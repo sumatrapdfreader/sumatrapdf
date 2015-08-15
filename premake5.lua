@@ -5,11 +5,12 @@ I'm using premake5 alpha4 from http://premake.github.io/download.html#v5
 (premake4 won't work, it doesn't support vs 2013+)
 
 TODO:
-* generate mupdf/generated or check them in
 * Installer
-* fix "LINK : warning LNK4068: /MACHINE not specified; defaulting to X86" in 32 bit build in sumatra.lib
 * a way to define SVN_PRE_RELEASE_VER, via build_config.h ? or msbuild
 * compare compilation flags nmake vs. us from compilation logs
+* consider checking in generated cmaps anyway. setting up cmapdump.exe
+  is cumbersome. Could also try to do it as buildcommands - maybe that would
+  avoid compiling cmapdump.exe if cmap .h files already exist
 
 Code fixes:
 * fix 64bit warnings ("4311", "4312", "4302", "4244", "4264") in Sumatra code
@@ -189,8 +190,7 @@ solution "SumatraPDF"
     kind "StaticLib"
     language "C"
     disablewarnings { "4018", "4100", "4127", "4244", "4245", "4996" }
-    includedirs { "ext/libjpeg-turbo" }
-    includedirs { "ext/libjpeg-turbo/simd" }
+    includedirs { "ext/libjpeg-turbo", "ext/libjpeg-turbo/simd" }
 
     -- nasm.exe -I .\ext\libjpeg-turbo\simd\
     -- -I .\ext\libjpeg-turbo\win\ -f win32
@@ -244,6 +244,13 @@ solution "SumatraPDF"
     links { "chm" }
 
 
+  -- unfortunate we need buildcmap re-direction but we can do
+  -- dependson { "cmapdump" } in "mupdf" as it'll break mupdf project
+  project "buildcmap"
+    kind "None"
+    dependson { "cmapdump" }
+
+
   project "mupdf"
     kind "StaticLib"
     language "C"
@@ -273,6 +280,7 @@ solution "SumatraPDF"
     filter {}
     mupdf_files()
     links { "zlib", "freetype", "libjpeg-turbo", "jbig2dec", "openjpeg" }
+    dependson "buildcmap"
 
 
   project "libmupdf"
@@ -339,7 +347,6 @@ solution "SumatraPDF"
     disablewarnings { "4091", "4577" }
     includedirs { "src/utils" }
     efi_files()
-    links { }
 
 
   project "mutool"
@@ -375,9 +382,13 @@ solution "SumatraPDF"
   project "cmapdump"
     kind "ConsoleApp"
     language "C"
+    -- force 32build so that we do 64bit even on 32bit machines
+    architecture "x86"
     disablewarnings { "4267" }
     includedirs { "mupdf/include" }
     files { "mupdf/scripts/cmapdump.c" }
+    postbuildcommands { "{COPY} %{cfg.targetdir}\\cmapdump.exe ..\\bin" }
+    postbuildcommands { "cd .. & call scripts\\gen_mupdf_generated.bat bin\\cmapdump.exe"}
 
 
   project "enginedump"
