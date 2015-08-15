@@ -404,12 +404,21 @@ public:
         }
     }
     ~WStrVec() {
-        FreeVecMembers(*this);
+        FreeMembers();
+    }
+
+    void FreeMembers() {
+        for (size_t i = 0; i < len; i++) {
+            auto s = els[i];
+            free(s);
+            els[i] = nullptr;
+        }
+        Vec::Reset();
     }
 
     WStrVec& operator=(const WStrVec& that) {
         if (this != &that) {
-            FreeVecMembers(*this);
+            FreeMembers();
             Vec::operator=(that);
             for (size_t i = 0; i < that.len; i++) {
                 if (At(i))
@@ -420,8 +429,7 @@ public:
     }
 
     void Reset() {
-        // FreeVecMembers calls Vec::Reset()
-        FreeVecMembers(*this);
+        FreeMembers();
     }
 
     WCHAR *Join(const WCHAR *joint=nullptr) {
