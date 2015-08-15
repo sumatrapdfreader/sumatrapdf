@@ -661,53 +661,44 @@ solution "SumatraPDF"
     }
 
 
-  --[[
-  TODO:
-  INSTALLER_DATA  = $(O)\InstallerData.dat
-
-  $(INSTALLER_DATA): $(MAKELZSA_APP) $(SUMATRA_APP_NO_MUPDF) $(LIBMUPDF_DLL)
-  $(CJK_FALLBACK_FONT) $(PDFFILTER_DLL) $(PDFPREVIEW_DLL) $(UNINSTALLER_APP)
-
-  $(MAKELZSA_APP) $@ $(SUMATRA_APP_NO_MUPDF):SumatraPDF.exe $(LIBMUPDF_DLL):libmupdf.dll
-   $(CJK_FALLBACK_FONT):DroidSansFallback.ttf $(PDFFILTER_DLL):PdfFilter.dll
-   $(PDFPREVIEW_DLL):PdfPreview.dll $(UNINSTALLER_APP):uninstall.exe
-
-  $(INSTALLER_RES): $(SRCDIR)\installer\Installer.rc $(SRCDIR)\installer\Resource.h $(SRCDIR)\Version.h $(INSTALLER_DATA)
-  	rc /r /fo$@ $(RC_FLAGS) /D "INSTALL_PAYLOAD_ZIP=..\..\$(INSTALLER_DATA)" $(SRCDIR)\installer\Installer.rc
-  --]]
-
-  -- TODO: fails at linking. Can't find symbols that should be in "utils" etc.
-  -- and I don't see utils.lib on link.exe list.
-  -- Looks like it's triggered by adding dependson
-  -- Possible solution:
-  -- * use linkoptions to force linking utils/zlib/unarr
-  -- * specify source files instead of linking projects
-  -- * move building of installer data to a separate project which will have
-  --   those dependencies instead
-  -- Full description of the problem: https://github.com/premake/premake-core/issues/208
   project "Installer"
     kind "WindowedApp"
     language "C++"
     flags { "NoManifest", "WinMain" }
-    disablewarnings { "4018", "4244", "4264", "4838", "4702", "4706" }
+    defines { "NO_LIBWEBP", "NO_LIBMUPDF", "HAVE_ZLIB", "HAVE_BZIP2", "HAVE_7Z" }
+    -- TODO: INSTALL_PAYLOAD_ZIP ends up ../dbg/InstallerData.dat and
+    -- QM() truns that into .../dbg/InstallerData.dat and gives this error:
+    -- 3>..\src\installer\Installer.rc(39): error RC2135: file not found: ...\dbg\InstallerData.dat
+    -- is it VS 2015 bug? It works that way even if I put that directly in Installer.rc as:
+    -- 1  RCDATA  QM(..\dbg\InstallerData.dat)
+    -- It works if I do:
+    -- 1  RCDATA  "..\dbg\InstallerData.dat"
+    -- No idea how to fix that. Maybe copy ../dbg/IntallerData.dat and use just InstallerData.dat ?
+    -- Or just move this step to build script
+    resdefines { "INSTALL_PAYLOAD_ZIP=%{cfg.targetdir}/InstallerData.dat" }
+    disablewarnings { "4018", "4127", "4131", "4244", "4267", "4302", "4311", "4312", "4456", "4457", "4838", "4702", "4706", "4996" }
+    -- TODO: could trim some of that
+    utils_files()
+    zlib_files()
+    unarr_files()
     files {
       "src/CrashHandler.*",
       "src/Translations.*",
       "src/installer/Installer.cpp",
       "src/installer/Installer.h",
       "src/installer/Trans_installer_txt.cpp",
-
+      "src/installer/Resource.h",
       "src/installer/Installer.rc",
     }
     includedirs {
-      "src", "src/utils", "ext/zlib", "ext/unarr", "ext/lzma/C"
+      "src", "src/utils", "ext/zlib", "ext/unarr", "ext/lzma/C", "ext/bzip2"
     }
-    links { "utils", "zlib", "unarr" }
     links {
       "comctl32", "gdiplus", "msimg32", "shlwapi", "urlmon",
       "version", "windowscodecs", "wininet"
     }
-    --dependson { "MakeLZSA", "SumatraPDF-no-MUPDF", "PdfFilter", "PdfPreview", "Uninstaller" }
+    dependson { "MakeLZSA", "SumatraPDF-no-MUPDF", "PdfFilter", "PdfPreview", "Uninstaller" }
+    prebuildcommands { "cd %{cfg.targetdir} & MakeLZSA.exe InstallerData.dat SumatraPDF-no-MUPDF.exe:SumatraPDF.exe libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll Uninstaller.exe:uninstall.exe ..\\mupdf\\resources\\fonts\\droid\\DroidSansFallback.ttf:DroidSansFallback.ttf" }
 
 
   -- dummy project that builds all other projects
