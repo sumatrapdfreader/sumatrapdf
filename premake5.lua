@@ -281,7 +281,7 @@ solution "SumatraPDF"
     disablewarnings { "4206" }
     -- premake has logic in vs2010_vcxproj.lua that only sets PlatformToolset
     -- if there is a c/c++ file, so we add a no-op cpp file to force This logic
-    files { "src/libmupdf.rc", "src/no_op_for_premake.cpp" }
+    files { "src/libmupdf.rc", "tools/premake/no_op_for_premake.cpp" }
     implibname "libmupdf"
     -- TODO: is thre a better way to do it?
     -- TODO: only for windows
@@ -705,7 +705,7 @@ solution "SumatraPDF"
     language "C"
     -- premake has logic in vs2010_vcxproj.lua that only sets PlatformToolset
     -- if there is a c/c++ file, so we add a no-op cpp file to force This logic
-    files { "src/no_op_console.c" }
+    files { "tools/premake/no_op_console.c" }
     dependson {
       "PdfPreview", "PdfFilter", "SumatraPDF", "SumatraPDF-no-MUPDF",
       "test_util", "cmapdump", "signfile", "plugin-test", "MakeLZSA",
