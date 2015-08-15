@@ -676,6 +676,12 @@ function sumatrapdf_files()
   files {
     "src/SumatraPDF.cpp",
     "src/SumatraStartup.cpp",
+    "src/SumatraPDF.rc",
+  }
+end
+
+function synctex_files()
+  files {
     "ext/synctex/synctex_parser_utils.c",
     "ext/synctex/synctex_parser.c",
   }

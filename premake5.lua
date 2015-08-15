@@ -296,6 +296,14 @@ solution "SumatraPDF"
     }
 
 
+  project "synctex"
+    kind "StaticLib"
+    language "C"
+    disablewarnings { "4127", "4244", "4267", "4702", "4706" }
+    includedirs { "ext/zlib", "ext/synctex" }
+    synctex_files()
+
+
   project "utils"
     kind "StaticLib"
     language "C++"
@@ -367,6 +375,7 @@ solution "SumatraPDF"
   project "cmapdump"
     kind "ConsoleApp"
     language "C"
+    disablewarnings { "4267" }
     includedirs { "mupdf/include" }
     files { "mupdf/scripts/cmapdump.c" }
 
@@ -583,20 +592,16 @@ solution "SumatraPDF"
     kind "WindowedApp"
     language "C++"
     flags { "NoManifest", "WinMain" }
-    -- TODO: these warnings should only occur in synctex which should be compiled separately
-    disablewarnings { "4018", "4244", "4267", "4702", "4706", "4838", "4127", "4189" }
-    includedirs {
-      "src/utils", "src/wingui", "src/mui", "ext/zlib", "ext/lzma/C",
-      "ext/libwebp", "ext/unarr", "mupdf/include", "src", "ext/synctex",
-      "ext/libdjvu", "ext/CHMLib/src"
-    }
+    includedirs { "src", "src/utils", "src/wingui", "src/mui" }
     sumatrapdf_files()
     files {
-      "src/SumatraPDF.rc",
       "docs/releasenotes.txt",
       "docs/releaseplan.txt",
     }
-    links { "sumatra", "utils", "mui", "engines", "mupdf", "libdjvu", "unarr", "libwebp" }
+    links {
+      "synctex", "sumatra", "utils", "mui", "engines", "mupdf",
+      "libdjvu", "unarr", "libwebp"
+    }
     links {
       "comctl32", "gdiplus", "msimg32", "shlwapi", "urlmon",
        "version", "windowscodecs", "wininet"
@@ -607,16 +612,13 @@ solution "SumatraPDF"
     kind "WindowedApp"
     language "C++"
     flags { "NoManifest", "WinMain" }
-    disablewarnings { "4018", "4244", "4264", "4838", "4702", "4706" }
-    includedirs {
-      "src/utils", "src/wingui", "src/mui", "ext/zlib", "ext/lzma/C",
-      "ext/libwebp", "ext/unarr", "mupdf/include", "src", "ext/synctex",
-      "ext/libdjvu", "ext/CHMLib/src"
-    }
+    includedirs { "src", "src/utils", "src/wingui", "src/mui", "mupdf/include" }
     sumatrapdf_files()
-    files { "src/SumatraPDF.rc" }
     files { "src/MuPDF_Exports.cpp" }
-    links { "sumatra", "libmupdf", "utils", "mui", "engines", "unarr", "libwebp" }
+    links {
+      "synctex", "sumatra", "libmupdf", "utils", "mui", "engines",
+      "unarr", "libwebp"
+    }
     links {
       "comctl32", "gdiplus", "msimg32", "shlwapi", "urlmon",
       "version", "windowscodecs", "wininet"
