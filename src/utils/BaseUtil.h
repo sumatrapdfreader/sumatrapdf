@@ -127,45 +127,44 @@ inline void CrashMe()
 // Just as with assert(), the condition is not guaranteed to be executed
 // in some builds, so it shouldn't contain the actual logic of the code
 
-inline void CrashAlwaysIf(bool cond) {
+#if defined(SVN_PRE_RELEASE_VER) || defined(DEBUG)
+inline void CrashIfFunc(bool cond) {
     if (cond) {
         CrashMe();
-        __analysis_assume(!(cond));
     }
 }
-
-#if defined(SVN_PRE_RELEASE_VER) || defined(DEBUG)
-inline void CrashIf(bool cond) {
-    CrashAlwaysIf(cond);
-}
 #else
-// TODO: probably __analysis_assume() is meaningless at this point
-// so we get more warnings in prefast build.
-// Should be a combination of a macro and inline function to
-// address both compiler warnings about unused variables and
-// help prefast builds. Or make it a macro for prefast and inline otherwise
-inline void CrashIf(bool cond) {
-    __analysis_assume(!(cond));
+inline void CrashIfFunc(bool cond) {
+    // no-op
 }
 #endif
 
 // Sometimes we want to assert only in debug build (not in pre-release)
+inline void CrashIfDebugOnlyFunc(bool cond) {
 #if defined(DEBUG)
-inline void CrashIfDebugOnly(bool cond) {
-    CrashAlwaysIf(cond);
-}
-#else
-inline void CrashIfDebugOnly(bool cond) {
-    __analysis_assume(!(cond));
-}
+    if (cond) { CrashMe(); }
 #endif
+}
+
+#define CrashIfDebugOnly(cond) \
+    __analysis_assume(!(cond)); \
+    CrashIfDebugOnlyFunc(cond);
+
+#define CrashAlwaysIf(cond) \
+    __analysis_assume(!(cond)); \
+    if (cond) { CrashMe(); }
+
+#define CrashIf(cond) \
+    __analysis_assume(!(cond)); \
+    CrashIfFunc(cond);
 
 // AssertCrash is like assert() but crashes like CrashIf()
 // It's meant to make converting assert() easier (converting to
 // CrashIf() requires inverting the condition, which can introduce bugs)
-inline void AssertCrash(bool cond) {
-    CrashIf(!(cond));
-}
+#define AssertCrash(cond) \
+    __analysis_assume(cond); \
+    CrashIfFunc(!(cond));
+
 
 template <typename T>
 inline T limitValue(T val, T min, T max)

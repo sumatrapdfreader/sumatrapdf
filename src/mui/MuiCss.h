@@ -106,8 +106,6 @@ static inline ElAlignData GetElAlignRight() {
 static inline ElAlignData GetElAlign(ElAlign align) {
     size_t idx = (size_t)align;
     CrashIf(idx >= dimof(g_ElAlignVals));
-    //TODO: bring back __assume in CrashIf
-    //__assume(idx < dimof(g_ElAlignVals));
     return g_ElAlignVals[idx];
 }
 

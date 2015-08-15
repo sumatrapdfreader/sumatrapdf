@@ -369,7 +369,7 @@ static float ZoomMenuItemToZoom(UINT menuItemId)
 
 static void ZoomMenuItemCheck(HMENU m, UINT menuItemId, bool canZoom)
 {
-    AssertCrash(IDM_ZOOM_FIRST <= menuItemId && menuItemId <= IDM_ZOOM_LAST);
+    AssertCrash((IDM_ZOOM_FIRST <= menuItemId) && (menuItemId <= IDM_ZOOM_LAST));
 
     for (int i = 0; i < dimof(gZoomMenuIds); i++)
         win::menu::SetEnabled(m, gZoomMenuIds[i].itemId, canZoom);
@@ -442,6 +442,7 @@ void MenuUpdateStateForWindow(WindowInfo* win)
 #define menusToEnableIfBrokenPDF menusToDisableIfDirectory
 
     TabInfo *tab = win->currentTab;
+    CrashIf(!tab);
     // TODO: is this check too expensive?
     bool fileExists = tab && file::Exists(tab->filePath);
 
