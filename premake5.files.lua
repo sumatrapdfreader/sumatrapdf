@@ -159,73 +159,71 @@ function jbig2dec_files()
 end
 
 function openjpeg_files()
-  files {
-    "ext/openjpeg/bio.c",
-    "ext/openjpeg/cidx_manager.c",
-    "ext/openjpeg/cio.c",
-    "ext/openjpeg/dwt.c",
-    "ext/openjpeg/event.c",
-    "ext/openjpeg/function_list.c",
-    "ext/openjpeg/image.c",
-    "ext/openjpeg/invert.c",
-    "ext/openjpeg/j2k.c",
-    "ext/openjpeg/jp2.c",
-    "ext/openjpeg/mct.c",
-    "ext/openjpeg/mqc.c",
-    "ext/openjpeg/openjpeg.c",
-    "ext/openjpeg/opj_clock.c",
-    "ext/openjpeg/phix_manager.c",
-    "ext/openjpeg/pi.c",
-    "ext/openjpeg/ppix_manager.c",
-    "ext/openjpeg/raw.c",
-    "ext/openjpeg/t1.c",
-    "ext/openjpeg/t2.c",
-    "ext/openjpeg/tcd.c",
-    "ext/openjpeg/tgt.c",
-    "ext/openjpeg/thix_manager.c",
-    "ext/openjpeg/tpix_manager.c",
-  }
-  -- TODO: probably can be
-  -- files { "ext/openjpeg/*.c" }
-  -- removefiles { "*t1_generate_luts.c"}
+  files_in_dir( "ext/openjpeg", {
+    "bio.*",
+    "cidx_manager.*",
+    "cio.*",
+    "dwt.*",
+    "event.*",
+    "function_list.*",
+    "image.*",
+    "invert.*",
+    "j2k.*",
+    "jp2.*",
+    "mct.*",
+    "mqc.*",
+    "openjpeg.*",
+    "opj_clock.*",
+    "opj_config.h",
+    "phix_manager.*",
+    "pi.*",
+    "ppix_manager.",
+    "raw.*",
+    "t1.*",
+    "t2.*",
+    "tcd.*",
+    "tgt.*",
+    "thix_manager.*",
+    "tpix_manager.*",
+  })
 end
 
 function libwebp_files()
-  files {
-    "ext/libwebp/dec/alpha.c",
-    "ext/libwebp/dec/buffer.c",
-    "ext/libwebp/dec/frame.c",
-    "ext/libwebp/dec/idec.c",
-    "ext/libwebp/dec/io.c",
-    "ext/libwebp/dec/quant.c",
-    "ext/libwebp/dec/tree.c",
-    "ext/libwebp/dec/vp8.c",
-    "ext/libwebp/dec/vp8l.c",
-    "ext/libwebp/dec/webp.c",
+  files_in_dir("ext/libwebp", {
+    "dec/alpha.c",
+    "dec/buffer.c",
+    "dec/frame.c",
+    "dec/idec.c",
+    "dec/io.c",
+    "dec/quant.c",
+    "dec/tree.c",
+    "dec/vp8.c",
+    "dec/vp8l.c",
+    "dec/webp.c",
 
-    "ext/libwebp/dsp/alpha_processing.c",
-    "ext/libwebp/dsp/cpu.c",
-    "ext/libwebp/dsp/dec.c",
-    "ext/libwebp/dsp/dec_sse2.c",
-    "ext/libwebp/dsp/lossless.c",
-    "ext/libwebp/dsp/lossless_sse2.c",
-    "ext/libwebp/dsp/upsampling.c",
-    "ext/libwebp/dsp/upsampling_sse2.c",
-    "ext/libwebp/dsp/yuv.c",
-    "ext/libwebp/dsp/yuv_sse2.c",
-    "ext/libwebp/dsp/dec_clip_tables.c",
-    "ext/libwebp/dsp/alpha_processing_sse2.c",
+    "dsp/alpha_processing.c",
+    "dsp/cpu.c",
+    "dsp/dec.c",
+    "dsp/dec_sse2.c",
+    "dsp/lossless.c",
+    "dsp/lossless_sse2.c",
+    "dsp/upsampling.c",
+    "dsp/upsampling_sse2.c",
+    "dsp/yuv.c",
+    "dsp/yuv_sse2.c",
+    "dsp/dec_clip_tables.c",
+    "dsp/alpha_processing_sse2.c",
 
-    "ext/libwebp/utils/bit_reader.c",
-    "ext/libwebp/utils/color_cache.c",
-    "ext/libwebp/utils/filters.c",
-    "ext/libwebp/utils/huffman.c",
-    "ext/libwebp/utils/quant_levels_dec.c",
-    "ext/libwebp/utils/rescaler.c",
-    "ext/libwebp/utils/thread.c",
-    "ext/libwebp/utils/utils.c",
-    "ext/libwebp/utils/random.c",
-  }
+    "utils/bit_reader.c",
+    "utils/color_cache.c",
+    "utils/filters.c",
+    "utils/huffman.c",
+    "utils/quant_levels_dec.c",
+    "utils/rescaler.c",
+    "utils/thread.c",
+    "utils/utils.c",
+    "utils/random.c",
+  })
 end
 
 function libjpeg_turbo_files()
@@ -311,20 +309,20 @@ function freetype_files()
     "ftotval.c",
   })
 
-  files {
-    "ext/freetype2/src/cff/cff.c",
-    "ext/freetype2/src/cid/type1cid.c",
-    "ext/freetype2/src/psaux/psaux.c",
-    "ext/freetype2/src/psnames/psnames.c",
-    "ext/freetype2/src/smooth/smooth.c",
-    "ext/freetype2/src/sfnt/sfnt.c",
-    "ext/freetype2/src/truetype/truetype.c",
-    "ext/freetype2/src/type1/type1.c",
-    "ext/freetype2/src/raster/raster.c",
-    "ext/freetype2/src/otvalid/otvalid.c",
-    "ext/freetype2/src/pshinter/pshinter.c",
-    "ext/freetype2/src/gzip/ftgzip.c",
-  }
+  files_in_dir("ext/freetype2/src", {
+    "cff/cff.c",
+    "cid/type1cid.c",
+    "psaux/psaux.c",
+    "psnames/psnames.c",
+    "smooth/smooth.c",
+    "sfnt/sfnt.c",
+    "truetype/truetype.c",
+    "type1/type1.c",
+    "raster/raster.c",
+    "otvalid/otvalid.c",
+    "pshinter/pshinter.c",
+    "gzip/ftgzip.c",
+  })
 
   filter "configurations:Debug*"
     files { "ext/freetype2/src/base/ftdebug.c" }
@@ -333,148 +331,150 @@ function freetype_files()
 end
 
 function sumatra_files()
-  files {
-    "src/AppPrefs.cpp",
-    "src/DisplayModel.cpp",
-    "src/CrashHandler.cpp",
-    "src/Favorites.cpp",
-    "src/TextSearch.cpp",
-    "src/SumatraAbout.cpp",
-    "src/SumatraAbout2.cpp",
-    "src/SumatraDialogs.cpp",
-    "src/SumatraProperties.cpp",
-    "src/GlobalPrefs.cpp",
-    "src/PdfSync.cpp",
-    "src/RenderCache.cpp",
-    "src/TextSelection.cpp",
-    "src/WindowInfo.cpp",
-    "src/ParseCommandLine.cpp",
-    "src/StressTesting.cpp",
-    "src/AppTools.cpp",
-    "src/AppUtil.cpp",
-    "src/TableOfContents.cpp",
-    "src/Toolbar.cpp",
-    "src/Print.cpp",
-    "src/Notifications.cpp",
-    "src/Selection.cpp",
-    "src/Search.cpp",
-    "src/Menu.cpp",
-    "src/ExternalViewers.cpp",
-    "src/EbookControls.cpp",
-    "src/EbookController.cpp",
-    "src/Doc.cpp",
-    "src/MuiEbookPageDef.cpp",
-    "src/PagesLayoutDef.cpp",
-    "src/Tester.cpp",
-    "src/Translations.cpp",
-    "src/Trans_sumatra_txt.cpp",
-    "src/Tabs.cpp",
-    "src/FileThumbnails.cpp",
-    "src/FileHistory.cpp",
-    "src/ChmModel.cpp",
-    "src/Caption.cpp",
-    "src/Canvas.cpp",
-    "src/TabInfo.cpp",
+  files_in_dir("src", {
+    "AppPrefs.*",
+    "AppTools.*",
+    "AppUtil.*",
+    "Caption.*",
+    "Canvas.*",
+    "ChmModel.*",
+    "CrashHandler.*",
+    "DisplayModel.*",
+    "Doc.*",
+    "EbookController.*",
+    "EbookControls.*",
+    "ExternalViewers.*",
+    "Favorites.*",
+    "FileHistory.*",
+    "FileThumbnails.*",
+    "GlobalPrefs.*",
+    "Menu.*",
+    "MuiEbookPageDef.*",
+    "Notifications.*",
+    "PagesLayoutDef.*",
+    "ParseCommandLine.*",
+    "PdfSync.*",
+    "Print.*",
+    "RenderCache.*",
+    "Search.*",
+    "Selection.*",
+    "SumatraAbout.*",
+    "SumatraAbout2.*",
+    "SumatraDialogs.*",
+    "SumatraProperties.*",
+    "StressTesting.*",
+    "TabInfo.*",
+    "TableOfContents.*",
+    "Tabs.*",
+    "Tester.*",
+    "TextSearch.*",
+    "TextSelection.*",
+    "Toolbar.*",
+    "Translations.*",
+    "Trans_sumatra_txt.cpp",
+    "WindowInfo.*",
 
-    "src/regress/Regress.cpp",
+    "regress/Regress.*",
 
-    "src/uia/Provider.cpp",
-    "src/uia/StartPageProvider.cpp",
-    "src/uia/DocumentProvider.cpp",
-    "src/uia/PageProvider.cpp",
-    "src/uia/TextRange.cpp",
-  }
+    "uia/Provider.*",
+    "uia/StartPageProvider.*",
+    "uia/DocumentProvider.*",
+    "uia/PageProvider.*",
+    "uia/TextRange.*",
+  })
 end
 
 function utils_files()
-  files {
-    "src/utils/FileUtil.cpp",
-    "src/utils/HttpUtil.cpp",
-    "src/utils/StrUtil.cpp",
-    "src/utils/WinUtil.cpp",
-    "src/utils/GdiPlusUtil.cpp",
-    "src/utils/FileTransactions.cpp",
-    "src/utils/Touch.cpp",
-    "src/utils/TrivialHtmlParser.cpp",
-    "src/utils/HtmlWindow.cpp",
-    "src/utils/DirIter.cpp",
-    "src/utils/BitReader.cpp",
-    "src/utils/HtmlPullParser.cpp",
-    "src/utils/HtmlPrettyPrint.cpp",
-    "src/utils/ThreadUtil.cpp",
-    "src/utils/DebugLog.cpp",
-    "src/utils/DbgHelpDyn.cpp",
-    "src/utils/JsonParser.cpp",
-    "src/utils/TgaReader.cpp",
-    "src/utils/HtmlParserLookup.cpp",
-    "src/utils/ByteOrderDecoder.cpp",
-    "src/utils/CmdLineParser.cpp",
-    "src/utils/UITask.cpp",
-    "src/utils/StrFormat.cpp",
-    "src/utils/Dict.cpp",
-    "src/utils/BaseUtil.cpp",
-    "src/utils/CssParser.cpp",
-    "src/utils/FileWatcher.cpp",
-    "src/utils/CryptoUtil.cpp",
-    "src/utils/StrSlice.cpp",
-    "src/utils/TxtParser.cpp",
-    "src/utils/SerializeTxt.cpp",
-    "src/utils/SquareTreeParser.cpp",
-    "src/utils/SettingsUtil.cpp",
-    "src/utils/WebpReader.cpp",
-    "src/utils/FzImgReader.cpp",
-    "src/utils/ArchUtil.cpp",
-    "src/utils/ZipUtil.cpp",
-    "src/utils/LzmaSimpleArchive.cpp",
-    "src/utils/Dpi.cpp",
+  files_in_dir("src/utils", {
+    "ArchUtil.*",
+    "BaseUtil.*",
+    "BitReader.*",
+    "ByteOrderDecoder.*",
+    "CmdLineParser.*",
+    "CryptoUtil.*",
+    "CssParser.*",
+    "DbgHelpDyn.*",
+    "DebugLog.*",
+    "Dict.*",
+    "DirIter.*",
+    "Dpi.*",
+    "FileTransactions.*",
+    "FileUtil.*",
+    "FileWatcher.*",
+    "FzImgReader.*",
+    "GdiPlusUtil.*",
+    "HtmlWindow.*",
+    "HtmlParserLookup.*",
+    "HtmlPullParser.*",
+    "HtmlPrettyPrint.*",
+    "HttpUtil.*",
+    "JsonParser.*",
+    "LzmaSimpleArchive.*",
+    "SerializeTxt.*",
+    "SettingsUtil.*",
+    "StrUtil.*",
+    "StrFormat.*",
+    "StrSlice.*",
+    "SquareTreeParser.*",
+    "ThreadUtil.*",
+    "TgaReader.*",
+    "Touch.*",
+    "TrivialHtmlParser.*",
+    "TxtParser.*",
+    "UITask.*",
+    "ZipUtil.*",
+    "WebpReader.*",
+    "WinUtil.*",
+  })
 
-    "src/wingui/DialogSizer.cpp",
-    "src/wingui/SplitterWnd.cpp",
-    "src/wingui/LabelWithCloseWnd.cpp",
-    "src/wingui/FrameRateWnd.cpp",
-    "src/wingui/EditCtrl.cpp",
-    "src/wingui/Win32Window.cpp",
-  }
+  files_in_dir("src/wingui", {
+    "DialogSizer.*",
+    "EditCtrl.*",
+    "FrameRateWnd.*",
+    "LabelWithCloseWnd.*",
+    "SplitterWnd.*",
+    "Win32Window.*",
+  })
 end
 
 function mui_files()
-  files {
-    "src/mui/MuiBase.cpp",
-    "src/mui/Mui.cpp",
-    "src/mui/MuiCss.cpp",
-    "src/mui/MuiLayout.cpp",
-    "src/mui/MuiPainter.cpp",
-    "src/mui/MuiControl.cpp",
-    "src/mui/MuiButton.cpp",
-    "src/mui/MuiScrollBar.cpp",
-    "src/mui/MuiEventMgr.cpp",
-    "src/mui/MuiHwndWrapper.cpp",
-    "src/mui/MuiGrid.cpp",
-    "src/mui/SvgPath.cpp",
-    "src/mui/MuiDefs.cpp",
-    "src/mui/MuiFromText.cpp",
-    "src/mui/TextRender.cpp",
-  }
+  files_in_dir("src/mui", {
+    "MuiBase.*",
+    "Mui.*",
+    "MuiCss.*",
+    "MuiLayout.*",
+    "MuiPainter.*",
+    "MuiControl.*",
+    "MuiButton.*",
+    "MuiScrollBar.*",
+    "MuiEventMgr.*",
+    "MuiHwndWrapper.*",
+    "MuiGrid.*",
+    "SvgPath.*",
+    "MuiDefs.*",
+    "MuiFromText.*",
+    "TextRender.*",
+  })
 end
 
 function engines_files()
-  files {
-    "src/PdfEngine.cpp",
-    "src/PsEngine.cpp",
-    "src/PdfCreator.cpp",
-    "src/ImagesEngine.cpp",
-    "src/DjVuEngine.cpp",
-    "src/EbookEngine.cpp",
-    "src/EbookDoc.cpp",
-    "src/MobiDoc.cpp",
-    "src/HtmlFormatter.cpp",
-    "src/EbookFormatter.cpp",
-    "src/ChmDoc.cpp",
-    "src/EngineManager.cpp",
-    "src/FileModifications.cpp",
+  files_in_dir("src", {
+    "ChmDoc.*",
+    "DjVuEngine.*",
+    "EbookDoc.*",
+    "EbookEngine.*",
+    "EbookFormatter.*",
+    "EngineManager.*",
+    "FileModifications.*",
+    "HtmlFormatter.*",
+    "ImagesEngine.*",
+    "MobiDoc.*",
+    "PdfCreator.*",
+    "PdfEngine.*",
+    "PsEngine.*",
 
-    "src/utils/PalmDbReader.cpp",
-  }
+    "utils/PalmDbReader.*",
+  })
 end
 
 function mupdf_files()
@@ -696,4 +696,129 @@ function efi_files()
     "src/utils/Dict*",
     "src/utils/StrUtil*",
   }
+end
+
+function test_util_files()
+  files_in_dir( "src/utils", {
+    "BaseUtil*",
+    "BitManip*",
+    "ByteOrderDecoder*",
+    "CmdLineParser*",
+    "CryptoUtil*",
+    "CssParser*",
+    "Dict*",
+    "DebugLog*",
+    "FileUtil*",
+    "GeomUtil.*",
+    "HtmlParserLookup*",
+    "HtmlPrettyPrint*",
+    "HtmlPullParser*",
+    "JsonParser*",
+    "Scoped.*",
+    "SettingsUtil*",
+    "SimpleLog*",
+    "StrFormat*",
+    "StrUtil*",
+    "SquareTreeParser*",
+    "TrivialHtmlParser*",
+    "UtAssert*",
+    "VarintGob*",
+    "Vec.*",
+    "WinUtil*",
+    "tests/*"
+  })
+  files_in_dir("src", {
+    --"AppTools.*",
+    --"ParseCommandLine.*",
+    --"StressTesting.*",
+    "AppUtil.*",
+    "UnitTests.cpp",
+    "mui/SvgPath*",
+    "tools/test_util.cpp"
+  })
+end
+
+function engine_dump_files()
+  files_in_dir("src", {
+    "EngineDump.cpp",
+    "mui/MiniMui.*",
+    "mui/TextRender.*",
+  })
+end
+
+function pdf_preview_files()
+  files_in_dir("src/previewer", {
+    "PdfPreview.*",
+    "PdfPreviewDll.cpp",
+  })
+  files { "src/MUPDF_Exports.cpp", "src/PdfEngine.*" }
+  filter {"configurations:Debug"}
+  files_in_dir("src", {
+    "ChmDoc.*",
+    "DjVuEngine.*",
+    "EbookDoc.*",
+    "EbookEngine.*",
+    "EbookFormatter.*",
+    "HtmlFormatter.*",
+    "ImagesEngine.*",
+    "MobiDoc.*",
+    "PdfCreator.*",
+    "utils/PalmDbReader.*",
+    "mui/MiniMui.*",
+    "mui/TextRender.*",
+  })
+  filter {}
+end
+
+function installer_utils_files()
+  files_in_dir("src/utils", {
+    "ArchUtil.*",
+    "BaseUtil.*",
+    "BitReader.*",
+    "ByteOrderDecoder.*",
+    "CmdLineParser.*",
+    "DbgHelpDyn.*",
+    "DebugLog.*",
+    "Dict.*",
+    "DirIter.*",
+    "Dpi.*",
+    "FileTransactions.*",
+    "FileUtil.*",
+    "FzImgReader.*",
+    "GdiPlusUtil.*",
+    "HttpUtil.*",
+    "LzmaSimpleArchive.*",
+    "StrUtil.*",
+    "StrFormat.*",
+    "StrSlice.*",
+    "ThreadUtil.*",
+    "TgaReader.*",
+    "UITask.*",
+    "WebpReader.*",
+    "WinUtil.*",
+  })
+end
+
+function installer_files()
+  zlib_files()
+  unarr_files()
+  installer_utils_files()
+  files_in_dir( "src", {
+    "CrashHandler.*",
+    "Translations.*",
+    "installer/Installer.cpp",
+    "installer/Installer.h",
+    "installer/Trans_installer_txt.cpp",
+    "installer/Resource.h",
+    "installer/Installer.rc",
+  })
+end
+
+function uninstaller_files()
+  files_in_dir("src", {
+    "CrashHandler.*",
+    "Translations.*",
+    "installer/Installer.*",
+    "installer/Trans_installer_txt.cpp",
+  })
 end

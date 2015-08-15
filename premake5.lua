@@ -43,7 +43,6 @@ Prefast:
  28125 - function X must be called in try/except (InitializeCriticalSection)
  28252 - Inconsistent annotaion
  28253 - Inconsistent annotaion
-
 --]]
 
 include("premake5.files.lua")
@@ -399,11 +398,7 @@ solution "SumatraPDF"
     kind "ConsoleApp"
     language "C++"
     includedirs { "src", "src/utils", "src/mui", "mupdf/include" }
-    files {
-      "src/EngineDump.cpp",
-      "src/mui/MiniMui.*",
-      "src/mui/TextRender.*",
-    }
+    engine_dump_files()
     links { "engines", "utils", "mupdf", "unarr", "libwebp", "libdjvu" }
     links {
       "comctl32", "gdiplus", "msimg32", "shlwapi",
@@ -417,43 +412,7 @@ solution "SumatraPDF"
     disablewarnings { "4838" }
     defines { "NO_LIBMUPDF" }
     includedirs { "src/utils" }
-    files_in_dir( "src/utils", {
-      "BaseUtil*",
-      "BitManip*",
-      "ByteOrderDecoder*",
-      "CmdLineParser*",
-      "CryptoUtil*",
-      "CssParser*",
-      "Dict*",
-      "DebugLog*",
-      "FileUtil*",
-      "GeomUtil.*",
-      "HtmlParserLookup*",
-      "HtmlPrettyPrint*",
-      "HtmlPullParser*",
-      "JsonParser*",
-      "Scoped.*",
-      "SettingsUtil*",
-      "SimpleLog*",
-      "StrFormat*",
-      "StrUtil*",
-      "SquareTreeParser*",
-      "TrivialHtmlParser*",
-      "UtAssert*",
-      "VarintGob*",
-      "Vec.*",
-      "WinUtil*",
-      "tests/*"
-    })
-    files_in_dir("src", {
-      --"AppTools.*",
-      --"ParseCommandLine.*",
-      --"StressTesting.*",
-      "AppUtil.*",
-      "UnitTests.cpp",
-      "mui/SvgPath*",
-      "tools/test_util.cpp"
-    })
+    test_util_files()
     links { "gdiplus", "comctl32", "shlwapi", "Version" }
 
 
@@ -526,16 +485,11 @@ solution "SumatraPDF"
     disablewarnings { "4838" }
     -- TODO: probably excessive
     includedirs {
-      "src/utils", "src/wingui", "src/mui", "ext/zlib", "ext/lzma/C",
-      "ext/libwebp", "ext/unarr", "mupdf/include", "src", "ext/synctex",
+      "src", "src/utils", "src/wingui", "src/mui", "mupdf/include", "ext/zlib",
+      "ext/lzma/C", "ext/libwebp", "ext/unarr",
       "ext/libdjvu", "ext/CHMLib/src"
     }
-    files_in_dir("src/previewer", {
-      "PdfPreview.*",
-      "PdfPreviewDll.cpp",
-    })
-    files { "src/MUPDF_Exports.cpp", "src/PdfEngine.cpp" }
-
+    pdf_preview_files()
     filter {"configurations:Debug"}
       defines {
         "BUILD_XPS_PREVIEW", "BUILD_DJVU_PREVIEW", "BUILD_EPUB_PREVIEW",
@@ -544,22 +498,7 @@ solution "SumatraPDF"
         "BUILD_TGA_PREVIEW"
       }
       links "chm"
-      files_in_dir("src", {
-        "ChmDoc.*",
-        "DjVuEngine.*",
-        "EbookDoc.*",
-        "EbookEngine.*",
-        "EbookFormatter.*",
-        "HtmlFormatter.*",
-        "ImagesEngine.*",
-        "MobiDoc.*",
-        "PdfCreator.*",
-        "utils/PalmDbReader.*",
-        "mui/MiniMui.*",
-        "mui/TextRender.*",
-    })
     filter {}
-
     links { "utils", "libmupdf" }
     links { "comctl32", "gdiplus", "msimg32", "shlwapi", "version" }
 
@@ -575,12 +514,12 @@ solution "SumatraPDF"
       "docs/releaseplan.txt",
     }
     links {
-      "synctex", "sumatra", "utils", "mui", "engines", "mupdf",
-      "libdjvu", "unarr", "libwebp"
+      "engines", "libdjvu",  "libwebp", "mui", "mupdf", "sumatra", "synctex",
+      "unarr", "utils"
     }
     links {
       "comctl32", "gdiplus", "msimg32", "shlwapi", "urlmon",
-       "version", "windowscodecs", "wininet"
+      "version", "windowscodecs", "wininet"
     }
 
 
@@ -607,18 +546,8 @@ solution "SumatraPDF"
     defines { "BUILD_UNINSTALLER" }
     flags { "NoManifest", "WinMain" }
     disablewarnings { "4018", "4244", "4264", "4838", "4702", "4706" }
-    files {
-      "src/CrashHandler.*",
-      "src/Translations.*",
-      "src/installer/Installer.cpp",
-      "src/installer/Installer.h",
-      "src/installer/Trans_installer_txt.cpp",
-
-      "src/installer/Installer.rc",
-    }
-    includedirs {
-      "src", "src/utils", "ext/zlib", "ext/unarr", "ext/lzma/C"
-    }
+    uninstaller_files()
+    includedirs { "src", "src/utils", "ext/zlib", "ext/unarr", "ext/lzma/C" }
     links { "utils", "zlib", "unarr" }
     links {
       "comctl32", "gdiplus", "msimg32", "shlwapi", "urlmon",
@@ -632,24 +561,9 @@ solution "SumatraPDF"
     language "C++"
     flags { "NoManifest", "WinMain" }
     defines { "NO_LIBWEBP", "NO_LIBMUPDF", "HAVE_ZLIB", "HAVE_BZIP2", "HAVE_7Z" }
-    resdefines { "INSTALL_PAYLOAD_ZIP=.\\%{cfg.targetdir}\\InstallerData.dat" }
     disablewarnings { "4018", "4127", "4131", "4244", "4267", "4302", "4311", "4312", "4456", "4457", "4838", "4702", "4706", "4996" }
-    -- TODO: could trim some of that
-    utils_files()
-    zlib_files()
-    unarr_files()
-    files {
-      "src/CrashHandler.*",
-      "src/Translations.*",
-      "src/installer/Installer.cpp",
-      "src/installer/Installer.h",
-      "src/installer/Trans_installer_txt.cpp",
-      "src/installer/Resource.h",
-      "src/installer/Installer.rc",
-    }
-    includedirs {
-      "src", "src/utils", "ext/zlib", "ext/unarr", "ext/lzma/C", "ext/bzip2"
-    }
+    installer_files()
+    includedirs { "src", "src/utils", "ext/zlib", "ext/unarr", "ext/lzma/C", "ext/bzip2" }
     links {
       "comctl32", "gdiplus", "msimg32", "shlwapi", "urlmon",
       "version", "windowscodecs", "wininet"
@@ -663,22 +577,8 @@ solution "SumatraPDF"
     defines { "NO_LIBWEBP", "NO_LIBMUPDF", "HAVE_ZLIB", "HAVE_BZIP2", "HAVE_7Z" }
     resdefines { "INSTALL_PAYLOAD_ZIP=.\\%{cfg.targetdir}\\InstallerData.dat" }
     disablewarnings { "4018", "4127", "4131", "4244", "4267", "4302", "4311", "4312", "4456", "4457", "4838", "4702", "4706", "4996" }
-    -- TODO: could trim some of that
-    utils_files()
-    zlib_files()
-    unarr_files()
-    files {
-      "src/CrashHandler.*",
-      "src/Translations.*",
-      "src/installer/Installer.cpp",
-      "src/installer/Installer.h",
-      "src/installer/Trans_installer_txt.cpp",
-      "src/installer/Resource.h",
-      "src/installer/Installer.rc",
-    }
-    includedirs {
-      "src", "src/utils", "ext/zlib", "ext/unarr", "ext/lzma/C", "ext/bzip2"
-    }
+    installer_files()
+    includedirs { "src", "src/utils", "ext/zlib", "ext/unarr", "ext/lzma/C", "ext/bzip2" }
     links {
       "comctl32", "gdiplus", "msimg32", "shlwapi", "urlmon",
       "version", "windowscodecs", "wininet"
