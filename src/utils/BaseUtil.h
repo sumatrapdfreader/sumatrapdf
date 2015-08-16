@@ -149,32 +149,31 @@ inline void CrashIfDebugOnlyFunc(bool cond) {
 }
 
 #define CrashIfDebugOnly(cond) \
-    { \
+    do { \
         __analysis_assume(!(cond)); \
         CrashIfDebugOnlyFunc(cond); \
-    }
+    } while(0)
 
 #define CrashAlwaysIf(cond) \
-    { \
+    do { \
           __analysis_assume(!(cond)); \
           if (cond) { CrashMe(); } \
-    }
+    } while(0)
 
 #define CrashIf(cond) \
-    { \
+    do { \
         __analysis_assume(!(cond)); \
         CrashIfFunc(cond); \
-    }
+    } while(0)
 
 // AssertCrash is like assert() but crashes like CrashIf()
 // It's meant to make converting assert() easier (converting to
 // CrashIf() requires inverting the condition, which can introduce bugs)
 #define AssertCrash(cond) \
-    { \
+    do { \
         __analysis_assume(cond); \
         CrashIfFunc(!(cond)); \
-    }
-
+    } while(0)
 
 template <typename T>
 inline T limitValue(T val, T min, T max)

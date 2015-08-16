@@ -70,7 +70,7 @@ solution "SumatraPDF"
       toolset "v120"
   filter {}
 
-  disablewarnings { "4100", "4324", "4458", "4800" }
+  disablewarnings { "4100", "4127", "4324", "4458", "4800" }
   warnings "Extra"
 
   location "this_is_invalid_location"
@@ -82,7 +82,7 @@ solution "SumatraPDF"
   filter "action:vs2013"
     location "vs2013"
   filter {}
-  
+
   filter "action:gmake"
     location "gmake"
   filter {}
@@ -140,7 +140,7 @@ solution "SumatraPDF"
   project "zlib"
     kind "StaticLib"
     language "C"
-    disablewarnings { "4127", "4131", "4244", "4996" }
+    disablewarnings { "4131", "4244", "4996" }
     zlib_files()
 
 
@@ -150,7 +150,7 @@ solution "SumatraPDF"
     -- TODO: try /D USE_EXCEPTION_EMULATION to see if it reduces the size
     -- and disables the exceptions warnings
     defines { "NEED_JPEG_DECODER", "THREADMODEL=0", "DDJVUAPI=/**/",  "MINILISPAPI=/**/", "DO_CHANGELOCALE=0" }
-    disablewarnings { "4100", "4127", "4189", "4244", "4267", "4302", "4311", "4312" }
+    disablewarnings { "4100", "4189", "4244", "4267", "4302", "4311", "4312" }
     disablewarnings { "4456", "4457", "4459", "4530", "4611", "4701", "4702", "4703", "4706" }
     includedirs { "ext/libjpeg-turbo" }
     libdjvu_files()
@@ -160,7 +160,7 @@ solution "SumatraPDF"
     kind "StaticLib"
     language "C"
     defines { "HAVE_ZLIB", "HAVE_BZIP2", "HAVE_7Z" }
-    disablewarnings { "4100", "4127", "4244", "4267", "4456", "4457", "4996" }
+    disablewarnings { "4100", "4244", "4267", "4456", "4457", "4996" }
     includedirs { "ext/zlib", "ext/bzip2", "ext/lzma/C" }
     unarr_files()
 
@@ -169,7 +169,7 @@ solution "SumatraPDF"
     kind "StaticLib"
     language "C"
     defines { "HAVE_STRING_H=1", "JBIG_NO_MEMENTO" }
-    disablewarnings { "4018", "4127", "4244", "4267", "4701" }
+    disablewarnings { "4018", "4244", "4267", "4701" }
     includedirs { "ext/jbig2dec" }
     jbig2dec_files()
 
@@ -177,7 +177,7 @@ solution "SumatraPDF"
   project "openjpeg"
     kind "StaticLib"
     language "C"
-    disablewarnings { "4127", "4244" }
+    disablewarnings { "4244" }
     includedirs { "ext/openjpeg" }
     openjpeg_files()
 
@@ -185,7 +185,7 @@ solution "SumatraPDF"
   project "libwebp"
     kind "StaticLib"
     language "C"
-    disablewarnings { "4127", "4204", "4244", "4057" }
+    disablewarnings { "4204", "4244", "4057" }
     includedirs { "ext/libwebp" }
     libwebp_files()
 
@@ -193,7 +193,7 @@ solution "SumatraPDF"
   project "libjpeg-turbo"
     kind "StaticLib"
     language "C"
-    disablewarnings { "4018", "4100", "4127", "4244", "4245" }
+    disablewarnings { "4018", "4100", "4244", "4245" }
     includedirs { "ext/libjpeg-turbo", "ext/libjpeg-turbo/simd" }
 
     -- nasm.exe -I .\ext\libjpeg-turbo\simd\
@@ -222,7 +222,7 @@ solution "SumatraPDF"
     kind "StaticLib"
     language "C"
     defines { "FT2_BUILD_LIBRARY", "FT_OPTION_AUTOFIT2"}
-    disablewarnings { "4018", "4127", "4996" }
+    disablewarnings { "4018", "4996" }
     includedirs { "ext/freetype2/config" }
     includedirs { "ext/freetype2/include" }
     freetype_files()
@@ -232,7 +232,7 @@ solution "SumatraPDF"
     kind "StaticLib"
     language "C"
     defines { "UNICODE", "_UNICODE", "PPC_BSTR"}
-    disablewarnings { "4018", "4057", "4127", "4189", "4244", "4267", "4295", "4701", "4706", "4996" }
+    disablewarnings { "4018", "4057", "4189", "4244", "4267", "4295", "4701", "4706", "4996" }
     files { "ext/CHMLib/src/chm_lib.c", "ext/CHMLib/src/lzx.c" }
 
 
@@ -302,7 +302,7 @@ solution "SumatraPDF"
   project "synctex"
     kind "StaticLib"
     language "C"
-    disablewarnings { "4127", "4244", "4267", "4702", "4706" }
+    disablewarnings { "4244", "4267", "4702", "4706" }
     includedirs { "ext/zlib", "ext/synctex" }
     synctex_files()
 
@@ -555,7 +555,7 @@ solution "SumatraPDF"
     language "C++"
     flags { "NoManifest", "WinMain" }
     defines { "NO_LIBWEBP", "NO_LIBMUPDF", "HAVE_ZLIB", "HAVE_BZIP2", "HAVE_7Z" }
-    disablewarnings { "4018", "4127", "4131", "4244", "4267", "4302", "4311", "4312", "4456", "4457", "4838", "4702", "4706", "4996" }
+    disablewarnings { "4018", "4131", "4244", "4267", "4302", "4311", "4312", "4456", "4457", "4838", "4702", "4706", "4996" }
     installer_files()
     includedirs { "src", "src/utils", "ext/zlib", "ext/unarr", "ext/lzma/C", "ext/bzip2" }
     links {
@@ -570,7 +570,7 @@ solution "SumatraPDF"
     flags { "NoManifest", "WinMain" }
     defines { "NO_LIBWEBP", "NO_LIBMUPDF", "HAVE_ZLIB", "HAVE_BZIP2", "HAVE_7Z" }
     resdefines { "INSTALL_PAYLOAD_ZIP=.\\%{cfg.targetdir}\\InstallerData.dat" }
-    disablewarnings { "4018", "4127", "4131", "4244", "4267", "4302", "4311", "4312", "4456", "4457", "4838", "4702", "4706", "4996" }
+    disablewarnings { "4018", "4131", "4244", "4267", "4302", "4311", "4312", "4456", "4457", "4838", "4702", "4706", "4996" }
     installer_files()
     includedirs { "src", "src/utils", "ext/zlib", "ext/unarr", "ext/lzma/C", "ext/bzip2" }
     links {
