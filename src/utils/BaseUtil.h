@@ -149,23 +149,31 @@ inline void CrashIfDebugOnlyFunc(bool cond) {
 }
 
 #define CrashIfDebugOnly(cond) \
-    __analysis_assume(!(cond)); \
-    CrashIfDebugOnlyFunc(cond);
+    { \
+        __analysis_assume(!(cond)); \
+        CrashIfDebugOnlyFunc(cond); \
+    }
 
 #define CrashAlwaysIf(cond) \
-    __analysis_assume(!(cond)); \
-    if (cond) { CrashMe(); }
+    { \
+          __analysis_assume(!(cond)); \
+          if (cond) { CrashMe(); } \
+    }
 
 #define CrashIf(cond) \
-    __analysis_assume(!(cond)); \
-    CrashIfFunc(cond);
+    { \
+        __analysis_assume(!(cond)); \
+        CrashIfFunc(cond); \
+    }
 
 // AssertCrash is like assert() but crashes like CrashIf()
 // It's meant to make converting assert() easier (converting to
 // CrashIf() requires inverting the condition, which can introduce bugs)
 #define AssertCrash(cond) \
-    __analysis_assume(cond); \
-    CrashIfFunc(!(cond));
+    { \
+        __analysis_assume(cond); \
+        CrashIfFunc(!(cond)); \
+    }
 
 
 template <typename T>
