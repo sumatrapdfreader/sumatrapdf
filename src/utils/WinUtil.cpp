@@ -833,7 +833,7 @@ static HRESULT GetDataFromStream(IStream *stream, void **data, ULONG *len)
     ULONG n = stat.cbSize.LowPart;
     // zero-terminate the stream's content, so that it could be
     // used directly as either a char* or a WCHAR* string
-    char *d = AllocArray<char>(n + sizeof(WCHAR));
+    char *d = AllocArray<char>(n + sizeof(WCHAR) + 1);
     if (!d)
         return E_OUTOFMEMORY;
 
