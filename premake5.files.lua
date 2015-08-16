@@ -394,6 +394,7 @@ function utils_files()
     "ArchUtil.*",
     "BaseUtil.*",
     "BitReader.*",
+    "BuildConfig.h",
     "ByteOrderDecoder.*",
     "CmdLineParser.*",
     "CryptoUtil.*",

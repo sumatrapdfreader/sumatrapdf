@@ -2,10 +2,9 @@
 To generate Visual Studio files in vs2015 directory, run: premake5 vs2015
 
 I'm using premake5 alpha4 from http://premake.github.io/download.html#v5
-(premake4 won't work, it doesn't support vs 2013+)
+(premake4 won't work, it doesn't support VS 2013+)
 
 TODO:
-* a way to define SVN_PRE_RELEASE_VER, via build_config.h ? or msbuild
 * compare compilation flags nmake vs. us from compilation logs
 * consider checking in generated cmaps anyway. setting up cmapdump.exe
   is cumbersome. Could also try to do it as buildcommands - maybe that would

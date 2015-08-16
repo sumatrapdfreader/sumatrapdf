@@ -11,6 +11,8 @@
 #define _UNICODE
 #endif
 
+#include "BuildConfig.h"
+
 #include <windows.h>
 #include <unknwn.h>
 #include <shlwapi.h>
