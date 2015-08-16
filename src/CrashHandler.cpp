@@ -522,7 +522,7 @@ static bool GetModules(str::Str<char>& s)
         if (str::EqI(nameA.Get(), "winex11.drv"))
             isWine = true;
         ScopedMem<char> pathA(str::conv::ToUtf8(mod.szExePath));
-        s.AppendFmt("Module: %08X %06X %-16s %s\r\n", (DWORD)mod.modBaseAddr, (DWORD)mod.modBaseSize, nameA.Get(), pathA.Get());
+        s.AppendFmt("Module: %p %06X %-16s %s\r\n", mod.modBaseAddr, mod.modBaseSize, nameA.Get(), pathA.Get());
         cont = Module32Next(snap, &mod);
     }
     CloseHandle(snap);

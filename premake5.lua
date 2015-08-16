@@ -334,8 +334,8 @@ solution "SumatraPDF"
   project "sumatra"
     kind "StaticLib"
     language "C++"
-    -- TODO: in CrashHandler.cpp only, fix them
-    disablewarnings { "4302", "4311", "4838" }
+    -- TODO: 4838 only in settingsstructs.h(642)
+    disablewarnings { "4838" }
     includedirs { "src", "src/utils", "src/wingui", "src/mui", "ext/synctex" }
     sumatra_files()
 
