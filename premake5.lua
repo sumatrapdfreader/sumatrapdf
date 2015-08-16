@@ -152,7 +152,7 @@ solution "SumatraPDF"
     libdjvu_files()
 
 
-  project "unarr"
+  project "unarrlib"
     kind "StaticLib"
     language "C"
     defines { "HAVE_ZLIB", "HAVE_BZIP2", "HAVE_7Z" }
@@ -286,7 +286,7 @@ solution "SumatraPDF"
     -- TODO: is thre a better way to do it?
     -- TODO: only for windows
     linkoptions { "/DEF:..\\src\\libmupdf.def" }
-    links { "mupdf", "libdjvu", "unarr", "libwebp" }
+    links { "mupdf", "libdjvu", "unarrlib", "libwebp" }
     links {
       "advapi32", "kernel32", "user32", "gdi32", "comdlg32",
       "shell32", "windowscodecs", "comctl32", "msimg32",
@@ -405,11 +405,18 @@ solution "SumatraPDF"
     language "C++"
     includedirs { "src", "src/utils", "src/mui", "mupdf/include" }
     engine_dump_files()
-    links { "engines", "utils", "mupdf", "unarr", "libwebp", "libdjvu" }
+    links { "engines", "utils", "mupdf", "unarrlib", "libwebp", "libdjvu" }
     links {
       "comctl32", "gdiplus", "msimg32", "shlwapi",
       "version", "windowscodecs"
     }
+
+
+  project "unarr"
+    kind "ConsoleApp"
+    language "C"
+    files { "ext/unarr/main.c" }
+    links { "unarrlib", "zlib" }
 
 
   project "test_util"
@@ -446,7 +453,7 @@ solution "SumatraPDF"
     language "C++"
     files { "src/tools/MakeLzSA.cpp" }
     includedirs { "src/utils", "ext/zlib", "ext/lzma/C", "ext/unarr" }
-    links { "unarr", "utils", "zlib" }
+    links { "unarrlib", "utils", "zlib" }
     links { "shlwapi" }
 
 
@@ -498,7 +505,7 @@ solution "SumatraPDF"
     }
     links {
       "engines", "libdjvu",  "libwebp", "mui", "mupdf", "sumatra", "synctex",
-      "uia", "unarr", "utils"
+      "uia", "unarrlib", "utils"
     }
     links {
       "comctl32", "gdiplus", "msimg32", "shlwapi", "urlmon",
@@ -515,7 +522,7 @@ solution "SumatraPDF"
     files { "src/MuPDF_Exports.cpp" }
     links {
       "synctex", "sumatra", "libmupdf", "utils", "mui", "engines",
-      "uia", "unarr", "libwebp"
+      "uia", "unarrlib", "libwebp"
     }
     links {
       "comctl32", "gdiplus", "msimg32", "shlwapi", "urlmon",
@@ -531,7 +538,7 @@ solution "SumatraPDF"
     disablewarnings { "4018", "4244", "4264", "4838", "4702", "4706" }
     uninstaller_files()
     includedirs { "src", "src/utils", "ext/zlib", "ext/unarr", "ext/lzma/C" }
-    links { "utils", "zlib", "unarr" }
+    links { "utils", "zlib", "unarrlib" }
     links {
       "comctl32", "gdiplus", "msimg32", "shlwapi", "urlmon",
        "version", "windowscodecs", "wininet"
@@ -580,5 +587,5 @@ solution "SumatraPDF"
     dependson {
       "PdfPreview", "PdfFilter", "SumatraPDF", "SumatraPDF-no-MUPDF",
       "test_util", "cmapdump", "signfile", "plugin-test", "MakeLZSA",
-      "mutool", "mudraw", "Uninstaller", "enginedump", "efi"
+      "mutool", "mudraw", "Uninstaller", "enginedump", "efi", "unarr"
     }
