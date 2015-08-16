@@ -1,9 +1,6 @@
 @ECHO OFF
 SETLOCAL
 
-REM TODO: also create SumatraPDF.pdb.lzsa. We can do it here becasue we
-REM have MakeLZSA.exe in target directory
-
 REM assumes we're being run from top-level directory as:
 REM scripts\appveyor-build-2.bat
 
@@ -14,9 +11,13 @@ set t0=%time: =0%
 CALL scripts\vc.bat
 IF ERRORLEVEL 1 EXIT /B 1
 
-cd vs2015
-msbuild.exe SumatraPDF.sln /t:Installer:Rebuild /p:Configuration=Release;Platform=Win32
-msbuild.exe SumatraPDF.sln /t:Installer:Rebuild /p:Configuration=Release;Platform=x64
+msbuild.exe "vs2015\SumatraPDF.sln" "/t:Installer;SumatraPDF;test_util" "/p:Configuration=Release;Platform=Win32" /m
+msbuild.exe "vs2015\SumatraPDF.sln" "/t:Installer;SumatraPDF" "/p:Configuration=Release;Platform=x64" /m
+
+cd rel
+.\MakeLZSA.exe SumatraPDF.pdb.lzsa libmupdf.pdb:libmupdf.pdb Installer.pdb:Installer.pdb SumatraPDF-no-MuPDF.pdb:SumatraPDF-no-MuPDF.pdb SumatraPDF.pdb:SumatraPDF.pdb
+cd ..\rel64
+.\MakeLZSA.exe SumatraPDF.pdb.lzsa libmupdf.pdb:libmupdf.pdb Installer.pdb:Installer.pdb SumatraPDF-no-MuPDF.pdb:SumatraPDF-no-MuPDF.pdb SumatraPDF.pdb:SumatraPDF.pdb
 
 set t=%time: =0%
 
