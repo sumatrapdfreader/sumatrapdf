@@ -609,7 +609,7 @@ WCHAR *GetDefaultPrinterName()
 
 bool CopyTextToClipboard(const WCHAR *text, bool appendOnly)
 {
-    assert(text);
+    CrashIf(!text);
     if (!text) return false;
 
     if (!appendOnly) {
@@ -621,7 +621,9 @@ bool CopyTextToClipboard(const WCHAR *text, bool appendOnly)
     HGLOBAL handle = GlobalAlloc(GMEM_MOVEABLE, (str::Len(text) + 1) * sizeof(WCHAR));
     if (handle) {
         WCHAR *globalText = (WCHAR *)GlobalLock(handle);
-        lstrcpy(globalText, text);
+        if (globalText) {
+            lstrcpy(globalText, text);
+        }
         GlobalUnlock(handle);
 
         SetClipboardData(CF_UNICODETEXT, handle);
@@ -825,30 +827,26 @@ static HRESULT GetDataFromStream(IStream *stream, void **data, ULONG *len)
     HRESULT res = stream->Stat(&stat, STATFLAG_NONAME);
     if (FAILED(res))
         return res;
-    assert(0 == stat.cbSize.HighPart);
     if (stat.cbSize.HighPart > 0 || stat.cbSize.LowPart > UINT_MAX - sizeof(WCHAR) - 1)
         return E_OUTOFMEMORY;
 
+    ULONG n = stat.cbSize.LowPart;
     // zero-terminate the stream's content, so that it could be
     // used directly as either a char* or a WCHAR* string
-    *len = stat.cbSize.LowPart;
-    *data = malloc(*len + sizeof(WCHAR) + 1);
-    if (!*data)
+    char *d = AllocArray<char>(n + sizeof(WCHAR));
+    if (!d)
         return E_OUTOFMEMORY;
 
     ULONG read;
     LARGE_INTEGER zero = { 0 };
     stream->Seek(zero, STREAM_SEEK_SET, nullptr);
-    res = stream->Read(*data, stat.cbSize.LowPart, &read);
-    if (FAILED(res) || read != *len) {
-        free(*data);
+    res = stream->Read(d, stat.cbSize.LowPart, &read);
+    if (FAILED(res) || read != n) {
+        free(d);
         return res;
     }
 
-    ((char *)*data)[*len] = '\0';
-    ((char *)*data)[*len + 1] = '\0';
-    ((char *)*data)[*len + 2] = '\0';
-
+    *len = n; *data = d;
     return S_OK;
 }
 
