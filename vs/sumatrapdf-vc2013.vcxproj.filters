@@ -1154,6 +1154,9 @@
     <ClInclude Include="..\src\utils\BitReader.h">
       <Filter>utils</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\utils\BuildConfig.h">
+      <Filter>utils</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\utils\ByteOrderDecoder.h">
       <Filter>utils</Filter>
     </ClInclude>

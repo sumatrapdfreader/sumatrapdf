@@ -129,17 +129,13 @@ inline void CrashMe()
 // Just as with assert(), the condition is not guaranteed to be executed
 // in some builds, so it shouldn't contain the actual logic of the code
 
-#if defined(SVN_PRE_RELEASE_VER) || defined(DEBUG)
 inline void CrashIfFunc(bool cond) {
+#if defined(SVN_PRE_RELEASE_VER) || defined(DEBUG)
     if (cond) {
         CrashMe();
     }
-}
-#else
-inline void CrashIfFunc(bool cond) {
-    // no-op
-}
 #endif
+}
 
 // Sometimes we want to assert only in debug build (not in pre-release)
 inline void CrashIfDebugOnlyFunc(bool cond) {
@@ -148,23 +144,25 @@ inline void CrashIfDebugOnlyFunc(bool cond) {
 #endif
 }
 
+#define while_0_nowarn __pragma(warning(push)) __pragma(warning(disable:4127)) while (0) __pragma(warning(pop))
+
 #define CrashIfDebugOnly(cond) \
     do { \
         __analysis_assume(!(cond)); \
         CrashIfDebugOnlyFunc(cond); \
-    } while(0)
+    } while_0_nowarn
 
 #define CrashAlwaysIf(cond) \
     do { \
           __analysis_assume(!(cond)); \
           if (cond) { CrashMe(); } \
-    } while(0)
+    } while_0_nowarn
 
 #define CrashIf(cond) \
     do { \
         __analysis_assume(!(cond)); \
         CrashIfFunc(cond); \
-    } while(0)
+    } while_0_nowarn
 
 // AssertCrash is like assert() but crashes like CrashIf()
 // It's meant to make converting assert() easier (converting to
@@ -173,7 +171,7 @@ inline void CrashIfDebugOnlyFunc(bool cond) {
     do { \
         __analysis_assume(cond); \
         CrashIfFunc(!(cond)); \
-    } while(0)
+    } while_0_nowarn
 
 template <typename T>
 inline T limitValue(T val, T min, T max)

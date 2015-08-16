@@ -829,6 +829,10 @@
 					>
 				</File>
 			</Filter>
+			<File
+				RelativePath="..\src\utils\BuildConfig.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Source Files"
