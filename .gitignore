@@ -24,7 +24,6 @@ vs/obj/
 *pyc
 *.vcxproj.user
 bin/premake5.exe
-vs2015/
 vs2013/
 rel/
 rel64/

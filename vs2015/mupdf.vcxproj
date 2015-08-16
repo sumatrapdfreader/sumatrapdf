@@ -1,0 +1,475 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleasePrefast|Win32">
+      <Configuration>ReleasePrefast</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleasePrefast|x64">
+      <Configuration>ReleasePrefast</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{2181F50F-8D95-1DC1-5617-C120C2EA19F2}</ProjectGuid>
+    <IgnoreWarnCompileDuplicatedFilename>true</IgnoreWarnCompileDuplicatedFilename>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>mupdf</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v140_xp</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v140_xp</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>..\dbg\</OutDir>
+    <IntDir>..\dbg\obj\x32\Debug\mupdf\</IntDir>
+    <TargetName>mupdf</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>..\dbg64\</OutDir>
+    <IntDir>..\dbg64\obj\x64\Debug\mupdf\</IntDir>
+    <TargetName>mupdf</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>..\rel\</OutDir>
+    <IntDir>..\rel\obj\x32\Release\mupdf\</IntDir>
+    <TargetName>mupdf</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>..\rel64\</OutDir>
+    <IntDir>..\rel64\obj\x64\Release\mupdf\</IntDir>
+    <TargetName>mupdf</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|Win32'">
+    <OutDir>..\relPrefast\</OutDir>
+    <IntDir>..\relPrefast\obj\x32\ReleasePrefast\mupdf\</IntDir>
+    <TargetName>mupdf</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|x64'">
+    <OutDir>..\relPrefast64\</OutDir>
+    <IntDir>..\relPrefast64\obj\x64\ReleasePrefast\mupdf\</IntDir>
+    <TargetName>mupdf</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DisableSpecificWarnings>4100;4324;4458;4800;4018;4244;4267;4838;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;_HAS_EXCEPTIONS=0;DEBUG;NOCJKFONT;SHARE_JPEG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\mupdf\include;..\mupdf\generated;..\ext\zlib;..\ext\freetype2\config;..\ext\freetype2\include;..\ext\jbig2dec;..\ext\libjpeg-turbo;..\ext\openjpeg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <Optimization>Disabled</Optimization>
+      <MinimalRebuild>false</MinimalRebuild>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <CompileAs>CompileAsC</CompileAs>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DisableSpecificWarnings>4100;4324;4458;4800;4018;4244;4267;4838;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;_HAS_EXCEPTIONS=0;DEBUG;NOCJKFONT;SHARE_JPEG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\mupdf\include;..\mupdf\generated;..\ext\zlib;..\ext\freetype2\config;..\ext\freetype2\include;..\ext\jbig2dec;..\ext\libjpeg-turbo;..\ext\openjpeg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>Disabled</Optimization>
+      <MinimalRebuild>false</MinimalRebuild>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <CompileAs>CompileAsC</CompileAs>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DisableSpecificWarnings>4100;4324;4458;4800;4018;4244;4267;4838;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;_HAS_EXCEPTIONS=0;NDEBUG;NOCJKFONT;SHARE_JPEG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\mupdf\include;..\mupdf\generated;..\ext\zlib;..\ext\freetype2\config;..\ext\freetype2\include;..\ext\jbig2dec;..\ext\libjpeg-turbo;..\ext\openjpeg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>Full</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <CompileAs>CompileAsC</CompileAs>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DisableSpecificWarnings>4100;4324;4458;4800;4018;4244;4267;4838;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;_HAS_EXCEPTIONS=0;NDEBUG;NOCJKFONT;SHARE_JPEG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\mupdf\include;..\mupdf\generated;..\ext\zlib;..\ext\freetype2\config;..\ext\freetype2\include;..\ext\jbig2dec;..\ext\libjpeg-turbo;..\ext\openjpeg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>Full</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <CompileAs>CompileAsC</CompileAs>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DisableSpecificWarnings>4100;4324;4458;4800;28125;28252;28253;4018;4244;4267;4838;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;_HAS_EXCEPTIONS=0;NDEBUG;NOCJKFONT;SHARE_JPEG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\mupdf\include;..\mupdf\generated;..\ext\zlib;..\ext\freetype2\config;..\ext\freetype2\include;..\ext\jbig2dec;..\ext\libjpeg-turbo;..\ext\openjpeg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>Full</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/analyze %(AdditionalOptions)</AdditionalOptions>
+      <CompileAs>CompileAsC</CompileAs>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DisableSpecificWarnings>4100;4324;4458;4800;28125;28252;28253;4018;4244;4267;4838;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;_HAS_EXCEPTIONS=0;NDEBUG;NOCJKFONT;SHARE_JPEG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\mupdf\include;..\mupdf\generated;..\ext\zlib;..\ext\freetype2\config;..\ext\freetype2\include;..\ext\jbig2dec;..\ext\libjpeg-turbo;..\ext\openjpeg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>Full</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/analyze %(AdditionalOptions)</AdditionalOptions>
+      <CompileAs>CompileAsC</CompileAs>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\mupdf\source\fitz\bbox-device.c" />
+    <ClCompile Include="..\mupdf\source\fitz\bitmap.c" />
+    <ClCompile Include="..\mupdf\source\fitz\buffer.c" />
+    <ClCompile Include="..\mupdf\source\fitz\colorspace.c" />
+    <ClCompile Include="..\mupdf\source\fitz\compressed-buffer.c" />
+    <ClCompile Include="..\mupdf\source\fitz\context.c" />
+    <ClCompile Include="..\mupdf\source\fitz\crypt-aes.c" />
+    <ClCompile Include="..\mupdf\source\fitz\crypt-arc4.c" />
+    <ClCompile Include="..\mupdf\source\fitz\crypt-md5.c" />
+    <ClCompile Include="..\mupdf\source\fitz\crypt-sha2.c" />
+    <ClCompile Include="..\mupdf\source\fitz\device.c" />
+    <ClCompile Include="..\mupdf\source\fitz\document.c" />
+    <ClCompile Include="..\mupdf\source\fitz\draw-affine.c" />
+    <ClCompile Include="..\mupdf\source\fitz\draw-blend.c" />
+    <ClCompile Include="..\mupdf\source\fitz\draw-device.c" />
+    <ClCompile Include="..\mupdf\source\fitz\draw-edge.c" />
+    <ClCompile Include="..\mupdf\source\fitz\draw-glyph.c" />
+    <ClCompile Include="..\mupdf\source\fitz\draw-mesh.c" />
+    <ClCompile Include="..\mupdf\source\fitz\draw-paint.c" />
+    <ClCompile Include="..\mupdf\source\fitz\draw-path.c" />
+    <ClCompile Include="..\mupdf\source\fitz\draw-scale-simple.c" />
+    <ClCompile Include="..\mupdf\source\fitz\draw-unpack.c" />
+    <ClCompile Include="..\mupdf\source\fitz\error.c" />
+    <ClCompile Include="..\mupdf\source\fitz\filter-basic.c" />
+    <ClCompile Include="..\mupdf\source\fitz\filter-dct.c" />
+    <ClCompile Include="..\mupdf\source\fitz\filter-fax.c" />
+    <ClCompile Include="..\mupdf\source\fitz\filter-flate.c" />
+    <ClCompile Include="..\mupdf\source\fitz\filter-jbig2.c" />
+    <ClCompile Include="..\mupdf\source\fitz\filter-leech.c" />
+    <ClCompile Include="..\mupdf\source\fitz\filter-lzw.c" />
+    <ClCompile Include="..\mupdf\source\fitz\filter-predict.c" />
+    <ClCompile Include="..\mupdf\source\fitz\font.c" />
+    <ClCompile Include="..\mupdf\source\fitz\ftoa.c" />
+    <ClCompile Include="..\mupdf\source\fitz\function.c" />
+    <ClCompile Include="..\mupdf\source\fitz\geometry.c" />
+    <ClCompile Include="..\mupdf\source\fitz\getopt.c" />
+    <ClCompile Include="..\mupdf\source\fitz\glyph.c" />
+    <ClCompile Include="..\mupdf\source\fitz\halftone.c" />
+    <ClCompile Include="..\mupdf\source\fitz\hash.c" />
+    <ClCompile Include="..\mupdf\source\fitz\image.c" />
+    <ClCompile Include="..\mupdf\source\fitz\link.c" />
+    <ClCompile Include="..\mupdf\source\fitz\list-device.c" />
+    <ClCompile Include="..\mupdf\source\fitz\load-jpeg.c" />
+    <ClCompile Include="..\mupdf\source\fitz\load-jpx.c" />
+    <ClCompile Include="..\mupdf\source\fitz\load-jxr.c" />
+    <ClCompile Include="..\mupdf\source\fitz\load-png.c" />
+    <ClCompile Include="..\mupdf\source\fitz\load-tiff.c" />
+    <ClCompile Include="..\mupdf\source\fitz\memory.c" />
+    <ClCompile Include="..\mupdf\source\fitz\outline.c" />
+    <ClCompile Include="..\mupdf\source\fitz\output.c" />
+    <ClCompile Include="..\mupdf\source\fitz\path.c" />
+    <ClCompile Include="..\mupdf\source\fitz\pixmap.c" />
+    <ClCompile Include="..\mupdf\source\fitz\printf.c" />
+    <ClCompile Include="..\mupdf\source\fitz\shade.c" />
+    <ClCompile Include="..\mupdf\source\fitz\stext-device.c" />
+    <ClCompile Include="..\mupdf\source\fitz\stext-output.c" />
+    <ClCompile Include="..\mupdf\source\fitz\stext-paragraph.c" />
+    <ClCompile Include="..\mupdf\source\fitz\stext-search.c" />
+    <ClCompile Include="..\mupdf\source\fitz\store.c" />
+    <ClCompile Include="..\mupdf\source\fitz\stream-open.c" />
+    <ClCompile Include="..\mupdf\source\fitz\stream-read.c" />
+    <ClCompile Include="..\mupdf\source\fitz\string.c" />
+    <ClCompile Include="..\mupdf\source\fitz\strtod.c" />
+    <ClCompile Include="..\mupdf\source\fitz\text.c" />
+    <ClCompile Include="..\mupdf\source\fitz\time.c" />
+    <ClCompile Include="..\mupdf\source\fitz\trace-device.c" />
+    <ClCompile Include="..\mupdf\source\fitz\transition.c" />
+    <ClCompile Include="..\mupdf\source\fitz\tree.c" />
+    <ClCompile Include="..\mupdf\source\fitz\ucdn.c" />
+    <ClCompile Include="..\mupdf\source\fitz\unzip.c" />
+    <ClCompile Include="..\mupdf\source\fitz\xml.c" />
+    <ClCompile Include="..\mupdf\source\pdf\js\pdf-js-none.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-annot-edit.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-annot.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-appearance.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-clean.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-cmap-load.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-cmap-parse.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-cmap-table.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-cmap.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-colorspace.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-crypt.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-device.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-encoding.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-event.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-field.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-font.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-fontfile.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-form.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-ft-tools.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-function.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-image.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-interpret.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-lex.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-metrics.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-nametree.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-object.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-op-buffer.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-op-filter.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-op-run.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-outline.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-page.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-parse.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-pattern.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-pkcs7.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-repair.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-run.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-shade.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-store.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-stream.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-type3.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-unicode.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-write.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-xobject.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-xref-aux.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-xref.c" />
+    <ClCompile Include="..\mupdf\source\xps\xps-common.c" />
+    <ClCompile Include="..\mupdf\source\xps\xps-doc.c" />
+    <ClCompile Include="..\mupdf\source\xps\xps-glyphs.c" />
+    <ClCompile Include="..\mupdf\source\xps\xps-gradient.c" />
+    <ClCompile Include="..\mupdf\source\xps\xps-image.c" />
+    <ClCompile Include="..\mupdf\source\xps\xps-outline.c" />
+    <ClCompile Include="..\mupdf\source\xps\xps-path.c" />
+    <ClCompile Include="..\mupdf\source\xps\xps-resource.c" />
+    <ClCompile Include="..\mupdf\source\xps\xps-tile.c" />
+    <ClCompile Include="..\mupdf\source\xps\xps-util.c" />
+    <ClCompile Include="..\mupdf\source\xps\xps-zip.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="..\mupdf\font_base14.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\nasm.exe -f win32 -I ../mupdf/ -o "$(IntDir)/font_base14.obj" "../mupdf/font_base14.asm"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/font_base14.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compiling ../mupdf/font_base14.asm</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\nasm.exe -f win64 -DWIN64 -I ../mupdf/ -o "$(IntDir)/font_base14.obj" "../mupdf/font_base14.asm"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)/font_base14.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling ../mupdf/font_base14.asm</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -I ../mupdf/ -o "$(IntDir)/font_base14.obj" "../mupdf/font_base14.asm"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/font_base14.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compiling ../mupdf/font_base14.asm</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\nasm.exe -f win64 -DWIN64 -I ../mupdf/ -o "$(IntDir)/font_base14.obj" "../mupdf/font_base14.asm"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)/font_base14.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling ../mupdf/font_base14.asm</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|Win32'">..\bin\nasm.exe -f win32 -I ../mupdf/ -o "$(IntDir)/font_base14.obj" "../mupdf/font_base14.asm"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|Win32'">$(IntDir)/font_base14.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|Win32'">Compiling ../mupdf/font_base14.asm</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|x64'">..\bin\nasm.exe -f win64 -DWIN64 -I ../mupdf/ -o "$(IntDir)/font_base14.obj" "../mupdf/font_base14.asm"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|x64'">$(IntDir)/font_base14.obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|x64'">Compiling ../mupdf/font_base14.asm</Message>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="zlib.vcxproj">
+      <Project>{16CFA17C-0206-A30D-ABF2-881097081F0F}</Project>
+    </ProjectReference>
+    <ProjectReference Include="freetype.vcxproj">
+      <Project>{89895BD8-7556-B6E3-9E6F-A48B8A9BEB71}</Project>
+    </ProjectReference>
+    <ProjectReference Include="libjpeg-turbo.vcxproj">
+      <Project>{DB56484D-4717-C483-1052-0D017CD10860}</Project>
+    </ProjectReference>
+    <ProjectReference Include="jbig2dec.vcxproj">
+      <Project>{BF5813C3-AB25-6ECE-D43E-5C76C06AA35C}</Project>
+    </ProjectReference>
+    <ProjectReference Include="openjpeg.vcxproj">
+      <Project>{FDC4548D-E991-AF98-12AB-9D40FED6E426}</Project>
+    </ProjectReference>
+    <ProjectReference Include="buildcmap.vcxproj">
+      <Project>{76DFAF19-E249-6490-2B88-1536973142E5}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
