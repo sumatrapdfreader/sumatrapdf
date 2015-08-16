@@ -442,7 +442,6 @@ void MenuUpdateStateForWindow(WindowInfo* win)
 #define menusToEnableIfBrokenPDF menusToDisableIfDirectory
 
     TabInfo *tab = win->currentTab;
-    CrashIf(!tab);
     // TODO: is this check too expensive?
     bool fileExists = tab && file::Exists(tab->filePath);
 
@@ -456,7 +455,7 @@ void MenuUpdateStateForWindow(WindowInfo* win)
 
     MenuUpdatePrintItem(win, win->menu);
 
-    bool enabled = win->IsDocLoaded() && tab->ctrl->HasTocTree();
+    bool enabled = win->IsDocLoaded() && tab && tab->ctrl->HasTocTree();
     win::menu::SetEnabled(win->menu, IDM_VIEW_BOOKMARKS, enabled);
 
     bool documentSpecific = win->IsDocLoaded();
@@ -468,7 +467,7 @@ void MenuUpdateStateForWindow(WindowInfo* win)
     MenuUpdateDisplayMode(win);
     MenuUpdateZoom(win);
 
-    if (win->IsDocLoaded()) {
+    if (win->IsDocLoaded() && tab) {
         win::menu::SetEnabled(win->menu, IDM_GOTO_NAV_BACK, tab->ctrl->CanNavigate(-1));
         win::menu::SetEnabled(win->menu, IDM_GOTO_NAV_FORWARD, tab->ctrl->CanNavigate(1));
     }
