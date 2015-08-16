@@ -1835,7 +1835,7 @@ bool AutoUpdateInitiate(const char *updateData)
     if (ok)
         OnMenuExit();
     else
-        gGlobalPrefs->reopenOnce->FreeVecMembers();
+        gGlobalPrefs->reopenOnce->FreeMembers();
     return ok;
 }
 #endif
