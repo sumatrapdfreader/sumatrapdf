@@ -5,7 +5,7 @@ AUTHORS).
 Want to join the project and contribute code? Read
 https://github.com/sumatrapdfreader/sumatrapdf/wiki/Contribute-code
 
-To compile you need Visual Studio 2013 (free Community edition from
-http://www.visualstudio.com/en-us/news/vs2013-community-vs.aspx will work).
+To compile you need Visual Studio 2015 (free Community edition from
+https://www.visualstudio.com/products/visual-studio-community-vs will work).
 
-Use vs/sumatrapdf-vc2013.sln.
+Open vs2015/SumatraPDF.sln.
