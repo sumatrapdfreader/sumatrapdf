@@ -12,7 +12,7 @@ CALL scripts\vc.bat
 IF ERRORLEVEL 1 EXIT /B 1
 
 msbuild.exe "vs2015\SumatraPDF.sln" "/t:Installer;SumatraPDF;test_util" "/p:Configuration=Release;Platform=Win32" /m
-msbuild.exe "vs2015\SumatraPDF.sln" "/t:Installer;SumatraPDF" "/p:Configuration=Release;Platform=x64" /m
+msbuild.exe "vs2015\SumatraPDF.sln" "/t:Installer;SumatraPDF;test_util" "/p:Configuration=Release;Platform=x64" /m
 
 cd rel
 .\MakeLZSA.exe SumatraPDF.pdb.lzsa libmupdf.pdb:libmupdf.pdb Installer.pdb:Installer.pdb SumatraPDF-no-MuPDF.pdb:SumatraPDF-no-MuPDF.pdb SumatraPDF.pdb:SumatraPDF.pdb

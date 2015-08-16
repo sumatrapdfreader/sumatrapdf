@@ -16,15 +16,12 @@ environment:
 
 skip_tags: true
 
-platform:
-  - x86
-  - x64
-
 build_script:
   - scripts\appveyor-build-2.bat
 
 test_script:
   - rel\test_util.exe
+  - rel64\test_util.exe
 
 artifacts:
   - path: rel\SumatraPDF.exe
