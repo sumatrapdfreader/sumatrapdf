@@ -307,9 +307,7 @@ solution "SumatraPDF"
   project "utils"
     kind "StaticLib"
     language "C++"
-    disablewarnings { "4018", "4838" }
-    -- TODO: DbgHelpDyn.cpp 64bit warnings only, fix the code
-    disablewarnings { "4302", "4311", "4312" }
+    disablewarnings { "4838" }
     includedirs { "src/utils", "src/wingui", "src/mui", "ext/zlib", "ext/lzma/C" }
     includedirs { "ext/libwebp", "ext/unarr", "mupdf/include" }
     utils_files()
@@ -318,7 +316,7 @@ solution "SumatraPDF"
   project "mui"
     kind "StaticLib"
     language "C++"
-    disablewarnings { "4018", "4838" }
+    disablewarnings { "4838" }
     includedirs { "src/utils", "src/wingui", "src/mui" }
     mui_files()
 

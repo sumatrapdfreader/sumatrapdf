@@ -334,8 +334,7 @@ void WriteMiniDump(const WCHAR *crashDumpFilePath, MINIDUMP_EXCEPTION_INFORMATIO
     CloseHandle(hFile);
 }
 
-// TODO: should offsetOut be DWORD_PTR for 64-bit compat?
-static bool GetAddrInfo(void *addr, char *module, DWORD moduleLen, DWORD& sectionOut, DWORD& offsetOut)
+static bool GetAddrInfo(void *addr, char *module, DWORD moduleLen, DWORD& sectionOut, DWORD_PTR& offsetOut)
 {
     MEMORY_BASIC_INFORMATION mbi;
     if (0 == VirtualQuery(addr, &mbi, sizeof(mbi)))
@@ -353,10 +352,10 @@ static bool GetAddrInfo(void *addr, char *module, DWORD moduleLen, DWORD& sectio
     PIMAGE_NT_HEADERS pNtHeader = (PIMAGE_NT_HEADERS)((BYTE *)dosHeader + dosHeader->e_lfanew);
     PIMAGE_SECTION_HEADER section = IMAGE_FIRST_SECTION(pNtHeader);
 
-    DWORD lAddr = (DWORD)addr - (DWORD)hMod;
+    DWORD_PTR lAddr = (DWORD_PTR)addr - (DWORD_PTR)hMod;
     for (unsigned int i = 0; i < pNtHeader->FileHeader.NumberOfSections; i++) {
-        DWORD startAddr = section->VirtualAddress;
-        DWORD endAddr = startAddr;
+        DWORD_PTR startAddr = section->VirtualAddress;
+        DWORD_PTR endAddr = startAddr;
         if (section->SizeOfRawData > section->Misc.VirtualSize)
             endAddr += section->SizeOfRawData;
         else
@@ -374,11 +373,8 @@ static bool GetAddrInfo(void *addr, char *module, DWORD moduleLen, DWORD& sectio
 
 static void AppendAddress(str::Str<char>& s, DWORD64 addr)
 {
-#ifdef _WIN64
-    s.AppendFmt("%016I64X", addr);
-#else
-    s.AppendFmt("%08X", (DWORD)addr);
-#endif
+    void *p = reinterpret_cast<void*>(addr);
+    s.AppendFmt("%p", p);
 }
 
 static void GetAddressInfo(str::Str<char>& s, DWORD64 addr)
@@ -399,7 +395,8 @@ static void GetAddressInfo(str::Str<char>& s, DWORD64 addr)
         symName = &(symInfo->Name[0]);
 
     char module[MAX_PATH] = { 0 };
-    DWORD section, offset;
+    DWORD section;
+    DWORD_PTR offset;
     if (GetAddrInfo((void*)addr, module, sizeof(module), section, offset)) {
         str::ToLower(module);
         const char *moduleShort = path::GetBaseName(module);
