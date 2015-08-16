@@ -105,7 +105,8 @@ CFLAGSB = $(CFLAGSB) /wd4100 /wd4324
 #        (happens rather often all over the place)
 # 4838 : 'conversion from '*' to '*' requires a narrowing conversion
 #        (QITABENT triggers this)
-CFLAGSB = $(CFLAGSB) /wd4458 /wd4838
+# 4127 : coditional expression is constant
+CFLAGSB = $(CFLAGSB) /wd4458 /wd4838 /wd4127
 
 !if "$(PLATFORM)$(STRICT_X64)"=="X64"
 # disable warnings-as-errors for x64 builds (unless STRICT_X64 is set)
