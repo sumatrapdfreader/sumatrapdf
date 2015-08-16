@@ -183,15 +183,17 @@ void DoAssociateExeWithPdfExtension(HKEY hkey)
     WriteRegStr(hkey, REG_CLASSES_APP L"\\shell\\printto\\command", nullptr, cmdPath);
 
     // Only change the association if we're confident, that we've registered ourselves well enough
-    if (ok) {
-        WriteRegStr(hkey, REG_CLASSES_PDF, nullptr, APP_NAME_STR);
-        // TODO: also add SumatraPDF to the Open With lists for the other supported extensions?
-        WriteRegStr(hkey, REG_CLASSES_PDF L"\\OpenWithProgids", APP_NAME_STR, L"");
-        if (hkey == HKEY_CURRENT_USER) {
-            WriteRegStr(hkey, REG_EXPLORER_PDF_EXT, L"Progid", APP_NAME_STR);
-            SHDeleteValue(hkey, REG_EXPLORER_PDF_EXT, L"Application");
-            DeleteRegKey(hkey, REG_EXPLORER_PDF_EXT L"\\UserChoice", true);
-        }
+    if (!ok)
+        return;
+
+    WriteRegStr(hkey, REG_CLASSES_PDF, nullptr, APP_NAME_STR);
+    // TODO: also add SumatraPDF to the Open With lists for the other supported extensions?
+    WriteRegStr(hkey, REG_CLASSES_PDF L"\\OpenWithProgids", APP_NAME_STR, L"");
+    if (hkey == HKEY_CURRENT_USER) {
+        WriteRegStr(hkey, REG_EXPLORER_PDF_EXT, L"Progid", APP_NAME_STR);
+        CrashIf(hkey == 0); // to appease prefast
+        SHDeleteValue(hkey, REG_EXPLORER_PDF_EXT, L"Application");
+        DeleteRegKey(hkey, REG_EXPLORER_PDF_EXT L"\\UserChoice", true);
     }
 }
 

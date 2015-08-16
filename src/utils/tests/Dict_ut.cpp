@@ -77,7 +77,7 @@ void DictTestMapStrToInt()
         ok = d.Remove(k, nullptr);
         utassert(ok);
     }
-    FreeVecMembers(toRemove);
+    toRemove.FreeMembers();
 }
 
 void DictTest()

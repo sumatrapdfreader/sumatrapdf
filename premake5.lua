@@ -166,7 +166,7 @@ solution "SumatraPDF"
     kind "StaticLib"
     language "C"
     defines { "HAVE_STRING_H=1", "JBIG_NO_MEMENTO" }
-    disablewarnings { "4018", "4127", "4244", "4267"}
+    disablewarnings { "4018", "4127", "4244", "4267", "4701" }
     includedirs { "ext/jbig2dec" }
     jbig2dec_files()
 
@@ -229,8 +229,7 @@ solution "SumatraPDF"
     kind "StaticLib"
     language "C"
     defines { "UNICODE", "_UNICODE", "PPC_BSTR"}
-    disablewarnings { "4018", "4057", "4127", "4189", "4244", "4267", "4295", "4706", "4996" }
-    includedirs { }
+    disablewarnings { "4018", "4057", "4127", "4189", "4244", "4267", "4295", "4701", "4706", "4996" }
     files { "ext/CHMLib/src/chm_lib.c", "ext/CHMLib/src/lzx.c" }
 
 

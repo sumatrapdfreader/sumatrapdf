@@ -727,7 +727,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     }
     if (gGlobalPrefs->reopenOnce->Count() > 0 && !gPluginURL) {
         if (gGlobalPrefs->reopenOnce->Count() == 1 && str::EqI(gGlobalPrefs->reopenOnce->At(0), L"SessionData")) {
-            FreeVecMembers(*gGlobalPrefs->reopenOnce);
+            gGlobalPrefs->reopenOnce->FreeMembers();
             restoreSession = true;
         }
         while (gGlobalPrefs->reopenOnce->Count() > 0) {

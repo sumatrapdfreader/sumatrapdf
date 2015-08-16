@@ -145,7 +145,7 @@ static void FreeStringArray(Vec<WCHAR *> *strArray)
 {
     if (!strArray)
         return;
-    FreeVecMembers(*strArray);
+    strArray->FreeMembers();
     delete strArray;
 }
 

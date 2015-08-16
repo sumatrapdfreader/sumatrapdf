@@ -104,6 +104,16 @@ public:
         memcpy(els, orig.els, sizeof(T) * (len = orig.len));
     }
 
+    // this frees all elements and clears the array.
+    // only applicable where T is a pointer. Otherwise will fail to compile
+    void FreeMembers() {
+        for (size_t i = 0; i < len; i++) {
+            auto s = els[i];
+            free(s);
+        }
+        Reset();
+    }
+
     Vec& operator=(const Vec& that) {
         if (this != &that) {
             EnsureCapCrash(that.cap);
@@ -310,16 +320,6 @@ public:
     }
 };
 
-// only suitable for T that are pointers that were malloc()ed
-template <typename T>
-inline void FreeVecMembers(Vec<T>& v)
-{
-    for (T& el : v) {
-        free(el);
-    }
-    v.Reset();
-}
-
 // only suitable for T that are pointers to C++ objects
 template <typename T>
 inline void DeleteVecMembers(Vec<T>& v)
@@ -405,15 +405,6 @@ public:
     }
     ~WStrVec() {
         FreeMembers();
-    }
-
-    void FreeMembers() {
-        for (size_t i = 0; i < len; i++) {
-            auto s = els[i];
-            free(s);
-            els[i] = nullptr;
-        }
-        Vec::Reset();
     }
 
     WStrVec& operator=(const WStrVec& that) {

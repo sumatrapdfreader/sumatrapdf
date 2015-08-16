@@ -556,7 +556,7 @@ public:
         delete hw;
         DestroyWindow(hwnd);
         delete doc;
-        FreeVecMembers(data);
+        data.FreeMembers();
         LeaveCriticalSection(&docAccess);
         DeleteCriticalSection(&docAccess);
     }

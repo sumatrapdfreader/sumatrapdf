@@ -1442,7 +1442,7 @@ public:
                 Visit(nullptr, url, -1);
             }
         }
-        FreeVecMembers(*paths);
+        paths->FreeMembers();
         delete paths;
 
         return html.StealData();

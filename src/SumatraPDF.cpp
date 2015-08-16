@@ -1835,7 +1835,7 @@ bool AutoUpdateInitiate(const char *updateData)
     if (ok)
         OnMenuExit();
     else
-        FreeVecMembers(*gGlobalPrefs->reopenOnce);
+        gGlobalPrefs->reopenOnce->FreeVecMembers();
     return ok;
 }
 #endif
@@ -3640,12 +3640,13 @@ void SetSidebarVisibility(WindowInfo *win, bool tocVisible, bool showFavorites)
     if (showFavorites)
         PopulateFavTreeIfNeeded(win);
 
-    if (!win->currentTab)
+    if (!win->currentTab) {
         CrashIf(tocVisible);
-    else if (!win->presentation)
+    } else if (!win->presentation) {
         win->currentTab->showToc = tocVisible;
-    else if (PM_ENABLED == win->presentation)
+    } else if (PM_ENABLED == win->presentation) {
         win->currentTab->showTocPresentation = tocVisible;
+    }
     win->tocVisible = tocVisible;
 
     // TODO: make this a per-window setting as well?
