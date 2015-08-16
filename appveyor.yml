@@ -3,6 +3,8 @@
 
 version: 3.1.{build}
 
+os: Visual Studio 2015
+
 branches:
   only:
     - master
@@ -15,9 +17,10 @@ environment:
 skip_tags: true
 
 build_script:
-  - scripts\appveyor-build.bat
+  - scripts\appveyor-build-2.bat
 
 artifacts:
-  - path: obj-rel64\SumatraPDF.exe
-  - path: obj-rel64\Installer.exe
-  - path: obj-rel64\SumatraPDF.pdb.lzsa
+  - path: rel\SumatraPDF.exe
+  - path: rel\Installer.exe
+  - path: rel64\SumatraPDF.exe
+  - path: rel64\Installer.exe
