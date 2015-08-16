@@ -501,12 +501,12 @@ HWND CreateDefaultButton(HWND hwndParent, const WCHAR *label, int width, int id)
     ClientRect r(hwndParent);
     rc.x = r.dx - rc.dx - WINDOW_MARGIN;
     rc.y = r.dy - rc.dy - WINDOW_MARGIN;
-    HWND button = CreateWindow(WC_BUTTON, label,
+    HMENU idMenu = (HMENU)(UINT_PTR)id;
+    HWND button = CreateWindowExW(0, WC_BUTTON, label,
                         BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
                         rc.x, rc.y, rc.dx, rc.dy, hwndParent,
-                        (HMENU)id, GetModuleHandle(nullptr), nullptr);
+                        idMenu, GetModuleHandle(nullptr), nullptr);
     SetWindowFont(button, gFontDefault, TRUE);
-
     return button;
 }
 

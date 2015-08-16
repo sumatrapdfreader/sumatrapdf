@@ -307,6 +307,7 @@ solution "SumatraPDF"
   project "utils"
     kind "StaticLib"
     language "C++"
+    -- QITABENT in shlwapi.h has incorrect definition and causes 4838
     disablewarnings { "4838" }
     includedirs { "src/utils", "src/wingui", "src/mui", "ext/zlib", "ext/lzma/C" }
     includedirs { "ext/libwebp", "ext/unarr", "mupdf/include" }
@@ -316,7 +317,6 @@ solution "SumatraPDF"
   project "mui"
     kind "StaticLib"
     language "C++"
-    disablewarnings { "4838" }
     includedirs { "src/utils", "src/wingui", "src/mui" }
     mui_files()
 
