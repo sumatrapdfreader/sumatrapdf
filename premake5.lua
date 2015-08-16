@@ -82,6 +82,10 @@ solution "SumatraPDF"
   filter "action:vs2013"
     location "vs2013"
   filter {}
+  
+  filter "action:gmake"
+    location "gmake"
+  filter {}
 
   filter {"platforms:x32", "configurations:Release"}
     targetdir "rel"
