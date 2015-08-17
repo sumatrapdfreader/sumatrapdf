@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -28,6 +29,15 @@ TODO:
 * implement release build
 */
 
+type Secrets struct {
+	AwsSecret               string
+	AwsAccess               string
+	CertPwd                 string
+	NotifierEmail           string
+	NotifierEmailPwd        string
+	TranslationUploadSecret string
+}
+
 var (
 	flgRelease       bool // if doing an official release build
 	flgPreRelease    bool // if doing pre-release build
@@ -35,7 +45,22 @@ var (
 	gitSha1          string
 	sumatraVersion   string
 	timeStart        time.Time
+	cachedSecrets    *Secrets
 )
+
+func readSecretsMust() *Secrets {
+	if cachedSecrets != nil {
+		return cachedSecrets
+	}
+	path := pj("scripts", "secrets.json")
+	d, err := ioutil.ReadFile(path)
+	fatalif(err != nil, "readSecretsMust(): error %s reading file '%s'\n", err, path)
+	var s Secrets
+	err = json.Unmarshal(d, &s)
+	fatalif(err != nil, "readSecretsMust(): failed to json-decode file '%s'. err: %s, data:\n%s\n", path, err, string(d))
+	cachedSecrets = &s
+	return cachedSecrets
+}
 
 func printTotalTime() {
 	fmt.Printf("total time: %s\n", time.Since(timeStart))
@@ -291,7 +316,7 @@ func setBuildConfig(preRelVer int, sha1 string, verQualifier string) {
 }
 
 func revertBuildConfigMust() {
-	runExe("git", "checkout", buildConfigPath())
+	runExeMust("git", "checkout", buildConfigPath())
 }
 
 func uploadPreReleaseToS3Must() {
@@ -306,6 +331,9 @@ func verifyPreReleaseNotInS3Must(preReleaseVer int) {
 func verifyHasPreReleaseSecretsMust() {
 	p := certPath()
 	fatalif(!fileExists(p), "verifyHasPreReleaseSecretsMust(): certificate file '%s' doesn't exist\n", p)
+	secrets := readSecretsMust()
+	fatalif(secrets.AwsSecret == "", "AwsSecret in %s is empty\n", p)
+	fatalif(secrets.AwsAccess == "", "AwsAccess in %s is empty\n", p)
 }
 
 func buildPreRelease() {
@@ -328,9 +356,18 @@ func buildRelease() {
 	fatalf("NYI")
 }
 
+// TODO: download translations if necessary
 func buildSmoke() {
 	fmt.Printf("Smoke build\n")
-	fatalf("NYI\n")
+	env := getEnvForVS()
+	_, err := runExeLogged(env, "msbuild.exe", "vs2015\\SumatraPDF.sln", "/t:Installer;SumatraPDF;test_util", "/p:Configuration=Release;Platform=Win32", "/m")
+	fataliferr(err)
+	path := pj("rel", "test_util.exe")
+	runExeMust(path)
+	_, err = runExeLogged(env, "msbuild.exe", "vs2015\\SumatraPDF.sln", "/t:Installer;SumatraPDF;test_util", "/p:Configuration=Release;Platform=x64", "/m")
+	fataliferr(err)
+	_, err = runExeLogged(env, "msbuild.exe", "vs2015\\SumatraPDF.sln", "/t:Installer;SumatraPDF;test_util", "/p:Configuration=Debug;Platform=x64", "/m")
+	fataliferr(err)
 }
 
 func removeDirMust(dir string) {
