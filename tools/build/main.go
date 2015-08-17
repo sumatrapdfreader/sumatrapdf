@@ -1,11 +1,13 @@
 package main
 
 import (
+	"flag"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"sort"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -17,74 +19,50 @@ To run:
  - restart so that PATH changes take place
  - set GOPATH env variable (e.g. to %USERPROFILE%\src\go)
 * go run .\tools\buildgo\main.go
-
-Some notes on the insanity that is setting up command-line build for both
-32 and 64 bit executables.
-
-Useful references:
-https://msdn.microsoft.com/en-us/library/f2ccy3wt.aspx
-https://msdn.microsoft.com/en-us/library/x4d2c09s.aspx
-http://www.sqlite.org/src/artifact/60dbf6021d3de0a9 -sqlite's win build script
-
-%VS140COMNTOOLS%\vsvars32.bat is how set basic env for 32bit builds for VS 2015
-(it's VS120COMNTOOLS for VS 2013).
-
-That sets VSINSTALLDIR env variable which we can use to setup both 32bit and
-64bit builds:
-%VCINSTALLDIR%\vcvarsall.bat x86_amd64 : 64bit
-%VCINSTALLDIR%\vcvarsall.bat x86 : 32bit
-
-If the OS is 64bit, there are also 64bit compilers that can be selected with:
-amd64 (for 64bit builds) and amd64_x86 (for 32bit builds). They generate
-the exact same code but can compiler bigger programs (can use more memory).
-
-I'm guessing %VS140COMNTOOLS%\vsvars32.bat is the same as %VSINSTALLDIR%\vcvarsall.bat x86.
 */
 
-// Platform represents a 32bit vs 64bit platform
-type Platform int
-
-const (
-	Platform32Bit Platform = 1
-	Platform64Bit Platform = 2
-)
-
-// EnvVar describes an environment variable
-type EnvVar struct {
-	Name string
-	Val  string
-}
+/*
+TODO:
+* implement pre-release build
+* upload files to s3
+* implement release build
+*/
 
 var (
-	cachedVcInstallDir string
+	flgRelease       bool // if doing an official release build
+	flgPreRelease    bool // if doing pre-release build
+	svnPreReleaseVer int
+	gitSha1          string
+	sumatraVersion   string
+	timeStart        time.Time
 )
 
-func (p Platform) is64() bool {
-	return p == Platform64Bit
-}
-
-func (p Platform) is32() bool {
-	return p == Platform32Bit
+func printTotalTime() {
+	fmt.Printf("total time: %s\n", time.Since(timeStart))
 }
 
 func fatalf(format string, args ...interface{}) {
 	fmt.Printf(format, args...)
+	printTotalTime()
 	os.Exit(1)
+}
+
+func fatalif(cond bool, format string, args ...interface{}) {
+	if cond {
+		fmt.Printf(format, args...)
+		printTotalTime()
+		os.Exit(1)
+	}
+}
+
+func fataliferr(err error) {
+	if err != nil {
+		fatalf("%s", err.Error())
+	}
 }
 
 func pj(elem ...string) string {
 	return filepath.Join(elem...)
-}
-
-func strConcat(arr1, arr2 []string) []string {
-	var res []string
-	for _, s := range arr1 {
-		res = append(res, s)
-	}
-	for _, s := range arr2 {
-		res = append(res, s)
-	}
-	return res
 }
 
 func replaceExt(path string, newExt string) string {
@@ -100,36 +78,7 @@ func fileExists(path string) bool {
 	return fi.Mode().IsRegular()
 }
 
-// maps upper-cased name of env variable to Name/Val
-func envToMap(env []string) map[string]*EnvVar {
-	res := make(map[string]*EnvVar)
-	for _, v := range env {
-		if len(v) == 0 {
-			continue
-		}
-		parts := strings.SplitN(v, "=", 2)
-		if len(parts) != 2 {
-
-		}
-		nameUpper := strings.ToUpper(parts[0])
-		res[nameUpper] = &EnvVar{
-			Name: parts[0],
-			Val:  parts[1],
-		}
-	}
-	return res
-}
-
-func flattenEnv(env map[string]*EnvVar) []string {
-	var res []string
-	for _, envVar := range env {
-		v := fmt.Sprintf("%s=%s", envVar.Name, envVar.Val)
-		res = append(res, v)
-	}
-	return res
-}
-
-func getEnvAfterScript(dir, script string) map[string]*EnvVar {
+func getEnvAfterScript(dir, script string) []string {
 	// TODO: maybe use COMSPEC env variable instead of "cmd.exe" (more robust)
 	cmd := exec.Command("cmd.exe", "/c", script+" & set")
 	cmd.Dir = dir
@@ -139,87 +88,67 @@ func getEnvAfterScript(dir, script string) map[string]*EnvVar {
 		fatalf("failed with %s\n", err)
 	}
 	res := string(resBytes)
-	//fmt.Printf("res:\n%s\n", res)
 	parts := strings.Split(res, "\n")
 	if len(parts) == 1 {
-		fmt.Printf("split failed\n")
-		fmt.Printf("res:\n%s\n", res)
-		os.Exit(1)
+		fatalf("split failed\nres:\n%s\n", res)
 	}
 	for idx, env := range parts {
-		env = strings.TrimSpace(env)
-		parts[idx] = env
+		parts[idx] = strings.TrimSpace(env)
 	}
-	return envToMap(parts)
+	return parts
 }
 
-// return value of VCINSTALLDIR env variable after running vsvars32.bat
-func getVcInstallDir(toolsDir string) string {
-	if cachedVcInstallDir == "" {
-		env := getEnvAfterScript(toolsDir, "vsvars32.bat")
-		val := env["VCINSTALLDIR"]
-		if val == nil {
-			fmt.Printf("no 'VCINSTALLDIR' variable in %s\n", env)
-			os.Exit(1)
+func getEnvValue(env []string, name string) (string, bool) {
+	for _, v := range env {
+		parts := strings.SplitN(v, "=", 2)
+		if len(parts) != 2 {
+			continue
 		}
-		cachedVcInstallDir = val.Val
+		if strings.EqualFold(name, parts[0]) {
+			return parts[1], true
+		}
 	}
-	return cachedVcInstallDir
+	return "", false
 }
 
-func genEnvForVS() []string {
-	initialEnv := envToMap(os.Environ())
-	vsVar := initialEnv["VS140COMNTOOLS"]
-	if vsVar == nil {
-		fatalf("VS140COMNTOOLS not set; VS 2015 not installed\n")
+func getOsEnvValue(name string) (string, bool) {
+	return getEnvValue(os.Environ(), name)
+}
+
+func getEnvForVSUncached() []string {
+	val, ok := getOsEnvValue("VS140COMNTOOLS")
+	if !ok {
+		fatalf("VS140COMNTOOLS not set; VS 2015 not installed?\n")
 	}
-	env := getEnvAfterScript(vsVar.Val, "vsvars32.bat")
-	return flattenEnv(env)
+	return getEnvAfterScript(val, "vsvars32.bat")
 }
 
-func getEnvForVcTools(vcInstallDir, platform string) []string {
-	env := getEnvAfterScript(vcInstallDir, "vcvarsall.bat "+platform)
-	return flattenEnv(env)
-}
+var (
+	envForVSCached []string
+)
 
-func getEnv32(vcInstallDir string) []string {
-	return getEnvForVcTools(vcInstallDir, "x86")
-}
-
-func getEnv64(vcInstallDir string) []string {
-	return getEnvForVcTools(vcInstallDir, "x86_amd64")
-}
-
-func dumpEnv(env map[string]*EnvVar) {
-	var keys []string
-	for k := range env {
-		keys = append(keys, k)
+func getEnvForVS() []string {
+	if envForVSCached == nil {
+		envForVSCached = getEnvForVSUncached()
 	}
-	sort.Strings(keys)
-	for _, k := range keys {
-		v := env[k]
-		fmt.Printf("%s: %s\n", v.Name, v.Val)
-	}
+	return envForVSCached
 }
 
-func getEnv(platform Platform) []string {
-	initialEnv := envToMap(os.Environ())
-	vsVar := initialEnv["VS140COMNTOOLS"]
-	if vsVar == nil {
-		fatalf("VS140COMNTOOLS not set; VS 2015 not installed\n")
+func toTrimmedLines(d []byte) []string {
+	lines := strings.Split(string(d), "\n")
+	i := 0
+	for _, l := range lines {
+		l = strings.TrimSpace(l)
+		// remove empty lines
+		if len(l) > 0 {
+			lines[i] = l
+			i++
+		}
 	}
-	vcInstallDir := getVcInstallDir(vsVar.Val)
-	switch platform {
-	case Platform32Bit:
-		return getEnv32(vcInstallDir)
-	case Platform64Bit:
-		return getEnv64(vcInstallDir)
-	default:
-		panic("unknown platform")
-	}
+	return lines[:i]
 }
 
-func lookupInEnvPathUncached(exeName string, env []string) string {
+func lookExeInEnvPathUncached(env []string, exeName string) string {
 	for _, envVar := range env {
 		parts := strings.SplitN(envVar, "=", 2)
 		name := strings.ToLower(parts[0])
@@ -238,28 +167,213 @@ func lookupInEnvPathUncached(exeName string, env []string) string {
 	return ""
 }
 
-func runExe(env []string, exeName string, args ...string) {
-	exePath := lookupInEnvPathUncached(exeName, env)
+// TODO: show progress as it happens
+func runExeInEnv(env []string, exeName string, args ...string) ([]byte, error) {
+	exePath, err := exec.LookPath(exeName)
+	if err != nil {
+		exePath = lookExeInEnvPathUncached(env, exeName)
+	}
 	cmd := exec.Command(exePath, args...)
 	cmd.Env = env
 	if true {
-		args := cmd.Args
-		args[0] = exeName
-		fmt.Printf("Running %s\n", args)
-		args[0] = exePath
+		fmt.Printf("Running %s\n", cmd.Args)
 	}
-	out, err := cmd.CombinedOutput()
+	return cmd.CombinedOutput()
+}
+
+func runExe(exeName string, args ...string) ([]byte, error) {
+	return runExeInEnv(os.Environ(), exeName, args...)
+}
+
+func runExeMust(exeName string, args ...string) {
+	_, err := runExeInEnv(os.Environ(), exeName, args...)
+	fataliferr(err)
+}
+
+func runExeLogged(env []string, exeName string, args ...string) ([]byte, error) {
+	out, err := runExeInEnv(env, exeName, args...)
 	if err != nil {
-		fatalf("%s failed with %s, out:\n%s\n", cmd.Args, err, string(out))
+		fmt.Printf("%s failed with %s, out:\n%s\n", args, err, string(out))
+		return out, err
 	}
 	fmt.Printf("%s\n", out)
+	return out, nil
+}
+
+func isNum(s string) bool {
+	_, err := strconv.Atoi(s)
+	return err == nil
+}
+
+// Version must be in format x.y.z
+func verifyCorrectVersionMust(ver string) {
+	parts := strings.Split(ver, ".")
+	fatalif(len(parts) == 0 || len(parts) > 3, "%s is not a valid version number", ver)
+	for _, part := range parts {
+		fatalif(!isNum(part), "%s is not a valid version number", ver)
+	}
+}
+
+func extractSumatraVersionMust() string {
+	path := pj("src", "Version.h")
+	d, err := ioutil.ReadFile(path)
+	fataliferr(err)
+	lines := toTrimmedLines(d)
+	s := "#define CURR_VERSION "
+	for _, l := range lines {
+		if strings.HasPrefix(l, s) {
+			ver := l[len(s):]
+			verifyCorrectVersionMust(ver)
+			return ver
+		}
+	}
+	fatalf("couldn't extract CURR_VERSION from %s\n", path)
+	return ""
+}
+
+func getGitLinearVersionMust() int {
+	out, err := runExe("git", "log", "--oneline")
+	fataliferr(err)
+	lines := toTrimmedLines(out)
+	n := len(lines)
+	fatalif(n < 9000, "getGitLinearVersion: n is %d (should be > 9000)", n)
+	return n
+}
+
+func isGitCleanMust() bool {
+	out, err := runExe("git", "status", "--porcelain")
+	fataliferr(err)
+	s := strings.TrimSpace(string(out))
+	return len(s) == 0
+}
+
+func verifyGitCleanMsut() {
+	fatalif(!isGitCleanMust(), "git has unsaved changes\n")
+}
+
+func getGitSha1Must() string {
+	out, err := runExe("git", "rev-parse", "HEAD")
+	fataliferr(err)
+	s := strings.TrimSpace(string(out))
+	fatalif(len(s) != 40, "getGitSha1Must(): %s doesn't look like sha1\n", s)
+	return s
+}
+
+func verifyStartedInRightDirectoryMust() {
+	path := buildConfigPath()
+	fatalif(!fileExists(path), "started in wrong directory (%s doesn't exist)\n", path)
+}
+
+func build() {
+	env := getEnvForVS()
+	_, err := runExeLogged(env, "msbuild.exe", "vs2015\\SumatraPDF.sln", "/t:Installer;SumatraPDF;test_util", "/p:Configuration=Release;Platform=Win32", "/m")
+	fataliferr(err)
+	_, err = runExeLogged(env, "msbuild.exe", "vs2015\\SumatraPDF.sln", "/t:Installer;SumatraPDF;test_util", "/p:Configuration=Release;Platform=x64", "/m")
+	fataliferr(err)
+}
+
+func buildConfigPath() string {
+	return pj("src", "utils", "BuildConfig.h")
+}
+
+func certPath() string {
+	return pj("scripts", "cert.pfx")
+}
+
+func setBuildConfig(preRelVer int, sha1 string, verQualifier string) {
+	s := fmt.Sprintf("#define SVN_PRE_RELEASE_VER %d\n", preRelVer)
+	s += fmt.Sprintf("#define GIT_COMMIT_ID %s\n", sha1)
+	if verQualifier != "" {
+		s += fmt.Sprintf("#define VER_QUALIFIER %s\n", verQualifier)
+	}
+	err := ioutil.WriteFile(buildConfigPath(), []byte(s), 644)
+	fataliferr(err)
+}
+
+func revertBuildConfigMust() {
+	runExe("git", "checkout", buildConfigPath())
+}
+
+func uploadPreReleaseToS3Must() {
+
+}
+
+func verifyPreReleaseNotInS3Must(preReleaseVer int) {
+	// TODO: write me
+}
+
+// check we have cert for signing and s3 creds for file uploads
+func verifyHasPreReleaseSecretsMust() {
+	p := certPath()
+	fatalif(!fileExists(p), "verifyHasPreReleaseSecretsMust(): certificate file '%s' doesn't exist\n", p)
+}
+
+func buildPreRelease() {
+	fmt.Printf("Building pre-release version")
+	verifyGitCleanMsut()
+	verifyHasPreReleaseSecretsMust()
+	verifyPreReleaseNotInS3Must(svnPreReleaseVer)
+	env := getEnvForVS()
+	setBuildConfig(svnPreReleaseVer, gitSha1, "")
+	_, err := runExeLogged(env, "msbuild.exe", "vs2015\\SumatraPDF.sln", "/t:Installer;SumatraPDF;test_util", "/p:Configuration=Release;Platform=Win32", "/m")
+	fataliferr(err)
+	setBuildConfig(svnPreReleaseVer, gitSha1, "x64")
+	_, err = runExeLogged(env, "msbuild.exe", "vs2015\\SumatraPDF.sln", "/t:Installer;SumatraPDF;test_util", "/p:Configuration=Release;Platform=x64", "/m")
+	fataliferr(err)
+	uploadPreReleaseToS3Must()
+}
+
+func buildRelease() {
+	fmt.Printf("Building a release version\n")
+	fatalf("NYI")
+}
+
+func buildSmoke() {
+	fmt.Printf("Smoke build\n")
+	fatalf("NYI\n")
+}
+
+func removeDirMust(dir string) {
+	err := os.RemoveAll(dir)
+	fataliferr(err)
+}
+
+func clean() {
+	removeDirMust("rel")
+	removeDirMust("rel64")
+	removeDirMust("relPrefast")
+	removeDirMust("dbg")
+	removeDirMust("dbg64")
+	removeDirMust("dbgPrefast")
+}
+
+func detectVersions() {
+	svnPreReleaseVer = getGitLinearVersionMust()
+	gitSha1 = getGitSha1Must()
+	sumatraVersion = extractSumatraVersionMust()
+	fmt.Printf("svnPreReleaseVer: '%d'\n", svnPreReleaseVer)
+	fmt.Printf("gitSha1: '%s'\n", gitSha1)
+	fmt.Printf("sumatraVersion: '%s'\n", sumatraVersion)
+}
+
+func parseCmdLine() {
+	flag.BoolVar(&flgRelease, "release", false, "do a release build")
+	flag.BoolVar(&flgPreRelease, "prerelease", false, "do a pre-release build")
+	flag.Parse()
 }
 
 func main() {
-	timeStart := time.Now()
-	env := genEnvForVS()
-	//runExe(env, "msbuild.exe", "vs2015\\SumatraPDF.vcxproj", "/p:Configuration=rel")
-	//runExe(env, "devenv.exe", "vs2015\\SumatraPDF.sln", "/Rebuild", "Release|Win32", "/Project", "vs2015\\SumatraPDF.vcxproj")
-  runExe(env, "devenv.exe", "vs2015\\SumatraPDF.sln", "/Rebuild", "Release|Win32", "/Project", "vs2015\\all.vcxproj")
-	fmt.Printf("total time: %s\n", time.Since(timeStart))
+	timeStart = time.Now()
+	parseCmdLine()
+	verifyStartedInRightDirectoryMust()
+	detectVersions()
+	clean()
+	if flgRelease {
+		buildRelease()
+	} else if flgPreRelease {
+		buildPreRelease()
+	} else {
+		buildSmoke()
+	}
+	printTotalTime()
 }

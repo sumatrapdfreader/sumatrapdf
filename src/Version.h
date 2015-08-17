@@ -1,7 +1,7 @@
 /* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// CURR_VERSION can be over-written externally (via makefile)
+// CURR_VERSION can be over-written externally
 #ifndef CURR_VERSION
 #define CURR_VERSION 3.1
 #endif
