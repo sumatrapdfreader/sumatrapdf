@@ -41,6 +41,7 @@ type Secrets struct {
 var (
 	flgRelease       bool // if doing an official release build
 	flgPreRelease    bool // if doing pre-release build
+	flgUpload        bool
 	svnPreReleaseVer int
 	gitSha1          string
 	sumatraVersion   string
@@ -152,9 +153,28 @@ var (
 	envForVSCached []string
 )
 
+func getPaths(env []string) []string {
+	path, ok := getEnvValue(env, "path")
+	fatalif(!ok, "")
+	parts := strings.Split(path, ";")
+	for i, s := range parts {
+		parts[i] = strings.TrimSpace(s)
+	}
+	return parts
+}
+
+func dumpEnv(env []string) {
+	for _, e := range env {
+		fmt.Printf("%s\n", e)
+	}
+	paths := getPaths(env)
+	fmt.Printf("PATH:\n  %s\n", strings.Join(paths, "\n  "))
+}
+
 func getEnvForVS() []string {
 	if envForVSCached == nil {
 		envForVSCached = getEnvForVSUncached()
+		//dumpEnv(envForVSCached)
 	}
 	return envForVSCached
 }
@@ -173,29 +193,53 @@ func toTrimmedLines(d []byte) []string {
 	return lines[:i]
 }
 
-func lookExeInEnvPathUncached(env []string, exeName string) string {
-	for _, envVar := range env {
-		parts := strings.SplitN(envVar, "=", 2)
-		name := strings.ToLower(parts[0])
-		if name != "path" {
-			continue
+func lookExeInEnvPathUncachedHelper(env []string, exeName string) string {
+	var found []string
+	paths := getPaths(env)
+	for _, dir := range paths {
+		path := filepath.Join(dir, exeName)
+		if fileExists(path) {
+			found = append(found, path)
 		}
-		parts = strings.Split(parts[1], ";")
-		for _, dir := range parts {
-			path := filepath.Join(dir, exeName)
-			if fileExists(path) {
-				return path
-			}
-		}
-		fatalf("didn't find %s in '%s'\n", exeName, parts[1])
 	}
-	return ""
+	if len(found) == 0 {
+		return ""
+	}
+	if len(found) == 1 {
+		return found[0]
+	}
+	// HACK: for msbuild.exe we might find 3 locations, prefer the one for
+	// 2015 VS. If we pick up 2013 VS, it'll complain about v140_xp toolset
+	// not being installed
+	for _, p := range found {
+		if strings.Contains(p, "14.0") {
+			return p
+		}
+	}
+	return found[0]
+}
+
+func lookExeInEnvPathUncached(env []string, exeName string) string {
+	fmt.Printf("lookExeInEnvPathUncached: exeName=%s\n", exeName)
+	path := lookExeInEnvPathUncachedHelper(env, exeName)
+	if path == "" && filepath.Ext(exeName) == "" {
+		path = lookExeInEnvPathUncachedHelper(env, exeName+".exe")
+	}
+	fatalif(path == "", "didn't find %s in %s\n", exeName, getPaths(env))
+	fmt.Printf("found %v for %s\n", path, exeName)
+	return path
 }
 
 // TODO: show progress as it happens
 func runExeInEnv(env []string, exeName string, args ...string) ([]byte, error) {
-	exePath, err := exec.LookPath(exeName)
-	if err != nil {
+	var exePath string
+	var err error
+	if false {
+		exePath, err = exec.LookPath(exeName)
+		if err != nil {
+			exePath = lookExeInEnvPathUncached(env, exeName)
+		}
+	} else {
 		exePath = lookExeInEnvPathUncached(env, exeName)
 	}
 	cmd := exec.Command(exePath, args...)
@@ -332,8 +376,11 @@ func verifyHasPreReleaseSecretsMust() {
 	p := certPath()
 	fatalif(!fileExists(p), "verifyHasPreReleaseSecretsMust(): certificate file '%s' doesn't exist\n", p)
 	secrets := readSecretsMust()
-	fatalif(secrets.AwsSecret == "", "AwsSecret in %s is empty\n", p)
-	fatalif(secrets.AwsAccess == "", "AwsAccess in %s is empty\n", p)
+	fatalif(secrets.CertPwd == "", "CertPwd missing in %s\n", p)
+	if flgUpload {
+		fatalif(secrets.AwsSecret == "", "AwsSecret missing in %s\n", p)
+		fatalif(secrets.AwsAccess == "", "AwsAccess missing in %s\n", p)
+	}
 }
 
 func buildPreRelease() {
@@ -353,7 +400,9 @@ func buildPreRelease() {
 
 func buildRelease() {
 	fmt.Printf("Building a release version\n")
-	fatalf("NYI")
+
+	// TODO: for now the same as smoke
+	buildSmoke()
 }
 
 // TODO: download translations if necessary
@@ -396,6 +445,7 @@ func detectVersions() {
 func parseCmdLine() {
 	flag.BoolVar(&flgRelease, "release", false, "do a release build")
 	flag.BoolVar(&flgPreRelease, "prerelease", false, "do a pre-release build")
+	flag.BoolVar(&flgUpload, "upload", false, "upload to s3 for release/prerelease builds")
 	flag.Parse()
 }
 
@@ -404,6 +454,9 @@ func main() {
 	parseCmdLine()
 	verifyStartedInRightDirectoryMust()
 	detectVersions()
+	if flgRelease || flgPreRelease {
+		verifyHasPreReleaseSecretsMust()
+	}
 	clean()
 	if flgRelease {
 		buildRelease()

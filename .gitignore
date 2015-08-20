@@ -1,5 +1,6 @@
 scripts/cert.pfx
 scripts/config.py
+scripts/secrets.json
 obj-rel/
 obj-dbg/
 rel/
