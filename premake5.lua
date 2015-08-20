@@ -1,7 +1,7 @@
 --[[
 To generate Visual Studio files in vs2015 directory, run: premake5 vs2015
 
-I'm using premake5 alpha4 from http://premake.github.io/download.html#v5
+I'm using premake5 alpha5 from http://premake.github.io/download.html#v5
 (premake4 won't work, it doesn't support VS 2013+)
 
 TODO:
@@ -49,9 +49,7 @@ Prefast:
 
 include("premake5.files.lua")
 
--- TODO: rename solution to workspace. workspace is the documented name
--- but latest alpha4 doesn't recognize it yet
-solution "SumatraPDF"
+workspace "SumatraPDF"
   configurations { "Debug", "Release", "ReleasePrefast" }
   platforms { "x32", "x64" }
   startproject "SumatraPDF"
@@ -105,15 +103,14 @@ solution "SumatraPDF"
 
   -- https://github.com/premake/premake-core/wiki/flags
   flags {
-    --"FatalWarnings", TODO: when ready
+    "FatalWarnings",
     "MultiProcessorCompile",
-    "NoExceptions",
-    "NoRTTI",
     "StaticRuntime",
     "Symbols",
-    --"UndefinedIndentifiers", TODO: not yet in alpha4 ?
     -- "Unicode", TODO: breaks libdjuv?
   }
+  exceptionhandling "Off"
+  rtti "Off"
 
   defines { "WIN32", "_WIN32", "_CRT_SECURE_NO_WARNINGS", "WINVER=0x0501", "_WIN32_WINNT=0x0501" }
   defines { "_HAS_EXCEPTIONS=0" }
@@ -361,11 +358,7 @@ solution "SumatraPDF"
     mutool_files()
     links { "mupdf" }
     links { "windowscodecs" }
-    linkoptions { "/ENTRY:\"wmainCRTStartup\"" }
-    -- TODO: a better fix should be entrypoint, which was added in
-    -- https://github.com/premake/premake-core/commit/b9402b0e67448ec6926713b0498bd954e86a116a
-    -- and is not in alpha4
-    --entrypoint "wmainCRTStartup"
+    entrypoint "wmainCRTStartup"
 
 
   project "mudraw"
@@ -377,10 +370,7 @@ solution "SumatraPDF"
     links { "mupdf" }
     links { "windowscodecs" }
     linkoptions { "/ENTRY:\"wmainCRTStartup\"" }
-    -- TODO: a better fix should be entrypoint, which was added in
-    -- https://github.com/premake/premake-core/commit/b9402b0e67448ec6926713b0498bd954e86a116a
-    -- and is not in alpha4
-    --entrypoint "wmainCRTStartup"
+    entrypoint "wmainCRTStartup"
 
 
   project "cmapdump"
