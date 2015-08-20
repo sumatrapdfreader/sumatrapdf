@@ -5,12 +5,16 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"mime"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/goamz/goamz/aws"
+	"github.com/goamz/goamz/s3"
 )
 
 /*
@@ -19,6 +23,7 @@ To run:
  - download and run latest installer http://golang.org/doc/install
  - restart so that PATH changes take place
  - set GOPATH env variable (e.g. to %USERPROFILE%\src\go)
+ - install goamz: go get github.com/goamz/goamz/s3
 * go run .\tools\buildgo\main.go
 */
 
@@ -42,6 +47,7 @@ var (
 	flgRelease       bool // if doing an official release build
 	flgPreRelease    bool // if doing pre-release build
 	flgUpload        bool
+	flgNoOp          bool
 	svnPreReleaseVer int
 	gitSha1          string
 	sumatraVersion   string
@@ -230,8 +236,7 @@ func lookExeInEnvPathUncached(env []string, exeName string) string {
 	return path
 }
 
-// TODO: show progress as it happens
-func runExeInEnv(env []string, exeName string, args ...string) ([]byte, error) {
+func lookExeInEnvPath(env []string, exeName string) string {
 	var exePath string
 	var err error
 	if false {
@@ -242,6 +247,12 @@ func runExeInEnv(env []string, exeName string, args ...string) ([]byte, error) {
 	} else {
 		exePath = lookExeInEnvPathUncached(env, exeName)
 	}
+	return exePath
+}
+
+// TODO: show progress as it happens
+func runExeInEnv(env []string, exeName string, args ...string) ([]byte, error) {
+	exePath := lookExeInEnvPath(env, exeName)
 	cmd := exec.Command(exePath, args...)
 	cmd.Env = env
 	if true {
@@ -363,10 +374,6 @@ func revertBuildConfigMust() {
 	runExeMust("git", "checkout", buildConfigPath())
 }
 
-func uploadPreReleaseToS3Must() {
-
-}
-
 func verifyPreReleaseNotInS3Must(preReleaseVer int) {
 	// TODO: write me
 }
@@ -381,6 +388,7 @@ func verifyHasPreReleaseSecretsMust() {
 		fatalif(secrets.AwsSecret == "", "AwsSecret missing in %s\n", p)
 		fatalif(secrets.AwsAccess == "", "AwsAccess missing in %s\n", p)
 	}
+
 }
 
 func buildPreRelease() {
@@ -388,14 +396,24 @@ func buildPreRelease() {
 	verifyGitCleanMsut()
 	verifyHasPreReleaseSecretsMust()
 	verifyPreReleaseNotInS3Must(svnPreReleaseVer)
+
 	env := getEnvForVS()
 	setBuildConfig(svnPreReleaseVer, gitSha1, "")
-	_, err := runExeLogged(env, "msbuild.exe", "vs2015\\SumatraPDF.sln", "/t:Installer;SumatraPDF;test_util", "/p:Configuration=Release;Platform=Win32", "/m")
+	_, err := runExeLogged(env, "msbuild.exe", "vs2015\\SumatraPDF.sln", "/t:SumatraPDF;SumatraPDF-no-MUPDF;test_util", "/p:Configuration=Release;Platform=Win32", "/m")
 	fataliferr(err)
+	// TODO: sign SumatraPDF.exe and SumatraPDF-no-MUPDF.exe
+	_, err = runExeLogged(env, "msbuild.exe", "vs2015\\SumatraPDF.sln", "/t:Installer", "/p:Configuration=Release;Platform=Win32", "/m")
+	fataliferr(err)
+
 	setBuildConfig(svnPreReleaseVer, gitSha1, "x64")
-	_, err = runExeLogged(env, "msbuild.exe", "vs2015\\SumatraPDF.sln", "/t:Installer;SumatraPDF;test_util", "/p:Configuration=Release;Platform=x64", "/m")
+	_, err = runExeLogged(env, "msbuild.exe", "vs2015\\SumatraPDF.sln", "/t:SumatraPDF;SumatraPDF-no-MUPDF;test_util", "/p:Configuration=Release;Platform=x64", "/m")
 	fataliferr(err)
-	uploadPreReleaseToS3Must()
+	// TODO: sign SumatraPDF.exe and SumatraPDF-no-MUPDF.exe
+	_, err = runExeLogged(env, "msbuild.exe", "vs2015\\SumatraPDF.sln", "/t:Installer", "/p:Configuration=Release;Platform=x64", "/m")
+	fataliferr(err)
+
+	// TODO: revert
+	s3UploadPreReleaseMust()
 }
 
 func buildRelease() {
@@ -403,6 +421,7 @@ func buildRelease() {
 
 	// TODO: for now the same as smoke
 	buildSmoke()
+	s3UploadReleaseMust()
 }
 
 // TODO: download translations if necessary
@@ -416,6 +435,150 @@ func buildSmoke() {
 	_, err = runExeLogged(env, "msbuild.exe", "vs2015\\SumatraPDF.sln", "/t:Installer;SumatraPDF;test_util", "/p:Configuration=Release;Platform=x64", "/m")
 	fataliferr(err)
 	_, err = runExeLogged(env, "msbuild.exe", "vs2015\\SumatraPDF.sln", "/t:Installer;SumatraPDF;test_util", "/p:Configuration=Debug;Platform=x64", "/m")
+	fataliferr(err)
+}
+
+func s3UploadFile(pathLocal string, pathRemote string) error {
+	s3BucketName := "kjkpub"
+	auth := aws.Auth{
+		AccessKey: "",
+		SecretKey: "",
+	}
+	s3Obj := s3.New(auth, aws.USWest, aws.RetryingClient)
+	bucket := s3Obj.Bucket(s3BucketName)
+	d, err := ioutil.ReadFile(pathLocal)
+	if err != nil {
+		return err
+	}
+	mimeType := mime.TypeByExtension(filepath.Ext(pathLocal))
+	opts := s3.Options{}
+	return bucket.Put(pathRemote, d, mimeType, s3.PublicRead, opts)
+}
+
+func s3UploadFiles(s3Dir string, dir string, files []string) error {
+	n := len(files) / 2
+	for i := 0; i < n; i++ {
+		pathLocal := filepath.Join(dir, files[2*i])
+		pathRemote := files[2*i+1]
+		err := s3UploadFile(pathLocal, s3Dir+pathRemote)
+		if err != nil {
+			return fmt.Errorf("failed to upload %s as %s, err: %s", pathLocal, pathRemote, err)
+		}
+	}
+	return nil
+}
+
+func fileSizeMust(path string) int64 {
+	fi, err := os.Stat(path)
+	fataliferr(err)
+	return fi.Size()
+}
+
+func manifestPath() string {
+	return filepath.Join("rel", "manifest.txt")
+}
+
+// manifest is build for pre-release builds and contains build stats
+func createManifestMust() {
+	var lines []string
+	files := []string{
+		"SumatraPDF.exe",
+		"SumatraPDF-no-MUPDF.exe",
+		"Installer.exe",
+	}
+	dirs := []string{"rel", "rel64"}
+	for _, dir := range dirs {
+		for _, file := range files {
+			path := filepath.Join(dir, file)
+			size := fileSizeMust(path)
+			line := fmt.Sprintf("%s: %d", path, size)
+			lines = append(lines, line)
+		}
+	}
+	s := strings.Join(lines, "\n")
+	err := ioutil.WriteFile(manifestPath(), []byte(s), 0644)
+	fataliferr(err)
+}
+
+func fileCopyMust(dst, src string) {
+	fatalif(true, "fileCopyMust: NYI")
+}
+
+/*
+def sign(file_path, cert_pwd):
+    # not everyone has a certificate, in which case don't sign
+    if cert_pwd is None:
+        print("Skipping signing %s" % file_path)
+        return
+    # the sign tool is finicky, so copy it and cert to the same dir as
+    # exe we're signing
+    file_dir = os.path.dirname(file_path)
+    file_name = os.path.basename(file_path)
+    cert_src = os.path.join("scripts", "cert.pfx")
+    cert_dest = os.path.join(file_dir, "cert.pfx")
+    if not os.path.exists(cert_dest):
+        shutil.copy(cert_src, cert_dest)
+    curr_dir = os.getcwd()
+    os.chdir(file_dir)
+    run_cmd_throw(
+        "signtool.exe", "sign", "/t", "http://timestamp.verisign.com/scripts/timstamp.dll",
+        "/du", "http://blog.kowalczyk.info/software/sumatrapdf/", "/f", "cert.pfx", "/p", cert_pwd, file_name)
+    os.chdir(curr_dir)
+*/
+
+func sign(path string, certPwd string) {
+	// the sign tool is finicky, so copy it and cert to the same dir as
+	// exe we're signing
+	fileDir := filepath.Dir(path)
+	fileName := filepath.Base(path)
+	certSrc := certPath()
+	certDest := filepath.Join(fileDir, "cert.pfx")
+	if !fileExists(certDest) {
+		fileCopyMust(certDest, certSrc)
+	}
+	// TODO: must be able to pass-in curr dir
+	runExeMust("signtool", "sign", "/t", "http://timestamp.verisign.com/scripts/timstamp.dll",
+		"/du", "http://blog.kowalczyk.info/software/sumatrapdf/", "/f", "cert.pfx",
+		"/p", certPwd, fileName)
+}
+
+// TODO: more files
+func s3UploadReleaseMust() {
+	s3Dir := "sumatrapdf/prerel/"
+
+	files := []string{
+		"SumatraPDF.exe", fmt.Sprintf("SumatraPDF-prerelease-%d.exe", svnPreReleaseVer),
+		"Installer.exe", fmt.Sprintf("SumatraPDF-prerelease-%d-install.exe", svnPreReleaseVer),
+	}
+	err := s3UploadFiles(s3Dir, "rel", files)
+	fataliferr(err)
+
+	files = []string{
+		"SumatraPDF.exe", fmt.Sprintf("SumatraPDF-prerelease-%d-64.exe", svnPreReleaseVer),
+		"Installer.exe", fmt.Sprintf("SumatraPDF-prerelease-%d-install-64.exe", svnPreReleaseVer),
+	}
+	err = s3UploadFiles(s3Dir, "rel64", files)
+	fataliferr(err)
+	// write manifest last
+	err = s3UploadFile(manifestPath(), fmt.Sprintf("manifest-%d.txt", svnPreReleaseVer))
+	fataliferr(err)
+}
+
+// https://kjkpub.s3.amazonaws.com/sumatrapdf/rel/SumatraPDF-3.0-install.exe
+func s3UploadPreReleaseMust() {
+	s3Dir := "sumatrapdf/rel/"
+	files := []string{
+		"SumatraPDF.exe", fmt.Sprintf("SumatraPDF-%s.exe", sumatraVersion),
+		"Installer.exe", fmt.Sprintf("SumatraPDF-%s-install.exe", sumatraVersion),
+	}
+	err := s3UploadFiles(s3Dir, "rel", files)
+	fataliferr(err)
+
+	files = []string{
+		"SumatraPDF.exe", fmt.Sprintf("SumatraPDF-%s-64.exe", sumatraVersion),
+		"Installer.exe", fmt.Sprintf("SumatraPDF-%s-install-64.exe", sumatraVersion),
+	}
+	err = s3UploadFiles(s3Dir, "rel64", files)
 	fataliferr(err)
 }
 
@@ -446,6 +609,7 @@ func parseCmdLine() {
 	flag.BoolVar(&flgRelease, "release", false, "do a release build")
 	flag.BoolVar(&flgPreRelease, "prerelease", false, "do a pre-release build")
 	flag.BoolVar(&flgUpload, "upload", false, "upload to s3 for release/prerelease builds")
+	flag.BoolVar(&flgNoOp, "noop", false, "compile but do nothing else")
 	flag.Parse()
 }
 
@@ -454,6 +618,9 @@ func main() {
 	parseCmdLine()
 	verifyStartedInRightDirectoryMust()
 	detectVersions()
+	if flgNoOp {
+		fatalf("Exiting because -noop\n")
+	}
 	if flgRelease || flgPreRelease {
 		verifyHasPreReleaseSecretsMust()
 	}
