@@ -6,6 +6,7 @@
 #include <exception>
 #include <tlhelp32.h>
 #include <signal.h>
+#include "WinDynCalls.h"
 #include "DbgHelpDyn.h"
 #include "FileUtil.h"
 #include "HttpUtil.h"
@@ -275,7 +276,7 @@ void SubmitCrashInfo()
     }
 
     char *s = nullptr;
-    if (!dbghelp::Initialize(gSymbolPathW)) {
+    if (!dbghelp::Initialize(gSymbolPathW, false)) {
         plog("SubmitCrashInfo(): dbghelp::Initialize() failed");
         return;
     }
@@ -309,9 +310,6 @@ static DWORD WINAPI CrashDumpThread(LPVOID data)
     UNUSED(data);
     WaitForSingleObject(gDumpEvent, INFINITE);
     if (!gCrashed)
-        return 0;
-
-    if (!dbghelp::Load())
         return 0;
 
 #ifndef HAS_NO_SYMBOLS

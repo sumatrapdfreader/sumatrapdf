@@ -4,13 +4,8 @@ License: Simplified BSD (see COPYING.BSD) */
 #include "BaseUtil.h"
 #include "WinDynCalls.h"
 
-/* TODO:
-- DbgHelpDyn.cpp
-- make SafeLoadLibrary private
-*/
-
-#define API_DECLARATION(name) \
-bool  Has##name = false; \
+#define API_DECLARATION(name)                                                                      \
+    \
 Sig_##name Dyn##name = nullptr;
 
 KERNEL32_API_LIST(API_DECLARATION)
@@ -21,6 +16,7 @@ KTMW32_API_LIST(API_DECLARATION)
 USER32_API_LIST(API_DECLARATION)
 DWMAPI_API_LIST(API_DECLARATION)
 UIA_API_LIST(API_DECLARATION)
+DBGHELP_API_LIST(API_DECLARATION)
 
 #undef API_DECLARATION
 
@@ -36,8 +32,7 @@ HMODULE SafeLoadLibrary(const WCHAR *dllName) {
     return LoadLibraryW(dllPath);
 }
 
-#define API_LOAD(name) \
-    Dyn##name = (Sig_##name)GetProcAddress(h, #name);
+#define API_LOAD(name) Dyn##name = (Sig_##name)GetProcAddress(h, #name);
 
 void InitDynCalls() {
     HMODULE h = SafeLoadLibrary(L"kernel32.dll");
@@ -77,15 +72,22 @@ void InitDynCalls() {
         UIA_API_LIST(API_LOAD)
     }
 
+#if 0
+    WCHAR *dbghelpPath = L"C:\\Program Files (x86)\\Microsoft Visual Studio 10.0\\Team Tools\\Performance Tools\\dbghelp.dll";
+    h = LoadLibrary(dbghelpPath);
+#else
+    h = SafeLoadLibrary(L"dbghelp.dll");
+#endif
+    if (h) {
+        DBGHELP_API_LIST(API_LOAD)
+    }
 }
 
 #undef API_LOAD
 
 namespace touch {
 
-bool SupportsGestures() {
-    return DynGetGestureInfo && DynCloseGestureInfoHandle;
-}
+bool SupportsGestures() { return DynGetGestureInfo && DynCloseGestureInfoHandle; }
 
 BOOL GetGestureInfo(HGESTUREINFO hGestureInfo, PGESTUREINFO pGestureInfo) {
     if (!DynGetGestureInfo)
@@ -99,14 +101,13 @@ BOOL CloseGestureInfoHandle(HGESTUREINFO hGestureInfo) {
     return DynCloseGestureInfoHandle(hGestureInfo);
 }
 
-BOOL SetGestureConfig(HWND hwnd, DWORD dwReserved, UINT cIDs, PGESTURECONFIG pGestureConfig, UINT cbSize) {
+BOOL SetGestureConfig(HWND hwnd, DWORD dwReserved, UINT cIDs, PGESTURECONFIG pGestureConfig,
+                      UINT cbSize) {
     if (!DynSetGestureConfig)
         return FALSE;
     return DynSetGestureConfig(hwnd, dwReserved, cIDs, pGestureConfig, cbSize);
 }
-
 }
-
 
 namespace theme {
 
@@ -117,54 +118,48 @@ bool IsAppThemed() {
     return false;
 }
 
-HTHEME OpenThemeData(HWND hwnd, LPCWSTR pszClassList)
-{
-    if (HasOpenThemeData) {
+HTHEME OpenThemeData(HWND hwnd, LPCWSTR pszClassList) {
+    if (DynOpenThemeData) {
         return DynOpenThemeData(hwnd, pszClassList);
     }
     return nullptr;
 }
 
-HRESULT CloseThemeData(HTHEME hTheme)
-{
-    if (HasCloseThemeData) {
+HRESULT CloseThemeData(HTHEME hTheme) {
+    if (DynCloseThemeData) {
         return DynCloseThemeData(hTheme);
     }
     return E_NOTIMPL;
 }
 
-HRESULT DrawThemeBackground(HTHEME hTheme, HDC hdc, int iPartId, int iStateId, LPCRECT pRect, LPCRECT pClipRect)
-{
-    if (HasDrawThemeBackground) {
+HRESULT DrawThemeBackground(HTHEME hTheme, HDC hdc, int iPartId, int iStateId, LPCRECT pRect,
+                            LPCRECT pClipRect) {
+    if (DynDrawThemeBackground) {
         return DynDrawThemeBackground(hTheme, hdc, iPartId, iStateId, pRect, pClipRect);
     }
     return E_NOTIMPL;
 }
 
-BOOL IsThemeActive()
-{
-    if (HasIsThemeActive) {
+BOOL IsThemeActive() {
+    if (DynIsThemeActive) {
         return DynIsThemeActive();
     }
     return FALSE;
 }
 
-BOOL IsThemeBackgroundPartiallyTransparent(HTHEME hTheme, int iPartId, int iStateId)
-{
-    if (HasIsThemeBackgroundPartiallyTransparent) {
+BOOL IsThemeBackgroundPartiallyTransparent(HTHEME hTheme, int iPartId, int iStateId) {
+    if (DynIsThemeBackgroundPartiallyTransparent) {
         return DynIsThemeBackgroundPartiallyTransparent(hTheme, iPartId, iStateId);
     }
     return FALSE;
 }
 
-HRESULT GetThemeColor(HTHEME hTheme, int iPartId, int iStateId, int iPropId, COLORREF *pColor)
-{
-    if (HasGetThemeColor) {
+HRESULT GetThemeColor(HTHEME hTheme, int iPartId, int iStateId, int iPropId, COLORREF *pColor) {
+    if (DynGetThemeColor) {
         return DynGetThemeColor(hTheme, iPartId, iStateId, iPropId, pColor);
     }
     return E_NOTIMPL;
 }
-
 };
 
 namespace dwm {
@@ -195,34 +190,36 @@ HRESULT GetWindowAttribute(HWND hwnd, DWORD dwAttribute, void *pvAttribute, DWOR
         return E_NOTIMPL;
     return DynDwmGetWindowAttribute(hwnd, dwAttribute, pvAttribute, cbAttribute);
 }
-
 };
-
 
 namespace uia {
 
-LRESULT ReturnRawElementProvider(HWND hwnd, WPARAM wParam, LPARAM lParam, IRawElementProviderSimple *provider) {
+LRESULT ReturnRawElementProvider(HWND hwnd, WPARAM wParam, LPARAM lParam,
+                                 IRawElementProviderSimple *provider) {
     if (!DynUiaReturnRawElementProvider)
         return 0;
     return DynUiaReturnRawElementProvider(hwnd, wParam, lParam, provider);
 }
 
-HRESULT HostProviderFromHwnd(HWND hwnd, IRawElementProviderSimple ** pProvider) {
+HRESULT HostProviderFromHwnd(HWND hwnd, IRawElementProviderSimple **pProvider) {
     if (!DynUiaHostProviderFromHwnd)
         return E_NOTIMPL;
     return DynUiaHostProviderFromHwnd(hwnd, pProvider);
 }
 
-HRESULT RaiseAutomationEvent(IRawElementProviderSimple * pProvider, EVENTID id) {
+HRESULT RaiseAutomationEvent(IRawElementProviderSimple *pProvider, EVENTID id) {
     if (!DynUiaRaiseAutomationEvent)
         return E_NOTIMPL;
     return DynUiaRaiseAutomationEvent(pProvider, id);
 }
 
-HRESULT RaiseStructureChangedEvent(IRawElementProviderSimple * pProvider, StructureChangeType structureChangeType, int * pRuntimeId, int cRuntimeIdLen) {
+HRESULT RaiseStructureChangedEvent(IRawElementProviderSimple *pProvider,
+                                   StructureChangeType structureChangeType, int *pRuntimeId,
+                                   int cRuntimeIdLen) {
     if (!DynUiaRaiseStructureChangedEvent)
         return E_NOTIMPL;
-    return DynUiaRaiseStructureChangedEvent(pProvider, structureChangeType, pRuntimeId, cRuntimeIdLen);
+    return DynUiaRaiseStructureChangedEvent(pProvider, structureChangeType, pRuntimeId,
+                                            cRuntimeIdLen);
 }
 
 HRESULT GetReservedNotSupportedValue(IUnknown **punkNotSupportedValue) {
@@ -230,6 +227,4 @@ HRESULT GetReservedNotSupportedValue(IUnknown **punkNotSupportedValue) {
         return E_NOTIMPL;
     return DynUiaGetReservedNotSupportedValue(punkNotSupportedValue);
 }
-
 };
-

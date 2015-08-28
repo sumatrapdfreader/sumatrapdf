@@ -3,6 +3,7 @@
 
 // utils
 #include "BaseUtil.h"
+#include "WinDynCalls.h"
 #include "CmdLineParser.h"
 #include "DbgHelpDyn.h"
 #include "FileUtil.h"

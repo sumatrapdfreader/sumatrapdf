@@ -17,6 +17,7 @@ To write new regression test:
 
 // utils
 #include "BaseUtil.h"
+#include "WinDynCalls.h"
 #include "ArchUtil.h"
 #include "DbgHelpDyn.h"
 #include "DirIter.h"
@@ -96,12 +97,7 @@ static DWORD WINAPI CrashDumpThread(LPVOID data)
         return 0;
 
     printflush("Captain, we've got a crash!\n");
-    if (!dbghelp::Load()) {
-        printflush("CrashDumpThread(): dbghelp::Load() failed");
-        return 0;
-    }
-
-    if (!dbghelp::Initialize(L"")) {
+    if (!dbghelp::Initialize(L"", false)) {
         printflush("CrashDumpThread(): dbghelp::Initialize() failed");
         return 0;
     }

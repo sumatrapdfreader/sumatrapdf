@@ -129,7 +129,8 @@ bool WriteRegDWORD(HKEY keySub, const WCHAR *keyName, const WCHAR *valName, DWOR
 
 bool CreateRegKey(HKEY keySub, const WCHAR *keyName) {
     HKEY hKey;
-    LSTATUS res = RegCreateKeyEx(keySub, keyName, 0, nullptr, 0, KEY_WRITE, nullptr, &hKey, nullptr);
+    LSTATUS res =
+        RegCreateKeyEx(keySub, keyName, 0, nullptr, 0, KEY_WRITE, nullptr, &hKey, nullptr);
     if (res != ERROR_SUCCESS)
         return false;
     RegCloseKey(hKey);
@@ -182,7 +183,8 @@ void DisableDataExecution() {
     // now try undocumented NtSetInformationProcess
     if (DynNtSetInformationProcess) {
         DWORD depMode = MEM_EXECUTE_OPTION_DISABLE | MEM_EXECUTE_OPTION_DISABLE_ATL;
-        DynNtSetInformationProcess(GetCurrentProcess(), PROCESS_EXECUTE_FLAGS, &depMode, sizeof(depMode));
+        DynNtSetInformationProcess(GetCurrentProcess(), PROCESS_EXECUTE_FLAGS, &depMode,
+                                   sizeof(depMode));
     }
 }
 
@@ -365,7 +367,7 @@ HANDLE LaunchProcess(const WCHAR *cmdLine, const WCHAR *currDir, DWORD flags) {
     // in case caller provides a read-only string
     ScopedMem<WCHAR> cmdLineCopy(str::Dup(cmdLine));
     if (!CreateProcessW(nullptr, cmdLineCopy, nullptr, nullptr, FALSE, flags, nullptr, currDir, &si,
-                       &pi))
+                        &pi))
         return nullptr;
 
     CloseHandle(pi.hThread);
