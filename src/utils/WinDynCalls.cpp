@@ -5,7 +5,6 @@ License: Simplified BSD (see COPYING.BSD) */
 #include "WinDynCalls.h"
 
 /* TODO:
-- Touch.cpp
 - Provider.cpp
 - Caption.cpp
 - DbgHelpDyn.cpp
@@ -21,6 +20,7 @@ NTDLL_API_LIST(API_DECLARATION)
 UXTHEME_API_LIST(API_DECLARATION)
 NORMALIZ_API_LIST(API_DECLARATION)
 KTMW32_API_LIST(API_DECLARATION)
+USER32_API_LIST(API_DECLARATION)
 #undef API_DECLARATION
 
 // Loads a DLL explicitly from the system's library collection
@@ -47,6 +47,10 @@ void InitDynCalls() {
     CrashAlwaysIf(!h);
     NTDLL_API_LIST(API_LOAD);
 
+    h = SafeLoadLibrary(L"user32.dll");
+    CrashAlwaysIf(!h);
+    USER32_API_LIST(API_LOAD);
+
     h = SafeLoadLibrary(L"uxtheme.dll");
     if (h) {
         UXTHEME_API_LIST(API_LOAD);
@@ -64,6 +68,33 @@ void InitDynCalls() {
 }
 
 #undef API_LOAD
+
+namespace touch {
+
+bool SupportsGestures() {
+    return DynGetGestureInfo && DynCloseGestureInfoHandle;
+}
+
+BOOL GetGestureInfo(HGESTUREINFO hGestureInfo, PGESTUREINFO pGestureInfo) {
+    if (!DynGetGestureInfo)
+        return FALSE;
+    return DynGetGestureInfo(hGestureInfo, pGestureInfo);
+}
+
+BOOL CloseGestureInfoHandle(HGESTUREINFO hGestureInfo) {
+    if (!DynCloseGestureInfoHandle)
+        return FALSE;
+    return DynCloseGestureInfoHandle(hGestureInfo);
+}
+
+BOOL SetGestureConfig(HWND hwnd, DWORD dwReserved, UINT cIDs, PGESTURECONFIG pGestureConfig, UINT cbSize) {
+    if (!DynSetGestureConfig)
+        return FALSE;
+    return DynSetGestureConfig(hwnd, dwReserved, cIDs, pGestureConfig, cbSize);
+}
+
+}
+
 
 namespace dyn {
 

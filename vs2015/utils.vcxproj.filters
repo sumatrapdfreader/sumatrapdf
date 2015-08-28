@@ -108,9 +108,6 @@
     <ClInclude Include="..\src\utils\ThreadUtil.h">
       <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\utils\Touch.h">
-      <Filter>utils</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\utils\TrivialHtmlParser.h">
       <Filter>utils</Filter>
     </ClInclude>
@@ -246,9 +243,6 @@
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\ThreadUtil.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\utils\Touch.cpp">
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\TrivialHtmlParser.cpp">

@@ -162,7 +162,7 @@ FORMAT_LIBS = $(MUPDF_LIB) $(DJVU_OBJS) $(UNARR_LIB) $(WEBP_OBJS)
 UTILS_OBJS = \
 	$(OU)\FileUtil.obj $(OU)\HttpUtil.obj \
 	$(OU)\StrUtil.obj $(OU)\WinUtil.obj $(OU)\GdiPlusUtil.obj \
-	$(OU)\DialogSizer.obj $(OU)\FileTransactions.obj $(OU)\Touch.obj \
+	$(OU)\DialogSizer.obj $(OU)\FileTransactions.obj \
 	$(OU)\TrivialHtmlParser.obj $(OU)\HtmlWindow.obj \
 	$(OU)\DirIter.obj $(OU)\BitReader.obj $(OU)\HtmlPullParser.obj \
 	$(OU)\HtmlPrettyPrint.obj $(OU)\ThreadUtil.obj $(OU)\DebugLog.obj \

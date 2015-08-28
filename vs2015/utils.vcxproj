@@ -337,7 +337,6 @@
     <ClInclude Include="..\src\utils\StrUtil.h" />
     <ClInclude Include="..\src\utils\TgaReader.h" />
     <ClInclude Include="..\src\utils\ThreadUtil.h" />
-    <ClInclude Include="..\src\utils\Touch.h" />
     <ClInclude Include="..\src\utils\TrivialHtmlParser.h" />
     <ClInclude Include="..\src\utils\TxtParser.h" />
     <ClInclude Include="..\src\utils\UITask.h" />
@@ -385,7 +384,6 @@
     <ClCompile Include="..\src\utils\StrUtil.cpp" />
     <ClCompile Include="..\src\utils\TgaReader.cpp" />
     <ClCompile Include="..\src\utils\ThreadUtil.cpp" />
-    <ClCompile Include="..\src\utils\Touch.cpp" />
     <ClCompile Include="..\src\utils\TrivialHtmlParser.cpp" />
     <ClCompile Include="..\src\utils\TxtParser.cpp" />
     <ClCompile Include="..\src\utils\UITask.cpp" />

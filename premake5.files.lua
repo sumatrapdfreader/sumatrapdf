@@ -470,7 +470,6 @@ function utils_files()
     "SquareTreeParser.*",
     "ThreadUtil.*",
     "TgaReader.*",
-    "Touch.*",
     "TrivialHtmlParser.*",
     "TxtParser.*",
     "UITask.*",

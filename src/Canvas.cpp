@@ -3,14 +3,13 @@
 
 // utils
 #include "BaseUtil.h"
-#include <dwmapi.h>
+#include "WinDynCalls.h"
 #include <UIAutomationCore.h>
 #include <UIAutomationCoreApi.h>
 #include "Dpi.h"
 #include "FileUtil.h"
 #include "FrameRateWnd.h"
 #include "Timer.h"
-#include "Touch.h"
 #include "UITask.h"
 #include "WinUtil.h"
 // rendering engines
@@ -886,16 +885,16 @@ static LRESULT CanvasOnMouseHWheel(WindowInfo& win, UINT message, WPARAM wParam,
 
 static LRESULT OnGesture(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    if (!Touch::SupportsGestures())
+    if (!touch::SupportsGestures())
         return DefWindowProc(win.hwndFrame, message, wParam, lParam);
 
     HGESTUREINFO hgi = (HGESTUREINFO)lParam;
     GESTUREINFO gi = { 0 };
     gi.cbSize = sizeof(GESTUREINFO);
 
-    BOOL ok = Touch::GetGestureInfo(hgi, &gi);
+    BOOL ok = touch::GetGestureInfo(hgi, &gi);
     if (!ok) {
-        Touch::CloseGestureInfoHandle(hgi);
+        touch::CloseGestureInfoHandle(hgi);
         return 0;
     }
 
@@ -977,7 +976,7 @@ static LRESULT OnGesture(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lP
             break;
     }
 
-    Touch::CloseGestureInfoHandle(hgi);
+    touch::CloseGestureInfoHandle(hgi);
     return 0;
 }
 

@@ -4,9 +4,9 @@
 // utils
 #include "BaseUtil.h"
 #include <wininet.h>
-#include "WinDynCalls.h"
 #include <UIAutomationCore.h>
 #include <UIAutomationCoreApi.h>
+#include "WinDynCalls.h"
 #include "CryptoUtil.h"
 #include "DirIter.h"
 #include "Dpi.h"
@@ -21,7 +21,6 @@
 #include "SplitterWnd.h"
 #include "SquareTreeParser.h"
 #include "ThreadUtil.h"
-#include "Touch.h"
 #include "UITask.h"
 #include "WinUtil.h"
 // rendering engines
@@ -1309,9 +1308,9 @@ static WindowInfo* CreateWindowInfo()
     UpdateWindowRtlLayout(win);
     UpdateToolbarSidebarText(win);
 
-    if (Touch::SupportsGestures()) {
+    if (touch::SupportsGestures()) {
         GESTURECONFIG gc = { 0, GC_ALLGESTURES, 0 };
-        Touch::SetGestureConfig(win->hwndCanvas, 0, 1, &gc, sizeof(GESTURECONFIG));
+        touch::SetGestureConfig(win->hwndCanvas, 0, 1, &gc, sizeof(GESTURECONFIG));
     }
 
     SetTabsInTitlebar(win, gGlobalPrefs->useTabs);

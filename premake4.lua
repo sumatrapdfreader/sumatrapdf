@@ -73,7 +73,6 @@ solution "efi"
       "src/utils/LzmaSimpleArchive*",
       "src/utils/Experiments*",
       "src/utils/UtilTests.cpp",
-      "src/utils/Touch*",
     }
     includedirs { "src/utils" }
 --]]
