@@ -361,6 +361,7 @@
     <ClInclude Include="..\src\utils\ThreadUtil.h" />
     <ClInclude Include="..\src\utils\UITask.h" />
     <ClInclude Include="..\src\utils\WebpReader.h" />
+    <ClInclude Include="..\src\utils\WinDynCalls.h" />
     <ClInclude Include="..\src\utils\WinUtil.h" />
   </ItemGroup>
   <ItemGroup>
@@ -454,6 +455,7 @@
     <ClCompile Include="..\src\utils\ThreadUtil.cpp" />
     <ClCompile Include="..\src\utils\UITask.cpp" />
     <ClCompile Include="..\src\utils\WebpReader.cpp" />
+    <ClCompile Include="..\src\utils\WinDynCalls.cpp" />
     <ClCompile Include="..\src\utils\WinUtil.cpp" />
   </ItemGroup>
   <ItemGroup>

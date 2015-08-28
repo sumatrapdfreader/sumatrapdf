@@ -175,7 +175,8 @@ UTILS_OBJS = \
 	$(OU)\WebpReader.obj $(OU)\FzImgReader.obj \
 	$(OU)\ArchUtil.obj $(OU)\ZipUtil.obj $(OU)\LzmaSimpleArchive.obj \
 	$(OU)\LabelWithCloseWnd.obj $(OU)\FrameRateWnd.obj \
-	$(OU)\Dpi.obj $(OU)\EditCtrl.obj $(OU)\Win32Window.obj
+	$(OU)\Dpi.obj $(OU)\EditCtrl.obj $(OU)\Win32Window.obj \
+	$(OU)\WinDynCalls.obj
 
 MUI_OBJS = \
 	$(OMUI)\MuiBase.obj $(OMUI)\Mui.obj $(OMUI)\MuiCss.obj $(OMUI)\MuiLayout.obj \

@@ -476,6 +476,7 @@ function utils_files()
     "UITask.*",
     "ZipUtil.*",
     "WebpReader.*",
+    "WinDynCalls.*",
     "WinUtil.*",
   })
 
@@ -777,6 +778,7 @@ function test_util_files()
     "VarintGob*",
     "Vec.*",
     "WinUtil*",
+    "WinDynCalls.*",
     "tests/*"
   })
   files_in_dir("src", {
@@ -870,6 +872,7 @@ function installer_utils_files()
     "TgaReader.*",
     "UITask.*",
     "WebpReader.*",
+    "WinDynCalls.*",
     "WinUtil.*",
   })
 end

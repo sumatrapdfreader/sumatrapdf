@@ -3,6 +3,7 @@
 
 // utils
 #include "BaseUtil.h"
+#include "WinDynCalls.h"
 #include <dwmapi.h>
 #include <UIAutomationCore.h>
 #include <UIAutomationCoreApi.h>
@@ -586,6 +587,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR cmdLine
     //_CrtSetBreakAlloc(421);
     TryLoadMemTrace();
 #endif
+
+    InitDynCalls();
 
     DisableDataExecution();
     // ensure that C functions behave consistently under all OS locales

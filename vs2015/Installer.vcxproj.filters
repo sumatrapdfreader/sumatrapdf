@@ -129,6 +129,9 @@
     <ClInclude Include="..\src\utils\WebpReader.h">
       <Filter>src\utils</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\utils\WinDynCalls.h">
+      <Filter>src\utils</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\utils\WinUtil.h">
       <Filter>src\utils</Filter>
     </ClInclude>
@@ -360,6 +363,9 @@
       <Filter>src\utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\WebpReader.cpp">
+      <Filter>src\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\WinDynCalls.cpp">
       <Filter>src\utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\WinUtil.cpp">

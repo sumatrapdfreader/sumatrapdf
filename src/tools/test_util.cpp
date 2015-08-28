@@ -1,4 +1,5 @@
 #include "BaseUtil.h"
+#include "WinDynCalls.h"
 
 // must be last due to assert() over-write
 #include "UtAssert.h"
@@ -37,6 +38,7 @@ int main(int argc, char **argv)
 {
     UNUSED(argc); UNUSED(argv);
     printf("Running unit tests\n");
+    InitDynCalls();
     BaseUtilTest();
     ByteOrderTests();
     CmdLineParserTest();

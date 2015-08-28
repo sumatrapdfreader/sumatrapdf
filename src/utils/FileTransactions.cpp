@@ -2,6 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
+#include "WinDynCalls.h"
 #include "FileTransactions.h"
 #include "FileUtil.h"
 #include "WinUtil.h"

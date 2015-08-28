@@ -4,24 +4,13 @@
 #include "BaseUtil.h"
 #include "BitManip.h"
 #include "FileUtil.h"
+#include "WinDynCalls.h"
 #include "WinUtil.h"
 #include <mlang.h>
 
 #include "DebugLog.h"
 
 static HFONT gDefaultGuiFont = nullptr;
-
-// Loads a DLL explicitly from the system's library collection
-HMODULE SafeLoadLibrary(const WCHAR *dllName) {
-    WCHAR dllPath[MAX_PATH];
-    UINT res = GetSystemDirectory(dllPath, dimof(dllPath));
-    if (!res || res >= dimof(dllPath))
-        return nullptr;
-    BOOL ok = PathAppend(dllPath, dllName);
-    if (!ok)
-        return nullptr;
-    return LoadLibrary(dllPath);
-}
 
 FARPROC LoadDllFunc(const WCHAR *dllName, const char *funcName) {
     HMODULE h = SafeLoadLibrary(dllName);
@@ -54,11 +43,9 @@ void FillWndClassEx(WNDCLASSEX &wcex, const WCHAR *clsName, WNDPROC wndproc) {
 // Return true if application is themed. Wrapper around IsAppThemed() in uxtheme.dll
 // that is compatible with earlier windows versions.
 bool _IsAppThemed() {
-    FARPROC pIsAppThemed = LoadDllFunc(L"uxtheme.dll", "IsAppThemed");
-    if (!pIsAppThemed)
-        return false;
-    if (pIsAppThemed())
+    if (HasIsAppThemed && DynIsAppThemed()) {
         return true;
+    }
     return false;
 }
 
@@ -223,18 +210,11 @@ typedef HRESULT(WINAPI *_NtSetInformationProcess)(HANDLE ProcessHandle,
 #define MEM_EXECUTE_OPTION_PERMANENT 0x8
 #define MEM_EXECUTE_OPTION_DISABLE_ATL 0x4
 
-typedef BOOL(WINAPI *SetProcessDEPPolicyFunc)(DWORD dwFlags);
-#ifndef PROCESS_DEP_ENABLE
-#define PROCESS_DEP_ENABLE 0x1
-#define PROCESS_DEP_DISABLE_ATL_THUNK_EMULATION 0x2
-#endif
 
 void DisableDataExecution() {
     // first try the documented SetProcessDEPPolicy
-    SetProcessDEPPolicyFunc spdp;
-    spdp = (SetProcessDEPPolicyFunc)LoadDllFunc(L"kernel32.dll", "SetProcessDEPPolicy");
-    if (spdp) {
-        spdp(PROCESS_DEP_ENABLE);
+    if (HasSetProcessDEPPolicy) {
+        DynSetProcessDEPPolicy(PROCESS_DEP_ENABLE);
         return;
     }
 

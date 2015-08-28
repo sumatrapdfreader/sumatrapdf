@@ -10,6 +10,7 @@
 #include "BaseUtil.h"
 #include <tlhelp32.h>
 #include "DbgHelpDyn.h"
+#include "WinDynCalls.h"
 #include "FileUtil.h"
 #include "WinUtil.h"
 

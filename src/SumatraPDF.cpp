@@ -4,7 +4,7 @@
 // utils
 #include "BaseUtil.h"
 #include <wininet.h>
-#include <dwmapi.h>
+#include "WinDynCalls.h"
 #include <UIAutomationCore.h>
 #include <UIAutomationCoreApi.h>
 #include "CryptoUtil.h"

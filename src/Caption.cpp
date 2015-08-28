@@ -3,8 +3,7 @@
 
 // utils
 #include "BaseUtil.h"
-#include <dwmapi.h>
-#include <vssym32.h>
+#include "WinDynCalls.h"
 #include "WinUtil.h"
 // layout controllers
 #include "SettingsStructs.h"
@@ -300,8 +299,9 @@ void RelayoutCaption(WindowInfo *win)
 
     if (dwm::IsCompositionEnabled()) {
         // hide the buttons, because DWM paints and serves them, when the composition is enabled
-        for (int i = CB_MINIMIZE; i <= CB_CLOSE; i++)
+        for (int i = CB_MINIMIZE; i <= CB_CLOSE; i++) {
             ShowWindow(ci->btn[i].hwnd, SW_HIDE);
+        }
     }
     else {
         int xEdge = GetSystemMetrics(SM_CXEDGE);
@@ -797,89 +797,6 @@ static void MenuBarAsPopupMenu(WindowInfo *win, int x, int y)
     DestroyMenu(popup);
 }
 
-typedef HTHEME (WINAPI *OpenThemeDataProc)(HWND hwnd, LPCWSTR pszClassList);
-typedef HRESULT (WINAPI *CloseThemeDataProc)(HTHEME hTheme);
-typedef HRESULT (WINAPI *DrawThemeBackgroundProc)(HTHEME hTheme, HDC hdc, int iPartId, int iStateId, LPCRECT pRect, LPCRECT pClipRect);
-typedef BOOL (WINAPI *IsThemeActiveProc)(VOID);
-typedef BOOL (WINAPI *IsThemeBackgroundPartiallyTransparentProc)(HTHEME hTheme, int iPartId, int iStateId);
-typedef HRESULT (WINAPI *GetThemeColorProc)(HTHEME hTheme, int iPartId, int iStateId, int iPropId, COLORREF *pColor);
-
-namespace vss {
-
-static bool gFuncsLoaded = false;
-static OpenThemeDataProc _OpenThemeData = nullptr;
-static CloseThemeDataProc _CloseThemeData = nullptr;
-static DrawThemeBackgroundProc _DrawThemeBackground = nullptr;
-static IsThemeActiveProc _IsThemeActive = nullptr;
-static IsThemeBackgroundPartiallyTransparentProc _IsThemeBackgroundPartiallyTransparent = nullptr;
-static GetThemeColorProc _GetThemeColor = nullptr;
-
-void Initialize()
-{
-    if (gFuncsLoaded)
-        return;
-    gFuncsLoaded = true;
-
-    HMODULE h = SafeLoadLibrary(L"UxTheme.dll");
-#define Load(func) _ ## func = (func ## Proc)GetProcAddress(h, #func)
-    Load(OpenThemeData);
-    Load(CloseThemeData);
-    Load(DrawThemeBackground);
-    Load(IsThemeActive);
-    Load(IsThemeBackgroundPartiallyTransparent);
-    Load(GetThemeColor);
-#undef Load
-}
-
-HTHEME OpenThemeData(HWND hwnd, LPCWSTR pszClassList)
-{
-    Initialize();
-    if (!_OpenThemeData)
-        return nullptr;
-    return _OpenThemeData(hwnd, pszClassList);
-}
-
-HRESULT CloseThemeData(HTHEME hTheme)
-{
-    Initialize();
-    if (!_CloseThemeData)
-        return E_NOTIMPL;
-    return _CloseThemeData(hTheme);
-}
-
-HRESULT DrawThemeBackground(HTHEME hTheme, HDC hdc, int iPartId, int iStateId, LPCRECT pRect, LPCRECT pClipRect)
-{
-    Initialize();
-    if (!_DrawThemeBackground)
-        return E_NOTIMPL;
-    return _DrawThemeBackground(hTheme, hdc, iPartId, iStateId, pRect, pClipRect);
-}
-
-BOOL IsThemeActive()
-{
-    Initialize();
-    if (!_IsThemeActive)
-        return FALSE;
-    return _IsThemeActive();
-}
-
-BOOL IsThemeBackgroundPartiallyTransparent(HTHEME hTheme, int iPartId, int iStateId)
-{
-    Initialize();
-    if (!_IsThemeBackgroundPartiallyTransparent)
-        return FALSE;
-    return _IsThemeBackgroundPartiallyTransparent(hTheme, iPartId, iStateId);
-}
-
-HRESULT GetThemeColor(HTHEME hTheme, int iPartId, int iStateId, int iPropId, COLORREF *pColor)
-{
-    Initialize();
-    if (!_GetThemeColor)
-        return E_NOTIMPL;
-    return _GetThemeColor(hTheme, iPartId, iStateId, iPropId, pColor);
-}
-
-};
 
 typedef HRESULT (WINAPI *DwmIsCompositionEnabledProc)(BOOL *pfEnabled);
 typedef HRESULT (WINAPI *DwmExtendFrameIntoClientAreaProc)(HWND hwnd, const MARGINS *pMarInset);
