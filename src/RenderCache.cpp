@@ -650,7 +650,7 @@ UINT RenderCache::PaintTile(HDC hdc, RectI bounds, DisplayModel *dm, int pageNo,
         int ySrc = -std::min(tileOnScreen.y, 0);
         float factor = std::min(1.0f * bmpSize.dx / tileOnScreen.dx, 1.0f * bmpSize.dy / tileOnScreen.dy);
 
-        SelectObject(bmpDC, hbmp);
+        HGDIOBJ prevBmp = SelectObject(bmpDC, hbmp);
         if (factor != 1.0f)
             StretchBlt(hdc, bounds.x, bounds.y, bounds.dx, bounds.dy,
                 bmpDC, (int)(xSrc * factor), (int)(ySrc * factor),
@@ -659,6 +659,7 @@ UINT RenderCache::PaintTile(HDC hdc, RectI bounds, DisplayModel *dm, int pageNo,
             BitBlt(hdc, bounds.x, bounds.y, bounds.dx, bounds.dy,
                 bmpDC, xSrc, ySrc, SRCCOPY);
 
+        SelectObject(bmpDC, prevBmp);
         DeleteDC(bmpDC);
 
 #ifdef SHOW_TILE_LAYOUT

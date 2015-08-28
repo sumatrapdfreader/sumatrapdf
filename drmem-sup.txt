@@ -4,29 +4,28 @@
 # quite a few false seem to come from inside __scrt_common_main_seh
 # Suppression for startup code
 UNINITIALIZED READ
-name=Error #1 (update to meaningful name)
+name=crt startup issues
 ...
 SumatraPDF.exe!__scrt_common_main_seh
-KERNEL32.dll!BaseThreadInitThunk
 
-# wcslen #1
+# wcslen in crt startup
 UNADDRESSABLE ACCESS
-name=wcslen #1
+name=wcslen in crt startup
 SumatraPDF.exe!wcsnlen
 ...
 SumatraPDF.exe!__scrt_common_main_seh
 KERNEL32.dll!BaseThreadInitThunk
 
-# wcslen #2
+# wcslen from str::FmtV
 UNADDRESSABLE ACCESS
-name=wcslen #2
+name=wcslen from FmtV
 SumatraPDF.exe!wcsnlen
 ...
 SumatraPDF.exe!str::FmtV
 
-# parallels tool
+# parallels driver
 UNINITIALIZED READ
-name=parallels driver on the stack
+name=parallels driver
 ...
 PrlToolsShellExt.dll!*
 

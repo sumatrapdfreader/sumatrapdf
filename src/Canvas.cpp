@@ -491,10 +491,10 @@ static void PaintPageFrameAndShadow(HDC hdc, RectI& bounds, RectI& pageRect, boo
 static void PaintPageFrameAndShadow(HDC hdc, RectI& bounds, RectI& pageRect, bool presentation)
 {
     UNUSED(pageRect);  UNUSED(presentation);
-    ScopedGdiObj<HPEN> pe(CreatePen(PS_NULL, 0, 0));
-    ScopedGdiObj<HBRUSH> brush(CreateSolidBrush(gRenderCache.backgroundColor));
-    SelectObject(hdc, pe);
-    SelectObject(hdc, brush);
+    ScopedPen pen(CreatePen(PS_NULL, 0, 0));
+    ScopedBrush brush(CreateSolidBrush(gRenderCache.backgroundColor));
+    ScopedHdcSelect restorePen(hdc, pen);
+    ScopedHdcSelect restoreBrush(hdc, brush);
     Rectangle(hdc, bounds.x, bounds.y, bounds.x + bounds.dx + 1, bounds.y + bounds.dy + 1);
 }
 #endif

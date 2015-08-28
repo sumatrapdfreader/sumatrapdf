@@ -771,7 +771,7 @@ static void MenuBarAsPopupMenu(WindowInfo *win, int x, int y)
         return;
     HMENU popup = CreatePopupMenu();
 
-    MENUITEMINFO mii;
+    MENUITEMINFO mii = { 0 };
     mii.cbSize = sizeof(MENUITEMINFO);
     mii.fMask = MIIM_SUBMENU | MIIM_STRING;
     for (int i = 0; i < count; i++) {
@@ -792,8 +792,10 @@ static void MenuBarAsPopupMenu(WindowInfo *win, int x, int y)
         x += ClientRect(win->caption->btn[CB_MENU].hwnd).dx;
     TrackPopupMenu(popup, TPM_LEFTALIGN, x, y, 0, win->hwndFrame, nullptr);
 
-    while (--count >= 0)
+    while (count > 0) {
+        --count;
         RemoveMenu(popup, count, MF_BYPOSITION);
+    }
     DestroyMenu(popup);
 }
 
