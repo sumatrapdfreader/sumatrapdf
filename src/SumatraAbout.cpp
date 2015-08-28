@@ -192,7 +192,7 @@ static void DrawSumatraVersion(HDC hdc, RectI rect)
 static RectI DrawBottomRightLink(HWND hwnd, HDC hdc, const WCHAR *txt)
 {
     ScopedFont fontLeftTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 14));
-    ScopedGdiObj<HPEN> penLinkLine(CreatePen(PS_SOLID, 1, COL_BLUE_LINK));
+    ScopedPen penLinkLine(CreatePen(PS_SOLID, 1, COL_BLUE_LINK));
     ScopedHdcSelect font(hdc, fontLeftTxt);
 
     SetTextColor(hdc, COL_BLUE_LINK);
@@ -207,9 +207,10 @@ static RectI DrawBottomRightLink(HWND hwnd, HDC hdc, const WCHAR *txt)
         rect.x = ABOUT_INNER_PADDING;
     RECT rTmp = rect.ToRECT();
     DrawText(hdc, txt, -1, &rTmp, IsUIRightToLeft() ? DT_RTLREADING : DT_LEFT);
-
-    SelectObject(hdc, penLinkLine);
-    PaintLine(hdc, RectI(rect.x, rect.y + rect.dy, rect.dx, 0));
+    {
+        ScopedHdcSelect pen(hdc, penLinkLine);
+        PaintLine(hdc, RectI(rect.x, rect.y + rect.dy, rect.dx, 0));
+    }
 
     // make the click target larger
     rect.Inflate(ABOUT_INNER_PADDING, ABOUT_INNER_PADDING);

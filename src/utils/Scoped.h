@@ -147,6 +147,7 @@ public:
     operator T() const { return obj; }
 };
 typedef ScopedGdiObj<HFONT> ScopedFont;
+typedef ScopedGdiObj<HPEN> ScopedPen;
 
 class ScopedHdcSelect {
     HDC hdc;
