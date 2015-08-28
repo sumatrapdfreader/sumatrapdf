@@ -629,13 +629,20 @@ static short GetPaperSize(BaseEngine *engine) {
     SizeD size = engine->Transform(mediabox, 1, 1.0f / engine->GetFileDPI(), 0).Size();
 
     switch (GetPaperFormat(size)) {
-    case Paper_A4: return DMPAPER_A4;
-    case Paper_A3: return DMPAPER_A3;
-    case Paper_A5: return DMPAPER_A5;
-    case Paper_Letter: return DMPAPER_LETTER;
-    case Paper_Legal: return DMPAPER_LEGAL;
-    case Paper_Tabloid: return DMPAPER_TABLOID;
-    default: return 0;
+        case Paper_A4:
+            return DMPAPER_A4;
+        case Paper_A3:
+            return DMPAPER_A3;
+        case Paper_A5:
+            return DMPAPER_A5;
+        case Paper_Letter:
+            return DMPAPER_LETTER;
+        case Paper_Legal:
+            return DMPAPER_LEGAL;
+        case Paper_Tabloid:
+            return DMPAPER_TABLOID;
+        default:
+            return 0;
     }
 }
 

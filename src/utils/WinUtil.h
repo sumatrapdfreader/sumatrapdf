@@ -9,51 +9,54 @@
 #define WM_MOUSEHWHEEL 0x020E
 #endif
 
-#define NO_COLOR        (COLORREF)-1
+#define NO_COLOR (COLORREF) - 1
 
-#define WIN_COL_WHITE   RGB(0xff, 0xff, 0xff)
-#define WIN_COL_BLACK   RGB(0, 0, 0)
+#define WIN_COL_WHITE RGB(0xff, 0xff, 0xff)
+#define WIN_COL_BLACK RGB(0, 0, 0)
 
 #define DRAGQUERY_NUMFILES 0xFFFFFFFF
 
-inline int RectDx(const RECT& r) { return r.right - r.left; }
-inline int RectDy(const RECT& r) { return r.bottom - r.top; }
+inline int RectDx(const RECT &r) { return r.right - r.left; }
+inline int RectDy(const RECT &r) { return r.bottom - r.top; }
 
 #define Edit_SelectAll(hwnd) Edit_SetSel(hwnd, 0, -1)
 #define ListBox_AppendString_NoSort(hwnd, txt) ListBox_InsertString(hwnd, -1, txt)
 
 HMODULE SafeLoadLibrary(const WCHAR *dllName);
 FARPROC LoadDllFunc(const WCHAR *dllName, const char *funcName);
-BOOL    SafeCloseHandle(HANDLE *h);
-BOOL    SafeDestroyWindow(HWND *hwnd);
-void    FillWndClassEx(WNDCLASSEX& wcex, const WCHAR *clsName, WNDPROC wndproc);
-inline void MoveWindow(HWND hwnd, RectI rect) { MoveWindow(hwnd, rect.x, rect.y, rect.dx, rect.dy, TRUE); }
-inline void MoveWindow(HWND hwnd, RECT *r) { MoveWindow(hwnd, r->left, r->top, RectDx(*r), RectDy(*r), TRUE); }
+BOOL SafeCloseHandle(HANDLE *h);
+BOOL SafeDestroyWindow(HWND *hwnd);
+void FillWndClassEx(WNDCLASSEX &wcex, const WCHAR *clsName, WNDPROC wndproc);
+inline void MoveWindow(HWND hwnd, RectI rect) {
+    MoveWindow(hwnd, rect.x, rect.y, rect.dx, rect.dy, TRUE);
+}
+inline void MoveWindow(HWND hwnd, RECT *r) {
+    MoveWindow(hwnd, r->left, r->top, RectDx(*r), RectDy(*r), TRUE);
+}
 
-bool   _IsAppThemed();
-bool   IsRunningInWow64();
-bool   IsVistaOrGreater();
+bool _IsAppThemed();
+bool IsRunningInWow64();
+bool IsVistaOrGreater();
 
-void   LogLastError(DWORD err=0);
-bool   RegKeyExists(HKEY keySub, const WCHAR *keyName);
+void LogLastError(DWORD err = 0);
+bool RegKeyExists(HKEY keySub, const WCHAR *keyName);
 WCHAR *ReadRegStr(HKEY keySub, const WCHAR *keyName, const WCHAR *valName);
-bool   WriteRegStr(HKEY keySub, const WCHAR *keyName, const WCHAR *valName, const WCHAR *value);
-bool   ReadRegDWORD(HKEY keySub, const WCHAR *keyName, const WCHAR *valName, DWORD& value);
-bool   WriteRegDWORD(HKEY keySub, const WCHAR *keyName, const WCHAR *valName, DWORD value);
-bool   CreateRegKey(HKEY keySub, const WCHAR *keyName);
-bool   DeleteRegKey(HKEY keySub, const WCHAR *keyName, bool resetACLFirst=false);
-WCHAR *GetSpecialFolder(int csidl, bool createIfMissing=false);
+bool WriteRegStr(HKEY keySub, const WCHAR *keyName, const WCHAR *valName, const WCHAR *value);
+bool ReadRegDWORD(HKEY keySub, const WCHAR *keyName, const WCHAR *valName, DWORD &value);
+bool WriteRegDWORD(HKEY keySub, const WCHAR *keyName, const WCHAR *valName, DWORD value);
+bool CreateRegKey(HKEY keySub, const WCHAR *keyName);
+bool DeleteRegKey(HKEY keySub, const WCHAR *keyName, bool resetACLFirst = false);
+WCHAR *GetSpecialFolder(int csidl, bool createIfMissing = false);
 
-void   DisableDataExecution();
-void   RedirectIOToConsole();
+void DisableDataExecution();
+void RedirectIOToConsole();
 WCHAR *GetExePath();
-int    FileTimeDiffInSecs(const FILETIME& ft1, const FILETIME& ft2);
+int FileTimeDiffInSecs(const FILETIME &ft1, const FILETIME &ft2);
 
 WCHAR *ResolveLnk(const WCHAR *path);
-bool   CreateShortcut(const WCHAR *shortcutPath, const WCHAR *exePath,
-                    const WCHAR *args=nullptr, const WCHAR *description=nullptr,
-                    int iconIndex=0);
-IDataObject* GetDataObjectForFile(const WCHAR *filePath, HWND hwnd=nullptr);
+bool CreateShortcut(const WCHAR *shortcutPath, const WCHAR *exePath, const WCHAR *args = nullptr,
+                    const WCHAR *description = nullptr, int iconIndex = 0);
+IDataObject *GetDataObjectForFile(const WCHAR *filePath, HWND hwnd = nullptr);
 DWORD GetFileVersion(const WCHAR *path);
 
 inline bool IsKeyPressed(int key) { return GetKeyState(key) & 0x8000 ? true : false; }
@@ -61,40 +64,41 @@ inline bool IsShiftPressed() { return IsKeyPressed(VK_SHIFT); }
 inline bool IsAltPressed() { return IsKeyPressed(VK_MENU); }
 inline bool IsCtrlPressed() { return IsKeyPressed(VK_CONTROL); }
 
-HFONT   CreateSimpleFont(HDC hdc, const WCHAR *fontName, int fontSize);
+HFONT CreateSimpleFont(HDC hdc, const WCHAR *fontName, int fontSize);
 
-RectI   ShiftRectToWorkArea(RectI rect, bool bFully=false);
-RectI   GetWorkAreaRect(RectI rect);
-RectI   GetFullscreenRect(HWND hwnd);
-RectI   GetVirtualScreenRect();
+RectI ShiftRectToWorkArea(RectI rect, bool bFully = false);
+RectI GetWorkAreaRect(RectI rect);
+RectI GetFullscreenRect(HWND hwnd);
+RectI GetVirtualScreenRect();
 
-bool    LaunchFile(const WCHAR *path, const WCHAR *params=nullptr, const WCHAR *verb=nullptr, bool hidden=false);
-HANDLE  LaunchProcess(const WCHAR *cmdLine, const WCHAR *currDir=nullptr, DWORD flags=0);
+bool LaunchFile(const WCHAR *path, const WCHAR *params = nullptr, const WCHAR *verb = nullptr,
+                bool hidden = false);
+HANDLE LaunchProcess(const WCHAR *cmdLine, const WCHAR *currDir = nullptr, DWORD flags = 0);
 
-void    PaintRect(HDC hdc, const RectI& rect);
-void    PaintLine(HDC hdc, const RectI& rect);
-void    DrawCenteredText(HDC hdc, const RectI& r, const WCHAR *txt, bool isRTL=false);
-void    DrawCenteredText(HDC hdc, const RECT& r, const WCHAR *txt, bool isRTL=false);
-SizeI   TextSizeInHwnd(HWND hwnd, const WCHAR *txt);
+void PaintRect(HDC hdc, const RectI &rect);
+void PaintLine(HDC hdc, const RectI &rect);
+void DrawCenteredText(HDC hdc, const RectI &r, const WCHAR *txt, bool isRTL = false);
+void DrawCenteredText(HDC hdc, const RECT &r, const WCHAR *txt, bool isRTL = false);
+SizeI TextSizeInHwnd(HWND hwnd, const WCHAR *txt);
 
-bool    IsCursorOverWindow(HWND hwnd);
-bool    GetCursorPosInHwnd(HWND hwnd, PointI& posOut);
-void    CenterDialog(HWND hDlg, HWND hParent=nullptr);
-WCHAR * GetDefaultPrinterName();
-bool    CopyTextToClipboard(const WCHAR *text, bool appendOnly=false);
-bool    CopyImageToClipboard(HBITMAP hbmp, bool appendOnly=false);
-void    ToggleWindowStyle(HWND hwnd, DWORD flag, bool enable, int type=GWL_STYLE);
-RectI   ChildPosWithinParent(HWND hwnd);
-HFONT   GetDefaultGuiFont();
+bool IsCursorOverWindow(HWND hwnd);
+bool GetCursorPosInHwnd(HWND hwnd, PointI &posOut);
+void CenterDialog(HWND hDlg, HWND hParent = nullptr);
+WCHAR *GetDefaultPrinterName();
+bool CopyTextToClipboard(const WCHAR *text, bool appendOnly = false);
+bool CopyImageToClipboard(HBITMAP hbmp, bool appendOnly = false);
+void ToggleWindowStyle(HWND hwnd, DWORD flag, bool enable, int type = GWL_STYLE);
+RectI ChildPosWithinParent(HWND hwnd);
+HFONT GetDefaultGuiFont();
 
-IStream*CreateStreamFromData(const void *data, size_t len);
-void  * GetDataFromStream(IStream *stream, size_t *len, HRESULT *res_opt=nullptr);
-bool    ReadDataFromStream(IStream *stream, void *buffer, size_t len, size_t offset=0);
-UINT    GuessTextCodepage(const char *data, size_t len, UINT defVal=CP_ACP);
-WCHAR * NormalizeString(const WCHAR *str, int /* NORM_FORM */ form);
-bool    IsRtl(HWND hwnd);
-void    ResizeHwndToClientArea(HWND hwnd, int dx, int dy, bool hasMenu);
-void    ResizeWindow(HWND, int dx, int dy);
+IStream *CreateStreamFromData(const void *data, size_t len);
+void *GetDataFromStream(IStream *stream, size_t *len, HRESULT *res_opt = nullptr);
+bool ReadDataFromStream(IStream *stream, void *buffer, size_t len, size_t offset = 0);
+UINT GuessTextCodepage(const char *data, size_t len, UINT defVal = CP_ACP);
+WCHAR *NormalizeString(const WCHAR *str, int /* NORM_FORM */ form);
+bool IsRtl(HWND hwnd);
+void ResizeHwndToClientArea(HWND hwnd, int dx, int dy, bool hasMenu);
+void ResizeWindow(HWND, int dx, int dy);
 
 // schedule WM_PAINT at window's leasure
 inline void ScheduleRepaint(HWND hwnd) { InvalidateRect(hwnd, nullptr, FALSE); }
@@ -123,7 +127,7 @@ bool SetEnabled(HMENU m, UINT id, bool isEnabled);
 void Remove(HMENU m, UINT id);
 void Empty(HMENU m);
 void SetText(HMENU m, UINT id, WCHAR *s);
-const WCHAR *ToSafeString(const WCHAR *str, ScopedMem<WCHAR>& newStr);
+const WCHAR *ToSafeString(const WCHAR *str, ScopedMem<WCHAR> &newStr);
 
 } // namespace menu
 
@@ -135,7 +139,7 @@ class DoubleBuffer {
     HBITMAP doubleBuffer;
     RectI rect;
 
-public:
+  public:
     DoubleBuffer(HWND hwnd, RectI rect);
     ~DoubleBuffer();
 
@@ -146,14 +150,10 @@ public:
 class DeferWinPosHelper {
     HDWP hdwp;
 
-public:
-    DeferWinPosHelper() {
-        hdwp = ::BeginDeferWindowPos(32);
-    }
+  public:
+    DeferWinPosHelper() { hdwp = ::BeginDeferWindowPos(32); }
 
-    ~DeferWinPosHelper() {
-        End();
-    }
+    ~DeferWinPosHelper() { End(); }
 
     void End() {
         if (hdwp) {
@@ -166,35 +166,33 @@ public:
         hdwp = ::DeferWindowPos(hdwp, hWnd, hWndInsertAfter, x, y, cx, cy, uFlags);
     }
 
-    void MoveWindow(HWND hWnd, int x, int y, int cx, int cy, BOOL bRepaint=TRUE) {
-        UINT uFlags = SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOZORDER;
+    void MoveWindow(HWND hWnd, int x, int y, int cx, int cy, BOOL bRepaint = TRUE) {
+        UINT uFlags = SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOZORDER;
         if (!bRepaint)
             uFlags |= SWP_NOREDRAW;
         this->SetWindowPos(hWnd, 0, x, y, cx, cy, uFlags);
     }
 
-    void MoveWindow(HWND hWnd, RectI r) {
-        this->MoveWindow(hWnd, r.x, r.y, r.dx, r.dy);
-    }
+    void MoveWindow(HWND hWnd, RectI r) { this->MoveWindow(hWnd, r.x, r.y, r.dx, r.dy); }
 };
 
-void    InitAllCommonControls();
-SizeI   GetBitmapSize(HBITMAP hbmp);
-void    UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor);
+void InitAllCommonControls();
+SizeI GetBitmapSize(HBITMAP hbmp);
+void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor);
 unsigned char *SerializeBitmap(HBITMAP hbmp, size_t *bmpBytesOut);
-HBITMAP CreateMemoryBitmap(SizeI size, HANDLE *hDataMapping=nullptr);
+HBITMAP CreateMemoryBitmap(SizeI size, HANDLE *hDataMapping = nullptr);
 COLORREF AdjustLightness(COLORREF c, float factor);
 float GetLightness(COLORREF c);
-double  GetProcessRunningTime();
+double GetProcessRunningTime();
 
 void RunNonElevated(const WCHAR *exePath);
-void VariantInitBstr(VARIANT& urlVar, const WCHAR *s);
-char *LoadTextResource(int resId, size_t *sizeOut=nullptr);
+void VariantInitBstr(VARIANT &urlVar, const WCHAR *s);
+char *LoadTextResource(int resId, size_t *sizeOut = nullptr);
 bool DDEExecute(const WCHAR *server, const WCHAR *topic, const WCHAR *command);
 
-void RectInflateTB(RECT& r, int top, int bottom);
-void DivideRectH(const RECT&r, int y, int dy, RECT& r1, RECT& r2, RECT& r3);
-void DivideRectV(const RECT&r, int x, int dx, RECT& r1, RECT& r2, RECT& r3);
+void RectInflateTB(RECT &r, int top, int bottom);
+void DivideRectH(const RECT &r, int y, int dy, RECT &r1, RECT &r2, RECT &r3);
+void DivideRectV(const RECT &r, int x, int dx, RECT &r1, RECT &r2, RECT &r3);
 
 HCURSOR GetCursor(LPWSTR id);
-void    SetCursor(LPWSTR id);
+void SetCursor(LPWSTR id);
