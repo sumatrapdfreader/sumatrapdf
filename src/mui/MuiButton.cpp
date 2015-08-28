@@ -302,6 +302,8 @@ void ButtonVector::Paint(Graphics *gfx, int offX, int offY)
     gfx->FillPath(brFill, tmp);
     if (0.f != s->strokeWidth)
         gfx->DrawPath(&pen, tmp);
+
+   delete tmp;
 }
 
 void ButtonVector::UpdateAfterStyleChange()
