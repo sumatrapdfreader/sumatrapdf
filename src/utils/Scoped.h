@@ -148,6 +148,7 @@ public:
 };
 typedef ScopedGdiObj<HFONT> ScopedFont;
 typedef ScopedGdiObj<HPEN> ScopedPen;
+typedef ScopedGdiObj<HBRUSH> ScopedBrush;
 
 class ScopedHdcSelect {
     HDC hdc;

@@ -222,14 +222,14 @@ static RectI DrawBottomRightLink(HWND hwnd, HDC hdc, const WCHAR *txt)
    to understand without seeing the design. */
 static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkInfo)
 {
-    HPEN penBorder = CreatePen(PS_SOLID, ABOUT_LINE_OUTER_SIZE, WIN_COL_BLACK);
-    HPEN penDivideLine = CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, WIN_COL_BLACK);
-    HPEN penLinkLine = CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, COL_BLUE_LINK);
+    ScopedPen penBorder(CreatePen(PS_SOLID, ABOUT_LINE_OUTER_SIZE, WIN_COL_BLACK));
+    ScopedPen penDivideLine(CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, WIN_COL_BLACK));
+    ScopedPen penLinkLine(CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, COL_BLUE_LINK));
 
     ScopedFont fontLeftTxt(CreateSimpleFont(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE));
     ScopedFont fontRightTxt(CreateSimpleFont(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE));
 
-    HGDIOBJ origFont = SelectObject(hdc, fontLeftTxt); /* Just to remember the orig font */
+    ScopedHdcSelect font(hdc, fontLeftTxt); /* Just to remember the orig font */
 
     ClientRect rc(hwnd);
     RECT rTmp = rc.ToRECT();
@@ -239,9 +239,9 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkI
     /* render title */
     RectI titleRect(rect.TL(), CalcSumatraVersionSize(hdc));
 
-    ScopedGdiObj<HBRUSH> bgBrush(CreateSolidBrush(GetLogoBgColor()));
-    SelectObject(hdc, bgBrush);
-    SelectObject(hdc, penBorder);
+    ScopedBrush bgBrush(CreateSolidBrush(GetLogoBgColor()));
+    ScopedHdcSelect brush(hdc, bgBrush);
+    ScopedHdcSelect pen(hdc, penBorder);
 #ifndef ABOUT_USE_LESS_COLORS
     Rectangle(hdc, rect.x, rect.y + ABOUT_LINE_OUTER_SIZE, rect.x + rect.dx, rect.y + titleRect.dy + ABOUT_LINE_OUTER_SIZE);
 #else
@@ -294,12 +294,6 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkI
     RectI divideLine(gAboutLayoutInfo[0].rightPos.x - ABOUT_LEFT_RIGHT_SPACE_DX,
                      rect.y + titleRect.dy + 4, 0, rect.y + rect.dy - 4 - gAboutLayoutInfo[0].rightPos.y);
     PaintLine(hdc, divideLine);
-
-    SelectObject(hdc, origFont);
-
-    DeleteObject(penBorder);
-    DeleteObject(penDivideLine);
-    DeleteObject(penLinkLine);
 }
 
 static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RectI *rect)
@@ -606,22 +600,22 @@ void DrawAboutPage(WindowInfo& win, HDC hdc)
 
 void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF textColor, COLORREF backgroundColor)
 {
-    HPEN penBorder = CreatePen(PS_SOLID, DOCLIST_SEPARATOR_DY, WIN_COL_BLACK);
-    HPEN penThumbBorder = CreatePen(PS_SOLID, DOCLIST_THUMBNAIL_BORDER_W, WIN_COL_BLACK);
-    HPEN penLinkLine = CreatePen(PS_SOLID, 1, COL_BLUE_LINK);
+    ScopedPen penBorder(CreatePen(PS_SOLID, DOCLIST_SEPARATOR_DY, WIN_COL_BLACK));
+    ScopedPen penThumbBorder(CreatePen(PS_SOLID, DOCLIST_THUMBNAIL_BORDER_W, WIN_COL_BLACK));
+    ScopedPen penLinkLine(CreatePen(PS_SOLID, 1, COL_BLUE_LINK));
 
     ScopedFont fontSumatraTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 24));
     ScopedFont fontLeftTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 14));
 
-    HGDIOBJ origFont = SelectObject(hdc, fontSumatraTxt); /* Just to remember the orig font */
+    ScopedHdcSelect font(hdc, fontSumatraTxt);
 
     ClientRect rc(win.hwndCanvas);
     RECT rTmp = rc.ToRECT();
-    ScopedGdiObj<HBRUSH> brushLogoBg(CreateSolidBrush(GetLogoBgColor()));
+    ScopedBrush brushLogoBg(CreateSolidBrush(GetLogoBgColor()));
     FillRect(hdc, &rTmp, brushLogoBg);
 
-    SelectObject(hdc, brushLogoBg);
-    SelectObject(hdc, penBorder);
+    ScopedHdcSelect brush(hdc, brushLogoBg);
+    ScopedHdcSelect pen(hdc, penBorder);
 
     bool isRtl = IsUIRightToLeft();
 
@@ -754,10 +748,4 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF 
 
     rect = DrawBottomRightLink(win.hwndCanvas, hdc, _TR("Hide frequently read"));
     win.staticLinks.Append(StaticLinkInfo(rect, SLINK_LIST_HIDE));
-
-    SelectObject(hdc, origFont);
-
-    DeleteObject(penBorder);
-    DeleteObject(penThumbBorder);
-    DeleteObject(penLinkLine);
 }
