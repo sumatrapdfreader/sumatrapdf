@@ -20,6 +20,7 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #endif
 
 #include "BaseUtil.h"
+#include "WinDynCalls.h"
 #include <tlhelp32.h>
 #include <io.h>
 #include "FileUtil.h"
@@ -1019,6 +1020,7 @@ int APIENTRY WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/,
     int ret = 1;
 
     SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
+    InitDynCalls();
 
     ScopedCom com;
     InitAllCommonControls();

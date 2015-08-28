@@ -40,15 +40,6 @@ void FillWndClassEx(WNDCLASSEX &wcex, const WCHAR *clsName, WNDPROC wndproc) {
     wcex.lpfnWndProc = wndproc;
 }
 
-// Return true if application is themed. Wrapper around IsAppThemed() in uxtheme.dll
-// that is compatible with earlier windows versions.
-bool _IsAppThemed() {
-    if (HasIsAppThemed && DynIsAppThemed()) {
-        return true;
-    }
-    return false;
-}
-
 /* Vista is major: 6, minor: 0 */
 bool IsVistaOrGreater() {
     OSVERSIONINFOEX osver = { 0 };
@@ -61,16 +52,12 @@ bool IsVistaOrGreater() {
 
 bool IsRunningInWow64() {
 #ifndef _WIN64
-    typedef BOOL(WINAPI * IsWow64ProcessProc)(HANDLE, PBOOL);
-    IsWow64ProcessProc _IsWow64Process =
-        (IsWow64ProcessProc)LoadDllFunc(L"kernel32.dll", "IsWow64Process");
     BOOL isWow = FALSE;
-    if (_IsWow64Process)
-        _IsWow64Process(GetCurrentProcess(), &isWow);
-    return isWow;
-#else
-    return false;
+    if (DynIsWow64Process && DynIsWow64Process(GetCurrentProcess(), &isWow)) {
+        return isWow == TRUE;
+    }
 #endif
+    return false;
 }
 
 void LogLastError(DWORD err) {
@@ -196,35 +183,18 @@ WCHAR *GetSpecialFolder(int csidl, bool createIfMissing) {
     return str::Dup(path);
 }
 
-#define PROCESS_EXECUTE_FLAGS 0x22
-
-/* enable "NX" execution prevention for XP, 2003
- * cf. http://www.uninformed.org/?v=2&a=4 */
-typedef HRESULT(WINAPI *_NtSetInformationProcess)(HANDLE ProcessHandle,
-                                                  UINT ProcessInformationClass,
-                                                  PVOID ProcessInformation,
-                                                  ULONG ProcessInformationLength);
-
-#define MEM_EXECUTE_OPTION_DISABLE 0x1
-#define MEM_EXECUTE_OPTION_ENABLE 0x2
-#define MEM_EXECUTE_OPTION_PERMANENT 0x8
-#define MEM_EXECUTE_OPTION_DISABLE_ATL 0x4
-
-
 void DisableDataExecution() {
     // first try the documented SetProcessDEPPolicy
-    if (HasSetProcessDEPPolicy) {
+    if (DynSetProcessDEPPolicy) {
         DynSetProcessDEPPolicy(PROCESS_DEP_ENABLE);
         return;
     }
 
     // now try undocumented NtSetInformationProcess
-    _NtSetInformationProcess ntsip;
-    DWORD depMode = MEM_EXECUTE_OPTION_DISABLE | MEM_EXECUTE_OPTION_DISABLE_ATL;
-
-    ntsip = (_NtSetInformationProcess)LoadDllFunc(L"ntdll.dll", "NtSetInformationProcess");
-    if (ntsip)
-        ntsip(GetCurrentProcess(), PROCESS_EXECUTE_FLAGS, &depMode, sizeof(depMode));
+    if (DynNtSetInformationProcess) {
+        DWORD depMode = MEM_EXECUTE_OPTION_DISABLE | MEM_EXECUTE_OPTION_DISABLE_ATL;
+        DynNtSetInformationProcess(GetCurrentProcess(), PROCESS_EXECUTE_FLAGS, &depMode, sizeof(depMode));
+    }
 }
 
 // Code from http://www.halcyon.com/~ast/dload/guicon.htm

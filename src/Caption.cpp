@@ -61,7 +61,7 @@ CaptionInfo::CaptionInfo(HWND hwndCaption): hwnd(hwndCaption), theme(nullptr), i
 
 CaptionInfo::~CaptionInfo() {
     if (theme)
-        vss::CloseThemeData(theme);
+        dyn::CloseThemeData(theme);
 }
 
 void CaptionInfo::UpdateBackgroundAlpha()
@@ -72,11 +72,11 @@ void CaptionInfo::UpdateBackgroundAlpha()
 void CaptionInfo::UpdateTheme()
 {
     if (theme) {
-        vss::CloseThemeData(theme);
+        dyn::CloseThemeData(theme);
         theme = nullptr;
     }
-    if (vss::IsThemeActive())
-        theme = vss::OpenThemeData(hwnd, L"WINDOW");
+    if (dyn::IsThemeActive())
+        theme = dyn::OpenThemeData(hwnd, L"WINDOW");
 }
 
 void CaptionInfo::UpdateColors(bool activeWindow)
@@ -99,12 +99,12 @@ void CaptionInfo::UpdateColors(bool activeWindow)
             B = BYTE((int)floor(B * factor + 0.5f) + white);
             bgColor = RGB(R, G, B);
     }
-    else if (!theme || !SUCCEEDED(vss::GetThemeColor(theme, WP_CAPTION, 0,
+    else if (!theme || !SUCCEEDED(dyn::GetThemeColor(theme, WP_CAPTION, 0,
         activeWindow ? TMT_FILLCOLORHINT : TMT_BORDERCOLORHINT, &bgColor))) {
             bgColor = activeWindow ? GetSysColor(COLOR_GRADIENTACTIVECAPTION)
                                    : GetSysColor(COLOR_GRADIENTINACTIVECAPTION);
     }
-    if (!theme || !SUCCEEDED(vss::GetThemeColor(theme, WP_CAPTION, 0,
+    if (!theme || !SUCCEEDED(dyn::GetThemeColor(theme, WP_CAPTION, 0,
         (activeWindow || dwm::IsCompositionEnabled()) ? TMT_CAPTIONTEXT : TMT_INACTIVECAPTIONTEXT, &textColor))) {
             textColor = (activeWindow || dwm::IsCompositionEnabled()) ? GetSysColor(COLOR_CAPTIONTEXT)
                                                                       : GetSysColor(COLOR_INACTIVECAPTIONTEXT);
@@ -409,12 +409,12 @@ static void DrawCaptionButton(DRAWITEMSTRUCT *item, WindowInfo *win)
 
     // draw system button
     if (partId) {
-        if (rc != rButton || vss::IsThemeBackgroundPartiallyTransparent(win->caption->theme, partId, stateId))
+        if (rc != rButton || dyn::IsThemeBackgroundPartiallyTransparent(win->caption->theme, partId, stateId))
             PaintCaptionBackground(memDC, win, false);
 
         RECT r = rc.ToRECT();
         if (win->caption->theme)
-            vss::DrawThemeBackground(win->caption->theme, memDC, partId, stateId, &r, nullptr);
+            dyn::DrawThemeBackground(win->caption->theme, memDC, partId, stateId, &r, nullptr);
         else
             DrawFrameControl(memDC, &r, DFC_CAPTION, state);
     }

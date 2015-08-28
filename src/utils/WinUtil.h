@@ -33,7 +33,6 @@ inline void MoveWindow(HWND hwnd, RECT *r) {
     MoveWindow(hwnd, r->left, r->top, RectDx(*r), RectDy(*r), TRUE);
 }
 
-bool _IsAppThemed();
 bool IsRunningInWow64();
 bool IsVistaOrGreater();
 

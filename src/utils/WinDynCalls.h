@@ -4,13 +4,14 @@ License: Simplified BSD (see COPYING.BSD) */
 /*
 A centrialized location for all APIs that we need to load dynamically.
 The convention is: for a function like SetProcessDEPPolicy(), we define
-a bool flag HasSetProcessDEPPolicy and function pointer DynSetProcessDEPPolicy()
-(with a signature matching SetProcessDEPPolicy()).
+a  function pointer DynSetProcessDEPPolicy() (with a signature matching SetProcessDEPPolicy()).
 
-The intent is to simplify by (potentially) loading all functions at once instead
-of scattering those calls 
+You can test if a function is available with if (DynSetProcessDEPPolicy).
+
+The intent is to standardize how we do it.
 */
 
+// as an exception, we include the headers needed for the calls that we dynamically load
 #include <dwmapi.h>
 #include <vssym32.h>
 
@@ -20,6 +21,20 @@ of scattering those calls
 #define PROCESS_DEP_DISABLE_ATL_THUNK_EMULATION 0x2
 #endif
 typedef BOOL(WINAPI *Sig_SetProcessDEPPolicy)(DWORD dwFlags);
+typedef BOOL(WINAPI *Sig_IsWow64Process)(HANDLE, PBOOL);
+
+// ntdll.dll
+
+#define PROCESS_EXECUTE_FLAGS 0x22
+#define MEM_EXECUTE_OPTION_DISABLE 0x1
+#define MEM_EXECUTE_OPTION_ENABLE 0x2
+#define MEM_EXECUTE_OPTION_PERMANENT 0x8
+#define MEM_EXECUTE_OPTION_DISABLE_ATL 0x4
+
+/* enable "NX" execution prevention for XP, 2003
+* cf. http://www.uninformed.org/?v=2&a=4 */
+typedef HRESULT(WINAPI *Sig_NtSetInformationProcess)(HANDLE ProcessHandle, UINT ProcessInformationClass, PVOID ProcessInformation, ULONG ProcessInformationLength);
+
 
 // ustheme.dll
 
@@ -45,10 +60,14 @@ typedef BOOL(WINAPI *Sig_IsThemeActive)(void);
 typedef BOOL(WINAPI *Sig_IsThemeBackgroundPartiallyTransparent)(HTHEME hTheme, int iPartId, int iStateId);
 typedef HRESULT(WINAPI *Sig_GetThemeColor)(HTHEME hTheme, int iPartId, int iStateId, int iPropId, COLORREF *pColor);
 
-#define KERNEL32_APIS_LIST(V) \
-    V(SetProcessDEPPolicy)
+#define KERNEL32_API_LIST(V) \
+    V(SetProcessDEPPolicy) \
+    V(IsWow64Process)
 
-#define UXTHEME_APIS_LIST(V) \
+#define NTDLL_API_LIST(V) \
+    V(NtSetInformationProcess)
+
+#define UXTHEME_API_LIST(V) \
     V(IsAppThemed) \
     V(OpenThemeData) \
     V(CloseThemeData) \
@@ -58,11 +77,11 @@ typedef HRESULT(WINAPI *Sig_GetThemeColor)(HTHEME hTheme, int iPartId, int iStat
     V(GetThemeColor)
 
 #define API_DECLARATION(name) \
-extern bool  Has##name; \
 extern Sig_##name Dyn##name;
 
-KERNEL32_APIS_LIST(API_DECLARATION)
-UXTHEME_APIS_LIST(API_DECLARATION)
+KERNEL32_API_LIST(API_DECLARATION)
+NTDLL_API_LIST(API_DECLARATION)
+UXTHEME_API_LIST(API_DECLARATION)
 
 #undef API_DECLARATION
 
@@ -70,12 +89,15 @@ HMODULE SafeLoadLibrary(const WCHAR *dllName);
 void InitDynCalls();
 
 // convenience wrappers
-namespace vss {
-    HTHEME OpenThemeData(HWND hwnd, LPCWSTR pszClassList);
-    HRESULT CloseThemeData(HTHEME hTheme);
-    HRESULT DrawThemeBackground(HTHEME hTheme, HDC hdc, int iPartId, int iStateId, LPCRECT pRect, LPCRECT pClipRect);
-    BOOL IsThemeActive();
-    BOOL IsThemeBackgroundPartiallyTransparent(HTHEME hTheme, int iPartId, int iStateId);
-    HRESULT GetThemeColor(HTHEME hTheme, int iPartId, int iStateId, int iPropId, COLORREF *pColor);
+namespace dyn {
+
+bool IsAppThemed();
+HTHEME OpenThemeData(HWND hwnd, LPCWSTR pszClassList);
+HRESULT CloseThemeData(HTHEME hTheme);
+HRESULT DrawThemeBackground(HTHEME hTheme, HDC hdc, int iPartId, int iStateId, LPCRECT pRect, LPCRECT pClipRect);
+BOOL IsThemeActive();
+BOOL IsThemeBackgroundPartiallyTransparent(HTHEME hTheme, int iPartId, int iStateId);
+HRESULT GetThemeColor(HTHEME hTheme, int iPartId, int iStateId, int iPropId, COLORREF *pColor);
+
 };
 
