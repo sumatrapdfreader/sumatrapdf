@@ -56,6 +56,7 @@
 #include "PdfSync.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
+#include "WinUtil.h"
 
 // Note: adding chm handling to DisplayModel is a hack, because DisplayModel
 // doesn't map to chm features well.
@@ -224,19 +225,6 @@ void DisplayModel::SetInitialViewSettings(DisplayMode newDisplayMode, int newSta
     }
     displayR2L = (layout & Layout_R2L) != 0;
     BuildPagesInfo();
-}
-
-// 0 - metric (centimeters etc.)
-// 1 - imperial (inches etc.)
-// this triggers drmemory. Force no inlining so that it's easy to write a
-// localized suppression
-static __declspec(noinline) int GetMeasurementSystem() {
-    WCHAR unitSystem[2] = { 0 };
-    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_IMEASURE, unitSystem, dimof(unitSystem));
-    if (unitSystem[0] == '0') {
-        return 0;
-    }
-    return 1;
 }
 
 void DisplayModel::BuildPagesInfo()

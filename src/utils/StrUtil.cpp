@@ -836,7 +836,7 @@ bool HexToMem(const char *s, unsigned char *buf, size_t bufLen)
 // Caller needs to free() the result.
 WCHAR *FormatNumWithThousandSep(size_t num, LCID locale)
 {
-    WCHAR thousandSep[4];
+    WCHAR thousandSep[4] = { 0 };
     if (!GetLocaleInfo(locale, LOCALE_STHOUSAND, thousandSep, dimof(thousandSep)))
         str::BufSet(thousandSep, dimof(thousandSep), L",");
     ScopedMem<WCHAR> buf(str::Format(L"%Iu", num));

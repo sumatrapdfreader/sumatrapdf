@@ -811,6 +811,7 @@ Exit:
         DeleteWindowInfo(gWindows.At(0));
     }
 
+    DeleteCachedCursors();
 #ifndef DEBUG
 
     // leave all the remaining clean-up to the OS

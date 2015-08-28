@@ -1266,3 +1266,28 @@ HCURSOR GetCursor(LPWSTR id) {
 }
 
 void SetCursor(LPWSTR id) { SetCursor(GetCursor(id)); }
+
+void DeleteCachedCursors() {
+    for (int i = 0; i < dimof(knownCursorIds); i++) {
+        HCURSOR cur = cachedCursors[i];
+        if (cur) {
+            DestroyCursor(cur);
+            cachedCursors[i] = NULL;
+        }
+    }
+}
+
+
+// 0 - metric (centimeters etc.)
+// 1 - imperial (inches etc.)
+// this triggers drmemory. Force no inlining so that it's easy to write a
+// localized suppression
+__declspec(noinline) int GetMeasurementSystem() {
+    WCHAR unitSystem[2] = { 0 };
+    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_IMEASURE, unitSystem, dimof(unitSystem));
+    if (unitSystem[0] == '0') {
+        return 0;
+    }
+    return 1;
+}
+

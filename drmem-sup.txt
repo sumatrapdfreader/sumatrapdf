@@ -34,3 +34,28 @@ UNINITIALIZED READ
 name=GetLocaleInfoW
 ...
 SumatraPDF.exe!GetMeasurementSystem
+
+# GetUserInfoWord
+UNINITIALIZED READ
+name=GetUserInfoWord
+KERNELBASE.dll!GetUserInfoWord
+...
+SumatraPDF.exe!FormatSystemTime
+
+# GetDateFormatW from kernelbase.dll and kernel32.dll
+UNINITIALIZED READ
+name=GetDateFormatW
+*!GetDateFormatW
+...
+SumatraPDF.exe!FormatSystemTime
+
+# GetUserInfo
+UNINITIALIZED READ
+name=GetUserInfo
+KERNELBASE.dll!GetUserInfo
+
+# weird leak 
+LEAK
+name=weird leak
+...
+SumatraPDF.exe!pre_c_initialization

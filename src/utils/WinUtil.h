@@ -193,3 +193,6 @@ void DivideRectV(const RECT &r, int x, int dx, RECT &r1, RECT &r2, RECT &r3);
 
 HCURSOR GetCursor(LPWSTR id);
 void SetCursor(LPWSTR id);
+void DeleteCachedCursors();
+
+int GetMeasurementSystem();

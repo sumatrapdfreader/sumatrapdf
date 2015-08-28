@@ -127,8 +127,9 @@ static bool IsoDateParse(const WCHAR *isoDate, SYSTEMTIME *timeOut)
 
 static WCHAR *FormatSystemTime(SYSTEMTIME& date)
 {
-    WCHAR buf[512];
+    WCHAR buf[512] = { 0 };
     int cchBufLen = dimof(buf);
+    ZeroMemory(&date, sizeof(SYSTEMTIME));
     int ret = GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &date, nullptr, buf, cchBufLen);
     if (ret < 2) // GetDateFormat() failed or returned an empty result
         return nullptr;
@@ -240,9 +241,7 @@ static WCHAR *FormatPageSize(BaseEngine *engine, int pageNo, int rotation)
     case Paper_Tabloid: formatName = L" (Tabloid)"; break;
     }
 
-    WCHAR unitSystem[2];
-    GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_IMEASURE, unitSystem, dimof(unitSystem));
-    bool isMetric = unitSystem[0] == '0';
+    bool isMetric = GetMeasurementSystem() == 0;
     double unitsPerInch = isMetric ? 2.54 : 1.0;
     const WCHAR *unit = isMetric ? L"cm" : L"in";
 
