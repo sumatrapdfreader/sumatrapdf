@@ -29,5 +29,9 @@ UNINITIALIZED READ
 name=parallels driver on the stack
 ...
 PrlToolsShellExt.dll!*
+
+# GetLocaleInfoW
+UNINITIALIZED READ
+name=GetLocaleInfoW
 ...
-SumatraPDF.exe!WinMain
+SumatraPDF.exe!GetMeasurementSystem

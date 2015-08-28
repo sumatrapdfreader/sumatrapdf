@@ -226,18 +226,29 @@ void DisplayModel::SetInitialViewSettings(DisplayMode newDisplayMode, int newSta
     BuildPagesInfo();
 }
 
+// 0 - metric (centimeters etc.)
+// 1 - imperial (inches etc.)
+// this triggers drmemory. Force no inlining so that it's easy to write a
+// localized suppression
+static __declspec(noinline) int GetMeasurementSystem() {
+    WCHAR unitSystem[2] = { 0 };
+    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_IMEASURE, unitSystem, dimof(unitSystem));
+    if (unitSystem[0] == '0') {
+        return 0;
+    }
+    return 1;
+}
+
 void DisplayModel::BuildPagesInfo()
 {
     AssertCrash(!pagesInfo);
     int pageCount = PageCount();
     pagesInfo = AllocArray<PageInfo>(pageCount);
 
-    WCHAR unitSystem[2] = { 0 };
-    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_IMEASURE, unitSystem, dimof(unitSystem));
     RectD defaultRect;
-    if (unitSystem[0] == '0') // metric A4 size
+    if (0 == GetMeasurementSystem())
         defaultRect = RectD(0, 0, 21.0 / 2.54 * engine->GetFileDPI(), 29.7 / 2.54 * engine->GetFileDPI());
-    else // imperial letter size
+    else
         defaultRect = RectD(0, 0, 8.5 * engine->GetFileDPI(), 11 * engine->GetFileDPI());
 
     int columns = ColumnsFromDisplayMode(displayMode);
