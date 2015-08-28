@@ -77,25 +77,25 @@ public:
     // note: Draw() ignores any transformation set on gfx
     static TextRenderGdi *  Create(Gdiplus::Graphics *gfx);
 
-    virtual void            SetFont(CachedFont *font);
-    virtual void            SetTextColor(Gdiplus::Color col);
-    virtual void            SetTextBgColor(Gdiplus::Color col);
+    void            SetFont(CachedFont *font) override;
+    void            SetTextColor(Gdiplus::Color col) override;
+    void            SetTextBgColor(Gdiplus::Color col) override;
 
-    virtual float           GetCurrFontLineSpacing();
+    float           GetCurrFontLineSpacing() override;
 
-    virtual Gdiplus::RectF  Measure(const char *s, size_t sLen);
-    virtual Gdiplus::RectF  Measure(const WCHAR *s, size_t sLen);
+    Gdiplus::RectF  Measure(const char *s, size_t sLen) override;
+    Gdiplus::RectF  Measure(const WCHAR *s, size_t sLen) override;
 
-    virtual void            Lock();
-    virtual void            Unlock();
+    void            Lock() override;
+    void            Unlock() override;
 
-    virtual void            Draw(const char *s, size_t sLen, RectF& bb, bool isRtl=false);
-    virtual void            Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isRtl=false);
+    void            Draw(const char *s, size_t sLen, RectF& bb, bool isRtl=false) override;
+    void            Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isRtl=false) override;
 
     void                    DrawTransparent(const char *s, size_t sLen, RectF& bb, bool isRtl=false);
     void                    DrawTransparent(const WCHAR *s, size_t sLen, RectF& bb, bool isRtl=false);
 
-    virtual ~TextRenderGdi();
+    ~TextRenderGdi() override;
 };
 
 class TextRenderGdiplus : public ITextRender {
@@ -114,22 +114,22 @@ private:
 public:
     static TextRenderGdiplus*  Create(Gdiplus::Graphics *gfx, Gdiplus::RectF (*measureAlgo)(Gdiplus::Graphics *g, Gdiplus::Font *f, const WCHAR *s, int len)=nullptr);
 
-    virtual void                SetFont(CachedFont *font);
-    virtual void                SetTextColor(Gdiplus::Color col);
-    virtual void                SetTextBgColor(Gdiplus::Color col) { UNUSED(col);  }
+    void                SetFont(CachedFont *font) override;
+    void                SetTextColor(Gdiplus::Color col) override;
+    void                SetTextBgColor(Gdiplus::Color col) override { UNUSED(col); }
 
-    virtual float               GetCurrFontLineSpacing();
+    float               GetCurrFontLineSpacing() override;
 
-    virtual Gdiplus::RectF      Measure(const char *s, size_t sLen);
-    virtual Gdiplus::RectF      Measure(const WCHAR *s, size_t sLen);
+    Gdiplus::RectF      Measure(const char *s, size_t sLen) override;
+    Gdiplus::RectF      Measure(const WCHAR *s, size_t sLen) override;
 
-    virtual void Lock() {}
-    virtual void Unlock() {}
+    void Lock()  override {}
+    void Unlock()  override {}
 
-    virtual void                Draw(const char *s, size_t sLen, RectF& bb, bool isRtl=false);
-    virtual void                Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isRtl=false);
+    void                Draw(const char *s, size_t sLen, RectF& bb, bool isRtl=false) override;
+    void                Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isRtl=false) override;
 
-    virtual ~TextRenderGdiplus();
+    ~TextRenderGdiplus() override;
 };
 
 // Note: this is not meant to be used, just exists so that I can see
@@ -157,22 +157,22 @@ class TextRenderHdc : public ITextRender {
 public:
     static TextRenderHdc* Create(Gdiplus::Graphics *gfx, int dx, int dy);
 
-    virtual void                SetFont(CachedFont *font);
-    virtual void                SetTextColor(Gdiplus::Color col);
-    virtual void                SetTextBgColor(Gdiplus::Color col);
+    void                SetFont(CachedFont *font) override;
+    void                SetTextColor(Gdiplus::Color col) override;
+    void                SetTextBgColor(Gdiplus::Color col) override;
 
-    virtual float               GetCurrFontLineSpacing();
+    float               GetCurrFontLineSpacing() override;
 
-    virtual Gdiplus::RectF      Measure(const char *s, size_t sLen);
-    virtual Gdiplus::RectF      Measure(const WCHAR *s, size_t sLen);
+    Gdiplus::RectF      Measure(const char *s, size_t sLen) override;
+    Gdiplus::RectF      Measure(const WCHAR *s, size_t sLen) override;
 
-    virtual void Lock();
-    virtual void Unlock();
+    void Lock() override;
+    void Unlock() override;
 
-    virtual void                Draw(const char *s, size_t sLen, RectF& bb, bool isRtl=false);
-    virtual void                Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isRtl=false);
+    void                Draw(const char *s, size_t sLen, RectF& bb, bool isRtl=false) override;
+    void                Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isRtl=false) override;
 
-    virtual ~TextRenderHdc();
+    ~TextRenderHdc() override;
 };
 
 ITextRender *CreateTextRender(TextRenderMethod method, Graphics *gfx, int dx, int dy);
