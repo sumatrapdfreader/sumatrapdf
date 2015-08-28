@@ -8,7 +8,7 @@ EXIT /B 1
 :VSFOUND
 
 REM add our nasm.exe and StripReloc.exe to the path
-SET PATH=%CD%\bin;%PATH%
+SET PATH=%CD%\bin;c:\Python27;%PATH%
 
 rem work-around cygwin/msdev issue
 set tmp=

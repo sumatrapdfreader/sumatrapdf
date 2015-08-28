@@ -228,12 +228,12 @@ void DisplayModel::SetInitialViewSettings(DisplayMode newDisplayMode, int newSta
 
 void DisplayModel::BuildPagesInfo()
 {
-    assert(!pagesInfo);
+    AssertCrash(!pagesInfo);
     int pageCount = PageCount();
     pagesInfo = AllocArray<PageInfo>(pageCount);
 
     WCHAR unitSystem[2] = { 0 };
-    GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_IMEASURE, unitSystem, dimof(unitSystem));
+    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_IMEASURE, unitSystem, dimof(unitSystem));
     RectD defaultRect;
     if (unitSystem[0] == '0') // metric A4 size
         defaultRect = RectD(0, 0, 21.0 / 2.54 * engine->GetFileDPI(), 29.7 / 2.54 * engine->GetFileDPI());

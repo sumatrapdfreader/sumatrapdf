@@ -135,9 +135,9 @@ bool Save()
     CrashIf(!path);
     if (!path)
         return false;
-    size_t prevPrefsDataSize;
+    size_t prevPrefsDataSize = 0;
     ScopedMem<char> prevPrefsData(file::ReadAll(path, &prevPrefsDataSize));
-    size_t prefsDataSize;
+    size_t prefsDataSize = 0;
     ScopedMem<char> prefsData(SerializeGlobalPrefs(gGlobalPrefs, prevPrefsData, &prefsDataSize));
 
     CrashIf(!prefsData || 0 == prefsDataSize);
