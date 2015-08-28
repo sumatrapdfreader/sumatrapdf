@@ -32,119 +32,130 @@ understand.
 namespace svg {
 
 enum PathInstrType {
-    MoveAbs = 0, MoveRel,   // M, m
-    LineToAbs, LineToRel,   // L, l
-    HLineAbs, HLineRel,     // H, h
-    VLineAbs, VLineRel,     // V, v
-    BezierCAbs, BezierCRel, // C, c
-    BezierSAbs, BezierSRel, // S, s
-    BezierQAbs, BezierQRel, // Q, q
-    BezierTAbs, BezierTRel, // T, t
-    ArcAbs, ArcRel,         // A, a
-    Close, Close2,          // Z, z
-    Count, Unknown = Count
+    MoveAbs = 0,
+    MoveRel, // M, m
+    LineToAbs,
+    LineToRel, // L, l
+    HLineAbs,
+    HLineRel, // H, h
+    VLineAbs,
+    VLineRel, // V, v
+    BezierCAbs,
+    BezierCRel, // C, c
+    BezierSAbs,
+    BezierSRel, // S, s
+    BezierQAbs,
+    BezierQRel, // Q, q
+    BezierTAbs,
+    BezierTRel, // T, t
+    ArcAbs,
+    ArcRel, // A, a
+    Close,
+    Close2, // Z, z
+    Count,
+    Unknown = Count
 };
 
 // the order must match order of PathInstrType enums
 static char *instructions = "MmLlHhVvCcSsQqTtAaZz";
 
 struct SvgPathInstr {
-    SvgPathInstr(PathInstrType type) : type(type) { }
+    SvgPathInstr(PathInstrType type) : type(type) {}
 
-    PathInstrType   type;
+    PathInstrType type;
     // the meaning of values depends on InstrType. We could be more safe
     // by giving them symbolic names but this gives us simpler parsing
-    float           v[6];
-    bool            largeArc, sweep;
+    float v[6];
+    bool largeArc, sweep;
 };
 
-static PathInstrType GetInstructionType(char c)
-{
-   const char *pos = str::FindChar(instructions, c);
-   if (!pos)
-       return Unknown;
-   return (PathInstrType)(pos - instructions);
+static PathInstrType GetInstructionType(char c) {
+    const char *pos = str::FindChar(instructions, c);
+    if (!pos)
+        return Unknown;
+    return (PathInstrType)(pos - instructions);
 }
 
-static bool ParseSvgPathData(const char * s, VecSegmented<SvgPathInstr>& instr)
-{
-    for (; str::IsWs(*s); s++);
+static bool ParseSvgPathData(const char *s, VecSegmented<SvgPathInstr> &instr) {
+    for (; str::IsWs(*s); s++)
+        ;
 
     while (*s) {
         SvgPathInstr i(GetInstructionType(*s++));
         switch (i.type) {
-        case Close: case Close2:
-            break;
+            case Close:
+            case Close2:
+                break;
 
-        case HLineAbs: case HLineRel:
-        case VLineAbs: case VLineRel:
-            s = str::Parse(s, "%f", &i.v[0]);
-            break;
+            case HLineAbs:
+            case HLineRel:
+            case VLineAbs:
+            case VLineRel:
+                s = str::Parse(s, "%f", &i.v[0]);
+                break;
 
-        case MoveAbs: case MoveRel:
-        case LineToAbs: case LineToRel:
-        case BezierTAbs: case BezierTRel:
-            s = str::Parse(s, "%f%_%?,%_%f", &i.v[0], &i.v[1]);
-            break;
+            case MoveAbs:
+            case MoveRel:
+            case LineToAbs:
+            case LineToRel:
+            case BezierTAbs:
+            case BezierTRel:
+                s = str::Parse(s, "%f%_%?,%_%f", &i.v[0], &i.v[1]);
+                break;
 
-        case BezierSAbs: case BezierSRel:
-        case BezierQAbs: case BezierQRel:
-            s = str::Parse(s, "%f%_%?,%_%f,%f%_%?,%_%f",
-                &i.v[0], &i.v[1], &i.v[2], &i.v[3]);
-            break;
+            case BezierSAbs:
+            case BezierSRel:
+            case BezierQAbs:
+            case BezierQRel:
+                s = str::Parse(s, "%f%_%?,%_%f,%f%_%?,%_%f", &i.v[0], &i.v[1], &i.v[2], &i.v[3]);
+                break;
 
-        case BezierCAbs: case BezierCRel:
-            s = str::Parse(s, "%f%_%?,%_%f,%f%_%?,%_%f,%f%_%?,%_%f",
-                &i.v[0], &i.v[1], &i.v[2], &i.v[3], &i.v[4], &i.v[5]);
-            break;
+            case BezierCAbs:
+            case BezierCRel:
+                s = str::Parse(s, "%f%_%?,%_%f,%f%_%?,%_%f,%f%_%?,%_%f", &i.v[0], &i.v[1], &i.v[2],
+                               &i.v[3], &i.v[4], &i.v[5]);
+                break;
 
-        case ArcAbs: case ArcRel:
-            {
+            case ArcAbs:
+            case ArcRel: {
                 int largeArc, sweep;
                 s = str::Parse(s, "%f%_%?,%_%f%_%?,%_%f%_%?,%_%d%_%?,%_%d%_%?,%_%f%_%?,%_%f",
-                    &i.v[0], &i.v[1], &i.v[2], &largeArc, &sweep, &i.v[3], &i.v[4]);
-                i.largeArc = (largeArc != 0); i.sweep = (sweep != 0);
-            }
-            break;
+                               &i.v[0], &i.v[1], &i.v[2], &largeArc, &sweep, &i.v[3], &i.v[4]);
+                i.largeArc = (largeArc != 0);
+                i.sweep = (sweep != 0);
+            } break;
 
-        default:
-            CrashIf(true);
-            return false;
+            default:
+                CrashIf(true);
+                return false;
         }
         if (!s)
             return false;
         instr.Append(i);
 
-        for (; str::IsWs(*s); s++);
+        for (; str::IsWs(*s); s++)
+            ;
     }
 
     return true;
 }
 
-static void RelPointToAbs(const PointF& lastEnd, float *xy)
-{
+static void RelPointToAbs(const PointF &lastEnd, float *xy) {
     xy[0] = lastEnd.X + xy[0];
     xy[1] = lastEnd.Y + xy[1];
 }
 
-static void RelXToAbs(const PointF& lastEnd, float *x)
-{
-    *x = lastEnd.X + *x;
-}
+static void RelXToAbs(const PointF &lastEnd, float *x) { *x = lastEnd.X + *x; }
 
-static void RelYToAbs(const PointF& lastEnd, float *y)
-{
-    *y = lastEnd.Y + *y;
-}
+static void RelYToAbs(const PointF &lastEnd, float *y) { *y = lastEnd.Y + *y; }
 
-GraphicsPath *GraphicsPathFromPathData(const char *s)
-{
+GraphicsPath *GraphicsPathFromPathData(const char *s) {
     VecSegmented<SvgPathInstr> instr;
     if (!ParseSvgPathData(s, instr))
         return nullptr;
     GraphicsPath *gp = ::new GraphicsPath();
     PointF prevEnd(0.f, 0.f);
-    for (SvgPathInstr& i : instr) {
+    for (SvgPathInstr &i : instr) {
         PathInstrType type = i.type;
 
         // convert relative coordinates to absolute based on end position of
@@ -190,5 +201,4 @@ GraphicsPath *GraphicsPathFromPathData(const char *s)
     }
     return gp;
 }
-
 }

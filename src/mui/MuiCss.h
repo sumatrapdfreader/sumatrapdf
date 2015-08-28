@@ -5,36 +5,36 @@ namespace css {
 
 enum PropType {
     // Maybe: use Style::styleName instead of PropStyleName
-    PropStyleName = 0,      // unique name of the style
-    PropFontName,           // font-family
-    PropFontSize,           // font-size
-    PropFontWeight,         // font-weight
-    PropPadding,            // padding
-    PropColor,              // color
-    PropBgColor,            // background-color
+    PropStyleName = 0, // unique name of the style
+    PropFontName,      // font-family
+    PropFontSize,      // font-size
+    PropFontWeight,    // font-weight
+    PropPadding,       // padding
+    PropColor,         // color
+    PropBgColor,       // background-color
 
-    PropBorderTopWidth,     // border-top-width
-    PropBorderRightWidth,   // border-right-width
-    PropBorderBottomWidth,  // border-bottom-width
-    PropBorderLeftWidth,    // border-left-width
+    PropBorderTopWidth,    // border-top-width
+    PropBorderRightWidth,  // border-right-width
+    PropBorderBottomWidth, // border-bottom-width
+    PropBorderLeftWidth,   // border-left-width
 
-    PropBorderTopColor,     // border-top-color
-    PropBorderRightColor,   // border-right-color
-    PropBorderBottomColor,  // border-bottom-color
-    PropBorderLeftColor,    // border-left-color
+    PropBorderTopColor,    // border-top-color
+    PropBorderRightColor,  // border-right-color
+    PropBorderBottomColor, // border-bottom-color
+    PropBorderLeftColor,   // border-left-color
 
-    PropTextAlign,          // text-align
+    PropTextAlign, // text-align
 
     // used to define horizontal/vertical alignment of an element
     // inside a container. Used e.g. for a ButtonVector
     PropVertAlign,
     PropHorizAlign,
 
-    PropFill,               // fill, used for svg::path
-    PropStroke,             // stroke, used for svg::path
-    PropStrokeWidth,        // stroke-width, used for svg::path
+    PropFill,        // fill, used for svg::path
+    PropStroke,      // stroke, used for svg::path
+    PropStrokeWidth, // stroke-width, used for svg::path
 
-    PropsCount              // must be at the end!
+    PropsCount // must be at the end!
 };
 
 bool IsWidthProp(PropType type);
@@ -46,13 +46,7 @@ bool IsAlignProp(PropType type);
 // Top/Left and Bottom/Right are represented by the same ElAlignData
 // values but they're semantically different, so we given them unique names
 // Note: must start at 0 and the order must match g_ElAlignVals
-enum class ElAlign {
-    Center = 0,
-    Top,
-    Bottom,
-    Left,
-    Right
-};
+enum class ElAlign { Center = 0, Top, Bottom, Left, Right };
 
 // A generalized way of specifying alignment (on a single axis,
 // vertical or horizontal) of an element relative to its container.
@@ -75,7 +69,7 @@ struct ElAlignData {
     float elementPoint;
     float containerPoint;
 
-    bool operator==(const ElAlignData& other) const;
+    bool operator==(const ElAlignData &other) const;
     int CalcOffset(int elSize, int containerSize) const;
 };
 
@@ -83,25 +77,15 @@ extern struct ElAlignData g_ElAlignVals[5];
 
 // we can't have constructors in ElAlignData, so those are
 // helper methods for constructing them
-static inline ElAlignData GetElAlignCenter() {
-    return g_ElAlignVals[(int)ElAlign::Center];
-}
+static inline ElAlignData GetElAlignCenter() { return g_ElAlignVals[(int)ElAlign::Center]; }
 
-static inline ElAlignData GetElAlignTop() {
-    return g_ElAlignVals[(int)ElAlign::Top];
-}
+static inline ElAlignData GetElAlignTop() { return g_ElAlignVals[(int)ElAlign::Top]; }
 
-static inline ElAlignData GetElAlignLeft() {
-    return g_ElAlignVals[(int)ElAlign::Left];
-}
+static inline ElAlignData GetElAlignLeft() { return g_ElAlignVals[(int)ElAlign::Left]; }
 
-static inline ElAlignData GetElAlignBottom() {
-    return g_ElAlignVals[(int)ElAlign::Bottom];
-}
+static inline ElAlignData GetElAlignBottom() { return g_ElAlignVals[(int)ElAlign::Bottom]; }
 
-static inline ElAlignData GetElAlignRight() {
-    return g_ElAlignVals[(int)ElAlign::Right];
-}
+static inline ElAlignData GetElAlignRight() { return g_ElAlignVals[(int)ElAlign::Right]; }
 
 static inline ElAlignData GetElAlign(ElAlign align) {
     size_t idx = (size_t)align;
@@ -121,35 +105,33 @@ enum ColorType {
 };
 
 struct ColorDataSolid {
-    ARGB    color;
-    Brush * cachedBrush;
+    ARGB color;
+    Brush *cachedBrush;
 };
 
 struct ColorDataGradientLinear {
-    LinearGradientMode    mode;
-    ARGB                  startColor;
-    ARGB                  endColor;
-    RectF *               rect;
-    LinearGradientBrush * cachedBrush;
+    LinearGradientMode mode;
+    ARGB startColor;
+    ARGB endColor;
+    RectF *rect;
+    LinearGradientBrush *cachedBrush;
 };
 
 struct ColorData {
-    ColorType   type;
+    ColorType type;
     union {
-        ColorDataSolid          solid;
+        ColorDataSolid solid;
         ColorDataGradientLinear gradientLinear;
     };
 
-    bool operator==(const ColorData& other) const;
+    bool operator==(const ColorData &other) const;
     bool IsTransparent() const { return type == ColorSolid && solid.color == 0; }
 };
 
 struct Padding {
     int top, right, bottom, left;
-    bool operator==(const Padding& other) const {
-        return (top == other.top) &&
-               (right == other.right) &&
-               (bottom == other.bottom) &&
+    bool operator==(const Padding &other) const {
+        return (top == other.top) && (right == other.right) && (bottom == other.bottom) &&
                (left == other.left);
     }
 };
@@ -160,21 +142,21 @@ struct Prop {
 
     void Free();
 
-    PropType    type;
+    PropType type;
 
     union {
-        char *      styleName;
-        WCHAR *     fontName;
-        float       fontSize;
-        FontStyle   fontWeight;
-        Padding     padding;
-        ColorData   color;
-        float       width;
-        AlignAttr   textAlign;
+        char *styleName;
+        WCHAR *fontName;
+        float fontSize;
+        FontStyle fontWeight;
+        Padding padding;
+        ColorData color;
+        float width;
+        AlignAttr textAlign;
         ElAlignData elAlign;
     };
 
-    bool Eq(const Prop* other) const;
+    bool Eq(const Prop *other) const;
 
     static Prop *AllocStyleName(const char *styleName);
     static Prop *AllocFontName(const WCHAR *name);
@@ -189,26 +171,28 @@ struct Prop {
     static Prop *AllocColorSolid(PropType type, int a, int r, int g, int b);
     static Prop *AllocColorSolid(PropType type, int r, int g, int b);
     static Prop *AllocColorSolid(PropType type, const char *color);
-    static Prop *AllocColorLinearGradient(PropType type, LinearGradientMode mode, ARGB startColor, ARGB endColor);
-    static Prop *AllocColorLinearGradient(PropType type, LinearGradientMode mode, const char *startColor, const char *endColor);
+    static Prop *AllocColorLinearGradient(PropType type, LinearGradientMode mode, ARGB startColor,
+                                          ARGB endColor);
+    static Prop *AllocColorLinearGradient(PropType type, LinearGradientMode mode,
+                                          const char *startColor, const char *endColor);
     static Prop *AllocWidth(PropType type, float width);
 };
 
 class Style {
     // if property is not found here, we'll search the
     // inheritance chain
-    Style *         inheritsFrom;
+    Style *inheritsFrom;
     // generation number, changes every time we change the style
-    size_t          gen;
+    size_t gen;
 
-public:
-    Style(Style *inheritsFrom=nullptr) : inheritsFrom(inheritsFrom) {
+  public:
+    Style(Style *inheritsFrom = nullptr) : inheritsFrom(inheritsFrom) {
         gen = 1; // so that we can use 0 for nullptr
     }
 
     void SetName(const char *n);
 
-    Vec<Prop*>  props;
+    Vec<Prop *> props;
 
     void Set(Prop *prop);
 
@@ -220,7 +204,7 @@ public:
     void SetPadding(int topBottom, int leftRight);
     void SetPadding(int top, int right, int bottom, int left);
 
-    Style * GetInheritsFrom() const;
+    Style *GetInheritsFrom() const;
     void SetInheritsFrom(Style *parent) { inheritsFrom = parent; }
     size_t GetIdentity() const;
 };
@@ -238,38 +222,38 @@ struct BorderColors {
 
 // CachedStyle combines values of all properties for easier use by clients
 struct CachedStyle {
-    const char *    styleName;
-    const WCHAR *   fontName;
-    float           fontSize;
-    FontStyle       fontWeight;
-    Padding         padding;
-    ColorData *     color;
-    ColorData *     bgColor;
-    BorderWidth     borderWidth;
-    BorderColors    borderColors;
-    AlignAttr       textAlign;
-    ElAlignData     vertAlign;
-    ElAlignData     horizAlign;
-    ColorData *     fill;
-    ColorData *     stroke;
-    float           strokeWidth;
+    const char *styleName;
+    const WCHAR *fontName;
+    float fontSize;
+    FontStyle fontWeight;
+    Padding padding;
+    ColorData *color;
+    ColorData *bgColor;
+    BorderWidth borderWidth;
+    BorderColors borderColors;
+    AlignAttr textAlign;
+    ElAlignData vertAlign;
+    ElAlignData horizAlign;
+    ColorData *fill;
+    ColorData *stroke;
+    float strokeWidth;
 };
 
 // few basic styles provided by mui
 // can be modified by the app (for easyily changing default appearance)
-Style* GetStyleDefault();
-Style* GetStyleButtonDefault();
-Style* GetStyleButtonDefaultMouseOver();
+Style *GetStyleDefault();
+Style *GetStyleButtonDefault();
+Style *GetStyleButtonDefaultMouseOver();
 
-void   Initialize();
-void   Destroy();
+void Initialize();
+void Destroy();
 
-CachedStyle* CacheStyle(Style *style, bool *changedOut);
-CachedStyle* CachedStyleByName(const char *name);
-Style *      StyleByName(const char *name);
+CachedStyle *CacheStyle(Style *style, bool *changedOut);
+CachedStyle *CachedStyleByName(const char *name);
+Style *StyleByName(const char *name);
 
-Brush *BrushFromColorData(ColorData *color, const Rect& r);
-Brush *BrushFromColorData(ColorData *color, const RectF& r);
+Brush *BrushFromColorData(ColorData *color, const Rect &r);
+Brush *BrushFromColorData(ColorData *color, const RectF &r);
 
 ARGB ParseCssColor(const char *color);
 Size GetBorderAndPaddingSize(CachedStyle *s);

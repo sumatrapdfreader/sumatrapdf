@@ -13,12 +13,8 @@
 
 using namespace Gdiplus;
 
-static void SvgPath00()
-{
-    const char *paths[] = {
-        "M0 0  L10 13 L0 ,26 Z",
-        "M10 0 L0,  13 L10 26 z"
-    };
+static void SvgPath00() {
+    const char *paths[] = { "M0 0  L10 13 L0 ,26 Z", "M10 0 L0,  13 L10 26 z" };
     for (size_t i = 0; i < dimof(paths); i++) {
         GraphicsPath *gp = svg::GraphicsPathFromPathData(paths[i]);
         utassert(gp);
@@ -26,7 +22,4 @@ static void SvgPath00()
     }
 }
 
-void SvgPath_UnitTests()
-{
-    SvgPath00();
-}
+void SvgPath_UnitTests() { SvgPath00(); }

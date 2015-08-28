@@ -11,8 +11,7 @@ using namespace Gdiplus;
 
 namespace mui {
 
-HFONT CachedFont::GetHFont()
-{
+HFONT CachedFont::GetHFont() {
     if (!hFont) {
         LOGFONTW lf;
         // TODO: Graphics is probably only used for metrics,
@@ -29,11 +28,14 @@ HFONT CachedFont::GetHFont()
 }
 
 class CachedFontItem : public CachedFont {
-public:
+  public:
     CachedFontItem *_next;
 
     CachedFontItem(const WCHAR *name, float sizePt, FontStyle style, Font *font) : _next(nullptr) {
-        this->name = str::Dup(name); this->sizePt = sizePt; this->style = style; this->font = font;
+        this->name = str::Dup(name);
+        this->sizePt = sizePt;
+        this->style = style;
+        this->font = font;
     }
     ~CachedFontItem() {
         free(name);
@@ -45,8 +47,7 @@ public:
 
 static CachedFontItem *gFontCache = nullptr;
 
-CachedFont *GetCachedFont(const WCHAR *name, float size, FontStyle style)
-{
+CachedFont *GetCachedFont(const WCHAR *name, float size, FontStyle style) {
     CachedFontItem **item = &gFontCache;
     for (; *item; item = &(*item)->_next) {
         if ((*item)->SameAs(name, size, style)) {
@@ -69,47 +70,42 @@ CachedFont *GetCachedFont(const WCHAR *name, float size, FontStyle style)
 
 // set consistent mode for our graphics objects so that we get
 // the same results when measuring text
-void InitGraphicsMode(Graphics *g)
-{
+void InitGraphicsMode(Graphics *g) {
     g->SetCompositingQuality(CompositingQualityHighQuality);
     g->SetSmoothingMode(SmoothingModeAntiAlias);
-    //g.SetSmoothingMode(SmoothingModeHighQuality);
+    // g.SetSmoothingMode(SmoothingModeHighQuality);
     g->SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
     g->SetPageUnit(UnitPixel);
 }
 
 class GlobalGraphicsHack {
     Bitmap bmp;
-public:
+
+  public:
     Graphics gfx;
 
-    GlobalGraphicsHack() : bmp(1, 1, PixelFormat32bppARGB), gfx(&bmp) {
-        InitGraphicsMode(&gfx);
-    }
+    GlobalGraphicsHack() : bmp(1, 1, PixelFormat32bppARGB), gfx(&bmp) { InitGraphicsMode(&gfx); }
 };
 
 static GlobalGraphicsHack *gGraphicsHack = nullptr;
 
-Graphics *AllocGraphicsForMeasureText()
-{
+Graphics *AllocGraphicsForMeasureText() {
     if (!gGraphicsHack) {
         gGraphicsHack = new GlobalGraphicsHack();
     }
     return &gGraphicsHack->gfx;
 }
 
-void FreeGraphicsForMeasureText(Graphics *g) { UNUSED(g); /* deallocation happens in mui::Destroy */ }
+void FreeGraphicsForMeasureText(Graphics *g) {
+    UNUSED(g); /* deallocation happens in mui::Destroy */
+}
 
 // allow for calls to mui::Initialize and mui::Destroy to be nested
 static LONG gMiniMuiRefCount = 0;
 
-void Initialize()
-{
-    InterlockedIncrement(&gMiniMuiRefCount);
-}
+void Initialize() { InterlockedIncrement(&gMiniMuiRefCount); }
 
-void Destroy()
-{
+void Destroy() {
     if (InterlockedDecrement(&gMiniMuiRefCount) != 0)
         return;
 
@@ -118,5 +114,4 @@ void Destroy()
     delete gGraphicsHack;
     gGraphicsHack = nullptr;
 }
-
 }

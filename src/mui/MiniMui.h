@@ -10,20 +10,20 @@ void Initialize();
 void Destroy();
 
 struct CachedFont {
-    WCHAR *             name;
-    float               sizePt;
-    Gdiplus::FontStyle  style;
+    WCHAR *name;
+    float sizePt;
+    Gdiplus::FontStyle style;
 
-    Gdiplus::Font *     font;
+    Gdiplus::Font *font;
     // hFont is created out of font
-    HFONT               hFont;
+    HFONT hFont;
 
-    HFONT               GetHFont();
-    Gdiplus::FontStyle  GetStyle() const { return style; }
-    float               GetSize() const { return sizePt; }
-    const WCHAR *       GetName() const { return name; }
+    HFONT GetHFont();
+    Gdiplus::FontStyle GetStyle() const { return style; }
+    float GetSize() const { return sizePt; }
+    const WCHAR *GetName() const { return name; }
 
-    bool                SameAs(const WCHAR *name, float sizePt, Gdiplus::FontStyle style) const {
+    bool SameAs(const WCHAR *name, float sizePt, Gdiplus::FontStyle style) const {
         return this->sizePt == sizePt && this->style == style && str::Eq(this->name, name);
     }
 };
@@ -33,11 +33,10 @@ CachedFont *GetCachedFont(const WCHAR *name, float sizePt, Gdiplus::FontStyle st
 void InitGraphicsMode(Gdiplus::Graphics *g);
 Gdiplus::Graphics *AllocGraphicsForMeasureText();
 void FreeGraphicsForMeasureText(Gdiplus::Graphics *g);
-
 };
 
 class ScopedMiniMui {
-public:
+  public:
     ScopedMiniMui() { mui::Initialize(); }
     ~ScopedMiniMui() { mui::Destroy(); }
 };

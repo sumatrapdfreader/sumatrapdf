@@ -7,22 +7,19 @@
 
 namespace mui {
 
-Grid::Grid(Style *style) : dirty(true), cells(nullptr),
-    maxColWidth(nullptr), maxRowHeight(nullptr), rows(0), cols(0)
-{
+Grid::Grid(Style *style)
+    : dirty(true), cells(nullptr), maxColWidth(nullptr), maxRowHeight(nullptr), rows(0), cols(0) {
     SetStyle(style);
 }
 
-Grid::~Grid()
-{
+Grid::~Grid() {
     free(cells);
     free(maxColWidth);
     free(maxRowHeight);
 }
 
 // TODO: request repaint?
-Grid& Grid::Add(Grid::CellData& ld)
-{
+Grid &Grid::Add(Grid::CellData &ld) {
     CrashIf(!ld.el);
     els.Append(ld);
     AddChild(ld.el);
@@ -30,8 +27,7 @@ Grid& Grid::Add(Grid::CellData& ld)
     return *this;
 }
 
-Grid::Cell *Grid::GetCell(int row, int col) const
-{
+Grid::Cell *Grid::GetCell(int row, int col) const {
     CrashIf(row < 0);
     CrashIf(row >= rows);
     CrashIf(col < 0);
@@ -39,8 +35,7 @@ Grid::Cell *Grid::GetCell(int row, int col) const
     return &cells[row * cols + col];
 }
 
-Point Grid::GetCellPos(int row, int col) const
-{
+Point Grid::GetCellPos(int row, int col) const {
     int x = 0, y = 0;
     for (int c = 0; c < col; c++) {
         x += maxColWidth[c];
@@ -53,8 +48,7 @@ Point Grid::GetCellPos(int row, int col) const
 
 // if there were elements added/removed from the grid,
 // we need to rebuild info about cells
-void Grid::RebuildCellDataIfNeeded()
-{
+void Grid::RebuildCellDataIfNeeded() {
     if (!dirty)
         return;
 
@@ -63,7 +57,7 @@ void Grid::RebuildCellDataIfNeeded()
     cols = 0;
     rows = 0;
 
-    for (Grid::CellData& d : els) {
+    for (Grid::CellData &d : els) {
         int maxCols = d.col + d.colSpan;
         if (maxCols > cols)
             cols = maxCols;
@@ -85,8 +79,7 @@ void Grid::RebuildCellDataIfNeeded()
     dirty = false;
 }
 
-Rect Grid::GetCellBbox(Grid::CellData *d)
-{
+Rect Grid::GetCellBbox(Grid::CellData *d) {
     Rect r;
     // TODO: probably add Grid's border to X
     Point p(GetCellPos(d->row, d->col));
@@ -101,8 +94,7 @@ Rect Grid::GetCellBbox(Grid::CellData *d)
     return r;
 }
 
-void Grid::Paint(Graphics *gfx, int offX, int offY)
-{
+void Grid::Paint(Graphics *gfx, int offX, int offY) {
     CrashIf(!IsVisible());
     CachedStyle *s = cachedStyle;
 
@@ -113,7 +105,7 @@ void Grid::Paint(Graphics *gfx, int offX, int offY)
     Rect r(offX, offY, pos.Width, pos.Height);
     DrawBorder(gfx, r, s);
 
-    for (Grid::CellData& d : els) {
+    for (Grid::CellData &d : els) {
         if (!d.cachedStyle)
             continue;
 
@@ -125,15 +117,14 @@ void Grid::Paint(Graphics *gfx, int offX, int offY)
     }
 }
 
-Size Grid::Measure(const Size availableSize)
-{
+Size Grid::Measure(const Size availableSize) {
     RebuildCellDataIfNeeded();
 
     Size borderSize(GetBorderAndPaddingSize(cachedStyle));
 
     Cell *cell;
     Control *el;
-    for (Grid::CellData& d : els) {
+    for (Grid::CellData &d : els) {
         cell = GetCell(d.row, d.col);
         cell->desiredSize.Width = 0;
         cell->desiredSize.Height = 0;
@@ -160,7 +151,7 @@ Size Grid::Measure(const Size availableSize)
     // account for cells with colSpan > 1. If cell.dx > total dx
     // of columns it spans, we widen the columns by equally
     // re-distributing the difference among columns
-    for (Grid::CellData& d : els) {
+    for (Grid::CellData &d : els) {
         if (d.colSpan == 1)
             continue;
         cell = GetCell(d.row, d.col);
@@ -186,10 +177,10 @@ Size Grid::Measure(const Size availableSize)
 
     int desiredWidth = 0;
     int desiredHeight = 0;
-    for (int row=0; row < rows; row++) {
+    for (int row = 0; row < rows; row++) {
         desiredHeight += maxRowHeight[row];
     }
-    for (int col=0; col < cols; col++) {
+    for (int col = 0; col < cols; col++) {
         desiredWidth += maxColWidth[col];
     }
     // TODO: what to do if desired size is more than availableSize?
@@ -198,12 +189,11 @@ Size Grid::Measure(const Size availableSize)
     return desiredSize;
 }
 
-void Grid::Arrange(const Rect finalRect)
-{
+void Grid::Arrange(const Rect finalRect) {
     Cell *cell;
     Control *el;
 
-    for (Grid::CellData& d : els) {
+    for (Grid::CellData &d : els) {
         cell = GetCell(d.row, d.col);
         el = d.el;
         Point pos(GetCellPos(d.row, d.col));

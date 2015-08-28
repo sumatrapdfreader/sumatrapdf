@@ -11,20 +11,17 @@
 
 namespace mui {
 
-EventMgr::EventMgr(HwndWrapper *wndRoot)
-    : wndRoot(wndRoot), currOver(nullptr), inSizeMove(false)
-{
+EventMgr::EventMgr(HwndWrapper *wndRoot) : wndRoot(wndRoot), currOver(nullptr), inSizeMove(false) {
     CrashIf(!wndRoot);
-    //CrashIf(wndRoot->hwnd);
+    // CrashIf(wndRoot->hwnd);
 }
 
-EventMgr::~EventMgr()
-{
+EventMgr::~EventMgr() {
     // unsubscribe event handlers for all controls
-    for (EventHandler& h : eventHandlers) {
+    for (EventHandler &h : eventHandlers) {
         delete h.events;
     }
-    for (NamedEventHandler& nh : namedEventHandlers) {
+    for (NamedEventHandler &nh : namedEventHandlers) {
         free((void *)nh.name);
         delete nh.namedEvents;
     }
@@ -32,8 +29,7 @@ EventMgr::~EventMgr()
 
 // Set minimum size that will be enforced by handling WM_GETMINMAXINFO
 // Default is (0,0), which is unlimited
-void EventMgr::SetMinSize(Size s)
-{
+void EventMgr::SetMinSize(Size s) {
     // TODO: need to figure out a way to force resizing
     // respecting those constraints. Could just size manually.
     // Without doing sth., the constraints will only apply
@@ -43,8 +39,7 @@ void EventMgr::SetMinSize(Size s)
 
 // Set maximum size that will be enforced by handling WM_GETMINMAXINFO
 // Default is (0,0), which is unlimited
-void EventMgr::SetMaxSize(Size s)
-{
+void EventMgr::SetMaxSize(Size s) {
     // TODO: need to figure out a way to force resizing
     // respecting those constraints. Could just size manually.
     // Without doing sth., the constraints will only apply
@@ -52,8 +47,7 @@ void EventMgr::SetMaxSize(Size s)
     maxSize = s;
 }
 
-void EventMgr::RemoveEventsForControl(Control *c)
-{
+void EventMgr::RemoveEventsForControl(Control *c) {
     for (size_t i = 0; i < eventHandlers.Count(); i++) {
         EventHandler h = eventHandlers.At(i);
         if (h.ctrlSource == c) {
@@ -65,9 +59,8 @@ void EventMgr::RemoveEventsForControl(Control *c)
     }
 }
 
-ControlEvents *EventMgr::EventsForControl(Control *c)
-{
-    for (EventHandler& h : eventHandlers) {
+ControlEvents *EventMgr::EventsForControl(Control *c) {
+    for (EventHandler &h : eventHandlers) {
         if (h.ctrlSource == c)
             return h.events;
     }
@@ -77,9 +70,8 @@ ControlEvents *EventMgr::EventsForControl(Control *c)
     return events;
 }
 
-NamedEvents * EventMgr::EventsForName(const char *name)
-{
-    for (NamedEventHandler& h : namedEventHandlers) {
+NamedEvents *EventMgr::EventsForName(const char *name) {
+    for (NamedEventHandler &h : namedEventHandlers) {
         if (str::EqI(h.name, name))
             return h.namedEvents;
     }
@@ -89,12 +81,11 @@ NamedEvents * EventMgr::EventsForName(const char *name)
     return namedEvents;
 }
 
-void EventMgr::NotifyNamedEventClicked(Control *c, int x, int y)
-{
+void EventMgr::NotifyNamedEventClicked(Control *c, int x, int y) {
     const char *name = c->namedEventClick;
     if (!name)
         return;
-    for (NamedEventHandler& h : namedEventHandlers) {
+    for (NamedEventHandler &h : namedEventHandlers) {
         if (str::EqI(h.name, name)) {
             h.namedEvents->Clicked(c, x, y);
             return;
@@ -102,9 +93,8 @@ void EventMgr::NotifyNamedEventClicked(Control *c, int x, int y)
     }
 }
 
-void EventMgr::NotifyClicked(Control *c, int x, int y)
-{
-    for (EventHandler& h : eventHandlers) {
+void EventMgr::NotifyClicked(Control *c, int x, int y) {
+    for (EventHandler &h : eventHandlers) {
         if (h.ctrlSource == c) {
             h.events->Clicked(c, x, y);
             return;
@@ -112,9 +102,8 @@ void EventMgr::NotifyClicked(Control *c, int x, int y)
     }
 }
 
-void EventMgr::NotifySizeChanged(Control *c, int dx, int dy)
-{
-    for (EventHandler& h : eventHandlers) {
+void EventMgr::NotifySizeChanged(Control *c, int dx, int dy) {
+    for (EventHandler &h : eventHandlers) {
         if (h.ctrlSource == c && h.events->SizeChanged) {
             h.events->SizeChanged(c, dx, dy);
         }
@@ -123,9 +112,9 @@ void EventMgr::NotifySizeChanged(Control *c, int dx, int dy)
 
 // TODO: optimize by getting both mouse over and mouse move windows in one call
 // x, y is a position in the root window
-LRESULT EventMgr::OnMouseMove(WPARAM keys, int x, int y, bool& wasHandled)
-{
-    UNUSED(keys); UNUSED(wasHandled);
+LRESULT EventMgr::OnMouseMove(WPARAM keys, int x, int y, bool &wasHandled) {
+    UNUSED(keys);
+    UNUSED(wasHandled);
     Vec<CtrlAndOffset> windows;
     Control *c;
 
@@ -164,9 +153,9 @@ LRESULT EventMgr::OnMouseMove(WPARAM keys, int x, int y, bool& wasHandled)
 // TODO: quite possibly the real logic for generating "click" events is
 // more complicated
 // (x, y) is in the coordinates of the root window
-LRESULT EventMgr::OnLButtonUp(WPARAM keys, int x, int y, bool& wasHandled)
-{
-    UNUSED(keys); UNUSED(wasHandled);
+LRESULT EventMgr::OnLButtonUp(WPARAM keys, int x, int y, bool &wasHandled) {
+    UNUSED(keys);
+    UNUSED(wasHandled);
     Vec<CtrlAndOffset> controls;
     uint16 wantedInputMask = bit::FromBit<uint16>(Control::WantsMouseClickBit);
     size_t count = CollectWindowsAt(wndRoot, x, y, wantedInputMask, &controls);
@@ -180,26 +169,24 @@ LRESULT EventMgr::OnLButtonUp(WPARAM keys, int x, int y, bool& wasHandled)
     return 0;
 }
 
-static void SetIfNotZero(LONG& l, int i, bool& didSet)
-{
+static void SetIfNotZero(LONG &l, int i, bool &didSet) {
     if (i != 0) {
         l = i;
         didSet = true;
     }
 }
 
-LRESULT EventMgr::OnGetMinMaxInfo(MINMAXINFO *info, bool& wasHandled)
-{
-    SetIfNotZero(info->ptMinTrackSize.x, minSize.Width,  wasHandled);
+LRESULT EventMgr::OnGetMinMaxInfo(MINMAXINFO *info, bool &wasHandled) {
+    SetIfNotZero(info->ptMinTrackSize.x, minSize.Width, wasHandled);
     SetIfNotZero(info->ptMinTrackSize.y, minSize.Height, wasHandled);
-    SetIfNotZero(info->ptMaxTrackSize.x, maxSize.Width,  wasHandled);
+    SetIfNotZero(info->ptMaxTrackSize.x, maxSize.Width, wasHandled);
     SetIfNotZero(info->ptMaxTrackSize.y, maxSize.Height, wasHandled);
     return 0;
 }
 
-LRESULT EventMgr::OnSetCursor(int x, int y, bool& wasHandled)
-{
-    UNUSED(x); UNUSED(y);
+LRESULT EventMgr::OnSetCursor(int x, int y, bool &wasHandled) {
+    UNUSED(x);
+    UNUSED(y);
     if (currOver && currOver->hCursor) {
         SetCursor(currOver->hCursor);
         wasHandled = true;
@@ -207,8 +194,7 @@ LRESULT EventMgr::OnSetCursor(int x, int y, bool& wasHandled)
     return TRUE;
 }
 
-LRESULT EventMgr::OnMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& wasHandled)
-{
+LRESULT EventMgr::OnMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool &wasHandled) {
     wasHandled = false;
 
     if (WM_ENTERSIZEMOVE == msg) {
@@ -220,8 +206,8 @@ LRESULT EventMgr::OnMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& wasHan
     }
 
     if (WM_SIZE == msg) {
-        //int dx = LOWORD(lParam);
-        //int dy = HIWORD(lParam);
+        // int dx = LOWORD(lParam);
+        // int dy = HIWORD(lParam);
         wndRoot->RequestLayout();
         return 0;
     }
@@ -248,7 +234,7 @@ LRESULT EventMgr::OnMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& wasHan
     }
 
     if (WM_GETMINMAXINFO == msg) {
-        return OnGetMinMaxInfo((MINMAXINFO*)lParam, wasHandled);
+        return OnGetMinMaxInfo((MINMAXINFO *)lParam, wasHandled);
     }
 
     if (WM_PAINT == msg) {
@@ -259,5 +245,4 @@ LRESULT EventMgr::OnMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& wasHan
 
     return 0;
 }
-
 }

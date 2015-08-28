@@ -3,17 +3,16 @@
 
 class EventMgr;
 
-class Control : public ILayout
-{
-public:
+class Control : public ILayout {
+  public:
     // allows a control to opt-out from being notified about
     // input events, stored in wantedInputBits
     enum WantedInputBits {
-        WantsMouseOverBit   = 0,
-        WantsMouseDownBit   = 1,
-        WantsMouseUpBit     = 2,
-        WantsMouseClickBit  = 3,
-        WantsMouseMoveBit   = 4,
+        WantsMouseOverBit = 0,
+        WantsMouseDownBit = 1,
+        WantsMouseUpBit = 2,
+        WantsMouseClickBit = 3,
+        WantsMouseMoveBit = 4,
         WantedInputBitLast
     };
 
@@ -22,20 +21,20 @@ public:
         MouseOverBit = 0,
         IsPressedBit = 1,
         // using IsHidden and not IsVisible so that 0 is default, visible state
-        IsHiddenBit  = 2,
+        IsHiddenBit = 2,
         StateBitLast
     };
 
-    Control(Control *newParent=nullptr);
+    Control(Control *newParent = nullptr);
     virtual ~Control();
 
-    void        SetParent(Control *newParent);
-    void        AddChild(Control *c, int pos = -1);
-    void        AddChild(Control *c1, Control *c2, Control *c3 = nullptr);
-    Control *   GetChild(size_t idx) const;
-    size_t      GetChildCount() const;
+    void SetParent(Control *newParent);
+    void AddChild(Control *c, int pos = -1);
+    void AddChild(Control *c1, Control *c2, Control *c3 = nullptr);
+    Control *GetChild(size_t idx) const;
+    size_t GetChildCount() const;
 
-    void        SetPosition(const Rect& p);
+    void SetPosition(const Rect &p);
 
     virtual void Paint(Graphics *gfx, int offX, int offY);
 
@@ -51,7 +50,10 @@ public:
     virtual void NotifyMouseEnter();
     virtual void NotifyMouseLeave();
 
-    virtual void NotifyMouseMove(int x, int y) { UNUSED(x); UNUSED(y); }
+    virtual void NotifyMouseMove(int x, int y) {
+        UNUSED(x);
+        UNUSED(y);
+    }
 
     bool WantsMouseClick() const;
     bool WantsMouseMove() const;
@@ -66,43 +68,43 @@ public:
     void SetNamedEventClick(const char *);
 
     void MeasureChildren(Size availableSize) const;
-    void MapMyToRootPos(int&x, int& y) const;
-    void MapRootToMyPos(int& x, int& y) const;
+    void MapMyToRootPos(int &x, int &y) const;
+    void MapRootToMyPos(int &x, int &y) const;
 
-    uint16          wantedInputBits; // WndWantedInputBits
-    uint16          stateBits;       // WndStateBits
+    uint16 wantedInputBits; // WndWantedInputBits
+    uint16 stateBits;       // WndStateBits
     // windows with bigger z-order are painted on top, 0 is default
-    int16           zOrder;
+    int16 zOrder;
 
-    ILayout *       layout;
-    Control *       parent;
+    ILayout *layout;
+    Control *parent;
 
-    WCHAR *         toolTip;
+    WCHAR *toolTip;
 
-    const char *    namedEventClick;
+    const char *namedEventClick;
 
     // we cache properties for the current style during SetStyle() which
     // makes if fast to access them anywhere without repeating the work
     // of searching the style inheritance chain
-    CachedStyle *   cachedStyle;
-    bool            SetStyle(Style *style);
+    CachedStyle *cachedStyle;
+    bool SetStyle(Style *style);
 
     // only used by HwndWrapper but we need it here
     // TODO: figure out to not have it in every Control
-    HWND            hwndParent;
+    HWND hwndParent;
 
     // cursor to show when mouse is over this window.
     // only works if the window sets WantsMouseOverBit.
     // Control doesn't own hCursor in order to enable easy
     // sharing of cursor among many windows.
-    HCURSOR         hCursor;
+    HCURSOR hCursor;
 
     // position and size (relative to parent, might be outside of parent's bounds)
-    Rect            pos;
+    Rect pos;
 
-protected:
-    Vec<Control*>   children;
+  protected:
+    Vec<Control *> children;
 
     // desired size calculated in Measure()
-    Size            desiredSize;
+    Size desiredSize;
 };

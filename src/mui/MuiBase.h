@@ -8,37 +8,32 @@ void EnterMuiCriticalSection();
 void LeaveMuiCriticalSection();
 
 class ScopedMuiCritSec {
-public:
+  public:
+    ScopedMuiCritSec() { EnterMuiCriticalSection(); }
 
-    ScopedMuiCritSec() {
-        EnterMuiCriticalSection();
-    }
-
-    ~ScopedMuiCritSec() {
-        LeaveMuiCriticalSection();
-    }
+    ~ScopedMuiCritSec() { LeaveMuiCriticalSection(); }
 };
 
 struct CachedFont {
-    const WCHAR *       name;
-    float               sizePt;
-    Gdiplus::FontStyle  style;
+    const WCHAR *name;
+    float sizePt;
+    Gdiplus::FontStyle style;
 
-    Gdiplus::Font *     font;
+    Gdiplus::Font *font;
     // hFont is created out of font
-    HFONT               hFont;
+    HFONT hFont;
 
-    HFONT               GetHFont();
-    Gdiplus::FontStyle  GetStyle() const { return style; }
-    float               GetSize() const { return sizePt; }
-    const WCHAR *       GetName() const { return name; }
-    bool                SameAs(const WCHAR *name, float sizePt, FontStyle style) const;
+    HFONT GetHFont();
+    Gdiplus::FontStyle GetStyle() const { return style; }
+    float GetSize() const { return sizePt; }
+    const WCHAR *GetName() const { return name; }
+    bool SameAs(const WCHAR *name, float sizePt, FontStyle style) const;
 };
 
-void        InitGraphicsMode(Graphics *g);
+void InitGraphicsMode(Graphics *g);
 CachedFont *GetCachedFont(const WCHAR *name, float sizePt, FontStyle style);
 
-Graphics *  AllocGraphicsForMeasureText();
-void        FreeGraphicsForMeasureText(Graphics *gfx);
+Graphics *AllocGraphicsForMeasureText();
+void FreeGraphicsForMeasureText(Graphics *gfx);
 
-int         CeilI(float n);
+int CeilI(float n);

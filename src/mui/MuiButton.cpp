@@ -9,8 +9,7 @@
 
 namespace mui {
 
-Button::Button(const WCHAR *s, Style *def, Style *mouseOver)
-{
+Button::Button(const WCHAR *s, Style *def, Style *mouseOver) {
     text = nullptr;
     wantedInputBits = (uint16)-1; // wants everything
     styleDefault = def;
@@ -19,21 +18,16 @@ Button::Button(const WCHAR *s, Style *def, Style *mouseOver)
     SetText(s);
 }
 
-Button::~Button()
-{
-    free(text);
-}
+Button::~Button() { free(text); }
 
-void Button::NotifyMouseEnter()
-{
+void Button::NotifyMouseEnter() {
     Control::NotifyMouseEnter();
     bool changed = SetStyle(styleMouseOver);
     if (changed)
         RecalculateSize(true);
 }
 
-void Button::NotifyMouseLeave()
-{
+void Button::NotifyMouseLeave() {
     Control::NotifyMouseLeave();
     bool changed = SetStyle(styleDefault);
     if (changed)
@@ -46,8 +40,7 @@ void Button::NotifyMouseLeave()
 // line spacing to be the height of the button, even if text is empty.
 // Note: it might be that for some cases button with no text should collapse
 // in size but we don't have a need for that yet
-void Button::RecalculateSize(bool repaintIfSizeDidntChange)
-{
+void Button::RecalculateSize(bool repaintIfSizeDidntChange) {
     Size prevSize = desiredSize;
 
     desiredSize = GetBorderAndPaddingSize(cachedStyle);
@@ -73,13 +66,14 @@ void Button::RecalculateSize(bool repaintIfSizeDidntChange)
             if (diff < 0) {
                 char *fontName = str::conv::ToUtf8(s->fontName);
                 char *tmp = str::conv::ToUtf8(text);
-                dbglog::CrashLogF("fontDy=%.2f, bbox.Height=%.2f, diff=%.2f (should be > 0) font: %s, text='%s'",
-                                  fontDy, bbox.Height, diff, fontName, tmp);
+                dbglog::CrashLogF(
+                    "fontDy=%.2f, bbox.Height=%.2f, diff=%.2f (should be > 0) font: %s, text='%s'",
+                    fontDy, bbox.Height, diff, fontName, tmp);
                 CrashIf(true);
             }
         }
     }
-    desiredSize.Width  += textDx;
+    desiredSize.Width += textDx;
     desiredSize.Height += CeilI(fontDy);
     FreeGraphicsForMeasureText(gfx);
 
@@ -89,14 +83,12 @@ void Button::RecalculateSize(bool repaintIfSizeDidntChange)
         RequestRepaint(this);
 }
 
-void Button::SetText(const WCHAR *s)
-{
+void Button::SetText(const WCHAR *s) {
     str::ReplacePtr(&text, s);
     RecalculateSize(true);
 }
 
-Size Button::Measure(const Size availableSize)
-{
+Size Button::Measure(const Size availableSize) {
     UNUSED(availableSize);
     // desiredSize is calculated when we change the
     // text, font or other attributes that influence
@@ -105,8 +97,7 @@ Size Button::Measure(const Size availableSize)
     return desiredSize;
 }
 
-void Button::UpdateAfterStyleChange()
-{
+void Button::UpdateAfterStyleChange() {
     if (IsMouseOver())
         SetStyle(styleMouseOver);
     else
@@ -115,21 +106,18 @@ void Button::UpdateAfterStyleChange()
     RecalculateSize(true);
 }
 
-void Button::SetStyles(Style *def, Style *mouseOver)
-{
+void Button::SetStyles(Style *def, Style *mouseOver) {
     styleDefault = def;
     styleMouseOver = mouseOver;
     UpdateAfterStyleChange();
 }
 
-void Button::SetDefaultStyle(Style *style)
-{
+void Button::SetDefaultStyle(Style *style) {
     styleDefault = style;
     UpdateAfterStyleChange();
 }
 
-void Button::SetMouseOverStyle(Style *style)
-{
+void Button::SetMouseOverStyle(Style *style) {
     styleMouseOver = style;
     UpdateAfterStyleChange();
 }
@@ -137,8 +125,7 @@ void Button::SetMouseOverStyle(Style *style)
 // given the size of a container, the size of an element inside
 // a container and alignment, calculates the position of
 // element within the container.
-static int AlignedOffset(int containerDx, int elDx, AlignAttr align)
-{
+static int AlignedOffset(int containerDx, int elDx, AlignAttr align) {
     if (Align_Left == align)
         return 0;
     if (Align_Right == align)
@@ -147,8 +134,7 @@ static int AlignedOffset(int containerDx, int elDx, AlignAttr align)
     return (containerDx - elDx) / 2;
 }
 
-void Button::Paint(Graphics *gfx, int offX, int offY)
-{
+void Button::Paint(Graphics *gfx, int offX, int offY) {
     CrashIf(!IsVisible());
 
     CachedStyle *s = cachedStyle;
@@ -173,8 +159,7 @@ void Button::Paint(Graphics *gfx, int offX, int offY)
     gfx->DrawString(text, (int)str::Len(text), font, PointF((REAL)x, (REAL)y), nullptr, brColor);
 }
 
-ButtonVector::ButtonVector()
-{
+ButtonVector::ButtonVector() {
     wantedInputBits = (uint16)-1; // wants everything
     styleDefault = nullptr;
     styleMouseOver = nullptr;
@@ -182,8 +167,7 @@ ButtonVector::ButtonVector()
     SetStyle(styleDefault);
 }
 
-ButtonVector::ButtonVector(GraphicsPath *gp)
-{
+ButtonVector::ButtonVector(GraphicsPath *gp) {
     wantedInputBits = (uint16)-1; // wants everything
     styleDefault = nullptr;
     styleMouseOver = nullptr;
@@ -192,37 +176,30 @@ ButtonVector::ButtonVector(GraphicsPath *gp)
     SetGraphicsPath(gp);
 }
 
-ButtonVector::~ButtonVector()
-{
-    ::delete graphicsPath;
-}
+ButtonVector::~ButtonVector() { ::delete graphicsPath; }
 
-void ButtonVector::NotifyMouseEnter()
-{
+void ButtonVector::NotifyMouseEnter() {
     Control::NotifyMouseEnter();
     bool changed = SetStyle(styleMouseOver);
     if (changed)
         RecalculateSize(true);
 }
 
-void ButtonVector::NotifyMouseLeave()
-{
+void ButtonVector::NotifyMouseLeave() {
     Control::NotifyMouseLeave();
     bool changed = SetStyle(styleDefault);
     if (changed)
         RecalculateSize(true);
 }
 
-void ButtonVector::SetGraphicsPath(GraphicsPath *gp)
-{
+void ButtonVector::SetGraphicsPath(GraphicsPath *gp) {
     ::delete graphicsPath;
     graphicsPath = gp;
     RecalculateSize(true);
 }
 
 // TODO: the position still seems a bit off wrt. padding
-void ButtonVector::RecalculateSize(bool repaintIfSizeDidntChange)
-{
+void ButtonVector::RecalculateSize(bool repaintIfSizeDidntChange) {
     Size prevSize = desiredSize;
 
     CachedStyle *s = cachedStyle;
@@ -240,7 +217,7 @@ void ButtonVector::RecalculateSize(bool repaintIfSizeDidntChange)
         pen.SetAlignment(PenAlignmentInset);
         graphicsPath->GetBounds(&bbox, nullptr, &pen);
     }
-    desiredSize.Width  += bbox.Width;
+    desiredSize.Width += bbox.Width;
     desiredSize.Height += bbox.Height;
 
     if (!prevSize.Equals(desiredSize))
@@ -249,15 +226,13 @@ void ButtonVector::RecalculateSize(bool repaintIfSizeDidntChange)
         RequestRepaint(this);
 }
 
-Size ButtonVector::Measure(const Size availableSize)
-{
+Size ButtonVector::Measure(const Size availableSize) {
     UNUSED(availableSize);
     // do nothing: calculated in RecalculateSize()
     return desiredSize;
 }
 
-void ButtonVector::Paint(Graphics *gfx, int offX, int offY)
-{
+void ButtonVector::Paint(Graphics *gfx, int offX, int offY) {
     CrashIf(!IsVisible());
 
     CachedStyle *s = cachedStyle;
@@ -288,11 +263,11 @@ void ButtonVector::Paint(Graphics *gfx, int offX, int offY)
     // Note: alignment is calculated against the size after substracting
     // ncSize is the size of the non-client parts i.e. border and padding, on both sides
     Size ncSize = GetBorderAndPaddingSize(s);
-    int elOffY = s->vertAlign.CalcOffset( gpBbox.Height, pos.Height - ncSize.Height);
-    int elOffX = s->horizAlign.CalcOffset(gpBbox.Width,  pos.Width  - ncSize.Width );
+    int elOffY = s->vertAlign.CalcOffset(gpBbox.Height, pos.Height - ncSize.Height);
+    int elOffX = s->horizAlign.CalcOffset(gpBbox.Width, pos.Width - ncSize.Width);
 
     int x = offX + elOffX + s->padding.left + (int)s->borderWidth.left + gpBbox.X;
-    int y = offY + elOffY + s->padding.top  + (int)s->borderWidth.top  + gpBbox.Y;
+    int y = offY + elOffY + s->padding.top + (int)s->borderWidth.top + gpBbox.Y;
 
     // TODO: can I avoid making a copy of GraphicsPath?
     GraphicsPath *tmp = graphicsPath->Clone();
@@ -303,11 +278,10 @@ void ButtonVector::Paint(Graphics *gfx, int offX, int offY)
     if (0.f != s->strokeWidth)
         gfx->DrawPath(&pen, tmp);
 
-   delete tmp;
+    delete tmp;
 }
 
-void ButtonVector::UpdateAfterStyleChange()
-{
+void ButtonVector::UpdateAfterStyleChange() {
     if (IsMouseOver())
         SetStyle(styleMouseOver);
     else
@@ -316,23 +290,19 @@ void ButtonVector::UpdateAfterStyleChange()
     RecalculateSize(true);
 }
 
-void ButtonVector::SetStyles(Style *def, Style *mouseOver)
-{
+void ButtonVector::SetStyles(Style *def, Style *mouseOver) {
     styleDefault = def;
     styleMouseOver = mouseOver;
     UpdateAfterStyleChange();
 }
 
-void ButtonVector::SetDefaultStyle(Style *style)
-{
+void ButtonVector::SetDefaultStyle(Style *style) {
     styleDefault = style;
     UpdateAfterStyleChange();
 }
 
-void ButtonVector::SetMouseOverStyle(Style *style)
-{
+void ButtonVector::SetMouseOverStyle(Style *style) {
     styleMouseOver = style;
     UpdateAfterStyleChange();
 }
-
 }

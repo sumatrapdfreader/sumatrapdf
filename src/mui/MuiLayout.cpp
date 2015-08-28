@@ -7,18 +7,14 @@
 
 namespace mui {
 
-DirectionalLayout::~DirectionalLayout()
-{
-}
+DirectionalLayout::~DirectionalLayout() {}
 
-DirectionalLayout& DirectionalLayout::Add(const DirectionalLayoutData& ld)
-{
+DirectionalLayout& DirectionalLayout::Add(const DirectionalLayoutData& ld) {
     els.Append(ld);
     return *this;
 }
 
-Size DirectionalLayout::Measure(const Size availableSize)
-{
+Size DirectionalLayout::Measure(const Size availableSize) {
     for (DirectionalLayoutData& e : els) {
         e.element->Measure(availableSize);
         e.desiredSize = e.element->DesiredSize();
@@ -27,8 +23,7 @@ Size DirectionalLayout::Measure(const Size availableSize)
     return desiredSize;
 }
 
-static int CalcScaledClippedSize(int size, float scale, int selfSize)
-{
+static int CalcScaledClippedSize(int size, float scale, int selfSize) {
     int scaledSize = selfSize;
     if (SizeSelf != scale)
         scaledSize = (int)((float)size * scale);
@@ -38,15 +33,14 @@ static int CalcScaledClippedSize(int size, float scale, int selfSize)
 }
 
 struct SizeInfo {
-    int     size;
-    float   scale;
+    int size;
+    float scale;
 
-    int     finalPos;
-    int     finalSize;
+    int finalPos;
+    int finalSize;
 };
 
-static void RedistributeSizes(Vec<SizeInfo>& sizes, int totalSize)
-{
+static void RedistributeSizes(Vec<SizeInfo>& sizes, int totalSize) {
     float toDistributeTotal = 0.f;
     int remainingSpace = totalSize;
 
@@ -70,8 +64,7 @@ static void RedistributeSizes(Vec<SizeInfo>& sizes, int totalSize)
     }
 }
 
-void HorizontalLayout::Arrange(const Rect finalRect)
-{
+void HorizontalLayout::Arrange(const Rect finalRect) {
     Vec<SizeInfo> sizes;
 
     for (DirectionalLayoutData& e : els) {
@@ -90,8 +83,7 @@ void HorizontalLayout::Arrange(const Rect finalRect)
     CrashIf(si != sizes.end());
 }
 
-void VerticalLayout::Arrange(const Rect finalRect)
-{
+void VerticalLayout::Arrange(const Rect finalRect) {
     Vec<SizeInfo> sizes;
 
     for (DirectionalLayoutData& e : els) {
