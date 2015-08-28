@@ -1277,7 +1277,6 @@ void DeleteCachedCursors() {
     }
 }
 
-
 // 0 - metric (centimeters etc.)
 // 1 - imperial (inches etc.)
 // this triggers drmemory. Force no inlining so that it's easy to write a
@@ -1290,4 +1289,3 @@ __declspec(noinline) int GetMeasurementSystem() {
     }
     return 1;
 }
-

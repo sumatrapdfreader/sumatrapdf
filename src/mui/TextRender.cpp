@@ -52,10 +52,35 @@ void TextRenderGdi::CreateHdcForTextMeasure() {
 }
 
 TextRenderGdi::~TextRenderGdi() {
+    RestoreHdcForTextMeasurePrevFont();
+    RestoreMemHdcPrevFont();
+    RestoreMemHdcPrevBitmap();
     FreeMemBmp();
     DeleteDC(memHdc);
-    ReleaseDC(nullptr, hdcForTextMeasure);
+    DeleteDC(hdcForTextMeasure);
     CrashIf(hdcGfxLocked); // hasn't been Unlock()ed
+}
+
+
+void TextRenderGdi::RestoreMemHdcPrevBitmap() {
+    if (memHdcPrevBitmap != nullptr) {
+        SelectObject(memHdc, memHdcPrevBitmap);
+        memHdcPrevBitmap = nullptr;
+    }
+}
+
+void TextRenderGdi::RestoreMemHdcPrevFont() {
+    if (memHdcPrevFont != nullptr) {
+        SelectObject(memHdc, memHdcPrevFont);
+        memHdcPrevFont = nullptr;
+    }
+}
+
+void TextRenderGdi::RestoreHdcForTextMeasurePrevFont() {
+    if (hdcForTextMeasurePrevFont != nullptr) {
+        SelectObject(hdcForTextMeasure, hdcForTextMeasurePrevFont);
+        hdcForTextMeasurePrevFont = nullptr;
+    }
 }
 
 void TextRenderGdi::SetFont(mui::CachedFont *font) {
@@ -69,7 +94,8 @@ void TextRenderGdi::SetFont(mui::CachedFont *font) {
         SelectFont(hdcGfxLocked, hfont);
     }
     if (hdcForTextMeasure) {
-        SelectFont(hdcForTextMeasure, hfont);
+        RestoreHdcForTextMeasurePrevFont();
+        hdcForTextMeasurePrevFont = SelectFont(hdcForTextMeasure, hfont);
     }
 }
 
@@ -199,7 +225,8 @@ void TextRenderGdi::CreateClearBmpOfSize(int dx, int dy)
 
     ZeroMemory(memBmpData, memBmpDx * memBmpDy * 4);
 
-    SelectObject(memHdc, memBmp);
+    RestoreMemHdcPrevBitmap();
+    memHdcPrevBitmap = SelectObject(memHdc, memBmp);
 }
 
 // based on http://theartofdev.wordpress.com/2013/10/24/transparent-text-rendering-with-gdi/,
@@ -224,7 +251,8 @@ void TextRenderGdi::DrawTransparent(const WCHAR *s, size_t sLen, RectF& bb, bool
     SetBkMode(memHdc, TRANSPARENT);
 
     //BitBlt(memHdc, 0, 0, dx, dy, hdcGfxLocked, x, y, SRCCOPY);
-    SelectObject(memHdc, currFont);
+    RestoreMemHdcPrevFont();
+    memHdcPrevFont = SelectObject(memHdc, currFont);
     ::SetTextColor(memHdc, textColor.ToCOLORREF());
 
 #if 0

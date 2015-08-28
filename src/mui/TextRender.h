@@ -45,6 +45,7 @@ class TextRenderGdi : public ITextRender {
 private:
     HDC                     hdcGfxLocked;
     HDC                     hdcForTextMeasure;
+    HGDIOBJ                 hdcForTextMeasurePrevFont;
     CachedFont *            currFont;
     Gdiplus::Graphics *     gfx;
     Gdiplus::Color          textColor;
@@ -52,17 +53,24 @@ private:
     WCHAR                   txtConvBuf[512];
 
     HDC                     memHdc;
+    HGDIOBJ                 memHdcPrevFont;
     HBITMAP                 memBmp;
+    HGDIOBJ                 memHdcPrevBitmap;
     void *                  memBmpData;
     int                     memBmpDx, memBmpDy;
 
 
     TextRenderGdi() : hdcGfxLocked(nullptr), hdcForTextMeasure(nullptr),
-        currFont(nullptr), gfx(nullptr), memHdc(nullptr), memBmp(nullptr), memBmpData(nullptr),
+        hdcForTextMeasurePrevFont(nullptr),
+        currFont(nullptr), gfx(nullptr), memHdc(nullptr), memHdcPrevFont(nullptr),
+        memBmp(nullptr), memHdcPrevBitmap(nullptr), memBmpData(nullptr),
         memBmpDx(0), memBmpDy(0) { }
 
     void        FreeMemBmp();
     void        CreateClearBmpOfSize(int dx, int dy);
+    void        RestoreMemHdcPrevFont();
+    void        RestoreHdcForTextMeasurePrevFont();
+    void        RestoreMemHdcPrevBitmap();
 
 public:
     void CreateHdcForTextMeasure();
