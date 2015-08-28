@@ -81,9 +81,9 @@ public:
         hwnd(wnd), data(nullptr), width(0), height(0),
         current(-1), highlighted(-1), xClicked(-1), xHighlighted(-1), nextTab(-1),
         isMouseInClientArea(false), isDragging(false), inTitlebar(false), currBgCol(DEFAULT_CURRENT_BG_COL) {
+        memset(&color, 0, sizeof(color));
         Reshape(tabSize.dx, tabSize.dy);
         EvaluateColors(false);
-        memset(&color, 0, sizeof(color));
     }
 
     ~TabPainter() {
