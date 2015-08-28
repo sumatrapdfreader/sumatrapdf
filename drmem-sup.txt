@@ -1,0 +1,33 @@
+# Supressions for DrMemory
+# Run as:  ..\drmemory\bin\drmemory.exe -suppress drmem-sup.txt -- .\rel\SumatraPDF.exe
+# Probably needs to be updated for different OS versions
+# quite a few false seem to come from inside __scrt_common_main_seh
+# Suppression for startup code
+UNINITIALIZED READ
+name=Error #1 (update to meaningful name)
+...
+SumatraPDF.exe!__scrt_common_main_seh
+KERNEL32.dll!BaseThreadInitThunk
+
+# wcslen #1
+UNADDRESSABLE ACCESS
+name=wcslen #1
+SumatraPDF.exe!wcsnlen
+...
+SumatraPDF.exe!__scrt_common_main_seh
+KERNEL32.dll!BaseThreadInitThunk
+
+# wcslen #2
+UNADDRESSABLE ACCESS
+name=wcslen #2
+SumatraPDF.exe!wcsnlen
+...
+SumatraPDF.exe!str::FmtV
+
+# parallels tool
+UNINITIALIZED READ
+name=parallels driver on the stack
+...
+PrlToolsShellExt.dll!*
+...
+SumatraPDF.exe!WinMain
