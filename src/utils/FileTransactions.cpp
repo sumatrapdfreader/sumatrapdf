@@ -7,48 +7,10 @@
 #include "FileUtil.h"
 #include "WinUtil.h"
 
-// from Ktmw32.h
-typedef HANDLE (WINAPI * CreateTransactionPtr)(LPSECURITY_ATTRIBUTES lpTransactionAttributes, LPGUID UOW, DWORD CreateOptions, DWORD IsolationLevel, DWORD IsolationFlags, DWORD Timeout, LPWSTR Description);
-typedef BOOL (WINAPI * CommitTransactionPtr)(HANDLE TransactionHandle);
-typedef BOOL (WINAPI * RollbackTransactionPtr)(HANDLE TransactionHandle);
-// from WinBase.h
-typedef HANDLE (WINAPI * CreateFileTransactedPtr)(LPCWSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile, HANDLE hTransaction, PUSHORT pusMiniVersion, PVOID pExtendedParameter);
-typedef BOOL (WINAPI * DeleteFileTransactedPtr)(LPCWSTR lpFileName, HANDLE hTransaction);
-
-static CreateTransactionPtr     _CreateTransaction = nullptr;
-static CommitTransactionPtr     _CommitTransaction = nullptr;
-static RollbackTransactionPtr   _RollbackTransaction = nullptr;
-static CreateFileTransactedPtr  _CreateFileTransacted = nullptr;
-static DeleteFileTransactedPtr  _DeleteFileTransacted = nullptr;
-
-static void InitializeTransactions()
-{
-    static bool initialized = false;
-    if (initialized)
-        return;
-    initialized = true;
-
-    HMODULE hLibKTM = SafeLoadLibrary(L"ktmw32.dll");
-    HMODULE hLibKernel = SafeLoadLibrary(L"kernel32.dll");
-    if (!hLibKTM || !hLibKernel)
-        return;
-
-#define Load(lib, func) _ ## func = (func ## Ptr)GetProcAddress(lib, #func)
-    Load(hLibKTM, CreateTransaction);
-    Load(hLibKTM, CommitTransaction);
-    Load(hLibKTM, RollbackTransaction);
-#undef Load
-#define Load(lib, func) _ ## func = (func ## Ptr)GetProcAddress(lib, #func "W")
-    Load(hLibKernel, CreateFileTransacted);
-    Load(hLibKernel, DeleteFileTransacted);
-#undef Load
-}
-
 FileTransaction::FileTransaction() : hTrans(nullptr)
 {
-    InitializeTransactions();
-    if (_CreateTransaction && _CommitTransaction && _RollbackTransaction && _CreateFileTransacted && _DeleteFileTransacted)
-        hTrans = _CreateTransaction(nullptr, 0, 0, 0, 0, 0, nullptr);
+    if (DynCreateTransaction && DynCommitTransaction && DynRollbackTransaction && DynCreateFileTransactedW && DynDeleteFileTransactedW)
+        hTrans = DynCreateTransaction(nullptr, 0, 0, 0, 0, 0, nullptr);
 }
 
 FileTransaction::~FileTransaction()
@@ -60,13 +22,13 @@ bool FileTransaction::Commit()
 {
     if (!hTrans)
         return true;
-    return _CommitTransaction(hTrans);
+    return DynCommitTransaction(hTrans);
 }
 
 HANDLE FileTransaction::CreateFile(const WCHAR *filePath, DWORD dwDesiredAccess, DWORD dwCreationDisposition)
 {
     if (hTrans) {
-        HANDLE hFile = _CreateFileTransacted(filePath, dwDesiredAccess, 0, nullptr, dwCreationDisposition, FILE_ATTRIBUTE_NORMAL, nullptr, hTrans, nullptr, nullptr);
+        HANDLE hFile = DynCreateFileTransactedW(filePath, dwDesiredAccess, 0, nullptr, dwCreationDisposition, FILE_ATTRIBUTE_NORMAL, nullptr, hTrans, nullptr, nullptr);
         DWORD err = GetLastError();
         if (INVALID_HANDLE_VALUE != hFile || ERROR_FILE_NOT_FOUND == err || ERROR_ACCESS_DENIED == err || ERROR_FILE_EXISTS  == err || ERROR_ALREADY_EXISTS  == err)
             return hFile;
@@ -94,7 +56,7 @@ bool FileTransaction::WriteAll(const WCHAR *filePath, const void *data, size_t d
 bool FileTransaction::Delete(const WCHAR *filePath)
 {
     if (hTrans) {
-        BOOL ok = _DeleteFileTransacted(filePath, hTrans);
+        BOOL ok = DynDeleteFileTransactedW(filePath, hTrans);
         DWORD err = GetLastError();
         if (ok || ERROR_FILE_NOT_FOUND == err || ERROR_ACCESS_DENIED == err)
             return ok || ERROR_FILE_NOT_FOUND == err;

@@ -4,6 +4,14 @@ License: Simplified BSD (see COPYING.BSD) */
 #include "BaseUtil.h"
 #include "WinDynCalls.h"
 
+/* TODO:
+- Touch.cpp
+- Provider.cpp
+- Caption.cpp
+- DbgHelpDyn.cpp
+- make SafeLoadLibrary private
+*/
+
 #define API_DECLARATION(name) \
 bool  Has##name = false; \
 Sig_##name Dyn##name = nullptr;
@@ -12,7 +20,7 @@ KERNEL32_API_LIST(API_DECLARATION)
 NTDLL_API_LIST(API_DECLARATION)
 UXTHEME_API_LIST(API_DECLARATION)
 NORMALIZ_API_LIST(API_DECLARATION)
-
+KTMW32_API_LIST(API_DECLARATION)
 #undef API_DECLARATION
 
 // Loads a DLL explicitly from the system's library collection
@@ -44,9 +52,14 @@ void InitDynCalls() {
         UXTHEME_API_LIST(API_LOAD);
     }
 
-    h = SafeLoadLibrary(L"Normaliz.dll");
+    h = SafeLoadLibrary(L"normaliz.dll");
     if (h) {
         NORMALIZ_API_LIST(API_LOAD);
+    }
+
+    h = SafeLoadLibrary(L"ktmw32.dll");
+    if (h) {
+        KTMW32_API_LIST(API_LOAD);
     }
 }
 

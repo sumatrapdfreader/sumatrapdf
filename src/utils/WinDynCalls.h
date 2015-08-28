@@ -25,17 +25,21 @@ typedef BOOL(WINAPI *Sig_SetProcessDEPPolicy)(DWORD dwFlags);
 typedef BOOL(WINAPI *Sig_IsWow64Process)(HANDLE, PBOOL);
 typedef BOOL(WINAPI *Sig_SetDllDirectoryW)(LPCWSTR);
 typedef void(WINAPI *Sig_RtlCaptureContext)(PCONTEXT);
+typedef HANDLE(WINAPI *Sig_CreateFileTransactedW)(LPCWSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile, HANDLE hTransaction, PUSHORT pusMiniVersion, PVOID pExtendedParameter);
+typedef BOOL(WINAPI * Sig_DeleteFileTransactedW)(LPCWSTR lpFileName, HANDLE hTransaction);
+
 
 #define KERNEL32_API_LIST(V) \
     V(SetProcessDEPPolicy) \
     V(IsWow64Process) \
     V(SetDllDirectoryW) \
-    V(RtlCaptureContext)
+    V(RtlCaptureContext) \
+    V(CreateFileTransactedW) \
+    V(DeleteFileTransactedW)
 
 
 
 // ntdll.dll
-
 #define PROCESS_EXECUTE_FLAGS 0x22
 #define MEM_EXECUTE_OPTION_DISABLE 0x1
 #define MEM_EXECUTE_OPTION_ENABLE 0x2
@@ -51,9 +55,8 @@ typedef HRESULT(WINAPI *Sig_NtSetInformationProcess)(HANDLE ProcessHandle, UINT 
 
 
 
-// ustheme.dll
-
-/* for win SDKs that don't have this */
+// uxtheme.dll
+// for win SDKs that don't have this
 #ifndef WM_THEMECHANGED
 #define WM_THEMECHANGED 0x031A
 #endif
@@ -92,6 +95,18 @@ typedef int(WINAPI *Sig_NormalizeString)(int, LPCWSTR, int, LPWSTR, int);
 #define NORMALIZ_API_LIST(V) \
     V(NormalizeString)
 
+
+// ktmw32.dll
+typedef HANDLE(WINAPI * Sig_CreateTransaction)(LPSECURITY_ATTRIBUTES lpTransactionAttributes, LPGUID UOW, DWORD CreateOptions, DWORD IsolationLevel, DWORD IsolationFlags, DWORD Timeout, LPWSTR Description);
+typedef BOOL(WINAPI * Sig_CommitTransaction)(HANDLE TransactionHandle);
+typedef BOOL(WINAPI * Sig_RollbackTransaction)(HANDLE TransactionHandle);
+
+#define KTMW32_API_LIST(V) \
+    V(CreateTransaction) \
+    V(CommitTransaction) \
+    V(RollbackTransaction)
+
+
 #define API_DECLARATION(name) \
 extern Sig_##name Dyn##name;
 
@@ -99,6 +114,7 @@ KERNEL32_API_LIST(API_DECLARATION)
 NTDLL_API_LIST(API_DECLARATION)
 UXTHEME_API_LIST(API_DECLARATION)
 NORMALIZ_API_LIST(API_DECLARATION)
+KTMW32_API_LIST(API_DECLARATION)
 
 #undef API_DECLARATION
 
