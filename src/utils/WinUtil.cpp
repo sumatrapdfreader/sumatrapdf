@@ -147,8 +147,8 @@ TryAgainWOW64:
 }
 
 bool WriteRegStr(HKEY keySub, const WCHAR *keyName, const WCHAR *valName, const WCHAR *value) {
-    LSTATUS res = SHSetValue(keySub, keyName, valName, REG_SZ, (const VOID *)value,
-                             (DWORD)(str::Len(value) + 1) * sizeof(WCHAR));
+    DWORD cbData = (DWORD)(str::Len(value) + 1) * sizeof(WCHAR);
+    LSTATUS res = SHSetValueW(keySub, keyName, valName, REG_SZ, (const void *)value, cbData);
     return ERROR_SUCCESS == res;
 }
 
@@ -160,14 +160,14 @@ bool ReadRegDWORD(HKEY keySub, const WCHAR *keyName, const WCHAR *valName, DWORD
 
 bool WriteRegDWORD(HKEY keySub, const WCHAR *keyName, const WCHAR *valName, DWORD value) {
     LSTATUS res =
-        SHSetValue(keySub, keyName, valName, REG_DWORD, (const VOID *)&value, sizeof(DWORD));
+        SHSetValueW(keySub, keyName, valName, REG_DWORD, (const void *)&value, sizeof(DWORD));
     return ERROR_SUCCESS == res;
 }
 
 bool CreateRegKey(HKEY keySub, const WCHAR *keyName) {
     HKEY hKey;
-    if (RegCreateKeyEx(keySub, keyName, 0, nullptr, 0, KEY_WRITE, nullptr, &hKey, nullptr) !=
-        ERROR_SUCCESS)
+    LSTATUS res = RegCreateKeyEx(keySub, keyName, 0, nullptr, 0, KEY_WRITE, nullptr, &hKey, nullptr);
+    if (res != ERROR_SUCCESS)
         return false;
     RegCloseKey(hKey);
     return true;
@@ -195,15 +195,14 @@ bool DeleteRegKey(HKEY keySub, const WCHAR *keyName, bool resetACLFirst) {
     if (resetACLFirst)
         ResetRegKeyAcl(keySub, keyName);
 
-    LSTATUS res = SHDeleteKey(keySub, keyName);
+    LSTATUS res = SHDeleteKeyW(keySub, keyName);
     return ERROR_SUCCESS == res || ERROR_FILE_NOT_FOUND == res;
 }
 
 WCHAR *GetSpecialFolder(int csidl, bool createIfMissing) {
     if (createIfMissing)
         csidl = csidl | CSIDL_FLAG_CREATE;
-    WCHAR path[MAX_PATH];
-    path[0] = '\0';
+    WCHAR path[MAX_PATH] = { 0 };
     HRESULT res = SHGetFolderPath(nullptr, csidl, nullptr, 0, path);
     if (S_OK != res)
         return nullptr;
@@ -280,10 +279,8 @@ void RedirectIOToConsole() {
 /* Return the full exe path of my own executable.
    Caller needs to free() the result. */
 WCHAR *GetExePath() {
-    WCHAR buf[MAX_PATH];
-    buf[0] = 0;
+    WCHAR buf[MAX_PATH] = { 0 };
     GetModuleFileName(nullptr, buf, dimof(buf));
-    buf[dimof(buf) - 1] = '\0';
     // TODO: is normalization needed here at all?
     return path::Normalize(buf);
 }
@@ -326,7 +323,7 @@ WCHAR *ResolveLnk(const WCHAR *path) {
     if (FAILED(hRes))
         return nullptr;
 
-    WCHAR newPath[MAX_PATH];
+    WCHAR newPath[MAX_PATH] = { 0 };
     hRes = lnk->GetPath(newPath, MAX_PATH, nullptr, 0);
     if (FAILED(hRes))
         return nullptr;
@@ -428,7 +425,7 @@ HANDLE LaunchProcess(const WCHAR *cmdLine, const WCHAR *currDir, DWORD flags) {
     // CreateProcess() might modify cmd line argument, so make a copy
     // in case caller provides a read-only string
     ScopedMem<WCHAR> cmdLineCopy(str::Dup(cmdLine));
-    if (!CreateProcess(nullptr, cmdLineCopy, nullptr, nullptr, FALSE, flags, nullptr, currDir, &si,
+    if (!CreateProcessW(nullptr, cmdLineCopy, nullptr, nullptr, FALSE, flags, nullptr, currDir, &si,
                        &pi))
         return nullptr;
 
