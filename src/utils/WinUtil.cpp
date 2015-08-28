@@ -12,17 +12,6 @@
 
 static HFONT gDefaultGuiFont = nullptr;
 
-FARPROC LoadDllFunc(const WCHAR *dllName, const char *funcName) {
-    HMODULE h = SafeLoadLibrary(dllName);
-    if (!h)
-        return nullptr;
-    return GetProcAddress(h, funcName);
-
-    // Note: we don't unload the dll. It's harmless for those that would stay
-    // loaded anyway but we would crash trying to call a function that
-    // was grabbed from a dll that was unloaded in the meantime
-}
-
 void InitAllCommonControls() {
     INITCOMMONCONTROLSEX cex = { 0 };
     cex.dwSize = sizeof(INITCOMMONCONTROLSEX);

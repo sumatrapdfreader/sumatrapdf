@@ -22,7 +22,6 @@ inline int RectDy(const RECT &r) { return r.bottom - r.top; }
 #define Edit_SelectAll(hwnd) Edit_SetSel(hwnd, 0, -1)
 #define ListBox_AppendString_NoSort(hwnd, txt) ListBox_InsertString(hwnd, -1, txt)
 
-FARPROC LoadDllFunc(const WCHAR *dllName, const char *funcName);
 BOOL SafeCloseHandle(HANDLE *h);
 BOOL SafeDestroyWindow(HWND *hwnd);
 void FillWndClassEx(WNDCLASSEX &wcex, const WCHAR *clsName, WNDPROC wndproc);

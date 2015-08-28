@@ -15,6 +15,7 @@ The intent is to standardize how we do it.
 #include <dwmapi.h>
 #include <vssym32.h>
 
+
 // kernel32.dll
 #ifndef PROCESS_DEP_ENABLE
 #define PROCESS_DEP_ENABLE 0x1
@@ -23,6 +24,15 @@ The intent is to standardize how we do it.
 typedef BOOL(WINAPI *Sig_SetProcessDEPPolicy)(DWORD dwFlags);
 typedef BOOL(WINAPI *Sig_IsWow64Process)(HANDLE, PBOOL);
 typedef BOOL(WINAPI *Sig_SetDllDirectoryW)(LPCWSTR);
+typedef void(WINAPI *Sig_RtlCaptureContext)(PCONTEXT);
+
+#define KERNEL32_API_LIST(V) \
+    V(SetProcessDEPPolicy) \
+    V(IsWow64Process) \
+    V(SetDllDirectoryW) \
+    V(RtlCaptureContext)
+
+
 
 // ntdll.dll
 
@@ -35,6 +45,10 @@ typedef BOOL(WINAPI *Sig_SetDllDirectoryW)(LPCWSTR);
 /* enable "NX" execution prevention for XP, 2003
 * cf. http://www.uninformed.org/?v=2&a=4 */
 typedef HRESULT(WINAPI *Sig_NtSetInformationProcess)(HANDLE ProcessHandle, UINT ProcessInformationClass, PVOID ProcessInformation, ULONG ProcessInformationLength);
+
+#define NTDLL_API_LIST(V) \
+    V(NtSetInformationProcess)
+
 
 
 // ustheme.dll
@@ -61,17 +75,6 @@ typedef BOOL(WINAPI *Sig_IsThemeActive)(void);
 typedef BOOL(WINAPI *Sig_IsThemeBackgroundPartiallyTransparent)(HTHEME hTheme, int iPartId, int iStateId);
 typedef HRESULT(WINAPI *Sig_GetThemeColor)(HTHEME hTheme, int iPartId, int iStateId, int iPropId, COLORREF *pColor);
 
-// normaliz.dll
-typedef int(WINAPI *Sig_NormalizeString)(int, LPCWSTR, int, LPWSTR, int);
-
-#define KERNEL32_API_LIST(V) \
-    V(SetProcessDEPPolicy) \
-    V(IsWow64Process) \
-    V(SetDllDirectoryW)
-
-#define NTDLL_API_LIST(V) \
-    V(NtSetInformationProcess)
-
 #define UXTHEME_API_LIST(V) \
     V(IsAppThemed) \
     V(OpenThemeData) \
@@ -80,6 +83,11 @@ typedef int(WINAPI *Sig_NormalizeString)(int, LPCWSTR, int, LPWSTR, int);
     V(IsThemeActive) \
     V(IsThemeBackgroundPartiallyTransparent) \
     V(GetThemeColor)
+
+
+
+// normaliz.dll
+typedef int(WINAPI *Sig_NormalizeString)(int, LPCWSTR, int, LPWSTR, int);
 
 #define NORMALIZ_API_LIST(V) \
     V(NormalizeString)
@@ -96,6 +104,7 @@ NORMALIZ_API_LIST(API_DECLARATION)
 
 HMODULE SafeLoadLibrary(const WCHAR *dllName);
 void InitDynCalls();
+
 
 // convenience wrappers
 namespace dyn {

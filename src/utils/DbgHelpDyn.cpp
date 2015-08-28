@@ -527,19 +527,17 @@ void GetThreadCallstack(str::Str<char>& s, DWORD threadId)
 // from local buffer overrun because optimizations are disabled in function)"
 #pragma warning(push)
 #pragma warning(disable : 4748)
-typedef VOID WINAPI RtlCaptureContextProc(PCONTEXT ContextRecord);
 __declspec(noinline) bool GetCurrentThreadCallstack(str::Str<char>& s)
 {
+    // not available under Win2000
+    if (!DynRtlCaptureContext)
+        return false;
+
     if (!Initialize(nullptr))
         return false;
 
     CONTEXT ctx;
-    // not available under Win2000
-    RtlCaptureContextProc *MyRtlCaptureContext = (RtlCaptureContextProc *)LoadDllFunc(L"kernel32.dll", "RtlCaptureContext");
-    if (!MyRtlCaptureContext)
-        return false;
-
-    MyRtlCaptureContext(&ctx);
+    DynRtlCaptureContext(&ctx);
     return GetCallstack(s, ctx, GetCurrentThread());
 }
 #pragma optimize("", off )
