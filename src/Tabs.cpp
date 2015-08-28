@@ -501,7 +501,7 @@ static LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
 
             if (!tab->isMouseInClientArea) {
                 // Track the mouse for leaving the client area.
-                TRACKMOUSEEVENT tme;
+                TRACKMOUSEEVENT tme = { 0 };
                 tme.cbSize = sizeof(TRACKMOUSEEVENT);
                 tme.dwFlags = TME_LEAVE;
                 tme.hwndTrack = hwnd;
