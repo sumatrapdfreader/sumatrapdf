@@ -10,16 +10,6 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 void PaintParentBackground(HWND hwnd, HDC hdc);
 void RelayoutCaption(WindowInfo *win);
 
-namespace dwm {
-
-void Initialize();
-BOOL IsCompositionEnabled();
-HRESULT ExtendFrameIntoClientArea(HWND hwnd, const MARGINS *pMarInset);
-BOOL DefWindowProc_(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *plResult);
-HRESULT GetWindowAttribute(HWND hwnd, DWORD dwAttribute, void *pvAttribute, DWORD cbAttribute);
-
-};
-
 enum CaptionButtons {
     CB_BTN_FIRST = 0,
     CB_MINIMIZE = CB_BTN_FIRST,
@@ -55,7 +45,7 @@ public:
     BYTE        bgAlpha;
     bool        isMenuOpen;
 
-    CaptionInfo(HWND hwndCaption);
+    explicit CaptionInfo(HWND hwndCaption);
     ~CaptionInfo();
 
     void UpdateTheme();

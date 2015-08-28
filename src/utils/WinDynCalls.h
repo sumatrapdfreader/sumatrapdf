@@ -88,6 +88,18 @@ typedef HRESULT(WINAPI *Sig_GetThemeColor)(HTHEME hTheme, int iPartId, int iStat
     V(GetThemeColor)
 
 
+/// dwmapi.dll
+typedef HRESULT(WINAPI *Sig_DwmIsCompositionEnabled)(BOOL *pfEnabled);
+typedef HRESULT(WINAPI *Sig_DwmExtendFrameIntoClientArea)(HWND hwnd, const MARGINS *pMarInset);
+typedef BOOL(WINAPI *Sig_DwmDefWindowProc)(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *plResult);
+typedef HRESULT(WINAPI *Sig_DwmGetWindowAttribute)(HWND hwnd, DWORD dwAttribute, void *pvAttribute, DWORD cbAttribute);
+
+#define DWMAPI_API_LIST(V) \
+    V(DwmIsCompositionEnabled) \
+    V(DwmExtendFrameIntoClientArea) \
+    V(DwmDefWindowProc) \
+    V(DwmGetWindowAttribute)
+
 
 // normaliz.dll
 typedef int(WINAPI *Sig_NormalizeString)(int, LPCWSTR, int, LPWSTR, int);
@@ -223,6 +235,7 @@ extern Sig_##name Dyn##name;
 KERNEL32_API_LIST(API_DECLARATION)
 NTDLL_API_LIST(API_DECLARATION)
 UXTHEME_API_LIST(API_DECLARATION)
+DWMAPI_API_LIST(API_DECLARATION)
 NORMALIZ_API_LIST(API_DECLARATION)
 KTMW32_API_LIST(API_DECLARATION)
 USER32_API_LIST(API_DECLARATION)
@@ -234,7 +247,7 @@ void InitDynCalls();
 
 
 // convenience wrappers
-namespace dyn {
+namespace theme {
 
 bool IsAppThemed();
 HTHEME OpenThemeData(HWND hwnd, LPCWSTR pszClassList);
@@ -243,6 +256,15 @@ HRESULT DrawThemeBackground(HTHEME hTheme, HDC hdc, int iPartId, int iStateId, L
 BOOL IsThemeActive();
 BOOL IsThemeBackgroundPartiallyTransparent(HTHEME hTheme, int iPartId, int iStateId);
 HRESULT GetThemeColor(HTHEME hTheme, int iPartId, int iStateId, int iPropId, COLORREF *pColor);
+
+};
+
+namespace dwm {
+
+BOOL IsCompositionEnabled();
+HRESULT ExtendFrameIntoClientArea(HWND hwnd, const MARGINS *pMarInset);
+BOOL DefWindowProc_(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *plResult);
+HRESULT GetWindowAttribute(HWND hwnd, DWORD dwAttribute, void *pvAttribute, DWORD cbAttribute);
 
 };
 

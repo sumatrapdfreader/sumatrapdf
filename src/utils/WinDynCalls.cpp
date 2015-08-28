@@ -6,7 +6,6 @@ License: Simplified BSD (see COPYING.BSD) */
 
 /* TODO:
 - Provider.cpp
-- Caption.cpp
 - DbgHelpDyn.cpp
 - make SafeLoadLibrary private
 */
@@ -21,6 +20,7 @@ UXTHEME_API_LIST(API_DECLARATION)
 NORMALIZ_API_LIST(API_DECLARATION)
 KTMW32_API_LIST(API_DECLARATION)
 USER32_API_LIST(API_DECLARATION)
+DWMAPI_API_LIST(API_DECLARATION)
 #undef API_DECLARATION
 
 // Loads a DLL explicitly from the system's library collection
@@ -54,6 +54,11 @@ void InitDynCalls() {
     h = SafeLoadLibrary(L"uxtheme.dll");
     if (h) {
         UXTHEME_API_LIST(API_LOAD);
+    }
+
+    h = SafeLoadLibrary(L"dwmapi.dll");
+    if (h) {
+        DWMAPI_API_LIST(API_LOAD);
     }
 
     h = SafeLoadLibrary(L"normaliz.dll");
@@ -96,7 +101,7 @@ BOOL SetGestureConfig(HWND hwnd, DWORD dwReserved, UINT cIDs, PGESTURECONFIG pGe
 }
 
 
-namespace dyn {
+namespace theme {
 
 bool IsAppThemed() {
     if (DynIsAppThemed && DynIsAppThemed()) {
@@ -155,3 +160,33 @@ HRESULT GetThemeColor(HTHEME hTheme, int iPartId, int iStateId, int iPropId, COL
 
 };
 
+namespace dwm {
+
+BOOL IsCompositionEnabled() {
+    if (!DynDwmIsCompositionEnabled)
+        return FALSE;
+    BOOL isEnabled;
+    if (SUCCEEDED(DynDwmIsCompositionEnabled(&isEnabled)))
+        return isEnabled;
+    return FALSE;
+}
+
+HRESULT ExtendFrameIntoClientArea(HWND hwnd, const MARGINS *pMarInset) {
+    if (!DynDwmExtendFrameIntoClientArea)
+        return E_NOTIMPL;
+    return DynDwmExtendFrameIntoClientArea(hwnd, pMarInset);
+}
+
+BOOL DefWindowProc_(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *plResult) {
+    if (!DynDwmDefWindowProc)
+        return FALSE;
+    return DynDwmDefWindowProc(hwnd, msg, wParam, lParam, plResult);
+}
+
+HRESULT GetWindowAttribute(HWND hwnd, DWORD dwAttribute, void *pvAttribute, DWORD cbAttribute) {
+    if (!DynDwmGetWindowAttribute)
+        return E_NOTIMPL;
+    return DynDwmGetWindowAttribute(hwnd, dwAttribute, pvAttribute, cbAttribute);
+}
+
+};

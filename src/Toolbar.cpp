@@ -234,7 +234,7 @@ static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT message, WPARAM wParam, L
     if (WM_CTLCOLORSTATIC == message) {
         HWND hStatic = (HWND)lParam;
         WindowInfo *win = FindWindowInfoByHwnd(hStatic);
-        if ((win && win->hwndFindBg != hStatic && win->hwndPageBg != hStatic) || dyn::IsAppThemed())
+        if ((win && win->hwndFindBg != hStatic && win->hwndPageBg != hStatic) || theme::IsAppThemed())
         {
             HDC hdc = (HDC)wParam;
             SetTextColor(hdc, GetSysColor(COLOR_WINDOWTEXT));
@@ -639,7 +639,7 @@ void CreateToolbar(WindowInfo *win)
     rbBand.fMask   = /*RBBIM_COLORS | RBBIM_TEXT | RBBIM_BACKGROUND | */
                    RBBIM_STYLE | RBBIM_CHILD | RBBIM_CHILDSIZE /*| RBBIM_SIZE*/;
     rbBand.fStyle  = /*RBBS_CHILDEDGE |*//* RBBS_BREAK |*/ RBBS_FIXEDSIZE /*| RBBS_GRIPPERALWAYS*/;
-    if (dyn::IsAppThemed())
+    if (theme::IsAppThemed())
         rbBand.fStyle |= RBBS_CHILDEDGE;
     rbBand.hbmBack = nullptr;
     rbBand.lpText     = L"Toolbar";

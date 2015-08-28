@@ -61,7 +61,7 @@ CaptionInfo::CaptionInfo(HWND hwndCaption): hwnd(hwndCaption), theme(nullptr), i
 
 CaptionInfo::~CaptionInfo() {
     if (theme)
-        dyn::CloseThemeData(theme);
+        theme::CloseThemeData(theme);
 }
 
 void CaptionInfo::UpdateBackgroundAlpha()
@@ -72,11 +72,11 @@ void CaptionInfo::UpdateBackgroundAlpha()
 void CaptionInfo::UpdateTheme()
 {
     if (theme) {
-        dyn::CloseThemeData(theme);
+        theme::CloseThemeData(theme);
         theme = nullptr;
     }
-    if (dyn::IsThemeActive())
-        theme = dyn::OpenThemeData(hwnd, L"WINDOW");
+    if (theme::IsThemeActive())
+        theme = theme::OpenThemeData(hwnd, L"WINDOW");
 }
 
 void CaptionInfo::UpdateColors(bool activeWindow)
@@ -99,12 +99,12 @@ void CaptionInfo::UpdateColors(bool activeWindow)
             B = BYTE((int)floor(B * factor + 0.5f) + white);
             bgColor = RGB(R, G, B);
     }
-    else if (!theme || !SUCCEEDED(dyn::GetThemeColor(theme, WP_CAPTION, 0,
+    else if (!theme || !SUCCEEDED(theme::GetThemeColor(theme, WP_CAPTION, 0,
         activeWindow ? TMT_FILLCOLORHINT : TMT_BORDERCOLORHINT, &bgColor))) {
             bgColor = activeWindow ? GetSysColor(COLOR_GRADIENTACTIVECAPTION)
                                    : GetSysColor(COLOR_GRADIENTINACTIVECAPTION);
     }
-    if (!theme || !SUCCEEDED(dyn::GetThemeColor(theme, WP_CAPTION, 0,
+    if (!theme || !SUCCEEDED(theme::GetThemeColor(theme, WP_CAPTION, 0,
         (activeWindow || dwm::IsCompositionEnabled()) ? TMT_CAPTIONTEXT : TMT_INACTIVECAPTIONTEXT, &textColor))) {
             textColor = (activeWindow || dwm::IsCompositionEnabled()) ? GetSysColor(COLOR_CAPTIONTEXT)
                                                                       : GetSysColor(COLOR_INACTIVECAPTIONTEXT);
@@ -409,12 +409,12 @@ static void DrawCaptionButton(DRAWITEMSTRUCT *item, WindowInfo *win)
 
     // draw system button
     if (partId) {
-        if (rc != rButton || dyn::IsThemeBackgroundPartiallyTransparent(win->caption->theme, partId, stateId))
+        if (rc != rButton || theme::IsThemeBackgroundPartiallyTransparent(win->caption->theme, partId, stateId))
             PaintCaptionBackground(memDC, win, false);
 
         RECT r = rc.ToRECT();
         if (win->caption->theme)
-            dyn::DrawThemeBackground(win->caption->theme, memDC, partId, stateId, &r, nullptr);
+            theme::DrawThemeBackground(win->caption->theme, memDC, partId, stateId, &r, nullptr);
         else
             DrawFrameControl(memDC, &r, DFC_CAPTION, state);
     }
@@ -797,68 +797,3 @@ static void MenuBarAsPopupMenu(WindowInfo *win, int x, int y)
     DestroyMenu(popup);
 }
 
-
-typedef HRESULT (WINAPI *DwmIsCompositionEnabledProc)(BOOL *pfEnabled);
-typedef HRESULT (WINAPI *DwmExtendFrameIntoClientAreaProc)(HWND hwnd, const MARGINS *pMarInset);
-typedef BOOL (WINAPI *DwmDefWindowProcProc)(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *plResult);
-typedef HRESULT (WINAPI *DwmGetWindowAttributeProc)(HWND hwnd, DWORD dwAttribute, void *pvAttribute, DWORD cbAttribute);
-
-namespace dwm {
-
-static bool gFuncsLoaded = false;
-static DwmIsCompositionEnabledProc _DwmIsCompositionEnabled = nullptr;
-static DwmExtendFrameIntoClientAreaProc _DwmExtendFrameIntoClientArea = nullptr;
-static DwmDefWindowProcProc _DwmDefWindowProc = nullptr;
-static DwmGetWindowAttributeProc _DwmGetWindowAttribute = nullptr;
-
-void Initialize()
-{
-    if (gFuncsLoaded)
-        return;
-    gFuncsLoaded = true;
-
-    HMODULE h = SafeLoadLibrary(L"Dwmapi.dll");
-#define Load(func) _ ## func = (func ## Proc)GetProcAddress(h, #func)
-    Load(DwmIsCompositionEnabled);
-    Load(DwmExtendFrameIntoClientArea);
-    Load(DwmDefWindowProc);
-    Load(DwmGetWindowAttribute);
-#undef Load
-}
-
-BOOL IsCompositionEnabled()
-{
-    Initialize();
-    if (!_DwmIsCompositionEnabled)
-        return FALSE;
-    BOOL isEnabled;
-    if (SUCCEEDED(_DwmIsCompositionEnabled(&isEnabled)))
-        return isEnabled;
-    return FALSE;
-}
-
-HRESULT ExtendFrameIntoClientArea(HWND hwnd, const MARGINS *pMarInset)
-{
-    Initialize();
-    if (!_DwmExtendFrameIntoClientArea)
-        return E_NOTIMPL;
-    return _DwmExtendFrameIntoClientArea(hwnd, pMarInset);
-}
-
-BOOL DefWindowProc_(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *plResult)
-{
-    Initialize();
-    if (!_DwmDefWindowProc)
-        return FALSE;
-    return _DwmDefWindowProc(hwnd, msg, wParam, lParam, plResult);
-}
-
-HRESULT GetWindowAttribute(HWND hwnd, DWORD dwAttribute, void *pvAttribute, DWORD cbAttribute)
-{
-    Initialize();
-    if (!_DwmGetWindowAttribute)
-        return E_NOTIMPL;
-    return _DwmGetWindowAttribute(hwnd, dwAttribute, pvAttribute, cbAttribute);
-}
-
-};
