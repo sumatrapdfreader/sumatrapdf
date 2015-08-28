@@ -11,10 +11,12 @@ You can test if a function is available with if (DynSetProcessDEPPolicy).
 The intent is to standardize how we do it.
 */
 
-// as an exception, we include the headers needed for the calls that we dynamically load
+// as an exception, we include system headers needed for the calls that we dynamically load
 #include <dwmapi.h>
 #include <vssym32.h>
-
+#include <UIAutomationCore.h>
+#include <UIAutomationCoreApi.h>
+#include <OleAcc.h>
 
 // kernel32.dll
 #ifndef PROCESS_DEP_ENABLE
@@ -117,6 +119,22 @@ typedef BOOL(WINAPI * Sig_RollbackTransaction)(HANDLE TransactionHandle);
     V(CreateTransaction) \
     V(CommitTransaction) \
     V(RollbackTransaction)
+
+
+// uiautomationcore.dll, not available under Win2000
+typedef LRESULT(WINAPI *Sig_UiaReturnRawElementProvider)(HWND hwnd, WPARAM wParam, LPARAM lParam, IRawElementProviderSimple *el);
+typedef HRESULT(WINAPI *Sig_UiaHostProviderFromHwnd)(HWND hwnd, IRawElementProviderSimple ** pProvider);
+typedef HRESULT(WINAPI *Sig_UiaRaiseAutomationEvent)(IRawElementProviderSimple * pProvider, EVENTID id);
+typedef HRESULT(WINAPI *Sig_UiaRaiseStructureChangedEvent)(IRawElementProviderSimple * pProvider, StructureChangeType structureChangeType, int * pRuntimeId, int cRuntimeIdLen);
+typedef HRESULT(WINAPI *Sig_UiaGetReservedNotSupportedValue)(IUnknown **punkNotSupportedValue);
+
+#define UIA_API_LIST(V) \
+    V(UiaReturnRawElementProvider) \
+    V(UiaHostProviderFromHwnd) \
+    V(UiaRaiseAutomationEvent) \
+    V(UiaRaiseStructureChangedEvent) \
+    V(UiaGetReservedNotSupportedValue)
+
 
 
 // user32.dll
@@ -239,6 +257,7 @@ DWMAPI_API_LIST(API_DECLARATION)
 NORMALIZ_API_LIST(API_DECLARATION)
 KTMW32_API_LIST(API_DECLARATION)
 USER32_API_LIST(API_DECLARATION)
+UIA_API_LIST(API_DECLARATION)
 
 #undef API_DECLARATION
 
@@ -279,5 +298,14 @@ BOOL SetGestureConfig(HWND hwnd, DWORD dwReserved, UINT cIDs, PGESTURECONFIG pGe
 
 }
 
+namespace uia {
+
+LRESULT ReturnRawElementProvider(HWND hwnd, WPARAM wParam, LPARAM lParam, IRawElementProviderSimple *);
+HRESULT HostProviderFromHwnd(HWND hwnd, IRawElementProviderSimple ** pProvider);
+HRESULT RaiseAutomationEvent(IRawElementProviderSimple * pProvider, EVENTID id);
+HRESULT RaiseStructureChangedEvent(IRawElementProviderSimple * pProvider, StructureChangeType structureChangeType, int * pRuntimeId, int cRuntimeIdLen);
+HRESULT GetReservedNotSupportedValue(IUnknown **punkNotSupportedValue);
+
+};
 
 

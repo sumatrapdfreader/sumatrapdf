@@ -4,9 +4,6 @@
 // utils
 #include "BaseUtil.h"
 #include "WinDynCalls.h"
-#include <dwmapi.h>
-#include <UIAutomationCore.h>
-#include <UIAutomationCoreApi.h>
 #include "CmdLineParser.h"
 #include "DbgHelpDyn.h"
 #include "Dpi.h"
@@ -620,9 +617,6 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR cmdLine
 
     srand((unsigned int)time(nullptr));
 
-    // load uiautomationcore.dll before installing crash handler (i.e. initializing
-    // dbghelp.dll), so that we get function names/offsets in GetCallstack()
-    uia::Initialize();
 #ifdef DEBUG
     dbghelp::RememberCallstackLogs();
 #endif

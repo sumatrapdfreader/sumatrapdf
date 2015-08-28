@@ -3,7 +3,6 @@
 
 // utils
 #include "BaseUtil.h"
-#include <dwmapi.h>
 #include <UIAutomationCore.h>
 #include <UIAutomationCoreApi.h>
 #include "FileUtil.h"

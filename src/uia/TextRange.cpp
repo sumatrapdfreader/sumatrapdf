@@ -2,9 +2,7 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
-#include <UIAutomationCore.h>
-#include <UIAutomationCoreApi.h>
-#include <OleAcc.h>
+#include "WinDynCalls.h"
 #include "BaseEngine.h"
 #include "uia/TextRange.h"
 #include "SettingsStructs.h"

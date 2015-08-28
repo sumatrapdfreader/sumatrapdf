@@ -54,13 +54,3 @@ private:
     IRawElementProviderFragment* GetElementFromPoint(double,double,IRawElementProviderFragment *);
 };
 
-namespace uia {
-
-void    Initialize();
-LRESULT ReturnRawElementProvider(HWND hwnd, WPARAM wParam, LPARAM lParam, IRawElementProviderSimple *);
-HRESULT HostProviderFromHwnd(HWND hwnd, IRawElementProviderSimple ** pProvider);
-HRESULT RaiseAutomationEvent(IRawElementProviderSimple * pProvider, EVENTID id);
-HRESULT RaiseStructureChangedEvent(IRawElementProviderSimple * pProvider, StructureChangeType structureChangeType, int * pRuntimeId, int cRuntimeIdLen);
-HRESULT GetReservedNotSupportedValue(IUnknown **punkNotSupportedValue);
-
-};

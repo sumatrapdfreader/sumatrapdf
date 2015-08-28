@@ -4,8 +4,6 @@
 // utils
 #include "BaseUtil.h"
 #include "WinDynCalls.h"
-#include <UIAutomationCore.h>
-#include <UIAutomationCoreApi.h>
 #include "Dpi.h"
 #include "FileUtil.h"
 #include "FrameRateWnd.h"

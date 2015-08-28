@@ -4,8 +4,6 @@
 // utils
 #include "BaseUtil.h"
 #include <wininet.h>
-#include <UIAutomationCore.h>
-#include <UIAutomationCoreApi.h>
 #include "WinDynCalls.h"
 #include "CryptoUtil.h"
 #include "DirIter.h"
