@@ -59,3 +59,15 @@ LEAK
 name=weird leak
 ...
 SumatraPDF.exe!pre_c_initialization
+
+# ddjvu_context_create
+UNINITIALIZED READ
+name=ddjvu_context_create
+...
+SumatraPDF.exe!ddjvu_context_create
+
+# ddjvu_context_create #2
+UNADDRESSABLE ACCESS
+name=ddjvu_context_create #2
+...
+SumatraPDF.exe!ddjvu_context_create
