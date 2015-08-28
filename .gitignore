@@ -33,3 +33,4 @@ relPrefast64/
 dbg/
 dbg64/
 bin/cmapdump.exe
+drmemlogs/

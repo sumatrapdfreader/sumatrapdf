@@ -82,7 +82,7 @@ public:
         current(-1), highlighted(-1), xClicked(-1), xHighlighted(-1), nextTab(-1),
         isMouseInClientArea(false), isDragging(false), inTitlebar(false), currBgCol(DEFAULT_CURRENT_BG_COL) {
         Reshape(tabSize.dx, tabSize.dy);
-        EvaluateColors();
+        EvaluateColors(false);
         memset(&color, 0, sizeof(color));
     }
 
@@ -304,7 +304,7 @@ public:
     }
 
     // Evaluates the colors for the tab's elements.
-    void EvaluateColors(bool force=false) {
+    void EvaluateColors(bool force) {
         COLORREF bg, txt;
         if (inTitlebar) {
             WindowInfo *win = FindWindowInfoByHwnd(hwnd);
@@ -608,7 +608,7 @@ static LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
             hdc = wParam ? (HDC)wParam : BeginPaint(hwnd, &ps);
 
             DoubleBuffer buffer(hwnd, RectI::FromRECT(rc));
-            tab->EvaluateColors();
+            tab->EvaluateColors(false);
             tab->Paint(buffer.GetDC(), rc);
             buffer.Flush(hdc);
 
