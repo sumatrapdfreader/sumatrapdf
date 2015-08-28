@@ -285,6 +285,7 @@ static bool CreateAppShortcut(bool allUsers)
 
 DWORD WINAPI InstallerThread(LPVOID data)
 {
+    UNUSED(data);
     gGlobalData.success = false;
 
     if (!CreateInstallationDirectory())

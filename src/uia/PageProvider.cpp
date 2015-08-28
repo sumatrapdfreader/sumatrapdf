@@ -217,6 +217,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::get_ProviderOptions(P
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::SetValue(LPCWSTR val)
 {
+    UNUSED(val);
     return E_ACCESSDENIED;
 }
 

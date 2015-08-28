@@ -73,8 +73,9 @@ public:
     virtual const WCHAR *FileName() const { return fileName; };
     virtual int PageCount() const { return pages ? (int)pages->Count() : 0; }
 
-    virtual RectD PageMediabox(int pageNo) { return pageRect; }
+    virtual RectD PageMediabox(int pageNo) { UNUSED(pageNo);  return pageRect; }
     virtual RectD PageContentBox(int pageNo, RenderTarget target=Target_View) {
+        UNUSED(target);
         RectD mbox = PageMediabox(pageNo);
         mbox.Inflate(-pageBorder, -pageBorder);
         return mbox;
@@ -91,12 +92,13 @@ public:
         return fileName ? (unsigned char *)file::ReadAll(fileName, cbCount) : nullptr;
     }
     virtual bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false) {
+        UNUSED(includeUserAnnots);
         return fileName ? CopyFile(fileName, copyFileName, FALSE) : false;
     }
-    virtual WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coords_out=nullptr,
+    virtual WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coordsOut=nullptr,
                                     RenderTarget target=Target_View);
     // make RenderCache request larger tiles than per default
-    virtual bool HasClipOptimizations(int pageNo) { return false; }
+    virtual bool HasClipOptimizations(int pageNo) { UNUSED(pageNo);  return false; }
     virtual PageLayoutType PreferredLayout() { return Layout_Book; }
 
     virtual bool SupportsAnnotation(bool forSaving=false) const { return !forSaving; }
@@ -107,7 +109,7 @@ public:
 
     virtual PageDestination *GetNamedDest(const WCHAR *name);
 
-    virtual bool BenchLoadPage(int pageNo) { return true; }
+    virtual bool BenchLoadPage(int pageNo) { UNUSED(pageNo); return true; }
 
 protected:
     WCHAR *fileName;
@@ -278,6 +280,7 @@ PointD EbookEngine::Transform(PointD pt, int pageNo, float zoom, int rotation, b
 
 RectD EbookEngine::Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse)
 {
+    UNUSED(pageNo);
     geomutil::RectT<REAL> rcF = rect.Convert<REAL>();
     PointF pts[2] = { PointF(rcF.x, rcF.y), PointF(rcF.x + rcF.dx, rcF.y + rcF.dy) };
     Matrix m;
@@ -352,8 +355,9 @@ static void DrawAnnotations(Graphics& g, Vec<PageAnnotation>& userAnnots, int pa
     }
 }
 
-RenderedBitmap *EbookEngine::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, AbortCookie **cookie_out)
+RenderedBitmap *EbookEngine::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, AbortCookie **cookieOut)
 {
+    UNUSED(target);
     RectD pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
     RectI screen = Transform(pageRc, pageNo, zoom, rotation).Round();
     PointI screenTL = screen.TL();
@@ -379,8 +383,8 @@ RenderedBitmap *EbookEngine::RenderBitmap(int pageNo, float zoom, int rotation, 
     g.SetTransform(&m);
 
     EbookAbortCookie *cookie = nullptr;
-    if (cookie_out)
-        *cookie_out = cookie = new EbookAbortCookie();
+    if (cookieOut)
+        *cookieOut = cookie = new EbookAbortCookie();
 
     ScopedCritSec scope(&pagesAccess);
 
@@ -406,8 +410,9 @@ static RectI GetInstrBbox(DrawInstr& instr, float pageBorder)
     return bbox.Round();
 }
 
-WCHAR *EbookEngine::ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coords_out, RenderTarget target)
+WCHAR *EbookEngine::ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coordsOut, RenderTarget target)
 {
+    UNUSED(target);
     ScopedCritSec scope(&pagesAccess);
 
     str::Str<WCHAR> content;
@@ -477,9 +482,9 @@ WCHAR *EbookEngine::ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **co
         coords.AppendBlanks(str::Len(lineSep));
     }
 
-    if (coords_out) {
+    if (coordsOut) {
         CrashIf(coords.Count() != content.Count());
-        *coords_out = coords.StealData();
+        *coordsOut = coords.StealData();
     }
     return content.StealData();
 }
@@ -802,6 +807,7 @@ unsigned char *EpubEngineImpl::GetFileData(size_t *cbCount)
 
 bool EpubEngineImpl::SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots)
 {
+    UNUSED(includeUserAnnots);
     if (stream) {
         size_t len;
         ScopedMem<void> data(GetDataFromStream(stream, &len));
@@ -1449,6 +1455,7 @@ public:
     }
 
     virtual void Visit(const WCHAR *name, const WCHAR *url, int level) {
+        UNUSED(name); UNUSED(level);
         if (!url || url::IsAbsolute(url))
             return;
         ScopedMem<WCHAR> plainUrl(url::GetFullPath(url));

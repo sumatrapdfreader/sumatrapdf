@@ -489,6 +489,8 @@ static void GetProps(Controller *ctrl, PropertiesLayout *layoutData, bool extend
         }
         layoutData->AddProperty(_TR("Fonts:"), str);
     }
+#else
+    UNUSED(extended);
 #endif
 }
 

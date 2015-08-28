@@ -25,6 +25,8 @@ static void GenPythonIntTest(int64_t val, uint8_t *d, int dLen)
             s.Append(" + ");
     }
     plogf("%s", s.Get());
+#else
+    UNUSED(val); UNUSED(d); UNUSED(dLen);
 #endif
 }
 
@@ -41,6 +43,8 @@ static void GenPythonUIntTest(uint64_t val, uint8_t *d, int dLen)
             s.Append(" + ");
     }
     plogf("%s", s.Get());
+#else
+    UNUSED(val); UNUSED(d); UNUSED(dLen);
 #endif
 }
 

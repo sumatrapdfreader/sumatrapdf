@@ -35,6 +35,7 @@ extern void StrFormatTest();
 
 int main(int argc, char **argv)
 {
+    UNUSED(argc); UNUSED(argv);
     printf("Running unit tests\n");
     BaseUtilTest();
     ByteOrderTests();

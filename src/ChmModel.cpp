@@ -233,6 +233,7 @@ void ChmModel::Navigate(int dir)
 
 void ChmModel::SetZoomVirtual(float zoom, PointI *fixPt)
 {
+    UNUSED(fixPt);
     if (zoom > 0)
         zoom = limitValue(zoom, ZOOM_MIN, ZOOM_MAX);
     if (zoom <= 0 || !IsValidZoom(zoom))
@@ -249,6 +250,7 @@ void ChmModel::ZoomTo(float zoomLevel)
 
 float ChmModel::GetZoomVirtual(bool absolute) const
 {
+    UNUSED(absolute);
     if (!htmlWindow)
         return 100;
     return (float)htmlWindow->GetZoomPercent();
@@ -569,7 +571,7 @@ public:
         hw->NavigateToDataUrl(homeUrl);
     }
 
-    virtual bool OnBeforeNavigate(const WCHAR *url, bool newWindow) { return !newWindow; }
+    virtual bool OnBeforeNavigate(const WCHAR *url, bool newWindow) { UNUSED(url);  return !newWindow; }
     virtual void OnDocumentComplete(const WCHAR *url) {
         if (url && *url == '/')
             url++;
@@ -586,13 +588,16 @@ public:
     }
     virtual void OnLButtonDown() { }
     virtual const unsigned char *GetDataForUrl(const WCHAR *url, size_t *len) {
+        UNUSED(len);
         ScopedCritSec scope(&docAccess);
         ScopedMem<WCHAR> plainUrl(url::GetFullPath(url));
         ScopedMem<char> urlUtf8(str::conv::ToUtf8(plainUrl));
         data.Append(doc->GetData(urlUtf8, len));
         return data.Last();
     }
-    virtual void DownloadData(const WCHAR *url, const unsigned char *data, size_t len) { }
+    virtual void DownloadData(const WCHAR *url, const unsigned char *data, size_t len) { 
+        UNUSED(url); UNUSED(data); UNUSED(len);
+    }
 };
 
 // Create a thumbnail of chm document by loading it again and rendering

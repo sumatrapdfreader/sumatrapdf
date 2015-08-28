@@ -18,8 +18,8 @@
 namespace lzsa {
 
 struct ISzCrtAlloc : ISzAlloc {
-    static void *_Alloc(void *p, size_t size) { return malloc(size); }
-    static void _Free(void *p, void *ptr) { free(ptr); }
+    static void *_Alloc(void *p, size_t size) { UNUSED(p);  return malloc(size); }
+    static void _Free(void *p, void *ptr) { UNUSED(p); free(ptr); }
 
     ISzCrtAlloc() { this->Alloc = _Alloc; this->Free = _Free; }
 };
@@ -198,6 +198,7 @@ int mainVerify(const WCHAR *archivePath)
 
 int main(int argc, char **argv)
 {
+    UNUSED(argc); UNUSED(argv);
 #ifdef DEBUG
     // report memory leaks on stderr
     _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);

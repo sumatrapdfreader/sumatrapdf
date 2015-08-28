@@ -239,7 +239,7 @@ void fz_stream_fingerprint(fz_stream *file, unsigned char digest[16])
     fz_drop_buffer(file->ctx, buffer);
 }
 
-static WCHAR *fz_text_page_to_str(fz_text_page *text, const WCHAR *lineSep, RectI **coords_out=nullptr)
+static WCHAR *fz_text_page_to_str(fz_text_page *text, const WCHAR *lineSep, RectI **coordsOut=nullptr)
 {
     size_t lineSepLen = str::Len(lineSep);
     size_t textLen = 0;
@@ -259,9 +259,9 @@ static WCHAR *fz_text_page_to_str(fz_text_page *text, const WCHAR *lineSep, Rect
         return nullptr;
 
     RectI *destRect = nullptr;
-    if (coords_out) {
-        destRect = *coords_out = AllocArray<RectI>(textLen + 1);
-        if (!*coords_out) {
+    if (coordsOut) {
+        destRect = *coordsOut = AllocArray<RectI>(textLen + 1);
+        if (!*coordsOut) {
             free(content);
             return nullptr;
         }
@@ -325,6 +325,7 @@ struct istream_filter {
 
 extern "C" static int next_istream(fz_stream *stm, int max)
 {
+    UNUSED(max);
     istream_filter *state = (istream_filter *)stm->state;
     ULONG cbRead = sizeof(state->buf);
     HRESULT res = state->stream->Read(state->buf, sizeof(state->buf), &cbRead);
@@ -644,36 +645,42 @@ static void fz_inspection_handle_image(fz_device *dev, fz_image *image)
 extern "C" static void
 fz_inspection_fill_path(fz_device *dev, fz_path *path, int even_odd, const fz_matrix *ctm, fz_colorspace *colorspace, float *color, float alpha)
 {
+    UNUSED(even_odd); UNUSED(ctm); UNUSED(colorspace); UNUSED(color); UNUSED(alpha);
     fz_inspection_handle_path(dev, path);
 }
 
 extern "C" static void
 fz_inspection_stroke_path(fz_device *dev, fz_path *path, fz_stroke_state *stroke, const fz_matrix *ctm, fz_colorspace *colorspace, float *color, float alpha)
 {
+    UNUSED(stroke); UNUSED(ctm); UNUSED(colorspace); UNUSED(color); UNUSED(alpha);
     fz_inspection_handle_path(dev, path);
 }
 
 extern "C" static void
 fz_inspection_clip_path(fz_device *dev, fz_path *path, const fz_rect *rect, int even_odd, const fz_matrix *ctm)
 {
+    UNUSED(rect); UNUSED(even_odd); UNUSED(ctm);
     fz_inspection_handle_path(dev, path);
 }
 
 extern "C" static void
 fz_inspection_clip_stroke_path(fz_device *dev, fz_path *path, const fz_rect *rect, fz_stroke_state *stroke, const fz_matrix *ctm)
 {
+    UNUSED(rect); UNUSED(stroke); UNUSED(ctm);
     fz_inspection_handle_path(dev, path);
 }
 
 extern "C" static void
 fz_inspection_fill_shade(fz_device *dev, fz_shade *shade, const fz_matrix *ctm, float alpha)
 {
+    UNUSED(shade); UNUSED(ctm); UNUSED(alpha);
     ((ListInspectionData *)dev->user)->mem_estimate += sizeof(fz_shade);
 }
 
 extern "C" static void
 fz_inspection_fill_image(fz_device *dev, fz_image *image, const fz_matrix *ctm, float alpha)
 {
+    UNUSED(alpha);
     fz_inspection_handle_image(dev, image);
     // extract rectangles for images a user might want to extract
     // TODO: try to better distinguish images a user might actually want to extract
@@ -688,12 +695,14 @@ fz_inspection_fill_image(fz_device *dev, fz_image *image, const fz_matrix *ctm, 
 extern "C" static void
 fz_inspection_fill_image_mask(fz_device *dev, fz_image *image, const fz_matrix *ctm, fz_colorspace *colorspace, float *color, float alpha)
 {
+    UNUSED(ctm); UNUSED(colorspace); UNUSED(color); UNUSED(alpha);
     fz_inspection_handle_image(dev, image);
 }
 
 extern "C" static void
 fz_inspection_clip_image_mask(fz_device *dev, fz_image *image, const fz_rect *rect, const fz_matrix *ctm)
 {
+    UNUSED(rect); UNUSED(ctm);
     fz_inspection_handle_image(dev, image);
 }
 
@@ -725,6 +734,7 @@ public:
 extern "C" static void
 fz_lock_context_cs(void *user, int lock)
 {
+    UNUSED(lock);
     // we use a single critical section for all locks,
     // since that critical section (ctxAccess) should
     // be guarding all fz_context access anyway and
@@ -741,6 +751,7 @@ fz_lock_context_cs(void *user, int lock)
 extern "C" static void
 fz_unlock_context_cs(void *user, int lock)
 {
+    UNUSED(lock);
     CRITICAL_SECTION *cs = (CRITICAL_SECTION *)user;
     LeaveCriticalSection(cs);
 }
@@ -1146,7 +1157,7 @@ public:
     virtual bool SaveFileAsPdf(const WCHAR *pdfFileName, bool includeUserAnnots=false) {
         return SaveFileAs(pdfFileName, includeUserAnnots);
     }
-    virtual WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coords_out=nullptr,
+    virtual WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coordsOut=nullptr,
                                     RenderTarget target=Target_View);
     virtual bool HasClipOptimizations(int pageNo);
     virtual PageLayoutType PreferredLayout();
@@ -1218,7 +1229,7 @@ protected:
         fz_rect r;
         return fz_create_view_ctm(pdf_bound_page(_doc, page, &r), zoom, rotation);
     }
-    WCHAR         * ExtractPageText(pdf_page *page, const WCHAR *lineSep, RectI **coords_out=nullptr,
+    WCHAR         * ExtractPageText(pdf_page *page, const WCHAR *lineSep, RectI **coordsOut=nullptr,
                                     RenderTarget target=Target_View, bool cacheRun=false);
 
     Vec<PdfPageRun *> runCache; // ordered most recently used first
@@ -1408,6 +1419,7 @@ public:
 
     virtual WCHAR * GetPassword(const WCHAR *fileName, unsigned char *fileDigest,
                                 unsigned char decryptionKeyOut[32], bool *saveKey) {
+        UNUSED(fileName); UNUSED(fileDigest);
         memcpy(decryptionKeyOut, cryptKey, 32);
         *saveKey = true;
         return nullptr;
@@ -2325,7 +2337,7 @@ RenderedBitmap *PdfEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
     return bmp;
 }
 
-WCHAR *PdfEngineImpl::ExtractPageText(pdf_page *page, const WCHAR *lineSep, RectI **coords_out, RenderTarget target, bool cacheRun)
+WCHAR *PdfEngineImpl::ExtractPageText(pdf_page *page, const WCHAR *lineSep, RectI **coordsOut, RenderTarget target, bool cacheRun)
 {
     if (!page)
         return nullptr;
@@ -2362,18 +2374,18 @@ WCHAR *PdfEngineImpl::ExtractPageText(pdf_page *page, const WCHAR *lineSep, Rect
 
     WCHAR *content = nullptr;
     if (ok)
-        content = fz_text_page_to_str(text, lineSep, coords_out);
+        content = fz_text_page_to_str(text, lineSep, coordsOut);
     fz_free_text_page(ctx, text);
     fz_free_text_sheet(ctx, sheet);
 
     return content;
 }
 
-WCHAR *PdfEngineImpl::ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coords_out, RenderTarget target)
+WCHAR *PdfEngineImpl::ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coordsOut, RenderTarget target)
 {
     pdf_page *page = GetPdfPage(pageNo, true);
     if (page)
-        return ExtractPageText(page, lineSep, coords_out, target);
+        return ExtractPageText(page, lineSep, coordsOut, target);
 
     EnterCriticalSection(&ctxAccess);
     fz_try(ctx) {
@@ -2385,7 +2397,7 @@ WCHAR *PdfEngineImpl::ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **
     }
     LeaveCriticalSection(&ctxAccess);
 
-    WCHAR *result = ExtractPageText(page, lineSep, coords_out, target);
+    WCHAR *result = ExtractPageText(page, lineSep, coordsOut, target);
 
     EnterCriticalSection(&ctxAccess);
     pdf_free_page(_doc, page);
@@ -3352,9 +3364,10 @@ public:
 
     virtual unsigned char *GetFileData(size_t *cbCount);
     virtual bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false);
-    virtual WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coords_out=nullptr,
+    virtual WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coordsOut=nullptr,
                                     RenderTarget target=Target_View) {
-        return ExtractPageText(GetXpsPage(pageNo), lineSep, coords_out);
+        UNUSED(target);
+        return ExtractPageText(GetXpsPage(pageNo), lineSep, coordsOut);
     }
     virtual bool HasClipOptimizations(int pageNo);
     virtual WCHAR *GetProperty(DocumentProperty prop);
@@ -3409,7 +3422,7 @@ protected:
         return fz_create_view_ctm(xps_bound_page(_doc, page, &r), zoom, rotation);
     }
     WCHAR         * ExtractPageText(xps_page *page, const WCHAR *lineSep,
-                                    RectI **coords_out=nullptr, bool cacheRun=false);
+                                    RectI **coordsOut=nullptr, bool cacheRun=false);
 
     Vec<XpsPageRun *> runCache; // ordered most recently used first
     XpsPageRun    * CreatePageRun(xps_page *page, fz_display_list *list);
@@ -3888,7 +3901,8 @@ RectD XpsEngineImpl::PageMediabox(int pageNo)
 
 RectD XpsEngineImpl::PageContentBox(int pageNo, RenderTarget target)
 {
-    assert(1 <= pageNo && pageNo <= PageCount());
+    UNUSED(target);
+    AssertCrash(1 <= pageNo && pageNo <= PageCount());
     xps_page *page = GetXpsPage(pageNo);
     if (!page)
         return RectD();
@@ -3939,6 +3953,7 @@ RectD XpsEngineImpl::Transform(RectD rect, int pageNo, float zoom, int rotation,
 
 RenderedBitmap *XpsEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, AbortCookie **cookie_out)
 {
+    UNUSED(target);
     xps_page* page = GetXpsPage(pageNo);
     if (!page)
         return nullptr;
@@ -3991,7 +4006,7 @@ RenderedBitmap *XpsEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
     return bitmap;
 }
 
-WCHAR *XpsEngineImpl::ExtractPageText(xps_page *page, const WCHAR *lineSep, RectI **coords_out, bool cacheRun)
+WCHAR *XpsEngineImpl::ExtractPageText(xps_page *page, const WCHAR *lineSep, RectI **coordsOut, bool cacheRun)
 {
     if (!page)
         return nullptr;
@@ -4026,7 +4041,7 @@ WCHAR *XpsEngineImpl::ExtractPageText(xps_page *page, const WCHAR *lineSep, Rect
 
     ScopedCritSec scope(&ctxAccess);
 
-    WCHAR *content = fz_text_page_to_str(text, lineSep, coords_out);
+    WCHAR *content = fz_text_page_to_str(text, lineSep, coordsOut);
     fz_free_text_page(ctx, text);
     fz_free_text_sheet(ctx, sheet);
 
@@ -4048,6 +4063,7 @@ unsigned char *XpsEngineImpl::GetFileData(size_t *cbCount)
 
 bool XpsEngineImpl::SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots)
 {
+    UNUSED(includeUserAnnots);
     size_t dataLen;
     ScopedMem<unsigned char> data(GetFileData(&dataLen));
     if (data) {
@@ -4162,6 +4178,7 @@ Vec<PageElement *> *XpsEngineImpl::GetElements(int pageNo)
 
 void XpsEngineImpl::LinkifyPageText(xps_page *page, int pageNo)
 {
+    UNUSED(pageNo);
     // make MuXPS extract all links and named destinations from the page
     assert(!GetPageRun(page, true));
     XpsPageRun *run = GetPageRun(page);

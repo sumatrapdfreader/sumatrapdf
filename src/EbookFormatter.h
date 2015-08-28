@@ -80,7 +80,7 @@ public:
 
 class TxtFormatter : public HtmlFormatter {
 protected:
-    virtual void HandleTagPagebreak(HtmlToken *t) { ForceNewPage(); }
+    virtual void HandleTagPagebreak(HtmlToken *t) { UNUSED(t);  ForceNewPage(); }
 
 public:
     explicit TxtFormatter(HtmlFormatterArgs *args) : HtmlFormatter(args) { }

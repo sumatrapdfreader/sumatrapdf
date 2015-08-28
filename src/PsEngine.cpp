@@ -248,14 +248,15 @@ public:
         return (unsigned char *)file::ReadAll(fileName, cbCount);
     }
     virtual bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false) {
+        UNUSED(includeUserAnnots);
         return fileName ? CopyFile(fileName, copyFileName, FALSE) : false;
     }
     virtual bool SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots=false) {
         return pdfEngine->SaveFileAs(pdfFileName, includeUserAnnots);
     }
-    virtual WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coords_out=nullptr,
+    virtual WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coordsOut=nullptr,
                                     RenderTarget target=Target_View) {
-        return pdfEngine->ExtractPageText(pageNo, lineSep, coords_out, target);
+        return pdfEngine->ExtractPageText(pageNo, lineSep, coordsOut, target);
     }
     virtual bool HasClipOptimizations(int pageNo) {
         return pdfEngine->HasClipOptimizations(pageNo);

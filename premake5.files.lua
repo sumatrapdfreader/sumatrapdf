@@ -136,6 +136,52 @@ function unarr_files()
   }
 end
 
+function unarr_no_bzip_files()
+  files {
+    "ext/unarr/common/conv.c",
+    "ext/unarr/common/crc32.c",
+    "ext/unarr/common/stream.c",
+    "ext/unarr/common/unarr.c",
+
+    "ext/unarr/lzmasdk/CpuArch.c",
+    "ext/unarr/lzmasdk/Ppmd7.c",
+    "ext/unarr/lzmasdk/Ppmd7Dec.c",
+    "ext/unarr/lzmasdk/Ppmd8.c",
+    "ext/unarr/lzmasdk/Ppmd8Dec.c",
+
+    "ext/unarr/rar/filter-rar.c",
+    "ext/unarr/rar/parse-rar.c",
+    "ext/unarr/rar/rar.c",
+    "ext/unarr/rar/rarvm.c",
+    "ext/unarr/rar/uncompress-rar.c",
+    "ext/unarr/rar/huffman-rar.c",
+
+    "ext/unarr/zip/parse-zip.c",
+    "ext/unarr/zip/uncompress-zip.c",
+    "ext/unarr/zip/zip.c",
+    "ext/unarr/zip/inflate.c",
+
+    "ext/unarr/_7z/_7z.c",
+
+    "ext/unarr/tar/tar.c",
+    "ext/unarr/tar/parse-tar.c",
+
+    "ext/lzma/C/LzmaDec.c",
+    "ext/lzma/C/Bra86.c",
+    "ext/lzma/C/LzmaEnc.c",
+    "ext/lzma/C/LzFind.c",
+    "ext/lzma/C/LzFindMt.c",
+    "ext/lzma/C/Threads.c",
+    "ext/lzma/C/7zBuf.c",
+    "ext/lzma/C/7zDec.c",
+    "ext/lzma/C/7zIn.c",
+    "ext/lzma/C/7zStream.c",
+    "ext/lzma/C/Bcj2.c",
+    "ext/lzma/C/Bra.c",
+    "ext/lzma/C/Lzma2Dec.c",
+  }
+end
+
 function jbig2dec_files()
   -- TODO: probably can be
   -- files { "ext/jbig2dec/jbig2*.c", "ext/jbig2dec/jbig2*.h" }

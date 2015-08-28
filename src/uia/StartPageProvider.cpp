@@ -117,6 +117,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::get_FragmentRoot
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationStartPageProvider::GetPatternProvider(PATTERNID patternId,IUnknown **pRetVal)
 {
+    UNUSED(patternId);
     *pRetVal = nullptr;
     return S_OK;
 }

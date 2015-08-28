@@ -193,6 +193,7 @@ public:
     }
     // ISequentialStream
     IFACEMETHODIMP Read(void *buffer, ULONG size, ULONG *read) {
+        UNUSED(buffer); UNUSED(size); UNUSED(read);
         return E_NOTIMPL;
     }
     IFACEMETHODIMP Write(const void *data, ULONG size, ULONG *written) {

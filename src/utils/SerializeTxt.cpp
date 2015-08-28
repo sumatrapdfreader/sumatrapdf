@@ -360,6 +360,7 @@ static void FreeTxtNode(TxtNode *node)
 
 static TxtNode *StructNodeFromTextNode(DecodeState& ds, TxtNode *txtNode, const StructMetadata *structDef)
 {
+    UNUSED(ds);
     CrashIf(TextNode != txtNode->type);
     str::Slice slice(txtNode->valStart, txtNode->valEnd);
     TxtNode *node = new TxtNode(StructNode);

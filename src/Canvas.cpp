@@ -165,6 +165,7 @@ static void OnDraggingStop(WindowInfo& win, int x, int y, bool aborted)
 
 static void OnMouseMove(WindowInfo& win, int x, int y, WPARAM flags)
 {
+    UNUSED(flags);
     AssertCrash(win.AsFixed());
 
     if (win.presentation) {
@@ -377,6 +378,7 @@ static void OnMouseLeftButtonDblClk(WindowInfo& win, int x, int y, WPARAM key)
 static void OnMouseMiddleButtonDown(WindowInfo& win, int x, int y, WPARAM key)
 {
     // Handle message by recording placement then moving document as mouse moves.
+    UNUSED(key);
 
     switch (win.mouseAction) {
     case MA_IDLE:
@@ -396,6 +398,7 @@ static void OnMouseMiddleButtonDown(WindowInfo& win, int x, int y, WPARAM key)
 
 static void OnMouseRightButtonDown(WindowInfo& win, int x, int y, WPARAM key)
 {
+    UNUSED(key);
     //lf("Right button clicked on %d %d", x, y);
     if (MA_SCROLLING == win.mouseAction)
         win.mouseAction = MA_IDLE;
@@ -490,6 +493,7 @@ static void PaintPageFrameAndShadow(HDC hdc, RectI& bounds, RectI& pageRect, boo
 #else
 static void PaintPageFrameAndShadow(HDC hdc, RectI& bounds, RectI& pageRect, bool presentation)
 {
+    UNUSED(pageRect);  UNUSED(presentation);
     ScopedGdiObj<HPEN> pe(CreatePen(PS_NULL, 0, 0));
     ScopedGdiObj<HBRUSH> brush(CreateSolidBrush(gRenderCache.backgroundColor));
     SelectObject(hdc, pe);
@@ -1134,6 +1138,7 @@ static void OnPaintAbout(WindowInfo& win)
 
 static void OnMouseLeftButtonDownAbout(WindowInfo& win, int x, int y, WPARAM key)
 {
+    UNUSED(key);
     //lf("Left button clicked on %d %d", x, y);
 
     // remember a link under so that on mouse up we only activate
@@ -1143,6 +1148,7 @@ static void OnMouseLeftButtonDownAbout(WindowInfo& win, int x, int y, WPARAM key
 
 static void OnMouseLeftButtonUpAbout(WindowInfo& win, int x, int y, WPARAM key)
 {
+    UNUSED(key);
     SetFocus(win.hwndFrame);
 
     const WCHAR *url = GetStaticLink(win.staticLinks, x, y);
@@ -1169,6 +1175,7 @@ static void OnMouseLeftButtonUpAbout(WindowInfo& win, int x, int y, WPARAM key)
 
 static void OnMouseRightButtonDownAbout(WindowInfo& win, int x, int y, WPARAM key)
 {
+    UNUSED(key);
     //lf("Right button clicked on %d %d", x, y);
     SetFocus(win.hwndFrame);
     win.dragStart = PointI(x, y);
@@ -1176,6 +1183,7 @@ static void OnMouseRightButtonDownAbout(WindowInfo& win, int x, int y, WPARAM ke
 
 static void OnMouseRightButtonUpAbout(WindowInfo& win, int x, int y, WPARAM key)
 {
+    UNUSED(key);
     bool didDragMouse =
         abs(x - win.dragStart.x) > GetSystemMetrics(SM_CXDRAG) ||
         abs(y - win.dragStart.y) > GetSystemMetrics(SM_CYDRAG);

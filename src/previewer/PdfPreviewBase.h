@@ -56,6 +56,7 @@ public:
 
     // IInitializeWithStream
     IFACEMETHODIMP Initialize(IStream *pStm, DWORD grfMode) {
+        UNUSED(grfMode);
         m_pStream = pStm;
         if (!m_pStream)
             return E_INVALIDARG;
@@ -136,7 +137,7 @@ public:
         *phwnd = m_hwndParent;
         return S_OK;
     }
-    IFACEMETHODIMP ContextSensitiveHelp(BOOL fEnterMode) { return E_NOTIMPL; }
+    IFACEMETHODIMP ContextSensitiveHelp(BOOL fEnterMode) { UNUSED(fEnterMode); return E_NOTIMPL; }
 
     // IPersist (for Windows XP)
     IFACEMETHODIMP GetClassID(CLSID *pClassID) {
@@ -145,6 +146,7 @@ public:
 
     // IPersistFile (for Windows XP)
     IFACEMETHODIMP Load(LPCOLESTR pszFileName, DWORD dwMode) {
+        UNUSED(dwMode);
         HANDLE hFile = CreateFile(pszFileName, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
         if (hFile == INVALID_HANDLE_VALUE)
             return E_INVALIDARG;
@@ -168,10 +170,10 @@ public:
         pStm->Release();
         return res;
     }
-    IFACEMETHODIMP IsDirty(void) { return E_NOTIMPL; }
-    IFACEMETHODIMP Save(LPCOLESTR pszFileName, BOOL bRemember) { return E_NOTIMPL; }
-    IFACEMETHODIMP SaveCompleted(LPCOLESTR pszFileName) { return E_NOTIMPL; }
-    IFACEMETHODIMP GetCurFile(LPOLESTR *ppszFileName) { return E_NOTIMPL; }
+    IFACEMETHODIMP IsDirty() { return E_NOTIMPL; }
+    IFACEMETHODIMP Save(LPCOLESTR pszFileName, BOOL bRemember) { UNUSED(pszFileName); UNUSED(bRemember); return E_NOTIMPL; }
+    IFACEMETHODIMP SaveCompleted(LPCOLESTR pszFileName) { UNUSED(pszFileName);  return E_NOTIMPL; }
+    IFACEMETHODIMP GetCurFile(LPOLESTR *ppszFileName) { UNUSED(ppszFileName); return E_NOTIMPL; }
 
     // IExtractImage2 (for Windows XP)
     IFACEMETHODIMP Extract(HBITMAP *phBmpThumbnail) {
@@ -181,6 +183,7 @@ public:
         return GetThumbnail(m_extractCx, phBmpThumbnail, &dummy);
     }
     IFACEMETHODIMP GetLocation(LPWSTR pszPathBuffer, DWORD cch, DWORD *pdwPriority, const SIZE *prgSize, DWORD dwRecClrDepth, DWORD *pdwFlags) {
+        UNUSED(pszPathBuffer);  UNUSED(cch);  UNUSED(pdwPriority); UNUSED(dwRecClrDepth);
         if (!prgSize || !pdwFlags)
             return E_INVALIDARG;
         // cheap implementation: ignore anything that isn't useful for IThumbnailProvider::GetThumbnail

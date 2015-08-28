@@ -297,6 +297,7 @@ bool Initialize(const WCHAR *symPathW, bool force)
 
 static BOOL CALLBACK OpenMiniDumpCallback(void *param, PMINIDUMP_CALLBACK_INPUT input, PMINIDUMP_CALLBACK_OUTPUT output)
 {
+    UNUSED(param);
     if (!input || !output)
         return FALSE;
 

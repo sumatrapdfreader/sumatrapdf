@@ -87,7 +87,7 @@ public:
     DirectionalLayout& Add(const DirectionalLayoutData& ld);
 
     virtual Size Measure(const Size availableSize);
-    virtual void Arrange(const Rect finalRect) { CrashIf(true); }
+    virtual void Arrange(const Rect finalRect) { UNUSED(finalRect);  CrashIf(true); }
 };
 
 class HorizontalLayout : public DirectionalLayout

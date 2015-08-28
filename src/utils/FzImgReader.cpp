@@ -1,16 +1,18 @@
 /* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+#pragma warning(disable: 4611) // interaction between '_setjmp' and C++ object destruction is non-portable
+
+#ifndef NO_LIBMUPDF
+extern "C" {
+#include <mupdf/fitz.h>
+}
+#endif
+
 #include "BaseUtil.h"
 #include "FzImgReader.h"
 
 #ifndef NO_LIBMUPDF
-
-#pragma warning(disable: 4611) // interaction between '_setjmp' and C++ object destruction is non-portable
-
-extern "C" {
-#include <mupdf/fitz.h>
-}
 
 using namespace Gdiplus;
 
@@ -168,7 +170,7 @@ Bitmap *ImageFromData(const char *data, size_t len)
 #else
 
 namespace fitz {
-Gdiplus::Bitmap *ImageFromData(const char *data, size_t len) { return nullptr; }
+    Gdiplus::Bitmap *ImageFromData(const char *data, size_t len) { UNUSED(data); UNUSED(len); return nullptr; }
 }
 
 #endif

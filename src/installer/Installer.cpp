@@ -858,7 +858,7 @@ static bool RegisterWinClass()
     return atom != 0;
 }
 
-static BOOL InstanceInit(int nCmdShow)
+static BOOL InstanceInit()
 {
     gFontDefault = CreateDefaultGuiFont();
     gUiDPIFactor = (float)DpiGet(HWND_DESKTOP)->dpiX / 96.f;
@@ -976,7 +976,7 @@ static void ParseCommandLine(WCHAR *cmdLine)
 
 // no-op but must be defined for CrashHandler.cpp
 void CrashHandlerMessage() { }
-void GetStressTestInfo(str::Str<char>* s) { }
+void GetStressTestInfo(str::Str<char>* s) { UNUSED(s); }
 
 void GetProgramInfo(str::Str<char>& s)
 {
@@ -1015,6 +1015,7 @@ static void InstallInstallerCrashHandler()
 int APIENTRY WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/,
                      LPSTR /* lpCmdLine*/, int nCmdShow)
 {
+    UNUSED(nCmdShow);
     int ret = 1;
 
     SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
@@ -1059,7 +1060,7 @@ int APIENTRY WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/,
     if (!RegisterWinClass())
         goto Exit;
 
-    if (!InstanceInit(nCmdShow))
+    if (!InstanceInit())
         goto Exit;
 
     ret = RunApp();

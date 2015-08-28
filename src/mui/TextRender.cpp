@@ -417,6 +417,8 @@ void TextRenderHdc::Draw(const WCHAR *s, size_t sLen, RectF& bb, bool isRtl) {
 #if 0
     if (isRtl)
         opts = opts | ETO_RTLREADING;
+#else
+    UNUSED(isRtl);
 #endif
     ExtTextOut(hdc, x, y, opts, nullptr, s, (UINT)sLen, nullptr);
 }

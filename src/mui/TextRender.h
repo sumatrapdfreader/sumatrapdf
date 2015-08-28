@@ -108,7 +108,7 @@ public:
 
     virtual void                SetFont(CachedFont *font);
     virtual void                SetTextColor(Gdiplus::Color col);
-    virtual void                SetTextBgColor(Gdiplus::Color col) {}
+    virtual void                SetTextBgColor(Gdiplus::Color col) { UNUSED(col);  }
 
     virtual float               GetCurrFontLineSpacing();
 

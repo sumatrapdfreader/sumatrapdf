@@ -53,14 +53,18 @@ public:
 
     virtual unsigned char *GetFileData(size_t *cbCount);
     virtual bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false);
-    virtual WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coords_out=nullptr,
-                                    RenderTarget target=Target_View) { return nullptr; }
-    virtual bool HasClipOptimizations(int pageNo) { return false; }
+    virtual WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coordsOut=nullptr,
+                                    RenderTarget target=Target_View) {
+        UNUSED(pageNo); UNUSED(lineSep);
+        UNUSED(coordsOut); UNUSED(target);
+        return nullptr;
+    }
+    virtual bool HasClipOptimizations(int pageNo) { UNUSED(pageNo);  return false; }
     virtual PageLayoutType PreferredLayout() { return Layout_NonContinuous; }
     virtual bool IsImageCollection() const { return true; }
 
-    virtual bool SupportsAnnotation(bool forSaving=false) const { return false; }
-    virtual void UpdateUserAnnotations(Vec<PageAnnotation> *list) { }
+    virtual bool SupportsAnnotation(bool forSaving = false) const { UNUSED(forSaving);  return false; }
+    virtual void UpdateUserAnnotations(Vec<PageAnnotation> *list) { UNUSED(list); }
 
     virtual Vec<PageElement *> *GetElements(int pageNo);
     virtual PageElement *GetElementAtPos(int pageNo, PointD pt);
@@ -116,8 +120,9 @@ RectD ImagesEngine::PageMediabox(int pageNo)
     return mediaboxes.At(pageNo - 1);
 }
 
-RenderedBitmap *ImagesEngine::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, AbortCookie **cookie_out)
+RenderedBitmap *ImagesEngine::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, AbortCookie **cookieOut)
 {
+    UNUSED(target); UNUSED(cookieOut);
     ImagePage *page = GetPage(pageNo);
     if (!page)
         return nullptr;
@@ -251,6 +256,7 @@ unsigned char *ImagesEngine::GetFileData(size_t *cbCount)
 
 bool ImagesEngine::SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots)
 {
+    UNUSED(includeUserAnnots);
     if (fileName) {
         BOOL ok = CopyFile(fileName, copyFileName, FALSE);
         if (ok)
@@ -521,6 +527,7 @@ RectD ImageEngineImpl::LoadMediabox(int pageNo)
 
 bool ImageEngineImpl::SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots)
 {
+    UNUSED(includeUserAnnots);
     bool ok = true;
     PdfCreator *c = new PdfCreator();
     if (fileName) {
@@ -611,10 +618,10 @@ public:
         return fileName ? CreateFromFile(fileName) : nullptr;
     }
 
-    virtual unsigned char *GetFileData(size_t *cbCount) { return nullptr; }
+    virtual unsigned char *GetFileData(size_t *cbCountOut) { UNUSED(cbCountOut);  return nullptr; }
     virtual bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false);
 
-    virtual WCHAR *GetProperty(DocumentProperty prop) { return nullptr; }
+    virtual WCHAR *GetProperty(DocumentProperty prop) { UNUSED(prop); return nullptr; }
 
     // TODO: is there a better place to expose pageFileNames than through page labels?
     virtual bool HasPageLabels() const { return true; }
@@ -719,6 +726,7 @@ DocTocItem *ImageDirEngineImpl::GetTocTree()
 
 bool ImageDirEngineImpl::SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots)
 {
+    UNUSED(includeUserAnnots);
     // only copy the files if the target directory doesn't exist yet
     if (!CreateDirectory(copyFileName, nullptr))
         return false;
@@ -755,6 +763,7 @@ RectD ImageDirEngineImpl::LoadMediabox(int pageNo)
 
 bool ImageDirEngineImpl::SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots)
 {
+    UNUSED(includeUserAnnots);
     bool ok = true;
     PdfCreator *c = new PdfCreator();
     for (int i = 1; i <= PageCount() && ok; i++) {
@@ -782,6 +791,7 @@ namespace ImageDirEngine {
 
 bool IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
+    UNUSED(sniff);
     // whether it actually contains images will be checked in LoadImageDir
     return dir::Exists(fileName);
 }
@@ -1025,6 +1035,7 @@ bool CbxEngineImpl::Visit(const char *path, const char *value, json::DataType ty
 
 bool CbxEngineImpl::SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots)
 {
+    UNUSED(includeUserAnnots);
     bool ok = true;
     PdfCreator *c = new PdfCreator();
     for (int i = 1; i <= PageCount() && ok; i++) {

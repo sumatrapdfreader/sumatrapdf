@@ -230,7 +230,7 @@ COLORREF GetNoDocBgColor()
     return COL_WINDOW_BG;
 }
 
-static bool InstanceInit(int nCmdShow)
+static bool InstanceInit()
 {
     gCursorDrag     = LoadCursor(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDC_CURSORDRAG));
     CrashIf(!gCursorDrag);
@@ -571,8 +571,9 @@ static bool AutoUpdateMain()
 }
 #endif
 
-int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR cmdLine, int nCmdShow)
 {
+    UNUSED(hPrevInstance); UNUSED(cmdLine); UNUSED(nCmdShow);
     int retCode = 1;    // by default it's error
 
     CrashIf(hInstance != GetInstance());
@@ -596,12 +597,12 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
 
 #if defined(DEBUG) || defined(SVN_PRE_RELEASE_VER)
-    if (str::StartsWith(lpCmdLine, "/tester")) {
+    if (str::StartsWith(cmdLine, "/tester")) {
         extern int TesterMain(); // in Tester.cpp
         return TesterMain();
     }
 
-    if (str::StartsWith(lpCmdLine, "/regress")) {
+    if (str::StartsWith(cmdLine, "/regress")) {
         extern int RegressMain(); // in Regress.cpp
         return RegressMain();
     }
@@ -671,7 +672,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         goto Exit;
 
     CrashIf(hInstance != GetModuleHandle(nullptr));
-    if (!InstanceInit(nCmdShow))
+    if (!InstanceInit())
         goto Exit;
 
     if (i.hwndPluginParent) {

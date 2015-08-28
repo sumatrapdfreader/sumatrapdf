@@ -20,18 +20,22 @@ public:
 
     // page navigation (stateful)
     virtual int CurrentPageNo() const { return currentPageNo; }
-    virtual void GoToPage(int pageNo, bool addNavPoint) { CrashIf(!ValidPageNo(pageNo)); DisplayPage(pages.At(pageNo - 1)); }
+    virtual void GoToPage(int pageNo, bool addNavPoint) {
+        UNUSED(addNavPoint);
+        CrashIf(!ValidPageNo(pageNo));
+        DisplayPage(pages.At(pageNo - 1));
+    }
     virtual bool CanNavigate(int dir) const;
     virtual void Navigate(int dir);
 
     // view settings
-    virtual void SetDisplayMode(DisplayMode mode, bool keepContinuous=false) { /* not supported */ }
+    virtual void SetDisplayMode(DisplayMode mode, bool keepContinuous = false) { UNUSED(mode); UNUSED(keepContinuous); /* not supported */ }
     virtual DisplayMode GetDisplayMode() const { return DM_SINGLE_PAGE; }
-    virtual void SetPresentationMode(bool enable) { /* not supported */ }
+    virtual void SetPresentationMode(bool enable) { UNUSED(enable); /* not supported */ }
     virtual void SetZoomVirtual(float zoom, PointI *fixPt=nullptr);
     virtual float GetZoomVirtual(bool absolute=false) const;
     virtual float GetNextZoomStep(float towards) const;
-    virtual void SetViewPortSize(SizeI size) { /* not needed(?) */ }
+    virtual void SetViewPortSize(SizeI size) { UNUSED(size); /* not needed(?) */ }
 
     // table of contents
     virtual bool HasTocTree() const;

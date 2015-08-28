@@ -237,6 +237,7 @@ static bool RemoveShortcut(bool allUsers)
 
 DWORD WINAPI UninstallerThread(LPVOID data)
 {
+    UNUSED(data);
     // also kill the original uninstaller, if it's just spawned
     // a DELETE_ON_CLOSE copy from the temp directory
     WCHAR *exePath = GetUninstallerPath();

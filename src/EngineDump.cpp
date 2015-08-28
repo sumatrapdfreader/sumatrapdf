@@ -402,12 +402,15 @@ public:
     explicit PasswordHolder(const WCHAR *password) : password(password) { }
     virtual WCHAR * GetPassword(const WCHAR *fileName, unsigned char *fileDigest,
                                 unsigned char decryptionKeyOut[32], bool *saveKey) {
+        UNUSED(fileName); UNUSED(fileDigest);
+        UNUSED(decryptionKeyOut);  UNUSED(saveKey);
         return str::Dup(password);
     }
 };
 
 int main(int argc, char **argv)
 {
+    UNUSED(argc); UNUSED(argv);
     setlocale(LC_ALL, "C");
     DisableDataExecution();
 

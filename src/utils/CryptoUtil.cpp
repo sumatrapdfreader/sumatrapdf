@@ -1,6 +1,12 @@
 /* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+#ifndef NO_LIBMUPDF
+extern "C" {
+#include <mupdf/fitz/crypt.h>
+}
+#endif
+
 #include "BaseUtil.h"
 #include "CryptoUtil.h"
 
@@ -9,10 +15,6 @@
 #endif
 
 #ifndef NO_LIBMUPDF
-
-extern "C" {
-#include <mupdf/fitz/crypt.h>
-}
 
 void CalcMD5Digest(const unsigned char *data, size_t byteCount, unsigned char digest[16])
 {

@@ -947,6 +947,7 @@ bool Fb2Doc::ParseToc(EbookTocVisitor *visitor)
 
 bool Fb2Doc::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
+    UNUSED(sniff);
     // TODO: implement sniffing
     return str::EndsWithI(fileName, L".fb2")  ||
            str::EndsWithI(fileName, L".fb2z") ||
@@ -991,6 +992,7 @@ PalmDoc::~PalmDoc()
 // cf. http://wiki.mobileread.com/wiki/TealDoc
 static const char *HandleTealDocTag(str::Str<char>& builder, WStrVec& tocEntries, const char *text, size_t len, UINT codePage)
 {
+    UNUSED(codePage);
     if (len < 9) {
 Fallback:
         builder.Append("&lt;");
@@ -1116,6 +1118,7 @@ size_t PalmDoc::GetHtmlDataSize() const
 
 WCHAR *PalmDoc::GetProperty(DocumentProperty prop) const
 {
+    UNUSED(prop);
     return nullptr;
 }
 
@@ -1262,6 +1265,7 @@ const WCHAR *HtmlDoc::GetFileName() const
 
 bool HtmlDoc::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
+    UNUSED(sniff);
     return str::EndsWithI(fileName, L".html") ||
            str::EndsWithI(fileName, L".htm") ||
            str::EndsWithI(fileName, L".xhtml");
@@ -1488,6 +1492,7 @@ const char *TxtDoc::GetHtmlData(size_t *lenOut) const
 
 WCHAR *TxtDoc::GetProperty(DocumentProperty prop) const
 {
+    UNUSED(prop);
     return nullptr;
 }
 
@@ -1540,6 +1545,7 @@ bool TxtDoc::ParseToc(EbookTocVisitor *visitor)
 
 bool TxtDoc::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
+    UNUSED(sniff);
     return str::EndsWithI(fileName, L".txt") ||
            str::EndsWithI(fileName, L".log") ||
            // http://en.wikipedia.org/wiki/.nfo

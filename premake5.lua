@@ -13,7 +13,6 @@ TODO:
 Code fixes:
 * fix 64bit warnings ("4311", "4312", "4302", "4244", "4264") in Sumatra code
   (not dependencies)
-* fix all 4100 in our code (by using UNREFERENCED_PARAMETER, not by deleting parameter names from interface definitions)
 
 Note about nasm: when providing "-I foo/bar/" flag to nasm.exe, it must be
 "foo/bar/" and not just "foo/bar".
@@ -68,7 +67,7 @@ workspace "SumatraPDF"
       toolset "v120"
   filter {}
 
-  disablewarnings { "4100", "4127", "4324", "4458", "4800" }
+  disablewarnings { "4127", "4324", "4458", "4800" }
   warnings "Extra"
 
   location "this_is_invalid_location"
@@ -169,7 +168,7 @@ workspace "SumatraPDF"
     kind "StaticLib"
     language "C"
     defines { "HAVE_STRING_H=1", "JBIG_NO_MEMENTO" }
-    disablewarnings { "4018", "4244", "4267", "4701" }
+    disablewarnings { "4018", "4100", "4244", "4267", "4701" }
     includedirs { "ext/jbig2dec" }
     jbig2dec_files()
 
@@ -177,7 +176,7 @@ workspace "SumatraPDF"
   project "openjpeg"
     kind "StaticLib"
     language "C"
-    disablewarnings { "4244" }
+    disablewarnings { "4100", "4244" }
     includedirs { "ext/openjpeg" }
     openjpeg_files()
 
@@ -251,7 +250,7 @@ workspace "SumatraPDF"
     kind "StaticLib"
     language "C"
     defines { "NOCJKFONT", "SHARE_JPEG" }
-    disablewarnings {  "4018", "4244", "4267", "4838", "4996", }
+    disablewarnings {  "4018", "4100", "4244", "4267", "4838", "4996", }
     includedirs {
       "mupdf/include", "mupdf/generated", "ext/zlib",
       "ext/freetype2/config", "ext/freetype2/include",
@@ -302,7 +301,7 @@ workspace "SumatraPDF"
   project "synctex"
     kind "StaticLib"
     language "C"
-    disablewarnings { "4244", "4267", "4702", "4706" }
+    disablewarnings { "4100", "4244", "4267", "4702", "4706" }
     includedirs { "ext/zlib", "ext/synctex" }
     synctex_files()
 
@@ -353,7 +352,7 @@ workspace "SumatraPDF"
   project "mutool"
     kind "ConsoleApp"
     language "C"
-    disablewarnings { "4267" }
+    disablewarnings { "4100", "4267" }
     includedirs { "ext/zlib", "ext/lzma/C", "ext/unarr", "mupdf/include" }
     mutool_files()
     links { "mupdf" }
@@ -364,7 +363,7 @@ workspace "SumatraPDF"
   project "mudraw"
     kind "ConsoleApp"
     language "C"
-    disablewarnings { "4267" }
+    disablewarnings { "4100", "4267" }
     includedirs { "ext/zlib", "ext/lzma/C", "ext/unarr", "mupdf/include" }
     mudraw_files()
     links { "mupdf" }
@@ -379,7 +378,7 @@ workspace "SumatraPDF"
     -- force 32build so that we can compile 64-bit Sumatra even on 32bit machines
     -- that couldn't run 64-bit cmapdump
     architecture "x86"
-    disablewarnings { "4267" }
+    disablewarnings { "4100", "4267" }
     includedirs { "mupdf/include" }
     files { "mupdf/scripts/cmapdump.c" }
 
@@ -412,6 +411,7 @@ workspace "SumatraPDF"
   project "unarr"
     kind "ConsoleApp"
     language "C"
+    disablewarnings { "4100" }
     files { "ext/unarr/main.c" }
     links { "unarrlib", "zlib" }
 
@@ -439,7 +439,7 @@ workspace "SumatraPDF"
     kind "WindowedApp"
     language "C++"
     flags { "WinMain" }
-    includedirs { "src/utils"}
+    includedirs { "src/utils" }
     files { "src/tools/plugin-test.cpp" }
     links { "utils", "mupdf" }
     links { "shlwapi" }
@@ -548,7 +548,10 @@ workspace "SumatraPDF"
     language "C++"
     flags { "NoManifest", "WinMain" }
     defines { "NO_LIBWEBP", "NO_LIBMUPDF", "HAVE_ZLIB", "HAVE_BZIP2", "HAVE_7Z" }
-    disablewarnings { "4018", "4131", "4244", "4267", "4302", "4311", "4312", "4456", "4457", "4838", "4702", "4706", "4996" }
+    disablewarnings {
+      "4018", "4100", "4131", "4244", "4267", "4302", "4311", "4312", "4456",
+      "4457", "4838", "4702", "4706", "4996"
+    }
     installer_files()
     includedirs { "src", "src/utils", "ext/zlib", "ext/unarr", "ext/lzma/C", "ext/bzip2" }
     links {
@@ -563,7 +566,10 @@ workspace "SumatraPDF"
     flags { "NoManifest", "WinMain" }
     defines { "NO_LIBWEBP", "NO_LIBMUPDF", "HAVE_ZLIB", "HAVE_BZIP2", "HAVE_7Z" }
     resdefines { "INSTALL_PAYLOAD_ZIP=.\\%{cfg.targetdir}\\InstallerData.dat" }
-    disablewarnings { "4018", "4131", "4244", "4267", "4302", "4311", "4312", "4456", "4457", "4838", "4702", "4706", "4996" }
+    disablewarnings {
+      "4018", "4100", "4131", "4244", "4267", "4302", "4311",
+      "4312", "4456", "4457", "4838", "4702", "4706", "4996"
+    }
     installer_files()
     includedirs { "src", "src/utils", "ext/zlib", "ext/unarr", "ext/lzma/C", "ext/bzip2" }
     links {

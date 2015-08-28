@@ -140,6 +140,7 @@ public:
     }
 
     void SpinMessageLoop(bool wait=true) {
+        UNUSED(wait);
         const ddjvu_message_t *msg;
 #if THREADMODEL!=NOTHREADS
         if (wait)
@@ -200,12 +201,12 @@ public:
 
     virtual unsigned char *GetFileData(size_t *cbCount);
     virtual bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false);
-    virtual WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coords_out=nullptr,
+    virtual WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coordsOut=nullptr,
                                     RenderTarget target=Target_View);
-    virtual bool HasClipOptimizations(int pageNo) { return false; }
+    virtual bool HasClipOptimizations(int pageNo) { UNUSED(pageNo);  return false; }
     virtual PageLayoutType PreferredLayout() { return Layout_Single; }
 
-    virtual WCHAR *GetProperty(DocumentProperty prop) { return nullptr; }
+    virtual WCHAR *GetProperty(DocumentProperty prop) { UNUSED(prop);  return nullptr; }
 
     virtual bool SupportsAnnotation(bool forSaving=false) const { return !forSaving; }
     virtual void UpdateUserAnnotations(Vec<PageAnnotation> *list);
@@ -215,7 +216,7 @@ public:
     virtual const WCHAR *GetDefaultFileExt() const { return L".djvu"; }
 
     // we currently don't load pages lazily, so there's nothing to do here
-    virtual bool BenchLoadPage(int pageNo) { return true; }
+    virtual bool BenchLoadPage(int pageNo) { UNUSED(pageNo);  return true; }
 
     virtual Vec<PageElement *> *GetElements(int pageNo);
     virtual PageElement *GetElementAtPos(int pageNo, PointD pt);
@@ -550,8 +551,10 @@ RenderedBitmap *DjVuEngineImpl::CreateRenderedBitmap(const char *bmpData, SizeI 
     return new RenderedBitmap(hbmp, size, hMap);
 }
 
-RenderedBitmap *DjVuEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, AbortCookie **cookie_out)
+RenderedBitmap *DjVuEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, AbortCookie **cookieOut)
 {
+    UNUSED(cookieOut); UNUSED(target);
+
     ScopedCritSec scope(&gDjVuContext.lock);
 
     RectD pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
@@ -604,6 +607,7 @@ RenderedBitmap *DjVuEngineImpl::RenderBitmap(int pageNo, float zoom, int rotatio
 
 RectD DjVuEngineImpl::PageContentBox(int pageNo, RenderTarget target)
 {
+    UNUSED(target);
     ScopedCritSec scope(&gDjVuContext.lock);
 
     RectD pageRc = PageMediabox(pageNo);
@@ -715,6 +719,7 @@ unsigned char *DjVuEngineImpl::GetFileData(size_t *cbCount)
 
 bool DjVuEngineImpl::SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots)
 {
+    UNUSED(includeUserAnnots);
     if (stream) {
         size_t len;
         ScopedMem<void> data(GetDataFromStream(stream, &len));
@@ -782,8 +787,9 @@ bool DjVuEngineImpl::ExtractPageText(miniexp_t item, const WCHAR *lineSep, str::
     return !item;
 }
 
-WCHAR *DjVuEngineImpl::ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coords_out, RenderTarget target)
+WCHAR *DjVuEngineImpl::ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coordsOut, RenderTarget target)
 {
+    UNUSED(target);
     ScopedCritSec scope(&gDjVuContext.lock);
 
     miniexp_t pagetext;
@@ -802,7 +808,7 @@ WCHAR *DjVuEngineImpl::ExtractPageText(int pageNo, const WCHAR *lineSep, RectI *
         AppendNewline(extracted, coords, lineSep);
 
     assert(str::Len(extracted.Get()) == coords.Count());
-    if (coords_out) {
+    if (coordsOut) {
         ddjvu_status_t status;
         ddjvu_pageinfo_t info;
         while ((status = ddjvu_document_get_pageinfo(doc, pageNo-1, &info)) < DDJVU_JOB_OK)
@@ -825,7 +831,7 @@ WCHAR *DjVuEngineImpl::ExtractPageText(int pageNo, const WCHAR *lineSep, RectI *
             }
         }
         CrashIf(coords.Count() != extracted.Count());
-        *coords_out = coords.StealData();
+        *coordsOut = coords.StealData();
     }
 
     return extracted.StealData();

@@ -97,6 +97,18 @@ static_assert(2 == sizeof(int16) && 2 == sizeof(uint16), "(u)int16 must be two b
 static_assert(4 == sizeof(int32) && 4 == sizeof(uint32), "(u)int32 must be four bytes");
 static_assert(8 == sizeof(int64) && 8 == sizeof(uint64), "(u)int64 must be eight bytes");
 
+// UNUSED is for marking unreferenced function arguments/variables
+// UNREFERENCED_PARAMETER is in windows SDK but too long. We use it if available,
+// otherwise we define our own version.
+// UNUSED might already be defined by mupdf\fits\system.h
+#if !defined(UNUSED)
+    #if defined(UNREFERENCED_PARAMETER)
+        #define UNUSED UNREFERENCED_PARAMETER
+    #else
+        #define UNUSED(P) (P)
+    #endif
+#endif
+
 #pragma warning(push)
 #pragma warning(disable: 6011) // silence /analyze: de-referencing a nullptr pointer
 // Note: it's inlined to make it easier on crash reports analyzer (if wasn't inlined
@@ -134,6 +146,8 @@ inline void CrashIfFunc(bool cond) {
     if (cond) {
         CrashMe();
     }
+#else
+    UNUSED(cond);
 #endif
 }
 
@@ -141,6 +155,8 @@ inline void CrashIfFunc(bool cond) {
 inline void CrashIfDebugOnlyFunc(bool cond) {
 #if defined(DEBUG)
     if (cond) { CrashMe(); }
+#else
+    UNUSED(cond);
 #endif
 }
 

@@ -125,6 +125,7 @@ void EventMgr::NotifySizeChanged(Control *c, int dx, int dy)
 // x, y is a position in the root window
 LRESULT EventMgr::OnMouseMove(WPARAM keys, int x, int y, bool& wasHandled)
 {
+    UNUSED(keys); UNUSED(wasHandled);
     Vec<CtrlAndOffset> windows;
     Control *c;
 
@@ -165,6 +166,7 @@ LRESULT EventMgr::OnMouseMove(WPARAM keys, int x, int y, bool& wasHandled)
 // (x, y) is in the coordinates of the root window
 LRESULT EventMgr::OnLButtonUp(WPARAM keys, int x, int y, bool& wasHandled)
 {
+    UNUSED(keys); UNUSED(wasHandled);
     Vec<CtrlAndOffset> controls;
     uint16 wantedInputMask = bit::FromBit<uint16>(Control::WantsMouseClickBit);
     size_t count = CollectWindowsAt(wndRoot, x, y, wantedInputMask, &controls);
@@ -197,6 +199,7 @@ LRESULT EventMgr::OnGetMinMaxInfo(MINMAXINFO *info, bool& wasHandled)
 
 LRESULT EventMgr::OnSetCursor(int x, int y, bool& wasHandled)
 {
+    UNUSED(x); UNUSED(y);
     if (currOver && currOver->hCursor) {
         SetCursor(currOver->hCursor);
         wasHandled = true;

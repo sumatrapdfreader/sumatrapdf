@@ -378,6 +378,7 @@ void EbookController::TriggerLayout()
 
 void EbookController::SizeChangedPage(Control *c, int dx, int dy)
 {
+    UNUSED(dx); UNUSED(dy);
     CrashIf(!(c == ctrls->pagesLayout->GetPage1() || c==ctrls->pagesLayout->GetPage2()));
     // delay re-layout so that we don't unnecessarily do the
     // work as long as the user is still resizing the window
@@ -388,19 +389,22 @@ void EbookController::SizeChangedPage(Control *c, int dx, int dy)
 
 void EbookController::ClickedNext(Control *c, int x, int y)
 {
+    UNUSED(c);  UNUSED(x); UNUSED(y);
     //CrashIf(c != ctrls->next);
     GoToNextPage();
 }
 
 void EbookController::ClickedPrev(Control *c, int x, int y)
 {
+    UNUSED(c);  UNUSED(x); UNUSED(y);
     //CrashIf(c != ctrls->prev);
     GoToPrevPage();
 }
 
-// (x, y) is in the coordinates of w
+// (x, y) is in the coordinates of c
 void EbookController::ClickedProgress(Control *c, int x, int y)
 {
+    UNUSED(x); UNUSED(y);
     CrashIf(c != ctrls->progress);
     float perc = ctrls->progress->GetPercAt(x);
     int pageCount = (int)GetPages()->Count();
@@ -554,6 +558,7 @@ bool EbookController::GoToNextPage()
 
 bool EbookController::GoToPrevPage(bool toBottom)
 {
+    UNUSED(toBottom);
     int dist = IsDoublePage() ? 2 : 1;
     if (currPageNo - dist < 1)
         return false;
@@ -671,6 +676,7 @@ void EbookController::CreateThumbnail(SizeI size, const std::function<void(Rende
 
 void EbookController::SetDisplayMode(DisplayMode mode, bool keepContinuous)
 {
+    UNUSED(keepContinuous);
     bool newDouble = !IsSingle(mode);
     if (IsDoublePage() == newDouble)
         return;
@@ -860,6 +866,7 @@ void EbookController::UpdateDisplayState(DisplayState *ds)
 
 void EbookController::SetViewPortSize(SizeI size)
 {
+    UNUSED(size);
     // relayouting gets the size from the canvas hwnd
     ctrls->mainWnd->RequestLayout();
 }

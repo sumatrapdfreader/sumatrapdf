@@ -359,6 +359,8 @@ WCHAR *AutoDetectInverseSearchCommands(HWND hwndCombo)
 // (or responds to Ctrl+Backspace as nowadays expected)
 bool ExtendedEditWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+    UNUSED(lParam);
+
     static bool delayFocus = false;
 
     switch (message) {

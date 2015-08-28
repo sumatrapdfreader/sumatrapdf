@@ -91,6 +91,7 @@ WCHAR *GetSumatraExePath()
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLineA, int nCmdShow)
 {
+    UNUSED(hPrevInstance);  UNUSED(lpCmdLineA);
     WStrVec argList;
     ParseCmdLine(GetCommandLine(), argList);
 

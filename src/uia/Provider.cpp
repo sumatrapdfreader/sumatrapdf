@@ -160,6 +160,7 @@ ULONG STDMETHODCALLTYPE SumatraUIAutomationProvider::Release(void)
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationProvider::GetPatternProvider(PATTERNID patternId,IUnknown **pRetVal)
 {
+    UNUSED(patternId);
     *pRetVal = nullptr;
     return S_OK;
 }

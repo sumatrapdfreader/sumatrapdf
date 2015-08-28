@@ -15,7 +15,7 @@ protected:
     ar_archive *ar;
 
     // call with fileindex = -1 for filename extraction using the fallback
-    virtual char *GetFileFromFallback(size_t fileindex, size_t *len=nullptr) { return nullptr; }
+    virtual char *GetFileFromFallback(size_t fileIndex, size_t *len = nullptr) { UNUSED(fileIndex); UNUSED(len); return nullptr; }
 
 public:
     ArchFile(ar_stream *data, ar_archive *(* openFormat)(ar_stream *));

@@ -90,6 +90,7 @@ public:
         return true;
     }
     virtual bool GoToPrevPage(bool toBottom=false) {
+        UNUSED(toBottom);
         if (CurrentPageNo() == 1)
             return false;
         GoToPage(CurrentPageNo() - 1, false);

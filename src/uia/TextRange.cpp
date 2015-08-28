@@ -359,6 +359,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::ExpandToEnclosingUnit(en
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::FindAttribute(TEXTATTRIBUTEID attr, VARIANT val, BOOL backward, ITextRangeProvider **found)
 {
+    UNUSED(attr); UNUSED(val); UNUSED(backward);
     if (found == nullptr)
         return E_POINTER;
     if (!document->IsDocumentLoaded())
@@ -371,6 +372,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::FindAttribute(TEXTATTRIB
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::FindText(BSTR text, BOOL backward, BOOL ignoreCase, ITextRangeProvider **found)
 {
+    UNUSED(text); UNUSED(backward); UNUSED(ignoreCase);
     if (found == nullptr)
         return E_POINTER;
     if (!document->IsDocumentLoaded())
@@ -382,6 +384,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::FindText(BSTR text, BOOL
 
 HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::GetAttributeValue(TEXTATTRIBUTEID attr, VARIANT *value)
 {
+    UNUSED(attr);
     if (value == nullptr)
         return E_POINTER;
     if (!document->IsDocumentLoaded())

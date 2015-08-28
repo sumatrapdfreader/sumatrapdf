@@ -288,6 +288,7 @@ void Control::MapRootToMyPos(int& x, int& y) const
 // Graphics canvas (pos is relative to that offset)
 void Control::Paint(Graphics *gfx, int offX, int offY)
 {
+    UNUSED(gfx); UNUSED(offX); UNUSED(offY);
     CrashIf(!IsVisible());
 }
 

@@ -500,6 +500,7 @@ RectI GetFullscreenRect(HWND hwnd)
 
 static BOOL CALLBACK GetMonitorRectProc(HMONITOR hMonitor, HDC hdc, LPRECT rcMonitor, LPARAM data)
 {
+    UNUSED(hMonitor); UNUSED(hdc);
     RectI *rcAll = (RectI *)data;
     *rcAll = rcAll->Union(RectI::FromRECT(*rcMonitor));
     return TRUE;
@@ -1293,6 +1294,8 @@ char *LoadTextResource(int resId, size_t *sizeOut)
 static HDDEDATA CALLBACK DdeCallback(UINT uType, UINT uFmt, HCONV hconv, HSZ hsz1,
     HSZ hsz2, HDDEDATA hdata, ULONG_PTR dwData1, ULONG_PTR dwData2)
 {
+    UNUSED(uType); UNUSED(uFmt); UNUSED(hconv); UNUSED(hsz1);
+    UNUSED(hsz2); UNUSED(hdata); UNUSED(dwData1); UNUSED(dwData2);
     return 0;
 }
 

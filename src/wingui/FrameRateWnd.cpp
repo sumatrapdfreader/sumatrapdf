@@ -35,6 +35,7 @@ static RECT GetClientRect(HWND hwnd) {
 }
 
 static void FrameRatePaint(FrameRateWnd *w, HDC hdc, PAINTSTRUCT &ps) {
+    UNUSED(ps);
     RECT rc = GetClientRect(w->hwnd);
     ScopedGdiObj<HBRUSH> brush(CreateSolidBrush(COL_BLACK));
     FillRect(hdc, &rc, brush);
@@ -96,6 +97,7 @@ static void FrameRateOnPaint(FrameRateWnd *w) {
 
 static LRESULT CALLBACK WndProcFrameRateAssociated(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
                                                    UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
+    UNUSED(uIdSubclass);
     if (WM_MOVING == msg || WM_SIZING == msg || WM_SIZE == msg || WM_WINDOWPOSCHANGED == msg ||
         WM_MOVE == msg) {
         FrameRateWnd *w = (FrameRateWnd *)dwRefData;

@@ -154,6 +154,7 @@ public:
 
 Size SumatraLogo::Measure(const Size availableSize)
 {
+    UNUSED(availableSize);
     Graphics *gfx = AllocGraphicsForMeasureText();
     CachedStyle *s = cachedStyle;
     CachedFont *cachedFont = GetCachedFont(s->fontName, s->fontSize, s->fontWeight);
@@ -207,6 +208,7 @@ public:
 
 void ButtonUrlHandler::Clicked(Control *c, int x, int y)
 {
+    UNUSED(x); UNUSED(y);
     WCHAR *url = c->toolTip;
     LaunchBrowser(url);
 }
@@ -280,6 +282,7 @@ static void DestroyAboutMuiWindow()
 
 static void CopyAboutInfoToClipboard(HWND hwnd)
 {
+    UNUSED(hwnd);
     str::Str<WCHAR> info(512);
     info.AppendFmt(L"%s %s\r\n", APP_NAME_STR, VERSION_TXT);
     for (size_t i = info.Size() - 2; i > 0; i--) {

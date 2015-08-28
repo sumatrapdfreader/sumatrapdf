@@ -14,6 +14,7 @@
 
 static LRESULT CALLBACK EditParentProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
                                        UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
+    UNUSED(uIdSubclass);
     EditCtrl *w = (EditCtrl *)dwRefData;
     CrashIf(GetParent(w->hwnd) != (HWND)lp);
     if ((WM_CTLCOLOREDIT == msg) && (w->bgBrush != nullptr)) {
@@ -43,6 +44,7 @@ static bool HasWsBorder(HWND hwnd)
 
 static LRESULT CALLBACK
 EditProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
+    UNUSED(uIdSubclass);
     EditCtrl *w = (EditCtrl *)dwRefData;
     CrashIf(w->hwnd != (HWND)lp);
 
