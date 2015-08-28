@@ -313,11 +313,9 @@ static bool RegisterServerDLL(const WCHAR *dllPath, bool install, const WCHAR *a
 
     // make sure that the DLL can find any DLLs it depends on and
     // which reside in the same directory (in this case: libmupdf.dll)
-    typedef BOOL (WINAPI *SetDllDirectoryProcW)(LPCWSTR);
-    SetDllDirectoryProcW _SetDllDirectory = (SetDllDirectoryProcW)LoadDllFunc(L"Kernel32.dll", "SetDllDirectoryW");
-    if (_SetDllDirectory) {
+    if (DynSetDllDirectoryW) {
         ScopedMem<WCHAR> dllDir(path::GetDir(dllPath));
-        _SetDllDirectory(dllDir);
+        DynSetDllDirectoryW(dllDir);
     }
 
     bool ok = false;
@@ -341,8 +339,8 @@ static bool RegisterServerDLL(const WCHAR *dllPath, bool install, const WCHAR *a
         FreeLibrary(lib);
     }
 
-    if (_SetDllDirectory)
-        _SetDllDirectory(L"");
+    if (DynSetDllDirectoryW)
+        DynSetDllDirectoryW(L"");
 
     OleUninitialize();
 

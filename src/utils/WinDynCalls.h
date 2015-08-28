@@ -22,6 +22,7 @@ The intent is to standardize how we do it.
 #endif
 typedef BOOL(WINAPI *Sig_SetProcessDEPPolicy)(DWORD dwFlags);
 typedef BOOL(WINAPI *Sig_IsWow64Process)(HANDLE, PBOOL);
+typedef BOOL(WINAPI *Sig_SetDllDirectoryW)(LPCWSTR);
 
 // ntdll.dll
 
@@ -60,9 +61,13 @@ typedef BOOL(WINAPI *Sig_IsThemeActive)(void);
 typedef BOOL(WINAPI *Sig_IsThemeBackgroundPartiallyTransparent)(HTHEME hTheme, int iPartId, int iStateId);
 typedef HRESULT(WINAPI *Sig_GetThemeColor)(HTHEME hTheme, int iPartId, int iStateId, int iPropId, COLORREF *pColor);
 
+// normaliz.dll
+typedef int(WINAPI *Sig_NormalizeString)(int, LPCWSTR, int, LPWSTR, int);
+
 #define KERNEL32_API_LIST(V) \
     V(SetProcessDEPPolicy) \
-    V(IsWow64Process)
+    V(IsWow64Process) \
+    V(SetDllDirectoryW)
 
 #define NTDLL_API_LIST(V) \
     V(NtSetInformationProcess)
@@ -76,12 +81,16 @@ typedef HRESULT(WINAPI *Sig_GetThemeColor)(HTHEME hTheme, int iPartId, int iStat
     V(IsThemeBackgroundPartiallyTransparent) \
     V(GetThemeColor)
 
+#define NORMALIZ_API_LIST(V) \
+    V(NormalizeString)
+
 #define API_DECLARATION(name) \
 extern Sig_##name Dyn##name;
 
 KERNEL32_API_LIST(API_DECLARATION)
 NTDLL_API_LIST(API_DECLARATION)
 UXTHEME_API_LIST(API_DECLARATION)
+NORMALIZ_API_LIST(API_DECLARATION)
 
 #undef API_DECLARATION
 

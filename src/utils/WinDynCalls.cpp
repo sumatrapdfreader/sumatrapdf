@@ -11,6 +11,7 @@ Sig_##name Dyn##name = nullptr;
 KERNEL32_API_LIST(API_DECLARATION)
 NTDLL_API_LIST(API_DECLARATION)
 UXTHEME_API_LIST(API_DECLARATION)
+NORMALIZ_API_LIST(API_DECLARATION)
 
 #undef API_DECLARATION
 
@@ -41,6 +42,11 @@ void InitDynCalls() {
     h = SafeLoadLibrary(L"uxtheme.dll");
     if (h) {
         UXTHEME_API_LIST(API_LOAD);
+    }
+
+    h = SafeLoadLibrary(L"Normaliz.dll");
+    if (h) {
+        NORMALIZ_API_LIST(API_LOAD);
     }
 }
 
