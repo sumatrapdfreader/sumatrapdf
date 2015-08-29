@@ -32,6 +32,7 @@ TODO:
 * implement pre-release build
 * upload files to s3
 * implement release build
+* implement buildbot
 */
 
 type Secrets struct {
@@ -47,6 +48,8 @@ var (
 	flgRelease       bool // if doing an official release build
 	flgPreRelease    bool // if doing pre-release build
 	flgUpload        bool
+	flgSmoke         bool
+	flgListS3        bool
 	flgNoOp          bool
 	svnPreReleaseVer int
 	gitSha1          string
@@ -89,7 +92,7 @@ func fatalif(cond bool, format string, args ...interface{}) {
 
 func fataliferr(err error) {
 	if err != nil {
-		fatalf("%s", err.Error())
+		fatalf("%s\n", err.Error())
 	}
 }
 
@@ -315,8 +318,10 @@ func getGitLinearVersionMust() int {
 	out, err := runExe("git", "log", "--oneline")
 	fataliferr(err)
 	lines := toTrimmedLines(out)
-	n := len(lines)
-	fatalif(n < 9000, "getGitLinearVersion: n is %d (should be > 9000)", n)
+	// we add 1000 to create a version that is larger than the svn version
+	// from the time we used svn
+	n := len(lines) + 1000
+	fatalif(n < 10000, "getGitLinearVersion: n is %d (should be > 10000)", n)
 	return n
 }
 
@@ -388,7 +393,6 @@ func verifyHasPreReleaseSecretsMust() {
 		fatalif(secrets.AwsSecret == "", "AwsSecret missing in %s\n", p)
 		fatalif(secrets.AwsAccess == "", "AwsAccess missing in %s\n", p)
 	}
-
 }
 
 func buildPreRelease() {
@@ -438,14 +442,21 @@ func buildSmoke() {
 	fataliferr(err)
 }
 
-func s3UploadFile(pathLocal string, pathRemote string) error {
+func s3GetBucket() *s3.Bucket {
 	s3BucketName := "kjkpub"
+	secrets := readSecretsMust()
 	auth := aws.Auth{
-		AccessKey: "",
-		SecretKey: "",
+		AccessKey: secrets.AwsAccess,
+		SecretKey: secrets.AwsSecret,
 	}
-	s3Obj := s3.New(auth, aws.USWest, aws.RetryingClient)
-	bucket := s3Obj.Bucket(s3BucketName)
+	// Note: it's important that region is aws.USEast. This is where my bucket
+	// is and giving a different region will fail
+	s3Obj := s3.New(auth, aws.USEast, aws.RetryingClient)
+	return s3Obj.Bucket(s3BucketName)
+}
+
+func s3UploadFile(pathLocal string, pathRemote string) error {
+	bucket := s3GetBucket()
 	d, err := ioutil.ReadFile(pathLocal)
 	if err != nil {
 		return err
@@ -466,6 +477,20 @@ func s3UploadFiles(s3Dir string, dir string, files []string) error {
 		}
 	}
 	return nil
+}
+
+func s3List() {
+	bucket := s3GetBucket()
+	s3Dir := "sumatrapdf/prerel/"
+	resp, err := bucket.List(s3Dir, "", "", 10000)
+	fataliferr(err)
+	fmt.Printf("%d files\n", len(resp.Contents))
+	if resp.IsTruncated {
+		fmt.Printf("beware: truncated response!\n")
+	}
+	for _, key := range resp.Contents {
+		fmt.Printf("file: %s\n", key.Key)
+	}
 }
 
 func fileSizeMust(path string) int64 {
@@ -606,6 +631,8 @@ func detectVersions() {
 }
 
 func parseCmdLine() {
+	flag.BoolVar(&flgListS3, "list-s3", false, "list files in s3")
+	flag.BoolVar(&flgSmoke, "smoke", false, "do a smoke (sanity) build")
 	flag.BoolVar(&flgRelease, "release", false, "do a release build")
 	flag.BoolVar(&flgPreRelease, "prerelease", false, "do a pre-release build")
 	flag.BoolVar(&flgUpload, "upload", false, "upload to s3 for release/prerelease builds")
@@ -629,8 +656,12 @@ func main() {
 		buildRelease()
 	} else if flgPreRelease {
 		buildPreRelease()
-	} else {
+	} else if flgSmoke {
 		buildSmoke()
+	} else if flgListS3 {
+		s3List()
+	} else {
+		flag.Usage()
 	}
 	printTotalTime()
 }
