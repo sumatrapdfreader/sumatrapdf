@@ -77,12 +77,16 @@ func readSecretsMust() *Secrets {
 	return cachedSecrets
 }
 
+func revertBuildConfig() {
+	runExe("git", "checkout", buildConfigPath())
+}
+
 func printTotalTime() {
+	revertBuildConfig()
 	fmt.Printf("total time: %s\n", time.Since(timeStart))
 }
 
 func fatalf(format string, args ...interface{}) {
-	revertBuildConfigMust()
 	fmt.Printf(format, args...)
 	printTotalTime()
 	os.Exit(1)
@@ -90,7 +94,6 @@ func fatalf(format string, args ...interface{}) {
 
 func fatalif(cond bool, format string, args ...interface{}) {
 	if cond {
-		revertBuildConfigMust()
 		fmt.Printf(format, args...)
 		printTotalTime()
 		os.Exit(1)
@@ -441,10 +444,6 @@ func setBuildConfig(preRelVer int, sha1 string, verQualifier string) {
 	}
 	err := ioutil.WriteFile(buildConfigPath(), []byte(s), 644)
 	fataliferr(err)
-}
-
-func revertBuildConfigMust() {
-	runExeMust("git", "checkout", buildConfigPath())
 }
 
 func verifyPreReleaseNotInS3Must(preReleaseVer int) {
