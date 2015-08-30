@@ -276,12 +276,12 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkI
     for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++) {
         bool hasUrl = HasPermission(Perm_DiskAccess) && el->url;
         SetTextColor(hdc, hasUrl ? COL_BLUE_LINK : ABOUT_BORDER_COL);
-        int txtLen = (int)str::Len(el->rightTxt);
+        size_t txtLen = str::Len(el->rightTxt);
 #ifdef GIT_COMMIT_ID
         if (str::EndsWith(el->rightTxt, GIT_COMMIT_ID_STR))
             txtLen -= str::Len(GIT_COMMIT_ID_STR) - 7;
 #endif
-        TextOut(hdc, el->rightPos.x, el->rightPos.y, el->rightTxt, txtLen);
+        TextOutW(hdc, el->rightPos.x, el->rightPos.y, el->rightTxt, (int)txtLen);
 
         if (hasUrl) {
             int underlineY = el->rightPos.y + el->rightPos.dy - 3;
