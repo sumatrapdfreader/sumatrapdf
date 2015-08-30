@@ -330,12 +330,12 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RectI *rect)
     int rightDy = 0;
     for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++) {
         SIZE txtSize;
-        int txtLen = (int)str::Len(el->rightTxt);
+        size_t txtLen = str::Len(el->rightTxt);
 #ifdef GIT_COMMIT_ID
         if (str::EndsWith(el->rightTxt, GIT_COMMIT_ID_STR))
             txtLen -= str::Len(GIT_COMMIT_ID_STR) - 7;
 #endif
-        GetTextExtentPoint32(hdc, el->rightTxt, txtLen, &txtSize);
+        GetTextExtentPoint32W(hdc, el->rightTxt, (int)txtLen, &txtSize);
         el->rightPos.dx = txtSize.cx;
         el->rightPos.dy = txtSize.cy;
 
