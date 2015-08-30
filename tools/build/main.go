@@ -553,6 +553,7 @@ func runTestUtilMust(dir string) {
 	out, err := cmd.CombinedOutput()
 	logCmdResult(cmd, out, err)
 	fataliferr(err)
+	appendTiming(time.Since(timeStart), cmdToStr(cmd))
 }
 
 func buildPreRelease() {
