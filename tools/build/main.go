@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"mime"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -30,15 +31,14 @@ To run:
 
 /*
 TODO:
-* run unit test in pre-release build and release build
 * implement pre-release build
 * upload files to s3
 * implement release build
 * implement buildbot
-* implement translation download for pre-release and release
 * e-mail notifications if buildbot fails
 */
 
+// Secrets defines secrets
 type Secrets struct {
 	AwsSecret               string
 	AwsAccess               string
@@ -48,6 +48,7 @@ type Secrets struct {
 	TranslationUploadSecret string
 }
 
+// Timing records how long something took to execute
 type Timing struct {
 	Duration time.Duration
 	What     string
@@ -68,6 +69,7 @@ var (
 	cachedSecrets    *Secrets
 	timings          []Timing
 	logFile          *os.File
+	inFatal          bool
 )
 
 func logToFile(s string) {
@@ -135,7 +137,7 @@ func revertBuildConfig() {
 	runExe("git", "checkout", buildConfigPath())
 }
 
-func printTotalTime() {
+func finalizeThings() {
 	revertBuildConfig()
 	printTimings()
 	fmt.Printf("total time: %s\n", time.Since(timeStart))
@@ -145,14 +147,18 @@ func printTotalTime() {
 
 func fatalf(format string, args ...interface{}) {
 	fmt.Printf(format, args...)
-	printTotalTime()
+	finalizeThings()
 	os.Exit(1)
 }
 
 func fatalif(cond bool, format string, args ...interface{}) {
 	if cond {
+		if inFatal {
+			os.Exit(1)
+		}
+		inFatal = true
 		fmt.Printf(format, args...)
-		printTotalTime()
+		finalizeThings()
 		os.Exit(1)
 	}
 }
@@ -232,7 +238,8 @@ var (
 func getPaths(env []string) []string {
 	path, ok := getEnvValue(env, "path")
 	fatalif(!ok, "")
-	parts := strings.Split(path, ";")
+	sep := string(os.PathListSeparator)
+	parts := strings.Split(path, sep)
 	for i, s := range parts {
 		parts[i] = strings.TrimSpace(s)
 	}
@@ -269,6 +276,26 @@ func toTrimmedLines(d []byte) []string {
 	return lines[:i]
 }
 
+func fileSizeMust(path string) int64 {
+	fi, err := os.Stat(path)
+	fataliferr(err)
+	return fi.Size()
+}
+
+func fileCopyMust(dst, src string) {
+	in, err := os.Open(src)
+	fataliferr(err)
+	defer in.Close()
+
+	out, err := os.Create(dst)
+	fataliferr(err)
+
+	_, err = io.Copy(out, in)
+	cerr := out.Close()
+	fataliferr(err)
+	fataliferr(cerr)
+}
+
 func lookExeInEnvPathUncachedHelper(env []string, exeName string) string {
 	var found []string
 	paths := getPaths(env)
@@ -297,10 +324,15 @@ func lookExeInEnvPathUncachedHelper(env []string, exeName string) string {
 
 func lookExeInEnvPathUncached(env []string, exeName string) string {
 	fmt.Printf("lookExeInEnvPathUncached: exeName=%s\n", exeName)
-	path := lookExeInEnvPathUncachedHelper(env, exeName)
+	path, err := exec.LookPath(exeName)
+	if err == nil && path != "" {
+		return path
+	}
+	path = lookExeInEnvPathUncachedHelper(env, exeName)
 	if path == "" && filepath.Ext(exeName) == "" {
 		path = lookExeInEnvPathUncachedHelper(env, exeName+".exe")
 	}
+	//panic(fmt.Sprintf("didn't find %s in %s\n", exeName, getPaths(env)))
 	fatalif(path == "", "didn't find %s in %s\n", exeName, getPaths(env))
 	fmt.Printf("found %v for %s\n", path, exeName)
 	return path
@@ -622,12 +654,6 @@ func buildSmoke() {
 	fataliferr(err)
 }
 
-func fileSizeMust(path string) int64 {
-	fi, err := os.Stat(path)
-	fataliferr(err)
-	return fi.Size()
-}
-
 func manifestPath() string {
 	return filepath.Join("rel", "manifest.txt")
 }
@@ -652,20 +678,6 @@ func createManifestMust() {
 	s := strings.Join(lines, "\n")
 	err := ioutil.WriteFile(manifestPath(), []byte(s), 0644)
 	fataliferr(err)
-}
-
-func fileCopyMust(dst, src string) {
-	in, err := os.Open(src)
-	fataliferr(err)
-	defer in.Close()
-
-	out, err := os.Create(dst)
-	fataliferr(err)
-
-	_, err = io.Copy(out, in)
-	cerr := out.Close()
-	fataliferr(err)
-	fataliferr(cerr)
 }
 
 func signMust(path string) {
@@ -849,6 +861,51 @@ func detectVersions() {
 	fmt.Printf("sumatraVersion: '%s'\n", sumatraVersion)
 }
 
+func translationsPath() string {
+	return pj("strings", "translations.txt")
+}
+
+func translationsSha1HexMust(d []byte) string {
+	lines := toTrimmedLines(d)
+	sha1 := lines[1]
+	fatalif(len(sha1) != 40, "lastTranslationsSha1HexMust: '%s' doesn't look like sha1", sha1)
+	return sha1
+}
+
+func lastTranslationsSha1HexMust() string {
+	d, err := ioutil.ReadFile(translationsPath())
+	fataliferr(err)
+	return translationsSha1HexMust(d)
+}
+
+func saveTranslationsMust(d []byte) {
+	err := ioutil.WriteFile(translationsPath(), d, 0644)
+	fataliferr(err)
+}
+
+func httpDlMust(uri string) []byte {
+	res, err := http.Get(uri)
+	fataliferr(err)
+	d, err := ioutil.ReadAll(res.Body)
+	res.Body.Close()
+	fataliferr(err)
+	return d
+}
+
+func downloadTranslations() {
+	sha1 := lastTranslationsSha1HexMust()
+	url := fmt.Sprintf("http://www.apptranslator.org/dltrans?app=SumatraPDF&sha1=%s", sha1)
+	d := httpDlMust(url)
+	lines := toTrimmedLines(d)
+	if lines[1] == "No change" {
+		fmt.Printf("translations didn't change\n")
+		return
+	}
+	saveTranslationsMust(d)
+	fmt.Printf("\nTranslations have changed! You must checkin before continuing!\n")
+	os.Exit(1)
+}
+
 func parseCmdLine() {
 	flag.BoolVar(&flgListS3, "list-s3", false, "list files in s3")
 	flag.BoolVar(&flgSmoke, "smoke", false, "do a smoke (sanity) build")
@@ -862,7 +919,13 @@ func parseCmdLine() {
 }
 
 func main() {
+	fmt.Printf("main()\n")
 	timeStart = time.Now()
+	fmt.Printf("before downloadTranslations\n")
+	downloadTranslations()
+	fmt.Printf("after downloadTranslations\n")
+	os.Exit(1)
+
 	parseCmdLine()
 	clean()
 	verifyStartedInRightDirectoryMust()
@@ -884,5 +947,5 @@ func main() {
 	} else {
 		flag.Usage()
 	}
-	printTotalTime()
+	finalizeThings()
 }
