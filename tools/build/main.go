@@ -597,6 +597,8 @@ func buildPreRelease() {
 	verifyHasPreReleaseSecretsMust()
 	verifyPreReleaseNotInS3Must(svnPreReleaseVer)
 
+	downloadTranslations()
+
 	setBuildConfig(svnPreReleaseVer, gitSha1, "")
 	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:SumatraPDF;SumatraPDF-no-MUPDF;Uninstaller;test_util", "/p:Configuration=Release;Platform=Win32", "/m")
 	fataliferr(err)
@@ -919,13 +921,7 @@ func parseCmdLine() {
 }
 
 func main() {
-	fmt.Printf("main()\n")
 	timeStart = time.Now()
-	fmt.Printf("before downloadTranslations\n")
-	downloadTranslations()
-	fmt.Printf("after downloadTranslations\n")
-	os.Exit(1)
-
 	parseCmdLine()
 	clean()
 	verifyStartedInRightDirectoryMust()
