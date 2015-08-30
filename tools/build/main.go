@@ -35,6 +35,9 @@ TODO:
 * implement release build
 * implement buildbot
 * implement translation download
+* print how much each runCmd took at the end
+* log to rel/build-log.txt in addition to stdout (open a log file at the beginning
+  and in run*() commands append to the log if log file exists)
 */
 
 type Secrets struct {
@@ -79,6 +82,7 @@ func printTotalTime() {
 }
 
 func fatalf(format string, args ...interface{}) {
+	revertBuildConfigMust()
 	fmt.Printf(format, args...)
 	printTotalTime()
 	os.Exit(1)
@@ -86,6 +90,7 @@ func fatalf(format string, args ...interface{}) {
 
 func fatalif(cond bool, format string, args ...interface{}) {
 	if cond {
+		revertBuildConfigMust()
 		fmt.Printf(format, args...)
 		printTotalTime()
 		os.Exit(1)
