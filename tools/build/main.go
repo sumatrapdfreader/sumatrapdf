@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"mime"
 	"os"
@@ -33,6 +34,7 @@ TODO:
 * upload files to s3
 * implement release build
 * implement buildbot
+* implement translation download
 */
 
 type Secrets struct {
@@ -253,19 +255,73 @@ func lookExeInEnvPath(env []string, exeName string) string {
 	return exePath
 }
 
-// TODO: show progress as it happens
-func runExeInEnv(env []string, exeName string, args ...string) ([]byte, error) {
+func getCmdInEnv(env []string, exeName string, args ...string) *exec.Cmd {
+	if env == nil {
+		env = os.Environ()
+	}
 	exePath := lookExeInEnvPath(env, exeName)
 	cmd := exec.Command(exePath, args...)
 	cmd.Env = env
 	if true {
 		fmt.Printf("Running %s\n", cmd.Args)
 	}
-	return cmd.CombinedOutput()
+	return cmd
+}
+
+func getCmd(exeName string, args ...string) *exec.Cmd {
+	return getCmdInEnv(nil, exeName, args...)
+}
+
+func runCmd(cmd *exec.Cmd, showProgress bool) ([]byte, error) {
+	if !showProgress {
+		return cmd.CombinedOutput()
+	}
+	out, _ := cmd.StdoutPipe()
+	cmd.Start()
+	var res []byte
+	go func() {
+		buf := make([]byte, 1024, 1024)
+		for {
+			n, err := out.Read(buf)
+			if err == io.EOF {
+				break
+			}
+			if n > 0 {
+				d := buf[:n]
+				res = append(res, d...)
+				os.Stdout.Write(d)
+			}
+		}
+	}()
+	err := cmd.Wait()
+	return res, err
+}
+
+func runCmdMust(cmd *exec.Cmd, showProgress bool) {
+	_, err := runCmd(cmd, showProgress)
+	fataliferr(err)
+}
+
+func runCmdLogged(cmd *exec.Cmd, showProgress bool) ([]byte, error) {
+	out, err := runCmd(cmd, showProgress)
+	if err != nil {
+		args := []string{cmd.Path}
+		args = append(args, cmd.Args...)
+		fmt.Printf("%s failed with %s, out:\n%s\n", args, err, string(out))
+		return out, err
+	}
+	fmt.Printf("%s\n", out)
+	return out, nil
 }
 
 func runExe(exeName string, args ...string) ([]byte, error) {
-	return runExeInEnv(os.Environ(), exeName, args...)
+	cmd := getCmd(exeName, args...)
+	return runCmd(cmd, false)
+}
+
+func runExeInEnv(env []string, exeName string, args ...string) ([]byte, error) {
+	cmd := getCmdInEnv(env, exeName, args...)
+	return runCmd(cmd, false)
 }
 
 func runExeMust(exeName string, args ...string) {
@@ -281,6 +337,14 @@ func runExeLogged(env []string, exeName string, args ...string) ([]byte, error) 
 	}
 	fmt.Printf("%s\n", out)
 	return out, nil
+}
+
+// TODO: also pass logger io.Writer where the result is written in addition
+// to stdout
+func runMsbuild(showProgress bool, args ...string) error {
+	cmd := getCmdInEnv(getEnvForVS(), "msbuild.exe", args...)
+	_, err := runCmdLogged(cmd, showProgress)
+	return err
 }
 
 func isNum(s string) bool {
@@ -350,10 +414,9 @@ func verifyStartedInRightDirectoryMust() {
 }
 
 func build() {
-	env := getEnvForVS()
-	_, err := runExeLogged(env, "msbuild.exe", "vs2015\\SumatraPDF.sln", "/t:Installer;SumatraPDF;test_util", "/p:Configuration=Release;Platform=Win32", "/m")
+	err := runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:Installer;SumatraPDF;test_util", "/p:Configuration=Release;Platform=Win32", "/m")
 	fataliferr(err)
-	_, err = runExeLogged(env, "msbuild.exe", "vs2015\\SumatraPDF.sln", "/t:Installer;SumatraPDF;test_util", "/p:Configuration=Release;Platform=x64", "/m")
+	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:Installer;SumatraPDF;test_util", "/p:Configuration=Release;Platform=x64", "/m")
 	fataliferr(err)
 }
 
@@ -396,49 +459,55 @@ func verifyHasPreReleaseSecretsMust() {
 }
 
 func buildPreRelease() {
-	fmt.Printf("Building pre-release version")
+	fmt.Printf("Building pre-release version\n")
+	var err error
 	verifyGitCleanMsut()
 	verifyHasPreReleaseSecretsMust()
 	verifyPreReleaseNotInS3Must(svnPreReleaseVer)
 
-	env := getEnvForVS()
 	setBuildConfig(svnPreReleaseVer, gitSha1, "")
-	_, err := runExeLogged(env, "msbuild.exe", "vs2015\\SumatraPDF.sln", "/t:SumatraPDF;SumatraPDF-no-MUPDF;test_util", "/p:Configuration=Release;Platform=Win32", "/m")
+	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:SumatraPDF;SumatraPDF-no-MUPDF;Uninstaller;test_util", "/p:Configuration=Release;Platform=Win32", "/m")
 	fataliferr(err)
-	// TODO: sign SumatraPDF.exe and SumatraPDF-no-MUPDF.exe
-	_, err = runExeLogged(env, "msbuild.exe", "vs2015\\SumatraPDF.sln", "/t:Installer", "/p:Configuration=Release;Platform=Win32", "/m")
+	signMust(pj("rel", "SumatraPDF.exe"))
+	signMust(pj("rel", "SumatraPDF-no-MUPDF.exe"))
+	signMust(pj("rel", "Uninstaller.exe"))
+	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:Installer", "/p:Configuration=Release;Platform=Win32", "/m")
 	fataliferr(err)
+	signMust(pj("rel", "Installer.exe"))
 
 	setBuildConfig(svnPreReleaseVer, gitSha1, "x64")
-	_, err = runExeLogged(env, "msbuild.exe", "vs2015\\SumatraPDF.sln", "/t:SumatraPDF;SumatraPDF-no-MUPDF;test_util", "/p:Configuration=Release;Platform=x64", "/m")
+	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:SumatraPDF;SumatraPDF-no-MUPDF;Uninstaller;test_util", "/p:Configuration=Release;Platform=x64", "/m")
 	fataliferr(err)
-	// TODO: sign SumatraPDF.exe and SumatraPDF-no-MUPDF.exe
-	_, err = runExeLogged(env, "msbuild.exe", "vs2015\\SumatraPDF.sln", "/t:Installer", "/p:Configuration=Release;Platform=x64", "/m")
+	signMust(pj("rel64", "SumatraPDF.exe"))
+	signMust(pj("rel64", "SumatraPDF-no-MUPDF.exe"))
+	signMust(pj("rel64", "Uninstaller.exe"))
+	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:Installer", "/p:Configuration=Release;Platform=x64", "/m")
 	fataliferr(err)
-
-	// TODO: revert
+	signMust(pj("rel64", "Installer.exe"))
+	// TODO: build pdb.zip
+	createManifestMust()
 	s3UploadPreReleaseMust()
 }
 
 func buildRelease() {
 	fmt.Printf("Building a release version\n")
 
-	// TODO: for now the same as smoke
-	buildSmoke()
-	s3UploadReleaseMust()
+	// TODO: for now the same as pre-release
+	buildPreRelease()
+
+	//s3UploadReleaseMust()
 }
 
 // TODO: download translations if necessary
 func buildSmoke() {
 	fmt.Printf("Smoke build\n")
-	env := getEnvForVS()
-	_, err := runExeLogged(env, "msbuild.exe", "vs2015\\SumatraPDF.sln", "/t:Installer;SumatraPDF;test_util", "/p:Configuration=Release;Platform=Win32", "/m")
+	err := runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:Installer;SumatraPDF;Uninstaller;test_util", "/p:Configuration=Release;Platform=Win32", "/m")
 	fataliferr(err)
 	path := pj("rel", "test_util.exe")
 	runExeMust(path)
-	_, err = runExeLogged(env, "msbuild.exe", "vs2015\\SumatraPDF.sln", "/t:Installer;SumatraPDF;test_util", "/p:Configuration=Release;Platform=x64", "/m")
+	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:Installer;SumatraPDF;Uninstaller;test_util", "/p:Configuration=Release;Platform=x64", "/m")
 	fataliferr(err)
-	_, err = runExeLogged(env, "msbuild.exe", "vs2015\\SumatraPDF.sln", "/t:Installer;SumatraPDF;test_util", "/p:Configuration=Debug;Platform=x64", "/m")
+	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:Installer;SumatraPDF;Uninstaller;test_util", "/p:Configuration=Debug;Platform=x64", "/m")
 	fataliferr(err)
 }
 
@@ -526,45 +595,38 @@ func createManifestMust() {
 }
 
 func fileCopyMust(dst, src string) {
-	fatalif(true, "fileCopyMust: NYI")
+	in, err := os.Open(src)
+	fataliferr(err)
+	defer in.Close()
+
+	out, err := os.Create(dst)
+	fataliferr(err)
+
+	_, err = io.Copy(out, in)
+	cerr := out.Close()
+	fataliferr(err)
+	fataliferr(cerr)
 }
 
-/*
-def sign(file_path, cert_pwd):
-    # not everyone has a certificate, in which case don't sign
-    if cert_pwd is None:
-        print("Skipping signing %s" % file_path)
-        return
-    # the sign tool is finicky, so copy it and cert to the same dir as
-    # exe we're signing
-    file_dir = os.path.dirname(file_path)
-    file_name = os.path.basename(file_path)
-    cert_src = os.path.join("scripts", "cert.pfx")
-    cert_dest = os.path.join(file_dir, "cert.pfx")
-    if not os.path.exists(cert_dest):
-        shutil.copy(cert_src, cert_dest)
-    curr_dir = os.getcwd()
-    os.chdir(file_dir)
-    run_cmd_throw(
-        "signtool.exe", "sign", "/t", "http://timestamp.verisign.com/scripts/timstamp.dll",
-        "/du", "http://blog.kowalczyk.info/software/sumatrapdf/", "/f", "cert.pfx", "/p", cert_pwd, file_name)
-    os.chdir(curr_dir)
-*/
-
-func sign(path string, certPwd string) {
+func signMust(path string) {
 	// the sign tool is finicky, so copy it and cert to the same dir as
 	// exe we're signing
 	fileDir := filepath.Dir(path)
 	fileName := filepath.Base(path)
+	secrets := readSecretsMust()
+	certPwd := secrets.CertPwd
 	certSrc := certPath()
-	certDest := filepath.Join(fileDir, "cert.pfx")
+	certDest := pj(fileDir, "cert.pfx")
 	if !fileExists(certDest) {
 		fileCopyMust(certDest, certSrc)
 	}
-	// TODO: must be able to pass-in curr dir
-	runExeMust("signtool", "sign", "/t", "http://timestamp.verisign.com/scripts/timstamp.dll",
-		"/du", "http://blog.kowalczyk.info/software/sumatrapdf/", "/f", "cert.pfx",
+	env := getEnvForVS()
+	cmd := getCmdInEnv(env, "signtool.exe", "sign", "/t", "http://timestamp.verisign.com/scripts/timstamp.dll",
+		"/du", "http://www.sumatrapdfreader.org", "/f", "cert.pfx",
 		"/p", certPwd, fileName)
+	cmd.Dir = fileDir
+	_, err := runCmdLogged(cmd, true)
+	fataliferr(err)
 }
 
 // TODO: more files
@@ -585,7 +647,7 @@ func s3UploadReleaseMust() {
 	err = s3UploadFiles(s3Dir, "rel64", files)
 	fataliferr(err)
 	// write manifest last
-	err = s3UploadFile(manifestPath(), fmt.Sprintf("manifest-%d.txt", svnPreReleaseVer))
+	err = s3UploadFile(manifestPath(), fmt.Sprintf("SumatraPDF-prerelease-%d-manifest.txt", svnPreReleaseVer))
 	fataliferr(err)
 }
 
@@ -605,6 +667,10 @@ func s3UploadPreReleaseMust() {
 	}
 	err = s3UploadFiles(s3Dir, "rel64", files)
 	fataliferr(err)
+	// TODO: upload
+	//sumatrapdf/sumatralatest.js
+	//sumatrapdf/sumpdf-prerelease-update.txt
+	//sumatrapdf/sumpdf-prerelease-latest.txt
 }
 
 func removeDirMust(dir string) {
