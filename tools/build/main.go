@@ -862,9 +862,6 @@ func parseCmdLine() {
 
 func main() {
 	timeStart = time.Now()
-	runTestUtil("rel")
-	os.Exit(1)
-
 	parseCmdLine()
 	clean()
 	verifyStartedInRightDirectoryMust()
