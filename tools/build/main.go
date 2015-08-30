@@ -30,14 +30,13 @@ To run:
 
 /*
 TODO:
+* run unit test in pre-release build and release build
 * implement pre-release build
 * upload files to s3
 * implement release build
 * implement buildbot
-* implement translation download
-* print how much each runCmd took at the end
-* log to rel/build-log.txt in addition to stdout (open a log file at the beginning
-  and in run*() commands append to the log if log file exists)
+* implement translation download for pre-release and release
+* e-mail notifications if buildbot fails
 */
 
 type Secrets struct {
@@ -49,6 +48,11 @@ type Secrets struct {
 	TranslationUploadSecret string
 }
 
+type Timing struct {
+	Duration time.Duration
+	What     string
+}
+
 var (
 	flgRelease       bool // if doing an official release build
 	flgPreRelease    bool // if doing pre-release build
@@ -56,12 +60,54 @@ var (
 	flgSmoke         bool
 	flgListS3        bool
 	flgNoOp          bool
+	flgNoClean       bool
 	svnPreReleaseVer int
 	gitSha1          string
 	sumatraVersion   string
 	timeStart        time.Time
 	cachedSecrets    *Secrets
+	timings          []Timing
+	logFile          *os.File
 )
+
+func logToFile(s string) {
+	if logFile == nil {
+		path := pj("rel", "build-log.txt")
+		var err error
+		logFile, err = os.Create(path)
+		if err != nil {
+			fmt.Printf("logToFile: os.Create() failed with %s\n", err)
+		}
+	}
+	logFile.WriteString(s)
+}
+
+func closeLogFile() {
+	if logFile != nil {
+		logFile.Close()
+		logFile = nil
+	}
+}
+
+func appendTiming(dur time.Duration, what string) {
+	t := Timing{
+		Duration: dur,
+		What:     what,
+	}
+	timings = append(timings, t)
+}
+
+func printTimings() {
+	for _, t := range timings {
+		fmt.Printf("%s\n    %s\n", t.Duration, t.What)
+	}
+}
+
+func cmdToStr(cmd *exec.Cmd) string {
+	arr := []string{cmd.Path}
+	arr = append(arr, cmd.Args...)
+	return strings.Join(arr, " ")
+}
 
 func readSecretsMust() *Secrets {
 	if cachedSecrets != nil {
@@ -82,7 +128,9 @@ func revertBuildConfig() {
 }
 
 func printTotalTime() {
+	closeLogFile()
 	revertBuildConfig()
+	printTimings()
 	fmt.Printf("total time: %s\n", time.Since(timeStart))
 }
 
@@ -281,28 +329,64 @@ func getCmd(exeName string, args ...string) *exec.Cmd {
 }
 
 func runCmd(cmd *exec.Cmd, showProgress bool) ([]byte, error) {
+	timeStart := time.Now()
 	if !showProgress {
-		return cmd.CombinedOutput()
+		res, err := cmd.CombinedOutput()
+		appendTiming(time.Since(timeStart), cmdToStr(cmd))
+		var s string
+		if err != nil {
+			s = fmt.Sprintf("%s failed with %s, out:\n%s\n\n", cmdToStr(cmd), err, string(res))
+		} else {
+			s = fmt.Sprintf("%s\n%s\n\n", cmdToStr(cmd), string(res))
+		}
+		logToFile(s)
+		return res, err
 	}
-	out, _ := cmd.StdoutPipe()
+	var resOut, resErr []byte
+	stdout, _ := cmd.StdoutPipe()
+	stderr, _ := cmd.StderrPipe()
 	cmd.Start()
-	var res []byte
+
 	go func() {
 		buf := make([]byte, 1024, 1024)
 		for {
-			n, err := out.Read(buf)
-			if err == io.EOF {
+			n, err := stdout.Read(buf)
+			if err != nil {
 				break
 			}
 			if n > 0 {
 				d := buf[:n]
-				res = append(res, d...)
+				resOut = append(resOut, d...)
 				os.Stdout.Write(d)
 			}
 		}
 	}()
+
+	go func() {
+		buf := make([]byte, 1024, 1024)
+		for {
+			n, err := stderr.Read(buf)
+			if err != nil {
+				break
+			}
+			if n > 0 {
+				d := buf[:n]
+				resErr = append(resErr, d...)
+				os.Stderr.Write(d)
+			}
+		}
+	}()
 	err := cmd.Wait()
-	return res, err
+	appendTiming(time.Since(timeStart), cmdToStr(cmd))
+	resOut = append(resOut, resErr...)
+	var s string
+	if err != nil {
+		s = fmt.Sprintf("%s failed with %s, out:\n%s\n\n", cmdToStr(cmd), err, string(resOut))
+	} else {
+		s = fmt.Sprintf("%s\n%s\n\n", cmdToStr(cmd), string(resOut))
+	}
+	logToFile(s)
+	return resOut, err
 }
 
 func runCmdMust(cmd *exec.Cmd, showProgress bool) {
@@ -465,7 +549,9 @@ func verifyHasPreReleaseSecretsMust() {
 func buildPreRelease() {
 	fmt.Printf("Building pre-release version\n")
 	var err error
-	verifyGitCleanMsut()
+	if !flgNoClean {
+		verifyGitCleanMsut()
+	}
 	verifyHasPreReleaseSecretsMust()
 	verifyPreReleaseNotInS3Must(svnPreReleaseVer)
 
@@ -490,7 +576,7 @@ func buildPreRelease() {
 	signMust(pj("rel64", "Installer.exe"))
 	// TODO: build pdb.zip
 	createManifestMust()
-	s3UploadPreReleaseMust()
+	//s3UploadPreReleaseMust()
 }
 
 func buildRelease() {
@@ -536,6 +622,7 @@ func s3UploadFile(pathLocal string, pathRemote string) error {
 	}
 	mimeType := mime.TypeByExtension(filepath.Ext(pathLocal))
 	opts := s3.Options{}
+	//opts.ContentMD5 =
 	return bucket.Put(pathRemote, d, mimeType, s3.PublicRead, opts)
 }
 
@@ -655,6 +742,33 @@ func s3UploadReleaseMust() {
 	fataliferr(err)
 }
 
+// sumatrapdf/sumatralatest.js
+/*
+var sumLatestVer = 10175;
+var sumBuiltOn = "2015-07-23";
+var sumLatestName = "SumatraPDF-prerelease-10175.exe";
+var sumLatestExe = "http://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-10175.exe";
+var sumLatestPdb = "http://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-10175.pdb.zip";
+var sumLatestInstaller = "http://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-10175-install.exe";
+*/
+func buildSumatraLatestJs() string {
+	currDate := time.Now().Format("2006-01-02")
+	v := svnPreReleaseVer
+	return fmt.Sprintf(`
+		var sumLatestVer = %d;
+		var sumBuiltOn = "%s";
+		var sumLatestName = "SumatraPDF-prerelease-%d.exe";
+
+		var sumLatestExe = "http://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-%d.exe";
+		var sumLatestPdb = "http://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-%d.pdb.zip";
+		var sumLatestInstaller = "http://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-%d-install.exe";
+
+		var sumLatestExe = "http://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-%d-64bit.exe";
+		var sumLatestPdb = "http://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-%d-64bit.pdb.zip";
+		var sumLatestInstaller = "http://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-%d-install-64bit.exe";
+`, v, currDate, v, v, v, v, v, v, v)
+}
+
 // https://kjkpub.s3.amazonaws.com/sumatrapdf/rel/SumatraPDF-3.0-install.exe
 func s3UploadPreReleaseMust() {
 	s3Dir := "sumatrapdf/rel/"
@@ -689,6 +803,7 @@ func clean() {
 	removeDirMust("dbg")
 	removeDirMust("dbg64")
 	removeDirMust("dbgPrefast")
+	os.Mkdir("rel", 0755) // this is where the log file goes
 }
 
 func detectVersions() {
@@ -707,12 +822,15 @@ func parseCmdLine() {
 	flag.BoolVar(&flgPreRelease, "prerelease", false, "do a pre-release build")
 	flag.BoolVar(&flgUpload, "upload", false, "upload to s3 for release/prerelease builds")
 	flag.BoolVar(&flgNoOp, "noop", false, "compile but do nothing else")
+	// -no-clean is useful when testing changes to this build script
+	flag.BoolVar(&flgNoClean, "no-clean", false, "allow running if repo has changes")
 	flag.Parse()
 }
 
 func main() {
 	timeStart = time.Now()
 	parseCmdLine()
+	clean()
 	verifyStartedInRightDirectoryMust()
 	detectVersions()
 	if flgNoOp {
@@ -721,7 +839,6 @@ func main() {
 	if flgRelease || flgPreRelease {
 		verifyHasPreReleaseSecretsMust()
 	}
-	clean()
 	if flgRelease {
 		buildRelease()
 	} else if flgPreRelease {
