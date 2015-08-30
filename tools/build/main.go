@@ -100,11 +100,19 @@ func appendTiming(dur time.Duration, what string) {
 func printTimings() {
 	for _, t := range timings {
 		fmt.Printf("%s\n    %s\n", t.Duration, t.What)
+		logToFile(fmt.Sprintf("%s\n    %s\n", t.Duration, t.What))
 	}
 }
 
-func cmdToStr(cmd *exec.Cmd) string {
+func cmdToStrLong(cmd *exec.Cmd) string {
 	arr := []string{cmd.Path}
+	arr = append(arr, cmd.Args...)
+	return strings.Join(arr, " ")
+}
+
+func cmdToStr(cmd *exec.Cmd) string {
+	s := filepath.Base(cmd.Path)
+	arr := []string{s}
 	arr = append(arr, cmd.Args...)
 	return strings.Join(arr, " ")
 }
@@ -128,10 +136,11 @@ func revertBuildConfig() {
 }
 
 func printTotalTime() {
-	closeLogFile()
 	revertBuildConfig()
 	printTimings()
 	fmt.Printf("total time: %s\n", time.Since(timeStart))
+	logToFile(fmt.Sprintf("total time: %s\n", time.Since(timeStart)))
+	closeLogFile()
 }
 
 func fatalf(format string, args ...interface{}) {
@@ -328,18 +337,22 @@ func getCmd(exeName string, args ...string) *exec.Cmd {
 	return getCmdInEnv(nil, exeName, args...)
 }
 
+func logCmdResult(cmd *exec.Cmd, out []byte, err error) {
+	var s string
+	if err != nil {
+		s = fmt.Sprintf("%s failed with %s, out:\n%s\n\n", cmdToStr(cmd), err, string(out))
+	} else {
+		s = fmt.Sprintf("%s\n%s\n\n", cmdToStr(cmd), string(out))
+	}
+	logToFile(s)
+}
+
 func runCmd(cmd *exec.Cmd, showProgress bool) ([]byte, error) {
 	timeStart := time.Now()
 	if !showProgress {
 		res, err := cmd.CombinedOutput()
 		appendTiming(time.Since(timeStart), cmdToStr(cmd))
-		var s string
-		if err != nil {
-			s = fmt.Sprintf("%s failed with %s, out:\n%s\n\n", cmdToStr(cmd), err, string(res))
-		} else {
-			s = fmt.Sprintf("%s\n%s\n\n", cmdToStr(cmd), string(res))
-		}
-		logToFile(s)
+		logCmdResult(cmd, res, err)
 		return res, err
 	}
 	var resOut, resErr []byte
@@ -379,13 +392,7 @@ func runCmd(cmd *exec.Cmd, showProgress bool) ([]byte, error) {
 	err := cmd.Wait()
 	appendTiming(time.Since(timeStart), cmdToStr(cmd))
 	resOut = append(resOut, resErr...)
-	var s string
-	if err != nil {
-		s = fmt.Sprintf("%s failed with %s, out:\n%s\n\n", cmdToStr(cmd), err, string(resOut))
-	} else {
-		s = fmt.Sprintf("%s\n%s\n\n", cmdToStr(cmd), string(resOut))
-	}
-	logToFile(s)
+	logCmdResult(cmd, resOut, err)
 	return resOut, err
 }
 
@@ -505,13 +512,6 @@ func verifyStartedInRightDirectoryMust() {
 	fatalif(!fileExists(path), "started in wrong directory (%s doesn't exist)\n", path)
 }
 
-func build() {
-	err := runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:Installer;SumatraPDF;test_util", "/p:Configuration=Release;Platform=Win32", "/m")
-	fataliferr(err)
-	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:Installer;SumatraPDF;test_util", "/p:Configuration=Release;Platform=x64", "/m")
-	fataliferr(err)
-}
-
 func buildConfigPath() string {
 	return pj("src", "utils", "BuildConfig.h")
 }
@@ -546,6 +546,15 @@ func verifyHasPreReleaseSecretsMust() {
 	}
 }
 
+func runTestUtilMust(dir string) {
+	timeStart := time.Now()
+	cmd := exec.Command(".\\test_util.exe")
+	cmd.Dir = "rel"
+	out, err := cmd.CombinedOutput()
+	logCmdResult(cmd, out, err)
+	fataliferr(err)
+}
+
 func buildPreRelease() {
 	fmt.Printf("Building pre-release version\n")
 	var err error
@@ -558,6 +567,7 @@ func buildPreRelease() {
 	setBuildConfig(svnPreReleaseVer, gitSha1, "")
 	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:SumatraPDF;SumatraPDF-no-MUPDF;Uninstaller;test_util", "/p:Configuration=Release;Platform=Win32", "/m")
 	fataliferr(err)
+	runTestUtilMust("rel")
 	signMust(pj("rel", "SumatraPDF.exe"))
 	signMust(pj("rel", "SumatraPDF-no-MUPDF.exe"))
 	signMust(pj("rel", "Uninstaller.exe"))
@@ -568,6 +578,9 @@ func buildPreRelease() {
 	setBuildConfig(svnPreReleaseVer, gitSha1, "x64")
 	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:SumatraPDF;SumatraPDF-no-MUPDF;Uninstaller;test_util", "/p:Configuration=Release;Platform=x64", "/m")
 	fataliferr(err)
+
+	//TODO: only when on 64-bit os
+	//runTestUtilMust("rel64")
 	signMust(pj("rel64", "SumatraPDF.exe"))
 	signMust(pj("rel64", "SumatraPDF-no-MUPDF.exe"))
 	signMust(pj("rel64", "Uninstaller.exe"))
@@ -588,6 +601,13 @@ func buildRelease() {
 	//s3UploadReleaseMust()
 }
 
+func build() {
+	err := runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:Installer;SumatraPDF;test_util", "/p:Configuration=Release;Platform=Win32", "/m")
+	fataliferr(err)
+	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:Installer;SumatraPDF;test_util", "/p:Configuration=Release;Platform=x64", "/m")
+	fataliferr(err)
+}
+
 // TODO: download translations if necessary
 func buildSmoke() {
 	fmt.Printf("Smoke build\n")
@@ -599,58 +619,6 @@ func buildSmoke() {
 	fataliferr(err)
 	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:Installer;SumatraPDF;Uninstaller;test_util", "/p:Configuration=Debug;Platform=x64", "/m")
 	fataliferr(err)
-}
-
-func s3GetBucket() *s3.Bucket {
-	s3BucketName := "kjkpub"
-	secrets := readSecretsMust()
-	auth := aws.Auth{
-		AccessKey: secrets.AwsAccess,
-		SecretKey: secrets.AwsSecret,
-	}
-	// Note: it's important that region is aws.USEast. This is where my bucket
-	// is and giving a different region will fail
-	s3Obj := s3.New(auth, aws.USEast, aws.RetryingClient)
-	return s3Obj.Bucket(s3BucketName)
-}
-
-func s3UploadFile(pathLocal string, pathRemote string) error {
-	bucket := s3GetBucket()
-	d, err := ioutil.ReadFile(pathLocal)
-	if err != nil {
-		return err
-	}
-	mimeType := mime.TypeByExtension(filepath.Ext(pathLocal))
-	opts := s3.Options{}
-	//opts.ContentMD5 =
-	return bucket.Put(pathRemote, d, mimeType, s3.PublicRead, opts)
-}
-
-func s3UploadFiles(s3Dir string, dir string, files []string) error {
-	n := len(files) / 2
-	for i := 0; i < n; i++ {
-		pathLocal := filepath.Join(dir, files[2*i])
-		pathRemote := files[2*i+1]
-		err := s3UploadFile(pathLocal, s3Dir+pathRemote)
-		if err != nil {
-			return fmt.Errorf("failed to upload %s as %s, err: %s", pathLocal, pathRemote, err)
-		}
-	}
-	return nil
-}
-
-func s3List() {
-	bucket := s3GetBucket()
-	s3Dir := "sumatrapdf/prerel/"
-	resp, err := bucket.List(s3Dir, "", "", 10000)
-	fataliferr(err)
-	fmt.Printf("%d files\n", len(resp.Contents))
-	if resp.IsTruncated {
-		fmt.Printf("beware: truncated response!\n")
-	}
-	for _, key := range resp.Contents {
-		fmt.Printf("file: %s\n", key.Key)
-	}
 }
 
 func fileSizeMust(path string) int64 {
@@ -720,28 +688,6 @@ func signMust(path string) {
 	fataliferr(err)
 }
 
-// TODO: more files
-func s3UploadReleaseMust() {
-	s3Dir := "sumatrapdf/prerel/"
-
-	files := []string{
-		"SumatraPDF.exe", fmt.Sprintf("SumatraPDF-prerelease-%d.exe", svnPreReleaseVer),
-		"Installer.exe", fmt.Sprintf("SumatraPDF-prerelease-%d-install.exe", svnPreReleaseVer),
-	}
-	err := s3UploadFiles(s3Dir, "rel", files)
-	fataliferr(err)
-
-	files = []string{
-		"SumatraPDF.exe", fmt.Sprintf("SumatraPDF-prerelease-%d-64.exe", svnPreReleaseVer),
-		"Installer.exe", fmt.Sprintf("SumatraPDF-prerelease-%d-install-64.exe", svnPreReleaseVer),
-	}
-	err = s3UploadFiles(s3Dir, "rel64", files)
-	fataliferr(err)
-	// write manifest last
-	err = s3UploadFile(manifestPath(), fmt.Sprintf("SumatraPDF-prerelease-%d-manifest.txt", svnPreReleaseVer))
-	fataliferr(err)
-}
-
 // sumatrapdf/sumatralatest.js
 /*
 var sumLatestVer = 10175;
@@ -769,9 +715,70 @@ func buildSumatraLatestJs() string {
 `, v, currDate, v, v, v, v, v, v, v)
 }
 
-// https://kjkpub.s3.amazonaws.com/sumatrapdf/rel/SumatraPDF-3.0-install.exe
+func s3GetBucket() *s3.Bucket {
+	s3BucketName := "kjkpub"
+	secrets := readSecretsMust()
+	auth := aws.Auth{
+		AccessKey: secrets.AwsAccess,
+		SecretKey: secrets.AwsSecret,
+	}
+	// Note: it's important that region is aws.USEast. This is where my bucket
+	// is and giving a different region will fail
+	s3Obj := s3.New(auth, aws.USEast, aws.RetryingClient)
+	return s3Obj.Bucket(s3BucketName)
+}
+
+func s3UploadString(pathRemote string, s string) error {
+	bucket := s3GetBucket()
+	d := []byte(s)
+	mimeType := mime.TypeByExtension(filepath.Ext(pathRemote))
+	opts := s3.Options{}
+	//opts.ContentMD5 =
+	return bucket.Put(pathRemote, d, mimeType, s3.PublicRead, opts)
+}
+
+func s3UploadFile(pathRemote, pathLocal string) error {
+	bucket := s3GetBucket()
+	d, err := ioutil.ReadFile(pathLocal)
+	if err != nil {
+		return err
+	}
+	mimeType := mime.TypeByExtension(filepath.Ext(pathLocal))
+	opts := s3.Options{}
+	//opts.ContentMD5 =
+	return bucket.Put(pathRemote, d, mimeType, s3.PublicRead, opts)
+}
+
+func s3UploadFiles(s3Dir string, dir string, files []string) error {
+	n := len(files) / 2
+	for i := 0; i < n; i++ {
+		pathLocal := filepath.Join(dir, files[2*i])
+		pathRemote := files[2*i+1]
+		err := s3UploadFile(pathLocal, s3Dir+pathRemote)
+		if err != nil {
+			return fmt.Errorf("failed to upload %s as %s, err: %s", pathLocal, pathRemote, err)
+		}
+	}
+	return nil
+}
+
+func s3List() {
+	bucket := s3GetBucket()
+	s3Dir := "sumatrapdf/prerel/"
+	resp, err := bucket.List(s3Dir, "", "", 10000)
+	fataliferr(err)
+	fmt.Printf("%d files\n", len(resp.Contents))
+	if resp.IsTruncated {
+		fmt.Printf("beware: truncated response!\n")
+	}
+	for _, key := range resp.Contents {
+		fmt.Printf("file: %s\n", key.Key)
+	}
+}
+
+// https://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-3.0-install.exe
 func s3UploadPreReleaseMust() {
-	s3Dir := "sumatrapdf/rel/"
+	s3Dir := "sumatrapdf/prerel/"
 	files := []string{
 		"SumatraPDF.exe", fmt.Sprintf("SumatraPDF-%s.exe", sumatraVersion),
 		"Installer.exe", fmt.Sprintf("SumatraPDF-%s-install.exe", sumatraVersion),
@@ -786,9 +793,35 @@ func s3UploadPreReleaseMust() {
 	err = s3UploadFiles(s3Dir, "rel64", files)
 	fataliferr(err)
 	// TODO: upload
-	//sumatrapdf/sumatralatest.js
+	//manifest
+	s := buildSumatraLatestJs()
+	err = s3UploadString("sumatrapdf/sumatralatest.js", s)
+	fataliferr(err)
 	//sumatrapdf/sumpdf-prerelease-update.txt
 	//sumatrapdf/sumpdf-prerelease-latest.txt
+}
+
+// TODO: more files
+func s3UploadReleaseMust() {
+	s3Dir := "sumatrapdf/rel/"
+
+	files := []string{
+		"SumatraPDF.exe", fmt.Sprintf("SumatraPDF-prerelease-%d.exe", svnPreReleaseVer),
+		"Installer.exe", fmt.Sprintf("SumatraPDF-prerelease-%d-install.exe", svnPreReleaseVer),
+	}
+	err := s3UploadFiles(s3Dir, "rel", files)
+	fataliferr(err)
+
+	files = []string{
+		"SumatraPDF.exe", fmt.Sprintf("SumatraPDF-prerelease-%d-64.exe", svnPreReleaseVer),
+		"Installer.exe", fmt.Sprintf("SumatraPDF-prerelease-%d-install-64.exe", svnPreReleaseVer),
+	}
+	err = s3UploadFiles(s3Dir, "rel64", files)
+	fataliferr(err)
+	// write manifest last
+	s3Path := s3Dir + fmt.Sprintf("SumatraPDF-prerelease-%d-manifest.txt", svnPreReleaseVer)
+	err = s3UploadFile(s3Path, manifestPath())
+	fataliferr(err)
 }
 
 func removeDirMust(dir string) {
@@ -829,6 +862,9 @@ func parseCmdLine() {
 
 func main() {
 	timeStart = time.Now()
+	runTestUtil("rel")
+	os.Exit(1)
+
 	parseCmdLine()
 	clean()
 	verifyStartedInRightDirectoryMust()
