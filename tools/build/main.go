@@ -730,6 +730,10 @@ func buildSumatraLatestJs() string {
 `, v, currDate, v, v, v, v, v, v, v)
 }
 
+func getClient() *http.Client {
+	return http.DefaultClient
+}
+
 func s3GetBucket() *s3.Bucket {
 	s3BucketName := "kjkpub"
 	secrets := readSecretsMust()
@@ -737,13 +741,38 @@ func s3GetBucket() *s3.Bucket {
 		AccessKey: secrets.AwsAccess,
 		SecretKey: secrets.AwsSecret,
 	}
+	//Note: http.DefaultClient is more robust than aws.RetryingClient
+	// (which fails for me with a timeout for large files e.g. ~6MB)
+	//client := aws.RetryingClient
+	client := getClient()
 	// Note: it's important that region is aws.USEast. This is where my bucket
 	// is and giving a different region will fail
-	s3Obj := s3.New(auth, aws.USEast, aws.RetryingClient)
+	s3Obj := s3.New(auth, aws.USEast, client)
+	//s3Obj.ReadTimeout = time.Minute * 10
+	//s3Obj.WriteTimeout = time.Minute * 10
+	//s3Obj.RequestTimeout = time.Minute * 10
+	//s3Obj.AttemptStrategy =
 	return s3Obj.Bucket(s3BucketName)
 }
 
+func s3UploadFile2(pathRemote, pathLocal string) error {
+	fmt.Printf("Uploading '%s' as '%s'\n", pathLocal, pathRemote)
+	bucket := s3GetBucket()
+	mimeType := mime.TypeByExtension(filepath.Ext(pathLocal))
+	fileSize := fileSizeMust(pathLocal)
+	perm := s3.PublicRead
+	f, err := os.Open(pathLocal)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	opts := s3.Options{}
+	//opts.ContentMD5 =
+	return bucket.PutReader(pathRemote, f, fileSize, mimeType, perm, opts)
+}
+
 func s3UploadString(pathRemote string, s string) error {
+	fmt.Printf("Uploading string of length %d  as '%s'\n", len(s), pathRemote)
 	bucket := s3GetBucket()
 	d := []byte(s)
 	mimeType := mime.TypeByExtension(filepath.Ext(pathRemote))
@@ -753,6 +782,7 @@ func s3UploadString(pathRemote string, s string) error {
 }
 
 func s3UploadFile(pathRemote, pathLocal string) error {
+	fmt.Printf("Uploading '%s' as '%s'\n", pathLocal, pathRemote)
 	bucket := s3GetBucket()
 	d, err := ioutil.ReadFile(pathLocal)
 	if err != nil {
@@ -920,8 +950,22 @@ func parseCmdLine() {
 	flag.Parse()
 }
 
+func testS3Upload() {
+	dst := "temp2.txt"
+	src := pj("rel", "SumatraPDF.exe")
+	//src := pj("rel", "buildcmap.exe")
+	err := s3UploadFile2(dst, src)
+	if err != nil {
+		fmt.Printf("upload failed with %s\n", err)
+	} else {
+		fmt.Printf("upload ok!\n")
+	}
+	os.Exit(1)
+}
+
 func main() {
 	timeStart = time.Now()
+	//testS3Upload()
 	parseCmdLine()
 	clean()
 	verifyStartedInRightDirectoryMust()
