@@ -924,6 +924,7 @@ func compilePreRelNameRegexpsMust() {
 		`SumatraPDF-prerelease-(\d+).exe`,
 		`SumatraPDF-prerelease-(\d+).pdb.lzsa`,
 		`SumatraPDF-prerelease-(\d+).pdb.zip`,
+
 		`SumatraPDF-prerelease-(\d+)-install-64.exe`,
 		`SumatraPDF-prerelease-(\d+)-64.exe`,
 		`SumatraPDF-prerelease-(\d+).pdb-64.lzsa`,
@@ -1057,7 +1058,7 @@ func s3Exists(s3Path string) bool {
 
 // https://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-1027-install.exe
 func s3UploadPreReleaseMust() {
-	prefix := fmt.Sprintf("SumatraPDF-prerelase-%d", svnPreReleaseVer)
+	prefix := fmt.Sprintf("SumatraPDF-prerelease-%d", svnPreReleaseVer)
 	files := []string{
 		"SumatraPDF.exe", fmt.Sprintf("%s.exe", prefix),
 		"Installer.exe", fmt.Sprintf("%s-install.exe", prefix),
@@ -1250,9 +1251,15 @@ func main() {
 	//testBuildLzsa()
 	//testS3Upload()
 	parseCmdLine()
-	clean()
+
+	if flgListS3 {
+		s3ListPreReleaseFilesMust(true)
+		return
+	}
+
 	verifyStartedInRightDirectoryMust()
 	detectVersions()
+	clean()
 	if flgRelease || flgPreRelease {
 		verifyHasPreReleaseSecretsMust()
 	}
@@ -1262,8 +1269,6 @@ func main() {
 		buildPreRelease()
 	} else if flgSmoke {
 		buildSmoke()
-	} else if flgListS3 {
-		s3ListPreReleaseFilesMust(true)
 	} else {
 		flag.Usage()
 		os.Exit(1)
