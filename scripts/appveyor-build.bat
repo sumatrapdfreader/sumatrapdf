@@ -21,7 +21,7 @@ EXIT /B
 :Build64
 CALL "%VS120COMNTOOLS%\..\..\VC\vcvarsall.bat" x86_amd64
 IF ERRORLEVEL 1 EXIT /B 1
-nmake -f makefile.msvc CFG=rel PLATFORM=X64 EXTCFLAGS="/D VER_QUALIFIER=x64" STRICT_X64=1 SumatraPDF Installer AllSymbols UnitTest
+nmake -f makefile.msvc CFG=rel PLATFORM=X64 EXTCFLAGS="/D STRICT_X64=1 SumatraPDF Installer AllSymbols UnitTest
 IF ERRORLEVEL 1 EXIT /B 1
 obj-rel64\test_util.exe
 IF ERRORLEVEL 1 EXIT /B 1

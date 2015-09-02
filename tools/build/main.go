@@ -572,12 +572,9 @@ func certPath() string {
 	return pj("scripts", "cert.pfx")
 }
 
-func setBuildConfig(preRelVer int, sha1 string, verQualifier string) {
+func setBuildConfig(preRelVer int, sha1 string) {
 	s := fmt.Sprintf("#define SVN_PRE_RELEASE_VER %d\n", preRelVer)
 	s += fmt.Sprintf("#define GIT_COMMIT_ID %s\n", sha1)
-	if verQualifier != "" {
-		s += fmt.Sprintf("#define VER_QUALIFIER %s\n", verQualifier)
-	}
 	err := ioutil.WriteFile(buildConfigPath(), []byte(s), 644)
 	fataliferr(err)
 }
@@ -663,7 +660,7 @@ func buildPreRelease() {
 
 	downloadTranslations()
 
-	setBuildConfig(svnPreReleaseVer, gitSha1, "")
+	setBuildConfig(svnPreReleaseVer, gitSha1)
 	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:SumatraPDF;SumatraPDF-no-MUPDF;Uninstaller;test_util", "/p:Configuration=Release;Platform=Win32", "/m")
 	fataliferr(err)
 	runTestUtilMust("rel")
@@ -674,7 +671,7 @@ func buildPreRelease() {
 	fataliferr(err)
 	signMust(pj("rel", "Installer.exe"))
 
-	setBuildConfig(svnPreReleaseVer, gitSha1, "x64")
+	setBuildConfig(svnPreReleaseVer, gitSha1)
 	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:SumatraPDF;SumatraPDF-no-MUPDF;Uninstaller;test_util", "/p:Configuration=Release;Platform=x64", "/m")
 	fataliferr(err)
 

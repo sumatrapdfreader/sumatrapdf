@@ -135,6 +135,22 @@ static void DrawSumatraPDF(HDC hdc, PointI pt)
 #endif
 }
 
+static bool is64bit() {
+    return 8 == sizeof(void*);
+}
+
+static WCHAR *GetSumatraVersion() {
+    str::Str<WCHAR> s;
+    s.Set(VERSION_TXT);
+    if (is64bit()) {
+        s.Append(L" 64-bit");
+    }
+#ifdef DEBUG
+    s.Append(L" (dbg)");
+#endif
+    return s.StealData();
+}
+
 static SizeI CalcSumatraVersionSize(HDC hdc)
 {
     SizeI result;
@@ -152,8 +168,8 @@ static SizeI CalcSumatraVersionSize(HDC hdc)
 
     /* consider version and version-sub strings */
     SelectObject(hdc, fontVersionTxt);
-    txt = VERSION_TXT;
-    GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
+    ScopedMem<WCHAR> ver(GetSumatraVersion());
+    GetTextExtentPoint32(hdc, ver.Get(), (int)str::Len(ver.Get()), &txtSize);
     LONG minWidth = txtSize.cx;
     txt = VERSION_SUB_TXT;
     GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
@@ -181,8 +197,9 @@ static void DrawSumatraVersion(HDC hdc, RectI rect)
     SetTextColor(hdc, WIN_COL_BLACK);
     SelectObject(hdc, fontVersionTxt);
     PointI pt(mainRect.x + mainRect.dx + ABOUT_INNER_PADDING, mainRect.y);
-    txt = VERSION_TXT;
-    TextOut(hdc, pt.x, pt.y, txt, (int)str::Len(txt));
+
+    ScopedMem<WCHAR> ver(GetSumatraVersion());
+    TextOut(hdc, pt.x, pt.y, ver.Get(), (int)str::Len(ver.Get()));
     txt = VERSION_SUB_TXT;
     TextOut(hdc, pt.x, pt.y + 16, txt, (int)str::Len(txt));
 
@@ -395,7 +412,8 @@ static void CopyAboutInfoToClipboard(HWND hwnd)
 {
     UNUSED(hwnd);
     str::Str<WCHAR> info(512);
-    info.AppendFmt(L"%s %s\r\n", APP_NAME_STR, VERSION_TXT);
+    ScopedMem<WCHAR> ver(GetSumatraVersion());
+    info.AppendFmt(L"%s %s\r\n", APP_NAME_STR, ver.Get());
     for (size_t i = info.Size() - 2; i > 0; i--) {
         info.Append('-');
     }

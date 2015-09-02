@@ -8,13 +8,10 @@
 #ifndef CURR_VERSION_COMMA
 #define CURR_VERSION_COMMA 3,1,0
 #endif
+
 // VER_QUALIFIER allows people who recompile SumatraPDF to add
 // a distinguishing string at the end of the version number
 // (e.g. version 2.3.2z or 2.4opt or 2.5x64)
-#if !defined(VER_QUALIFIER) && defined(DEBUG)
-// adds " (dbg)" after the version in debug builds
-#define VER_QUALIFIER \x20(dbg)
-#endif
 
 #define APP_NAME_STR       L"SumatraPDF"
 
