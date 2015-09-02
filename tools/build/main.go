@@ -57,6 +57,7 @@ type Timing struct {
 
 const (
 	s3PreRelDir = "sumatrapdf/prerel/"
+	logFileName = "build-log.txt"
 )
 
 var (
@@ -84,11 +85,11 @@ func is64Bit() bool {
 
 func logToFile(s string) {
 	if logFile == nil {
-		path := pj("rel", "build-log.txt")
 		var err error
-		logFile, err = os.Create(path)
+		logFile, err = os.Create(logFileName)
 		if err != nil {
-			fmt.Printf("logToFile: os.Create() failed with %s\n", err)
+			fmt.Printf("logToFile: os.Create('%s') failed with %s\n", logFileName, err)
+			os.Exit(1)
 		}
 	}
 	logFile.WriteString(s)
@@ -1254,6 +1255,7 @@ func main() {
 		return
 	}
 
+	os.Remove(logFileName)
 	verifyStartedInRightDirectoryMust()
 	detectVersions()
 	clean()

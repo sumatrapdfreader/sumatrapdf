@@ -36,3 +36,4 @@ bin/cmapdump.exe
 drmemlogs/
 src/utils/BuildConfig.h
 *.vspx
+build-log.txt
