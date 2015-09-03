@@ -1745,7 +1745,7 @@ static void RememberSessionState()
             if (tab->ctrl)
                 tab->ctrl->UpdateDisplayState(ds);
             // TODO: pageNo should be good enough, as canvas size is restored as well
-            if (tab->AsEbook())
+            if (tab->AsEbook() && tab->ctrl)
                 ds->pageNo = tab->ctrl->CurrentPageNo();
             ds->showToc = tab->showToc;
             *ds->tocState = tab->tocState;
