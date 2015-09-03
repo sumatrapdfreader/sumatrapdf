@@ -930,6 +930,7 @@ func parseAnalyzeOutput(d []byte) {
 	s := genAnalyzeHTML(deDuped)
 	err := ioutil.WriteFile("analyze-errors.html", []byte(s), 0644)
 	fataliferr(err)
+	// TODO: open a browser with analyze-errors.html
 }
 
 func parseSavedAnalyzeOuptut() {
@@ -941,13 +942,13 @@ func parseSavedAnalyzeOuptut() {
 func buildAnalyze() {
 	fmt.Printf("Analyze build\n")
 	// I assume 64-bit build will catch more issues
-	out, err := runMsbuildGetOutput(true, "vs2015\\SumatraPDF.sln", "/t:Installer", "/p:Configuration=ReleasePrefast;Platform=x64", "/m")
+	out, _ := runMsbuildGetOutput(true, "vs2015\\SumatraPDF.sln", "/t:Installer", "/p:Configuration=ReleasePrefast;Platform=x64", "/m")
 
 	if true {
 		err2 := ioutil.WriteFile("analyze-output.txt", out, 0644)
 		fataliferr(err2)
 	}
-	fataliferr(err)
+	//fataliferr(err)
 
 	parseAnalyzeOutput(out)
 }
