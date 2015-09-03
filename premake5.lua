@@ -6,13 +6,6 @@ I'm using premake5 alpha5 from http://premake.github.io/download.html#v5
 
 TODO:
 * compare compilation flags nmake vs. us from compilation logs
-* consider checking in generated cmaps anyway. setting up cmapdump.exe
-  is cumbersome. Could also try to do it as buildcommands - maybe that would
-  avoid compiling cmapdump.exe if cmap .h files already exist
-
-Code fixes:
-* fix 64bit warnings ("4311", "4312", "4302", "4244", "4264") in Sumatra code
-  (not dependencies)
 
 Note about nasm: when providing "-I foo/bar/" flag to nasm.exe, it must be
 "foo/bar/" and not just "foo/bar".
