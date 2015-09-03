@@ -569,7 +569,7 @@ static bool AutoUpdateMain()
 }
 #endif
 
-int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR cmdLine, int nCmdShow)
+int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR cmdLine, _In_ int nCmdShow)
 {
     UNUSED(hPrevInstance); UNUSED(cmdLine); UNUSED(nCmdShow);
     int retCode = 1;    // by default it's error
