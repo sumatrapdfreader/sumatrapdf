@@ -805,12 +805,21 @@ func currDirLen() int {
 	return currDirLenCached
 }
 
+func pre(s string) string {
+	return `<pre style="white-space: pre-wrap;">` + s + `</pre>`
+}
+
+func a(url, txt string) string {
+	return fmt.Sprintf(`<a href="%s">%s</a>`, url, txt)
+}
+
 //https://github.com/sumatrapdfreader/sumatrapdf/blob/c760b1996bec63c0bd9b2910b0811c41ed26db60/premake5.lua
 func htmlizeSrcLink(al *AnalyzeLine, gitVersion string) string {
 	path := strings.Replace(al.FilePath, "\\", "/", -1)
 	lineNo := al.LineNo
 	uri := fmt.Sprintf("https://github.com/sumatrapdfreader/sumatrapdf/blob/%s/%s#L%d", gitSha1, path, lineNo)
-	return fmt.Sprintf(`<a href="%s">%s(%d)</a>`, uri, al.FilePath, lineNo)
+	txt := fmt.Sprintf("%s(%d)", al.FilePath, lineNo)
+	return a(uri, txt)
 }
 
 func htmlizeErrorLines(errors []*AnalyzeLine) ([]string, []string, []string) {
@@ -831,35 +840,33 @@ func htmlizeErrorLines(errors []*AnalyzeLine) ([]string, []string, []string) {
 	return sumatraErrors, mupdfErrors, extErrors
 }
 
-func pre(s string) string {
-	return `<pre style="white-space: pre-wrap;">` + s + `</pre>`
-}
-
 func genAnalyzeHTML(errors []*AnalyzeLine) string {
 	sumatraErrors, mupdfErrors, extErrors := htmlizeErrorLines(errors)
 	nSumatraErrors := len(sumatraErrors)
 	nMupdfErrors := len(mupdfErrors)
 	nExtErrors := len(extErrors)
 
-	a := []string{"<html>", "<body>"}
-	//s += a("../index.html", "Home")
-	s := fmt.Sprintf(": build %s, %d warnings in sumatra code, %d in mupdf, %d in ext:", gitSha1, nSumatraErrors, nMupdfErrors, nExtErrors)
-	a = append(a, s)
+	res := []string{"<html>", "<body>"}
+
+	homeLink := a("../index.html", "Home")
+	commitLink := a("https://github.com/sumatrapdfreader/sumatrapdf/commit/"+gitSha1, gitSha1)
+	s := fmt.Sprintf("%s: commit %s, %d warnings in sumatra code, %d in mupdf, %d in ext:", homeLink, commitLink, nSumatraErrors, nMupdfErrors, nExtErrors)
+	res = append(res, s)
 
 	s = pre(strings.Join(sumatraErrors, "\n"))
-	a = append(a, s)
+	res = append(res, s)
 
-	a = append(a, "<p>Warnings in mupdf code:</p>")
+	res = append(res, "<p>Warnings in mupdf code:</p>")
 	s = pre(strings.Join(mupdfErrors, "\n"))
-	a = append(a, s)
+	res = append(res, s)
 
-	a = append(a, "<p>Warnings in ext code:</p>")
+	res = append(res, "<p>Warnings in ext code:</p>")
 	s = pre(strings.Join(extErrors, "\n"))
-	a = append(a, s)
+	res = append(res, s)
 
-	a = append(a, "</pre>")
-	a = append(a, "</body>", "</html>")
-	return strings.Join(a, "\n")
+	res = append(res, "</pre>")
+	res = append(res, "</body>", "</html>")
+	return strings.Join(res, "\n")
 }
 
 func parseAnalyzeLine(s string) AnalyzeLine {
