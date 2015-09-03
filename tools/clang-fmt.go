@@ -14,7 +14,7 @@ const (
 	// we used to use Mozilla style for the base, but they really changed the
 	// style between 3.5 and 3.7. Chromium style is close to Mozilla and
 	// even makes more sense about details like "char* s" vs. "char *"
-	clangStyle = `-style="{BasedOnStyle: Chromium, IndentWidth: 4, ColumnLimit: 100, UseTab: Never}"`
+	clangStyle = `{BasedOnStyle: Chromium, IndentWidth: 4, ColumnLimit: 100}`
 )
 
 func fataliferr(err error) {
@@ -88,7 +88,7 @@ func getSrcFilesMust(dir string) []string {
 func runInDirMust(exePath string, dir string) {
 	files := getSrcFilesMust(dir)
 	for _, f := range files {
-		cmd := exec.Command(exePath, clangStyle, "-i", f)
+		cmd := exec.Command(exePath, "-style", clangStyle, "-i", f)
 		cmd.Dir = dir
 		fmt.Printf("Running: '%s'\n", strings.Join(cmd.Args, " "))
 		out, err := cmd.CombinedOutput()
