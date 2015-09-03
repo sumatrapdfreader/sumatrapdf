@@ -806,18 +806,17 @@ func currDirLen() int {
 }
 
 //https://github.com/sumatrapdfreader/sumatrapdf/blob/c760b1996bec63c0bd9b2910b0811c41ed26db60/premake5.lua
-
 func htmlizeSrcLink(al *AnalyzeLine, gitVersion string) string {
 	path := strings.Replace(al.FilePath, "\\", "/", -1)
 	lineNo := al.LineNo
-	uri := fmt.Sprintf("https://github.com/sumatrapdfreader/sumatrapdf/blob/%s/premake5.lua#L%d", path, lineNo)
+	uri := fmt.Sprintf("https://github.com/sumatrapdfreader/sumatrapdf/blob/%s/%s#L%d", gitSha1, path, lineNo)
 	return fmt.Sprintf(`<a href="%s">%s(%d)</a>`, uri, al.FilePath, lineNo)
 }
 
 func htmlizeErrorLines(errors []*AnalyzeLine) ([]string, []string, []string) {
 	var sumatraErrors, mupdfErrors, extErrors []string
 	for _, al := range errors {
-		s := htmlizeSrcLink(al, gitSha1)
+		s := htmlizeSrcLink(al, gitSha1) + " : " + al.Message
 		path := al.FilePath
 		if strings.HasPrefix(path, "src") {
 			sumatraErrors = append(sumatraErrors, s)
@@ -847,15 +846,15 @@ func genAnalyzeHTML(errors []*AnalyzeLine) string {
 	s := fmt.Sprintf(": build %s, %d warnings in sumatra code, %d in mupdf, %d in ext:", gitSha1, nSumatraErrors, nMupdfErrors, nExtErrors)
 	a = append(a, s)
 
-	s = pre(strings.Join(sumatraErrors, ""))
+	s = pre(strings.Join(sumatraErrors, "\n"))
 	a = append(a, s)
 
 	a = append(a, "<p>Warnings in mupdf code:</p>")
-	s = pre(strings.Join(mupdfErrors, ""))
+	s = pre(strings.Join(mupdfErrors, "\n"))
 	a = append(a, s)
 
 	a = append(a, "<p>Warnings in ext code:</p>")
-	s = pre(strings.Join(extErrors, ""))
+	s = pre(strings.Join(extErrors, "\n"))
 	a = append(a, s)
 
 	a = append(a, "</pre>")
@@ -897,8 +896,40 @@ func parseAnalyzeLine(s string) AnalyzeLine {
 	return res
 }
 
+func isSrcFile(name string) bool {
+	ext := strings.ToLower(filepath.Ext(name))
+	switch ext {
+	case ".cpp", ".c", ".h":
+		return true
+	}
+	return false
+}
+
+// the compiler prints file names lower cased, we want real name in file system
+// (otherwise e.g. links to github break)
+func fixFileNames(a []*AnalyzeLine) {
+	fmt.Printf("fixFileNames\n")
+	files := make(map[string]string)
+	filepath.Walk(".", func(path string, fi os.FileInfo, err error) error {
+		if err != nil {
+			return nil
+		}
+		if !isSrcFile(path) {
+			return nil
+		}
+		//fmt.Printf("path: '%s', name: '%s'\n", path, fi.Name())
+		pathLower := strings.ToLower(path)
+		files[pathLower] = path
+		return nil
+	})
+	for _, al := range a {
+		if sub := files[al.FilePath]; sub != "" {
+			al.FilePath = sub
+		}
+	}
+}
+
 func parseAnalyzeOutput(d []byte) {
-	fmt.Printf("parseAnalyzeOutput\n")
 	lines := toTrimmedLines(d)
 	var warnings []string
 	for _, line := range lines {
@@ -920,7 +951,9 @@ func parseAnalyzeOutput(d []byte) {
 	}
 
 	sort.Sort(ByPathLine(deDuped))
-	if true {
+	fixFileNames(deDuped)
+
+	if false {
 		for _, al := range deDuped {
 			fmt.Printf("%s, %d, %s\n", al.FilePath, al.LineNo, al.Message)
 		}
@@ -1489,6 +1522,7 @@ func main() {
 	//testS3Upload()
 
 	if false {
+		detectVersions()
 		parseSavedAnalyzeOuptut()
 		os.Exit(0)
 	}

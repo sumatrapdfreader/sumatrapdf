@@ -37,3 +37,5 @@ drmemlogs/
 src/utils/BuildConfig.h
 *.vspx
 build-log.txt
+analyze-output.txt
+analyze-errors.html
