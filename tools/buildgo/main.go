@@ -452,6 +452,16 @@ func cl(src, dst string, env []string, args *Args) {
 	runExe("cl.exe", env, args)
 }
 
+func isExt(name string, valid []string) bool {
+	ext := strings.ToLower(filepath.Ext(name))
+	for _, s := range valid {
+		if ext == s {
+			return true
+		}
+	}
+	return false
+}
+
 // given ${dir}/foo.rc, returns ${outDir}/${dir}/foo.rc
 func rcOut(src, outDir string) string {
 	verifyIsRcFile(src)
@@ -460,22 +470,15 @@ func rcOut(src, outDir string) string {
 }
 
 func verifyIsRcFile(path string) {
-	s := strings.ToLower(path)
-	if strings.HasSuffix(s, ".rc") {
-		return
+	if !isExt(path, []string{".rc"}) {
+		fatalf("%s should end in '.rc'\n", path)
 	}
-	fatalf("%s should end in '.rc'\n", path)
 }
 
 func verifyIsCFile(path string) {
-	s := strings.ToLower(path)
-	if strings.HasSuffix(s, ".cpp") {
-		return
+	if !isExt(path, []string{".cpp", ".c"}) {
+		fatalf("%s should end in '.c' or '.cpp'\n", path)
 	}
-	if strings.HasSuffix(s, ".c") {
-		return
-	}
-	fatalf("%s should end in '.c' or '.cpp'\n", path)
 }
 
 func clOut(src, outDir string) string {
