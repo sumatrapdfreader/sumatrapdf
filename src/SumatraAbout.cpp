@@ -135,14 +135,10 @@ static void DrawSumatraPDF(HDC hdc, PointI pt)
 #endif
 }
 
-static bool is64bit() {
-    return 8 == sizeof(void*);
-}
-
 static WCHAR *GetSumatraVersion() {
     str::Str<WCHAR> s;
     s.Set(VERSION_TXT);
-    if (is64bit()) {
+    if (IsProcess64()) {
         s.Append(L" 64-bit");
     }
 #ifdef DEBUG
@@ -151,7 +147,7 @@ static WCHAR *GetSumatraVersion() {
     return s.StealData();
 }
 
-static SizeI CalcSumatraVersionSize(HDC hdc)
+static SizeI CalcSumatraVersionSize(HWND hwnd, HDC hdc)
 {
     SizeI result;
 
@@ -170,7 +166,7 @@ static SizeI CalcSumatraVersionSize(HDC hdc)
     SelectObject(hdc, fontVersionTxt);
     ScopedMem<WCHAR> ver(GetSumatraVersion());
     GetTextExtentPoint32(hdc, ver.Get(), (int)str::Len(ver.Get()), &txtSize);
-    LONG minWidth = txtSize.cx;
+    LONG minWidth = txtSize.cx + DpiScaleX(hwnd, 8);
     txt = VERSION_SUB_TXT;
     GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
     txtSize.cx = std::max(txtSize.cx, minWidth);
@@ -254,7 +250,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkI
     FillRect(hdc, &rTmp, brushAboutBg);
 
     /* render title */
-    RectI titleRect(rect.TL(), CalcSumatraVersionSize(hdc));
+    RectI titleRect(rect.TL(), CalcSumatraVersionSize(hwnd, hdc));
 
     ScopedBrush bgBrush(CreateSolidBrush(GetLogoBgColor()));
     ScopedHdcSelect brush(hdc, bgBrush);
@@ -321,7 +317,7 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RectI *rect)
     HGDIOBJ origFont = SelectObject(hdc, fontLeftTxt);
 
     /* calculate minimal top box size */
-    SizeI headerSize = CalcSumatraVersionSize(hdc);
+    SizeI headerSize = CalcSumatraVersionSize(hwnd, hdc);
 
     /* calculate left text dimensions */
     SelectObject(hdc, fontLeftTxt);
@@ -638,7 +634,7 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF 
     bool isRtl = IsUIRightToLeft();
 
     /* render title */
-    RectI titleBox = RectI(PointI(0, 0), CalcSumatraVersionSize(hdc));
+    RectI titleBox = RectI(PointI(0, 0), CalcSumatraVersionSize(win.hwndCanvas, hdc));
     titleBox.x = rc.dx - titleBox.dx - 3;
     DrawSumatraVersion(hdc, titleBox);
     PaintLine(hdc, RectI(0, titleBox.dy, rc.dx, 0));

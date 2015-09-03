@@ -49,6 +49,26 @@ bool IsRunningInWow64() {
     return false;
 }
 
+// return true if this is 64-bit executable
+bool IsProcess64() {
+    return 8 == sizeof(void*);
+}
+
+// return true if running on 64-bit
+bool IsOs64() {
+    // 64-bit process cam only run on 64-bit OS
+    if (IsProcess64()) {
+        return true;
+    }
+    // this is 32-bit process. see if running under WOW64
+    BOOL isWow = FALSE;
+    if (DynIsWow64Process && DynIsWow64Process(GetCurrentProcess(), &isWow)) {
+        return isWow == TRUE;
+    }
+    return false;
+}
+
+
 void LogLastError(DWORD err) {
     // allow to set a breakpoint in release builds
     if (0 == err)

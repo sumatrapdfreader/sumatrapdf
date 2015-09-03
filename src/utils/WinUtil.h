@@ -32,6 +32,8 @@ inline void MoveWindow(HWND hwnd, RECT *r) {
     MoveWindow(hwnd, r->left, r->top, RectDx(*r), RectDy(*r), TRUE);
 }
 
+bool IsOs64();
+bool IsProcess64();
 bool IsRunningInWow64();
 bool IsVistaOrGreater();
 
