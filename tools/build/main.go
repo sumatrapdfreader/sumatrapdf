@@ -805,6 +805,64 @@ func currDirLen() int {
 	return currDirLenCached
 }
 
+//https://github.com/sumatrapdfreader/sumatrapdf/blob/c760b1996bec63c0bd9b2910b0811c41ed26db60/premake5.lua
+
+func htmlizeSrcLink(al *AnalyzeLine, gitVersion string) string {
+	path := strings.Replace(al.FilePath, "\\", "/", -1)
+	lineNo := al.LineNo
+	uri := fmt.Sprintf("https://github.com/sumatrapdfreader/sumatrapdf/blob/%s/premake5.lua#L%d", path, lineNo)
+	return fmt.Sprintf(`<a href="%s">%s(%d)</a>`, uri, al.FilePath, lineNo)
+}
+
+func htmlizeErrorLines(errors []*AnalyzeLine) ([]string, []string, []string) {
+	var sumatraErrors, mupdfErrors, extErrors []string
+	for _, al := range errors {
+		s := htmlizeSrcLink(al, gitSha1)
+		path := al.FilePath
+		if strings.HasPrefix(path, "src") {
+			sumatraErrors = append(sumatraErrors, s)
+		} else if strings.HasPrefix(path, "mupdf") {
+			mupdfErrors = append(mupdfErrors, s)
+		} else if strings.HasPrefix(path, "ext") {
+			extErrors = append(extErrors, s)
+		} else {
+			extErrors = append(extErrors, s)
+		}
+	}
+	return sumatraErrors, mupdfErrors, extErrors
+}
+
+func pre(s string) string {
+	return `<pre style="white-space: pre-wrap;">` + s + `</pre>`
+}
+
+func genAnalyzeHTML(errors []*AnalyzeLine) string {
+	sumatraErrors, mupdfErrors, extErrors := htmlizeErrorLines(errors)
+	nSumatraErrors := len(sumatraErrors)
+	nMupdfErrors := len(mupdfErrors)
+	nExtErrors := len(extErrors)
+
+	a := []string{"<html>", "<body>"}
+	//s += a("../index.html", "Home")
+	s := fmt.Sprintf(": build %s, %d warnings in sumatra code, %d in mupdf, %d in ext:", gitSha1, nSumatraErrors, nMupdfErrors, nExtErrors)
+	a = append(a, s)
+
+	s = pre(strings.Join(sumatraErrors, ""))
+	a = append(a, s)
+
+	a = append(a, "<p>Warnings in mupdf code:</p>")
+	s = pre(strings.Join(mupdfErrors, ""))
+	a = append(a, s)
+
+	a = append(a, "<p>Warnings in ext code:</p>")
+	s = pre(strings.Join(extErrors, ""))
+	a = append(a, s)
+
+	a = append(a, "</pre>")
+	a = append(a, "</body>", "</html>")
+	return strings.Join(a, "\n")
+}
+
 func parseAnalyzeLine(s string) AnalyzeLine {
 	sOrig := s
 	// remove " [C:\Users\kjk\src\sumatrapdf\vs2015\Installer.vcxproj]" from the end
@@ -869,7 +927,9 @@ func parseAnalyzeOutput(d []byte) {
 	}
 	fmt.Printf("\n\n%d warnings\n", len(deDuped))
 
-	// TODO: generate analyze-report-${ver}.html and open browser with it
+	s := genAnalyzeHTML(deDuped)
+	err := ioutil.WriteFile("analyze-errors.html", []byte(s), 0644)
+	fataliferr(err)
 }
 
 func parseSavedAnalyzeOuptut() {
