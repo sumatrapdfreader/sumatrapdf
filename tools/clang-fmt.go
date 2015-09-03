@@ -14,7 +14,7 @@ const (
 	// we used to use Mozilla style for the base, but they really changed the
 	// style between 3.5 and 3.7. Chromium style is close to Mozilla and
 	// even makes more sense about details like "char* s" vs. "char *"
-	clangStyle = `{BasedOnStyle: Chromium, IndentWidth: 4, ColumnLimit: 100}`
+	clangStyle = `{BasedOnStyle: Chromium, IndentWidth: 4, ColumnLimit: 100, AccessModifierOffset: -2}`
 )
 
 func fataliferr(err error) {
