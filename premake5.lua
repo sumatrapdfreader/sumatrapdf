@@ -95,12 +95,16 @@ workspace "SumatraPDF"
 
   -- https://github.com/premake/premake-core/wiki/flags
   flags {
-    "FatalWarnings",
     "MultiProcessorCompile",
     "StaticRuntime",
     "Symbols",
     -- "Unicode", TODO: breaks libdjuv?
   }
+
+  filter {"configurations:not ReleasePrefast"}
+    flags { "FatalWarnings" }
+  filter {}
+
   exceptionhandling "Off"
   rtti "Off"
 
