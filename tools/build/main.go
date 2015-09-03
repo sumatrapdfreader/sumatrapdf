@@ -57,6 +57,7 @@ type Timing struct {
 
 const (
 	s3PreRelDir = "sumatrapdf/prerel/"
+	s3RelDir    = "sumatrapdf/rel/"
 	logFileName = "build-log.txt"
 )
 
@@ -66,6 +67,7 @@ var (
 	flgUpload        bool
 	flgSmoke         bool
 	flgListS3        bool
+	flgAnalyze       bool
 	flgNoCleanCheck  bool
 	svnPreReleaseVer int
 	gitSha1          string
@@ -79,7 +81,7 @@ var (
 
 // Note: it can say is 32bit on 64bit machine (if 32bit toolset is installed),
 // but it'll never say it's 64bit if it's 32bit
-func is64Bit() bool {
+func isOS64Bit() bool {
 	return runtime.GOARCH == "amd64"
 }
 
@@ -499,6 +501,11 @@ func runMsbuild(showProgress bool, args ...string) error {
 	return err
 }
 
+func runMsbuildGetOutput(showProgress bool, args ...string) ([]byte, error) {
+	cmd := getCmdInEnv(getEnvForVS(), "msbuild.exe", args...)
+	return runCmdLogged(cmd, showProgress)
+}
+
 func isNum(s string) bool {
 	_, err := strconv.Atoi(s)
 	return err == nil
@@ -584,15 +591,21 @@ func setBuildConfig(preRelVer int, sha1 string) {
 // consider a pre-release build already present in s3 if manifest file exists
 func verifyPreReleaseNotInS3Must(preReleaseVer int) {
 	s3Path := fmt.Sprintf("%smanifest-%d.txt", s3PreRelDir, preReleaseVer)
-	fatalif(s3Exists(s3Path), "build %d already exists in s3 because '%s' is present\n", preReleaseVer, s3Path)
+	fatalif(s3Exists(s3Path), "build %d already exists in s3 because '%s' exists\n", preReleaseVer, s3Path)
+}
+
+func verifyReleaseNotInS3Must(sumatraVersion string) {
+	s3Path := fmt.Sprintf("%sSuamtraPDF-%sinstall.exe", s3RelDir, sumatraVersion)
+	fatalif(s3Exists(s3Path), "build '%s' already exists in s3 because '%s' existst\n", sumatraVersion, s3Path)
 }
 
 // check we have cert for signing and s3 creds for file uploads
-func verifyHasPreReleaseSecretsMust() {
+func verifyHasReleaseSecretsMust() {
 	p := certPath()
 	fatalif(!fileExists(p), "verifyHasPreReleaseSecretsMust(): certificate file '%s' doesn't exist\n", p)
 	secrets := readSecretsMust()
 	fatalif(secrets.CertPwd == "", "CertPwd missing in %s\n", p)
+
 	if flgUpload {
 		fatalif(secrets.AwsSecret == "", "AwsSecret missing in %s\n", p)
 		fatalif(secrets.AwsAccess == "", "AwsAccess missing in %s\n", p)
@@ -651,12 +664,12 @@ func createPdbLzsaMust(dir string) {
 }
 
 func buildPreRelease() {
-	fmt.Printf("Building pre-release version\n")
 	var err error
+
+	fmt.Printf("Building pre-release version\n")
 	if !flgNoCleanCheck {
 		verifyGitCleanMsut()
 	}
-	verifyHasPreReleaseSecretsMust()
 	verifyPreReleaseNotInS3Must(svnPreReleaseVer)
 
 	downloadTranslations()
@@ -676,7 +689,7 @@ func buildPreRelease() {
 	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:SumatraPDF;SumatraPDF-no-MUPDF;Uninstaller;test_util", "/p:Configuration=Release;Platform=x64", "/m")
 	fataliferr(err)
 
-	if is64Bit() {
+	if isOS64Bit() {
 		runTestUtilMust("rel64")
 	}
 	signMust(pj("rel64", "SumatraPDF.exe"))
@@ -700,21 +713,183 @@ func buildPreRelease() {
 }
 
 func buildRelease() {
-	fmt.Printf("Building release version\n")
-	verifyReleaseBranchMust()
+	var err error
 
-	// TODO: implement me
+	fmt.Printf("Building release version %s\n", sumatraVersion)
+	verifyGitCleanMsut()
+	verifyOnReleaseBranchMust()
 
+	verifyReleaseNotInS3Must(sumatraVersion)
+
+	//TODO: not sure if should download translations
+	downloadTranslations()
+
+	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:SumatraPDF;SumatraPDF-no-MUPDF;Uninstaller;test_util", "/p:Configuration=Release;Platform=Win32", "/m")
+	fataliferr(err)
+	runTestUtilMust("rel")
+	signMust(pj("rel", "SumatraPDF.exe"))
+	signMust(pj("rel", "SumatraPDF-no-MUPDF.exe"))
+	signMust(pj("rel", "Uninstaller.exe"))
+	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:Installer", "/p:Configuration=Release;Platform=Win32", "/m")
+	fataliferr(err)
+	signMust(pj("rel", "Installer.exe"))
+
+	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:SumatraPDF;SumatraPDF-no-MUPDF;Uninstaller;test_util", "/p:Configuration=Release;Platform=x64", "/m")
+	fataliferr(err)
+
+	if isOS64Bit() {
+		runTestUtilMust("rel64")
+	}
+	signMust(pj("rel64", "SumatraPDF.exe"))
+	signMust(pj("rel64", "SumatraPDF-no-MUPDF.exe"))
+	signMust(pj("rel64", "Uninstaller.exe"))
+	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:Installer", "/p:Configuration=Release;Platform=x64", "/m")
+	fataliferr(err)
+	signMust(pj("rel64", "Installer.exe"))
+
+	createPdbZipMust("rel")
+	createPdbZipMust("rel64")
+
+	createPdbLzsaMust("rel")
+	createPdbLzsaMust("rel64")
+
+	createManifestMust()
 	if flgUpload {
-		//s3UploadReleaseMust()
+		s3UploadReleaseMust()
 	}
 }
 
-func build() {
-	err := runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:Installer;SumatraPDF;test_util", "/p:Configuration=Release;Platform=Win32", "/m")
+// AnalyzeLine has info about a warning line from prefast/analyze build
+// Given:
+//
+// c:\users\kjk\src\sumatrapdf\ext\unarr\rar\uncompress-rar.c(171): warning C6011:
+// Dereferencing NULL pointer 'code->table'. : Lines: 163, 165, 169, 170,
+// 171 [C:\Users\kjk\src\sumatrapdf\vs2015\Installer.vcxproj]
+//
+// FilePath will be: "ext\unarr\rar\uncompress-rar.c"
+// LineNo will be: 171
+// Message will be: warning C6011: Dereferencing NULL pointer 'code->table'. : Lines: 163, 165, 169, 170, 171
+type AnalyzeLine struct {
+	FilePath string
+	LineNo   int
+	Message  string
+	OrigLine string
+}
+
+// ByPathLine is to sort AnalyzeLine by file path then by line number
+type ByPathLine []*AnalyzeLine
+
+func (s ByPathLine) Len() int {
+	return len(s)
+}
+func (s ByPathLine) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+func (s ByPathLine) Less(i, j int) bool {
+	if s[i].FilePath == s[j].FilePath {
+		return s[i].LineNo < s[j].LineNo
+	}
+	return s[i].FilePath < s[j].FilePath
+}
+
+var (
+	currDirLenCached int
+)
+
+func currDirLen() int {
+	if currDirLenCached == 0 {
+		dir, err := os.Getwd()
+		fataliferr(err)
+		currDirLenCached = len(dir)
+	}
+	return currDirLenCached
+}
+
+func parseAnalyzeLine(s string) AnalyzeLine {
+	sOrig := s
+	// remove " [C:\Users\kjk\src\sumatrapdf\vs2015\Installer.vcxproj]" from the end
+	end := strings.LastIndex(s, " [")
+	fatalif(end == -1, "invalid line '%s'\n", sOrig)
+	s = s[:end]
+	parts := strings.SplitN(s, "): ", 2)
+	fatalif(len(parts) != 2, "invalid line '%s'\n", sOrig)
+	res := AnalyzeLine{
+		OrigLine: sOrig,
+		Message:  parts[1],
+	}
+	s = parts[0]
+	end = strings.LastIndex(s, "(")
+	fatalif(end == -1, "invalid line '%s'\n", sOrig)
+	// change
+	// c:\users\kjk\src\sumatrapdf\ext\unarr\rar\uncompress-rar.c
+	// =>
+	// ext\unarr\rar\uncompress-rar.c
+	path := s[:end]
+	// sometimes the line starts with:
+	// 11>c:\users\kjk\src\sumatrapdf\ext\bzip2\bzlib.c(238)
+	start := strings.Index(path, ">")
+	if start != -1 {
+		path = path[start+1:]
+	}
+	start = currDirLen() + 1
+	res.FilePath = path[start:]
+	n, err := strconv.Atoi(s[end+1:])
 	fataliferr(err)
-	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:Installer;SumatraPDF;test_util", "/p:Configuration=Release;Platform=x64", "/m")
+	res.LineNo = n
+	return res
+}
+
+func parseAnalyzeOutput(d []byte) {
+	fmt.Printf("parseAnalyzeOutput\n")
+	lines := toTrimmedLines(d)
+	var warnings []string
+	for _, line := range lines {
+		if strings.Contains(line, ": warning C") {
+			warnings = append(warnings, line)
+		}
+	}
+
+	seen := make(map[string]bool)
+	var deDuped []*AnalyzeLine
+	for _, s := range warnings {
+		al := parseAnalyzeLine(s)
+		full := fmt.Sprintf("%s, %d, %s\n", al.FilePath, al.LineNo, al.Message)
+		if !seen[full] {
+			deDuped = append(deDuped, &al)
+			seen[full] = true
+			//fmt.Print(full)
+		}
+	}
+
+	sort.Sort(ByPathLine(deDuped))
+	if true {
+		for _, al := range deDuped {
+			fmt.Printf("%s, %d, %s\n", al.FilePath, al.LineNo, al.Message)
+		}
+	}
+	fmt.Printf("\n\n%d warnings\n", len(deDuped))
+
+	// TODO: generate analyze-report-${ver}.html and open browser with it
+}
+
+func parseSavedAnalyzeOuptut() {
+	d, err := ioutil.ReadFile("analyze-output.txt")
 	fataliferr(err)
+	parseAnalyzeOutput(d)
+}
+
+func buildAnalyze() {
+	fmt.Printf("Analyze build\n")
+	// I assume 64-bit build will catch more issues
+	out, err := runMsbuildGetOutput(true, "vs2015\\SumatraPDF.sln", "/t:Installer", "/p:Configuration=ReleasePrefast;Platform=x64", "/m")
+
+	if true {
+		err2 := ioutil.WriteFile("analyze-output.txt", out, 0644)
+		fataliferr(err2)
+	}
+	fataliferr(err)
+
+	parseAnalyzeOutput(out)
 }
 
 func buildSmoke() {
@@ -1098,7 +1273,7 @@ func s3UploadPreReleaseMust() {
 
 // When doing a release build, it must be from from a branch rel${ver}working
 // e.g. rel3.1working, where ${ver} must much sumatraVersion
-func verifyReleaseBranchMust() {
+func verifyOnReleaseBranchMust() {
 	// 'git branch' return branch name in format: '* master'
 	out := strings.TrimSpace(string(runExeMust("git", "branch")))
 	pref := "* rel"
@@ -1141,14 +1316,16 @@ func removeDirMust(dir string) {
 }
 
 func clean() {
+	if flgAnalyze {
+		removeDirMust("relPrefast")
+		removeDirMust("dbgPrefast")
+		return
+	}
+
 	removeDirMust("rel")
 	removeDirMust("rel64")
-	removeDirMust("relPrefast")
-	removeDirMust("dbg")
-	removeDirMust("dbg64")
-	removeDirMust("dbgPrefast")
-	err := os.Mkdir("rel", 0755) // this is where the log file goes
-	fataliferr(err)
+	//removeDirMust("dbg")
+	//removeDirMust("dbg64")
 }
 
 func detectVersions() {
@@ -1210,12 +1387,13 @@ func parseCmdLine() {
 	flag.BoolVar(&flgSmoke, "smoke", false, "do a smoke (sanity) build")
 	flag.BoolVar(&flgRelease, "release", false, "do a release build")
 	flag.BoolVar(&flgPreRelease, "prerelease", false, "do a pre-release build")
+	flag.BoolVar(&flgAnalyze, "analyze", false, "run analyze (prefast) and create summary of bugs as html file")
 	flag.BoolVar(&flgUpload, "upload", false, "upload to s3 for release/prerelease builds")
 	// -no-clean-check is useful when testing changes to this build script
 	flag.BoolVar(&flgNoCleanCheck, "no-clean-check", false, "allow running if repo has changes (for testing build script)")
 	flag.Parse()
 	// must provide an action to perform
-	if flgListS3 || flgSmoke || flgRelease || flgPreRelease {
+	if flgListS3 || flgSmoke || flgRelease || flgPreRelease || flgAnalyze {
 		return
 	}
 	flag.Usage()
@@ -1248,6 +1426,12 @@ func init() {
 func main() {
 	//testBuildLzsa()
 	//testS3Upload()
+
+	if false {
+		parseSavedAnalyzeOuptut()
+		os.Exit(0)
+	}
+
 	parseCmdLine()
 
 	if flgListS3 {
@@ -1260,7 +1444,7 @@ func main() {
 	detectVersions()
 	clean()
 	if flgRelease || flgPreRelease {
-		verifyHasPreReleaseSecretsMust()
+		verifyHasReleaseSecretsMust()
 	}
 	if flgRelease {
 		buildRelease()
@@ -1268,6 +1452,8 @@ func main() {
 		buildPreRelease()
 	} else if flgSmoke {
 		buildSmoke()
+	} else if flgAnalyze {
+		buildAnalyze()
 	} else {
 		flag.Usage()
 		os.Exit(1)
