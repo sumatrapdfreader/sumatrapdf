@@ -35,6 +35,7 @@ inline void MoveWindow(HWND hwnd, RECT *r) {
 bool IsOs64();
 bool IsProcess64();
 bool IsRunningInWow64();
+bool IsProcessAndOsArchSame();
 bool IsVistaOrGreater();
 
 void LogLastError(DWORD err = 0);

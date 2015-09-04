@@ -89,6 +89,16 @@ static bool ExtractFiles(lzma::SimpleArchive *archive)
     return trans.Commit();
 }
 
+// TODO: also check if valid lzma::ParseSimpleArchive()
+// TODO: use it early in installer to show an error message
+#if 0
+static bool IsValidInstaller()
+{
+  HRSRC resSrc = FindResource(GetModuleHandle(nullptr), MAKEINTRESOURCE(1), RT_RCDATA);
+  return resSrc != nullptr;
+}
+#endif
+
 static bool InstallCopyFiles()
 {
     bool ok;
@@ -653,9 +663,7 @@ void OnCreateWindow(HWND hwnd)
 
     // only show this checkbox if the CPU arch of DLL and OS match
     // (assuming that the installer has the same CPU arch as its content!)
-#ifndef _WIN64
-    if (!IsRunningInWow64())
-#endif
+    if (IsProcessAndOsArchSame())
     {
         gHwndCheckboxRegisterPdfFilter = CreateWindow(
             WC_BUTTON, _TR("Let Windows Desktop Search &search PDF documents"),

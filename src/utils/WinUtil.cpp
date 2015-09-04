@@ -68,6 +68,11 @@ bool IsOs64() {
     return false;
 }
 
+// return true if OS and our process have the same arch (i.e. both are 32bit
+// or both are 64bit)
+bool IsProcessAndOsArchSame() {
+    return IsProcess64() == IsOs64();
+}
 
 void LogLastError(DWORD err) {
     // allow to set a breakpoint in release builds
