@@ -657,7 +657,7 @@ static WCHAR *BuildSymbolsUrl()
     return str::Dup(preDefinedUrl);
 #else
   #ifdef SVN_PRE_RELEASE_VER
-    WCHAR *urlBase = L"http://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-" TEXT(QM(SVN_PRE_RELEASE_VER))
+    WCHAR *urlBase = L"http://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-" TEXT(QM(SVN_PRE_RELEASE_VER));
   #else
     WCHAR *urlBase = L"http://kjkpub.s3.amazonaws.com/sumatrapdf/rel/SumatraPDF-" TEXT(QM(CURR_VERSION));
   #endif
