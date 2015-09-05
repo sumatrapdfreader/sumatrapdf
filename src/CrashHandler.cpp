@@ -600,6 +600,21 @@ static bool BuildSymbolPath()
     return true;
 }
 
+// Get url for file with symbols. Caller needs to free().
+static WCHAR *BuildSymbolsUrl() {
+#ifdef SYMBOL_DOWNLOAD_URL
+    return str::Dup(preDefinedUrl);
+#else
+#ifdef SVN_PRE_RELEASE_VER
+    WCHAR *urlBase = L"http://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-" TEXT(QM(SVN_PRE_RELEASE_VER));
+#else
+    WCHAR *urlBase = L"http://kjkpub.s3.amazonaws.com/sumatrapdf/rel/SumatraPDF-" TEXT(QM(CURR_VERSION));
+#endif
+    WCHAR *is64 = IsProcess64() ? L"-64" : L"";
+    return str::Format(L"%s.pdb%s.lzsa", urlBase, is64);
+#endif
+}
+
 // detect which exe it is (installer, sumatra static or sumatra with dlls)
 static ExeType DetectExeType()
 {
@@ -648,22 +663,6 @@ void onUnexpected() {
 int __cdecl _purecall() {
     CrashMe();
     return 0;
-}
-
-// Get url for file with symbols. Caller needs to free().
-static WCHAR *BuildSymbolsUrl()
-{
-#ifdef SYMBOL_DOWNLOAD_URL
-    return str::Dup(preDefinedUrl);
-#else
-  #ifdef SVN_PRE_RELEASE_VER
-    WCHAR *urlBase = L"http://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-" TEXT(QM(SVN_PRE_RELEASE_VER));
-  #else
-    WCHAR *urlBase = L"http://kjkpub.s3.amazonaws.com/sumatrapdf/rel/SumatraPDF-" TEXT(QM(CURR_VERSION));
-  #endif
-    WCHAR *is64 = IsProcess64() ? L"-64" : L"";
-    return str::Format(L"%s.pdb%s.lzsa", urlBase, is64);
-#endif
 }
 
 void InstallCrashHandler(const WCHAR *crashDumpPath, const WCHAR *symDir)
