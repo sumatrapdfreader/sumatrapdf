@@ -20,14 +20,6 @@
 #define NOLOG 1 // 0 for more detailed debugging, 1 to disable lf()
 #include "DebugLog.h"
 
-#ifndef SYMBOL_DOWNLOAD_URL
-#ifdef SVN_PRE_RELEASE_VER
-#define SYMBOL_DOWNLOAD_URL L"http://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-" TEXT(QM(SVN_PRE_RELEASE_VER)) L".pdb.lzsa"
-#else
-#define SYMBOL_DOWNLOAD_URL L"http://kjkpub.s3.amazonaws.com/sumatrapdf/rel/SumatraPDF-" TEXT(QM(CURR_VERSION)) L".pdb.lzsa"
-#endif
-#endif
-
 #if !defined(CRASH_SUBMIT_SERVER) || !defined(CRASH_SUBMIT_URL)
 #define CRASH_SUBMIT_SERVER L"blog.kowalczyk.info"
 #define CRASH_SUBMIT_URL    L"/app/crashsubmit?appname=SumatraPDF"
@@ -86,6 +78,7 @@ static CrashHandlerAllocator *gCrashHandlerAllocator = nullptr;
 
 // Note: intentionally not using ScopedMem<> to avoid
 // static initializers/destructors, which are bad
+static WCHAR *  gSymbolsUrl = nullptr;
 static WCHAR *  gCrashDumpPath = nullptr;
 static WCHAR *  gSymbolPathW = nullptr;
 static WCHAR *  gSymbolsDir = nullptr;
@@ -231,7 +224,7 @@ static bool DownloadAndUnzipSymbols(const WCHAR *pdbZipPath, const WCHAR *symDir
     plog("DownloadAndUnzipSymbols(): DEBUG build so not doing anything");
     return false;
 #else
-    if (!HttpGetToFile(SYMBOL_DOWNLOAD_URL, pdbZipPath)) {
+    if (!HttpGetToFile(gSymbolsUrl, pdbZipPath)) {
         plog("DownloadAndUnzipSymbols(): couldn't download symbols");
         return false;
     }
@@ -657,6 +650,22 @@ int __cdecl _purecall() {
     return 0;
 }
 
+// Get url for file with symbols. Caller needs to free().
+static WCHAR *BuildSymbolsUrl()
+{
+#ifdef SYMBOL_DOWNLOAD_URL
+    return str::Dup(preDefinedUrl);
+#else
+  #ifdef SVN_PRE_RELEASE_VER
+    WCHAR *urlBase = L"http://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-" TEXT(QM(SVN_PRE_RELEASE_VER))
+  #else
+    WCHAR *urlBase = L"http://kjkpub.s3.amazonaws.com/sumatrapdf/rel/SumatraPDF-" TEXT(QM(CURR_VERSION));
+  #endif
+    WCHAR *is64 = IsProcess64() ? L"-64" : L"";
+    return str::Format(L"%s.pdb%s.lzsa", urlBase, is64);
+#endif
+}
+
 void InstallCrashHandler(const WCHAR *crashDumpPath, const WCHAR *symDir)
 {
     assert(!gDumpEvent && !gDumpThread);
@@ -683,6 +692,7 @@ void InstallCrashHandler(const WCHAR *crashDumpPath, const WCHAR *symDir)
     // when crash handler is invoked. It's ok to use standard
     // allocation functions here.
     gCrashHandlerAllocator = new CrashHandlerAllocator();
+    gSymbolsUrl = BuildSymbolsUrl();
     gCrashDumpPath = str::Dup(crashDumpPath);
     gDumpEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
     if (!gDumpEvent)
@@ -716,6 +726,7 @@ void UninstallCrashHandler()
     CloseHandle(gDumpEvent);
 
     free(gCrashDumpPath);
+    free(gSymbolsUrl);
     free(gSymbolsDir);
     free(gPdbZipPath);
     free(gLibMupdfPdbPath);

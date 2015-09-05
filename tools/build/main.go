@@ -1189,22 +1189,23 @@ manifest-10169.txt
 
 var (
 	preRelNameRegexps []*regexp.Regexp
-)
+	regexps           = []string{
+		`SumatraPDF-prerelease-(\d+)-install-64.exe`,
+		`SumatraPDF-prerelease-(\d+)-64.exe`,
+		`SumatraPDF-prerelease-(\d+).pdb-64.lzsa`,
+		`SumatraPDF-prerelease-(\d+).pdb-64.zip`,
 
-func compilePreRelNameRegexpsMust() {
-	fatalif(preRelNameRegexps != nil, "preRelNameRegexps != nil")
-	var regexps = []string{
 		`SumatraPDF-prerelease-(\d+)-install.exe`,
 		`SumatraPDF-prerelease-(\d+).exe`,
 		`SumatraPDF-prerelease-(\d+).pdb.lzsa`,
 		`SumatraPDF-prerelease-(\d+).pdb.zip`,
 
-		`SumatraPDF-prerelease-(\d+)-install-64.exe`,
-		`SumatraPDF-prerelease-(\d+)-64.exe`,
-		`SumatraPDF-prerelease-(\d+).pdb-64.lzsa`,
-		`SumatraPDF-prerelease-(\d+).pdb-64.zip`,
 		`manifest-(\d+).txt`,
 	}
+)
+
+func compilePreRelNameRegexpsMust() {
+	fatalif(preRelNameRegexps != nil, "preRelNameRegexps != nil")
 	for _, s := range regexps {
 		r := regexp.MustCompile(s)
 		preRelNameRegexps = append(preRelNameRegexps, r)
