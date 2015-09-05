@@ -10,11 +10,101 @@ import (
 	"strings"
 )
 
+/*
+
+List of clang-format formats in 3.5 and 3.7: https://gist.github.com/kjk/298216da8cb4c665075b
+
+Summary of Mozilla clang-format style changes between clang 3.5 and 3.7
+
+Mozilla 3.5
+ConstructorInitializerIndentWidth: 4
+Standard:        Cpp03
+ContinuationIndentWidth: 4
+AllowShortFunctionsOnASingleLine: All
+AlwaysBreakTemplateDeclarations: false
+BreakBeforeBinaryOperators: false
+BreakConstructorInitializersBeforeComma: false
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+DerivePointerAlignment: true
+BreakBeforeBraces: Attach
+
+Mozilla 3.7
+ConstructorInitializerIndentWidth: 2
+Standard:        Cpp11
+ContinuationIndentWidth: 2
+AllowShortFunctionsOnASingleLine: Inline
+AlwaysBreakTemplateDeclarations: true
+BreakBeforeBinaryOperators: None
+ConstructorInitializerAllOnOneLineOrOnePerLine: false
+DerivePointerAlignment: false
+BreakBeforeBraces: Mozilla
+
+Removed between 3.5 and 3.7:
+IndentFunctionDeclarationAfterType: false
+
+New in 3.7:
+AlignAfterOpenBracket: true
+AlignConsecutiveAssignments: false
+AlignOperands:   true
+AllowShortCaseLabelsOnASingleLine: false
+AlwaysBreakAfterDefinitionReturnType: TopLevel
+BinPackArguments: true
+MacroBlockBegin: ''
+MacroBlockEnd:   ''
+ObjCBlockIndentWidth: 2
+SpaceAfterCStyleCast: false
+SpacesInSquareBrackets: false
+
+
+Differences between Chromium and Mozilla styles in clang 3.7
+Mozilla
+AccessModifierOffset: -2
+AlignEscapedNewlinesLeft: false
+AlwaysBreakAfterDefinitionReturnType: TopLevel
+AlwaysBreakBeforeMultilineStrings: false
+BinPackParameters: true
+BreakBeforeBraces: Mozilla
+BreakConstructorInitializersBeforeComma: true
+ConstructorInitializerAllOnOneLineOrOnePerLine: false
+ConstructorInitializerIndentWidth: 2
+ContinuationIndentWidth: 2
+Cpp11BracedListStyle: false
+KeepEmptyLinesAtTheStartOfBlocks: true
+MacroBlockBegin: ''
+ObjCSpaceAfterProperty: true
+PenaltyBreakBeforeFirstCallParameter: 19
+SpacesBeforeTrailingComments: 1
+Standard:        Cpp11
+
+Chromium
+AccessModifierOffset: -1
+AlignEscapedNewlinesLeft: true
+AlwaysBreakAfterDefinitionReturnType: None
+AlwaysBreakBeforeMultilineStrings: true
+BinPackParameters: false
+BreakBeforeBraces: Attach
+BreakConstructorInitializersBeforeComma: false
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+ConstructorInitializerIndentWidth: 4
+ContinuationIndentWidth: 4
+Cpp11BracedListStyle: true
+KeepEmptyLinesAtTheStartOfBlocks: false
+MacroBlockBegin: '^IPC_END_MESSAGE_MAP$'
+ObjCSpaceAfterProperty: false
+PenaltyBreakBeforeFirstCallParameter: 1
+SpacesBeforeTrailingComments: 2
+Standard:        Auto
+*/
+
 const (
 	// we used to use Mozilla style for the base, but they really changed the
-	// style between 3.5 and 3.7. Chromium style is close to Mozilla and
-	// even makes more sense about details like "char* s" vs. "char *"
-	clangStyle = `{BasedOnStyle: Chromium, IndentWidth: 4, ColumnLimit: 100, AccessModifierOffset: -2}`
+	// style between 3.5 and 3.7. This style is meant to not differ too much
+	// from Mozilla 3.5 style (which we used for a bunch of files already)
+	// TODO: bite the bullet and use PointerAlignment: Right ?
+	// We're not consistent about it but currently Left might be more frequent,
+	// possibly due to being in Mozilla 3.5 style. On the other hand in 3.7 all
+	// styles but llvm use Left
+	clangStyle = `{BasedOnStyle: Chromium, IndentWidth: 4, ColumnLimit: 100, AccessModifierOffset: -2, PointerAlignment: Right, SpacesBeforeTrailingComments: 1, BinPackParameters: true}`
 )
 
 func fataliferr(err error) {
