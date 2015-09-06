@@ -555,7 +555,7 @@ func isGitCleanMust() bool {
 	return len(s) == 0
 }
 
-func verifyGitCleanMsut() {
+func verifyGitCleanMust() {
 	fatalif(!isGitCleanMust(), "git has unsaved changes\n")
 }
 
@@ -668,7 +668,7 @@ func buildPreRelease() {
 
 	fmt.Printf("Building pre-release version\n")
 	if !flgNoCleanCheck {
-		verifyGitCleanMsut()
+		verifyGitCleanMust()
 	}
 	verifyPreReleaseNotInS3Must(svnPreReleaseVer)
 
