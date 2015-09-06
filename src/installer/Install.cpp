@@ -482,7 +482,6 @@ static void OnButtonOptions()
 //] ACCESSKEY_GROUP Installer
 
     ClientRect rc(gHwndFrame);
-    //rc.dy -= BOTTOM_PART_DY;
     RECT rcTmp = rc.ToRECT();
     InvalidateRect(gHwndFrame, &rcTmp, TRUE);
 
@@ -621,21 +620,23 @@ void OnCreateWindow(HWND hwnd)
 
     RectI rc(WINDOW_MARGIN, 0, dpiAdjust(96), btnOptionsSize.cy);
 
-    int staticDy = dpiAdjust(20);
+    SizeI size = TextSizeInHwnd(hwnd, L"Foo");
+    int staticDy = size.dy + dpiAdjust(4);
+
     rc.y = TITLE_PART_DY + WINDOW_MARGIN;
-    gHwndStaticInstDir = CreateWindow(WC_STATIC, _TR("Install SumatraPDF in &folder:"),
+    gHwndStaticInstDir = CreateWindowExW(0, WC_STATIC, _TR("Install SumatraPDF in &folder:"),
                                       WS_CHILD,
                                       rc.x, rc.y, r.dx - 2 * rc.x, staticDy,
                                       hwnd, nullptr, GetModuleHandle(nullptr), nullptr);
     SetWindowFont(gHwndStaticInstDir, gFontDefault, TRUE);
     rc.y += staticDy;
 
-    gHwndTextboxInstDir = CreateWindow(WC_EDIT, gGlobalData.installDir,
+    gHwndTextboxInstDir = CreateWindowExW(0, WC_EDIT, gGlobalData.installDir,
                                        WS_CHILD | WS_TABSTOP | WS_BORDER | ES_LEFT | ES_AUTOHSCROLL,
                                        rc.x, rc.y, r.dx - 3 * rc.x - staticDy, staticDy,
                                        hwnd, nullptr, GetModuleHandle(nullptr), nullptr);
     SetWindowFont(gHwndTextboxInstDir, gFontDefault, TRUE);
-    gHwndButtonBrowseDir = CreateWindow(WC_BUTTON, L"&...",
+    gHwndButtonBrowseDir = CreateWindowExW(0, WC_BUTTON, L"&...",
                                         BS_PUSHBUTTON | WS_CHILD | WS_TABSTOP,
                                         r.dx - rc.x - staticDy, rc.y, staticDy, staticDy,
                                         hwnd, (HMENU)ID_BUTTON_BROWSE, GetModuleHandle(nullptr), nullptr);
@@ -683,18 +684,18 @@ void OnCreateWindow(HWND hwnd)
         SetWindowFont(gHwndCheckboxRegisterPdfPreviewer, gFontDefault, TRUE);
         Button_SetCheck(gHwndCheckboxRegisterPdfPreviewer, gGlobalData.installPdfPreviewer || IsPdfPreviewerInstalled());
         rc.y += staticDy;
-    }
 
-    // only show this checkbox if the browser plugin has been installed before
-    if (IsBrowserPluginInstalled()) {
-        gHwndCheckboxKeepBrowserPlugin = CreateWindow(
-            WC_BUTTON, _TR("Keep the PDF &browser plugin installed (no longer supported)"),
-            WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
-            rc.x, rc.y, r.dx - 2 * rc.x, staticDy,
-            hwnd, (HMENU)ID_CHECKBOX_BROWSER_PLUGIN, GetModuleHandle(nullptr), nullptr);
-        SetWindowFont(gHwndCheckboxKeepBrowserPlugin, gFontDefault, TRUE);
-        Button_SetCheck(gHwndCheckboxKeepBrowserPlugin, gGlobalData.keepBrowserPlugin);
-        rc.y += staticDy;
+        // only show this checkbox if the browser plugin has been installed before
+        if (IsBrowserPluginInstalled()) {
+            gHwndCheckboxKeepBrowserPlugin = CreateWindow(
+                WC_BUTTON, _TR("Keep the PDF &browser plugin installed (no longer supported)"),
+                WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
+                rc.x, rc.y, r.dx - 2 * rc.x, staticDy,
+                hwnd, (HMENU) ID_CHECKBOX_BROWSER_PLUGIN, GetModuleHandle(nullptr), nullptr);
+            SetWindowFont(gHwndCheckboxKeepBrowserPlugin, gFontDefault, TRUE);
+            Button_SetCheck(gHwndCheckboxKeepBrowserPlugin, gGlobalData.keepBrowserPlugin);
+            rc.y += staticDy;
+        }
     }
 
     gShowOptions = !gShowOptions;
