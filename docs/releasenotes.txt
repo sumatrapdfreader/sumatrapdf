@@ -3,11 +3,13 @@ the release notes, as we make them, to make the release process easier.
 
 Next version:
 
-3.1 (????-??-??)
+3.1 (2015-09-??)
 
+* 64bit builds
 * printing happens (again) always as image which leads to more reliable
   results at the cost of requiring more printer memory; the "Print as Image"
   advanced printing option has been removed
+* scrolling with touchpad (e.g. on Surface Pro) now works
 * many crash and other bug fixes
 
 3.0 (2014-10-18)
