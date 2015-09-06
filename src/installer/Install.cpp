@@ -673,17 +673,17 @@ void OnCreateWindow(HWND hwnd)
         SetWindowFont(gHwndCheckboxRegisterPdfFilter, gFontDefault, TRUE);
         Button_SetCheck(gHwndCheckboxRegisterPdfFilter, gGlobalData.installPdfFilter || IsPdfFilterInstalled());
         rc.y += staticDy;
-    }
 
-    // for Windows XP, this means only basic thumbnail support
-    gHwndCheckboxRegisterPdfPreviewer = CreateWindow(
-        WC_BUTTON, _TR("Let Windows show &previews of PDF documents"),
-        WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
-        rc.x, rc.y, r.dx - 2 * rc.x, staticDy,
-        hwnd, (HMENU)ID_CHECKBOX_PDF_PREVIEWER, GetModuleHandle(nullptr), nullptr);
-    SetWindowFont(gHwndCheckboxRegisterPdfPreviewer, gFontDefault, TRUE);
-    Button_SetCheck(gHwndCheckboxRegisterPdfPreviewer, gGlobalData.installPdfPreviewer || IsPdfPreviewerInstalled());
-    rc.y += staticDy;
+        // for Windows XP, this means only basic thumbnail support
+        gHwndCheckboxRegisterPdfPreviewer = CreateWindow(
+            WC_BUTTON, _TR("Let Windows show &previews of PDF documents"),
+            WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
+            rc.x, rc.y, r.dx - 2 * rc.x, staticDy,
+            hwnd, (HMENU) ID_CHECKBOX_PDF_PREVIEWER, GetModuleHandle(nullptr), nullptr);
+        SetWindowFont(gHwndCheckboxRegisterPdfPreviewer, gFontDefault, TRUE);
+        Button_SetCheck(gHwndCheckboxRegisterPdfPreviewer, gGlobalData.installPdfPreviewer || IsPdfPreviewerInstalled());
+        rc.y += staticDy;
+    }
 
     // only show this checkbox if the browser plugin has been installed before
     if (IsBrowserPluginInstalled()) {
