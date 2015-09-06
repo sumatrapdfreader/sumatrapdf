@@ -549,20 +549,22 @@ static void OnButtonBrowse()
         installDir.Set(path::GetDir(installDir));
 
     WCHAR path[MAX_PATH];
-    if (BrowseForFolder(gHwndFrame, installDir, _TR("Select the folder where SumatraPDF should be installed:"), path, dimof(path))) {
-        WCHAR *installPath = path;
-        // force paths that aren't entered manually to end in ...\SumatraPDF
-        // to prevent unintended installations into e.g. %ProgramFiles% itself
-        if (!str::EndsWithI(path, L"\\" APP_NAME_STR))
-            installPath = path::Join(path, APP_NAME_STR);
-        win::SetText(gHwndTextboxInstDir, installPath);
-        Edit_SetSel(gHwndTextboxInstDir, 0, -1);
-        SetFocus(gHwndTextboxInstDir);
-        if (installPath != path)
-            free(installPath);
-    }
-    else
+    BOOL ok = BrowseForFolder(gHwndFrame, installDir, _TR("Select the folder where SumatraPDF should be installed:"), path, dimof(path));
+    if (!ok) {
         SetFocus(gHwndButtonBrowseDir);
+        return;
+    }
+
+    WCHAR *installPath = path;
+    // force paths that aren't entered manually to end in ...\SumatraPDF
+    // to prevent unintended installations into e.g. %ProgramFiles% itself
+    if (!str::EndsWithI(path, L"\\" APP_NAME_STR))
+        installPath = path::Join(path, APP_NAME_STR);
+    win::SetText(gHwndTextboxInstDir, installPath);
+    Edit_SetSel(gHwndTextboxInstDir, 0, -1);
+    SetFocus(gHwndTextboxInstDir);
+    if (installPath != path)
+        free(installPath);
 }
 
 bool OnWmCommand(WPARAM wParam)
@@ -602,101 +604,110 @@ bool OnWmCommand(WPARAM wParam)
 }
 
 //[ ACCESSKEY_GROUP Installer
-// TODO: since we have a variable UI, for better layout (anchored to the bottom,
-// not the top), we should layout controls starting at the bottom and go up
 void OnCreateWindow(HWND hwnd)
 {
     ClientRect r(hwnd);
     gHwndButtonInstUninst = CreateDefaultButton(hwnd, _TR("Install SumatraPDF"), IDOK);
     
-    SIZE btnOptionsSize;
-    gHwndButtonOptions = CreateButton(hwnd, _TR("&Options"), ID_BUTTON_OPTIONS, BS_PUSHBUTTON, btnOptionsSize);
-    int x = WINDOW_MARGIN ;
-    int y = r.dy - btnOptionsSize.cy - WINDOW_MARGIN;
+    SIZE btnSize;
+    gHwndButtonOptions = CreateButton(hwnd, _TR("&Options"), ID_BUTTON_OPTIONS, BS_PUSHBUTTON, btnSize);
+    int x = WINDOW_MARGIN;
+    int y = r.dy - btnSize.cy - WINDOW_MARGIN;
     SetWindowPos(gHwndButtonOptions, nullptr, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW);
 
-    gButtonDy = btnOptionsSize.cy;
+    gButtonDy = btnSize.cy;
     gBottomPartDy = gButtonDy + (WINDOW_MARGIN * 2);
-
-    RectI rc(WINDOW_MARGIN, 0, dpiAdjust(96), btnOptionsSize.cy);
 
     SizeI size = TextSizeInHwnd(hwnd, L"Foo");
     int staticDy = size.dy + dpiAdjust(4);
 
-    rc.y = TITLE_PART_DY + WINDOW_MARGIN;
-    gHwndStaticInstDir = CreateWindowExW(0, WC_STATIC, _TR("Install SumatraPDF in &folder:"),
-                                      WS_CHILD,
-                                      rc.x, rc.y, r.dx - 2 * rc.x, staticDy,
-                                      hwnd, nullptr, GetModuleHandle(nullptr), nullptr);
-    SetWindowFont(gHwndStaticInstDir, gFontDefault, TRUE);
-    rc.y += staticDy;
+    y = r.dy - gBottomPartDy;
+    int dx = r.dx - (WINDOW_MARGIN * 2) - dpiAdjust(2);
 
-    gHwndTextboxInstDir = CreateWindowExW(0, WC_EDIT, gGlobalData.installDir,
-                                       WS_CHILD | WS_TABSTOP | WS_BORDER | ES_LEFT | ES_AUTOHSCROLL,
-                                       rc.x, rc.y, r.dx - 3 * rc.x - staticDy, staticDy,
-                                       hwnd, nullptr, GetModuleHandle(nullptr), nullptr);
-    SetWindowFont(gHwndTextboxInstDir, gFontDefault, TRUE);
-    gHwndButtonBrowseDir = CreateWindowExW(0, WC_BUTTON, L"&...",
-                                        BS_PUSHBUTTON | WS_CHILD | WS_TABSTOP,
-                                        r.dx - rc.x - staticDy, rc.y, staticDy, staticDy,
-                                        hwnd, (HMENU)ID_BUTTON_BROWSE, GetModuleHandle(nullptr), nullptr);
-    SetWindowFont(gHwndButtonBrowseDir, gFontDefault, TRUE);
-    rc.y += 2 * staticDy;
+    x += dpiAdjust(2);
+
+    // build options controls going from the bottom
+    y -= (staticDy + WINDOW_MARGIN);
 
     ScopedMem<WCHAR> defaultViewer(GetDefaultPdfViewer());
     BOOL hasOtherViewer = !str::EqI(defaultViewer, APP_NAME_STR);
     BOOL isSumatraDefaultViewer = defaultViewer && !hasOtherViewer;
 
+    // only show this checkbox if the CPU arch of DLL and OS match
+    // (assuming that the installer has the same CPU arch as its content!)
+    if (IsProcessAndOsArchSame()) {
+
+        // only show this checkbox if the browser plugin has been installed before
+        if (IsBrowserPluginInstalled()) {
+            gHwndCheckboxKeepBrowserPlugin = CreateWindowExW(
+                0, WC_BUTTON, _TR("Keep the PDF &browser plugin installed (no longer supported)"),
+                WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
+                x, y, dx, staticDy,
+                hwnd, (HMENU) ID_CHECKBOX_BROWSER_PLUGIN, GetModuleHandle(nullptr), nullptr);
+            SetWindowFont(gHwndCheckboxKeepBrowserPlugin, gFontDefault, TRUE);
+            Button_SetCheck(gHwndCheckboxKeepBrowserPlugin, gGlobalData.keepBrowserPlugin);
+            y -= staticDy;
+        }
+
+        // for Windows XP, this means only basic thumbnail support
+        gHwndCheckboxRegisterPdfPreviewer = CreateWindowExW(
+            0, WC_BUTTON, _TR("Let Windows show &previews of PDF documents"),
+            WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
+            x, y, dx, staticDy,
+            hwnd, (HMENU) ID_CHECKBOX_PDF_PREVIEWER, GetModuleHandle(nullptr), nullptr);
+        SetWindowFont(gHwndCheckboxRegisterPdfPreviewer, gFontDefault, TRUE);
+        Button_SetCheck(gHwndCheckboxRegisterPdfPreviewer, gGlobalData.installPdfPreviewer || IsPdfPreviewerInstalled());
+        y -= staticDy;
+
+        gHwndCheckboxRegisterPdfFilter = CreateWindowEx(
+            0, WC_BUTTON, _TR("Let Windows Desktop Search &search PDF documents"),
+            WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
+            x, y, dx, staticDy,
+            hwnd, (HMENU) ID_CHECKBOX_PDF_FILTER, GetModuleHandle(nullptr), nullptr);
+        SetWindowFont(gHwndCheckboxRegisterPdfFilter, gFontDefault, TRUE);
+        Button_SetCheck(gHwndCheckboxRegisterPdfFilter, gGlobalData.installPdfFilter || IsPdfFilterInstalled());
+        y -= staticDy;
+    }
+
     // only show the checbox if Sumatra is not already a default viewer.
     // the alternative (disabling the checkbox) is more confusing
     if (!isSumatraDefaultViewer) {
-        gHwndCheckboxRegisterDefault = CreateWindow(
-            WC_BUTTON, _TR("Use SumatraPDF as the &default PDF reader"),
+        gHwndCheckboxRegisterDefault = CreateWindowExW(
+            0, WC_BUTTON, _TR("Use SumatraPDF as the &default PDF reader"),
             WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
-            rc.x, rc.y, r.dx - 2 * rc.x, staticDy,
-            hwnd, (HMENU)ID_CHECKBOX_MAKE_DEFAULT, GetModuleHandle(nullptr), nullptr);
+            x, y, dx, staticDy,
+            hwnd, (HMENU) ID_CHECKBOX_MAKE_DEFAULT, GetModuleHandle(nullptr), nullptr);
         SetWindowFont(gHwndCheckboxRegisterDefault, gFontDefault, TRUE);
         // only check the "Use as default" checkbox when no other PDF viewer
         // is currently selected (not going to intrude)
         Button_SetCheck(gHwndCheckboxRegisterDefault, !hasOtherViewer || gGlobalData.registerAsDefault);
-        rc.y += staticDy;
+        y -= staticDy;
     }
+    // a bit more space between text box and checkboxes
+    y -= (dpiAdjust(4) + WINDOW_MARGIN);
 
-    // only show this checkbox if the CPU arch of DLL and OS match
-    // (assuming that the installer has the same CPU arch as its content!)
-    if (IsProcessAndOsArchSame())
-    {
-        gHwndCheckboxRegisterPdfFilter = CreateWindow(
-            WC_BUTTON, _TR("Let Windows Desktop Search &search PDF documents"),
-            WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
-            rc.x, rc.y, r.dx - 2 * rc.x, staticDy,
-            hwnd, (HMENU)ID_CHECKBOX_PDF_FILTER, GetModuleHandle(nullptr), nullptr);
-        SetWindowFont(gHwndCheckboxRegisterPdfFilter, gFontDefault, TRUE);
-        Button_SetCheck(gHwndCheckboxRegisterPdfFilter, gGlobalData.installPdfFilter || IsPdfFilterInstalled());
-        rc.y += staticDy;
+    const WCHAR *s = _TR("&...");
+    SizeI btnSize2 = TextSizeInHwnd(hwnd, s);
+    btnSize.cx += dpiAdjust(4);
+    gHwndButtonBrowseDir = CreateButton(hwnd, s, ID_BUTTON_BROWSE, BS_PUSHBUTTON, btnSize);
+    x = r.dx - WINDOW_MARGIN - btnSize2.dx;
+    SetWindowPos(gHwndButtonBrowseDir, nullptr, x, y, btnSize2.dx, staticDy, SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW | SWP_FRAMECHANGED);
 
-        // for Windows XP, this means only basic thumbnail support
-        gHwndCheckboxRegisterPdfPreviewer = CreateWindow(
-            WC_BUTTON, _TR("Let Windows show &previews of PDF documents"),
-            WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
-            rc.x, rc.y, r.dx - 2 * rc.x, staticDy,
-            hwnd, (HMENU) ID_CHECKBOX_PDF_PREVIEWER, GetModuleHandle(nullptr), nullptr);
-        SetWindowFont(gHwndCheckboxRegisterPdfPreviewer, gFontDefault, TRUE);
-        Button_SetCheck(gHwndCheckboxRegisterPdfPreviewer, gGlobalData.installPdfPreviewer || IsPdfPreviewerInstalled());
-        rc.y += staticDy;
+    x = WINDOW_MARGIN;
+    dx = r.dx - (2 * WINDOW_MARGIN) - btnSize2.dx - dpiAdjust(4);
+    gHwndTextboxInstDir = CreateWindowExW(0, WC_EDIT, gGlobalData.installDir,
+        WS_CHILD | WS_TABSTOP | WS_BORDER | ES_LEFT | ES_AUTOHSCROLL,
+        x, y, dx, staticDy,
+        hwnd, nullptr, GetModuleHandle(nullptr), nullptr);
+    SetWindowFont(gHwndTextboxInstDir, gFontDefault, TRUE);
 
-        // only show this checkbox if the browser plugin has been installed before
-        if (IsBrowserPluginInstalled()) {
-            gHwndCheckboxKeepBrowserPlugin = CreateWindow(
-                WC_BUTTON, _TR("Keep the PDF &browser plugin installed (no longer supported)"),
-                WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
-                rc.x, rc.y, r.dx - 2 * rc.x, staticDy,
-                hwnd, (HMENU) ID_CHECKBOX_BROWSER_PLUGIN, GetModuleHandle(nullptr), nullptr);
-            SetWindowFont(gHwndCheckboxKeepBrowserPlugin, gFontDefault, TRUE);
-            Button_SetCheck(gHwndCheckboxKeepBrowserPlugin, gGlobalData.keepBrowserPlugin);
-            rc.y += staticDy;
-        }
-    }
+    y -= staticDy;
+
+    gHwndStaticInstDir = CreateWindowExW(
+        0, WC_STATIC, _TR("Install SumatraPDF in &folder:"),WS_CHILD,
+        x, y, r.dx, staticDy,
+        hwnd, nullptr, GetModuleHandle(nullptr), nullptr);
+    SetWindowFont(gHwndStaticInstDir, gFontDefault, TRUE);
 
     gShowOptions = !gShowOptions;
     OnButtonOptions();

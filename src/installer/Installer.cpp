@@ -303,10 +303,6 @@ int dpiAdjust(int value)
 void InvalidateFrame()
 {
     ClientRect rc(gHwndFrame);
-    if (gShowOptions)
-        rc.dy = TITLE_PART_DY;
-    else
-        rc.dy -= gBottomPartDy;
     RECT rcTmp = rc.ToRECT();
     InvalidateRect(gHwndFrame, &rcTmp, FALSE);
 }
@@ -797,31 +793,14 @@ static void DrawFrame2(Graphics &g, RectI r)
         DrawMessage(g, gMsgError, msgY, (REAL)r.dx, COLOR_MSG_FAILED);
 }
 
-static void DrawFrame(HWND hwnd, HDC dc, PAINTSTRUCT *ps)
+static void DrawFrame(HWND hwnd, HDC dc, PAINTSTRUCT *)
 {
-    RECT rc;
-    GetClientRect(hwnd, &rc);
-    if (gShowOptions)
-        rc.top = TITLE_PART_DY;
-    else
-        rc.top = rc.bottom - gBottomPartDy;
-    RECT rcTmp;
-    if (IntersectRect(&rcTmp, &rc, &ps->rcPaint)) {
-        HBRUSH brushNativeBg = CreateSolidBrush(WIN_BG_COLOR);
-        FillRect(dc, &rc, brushNativeBg);
-        DeleteObject(brushNativeBg);
-    }
-
     // TODO: cache bmp object?
     Graphics g(dc);
-    ClientRect rc2(hwnd);
-    if (gShowOptions)
-        rc2.dy = TITLE_PART_DY;
-    else
-        rc2.dy -= gBottomPartDy;
-    Bitmap bmp(rc2.dx, rc2.dy, &g);
+    ClientRect rc(hwnd);
+    Bitmap bmp(rc.dx, rc.dy, &g);
     Graphics g2((Image*)&bmp);
-    DrawFrame2(g2, rc2);
+    DrawFrame2(g2, rc);
     g.DrawImage(&bmp, 0, 0);
 }
 
