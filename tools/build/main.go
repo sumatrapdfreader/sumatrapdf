@@ -716,7 +716,7 @@ func buildRelease() {
 	var err error
 
 	fmt.Printf("Building release version %s\n", sumatraVersion)
-	verifyGitCleanMsut()
+	verifyGitCleanMust()
 	verifyOnReleaseBranchMust()
 
 	verifyReleaseNotInS3Must(sumatraVersion)
