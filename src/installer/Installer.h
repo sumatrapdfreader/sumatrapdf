@@ -8,6 +8,8 @@
 #define INSTALLER_WIN_DX    420
 #define INSTALLER_WIN_DY    340
 
+#define WIN_BG_COLOR RGB(0xff, 0xf2, 0) // yellow
+
 #define WINDOW_MARGIN   8
 // The window is divided in three parts:
 // * top part, where we display nice graphics

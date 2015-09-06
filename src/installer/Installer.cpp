@@ -777,7 +777,9 @@ static void DrawFrame2(Graphics &g, RectI r)
     Font f(L"Impact", 40, FontStyleRegular);
     CalcLettersLayout(g, &f, r.dx);
 
-    SolidBrush bgBrush(Color(0xff, 0xf2, 0));
+    Gdiplus::Color bgCol;
+    bgCol.SetFromCOLORREF(WIN_BG_COLOR);
+    SolidBrush bgBrush(bgCol);
     Rect r2(r.ToGdipRect());
     r2.Inflate(1, 1);
     g.FillRectangle(&bgBrush, r2);
@@ -805,7 +807,7 @@ static void DrawFrame(HWND hwnd, HDC dc, PAINTSTRUCT *ps)
         rc.top = rc.bottom - gBottomPartDy;
     RECT rcTmp;
     if (IntersectRect(&rcTmp, &rc, &ps->rcPaint)) {
-        HBRUSH brushNativeBg = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
+        HBRUSH brushNativeBg = CreateSolidBrush(WIN_BG_COLOR);
         FillRect(dc, &rc, brushNativeBg);
         DeleteObject(brushNativeBg);
     }
@@ -831,6 +833,8 @@ static void OnPaintFrame(HWND hwnd)
     EndPaint(hwnd, &ps);
 }
 
+HBRUSH ghbrBackground = nullptr;
+
 static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     bool handled;
@@ -846,6 +850,17 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
 #endif
             OnCreateWindow(hwnd);
             break;
+
+        case WM_CTLCOLORSTATIC:
+        {
+            if (ghbrBackground == nullptr) {
+                ghbrBackground = CreateSolidBrush(RGB(0xff, 0xf2, 0));
+            }
+            HDC hdc = (HDC) wParam;
+            SetTextColor(hdc, RGB(0, 0, 0));
+            SetBkMode(hdc, TRANSPARENT);
+            return (LRESULT) ghbrBackground;
+        }
 
         case WM_DESTROY:
             PostQuitMessage(0);
