@@ -62,6 +62,8 @@ HFONT           gFontDefault;
 bool            gShowOptions = false;
 bool            gForceCrash = false;
 WCHAR *         gMsgError = nullptr;
+int             gBottomPartDy = 0;
+int             gButtonDy = 0;
 
 static WStrVec          gProcessesToClose;
 static float            gUiDPIFactor = 1.0f;
@@ -274,6 +276,16 @@ void KillSumatra()
     KillProcess(exePath, TRUE);
 }
 
+#if 1
+static HFONT CreateDefaultGuiFont()
+{
+    NONCLIENTMETRICSW ncm;
+    ncm.cbSize = sizeof(ncm);
+    SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
+    HFONT f = CreateFontIndirectW(&ncm.lfMenuFont);
+    return f;
+}
+#else
 static HFONT CreateDefaultGuiFont()
 {
     HDC hdc = GetDC(nullptr);
@@ -281,6 +293,7 @@ static HFONT CreateDefaultGuiFont()
     ReleaseDC(nullptr, hdc);
     return font;
 }
+#endif
 
 int dpiAdjust(int value)
 {
@@ -293,7 +306,7 @@ void InvalidateFrame()
     if (gShowOptions)
         rc.dy = TITLE_PART_DY;
     else
-        rc.dy -= BOTTOM_PART_DY;
+        rc.dy -= gBottomPartDy;
     RECT rcTmp = rc.ToRECT();
     InvalidateRect(gHwndFrame, &rcTmp, FALSE);
 }
@@ -491,27 +504,52 @@ void UninstallPdfPreviewer()
         NotifyFailed(_TR("Couldn't uninstall PDF previewer"));
 }
 
-HWND CreateDefaultButton(HWND hwndParent, const WCHAR *label, int width, int id)
-{
-    RectI rc(0, 0, dpiAdjust(width), PUSH_BUTTON_DY);
+SIZE GetIdealButtonSize(HWND hwnd) {
+    // adjust to real size and position to the right
+    SIZE s;
+    Button_GetIdealSize(hwnd, &s);
+    // add padding
+    s.cx += dpiAdjust(8) * 2;
+    s.cy += dpiAdjust(2) * 2;
+    return s;
+}
 
-    // TODO: determine the sizes of buttons by measuring their real size
-    // and adjust size of the window appropriately
+SIZE SetButtonTextAndResize(HWND hwnd, const WCHAR * s)
+{
+    win::SetText(hwnd, s);
+    SIZE size = GetIdealButtonSize(hwnd);
+    SetWindowPos(hwnd, nullptr, 0, 0, size.cx, size.cy, SWP_NOMOVE | SWP_NOZORDER | SWP_NOREDRAW | SWP_NOACTIVATE | SWP_FRAMECHANGED);
+    return size;
+}
+
+// Creates a button that has a right size for it's text, 
+HWND CreateButton(HWND hwndParent, const WCHAR *s, int id, DWORD style, SIZE& sizeOut)
+{
+    HMENU idMenu = (HMENU) (UINT_PTR) id;
+    style |= WS_CHILD | WS_TABSTOP;
+    HWND hwnd = CreateWindowExW(0, WC_BUTTON, L"", style,
+        0, 0, 100, 20, hwndParent,
+        idMenu, GetModuleHandle(nullptr), nullptr);
+    SetWindowFont(hwnd, gFontDefault, TRUE);
+    sizeOut = SetButtonTextAndResize(hwnd, s);
+    return hwnd;
+}
+
+HWND CreateDefaultButton(HWND hwndParent, const WCHAR *s, int id)
+{
+    SIZE size;
+    HWND hwnd = CreateButton(hwndParent, s, id, BS_DEFPUSHBUTTON, size);
+
     ClientRect r(hwndParent);
-    rc.x = r.dx - rc.dx - WINDOW_MARGIN;
-    rc.y = r.dy - rc.dy - WINDOW_MARGIN;
-    HMENU idMenu = (HMENU)(UINT_PTR)id;
-    HWND button = CreateWindowExW(0, WC_BUTTON, label,
-                        BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
-                        rc.x, rc.y, rc.dx, rc.dy, hwndParent,
-                        idMenu, GetModuleHandle(nullptr), nullptr);
-    SetWindowFont(button, gFontDefault, TRUE);
-    return button;
+    int x = r.dx - size.cx - WINDOW_MARGIN;
+    int y = r.dy - size.cy - WINDOW_MARGIN;
+    SetWindowPos(hwnd, nullptr, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+    return hwnd;
 }
 
 void CreateButtonExit(HWND hwndParent)
 {
-    gHwndButtonExit = CreateDefaultButton(hwndParent, _TR("Close"), 80, ID_BUTTON_EXIT);
+    gHwndButtonExit = CreateDefaultButton(hwndParent, _TR("Close"), ID_BUTTON_EXIT);
 }
 
 void OnButtonExit()
@@ -764,7 +802,7 @@ static void DrawFrame(HWND hwnd, HDC dc, PAINTSTRUCT *ps)
     if (gShowOptions)
         rc.top = TITLE_PART_DY;
     else
-        rc.top = rc.bottom - BOTTOM_PART_DY;
+        rc.top = rc.bottom - gBottomPartDy;
     RECT rcTmp;
     if (IntersectRect(&rcTmp, &rc, &ps->rcPaint)) {
         HBRUSH brushNativeBg = CreateSolidBrush(GetSysColor(COLOR_BTNFACE));
@@ -778,7 +816,7 @@ static void DrawFrame(HWND hwnd, HDC dc, PAINTSTRUCT *ps)
     if (gShowOptions)
         rc2.dy = TITLE_PART_DY;
     else
-        rc2.dy -= BOTTOM_PART_DY;
+        rc2.dy -= gBottomPartDy;
     Bitmap bmp(rc2.dx, rc2.dy, &g);
     Graphics g2((Image*)&bmp);
     DrawFrame2(g2, rc2);

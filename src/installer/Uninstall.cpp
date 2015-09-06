@@ -320,8 +320,7 @@ bool OnWmCommand(WPARAM wParam)
 
 void OnCreateWindow(HWND hwnd)
 {
-    // TODO: this button might be too narrow for some translations
-    gHwndButtonInstUninst = CreateDefaultButton(hwnd, _TR("Uninstall SumatraPDF"), 150);
+    gHwndButtonInstUninst = CreateDefaultButton(hwnd, _TR("Uninstall SumatraPDF"), IDOK);
 }
 
 void CreateMainWindow()

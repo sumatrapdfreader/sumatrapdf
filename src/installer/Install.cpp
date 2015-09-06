@@ -280,8 +280,7 @@ static bool CreateInstallationDirectory()
 
 static void CreateButtonRunSumatra(HWND hwndParent)
 {
-    // TODO: this button might be too narrow for some translations
-    gHwndButtonRunSumatra = CreateDefaultButton(hwndParent, _TR("Start SumatraPDF"), 140, ID_BUTTON_START_SUMATRA);
+    gHwndButtonRunSumatra = CreateDefaultButton(hwndParent, _TR("Start SumatraPDF"), ID_BUTTON_START_SUMATRA);
 }
 
 static bool CreateAppShortcut(bool allUsers)
@@ -396,7 +395,7 @@ static void OnButtonInstall()
                                     IsCheckboxChecked(gHwndCheckboxKeepBrowserPlugin);
 
     // create a progress bar in place of the Options button
-    RectI rc(0, 0, dpiAdjust(INSTALLER_WIN_DX / 2), PUSH_BUTTON_DY);
+    RectI rc(0, 0, dpiAdjust(INSTALLER_WIN_DX / 2), gButtonDy);
     rc = MapRectToWindow(rc, gHwndButtonOptions, gHwndFrame);
     gHwndProgressBar = CreateWindow(PROGRESS_CLASS, nullptr, WS_CHILD | WS_VISIBLE,
                                     rc.x, rc.y, rc.dx, rc.dy,
@@ -475,17 +474,17 @@ static void OnButtonOptions()
 //[ ACCESSKEY_GROUP Installer
 //[ ACCESSKEY_ALTERNATIVE // ideally, the same accesskey is used for both
     if (gShowOptions)
-        win::SetText(gHwndButtonOptions, _TR("Hide &Options"));
+        SetButtonTextAndResize(gHwndButtonOptions, _TR("Hide &Options"));
 //| ACCESSKEY_ALTERNATIVE
     else
-        win::SetText(gHwndButtonOptions, _TR("&Options"));
+        SetButtonTextAndResize(gHwndButtonOptions, _TR("&Options"));
 //] ACCESSKEY_ALTERNATIVE
 //] ACCESSKEY_GROUP Installer
 
     ClientRect rc(gHwndFrame);
-    rc.dy -= BOTTOM_PART_DY;
+    //rc.dy -= BOTTOM_PART_DY;
     RECT rcTmp = rc.ToRECT();
-    InvalidateRect(gHwndFrame, &rcTmp, FALSE);
+    InvalidateRect(gHwndFrame, &rcTmp, TRUE);
 
     SetFocus(gHwndButtonOptions);
 }
@@ -608,18 +607,19 @@ bool OnWmCommand(WPARAM wParam)
 // not the top), we should layout controls starting at the bottom and go up
 void OnCreateWindow(HWND hwnd)
 {
-    // TODO: this button might be too narrow for some translations
-    gHwndButtonInstUninst = CreateDefaultButton(hwnd, _TR("Install SumatraPDF"), 140);
-
-    RectI rc(WINDOW_MARGIN, 0, dpiAdjust(96), PUSH_BUTTON_DY);
     ClientRect r(hwnd);
-    rc.y = r.dy - rc.dy - WINDOW_MARGIN;
+    gHwndButtonInstUninst = CreateDefaultButton(hwnd, _TR("Install SumatraPDF"), IDOK);
+    
+    SIZE btnOptionsSize;
+    gHwndButtonOptions = CreateButton(hwnd, _TR("&Options"), ID_BUTTON_OPTIONS, BS_PUSHBUTTON, btnOptionsSize);
+    int x = WINDOW_MARGIN ;
+    int y = r.dy - btnOptionsSize.cy - WINDOW_MARGIN;
+    SetWindowPos(gHwndButtonOptions, nullptr, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW);
 
-    gHwndButtonOptions = CreateWindow(WC_BUTTON, _TR("&Options"),
-                        BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
-                        rc.x, rc.y, rc.dx, rc.dy, hwnd,
-                        (HMENU)ID_BUTTON_OPTIONS, GetModuleHandle(nullptr), nullptr);
-    SetWindowFont(gHwndButtonOptions, gFontDefault, TRUE);
+    gButtonDy = btnOptionsSize.cy;
+    gBottomPartDy = gButtonDy + (WINDOW_MARGIN * 2);
+
+    RectI rc(WINDOW_MARGIN, 0, dpiAdjust(96), btnOptionsSize.cy);
 
     int staticDy = dpiAdjust(20);
     rc.y = TITLE_PART_DY + WINDOW_MARGIN;
