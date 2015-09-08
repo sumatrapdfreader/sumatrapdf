@@ -221,6 +221,8 @@ PaperFormat GetPaperFormat(SizeD size)
         return Paper_Legal;
     if (limitValue(sizeP.dx, 10.99, 11.01) == sizeP.dx && limitValue(sizeP.dy, 16.99, 17.01) == sizeP.dy)
         return Paper_Tabloid;
+    if (limitValue(sizeP.dx, 5.49, 5.51) == sizeP.dx && limitValue(sizeP.dy, 8.49, 8.51) == sizeP.dy)
+        return Paper_Statement;
     return Paper_Other;
 }
 
@@ -239,6 +241,7 @@ static WCHAR *FormatPageSize(BaseEngine *engine, int pageNo, int rotation)
     case Paper_Letter: formatName = L" (Letter)"; break;
     case Paper_Legal: formatName = L" (Legal)"; break;
     case Paper_Tabloid: formatName = L" (Tabloid)"; break;
+    case Paper_Statement: formatName = L" (Statement)"; break;
     }
 
     bool isMetric = GetMeasurementSystem() == 0;
