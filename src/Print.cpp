@@ -641,6 +641,8 @@ static short GetPaperSize(BaseEngine *engine) {
             return DMPAPER_LEGAL;
         case Paper_Tabloid:
             return DMPAPER_TABLOID;
+        case Paper_Statement:
+            return DMPAPER_STATEMENT;
         default:
             return 0;
     }
@@ -653,6 +655,8 @@ static short GetPaperByName(const WCHAR *papername) {
         return DMPAPER_LEGAL;
     if (str::EqI(papername, L"tabloid"))
         return DMPAPER_TABLOID;
+    if (str::EqI(papername, L"statement"))
+        return DMPAPER_STATEMENT;
     if (str::EqI(papername, L"A3"))
         return DMPAPER_A3;
     if (str::EqI(papername, L"A4"))
