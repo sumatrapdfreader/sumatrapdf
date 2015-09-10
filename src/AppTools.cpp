@@ -97,10 +97,16 @@ WCHAR *AppGenDataFilename(const WCHAR *fileName)
 
     /* Use %APPDATA% */
     ScopedMem<WCHAR> path(GetSpecialFolder(CSIDL_APPDATA, true));
+    CrashIf(!path);
     if (!path)
         return nullptr;
     path.Set(path::Join(path, APP_NAME_STR));
-    if (!path || !dir::Create(path))
+    CrashIf(!path);
+    if (!path)
+        return nullptr;
+    bool ok = dir::Create(path);
+    CrashIf(!ok);
+    if (!ok)
         return nullptr;
     return path::Join(path, fileName);
 }
