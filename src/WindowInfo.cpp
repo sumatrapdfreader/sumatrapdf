@@ -170,9 +170,15 @@ void WindowInfo::ChangePresentationMode(PresentationMode mode)
 
 void WindowInfo::Focus()
 {
-    if (IsIconic(hwndFrame))
-        ShowWindow(hwndFrame, SW_RESTORE);
-    SetForegroundWindow(hwndFrame);
+    win::ToForeground(hwndFrame);
+    // set focus to an owned modal dialog if there is one
+    HWND hwnd = nullptr;
+    while ((hwnd = FindWindowEx(HWND_DESKTOP, hwnd, nullptr, nullptr)) != nullptr) {
+        if (GetWindow(hwnd, GW_OWNER) == hwndFrame && (GetWindowStyle(hwnd) & WS_DLGFRAME)) {
+            SetFocus(hwnd);
+            return;
+        }
+    }
     SetFocus(hwndFrame);
 }
 

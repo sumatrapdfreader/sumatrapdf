@@ -713,13 +713,15 @@ static void SetTabTitle(WindowInfo *win, TabInfo *tab)
 }
 
 // On load of a new document we insert a new tab item in the tab bar.
-void TabsOnLoadedDoc(WindowInfo *win)
+TabInfo *CreateNewTab(WindowInfo *win, const WCHAR *filePath)
 {
+    CrashIf(!win);
     if (!win)
-        return;
+        return nullptr;
 
-    TabInfo *tab = win->tabs.Last();
-    VerifyTabInfo(win, tab);
+    TabInfo *tab = new TabInfo(filePath);
+    win->tabs.Append(tab);
+    tab->canvasRc = win->canvasRc;
 
     TCITEM tcs;
     tcs.mask = TCIF_TEXT;
@@ -734,6 +736,8 @@ void TabsOnLoadedDoc(WindowInfo *win)
         // TODO: what now?
         CrashIf(true);
     }
+
+    return tab;
 }
 
 // Refresh the tab's title

@@ -158,7 +158,7 @@ struct LoadArgs
 {
     explicit LoadArgs(const WCHAR *fileName, WindowInfo *win=nullptr) :
         fileName(fileName), win(win), showWin(true), forceReuse(false),
-        isNewWindow(false), allowFailure(true), placeWindow(true) { }
+        isNewWindow(false), placeWindow(true) { }
 
     const WCHAR *fileName;
     WindowInfo *win;
@@ -166,7 +166,6 @@ struct LoadArgs
     bool forceReuse;
     // for internal use
     bool isNewWindow;
-    bool allowFailure;
     bool placeWindow;
 };
 

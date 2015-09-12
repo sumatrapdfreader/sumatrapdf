@@ -442,11 +442,16 @@ WCHAR *HwndPasswordUI::GetPassword(const WCHAR *fileName, unsigned char *fileDig
         if (urlName)
             fileName = urlName;
     }
-
     fileName = path::GetBaseName(fileName);
+
     // check if the window is still valid as it might have been closed by now
-    if (!IsWindow(hwnd))
+    if (!IsWindow(hwnd)) {
+        CrashIf(true);
         hwnd = GetForegroundWindow();
+    }
+    // make sure that the password dialog is visible
+    win::ToForeground(hwnd);
+
     bool *rememberPwd = gGlobalPrefs->rememberOpenedFiles ? saveKey : nullptr;
     return Dialog_GetPassword(hwnd, fileName, rememberPwd);
 }
@@ -936,12 +941,10 @@ static void UpdateUiForCurrentTab(WindowInfo *win)
 // meaning of the internal values of LoadArgs:
 // isNewWindow : if true then 'win' refers to a newly created window that needs
 //   to be resized and placed
-// allowFailure : if false then keep displaying the previously loaded document
-//   if the new one is broken
 // placeWindow : if true then the Window will be moved/sized according
 //   to the 'state' information even if the window was already placed
 //   before (isNewWindow=false)
-static bool LoadDocIntoCurrentTab(LoadArgs& args, PasswordUI *pwdUI, DisplayState *state=nullptr)
+static void LoadDocIntoCurrentTab(LoadArgs& args, Controller *ctrl, DisplayState *state=nullptr)
 {
     WindowInfo *win = args.win;
     TabInfo *tab = win->currentTab;
@@ -989,22 +992,17 @@ static bool LoadDocIntoCurrentTab(LoadArgs& args, PasswordUI *pwdUI, DisplayStat
     AbortFinding(args.win, false);
 
     Controller *prevCtrl = win->ctrl;
-    tab->filePath.Set(str::Dup(args.fileName));
-    tab->ctrl = CreateControllerForFile(args.fileName, pwdUI, win);
+    tab->ctrl = ctrl;
     win->ctrl = tab->ctrl;
-
-    bool needRefresh = !win->ctrl;
 
     // ToC items might hold a reference to an Engine, so make sure to
     // delete them before destroying the whole DisplayModel
     // (same for linkOnLastButtonDown)
-    if (win->ctrl || args.allowFailure) {
-        ClearTocBox(win);
-        delete tab->tocRoot;
-        tab->tocRoot = nullptr;
-        delete win->linkOnLastButtonDown;
-        win->linkOnLastButtonDown = nullptr;
-    }
+    ClearTocBox(win);
+    delete tab->tocRoot;
+    tab->tocRoot = nullptr;
+    delete win->linkOnLastButtonDown;
+    win->linkOnLastButtonDown = nullptr;
 
     AssertCrash(!win->IsAboutWindow() && win->IsDocLoaded() == (win->ctrl != nullptr));
     // TODO: http://code.google.com/p/sumatrapdf/issues/detail?id=1570
@@ -1038,17 +1036,10 @@ static bool LoadDocIntoCurrentTab(LoadArgs& args, PasswordUI *pwdUI, DisplayStat
         }
         else
             CrashIf(true);
-        delete prevCtrl;
-    } else if (args.allowFailure || !prevCtrl) {
-        CrashIf(!args.allowFailure);
-        delete prevCtrl;
-        state = nullptr;
     } else {
-        // if there is an error while reading the document and a repair is not requested
-        // then fallback to the previous state
-        tab->ctrl = prevCtrl;
-        win->ctrl = tab->ctrl;
+        state = nullptr;
     }
+    delete prevCtrl;
 
     if (state) {
         CrashIf(!win->IsDocLoaded());
@@ -1079,7 +1070,7 @@ static bool LoadDocIntoCurrentTab(LoadArgs& args, PasswordUI *pwdUI, DisplayStat
     if (!args.isNewWindow && win->IsDocLoaded())
         win->RedrawAll();
 
-    SetFrameTitleForTab(tab, needRefresh);
+    SetFrameTitleForTab(tab, false);
     UpdateUiForCurrentTab(win);
 
     if (win->AsEbook()) {
@@ -1088,7 +1079,7 @@ static bool LoadDocIntoCurrentTab(LoadArgs& args, PasswordUI *pwdUI, DisplayStat
         win->AsEbook()->StartLayouting(state ? state->reparseIdx : 0, displayMode);
     }
 
-    if (HasPermission(Perm_DiskAccess) && tab->GetEngineType() == Engine_PDF && win->ctrl != prevCtrl) {
+    if (HasPermission(Perm_DiskAccess) && tab->GetEngineType() == Engine_PDF) {
         CrashIf(!win->AsFixed() || win->AsFixed()->pdfSync);
         int res = Synchronizer::Create(args.fileName, win->AsFixed()->GetEngine(), &win->AsFixed()->pdfSync);
         // expose SyncTeX in the UI
@@ -1120,9 +1111,10 @@ static bool LoadDocIntoCurrentTab(LoadArgs& args, PasswordUI *pwdUI, DisplayStat
         win->AsFixed()->SetScrollState(ss);
 
     win->RedrawAll(true);
+    TabsOnChangedDoc(win);
 
     if (!win->IsDocLoaded())
-        return false;
+        return;
 
     ScopedMem<WCHAR> unsupported(win->ctrl->GetProperty(Prop_UnsupportedFeatures));
     if (unsupported) {
@@ -1135,8 +1127,6 @@ static bool LoadDocIntoCurrentTab(LoadArgs& args, PasswordUI *pwdUI, DisplayStat
         EnterFullScreen(win);
     if (!args.isNewWindow && win->presentation && win->ctrl)
         win->ctrl->SetPresentationMode(true);
-
-    return true;
 }
 
 void ReloadDocument(WindowInfo *win, bool autorefresh)
@@ -1151,6 +1141,17 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
         return;
     }
 
+    HwndPasswordUI pwdUI(win->hwndFrame);
+    Controller *ctrl = CreateControllerForFile(tab->filePath, &pwdUI, win);
+    // We don't allow PDF-repair if it is an autorefresh because
+    // a refresh event can occur before the file is finished being written,
+    // in which case the repair could fail. Instead, if the file is broken,
+    // we postpone the reload until the next autorefresh event
+    if (!ctrl && autorefresh) {
+        SetFrameTitleForTab(tab, true);
+        return;
+    }
+
     DisplayState *ds = NewDisplayState(tab->filePath);
     tab->ctrl->UpdateDisplayState(ds);
     UpdateDisplayStateWindowRect(*win, *ds);
@@ -1162,22 +1163,15 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
                     : WIN_STATE_NORMAL ;
     ds->useDefaultState = false;
 
-    ScopedMem<WCHAR> path(str::Dup(tab->filePath));
-    HwndPasswordUI pwdUI(win->hwndFrame);
-    LoadArgs args(path, win);
+    LoadArgs args(tab->filePath, win);
     args.showWin = true;
-    // We don't allow PDF-repair if it is an autorefresh because
-    // a refresh event can occur before the file is finished being written,
-    // in which case the repair could fail. Instead, if the file is broken,
-    // we postpone the reload until the next autorefresh event
-    args.allowFailure = !autorefresh;
     args.placeWindow = false;
-    if (!LoadDocIntoCurrentTab(args, &pwdUI, ds)) {
+    LoadDocIntoCurrentTab(args, ctrl, ds);
+
+    if (!ctrl) {
         DeleteDisplayState(ds);
-        TabsOnChangedDoc(win);
         return;
     }
-    TabsOnChangedDoc(win);
 
     tab->reloadOnFocus = false;
 
@@ -1485,16 +1479,13 @@ WindowInfo* LoadDocument(LoadArgs& args)
     }
 
     bool openNewTab = gGlobalPrefs->useTabs && !args.forceReuse;
-    if (openNewTab) {
+    if (openNewTab && !args.win) {
         // modify the args so that we always reuse the same window
-        if (!args.win) {
-            // TODO: enable the tab bar if tabs haven't been initialized
-            if (gWindows.Count() > 0) {
-                win = args.win = gWindows.Last();
-                args.isNewWindow = false;
-            }
+        // TODO: enable the tab bar if tabs haven't been initialized
+        if (gWindows.Count() > 0) {
+            win = args.win = gWindows.Last();
+            args.isNewWindow = false;
         }
-        SaveCurrentTabInfo(args.win);
     }
 
     if (!win && 1 == gWindows.Count() && gWindows.At(0)->IsAboutWindow()) {
@@ -1514,6 +1505,14 @@ WindowInfo* LoadDocument(LoadArgs& args)
         }
     }
 
+    HwndPasswordUI pwdUI(win->hwndFrame);
+    Controller *ctrl = CreateControllerForFile(fullPath, &pwdUI, win);
+    // don't fail if a user tries to load an SMX file instead
+    if (!ctrl && IsModificationsFile(fullPath)) {
+        *(WCHAR *)path::GetExt(fullPath) = '\0';
+        ctrl = CreateControllerForFile(fullPath, &pwdUI, win);
+    }
+
     CrashIf(openNewTab && args.forceReuse);
     if (win->IsAboutWindow()) {
         // invalidate the links on the Frequently Read page
@@ -1523,31 +1522,23 @@ WindowInfo* LoadDocument(LoadArgs& args)
     }
     else {
         CrashIf(!args.forceReuse && !openNewTab);
+        if (openNewTab) {
+            SaveCurrentTabInfo(args.win);
+        }
         CloseDocumentInTab(win, true, args.forceReuse);
     }
     if (!args.forceReuse) {
-        win->currentTab = new TabInfo();
-        win->tabs.Append(win->currentTab);
-        win->currentTab->canvasRc = win->canvasRc;
+        // insert a new tab for the loaded document
+        win->currentTab = CreateNewTab(win, fullPath);
+    }
+    else {
+        win->currentTab->filePath.Set(str::Dup(fullPath));
     }
 
-    HwndPasswordUI pwdUI(win->hwndFrame);
     args.fileName = fullPath;
-    args.allowFailure = true;
     // TODO: stop remembering/restoring window positions when using tabs?
     args.placeWindow = !gGlobalPrefs->useTabs;
-    bool loaded = LoadDocIntoCurrentTab(args, &pwdUI);
-    // don't fail if a user tries to load an SMX file instead
-    if (!loaded && IsModificationsFile(fullPath)) {
-        *(WCHAR *)path::GetExt(fullPath) = '\0';
-        loaded = LoadDocIntoCurrentTab(args, &pwdUI);
-    }
-
-    // insert new tab item for the loaded document
-    if (!args.forceReuse)
-        TabsOnLoadedDoc(win);
-    else
-        TabsOnChangedDoc(win);
+    LoadDocIntoCurrentTab(args, ctrl);
 
     if (gPluginMode) {
         // hide the menu for embedded documents opened from the plugin
@@ -1555,7 +1546,7 @@ WindowInfo* LoadDocument(LoadArgs& args)
         return win;
     }
 
-    if (!loaded) {
+    if (!ctrl) {
         if (gFileHistory.MarkFileInexistent(fullPath))
             prefs::Save();
         return win;

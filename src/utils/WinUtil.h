@@ -113,6 +113,8 @@ inline BOOL toBOOL(bool b) { return b ? TRUE : FALSE; }
 
 namespace win {
 
+void ToForeground(HWND hwnd);
+
 size_t GetTextLen(HWND hwnd);
 WCHAR *GetText(HWND hwnd);
 

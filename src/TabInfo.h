@@ -32,7 +32,7 @@ public:
     float prevZoomVirtual;
     DisplayMode prevDisplayMode;
 
-    TabInfo();
+    TabInfo(const WCHAR *filePath=nullptr);
     ~TabInfo();
 
     DisplayModel *AsFixed() const { return ctrl ? ctrl->AsFixed() : nullptr; }

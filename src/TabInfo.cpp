@@ -23,8 +23,8 @@
 #include "Selection.h"
 #include "Translations.h"
 
-TabInfo::TabInfo() :
-    ctrl(nullptr),
+TabInfo::TabInfo(const WCHAR *filePath) :
+    filePath(str::Dup(filePath)), ctrl(nullptr),
     showToc(false), showTocPresentation(false), tocRoot(nullptr),
     reloadOnFocus(false), watcher(nullptr), selectionOnPage(nullptr),
     prevZoomVirtual(INVALID_ZOOM), prevDisplayMode(DM_AUTOMATIC)

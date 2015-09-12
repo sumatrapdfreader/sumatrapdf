@@ -851,6 +851,12 @@ bool IsRtl(HWND hwnd) {
 
 namespace win {
 
+void ToForeground(HWND hwnd) {
+    if (IsIconic(hwnd))
+        ShowWindow(hwnd, SW_RESTORE);
+    SetForegroundWindow(hwnd);
+}
+
 /* return text of window or edit control, nullptr in case of an error.
 caller needs to free() the result */
 WCHAR *GetText(HWND hwnd) {

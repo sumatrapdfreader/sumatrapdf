@@ -705,10 +705,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
             OpenUsingDde(hPrevWnd, i.fileNames.At(n), i, 0 == n);
         }
         if (0 == i.fileNames.Count()) {
-            // cf. WindowInfo::Focus()
-            if (IsIconic(hPrevWnd))
-                ShowWindow(hPrevWnd, SW_RESTORE);
-            SetForegroundWindow(hPrevWnd);
+            win::ToForeground(hPrevWnd);
         }
         goto Exit;
     }
