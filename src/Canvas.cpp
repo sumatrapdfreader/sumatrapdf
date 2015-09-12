@@ -298,8 +298,6 @@ static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
     /* follow an active link */
     else if (link && link->GetRect().Contains(ptPage)) {
         PageDestination *dest = link->AsLink();
-        win.linkHandler->GotoLink(dest);
-        SetCursor(IDC_ARROW);
         // highlight the clicked link (as a reminder of the last action once the user returns)
         if (dest && (Dest_LaunchURL == dest->GetDestType() || Dest_LaunchFile == dest->GetDestType())) {
             DeleteOldSelectionInfo(&win, true);
@@ -307,6 +305,8 @@ static void OnMouseLeftButtonUp(WindowInfo& win, int x, int y, WPARAM key)
             win.showSelection = win.currentTab->selectionOnPage != nullptr;
             win.RepaintAsync();
         }
+        SetCursor(IDC_ARROW);
+        win.linkHandler->GotoLink(dest);
     }
     /* if we had a selection and this was just a click, hide the selection */
     else if (win.showSelection)

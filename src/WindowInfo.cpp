@@ -310,11 +310,14 @@ void LinkHandler::GotoLink(PageDestination *link)
                 // treat relative URIs as file paths (without fragment identifier)
                 if (hash)
                     *hash = '\0';
+                str::TransChars(path.Get(), L"/", L"\\"); 
+                url::DecodeInPlace(path.Get());
                 // LaunchFile will reject unsupported file types
                 LaunchFile(path, nullptr);
             }
             else {
                 // LaunchBrowser will reject unsupported URI schemes
+                // TODO: support file URIs?
                 LaunchBrowser(path);
             }
         }
