@@ -154,7 +154,7 @@ workspace "SumatraPDF"
     language "C"
     -- TODO: for bzip2, need BZ_NO_STDIO and BZ_DEBUG=0
     -- TODO: for lzma, need _7ZIP_PPMD_SUPPPORT
-    defines { "HAVE_ZLIB", "HAVE_BZIP2", "HAVE_7Z" }
+    defines { "HAVE_ZLIB", "HAVE_BZIP2", "HAVE_7Z", "BZ_NO_STDIO", "_7ZIP_PPMD_SUPPPORT" }
     -- TODO: most of these warnings are due to bzip2 and lzma
     disablewarnings { "4100", "4244", "4267", "4456", "4457", "4996" }
     includedirs { "ext/zlib", "ext/bzip2", "ext/lzma/C" }
