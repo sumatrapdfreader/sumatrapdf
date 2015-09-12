@@ -519,7 +519,7 @@ static int RunMessageLoop()
     return (int)msg.wParam;
 }
 
-#ifdef SUPPORTS_AUTO_UPDATE
+#if defined(SUPPORTS_AUTO_UPDATE) || defined(DEBUG)
 static bool RetryIO(const std::function<bool ()>& func, int tries=10)
 {
     while (tries-- > 0) {
@@ -607,8 +607,8 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
         return RegressMain();
     }
 #endif
-#ifdef SUPPORTS_AUTO_UPDATE
-    if (str::StartsWith(lpCmdLine, "-autoupdate")) {
+#if defined(SUPPORTS_AUTO_UPDATE) || defined(DEBUG)
+    if (str::StartsWith(cmdLine, "-autoupdate")) {
         bool quit = AutoUpdateMain();
         if (quit)
             return 0;

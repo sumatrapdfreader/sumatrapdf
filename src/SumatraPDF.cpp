@@ -1766,7 +1766,7 @@ static void RememberSessionState()
 #error Auto-update without authentication of the downloaded data is not recommended
 #endif
 
-#ifdef SUPPORTS_AUTO_UPDATE
+#if defined(SUPPORTS_AUTO_UPDATE) || defined(DEBUG)
 static void OnMenuExit();
 
 bool AutoUpdateInitiate(const char *updateData)

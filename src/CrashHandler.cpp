@@ -603,7 +603,7 @@ static bool BuildSymbolPath()
 // Get url for file with symbols. Caller needs to free().
 static WCHAR *BuildSymbolsUrl() {
 #ifdef SYMBOL_DOWNLOAD_URL
-    return str::Dup(preDefinedUrl);
+    return str::Dup(SYMBOL_DOWNLOAD_URL);
 #else
 #ifdef SVN_PRE_RELEASE_VER
     WCHAR *urlBase = L"http://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-" TEXT(QM(SVN_PRE_RELEASE_VER));
