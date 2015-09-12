@@ -686,7 +686,8 @@ void OnCreateWindow(HWND hwnd)
     // a bit more space between text box and checkboxes
     y -= (dpiAdjust(4) + WINDOW_MARGIN);
 
-    const WCHAR *s = _TR("&...");
+    // TODO: should this be translatable?
+    const WCHAR *s = L"&...";
     SizeI btnSize2 = TextSizeInHwnd(hwnd, s);
     btnSize.cx += dpiAdjust(4);
     gHwndButtonBrowseDir = CreateButton(hwnd, s, ID_BUTTON_BROWSE, BS_PUSHBUTTON, btnSize);
