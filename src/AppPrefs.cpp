@@ -132,7 +132,7 @@ bool Save()
     conv::FromZoom(&gGlobalPrefs->defaultZoom, gGlobalPrefs->defaultZoomFloat);
 
     ScopedMem<WCHAR> path(GetSettingsPath());
-    CrashIf(!path);
+    CrashIfDebugOnly(!path);
     if (!path)
         return false;
     size_t prevPrefsDataSize = 0;

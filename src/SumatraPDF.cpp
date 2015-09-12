@@ -3377,9 +3377,9 @@ bool FrameOnKeydown(WindowInfo *win, WPARAM key, LPARAM lparam, bool inTextfield
 
 static WCHAR SingleCharLowerW(WCHAR c)
 {
-	WCHAR buf[2] = { c, 0 };
-	CharLowerBuffW(buf, 1);
-	return buf[0];
+    WCHAR buf[2] = { c, 0 };
+    CharLowerBuffW(buf, 1);
+    return buf[0];
 }
 
 static void FrameOnChar(WindowInfo& win, WPARAM key, LPARAM info=0)

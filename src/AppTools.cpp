@@ -101,11 +101,9 @@ WCHAR *AppGenDataFilename(const WCHAR *fileName)
     if (!path)
         return nullptr;
     path.Set(path::Join(path, APP_NAME_STR));
-    CrashIf(!path);
     if (!path)
         return nullptr;
     bool ok = dir::Create(path);
-    CrashIf(!ok);
     if (!ok)
         return nullptr;
     return path::Join(path, fileName);
