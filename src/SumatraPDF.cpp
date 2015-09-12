@@ -831,7 +831,7 @@ void ControllerCallbackHandler::PageNoChanged(Controller *ctrl, int pageNo)
     }
 }
 
-static Controller *CreateControllerForFile(const WCHAR *filePath, PasswordUI *pwdUI, WindowInfo *win, DisplayMode displayMode, int reparseIdx=0)
+static Controller *CreateControllerForFile(const WCHAR *filePath, PasswordUI *pwdUI, WindowInfo *win)
 {
     if (!win->cbHandler)
         win->cbHandler = new ControllerCallbackHandler(win);
@@ -871,13 +871,7 @@ LoadEngineInFixedPageUI:
     else if (Doc::IsSupportedFile(filePath)) {
         Doc doc = Doc::CreateFromFile(filePath);
         if (doc.IsDocLoaded()) {
-            ctrl = EbookController::Create(win->hwndCanvas, win->cbHandler, win->frameRateWnd);
-            // TODO: SetDoc triggers a relayout which spins the message loop early
-            // through UpdateWindow - make sure that Canvas uses the correct WndProc
-            win->currentTab->ctrl = ctrl;
-            win->ctrl = win->currentTab->ctrl;
-            ctrl->AsEbook()->EnableMessageHandling(false);
-            ctrl->AsEbook()->SetDoc(doc, reparseIdx, displayMode);
+            ctrl = EbookController::Create(doc, win->hwndCanvas, win->cbHandler, win->frameRateWnd);
         }
         CrashIf(ctrl && (!ctrl->AsEbook() || ctrl->AsFixed() || ctrl->AsChm()));
     }
@@ -996,7 +990,7 @@ static bool LoadDocIntoCurrentTab(LoadArgs& args, PasswordUI *pwdUI, DisplayStat
 
     Controller *prevCtrl = win->ctrl;
     tab->filePath.Set(str::Dup(args.fileName));
-    tab->ctrl = CreateControllerForFile(args.fileName, pwdUI, win, displayMode, state ? state->reparseIdx : 0);
+    tab->ctrl = CreateControllerForFile(args.fileName, pwdUI, win);
     win->ctrl = tab->ctrl;
 
     bool needRefresh = !win->ctrl;
@@ -1088,6 +1082,12 @@ static bool LoadDocIntoCurrentTab(LoadArgs& args, PasswordUI *pwdUI, DisplayStat
     SetFrameTitleForTab(tab, needRefresh);
     UpdateUiForCurrentTab(win);
 
+    if (win->AsEbook()) {
+        // start ebook UI layout after UpdateUiForCurrentTab
+        // (prevents the need for an instant re-layout)
+        win->AsEbook()->StartLayouting(state ? state->reparseIdx : 0, displayMode);
+    }
+
     if (HasPermission(Perm_DiskAccess) && tab->GetEngineType() == Engine_PDF && win->ctrl != prevCtrl) {
         CrashIf(!win->AsFixed() || win->AsFixed()->pdfSync);
         int res = Synchronizer::Create(args.fileName, win->AsFixed()->GetEngine(), &win->AsFixed()->pdfSync);
@@ -1095,10 +1095,6 @@ static bool LoadDocIntoCurrentTab(LoadArgs& args, PasswordUI *pwdUI, DisplayStat
         if (PDFSYNCERR_SUCCESS == res)
             gGlobalPrefs->enableTeXEnhancements = true;
     }
-
-    // reallow resizing/relayout/repaining
-    if (win->AsEbook())
-        win->AsEbook()->EnableMessageHandling(true);
 
     if (args.isNewWindow || args.placeWindow && state) {
         if (args.isNewWindow && state && !state->windowPos.IsEmpty()) {

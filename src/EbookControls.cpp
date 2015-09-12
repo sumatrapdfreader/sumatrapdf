@@ -141,7 +141,7 @@ void PageControl::Paint(Graphics *gfx, int offX, int offY)
     delete textRender;
 
     double durAll = timerAll.Stop();
-    plogf("all: %.2f, fill: %.2f, draw html: %.2f", durAll, durFill, durDraw);
+    lf("all: %.2f, fill: %.2f, draw html: %.2f", durAll, durFill, durDraw);
 }
 
 Control *CreatePageControl(TxtNode *structDef)

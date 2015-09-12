@@ -197,12 +197,14 @@ static void DeletePages(Vec<HtmlPage*>** toDeletePtr)
     *toDeletePtr = nullptr;
 }
 
-EbookController::EbookController(EbookControls *ctrls, ControllerCallback *cb) :
-    Controller(cb), ctrls(ctrls), pages(nullptr), incomingPages(nullptr),
+EbookController::EbookController(Doc doc, EbookControls *ctrls, ControllerCallback *cb) :
+    doc(doc), Controller(cb), ctrls(ctrls), pages(nullptr), incomingPages(nullptr),
     currPageNo(0), pageSize(0, 0), formattingThread(nullptr), formattingThreadNo(-1),
-    currPageReparseIdx(0), handleMsgs(true), pageAnchorIds(nullptr), pageAnchorIdxs(nullptr),
+    currPageReparseIdx(0), handleMsgs(false), pageAnchorIds(nullptr), pageAnchorIdxs(nullptr),
     navHistoryIx(0)
 {
+    CrashIf(!doc.IsDocLoaded());
+
     EventMgr *em = ctrls->mainWnd->evtMgr;
     // TODO: do I need lambada here, can I just pass EbookController::ClickedNext directly?
     em->EventsForName("next")->Clicked = [=](Control *c, int x, int y) {
@@ -566,19 +568,17 @@ bool EbookController::GoToPrevPage(bool toBottom)
     return true;
 }
 
-void EbookController::SetDoc(Doc newDoc, int startReparseIdxArg, DisplayMode displayMode)
+void EbookController::StartLayouting(int startReparseIdxArg, DisplayMode displayMode)
 {
-    CrashIf(!newDoc.IsDocLoaded());
+    if ((size_t)startReparseIdxArg >= doc.GetHtmlDataSize())
+        startReparseIdxArg = 0;
     currPageReparseIdx = startReparseIdxArg;
-    if ((size_t)currPageReparseIdx >= newDoc.GetHtmlDataSize())
-        currPageReparseIdx = 0;
-    CloseCurrentDocument();
-
-    doc = newDoc;
     // displayMode could be any value if alternate UI was used, we have to limit it to
     // either DM_SINGLE_PAGE or DM_FACING
     if (DM_AUTOMATIC == displayMode)
         displayMode = gGlobalPrefs->defaultDisplayModeEnum;
+
+    EnableMessageHandling(true);
     SetDisplayMode(displayMode);
     TriggerLayout();
     UpdateStatus();
@@ -953,12 +953,12 @@ void EbookController::CopyNavHistory(EbookController& orig)
     navHistoryIx = orig.navHistoryIx;
 }
 
-EbookController *EbookController::Create(HWND hwnd, ControllerCallback *cb, FrameRateWnd *frameRateWnd)
+EbookController *EbookController::Create(Doc doc, HWND hwnd, ControllerCallback *cb, FrameRateWnd *frameRateWnd)
 {
     EbookControls *ctrls = CreateEbookControls(hwnd, frameRateWnd);
     if (!ctrls)
         return nullptr;
-    return new EbookController(ctrls, cb);
+    return new EbookController(doc, ctrls, cb);
 }
 
 // not a destructor so that EbookFormattingData don't have to be exposed in EbookController.h

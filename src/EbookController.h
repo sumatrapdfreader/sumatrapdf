@@ -18,7 +18,7 @@ using namespace mui;
 class EbookController : public Controller
 {
 public:
-    EbookController(EbookControls *ctrls, ControllerCallback *cb);
+    EbookController(Doc doc, EbookControls *ctrls, ControllerCallback *cb);
     virtual ~EbookController();
 
     virtual const WCHAR *FilePath() const { return doc.GetFilePath(); }
@@ -62,13 +62,13 @@ public:
     void RequestRepaint();
     void HandlePagesFromEbookLayout(EbookFormattingData *ebookLayout);
     void TriggerLayout();
-    void SetDoc(Doc newDoc, int startReparseIdxArg=-1, DisplayMode displayMode=DM_AUTOMATIC);
+    void StartLayouting(int startReparseIdxArg=-1, DisplayMode displayMode=DM_AUTOMATIC);
     int  ResolvePageAnchor(const WCHAR *id);
     void CopyNavHistory(EbookController& orig);
     int  CurrentTocPageNo() const;
 
-    // call SetDoc before using this EbookController
-    static EbookController *Create(HWND hwnd, ControllerCallback *cb, FrameRateWnd *);
+    // call StartLayouting before using this EbookController
+    static EbookController *Create(Doc doc, HWND hwnd, ControllerCallback *cb, FrameRateWnd *);
 
     static void DeleteEbookFormattingData(EbookFormattingData *data);
 
