@@ -608,7 +608,7 @@ void OnCreateWindow(HWND hwnd)
 {
     ClientRect r(hwnd);
     gHwndButtonInstUninst = CreateDefaultButton(hwnd, _TR("Install SumatraPDF"), IDOK);
-    
+
     SIZE btnSize;
     gHwndButtonOptions = CreateButton(hwnd, _TR("&Options"), ID_BUTTON_OPTIONS, BS_PUSHBUTTON, btnSize);
     int x = WINDOW_MARGIN;
@@ -686,7 +686,6 @@ void OnCreateWindow(HWND hwnd)
     // a bit more space between text box and checkboxes
     y -= (dpiAdjust(4) + WINDOW_MARGIN);
 
-    // TODO: should this be translatable?
     const WCHAR *s = L"&...";
     SizeI btnSize2 = TextSizeInHwnd(hwnd, s);
     btnSize.cx += dpiAdjust(4);
