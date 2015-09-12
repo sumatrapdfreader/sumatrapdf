@@ -30,7 +30,7 @@ Reference for warnings:
  4702 - unreachable code
  4706 - assignment within conditional expression
  4800 - forcing value to bool (performance warning)
- 4838 - 6conversion from X to Y requires a narrowing conversion
+ 4838 - conversion from X to Y requires a narrowing conversion
  4996 - POSIX name deprecated
 
 Prefast:
@@ -247,7 +247,7 @@ workspace "SumatraPDF"
     kind "StaticLib"
     language "C"
     defines { "NOCJKFONT", "SHARE_JPEG" }
-    disablewarnings {  "4018", "4100", "4244", "4267", "4838", "4996", }
+    disablewarnings {  "4244", "4267", }
     includedirs {
       "mupdf/include", "mupdf/generated", "ext/zlib",
       "ext/freetype2/config", "ext/freetype2/include",
