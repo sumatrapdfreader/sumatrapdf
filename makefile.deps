@@ -166,7 +166,7 @@ $(OS)\AppTools.obj: $B\src\AppTools.h $B\src\Translations.h $B\src\utils\BaseUti
 $(OS)\AppTools.obj: $B\src\utils\BuildConfig.h $B\src\utils\CmdLineParser.h $B\src\utils\DbgHelpDyn.h
 $(OS)\AppTools.obj: $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h $B\src\utils\mingw_compat.h
 $(OS)\AppTools.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
-$(OS)\AppTools.obj: $B\src\utils\WinUtil.h $B\src\Version.h
+$(OS)\AppTools.obj: $B\src\utils\WinDynCalls.h $B\src\utils\WinUtil.h $B\src\Version.h
 $(OS)\AppUtil.obj: $B\src\AppUtil.h $B\src\utils\BaseUtil.h $B\src\utils\BuildConfig.h
 $(OS)\AppUtil.obj: $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h $B\src\utils\mingw_compat.h
 $(OS)\AppUtil.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
@@ -181,14 +181,14 @@ $(OS)\Canvas.obj: $B\src\TextSelection.h $B\src\Toolbar.h $B\src\Translations.h
 $(OS)\Canvas.obj: $B\src\uia\Provider.h $B\src\utils\BaseUtil.h $B\src\utils\BuildConfig.h
 $(OS)\Canvas.obj: $B\src\utils\Dpi.h $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h
 $(OS)\Canvas.obj: $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
-$(OS)\Canvas.obj: $B\src\utils\Timer.h $B\src\utils\UITask.h
-$(OS)\Canvas.obj: $B\src\utils\Vec.h $B\src\utils\WinUtil.h $B\src\WindowInfo.h
+$(OS)\Canvas.obj: $B\src\utils\Timer.h $B\src\utils\UITask.h $B\src\utils\Vec.h
+$(OS)\Canvas.obj: $B\src\utils\WinDynCalls.h $B\src\utils\WinUtil.h $B\src\WindowInfo.h
 $(OS)\Canvas.obj: $B\src\wingui\FrameRateWnd.h
 $(OS)\Caption.obj: $B\src\Caption.h $B\src\SettingsStructs.h $B\src\SumatraPDF.h
 $(OS)\Caption.obj: $B\src\Tabs.h $B\src\Translations.h $B\src\utils\BaseUtil.h
 $(OS)\Caption.obj: $B\src\utils\BuildConfig.h $B\src\utils\GeomUtil.h $B\src\utils\mingw_compat.h
 $(OS)\Caption.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
-$(OS)\Caption.obj: $B\src\utils\WinUtil.h $B\src\WindowInfo.h
+$(OS)\Caption.obj: $B\src\utils\WinDynCalls.h $B\src\utils\WinUtil.h $B\src\WindowInfo.h
 $(OS)\ChmDoc.obj: $B\ext\CHMlib\src\chm_lib.h $B\src\BaseEngine.h $B\src\ChmDoc.h
 $(OS)\ChmDoc.obj: $B\src\EbookBase.h $B\src\utils\BaseUtil.h $B\src\utils\BuildConfig.h
 $(OS)\ChmDoc.obj: $B\src\utils\ByteReader.h $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h
@@ -205,7 +205,7 @@ $(OS)\CrashHandler.obj: $B\src\utils\BaseUtil.h $B\src\utils\BuildConfig.h $B\sr
 $(OS)\CrashHandler.obj: $B\src\utils\DebugLog.h $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h
 $(OS)\CrashHandler.obj: $B\src\utils\HttpUtil.h $B\src\utils\LzmaSimpleArchive.h $B\src\utils\mingw_compat.h
 $(OS)\CrashHandler.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
-$(OS)\CrashHandler.obj: $B\src\utils\WinUtil.h $B\src\Version.h
+$(OS)\CrashHandler.obj: $B\src\utils\WinDynCalls.h $B\src\utils\WinUtil.h $B\src\Version.h
 $(OS)\DialogSizer.obj: $B\src\utils\BaseUtil.h $B\src\utils\BuildConfig.h $B\src\utils\GeomUtil.h
 $(OS)\DialogSizer.obj: $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
 $(OS)\DialogSizer.obj: $B\src\utils\Vec.h $B\src\utils\WinUtil.h $B\src\wingui\DialogSizer.h
@@ -214,7 +214,7 @@ $(OS)\DisplayModel.obj: $B\src\EngineManager.h $B\src\GlobalPrefs.h $B\src\PdfSy
 $(OS)\DisplayModel.obj: $B\src\SettingsStructs.h $B\src\TextSearch.h $B\src\TextSelection.h
 $(OS)\DisplayModel.obj: $B\src\utils\BaseUtil.h $B\src\utils\BuildConfig.h $B\src\utils\GeomUtil.h
 $(OS)\DisplayModel.obj: $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
-$(OS)\DisplayModel.obj: $B\src\utils\Vec.h
+$(OS)\DisplayModel.obj: $B\src\utils\Vec.h $B\src\utils\WinUtil.h
 $(OS)\DjVuEngine.obj: $B\ext\libdjvu\ddjvuapi.h $B\ext\libdjvu\miniexp.h $B\src\BaseEngine.h
 $(OS)\DjVuEngine.obj: $B\src\DjVuEngine.h $B\src\utils\BaseUtil.h $B\src\utils\BuildConfig.h
 $(OS)\DjVuEngine.obj: $B\src\utils\ByteReader.h $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h
@@ -363,7 +363,7 @@ $(OS)\Installer.obj: $B\src\utils\DebugLog.h $B\src\utils\Dpi.h $B\src\utils\Fil
 $(OS)\Installer.obj: $B\src\utils\FileUtil.h $B\src\utils\FrameTimeoutCalculator.h $B\src\utils\GeomUtil.h
 $(OS)\Installer.obj: $B\src\utils\LzmaSimpleArchive.h $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h
 $(OS)\Installer.obj: $B\src\utils\StrUtil.h $B\src\utils\Timer.h $B\src\utils\Vec.h
-$(OS)\Installer.obj: $B\src\utils\WinUtil.h $B\src\Version.h
+$(OS)\Installer.obj: $B\src\utils\WinDynCalls.h $B\src\utils\WinUtil.h $B\src\Version.h
 $(OS)\LabelWithCloseWnd.obj: $B\src\utils\BaseUtil.h $B\src\utils\BuildConfig.h $B\src\utils\Dpi.h
 $(OS)\LabelWithCloseWnd.obj: $B\src\utils\GdiPlusUtil.h $B\src\utils\GeomUtil.h $B\src\utils\mingw_compat.h
 $(OS)\LabelWithCloseWnd.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
@@ -488,7 +488,7 @@ $(OS)\Regress.obj: $B\src\utils\BaseUtil.h $B\src\utils\BuildConfig.h $B\src\uti
 $(OS)\Regress.obj: $B\src\utils\DirIter.h $B\src\utils\FileUtil.h $B\src\utils\GdiPlusUtil.h
 $(OS)\Regress.obj: $B\src\utils\GeomUtil.h $B\src\utils\HtmlParserLookup.h $B\src\utils\mingw_compat.h
 $(OS)\Regress.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
-$(OS)\Regress.obj: $B\src\utils\WinUtil.h
+$(OS)\Regress.obj: $B\src\utils\WinDynCalls.h $B\src\utils\WinUtil.h
 $(OS)\RenderCache.obj: $B\src\BaseEngine.h $B\src\Controller.h $B\src\DisplayModel.h
 $(OS)\RenderCache.obj: $B\src\EngineManager.h $B\src\GlobalPrefs.h $B\src\RenderCache.h
 $(OS)\RenderCache.obj: $B\src\SettingsStructs.h $B\src\TextSelection.h $B\src\utils\BaseUtil.h
@@ -581,8 +581,8 @@ $(OS)\SumatraPDF.obj: $B\src\utils\DebugLog.h $B\src\utils\DirIter.h $B\src\util
 $(OS)\SumatraPDF.obj: $B\src\utils\FileUtil.h $B\src\utils\FileWatcher.h $B\src\utils\GdiPlusUtil.h
 $(OS)\SumatraPDF.obj: $B\src\utils\GeomUtil.h $B\src\utils\HtmlParserLookup.h $B\src\utils\HttpUtil.h
 $(OS)\SumatraPDF.obj: $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h $B\src\utils\SquareTreeParser.h
-$(OS)\SumatraPDF.obj: $B\src\utils\StrUtil.h $B\src\utils\ThreadUtil.h
-$(OS)\SumatraPDF.obj: $B\src\utils\UITask.h $B\src\utils\Vec.h $B\src\utils\WinUtil.h
+$(OS)\SumatraPDF.obj: $B\src\utils\StrUtil.h $B\src\utils\ThreadUtil.h $B\src\utils\UITask.h
+$(OS)\SumatraPDF.obj: $B\src\utils\Vec.h $B\src\utils\WinDynCalls.h $B\src\utils\WinUtil.h
 $(OS)\SumatraPDF.obj: $B\src\Version.h $B\src\WindowInfo.h $B\src\wingui\FrameRateWnd.h
 $(OS)\SumatraPDF.obj: $B\src\wingui\LabelWithCloseWnd.h $B\src\wingui\SplitterWnd.h
 $(OS)\SumatraProperties.obj: $B\src\BaseEngine.h $B\src\Controller.h $B\src\DisplayModel.h
@@ -612,8 +612,8 @@ $(OS)\SumatraStartup.obj: $B\src\utils\Dpi.h $B\src\utils\FileUtil.h $B\src\util
 $(OS)\SumatraStartup.obj: $B\src\utils\GeomUtil.h $B\src\utils\HtmlParserLookup.h $B\src\utils\mingw_compat.h
 $(OS)\SumatraStartup.obj: $B\src\utils\Scoped.h $B\src\utils\SquareTreeParser.h $B\src\utils\StrUtil.h
 $(OS)\SumatraStartup.obj: $B\src\utils\ThreadUtil.h $B\src\utils\UITask.h $B\src\utils\Vec.h
-$(OS)\SumatraStartup.obj: $B\src\utils\WinUtil.h $B\src\Version.h $B\src\WindowInfo.h
-$(OS)\SumatraStartup.obj: $B\src\wingui\LabelWithCloseWnd.h $B\src\wingui\SplitterWnd.h
+$(OS)\SumatraStartup.obj: $B\src\utils\WinDynCalls.h $B\src\utils\WinUtil.h $B\src\Version.h
+$(OS)\SumatraStartup.obj: $B\src\WindowInfo.h $B\src\wingui\LabelWithCloseWnd.h $B\src\wingui\SplitterWnd.h
 $(OS)\TabInfo.obj: $B\src\AppUtil.h $B\src\BaseEngine.h $B\src\ChmModel.h
 $(OS)\TabInfo.obj: $B\src\Controller.h $B\src\DisplayModel.h $B\src\EngineManager.h
 $(OS)\TabInfo.obj: $B\src\GlobalPrefs.h $B\src\Selection.h $B\src\SettingsStructs.h
@@ -638,8 +638,8 @@ $(OS)\Tabs.obj: $B\src\TabInfo.h $B\src\TableOfContents.h $B\src\Tabs.h
 $(OS)\Tabs.obj: $B\src\utils\BaseUtil.h $B\src\utils\BuildConfig.h $B\src\utils\Dpi.h
 $(OS)\Tabs.obj: $B\src\utils\FileUtil.h $B\src\utils\GdiPlusUtil.h $B\src\utils\GeomUtil.h
 $(OS)\Tabs.obj: $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
-$(OS)\Tabs.obj: $B\src\utils\UITask.h $B\src\utils\Vec.h $B\src\utils\WinUtil.h
-$(OS)\Tabs.obj: $B\src\WindowInfo.h
+$(OS)\Tabs.obj: $B\src\utils\UITask.h $B\src\utils\Vec.h $B\src\utils\WinDynCalls.h
+$(OS)\Tabs.obj: $B\src\utils\WinUtil.h $B\src\WindowInfo.h
 $(OS)\Tester.obj: $B\src\BaseEngine.h $B\src\EbookBase.h $B\src\EbookFormatter.h
 $(OS)\Tester.obj: $B\src\HtmlFormatter.h $B\src\MobiDoc.h $B\src\mui\Mui.h
 $(OS)\Tester.obj: $B\src\mui\MuiBase.h $B\src\mui\MuiButton.h $B\src\mui\MuiControl.h
@@ -667,7 +667,7 @@ $(OS)\Toolbar.obj: $B\src\TextSearch.h $B\src\TextSelection.h $B\src\Toolbar.h
 $(OS)\Toolbar.obj: $B\src\Translations.h $B\src\utils\BaseUtil.h $B\src\utils\BuildConfig.h
 $(OS)\Toolbar.obj: $B\src\utils\Dpi.h $B\src\utils\GeomUtil.h $B\src\utils\mingw_compat.h
 $(OS)\Toolbar.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
-$(OS)\Toolbar.obj: $B\src\utils\WinUtil.h $B\src\WindowInfo.h
+$(OS)\Toolbar.obj: $B\src\utils\WinDynCalls.h $B\src\utils\WinUtil.h $B\src\WindowInfo.h
 $(OS)\Trans_installer_txt.obj: $B\src\utils\BaseUtil.h $B\src\utils\BuildConfig.h $B\src\utils\GeomUtil.h
 $(OS)\Trans_installer_txt.obj: $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
 $(OS)\Trans_installer_txt.obj: $B\src\utils\Vec.h
@@ -739,7 +739,7 @@ $(OU)\CssParser_ut.obj: $B\src\utils\Vec.h
 $(OU)\DbgHelpDyn.obj: $B\src\utils\BaseUtil.h $B\src\utils\BuildConfig.h $B\src\utils\DbgHelpDyn.h
 $(OU)\DbgHelpDyn.obj: $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h $B\src\utils\mingw_compat.h
 $(OU)\DbgHelpDyn.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
-$(OU)\DbgHelpDyn.obj: $B\src\utils\WinUtil.h
+$(OU)\DbgHelpDyn.obj: $B\src\utils\WinDynCalls.h $B\src\utils\WinUtil.h
 $(OU)\DebugLog.obj: $B\src\utils\BaseUtil.h $B\src\utils\BuildConfig.h $B\src\utils\DebugLog.h
 $(OU)\DebugLog.obj: $B\src\utils\GeomUtil.h $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h
 $(OU)\DebugLog.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h
@@ -758,7 +758,7 @@ $(OU)\Dpi.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h
 $(OU)\FileTransactions.obj: $B\src\utils\BaseUtil.h $B\src\utils\BuildConfig.h $B\src\utils\FileTransactions.h
 $(OU)\FileTransactions.obj: $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h $B\src\utils\mingw_compat.h
 $(OU)\FileTransactions.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
-$(OU)\FileTransactions.obj: $B\src\utils\WinUtil.h
+$(OU)\FileTransactions.obj: $B\src\utils\WinDynCalls.h $B\src\utils\WinUtil.h
 $(OU)\FileUtil.obj: $B\src\utils\BaseUtil.h $B\src\utils\BuildConfig.h $B\src\utils\FileUtil.h
 $(OU)\FileUtil.obj: $B\src\utils\GeomUtil.h $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h
 $(OU)\FileUtil.obj: $B\src\utils\StrUtil.h $B\src\utils\Vec.h
@@ -881,7 +881,7 @@ $(OU)\StrUtil_ut.obj: $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h $B\src\u
 $(OU)\StrUtil_ut.obj: $B\src\utils\UtAssert.h $B\src\utils\Vec.h
 $(OU)\test_util.obj: $B\src\utils\BaseUtil.h $B\src\utils\BuildConfig.h $B\src\utils\GeomUtil.h
 $(OU)\test_util.obj: $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
-$(OU)\test_util.obj: $B\src\utils\UtAssert.h $B\src\utils\Vec.h
+$(OU)\test_util.obj: $B\src\utils\UtAssert.h $B\src\utils\Vec.h $B\src\utils\WinDynCalls.h
 $(OU)\TgaReader.obj: $B\src\utils\BaseUtil.h $B\src\utils\BuildConfig.h $B\src\utils\GeomUtil.h
 $(OU)\TgaReader.obj: $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
 $(OU)\TgaReader.obj: $B\src\utils\TgaReader.h $B\src\utils\Vec.h
@@ -918,10 +918,13 @@ $(OU)\WebpReader.obj: $B\ext\libwebp\webp\decode.h $B\ext\libwebp\webp\types.h $
 $(OU)\WebpReader.obj: $B\src\utils\BuildConfig.h $B\src\utils\GeomUtil.h $B\src\utils\mingw_compat.h
 $(OU)\WebpReader.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
 $(OU)\WebpReader.obj: $B\src\utils\WebpReader.h
+$(OU)\WinDynCalls.obj: $B\src\utils\BaseUtil.h $B\src\utils\BuildConfig.h $B\src\utils\GeomUtil.h
+$(OU)\WinDynCalls.obj: $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
+$(OU)\WinDynCalls.obj: $B\src\utils\Vec.h $B\src\utils\WinDynCalls.h
 $(OU)\WinUtil.obj: $B\src\utils\BaseUtil.h $B\src\utils\BitManip.h $B\src\utils\BuildConfig.h
 $(OU)\WinUtil.obj: $B\src\utils\DebugLog.h $B\src\utils\FileUtil.h $B\src\utils\GeomUtil.h
 $(OU)\WinUtil.obj: $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
-$(OU)\WinUtil.obj: $B\src\utils\Vec.h $B\src\utils\WinUtil.h
+$(OU)\WinUtil.obj: $B\src\utils\Vec.h $B\src\utils\WinDynCalls.h $B\src\utils\WinUtil.h
 $(OU)\WinUtil_ut.obj: $B\src\utils\BaseUtil.h $B\src\utils\BuildConfig.h $B\src\utils\GeomUtil.h
 $(OU)\WinUtil_ut.obj: $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
 $(OU)\WinUtil_ut.obj: $B\src\utils\UtAssert.h $B\src\utils\Vec.h $B\src\utils\WinUtil.h
@@ -946,7 +949,7 @@ $(OUIA)\Provider.obj: $B\src\uia\Constants.h $B\src\uia\DocumentProvider.h $B\sr
 $(OUIA)\Provider.obj: $B\src\uia\StartPageProvider.h $B\src\utils\BaseUtil.h $B\src\utils\BuildConfig.h
 $(OUIA)\Provider.obj: $B\src\utils\DbgHelpDyn.h $B\src\utils\GeomUtil.h $B\src\utils\mingw_compat.h
 $(OUIA)\Provider.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
-$(OUIA)\Provider.obj: $B\src\utils\WinUtil.h
+$(OUIA)\Provider.obj: $B\src\utils\WinDynCalls.h $B\src\utils\WinUtil.h
 $(OUIA)\StartPageProvider.obj: $B\src\uia\Constants.h $B\src\uia\Provider.h $B\src\uia\StartPageProvider.h
 $(OUIA)\StartPageProvider.obj: $B\src\utils\BaseUtil.h $B\src\utils\BuildConfig.h $B\src\utils\GeomUtil.h
 $(OUIA)\StartPageProvider.obj: $B\src\utils\mingw_compat.h $B\src\utils\Scoped.h $B\src\utils\StrUtil.h
@@ -957,6 +960,7 @@ $(OUIA)\TextRange.obj: $B\src\uia\Constants.h $B\src\uia\DocumentProvider.h $B\s
 $(OUIA)\TextRange.obj: $B\src\uia\Provider.h $B\src\uia\TextRange.h $B\src\utils\BaseUtil.h
 $(OUIA)\TextRange.obj: $B\src\utils\BuildConfig.h $B\src\utils\GeomUtil.h $B\src\utils\mingw_compat.h
 $(OUIA)\TextRange.obj: $B\src\utils\Scoped.h $B\src\utils\StrUtil.h $B\src\utils\Vec.h
+$(OUIA)\TextRange.obj: $B\src\utils\WinDynCalls.h
 $(OUN)\_7z.obj: $B\ext\lzma\C\7z.h $B\ext\lzma\C\7zBuf.h $B\ext\lzma\C\Types.h
 $(OUN)\_7z.obj: $B\ext\unarr\_7z\_7z.h $B\ext\unarr\common\allocator.h $B\ext\unarr\common\unarr-imp.h
 $(OUN)\_7z.obj: $B\ext\unarr\lzmasdk\7zTypes.h $B\ext\unarr\unarr.h

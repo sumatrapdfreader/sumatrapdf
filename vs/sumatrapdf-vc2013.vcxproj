@@ -200,13 +200,13 @@
     <ClCompile Include="..\src\utils\StrUtil.cpp" />
     <ClCompile Include="..\src\utils\TgaReader.cpp" />
     <ClCompile Include="..\src\utils\ThreadUtil.cpp" />
-    <ClCompile Include="..\src\utils\Touch.cpp" />
     <ClCompile Include="..\src\utils\TrivialHtmlParser.cpp" />
     <ClCompile Include="..\src\utils\TxtParser.cpp" />
     <ClCompile Include="..\src\utils\UITask.cpp" />
     <ClCompile Include="..\src\utils\UtAssert.cpp" />
     <ClCompile Include="..\src\utils\VarintGob.cpp" />
     <ClCompile Include="..\src\utils\WebpReader.cpp" />
+    <ClCompile Include="..\src\utils\WinDynCalls.cpp" />
     <ClCompile Include="..\src\utils\WinUtil.cpp" />
     <ClCompile Include="..\src\utils\ZipUtil.cpp" />
     <ClCompile Include="..\src\wingui\DialogSizer.cpp" />
@@ -494,7 +494,6 @@
     <ClInclude Include="..\src\utils\TgaReader.h" />
     <ClInclude Include="..\src\utils\ThreadUtil.h" />
     <ClInclude Include="..\src\utils\Timer.h" />
-    <ClInclude Include="..\src\utils\Touch.h" />
     <ClInclude Include="..\src\utils\TrivialHtmlParser.h" />
     <ClInclude Include="..\src\utils\TxtParser.h" />
     <ClInclude Include="..\src\utils\UITask.h" />
@@ -503,6 +502,7 @@
     <ClInclude Include="..\src\utils\Vec.h" />
     <ClInclude Include="..\src\utils\VecSegmented.h" />
     <ClInclude Include="..\src\utils\WebpReader.h" />
+    <ClInclude Include="..\src\utils\WinDynCalls.h" />
     <ClInclude Include="..\src\utils\WinUtil.h" />
     <ClInclude Include="..\src\utils\ZipUtil.h" />
     <ClInclude Include="..\src\wingui\DialogSizer.h" />

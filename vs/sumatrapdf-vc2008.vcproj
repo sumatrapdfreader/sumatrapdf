@@ -149,6 +149,10 @@
 		<Filter
 			Name="baseutils"
 			>
+			<File
+				RelativePath="..\src\utils\BuildConfig.h"
+				>
+			</File>
 			<Filter
 				Name="dataformats"
 				>
@@ -333,19 +337,19 @@
 					>
 				</File>
 				<File
-					RelativePath="..\src\utils\Touch.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\src\utils\Touch.h"
-					>
-				</File>
-				<File
 					RelativePath="..\src\utils\UITask.cpp"
 					>
 				</File>
 				<File
 					RelativePath="..\src\utils\UITask.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\WinDynCalls.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\utils\WinDynCalls.h"
 					>
 				</File>
 				<File
@@ -829,10 +833,6 @@
 					>
 				</File>
 			</Filter>
-			<File
-				RelativePath="..\src\utils\BuildConfig.h"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Source Files"
