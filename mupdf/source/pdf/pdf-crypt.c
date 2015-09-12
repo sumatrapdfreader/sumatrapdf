@@ -536,8 +536,10 @@ pdf_compute_encryption_key_r6(fz_context *ctx, pdf_crypt *crypt, unsigned char *
 	pdf_compute_hardened_hash_r6(ctx, password, pwlen,
 		(ownerkey ? crypt->o : crypt->u) + 32,
 		ownerkey ? crypt->u : NULL, validationkey);
+	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=696182 */
 	pdf_compute_hardened_hash_r6(ctx, password, pwlen,
-		crypt->u + 40, NULL, hash);
+		(ownerkey ? crypt->o : crypt->u) + 40,
+		ownerkey ? crypt->u : NULL, hash);
 
 	memset(iv, 0, sizeof(iv));
 	if (aes_setkey_dec(&aes, hash, 256))
