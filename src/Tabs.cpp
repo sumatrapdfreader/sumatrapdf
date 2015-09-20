@@ -655,11 +655,19 @@ void CreateTabbar(WindowInfo *win)
 }
 
 // verifies that TabInfo state is consistent with WindowInfo state
-static void VerifyTabInfo(WindowInfo *win, TabInfo *tdata)
+static NO_INLINE void VerifyTabInfo(WindowInfo *win, TabInfo *tdata)
 {
     CrashIf(tdata->ctrl != win->ctrl);
-    CrashIf(!str::Eq(ScopedMem<WCHAR>(win::GetText(win->hwndFrame)), tdata->frameTitle));
-    CrashIf(win->tocVisible != (!win->presentation ? tdata->showToc : PM_ENABLED == win->presentation ? tdata->showTocPresentation : false));
+    ScopedMem<WCHAR> winTitle(win::GetText(win->hwndFrame));
+    CrashIf(!str::Eq(winTitle.Get(), tdata->frameTitle));
+    bool expectedTocVisibility = tdata->showToc; // if not in presentation mode
+    if (PM_DISABLED != win->presentation) {
+        expectedTocVisibility = false; // PM_BLACK_SCREEN, PM_WHITE_SCREEN
+        if (PM_ENABLED == win->presentation) {
+            expectedTocVisibility = tdata->showTocPresentation;
+        }
+    }
+    CrashIf(win->tocVisible != expectedTocVisibility);
     CrashIf(tdata->canvasRc != win->canvasRc);
 }
 
