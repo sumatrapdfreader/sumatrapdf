@@ -1076,7 +1076,7 @@ static NO_INLINE LRESULT CanvasOnMouseWheelEbook(WindowInfo& win, UINT message, 
         //       WM_MOUSEWHEEL and when it's bubbling up, we'd return
         //       here recursively - prevent that
         LRESULT res = 0;
-        if (gWheelMsgRedirect) {
+        if (!gWheelMsgRedirect) {
             gWheelMsgRedirect = true;
             res = SendMessage(win.hwndTocTree, message, wParam, lParam);
             gWheelMsgRedirect = false;
