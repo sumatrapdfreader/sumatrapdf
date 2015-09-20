@@ -80,6 +80,13 @@ inline T *AllocStruct()
     return (T*)calloc(1, sizeof(T));
 }
 
+#if defined(_MSC_VER)
+#define NO_INLINE __declspec(noinline)
+#else
+// assuming gcc or similar
+#define NO_INLINE __attribute__((noinline))
+#endif
+
 #define NoOp()      ((void)0)
 #define dimof(array) (sizeof(DimofSizeHelper(array)))
 template <typename T, size_t N>

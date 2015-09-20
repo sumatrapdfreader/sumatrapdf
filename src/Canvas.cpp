@@ -1067,16 +1067,20 @@ static LRESULT WndProcCanvasChmUI(WindowInfo& win, HWND hwnd, UINT msg, WPARAM w
 
 ///// methods needed for EbookUI canvases /////
 
-static LRESULT CanvasOnMouseWheelEbook(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lParam)
+// NO_INLINE to help in debugging https://github.com/sumatrapdfreader/sumatrapdf/issues/292
+static NO_INLINE LRESULT CanvasOnMouseWheelEbook(WindowInfo& win, UINT message, WPARAM wParam, LPARAM lParam)
 {
     // Scroll the ToC sidebar, if it's visible and the cursor is in it
-    if (win.tocVisible && IsCursorOverWindow(win.hwndTocTree) && !gWheelMsgRedirect) {
+    if (win.tocVisible && IsCursorOverWindow(win.hwndTocTree)) {
         // Note: hwndTocTree's window procedure doesn't always handle
         //       WM_MOUSEWHEEL and when it's bubbling up, we'd return
         //       here recursively - prevent that
-        gWheelMsgRedirect = true;
-        LRESULT res = SendMessage(win.hwndTocTree, message, wParam, lParam);
-        gWheelMsgRedirect = false;
+        LRESULT res = 0;
+        if (gWheelMsgRedirect) {
+            gWheelMsgRedirect = true;
+            res = SendMessage(win.hwndTocTree, message, wParam, lParam);
+            gWheelMsgRedirect = false;
+        }
         return res;
     }
 
