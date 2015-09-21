@@ -11,11 +11,12 @@
 #define WIN_BG_COLOR RGB(0xff, 0xf2, 0) // yellow
 
 #define WINDOW_MARGIN   dpiAdjust(8)
-// The window is divided in three parts:
-// * top part, where we display nice graphics
-// * middle part, where we either display messages or advanced options
-// * bottom part, with install/uninstall button
-// This is the height of the top part
+
+/* The window is divided in three parts:
+- top part, where we display nice graphics
+- middle part, where we either display messages or advanced options
+- bottom part, with install/uninstall button
+*/
 
 // This is the height of the lower part
 extern int gBottomPartDy;

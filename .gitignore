@@ -39,3 +39,6 @@ src/utils/BuildConfig.h
 build-log.txt
 analyze-output.txt
 analyze-errors.html
+*.cov
+CoverageReport*
+LastCoverageResults.log

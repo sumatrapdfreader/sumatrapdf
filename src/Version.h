@@ -11,7 +11,7 @@
 
 // VER_QUALIFIER allows people who recompile SumatraPDF to add
 // a distinguishing string at the end of the version number
-// (e.g. version 2.3.2z or 2.4opt or 2.5x64)
+// (e.g. version 2.3.2z or 2.4opt)
 
 #define APP_NAME_STR       L"SumatraPDF"
 

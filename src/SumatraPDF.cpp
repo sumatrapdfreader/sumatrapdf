@@ -4284,14 +4284,20 @@ InitMouseWheelInfo:
 void GetProgramInfo(str::Str<char>& s)
 {
     s.AppendFmt("Ver: %s", CURR_VERSION_STRA);
-#ifdef SVN_PRE_RELEASE_VER
+#if defined(SVN_PRE_RELEASE_VER)
     s.AppendFmt(" pre-release");
 #endif
+
 #ifdef DEBUG
     if (!str::EndsWith(s.Get(), " (dbg)"))
         s.Append(" (dbg)");
 #endif
     s.Append("\r\n");
+
+#if defined(GIT_COMMIT_ID)
+    const char *gitSha1 = QM(GIT_COMMIT_ID);
+    s.AppendFmt("Git: %s (https://github.com/sumatrapdfreader/sumatrapdf/tree/%s)\r\n", gitSha1, gitSha1);
+#endif
     s.AppendFmt("Browser plugin: %s\r\n", gPluginMode ? "yes" : "no");
 }
 
