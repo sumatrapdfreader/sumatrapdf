@@ -1015,6 +1015,9 @@ void GetProgramInfo(str::Str<char>& s)
 #ifdef SVN_PRE_RELEASE_VER
     s.AppendFmt(" pre-release");
 #endif
+    if (IsProcess64()) {
+        s.Append(" 64-bit");
+    }
 #ifdef DEBUG
     if (!str::EndsWith(s.Get(), " (dbg)"))
         s.Append(" (dbg)");

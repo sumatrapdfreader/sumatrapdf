@@ -4289,18 +4289,21 @@ void GetProgramInfo(str::Str<char>& s)
 #if defined(SVN_PRE_RELEASE_VER)
     s.AppendFmt(" pre-release");
 #endif
-
+    if (IsProcess64()) {
+        s.Append(" 64-bit");
+    }
 #ifdef DEBUG
     if (!str::EndsWith(s.Get(), " (dbg)"))
         s.Append(" (dbg)");
 #endif
+    if (gPluginMode)
+        s.Append(" [plugin]");
     s.Append("\r\n");
 
 #if defined(GIT_COMMIT_ID)
     const char *gitSha1 = QM(GIT_COMMIT_ID);
     s.AppendFmt("Git: %s (https://github.com/sumatrapdfreader/sumatrapdf/tree/%s)\r\n", gitSha1, gitSha1);
 #endif
-    s.AppendFmt("Browser plugin: %s\r\n", gPluginMode ? "yes" : "no");
 }
 
 bool CrashHandlerCanUseNet()
