@@ -26,6 +26,8 @@ public:
 
 class EpubDoc {
     ZipFile zip;
+    CRITICAL_SECTION zipAccess;
+
     str::Str<char> htmlData;
     Vec<ImageData2> images;
     ScopedMem<WCHAR> tocPath;

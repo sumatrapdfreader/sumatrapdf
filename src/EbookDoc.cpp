@@ -232,18 +232,27 @@ const char *EPUB_ENC_NS = "http://www.w3.org/2001/04/xmlenc#";
 
 EpubDoc::EpubDoc(const WCHAR *fileName) :
     zip(fileName, true), fileName(str::Dup(fileName)),
-    isNcxToc(false), isRtlDoc(false) { }
+    isNcxToc(false), isRtlDoc(false) {
+    InitializeCriticalSection(&zipAccess);
+}
 
 EpubDoc::EpubDoc(IStream *stream) :
     zip(stream, true), fileName(nullptr),
-    isNcxToc(false), isRtlDoc(false) { }
+    isNcxToc(false), isRtlDoc(false) {
+    InitializeCriticalSection(&zipAccess);
+}
 
 EpubDoc::~EpubDoc()
 {
+    EnterCriticalSection(&zipAccess);
+
     for (size_t i = 0; i < images.Count(); i++) {
         free(images.At(i).base.data);
         free(images.At(i).id);
     }
+
+    LeaveCriticalSection(&zipAccess);
+    DeleteCriticalSection(&zipAccess);
 }
 
 bool EpubDoc::Load()
@@ -434,6 +443,8 @@ size_t EpubDoc::GetHtmlDataSize() const
 
 ImageData *EpubDoc::GetImageData(const char *id, const char *pagePath)
 {
+    ScopedCritSec scope(&zipAccess);
+
     if (!pagePath) {
         CrashIf(true);
         // if we're reparsing, we might not have pagePath, which is needed to
@@ -491,6 +502,8 @@ char *EpubDoc::GetFileData(const char *relPath, const char *pagePath, size_t *le
         CrashIf(true);
         return nullptr;
     }
+
+    ScopedCritSec scope(&zipAccess);
 
     ScopedMem<char> url(NormalizeURL(relPath, pagePath));
     ScopedMem<WCHAR> zipPath(str::conv::FromUtf8(url));
@@ -624,7 +637,11 @@ bool EpubDoc::ParseToc(EbookTocVisitor *visitor)
     if (!tocPath)
         return false;
     size_t tocDataLen;
-    ScopedMem<char> tocData(zip.GetFileDataByName(tocPath, &tocDataLen));
+    ScopedMem<char> tocData;
+    {
+        ScopedCritSec scope(&zipAccess);
+        tocData.Set(zip.GetFileDataByName(tocPath, &tocDataLen));
+    }
     if (!tocData)
         return false;
 
