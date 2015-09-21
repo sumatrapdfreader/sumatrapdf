@@ -853,7 +853,7 @@ LoadEngineInFixedPageUI:
         ctrl = new DisplayModel(engine, engineType, win->cbHandler);
         CrashIf(!ctrl || !ctrl->AsFixed() || ctrl->AsChm() || ctrl->AsEbook());
     }
-    else if (ChmModel::IsSupportedFile(filePath)) {
+    else if (ChmModel::IsSupportedFile(filePath) && !gGlobalPrefs->chmUI.useFixedPageUI) {
         ChmModel *chmModel = ChmModel::Create(filePath, win->cbHandler);
         if (chmModel) {
             // make sure that MSHTML can't be used as a potential exploit
@@ -865,15 +865,17 @@ LoadEngineInFixedPageUI:
             // if CLSID_WebBrowser isn't available, fall back on ChmEngine
             if (!chmModel->SetParentHwnd(win->hwndCanvas)) {
                 delete chmModel;
-                engine = EngineManager::CreateEngine(filePath, pwdUI, &engineType);
-                CrashIf(engineType != (engine ? Engine_Chm : Engine_None));
+                engine = EngineManager::CreateEngine(filePath, pwdUI, &engineType, true);
+                CrashIf(engineType != Engine_Chm);
+                if (!engine)
+                    return nullptr;
                 goto LoadEngineInFixedPageUI;
             }
             ctrl = chmModel;
         }
         CrashIf(ctrl && (!ctrl->AsChm() || ctrl->AsFixed() || ctrl->AsEbook()));
     }
-    else if (Doc::IsSupportedFile(filePath)) {
+    else if (Doc::IsSupportedFile(filePath) && !gGlobalPrefs->ebookUI.useFixedPageUI) {
         Doc doc = Doc::CreateFromFile(filePath);
         if (doc.IsDocLoaded()) {
             ctrl = EbookController::Create(doc, win->hwndCanvas, win->cbHandler, win->frameRateWnd);
