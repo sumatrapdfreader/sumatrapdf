@@ -1023,6 +1023,10 @@ void GetProgramInfo(str::Str<char>& s)
         s.Append(" (dbg)");
 #endif
     s.Append("\r\n");
+#if defined(GIT_COMMIT_ID)
+    const char *gitSha1 = QM(GIT_COMMIT_ID);
+    s.AppendFmt("Git: %s (https://github.com/sumatrapdfreader/sumatrapdf/tree/%s)\r\n", gitSha1, gitSha1);
+#endif
 }
 
 bool CrashHandlerCanUseNet()
