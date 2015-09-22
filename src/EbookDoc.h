@@ -26,6 +26,8 @@ public:
 
 class EpubDoc {
     ZipFile zip;
+    // zip and images are the only mutable members of EpubDoc after initialization;
+    // access to them must be serialized for multi-threaded users (such as EbookController)
     CRITICAL_SECTION zipAccess;
 
     str::Str<char> htmlData;
@@ -110,7 +112,6 @@ class PdbReader;
 class PalmDoc {
     ScopedMem<WCHAR> fileName;
     str::Str<char> htmlData;
-    Vec<ImageData2> images;
     WStrVec tocEntries;
 
     bool Load();

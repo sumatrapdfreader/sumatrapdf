@@ -996,12 +996,7 @@ Fb2Doc *Fb2Doc::CreateFromStream(IStream *stream)
 
 PalmDoc::PalmDoc(const WCHAR *fileName) : fileName(str::Dup(fileName)) { }
 
-PalmDoc::~PalmDoc()
-{
-    for (size_t i = 0; i < images.Count(); i++) {
-        free(images.At(i).base.data);
-        free(images.At(i).id);
-    }
+PalmDoc::~PalmDoc() {
 }
 
 #define PDB_TOC_ENTRY_MARK "ToC!Entry!"
@@ -1238,6 +1233,9 @@ const char *HtmlDoc::GetHtmlData(size_t *lenOut) const
 
 ImageData *HtmlDoc::GetImageData(const char *id)
 {
+    // TODO: this isn't thread-safe (might leak image data when called concurrently),
+    //       so add a critical section once it's used for EbookController
+
     ScopedMem<char> url(NormalizeURL(id, pagePath));
     for (size_t i = 0; i < images.Count(); i++) {
         if (str::Eq(images.At(i).id, url))

@@ -851,6 +851,7 @@ protected:
     char *GetImageData(int pageNo, size_t& len);
     void ParseComicInfoXml(const char *xmlData);
 
+    // access to cbxFile must be protected after initialization (with cacheAccess)
     ArchFile *cbxFile;
     CbxFormat cbxFormat;
     Vec<size_t> fileIdxs;
