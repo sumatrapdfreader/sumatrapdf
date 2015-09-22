@@ -435,10 +435,17 @@ pdf_compute_encryption_key_r5(fz_context *ctx, pdf_crypt *crypt, unsigned char *
 
 	/* Step 3.5/4.5 - compute file encryption key from OE/UE */
 
+	/* cf. https://github.com/sumatrapdfreader/sumatrapdf/issues/294 */
+	if (ownerkey)
+	{
+		memcpy(buffer + pwlen, crypt->o + 40, 8);
+		memcpy(buffer + pwlen + 8, crypt->u, 48);
+	}
+	else
 	memcpy(buffer + pwlen, crypt->u + 40, 8);
 
 	fz_sha256_init(&sha256);
-	fz_sha256_update(&sha256, buffer, pwlen + 8);
+	fz_sha256_update(&sha256, buffer, pwlen + 8 + (ownerkey ? 48 : 0));
 	fz_sha256_final(&sha256, buffer);
 
 	/* clear password buffer and use it as iv */
