@@ -1,0 +1,9 @@
+# http://clang.llvm.org/docs/ClangFormatStyleOptions.html
+# Must be in sync with clangStyle in tools\clang-fmt.go
+BasedOnStyle: Chromium
+IndentWidth: 4
+ColumnLimit: 100
+AccessModifierOffset: -2
+PointerAlignment: Right
+SpacesBeforeTrailingComments: 1
+BinPackParameters: true
