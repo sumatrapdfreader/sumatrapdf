@@ -960,7 +960,7 @@ pdf_show_path(pdf_csi *csi, pdf_run_state *pr, int doclose, int dofill, int dost
 					(path->coords[0] != path->coords[2] || path->coords[1] != path->coords[3]))
 				{
 					fz_stroke_state *stroke = fz_new_stroke_state(ctx);
-					stroke->linewidth = 0.1f / fz_matrix_expansion(&gstate->ctm);
+					stroke->linewidth = 0.001f / fz_matrix_expansion(&gstate->ctm);
 					fz_stroke_path(pr->dev, path, stroke, &gstate->ctm,
 						gstate->fill.colorspace, gstate->fill.v, gstate->fill.alpha);
 					fz_drop_stroke_state(ctx, stroke);
