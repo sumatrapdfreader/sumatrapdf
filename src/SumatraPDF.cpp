@@ -2207,7 +2207,8 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
         ShowWindow(win->hwndFrame, SW_HIDE);
     if (lastWindow) {
         // don't call RememberSessionState if OnMenuExit already has
-        if (quitIfLast && gGlobalPrefs->sessionData->Count() == 0)
+        // also don't remember a single document (unless quitting through Menu -> Exit)
+        if (quitIfLast && gGlobalPrefs->sessionData->Count() == 0 && win->tabs.Count() > 1)
             RememberSessionState();
         prefs::Save();
     }
