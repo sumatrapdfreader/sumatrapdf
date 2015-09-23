@@ -1805,7 +1805,7 @@ bool AutoUpdateInitiate(const char *updateData)
     CrashIf(gGlobalPrefs->reopenOnce->Count() > 0);
 #if 0
     RememberSessionState();
-    gGlobalPrefs->reopenOnce->Append(str::Dup("SessionData"));
+    gGlobalPrefs->reopenOnce->Append(str::Dup(L"SessionData"));
 #else
     for (WindowInfo *win : gWindows) {
         for (TabInfo *tab : win->tabs) {
@@ -1820,8 +1820,12 @@ bool AutoUpdateInitiate(const char *updateData)
     ok = LaunchFile(updateExe, updateArgs);
     if (ok)
         OnMenuExit();
-    else
+    else {
         gGlobalPrefs->reopenOnce->FreeMembers();
+#if 0
+        ResetSessionState(gGlobalPrefs->sessionData);
+#endif
+    }
     return ok;
 }
 #endif

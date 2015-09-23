@@ -750,8 +750,10 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     }
     ResetSessionState(gGlobalPrefs->sessionData);
 
-    for (size_t n = 0; n < i.fileNames.Count(); n++) {
-        win = LoadOnStartup(i.fileNames.At(n), i, !win);
+    for (const WCHAR *filePath : i.fileNames) {
+        if (restoreSession && FindWindowInfoByFile(filePath, true))
+            continue;
+        win = LoadOnStartup(filePath, i, !win);
         if (!win) {
             retCode++;
             continue;
