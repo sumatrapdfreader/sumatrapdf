@@ -26,7 +26,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <png.h>
+
+#if PNG_LIBPNG_VER_MAJOR == 1 && PNG_LIBPNG_VER_MINOR < 5
 #include <pngstruct.h>
+#endif
+
 #define CVT_PTR(ptr) (ptr)
 
 #include "jbig2.h"
@@ -39,8 +43,13 @@ static void
 jbig2_png_write_data(png_structp png_ptr, png_bytep data, png_size_t length)
 {
     png_size_t check;
+#if PNG_LIBPNG_VER_MAJOR == 1 && PNG_LIBPNG_VER_MINOR < 5
+    png_FILE_p f = (png_FILE_p)png_ptr->io_ptr;
+#else
+    png_FILE_p f = (png_FILE_p)png_get_io_ptr(png_ptr);
+#endif
 
-    check = fwrite(data, 1, length, (png_FILE_p)png_ptr->io_ptr);
+    check = fwrite(data, 1, length, f);
     if (check != length) {
       png_error(png_ptr, "Write Error");
     }
@@ -49,10 +58,14 @@ jbig2_png_write_data(png_structp png_ptr, png_bytep data, png_size_t length)
 static void
 jbig2_png_flush(png_structp png_ptr)
 {
-    png_FILE_p io_ptr;
-    io_ptr = (png_FILE_p)CVT_PTR((png_ptr->io_ptr));
-    if (io_ptr != NULL)
-        fflush(io_ptr);
+#if PNG_LIBPNG_VER_MAJOR == 1 && PNG_LIBPNG_VER_MINOR < 5
+    png_FILE_p f = (png_FILE_p)png_ptr->io_ptr;
+#else
+    png_FILE_p f = (png_FILE_p)png_get_io_ptr(png_ptr);
+#endif
+
+    if (f != NULL)
+        fflush(f);
 }
 
 int jbig2_image_write_png_file(Jbig2Image *image, char *filename)

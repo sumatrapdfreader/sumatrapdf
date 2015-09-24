@@ -412,6 +412,7 @@ cleanup1:
 		case JBIG2_CORNER_TOPLEFT: x = S; y = T; break;
 		case JBIG2_CORNER_TOPRIGHT: x = S - IB->width + 1; y = T; break;
 		case JBIG2_CORNER_BOTTOMLEFT: x = S; y = T - IB->height + 1; break;
+		default:
 		case JBIG2_CORNER_BOTTOMRIGHT: x = S - IB->width + 1; y = T - IB->height + 1; break;
 		}
 	    } else { /* TRANSPOSED */
@@ -419,6 +420,7 @@ cleanup1:
 		case JBIG2_CORNER_TOPLEFT: x = T; y = S; break;
 		case JBIG2_CORNER_TOPRIGHT: x = T - IB->width + 1; y = S; break;
 		case JBIG2_CORNER_BOTTOMLEFT: x = T; y = S - IB->height + 1; break;
+		default:
 		case JBIG2_CORNER_BOTTOMRIGHT: x = T - IB->width + 1; y = S - IB->height + 1; break;
 		}
 	    }

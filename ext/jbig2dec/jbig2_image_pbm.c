@@ -145,7 +145,7 @@ Jbig2Image *jbig2_image_read_pbm(Jbig2Ctx *ctx, FILE *in)
     }
     /* the pbm data is byte-aligned, so we can
        do a simple block read */
-    fread(image->data, 1, image->height*image->stride, in);
+    (void)fread(image->data, 1, image->height*image->stride, in);
     if (feof(in)) {
         fprintf(stderr, "unexpected end of pbm file.\n");
         jbig2_image_release(ctx, image);
