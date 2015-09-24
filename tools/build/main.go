@@ -35,7 +35,6 @@ To run:
 
 /*
 TODO:
-* implement release build
 * implement buildbot loop
 */
 
