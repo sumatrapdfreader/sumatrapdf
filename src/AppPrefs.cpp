@@ -62,6 +62,14 @@ bool Load()
     gGlobalPrefs = NewGlobalPrefs(prefsData);
     CrashAlwaysIf(!gGlobalPrefs);
 
+    // in pre-release builds between 3.1.10079 and 3.1.10377,
+    // RestoreSession was a string with the additional option "auto"
+    // TODO: remove this after 3.2 has been released
+#if defined(DEBUG) || defined(SVN_PRE_RELEASE_VER)
+    if (!gGlobalPrefs->restoreSession && prefsData && str::Find(prefsData, "\nRestoreSession = auto"))
+        gGlobalPrefs->restoreSession = true;
+#endif
+
 #ifdef DISABLE_EBOOK_UI
     if (!prefsData || !str::Find(prefsData, "UseFixedPageUI ="))
         gGlobalPrefs->ebookUI.useFixedPageUI = gGlobalPrefs->chmUI.useFixedPageUI = true;

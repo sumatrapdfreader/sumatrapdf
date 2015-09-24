@@ -712,13 +712,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 
     bool restoreSession = false;
     if (gGlobalPrefs->sessionData->Count() > 0 && !gPluginURL) {
-        restoreSession = str::EqI(gGlobalPrefs->restoreSession, "yes") ||
-                         str::EqI(gGlobalPrefs->restoreSession, "true") ||
-#ifndef DISABLE_SESSION_RESTORE
-                         str::EqI(gGlobalPrefs->restoreSession, "auto");
-#else
-                         false;
-#endif
+        restoreSession = gGlobalPrefs->restoreSession;
     }
     if (gGlobalPrefs->reopenOnce->Count() > 0 && !gPluginURL) {
         if (gGlobalPrefs->reopenOnce->Count() == 1 && str::EqI(gGlobalPrefs->reopenOnce->At(0), L"SessionData")) {
@@ -810,7 +804,6 @@ Exit:
         DeleteWindowInfo(gWindows.At(0));
     }
 
-    DeleteCachedCursors();
 #ifndef DEBUG
 
     // leave all the remaining clean-up to the OS
@@ -819,6 +812,7 @@ Exit:
 
 #else
 
+    DeleteCachedCursors();
     DeleteObject(GetDefaultGuiFont());
     DeleteBitmap(gBitmapReloadingCue);
     DeleteSplitterBrush();

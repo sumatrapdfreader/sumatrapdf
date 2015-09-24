@@ -383,9 +383,8 @@ GlobalPrefs = [
 	Field("UseSysColors", Bool, False,
 		"if true, we use Windows system colors for background/text color. Over-rides other settings",
 		expert=True),
-	Field("RestoreSession", Utf8String, "auto",
-		"whether to restore the session stored in SessionData " +
-		"(possible values: yes, no, auto)",
+	Field("RestoreSession", Bool, True,
+		"if true and SessionData isn't empty, that session will be restored at startup",
 		expert=True),
 	EmptyLine(),
 

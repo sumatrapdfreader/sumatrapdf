@@ -280,9 +280,9 @@ struct GlobalPrefs {
     // if true, we use Windows system colors for background/text color.
     // Over-rides other settings
     bool useSysColors;
-    // whether to restore the session stored in SessionData (possible
-    // values: yes, no, auto)
-    char * restoreSession;
+    // if true and SessionData isn't empty, that session will be restored
+    // at startup
+    bool restoreSession;
     // customization options for PDF, XPS, DjVu and PostScript UI
     FixedPageUI fixedPageUI;
     // customization options for eBooks (EPUB, Mobi, FictionBook) UI. If
@@ -591,7 +591,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     { offsetof(GlobalPrefs, escToExit),                Type_Bool,        false                                                                                                                 },
     { offsetof(GlobalPrefs, reuseInstance),            Type_Bool,        false                                                                                                                 },
     { offsetof(GlobalPrefs, useSysColors),             Type_Bool,        false                                                                                                                 },
-    { offsetof(GlobalPrefs, restoreSession),           Type_Utf8String,  (intptr_t)"auto"                                                                                                      },
+    { offsetof(GlobalPrefs, restoreSession),           Type_Bool,        true                                                                                                                  },
     { (size_t)-1,                                      Type_Comment,     0                                                                                                                     },
     { offsetof(GlobalPrefs, fixedPageUI),              Type_Struct,      (intptr_t)&gFixedPageUIInfo                                                                                           },
     { offsetof(GlobalPrefs, ebookUI),                  Type_Struct,      (intptr_t)&gEbookUIInfo                                                                                               },
