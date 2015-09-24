@@ -144,6 +144,10 @@ func sha1HexToS3Path(sha1Hex string) string {
 	return fmt.Sprintf("%s/%s/%s", sha1Hex[:2], sha1Hex[2:4], sha1Hex[4:])
 }
 
+func perc(total, n int) float64 {
+	return float64(n) * 100 / float64(total)
+}
+
 func calcFileInfo(fi *FileInfo) {
 	fmt.Printf("calcFileInfo: '%s'\n", fi.Path)
 	const BufSize = 16 * 1024
@@ -156,7 +160,7 @@ func calcFileInfo(fi *FileInfo) {
 	fi.ShouldCompress = false
 	tryCompressFirsBlock := shouldTryCompressFile(fi.Path)
 	var gzw *gzip.Writer
-	var compressedData bytes.Buffer
+	compressedData := &bytes.Buffer{}
 	fi.Size = 0
 	fi.CompressedData = nil
 	for {
@@ -174,23 +178,26 @@ func calcFileInfo(fi *FileInfo) {
 		fataliferr(err)
 		if tryCompressFirsBlock {
 			tryCompressFirsBlock = false
-			gz, err := gzip.NewWriterLevel(&compressedData, gzip.BestCompression)
+			gz, err := gzip.NewWriterLevel(compressedData, gzip.BestCompression)
 			fataliferr(err)
 			_, err = gz.Write(d)
 			fataliferr(err)
 			gz.Close()
 			compressedSize := compressedData.Len()
-			// only compress if we compress at least 6.25% (16k => 15k)
-			fi.ShouldCompress = compressedSize < (BufSize - 1024)
+			saved := n - compressedSize
+			// relatively high threshold of 20% savings on compression
+			fi.ShouldCompress = saved > 0 && perc(compressedSize, saved) > 20
+			diff := n - compressedSize
+			fmt.Printf("  should compress: %v, %d => %d (%d %.2f%%)\n", fi.ShouldCompress, n, compressedSize, diff, perc(n, diff))
 			if fi.ShouldCompress {
-				compressedData.Reset()
-				gzw, err = gzip.NewWriterLevel(&compressedData, gzip.BestCompression)
+				compressedData = &bytes.Buffer{}
+				gzw, err = gzip.NewWriterLevel(compressedData, gzip.BestCompression)
 				fataliferr(err)
 			}
-			if gzw != nil {
-				_, err = gzw.Write(d)
-				fataliferr(err)
-			}
+		}
+		if gzw != nil {
+			_, err = gzw.Write(d)
+			fataliferr(err)
 		}
 	}
 	sha1Sum := sha1.Sum(nil)
@@ -221,13 +228,13 @@ func calcFileInfo(fi *FileInfo) {
 		fi.S3FullPath = fi.S3PathSha1Part + ext
 	}
 	fmt.Printf("  sha1: %s\n", fi.Sha1Hex)
-	fmt.Printf("  s3: %s\n", fi.S3FullPath)
+	fmt.Printf("   md5: %s\n", fi.Md5Hex)
+	fmt.Printf("    s3: %s\n", fi.S3FullPath)
 	fmt.Printf("  size: %d\n", fi.Size)
 	if fi.CompressedData != nil {
 		sizedCompressed := len(fi.CompressedData)
 		saved := fi.Size - sizedCompressed
-		savedPerc := (float64(sizedCompressed) * 100) / float64(fi.Size)
-		fmt.Printf("  size compressed: %d (saves %d %.2f%%)\n", sizedCompressed, saved, savedPerc)
+		fmt.Printf("  size compressed: %d (saves %d %.2f%%)\n", sizedCompressed, saved, perc(fi.Size, saved))
 	}
 }
 
