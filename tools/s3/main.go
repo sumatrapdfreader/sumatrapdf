@@ -57,9 +57,10 @@ var (
 
 	cachedSecrets *Secrets
 
-	wgUploads           sync.WaitGroup
-	inFatal             bool
-	validExts           = []string{".pdf", ".mobi", ".epub", ".chm"}
+	wgUploads sync.WaitGroup
+	inFatal   bool
+	validExts = []string{".pdf", ".mobi", ".epub", ".chm", ".cbz", "cbr"}
+	// only try to compress files that are not already compressed
 	toMaybeCompressExts = []string{".pdf", ".mobi", ".chm"}
 )
 
@@ -139,11 +140,12 @@ func readSecretsMust() *Secrets {
 // xx/yy/zzzzzzzzzzz..
 // This gives 256 files in the leaf for 16 million total files
 func sha1HexToS3Path(sha1Hex string) string {
-	fatalif(len(sha1Hex) != 20, "invalid sha1Hex")
+	fatalif(len(sha1Hex) != 40, "invalid sha1Hex '%s'", sha1Hex)
 	return fmt.Sprintf("%s/%s/%s", sha1Hex[:2], sha1Hex[2:4], sha1Hex[4:])
 }
 
 func calcFileInfo(fi *FileInfo) {
+	fmt.Printf("calcFileInfo: '%s'\n", fi.Path)
 	const BufSize = 16 * 1024
 	var buf [BufSize]byte
 	r, err := os.Open(fi.Path)
@@ -218,6 +220,15 @@ func calcFileInfo(fi *FileInfo) {
 	} else {
 		fi.S3FullPath = fi.S3PathSha1Part + ext
 	}
+	fmt.Printf("  sha1: %s\n", fi.Sha1Hex)
+	fmt.Printf("  s3: %s\n", fi.S3FullPath)
+	fmt.Printf("  size: %d\n", fi.Size)
+	if fi.CompressedData != nil {
+		sizedCompressed := len(fi.CompressedData)
+		saved := fi.Size - sizedCompressed
+		savedPerc := (float64(sizedCompressed) * 100) / float64(fi.Size)
+		fmt.Printf("  size compressed: %d (saves %d %.2f%%)\n", sizedCompressed, saved, savedPerc)
+	}
 }
 
 func uploadFileInfo(fi *FileInfo) {
@@ -236,6 +247,19 @@ func uploadDir(dir string) {
 	ch := make(chan *FileInfo)
 	// only one uploader because I'm most likely limited by bandwidth
 	go uploadWorker(ch)
+	filepath.Walk(dir, func(path string, fi os.FileInfo, err error) error {
+		if err != nil {
+			return nil
+		}
+		if !isSupportedFile(path) {
+			return nil
+		}
+		fileInfo := &FileInfo{
+			Path: path,
+		}
+		calcFileInfo(fileInfo)
+		return nil
+	})
 	close(ch)
 	wgUploads.Wait()
 }
