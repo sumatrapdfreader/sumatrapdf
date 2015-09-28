@@ -43,12 +43,9 @@
   those pages to a bitmap and display those bitmaps.
 */
 
-// utils
 #include "BaseUtil.h"
-// rendering engines
 #include "BaseEngine.h"
 #include "EngineManager.h"
-// layout controllers
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "DisplayModel.h"
@@ -711,7 +708,7 @@ int DisplayModel::GetPageNoByPoint(PointI pt)
 
     for (int pageNo = 1; pageNo <= PageCount(); ++pageNo) {
         PageInfo *pageInfo = GetPageInfo(pageNo);
-        assert(0.0 == pageInfo->visibleRatio || pageInfo->shown);
+        AssertCrash(0.0 == pageInfo->visibleRatio || pageInfo->shown);
         if (!pageInfo->shown)
             continue;
 
@@ -732,7 +729,7 @@ int DisplayModel::GetPageNextToPoint(PointI pt)
 
     for (int pageNo = 1; pageNo <= PageCount(); ++pageNo) {
         PageInfo *pageInfo = GetPageInfo(pageNo);
-        assert(0.0 == pageInfo->visibleRatio || pageInfo->shown);
+        AssertCrash(0.0 == pageInfo->visibleRatio || pageInfo->shown);
         if (!pageInfo->shown)
             continue;
 
@@ -753,7 +750,7 @@ int DisplayModel::GetPageNextToPoint(PointI pt)
 PointI DisplayModel::CvtToScreen(int pageNo, PointD pt)
 {
     PageInfo *pageInfo = GetPageInfo(pageNo);
-    assert(pageInfo);
+    CrashIf(!pageInfo);
     if (!pageInfo)
         return PointI();
 
@@ -778,7 +775,7 @@ PointD DisplayModel::CvtFromScreen(PointI pt, int pageNo)
         pageNo = GetPageNextToPoint(pt);
 
     const PageInfo *pageInfo = GetPageInfo(pageNo);
-    assert(pageInfo);
+    CrashIf(!pageInfo);
     if (!pageInfo)
         return PointD();
 
