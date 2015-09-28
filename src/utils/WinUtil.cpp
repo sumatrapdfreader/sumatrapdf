@@ -214,9 +214,9 @@ void DisableDataExecution() {
 }
 
 // Code from http://www.halcyon.com/~ast/dload/guicon.htm
+// See https://github.com/benvanik/xenia/issues/228 for the VS2015 fix
 void RedirectIOToConsole() {
     CONSOLE_SCREEN_BUFFER_INFO coninfo;
-    int hConHandle;
 
     // allocate a console for this app
     AllocConsole();
@@ -227,18 +227,31 @@ void RedirectIOToConsole() {
     SetConsoleScreenBufferSize(GetStdHandle(STD_OUTPUT_HANDLE), coninfo.dwSize);
 
     // redirect unbuffered STDOUT to the console
-    hConHandle = _open_osfhandle((intptr_t)GetStdHandle(STD_OUTPUT_HANDLE), _O_TEXT);
+#if _MSC_VER < 1900
+    int hConHandle = _open_osfhandle((intptr_t)GetStdHandle(STD_OUTPUT_HANDLE), _O_TEXT);
     *stdout = *_fdopen(hConHandle, "w");
+#else
+    FILE *con;
+    freopen_s(&con, "CONOUT$", "w", stdout);
+#endif
     setvbuf(stdout, nullptr, _IONBF, 0);
 
     // redirect unbuffered STDERR to the console
+#if _MSC_VER < 1900
     hConHandle = _open_osfhandle((intptr_t)GetStdHandle(STD_ERROR_HANDLE), _O_TEXT);
     *stderr = *_fdopen(hConHandle, "w");
+#else
+    freopen_s(&con, "CONOUT$", "w", stderr);
+#endif
     setvbuf(stderr, nullptr, _IONBF, 0);
 
     // redirect unbuffered STDIN to the console
+#if _MSC_VER < 1900
     hConHandle = _open_osfhandle((intptr_t)GetStdHandle(STD_INPUT_HANDLE), _O_TEXT);
     *stdin = *_fdopen(hConHandle, "r");
+#else
+    freopen_s(&con, "CONIN$", "r", stdin);
+#endif
     setvbuf(stdin, nullptr, _IONBF, 0);
 }
 
