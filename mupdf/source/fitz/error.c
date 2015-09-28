@@ -134,7 +134,11 @@ int fz_push_try(fz_error_context *ex)
 	/* SumatraPDF: add filename and line number to errors and warnings */
 	fprintf(stderr, "! %s:%d: %s\n", get_base_name(__FILE__), __LINE__, ex->message);
 	LOGE("error: %s\n", ex->message);
-	return 0;
+	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=695948 */
+	/* cf. http://git.ghostscript.com/?p=user/robin/mupdf.git;a=commitdiff;h=3decd1bbaeba261943fc2ff5a731deeb0c18e0b9 */
+	ex->errcode = FZ_ERROR_GENERIC;
+	ex->top--;
+	throw(ex);
 }
 
 int fz_caught(fz_context *ctx)

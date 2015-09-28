@@ -459,6 +459,8 @@ pdf_process_stream(pdf_csi *csi, pdf_lexbuf *buf)
 			if (!csi->cookie)
 			{
 				fz_rethrow_if(ctx, FZ_ERROR_TRYLATER);
+				/* SumatraPDF: abort processing also without error cookie */
+				fz_rethrow_if(ctx, FZ_ERROR_ABORT);
 			}
 			else if ((caught = fz_caught(ctx)) == FZ_ERROR_TRYLATER)
 			{
