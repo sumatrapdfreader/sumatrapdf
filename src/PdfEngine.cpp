@@ -2445,8 +2445,12 @@ bool PdfEngineImpl::IsLinearizedFile()
            pdf_is_int(pdf_dict_gets(obj, "T"));
 }
 
-static void pdf_extract_fonts(pdf_obj *res, Vec<pdf_obj *>& fontList)
+static void pdf_extract_fonts(pdf_obj *res, Vec<pdf_obj *>& fontList, Vec<pdf_obj *>& resList)
 {
+    if (!res || pdf_mark_obj(res))
+        return;
+    resList.Append(res);
+
     pdf_obj *fonts = pdf_dict_gets(res, "Font");
     for (int k = 0; k < pdf_dict_len(fonts); k++) {
         pdf_obj *font = pdf_resolve_indirect(pdf_dict_get_val(fonts, k));
@@ -2458,16 +2462,14 @@ static void pdf_extract_fonts(pdf_obj *res, Vec<pdf_obj *>& fontList)
     for (int k = 0; k < pdf_dict_len(xobjs); k++) {
         pdf_obj *xobj = pdf_dict_get_val(xobjs, k);
         pdf_obj *xres = pdf_dict_gets(xobj, "Resources");
-        if (xobj && xres && !pdf_mark_obj(xobj)) {
-            pdf_extract_fonts(xres, fontList);
-            pdf_unmark_obj(xobj);
-        }
+        pdf_extract_fonts(xres, fontList, resList);
     }
 }
 
 WCHAR *PdfEngineImpl::ExtractFontList()
 {
     Vec<pdf_obj *> fontList;
+    Vec<pdf_obj *> resList;
 
     // collect all fonts from all page objects
     for (int i = 1; i <= PageCount(); i++) {
@@ -2475,17 +2477,23 @@ WCHAR *PdfEngineImpl::ExtractFontList()
         if (page) {
             ScopedCritSec scope(&ctxAccess);
             fz_try(ctx) {
-                pdf_extract_fonts(page->resources, fontList);
+                pdf_extract_fonts(page->resources, fontList, resList);
                 for (pdf_annot *annot = page->annots; annot; annot = annot->next) {
                     if (annot->ap)
-                        pdf_extract_fonts(annot->ap->resources, fontList);
+                        pdf_extract_fonts(annot->ap->resources, fontList, resList);
                 }
             }
             fz_catch(ctx) { }
         }
     }
 
+    // start ctxAccess scope here so that we don't also have to
+    // ask for pagesAccess (as is required for GetPdfPage)
     ScopedCritSec scope(&ctxAccess);
+
+    for (pdf_obj *res : resList) {
+        pdf_unmark_obj(res);
+    }
 
     WStrVec fonts;
     for (size_t i = 0; i < fontList.Count(); i++) {
