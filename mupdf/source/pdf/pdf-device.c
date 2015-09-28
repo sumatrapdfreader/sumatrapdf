@@ -175,7 +175,7 @@ send_image(pdf_device *pdev, fz_image *image, int mask, int smask)
 		fz_md5_final(&state, digest);
 		for(i=0; i < pdev->num_imgs; i++)
 		{
-			if (!memcmp(&digest, pdev->images[i].digest, sizeof(16)))
+			if (!memcmp(&digest, pdev->images[i].digest, sizeof(digest)))
 			{
 				num = i;
 				break;
