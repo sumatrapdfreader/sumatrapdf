@@ -3,9 +3,12 @@ the release notes, as we make them, to make the release process easier.
 
 Next version:
 
-3.1 (2015-09-??)
+3.1 (2015-10-??)
 
 * 64bit builds
+* all documents are restored at startup if a window with multiple tabs
+  is closed (or if closing happened through File -> Exit); this can be
+  disabled through the RestoreSession advanced setting
 * printing happens (again) always as image which leads to more reliable
   results at the cost of requiring more printer memory; the "Print as Image"
   advanced printing option has been removed
