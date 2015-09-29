@@ -54,18 +54,11 @@ bool IsProcess64() {
     return 8 == sizeof(void*);
 }
 
-// return true if running on 64-bit
+// return true if running on a 64-bit OS
 bool IsOs64() {
-    // 64-bit process cam only run on 64-bit OS
-    if (IsProcess64()) {
-        return true;
-    }
-    // this is 32-bit process. see if running under WOW64
-    BOOL isWow = FALSE;
-    if (DynIsWow64Process && DynIsWow64Process(GetCurrentProcess(), &isWow)) {
-        return isWow == TRUE;
-    }
-    return false;
+    // 64-bit processes can only run on a 64-bit OS,
+    // 32-bit processes run on a 64-bit OS under WOW64
+    return IsProcess64() || IsRunningInWow64();
 }
 
 // return true if OS and our process have the same arch (i.e. both are 32bit

@@ -4298,7 +4298,7 @@ void GetProgramInfo(str::Str<char>& s)
         s.Append(" 64-bit");
     }
 #ifdef DEBUG
-    if (!str::EndsWith(s.Get(), " (dbg)"))
+    if (!str::Find(s.Get(), " (dbg)"))
         s.Append(" (dbg)");
 #endif
     if (gPluginMode)
