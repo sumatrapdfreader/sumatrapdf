@@ -43,9 +43,13 @@
   those pages to a bitmap and display those bitmaps.
 */
 
+// utils
 #include "BaseUtil.h"
+#include "WinUtil.h"
+// rendering engines
 #include "BaseEngine.h"
 #include "EngineManager.h"
+// layout controllers
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "DisplayModel.h"
@@ -53,10 +57,6 @@
 #include "PdfSync.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
-#include "WinUtil.h"
-
-// Note: adding chm handling to DisplayModel is a hack, because DisplayModel
-// doesn't map to chm features well.
 
 // if true, we pre-render the pages right before and after the visible pages
 static bool gPredictiveRender = true;
