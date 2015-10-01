@@ -1151,6 +1151,7 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
     // we postpone the reload until the next autorefresh event
     if (!ctrl && autorefresh) {
         SetFrameTitleForTab(tab, true);
+        win::SetText(win->hwndFrame, tab->frameTitle);
         return;
     }
 
