@@ -161,8 +161,17 @@ func sha1HexToS3Path(sha1Hex string) string {
 	return fmt.Sprintf("%s/%s/%s", sha1Hex[:2], sha1Hex[2:4], sha1Hex[4:])
 }
 
+func removeExt(s string) string {
+	ext := filepath.Ext(s)
+	if len(ext) == 0 {
+		return s
+	}
+	return s[len(s)-len(ext):]
+}
+
 // reverse of sha1HexToS3Path
 func s3PathToSha1Hex(s string) string {
+	s = removeExt(s)
 	s = s[len(s)-41:]
 	fatalif(s[2] != '/', "s[2] is '%c', should be '/'", s[2])
 	s = strings.Replace(s, "/", "", -1)
