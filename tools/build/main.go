@@ -55,9 +55,10 @@ type Timing struct {
 }
 
 const (
-	s3PreRelDir = "sumatrapdf/prerel/"
-	s3RelDir    = "sumatrapdf/rel/"
-	logFileName = "build-log.txt"
+	s3PreRelDir  = "sumatrapdf/prerel/"
+	s3RelDir     = "sumatrapdf/rel/"
+	logFileName  = "build-log.txt"
+	MaxS3Results = 1000
 )
 
 var (
@@ -1258,7 +1259,7 @@ func s3ListPreReleaseFilesMust(dbg bool) []*FilesForVer {
 	fatalif(preRelNameRegexps == nil, "preRelNameRegexps == nil")
 	var res []*FilesForVer
 	bucket := s3GetBucket()
-	resp, err := bucket.List(s3PreRelDir, "", "", 10000)
+	resp, err := bucket.List(s3PreRelDir, "", "", MaxS3Results)
 	fataliferr(err)
 	fatalif(resp.IsTruncated, "truncated response! implement reading all the files\n")
 	if dbg {
