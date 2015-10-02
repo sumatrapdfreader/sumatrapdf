@@ -137,6 +137,15 @@ pdf_repair_obj(pdf_document *doc, pdf_lexbuf *buf, int *stmofsp, int *stmlenp, p
 
 		while (memcmp(buf->scratch, "endstream", 9) != 0)
 		{
+			/* cf. bugs.ghostscript.com/show_bug.cgi?id=696129 */
+			if (stm_len > 0 && memcmp(buf->scratch, "endobj", 6) == 0 && fz_tell(file) - *stmofsp - 9 >= stm_len)
+			{
+				fz_warn(ctx, "found 'endobj' before 'endstream' after indicated stream /Length");
+				fz_seek(file, -9, SEEK_CUR);
+				if (stmlenp)
+					*stmlenp = fz_tell(file) - *stmofsp;
+				goto atobjend;
+			}
 			c = fz_read_byte(file);
 			if (c == EOF)
 				break;
