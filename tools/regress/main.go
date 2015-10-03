@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -19,14 +20,23 @@ Test succeeds if the output is same as expected.
 */
 
 var (
-	inFatal bool
+	inFatal     bool
+	failedTests []*Test
 )
 
 type Test struct {
-	Cmd         string
-	FileSha1Hex string
-	FileURL     string
-	StdOut      string
+	// values from parsing test file
+	CmdUnparsed    string
+	FileSha1Hex    string
+	FileURL        string
+	ExpectedOutput string
+
+	// computed values
+	CmdPath  string
+	CmdArgs  []string
+	FilePath string
+	Error    error
+	Output   string
 }
 
 func printStack() {
@@ -73,16 +83,111 @@ func toTrimmedLines(d []byte) []string {
 	return lines[:i]
 }
 
-func parseTestsMust(path string) {
+func parseTestsMust(path string) []*Test {
+	var res []*Test
 	d, err := ioutil.ReadFile(path)
 	fataliferr(err)
 	lines := toTrimmedLines(d)
 	// TODO: finish me
 	fmt.Printf("%d lines\n", len(lines))
+	return res
+}
+
+func cmdToStrLong2(cmd *exec.Cmd) string {
+	arr := []string{`"` + cmd.Path + `"`}
+	arr = append(arr, cmd.Args...)
+	return strings.Join(arr, " ")
+}
+
+func cmdToStrLong(cmd *exec.Cmd) string {
+	return strings.Join(cmd.Args, " ")
+}
+
+func isOutputEqual(s1, s2 string) bool {
+	// TODO: normalize whitespace
+	return s1 != s2
+}
+
+func runTest(t *Test) {
+	for i, arg := range t.CmdArgs {
+		if arg == "$file" {
+			t.CmdArgs[i] = t.FilePath
+		}
+	}
+	cmd := exec.Command(t.CmdPath, t.CmdArgs...)
+	fmt.Printf("Running: %s\n", cmdToStrLong(cmd))
+	res, err := cmd.Output()
+	t.Output = string(res)
+	if err != nil {
+		t.Error = err
+		failedTests = append(failedTests, t)
+		return
+	}
+	if !isOutputEqual(t.Output, t.ExpectedOutput) {
+		failedTests = append(failedTests, t)
+		return
+	}
+	fmt.Printf("test passed, output: %s\n", res)
+}
+
+func dumpFailedTest(t *Test) {
+	// TODO: write me
+	args := strings.Join(t.CmdArgs, " ")
+	fmt.Printf("Test %s %s failed\n", t.CmdPath, args)
+	if t.Error != nil {
+		fmt.Printf("Reason: process exited with error '%s'\n", t.Error)
+		return
+	}
+	if !isOutputEqual(t.Output, t.ExpectedOutput) {
+		fmt.Printf(`
+Reason: got output:
+-----
+%s
+-----
+expected:
+-----
+%s
+-----
+`, t.Output, t.ExpectedOutput)
+		return
+	}
+	fmt.Printf("Internal rror: unknown reason\n")
+}
+
+func dumpFailedTests() int {
+	if len(failedTests) == 0 {
+		fmt.Printf("All tests passed!\n")
+		return 0
+	}
+	for _, t := range failedTests {
+		dumpFailedTest(t)
+	}
+	return len(failedTests)
+}
+
+func downloadTestFilesMust(tests []*Test) {
+	// TODO: write me
+}
+
+func runTests(tests []*Test) {
+	for _, test := range tests {
+		runTest(test)
+	}
 }
 
 func main() {
 	fmt.Printf("regress\n")
 	p := filepath.Join("tools", "regress", "tests.txt")
-	parseTestsMust(p)
+	tests := parseTestsMust(p)
+	downloadTestFilesMust(tests)
+
+	t := &Test{
+		CmdPath:        "dbg/SumatraPDF.exe",
+		CmdArgs:        []string{"-render", "2", "-zoom", "5", "$file"},
+		FilePath:       "89a36816f1ab490d46c0c7a6b34b678f72bf.pdf",
+		ExpectedOutput: "rendering page 1 for '89a36816f1ab490d46c0c7a6b34b678f72bf.pdf', zoom: 5.00",
+	}
+	runTest(t)
+	//runTests(tests)
+	os.Exit(dumpFailedTests())
 }

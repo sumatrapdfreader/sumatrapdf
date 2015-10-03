@@ -1,4 +1,8 @@
-Test
-  Url: https://kjkpub.s3.amazonaws.com/testfiles/6f/d3/89a36816f1ab490d46c0c7a6b34b678f72bf.pdf
-  Sha1: 6fd389a36816f1ab490d46c0c7a6b34b678f72b
-  Cmd: SumatraPDF.exe -render 2 $file
+# Note: tests are separated by a single empty line (that is not a part
+# of Out: block)
+# https://github.com/sumatrapdfreader/sumatrapdf/issues/306
+# this crashed rendering page 2. -zoom 10 because actual size is 4k x 3k
+Url: https://kjkpub.s3.amazonaws.com/testfiles/6f/d3/89a36816f1ab490d46c0c7a6b34b678f72bf.pdf
+Sha1: 6fd389a36816f1ab490d46c0c7a6b34b678f72b
+Cmd: SumatraPDF.exe -render 2 -zoom 5 $file
+Out: rendering page 1 for '89a36816f1ab490d46c0c7a6b34b678f72bf.pdf', zoom: 5.00
