@@ -1145,6 +1145,9 @@ pdf_flush_text(pdf_csi *csi, pdf_run_state *pr)
 			}
 		}
 
+		/* cf. https://github.com/sumatrapdfreader/sumatrapdf/issues/306 */
+		pdf_end_group(csi, pr, &softmask);
+
 		if (doclip)
 		{
 			if (pr->accumulate < 2)
@@ -1152,8 +1155,6 @@ pdf_flush_text(pdf_csi *csi, pdf_run_state *pr)
 			fz_clip_text(pr->dev, text, &gstate->ctm, pr->accumulate);
 			pr->accumulate = 2;
 		}
-
-		pdf_end_group(csi, pr, &softmask);
 	}
 	fz_always(ctx)
 	{
