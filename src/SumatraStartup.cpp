@@ -569,6 +569,43 @@ static bool AutoUpdateMain()
 }
 #endif
 
+// TODO: move to Tests.cpp or some such
+void TestRenderPage(const CommandLineInfo& i) {
+    if (i.showConsole) {
+        RedirectIOToConsole();
+        fz_redirect_dll_io_to_console();
+    }
+
+    if (i.pageNumber == -1) {
+        printf("pageNumber is -1\n");
+        return;
+    }
+    auto files = i.fileNames;
+    if (files.Count() == 0) {
+        printf("no file provided\n");
+        return;
+    }
+    float zoom = ZOOM_ACTUAL_SIZE;
+    if (i.startZoom != INVALID_ZOOM) {
+        zoom = i.startZoom;
+    }
+    for (auto fileName : files) {
+        ScopedMem<char> fileNameUtf(str::conv::ToUtf8(fileName));
+        printf("rendering page %d for '%s', zoom: %.2f\n", i.pageNumber, fileNameUtf.Get(), zoom);
+        auto engine = EngineManager::CreateEngine(fileName);
+        if (engine == nullptr) {
+            printf("failed to create engine\n");
+            continue;
+        }
+        auto bmp = engine->RenderBitmap(i.pageNumber, zoom, 0);
+        if (bmp == nullptr) {
+            printf("failed to render page\n");
+        }
+        delete bmp;
+        delete engine;
+    }
+}
+
 int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR cmdLine, _In_ int nCmdShow)
 {
     UNUSED(hPrevInstance); UNUSED(cmdLine); UNUSED(nCmdShow);
@@ -631,6 +668,15 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 
     CommandLineInfo i;
     i.ParseCommandLine(GetCommandLine());
+
+    if (i.testRenderPage) {
+        TestRenderPage(i);
+        UninstallCrashHandler();
+        // output leaks after all destructors of static objects have run
+        _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+        return 0;
+    }
+
     InitializePolicies(i.restrictedUse);
     if (i.appdataDir)
         SetAppDataPath(i.appdataDir);

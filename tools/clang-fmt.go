@@ -11,6 +11,15 @@ import (
 )
 
 /*
+See .clang-fromat to see the style we're using.
+We used to use Mozilla style for the base, but they changed the style a lot
+between 3.5 and 3.7. Our style is meant to not differ too much from Mozilla 3.5
+style (which we used for a bunch of files already)
+TODO: bite the bullet and use PointerAlignment: Right ?
+We're not consistent about it but currently Left might be more frequent,
+possibly due to being in Mozilla 3.5 style. On the other hand in 3.7 all
+styles but llvm use Left
+
 
 List of clang-format formats in 3.5 and 3.7: https://gist.github.com/kjk/298216da8cb4c665075b
 
@@ -96,16 +105,7 @@ SpacesBeforeTrailingComments: 2
 Standard:        Auto
 */
 
-const (
-	// we used to use Mozilla style for the base, but they really changed the
-	// style between 3.5 and 3.7. This style is meant to not differ too much
-	// from Mozilla 3.5 style (which we used for a bunch of files already)
-	// TODO: bite the bullet and use PointerAlignment: Right ?
-	// We're not consistent about it but currently Left might be more frequent,
-	// possibly due to being in Mozilla 3.5 style. On the other hand in 3.7 all
-	// styles but llvm use Left
-	clangStyle = `{BasedOnStyle: Chromium, IndentWidth: 4, ColumnLimit: 100, AccessModifierOffset: -2, PointerAlignment: Right, SpacesBeforeTrailingComments: 1, BinPackParameters: true}`
-)
+const ()
 
 func fataliferr(err error) {
 	if err != nil {
@@ -175,14 +175,31 @@ func getSrcFilesMust(dir string) []string {
 	return srcFiles
 }
 
+func formatFileInDirMust(exePath string, dir, file string) {
+	// -style=file means: use .clang-format
+	cmd := exec.Command(exePath, "-style=file", "-i", file)
+	cmd.Dir = dir
+	fmt.Printf("Running: '%s'\n", strings.Join(cmd.Args, " "))
+	out, err := cmd.CombinedOutput()
+	ifCmdFailed(err, out, cmd)
+}
+
+func formatFileMust(exePath string, filePath string) {
+	dir := filepath.Dir(filePath)
+	file := filepath.Base(filePath)
+	formatFileInDirMust(exePath, dir, file)
+}
+
 func runInDirMust(exePath string, dir string) {
 	files := getSrcFilesMust(dir)
-	for _, f := range files {
-		cmd := exec.Command(exePath, "-style", clangStyle, "-i", f)
-		cmd.Dir = dir
-		fmt.Printf("Running: '%s'\n", strings.Join(cmd.Args, " "))
-		out, err := cmd.CombinedOutput()
-		ifCmdFailed(err, out, cmd)
+	for _, file := range files {
+		formatFileInDirMust(exePath, dir, file)
+	}
+}
+
+func runOnFilesInDirMust(exePath, dir string, files []string) {
+	for _, file := range files {
+		formatFileInDirMust(exePath, dir, file)
 	}
 }
 
@@ -193,8 +210,15 @@ func main() {
 	fmt.Printf("exe path: %s\n", exePath)
 	verifyClangFormatVersion(exePath)
 
+	runOnFilesInDirMust(exePath, "src", []string{
+		"ParseCommandLine.h",
+		"ParseCommandLine.cpp",
+		//"Print.cpp",
+		//"Print.h",
+	})
+
 	d = filepath.Join("src", "utils")
-	//runInDirMust(exePath, d)
+	runInDirMust(exePath, d)
 
 	d = filepath.Join("src", "mui")
 	runInDirMust(exePath, d)

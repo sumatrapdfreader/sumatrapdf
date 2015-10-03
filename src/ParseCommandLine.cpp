@@ -13,18 +13,17 @@
 #include "StressTesting.h"
 
 #ifdef DEBUG
-static void EnumeratePrinters()
-{
+static void EnumeratePrinters() {
     str::Str<WCHAR> output;
 
     PRINTER_INFO_5 *info5Arr = nullptr;
     DWORD bufSize = 0, printersCount;
-    bool fOk = EnumPrinters(PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS, nullptr,
-        5, nullptr, bufSize, &bufSize, &printersCount);
+    bool fOk = EnumPrinters(PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS, nullptr, 5, nullptr,
+                            bufSize, &bufSize, &printersCount);
     if (fOk || GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
         info5Arr = (PRINTER_INFO_5 *)malloc(bufSize);
-        fOk = EnumPrinters(PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS, nullptr,
-            5, (LPBYTE)info5Arr, bufSize, &bufSize, &printersCount);
+        fOk = EnumPrinters(PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS, nullptr, 5,
+                           (LPBYTE)info5Arr, bufSize, &bufSize, &printersCount);
     }
     if (!fOk || !info5Arr) {
         output.AppendFmt(L"Call to EnumPrinters failed with error %#x", GetLastError());
@@ -37,35 +36,38 @@ static void EnumeratePrinters()
         const WCHAR *printerName = info5Arr[i].pPrinterName;
         const WCHAR *printerPort = info5Arr[i].pPortName;
         bool fDefault = str::Eq(defName, printerName);
-        output.AppendFmt(L"%s (Port: %s, attributes: %#x%s)\n", printerName, printerPort, info5Arr[i].Attributes, fDefault ? L", default" : L"");
+        output.AppendFmt(L"%s (Port: %s, attributes: %#x%s)\n", printerName, printerPort,
+                         info5Arr[i].Attributes, fDefault ? L", default" : L"");
 
         DWORD bins = DeviceCapabilities(printerName, printerPort, DC_BINS, nullptr, nullptr);
-        DWORD binNames = DeviceCapabilities(printerName, printerPort, DC_BINNAMES, nullptr, nullptr);
+        DWORD binNames =
+            DeviceCapabilities(printerName, printerPort, DC_BINNAMES, nullptr, nullptr);
         CrashIf(bins != binNames);
         if (0 == bins) {
             output.Append(L" - no paper bins available\n");
-        }
-        else if (bins == (DWORD)-1) {
-            output.AppendFmt(L" - Call to DeviceCapabilities failed with error %#x\n", GetLastError());
-        }
-        else {
+        } else if (bins == (DWORD)-1) {
+            output.AppendFmt(L" - Call to DeviceCapabilities failed with error %#x\n",
+                             GetLastError());
+        } else {
             ScopedMem<WORD> binValues(AllocArray<WORD>(bins));
-            DeviceCapabilities(printerName, printerPort, DC_BINS, (WCHAR *)binValues.Get(), nullptr);
+            DeviceCapabilities(printerName, printerPort, DC_BINS, (WCHAR *)binValues.Get(),
+                               nullptr);
             ScopedMem<WCHAR> binNameValues(AllocArray<WCHAR>(24 * binNames));
             DeviceCapabilities(printerName, printerPort, DC_BINNAMES, binNameValues.Get(), nullptr);
             for (DWORD j = 0; j < bins; j++) {
-                output.AppendFmt(L" - '%s' (%d)\n", binNameValues.Get() + 24 * j, binValues.Get()[j]);
+                output.AppendFmt(L" - '%s' (%d)\n", binNameValues.Get() + 24 * j,
+                                 binValues.Get()[j]);
             }
         }
     }
     free(info5Arr);
-    MessageBox(nullptr, output.Get(), L"SumatraPDF - EnumeratePrinters", MB_OK | MB_ICONINFORMATION);
+    MessageBox(nullptr, output.Get(), L"SumatraPDF - EnumeratePrinters",
+               MB_OK | MB_ICONINFORMATION);
 }
 #endif
 
 /* Parse 'txt' as hex color and return the result in 'destColor' */
-static void ParseColor(COLORREF *destColor, const WCHAR *txt)
-{
+static void ParseColor(COLORREF *destColor, const WCHAR *txt) {
     if (!destColor)
         return;
     if (str::StartsWith(txt, L"0x"))
@@ -79,35 +81,37 @@ static void ParseColor(COLORREF *destColor, const WCHAR *txt)
 }
 
 // -view [continuous][singlepage|facing|bookview]
-static void ParseViewMode(DisplayMode *mode, const WCHAR *txt)
-{
+static void ParseViewMode(DisplayMode *mode, const WCHAR *txt) {
     *mode = prefs::conv::ToDisplayMode(txt, DM_AUTOMATIC);
 }
 
-// -zoom [fitwidth|fitpage|fitcontent|100%] (with 100% meaning actual size)
-static void ParseZoomValue(float *zoom, const WCHAR *txt)
-{
-    if (str::EqIS(txt, L"fit page"))
+// -zoom [fitwidth|fitpage|fitcontent|n]
+// if a number, it's in percent e.g. 12.5 means 12.5%
+// 100 means 100% i.e. actual size as e.g. given in PDF file
+static void ParseZoomValue(float *zoom, const WCHAR *txt) {
+    if (str::EqIS(txt, L"fit page") || str::EqIS(txt, L"fitpage") || str::EqIS(txt, L"fit-page")) {
         *zoom = ZOOM_FIT_PAGE;
-    else if (str::EqIS(txt, L"fit width"))
+    } else if (str::EqIS(txt, L"fit width") || str::EqIS(txt, L"fitwidth") ||
+               str::EqIS(txt, L"fit-width")) {
         *zoom = ZOOM_FIT_WIDTH;
-    else if (str::EqIS(txt, L"fit content"))
+    } else if (str::EqIS(txt, L"fit content") || str::EqIS(txt, L"fitcontent") ||
+               str::EqIS(txt, L"fit-content")) {
         *zoom = ZOOM_FIT_CONTENT;
-    else
+    } else {
+        // TODO: allow 100% by eating terminating %
         str::Parse(txt, L"%f", zoom);
+    }
 }
 
 // -scroll x,y
-static void ParseScrollValue(PointI *scroll, const WCHAR *txt)
-{
+static void ParseScrollValue(PointI *scroll, const WCHAR *txt) {
     int x, y;
     if (str::Parse(txt, L"%d,%d%$", &x, &y))
         *scroll = PointI(x, y);
 }
 
 /* parse argument list. we assume that all unrecognized arguments are file names. */
-void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine)
-{
+void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine) {
     WStrVec argList;
     ParseCmdLine(cmdLine, argList);
     size_t argCount = argList.Count();
@@ -125,87 +129,67 @@ void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine)
             makeDefault = true;
             exitImmediately = true;
             return;
-        }
-        else if (is_arg("-silent")) {
+        } else if (is_arg("-silent")) {
             // silences errors happening during -print-to and -print-to-default
             silent = true;
-        }
-        else if (is_arg("-print-to-default")) {
+        } else if (is_arg("-print-to-default")) {
             printerName.Set(GetDefaultPrinterName());
             if (!printerName)
                 printDialog = true;
             exitWhenDone = true;
-        }
-        else if (is_arg_with_param("-print-to")) {
+        } else if (is_arg_with_param("-print-to")) {
             handle_string_param(printerName);
             exitWhenDone = true;
-        }
-        else if (is_arg("-print-dialog")) {
+        } else if (is_arg("-print-dialog")) {
             printDialog = true;
-        }
-        else if (is_arg_with_param("-print-settings")) {
+        } else if (is_arg_with_param("-print-settings")) {
             // argument is a comma separated list of page ranges and
             // advanced options [even|odd] and [noscale|shrink|fit]
             // e.g. -print-settings "1-3,5,10-8,odd,fit"
             handle_string_param(printSettings);
             str::RemoveChars(printSettings, L" ");
             str::TransChars(printSettings, L";", L",");
-        }
-        else if (is_arg("-exit-when-done") || is_arg("-exit-on-print")) {
+        } else if (is_arg("-exit-when-done") || is_arg("-exit-on-print")) {
             // only affects -print-dialog (-print-to and -print-to-default
             // always exit on print) and -stress-test (useful for profiling)
             exitWhenDone = true;
-        }
-        else if (is_arg_with_param("-inverse-search")) {
+        } else if (is_arg_with_param("-inverse-search")) {
             inverseSearchCmdLine.Set(str::Dup(argList.At(++n)));
-        }
-        else if ((is_arg_with_param("-forward-search") ||
-                  is_arg_with_param("-fwdsearch")) && argCount > n + 2) {
+        } else if ((is_arg_with_param("-forward-search") || is_arg_with_param("-fwdsearch")) &&
+                   argCount > n + 2) {
             // -forward-search is for consistency with -inverse-search
             // -fwdsearch is for consistency with -fwdsearch-*
             handle_string_param(forwardSearchOrigin);
             handle_int_param(forwardSearchLine);
-        }
-        else if (is_arg_with_param("-nameddest") || is_arg_with_param("-named-dest")) {
+        } else if (is_arg_with_param("-nameddest") || is_arg_with_param("-named-dest")) {
             // -nameddest is for backwards compat (was used pre-1.3)
             // -named-dest is for consistency
             handle_string_param(destName);
-        }
-        else if (is_arg_with_param("-page")) {
+        } else if (is_arg_with_param("-page")) {
             handle_int_param(pageNumber);
-        }
-        else if (is_arg("-restrict")) {
+        } else if (is_arg("-restrict")) {
             restrictedUse = true;
-        }
-        else if (is_arg("-invertcolors") || is_arg("-invert-colors")) {
+        } else if (is_arg("-invertcolors") || is_arg("-invert-colors")) {
             // -invertcolors is for backwards compat (was used pre-1.3)
             // -invert-colors is for consistency
             // -invert-colors used to be a shortcut for -set-color-range 0xFFFFFF 0x000000
             // now it non-permanently swaps textColor and backgroundColor
             invertColors = true;
-        }
-        else if (is_arg("-presentation")) {
+        } else if (is_arg("-presentation")) {
             enterPresentation = true;
-        }
-        else if (is_arg("-fullscreen")) {
+        } else if (is_arg("-fullscreen")) {
             enterFullScreen = true;
-        }
-        else if (is_arg_with_param("-view")) {
+        } else if (is_arg_with_param("-view")) {
             ParseViewMode(&startView, argList.At(++n));
-        }
-        else if (is_arg_with_param("-zoom")) {
+        } else if (is_arg_with_param("-zoom")) {
             ParseZoomValue(&startZoom, argList.At(++n));
-        }
-        else if (is_arg_with_param("-scroll")) {
+        } else if (is_arg_with_param("-scroll")) {
             ParseScrollValue(&startScroll, argList.At(++n));
-        }
-        else if (is_arg("-console")) {
+        } else if (is_arg("-console")) {
             showConsole = true;
-        }
-        else if (is_arg_with_param("-appdata")) {
+        } else if (is_arg_with_param("-appdata")) {
             appdataDir.Set(str::Dup(argList.At(++n)));
-        }
-        else if (is_arg_with_param("-plugin")) {
+        } else if (is_arg_with_param("-plugin")) {
             // -plugin [<URL>] <parent HWND>
             if (argCount > n + 2 && !str::IsDigit(*argList.At(n + 1)) && *argList.At(n + 2) != '-')
                 handle_string_param(pluginURL);
@@ -213,9 +197,9 @@ void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine)
             // become the parent of a frameless SumatraPDF
             // (used e.g. for embedding it into a browser plugin)
             hwndPluginParent = (HWND)(INT_PTR)_wtol(argList.At(++n));
-        }
-        else if (is_arg_with_param("-stress-test")) {
-            // -stress-test <file or dir path> [<file filter>] [<page/file range(s)>] [<cycle count>x]
+        } else if (is_arg_with_param("-stress-test")) {
+            // -stress-test <file or dir path> [<file filter>] [<page/file range(s)>] [<cycle
+            // count>x]
             // e.g. -stress-test file.pdf 25x  for rendering file.pdf 25 times
             //      -stress-test file.pdf 1-3  render only pages 1, 2 and 3 of file.pdf
             //      -stress-test dir 301- 2x   render all files in dir twice, skipping first 300
@@ -226,18 +210,19 @@ void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine)
                 handle_string_param(stressTestFilter);
             if (has_additional_param() && IsValidPageRange(additional_param()))
                 handle_string_param(stressTestRanges);
-            if (has_additional_param() && str::Parse(additional_param(), L"%dx%$", &num) && num > 0) {
+            if (has_additional_param() && str::Parse(additional_param(), L"%dx%$", &num) &&
+                num > 0) {
                 stressTestCycles = num;
                 n++;
             }
-        }
-        else if (is_arg_with_param("-n")) {
+        } else if (is_arg_with_param("-n")) {
             handle_int_param(stressParallelCount);
-        }
-        else if (is_arg("-rand")) {
+        } else if (is_arg_with_param("-render")) {
+            handle_int_param(pageNumber);
+            testRenderPage = true;
+        } else if (is_arg("-rand")) {
             stressRandomizeFiles = true;
-        }
-        else if (is_arg_with_param("-bench")) {
+        } else if (is_arg_with_param("-bench")) {
             WCHAR *s = str::Dup(argList.At(++n));
             pathsToBenchmark.Push(s);
             s = nullptr;
@@ -250,8 +235,7 @@ void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine)
             // to make testing of crash reporting system in pre-release/release
             // builds possible
             crashOnOpen = true;
-        }
-        else if (is_arg("-reuse-instance")) {
+        } else if (is_arg("-reuse-instance")) {
             // for backwards compatibility, -reuse-instance reuses whatever
             // instance has registered as DDE server
             reuseDdeInstance = true;
@@ -259,18 +243,15 @@ void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine)
         // TODO: remove the following deprecated options within a release or two
         else if (is_arg_with_param("-lang")) {
             lang.Set(str::conv::ToAnsi(argList.At(++n)));
-        }
-        else if (is_arg("-esc-to-exit")) {
+        } else if (is_arg("-esc-to-exit")) {
             globalPrefArgs.Append(str::Dup(argList.At(n)));
-        }
-        else if (is_arg_with_param("-bgcolor") || is_arg_with_param("-bg-color") ||
-                 is_arg_with_param("-fwdsearch-offset") || is_arg_with_param("-fwdsearch-width") ||
-                 is_arg_with_param("-fwdsearch-color") || is_arg_with_param("-fwdsearch-permanent") ||
-                 is_arg_with_param("-manga-mode")) {
+        } else if (is_arg_with_param("-bgcolor") || is_arg_with_param("-bg-color") ||
+                   is_arg_with_param("-fwdsearch-offset") ||
+                   is_arg_with_param("-fwdsearch-width") || is_arg_with_param("-fwdsearch-color") ||
+                   is_arg_with_param("-fwdsearch-permanent") || is_arg_with_param("-manga-mode")) {
             globalPrefArgs.Append(str::Dup(argList.At(n)));
             globalPrefArgs.Append(str::Dup(argList.At(++n)));
-        }
-        else if (is_arg("-set-color-range") && argCount > n + 2) {
+        } else if (is_arg("-set-color-range") && argCount > n + 2) {
             globalPrefArgs.Append(str::Dup(argList.At(n)));
             globalPrefArgs.Append(str::Dup(argList.At(++n)));
             globalPrefArgs.Append(str::Dup(argList.At(++n)));
@@ -286,8 +267,7 @@ void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine)
         // this should have been handled already by AutoUpdateMain
         else if (is_arg_with_param("-autoupdate")) {
             n++;
-        }
-        else {
+        } else {
             // Remember this argument as a filename to open
             WCHAR *filePath = nullptr;
             if (str::EndsWithI(argList.At(n), L".lnk"))
@@ -305,8 +285,8 @@ void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine)
 #undef handle_int_param
 }
 
-void CommandLineInfo::UpdateGlobalPrefs()
-{
+// TODO: doesn't belong in CommandLineInfo
+void CommandLineInfo::UpdateGlobalPrefs() {
     if (inverseSearchCmdLine) {
         str::ReplacePtr(&gGlobalPrefs->inverseSearchCmdLine, inverseSearchCmdLine);
         gGlobalPrefs->enableTeXEnhancements = true;
@@ -316,33 +296,27 @@ void CommandLineInfo::UpdateGlobalPrefs()
     for (size_t n = 0; n < globalPrefArgs.Count(); n++) {
         if (str::EqI(globalPrefArgs.At(n), L"-esc-to-exit")) {
             gGlobalPrefs->escToExit = true;
-        }
-        else if (str::EqI(globalPrefArgs.At(n), L"-bgcolor") || str::EqI(globalPrefArgs.At(n), L"-bg-color")) {
+        } else if (str::EqI(globalPrefArgs.At(n), L"-bgcolor") ||
+                   str::EqI(globalPrefArgs.At(n), L"-bg-color")) {
             // -bgcolor is for backwards compat (was used pre-1.3)
             // -bg-color is for consistency
             ParseColor(&gGlobalPrefs->mainWindowBackground, globalPrefArgs.At(++n));
-        }
-        else if (str::EqI(globalPrefArgs.At(n), L"-set-color-range")) {
+        } else if (str::EqI(globalPrefArgs.At(n), L"-set-color-range")) {
             ParseColor(&gGlobalPrefs->fixedPageUI.textColor, globalPrefArgs.At(++n));
             ParseColor(&gGlobalPrefs->fixedPageUI.backgroundColor, globalPrefArgs.At(++n));
-        }
-        else if (str::EqI(globalPrefArgs.At(n), L"-fwdsearch-offset")) {
+        } else if (str::EqI(globalPrefArgs.At(n), L"-fwdsearch-offset")) {
             gGlobalPrefs->forwardSearch.highlightOffset = _wtoi(globalPrefArgs.At(++n));
             gGlobalPrefs->enableTeXEnhancements = true;
-        }
-        else if (str::EqI(globalPrefArgs.At(n), L"-fwdsearch-width")) {
+        } else if (str::EqI(globalPrefArgs.At(n), L"-fwdsearch-width")) {
             gGlobalPrefs->forwardSearch.highlightWidth = _wtoi(globalPrefArgs.At(++n));
             gGlobalPrefs->enableTeXEnhancements = true;
-        }
-        else if (str::EqI(globalPrefArgs.At(n), L"-fwdsearch-color")) {
+        } else if (str::EqI(globalPrefArgs.At(n), L"-fwdsearch-color")) {
             ParseColor(&gGlobalPrefs->forwardSearch.highlightColor, globalPrefArgs.At(++n));
             gGlobalPrefs->enableTeXEnhancements = true;
-        }
-        else if (str::EqI(globalPrefArgs.At(n), L"-fwdsearch-permanent")) {
+        } else if (str::EqI(globalPrefArgs.At(n), L"-fwdsearch-permanent")) {
             gGlobalPrefs->forwardSearch.highlightPermanent = _wtoi(globalPrefArgs.At(++n));
             gGlobalPrefs->enableTeXEnhancements = true;
-        }
-        else if (str::EqI(globalPrefArgs.At(n), L"-manga-mode")) {
+        } else if (str::EqI(globalPrefArgs.At(n), L"-manga-mode")) {
             const WCHAR *s = globalPrefArgs.At(++n);
             gGlobalPrefs->comicBookUI.cbxMangaMode = str::EqI(L"true", s) || str::Eq(L"1", s);
         }
