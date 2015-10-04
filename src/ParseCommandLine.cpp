@@ -126,14 +126,62 @@ static void ParseScrollValue(PointI *scroll, const WCHAR *txt) {
         *scroll = PointI(x, y);
 }
 
+// order must match enum
+static const char *argNames = "register-for-pdf\0" \
+"print-to-default\0" \
+"print-dialog\0" \
+"exit-when-done\0" \
+"exit-on-print\0" \
+"restrict\0" \
+"invertcolors\0" \
+"invert-colors\0" \
+"presentation\0" \
+"fullscreen\0" \
+"console\0" \
+"rand\0" \
+"crash-on-open\0" \
+"reuse-instance\0" \
+"esc-to-exit\0" \
+"set-color-range\0" \
+"enum-printers\0" \
+"silent\0";
+
+enum {
+    RegisterForPdf,
+    PrintToDefault,
+    PrintDialog,
+    ExitWhenDone,
+    ExitOnPrint,
+    Restrict,
+    InvertColors1,
+    InvertColors2,
+    Presentation,
+    Fullscreen,
+    Console,
+    Rand,
+    CrashOnOpen,
+    ReuseInstance,
+    EscToExit,
+    SetColorRange,
+    ArgEnumPrinters, // EnumPrinters conflicts with win API EnumPrinters()
+    Silent
+};
+
+static int GetArgNo(const WCHAR *argName) {
+    if (*argName == '-' || *argName == '/') {
+        argName++;
+    }
+    return seqstrings::StrToIdx(argNames, argName);
+}
+
 /* parse argument list. we assume that all unrecognized arguments are file names. */
 void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine) {
     WStrVec argList;
     ParseCmdLine(cmdLine, argList);
     size_t argCount = argList.Count();
 
-#define is_arg(txt) str::EqI(TEXT(txt), argument)
-#define is_arg_with_param(txt) (is_arg(txt) && (argCount > n + 1))
+#define is_arg2(txt) str::EqI(TEXT(txt), argument)
+#define is_arg_with_param(txt) (is_arg2(txt) && (argCount > n + 1))
 #define additional_param() argList.At(n + 1)
 #define has_additional_param() ((argCount > n + 1) && ('-' != additional_param()[0]))
 #define handle_string_param(name) name.Set(str::Dup(argList.At(++n)))
@@ -141,14 +189,15 @@ void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine) {
 
     for (size_t n = 1; n < argCount; n++) {
         WCHAR *argument = argList.At(n);
-        if (is_arg("-register-for-pdf")) {
+        int arg = GetArgNo(argument);
+        if (RegisterForPdf == arg) {
             makeDefault = true;
             exitImmediately = true;
             return;
-        } else if (is_arg("-silent")) {
+        } else if (Silent == arg) {
             // silences errors happening during -print-to and -print-to-default
             silent = true;
-        } else if (is_arg("-print-to-default")) {
+        } else if (PrintToDefault == arg) {
             printerName.Set(GetDefaultPrinterName());
             if (!printerName)
                 printDialog = true;
@@ -156,7 +205,7 @@ void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine) {
         } else if (is_arg_with_param("-print-to")) {
             handle_string_param(printerName);
             exitWhenDone = true;
-        } else if (is_arg("-print-dialog")) {
+        } else if (PrintDialog == arg) {
             printDialog = true;
         } else if (is_arg_with_param("-print-settings")) {
             // argument is a comma separated list of page ranges and
@@ -165,7 +214,7 @@ void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine) {
             handle_string_param(printSettings);
             str::RemoveChars(printSettings, L" ");
             str::TransChars(printSettings, L";", L",");
-        } else if (is_arg("-exit-when-done") || is_arg("-exit-on-print")) {
+        } else if (ExitWhenDone == arg || ExitOnPrint == arg) {
             // only affects -print-dialog (-print-to and -print-to-default
             // always exit on print) and -stress-test (useful for profiling)
             exitWhenDone = true;
@@ -183,17 +232,17 @@ void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine) {
             handle_string_param(destName);
         } else if (is_arg_with_param("-page")) {
             handle_int_param(pageNumber);
-        } else if (is_arg("-restrict")) {
+        } else if (Restrict == arg) {
             restrictedUse = true;
-        } else if (is_arg("-invertcolors") || is_arg("-invert-colors")) {
+        } else if (InvertColors1 == arg || InvertColors2 == arg) {
             // -invertcolors is for backwards compat (was used pre-1.3)
             // -invert-colors is for consistency
             // -invert-colors used to be a shortcut for -set-color-range 0xFFFFFF 0x000000
             // now it non-permanently swaps textColor and backgroundColor
             invertColors = true;
-        } else if (is_arg("-presentation")) {
+        } else if (Presentation == arg) {
             enterPresentation = true;
-        } else if (is_arg("-fullscreen")) {
+        } else if (Fullscreen == arg) {
             enterFullScreen = true;
         } else if (is_arg_with_param("-view")) {
             ParseViewMode(&startView, argList.At(++n));
@@ -201,7 +250,7 @@ void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine) {
             ParseZoomValue(&startZoom, argList.At(++n));
         } else if (is_arg_with_param("-scroll")) {
             ParseScrollValue(&startScroll, argList.At(++n));
-        } else if (is_arg("-console")) {
+        } else if (Console == arg) {
             showConsole = true;
         } else if (is_arg_with_param("-appdata")) {
             appdataDir.Set(str::Dup(argList.At(++n)));
@@ -236,7 +285,7 @@ void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine) {
         } else if (is_arg_with_param("-render")) {
             handle_int_param(pageNumber);
             testRenderPage = true;
-        } else if (is_arg("-rand")) {
+        } else if (Rand == arg) {
             stressRandomizeFiles = true;
         } else if (is_arg_with_param("-bench")) {
             WCHAR *s = str::Dup(argList.At(++n));
@@ -247,11 +296,11 @@ void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine) {
             }
             pathsToBenchmark.Push(s);
             exitImmediately = true;
-        } else if (is_arg("-crash-on-open")) {
+        } else if (CrashOnOpen == arg) {
             // to make testing of crash reporting system in pre-release/release
             // builds possible
             crashOnOpen = true;
-        } else if (is_arg("-reuse-instance")) {
+        } else if (ReuseInstance == arg) {
             // for backwards compatibility, -reuse-instance reuses whatever
             // instance has registered as DDE server
             reuseDdeInstance = true;
@@ -259,7 +308,7 @@ void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine) {
         // TODO: remove the following deprecated options within a release or two
         else if (is_arg_with_param("-lang")) {
             lang.Set(str::conv::ToAnsi(argList.At(++n)));
-        } else if (is_arg("-esc-to-exit")) {
+        } else if (EscToExit == arg) {
             globalPrefArgs.Append(str::Dup(argList.At(n)));
         } else if (is_arg_with_param("-bgcolor") || is_arg_with_param("-bg-color") ||
                    is_arg_with_param("-fwdsearch-offset") ||
@@ -267,13 +316,13 @@ void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine) {
                    is_arg_with_param("-fwdsearch-permanent") || is_arg_with_param("-manga-mode")) {
             globalPrefArgs.Append(str::Dup(argList.At(n)));
             globalPrefArgs.Append(str::Dup(argList.At(++n)));
-        } else if (is_arg("-set-color-range") && argCount > n + 2) {
+        } else if (SetColorRange == arg && argCount > n + 2) {
             globalPrefArgs.Append(str::Dup(argList.At(n)));
             globalPrefArgs.Append(str::Dup(argList.At(++n)));
             globalPrefArgs.Append(str::Dup(argList.At(++n)));
         }
 #ifdef DEBUG
-        else if (is_arg("-enum-printers")) {
+        else if (ArgEnumPrinters == arg) {
             EnumeratePrinters();
             /* this is for testing only, exit immediately */
             exitImmediately = true;
