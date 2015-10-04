@@ -211,41 +211,34 @@ void DisableDataExecution() {
 void RedirectIOToConsole() {
     CONSOLE_SCREEN_BUFFER_INFO coninfo;
 
-    // allocate a console for this app
     AllocConsole();
 
-    // set the screen buffer to be big enough to let us scroll text
+    // make buffer big enough to allow scrolling
     GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &coninfo);
     coninfo.dwSize.Y = 500;
     SetConsoleScreenBufferSize(GetStdHandle(STD_OUTPUT_HANDLE), coninfo.dwSize);
 
-    // redirect unbuffered STDOUT to the console
+    // redirect STDIN, STDOUT and STDERR to the console
 #if _MSC_VER < 1900
     int hConHandle = _open_osfhandle((intptr_t)GetStdHandle(STD_OUTPUT_HANDLE), _O_TEXT);
     *stdout = *_fdopen(hConHandle, "w");
+
+    hConHandle = _open_osfhandle((intptr_t) GetStdHandle(STD_ERROR_HANDLE), _O_TEXT);
+    *stderr = *_fdopen(hConHandle, "w");
+
+    hConHandle = _open_osfhandle((intptr_t) GetStdHandle(STD_INPUT_HANDLE), _O_TEXT);
+    *stdin = *_fdopen(hConHandle, "r");
 #else
     FILE *con;
     freopen_s(&con, "CONOUT$", "w", stdout);
-#endif
-    setvbuf(stdout, nullptr, _IONBF, 0);
-
-    // redirect unbuffered STDERR to the console
-#if _MSC_VER < 1900
-    hConHandle = _open_osfhandle((intptr_t)GetStdHandle(STD_ERROR_HANDLE), _O_TEXT);
-    *stderr = *_fdopen(hConHandle, "w");
-#else
     freopen_s(&con, "CONOUT$", "w", stderr);
-#endif
-    setvbuf(stderr, nullptr, _IONBF, 0);
-
-    // redirect unbuffered STDIN to the console
-#if _MSC_VER < 1900
-    hConHandle = _open_osfhandle((intptr_t)GetStdHandle(STD_INPUT_HANDLE), _O_TEXT);
-    *stdin = *_fdopen(hConHandle, "r");
-#else
     freopen_s(&con, "CONIN$", "r", stdin);
 #endif
+
+    // make them unbuffered
     setvbuf(stdin, nullptr, _IONBF, 0);
+    setvbuf(stdout, nullptr, _IONBF, 0);
+    setvbuf(stderr, nullptr, _IONBF, 0);
 }
 
 /* Return the full exe path of my own executable.
