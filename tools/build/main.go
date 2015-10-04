@@ -119,12 +119,6 @@ func printTimings() {
 	}
 }
 
-func printStack() {
-	buf := make([]byte, 1024*164)
-	n := runtime.Stack(buf, false)
-	fmt.Printf("%s", buf[:n])
-}
-
 func cmdToStrLong(cmd *exec.Cmd) string {
 	arr := []string{cmd.Path}
 	arr = append(arr, cmd.Args...)
@@ -164,6 +158,12 @@ func finalizeThings(crashed bool) {
 		logToFile(fmt.Sprintf("total time: %s\n", time.Since(timeStart)))
 	}
 	closeLogFile()
+}
+
+func printStack() {
+	buf := make([]byte, 1024*164)
+	n := runtime.Stack(buf, false)
+	fmt.Printf("%s", buf[:n])
 }
 
 func fatalf(format string, args ...interface{}) {
