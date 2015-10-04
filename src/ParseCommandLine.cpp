@@ -85,22 +85,39 @@ static void ParseViewMode(DisplayMode *mode, const WCHAR *txt) {
     *mode = prefs::conv::ToDisplayMode(txt, DM_AUTOMATIC);
 }
 
+static const char *zoomValues = "fit page\0fitpage\0fit-page\0fit width\0fitwidth\0fit-width\0fit content\0fitcontent\0fit-content\0";
+
+// TODO: write unit tests for those
 // -zoom [fitwidth|fitpage|fitcontent|n]
 // if a number, it's in percent e.g. 12.5 means 12.5%
 // 100 means 100% i.e. actual size as e.g. given in PDF file
-static void ParseZoomValue(float *zoom, const WCHAR *txt) {
-    if (str::EqIS(txt, L"fit page") || str::EqIS(txt, L"fitpage") || str::EqIS(txt, L"fit-page")) {
-        *zoom = ZOOM_FIT_PAGE;
-    } else if (str::EqIS(txt, L"fit width") || str::EqIS(txt, L"fitwidth") ||
-               str::EqIS(txt, L"fit-width")) {
-        *zoom = ZOOM_FIT_WIDTH;
-    } else if (str::EqIS(txt, L"fit content") || str::EqIS(txt, L"fitcontent") ||
-               str::EqIS(txt, L"fit-content")) {
+static void ParseZoomValue(float *zoom, const WCHAR *txtOrig) {
+    ScopedMem<char> txtDup(str::conv::ToUtf8(txtOrig));
+    char *txt = txtDup.Get();
+    str::ToLower(txt);
+    int zoomVal = seqstrings::StrToIdx(zoomValues, txt);
+    if (zoomVal != -1) {
+        // 0-2 : fit page
+        // 3-5 : fit width
+        // 6-8 : fit content
         *zoom = ZOOM_FIT_CONTENT;
-    } else {
-        // TODO: allow 100% by eating terminating %
-        str::Parse(txt, L"%f", zoom);
+        if (zoomVal <= 5) {
+            *zoom = ZOOM_FIT_WIDTH;
+        }
+        if (zoomVal <= 2) {
+            *zoom = ZOOM_FIT_PAGE;
+        }
+        return;
     }
+    // remove trailing % in place, if exists
+    if (str::EndsWith(txt, "%")) {
+        txt[str::Len(txt) - 1] = 0;
+    }
+    str::Parse(txt, "%f", zoom);
+    // prevent really small zoom and zoom values that are not valid numbers
+    // (which would be parsed as 0)
+    if (*zoom < 1.f)
+        *zoom = ZOOM_ACTUAL_SIZE;
 }
 
 // -scroll x,y

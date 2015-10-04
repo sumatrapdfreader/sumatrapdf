@@ -1503,7 +1503,7 @@ static inline const char *StrEqWeird(const char *s, const WCHAR *toFind)
     }
 }
 
-// conceptually strings is an array of 0-terminated strings where,  laid
+// conceptually strings is an array of 0-terminated strings where, laid
 // out sequentially in memory, terminated with a 0-length string
 // Returns index of toFind string in strings
 // Returns -1 if string doesn't exist

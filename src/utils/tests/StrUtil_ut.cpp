@@ -54,7 +54,7 @@ static void StrReplaceTest()
 
 static void StrSeqTest()
 {
-    const char *s = "foo\0a\0bar\0\0";
+    const char *s = "foo\0a\0bar\0";
     utassert(0 == seqstrings::StrToIdx(s, "foo"));
     utassert(1 == seqstrings::StrToIdx(s, "a"));
     utassert(2 == seqstrings::StrToIdx(s, "bar"));
