@@ -391,11 +391,11 @@ void StrTest()
 
     {
         char str1[] = "aAbBcC... 1-9";
-        str::ToLower(str1);
+        str::ToLowerInPlace(str1);
         utassert(str::Eq(str1, "aabbcc... 1-9"));
 
         WCHAR wstr[] = L"aAbBcC... 1-9";
-        str::ToLower(wstr);
+        str::ToLowerInPlace(wstr);
         utassert(str::Eq(wstr, L"aabbcc... 1-9"));
     }
 

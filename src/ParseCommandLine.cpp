@@ -93,8 +93,7 @@ static const char *zoomValues = "fit page\0fitpage\0fit-page\0fit width\0fitwidt
 // 100 means 100% i.e. actual size as e.g. given in PDF file
 static void ParseZoomValue(float *zoom, const WCHAR *txtOrig) {
     ScopedMem<char> txtDup(str::conv::ToUtf8(txtOrig));
-    char *txt = txtDup.Get();
-    str::ToLower(txt);
+    char *txt = str::ToLowerInPlace(txtDup.Get());
     int zoomVal = seqstrings::StrToIdx(zoomValues, txt);
     if (zoomVal != -1) {
         // 0-2 : fit page

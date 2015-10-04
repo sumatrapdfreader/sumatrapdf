@@ -278,7 +278,7 @@ static void GetAddressInfo(str::Str<char>& s, DWORD64 addr)
     DWORD section;
     DWORD_PTR offset;
     if (GetAddrInfo((void*)addr, module, sizeof(module), section, offset)) {
-        str::ToLower(module);
+        str::ToLowerInPlace(module);
         const char *moduleShort = path::GetBaseName(module);
         AppendAddress(s, addr);
         s.AppendFmt(" %02X:", section);

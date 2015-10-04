@@ -429,7 +429,7 @@ static HWND FindPrevInstWindow(HANDLE *hMutex)
     // create a unique identifier for this executable
     // (allows independent side-by-side installations)
     ScopedMem<WCHAR> exePath(GetExePath());
-    str::ToLower(exePath);
+    str::ToLowerInPlace(exePath);
     uint32_t hash = MurmurHash2(exePath.Get(), str::Len(exePath) * sizeof(WCHAR));
     ScopedMem<WCHAR> mapId(str::Format(L"SumatraPDF-%08x", hash));
 
@@ -671,7 +671,10 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 
     if (i.testRenderPage) {
         TestRenderPage(i);
+        mui::Destroy();
+        uitask::Destroy();
         UninstallCrashHandler();
+        dbghelp::FreeCallstackLogs();
         // output leaks after all destructors of static objects have run
         _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
         return 0;

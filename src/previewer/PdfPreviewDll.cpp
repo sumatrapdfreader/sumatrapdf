@@ -288,7 +288,7 @@ STDAPI DllInstall(BOOL bInstall, LPCWSTR pszCmdLine)
     // allows installing only a subset of available preview handlers
     if (str::StartsWithI(pszCmdLine, L"exts:")) {
         ScopedMem<WCHAR> extsList(str::Dup(pszCmdLine + 5));
-        str::ToLower(extsList);
+        str::ToLowerInPlace(extsList);
         str::TransChars(extsList, L";. :", L",,,\0");
         WStrVec exts;
         exts.Split(extsList, L",", true);

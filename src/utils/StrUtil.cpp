@@ -320,18 +320,22 @@ WCHAR *DupN(const WCHAR *s, size_t lenCch)
     return res;
 }
 
-void ToLower(char *s)
+char *ToLowerInPlace(char *s)
 {
-    if (!s) return;
-    for (; *s; s++)
-        *s = (char)tolower(*s);
+    char *res = s;
+    for (; s && *s; s++) {
+      *s = (char)tolower(*s);
+    }
+    return res;
 }
 
-void ToLower(WCHAR *s)
+WCHAR* ToLowerInPlace(WCHAR *s)
 {
-    if (!s) return;
-    for (; *s; s++)
-        *s = towlower(*s);
+    WCHAR *res = s;
+    for (; s && *s; s++) {
+      *s = towlower(*s);
+    }
+    return res;
 }
 
 /* Caller needs to free() the result */

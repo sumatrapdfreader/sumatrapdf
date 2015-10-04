@@ -60,8 +60,8 @@ inline bool EqNIx(const char *s, size_t len, const char *s2) {
 char *  DupN(const char *s, size_t lenCch);
 WCHAR * DupN(const WCHAR *s, size_t lenCch);
 
-void ToLower(char *s);
-void ToLower(WCHAR *s);
+char* ToLowerInPlace(char *s);
+WCHAR* ToLowerInPlace(WCHAR *s);
 
 char *  ToMultiByte(const WCHAR *txt, UINT CodePage, int cchTxtLen=-1);
 char *  ToMultiByte(const char *src, UINT CodePageSrc, UINT CodePageDest);

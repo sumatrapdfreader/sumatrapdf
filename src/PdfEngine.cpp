@@ -946,7 +946,7 @@ WCHAR *FormatPageLabel(const char *type, int pageNo, const WCHAR *prefix)
         // roman numbering style
         ScopedMem<WCHAR> number(str::FormatRomanNumeral(pageNo));
         if (*type == 'r')
-            str::ToLower(number.Get());
+            str::ToLowerInPlace(number.Get());
         return str::Format(L"%s%s", prefix, number);
     }
     if (str::EqI(type, "A")) {
@@ -956,7 +956,7 @@ WCHAR *FormatPageLabel(const char *type, int pageNo, const WCHAR *prefix)
         for (int i = 0; i < (pageNo - 1) / 26; i++)
             number.Append(number.At(0));
         if (*type == 'a')
-            str::ToLower(number.Get());
+            str::ToLowerInPlace(number.Get());
         return str::Format(L"%s%s", prefix, number.Get());
     }
     return str::Dup(prefix);

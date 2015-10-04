@@ -221,13 +221,13 @@ void InitializePolicies(bool restrict)
         const char *value;
         if ((value = polsec->GetValue("LinkProtocols")) != nullptr) {
             ScopedMem<WCHAR> protocols(str::conv::FromUtf8(value));
-            str::ToLower(protocols);
+            str::ToLowerInPlace(protocols);
             str::TransChars(protocols, L":; ", L",,,");
             gAllowedLinkProtocols.Split(protocols, L",", true);
         }
         if ((value = polsec->GetValue("SafeFileTypes")) != nullptr) {
             ScopedMem<WCHAR> protocols(str::conv::FromUtf8(value));
-            str::ToLower(protocols);
+            str::ToLowerInPlace(protocols);
             str::TransChars(protocols, L":; ", L",,,");
             gAllowedFileTypes.Split(protocols, L",", true);
         }
@@ -269,7 +269,7 @@ bool LaunchBrowser(const WCHAR *url)
     ScopedMem<WCHAR> protocol;
     if (!str::Parse(url, L"%S:", &protocol))
         return false;
-    str::ToLower(protocol);
+    str::ToLowerInPlace(protocol);
     if (!gAllowedLinkProtocols.Contains(protocol))
         return false;
 
@@ -289,7 +289,7 @@ bool OpenFileExternally(const WCHAR *path)
     // since we allow following hyperlinks, also allow opening local webpages
     if (str::EndsWithI(path, L".htm") || str::EndsWithI(path, L".html") || str::EndsWithI(path, L".xhtml"))
         perceivedType.Set(str::Dup(L"webpage"));
-    str::ToLower(perceivedType);
+    str::ToLowerInPlace(perceivedType);
     if (gAllowedFileTypes.Contains(L"*"))
         /* allow all file types (not recommended) */;
     else if (!perceivedType || !gAllowedFileTypes.Contains(perceivedType))

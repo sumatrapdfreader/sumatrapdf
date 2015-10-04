@@ -967,7 +967,7 @@ static void ParseCommandLine(WCHAR *cmdLine)
             gGlobalData.registerAsDefault = true;
         else if (is_arg_with_param("opt")) {
             WCHAR *opts = argList.At(++i);
-            str::ToLower(opts);
+            str::ToLowerInPlace(opts);
             str::TransChars(opts, L" ;", L",,");
             WStrVec optlist;
             optlist.Split(opts, L",", true);
