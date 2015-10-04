@@ -144,6 +144,32 @@ static const char *argNames = "register-for-pdf\0" \
 "esc-to-exit\0" \
 "set-color-range\0" \
 "enum-printers\0" \
+"print-to\0" \
+"print-settings\0" \
+"inverse-search\0" \
+"forward-search\0" \
+"fwdsearch\0" \
+"nameddest\0" \
+"named-dest\0" \
+"page\0" \
+"view\0" \
+"zoom\0" \
+"scroll\0" \
+"appdata\0" \
+"plugin\0" \
+"stress-test\0" \
+"n\0" \
+"render\0" \
+"bench\0" \
+"lang\0" \
+"bgcolor\0" \
+"bg-color\0" \
+"fwdsearch-offset\0" \
+"fwdsearch-width\0" \
+"fwdsearch-color\0" \
+"fwdsearch-permanent\0" \
+"manga-mode\0" \
+"autoupdate\0" \
 "silent\0";
 
 enum {
@@ -164,6 +190,32 @@ enum {
     EscToExit,
     SetColorRange,
     ArgEnumPrinters, // EnumPrinters conflicts with win API EnumPrinters()
+    PrintTo,
+    PrintSettings,
+    InverseSearch,
+    ForwardSearch,
+    FwdSearch,
+    NamedDest,
+    NamedDest2,
+    Page,
+    View,
+    Zoom,
+    Scroll,
+    AppData,
+    Plugin,
+    StressTest,
+    ArgN,
+    Render,
+    Bench,
+    Lang,
+    BgColor,
+    BgColor2,
+    FwdSearchOffset,
+    FwdSearchWidth,
+    FwdSearchColor,
+    FwdSearchPermanent,
+    MangaMode,
+    AutoUpdate,
     Silent
 };
 
@@ -180,16 +232,19 @@ void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine) {
     ParseCmdLine(cmdLine, argList);
     size_t argCount = argList.Count();
 
-#define is_arg2(txt) str::EqI(TEXT(txt), argument)
-#define is_arg_with_param(txt) (is_arg2(txt) && (argCount > n + 1))
+#define is_arg_with_param(_argNo) (param && _argNo == arg)
 #define additional_param() argList.At(n + 1)
 #define has_additional_param() ((argCount > n + 1) && ('-' != additional_param()[0]))
 #define handle_string_param(name) name.Set(str::Dup(argList.At(++n)))
 #define handle_int_param(name) name = _wtoi(argList.At(++n))
 
     for (size_t n = 1; n < argCount; n++) {
-        WCHAR *argument = argList.At(n);
-        int arg = GetArgNo(argument);
+        WCHAR *argName = argList.At(n);
+        int arg = GetArgNo(argName);
+        WCHAR *param = nullptr;
+        if (argCount > n + 1) {
+            param = argList.At(n + 1);
+        }
         if (RegisterForPdf == arg) {
             makeDefault = true;
             exitImmediately = true;
@@ -202,12 +257,12 @@ void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine) {
             if (!printerName)
                 printDialog = true;
             exitWhenDone = true;
-        } else if (is_arg_with_param("-print-to")) {
+        } else if (is_arg_with_param(PrintTo)) {
             handle_string_param(printerName);
             exitWhenDone = true;
         } else if (PrintDialog == arg) {
             printDialog = true;
-        } else if (is_arg_with_param("-print-settings")) {
+        } else if (is_arg_with_param(PrintSettings)) {
             // argument is a comma separated list of page ranges and
             // advanced options [even|odd] and [noscale|shrink|fit]
             // e.g. -print-settings "1-3,5,10-8,odd,fit"
@@ -218,19 +273,19 @@ void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine) {
             // only affects -print-dialog (-print-to and -print-to-default
             // always exit on print) and -stress-test (useful for profiling)
             exitWhenDone = true;
-        } else if (is_arg_with_param("-inverse-search")) {
+        } else if (is_arg_with_param(InverseSearch)) {
             inverseSearchCmdLine.Set(str::Dup(argList.At(++n)));
-        } else if ((is_arg_with_param("-forward-search") || is_arg_with_param("-fwdsearch")) &&
+        } else if ((is_arg_with_param(ForwardSearch) || is_arg_with_param(FwdSearch)) &&
                    argCount > n + 2) {
             // -forward-search is for consistency with -inverse-search
             // -fwdsearch is for consistency with -fwdsearch-*
             handle_string_param(forwardSearchOrigin);
             handle_int_param(forwardSearchLine);
-        } else if (is_arg_with_param("-nameddest") || is_arg_with_param("-named-dest")) {
+        } else if (is_arg_with_param(NamedDest) || is_arg_with_param(NamedDest2)) {
             // -nameddest is for backwards compat (was used pre-1.3)
             // -named-dest is for consistency
             handle_string_param(destName);
-        } else if (is_arg_with_param("-page")) {
+        } else if (is_arg_with_param(Page)) {
             handle_int_param(pageNumber);
         } else if (Restrict == arg) {
             restrictedUse = true;
@@ -244,17 +299,21 @@ void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine) {
             enterPresentation = true;
         } else if (Fullscreen == arg) {
             enterFullScreen = true;
-        } else if (is_arg_with_param("-view")) {
-            ParseViewMode(&startView, argList.At(++n));
-        } else if (is_arg_with_param("-zoom")) {
-            ParseZoomValue(&startZoom, argList.At(++n));
-        } else if (is_arg_with_param("-scroll")) {
-            ParseScrollValue(&startScroll, argList.At(++n));
+        } else if (is_arg_with_param(View)) {
+            ParseViewMode(&startView, param);
+            ++n;
+        } else if (is_arg_with_param(Zoom)) {
+            ParseZoomValue(&startZoom, param);
+            ++n;
+        } else if (is_arg_with_param(Scroll)) {
+            ParseScrollValue(&startScroll, param);
+            ++n;
         } else if (Console == arg) {
             showConsole = true;
-        } else if (is_arg_with_param("-appdata")) {
-            appdataDir.Set(str::Dup(argList.At(++n)));
-        } else if (is_arg_with_param("-plugin")) {
+        } else if (is_arg_with_param(AppData)) {
+            appdataDir.Set(str::Dup(param));
+            ++n;
+        } else if (is_arg_with_param(Plugin)) {
             // -plugin [<URL>] <parent HWND>
             if (argCount > n + 2 && !str::IsDigit(*argList.At(n + 1)) && *argList.At(n + 2) != '-')
                 handle_string_param(pluginURL);
@@ -262,7 +321,7 @@ void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine) {
             // become the parent of a frameless SumatraPDF
             // (used e.g. for embedding it into a browser plugin)
             hwndPluginParent = (HWND)(INT_PTR)_wtol(argList.At(++n));
-        } else if (is_arg_with_param("-stress-test")) {
+        } else if (is_arg_with_param(StressTest)) {
             // -stress-test <file or dir path> [<file filter>] [<page/file range(s)>] [<cycle
             // count>x]
             // e.g. -stress-test file.pdf 25x  for rendering file.pdf 25 times
@@ -280,15 +339,16 @@ void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine) {
                 stressTestCycles = num;
                 n++;
             }
-        } else if (is_arg_with_param("-n")) {
+        } else if (is_arg_with_param(ArgN)) {
             handle_int_param(stressParallelCount);
-        } else if (is_arg_with_param("-render")) {
+        } else if (is_arg_with_param(Render)) {
             handle_int_param(pageNumber);
             testRenderPage = true;
         } else if (Rand == arg) {
             stressRandomizeFiles = true;
-        } else if (is_arg_with_param("-bench")) {
-            WCHAR *s = str::Dup(argList.At(++n));
+        } else if (is_arg_with_param(Bench)) {
+            WCHAR *s = str::Dup(param);
+            ++n;
             pathsToBenchmark.Push(s);
             s = nullptr;
             if (has_additional_param() && IsBenchPagesInfo(additional_param())) {
@@ -306,14 +366,15 @@ void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine) {
             reuseDdeInstance = true;
         }
         // TODO: remove the following deprecated options within a release or two
-        else if (is_arg_with_param("-lang")) {
-            lang.Set(str::conv::ToAnsi(argList.At(++n)));
+        else if (is_arg_with_param(Lang)) {
+            lang.Set(str::conv::ToAnsi(param));
+            ++n;
         } else if (EscToExit == arg) {
             globalPrefArgs.Append(str::Dup(argList.At(n)));
-        } else if (is_arg_with_param("-bgcolor") || is_arg_with_param("-bg-color") ||
-                   is_arg_with_param("-fwdsearch-offset") ||
-                   is_arg_with_param("-fwdsearch-width") || is_arg_with_param("-fwdsearch-color") ||
-                   is_arg_with_param("-fwdsearch-permanent") || is_arg_with_param("-manga-mode")) {
+        } else if (is_arg_with_param(BgColor) || is_arg_with_param(BgColor2) ||
+                   is_arg_with_param(FwdSearchOffset) ||
+                   is_arg_with_param(FwdSearchWidth) || is_arg_with_param(FwdSearchColor) ||
+                   is_arg_with_param(FwdSearchPermanent) || is_arg_with_param(MangaMode)) {
             globalPrefArgs.Append(str::Dup(argList.At(n)));
             globalPrefArgs.Append(str::Dup(argList.At(++n)));
         } else if (SetColorRange == arg && argCount > n + 2) {
@@ -330,7 +391,7 @@ void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine) {
         }
 #endif
         // this should have been handled already by AutoUpdateMain
-        else if (is_arg_with_param("-autoupdate")) {
+        else if (is_arg_with_param(AutoUpdate)) {
             n++;
         } else {
             // Remember this argument as a filename to open
@@ -342,7 +403,6 @@ void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine) {
             fileNames.Push(filePath);
         }
     }
-#undef is_arg
 #undef is_arg_with_param
 #undef additional_param
 #undef has_additional_param
