@@ -2,11 +2,14 @@ package main
 
 import (
 	"fmt"
+	"io"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 )
 
 /*
@@ -32,6 +35,7 @@ const (
 type GitChange struct {
 	Type int // Modified, Added etc.
 	Path string
+	Name string
 }
 
 func printStack() {
@@ -111,6 +115,7 @@ func createTempDirMust() {
 
 func runCmd(exePath string, args ...string) ([]byte, error) {
 	cmd := exec.Command(exePath, args...)
+	fmt.Printf("running: %s %v\n", filepath.Base(exePath), args)
 	return cmd.Output()
 }
 
@@ -131,14 +136,19 @@ func parseGitStatusLineMust(s string) *GitChange {
 		fatalif(true, "invalid line: '%s'\n", s)
 	}
 	c.Path = strings.TrimSpace(parts[1])
+	c.Name = filepath.Base(c.Path)
 	return c
 }
 
-func parseGitStatusMust(out []byte) []*GitChange {
+func parseGitStatusMust(out []byte, includeNotCheckedIn bool) []*GitChange {
 	var res []*GitChange
 	lines := toTrimmedLines(out)
 	for _, l := range lines {
-		res = append(res, parseGitStatusLineMust(l))
+		c := parseGitStatusLineMust(l)
+		if !includeNotCheckedIn && c.Type == NotCheckedIn {
+			continue
+		}
+		res = append(res, c)
 	}
 	return res
 }
@@ -146,17 +156,154 @@ func parseGitStatusMust(out []byte) []*GitChange {
 func gitStatusMust() []*GitChange {
 	out, err := runCmd(gitPath, "status", "--porcelain")
 	fataliferr(err)
-	return parseGitStatusMust(out)
+	return parseGitStatusMust(out, false)
+}
+
+func gitGetFileContentHeadMust(path string) []byte {
+	loc := "HEAD:" + path
+	out, err := runCmd(gitPath, "show", loc)
+	fataliferr(err)
+	return out
+}
+
+// delete directories older than 1 day in tempDir
+func deleteOldDirs() {
+	files, err := ioutil.ReadDir(tempDir)
+	fataliferr(err)
+	for _, fi := range files {
+		if !fi.IsDir() {
+			// we shouldn't create anything but dirs
+			continue
+		}
+		age := time.Now().Sub(fi.ModTime())
+		path := filepath.Join(tempDir, fi.Name())
+		if age > time.Hour*24 {
+			fmt.Printf("Deleting %s because older than 1 day\n", path)
+			err = os.RemoveAll(path)
+			fataliferr(err)
+		} else {
+			fmt.Printf("Not deleting %s because younger than 1 day (%s)\n", path, age)
+		}
+	}
+}
+
+func getBeforeAfterDirs(dir string) (string, string) {
+	dirBefore := filepath.Join(dir, "before")
+	dirAfter := filepath.Join(dir, "after")
+	return dirBefore, dirAfter
+}
+
+// http://manual.winmerge.org/Command_line.html
+func runWinMerge(dir string) {
+	dirBefore, dirAfter := getBeforeAfterDirs(dir)
+	/*
+		/e : close with Esc
+		/u : don't add paths to MRU
+		/wl, wr : open left/right as read-only
+		/r : recursive compare
+	*/
+	_, err := runCmd(winMergePath, "/u", "/wl", "/wr", dirBefore, dirAfter)
+	fataliferr(err)
+}
+
+func catGitHeadToFileMust(dst, gitPath string) {
+	fmt.Printf("catGitHeadToFileMust: %s => %s\n", gitPath, dst)
+	d := gitGetFileContentHeadMust(gitPath)
+	f, err := os.Create(dst)
+	fataliferr(err)
+	defer f.Close()
+	_, err = f.Write(d)
+	fataliferr(err)
+}
+
+func createEmptyFileMust(path string) {
+	f, err := os.Create(path)
+	fataliferr(err)
+	f.Close()
+}
+
+func copyFileMust(dst, src string) {
+	// ensure windows-style dir separator
+	dst = strings.Replace(dst, "/", "\\", -1)
+	src = strings.Replace(src, "/", "\\", -1)
+
+	fdst, err := os.Create(dst)
+	fataliferr(err)
+	defer fdst.Close()
+	fsrc, err := os.Open(src)
+	fataliferr(err)
+	defer fsrc.Close()
+	_, err = io.Copy(fdst, fsrc)
+	fataliferr(err)
+}
+
+func copyFileAddedMust(dirBefore, dirAfter string, change *GitChange) {
+	// empty file in before, content in after
+	path := filepath.Join(dirBefore, change.Name)
+	createEmptyFileMust(path)
+	path = filepath.Join(dirAfter, change.Name)
+	copyFileMust(path, change.Path)
+}
+
+func copyFileDeletedMust(dirBefore, dirAfter string, change *GitChange) {
+	// empty file in after
+	path := filepath.Join(dirAfter, change.Name)
+	createEmptyFileMust(path)
+	// version from HEAD in before
+	path = filepath.Join(dirBefore, change.Name)
+	catGitHeadToFileMust(path, change.Path)
+}
+
+func copyFileModifiedMust(dirBefore, dirAfter string, change *GitChange) {
+	// current version on disk in after
+	path := filepath.Join(dirAfter, change.Name)
+	copyFileMust(path, change.Path)
+	// version from HEAD in before
+	path = filepath.Join(dirBefore, change.Name)
+	catGitHeadToFileMust(path, change.Path)
+}
+
+func copyFileChangeMust(dir string, change *GitChange) {
+	dirBefore, dirAfter := getBeforeAfterDirs(dir)
+	switch change.Type {
+	case Added:
+		copyFileAddedMust(dirBefore, dirAfter, change)
+	case Modified:
+		copyFileModifiedMust(dirBefore, dirAfter, change)
+	case Deleted:
+		copyFileModifiedMust(dirBefore, dirAfter, change)
+	default:
+		fatalif(true, "unknown change %+v\n", change)
+	}
+}
+
+func copyFiles(dir string, changes []*GitChange) {
+	dirBefore, dirAfter := getBeforeAfterDirs(dir)
+	err := os.MkdirAll(dirBefore, 0755)
+	fataliferr(err)
+	err = os.MkdirAll(dirAfter, 0755)
+	fataliferr(err)
+	for _, change := range changes {
+		copyFileChangeMust(dir, change)
+	}
 }
 
 func main() {
 	detectExesMust()
 	createTempDirMust()
 	fmt.Printf("temp dir: %s\n", tempDir)
+	deleteOldDirs()
 	changes := gitStatusMust()
 	if len(changes) == 0 {
 		fmt.Printf("No changes to preview!")
 		os.Exit(0)
 	}
-	fmt.Printf("%d changes\n", len(changes))
+	fmt.Printf("%d change(s)\n", len(changes))
+	// TODO: verify GitChange.Name is unique in changes
+	subDir := time.Now().Format("2006-01-02_15_04_05")
+	dir := filepath.Join(tempDir, subDir)
+	err := os.MkdirAll(dir, 0755)
+	fataliferr(err)
+	copyFiles(dir, changes)
+	runWinMerge(dir)
 }
