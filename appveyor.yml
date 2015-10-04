@@ -17,7 +17,7 @@ environment:
 skip_tags: true
 
 build_script:
-  - scripts\appveyor-build-2.bat
+  - scripts\appveyor-build.bat
 
 test_script:
   - rel\test_util.exe

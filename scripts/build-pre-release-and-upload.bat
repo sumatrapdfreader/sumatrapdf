@@ -1,1 +1,1 @@
-go run .\build\main.go -prerelease -upload
+go run .\tools\build\main.go -prerelease -upload
