@@ -1,1 +1,1 @@
-@call ./scripts/build-release.bat -upload
+go run .\tools\build\main.go -release -upload
