@@ -1,6 +1,7 @@
 /* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+// TODO: move to SettingsStructs.h
 #define ZOOM_FIT_PAGE       -1.f
 #define ZOOM_FIT_WIDTH      -2.f
 #define ZOOM_FIT_CONTENT    -3.f
@@ -25,6 +26,7 @@ SessionData *NewSessionData();
 TabState *NewTabState(DisplayState *ds);
 void ResetSessionState(Vec<SessionData *> *sessionData);
 
+// TODO: those are actually defined in SettingsStructs.cpp
 namespace prefs {
 namespace conv {
 

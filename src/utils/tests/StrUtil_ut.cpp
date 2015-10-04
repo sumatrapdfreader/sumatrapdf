@@ -131,6 +131,23 @@ static void StrConvTest()
     utassert(conv == 0 && str::Eq(cbuf, ""));
 }
 
+static void StrUrlExtractTest()
+{
+    utassert(!url::GetFileName(L""));
+    utassert(!url::GetFileName(L"#hash_only"));
+    utassert(!url::GetFileName(L"?query=only"));
+    ScopedMem<WCHAR> fileName(url::GetFileName(L"http://example.net/filename.ext"));
+    utassert(str::Eq(fileName, L"filename.ext"));
+    fileName.Set(url::GetFileName(L"http://example.net/filename.ext#with_hash"));
+    utassert(str::Eq(fileName, L"filename.ext"));
+    fileName.Set(url::GetFileName(L"http://example.net/path/to/filename.ext?more=data"));
+    utassert(str::Eq(fileName, L"filename.ext"));
+    fileName.Set(url::GetFileName(L"http://example.net/pa%74h/na%2f%6d%65%2ee%78t"));
+    utassert(str::Eq(fileName, L"na/me.ext"));
+    fileName.Set(url::GetFileName(L"http://example.net/%E2%82%AC"));
+    utassert(str::Eq((char *)fileName.Get(), "\xAC\x20"));
+}
+
 void StrTest()
 {
     WCHAR buf[32];
@@ -551,4 +568,5 @@ void StrTest()
     StrReplaceTest();
     StrSeqTest();
     StrConvTest();
+    StrUrlExtractTest();
 }

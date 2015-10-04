@@ -211,8 +211,6 @@ func main() {
 	verifyClangFormatVersion(exePath)
 
 	runOnFilesInDirMust(exePath, "src", []string{
-		"ParseCommandLine.h",
-		"ParseCommandLine.cpp",
 		//"Print.cpp",
 		//"Print.h",
 	})

@@ -1,6 +1,13 @@
 /* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+struct PageRange {
+    PageRange() : start(1), end(INT_MAX) {}
+    PageRange(int start, int end) : start(start), end(end) {}
+
+    int start, end; // end == INT_MAX means to the last page
+};
+
 class CommandLineInfo {
   public:
     WStrVec fileNames;
@@ -94,3 +101,6 @@ class CommandLineInfo {
 };
 
 void ParseColor(COLORREF *destColor, const WCHAR *txt);
+bool IsValidPageRange(const WCHAR *ranges);
+bool IsBenchPagesInfo(const WCHAR *s);
+bool ParsePageRanges(const WCHAR *ranges, Vec<PageRange> &result);

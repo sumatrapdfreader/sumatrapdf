@@ -1,6 +1,8 @@
 /* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+// Note: can't clang-format because it destroys argNames
+
 // utils
 #include "BaseUtil.h"
 #include "CmdLineParser.h"
@@ -80,14 +82,56 @@ void ParseColor(COLORREF *destColor, const WCHAR *txt) {
         *destColor = RGB(r, g, b);
 }
 
+// parses a list of page ranges such as 1,3-5,7- (i..e all but pages 2 and 6)
+// into an interable list (returns nullptr on parsing errors)
+// caller must delete the result
+bool ParsePageRanges(const WCHAR *ranges, Vec<PageRange> &result) {
+    if (!ranges)
+        return false;
+
+    WStrVec rangeList;
+    rangeList.Split(ranges, L",", true);
+    rangeList.SortNatural();
+
+    for (size_t i = 0; i < rangeList.Count(); i++) {
+        int start, end;
+        if (str::Parse(rangeList.At(i), L"%d-%d%$", &start, &end) && 0 < start && start <= end)
+            result.Append(PageRange(start, end));
+        else if (str::Parse(rangeList.At(i), L"%d-%$", &start) && 0 < start)
+            result.Append(PageRange(start, INT_MAX));
+        else if (str::Parse(rangeList.At(i), L"%d%$", &start) && 0 < start)
+            result.Append(PageRange(start, start));
+        else
+            return false;
+    }
+
+    return result.Count() > 0;
+}
+
+// a valid page range is a non-empty, comma separated list of either
+// single page ("3") numbers, closed intervals "2-4" or intervals
+// unlimited to the right ("5-")
+bool IsValidPageRange(const WCHAR *ranges) {
+    Vec<PageRange> rangeList;
+    return ParsePageRanges(ranges, rangeList);
+}
+
+// <s> can be:
+// * "loadonly"
+// * description of page ranges e.g. "1", "1-5", "2-3,6,8-10"
+bool IsBenchPagesInfo(const WCHAR *s) {
+    return str::EqI(s, L"loadonly") || IsValidPageRange(s);
+}
+
 // -view [continuous][singlepage|facing|bookview]
 static void ParseViewMode(DisplayMode *mode, const WCHAR *txt) {
     *mode = prefs::conv::ToDisplayMode(txt, DM_AUTOMATIC);
 }
 
-static const char *zoomValues = "fit page\0fitpage\0fit-page\0fit width\0fitwidth\0fit-width\0fit content\0fitcontent\0fit-content\0";
+static const char *zoomValues =
+    "fit page\0fitpage\0fit-page\0fit width\0fitwidth\0fit-width\0fit "
+    "content\0fitcontent\0fit-content\0";
 
-// TODO: write unit tests for those
 // -zoom [fitwidth|fitpage|fitcontent|n]
 // if a number, it's in percent e.g. 12.5 means 12.5%
 // 100 means 100% i.e. actual size as e.g. given in PDF file
@@ -128,49 +172,49 @@ static void ParseScrollValue(PointI *scroll, const WCHAR *txt) {
 
 // order must match enum
 static const char *argNames = "register-for-pdf\0" \
-"print-to-default\0" \
-"print-dialog\0" \
-"exit-when-done\0" \
-"exit-on-print\0" \
-"restrict\0" \
-"invertcolors\0" \
-"invert-colors\0" \
-"presentation\0" \
-"fullscreen\0" \
-"console\0" \
-"rand\0" \
-"crash-on-open\0" \
-"reuse-instance\0" \
-"esc-to-exit\0" \
-"set-color-range\0" \
-"enum-printers\0" \
-"print-to\0" \
-"print-settings\0" \
-"inverse-search\0" \
-"forward-search\0" \
-"fwdsearch\0" \
-"nameddest\0" \
-"named-dest\0" \
-"page\0" \
-"view\0" \
-"zoom\0" \
-"scroll\0" \
-"appdata\0" \
-"plugin\0" \
-"stress-test\0" \
-"n\0" \
-"render\0" \
-"bench\0" \
-"lang\0" \
-"bgcolor\0" \
-"bg-color\0" \
-"fwdsearch-offset\0" \
-"fwdsearch-width\0" \
-"fwdsearch-color\0" \
-"fwdsearch-permanent\0" \
-"manga-mode\0" \
-"autoupdate\0" \
-"silent\0";
+    "print-to-default\0" \
+    "print-dialog\0" \
+    "exit-when-done\0" \
+    "exit-on-print\0" \
+    "restrict\0" \
+    "invertcolors\0" \
+    "invert-colors\0" \
+    "presentation\0" \
+    "fullscreen\0" \
+    "console\0" \
+    "rand\0" \
+    "crash-on-open\0" \
+    "reuse-instance\0" \
+    "esc-to-exit\0" \
+    "set-color-range\0" \
+    "enum-printers\0" \
+    "print-to\0" \
+    "print-settings\0" \
+    "inverse-search\0" \
+    "forward-search\0" \
+    "fwdsearch\0" \
+    "nameddest\0" \
+    "named-dest\0" \
+    "page\0" \
+    "view\0" \
+    "zoom\0" \
+    "scroll\0" \
+    "appdata\0" \
+    "plugin\0" \
+    "stress-test\0" \
+    "n\0" \
+    "render\0" \
+    "bench\0" \
+    "lang\0" \
+    "bgcolor\0" \
+    "bg-color\0" \
+    "fwdsearch-offset\0" \
+    "fwdsearch-width\0" \
+    "fwdsearch-color\0" \
+    "fwdsearch-permanent\0" \
+    "manga-mode\0" \
+    "autoupdate\0" \
+    "silent\0";
 
 enum {
     RegisterForPdf,
@@ -372,9 +416,9 @@ void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine) {
         } else if (EscToExit == arg) {
             globalPrefArgs.Append(str::Dup(argList.At(n)));
         } else if (is_arg_with_param(BgColor) || is_arg_with_param(BgColor2) ||
-                   is_arg_with_param(FwdSearchOffset) ||
-                   is_arg_with_param(FwdSearchWidth) || is_arg_with_param(FwdSearchColor) ||
-                   is_arg_with_param(FwdSearchPermanent) || is_arg_with_param(MangaMode)) {
+                   is_arg_with_param(FwdSearchOffset) || is_arg_with_param(FwdSearchWidth) ||
+                   is_arg_with_param(FwdSearchColor) || is_arg_with_param(FwdSearchPermanent) ||
+                   is_arg_with_param(MangaMode)) {
             globalPrefArgs.Append(str::Dup(argList.At(n)));
             globalPrefArgs.Append(str::Dup(argList.At(++n)));
         } else if (SetColorRange == arg && argCount > n + 2) {
@@ -396,10 +440,10 @@ void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine) {
         } else {
             // Remember this argument as a filename to open
             WCHAR *filePath = nullptr;
-            if (str::EndsWithI(argList.At(n), L".lnk"))
-                filePath = ResolveLnk(argList.At(n));
+            if (str::EndsWithI(argName, L".lnk"))
+                filePath = ResolveLnk(argName);
             if (!filePath)
-                filePath = str::Dup(argList.At(n));
+                filePath = str::Dup(argName);
             fileNames.Push(filePath);
         }
     }

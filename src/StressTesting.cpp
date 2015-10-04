@@ -50,50 +50,7 @@ bool IsStressTesting()
     return gIsStressTesting;
 }
 
-struct PageRange {
-    PageRange() : start(1), end(INT_MAX) { }
-    PageRange(int start, int end) : start(start), end(end) { }
-
-    int start, end; // end == INT_MAX means to the last page
-};
-
-// parses a list of page ranges such as 1,3-5,7- (i..e all but pages 2 and 6)
-// into an interable list (returns nullptr on parsing errors)
-// caller must delete the result
-static bool ParsePageRanges(const WCHAR *ranges, Vec<PageRange>& result)
-{
-    if (!ranges)
-        return false;
-
-    WStrVec rangeList;
-    rangeList.Split(ranges, L",", true);
-    rangeList.SortNatural();
-
-    for (size_t i = 0; i < rangeList.Count(); i++) {
-        int start, end;
-        if (str::Parse(rangeList.At(i), L"%d-%d%$", &start, &end) && 0 < start && start <= end)
-            result.Append(PageRange(start, end));
-        else if (str::Parse(rangeList.At(i), L"%d-%$", &start) && 0 < start)
-            result.Append(PageRange(start, INT_MAX));
-        else if (str::Parse(rangeList.At(i), L"%d%$", &start) && 0 < start)
-            result.Append(PageRange(start, start));
-        else
-            return false;
-    }
-
-    return result.Count() > 0;
-}
-
-// a valid page range is a non-empty, comma separated list of either
-// single page ("3") numbers, closed intervals "2-4" or intervals
-// unlimited to the right ("5-")
-bool IsValidPageRange(const WCHAR *ranges)
-{
-    Vec<PageRange> rangeList;
-    return ParsePageRanges(ranges, rangeList);
-}
-
-inline bool IsInRange(Vec<PageRange>& ranges, int pageNo)
+static bool IsInRange(Vec<PageRange>& ranges, int pageNo)
 {
     for (size_t i = 0; i < ranges.Count(); i++) {
         if (ranges.At(i).start <= pageNo && pageNo <= ranges.At(i).end)
@@ -126,14 +83,6 @@ static void BenchLoadRender(BaseEngine *engine, int pagenum)
     delete rendered;
     timeMs = t.GetTimeInMs();
     logbench(L"pagerender %3d: %.2f ms", pagenum, timeMs);
-}
-
-// <s> can be:
-// * "loadonly"
-// * description of page ranges e.g. "1", "1-5", "2-3,6,8-10"
-bool IsBenchPagesInfo(const WCHAR *s)
-{
-    return str::EqI(s, L"loadonly") || IsValidPageRange(s);
 }
 
 static int FormatWholeDoc(Doc& doc) {
