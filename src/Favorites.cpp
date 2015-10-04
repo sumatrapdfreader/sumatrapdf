@@ -22,6 +22,7 @@
 #include "WindowInfo.h"
 #include "TabInfo.h"
 #include "resource.h"
+#include "ParseCommandLine.h"
 #include "AppPrefs.h"
 #include "Favorites.h"
 #include "Menu.h"

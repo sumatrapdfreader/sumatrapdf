@@ -67,7 +67,7 @@ static void EnumeratePrinters() {
 #endif
 
 /* Parse 'txt' as hex color and return the result in 'destColor' */
-static void ParseColor(COLORREF *destColor, const WCHAR *txt) {
+void ParseColor(COLORREF *destColor, const WCHAR *txt) {
     if (!destColor)
         return;
     if (str::StartsWith(txt, L"0x"))
@@ -299,42 +299,4 @@ void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine) {
 #undef has_additional_param
 #undef handle_string_param
 #undef handle_int_param
-}
-
-// TODO: doesn't belong in CommandLineInfo
-void CommandLineInfo::UpdateGlobalPrefs() {
-    if (inverseSearchCmdLine) {
-        str::ReplacePtr(&gGlobalPrefs->inverseSearchCmdLine, inverseSearchCmdLine);
-        gGlobalPrefs->enableTeXEnhancements = true;
-    }
-    gGlobalPrefs->fixedPageUI.invertColors = invertColors;
-
-    for (size_t n = 0; n < globalPrefArgs.Count(); n++) {
-        if (str::EqI(globalPrefArgs.At(n), L"-esc-to-exit")) {
-            gGlobalPrefs->escToExit = true;
-        } else if (str::EqI(globalPrefArgs.At(n), L"-bgcolor") ||
-                   str::EqI(globalPrefArgs.At(n), L"-bg-color")) {
-            // -bgcolor is for backwards compat (was used pre-1.3)
-            // -bg-color is for consistency
-            ParseColor(&gGlobalPrefs->mainWindowBackground, globalPrefArgs.At(++n));
-        } else if (str::EqI(globalPrefArgs.At(n), L"-set-color-range")) {
-            ParseColor(&gGlobalPrefs->fixedPageUI.textColor, globalPrefArgs.At(++n));
-            ParseColor(&gGlobalPrefs->fixedPageUI.backgroundColor, globalPrefArgs.At(++n));
-        } else if (str::EqI(globalPrefArgs.At(n), L"-fwdsearch-offset")) {
-            gGlobalPrefs->forwardSearch.highlightOffset = _wtoi(globalPrefArgs.At(++n));
-            gGlobalPrefs->enableTeXEnhancements = true;
-        } else if (str::EqI(globalPrefArgs.At(n), L"-fwdsearch-width")) {
-            gGlobalPrefs->forwardSearch.highlightWidth = _wtoi(globalPrefArgs.At(++n));
-            gGlobalPrefs->enableTeXEnhancements = true;
-        } else if (str::EqI(globalPrefArgs.At(n), L"-fwdsearch-color")) {
-            ParseColor(&gGlobalPrefs->forwardSearch.highlightColor, globalPrefArgs.At(++n));
-            gGlobalPrefs->enableTeXEnhancements = true;
-        } else if (str::EqI(globalPrefArgs.At(n), L"-fwdsearch-permanent")) {
-            gGlobalPrefs->forwardSearch.highlightPermanent = _wtoi(globalPrefArgs.At(++n));
-            gGlobalPrefs->enableTeXEnhancements = true;
-        } else if (str::EqI(globalPrefArgs.At(n), L"-manga-mode")) {
-            const WCHAR *s = globalPrefArgs.At(++n);
-            gGlobalPrefs->comicBookUI.cbxMangaMode = str::EqI(L"true", s) || str::Eq(L"1", s);
-        }
-    }
 }

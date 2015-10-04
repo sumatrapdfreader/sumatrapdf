@@ -91,5 +91,6 @@ class CommandLineInfo {
     ~CommandLineInfo() {}
 
     void ParseCommandLine(const WCHAR *cmdLine);
-    void UpdateGlobalPrefs();
 };
+
+void ParseColor(COLORREF *destColor, const WCHAR *txt);

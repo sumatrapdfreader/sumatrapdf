@@ -35,6 +35,7 @@
 #include "WindowInfo.h"
 #include "TabInfo.h"
 #include "resource.h"
+#include "ParseCommandLine.h"
 #include "AppPrefs.h"
 #include "AppTools.h"
 #include "Canvas.h"
@@ -42,7 +43,6 @@
 #include "CrashHandler.h"
 #include "FileThumbnails.h"
 #include "Notifications.h"
-#include "ParseCommandLine.h"
 #include "Print.h"
 #include "Search.h"
 #include "Selection.h"
@@ -685,7 +685,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
         SetAppDataPath(i.appdataDir);
 
     prefs::Load();
-    i.UpdateGlobalPrefs();
+    prefs::UpdateGlobalPrefs(i);
     SetCurrentLang(i.lang ? i.lang : gGlobalPrefs->uiLanguage);
 
     // This allows ad-hoc comparison of gdi, gdi+ and gdi+ quick when used
