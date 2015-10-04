@@ -55,7 +55,7 @@ workspace "SumatraPDF"
 
   filter "platforms:x64"
      architecture "x86_64"
-     toolset "v140"
+     toolset "v140_xp"
      filter "action:vs2013"
       toolset "v120"
   filter {}
