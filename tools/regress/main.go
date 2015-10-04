@@ -97,26 +97,86 @@ func fataliferr(err error) {
 }
 
 func toTrimmedLines(d []byte) []string {
-	lines := strings.Split(string(d), "\n")
-	i := 0
-	for _, l := range lines {
+	var res []string
+	for _, l := range strings.Split(string(d), "\n") {
 		l = strings.TrimSpace(l)
-		// remove empty lines
-		if len(l) > 0 {
-			lines[i] = l
-			i++
+		res = append(res, l)
+	}
+	return res
+}
+
+func collapseMultipleEmptyLines(lines []string) []string {
+	var res []string
+	prevWasEmpty := false
+	for _, l := range lines {
+		if l == "" && prevWasEmpty {
+			continue
+		}
+		prevWasEmpty = l == ""
+		res = append(res, l)
+	}
+	return res
+}
+
+func parseTest(lines []string) (*Test, []string) {
+	t := &Test{}
+	//fmt.Printf("parseTest: %d lines\n", len(lines))
+	if len(lines) == 0 {
+		return nil, nil
+	}
+	for len(lines) > 0 {
+		l := lines[0]
+		lines = lines[1:]
+		// skip comments
+		if strings.HasPrefix(l, "#") {
+			continue
+		}
+		//fmt.Printf("lt: '%s'\n", l)
+		// empty line separates tests
+		if l == "" {
+			break
+		}
+
+		parts := strings.SplitN(l, ":", 2)
+		fatalif(len(parts) != 2, "invalid line: '%s'", l)
+		name := strings.ToLower(parts[0])
+		val := strings.TrimSpace(parts[1])
+		switch name {
+		case "url":
+			t.FileURL = val
+		case "sha1":
+			fatalif(len(val) != 40, "len(val) != 40 (%d)", len(val))
+			t.FileSha1Hex = val
+		case "cmd":
+			t.CmdUnparsed = val
+		case "out":
+			t.ExpectedOutput = val
 		}
 	}
-	return lines[:i]
+	fatalif(t.FileURL == "", "Url: filed missing")
+	fatalif(t.FileSha1Hex == "", "Sha1: field missing")
+	fatalif(t.CmdUnparsed == "", "Cmd: field missing")
+	fatalif(t.ExpectedOutput == "", "Out: field missing")
+	// TODO: parse t.CmdUnparsed int t.CmdPath and t.CmdArgs
+	// TODO: replace $file in t.ExpectedOutput with t.File
+	return t, lines
 }
 
 func parseTestsMust(path string) []*Test {
 	var res []*Test
+	var test *Test
 	d, err := ioutil.ReadFile(path)
 	fataliferr(err)
 	lines := toTrimmedLines(d)
-	// TODO: finish me
-	fmt.Printf("%d lines\n", len(lines))
+	lines = collapseMultipleEmptyLines(lines)
+	for {
+		test, lines = parseTest(lines)
+		if test == nil {
+			break
+		}
+		res = append(res, test)
+	}
+	fmt.Printf("%d tests\n", len(res))
 	return res
 }
 
