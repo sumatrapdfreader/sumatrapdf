@@ -265,6 +265,8 @@ enum {
 static int GetArgNo(const WCHAR *argName) {
     if (*argName == '-' || *argName == '/') {
         argName++;
+    } else {
+        return -1;
     }
     return seqstrings::StrToIdx(argNames, argName);
 }
