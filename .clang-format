@@ -4,6 +4,6 @@ BasedOnStyle: Chromium
 IndentWidth: 4
 ColumnLimit: 100
 AccessModifierOffset: -2
-PointerAlignment: Right
+PointerAlignment: Left
 SpacesBeforeTrailingComments: 1
 BinPackParameters: true

@@ -17,11 +17,6 @@ See .clang-fromat to see the style we're using.
 We used to use Mozilla style for the base, but they changed the style a lot
 between 3.5 and 3.7. Our style is meant to not differ too much from Mozilla 3.5
 style (which we used for a bunch of files already)
-TODO: bite the bullet and use PointerAlignment: Right ?
-We're not consistent about it but currently Left might be more frequent,
-possibly due to being in Mozilla 3.5 style. On the other hand in 3.7 all
-styles but llvm use Left
-
 
 List of clang-format formats in 3.5 and 3.7: https://gist.github.com/kjk/298216da8cb4c665075b
 
@@ -237,8 +232,10 @@ func main() {
 	verifyClangFormatVersion(exePath)
 
 	runOnFilesInDirMust(exePath, "src", []string{
-	//"Print.cpp",
-	//"Print.h",
+		"ParseCommandLine.cpp",
+		"ParseCommandLine.h",
+		//"Print.cpp",
+		//"Print.h",
 	})
 
 	d = filepath.Join("src", "utils")
