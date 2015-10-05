@@ -129,7 +129,6 @@ static WCHAR *FormatSystemTime(SYSTEMTIME& date)
 {
     WCHAR buf[512] = { 0 };
     int cchBufLen = dimof(buf);
-    ZeroMemory(&date, sizeof(SYSTEMTIME));
     int ret = GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &date, nullptr, buf, cchBufLen);
     if (ret < 2) // GetDateFormat() failed or returned an empty result
         return nullptr;
@@ -156,7 +155,7 @@ static void ConvDateToDisplay(WCHAR **s, bool (* DateParse)(const WCHAR *date, S
     if (!s || !*s || !DateParse)
         return;
 
-    SYSTEMTIME date;
+    SYSTEMTIME date = { 0 };
     bool ok = DateParse(*s, &date);
     if (!ok)
         return;
