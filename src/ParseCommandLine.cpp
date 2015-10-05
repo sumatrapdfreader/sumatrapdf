@@ -1,8 +1,6 @@
 /* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// Note: can't clang-format because it destroys argNames
-
 // utils
 #include "BaseUtil.h"
 #include "CmdLineParser.h"
@@ -171,49 +169,50 @@ static void ParseScrollValue(PointI *scroll, const WCHAR *txt) {
 }
 
 // order must match enum
-static const char *argNames = "register-for-pdf\0" \
-    "print-to-default\0" \
-    "print-dialog\0" \
-    "exit-when-done\0" \
-    "exit-on-print\0" \
-    "restrict\0" \
-    "invertcolors\0" \
-    "invert-colors\0" \
-    "presentation\0" \
-    "fullscreen\0" \
-    "console\0" \
-    "rand\0" \
-    "crash-on-open\0" \
-    "reuse-instance\0" \
-    "esc-to-exit\0" \
-    "set-color-range\0" \
-    "enum-printers\0" \
-    "print-to\0" \
-    "print-settings\0" \
-    "inverse-search\0" \
-    "forward-search\0" \
-    "fwdsearch\0" \
-    "nameddest\0" \
-    "named-dest\0" \
-    "page\0" \
-    "view\0" \
-    "zoom\0" \
-    "scroll\0" \
-    "appdata\0" \
-    "plugin\0" \
-    "stress-test\0" \
-    "n\0" \
-    "render\0" \
-    "bench\0" \
-    "lang\0" \
-    "bgcolor\0" \
-    "bg-color\0" \
-    "fwdsearch-offset\0" \
-    "fwdsearch-width\0" \
-    "fwdsearch-color\0" \
-    "fwdsearch-permanent\0" \
-    "manga-mode\0" \
-    "autoupdate\0" \
+static const char *argNames = 
+    "register-for-pdf\0"
+    "print-to-default\0"
+    "print-dialog\0"
+    "exit-when-done\0"
+    "exit-on-print\0"
+    "restrict\0"
+    "invertcolors\0"
+    "invert-colors\0"
+    "presentation\0"
+    "fullscreen\0"
+    "console\0"
+    "rand\0"
+    "crash-on-open\0"
+    "reuse-instance\0"
+    "esc-to-exit\0"
+    "set-color-range\0"
+    "enum-printers\0"
+    "print-to\0"
+    "print-settings\0"
+    "inverse-search\0"
+    "forward-search\0"
+    "fwdsearch\0"
+    "nameddest\0"
+    "named-dest\0"
+    "page\0"
+    "view\0"
+    "zoom\0"
+    "scroll\0"
+    "appdata\0"
+    "plugin\0"
+    "stress-test\0"
+    "n\0"
+    "render\0"
+    "bench\0"
+    "lang\0"
+    "bgcolor\0"
+    "bg-color\0"
+    "fwdsearch-offset\0"
+    "fwdsearch-width\0"
+    "fwdsearch-color\0"
+    "fwdsearch-permanent\0"
+    "manga-mode\0"
+    "autoupdate\0"
     "silent\0";
 
 enum {
