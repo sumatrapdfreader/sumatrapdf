@@ -4318,7 +4318,7 @@ bool CrashHandlerCanUseNet()
     return HasPermission(Perm_InternetAccess);
 }
 
-void CrashHandlerMessage()
+void ShowCrashHandlerMessage()
 {
     // don't show a message box in restricted use, as the user most likely won't be
     // able to do anything about it anyway and it's up to the application provider

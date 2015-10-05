@@ -29,7 +29,7 @@
 // and sumatra proper. They must be implemented for each app.
 extern void GetStressTestInfo(str::Str<char>* s);
 extern bool CrashHandlerCanUseNet();
-extern void CrashHandlerMessage();
+extern void ShowCrashHandlerMessage();
 extern void GetProgramInfo(str::Str<char>& s);
 
 /* Note: we cannot use standard malloc()/free()/new()/delete() in crash handler.
@@ -335,7 +335,7 @@ static LONG WINAPI DumpExceptionHandler(EXCEPTION_POINTERS *exceptionInfo)
     SetEvent(gDumpEvent);
     WaitForSingleObject(gDumpThread, INFINITE);
 
-    CrashHandlerMessage();
+    ShowCrashHandlerMessage();
     TerminateProcess(GetCurrentProcess(), 1);
 
     return EXCEPTION_CONTINUE_SEARCH;
