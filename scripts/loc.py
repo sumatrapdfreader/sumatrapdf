@@ -10,6 +10,7 @@ pj = os.path.join
 
 DIRS = ["src",
         pj("src", "utils"),
+        pj("src", "tools"),
         pj("src", "mui"),
         pj("src", "wingui"),
         pj("src", "installer"),
@@ -18,6 +19,7 @@ DIRS = ["src",
         pj("src", "uia"),
         ]
 
+g_long_fmt = False
 
 def is_blacklisted(name):
     if name in ["DialogSizer.cpp", "DialogSizer.h",
@@ -57,6 +59,29 @@ def get_dir_loc(locs_per_file):
     return sum(locs_per_file.values())
 
 
+def short_format(locs_per_dir):
+    loc_total = 0
+    for dir in sorted(locs_per_dir.keys()):
+        locs_per_file = locs_per_dir[dir]
+        print("%6d %s" % (get_dir_loc(locs_per_file), dir))
+
+        for file in sorted(locs_per_file.keys()):
+            loc = locs_per_file[file]
+            loc_total += loc
+    print("\nTotal: %d" % loc_total)
+
+def long_format(locs_per_dir):
+    loc_total = 0
+    for dir in sorted(locs_per_dir.keys()):
+        locs_per_file = locs_per_dir[dir]
+        print("\n%s: %6d " % (dir, get_dir_loc(locs_per_file)))
+
+        for file in sorted(locs_per_file.keys()):
+            loc = locs_per_file[file]
+            print(" %-25s %d" % (file, loc))
+            loc_total += loc
+    print("\nTotal: %d" % loc_total)
+
 def main():
     # we assume the script is run from top-level directory as
     # python ./script/loc.py
@@ -64,15 +89,11 @@ def main():
     locs_per_dir = {}
     for dir in DIRS:
         locs_per_dir[dir] = get_locs_for_dir(srcDir, dir)
-    loc_total = 0
-    for dir in sorted(locs_per_dir.keys()):
-        locs_per_file = locs_per_dir[dir]
-        print("\n%s (%d)" % (dir, get_dir_loc(locs_per_file)))
-        for file in sorted(locs_per_file.keys()):
-            loc = locs_per_file[file]
-            print(" %-25s %d" % (file, loc))
-            loc_total += loc
-    print("\nTotal: %d" % loc_total)
+
+    if g_long_fmt:
+        long_format(locs_per_dir)
+    else:
+        short_format(locs_per_dir)
 
 if __name__ == "__main__":
     main()
