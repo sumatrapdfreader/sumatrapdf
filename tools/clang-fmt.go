@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"crypto/sha1"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -105,7 +107,15 @@ SpacesBeforeTrailingComments: 2
 Standard:        Auto
 */
 
-const ()
+const (
+	// we don't want too many formatting changes per checkin, so we limit
+	// number of files changed in one run
+	maxToChange = 2
+)
+
+var (
+	nChanged = 0
+)
 
 func fataliferr(err error) {
 	if err != nil {
@@ -175,13 +185,29 @@ func getSrcFilesMust(dir string) []string {
 	return srcFiles
 }
 
+func getFileSha1Must(path string) []byte {
+	d, err := ioutil.ReadFile(path)
+	fataliferr(err)
+	res := sha1.Sum(d)
+	return res[:]
+}
+
 func formatFileInDirMust(exePath string, dir, file string) {
 	// -style=file means: use .clang-format
+	path := filepath.Join(dir, file)
+	sha1Before := getFileSha1Must(path)
 	cmd := exec.Command(exePath, "-style=file", "-i", file)
 	cmd.Dir = dir
 	fmt.Printf("Running: '%s'\n", strings.Join(cmd.Args, " "))
 	out, err := cmd.CombinedOutput()
 	ifCmdFailed(err, out, cmd)
+	sha1After := getFileSha1Must(path)
+	if !bytes.Equal(sha1Before, sha1After) {
+		nChanged++
+		if nChanged >= maxToChange {
+			os.Exit(0)
+		}
+	}
 }
 
 func formatFileMust(exePath string, filePath string) {
@@ -211,8 +237,8 @@ func main() {
 	verifyClangFormatVersion(exePath)
 
 	runOnFilesInDirMust(exePath, "src", []string{
-		//"Print.cpp",
-		//"Print.h",
+	//"Print.cpp",
+	//"Print.h",
 	})
 
 	d = filepath.Join("src", "utils")
