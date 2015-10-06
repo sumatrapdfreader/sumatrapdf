@@ -419,7 +419,10 @@ bool ImageEngineImpl::FinishLoading()
     // extract all frames from multi-page TIFFs and animated GIFs
     if (str::Eq(fileExt, L".tif") || str::Eq(fileExt, L".gif")) {
         const GUID *frameDimension = str::Eq(fileExt, L".tif") ? &FrameDimensionPage : &FrameDimensionTime;
-        mediaboxes.AppendBlanks(image->GetFrameCount(frameDimension) - 1);
+        UINT frameCount = image->GetFrameCount(frameDimension);
+        AssertCrash(frameCount > 0);
+        if (frameCount > 0)
+            mediaboxes.AppendBlanks(frameCount - 1);
     }
 
     CrashIf(!fileExt);
@@ -486,7 +489,7 @@ Bitmap *ImageEngineImpl::LoadBitmap(int pageNo, bool& deleteAfterUse)
     CrashIf(!str::Eq(fileExt, L".tif") && !str::Eq(fileExt, L".gif"));
     const GUID *frameDimension = str::Eq(fileExt, L".tif") ? &FrameDimensionPage : &FrameDimensionTime;
     UINT frameCount = image->GetFrameCount(frameDimension);
-    CrashIf((unsigned int)pageNo > frameCount);
+    CrashIf((UINT)pageNo > frameCount);
     Bitmap *frame = image->Clone(0, 0, image->GetWidth(), image->GetHeight(), PixelFormat32bppARGB);
     if (!frame)
         return nullptr;
