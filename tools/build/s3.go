@@ -19,12 +19,24 @@ var (
 	s3AwsAccess string
 	s3AwsSecret string
 	// client can change bucket
-	s3BucketName string = "kjkpub"
+	s3BucketName = "kjkpub"
 )
+
+func md5B64OfBytes(d []byte) string {
+	md5Sum := md5.Sum(d)
+	return base64.StdEncoding.EncodeToString(md5Sum[:])
+}
+
+func md5B64OfFile(path string) string {
+	d, err := ioutil.ReadFile(path)
+	fataliferr(err)
+	return md5B64OfBytes(d)
+}
 
 func s3VerifyHasSecrets() {
 	fatalif(s3AwsAccess == "", "invalid s3AwsAccess\n")
 	fatalif(s3AwsSecret == "", "invalid s3AwsSsecret\n")
+	fatalif(s3AwsSecret == s3AwsAccess, "s3AwsSecret == s3AwsAccess")
 }
 
 // must be called before any other call
@@ -57,6 +69,8 @@ func s3GetBucket() *s3.Bucket {
 func s3UploadFileReader(pathRemote, pathLocal string, public bool) error {
 	fmt.Printf("Uploading '%s' as '%s'. ", pathLocal, pathRemote)
 	start := time.Now()
+	opts := s3.Options{}
+	opts.ContentMD5 = md5B64OfFile(pathLocal)
 	bucket := s3GetBucket()
 	mimeType := mime.TypeByExtension(filepath.Ext(pathLocal))
 	fileSize := fileSizeMust(pathLocal)
@@ -69,8 +83,6 @@ func s3UploadFileReader(pathRemote, pathLocal string, public bool) error {
 		return err
 	}
 	defer f.Close()
-	opts := s3.Options{}
-	//opts.ContentMD5 =
 	err = bucket.PutReader(pathRemote, f, fileSize, mimeType, perm, opts)
 	appendTiming(time.Since(start), fmt.Sprintf("Upload of %s, size: %d", pathRemote, fileSize))
 	if err != nil {
@@ -96,11 +108,6 @@ func s3UploadFile(pathRemote, pathLocal string, public bool) error {
 	opts := s3.Options{}
 	opts.ContentMD5 = md5B64OfBytes(d)
 	return bucket.Put(pathRemote, d, mimeType, perm, opts)
-}
-
-func md5B64OfBytes(d []byte) string {
-	md5Sum := md5.Sum(d)
-	return base64.StdEncoding.EncodeToString(md5Sum[:])
 }
 
 func s3UploadString(pathRemote string, s string, public bool) error {

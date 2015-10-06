@@ -118,6 +118,7 @@ func fileExists(path string) bool {
 	}
 	return fi.Mode().IsRegular()
 }
+
 func toTrimmedLines(d []byte) []string {
 	lines := strings.Split(string(d), "\n")
 	i := 0
