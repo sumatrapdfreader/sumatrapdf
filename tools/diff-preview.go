@@ -288,17 +288,50 @@ func copyFiles(dir string, changes []*GitChange) {
 	}
 }
 
+func hasGitDirMust(dir string) bool {
+	files, err := ioutil.ReadDir(dir)
+	fataliferr(err)
+	for _, fi := range files {
+		if strings.ToLower(fi.Name()) == ".git" {
+			return fi.IsDir()
+		}
+	}
+	return false
+}
+
+// git status returns names relative to root of
+func cdToGitRoot() {
+	var newDir string
+	dir, err := os.Getwd()
+	fataliferr(err)
+	for {
+		if hasGitDirMust(dir) {
+			break
+		}
+		newDir = filepath.Dir(dir)
+		fatalif(dir == newDir, "dir == newDir (%s == %s)", dir, newDir)
+		dir = newDir
+	}
+	if newDir != "" {
+		fmt.Printf("Changed current dir to: '%s'\n", newDir)
+		os.Chdir(newDir)
+	}
+}
+
 func main() {
 	detectExesMust()
 	createTempDirMust()
 	fmt.Printf("temp dir: %s\n", tempDir)
 	deleteOldDirs()
+
+	cdToGitRoot()
 	changes := gitStatusMust()
 	if len(changes) == 0 {
 		fmt.Printf("No changes to preview!")
 		os.Exit(0)
 	}
 	fmt.Printf("%d change(s)\n", len(changes))
+
 	// TODO: verify GitChange.Name is unique in changes
 	subDir := time.Now().Format("2006-01-02_15_04_05")
 	dir := filepath.Join(tempDir, subDir)
