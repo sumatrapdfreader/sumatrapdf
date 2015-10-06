@@ -60,20 +60,16 @@ var (
 	sumatraVersion   string
 	timeStart        time.Time
 	cachedSecrets    *Secrets
-	logFile          *os.File
 )
 
-func cmdToStrLong(cmd *exec.Cmd) string {
-	arr := []string{cmd.Path}
-	arr = append(arr, cmd.Args...)
-	return strings.Join(arr, " ")
-}
-
-func cmdToStr(cmd *exec.Cmd) string {
-	s := filepath.Base(cmd.Path)
-	arr := []string{s}
-	arr = append(arr, cmd.Args...)
-	return strings.Join(arr, " ")
+func finalizeThings(crashed bool) {
+	revertBuildConfig()
+	if !crashed {
+		printTimings()
+		fmt.Printf("total time: %s\n", time.Since(timeStart))
+		logToFile(fmt.Sprintf("total time: %s\n", time.Since(timeStart)))
+	}
+	closeLogFile()
 }
 
 func readSecretsMust() *Secrets {
@@ -92,16 +88,6 @@ func readSecretsMust() *Secrets {
 
 func revertBuildConfig() {
 	runExe("git", "checkout", buildConfigPath())
-}
-
-func finalizeThings(crashed bool) {
-	revertBuildConfig()
-	if !crashed {
-		printTimings()
-		fmt.Printf("total time: %s\n", time.Since(timeStart))
-		logToFile(fmt.Sprintf("total time: %s\n", time.Since(timeStart)))
-	}
-	closeLogFile()
 }
 
 func extractSumatraVersionMust() string {

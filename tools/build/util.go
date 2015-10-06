@@ -22,6 +22,7 @@ type Timing struct {
 var (
 	timings     []Timing
 	inFatal     bool
+	logFile     *os.File
 	logFileName string // set logFileName to enable loggin
 )
 

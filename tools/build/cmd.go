@@ -9,6 +9,19 @@ import (
 	"time"
 )
 
+func cmdToStrLong(cmd *exec.Cmd) string {
+	arr := []string{cmd.Path}
+	arr = append(arr, cmd.Args...)
+	return strings.Join(arr, " ")
+}
+
+func cmdToStr(cmd *exec.Cmd) string {
+	s := filepath.Base(cmd.Path)
+	arr := []string{s}
+	arr = append(arr, cmd.Args...)
+	return strings.Join(arr, " ")
+}
+
 func getEnvAfterScript(dir, script string) []string {
 	// TODO: maybe use COMSPEC env variable instead of "cmd.exe" (more robust)
 	cmd := exec.Command("cmd.exe", "/c", script+" & set")
