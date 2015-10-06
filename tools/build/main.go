@@ -597,22 +597,22 @@ func s3UploadPreReleaseMust() {
 
 	manifestRemotePath := s3PreRelDir + fmt.Sprintf("manifest-%d.txt", svnPreReleaseVer)
 	manifestLocalPath := pj("rel", "manifest.txt")
-	err = s3UploadFile(manifestRemotePath, manifestLocalPath)
+	err = s3UploadFileReader(manifestRemotePath, manifestLocalPath, true)
 	fataliferr(err)
 
 	s := createSumatraLatestJs()
-	err = s3UploadString("sumatrapdf/sumatralatest.js", s)
+	err = s3UploadString("sumatrapdf/sumatralatest.js", s, true)
 	fataliferr(err)
 
 	//sumatrapdf/sumpdf-prerelease-latest.txt
 	s = fmt.Sprintf("%d\n", svnPreReleaseVer)
-	err = s3UploadString("sumatrapdf/sumpdf-prerelease-latest.txt", s)
+	err = s3UploadString("sumatrapdf/sumpdf-prerelease-latest.txt", s, true)
 	fataliferr(err)
 
 	//sumatrapdf/sumpdf-prerelease-update.txt
 	//don't set a Stable version for pre-release builds
 	s = fmt.Sprintf("[SumatraPDF]\nLatest %d\n", svnPreReleaseVer)
-	err = s3UploadString("sumatrapdf/sumpdf-prerelease-update.txt", s)
+	err = s3UploadString("sumatrapdf/sumpdf-prerelease-update.txt", s, true)
 	fataliferr(err)
 }
 
@@ -651,7 +651,7 @@ func s3UploadReleaseMust() {
 	fataliferr(err)
 	// write manifest last
 	s3Path := s3Dir + fmt.Sprintf("SumatraPDF-prerelease-%d-manifest.txt", svnPreReleaseVer)
-	err = s3UploadFile(s3Path, manifestPath())
+	err = s3UploadFileReader(s3Path, manifestPath(), true)
 	fataliferr(err)
 }
 
@@ -735,7 +735,7 @@ func testS3Upload() {
 	dst := "temp2.txt"
 	src := pj("rel", "SumatraPDF.exe")
 	//src := pj("rel", "buildcmap.exe")
-	err := s3UploadFile2(dst, src)
+	err := s3UploadFile(dst, src, true)
 	if err != nil {
 		fmt.Printf("upload failed with %s\n", err)
 	} else {

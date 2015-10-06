@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/md5"
+	"encoding/base64"
 	"fmt"
 	"io/ioutil"
 	"mime"
@@ -52,13 +54,16 @@ func s3GetBucket() *s3.Bucket {
 	return s3Obj.Bucket(s3BucketName)
 }
 
-func s3UploadFile(pathRemote, pathLocal string) error {
+func s3UploadFileReader(pathRemote, pathLocal string, public bool) error {
 	fmt.Printf("Uploading '%s' as '%s'. ", pathLocal, pathRemote)
 	start := time.Now()
 	bucket := s3GetBucket()
 	mimeType := mime.TypeByExtension(filepath.Ext(pathLocal))
 	fileSize := fileSizeMust(pathLocal)
-	perm := s3.PublicRead
+	perm := s3.Private
+	if public {
+		perm = s3.PublicRead
+	}
 	f, err := os.Open(pathLocal)
 	if err != nil {
 		return err
@@ -76,27 +81,40 @@ func s3UploadFile(pathRemote, pathLocal string) error {
 	return err
 }
 
-func s3UploadString(pathRemote string, s string) error {
-	fmt.Printf("Uploading string of length %d  as '%s'\n", len(s), pathRemote)
-	bucket := s3GetBucket()
-	d := []byte(s)
-	mimeType := mime.TypeByExtension(filepath.Ext(pathRemote))
-	opts := s3.Options{}
-	//opts.ContentMD5 =
-	return bucket.Put(pathRemote, d, mimeType, s3.PublicRead, opts)
-}
-
-func s3UploadFile2(pathRemote, pathLocal string) error {
+func s3UploadFile(pathRemote, pathLocal string, public bool) error {
 	fmt.Printf("Uploading '%s' as '%s'\n", pathLocal, pathRemote)
 	bucket := s3GetBucket()
 	d, err := ioutil.ReadFile(pathLocal)
 	if err != nil {
 		return err
 	}
+	perm := s3.Private
+	if public {
+		perm = s3.PublicRead
+	}
 	mimeType := mime.TypeByExtension(filepath.Ext(pathLocal))
 	opts := s3.Options{}
-	//opts.ContentMD5 =
-	return bucket.Put(pathRemote, d, mimeType, s3.PublicRead, opts)
+	opts.ContentMD5 = md5B64OfBytes(d)
+	return bucket.Put(pathRemote, d, mimeType, perm, opts)
+}
+
+func md5B64OfBytes(d []byte) string {
+	md5Sum := md5.Sum(d)
+	return base64.StdEncoding.EncodeToString(md5Sum[:])
+}
+
+func s3UploadString(pathRemote string, s string, public bool) error {
+	fmt.Printf("Uploading string of length %d  as '%s'\n", len(s), pathRemote)
+	bucket := s3GetBucket()
+	d := []byte(s)
+	mimeType := mime.TypeByExtension(filepath.Ext(pathRemote))
+	opts := s3.Options{}
+	opts.ContentMD5 = md5B64OfBytes([]byte(s))
+	perm := s3.Private
+	if public {
+		perm = s3.PublicRead
+	}
+	return bucket.Put(pathRemote, d, mimeType, perm, opts)
 }
 
 func s3UploadFiles(s3Dir string, dir string, files []string) error {
@@ -104,7 +122,7 @@ func s3UploadFiles(s3Dir string, dir string, files []string) error {
 	for i := 0; i < n; i++ {
 		pathLocal := filepath.Join(dir, files[2*i])
 		pathRemote := files[2*i+1]
-		err := s3UploadFile(s3Dir+pathRemote, pathLocal)
+		err := s3UploadFileReader(s3Dir+pathRemote, pathLocal, true)
 		if err != nil {
 			return fmt.Errorf("failed to upload '%s' as '%s', err: %s", pathLocal, pathRemote, err)
 		}
