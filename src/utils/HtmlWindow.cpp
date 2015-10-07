@@ -1223,7 +1223,7 @@ static LRESULT CALLBACK WndProcParent(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
 void HtmlWindow::SubclassHwnd()
 {
     wndProcBrowserPrev = (WNDPROC)SetWindowLongPtr(hwndParent, GWLP_WNDPROC, (LONG_PTR)WndProcParent);
-    SetWindowLongPtr(hwndParent, GWLP_USERDATA, (LONG_PTR)this);
+    userDataBrowserPrev = SetWindowLongPtr(hwndParent, GWLP_USERDATA, (LONG_PTR)this);
 }
 
 void HtmlWindow::UnsubclassHwnd()
@@ -1231,7 +1231,7 @@ void HtmlWindow::UnsubclassHwnd()
     if (!wndProcBrowserPrev)
         return;
     SetWindowLongPtr(hwndParent, GWLP_WNDPROC, (LONG_PTR)wndProcBrowserPrev);
-    SetWindowLongPtr(hwndParent, GWLP_USERDATA, (LONG_PTR)0);
+    SetWindowLongPtr(hwndParent, GWLP_USERDATA, userDataBrowserPrev);
 }
 
 HtmlWindow::HtmlWindow(HWND hwndParent, HtmlWindowCallback *cb) :
@@ -1239,7 +1239,7 @@ HtmlWindow::HtmlWindow(HWND hwndParent, HtmlWindowCallback *cb) :
     oleInPlaceObject(nullptr), viewObject(nullptr),
     connectionPoint(nullptr), htmlContent(nullptr), oleObjectHwnd(nullptr),
     adviseCookie(0), htmlWinCb(cb),
-    wndProcBrowserPrev(nullptr),
+    wndProcBrowserPrev(nullptr), userDataBrowserPrev(0),
     canGoBack(false), canGoForward(false)
 {
     assert(hwndParent);

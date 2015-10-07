@@ -871,6 +871,8 @@ LoadEngineInFixedPageUI:
                     return nullptr;
                 goto LoadEngineInFixedPageUI;
             }
+            // another ChmModel might still be active
+            chmModel->RemoveParentHwnd();
             ctrl = chmModel;
         }
         CrashIf(ctrl && (!ctrl->AsChm() || ctrl->AsFixed() || ctrl->AsEbook()));
@@ -1029,6 +1031,7 @@ static void LoadDocIntoCurrentTab(LoadArgs& args, Controller *ctrl, DisplayState
                 win->uia_provider->OnDocumentLoad(dm);
         }
         else if (win->AsChm()) {
+            win->AsChm()->SetParentHwnd(win->hwndCanvas);
             win->ctrl->SetDisplayMode(displayMode);
             win->ctrl->GoToPage(ss.page, false);
         }
