@@ -239,6 +239,13 @@ void fz_stream_fingerprint(fz_stream *file, unsigned char digest[16])
     fz_drop_buffer(file->ctx, buffer);
 }
 
+static inline int wchars_per_rune(int rune)
+{
+    if (rune & 0x1F0000)
+        return 2;
+    return 1;
+}
+
 static WCHAR *fz_text_page_to_str(fz_text_page *text, const WCHAR *lineSep, RectI **coordsOut=nullptr)
 {
     size_t lineSepLen = str::Len(lineSep);
@@ -248,7 +255,10 @@ static WCHAR *fz_text_page_to_str(fz_text_page *text, const WCHAR *lineSep, Rect
             continue;
         for (fz_text_line *line = block->u.text->lines; line < block->u.text->lines + block->u.text->len; line++) {
             for (fz_text_span *span = line->first_span; span; span = span->next) {
-                textLen += span->len + 1;
+                for (fz_text_char *c = span->text; c < span->text + span->len; c++) {
+                    textLen += wchars_per_rune(c->c);
+                }
+                textLen++;
             }
             textLen += lineSepLen - 1;
         }
@@ -275,7 +285,11 @@ static WCHAR *fz_text_page_to_str(fz_text_page *text, const WCHAR *lineSep, Rect
             for (fz_text_span *span = line->first_span; span; span = span->next) {
                 for (fz_text_char *c = span->text; c < span->text + span->len; c++) {
                     *dest = c->c;
-                    if (*dest <= 32 || str::IsNonCharacter(*dest)) {
+                    if (wchars_per_rune(c->c) == 2) {
+                        *dest++ = 0xD800 | ((c->c - 0x10000) >> 10) & 0x3FF;
+                        *dest = 0xDC00 | (c->c - 0x10000) & 0x3FF;
+                    }
+                    else if (*dest <= 32 || str::IsNonCharacter(*dest)) {
                         if (!str::IsWs(*dest))
                             *dest = '?';
                         // collapse multiple whitespace characters into one
@@ -289,6 +303,8 @@ static WCHAR *fz_text_page_to_str(fz_text_page *text, const WCHAR *lineSep, Rect
                         fz_rect bbox;
                         fz_text_char_bbox(&bbox, span, c - span->text);
                         *destRect++ = fz_rect_to_RectD(bbox).Round();
+                        if (wchars_per_rune(c->c) == 2)
+                            *destRect++ = fz_rect_to_RectD(bbox).Round();
                     }
                 }
                 if (span->len > 0 && span->next && dest > content && *dest != ' ') {
