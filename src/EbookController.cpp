@@ -562,9 +562,9 @@ bool EbookController::GoToPrevPage(bool toBottom)
 {
     UNUSED(toBottom);
     int dist = IsDoublePage() ? 2 : 1;
-    if (currPageNo - dist < 1)
+    if (currPageNo == 1)
         return false;
-    GoToPage(currPageNo - dist, false);
+    GoToPage(currPageNo - dist < 1 ? 1 : currPageNo - dist, false);
     return true;
 }
 
