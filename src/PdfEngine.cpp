@@ -341,7 +341,7 @@ static WCHAR *fz_text_page_to_str(fz_text_page *text, const WCHAR *lineSep, Rect
             }
 
             content.Append(lineSep);
-            for (int i = 0; destRect && i < lineSepLen; i++) {
+            for (size_t i = 0; destRect && i < lineSepLen; i++) {
                 destRect->Append(RectI());
             }
         }
