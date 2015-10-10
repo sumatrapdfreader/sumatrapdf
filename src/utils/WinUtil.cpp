@@ -555,11 +555,12 @@ bool CopyTextToClipboard(const WCHAR *text, bool appendOnly) {
         EmptyClipboard();
     }
 
-    HGLOBAL handle = GlobalAlloc(GMEM_MOVEABLE, (str::Len(text) + 1) * sizeof(WCHAR));
+    size_t n = str::Len(text) + 1;
+    HGLOBAL handle = GlobalAlloc(GMEM_MOVEABLE, n * sizeof(WCHAR));
     if (handle) {
         WCHAR *globalText = (WCHAR *)GlobalLock(handle);
         if (globalText) {
-            lstrcpy(globalText, text);
+            str::BufSet(globalText, n, text);
         }
         GlobalUnlock(handle);
 

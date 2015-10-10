@@ -452,4 +452,9 @@ static inline BYTE GetBValueSafe(COLORREF rgb)
 #undef GetBValue
 #define GetBValue UseGetBValueSafeInstead
 
+#ifdef lstrcpy
+#undef lstrcpy
+#define lstrcpy dont_use_lstrcpy
+#endif
+
 #endif

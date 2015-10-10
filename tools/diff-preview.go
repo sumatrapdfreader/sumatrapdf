@@ -119,6 +119,12 @@ func runCmd(exePath string, args ...string) ([]byte, error) {
 	return cmd.Output()
 }
 
+func runCmdNoWait(exePath string, args ...string) error {
+	cmd := exec.Command(exePath, args...)
+	fmt.Printf("running: %s %v\n", filepath.Base(exePath), args)
+	return cmd.Start()
+}
+
 func parseGitStatusLineMust(s string) *GitChange {
 	c := &GitChange{}
 	parts := strings.SplitN(s, " ", 2)
@@ -202,7 +208,7 @@ func runWinMerge(dir string) {
 		/wl, wr : open left/right as read-only
 		/r : recursive compare
 	*/
-	_, err := runCmd(winMergePath, "/u", "/wl", "/wr", dirBefore, dirAfter)
+	err := runCmdNoWait(winMergePath, "/u", "/wl", "/wr", dirBefore, dirAfter)
 	fataliferr(err)
 }
 
