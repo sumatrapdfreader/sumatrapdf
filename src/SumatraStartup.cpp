@@ -630,7 +630,7 @@ static void TestExtractPage(const CommandLineInfo& i) {
             continue;
         }
         RectI *coordsOut; // not using the result, only to trigger the code path
-        WCHAR *uni = engine->ExtractPageText(i.pageNumber, L"", &coordsOut);
+        WCHAR *uni = engine->ExtractPageText(i.pageNumber, L"_", &coordsOut);
         char *utf = str::conv::ToUtf8(uni);
         printf("text on page %d: '", i.pageNumber);
         // print characters as hex because I don't know what kind of locale-specific mangling

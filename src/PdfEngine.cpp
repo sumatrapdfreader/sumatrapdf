@@ -302,6 +302,23 @@ static void AddSpaceAtSpanEnd(fz_text_span *span, str::Str<WCHAR>& s, Vec<RectI>
     rects.Append(prev);
 }
 
+static void AddLineSep(str::Str<WCHAR>& s, Vec<RectI>& rects, const WCHAR *lineSep, size_t lineSepLen) {
+    if (lineSepLen == 0) {
+        return;
+    }
+    // remove trailing spaces
+    if (str::IsWs(s.LastChar())) {
+        s.Pop();
+        rects.Pop();
+    }
+
+    s.Append(lineSep);
+    for (size_t i = 0; i < lineSepLen; i++) {
+        rects.Append(RectI());
+    }
+}
+
+
 static WCHAR *fz_text_page_to_str(fz_text_page *text, const WCHAR *lineSep, RectI **coordsOut)
 {
     size_t lineSepLen = str::Len(lineSep);
@@ -320,16 +337,7 @@ static WCHAR *fz_text_page_to_str(fz_text_page *text, const WCHAR *lineSep, Rect
                 }
                 AddSpaceAtSpanEnd(span, content, rects);
             }
-            // remove trailing spaces
-            if (lineSepLen > 0 && str::IsWs(content.LastChar())) {
-                content.Pop();
-                rects.Pop();
-            }
-
-            content.Append(lineSep);
-            for (size_t i = 0; i < lineSepLen; i++) {
-                rects.Append(RectI());
-            }
+            AddLineSep(content, rects, lineSep, lineSepLen);
         }
     }
 

@@ -11,4 +11,4 @@ Out: rendering page 2 for '$file', zoom: 5.00
 Url: https://kjkpub.s3.amazonaws.com/testfiles/56/3d/c5439587d72663803537a171e6f9dc8c61d4.pdf
 Sha1: 563dc5439587d72663803537a171e6f9dc8c61d4
 Cmd: SumatraPDF.exe -extract-text 1 $file
-Out: text on page 1: 'f0 9d 91 93 '
+Out: text on page 1: 'f0 9d 91 93 5f '
