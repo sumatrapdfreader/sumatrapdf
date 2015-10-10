@@ -246,25 +246,33 @@ static inline int wchars_per_rune(int rune)
     return 1;
 }
 
-static void AddChar(str::Str<WCHAR>& s, fz_text_char *c) {
+static void AddChar(fz_text_span *span, fz_text_char *c, str::Str<WCHAR>& s, Vec<RectI>& rects) {
+    fz_rect bbox;
+    fz_text_char_bbox(&bbox, span, c - span->text);
+    RectI r = fz_rect_to_RectD(bbox).Round();
+
     int n = wchars_per_rune(c->c);
     if (n == 2) {
         WCHAR tmp[2];
         tmp[0] = 0xD800 | ((c->c - 0x10000) >> 10) & 0x3FF;
         tmp[1] = 0xDC00 | (c->c - 0x10000) & 0x3FF;
         s.Append(tmp, 2);
+        rects.Append(r);
+        rects.Append(r);
         return;
     }
     WCHAR wc = c->c;
     bool isNonPrintable = (wc <= 32) || str::IsNonCharacter(wc);
     if (!isNonPrintable) {
         s.Append(wc);
+        rects.Append(r);
         return;
     }
 
     // non-printable or whitespace
     if (!str::IsWs(wc)) {
         s.Append(L'?');
+        rects.Append(r);
         return;
     }
 
@@ -272,52 +280,35 @@ static void AddChar(str::Str<WCHAR>& s, fz_text_char *c) {
     WCHAR prev = s.LastChar();
     if (!str::IsWs(prev)) {
         s.Append(L' ');
-    }
-}
-
-static void AddRect(Vec<RectI> *rects, fz_text_span *span, fz_text_char *c) {
-    fz_rect bbox;
-    fz_text_char_bbox(&bbox, span, c - span->text);
-    RectI r = fz_rect_to_RectD(bbox).Round();
-    rects->Append(r);
-    if (wchars_per_rune(c->c) == 2) {
-        rects->Append(r);
+        rects.Append(r);
     }
 }
 
 // if there's a span following this one, add space to separate them
-static void AddSpaceAtSpanEnd(fz_text_span *span, str::Str<WCHAR>& s, Vec<RectI> *rects) {
+static void AddSpaceAtSpanEnd(fz_text_span *span, str::Str<WCHAR>& s, Vec<RectI>& rects) {
     if (span->len == 0 || span->next == NULL) {
         return;
     }
     CrashIf(s.Count() == 0);
-    CrashIf(rects && rects->Count() == 0);
+    CrashIf(rects.Count() == 0);
     if (s.LastChar() == ' ') {
         return;
     }
     // TODO: use a Tab instead? (this might be a table)
     s.Append(L' ');
-    if (!rects) {
-        return;
-    }
-    RectI prev = rects->Last();
+    RectI prev = rects.Last();
     prev.x += prev.dx;
     prev.dx /= 2;
-    rects->Append(prev);
+    rects.Append(prev);
 }
 
-static WCHAR *fz_text_page_to_str(fz_text_page *text, const WCHAR *lineSep, RectI **coordsOut=nullptr)
+static WCHAR *fz_text_page_to_str(fz_text_page *text, const WCHAR *lineSep, RectI **coordsOut)
 {
     size_t lineSepLen = str::Len(lineSep);
     str::Str<WCHAR> content;
-
-    Vec<RectI> *destRect = nullptr;
-    if (coordsOut) {
-        destRect = new Vec<RectI>();
-        if (!destRect) {
-            return nullptr;
-        }
-    }
+    // coordsOut is optional but we ask for it by default so we simplify the code
+    // by always calculating it
+    Vec<RectI> rects;
 
     for (fz_page_block *block = text->blocks; block < text->blocks + text->len; block++) {
         if (block->type != FZ_PAGE_BLOCK_TEXT)
@@ -325,33 +316,27 @@ static WCHAR *fz_text_page_to_str(fz_text_page *text, const WCHAR *lineSep, Rect
         for (fz_text_line *line = block->u.text->lines; line < block->u.text->lines + block->u.text->len; line++) {
             for (fz_text_span *span = line->first_span; span; span = span->next) {
                 for (fz_text_char *c = span->text; c < span->text + span->len; c++) {
-                    AddChar(content, c);
-                    if (destRect) {
-                        AddRect(destRect, span, c);
-                    }
+                    AddChar(span, c, content, rects);
                 }
-                AddSpaceAtSpanEnd(span, content, destRect);
+                AddSpaceAtSpanEnd(span, content, rects);
             }
             // remove trailing spaces
             if (lineSepLen > 0 && str::IsWs(content.LastChar())) {
                 content.Pop();
-                if (destRect) {
-                    destRect->Pop();
-                }
+                rects.Pop();
             }
 
             content.Append(lineSep);
-            for (size_t i = 0; destRect && i < lineSepLen; i++) {
-                destRect->Append(RectI());
+            for (size_t i = 0; i < lineSepLen; i++) {
+                rects.Append(RectI());
             }
         }
     }
 
-    CrashIf(destRect != nullptr && content.Count() != destRect->Count());
+    CrashIf(content.Count() != rects.Count());
 
-    if (destRect) {
-        *coordsOut = destRect->StealData();
-        delete destRect;
+    if (coordsOut) {
+        *coordsOut = rects.StealData();
     }
 
     return content.StealData();
