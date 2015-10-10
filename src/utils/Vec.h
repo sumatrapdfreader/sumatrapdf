@@ -387,6 +387,13 @@ public:
     {
         return Vec<T>::els;
     }
+
+    T LastChar() const {
+        if (len == 0) {
+            return 0;
+        }
+        return At(len - 1);
+    }
 };
 
 }

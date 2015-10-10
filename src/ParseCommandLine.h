@@ -91,6 +91,7 @@ class CommandLineInfo {
           stressParallelCount(1),
           stressRandomizeFiles(false),
           testRenderPage(false),
+          testExtractPage(false),
           appdataDir(nullptr),
           inverseSearchCmdLine(nullptr),
           invertColors(false),

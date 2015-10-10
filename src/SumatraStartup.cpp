@@ -629,7 +629,8 @@ static void TestExtractPage(const CommandLineInfo& i) {
             printf("failed to create engine for file '%s'\n", fileNameUtf.Get());
             continue;
         }
-        WCHAR *uni = engine->ExtractPageText(i.pageNumber, L"");
+        RectI *coordsOut; // not using the result, only to trigger the code path
+        WCHAR *uni = engine->ExtractPageText(i.pageNumber, L"", &coordsOut);
         char *utf = str::conv::ToUtf8(uni);
         printf("text on page %d: '", i.pageNumber);
         // print characters as hex because I don't know what kind of locale-specific mangling
@@ -642,6 +643,7 @@ static void TestExtractPage(const CommandLineInfo& i) {
         printf("'\n");
         free(uni);
         free(utf);
+        free(coordsOut);
         delete engine;
     }
 }

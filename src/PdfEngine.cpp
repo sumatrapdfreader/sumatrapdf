@@ -246,92 +246,115 @@ static inline int wchars_per_rune(int rune)
     return 1;
 }
 
+static void AddChar(str::Str<WCHAR>& s, fz_text_char *c) {
+    int n = wchars_per_rune(c->c);
+    if (n == 2) {
+        WCHAR tmp[2];
+        tmp[0] = 0xD800 | ((c->c - 0x10000) >> 10) & 0x3FF;
+        tmp[1] = 0xDC00 | (c->c - 0x10000) & 0x3FF;
+        s.Append(tmp, 2);
+        return;
+    }
+    WCHAR wc = c->c;
+    bool isNonPrintable = (wc <= 32) || str::IsNonCharacter(wc);
+    if (!isNonPrintable) {
+        s.Append(wc);
+        return;
+    }
+
+    // non-printable or whitespace
+    if (!str::IsWs(wc)) {
+        s.Append(L'?');
+        return;
+    }
+
+    // collapse multiple whitespace characters into one
+    WCHAR prev = s.LastChar();
+    if (!str::IsWs(prev)) {
+        s.Append(L' ');
+    }
+}
+
+static void AddRect(Vec<RectI> *rects, fz_text_span *span, fz_text_char *c) {
+    fz_rect bbox;
+    fz_text_char_bbox(&bbox, span, c - span->text);
+    RectI r = fz_rect_to_RectD(bbox).Round();
+    rects->Append(r);
+    if (wchars_per_rune(c->c) == 2) {
+        rects->Append(r);
+    }
+}
+
+// if there's a span following this one, add space to separate them
+static void AddSpaceAtSpanEnd(fz_text_span *span, str::Str<WCHAR>& s, Vec<RectI> *rects) {
+    if (span->len == 0 || span->next == NULL) {
+        return;
+    }
+    CrashIf(s.Count() == 0);
+    CrashIf(rects && rects->Count() == 0);
+    if (s.LastChar() == ' ') {
+        return;
+    }
+    // TODO: use a Tab instead? (this might be a table)
+    s.Append(L' ');
+    if (!rects) {
+        return;
+    }
+    RectI prev = rects->Last();
+    prev.x += prev.dx;
+    prev.dx /= 2;
+    rects->Append(prev);
+}
+
 static WCHAR *fz_text_page_to_str(fz_text_page *text, const WCHAR *lineSep, RectI **coordsOut=nullptr)
 {
     size_t lineSepLen = str::Len(lineSep);
-    size_t textLen = 0;
-    for (fz_page_block *block = text->blocks; block < text->blocks + text->len; block++) {
-        if (block->type != FZ_PAGE_BLOCK_TEXT)
-            continue;
-        for (fz_text_line *line = block->u.text->lines; line < block->u.text->lines + block->u.text->len; line++) {
-            for (fz_text_span *span = line->first_span; span; span = span->next) {
-                for (fz_text_char *c = span->text; c < span->text + span->len; c++) {
-                    textLen += wchars_per_rune(c->c);
-                }
-                textLen++;
-            }
-            textLen += lineSepLen - 1;
-        }
-    }
+    str::Str<WCHAR> content;
 
-    WCHAR *content = AllocArray<WCHAR>(textLen + 1);
-    if (!content)
-        return nullptr;
-
-    RectI *destRect = nullptr;
+    Vec<RectI> *destRect = nullptr;
     if (coordsOut) {
-        destRect = *coordsOut = AllocArray<RectI>(textLen + 1);
-        if (!*coordsOut) {
-            free(content);
+        destRect = new Vec<RectI>();
+        if (!destRect) {
             return nullptr;
         }
     }
 
-    WCHAR *dest = content;
     for (fz_page_block *block = text->blocks; block < text->blocks + text->len; block++) {
         if (block->type != FZ_PAGE_BLOCK_TEXT)
             continue;
         for (fz_text_line *line = block->u.text->lines; line < block->u.text->lines + block->u.text->len; line++) {
             for (fz_text_span *span = line->first_span; span; span = span->next) {
                 for (fz_text_char *c = span->text; c < span->text + span->len; c++) {
-                    *dest = c->c;
-                    if (wchars_per_rune(c->c) == 2) {
-                        *dest++ = 0xD800 | ((c->c - 0x10000) >> 10) & 0x3FF;
-                        *dest = 0xDC00 | (c->c - 0x10000) & 0x3FF;
-                    }
-                    else if (*dest <= 32 || str::IsNonCharacter(*dest)) {
-                        if (!str::IsWs(*dest))
-                            *dest = '?';
-                        // collapse multiple whitespace characters into one
-                        else if (dest > content && !str::IsWs(dest[-1]))
-                            *dest = ' ';
-                        else
-                            continue;
-                    }
-                    dest++;
+                    AddChar(content, c);
                     if (destRect) {
-                        fz_rect bbox;
-                        fz_text_char_bbox(&bbox, span, c - span->text);
-                        *destRect++ = fz_rect_to_RectD(bbox).Round();
-                        if (wchars_per_rune(c->c) == 2)
-                            *destRect++ = fz_rect_to_RectD(bbox).Round();
+                        AddRect(destRect, span, c);
                     }
                 }
-                if (span->len > 0 && span->next && dest > content && *dest != ' ') {
-                    // TODO: use a Tab instead? (this might be a table)
-                    *dest++ = ' ';
-                    if (destRect) {
-                        RectI prev = destRect[-1];
-                        prev.x += prev.dx;
-                        prev.dx /= 2;
-                        *destRect++ = prev;
-                    }
-                }
+                AddSpaceAtSpanEnd(span, content, destRect);
             }
             // remove trailing spaces
-            if (lineSepLen > 0 && dest > content && str::IsWs(dest[-1])) {
-                *--dest = '\0';
-                if (destRect)
-                    *--destRect = RectI();
+            if (lineSepLen > 0 && str::IsWs(content.LastChar())) {
+                content.Pop();
+                if (destRect) {
+                    destRect->Pop();
+                }
             }
-            lstrcpy(dest, lineSep);
-            dest += lineSepLen;
-            if (destRect)
-                destRect += lineSepLen;
+
+            content.Append(lineSep);
+            for (int i = 0; destRect && i < lineSepLen; i++) {
+                destRect->Append(RectI());
+            }
         }
     }
 
-    return content;
+    CrashIf(destRect != nullptr && content.Count() != destRect->Count());
+
+    if (destRect) {
+        *coordsOut = destRect->StealData();
+        delete destRect;
+    }
+
+    return content.StealData();
 }
 
 struct istream_filter {
