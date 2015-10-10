@@ -52,6 +52,7 @@ class CommandLineInfo {
 
     // related to testing
     bool testRenderPage;
+    bool testExtractPage;
     int testPageNo;
 
     bool crashOnOpen;

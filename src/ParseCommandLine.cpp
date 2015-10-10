@@ -213,6 +213,7 @@ static const char *argNames =
     "fwdsearch-permanent\0"
     "manga-mode\0"
     "autoupdate\0"
+    "extract-text\0"
     "silent\0";
 
 enum {
@@ -259,6 +260,7 @@ enum {
     FwdSearchPermanent,
     MangaMode,
     AutoUpdate,
+    ExtractText,
     Silent
 };
 
@@ -389,6 +391,9 @@ void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine) {
         } else if (is_arg_with_param(Render)) {
             handle_int_param(pageNumber);
             testRenderPage = true;
+        } else if (is_arg_with_param(ExtractText)) {
+            handle_int_param(pageNumber);
+            testExtractPage = true;
         } else if (Rand == arg) {
             stressRandomizeFiles = true;
         } else if (is_arg_with_param(Bench)) {
