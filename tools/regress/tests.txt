@@ -6,3 +6,8 @@ Url: https://kjkpub.s3.amazonaws.com/testfiles/6f/d3/89a36816f1ab490d46c0c7a6b34
 Sha1: 6fd389a36816f1ab490d46c0c7a6b34b678f72bf
 Cmd: SumatraPDF.exe -render 2 -zoom 5 $file
 Out: rendering page 2 for '$file', zoom: 5.00
+
+Url: https://kjkpub.s3.amazonaws.com/testfiles/56/3d/c5439587d72663803537a171e6f9dc8c61d4.pdf
+Sha1: 563dc5439587d72663803537a171e6f9dc8c61d4
+Cmd: SumatraPDF.exe -extract-text 1 $file
+Out: text on page 1: 'ed 91 93 '

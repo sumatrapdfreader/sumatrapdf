@@ -646,6 +646,15 @@ static void TestExtractPage(const CommandLineInfo& i) {
     }
 }
 
+static void ShutdownCommon() {
+    mui::Destroy();
+    uitask::Destroy();
+    UninstallCrashHandler();
+    dbghelp::FreeCallstackLogs();
+    // output leaks after all destructors of static objects have run
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+}
+
 int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR cmdLine, _In_ int nCmdShow)
 {
     UNUSED(hPrevInstance); UNUSED(cmdLine); UNUSED(nCmdShow);
@@ -711,23 +720,13 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 
     if (i.testRenderPage) {
         TestRenderPage(i);
-        mui::Destroy();
-        uitask::Destroy();
-        UninstallCrashHandler();
-        dbghelp::FreeCallstackLogs();
-        // output leaks after all destructors of static objects have run
-        _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+        ShutdownCommon();
         return 0;
     }
 
     if (i.testExtractPage) {
         TestExtractPage(i);
-        mui::Destroy();
-        uitask::Destroy();
-        UninstallCrashHandler();
-        dbghelp::FreeCallstackLogs();
-        // output leaks after all destructors of static objects have run
-        _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+        ShutdownCommon();
         return 0;
     }
 
