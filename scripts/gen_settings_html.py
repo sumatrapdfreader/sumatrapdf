@@ -19,7 +19,7 @@ html_tmpl = """\
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title>Customizing SumatraPDF</title>
+<title>Customizing SumatraPDF %VER%</title>
 <style type=text/css>
 body {
     font-size: 90%;
@@ -74,7 +74,7 @@ body {
 
 <div class=desc>
 
-<h2>Customizing SumatraPDF</h2>
+<h2>Customizing SumatraPDF %VER%</h2>
 
 <p>You can change the look and behavior of
 <a href="http://www.sumatrapdfreader.org/">SumatraPDF</a>
@@ -317,6 +317,8 @@ def gen_html():
     prefs = gen_settingsstructs.GlobalPrefs
     inside = gen_struct(prefs)
     s = html_tmpl.replace("%INSIDE%", inside)
+    print("g_version: '%s'\n", g_version)
+    s = s.replace("%VER%", str(g_version))
     file_name = "settings" + g_version + ".html"
     p = os.path.join("scripts", file_name)
     open(p, "w").write(s)

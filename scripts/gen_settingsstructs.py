@@ -607,7 +607,9 @@ def BuildMetaData(struct, built=[]):
 
 def GenerateSettingsHtml():
 	from gen_settings_html import html_tmpl, gen_struct, gen_settingsstructs
-	return html_tmpl.replace("%INSIDE%", gen_struct(gen_settingsstructs.GlobalPrefs, prerelease=True))
+	s = html_tmpl.replace("%INSIDE%", gen_struct(gen_settingsstructs.GlobalPrefs, prerelease=True))
+	ver = util2.get_sumatrapdf_version()
+	return s.replace("%VER%", str(ver))
 
 SettingsStructs_Header = """\
 /* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
