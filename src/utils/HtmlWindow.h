@@ -93,7 +93,7 @@ public:
 
     // TODO: not for public use
     WNDPROC wndProcBrowserPrev;
-    LONG_PTR userDataBrowserPrev
+    LONG_PTR userDataBrowserPrev;
     HtmlWindowCallback *htmlWinCb;
 
     bool    OnBeforeNavigate(const WCHAR *url, bool newWindow);
