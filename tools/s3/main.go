@@ -230,11 +230,10 @@ func sha1ExistsInS3Must(sha1 string) bool {
 }
 
 func uploadFileInfo(fi *FileInfo) {
-	// TODO: write me
 	timeStart := time.Now()
 	pathRemote := fi.S3FullPath
 	pathLocal := fi.Path
-	fmt.Printf("uloadFileInfo(): %s => %s, pub: %v, %d bytes", pathLocal, pathRemote, isPublic(), fi.Size)
+	fmt.Printf("uploadFileInfo(): %s => %s, pub: %v, %d bytes", pathLocal, pathRemote, isPublic(), fi.Size)
 	if sha1ExistsInS3Must(fi.Sha1Hex) {
 		// TODO: if different permissions (public vs. private), change the perms
 		// TODO: for extra paranoia could verify that fi.Size matches size in S3
