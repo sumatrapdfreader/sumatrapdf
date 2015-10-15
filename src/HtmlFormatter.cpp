@@ -743,6 +743,8 @@ void HtmlFormatter::EmitTextRun(const char *s, const char *end)
         size_t strLen = str::Utf8ToWcharBuf(s, end - s, buf, dimof(buf));
         // soft hyphens should not be displayed
         strLen -= str::RemoveChars(buf, L"\xad");
+        if (0 == strLen)
+            break;
         textMeasure->SetFont(CurrFont());
         RectF bbox = textMeasure->Measure(buf, strLen);
         EnsureDx(bbox.Width);
