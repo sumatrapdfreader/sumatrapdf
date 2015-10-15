@@ -498,8 +498,9 @@ pdf_transform_annot(pdf_annot *annot)
 		h = 0;
 	else
 		h = (rect.y1 - rect.y0) / (bbox.y1 - bbox.y0);
-	x = rect.x0 - bbox.x0;
-	y = rect.y0 - bbox.y0;
+	/* cf. https://github.com/sumatrapdfreader/sumatrapdf/issues/318 */
+	x = rect.x0 - bbox.x0 * w;
+	y = rect.y0 - bbox.y0 * h;
 
 	fz_pre_scale(fz_translate(&annot->matrix, x, y), w, h);
 }
