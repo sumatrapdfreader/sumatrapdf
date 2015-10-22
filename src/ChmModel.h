@@ -23,7 +23,8 @@ public:
     virtual void GoToPage(int pageNo, bool addNavPoint) {
         UNUSED(addNavPoint);
         CrashIf(!ValidPageNo(pageNo));
-        DisplayPage(pages.At(pageNo - 1));
+        if (ValidPageNo(pageNo))
+            DisplayPage(pages.At(pageNo - 1));
     }
     virtual bool CanNavigate(int dir) const;
     virtual void Navigate(int dir);
