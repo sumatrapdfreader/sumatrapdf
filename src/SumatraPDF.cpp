@@ -1034,6 +1034,7 @@ static void LoadDocIntoCurrentTab(LoadArgs& args, Controller *ctrl, DisplayState
         else if (win->AsChm()) {
             win->AsChm()->SetParentHwnd(win->hwndCanvas);
             win->ctrl->SetDisplayMode(displayMode);
+            ss.page = limitValue(ss.page, 1, win->ctrl->PageCount());
             win->ctrl->GoToPage(ss.page, false);
         }
         else if (win->AsEbook()) {
