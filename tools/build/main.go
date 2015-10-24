@@ -23,7 +23,7 @@ To run:
  - restart so that PATH changes take place
  - set GOPATH env variable (e.g. to %USERPROFILE%\src\go)
  - install goamz: go get github.com/goamz/goamz/s3
-* go run .\tools\build\*.go
+* see .\scripts\build-release.bat for how to run it
 */
 
 /*
@@ -145,10 +145,13 @@ func setBuildConfig(preRelVer int, sha1 string) {
 	fataliferr(err)
 }
 
-// we shouldn't re-upload files. We upload manifest-${rel}.txt last, so we
+// we shouldn't re-upload files. We upload manifest-${ver}.txt last, so we
 // consider a pre-release build already present in s3 if manifest file exists
 func verifyPreReleaseNotInS3Must(preReleaseVer int) {
-	s3Path := fmt.Sprintf("%smanifest-%d.txt", s3PreRelDir, preReleaseVer)
+	if !flgUpload {
+		return
+	}
+	s3Path := s3PreRelDir + fmt.Sprintf("manifest-%d.txt", preReleaseVer)
 	fatalif(s3Exists(s3Path), "build %d already exists in s3 because '%s' exists\n", preReleaseVer, s3Path)
 }
 
@@ -156,7 +159,7 @@ func verifyReleaseNotInS3Must(sumatraVersion string) {
 	if !flgUpload {
 		return
 	}
-	s3Path := fmt.Sprintf("%sSuamtraPDF-%sinstall.exe", s3RelDir, sumatraVersion)
+	s3Path := s3RelDir + fmt.Sprintf("maniest-%d.txt", sumatraVersion)
 	fatalif(s3Exists(s3Path), "build '%s' already exists in s3 because '%s' existst\n", sumatraVersion, s3Path)
 }
 
@@ -274,12 +277,11 @@ func buildRelease() {
 	var err error
 
 	fmt.Printf("Building release version %s\n", sumatraVersion)
+	fataliferr(err)
 	verifyGitCleanMust()
-	//verifyOnReleaseBranchMust()
-
+	verifyOnReleaseBranchMust()
 	verifyReleaseNotInS3Must(sumatraVersion)
 
-	//TODO: not sure if should download translations
 	downloadTranslations()
 
 	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:SumatraPDF;SumatraPDF-no-MUPDF;Uninstaller;test_util", "/p:Configuration=Release;Platform=Win32", "/m")
@@ -312,9 +314,10 @@ func buildRelease() {
 	createPdbLzsaMust("rel64")
 
 	createManifestMust()
-	if flgUpload {
-		s3UploadReleaseMust()
-	}
+
+	fatalif(true, "stopping here for now")
+
+	s3UploadReleaseMust()
 }
 
 func buildAnalyze() {
@@ -616,41 +619,66 @@ func s3UploadPreReleaseMust() {
 	fataliferr(err)
 }
 
+/*
+
+Given result of git btranch that looks like:
+
+master
+* rel3.1working
+
+Return active branch marked with "*" ('rel3.1working' in this case) or empty
+string if no current branch.
+*/
+
+func getCurrentBranch(d []byte) string {
+	lines := toTrimmedLines(d)
+	for _, l := range lines {
+		if strings.HasPrefix(l, "* ") {
+			return l[2:]
+		}
+	}
+	return ""
+}
+
 // When doing a release build, it must be from from a branch rel${ver}working
 // e.g. rel3.1working, where ${ver} must much sumatraVersion
 func verifyOnReleaseBranchMust() {
 	// 'git branch' return branch name in format: '* master'
-	out := strings.TrimSpace(string(runExeMust("git", "branch")))
-	pref := "* rel"
+	out := runExeMust("git", "branch")
+	currBranch := getCurrentBranch(out)
+	pref := "rel"
 	suff := "working"
-	fatalif(!strings.HasPrefix(out, pref), "running on branch '%s' which is not 'rel${ver}working' branch\n", out)
-	fatalif(!strings.HasSuffix(out, suff), "running on branch '%s' which is not 'rel${ver}working' branch\n", out)
+	fatalif(!strings.HasPrefix(currBranch, pref), "running on branch '%s' which is not 'rel${ver}working' branch\n", currBranch)
+	fatalif(!strings.HasSuffix(currBranch, suff), "running on branch '%s' which is not 'rel${ver}working' branch\n", currBranch)
 
-	ver := out[len(pref):]
-	ver = out[:len(out)-len(suff)]
-	fatalif(ver != sumatraVersion, "version mismatch, sumatra: '%s', branch: '%s'", sumatraVersion, ver)
+	ver := currBranch[len(pref):]
+	ver = ver[:len(ver)-len(suff)]
+	fatalif(ver != sumatraVersion, "version mismatch, sumatra: '%s', branch: '%s'\n", sumatraVersion, ver)
 }
 
 // https://kjkpub.s3.amazonaws.com/sumatrapdf/rel/SumatraPDF-3.0-install.exe
 // TODO: more files
 func s3UploadReleaseMust() {
-	s3Dir := "sumatrapdf/rel/"
+	if !flgUpload {
+		fmt.Printf("Skipping release upload to s3 because -upload flag not given\n")
+		return
+	}
 
 	files := []string{
-		"SumatraPDF.exe", fmt.Sprintf("SumatraPDF-prerelease-%d.exe", svnPreReleaseVer),
-		"Installer.exe", fmt.Sprintf("SumatraPDF-prerelease-%d-install.exe", svnPreReleaseVer),
+		"SumatraPDF.exe", fmt.Sprintf("SumatraPDF-%d.exe", svnPreReleaseVer),
+		"Installer.exe", fmt.Sprintf("SumatraPDF-%d-install.exe", svnPreReleaseVer),
 	}
-	err := s3UploadFiles(s3Dir, "rel", files)
+	err := s3UploadFiles(s3RelDir, "rel", files)
 	fataliferr(err)
 
 	files = []string{
-		"SumatraPDF.exe", fmt.Sprintf("SumatraPDF-prerelease-%d-64.exe", svnPreReleaseVer),
-		"Installer.exe", fmt.Sprintf("SumatraPDF-prerelease-%d-install-64.exe", svnPreReleaseVer),
+		"SumatraPDF.exe", fmt.Sprintf("SumatraPDF-%d-64.exe", svnPreReleaseVer),
+		"Installer.exe", fmt.Sprintf("SumatraPDF-%d-install-64.exe", svnPreReleaseVer),
 	}
-	err = s3UploadFiles(s3Dir, "rel64", files)
+	err = s3UploadFiles(s3RelDir, "rel64", files)
 	fataliferr(err)
 	// write manifest last
-	s3Path := s3Dir + fmt.Sprintf("SumatraPDF-prerelease-%d-manifest.txt", svnPreReleaseVer)
+	s3Path := s3RelDir + fmt.Sprintf("SumatraPDF-prerelease-%d-manifest.txt", svnPreReleaseVer)
 	err = s3UploadFileReader(s3Path, manifestPath(), true)
 	fataliferr(err)
 }
@@ -758,6 +786,12 @@ func init() {
 func main() {
 	//testBuildLzsa()
 	//testS3Upload()
+
+	// TODO: temporary
+	if true {
+		err := os.Chdir(pj("..", "sumatrapdf-3.1"))
+		fataliferr(err)
+	}
 
 	if false {
 		detectVersions()
