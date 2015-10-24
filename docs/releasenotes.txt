@@ -3,7 +3,7 @@ the release notes, as we make them, to make the release process easier.
 
 Next version:
 
-3.1 (2015-10-??)
+3.1 (2015-10-24)
 
 * 64bit builds
 * all documents are restored at startup if a window with multiple tabs
