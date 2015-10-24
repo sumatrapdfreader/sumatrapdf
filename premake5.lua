@@ -4,9 +4,6 @@ To generate Visual Studio files in vs2015 directory, run: premake5 vs2015
 I'm using premake5 alpha6 from http://premake.github.io/download.html#v5
 (premake4 won't work, it doesn't support VS 2013+)
 
-TODO:
-* compare compilation flags nmake vs. us from compilation logs
-
 Note about nasm: when providing "-I foo/bar/" flag to nasm.exe, it must be
 "foo/bar/" and not just "foo/bar".
 

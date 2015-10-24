@@ -1,4 +1,12 @@
-3.1: 64-bit builds
+Some ideas for 3.2 release:
+- improve tabs (re-arrange with drag&drop, allow moving between windows)
+- background loading so that we don't stall on slow filesystem (network drives)
+- ebook improvements
+ - allow changing font size
+ - change font/bg color
+ - search
+ - text selection
+- better handle fit-width for files that have non-uniform pages
 
 It's best to make the most risky (most likely to introduce breakage) changes
 first so that there is time to stabilize the code. E.g. in 2.2, LoadDocument()
