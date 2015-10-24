@@ -190,6 +190,29 @@ var (
 		"SumatraPDF-no-MuPDF.pdb", "SumatraPDF.pdb"}
 )
 
+func addZipFileMust(w *zip.Writer, path string) {
+	d, err := ioutil.ReadFile(path)
+	fataliferr(err)
+	f, err := w.Create(filepath.Base(path))
+	fataliferr(err)
+	_, err = f.Write(d)
+	fataliferr(err)
+	// no need to close f. It's implicitly closed by the next Create() or Close() call
+}
+
+func createExeZipMust(dir string) {
+	path := pj(dir, "SumatraPDF.zip")
+	f, err := os.Create(path)
+	fataliferr(err)
+	defer f.Close()
+	w := zip.NewWriter(f)
+
+	addZipFileMust(w, pj(dir, "SumatraPDF.exe"))
+
+	err = w.Close()
+	fataliferr(err)
+}
+
 func createPdbZipMust(dir string) {
 	path := pj(dir, "SumatraPDF.pdb.zip")
 	f, err := os.Create(path)
@@ -198,13 +221,7 @@ func createPdbZipMust(dir string) {
 	w := zip.NewWriter(f)
 
 	for _, file := range pdbFiles {
-		path = pj(dir, file)
-		d, err := ioutil.ReadFile(path)
-		fataliferr(err)
-		f, err := w.Create(file)
-		fataliferr(err)
-		_, err = f.Write(d)
-		fataliferr(err)
+		addZipFileMust(w, pj(dir, file))
 	}
 
 	err = w.Close()
@@ -304,6 +321,9 @@ func buildRelease() {
 	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:Installer", "/p:Configuration=Release;Platform=x64", "/m")
 	fataliferr(err)
 	signMust(pj("rel64", "Installer.exe"))
+
+	createExeZipMust("rel")
+	createExeZipMust("rel64")
 
 	createPdbZipMust("rel")
 	createPdbZipMust("rel64")
@@ -594,11 +614,12 @@ func s3UploadPreReleaseMust(ver string) {
 	err := s3UploadFiles(s3PreRelDir, "rel", files)
 	fataliferr(err)
 
+	prefix = fmt.Sprintf("SumatraPDF-prerelease-%s-64", ver)
 	files = []string{
-		"SumatraPDF.exe", fmt.Sprintf("%s-64.exe", prefix),
-		"Installer.exe", fmt.Sprintf("%s-install-64.exe", prefix),
-		"SumatraPDF.pdb.zip", fmt.Sprintf("%s.pdb-64.zip", prefix),
-		"SumatraPDF.pdb.lzsa", fmt.Sprintf("%s.pdb-64.lzsa", prefix),
+		"SumatraPDF.exe", fmt.Sprintf("%s.exe", prefix),
+		"Installer.exe", fmt.Sprintf("%s-install.exe", prefix),
+		"SumatraPDF.pdb.zip", fmt.Sprintf("%s.pdb.zip", prefix),
+		"SumatraPDF.pdb.lzsa", fmt.Sprintf("%s.pdb.lzsa", prefix),
 	}
 	err = s3UploadFiles(s3PreRelDir, "rel64", files)
 	fataliferr(err)
@@ -676,6 +697,7 @@ func s3UploadReleaseMust(ver string) {
 	prefix := fmt.Sprintf("SumatraPDF-%s", ver)
 	files := []string{
 		"SumatraPDF.exe", fmt.Sprintf("%s.exe", prefix),
+		"SumatraPDF.zip", fmt.Sprintf("%s.zip", prefix),
 		"Installer.exe", fmt.Sprintf("%s-install.exe", prefix),
 		"SumatraPDF.pdb.zip", fmt.Sprintf("%s.pdb.zip", prefix),
 		"SumatraPDF.pdb.lzsa", fmt.Sprintf("%s.pdb.lzsa", prefix),
@@ -683,11 +705,13 @@ func s3UploadReleaseMust(ver string) {
 	err := s3UploadFiles(s3RelDir, "rel", files)
 	fataliferr(err)
 
+	prefix = fmt.Sprintf("SumatraPDF-%s-64", ver)
 	files = []string{
-		"SumatraPDF.exe", fmt.Sprintf("%s-64.exe", prefix),
-		"Installer.exe", fmt.Sprintf("%s-install-64.exe", prefix),
-		"SumatraPDF.pdb.zip", fmt.Sprintf("%s.pdb-64.zip", prefix),
-		"SumatraPDF.pdb.lzsa", fmt.Sprintf("%s.pdb-64.lzsa", prefix),
+		"SumatraPDF.exe", fmt.Sprintf("%s.exe", prefix),
+		"SumatraPDF.zip", fmt.Sprintf("%s.zip", prefix),
+		"Installer.exe", fmt.Sprintf("%s-install.exe", prefix),
+		"SumatraPDF.pdb.zip", fmt.Sprintf("%s.pdb.zip", prefix),
+		"SumatraPDF.pdb.lzsa", fmt.Sprintf("%s.pdb.lzsa", prefix),
 	}
 	err = s3UploadFiles(s3RelDir, "rel64", files)
 	fataliferr(err)
