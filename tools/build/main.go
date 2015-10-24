@@ -147,20 +147,20 @@ func setBuildConfig(preRelVer int, sha1 string) {
 
 // we shouldn't re-upload files. We upload manifest-${ver}.txt last, so we
 // consider a pre-release build already present in s3 if manifest file exists
-func verifyPreReleaseNotInS3Must(preReleaseVer int) {
+func verifyPreReleaseNotInS3Must(ver string) {
 	if !flgUpload {
 		return
 	}
-	s3Path := s3PreRelDir + fmt.Sprintf("manifest-%d.txt", preReleaseVer)
-	fatalif(s3Exists(s3Path), "build %d already exists in s3 because '%s' exists\n", preReleaseVer, s3Path)
+	s3Path := s3PreRelDir + fmt.Sprintf("SumatraPDF-prerelease-%s-manifest.txt", ver)
+	fatalif(s3Exists(s3Path), "build %d already exists in s3 because '%s' exists\n", ver, s3Path)
 }
 
-func verifyReleaseNotInS3Must(sumatraVersion string) {
+func verifyReleaseNotInS3Must(ver string) {
 	if !flgUpload {
 		return
 	}
-	s3Path := s3RelDir + fmt.Sprintf("manifest-%s.txt", sumatraVersion)
-	fatalif(s3Exists(s3Path), "build '%s' already exists in s3 because '%s' existst\n", sumatraVersion, s3Path)
+	s3Path := s3RelDir + fmt.Sprintf("SumatraPDF-%s-manifest.txt", ver)
+	fatalif(s3Exists(s3Path), "build '%s' already exists in s3 because '%s' existst\n", ver, s3Path)
 }
 
 // check we have cert for signing and s3 creds for file uploads
@@ -232,7 +232,7 @@ func buildPreRelease() {
 	fmt.Printf("Building pre-release version %d\n", svnPreReleaseVer)
 	verifyGitCleanMust()
 	verifyOnMasterBranchMust()
-	verifyPreReleaseNotInS3Must(svnPreReleaseVer)
+	verifyPreReleaseNotInS3Must(strconv.Itoa(svnPreReleaseVer))
 
 	downloadTranslations()
 
@@ -603,7 +603,7 @@ func s3UploadPreReleaseMust(ver string) {
 	err = s3UploadFiles(s3PreRelDir, "rel64", files)
 	fataliferr(err)
 
-	manifestRemotePath := s3PreRelDir + fmt.Sprintf("manifest-%s.txt", ver)
+	manifestRemotePath := s3PreRelDir + prefix + "-manifest.txt"
 	manifestLocalPath := pj("rel", "manifest.txt")
 	err = s3UploadFileReader(manifestRemotePath, manifestLocalPath, true)
 	fataliferr(err)
@@ -624,7 +624,6 @@ func s3UploadPreReleaseMust(ver string) {
 }
 
 /*
-
 Given result of git btranch that looks like:
 
 master
@@ -690,11 +689,11 @@ func s3UploadReleaseMust(ver string) {
 		"SumatraPDF.pdb.zip", fmt.Sprintf("%s.pdb-64.zip", prefix),
 		"SumatraPDF.pdb.lzsa", fmt.Sprintf("%s.pdb-64.lzsa", prefix),
 	}
-	err = s3UploadFiles(s3PreRelDir, "rel64", files)
+	err = s3UploadFiles(s3RelDir, "rel64", files)
 	fataliferr(err)
 
 	// upload manifest last
-	manifestRemotePath := s3RelDir + fmt.Sprintf("manifest-%s.txt", ver)
+	manifestRemotePath := s3RelDir + prefix + "-manifest.txt"
 	manifestLocalPath := pj("rel", "manifest.txt")
 	err = s3UploadFileReader(manifestRemotePath, manifestLocalPath, true)
 	fataliferr(err)
@@ -809,7 +808,7 @@ func main() {
 	//testS3Upload()
 
 	// TODO: temporary
-	if false {
+	if true {
 		err := os.Chdir(pj("..", "sumatrapdf-3.1"))
 		fataliferr(err)
 	}
