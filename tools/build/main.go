@@ -605,6 +605,7 @@ func s3UploadPreReleaseMust(ver string) {
 	}
 
 	prefix := fmt.Sprintf("SumatraPDF-prerelease-%s", ver)
+	manifestRemotePath := s3PreRelDir + prefix + "-manifest.txt"
 	files := []string{
 		"SumatraPDF.exe", fmt.Sprintf("%s.exe", prefix),
 		"Installer.exe", fmt.Sprintf("%s-install.exe", prefix),
@@ -624,7 +625,6 @@ func s3UploadPreReleaseMust(ver string) {
 	err = s3UploadFiles(s3PreRelDir, "rel64", files)
 	fataliferr(err)
 
-	manifestRemotePath := s3PreRelDir + prefix + "-manifest.txt"
 	manifestLocalPath := pj("rel", "manifest.txt")
 	err = s3UploadFileReader(manifestRemotePath, manifestLocalPath, true)
 	fataliferr(err)
@@ -695,6 +695,7 @@ func s3UploadReleaseMust(ver string) {
 	}
 
 	prefix := fmt.Sprintf("SumatraPDF-%s", ver)
+	manifestRemotePath := s3RelDir + prefix + "-manifest.txt"
 	files := []string{
 		"SumatraPDF.exe", fmt.Sprintf("%s.exe", prefix),
 		"SumatraPDF.zip", fmt.Sprintf("%s.zip", prefix),
@@ -717,7 +718,6 @@ func s3UploadReleaseMust(ver string) {
 	fataliferr(err)
 
 	// upload manifest last
-	manifestRemotePath := s3RelDir + prefix + "-manifest.txt"
 	manifestLocalPath := pj("rel", "manifest.txt")
 	err = s3UploadFileReader(manifestRemotePath, manifestLocalPath, true)
 	fataliferr(err)
