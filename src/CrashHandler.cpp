@@ -611,7 +611,7 @@ static WCHAR *BuildSymbolsUrl() {
     WCHAR *urlBase = L"http://kjkpub.s3.amazonaws.com/sumatrapdf/rel/SumatraPDF-" TEXT(QM(CURR_VERSION));
 #endif
     WCHAR *is64 = IsProcess64() ? L"-64" : L"";
-    return str::Format(L"%s.pdb%s.lzsa", urlBase, is64);
+    return str::Format(L"%s%s.pdb.lzsa", urlBase, is64);
 #endif
 }
 
