@@ -159,7 +159,7 @@ func verifyReleaseNotInS3Must(sumatraVersion string) {
 	if !flgUpload {
 		return
 	}
-	s3Path := s3RelDir + fmt.Sprintf("maniest-%d.txt", sumatraVersion)
+	s3Path := s3RelDir + fmt.Sprintf("manifest-%s.txt", sumatraVersion)
 	fatalif(s3Exists(s3Path), "build '%s' already exists in s3 because '%s' existst\n", sumatraVersion, s3Path)
 }
 
@@ -229,8 +229,9 @@ func createPdbLzsaMust(dir string) {
 func buildPreRelease() {
 	var err error
 
-	fmt.Printf("Building pre-release version\n")
+	fmt.Printf("Building pre-release version %d\n", svnPreReleaseVer)
 	verifyGitCleanMust()
+	verifyOnMasterBranchMust()
 	verifyPreReleaseNotInS3Must(svnPreReleaseVer)
 
 	downloadTranslations()
@@ -267,17 +268,14 @@ func buildPreRelease() {
 	createPdbLzsaMust("rel64")
 
 	createManifestMust()
-	if flgUpload {
-		s3DeleteOldestPreRel()
-		s3UploadPreReleaseMust()
-	}
+	s3DeleteOldestPreRel()
+	s3UploadPreReleaseMust(strconv.Itoa(svnPreReleaseVer))
 }
 
 func buildRelease() {
 	var err error
 
 	fmt.Printf("Building release version %s\n", sumatraVersion)
-	fataliferr(err)
 	verifyGitCleanMust()
 	verifyOnReleaseBranchMust()
 	verifyReleaseNotInS3Must(sumatraVersion)
@@ -314,10 +312,7 @@ func buildRelease() {
 	createPdbLzsaMust("rel64")
 
 	createManifestMust()
-
-	fatalif(true, "stopping here for now")
-
-	s3UploadReleaseMust()
+	s3UploadReleaseMust(sumatraVersion)
 }
 
 func buildAnalyze() {
@@ -503,6 +498,7 @@ func addToFilesForVer(path, name, verStr string, files []*FilesForVer) []*FilesF
 	return append(files, &fi)
 }
 
+// ByVerFilesForVer sorts by version
 type ByVerFilesForVer []*FilesForVer
 
 func (s ByVerFilesForVer) Len() int {
@@ -556,6 +552,9 @@ func s3ListPreReleaseFilesMust(dbg bool) []*FilesForVer {
 }
 
 func s3DeleteOldestPreRel() {
+	if !flgUpload {
+		return
+	}
 	maxToRetain := 10
 	files := s3ListPreReleaseFilesMust(false)
 	if len(files) < maxToRetain {
@@ -577,9 +576,15 @@ func s3DeleteOldestPreRel() {
 	}
 }
 
-// https://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-1027-install.exe
-func s3UploadPreReleaseMust() {
-	prefix := fmt.Sprintf("SumatraPDF-prerelease-%d", svnPreReleaseVer)
+// upload as:
+// https://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-1027-install.exe etc.
+func s3UploadPreReleaseMust(ver string) {
+	if !flgUpload {
+		fmt.Printf("Skipping pre-release upload to s3 because -upload flag not given\n")
+		return
+	}
+
+	prefix := fmt.Sprintf("SumatraPDF-prerelease-%s", ver)
 	files := []string{
 		"SumatraPDF.exe", fmt.Sprintf("%s.exe", prefix),
 		"Installer.exe", fmt.Sprintf("%s-install.exe", prefix),
@@ -598,7 +603,7 @@ func s3UploadPreReleaseMust() {
 	err = s3UploadFiles(s3PreRelDir, "rel64", files)
 	fataliferr(err)
 
-	manifestRemotePath := s3PreRelDir + fmt.Sprintf("manifest-%d.txt", svnPreReleaseVer)
+	manifestRemotePath := s3PreRelDir + fmt.Sprintf("manifest-%s.txt", ver)
 	manifestLocalPath := pj("rel", "manifest.txt")
 	err = s3UploadFileReader(manifestRemotePath, manifestLocalPath, true)
 	fataliferr(err)
@@ -608,13 +613,12 @@ func s3UploadPreReleaseMust() {
 	fataliferr(err)
 
 	//sumatrapdf/sumpdf-prerelease-latest.txt
-	s = fmt.Sprintf("%d\n", svnPreReleaseVer)
-	err = s3UploadString("sumatrapdf/sumpdf-prerelease-latest.txt", s, true)
+	err = s3UploadString("sumatrapdf/sumpdf-prerelease-latest.txt", ver, true)
 	fataliferr(err)
 
 	//sumatrapdf/sumpdf-prerelease-update.txt
 	//don't set a Stable version for pre-release builds
-	s = fmt.Sprintf("[SumatraPDF]\nLatest %d\n", svnPreReleaseVer)
+	s = fmt.Sprintf("[SumatraPDF]\nLatest %s\n", ver)
 	err = s3UploadString("sumatrapdf/sumpdf-prerelease-update.txt", s, true)
 	fataliferr(err)
 }
@@ -629,7 +633,6 @@ master
 Return active branch marked with "*" ('rel3.1working' in this case) or empty
 string if no current branch.
 */
-
 func getCurrentBranch(d []byte) string {
 	lines := toTrimmedLines(d)
 	for _, l := range lines {
@@ -656,31 +659,49 @@ func verifyOnReleaseBranchMust() {
 	fatalif(ver != sumatraVersion, "version mismatch, sumatra: '%s', branch: '%s'\n", sumatraVersion, ver)
 }
 
-// https://kjkpub.s3.amazonaws.com/sumatrapdf/rel/SumatraPDF-3.0-install.exe
-// TODO: more files
-func s3UploadReleaseMust() {
+func verifyOnMasterBranchMust() {
+	// 'git branch' return branch name in format: '* master'
+	out := runExeMust("git", "branch")
+	currBranch := getCurrentBranch(out)
+	fatalif(currBranch != "master", "no on master branch (branch: '%s')\n", currBranch)
+}
+
+// upload as:
+// https://kjkpub.s3.amazonaws.com/sumatrapdf/rel/SumatraPDF-3.1-install.exe etc.
+func s3UploadReleaseMust(ver string) {
 	if !flgUpload {
 		fmt.Printf("Skipping release upload to s3 because -upload flag not given\n")
 		return
 	}
 
+	prefix := fmt.Sprintf("SumatraPDF-%s", ver)
 	files := []string{
-		"SumatraPDF.exe", fmt.Sprintf("SumatraPDF-%d.exe", svnPreReleaseVer),
-		"Installer.exe", fmt.Sprintf("SumatraPDF-%d-install.exe", svnPreReleaseVer),
+		"SumatraPDF.exe", fmt.Sprintf("%s.exe", prefix),
+		"Installer.exe", fmt.Sprintf("%s-install.exe", prefix),
+		"SumatraPDF.pdb.zip", fmt.Sprintf("%s.pdb.zip", prefix),
+		"SumatraPDF.pdb.lzsa", fmt.Sprintf("%s.pdb.lzsa", prefix),
 	}
 	err := s3UploadFiles(s3RelDir, "rel", files)
 	fataliferr(err)
 
 	files = []string{
-		"SumatraPDF.exe", fmt.Sprintf("SumatraPDF-%d-64.exe", svnPreReleaseVer),
-		"Installer.exe", fmt.Sprintf("SumatraPDF-%d-install-64.exe", svnPreReleaseVer),
+		"SumatraPDF.exe", fmt.Sprintf("%s-64.exe", prefix),
+		"Installer.exe", fmt.Sprintf("%s-install-64.exe", prefix),
+		"SumatraPDF.pdb.zip", fmt.Sprintf("%s.pdb-64.zip", prefix),
+		"SumatraPDF.pdb.lzsa", fmt.Sprintf("%s.pdb-64.lzsa", prefix),
 	}
-	err = s3UploadFiles(s3RelDir, "rel64", files)
+	err = s3UploadFiles(s3PreRelDir, "rel64", files)
 	fataliferr(err)
-	// write manifest last
-	s3Path := s3RelDir + fmt.Sprintf("SumatraPDF-prerelease-%d-manifest.txt", svnPreReleaseVer)
-	err = s3UploadFileReader(s3Path, manifestPath(), true)
+
+	// upload manifest last
+	manifestRemotePath := s3RelDir + fmt.Sprintf("manifest-%s.txt", ver)
+	manifestLocalPath := pj("rel", "manifest.txt")
+	err = s3UploadFileReader(manifestRemotePath, manifestLocalPath, true)
 	fataliferr(err)
+
+	// Note: not uploading auto-update version info. We update it separately,
+	// a week or so after build is released, so that if there are serious issues,
+	// we can create an update and less people will be affected
 }
 
 func clean() {
@@ -788,7 +809,7 @@ func main() {
 	//testS3Upload()
 
 	// TODO: temporary
-	if true {
+	if false {
 		err := os.Chdir(pj("..", "sumatrapdf-3.1"))
 		fataliferr(err)
 	}
