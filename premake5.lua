@@ -1,7 +1,7 @@
 --[[
 To generate Visual Studio files in vs2015 directory, run: premake5 vs2015
 
-I'm using premake5 alpha5 from http://premake.github.io/download.html#v5
+I'm using premake5 alpha6 from http://premake.github.io/download.html#v5
 (premake4 won't work, it doesn't support VS 2013+)
 
 TODO:
@@ -574,7 +574,10 @@ workspace "SumatraPDF"
       "version", "windowscodecs", "wininet"
     }
     dependson { "MakeLZSA", "SumatraPDF-no-MUPDF", "PdfFilter", "PdfPreview", "Uninstaller" }
-    prebuildcommands { "cd %{cfg.targetdir} & MakeLZSA.exe InstallerData.dat SumatraPDF-no-MUPDF.exe:SumatraPDF.exe libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll Uninstaller.exe:uninstall.exe ..\\mupdf\\resources\\fonts\\droid\\DroidSansFallback.ttf:DroidSansFallback.ttf"  }
+    -- Note: to allow 64-bit builds on 32-bit machine, always use 32-bit MakeLZSA.exe
+    -- TODO: checkin MakeLZSA.exe to bin and use that because this might still fail
+    -- if we didn't build 32-bit build first
+    prebuildcommands { "cd %{cfg.targetdir} & ..\\rel\\MakeLZSA.exe InstallerData.dat SumatraPDF-no-MUPDF.exe:SumatraPDF.exe libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll Uninstaller.exe:uninstall.exe ..\\mupdf\\resources\\fonts\\droid\\DroidSansFallback.ttf:DroidSansFallback.ttf"  }
 
 
   -- dummy project that builds all other projects
