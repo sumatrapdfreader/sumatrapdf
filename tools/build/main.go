@@ -55,7 +55,7 @@ var (
 	flgListS3        bool
 	flgAnalyze       bool
 	flgNoCleanCheck  bool
-	svnPreReleaseVer int
+	svnPreReleaseVer string
 	gitSha1          string
 	sumatraVersion   string
 	timeStart        time.Time
@@ -138,8 +138,8 @@ func certPath() string {
 	return pj("scripts", "cert.pfx")
 }
 
-func setBuildConfig(preRelVer int, sha1 string) {
-	s := fmt.Sprintf("#define SVN_PRE_RELEASE_VER %d\n", preRelVer)
+func setBuildConfig(preRelVer string, sha1 string) {
+	s := fmt.Sprintf("#define SVN_PRE_RELEASE_VER %s\n", preRelVer)
 	s += fmt.Sprintf("#define GIT_COMMIT_ID %s\n", sha1)
 	err := ioutil.WriteFile(buildConfigPath(), []byte(s), 644)
 	fataliferr(err)
@@ -229,10 +229,10 @@ func createPdbLzsaMust(dir string) {
 func buildPreRelease() {
 	var err error
 
-	fmt.Printf("Building pre-release version %d\n", svnPreReleaseVer)
+	fmt.Printf("Building pre-release version %s\n", svnPreReleaseVer)
 	verifyGitCleanMust()
 	verifyOnMasterBranchMust()
-	verifyPreReleaseNotInS3Must(strconv.Itoa(svnPreReleaseVer))
+	verifyPreReleaseNotInS3Must(svnPreReleaseVer)
 
 	downloadTranslations()
 
@@ -269,7 +269,7 @@ func buildPreRelease() {
 
 	createManifestMust()
 	s3DeleteOldestPreRel()
-	s3UploadPreReleaseMust(strconv.Itoa(svnPreReleaseVer))
+	s3UploadPreReleaseMust(svnPreReleaseVer)
 }
 
 func buildRelease() {
@@ -408,17 +408,17 @@ func createSumatraLatestJs() string {
 	currDate := time.Now().Format("2006-01-02")
 	v := svnPreReleaseVer
 	return fmt.Sprintf(`
-		var sumLatestVer = %d;
+		var sumLatestVer = %s;
 		var sumBuiltOn = "%s";
-		var sumLatestName = "SumatraPDF-prerelease-%d.exe";
+		var sumLatestName = "SumatraPDF-prerelease-%s.exe";
 
-		var sumLatestExe = "http://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-%d.exe";
-		var sumLatestPdb = "http://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-%d.pdb.zip";
-		var sumLatestInstaller = "http://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-%d-install.exe";
+		var sumLatestExe = "http://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-%s.exe";
+		var sumLatestPdb = "http://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-%s.pdb.zip";
+		var sumLatestInstaller = "http://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-%s-install.exe";
 
-		var sumLatestExe64 = "http://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-%d-64.exe";
-		var sumLatestPdb64 = "http://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-%d-64.pdb.zip";
-		var sumLatestInstaller64 = "http://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-%d-install-64.exe";
+		var sumLatestExe64 = "http://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-%s-64.exe";
+		var sumLatestPdb64 = "http://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-%s-64.pdb.zip";
+		var sumLatestInstaller64 = "http://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-%s-install-64.exe";
 `, v, currDate, v, v, v, v, v, v, v)
 }
 
@@ -717,10 +717,10 @@ func clean() {
 }
 
 func detectVersions() {
-	svnPreReleaseVer = getGitLinearVersionMust()
+	svnPreReleaseVer = strconv.Itoa(getGitLinearVersionMust())
 	gitSha1 = getGitSha1Must()
 	sumatraVersion = extractSumatraVersionMust()
-	fmt.Printf("svnPreReleaseVer: '%d'\n", svnPreReleaseVer)
+	fmt.Printf("svnPreReleaseVer: '%s'\n", svnPreReleaseVer)
 	fmt.Printf("gitSha1: '%s'\n", gitSha1)
 	fmt.Printf("sumatraVersion: '%s'\n", sumatraVersion)
 }
