@@ -127,7 +127,7 @@ langs_html_tmpl = """\
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title>Languages supported by SumatraPDF</title>
+<title>Languages supported by SumatraPDF %VER%</title>
 <style type=text/css>
 body {
     font-size: 90%;
@@ -172,7 +172,7 @@ body {
 <h2>Languages supported by SumatraPDF</h2>
 
 <p>Languages supported by SumatraPDF. You can use ISO code as a value
-of <code>UiLanguage</code> setting in <a href="settings.html">settings file</a>.
+of <code>UiLanguage</code> setting in <a href="settings%VER%.html">settings file</a>.
 </p>
 
 <p>Note: not all languages are fully translated. Help us <a href="http://www.apptranslator.org/app/SumatraPDF">translate SumatraPDF</a>.</p>
@@ -191,6 +191,12 @@ indent_str = "    "
 
 # if s in the form: "foo](bar.html)", returns ["foo", "bar.html"].
 # otherwise returns ["foo"]
+
+
+def create_dir(d):
+    if not os.path.exists(d):
+        os.makedirs(d)
+    return d
 
 
 def extract_url(s):
@@ -286,14 +292,28 @@ class Lang(object):
         self.code = code
 
 
+def settings_dir():
+    d = os.path.join("docs", "settings")
+    create_dir(d)
+    return d
+
+
 def blog_dir():
     script_dir = os.path.realpath(os.path.dirname(__file__))
     d = os.path.realpath(
-        os.path.join(script_dir, "..", "..", "go", "src", "github.com", "kjk", "blog", "www", "software", "sumatrapdf"))
+        os.path.join(script_dir, "..", "..", "go", "src", "github.com", "kjk", "sumatra-website", "www"))
     if os.path.exists(d):
         return d
     print("blog dir '%s' doesn't exist" % d)
     return None
+
+
+def langs_file_name():
+    return "langs%s.html" % g_version
+
+
+def settings_file_name():
+    return "settings%s.html" % g_version
 
 
 def gen_langs_html():
@@ -306,30 +326,28 @@ def gen_langs_html():
         lines += [s]
     inside = "\n".join(lines)
     s = langs_html_tmpl.replace("%INSIDE%", inside)
-    file_name = "langs.html"
-    p = os.path.join("scripts", file_name)
+    s = s.replace("%VER%", str(g_version))
+    s = s.replace("settings.html", settings_file_name())
+    p = os.path.join(settings_dir(), langs_file_name())
     open(p, "w").write(s)
     if blog_dir() is not None:
-        p = os.path.join(blog_dir(), file_name)
+        p = os.path.join(blog_dir(), langs_file_name())
         open(p, "w").write(s)
+
 
 def gen_html():
     prefs = gen_settingsstructs.GlobalPrefs
     inside = gen_struct(prefs)
     s = html_tmpl.replace("%INSIDE%", inside)
-    print("g_version: '%s'\n", g_version)
+    print("g_version: '%s'\n" % g_version)
     s = s.replace("%VER%", str(g_version))
-    file_name = "settings" + g_version + ".html"
-    p = os.path.join("scripts", file_name)
+    s = s.replace("langs.html", langs_file_name())
+    p = os.path.join(settings_dir(), settings_file_name())
     open(p, "w").write(s)
     if blog_dir() is not None:
-        p = os.path.join(blog_dir(), file_name)
+        p = os.path.join(blog_dir(), settings_file_name())
         open(p, "w").write(s)
-        # also save the latest version as settings.html so that there is a
-        # permament version we can link from from docs that is independent of
-        # program version number
-        p = os.path.join(blog_dir(), "settings.html")
-        open(p, "w").write(s)
+
 
 if __name__ == "__main__":
     util2.chdir_top()
