@@ -16,12 +16,12 @@
 static void EnumeratePrinters() {
     str::Str<WCHAR> output;
 
-    PRINTER_INFO_5 *info5Arr = nullptr;
+    PRINTER_INFO_5* info5Arr = nullptr;
     DWORD bufSize = 0, printersCount;
     bool fOk = EnumPrinters(PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS, nullptr, 5, nullptr,
                             bufSize, &bufSize, &printersCount);
     if (fOk || GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
-        info5Arr = (PRINTER_INFO_5 *)malloc(bufSize);
+        info5Arr = (PRINTER_INFO_5*)malloc(bufSize);
         fOk = EnumPrinters(PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS, nullptr, 5,
                            (LPBYTE)info5Arr, bufSize, &bufSize, &printersCount);
     }
@@ -33,8 +33,8 @@ static void EnumeratePrinters() {
     }
     ScopedMem<WCHAR> defName(GetDefaultPrinterName());
     for (DWORD i = 0; i < printersCount; i++) {
-        const WCHAR *printerName = info5Arr[i].pPrinterName;
-        const WCHAR *printerPort = info5Arr[i].pPortName;
+        const WCHAR* printerName = info5Arr[i].pPrinterName;
+        const WCHAR* printerPort = info5Arr[i].pPortName;
         bool fDefault = str::Eq(defName, printerName);
         output.AppendFmt(L"%s (Port: %s, attributes: %#x%s)\n", printerName, printerPort,
                          info5Arr[i].Attributes, fDefault ? L", default" : L"");
@@ -50,8 +50,7 @@ static void EnumeratePrinters() {
                              GetLastError());
         } else {
             ScopedMem<WORD> binValues(AllocArray<WORD>(bins));
-            DeviceCapabilities(printerName, printerPort, DC_BINS, (WCHAR *)binValues.Get(),
-                               nullptr);
+            DeviceCapabilities(printerName, printerPort, DC_BINS, (WCHAR*)binValues.Get(), nullptr);
             ScopedMem<WCHAR> binNameValues(AllocArray<WCHAR>(24 * binNames));
             DeviceCapabilities(printerName, printerPort, DC_BINNAMES, binNameValues.Get(), nullptr);
             for (DWORD j = 0; j < bins; j++) {
@@ -67,7 +66,7 @@ static void EnumeratePrinters() {
 #endif
 
 /* Parse 'txt' as hex color and return the result in 'destColor' */
-void ParseColor(COLORREF *destColor, const WCHAR *txt) {
+void ParseColor(COLORREF* destColor, const WCHAR* txt) {
     if (!destColor)
         return;
     if (str::StartsWith(txt, L"0x"))
@@ -83,7 +82,7 @@ void ParseColor(COLORREF *destColor, const WCHAR *txt) {
 // parses a list of page ranges such as 1,3-5,7- (i..e all but pages 2 and 6)
 // into an interable list (returns nullptr on parsing errors)
 // caller must delete the result
-bool ParsePageRanges(const WCHAR *ranges, Vec<PageRange> &result) {
+bool ParsePageRanges(const WCHAR* ranges, Vec<PageRange>& result) {
     if (!ranges)
         return false;
 
@@ -109,7 +108,7 @@ bool ParsePageRanges(const WCHAR *ranges, Vec<PageRange> &result) {
 // a valid page range is a non-empty, comma separated list of either
 // single page ("3") numbers, closed intervals "2-4" or intervals
 // unlimited to the right ("5-")
-bool IsValidPageRange(const WCHAR *ranges) {
+bool IsValidPageRange(const WCHAR* ranges) {
     Vec<PageRange> rangeList;
     return ParsePageRanges(ranges, rangeList);
 }
@@ -117,25 +116,25 @@ bool IsValidPageRange(const WCHAR *ranges) {
 // <s> can be:
 // * "loadonly"
 // * description of page ranges e.g. "1", "1-5", "2-3,6,8-10"
-bool IsBenchPagesInfo(const WCHAR *s) {
+bool IsBenchPagesInfo(const WCHAR* s) {
     return str::EqI(s, L"loadonly") || IsValidPageRange(s);
 }
 
 // -view [continuous][singlepage|facing|bookview]
-static void ParseViewMode(DisplayMode *mode, const WCHAR *txt) {
+static void ParseViewMode(DisplayMode* mode, const WCHAR* txt) {
     *mode = prefs::conv::ToDisplayMode(txt, DM_AUTOMATIC);
 }
 
-static const char *zoomValues =
+static const char* zoomValues =
     "fit page\0fitpage\0fit-page\0fit width\0fitwidth\0fit-width\0fit "
     "content\0fitcontent\0fit-content\0";
 
 // -zoom [fitwidth|fitpage|fitcontent|n]
 // if a number, it's in percent e.g. 12.5 means 12.5%
 // 100 means 100% i.e. actual size as e.g. given in PDF file
-static void ParseZoomValue(float *zoom, const WCHAR *txtOrig) {
+static void ParseZoomValue(float* zoom, const WCHAR* txtOrig) {
     ScopedMem<char> txtDup(str::conv::ToUtf8(txtOrig));
-    char *txt = str::ToLowerInPlace(txtDup.Get());
+    char* txt = str::ToLowerInPlace(txtDup.Get());
     int zoomVal = seqstrings::StrToIdx(zoomValues, txt);
     if (zoomVal != -1) {
         // 0-2 : fit page
@@ -162,14 +161,14 @@ static void ParseZoomValue(float *zoom, const WCHAR *txtOrig) {
 }
 
 // -scroll x,y
-static void ParseScrollValue(PointI *scroll, const WCHAR *txt) {
+static void ParseScrollValue(PointI* scroll, const WCHAR* txt) {
     int x, y;
     if (str::Parse(txt, L"%d,%d%$", &x, &y))
         *scroll = PointI(x, y);
 }
 
 // order must match enum
-static const char *argNames = 
+static const char* argNames =
     "register-for-pdf\0"
     "print-to-default\0"
     "print-dialog\0"
@@ -264,7 +263,7 @@ enum {
     Silent
 };
 
-static int GetArgNo(const WCHAR *argName) {
+static int GetArgNo(const WCHAR* argName) {
     if (*argName == '-' || *argName == '/') {
         argName++;
     } else {
@@ -274,7 +273,7 @@ static int GetArgNo(const WCHAR *argName) {
 }
 
 /* parse argument list. we assume that all unrecognized arguments are file names. */
-void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine) {
+void CommandLineInfo::ParseCommandLine(const WCHAR* cmdLine) {
     WStrVec argList;
     ParseCmdLine(cmdLine, argList);
     size_t argCount = argList.Count();
@@ -286,9 +285,9 @@ void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine) {
 #define handle_int_param(name) name = _wtoi(argList.At(++n))
 
     for (size_t n = 1; n < argCount; n++) {
-        WCHAR *argName = argList.At(n);
+        WCHAR* argName = argList.At(n);
         int arg = GetArgNo(argName);
-        WCHAR *param = nullptr;
+        WCHAR* param = nullptr;
         if (argCount > n + 1) {
             param = argList.At(n + 1);
         }
@@ -397,7 +396,7 @@ void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine) {
         } else if (Rand == arg) {
             stressRandomizeFiles = true;
         } else if (is_arg_with_param(Bench)) {
-            WCHAR *s = str::Dup(param);
+            WCHAR* s = str::Dup(param);
             ++n;
             pathsToBenchmark.Push(s);
             s = nullptr;
@@ -445,7 +444,7 @@ void CommandLineInfo::ParseCommandLine(const WCHAR *cmdLine) {
             n++;
         } else {
             // Remember this argument as a filename to open
-            WCHAR *filePath = nullptr;
+            WCHAR* filePath = nullptr;
             if (str::EndsWithI(argName, L".lnk"))
                 filePath = ResolveLnk(argName);
             if (!filePath)

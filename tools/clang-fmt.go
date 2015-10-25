@@ -225,7 +225,6 @@ func runOnFilesInDirMust(exePath, dir string, files []string) {
 }
 
 func main() {
-	var d string
 	exePath, err := exec.LookPath("clang-format")
 	fataliferr(err)
 	fmt.Printf("exe path: %s\n", exePath)
@@ -234,16 +233,13 @@ func main() {
 	runOnFilesInDirMust(exePath, "src", []string{
 		"ParseCommandLine.cpp",
 		"ParseCommandLine.h",
+		"Tests.cpp",
+		"Tests.h",
 		//"Print.cpp",
 		//"Print.h",
 	})
 
-	d = filepath.Join("src", "utils")
-	runInDirMust(exePath, d)
-
-	d = filepath.Join("src", "mui")
-	runInDirMust(exePath, d)
-
-	d = filepath.Join("src", "wingui")
-	runInDirMust(exePath, d)
+	//runInDirMust(exePath, filepath.Join("src", "utils"))
+	//runInDirMust(exePath, filepath.Join("src", "mui"))
+	//runInDirMust(exePath, filepath.Join("src", "wingui"))
 }

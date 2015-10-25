@@ -99,10 +99,10 @@ class CommandLineInfo {
 
     ~CommandLineInfo() {}
 
-    void ParseCommandLine(const WCHAR *cmdLine);
+    void ParseCommandLine(const WCHAR* cmdLine);
 };
 
-void ParseColor(COLORREF *destColor, const WCHAR *txt);
-bool IsValidPageRange(const WCHAR *ranges);
-bool IsBenchPagesInfo(const WCHAR *s);
-bool ParsePageRanges(const WCHAR *ranges, Vec<PageRange> &result);
+void ParseColor(COLORREF* destColor, const WCHAR* txt);
+bool IsValidPageRange(const WCHAR* ranges);
+bool IsBenchPagesInfo(const WCHAR* s);
+bool ParsePageRanges(const WCHAR* ranges, Vec<PageRange>& result);
