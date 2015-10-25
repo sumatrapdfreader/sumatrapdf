@@ -605,12 +605,6 @@ def BuildMetaData(struct, built=[]):
 	lines.append("static %sStructInfo g%sInfo = { sizeof(%s), %d, g%sFields, \"%s\" };" % ("const " if fullName != "FileState" else "", fullName, struct.structName, len(names), fullName, "\\0".join(names)))
 	return "\n".join(lines)
 
-def GenerateSettingsHtml():
-	from gen_settings_html import html_tmpl, gen_struct, gen_settingsstructs
-	s = html_tmpl.replace("%INSIDE%", gen_struct(gen_settingsstructs.GlobalPrefs, prerelease=True))
-	ver = util2.get_sumatrapdf_version()
-	return s.replace("%VER%", str(ver))
-
 SettingsStructs_Header = """\
 /* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 (see COPYING) */
@@ -642,17 +636,13 @@ typedef struct FileState DisplayState;
 #endif
 """
 
-def main():
-	util2.chdir_top()
 
+def gen():
 	structDef = BuildStruct(GlobalPrefs)
 	structMetadata = BuildMetaData(GlobalPrefs)
 
 	content = SettingsStructs_Header % locals()
 	open("src/SettingsStructs.h", "wb").write(content.replace("\n", "\r\n").replace("\t", "    "))
-
-	content = GenerateSettingsHtml()
-	open("docs/settings.html", "wb").write(content.replace("\n", "\r\n"))
 
 	beforeUseDefaultState = True
 	for field in FileSettings:
@@ -662,6 +652,3 @@ def main():
 			assert field.name not in rememberedDisplayState, "%s shouldn't be serialized when UseDefaultState is true" % field.name
 		else:
 			assert field.name in rememberedDisplayState or field.internal, "%s won't be serialized when UseDefaultState is true" % field.name
-
-if __name__ == "__main__":
-	main()

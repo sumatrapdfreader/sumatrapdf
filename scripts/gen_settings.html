@@ -337,7 +337,7 @@ def gen_langs_html():
         open(p, "w").write(s)
 
 
-def gen_html():
+def gen_settings_html():
     prefs = gen_settingsstructs.GlobalPrefs
     inside = gen_struct(prefs)
     s = html_tmpl.replace("%INSIDE%", inside)
@@ -354,5 +354,5 @@ def gen_html():
 if __name__ == "__main__":
     util2.chdir_top()
     gen_langs_html()
-    gen_html()
-    gen_settingsstructs.main()
+    gen_settings_html()
+    gen_settingsstructs.gen()
