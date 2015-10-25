@@ -254,7 +254,7 @@ func buildPreRelease() {
 	verifyOnMasterBranchMust()
 	verifyPreReleaseNotInS3Must(svnPreReleaseVer)
 
-	downloadTranslations()
+	verifyTranslationsMust()
 
 	setBuildConfig(gitSha1, svnPreReleaseVer)
 	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:SumatraPDF;SumatraPDF-no-MUPDF;Uninstaller;test_util", "/p:Configuration=Release;Platform=Win32", "/m")
@@ -299,7 +299,7 @@ func buildRelease() {
 	verifyOnReleaseBranchMust()
 	verifyReleaseNotInS3Must(sumatraVersion)
 
-	downloadTranslations()
+	verifyTranslationsMust()
 
 	setBuildConfig(gitSha1, "")
 	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:SumatraPDF;SumatraPDF-no-MUPDF;Uninstaller;test_util", "/p:Configuration=Release;Platform=Win32", "/m")
@@ -354,7 +354,7 @@ func buildAnalyze() {
 
 func buildSmoke() {
 	fmt.Printf("Smoke build\n")
-	downloadTranslations()
+	verifyTranslationsMust()
 
 	err := runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:Installer;SumatraPDF;Uninstaller;test_util", "/p:Configuration=Release;Platform=Win32", "/m")
 	fataliferr(err)
@@ -774,18 +774,12 @@ func saveTranslationsMust(d []byte) {
 	fataliferr(err)
 }
 
-func downloadTranslations() {
+func verifyTranslationsMust() {
 	sha1 := lastTranslationsSha1HexMust()
 	url := fmt.Sprintf("http://www.apptranslator.org/dltrans?app=SumatraPDF&sha1=%s", sha1)
 	d := httpDlMust(url)
 	lines := toTrimmedLines(d)
-	if lines[1] == "No change" {
-		fmt.Printf("translations didn't change\n")
-		return
-	}
-	saveTranslationsMust(d)
-	fmt.Printf("\nTranslations have changed! You must checkin before continuing!\n")
-	os.Exit(1)
+	fatalif(lines[1] != "No change", "translations changed, run python scripts/trans_download.py\n")
 }
 
 func parseCmdLine() {
@@ -833,12 +827,6 @@ func init() {
 func main() {
 	//testBuildLzsa()
 	//testS3Upload()
-
-	// TODO: temporary
-	if true {
-		err := os.Chdir(pj("..", "sumatrapdf-3.1"))
-		fataliferr(err)
-	}
 
 	if false {
 		detectVersions()
