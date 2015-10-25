@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-5206c68a5ea71b7ea5c7928ee580d8d135536794
+f40e642eb49e32c0debc5c46a32eb49e6c2c24d6
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -7681,7 +7681,7 @@ vn:Tiếp tục\tAlt+Mũi tên phải
 :F&ullscreen\tF11
 af:Volskerm\tCtrl+Shift+L
 am:Ամ&բողջ էկրանով\tCtrl+Shift+L
-ar:ملء الشاشة \TF11 
+ar:ملء الشاشة \tF11 
 az:Tam ek&ran\tCtrl+Shift+L
 bg:На &цял екран\tCtrl+Shift+L / F11
 bn:পূর্ণ পর্দা\tCtrl+Shift+L
