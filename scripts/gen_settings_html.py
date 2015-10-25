@@ -20,7 +20,7 @@ html_tmpl = """\
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>Customizing SumatraPDF %VER%</title>
-<style type=text/css>
+<style type="text/css">
 body {
     font-size: 90%;
     background-color: #f5f5f5;
@@ -72,7 +72,7 @@ body {
 
 <body>
 
-<div class=desc>
+<div class="desc">
 
 <h2>Customizing SumatraPDF %VER%</h2>
 
@@ -96,11 +96,11 @@ square brackets in pairs</b>! Else you risk losing all the data following them.<
 
 </div>
 
-<pre class=txt>
+<pre class="txt">
 %INSIDE%
 </pre>
 
-<div class=desc>
+<div class="desc">
 <h3 id="color">Syntax for color values</h3>
 
 <p>
@@ -128,7 +128,7 @@ langs_html_tmpl = """\
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>Languages supported by SumatraPDF %VER%</title>
-<style type=text/css>
+<style type="text/css">
 body {
     font-size: 90%;
     background-color: #f5f5f5;
@@ -169,7 +169,7 @@ body {
 
 <body>
 
-<h2>Languages supported by SumatraPDF</h2>
+<h2>Languages supported by SumatraPDF %VER%</h2>
 
 <p>Languages supported by SumatraPDF. You can use ISO code as a value
 of <code>UiLanguage</code> setting in <a href="settings%VER%.html">settings file</a>.
@@ -212,7 +212,7 @@ def extract_url(s):
 
 def gen_comment(comment, field_id, start, first=False):
     line_len = 100
-    s = start + '<span class=cm id="%s">' % field_id
+    s = start + '<span class="cm" id="%s">' % field_id
     if not first:
         s = "\n" + s
     left = line_len - len(start)
