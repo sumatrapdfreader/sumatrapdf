@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import cgi
 import os
 import util2
 import gen_settingsstructs
@@ -218,6 +219,7 @@ def gen_comment(comment, field_id, start, first=False):
     left = line_len - len(start)
     # [foo](bar.html) is turned into <a href="bar.html">foo</a>
     href_text = None
+    comment = cgi.escape(comment)
     for word in comment.split():
         if word[0] == "[":
             word_url = extract_url(word[1:])
