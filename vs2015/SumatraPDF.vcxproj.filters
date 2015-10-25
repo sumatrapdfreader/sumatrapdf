@@ -23,6 +23,9 @@
     <ClCompile Include="..\src\SumatraStartup.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\Tests.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\SumatraPDF.rc">

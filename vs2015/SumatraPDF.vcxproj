@@ -326,6 +326,7 @@
   <ItemGroup>
     <ClCompile Include="..\src\SumatraPDF.cpp" />
     <ClCompile Include="..\src\SumatraStartup.cpp" />
+    <ClCompile Include="..\src\Tests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\docs\releasenotes.txt" />
