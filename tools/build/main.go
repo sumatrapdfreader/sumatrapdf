@@ -194,13 +194,18 @@ var (
 )
 
 func addZipFileMust(w *zip.Writer, path string) {
+	fi, err := os.Stat(path)
+	fataliferr(err)
+	fih, err := zip.FileInfoHeader(fi)
+	fataliferr(err)
+	fih.Name = filepath.Base(path)
 	d, err := ioutil.ReadFile(path)
 	fataliferr(err)
-	f, err := w.Create(filepath.Base(path))
+	f, err := w.CreateHeader(fih)
 	fataliferr(err)
 	_, err = f.Write(d)
 	fataliferr(err)
-	// no need to close f. It's implicitly closed by the next Create() or Close() call
+	// no need to close f. It's implicitly closed by the next Create(), CreateHeader() or Close() call
 }
 
 func createExeZipMust(dir string) {
