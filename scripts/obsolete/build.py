@@ -413,9 +413,9 @@ def build(upload, upload_tmp, testing, build_test_installer, build_rel_installer
         jstxt = 'var sumLatestVer = %s;\n' % ver
         jstxt += 'var sumBuiltOn = "%s";\n' % time.strftime("%Y-%m-%d")
         jstxt += 'var sumLatestName = "%s";\n' % s3_exe.split("/")[-1]
-        jstxt += 'var sumLatestExe = "http://kjkpub.s3.amazonaws.com/%s";\n' % s3_exe
-        jstxt += 'var sumLatestPdb = "http://kjkpub.s3.amazonaws.com/%s";\n' % s3_pdb_zip
-        jstxt += 'var sumLatestInstaller = "http://kjkpub.s3.amazonaws.com/%s";\n' % s3_installer
+        jstxt += 'var sumLatestExe = "https://kjkpub.s3.amazonaws.com/%s";\n' % s3_exe
+        jstxt += 'var sumLatestPdb = "https://kjkpub.s3.amazonaws.com/%s";\n' % s3_pdb_zip
+        jstxt += 'var sumLatestInstaller = "https://kjkpub.s3.amazonaws.com/%s";\n' % s3_installer
 
     s3.upload_file_public(installer, s3_installer)
     s3.upload_file_public(pdb_lzsa_archive, s3_pdb_lzsa)
@@ -434,7 +434,7 @@ def build(upload, upload_tmp, testing, build_test_installer, build_rel_installer
     else:
         # update the Latest version for manual update checks but
         # leave the Stable version for automated update checks
-        update_url = "http://kjkpub.s3.amazonaws.com/sumatrapdf/sumpdf-update.txt"
+        update_url = "https://kjkpub.s3.amazonaws.com/sumatrapdf/sumpdf-update.txt"
         ver_stable = get_stable_version(update_url, "2.5.2")
         s3.upload_file_public(exe_zip_path, s3_exe_zip)
         s3.upload_data_public("[SumatraPDF]\nLatest %s\nStable %s\n" % (ver, ver_stable), "sumatrapdf/sumpdf-update.txt")

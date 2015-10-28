@@ -606,9 +606,9 @@ static WCHAR *BuildSymbolsUrl() {
     return str::Dup(SYMBOL_DOWNLOAD_URL);
 #else
 #ifdef SVN_PRE_RELEASE_VER
-    WCHAR *urlBase = L"http://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-" TEXT(QM(SVN_PRE_RELEASE_VER));
+    WCHAR *urlBase = L"https://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-" TEXT(QM(SVN_PRE_RELEASE_VER));
 #else
-    WCHAR *urlBase = L"http://kjkpub.s3.amazonaws.com/sumatrapdf/rel/SumatraPDF-" TEXT(QM(CURR_VERSION));
+    WCHAR *urlBase = L"https://kjkpub.s3.amazonaws.com/sumatrapdf/rel/SumatraPDF-" TEXT(QM(CURR_VERSION));
 #endif
     WCHAR *is64 = IsProcess64() ? L"-64" : L"";
     return str::Format(L"%s%s.pdb.lzsa", urlBase, is64);
