@@ -322,7 +322,8 @@ static int CALLBACK unrarCallback(UINT msg, LPARAM userData, LPARAM rarBuffer, L
 
 char *UnRarDll::GetFileByName(const WCHAR *rarPath, const WCHAR *filename, size_t *len)
 {
-    if (!RARGetDllVersion || RARGetDllVersion() != RAR_DLL_VERSION || !rarPath)
+    // assume that unrar.dll is forward compatible (as indicated by its documentation)
+    if (!RARGetDllVersion || RARGetDllVersion() < RAR_DLL_VERSION || !rarPath)
         return false;
 
     str::Str<char> data;
