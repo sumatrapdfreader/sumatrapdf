@@ -619,7 +619,7 @@ pdf_create_annot_ex(pdf_document *doc, const fz_rect *rect, pdf_obj *base_obj, f
 }
 
 #define ANNOT_OC_VIEW_ONLY \
-	"<< /OCGs << /Usage << /Print << /PrintState /OFF >> /Export << /ExportState /OFF >> >> >> >>"
+	"<< /Type /OCMD /OCGs << /Type /OCG /Usage << /Print << /PrintState /OFF >> /Export << /ExportState /OFF >> >> >> >>"
 
 static pdf_obj *
 pdf_clone_for_view_only(pdf_document *doc, pdf_obj *obj)
@@ -629,6 +629,8 @@ pdf_clone_for_view_only(pdf_document *doc, pdf_obj *obj)
 
 	fz_try(ctx)
 	{
+		if (!doc->ocg)
+			doc->ocg = fz_calloc(doc->ctx, 1, sizeof(*doc->ocg));
 		pdf_dict_puts_drop(obj, "OC", pdf_new_obj_from_str(doc, ANNOT_OC_VIEW_ONLY));
 	}
 	fz_catch(ctx)
