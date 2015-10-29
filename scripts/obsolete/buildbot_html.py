@@ -172,7 +172,7 @@ def build_index_html(stats_for_ver, checkin_comment_for_ver):
         if int(ver) >= g_first_analyze_build and total_warnings > 0 and not stats.rel_failed:
             assert("analyze.html" in files)
 
-        s3_ver_url = "http://kjkpub.s3.amazonaws.com/" + s3_dir + ver + "/"
+        s3_ver_url = "https://kjkpub.s3.amazonaws.com/" + s3_dir + ver + "/"
         html += "  <tr>\n"
 
         # build number

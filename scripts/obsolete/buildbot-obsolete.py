@@ -1,6 +1,6 @@
 """
 Builds sumatra and uploads results to s3 for easy analysis, viewable at:
-http://kjkpub.s3.amazonaws.com/sumatrapdf/buildbot/index.html
+https://kjkpub.s3.amazonaws.com/sumatrapdf/buildbot/index.html
 """
 import sys
 import os
@@ -466,7 +466,7 @@ g_email_to = ["kkowalczyk@gmail.com", "zeniko@gmail.com"]
 
 
 def email_tests_failed(ver, err):
-    s3_url_start = "http://kjkpub.s3.amazonaws.com/sumatrapdf/buildbot/"
+    s3_url_start = "https://kjkpub.s3.amazonaws.com/sumatrapdf/buildbot/"
     c = load_config()
     if not c.HasNotifierEmail():
         print("email_tests_failed() not ran because not c.HasNotifierEmail()")
@@ -494,7 +494,7 @@ def email_msg(msg):
 
 
 def email_build_failed(ver):
-    s3_url_start = "http://kjkpub.s3.amazonaws.com/sumatrapdf/buildbot/"
+    s3_url_start = "https://kjkpub.s3.amazonaws.com/sumatrapdf/buildbot/"
     c = load_config()
     if not c.HasNotifierEmail():
         print("email_build_failed() not ran because not c.HasNotifierEmail()")
@@ -655,4 +655,3 @@ if __name__ == "__main__":
     except Exception, e:
         msg = "buildbot failed\nException: " + str(e) + "\n"
         email_msg(msg)
-

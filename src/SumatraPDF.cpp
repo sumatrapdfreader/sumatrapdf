@@ -148,9 +148,9 @@ void SetCurrentLang(const char *langCode)
 
 #ifndef SUMATRA_UPDATE_INFO_URL
 #ifdef SVN_PRE_RELEASE_VER
-#define SUMATRA_UPDATE_INFO_URL L"http://kjkpub.s3.amazonaws.com/sumatrapdf/sumpdf-prerelease-update.txt"
+#define SUMATRA_UPDATE_INFO_URL L"https://kjkpub.s3.amazonaws.com/sumatrapdf/sumpdf-prerelease-update.txt"
 #else
-#define SUMATRA_UPDATE_INFO_URL L"http://kjkpub.s3.amazonaws.com/sumatrapdf/sumpdf-update.txt"
+#define SUMATRA_UPDATE_INFO_URL L"https://kjkpub.s3.amazonaws.com/sumatrapdf/sumpdf-update.txt"
 #endif
 #endif
 
@@ -556,7 +556,7 @@ static void UpdateWindowRtlLayout(WindowInfo *win)
     if (tocVisible || favVisible)
         SetSidebarVisibility(win, false, false);
 
-    // cf. http://www.microsoft.com/middleeast/msdn/mirror.aspx
+    // cf. https://www.microsoft.com/middleeast/msdn/mirror.aspx
     ToggleWindowStyle(win->hwndFrame, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
 
     ToggleWindowStyle(win->hwndTocBox, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
@@ -1010,7 +1010,7 @@ static void LoadDocIntoCurrentTab(LoadArgs& args, Controller *ctrl, DisplayState
     win->linkOnLastButtonDown = nullptr;
 
     AssertCrash(!win->IsAboutWindow() && win->IsDocLoaded() == (win->ctrl != nullptr));
-    // TODO: http://code.google.com/p/sumatrapdf/issues/detail?id=1570
+    // TODO: https://code.google.com/p/sumatrapdf/issues/detail?id=1570
     if (win->ctrl) {
         if (win->AsFixed()) {
             DisplayModel *dm = win->AsFixed();
@@ -1869,7 +1869,7 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp *rsp, bool silent)
     if (0 == data->Size())
         return ERROR_INTERNET_CONNECTION_ABORTED;
 
-    // See http://code.google.com/p/sumatrapdf/issues/detail?id=725
+    // See https://code.google.com/p/sumatrapdf/issues/detail?id=725
     // If a user configures os-wide proxy that is not regular ie proxy
     // (which we pick up) we might get complete garbage in response to
     // our query. Make sure to check whether the returned data is sane.
@@ -2589,7 +2589,7 @@ static void OnMenuSaveBookmark(WindowInfo& win)
 }
 
 #if 0
-// code adapted from http://support.microsoft.com/kb/131462/en-us
+// code adapted from https://support.microsoft.com/kb/131462/en-us
 static UINT_PTR CALLBACK FileOpenHook(HWND hDlg, UINT uiMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uiMsg) {
@@ -3461,7 +3461,7 @@ static void FrameOnChar(WindowInfo& win, WPARAM key, LPARAM info=0)
     case 'z':
         win.ToggleZoom();
         break;
-    // per http://en.wikipedia.org/wiki/Keyboard_layout
+    // per https://en.wikipedia.org/wiki/Keyboard_layout
     // almost all keyboard layouts allow to press either
     // '+' or '=' unshifted (and one of them is also often
     // close to '-'); the other two alternatives are for

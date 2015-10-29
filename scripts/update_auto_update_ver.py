@@ -128,8 +128,8 @@ def verify_version_not_lower(myver, curr1, curr2):
         sys.exit(1)
 
 def main():
-    url_update = "http://kjkpub.s3.amazonaws.com/sumatrapdf/sumpdf-update.txt"
-    url_latest = "http://kjkpub.s3.amazonaws.com/sumatrapdf/sumpdf-latest.txt"
+    url_update = "https://kjkpub.s3.amazonaws.com/sumatrapdf/sumpdf-update.txt"
+    url_latest = "https://kjkpub.s3.amazonaws.com/sumatrapdf/sumpdf-latest.txt"
 
     conf = load_config()
     assert conf.aws_access != "" and conf.aws_secret != ""
