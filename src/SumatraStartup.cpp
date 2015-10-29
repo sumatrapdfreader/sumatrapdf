@@ -743,6 +743,9 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
         }
     }
     ResetSessionState(gGlobalPrefs->sessionData);
+    // prevent the same session from being restored twice
+    if (restoreSession && !(gGlobalPrefs->reuseInstance || gGlobalPrefs->useTabs))
+        prefs::Save();
 
     for (const WCHAR *filePath : i.fileNames) {
         if (restoreSession && FindWindowInfoByFile(filePath, true))
