@@ -1106,6 +1106,7 @@ static LRESULT WndProcCanvasEbookUI(WindowInfo& win, HWND hwnd, UINT msg, WPARAM
         return DefWindowProc(hwnd, msg, wParam, lParam);
 
     case WM_MOUSEWHEEL:
+    case WM_MOUSEHWHEEL:
         return CanvasOnMouseWheelEbook(win, msg, wParam, lParam);
 
     case WM_GESTURE:
