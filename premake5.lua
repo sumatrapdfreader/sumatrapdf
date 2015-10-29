@@ -50,6 +50,7 @@ workspace "SumatraPDF"
   filter "platforms:x32"
      architecture "x86"
      toolset "v140_xp"
+     buildoptions { "/arch:IA32" } -- disable the default /arch:SSE2 for 32-bit builds
      filter "action:vs2013"
       toolset "v120_xp"
   filter {}
@@ -58,7 +59,7 @@ workspace "SumatraPDF"
      architecture "x86_64"
      toolset "v140_xp"
      filter "action:vs2013"
-      toolset "v120"
+      toolset "v120_xp"
   filter {}
 
   disablewarnings { "4127", "4324", "4458", "4800" }
