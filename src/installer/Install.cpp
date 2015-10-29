@@ -633,22 +633,21 @@ void OnCreateWindow(HWND hwnd)
     BOOL hasOtherViewer = !str::EqI(defaultViewer, APP_NAME_STR);
     BOOL isSumatraDefaultViewer = defaultViewer && !hasOtherViewer;
 
+    // only show this checkbox if the browser plugin has been installed before
+    if (IsBrowserPluginInstalled()) {
+        gHwndCheckboxKeepBrowserPlugin = CreateWindowExW(
+            0, WC_BUTTON, _TR("Keep the PDF &browser plugin installed (no longer supported)"),
+            WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
+            x, y, dx, staticDy,
+            hwnd, (HMENU) ID_CHECKBOX_BROWSER_PLUGIN, GetModuleHandle(nullptr), nullptr);
+        SetWindowFont(gHwndCheckboxKeepBrowserPlugin, gFontDefault, TRUE);
+        Button_SetCheck(gHwndCheckboxKeepBrowserPlugin, gGlobalData.keepBrowserPlugin);
+        y -= staticDy;
+    }
+
     // only show this checkbox if the CPU arch of DLL and OS match
     // (assuming that the installer has the same CPU arch as its content!)
     if (IsProcessAndOsArchSame()) {
-
-        // only show this checkbox if the browser plugin has been installed before
-        if (IsBrowserPluginInstalled()) {
-            gHwndCheckboxKeepBrowserPlugin = CreateWindowExW(
-                0, WC_BUTTON, _TR("Keep the PDF &browser plugin installed (no longer supported)"),
-                WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
-                x, y, dx, staticDy,
-                hwnd, (HMENU) ID_CHECKBOX_BROWSER_PLUGIN, GetModuleHandle(nullptr), nullptr);
-            SetWindowFont(gHwndCheckboxKeepBrowserPlugin, gFontDefault, TRUE);
-            Button_SetCheck(gHwndCheckboxKeepBrowserPlugin, gGlobalData.keepBrowserPlugin);
-            y -= staticDy;
-        }
-
         // for Windows XP, this means only basic thumbnail support
         gHwndCheckboxRegisterPdfPreviewer = CreateWindowExW(
             0, WC_BUTTON, _TR("Let Windows show &previews of PDF documents"),
