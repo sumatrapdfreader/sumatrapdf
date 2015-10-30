@@ -3874,10 +3874,10 @@ const char * gTranslations_nl =
   "Boek samenstellen... %d paginas\0"\
   "Tekst gevonden op pagina %s\0"\
   "Tekst gevonden op pagina %s (opnieuw)\0"\
-  "Vaak gelezen\0"\
+  "Eerder Weergegeven\0"\
   "\0"\
   "Ga naar pagina\0"\
-  "'Eerder Gelezen' verbergen\0"\
+  "'Eerder Weergegeven' verbergen\0"\
   "Tip: Gebruik de functietoets F3 om verder te zoeken\0"\
   "Afbeeldingen (*.%s)\0"\
   "\0"\
@@ -3950,7 +3950,7 @@ const char * gTranslations_nl =
   "Toon pagina's doorlopend\0"\
   "Werkbalk tonen\0"\
   "Toon Favorieten\0"\
-  "'Eerder Gelezen' weergeven\0"\
+  "'Eerder Weergegeven' tonen\0"\
   "Toon de &bladwijzerwerkbalk indien beschikbaar\0"\
   "Enkele pagina\0"\
   "Sorry, dit had niet mogen gebeuren!\n\nDruk 'Annuleren', als je wilt helpen de oorzaak van deze fout te vinden.\0"\

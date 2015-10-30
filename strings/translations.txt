@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-f40e642eb49e32c0debc5c46a32eb49e6c2c24d6
+ed98858538424fe942555e2080e860656c811c4e
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -9646,7 +9646,7 @@ mk:Често читани
 ml:കൂടുതല്‍ വായിച്ചത്.
 my:Kerap Dibaca
 ne:प्रायजसो पढिएको
-nl:Vaak gelezen
+nl:Eerder Weergegeven
 no:Ofte leste
 pl:Ostatnio otwierane
 pt:Frequentes
@@ -9891,7 +9891,7 @@ lv:Slēpt bieži lasītos
 mk:Сокриј често читани
 my:Sembunyikan Bacaan Kerap
 ne:प्रायजसो पढिएको लुकाउनुहोस्
-nl:'Eerder Gelezen' verbergen
+nl:'Eerder Weergegeven' verbergen
 no:Skjult ofte leste
 pl:Ukryj ostatnio otwierane
 pt:Ocultar frequentes
@@ -14735,7 +14735,7 @@ lv:Rādīt bieži lasītos
 mk:Прикажи често читани
 my:Paparkan dokuman yang kerap dibaca
 ne:प्रायजसो पढिएको देखाउनुहोस्
-nl:'Eerder Gelezen' weergeven
+nl:'Eerder Weergegeven' tonen
 no:Vis ofte leste
 pl:Pokaż często otwierane
 pt:Mostrar frequentes
