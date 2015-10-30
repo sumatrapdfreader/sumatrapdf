@@ -19,7 +19,8 @@
 #ifdef NOASMFONTS
 #include "gen_font_base14.h"
 #else
-/* TODO: we need a script that updates the size of the fonts when they change,
+/* fonts are included via font_base14.asm.
+   TODO: we need a script that updates the size of the fonts when they change,
    to be run manually after font update. It could be a separate .h file
    (such as gen_font_base14.h) or we could directly change this file. */
 extern const unsigned char pdf_font_Dingbats[29728];
