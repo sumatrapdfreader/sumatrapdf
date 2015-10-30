@@ -1,9 +1,9 @@
 AppTranslator: SumatraPDF
-990b73ec1e3e656af8e6605c493f7cf1128d038a
+ed98858538424fe942555e2080e860656c811c4e
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
-ar:حول البرنامج
+ar:حول& 
 az:Proqram &haqqında
 bg:За &програмата
 bn:&আমাদের সম্পর্কে
@@ -73,7 +73,7 @@ vn:Giới thiệu
 :&Actual Size\tCtrl+1
 af:&Gewone Grootte\tCtrl+1
 am:Իրական &չափը\tCtrl+1
-ar:الحجم الحقيقي\tCtrl+1
+ar:الحجم &الحقيقي\tCtrl+1
 az:&Həqiqi ölçü\tCtrl+1
 bg:&Оригинален (реален) размер\tCtrl+1
 bn:বাস্তবিক আকার\tCtrl+1
@@ -142,7 +142,7 @@ uz:&Haqiqiy o'lchami\tCtrl+1
 vn:Kích thướ&c thật\tCtrl+1
 :&Advanced Options...
 am:&Ընդլայնված կարգավորումներ..
-ar:خيارات متقدمة
+ar:خيارات &متقدمة
 az:&Əlavə seçimlər...
 bg:Разширени опции
 br:Opções &Avançadas...
@@ -194,7 +194,7 @@ uz:&Qo'shimcha parametrlar...
 vn:Tùy chọn &nâng cao...
 :&All selected pages
 am:&Ընտրված բոլոր էջերը
-ar:&كل الصفحات المحددة
+ar:كل الصفحات المحددة&
 az:&Bütün seçilmiş səhifələr
 bg:&Всички избрани страници
 bn:&নির্বাচিত পৃষ্ঠাসমূহ
@@ -256,7 +256,7 @@ uz:&Hamma tanlangan betlar
 vn:Tất cả các tr&ang được chọn
 :&Back\tAlt+Left Arrow
 am:&Նախորդը\tAlt+Left Arrow
-ar:&الخلف\tAlt+السهم الأيسر
+ar:للخلف&\tAlt+Left Arrow
 az:&Geri\tAlt+Left Arrow
 bg:На&зад\tAlt+Лява стрелка
 br:Voltar\tAlt+<-
@@ -317,7 +317,7 @@ uz:&Orqaga\tAlt+<-
 vn:Trở về\tAlt+Mũi tên trái
 :&Book View\tCtrl+8
 am:&Գրքի տեսքով\tCtrl+8
-ar:&عرض الكتاب
+ar:عرض &الكتاب
 az:&Kitab formatı\tCtrl+8
 bg:&Изглед като книга\tCtrl+8
 br:Visualizar como livro\tCtrl+8
@@ -375,7 +375,7 @@ vn:Xem dạng sách\tCtrl+8
 :&Close\tCtrl+W
 af:Maak Toe\tCtrl+W
 am:&Փակել\tCtrl+W
-ar:&إنهاء\tCtrl+W
+ar:&اغلاق\tCtrl+W
 az:&Bağla\tCtrl+W
 bg:&Затвори\tCtrl+W
 bn:&বন্ধ\tCtrl+W
@@ -443,7 +443,7 @@ uz:&Yopish\tCtrl+W
 vn:Đóng tập tin\tCtrl+W
 :&Copy Selection
 am:&Պատճենել նշվածը
-ar:&نسخ المحدد
+ar:نسخ المحدد&
 az:Seçilmiş sahəni &kopyala
 bg:&Копиране на избраното
 bn:&নির্বাচিত অংশ কপি করুন
@@ -503,7 +503,7 @@ uz:&Tanlanganni nusxa olish
 vn:&Chép phần đã chọn
 :&Copy Selection\tCtrl+C
 am:Պատճենել նշվածը\tCtrl+C
-ar:&نسخ المحدد\tCtrl+C
+ar:نسخ المحدد&\tCtrl+C
 az:Seçilmiş &sahəni kopyala\tCtrl+C
 bg:&Копиране на избраното\tCtrl+C
 br:Copiar seleção\tCtrl+C
@@ -565,7 +565,7 @@ vn:&Chép phần đã chọn\tCtrl+C
 :&Don't ask me again
 af:Moet My Nie Weer Vra Nie
 am:&Այլևս չհարցնել
-ar:&لا تسألني مرةً أخرى
+ar:لا تسألني مرةً أخرى&
 az:Bir daha &soruşma
 bg:Без повтор&но питане
 bn:&আমাকে আর জিজ্ঞেস করবেন না
@@ -632,7 +632,7 @@ uz:&Boshqa so'ralmasin
 vn:Không hỏi lại
 :&Even pages only
 am:&Միայն զույգ էջերը
-ar:&الصفحات الزوجية فقط
+ar:الصفحات &الزوجية فقط
 az:Yalnız &cüt səhifələr
 bg:Само &четни страници
 br:Apenas as páginas par&es
@@ -690,7 +690,7 @@ uz:&Faqat juft betlar
 vn:Chỉ những trang lẻ
 :&Facing\tCtrl+7
 am:&Երկու էջով\tCtrl+7
-ar:&متقابل\tCtrl+7
+ar:متقابلتان&\tCtrl+7
 az:&Cüt səhifələr\tCtrl+7
 bg:&Срещуположни страници\tCtrl+7
 br:Página dupla\tCtrl+7
@@ -747,7 +747,7 @@ vn:Trang kép\tCtrl+7
 :&File
 af:&Lêer
 am:&Ֆայլ
-ar:&ملف
+ar:ملف&
 az:&Fayl
 bg:&Файл
 bn:&সঞ্চিকা
@@ -815,7 +815,7 @@ uz:&Fayl
 vn:Tập tin
 :&Find what:
 am:&Ինչ փնտրել.
-ar:&ابحث عن:
+ar:ابحث عن&:
 az:&Axtarılan sətir:
 bg:&Търсене на:
 br:&Localizar o quê:
@@ -878,7 +878,7 @@ vn:Tìm (các) từ sau:
 :&First Page\tHome
 af:Eerste Bladsy\tHome
 am:Առաջին էջը\tHome
-ar:&الصفحة الأولى\tHome
+ar:الصفحة &الأولى\tHome
 az:&Birinci səhifə\tHome
 bg:&Начална страница\tHome
 bn:প্রথম পৃষ্ঠা\tHome
@@ -946,7 +946,7 @@ uz:&Birinchi bet\tHome
 vn:Trang đầu\tHome
 :&Fit pages to printable area
 am:&Հարմարեցնել էջերը տպելու համար
-ar:&محاذاة الصفحات لموافقة مساحة الطباعة
+ar:&ملائمة الصفحات لمنطقة الطباعة
 az:Səhifələri çap sa&həsinə sığışdır
 bg:&Оразмери страниците в полето за отпечатване
 br:Ajustar páginas à área de impressão
@@ -1005,7 +1005,7 @@ vn:Vừa trang in
 :&Go To
 af:&Gaan Na
 am:&Անցնել
-ar:&الذهاب إلى
+ar:انتقل الى&
 az:K&eçid
 bg:&Отиване на
 bn:এতে চলুন...
@@ -1073,7 +1073,7 @@ uz:&O'tish
 vn:Nhảy đến
 :&Go to page:
 am:&Անցնել էջին.
-ar:&انتقل إلى صفحة
+ar:انتقل إلى صفحة&
 az:&Səhifə:
 bg:Отиди на &страница:
 br:&Ir para a página:
@@ -1136,7 +1136,7 @@ vn:Nhảy đến trang:
 :&Help
 af:Hulp
 am:&Օգնություն
-ar:&مساعدة
+ar:التعليمات&
 az:&Kömək
 bg:&Помощ
 bn:&সাহায্য
@@ -1205,7 +1205,7 @@ vn:Trợ &giúp
 :&Last Page\tEnd
 af:Laaste Bladsy\tEnd
 am:Վերջին էջը\tEnd
-ar:&الصفحة الأخيرة\tEnd
+ar:الصفحة &الأخيرة\tEnd
 az:&Axırıncı səhifə\tEnd
 bg:&Последна страница\tEnd
 bn:শেষ পৃষ্ঠা\tEnd
@@ -1273,7 +1273,7 @@ uz:&Oxirgi bet\tEnd
 vn:Trang cuối\tEnd
 :&Magnification:
 am:&Մեծացնել
-ar:&التقريب
+ar:&التكبير
 az:&Böyütmə:
 bg:&Увеличение:
 br:Aumento:
@@ -1398,7 +1398,7 @@ uz:&Qo'llanma
 vn:Hướng dẫn sử dụng
 :&Match case
 am:&Հաշվի առնել մեծատառ/փոքրատառը
-ar:&مطابقة
+ar:مطابقة حالة الأحرف& 
 az:Re&gistri nəzərə al
 bg:&Същия текст
 br:Diferenciar minúsculas e maiúsculas
@@ -1460,7 +1460,7 @@ vn:Phân biệt &HOA-thường
 :&Next Page\tRight Arrow
 af:Volgende Bladsy\t->
 am:Հաջորդ էջը\t->
-ar:&الصفحة التالية\t->
+ar:الصفحة &التالية\t->
 az:&Sonrakı səhifə\tRight Arrow
 bg:Следва&ща страница\tДясна стрелка
 bn:পরবর্তী পৃষ্ঠা\t->
@@ -1528,7 +1528,7 @@ uz:&Keyingi bet\t->
 vn:Trang sau\tMũi tên phải
 :&No
 am:&Ոչ
-ar:&كلا
+ar:لا&
 az:&Xeyr
 bg:&Не
 br:&Não
@@ -1590,7 +1590,7 @@ uz:&Yo'q
 vn:Không
 :&No, thanks
 am:&Ոչ
-ar:&كلا ، شكراً
+ar:لا ، شكر&
 az:&Xeyr, təşəkkür!
 bg:&Не, благодаря
 br:&Não, obrigado
@@ -1710,7 +1710,7 @@ uz:&Faqat toq betlar
 vn:Chỉ những trang chẵn
 :&Open Document
 am:&Բացել էջը
-ar:&فتح مستند
+ar:فتح مستند&
 az:Sənədi &aç
 bg:&Отваряне на документ
 br:Abrir d&ocumento
@@ -1947,7 +1947,7 @@ uz:&Parametrlar...
 vn:Tuỳ chọn
 :&Password:
 am:&Գաղտնաբառը
-ar:&كلمة المرور:
+ar:كلمة السر&:
 az:&Parol:
 bg:&Парола
 br:&Senha:
@@ -2009,7 +2009,7 @@ uz:&Maxfiy so'z:
 vn:Mật khẩu:
 :&Pin Document
 am:&Կցել էջը
-ar:&علّم مستند
+ar:&ثبت المستند
 az:Sənədi &yadda saxla
 bg:&Закачи документ
 br:Fixar documento
@@ -2066,7 +2066,7 @@ vn:Ghim tập tin
 :&Previous Page\tLeft Arrow
 af:Vorige Bladsy\t<-
 am:Նախորդ էջը\t<-
-ar:&الصفحة السابقة\t<-
+ar:الصفحة &السابقة\tLeft Arrow
 az:&Əvvəlki səhifə\tLeft Arrow
 bg:Преди&шна страница\tЛява стрелка
 bn:পূর্ববর্তী পৃষ্ঠা\t<-
@@ -2319,7 +2319,7 @@ uz:&Chop etish\tCtrl+P
 vn:In...\tCtrl+P
 :&Remember the password for this document
 am:&Հիշել ֆայլի գաղտնաբառը
-ar:&حفظ كلمة المرور لهذا المستند
+ar:&حفظ كلمة السر لهذا المستند
 az:Bu sənəd üçün parolu &yadda saxla
 bg:Запомни &паролата за този документ
 br:Lembra&r a senha deste documento
@@ -2377,7 +2377,7 @@ uz:&Ushbu hujjatning maxfiy so'zini eslab qolish
 vn:Nhớ mật khẩu cho tập tin này
 :&Remember these settings for each document
 am:Հիշել այս կարգավորումները &բոլոր ֆայլերի համար
-ar:&حفظ هذه الإعدادات لكل مستند
+ar:&تذكر هذه الإعدادات لكل وثيقة
 az:Bu &parametrləri bütün sənədlər üçün yadda saxla
 bg:Запази &настройките за всеки документ
 br:Lembrar estas preferências para cada documento
@@ -2681,7 +2681,7 @@ uz:&Moslamalar
 vn:Cài đặt
 :&Shrink pages to printable area (if necessary)
 am:&Հարմարեցնել էջը տպելու համար (եթե պահանջվում է)
-ar:&تعديل الصفحات لموافقة مساحة الطباعة (عند الضرورة)
+ar:(تقليص الصفحات إلى منطقة قابلة للطباعة (إذا لزم الأمر& 
 az:Ehtiyac varsa, səhifələri çap sahəsinin ölçüsünə görə kiçilt
 bg:&Намали страниците в мястото за отпечатване (при необходимост)
 br:Reduzir página&s à área de impressão (se necessário)
@@ -2990,7 +2990,7 @@ uz:&Ko'rish
 vn:Hiển thị
 :&Window
 am:&Պատուհան
-ar:النافذة
+ar:النافذة&
 az:&Pəncərə
 br:&Janela
 bs:&Prozor
@@ -3096,7 +3096,7 @@ vn:Đồng ý
 :&Zoom
 af:&Zoem
 am:&Չափը
-ar:&التقريب
+ar: تكبير/تصغير&
 az:&Miqyas
 bg:&Увеличение
 bn:&বিবর্ধন
@@ -3282,7 +3282,7 @@ vn:(trang %s)
 :About SumatraPDF
 af:Omtrent SumatraPDF
 am:SumatraPDF-ի մասին
-ar:SumatraPDF حول برنامج
+ar:حول المستندات المحمولة Sumatra  
 az:SumatraPDF haqqında
 bg:За SumatraPDF
 bn:সুমাত্রাপিডিএফ-এর সম্পর্কে
@@ -3351,7 +3351,7 @@ uz:SumatraPDF haqida
 vn:Giới thiệu SumatraPDF
 :Add Favorite
 am:Ավելացնել ընտրյալներին
-ar:أضف للمفضلة
+ar:اضافة للمفضلة
 az:Seçilmişlərə əlavə et
 bg:Добавяне към любимите
 bn:প্রিয় যোগ করুন
@@ -3413,7 +3413,7 @@ uz:Tanlanganlarga qo'shish
 vn:Thêm Ưa thích
 :Add page %s to favorites
 am:Ավելացնել %s էջը ընտրյալներին
-ar:أضف الصفحة %s للمفضلة
+ar:الى المفضلة %s اضافة صفحة
 az:%s. səhifəni seçilmişlərə əlavə et
 bg:Добавяне на страница %s към любимите
 br:Adicionar página %s aos Favoritos
@@ -3473,7 +3473,7 @@ uz:%s betni Tanlanganlarga qo'shish
 vn:Thêm trang %s vào Ưa thích
 :Add page %s to favorites with (optional) name:
 am:Ավելացնել %s էջը ընտրյալներին հետևյալ անվամբ`
-ar:أضف الصفحة %s للمفضلة باسم (اختياري):
+ar:(الى المفضلة مع  اسم (إختياري %s اضافة صفحة:
 az:%s. səhifəni bu (istənilən) adla seçilmişlərə əlavə et:
 bg:Добавяне на страница %s към любимите с име (по избор):
 br:Adicionar página %s aos Favoritos com outro nome (opcional):
@@ -3532,7 +3532,7 @@ uz:%s betni Tanlanganlarga (boshqa) nom bilan qo'shish:
 vn:Thêm trang %s vào Ưa thích với tên (tùy chọn):
 :Add to favorites
 am:Ավելացնել ընտրյալներին
-ar:أضف للمفضلة
+ar:اضافة للمفضلة
 az:Seçilmişlərə əlavə et
 bg:Добавяне към любимите
 bn:পছন্দের মধ্যে অন্তর্ভুক্ত করুন
@@ -3849,7 +3849,7 @@ vn:Ứng dụng:
 :Are you sure you want to uninstall SumatraPDF?
 af:Is jy seker jy wil SumatraPDF oninstalleer?
 am:Համոզվա՞ծ եք, որ ցանկանում եք ջնջել SumatraPDF-ը:
-ar:هل أنت متأكد من أنك تريد إزالة SumatraPDF؟
+ar: المحمولة؟  Sumatra هل انت متاكد تريد مسح مستندات 
 az:Əminsiniz ki, SumatraPDF-i silmək istəyirsiniz?
 bg:Наистина ли искате да деинсталирате SumatraPDF ?
 bn:আপনি কি নিশ্চিত যে আপনি সুমাত্রা-পিডিএফ আন-ইন্সটল করতে চান?
@@ -3905,7 +3905,7 @@ vn:Bạn có chắc muốn gỡ bỏ SumatraPDF không?
 :Associate with PDF files?
 af:Assosieer Met PDF lêers?
 am:Ասոցիացնե՞լ PDF ֆայլերի հետ։
-ar:ربط مع ملفات البي دي إف
+ar:ارتبط بملفات مستندات محمولة ؟
 az:PDF fayllarla əlaqə yaradılsın?
 bg:Указване на програмата като такава по подразбиране за отваряне на PDF файлове?
 bn:পিডিএফ সঞ্চিকার সাথে সম্বন্ধ করা হবে?
@@ -3974,7 +3974,7 @@ uz:PDF-fayllar bilan bog'lansinmi?
 vn:Liên kết với tập tin PDF?
 :Attachment: %s
 am:Կցորդ. %s
-ar:المرفقات: %s
+ar:%s:مرفق
 az:Qoşma: %s
 bg:Прикрепен: %s
 bn:সংযুক্তিঃ %s
@@ -4166,7 +4166,7 @@ uz:Avtomatik
 vn:Tự động
 :Automatically check for &updates
 am:Ինքնաշխատ ստուգել &թարմացումները
-ar:تحقق من التحديثات آلياً
+ar:تلقائياً التحقق من وجود &التحديثات
 az:Yeniləmələri avto&matik yoxla
 bg:Автоматична проверка за &обновления
 br:&Procurar atualizações automaticamente
@@ -4360,7 +4360,7 @@ uz:&Xatcho'plar\tF12
 vn:Chỉ dấu sách\tF12
 :Bookmark Shortcuts
 am:Էջանշել պիտակները
-ar:اختصارات مرجعية
+ar:اختصارات قائمة العناوين
 az:Əlfəcin yarlıkları
 bg:Кратък път към отметки
 bn:পুস্তক-চিহ্ন শর্টকাট
@@ -4417,7 +4417,7 @@ uz:Xatcho'p yorliqlari
 vn:Lối tắt chỉ dấu sách
 :Bookmark shortcut to page %s of %s
 am:Էջանշել %s էջից %s-ը
-ar:اختصار مرجعية للصفحة %s من %s
+ar:%s من %s اختصار قائمة العناوين الى صفحة
 az:%s. (%s) səhifə yarlıkının əlfəcini
 bg:Кратък път към отметка на страница %s от %s
 br:Atalho para a página %s de %s
@@ -4473,7 +4473,7 @@ uz:Xatcho'p yorlig'i betga %s %s dan
 vn:Lối tắt chỉ dấu sách đến trang %s của %s
 :Bookmarks
 am:Էջանիշեր
-ar:العلامات
+ar:قائمة العناوين
 az:Əlfəcinlər
 bg:Отметки
 bn:পুস্তক-চিহ্নসমূহ
@@ -4715,7 +4715,7 @@ vn:Không thể kết nối Internet (lỗi %#x).
 :Cancel
 af:Kanselleer
 am:Չեղարկել
-ar:إلغاء
+ar:الغاء الامر
 az:İmtina
 bg:Отказ
 bn:বাতিল করুন
@@ -4844,7 +4844,7 @@ uz:Faylni chop etib bo'lmadi
 vn:Không in được tập tin này
 :Cannot start inverse search command. Please check the command line in the settings.
 am:Հնարավոր չէ որոնել։ Ստուգեք հրամանների տողի կարգավորումները։
-ar:لايمكن البدء في البحث في الاتجاه المعاكس. يرجى التحقق من الأمر في الإعدادات
+ar:لا يمكن بدء تشغيل الأمر بحث عكسي. الرجاء التحقق من سطر الأوامر في الإعدادات
 az:Tərs axtarış komandasını icra etmək mümkün deyil. Komanda sətrinin parametrlərini yoxlayın.
 bg:Обратното търсене не може да започне. Моля проверете параметрите в настройките.
 br:Não é possível acionar a pesquisa inversa. Verifique a linha de comando nas preferências.
@@ -4906,7 +4906,7 @@ vn:Không thể bắt đầu lệnh tìm kiếm ngược. Xin kiểm tra phần 
 :Change Language
 af:Verander Taal (Change Language)
 am:Փոխել լեզուն (Change Language)
-ar:تغيير اللغة (Change language)
+ar:تغيير اللغة 
 az:Dili dəyişdir (Change Language)
 bg:Смяна на езика на програмата (Change Language)
 bn:ভাষা পরিবর্তন (Change Language)
@@ -5101,7 +5101,7 @@ uz:Yopish
 vn:Đóng lại
 :Comic books
 am:Հումորիստական գրքեր
-ar:كتب قصص مصورة
+ar:الكتب الهزلية
 az:CBR, CBZ sənədləri
 bg:CBR, CBZ документи (комикси)
 bn:কমিক বই
@@ -5218,7 +5218,7 @@ vn:Tính tương thích
 :Continuous
 af:Aanmekaar
 am:Անդադար
-ar:صفحات متتالية
+ar:مستمر
 az:Ardıcıl səhifələr
 bg:Непрекъснати страници
 bn:ক্রমাগত...
@@ -5348,7 +5348,7 @@ vn:Xem sách liên tiếp
 :Continuous Facing
 af:Vertoon Aanmekaar
 am:Անդադար երկու էջով
-ar:صفحات متقابلة متتالية
+ar:المواجهة مستمرة
 az:Ardıcıl cüt səhifələr
 bg:Непрекъснати срещуположни страници
 bn:ক্রমাগত দুটি পৃষ্ঠায়
@@ -5417,7 +5417,7 @@ vn:Trang kép liên tiếp
 :Contribute Translation
 af:Dra By Tot Ñ Vertaling.
 am:Օգնել թարգմանել
-ar:ساهم في ترجمة البرنامج
+ar:ساهم بالترجمة
 az:Tərcüməyə kömək et
 bg:Допринеси за превода
 bn:অনুবাদ প্রদান করুন
@@ -5484,7 +5484,7 @@ uz:Tarjima qilish
 vn:Đóng góp dịch thuật
 :Copy &Image
 am:Պատճենել &Նկարը
-ar:نسخ الصورة
+ar:نسخ &الصورة
 az:&Şəkli kopyala
 bg:Копиране на &изображението
 bn:&ছবি কপি করুন
@@ -5601,7 +5601,7 @@ uz:&Bog' manzilini nusxa olish
 vn:Chép địa chỉ liên kết
 :Copy Co&mment
 am:Պատճենել մեկ&նաբանությունը
-ar:نسخ الملحوظة
+ar:نسخ ال&تعليق  
 az:&Şərhi kopyala
 bg:Копиране на &коментара
 br:Copiar Co&mentário
@@ -5659,7 +5659,7 @@ uz:&Izohni nusxa olish
 vn:Chép chú thích
 :Copying text was denied (copying as image only)
 am:Տեքստի պատճենումը թույլատրված չէ (պատճենում է որպես պատկեր)
-ar:تعذر نسخ النص (النسخ كصورة فقط)
+ar:(ناسخ النص رفض (ناسخ باسم صورة فقط 
 az:Mətni kopyalamaq mümkün olmadı (şəkil kimi kopyalanır)
 bg:Текстът не може да бъде копиран (затова беше копиран само като картинка)
 bn:লেখা কপি করতে দেয়া হয়নি (ছবি-মাত্র কপি করা হচ্ছিল)
@@ -5778,7 +5778,7 @@ uz:Mualliflik huquqi:
 vn:Quyền tác giả:
 :Could not obtain Printer properties
 am:Տպիչի հատկությունները հասանելի չեն
-ar:لم يمكن الحصول على خصائص الطابعة
+ar:تعذر الحصول على خصائص الطابعة
 az:Printer xüsusiyyətlərini müəyyən etmək mümkün olmadı
 bg:Настройките на принтера не са намерени
 bn:মুদ্রণ যন্ত্রের প্রোপারটিজ অর্জন করা সম্ভব হয়নি
@@ -5836,7 +5836,7 @@ uz:Printer xossalarini olib bo'lmadi
 vn:Không thể có được thuộc tính Máy in
 :Couldn't create temporary directory
 am:Հնարավոր չեղավ ստեղծել ժամանակավոր թղթապանակ
-ar:لم أتمكن من إنشاء مجلد مؤقت
+ar:لا يمكن إنشاء دليل مؤقت
 az:Müvəqqəti qovluğu yaratmaq mümkün olmadı
 bg:Не може да се създаде временна директория
 bn:অস্থায়ী ডিরেক্টরি প্রস্তুত করা সম্ভব হয়নি
@@ -5890,7 +5890,7 @@ uz:Vaqtincha direktoriyani yaratib bo'lmadi
 vn:Không tạo được thư mục tạm
 :Couldn't create the installation directory
 am:Հնարավոր չեղավ ստեղծել տեղադրման թղթապանակը
-ar:لم أتمكن من إنشاء مجلد البرنامج
+ar:لا يمكن إنشاء دليل التثبيت
 az:Quraşdırma qovluğunu yaratmaq mümkün olmadı
 bg:Не може да се създаде директория за инсталация
 bn:ইন্সটলএসন ডিরেক্টরি প্রস্তুত করা সম্ভব হয়নি
@@ -6005,7 +6005,7 @@ uz:Printerni ishga tushirib bo'lmadi
 vn:Không khởi động được máy in
 :Couldn't install PDF previewer
 am:Հնարավոր չեղավ տեղակայել PDF-ի նախադիտումը
-ar:لم أتمكن من تنصيب معاين PDF
+ar:لم استطع تثبيت معاين المستندات المحمولة
 az:PDF önbaxış alətini quraşdırmaq mümkün olmadı
 bn:পিডিএফ প্রিভিউয়ার ইন্সটল করা সম্ভব হয়নি
 br:Não foi possível instalar o pré-visualizador para PDF
@@ -6056,7 +6056,7 @@ uz:PDF ko'rish vositasini o'rnatib bo'lmadi
 vn:Không thể cài đặt phần hiển thị trước PDF
 :Couldn't install PDF search filter
 am:Հնարավոր չեղավ տեղակայել PDF-ի որոնման պայման
-ar:لم أتمكن من تنصيب فلتر البحث لـPDF
+ar:لم أستطع تثبيت تصفية بحث الملفات المحمولة
 az:PDF axtarış filtrini quraşdırmaq mümkün olmadı
 bg:Не можа да се инсталира PDF филтър за търсене
 bn:পিডিএফ খোঁজ ফিল্টার ইন্সটল করা সম্ভব হয়নি
@@ -6109,7 +6109,7 @@ uz:PDF qidirish filtrini o'rnatib bo'lmadi
 vn:Không thể cài đặt bộ lọc tìm kiếm PDF
 :Couldn't obtain temporary directory
 am:Հնարավոր չեղավ ստանալ ժամանակավոր թղթապանակ
-ar:لم أتمكن من الحصول على المجلد المؤقت
+ar:لم أستطع الحصول على الدليل المؤقت
 az:Müvəqqəti qovluğu təyin etmək mümkün olmadı
 bg:Не можа да се получи временна директория
 br:Não foi possível obter a pasta temporária
@@ -6160,7 +6160,7 @@ uz:Vaqtinchalik direktoriyani olib bo'lmadi
 vn:Không thể tìm được thư mục tạm
 :Couldn't remove installation directory
 am:Հնարավոր չեղավ ջնջել տեղադրման թղթապանակը
-ar:لم أتمكن من إزالة مجلد البرنامج
+ar:لا يمكن إزالة دليل التثبيت
 az:Quraşdırma qovluğunu silmək mümkün olmadı
 bg:Не можа да се изтрие инсталационната директория
 br:Não foi possível remover a pasta de instalação
@@ -6211,7 +6211,7 @@ uz:O'rnatish direktoriyasini o'chirib bo'lmadi
 vn:Không thể gỡ bỏ thư mục cài đặt
 :Couldn't remove the shortcut
 am:Հնարավոր չեղավ ջնջել պիտակը
-ar:لم أتمكن من حذف رابط البرنامج
+ar:لا يمكن إزالة الاختصار
 az:Yarlığı silmək mümkün olmadı
 bg:Не можа да се изтрие командата за бърз достъп
 bn:শর্টকাট বাতিল করা সম্ভব হয়নি
@@ -6264,7 +6264,7 @@ uz:Xatcho'pni o'chirib bo'lmadi
 vn:Không bỏ lối tắt được
 :Couldn't render the page
 am:Հնարավոր չեղավ ստեղծել էջի պատկերը
-ar:لا يمكن عرض هذه الصفحة
+ar:لا يستطيع أن يعيد الصفحة
 az:Səhifəni əks etdirmək mümkün olmadı
 bg:Страницата не може да се изобрази
 br:Não foi possível renderizar a página
@@ -6326,7 +6326,7 @@ uz:Betni render qilib bo'lmadi
 vn:Không hiện được trang
 :Couldn't uninstall PDF previewer
 am:Հնարավոր չեղավ հեռացնել PDF-ի նախադիտումը
-ar:لم أتمكن من إزالة معاين PDF
+ar:لا يمكن إلغاء تثبيت معاين المستندات المحمولة
 az:PDF önbaxış alətini silmək mümkün olmadı
 br:Não foi possível desinstalar o pré-visualizador para PDF
 bs:Neuspješna deinstalacija PDF preglednika
@@ -6376,7 +6376,7 @@ uz:PDF ko'rish vositasini o'chirib bo'lmadi
 vn:Không thể gỡ cài đặt bộ xem truớc PDF
 :Couldn't uninstall PDF search filter
 am:Հնարավոր չեղավ հեռացնել PDF որոնելու պայմանը
-ar:لم أتمكن من إزالة فلتر البحث لـPDF
+ar: لا يمكن إلغاء تثبيت تصفية بحث المستندات المحمولة 
 az:PDF axtarış filtrini silmək mümkün olmadı
 bg:Не може да деинсталирате PDF филтър за търсене
 br:Não foi possível desinstalar o filtro de pesquisa para PDF
@@ -6428,7 +6428,7 @@ uz:PDF qidirish filtrini o'chirib bo'lmadi
 vn:Không thể gỡ cài đặt bộ lọc tìm kiếm PDF
 :Couldn't uninstall browser plugin
 am:Հնարավոր չեղավ հեռացնել դիտարկիչի բաղադրիչը
-ar:لم أتمكن من إزالة ملحق المستعرض
+ar:لا يمكن إلغاء تثبيت متصفح البرنامج المساعد
 az:Brauzer plaginini silmək mümkün olmadı
 bg:Не може да деинсталирате плъгина за браузъра
 br:Não foi possível desinstalar o plugin do navegador
@@ -6480,7 +6480,7 @@ uz:Brauzer plaginini o'chirib bo'lmadi
 vn:Không thể gỡ cài đặt Plugin trình duyệt
 :Couldn't write %s to disk
 am:Հնարավոր չէ գրել %s պնակում
-ar:لم أتمكن من كتابة %s للقرص الصلب
+ar: الى القرص %s لا يستطيع ان يكتب
 az:%s diskə yazıla bilmədi
 bg:Не можа да се запише %s на диска
 br:Não foi possível gravar %s no disco
@@ -6531,7 +6531,7 @@ uz:%s diskka yozib bo'lmadi
 vn:Không thể ghi %s vào đĩa
 :Created:
 am:Ստեղծված է.
-ar:الإنشاء
+ar:منشاء
 az:Hazırlanma tarixi:
 bg:Създаден:
 bn:নির্মিতঃ
@@ -6654,7 +6654,7 @@ uz:Joriy fayl
 vn:Tập tin hiện hành
 :Cursor position:
 am:Նշորդի դիրքը.
-ar:إحداثيات المؤشر
+ar:موقع المؤشرة:
 az:Kursorun mövqeyi:
 br:Posição do cursor:
 bs:Pozicija kursora:
@@ -6699,7 +6699,7 @@ uz:Kursor holati:
 vn:Vị trí con trỏ:
 :Custom &Zoom...\tCtrl+Y
 am:&Ընտրված չափով\tCtrl+Y
-ar:تنسيق &التقريب\tCtrl+Y
+ar:تكبير مخصص&\tCtrl+Y
 az:Miq&yası qeyd et...\tCtrl+Y
 bg:Увеличение по &избор...\tCtrl+Y
 br:&Zoom personalizado...\tCtrl+Y
@@ -6760,7 +6760,7 @@ uz:&Miqyosni ko'rsatish...\tCtrl+Y
 vn:Thu phóng &tuỳ ý...\tCtrl+Y
 :Default &Layout:
 am:Ծրագրային &լայնքը.
-ar:الشكل &الافتراضي
+ar:التخطيط الافتراضي&
 az:Standart &düzüm:
 bg:&Разположение по подразбиране:
 br:&Visualização Padrão
@@ -6822,7 +6822,7 @@ uz:Andoza &joylashish
 vn:Khung nhìn mặc định
 :Default &Zoom:
 am:Ծրագրային &չափը.
-ar:التقريب الافتراضي
+ar:التكبير الافتراضي&:
 az:Standart miq&yas:
 bg:&Увеличение по подразбиране:
 br:&Zoom Padrão
@@ -6884,7 +6884,7 @@ uz:Andoza &miqyos
 vn:Kích thước mặc định
 :Default PDF reader can't be changed in portable mode
 am:Շարժական վիճակում հնարավոր չէ փոխել PDF կարդալու հիմնական ծրագիրը
-ar:لايمكن تغيير قاريء ملفات البي دي إف في وضح النسخة المحمولة
+ar:لا يمكن تغيير قارئ المستندات المحمولة الافتراضية في وضع المحمول 
 az:Mobil rejimdə PDF fayllarla əlaqə yaratmaq mümkün deyil
 bg:PDF четеца не може да бъде сменен в преносим режим
 br:Não é possível alterar o leitor PDF padrão no modo portátil
@@ -6946,7 +6946,7 @@ uz:Portable usulida andoza PDF ko'rish vositasini o'zgartirib bo'lmaydi
 vn:Không thay đổi được trình đọc PDF chính ở chế độ di động
 :Denied Permissions:
 am:Լիազորությունները մերժված են.
-ar:لاتوجد امتيازات
+ar:رفض الأذونات:
 az:Qadağan olunmuş hüquqlar:
 bg:Достъпът отказан:
 br:Permissões negadas:
@@ -7006,7 +7006,7 @@ vn:Các quyền bị từ chối
 :DjVu documents
 af:DjVu dokumente
 am:DjVu ֆայլեր
-ar:ملفات DjVu
+ar:DjVu  وثائق
 az:DjVu sənədləri
 bg:DjVu документи
 br:Documentos DjVu
@@ -7187,7 +7187,7 @@ vn:Tải xuống
 :E&xit\tCtrl+Q
 af:&Gaan Uit-Q
 am:Փա&կել\tCtrl+Q
-ar:إغلاق البرنامج\tCtrl+Q
+ar:خروج\tCtrl+Q
 az:Çıxı&ş\tCtrl+Q
 bg:Из&ход\tCtrl+Q
 bn:&প্রস্থান\tCtrl+Q
@@ -7255,7 +7255,7 @@ uz:&Chiqish\tCtrl+Q
 vn:Th&oát\tCtrl+Q
 :EPUB ebooks
 am:EPUB ebooks
-ar:ملفات EPUB
+ar:EPUB كتب الكترونية
 az:EPUB e-kitabları
 bg:EPUB документи
 br:Documentos EPUB
@@ -7314,7 +7314,7 @@ vn:Tập tin EPUB
 :Enter password
 af:Tik Wagwoord In
 am:Գրեք գաղտնաբառը
-ar:ادخل كلمة المرور
+ar:ادخل كلمة السر
 az:Parolu daxil edin
 bg:Въведете парола
 bn:শব্দকূট প্রবেশ করুন
@@ -7383,7 +7383,7 @@ vn:Nhập mật khẩu
 :Enter password for %s
 af:Tik Wagwoord In Vir %s
 am:Գրեք գաղտնաբառը՝ %s-ի համար
-ar:كلمة المرور لـ %s
+ar:%s ادخل كلمة سر ل
 az:%s üçün parolu daxil edin
 bg:Въведете парола за %s
 bn:%s-এর জন্য শব্দকূট প্রবেশ করুন
@@ -7450,7 +7450,7 @@ uz:%s uchun maxfiy so'zni kiriting
 vn:Nhập mật khẩu cho %s
 :Enter the command-line to invoke when you double-click on the PDF document:
 am:Մուտքագրեք հրաման, որը կկատարվի PDF ֆայլում մկնիկի կրկնակի սեղման ժամանակ.
-ar:أدخل سطر الأوامر لاستدعائه عند النقر المزدوج على المستند
+ar:ادخل سطر الاوامر للاستدعاء عند النقر المزدوج فوق وثيقة المستندات المحمولة
 az:PDF sənədinin üstünə iki dəfə basdıqda çağırılan komanda sətrini daxil edin:
 bg:Въведете командата, която ще бъде изпълнена при двоен клик върху PDF документа:
 br:Digite a linha de comando a ser invocada com um duplo clique sobre o documento PDF:
@@ -7508,7 +7508,7 @@ uz:PDF-hujjatni ikki marta bosganda ishga tushadigan buyruq satrini kiriting:
 vn:Nhập dòng lệnh gọi khi bạn nhấp đúp vào tập tin PDF:
 :Error loading %s
 am:Բացման սխալ %s
-ar:خطأ في تحميل %s
+ar:%s خطأ في التحميل  
 az:%s faylının yüklənməsində xəta baş verdi
 bg:Грешка при зареждане на %s
 br:Erro ao carregar %s
@@ -7620,7 +7620,7 @@ uz:&Tanlanganlar
 vn:Ưa thích
 :F&orward\tAlt+Right Arrow
 am:Առաջ\tAlt+->
-ar:الأمام\tAlt+السهم الأيمن
+ar:ل&لامام\tAlt+Right Arrow
 az:&İrəli\tAlt+Right Arrow
 bg:Нап&ред\tAlt+Дясна стрелка
 br:Avançar\tAlt+->
@@ -7681,7 +7681,7 @@ vn:Tiếp tục\tAlt+Mũi tên phải
 :F&ullscreen\tF11
 af:Volskerm\tCtrl+Shift+L
 am:Ամ&բողջ էկրանով\tCtrl+Shift+L
-ar:بحجم الشاشة\tCtrl+Shift+L
+ar:ملء الشاشة \tF11 
 az:Tam ek&ran\tCtrl+Shift+L
 bg:На &цял екран\tCtrl+Shift+L / F11
 bn:পূর্ণ পর্দা\tCtrl+Shift+L
@@ -7750,7 +7750,7 @@ vn:Toàn màn hình\tCtrl+Shift+L
 :Facing
 af:Teenoor
 am:Երկու էջ
-ar:صفحتان متقابلتان
+ar:متقابلتان
 az:Cüt səhifələr
 bg:Срещуположни страници
 bn:দুটি পৃষ্ঠায়
@@ -7818,7 +7818,7 @@ uz:Ikkita betdan
 vn:Trang kép
 :Failed to copy uninstaller to temp directory
 am:Հնարավոր չեղավ պատճենել ջնջիչը ժամանակավոր թղթապանակ
-ar:فشل في نسخ مزيل البرنامج إلى المجلد المؤت
+ar:فشل في نسخ إلغاء التثبيت الى الدليل المؤقت
 az:Deinstalyatoru müvəqqəti qovluğa kopyalamaq mümkün olmadı
 bg:Не може да се копира деинсталатора във временната директория
 br:Falha na cópia do desinstalador para a pasta temporária
@@ -7921,7 +7921,7 @@ uz:Xatcho'pni yaratib bo'lmadi
 vn:Không thể tạo Shortcut
 :Failed to delete uninstaller registry keys
 am:Հնարավոր չեղավ ջնջել Գրանցատեղիի բանալիները
-ar:فشل في حذف مزيل البرنامج من registry
+ar:فشل في حذف مفاتيح مكتب تسجيل إلغاء التثبيت
 az:Deinstalyatorun reyestr açarlarını silmək mümkün olmadı
 bg:Неуспешно изтриване на ключовете на деинсталатора в регистъра
 br:Falha na remoção das entradas de registro do desinstalador
@@ -8096,7 +8096,7 @@ uz:Faylni saqlash muvaffaqiyatsiz tugadi
 vn:Không lưu được tập tin.
 :Failed to write the extended file extension information to the registry
 am:Հնարավոր չեղավ ֆայլի ընդլայնման մասին գրառել Գրանցատեղիում
-ar:فشل في كتابة بيانات الملف في registry
+ar:فشل في كتابة معلومات امتداد الملف الممتدة لمكتب التسجيل
 az:Faylın genişliyi haqqında ətraflı məlumatı reyestrə yazmaq mümkün olmadı
 br:Falha na gravação da extensão de arquivo no registro
 bs:Neuspješno zapisivanje informacije o ekstenziji proširenog fajla u registar
@@ -8146,7 +8146,7 @@ uz:Fayl turi haqida kengaytirilgan ma'lumotini reyestrga yozish muvaffaqiyatsiz 
 vn:Không thể ghi thông tin về phần mở rộng của tập tin vào khóa Registry
 :Failed to write the uninstallation information to the registry
 am:Ծրագիրը հեռացնելու մասին գրառումը չստացվեց Գրանցատեղիում
-ar:فشل في كتابة بيانات إزالة البرنامج في registry
+ar:فشل في كتابة معلومات الغاء التثبيت الى مكتب التسجيل
 az:Deinstalyasiya məlumatını reyestrə yazmaq mümkün olmadı
 br:Falha na gravação dos dados de desinstalação no registro
 bs:Neuspješno zapisivanje deinstalacijske informacije u registar
@@ -8196,7 +8196,7 @@ uz:Dasturni o'chirish ma'lumotini reyestrga yozish muvaffaqiyatsiz tugadi
 vn:Không thể ghi thông tin về việc gỡ cài đặt vào khóa Registry
 :Fast Web View
 am:Արագ վեբ դիտում
-ar:تهيئة الويب السريعة
+ar:عرض سريع على الويب
 az:Sürətli veb-görüntü
 bg:Бърз Web изглед
 br:Visualização rápida na Web
@@ -8308,7 +8308,7 @@ uz:Tanlanganlar
 vn:Ưa thích
 :FictionBook documents
 am:FictionBook փաստաթղթեր
-ar:ملفات FictionBook
+ar:وثائق كتاب الخيال
 az:FictionBook sənədləri
 bg:Документи FictionBook
 br:Documentos FictionBook
@@ -8476,7 +8476,7 @@ uz:Fayl hajmi:
 vn:Kích thước:
 :File:
 am:Ֆայլը.
-ar:الملف
+ar:ملف
 az:Fayl:
 bg:Файл:
 br:Arquivo:
@@ -8538,7 +8538,7 @@ vn:Tập tin:
 :Fin&d...\tCtrl+F
 af:Soek...\tCtrl+F
 am:Փնտ&րել...\tCtrl+F
-ar:بحث...\tCtrl+F
+ar:بح&ث...\tCtrl+F
 az:A&xtar...\tCtrl+F
 bg:&Търси...\tCtrl+F
 bn:অনুসন্ধান...\tCtrl+F
@@ -8872,7 +8872,7 @@ uz:Qidirish:
 vn:Tìm kiếm:
 :Fit &Content\tCtrl+3
 am:Հարմարեցնել &բովանդակությունը\tCtrl+3
-ar:مناسبة المحتوى\tCtrl+3
+ar:ملائمة المحتوى  \tCtrl+3
 az:&Məzmuna görə sığışdır\tCtrl+3
 bg:Оразмеряване по &съдържание\tCtrl+3
 br:Ajustar ao &conteúdo\tCtrl+3
@@ -8931,7 +8931,7 @@ vn:Vừa nội dung\tCtrl+3
 :Fit &Page\tCtrl+0
 af:&Pas Blad In\tCtrl+0
 am:Էջի &չափով\tCtrl+0
-ar:مناسب للشاشة\tCtrl+0
+ar:ملائمة &الصفحة \tCtrl+0
 az:&Səhifəyə görə sığışdır\tCtrl+0
 bg:Оразмеряване по &височина\tCtrl+0
 bn:পৃষ্ঠা অনুরূপ\tCtrl+0
@@ -9000,7 +9000,7 @@ vn:Vừa &trang\tCtrl+0
 :Fit &Width\tCtrl+2
 af:Pas In Breedte\tCtrl+2
 am:Հավասարեցնել &լայնությամբ\tCtrl+2
-ar:مناسب لعرض الشاشة\tCtrl+2
+ar:ملائمة &العرض \tCtrl+2
 az:&Genişliyə görə sığışdır\tCtrl+2
 bg:Оразмеряване по &ширина\tCtrl+2
 bn:প্রস্থ অনুরূপ\tCtrl+2
@@ -9068,7 +9068,7 @@ uz:&Eniga moslash\tCtrl+2
 vn:Vừa chiều &rộng\tCtrl+2
 :Fit Content
 am:Հարմարեցնել բովանդակությունը
-ar:مناسبة المحتوى
+ar:ملائمة المحتوى
 az:Məzmuna görə sığışdır
 bg:Оразмеряване по съдържание
 br:Ajustar ao conteúdo
@@ -9127,7 +9127,7 @@ vn:Vừa nội dung
 :Fit Page
 af:Pas Blad In
 am:Ձգել էջը
-ar:مناسب للشاشة
+ar:ملائمة الصفحة
 az:Səhifəyə görə sığışdır
 bg:Оразмеряване по височина
 bn:পৃষ্ঠা অনুরূপ
@@ -9196,7 +9196,7 @@ vn:Vừa trang
 :Fit Width
 af:Pas In Breedte
 am:Ձգել լայնությամբ
-ar:مناسب لعرض الشاشة
+ar:ملائمة العرض 
 az:Genişliyə görə sığışdır
 bg:Оразмери по ширина
 bn:প্রস্থ অনুরূপ
@@ -9264,7 +9264,7 @@ uz:Eniga moslash
 vn:Vừa chiều rộng
 :Fit Width and Show Pages Continuously
 am:Ձգել լայնությամբ և ցուցադրել էջերը անդադար
-ar:احتواء بالعرض وعرض الصفحات باستمرار
+ar:ملائمة العرض واظهار الصفحات باستمرار
 az:Səhifənin genişliyinə görə sığışdır və səhifələri ardıcıl göstər
 bg:Оразмери по широчина и покажи страниците непрекъснато
 br:Ajustar pela largura e exibir páginas de modo contínuo
@@ -9322,7 +9322,7 @@ uz:Eniga moslash va uzluksiz
 vn:Vừa chiều rộng và Xem trang liên tiếp
 :Fit a Single Page
 am:Ձգել մեկ էջի չափով
-ar:احتواء صفحة مفردة
+ar:ملائمة صفحة مفردة
 az:Tək səhifəyə sığışdır
 bg:Оразмери една страница
 br:Ajustar em uma única página
@@ -9646,7 +9646,7 @@ mk:Често читани
 ml:കൂടുതല്‍ വായിച്ചത്.
 my:Kerap Dibaca
 ne:प्रायजसो पढिएको
-nl:Vaak gelezen
+nl:Eerder Weergegeven
 no:Ofte leste
 pl:Ostatnio otwierane
 pt:Frequentes
@@ -9736,7 +9736,7 @@ vn:GB
 :Go to page
 af:Gaan Na Bladsy
 am:Անցնել էջի
-ar:اذهب لصفحة
+ar:انتقل لصفحة
 az:Səhifəyə keç
 bg:Отиване на страница
 bn:এর পৃষ্ঠায় চলুন
@@ -9891,7 +9891,7 @@ lv:Slēpt bieži lasītos
 mk:Сокриј често читани
 my:Sembunyikan Bacaan Kerap
 ne:प्रायजसो पढिएको लुकाउनुहोस्
-nl:'Eerder Gelezen' verbergen
+nl:'Eerder Weergegeven' verbergen
 no:Skjult ofte leste
 pl:Ukryj ostatnio otwierane
 pt:Ocultar frequentes
@@ -9911,7 +9911,7 @@ uz:Tez-tez o'qiladiganlarni yashirish
 vn:Ẩn Đọc thường xuyên
 :Hint: Use the F3 key for finding again
 am:Որոնումը կրկնելու համար օգտագործեք F3 կոճակը
-ar:للبحث مرةً أخرى ، اضغط F3
+ar: للبحث مرة أخرى F3 تلميح: استخدام مفتاح
 az:Təkrar axtarış üçün F3 düyməsinə basın
 bg:Съвет: Използвайте F3 за повторно търсене
 br:Dica: tecle F3 para achar a próxima ocorrência
@@ -10028,7 +10028,7 @@ vn:Tập tin ảnh (*.%s)
 :Install SumatraPDF
 af:Installeer SumatraPDF
 am:Տեղակայել SumatraPDF-ը
-ar:تنصيب SumatraPDF
+ar:المحمولة Sumatra تثبيت مستندات
 az:SumatraPDF-i quraşdır
 bg:Инсталиране на SumatraPDF
 br:Instalar SumatraPDF
@@ -10080,7 +10080,7 @@ uz:SumatraPDF o'rnatish
 vn:Cài đặt SumatraPDF
 :Install SumatraPDF in &folder:
 am:Տեղադրել SumatraPDF-ը &հետևյալ թղթապանակում՝
-ar:تنصيب SumatraPDF في المجلد:
+ar:المحمولة في المجلد Sumatra تثبيت مستندات :
 az:SumatraPDF-i bu &qovluqda quraşdır:
 br:Instalar SumatraPDF na &pasta:
 bs:Instaliraj SumatraPDF u &direktorij:
@@ -10131,7 +10131,7 @@ uz:SumatraPDF &jildga o'rnatish
 vn:Cài đặt SumatraPDF trong &thư mục:
 :Installation failed!
 am:Տեղակայումը ձախողվեց:
-ar:فشل في تنصيب البرنامج
+ar:!فشل التثبيت
 az:Quraşdırma baş tutmadı!
 bg:Инсталацията беше неуспешна!
 br:Falha na instalação!
@@ -10183,7 +10183,7 @@ uz:O'rnatish muvaffaqiyatsiz tugadi!
 vn:Cài đặt thất bại!
 :Installation in progress...
 am:Ընթացքում է...
-ar:قيد تنصيب البرنامج ...
+ar:التثبيت قيد التقدم...
 az:Quraşdırma davam edir...
 bg:Инсталиране...
 br:Instalação em progresso...
@@ -10304,7 +10304,7 @@ uz:KB
 vn:KB
 :Keep the PDF &browser plugin installed (no longer supported)
 am:Թողնել &դիտարկիչի PDF բաղադրիչը (այլևս չի աջակցում)
-ar:حافظ على تكميلة البرنامج في المتصفح
+ar:(الحفاظ  على المستندات المحمولة متصفح البرنامج المساعد المثبت (لم تعد معتمدة
 az:PDF &brauzer plaginini silmə (artıq dəstəklənmir)
 br:Mantenha o plugin PDF para instalado (não é mais suportado)
 bs:Ostavi plugin instaliran u &browseru (više nije podržano)
@@ -10349,7 +10349,7 @@ uz:PDF &brauzer plaginini o'rnatilgan qoldirish (boshqa qo'llab-quvvatlanmaydi)
 vn:Giữ lại Plugin PDF đã cài đặt cho các trình duyệt (không còn được hỗ trợ)
 :Let Windows Desktop Search &search PDF documents
 am:Թույլատրել Windows Desktop Search-ին &փնտրել PDF ֆայլեր
-ar:السماح لويندوز بالبحث في ملفات PDF
+ar:دع البحث في سطح مكتب الوندوز &البحث في وثائق المستندات المحمولة
 az:PDF sənədlərini Windows Desktop Search vasitəsilə a&xtar
 br:Permitir que o Windows faça a bu&sca em documentos PDF
 bs:Omogući Windows Desktop Search-u da &pretražuje PDF dokumente
@@ -10399,7 +10399,7 @@ uz:Windows Desktop Search yordamida PDF hujjatlarini &qidirish
 vn:Cho phép Windows &tìm kiếm các tài liệu PDF
 :Let Windows show &previews of PDF documents
 am:Թույլատրել Windows-ին &ցուցադրել PDF ֆայլերի նախադիտումը
-ar:السماح لويندوز عرض صور معاينة PDF
+ar:دع الوندوز باظهار &معاينات الوثائق من المستندات المحمولة
 az:PDF sənədlərini Windows alətləri vasitəsilə &görüntülə
 br:Permitir que o Windows &pré-visualize documentos PDF
 bs:Omogući Windows-ima da prikažu &pregled PDF dokumenata
@@ -10519,7 +10519,7 @@ vn:MB
 :Make SumatraPDF default application for PDF files?
 af:Maak Sumatra Die Automatiese Program Vir PDF Lêers?
 am:Հաստատե՞լ SumatraPDF-ն PDF ֆայլերը բացող հիմնական ծրագիր։
-ar:هل تريد جعل قاريء سومطره للبي دي إف ، التطبيق الافتراضي؟
+ar: المحمولة الافتراضي  لملفات المستندات المحمولة؟ Sumatra  جعل تطبيق مستندات
 az:SumatraPDF PDF faylların görüntülənməsi üçün standart proqram edilsin?
 bg:Искате ли да зададете SumatraPDF като основното си приложение за отваряне на PDF файлове?
 bn:সুমাত্রাপিডিএফ কে পিডিএফ সঞ্চিকাগুলির জন্য স্বাভাবিক অনুপ্রয়োগ রূপে নির্ধারণ করা হবে?
@@ -10586,7 +10586,7 @@ vn:Đặt SumatraPDF làm trình đọc PDF mặc định?
 :Make SumatraPDF my default PDF reader
 af:Maak Sumatra Die Automatiese PDF Leser
 am:Ասոցիացնել PDF ֆայլերը SumatraPDF-ի հետ
-ar:PDF جعل هذا البرنامج القارىء الرئيسي لملفات
+ar:المحمولة  قارئ المستندات المحمولة الافتراضي Sumatra جعل  مستندات 
 az:SumatraPDF-i PDF fayllarla əlaqələndir
 bg:Направи SumatraPDF четец на PDF по подразбиране
 bn:সুমাত্রাপিডিএফ কে আপনার স্বাভাবিক পঠক রূপে নির্ধারণ
@@ -10654,7 +10654,7 @@ uz:SumatraPDF PDF fayllar bilan bog'lanish
 vn:Đặt SumatraPDF làm trình đọc PDF chính
 :Man&ga Mode
 am:Man&ga եղանակ
-ar:Man&ga وضعية 
+ar:نمط Man&ga 
 az:Man&qa rejimi
 bg:Режим за ман&га
 br:Modo Man&gá
@@ -10706,7 +10706,7 @@ vn:Kiểu &Manga
 :Match Case
 af:Vind Bypassende Klein Letters / Hoofletters
 am:Հաշվի առնել մեծատառ/փոքրատառը
-ar:مناسبة الخط
+ar:مطابقة حالة الأحرف
 az:Registri nəzərə al
 bg:Същия текст
 bn:অক্ষরের আকার মেলান
@@ -10772,7 +10772,7 @@ uz:Registrni hisobga olish
 vn:Phân biệt HOA-thường
 :Mobi documents
 am:XPS ֆայլեր
-ar:ملفات Mobi
+ar:وثائق Mobi
 az:Mobi sənədləri
 bg:Mobi документи
 br:Documentos Mobi
@@ -11026,7 +11026,7 @@ uz:Keyingi bet
 vn:Trang sau
 :No matches were found
 am:Ոչինչ չի գտնվել
-ar:لم يتم العثور على نتائج
+ar:لا توجد متطابقات
 az:Uyğun mətn tapılmadı
 bg:Няма съвпадения
 br:Nenhuma ocorrência encontrada
@@ -11207,7 +11207,7 @@ uz:Sinxronlanish fayli topilmadi
 vn:Không tìm thấy tập tin đồng bộ nào
 :No synchronization info at this position
 am:Այստեղ չկա համաժամեցնելու համար տեղեկություն
-ar:لاتوجد معلومات المزامنة في هذا الموقع
+ar:لا معلومات تزامن في هذا الموقع
 az:Bu mövqedə sinxronlaşdırma məlumatı yoxdur
 bg:В тази позиция няма информация за синхронизация
 br:Não há informação de sincronização nesta posição
@@ -11461,7 +11461,7 @@ uz:Ochish
 vn:Mở tập tin
 :Open &in PDF-XChange
 am:Բացել PDF-XChange-ում
-ar:فتح الملف بـ PDF-XChange
+ar:فتح في PDF-XChange
 az:PD&F-XChange-də aç
 bg:Отворяне с PDF-XChange
 br:Abrir no PDF-XChange
@@ -11631,7 +11631,7 @@ uz:%s'da ochish
 vn:Mở bằng %s
 :Open in &Adobe Reader
 am:Բացել &Adobe Reader-ում
-ar:فتح الملف بـ Adobe Reader
+ar:فتح في &قارئ ادوبي
 az:&Adobe Reader-də aç
 bg:Отваряне с &Adobe Reader
 br:Abrir no &Adobe Reader
@@ -11693,7 +11693,7 @@ uz:&Adobe Readerda ochish
 vn:Mở bằng Adobe Reader
 :Open in &Foxit Reader
 am:Բացել &Foxit Reader-ում
-ar:فتح الملف بـ Foxit Reader
+ar:فتح في Foxit Reader
 az:&Foxit Reader-də aç
 bg:Отваряне с &Foxit Reader
 br:Abrir no &Foxit Reader
@@ -11754,7 +11754,7 @@ uz:&Foxit Readerda ochish
 vn:Mở bằng Foxit Reader
 :Open in &Microsoft HTML Help
 am:Բացել Microsoft HTML Help-ում
-ar:فتح الملف بـ Microsoft HTML Help
+ar:فتح في Microsoft HTML Help
 az:Microsoft &HTML Help-də aç
 bg:Отваряне с Microsoft HTML Help
 br:Abrir no Microsoft HTML Help
@@ -11814,7 +11814,7 @@ uz:Microsoft HTML Helpda ochish
 vn:Mở bằng Microsoft HTML Help
 :Open in &Microsoft XPS-Viewer
 am:Բացել Microsoft XPS-Viewer-ում
-ar:فتح الملف بـ Microsoft XPS-Viewer
+ar:فتح في Microsoft XPS-Viewer
 az:Microsoft &XPS-Viewer-də aç
 bg:Отваряне с Microsoft XPS-Viewer
 br:Abrir no Microsoft XPS-Viewer
@@ -11991,7 +11991,7 @@ vn:Thuộc tính\tCtrl+D
 :PDF Document
 af:PDF Dokument
 am:PDF ֆայլ
-ar:مستند البي دي إف
+ar:وثيقة المستندات المحمولة
 az:PDF sənədi
 bg:PDF документ
 br:Documento PDF
@@ -12053,7 +12053,7 @@ uz:PDF hujjati
 vn:Tập tin PDF
 :PDF Optimizations:
 am:PDF-ի լավարկում.
-ar:تحسينات البي دي إف
+ar:تحسينات المستندات المحمولة
 az:PDF optimallaşdırması:
 bg:PDF оптимизации:
 br:Otimizações PDF:
@@ -12108,7 +12108,7 @@ uz:PDF optimizatsiyalari:
 vn:Các tối ưu PDF
 :PDF Producer:
 am:PDF-ը ստեղծվել է.
-ar:مُنتِج البي دي إف
+ar:منتج المستندات المحمولة:
 az:PDF kompilyatoru:
 bg:PDF създател:
 br:Produtor do PDF:
@@ -12167,7 +12167,7 @@ uz:PDF yaratuvchisi:
 vn:Phần mềm tạo PDF:
 :PDF Version:
 am:PDF-ի տարբերակը.
-ar:إصدار البي دبي إف
+ar:اصدارالمستندات المحمولة
 az:PDF versiyası:
 bg:PDF версия:
 br:Versão do PDF:
@@ -12226,7 +12226,7 @@ uz:PDF versiyasi:
 vn:Phiên bản PDF:
 :PDF documents
 am:PDF ֆայլեր
-ar:مستندات البي دي إف
+ar:وثائق المستندات المحمولة
 az:PDF sənədləri
 bg:PDF документи
 br:Documentos PDF
@@ -12289,7 +12289,7 @@ vn:Tập tin PDF
 :Pa&ge...\tCtrl+G
 af:Bladsy...\tCtrl+G
 am:Էջ&ը...\tCtrl+G
-ar:صفحة محددة\tCtrl+G
+ar:صف&حة \tCtrl+G
 az:Sə&hifə...\tCtrl+G
 bg:&Страница...\tCtrl+G
 bn:পৃষ্ঠা সংখ্যা...\tCtrl+G
@@ -12475,7 +12475,7 @@ uz:Bet o'lchami:
 vn:Kích thước trang:
 :Page number %u inexistant
 am:%u էջը գոյություն չունի
-ar:رقم الصفحة الحالية %u
+ar:غير موجود %u رقم الصفحة 
 az:Səhifə %u mövcud deyil
 bg:Страница с номер %u не съществува
 br:A página %u não existe
@@ -12536,7 +12536,7 @@ uz:Bet %u mavjud emas
 vn:Trang %u không tồn tại
 :Page scaling
 am:Էջի շարժը
-ar:تحجيم الصفحة
+ar:قياس الصفحة
 az:Səhifələrin miqyaslanması
 bg:Оразмеряване на страницата
 br:Ajuste da página
@@ -12661,7 +12661,7 @@ uz:Bet:
 vn:Trang:
 :PalmDoc documents
 am:PalmDoc փաստաթղթեր
-ar:وثائق بالم دوك
+ar:وثائق PalmDoc 
 az:PalmDoc sənədləri
 br:Documentos PalmDoc
 bs:PalmDoc dokumenti
@@ -12704,7 +12704,7 @@ uz:PalmDoc ho'jjatlari
 vn:Tài liệu PalmDoc
 :Please close %s to proceed!
 am:Շարունակելուց առաջ փակեք %s-ը:
-ar:أغلق %s للإكمال!
+ar: !المضي قدما %s الرجاء اغلاق
 az:Davam etmək üçün %s bağlayın!
 br:Por favor feche %s para continuar!
 bs:Molimo da zatvorite %s za nastavak!
@@ -12755,7 +12755,7 @@ uz:Davom etish uchun %s yoping!
 vn:Hãy đóng %s lại để tiến hành!
 :Please wait - rendering...
 am:Խնդրում ենք սպասել...
-ar:الرجاء الانتظار ، جاري التجزئة
+ar:الرجاء الإنتظار - اعادة...
 az:Görüntü hazırlanır, lütfən gözləyin...
 bg:Моля изчакайте - изображението се създава
 br:Por favor aguarde, renderizando...
@@ -12816,7 +12816,7 @@ uz:Kutib turing - render qilinmoqda...
 vn:Xin chờ đợi, đang hiện...
 :Postscript documents
 am:Հետգրվածքային ֆայլեր
-ar:ملفات Postscript
+ar:وثائق التذييل
 az:Postscript sənədləri
 bg:Postscript документи
 br:Documentos Postscript
@@ -12872,7 +12872,7 @@ uz:Postscript hujjatlari
 vn:Tập tin Postscript
 :Pr&esentation\tF5
 am:Ներ&կայացում\tF5
-ar:عرض ملء الشاشة \tCtrl+L
+ar:العرض التقديم \tF5
 az:Tə&qdimat\tCtrl+L
 bg:&Презентация\tCtrl+L
 br:Apr&esentação\tCtrl+L
@@ -13113,7 +13113,7 @@ uz:Chop etish diapazoni
 vn:Giới hạn vùng in
 :Printer with given name doesn't exist
 am:Այս անվամբ տպիչ գոյություն չունի
-ar:الطابعة بهذا الاسم غير موجودة
+ar:طابعة بهذا الاسم غير موجودة
 az:Bu adda printer mövcud deyil
 bg:Принтер с това име не съществува
 br:Nâo existe uma impressora com esse nome
@@ -13169,7 +13169,7 @@ uz:Bunday printer mavjud emas
 vn:Máy in với tên được cho không tồn tại
 :Printing in progress.
 am:Տպում է:
-ar:جاري الطباعة.
+ar:الطباعة في التقدم.
 az:Çap davam edir.
 bg:Печатане...
 br:Imprimindo...
@@ -13223,7 +13223,7 @@ uz:Chop etilmoqda.
 vn:Đang in.
 :Printing is still in progress. Abort and quit?
 am:Տպում է: Ընդհատե՞լ և փակել:
-ar:الطباعة قيد التنفيذ. هل تريد التوقف والخروج؟
+ar:الطباعة قيد التقدم. إحباط وإنهاء؟
 az:Çap davam edir. Dayandırmaq və proqramdan çıxmaq?
 bg:Печатането все още е на ход. Сигурни ли сте, че искате принудително да го откажете и да излезете?
 br:Ainda imprimindo... Interromper e sair?
@@ -13275,7 +13275,7 @@ uz:Chop etilmoqda. To'xtatilib dasturdan chiqilsinmi?
 vn:Vẫn còn đang in. Hủy bỏ và thoát ra?
 :Printing is still in progress. Abort and start over?
 am:Տպում է։ Կանգնեցնե՞լ։
-ar:الطباعة جارية. أوقفها وأعدها مرة أخرى؟
+ar:الطباعة قيد التقدم. إحباط والبدء من جديد؟
 az:Çap davam edir. Dayandırmaq və yenidən başlamaq?
 bg:Отпечатването се извършва. Прекъсни и започни отначало?
 br:A impressão está em andamento. Interromper e começar de novo?
@@ -13572,7 +13572,7 @@ vn:Nhớ các tập tin đã mở
 :Remove from favorites
 af:Verwyder van gunstelinge
 am:Հեռացնել ընտրյալներից
-ar:احذف من المفضلة
+ar:ازالة من المفضلة
 az:Seçilmişlərdən sil
 bg:Премахни от любимите
 br:Remover dos Favoritos
@@ -13628,7 +13628,7 @@ uz:Tanlanganlardan o'chirish
 vn:Xóa khỏi Ưa thích
 :Remove page %s from favorites
 am:Հեռացնել %s  էջը ընտրյալներից
-ar:احذف الصفحة %s من المفضلة
+ar:حذف الصفحة %s من المفضلة
 az:%s. səhifəni seçilmişlərdən sil
 bg:Премахни страница %s от любимите
 br:Remover página %s dos Favoritos
@@ -14063,7 +14063,7 @@ uz:%d %d dan qidirilmoqda...
 vn:Đang tìm %d trên %d
 :Select &All
 am:Նշել &բոլորը
-ar:حدد الكل
+ar:حدد &الكل
 az:&Hamısını seç
 bg:Избери всичко
 br:Selecion&ar tudo
@@ -14120,7 +14120,7 @@ uz:&Hammasini tanlash
 vn:Chọn hết
 :Select &All\tCtrl+A
 am:Նշել &բոլորը\tCtrl+A
-ar:اختيار &الكل\tCtrl+A
+ar:حدد&الكل\tCtrl+A
 az:&Hamısını seç\tCtrl+A
 bg:Избери &всичко\tCtrl+A
 br:Selecion&ar Tudo\tCtrl+A
@@ -14177,7 +14177,7 @@ uz:&Hammasini tanlash\tCtrl+A
 vn:Chọn hết\tCtrl+A
 :Select content with Ctrl+left mouse button
 am:Նշել ընտրվածը Ctrl+մկնիկի ձախ կոճակով
-ar:اختر المحتوى بالضغط على زر الفأرة الأيسر و Ctrl
+ar:حدد المحتوى بالضغط على زر الفأرة الأيسر و Ctrl
 az:Məzmunu Ctrl+sol siçan düyməsi ilə seç
 bg:Изберете съдържание с Ctrl и левия бутон на мишката
 br:Selecionar com Ctrl+Botão esquerdo do mouse
@@ -14237,7 +14237,7 @@ uz:Ctrl va sichqonchaning chap tugmasini bosib tarkibini tanlang
 vn:Đánh dấu nội dung bằng Ctrl+phím chuột trái
 :Select the folder where SumatraPDF should be installed:
 am:Ընտրեք թղթապանակում, որտեղ պետք է տեղակայվի SumatraPDF-ը՝
-ar:اختر مجلد تنصيب البرنامج:
+ar:المحمولة Sumatra حدد المجلد حيث يجب أن يكون مثبت مستندات :
 az:SumatraPDF-in quraşdırılacağı qovluğu seçin:
 bg:Изберете папката, в която да се инсталира SumatraPDF:
 br:Selecione a pasta onde o SumatraPDF deverá ser instalado:
@@ -14333,7 +14333,7 @@ uz:Tanlash:
 vn:Lựa chọn:
 :Send by &E-mail...
 am:Ուղարկել &էլ. փոստով
-ar:إرسال بالبريد الإلكتروني
+ar:إرسال ب&البريد الإلكتروني
 az:&E-poçtla göndər...
 bg:Изпрати по &електронната поща
 br:Enviar por email...
@@ -14459,7 +14459,7 @@ uz:Teskari qidirish buyruq satrini moslash
 vn:Đặt dòng lệnh tìm kiếm ngược
 :Show &Bookmarks
 am:Ցուցադրել &Էջանիշերը
-ar:إظهار العلامات
+ar:اظهار &قوائم العناوين
 az:Ə&lfəcinləri göstər
 bg:Покажи отметките
 br:Mostrar Fa&voritos
@@ -14514,7 +14514,7 @@ uz:&Xatcho'plarni ko'rsatish
 vn:Hiện chỉ dấu sách
 :Show &Pages Continuously
 am:Էջերը &ցուցադրել շարունակական
-ar:عرض الصفحات باستمرار
+ar:اظهار الصفحات باستمرار
 az:Səhifələri &ardıcıl göstər
 bg:&Непрекъснати страници
 br:Exibir páginas de modo contínuo
@@ -14575,7 +14575,7 @@ vn:Xem trang liên tiếp
 :Show &Toolbar
 af:Vertoon Toolbar
 am:Ցուցադրել &գործիքները
-ar:عرض شريط الأدوات
+ar:اظهار شريط الأدوات
 az:Alətlər &panelini göstər
 bg:Лен&та с инструменти
 bn:উপকরণপট্টি প্রদর্শন
@@ -14735,7 +14735,7 @@ lv:Rādīt bieži lasītos
 mk:Прикажи често читани
 my:Paparkan dokuman yang kerap dibaca
 ne:प्रायजसो पढिएको देखाउनुहोस्
-nl:'Eerder Gelezen' weergeven
+nl:'Eerder Weergegeven' tonen
 no:Vis ofte leste
 pl:Pokaż często otwierane
 pt:Mostrar frequentes
@@ -14755,7 +14755,7 @@ uz:Tez-tez o'qiladiganlarni ko'rsatish
 vn:Hiện Đọc thường xuyên
 :Show the &bookmarks sidebar when available
 am:Հնարավորության դեպքում ցուցադրել &Էջերը
-ar:عرض الاختصارات المرجعية في الشريط الجانبي عند وجودها
+ar:اظهار &قائمة العناوين في الشريط الجانبي عند توفرها
 az:Mümkündürsə, ə&lfəcinlər panelini göstər
 bg:Покажи &показалеца в страничната колона когато е възможно
 br:Mostrar barra lateral de marcadores quando disponível
@@ -14885,7 +14885,7 @@ uz:Bitta bet
 vn:Trang đơn
 :Some files to be installed are damaged or missing
 am:Տեղակայվող որոշ ֆայլեր վնասված են կամ բացակայում են
-ar:بعض ملفات التنصيب مفقودة أو معطوبة
+ar:بعض الملفات التي ستثبت قد  تكون تالفة أو مفقودة
 az:Bəzi quraşdırılacaq fayllar zədələnmişdir və ya yoxdur
 br:Alguns arquivos de instalação estão danificados ou ausentes
 bs:Neki fajlovi koji bi trebali biti instalirani su ili oštećeni ili nedostaju
@@ -14935,7 +14935,7 @@ uz:Ba'zi o'rnatilayotgan fayllar buzilgan yoki mavjud emas
 vn:Một số tập tin dùng để cài đặt đã bị lỗi hoặc bị thiếu
 :Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 am:Կներեք, սա չպետք է տեղի ունենար։\n\nՍեղմեք 'Չեղարկել'՝եթե ցանկանում եք օգնել մեզ վերացնելու այս սխալը։
-ar:عذرا, لا يجدر أن يحدث ما حدث!\n\n الرجاء الضغط على 'إلغاء', إذا كنت تريد مساعدتنا في حل هذه المشكلة
+ar:الرجاء اضغط 'إلغاء الأمر'، إذا كنت ترغب في مساعدتنا على إصلاح هذا الحادث \n\n !آسف، أنه لا ينبغي أن يكون قد حدث
 az:Bağışlayın, gözlənilməz xəta baş verdi!\n\nProblemin həllində bizə kömək etmək üçün "İmtina" düyməsinə basın.
 bg:Извинете, това не би трябвало да се случва!\n\nМоля, натиснете „Отказ“, ако искате да ни помогнете да поправим причината за този срив (спиране).
 br:Desculpe, isso não deveria ter acontecido!\n\nAperte 'Cancelar' se quiser nos ajudar a corrigir a causa deste erro.
@@ -15053,7 +15053,7 @@ uz:%s manba faylida sinxronlanish nuqtasi yo'q
 vn:Tập tin nguồn %s không có điểm đồng bộ
 :Start SumatraPDF
 am:Բացել SumatraPDF-ը
-ar:بدء SumatraPDF
+ar:بدء تشغيل مستندات Sumatra  المحمولة
 az:SumatraPDF-i işə sal
 br:Iniciar SumatraPDF
 bs:Pokreni SumatraPDF
@@ -15166,7 +15166,7 @@ vn:Chủ đề:
 :SumatraPDF %s Installer
 af:SumatraPDF %s Installeerder
 am:SumatraPDF %s-ը տեղակայելու ծրագիր
-ar:SumatraPDF %s منصب
+ar:المثبت%s المحمولة Sumatra مستندات
 az:SumatraPDF quraşdırıcısı %s
 br:SumatraPDF %s instalador
 bs:SumatraPDF %s instaler
@@ -15216,7 +15216,7 @@ uz:SumatraPDF %s o'rnatuvchisi
 vn:Bộ cài đặt %s SumatraPDF
 :SumatraPDF %s Uninstaller
 am:SumatraPDF %s-ը հեռացնելու ծրագիր
-ar:SumatraPDF %s مزيل التنصيب
+ar:إلغاء  تثبيت %s المحمولة Sumatra مستندات
 az:SumatraPDF deinstalyatoru %s
 br:SumatraPDF %s desinstalador
 bs:SumatraPDF %s deinstaler
@@ -15266,7 +15266,7 @@ uz:SumatraPDF %s o'chirish dasturi
 vn:Bộ gỡ cài đặt %s SumatraPDF
 :SumatraPDF Options
 am:Ընտրանքներ
-ar:خيارات SumatraPDF
+ar:خيارات مستندات Sumatra المحمولة
 az:SumatraPDF seçimləri
 bg:Настройки на SumatraPDF
 br:Opções do SumatraPDF
@@ -15327,7 +15327,7 @@ uz:SumatraPDF Parametrlari
 vn:Tuỳ chọn SumatraPDF
 :SumatraPDF Update
 am:SumatraPDF-ի թարմացումները
-ar:تحديث SumatraPDF
+ar:تحديث  مستندات Sumatra المحمولة
 az:SumatraPDF yeniləməsi
 bg:Обновяване на SumatraPDF
 br:Atualização do SumatraPDF
@@ -15384,7 +15384,7 @@ uz:SumatraPDF yangilash
 vn:Cập nhật SumatraPDF
 :SumatraPDF crashed
 am:SumatraPDF-ի ձախողում
-ar:مشكلة في SumatraPDF
+ar:مستندات Sumatra المحمولة تحطمت
 az:SumatraPDF əməliyyatı qəza ilə nəticələndi
 bg:SumatraPDF се срина (спря внезапно)
 br:O SumatraPDF travou
@@ -15441,7 +15441,7 @@ uz:SumatraPDFda nosozlik ro'y berdi
 vn:SumatraPDF đã ngưng hoạt đọng
 :SumatraPDF has been uninstalled.
 am:SumatraPDF-ը հեռացվել է:
-ar:تمت إزالة SumatraPDF
+ar: مستندات Sumatra المحمولة إلغاء تثبيت
 az:SumatraPDF silindi.
 br:SumatraPDF foi desinstalado.
 bs:SumatraPDF je deinstaliran.
@@ -15491,7 +15491,7 @@ uz:SumatraPDF o'chirildi.
 vn:SumatraPDF đã được gỡ bỏ.
 :SumatraPDF installation not found.
 am:SumatraPDF-ը չի գտնվել:
-ar:ملفات تنصيب SumatraPDF غير موجودة
+ar:مستندات Sumatra المحمولة لم يتم العثور على تثبيت
 az:SumatraPDF quraşdırması tapılmadı.
 br:A instalação do SumatraPDF não foi encontrada.
 bs:SumatraPDF instalacija nije pronađena.
@@ -15541,7 +15541,7 @@ uz:SumatraPDF o'rnatilganligi topilmadi.
 vn:Không tìm thấy gói cài đặt SumatraPDF.
 :SumatraPDF is your default PDF reader
 am:PDF ֆայլերը ասոցիացվել են SumatraPDF-ի հետ
-ar:قارئ SumatraPDF هو الافتراضي
+ar:المحمولة هو قارئ المستندات المحمولة الافتراضي Sumatra مستندات
 az:SumatraPDF PDF faylları ilə əlaqələndirilmişdir
 bg:SumatraPDF е вашият PDF четец по подразбиране
 br:O SumatraPDF é o seu leitor PDF padrão
@@ -15602,7 +15602,7 @@ uz:SumatraPDF andoza PDF ko'rish vositasi
 vn:SumatraPDF là trình đọc PDF chính của bạn
 :SumatraPDF should now be your default PDF reader
 am:PDF ֆայլերը ասոցիացվեցին SumatraPDF-ի հետ
-ar:قارئ SumatraPDF يجب أن يكون القارئ الافتراضي
+ar:  مستندات Sumatra المحمولة الان يجب ان تكون لديك قارئ مستندات محمولة افتراضي
 az:SumatraPDF artıq PDF faylları ilə əlaqələndirilmişdir
 bg:SumatraPDF вече трябва да е указана като подразбиращ се четец на/за PDF файлове
 br:O SumatraPDF deve ser agora seu leitor PDF padrão
@@ -15724,7 +15724,7 @@ uz:Sinxronlanish faylini ochib bo'lmadi
 vn:Không mở được tập tin đồng bộ
 :Tagged PDF
 am:Կցված PDF
-ar:البي دي إف الموسومة
+ar:المستندات المحمولة موسومة
 az:Teqlənmiş PDF
 bg:Етикетирен .PDF файл (Tagged PDF)
 br:PDF com marcações (tags)
@@ -15838,7 +15838,7 @@ uz:Matn hujjatlari
 vn:Tập tin văn bản
 :Thank you for choosing SumatraPDF!
 am:Շնորհակալություն SumatraPDF-ը նախընտրելու համար:
-ar:شكرا لاختيار SumatraPDF
+ar:نشكركم لاختياركم مستندات Sumatra المحمولة  
 az:SumatraPDF-i seçdiyiniz üçün təşəkkür edirik!
 br:Obrigado por escolher o SumatraPDF!
 bs:Hvala Vam što ste izabrali SumatraPDF!
@@ -15889,7 +15889,7 @@ uz:SumatraPDF tanlaganingiz uchun tashakkur!
 vn:Cảm ơn vì đã chọn SumatraPDF!
 :Thank you! SumatraPDF has been installed.
 am:Շնորհակալություն: SumatraPDF-ը տեղադրվել է:
-ar:تم تنصيب SumatraPDF
+ar:شكرا! تم تثبيت  مستندات Sumatra المحمولة  
 az:Təşəkkürlər! SumatraPDF quraşdırıldı.
 br:Obrigado! O SumatraPDF foi instalado.
 bs:Hvala Vam! SumatraPDF je instaliran.
@@ -15940,7 +15940,7 @@ uz:Tashakkur! SumatraPDF o'rnatildi.
 vn:Cảm ơn bạn! SumatraPDF đã được cài đặt.
 :The installer has been corrupted. Please download it again.\nSorry for the inconvenience!
 am:Ծրագրի տեղադրիչը վնասված է: Կրկին բեռնեք այն:\nՀայցում ենք Ձեր ներողամտությունը:
-ar:برنامج التثبيت معطوب. قم بتحميل البرنامج مرة أخرى
+ar:اسف للازعاج! \n . تم إتلاف المثبت. الرجاء تحميله مرة أخرى
 az:Quraşdırıcı zədələnmişdir. Lütfən onu təkrar endirin.\nNarahatçılığa görə üzr istəyirik!
 br:O instalador está corrompido. Por favor baixe-o novamente.\nDesculpe pelo incômodo!
 bs:Instaler je oštećen. Molimo da ga ponovo preuzmete.\nOprostite zbog neugodnosti!
@@ -15989,6 +15989,7 @@ uk:Інсталятор було пошкоджено. Будь ласка за�
 uz:O'rnatuvchi buzilgan. Qaytadan yuklab oling. \nNoqulayliklar uchun uzr so'raymiz!
 vn:Trình cài đặt đã bị lỗi. Xin vui lòng tải về lần nữa.\nRất tiếc về sự bất tiện này!
 :This document uses unsupported features (%s) and might not render properly
+ar:وقد لا تعرض بشكل صحيح (%s) هذا المستند يستخدم ميزات غير معتمدة
 az:Bu sənəd dəstəklənməyən funksiyalardan (%s) istifadə edir və düzgün əks olunmaya bilər
 br:Este documento utiliza recursos não suportados (%s) e pode não ser exibido corretamente.
 bs:Ovaj dokument koristi nepodržane funkcionalnosti (%s) i zbog toga možda neće biti ispravno prikazan
@@ -16020,6 +16021,7 @@ sk:Tento dokument používa nepodporované funkcie (%s) a týmto sa nemusí vykr
 sl:Da dokument uporablja nepodprte značilnosti (%s) in se morda ne bo naložil pravilno
 sp-rs:Ovaj dokument koristi nepodržane opcije (%s) i može biti prikazan nekorektno
 sr-rs:Овај документ користи неподржане опције (%s) и може бити приказан некоректно
+sv:Detta dokument använder funktioner som inte stöds (%s) och kan inte återges korrekt
 tr:Bu belge desteklenmeyen özellikler içeriyor (%s) ve doğru görüntülenemeyebilir
 tw:此文件使用未支援的功能 (%s) ，並可能無法正確的繪製。
 uk:Даний документ використовує можливості, що не підтримуються (%s) і тому може відображатися з помилками
@@ -16090,7 +16092,7 @@ uz:Sarlavha:
 vn:Tựa đề
 :Uninstall SumatraPDF
 am:Ջնջել SumatraPDF-ը
-ar:إزالة SumatraPDF
+ar:المحمولة Sumatra  الغاء تثبيت مستندات
 az:SumatraPDF-i sil
 bg:Деинсталиране на SumatraPDF
 br:Desinstalar SumatraPDF
@@ -16143,7 +16145,7 @@ uz:SumatraPDFni o'chirish
 vn:Gỡ bỏ SumatraPDF
 :Uninstallation failed
 am:Հնարավոր չեղավ հեռացնել ծրագիրը
-ar:فشل إزالة البرنامج
+ar:فشل إلغاء التثبيت
 az:Deinstalyasiya baş tutmadı
 bg:Деинсталирането беше неуспешно!
 br:A desinstalação falhou
@@ -16196,7 +16198,7 @@ uz:O'chirish muvaffaqiyatsiz tugadi
 vn:Không gỡ bỏ được
 :Uninstallation in progress...
 am:Ծրագիրը հեռացվում է...
-ar:إزالة البرنامج قيد العمل...
+ar:إزالة التثبيت قيد التقدم...
 az:Deinstalyasiya davam edir...
 bg:Деинсталиране...
 br:Desinstalação em progresso...
@@ -16354,7 +16356,7 @@ uz:&Ilovalarni qo'llash
 vn:Dùng &thẻ
 :Use SumatraPDF as the &default PDF reader
 am:Օգտ. SumatraPDF-ը որպես &PDF-ի հիմնական ծրագիր
-ar:تعيين SumatraPDF البرنامج الافتراضي لفتح ملفات PDF
+ar: المحمولة باسم& قارئ مستندات محمولة افتراضي Sumatra استخدم مستندات
 az:SumatraPDF &standart PDF oxuyucusu kimi istifadə olunsun
 bg:Използване на SumatraPDF като основен четец на PDF файлове
 br:Usar o SumatraPDF como o leitor PDF pa&drão
@@ -16607,7 +16609,7 @@ uz:Diqqat
 vn:Cảnh báo
 :XPS documents
 am:XPS ֆայլեր
-ar:ملفات XPS
+ar:مستندات XPS
 az:XPS sənədləri
 bg:XPS документи
 br:Documentos XPS
@@ -16799,7 +16801,7 @@ uz:Sizdagi versiya %s
 vn:Bạn đang dùng phiên bản %s
 :Zoom
 am:Չափը
-ar:تقريب
+ar:تكبير/تصغير
 az:Miqyas
 bg:Увеличение
 br:Zoom
@@ -16999,7 +17001,7 @@ uz:Kichraytirish
 vn:Thu nhỏ
 :Zoom factor
 am:Չափի գործակիցը
-ar:معايرة التقريب
+ar:عامل التكبير/التصغير
 az:Miqyas
 bg:Коефициент на увеличение
 br:Proporção de Zoom
@@ -17059,7 +17061,7 @@ uz:Miqyos omili
 vn:Hệ số thu phóng
 :[Changes detected; refreshing] %s
 am:[Հայտնաբերվել են փոփոխություններ, ընթանում է թարմացում] %s
-ar:جاري التحديث بعد التغييرات %s
+ar:%s [تغييرات إكتشفت؛ المنعش] 
 az:[Dəyişikliklər müəyyən edildi; yenilənmə] %s
 bg:[Намерени са промени; обновявам] %s
 bn:[পরিবর্তন সনাক্ত হয়েছে; রিফ্রেশ করা হচ্ছে] %s
@@ -17122,7 +17124,7 @@ uz:[O'zgarishlar aniqlangan; yangilanmoqda] %s
 vn:[Phát hiện thay đổi; đang cập nhật] %s
 :copying text
 am:Տեքստը պատճենվում է
-ar:يتم حالياً نسخ النص
+ar:ناسخ النص
 az:mətnin kopyalanması
 bg:копиране на текст
 bn:লেখা কপি করা হচ্ছে
@@ -17183,7 +17185,7 @@ uz:matnni nusxa olish
 vn:đang chép văn bản
 :printing document
 am:Ֆայլը տպվում է
-ar:تتم حالياً الطباعة
+ar:طباعة المستند
 az:sənədin çap olunması
 bg:отпечатване на документ
 br:imprimindo documento
