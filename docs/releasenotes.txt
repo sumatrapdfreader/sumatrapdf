@@ -3,6 +3,15 @@ the release notes, as we make them, to make the release process easier.
 
 Next version:
 
+3.2 (????-??-??)
+
+
+3.1.1 (2015-11-01)
+* (re)add support for old processors that don't have SSE2
+* support newer versions of unrar.dll
+* allow keeping browser plugin if it's already installed
+* crash fixes
+
 3.1 (2015-10-24)
 
 * 64bit builds
