@@ -854,6 +854,11 @@ func main() {
 		verifyHasReleaseSecretsMust()
 	}
 	if flgRelease {
+		// TODO: temporary
+		if (true) {
+			err := os.Chdir(pj("..", "sumatrapdf-3.1"))
+			fataliferr(err)
+		}
 		buildRelease()
 	} else if flgPreRelease {
 		buildPreRelease()

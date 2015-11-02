@@ -6,7 +6,7 @@ Next version:
 3.2 (????-??-??)
 
 
-3.1.1 (2015-11-01)
+3.1.1 (2015-11-02)
 * (re)add support for old processors that don't have SSE2
 * support newer versions of unrar.dll
 * allow keeping browser plugin if it's already installed
