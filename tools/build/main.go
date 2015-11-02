@@ -672,7 +672,8 @@ func getCurrentBranch(d []byte) string {
 }
 
 // When doing a release build, it must be from from a branch rel${ver}working
-// e.g. rel3.1working, where ${ver} must much sumatraVersion
+// e.g. rel3.1working, where ${ver} must match first 2 digits in sumatraVersion
+// i.e. we allow 3.1.1 and 3.1.2 from branch 3.1 but not from 3.0 or 3.2
 func verifyOnReleaseBranchMust() {
 	// 'git branch' return branch name in format: '* master'
 	out := runExeMust("git", "branch")
@@ -684,7 +685,8 @@ func verifyOnReleaseBranchMust() {
 
 	ver := currBranch[len(pref):]
 	ver = ver[:len(ver)-len(suff)]
-	fatalif(ver != sumatraVersion, "version mismatch, sumatra: '%s', branch: '%s'\n", sumatraVersion, ver)
+
+	fatalif(!strings.HasPrefix(sumatraVersion, ver), "version mismatch, sumatra: '%s', branch: '%s'\n", sumatraVersion, ver)
 }
 
 func verifyOnMasterBranchMust() {
