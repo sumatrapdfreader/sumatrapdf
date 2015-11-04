@@ -171,6 +171,13 @@ func removeDirMust(dir string) {
 	fataliferr(err)
 }
 
+func removeFileMust(path string) {
+	if !fileExists(path) {
+		return
+	}
+
+}
+
 // Version must be in format x.y.z
 func verifyCorrectVersionMust(ver string) {
 	parts := strings.Split(ver, ".")

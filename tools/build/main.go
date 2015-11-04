@@ -211,8 +211,7 @@ func addZipFileMust(w *zip.Writer, path string) {
 	// or Close() call on zip.Writer
 }
 
-// TODO: implement using pigz
-func createExeZipMust(dir string) {
+func createExeZipWithGoMust(dir string) {
 	path := pj(dir, "SumatraPDF.zip")
 	f, err := os.Create(path)
 	fataliferr(err)
@@ -221,6 +220,33 @@ func createExeZipMust(dir string) {
 	addZipFileMust(zw, pj(dir, "SumatraPDF.exe"))
 	err = zw.Close()
 	fataliferr(err)
+}
+
+func createExeZipWithPigz(dir string) {
+	srcFile := "SumatraPDF.exe"
+	srcPath := filepath.Join(dir, srcFile)
+	dstFile := "SumatraPDF.zip"
+	dstPath := filepath.Join(dir, dstFile)
+	fatalif(!fileExists(srcPath), "file '%s' doesn't exist", srcPath)
+	removeFileMust(dstPath)
+	wd, err := os.Getwd()
+	fataliferr(err)
+	pigzExePath := filepath.Join(wd, "bin", "pigz.exe")
+	fatalif(!fileExists(pigzExePath), "file '%s' doesn't exist", pigzExePath)
+	cmd := exec.Command(pigzExePath, "-11", "--keep", "--zip", srcFile)
+	// in pigz we don't control the name of the file created inside so
+	// so when we run pigz the current directory is the same as
+	// the directory with the file we're compressing
+	cmd.Dir = dir
+	_, err = runCmd(cmd, true)
+	fataliferr(err)
+	fatalif(!fileExists(dstPath), "file '%x' doesn't exist", dstPath)
+}
+
+func createExeZipMust(dir string) {
+	createExeZipWithGoMust(dir)
+	// TODO: switch to it after testing it works
+	//createExeZipWithPigz(dir)
 }
 
 func createPdbZipMust(dir string) {
@@ -300,6 +326,7 @@ func buildPreRelease() {
 	s3UploadPreReleaseMust(svnPreReleaseVer)
 }
 
+// TOOD: alternatively, just puts pigz.exe in the repo
 func downloadPigzMust() {
 	uri := "https://kjkpub.s3.amazonaws.com/software/pigz/2.3.1-149/pigz.exe"
 	path := pj("bin", "pigz.exe")
