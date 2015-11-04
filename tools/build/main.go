@@ -225,28 +225,41 @@ func createExeZipWithGoMust(dir string) {
 func createExeZipWithPigz(dir string) {
 	srcFile := "SumatraPDF.exe"
 	srcPath := filepath.Join(dir, srcFile)
+	fatalif(!fileExists(srcPath), "file '%s' doesn't exist\n", srcPath)
+
+	// this is the file that pigz.exe will create
+	dstFileTmp := "SumatraPDF.exe.zip"
+	dstPathTmp := filepath.Join(dir, dstFileTmp)
+	removeFileMust(dstPathTmp)
+
+	// this is the file we want at the end
 	dstFile := "SumatraPDF.zip"
 	dstPath := filepath.Join(dir, dstFile)
-	fatalif(!fileExists(srcPath), "file '%s' doesn't exist", srcPath)
 	removeFileMust(dstPath)
+
 	wd, err := os.Getwd()
 	fataliferr(err)
 	pigzExePath := filepath.Join(wd, "bin", "pigz.exe")
-	fatalif(!fileExists(pigzExePath), "file '%s' doesn't exist", pigzExePath)
+	fatalif(!fileExists(pigzExePath), "file '%s' doesn't exist\n", pigzExePath)
 	cmd := exec.Command(pigzExePath, "-11", "--keep", "--zip", srcFile)
 	// in pigz we don't control the name of the file created inside so
 	// so when we run pigz the current directory is the same as
 	// the directory with the file we're compressing
 	cmd.Dir = dir
+	fmt.Printf("Running %s\n", cmd.Args)
 	_, err = runCmd(cmd, true)
 	fataliferr(err)
-	fatalif(!fileExists(dstPath), "file '%x' doesn't exist", dstPath)
+
+	fatalif(!fileExists(dstPathTmp), "file '%s' doesn't exist\n", dstPathTmp)
+	err = os.Rename(dstPathTmp, dstPath)
+	fataliferr(err)
 }
 
+// createExeZipWithGoMust() is faster, createExeZipWithPigz() generates slightly
+// smaller files
 func createExeZipMust(dir string) {
-	createExeZipWithGoMust(dir)
-	// TODO: switch to it after testing it works
-	//createExeZipWithPigz(dir)
+	//createExeZipWithGoMust(dir)
+	createExeZipWithPigz(dir)
 }
 
 func createPdbZipMust(dir string) {
@@ -322,7 +335,6 @@ func buildPreRelease() {
 	createPdbLzsaMust("rel64")
 
 	createManifestMust()
-	s3DeleteOldestPreRel()
 	s3UploadPreReleaseMust(svnPreReleaseVer)
 }
 
@@ -651,6 +663,8 @@ func s3UploadPreReleaseMust(ver string) {
 		fmt.Printf("Skipping pre-release upload to s3 because -upload flag not given\n")
 		return
 	}
+
+	s3DeleteOldestPreRel()
 
 	prefix := fmt.Sprintf("SumatraPDF-prerelease-%s", ver)
 	manifestRemotePath := s3PreRelDir + prefix + "-manifest.txt"

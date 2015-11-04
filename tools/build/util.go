@@ -175,7 +175,8 @@ func removeFileMust(path string) {
 	if !fileExists(path) {
 		return
 	}
-
+	err := os.Remove(path)
+	fataliferr(err)
 }
 
 // Version must be in format x.y.z
