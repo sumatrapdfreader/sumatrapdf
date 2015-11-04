@@ -220,15 +220,15 @@ func httpDlMust(uri string) []byte {
 
 func httpDlToFileMust(uri string, path string, sha1Hex string) {
 	if fileExists(path) {
+		sha1File, err := fileSha1Hex(path)
+		fataliferr(err)
+		fatalif(sha1File != sha1Hex, "file '%s' exists but has sha1 of %s and we expected %s", path, sha1File, sha1Hex)
 		return
 	}
-	sha1File, err := fileSha1Hex(path)
-	fataliferr(err)
-	fatalif(sha1File != sha1Hex, "file '%s' exists but has sha1 of %s and we expected %s", path, sha1File, sha1Hex)
 	fmt.Printf("Downloading '%s'\n", uri)
 	d := httpDlMust(uri)
-	sha1File = dataSha1Hex(d)
+	sha1File := dataSha1Hex(d)
 	fatalif(sha1File != sha1Hex, "downloaded '%s' but it has sha1 of %s and we expected %s", uri, sha1File, sha1Hex)
-	err = ioutil.WriteFile(path, d, 0755)
+	err := ioutil.WriteFile(path, d, 0755)
 	fataliferr(err)
 }
