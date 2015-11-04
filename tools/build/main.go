@@ -263,6 +263,8 @@ func buildPreRelease() {
 
 	verifyTranslationsMust()
 
+	downloadPigzMust()
+
 	setBuildConfig(gitSha1, svnPreReleaseVer)
 	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:SumatraPDF;SumatraPDF-no-MUPDF;Uninstaller;test_util", "/p:Configuration=Release;Platform=Win32", "/m")
 	fataliferr(err)
@@ -298,6 +300,13 @@ func buildPreRelease() {
 	s3UploadPreReleaseMust(svnPreReleaseVer)
 }
 
+func downloadPigzMust() {
+	uri := "https://kjkpub.s3.amazonaws.com/software/pigz/2.3.1-149/pigz.exe"
+	path := pj("bin", "pigz.exe")
+	sha1 := "10a2d3e3cafbad083972d6498fee4dc7df603c04"
+	httpDlToFileMust(uri, path, sha1)
+}
+
 func buildRelease() {
 	var err error
 
@@ -307,6 +316,8 @@ func buildRelease() {
 	verifyReleaseNotInS3Must(sumatraVersion)
 
 	verifyTranslationsMust()
+
+	downloadPigzMust()
 
 	setBuildConfig(gitSha1, "")
 	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:SumatraPDF;SumatraPDF-no-MUPDF;Uninstaller;test_util", "/p:Configuration=Release;Platform=Win32", "/m")

@@ -33,6 +33,7 @@ relPrefast64/
 dbg/
 dbg64/
 bin/cmapdump.exe
+bin/pigz.exe
 drmemlogs/
 src/utils/BuildConfig.h
 *.vspx
