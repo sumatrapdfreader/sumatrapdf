@@ -875,8 +875,7 @@ func main() {
 	//testBuildLzsa()
 	//testS3Upload()
 
-	// TODO: temporary
-	if true {
+	if false {
 		err := os.Chdir(pj("..", "sumatrapdf-3.1"))
 		fataliferr(err)
 	}
