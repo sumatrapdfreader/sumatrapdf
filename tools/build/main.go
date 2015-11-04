@@ -23,7 +23,7 @@ To run:
  - restart so that PATH changes take place
  - set GOPATH env variable (e.g. to %USERPROFILE%\src\go)
  - install goamz: go get github.com/goamz/goamz/s3
-* see .\scripts\build-release.bat for how to run it
+* see scripts\build-release.bat for how to run it
 */
 
 /*
@@ -199,25 +199,27 @@ func addZipFileMust(w *zip.Writer, path string) {
 	fih, err := zip.FileInfoHeader(fi)
 	fataliferr(err)
 	fih.Name = filepath.Base(path)
+	fih.Method = zip.Deflate
 	d, err := ioutil.ReadFile(path)
 	fataliferr(err)
-	f, err := w.CreateHeader(fih)
+	fw, err := w.CreateHeader(fih)
 	fataliferr(err)
-	_, err = f.Write(d)
+	_, err = fw.Write(d)
 	fataliferr(err)
-	// no need to close f. It's implicitly closed by the next Create(), CreateHeader() or Close() call
+	// fw is just a io.Writer so we can't Close() it. It's not necessary as
+	// it's implicitly closed by the next Create(), CreateHeader()
+	// or Close() call on zip.Writer
 }
 
+// TODO: implement using pigz
 func createExeZipMust(dir string) {
 	path := pj(dir, "SumatraPDF.zip")
 	f, err := os.Create(path)
 	fataliferr(err)
 	defer f.Close()
-	w := zip.NewWriter(f)
-
-	addZipFileMust(w, pj(dir, "SumatraPDF.exe"))
-
-	err = w.Close()
+	zw := zip.NewWriter(f)
+	addZipFileMust(zw, pj(dir, "SumatraPDF.exe"))
+	err = zw.Close()
 	fataliferr(err)
 }
 
