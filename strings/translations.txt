@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-ed98858538424fe942555e2080e860656c811c4e
+69406679ee68cbca7ec4b27299792712ae11e2ce
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -161,6 +161,7 @@ eu:Au&kera aurreratuak...
 fa:تنظیمات پیشرفته
 fi:&Lisäasetukset...
 fr:Options &avancées…
+ga:&Ardroghanna...
 gl:&Opcións avanzadas...
 he:הגדרות מתקדמות...
 hr:N&apredne mogućnosti
@@ -1853,6 +1854,7 @@ eu:A&ukerak
 fa:&گزینه‌ها
 fi:&Asetukset
 fr:&Options
+ga:&Roghanna
 gl:&Opcións
 he:אפשרויות
 hr:P&ostavke
@@ -3007,6 +3009,7 @@ eu:Lei&hoa
 fa:&پنجره
 fi:Ikkuna
 fr:F&enêtre
+ga:&Fuinneog
 he:&חלון
 hr:P&rozor
 hu:&Ablak
@@ -3553,7 +3556,7 @@ eu:Gehitu Gogokoenetara
 fa:افزودن به علاقه‌مندی‌ها
 fi:Lisää suosikkeihin
 fr:Ajouter aux favoris
-ga:Cuir le na ceanáin
+ga:Cuir leis na ceanáin
 gl:Engadir a favoritos
 he:הוסף למועדפים
 hi:पसंदीदा सूचि में जोड़ें
@@ -3869,6 +3872,7 @@ eu:Zihur zaude SumatraPDF kentzea nahi duzula?
 fa:آیا برای پاک کردن برنامه‌ی سوماترا پی‌دی‌اف مطمئن هستید؟
 fi:Oletko varma, että haluat poistaa SumatraPDF:n?
 fr:Êtes-vous certain de vouloir désinstaller SumatraPDF ?
+ga:An bhfuil tú cinnte gur mian leat SumatraPDF a dhíshuiteáil?
 gl:Seguro que queres desinstalar SumatraPDF?
 he:האם אתה בטוח שברצונך להסיר את SumatraPDF?
 hi:अस्थायी निर्देशिका नहीं बना सका
@@ -5063,6 +5067,7 @@ eu:Itxi
 fa:بستن
 fi:Sulje
 fr:Fermer
+ga:Dún
 gl:Pechar
 he:סגור
 hi:Close
@@ -5856,6 +5861,7 @@ eu:Ezinezkoa aldibaterako zuzenbidea sortzea
 fa:نمی‌توان پوشه‌ی موقت را ایجاد کرد
 fi:Väliaikaiskansion luominen epäonnistui
 fr:Impossible de créer un répertoire temporaire
+ga:Níorbh fhéidir comhadlann sealadach a chruthú
 gl:Non se puido crear o cartafol temporal
 he:יצירת תיקייה זמנית נכשלה.
 hi:अस्थायी निर्देशिका नहीं बना सका
@@ -5910,6 +5916,7 @@ eu:Ezinezkoa ezarpen zuzenbidea sortzea
 fa:نمی‌توان پوشه‌ی نصب را ایجاد کرد
 fi:Asennuskansion luominen epäonnistui
 fr:Impossible de créer le répertoire d'installation
+ga:Níorbh fhéidir an chomhadlann suiteála a chruthú
 gl:Non se puido crear o cartafol de instalación
 he:יצירת תיקיית התקנה נכשלה.
 hi:अस्थायी निर्देशिका नहीं बना सका
@@ -6024,6 +6031,7 @@ eu:Ezinezkoa PDF aurreikustatzailea ezartzea
 fa:نمی‌توان پیش‌نمایشگر PDF را نصب کرد.
 fi:PDF-esikatselijan asentaminen epäonnistui
 fr:Impossible d'installer l'aperçu PDF
+ga:Níorbh fhéidir réamhamharcóir PDF a shuiteáil
 gl:Non se puido instalado o previsualizador de PDF
 he:התקנת תצוגה מקדימה לקובצי PDF נכשלה.
 hr:Nemoguće instalirati PDF preglednik
@@ -6076,6 +6084,7 @@ eu:Ezinezkoa PDF bilaketa iragazkia ezartzea
 fa:نمی‌توان فیلتر جستجوی PDF را نصب کرد.
 fi:PDF-hakusuodattimen asentaminen epäonnistui
 fr:Impossible d'installer le filtre de recherche PDF
+ga:Níorbh fhéidir scagaire cuardaigh PDF a shuiteáil
 gl:Non se puido instalar o filtro de busca de PDF
 he:התקנת מסנן חיפוש ל- PDF נכשלה.
 hr:Nemoguće instalirati PDF filter pretraživanja
@@ -6128,6 +6137,7 @@ eu:Ezinezkoa aldibaterako zuzenbidea lortzea
 fa:دسترسی به پوشه‌ی موقت مقدور نیست
 fi:Väliaikaishakemiston käyttäminen epäonnistui
 fr:Impossible d'obtenir un répertoire temporaire
+ga:Níorbh fhéidir an chomhadlann sealadach a fháil
 gl:Non se puido obter o cartafol temporal
 he:הגישה לתיקייה הזמנית נכשלה.
 hr:Nemoguće dobiti privremenu mapu
@@ -6179,6 +6189,7 @@ eu:Ezinezkoa ezarpen zuzenbidea kentzea
 fa:نمی‌توان پوشه‌ی نصب را حذف کرد
 fi:Asennuskansion poistaminen epäonnistui
 fr:Impossible de supprimer le répertoire d'installation
+ga:Níorbh fhéidir an chomhadlann suiteála a bhaint
 gl:Non se puido eliminar o cartafol de instalación
 he:הסרת תיקיית ההתקנה נכשלה.
 hr:Nemoguće ukloniti instalacijsku mapu
@@ -6231,6 +6242,7 @@ eu:Ezinezkoa lastertekla kentzea
 fa:نمی‌توان میانبر را حذف کرد
 fi:Pikakuvakkeen poistaminen epäonnistui
 fr:Impossible de supprimer le raccourci
+ga:Ní féidir an t-aicearra a bhaint
 gl:Non se puido eliminar o atallo
 he:הסרת קיצור דרך נכשלה.
 hr:Nemoguće ukloniti prečac
@@ -6344,6 +6356,7 @@ eu:Ezinezkoa PDF aurreikustatzailea kentzea
 fa:نمی‌توان پیش‌نمایشگر PDF را پاک کرد
 fi:PDF-esikatselijan poistaminen epäonnistui
 fr:Impossible de désinstaller l'aperçu PDF
+ga:Níorbh fhéidir an réamhamharcóir PDF a dhíshuiteáil
 gl:Non se puido desinstalar o previsualizador de PDFs
 he:הסרת כלי תצוגה מקדימה ל- PDF נכשלה.
 hr:Nemoguće deinstalirati PDF preglednik
@@ -6395,6 +6408,7 @@ eu:Ezinezkoa PDF bilaketa iragazkia kentzea
 fa:نمی‌توان فیلتر جستجوی PDF را پاک کرد
 fi:PDF-hakusuodattimen poistaminen epäonnistui
 fr:Impossible de désinstaller le filtre de recherche PDF
+ga:Níorbh fhéidir an scagaire cuardaigh PDF a dhíshuiteáil
 gl:Non se puido desinstalar o filtro de buscas de PDF
 he:הסרת מסנן חיפוש ל- PDF נכשלה.
 hr:Nemoguće deinstalirati PDF filter pretraživnja
@@ -6447,6 +6461,7 @@ eu:Ezinezkoa nabigatzaile plugina kentzea
 fa:نمی‌توان افزونه‌ی مرورگر را پاک کرد
 fi:Selainliitännäisen poistaminen epäonnistui
 fr:Impossible de désinstalle le plug-in du navigateur
+ga:Níorbh fhéidir an breiseán don líonléitheoir a dhíshuiteáil
 gl:Non se puido desinstalar o engadido do navegador
 he:הסרת התוסף לדפדפן נכשלה.
 hr:Nemoguće deinstalirati dodatak za internet preglednik
@@ -6499,6 +6514,7 @@ eu:Ezinezkoa %s diskara idaztea
 fa:نمی‌توان %s را روی دیسک نوشت
 fi:Levylle kirjoittaminen epäonnistui: %s
 fr:Impossible d'écrire %s sur le disque
+ga:Níorbh fhéidir %s a scríobh chuig an diosca
 gl:Non se puido escribir %s no disco
 he:כתיבת %s לדיסק נכשלה.
 hr:Nemoguće zapisati %s na disk
@@ -6671,6 +6687,7 @@ eu:Kurtsorearen kokapena:
 fa:موقعیت مکان‌نما
 fi:Kohdistimen sijainti:
 fr:Position du curseur :
+ga:Suíomh an chúrsóra:
 he:מיקום סמן:
 hr:Pozicija pokazivača:
 hu:Kurzor pozíció:
@@ -7837,6 +7854,7 @@ eu:Hutsegitea kentzailea aldibaterako zuzenbidra kopiatzerakoan
 fa:کپی کردن برنامه‌ی حذف به پوشه‌ی موقت ناموفق بود
 fi:Poisto-ohjelman kopioiminen väliaikaiskansioon epäonnistui
 fr:La copie du désinstalleur dans un répertoire temporaire a échoué
+ga:Theip air an díshuiteálaí a mhacasamhlú chuig an chomhadlann sealadach
 gl:Fallou a copia do desinstalador no cartafol temporal
 he:העתקת מסיר התוכנה לתיקייה הזמנית נכשלה.
 hr:Neuspjeh kod kopiranju deinstalera u privremenu mapu
@@ -7888,6 +7906,7 @@ eu:Hutsegitea lasterbidea sortzerakoan
 fa:خطا در ایجاد میانبر
 fi:Pikakuvakkeen luominen epäonnistui
 fr:Impossible de créer un raccourci
+ga:Theip air aicearra a chruthú
 gl:Fallou a creación do atallo
 he:יצירת קיצור דרך נכשלה.
 hr:Neuspjeh u kreiranju prečaca
@@ -7940,6 +7959,7 @@ eu:Hutsegitea kentzaile erregistro giltzak ezabatzerakoan
 fa:کلیدهای رجیستری برنامه‌ی حذف پاک نشد
 fi:Poisto-ohjelman rekisteriavainten poistaminen epäonnistui
 fr:La suppression des clés de la base de registre du désinstalleur a échoué
+ga:Theip air eochracha clárlainne an díshuiteálaithe a scriosadh
 gl:Fallou o borrado das claves de rexistro
 he:מחיקת מפתחות רישום של מסיר התוכנה נכשלה.
 hr:Neuspjeh kod brisanja ključeva registra deinstalatera
@@ -8114,6 +8134,7 @@ eu:Hutsegitea agiri hedatu hedapen argibideak erregistroan idazterakoan
 fa:ثبت اطلاعات ارسال شده با پسوند طولانی ناموفق
 fi:Tiedostopäätetietojen kirjoittaminen rekisteriin epäonnistui
 fr:L'écriture dans la base de registre des informations étendues de l'extension de fichier a échoué
+ga:Theip air faisnéis fhairsingthe iarmhír comhadainm a scríobh chuig an chlárlann
 gl:Non se puido escribir a información de extensión do ficheiro no rexistro
 he:כתיבת נתוני סיומת קבצים ברישום נכשלה.
 hr:Neuspjeh kod zapisivanja produženih informacija nastavka datoteke u registru
@@ -8164,6 +8185,7 @@ eu:Hutsegitea kentze argibideak erregistroan idazterakoan
 fa:ثبت اطلاعات فرآیند حذف در رجیستری ناموفق بود
 fi:Poistamistietojen kirjoittaminen rekisteriin epäonnistui
 fr:L'écriture des informations de désinstallation dans la base de registre a échoué
+ga:Theip air an fhaisnéis díshuiteálaithe a scríobh chuig an chlárlann
 gl:Fallouse ao escribir a información de desintalación no rexistro
 he:כתיבת נתוני הסרת התוכנה ברישום נכשלה.
 hr:Neuspjeh kod zapisivanja deinstalacijskih informacija u registar
@@ -8327,6 +8349,7 @@ eu:FikzioLiburu agiriak
 fa:اسناد FictionBook
 fi:FictionBook-asiakirjat
 fr:Documents FictionBook
+ga:Cáipéisí FictionBook
 gl:Documentos FictionBook
 he:קובצי FictionBook
 hi:गल्प बुक दस्तावेजों
@@ -9822,6 +9845,7 @@ eu:Ezkuta A&ukerak
 fa:مخفی کردن &گزینه‌ها
 fi:Piilota
 fr:Masque les &options
+ga:Cuir na roghanna i bhfolach
 gl:Agochar as &opcións
 he:הסתר אפשרויות
 hr:Sakrij postavke
@@ -10047,6 +10071,7 @@ eu:Ezarri SumatraPDF
 fa:نصب کردن SumatraPDF
 fi:Asenna SumatraPDF
 fr:Installer SumatraPDF
+ga:Suiteáil SumatraPDF
 gl:Instalar SumatraPDF
 he:התקן את SumatraPDF
 hr:Instaliraj SumatraPDF
@@ -10098,6 +10123,7 @@ eu:Ezarri Su&matraPDF agiritegi honetan:
 fa:SumatraPDF را در این &پوشه نصب کن:
 fi:Asenna SumatraPDF kansioon:
 fr:Installer SumatraPDF dans le répertoire :
+ga:Suiteáil SumatraPDF sa bh&fillteán seo:
 gl:Instalar SumatraPDF no &cartafol:
 he:התקן את SumatraPDF בתיקייה:
 hr:Instaliraj SumatraPDF u &mapu:
@@ -10150,6 +10176,7 @@ eu:Ezarpen hutsegitea!
 fa:ایراد در نصب
 fi:Asentaminen epäonnistui!
 fr:Échec de l'installation !
+ga:Theip ar an suiteáil!
 gl:Fallou a instalación!
 he:התקנת SumatraPDF נכשלה.
 hr:Instalacija nije uspjela!
@@ -10202,6 +10229,7 @@ eu:Ezarpena garatzen...
 fa:در حال نصب...
 fi:Asennus käynnissä...
 fr:Installation en cours…
+ga:Suiteáil ar siúl...
 gl:Instalación en curso...
 he:מתקין את SumatraPDF...
 hr:Instaliranje...
@@ -10322,6 +10350,7 @@ eu:Eduki PDF &nabigatzaile plugina ezarrita (sostengu gabe aurrerantzean)
 fa:افزونه‌ی PDF نصب شده روی مرورگر باقی بماند (دیگر پشتیبانی نمی‌شود)
 fi:Pidä PDF-selainlaajennus asennettuna (ei enää tuettu)
 fr:Conserver le plugin pour navigateur (plus de support)
+ga:Coinnigh suiteáilte an breiseán don líonléitheoir PDF (ní thugtar tacaíocht dó feasta)
 he:השאר את תוסף PDF לדפדפנים (התוסף אינו נתמך עוד)
 hr:Zadrži PDF &browser dodatak instaliran (više nije podržano)
 hu:Hagyja a PDF böngésző beépülőt telepítve (már nem támogatott)
@@ -10367,6 +10396,7 @@ eu:&Utzi Windows Mahaigain Bilaketari PDF agiriak bilatzen
 fa:جستجوگر ویندوز امکان &جستجو در اسناد PDF را داشته باشد
 fi:&Anna Windowsin hakutoiminnon etsiä PDF-asiakirjoista
 fr:Permettre à Windows Desktop Search la recherche de documents PDF
+ga:Lig do Chuardach Deasca Windows cáipéisí PDF a chuardach
 gl:Deixar que o buscador de escritorio de Windos &busque nos documentos de PDF
 he:אפשר חיפוש קובצי PDF במערכת החיפוש של Windows
 hr:Neka Windows pretraga radne površine &pretražuje PDF dokumente
@@ -10417,6 +10447,7 @@ eu:Utzi &Windowsi PDF agirien aurreikuspenak erakusten
 fa:ویندوز امکان پیش‌نمایش اسناد PDF را داشته باشد
 fi:Anna Windowsin näyttää &esikatselukuvat PDF-asiakirjoille
 fr:Permettre à Windows de montrer des a&perçus des documents PDF
+ga:Lig do Windows réamhamhairc de cháipéisí PDF a thaispeáint
 gl:Deixar que Windows mostre &previsualizacións de documentos PDF
 he:אפשר תצוגה מקדימה של קובצי PDF
 hr:Neka Windows prikazuje &pregled PDF dokumenata
@@ -10673,6 +10704,7 @@ eu:Ma&nga Modua
 fa:حالت مانگا
 fi:Man&ga-moodi
 fr:Mode man&ga
+ga:Mód Man&ga
 gl:Modo Man&ga
 he:מצב Manga
 hr:Man&ga način
@@ -11598,6 +11630,7 @@ eu:Irekitzea %s
 fa:باز کردن در %s
 fi:Avaa ohjelmassa %s
 fr:Ouvrir dans %s
+ga:Oscail i %s
 gl:Abrir en %s
 he:פתח ב- %s
 hr:Otvori u %s
@@ -12676,6 +12709,7 @@ es:Documentos PalmDoc
 et:PalmDoc-dokumendid
 eu:PalmDoc agiriak
 fr:Fichiers PalmDoc
+ga:Cáipéisí PalmDoc
 he:קובצי PalmDoc
 hr:PalmDoc dokumenti
 hu:PalmDoc dokumentumok
@@ -12722,6 +12756,7 @@ eu:Mesedez itxi %s jarraitzeko!
 fa:پیش از ادامه لطفا %s را ببندید!
 fi:Sulje %s jatkaaksesi!
 fr:Fermez %s pour continuer, s.v.p. !
+ga:Dún %s le do thoil chun dul ar aghaidh!
 gl:Peche %s para continuar
 he:להמשך, אנא סגור את %s!
 hr:Molim zatvorite %s za nastavak!
@@ -13188,6 +13223,7 @@ eu:Irarketa garatzen.
 fa:فرآیند چاپ در جریان است.
 fi:Tulostaminen käynnissä.
 fr:Impression en cours
+ga:Clóbhualadh ar siúl.
 gl:Impresión en curso.
 he:הדפסה מתבצעת.
 hi:छपाई में प्रगति.
@@ -13242,6 +13278,7 @@ eu:Irarketa oraindik garatzen ari da. Eten eta utzi?
 fa:فرآیند چاپ هنوز در جریان است. انصراف و خروج؟
 fi:Tulostaminen on edelleen käynnissä. Keskeytä ja lopeta?
 fr:Impression toujours en cours. Annuler et quitter ?
+ga:Tá clóbhuladh fós ar siúl. Tobscoir agus dún?
 gl:Ainda se está imprimindo. Quere detela e saír?
 he:תהליך ההדפסה עדיין לא הסתיים. לבטל ולצאת?
 hi:छपाई अभी भी प्रगति पर है | रद्द किजिये और दें छोड़ दें ?
@@ -14256,6 +14293,7 @@ eu:Hautatu SumatraPDF ezarri behar den agiritegia:
 fa:پوشه‌ای را برای نصب Sumatra PDF انتخاب کنید:
 fi:Valitse kansio, johon SumatraPDF asennetaan:
 fr:Sélectionner le répertoire d'installation de SumatraPDF :
+ga:Roghnaigh an fillteán inar chóir SumatraPDF a shuiteáil:
 gl:Escolla o cartafol onde quere instalar SumatraPDF
 he:בחר את תיקיית ההתקנה של SumatraPDF:
 hr:Odaberite mapu gdje bi trebalo instalirati SumatraPDF:
@@ -14305,6 +14343,7 @@ eu:Hautatpena:
 fa:انتخاب
 fi:Valinta:
 fr:Sélection :
+ga:Roghnúchán
 he:בחירה:
 hr:Odabir:
 hu:Kijelölés:
@@ -14903,6 +14942,7 @@ eu:Ezarritako zenbait agiri hondatuta edo galduta daude
 fa:بعضی از فایل‌های نصب خراب هستند یا وجود ندارند
 fi:Osa asennettavista tiedostoista on vahingoittuneita tai ne puuttuvat
 fr:Des fichiers prévus pour l'installation sont endommagés ou manquants
+ga:Tá díobháil déanta de roinnt de na comhaid atá le suiteáil nó tá siad in easnamh
 gl:Algúns ficheiros que se precisan instalar están danados ou faltan
 he:קובצי התקנה מסוימים פגומים או חסרים.
 hr:Neke datoteke za instalaciju su oštećene ili nedostaju
@@ -15071,6 +15111,7 @@ eu:Abiarazi SumatraPDF
 fa:اجرای Sumatra PDF
 fi:Avaa SumatraPDF
 fr:Lancer SumatraPDF
+ga:Tosaigh SumatraPDF
 gl:Iniciar SumatraPDF
 he:הפעל את SumatraPDF
 hi:SumatraPDF शुरू
@@ -15184,6 +15225,7 @@ eu:SumatraPDF %s Ezartzailea
 fa:نصب کننده SumatraPDF %s
 fi:SumatraPDF %s asennusohjelma
 fr:Installeur de SumatraPDF %s
+ga:Suiteálaí %s SumatraPDF
 gl:Instalador %s SumatraPDF
 he:התקנת SumatraPDF %s
 hr:SumatraPDF %s instaler
@@ -15234,6 +15276,7 @@ eu:SumatraPDF %s Kentzailea
 fa:حذف کننده SumatraPDF %s
 fi:SumatraPDF %s poisto-ohjelma
 fr:Désinstalleur de SumatraPDF %s
+ga:Díshuiteálaí SumatraPDF %s
 gl:Desinstalador %s SumatraPDF
 he:הסרת SumatraPDF %s
 hr:SumatraPDF %s deinstaler
@@ -15459,6 +15502,7 @@ eu:SumatraPDF kendu da.
 fa:SumatraPDF پاک شد.
 fi:SumatraPDF on poistettu.
 fr:SumatraPDF a été désinstallé.
+ga:Díshuiteáladh SumatraPDF.
 gl:Desintalouse SumatraPDF
 he:התקנת SumatraPDF הושלמה.
 hr:SumatraPDF je deinstaliran.
@@ -15509,6 +15553,7 @@ eu:SumatraPDF ezarpena ez da aurkitu.
 fa:نصب شده‌ی SumatraPDF پیدا نشد.
 fi:SumatraPDF-asennusta ei löytynyt.
 fr:Installation de SumatraPDF non trouvée
+ga:Níor aimsíodh suiteáil SumatraPDF.
 gl:Non se atopou ningunha instalación de SumatraPDF.
 he:התקנת SumatraPDF לא נמצאה.
 hr:SumatraPDF instalacija nije pronađena.
@@ -15856,6 +15901,7 @@ eu:Mila esker SumatraPDF hautatzeagaitik!
 fa:به خاطر انتخاب SumatraPDF از شما متشکریم!
 fi:Kiitos, että valitsit SumatraPDF:n!
 fr:Merci d'avoir choisi SumatraPDF !
+ga:Go raibh maith agat as ucht SumatraPDF a roghnú!
 gl:Graciñas por escoller SumatraPDF!
 he:תודה על בחירתך ב- SumatraPDF.
 hr:Hvala Vam na odabiru SumatraPDF!
@@ -15907,6 +15953,7 @@ eu:Mila esker! SumatraPDF ezarri da.
 fa:با تشکر! SumatraPDF نصب شد.
 fi:Kiitos! SumatraPDF asennettiin.
 fr:Merci ! SumatraPDF a été installé.
+ga:Go raibh maith agat! Suiteáladh SumatraPDF.
 gl:Parabéns! Xa tes SumatraPDF instalado.
 he:התקנת SumatraPDF הושלמה.
 hr:Hvala Vam! SumatraPDF je instaliran.
@@ -15958,6 +16005,7 @@ eu:Ezartzailea hondatuta dago. Mesedez jeitsi berriro.\nBarkatu eragozpenagaitik
 fa:برنامه نصب خراب شده است. لطفا دوباره دانلود کنید.\nبا عرض پوزش به خاطر اشکال به وجود آمده..
 fi:Asennusohjelma on viallinen. Lataa se uudelleen.\nAnteeksi häiriö!
 fr:L'installeur est corrompu. Veuillez le télécharger de nouveau. \nDésolé de ce désagrément !
+ga:Tá an suiteálaí truaillithe. Déan é a íosluchtú arís le do thoil.\nIs dona linn aon mhíchuibhiúlacht!
 gl:O instalador está corrompido. Descárgao de novo.
 he:קובץ ההתקנה פגום. אנא הורד שוב.
 hr:Instaler je oštećen. Molim Vas preuzmite ga ponovno.\nIsprika za tu neugodnost!
@@ -16004,6 +16052,7 @@ es:Este documento utiliza funcionalidades no admitidas (%s) y podría no mostrar
 et:See dokument sisaldab omadusi (%s), mida program ei toeta ja seetõttu ei pruugi see olla õigesti esitatud.
 eu:Agiri honek sostengatu gabeko (%s) ezaugarriak erabiltzen ditu eta badaiteke egoki ez aurkeztea
 fr:Ce document utilise des fonctionnalités non supportées (%s) et pourrait ne pas s'afficher correctement
+ga:Baineann an cháipéis seo feidhm as gnéithe (%s) nach dtugtar tacaíocht dóibh agus b'fhéidir nach ndéanfar iad a thaispeáint i gceart
 he:קובץ זה כולל מאפיינים שאינם נתמכים (%s), וייתכן שלא יוצג כראוי.
 hr:Ovaj dokument koristi nepodržane značajke (%s) i možda se neće ispravno prikazati
 hu:Ez a fájl nem támogatott funkciókat (%s) tartalmaz és lehet, hogy nem pontosan kerül megjelenítésre
@@ -16111,6 +16160,7 @@ eu:Kendu SumatraPDF
 fa:پاک کردن SumatraPDF
 fi:Poista SumatraPDF
 fr:Désinstaller SumatraPDF
+ga:Déan SumatraPDF a dhíshuiteáil
 gl:Desinstalar SumatraPDF
 he:הסר את SumatraPDF
 hr:Deinstaliraj SumatraPDF
@@ -16164,6 +16214,7 @@ eu:Kentze hutsegitea
 fa:پاک کردن برنامه ناموفق بود
 fi:Poistaminen epäonnistui
 fr:Échec de la désinstallation
+ga:Theip air díshuiteáil
 gl:Fallou a desinstalación
 he:הסרת SumatraPDF נכשלה.
 hr:Deinstalacija nije uspjela
@@ -16217,6 +16268,7 @@ eu:Kentzea garatzen...
 fa:فرآیند حذف برنامه در جریان است...
 fi:Poistaminen käynnissä...
 fr:Désinstallation en cours…
+ga:Díshuiteáil ar siúl...
 gl:Desinstalación en procreso...
 he:מסיר את SumatraPDF...
 hr:Deinstaliranje...
@@ -16328,6 +16380,7 @@ eu:Erabili &hegatsak
 fa:استفاده از &سربرگ
 fi:Käytä välilehtiä
 fr:Utiliser les ongle&ts
+ga:Bain feidhm as &cluaisíní
 he:השתמש בלשוניות
 hr:Koristi &kartice
 hu:Fülek használata
@@ -16375,6 +16428,7 @@ eu:Erabili SumatraP&DF berezko PDF irakurtzaile bezala
 fa:استفاده از SumatraPDF به عنوان پی‌دی‌اف خوان &پیشفرض
 fi:Käytä SumatraPDF:ää PDF-asiakirjojen oletuslukijana
 fr:Choisir SumatraPDF comme lecteur PDF par &défaut
+ga:Bain feidhm as SumatraPDF mar an léitheoir PDF réamhshocraithe
 gl:Emprega SumatraPDF como o lector de PDF por &defecto
 he:הגדר את SumatraPDF כתוכנת ברירת מחדל לקובצי PDF
 hr:Koristi SumatraPDF kao zadani PDF preglednik

@@ -7,7 +7,7 @@
 
 namespace trans {
 
-#define LANGS_COUNT   50
+#define LANGS_COUNT   51
 #define STRINGS_COUNT 42
 
 const char *gOriginalStrings[STRINGS_COUNT] = {
@@ -1069,6 +1069,50 @@ const char * gTranslations_id =
   "Proses uninstall gagal.\0"\
   "Proses uninstall sedang berjalan...\0"\
   "Gunakan SumatraPDF sebagai pembaca PDF standar.\0";
+
+const char * gTranslations_ga = 
+  "&Roghanna\0"\
+  "An bhfuil t\303\272 cinnte gur mian leat SumatraPDF a dh\303\255shuite\303\241il?\0"\
+  "D\303\272n\0"\
+  "N\303\255orbh fh\303\251idir comhadlann sealadach a chruth\303\272\0"\
+  "N\303\255orbh fh\303\251idir an chomhadlann suite\303\241la a chruth\303\272\0"\
+  "N\303\255orbh fh\303\251idir r\303\251amhamharc\303\263ir PDF a shuite\303\241il\0"\
+  "N\303\255orbh fh\303\251idir scagaire cuardaigh PDF a shuite\303\241il\0"\
+  "N\303\255orbh fh\303\251idir an chomhadlann sealadach a fh\303\241il\0"\
+  "N\303\255orbh fh\303\251idir an chomhadlann suite\303\241la a bhaint\0"\
+  "N\303\255 f\303\251idir an t-aicearra a bhaint\0"\
+  "N\303\255orbh fh\303\251idir an r\303\251amhamharc\303\263ir PDF a dh\303\255shuite\303\241il\0"\
+  "N\303\255orbh fh\303\251idir an scagaire cuardaigh PDF a dh\303\255shuite\303\241il\0"\
+  "N\303\255orbh fh\303\251idir an breise\303\241n don l\303\255onl\303\251itheoir a dh\303\255shuite\303\241il\0"\
+  "N\303\255orbh fh\303\251idir %s a scr\303\255obh chuig an diosca\0"\
+  "Theip air an d\303\255shuite\303\241la\303\255 a mhacasamhl\303\272 chuig an chomhadlann sealadach\0"\
+  "Theip air aicearra a chruth\303\272\0"\
+  "Theip air eochracha cl\303\241rlainne an d\303\255shuite\303\241laithe a scriosadh\0"\
+  "Theip air faisn\303\251is fhairsingthe iarmh\303\255r comhadainm a scr\303\255obh chuig an chl\303\241rlann\0"\
+  "Theip air an fhaisn\303\251is d\303\255shuite\303\241laithe a scr\303\255obh chuig an chl\303\241rlann\0"\
+  "Cuir na roghanna i bhfolach\0"\
+  "Suite\303\241il SumatraPDF\0"\
+  "Suite\303\241il SumatraPDF sa bh&fillte\303\241n seo:\0"\
+  "Theip ar an suite\303\241il!\0"\
+  "Suite\303\241il ar si\303\272l...\0"\
+  "Coinnigh suite\303\241ilte an breise\303\241n don l\303\255onl\303\251itheoir PDF (n\303\255 thugtar taca\303\255ocht d\303\263 feasta)\0"\
+  "Lig do Chuardach Deasca Windows c\303\241ip\303\251is\303\255 PDF a chuardach\0"\
+  "Lig do Windows r\303\251amhamhairc de ch\303\241ip\303\251is\303\255 PDF a thaispe\303\241int\0"\
+  "D\303\272n %s le do thoil chun dul ar aghaidh!\0"\
+  "Roghnaigh an fillte\303\241n inar ch\303\263ir SumatraPDF a shuite\303\241il:\0"\
+  "T\303\241 d\303\255obh\303\241il d\303\251anta de roinnt de na comhaid at\303\241 le suite\303\241il n\303\263 t\303\241 siad in easnamh\0"\
+  "Tosaigh SumatraPDF\0"\
+  "Suite\303\241la\303\255 %s SumatraPDF\0"\
+  "D\303\255shuite\303\241la\303\255 SumatraPDF %s\0"\
+  "D\303\255shuite\303\241ladh SumatraPDF.\0"\
+  "N\303\255or aims\303\255odh suite\303\241il SumatraPDF.\0"\
+  "Go raibh maith agat as ucht SumatraPDF a roghn\303\272!\0"\
+  "Go raibh maith agat! Suite\303\241ladh SumatraPDF.\0"\
+  "T\303\241 an suite\303\241la\303\255 truaillithe. D\303\251an \303\251 a \303\255oslucht\303\272 ar\303\255s le do thoil.\nIs dona linn aon mh\303\255chuibhi\303\272lacht!\0"\
+  "D\303\251an SumatraPDF a dh\303\255shuite\303\241il\0"\
+  "Theip air d\303\255shuite\303\241il\0"\
+  "D\303\255shuite\303\241il ar si\303\272l...\0"\
+  "Bain feidhm as SumatraPDF mar an l\303\251itheoir PDF r\303\251amhshocraithe\0";
 
 const char * gTranslations_it = 
   "&Opzioni\0"\
@@ -2240,6 +2284,7 @@ static const char *gTranslations[LANGS_COUNT] = {
   gTranslations_he, 
   gTranslations_hu, 
   gTranslations_id, 
+  gTranslations_ga, 
   gTranslations_it, 
   gTranslations_ja, 
   gTranslations_kr, 
@@ -2295,6 +2340,7 @@ const char *gLangCodes =   "en\0" \
   "he\0" \
   "hu\0" \
   "id\0" \
+  "ga\0" \
   "it\0" \
   "ja\0" \
   "kr\0" \
@@ -2346,6 +2392,7 @@ const char *gLangNames =   "English\0" \
   "Hebrew (\327\242\327\221\327\250\327\231\327\252)\0" \
   "Hungarian (Magyar)\0" \
   "Indonesian (Bahasa Indonesia)\0" \
+  "Irish (Gaeilge)\0" \
   "Italian (Italiano)\0" \
   "Japanese (\346\227\245\346\234\254\350\252\236)\0" \
   "Korean (\355\225\234\352\265\255\354\226\264)\0" \
@@ -2409,6 +2456,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
   _LANGID(LANG_HEBREW),
   _LANGID(LANG_HUNGARIAN),
   _LANGID(LANG_INDONESIAN),
+  _LANGID(LANG_IRISH),
   _LANGID(LANG_ITALIAN),
   _LANGID(LANG_JAPANESE),
   _LANGID(LANG_KOREAN),
@@ -2440,7 +2488,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
 
 bool IsLangRtl(int idx)
 {
-  return (2 == idx) || (21 == idx) || (27 == idx) || (32 == idx);
+  return (2 == idx) || (21 == idx) || (28 == idx) || (33 == idx);
 }
 
 int gLangsCount = LANGS_COUNT;

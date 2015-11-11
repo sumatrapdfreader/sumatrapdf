@@ -6713,7 +6713,7 @@ const char * gTranslations_id =
 const char * gTranslations_ga = 
   "Maidir le\0"\
   "&F\303\255ormh\303\251id\tCtrl+1\0"\
-  "\0"\
+  "&Ardroghanna...\0"\
   "&Gach leathanach roghnaithe\0"\
   "&Siar\tAlt+Saighead Ar Cl\303\251\0"\
   "&Leabhar-amharc\tCtrl+8\0"\
@@ -6758,7 +6758,7 @@ const char * gTranslations_ga =
   "&N\303\241 bac leis an leagan seo\0"\
   "&Bain feidhm as m\303\251ideanna bunaidh an leathanaigh\0"\
   "&Amharc\0"\
-  "\0"\
+  "&Fuinneog\0"\
   "&D\303\251an sin\0"\
   "&Formh\303\251ad\303\272\0"\
   "(as %d)\0"\
@@ -6767,7 +6767,7 @@ const char * gTranslations_ga =
   "Cuir cean\303\241n leis\0"\
   "Cuir leathanach a %s le na cean\303\241in\0"\
   "Cuir leathanach a %s le na cean\303\241in le ainm (roghnach):\0"\
-  "Cuir le na cean\303\241in\0"\
+  "Cuir leis na cean\303\241in\0"\
   "Ardroghanna\0"\
   "Gach comhad\0"\
   "Gach c\303\241ip\303\251is inl\303\251ite\0"\
@@ -6806,7 +6806,7 @@ const char * gTranslations_ga =
   "N\303\255orbh fh\303\251idir an leathanach a ch\303\263iri\303\272\0"\
   "Cruthaithe:\0"\
   "Comhad reatha\0"\
-  "\0"\
+  "Su\303\255omh an ch\303\272rs\303\263ra:\0"\
   "Formh\303\251ad\303\272 saincheaptha...\tCtrl+Y\0"\
   "&Leagan amach r\303\251amhshocraithe:\0"\
   "Formh\303\251ad\303\272 r\303\251amhshocraithe:\0"\
@@ -6829,7 +6829,7 @@ const char * gTranslations_ga =
   "Theip air comhad a chuir i dtaisce\0"\
   "Gr\303\251as\303\241in dearcadh go tapa\0"\
   "Cean\303\241in\0"\
-  "\0"\
+  "C\303\241ip\303\251is\303\255 FictionBook\0"\
   "N\303\203or aims\303\203odh an comhad %s\0"\
   "M\303\251id an chomhaid:\0"\
   "Comhad:\0"\
@@ -6860,7 +6860,7 @@ const char * gTranslations_ga =
   "\0"\
   "B\303\255odh SumatraPDF mar an l\303\251itheoir PDF r\303\251amhshocruithe?\0"\
   "B\303\255odh SumatraPDF mar an l\303\251itheoir PDF r\303\251amhshocruithe\0"\
-  "\0"\
+  "M\303\263d Man&ga\0"\
   "Comhoiri\303\272naigh an c\303\241s\0"\
   "C\303\241ip\303\251is\303\255 Mobi\0"\
   "Mionathraithe:\0"\
@@ -6875,7 +6875,7 @@ const char * gTranslations_ga =
   "Oscail\0"\
   "Oscail &i PDF-XChange\0"\
   "Oscail c\303\241ip\303\251is...\0"\
-  "\0"\
+  "Oscail i %s\0"\
   "Oscail in &Adobe Reader\0"\
   "Oscail i &Foxit Reader\0"\
   "Oscail i &Microsoft HTML Help\0"\
@@ -6893,7 +6893,7 @@ const char * gTranslations_ga =
   "N\303\255l an uimhir leathanaigh %u ann\0"\
   "Sc\303\241l\303\272 leathanaigh\0"\
   "Leathanach:\0"\
-  "\0"\
+  "C\303\241ip\303\251is\303\255 PalmDoc\0"\
   "Fan le do thoil - t\303\241 s\303\251 \303\241 ch\303\263iri\303\272...\0"\
   "C\303\241ip\303\251is\303\255 Postscript\0"\
   "Cur i l\303\241thair\tCtrl+L\0"\
@@ -6901,8 +6901,8 @@ const char * gTranslations_ga =
   "Cl\303\263bhuail\0"\
   "Raon cl\303\263bhuailte\0"\
   "N\303\255l cl\303\263ire leis an ainm sin ann\0"\
-  "\0"\
-  "\0"\
+  "Cl\303\263bhualadh ar si\303\272l.\0"\
+  "T\303\241 cl\303\263bhuladh f\303\263s ar si\303\272l. Tobscoir agus d\303\272n?\0"\
   "T\303\241 s\303\251 f\303\263s ag cl\303\263bhualadh. Tobscoir agus tosaigh ar\303\255s?\0"\
   "Ag cl\303\263bhualadh leathanach a %d as %d...\0"\
   "Fadhb chl\303\263bhuailte.\0"\
@@ -6919,7 +6919,7 @@ const char * gTranslations_ga =
   "Roghnaigh Uile\0"\
   "Roghnaigh Uile\tCtrl+A\0"\
   "Roghnaigh inneachar le Ctrl+an cnaipe luch\303\263ige ar chl\303\251\0"\
-  "\0"\
+  "Roghn\303\272ch\303\241n\0"\
   "Seol i r\303\255omhphost...\0"\
   "Socruigh l\303\255ne na n-orduithe cuardaigh aisiompaithe\0"\
   "Lea&bharmharcanna a taispe\303\241int\0"\
@@ -6940,10 +6940,10 @@ const char * gTranslations_ga =
   "N\303\255 f\303\251idir an comhad comhaimseartha a oscailt\0"\
   "PDF form\303\241id chlibe\303\241ilte\0"\
   "C\303\241ip\303\251is\303\255 t\303\251acs\0"\
-  "\0"\
+  "Baineann an ch\303\241ip\303\251is seo feidhm as gn\303\251ithe (%s) nach dtugtar taca\303\255ocht d\303\263ibh agus b'fh\303\251idir nach nd\303\251anfar iad a thaispe\303\241int i gceart\0"\
   "Teideal:\0"\
   "Comhad foinse anaithnid (%s)\0"\
-  "\0"\
+  "Bain feidhm as &cluais\303\255n\303\255\0"\
   "Amharc\0"\
   "Tabhair cuairt ar an su\303\255omh idirl\303\255on\0"\
   "Rabhadh\0"\
