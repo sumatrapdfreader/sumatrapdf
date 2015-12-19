@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-69406679ee68cbca7ec4b27299792712ae11e2ce
+86fcaf171960c76e82ed11d27a65c0b27781c108
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -3285,7 +3285,7 @@ vn:(trang %s)
 :About SumatraPDF
 af:Omtrent SumatraPDF
 am:SumatraPDF-ի մասին
-ar:حول المستندات المحمولة Sumatra  
+ar:حول SumatraPDF
 az:SumatraPDF haqqında
 bg:За SumatraPDF
 bn:সুমাত্রাপিডিএফ-এর সম্পর্কে
@@ -3852,7 +3852,7 @@ vn:Ứng dụng:
 :Are you sure you want to uninstall SumatraPDF?
 af:Is jy seker jy wil SumatraPDF oninstalleer?
 am:Համոզվա՞ծ եք, որ ցանկանում եք ջնջել SumatraPDF-ը:
-ar: المحمولة؟  Sumatra هل انت متاكد تريد مسح مستندات 
+ar:؟  SumatraPDF هل انت متاكد تريد مسح 
 az:Əminsiniz ki, SumatraPDF-i silmək istəyirsiniz?
 bg:Наистина ли искате да деинсталирате SumatraPDF ?
 bn:আপনি কি নিশ্চিত যে আপনি সুমাত্রা-পিডিএফ আন-ইন্সটল করতে চান?
@@ -4170,7 +4170,7 @@ uz:Avtomatik
 vn:Tự động
 :Automatically check for &updates
 am:Ինքնաշխատ ստուգել &թարմացումները
-ar:تلقائياً التحقق من وجود &التحديثات
+ar:التحقق تلقائياً  من وجود &تحديثات
 az:Yeniləmələri avto&matik yoxla
 bg:Автоматична проверка за &обновления
 br:&Procurar atualizações automaticamente
@@ -4601,7 +4601,7 @@ vn:Bytes
 :CHM documents
 af:CHM dokumente
 am:CHM ֆայլեր
-ar:ملفات CHM
+ar:CHM ملفات 
 az:CHM sənədləri
 bg:CHM документи
 br:Documentos CHM
@@ -5198,6 +5198,7 @@ kr:호환성
 ku:گونجاو
 lv:Saderība
 mk:Компатибилност
+ml:പൊരുത്തം
 my:Kesesuaian
 ne:मिल्दोजुल्दो
 nl:Compatibiliteit
