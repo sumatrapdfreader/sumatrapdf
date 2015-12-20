@@ -62,6 +62,24 @@ var (
 	cachedSecrets    *Secrets
 )
 
+func parseCmdLine() {
+	flag.BoolVar(&flgListS3, "list-s3", false, "list files in s3")
+	flag.BoolVar(&flgSmoke, "smoke", false, "do a smoke (sanity) build")
+	flag.BoolVar(&flgRelease, "release", false, "do a release build")
+	flag.BoolVar(&flgPreRelease, "prerelease", false, "do a pre-release build")
+	flag.BoolVar(&flgAnalyze, "analyze", false, "run analyze (prefast) and create summary of bugs as html file")
+	flag.BoolVar(&flgUpload, "upload", false, "upload to s3 for release/prerelease builds")
+	// -no-clean-check is useful when testing changes to this build script
+	flag.BoolVar(&flgNoCleanCheck, "no-clean-check", false, "allow running if repo has changes (for testing build script)")
+	flag.Parse()
+	// must provide an action to perform
+	if flgListS3 || flgSmoke || flgRelease || flgPreRelease || flgAnalyze {
+		return
+	}
+	flag.Usage()
+	os.Exit(1)
+}
+
 func finalizeThings(crashed bool) {
 	revertBuildConfig()
 	if !crashed {
@@ -309,6 +327,7 @@ func buildPreRelease() {
 	fataliferr(err)
 	runTestUtilMust("rel")
 	signMust(pj("rel", "SumatraPDF.exe"))
+	signMust(pj("rel", "libmupdf.dll"))
 	signMust(pj("rel", "SumatraPDF-no-MUPDF.exe"))
 	signMust(pj("rel", "Uninstaller.exe"))
 	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:Installer", "/p:Configuration=Release;Platform=Win32", "/m")
@@ -322,6 +341,7 @@ func buildPreRelease() {
 		runTestUtilMust("rel64")
 	}
 	signMust(pj("rel64", "SumatraPDF.exe"))
+	signMust(pj("rel64", "libmupdf.dll"))
 	signMust(pj("rel64", "SumatraPDF-no-MUPDF.exe"))
 	signMust(pj("rel64", "Uninstaller.exe"))
 	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:Installer", "/p:Configuration=Release;Platform=x64", "/m")
@@ -455,6 +475,16 @@ func createManifestMust() {
 	fataliferr(err)
 }
 
+// http://zabkat.com/blog/code-signing-sha1-armageddon.htm
+// signtool sign /n "subject name" /t http://timestamp.comodoca.com/authenticode myInstaller.exe
+// signtool sign /n "subject name" /fd sha256 /tr http://timestamp.comodoca.com/rfc3161 /td sha256 /as myInstaller.exe
+// signtool args (https://msdn.microsoft.com/en-us/library/windows/desktop/aa387764(v=vs.85).aspx):
+//   /as          : append signature
+//   /fd ${alg}   : specify digest algo, default is sha1
+//   /t ${url}    : timestamp server
+//   /tr ${url}   : timestamp rfc 3161 server
+//   /td ${alg}   : for /tr, must be after /tr
+//   /du ${url}   : URL for expanded description of the signed content.
 func signMust(path string) {
 	// the sign tool is finicky, so copy the cert to the same dir as
 	// the exe we're signing
@@ -467,11 +497,20 @@ func signMust(path string) {
 	if !fileExists(certDest) {
 		fileCopyMust(certDest, certSrc)
 	}
+	// sign with sha1 for pre-win-7
 	cmd := getCmdInEnv(getEnvForVS(), "signtool.exe", "sign", "/t", "http://timestamp.verisign.com/scripts/timstamp.dll",
 		"/du", "http://www.sumatrapdfreader.org", "/f", "cert.pfx",
 		"/p", certPwd, fileName)
 	cmd.Dir = fileDir
 	_, err := runCmdLogged(cmd, true)
+	fataliferr(err)
+
+	// double-sign with sha2 for win7+ ater Jan 2016
+	cmd = getCmdInEnv(getEnvForVS(), "signtool.exe", "sign", "/fd", "sha256", "/tr", "http://timestamp.comodoca.com/rfc3161",
+		"/td", "sha256", "/du", "http://www.sumatrapdfreader.org", "/f", "cert.pfx",
+		"/p", certPwd, "/as", fileName)
+	cmd.Dir = fileDir
+	_, err = runCmdLogged(cmd, true)
 	fataliferr(err)
 }
 
@@ -841,24 +880,6 @@ func verifyTranslationsMust() {
 	d := httpDlMust(url)
 	lines := toTrimmedLines(d)
 	fatalif(lines[1] != "No change", "translations changed, run python scripts/trans_download.py\n")
-}
-
-func parseCmdLine() {
-	flag.BoolVar(&flgListS3, "list-s3", false, "list files in s3")
-	flag.BoolVar(&flgSmoke, "smoke", false, "do a smoke (sanity) build")
-	flag.BoolVar(&flgRelease, "release", false, "do a release build")
-	flag.BoolVar(&flgPreRelease, "prerelease", false, "do a pre-release build")
-	flag.BoolVar(&flgAnalyze, "analyze", false, "run analyze (prefast) and create summary of bugs as html file")
-	flag.BoolVar(&flgUpload, "upload", false, "upload to s3 for release/prerelease builds")
-	// -no-clean-check is useful when testing changes to this build script
-	flag.BoolVar(&flgNoCleanCheck, "no-clean-check", false, "allow running if repo has changes (for testing build script)")
-	flag.Parse()
-	// must provide an action to perform
-	if flgListS3 || flgSmoke || flgRelease || flgPreRelease || flgAnalyze {
-		return
-	}
-	flag.Usage()
-	os.Exit(1)
 }
 
 func testS3Upload() {
