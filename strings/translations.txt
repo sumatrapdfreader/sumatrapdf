@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-86fcaf171960c76e82ed11d27a65c0b27781c108
+e54223ffb6c2a437da97f1b9ab6584585c3fd47f
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -116,7 +116,7 @@ ml:ശരിയായ വലിപ്പം\tCtrl+1
 mm:ပုံမှန် အရွယ်\tCtrl+1
 my:&Saiz sebenar\tCtrl+1
 ne:&सही आकार\tCtrl+1
-nl:W&are grootte\tCtrl+1
+nl:&Ware grootte\tCtrl+1
 nn:F&aktisk storleik\tCtrl+1
 no:Fak&tisk størrelse\tCtrl+1
 pa:ਸਹੀ ਅਕਾਰ(&u)\tCtrl+1

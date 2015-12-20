@@ -3736,7 +3736,7 @@ const char * gTranslations_dk =
 
 const char * gTranslations_nl = 
   "&Over\0"\
-  "W&are grootte\tCtrl+1\0"\
+  "&Ware grootte\tCtrl+1\0"\
   "&Geavanceerde Opties...\0"\
   "&Alle geselecteerde pagina's\0"\
   "Terug\tAlt+<-\0"\
