@@ -328,6 +328,8 @@ func buildPreRelease() {
 	runTestUtilMust("rel")
 	signMust(pj("rel", "SumatraPDF.exe"))
 	signMust(pj("rel", "libmupdf.dll"))
+	signMust(pj("rel", "PdfFilter.dll"))
+	signMust(pj("rel", "PdfPreview.dll"))
 	signMust(pj("rel", "SumatraPDF-no-MUPDF.exe"))
 	signMust(pj("rel", "Uninstaller.exe"))
 	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:Installer", "/p:Configuration=Release;Platform=Win32", "/m")
@@ -342,6 +344,8 @@ func buildPreRelease() {
 	}
 	signMust(pj("rel64", "SumatraPDF.exe"))
 	signMust(pj("rel64", "libmupdf.dll"))
+	signMust(pj("rel", "PdfFilter.dll"))
+	signMust(pj("rel", "PdfPreview.dll"))
 	signMust(pj("rel64", "SumatraPDF-no-MUPDF.exe"))
 	signMust(pj("rel64", "Uninstaller.exe"))
 	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:Installer", "/p:Configuration=Release;Platform=x64", "/m")
