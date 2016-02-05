@@ -1245,7 +1245,7 @@ static WindowInfo* CreateWindowInfo()
 
     HWND hwndFrame = CreateWindow(
             FRAME_CLASS_NAME, SUMATRA_WINDOW_TITLE,
-            WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
+            WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_MAXIMIZE,
             windowPos.x, windowPos.y, windowPos.dx, windowPos.dy,
             nullptr, nullptr,
             GetModuleHandle(nullptr), nullptr);
