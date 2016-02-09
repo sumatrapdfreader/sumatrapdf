@@ -823,6 +823,13 @@ static LRESULT CanvasOnMouseWheel(WindowInfo& win, UINT message, WPARAM wParam, 
             win.AsFixed()->ScrollYBy(-MulDiv(si.nPage, delta, WHEEL_DELTA), true);
         return 0;
     }
+    
+   // added: shift while scrolling will scroll by half a page per tick
+   //        really usefull for browsing long files
+	if ((LOWORD(wParam) & MK_SHIFT) || IsShiftPressed()) {
+		SendMessage(win.hwndCanvas, WM_VSCROLL, (delta>0) ? SB_HPAGEUP : SB_HPAGEDOWN, 0);
+		return 0;
+	}
 
     win.wheelAccumDelta += delta;
     int currentScrollPos = GetScrollPos(win.hwndCanvas, SB_VERT);
