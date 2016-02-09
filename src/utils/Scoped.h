@@ -48,6 +48,7 @@ public:
     explicit ScopedHandle(HANDLE handle) : handle(handle) { }
     ~ScopedHandle() { CloseHandle(handle); }
     operator HANDLE() const { return handle; }
+    bool IsValid() const { return handle != NULL && handle != INVALID_HANDLE_VALUE; }
 };
 
 // deletes any object at the end of the scope

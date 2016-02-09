@@ -128,7 +128,7 @@ const WCHAR *GetOwnPath();
 bool OnWmCommand(WPARAM wParam);
 bool CreateProcessHelper(const WCHAR *exe, const WCHAR *args=nullptr);
 WCHAR *GetUninstallerPath();
-int KillProcess(const WCHAR *processPath, BOOL waitUntilTerminated);
+int KillProcess(const WCHAR *processPath, bool waitUntilTerminated);
 void UninstallBrowserPlugin();
 void UninstallPdfFilter();
 void UninstallPdfPreviewer();
