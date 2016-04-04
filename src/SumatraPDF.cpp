@@ -2012,6 +2012,10 @@ void GetFixedPageUiColors(COLORREF& text, COLORREF& bg)
         text = GetSysColor(COLOR_WINDOWTEXT);
         bg = GetSysColor(COLOR_WINDOW);
     }
+    else if (gGlobalPrefs->fixedPageUI.nightMode) {
+        text = gGlobalPrefs->fixedPageUI.nightModeTextColor;
+        bg = gGlobalPrefs->fixedPageUI.nightModeBackgroundColor;
+	}
     else {
         text = gGlobalPrefs->fixedPageUI.textColor;
         bg = gGlobalPrefs->fixedPageUI.backgroundColor;
@@ -2019,6 +2023,12 @@ void GetFixedPageUiColors(COLORREF& text, COLORREF& bg)
     if (gGlobalPrefs->fixedPageUI.invertColors) {
         std::swap(text, bg);
     }
+}
+
+void ToggleNightMode()
+{
+    gGlobalPrefs->fixedPageUI.nightMode = !gGlobalPrefs->fixedPageUI.nightMode;
+    UpdateDocumentColors();
 }
 
 void GetEbookUiColors(COLORREF& text, COLORREF& bg)
@@ -3873,6 +3883,11 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
 
         case IDM_VIEW_BOOKMARKS:
             ToggleTocBox(win);
+            break;
+
+        case IDM_VIEW_NIGHT_MODE:
+            ToggleNightMode();
+            win::menu::SetChecked(win->menu, IDM_VIEW_NIGHT_MODE, gGlobalPrefs->fixedPageUI.nightMode);
             break;
 
         case IDM_GOTO_NEXT_PAGE:
