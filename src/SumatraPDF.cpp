@@ -4256,8 +4256,8 @@ InitMouseWheelInfo:
             break;
 
         case WM_DDE_INITIATE:
-            if (gPluginMode)
-                break;
+            //if (gPluginMode)
+            //    break;
             return OnDDEInitiate(hwnd, wParam, lParam);
         case WM_DDE_EXECUTE:
             return OnDDExecute(hwnd, wParam, lParam);
