@@ -712,24 +712,24 @@ class EpubEngineImpl : public EbookEngine {
 public:
     EpubEngineImpl() : EbookEngine(), doc(nullptr), stream(nullptr) { }
     virtual ~EpubEngineImpl();
-    virtual BaseEngine *Clone() {
+    BaseEngine *Clone() override {
         if (stream)
             return CreateFromStream(stream);
         return fileName ? CreateFromFile(fileName) : nullptr;
     }
 
-    virtual unsigned char *GetFileData(size_t *cbCount);
-    virtual bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false);
+    unsigned char *GetFileData(size_t *cbCount) override;
+    bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false) override;
 
-    virtual PageLayoutType PreferredLayout();
+    PageLayoutType PreferredLayout() override;
 
-    virtual WCHAR *GetProperty(DocumentProperty prop) {
+    WCHAR *GetProperty(DocumentProperty prop) override {
         return prop != Prop_FontList ? doc->GetProperty(prop) : ExtractFontList();
     }
-    virtual const WCHAR *GetDefaultFileExt() const { return L".epub"; }
+    const WCHAR *GetDefaultFileExt() const override { return L".epub"; }
 
-    virtual bool HasTocTree() const { return doc->HasToc(); }
-    virtual DocTocItem *GetTocTree();
+    bool HasTocTree() const override { return doc->HasToc(); }
+    DocTocItem *GetTocTree() override;
 
     static BaseEngine *CreateFromFile(const WCHAR *fileName);
     static BaseEngine *CreateFromStream(IStream *stream);
@@ -885,19 +885,19 @@ class Fb2EngineImpl : public EbookEngine {
 public:
     Fb2EngineImpl() : EbookEngine(), doc(nullptr) { }
     virtual ~Fb2EngineImpl() { delete doc; }
-    virtual BaseEngine *Clone() {
+    BaseEngine *Clone() override {
         return fileName ? CreateFromFile(fileName) : nullptr;
     }
 
-    virtual WCHAR *GetProperty(DocumentProperty prop) {
+    WCHAR *GetProperty(DocumentProperty prop) override {
         return prop != Prop_FontList ? doc->GetProperty(prop) : ExtractFontList();
     }
-    virtual const WCHAR *GetDefaultFileExt() const {
+    const WCHAR *GetDefaultFileExt() const override {
         return doc->IsZipped() ? L".fb2z" : L".fb2";
     }
 
-    virtual bool HasTocTree() const { return doc->HasToc(); }
-    virtual DocTocItem *GetTocTree();
+    bool HasTocTree() const override { return doc->HasToc(); }
+    DocTocItem *GetTocTree() override;
 
     static BaseEngine *CreateFromFile(const WCHAR *fileName);
     static BaseEngine *CreateFromStream(IStream *stream);
@@ -1000,19 +1000,19 @@ BaseEngine *CreateFromStream(IStream *stream)
 class MobiEngineImpl : public EbookEngine {
 public:
     MobiEngineImpl() : EbookEngine(), doc(nullptr) { }
-    virtual ~MobiEngineImpl() { delete doc; }
-    virtual BaseEngine *Clone() {
+    ~MobiEngineImpl() override { delete doc; }
+    BaseEngine *Clone() override {
         return fileName ? CreateFromFile(fileName) : nullptr;
     }
 
-    virtual WCHAR *GetProperty(DocumentProperty prop) {
+    WCHAR *GetProperty(DocumentProperty prop) override {
         return prop != Prop_FontList ? doc->GetProperty(prop) : ExtractFontList();
     }
-    virtual const WCHAR *GetDefaultFileExt() const { return L".mobi"; }
+    const WCHAR *GetDefaultFileExt() const override { return L".mobi"; }
 
-    virtual PageDestination *GetNamedDest(const WCHAR *name);
-    virtual bool HasTocTree() const { return doc->HasToc(); }
-    virtual DocTocItem *GetTocTree();
+    PageDestination *GetNamedDest(const WCHAR *name) override;
+    bool HasTocTree() const override { return doc->HasToc(); }
+    DocTocItem *GetTocTree() override;
 
     static BaseEngine *CreateFromFile(const WCHAR *fileName);
     static BaseEngine *CreateFromStream(IStream *stream);
@@ -1149,17 +1149,17 @@ class PdbEngineImpl : public EbookEngine {
 public:
     PdbEngineImpl() : EbookEngine(), doc(nullptr) { }
     virtual ~PdbEngineImpl() { delete doc; }
-    virtual BaseEngine *Clone() {
+    BaseEngine *Clone() override {
         return fileName ? CreateFromFile(fileName) : nullptr;
     }
 
-    virtual WCHAR *GetProperty(DocumentProperty prop) {
+    WCHAR *GetProperty(DocumentProperty prop) override {
         return prop != Prop_FontList ? doc->GetProperty(prop) : ExtractFontList();
     }
-    virtual const WCHAR *GetDefaultFileExt() const { return L".pdb"; }
+    const WCHAR *GetDefaultFileExt() const override { return L".pdb"; }
 
-    virtual bool HasTocTree() const { return doc->HasToc(); }
-    virtual DocTocItem *GetTocTree();
+    bool HasTocTree() const override { return doc->HasToc(); }
+    DocTocItem *GetTocTree() override;
 
     static BaseEngine *CreateFromFile(const WCHAR *fileName);
 
@@ -1353,20 +1353,20 @@ public:
         delete dataCache;
         delete doc;
     }
-    virtual BaseEngine *Clone() {
+    BaseEngine *Clone() override {
         return fileName ? CreateFromFile(fileName) : nullptr;
     }
 
-    virtual WCHAR *GetProperty(DocumentProperty prop) {
+    WCHAR *GetProperty(DocumentProperty prop) override {
         return prop != Prop_FontList ? doc->GetProperty(prop) : ExtractFontList();
     }
-    virtual const WCHAR *GetDefaultFileExt() const { return L".chm"; }
+    const WCHAR *GetDefaultFileExt() const override { return L".chm"; }
 
-    virtual PageLayoutType PreferredLayout() { return Layout_Single; }
+    PageLayoutType PreferredLayout() override { return Layout_Single; }
 
-    virtual PageDestination *GetNamedDest(const WCHAR *name);
-    virtual bool HasTocTree() const { return doc->HasToc() || doc->HasIndex(); }
-    virtual DocTocItem *GetTocTree();
+    PageDestination *GetNamedDest(const WCHAR *name) override;
+    bool HasTocTree() const override { return doc->HasToc() || doc->HasIndex(); }
+    DocTocItem *GetTocTree() override;
 
     static BaseEngine *CreateFromFile(const WCHAR *fileName);
 
@@ -1609,15 +1609,15 @@ public:
     virtual ~HtmlEngineImpl() {
         delete doc;
     }
-    virtual BaseEngine *Clone() {
+    BaseEngine *Clone() override {
         return fileName ? CreateFromFile(fileName) : nullptr;
     }
 
-    virtual WCHAR *GetProperty(DocumentProperty prop) {
+    WCHAR *GetProperty(DocumentProperty prop) override {
         return prop != Prop_FontList ? doc->GetProperty(prop) : ExtractFontList();
     }
-    virtual const WCHAR *GetDefaultFileExt() const { return L".html"; }
-    virtual PageLayoutType PreferredLayout() { return Layout_Single; }
+    const WCHAR *GetDefaultFileExt() const override { return L".html"; }
+    PageLayoutType PreferredLayout() override { return Layout_Single; }
 
     static BaseEngine *CreateFromFile(const WCHAR *fileName);
 
@@ -1717,20 +1717,20 @@ public:
         pageRect = RectD(0, 0, 8.27 * GetFileDPI(), 11.693 * GetFileDPI());
     }
     virtual ~TxtEngineImpl() { delete doc; }
-    virtual BaseEngine *Clone() {
+    BaseEngine *Clone() override {
         return fileName ? CreateFromFile(fileName) : nullptr;
     }
 
-    virtual WCHAR *GetProperty(DocumentProperty prop) {
+    WCHAR *GetProperty(DocumentProperty prop) override {
         return prop != Prop_FontList ? doc->GetProperty(prop) : ExtractFontList();
     }
-    virtual const WCHAR *GetDefaultFileExt() const {
+    const WCHAR *GetDefaultFileExt() const override {
         return fileName ? path::GetExt(fileName) : L".txt";
     }
-    virtual PageLayoutType PreferredLayout() { return Layout_Single; }
+    PageLayoutType PreferredLayout() override { return Layout_Single; }
 
-    virtual bool HasTocTree() const { return doc->HasToc(); }
-    virtual DocTocItem *GetTocTree();
+    bool HasTocTree() const override { return doc->HasToc(); }
+    DocTocItem *GetTocTree() override;
 
     static BaseEngine *CreateFromFile(const WCHAR *fileName);
 
