@@ -36,7 +36,7 @@ class DjVuDestination : public PageDestination {
 public:
     explicit DjVuDestination(const char *link) : link(str::Dup(link)) { }
 
-    virtual PageDestType GetDestType() const {
+    PageDestType GetDestType() const override {
         if (IsPageLink(link))
             return Dest_ScrollTo;
         if (str::Eq(link, "#+1"))
@@ -47,15 +47,15 @@ public:
             return Dest_LaunchURL;
         return Dest_None;
     }
-    virtual int GetDestPageNo() const {
+    int GetDestPageNo() const override {
         if (IsPageLink(link))
             return atoi(link + 1);
         return 0;
     }
-    virtual RectD GetDestRect() const {
+    RectD GetDestRect() const override {
         return RectD(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
     }
-    virtual WCHAR *GetDestValue() const {
+    WCHAR *GetDestValue() const override {
         if (Dest_LaunchURL == GetDestType())
             return str::conv::FromUtf8(link);
         return nullptr;
@@ -75,15 +75,15 @@ public:
         if (!str::IsEmpty(comment))
             value = str::conv::FromUtf8(comment);
     }
-    virtual ~DjVuLink() {
+    ~DjVuLink()  override {
         delete dest;
         free(value);
     }
 
-    virtual PageElementType GetType() const { return Element_Link; }
-    virtual int GetPageNo() const { return pageNo; }
-    virtual RectD GetRect() const { return rect; }
-    virtual WCHAR *GetValue() const {
+    PageElementType GetType() const  override { return Element_Link; }
+    int GetPageNo() const  override { return pageNo; }
+    RectD GetRect() const override { return rect; }
+    WCHAR *GetValue() const override {
         if (value)
             return str::Dup(value);
         if (Dest_LaunchURL == dest->GetDestType())

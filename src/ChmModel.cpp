@@ -35,17 +35,19 @@ public:
     }
 
     virtual PageDestination *GetLink() { return url ? this : nullptr; }
-    virtual PageDestType GetDestType() const {
+
+    // PageDestination
+    PageDestType GetDestType() const override {
         return !url ? Dest_None : IsExternalUrl(url) ? Dest_LaunchURL : Dest_ScrollTo;
     }
-    virtual int GetDestPageNo() const { return pageNo; }
-    virtual RectD GetDestRect() const {
+    int GetDestPageNo() const override { return pageNo; }
+    RectD GetDestRect() const override {
         return RectD(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
     }
-    virtual WCHAR *GetDestValue() const {
+    WCHAR *GetDestValue() const override {
         return url && IsExternalUrl(url) ? str::Dup(url) : nullptr;
     }
-    virtual WCHAR *GetDestName() const {
+    WCHAR *GetDestName() const override {
         return url && !IsExternalUrl(url) ? str::Dup(url) : nullptr;
     }
 };

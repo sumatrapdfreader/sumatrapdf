@@ -154,10 +154,10 @@ public:
     SimpleDest2(int pageNo, RectD rect, WCHAR *value=nullptr) :
         pageNo(pageNo), rect(rect), value(value) { }
 
-    virtual PageDestType GetDestType() const { return value ? Dest_LaunchURL : Dest_ScrollTo; }
-    virtual int GetDestPageNo() const { return pageNo; }
-    virtual RectD GetDestRect() const { return rect; }
-    virtual WCHAR *GetDestValue() const { return str::Dup(value); }
+    PageDestType GetDestType() const override { return value ? Dest_LaunchURL : Dest_ScrollTo; }
+    int GetDestPageNo() const override { return pageNo; }
+    RectD GetDestRect() const override { return rect; }
+    WCHAR *GetDestValue() const override { return str::Dup(value); }
 };
 
 class EbookLink : public PageElement, public PageDestination {
@@ -173,20 +173,20 @@ public:
         link(link), rect(rect), dest(dest), pageNo(pageNo), showUrl(showUrl) { }
     virtual ~EbookLink() { delete dest; }
 
-    virtual PageElementType GetType() const { return Element_Link; }
-    virtual int GetPageNo() const { return pageNo; }
-    virtual RectD GetRect() const { return rect.Convert<double>(); }
-    virtual WCHAR *GetValue() const {
+    PageElementType GetType() const override { return Element_Link; }
+    int GetPageNo() const override { return pageNo; }
+    RectD GetRect() const override { return rect.Convert<double>(); }
+    WCHAR *GetValue() const override {
         if (!dest || showUrl)
             return str::conv::FromHtmlUtf8(link->str.s, link->str.len);
         return nullptr;
     }
     virtual PageDestination *AsLink() { return dest ? dest : this; }
 
-    virtual PageDestType GetDestType() const { return Dest_LaunchURL; }
-    virtual int GetDestPageNo() const { return 0; }
-    virtual RectD GetDestRect() const { return RectD(); }
-    virtual WCHAR *GetDestValue() const { return GetValue(); }
+    PageDestType GetDestType() const override { return Dest_LaunchURL; }
+    int GetDestPageNo() const override { return 0; }
+    RectD GetDestRect() const override { return RectD(); }
+    WCHAR *GetDestValue() const override { return GetValue(); }
 };
 
 class ImageDataElement : public PageElement {
@@ -1539,12 +1539,12 @@ class ChmEmbeddedDest : public PageDestination {
 public:
     ChmEmbeddedDest(ChmEngineImpl *engine, const char *path) : engine(engine), path(str::Dup(path)) { }
 
-    virtual PageDestType GetDestType() const { return Dest_LaunchEmbedded; }
-    virtual int GetDestPageNo() const { return 0; }
-    virtual RectD GetDestRect() const { return RectD(); }
-    virtual WCHAR *GetDestValue() const { return str::conv::FromUtf8(path::GetBaseName(path)); }
+    PageDestType GetDestType() const  override { return Dest_LaunchEmbedded; }
+    int GetDestPageNo() const  override { return 0; }
+    RectD GetDestRect() const  override { return RectD(); }
+    WCHAR *GetDestValue() const  override { return str::conv::FromUtf8(path::GetBaseName(path)); }
 
-    virtual bool SaveEmbedded(LinkSaverUI& saveUI) { return engine->SaveEmbedded(saveUI, path); }
+    bool SaveEmbedded(LinkSaverUI& saveUI)  override { return engine->SaveEmbedded(saveUI, path); }
 };
 
 PageElement *ChmEngineImpl::CreatePageLink(DrawInstr *link, RectI rect, int pageNo)

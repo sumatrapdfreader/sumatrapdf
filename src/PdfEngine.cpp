@@ -634,9 +634,9 @@ class SimpleDest : public PageDestination {
 public:
     SimpleDest(int pageNo, RectD rect) : pageNo(pageNo), rect(rect) { }
 
-    virtual PageDestType GetDestType() const { return Dest_ScrollTo; }
-    virtual int GetDestPageNo() const { return pageNo; }
-    virtual RectD GetDestRect() const { return rect; }
+    PageDestType GetDestType() const override { return Dest_ScrollTo; }
+    int GetDestPageNo() const override { return pageNo; }
+    RectD GetDestRect() const override { return rect; }
 };
 
 struct FitzImagePos {
@@ -1310,17 +1310,19 @@ public:
             this->pt = PointD(pt->x, pt->y);
     }
 
-    virtual PageElementType GetType() const { return Element_Link; }
-    virtual int GetPageNo() const { return pageNo; }
-    virtual RectD GetRect() const { return rect; }
-    virtual WCHAR *GetValue() const;
+    // PageElement
+    PageElementType GetType() const override { return Element_Link; }
+    int GetPageNo() const override { return pageNo; }
+    RectD GetRect() const override { return rect; }
+    WCHAR *GetValue() const override;
     virtual PageDestination *AsLink() { return this; }
 
-    virtual PageDestType GetDestType() const;
-    virtual int GetDestPageNo() const;
-    virtual RectD GetDestRect() const;
-    virtual WCHAR *GetDestValue() const { return GetValue(); }
-    virtual WCHAR *GetDestName() const;
+    // PageDestination
+    PageDestType GetDestType() const override;
+    int GetDestPageNo() const override;
+    RectD GetDestRect() const override;
+    WCHAR *GetDestValue() const override { return GetValue(); }
+    WCHAR *GetDestName() const override;
 
     virtual bool SaveEmbedded(LinkSaverUI& saveUI);
 };
@@ -3496,17 +3498,17 @@ public:
     XpsLink(XpsEngineImpl *engine, fz_link_dest *link, fz_rect rect=fz_empty_rect, int pageNo=-1) :
         engine(engine), link(link), rect(fz_rect_to_RectD(rect)), pageNo(pageNo) { }
 
-    virtual PageElementType GetType() const { return Element_Link; }
-    virtual int GetPageNo() const { return pageNo; }
-    virtual RectD GetRect() const { return rect; }
-    virtual WCHAR *GetValue() const {
+    PageElementType GetType() const  override { return Element_Link; }
+    int GetPageNo() const  override { return pageNo; }
+    RectD GetRect() const  override { return rect; }
+    WCHAR *GetValue() const  override {
         if (link && FZ_LINK_URI == link->kind)
             return str::conv::FromUtf8(link->ld.uri.uri);
         return nullptr;
     }
     virtual PageDestination *AsLink() { return this; }
 
-    virtual PageDestType GetDestType() const {
+    PageDestType GetDestType() const override {
         if (!link)
             return Dest_None;
         if (FZ_LINK_GOTO == link->kind)
@@ -3515,17 +3517,17 @@ public:
             return Dest_LaunchURL;
         return Dest_None;
     }
-    virtual int GetDestPageNo() const {
+    int GetDestPageNo() const override {
         if (!link || link->kind != FZ_LINK_GOTO)
             return 0;
         return link->ld.gotor.page + 1;
     }
-    virtual RectD GetDestRect() const {
+    RectD GetDestRect() const override {
         if (!engine || !link || link->kind != FZ_LINK_GOTO || !link->ld.gotor.dest)
             return RectD(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
         return fz_rect_to_RectD(engine->FindDestRect(link->ld.gotor.dest));
     }
-    virtual WCHAR *GetDestValue() const { return GetValue(); }
+    WCHAR *GetDestValue() const override { return GetValue(); }
 };
 
 class XpsTocItem : public DocTocItem {
