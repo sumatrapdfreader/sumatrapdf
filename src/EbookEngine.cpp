@@ -62,7 +62,7 @@ class EbookAbortCookie : public AbortCookie {
 public:
     bool abort;
     EbookAbortCookie() : abort(false) { }
-    virtual void Abort() { abort = true; }
+    void Abort() override { abort = true; }
 };
 
 class EbookEngine : public BaseEngine {

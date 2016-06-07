@@ -760,7 +760,7 @@ class FitzAbortCookie : public AbortCookie {
 public:
     fz_cookie cookie;
     FitzAbortCookie() { memset(&cookie, 0, sizeof(cookie)); }
-    virtual void Abort() { cookie.abort = 1; }
+    void Abort() override { cookie.abort = 1; }
 };
 
 extern "C" static void
@@ -1165,66 +1165,66 @@ class PdfEngineImpl : public BaseEngine {
 public:
     PdfEngineImpl();
     virtual ~PdfEngineImpl();
-    virtual BaseEngine *Clone();
+    BaseEngine *Clone() override;
 
-    virtual const WCHAR *FileName() const { return _fileName; };
-    virtual int PageCount() const {
+    const WCHAR *FileName() const  override { return _fileName; };
+    int PageCount() const override {
         // make sure that _doc->page_count is initialized as soon as
         // _doc is defined, so that pdf_count_pages can't throw
         return _doc ? pdf_count_pages(_doc) : 0;
     }
 
-    virtual RectD PageMediabox(int pageNo);
-    virtual RectD PageContentBox(int pageNo, RenderTarget target=Target_View);
+    RectD PageMediabox(int pageNo) override;
+    RectD PageContentBox(int pageNo, RenderTarget target=Target_View) override;
 
-    virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
+    RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
                          RectD *pageRect=nullptr, /* if nullptr: defaults to the page's mediabox */
-                         RenderTarget target=Target_View, AbortCookie **cookie_out=nullptr);
+                         RenderTarget target=Target_View, AbortCookie **cookie_out=nullptr) override;
 
-    virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false);
-    virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false);
+    PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false) override;
+    RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false) override;
 
-    virtual unsigned char *GetFileData(size_t *cbCount);
-    virtual bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false);
+    unsigned char *GetFileData(size_t *cbCount) override;
+    bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false) override;
     virtual bool SaveFileAsPdf(const WCHAR *pdfFileName, bool includeUserAnnots=false) {
         return SaveFileAs(pdfFileName, includeUserAnnots);
     }
-    virtual WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coordsOut=nullptr,
-                                    RenderTarget target=Target_View);
-    virtual bool HasClipOptimizations(int pageNo);
-    virtual PageLayoutType PreferredLayout();
-    virtual WCHAR *GetProperty(DocumentProperty prop);
+    WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coordsOut=nullptr,
+                                    RenderTarget target=Target_View) override;
+    bool HasClipOptimizations(int pageNo) override;
+    PageLayoutType PreferredLayout() override;
+    WCHAR *GetProperty(DocumentProperty prop) override;
 
-    virtual bool SupportsAnnotation(bool forSaving=false) const;
-    virtual void UpdateUserAnnotations(Vec<PageAnnotation> *list);
+    bool SupportsAnnotation(bool forSaving=false) const override;
+    void UpdateUserAnnotations(Vec<PageAnnotation> *list) override;
 
-    virtual bool AllowsPrinting() const {
+    bool AllowsPrinting() const override {
         return pdf_has_permission(_doc, PDF_PERM_PRINT);
     }
-    virtual bool AllowsCopyingText() const {
+    bool AllowsCopyingText() const override {
         return pdf_has_permission(_doc, PDF_PERM_COPY);
     }
 
-    virtual float GetFileDPI() const { return 72.0f; }
-    virtual const WCHAR *GetDefaultFileExt() const { return L".pdf"; }
+    float GetFileDPI() const override { return 72.0f; }
+    const WCHAR *GetDefaultFileExt() const override { return L".pdf"; }
 
-    virtual bool BenchLoadPage(int pageNo) { return GetPdfPage(pageNo) != nullptr; }
+    bool BenchLoadPage(int pageNo)  override { return GetPdfPage(pageNo) != nullptr; }
 
-    virtual Vec<PageElement *> *GetElements(int pageNo);
-    virtual PageElement *GetElementAtPos(int pageNo, PointD pt);
+    Vec<PageElement *> *GetElements(int pageNo) override;
+    PageElement *GetElementAtPos(int pageNo, PointD pt) override;
 
-    virtual PageDestination *GetNamedDest(const WCHAR *name);
-    virtual bool HasTocTree() const {
+    PageDestination *GetNamedDest(const WCHAR *name) override;
+    bool HasTocTree() const override {
         return outline != nullptr || attachments != nullptr;
     }
-    virtual DocTocItem *GetTocTree();
+    DocTocItem *GetTocTree() override;
 
-    virtual bool HasPageLabels() const { return _pagelabels != nullptr; }
-    virtual WCHAR *GetPageLabel(int pageNo) const;
-    virtual int GetPageByLabel(const WCHAR *label) const;
+    bool HasPageLabels() const override { return _pagelabels != nullptr; }
+    WCHAR *GetPageLabel(int pageNo) const override;
+    int GetPageByLabel(const WCHAR *label) const override;
 
-    virtual bool IsPasswordProtected() const override { return isProtected; }
-    virtual char *GetDecryptionKey() const override;
+    bool IsPasswordProtected() const override { return isProtected; }
+    char *GetDecryptionKey() const override;
 
     static BaseEngine *CreateFromFile(const WCHAR *fileName, PasswordUI *pwdUI);
     static BaseEngine *CreateFromStream(IStream *stream, PasswordUI *pwdUI);
