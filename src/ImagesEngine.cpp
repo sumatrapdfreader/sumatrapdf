@@ -330,14 +330,14 @@ public:
     ImageEngineImpl() : fileExt(nullptr), image(nullptr) { }
     virtual ~ImageEngineImpl() { delete image; }
 
-    virtual BaseEngine *Clone();
+    BaseEngine *Clone() override;
 
-    virtual WCHAR *GetProperty(DocumentProperty prop);
+    WCHAR *GetProperty(DocumentProperty prop) override;
 
-    virtual float GetFileDPI() const { return image->GetHorizontalResolution(); }
-    virtual const WCHAR *GetDefaultFileExt() const { return fileExt; }
+    float GetFileDPI() const override { return image->GetHorizontalResolution(); }
+    const WCHAR *GetDefaultFileExt() const override { return fileExt; }
 
-    virtual bool SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots=false);
+    bool SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots=false) override;
 
     static BaseEngine *CreateFromFile(const WCHAR *fileName);
     static BaseEngine *CreateFromStream(IStream *stream);
@@ -614,28 +614,28 @@ class ImageDirEngineImpl : public ImagesEngine {
 public:
     ImageDirEngineImpl() : fileDPI(96.0f) { }
 
-    virtual BaseEngine *Clone() {
+    BaseEngine *Clone() override {
         return fileName ? CreateFromFile(fileName) : nullptr;
     }
 
-    virtual unsigned char *GetFileData(size_t *cbCountOut) { UNUSED(cbCountOut);  return nullptr; }
-    virtual bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false);
+    unsigned char *GetFileData(size_t *cbCountOut) override { UNUSED(cbCountOut);  return nullptr; }
+    bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false) override;
 
-    virtual WCHAR *GetProperty(DocumentProperty prop) { UNUSED(prop); return nullptr; }
+    WCHAR *GetProperty(DocumentProperty prop) override { UNUSED(prop); return nullptr; }
 
     // TODO: is there a better place to expose pageFileNames than through page labels?
-    virtual bool HasPageLabels() const { return true; }
-    virtual WCHAR *GetPageLabel(int pageNo) const;
-    virtual int GetPageByLabel(const WCHAR *label) const;
+    bool HasPageLabels() const override { return true; }
+    WCHAR *GetPageLabel(int pageNo) const override;
+    int GetPageByLabel(const WCHAR *label) const override;
 
-    virtual bool HasTocTree() const { return true; }
-    virtual DocTocItem *GetTocTree();
+    bool HasTocTree() const override { return true; }
+    DocTocItem *GetTocTree() override;
 
     // TODO: better handle the case where images have different resolutions
-    virtual float GetFileDPI() const { return fileDPI; }
-    virtual const WCHAR *GetDefaultFileExt() const { return L""; }
+    float GetFileDPI() const override { return fileDPI; }
+    const WCHAR *GetDefaultFileExt() const override { return L""; }
 
-    virtual bool SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots=false);
+    bool SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots=false) override;
 
     static BaseEngine *CreateFromFile(const WCHAR *fileName);
 
@@ -812,7 +812,7 @@ public:
     CbxEngineImpl(ArchFile *arch, CbxFormat cbxFormat) : cbxFile(arch), cbxFormat(cbxFormat) { }
     virtual ~CbxEngineImpl() { delete cbxFile; }
 
-    virtual BaseEngine *Clone() {
+    virtual BaseEngine *Clone()  override {
         if (fileStream) {
             ScopedComPtr<IStream> stm;
             HRESULT res = fileStream->Clone(&stm);
@@ -824,18 +824,18 @@ public:
         return nullptr;
     }
 
-    virtual bool SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots=false);
+    bool SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots=false) override;
 
-    virtual WCHAR *GetProperty(DocumentProperty prop);
+    WCHAR *GetProperty(DocumentProperty prop) override;
 
     // not using the resolution of the contained images seems to be
     // expected, cf. http://forums.fofou.org/sumatrapdf/topic?id=3183827
     // TODO: return win::GetHwndDpi(HWND_DESKTOP) instead?
-    virtual float GetFileDPI() const { return 96.0f; }
-    virtual const WCHAR *GetDefaultFileExt() const;
+    float GetFileDPI() const override { return 96.0f; }
+    const WCHAR *GetDefaultFileExt() const override;
 
     // json::ValueVisitor
-    virtual bool Visit(const char *path, const char *value, json::DataType type);
+    bool Visit(const char *path, const char *value, json::DataType type) override;
 
     static BaseEngine *CreateFromFile(const WCHAR *fileName);
     static BaseEngine *CreateFromStream(IStream *stream);
