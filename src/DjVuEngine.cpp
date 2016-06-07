@@ -177,57 +177,57 @@ class DjVuEngineImpl : public BaseEngine {
 public:
     DjVuEngineImpl();
     virtual ~DjVuEngineImpl();
-    virtual BaseEngine *Clone() {
+    BaseEngine *Clone() override {
         if (stream)
             return CreateFromStream(stream);
         return fileName ? CreateFromFile(fileName) : nullptr;
     }
 
-    virtual const WCHAR *FileName() const { return fileName; };
-    virtual int PageCount() const { return pageCount; }
+    const WCHAR *FileName() const override { return fileName; };
+    int PageCount() const override { return pageCount; }
 
-    virtual RectD PageMediabox(int pageNo) {
+    RectD PageMediabox(int pageNo) override {
         assert(1 <= pageNo && pageNo <= PageCount());
         return mediaboxes[pageNo-1];
     }
-    virtual RectD PageContentBox(int pageNo, RenderTarget target=Target_View);
+    RectD PageContentBox(int pageNo, RenderTarget target=Target_View) override;
 
-    virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
+    RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
                          RectD *pageRect=nullptr, /* if nullptr: defaults to the page's mediabox */
-                         RenderTarget target=Target_View, AbortCookie **cookie_out=nullptr);
+                         RenderTarget target=Target_View, AbortCookie **cookie_out=nullptr) override;
 
-    virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false);
-    virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false);
+    PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false) override;
+    RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false) override;
 
-    virtual unsigned char *GetFileData(size_t *cbCount);
-    virtual bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false);
-    virtual WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coordsOut=nullptr,
-                                    RenderTarget target=Target_View);
-    virtual bool HasClipOptimizations(int pageNo) { UNUSED(pageNo);  return false; }
-    virtual PageLayoutType PreferredLayout() { return Layout_Single; }
+    unsigned char *GetFileData(size_t *cbCount) override;
+    bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false) override;
+    WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coordsOut=nullptr,
+                                    RenderTarget target=Target_View) override;
+    bool HasClipOptimizations(int pageNo) override { UNUSED(pageNo);  return false; }
+    PageLayoutType PreferredLayout() override { return Layout_Single; }
 
-    virtual WCHAR *GetProperty(DocumentProperty prop) { UNUSED(prop);  return nullptr; }
+    WCHAR *GetProperty(DocumentProperty prop) override { UNUSED(prop);  return nullptr; }
 
-    virtual bool SupportsAnnotation(bool forSaving=false) const { return !forSaving; }
-    virtual void UpdateUserAnnotations(Vec<PageAnnotation> *list);
+    bool SupportsAnnotation(bool forSaving=false) const override { return !forSaving; }
+    void UpdateUserAnnotations(Vec<PageAnnotation> *list) override;
 
     // DPI isn't constant for all pages and thus premultiplied
-    virtual float GetFileDPI() const { return 300.0f; }
-    virtual const WCHAR *GetDefaultFileExt() const { return L".djvu"; }
+    float GetFileDPI() const override { return 300.0f; }
+    const WCHAR *GetDefaultFileExt() const override { return L".djvu"; }
 
     // we currently don't load pages lazily, so there's nothing to do here
-    virtual bool BenchLoadPage(int pageNo) { UNUSED(pageNo);  return true; }
+    bool BenchLoadPage(int pageNo) override { UNUSED(pageNo); return true; }
 
-    virtual Vec<PageElement *> *GetElements(int pageNo);
-    virtual PageElement *GetElementAtPos(int pageNo, PointD pt);
+    Vec<PageElement *> *GetElements(int pageNo) override;
+    PageElement *GetElementAtPos(int pageNo, PointD pt) override;
 
-    virtual PageDestination *GetNamedDest(const WCHAR *name);
-    virtual bool HasTocTree() const { return outline != miniexp_nil; }
-    virtual DocTocItem *GetTocTree();
+    PageDestination *GetNamedDest(const WCHAR *name) override;
+    bool HasTocTree() const override { return outline != miniexp_nil; }
+    DocTocItem *GetTocTree() override;
 
-    virtual bool HasPageLabels() const { return hasPageLabels; }
-    virtual WCHAR *GetPageLabel(int pageNo) const;
-    virtual int GetPageByLabel(const WCHAR *label) const;
+    bool HasPageLabels() const override { return hasPageLabels; }
+    WCHAR *GetPageLabel(int pageNo) const override;
+    int GetPageByLabel(const WCHAR *label) const override;
 
     static BaseEngine *CreateFromFile(const WCHAR *fileName);
     static BaseEngine *CreateFromStream(IStream *stream);
