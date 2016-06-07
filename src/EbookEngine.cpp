@@ -70,46 +70,46 @@ public:
     EbookEngine();
     virtual ~EbookEngine();
 
-    virtual const WCHAR *FileName() const { return fileName; };
-    virtual int PageCount() const { return pages ? (int)pages->Count() : 0; }
+    const WCHAR *FileName() const override { return fileName; };
+    int PageCount() const override { return pages ? (int)pages->Count() : 0; }
 
-    virtual RectD PageMediabox(int pageNo) { UNUSED(pageNo);  return pageRect; }
-    virtual RectD PageContentBox(int pageNo, RenderTarget target=Target_View) {
+    RectD PageMediabox(int pageNo) override { UNUSED(pageNo);  return pageRect; }
+    RectD PageContentBox(int pageNo, RenderTarget target=Target_View) override {
         UNUSED(target);
         RectD mbox = PageMediabox(pageNo);
         mbox.Inflate(-pageBorder, -pageBorder);
         return mbox;
     }
 
-    virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
+    RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
                          RectD *pageRect=nullptr, /* if nullptr: defaults to the page's mediabox */
-                         RenderTarget target=Target_View, AbortCookie **cookie_out=nullptr);
+                         RenderTarget target=Target_View, AbortCookie **cookie_out=nullptr) override;
 
-    virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false);
-    virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false);
+    PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false) override;
+    RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false) override;
 
-    virtual unsigned char *GetFileData(size_t *cbCount) {
+    unsigned char *GetFileData(size_t *cbCount) override {
         return fileName ? (unsigned char *)file::ReadAll(fileName, cbCount) : nullptr;
     }
-    virtual bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false) {
+    bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false) override {
         UNUSED(includeUserAnnots);
         return fileName ? CopyFile(fileName, copyFileName, FALSE) : false;
     }
-    virtual WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coordsOut=nullptr,
-                                    RenderTarget target=Target_View);
+    WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coordsOut=nullptr,
+                                    RenderTarget target=Target_View) override;
     // make RenderCache request larger tiles than per default
-    virtual bool HasClipOptimizations(int pageNo) { UNUSED(pageNo);  return false; }
-    virtual PageLayoutType PreferredLayout() { return Layout_Book; }
+    bool HasClipOptimizations(int pageNo) override { UNUSED(pageNo);  return false; }
+    PageLayoutType PreferredLayout() override { return Layout_Book; }
 
-    virtual bool SupportsAnnotation(bool forSaving=false) const { return !forSaving; }
-    virtual void UpdateUserAnnotations(Vec<PageAnnotation> *list);
+    bool SupportsAnnotation(bool forSaving=false) const override { return !forSaving; }
+    void UpdateUserAnnotations(Vec<PageAnnotation> *list) override;
 
-    virtual Vec<PageElement *> *GetElements(int pageNo);
-    virtual PageElement *GetElementAtPos(int pageNo, PointD pt);
+    Vec<PageElement *> *GetElements(int pageNo) override;
+    PageElement *GetElementAtPos(int pageNo, PointD pt) override;
 
-    virtual PageDestination *GetNamedDest(const WCHAR *name);
+    PageDestination *GetNamedDest(const WCHAR *name) override;
 
-    virtual bool BenchLoadPage(int pageNo) { UNUSED(pageNo); return true; }
+    bool BenchLoadPage(int pageNo) override { UNUSED(pageNo); return true; }
 
 protected:
     WCHAR *fileName;
