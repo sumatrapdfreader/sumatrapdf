@@ -10,10 +10,10 @@ class CPdfFilter : public CFilterBase
 public:
     CPdfFilter(long *plRefCount) : CFilterBase(plRefCount),
         m_state(STATE_PDF_END), m_iPageNo(-1), m_pdfEngine(nullptr) { }
-    virtual ~CPdfFilter() { CleanUp(); }
+    ~CPdfFilter()  override { CleanUp(); }
 
-    virtual HRESULT OnInit();
-    virtual HRESULT GetNextChunkValue(CChunkValue &chunkValue);
+    HRESULT OnInit() override;
+    HRESULT GetNextChunkValue(CChunkValue &chunkValue) override;
 
     VOID CleanUp();
 
