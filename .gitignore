@@ -43,3 +43,5 @@ analyze-errors.html
 *.cov
 CoverageReport*
 LastCoverageResults.log
+*.db
+*.opendb

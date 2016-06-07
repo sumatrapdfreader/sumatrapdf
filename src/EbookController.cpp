@@ -63,10 +63,11 @@ public:
 
     virtual PageDestination *GetLink() { return this; }
 
-    virtual PageDestType GetDestType() const { return url ? Dest_LaunchURL : Dest_ScrollTo; }
-    virtual int GetDestPageNo() const { return pageNo; }
-    virtual RectD GetDestRect() const { return RectD(); }
-    virtual WCHAR *GetDestValue() const { return str::Dup(url); }
+    // PageDestination
+    PageDestType GetDestType() const override { return url ? Dest_LaunchURL : Dest_ScrollTo; }
+    int GetDestPageNo() const override { return pageNo; }
+    RectD GetDestRect() const override { return RectD(); }
+    WCHAR *GetDestValue() const  override { return str::Dup(url); }
 };
 
 struct EbookFormattingData {

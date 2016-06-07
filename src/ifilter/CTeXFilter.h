@@ -9,10 +9,10 @@ public:
     CTeXFilter(long *plRefCount) : CFilterBase(plRefCount),
         m_state(STATE_TEX_END), m_pData(nullptr), m_pPtr(nullptr),
         m_pBuffer(nullptr), m_iDepth(0) { }
-    virtual ~CTeXFilter() { CleanUp(); }
+    ~CTeXFilter() override { CleanUp(); }
 
-    virtual HRESULT OnInit();
-    virtual HRESULT GetNextChunkValue(CChunkValue &chunkValue);
+    HRESULT OnInit() override;
+    HRESULT GetNextChunkValue(CChunkValue &chunkValue) override;
 
     VOID CleanUp()
     {

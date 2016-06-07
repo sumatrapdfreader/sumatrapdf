@@ -208,7 +208,7 @@ public:
     virtual ~PsEngineImpl() {
         delete pdfEngine;
     }
-    virtual BaseEngine *Clone() {
+    BaseEngine *Clone() override {
         BaseEngine *newEngine = pdfEngine->Clone();
         if (!newEngine)
             return nullptr;
@@ -219,52 +219,52 @@ public:
         return clone;
     }
 
-    virtual const WCHAR *FileName() const { return fileName; };
-    virtual int PageCount() const {
+    const WCHAR *FileName() const override { return fileName; };
+    int PageCount() const override {
         return pdfEngine->PageCount();
     }
 
-    virtual RectD PageMediabox(int pageNo) {
+    RectD PageMediabox(int pageNo) override {
         return pdfEngine->PageMediabox(pageNo);
     }
-    virtual RectD PageContentBox(int pageNo, RenderTarget target=Target_View) {
+    RectD PageContentBox(int pageNo, RenderTarget target=Target_View) override {
         return pdfEngine->PageContentBox(pageNo, target);
     }
 
-    virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
+    RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
                          RectD *pageRect=nullptr, /* if nullptr: defaults to the page's mediabox */
-                         RenderTarget target=Target_View, AbortCookie **cookie_out=nullptr) {
+                         RenderTarget target=Target_View, AbortCookie **cookie_out=nullptr) override {
         return pdfEngine->RenderBitmap(pageNo, zoom, rotation, pageRect, target, cookie_out);
     }
 
-    virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false) {
+    PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false) override {
         return pdfEngine->Transform(pt, pageNo, zoom, rotation, inverse);
     }
-    virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false) {
+    RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false) override {
         return pdfEngine->Transform(rect, pageNo, zoom, rotation, inverse);
     }
 
-    virtual unsigned char *GetFileData(size_t *cbCount) {
+    unsigned char *GetFileData(size_t *cbCount) override {
         return (unsigned char *)file::ReadAll(fileName, cbCount);
     }
-    virtual bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false) {
+    bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false) override {
         UNUSED(includeUserAnnots);
         return fileName ? CopyFile(fileName, copyFileName, FALSE) : false;
     }
-    virtual bool SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots=false) {
+    bool SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots=false) override {
         return pdfEngine->SaveFileAs(pdfFileName, includeUserAnnots);
     }
-    virtual WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coordsOut=nullptr,
-                                    RenderTarget target=Target_View) {
+    WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coordsOut=nullptr,
+                                    RenderTarget target=Target_View) override {
         return pdfEngine->ExtractPageText(pageNo, lineSep, coordsOut, target);
     }
-    virtual bool HasClipOptimizations(int pageNo) {
+    bool HasClipOptimizations(int pageNo) override {
         return pdfEngine->HasClipOptimizations(pageNo);
     }
-    virtual PageLayoutType PreferredLayout() {
+    PageLayoutType PreferredLayout() override {
         return pdfEngine->PreferredLayout();
     }
-    virtual WCHAR *GetProperty(DocumentProperty prop) {
+    WCHAR *GetProperty(DocumentProperty prop) override {
         // omit properties created by Ghostscript
         if (!pdfEngine || Prop_CreationDate == prop || Prop_ModificationDate == prop ||
             Prop_PdfVersion == prop || Prop_PdfProducer == prop || Prop_PdfFileStructure == prop) {
@@ -273,49 +273,49 @@ public:
         return pdfEngine->GetProperty(prop);
     }
 
-    virtual bool SupportsAnnotation(bool forSaving=false) const {
+    bool SupportsAnnotation(bool forSaving=false) const override {
         return !forSaving && pdfEngine->SupportsAnnotation();
     }
-    virtual void UpdateUserAnnotations(Vec<PageAnnotation> *list) {
+    void UpdateUserAnnotations(Vec<PageAnnotation> *list) override {
         pdfEngine->UpdateUserAnnotations(list);
     }
 
-    virtual bool AllowsPrinting() const {
+    bool AllowsPrinting() const override {
         return pdfEngine->AllowsPrinting();
     }
-    virtual bool AllowsCopyingText() const {
+    bool AllowsCopyingText() const override {
         return pdfEngine->AllowsCopyingText();
     }
 
-    virtual float GetFileDPI() const {
+    float GetFileDPI() const override {
         return pdfEngine->GetFileDPI();
     }
-    virtual const WCHAR *GetDefaultFileExt() const {
+    const WCHAR *GetDefaultFileExt() const override {
         return !str::EndsWithI(fileName, L".eps") ? L".ps" : L".eps";
     }
 
-    virtual bool BenchLoadPage(int pageNo) {
+    bool BenchLoadPage(int pageNo) override {
         return pdfEngine->BenchLoadPage(pageNo);
     }
 
-    virtual Vec<PageElement *> *GetElements(int pageNo) {
+    Vec<PageElement *> *GetElements(int pageNo) override {
         return pdfEngine->GetElements(pageNo);
     }
-    virtual PageElement *GetElementAtPos(int pageNo, PointD pt) {
+    PageElement *GetElementAtPos(int pageNo, PointD pt) override {
         return pdfEngine->GetElementAtPos(pageNo, pt);
     }
 
-    virtual PageDestination *GetNamedDest(const WCHAR *name) {
+    PageDestination *GetNamedDest(const WCHAR *name) override {
         return pdfEngine->GetNamedDest(name);
     }
-    virtual bool HasTocTree() const {
+    bool HasTocTree() const override {
         return pdfEngine->HasTocTree();
     }
-    virtual DocTocItem *GetTocTree() {
+    DocTocItem *GetTocTree() override {
         return pdfEngine->GetTocTree();
     }
 
-    virtual char *GetDecryptionKey() const {
+    char *GetDecryptionKey() const override {
         return pdfEngine->GetDecryptionKey();
     }
 

@@ -10,10 +10,10 @@ class CEpubFilter : public CFilterBase
 public:
     CEpubFilter(long *plRefCount) : CFilterBase(plRefCount),
         m_state(STATE_EPUB_END), m_epubDoc(nullptr) { }
-    virtual ~CEpubFilter() { CleanUp(); }
+    ~CEpubFilter()  override { CleanUp(); }
 
-    virtual HRESULT OnInit();
-    virtual HRESULT GetNextChunkValue(CChunkValue &chunkValue);
+    HRESULT OnInit() override;
+    HRESULT GetNextChunkValue(CChunkValue &chunkValue) override;
 
     VOID CleanUp();
 

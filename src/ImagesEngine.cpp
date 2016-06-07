@@ -39,37 +39,37 @@ public:
     ImagesEngine();
     virtual ~ImagesEngine();
 
-    virtual const WCHAR *FileName() const { return fileName; };
-    virtual int PageCount() const { return (int)mediaboxes.Count(); }
+    const WCHAR *FileName() const override { return fileName; };
+    int PageCount() const override { return (int)mediaboxes.Count(); }
 
-    virtual RectD PageMediabox(int pageNo);
+    RectD PageMediabox(int pageNo) override;
 
-    virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
+    RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
                          RectD *pageRect=nullptr, /* if nullptr: defaults to the page's mediabox */
-                         RenderTarget target=Target_View, AbortCookie **cookie_out=nullptr);
+                         RenderTarget target=Target_View, AbortCookie **cookie_out=nullptr) override;
 
-    virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false);
-    virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false);
+    PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false) override;
+    RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false) override;
 
-    virtual unsigned char *GetFileData(size_t *cbCount);
-    virtual bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false);
-    virtual WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coordsOut=nullptr,
-                                    RenderTarget target=Target_View) {
+    unsigned char *GetFileData(size_t *cbCount) override;
+    bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false) override;
+    WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coordsOut=nullptr,
+                                    RenderTarget target=Target_View) override {
         UNUSED(pageNo); UNUSED(lineSep);
         UNUSED(coordsOut); UNUSED(target);
         return nullptr;
     }
-    virtual bool HasClipOptimizations(int pageNo) { UNUSED(pageNo);  return false; }
-    virtual PageLayoutType PreferredLayout() { return Layout_NonContinuous; }
-    virtual bool IsImageCollection() const { return true; }
+    bool HasClipOptimizations(int pageNo) override { UNUSED(pageNo);  return false; }
+    PageLayoutType PreferredLayout() override { return Layout_NonContinuous; }
+    bool IsImageCollection() const override { return true; }
 
-    virtual bool SupportsAnnotation(bool forSaving = false) const { UNUSED(forSaving);  return false; }
-    virtual void UpdateUserAnnotations(Vec<PageAnnotation> *list) { UNUSED(list); }
+    bool SupportsAnnotation(bool forSaving = false) const override { UNUSED(forSaving);  return false; }
+    void UpdateUserAnnotations(Vec<PageAnnotation> *list) override { UNUSED(list); }
 
-    virtual Vec<PageElement *> *GetElements(int pageNo);
-    virtual PageElement *GetElementAtPos(int pageNo, PointD pt);
+    Vec<PageElement *> *GetElements(int pageNo) override;
+    PageElement *GetElementAtPos(int pageNo, PointD pt) override;
 
-    virtual bool BenchLoadPage(int pageNo) {
+    bool BenchLoadPage(int pageNo) override {
         ImagePage *page = GetPage(pageNo);
         if (page)
             DropPage(page);
@@ -330,14 +330,14 @@ public:
     ImageEngineImpl() : fileExt(nullptr), image(nullptr) { }
     virtual ~ImageEngineImpl() { delete image; }
 
-    virtual BaseEngine *Clone();
+    BaseEngine *Clone() override;
 
-    virtual WCHAR *GetProperty(DocumentProperty prop);
+    WCHAR *GetProperty(DocumentProperty prop) override;
 
-    virtual float GetFileDPI() const { return image->GetHorizontalResolution(); }
-    virtual const WCHAR *GetDefaultFileExt() const { return fileExt; }
+    float GetFileDPI() const override { return image->GetHorizontalResolution(); }
+    const WCHAR *GetDefaultFileExt() const override { return fileExt; }
 
-    virtual bool SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots=false);
+    bool SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots=false) override;
 
     static BaseEngine *CreateFromFile(const WCHAR *fileName);
     static BaseEngine *CreateFromStream(IStream *stream);
@@ -614,28 +614,28 @@ class ImageDirEngineImpl : public ImagesEngine {
 public:
     ImageDirEngineImpl() : fileDPI(96.0f) { }
 
-    virtual BaseEngine *Clone() {
+    BaseEngine *Clone() override {
         return fileName ? CreateFromFile(fileName) : nullptr;
     }
 
-    virtual unsigned char *GetFileData(size_t *cbCountOut) { UNUSED(cbCountOut);  return nullptr; }
-    virtual bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false);
+    unsigned char *GetFileData(size_t *cbCountOut) override { UNUSED(cbCountOut);  return nullptr; }
+    bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false) override;
 
-    virtual WCHAR *GetProperty(DocumentProperty prop) { UNUSED(prop); return nullptr; }
+    WCHAR *GetProperty(DocumentProperty prop) override { UNUSED(prop); return nullptr; }
 
     // TODO: is there a better place to expose pageFileNames than through page labels?
-    virtual bool HasPageLabels() const { return true; }
-    virtual WCHAR *GetPageLabel(int pageNo) const;
-    virtual int GetPageByLabel(const WCHAR *label) const;
+    bool HasPageLabels() const override { return true; }
+    WCHAR *GetPageLabel(int pageNo) const override;
+    int GetPageByLabel(const WCHAR *label) const override;
 
-    virtual bool HasTocTree() const { return true; }
-    virtual DocTocItem *GetTocTree();
+    bool HasTocTree() const override { return true; }
+    DocTocItem *GetTocTree() override;
 
     // TODO: better handle the case where images have different resolutions
-    virtual float GetFileDPI() const { return fileDPI; }
-    virtual const WCHAR *GetDefaultFileExt() const { return L""; }
+    float GetFileDPI() const override { return fileDPI; }
+    const WCHAR *GetDefaultFileExt() const override { return L""; }
 
-    virtual bool SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots=false);
+    bool SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots=false) override;
 
     static BaseEngine *CreateFromFile(const WCHAR *fileName);
 
@@ -812,7 +812,7 @@ public:
     CbxEngineImpl(ArchFile *arch, CbxFormat cbxFormat) : cbxFile(arch), cbxFormat(cbxFormat) { }
     virtual ~CbxEngineImpl() { delete cbxFile; }
 
-    virtual BaseEngine *Clone() {
+    virtual BaseEngine *Clone()  override {
         if (fileStream) {
             ScopedComPtr<IStream> stm;
             HRESULT res = fileStream->Clone(&stm);
@@ -824,18 +824,18 @@ public:
         return nullptr;
     }
 
-    virtual bool SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots=false);
+    bool SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots=false) override;
 
-    virtual WCHAR *GetProperty(DocumentProperty prop);
+    WCHAR *GetProperty(DocumentProperty prop) override;
 
     // not using the resolution of the contained images seems to be
     // expected, cf. http://forums.fofou.org/sumatrapdf/topic?id=3183827
     // TODO: return win::GetHwndDpi(HWND_DESKTOP) instead?
-    virtual float GetFileDPI() const { return 96.0f; }
-    virtual const WCHAR *GetDefaultFileExt() const;
+    float GetFileDPI() const override { return 96.0f; }
+    const WCHAR *GetDefaultFileExt() const override;
 
     // json::ValueVisitor
-    virtual bool Visit(const char *path, const char *value, json::DataType type);
+    bool Visit(const char *path, const char *value, json::DataType type) override;
 
     static BaseEngine *CreateFromFile(const WCHAR *fileName);
     static BaseEngine *CreateFromStream(IStream *stream);
