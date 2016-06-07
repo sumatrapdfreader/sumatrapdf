@@ -3387,47 +3387,47 @@ class XpsEngineImpl : public BaseEngine {
 public:
     XpsEngineImpl();
     virtual ~XpsEngineImpl();
-    virtual BaseEngine *Clone();
+    BaseEngine *Clone() override;
 
-    virtual const WCHAR *FileName() const { return _fileName; };
-    virtual int PageCount() const {
+    const WCHAR *FileName() const override { return _fileName; };
+    int PageCount() const override {
         return _doc ? xps_count_pages(_doc) : 0;
     }
 
-    virtual RectD PageMediabox(int pageNo);
-    virtual RectD PageContentBox(int pageNo, RenderTarget target=Target_View);
+    RectD PageMediabox(int pageNo) override;
+    RectD PageContentBox(int pageNo, RenderTarget target=Target_View) override;
 
-    virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
+    RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
                          RectD *pageRect=nullptr, /* if nullptr: defaults to the page's mediabox */
-                         RenderTarget target=Target_View, AbortCookie **cookie_out=nullptr);
+                         RenderTarget target=Target_View, AbortCookie **cookie_out=nullptr) override;
 
-    virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false);
-    virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false);
+    PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false) override;
+    RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false) override;
 
-    virtual unsigned char *GetFileData(size_t *cbCount);
-    virtual bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false);
-    virtual WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coordsOut=nullptr,
-                                    RenderTarget target=Target_View) {
+    unsigned char *GetFileData(size_t *cbCount) override;
+    bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false) override;
+    WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coordsOut=nullptr,
+                                    RenderTarget target=Target_View) override {
         UNUSED(target);
         return ExtractPageText(GetXpsPage(pageNo), lineSep, coordsOut);
     }
-    virtual bool HasClipOptimizations(int pageNo);
-    virtual WCHAR *GetProperty(DocumentProperty prop);
+    bool HasClipOptimizations(int pageNo) override;
+    WCHAR *GetProperty(DocumentProperty prop) override;
 
-    virtual bool SupportsAnnotation(bool forSaving=false) const;
-    virtual void UpdateUserAnnotations(Vec<PageAnnotation> *list);
+    bool SupportsAnnotation(bool forSaving=false) const override;
+    void UpdateUserAnnotations(Vec<PageAnnotation> *list) override;
 
-    virtual float GetFileDPI() const { return 72.0f; }
-    virtual const WCHAR *GetDefaultFileExt() const { return L".xps"; }
+    float GetFileDPI() const override { return 72.0f; }
+    const WCHAR *GetDefaultFileExt() const override { return L".xps"; }
 
-    virtual bool BenchLoadPage(int pageNo) { return GetXpsPage(pageNo) != nullptr; }
+    bool BenchLoadPage(int pageNo) override { return GetXpsPage(pageNo) != nullptr; }
 
-    virtual Vec<PageElement *> *GetElements(int pageNo);
-    virtual PageElement *GetElementAtPos(int pageNo, PointD pt);
+    Vec<PageElement *> *GetElements(int pageNo) override;
+    PageElement *GetElementAtPos(int pageNo, PointD pt) override;
 
-    virtual PageDestination *GetNamedDest(const WCHAR *name);
-    virtual bool HasTocTree() const { return _outline != nullptr; }
-    virtual DocTocItem *GetTocTree();
+    PageDestination *GetNamedDest(const WCHAR *name) override;
+    bool HasTocTree() const override { return _outline != nullptr; }
+    DocTocItem *GetTocTree() override;
 
     fz_rect FindDestRect(const char *target);
 
