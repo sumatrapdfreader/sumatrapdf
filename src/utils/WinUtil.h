@@ -86,7 +86,7 @@ bool GetCursorPosInHwnd(HWND hwnd, PointI &posOut);
 void CenterDialog(HWND hDlg, HWND hParent = nullptr);
 WCHAR *GetDefaultPrinterName();
 bool CopyTextToClipboard(const WCHAR *text, bool appendOnly = false);
-bool CopyImageToClipboard(HBITMAP hbmp, bool appendOnly = false);
+bool CopyImageToClipboard(HBITMAP hbmp, bool appendOnly);
 void ToggleWindowStyle(HWND hwnd, DWORD flag, bool enable, int type = GWL_STYLE);
 RectI ChildPosWithinParent(HWND hwnd);
 HFONT GetDefaultGuiFont();

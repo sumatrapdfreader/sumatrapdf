@@ -573,6 +573,25 @@ bool CopyTextToClipboard(const WCHAR *text, bool appendOnly) {
     return handle != nullptr;
 }
 
+static bool SetClipboardImage(HBITMAP hbmp) {
+    if (!hbmp)
+        return false;
+    BITMAP bmpInfo;
+    GetObject(hbmp, sizeof(BITMAP), &bmpInfo);
+    HANDLE h = nullptr;
+    if (bmpInfo.bmBits != nullptr) {
+        // GDI+ produced HBITMAPs are DIBs instead of DDBs which
+        // aren't correctly handled by the clipboard, so create a
+        // clipboard-safe clone
+        ScopedGdiObj<HBITMAP> ddbBmp(
+            (HBITMAP)CopyImage(hbmp, IMAGE_BITMAP, bmpInfo.bmWidth, bmpInfo.bmHeight, 0));
+        h = SetClipboardData(CF_BITMAP, ddbBmp);
+    } else {
+        h = SetClipboardData(CF_BITMAP, hbmp);
+    }
+    return h != nullptr;
+}
+
 bool CopyImageToClipboard(HBITMAP hbmp, bool appendOnly) {
     if (!appendOnly) {
         if (!OpenClipboard(nullptr))
@@ -580,20 +599,7 @@ bool CopyImageToClipboard(HBITMAP hbmp, bool appendOnly) {
         EmptyClipboard();
     }
 
-    bool ok = false;
-    if (hbmp) {
-        BITMAP bmpInfo;
-        GetObject(hbmp, sizeof(BITMAP), &bmpInfo);
-        if (bmpInfo.bmBits != nullptr) {
-            // GDI+ produced HBITMAPs are DIBs instead of DDBs which
-            // aren't correctly handled by the clipboard, so create a
-            // clipboard-safe clone
-            ScopedGdiObj<HBITMAP> ddbBmp(
-                (HBITMAP)CopyImage(hbmp, IMAGE_BITMAP, bmpInfo.bmWidth, bmpInfo.bmHeight, 0));
-            ok = SetClipboardData(CF_BITMAP, ddbBmp) != nullptr;
-        } else
-            ok = SetClipboardData(CF_BITMAP, hbmp) != nullptr;
-    }
+    bool ok = SetClipboardImage(hbmp);
 
     if (!appendOnly)
         CloseClipboard();

@@ -600,7 +600,7 @@ void OnContextMenu(WindowInfo* win, int x, int y)
         if (pageEl) {
             RenderedBitmap *bmp = pageEl->GetImage();
             if (bmp)
-                CopyImageToClipboard(bmp->GetBitmap());
+                CopyImageToClipboard(bmp->GetBitmap(), false);
             delete bmp;
         }
         break;
