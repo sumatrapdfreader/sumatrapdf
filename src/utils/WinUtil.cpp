@@ -920,10 +920,10 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor) {
     if (ret >= sizeof(info.dsBm) && info.dsBm.bmBits && 32 == info.dsBm.bmBitsPixel &&
         size.dx * 4 == info.dsBm.bmWidthBytes) {
         int bmpBytes = size.dx * size.dy * 4;
-        BYTE *bmpData = (BYTE *)info.dsBm.bmBits;
+        uint8 *bmpData = (uint8 *)info.dsBm.bmBits;
         for (int i = 0; i < bmpBytes; i++) {
             int k = i % 4;
-            bmpData[i] = (BYTE)(base[k] + mul255(bmpData[i], diff[k]));
+            bmpData[i] = (uint8)(base[k] + mul255(bmpData[i], diff[k]));
         }
         return;
     }
@@ -931,11 +931,11 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor) {
     // for mapped 24-bit DI bitmaps: directly access the pixel data
     if (ret >= sizeof(info.dsBm) && info.dsBm.bmBits && 24 == info.dsBm.bmBitsPixel &&
         info.dsBm.bmWidthBytes >= size.dx * 3) {
-        BYTE *bmpData = (BYTE *)info.dsBm.bmBits;
+        uint8 *bmpData = (uint8 *)info.dsBm.bmBits;
         for (int y = 0; y < size.dy; y++) {
             for (int x = 0; x < size.dx * 3; x++) {
                 int k = x % 3;
-                bmpData[x] = (BYTE)(base[k] + mul255(bmpData[x], diff[k]));
+                bmpData[x] = (uint8)(base[k] + mul255(bmpData[x], diff[k]));
             }
             bmpData += info.dsBm.bmWidthBytes;
         }
@@ -950,9 +950,9 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor) {
         DeleteObject(SelectObject(hDC, hbmp));
         UINT num = GetDIBColorTable(hDC, 0, dimof(palette), palette);
         for (UINT i = 0; i < num; i++) {
-            palette[i].rgbRed = (BYTE)(base[2] + mul255(palette[i].rgbRed, diff[2]));
-            palette[i].rgbGreen = (BYTE)(base[1] + mul255(palette[i].rgbGreen, diff[1]));
-            palette[i].rgbBlue = (BYTE)(base[0] + mul255(palette[i].rgbBlue, diff[0]));
+            palette[i].rgbRed = (uint8)(base[2] + mul255(palette[i].rgbRed, diff[2]));
+            palette[i].rgbGreen = (uint8)(base[1] + mul255(palette[i].rgbGreen, diff[1]));
+            palette[i].rgbBlue = (uint8)(base[0] + mul255(palette[i].rgbBlue, diff[0]));
         }
         if (num > 0)
             SetDIBColorTable(hDC, 0, num, palette);
@@ -970,13 +970,13 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor) {
 
     HDC hDC = CreateCompatibleDC(nullptr);
     int bmpBytes = size.dx * size.dy * 4;
-    ScopedMem<BYTE> bmpData((BYTE *)malloc(bmpBytes));
+    ScopedMem<uint8> bmpData((uint8 *)malloc(bmpBytes));
     CrashIf(!bmpData);
 
     if (GetDIBits(hDC, hbmp, 0, size.dy, bmpData, &bmi, DIB_RGB_COLORS)) {
         for (int i = 0; i < bmpBytes; i++) {
             int k = i % 4;
-            bmpData[i] = (BYTE)(base[k] + mul255(bmpData[i], diff[k]));
+            bmpData[i] = (uint8)(base[k] + mul255(bmpData[i], diff[k]));
         }
         SetDIBits(hDC, hbmp, 0, size.dy, bmpData, &bmi, DIB_RGB_COLORS);
     }
