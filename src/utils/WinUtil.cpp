@@ -901,6 +901,75 @@ inline int mul255(int a, int b) {
     return x >> 8;
 }
 
+void FinalizeBitmapPixels(BitmapPixels* bitmapPixels) {
+    HDC hdc = bitmapPixels->hdc;
+    if (!hdc) {
+        free(bitmapPixels);
+        return;
+    }
+    SetDIBits(bitmapPixels->hdc, bitmapPixels->hbmp, 0, bitmapPixels->size.dy, bitmapPixels->pixels, &bitmapPixels->bmi, DIB_RGB_COLORS);
+    DeleteDC(hdc);
+    free(bitmapPixels);
+}
+
+BitmapPixels *GetBitmapPixels(HBITMAP hbmp) {
+    BitmapPixels *res = AllocStruct<BitmapPixels>();
+
+    DIBSECTION info = { 0 };
+    int ret = GetObject(hbmp, sizeof(info), &info);
+    CrashIf(ret < sizeof(info.dsBm));
+    SizeI size(info.dsBm.bmWidth, info.dsBm.bmHeight);
+
+    res->size = size;
+    res->hbmp = hbmp;
+
+    // for mapped 32-bit DI bitmaps: directly access the pixel data
+    if (ret >= sizeof(info.dsBm) && info.dsBm.bmBits && 32 == info.dsBm.bmBitsPixel &&
+        size.dx * 4 == info.dsBm.bmWidthBytes) {
+        res->pixels = (uint8 *)info.dsBm.bmBits;
+        res->nBytesPerPixel = 4;
+        res->nBytesPerRow = info.dsBm.bmWidthBytes;
+        res->nBytes = size.dx * size.dy * 4;
+        return res;
+    }
+
+    // for mapped 24-bit DI bitmaps: directly access the pixel data
+    if (ret >= sizeof(info.dsBm) && info.dsBm.bmBits && 24 == info.dsBm.bmBitsPixel &&
+        info.dsBm.bmWidthBytes >= size.dx * 3) {
+        res->pixels = (uint8 *)info.dsBm.bmBits;
+        res->nBytesPerPixel = 3;
+        res->nBytesPerRow = info.dsBm.bmWidthBytes;
+        res->nBytes = size.dx * size.dy * 4;
+        return res;
+    }
+
+    // we don't support paletted DI bitmaps
+    if (sizeof(info) == ret && info.dsBmih.biBitCount && info.dsBmih.biBitCount <= 8) {
+        FinalizeBitmapPixels(res);
+        return nullptr;
+    }
+
+    BITMAPINFO bmi = { 0 };
+    bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
+    bmi.bmiHeader.biWidth = size.dx;
+    bmi.bmiHeader.biHeight = size.dy;
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = 32;
+    bmi.bmiHeader.biCompression = BI_RGB;
+
+    HDC hdc = CreateCompatibleDC(nullptr);
+    int bmpBytes = size.dx * size.dy * 4;
+    ScopedMem<uint8> bmpData((uint8 *)malloc(bmpBytes));
+    CrashIf(!bmpData);
+
+    if (!GetDIBits(hdc, hbmp, 0, size.dy, bmpData, &bmi, DIB_RGB_COLORS)) {
+        DeleteDC(hdc);
+        FinalizeBitmapPixels(res);
+        return nullptr;
+    }
+    return res;
+}
+
 void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor) {
     if ((textColor & 0xFFFFFF) == WIN_COL_BLACK && (bgColor & 0xFFFFFF) == WIN_COL_WHITE)
         return;

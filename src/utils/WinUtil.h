@@ -178,8 +178,22 @@ class DeferWinPosHelper {
     void MoveWindow(HWND hWnd, RectI r) { this->MoveWindow(hWnd, r.x, r.y, r.dx, r.dy); }
 };
 
+struct BitmapPixels {
+    uint8*      pixels;
+    SizeI       size;
+    int         nBytes;
+    int         nBytesPerPixel;
+    int         nBytesPerRow;
+
+    HBITMAP     hbmp;
+    BITMAPINFO  bmi;
+    HDC         hdc;
+};
+
 void InitAllCommonControls();
 SizeI GetBitmapSize(HBITMAP hbmp);
+BitmapPixels *GetBitmapPixels(HBITMAP hbmp);
+void FinalizeBitmapPixels(BitmapPixels* bitmapPixels);
 void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor);
 unsigned char *SerializeBitmap(HBITMAP hbmp, size_t *bmpBytesOut);
 HBITMAP CreateMemoryBitmap(SizeI size, HANDLE *hDataMapping = nullptr);
