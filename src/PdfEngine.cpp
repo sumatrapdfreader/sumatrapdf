@@ -634,9 +634,9 @@ class SimpleDest : public PageDestination {
 public:
     SimpleDest(int pageNo, RectD rect) : pageNo(pageNo), rect(rect) { }
 
-    virtual PageDestType GetDestType() const { return Dest_ScrollTo; }
-    virtual int GetDestPageNo() const { return pageNo; }
-    virtual RectD GetDestRect() const { return rect; }
+    PageDestType GetDestType() const override { return Dest_ScrollTo; }
+    int GetDestPageNo() const override { return pageNo; }
+    RectD GetDestRect() const override { return rect; }
 };
 
 struct FitzImagePos {
@@ -760,7 +760,7 @@ class FitzAbortCookie : public AbortCookie {
 public:
     fz_cookie cookie;
     FitzAbortCookie() { memset(&cookie, 0, sizeof(cookie)); }
-    virtual void Abort() { cookie.abort = 1; }
+    void Abort() override { cookie.abort = 1; }
 };
 
 extern "C" static void
@@ -1165,66 +1165,66 @@ class PdfEngineImpl : public BaseEngine {
 public:
     PdfEngineImpl();
     virtual ~PdfEngineImpl();
-    virtual BaseEngine *Clone();
+    BaseEngine *Clone() override;
 
-    virtual const WCHAR *FileName() const { return _fileName; };
-    virtual int PageCount() const {
+    const WCHAR *FileName() const  override { return _fileName; };
+    int PageCount() const override {
         // make sure that _doc->page_count is initialized as soon as
         // _doc is defined, so that pdf_count_pages can't throw
         return _doc ? pdf_count_pages(_doc) : 0;
     }
 
-    virtual RectD PageMediabox(int pageNo);
-    virtual RectD PageContentBox(int pageNo, RenderTarget target=Target_View);
+    RectD PageMediabox(int pageNo) override;
+    RectD PageContentBox(int pageNo, RenderTarget target=Target_View) override;
 
-    virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
+    RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
                          RectD *pageRect=nullptr, /* if nullptr: defaults to the page's mediabox */
-                         RenderTarget target=Target_View, AbortCookie **cookie_out=nullptr);
+                         RenderTarget target=Target_View, AbortCookie **cookie_out=nullptr) override;
 
-    virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false);
-    virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false);
+    PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false) override;
+    RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false) override;
 
-    virtual unsigned char *GetFileData(size_t *cbCount);
-    virtual bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false);
+    unsigned char *GetFileData(size_t *cbCount) override;
+    bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false) override;
     virtual bool SaveFileAsPdf(const WCHAR *pdfFileName, bool includeUserAnnots=false) {
         return SaveFileAs(pdfFileName, includeUserAnnots);
     }
-    virtual WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coordsOut=nullptr,
-                                    RenderTarget target=Target_View);
-    virtual bool HasClipOptimizations(int pageNo);
-    virtual PageLayoutType PreferredLayout();
-    virtual WCHAR *GetProperty(DocumentProperty prop);
+    WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coordsOut=nullptr,
+                                    RenderTarget target=Target_View) override;
+    bool HasClipOptimizations(int pageNo) override;
+    PageLayoutType PreferredLayout() override;
+    WCHAR *GetProperty(DocumentProperty prop) override;
 
-    virtual bool SupportsAnnotation(bool forSaving=false) const;
-    virtual void UpdateUserAnnotations(Vec<PageAnnotation> *list);
+    bool SupportsAnnotation(bool forSaving=false) const override;
+    void UpdateUserAnnotations(Vec<PageAnnotation> *list) override;
 
-    virtual bool AllowsPrinting() const {
+    bool AllowsPrinting() const override {
         return pdf_has_permission(_doc, PDF_PERM_PRINT);
     }
-    virtual bool AllowsCopyingText() const {
+    bool AllowsCopyingText() const override {
         return pdf_has_permission(_doc, PDF_PERM_COPY);
     }
 
-    virtual float GetFileDPI() const { return 72.0f; }
-    virtual const WCHAR *GetDefaultFileExt() const { return L".pdf"; }
+    float GetFileDPI() const override { return 72.0f; }
+    const WCHAR *GetDefaultFileExt() const override { return L".pdf"; }
 
-    virtual bool BenchLoadPage(int pageNo) { return GetPdfPage(pageNo) != nullptr; }
+    bool BenchLoadPage(int pageNo)  override { return GetPdfPage(pageNo) != nullptr; }
 
-    virtual Vec<PageElement *> *GetElements(int pageNo);
-    virtual PageElement *GetElementAtPos(int pageNo, PointD pt);
+    Vec<PageElement *> *GetElements(int pageNo) override;
+    PageElement *GetElementAtPos(int pageNo, PointD pt) override;
 
-    virtual PageDestination *GetNamedDest(const WCHAR *name);
-    virtual bool HasTocTree() const {
+    PageDestination *GetNamedDest(const WCHAR *name) override;
+    bool HasTocTree() const override {
         return outline != nullptr || attachments != nullptr;
     }
-    virtual DocTocItem *GetTocTree();
+    DocTocItem *GetTocTree() override;
 
-    virtual bool HasPageLabels() const { return _pagelabels != nullptr; }
-    virtual WCHAR *GetPageLabel(int pageNo) const;
-    virtual int GetPageByLabel(const WCHAR *label) const;
+    bool HasPageLabels() const override { return _pagelabels != nullptr; }
+    WCHAR *GetPageLabel(int pageNo) const override;
+    int GetPageByLabel(const WCHAR *label) const override;
 
-    virtual bool IsPasswordProtected() const override { return isProtected; }
-    virtual char *GetDecryptionKey() const override;
+    bool IsPasswordProtected() const override { return isProtected; }
+    char *GetDecryptionKey() const override;
 
     static BaseEngine *CreateFromFile(const WCHAR *fileName, PasswordUI *pwdUI);
     static BaseEngine *CreateFromStream(IStream *stream, PasswordUI *pwdUI);
@@ -1310,17 +1310,19 @@ public:
             this->pt = PointD(pt->x, pt->y);
     }
 
-    virtual PageElementType GetType() const { return Element_Link; }
-    virtual int GetPageNo() const { return pageNo; }
-    virtual RectD GetRect() const { return rect; }
-    virtual WCHAR *GetValue() const;
+    // PageElement
+    PageElementType GetType() const override { return Element_Link; }
+    int GetPageNo() const override { return pageNo; }
+    RectD GetRect() const override { return rect; }
+    WCHAR *GetValue() const override;
     virtual PageDestination *AsLink() { return this; }
 
-    virtual PageDestType GetDestType() const;
-    virtual int GetDestPageNo() const;
-    virtual RectD GetDestRect() const;
-    virtual WCHAR *GetDestValue() const { return GetValue(); }
-    virtual WCHAR *GetDestName() const;
+    // PageDestination
+    PageDestType GetDestType() const override;
+    int GetDestPageNo() const override;
+    RectD GetDestRect() const override;
+    WCHAR *GetDestValue() const override { return GetValue(); }
+    WCHAR *GetDestName() const override;
 
     virtual bool SaveEmbedded(LinkSaverUI& saveUI);
 };
@@ -3385,47 +3387,47 @@ class XpsEngineImpl : public BaseEngine {
 public:
     XpsEngineImpl();
     virtual ~XpsEngineImpl();
-    virtual BaseEngine *Clone();
+    BaseEngine *Clone() override;
 
-    virtual const WCHAR *FileName() const { return _fileName; };
-    virtual int PageCount() const {
+    const WCHAR *FileName() const override { return _fileName; };
+    int PageCount() const override {
         return _doc ? xps_count_pages(_doc) : 0;
     }
 
-    virtual RectD PageMediabox(int pageNo);
-    virtual RectD PageContentBox(int pageNo, RenderTarget target=Target_View);
+    RectD PageMediabox(int pageNo) override;
+    RectD PageContentBox(int pageNo, RenderTarget target=Target_View) override;
 
-    virtual RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
+    RenderedBitmap *RenderBitmap(int pageNo, float zoom, int rotation,
                          RectD *pageRect=nullptr, /* if nullptr: defaults to the page's mediabox */
-                         RenderTarget target=Target_View, AbortCookie **cookie_out=nullptr);
+                         RenderTarget target=Target_View, AbortCookie **cookie_out=nullptr) override;
 
-    virtual PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false);
-    virtual RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false);
+    PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false) override;
+    RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false) override;
 
-    virtual unsigned char *GetFileData(size_t *cbCount);
-    virtual bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false);
-    virtual WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coordsOut=nullptr,
-                                    RenderTarget target=Target_View) {
+    unsigned char *GetFileData(size_t *cbCount) override;
+    bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false) override;
+    WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coordsOut=nullptr,
+                                    RenderTarget target=Target_View) override {
         UNUSED(target);
         return ExtractPageText(GetXpsPage(pageNo), lineSep, coordsOut);
     }
-    virtual bool HasClipOptimizations(int pageNo);
-    virtual WCHAR *GetProperty(DocumentProperty prop);
+    bool HasClipOptimizations(int pageNo) override;
+    WCHAR *GetProperty(DocumentProperty prop) override;
 
-    virtual bool SupportsAnnotation(bool forSaving=false) const;
-    virtual void UpdateUserAnnotations(Vec<PageAnnotation> *list);
+    bool SupportsAnnotation(bool forSaving=false) const override;
+    void UpdateUserAnnotations(Vec<PageAnnotation> *list) override;
 
-    virtual float GetFileDPI() const { return 72.0f; }
-    virtual const WCHAR *GetDefaultFileExt() const { return L".xps"; }
+    float GetFileDPI() const override { return 72.0f; }
+    const WCHAR *GetDefaultFileExt() const override { return L".xps"; }
 
-    virtual bool BenchLoadPage(int pageNo) { return GetXpsPage(pageNo) != nullptr; }
+    bool BenchLoadPage(int pageNo) override { return GetXpsPage(pageNo) != nullptr; }
 
-    virtual Vec<PageElement *> *GetElements(int pageNo);
-    virtual PageElement *GetElementAtPos(int pageNo, PointD pt);
+    Vec<PageElement *> *GetElements(int pageNo) override;
+    PageElement *GetElementAtPos(int pageNo, PointD pt) override;
 
-    virtual PageDestination *GetNamedDest(const WCHAR *name);
-    virtual bool HasTocTree() const { return _outline != nullptr; }
-    virtual DocTocItem *GetTocTree();
+    PageDestination *GetNamedDest(const WCHAR *name) override;
+    bool HasTocTree() const override { return _outline != nullptr; }
+    DocTocItem *GetTocTree() override;
 
     fz_rect FindDestRect(const char *target);
 
@@ -3496,17 +3498,17 @@ public:
     XpsLink(XpsEngineImpl *engine, fz_link_dest *link, fz_rect rect=fz_empty_rect, int pageNo=-1) :
         engine(engine), link(link), rect(fz_rect_to_RectD(rect)), pageNo(pageNo) { }
 
-    virtual PageElementType GetType() const { return Element_Link; }
-    virtual int GetPageNo() const { return pageNo; }
-    virtual RectD GetRect() const { return rect; }
-    virtual WCHAR *GetValue() const {
+    PageElementType GetType() const  override { return Element_Link; }
+    int GetPageNo() const  override { return pageNo; }
+    RectD GetRect() const  override { return rect; }
+    WCHAR *GetValue() const  override {
         if (link && FZ_LINK_URI == link->kind)
             return str::conv::FromUtf8(link->ld.uri.uri);
         return nullptr;
     }
     virtual PageDestination *AsLink() { return this; }
 
-    virtual PageDestType GetDestType() const {
+    PageDestType GetDestType() const override {
         if (!link)
             return Dest_None;
         if (FZ_LINK_GOTO == link->kind)
@@ -3515,17 +3517,17 @@ public:
             return Dest_LaunchURL;
         return Dest_None;
     }
-    virtual int GetDestPageNo() const {
+    int GetDestPageNo() const override {
         if (!link || link->kind != FZ_LINK_GOTO)
             return 0;
         return link->ld.gotor.page + 1;
     }
-    virtual RectD GetDestRect() const {
+    RectD GetDestRect() const override {
         if (!engine || !link || link->kind != FZ_LINK_GOTO || !link->ld.gotor.dest)
             return RectD(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
         return fz_rect_to_RectD(engine->FindDestRect(link->ld.gotor.dest));
     }
-    virtual WCHAR *GetDestValue() const { return GetValue(); }
+    WCHAR *GetDestValue() const override { return GetValue(); }
 };
 
 class XpsTocItem : public DocTocItem {

@@ -286,11 +286,11 @@ public:
         name(dest->GetDestName()) { }
     virtual ~RemoteDestination() { }
 
-    virtual PageDestType GetDestType() const { return type; }
-    virtual int GetDestPageNo() const { return pageNo; }
-    virtual RectD GetDestRect() const { return rect; }
-    virtual WCHAR *GetDestValue() const { return str::Dup(value); }
-    virtual WCHAR *GetDestName() const { return str::Dup(name); }
+    PageDestType GetDestType() const override { return type; }
+    int GetDestPageNo() const override { return pageNo; }
+    RectD GetDestRect() const override { return rect; }
+    WCHAR *GetDestValue() const override { return str::Dup(value); }
+    WCHAR *GetDestName() const override { return str::Dup(name); }
 };
 
 void LinkHandler::GotoLink(PageDestination *link)

@@ -209,6 +209,7 @@ public:
 
         return OnInit();
     }
+
     IFACEMETHODIMP GetChunk(STAT_CHUNK *pStat) {
         m_currentChunk.Clear();
         HRESULT hr = GetNextChunkValue(m_currentChunk);
@@ -225,6 +226,7 @@ public:
 
         return hr;
     }
+
     IFACEMETHODIMP GetText(ULONG *pcwcBuffer, WCHAR *awcBuffer) {
         if (!pcwcBuffer || !*pcwcBuffer)
             return E_INVALIDARG;

@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-830b1a279c2efbfcc9735d96414cd8dcdc45f903
+e9792ad5ecda07291dbb4fe0830fefb25256d03f
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -3004,7 +3004,7 @@ cy:&Ffenestr
 cz:&Okno
 de:Fe&nster
 dk:&Vindue
-el:&Παράθυρο
+el:Παρά&θυρο
 es:V&entana
 et:A&ken
 eu:Lei&hoa
@@ -6030,6 +6030,7 @@ vn:Không khởi động được máy in
 am:Հնարավոր չեղավ տեղակայել PDF-ի նախադիտումը
 ar:لم استطع تثبيت معاين المستندات المحمولة
 az:PDF önbaxış alətini quraşdırmaq mümkün olmadı
+bg:Програмата за преглед на PDF файлове не се инсталира
 bn:পিডিএফ প্রিভিউয়ার ইন্সটল করা সম্ভব হয়নি
 br:Não foi possível instalar o pré-visualizador para PDF
 bs:Neuspješno instaliranje PDF preglednika
@@ -6356,6 +6357,7 @@ vn:Không hiện được trang
 am:Հնարավոր չեղավ հեռացնել PDF-ի նախադիտումը
 ar:لا يمكن إلغاء تثبيت معاين المستندات المحمولة
 az:PDF önbaxış alətini silmək mümkün olmadı
+bg:Програмата за преглед на PDF файлове не е премахната.
 br:Não foi possível desinstalar o pré-visualizador para PDF
 bs:Neuspješna deinstalacija PDF preglednika
 ca-xv:No es pot desinstal·lar el visor ràpid PDF
@@ -6689,6 +6691,7 @@ vn:Tập tin hiện hành
 am:Նշորդի դիրքը.
 ar:موقع المؤشرة:
 az:Kursorun mövqeyi:
+bg:Позиция на курсора
 br:Posição do cursor:
 bs:Pozicija kursora:
 ca:Posició del cursor
@@ -7766,7 +7769,7 @@ pa:ਪੂਰੀ ਸਕਰੀਨ\tCtrl+Shift+L
 pl:Pełny ekran\tCtrl+Shift+L
 pt:Ecrã co&mpleto\tCtrl+Shift+L
 ro:Tot ecranul\tCtrl+Shift+L
-ru:Полный &экран\tCtrl+Shift+L
+ru:Полный &экран\tF11
 si:සම්පූර්ණ තිරය\tCtrl+Shift+L
 sk:&Na celú obrazovku\tCtrl+Shift+L
 sl:Celozaslonsko\tCtrl+Shift+L
@@ -8137,6 +8140,7 @@ vn:Không lưu được tập tin.
 am:Հնարավոր չեղավ ֆայլի ընդլայնման մասին գրառել Գրանցատեղիում
 ar:فشل في كتابة معلومات امتداد الملف الممتدة لمكتب التسجيل
 az:Faylın genişliyi haqqında ətraflı məlumatı reyestrə yazmaq mümkün olmadı
+bg:Информация за разширението за изпълнителни файлове не може да се вкара в регистъра. 
 br:Falha na gravação da extensão de arquivo no registro
 bs:Neuspješno zapisivanje informacije o ekstenziji proširenog fajla u registar
 ca-xv:No es pot escriure la informació d'extensió de fitxer extesa al registre
@@ -8188,6 +8192,7 @@ vn:Không thể ghi thông tin về phần mở rộng của tập tin vào khó
 am:Ծրագիրը հեռացնելու մասին գրառումը չստացվեց Գրանցատեղիում
 ar:فشل في كتابة معلومات الغاء التثبيت الى مكتب التسجيل
 az:Deinstalyasiya məlumatını reyestrə yazmaq mümkün olmadı
+bg:Информацията за премахването на програмата не може да се впише в регистъра.
 br:Falha na gravação dos dados de desinstalação no registro
 bs:Neuspješno zapisivanje deinstalacijske informacije u registar
 ca-xv:No es pot escriure la informació de desinstal·lació al registre
@@ -9848,6 +9853,7 @@ vn:Nhảy đến trang
 am:Թաքցնել &ընտրանքները
 ar:إخفاء &الخيارات
 az:&Seçimləri gizlət
+bg:Скрии &Опции
 br:Ocultar &Opções
 bs:Sakrij &opcije
 ca-xv:Amaga les &opcions
@@ -9857,7 +9863,7 @@ cy:Dewisiadau C&uddio
 cz:Skrýt &možnosti
 de:&Optionen
 dk:Gem &valgmuligheder
-el:Επιλογές &απόκρυψης
+el:Απόκρυψη επιλογών
 es:Menos &opciones
 et:Peida &sätted
 eu:Ezkuta A&ukerak
@@ -10126,6 +10132,7 @@ vn:Cài đặt SumatraPDF
 am:Տեղադրել SumatraPDF-ը &հետևյալ թղթապանակում՝
 ar:المحمولة في المجلد Sumatra تثبيت مستندات :
 az:SumatraPDF-i bu &qovluqda quraşdır:
+bg:Инсталираи SumatraPDF във &папка
 br:Instalar SumatraPDF na &pasta:
 bs:Instaliraj SumatraPDF u &direktorij:
 ca-xv:Instal·la el SumatraPDF a la &carpeta:
@@ -10135,7 +10142,7 @@ cy:Gosod SumatraPDF yn &ffolder:
 cz:Nainstalovat SumatraPDF do &složky:
 de:&Installationsverzeichnis:
 dk:Installer SumatraPDF i &mappe:
-el:Εγκατάσταση SumatraPDF σε &folder:
+el:Εγκατάσταση SumatraPDF στο φάκελο:
 es:&Instalar SumatraPDF en la siguiente carpeta:
 et:Paigalda SumatraPDF &kataloogi:
 eu:Ezarri Su&matraPDF agiritegi honetan:
@@ -10409,7 +10416,7 @@ cy:Gadael i Chwilio Bwrdd Gwaith Windows c&hwilio'r dogfennau PDF
 cz:Nechte Windows Desktop Search &prohledávat PDF dokumenty
 de:PDF Dokumente in Windows-&Suchen einbeziehen
 dk:Lad Windows' skrivebordssøgning &søge i PDF-dokumenter
-el:Αναζήτηση εγγράφων PDF μέσω Windows Desktop Search 
+el:Αναζήτηση εγγράφων PDF μέσω του Windows Desktop Search 
 es:Permitir que la búsqueda de Windows encuentre documentos PDF
 et:Windows Desktop Search &otsib PDF-dokumente
 eu:&Utzi Windows Mahaigain Bilaketari PDF agiriak bilatzen
@@ -10460,7 +10467,7 @@ cy:Gadael i Windows ddangos &rhagolwg o ddogfennau PDF
 cz:Nechte Windows zobrazit &náhledy PDF dokumentů
 de:&Vorschau für PDF Dokumente in Explorer aktivieren
 dk:Lad Windows vise &forhåndsvisninger af PDF-dokumenter
-el:Εμφάνιση & προεπισκόπηση των εγγράφων PDF στα Windows
+el:Εμφάνιση προεπισκόπησης των εγγράφων PDF στα Windows
 es:Mostrar miniaturas en los iconos de documentos &PDF
 et:Windows kuvab PDF-dokumentide &eelvaateid
 eu:Utzi &Windowsi PDF agirien aurreikuspenak erakusten
@@ -12717,6 +12724,7 @@ vn:Trang:
 am:PalmDoc փաստաթղթեր
 ar:وثائق PalmDoc 
 az:PalmDoc sənədləri
+bg:PalmDoc документи
 br:Documentos PalmDoc
 bs:PalmDoc dokumenti
 ca:Documents PalmDoc
@@ -12729,6 +12737,8 @@ el:Έγγραφα PalmDoc
 es:Documentos PalmDoc
 et:PalmDoc-dokumendid
 eu:PalmDoc agiriak
+fa:PalmDoc اسناد
+fi:PalmDoc-asiakirjat
 fr:Fichiers PalmDoc
 ga:Cáipéisí PalmDoc
 gl:Documentos PalmDoc
@@ -12762,6 +12772,7 @@ vn:Tài liệu PalmDoc
 am:Շարունակելուց առաջ փակեք %s-ը:
 ar: !المضي قدما %s الرجاء اغلاق
 az:Davam etmək üçün %s bağlayın!
+bg:Моля изберете %s за да продължите!
 br:Por favor feche %s para continuar!
 bs:Molimo da zatvorite %s za nastavak!
 ca-xv:Tanqueu %s per continuar!
@@ -12971,7 +12982,7 @@ no:Pr&esentasjon\tCtrl+L
 pl:&Prezentacja\tCtrl+L
 pt:Aprese&ntação\tCtrl+L
 ro:Pr&ezentare\tCtrl+L
-ru:Пр&езентация\tCtrl+L
+ru:Пр&езентация\tF5
 sk:Pr&ezentácia\tCtrl+L
 sl:Pr&edstavitev\tCtrl+L
 sp-rs:Prezentacija\tCtrl+L
@@ -13320,7 +13331,7 @@ no:Skriver ut fortsatt. Avbryte?
 pl:Nadal trwa drukowanie. Przerwać i wyjść?
 pt:Impressão ainda em curso. Abortar e sair?
 ro:In prezent se tipareste ceva. Anulati si renuntati?
-ru:Печать продолжается. Отменить и выйти?
+ru:Печать ещё не завершена. Отменить и выйти?
 sk:Prebieha tlač. Prerušiť a ukončiť tlač?
 sl:Tiskanje je še vedno v teku. Prekinem in končam?
 sp-rs:Štampanje je i dalje u toku. Obustaviti i izaći?
@@ -14351,6 +14362,7 @@ vn:Chọn thư mục nơi mà SumatraPDF sẽ được cài đặt:
 am:Նշվածը.
 ar:التحديد
 az:Seçmə:
+bg:Избор:
 br:Seleção:
 bs:Selekcija:
 ca:Selecció:
@@ -14950,6 +14962,7 @@ vn:Trang đơn
 am:Տեղակայվող որոշ ֆայլեր վնասված են կամ բացակայում են
 ar:بعض الملفات التي ستثبت قد  تكون تالفة أو مفقودة
 az:Bəzi quraşdırılacaq fayllar zədələnmişdir və ya yoxdur
+bg:Някои файлове които са нужни за инсталацията са повредени или липсват
 br:Alguns arquivos de instalação estão danificados ou ausentes
 bs:Neki fajlovi koji bi trebali biti instalirani su ili oštećeni ili nedostaju
 ca-xv:Alguns fitxers que s'han d'instal·lar no hi són o són malmesos
@@ -15119,6 +15132,7 @@ vn:Tập tin nguồn %s không có điểm đồng bộ
 am:Բացել SumatraPDF-ը
 ar:بدء تشغيل مستندات Sumatra  المحمولة
 az:SumatraPDF-i işə sal
+bg:Стартираи SumatraPDF
 br:Iniciar SumatraPDF
 bs:Pokreni SumatraPDF
 ca-xv:Inicia el SumatraPDF
@@ -15510,6 +15524,7 @@ vn:SumatraPDF đã ngưng hoạt đọng
 am:SumatraPDF-ը հեռացվել է:
 ar: مستندات Sumatra المحمولة إلغاء تثبيت
 az:SumatraPDF silindi.
+bg:SumatraPDF е премахнат.
 br:SumatraPDF foi desinstalado.
 bs:SumatraPDF je deinstaliran.
 ca-xv:S'ha desinstal·lat el SumatraPDF.
@@ -15909,6 +15924,7 @@ vn:Tập tin văn bản
 am:Շնորհակալություն SumatraPDF-ը նախընտրելու համար:
 ar:نشكركم لاختياركم مستندات Sumatra المحمولة  
 az:SumatraPDF-i seçdiyiniz üçün təşəkkür edirik!
+bg:Благодаря че избрахте SumatraPDF!
 br:Obrigado por escolher o SumatraPDF!
 bs:Hvala Vam što ste izabrali SumatraPDF!
 ca-xv:Gràcies per triar el SumatraPDF!
@@ -15961,6 +15977,7 @@ vn:Cảm ơn vì đã chọn SumatraPDF!
 am:Շնորհակալություն: SumatraPDF-ը տեղադրվել է:
 ar:شكرا! تم تثبيت  مستندات Sumatra المحمولة  
 az:Təşəkkürlər! SumatraPDF quraşdırıldı.
+bg:Благодаря ви! SumatraPDF вече е инсталиран.
 br:Obrigado! O SumatraPDF foi instalado.
 bs:Hvala Vam! SumatraPDF je instaliran.
 ca-xv:Gràcies! S'ha instal·lat el SumatraPDF.
@@ -16014,6 +16031,7 @@ vn:Cảm ơn bạn! SumatraPDF đã được cài đặt.
 am:Ծրագրի տեղադրիչը վնասված է: Կրկին բեռնեք այն:\nՀայցում ենք Ձեր ներողամտությունը:
 ar:اسف للازعاج! \n . تم إتلاف المثبت. الرجاء تحميله مرة أخرى
 az:Quraşdırıcı zədələnmişdir. Lütfən onu təkrar endirin.\nNarahatçılığa görə üzr istəyirik!
+bg:Програмата за инсталиране е повредена. Моля, изтеглете я отново.\n Простете ни за неудобството!
 br:O instalador está corrompido. Por favor baixe-o novamente.\nDesculpe pelo incômodo!
 bs:Instaler je oštećen. Molimo da ga ponovo preuzmete.\nOprostite zbog neugodnosti!
 ca-xv:L'instal·lador és malmés. Baixeu-lo una altra vegada.\nLamentem les molèsties!
@@ -16077,6 +16095,8 @@ el:Αυτό το έγγραφο χρησιμοποιεί μη υποστηριζ
 es:Este documento utiliza funcionalidades no admitidas (%s) y podría no mostrarse adecuadamente
 et:See dokument sisaldab omadusi (%s), mida program ei toeta ja seetõttu ei pruugi see olla õigesti esitatud.
 eu:Agiri honek sostengatu gabeko (%s) ezaugarriak erabiltzen ditu eta badaiteke egoki ez aurkeztea
+fa:این سند حاوی ویژگی‌هایی است که توسط این برنامه پشتیبانی نمی‌شود (%s) و ممکن است به درستی نمایش داده نشود
+fi:Asiakirja käyttää ei-tuettuja ominaisuuksia (%s) ja ei ehkä näy oikein.
 fr:Ce document utilise des fonctionnalités non supportées (%s) et pourrait ne pas s'afficher correctement
 ga:Baineann an cháipéis seo feidhm as gnéithe (%s) nach dtugtar tacaíocht dóibh agus b'fhéidir nach ndéanfar iad a thaispeáint i gceart
 gl:Este documento usa características non compatibles (%s) e pode non presentarse correctamente.
