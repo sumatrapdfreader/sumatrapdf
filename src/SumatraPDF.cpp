@@ -184,7 +184,7 @@ void InitializePolicies(bool restrict)
     // (if the file isn't there, everything is allowed)
     ScopedMem<WCHAR> restrictPath(path::GetAppPath(RESTRICTIONS_FILE_NAME));
     if (!file::Exists(restrictPath)) {
-        gPolicyRestrictions = Perm_All;
+        gPolicyRestrictions = Perm_DiskAccess;
         gAllowedLinkProtocols.Split(DEFAULT_LINK_PROTOCOLS, L",");
         gAllowedFileTypes.Split(DEFAULT_FILE_PERCEIVED_TYPES, L",");
         return;
