@@ -194,6 +194,7 @@ void InitAllCommonControls();
 SizeI GetBitmapSize(HBITMAP hbmp);
 BitmapPixels *GetBitmapPixels(HBITMAP hbmp);
 void FinalizeBitmapPixels(BitmapPixels* bitmapPixels);
+COLORREF GetPixel(BitmapPixels *bitmap, int x, int y);
 void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor);
 unsigned char *SerializeBitmap(HBITMAP hbmp, size_t *bmpBytesOut);
 HBITMAP CreateMemoryBitmap(SizeI size, HANDLE *hDataMapping = nullptr);

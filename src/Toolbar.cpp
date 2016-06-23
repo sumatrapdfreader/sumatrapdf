@@ -221,11 +221,11 @@ static HBITMAP LoadExternalBitmap(HINSTANCE hInst, WCHAR * fileName, INT resourc
     ScopedMem<WCHAR> path(AppGenDataFilename(fileName));
 
     if (path) {
-        HBITMAP hBmp = (HBITMAP)LoadImage(nullptr, path, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+        HBITMAP hBmp = (HBITMAP)LoadImage(nullptr, path, IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION | LR_LOADFROMFILE);
         if (hBmp)
             return hBmp;
     }
-    return LoadBitmap(hInst, MAKEINTRESOURCE(resourceId));
+    return (HBITMAP)LoadImage(hInst, MAKEINTRESOURCE(resourceId), IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION );
 }
 
 static WNDPROC DefWndProcToolbar = nullptr;
@@ -592,9 +592,9 @@ void CreateToolbar(WindowInfo *win)
         int scaleY = (int)ceilf((float)dpi->dpiY / 96.f);
         size.dx *= scaleX;
         size.dy *= scaleY;
-        hbmp = (HBITMAP)CopyImage(hbmp, IMAGE_BITMAP, size.dx, size.dy, LR_COPYDELETEORG);
+        hbmp = (HBITMAP)CopyImage(hbmp, IMAGE_BITMAP, size.dx, size.dy, LR_CREATEDIBSECTION | LR_COPYDELETEORG);
     }
-    // Assume square icons
+    // assume square icons
     HIMAGELIST himl = ImageList_Create(size.dy, size.dy, ILC_COLORDDB | ILC_MASK, 0, 0);
     ImageList_AddMasked(himl, hbmp, RGB(0xFF, 0, 0xFF));
     DeleteObject(hbmp);

@@ -903,30 +903,51 @@ inline int mul255(int a, int b) {
 
 void FinalizeBitmapPixels(BitmapPixels* bitmapPixels) {
     HDC hdc = bitmapPixels->hdc;
-    if (!hdc) {
-        free(bitmapPixels);
-        return;
+    if (hdc) {
+        SetDIBits(bitmapPixels->hdc, bitmapPixels->hbmp, 0, bitmapPixels->size.dy, bitmapPixels->pixels, &bitmapPixels->bmi, DIB_RGB_COLORS);
+        DeleteDC(hdc);
     }
-    SetDIBits(bitmapPixels->hdc, bitmapPixels->hbmp, 0, bitmapPixels->size.dy, bitmapPixels->pixels, &bitmapPixels->bmi, DIB_RGB_COLORS);
-    DeleteDC(hdc);
     free(bitmapPixels);
+}
+
+static bool IsPalettedBitmap(DIBSECTION& info, int nBytes) {
+    return sizeof(info) == nBytes && info.dsBmih.biBitCount != 0 && info.dsBmih.biBitCount <= 8;
+}
+
+COLORREF GetPixel(BitmapPixels *bitmap, int x, int y) {
+    CrashIf(x < 0 || x >= bitmap->size.dx);
+    CrashIf(y < 0 || y >= bitmap->size.dy);
+    uint8 *pixels = bitmap->pixels;
+    uint8 *pixel = pixels + y * bitmap->nBytesPerRow + x * bitmap->nBytesPerPixel;
+    // color order in DIB is blue-green-red-alpha
+    COLORREF c = 0;
+    if (3 == bitmap->nBytesPerPixel) {
+        c = RGB(pixel[2], pixel[1], pixel[0]);
+    } else if (4 == bitmap->nBytesPerPixel) {
+        c = RGB(pixel[3], pixel[2], pixel[1]);
+    } else {
+        CrashIf(true);
+    }
+    return c;
 }
 
 BitmapPixels *GetBitmapPixels(HBITMAP hbmp) {
     BitmapPixels *res = AllocStruct<BitmapPixels>();
 
     DIBSECTION info = { 0 };
-    int ret = GetObject(hbmp, sizeof(info), &info);
-    CrashIf(ret < sizeof(info.dsBm));
+    int nBytes = GetObject(hbmp, sizeof(info), &info);
+    CrashIf(nBytes < sizeof(info.dsBm));
     SizeI size(info.dsBm.bmWidth, info.dsBm.bmHeight);
 
     res->size = size;
     res->hbmp = hbmp;
 
+    if (nBytes >= sizeof(info.dsBm)) {
+        res->pixels = (uint8_t *)info.dsBm.bmBits;
+    }
+
     // for mapped 32-bit DI bitmaps: directly access the pixel data
-    if (ret >= sizeof(info.dsBm) && info.dsBm.bmBits && 32 == info.dsBm.bmBitsPixel &&
-        size.dx * 4 == info.dsBm.bmWidthBytes) {
-        res->pixels = (uint8 *)info.dsBm.bmBits;
+    if (res->pixels && 32 == info.dsBm.bmBitsPixel && size.dx * 4 == info.dsBm.bmWidthBytes) {
         res->nBytesPerPixel = 4;
         res->nBytesPerRow = info.dsBm.bmWidthBytes;
         res->nBytes = size.dx * size.dy * 4;
@@ -934,9 +955,7 @@ BitmapPixels *GetBitmapPixels(HBITMAP hbmp) {
     }
 
     // for mapped 24-bit DI bitmaps: directly access the pixel data
-    if (ret >= sizeof(info.dsBm) && info.dsBm.bmBits && 24 == info.dsBm.bmBitsPixel &&
-        info.dsBm.bmWidthBytes >= size.dx * 3) {
-        res->pixels = (uint8 *)info.dsBm.bmBits;
+    if (res->pixels && 24 == info.dsBm.bmBitsPixel && info.dsBm.bmWidthBytes >= size.dx * 3) {
         res->nBytesPerPixel = 3;
         res->nBytesPerRow = info.dsBm.bmWidthBytes;
         res->nBytes = size.dx * size.dy * 4;
@@ -944,7 +963,7 @@ BitmapPixels *GetBitmapPixels(HBITMAP hbmp) {
     }
 
     // we don't support paletted DI bitmaps
-    if (sizeof(info) == ret && info.dsBmih.biBitCount && info.dsBmih.biBitCount <= 8) {
+    if (IsPalettedBitmap(info, nBytes)) {
         FinalizeBitmapPixels(res);
         return nullptr;
     }
@@ -967,6 +986,7 @@ BitmapPixels *GetBitmapPixels(HBITMAP hbmp) {
         FinalizeBitmapPixels(res);
         return nullptr;
     }
+    res->hdc = hdc;
     return res;
 }
 
