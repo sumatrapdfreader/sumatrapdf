@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-e9792ad5ecda07291dbb4fe0830fefb25256d03f
+72370b528f12545dc5b3767e42ee8d40168b3ebe
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -188,6 +188,7 @@ sq:Opsionet e &avancuara...
 sr-rs:Напредне опције
 sv:&Avancerade Inställningar
 ta:&மேம்பட்ட விருப்பங்கள்
+th:yyyy
 tr:Gelişmiş Ayarlar
 tw:進階選項(&A)...
 uk:Розширені налаштування...
@@ -2998,6 +2999,7 @@ ar:النافذة&
 az:&Pəncərə
 br:&Janela
 bs:&Prozor
+ca-xv:&Finestra
 ca:&Finestra
 cn:窗口(&W)
 cy:&Ffenestr
@@ -6694,6 +6696,7 @@ az:Kursorun mövqeyi:
 bg:Позиция на курсора
 br:Posição do cursor:
 bs:Pozicija kursora:
+ca-xv:Posició del cursor:
 ca:Posició del cursor
 cn:光标位置:
 cy:Safle'r cyrchwr:
@@ -12727,6 +12730,7 @@ az:PalmDoc sənədləri
 bg:PalmDoc документи
 br:Documentos PalmDoc
 bs:PalmDoc dokumenti
+ca-xv:Documents PalmDoc
 ca:Documents PalmDoc
 cn:PalmDoc 文档
 cy:Dogfennau PalmDoc
@@ -14365,6 +14369,7 @@ az:Seçmə:
 bg:Избор:
 br:Seleção:
 bs:Selekcija:
+ca-xv:Selecció:
 ca:Selecció:
 cn:选择:
 cy:Dewis:
@@ -16085,6 +16090,7 @@ ar:وقد لا تعرض بشكل صحيح (%s) هذا المستند يستخد�
 az:Bu sənəd dəstəklənməyən funksiyalardan (%s) istifadə edir və düzgün əks olunmaya bilər
 br:Este documento utiliza recursos não suportados (%s) e pode não ser exibido corretamente.
 bs:Ovaj dokument koristi nepodržane funkcionalnosti (%s) i zbog toga možda neće biti ispravno prikazan
+ca-xv:Aquest document utilitza característiques no suportades (%s) i pot no mostrar-se correctament
 ca:Aquest document utilitza característiques no suportades (%s) i podria no ser mostrat correctament
 cn:文檔使用未支持的功能 (%s)，可能無法正確繪製。
 cy:Mae'r ddogfen hon yn defnyddio nodweddion sydd ddim yn cael eu cynnal (%s) ac efallai na fyddant yn rendro'n gywir
@@ -16414,6 +16420,7 @@ ar:الإستعمال & التبويبات
 az:&Tab-vərəqələrdən istifadə et
 br:Usar &abas
 bs:Koristi &tabove
+ca-xv:Utilitza &pestanyes
 ca:Utilitza les pes&tanyes
 cn:使用页签(&T)
 cy:Defnyddio &tabiau

@@ -2294,7 +2294,7 @@ const char * gTranslations_ca_xv =
   "&Omet esta versi\303\263\0"\
   "&Usa la mida de p\303\240gina original\0"\
   "&Visualitza\0"\
-  "\0"\
+  "&Finestra\0"\
   "&S\303\255\0"\
   "&Escalat\0"\
   "(de %d)\0"\
@@ -2342,7 +2342,7 @@ const char * gTranslations_ca_xv =
   "No es pot representar la p\303\240gina\0"\
   "Creat:\0"\
   "Fitxer actual\0"\
-  "\0"\
+  "Posici\303\263 del cursor:\0"\
   "Zoom &predeterminat..\tCtrl+Y\0"\
   "&Visualitzaci\303\263 predeterminada:\0"\
   "&Zoom predeterminat\0"\
@@ -2429,7 +2429,7 @@ const char * gTranslations_ca_xv =
   "La p\303\240gina %u no existeix\0"\
   "Escalat de la p\303\240gina\0"\
   "P\303\240gina:\0"\
-  "\0"\
+  "Documents PalmDoc\0"\
   "S'est\303\240 renderitzant...\0"\
   "Documents Postscript\0"\
   "Pr&esentaci\303\263\tCtrl+L\0"\
@@ -2455,7 +2455,7 @@ const char * gTranslations_ca_xv =
   "Selecciona-ho &tot\0"\
   "Seleccciona-ho &tot\tCtrl+A\0"\
   "Seleccioneu contigut amb la combinaci\303\263 Ctrl+bot\303\263 secundari del ratol\303\255\0"\
-  "\0"\
+  "Selecci\303\263:\0"\
   "Envia per correu-&e...\0"\
   "Cerca cap arrere\0"\
   "Mostra els &marcadors\0"\
@@ -2476,10 +2476,10 @@ const char * gTranslations_ca_xv =
   "El fitxer de sincronitzaci\303\263 no es pot obrir\0"\
   "PDF etiquetat\0"\
   "Documents de text\0"\
-  "\0"\
+  "Aquest document utilitza caracter\303\255stiques no suportades (%s) i pot no mostrar-se correctament\0"\
   "T\303\255tol:\0"\
   "Fitxer origen desconegut (%s)\0"\
-  "\0"\
+  "Utilitza &pestanyes\0"\
   "Visualitza\0"\
   "Visiteu el lloc &web\0"\
   "Av\303\255s\0"\
