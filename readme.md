@@ -15,4 +15,4 @@ Open `vs2015/SumatraPDF.sln`.
 
 [![Build status](https://ci.appveyor.com/api/projects/status/tesjtgmpy26uf8p7?svg=true)](https://ci.appveyor.com/project/kjk/sumatrapdf)
 
-This mod adds save-as and defaults to a maximized window for sumatraPDF
+This mod adds save-as and defaults to a maximized window for sumatraPDF as well as restricts the permissions to just Perm_DiskAccess thereby preventing setting changes.
