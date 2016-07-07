@@ -591,7 +591,7 @@ void CreateToolbar(WindowInfo *win)
     // On Win 10, when we scale the icons we have to use LR_CREATEDIBSECTION flag when loading
     // the icon. Otherwise we get pink instead of transparent color.
     // Unfortunately, this might cause pink on non-Win 10 (according to some bug reports)
-    // TODO: maybe disable if not win 10
+    // TODO: maybe disable if not win 10;
     bool useDibSection = needsScaling;
 
     // the name of the bitmap contains the number of icons so that after adding/removing
