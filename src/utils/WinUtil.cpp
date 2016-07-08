@@ -1415,3 +1415,33 @@ __declspec(noinline) int GetMeasurementSystem() {
     }
     return 1;
 }
+
+static void GetOsVersion(OSVERSIONINFOEX& ver)
+{
+    ZeroMemory(&ver, sizeof(ver));
+    ver.dwOSVersionInfoSize = sizeof(ver);
+#pragma warning(push)
+#pragma warning(disable: 4996) // 'GetVersionEx': was declared deprecated
+#pragma warning(disable: 28159) // Consider using 'IsWindows*' instead of 'GetVersionExW'
+    // see: https://msdn.microsoft.com/en-us/library/windows/desktop/dn424972(v=vs.85).aspx
+    // starting with Windows 8.1, GetVersionEx will report a wrong version number
+    // unless the OS's GUID has been explicitly added to the compatibility manifest
+    BOOL ok = GetVersionEx((OSVERSIONINFO*)&ver);
+#pragma warning(pop)
+    CrashIf(!ok);
+}
+
+// For more versions see OsNameFromVer() in CrashHandler.cpp
+
+bool IsWin10() {
+    OSVERSIONINFOEX ver;
+    GetOsVersion(ver);
+    return ver.dwMajorVersion == 10;
+}
+
+bool IsWin7() {
+    OSVERSIONINFOEX ver;
+    GetOsVersion(ver);
+    return ver.dwMajorVersion == 6 && ver.dwMinorVersion == 1;
+}
+

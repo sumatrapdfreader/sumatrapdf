@@ -216,3 +216,5 @@ void SetCursor(LPWSTR id);
 void DeleteCachedCursors();
 
 int GetMeasurementSystem();
+bool IsWin10();
+bool IsWin7();
