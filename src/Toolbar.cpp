@@ -568,6 +568,33 @@ static void CreatePageBox(WindowInfo& win)
 #define WS_REBAR (WS_CHILD | WS_CLIPCHILDREN | WS_BORDER | RBS_VARHEIGHT | \
                   RBS_BANDBORDERS | CCS_NODIVIDER | CCS_NOPARENTALIGN)
 
+
+// Sometimes scaled icons show up with purple background. Here's what I was able to piece together.
+// When icons not scaled, we don't ask for DIB section (the original behavior of the code)
+// Win 7 : purple if DIB section (tested by me)
+// Win 10 :
+//  build 14383 : purple if no DIB section (tested by me)
+//  build 10586 : purple if DIB section (reported in https://github.com/sumatrapdfreader/sumatrapdf/issues/569#issuecomment-231508990)
+// Other builds not tested, will default to no DIB section. Might need to update it if more reports come in.
+static bool UseDibSection(bool needsScaling) {
+    if (!needsScaling) {
+        return false;
+    }
+    OSVERSIONINFOEX ver;
+    GetOsVersion(ver);
+    // everything other than win 10: no DIB section
+    if (ver.dwMajorVersion != 10) {
+        return false;
+    }
+    // win 10 seems to behave differently depending on the build
+    // I assume that up to 10586 we don't want dib
+    if (ver.dwBuildNumber <= 10586) {
+        return false;
+    }
+    // builds > 10586, including 14383
+    return true;
+}
+
 void CreateToolbar(WindowInfo *win)
 {
     HWND hwndToolbar = CreateWindowEx(0, TOOLBARCLASSNAME, nullptr, WS_TOOLBAR,
@@ -588,12 +615,7 @@ void CreateToolbar(WindowInfo *win)
     int scaleY = (int)ceilf((float)dpi->dpiY / 96.f);
     bool needsScaling = (scaleX > 1) || (scaleY > 1);
 
-    // Sometimes scaled icons show up with purple background. Here's my testing so far:
-    // When icons not scaled, we don't ask for DIB section (the original behavior of the code)
-    // On Win 7, it's purple if we ask for DIB section.
-    // On Win 10, it's purple if we don't ask for DIB section.
-    // So we'll ask for DIB section if scaling and on Win 10.
-    bool useDibSection = needsScaling && IsWin10();
+    bool useDibSection = UseDibSection(needsScaling);
 
     // the name of the bitmap contains the number of icons so that after adding/removing
     // icons a complete default toolbar is used rather than an incomplete customized one

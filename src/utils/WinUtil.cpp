@@ -45,7 +45,7 @@ void MoveWindow(HWND hwnd, RECT *r) {
     MoveWindow(hwnd, r->left, r->top, RectDx(*r), RectDy(*r), TRUE);
 }
 
-static void GetOsVersion(OSVERSIONINFOEX& ver)
+void GetOsVersion(OSVERSIONINFOEX& ver)
 {
     ZeroMemory(&ver, sizeof(ver));
     ver.dwOSVersionInfoSize = sizeof(ver);
@@ -61,7 +61,6 @@ static void GetOsVersion(OSVERSIONINFOEX& ver)
 }
 
 // For more versions see OsNameFromVer() in CrashHandler.cpp
-
 bool IsWin10() {
     OSVERSIONINFOEX ver;
     GetOsVersion(ver);

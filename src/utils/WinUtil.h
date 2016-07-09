@@ -33,6 +33,7 @@ bool IsProcess64();
 bool IsRunningInWow64();
 bool IsProcessAndOsArchSame();
 bool IsVistaOrGreater();
+void GetOsVersion(OSVERSIONINFOEX& ver);
 bool IsWin10();
 bool IsWin7();
 
