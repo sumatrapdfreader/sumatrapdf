@@ -2917,11 +2917,11 @@ void SetCurrentLanguageAndRefreshUI(const char *langCode)
     prefs::Save();
 }
 
-static void OnMenuChangeLanguage(HWND hwnd)
-{
-    const char *newLangCode = Dialog_ChangeLanguge(hwnd, trans::GetCurrentLangCode());
-    SetCurrentLanguageAndRefreshUI(newLangCode);
-}
+//static void OnMenuChangeLanguage(HWND hwnd)
+//{
+//    const char *newLangCode = Dialog_ChangeLanguge(hwnd, trans::GetCurrentLangCode());
+//    SetCurrentLanguageAndRefreshUI(newLangCode);
+//}
 
 static void OnMenuViewShowHideToolbar()
 {
@@ -3866,11 +3866,11 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
             if (!win->tabsInTitlebar)
                 ShowHideMenuBar(win);
             break;
-
+#if 0
         case IDM_CHANGE_LANGUAGE:
             OnMenuChangeLanguage(win->hwndFrame);
             break;
-
+#endif
         case IDM_VIEW_BOOKMARKS:
             ToggleTocBox(win);
             break;
