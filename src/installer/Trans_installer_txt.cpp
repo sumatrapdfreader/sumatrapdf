@@ -7,7 +7,7 @@
 
 namespace trans {
 
-#define LANGS_COUNT   52
+#define LANGS_COUNT   53
 #define STRINGS_COUNT 42
 
 const char *gOriginalStrings[STRINGS_COUNT] = {
@@ -456,7 +456,7 @@ const char * gTranslations_ca_xv =
 
 const char * gTranslations_cn = 
   "\351\200\211\351\241\271(&O)\0"\
-  "\344\275\240\347\241\256\345\256\236\350\246\201\350\247\243\351\231\244\345\256\211\350\243\205 SumatraPDF \345\220\227\357\274\237\0"\
+  "\344\275\240\347\241\256\345\256\236\350\246\201\345\215\270\350\275\275 SumatraPDF \345\220\227\357\274\237\0"\
   "\345\205\263\351\227\255\0"\
   "\346\227\240\346\263\225\345\210\233\345\273\272\344\270\264\346\227\266\347\233\256\345\275\225\0"\
   "\346\227\240\346\263\225\345\210\233\345\273\272\345\256\211\350\243\205\346\226\207\344\273\266\345\244\271\0"\
@@ -465,15 +465,15 @@ const char * gTranslations_cn =
   "\346\227\240\346\263\225\350\216\267\345\276\227\346\232\202\345\255\230\346\226\207\344\273\266\345\244\271\0"\
   "\346\227\240\346\263\225\347\247\273\351\231\244\345\256\211\350\243\205\347\233\256\345\275\225\0"\
   "\346\227\240\346\263\225\347\247\273\351\231\244\345\277\253\346\215\267\346\226\271\345\274\217\0"\
-  "\346\227\240\346\263\225\350\247\243\351\231\244\345\256\211\350\243\205 PDF \351\242\204\350\247\210\345\231\250\0"\
-  "\346\227\240\346\263\225\345\256\211\350\243\205 PDF \346\220\234\347\264\242\350\277\207\346\273\244\345\231\250\0"\
-  "\346\227\240\346\263\225\350\247\243\351\231\244\345\256\211\350\243\205\346\265\217\350\247\210\345\231\250\346\217\222\344\273\266\0"\
+  "\346\227\240\346\263\225\345\215\270\350\275\275 PDF \351\242\204\350\247\210\345\231\250\0"\
+  "\346\227\240\346\263\225\345\215\270\350\275\275 PDF \346\220\234\347\264\242\350\277\207\346\273\244\345\231\250\0"\
+  "\346\227\240\346\263\225\345\215\270\350\275\275\346\265\217\350\247\210\345\231\250\346\217\222\344\273\266\0"\
   "\346\227\240\346\263\225\345\206\231\345\205\245 %s \345\210\260\347\243\201\347\233\230\0"\
-  "\346\227\240\346\263\225\345\244\215\345\210\266\350\247\243\351\231\244\345\256\211\350\243\205\347\250\213\345\272\217\345\210\260\346\232\202\345\255\230\347\233\256\345\275\225\0"\
+  "\346\227\240\346\263\225\345\244\215\345\210\266\345\215\270\350\275\275\347\250\213\345\272\217\345\210\260\346\232\202\345\255\230\347\233\256\345\275\225\0"\
   "\346\227\240\346\263\225\345\210\233\345\273\272\345\277\253\346\215\267\346\226\271\345\274\217\0"\
-  "\345\210\240\351\231\244\350\247\243\351\231\244\345\256\211\350\243\205\345\231\250\346\263\250\345\206\214\351\241\271\345\244\261\350\264\245\343\200\202\0"\
+  "\345\210\240\351\231\244\345\215\270\350\275\275\347\250\213\345\272\217\346\263\250\345\206\214\351\241\271\345\244\261\350\264\245\343\200\202\0"\
   "\345\206\231\345\205\245\346\211\251\345\261\225\345\220\215\344\277\241\346\201\257\345\210\260\346\263\250\345\206\214\351\241\271\345\244\261\350\264\245\343\200\202\0"\
-  "\345\206\231\345\205\245\350\247\243\351\231\244\345\256\211\350\243\205\344\277\241\346\201\257\345\210\260\346\263\250\345\206\214\351\241\271\345\244\261\350\264\245\343\200\202\0"\
+  "\345\206\231\345\205\245\345\215\270\350\275\275\344\277\241\346\201\257\345\210\260\346\263\250\345\206\214\351\241\271\345\244\261\350\264\245\343\200\202\0"\
   "\351\232\220\350\227\217\351\200\211\351\241\271(&O)\0"\
   "\345\256\211\350\243\205 SumatraPDF\0"\
   "\345\256\211\350\243\205 SumatraPDF \344\272\216\346\226\207\344\273\266\345\244\271(&F):\0"\
@@ -486,17 +486,17 @@ const char * gTranslations_cn =
   "\351\200\211\346\213\251 SumatraPDF \345\272\224\350\242\253\345\256\211\350\243\205\347\232\204\346\226\207\344\273\266\345\244\271\357\274\232\0"\
   "\346\237\220\344\272\233\345\256\211\350\243\205\346\211\200\351\234\200\347\232\204\346\226\207\344\273\266\346\215\237\345\235\217\346\210\226\344\270\242\345\244\261\0"\
   "\345\220\257\345\212\250SumatraPDF\0"\
-  "SumatraPDF %s \345\256\211\350\243\205\345\231\250\0"\
-  "SumatraPDF %s \350\247\243\351\231\244\345\256\211\350\243\205\345\231\250\0"\
-  "\345\267\262\350\247\243\351\231\244\345\256\211\350\243\205 SumatraPDF \343\200\202\0"\
+  "SumatraPDF %s \345\256\211\350\243\205\347\250\213\345\272\217\0"\
+  "SumatraPDF %s \345\215\270\350\275\275\347\250\213\345\272\217\0"\
+  "\345\267\262\345\215\270\350\275\275 SumatraPDF \343\200\202\0"\
   "\346\234\252\346\211\276\345\210\260 SumatraPDF \345\256\211\350\243\205\343\200\202\0"\
   "\350\260\242\350\260\242\351\200\211\347\224\250SumatraPDF!\0"\
   "\350\260\242\350\260\242! SumatraPDF\345\267\262\347\273\217\345\256\211\350\243\205\345\245\275.\0"\
   "\346\212\261\346\255\211\345\256\211\350\243\205\347\250\213\345\272\217\346\215\237\345\235\217\357\274\214\350\257\267\351\207\215\346\226\260\344\270\213\350\275\275\343\200\202\0"\
-  "\350\247\243\351\231\244\345\256\211\350\243\205 SumatraPDF\0"\
-  "\350\247\243\351\231\244\345\256\211\350\243\205\345\244\261\350\264\245\0"\
-  "\350\247\243\351\231\244\345\256\211\350\243\205\346\255\243\345\234\250\350\277\233\350\241\214...\0"\
-  "\344\275\277\347\224\250 SumatraPDF \344\275\234\344\270\272\351\273\230\346\207\247\347\232\204 PDF \351\230\205\350\257\273\345\231\250(&U)\0";
+  "\345\215\270\350\275\275 SumatraPDF\0"\
+  "\345\215\270\350\275\275\345\244\261\350\264\245\0"\
+  "\345\215\270\350\275\275\346\255\243\345\234\250\350\277\233\350\241\214...\0"\
+  "\344\275\277\347\224\250 SumatraPDF \344\275\234\344\270\272\351\273\230\350\256\244\347\232\204 PDF \351\230\205\350\257\273\345\231\250(&U)\0";
 
 const char * gTranslations_tw = 
   "\351\201\270\351\240\205(&O)\0"\
@@ -1491,7 +1491,7 @@ const char * gTranslations_no =
   "Installere SumatraPDF i &mappe:\0"\
   "Feil ved installering!\0"\
   "Installasjon p\303\245g\303\245r...\0"\
-  "Behold PDF &nettleser -tillegg installert (ingen support lenger)\0"\
+  "Fortsett \303\245 ha PDF-nettlesertillegget installert (Ikke lenger st\303\270ttet)\0"\
   "La Windows s\303\270kemotor &s\303\270ke PDF dokumenter\0"\
   "La Windows vise &forh\303\245ndsvisning av PDF-dokumenter\0"\
   "Vennligst lukk %s for \303\245 fortsette!\0"\
@@ -1509,6 +1509,50 @@ const char * gTranslations_no =
   "Feil ved avinstallering\0"\
   "Avinstallering p\303\245g\303\245r...\0"\
   "Bruk SumatraPDF som &standard PDF-leser\0";
+
+const char * gTranslations_nn = 
+  "&Innstillingar\0"\
+  "Er du sikker p\303\245 at du vil avinstallere SumatraPDF?\0"\
+  "Lukk\0"\
+  "Kunne ikkje lage midlertidig direktiv\0"\
+  "Kunne ikkje lage installasjonsdirektivet\0"\
+  "Kunne ikkje installere PDF-forhandsvisar\0"\
+  "Kunne ikkje installere PDF-s\303\270kjefilter\0"\
+  "Kunne ikkje hente midlertidig direktiv\0"\
+  "Kunne ikkje fjerne installasjonsdirektiv\0"\
+  "Kunne ikkje fjerne snarvegen\0"\
+  "Kunne ikkje avinstallere PDF-forhandsvisar\0"\
+  "Kunne ikkje avinstallere PDF-s\303\270kjefilteret\0"\
+  "Kunne ikkje avinstallere nettlesartillegget\0"\
+  "Kunne ikkje lagre %s til disken\0"\
+  "Mislykkas i \303\245 kopiere installasjonsfjernar til det midlertidige direktivet\0"\
+  "Klarte ikkje \303\245 lage ein snarveg\0"\
+  "Mislykkast i \303\245 slette avinstalleringsregistern\303\270klane\0"\
+  "Mislykkast i \303\245 skrive den utvida filutvidingsinformasjonen til registeret\0"\
+  "Mislykkast i \303\245 skrive avinstalleringsinformasjonen til registeret\0"\
+  "Skjul &innstillingar\0"\
+  "Installer SumatraPDF\0"\
+  "Installer SumatraPDF i mappa:\0"\
+  "Installering mislykkast!\0"\
+  "Installering under arbeid...\0"\
+  "Behald installeringa av PDF-&nettlesartillegget (Ikkje lenger st\303\270tta)\0"\
+  "Let Windows Skrivebordss\303\270k &s\303\270kje gjennom PDF-dokumentar\0"\
+  "Let Windows vise &forhandsvisingar av PDF-dokumentar\0"\
+  "Vennlig lukk %s for \303\245 fortsetje!\0"\
+  "Vel mappa der SumatraPDF skal bli installert:\0"\
+  "Nokre filar som skal installeres, enten mangler eller har forsvunnet.\0"\
+  "\0"\
+  "SumatraPDF %s-installerer\0"\
+  "SumatraPDF %s-avinstallerer\0"\
+  "SumatraPDF har blitt avinstallert.\0"\
+  "SumatraPDF-installeringa blei ikkje funnet.\0"\
+  "Takk for at du valde SumatraPDF!\0"\
+  "Tusen takk! SumatraPDF har blitt installert.\0"\
+  "Installeringsprogrammet har blitt korrumpert. Venligst installer han igjen.\nVi beklager for problemane!\0"\
+  "Avinstaller SumatraPDF\0"\
+  "Avinstallering mislykkast\0"\
+  "Avinstallasjon under arbeid...\0"\
+  "Bruk SumatraPDF som standard PDF-lesar\0";
 
 const char * gTranslations_fa = 
   "&\332\257\330\262\333\214\331\206\331\207\342\200\214\331\207\330\247\0"\
@@ -2338,6 +2382,7 @@ static const char *gTranslations[LANGS_COUNT] = {
   gTranslations_mk, 
   gTranslations_my, 
   gTranslations_no, 
+  gTranslations_nn, 
   gTranslations_fa, 
   gTranslations_pl, 
   gTranslations_br, 
@@ -2395,6 +2440,7 @@ const char *gLangCodes =   "en\0" \
   "mk\0" \
   "my\0" \
   "no\0" \
+  "nn\0" \
   "fa\0" \
   "pl\0" \
   "br\0" \
@@ -2448,6 +2494,7 @@ const char *gLangNames =   "English\0" \
   "Macedonian (\320\274\320\260\320\272\320\265\320\264\320\276\320\275\321\201\320\272\320\270)\0" \
   "Malaysian (Bahasa Melayu)\0" \
   "Norwegian (Norsk)\0" \
+  "Norwegian Neo-Norwegian (Norsk nynorsk)\0" \
   "Persian (\331\201\330\247\330\261\330\263\333\214)\0" \
   "Polish (Polski)\0" \
   "Portuguese - Brazil (Portugu\303\252s)\0" \
@@ -2513,6 +2560,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
   _LANGID(LANG_MACEDONIAN),
   _LANGID(LANG_MALAY),
   MAKELANGID(LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL),
+  MAKELANGID(LANG_NORWEGIAN, SUBLANG_NORWEGIAN_NYNORSK),
   _LANGID(LANG_FARSI),
   _LANGID(LANG_POLISH),
   MAKELANGID(LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN),
@@ -2536,7 +2584,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
 
 bool IsLangRtl(int idx)
 {
-  return (2 == idx) || (22 == idx) || (29 == idx) || (34 == idx);
+  return (2 == idx) || (22 == idx) || (29 == idx) || (35 == idx);
 }
 
 int gLangsCount = LANGS_COUNT;

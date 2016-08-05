@@ -7,7 +7,7 @@
 
 namespace trans {
 
-#define LANGS_COUNT   56
+#define LANGS_COUNT   57
 #define STRINGS_COUNT 246
 
 const char *gOriginalStrings[STRINGS_COUNT] = {
@@ -2500,7 +2500,7 @@ const char * gTranslations_cn =
   "\351\253\230\347\272\247\351\200\211\351\241\271(&A)...\0"\
   "\346\211\200\346\234\211\345\267\262\351\200\211\345\256\232\351\241\265\351\235\242(&A)\0"\
   "\344\270\212\344\270\200\351\241\265(&B)\tAlt+\345\267\246\347\256\255\345\244\264\0"\
-  "\344\271\246\346\234\254\346\237\245\347\234\213(&B)\tCtrl+8\0"\
+  "\344\271\246\347\261\215\350\247\206\345\233\276(&B)\tCtrl+8\0"\
   "\345\205\263\351\227\255(&C)\tCtrl+W\0"\
   "\345\244\215\345\210\266\351\200\211\345\256\232\350\214\203\345\233\264(&C)\0"\
   "\345\244\215\345\210\266\351\200\211\345\256\232\350\214\203\345\233\264(&C)\tCtrl+C\0"\
@@ -2520,7 +2520,7 @@ const char * gTranslations_cn =
   "\345\214\271\351\205\215\345\244\247\345\260\217\345\206\231(&M)\0"\
   "\344\270\213\344\270\200\351\241\265(&N)\t\345\217\263\347\256\255\345\244\264\0"\
   "\345\220\246(&N)\0"\
-  "\345\220\246\357\274\214\350\260\242\350\260\242(&N)\0"\
+  "\344\270\215\357\274\214\350\260\242\350\260\242(&N)\0"\
   "\344\273\205\345\245\207\346\225\260\351\241\265(&O)\0"\
   "\346\211\223\345\274\200\346\226\207\344\273\266(&O)\0"\
   "\346\211\223\345\274\200(&O)...\tCtrl+O\0"\
@@ -2541,7 +2541,7 @@ const char * gTranslations_cn =
   "\345\215\225\351\241\265\346\250\241\345\274\217(&S)\tCtrl+6\0"\
   "\350\267\263\350\277\207\346\255\244\347\211\210\346\234\254(&S)\0"\
   "\344\275\277\347\224\250\345\216\237\345\247\213\351\241\265\351\235\242\345\244\247\345\260\217(&U)\0"\
-  "\346\237\245\347\234\213(&V)\0"\
+  "\350\247\206\345\233\276(&V)\0"\
   "\347\252\227\345\217\243(&W)\0"\
   "\346\230\257(&Y)\0"\
   "\347\274\251\346\224\276(&Z)\0"\
@@ -2561,7 +2561,7 @@ const char * gTranslations_cn =
   "\344\275\234\350\200\205:\0"\
   "\350\207\252\345\212\250\0"\
   "\350\207\252\345\212\250\346\243\200\346\237\245\346\233\264\346\226\260(&U)\0"\
-  "\344\271\246\346\234\254\346\237\245\347\234\213\0"\
+  "\344\271\246\347\261\215\350\247\206\345\233\276\0"\
   "\344\271\246\347\255\276(&M)...\tF12\0"\
   "\344\271\246\347\255\276\345\277\253\346\215\267\346\226\271\345\274\217\0"\
   "\344\271\246\347\255\276\345\277\253\346\215\267\346\226\271\345\274\217\346\214\207\345\220\221\347\254\254 %s \351\241\265 (\346\226\207\344\273\266 %s)\0"\
@@ -2585,7 +2585,7 @@ const char * gTranslations_cn =
   "\345\244\215\345\210\266\346\263\250\351\207\212(&M)\0"\
   "\345\244\215\345\210\266\346\226\207\346\234\254\345\244\261\350\264\245 (\345\217\252\350\203\275\345\244\215\345\210\266\344\270\272\345\233\276\347\211\207)\0"\
   "\347\211\210\346\235\203:\0"\
-  "\346\227\240\346\263\225\345\217\226\345\276\227\346\211\223\345\215\260\346\234\272\347\211\271\346\200\247\0"\
+  "\346\227\240\346\263\225\350\216\267\345\217\226\346\211\223\345\215\260\346\234\272\345\261\236\346\200\247\0"\
   "\344\270\215\350\203\275\345\210\235\345\247\213\345\214\226\346\211\223\345\215\260\346\234\272\0"\
   "\346\227\240\346\263\225\346\270\262\346\237\223\350\257\245\351\241\265\351\235\242\0"\
   "\345\210\233\345\273\272\346\227\266\351\227\264:\0"\
@@ -2603,7 +2603,7 @@ const char * gTranslations_cn =
   "EPUB \346\226\207\346\241\243\0"\
   "\351\224\256\345\205\245\345\257\206\347\240\201\0"\
   "\351\224\256\345\205\245 %s \347\232\204\345\257\206\347\240\201\0"\
-  "\350\257\267\351\224\256\345\205\245\351\274\240\346\240\207\346\214\211\344\270\244\344\270\213 PDF \346\226\207\344\273\266\346\227\266\357\274\214\345\272\224\350\277\220\350\241\214\347\232\204\345\221\275\344\273\244(&E):\0"\
+  "\350\257\267\351\224\256\345\205\245\345\217\214\345\207\273 PDF \346\226\207\344\273\266\346\227\266\357\274\214\345\272\224\350\277\220\350\241\214\347\232\204\345\221\275\344\273\244(&E):\0"\
   "\350\275\275\345\205\245\351\224\231\350\257\257 %s\0"\
   "\346\224\266\350\227\217(&A)\0"\
   "\344\270\213\344\270\200\351\241\265\351\235\242(&O)\tAlt+\345\217\263\347\256\255\345\244\264\0"\
@@ -2631,7 +2631,7 @@ const char * gTranslations_cn =
   "\350\207\252\351\200\202\345\272\224\345\256\275\345\272\246\350\277\236\347\273\255\346\250\241\345\274\217\0"\
   "\350\207\252\351\200\202\345\272\224\345\215\225\351\241\265\346\250\241\345\274\217\0"\
   "\345\255\227\344\275\223(&F):\0"\
-  "\346\255\243\345\234\250\346\240\274\345\274\217\345\214\226\344\271\246\346\234\254... %d \351\241\265\0"\
+  "\346\255\243\345\234\250\344\270\272\344\271\246\347\261\215\346\216\222\347\211\210\346\240\274\345\274\217... %d \351\241\265\0"\
   "\344\272\216\347\254\254 %s \351\241\265\346\211\276\345\210\260\347\233\256\346\240\207\0"\
   "\344\272\216\347\254\254 %s \351\241\265\346\211\276\345\210\260\347\233\256\346\240\207 (\345\267\262\344\273\216\345\244\264\346\237\245\346\211\276)\0"\
   "\347\273\217\345\270\270\346\211\223\345\274\200\347\232\204\346\226\207\344\273\266\0"\
@@ -2642,7 +2642,7 @@ const char * gTranslations_cn =
   "\345\233\276\347\211\207\346\226\207\344\273\266 (*.%s)\0"\
   "\0"\
   "\0"\
-  "\346\212\212 SumatraPDF \344\275\234\344\270\272\351\273\230\350\252\215\347\232\204 PDF \351\230\205\350\257\273\345\231\250?\0"\
+  "\346\212\212 SumatraPDF \344\275\234\344\270\272\351\273\230\350\256\244\347\232\204 PDF \351\230\205\350\257\273\345\231\250?\0"\
   "\345\260\206 SumatraPDF \350\256\276\347\275\256\344\270\272\351\273\230\350\256\244\347\232\204 PDF \351\230\205\350\257\273\345\231\250\0"\
   "\346\274\253\347\224\273\346\250\241\345\274\217(&G)\0"\
   "\345\244\247\345\260\217\345\206\231\345\214\271\351\205\215\0"\
@@ -2664,8 +2664,8 @@ const char * gTranslations_cn =
   "\345\234\250 &Foxit Reader \344\270\255\346\211\223\345\274\200\0"\
   "\345\234\250 &Microsoft HTML Help \344\270\255\346\211\223\345\274\200(&M)\0"\
   "\345\234\250 &Microsoft XPS-Viewer \344\270\255\346\211\223\345\274\200\0"\
-  "\347\211\271\346\200\247(&R)\0"\
-  "\347\211\271\346\200\247(&R)...\tCtrl+D\0"\
+  "\345\261\236\346\200\247(&R)\0"\
+  "\345\261\236\346\200\247(&R)...\tCtrl+D\0"\
   "PDF \346\226\207\346\241\243\0"\
   "PDF \344\274\230\345\214\226:\0"\
   "PDF \345\210\266\344\275\234\347\250\213\345\272\217:\0"\
@@ -2724,15 +2724,15 @@ const char * gTranslations_cn =
   "\346\227\240\346\263\225\346\211\223\345\274\200\345\220\214\346\255\245\346\226\207\344\273\266\0"\
   "\345\267\262\346\240\207\350\256\260PDF\0"\
   "\346\226\207\346\234\254\346\226\207\346\241\243\0"\
-  "\346\226\207\346\252\224\344\275\277\347\224\250\346\234\252\346\224\257\346\214\201\347\232\204\345\212\237\350\203\275 (%s)\357\274\214\345\217\257\350\203\275\347\204\241\346\263\225\346\255\243\347\242\272\347\271\252\350\243\275\343\200\202\0"\
+  "\350\257\245\346\226\207\346\241\243\344\275\277\347\224\250\344\272\206\344\270\215\346\224\257\346\214\201\347\232\204\347\211\271\346\200\247 (%s)\357\274\214\345\217\257\350\203\275\346\227\240\346\263\225\346\255\243\347\241\256\346\270\262\346\237\223\343\200\202\0"\
   "\346\240\207\351\242\230:\0"\
   "\346\234\252\347\237\245\347\232\204\346\272\220\346\226\207\344\273\266 (%s)\0"\
   "\344\275\277\347\224\250\351\241\265\347\255\276(&T)\0"\
-  "\346\237\245\347\234\213\0"\
+  "\350\247\206\345\233\276\0"\
   "\350\256\277\351\227\256\347\275\221\347\253\231(&W)\0"\
   "\350\255\246\345\221\212\0"\
   "XPS \346\226\207\344\273\266\0"\
-  "\344\275\240\345\267\262\346\234\211\346\234\200\346\226\260\347\211\210\343\200\202\0"\
+  "\346\202\250\347\232\204\347\211\210\346\234\254\344\270\272\346\234\200\346\226\260\347\211\210\343\200\202\0"\
   "\347\233\256\345\211\215\347\211\210\346\234\254\344\270\272 %s\0"\
   "\347\274\251\346\224\276\0"\
   "\346\224\276\345\244\247\0"\
@@ -6175,7 +6175,7 @@ const char * gTranslations_hi =
   "\340\244\270\340\244\254 &\340\244\232\340\245\201\340\244\250\340\245\207\340\244\202\0"\
   "\340\244\270\340\244\254 &\340\244\232\340\245\201\340\244\250\340\245\207\340\244\202\tCtrl+A\0"\
   "\340\244\270\340\244\276\340\244\256\340\244\227\340\245\215\340\244\260\340\245\200 \340\244\225\340\244\276 \340\244\232\340\244\257\340\244\250 \340\244\225\340\244\260\340\244\250\340\245\207 \340\244\225\340\245\207 \340\244\262\340\244\277\340\244\257\340\245\207  Ctrl +  \340\244\256\340\244\276\340\244\211\340\244\270 \340\244\225\340\244\276 \340\244\254\340\244\276\340\244\257\340\244\276\340\244\201 \340\244\254\340\244\237\340\244\250 \340\244\246\340\244\254\340\244\276\340\244\217\340\244\201\0"\
-  "\0"\
+  "\340\244\232\340\245\201\340\244\250\340\244\276\340\244\265\0"\
   "&\340\244\210 - \340\244\256\340\245\207\340\244\262 \340\244\246\340\245\215\340\244\265\340\244\276\340\244\260\340\244\276 \340\244\255\340\245\207\340\244\234\340\245\207\340\244\202...\0"\
   "\340\244\211\340\244\262\340\244\237\340\245\200 command-line \340\244\226\340\245\213\340\244\234 \340\244\270\340\245\210\340\244\237 \340\244\225\340\244\260\340\245\207\340\244\202\0"\
   "\340\244\254\340\245\201\340\244\225\340\244\256\340\244\276\340\244\260\340\245\215\340\244\225 \340\244\246\340\244\277\340\244\226\340\244\276\340\244\217\340\244\201 (&B)\0"\
@@ -6796,7 +6796,7 @@ const char * gTranslations_ga =
   "Leabhar-amharc lean\303\272nach\0"\
   "Dh\303\241 leathanach ar lean\303\272int\0"\
   "Aistrigh \303\251 seo\0"\
-  "Macasamhlaigh &\303\215omh\303\241nna\0"\
+  "Macasamhlaigh an &\303\215omh\303\241\0"\
   "Macasamhlaigh seoladh an naisc\0"\
   "Macasamhlaigh an n\303\263ta tr\303\241chta\0"\
   "N\303\255orbh fh\303\251idir t\303\251acs a mhacasamhl\303\272 (macasamhl\303\272 mar \303\255omh\303\241 amh\303\241in)\0"\
@@ -9193,7 +9193,7 @@ const char * gTranslations_ne =
 const char * gTranslations_no = 
   "&Om\0"\
   "Fak&tisk st\303\270rrelse\tCtrl+1\0"\
-  "&Avanserte tilleggsfunksjoner\0"\
+  "&Avanserte innstillinger\0"\
   "&Alle valgte sider\0"\
   "Tilbake\tAlt+Pil venstre\0"\
   "&Bokvisning\tCtrl+8\0"\
@@ -9202,7 +9202,7 @@ const char * gTranslations_no =
   "Kopier merket tekst\tCtrl+C\0"\
   "&Ikke sp\303\270r meg igjen\0"\
   "Bare &partallssider\0"\
-  "&Vendt\tCtrl+7\0"\
+  "&Flere sider\tCtrl+7\0"\
   "&Fil\0"\
   "&S\303\270k etter:\0"\
   "F\303\270rste side\tHome\0"\
@@ -9267,7 +9267,7 @@ const char * gTranslations_no =
   "Kan ikke koble til Internett (feilmelding %#x).\0"\
   "Avbryt\0"\
   "Kan ikke skrive ut filen\0"\
-  "Kan ikke starte invertert s\303\270ke kommando. Vennligst sjekk kommandolinjen i innstillingene.\0"\
+  "Kan ikke starte invertert s\303\270kekommando. Vennligst sjekk kommandolinjen i innstillingene.\0"\
   "Endre spr\303\245k (Change Language)\0"\
   "&Se etter oppdateringer...\0"\
   "Tegneserier\0"\
@@ -9304,7 +9304,7 @@ const char * gTranslations_no =
   "F&avoritter\0"\
   "Fremover\tAlt+Pil h\303\270yre\0"\
   "Fullskjerm\tCtrl+Shift+L\0"\
-  "Motst\303\245ende\0"\
+  "Flere sider\0"\
   "Kunne ikke endre navn p\303\245 filen!\0"\
   "Feil ved lagring av filen\0"\
   "Rask Nettvisning\0"\
@@ -9340,7 +9340,7 @@ const char * gTranslations_no =
   "\0"\
   "Gj\303\270re SumatraPDF til standard \303\245pningsprogram for PDF-filer?\0"\
   "Bruk SumatraPDF som standard PDF-leser\0"\
-  "\0"\
+  "Man&ga-modus\0"\
   "Skill mellom store og sm\303\245 bokstaver\0"\
   "Mobi-dokumenter\0"\
   "Endret:\0"\
@@ -9420,7 +9420,7 @@ const char * gTranslations_no =
   "Synkroniserende fil kan ikke \303\245pnes\0"\
   "Merket PDF\0"\
   "Tekstdokumenter\0"\
-  "\0"\
+  "Dette dokumentet bruker ust\303\270ttede funksjoner (%s) og kan muligens ikke bli vist riktig.\0"\
   "Tittel:\0"\
   "Ukjent kildefil (%s)\0"\
   "Bruk &tabs\0"\
@@ -9437,6 +9437,254 @@ const char * gTranslations_no =
   "[Endringer oppdaget; oppdaterer] %s\0"\
   "kopierer tekst\0"\
   "skriver ut dokument\0";
+
+const char * gTranslations_nn = 
+  "&Om\0"\
+  "F&aktisk storleik\tCtrl+1\0"\
+  "&Avanserte innstillingar\0"\
+  "&Alle valde sider\0"\
+  "&Tilbake\tAlt+Venstretast\0"\
+  "&Bokvising\tCtrl+8\0"\
+  "&Lukk\tCtrl+W\0"\
+  "&Kopier utval\0"\
+  "&Kopier utval\tCtrl+C\0"\
+  "Ikkje sp\303\270r meg igjen\0"\
+  "&Kun partalssider\0"\
+  "&Fleire sider\tCtrl+7\0"\
+  "&Fil\0"\
+  "&Finn hvilke:\0"\
+  "Fyrste side\tHome\0"\
+  "&Tilpass sider til utskrivbart omr\303\245de\0"\
+  "&G\303\245 til\0"\
+  "&Hopp til side:\0"\
+  "&Hjelp\0"\
+  "Siste side\tEnd\0"\
+  "&Forst\303\270rring:\0"\
+  "&Anvisning\0"\
+  "&Skil mellom store/sm\303\245 bokstaver\0"\
+  "Neste side\t->\0"\
+  "&Nei\0"\
+  "&Nei takk\0"\
+  "&Kun oddetalssider\0"\
+  "&Opne dokument\0"\
+  "&Opne...\tCtrl+O\0"\
+  "&Innstillingar...\0"\
+  "&Passord:\0"\
+  "&Fest dokument\0"\
+  "F\303\270rre side\t<-\0"\
+  "&Skriv ut\0"\
+  "Skriv &ut...\tCtrl+P\0"\
+  "&Skriv ut... (Blei nekta)\0"\
+  "&Husk passordet for dette dokumentet\0"\
+  "&Husk innstillingane for kvart dokument\0"\
+  "&Fjern dokument\0"\
+  "&Lagre som...\0"\
+  "Lagre &som...\tCtrl+S\0"\
+  "&Innstillingar\0"\
+  "&Krymp sider til utskrivbart omr\303\245de (hvis n\303\270dvendig)\0"\
+  "&Enkeltside\tCtrl+6\0"\
+  "Hopp over denne versjonen\0"\
+  "&Bruk opprinnelige sidestorleikar\0"\
+  "&Vis\0"\
+  "&Vindu\0"\
+  "&Ja\0"\
+  "\0"\
+  "(av %d)\0"\
+  "(side %s)\0"\
+  "Om SumatraPDF\0"\
+  "Legg til ein favoritt\0"\
+  "Legg til side %s i favorittane\0"\
+  "Legg til side %s i favorittane med (valfritt) namn:\0"\
+  "Legg til i favorittar\0"\
+  "Avansert\0"\
+  "Alle filar\0"\
+  "Alle st\303\270ttede dokumentar\0"\
+  "Applikasjon:\0"\
+  "Tilknytte PDF-filer?\0"\
+  "Vedlegg: %s\0"\
+  "Skapar:\0"\
+  "Automatisk\0"\
+  "S\303\270k automatisk etter &oppdateringar\0"\
+  "Bokvising\0"\
+  "Bokmerker\tF12\0"\
+  "Bokmerk snarveg\0"\
+  "Bokmerk snarveg til side %s av %s\0"\
+  "Bokmerkar\0"\
+  "\0"\
+  "CHM-dokumentar\0"\
+  "Kan ikkje kople til internettet (Feilkode %#x).\0"\
+  "Lukk\0"\
+  "Kan ikkje skrive ut denne fila\0"\
+  "Kan ikkje starte invertert s\303\270kjekommando. Venligst sjekk kommandolinja i innstillingane.\0"\
+  "Byt spr\303\245k (Change Language)\0"\
+  "&Sj\303\245 etter ny versjon\0"\
+  "Teikneserieb\303\270kjer\0"\
+  "Kompatibilitet\0"\
+  "Kontinuerleg\0"\
+  "Kontinuerleg bokvising\0"\
+  "Kontunuerleg motst\303\245ande\0"\
+  "Delta med omsetjing\0"\
+  "Kopier &bilete\0"\
+  "Kopier &lenkeadresse\0"\
+  "Kopier ko&mmentar\0"\
+  "Kopiering av tekst blei nektast (Kopierer kun som bilete)\0"\
+  "Opphavsret:\0"\
+  "Kunne ikkje hente utskrivaregenskapene\0"\
+  "Kunne ikkje starte utskrivaren\0"\
+  "Kunne ikkje rendre siden\0"\
+  "Skapt:\0"\
+  "N\303\245verande fil\0"\
+  "Mark\303\270rposisjon:\0"\
+  "Tilpassa &zooming...\tCtrl+Y\0"\
+  "Standard &oppsett:\0"\
+  "Standard &zooming:\0"\
+  "Standard PDF-lesar kan ikkje bli endra i flyttbar modus\0"\
+  "Permisjonar som blei nekta:\0"\
+  "DjVu-dokumentar\0"\
+  "Dokumentegenskaper\0"\
+  "Last ned\0"\
+  "&Avslutt\tCtrl+Q\0"\
+  "EPUB digitale b\303\270kjer\0"\
+  "Skriv inn passord\0"\
+  "Skriv inn passord for %s\0"\
+  "G\303\245 inn i kommandolinja for \303\245 hentast, n\303\245r du dobbeltklikkar p\303\245 PDF-dokumentet:\0"\
+  "Feil ved innlasting av %s\0"\
+  "F&avorittar\0"\
+  "F&ramover\tAlt+H\303\270yretast\0"\
+  "Full skjerm\tCtrl+Shift+L\0"\
+  "Fleire sider\0"\
+  "Klarte ikkje \303\245 omd\303\270pe fila!\0"\
+  "Feil under lagring av fil\0"\
+  "Rask nettvising\0"\
+  "Favorittar\0"\
+  "FictionBook-dokumentar\0"\
+  "Filen %s blei ikkje funnet\0"\
+  "Filst\303\270rrelse:\0"\
+  "Fil:\0"\
+  "Finn...\tCtrl+F\0"\
+  "Finn\0"\
+  "Finn neste\0"\
+  "Finn f\303\270rre\0"\
+  "Finn\0"\
+  "Tilpass &innhald\tCtrl+3\0"\
+  "Tilpass &side\tCtrl+0\0"\
+  "Tilpass &breidde\tCtrl+2\0"\
+  "Tilpass innhald\0"\
+  "Tilpass side\0"\
+  "Tilpass breidde\0"\
+  "Tilpass bredde og vis sider kontinuerleg\0"\
+  "Tilpass ein enkel side\0"\
+  "Fontar:\0"\
+  "Formatterer boka... %d sider\0"\
+  "Fann tekst p\303\245 side %s\0"\
+  "Fann tekst p\303\245 side %s (igjen)\0"\
+  "Ofte lesne\0"\
+  "\0"\
+  "G\303\245 til side\0"\
+  "Skjul ofte lesne\0"\
+  "Tips: Bruk F3-knappen for \303\245 finne igjen\0"\
+  "Biletfilar (*.%s)\0"\
+  "\0"\
+  "\0"\
+  "Gjere SumatraPDF til standardprogram for PDF-filer?\0"\
+  "Bruk SumatraPDF som standard PDF-lesar\0"\
+  "Man&ga-vising\0"\
+  "Skil mellom store/sm\303\245 bokstavar\0"\
+  "Mobi-dokumentar\0"\
+  "Endrast:\0"\
+  "Ny versjon (ver. %s) tilgjengeleg. Laste ned?\0"\
+  "Neste side\0"\
+  "Ingen treff blei funnet\0"\
+  "Ingen resultat funnet omkring linje %u i fila %s\0"\
+  "Ingen synkroniseringsfil blei funna\0"\
+  "Ingen synkroniseringsinfo p\303\245 denne posisjonen\0"\
+  "Antal sider:\0"\
+  "\0"\
+  "Opne\0"\
+  "Opne &i PDF-XChange\0"\
+  "Opne eit dokument\0"\
+  "Opne i %s\0"\
+  "Opne i &Adobe Reader\0"\
+  "Opne i &Foxit Reader\0"\
+  "Opne i &Microsoft HTML-hjelp\0"\
+  "Opne i &Microsoft XPS-visar\0"\
+  "E&genskaper\0"\
+  "E&genskaper\tCtrl+D\0"\
+  "PDF-dokument\0"\
+  "PDF-optimaliseringer:\0"\
+  "PDF-lagar:\0"\
+  "PDF-versjon:\0"\
+  "PDF-dokumentar\0"\
+  "Side...\tCtrl+G\0"\
+  "Side %s\0"\
+  "Sidestorleik:\0"\
+  "Side nummer %u eksisterer ikkje\0"\
+  "Sideskalering\0"\
+  "Side:\0"\
+  "PalmDoc-dokumentar\0"\
+  "Venligst vent - Visar...\0"\
+  "Etterskriv dokumentar\0"\
+  "Pr&esentasjon\tF5\0"\
+  "F\303\270rre side\0"\
+  "Skriv ut\0"\
+  "Utskrivingsrekkevidde\0"\
+  "Ein skriver med det namnet finnes ikkje\0"\
+  "Utskriving under arbeid.\0"\
+  "Utskrivinga p\303\245g\303\245r framleis. Vil du stoppe og avslutte?\0"\
+  "Utskrivinga p\303\245g\303\245r framleis. Vil du stoppe og starte p\303\245 nytt?\0"\
+  "Skriver ut side %d av %d...\0"\
+  "Skrivarfeil\0"\
+  "Gjev n&ytt namn...\tF2\0"\
+  "Husk &opna filar\0"\
+  "Fjern fr\303\245 favorittar\0"\
+  "Fjern side %s fr\303\245 favorittene\0"\
+  "Gjev nytt namn\0"\
+  "Roter til venstre\tCtrl+Shift+-\0"\
+  "Roter til h\303\270gre\tCtrl+Shift++\0"\
+  "Lagre som\0"\
+  "Large s&narveg...\tCtrl+Shift+S\0"\
+  "S\303\270kjer gjennom %d av %d...\0"\
+  "Vel &alle\0"\
+  "Vel &alle\tCtrl+A\0"\
+  "Vel innhald med Ctrl + venstre museknapp\0"\
+  "Utval:\0"\
+  "Send med &E-post...\0"\
+  "Velg motsatt s\303\270k-kommandolinje\0"\
+  "Vis &bokmerkar\0"\
+  "Vis &sider kontinuerleg\0"\
+  "Vis verktylinje\0"\
+  "Vis favorittar\0"\
+  "Vis ofte lesne\0"\
+  "Vis &bokmerkesidelinja hvis den er tilgjengeleg\0"\
+  "Enkel side\0"\
+  "Beklager, d\303\251t skulle ikkje ha skjedd!\n\nVenligst trykk 'Lukk' hvis du vil hjelpe oss \303\245 fikse orsaka til dette krasjet.\0"\
+  "Kildefila %s har ikkje nokre synkroniseringspunkt\0"\
+  "Tema:\0"\
+  "SumatraPDF-innstillingar\0"\
+  "SumatraPDF Oppdatering\0"\
+  "SumatraPDF har krasja\0"\
+  "SumatraPDF er din standard PDF-lesar\0"\
+  "SumatraPDF skulle no vere din standard PDF-lesar\0"\
+  "Synkroniseringsfila kan ikkje opnes\0"\
+  "Merka PDF\0"\
+  "Tekstdokumentar\0"\
+  "Dette dokumentet bruker ust\303\270tta funksjoner (%s) og kan kanskje ikkje visast riktig.\0"\
+  "Tittel:\0"\
+  "Ukjend kildefil (%s)\0"\
+  "Bruk &faner\0"\
+  "Vis\0"\
+  "Vitj &heimeside\0"\
+  "Fare\0"\
+  "XPS-dokumentar\0"\
+  "Du har den siste versjonen.\0"\
+  "Du har versjon %s\0"\
+  "\0"\
+  "Zoom inn\0"\
+  "Zoom ut\0"\
+  "Zoomfaktor\0"\
+  "[Endringar oppdaga; lastar inn p\303\245 nytt] %s\0"\
+  "Kopierer tekst\0"\
+  "Skrivar ut dokument\0";
 
 const char * gTranslations_fa = 
   "&\330\257\330\261\330\250\330\247\330\261\331\207\0"\
@@ -13942,6 +14190,7 @@ static const char *gTranslations[LANGS_COUNT] = {
   gTranslations_my, 
   gTranslations_ne, 
   gTranslations_no, 
+  gTranslations_nn, 
   gTranslations_fa, 
   gTranslations_pl, 
   gTranslations_br, 
@@ -14003,6 +14252,7 @@ const char *gLangCodes =   "en\0" \
   "my\0" \
   "ne\0" \
   "no\0" \
+  "nn\0" \
   "fa\0" \
   "pl\0" \
   "br\0" \
@@ -14060,6 +14310,7 @@ const char *gLangNames =   "English\0" \
   "Malaysian (Bahasa Melayu)\0" \
   "Nepali (\340\244\250\340\245\207\340\244\252\340\244\276\340\244\262\340\245\200)\0" \
   "Norwegian (Norsk)\0" \
+  "Norwegian Neo-Norwegian (Norsk nynorsk)\0" \
   "Persian (\331\201\330\247\330\261\330\263\333\214)\0" \
   "Polish (Polski)\0" \
   "Portuguese - Brazil (Portugu\303\252s)\0" \
@@ -14129,6 +14380,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
   _LANGID(LANG_MALAY),
   _LANGID(LANG_NEPALI),
   MAKELANGID(LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL),
+  MAKELANGID(LANG_NORWEGIAN, SUBLANG_NORWEGIAN_NYNORSK),
   _LANGID(LANG_FARSI),
   _LANGID(LANG_POLISH),
   MAKELANGID(LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN),
@@ -14152,7 +14404,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
 
 bool IsLangRtl(int idx)
 {
-  return (2 == idx) || (23 == idx) || (31 == idx) || (38 == idx);
+  return (2 == idx) || (23 == idx) || (31 == idx) || (39 == idx);
 }
 
 int gLangsCount = LANGS_COUNT;

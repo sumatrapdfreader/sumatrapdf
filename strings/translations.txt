@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-72370b528f12545dc5b3767e42ee8d40168b3ebe
+8dde3f09f5459f74c184f9a421ad0f9edf851151
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -176,7 +176,8 @@ lv:&Papildu opcijas...
 mk:&Напредни oпции...
 my:&Tetapan terperinci...
 nl:&Geavanceerde Opties...
-no:&Avanserte tilleggsfunksjoner
+nn:&Avanserte innstillingar
+no:&Avanserte innstillinger
 pl:Opcje zaawansowane...
 pt:Opções &avançadas...
 ro:Opțiuni &avansate...
@@ -236,6 +237,7 @@ ml:&തിരഞ്ഞെടുത്ത താളുകളെല്ലാം
 my:&Semua mukasurat pilihan
 ne:चयन गरिएका &सबै पृष्ठहरु
 nl:&Alle geselecteerde pagina's
+nn:&Alle valde sider
 no:&Alle valgte sider
 pl:&Zaznaczone strony
 pt:&Todas as páginas selecionadas
@@ -287,6 +289,7 @@ hu:Ugrás vissza\tAlt+<-
 id:Kembali\tAlt+<-
 it:&Indietro\t<Alt>+<Freccia sinistra>
 ja:前に戻る(&B)\tAlt+←
+jv:&Mbalik\tAlt+Arah Kiri
 ka:&უკან\tAlt+მარცხენა ისარი
 kr:이전에 본 페이지(&B)\tAlt+왼쪽 방향키
 ku:&گەڕانەوە\tAlt+Left Arrow
@@ -297,6 +300,7 @@ mk:Назад\tAlt+Left Arrow
 my:&Kembali\tAlt+Left Arrow
 ne:&पछाडि\tAlt+बायाँ बाण
 nl:Terug\tAlt+<-
+nn:&Tilbake\tAlt+Venstretast
 no:Tilbake\tAlt+Pil venstre
 pl:&Wstecz\tAlt+W lewo
 pt:V&oltar\tAlt + <-
@@ -326,7 +330,7 @@ br:Visualizar como livro\tCtrl+8
 bs:&Knjiški pregled\tCtrl+8
 ca-xv:Visualització de &llibre\tCtrl+8
 ca:Visualització de &llibre\tCtrl+8
-cn:书本查看(&B)\tCtrl+8
+cn:书籍视图(&B)\tCtrl+8
 cy:Golwg &Llyfr\tCtrl+8
 cz:K&niha\tCtrl+8
 de:&Buchansicht\tStrg+8
@@ -347,6 +351,7 @@ hu:&Könyv-mód (oldalpár címlappal)\tCtrl+8
 id:Tampilan &Buku\tCtrl+8
 it:Vista &libro\t<Ctrl>+8
 ja:ブック ビュー&(B)\tCtrl+B
+jv:&Tampilan Buku\tCtrl+8
 ka:&წიგნის რეჟიმი\tCtrl+8
 kr:책처럼 보기(&B)\tCtrl+8
 ku:شێوازی پەرتووک&\tCtrl+8
@@ -356,6 +361,7 @@ mk:Книга\tCtrl+8
 my:Lihat &buku\tCtrl+8
 ne:&पुस्तिका दृश्य\tCtrl+8
 nl:&Boekweergave\tCtrl+8
+nn:&Bokvising\tCtrl+8
 no:&Bokvisning\tCtrl+8
 pl:Widok o&dczytu\tCtrl+8
 pt:Como li&vro\tCtrl+8
@@ -484,6 +490,7 @@ mk:&Копирај селекција
 my:&Salin Pilihan
 ne:चयनको प्रति&लिपि बनाउनुहोस्
 nl:Selectie kopiëren
+nn:&Kopier utval
 no:&Kopier valgt område
 pl:Kopiuj &zaznaczenie
 pt:&Copiar seleção
@@ -545,6 +552,7 @@ mk:Копирај селекција\tCtrl+C
 my:&Salin pilihan\tCtrl+C
 ne:चयनको प्रति&लिपि बनाउनुहोस्\tCtrl+C
 nl:Kopieer selectie\tCtrl+C
+nn:&Kopier utval\tCtrl+C
 no:Kopier merket tekst\tCtrl+C
 pl:Kopiuj &zaznaczenie\tCtrl+C
 pt:&Copiar seleção\tCtrl+C
@@ -672,6 +680,7 @@ mk:Само &парни страници
 my:&Mukasurat genap sahaja
 ne:&जोर पृष्ठ मात्र
 nl:Alleen &Even pagina's
+nn:&Kun partalssider
 no:Bare &partallssider
 pl:Strony &parzyste
 pt:Só páginas &pares
@@ -730,7 +739,8 @@ mk:Две страници\tCtrl+7
 my:&Menghadap\tCtrl+7
 ne:&सम्मुख\tCtrl+7
 nl:&Dubbele pagina\tCtrl+7
-no:&Vendt\tCtrl+7
+nn:&Fleire sider\tCtrl+7
+no:&Flere sider\tCtrl+7
 pl:&Wiele stron\tCtrl+7
 pt:D&uas páginas\tCtrl+7
 ro:Două pagini\tCtrl+7
@@ -859,6 +869,7 @@ ml:എന്തു തിരയണം
 my:&carian:
 ne:के फेला पार्ने:
 nl:&Zoek naar:
+nn:&Finn hvilke:
 no:&Søk etter:
 pl:&Szukaj:
 pt:&Localizar:
@@ -986,6 +997,7 @@ mk:&Прилагоди страници на зона за печатење
 my:&Muatkan halaman pada kawasan boleh cetak
 ne:पृष्ठहरुलाई छाप्नयोग्य क्षेत्रमा &अटाउनुहोस्
 nl:Pagina's in afdrukgebied passen
+nn:&Tilpass sider til utskrivbart område
 no:&Tilpass sider til utskriftsområde
 pl:Dopasuj strony do rozmiaru &wydruku
 pt:A&justar páginas à área de impressão
@@ -1117,6 +1129,7 @@ ml:താളിലേക്ക് പോകുക
 my:&Pergi ke halaman:
 ne:&पृष्ठमा जानुहोस्
 nl:&Ga naar pagina:
+nn:&Hopp til side:
 no:&Gå til side:
 pl:Idź &do strony:
 pt:Ir pa&ra a página:
@@ -1315,6 +1328,7 @@ mk:&Зголемување
 my:&Pembesaran:
 ne:&आवर्धन:
 nl:&Vergroting:
+nn:&Forstørring:
 no:&Forstørrelse:
 pl:&Powiększenie:
 pt:&Ampliação:
@@ -1378,6 +1392,7 @@ mm:&ကိုယ်တိုင်
 my:&Manual
 ne:&पुस्तिका
 nl:Handleiding
+nn:&Anvisning
 no:&Bruksanvisning
 pa:ਮਦੱਦ ਕਤਾਬ(&M)
 pl:Instrukcja o&bsługi
@@ -1441,6 +1456,7 @@ mk:&Разликувај мали и големи букви
 my:&Padan case
 ne:&केस मिलाउनुहोस्
 nl:Hoofd-/kleine letters toepassen
+nn:&Skil mellom store/små bokstaver
 no:&Skill mellom store og små bokstaver
 pl:&Uwzględnij wielkość liter
 pt:Sensível a &maiúsculas
@@ -1571,6 +1587,7 @@ mk:&Не
 my:&Tidak
 ne:&बेठिक
 nl:&Nee
+nn:&Nei
 no:&Nei
 pl:&Nie
 pt:&Não
@@ -1601,7 +1618,7 @@ bs:&Ne, hvala
 by:Дзякуй, не
 ca-xv:&No, gràcies
 ca:&No, gràcies
-cn:否，谢谢(&N)
+cn:不，谢谢(&N)
 cy:&Dim diolch
 cz:&Ne, děkuji
 de:&Nein danke
@@ -1623,7 +1640,7 @@ hu:Köszönöm,&nem
 id:&Tidak, terima kasih
 it:&No, grazie
 ja:いいえ(&N)
-jv:&No, gracias
+jv:&Ora, matur nuwun
 ka:&არა, გმადლობთ
 kr:아니오(&N)
 ku:نەخێر، سوپاس&
@@ -1634,6 +1651,7 @@ mk:&Не, благодарам
 my:&Tidak, terima kasih
 ne:धन्यबाद, तर &पर्दैन
 nl:&Nee, bedankt
+nn:&Nei takk
 no:&Nei, takk
 pl:Nie, &dziękuję
 pt:&Não, obrigado(a)
@@ -1693,6 +1711,7 @@ ml:ഒറ്റ സംഖ്യാ താളുകള്‍ മാത്രം
 my:&Mukasurat ganjil sahaja
 ne:&बिजोर पृष्ठ मात्र
 nl:Alleen &Oneven pagina's
+nn:&Kun oddetalssider
 no:Bare &oddetallssider
 pl:Strony &nieparzyste
 pt:Só páginas í&mpares
@@ -1751,6 +1770,7 @@ mk:Отвори документ
 my:&Buka dokumen
 ne:&कागजात खोल्नुहोस्
 nl:Document &Openen
+nn:&Opne dokument
 no:&Åpne dokument
 pl:&Otwórz dokument
 pt:&Abrir documento
@@ -1872,6 +1892,7 @@ lv:&Opcijas
 mk:&Опции
 my:&Tetapan
 nl:&Opties
+nn:&Innstillingar
 no:&Tillegg
 pl:&Opcje
 pt:&Opções
@@ -1931,6 +1952,7 @@ mk:&Опции...
 my:&Pilihan...
 ne:&विकल्पहरु
 nl:&Opties...
+nn:&Innstillingar...
 no:&Innstillinger...
 pl:&Opcje...
 pt:&Opções...
@@ -1993,6 +2015,7 @@ ml:രഹസ്യവാക്ക്
 my:&Kata laluan
 ne:&पासवर्ड
 nl:&Wachtwoord:
+nn:&Passord:
 no:&Passord:
 pl:&Hasło:
 pt:&Palavra-passe:
@@ -2051,6 +2074,7 @@ mk:Закачи документ
 my:&Pin Dokumen
 ne:कागजातलाई &टाँस्नुहोस्
 nl:Document &Vastpinnen
+nn:&Fest dokument
 no:Fes&t dokument
 pl:&Przypnij dokument
 pt:Fi&xar documento
@@ -2176,6 +2200,7 @@ mk:&Печати...
 my:&Cetak...
 ne:&छाप्नुहोस् ...
 nl:Afdrukken...
+nn:&Skriv ut
 no:&Skriv ut...
 pl:&Drukuj...
 pt:&Imprimir...
@@ -2234,6 +2259,7 @@ mk:&Печати... (denied)
 my:&Cetak... (dinafikan)
 ne:&छपाई... (अस्वीकार भयो)
 nl:Afdrukken... (niet toegestaan)
+nn:&Skriv ut... (Blei nekta)
 no:&Skriv ut... (ikke tillatt)
 pl:&Drukuj... (odmówiono)
 pt:&Imprimir...(recusado)
@@ -2361,6 +2387,7 @@ mk:&Запомни ја лозинката за овој документ
 my:&Ingat katalaluan untuk dokumen ini
 ne:यो कागजातको पासवर्ड &सम्झनुहोस्
 nl:Wachtwoord onthouden voor dit document
+nn:&Husk passordet for dette dokumentet
 no:&Husk passordet for dette dokumentet
 pl:Pamiętaj &hasło dla tego dokumentu
 pt:&Lembrar palavra-passe deste documento
@@ -2422,6 +2449,7 @@ mk:&Запомни ги овие поставувања за секој доку
 my:&Ingat tetapan-tetapan ini untuk setiap dokumen
 ne:यी सेटिङहरु प्रत्येक कागजातको लागि &सम्झनुहोस्
 nl:&Bewaar deze instellingen voor elk document
+nn:&Husk innstillingane for kvart dokument
 no:&Husk disse innstillingene for hvert dokument
 pl:Pamiętaj ustawienia dla &każdego dokumentu
 pt:&Lembrar estas definições para todos os documentos
@@ -2480,6 +2508,7 @@ mk:Отстрани документ
 my:&Buang dokumen
 ne:कागजात &हटाउनुहोस्
 nl:Document ve&rwijderen
+nn:&Fjern dokument
 no:&Fjern dokument
 pl:&Usuń dokument
 pt:Remover doc&umento
@@ -2536,6 +2565,7 @@ mk:&Зачувај како...
 my:&Simpan Sebagai...
 ne:ब&चत गर्नुहोस्...
 nl:Op&slaan als...
+nn:&Lagre som...
 no:&Lagre som...
 pl:Zapisz jako...
 pt:&Gravar como...
@@ -2665,6 +2695,7 @@ mk:&Поставувања
 my:&Tetapan
 ne:&सेटिङहरू
 nl:&Instellingen
+nn:&Innstillingar
 no:&Alternativer
 pl:&Ustawienia
 pt:&Definições
@@ -2723,6 +2754,7 @@ mk:&Намали страници според зона за печатење (�
 my:&Kecilkan muka surat ke kawasan cetak (jika perlu)
 ne:पृष्ठहरुलाई छाप्नयोग्य क्षेत्रमा &खुम्च्याउनुहोस् (आवस्यक परेमा)
 nl:Pagina's verkleinen tot afdrukgebied (indien nodig)
+nn:&Krymp sider til utskrivbart område (hvis nødvendig)
 no:&Krymp sider til utskriftsområde (om nødvendig)
 pl:&Zmniejsz strony do rozmiaru wydruku (w razie potrzeby)
 pt:&Reduzir páginas à área de impressão (se necessário)
@@ -2781,6 +2813,7 @@ mk:Единечна страница\tCtrl+6
 my:&Halaman Tunggal\tCtrl+6
 ne:&एकल पृष्ठ\tCtrl+6
 nl:&Enkele pagina\tCtrl+6
+nn:&Enkeltside\tCtrl+6
 no:&Enkeltside\tCtrl+6
 pl:&Pojedyncza strona\tCtrl+6
 pt:Uma &página\tCtrl+6
@@ -2905,6 +2938,7 @@ mk:&Користи оригинални димензии на страници
 my:&Gunakan saiz halaman asal
 ne:&मौलिक पृष्ठ साईज प्रयोग गर्नुहोस्
 nl:Originele paginagrootte gebruiken
+nn:&Bruk opprinnelige sidestorleikar
 no:&Benytt opprinnelige sidestørrelser
 pl:Użyj &oryginalnego rozmiaru stron
 pt:&Utilizar tamanho original
@@ -2936,7 +2970,7 @@ bs:&Prikaz
 by:Выгляд
 ca-xv:&Visualitza
 ca:&Visualitza
-cn:查看(&V)
+cn:视图(&V)
 cy:&Gweld
 cz:&Zobrazit
 de:&Ansicht
@@ -3026,6 +3060,7 @@ ku:&پەنجەرە
 lv:&Logs
 mk:&Прозорец
 nl:&Window
+nn:&Vindu
 no:&Vindu
 pl:&Okno
 pt:&Janela
@@ -3082,6 +3117,7 @@ mk:&Да
 my:&Ya
 ne:&ठिक
 nl:&Ja
+nn:&Ja
 no:&Ja
 pl:&Tak
 pt:&Sim
@@ -3212,6 +3248,7 @@ mk:(од %d)
 my:(dari %d)
 ne:(कुल %d मध्ये)
 nl:(van %d)
+nn:(av %d)
 no:(av %d)
 pl:(z %d)
 pt:(de %d)
@@ -3270,6 +3307,7 @@ mk:(страница %s)
 my:(halaman %s)
 ne:(पृष्ठ %s)
 nl:(pagina %s)
+nn:(side %s)
 no:(side %s)
 pl:(strona %s)
 pt:(página %s)
@@ -3400,6 +3438,7 @@ ml:പ്രീയപ്പെട്ടതായി ചേര്‍ക്കു�
 my:Tambah pada Kegemaran
 ne:मनपर्नेमा थप्नुहोस्
 nl:Voeg Favoriet toe
+nn:Legg til ein favoritt
 no:Legg til i Favoritter
 pl:Dodaj do ulubionych
 pt:Adicionar favorito
@@ -3460,6 +3499,7 @@ mk:Додај страница %s во омилени
 my:Tambahkan halaman %s pada kegemaran
 ne:पृष्ठ %s लाई मनपर्नेमा थप्नुहोस्
 nl:Voeg pagina %s toe aan favorieten
+nn:Legg til side %s i favorittane
 no:Legg til side %s i favoritter
 pl:Dodaj stronę %s do ulubionych
 pt:Adicionar página %s aos favoritos
@@ -3519,6 +3559,7 @@ mk:Додај страница %s во омилени со име по избо�
 my:Tambah halaman %s pada kegemaran dengan nama (pilihan):
 ne:पृष्ठ %s लाई मनपर्नेमा (ऐच्छिक) नाम सहित थप्नुहोस्
 nl:Voeg pagina %s toe aan favorieten met (optionele) naam:
+nn:Legg til side %s i favorittane med (valfritt) namn:
 no:Legg til side %s i favoritter med (valgfritt) navn:
 pl:Dodaj stronę %s do ulubionych pod (opcjonalną) nazwą:
 pt:Adicionar página %s aos favoritos com nome (opcional):
@@ -3581,6 +3622,7 @@ ml:പ്രീയപ്പെട്ടതിലേക്ക് കൂട്ട�
 my:Tambah pada kegemaran
 ne:मनपर्नेमा थप्नुहोस्
 nl:Voeg toe aan favorieten
+nn:Legg til i favorittar
 no:Legg til i favoritter
 pl:Dodaj do ulubionych
 pt:Adicionar aos favoritos
@@ -3646,6 +3688,7 @@ ml:പുരോഗമിച്ചത്
 my:Lanjutan
 ne:उन्नत
 nl:Geavanceerd
+nn:Avansert
 no:Avansert
 pl:Zaawansowane
 pt:Avançadas
@@ -3711,6 +3754,7 @@ ml:എല്ലാ ഫയലുകളും
 my:Semua fail
 ne:सबै फाइलहरु
 nl:Alle bestanden
+nn:Alle filar
 no:Alle filer (*.*)
 pl:Wszystkie pliki
 pt:Todos os ficheiros
@@ -3772,6 +3816,7 @@ mk:Сите поддражни документи
 my:Semua dokumen yang disokong
 ne:सबै समर्थनयोग्य कागजातहरू
 nl:Alle ondersteunde documenten
+nn:Alle støttede dokumentar
 no:Alle støttede dokumenter
 pl:Wszystkie obsługiwane pliki
 pt:Todos os documentos
@@ -3834,6 +3879,7 @@ mk:Апликација:
 my:Aplikasi
 ne:अनुप्रयोग:
 nl:Programma:
+nn:Applikasjon:
 no:Program:
 pl:Program:
 pt:Aplicação:
@@ -3865,7 +3911,7 @@ br:Tem certeza de que quer desinstalar o SumatraPDF?
 bs:Da li ste sigurni da želite deinstalirati SumatraPDF?
 ca-xv:Esteu segur de voler desinstal·lar el SumatraPDF?
 ca:Esteu segur de voler desinstal·lar el SumatraPDF?
-cn:你确实要解除安装 SumatraPDF 吗？
+cn:你确实要卸载 SumatraPDF 吗？
 cy:Ydych chi'n siŵr eich bod am ddadosod SumatraPDF
 cz:Opravdu chcete odinstalovat SumatraPDF?
 de:Möchten Sie SumatraPDF wirklich deinstallieren?
@@ -3894,6 +3940,7 @@ mk:Дали сте сигурни дека сакате да го избрише
 my:Adakah anda pasti anda mahu membuang SumatraPDF?
 ne:SumatraPDF हटाउन चाहानुहुन्छ?
 nl:Bent u zeker dat u SumatraPDF wilt verwijderen?
+nn:Er du sikker på at du vil avinstallere SumatraPDF?
 no:Vil du virkelig avinstallere SumatraPDF?
 pl:Czy na pewno chcesz usunąć SumatraPDF?
 pt:Tem a certeza que quer desinstalar o SumatraPDF?
@@ -4023,6 +4070,7 @@ mk:Прилог: %s
 my:Lampiran: %s
 ne:संलग्नहरू: %s
 nl:Bijlage: %s
+nn:Vedlegg: %s
 no:Vedlegg: %s
 pl:Załącznik: %s
 pt:Anexo: %s
@@ -4088,6 +4136,7 @@ ml:രചയിതാവ്
 my:Pengarang
 ne:लेखक
 nl:Auteur:
+nn:Skapar:
 no:Forfatter:
 pl:Autor:
 pt:Autor:
@@ -4154,6 +4203,7 @@ ml:സ്വയമേവ.
 my:Automatik
 ne:स्वत:
 nl:Automatisch
+nn:Automatisk
 no:Automatisk
 pl:Automatycznie
 pt:Automático
@@ -4206,6 +4256,7 @@ hu:&Frissítések automatikus keresése
 id:Periksa &pembaruan secara otomatis
 it:Controlla a&utomaticamente aggiornamenti
 ja:自動的に更新をチェックする(&U)
+jv:Otomatis nge-cek &updatetan
 ka:განახლების &ავტომატურად შემოწმება
 kr:자동으로 업데이트 확인(&U)
 ku:پشکنین بۆ نوێکردنەوە بە &خۆکاری
@@ -4217,6 +4268,7 @@ ml:പുതിയ പതിപ്പുണ്ടോയെന്ന് സ്വ
 my:Semak &kemas kini secara automatik
 ne:&अद्यावधिकहरु स्वतः जाँच्नुहोस्
 nl:Automatisch controleren op &updates
+nn:Søk automatisk etter &oppdateringar
 no:Automatisk sjekk for &oppdateringer
 pl:&Szukaj aktualizacji automatycznie
 pt:&Procurar atualizações automaticamente
@@ -4247,7 +4299,7 @@ br:Ver como livro
 bs:Knjiški pregled
 ca-xv:Visualització de llibre
 ca:Visualització de llibre
-cn:书本查看
+cn:书籍视图
 cy:Golwg Llyfr
 cz:Kniha
 de:Buchansicht
@@ -4269,6 +4321,7 @@ hu:Könyv (oldalpár címlappal)
 id:Tampilan Buku
 it:Vista libro
 ja:ブック ビュー
+jv:Tampilan Buku
 ka:წიგნის რეჟიმი
 kr:책처럼 보기
 ku:شێوازی پەرتووک
@@ -4279,6 +4332,7 @@ mk:Книга
 my:Paparan buku
 ne:पुस्तिका दृश्य
 nl:Boekweergave
+nn:Bokvising
 no:Bokvisning
 pl:Widok odczytu
 pt:Como livro
@@ -4408,6 +4462,7 @@ mk:Кратенки од обележувачи
 my:Pintasan Penanda
 ne:पुस्तकचिनो सर्टकटहरु
 nl:Bladwijzer maken
+nn:Bokmerk snarveg
 no:Bokmerk snarveier
 pl:Zakładki
 pt:Atalhos de marcadores
@@ -4464,6 +4519,7 @@ mk:Кратенки од обележувачи за страница %s од %s
 my:Bookmark shortcut ke halaman %s daripada %s
 ne:पृष्ठ %s (कुल %s मध्ये) को सर्टकटलाई पुस्तकचिनो बनाउनुहोस्
 nl:Bladwijzer maken naar pagina %s van %s
+nn:Bokmerk snarveg til side %s av %s
 no:Bokmerk snarvei til side %s av %s
 pl:Wstaw zakładkę do strony %s z %s
 pt:Atalho para a página %s de %s
@@ -4524,6 +4580,7 @@ ml:അടയാളം വയ്ക്കുക
 my:Penanda
 ne:पुस्तकचिनो
 nl:Bladwijzers
+nn:Bokmerkar
 no:Bokmerker
 pl:Zakładki
 pt:Marcadores
@@ -4587,6 +4644,7 @@ ml:Bytes
 my:Bytes
 ne:बाईट
 nl:Bytes
+nn:Bytes
 no:bytes
 pl:bajtów
 pt:Bytes
@@ -4649,6 +4707,7 @@ mk:CHM-документи
 my:Dokumen CHM
 ne:CHM कागजातहरु
 nl:CHM-documenten
+nn:CHM-dokumentar
 no:CHM-dokumenter
 pl:Dokumenty CHM
 pt:Documentos CHM
@@ -4706,6 +4765,7 @@ mk:Не можам да се поврзам на Интернет (грешка 
 my:Gagal menyambung ke Internet (ralat %#x).
 ne:इन्टरनेट जडान गर्न सकिएन (त्रुटि %#x).
 nl:Kan geen verbinding maken met internet (fout %#x).
+nn:Kan ikkje kople til internettet (Feilkode %#x).
 no:Kan ikke koble til Internett (feilmelding %#x).
 pl:Nie można połączyć z Internetem (błąd %#x).
 pt:Não foi possível ligar à Internet (erro %#x)
@@ -4772,6 +4832,7 @@ ml:വേണ്ടാ
 my:Batal
 ne:रद्द गर्नुहोस्
 nl:Annuleren
+nn:Lukk
 no:Avbryt
 pl:Anuluj
 pt:Cancelar
@@ -4837,6 +4898,7 @@ ml:ഈ ഫയല്‍ അച്ചടിക്കാന്‍ പറ്റി�
 my:Tidak boleh cetak fail ini
 ne:यो फाइल छाप्न सकिंदैन
 nl:Kan dit bestand niet afdrukken
+nn:Kan ikkje skrive ut denne fila
 no:Kan ikke skrive ut filen
 pl:Nie można drukować tego pliku
 pt:Não foi possível imprimir este ficheiro
@@ -4898,7 +4960,8 @@ mk:Не можам да започнам со обратното пребару�
 my:Tidak boleh memulakan arahan carian songsang. Sila periksa baris arahan dalam tetapan.
 ne:आदेश पङ्‌क्ति उल्टो खोजाई सुरु गर्न सकिएन | कृपया सेटिङमा आदेश पङ्‌क्ति हेर्नुहोस |
 nl:Kan de omgekeerde zoekopdracht niet starten. Controleer de opdrachtregel in de instellingen.
-no:Kan ikke starte invertert søke kommando. Vennligst sjekk kommandolinjen i innstillingene.
+nn:Kan ikkje starte invertert søkjekommando. Venligst sjekk kommandolinja i innstillingane.
+no:Kan ikke starte invertert søkekommando. Vennligst sjekk kommandolinjen i innstillingene.
 pl:Nie można rozpocząć odwrotnego wyszukiwania. Proszę sprawdzić ustawienia wiersza poleceń.
 pt:Não é possível iniciar o comando da pesquisa inversa. Verifique a linha de comandos nas definições.
 ro:Nu pot lansa comanda de căutare inversă. Verificați, vă rog, opțiunile din linia de comandă.
@@ -5097,6 +5160,7 @@ ml:അടയ്ക്കുക
 my:Tutup
 ne:बन्द गर्नुहोस्
 nl:Sluiten
+nn:Lukk
 no:Lukk
 pl:Zamknij
 pt:Fechar
@@ -5156,6 +5220,7 @@ mk:Стрипови
 my:Buku komik
 ne:कमिक पुस्तिका
 nl:Stripboeken
+nn:Teikneseriebøkjer
 no:Tegneserier
 pl:Komiksy
 pt:Banda desenhada
@@ -5215,6 +5280,7 @@ ml:പൊരുത്തം
 my:Kesesuaian
 ne:मिल्दोजुल्दो
 nl:Compatibiliteit
+nn:Kompatibilitet
 no:Kompatibilitet
 pl:Zgodność
 pt:Compatibilidade
@@ -5345,6 +5411,7 @@ mk:Книга со непрекинат поглед
 my:Paparan buku berterusan
 ne:निरन्तर पुस्तिका दृश्य
 nl:Doorlopende boekweergave
+nn:Kontinuerleg bokvising
 no:Kontinuerlig bokvisning
 pl:Widok odczytu - układ ciągły
 pt:Como livro contínuo
@@ -5524,7 +5591,7 @@ eu:Kopiatu &Irudia
 fa:رونوشت از &عکس
 fi:Kopioi &kuva
 fr:Copier l'&image
-ga:Macasamhlaigh &Íomhánna
+ga:Macasamhlaigh an &Íomhá
 gl:Copiar a &imaxe
 he:העתק תמונה
 hi:&छवि नक़ल करें
@@ -5542,6 +5609,7 @@ mk:Копирај &слика
 my:Salin &Imej
 ne:&छवि प्रतिलिपि बनाउनुहोस्
 nl:Afbeelding kopiëren
+nn:Kopier &bilete
 no:Kopier &Bilde
 pl:Kopiuj obraz
 pt:Copiar &imagem
@@ -5601,6 +5669,7 @@ mk:Копирај ја адресата на &врската
 my:Salin &Alamat Pautan
 ne:&लिङ्क ठेगानाको प्रतिलिपि बनाउनुहोस्
 nl:&Verwijzing kopiëren
+nn:Kopier &lenkeadresse
 no:Kopier &lenkeadresse
 pl:Kopiuj adres z &odnośnika
 pt:Copiar endereço da &ligação
@@ -5659,6 +5728,7 @@ mk:Копирај коментар
 my:Salin Ko&men
 ne:&टिप्पणीको प्रतिलिपि बनाउनुहोस्
 nl:Notitie kopiëren
+nn:Kopier ko&mmentar
 no:Kopier ko&mmentar
 pl:Kopiuj ko&mentarz
 pt:Copiar co&mentário
@@ -5718,6 +5788,7 @@ mk:Копирањето на текстот беше одбиено (копир�
 my:Salinan teks telah ditolak (menyalin sebagai imej sahaja)
 ne:पाठ प्रतिलिपि अस्वीकार भयो (छविको रुपमा प्रतिलिपि बनाईदैछ)
 nl:Tekst kopiëren niet toegestaan (kopieer als afbeelding)
+nn:Kopiering av tekst blei nektast (Kopierer kun som bilete)
 no:Mangler tillatelse til kopiering av tekst (kopierer kun som bilde)
 pl:Nie można kopiować tekstu (można kopiować jako obrazy)
 pt:A cópia do texto foi recusada (copie como imagem)
@@ -5779,6 +5850,7 @@ ml:പകര്‍പ്പവകാശം
 my:Hakcipta
 ne:प्रतिलिपिअधिकार:
 nl:Auteursrecht
+nn:Opphavsret:
 no:Opphavsrett:
 pl:Prawo autorskie:
 pt:Direitos de autor:
@@ -5808,7 +5880,7 @@ br:Não foi possível obter as propriedades da Impressora
 bs:Ne mogu dobaviti postavke štampača
 ca-xv:No es poden obtindre les propietats de la impressora
 ca:No es poden obtenir les propietats de la impressora
-cn:无法取得打印机特性
+cn:无法获取打印机属性
 cy:Methu canfod priodweddau Argraffydd
 cz:Nelze získat vlastnosti tiskárny
 de:Konnte Druckereigenschaften nicht bestimmen
@@ -5838,6 +5910,7 @@ mk:Не можам да дојдам до својствата на печата
 my:Gagal mendapatkan maklumat Pencetak
 ne:मुद्रक गुणहरु प्राप्त गर्न सकिएन
 nl:Kan geen printereigenschappen verkrijgen
+nn:Kunne ikkje hente utskrivaregenskapene
 no:Kunne ikke innhente skriveregenskaper
 pl:Nie można uzyskać właściwości drukarki
 pt:Não foi possível obter as propriedades da impressora
@@ -5895,6 +5968,7 @@ mk:Не можам да создадам привремена папка
 my:Tidak dapat mencipta direktori sementara
 ne:अस्थाई डाइरेक्टरी बनाउन सकिएन
 nl:Kan tijdelijke map niet aanmaken
+nn:Kunne ikkje lage midlertidig direktiv
 no:Kunne ikke opprette en midlertidig mappe
 pl:Nie można utworzyć katalogu tymczasowego
 pt:Não foi possível criar a pasta temporária
@@ -5949,6 +6023,7 @@ lv:Nevarēja izveidot instalācijas direktoriju
 mk:Не можам да ја создадам папката за инсталација
 my:Tidak dapat mencipta direktori pemasangan
 nl:Kan de installatiemap niet aanmaken
+nn:Kunne ikkje lage installasjonsdirektivet
 no:Kunne ikke opprette installasjonsmappen 
 pl:Nie można utworzyć katalogu instalacyjnego
 pt:Não foi possível criar a pasta de instalação
@@ -6008,6 +6083,7 @@ mk:Не можам да го подготвам печатачот
 my:Tidak dapat memulakan pencetak
 ne:मुद्रकलाई आरम्भ गर्न सकिएन
 nl:Kan de printer niet initialiseren
+nn:Kunne ikkje starte utskrivaren
 no:Kunne ikke klargjøre skriveren
 pl:Nie można zainicjować drukarki
 pt:Não foi possível iniciar a impressora
@@ -6064,6 +6140,7 @@ lv:Nevarēja instalēt PDF priekšskatījumu
 mk:Не можам да инсталирам прикажувачот на PDF
 my:Tidak dapat memasang previewer PDF
 nl:Kan PDF-previewer niet installeren
+nn:Kunne ikkje installere PDF-forhandsvisar
 no:Kunne ikke installere PDF forhåndsvisning
 pl:Nie można zainstalować podglądu PDF
 pt:Não foi possível instalar o antevisão de PDF
@@ -6118,6 +6195,7 @@ lv:Nevarēja instalēt PDF meklēšanas filtru
 mk:Не можам да инсталирам филтер за пребарување на PDF
 my:Tidak dapat memasang penapis carian PDF
 nl:Kan PDF-zoekfilter niet installeren
+nn:Kunne ikkje installere PDF-søkjefilter
 no:Kunne ikke installere PDF søkefilter
 pl:Nie można zainstalować filtru przeszukiwania PDF
 pt:Não foi possível instalar o filtro de procuras
@@ -6170,6 +6248,7 @@ lv:Nevarēja iegūt pagaidu direktoriju
 mk:Не можам да пристапам до привремената папка
 my:Tidak boleh mendapatkan direktori sementara
 nl:Kan tijdelijke map niet verkrijgen
+nn:Kunne ikkje hente midlertidig direktiv
 no:Kunne ikke finne midlertidig mappe
 pl:Nie można uzyskać katalogu tymczasowego
 pt:Não foi possível obter a pasta temporária
@@ -6222,6 +6301,7 @@ lv:Nevarēja noņemt instalācijas direktoriju
 mk:Не можам да ја избришам инсталационата папка
 my:Tidak dapat memadamkan direktori pemasangan
 nl:Kan installatiemap niet verwijderen
+nn:Kunne ikkje fjerne installasjonsdirektiv
 no:Kunne ikke fjerne installasjonsmappen
 pl:Nie można usunąć katalogu instalacyjnego
 pt:Não foi possível remover a pasta de instalação
@@ -6276,6 +6356,7 @@ lv:Nevarēja noņemt saīsni
 mk:Не можам да ја избришам кратенката
 my:Tidak dapat membuang shortcut
 nl:Kon snelkoppeling niet verwijderen
+nn:Kunne ikkje fjerne snarvegen
 no:Kunne ikke fjerne snarveien
 pl:Nie można usunąć skrótu
 pt:Não foi possível remover o atalho
@@ -6335,6 +6416,7 @@ mk:Не можам да ја прикажам страницата
 my:Tidak dapat memuatkan halaman
 ne:पृष्ठ रेन्डर गर्न सकिएन
 nl:Kan deze pagina niet weergegeven
+nn:Kunne ikkje rendre siden
 no:Kunne ikke vise siden
 pl:Nie można wyświetlić strony
 pt:Não foi possível processar a página
@@ -6364,7 +6446,7 @@ br:Não foi possível desinstalar o pré-visualizador para PDF
 bs:Neuspješna deinstalacija PDF preglednika
 ca-xv:No es pot desinstal·lar el visor ràpid PDF
 ca:No es pot desinstal·lar el visor ràpid PDF
-cn:无法解除安装 PDF 预览器
+cn:无法卸载 PDF 预览器
 cy:Methu dadosod rhagolygwr PDF
 cz:Nelze odinstalovat PDF prohlížeč
 de:Konnte die PDF Vorschau nicht deinstallieren
@@ -6390,6 +6472,7 @@ lv:Nevarēja atinstalēt PDF priekšskatījumu
 mk:Не можам да го избришам прикажувачот на PDF
 my:Tidak dapat membuang previewer PDF
 nl:Kan PDF-previewer niet verwijderen
+nn:Kunne ikkje avinstallere PDF-forhandsvisar
 no:Kunne ikke avinstallere PDF forhåndsvisning
 pl:Nie można usunąć podglądu PDF
 pt:Não foi possível desinstalar a antevisão de PDF
@@ -6416,7 +6499,7 @@ br:Não foi possível desinstalar o filtro de pesquisa para PDF
 bs:Neuspješna deinstalacija filtera za pretragu PDF-ova
 ca-xv:No es pot desinstal·lar el filtre de cerca PDF
 ca:No es pot desinstal·lar el filtre de cerca PDF
-cn:无法安装 PDF 搜索过滤器
+cn:无法卸载 PDF 搜索过滤器
 cy:Methu dadosod hidl chwilio PDF
 cz:Nelze odinstalovavat vyhledávací PDF filtr
 de:Konnte den PDF Suchfilter nicht deinstallieren
@@ -6443,6 +6526,7 @@ lv:Nevarēja atinstalēt PDF meklēšanas filtru
 mk:Не можам да го избришам филтерот за пребарување на PDF
 my:Tidak dapat memadam penapis carian PDF
 nl:Kon PDF zoek filter niet deïnstalleren
+nn:Kunne ikkje avinstallere PDF-søkjefilteret
 no:Kunne ikke avinstallere PDF søkefilter
 pl:Nie można usunąć filtru przeszukiwania PDF
 pt:Não foi possível desinstalar o filtro de procura
@@ -6469,7 +6553,7 @@ br:Não foi possível desinstalar o plugin do navegador
 bs:Neuspješna instalacija plugina za browser
 ca-xv:No es pot desinstal·lar el connector de navegador
 ca:No es pot desinstal·lar el connector de navegador
-cn:无法解除安装浏览器插件
+cn:无法卸载浏览器插件
 cy:Methu dadosod ategyn porwr
 cz:Nepodařilo se odinstalovat rozšíření z prohlížeče
 de:Konnte das Browser-Plugin nicht deinstallieren
@@ -6496,6 +6580,7 @@ lv:Nevarēja atinstalēt pārlūkprogrammas spraudni
 mk:Не можам да го избришам додатокот за прелистувачи
 my:Tidak dapat membuang pelayar plugin
 nl:Kan browserplugin niet verwijderen
+nn:Kunne ikkje avinstallere nettlesartillegget
 no:Kunne ikke avinstallere nettlesertillegget
 pl:Nie można usunąć wtyczki do przeglądarek
 pt:Não foi possível desinstalar o plugin do navegador
@@ -6549,6 +6634,7 @@ mk:Не можам да ја снимам %s на диск
 my:Tidak boleh memasukkan data %s ke cakera
 ne:%s डिस्कमा लेख्न सकिएन
 nl:Kon %s niet op schijf wegschrijven
+nn:Kunne ikkje lagre %s til disken
 no:Kunne ikke skrive %s til disk 
 pl:Nie można zapisać %s na dysk
 pt:Não foi possível escrever %s no disco
@@ -6608,6 +6694,7 @@ ml:സൃഷ്ടിച്ചു
 my:Dicipta:
 ne:सिर्जना गरिएको:
 nl:Gemaakt:
+nn:Skapt:
 no:Opprettet:
 pl:Utworzono:
 pt:Criado:
@@ -6670,6 +6757,7 @@ ml:നിലവിലെ ഫയല്‍
 my:Fail semasa
 ne:हालको फाइल
 nl:Huidig bestand
+nn:Nåverande fil
 no:Gjeldende fil
 pl:Bieżący plik
 pt:Ficheiro atual
@@ -6718,13 +6806,14 @@ hu:Kurzor pozíció:
 id:Posisi kursor:
 it:Posizione cursore
 ja:カーソル位置：
-jv:Posición del cursor
+jv:Posisi kursor:
 ka:კურსორის პოზიცია:
 kr:커서 위치:
 ku:شوێنی نیشانەی ماوس:
 lv:Kursora pozīcija:
 mk:Местоположба на покажувач:
 nl:Cursor positie
+nn:Markørposisjon:
 no:Skrivemerkeposisjon:
 pl:Pozycja kursora:
 pt:Posição do cursor:
@@ -6780,6 +6869,7 @@ mk:&Зумирање по избор...\tCtrl+Y
 my:Custom &Zoom...\tCtrl+Y
 ne:अनुकुल &आकार ...\tCtrl+Y
 nl:&Aangepaste Zoom...\tCtrl+Y
+nn:Tilpassa &zooming...\tCtrl+Y
 no:&Egendefinert zoom...\tCtrl+Y
 pl:&Własne powiększenie...\tCtrl+Y
 pt:&Personalizar...\tCtrl+Y
@@ -6842,6 +6932,7 @@ mk:&Основен поглед:
 my:Default &Susunatur:
 ne:पूर्वनिर्धारित स&जावट:
 nl:Standaard opmaak:
+nn:Standard &oppsett:
 no:Standard sideoppsett:
 pl:&Układ domyślny:
 pt:&Exibição padrão:
@@ -6904,6 +6995,7 @@ mk:Основно &зумирање:
 my:Default &Zum:
 ne:पूर्वनिर्धारित &आकार:
 nl:Standaard &zoom:
+nn:Standard &zooming:
 no:Standard&zoom:
 pl:Domyślne &powiększenie:
 pt:&Ampliação padrão:
@@ -6966,6 +7058,7 @@ mk:Основниот читач на PDF не може да работи во �
 my:Pembaca utama PDF tidak boleh ditukar ketika mod mudah alih
 ne:चलायमान मोडमा पूर्वनिर्धारित PDF पाठक परिवर्तन गर्न मिल्दैन
 nl:Standaard PDF-lezer kan niet worden aangepast in portable modus
+nn:Standard PDF-lesar kan ikkje bli endra i flyttbar modus
 no:Standard PDF-leser kan ikke endres i flyttbar modus
 pl:Domyślna przeglądarka PDF nie może być zmieniona w trybie przenośnym
 pt:No modo portátil, não pode alterar o leitor pré-definido dos PDFs
@@ -7025,6 +7118,7 @@ mk:Одбиени привилегии:
 my:Kebenaran Dinafikan:
 ne:अस्वीकृत अनुमतिहरु:
 nl:Niet toegestaan:
+nn:Permisjonar som blei nekta:
 no:Manglende tillatelser:
 pl:Brak zezwoleń:
 pt:Permissões recusadas:
@@ -7086,6 +7180,7 @@ mk:DjVu-документи
 my:Dokumen DjVu
 ne:DjVu कागजातहरु
 nl:DjVu-documenten
+nn:DjVu-dokumentar
 no:DjVu-dokumenter
 pl:Dokumenty DjVu
 pt:Documentos DjVu
@@ -7144,6 +7239,7 @@ mk:Својства на документ
 my:Maklumat Dokumen
 ne:कागजात गुणहरू
 nl:Documenteigenschappen
+nn:Dokumentegenskaper
 no:Dokumentegenskaper
 pl:Właściwości dokumentu
 pt:Propriedades do documento
@@ -7207,6 +7303,7 @@ mk:Преземи
 my:Muat turun
 ne:डाउनलोड
 nl:Downloaden
+nn:Last ned
 no:Nedlasting
 pl:Pobierz
 pt:Transferir
@@ -7336,6 +7433,7 @@ ml:EPUB പുസ്തകങ്ങള്‍
 my:Ebook EPUB
 ne:EPUB ई-पुस्तकहरु
 nl:EPUB-bestanden
+nn:EPUB digitale bøkjer
 no:EPUB-dokumenter
 pl:Dokumenty EPUB
 pt:Documentos EPUB
@@ -7499,7 +7597,7 @@ br:Digite a linha de comando a ser invocada com um duplo clique sobre o document
 bs:Unesite komandnu liniju za izvršavanje prilikom dvostrukog klika na PDF dokument:
 ca-xv:Introduïu la línia d'ordes que voleu executar en fer doble clic al document PDF:
 ca:Introduïu la línia d'ordres que voleu executar en fer doble clic al document PDF:
-cn:请键入鼠标按两下 PDF 文件时，应运行的命令(&E):
+cn:请键入双击 PDF 文件时，应运行的命令(&E):
 cy:Rhowch y llinell orchymyn i'w gychwyn pan yn rhoi clic dwbl i ddogfen PDF:
 cz:Dvojité kliknutí na PDF dokument vykoná zadaný příkazový řádek:
 de:Beim Doppelklicken im PDF Dokument wird der folgende Befehl ausgeführt:
@@ -7529,6 +7627,7 @@ mk:Внесете команда, за да се извршува при сек�
 my:Masukkan baris arahan untuk digunakan apabila anda klik dua kali pada dokumen PDF:
 ne:PDF कागजातमा दोहोरो क्लिक गर्दा आह्वान गर्ने आदेश पङ्‌क्ति प्रविष्ट गराउनुहोस्:
 nl:Opdracht-regel die gestart moet worden bij het dubbelklikken van een PDF-document:
+nn:Gå inn i kommandolinja for å hentast, når du dobbeltklikkar på PDF-dokumentet:
 no:Skriv inn kommandolinjen som skal kjøres når du dobbeltklikker på PDF-dokumentet:
 pl:Podaj polecenie wykonywane po dwukrotnym kliknięciu pliku PDF:
 pt:Indique a linha de comandos a invocar ao clicar duas vezes no documento PDF:
@@ -7587,6 +7686,7 @@ mk:Грешка при вчитување %s
 my:Ralat memuatkan %s
 ne:%s लोड त्रुटि
 nl:Fout bij het laden van %s
+nn:Feil ved innlasting av %s
 no:Feil under lasting %s
 pl:Błąd ładowania pliku %s
 pt:Erro ao carregar %s
@@ -7643,6 +7743,7 @@ mk:Омилени
 my:Kegem&aran
 ne:&मनपर्ने
 nl:F&avorieten
+nn:F&avorittar
 no:F&avoritter
 pl:&Ulubione
 pt:Fav&oritos
@@ -7701,6 +7802,7 @@ mk:Напред\tAlt+Right Arrow
 my:F&orward \t alt + Panah Kanan
 ne:अ&गाडि\tAlt+दायाँ बाण
 nl:Verder\tAlt+->
+nn:F&ramover\tAlt+Høyretast
 no:Fremover\tAlt+Pil høyre
 pl:&Dalej\tAlt+W prawo
 pt:A&vançar\tAlt + ->
@@ -7835,8 +7937,8 @@ mm: အရှေ့မျက်နှာ
 my:Dua belah mukasurat
 ne:सम्मुख
 nl:Dubbele pagina
-nn:Motståande
-no:Motstående
+nn:Fleire sider
+no:Flere sider
 pa:ਕਿਤਾਬ
 pl:Wiele stron
 pt:Duas páginas
@@ -7867,7 +7969,7 @@ br:Falha na cópia do desinstalador para a pasta temporária
 bs:Neuspješno kopiranje deinstalera u privremeni direktorij
 ca-xv:No es pot copiar el desinstal·lador al directori temporal
 ca:No es pot copiar el desinstal·lador al directori temporal
-cn:无法复制解除安装程序到暂存目录
+cn:无法复制卸载程序到暂存目录
 cy:Methwyd copïo'r dadosodwr i'r cyfeiriadur dros dro
 cz:Nezdařilo se zkopírovat odinstalační program do dočasného adresáře
 de:Konnte das Deinstallationsprogramm nicht kopieren
@@ -7893,6 +7995,7 @@ lv:Neizdevās iekopēt instalācijas noņemšanas programmu pagaidu direktorijā
 mk:Не успеав да го ископирам деинсталаторот во привремената папка
 my:Gagal untuk menyalin uninstaller untuk direktori sementara
 nl:Kon deinstallatie programma niet kopieren naar tijdelijke folder
+nn:Mislykkas i å kopiere installasjonsfjernar til det midlertidige direktivet
 no:Kan ikke kopiere avinstalleringsrutinen til midlertidig mappe
 pl:Nie można skopiować deinstalatora do katalogu tymczasowego
 pt:Falha ao copiar o desinstalador para a pasta temporária
@@ -7946,6 +8049,7 @@ lv:Neizdevās izveidot saīsni
 mk:Не успеав да создадам кратенка
 my:Gagal untuk mencipta shortcut
 nl:Kon snelkoppeling niet aanmaken
+nn:Klarte ikkje å lage ein snarveg
 no:Kan ikke opprette snarvei
 pl:Błąd przy tworzeniu skrótu
 pt:Erro ao criar atalho
@@ -7972,7 +8076,7 @@ br:Falha na remoção das entradas de registro do desinstalador
 bs:Neuspješno brisanje registarskih ključeva deinstalera
 ca-xv:No es poden suprimir les claus de registre del desinstal·lador
 ca:No es poden suprimir les claus de registre del desinstal·lador
-cn:删除解除安装器注册项失败。
+cn:删除卸载程序注册项失败。
 cy:Methwyd dileu allweddi cofrestrfa'r dadosodwr
 cz:Nepodařilo se smazat odinslační záznamy z registru
 de:Konnte nicht alle Registry-Einträge löschen
@@ -7998,6 +8102,7 @@ lv:Neizdevās izdzēst instalācijas noņemšanas programmas reģistra atslēgas
 mk:Не успеав да ги избришам регистарските клучеви на деинсталаторот
 my:Gagal untuk memadam kekunci pendaftaran uninstaller
 nl:Kon deinstallatie register sleutels niet verwijderen
+nn:Mislykkast i å slette avinstalleringsregisternøklane
 no:Kan ikke slette avinstalleringsnøkler i Registeret
 pl:Nie można usunąć kluczy deinstalatora z rejestru
 pt:Falha ao eliminar as chaves do registo
@@ -8053,6 +8158,7 @@ mk:Не успеав да ја преименувам датотеката!
 my:Gagal menamakan semula fail!
 ne:नाम फेराई असफल
 nl:Naam niet kunnen wijzigen!
+nn:Klarte ikkje å omdøpe fila!
 no:Kunne ikke endre navn på filen!
 pl:Błąd zmiany nazwy pliku!
 pt:Falha ao mudar o nome do ficheiro!
@@ -8174,6 +8280,7 @@ lv:Neizdevās ierakstīt failu paplašinājumu informāciju reģistrā
 mk:Не успеав да ги запишам информациите за типови на датотеки во регистарот
 my:Gagal menulis fail lanjutan maklumat tambahan ke dalam registry
 nl:Kan uitgebreide bestandsextensie-informatie niet wegschrijven in register
+nn:Mislykkast i å skrive den utvida filutvidingsinformasjonen til registeret
 no:Kan ikke lagre utvidet filtypeinformasjon i Registeret
 pl:Nie można wprowadzić poszerzonych informacji o rozszerzeniu pliku do rejestru
 pt:Falha ao escrever as informações do tipo de ficheiro nas chaves de registo
@@ -8200,7 +8307,7 @@ br:Falha na gravação dos dados de desinstalação no registro
 bs:Neuspješno zapisivanje deinstalacijske informacije u registar
 ca-xv:No es pot escriure la informació de desinstal·lació al registre
 ca:No es pot escriure la informació de desinstal·lació al registre
-cn:写入解除安装信息到注册项失败。
+cn:写入卸载信息到注册项失败。
 cy:Methwyd ysgrifennu gwybodaeth y dadosodwr i'r gofrestrfa
 cz:Nepodařilo se zapsat odinslační záznamy do registru
 de:Konnte keine Deinstallations-Informationen in die Registry schreiben
@@ -8226,6 +8333,7 @@ lv:Neizdevās ierakstīt atinstalēšanas informāciju reģistrā
 mk:Не успеав да ги запишам информациите за деинсталаторот во регистарот
 my:Gagal untuk menulis maklumat pemasangan untuk registry
 nl:Kan deïnstallatie-informatie niet wegschrijven in het register
+nn:Mislykkast i å skrive avinstalleringsinformasjonen til registeret
 no:Kan ikke lagre avinstalleringsinformasjon i Registeret
 pl:Nie można zapisać informacji o usunięciu programu do rejestru
 pt:Falha ao escrever as informações de desinstalação no registo
@@ -8280,6 +8388,7 @@ mk:Брз веб-преглед
 my:Paparan Web Cepat
 ne:द्रुत वेब दृश्य
 nl:Snelle browserweergave
+nn:Rask nettvising
 no:Rask Nettvisning
 pl:Szybkie wyświetlanie w Internecie
 pt:Visualização rápida na web
@@ -8337,6 +8446,7 @@ ml:പ്രിയപ്പെട്ടത്
 my:Kegemaran
 ne:मनपर्नेहरु
 nl:Favorieten
+nn:Favorittar
 no:Favoritter
 pl:Ulubione
 pt:Favoritos
@@ -8392,6 +8502,7 @@ lv:FictionBook dokumenti
 mk:Документи на FictionBook
 my:Dokumen FictionBook
 nl:FictionBookdocumenten
+nn:FictionBook-dokumentar
 no:FictionBook-dokumenter
 pl:Dokumenty FictionBook
 pt:Livros de ficção
@@ -8447,6 +8558,7 @@ mk:Датотеката %s не е најдена
 my:Fail %s tidak dijumpai
 ne:फाइल %s भेटिएन
 nl:Bestand %s niet gevonden
+nn:Filen %s blei ikkje funnet
 no:Filen %s finnes ikke
 pl:Nie znaleziono pliku %s
 pt:Ficheiro %s não encontrado
@@ -8505,6 +8617,7 @@ ml:ഫയല്‍ വലുപ്പം
 my:Saiz fail:
 ne:फाइल साइज
 nl:Bestandsgrootte
+nn:Filstørrelse:
 no:Filstørrelse:
 pl:Rozmiar pliku:
 pt:Tamanho do ficheiro:
@@ -8565,6 +8678,7 @@ ml:ഫയല്‍
 my:Fail:
 ne:फाइल:
 nl:Bestand:
+nn:Fil:
 no:Fil:
 pl:Plik:
 pt:Ficheiro:
@@ -8696,6 +8810,7 @@ ml:തിരയുക.
 my:Cari
 ne:खोज्नुहोस्
 nl:Zoeken
+nn:Finn
 no:Søk etter
 pl:Znajdź
 pt:Localizar
@@ -8959,6 +9074,7 @@ mk:Прилагоди на &содржина\tCtrl+3
 my:Fit &Kandungan\tCtrl +3
 ne:&सामग्री अटाउनुहोस्\tCtrl+3
 nl:Passend maken\tCtrl+3
+nn:Tilpass &innhald\tCtrl+3
 no:Tilpass &innhold\tCtrl+3
 pl:Dopasuj do &zawartości\tCtrl+3
 pt:Ajustar ao &conteúdo\tCtrl+3
@@ -9155,6 +9271,7 @@ mk:Прилагоди на содржина
 my:Muatkan Kandungan
 ne:सामग्री अटाउनुहोस्
 nl:Passend maken
+nn:Tilpass innhald
 no:Tilpass innhold
 pl:Dopasuj do zawartości strony
 pt:Ajustar ao conteúdo
@@ -9351,6 +9468,7 @@ mk:Прилагоди на широчина и прикажи страници �
 my:Muatkan Lebar dan Paparkan Halaman Berterusan
 ne:चौडाई अटाउनुहोस् र पृष्ठहरु निरन्तर देखाउनुहोस्
 nl:Passend in breedte en pagina's doorlopend
+nn:Tilpass bredde og vis sider kontinuerleg
 no:Tilpass bredde og vis sider kontinuerlig
 pl:Dopasuj szerokość i wyświetlaj strony w układzie ciągłym
 pt:Ajustar largura e mostrar páginas contínuas
@@ -9410,6 +9528,7 @@ ml:ഒരൊറ്റ താള്‍ ഉള്‍ക്കൊള്ളിക്
 my:Muatkan Halaman Tunggal
 ne:एकल पृष्ठ अटाउनुहोस्
 nl:Hele pagina passend maken
+nn:Tilpass ein enkel side
 no:Tilpass til enkeltside
 pl:Dopasuj pojedynczą stronę
 pt:Ajustar a uma página
@@ -9468,6 +9587,7 @@ ml:ലിപികള്‍
 my:Fon:
 ne:फन्टहरू:
 nl:Lettertypen:
+nn:Fontar:
 no:Skrifter:
 pl:Czcionki:
 pt:Tipo de letra:
@@ -9495,7 +9615,7 @@ br:Formatando o livro... %d páginas
 bs:Formatiranje knjige... %d stranica
 ca-xv:S'està formatant el llibre... %d pàgines
 ca:S'està formatant el llibre... %d pàgines
-cn:正在格式化书本... %d 页
+cn:正在为书籍排版格式... %d 页
 cy:Fformatio'r llyfr... %d tudalen
 cz:Formátování knihy... %d stránek
 de:Buch wird formatiert… Seite %d
@@ -9523,6 +9643,7 @@ mk:Ја форматирам книгата... %d страници
 my:Format buku ... %d halaman
 ne:पुस्तक स्वरूपण ... %d पृष्ठहरु
 nl:Boek samenstellen... %d paginas
+nn:Formatterer boka... %d sider
 no:Formater bok... %d sidene
 pl:Formatowanie książki... %d stron
 pt:A formatar livro... %d páginas
@@ -9582,6 +9703,7 @@ mk:Пронајдов текст на страница %s
 my:Menjumpai teks pada halaman %s
 ne:पृष्ठ %s मा पाठ भेटियो
 nl:Tekst gevonden op pagina %s
+nn:Fann tekst på side %s
 no:Fant tekst på side %s
 pl:Znaleziono tekst na stronie %s
 pt:Texto encontrado na página %s
@@ -9640,6 +9762,7 @@ mk:Пронајдов текст на страница %s (повторно)
 my:Found teks pada halaman %s (lagi)
 ne:पृष्ठ %s मा पाठ भेटियो (पुनः)
 nl:Tekst gevonden op pagina %s (opnieuw)
+nn:Fann tekst på side %s (igjen)
 no:Fant tekst på side %s (igjen)
 pl:Znaleziono tekst na stronie %s (znowu)
 pt:Texto encontrado na página %s
@@ -9697,6 +9820,7 @@ ml:കൂടുതല്‍ വായിച്ചത്.
 my:Kerap Dibaca
 ne:प्रायजसो पढिएको
 nl:Eerder Weergegeven
+nn:Ofte lesne
 no:Ofte leste
 pl:Ostatnio otwierane
 pt:Frequentes
@@ -9888,6 +10012,7 @@ lv:Paslēpt &opcijas
 mk:Скриј &опции
 my:Sembunyi &Tetapan
 nl:Verberg &Opties
+nn:Skjul &innstillingar
 no:Skjule &Tillegg
 pl:Ukryj &Opcje
 pt:&Ocultar opções
@@ -9944,6 +10069,7 @@ mk:Сокриј често читани
 my:Sembunyikan Bacaan Kerap
 ne:प्रायजसो पढिएको लुकाउनुहोस्
 nl:'Eerder Weergegeven' verbergen
+nn:Skjul ofte lesne
 no:Skjult ofte leste
 pl:Ukryj ostatnio otwierane
 pt:Ocultar frequentes
@@ -10002,6 +10128,7 @@ mk:Совет: За повторно пребарување користете F
 my:Petunjuk: Gunakan kekunci F3 untuk mencari semula
 ne:सङ्केत: पुनः फेलापार्न F3 कुञ्जी प्रयोग गर्नुहोस्
 nl:Tip: Gebruik de functietoets F3 om verder te zoeken
+nn:Tips: Bruk F3-knappen for å finne igjen
 no:Tips: Bruk F3 tasten for søk etter neste
 pl:Wskazówka: użyj klawisza F3, aby szukać dalej
 pt:Dica: utilize F3 para procurar a seguinte
@@ -10060,6 +10187,7 @@ mk:Слики (*.%s)
 my:Imej Fail (*.%s)
 ne:छवि फाइल (*.%s)
 nl:Afbeeldingen (*.%s)
+nn:Biletfilar (*.%s)
 no:Bildefiler (*.%s)
 pl:Pliki graficzne (*.%s)
 pt:Imagens (*.%s)
@@ -10102,6 +10230,7 @@ fr:Installer SumatraPDF
 ga:Suiteáil SumatraPDF
 gl:Instalar SumatraPDF
 he:התקן את SumatraPDF
+hi:SumatraPDF स्थापित करें
 hr:Instaliraj SumatraPDF
 hu:SumatraPDF telepítése
 id:Install SumatraPDF
@@ -10114,6 +10243,7 @@ lv:Instalēt SumatraPDF
 mk:Инсталирај SumatraPDF
 my:Pasang SumatraPDF
 nl:Installeer SumatraPDF
+nn:Installer SumatraPDF
 no:Installer SumatraPDF
 pl:Zainstaluj SumatraPDF
 pt:Instalar SumatraPDF
@@ -10167,6 +10297,7 @@ lv:Instalēt SumatraPDF &mapē:
 mk:Инсталирај SumatraPDF во &папка:
 my:Pasang SumatraPDF dalam &folder
 nl:Installeer SumatraPDF in &folder
+nn:Installer SumatraPDF i mappa:
 no:Installere SumatraPDF i &mappe:
 pl:Zainstaluj SumatraPDF w &folderze:
 pt:Instalar SumatraPD&F na pasta:
@@ -10220,6 +10351,7 @@ lv:Instalēšana neizdevās!
 mk:Инсталирањето не успеа!
 my:Pemasangan gagal!
 nl:Installatie mislukt!
+nn:Installering mislykkast!
 no:Feil ved installering!
 pl:Błąd instalacji!
 pt:A instalação falhou!
@@ -10273,6 +10405,7 @@ lv:Notiek instalēšana...
 mk:Инсталирањето е во тек...
 my:Pemasangan sedang dijalankan...
 nl:Installatie in uitvoering...
+nn:Installering under arbeid...
 no:Installasjon pågår...
 pl:Trwa instalacja...
 pt:A instalar...
@@ -10392,7 +10525,8 @@ ku:هێشتنەوەی پێوەکراوی وێبگەڕ بە دامەزێرێنر�
 lv:Paturēt pārlūka PDF spraudni instalētu (vairs netiek atbalstīts)
 mk:Задржи го додатокот за PDF за &прелистувачи (не е повеќе поддржан)
 nl:Behoud de PDF &browser plugin geïnstalleerd (niet ondersteund)
-no:Behold PDF &nettleser -tillegg installert (ingen support lenger)
+nn:Behald installeringa av PDF-&nettlesartillegget (Ikkje lenger støtta)
+no:Fortsett å ha PDF-nettlesertillegget installert (Ikke lenger støttet)
 pl:Pozostaw zainstalowaną &wtyczkę PDF do przeglądarek (już nie jest wspierana)
 pt:&Manter plugin de navegador instalado (já não é suportado)
 ru:Сохранить установленный PDF плагин для браузера (более не поддерживается)
@@ -10440,6 +10574,7 @@ lv:&Meklēt PDF dokumentus ar Windows Desktop Search
 mk:Дозволи Windows Desktop Search да пребарува низ PDF-документи
 my:Biarkan Windows Desktop Search &mencari dokumen PDF
 nl:Laat Windows Bureaublad Zoeker PDF documenten &zoeken
+nn:Let Windows Skrivebordssøk &søkje gjennom PDF-dokumentar
 no:La Windows søkemotor &søke PDF dokumenter
 pl:Wyszukiwanie z pulpitu systemu Windows ma &przeszukiwać pliki PDF
 pt:Permitir que o Windows Desktop &Search localize os PDF
@@ -10491,6 +10626,7 @@ lv:Ļaut Windows rādīt PDF dokumentu &priekšskatījumus
 mk:Дозволи Windows да прикажува слики за PDF-документи
 my:Biarkan Windows menunjukkan &preview dokumen PDF
 nl:Laat Windows &voorbeelden tonen van PDF documenten
+nn:Let Windows vise &forhandsvisingar av PDF-dokumentar
 no:La Windows vise &forhåndsvisning av PDF-dokumenter
 pl:Windows ma pokazywać &podgląd plików PDF
 pt:&Permitir que o Windows mostre uma antevisão dos PDF
@@ -10589,7 +10725,7 @@ bs:Postavi SumatraPDF za glavnu aplikaciju za PDF fajlove?
 by:Зрабіць SumatraPDF стандартнай праграмай прагляду PDF-файлаў?
 ca-xv:Voleu que el SumatraPDF siga el visor predeterminat dels fitxers PDF?
 ca:Voleu que el SumatraPDF sigui el visor predeterminat dels fitxers PDF?
-cn:把 SumatraPDF 作为默認的 PDF 阅读器?
+cn:把 SumatraPDF 作为默认的 PDF 阅读器?
 cy:Gosod SumatraPDF fel rhaglen rhagosodedig ar gyfer ffeiliau PDF?
 cz:Nastavit SumatraPDF jako výchozí prohlížeč PDF souborů?
 de:SumatraPDF als Standardanwendung für PDF-Dateien registrieren?
@@ -10749,6 +10885,8 @@ lv:&Manga režīms
 mk:Режим за Man&ga
 my:Mode Man&ga
 nl:Man&gamodus
+nn:Man&ga-vising
+no:Man&ga-modus
 pl:Tryb mangi
 pt:Modo man&ga
 ro:Mod man&ga
@@ -10872,6 +11010,7 @@ mk:Mobi-документи
 my:Dokumen Mobi
 ne:Mobi कागजातहरु
 nl:Mobi-documenten
+nn:Mobi-dokumentar
 no:Mobi-dokumenter
 pl:Dokumenty Mobi
 pt:Documentos Mobi
@@ -10931,6 +11070,7 @@ ml:പരിഷ്കരിച്ചത്
 my:Diubah:
 ne:परिमार्जित:
 nl:Aangepast:
+nn:Endrast:
 no:Endret:
 pl:Zmodyfikowano:
 pt:Modificado:
@@ -11129,6 +11269,7 @@ ml:തുല്യമായത് കണ്ടില്ല
 my:Tiada padanan dijumpai
 ne:जोडाहरु प्राप्त भएन
 nl:Geen zoekresultaat gevonden
+nn:Ingen treff blei funnet
 no:Søkeelementet ble ikke funnet
 pl:Nie znaleziono wyników
 pt:Nenhuma ocorrência encontrada
@@ -11189,6 +11330,7 @@ mk:Не најдов резултати околу линијата %u во да
 my:Tiada hasil ditemui di sekitar baris %u dalam fail %s
 ne:पङ्क्ति %u (फाइल %s को) वरपर कुनै नतिजा फेला परेन
 nl:Geen resultaat gevonden bij regel %u in bestand %s
+nn:Ingen resultat funnet omkring linje %u i fila %s
 no:Ingen resultater funnet rundt linje %u i filen %s
 pl:Nie znaleziono wyników w okolicach wiersza %u w pliku %s
 pt:Nenhum resultado perto da linha %u no ficheiro %s
@@ -11248,6 +11390,7 @@ mk:Не најдов синхронизациска датотека
 my:Tiada fail penyegerakan ditemui
 ne:कुनै समक्रमण फाइल भेटिएन्
 nl:Geen synchronisatiebestand gevonden
+nn:Ingen synkroniseringsfil blei funna
 no:Ingen synkroniserende fil funnet
 pl:Nie znaleziono pliku synchronizacji
 pt:Nenhum ficheiro de sincronização encontrado
@@ -11309,6 +11452,7 @@ mk:Нема информации за синхронизација на оваа
 my:Tiada maklumat penyelarasan pada kedudukan ini
 ne:यो स्थानमा समक्रमण जानकारी छैन
 nl:Geen synchronisatieinformatie beschikbaar
+nn:Ingen synkroniseringsinfo på denne posisjonen
 no:Ingen synkroniserings info her
 pl:Brak informacji o synchronizacji w tej pozycji
 pt:Não há informações de sincronização nesta posição
@@ -11369,6 +11513,7 @@ ml:താളുകളുടെ എണ്ണം
 my:Jumlah mukasurat:
 ne:पृष्ठ संख्या:
 nl:Aantal pagina's:
+nn:Antal sider:
 no:Antall sider:
 pl:Liczba stron:
 pt:Número de páginas:
@@ -11432,6 +11577,7 @@ ml:ശരി
 my:OK
 ne:हुन्छ
 nl:OK
+nn:OK
 no:OK
 pl:OK
 pt:Aplicar
@@ -11563,6 +11709,7 @@ mk:Отвори со PDF-XChange
 my:Buka &menggunakan PDF-XChange
 ne:PDF-XChange मा &खोल्नुहोस्
 nl:Openen met PDF-XChange
+nn:Opne &i PDF-XChange
 no:Åpne i PDF-XChange
 pl:Otwórz w PDF-XChange
 pt:Abrir no PDF-&XChange
@@ -11621,6 +11768,7 @@ mk:Отвори документ...
 my:Buka dokumen...
 ne:कागजात खोल्नुहोस्
 nl:Open een document...
+nn:Opne eit dokument
 no:Åpne et dokument...
 pl:Otwórz dokument...
 pt:Abrir documento...
@@ -11676,6 +11824,7 @@ mk:Отвори во %s
 my:Buka dalam %s
 ne:%s मा खोल्नुहोस्
 nl:Open in %s
+nn:Opne i %s
 no:Åpne i %s
 pl:Otwórz w %s
 pt:Abrir em %s
@@ -11735,6 +11884,7 @@ mk:Отвори со &Adobe Reader
 my:Buka menggunakan &Adobe Reader
 ne:Adobe Reader मा &खोल्नुहोस्
 nl:Openen met &Adobe Reader
+nn:Opne i &Adobe Reader
 no:Åpne i &Adobe Reader
 pl:Otwórz w &Adobe Reader
 pt:Abrir no Adobe &Reader
@@ -11797,6 +11947,7 @@ mk:Отвори со &Foxit Reader
 my:Buka dengan &Foxit Reader
 ne:Foxit Reader मा &खोल्नुहोस्
 nl:Openen met &Foxit Reader
+nn:Opne i &Foxit Reader
 no:Åpne i &Foxit Reader
 pl:Otwórz w &Foxit Reader
 pt:Abrir &no &Foxit Reader
@@ -11857,6 +12008,7 @@ mk:Отвори со Microsoft HTML Help
 my:Buka menggunakan &Microsoft HTML Help
 ne:Microsoft HTML Help मा &खोल्नुहोस्
 nl:Openen met Microsoft HTML Help
+nn:Opne i &Microsoft HTML-hjelp
 no:Åpne i Microsoft HTML Help
 pl:Otwórz w Microsoft HTML Help
 pt:Abrir no &Microsoft HTML Help
@@ -11917,6 +12069,7 @@ mk:Отвори со Microsoft XPS-Viewer
 my:Buka menggunakan &Microsoft XPS-Viewer
 ne:Microsoft XPS-Viewer मा &खोल्नुहोस्
 nl:Openen met Microsoft XPS-Viewer
+nn:Opne i &Microsoft XPS-visar
 no:Åpne i Microsoft XPS-Viewer
 pl:Otwórz w Microsoft XPS-Viewer
 pt:Abrir no &Microsoft XPS-Viewer
@@ -11945,7 +12098,7 @@ br:P&ropriedades
 bs:&Postavke
 ca-xv:P&ropietats
 ca:P&ropietats
-cn:特性(&R)
+cn:属性(&R)
 cy:&Priodweddau
 cz:&Vlastnosti
 de:Ei&genschaften
@@ -11975,6 +12128,7 @@ mk:&Својства
 my:P&roperties
 ne:&गुणहरु
 nl:Eigenschappen
+nn:E&genskaper
 no:E&genskaper
 pl:Właściwości
 pt:&Propriedades
@@ -12002,7 +12156,7 @@ br:Propriedades...\tCtrl+D
 bs:P&ostavke...\tCtrl+D
 ca-xv:P&ropietats...\tCtrl+D
 ca:P&ropietats...\tCtrl+D
-cn:特性(&R)...\tCtrl+D
+cn:属性(&R)...\tCtrl+D
 cy:P&riodweddau...\tCtrl+D
 cz:&Vlastnosti...\tCtrl+D
 de:Ei&genschaften\tStrg+D
@@ -12033,6 +12187,7 @@ mk:С&војства...\tCtrl+D
 my:P&roperties\tCtrl+D
 ne:&गुणहरु\tCtrl+D
 nl:E&igenschappen...\tCtrl+D
+nn:E&genskaper\tCtrl+D
 no:E&genskaper...\tCtrl+D
 pl:&Właściwości\tCtrl+D
 pt:&Propriedades...\tCtrl+D
@@ -12095,6 +12250,7 @@ mk:PDF-документ
 my:Dokumen PDF
 ne:PDF कागजात
 nl:PDF-document
+nn:PDF-dokument
 no:PDF-dokument
 pl:Dokument PDF
 pt:Documento PDF
@@ -12153,6 +12309,7 @@ mk:Оптимизации за PDF:
 my:Pengoptimuman PDF:
 ne:PDF अप्टिमाइजेसन
 nl:PDF Optimalisaties
+nn:PDF-optimaliseringer:
 no:PDF Optimalisering:
 pl:Optymalizacja PDF:
 pt:Otimizações PDF:
@@ -12210,6 +12367,7 @@ mk:PDF-генератор:
 my:PDF Producer:
 ne:PDF निर्माता
 nl:PDF-maker:
+nn:PDF-lagar:
 no:PDF-produsent:
 pl:Producent PDF:
 pt:Criador do PDF:
@@ -12269,6 +12427,7 @@ mk:Верзија на PDF:
 my:Versi PDF:
 ne:PDF संस्करण
 nl:PDF-versie:
+nn:PDF-versjon:
 no:PDF-versjon:
 pl:Wersja PDF:
 pt:Versão PDF:
@@ -12330,6 +12489,7 @@ mk:PDF-документи
 my:Dokumen-dokumen PDF
 ne:PDF कागजात
 nl:PDF-documenten
+nn:PDF-dokumentar
 no:PDF-dokumenter (*.pdf)
 pl:Dokumenty PDF
 pt:Documentos PDF
@@ -12458,6 +12618,7 @@ mk:страница %s
 my:Halaman %s
 ne:पृष्ठ %s
 nl:Pagina %s
+nn:Side %s
 no:Side %s
 pl:Strona %s
 pt:Página %s
@@ -12518,6 +12679,7 @@ ml:താള്‍ വലുപ്പം
 my:Saiz mukasurat
 ne:पृष्ठ साइज:
 nl:Paginagrootte:
+nn:Sidestorleik:
 no:Sidestørrelse:
 pl:Rozmiar strony:
 pt:Tamanho da página:
@@ -12579,6 +12741,7 @@ mk:Страница со број %u не постои
 my:Halaman bilangan %u tidak wujud
 ne:पृष्ट संख्या %u अवस्थित छैन
 nl:Paginanummer %u bestaat niet
+nn:Side nummer %u eksisterer ikkje
 no:Sidetallet '%u' finnes ikke i dokumentet
 pl:Brak strony o numerze %u
 pt:A página %u não existe
@@ -12637,6 +12800,7 @@ mk:Размер на страница
 my:Skala halaman
 ne:पृष्ठ मापन
 nl:Pagina schalen
+nn:Sideskalering
 no:Sideskalering
 pl:Skalowanie strony
 pt:Ajuste de páginas
@@ -12758,6 +12922,7 @@ ku:بەڵگە نامەکانی PalmDoc
 lv:PalmDoc dokumenti
 mk:документи на PalmDoc
 nl:PalmDoc documenten
+nn:PalmDoc-dokumentar
 no:PalmDoc dokumenter
 pl:Dokumenty PalmDoc
 pt:Documentos PalmDoc
@@ -12796,6 +12961,7 @@ fr:Fermez %s pour continuer, s.v.p. !
 ga:Dún %s le do thoil chun dul ar aghaidh!
 gl:Peche %s para continuar
 he:להמשך, אנא סגור את %s!
+hi:जारी रखने के लिए %s को बंद करे!
 hr:Molim zatvorite %s za nastavak!
 hu:A(z) %s bezárása szükséges a folytatáshoz!
 id:Silakan tutup %s untuk melanjutkan.
@@ -12809,6 +12975,7 @@ mk:Ве молам затворете го %s, за да продолжите!
 my:Sila tutup %s untuk meneruskan!
 ne:अगाडि बढ्न कृपया %s बन्द गर्नुहोस्!
 nl:Sluit %s om verder te gaan!
+nn:Vennlig lukk %s for å fortsetje!
 no:Vennligst lukk %s for å fortsette!
 pl:Zamknij  %s, aby kontynuować!
 pt:Para continuar, feche o %s!
@@ -12868,6 +13035,7 @@ mk:Ве молам почекајте - создавам приказ...
 my:Sila tunggu - memaparkan...
 ne:कृपया पर्खनुहोस - रेन्डरिङ हुदैछ ...
 nl:Een ogenblik - weergeven...
+nn:Venligst vent - Visar...
 no:Vennligst vent - arbeider...
 pl:Proszę czekać - renderowanie...
 pt:Por favor aguarde - a processar...
@@ -12926,6 +13094,7 @@ mk:Postscript-документи
 my:Dokumen PostScript
 ne:पोस्ट स्क्रिप्ट कागजातहरु
 nl:Postscript documenten
+nn:Etterskriv dokumentar
 no:Postscript-dokumenter
 pl:Dokumenty postscript
 pt:Documentos Postscript
@@ -12982,6 +13151,7 @@ mk:Презентација\tCtrl+L
 my:P&embentangan\tCtrl + L
 ne:प्रस्तुती&करण\tCtrl+L
 nl:Pr&esentatie\tCtrl+L
+nn:Pr&esentasjon\tF5
 no:Pr&esentasjon\tCtrl+L
 pl:&Prezentacja\tCtrl+L
 pt:Aprese&ntação\tCtrl+L
@@ -13109,6 +13279,7 @@ ml:അച്ചടിയ്ക്കുക.
 my:Cetak
 ne:छाप्नुहोस्
 nl:Afdrukken
+nn:Skriv ut
 no:Skriv ut
 pl:Drukuj
 pt:Imprimir
@@ -13166,6 +13337,7 @@ mk:Опсег за печатење
 my:Cetak julat
 ne:छपाई दायरा
 nl:Bereik afdrukken
+nn:Utskrivingsrekkevidde
 no:Utskriftsområde
 pl:Zakres druku
 pt:Intervalo de impressão
@@ -13223,6 +13395,7 @@ mk:Не постои печатач со зададеното име
 my:Pencetak dengan nama yang diberikan tidak wujud
 ne:दिईएको नाम भएको मुद्रक अवस्थित छैन
 nl:Printer met de opgegeven naam bestaat niet
+nn:Ein skriver med det namnet finnes ikkje
 no:Skriver med gjeldende navn eksisterer ikke
 pl:Drukarka o podanej nazwie nie istnieje
 pt:A impressora indicada não existe
@@ -13278,6 +13451,7 @@ mk:Печатењето е во тек.
 ml:അച്ചടി പുരോഗമിക്കുന്നു
 my:Cetakan sedang dijalankan.
 nl:Aan het printen.
+nn:Utskriving under arbeid.
 no:Utskrift pågår.
 pl:Trwa drukowanie.
 pt:Impressão em curso
@@ -13331,6 +13505,7 @@ lv:Vēl joprojām notiek drukāšana. Priekšlaikus pārtraukt un beigt?
 mk:Печатењето е сè уште во тек. Да го поништам и прекинам?
 my:Cetakan sedang dilakukan. Batal dan Henti?
 nl:Nog steeds aan het printen. Annuleren en stoppen?
+nn:Utskrivinga pågår framleis. Vil du stoppe og avslutte?
 no:Skriver ut fortsatt. Avbryte?
 pl:Nadal trwa drukowanie. Przerwać i wyjść?
 pt:Impressão ainda em curso. Abortar e sair?
@@ -13387,6 +13562,7 @@ mk:Печатењето трае сè уште. Да го запрам и да �
 my:Cetakan masih lagi dijalankan. Batalkan dan mulakan semula?
 ne:छपाई कार्य प्रगति हुदैछ | परित्याग गरि पुनः सुरु गर्ने?
 nl:Afdrukken is nog niet voltooid. Afbreken en opnieuw beginnen?
+nn:Utskrivinga pågår framleis. Vil du stoppe og starte på nytt?
 no:Utskriften pågår fortsatt. Avbryte og starte på nytt?
 pl:Nadal trwa drukowanie. Przerwać i zacząć od nowa?
 pt:A impressão está em curso. Cancelar e reiniciar?
@@ -13443,6 +13619,7 @@ mk:Печатење на страница %d од %d...
 my:Mencetak halaman %d daripada %d...
 ne:पृष्ठ %d (कुल %d मध्ये) को छपाई हुदैछ ...
 nl:Pagina %d van %d afdrukken...
+nn:Skriver ut side %d av %d...
 no:Skriver ut side %d av %d...
 pl:Drukowanie strony %d z %d...
 pt:A imprimir página %d de %d...
@@ -13566,6 +13743,7 @@ mk:Преименувај... \tF2
 my:&Nama semula ...\tF2
 ne:नाम &फेर्नुहोस्...\tF2
 nl:&Naam wijzigen...\tF2
+nn:Gjev n&ytt namn...\tF2
 no:Gi nytt &navn... \tF2
 pl:Zmień &nazwę...\tF2
 pt:Mudar &nome...\tF2
@@ -13625,6 +13803,7 @@ mk:Запомни ги &отворените датотеки
 my:Ingat &fail yang telah dibuka
 ne:&खोलिएका फाइलहरु सम्झनुहोस्
 nl:Onthoud ge&opende bestanden
+nn:Husk &opna filar
 no:Husk &åpnede filer
 pl:Pamiętaj &otwierane pliki
 pt:Lembrar ficheiros abert&os
@@ -13684,6 +13863,7 @@ mk:Отстрани од омилени
 my:Keluarkan daripada kegemaran
 ne:मनपर्ने बाट हटाउनुहोस्
 nl:Verwijder uit favorieten
+nn:Fjern frå favorittar
 no:Fjern fra favoritter
 pl:Usuń z ulubionych
 pt:Remover dos favoritos
@@ -13740,6 +13920,7 @@ mk:Отстрани страница %s од омилени
 my:Padam halaman %s dari kegemaran
 ne:मनपर्ने बाट पृष्ठ %s लाई हटाउनुहोस्
 nl:Verwijder pagina %s uit favorieten
+nn:Fjern side %s frå favorittene
 no:Fjern side %s fra favoritter
 pl:Usuń stronę %s z ulubionych
 pt:Remover página %s dos favoritos
@@ -13795,6 +13976,7 @@ mk:Преименувај во
 my:Namakan sebagai
 ne:नाम फेर्नुहोस्
 nl:Naam wijzigen in
+nn:Gjev nytt namn
 no:Endre Navn Til
 pl:Zmień nazwę na
 pt:Mudar nome para
@@ -14058,6 +14240,7 @@ mk:Зачувај &кратенка...\tCtrl+Shift+S
 my:Simpan S&hortcut...\tCtrl+Shift+S
 ne:&सर्टकट बचत गर्नुहोस्...\tCtrl+Shift+S
 nl:Snelkoppeling opslaan...\tCtrl+Shift+S
+nn:Large s&narveg...\tCtrl+Shift+S
 no:Lagre s&narvei...\tCtrl+Shift+S
 pl:Utwórz skrót do dokumentu\tCtrl+Shift+S
 pt:Criar atal&ho...\tCtrl+Shift+S
@@ -14117,6 +14300,7 @@ mk:Пребарувам %d од %d страници...
 my:Mencari %d dari %d...
 ne:%d (कुल %d मध्ये) मा खोजि हुदैछ...
 nl:Zoek %d van %d...
+nn:Søkjer gjennom %d av %d...
 no:Søker %d av %d...
 pl:Szukanie %d z %d...
 pt:A procurar %d de %d...
@@ -14175,6 +14359,7 @@ mk:Избери сè
 my:Pilih &Semua
 ne:सबै &चयन गर्नुहोस्
 nl:&Alles selecteren
+nn:Vel &alle
 no:Merk &alt
 pl:Zaznacz wszystko
 pt:&Selecionar tudo
@@ -14232,6 +14417,7 @@ mk:Избери сè\tCtrl+A
 my:Pilih Semu&a\tCtrl+A
 ne:सबै &चयन गर्नुहोस्\tCtrl+A
 nl:Selecteer &alles\tCtrl+A
+nn:Vel &alle\tCtrl+A
 no:Merk &alle\tCtrl+A
 pl:Zaznacz &wszystko\tCtrl+A
 pt:&Selecionar tudo\tCtrl+A
@@ -14291,6 +14477,7 @@ mk:Селектирај со Ctrl и левото копче на глувчет
 my:Pilih kandungan dengan Ctrl + butang kiri tetikus
 ne:Ctrl+बायाँ माउसबटनले सामाग्री चयन गर्नुहोस्
 nl:Selecteer inhoud met Ctrl+linker muisknop
+nn:Vel innhald med Ctrl + venstre museknapp
 no:Velg innhold med Ctrl+Venstre museknapp
 pl:Zaznacz zawartość wciskając Ctrl i lewy przycisk myszy
 pt:Selecione o conteúdo com Ctrl+botão esquerdo do rato
@@ -14334,6 +14521,7 @@ fr:Sélectionner le répertoire d'installation de SumatraPDF :
 ga:Roghnaigh an fillteán inar chóir SumatraPDF a shuiteáil:
 gl:Escolla o cartafol onde quere instalar SumatraPDF
 he:בחר את תיקיית ההתקנה של SumatraPDF:
+hi:sumatraPDF स्थापित करने के लिए फोल्डर का चुनाव किजिए:
 hr:Odaberite mapu gdje bi trebalo instalirati SumatraPDF:
 hu:Válassza ki a SumatraPDF telepítési könyvtárát:
 id:Pilih folder instalasi SumatraPDF:
@@ -14345,6 +14533,7 @@ lv:Atlasiet mapi, kurā jāinstalē SumatraPDF
 mk:Изберете ја папката каде што треба да се инсталира SumatraPDF:
 my:Pilih folder di mana SumatraPDF harus dipasang:
 nl:Kies de folder waar SumatraPDF geinstalleerd moet worden:
+nn:Vel mappa der SumatraPDF skal bli installert:
 no:Velg mappe der SumatraPDF skal installeres:
 pl:Wybierz folder, w którym należy zainstalować program SumatraPDF:
 pt:Escolha a pasta de instalação do SumatraPDF:
@@ -14386,6 +14575,7 @@ fr:Sélection :
 ga:Roghnúchán
 gl:Selección:
 he:בחירה:
+hi:चुनाव
 hr:Odabir:
 hu:Kijelölés:
 id:Seleksi:
@@ -14397,6 +14587,7 @@ lv:Atlase:
 mk:Селекција:
 my:Pilihan
 nl:Selectie
+nn:Utval:
 no:Valg:
 pl:Selekcja:
 pt:Selecção:
@@ -14452,6 +14643,7 @@ mk:Испрати по &е-пошта...
 my:Hantar melalui &Emel...
 ne:&ई-मेल द्वारा पठाउनुहोस्...
 nl:Verzend per &e-mail...
+nn:Send med &E-post...
 no:Send med e-post...
 pl:Dołącz do wiadomości &e-mail...
 pt:&Enviar por correio eletrónico...
@@ -14575,6 +14767,7 @@ mk:Прикажи &обележувачи
 my:Papar &Bookmark
 ne:&पुस्तकचिनोहरू देखाउनुहोस्
 nl:Bladwijzers tonen
+nn:Vis &bokmerkar
 no:Vis &Bookmarks
 pl:Pokaż &Zakładki
 pt:&Mostrar marcadores
@@ -14633,6 +14826,7 @@ mk:Прикажувај страници непрекинато
 my:Papar mukasurat secara berterusan
 ne:पृष्ठहरु &निरन्तर देखाउनुहोस्
 nl:Toon pagina's doorlopend
+nn:Vis &sider kontinuerleg
 no:Vis sider kontinuerlig
 pl:Wyświetlaj strony w układzie &ciągłym
 pt:M&ostrar páginas contínuas
@@ -14760,6 +14954,7 @@ mk:Прикажи омилени
 my:Papar kegemaran
 ne:मनपर्नेहरु देखाउनुहोस्
 nl:Toon Favorieten
+nn:Vis favorittar
 no:Vis Favoritter
 pl:Pokaż ulubione
 pt:Mostrar favoritos
@@ -14816,6 +15011,7 @@ mk:Прикажи често читани
 my:Paparkan dokuman yang kerap dibaca
 ne:प्रायजसो पढिएको देखाउनुहोस्
 nl:'Eerder Weergegeven' tonen
+nn:Vis ofte lesne
 no:Vis ofte leste
 pl:Pokaż często otwierane
 pt:Mostrar frequentes
@@ -14875,6 +15071,7 @@ mk:Прикажи го алатникот со &обележувачи кога 
 my:Tunjukkan &bookmark sidebar apabila ada
 ne:उपलब्ध भएमा &पुस्तकचिनो छेउपट्‍टि देखाउनुहोस्
 nl:Toon de &bladwijzerwerkbalk indien beschikbaar
+nn:Vis &bokmerkesidelinja hvis den er tilgjengeleg
 no:Vis &bokmerker-fanen når tilgjengelig
 pl:Pokaż panel za&kładek, gdy są dostępne
 pt:&Mostrar barra de marcadores quando disponível
@@ -14998,6 +15195,7 @@ lv:Kādi faili ir instalēti bojāti vai tie trūkst
 mk:Некои од датотеките што треба да се инсталираат се оштетени или недостасуваат
 my:Sesetengah fail yang akan dipasang akan rosak atau hilang
 nl:Sommige bestanden voor de installatie zijn beschadigd of ontbreken
+nn:Nokre filar som skal installeres, enten mangler eller har forsvunnet.
 no:Noen filer som skal installeres er skadet eller mangler
 pl:Niektóre pliki instalacyjne są uszkodzone lub niedostępne
 pt:Alguns ficheiros do instalador estão danificados
@@ -15054,6 +15252,7 @@ mk:Извинете, ова не требаше да се случи!\n\nДок�
 my:Maaf, itu tidak sepatutnya berlaku!\nSila tekan 'Batal', jika anda ingin membantu kami menetapkan punca kemalangan ini.
 ne:माफ गर्नुहोला, यस्तो हुनुहुदैनथ्यो\n\nयदि तपाई यो क्र्यास ठिक गर्न सहयोग गर्न चाहानुहुन्छ भने कृपया 'रद्द गर्नुस्' मा थिच्नुस |
 nl:Sorry, dit had niet mogen gebeuren!\n\nDruk 'Annuleren', als je wilt helpen de oorzaak van deze fout te vinden.
+nn:Beklager, dét skulle ikkje ha skjedd!\n\nVenligst trykk 'Lukk' hvis du vil hjelpe oss å fikse orsaka til dette krasjet.
 no:Beklager, men dette burde ikke ha skjedd!\n\nVennligst trykk 'Avbryt' hvis du ønsker å hjelpe oss med å fikse dette problemet.
 pl:Przepraszamy - to nie powinno się zdarzyć!\n\nProszę nacisnąć przycisk 'Anuluj', jeżeli chcesz pomóc nam w usunięciu tego problemu.
 pt:Isto não devia ter ocorrido!\n\nPrima "Cancelar", se nos quiser ajudar a corrigir a origem deste erro.
@@ -15114,6 +15313,7 @@ mk:Изворната датотека %s нема синхронизациск�
 my:Sumber fail %s tidak mempunyai titik penyegerakan
 ne:स्रोत फाइल %s मा समक्रमण विन्दु छैन
 nl:Bestand %s heeft geen synchronisatiepunt
+nn:Kildefila %s har ikkje nokre synkroniseringspunkt
 no:Kildefilen %s har ingen synkroniseringspunkt
 pl:Plik źródłowy %s nie posiada punktów synchronizacji
 pt:O ficheiro %s não tem ponto de sincronização
@@ -15170,6 +15370,7 @@ lv:Palaist SumatraPDF
 mk:Стартувај SumatraPDF
 my:Mula SumatraPDF
 nl:Start SumatraPDF
+nn:Start SumatraPDF
 no:Start SumatraPDF
 pl:Uruchom SumatraPDF
 pt:Iniciar SumatraPDF
@@ -15227,6 +15428,7 @@ mk:Предмет:
 my:Subjek
 ne:बिषय
 nl:Onderwerp:
+nn:Tema:
 no:Emne:
 pl:Temat:
 pt:Assunto:
@@ -15256,7 +15458,7 @@ br:SumatraPDF %s instalador
 bs:SumatraPDF %s instaler
 ca-xv:Instal·lador del SumatraPDF %s
 ca:Instal·lador del SumatraPDF %s
-cn:SumatraPDF %s 安装器
+cn:SumatraPDF %s 安装程序
 cy:Gosodwr SumatraPDF %s
 cz:SumatraPDF %s instalátor
 de:SumatraPDF %s installieren
@@ -15282,6 +15484,7 @@ lv:SumatraPDF %s instalētājs
 mk:Инсталација на SumatraPDF %s
 my:Installer SumatraPDF %s
 nl:SumatraPDF %s installatieprogramma
+nn:SumatraPDF %s-installerer
 no:SumatraPDF %s installering 
 pl:Instalator SumatraPDF %s
 pt:Instalador do SumatraPDF %s
@@ -15307,7 +15510,7 @@ br:SumatraPDF %s desinstalador
 bs:SumatraPDF %s deinstaler
 ca-xv:Desintal·lador del SumatraPDF %s
 ca:Desintal·lador del SumatraPDF %s
-cn:SumatraPDF %s 解除安装器
+cn:SumatraPDF %s 卸载程序
 cy:Dadosodwr SumatraPDF %s
 cz:SumatraPDF %s odinstalátor
 de:SumatraPDF %s deinstallieren
@@ -15333,6 +15536,7 @@ lv:SumatraPDF %s atinstalētājs
 mk:Деинсталација на SumatraPDF %s
 my:SumatraPDF %s Uninstaller
 nl:SumatraPDF %s deinstallatieprogramma
+nn:SumatraPDF %s-avinstallerer
 no:SumatraPDF %s avinstallering
 pl:Usuń SumatraPDF %s
 pt:Desinstalador do SumatraPDF %s
@@ -15392,6 +15596,7 @@ mk:Поставувања на SumatraPDF
 my:Tetapan-tetapan SumatraPDF
 ne:SumatraPDF विकल्पहरु
 nl:SumatraPDF Opties
+nn:SumatraPDF-innstillingar
 no:Innstillinger
 pl:Opcje SumatraPDF
 pt:Opções do SumatraPDF
@@ -15450,6 +15655,7 @@ mk:Надградување на SumatraPDF
 my:Kemaskini SumatraPDF
 ne:SumatraPDF अद्यावधिक
 nl:SumatraPDF Update
+nn:SumatraPDF Oppdatering
 no:SumatraPDF Oppdatering
 pl:Aktualizacja SumatraPDF
 pt:Atualização do SumatraPDF
@@ -15507,6 +15713,7 @@ mk:SumatraPDF се сруши
 my:SumatraPDF crashed
 ne:SumatraPDF बिग्रियो
 nl:SumatraPDF is vastgelopen
+nn:SumatraPDF har krasja
 no:SumatraPDF krasjet
 pl:SumatraPDF uległ awarii
 pt:O SumatraPDF terminou
@@ -15534,7 +15741,7 @@ br:SumatraPDF foi desinstalado.
 bs:SumatraPDF je deinstaliran.
 ca-xv:S'ha desinstal·lat el SumatraPDF.
 ca:S'ha desinstal·lat el SumatraPDF.
-cn:已解除安装 SumatraPDF 。
+cn:已卸载 SumatraPDF 。
 cy:Mae SumatraPDF wedi ei ddadosod.
 cz:SumatraPDF byl odinstalován.
 de:SumatraPDF wurde deinstalliert.
@@ -15560,6 +15767,7 @@ lv:SumatraPDF ir atinstalēta
 mk:SumatraPDF е избришан.
 my:SumatraPDF telah dibuang.
 nl:SumatraPDF werd verwijderd.
+nn:SumatraPDF har blitt avinstallert.
 no:SumatraPDF har blitt avinstallert.
 pl:Program SumatraPDF został usunięty.
 pt:O SumatraPDF foi desinstalado.
@@ -15611,6 +15819,7 @@ lv:SumatraPDF instalācija nav atrasta
 mk:Не најдов инсталации на SumatraPDF.
 my:Pemasangan SumatraPDF tidak dijumpai.
 nl:SumatraPDF-installatie niet gevonden.
+nn:SumatraPDF-installeringa blei ikkje funnet.
 no:SumatraPDF installering ikke funnet.
 pl:Program SumatraPDF nie został znaleziony.
 pt:O SumatraPDF não foi encontrado.
@@ -15670,6 +15879,7 @@ mk:SumatraPDF е Вашиот основен читач на PDF
 my:SumatraPDF ialah pembaca PDF utama anda
 ne:SumatraPDF तपाईको पूर्वनिर्धारित PDF पाठक हो
 nl:SumatraPDF is de standaard PDF-lezer
+nn:SumatraPDF er din standard PDF-lesar
 no:SumatraPDF er din standard PDF-leser
 pl:SumatraPDF jest domyślną przeglądarką PDF
 pt:O SumatraPDF é o leitor principal dos PDF
@@ -15731,6 +15941,7 @@ mk:Сега SumatraPDF би требало да е Вашиот основен �
 my:SumatraPDF kini harus menjadi pembaca utama PDF anda
 ne:SumatraPDF अब तपाईको पूर्वनिर्धारित PDF पाठक हुनुपर्छ
 nl:SumatraPDF zou nu de standaard PDF-lezer moeten zijn
+nn:SumatraPDF skulle no vere din standard PDF-lesar
 no:SumatraPDF burde nå være din standard PDF-leser
 pl:SumatraPDF powinien być teraz domyślną przeglądarką PDF
 pt:O SumatraPDF deve agora ser o leitor principal dos PDF
@@ -15792,6 +16003,7 @@ mk:Синхронизациската датотека не може да се �
 my:File penyegerakan tidak boleh dibuka
 ne:समक्रमण फाइल खोल्न सकिदैन्
 nl:Het synchronisatiebestand kan niet worden geopend
+nn:Synkroniseringsfila kan ikkje opnes
 no:Synkroniserende fil kan ikke åpnes
 pl:Nie można otworzyć pliku synchronizacji
 pt:Não foi possível abrir o ficheiro de sincronização
@@ -15848,6 +16060,7 @@ mk:Означен PDF
 my:PDF ditanda
 ne:ट्याग गरिएको PDF
 nl:Tagged PDF
+nn:Merka PDF
 no:Merket PDF
 pl:Tagowany plik PDF
 pt:PDF com tags
@@ -15906,6 +16119,7 @@ mk:Текстуални документи
 my:Dokumen teks
 ne:पाठ कागजातहरु
 nl:Tekstdocumenten
+nn:Tekstdokumentar
 no:Tekstdokumenter
 pl:Pliki tekstowe
 pt:Documentos de texto
@@ -15949,6 +16163,7 @@ fr:Merci d'avoir choisi SumatraPDF !
 ga:Go raibh maith agat as ucht SumatraPDF a roghnú!
 gl:Graciñas por escoller SumatraPDF!
 he:תודה על בחירתך ב- SumatraPDF.
+hi:sumatraPDF चुनने के लिए धन्यवाद !
 hr:Hvala Vam na odabiru SumatraPDF!
 hu:Köszönjük, hogy a SumatraPDF-et választotta!
 id:Terima kasih telah memakai SumatraPDF!
@@ -15961,6 +16176,7 @@ lv:Pateicamies par SumatraPDF izvēlēšanos!
 mk:Ви благодарам што го одбравте SumatraPDF!
 my:Terima kasih kerana memilih SumatraPDF!
 nl:Dank u om voor SumatraPDF te kiezen!
+nn:Takk for at du valde SumatraPDF!
 no:Takk for at du valgte SumatraPDF!
 pl:Dziękujemy za wybór SumatraPDF!
 pt:Obrigado por ter escolhido o SumatraPDF!
@@ -16015,6 +16231,7 @@ mk:Ви благодарам! SumatraPDF е успешно инсталиран.
 my:Terima kasih! SumatraPDF sudah dipasang pada komputer anda.
 ne:धन्यबाद! SumatraPDF इन्सटल गरिएको छ
 nl:Dank u! SumatraPDF werd geinstalleerd.
+nn:Tusen takk! SumatraPDF har blitt installert.
 no:Takk! SumatraPDF har blitt installert.
 pl:Program SumatraPDF został zainstalowany.
 pt:O SumatraPDF foi instalado.
@@ -16067,6 +16284,7 @@ lv:Instalēšanas programma ir bijusi bojāta. Lūdzu, lejupielādējiet to vēl
 mk:Датотеката за инсталирање е расипана. Ве молам преземете ја повторно.\nИзвинете на незгодата!
 my:Installer telah rosak. Sila muat turun sekali lagi.\nMinta maaf atas kesulitan!
 nl:Het installatieprogramma is beschadigd. Download het opnieuw aub.\nOnze excuses voor het ongemak!
+nn:Installeringsprogrammet har blitt korrumpert. Venligst installer han igjen.\nVi beklager for problemane!
 no:Installeringsprogrammet er defekt. Vennligst last det ned på nytt. \nBeklager!
 pl:Plik instalacyjny jest uszkodzony. Pobierz go jeszcze raz.\nPrzepraszamy za kłopot.
 pt:O instalador está danificado. Efetue uma nova transferência.\nDesculpe o inconveniente.
@@ -16092,7 +16310,7 @@ br:Este documento utiliza recursos não suportados (%s) e pode não ser exibido 
 bs:Ovaj dokument koristi nepodržane funkcionalnosti (%s) i zbog toga možda neće biti ispravno prikazan
 ca-xv:Aquest document utilitza característiques no suportades (%s) i pot no mostrar-se correctament
 ca:Aquest document utilitza característiques no suportades (%s) i podria no ser mostrat correctament
-cn:文檔使用未支持的功能 (%s)，可能無法正確繪製。
+cn:该文档使用了不支持的特性 (%s)，可能无法正确渲染。
 cy:Mae'r ddogfen hon yn defnyddio nodweddion sydd ddim yn cael eu cynnal (%s) ac efallai na fyddant yn rendro'n gywir
 cz:Tento dokument používá nepodporované funkce (%s) a tímto se nemusí vykreslit správně
 de:Dieses Dokument kann vermutlich nicht korrekt angezeigt werden wegen fehlender Unterstützung für %s
@@ -16116,6 +16334,8 @@ kr:이 문서는 지원되지 않는 기능 (%s)을 사용했고, 제대로 렌�
 ku:ئەم بەڵگەنامەیە خزمەتگوزاری نەگونجاوی تێدایە  (%s) لەوانەیە بەباشی دەرنەکەێت
 lv:Šajā dokumentā ir izmantotas neatbalstītas iespējas (%s), un iespējams, netiek atveidots pareizi
 nl:Dit document maakt gebruik van niet-ondersteunde functies (%s) en wordt mogelijk niet goed weergegeven
+nn:Dette dokumentet bruker ustøtta funksjoner (%s) og kan kanskje ikkje visast riktig.
+no:Dette dokumentet bruker ustøttede funksjoner (%s) og kan muligens ikke bli vist riktig.
 pl:Ten dokument używa niewspieranych funkcji (%s) i może wyświetlać się niepoprawnie
 pt:Este documento possui funcionalidades não suportadas (%s) e pode não ser mostrado corretamente
 ru:Этот документ использует неподдерживаемые функции (%s) и может отображаться с ошибками
@@ -16172,6 +16392,7 @@ ml:തലക്കെട്ട്
 my:Tajuk:
 ne:शीर्षक:
 nl:Titel:
+nn:Tittel:
 no:Tittel:
 pl:Tytuł:
 pt:Título:
@@ -16201,7 +16422,7 @@ br:Desinstalar SumatraPDF
 bs:Deinstaliraj SumatraPDF
 ca-xv:Desinstal·la el SumatraPDF
 ca:Desinstal·la el SumatraPDF
-cn:解除安装 SumatraPDF
+cn:卸载 SumatraPDF
 cy:Dadosod SumatraPDF
 cz:Odinstalovat SumatraPDF
 de:Deinstallieren
@@ -16229,6 +16450,7 @@ mk:Избриши SumatraPDF
 ml:സുമാത്ര പി.ഡി.എഫ്.നീക്കം ചെയ്യുക.
 my:Membuang SumatraPDF
 nl:Deinstalleer SumatraPDF
+nn:Avinstaller SumatraPDF
 no:Avinstaller SumatraPDF
 pl:Usuń SumatraPDF
 pt:Remover SumatraPDF
@@ -16255,7 +16477,7 @@ br:A desinstalação falhou
 bs:Neuspješna deinstalacija
 ca-xv:La desinstal·lació ha fallat
 ca:La desinstal·lació ha fallat
-cn:解除安装失败
+cn:卸载失败
 cy:Methodd y gosod
 cz:Odinstalace programu se nezdařila
 de:Die Deinstallation ist fehlgeschlagen
@@ -16282,6 +16504,7 @@ lv:Atinstalēšana neizdevās
 mk:Бришењето не успеа
 my:Penyahpasangan gagal
 nl:Deinstallatie mislukt
+nn:Avinstallering mislykkast
 no:Feil ved avinstallering
 pl:Usunięcie programu nie powiodło się
 pt:Falha na desinstalação!
@@ -16309,7 +16532,7 @@ br:Desinstalação em progresso...
 bs:Deinstalacija u toku ...
 ca-xv:Desinstal·lació en progrés...
 ca:Desinstal·lació en progrés...
-cn:解除安装正在进行...
+cn:卸载正在进行...
 cy:Wrthi'n dadosod...
 cz:Probíhá odinstalace...
 de:Die Deinstallation wird ausgeführt…
@@ -16336,6 +16559,7 @@ lv:Notiek atinstalēšana...
 mk:Бришењето е во тек...
 my:Penyahpasangan sedang dijalankan ...
 nl:Deinstallatie is bezig...
+nn:Avinstallasjon under arbeid...
 no:Avinstallering pågår...
 pl:Trwa usuwanie...
 pt:A desinstalar...
@@ -16395,6 +16619,7 @@ mk:Непозната изворна датотека (%s)
 my:Fail sumber tidak diketahui (%s)
 ne:अज्ञात स्रोत फाइल (%s)
 nl:Onbekend bronbestand (%s)
+nn:Ukjend kildefil (%s)
 no:Ukjent kildefil (%s)
 pl:Nieznany plik źródłowy (%s)
 pt:O ficheiro (%s) é desconhecido
@@ -16448,6 +16673,7 @@ ku:بەکارهێنان &شریتەکان
 lv:Lietot &cilnes
 mk:Користи &табови
 nl:Gebruik &tabs
+nn:Bruk &faner
 no:Bruk &tabs
 pl:Włącz wyświetlanie &kart
 pt:&Utilizar separadores
@@ -16471,7 +16697,7 @@ br:Usar o SumatraPDF como o leitor PDF pa&drão
 bs:Koristi SumatraPDF kao &izvorni PDF čitač
 ca-xv:Usa el SumatraPDF com a visor PDF &predeterminat
 ca:Usa el SumatraPDF com a visor PDF &predeterminat
-cn:使用 SumatraPDF 作为默懧的 PDF 阅读器(&U)
+cn:使用 SumatraPDF 作为默认的 PDF 阅读器(&U)
 cy:Defnyddio SumatraPDF fel y darllennydd PDF &rhagosodedig
 cz:Použít SumatraPDF jako &výchozí PDF prohlížeč
 de:SumatraPDF als Standard&programm für PDF Dokumente verwenden
@@ -16498,6 +16724,7 @@ lv:Izmantot SumatraPDF kā &noklusējuma PDF lasītāju
 mk:Користи го SumatraPDF како &основен читач на PDF
 my:Jadikan SumatraPDF sebagai aplikasi utama pembaca PDF anda
 nl:Gebruik SumatraPDF als &standaard PDF lezer
+nn:Bruk SumatraPDF som standard PDF-lesar
 no:Bruk SumatraPDF som &standard PDF-leser
 pl:Używaj SumatraPDF jako domyślnej przeglądarki PDF
 pt:Utilizar o SumatraPDF como leitor pa&drão de PDF
@@ -16527,7 +16754,7 @@ bs:Prikaz
 by:Выгляд
 ca-xv:Visualitza
 ca:Visualitza
-cn:查看
+cn:视图
 cy:Gweld
 cz:Zobrazení
 de:Ansicht
@@ -16697,6 +16924,7 @@ ml:മുന്നറിയിപ്പ്
 my:Amaran
 ne:चेतावनी
 nl:Waarschuwing
+nn:Fare
 no:Advarsel
 pl:Uwaga
 pt:Aviso
@@ -16756,6 +16984,7 @@ mk:XPS-документи
 my:Dokumen XPS
 ne:XPS कागजातहरु
 nl:XPS-documenten
+nn:XPS-dokumentar
 no:XPS-dokumenter
 pl:Pliki XPS
 pt:Documentos XPS
@@ -16785,7 +17014,7 @@ bs:Koristite najnoviju verziju.
 by:Вы выкарыстоўваеце апошнюю версію.
 ca-xv:Teniu la darrera versió.
 ca:Teniu la darrera versió.
-cn:你已有最新版。
+cn:您的版本为最新版。
 cy:Mae'r fersiwn diweddaraf gennych.
 cz:Používáte nejnovější verzi.
 de:Sie haben die neuste Version installiert.
@@ -16949,6 +17178,7 @@ mk:Зумирање
 my:Zum
 ne:आकार परिवर्तन
 nl:Zoom
+nn:Zoom
 no:Zoom
 pl:Powiększenie
 pt:Ajustar
@@ -17149,6 +17379,7 @@ mk:Степен на зумирање
 my:Faktor zoom
 ne:आकार कारकतत्व
 nl:Zoomniveau
+nn:Zoomfaktor
 no:Zoom til
 pl:Współczynnik powiększenia
 pt:Ampliação
@@ -17211,6 +17442,7 @@ mk:[Забележав промени; освежувам...] %s
 my:[Perubahan dikesan; refresh semula] %s
 ne:[परिवर्तन पत्ता लाग्यो; ताजा गरिँदैछ] %s
 nl:[Bestand gewijzigd; verversen] %s
+nn:[Endringar oppdaga; lastar inn på nytt] %s
 no:[Endringer oppdaget; oppdaterer] %s
 pl:[wykryto zmiany; odświeżanie] %s
 pt:[Mudanças detetadas; a atualizar] %s
@@ -17272,6 +17504,7 @@ ml:വാക്യങ്ങള്‍ പകര്‍ത്തിക്കൊണ�
 my:menyalin teks
 ne:पाठ प्रतिलिपि बनाईदैछ
 nl:tekst kopiëren
+nn:Kopierer tekst
 no:kopierer tekst
 pl:kopiowanie tekstu
 pt:cópia de texto
@@ -17331,6 +17564,7 @@ mk:печатам документ
 my:mencetak dokumen
 ne:कागजात छपाइ
 nl:document afdrukken
+nn:Skrivar ut dokument
 no:skriver ut dokument
 pl:drukowanie dokumentu
 pt:imprimir documento
