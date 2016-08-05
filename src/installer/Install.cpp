@@ -235,12 +235,13 @@ static bool ListAsDefaultProgram()
     HKEY hkey = HKEY_LOCAL_MACHINE;
     bool ok = true;
 
-    ok &= WriteRegStr(hkey, L"SOFTWARE\\RegisteredApplications", L"SumatraPDF", L"SOFTWARE\SumatraPDF\Capabilities");
-    ok &= WriteRegStr(heky, L"SOFTWARE\SumatraPDF\Capabilities", L"ApplicationDescription", "SumatraPDF is a PDF reader.");
-    ok &= WriteRegStr(heky, L"SOFTWARE\SumatraPDF\Capabilities", L"ApplicationName", "SumatraPDF Reader");
+    ok &= WriteRegStr(hkey, L"SOFTWARE\\RegisteredApplications", L"SumatraPDF", L"SOFTWARE\\SumatraPDF\\Capabilities");
+    ok &= WriteRegStr(hkey, L"SOFTWARE\\SumatraPDF\\Capabilities", L"ApplicationDescription", L"SumatraPDF is a PDF reader.");
+    ok &= WriteRegStr(hkey, L"SOFTWARE\\SumatraPDF\\Capabilities", L"ApplicationName", L"SumatraPDF Reader");
 
     // TODO: register more extensions
-    ok &= WriteRegStr(heky, L"SOFTWARE\SumatraPDF\Capabilities\FileAssociations", L".pdf", "SumatraPDF.exe");
+    ok &= WriteRegStr(hkey, L"SOFTWARE\\SumatraPDF\\Capabilities\\FileAssociations", L".pdf", L"SumatraPDF.exe");
+    return ok;
 }
 
 // cf. http://msdn.microsoft.com/en-us/library/cc144148(v=vs.85).aspx
@@ -364,6 +365,7 @@ DWORD WINAPI InstallerThread(LPVOID data)
         !WriteExtendedFileExtensionInfo(HKEY_CURRENT_USER)) {
         NotifyFailed(_TR("Failed to write the extended file extension information to the registry"));
     }
+    ListAsDefaultProgram();
     ProgressStep();
 
 Error:
