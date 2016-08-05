@@ -105,6 +105,7 @@ static bool DeleteEmptyRegKey(HKEY root, const WCHAR *keyName)
     return isEmpty;
 }
 
+// TODO: remove keys added in ListAsDefaultProgram
 static void RemoveOwnRegistryKeys()
 {
     HKEY keys[] = { HKEY_LOCAL_MACHINE, HKEY_CURRENT_USER };

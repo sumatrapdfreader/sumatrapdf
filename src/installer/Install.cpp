@@ -228,6 +228,21 @@ static bool WriteUninstallerRegistryInfo(HKEY hkey)
     return ok;
 }
 
+// https://msdn.microsoft.com/en-us/library/windows/desktop/cc144154(v=vs.85).aspx
+// http://www.tenforums.com/software-apps/23509-how-add-my-own-program-list-default-programs.html#post407794
+static bool ListAsDefaultProgram()
+{
+    HKEY hkey = HKEY_LOCAL_MACHINE;
+    bool ok = true;
+
+    ok &= WriteRegStr(hkey, L"SOFTWARE\\RegisteredApplications", L"SumatraPDF", L"SOFTWARE\SumatraPDF\Capabilities");
+    ok &= WriteRegStr(heky, L"SOFTWARE\SumatraPDF\Capabilities", L"ApplicationDescription", "SumatraPDF is a PDF reader.");
+    ok &= WriteRegStr(heky, L"SOFTWARE\SumatraPDF\Capabilities", L"ApplicationName", "SumatraPDF Reader");
+
+    // TODO: register more extensions
+    ok &= WriteRegStr(heky, L"SOFTWARE\SumatraPDF\Capabilities\FileAssociations", L".pdf", "SumatraPDF.exe");
+}
+
 // cf. http://msdn.microsoft.com/en-us/library/cc144148(v=vs.85).aspx
 static bool WriteExtendedFileExtensionInfo(HKEY hkey)
 {
