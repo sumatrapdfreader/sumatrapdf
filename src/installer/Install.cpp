@@ -202,23 +202,28 @@ static bool WriteUninstallerRegistryInfo(HKEY hkey)
     ScopedMem<WCHAR> installDir(path::GetDir(installedExePath));
     ScopedMem<WCHAR> uninstallCmdLine(str::Format(L"\"%s\"", ScopedMem<WCHAR>(GetUninstallerPath())));
 
-    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_ICON, installedExePath);
-    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_NAME, APP_NAME_STR);
-    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_VERSION, CURR_VERSION_STR);
+    // path to installed executable (or "$path,0" to force the first icon)
+    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, L"DisplayIcon", installedExePath);
+    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, L"DisplayName", APP_NAME_STR);
+    // version format: "1.2"
+    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, L"DisplayVersion", CURR_VERSION_STR);
     // Windows XP doesn't allow to view the version number at a glance,
     // so include it in the DisplayName
     if (!IsVistaOrGreater())
-        ok &= WriteRegStr(hkey, REG_PATH_UNINST, DISPLAY_NAME, APP_NAME_STR L" " CURR_VERSION_STR);
+        ok &= WriteRegStr(hkey, REG_PATH_UNINST, L"DisplayName", APP_NAME_STR L" " CURR_VERSION_STR);
     DWORD size = GetDirSize(gGlobalData.installDir) / 1024;
-    ok &= WriteRegDWORD(hkey, REG_PATH_UNINST, ESTIMATED_SIZE, size);
-    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, INSTALL_DATE, installDate);
-    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, INSTALL_LOCATION, installDir);
-    ok &= WriteRegDWORD(hkey, REG_PATH_UNINST, NO_MODIFY, 1);
-    ok &= WriteRegDWORD(hkey, REG_PATH_UNINST, NO_REPAIR, 1);
-    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, PUBLISHER, TEXT(PUBLISHER_STR));
-    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, UNINSTALL_STRING, uninstallCmdLine);
-    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, URL_INFO_ABOUT, L"http://www.sumatrapdfreader.org/");
-    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, URL_UPDATE_INFO, L"http://www.sumatrapdfreader.org/news.html");
+    // size of installed directory after copying files
+    ok &= WriteRegDWORD(hkey, REG_PATH_UNINST, L"EstimatedSize", size);
+    // current date as YYYYMMDD
+    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, L"InstallDate", installDate);
+    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, L"InstallLocation", installDir);
+    ok &= WriteRegDWORD(hkey, REG_PATH_UNINST, L"NoModify", 1);
+    ok &= WriteRegDWORD(hkey, REG_PATH_UNINST, L"NoRepair", 1);
+    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, L"Publisher", TEXT(PUBLISHER_STR));
+    // command line for uninstaller
+    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, L"UninstallString", uninstallCmdLine);
+    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, L"URLInfoAbout", L"http://www.sumatrapdfreader.org/");
+    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, L"URLUpdateInfo", L"http://www.sumatrapdfreader.org/news.html");
 
     return ok;
 }

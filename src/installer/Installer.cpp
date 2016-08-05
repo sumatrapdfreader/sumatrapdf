@@ -222,8 +222,8 @@ const WCHAR *GetOwnPath()
 
 static WCHAR *GetInstallationDir()
 {
-    ScopedMem<WCHAR> dir(ReadRegStr(HKEY_CURRENT_USER, REG_PATH_UNINST, INSTALL_LOCATION));
-    if (!dir) dir.Set(ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_UNINST, INSTALL_LOCATION));
+    ScopedMem<WCHAR> dir(ReadRegStr(HKEY_CURRENT_USER, REG_PATH_UNINST, L"InstallLocation"));
+    if (!dir) dir.Set(ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_UNINST, L"InstallLocation"));
     if (dir) {
         if (str::EndsWithI(dir, L".exe")) {
             dir.Set(path::GetDir(dir));
@@ -262,9 +262,9 @@ static WCHAR *GetBrowserPluginPath()
 
 WCHAR *GetInstalledBrowserPluginPath()
 {
-    WCHAR *path = ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_PLUGIN, PLUGIN_PATH);
+    WCHAR *path = ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_PLUGIN, L"Path");
     if (!path)
-        path = ReadRegStr(HKEY_CURRENT_USER, REG_PATH_PLUGIN, PLUGIN_PATH);
+        path = ReadRegStr(HKEY_CURRENT_USER, REG_PATH_PLUGIN, L"Path");
     return path;
 }
 
