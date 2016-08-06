@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-8dde3f09f5459f74c184f9a421ad0f9edf851151
+b6d9806b75ae61fce5a0c74c58b26ea4dfdc6b4b
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -301,7 +301,7 @@ my:&Kembali\tAlt+Left Arrow
 ne:&पछाडि\tAlt+बायाँ बाण
 nl:Terug\tAlt+<-
 nn:&Tilbake\tAlt+Venstretast
-no:Tilbake\tAlt+Pil venstre
+no:Tilbake\tAlt+←
 pl:&Wstecz\tAlt+W lewo
 pt:V&oltar\tAlt + <-
 ro:Înapoi\tAlt+<-
@@ -1523,7 +1523,7 @@ my:&Halaman seterusnya\t->
 ne:&अर्को पृष्ठ\tदायाँ बाण
 nl:Volgende pagina\t->
 nn:Neste side\t->
-no:Neste side\tPil høyre
+no:Neste side\t→
 pa:ਅਗਲੇ ਪੰਨੇ ਤੇ\t->
 pl:&Następna strona\tW prawo
 pt:Página &seguinte\t->
@@ -2139,7 +2139,7 @@ my:&Halaman sebelumnya\t<-
 ne:अ&घिल्लो पृष्ठ\tबायाँ बाण
 nl:Vorige pagina\t<-
 nn:Førre side\t<-
-no:Forrige side\tPil venstre
+no:Forrige side\t←
 pa:ਪਿਛਲੇ ਪੰਨੇ ਤੇ\t<-
 pl:&Poprzednia strona\tW lewo
 pt:Página &anterior\t<-
@@ -3005,7 +3005,7 @@ my:&Lihat
 ne:&हेर्नुहोस्
 nl:&Beeld
 nn:&Vis
-no:&Vis
+no:&Visning
 pa:ਵੇਖੋ(&V)
 pl:&Widok
 pt:&Ver
@@ -3059,7 +3059,7 @@ kr:창(&W)
 ku:&پەنجەرە
 lv:&Logs
 mk:&Прозорец
-nl:&Window
+nl:&Venster
 nn:&Vindu
 no:&Vindu
 pl:&Okno
@@ -3939,7 +3939,7 @@ lv:Vai jūs esat pārliecināts, ka vēlaties atinstalēt SumatraPDF?
 mk:Дали сте сигурни дека сакате да го избришете SumatraPDF?
 my:Adakah anda pasti anda mahu membuang SumatraPDF?
 ne:SumatraPDF हटाउन चाहानुहुन्छ?
-nl:Bent u zeker dat u SumatraPDF wilt verwijderen?
+nl:Weet u zeker dat u SumatraPDF wilt verwijderen?
 nn:Er du sikker på at du vil avinstallere SumatraPDF?
 no:Vil du virkelig avinstallere SumatraPDF?
 pl:Czy na pewno chcesz usunąć SumatraPDF?
@@ -5479,7 +5479,7 @@ my:Dua belah mukasurat bersambung
 ne:निरन्तर सम्मुख पृष्ठ
 nl:Dubbele pagina doorlopend
 nn:Kontunuerleg motståande
-no:Kontinuerlig - motst&ående
+no:Kontinuerlig - motstående
 pa:ਲਗਾਤਾਰ ਕਿਤਾਬ
 pl:Wiele stron - układ ciągły
 pt:Duas páginas contínuas
@@ -6868,7 +6868,7 @@ lv:Pielāgot &tālummaiņu...\tCtrl+Y
 mk:&Зумирање по избор...\tCtrl+Y
 my:Custom &Zoom...\tCtrl+Y
 ne:अनुकुल &आकार ...\tCtrl+Y
-nl:&Aangepaste Zoom...\tCtrl+Y
+nl:Aangepaste &Zoom...\tCtrl+Y
 nn:Tilpassa &zooming...\tCtrl+Y
 no:&Egendefinert zoom...\tCtrl+Y
 pl:&Własne powiększenie...\tCtrl+Y
@@ -7687,7 +7687,7 @@ my:Ralat memuatkan %s
 ne:%s लोड त्रुटि
 nl:Fout bij het laden van %s
 nn:Feil ved innlasting av %s
-no:Feil under lasting %s
+no:Feil under innlasting av %s
 pl:Błąd ładowania pliku %s
 pt:Erro ao carregar %s
 ro:Eroare la încărcarea %s
@@ -7803,7 +7803,7 @@ my:F&orward \t alt + Panah Kanan
 ne:अ&गाडि\tAlt+दायाँ बाण
 nl:Verder\tAlt+->
 nn:F&ramover\tAlt+Høyretast
-no:Fremover\tAlt+Pil høyre
+no:Fremover\tAlt+→
 pl:&Dalej\tAlt+W prawo
 pt:A&vançar\tAlt + ->
 ro:Înainte\tAlt+->
@@ -10129,7 +10129,7 @@ my:Petunjuk: Gunakan kekunci F3 untuk mencari semula
 ne:सङ्केत: पुनः फेलापार्न F3 कुञ्जी प्रयोग गर्नुहोस्
 nl:Tip: Gebruik de functietoets F3 om verder te zoeken
 nn:Tips: Bruk F3-knappen for å finne igjen
-no:Tips: Bruk F3 tasten for søk etter neste
+no:Tips: Bruk F3-tasten for å søke etter neste
 pl:Wskazówka: użyj klawisza F3, aby szukać dalej
 pt:Dica: utilize F3 para procurar a seguinte
 ro:Sugestie: Utilizați tasta F3 pentru a căuta mai departe
@@ -10296,7 +10296,7 @@ ku:لە فۆڵدەری SumatraPDF دابەزاندنی:
 lv:Instalēt SumatraPDF &mapē:
 mk:Инсталирај SumatraPDF во &папка:
 my:Pasang SumatraPDF dalam &folder
-nl:Installeer SumatraPDF in &folder
+nl:Installeer SumatraPDF in &map
 nn:Installer SumatraPDF i mappa:
 no:Installere SumatraPDF i &mappe:
 pl:Zainstaluj SumatraPDF w &folderze:
@@ -10524,7 +10524,7 @@ kr:브라우저에 설치된 PDF 플러그인 유지(&B) (더 이상 지원 안 
 ku:هێشتنەوەی پێوەکراوی وێبگەڕ بە دامەزێرێنراوی (چیتر پاڵپشتی ناکرێت)
 lv:Paturēt pārlūka PDF spraudni instalētu (vairs netiek atbalstīts)
 mk:Задржи го додатокот за PDF за &прелистувачи (не е повеќе поддржан)
-nl:Behoud de PDF &browser plugin geïnstalleerd (niet ondersteund)
+nl:Behoud de PDF-&browserplugin geïnstalleerd (niet langer ondersteund)
 nn:Behald installeringa av PDF-&nettlesartillegget (Ikkje lenger støtta)
 no:Fortsett å ha PDF-nettlesertillegget installert (Ikke lenger støttet)
 pl:Pozostaw zainstalowaną &wtyczkę PDF do przeglądarek (już nie jest wspierana)
@@ -11391,7 +11391,7 @@ my:Tiada fail penyegerakan ditemui
 ne:कुनै समक्रमण फाइल भेटिएन्
 nl:Geen synchronisatiebestand gevonden
 nn:Ingen synkroniseringsfil blei funna
-no:Ingen synkroniserende fil funnet
+no:Ingen synkroniseringsfil funnet
 pl:Nie znaleziono pliku synchronizacji
 pt:Nenhum ficheiro de sincronização encontrado
 ro:Nu s-a găsit fișier de sincronizare
@@ -11453,7 +11453,7 @@ my:Tiada maklumat penyelarasan pada kedudukan ini
 ne:यो स्थानमा समक्रमण जानकारी छैन
 nl:Geen synchronisatieinformatie beschikbaar
 nn:Ingen synkroniseringsinfo på denne posisjonen
-no:Ingen synkroniserings info her
+no:Ingen synkroniseringsinfo her
 pl:Brak informacji o synchronizacji w tej pozycji
 pt:Não há informações de sincronização nesta posição
 ro:Nu există informație de sincronizare la această poziție
@@ -12009,7 +12009,7 @@ my:Buka menggunakan &Microsoft HTML Help
 ne:Microsoft HTML Help मा &खोल्नुहोस्
 nl:Openen met Microsoft HTML Help
 nn:Opne i &Microsoft HTML-hjelp
-no:Åpne i Microsoft HTML Help
+no:Åpne i &Microsoft HTML Help
 pl:Otwórz w Microsoft HTML Help
 pt:Abrir no &Microsoft HTML Help
 ro:Deschide în Microsoft HTML Help
@@ -12070,7 +12070,7 @@ my:Buka menggunakan &Microsoft XPS-Viewer
 ne:Microsoft XPS-Viewer मा &खोल्नुहोस्
 nl:Openen met Microsoft XPS-Viewer
 nn:Opne i &Microsoft XPS-visar
-no:Åpne i Microsoft XPS-Viewer
+no:Åpne i &Microsoft XPS-visning
 pl:Otwórz w Microsoft XPS-Viewer
 pt:Abrir no &Microsoft XPS-Viewer
 ro:Deschide în Microsoft XPS-Viewer
@@ -12127,7 +12127,7 @@ lv:&Rekvizīti
 mk:&Својства
 my:P&roperties
 ne:&गुणहरु
-nl:Eigenschappen
+nl:E&igenschappen
 nn:E&genskaper
 no:E&genskaper
 pl:Właściwości
@@ -14042,7 +14042,7 @@ my:Ubah ke kiri\tCtrl+Shift+-
 ne:&बायाँ घुमाउनुहोस्\tCtrl+Shift+-
 nl:Linksom draaien\tCtrl+Shift+-
 nn:Roter til venstre\tCtrl+Shift+-
-no:Roter mot klokken\tCtrl+Shift+Minus
+no:Roter mot klokken\tCtrl+Shift+Strek
 pa:ਸੱਜੇ ਪਾਸੇ ਘੁਮਾਓ\tCtrl+Shift+-
 pl:Obróć w &lewo\tCtrl+Shift+Minus
 pt:Rodar à &esquerda\tCtrl+Shift+-
@@ -14416,7 +14416,7 @@ lv:Atlasīt &visu\tCtrl+A
 mk:Избери сè\tCtrl+A
 my:Pilih Semu&a\tCtrl+A
 ne:सबै &चयन गर्नुहोस्\tCtrl+A
-nl:Selecteer &alles\tCtrl+A
+nl:&Alles selecteren\tCtrl+A
 nn:Vel &alle\tCtrl+A
 no:Merk &alle\tCtrl+A
 pl:Zaznacz &wszystko\tCtrl+A
@@ -14644,7 +14644,7 @@ my:Hantar melalui &Emel...
 ne:&ई-मेल द्वारा पठाउनुहोस्...
 nl:Verzend per &e-mail...
 nn:Send med &E-post...
-no:Send med e-post...
+no:Send med E-post...
 pl:Dołącz do wiadomości &e-mail...
 pt:&Enviar por correio eletrónico...
 ro:Trimite pe &E-mail...
@@ -14709,7 +14709,7 @@ my:Tetapkan pencarian songsang baris arahan
 ne:आदेश पङ्‌क्ति उल्टो खोजाई सेट गर्नुहोस्
 nl:Omgekeerde zoekrichting instellen
 nn:Velg motsatt søk-kommandolinje
-no:Sett invers kommandolinje for søk
+no:Velg invertert kommandolinje for søk
 pa:ਪੁੱਠੀ command-line ਖੋਜ ਸੈਟ ਕਰੋ
 pl:Ustaw wiersz poleceń do odwrotnego wyszukiwania
 pt:Definir linha de comandos para procura inversa
@@ -14768,7 +14768,7 @@ my:Papar &Bookmark
 ne:&पुस्तकचिनोहरू देखाउनुहोस्
 nl:Bladwijzers tonen
 nn:Vis &bokmerkar
-no:Vis &Bookmarks
+no:Vis &bokmerker
 pl:Pokaż &Zakładki
 pt:&Mostrar marcadores
 ro:Arata Se&bnele de Carte
@@ -14955,7 +14955,7 @@ my:Papar kegemaran
 ne:मनपर्नेहरु देखाउनुहोस्
 nl:Toon Favorieten
 nn:Vis favorittar
-no:Vis Favoritter
+no:Vis favoritter
 pl:Pokaż ulubione
 pt:Mostrar favoritos
 ro:Arată favoritele
@@ -15072,7 +15072,7 @@ my:Tunjukkan &bookmark sidebar apabila ada
 ne:उपलब्ध भएमा &पुस्तकचिनो छेउपट्‍टि देखाउनुहोस्
 nl:Toon de &bladwijzerwerkbalk indien beschikbaar
 nn:Vis &bokmerkesidelinja hvis den er tilgjengeleg
-no:Vis &bokmerker-fanen når tilgjengelig
+no:Vis &bokmerkefanen om tilgjengelig
 pl:Pokaż panel za&kładek, gdy są dostępne
 pt:&Mostrar barra de marcadores quando disponível
 ro:Arată bara laterală pentru &marcaje, când există
@@ -15253,7 +15253,7 @@ my:Maaf, itu tidak sepatutnya berlaku!\nSila tekan 'Batal', jika anda ingin memb
 ne:माफ गर्नुहोला, यस्तो हुनुहुदैनथ्यो\n\nयदि तपाई यो क्र्यास ठिक गर्न सहयोग गर्न चाहानुहुन्छ भने कृपया 'रद्द गर्नुस्' मा थिच्नुस |
 nl:Sorry, dit had niet mogen gebeuren!\n\nDruk 'Annuleren', als je wilt helpen de oorzaak van deze fout te vinden.
 nn:Beklager, dét skulle ikkje ha skjedd!\n\nVenligst trykk 'Lukk' hvis du vil hjelpe oss å fikse orsaka til dette krasjet.
-no:Beklager, men dette burde ikke ha skjedd!\n\nVennligst trykk 'Avbryt' hvis du ønsker å hjelpe oss med å fikse dette problemet.
+no:Beklager, dette skulle ikke ha skjedd!\n\nVennligst trykk 'Avbryt' hvis du ønsker å hjelpe oss med å fikse dette problemet.
 pl:Przepraszamy - to nie powinno się zdarzyć!\n\nProszę nacisnąć przycisk 'Anuluj', jeżeli chcesz pomóc nam w usunięciu tego problemu.
 pt:Isto não devia ter ocorrido!\n\nPrima "Cancelar", se nos quiser ajudar a corrigir a origem deste erro.
 ro:Scuze, acest eveniment nu ar fi trebuit să aibă loc!\n\nVă rugăm apăsați „Renunță”, dacă doriți să ne ajutați să îndreptăm cauza erorii.
@@ -15656,7 +15656,7 @@ my:Kemaskini SumatraPDF
 ne:SumatraPDF अद्यावधिक
 nl:SumatraPDF Update
 nn:SumatraPDF Oppdatering
-no:SumatraPDF Oppdatering
+no:SumatraPDF-oppdatering
 pl:Aktualizacja SumatraPDF
 pt:Atualização do SumatraPDF
 ro:Versiune nouă SumatraPDF
@@ -16230,7 +16230,7 @@ lv:Paldies! SumatraPDF ir instalēta.
 mk:Ви благодарам! SumatraPDF е успешно инсталиран.
 my:Terima kasih! SumatraPDF sudah dipasang pada komputer anda.
 ne:धन्यबाद! SumatraPDF इन्सटल गरिएको छ
-nl:Dank u! SumatraPDF werd geinstalleerd.
+nl:Dank u! SumatraPDF is geinstalleerd.
 nn:Tusen takk! SumatraPDF har blitt installert.
 no:Takk! SumatraPDF har blitt installert.
 pl:Program SumatraPDF został zainstalowany.
@@ -16674,7 +16674,7 @@ lv:Lietot &cilnes
 mk:Користи &табови
 nl:Gebruik &tabs
 nn:Bruk &faner
-no:Bruk &tabs
+no:Bruk &faner
 pl:Włącz wyświetlanie &kart
 pt:&Utilizar separadores
 ru:Использовать &вкладки

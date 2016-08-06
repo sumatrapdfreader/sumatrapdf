@@ -676,7 +676,7 @@ const char * gTranslations_dk =
 
 const char * gTranslations_nl = 
   "&Opties\0"\
-  "Bent u zeker dat u SumatraPDF wilt verwijderen?\0"\
+  "Weet u zeker dat u SumatraPDF wilt verwijderen?\0"\
   "Sluiten\0"\
   "Kan tijdelijke map niet aanmaken\0"\
   "Kan de installatiemap niet aanmaken\0"\
@@ -696,10 +696,10 @@ const char * gTranslations_nl =
   "Kan de\303\257nstallatie-informatie niet wegschrijven in het register\0"\
   "Verberg &Opties\0"\
   "Installeer SumatraPDF\0"\
-  "Installeer SumatraPDF in &folder\0"\
+  "Installeer SumatraPDF in &map\0"\
   "Installatie mislukt!\0"\
   "Installatie in uitvoering...\0"\
-  "Behoud de PDF &browser plugin ge\303\257nstalleerd (niet ondersteund)\0"\
+  "Behoud de PDF-&browserplugin ge\303\257nstalleerd (niet langer ondersteund)\0"\
   "Laat Windows Bureaublad Zoeker PDF documenten &zoeken\0"\
   "Laat Windows &voorbeelden tonen van PDF documenten\0"\
   "Sluit %s om verder te gaan!\0"\
@@ -711,7 +711,7 @@ const char * gTranslations_nl =
   "SumatraPDF werd verwijderd.\0"\
   "SumatraPDF-installatie niet gevonden.\0"\
   "Dank u om voor SumatraPDF te kiezen!\0"\
-  "Dank u! SumatraPDF werd geinstalleerd.\0"\
+  "Dank u! SumatraPDF is geinstalleerd.\0"\
   "Het installatieprogramma is beschadigd. Download het opnieuw aub.\nOnze excuses voor het ongemak!\0"\
   "Deinstalleer SumatraPDF\0"\
   "Deinstallatie mislukt\0"\

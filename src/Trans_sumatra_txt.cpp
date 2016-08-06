@@ -3782,7 +3782,7 @@ const char * gTranslations_nl =
   "Deze versie overslaan\0"\
   "Originele paginagrootte gebruiken\0"\
   "&Beeld\0"\
-  "\0"\
+  "&Venster\0"\
   "&Ja\0"\
   "\0"\
   "(van %d)\0"\
@@ -3831,7 +3831,7 @@ const char * gTranslations_nl =
   "Gemaakt:\0"\
   "Huidig bestand\0"\
   "Cursor positie\0"\
-  "&Aangepaste Zoom...\tCtrl+Y\0"\
+  "Aangepaste &Zoom...\tCtrl+Y\0"\
   "Standaard opmaak:\0"\
   "Standaard &zoom:\0"\
   "Standaard PDF-lezer kan niet worden aangepast in portable modus\0"\
@@ -3904,7 +3904,7 @@ const char * gTranslations_nl =
   "Openen met &Foxit Reader\0"\
   "Openen met Microsoft HTML Help\0"\
   "Openen met Microsoft XPS-Viewer\0"\
-  "Eigenschappen\0"\
+  "E&igenschappen\0"\
   "E&igenschappen...\tCtrl+D\0"\
   "PDF-document\0"\
   "PDF Optimalisaties\0"\
@@ -3941,7 +3941,7 @@ const char * gTranslations_nl =
   "Snelkoppeling opslaan...\tCtrl+Shift+S\0"\
   "Zoek %d van %d...\0"\
   "&Alles selecteren\0"\
-  "Selecteer &alles\tCtrl+A\0"\
+  "&Alles selecteren\tCtrl+A\0"\
   "Selecteer inhoud met Ctrl+linker muisknop\0"\
   "Selectie\0"\
   "Verzend per &e-mail...\0"\
@@ -9195,7 +9195,7 @@ const char * gTranslations_no =
   "Fak&tisk st\303\270rrelse\tCtrl+1\0"\
   "&Avanserte innstillinger\0"\
   "&Alle valgte sider\0"\
-  "Tilbake\tAlt+Pil venstre\0"\
+  "Tilbake\tAlt+\342\206\220\0"\
   "&Bokvisning\tCtrl+8\0"\
   "&Lukk\tCtrl+W\0"\
   "&Kopier valgt omr\303\245de\0"\
@@ -9214,7 +9214,7 @@ const char * gTranslations_no =
   "&Forst\303\270rrelse:\0"\
   "&Bruksanvisning\0"\
   "&Skill mellom store og sm\303\245 bokstaver\0"\
-  "Neste side\tPil h\303\270yre\0"\
+  "Neste side\t\342\206\222\0"\
   "&Nei\0"\
   "&Nei, takk\0"\
   "Bare &oddetallssider\0"\
@@ -9223,7 +9223,7 @@ const char * gTranslations_no =
   "&Innstillinger...\0"\
   "&Passord:\0"\
   "Fes&t dokument\0"\
-  "Forrige side\tPil venstre\0"\
+  "Forrige side\t\342\206\220\0"\
   "&Skriv ut...\0"\
   "&Skriv ut...\tCtrl+P\0"\
   "&Skriv ut... (ikke tillatt)\0"\
@@ -9237,7 +9237,7 @@ const char * gTranslations_no =
   "&Enkeltside\tCtrl+6\0"\
   "&Ignorer denne versjonen\0"\
   "&Benytt opprinnelige sidest\303\270rrelser\0"\
-  "&Vis\0"\
+  "&Visning\0"\
   "&Vindu\0"\
   "&Ja\0"\
   "\0"\
@@ -9274,7 +9274,7 @@ const char * gTranslations_no =
   "Kompatibilitet\0"\
   "Kontinuerlig\0"\
   "Kontinuerlig bokvisning\0"\
-  "Kontinuerlig - motst&\303\245ende\0"\
+  "Kontinuerlig - motst\303\245ende\0"\
   "Bidra med oversetting\0"\
   "Kopier &Bilde\0"\
   "Kopier &lenkeadresse\0"\
@@ -9300,9 +9300,9 @@ const char * gTranslations_no =
   "Skriv inn passord\0"\
   "Skriv inn passord for %s\0"\
   "Skriv inn kommandolinjen som skal kj\303\270res n\303\245r du dobbeltklikker p\303\245 PDF-dokumentet:\0"\
-  "Feil under lasting %s\0"\
+  "Feil under innlasting av %s\0"\
   "F&avoritter\0"\
-  "Fremover\tAlt+Pil h\303\270yre\0"\
+  "Fremover\tAlt+\342\206\222\0"\
   "Fullskjerm\tCtrl+Shift+L\0"\
   "Flere sider\0"\
   "Kunne ikke endre navn p\303\245 filen!\0"\
@@ -9334,7 +9334,7 @@ const char * gTranslations_no =
   "\0"\
   "G\303\245 til side\0"\
   "Skjult ofte leste\0"\
-  "Tips: Bruk F3 tasten for s\303\270k etter neste\0"\
+  "Tips: Bruk F3-tasten for \303\245 s\303\270ke etter neste\0"\
   "Bildefiler (*.%s)\0"\
   "\0"\
   "\0"\
@@ -9348,8 +9348,8 @@ const char * gTranslations_no =
   "Neste side\0"\
   "S\303\270keelementet ble ikke funnet\0"\
   "Ingen resultater funnet rundt linje %u i filen %s\0"\
-  "Ingen synkroniserende fil funnet\0"\
-  "Ingen synkroniserings info her\0"\
+  "Ingen synkroniseringsfil funnet\0"\
+  "Ingen synkroniseringsinfo her\0"\
   "Antall sider:\0"\
   "\0"\
   "\303\205pne\0"\
@@ -9358,8 +9358,8 @@ const char * gTranslations_no =
   "\303\205pne i %s\0"\
   "\303\205pne i &Adobe Reader\0"\
   "\303\205pne i &Foxit Reader\0"\
-  "\303\205pne i Microsoft HTML Help\0"\
-  "\303\205pne i Microsoft XPS-Viewer\0"\
+  "\303\205pne i &Microsoft HTML Help\0"\
+  "\303\205pne i &Microsoft XPS-visning\0"\
   "E&genskaper\0"\
   "E&genskaper...\tCtrl+D\0"\
   "PDF-dokument\0"\
@@ -9391,7 +9391,7 @@ const char * gTranslations_no =
   "Fjern fra favoritter\0"\
   "Fjern side %s fra favoritter\0"\
   "Endre Navn Til\0"\
-  "Roter mot klokken\tCtrl+Shift+Minus\0"\
+  "Roter mot klokken\tCtrl+Shift+Strek\0"\
   "Roter med klokken\tCtrl+Shift+Pluss\0"\
   "Lagre som\0"\
   "Lagre s&narvei...\tCtrl+Shift+S\0"\
@@ -9400,20 +9400,20 @@ const char * gTranslations_no =
   "Merk &alle\tCtrl+A\0"\
   "Velg innhold med Ctrl+Venstre museknapp\0"\
   "Valg:\0"\
-  "Send med e-post...\0"\
-  "Sett invers kommandolinje for s\303\270k\0"\
-  "Vis &Bookmarks\0"\
+  "Send med E-post...\0"\
+  "Velg invertert kommandolinje for s\303\270k\0"\
+  "Vis &bokmerker\0"\
   "Vis sider kontinuerlig\0"\
   "Vis verkt\303\270ylinje\0"\
-  "Vis Favoritter\0"\
+  "Vis favoritter\0"\
   "Vis ofte leste\0"\
-  "Vis &bokmerker-fanen n\303\245r tilgjengelig\0"\
+  "Vis &bokmerkefanen om tilgjengelig\0"\
   "Enkeltside\0"\
-  "Beklager, men dette burde ikke ha skjedd!\n\nVennligst trykk 'Avbryt' hvis du \303\270nsker \303\245 hjelpe oss med \303\245 fikse dette problemet.\0"\
+  "Beklager, dette skulle ikke ha skjedd!\n\nVennligst trykk 'Avbryt' hvis du \303\270nsker \303\245 hjelpe oss med \303\245 fikse dette problemet.\0"\
   "Kildefilen %s har ingen synkroniseringspunkt\0"\
   "Emne:\0"\
   "Innstillinger\0"\
-  "SumatraPDF Oppdatering\0"\
+  "SumatraPDF-oppdatering\0"\
   "SumatraPDF krasjet\0"\
   "SumatraPDF er din standard PDF-leser\0"\
   "SumatraPDF burde n\303\245 v\303\246re din standard PDF-leser\0"\
@@ -9423,7 +9423,7 @@ const char * gTranslations_no =
   "Dette dokumentet bruker ust\303\270ttede funksjoner (%s) og kan muligens ikke bli vist riktig.\0"\
   "Tittel:\0"\
   "Ukjent kildefil (%s)\0"\
-  "Bruk &tabs\0"\
+  "Bruk &faner\0"\
   "Vis\0"\
   "\303\205pne &hjemmesiden\0"\
   "Advarsel\0"\
