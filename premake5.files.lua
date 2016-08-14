@@ -419,6 +419,7 @@ function sumatra_files()
     "Toolbar.*",
     "Translations.*",
     "Trans_sumatra_txt.cpp",
+    "Version.h",
     "WindowInfo.*",
 
     "regress/Regress.*",

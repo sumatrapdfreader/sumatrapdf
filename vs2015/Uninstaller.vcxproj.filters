@@ -6,11 +6,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\src\installer\Installer.exe.manifest">
-      <Filter>installer</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="..\src\CrashHandler.h" />
     <ClInclude Include="..\src\Translations.h" />
     <ClInclude Include="..\src\installer\Installer.h">
@@ -26,6 +21,11 @@
     <ClCompile Include="..\src\installer\Trans_installer_txt.cpp">
       <Filter>installer</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\src\installer\Installer.exe.manifest">
+      <Filter>installer</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\installer\Installer.rc">
