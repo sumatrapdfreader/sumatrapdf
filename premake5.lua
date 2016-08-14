@@ -138,7 +138,7 @@ workspace "SumatraPDF"
 
   project "libdjvu"
     kind "StaticLib"
-    characterset ("Unicode")
+    characterset ("MBCS")
     language "C++"
     -- TODO: try /D USE_EXCEPTION_EMULATION to see if it reduces the size
     -- and disables the exceptions warnings
