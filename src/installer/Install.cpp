@@ -260,10 +260,12 @@ static bool ListAsDefaultProgramPreWin10(HKEY hkey)
     // \SOFTWARE\Classes\CLSID\{GUID}\ProgID etc. entries
     // Also, if Sumatra is the only program handling those docs, our
     // PDF icon will be shown (we need icons and properly configure them)
+    bool ok = true;
     for (int i = 0; nullptr != gSupportedExts[i]; i++) {
         ScopedMem<WCHAR> keyname(str::Join(L"Software\\Classes\\", gSupportedExts[i], L"\\OpenWithList\\" EXENAME));
         ok &= CreateRegKey(hkey, keyname);
     }
+    return ok;
 }
 
 // cf. http://msdn.microsoft.com/en-us/library/cc144148(v=vs.85).aspx
@@ -287,7 +289,7 @@ static bool WriteExtendedFileExtensionInfo(HKEY hkey)
 
     // don't add REG_CLASSES_APPS L"\\SupportedTypes", as that prevents SumatraPDF.exe to
     // potentially appear in the Open With lists for other filetypes (such as single images)
-    ListAsDefaultProgramPreWin10(hkey);
+    ok &= ListAsDefaultProgramPreWin10(hkey);
 
     // in case these values don't exist yet (we won't delete these at uninstallation)
     ok &= WriteRegStr(hkey, REG_CLASSES_PDF, L"Content Type", L"application/pdf");
