@@ -131,7 +131,6 @@ static void RemoveOwnRegistryKeys()
             DeleteEmptyRegKey(keys[i], keyname);
         }
     }
-HKEY_LOCAL_MACHINE\SOFTWARE\RegisteredApplications
 
     // delete keys written in ListAsDefaultProgramWin10()
     HKEY hkey = HKEY_LOCAL_MACHINE;
