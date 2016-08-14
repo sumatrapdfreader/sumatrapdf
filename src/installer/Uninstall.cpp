@@ -105,7 +105,6 @@ static bool DeleteEmptyRegKey(HKEY root, const WCHAR *keyName)
     return isEmpty;
 }
 
-// TODO: remove keys added in ListAsDefaultProgram
 static void RemoveOwnRegistryKeys()
 {
     HKEY keys[] = { HKEY_LOCAL_MACHINE, HKEY_CURRENT_USER };
@@ -131,6 +130,17 @@ static void RemoveOwnRegistryKeys()
             *(WCHAR *)str::FindCharLast(keyname, '\\') = '\0';
             DeleteEmptyRegKey(keys[i], keyname);
         }
+    }
+
+    // delete keys written in ListAsDefaultProgramWin10()
+    HKEY hkey = HKEY_LOCAL_MACHINE;
+    DeleteRegKey(hkey, L"SOFTWARE\\RegisteredApplications\\SumatraPDF");
+    DeleteRegKey(hkey, L"SOFTWARE\\SumatraPDF\\Capabilities\\ApplicationDescription");
+    DeleteRegKey(hkey, L"SOFTWARE\\SumatraPDF\\Capabilities\\ApplicationName");
+    for (int i = 0; nullptr != gSupportedExts[i]; i++) {
+        WCHAR *ext = gSupportedExts[i];
+        ScopedMem<WCHAR> key(str::Join(L"SOFTWARE\\SumatraPDF\\Capabilities\\FileAssociations", ext));
+        DeleteRegKey(hkey, key);
     }
 }
 
