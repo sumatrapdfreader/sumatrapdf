@@ -3,10 +3,10 @@
 
 // CURR_VERSION can be over-written externally
 #ifndef CURR_VERSION
-#define CURR_VERSION 3.2
+#define CURR_VERSION 3.1.2
 #endif
 #ifndef CURR_VERSION_COMMA
-#define CURR_VERSION_COMMA 3,2,0
+#define CURR_VERSION_COMMA 3,1,2
 #endif
 
 // VER_QUALIFIER allows people who recompile SumatraPDF to add
