@@ -21,8 +21,8 @@
 #include "DebugLog.h"
 
 #if !defined(CRASH_SUBMIT_SERVER) || !defined(CRASH_SUBMIT_URL)
-#define CRASH_SUBMIT_SERVER L"blog.kowalczyk.info"
-#define CRASH_SUBMIT_URL    L"/app/crashsubmit?appname=SumatraPDF"
+#define CRASH_SUBMIT_SERVER L"kjktools.org"
+#define CRASH_SUBMIT_URL    L"/crashreports/submit?app=SumatraPDF&ver=" CURR_VERSION_STR
 #endif
 
 // The following functions allow crash handler to be used by both installer
