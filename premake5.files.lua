@@ -487,6 +487,7 @@ function utils_files()
     "FrameRateWnd.*",
     "LabelWithCloseWnd.*",
     "SplitterWnd.*",
+    "TabsWnd.*",
     "Win32Window.*",
   })
 end

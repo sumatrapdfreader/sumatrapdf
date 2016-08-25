@@ -337,6 +337,7 @@
     <ClInclude Include="..\src\wingui\FrameRateWnd.h" />
     <ClInclude Include="..\src\wingui\LabelWithCloseWnd.h" />
     <ClInclude Include="..\src\wingui\SplitterWnd.h" />
+    <ClInclude Include="..\src\wingui\TabsWnd.h" />
     <ClInclude Include="..\src\wingui\Win32Window.h" />
   </ItemGroup>
   <ItemGroup>
@@ -384,6 +385,7 @@
     <ClCompile Include="..\src\wingui\FrameRateWnd.cpp" />
     <ClCompile Include="..\src\wingui\LabelWithCloseWnd.cpp" />
     <ClCompile Include="..\src\wingui\SplitterWnd.cpp" />
+    <ClCompile Include="..\src\wingui\TabsWnd.cpp" />
     <ClCompile Include="..\src\wingui\Win32Window.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
