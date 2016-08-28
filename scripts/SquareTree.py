@@ -13,19 +13,19 @@ Usage:
 	print SquareTree.Serialize(root)
 """
 
-import re
+import os, re, util
 
 class Node(object):
 	def __init__(self):
 		self.data = []
-	
+
 	def __repr__(self):
 		return repr(self.data)
-	
+
 	def GetChild(self, name, idx=0):
 		children = [item for item in self.data if type(item[1]) is Node and item[0].lower() == name.lower()]
 		return (children + [(name, None)] * (idx + 1))[idx][1]
-	
+
 	def GetValue(self, name, idx=0):
 		values = [item for item in self.data if type(item[1]) is not Node and item[0].lower() == name.lower()]
 		return (values + [(name, None)] * (idx + 1))[idx][1]
@@ -41,7 +41,7 @@ def Parse(data, level=0):
 			import locale
 			data = data.decode(locale.getpreferredencoding())
 		data += "\n"
-	
+
 	node = Node()
 	while data:
 		# skip blank lines, comments and whitespace at the beginning of a line
@@ -94,7 +94,7 @@ def Parse(data, level=0):
 			node.data.append((key, value))
 		else:
 			assert False, "invalid data line: %s" % line.group(0)
-	
+
 	if level > 0:
 		return node, data
 	return node
@@ -110,16 +110,15 @@ def Serialize(root, level=0):
 			result += ["\t" * level + node[0] + " = " + node[1]]
 		else:
 			assert False, "value must be Node/list or string"
-	
+
 	if level > 0:
 		return result
 	# encode the result as UTF-8
 	return ("\n".join(result) + "\n").encode("utf-8-sig")
 
 if __name__ == "__main__":
-	import util2, os
-	util2.chdir_top()
-	
+	util.chdir_top()
+
 	data = " Key : Value \nNode\n[\n[ Node ]\nKey=Value2".encode("utf-8-sig")
 	root = Parse(data)
 	assert root.GetValue("key") == "Value"
@@ -127,7 +126,7 @@ if __name__ == "__main__":
 	assert root.GetChild("node", 1).GetValue("key") == "Value2"
 	data = Serialize(root)
 	assert Serialize(Parse(data)) == data
-	
+
 	path = os.path.join("obj-dbg", "SumatraPDF-settings.txt")
 	if os.path.exists(path):
 		data = open(path).read()

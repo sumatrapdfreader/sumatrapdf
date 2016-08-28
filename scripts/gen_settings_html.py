@@ -2,7 +2,7 @@
 
 import cgi
 import os
-import util2
+import util
 import gen_settingsstructs
 import trans_langs
 
@@ -12,7 +12,7 @@ TODO:
    in a separate table
 """
 
-g_version = util2.get_sumatrapdf_version()
+g_version = util.get_sumatrapdf_version()
 
 html_tmpl = """\
 <!doctype html>
@@ -352,7 +352,7 @@ def gen_settings_html():
 
 
 if __name__ == "__main__":
-    util2.chdir_top()
+    util.chdir_top()
     gen_langs_html()
     gen_settings_html()
     gen_settingsstructs.gen()

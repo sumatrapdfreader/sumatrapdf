@@ -12,7 +12,6 @@ import sys
 #import glob
 import subprocess
 import util
-import util2
 
 
 def verify_flint_installed():
@@ -24,12 +23,12 @@ def verify_flint_installed():
         sys.exit(1)
 
 
-@util2.memoize
+@util.memoize
 def src_dir():
     return "src"
 
 
-@util2.memoize
+@util.memoize
 def src_utils_dir():
     return os.path.join("src", "utils")
 
