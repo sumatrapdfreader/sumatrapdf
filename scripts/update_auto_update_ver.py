@@ -80,6 +80,7 @@ def v2fhelper(v, suff, version, weight):
     version[5] = parts[1]
     return parts[0]
 
+
 # Convert a Mozilla-style version string into a floating-point number
 #   1.2.3.4, 1.2a5, 2.3.4b1pre, 3.0rc2, etc
 def version2float(v):
@@ -127,21 +128,28 @@ def verify_version_not_lower(myver, curr1, curr2):
         print("version you gave is less than sumpdf-latest.txt (%s < %s)" % (myver, curr2))
         sys.exit(1)
 
-def main():
+
+# TODO: we don't use two-tier version so could be simplified
+def main(new_ver):
     url_update = "https://kjkpub.s3.amazonaws.com/sumatrapdf/sumpdf-update.txt"
     url_latest = "https://kjkpub.s3.amazonaws.com/sumatrapdf/sumpdf-latest.txt"
 
     conf = load_config()
-    assert conf.aws_access != "" and conf.aws_secret != ""
-    s3.set_secrets(conf.aws_access, conf.aws_secret)
+    aws_access, aws_secret = conf.GetAwsCredsMustExist()
+    s3.set_secrets(aws_access, aws_secret)
     s3.set_bucket("kjkpub")
 
     v1 = get_latest_version(url_latest)
-    (v2, ver) = get_update_versions(url_update)
-    validate_ver(ver)
+    (v2, ver_4) = get_update_versions(url_update)
+    validate_ver(ver_4)
     assert not v2 or v1 == v2, "sumpdf-update.txt and sumpdf-latest.txt don't agree on Stable version, run build.py -release first"
-    verify_version_not_lower(ver, v1, v2)
-    sys.stdout.write("Going to update auto-update version to %s. Are you sure? [y/N] " % ver)
+
+    if not new_ver:
+        print("Current version: %s. To update run:\npython scripts\update_auto_update_ver.py <new_version>" % v1)
+        return
+
+    verify_version_not_lower(new_ver, v1, v2)
+    sys.stdout.write("Current version: %s\nGoing to update auto-update version to %s. Are you sure? [y/N] " % (v1, new_ver))
     sys.stdout.flush()
     ch = getch()
     print()
@@ -150,18 +158,22 @@ def main():
         sys.exit(1)
 
     # remove the Stable version from sumpdf-update.txt
-    s = "[SumatraPDF]\nLatest %s\n" % ver
+    s = "[SumatraPDF]\nLatest %s\n" % new_ver
     s3.upload_data_public(s, "sumatrapdf/sumpdf-update.txt")
     # keep updating the legacy file for now
-    s = "%s\n" % ver
+    s = "%s\n" % new_ver
     s3.upload_data_public(s, "sumatrapdf/sumpdf-latest.txt")
     v1 = get_latest_version(url_latest)
     (v2, v3) = get_update_versions(url_update)
-    if v1 != ver or v2 != None or v3 != ver:
-        print("Upload failed because v1 or v3 != ver ('%s' or '%s' != '%s'" % (v1, v3, ver))
+    if v1 != new_ver or v2 != None or v3 != new_ver:
+        print("Upload failed because v1 or v3 != ver ('%s' or '%s' != '%s'" % (v1, v3, new_ver))
         sys.exit(1)
-    print("Successfully update auto-update version to '%s'" % ver)
+    print("Successfully update auto-update version to '%s'" % new_ver)
 
 
 if __name__ == "__main__":
-    main()
+    new_ver = None
+    if len(sys.argv) == 2:
+        new_ver = sys.argv[1]
+        validate_ver(new_ver)
+    main(new_ver)
