@@ -382,7 +382,7 @@ def load_config():
     except:
         # it's ok if doesn't exist, we just won't have the config data
         exctype, excval = sys.exc_info()[:2]
-        #print "exception '%s' ('%s') when loading config.py" % (exctype, excval)
+        print "exception '%s' ('%s') when loading config.py" % (exctype, excval)
 
     g_config = c
     return g_config
