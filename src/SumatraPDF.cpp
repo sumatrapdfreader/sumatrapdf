@@ -4339,5 +4339,5 @@ void ShowCrashHandlerMessage()
 #endif
 
     // TODO: maybe launch notepad with crash report?
-    MessageBox(nullptr, _TR("We're sorry, SumatraPDF crashed."), _TR("SumatraPDF crashed"), MB_ICONERROR | MB_OK | MbRtlReadingMaybe());
+    MessageBoxA(nullptr, "We're sorry, SumatraPDF crashed.", "SumatraPDF crashed", MB_ICONERROR | MB_OK | MbRtlReadingMaybe());
 }
