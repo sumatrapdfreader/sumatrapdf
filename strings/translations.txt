@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-b6d9806b75ae61fce5a0c74c58b26ea4dfdc6b4b
+3443f2b34d17a7d4f4de85892bc3ace63390424a
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -928,7 +928,7 @@ kr:첫 페이지(&F)\tHome
 ku:پەڕەی یەکەم&\tHome
 kw:Kynsa Folen\tHome
 lt:Pi&rmąjį puslapį\tHome
-lv:&Pirmā lappuse\tSākums
+lv:&Pirmo lappusi\tSākums
 mk:Прва страница\tHome
 ml:ആദ്യ താള്‍\tHome
 mm:ပထမ စာမျက်နှာ\tHome
@@ -1257,7 +1257,7 @@ kr:마지막 페이지(&L)\tEnd
 ku:دواین پەڕە&\tEnd
 kw:Diwettha folen\tEnd
 lt:Pa&skutinįjį puslapį\tEnd
-lv:Pē&dējā lappuse\tBeigas
+lv:Pē&dējo lappusi\tBeigas
 mk:Последна страница\tEnd
 ml:അവസാന താള്‍\tEnd
 mm:နောက်ဆုံး စာမျက်နှာ\tEnd
@@ -5089,7 +5089,7 @@ kr:업데이트 확인(&U)
 ku:پشکنین بۆ &نوێکردنەوە
 kw:&Checkya rag versyon nowyth
 lt:Tikrinti, ar yra &naujinimų
-lv:Pārbaudīt, vai nav &atjauninājumu
+lv:Pārbaudīt, vai nav &atjauninājumi
 mk:&Провери за надградби
 mm:အမျိုးအစား သစ်စုံစမ်းရန်
 my:Semak &Kemaskini
@@ -5215,7 +5215,7 @@ ka:კომიქსები
 kr:만화 책
 ku:پەرتووکی کۆمیدی
 lt:Komiksų knygelės
-lv:Komiksu grāmatas (CBZ un CBR)
+lv:Komiksu grāmatas
 mk:Стрипови
 my:Buku komik
 ne:कमिक पुस्तिका
@@ -5406,7 +5406,7 @@ kr:이어서 책처럼 보기
 ku:پیشاندانی پەرتووک بە بەردەوامی
 kw:Gwel-lyver heb aswa
 lt:Nenutrūkstama knygos peržiūra
-lv:Nepārtraukts grāmatu skats
+lv:Nepārtraukts grāmatas skats
 mk:Книга со непрекинат поглед
 my:Paparan buku berterusan
 ne:निरन्तर पुस्तिका दृश्य
@@ -5783,7 +5783,7 @@ ka:ტექსტის კოპირება აკრძალულია
 kr:문구 복사가 거부됐습니다. (이미지만 복사합니다.)
 ku:(لەبەرگرتنەوەی دەق ڕەتکرایەوە (تەنها لەبەرگرتنەوەی وێنە
 lt:Teksto kopijavimas uždraustas (kopijuojamas tik ekrano vaizdas)
-lv:Teksta kopēšana liegta (kopē tikai kā attēlu)
+lv:Teksta kopēšana ir liegta (kopē tikai kā attēlu)
 mk:Копирањето на текстот беше одбиено (копирање само во вид на слика)
 my:Salinan teks telah ditolak (menyalin sebagai imej sahaja)
 ne:पाठ प्रतिलिपि अस्वीकार भयो (छविको रुपमा प्रतिलिपि बनाईदैछ)
@@ -10123,7 +10123,7 @@ kr:힌트: 다시 찾으려면, F3 키를 누르세요.
 ku:بەکاربهێنە بۆ دووبارە دۆزینەوە F3 فێرکاری: دوگمەی
 kw:Hynt: Devnydhya alhwedhen F3 rag daskavos
 lt:Patarimas: ieškodami kito atitikmens naudokite klavišą F3
-lv:Ieteikums: Izmantojiet taustiņu F3, lai atrastu atkal
+lv:Ieteikums: izmantojiet taustiņu F3, lai atrastu atkal
 mk:Совет: За повторно пребарување користете F3 од тастатурата
 my:Petunjuk: Gunakan kekunci F3 untuk mencari semula
 ne:सङ्केत: पुनः फेलापार्न F3 कुञ्जी प्रयोग गर्नुहोस्
@@ -15066,7 +15066,7 @@ kr:사용 가능하면, 책갈피 옆구리 표시줄 보이기(&B)
 ku:پیشاندانی &نیشانەکراوەکان لە تەنیشتەوە ئەگەر هەبوو
 kw:Diskwedhes &amalvar an lyververkyow mars eus onan
 lt:Rodyti &žymų parankinę, kai yra žymų
-lv:Rādīt &grāmatzīmju sānjoslu, ja ir pieejama
+lv:Rādīt &grāmatzīmju sānjoslu, ja tā ir pieejama
 mk:Прикажи го алатникот со &обележувачи кога е достапен
 my:Tunjukkan &bookmark sidebar apabila ada
 ne:उपलब्ध भएमा &पुस्तकचिनो छेउपट्‍टि देखाउनुहोस्
@@ -15247,7 +15247,7 @@ ka:ბოდიშს გიხდით, ეს არ უნდა მომ�
 kr:미안합니다, 그런 일이 일어날 리가 없는데!\n\n이 충돌의 원인을 해결하는데 도움을 주려면, '취소'를 누르세요.
 ku:تکایە کلیک لەسەر 'پاشگەزبونەوە' ، بکە ئەگەر ئەتەوێ یارمەتیدەرمان بیت لە جارەسەرکردنی ئەم کێشەیە\n\n !ببورە، لە ڕوودانی ئەم کێشەیە
 lt:Apgailestaujame, taip neturėjo nutikti!\n\nSpustelėkite „Atsisakyti“, jeigu norite mums padėti pašalinti šios strigties priežastį.
-lv:Piedodiet, šim nevajadzēja notikt!\n\nLūdzu spiediet 'Atcelt', ja jūs vēlaties mums palīdzēt novērst šīs kļūmes cēloni.
+lv:Piedodiet, šim nevajadzēja notikt!\n\nLūdzu, spiediet 'Atcelt', ja jūs vēlaties mums palīdzēt novērst šīs kļūmes cēloni.
 mk:Извинете, ова не требаше да се случи!\n\nДоколку сакате да ни помогнете да го отстраниме овој проблем, Ве молам изберете 'Откажи'.
 my:Maaf, itu tidak sepatutnya berlaku!\nSila tekan 'Batal', jika anda ingin membantu kami menetapkan punca kemalangan ini.
 ne:माफ गर्नुहोला, यस्तो हुनुहुदैनथ्यो\n\nयदि तपाई यो क्र्यास ठिक गर्न सहयोग गर्न चाहानुहुन्छ भने कृपया 'रद्द गर्नुस्' मा थिच्नुस |
@@ -15650,7 +15650,7 @@ ka:SumatraPDF-ის განახლება
 kr:SumatraPDF 업데이트
 ku:نوێکردنەوەی SumatraPDF
 lt:„SumatraPDF“ naujinimas
-lv:SumatraPDF atjauninājums
+lv:SumatraPDF atjaunināšana
 mk:Надградување на SumatraPDF
 my:Kemaskini SumatraPDF
 ne:SumatraPDF अद्यावधिक

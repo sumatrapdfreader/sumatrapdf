@@ -7965,12 +7965,12 @@ const char * gTranslations_lv =
   "&Divas lappuses\tCtrl+7\0"\
   "&Fails\0"\
   "&Ko atrast:\0"\
-  "&Pirm\304\201 lappuse\tS\304\201kums\0"\
+  "&Pirmo lappusi\tS\304\201kums\0"\
   "Ietilpin\304\201t lappuses &apdruk\304\201jam\304\201 zon\304\201\0"\
   "&Doties uz\0"\
   "&Doties uz lappusi:\0"\
   "&Pal\304\253dz\304\253ba\0"\
-  "P\304\223&d\304\223j\304\201 lappuse\tBeigas\0"\
+  "P\304\223&d\304\223jo lappusi\tBeigas\0"\
   "&Palielin\304\201jums:\0"\
   "&Rokasgr\304\201mata\0"\
   "&Saska\305\206ot re\304\243istru\0"\
@@ -8029,17 +8029,17 @@ const char * gTranslations_lv =
   "Nevar izdruk\304\201t \305\241o failu\0"\
   "Neizdev\304\201s palaist invers\304\201s mekl\304\223\305\241anas komandu. L\305\253dzu p\304\201rbaudiet komandrindu iestat\304\253jumus.\0"\
   "Main\304\253t valodu (Change Language)\0"\
-  "P\304\201rbaud\304\253t, vai nav &atjaunin\304\201jumu\0"\
-  "Komiksu gr\304\201matas (CBZ un CBR)\0"\
+  "P\304\201rbaud\304\253t, vai nav &atjaunin\304\201jumi\0"\
+  "Komiksu gr\304\201matas\0"\
   "Sader\304\253ba\0"\
   "Nep\304\201rtraukts\n\0"\
-  "Nep\304\201rtraukts gr\304\201matu skats\0"\
+  "Nep\304\201rtraukts gr\304\201matas skats\0"\
   "Nep\304\201rtraukti divas lappuses\0"\
   "Piedal\304\253ties tulko\305\241an\304\201\0"\
   "Kop\304\223t &att\304\223lu\0"\
   "Kop\304\223t &saites adresi\0"\
   "Kop\304\223t &koment\304\201ru\0"\
-  "Teksta kop\304\223\305\241ana liegta (kop\304\223 tikai k\304\201 att\304\223lu)\0"\
+  "Teksta kop\304\223\305\241ana ir liegta (kop\304\223 tikai k\304\201 att\304\223lu)\0"\
   "Autorties\304\253bas:\0"\
   "Nevar ieg\305\253t printera rekviz\304\253tus\0"\
   "Neizdev\304\201s inicializ\304\223t printeri\0"\
@@ -8094,7 +8094,7 @@ const char * gTranslations_lv =
   "\0"\
   "Doties uz lappusi\0"\
   "Sl\304\223pt bie\305\276i las\304\253tos\0"\
-  "Ieteikums: Izmantojiet tausti\305\206u F3, lai atrastu atkal\0"\
+  "Ieteikums: izmantojiet tausti\305\206u F3, lai atrastu atkal\0"\
   "Att\304\223lu faili (*.%s)\0"\
   "\0"\
   "\0"\
@@ -8167,13 +8167,13 @@ const char * gTranslations_lv =
   "R\304\201d\304\253t &r\304\253kjoslu\0"\
   "R\304\201d\304\253t &gr\304\201matz\304\253mes\0"\
   "R\304\201d\304\253t bie\305\276i las\304\253tos\0"\
-  "R\304\201d\304\253t &gr\304\201matz\304\253mju s\304\201njoslu, ja ir pieejama\0"\
+  "R\304\201d\304\253t &gr\304\201matz\304\253mju s\304\201njoslu, ja t\304\201 ir pieejama\0"\
   "Viena lappuse\0"\
-  "Piedodiet, \305\241im nevajadz\304\223ja notikt!\n\nL\305\253dzu spiediet 'Atcelt', ja j\305\253s v\304\223laties mums pal\304\253dz\304\223t nov\304\223rst \305\241\304\253s k\304\274\305\253mes c\304\223loni.\0"\
+  "Piedodiet, \305\241im nevajadz\304\223ja notikt!\n\nL\305\253dzu, spiediet 'Atcelt', ja j\305\253s v\304\223laties mums pal\304\253dz\304\223t nov\304\223rst \305\241\304\253s k\304\274\305\253mes c\304\223loni.\0"\
   "Avota failam %s nav sinhroniz\304\201cijas punkta\0"\
   "T\304\223ma:\0"\
   "SumatraPDF opcijas\0"\
-  "SumatraPDF atjaunin\304\201jums\0"\
+  "SumatraPDF atjaunin\304\201\305\241ana\0"\
   "SumatraPDF avar\304\223ja\0"\
   "SumatraPDF ir j\305\253su noklus\304\223juma PDF las\304\253t\304\201js\0"\
   "SumatraPDF tagad b\305\253s j\305\253su noklus\304\223juma PDF las\304\253t\304\201js\0"\
