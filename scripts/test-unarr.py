@@ -2,7 +2,7 @@ import sys
 import os
 import subprocess
 import shutil
-import util2
+import util
 
 g_get_files = False
 g_show_files = False
@@ -13,7 +13,7 @@ def usage_and_exit():
     sys.exit(1)
 
 
-@util2.memoize
+@util.memoize
 def detect_unarr_exe():
     p = os.path.join("obj-rel", "unarr.exe")
     if os.path.exists(p):

@@ -47,8 +47,8 @@ BOOL IsUninstallerNeeded()
 static bool RemoveUninstallerRegistryInfo(HKEY hkey)
 {
     bool ok1 = DeleteRegKey(hkey, REG_PATH_UNINST);
-    // this key was added by installers up to version 1.8
-    bool ok2 = DeleteRegKey(hkey, REG_PATH_SOFTWARE);
+    // legacy, this key was added by installers up to version 1.8
+    bool ok2 = DeleteRegKey(hkey, L"Software\\" APP_NAME_STR);
     return ok1 && ok2;
 }
 
@@ -131,6 +131,11 @@ static void RemoveOwnRegistryKeys()
             DeleteEmptyRegKey(keys[i], keyname);
         }
     }
+
+    // delete keys written in ListAsDefaultProgramWin10()
+    HKEY hkey = HKEY_LOCAL_MACHINE;
+    SHDeleteValue(hkey, L"SOFTWARE\\RegisteredApplications", L"SumatraPDF");
+    DeleteRegKey(hkey, L"SOFTWARE\\SumatraPDF\\Capabilities");
 }
 
 static BOOL RemoveEmptyDirectory(const WCHAR *dir)

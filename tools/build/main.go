@@ -323,7 +323,7 @@ func buildPreRelease() {
 	downloadPigzMust()
 
 	setBuildConfig(gitSha1, svnPreReleaseVer)
-	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:SumatraPDF;SumatraPDF-no-MUPDF;Uninstaller;test_util", "/p:Configuration=Release;Platform=Win32", "/m")
+	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:SumatraPDF;SumatraPDF-no-MUPDF;PdfFilter;PdfPreview;Uninstaller;test_util", "/p:Configuration=Release;Platform=Win32", "/m")
 	fataliferr(err)
 	runTestUtilMust("rel")
 	signMust(pj("rel", "SumatraPDF.exe"))
@@ -336,7 +336,7 @@ func buildPreRelease() {
 	fataliferr(err)
 	signMust(pj("rel", "Installer.exe"))
 
-	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:SumatraPDF;SumatraPDF-no-MUPDF;Uninstaller;test_util", "/p:Configuration=Release;Platform=x64", "/m")
+	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:SumatraPDF;SumatraPDF-no-MUPDF;PdfFilter;PdfPreview;Uninstaller;test_util", "/p:Configuration=Release;Platform=x64", "/m")
 	fataliferr(err)
 
 	if isOS64Bit() {

@@ -5,7 +5,7 @@ Given a string, see if it belongs to a known set of strings. If it does,
 return a value corresponding to that string.
 """
 
-import util2
+import util
 
 Template_Defines = """\
 #define CS1(c1)             (c1)
@@ -112,12 +112,12 @@ def createFastFinder(list, type, default, caseInsensitive, funcName=None):
 # (which would allow to "internalize" a string)
 def createTypeEnum(list, type, default):
 	list = sorted(list, key=lambda a: a[0])
-	parts = util2.group([item[1] for item in list] + [default], 5)
+	parts = util.group([item[1] for item in list] + [default], 5)
 	return unTab(Template_Enumeration % (type, ",\n	".join([", ".join(part) for part in parts])))
 
 def createFastSelector(fullList, nameList, funcName, type):
 	cases = ["case %s:" % value for (name, value) in fullList if name in nameList]
-	return unTab(Template_Selector % (funcName, type, "\n	".join([" ".join(part) for part in util2.group(cases, 4)])))
+	return unTab(Template_Selector % (funcName, type, "\n	".join([" ".join(part) for part in util.group(cases, 4)])))
 
 ########## HTML tags and attributes ##########
 
@@ -213,7 +213,7 @@ Template_Lookup_Code = """\
 """
 
 def main():
-	util2.chdir_top()
+	util.chdir_top()
 
 	tags = [(name, getEnumName(name, "Tag")) for name in sorted(List_HTML_Tags.split() + List_Other_Tags.split())]
 	attrs = [(name, getEnumName(name, "Attr")) for name in sorted(List_HTML_Attrs.split() + List_Other_Attrs.split())]

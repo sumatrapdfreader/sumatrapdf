@@ -19,24 +19,23 @@
 inline int RectDx(const RECT &r) { return r.right - r.left; }
 inline int RectDy(const RECT &r) { return r.bottom - r.top; }
 
-#define Edit_SelectAll(hwnd) Edit_SetSel(hwnd, 0, -1)
-#define ListBox_AppendString_NoSort(hwnd, txt) ListBox_InsertString(hwnd, -1, txt)
+void Edit_SelectAll(HWND hwnd);
+void ListBox_AppendString_NoSort(HWND hwnd, WCHAR *txt);
 
 BOOL SafeCloseHandle(HANDLE *h);
 BOOL SafeDestroyWindow(HWND *hwnd);
 void FillWndClassEx(WNDCLASSEX &wcex, const WCHAR *clsName, WNDPROC wndproc);
-inline void MoveWindow(HWND hwnd, RectI rect) {
-    MoveWindow(hwnd, rect.x, rect.y, rect.dx, rect.dy, TRUE);
-}
-inline void MoveWindow(HWND hwnd, RECT *r) {
-    MoveWindow(hwnd, r->left, r->top, RectDx(*r), RectDy(*r), TRUE);
-}
+void MoveWindow(HWND hwnd, RectI rect);
+void MoveWindow(HWND hwnd, RECT *r);
 
 bool IsOs64();
 bool IsProcess64();
 bool IsRunningInWow64();
 bool IsProcessAndOsArchSame();
 bool IsVistaOrGreater();
+void GetOsVersion(OSVERSIONINFOEX& ver);
+bool IsWin10();
+bool IsWin7();
 
 void LogLastError(DWORD err = 0);
 bool RegKeyExists(HKEY keySub, const WCHAR *keyName);
@@ -86,7 +85,7 @@ bool GetCursorPosInHwnd(HWND hwnd, PointI &posOut);
 void CenterDialog(HWND hDlg, HWND hParent = nullptr);
 WCHAR *GetDefaultPrinterName();
 bool CopyTextToClipboard(const WCHAR *text, bool appendOnly = false);
-bool CopyImageToClipboard(HBITMAP hbmp, bool appendOnly = false);
+bool CopyImageToClipboard(HBITMAP hbmp, bool appendOnly);
 void ToggleWindowStyle(HWND hwnd, DWORD flag, bool enable, int type = GWL_STYLE);
 RectI ChildPosWithinParent(HWND hwnd);
 HFONT GetDefaultGuiFont();
@@ -101,13 +100,10 @@ void ResizeHwndToClientArea(HWND hwnd, int dx, int dy, bool hasMenu);
 void ResizeWindow(HWND, int dx, int dy);
 
 // schedule WM_PAINT at window's leasure
-inline void ScheduleRepaint(HWND hwnd) { InvalidateRect(hwnd, nullptr, FALSE); }
+void ScheduleRepaint(HWND hwnd);
 
 // do WM_PAINT immediately
-inline void RepaintNow(HWND hwnd) {
-    InvalidateRect(hwnd, nullptr, FALSE);
-    UpdateWindow(hwnd);
-}
+void RepaintNow(HWND hwnd);
 
 inline BOOL toBOOL(bool b) { return b ? TRUE : FALSE; }
 
@@ -153,33 +149,31 @@ class DeferWinPosHelper {
     HDWP hdwp;
 
   public:
-    DeferWinPosHelper() { hdwp = ::BeginDeferWindowPos(32); }
+    DeferWinPosHelper();
+    ~DeferWinPosHelper();
+    void End();
+    void SetWindowPos(HWND hWnd, HWND hWndInsertAfter, int x, int y, int cx, int cy, UINT uFlags);
+    void MoveWindow(HWND hWnd, int x, int y, int cx, int cy, BOOL bRepaint = TRUE);
+    void MoveWindow(HWND hWnd, RectI r);
+};
 
-    ~DeferWinPosHelper() { End(); }
+struct BitmapPixels {
+    uint8*      pixels;
+    SizeI       size;
+    int         nBytes;
+    int         nBytesPerPixel;
+    int         nBytesPerRow;
 
-    void End() {
-        if (hdwp) {
-            ::EndDeferWindowPos(hdwp);
-            hdwp = nullptr;
-        }
-    }
-
-    void SetWindowPos(HWND hWnd, HWND hWndInsertAfter, int x, int y, int cx, int cy, UINT uFlags) {
-        hdwp = ::DeferWindowPos(hdwp, hWnd, hWndInsertAfter, x, y, cx, cy, uFlags);
-    }
-
-    void MoveWindow(HWND hWnd, int x, int y, int cx, int cy, BOOL bRepaint = TRUE) {
-        UINT uFlags = SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOZORDER;
-        if (!bRepaint)
-            uFlags |= SWP_NOREDRAW;
-        this->SetWindowPos(hWnd, 0, x, y, cx, cy, uFlags);
-    }
-
-    void MoveWindow(HWND hWnd, RectI r) { this->MoveWindow(hWnd, r.x, r.y, r.dx, r.dy); }
+    HBITMAP     hbmp;
+    BITMAPINFO  bmi;
+    HDC         hdc;
 };
 
 void InitAllCommonControls();
 SizeI GetBitmapSize(HBITMAP hbmp);
+BitmapPixels *GetBitmapPixels(HBITMAP hbmp);
+void FinalizeBitmapPixels(BitmapPixels* bitmapPixels);
+COLORREF GetPixel(BitmapPixels *bitmap, int x, int y);
 void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor);
 unsigned char *SerializeBitmap(HBITMAP hbmp, size_t *bmpBytesOut);
 HBITMAP CreateMemoryBitmap(SizeI size, HANDLE *hDataMapping = nullptr);

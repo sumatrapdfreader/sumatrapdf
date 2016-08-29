@@ -12,13 +12,13 @@ items which share the same accesskey are reported so that they could
 be changed to unique accesskeys.
 """
 
-import re, trans_download, trans_gen, trans_langs, util2
+import re, trans_download, trans_gen, trans_langs, util
 
 def extract_accesskey_groups(path):
 	groups = {}
 	group, group_name = None, None
 	alt_group = None
-	
+
 	for line in open(path, "r").readlines():
 		if line.startswith("//[ ACCESSKEY_GROUP ") or line.startswith("//] ACCESSKEY_GROUP "):
 			new_name = line[20:].strip()
@@ -30,7 +30,7 @@ def extract_accesskey_groups(path):
 				assert group is not None, "Unexpected group end ('%s')" % new_name
 				assert group_name == new_name, "Group end mismatch: '%s' != '%s'" (new_name, group_name)
 				group = None
-		
+
 		elif line.startswith("//[ ACCESSKEY_ALTERNATIVE") or  line.startswith("//| ACCESSKEY_ALTERNATIVE") or  line.startswith("//] ACCESSKEY_ALTERNATIVE"):
 			assert group is not None, "Can't use ACCESSKEY_ALTERNATIVE outside of group"
 			assert line[25].isspace(), "Typo?"
@@ -44,7 +44,7 @@ def extract_accesskey_groups(path):
 			else:
 				assert alt_group is not None, "Unexpected ACCESSKEY_ALTERNATIVE end"
 				alt_group = None
-		
+
 		elif group is not None:
 			strings = re.findall(trans_gen.TRANSLATION_PATTERN, line)
 			for string in strings:
@@ -53,7 +53,7 @@ def extract_accesskey_groups(path):
 					group.append(string)
 				if alt_group is not None:
 					alt_group[-1].append(string)
-	
+
 	return groups
 
 def get_alternate_ix(alternates, string):
@@ -68,10 +68,10 @@ def detect_accesskey_clashes(groups, translations):
 		print "Accesskey issues for '%s'" % lang[1]
 		print "=" * (23 + len(lang[1]))
 		warnings = []
-		
+
 		for (name, strings) in groups.items():
 			used_keys, duplicates, alternates = {}, [], {}
-			
+
 			for string in strings[1:]:
 				trans = ([item[1] for item in translations[string] if item[0] == lang[0]] + [string])[0]
 				ix = trans.find("&")
@@ -86,7 +86,7 @@ def detect_accesskey_clashes(groups, translations):
 				if "&" not in string:
 					warnings.append("WARNING: Translation has accesskey where original doesn't:")
 					warnings.append("         \"%s\", \"%s\"" % (string, trans))
-				
+
 				key = trans[ix + 1].upper()
 				alternates[key] = alternates.get(key, [])
 				if key in used_keys.keys():
@@ -99,7 +99,7 @@ def detect_accesskey_clashes(groups, translations):
 						warnings.append("WARNING: Access key '%s' might not work on all keyboards (\"%s\")" % (key, trans))
 					used_keys[key] = trans
 					alternates[key].append(get_alternate_ix(strings[0], string))
-			
+
 			if duplicates:
 				print "Clashes in accesskey group '%s':" % name
 				for item in duplicates:
@@ -107,20 +107,20 @@ def detect_accesskey_clashes(groups, translations):
 				available = [chr(i) for i in range(ord("A"), ord("Z") + 1) if chr(i) not in used_keys.keys()]
 				print "   (available keys: %s)" % "".join(available)
 				print
-		
+
 		print "\n".join(warnings)
 		print
 
 def main():
-	util2.chdir_top()
-	
+	util.chdir_top()
+
 	groups = {}
 	for file in trans_gen.C_FILES_TO_PROCESS:
 		groups.update(extract_accesskey_groups(file))
-	
+
 	translations = open(trans_download.lastDownloadFilePath(), "rb").read()
 	translations = trans_download.parseTranslations(translations)
-	
+
 	detect_accesskey_clashes(groups, translations)
 
 if __name__ == "__main__":

@@ -45,6 +45,7 @@
     <ClInclude Include="..\src\TextSelection.h" />
     <ClInclude Include="..\src\Toolbar.h" />
     <ClInclude Include="..\src\Translations.h" />
+    <ClInclude Include="..\src\Version.h" />
     <ClInclude Include="..\src\WindowInfo.h" />
   </ItemGroup>
   <ItemGroup>

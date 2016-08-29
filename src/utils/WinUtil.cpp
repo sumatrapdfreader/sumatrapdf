@@ -12,6 +12,14 @@
 
 static HFONT gDefaultGuiFont = nullptr;
 
+void Edit_SelectAll(HWND hwnd) {
+    Edit_SetSel(hwnd, 0, -1);
+}
+
+void ListBox_AppendString_NoSort(HWND hwnd, WCHAR *txt) {
+    ListBox_InsertString(hwnd, -1, txt);
+}
+
 void InitAllCommonControls() {
     INITCOMMONCONTROLSEX cex = { 0 };
     cex.dwSize = sizeof(INITCOMMONCONTROLSEX);
@@ -27,6 +35,42 @@ void FillWndClassEx(WNDCLASSEX &wcex, const WCHAR *clsName, WNDPROC wndproc) {
     wcex.hCursor = GetCursor(IDC_ARROW);
     wcex.lpszClassName = clsName;
     wcex.lpfnWndProc = wndproc;
+}
+
+void MoveWindow(HWND hwnd, RectI rect) {
+    MoveWindow(hwnd, rect.x, rect.y, rect.dx, rect.dy, TRUE);
+}
+
+void MoveWindow(HWND hwnd, RECT *r) {
+    MoveWindow(hwnd, r->left, r->top, RectDx(*r), RectDy(*r), TRUE);
+}
+
+void GetOsVersion(OSVERSIONINFOEX& ver)
+{
+    ZeroMemory(&ver, sizeof(ver));
+    ver.dwOSVersionInfoSize = sizeof(ver);
+#pragma warning(push)
+#pragma warning(disable: 4996) // 'GetVersionEx': was declared deprecated
+#pragma warning(disable: 28159) // Consider using 'IsWindows*' instead of 'GetVersionExW'
+    // see: https://msdn.microsoft.com/en-us/library/windows/desktop/dn424972(v=vs.85).aspx
+    // starting with Windows 8.1, GetVersionEx will report a wrong version number
+    // unless the OS's GUID has been explicitly added to the compatibility manifest
+    BOOL ok = GetVersionEx((OSVERSIONINFO*)&ver);
+#pragma warning(pop)
+    CrashIf(!ok);
+}
+
+// For more versions see OsNameFromVer() in CrashHandler.cpp
+bool IsWin10() {
+    OSVERSIONINFOEX ver;
+    GetOsVersion(ver);
+    return ver.dwMajorVersion == 10;
+}
+
+bool IsWin7() {
+    OSVERSIONINFOEX ver;
+    GetOsVersion(ver);
+    return ver.dwMajorVersion == 6 && ver.dwMinorVersion == 1;
 }
 
 /* Vista is major: 6, minor: 0 */
@@ -573,6 +617,25 @@ bool CopyTextToClipboard(const WCHAR *text, bool appendOnly) {
     return handle != nullptr;
 }
 
+static bool SetClipboardImage(HBITMAP hbmp) {
+    if (!hbmp)
+        return false;
+    BITMAP bmpInfo;
+    GetObject(hbmp, sizeof(BITMAP), &bmpInfo);
+    HANDLE h = nullptr;
+    if (bmpInfo.bmBits != nullptr) {
+        // GDI+ produced HBITMAPs are DIBs instead of DDBs which
+        // aren't correctly handled by the clipboard, so create a
+        // clipboard-safe clone
+        ScopedGdiObj<HBITMAP> ddbBmp(
+            (HBITMAP)CopyImage(hbmp, IMAGE_BITMAP, bmpInfo.bmWidth, bmpInfo.bmHeight, 0));
+        h = SetClipboardData(CF_BITMAP, ddbBmp);
+    } else {
+        h = SetClipboardData(CF_BITMAP, hbmp);
+    }
+    return h != nullptr;
+}
+
 bool CopyImageToClipboard(HBITMAP hbmp, bool appendOnly) {
     if (!appendOnly) {
         if (!OpenClipboard(nullptr))
@@ -580,20 +643,7 @@ bool CopyImageToClipboard(HBITMAP hbmp, bool appendOnly) {
         EmptyClipboard();
     }
 
-    bool ok = false;
-    if (hbmp) {
-        BITMAP bmpInfo;
-        GetObject(hbmp, sizeof(BITMAP), &bmpInfo);
-        if (bmpInfo.bmBits != nullptr) {
-            // GDI+ produced HBITMAPs are DIBs instead of DDBs which
-            // aren't correctly handled by the clipboard, so create a
-            // clipboard-safe clone
-            ScopedGdiObj<HBITMAP> ddbBmp(
-                (HBITMAP)CopyImage(hbmp, IMAGE_BITMAP, bmpInfo.bmWidth, bmpInfo.bmHeight, 0));
-            ok = SetClipboardData(CF_BITMAP, ddbBmp) != nullptr;
-        } else
-            ok = SetClipboardData(CF_BITMAP, hbmp) != nullptr;
-    }
+    bool ok = SetClipboardImage(hbmp);
 
     if (!appendOnly)
         CloseClipboard();
@@ -663,6 +713,32 @@ void DoubleBuffer::Flush(HDC hdc) {
     assert(hdc != hdcBuffer);
     if (hdcBuffer)
         BitBlt(hdc, rect.x, rect.y, rect.dx, rect.dy, hdcBuffer, 0, 0, SRCCOPY);
+}
+
+DeferWinPosHelper::DeferWinPosHelper() { hdwp = ::BeginDeferWindowPos(32); }
+
+DeferWinPosHelper::~DeferWinPosHelper() { End(); }
+
+void DeferWinPosHelper::End() {
+    if (hdwp) {
+        ::EndDeferWindowPos(hdwp);
+        hdwp = nullptr;
+    }
+}
+
+void DeferWinPosHelper::SetWindowPos(HWND hWnd, HWND hWndInsertAfter, int x, int y, int cx, int cy, UINT uFlags) {
+    hdwp = ::DeferWindowPos(hdwp, hWnd, hWndInsertAfter, x, y, cx, cy, uFlags);
+}
+
+void DeferWinPosHelper::MoveWindow(HWND hWnd, int x, int y, int cx, int cy, BOOL bRepaint) {
+    UINT uFlags = SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOZORDER;
+    if (!bRepaint)
+        uFlags |= SWP_NOREDRAW;
+    this->SetWindowPos(hWnd, 0, x, y, cx, cy, uFlags);
+}
+
+void DeferWinPosHelper::MoveWindow(HWND hWnd, RectI r) { 
+    this->MoveWindow(hWnd, r.x, r.y, r.dx, r.dy);
 }
 
 namespace win {
@@ -895,6 +971,95 @@ inline int mul255(int a, int b) {
     return x >> 8;
 }
 
+void FinalizeBitmapPixels(BitmapPixels* bitmapPixels) {
+    HDC hdc = bitmapPixels->hdc;
+    if (hdc) {
+        SetDIBits(bitmapPixels->hdc, bitmapPixels->hbmp, 0, bitmapPixels->size.dy, bitmapPixels->pixels, &bitmapPixels->bmi, DIB_RGB_COLORS);
+        DeleteDC(hdc);
+    }
+    free(bitmapPixels);
+}
+
+static bool IsPalettedBitmap(DIBSECTION& info, int nBytes) {
+    return sizeof(info) == nBytes && info.dsBmih.biBitCount != 0 && info.dsBmih.biBitCount <= 8;
+}
+
+COLORREF GetPixel(BitmapPixels *bitmap, int x, int y) {
+    CrashIf(x < 0 || x >= bitmap->size.dx);
+    CrashIf(y < 0 || y >= bitmap->size.dy);
+    uint8 *pixels = bitmap->pixels;
+    uint8 *pixel = pixels + y * bitmap->nBytesPerRow + x * bitmap->nBytesPerPixel;
+    // color order in DIB is blue-green-red-alpha
+    COLORREF c = 0;
+    if (3 == bitmap->nBytesPerPixel) {
+        c = RGB(pixel[2], pixel[1], pixel[0]);
+    } else if (4 == bitmap->nBytesPerPixel) {
+        c = RGB(pixel[3], pixel[2], pixel[1]);
+    } else {
+        CrashIf(true);
+    }
+    return c;
+}
+
+BitmapPixels *GetBitmapPixels(HBITMAP hbmp) {
+    BitmapPixels *res = AllocStruct<BitmapPixels>();
+
+    DIBSECTION info = { 0 };
+    int nBytes = GetObject(hbmp, sizeof(info), &info);
+    CrashIf(nBytes < sizeof(info.dsBm));
+    SizeI size(info.dsBm.bmWidth, info.dsBm.bmHeight);
+
+    res->size = size;
+    res->hbmp = hbmp;
+
+    if (nBytes >= sizeof(info.dsBm)) {
+        res->pixels = (uint8_t *)info.dsBm.bmBits;
+    }
+
+    // for mapped 32-bit DI bitmaps: directly access the pixel data
+    if (res->pixels && 32 == info.dsBm.bmBitsPixel && size.dx * 4 == info.dsBm.bmWidthBytes) {
+        res->nBytesPerPixel = 4;
+        res->nBytesPerRow = info.dsBm.bmWidthBytes;
+        res->nBytes = size.dx * size.dy * 4;
+        return res;
+    }
+
+    // for mapped 24-bit DI bitmaps: directly access the pixel data
+    if (res->pixels && 24 == info.dsBm.bmBitsPixel && info.dsBm.bmWidthBytes >= size.dx * 3) {
+        res->nBytesPerPixel = 3;
+        res->nBytesPerRow = info.dsBm.bmWidthBytes;
+        res->nBytes = size.dx * size.dy * 4;
+        return res;
+    }
+
+    // we don't support paletted DI bitmaps
+    if (IsPalettedBitmap(info, nBytes)) {
+        FinalizeBitmapPixels(res);
+        return nullptr;
+    }
+
+    BITMAPINFO bmi = { 0 };
+    bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
+    bmi.bmiHeader.biWidth = size.dx;
+    bmi.bmiHeader.biHeight = size.dy;
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = 32;
+    bmi.bmiHeader.biCompression = BI_RGB;
+
+    HDC hdc = CreateCompatibleDC(nullptr);
+    int bmpBytes = size.dx * size.dy * 4;
+    ScopedMem<uint8> bmpData((uint8 *)malloc(bmpBytes));
+    CrashIf(!bmpData);
+
+    if (!GetDIBits(hdc, hbmp, 0, size.dy, bmpData, &bmi, DIB_RGB_COLORS)) {
+        DeleteDC(hdc);
+        FinalizeBitmapPixels(res);
+        return nullptr;
+    }
+    res->hdc = hdc;
+    return res;
+}
+
 void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor) {
     if ((textColor & 0xFFFFFF) == WIN_COL_BLACK && (bgColor & 0xFFFFFF) == WIN_COL_WHITE)
         return;
@@ -914,10 +1079,10 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor) {
     if (ret >= sizeof(info.dsBm) && info.dsBm.bmBits && 32 == info.dsBm.bmBitsPixel &&
         size.dx * 4 == info.dsBm.bmWidthBytes) {
         int bmpBytes = size.dx * size.dy * 4;
-        BYTE *bmpData = (BYTE *)info.dsBm.bmBits;
+        uint8 *bmpData = (uint8 *)info.dsBm.bmBits;
         for (int i = 0; i < bmpBytes; i++) {
             int k = i % 4;
-            bmpData[i] = (BYTE)(base[k] + mul255(bmpData[i], diff[k]));
+            bmpData[i] = (uint8)(base[k] + mul255(bmpData[i], diff[k]));
         }
         return;
     }
@@ -925,11 +1090,11 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor) {
     // for mapped 24-bit DI bitmaps: directly access the pixel data
     if (ret >= sizeof(info.dsBm) && info.dsBm.bmBits && 24 == info.dsBm.bmBitsPixel &&
         info.dsBm.bmWidthBytes >= size.dx * 3) {
-        BYTE *bmpData = (BYTE *)info.dsBm.bmBits;
+        uint8 *bmpData = (uint8 *)info.dsBm.bmBits;
         for (int y = 0; y < size.dy; y++) {
             for (int x = 0; x < size.dx * 3; x++) {
                 int k = x % 3;
-                bmpData[x] = (BYTE)(base[k] + mul255(bmpData[x], diff[k]));
+                bmpData[x] = (uint8)(base[k] + mul255(bmpData[x], diff[k]));
             }
             bmpData += info.dsBm.bmWidthBytes;
         }
@@ -944,9 +1109,9 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor) {
         DeleteObject(SelectObject(hDC, hbmp));
         UINT num = GetDIBColorTable(hDC, 0, dimof(palette), palette);
         for (UINT i = 0; i < num; i++) {
-            palette[i].rgbRed = (BYTE)(base[2] + mul255(palette[i].rgbRed, diff[2]));
-            palette[i].rgbGreen = (BYTE)(base[1] + mul255(palette[i].rgbGreen, diff[1]));
-            palette[i].rgbBlue = (BYTE)(base[0] + mul255(palette[i].rgbBlue, diff[0]));
+            palette[i].rgbRed = (uint8)(base[2] + mul255(palette[i].rgbRed, diff[2]));
+            palette[i].rgbGreen = (uint8)(base[1] + mul255(palette[i].rgbGreen, diff[1]));
+            palette[i].rgbBlue = (uint8)(base[0] + mul255(palette[i].rgbBlue, diff[0]));
         }
         if (num > 0)
             SetDIBColorTable(hDC, 0, num, palette);
@@ -964,13 +1129,13 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor) {
 
     HDC hDC = CreateCompatibleDC(nullptr);
     int bmpBytes = size.dx * size.dy * 4;
-    ScopedMem<BYTE> bmpData((BYTE *)malloc(bmpBytes));
+    ScopedMem<uint8> bmpData((uint8 *)malloc(bmpBytes));
     CrashIf(!bmpData);
 
     if (GetDIBits(hDC, hbmp, 0, size.dy, bmpData, &bmi, DIB_RGB_COLORS)) {
         for (int i = 0; i < bmpBytes; i++) {
             int k = i % 4;
-            bmpData[i] = (BYTE)(base[k] + mul255(bmpData[i], diff[k]));
+            bmpData[i] = (uint8)(base[k] + mul255(bmpData[i], diff[k]));
         }
         SetDIBits(hDC, hbmp, 0, size.dy, bmpData, &bmi, DIB_RGB_COLORS);
     }
@@ -1168,6 +1333,16 @@ void ResizeWindow(HWND hwnd, int dx, int dy) {
     SetWindowPos(hwnd, nullptr, 0, 0, dx, dy, SWP_NOMOVE | SWP_NOZORDER);
 }
 
+void ScheduleRepaint(HWND hwnd) {
+    InvalidateRect(hwnd, nullptr, FALSE);
+}
+
+// do WM_PAINT immediately
+void RepaintNow(HWND hwnd) {
+    InvalidateRect(hwnd, nullptr, FALSE);
+    UpdateWindow(hwnd);
+}
+
 void VariantInitBstr(VARIANT &urlVar, const WCHAR *s) {
     VariantInit(&urlVar);
     urlVar.vt = VT_BSTR;
@@ -1320,3 +1495,4 @@ __declspec(noinline) int GetMeasurementSystem() {
     }
     return 1;
 }
+

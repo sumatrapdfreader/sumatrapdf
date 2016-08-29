@@ -7,12 +7,12 @@ and adds exports for the other libraries contained within libmupdf.dll but
 used by SumatraPDF-no-MuPDF.exe (unarr, libdjvu, zlib, lzma, libwebp).
 """
 
-import os, re, util2
+import os, re, util
 
 def generateExports(header, exclude=[]):
 	if os.path.isdir(header):
 		return "\n".join([generateExports(os.path.join(header, file), exclude) for file in os.listdir(header)])
-	
+
 	data = open(header, "r").read()
 	data = re.sub(r"(?sm)^#ifndef NDEBUG\s.*?^#endif", "", data, 0)
 	data = re.sub(r"(?sm)^#ifdef ARCH_ARM\s.*?^#endif", "", data, 0)
@@ -119,21 +119,21 @@ EXPORTS
 """
 
 def main():
-	util2.chdir_top()
+	util.chdir_top()
 	os.chdir("mupdf")
-	
+
 	# don't include/export doc_* functions, support for additional input/output formats and form support
 	doc_exports = collectFunctions("source/fitz/document.c") + collectFunctions("source/fitz/document-all.c") + collectFunctions("source/fitz/document-no-run.c") + ["fz_get_annot_type"]
 	more_formats = collectFunctions("source/fitz/svg-device.c") + collectFunctions("source/fitz/output-pcl.c") + collectFunctions("source/fitz/output-pwg.c")
 	form_exports = collectFunctions("source/pdf/pdf-form.c") + collectFunctions("source/pdf/pdf-event.c") + collectFunctions("source/pdf/pdf-appearance.c") + collectFunctions("source/pdf/js/pdf-jsimp-cpp.c") + ["pdf_access_submit_event", "pdf_init_ui_pointer_event"]
 	misc_exports = collectFunctions("source/fitz/stream-prog.c") + collectFunctions("source/fitz/test-device.c")
 	sign_exports = ["pdf_crypt_buffer", "pdf_read_pfx", "pdf_sign_signature", "pdf_signer_designated_name", "pdf_free_designated_name"]
-	
+
 	fitz_exports = generateExports("include/mupdf/fitz", doc_exports + more_formats + misc_exports)
 	mupdf_exports = generateExports("include/mupdf/pdf", form_exports + sign_exports + ["pdf_open_compressed_stream"])
 	muxps_exports = generateExports("include/mupdf/xps.h", ["xps_parse_solid_color_brush", "xps_print_path"])
 	unarr_exports = generateExports("../ext/unarr/unarr.h")
-	
+
 	list = LIBMUPDF_DEF % locals()
 	open("../src/libmupdf.def", "wb").write(list.replace("\n", "\r\n"))
 

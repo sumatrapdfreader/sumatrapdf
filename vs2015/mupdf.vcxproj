@@ -36,40 +36,40 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v140_xp</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v140_xp</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v140_xp</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v140_xp</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
@@ -429,24 +429,24 @@
   <ItemGroup>
     <CustomBuild Include="..\mupdf\font_base14.asm">
       <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\nasm.exe -f win32 -I ../mupdf/ -o "$(IntDir)/font_base14.obj" "../mupdf/font_base14.asm"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/font_base14.obj</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compiling ../mupdf/font_base14.asm</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\nasm.exe -f win64 -DWIN64 -I ../mupdf/ -o "$(IntDir)/font_base14.obj" "../mupdf/font_base14.asm"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)/font_base14.obj</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling ../mupdf/font_base14.asm</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -I ../mupdf/ -o "$(IntDir)/font_base14.obj" "../mupdf/font_base14.asm"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/font_base14.obj</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compiling ../mupdf/font_base14.asm</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\nasm.exe -f win64 -DWIN64 -I ../mupdf/ -o "$(IntDir)/font_base14.obj" "../mupdf/font_base14.asm"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)/font_base14.obj</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling ../mupdf/font_base14.asm</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|Win32'">..\bin\nasm.exe -f win32 -I ../mupdf/ -o "$(IntDir)/font_base14.obj" "../mupdf/font_base14.asm"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|Win32'">$(IntDir)/font_base14.obj</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|Win32'">Compiling ../mupdf/font_base14.asm</Message>
-      <Command Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|x64'">..\bin\nasm.exe -f win64 -DWIN64 -I ../mupdf/ -o "$(IntDir)/font_base14.obj" "../mupdf/font_base14.asm"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|x64'">$(IntDir)/font_base14.obj</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|x64'">Compiling ../mupdf/font_base14.asm</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\nasm.exe -f win32 -I ../mupdf/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)/%(Filename).obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compiling %(Identity)</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\nasm.exe -f win64 -DWIN64 -I ../mupdf/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)/%(Filename).obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling %(Identity)</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -I ../mupdf/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)/%(Filename).obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compiling %(Identity)</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\nasm.exe -f win64 -DWIN64 -I ../mupdf/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)/%(Filename).obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling %(Identity)</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|Win32'">..\bin\nasm.exe -f win32 -I ../mupdf/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|Win32'">$(IntDir)/%(Filename).obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|Win32'">Compiling %(Identity)</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|x64'">..\bin\nasm.exe -f win64 -DWIN64 -I ../mupdf/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|x64'">$(IntDir)/%(Filename).obj</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|x64'">Compiling %(Identity)</Message>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
@@ -456,11 +456,11 @@
     <ProjectReference Include="freetype.vcxproj">
       <Project>{89895BD8-7556-B6E3-9E6F-A48B8A9BEB71}</Project>
     </ProjectReference>
-    <ProjectReference Include="jbig2dec.vcxproj">
-      <Project>{BF5813C3-AB25-6ECE-D43E-5C76C06AA35C}</Project>
-    </ProjectReference>
     <ProjectReference Include="libjpeg-turbo.vcxproj">
       <Project>{DB56484D-4717-C483-1052-0D017CD10860}</Project>
+    </ProjectReference>
+    <ProjectReference Include="jbig2dec.vcxproj">
+      <Project>{BF5813C3-AB25-6ECE-D43E-5C76C06AA35C}</Project>
     </ProjectReference>
     <ProjectReference Include="openjpeg.vcxproj">
       <Project>{FDC4548D-E991-AF98-12AB-9D40FED6E426}</Project>
