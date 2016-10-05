@@ -9,7 +9,7 @@ More information:
 * [wiki with more docs](https://github.com/sumatrapdfreader/sumatrapdf/wiki)
 
 To compile you need Visual Studio 2015. [Free Community edition](https://www.visualstudio.com/products/visual-studio-community-vs)
-will work.
+works.
 
 Open `vs2015/SumatraPDF.sln`.
 
