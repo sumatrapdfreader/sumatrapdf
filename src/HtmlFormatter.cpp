@@ -848,12 +848,11 @@ void HtmlFormatter::HandleTagP(HtmlToken *t, bool isDiv)
 
         SetAlignment(align);
         EmitParagraph(indent);
-        EmitEmptyLine(0.4 * CurrFont()->GetSize());
     } else {
         FlushCurrLine(true);
         RevertStyleChange();
-        EmitEmptyLine(0.4 * CurrFont()->GetSize());
     }
+    EmitEmptyLine(0.4f * CurrFont()->GetSize());
 }
 
 void HtmlFormatter::HandleTagFont(HtmlToken *t)
@@ -935,7 +934,7 @@ void HtmlFormatter::HandleTagHx(HtmlToken *t)
         float fontSize = defaultFontSize * pow(1.1f, '5' - t->s[1]);
         if (currY > 0)
             currY += fontSize / 2;
-        SetFont(L"Arial", FontStyleBold, fontSize);
+        SetFontBasedOn(CurrFont(), FontStyleBold, fontSize);
 
         StyleRule rule = ComputeStyleRule(t);
         if (Align_NotFound == rule.textAlign)
@@ -958,7 +957,7 @@ void HtmlFormatter::HandleTagPre(HtmlToken *t)
 {
     FlushCurrLine(true);
     if (t->IsStartTag()) {
-        SetFont(L"Lucida Console", (FontStyle)CurrFont()->GetStyle());
+        SetFont(L"Courier New", (FontStyle)CurrFont()->GetStyle());
         CurrStyle()->align = Align_Left;
         preFormatted = true;
     }
@@ -1196,7 +1195,7 @@ void HtmlFormatter::HandleHtmlTag(HtmlToken *t)
             RevertStyleChange();
     } else if (Tag_Code == tag || Tag_Tt == tag) {
         if (t->IsStartTag())
-            SetFont(L"Lucida Console", (FontStyle)CurrFont()->GetStyle());
+            SetFont(L"Courier New", (FontStyle)CurrFont()->GetStyle());
         else if (t->IsEndTag())
             RevertStyleChange();
     } else if (Tag_Pre == tag) {
