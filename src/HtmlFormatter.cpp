@@ -852,6 +852,7 @@ void HtmlFormatter::HandleTagP(HtmlToken *t, bool isDiv)
         FlushCurrLine(true);
         RevertStyleChange();
     }
+    EmitEmptyLine(0.4f * CurrFont()->GetSize());
 }
 
 void HtmlFormatter::HandleTagFont(HtmlToken *t)
