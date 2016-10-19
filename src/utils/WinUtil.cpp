@@ -12,6 +12,14 @@
 
 static HFONT gDefaultGuiFont = nullptr;
 
+void Edit_SelectAll(HWND hwnd) {
+    Edit_SetSel(hwnd, 0, -1);
+}
+
+void ListBox_AppendString_NoSort(HWND hwnd, WCHAR *txt) {
+    ListBox_InsertString(hwnd, -1, txt);
+}
+
 void InitAllCommonControls() {
     INITCOMMONCONTROLSEX cex = { 0 };
     cex.dwSize = sizeof(INITCOMMONCONTROLSEX);
@@ -27,6 +35,42 @@ void FillWndClassEx(WNDCLASSEX &wcex, const WCHAR *clsName, WNDPROC wndproc) {
     wcex.hCursor = GetCursor(IDC_ARROW);
     wcex.lpszClassName = clsName;
     wcex.lpfnWndProc = wndproc;
+}
+
+void MoveWindow(HWND hwnd, RectI rect) {
+    MoveWindow(hwnd, rect.x, rect.y, rect.dx, rect.dy, TRUE);
+}
+
+void MoveWindow(HWND hwnd, RECT *r) {
+    MoveWindow(hwnd, r->left, r->top, RectDx(*r), RectDy(*r), TRUE);
+}
+
+void GetOsVersion(OSVERSIONINFOEX& ver)
+{
+    ZeroMemory(&ver, sizeof(ver));
+    ver.dwOSVersionInfoSize = sizeof(ver);
+#pragma warning(push)
+#pragma warning(disable: 4996) // 'GetVersionEx': was declared deprecated
+#pragma warning(disable: 28159) // Consider using 'IsWindows*' instead of 'GetVersionExW'
+    // see: https://msdn.microsoft.com/en-us/library/windows/desktop/dn424972(v=vs.85).aspx
+    // starting with Windows 8.1, GetVersionEx will report a wrong version number
+    // unless the OS's GUID has been explicitly added to the compatibility manifest
+    BOOL ok = GetVersionEx((OSVERSIONINFO*)&ver);
+#pragma warning(pop)
+    CrashIf(!ok);
+}
+
+// For more versions see OsNameFromVer() in CrashHandler.cpp
+bool IsWin10() {
+    OSVERSIONINFOEX ver;
+    GetOsVersion(ver);
+    return ver.dwMajorVersion == 10;
+}
+
+bool IsWin7() {
+    OSVERSIONINFOEX ver;
+    GetOsVersion(ver);
+    return ver.dwMajorVersion == 6 && ver.dwMinorVersion == 1;
 }
 
 /* Vista is major: 6, minor: 0 */
@@ -671,6 +715,32 @@ void DoubleBuffer::Flush(HDC hdc) {
         BitBlt(hdc, rect.x, rect.y, rect.dx, rect.dy, hdcBuffer, 0, 0, SRCCOPY);
 }
 
+DeferWinPosHelper::DeferWinPosHelper() { hdwp = ::BeginDeferWindowPos(32); }
+
+DeferWinPosHelper::~DeferWinPosHelper() { End(); }
+
+void DeferWinPosHelper::End() {
+    if (hdwp) {
+        ::EndDeferWindowPos(hdwp);
+        hdwp = nullptr;
+    }
+}
+
+void DeferWinPosHelper::SetWindowPos(HWND hWnd, HWND hWndInsertAfter, int x, int y, int cx, int cy, UINT uFlags) {
+    hdwp = ::DeferWindowPos(hdwp, hWnd, hWndInsertAfter, x, y, cx, cy, uFlags);
+}
+
+void DeferWinPosHelper::MoveWindow(HWND hWnd, int x, int y, int cx, int cy, BOOL bRepaint) {
+    UINT uFlags = SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOZORDER;
+    if (!bRepaint)
+        uFlags |= SWP_NOREDRAW;
+    this->SetWindowPos(hWnd, 0, x, y, cx, cy, uFlags);
+}
+
+void DeferWinPosHelper::MoveWindow(HWND hWnd, RectI r) { 
+    this->MoveWindow(hWnd, r.x, r.y, r.dx, r.dy);
+}
+
 namespace win {
 namespace menu {
 
@@ -1263,6 +1333,16 @@ void ResizeWindow(HWND hwnd, int dx, int dy) {
     SetWindowPos(hwnd, nullptr, 0, 0, dx, dy, SWP_NOMOVE | SWP_NOZORDER);
 }
 
+void ScheduleRepaint(HWND hwnd) {
+    InvalidateRect(hwnd, nullptr, FALSE);
+}
+
+// do WM_PAINT immediately
+void RepaintNow(HWND hwnd) {
+    InvalidateRect(hwnd, nullptr, FALSE);
+    UpdateWindow(hwnd);
+}
+
 void VariantInitBstr(VARIANT &urlVar, const WCHAR *s) {
     VariantInit(&urlVar);
     urlVar.vt = VT_BSTR;
@@ -1415,3 +1495,4 @@ __declspec(noinline) int GetMeasurementSystem() {
     }
     return 1;
 }
+

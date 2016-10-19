@@ -15,7 +15,6 @@ import cPickle
 import traceback
 import s3
 import util
-import util2
 import efiparse
 import build
 from util import file_remove_try_hard, run_cmd_throw, pretty_print_secs
@@ -94,7 +93,7 @@ def get_logs_cache_dir():
     return g_logs_cache_dir
 
 
-@util2.memoize
+@util.memoize
 def cert_path():
     scripts_dir = os.path.realpath(os.path.dirname(__file__))
     cert_path = os.path.join(scripts_dir, "cert.pfx")

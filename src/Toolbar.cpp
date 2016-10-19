@@ -216,16 +216,17 @@ void UpdateFindbox(WindowInfo* win)
     }
 }
 
-static HBITMAP LoadExternalBitmap(HINSTANCE hInst, WCHAR * fileName, INT resourceId)
+static HBITMAP LoadExternalBitmap(HINSTANCE hInst, WCHAR * fileName, INT resourceId, bool useDibSection)
 {
     ScopedMem<WCHAR> path(AppGenDataFilename(fileName));
 
+    UINT flags = useDibSection ? LR_CREATEDIBSECTION : 0;
     if (path) {
-        HBITMAP hBmp = (HBITMAP)LoadImage(nullptr, path, IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION | LR_LOADFROMFILE);
+        HBITMAP hBmp = (HBITMAP)LoadImage(nullptr, path, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | flags);
         if (hBmp)
             return hBmp;
     }
-    return (HBITMAP)LoadImage(hInst, MAKEINTRESOURCE(resourceId), IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION );
+    return (HBITMAP)LoadImage(hInst, MAKEINTRESOURCE(resourceId), IMAGE_BITMAP, 0, 0, flags);
 }
 
 static WNDPROC DefWndProcToolbar = nullptr;
@@ -567,6 +568,33 @@ static void CreatePageBox(WindowInfo& win)
 #define WS_REBAR (WS_CHILD | WS_CLIPCHILDREN | WS_BORDER | RBS_VARHEIGHT | \
                   RBS_BANDBORDERS | CCS_NODIVIDER | CCS_NOPARENTALIGN)
 
+
+// Sometimes scaled icons show up with purple background. Here's what I was able to piece together.
+// When icons not scaled, we don't ask for DIB section (the original behavior of the code)
+// Win 7 : purple if DIB section (tested by me)
+// Win 10 :
+//  build 14383 : purple if no DIB section (tested by me)
+//  build 10586 : purple if DIB section (reported in https://github.com/sumatrapdfreader/sumatrapdf/issues/569#issuecomment-231508990)
+// Other builds not tested, will default to no DIB section. Might need to update it if more reports come in.
+static bool UseDibSection(bool needsScaling) {
+    if (!needsScaling) {
+        return false;
+    }
+    OSVERSIONINFOEX ver;
+    GetOsVersion(ver);
+    // everything other than win 10: no DIB section
+    if (ver.dwMajorVersion != 10) {
+        return false;
+    }
+    // win 10 seems to behave differently depending on the build
+    // I assume that up to 10586 we don't want dib
+    if (ver.dwBuildNumber <= 10586) {
+        return false;
+    }
+    // builds > 10586, including 14383
+    return true;
+}
+
 void CreateToolbar(WindowInfo *win)
 {
     HWND hwndToolbar = CreateWindowEx(0, TOOLBARCLASSNAME, nullptr, WS_TOOLBAR,
@@ -578,22 +606,33 @@ void CreateToolbar(WindowInfo *win)
     ShowWindow(hwndToolbar, SW_SHOW);
     TBBUTTON tbButtons[TOOLBAR_BUTTONS_COUNT];
 
-    // the name of the bitmap contains the number of icons so that after adding/removing
-    // icons a complete default toolbar is used rather than an incomplete customized one
-    HBITMAP hbmp = LoadExternalBitmap(GetModuleHandle(nullptr), L"toolbar_11.bmp", IDB_TOOLBAR);
-    SizeI size = GetBitmapSize(hbmp);
     // stretch the toolbar bitmaps for higher DPI settings
     // TODO: get nicely interpolated versions of the toolbar icons for higher resolutions
-    int minIconSize = DpiScaleX(win->hwndFrame, TOOLBAR_MIN_ICON_SIZE);
-    if (size.dy < minIconSize) {
-        Dpi *dpi = DpiGet(win->hwndFrame);
-        // scale toolbar images only by integral sizes (2, 3 etc.)
-        int scaleX = (int)ceilf((float)dpi->dpiX / 96.f);
-        int scaleY = (int)ceilf((float)dpi->dpiY / 96.f);
+
+    Dpi *dpi = DpiGet(win->hwndFrame);
+    // scale toolbar images only by integral sizes (2, 3 etc.)
+    int scaleX = (int)ceilf((float)dpi->dpiX / 96.f);
+    int scaleY = (int)ceilf((float)dpi->dpiY / 96.f);
+    bool needsScaling = (scaleX > 1) || (scaleY > 1);
+
+    bool useDibSection = UseDibSection(needsScaling);
+
+    // the name of the bitmap contains the number of icons so that after adding/removing
+    // icons a complete default toolbar is used rather than an incomplete customized one
+    HBITMAP hbmp = LoadExternalBitmap(GetModuleHandle(nullptr), L"toolbar_11.bmp", IDB_TOOLBAR, useDibSection);
+    SizeI size = GetBitmapSize(hbmp);
+
+    if (needsScaling) {
         size.dx *= scaleX;
         size.dy *= scaleY;
-        hbmp = (HBITMAP)CopyImage(hbmp, IMAGE_BITMAP, size.dx, size.dy, LR_CREATEDIBSECTION | LR_COPYDELETEORG);
+
+        UINT flags = LR_COPYDELETEORG;
+        if (useDibSection) {
+            flags |= LR_CREATEDIBSECTION;
+        }
+        hbmp = (HBITMAP)CopyImage(hbmp, IMAGE_BITMAP, size.dx, size.dy, flags);
     }
+
     // assume square icons
     HIMAGELIST himl = ImageList_Create(size.dy, size.dy, ILC_COLORDDB | ILC_MASK, 0, 0);
     ImageList_AddMasked(himl, hbmp, RGB(0xFF, 0, 0xFF));

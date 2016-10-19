@@ -52,7 +52,6 @@ import types
 import subprocess
 import s3
 import util
-import util2
 from util import test_for_flag, run_cmd_throw, run_cmd
 from util import verify_started_in_right_directory, log
 from util import extract_sumatra_version, zip_file, get_git_linear_version
@@ -68,7 +67,7 @@ def usage():
     sys.exit(1)
 
 
-@util2.memoize
+@util.memoize
 def get_top_dir():
     scripts_dir = os.path.realpath(os.path.dirname(__file__))
     return os.path.realpath(os.path.join(scripts_dir, ".."))

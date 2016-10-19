@@ -130,6 +130,7 @@ Facing
 Failed to copy uninstaller to temp directory
 Failed to create a shortcut
 Failed to delete uninstaller registry keys
+Failed to register as default program on win 10
 Failed to rename the file!
 Failed to save a file
 Failed to write the extended file extension information to the registry

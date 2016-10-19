@@ -21,8 +21,8 @@
 #include "DebugLog.h"
 
 #if !defined(CRASH_SUBMIT_SERVER) || !defined(CRASH_SUBMIT_URL)
-#define CRASH_SUBMIT_SERVER L"blog.kowalczyk.info"
-#define CRASH_SUBMIT_URL    L"/app/crashsubmit?appname=SumatraPDF"
+#define CRASH_SUBMIT_SERVER L"kjktools.org"
+#define CRASH_SUBMIT_URL    L"/crashreports/submit?app=SumatraPDF&ver=" CURR_VERSION_STR
 #endif
 
 // The following functions allow crash handler to be used by both installer
@@ -359,6 +359,10 @@ static const char *OsNameFromVer(OSVERSIONINFOEX ver)
         return "XP";
     if (ver.dwMajorVersion == 5 && ver.dwMinorVersion == 0)
         return "2000";
+    if (ver.dwMajorVersion == 10) {
+        // ver.dwMinorVersion seems to always be 0
+        return "10";
+    }
 
     // either a newer or an older NT version, neither of which we support
     static char osVerStr[32];
@@ -374,6 +378,7 @@ static void GetOsVersion(str::Str<char>& s)
 #pragma warning(push)
 #pragma warning(disable: 4996) // 'GetVersionEx': was declared deprecated
 #pragma warning(disable: 28159) // Consider using 'IsWindows*' instead of 'GetVersionExW'
+    // see: https://msdn.microsoft.com/en-us/library/windows/desktop/dn424972(v=vs.85).aspx
     // starting with Windows 8.1, GetVersionEx will report a wrong version number
     // unless the OS's GUID has been explicitly added to the compatibility manifest
     BOOL ok = GetVersionEx((OSVERSIONINFO*)&ver);

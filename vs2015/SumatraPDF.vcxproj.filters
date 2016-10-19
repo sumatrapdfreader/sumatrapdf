@@ -9,14 +9,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\docs\releasenotes.txt">
-      <Filter>docs</Filter>
-    </None>
-    <None Include="..\docs\releaseplan.txt">
-      <Filter>docs</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="..\src\SumatraPDF.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -26,6 +18,14 @@
     <ClCompile Include="..\src\Tests.cpp">
       <Filter>src</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\docs\releasenotes.txt">
+      <Filter>docs</Filter>
+    </None>
+    <None Include="..\docs\releaseplan.txt">
+      <Filter>docs</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\SumatraPDF.rc">

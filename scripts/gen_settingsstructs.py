@@ -6,7 +6,7 @@ a variety of preference values from user provided settings files.
 See further below for the definition of all currently supported options.
 """
 
-import util2
+import util
 
 class Type(object):
 	def __init__(self, name, ctype):
@@ -368,7 +368,7 @@ SessionData = [
 ]
 
 GlobalPrefs = [
-	Comment("For documentation, see http://www.sumatrapdfreader.org/settings%s.html" % util2.get_sumatrapdf_version()),
+	Comment("For documentation, see http://www.sumatrapdfreader.org/settings%s.html" % util.get_sumatrapdf_version()),
 	EmptyLine(),
 
 	Field("MainWindowBackground", Color, RGB(0xFF, 0xF2, 0x00, a=0x80),

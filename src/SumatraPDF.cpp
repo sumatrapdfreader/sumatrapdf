@@ -4337,9 +4337,16 @@ void ShowCrashHandlerMessage()
     // able to do anything about it anyway and it's up to the application provider
     // to fix the unexpected behavior (of which for a restricted set of documents
     // there should be much less, anyway)
-    if (HasPermission(Perm_DiskAccess)) {
-        int res = MessageBox(nullptr, _TR("Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash."), _TR("SumatraPDF crashed"), MB_ICONERROR | MB_OKCANCEL | MbRtlReadingMaybe());
-        if (IDCANCEL == res)
-            LaunchBrowser(CRASH_REPORT_URL);
+    if (!HasPermission(Perm_DiskAccess)) {
+        return;
     }
+
+#if 0
+    int res = MessageBox(nullptr, _TR("Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash."), _TR("SumatraPDF crashed"), MB_ICONERROR | MB_OKCANCEL | MbRtlReadingMaybe());
+    if (IDCANCEL == res)
+        LaunchBrowser(CRASH_REPORT_URL);
+#endif
+
+    // TODO: maybe launch notepad with crash report?
+    MessageBoxA(nullptr, "We're sorry, SumatraPDF crashed.", "SumatraPDF crashed", MB_ICONERROR | MB_OK | MbRtlReadingMaybe());
 }

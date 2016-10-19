@@ -202,24 +202,69 @@ static bool WriteUninstallerRegistryInfo(HKEY hkey)
     ScopedMem<WCHAR> installDir(path::GetDir(installedExePath));
     ScopedMem<WCHAR> uninstallCmdLine(str::Format(L"\"%s\"", ScopedMem<WCHAR>(GetUninstallerPath())));
 
-    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_ICON, installedExePath);
-    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_NAME, APP_NAME_STR);
-    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, DISPLAY_VERSION, CURR_VERSION_STR);
+    // path to installed executable (or "$path,0" to force the first icon)
+    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, L"DisplayIcon", installedExePath);
+    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, L"DisplayName", APP_NAME_STR);
+    // version format: "1.2"
+    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, L"DisplayVersion", CURR_VERSION_STR);
     // Windows XP doesn't allow to view the version number at a glance,
     // so include it in the DisplayName
     if (!IsVistaOrGreater())
-        ok &= WriteRegStr(hkey, REG_PATH_UNINST, DISPLAY_NAME, APP_NAME_STR L" " CURR_VERSION_STR);
+        ok &= WriteRegStr(hkey, REG_PATH_UNINST, L"DisplayName", APP_NAME_STR L" " CURR_VERSION_STR);
     DWORD size = GetDirSize(gGlobalData.installDir) / 1024;
-    ok &= WriteRegDWORD(hkey, REG_PATH_UNINST, ESTIMATED_SIZE, size);
-    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, INSTALL_DATE, installDate);
-    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, INSTALL_LOCATION, installDir);
-    ok &= WriteRegDWORD(hkey, REG_PATH_UNINST, NO_MODIFY, 1);
-    ok &= WriteRegDWORD(hkey, REG_PATH_UNINST, NO_REPAIR, 1);
-    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, PUBLISHER, TEXT(PUBLISHER_STR));
-    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, UNINSTALL_STRING, uninstallCmdLine);
-    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, URL_INFO_ABOUT, L"http://www.sumatrapdfreader.org/");
-    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, URL_UPDATE_INFO, L"http://www.sumatrapdfreader.org/news.html");
+    // size of installed directory after copying files
+    ok &= WriteRegDWORD(hkey, REG_PATH_UNINST, L"EstimatedSize", size);
+    // current date as YYYYMMDD
+    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, L"InstallDate", installDate);
+    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, L"InstallLocation", installDir);
+    ok &= WriteRegDWORD(hkey, REG_PATH_UNINST, L"NoModify", 1);
+    ok &= WriteRegDWORD(hkey, REG_PATH_UNINST, L"NoRepair", 1);
+    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, L"Publisher", TEXT(PUBLISHER_STR));
+    // command line for uninstaller
+    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, L"UninstallString", uninstallCmdLine);
+    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, L"URLInfoAbout", L"http://www.sumatrapdfreader.org/");
+    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, L"URLUpdateInfo", L"http://www.sumatrapdfreader.org/news.html");
 
+    return ok;
+}
+
+// https://msdn.microsoft.com/en-us/library/windows/desktop/cc144154(v=vs.85).aspx
+// http://www.tenforums.com/software-apps/23509-how-add-my-own-program-list-default-programs.html#post407794
+static bool ListAsDefaultProgramWin10()
+{
+    HKEY hkey = HKEY_LOCAL_MACHINE;
+    bool ok = true;
+
+    ok &= WriteRegStr(hkey, L"SOFTWARE\\RegisteredApplications", L"SumatraPDF", L"SOFTWARE\\SumatraPDF\\Capabilities");
+    ok &= WriteRegStr(hkey, L"SOFTWARE\\SumatraPDF\\Capabilities", L"ApplicationDescription", L"SumatraPDF is a PDF reader.");
+    ok &= WriteRegStr(hkey, L"SOFTWARE\\SumatraPDF\\Capabilities", L"ApplicationName", L"SumatraPDF Reader");
+
+    for (int i = 0; nullptr != gSupportedExts[i]; i++) {
+        WCHAR *ext = gSupportedExts[i];
+        ok &= WriteRegStr(hkey, L"SOFTWARE\\SumatraPDF\\Capabilities\\FileAssociations", ext, L"SumatraPDF.exe");
+    }
+    return ok;
+}
+
+static bool ListAsDefaultProgramPreWin10(HKEY hkey)
+{
+    // add the installed SumatraPDF.exe to the Open With lists of the supported file extensions
+    // TODO: per http://msdn.microsoft.com/en-us/library/cc144148(v=vs.85).aspx we shouldn't be
+    // using OpenWithList but OpenWithProgIds. Also, it doesn't seem to work on my win7 32bit
+    // (HKLM\Software\Classes\.mobi\OpenWithList\SumatraPDF.exe key is present but "Open With"
+    // menu item doesn't even exist for .mobi files
+    // It's not so easy, though, because if we just set it to SumatraPDF,
+    // all gSupportedExts will be reported as "PDF Document" by Explorer, so this needs
+    // to be more intelligent. We should probably mimic Windows Media Player scheme i.e.
+    // set OpenWithProgIds to SumatraPDF.AssocFile.Mobi etc. and create apropriate
+    // \SOFTWARE\Classes\CLSID\{GUID}\ProgID etc. entries
+    // Also, if Sumatra is the only program handling those docs, our
+    // PDF icon will be shown (we need icons and properly configure them)
+    bool ok = true;
+    for (int i = 0; nullptr != gSupportedExts[i]; i++) {
+        ScopedMem<WCHAR> keyname(str::Join(L"Software\\Classes\\", gSupportedExts[i], L"\\OpenWithList\\" EXENAME));
+        ok &= CreateRegKey(hkey, keyname);
+    }
     return ok;
 }
 
@@ -241,25 +286,10 @@ static bool WriteExtendedFileExtensionInfo(HKEY hkey)
     ok &= WriteRegStr(hkey, REG_CLASSES_APPS L"\\Shell\\Print\\Command", nullptr, printPath);
     ScopedMem<WCHAR> printToPath(str::Format(L"\"%s\" -print-to \"%%2\" \"%%1\"", exePath));
     ok &= WriteRegStr(hkey, REG_CLASSES_APPS L"\\Shell\\PrintTo\\Command", nullptr, printToPath);
+
     // don't add REG_CLASSES_APPS L"\\SupportedTypes", as that prevents SumatraPDF.exe to
     // potentially appear in the Open With lists for other filetypes (such as single images)
-
-    // add the installed SumatraPDF.exe to the Open With lists of the supported file extensions
-    // TODO: per http://msdn.microsoft.com/en-us/library/cc144148(v=vs.85).aspx we shouldn't be
-    // using OpenWithList but OpenWithProgIds. Also, it doesn't seem to work on my win7 32bit
-    // (HKLM\Software\Classes\.mobi\OpenWithList\SumatraPDF.exe key is present but "Open With"
-    // menu item doesn't even exist for .mobi files
-    // It's not so easy, though, because if we just set it to SumatraPDF,
-    // all gSupportedExts will be reported as "PDF Document" by Explorer, so this needs
-    // to be more intelligent. We should probably mimic Windows Media Player scheme i.e.
-    // set OpenWithProgIds to SumatraPDF.AssocFile.Mobi etc. and create apropriate
-    // \SOFTWARE\Classes\CLSID\{GUID}\ProgID etc. entries
-    // Also, if Sumatra is the only program handling those docs, our
-    // PDF icon will be shown (we need icons and properly configure them)
-    for (int i = 0; nullptr != gSupportedExts[i]; i++) {
-        ScopedMem<WCHAR> keyname(str::Join(L"Software\\Classes\\", gSupportedExts[i], L"\\OpenWithList\\" EXENAME));
-        ok &= CreateRegKey(hkey, keyname);
-    }
+    ok &= ListAsDefaultProgramPreWin10(hkey);
 
     // in case these values don't exist yet (we won't delete these at uninstallation)
     ok &= WriteRegStr(hkey, REG_CLASSES_PDF, L"Content Type", L"application/pdf");
@@ -344,6 +374,11 @@ DWORD WINAPI InstallerThread(LPVOID data)
         !WriteExtendedFileExtensionInfo(HKEY_CURRENT_USER)) {
         NotifyFailed(_TR("Failed to write the extended file extension information to the registry"));
     }
+
+    if (!ListAsDefaultProgramWin10()) {
+        NotifyFailed(_TR("Failed to register as default program on win 10"));        
+    }
+
     ProgressStep();
 
 Error:

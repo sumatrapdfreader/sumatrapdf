@@ -2,7 +2,7 @@
 
 import os
 import re
-import util2
+import util
 import codecs
 import trans_langs
 import bz2
@@ -65,7 +65,7 @@ def extract_strings_from_c_files(with_paths=False):
                         for s in file_strings]
         else:
             strings += file_strings
-    return util2.uniquify(strings)
+    return util.uniquify(strings)
 
 # use octal escapes because hexadecimal ones can consist of
 # up to four characters, e.g. \xABc isn't the same as \253c

@@ -41,37 +41,6 @@ extern int gButtonDy;
 #else
 #define REG_PATH_PLUGIN     L"Software\\MozillaPlugins\\@mozilla.zeniko.ch/SumatraPDF_Browser_Plugin_x64"
 #endif
-#define PLUGIN_PATH         L"Path"
-
-// Keys we'll set in REG_PATH_UNINST path
-
-// REG_SZ, a path to installed executable (or "$path,0" to force the first icon)
-#define DISPLAY_ICON L"DisplayIcon"
-// REG_SZ, e.g "SumatraPDF" (APP_NAME_STR)
-#define DISPLAY_NAME L"DisplayName"
-// REG_SZ, e.g. "1.2" (CURR_VERSION_STR)
-#define DISPLAY_VERSION L"DisplayVersion"
-// REG_DWORD, get size of installed directory after copying files
-#define ESTIMATED_SIZE L"EstimatedSize"
-// REG_SZ, the current date as YYYYMMDD
-#define INSTALL_DATE L"InstallDate"
-// REG_DWORD, set to 1
-#define NO_MODIFY L"NoModify"
-// REG_DWORD, set to 1
-#define NO_REPAIR L"NoRepair"
-// REG_SZ, e.g. "Krzysztof Kowalczyk" (PUBLISHER_STR)
-#define PUBLISHER L"Publisher"
-// REG_SZ, command line for uninstaller
-#define UNINSTALL_STRING L"UninstallString"
-// REG_SZ, e.g. "http://www.sumatrapdfreader.org/"
-#define URL_INFO_ABOUT L"URLInfoAbout"
-// REG_SZ, e.g. "http://www.sumatrapdfreader.org/news.html"
-#define URL_UPDATE_INFO L"URLUpdateInfo"
-// REG_SZ, same as INSTALL_DIR below
-#define INSTALL_LOCATION L"InstallLocation"
-
-// Legacy key, only removed at uninstallation
-#define REG_PATH_SOFTWARE   L"Software\\" APP_NAME_STR
 
 #define ID_BUTTON_EXIT                11
 

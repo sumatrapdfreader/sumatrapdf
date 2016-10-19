@@ -7,7 +7,6 @@ import cPickle
 import traceback
 import s3
 import util
-import util2
 import build
 import subprocess
 from util import file_remove_try_hard, pretty_print_secs
@@ -18,7 +17,7 @@ import runtests
 
 TIME_BETWEEN_PRE_RELEASE_BUILDS_IN_SECS = 60 * 60 * 8  # 8hrs
 
-@util2.memoize
+@util.memoize
 def cert_path():
     scripts_dir = os.path.realpath(os.path.dirname(__file__))
     cert_path = os.path.join(scripts_dir, "cert.pfx")
