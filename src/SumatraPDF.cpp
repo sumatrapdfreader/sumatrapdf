@@ -2929,10 +2929,10 @@ static void OnMenuAdvancedOptions()
     if (!HasPermission(Perm_DiskAccess) || !HasPermission(Perm_SavePreferences))
         return;
 
-    ScopedMem<WCHAR> path(prefs::GetSettingsPath());
+    std::unique_ptr<WCHAR> path(prefs::GetSettingsPath());
     // TODO: disable/hide the menu item when there's no prefs file
     //       (happens e.g. when run in portable mode from a CD)?
-    LaunchFile(path, nullptr, L"open");
+    LaunchFile(path.get(), nullptr, L"open");
 }
 
 static void OnMenuOptions(HWND hwnd)

@@ -58,16 +58,16 @@ bool Load()
 {
     CrashIf(gGlobalPrefs);
 
-    ScopedMem<WCHAR> path(GetSettingsPath());
-    ScopedMem<char> prefsData(file::ReadAll(path, nullptr));
-    gGlobalPrefs = NewGlobalPrefs(prefsData);
+    std::unique_ptr<WCHAR> path(GetSettingsPath());
+    std::unique_ptr<char> prefsData(file::ReadAll(path.get(), nullptr));
+    gGlobalPrefs = NewGlobalPrefs(prefsData.get());
     CrashAlwaysIf(!gGlobalPrefs);
 
     // in pre-release builds between 3.1.10079 and 3.1.10377,
     // RestoreSession was a string with the additional option "auto"
     // TODO: remove this after 3.2 has been released
 #if defined(DEBUG) || defined(SVN_PRE_RELEASE_VER)
-    if (!gGlobalPrefs->restoreSession && prefsData && str::Find(prefsData, "\nRestoreSession = auto"))
+    if (!gGlobalPrefs->restoreSession && prefsData && str::Find(prefsData.get(), "\nRestoreSession = auto"))
         gGlobalPrefs->restoreSession = true;
 #endif
 
@@ -84,7 +84,7 @@ bool Load()
         // guess the ui language on first start
         str::ReplacePtr(&gGlobalPrefs->uiLanguage, trans::DetectUserLang());
     }
-    gGlobalPrefs->lastPrefUpdate = file::GetModificationTime(path);
+    gGlobalPrefs->lastPrefUpdate = file::GetModificationTime(path.get());
     gGlobalPrefs->defaultDisplayModeEnum = conv::ToDisplayMode(gGlobalPrefs->defaultDisplayMode, DM_AUTOMATIC);
     gGlobalPrefs->defaultZoomFloat = conv::ToZoom(gGlobalPrefs->defaultZoom, ZOOM_ACTUAL_SIZE);
     CrashIf(!IsValidZoom(gGlobalPrefs->defaultZoomFloat));
@@ -113,7 +113,7 @@ bool Load()
     gFileHistory.UpdateStatesSource(gGlobalPrefs->fileStates);
     SetDefaultEbookFont(gGlobalPrefs->ebookUI.fontName, gGlobalPrefs->ebookUI.fontSize);
 
-    if (!file::Exists(path))
+    if (!file::Exists(path.get()))
         Save();
     return true;
 }
@@ -140,28 +140,29 @@ bool Save()
     str::ReplacePtr(&gGlobalPrefs->defaultDisplayMode, conv::FromDisplayMode(gGlobalPrefs->defaultDisplayModeEnum));
     conv::FromZoom(&gGlobalPrefs->defaultZoom, gGlobalPrefs->defaultZoomFloat);
 
-    ScopedMem<WCHAR> path(GetSettingsPath());
+    std::unique_ptr<WCHAR> path(GetSettingsPath());
     CrashIfDebugOnly(!path);
     if (!path)
         return false;
     size_t prevPrefsDataSize = 0;
-    ScopedMem<char> prevPrefsData(file::ReadAll(path, &prevPrefsDataSize));
+    std::unique_ptr<char> prevPrefsData(file::ReadAll(path.get(), &prevPrefsDataSize));
     size_t prefsDataSize = 0;
-    ScopedMem<char> prefsData(SerializeGlobalPrefs(gGlobalPrefs, prevPrefsData, &prefsDataSize));
+    std::unique_ptr<char> prefsData(SerializeGlobalPrefs(gGlobalPrefs, prevPrefsData.get(), &prefsDataSize));
 
     CrashIf(!prefsData || 0 == prefsDataSize);
     if (!prefsData || 0 == prefsDataSize)
         return false;
 
     // only save if anything's changed at all
-    if (prevPrefsDataSize == prefsDataSize && str::Eq(prefsData, prevPrefsData))
+    if (prevPrefsDataSize == prefsDataSize &&
+        str::Eq(prefsData.get(), prevPrefsData.get())) {
         return true;
+    }
 
-    FileTransaction trans;
-    bool ok = trans.WriteAll(path, prefsData, prefsDataSize) && trans.Commit();
+    bool ok = file::WriteAll(path.get(), prefsData.get(), prefsDataSize);
     if (!ok)
         return false;
-    gGlobalPrefs->lastPrefUpdate = file::GetModificationTime(path);
+    gGlobalPrefs->lastPrefUpdate = file::GetModificationTime(path.get());
     return true;
 }
 
@@ -169,17 +170,17 @@ bool Save()
 // or if they are edited by the user using a text editor
 bool Reload()
 {
-    ScopedMem<WCHAR> path(GetSettingsPath());
-    if (!file::Exists(path))
+    std::unique_ptr<WCHAR> path(GetSettingsPath());
+    if (!file::Exists(path.get()))
         return false;
 
     // make sure that the settings file is readable - else wait
     // a short while to prevent accidental dataloss
     int tryAgainCount = 5;
-    HANDLE h = file::OpenReadOnly(path);
+    HANDLE h = file::OpenReadOnly(path.get());
     while (INVALID_HANDLE_VALUE == h && tryAgainCount-- > 0) {
         Sleep(200);
-        h = file::OpenReadOnly(path);
+        h = file::OpenReadOnly(path.get());
     }
     if (INVALID_HANDLE_VALUE == h) {
         // prefer not reloading to resetting all settings
@@ -188,11 +189,11 @@ bool Reload()
 
     ScopedHandle hScope(h);
 
-    FILETIME time = file::GetModificationTime(path);
+    FILETIME time = file::GetModificationTime(path.get());
     if (FileTimeEq(time, gGlobalPrefs->lastPrefUpdate))
         return true;
 
-    ScopedMem<char> uiLanguage(str::Dup(gGlobalPrefs->uiLanguage));
+    std::unique_ptr<char> uiLanguage(str::Dup(gGlobalPrefs->uiLanguage));
     bool showToolbar = gGlobalPrefs->showToolbar;
     bool invertColors = gGlobalPrefs->fixedPageUI.invertColors;
 
@@ -211,7 +212,7 @@ bool Reload()
         gWindows.At(0)->RedrawAll(true);
     }
 
-    if (!str::Eq(uiLanguage, gGlobalPrefs->uiLanguage))
+    if (!str::Eq(uiLanguage.get(), gGlobalPrefs->uiLanguage))
         SetCurrentLanguageAndRefreshUI(gGlobalPrefs->uiLanguage);
 
     for (WindowInfo *win : gWindows) {
@@ -278,8 +279,8 @@ void RegisterForFileChanges()
         return;
 
     CrashIf(gWatchedSettingsFile); // only call me once
-    ScopedMem<WCHAR> path(GetSettingsPath());
-    gWatchedSettingsFile = FileWatcherSubscribe(path, schedulePrefsReload);
+    std::unique_ptr<WCHAR> path(GetSettingsPath());
+    gWatchedSettingsFile = FileWatcherSubscribe(path.get(), schedulePrefsReload);
 }
 
 void UnregisterForFileChanges()
