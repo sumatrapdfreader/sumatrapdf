@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-3443f2b34d17a7d4f4de85892bc3ace63390424a
+d09fed6c5c207105b13280fe59cd74e2ec980ae8
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -172,6 +172,7 @@ ja:詳細設定(&A)
 jv:&Pilihan Terusan...
 kr:고급 옵션(&A)...
 ku:هەڵبژاردنی پەرەسەندوو ...&
+kw:Settyansow &avonsys...
 lv:&Papildu opcijas...
 mk:&Напредни oпции...
 my:&Tetapan terperinci...
@@ -230,6 +231,7 @@ jv:&Kabeh kaca sing kapilih
 ka:&ყველა მონიშნული გვერდი
 kr:선택한 모든 페이지(&A)
 ku:هەموو پەڕە دیاریکراوەکان&
+kw:Pub folen dewisys
 lt:&Visi pažymėti puslapiai
 lv:&Visas atlasītās lappuses
 mk:&Сите означени страници
@@ -1546,6 +1548,7 @@ uk:Наступна сторінка\t->
 uz:&Keyingi bet\t->
 vn:Trang sau\tMũi tên phải
 :&No
+af:&Nee
 am:&Ոչ
 ar:لا&
 az:&Xeyr
@@ -1609,6 +1612,7 @@ uk:Ні
 uz:&Yo'q
 vn:Không
 :&No, thanks
+af:&Nee dankie
 am:&Ոչ
 ar:لا ، شكر&
 az:&Xeyr, təşəkkür!
@@ -1861,6 +1865,7 @@ vn:Mở tập tin...\tCtrl+O
 am:&Ընտրանքներ
 ar:&الخيارات
 az:&Seçimlər
+bg:&Настройки
 br:&Opções
 bs:&Opcije
 ca-xv:&Opcions
@@ -3031,6 +3036,7 @@ vn:Hiển thị
 am:&Պատուհան
 ar:النافذة&
 az:&Pəncərə
+bg:&Прозорец
 br:&Janela
 bs:&Prozor
 ca-xv:&Finestra
@@ -3070,12 +3076,14 @@ sl:&Okno
 sp-rs:P&rozor
 sr-rs:П&розор
 sv:Fönster
+ta:விண்டாஸ் 
 tr:&Pencere
 tw:視窗(&W)
 uk:&Вікно
 uz:&Oyna
 vn:&Cửa sổ
 :&Yes
+af:&Ja
 am:&Այո
 ar:&نعم
 az:&Bəli
@@ -3406,7 +3414,7 @@ bs:Dodaj favorit
 by:Дадаць у Выбранае
 ca-xv:Afegix un preferit
 ca:Afegeix un preferit
-cn:添加收藏夹(&A)
+cn:添加到收藏夹(&A)
 cy:Ychwanegu Ffefryn
 cz:Přidat oblíbenou položku
 de:Favoriten hinzufügen
@@ -3431,6 +3439,7 @@ jv:Nambah Favorit
 ka:რჩეულებში დამატება
 kr:즐겨찾기 추가.
 ku:زیادکردنی بۆ لیستی پەسەندەکان
+kw:Keworra gwella
 lt:Sukurti žymą
 lv:Pievienošana izlasei
 mk:Додај омилен
@@ -3672,7 +3681,7 @@ gl:Avanzado
 he:מתקדם
 hi:उन्नत
 hr:Napredno
-hu:Speciális
+hu:Haladó
 id:Lanjutan
 it:Avanzate
 ja:詳細設定
@@ -3873,6 +3882,7 @@ jv:Aplikasi
 ka:აპლიკაცია:
 kr:프로그램:
 ku:بەرنامە:
+kw:Towlen:
 lt:Programa:
 lv:Programma:
 mk:Апликација:
@@ -4064,6 +4074,7 @@ jv:Lampiran: %s
 ka:დანართი: %s
 kr:첨부: %s
 ku:%s :پاشکۆ
+kw:Stagell: %s
 lt:Priedas: %s
 lv:Pielikums: %s
 mk:Прилог: %s
@@ -4129,6 +4140,7 @@ jv:Penerjemah
 ka:ავტორი:
 kr:저자:
 ku:دانەر:
+kw:Awtour:
 lt:Autorius:
 lv:Autors:
 mk:Автор:
@@ -4539,6 +4551,7 @@ uk:Закладка ярлика на сторінку %s з %s
 uz:Xatcho'p yorlig'i betga %s %s dan
 vn:Lối tắt chỉ dấu sách đến trang %s của %s
 :Bookmarks
+af:Boekmerke\r\n
 am:Էջանիշեր
 ar:قائمة العناوين
 az:Əlfəcinlər
@@ -4637,6 +4650,7 @@ jv:Bytes
 ka:ბაიტი
 kr:바이트
 ku:بایت
+kw:Baytys
 lt:baitų
 lv:baiti
 mk:бајти
@@ -4800,7 +4814,7 @@ ca-xv:Cancel·la
 ca:Cancel·la
 cn:取消(&C)
 cy:Diddymu
-cz:Storno
+cz:Zrušit
 de:Abbrechen
 dk:Annuller
 el:Άκυρο
@@ -5154,6 +5168,7 @@ jv:Tutup
 ka:დახურვა
 kr:닫기
 ku:داخستن
+kw:Degea
 lv:Aizvērt
 mk:Затвори
 ml:അടയ്ക്കുക
@@ -5844,6 +5859,7 @@ ja:コピーライト:
 jv:Derechos de autor
 kr:저작권:
 ku:مافی لەبەرگرتنەوە:
+kw:Gwirpryntyans:
 lv:Autortiesības:
 mk:Авторско право:
 ml:പകര്‍പ്പവകാശം
@@ -6653,6 +6669,7 @@ uk:Не вдалося записати %s на диск
 uz:%s diskka yozib bo'lmadi
 vn:Không thể ghi %s vào đĩa
 :Created:
+af:Geskep
 am:Ստեղծված`
 ar:منشاء
 az:Hazırlanma tarixi:
@@ -6687,6 +6704,7 @@ ja:作成日時:
 ka:შექმნილია:
 kr:만든 날짜:
 ku:دروستکراو:
+kw:Gwrys:
 lt:Sukurtas:
 lv:Izveidots:
 mk:Создадено на:
@@ -6750,6 +6768,7 @@ ja:現在のファイル
 ka:მიმდინარე ფაილი
 kr:현재 파일
 ku:فایلی ئێستا
+kw:Restren a-lemmyn
 lt:Esamasis failas
 lv:Pašreizējais fails
 mk:Активна датотека
@@ -7112,6 +7131,7 @@ ja:拒否された権限:
 ka:თქვენ არ გაქვთ საჭირო უფლებები:
 kr:거부된 사용 권한:
 ku:مۆڵەتپێدانە ڕەتکراوەکان:
+kw:Kumyasow Neghys:
 lt:Nesuteikti leidimai:
 lv:Atteiktas atļaujas:
 mk:Одбиени привилегии:
@@ -7426,6 +7446,7 @@ ja:EPUB ドキュメント
 ka:EPUB დოკუმენტები
 kr:ePub 문서
 ku:EPUB پەرتووکە ئەلکترۆنیەکانی
+kw:E-lyvrow EPUB
 lt:EPUB dokumentai
 lv:EPUB elektroniskās grāmatas
 mk:EPUB-е-книги
@@ -8120,6 +8141,28 @@ tw:刪除解除安裝器註冊項失敗。
 uk:Не вдалося видалити інформацію деінсталятора з реєстру
 uz:O'chirish dasturining reyestr kalitlarini o'chirish muvaffaqiyatsiz tugadi
 vn:Không thể xóa các khóa Registry của bộ gỡ cài đặt
+:Failed to register as default program on win 10
+am:Հնարավոր չեղավ գրանցել որպես լռելյայն ծրագիր Win 10-ում
+az:win 10 da əsas proqram olaraq qeydiyyatdan keçirmək uğursuz oldu
+bg:Грешка при регистрация като програма по подразбиране на Windows 10
+br:Falha ao registrar como programa padrão no Windows 10
+bs:Neuspješno registriranje kao zadani program na win 10
+cn:Win 10 默认程序设置失败
+cz:Nepodařilo se nastavit jako výchozí program na Windows 10
+el:Απέτυχε να γίνει το προκαθορισμένο πρόγραμμα ανάγνωσης στα Win 10
+et:Vaikeprogrammina registreerumine Windows 10 all ebaõnnestus
+eu:Hutsegitea win 10-ean berezko programa bezala erregistratzerakoan
+fr:Échec de l'enregistrement comme programme par défaut sous Windows 10.
+he:רישום SumatraPDF כתוכנת ברירת מחדל לקובצי PDF ב- Windows 10 נכשל.
+hr:Neuspješno registriranje kao zadani program na Windows 10
+hu:Sikertelen regisztráció alapértelmezett programként Windows 10-en
+ja:Windows 10 で既定のプログラムとして登録するのに失敗しました
+lv:Neizdevās reģistrēt kā noklusējuma programmu Windows 10 vidē
+ru:Не удалось зарегистрировать как программу по умолчанию в Windows 10
+sp-rs:Neuspelo postavljanje kao podrazumevani program na win 10
+sr-rs:Неуспело постављање као подразумевани програм на wин 10
+tw:Win 10 默認程式註冊失敗
+uk:Не вдалося зареєструватися як програма по замовчуванню у Windows 10
 :Failed to rename the file!
 am:Հնարավոր չեղավ վերանվանել ֆայլը։
 ar:فشل في إعادة تسمية الملف!
@@ -8610,6 +8653,7 @@ ja:ファイルサイズ:
 ka:ფაილის ზომა:
 kr:파일 크기:
 ku:قەبارەی فایل:
+kw:Braster Restren:
 lt:Failo dydis:
 lv:Faila lielums:
 mk:Големина на датотека:
@@ -8671,6 +8715,7 @@ ja:ファイル:
 ka:ფაილი:
 kr:파일:
 ku:فایل:
+kw:Restren:
 lt:Failas:
 lv:Fails:
 mk:Датотека:
@@ -10008,6 +10053,7 @@ ja:オプションを隠す(&O)
 ka:&ვარიანტების დამალვა
 kr:옵션 숨김(&O)
 ku:هەڵبژاردنەکانی &شاردنەوە
+kw:Kudha Settyans&ow
 lv:Paslēpt &opcijas
 mk:Скриј &опции
 my:Sembunyi &Tetapan
@@ -10347,6 +10393,7 @@ ja:インストールに失敗！
 ka:ინსტალაცია ვერ მოხერხდა!
 kr:설치 실패!
 ku:دابەزاندن سەرکەوتو نەبوو!
+kw:Ynstallyans fyllys!
 lv:Instalēšana neizdevās!
 mk:Инсталирањето не успеа!
 my:Pemasangan gagal!
@@ -10496,6 +10543,7 @@ vn:KB
 am:Թողնել &դիտարկիչի PDF բաղադրիչը (այլևս չի աջակցում)
 ar:(الحفاظ  على المستندات المحمولة متصفح البرنامج المساعد المثبت (لم تعد معتمدة
 az:PDF &brauzer plaginini silmə (artıq dəstəklənmir)
+bg:Запази PDF приставката за &браузъри (не се поддържа)
 br:Mantenha o plugin PDF para instalado (não é mais suportado)
 bs:Ostavi plugin instaliran u &browseru (više nije podržano)
 ca-xv:Mantín instal·lat el connector PDF del &navegador (ja no es manté)
@@ -10544,6 +10592,7 @@ vn:Giữ lại Plugin PDF đã cài đặt cho các trình duyệt (không còn 
 am:Թույլատրել Windows Desktop Search-ին &PDF ֆայլերի որոնումը
 ar:دع البحث في سطح مكتب الوندوز &البحث في وثائق المستندات المحمولة
 az:PDF sənədlərini Windows Desktop Search vasitəsilə a&xtar
+bg:Нека Windows Desktop Search &търси PDF документи
 br:Permitir que o Windows faça a bu&sca em documentos PDF
 bs:Omogući Windows Desktop Search-u da &pretražuje PDF dokumente
 ca-xv:Permet al Windows Desktop Search &cercar als documents PDF
@@ -10596,6 +10645,7 @@ vn:Cho phép Windows &tìm kiếm các tài liệu PDF
 am:Թույլատրել Windows-ին &ցուցադրել PDF ֆայլերի նախադիտումը
 ar:دع الوندوز باظهار &معاينات الوثائق من المستندات المحمولة
 az:PDF sənədlərini Windows alətləri vasitəsilə &görüntülə
+bg:Нека Windows показва &преглед на PDF документи
 br:Permitir que o Windows &pré-visualize documentos PDF
 bs:Omogući Windows-ima da prikažu &pregled PDF dokumenata
 ca-xv:Permet al Windows mostrar &visualitzacions prèvies dels documents
@@ -11004,6 +11054,7 @@ ja:Mobi ドキュメント
 ka:Mobi დოკუმენტები
 kr:Mobi 문서
 ku:Mobi بەڵگەنامەکانی
+kw:Restrennow Mobi
 lt:Mobi dokumentai
 lv:Mobi dokumenti
 mk:Mobi-документи
@@ -11063,6 +11114,7 @@ ja:変更日時:
 ka:შეცვლილია:
 kr:고친 날짜:
 ku:دەستکاریکراو:
+kw:Chanjys:
 lt:Keistas:
 lv:Modificēts:
 mk:Изменето на:
@@ -11762,6 +11814,7 @@ ja:ドキュメントを開く...
 ka:დოკუმენტის გახსნა...
 kr:문서 열기...
 ku:کردنەوەی بەڵگەنامە...
+kw:Ygeri restren...
 lt:Atverti dokumentą...
 lv:Atvērt dokumentu...
 mk:Отвори документ...
@@ -12612,6 +12665,7 @@ ja:ページ %s
 ka:%s გვერდი
 kr:%s 페이지
 ku:پەڕەی %s
+kw:Folen %s
 lt:%s puslapis
 lv:Lappuse %s
 mk:страница %s
@@ -12672,6 +12726,7 @@ ja:ページ サイズ:
 ka:გვერდის ფორმატი:
 kr:페이지 크기:
 ku:قەبارەی پەڕە:
+kw:Braster Folen:
 lt:Puslapio dydis:
 lv:Lappuses lielums:
 mk:Големина на страница:
@@ -13738,6 +13793,7 @@ it:Ri&nomina...\tF2
 ja:名前を変更(&N)...\tF2
 kr:이름 바꾸기(&N)...\tF2
 ku:گۆڕینی &ناو...\tF2
+kw:Dashe&nwel...\tF2
 lv:Pār&dēvēt...\tF2
 mk:Преименувај... \tF2
 my:&Nama semula ...\tF2
@@ -15454,6 +15510,7 @@ af:SumatraPDF %s Installeerder
 am:SumatraPDF %s-ը տեղակայելու ծրագիր
 ar:المثبت%s المحمولة Sumatra مستندات
 az:SumatraPDF quraşdırıcısı %s
+bg:SumatraPDF %s инсталатор
 br:SumatraPDF %s instalador
 bs:SumatraPDF %s instaler
 ca-xv:Instal·lador del SumatraPDF %s
@@ -15506,6 +15563,7 @@ vn:Bộ cài đặt %s SumatraPDF
 am:SumatraPDF %s-ը հեռացնելու ծրագիր
 ar:إلغاء  تثبيت %s المحمولة Sumatra مستندات
 az:SumatraPDF deinstalyatoru %s
+bg:SumatraPDF %s деинсталатор
 br:SumatraPDF %s desinstalador
 bs:SumatraPDF %s deinstaler
 ca-xv:Desintal·lador del SumatraPDF %s
@@ -15789,6 +15847,7 @@ vn:SumatraPDF đã được gỡ bỏ.
 am:SumatraPDF-ը չի գտնվել:
 ar:مستندات Sumatra المحمولة لم يتم العثور على تثبيت
 az:SumatraPDF quraşdırması tapılmadı.
+bg:Не е намерена инсталационен пакет на SumatraPDF
 br:A instalação do SumatraPDF não foi encontrada.
 bs:SumatraPDF instalacija nije pronađena.
 ca-xv:No s'ha trobat cap instal·lació del SumatraPDF.
@@ -16306,6 +16365,7 @@ vn:Trình cài đặt đã bị lỗi. Xin vui lòng tải về lần nữa.\nR�
 am:Փաստաթուղթը օգտագործում է չաջակցվող յուրահատկություններ (%s) և հնարավոր է նորմալ չաշխատի:
 ar:وقد لا تعرض بشكل صحيح (%s) هذا المستند يستخدم ميزات غير معتمدة
 az:Bu sənəd dəstəklənməyən funksiyalardan (%s) istifadə edir və düzgün əks olunmaya bilər
+bg:Този документ използва неподдържана функционалност (%s) и може да не се визуализира коректно
 br:Este documento utiliza recursos não suportados (%s) e pode não ser exibido corretamente.
 bs:Ovaj dokument koristi nepodržane funkcionalnosti (%s) i zbog toga možda neće biti ispravno prikazan
 ca-xv:Aquest document utilitza característiques no suportades (%s) i pot no mostrar-se correctament
@@ -16643,6 +16703,7 @@ vn:Không rõ tập tin nguồn (%s)
 am:Ավելացնել &ներդիրներ
 ar:الإستعمال & التبويبات
 az:&Tab-vərəqələrdən istifadə et
+bg:&Използвай табулатор
 br:Usar &abas
 bs:Koristi &tabove
 ca-xv:Utilitza &pestanyes
@@ -17004,7 +17065,7 @@ uz:XPS hujjatlari
 vn:Tập tin XPS
 :You have the latest version.
 af:Jy Het Die Nuutste Uitgawe.
-am:Սա նորագույն տարբերակն է։
+am:Սա վերջին տարբերակն է։
 ar:لديك آخر نسخة
 az:Ən son versiyanı istifadə edirsiniz.
 bg:Имате последната версия.
