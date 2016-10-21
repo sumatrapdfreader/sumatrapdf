@@ -76,7 +76,7 @@ struct WatchedFile {
     WatchedFile *           next;
     WatchedDir *            watchedDir;
     const WCHAR *           filePath;
-    FileChangeObserver *    observer;
+    std::function<void()>   onFileChangedCb;
 
     // if true, the file is on a network drive and we have
     // to check if it changed manually, by periodically checking
@@ -162,7 +162,7 @@ static void NotifyAboutFile(WatchedDir *d, const WCHAR *fileName)
         // because the time granularity is so big that this can cause genuine
         // file notifications to be ignored. (This happens for instance for
         // PDF files produced by pdftex from small.tex document)
-        wf->observer->OnFileChanged();
+        wf->onFileChangedCb();
     }
 }
 
@@ -276,7 +276,7 @@ static void RunManualCheck()
             continue;
         if (FileStateChanged(wf->filePath, &wf->fileState)) {
             lf(L"RunManualCheck() %s changed", wf->filePath);
-            wf->observer->OnFileChanged();
+            wf->onFileChangedCb();
         }
     }
 }
@@ -369,7 +369,7 @@ static WatchedDir *NewWatchedDir(const WCHAR *dirPath)
     return wd;
 }
 
-static WatchedFile *NewWatchedFile(const WCHAR *filePath, FileChangeObserver *observer)
+static WatchedFile *NewWatchedFile(const WCHAR *filePath, std::function<void()> onFileChangedCb)
 {
     bool isManualCheck = PathIsNetworkPath(filePath);
     ScopedMem<WCHAR> dirPath(path::GetDir(filePath));
@@ -387,7 +387,7 @@ static WatchedFile *NewWatchedFile(const WCHAR *filePath, FileChangeObserver *ob
 
     WatchedFile *wf = AllocStruct<WatchedFile>();
     wf->filePath = str::Dup(filePath);
-    wf->observer = observer;
+    wf->onFileChangedCb = onFileChangedCb;
     wf->watchedDir = wd;
     wf->isManualCheck = isManualCheck;
 
@@ -407,7 +407,6 @@ static WatchedFile *NewWatchedFile(const WCHAR *filePath, FileChangeObserver *ob
 static void DeleteWatchedFile(WatchedFile *wf)
 {
     free((void*)wf->filePath);
-    delete wf->observer;
     free(wf);
 }
 
@@ -419,21 +418,18 @@ We take ownership of observer object.
 Returns a cancellation token that can be used in FileWatcherUnsubscribe(). That
 way we can support multiple callers subscribing to the same file.
 */
-WatchedFile *FileWatcherSubscribe(const WCHAR *path, FileChangeObserver *observer)
+WatchedFile *FileWatcherSubscribe(const WCHAR *path, std::function<void()> onFileChangedCb)
 {
-    CrashIf(!observer);
-
     lf(L"FileWatcherSubscribe() path: %s", path);
 
     if (!file::Exists(path)) {
-        delete observer;
         return nullptr;
     }
 
     StartThreadIfNecessary();
 
     ScopedCritSec cs(&g_threadCritSec);
-    return NewWatchedFile(path, observer);
+    return NewWatchedFile(path, onFileChangedCb);
 }
 
 static bool IsWatchedDirReferenced(WatchedDir *wd)

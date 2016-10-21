@@ -268,15 +268,11 @@ void CleanUp()
     gGlobalPrefs = nullptr;
 }
 
-class SettingsFileObserver : public FileChangeObserver {
-public:
-    SettingsFileObserver() { }
 
-    virtual void OnFileChanged() {
-        // don't Reload directly so as to prevent potential race conditions
-        uitask::Post([] { prefs::Reload(); });
-    }
-};
+void schedulePrefsReload() {
+    // don't Reload directly so as to prevent potential race conditions
+    uitask::Post(prefs::Reload);
+}
 
 void RegisterForFileChanges()
 {
@@ -285,7 +281,7 @@ void RegisterForFileChanges()
 
     CrashIf(gWatchedSettingsFile); // only call me once
     ScopedMem<WCHAR> path(GetSettingsPath());
-    gWatchedSettingsFile = FileWatcherSubscribe(path, new SettingsFileObserver());
+    gWatchedSettingsFile = FileWatcherSubscribe(path, schedulePrefsReload);
 }
 
 void UnregisterForFileChanges()

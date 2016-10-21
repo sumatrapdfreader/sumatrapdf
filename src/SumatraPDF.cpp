@@ -1422,27 +1422,20 @@ static WindowInfo* LoadDocumentNew(LoadArgs& args)
 }
 #endif
 
-class TabReloadHandler : public FileChangeObserver {
-    TabInfo *tab;
-
-public:
-    explicit TabReloadHandler(TabInfo *tab) : tab(tab) { }
-
-    virtual void OnFileChanged() override {
-        // to prevent race conditions between file changes and closing tabs,
-        // use the tab only on the main UI thread
-        uitask::Post([=] {
-            WindowInfo *win = FindWindowInfoByTab(tab);
-            if (!win)
-                return;
-            tab->reloadOnFocus = true;
-            if (tab == win->currentTab) {
-                // delay the reload slightly, in case we get another request immediately after this one
-                SetTimer(win->hwndCanvas, AUTO_RELOAD_TIMER_ID, AUTO_RELOAD_DELAY_IN_MS, nullptr);
-            }
-        });
-    }
-};
+void scheduleReloadTab(TabInfo *tab) {
+    // to prevent race conditions between file changes and closing tabs,
+    // use the tab only on the main UI thread
+    uitask::Post([=] {
+        WindowInfo *win = FindWindowInfoByTab(tab);
+        if (!win)
+            return;
+        tab->reloadOnFocus = true;
+        if (tab == win->currentTab) {
+            // delay the reload slightly, in case we get another request immediately after this one
+            SetTimer(win->hwndCanvas, AUTO_RELOAD_TIMER_ID, AUTO_RELOAD_DELAY_IN_MS, nullptr);
+        }
+    });
+}
 
 // TODO: eventually I would like to move all loading to be async. To achieve that
 // we need clear separatation of loading process into 2 phases: loading the
@@ -1560,10 +1553,10 @@ WindowInfo* LoadDocument(LoadArgs& args)
         return win;
     }
 
-    CrashIf(win->currentTab->watcher);
+    auto currTab = win->currentTab;
+    CrashIf(currTab->watcher);
     if (gGlobalPrefs->reloadModifiedDocuments) {
-        TabReloadHandler *observer = new TabReloadHandler(win->currentTab);
-        win->currentTab->watcher = FileWatcherSubscribe(win->currentTab->filePath, observer);
+        currTab->watcher = FileWatcherSubscribe(win->currentTab->filePath, [currTab] { scheduleReloadTab(currTab); });
     }
 
     if (gGlobalPrefs->rememberOpenedFiles) {
