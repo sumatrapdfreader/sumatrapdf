@@ -268,9 +268,7 @@ void CleanUp()
     gGlobalPrefs = nullptr;
 }
 
-
 void schedulePrefsReload() {
-    // don't Reload directly so as to prevent potential race conditions
     uitask::Post(prefs::Reload);
 }
 
