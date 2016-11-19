@@ -173,6 +173,7 @@ jv:&Pilihan Terusan...
 kr:고급 옵션(&A)...
 ku:هەڵبژاردنی پەرەسەندوو ...&
 kw:Settyansow &avonsys...
+lt:&Išplėstiniai nustatymai...
 lv:&Papildu opcijas...
 mk:&Напредни oпции...
 my:&Tetapan terperinci...
@@ -3063,6 +3064,7 @@ it:&Finestra
 ja:ウィンドウ(&W)
 kr:창(&W)
 ku:&پەنجەرە
+lt:&Langas
 lv:&Logs
 mk:&Прозорец
 nl:&Venster
@@ -8196,6 +8198,7 @@ ja:ファイル名の変更に失敗しました！
 ka:ფაილის გადარქმევა ვერ მოხერხდა!
 kr:파일 이름을 바꾸지 못했습니다!
 ku:گۆڕینی ناوی فایل سەرکەوتونەبوو!
+lt:Nepavyko pervadinti failo!
 lv:Neizdevās pārdēvēt failu!
 mk:Не успеав да ја преименувам датотеката!
 my:Gagal menamakan semula fail!
@@ -8319,6 +8322,7 @@ it:Scrittura fallita informazione estensione estesa file nel registro
 ja:拡張子情報をレジストリに書き込むのに失敗しました
 kr:확장된 파일의 확장자 정보를 레지스트리에 쓰지 못했습니다.
 ku:دانانی زانیاری پاشکۆی فایل سەرکەوتو نەبوو لە ڕیگستریدا
+lt:Nepavyko išplėstinės failo plėtinio informacijos įrašyti į registrą
 lv:Neizdevās ierakstīt failu paplašinājumu informāciju reģistrā
 mk:Не успеав да ги запишам информациите за типови на датотеки во регистарот
 my:Gagal menulis fail lanjutan maklumat tambahan ke dalam registry
@@ -8372,6 +8376,7 @@ it:Scrittura fallita informazione disinstallazione nel registro
 ja:アンインストール情報をレジストリに書き込むのに失敗しました
 kr:제거 정보를 레지스트리에 쓰지 못했습니다.
 ku:دانانی زانیاری سڕینەوە سەرکەوتو نەبوو لە ڕیگستریدا
+lt:Išinstaliavimo informacijos nepavyko įrašyti į registrą
 lv:Neizdevās ierakstīt atinstalēšanas informāciju reģistrā
 mk:Не успеав да ги запишам информациите за деинсталаторот во регистарот
 my:Gagal untuk menulis maklumat pemasangan untuk registry
@@ -8426,6 +8431,7 @@ it:Vista web veloce
 ja:高速ウェブ表示
 kr:빠른 웹 보기
 ku:شێوازی پیشاندانی خێرای ماڵپەر
+lt:Greita peržiūra tinkle
 lv:Ātrais tīmekļa skats
 mk:Брз веб-преглед
 my:Paparan Web Cepat
@@ -8541,6 +8547,7 @@ ja:フィクション文章
 ka:FictionBook დოკუმენტები
 kr:FictionBook 문서
 ku:FictionBook بەڵگەنامەکانی
+lt:FictionBook dokumentai
 lv:FictionBook dokumenti
 mk:Документи на FictionBook
 my:Dokumen FictionBook
@@ -8596,6 +8603,7 @@ ja:ファイル %s が見つかりません
 ka:%s ფაილი ვერ მოიძებნა
 kr:%s 파일을 찾을 수 없습니다.
 ku:نەدۆزرایەوە %s فایلی
+lt:Failas %s nerastas
 lv:Fails %s nav atrasts
 mk:Датотеката %s не е најдена
 my:Fail %s tidak dijumpai
@@ -12974,6 +12982,7 @@ ja:PalmDoc ドキュメント
 ka:PalmDoc დოკუმენტები
 kr:PalmDoc 문서
 ku:بەڵگە نامەکانی PalmDoc
+lt:PalmDoc dokumentai
 lv:PalmDoc dokumenti
 mk:документи на PalmDoc
 nl:PalmDoc documenten
@@ -13794,6 +13803,7 @@ ja:名前を変更(&N)...\tF2
 kr:이름 바꾸기(&N)...\tF2
 ku:گۆڕینی &ناو...\tF2
 kw:Dashe&nwel...\tF2
+lt:P&ervadinti...\tF2
 lv:Pār&dēvēt...\tF2
 mk:Преименувај... \tF2
 my:&Nama semula ...\tF2
@@ -14027,6 +14037,7 @@ it:Rinomina in
 ja:名前の変更名
 kr:바꿀 이름
 ku:گۆڕینی ناو بۆ
+lt:Pervadinti į
 lv:Pārdēvēt uz
 mk:Преименувај во
 my:Namakan sebagai
@@ -16731,6 +16742,7 @@ ja:タブを使う(&t)
 ka:ჩა&ნართების გამოყენება
 kr:탭 사용(&T)
 ku:بەکارهێنان &شریتەکان
+lt:Naudoti k&orteles
 lv:Lietot &cilnes
 mk:Користи &табови
 nl:Gebruik &tabs
