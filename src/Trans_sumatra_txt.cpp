@@ -8201,7 +8201,7 @@ const char * gTranslations_lv =
 const char * gTranslations_lt = 
   "Apie\0"\
   "&Originalus\tCtrl+1\0"\
-  "\0"\
+  "&I\305\241pl\304\227stiniai nustatymai...\0"\
   "&Visi pa\305\276ym\304\227ti puslapiai\0"\
   "At&gal\tAlt+Kair\304\227n\0"\
   "Knyga\tCtrl+8\0"\
@@ -8246,7 +8246,7 @@ const char * gTranslations_lt =
   "Pralei&sti \305\241i\304\205 versij\304\205\0"\
   "Na&udoti originalius puslapi\305\263 dyd\305\276ius\0"\
   "&Rodymas\0"\
-  "\0"\
+  "&Langas\0"\
   "&Taip\0"\
   "&Mastelis\0"\
   "(i\305\241 %d)\0"\
@@ -8267,8 +8267,8 @@ const char * gTranslations_lt =
   "Automati\305\241kai &tikrinti, ar yra naujinim\305\263\0"\
   "Knyga\0"\
   "\305\275ym\304\227s\tF12\0"\
-  "\0"\
-  "\0"\
+  "\305\275ymi\305\263 nuorodos\0"\
+  "\305\275ym\304\227s nuoroda \304\257 puslap\304\257 %s i\305\241 %s\0"\
   "\305\275ym\304\227s\0"\
   "bait\305\263\0"\
   "CHM dokumentai\0"\
@@ -8279,22 +8279,22 @@ const char * gTranslations_lt =
   "Keisti kalb\304\205 (Change Language)\0"\
   "Tikrinti, ar yra &naujinim\305\263\0"\
   "Komiks\305\263 knygel\304\227s\0"\
-  "\0"\
+  "Suderinamumas\0"\
   "Nenutr\305\253kstama\0"\
   "Nenutr\305\253kstama knygos per\305\276i\305\253ra\0"\
   "Nenutr\305\253kstama dviej\305\263 puslapi\305\263\0"\
   "Prisid\304\227ti prie vertimo\0"\
-  "\0"\
+  "Kopijuoti &paveiksl\304\205\0"\
   "Kopijuoti &saito adres\304\205\0"\
   "Kopijuoti ko&mentar\304\205\0"\
   "Teksto kopijavimas u\305\276draustas (kopijuojamas tik ekrano vaizdas)\0"\
-  "\0"\
+  "Autorin\304\227s teis\304\227s:\0"\
   "Spausdintuvo savybi\305\263 su\305\276inoti nepavyko\0"\
   "Nepavyko prisijungti prie spausdintuvo\0"\
   "Nepavyko atvaizduoti puslapio\0"\
   "Sukurtas:\0"\
   "Esamasis failas\0"\
-  "\0"\
+  "\305\275ymeklio pozicija:\0"\
   "Pasirinkti &mastel\304\257...\tCtrl+Y\0"\
   "Numatytasis i\305\241&d\304\227stymas:\0"\
   "Numatytasis &mastelis\0"\
@@ -8313,12 +8313,12 @@ const char * gTranslations_lt =
   "&Pirmyn\tAlt+De\305\241in\304\227n\0"\
   "&Visas ekranas\tCtrl+Shift+L\0"\
   "Du puslapiai\0"\
-  "\0"\
+  "Nepavyko pervadinti failo!\0"\
   "Failo \304\257ra\305\241yti nepavyko\0"\
-  "\0"\
+  "Greita per\305\276i\305\253ra tinkle\0"\
   "Parankiniai\0"\
-  "\0"\
-  "\0"\
+  "FictionBook dokumentai\0"\
+  "Failas %s nerastas\0"\
   "Failo dydis:\0"\
   "Failas:\0"\
   "&Ie\305\241koti...\tCtrl+F\0"\
@@ -8334,8 +8334,8 @@ const char * gTranslations_lt =
   "Visas puslapio plotis\0"\
   "Visas puslapio plotis, nenutr\305\253kstama per\305\276i\305\253ra\0"\
   "Visas puslapis\0"\
-  "\0"\
-  "\0"\
+  "\305\240riftai\0"\
+  "Knyga formatuojama... %d puslapiai\0"\
   "Ie\305\241koti teksto %s puslapyje\0"\
   "Rastas tekstas %s puslapyje (v\304\227l)\0"\
   "Da\305\276niausiai skaitomi\0"\
@@ -8348,7 +8348,7 @@ const char * gTranslations_lt =
   "\0"\
   "Ar nustatyti \342\200\236SumatraPDF\342\200\234 kaip numatyt\304\205j\304\205 PDF \305\276i\305\253rykl\304\231?\0"\
   "\342\200\236SumatraPDF\342\200\234 nustatymas numatyt\304\205ja PDF \305\276i\305\253rykle\0"\
-  "\0"\
+  "Man&ga re\305\276imas\0"\
   "Skirti did\305\276i\304\205sias ir ma\305\276\304\205sias raides\0"\
   "Mobi dokumentai\0"\
   "Keistas:\0"\
@@ -8363,15 +8363,15 @@ const char * gTranslations_lt =
   "Atverti\0"\
   "Atverti naudojant \342\200\236PDF-&XChange\342\200\234\0"\
   "Atverti dokument\304\205...\0"\
-  "\0"\
+  "Atidaryti su %s\0"\
   "Atverti naudojant \342\200\236&Adobe Reader\342\200\234\0"\
   "Atverti naudojant \342\200\236&Foxit Reader\342\200\234\0"\
-  "\0"\
-  "\0"\
+  "Atverti su &Microsoft HTML Help\0"\
+  "Atverti su &Microsoft XPS-Viewer\0"\
   "&Savyb\304\227s\0"\
   "&Savyb\304\227s\tCtrl+D\0"\
   "PDF dokumentas\0"\
-  "\0"\
+  "PDF optimizacijos:\0"\
   "PDF leid\304\227jas:\0"\
   "PDF versija:\0"\
   "PDF dokumentai\0"\
@@ -8381,7 +8381,7 @@ const char * gTranslations_lt =
   "Puslapio numerio %u n\304\227ra\0"\
   "Puslapio mastelis\0"\
   "Puslapis:\0"\
-  "\0"\
+  "PalmDoc dokumentai\0"\
   "Pra\305\241ome palaukti \342\200\223 atvaizduojama...\0"\
   "\342\200\236PostScript\342\200\234 dokumentai\0"\
   "&Pateiktis\tCtrl+L\0"\
@@ -8389,28 +8389,28 @@ const char * gTranslations_lt =
   "Spausdinti\0"\
   "Spausdinimo intervalas\0"\
   "Spausdintuvo tokiu vardu n\304\227ra\0"\
-  "\0"\
-  "\0"\
+  "Vyksta spausdinimas\0"\
+  "Spausdinimas vis dar vyksta. Nutraukti ir i\305\241eiti?\0"\
   "Spausdinimas dar nebaigtas. Ar norite j\304\257 nutraukti ir prad\304\227ti i\305\241 naujo?\0"\
   "Spausdinamas %d puslapis i\305\241 %d...\0"\
   "Spausdinimo problema.\0"\
-  "\0"\
+  "P&ervadinti...\tF2\0"\
   "\304\256siminti &atvertus failus\0"\
   "Pa\305\241alinti i\305\241 parankini\305\263\0"\
   "Pa\305\241alinti %s puslap\304\257 i\305\241 parankini\305\263\0"\
-  "\0"\
+  "Pervadinti \304\257\0"\
   "Pasukti \304\257 &kair\304\231\tCtrl+Shift+-\0"\
   "Pasukti \304\257 &de\305\241in\304\231\tCtrl+Shift++\0"\
   "\304\256ra\305\241yti kaip\0"\
-  "\0"\
+  "I\305\241saugoti N&uorod\304\205...\tCtrl+Shift+S\0"\
   "Ie\305\241koma %d i\305\241 %d...\0"\
   "Pa\305\276ym\304\227ti &visk\304\205\0"\
   "Pa\305\276ym\304\227ti &visk\304\205\tCtrl+A\0"\
   "Turin\304\257 \305\276ym\304\227kite su Ctrl+kairiuoju pel\304\227s klavi\305\241u\0"\
-  "\0"\
+  "Pasirinkimas:\0"\
   "Si\305\263sti el. &pa\305\241tu...\0"\
   "Nustatyti atvirk\305\241\304\215ios paie\305\241kos komandin\304\231 eilut\304\231\0"\
-  "\0"\
+  "Rodyti \305\276&ymas\0"\
   "&Puslapius rodyti nenutr\305\253kstamai\0"\
   "Rodyti &priemoni\305\263 juost\304\205\0"\
   "Rodyti parankinius\0"\
@@ -8426,12 +8426,12 @@ const char * gTranslations_lt =
   "\342\200\236SumatraPDF\342\200\234 yra numatytoji PDF \305\276i\305\253rykl\304\227\0"\
   "Dabar \342\200\236SumatraPDF\342\200\234 bus numatytoji PDF \305\276i\305\253rykl\304\227\0"\
   "Sinchronizacijos failas negali b\305\253ti atvertas\0"\
-  "\0"\
+  "Pa\305\276ym\304\227tas PDF\0"\
   "Tekstiniai dokumentai\0"\
-  "\0"\
+  "\305\240is dokumentas naudoja nepalaikomas funkcijas (%s) ir gali b\305\253ti atvaizduotas neteisingai\0"\
   "Pavadinimas:\0"\
   "Ne\305\276inomas pradinis failas (%s)\0"\
-  "\0"\
+  "Naudoti k&orteles\0"\
   "Rodymas\0"\
   "Interneto &svetain\304\227\0"\
   "\304\256sp\304\227jimas\0"\

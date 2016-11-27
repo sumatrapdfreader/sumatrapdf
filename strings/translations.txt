@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-d09fed6c5c207105b13280fe59cd74e2ec980ae8
+c44365a00748350ddf85f60038dfa6be4c1d4748
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -173,6 +173,7 @@ jv:&Pilihan Terusan...
 kr:고급 옵션(&A)...
 ku:هەڵبژاردنی پەرەسەندوو ...&
 kw:Settyansow &avonsys...
+lt:&Išplėstiniai nustatymai...
 lv:&Papildu opcijas...
 mk:&Напредни oпции...
 my:&Tetapan terperinci...
@@ -1771,6 +1772,7 @@ ku:کردنەوەی بەڵگەنامە&
 lt:&Atverti dokumentą
 lv:&Atvērt dokumentu
 mk:Отвори документ
+ml:രേഖ തുറക്കുക
 my:&Buka dokumen
 ne:&कागजात खोल्नुहोस्
 nl:Document &Openen
@@ -1893,6 +1895,7 @@ ja:オプション(&O)
 ka:&ვარიანტები
 kr:옵션(&O)
 ku:هەڵبژاردنەکان&
+lt:&Nuostatos
 lv:&Opcijas
 mk:&Опции
 my:&Tetapan
@@ -3063,6 +3066,7 @@ it:&Finestra
 ja:ウィンドウ(&W)
 kr:창(&W)
 ku:&پەنجەرە
+lt:&Langas
 lv:&Logs
 mk:&Прозорец
 nl:&Venster
@@ -3945,6 +3949,7 @@ ja:SumatraPDFを本当にアンインストールしますか？
 jv:Apa panjenengan yakin arep mbusak instalasi SumatraPDF?
 kr:SumatraPDF를 제거할까요?
 ku:ئایا دڵنیایت لە سڕینەوەی SumatraPDF?
+lt:Ar tikrai norite pašalinti SumatraPDF?
 lv:Vai jūs esat pārliecināts, ka vēlaties atinstalēt SumatraPDF?
 mk:Дали сте сигурни дека сакате да го избришете SumatraPDF?
 my:Adakah anda pasti anda mahu membuang SumatraPDF?
@@ -4469,6 +4474,7 @@ jv:Atajos de marcadores
 ka:მალსახმობები
 kr:책갈피 바로가기
 ku:نیشانەکردنی کورتە ئایکۆنەکان
+lt:Žymių nuorodos
 lv:Grāmatzīmju saīsnes
 mk:Кратенки од обележувачи
 my:Pintasan Penanda
@@ -4526,6 +4532,7 @@ ja:ページ %s、ファイル %s に対するショートカットをブック�
 ka:%s-იდან %s გვერდის მალსახმობის ჩანიშვნა
 kr:%s / %s 페이지에 책갈피 바로가기
 ku:%s لە %s نیشانەکردنی کورتەئایکۆن بۆ پەڕە
+lt:Žymės nuoroda į puslapį %s iš %s
 lv:Grāmatzīmju saīsne uz %s lappusi no %s
 mk:Кратенки од обележувачи за страница %s од %s
 my:Bookmark shortcut ke halaman %s daripada %s
@@ -5169,6 +5176,7 @@ ka:დახურვა
 kr:닫기
 ku:داخستن
 kw:Degea
+lt:Uždaryti
 lv:Aizvērt
 mk:Затвори
 ml:അടയ്ക്കുക
@@ -5289,6 +5297,7 @@ jv:Compatibilidad
 ka:თავსებადობა
 kr:호환성
 ku:گونجاو
+lt:Suderinamumas
 lv:Saderība
 mk:Компатибилност
 ml:പൊരുത്തം
@@ -5619,6 +5628,7 @@ jv:Copiar &Imagen
 ka:სურათის &კოპირება
 kr:이미지 복사(&I)
 ku:لەبەرگرتنەوەی &وێنە
+lt:Kopijuoti &paveikslą
 lv:Kopēt &attēlu
 mk:Копирај &слика
 my:Salin &Imej
@@ -5860,6 +5870,7 @@ jv:Derechos de autor
 kr:저작권:
 ku:مافی لەبەرگرتنەوە:
 kw:Gwirpryntyans:
+lt:Autorinės teisės:
 lv:Autortiesības:
 mk:Авторско право:
 ml:പകര്‍പ്പവകാശം
@@ -5979,6 +5990,7 @@ ja:一時ディレクトリを作成できませんでした
 ka:დროებითი საქაღალდე ვერ შეიქმნა
 kr:임시 디렉토리를 만들 수 없습니다.
 ku:ناتوانرێت فۆڵدەری کاتی دروستبکرێت
+lt:Nepavyko sukurti laikino katalogo
 lv:Nevarēja izveidot pagaidu direktoriju
 mk:Не можам да создадам привремена папка
 my:Tidak dapat mencipta direktori sementara
@@ -6035,6 +6047,7 @@ it:Impossibile creare la cartella di installazione
 ja:インストール先ディレクトリを作成できませんでした
 kr:설치 디렉토리를 만들 수 없습니다.
 ku:ناتوانرێت فۆڵدەری دابەزاندن دروست بکرێت
+lt:Nepavyko sukurti įdiegimo katalogo
 lv:Nevarēja izveidot instalācijas direktoriju
 mk:Не можам да ја создадам папката за инсталација
 my:Tidak dapat mencipta direktori pemasangan
@@ -6152,6 +6165,7 @@ it:Impossibile installare modulo anteprima PDF
 ja:PDF プレビューアをインストールできませんでした
 kr:PDF 미리보기를 설치할 수 없습니다.
 ku:ناتوانرێت پیشاندەری PDF دابەزێندرێت
+lt:Nepavyko įdiegti PDF peržiūros programą
 lv:Nevarēja instalēt PDF priekšskatījumu
 mk:Не можам да инсталирам прикажувачот на PDF
 my:Tidak dapat memasang previewer PDF
@@ -6207,6 +6221,7 @@ ja:PDF 検索フィルタをインストールできませんでした
 ka:PDF ძიების ფილტრის ინსტალაცია ვერ მოხერხდა
 kr:PDF 검색 필터를 설치할 수 없습니다.
 ku:ناتوانرێت فرمانی گەڕانی PDF دابەزێندرێت
+lt:Nepavyko įdiegti PDF paieškos filtro
 lv:Nevarēja instalēt PDF meklēšanas filtru
 mk:Не можам да инсталирам филтер за пребарување на PDF
 my:Tidak dapat memasang penapis carian PDF
@@ -6260,6 +6275,7 @@ it:Impossibile ottenere la cartella temporanea
 ja:一時ディレクトリを確保できませんでした
 kr:임시 디렉토리를 가져올 수 없습니다.
 ku:ناتوانرێت فۆڵدەری کاتی بدۆزرێتەوە
+lt:Nepavyko gauti laikinojo katalogo
 lv:Nevarēja iegūt pagaidu direktoriju
 mk:Не можам да пристапам до привремената папка
 my:Tidak boleh mendapatkan direktori sementara
@@ -6313,6 +6329,7 @@ it:Impossibile rimuovere la cartella di installazione
 ja:インストール先ディレクトリを削除できませんでした
 kr:설치 디렉토리를 제거할 수 없습니다.
 ku:ناتوانرێت فۆڵدەری دابەزاندن لابدرێت
+lt:Nepavyko pašalinti įdiegimo katalogo
 lv:Nevarēja noņemt instalācijas direktoriju
 mk:Не можам да ја избришам инсталационата папка
 my:Tidak dapat memadamkan direktori pemasangan
@@ -6368,6 +6385,7 @@ ja:ショートカットを削除できませんでした
 ka:მალსახმობი ვერ ამოიშალა
 kr:바로가기를 제거할 수 없습니다.
 ku:ناتوانرێت کورتە ئایکۆن لابدرێت
+lt:Nepavyko pašalinti nuorodos
 lv:Nevarēja noņemt saīsni
 mk:Не можам да ја избришам кратенката
 my:Tidak dapat membuang shortcut
@@ -6484,6 +6502,7 @@ it:Impossibile disinstallare modulo anteprima PDF
 ja:PDF プレビューアをアンインストールできませんでした
 kr:PDF 미리보기를 제거할 수 없습니다.
 ku:ناتوانرێت پیشاندەری PDF بسڕدرێتەوە
+lt:Nepavyko pašalinti PDF peržiūros programos
 lv:Nevarēja atinstalēt PDF priekšskatījumu
 mk:Не можам да го избришам прикажувачот на PDF
 my:Tidak dapat membuang previewer PDF
@@ -6538,6 +6557,7 @@ ja:PDF 検索フィルタをアンインストールできませんでした
 ka:PDF ძიების ფილტრის დეინსტალაცია ვერ მოხერხდა
 kr:PDF 검색 필터를 제거할 수 없습니다.
 ku:ناتوانرێت فرمانی گەڕانی PDF بسڕدرێتەوە
+lt:Nepavyko pašalinti PDF paieškos filtro
 lv:Nevarēja atinstalēt PDF meklēšanas filtru
 mk:Не можам да го избришам филтерот за пребарување на PDF
 my:Tidak dapat memadam penapis carian PDF
@@ -6592,6 +6612,7 @@ ja:ブラウザプラグインをアンインストールできませんでし�
 ka:ბრაუზერის დანამატის დეინსტალაცია ვერ მოხერხდა
 kr:브라우저 플러그인을 제거할 수 없습니다.
 ku:ناتوانرێت پێوەکراوی وێبگەڕ بسڕدرێتەوە
+lt:Nepavyko pašalinti naršyklės įskiepio
 lv:Nevarēja atinstalēt pārlūkprogrammas spraudni
 mk:Не можам да го избришам додатокот за прелистувачи
 my:Tidak dapat membuang pelayar plugin
@@ -6645,6 +6666,7 @@ it:Impossibile scrivere %s nel disco.
 ja:%s をディスクに書き込めませんでした
 kr:%s(을)를 디스크에 쓸 수 없습니다.
 ku:بخوێندرێتەوە بۆ دیسک %s ناتوانرێت
+lt:Nepavyko %s įrašyti į diską
 lv:Nevarēja rakstīt %s diskā
 mk:Не можам да ја снимам %s на диск
 my:Tidak boleh memasukkan data %s ke cakera
@@ -6829,6 +6851,7 @@ jv:Posisi kursor:
 ka:კურსორის პოზიცია:
 kr:커서 위치:
 ku:شوێنی نیشانەی ماوس:
+lt:Žymeklio pozicija:
 lv:Kursora pozīcija:
 mk:Местоположба на покажувач:
 nl:Cursor positie
@@ -8012,6 +8035,7 @@ it:Impossibile copiare programma disinstallazione nella cartella temporanea
 ja:アンインストーラを一時ディレクトリへコピーするのに失敗しました
 kr:제거 관리자를 임시 디렉토리에 복사하지 못했습니다.
 ku:لەبەرگرتنەوەی داتاکانی سڕینەوە سەرکەتو نەبوو بۆ فۆڵدەری کاتی
+lt:Nepavyko šalinimo programos nukopijuoti į laikiną katalogą
 lv:Neizdevās iekopēt instalācijas noņemšanas programmu pagaidu direktorijā
 mk:Не успеав да го ископирам деинсталаторот во привремената папка
 my:Gagal untuk menyalin uninstaller untuk direktori sementara
@@ -8066,6 +8090,7 @@ ja:ショートカットの作成に失敗しました
 ka:მალსახმობი ვერ შეიქმნა
 kr:바로가기를 만들지 못했습니다.
 ku:دروستکردنی کورتە ئایکۆن سەرکەوتو نەبوو
+lt:Nepavyko sukurti nuorodos
 lv:Neizdevās izveidot saīsni
 mk:Не успеав да создадам кратенка
 my:Gagal untuk mencipta shortcut
@@ -8119,6 +8144,7 @@ it:Impossibile rimuovere chiavi registro
 ja:アンインストーラのレジストリキーを削除するのに失敗しました
 kr:레지스트리 키를 삭제하지 못했습니다.
 ku:سڕینەوەی پاشکۆ و کلیلەکانی ڕیگستری سەرکەتو نەبوو
+lt:Nepavyko ištrinti šalinimo programos registro raktų
 lv:Neizdevās izdzēst instalācijas noņemšanas programmas reģistra atslēgas
 mk:Не успеав да ги избришам регистарските клучеви на деинсталаторот
 my:Gagal untuk memadam kekunci pendaftaran uninstaller
@@ -8157,7 +8183,10 @@ he:רישום SumatraPDF כתוכנת ברירת מחדל לקובצי PDF ב- W
 hr:Neuspješno registriranje kao zadani program na Windows 10
 hu:Sikertelen regisztráció alapértelmezett programként Windows 10-en
 ja:Windows 10 で既定のプログラムとして登録するのに失敗しました
+lt:Nepavyko programos padaryti numatytąja Windows 10 sistemoje
 lv:Neizdevās reģistrēt kā noklusējuma programmu Windows 10 vidē
+nl:Als standaard App in Windows 10 aanmelden mislukt
+pl:Nie udało się zarejestrować jako domyślny program na Windows 10
 ru:Не удалось зарегистрировать как программу по умолчанию в Windows 10
 sp-rs:Neuspelo postavljanje kao podrazumevani program na win 10
 sr-rs:Неуспело постављање као подразумевани програм на wин 10
@@ -8196,6 +8225,7 @@ ja:ファイル名の変更に失敗しました！
 ka:ფაილის გადარქმევა ვერ მოხერხდა!
 kr:파일 이름을 바꾸지 못했습니다!
 ku:گۆڕینی ناوی فایل سەرکەوتونەبوو!
+lt:Nepavyko pervadinti failo!
 lv:Neizdevās pārdēvēt failu!
 mk:Не успеав да ја преименувам датотеката!
 my:Gagal menamakan semula fail!
@@ -8319,6 +8349,7 @@ it:Scrittura fallita informazione estensione estesa file nel registro
 ja:拡張子情報をレジストリに書き込むのに失敗しました
 kr:확장된 파일의 확장자 정보를 레지스트리에 쓰지 못했습니다.
 ku:دانانی زانیاری پاشکۆی فایل سەرکەوتو نەبوو لە ڕیگستریدا
+lt:Nepavyko į registrą įrašyti išplėstinės failo plėtinio informacijos
 lv:Neizdevās ierakstīt failu paplašinājumu informāciju reģistrā
 mk:Не успеав да ги запишам информациите за типови на датотеки во регистарот
 my:Gagal menulis fail lanjutan maklumat tambahan ke dalam registry
@@ -8372,6 +8403,7 @@ it:Scrittura fallita informazione disinstallazione nel registro
 ja:アンインストール情報をレジストリに書き込むのに失敗しました
 kr:제거 정보를 레지스트리에 쓰지 못했습니다.
 ku:دانانی زانیاری سڕینەوە سەرکەوتو نەبوو لە ڕیگستریدا
+lt:Nepavyko į registrą įrašyti programos šalinimo informacijos
 lv:Neizdevās ierakstīt atinstalēšanas informāciju reģistrā
 mk:Не успеав да ги запишам информациите за деинсталаторот во регистарот
 my:Gagal untuk menulis maklumat pemasangan untuk registry
@@ -8426,6 +8458,7 @@ it:Vista web veloce
 ja:高速ウェブ表示
 kr:빠른 웹 보기
 ku:شێوازی پیشاندانی خێرای ماڵپەر
+lt:Greita peržiūra tinkle
 lv:Ātrais tīmekļa skats
 mk:Брз веб-преглед
 my:Paparan Web Cepat
@@ -8541,6 +8574,7 @@ ja:フィクション文章
 ka:FictionBook დოკუმენტები
 kr:FictionBook 문서
 ku:FictionBook بەڵگەنامەکانی
+lt:FictionBook dokumentai
 lv:FictionBook dokumenti
 mk:Документи на FictionBook
 my:Dokumen FictionBook
@@ -8596,6 +8630,7 @@ ja:ファイル %s が見つかりません
 ka:%s ფაილი ვერ მოიძებნა
 kr:%s 파일을 찾을 수 없습니다.
 ku:نەدۆزرایەوە %s فایلی
+lt:Failas %s nerastas
 lv:Fails %s nav atrasts
 mk:Датотеката %s не е најдена
 my:Fail %s tidak dijumpai
@@ -9626,6 +9661,7 @@ ja:フォント:
 ka:შრიფტები
 kr:글꼴:
 ku:فۆنت:
+lt:Šriftai
 lv:Fonti:
 mk:Букви:
 ml:ലിപികള്‍
@@ -9683,6 +9719,7 @@ it:Formattazione del libro ... %d pagine
 ja:製本中… %d ページ
 kr:%d 페이지 읽어들이는 중...
 ku:پەڕە %d  فۆڕماتکردنی پەڕەکانی پەرتووک ...
+lt:Knyga formatuojama... %d puslapiai
 lv:Grāmatas formatēšana... %d lappuses
 mk:Ја форматирам книгата... %d страници
 my:Format buku ... %d halaman
@@ -10054,6 +10091,7 @@ ka:&ვარიანტების დამალვა
 kr:옵션 숨김(&O)
 ku:هەڵبژاردنەکانی &شاردنەوە
 kw:Kudha Settyans&ow
+lt:Slėpti &Nuostatas
 lv:Paslēpt &opcijas
 mk:Скриј &опции
 my:Sembunyi &Tetapan
@@ -10285,6 +10323,7 @@ ja:SumatraPDFをインストール
 ka:SumatraPDF-ის ინსტალაცია
 kr:SumatraPDF 설치
 ku:دابەزاندنی SumatraPDF
+lt:Įdiegti SumatraPDF
 lv:Instalēt SumatraPDF
 mk:Инсталирај SumatraPDF
 my:Pasang SumatraPDF
@@ -10339,6 +10378,7 @@ ja:SumatraPDF インストール先フォルダ(&F)
 ka:SumatraPDF-ის ინსტალაცია &საქაღალდეში:
 kr:SumatraPDF 설치 폴더(&F):
 ku:لە فۆڵدەری SumatraPDF دابەزاندنی:
+lt:Įdiegti SumatraPDF į &katalogą:
 lv:Instalēt SumatraPDF &mapē:
 mk:Инсталирај SumatraPDF во &папка:
 my:Pasang SumatraPDF dalam &folder
@@ -10394,6 +10434,7 @@ ka:ინსტალაცია ვერ მოხერხდა!
 kr:설치 실패!
 ku:دابەزاندن سەرکەوتو نەبوو!
 kw:Ynstallyans fyllys!
+lt:Įdiegimas nepavyko!
 lv:Instalēšana neizdevās!
 mk:Инсталирањето не успеа!
 my:Pemasangan gagal!
@@ -10448,6 +10489,7 @@ ja:インストール中…
 ka:მიმდინარეობს ინსტალაცია...
 kr:설치하는 중...
 ku:دابەزاندن لە ئەنجامداندایە...
+lt:Vyksta programos įdiegimas...
 lv:Notiek instalēšana...
 mk:Инсталирањето е во тек...
 my:Pemasangan sedang dijalankan...
@@ -10570,6 +10612,7 @@ it:Mantieni installato il plugin PDF del &browser (non più supportato)
 ja:PDF閲覧プラグインのインストールは保つ(&b) (廃止された機能)
 kr:브라우저에 설치된 PDF 플러그인 유지(&B) (더 이상 지원 안 함)
 ku:هێشتنەوەی پێوەکراوی وێبگەڕ بە دامەزێرێنراوی (چیتر پاڵپشتی ناکرێت)
+lt:Palikti PDF &naršyklės įskiepį įdiegtą (nebepalaikoma)
 lv:Paturēt pārlūka PDF spraudni instalētu (vairs netiek atbalstīts)
 mk:Задржи го додатокот за PDF за &прелистувачи (не е повеќе поддржан)
 nl:Behoud de PDF-&browserplugin geïnstalleerd (niet langer ondersteund)
@@ -10619,6 +10662,7 @@ it:Assegna a Windows la ricerca sul desktop & dei documenti PDF
 ja:Windows デスクトップ サーチの PDF ドキュメント検索を許可する(&s)
 kr:Windows 데스크톱 검색에 PDF 문서 검색 기능 추가(&S)
 ku:PDF ڕێگەدان بە گەڕانی سەرشاشەی ویندۆز &بگەڕێت بۆ بەڵگەنامەکانی
+lt:Leisti Windows Desktop Search &ieškoti PDF dokumentų
 lv:&Meklēt PDF dokumentus ar Windows Desktop Search
 mk:Дозволи Windows Desktop Search да пребарува низ PDF-документи
 my:Biarkan Windows Desktop Search &mencari dokumen PDF
@@ -10672,6 +10716,7 @@ it:Assegna a Windows la visualizzazione & anteprima dei documenti PDF
 ja:Windows の PDF ドキュメントプレビューを許可する(&p)
 kr:Windows 에 PDF 문서 미리보기 기능 추가(&P)
 ku:پیشان بدات PDF ڕێگەدان بە پیشاندەری ویندۆز &بەڵگەنامەکانی
+lt:Leisti Windows rodyti PDF dokumentų &peržiūras
 lv:Ļaut Windows rādīt PDF dokumentu &priekšskatījumus
 mk:Дозволи Windows да прикажува слики за PDF-документи
 my:Biarkan Windows menunjukkan &preview dokumen PDF
@@ -10931,6 +10976,7 @@ ja:漫画モード(&G)
 ka:მან&გას რეჟიმი
 kr:만화 방식(&G)
 ku:Man&ga شێوازی
+lt:Man&ga režimas
 lv:&Manga režīms
 mk:Режим за Man&ga
 my:Mode Man&ga
@@ -11872,6 +11918,7 @@ ja:%s で開く
 ka:%s-ში გახსნა
 kr:%s(으)로 열기
 ku:کردنەوە لە %s
+lt:Atidaryti su %s
 lv:Atvērt ar %s
 mk:Отвори во %s
 my:Buka dalam %s
@@ -12056,6 +12103,7 @@ ka:გახსნა Microsoft HTML Help-ში
 kr:Microsoft HTML Help로 열기(&M)
 ku:Microsoft HTML کردنەوە  بەهۆی &یارمەتی
 kw:Ygeri yn Microsoft HTML Help
+lt:Atverti su &Microsoft HTML Help
 lv:Atvērt ar &Microsoft HTML Help
 mk:Отвори со Microsoft HTML Help
 my:Buka menggunakan &Microsoft HTML Help
@@ -12117,6 +12165,7 @@ ka:გახსნა Microsoft XPS-Viewer-ში
 kr:Microsoft XPS-Viewer로 열기(&M)
 ku:Microsoft XPS کردنەوەی بەهۆی &پیشاندەری
 kw:Ygeri yn Microsoft XPS-Viewer
+lt:Atverti su &Microsoft XPS-Viewer
 lv:Atvērt ar &Microsoft XPS-Viewer
 mk:Отвори со Microsoft XPS-Viewer
 my:Buka menggunakan &Microsoft XPS-Viewer
@@ -12357,6 +12406,7 @@ ja:PDF 最適化:
 ka:PDF-ის ოპტიმიზაციის ხერხები:
 kr:PDF 최적화:
 ku:PDF ڕێکخستنی:
+lt:PDF optimizacijos:
 lv:PDF optimizācija:
 mk:Оптимизации за PDF:
 my:Pengoptimuman PDF:
@@ -12974,6 +13024,7 @@ ja:PalmDoc ドキュメント
 ka:PalmDoc დოკუმენტები
 kr:PalmDoc 문서
 ku:بەڵگە نامەکانی PalmDoc
+lt:PalmDoc dokumentai
 lv:PalmDoc dokumenti
 mk:документи на PalmDoc
 nl:PalmDoc documenten
@@ -13025,6 +13076,7 @@ ja:%s を閉じてください
 ka:გასაგრძელებლად, გთხოვთ, დაუხუროთ %s!
 kr:진행하려면, %s (을)를 닫으세요!
 ku:تکایە %s دابخە بۆ بەردەوامبون!
+lt:Norėdami tęsti, uždarykite %s!
 lv:Lai turpinātu, lūdzu, aizveriet %s!
 mk:Ве молам затворете го %s, за да продолжите!
 my:Sila tutup %s untuk meneruskan!
@@ -13501,6 +13553,7 @@ ja:印刷を実行中です。
 ka:მიმდინარეობს ბეჭდვა.
 kr:인쇄 작업 중입니다.
 ku:چاپکردن لە ئەنجامداندایە
+lt:Vyksta spausdinimas
 lv:Notiek drukāšana.
 mk:Печатењето е во тек.
 ml:അച്ചടി പുരോഗമിക്കുന്നു
@@ -13556,6 +13609,7 @@ it:La stampa è ancora in corso. Interrompere e uscire?
 ja:印刷を実行中です。中止して終了しますか？
 kr:아직 인쇄가 진행 중입니다.  중단하고 끝낼까요?
 ku:چاپکردن لە ئەنجامداندایە. کۆتایی پێهێنان و دەرچوون؟
+lt:Spausdinimas vis dar vyksta. Nutraukti ir išeiti?
 lv:Vēl joprojām notiek drukāšana. Priekšlaikus pārtraukt un beigt?
 mk:Печатењето е сè уште во тек. Да го поништам и прекинам?
 my:Cetakan sedang dilakukan. Batal dan Henti?
@@ -13794,6 +13848,7 @@ ja:名前を変更(&N)...\tF2
 kr:이름 바꾸기(&N)...\tF2
 ku:گۆڕینی &ناو...\tF2
 kw:Dashe&nwel...\tF2
+lt:P&ervadinti...\tF2
 lv:Pār&dēvēt...\tF2
 mk:Преименувај... \tF2
 my:&Nama semula ...\tF2
@@ -14027,6 +14082,7 @@ it:Rinomina in
 ja:名前の変更名
 kr:바꿀 이름
 ku:گۆڕینی ناو بۆ
+lt:Pervadinti į
 lv:Pārdēvēt uz
 mk:Преименувај во
 my:Namakan sebagai
@@ -14291,6 +14347,7 @@ ja:ショートカットを作成(&H)...\tCtrl+Shift+S
 ka:&ჩანიშვნა…\tCtrl+Shift+S
 kr:바로가기 저장(&H)...\tCtrl+Shift+S
 ku:پاراستنی کورتە&ئایکۆن...\tCtrl+Shift+S
+lt:Išsaugoti N&uorodą...\tCtrl+Shift+S
 lv:Saglabāt saīs&ni....\tCtrl+Shift+S
 mk:Зачувај &кратенка...\tCtrl+Shift+S
 my:Simpan S&hortcut...\tCtrl+Shift+S
@@ -14585,6 +14642,7 @@ it:Seleziona la cartella dove installare SumatraPDF:
 ja:インストール先ディレクトリの選択:
 kr:SumatraPDF를 설치할 폴더 선택:
 ku::SumatraPDF فۆڵدەرێک دیاریبکە بۆ دابەزاندنی
+lt:Pasirinkite kur diegti SumatraPDF:
 lv:Atlasiet mapi, kurā jāinstalē SumatraPDF
 mk:Изберете ја папката каде што треба да се инсталира SumatraPDF:
 my:Pilih folder di mana SumatraPDF harus dipasang:
@@ -14639,6 +14697,7 @@ it:Selezione
 ja:Selection:
 kr:선택:
 ku:دیاریکراو:
+lt:Pasirinkimas:
 lv:Atlase:
 mk:Селекција:
 my:Pilihan
@@ -14818,6 +14877,7 @@ ja:ブックマークを表示(&B)
 ka:&სანიშნეების ჩვენება
 kr:책갈피 보이기(&B)
 ku:پیشنادانی &نیشانەکراوەکان
+lt:Rodyti ž&ymas
 lv:Rādīt &grāmatzīmes
 mk:Прикажи &обележувачи
 my:Papar &Bookmark
@@ -15247,6 +15307,7 @@ it:Alcuni file che dovevano essere installati erano corrotti o mancanti
 ja:インストールすべきいくつかのファイルが破損しているか存在しません。
 kr:설치해야 할 일부 파일이 손상 또는 누락됐습니다.
 ku:هەندێک فایلی دابەزاندن وونبوون یان تێکچوون
+lt:Kai kurių, norimų diegti, failų trūksta arba jie yra pažeisti.
 lv:Kādi faili ir instalēti bojāti vai tie trūkst
 mk:Некои од датотеките што треба да се инсталираат се оштетени или недостасуваат
 my:Sesetengah fail yang akan dipasang akan rosak atau hilang
@@ -15422,6 +15483,7 @@ ja:SumatraPDFを実行
 ka:SumatraPDF-ის გაშვება
 kr:SumatraPDF 시작
 ku:SumatraPDF دەستپێکردنی
+lt:Paleisti SumatraPDF
 lv:Palaist SumatraPDF
 mk:Стартувај SumatraPDF
 my:Mula SumatraPDF
@@ -15537,6 +15599,7 @@ it:Installazione SumatraPDF %s
 ja:SumatraPDF %s インストーラ
 kr:SumatraPDF %s 설치 관리자
 ku:SumatraPDF %s دابەزاندنی
+lt:SumatraPDF diegimo programa %s
 lv:SumatraPDF %s instalētājs
 mk:Инсталација на SumatraPDF %s
 my:Installer SumatraPDF %s
@@ -15590,6 +15653,7 @@ it:Disinstallazione SumatraPDF %s
 ja:SumatraPDF %s アンインストーラ
 kr:SumatraPDF %s 제거 관리자
 ku:SumatraPDF %s سڕینەوەی
+lt:SumatraPDF šalinimo programa %s
 lv:SumatraPDF %s atinstalētājs
 mk:Деинсталација на SumatraPDF %s
 my:SumatraPDF %s Uninstaller
@@ -15821,6 +15885,7 @@ it:SumatraPDF è stata completamente disinstallato.
 ja:SumatraPDF がアンインストールされました。
 kr:SumatraPDF가 제거됐습니다.
 ku:.سڕایەوە SumatraPDF
+lt:SumatraPDF buvo pašalinta.
 lv:SumatraPDF ir atinstalēta
 mk:SumatraPDF е избришан.
 my:SumatraPDF telah dibuang.
@@ -15874,6 +15939,7 @@ it:Installazione SumatraPDF non trovata.
 ja:SumatraPDFのインストール情報を見つけられません
 kr:SumatraPDF 설치 파일을 찾을 수 없습니다.
 ku:.نەدۆزرایەوە SumatraPDF دابەزێنەری
+lt:SumatraPDF įdiegimas nerastas.
 lv:SumatraPDF instalācija nav atrasta
 mk:Не најдов инсталации на SumatraPDF.
 my:Pemasangan SumatraPDF tidak dijumpai.
@@ -16114,6 +16180,7 @@ it:PDF marcati
 ja:タグ付き PDF
 kr:태그있는 PDF
 ku:ە دیاریکراوەکان PDF
+lt:Pažymėtas PDF
 lv:Atzīmēts PDF
 mk:Означен PDF
 my:PDF ditanda
@@ -16231,6 +16298,7 @@ ja:SumatraPDF を選んで頂きありがとうございます！
 ka:გმადლობთ, რომ აირჩიეთ SumatraPDF!
 kr:SumatraPDF를 선택해 주셔서 고마워요!
 ku:سوپاس بۆ هەڵبژاردنی !SumatraPDF
+lt:Ačiū, kad pasirinkote SumatraPDF!
 lv:Pateicamies par SumatraPDF izvēlēšanos!
 mk:Ви благодарам што го одбравте SumatraPDF!
 my:Terima kasih kerana memilih SumatraPDF!
@@ -16285,6 +16353,7 @@ ja:ありがとう！SumatraPDF はインストールされました。
 ka:გმადლობთ! SumatraPDF დაინსტალირდა.
 kr:야호! SumatraPDF가 설치됐습니다.
 ku:سوپاس! SumatraPDF دابەزێنرا.
+lt:Ačiū! SumatraPDF buvo įdiegta.
 lv:Paldies! SumatraPDF ir instalēta.
 mk:Ви благодарам! SumatraPDF е успешно инсталиран.
 my:Terima kasih! SumatraPDF sudah dipasang pada komputer anda.
@@ -16339,6 +16408,7 @@ it:Il programma di installazione è danneggiato. Riscaricalo nuovamente.\nSiamo 
 ja:インストーラが破損しています。もう一度ダウンロードしてください。\nご不便をおかけし、申し訳ありません。
 kr:설치 관리자가 손상됐습니다.  다시 다운로드하세요.\n불편하게 해서 미안합니다!
 ku:دابەزێنەر تێکچووە. تکایە دووبارە دایبگرەوە.\nببورە لە ڕوودانی ئەو هەڵەیە!
+lt:Diegimo programa sugadinta. Prašome atsisiųsti ją iš naujo.\nAtsiprašome už nepatogumus!
 lv:Instalēšanas programma ir bijusi bojāta. Lūdzu, lejupielādējiet to vēlreiz.\nPiedodiet par sagādātajām neērtībām!
 mk:Датотеката за инсталирање е расипана. Ве молам преземете ја повторно.\nИзвинете на незгодата!
 my:Installer telah rosak. Sila muat turun sekali lagi.\nMinta maaf atas kesulitan!
@@ -16392,6 +16462,7 @@ it:Questo documento usa funzioni non supportate (%s) e potrebbe non essere visua
 ja:このドキュメントはサポートしていない機能(%s)を使用しているため、正しく描画できない可能性があります
 kr:이 문서는 지원되지 않는 기능 (%s)을 사용했고, 제대로 렌더링되지 않을 수 있습니다.
 ku:ئەم بەڵگەنامەیە خزمەتگوزاری نەگونجاوی تێدایە  (%s) لەوانەیە بەباشی دەرنەکەێت
+lt:Šis dokumentas naudoja nepalaikomas funkcijas (%s) ir gali būti atvaizduotas neteisingai
 lv:Šajā dokumentā ir izmantotas neatbalstītas iespējas (%s), un iespējams, netiek atveidots pareizi
 nl:Dit document maakt gebruik van niet-ondersteunde functies (%s) en wordt mogelijk niet goed weergegeven
 nn:Dette dokumentet bruker ustøtta funksjoner (%s) og kan kanskje ikkje visast riktig.
@@ -16505,6 +16576,7 @@ ja:SumatraPDFをアンインストール
 ka:SumatraPDF-ის დეინსტალაცია
 kr:SumatraPDF 제거
 ku:سڕینەوەی SumatraPDF
+lt:Pašalinti SumatraPDF
 lv:Atinstalēt SumatraPDF
 mk:Избриши SumatraPDF
 ml:സുമാത്ര പി.ഡി.എഫ്.നീക്കം ചെയ്യുക.
@@ -16560,6 +16632,7 @@ ja:アンインストールに失敗
 ka:დეინსტალაცია ვერ მოხერხდა
 kr:제거 실패
 ku:سڕینەوە سەرکەوتو نەبوو
+lt:Programos šalinimas nepavyko
 lv:Atinstalēšana neizdevās
 mk:Бришењето не успеа
 my:Penyahpasangan gagal
@@ -16615,6 +16688,7 @@ ja:アンインストール中…
 ka:მიმდინარეობს დეინსტალაცია...
 kr:제거하는 중...
 ku:سڕینەوە لە ئەنجامداندایە...
+lt:Vyksta programos šalinimas...
 lv:Notiek atinstalēšana...
 mk:Бришењето е во тек...
 my:Penyahpasangan sedang dijalankan ...
@@ -16731,6 +16805,7 @@ ja:タブを使う(&t)
 ka:ჩა&ნართების გამოყენება
 kr:탭 사용(&T)
 ku:بەکارهێنان &شریتەکان
+lt:Naudoti k&orteles
 lv:Lietot &cilnes
 mk:Користи &табови
 nl:Gebruik &tabs
@@ -16781,6 +16856,7 @@ ja:SumatraPDF を PDF ファイルの既定のアプリケーションにしま�
 ka:SumatraPDF-ის &ნაგულისხმევ PDF-ის წამკითხველად გაყენება
 kr:SumatraPDF를 기본 PDF 리더로 사용(&D)
 ku:وەکو خوێنەرەوەی &سەرەکی PDF SumatraPDF بەکارهێنانی
+lt:Naudoti SumatraPDF kaip &numatytąją PDF peržiūros programą
 lv:Izmantot SumatraPDF kā &noklusējuma PDF lasītāju
 mk:Користи го SumatraPDF како &основен читач на PDF
 my:Jadikan SumatraPDF sebagai aplikasi utama pembaca PDF anda

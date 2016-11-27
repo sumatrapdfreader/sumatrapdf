@@ -7,7 +7,7 @@
 
 namespace trans {
 
-#define LANGS_COUNT   53
+#define LANGS_COUNT   54
 #define STRINGS_COUNT 43
 
 const char *gOriginalStrings[STRINGS_COUNT] = {
@@ -707,7 +707,7 @@ const char * gTranslations_nl =
   "Kon deinstallatie programma niet kopieren naar tijdelijke folder\0"\
   "Kon snelkoppeling niet aanmaken\0"\
   "Kon deinstallatie register sleutels niet verwijderen\0"\
-  "\0"\
+  "Als standaard App in Windows 10 aanmelden mislukt\0"\
   "Kan uitgebreide bestandsextensie-informatie niet wegschrijven in register\0"\
   "Kan de\303\257nstallatie-informatie niet wegschrijven in het register\0"\
   "Verberg &Opties\0"\
@@ -1409,6 +1409,51 @@ const char * gTranslations_lv =
   "Notiek atinstal\304\223\305\241ana...\0"\
   "Izmantot SumatraPDF k\304\201 &noklus\304\223juma PDF las\304\253t\304\201ju\0";
 
+const char * gTranslations_lt = 
+  "&Nuostatos\0"\
+  "Ar tikrai norite pa\305\241alinti SumatraPDF?\0"\
+  "U\305\276daryti\0"\
+  "Nepavyko sukurti laikino katalogo\0"\
+  "Nepavyko sukurti \304\257diegimo katalogo\0"\
+  "Nepavyko \304\257diegti PDF per\305\276i\305\253ros program\304\205\0"\
+  "Nepavyko \304\257diegti PDF paie\305\241kos filtro\0"\
+  "Nepavyko gauti laikinojo katalogo\0"\
+  "Nepavyko pa\305\241alinti \304\257diegimo katalogo\0"\
+  "Nepavyko pa\305\241alinti nuorodos\0"\
+  "Nepavyko pa\305\241alinti PDF per\305\276i\305\253ros programos\0"\
+  "Nepavyko pa\305\241alinti PDF paie\305\241kos filtro\0"\
+  "Nepavyko pa\305\241alinti nar\305\241ykl\304\227s \304\257skiepio\0"\
+  "Nepavyko %s \304\257ra\305\241yti \304\257 disk\304\205\0"\
+  "Nepavyko \305\241alinimo programos nukopijuoti \304\257 laikin\304\205 katalog\304\205\0"\
+  "Nepavyko sukurti nuorodos\0"\
+  "Nepavyko i\305\241trinti \305\241alinimo programos registro rakt\305\263\0"\
+  "Nepavyko programos padaryti numatyt\304\205ja Windows 10 sistemoje\0"\
+  "Nepavyko \304\257 registr\304\205 \304\257ra\305\241yti i\305\241pl\304\227stin\304\227s failo pl\304\227tinio informacijos\0"\
+  "Nepavyko \304\257 registr\304\205 \304\257ra\305\241yti programos \305\241alinimo informacijos\0"\
+  "Sl\304\227pti &Nuostatas\0"\
+  "\304\256diegti SumatraPDF\0"\
+  "\304\256diegti SumatraPDF \304\257 &katalog\304\205:\0"\
+  "\304\256diegimas nepavyko!\0"\
+  "Vyksta programos \304\257diegimas...\0"\
+  "Palikti PDF &nar\305\241ykl\304\227s \304\257skiep\304\257 \304\257diegt\304\205 (nebepalaikoma)\0"\
+  "Leisti Windows Desktop Search &ie\305\241koti PDF dokument\305\263\0"\
+  "Leisti Windows rodyti PDF dokument\305\263 &per\305\276i\305\253ras\0"\
+  "Nor\304\227dami t\304\231sti, u\305\276darykite %s!\0"\
+  "Pasirinkite kur diegti SumatraPDF:\0"\
+  "Kai kuri\305\263, norim\305\263 diegti, fail\305\263 tr\305\253ksta arba jie yra pa\305\276eisti.\0"\
+  "Paleisti SumatraPDF\0"\
+  "SumatraPDF diegimo programa %s\0"\
+  "SumatraPDF \305\241alinimo programa %s\0"\
+  "SumatraPDF buvo pa\305\241alinta.\0"\
+  "SumatraPDF \304\257diegimas nerastas.\0"\
+  "A\304\215i\305\253, kad pasirinkote SumatraPDF!\0"\
+  "A\304\215i\305\253! SumatraPDF buvo \304\257diegta.\0"\
+  "Diegimo programa sugadinta. Pra\305\241ome atsisi\305\263sti j\304\205 i\305\241 naujo.\nAtsipra\305\241ome u\305\276 nepatogumus!\0"\
+  "Pa\305\241alinti SumatraPDF\0"\
+  "Programos \305\241alinimas nepavyko\0"\
+  "Vyksta programos \305\241alinimas...\0"\
+  "Naudoti SumatraPDF kaip &numatyt\304\205j\304\205 PDF per\305\276i\305\253ros program\304\205\0";
+
 const char * gTranslations_mk = 
   "&\320\236\320\277\321\206\320\270\320\270\0"\
   "\320\224\320\260\320\273\320\270 \321\201\321\202\320\265 \321\201\320\270\320\263\321\203\321\200\320\275\320\270 \320\264\320\265\320\272\320\260 \321\201\320\260\320\272\320\260\321\202\320\265 \320\264\320\260 \320\263\320\276 \320\270\320\267\320\261\321\200\320\270\321\210\320\265\321\202\320\265 SumatraPDF?\0"\
@@ -1652,7 +1697,7 @@ const char * gTranslations_pl =
   "Nie mo\305\274na skopiowa\304\207 deinstalatora do katalogu tymczasowego\0"\
   "B\305\202\304\205d przy tworzeniu skr\303\263tu\0"\
   "Nie mo\305\274na usun\304\205\304\207 kluczy deinstalatora z rejestru\0"\
-  "\0"\
+  "Nie uda\305\202o si\304\231 zarejestrowa\304\207 jako domy\305\233lny program na Windows 10\0"\
   "Nie mo\305\274na wprowadzi\304\207 poszerzonych informacji o rozszerzeniu pliku do rejestru\0"\
   "Nie mo\305\274na zapisa\304\207 informacji o usuni\304\231ciu programu do rejestru\0"\
   "Ukryj &Opcje\0"\
@@ -2432,6 +2477,7 @@ static const char *gTranslations[LANGS_COUNT] = {
   gTranslations_kr, 
   gTranslations_ku, 
   gTranslations_lv, 
+  gTranslations_lt, 
   gTranslations_mk, 
   gTranslations_my, 
   gTranslations_no, 
@@ -2490,6 +2536,7 @@ const char *gLangCodes =   "en\0" \
   "kr\0" \
   "ku\0" \
   "lv\0" \
+  "lt\0" \
   "mk\0" \
   "my\0" \
   "no\0" \
@@ -2544,6 +2591,7 @@ const char *gLangNames =   "English\0" \
   "Korean (\355\225\234\352\265\255\354\226\264)\0" \
   "Kurdish (\331\203\331\210\330\261\330\257\333\214)\0" \
   "Latvian (latvie\305\241u valoda)\0" \
+  "Lithuanian (Lietuvi\305\263)\0" \
   "Macedonian (\320\274\320\260\320\272\320\265\320\264\320\276\320\275\321\201\320\272\320\270)\0" \
   "Malaysian (Bahasa Melayu)\0" \
   "Norwegian (Norsk)\0" \
@@ -2610,6 +2658,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
   _LANGID(LANG_KOREAN),
   MAKELANGID(LANG_CENTRAL_KURDISH, SUBLANG_CENTRAL_KURDISH_CENTRAL_KURDISH_IRAQ),
   _LANGID(LANG_LATVIAN),
+  _LANGID(LANG_LITHUANIAN),
   _LANGID(LANG_MACEDONIAN),
   _LANGID(LANG_MALAY),
   MAKELANGID(LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL),
@@ -2637,7 +2686,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
 
 bool IsLangRtl(int idx)
 {
-  return (2 == idx) || (22 == idx) || (29 == idx) || (35 == idx);
+  return (2 == idx) || (22 == idx) || (29 == idx) || (36 == idx);
 }
 
 int gLangsCount = LANGS_COUNT;
