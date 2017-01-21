@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-c44365a00748350ddf85f60038dfa6be4c1d4748
+edb92e8c76d5b3ad451906cf5dc0c4d794af0e71
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -1543,7 +1543,7 @@ sv:Nästa sida\t->
 ta:அடுத்த பக்கம்\t->
 th:หน้าถัดไป\t->
 tl:Sunod na Pahina\t->
-tr:S&onraki Sayfa\t->
+tr:&Sonraki Sayfa\t->
 tw:下一頁(&N)\t右箭頭
 uk:Наступна сторінка\t->
 uz:&Keyingi bet\t->
@@ -3794,6 +3794,7 @@ am:Աջակցվող բոլոր փասթաթղթերը
 ar:كل المستندات المدعومة
 az:Bütün dəstəklənən sənədlər
 bg:Всички поддържани документи
+bn:সমস্ত সমর্থিত নথি
 br:Todos os documentos suportados
 bs:Svi podržani dokumenti
 ca-xv:Tots els documents suportats
@@ -5399,6 +5400,7 @@ am:Շարունակել գրքի տեսքով
 ar:عرض مستمر للكتاب
 az:Ardıcıl kitab formatı
 bg:Непрекъснат изглед като книга
+bn:\r\n\r\n\r\n\r\nক্রমাগত বই দৃশ্য\r\n
 br:Ver como livro contínuo
 bs:Slijedni knjiški pogled
 ca-xv:Visualització contínua de llibre
@@ -6823,6 +6825,7 @@ am:Նշորդի դիրքը.
 ar:موقع المؤشرة:
 az:Kursorun mövqeyi:
 bg:Позиция на курсора
+bn:কার্সার অবস্থানে
 br:Posição do cursor:
 bs:Pozicija kursora:
 ca-xv:Posició del cursor:
@@ -7126,6 +7129,7 @@ am:Լիազորությունները մերժված են.
 ar:رفض الأذونات:
 az:Qadağan olunmuş hüquqlar:
 bg:Достъпът отказан:
+bn:অস্বীকার অনুমতি
 br:Permissões negadas:
 bs:Odbijene dozvole:
 ca-xv:Permisos denegats:
@@ -7247,6 +7251,7 @@ am:Ֆայլի հատկությունները
 ar:خصائص المستند
 az:Sənədin xüsusiyyətləri
 bg:Свойства на документа
+bn:নথির বৈশিষ্ট্য
 br:Propriedades do Documento
 bs:Svojstva dokumenta
 ca-xv:Propietats del document
@@ -7308,6 +7313,7 @@ am:Ներբեռնել
 ar:تحميل
 az:Bəli
 bg:Свали
+bn:ডাউনলোড
 br:Baixar
 bs:Preuzmi
 by:Загрузка
@@ -8169,6 +8175,7 @@ uz:O'chirish dasturining reyestr kalitlarini o'chirish muvaffaqiyatsiz tugadi
 vn:Không thể xóa các khóa Registry của bộ gỡ cài đặt
 :Failed to register as default program on win 10
 am:Հնարավոր չեղավ գրանցել որպես լռելյայն ծրագիր Win 10-ում
+ar:فشل للتسجيل في البرنامج الافتراضي على فوز 10
 az:win 10 da əsas proqram olaraq qeydiyyatdan keçirmək uğursuz oldu
 bg:Грешка при регистрация като програма по подразбиране на Windows 10
 br:Falha ao registrar como programa padrão no Windows 10
@@ -8183,13 +8190,17 @@ he:רישום SumatraPDF כתוכנת ברירת מחדל לקובצי PDF ב- W
 hr:Neuspješno registriranje kao zadani program na Windows 10
 hu:Sikertelen regisztráció alapértelmezett programként Windows 10-en
 ja:Windows 10 で既定のプログラムとして登録するのに失敗しました
+kr:Windows 10 상에서 기본 프로그램으로 등록하지 못했습니다.
 lt:Nepavyko programos padaryti numatytąja Windows 10 sistemoje
 lv:Neizdevās reģistrēt kā noklusējuma programmu Windows 10 vidē
 nl:Als standaard App in Windows 10 aanmelden mislukt
 pl:Nie udało się zarejestrować jako domyślny program na Windows 10
 ru:Не удалось зарегистрировать как программу по умолчанию в Windows 10
+sk:Nastavenie predvoleného programu pod Windows 10 zlyhalo.
+sl:Napaka pri registraciji kot win 10 privzeti program
 sp-rs:Neuspelo postavljanje kao podrazumevani program na win 10
 sr-rs:Неуспело постављање као подразумевани програм на wин 10
+tr:\r\nWin 10'da varsayılan program olarak kayıt edilemedi
 tw:Win 10 默認程式註冊失敗
 uk:Не вдалося зареєструватися як програма по замовчуванню у Windows 10
 :Failed to rename the file!
@@ -13137,7 +13148,7 @@ kr:렌더링 중입니다, 기다리세요...
 ku:تکایە چاوەڕوانبە - پوختە ئەکرێت...
 kw:Gortos, mar pleg - ow rendra...
 lt:Prašome palaukti – atvaizduojama...
-lv:Lūdzu, uzgaidiet – notiek atveidošana...
+lv:Lūdzu, uzgaidiet — notiek atveidošana...
 mk:Ве молам почекајте - создавам приказ...
 my:Sila tunggu - memaparkan...
 ne:कृपया पर्खनुहोस - रेन्डरिङ हुदैछ ...
@@ -15886,7 +15897,7 @@ ja:SumatraPDF がアンインストールされました。
 kr:SumatraPDF가 제거됐습니다.
 ku:.سڕایەوە SumatraPDF
 lt:SumatraPDF buvo pašalinta.
-lv:SumatraPDF ir atinstalēta
+lv:SumatraPDF ir atinstalēta.
 mk:SumatraPDF е избришан.
 my:SumatraPDF telah dibuang.
 nl:SumatraPDF werd verwijderd.
@@ -15940,7 +15951,7 @@ ja:SumatraPDFのインストール情報を見つけられません
 kr:SumatraPDF 설치 파일을 찾을 수 없습니다.
 ku:.نەدۆزرایەوە SumatraPDF دابەزێنەری
 lt:SumatraPDF įdiegimas nerastas.
-lv:SumatraPDF instalācija nav atrasta
+lv:SumatraPDF instalācija nav atrasta.
 mk:Не најдов инсталации на SumatraPDF.
 my:Pemasangan SumatraPDF tidak dijumpai.
 nl:SumatraPDF-installatie niet gevonden.

@@ -8134,7 +8134,7 @@ const char * gTranslations_lv =
   "Lappuses m\304\223rogo\305\241ana\0"\
   "Lappuse:\0"\
   "PalmDoc dokumenti\0"\
-  "L\305\253dzu, uzgaidiet \342\200\223 notiek atveido\305\241ana...\0"\
+  "L\305\253dzu, uzgaidiet \342\200\224 notiek atveido\305\241ana...\0"\
   "PostScript dokumenti\0"\
   "Prezent\304\201cija\tF5\0"\
   "Iepriek\305\241\304\223j\304\201 lappuse\0"\
@@ -12934,7 +12934,7 @@ const char * gTranslations_tr =
   "&B\303\274y\303\274te\303\247:\0"\
   "&El kitab\304\261\0"\
   "B&\303\274y\303\274k/K\303\274\303\247\303\274k harf e\305\237le\305\237tir\0"\
-  "S&onraki Sayfa\t->\0"\
+  "&Sonraki Sayfa\t->\0"\
   "&Hay\304\261r\0"\
   "&Hay\304\261r, te\305\237ekk\303\274rler\0"\
   "Sadece &tek sayfalar\0"\
