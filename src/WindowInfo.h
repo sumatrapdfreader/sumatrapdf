@@ -249,7 +249,7 @@ class LinkHandler {
     PageDestination *FindTocItem(DocTocItem *item, const WCHAR *name, bool partially=false);
 
 public:
-    explicit LinkHandler(WindowInfo& win) : owner(&win) { }
+    explicit LinkHandler(WindowInfo* win) : owner(win) { }
 
     void GotoLink(PageDestination *link);
     void GotoNamedDest(const WCHAR *name);

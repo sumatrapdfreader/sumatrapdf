@@ -57,7 +57,7 @@ WindowInfo::WindowInfo(HWND hwnd) :
 {
     touchState.panStarted = false;
     buffer = new DoubleBuffer(hwndCanvas, canvasRc);
-    linkHandler = new LinkHandler(*this);
+    linkHandler = new LinkHandler(this);
     notifications = new Notifications();
     fwdSearchMark.show = false;
 }

@@ -588,14 +588,14 @@ void OnMenuAbout()
     ShowWindow(gHwndAbout, SW_SHOW);
 }
 
-void DrawAboutPage(WindowInfo& win, HDC hdc)
+void DrawAboutPage(WindowInfo* win, HDC hdc)
 {
-    ClientRect rc(win.hwndCanvas);
-    UpdateAboutLayoutInfo(win.hwndCanvas, hdc, &rc);
-    DrawAbout(win.hwndCanvas, hdc, rc, win.staticLinks);
+    ClientRect rc(win->hwndCanvas);
+    UpdateAboutLayoutInfo(win->hwndCanvas, hdc, &rc);
+    DrawAbout(win->hwndCanvas, hdc, rc, win->staticLinks);
     if (HasPermission(Perm_SavePreferences | Perm_DiskAccess) && gGlobalPrefs->rememberOpenedFiles) {
-        RectI rect = DrawBottomRightLink(win.hwndCanvas, hdc, _TR("Show frequently read"));
-        win.staticLinks.Append(StaticLinkInfo(rect, SLINK_LIST_SHOW));
+        RectI rect = DrawBottomRightLink(win->hwndCanvas, hdc, _TR("Show frequently read"));
+        win->staticLinks.Append(StaticLinkInfo(rect, SLINK_LIST_SHOW));
     }
 }
 
@@ -603,16 +603,16 @@ void DrawAboutPage(WindowInfo& win, HDC hdc)
 
 #define DOCLIST_SEPARATOR_DY        2
 #define DOCLIST_THUMBNAIL_BORDER_W  1
-#define DOCLIST_MARGIN_LEFT         DpiScaleX(win.hwndFrame, 40)
-#define DOCLIST_MARGIN_BETWEEN_X    DpiScaleX(win.hwndFrame, 30)
-#define DOCLIST_MARGIN_RIGHT        DpiScaleX(win.hwndFrame, 40)
-#define DOCLIST_MARGIN_TOP          DpiScaleY(win.hwndFrame, 60)
-#define DOCLIST_MARGIN_BETWEEN_Y    DpiScaleY(win.hwndFrame, 50)
-#define DOCLIST_MARGIN_BOTTOM       DpiScaleY(win.hwndFrame, 40)
+#define DOCLIST_MARGIN_LEFT         DpiScaleX(win->hwndFrame, 40)
+#define DOCLIST_MARGIN_BETWEEN_X    DpiScaleX(win->hwndFrame, 30)
+#define DOCLIST_MARGIN_RIGHT        DpiScaleX(win->hwndFrame, 40)
+#define DOCLIST_MARGIN_TOP          DpiScaleY(win->hwndFrame, 60)
+#define DOCLIST_MARGIN_BETWEEN_Y    DpiScaleY(win->hwndFrame, 50)
+#define DOCLIST_MARGIN_BOTTOM       DpiScaleY(win->hwndFrame, 40)
 #define DOCLIST_MAX_THUMBNAILS_X    5
-#define DOCLIST_BOTTOM_BOX_DY       DpiScaleY(win.hwndFrame, 50)
+#define DOCLIST_BOTTOM_BOX_DY       DpiScaleY(win->hwndFrame, 50)
 
-void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF textColor, COLORREF backgroundColor)
+void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF textColor, COLORREF backgroundColor)
 {
     ScopedPen penBorder(CreatePen(PS_SOLID, DOCLIST_SEPARATOR_DY, WIN_COL_BLACK));
     ScopedPen penThumbBorder(CreatePen(PS_SOLID, DOCLIST_THUMBNAIL_BORDER_W, WIN_COL_BLACK));
@@ -623,7 +623,7 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF 
 
     ScopedHdcSelect font(hdc, fontSumatraTxt);
 
-    ClientRect rc(win.hwndCanvas);
+    ClientRect rc(win->hwndCanvas);
     RECT rTmp = rc.ToRECT();
     ScopedBrush brushLogoBg(CreateSolidBrush(GetLogoBgColor()));
     FillRect(hdc, &rTmp, brushLogoBg);
@@ -631,10 +631,11 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF 
     ScopedHdcSelect brush(hdc, brushLogoBg);
     ScopedHdcSelect pen(hdc, penBorder);
 
+    auto staticLinks = win->staticLinks;
     bool isRtl = IsUIRightToLeft();
 
     /* render title */
-    RectI titleBox = RectI(PointI(0, 0), CalcSumatraVersionSize(win.hwndCanvas, hdc));
+    RectI titleBox = RectI(PointI(0, 0), CalcSumatraVersionSize(win->hwndCanvas, hdc));
     titleBox.x = rc.dx - titleBox.dx - 3;
     DrawSumatraVersion(hdc, titleBox);
     PaintLine(hdc, RectI(0, titleBox.dy, rc.dx, 0));
@@ -675,7 +676,7 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF 
     SelectObject(hdc, fontLeftTxt);
     SelectObject(hdc, GetStockBrush(NULL_BRUSH));
 
-    win.staticLinks.Reset();
+    staticLinks.Reset();
     for (int h = 0; h < height; h++) {
         for (int w = 0; w < width; w++) {
             if (h * width + w >= (int)list.Count()) {
@@ -715,7 +716,7 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF 
             }
             RoundRect(hdc, page.x, page.y, page.x + page.dx, page.y + page.dy, 10, 10);
 
-            int iconSpace = DpiScaleX(win.hwndFrame, 20);
+            int iconSpace = DpiScaleX(win->hwndFrame, 20);
             RectI rect(page.x + iconSpace, page.y + page.dy + 3, page.dx - iconSpace, iconSpace);
             if (isRtl)
                 rect.x -= iconSpace;
@@ -725,10 +726,10 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF 
             SHFILEINFO sfi = { 0 };
             HIMAGELIST himl = (HIMAGELIST)SHGetFileInfo(state->filePath, 0, &sfi, sizeof(sfi), SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
             ImageList_Draw(himl, sfi.iIcon, hdc,
-                           isRtl ? page.x + page.dx - DpiScaleX(win.hwndFrame, 16) : page.x,
+                           isRtl ? page.x + page.dx - DpiScaleX(win->hwndFrame, 16) : page.x,
                            rect.y, ILD_TRANSPARENT);
 
-            win.staticLinks.Append(StaticLinkInfo(rect.Union(page), state->filePath, state->filePath));
+            staticLinks.Append(StaticLinkInfo(rect.Union(page), state->filePath, state->filePath));
         }
     }
 
@@ -739,7 +740,7 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF 
     SetTextColor(hdc, COL_BLUE_LINK);
     SelectObject(hdc, penLinkLine);
 
-    HIMAGELIST himl = (HIMAGELIST)SendMessage(win.hwndToolbar, TB_GETIMAGELIST, 0, 0);
+    HIMAGELIST himl = (HIMAGELIST)SendMessage(win->hwndToolbar, TB_GETIMAGELIST, 0, 0);
     RectI rectIcon(offset.x, rc.y, 0, 0);
     ImageList_GetIconSize(himl, &rectIcon.dx, &rectIcon.dy);
     rectIcon.y += (rc.dy - rectIcon.dy) / 2;
@@ -758,8 +759,8 @@ void DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF 
     // make the click target larger
     rect = rect.Union(rectIcon);
     rect.Inflate(10, 10);
-    win.staticLinks.Append(StaticLinkInfo(rect, SLINK_OPEN_FILE));
+    staticLinks.Append(StaticLinkInfo(rect, SLINK_OPEN_FILE));
 
-    rect = DrawBottomRightLink(win.hwndCanvas, hdc, _TR("Hide frequently read"));
-    win.staticLinks.Append(StaticLinkInfo(rect, SLINK_LIST_HIDE));
+    rect = DrawBottomRightLink(win->hwndCanvas, hdc, _TR("Hide frequently read"));
+    staticLinks.Append(StaticLinkInfo(rect, SLINK_LIST_HIDE));
 }

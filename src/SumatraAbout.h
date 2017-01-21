@@ -3,7 +3,7 @@
 
 void OnMenuAbout();
 
-void  DrawAboutPage(WindowInfo& win, HDC hdc);
+void  DrawAboutPage(WindowInfo* win, HDC hdc);
 
 const WCHAR *GetStaticLink(Vec<StaticLinkInfo>& linkInfo, int x, int y, StaticLinkInfo *info=nullptr);
 
@@ -11,4 +11,4 @@ const WCHAR *GetStaticLink(Vec<StaticLinkInfo>& linkInfo, int x, int y, StaticLi
 #define SLINK_LIST_SHOW L"<View,ShowList>"
 #define SLINK_LIST_HIDE L"<View,HideList>"
 
-void    DrawStartPage(WindowInfo& win, HDC hdc, FileHistory& fileHistory, COLORREF textColor, COLORREF backgroundColor);
+void    DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF textColor, COLORREF backgroundColor);
