@@ -631,7 +631,6 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     ScopedHdcSelect brush(hdc, brushLogoBg);
     ScopedHdcSelect pen(hdc, penBorder);
 
-    auto staticLinks = win->staticLinks;
     bool isRtl = IsUIRightToLeft();
 
     /* render title */
@@ -676,7 +675,7 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     SelectObject(hdc, fontLeftTxt);
     SelectObject(hdc, GetStockBrush(NULL_BRUSH));
 
-    staticLinks.Reset();
+    win->staticLinks.Reset();
     for (int h = 0; h < height; h++) {
         for (int w = 0; w < width; w++) {
             if (h * width + w >= (int)list.Count()) {
@@ -729,7 +728,7 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
                            isRtl ? page.x + page.dx - DpiScaleX(win->hwndFrame, 16) : page.x,
                            rect.y, ILD_TRANSPARENT);
 
-            staticLinks.Append(StaticLinkInfo(rect.Union(page), state->filePath, state->filePath));
+            win->staticLinks.Append(StaticLinkInfo(rect.Union(page), state->filePath, state->filePath));
         }
     }
 
@@ -759,8 +758,8 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     // make the click target larger
     rect = rect.Union(rectIcon);
     rect.Inflate(10, 10);
-    staticLinks.Append(StaticLinkInfo(rect, SLINK_OPEN_FILE));
+    win->staticLinks.Append(StaticLinkInfo(rect, SLINK_OPEN_FILE));
 
     rect = DrawBottomRightLink(win->hwndCanvas, hdc, _TR("Hide frequently read"));
-    staticLinks.Append(StaticLinkInfo(rect, SLINK_LIST_HIDE));
+    win->staticLinks.Append(StaticLinkInfo(rect, SLINK_LIST_HIDE));
 }
