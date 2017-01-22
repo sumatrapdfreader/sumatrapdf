@@ -245,16 +245,16 @@ unsigned char *ImagesEngine::GetFileData(size_t *cbCount)
         if (data)
             return (unsigned char *)data;
     }
-    if (fileName)
-        return (unsigned char *)file::ReadAll(fileName, cbCount);
+    if (FileName())
+        return (unsigned char *)file::ReadAll(FileName(), cbCount);
     return nullptr;
 }
 
 bool ImagesEngine::SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots)
 {
     UNUSED(includeUserAnnots);
-    if (fileName) {
-        BOOL ok = CopyFile(fileName, copyFileName, FALSE);
+    if (FileName()) {
+        BOOL ok = CopyFile(FileName(), copyFileName, FALSE);
         if (ok)
             return true;
     }
@@ -357,7 +357,7 @@ BaseEngine *ImageEngineImpl::Clone()
         return nullptr;
 
     ImageEngineImpl *clone = new ImageEngineImpl();
-    clone->fileName = str::Dup(fileName);
+    clone->SetFileName(FileName());
     clone->fileExt = fileExt;
     if (fileStream)
         fileStream->Clone(&clone->fileStream);
@@ -371,7 +371,7 @@ bool ImageEngineImpl::LoadSingleFile(const WCHAR *file)
 {
     if (!file)
         return false;
-    fileName = str::Dup(file);
+    SetFileName(file);
 
     size_t len;
     ScopedMem<char> data(file::ReadAll(file, &len));
@@ -526,9 +526,9 @@ bool ImageEngineImpl::SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAn
     UNUSED(includeUserAnnots);
     bool ok = true;
     PdfCreator *c = new PdfCreator();
-    if (fileName) {
+    if (FileName()) {
         size_t len;
-        ScopedMem<char> data(file::ReadAll(fileName, &len));
+        ScopedMem<char> data(file::ReadAll(FileName(), &len));
         ok = data && c->AddImagePage(data, len, GetFileDPI());
     }
     else {
@@ -611,7 +611,10 @@ public:
     ImageDirEngineImpl() : fileDPI(96.0f) { }
 
     BaseEngine *Clone() override {
-        return fileName ? CreateFromFile(fileName) : nullptr;
+        if (FileName()) {
+            return CreateFromFile(FileName());
+        }
+        return nullptr;
     }
 
     unsigned char *GetFileData(size_t *cbCountOut) override { UNUSED(cbCountOut);  return nullptr; }
@@ -647,7 +650,7 @@ protected:
 
 bool ImageDirEngineImpl::LoadImageDir(const WCHAR *dirName)
 {
-    fileName = str::Dup(dirName);
+    SetFileName(dirName);
 
     ScopedMem<WCHAR> pattern(path::Join(dirName, L"*"));
 
@@ -815,8 +818,8 @@ public:
             if (SUCCEEDED(res))
                 return CreateFromStream(stm);
         }
-        if (fileName)
-            return CreateFromFile(fileName);
+        if (FileName())
+            return CreateFromFile(FileName());
         return nullptr;
     }
 
@@ -867,7 +870,7 @@ bool CbxEngineImpl::LoadFromFile(const WCHAR *file)
 {
     if (!file)
         return false;
-    fileName = str::Dup(file);
+    SetFileName(file);
 
     return FinishLoading();
 }

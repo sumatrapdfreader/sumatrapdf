@@ -213,8 +213,8 @@ public:
         if (!newEngine)
             return nullptr;
         PsEngineImpl *clone = new PsEngineImpl();
-        if (fileName)
-            clone->fileName.Set(str::Dup(fileName));
+        if (FileName())
+            clone->SetFileName(FileName());
         clone->pdfEngine = newEngine;
         return clone;
     }
@@ -244,11 +244,11 @@ public:
     }
 
     unsigned char *GetFileData(size_t *cbCount) override {
-        return (unsigned char *)file::ReadAll(fileName, cbCount);
+        return (unsigned char *)file::ReadAll(FileName(), cbCount);
     }
     bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false) override {
         UNUSED(includeUserAnnots);
-        return fileName ? CopyFile(fileName, copyFileName, FALSE) : false;
+        return FileName() ? CopyFile(FileName(), copyFileName, FALSE) : false;
     }
     bool SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots=false) override {
         return pdfEngine->SaveFileAs(pdfFileName, includeUserAnnots);
@@ -290,7 +290,7 @@ public:
         return pdfEngine->GetFileDPI();
     }
     const WCHAR *GetDefaultFileExt() const override {
-        return !str::EndsWithI(fileName, L".eps") ? L".ps" : L".eps";
+        return !str::EndsWithI(FileName(), L".eps") ? L".ps" : L".eps";
     }
 
     bool BenchLoadPage(int pageNo) override {
@@ -324,10 +324,10 @@ protected:
     BaseEngine *pdfEngine;
 
     bool Load(const WCHAR *fileName) {
-        AssertCrash(!this->fileName && !pdfEngine);
+        AssertCrash(!FileName() && !pdfEngine);
         if (!fileName)
             return false;
-        this->fileName.Set(str::Dup(fileName));
+        SetFileName(fileName);
         if (file::StartsWith(fileName, "\x1F\x8B"))
             pdfEngine = psgz2pdf(fileName);
         else

@@ -336,6 +336,11 @@ public:
     const WCHAR *FileName() const { return fileName.Get(); }
 
 protected:
+    void SetFileName(const WCHAR *s) {
+        fileName.SetCopy(s);
+    }
+
+private:
     ScopedMem<WCHAR> fileName;
 };
 

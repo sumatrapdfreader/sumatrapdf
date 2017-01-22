@@ -1468,8 +1468,8 @@ BaseEngine *PdfEngineImpl::Clone()
 
     PdfEngineImpl *clone = new PdfEngineImpl();
     bool ok = false;
-    if (fileName.Get()) {
-        ok = clone->Load(fileName.Get(), pwdUI);
+    if (FileName()) {
+        ok = clone->Load(FileName(), pwdUI);
     } else {
         ok = clone->Load(_doc->file, pwdUI);
     }
@@ -1509,10 +1509,10 @@ static const WCHAR *findEmbedMarks(const WCHAR *fileName)
     return embedMarks;
 }
 
-bool PdfEngineImpl::Load(const WCHAR *_fileName, PasswordUI *pwdUI)
+bool PdfEngineImpl::Load(const WCHAR *fileName, PasswordUI *pwdUI)
 {
-    AssertCrash(!fileName.Get() && !_doc && ctx);
-    fileName.SetCopy(_fileName);
+    AssertCrash(!FileName() && !_doc && ctx);
+    SetFileName(fileName);
     if (!ctx)
         return false;
 
@@ -1565,7 +1565,7 @@ OpenEmbeddedFile:
 
 bool PdfEngineImpl::Load(IStream *stream, PasswordUI *pwdUI)
 {
-    assert(!fileName.Get() && !_doc && ctx);
+    assert(!FileName() && !_doc && ctx);
     if (!ctx)
         return false;
 
@@ -1583,7 +1583,7 @@ bool PdfEngineImpl::Load(IStream *stream, PasswordUI *pwdUI)
 
 bool PdfEngineImpl::Load(fz_stream *stm, PasswordUI *pwdUI)
 {
-    assert(!fileName.Get() && !_doc && ctx);
+    assert(!FileName() && !_doc && ctx);
     if (!ctx)
         return false;
 
@@ -1625,7 +1625,7 @@ bool PdfEngineImpl::LoadFromStream(fz_stream *stm, PasswordUI *pwdUI)
 
     bool ok = false, saveKey = false;
     while (!ok) {
-        ScopedMem<WCHAR> pwd(pwdUI->GetPassword(fileName.Get(), digest, pdf_crypt_key(_doc), &saveKey));
+        ScopedMem<WCHAR> pwd(pwdUI->GetPassword(FileName(), digest, pdf_crypt_key(_doc), &saveKey));
         if (!pwd) {
             // password not given or encryption key has been remembered
             ok = saveKey;
@@ -2744,8 +2744,8 @@ unsigned char *PdfEngineImpl::GetFileData(size_t *cbCount)
     }
     fz_catch(ctx) {
         data = nullptr;
-        if (fileName.Get()) {
-            data = (unsigned char *) file::ReadAll(fileName, cbCount);
+        if (FileName()) {
+            data = (unsigned char *) file::ReadAll(FileName(), cbCount);
         }
     }
     return data;
@@ -2760,9 +2760,9 @@ bool PdfEngineImpl::SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots
         if (ok)
             return !includeUserAnnots || SaveUserAnnots(copyFileName);
     }
-    if (!fileName.Get())
+    if (!FileName())
         return false;
-    bool ok = CopyFile(fileName.Get(), copyFileName, FALSE);
+    bool ok = CopyFile(FileName(), copyFileName, FALSE);
     if (!ok)
         return false;
     // TODO: try to recover when SaveUserAnnots fails?
@@ -3620,8 +3620,8 @@ BaseEngine *XpsEngineImpl::Clone()
 
     XpsEngineImpl *clone = new XpsEngineImpl();
     bool ok;
-    if (fileName.Get()) {
-        ok = clone->Load(fileName.Get());
+    if (FileName()) {
+        ok = clone->Load(FileName());
     } else {
         ok = clone->Load(_docStream);
     }
@@ -3635,16 +3635,16 @@ BaseEngine *XpsEngineImpl::Clone()
     return clone;
 }
 
-bool XpsEngineImpl::Load(const WCHAR *fileNameIn)
+bool XpsEngineImpl::Load(const WCHAR *fileName)
 {
-    AssertCrash(!fileName.Get() && !_doc && !_docStream && ctx);
-    fileName.SetCopy(fileNameIn);
+    AssertCrash(!FileName() && !_doc && !_docStream && ctx);
+    SetFileName(fileName);
     if (!ctx)
         return false;
 
-    if (dir::Exists(fileNameIn)) {
+    if (dir::Exists(fileName)) {
         // load uncompressed documents as a recompressed ZIP stream
-        ScopedComPtr<IStream> zipStream(OpenDirAsZipStream(fileNameIn, true));
+        ScopedComPtr<IStream> zipStream(OpenDirAsZipStream(fileName, true));
         if (!zipStream)
             return false;
         return Load(zipStream);
@@ -3652,7 +3652,7 @@ bool XpsEngineImpl::Load(const WCHAR *fileNameIn)
 
     fz_stream *stm = nullptr;
     fz_try(ctx) {
-        stm = fz_open_file2(ctx, fileNameIn);
+        stm = fz_open_file2(ctx, fileName);
     }
     fz_catch(ctx) {
         return false;
@@ -3678,7 +3678,7 @@ bool XpsEngineImpl::Load(IStream *stream)
 
 bool XpsEngineImpl::Load(fz_stream *stm)
 {
-    assert(!fileName.Get() && !_doc && !_docStream && ctx);
+    assert(!FileName() && !_doc && !_docStream && ctx);
     if (!ctx)
         return false;
 
@@ -4107,8 +4107,8 @@ unsigned char *XpsEngineImpl::GetFileData(size_t *cbCount)
     }
     fz_catch(ctx) {
         data = nullptr;
-        if (fileName.Get()) {
-            data = (unsigned char *) file::ReadAll(fileName.Get(), cbCount);
+        if (FileName()) {
+            data = (unsigned char *) file::ReadAll(FileName(), cbCount);
         }
     }
     return data;
@@ -4124,9 +4124,9 @@ bool XpsEngineImpl::SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots
         if (ok)
             return true;
     }
-    if (!fileName.Get())
+    if (!FileName())
         return false;
-    return CopyFile(fileName.Get(), copyFileName, FALSE);
+    return CopyFile(FileName(), copyFileName, FALSE);
 }
 
 WCHAR *XpsEngineImpl::ExtractFontList()
