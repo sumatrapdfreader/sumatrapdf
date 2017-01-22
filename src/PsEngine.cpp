@@ -204,7 +204,7 @@ static BaseEngine *psgz2pdf(const WCHAR *fileName)
 // the ps2pdf conversion from Ghostscript returns
 class PsEngineImpl : public BaseEngine {
 public:
-    PsEngineImpl() : fileName(nullptr), pdfEngine(nullptr) { }
+    PsEngineImpl() : pdfEngine(nullptr) { }
     virtual ~PsEngineImpl() {
         delete pdfEngine;
     }
@@ -219,7 +219,6 @@ public:
         return clone;
     }
 
-    const WCHAR *FileName() const override { return fileName; };
     int PageCount() const override {
         return pdfEngine->PageCount();
     }
@@ -322,7 +321,6 @@ public:
     static BaseEngine *CreateFromFile(const WCHAR *fileName);
 
 protected:
-    ScopedMem<WCHAR> fileName;
     BaseEngine *pdfEngine;
 
     bool Load(const WCHAR *fileName) {

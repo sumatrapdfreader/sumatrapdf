@@ -183,7 +183,6 @@ public:
         return fileName ? CreateFromFile(fileName) : nullptr;
     }
 
-    const WCHAR *FileName() const override { return fileName; };
     int PageCount() const override { return pageCount; }
 
     RectD PageMediabox(int pageNo) override {
@@ -270,7 +269,6 @@ DjVuEngineImpl::~DjVuEngineImpl()
     ScopedCritSec scope(&gDjVuContext.lock);
 
     free(mediaboxes);
-    free(fileName);
 
     if (annos) {
         for (int i = 0; i < pageCount; i++) {

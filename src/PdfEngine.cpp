@@ -1167,7 +1167,6 @@ public:
     virtual ~PdfEngineImpl();
     BaseEngine *Clone() override;
 
-    const WCHAR *FileName() const  override { return _fileName; };
     int PageCount() const override {
         // make sure that _doc->page_count is initialized as soon as
         // _doc is defined, so that pdf_count_pages can't throw
@@ -1230,7 +1229,6 @@ public:
     static BaseEngine *CreateFromStream(IStream *stream, PasswordUI *pwdUI);
 
 protected:
-    WCHAR *_fileName;
     char *_decryptionKey;
     bool isProtected;
 
@@ -1371,7 +1369,7 @@ public:
     }
 };
 
-PdfEngineImpl::PdfEngineImpl() : _fileName(nullptr), _doc(nullptr),
+PdfEngineImpl::PdfEngineImpl() : _doc(nullptr),
     _pages(nullptr), _pageObjs(nullptr), _mediaboxes(nullptr), _info(nullptr),
     outline(nullptr), attachments(nullptr), _pagelabels(nullptr),
     _decryptionKey(nullptr), isProtected(false),
@@ -1436,7 +1434,6 @@ PdfEngineImpl::~PdfEngineImpl()
 
     free(_mediaboxes);
     delete _pagelabels;
-    free(_fileName);
     free(_decryptionKey);
 
     LeaveCriticalSection(&ctxAccess);
@@ -1470,7 +1467,13 @@ BaseEngine *PdfEngineImpl::Clone()
         pwdUI = new PasswordCloner(pdf_crypt_key(_doc));
 
     PdfEngineImpl *clone = new PdfEngineImpl();
-    if (!clone || !(_fileName ? clone->Load(_fileName, pwdUI) : clone->Load(_doc->file, pwdUI))) {
+    bool ok = false;
+    if (fileName.Get()) {
+        ok = clone->Load(fileName.Get(), pwdUI);
+    } else {
+        ok = clone->Load(_doc->file, pwdUI);
+    }
+    if (!ok) {
         delete clone;
         delete pwdUI;
         return nullptr;
@@ -1506,21 +1509,21 @@ static const WCHAR *findEmbedMarks(const WCHAR *fileName)
     return embedMarks;
 }
 
-bool PdfEngineImpl::Load(const WCHAR *fileName, PasswordUI *pwdUI)
+bool PdfEngineImpl::Load(const WCHAR *_fileName, PasswordUI *pwdUI)
 {
-    assert(!_fileName && !_doc && ctx);
-    _fileName = str::Dup(fileName);
-    if (!_fileName || !ctx)
+    AssertCrash(!fileName.Get() && !_doc && ctx);
+    fileName.SetCopy(_fileName);
+    if (!ctx)
         return false;
 
     fz_stream *file = nullptr;
     // File names ending in :<digits>:<digits> are interpreted as containing
     // embedded PDF documents (the digits are :<num>:<gen> of the embedded file stream)
-    WCHAR *embedMarks = (WCHAR *)findEmbedMarks(_fileName);
+    WCHAR *embedMarks = (WCHAR *)findEmbedMarks(fileName);
     if (embedMarks)
         *embedMarks = '\0';
     fz_try(ctx) {
-        file = fz_open_file2(ctx, _fileName);
+        file = fz_open_file2(ctx, fileName);
     }
     fz_catch(ctx) {
         file = nullptr;
@@ -1562,7 +1565,7 @@ OpenEmbeddedFile:
 
 bool PdfEngineImpl::Load(IStream *stream, PasswordUI *pwdUI)
 {
-    assert(!_fileName && !_doc && ctx);
+    assert(!fileName.Get() && !_doc && ctx);
     if (!ctx)
         return false;
 
@@ -1580,7 +1583,7 @@ bool PdfEngineImpl::Load(IStream *stream, PasswordUI *pwdUI)
 
 bool PdfEngineImpl::Load(fz_stream *stm, PasswordUI *pwdUI)
 {
-    assert(!_fileName && !_doc && ctx);
+    assert(!fileName.Get() && !_doc && ctx);
     if (!ctx)
         return false;
 
@@ -1622,7 +1625,7 @@ bool PdfEngineImpl::LoadFromStream(fz_stream *stm, PasswordUI *pwdUI)
 
     bool ok = false, saveKey = false;
     while (!ok) {
-        ScopedMem<WCHAR> pwd(pwdUI->GetPassword(_fileName, digest, pdf_crypt_key(_doc), &saveKey));
+        ScopedMem<WCHAR> pwd(pwdUI->GetPassword(fileName.Get(), digest, pdf_crypt_key(_doc), &saveKey));
         if (!pwd) {
             // password not given or encryption key has been remembered
             ok = saveKey;
@@ -2740,7 +2743,10 @@ unsigned char *PdfEngineImpl::GetFileData(size_t *cbCount)
         data = fz_extract_stream_data(_doc->file, cbCount);
     }
     fz_catch(ctx) {
-        return _fileName ? (unsigned char *)file::ReadAll(_fileName, cbCount) : nullptr;
+        data = nullptr;
+        if (fileName.Get()) {
+            data = (unsigned char *) file::ReadAll(fileName, cbCount);
+        }
     }
     return data;
 }
@@ -2754,9 +2760,9 @@ bool PdfEngineImpl::SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots
         if (ok)
             return !includeUserAnnots || SaveUserAnnots(copyFileName);
     }
-    if (!_fileName)
+    if (!fileName.Get())
         return false;
-    bool ok = CopyFile(_fileName, copyFileName, FALSE);
+    bool ok = CopyFile(fileName.Get(), copyFileName, FALSE);
     if (!ok)
         return false;
     // TODO: try to recover when SaveUserAnnots fails?
@@ -3389,7 +3395,6 @@ public:
     virtual ~XpsEngineImpl();
     BaseEngine *Clone() override;
 
-    const WCHAR *FileName() const override { return _fileName; };
     int PageCount() const override {
         return _doc ? xps_count_pages(_doc) : 0;
     }
@@ -3435,8 +3440,6 @@ public:
     static BaseEngine *CreateFromStream(IStream *stream);
 
 protected:
-    WCHAR *_fileName;
-
     // make sure to never ask for _pagesAccess in an ctxAccess
     // protected critical section in order to avoid deadlocks
     CRITICAL_SECTION ctxAccess;
@@ -3559,7 +3562,7 @@ public:
     }
 };
 
-XpsEngineImpl::XpsEngineImpl() : _fileName(nullptr), _doc(nullptr), _docStream(nullptr), _pages(nullptr),
+XpsEngineImpl::XpsEngineImpl() : _doc(nullptr), _docStream(nullptr), _pages(nullptr),
     _mediaboxes(nullptr), _outline(nullptr), _info(nullptr), imageRects(nullptr)
 {
     InitializeCriticalSection(&_pagesAccess);
@@ -3604,7 +3607,6 @@ XpsEngineImpl::~XpsEngineImpl()
     ctx = nullptr;
 
     free(_mediaboxes);
-    free(_fileName);
 
     LeaveCriticalSection(&ctxAccess);
     DeleteCriticalSection(&ctxAccess);
@@ -3617,7 +3619,13 @@ BaseEngine *XpsEngineImpl::Clone()
     ScopedCritSec scope(&ctxAccess);
 
     XpsEngineImpl *clone = new XpsEngineImpl();
-    if (!clone || !(_fileName ? clone->Load(_fileName) : clone->Load(_docStream))) {
+    bool ok;
+    if (fileName.Get()) {
+        ok = clone->Load(fileName.Get());
+    } else {
+        ok = clone->Load(_docStream);
+    }
+    if (!ok) {
         delete clone;
         return nullptr;
     }
@@ -3627,16 +3635,16 @@ BaseEngine *XpsEngineImpl::Clone()
     return clone;
 }
 
-bool XpsEngineImpl::Load(const WCHAR *fileName)
+bool XpsEngineImpl::Load(const WCHAR *fileNameIn)
 {
-    AssertCrash(!_fileName && !_doc && !_docStream && ctx);
-    _fileName = str::Dup(fileName);
-    if (!_fileName || !ctx)
+    AssertCrash(!fileName.Get() && !_doc && !_docStream && ctx);
+    fileName.SetCopy(fileNameIn);
+    if (!ctx)
         return false;
 
-    if (dir::Exists(_fileName)) {
+    if (dir::Exists(fileNameIn)) {
         // load uncompressed documents as a recompressed ZIP stream
-        ScopedComPtr<IStream> zipStream(OpenDirAsZipStream(_fileName, true));
+        ScopedComPtr<IStream> zipStream(OpenDirAsZipStream(fileNameIn, true));
         if (!zipStream)
             return false;
         return Load(zipStream);
@@ -3644,7 +3652,7 @@ bool XpsEngineImpl::Load(const WCHAR *fileName)
 
     fz_stream *stm = nullptr;
     fz_try(ctx) {
-        stm = fz_open_file2(ctx, _fileName);
+        stm = fz_open_file2(ctx, fileNameIn);
     }
     fz_catch(ctx) {
         return false;
@@ -3670,7 +3678,7 @@ bool XpsEngineImpl::Load(IStream *stream)
 
 bool XpsEngineImpl::Load(fz_stream *stm)
 {
-    assert(!_fileName && !_doc && !_docStream && ctx);
+    assert(!fileName.Get() && !_doc && !_docStream && ctx);
     if (!ctx)
         return false;
 
@@ -4098,7 +4106,10 @@ unsigned char *XpsEngineImpl::GetFileData(size_t *cbCount)
         data = fz_extract_stream_data(_docStream, cbCount);
     }
     fz_catch(ctx) {
-        return _fileName ? (unsigned char *)file::ReadAll(_fileName, cbCount) : nullptr;
+        data = nullptr;
+        if (fileName.Get()) {
+            data = (unsigned char *) file::ReadAll(fileName.Get(), cbCount);
+        }
     }
     return data;
 }
@@ -4113,9 +4124,9 @@ bool XpsEngineImpl::SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots
         if (ok)
             return true;
     }
-    if (!_fileName)
+    if (!fileName.Get())
         return false;
-    return CopyFile(_fileName, copyFileName, FALSE);
+    return CopyFile(fileName.Get(), copyFileName, FALSE);
 }
 
 WCHAR *XpsEngineImpl::ExtractFontList()

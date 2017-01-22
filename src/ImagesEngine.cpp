@@ -39,7 +39,6 @@ public:
     ImagesEngine();
     virtual ~ImagesEngine();
 
-    const WCHAR *FileName() const override { return fileName; };
     int PageCount() const override { return (int)mediaboxes.Count(); }
 
     RectD PageMediabox(int pageNo) override;
@@ -77,7 +76,6 @@ public:
     }
 
 protected:
-    WCHAR *fileName;
     ScopedComPtr<IStream> fileStream;
 
     CRITICAL_SECTION cacheAccess;
@@ -93,7 +91,7 @@ protected:
     void DropPage(ImagePage *page, bool forceRemove=false);
 };
 
-ImagesEngine::ImagesEngine() : fileName(nullptr)
+ImagesEngine::ImagesEngine()
 {
     InitializeCriticalSection(&cacheAccess);
 }
@@ -106,8 +104,6 @@ ImagesEngine::~ImagesEngine()
         DropPage(pageCache.Last(), true);
     }
     LeaveCriticalSection(&cacheAccess);
-
-    free(fileName);
 
     DeleteCriticalSection(&cacheAccess);
 }

@@ -16,6 +16,13 @@ public:
         free(ptr);
         ptr = newPtr;
     }
+    void SetCopy(const T *newPtr) {
+        free(ptr);
+        ptr = nullptr;
+        if (newPtr) {
+            ptr = str::Dup(newPtr);
+        }
+    }
     ScopedMem& operator=(T* newPtr) {
         free(ptr);
         ptr = newPtr;

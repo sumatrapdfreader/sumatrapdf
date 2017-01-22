@@ -220,8 +220,6 @@ public:
     // creates a clone of this engine (e.g. for printing on a different thread)
     virtual BaseEngine *Clone() = 0;
 
-    // the name of the file this engine handles
-    virtual const WCHAR *FileName() const = 0;
     // number of pages the loaded document contains
     virtual int PageCount() const = 0;
 
@@ -333,6 +331,12 @@ public:
     // loads the given page so that the time required can be measured
     // without also measuring rendering times
     virtual bool BenchLoadPage(int pageNo) = 0;
+
+    // the name of the file this engine handles
+    const WCHAR *FileName() const { return fileName.Get(); }
+
+protected:
+    ScopedMem<WCHAR> fileName;
 };
 
 class PasswordUI {

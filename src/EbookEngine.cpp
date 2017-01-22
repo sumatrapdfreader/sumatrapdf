@@ -70,7 +70,6 @@ public:
     EbookEngine();
     virtual ~EbookEngine();
 
-    const WCHAR *FileName() const override { return fileName; };
     int PageCount() const override { return pages ? (int)pages->Count() : 0; }
 
     RectD PageMediabox(int pageNo) override { UNUSED(pageNo);  return pageRect; }
@@ -241,7 +240,6 @@ EbookEngine::~EbookEngine()
     if (pages)
         DeleteVecMembers(*pages);
     delete pages;
-    free(fileName);
 
     LeaveCriticalSection(&pagesAccess);
     DeleteCriticalSection(&pagesAccess);
