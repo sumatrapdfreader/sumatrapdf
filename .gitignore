@@ -25,6 +25,7 @@ vs/obj/
 *.vcxproj.user
 bin/premake5.exe
 vs2013/
+vs2015/.vs/
 rel/
 rel64/
 relPrefast/

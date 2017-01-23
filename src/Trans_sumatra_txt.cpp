@@ -8090,7 +8090,7 @@ const char * gTranslations_lv =
   "Gr\304\201matas format\304\223\305\241ana... %d lappuses\0"\
   "%s lappus\304\223 atrasts teksts\0"\
   "%s lappus\304\223 atrasts teksts (v\304\223lreiz)\0"\
-  "Bie\305\276i las\304\253tie\0"\
+  "Bie\305\276\304\201k las\304\253tie\0"\
   "\0"\
   "Doties uz lappusi\0"\
   "Sl\304\223pt bie\305\276i las\304\253tos\0"\

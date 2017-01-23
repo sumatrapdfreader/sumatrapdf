@@ -1562,7 +1562,7 @@ const char * gTranslations_no =
   "Kan ikke kopiere avinstalleringsrutinen til midlertidig mappe\0"\
   "Kan ikke opprette snarvei\0"\
   "Kan ikke slette avinstalleringsn\303\270kler i Registeret\0"\
-  "\0"\
+  "Klarte ikke \303\245 bli registrert som standardprogram i Windows 10.\0"\
   "Kan ikke lagre utvidet filtypeinformasjon i Registeret\0"\
   "Kan ikke lagre avinstalleringsinformasjon i Registeret\0"\
   "Skjule &Tillegg\0"\
@@ -1607,7 +1607,7 @@ const char * gTranslations_nn =
   "Mislykkas i \303\245 kopiere installasjonsfjernar til det midlertidige direktivet\0"\
   "Klarte ikkje \303\245 lage ein snarveg\0"\
   "Mislykkast i \303\245 slette avinstalleringsregistern\303\270klane\0"\
-  "\0"\
+  "Klarte ikkje \303\245 bli registrert som standardprogram i Windows 10.\0"\
   "Mislykkast i \303\245 skrive den utvida filutvidingsinformasjonen til registeret\0"\
   "Mislykkast i \303\245 skrive avinstalleringsinformasjonen til registeret\0"\
   "Skjul &innstillingar\0"\

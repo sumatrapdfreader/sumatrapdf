@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-edb92e8c76d5b3ad451906cf5dc0c4d794af0e71
+65923ca9632c71d88095c36a49fa911598f7e70c
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -8194,6 +8194,8 @@ kr:Windows 10 상에서 기본 프로그램으로 등록하지 못했습니다.
 lt:Nepavyko programos padaryti numatytąja Windows 10 sistemoje
 lv:Neizdevās reģistrēt kā noklusējuma programmu Windows 10 vidē
 nl:Als standaard App in Windows 10 aanmelden mislukt
+nn:Klarte ikkje å bli registrert som standardprogram i Windows 10.
+no:Klarte ikke å bli registrert som standardprogram i Windows 10.
 pl:Nie udało się zarejestrować jako domyślny program na Windows 10
 ru:Не удалось зарегистрировать как программу по умолчанию в Windows 10
 sk:Nastavenie predvoleného programu pod Windows 10 zlyhalo.
@@ -9907,7 +9909,7 @@ ka:ბოლოს წაკითხული დოკუმენტები
 kr:최근에 읽은 파일
 ku:زۆرترین خوێندراوە
 lt:Dažniausiai skaitomi
-lv:Bieži lasītie
+lv:Biežāk lasītie
 mk:Често читани
 ml:കൂടുതല്‍ വായിച്ചത്.
 my:Kerap Dibaca
