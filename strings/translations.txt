@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-65923ca9632c71d88095c36a49fa911598f7e70c
+b469c0040daaef20b6c36268f41d9a12621966dc
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -4559,7 +4559,7 @@ uk:Закладка ярлика на сторінку %s з %s
 uz:Xatcho'p yorlig'i betga %s %s dan
 vn:Lối tắt chỉ dấu sách đến trang %s của %s
 :Bookmarks
-af:Boekmerke\r\n
+af:Boekmerke\n
 am:Էջանիշեր
 ar:قائمة العناوين
 az:Əlfəcinlər
@@ -5400,7 +5400,7 @@ am:Շարունակել գրքի տեսքով
 ar:عرض مستمر للكتاب
 az:Ardıcıl kitab formatı
 bg:Непрекъснат изглед като книга
-bn:\r\n\r\n\r\n\r\nক্রমাগত বই দৃশ্য\r\n
+bn:\n\n\n\nক্রমাগত বই দৃশ্য\n
 br:Ver como livro contínuo
 bs:Slijedni knjiški pogled
 ca-xv:Visualització contínua de llibre
@@ -8183,6 +8183,7 @@ bs:Neuspješno registriranje kao zadani program na win 10
 cn:Win 10 默认程序设置失败
 cz:Nepodařilo se nastavit jako výchozí program na Windows 10
 el:Απέτυχε να γίνει το προκαθορισμένο πρόγραμμα ανάγνωσης στα Win 10
+es:Fallo al registrar como programa por defecto en Windows 10.
 et:Vaikeprogrammina registreerumine Windows 10 all ebaõnnestus
 eu:Hutsegitea win 10-ean berezko programa bezala erregistratzerakoan
 fr:Échec de l'enregistrement comme programme par défaut sous Windows 10.
@@ -8202,7 +8203,7 @@ sk:Nastavenie predvoleného programu pod Windows 10 zlyhalo.
 sl:Napaka pri registraciji kot win 10 privzeti program
 sp-rs:Neuspelo postavljanje kao podrazumevani program na win 10
 sr-rs:Неуспело постављање као подразумевани програм на wин 10
-tr:\r\nWin 10'da varsayılan program olarak kayıt edilemedi
+tr:\nWin 10'da varsayılan program olarak kayıt edilemedi
 tw:Win 10 默認程式註冊失敗
 uk:Не вдалося зареєструватися як програма по замовчуванню у Windows 10
 :Failed to rename the file!
