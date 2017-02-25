@@ -43,11 +43,13 @@ typedef HANDLE(WINAPI *Sig_CreateFileTransactedW)(LPCWSTR lpFileName, DWORD dwDe
                                                   HANDLE hTransaction, PUSHORT pusMiniVersion,
                                                   PVOID pExtendedParameter);
 typedef BOOL(WINAPI *Sig_DeleteFileTransactedW)(LPCWSTR lpFileName, HANDLE hTransaction);
+typedef BOOL(WINAPI *Sig_SetDefaultDllDirectories)(DWORD directoryFlags);
 
 #define KERNEL32_API_LIST(V)                                                                       \
     V(SetProcessDEPPolicy)                                                                         \
     V(IsWow64Process)                                                                              \
     V(SetDllDirectoryW)                                                                            \
+    V(SetDefaultDllDirectories)                                                                    \
     V(RtlCaptureContext)                                                                           \
     V(CreateFileTransactedW)                                                                       \
     V(DeleteFileTransactedW)
@@ -381,3 +383,5 @@ HRESULT RaiseStructureChangedEvent(IRawElementProviderSimple *pProvider,
                                    int cRuntimeIdLen);
 HRESULT GetReservedNotSupportedValue(IUnknown **punkNotSupportedValue);
 };
+
+void NoDllHijacking();
