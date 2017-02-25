@@ -507,8 +507,7 @@ void OnMenuPrint(WindowInfo *win, bool waitForCompletion) {
         return;
     }
 
-    PRINTDLGEX pd;
-    ZeroMemory(&pd, sizeof(PRINTDLGEX));
+    PRINTDLGEX pd = { 0 };
     pd.lStructSize = sizeof(PRINTDLGEX);
     pd.hwndOwner = win->hwndFrame;
     pd.Flags = PD_USEDEVMODECOPIESANDCOLLATE | PD_COLLATE;

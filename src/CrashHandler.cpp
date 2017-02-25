@@ -372,8 +372,7 @@ static const char *OsNameFromVer(OSVERSIONINFOEX ver)
 
 static void GetOsVersion(str::Str<char>& s)
 {
-    OSVERSIONINFOEX ver;
-    ZeroMemory(&ver, sizeof(ver));
+    OSVERSIONINFOEX ver = { 0 };
     ver.dwOSVersionInfoSize = sizeof(ver);
 #pragma warning(push)
 #pragma warning(disable: 4996) // 'GetVersionEx': was declared deprecated

@@ -910,8 +910,7 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wP
 
 HPROPSHEETPAGE CreatePrintAdvancedPropSheet(Print_Advanced_Data *data, ScopedMem<DLGTEMPLATE>& dlgTemplate)
 {
-    PROPSHEETPAGE psp;
-    ZeroMemory(&psp, sizeof(PROPSHEETPAGE));
+    PROPSHEETPAGE psp = { 0 };
 
     psp.dwSize = sizeof(PROPSHEETPAGE);
     psp.dwFlags = PSP_USETITLE | PSP_PREMATURE;
