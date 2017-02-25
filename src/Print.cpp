@@ -685,7 +685,7 @@ static short GetPaperSourceByName(const WCHAR *name, LPDEVMODE devMode) {
             return bins.Get()[i];
     }
     // alternatively allow indicating the paper bin directly by number
-    if (str::Parse(L"%u%$", name, &count))
+    if (str::Parse(name, L"%u%$", &count))
         return (short)count;
     return devMode->dmDefaultSource;
 }
