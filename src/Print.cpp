@@ -793,9 +793,7 @@ bool PrintFile(BaseEngine *engine, WCHAR *printerName, bool displayErrors, const
                               _TR("Printing problem."));
         goto Exit;
     }
-    devMode = (LPDEVMODE)malloc(structSize);
-    if (!devMode)
-        goto Exit;
+    devMode = (LPDEVMODE)calloc(structSize, 1);
 
     // Get the default DevMode for the printer and modify it for your needs.
     returnCode = DocumentProperties(nullptr, printer, printerName,
@@ -804,9 +802,10 @@ bool PrintFile(BaseEngine *engine, WCHAR *printerName, bool displayErrors, const
                                     DM_OUT_BUFFER); /* Have the output buffer filled. */
     if (IDOK != returnCode) {
         // If failure, inform the user, cleanup and return failure.
-        if (displayErrors)
+        if (displayErrors) {
             MessageBoxWarning(nullptr, _TR("Could not obtain Printer properties"),
                               _TR("Printing problem."));
+        }
         goto Exit;
     }
 
@@ -825,9 +824,10 @@ bool PrintFile(BaseEngine *engine, WCHAR *printerName, bool displayErrors, const
 
         PrintData pd(engine, infoData, devMode, ranges, advanced);
         ok = PrintToDevice(pd);
-        if (!ok && displayErrors)
+        if (!ok && displayErrors) {
             MessageBoxWarning(nullptr, _TR("Couldn't initialize printer"),
                               _TR("Printing problem."));
+        }
     }
 
 Exit:
