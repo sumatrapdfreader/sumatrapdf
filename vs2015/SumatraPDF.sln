@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2015
+# Visual Studio 14
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SumatraPDF", "SumatraPDF.vcxproj", "{DC1BAF9B-C8D3-F0E8-31DB-C9441DB28BD9}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zlib", "zlib.vcxproj", "{16CFA17C-0206-A30D-ABF2-881097081F0F}"

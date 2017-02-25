@@ -1,7 +1,7 @@
 --[[
 To generate Visual Studio files in vs2015 directory, run: premake5 vs2015
 
-I'm using premake5 alpha9 from http://premake.github.io/download.html#v5
+I'm using premake5 alpha11 from http://premake.github.io/download.html#v5
 (premake4 won't work, it doesn't support VS 2013+)
 
 Note about nasm: when providing "-I foo/bar/" flag to nasm.exe, it must be
@@ -92,11 +92,12 @@ workspace "SumatraPDF"
   filter {}
   objdir "%{cfg.targetdir}/obj"
 
+  symbols "On"
+
   -- https://github.com/premake/premake-core/wiki/flags
   flags {
     "MultiProcessorCompile",
     "StaticRuntime",
-    "Symbols",
     -- "Unicode", TODO: breaks libdjuv?
   }
 
