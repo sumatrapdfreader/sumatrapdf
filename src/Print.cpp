@@ -665,31 +665,35 @@ static short GetPaperByName(const WCHAR *papername) {
     return 0;
 }
 
-static short GetPaperSourceByName(const WCHAR *name, LPDEVMODE devMode) {
+static short GetPaperSourceByName(const WCHAR *printerName, const WCHAR *binName, LPDEVMODE devMode) {
     CrashIf(!(devMode->dmFields & DM_DEFAULTSOURCE));
-    if (!(devMode->dmFields & DM_DEFAULTSOURCE))
+    if (!(devMode->dmFields & DM_DEFAULTSOURCE)) {
         return devMode->dmDefaultSource;
-    DWORD count = DeviceCapabilities(devMode->dmDeviceName, nullptr, DC_BINS, nullptr, nullptr);
-    DWORD count2 =
-        DeviceCapabilities(devMode->dmDeviceName, nullptr, DC_BINNAMES, nullptr, nullptr);
-    if (count != count2 || 0 == count)
+    }
+    DWORD count = DeviceCapabilities(printerName, nullptr, DC_BINS, nullptr, nullptr);
+    DWORD count2 = DeviceCapabilities(printerName, nullptr, DC_BINNAMES, nullptr, nullptr);
+    if (count != count2 || 0 == count || ((DWORD)-1 == count)) {
         return devMode->dmDefaultSource;
+    }
     // try to determine the paper bin number by name
     ScopedMem<WORD> bins(AllocArray<WORD>(count));
     ScopedMem<WCHAR> binNames(AllocArray<WCHAR>(24 * count + 1));
-    DeviceCapabilities(devMode->dmDeviceName, nullptr, DC_BINS, (WCHAR *)bins.Get(), nullptr);
-    DeviceCapabilities(devMode->dmDeviceName, nullptr, DC_BINNAMES, binNames.Get(), nullptr);
+    DeviceCapabilities(printerName, nullptr, DC_BINS, (WCHAR *)bins.Get(), nullptr);
+    DeviceCapabilities(printerName, nullptr, DC_BINNAMES, binNames.Get(), nullptr);
     for (DWORD i = 0; i < count; i++) {
-        if (str::EqIS(binNames.Get() + 24 * i, name))
+        const WCHAR *currName = binNames.Get() + 24 * i;
+        if (str::EqIS(currName, binName)) {
             return bins.Get()[i];
+        }
     }
     // alternatively allow indicating the paper bin directly by number
-    if (str::Parse(name, L"%u%$", &count))
+    if (str::Parse(binName, L"%u%$", &count)) {
         return (short)count;
+    }
     return devMode->dmDefaultSource;
 }
 
-static void ApplyPrintSettings(const WCHAR *settings, int pageCount, Vec<PRINTPAGERANGE> &ranges,
+static void ApplyPrintSettings(const WCHAR *printerName, const WCHAR *settings, int pageCount, Vec<PRINTPAGERANGE> &ranges,
                                Print_Advanced_Data &advanced, LPDEVMODE devMode) {
     WStrVec rangeList;
     if (settings)
@@ -728,7 +732,7 @@ static void ApplyPrintSettings(const WCHAR *settings, int pageCount, Vec<PRINTPA
         else if (str::EqI(rangeList.At(i), L"monochrome"))
             devMode->dmColor = DMCOLOR_MONOCHROME;
         else if (str::StartsWithI(rangeList.At(i), L"bin="))
-            devMode->dmDefaultSource = GetPaperSourceByName(rangeList.At(i) + 4, devMode);
+            devMode->dmDefaultSource = GetPaperSourceByName(printerName, rangeList.At(i) + 4, devMode);
         else if (str::StartsWithI(rangeList.At(i), L"paper="))
             devMode->dmPaperSize = GetPaperByName(rangeList.At(i) + 6);
     }
@@ -819,7 +823,7 @@ bool PrintFile(BaseEngine *engine, WCHAR *printerName, bool displayErrors, const
         Print_Advanced_Data advanced;
         Vec<PRINTPAGERANGE> ranges;
 
-        ApplyPrintSettings(settings, engine->PageCount(), ranges, advanced, devMode);
+        ApplyPrintSettings(printerName, settings, engine->PageCount(), ranges, advanced, devMode);
 
         PrintData pd(engine, infoData, devMode, ranges, advanced);
         ok = PrintToDevice(pd);
