@@ -23,8 +23,8 @@ public:
     void SetSensitive(bool sensitive);
     void SetDirection(TextSearchDirection direction);
     void SetLastResult(TextSelection *sel);
-    TextSel *FindFirst(int page, const WCHAR *text, ProgressUpdateUI *tracker=nullptr);
-    TextSel *FindNext(ProgressUpdateUI *tracker=nullptr);
+    TextSel *FindFirst(int page, const WCHAR *text, ProgressUpdateUI *tracker = nullptr);
+    TextSel *FindNext(ProgressUpdateUI *tracker = nullptr);
 
     // note: the result might not be a valid page number!
     int GetCurrentPageNo() const { return findPage; }
@@ -61,6 +61,6 @@ private:
 
     WCHAR *lastText = nullptr;
     int nPages = 0;
-    std::vector<bool> findCache2;
-    BYTE *findCache;
+    std::vector<bool> pagesToSkip;
 };
+
