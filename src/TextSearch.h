@@ -30,16 +30,16 @@ public:
     int GetCurrentPageNo() const { return findPage; }
 
 protected:
-    WCHAR *findText;
-    WCHAR *anchor;
-    int findPage;
-    bool forward;
-    bool caseSensitive;
+    WCHAR *findText = nullptr;
+    WCHAR *anchor = nullptr;
+    int findPage = 0;
+    bool forward = true;
+    bool caseSensitive = false;
     // these two options are implicitly set when the search text begins
     // resp. ends in a single space (many users already search that way),
     // combining them yields a 'Whole words' search
-    bool matchWordStart;
-    bool matchWordEnd;
+    bool matchWordStart = false;
+    bool matchWordEnd = false;
 
     void SetText(const WCHAR *text);
     bool FindTextInPage(int pageNo = 0);
@@ -56,9 +56,11 @@ protected:
     void Reset();
 
 private:
-    const WCHAR *pageText;
-    int findIndex;
+    const WCHAR *pageText = nullptr;
+    int findIndex = 0;
 
-    WCHAR *lastText;
+    WCHAR *lastText = nullptr;
+    int nPages = 0;
+    std::vector<bool> findCache2;
     BYTE *findCache;
 };
