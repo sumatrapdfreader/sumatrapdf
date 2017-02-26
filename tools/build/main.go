@@ -307,12 +307,9 @@ func createPdbZipMust(dir string) {
 func createPdbLzsaMust(dir string) {
 	args := []string{"SumatraPDF.pdb.lzsa"}
 	args = append(args, pdbFiles...)
-	// refer to rel\MakeLZSA.exe using absolute path so that we always
-	// use 32-bit version and to avoid issues with running it in different
-	// directories when name is relative
 	curDir, err := os.Getwd()
 	fataliferr(err)
-	makeLzsaPath := pj(curDir, "rel", "MakeLZSA.exe")
+	makeLzsaPath := pj(curDir, "bin", "MakeLZSA.exe")
 	cmd := getCmd(makeLzsaPath, args...)
 	cmd.Dir = dir
 	_, err = runCmdLogged(cmd, true)

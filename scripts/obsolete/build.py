@@ -81,7 +81,7 @@ def copy_to_dst_dir(src_path, dst_dir):
 
 def create_pdb_lzsa_archive(dir, archive_name):
     archive_path = os.path.join(dir, archive_name)
-    MakeLzsa = os.path.join(dir, "MakeLzsa.exe")
+    MakeLzsa = os.path.join(dir, "MakeLZSA.exe")
     files = ["libmupdf.pdb", "Installer.pdb",
              "SumatraPDF-no-MuPDF.pdb", "SumatraPDF.pdb"]
     files = [os.path.join(dir, file) + ":" + file for file in files]

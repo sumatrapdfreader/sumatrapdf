@@ -574,11 +574,8 @@ workspace "SumatraPDF"
       "comctl32", "gdiplus", "msimg32", "shlwapi", "urlmon",
       "version", "windowscodecs", "wininet"
     }
-    dependson { "MakeLZSA", "SumatraPDF-no-MUPDF", "PdfFilter", "PdfPreview", "Uninstaller" }
-    -- Note: to allow 64-bit builds on 32-bit machine, always use 32-bit MakeLZSA.exe
-    -- TODO: checkin MakeLZSA.exe to bin and use that because this might still fail
-    -- if we didn't build 32-bit build first
-    prebuildcommands { "cd %{cfg.targetdir} & ..\\rel\\MakeLZSA.exe InstallerData.dat SumatraPDF-no-MUPDF.exe:SumatraPDF.exe libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll Uninstaller.exe:uninstall.exe ..\\mupdf\\resources\\fonts\\droid\\DroidSansFallback.ttf:DroidSansFallback.ttf"  }
+    dependson { "SumatraPDF-no-MUPDF", "PdfFilter", "PdfPreview", "Uninstaller" }
+    prebuildcommands { "cd %{cfg.targetdir} & ..\\bin\\MakeLZSA.exe InstallerData.dat SumatraPDF-no-MUPDF.exe:SumatraPDF.exe libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll Uninstaller.exe:uninstall.exe ..\\mupdf\\resources\\fonts\\droid\\DroidSansFallback.ttf:DroidSansFallback.ttf"  }
 
 
   -- dummy project that builds all other projects
