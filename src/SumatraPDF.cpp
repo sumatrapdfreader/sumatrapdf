@@ -3188,6 +3188,15 @@ static void OnMenuViewPresentation(WindowInfo& win)
     OnMenuViewFullscreen(&win, win.AsFixed() != nullptr);
 }
 
+// make sure that idx falls within <0, max-1> inclusive range
+// negative numbers wrap from the end
+static int wrapIdx(int idx, int max) {
+    for (; idx < 0;  idx += max) {
+        idx += max;
+    }
+    return idx % max;
+}
+
 void AdvanceFocus(WindowInfo* win)
 {
     // Tab order: Frame -> Page -> Find -> ToC -> Favorites -> Frame -> ...
@@ -3196,40 +3205,38 @@ void AdvanceFocus(WindowInfo* win)
                       gGlobalPrefs->showToolbar && win->IsDocLoaded();
     int direction = IsShiftPressed() ? -1 : 1;
 
-    struct {
-        HWND hwnd;
-        bool isAvailable;
-    } tabOrder[] = {
-        { win->hwndFrame,   true                                },
-        { win->hwndPageBox, hasToolbar                          },
-        { win->hwndFindBox, hasToolbar && NeedsFindUI(win)      },
-        { win->hwndTocTree, win->tocLoaded && win->tocVisible   },
-        { win->hwndFavTree, gGlobalPrefs->showFavorites         },
-    };
-
-    /* // make sure that at least one element is available
-    bool hasAvailable = false;
-    for (int i = 0; i < dimof(tabOrder) && !hasAvailable; i++)
-        hasAvailable = tabOrder[i].isAvailable;
-    if (!hasAvailable)
-        return;
-    // */
+    const int MAX_WINDOWS = 5;
+    HWND tabOrder[MAX_WINDOWS] = { win->hwndFrame };
+    int nWindows = 1;
+    if (hasToolbar) {
+        tabOrder[nWindows++] = win->hwndPageBox;
+    }
+    if (hasToolbar && NeedsFindUI(win)) {
+        tabOrder[nWindows++] = win->hwndFindBox;
+    }
+    if (win->tocLoaded && win->tocVisible) {
+        tabOrder[nWindows++] = win->hwndTocTree;
+    }
+    if (gGlobalPrefs->showFavorites) {
+        tabOrder[nWindows++] = win->hwndFavTree;
+    }
+    CrashIf(nWindows > MAX_WINDOWS);
 
     // find the currently focused element
-    HWND current = GetFocus();
-    int ix;
-    for (ix = 0; ix < dimof(tabOrder); ix++)
-        if (tabOrder[ix].hwnd == current)
+    HWND focused = GetFocus();
+    int i;
+    for (i = 0; i < nWindows; i++) {
+        if (tabOrder[i] == focused) {
             break;
+        }
+    }
     // if it's not in the tab order, start at the beginning
-    if (ix == dimof(tabOrder))
-        ix = -direction;
-
+    if (i == nWindows) {
+        i = wrapIdx(-direction, nWindows);
+    }
     // focus the next available element
-    do {
-        ix = (ix + direction + dimof(tabOrder)) % dimof(tabOrder);
-    } while (!tabOrder[ix].isAvailable);
-    SetFocus(tabOrder[ix].hwnd);
+    i = wrapIdx(i + direction, nWindows);
+    SetFocus(tabOrder[i]);
 }
 
 // allow to distinguish a '/' caused by VK_DIVIDE (rotates a document)
