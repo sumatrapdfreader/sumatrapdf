@@ -1,9 +1,13 @@
 # http://clang.llvm.org/docs/ClangFormatStyleOptions.html
-# Must be in sync with clangStyle in tools\clang-fmt.go
+# Easy way to check some of the flags: https://clangformat.com/
 BasedOnStyle: Chromium
 IndentWidth: 4
-ColumnLimit: 100
+ColumnLimit: 120
 AccessModifierOffset: -2
 PointerAlignment: Left
 SpacesBeforeTrailingComments: 1
 BinPackParameters: true
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+Cpp11BracedListStyle: true
+SortIncludes: false

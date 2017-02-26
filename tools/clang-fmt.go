@@ -235,8 +235,8 @@ func main() {
 		"ParseCommandLine.h",
 		"Tests.cpp",
 		"Tests.h",
-		//"Print.cpp",
-		//"Print.h",
+		"Print.cpp",
+		"Print.h",
 	})
 
 	//runInDirMust(exePath, filepath.Join("src", "utils"))
