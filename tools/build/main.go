@@ -82,6 +82,13 @@ func parseCmdLine() {
 	os.Exit(1)
 }
 
+func finalizeThings2() {
+	printTimings()
+	fmt.Printf("total time: %s\n", time.Since(timeStart))
+	logToFile(fmt.Sprintf("total time: %s\n", time.Since(timeStart)))
+	closeLogFile()
+}
+
 func finalizeThings(crashed bool) {
 	revertBuildConfig()
 	if !crashed {
@@ -375,7 +382,7 @@ func downloadPigzMust() {
 func buildMakeLzsa() {
 	fmt.Printf("Building release version %s\n", sumatraVersion)
 	//verifyGitCleanMust()
-	verifyOnReleaseBranchMust()
+	verifyOnMasterBranchMust()
 
 	err := runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:MakeLZSA", "/p:Configuration=Release;Platform=Win32", "/m")
 	fataliferr(err)
@@ -955,7 +962,7 @@ func main() {
 	}
 	if flgBuildMakeLzsa {
 		buildMakeLzsa()
-		finalizeThings(false)
+		finalizeThings2()
 		return
 	}
 	if flgRelease {

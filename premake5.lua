@@ -446,9 +446,9 @@ workspace "SumatraPDF"
   project "MakeLZSA"
     kind "ConsoleApp"
     language "C++"
-    files { "src/tools/MakeLzSA.cpp" }
+    makelzsa_files()
     includedirs { "src/utils", "ext/zlib", "ext/lzma/C", "ext/unarr" }
-    links { "unarrlib", "utils", "zlib" }
+    links { "unarrlib", "zlib" }
     links { "shlwapi" }
 
 
