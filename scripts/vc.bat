@@ -9,11 +9,9 @@ REM for an alternative approach, see
 REM https://github.com/HaxeFoundation/hxcpp/blob/master/toolchain/msvc-setup.bat
 
 IF "%1" == "2015" GOTO VS_2015
-IF "%1" == "2013" GOTO VS_2013
 IF EXIST "%VS140COMNTOOLS%\vsvars32.bat" GOTO VS_2015
-IF EXIST "%VS120COMNTOOLS%\vsvars32.bat" GOTO VS_2013
 
-ECHO Visual Studio 2013 or 2015 doesn't seem to be installed
+ECHO Visual Studio 2015 or 2015 doesn't seem to be installed
 EXIT /B 1
 
 :VS_2015
