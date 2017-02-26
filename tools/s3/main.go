@@ -40,6 +40,7 @@ type Secrets struct {
 	AwsAccess string
 }
 
+// FileInfo describes a file
 type FileInfo struct {
 	Path           string // file path of the original file
 	S3PathSha1Part string
@@ -50,6 +51,7 @@ type FileInfo struct {
 	Size           int64 // size of the file, not compressed
 }
 
+// FileInS3 describes file in S3
 type FileInS3 struct {
 	S3Path  string // full path in S3 i.e. testfiles/xx/yy/zzzzz.ext
 	Name    string // original name of the file
@@ -61,7 +63,7 @@ type FileInS3 struct {
 const (
 	s3Bucket     = "kjkpub"
 	s3Dir        = "testfiles/"
-	MaxS3Results = 1000
+	maxS3Results = 1000
 )
 
 var (
@@ -75,7 +77,8 @@ var (
 	validExts = []string{".pdf", ".mobi", ".epub", ".chm", ".cbz", ".cbr", ".xps", ".djvu"}
 )
 
-func (fi *FileInS3) Url() string {
+// URL returns url
+func (fi *FileInS3) URL() string {
 	return "https://kjkpub.s3.amazonaws.com/testfiles/" + fi.S3Path
 }
 
@@ -222,7 +225,7 @@ func sha1ExistsInS3Must(sha1 string) bool {
 	// must do a list, because we add file extension at the end
 	prefix := s3Dir + sha1[:2] + "/" + sha1[2:4] + "/" + sha1[4:]
 	bucket := s3GetBucket()
-	resp, err := bucket.List(prefix, "", "", MaxS3Results)
+	resp, err := bucket.List(prefix, "", "", maxS3Results)
 	fataliferr(err)
 	keys := resp.Contents
 	fatalif(len(keys) > 1, "len(keys) == %d (should be 0 or 1)", len(keys))
@@ -329,7 +332,7 @@ func s3ListFilesMust() []*FileInS3 {
 	delim := ""
 	marker := ""
 	for {
-		resp, err := bucket.List(s3Dir, delim, marker, MaxS3Results)
+		resp, err := bucket.List(s3Dir, delim, marker, maxS3Results)
 		fataliferr(err)
 		for _, key := range resp.Contents {
 			fi := &FileInS3{}

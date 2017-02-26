@@ -55,6 +55,7 @@ var (
 	flgListS3        bool
 	flgAnalyze       bool
 	flgNoCleanCheck  bool
+	flgBuildMakeLzsa bool
 	svnPreReleaseVer string
 	gitSha1          string
 	sumatraVersion   string
@@ -67,13 +68,14 @@ func parseCmdLine() {
 	flag.BoolVar(&flgSmoke, "smoke", false, "do a smoke (sanity) build")
 	flag.BoolVar(&flgRelease, "release", false, "do a release build")
 	flag.BoolVar(&flgPreRelease, "prerelease", false, "do a pre-release build")
+	flag.BoolVar(&flgBuildMakeLzsa, "build-makelzsa", false, "build makelzsa.exe")
 	flag.BoolVar(&flgAnalyze, "analyze", false, "run analyze (prefast) and create summary of bugs as html file")
 	flag.BoolVar(&flgUpload, "upload", false, "upload to s3 for release/prerelease builds")
 	// -no-clean-check is useful when testing changes to this build script
 	flag.BoolVar(&flgNoCleanCheck, "no-clean-check", false, "allow running if repo has changes (for testing build script)")
 	flag.Parse()
 	// must provide an action to perform
-	if flgListS3 || flgSmoke || flgRelease || flgPreRelease || flgAnalyze {
+	if flgListS3 || flgSmoke || flgRelease || flgPreRelease || flgAnalyze || flgBuildMakeLzsa {
 		return
 	}
 	flag.Usage()
@@ -368,6 +370,18 @@ func downloadPigzMust() {
 	path := pj("bin", "pigz.exe")
 	sha1 := "10a2d3e3cafbad083972d6498fee4dc7df603c04"
 	httpDlToFileMust(uri, path, sha1)
+}
+
+func buildMakeLzsa() {
+	fmt.Printf("Building release version %s\n", sumatraVersion)
+	//verifyGitCleanMust()
+	verifyOnReleaseBranchMust()
+
+	err := runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:MakeLZSA", "/p:Configuration=Release;Platform=Win32", "/m")
+	fataliferr(err)
+	path := pj("rel", "MakeLZSA.exe")
+	signMust(path)
+	fmt.Printf("Built %s\n", path)
 }
 
 func buildRelease() {
@@ -938,6 +952,11 @@ func main() {
 	clean()
 	if flgRelease || flgPreRelease {
 		verifyHasReleaseSecretsMust()
+	}
+	if flgBuildMakeLzsa {
+		buildMakeLzsa()
+		finalizeThings(false)
+		return
 	}
 	if flgRelease {
 		buildRelease()
