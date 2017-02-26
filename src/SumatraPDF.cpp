@@ -2522,6 +2522,11 @@ static void OnMenuRenameFile(WindowInfo &win)
     LoadDocument(args);
 }
 
+static void OnMenuSavePosition()
+{
+	prefs::Save();
+}
+
 static void OnMenuSaveBookmark(WindowInfo& win)
 {
     if (!HasPermission(Perm_DiskAccess) || gPluginMode) return;
@@ -3788,6 +3793,10 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
         case IDM_REFRESH:
             ReloadDocument(win);
             break;
+
+		case IDM_SAVE_POSITION:
+			OnMenuSavePosition();
+			break;
 
         case IDM_SAVEAS_BOOKMARK:
             OnMenuSaveBookmark(*win);
