@@ -33,30 +33,9 @@
 #include "Translations.h"
 #include "uia/Provider.h"
 
-WindowInfo::WindowInfo(HWND hwnd) :
-    ctrl(nullptr), currentTab(nullptr), menu(nullptr), hwndFrame(hwnd), isMenuHidden(false),
-    linkOnLastButtonDown(nullptr), url(nullptr),
-    tocVisible(false), tocLoaded(false), tocKeepSelection(false),
-    isFullScreen(false), presentation(PM_DISABLED),
-    windowStateBeforePresentation(0), nonFullScreenWindowStyle(0),
-    hwndCanvas(nullptr), hwndToolbar(nullptr), hwndReBar(nullptr),
-    hwndFindText(nullptr), hwndFindBox(nullptr), hwndFindBg(nullptr),
-    hwndPageText(nullptr), hwndPageBox(nullptr), hwndPageBg(nullptr), hwndPageTotal(nullptr),
-    hwndTocBox(nullptr), hwndTocTree(nullptr), tocLabelWithClose(nullptr),
-    sidebarSplitter(nullptr), favSplitter(nullptr),
-    hwndInfotip(nullptr), infotipVisible(false),
-    findThread(nullptr), findCanceled(false), printThread(nullptr), printCanceled(false),
-    showSelection(false), mouseAction(MA_IDLE), dragStartPending(false),
-    currPageNo(0),
-    xScrollSpeed(0), yScrollSpeed(0), wheelAccumDelta(0),
-    delayedRepaintTimer(0), stressTest(nullptr),
-    hwndFavBox(nullptr), hwndFavTree(nullptr), favLabelWithClose(nullptr),
-    uia_provider(nullptr), cbHandler(nullptr), frameRateWnd(nullptr),
-    hwndTabBar(nullptr), tabsVisible(false), tabsInTitlebar(false), tabSelectionHistory(nullptr),
-    hwndCaption(nullptr), caption(nullptr), extendedFrameHeight(0)
-{
+WindowInfo::WindowInfo(HWND hwnd) {
+    hwndFrame = hwnd;
     touchState.panStarted = false;
-    buffer = new DoubleBuffer(hwndCanvas, canvasRc);
     linkHandler = new LinkHandler(this);
     notifications = new Notifications();
     fwdSearchMark.show = false;
@@ -114,7 +93,7 @@ EbookController *WindowInfo::AsEbook() const { return ctrl ? ctrl->AsEbook() : n
 void WindowInfo::UpdateCanvasSize()
 {
     RectI rc = ClientRect(hwndCanvas);
-    if (canvasRc == rc)
+    if (buffer && canvasRc == rc)
         return;
     canvasRc = rc;
 
@@ -316,7 +295,7 @@ void LinkHandler::GotoLink(PageDestination *link)
                 // treat relative URIs as file paths (without fragment identifier)
                 if (hash)
                     *hash = '\0';
-                str::TransChars(path.Get(), L"/", L"\\"); 
+                str::TransChars(path.Get(), L"/", L"\\");
                 url::DecodeInPlace(path.Get());
                 // LaunchFile will reject unsupported file types
                 LaunchFile(path, nullptr);

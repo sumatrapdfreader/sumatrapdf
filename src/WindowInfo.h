@@ -93,67 +93,67 @@ public:
     EbookController *AsEbook() const;
 
     // TODO: use currentTab->ctrl instead
-    Controller *    ctrl; // owned by currentTab
+    Controller *    ctrl = nullptr; // owned by currentTab
 
     Vec<TabInfo *>  tabs;
-    TabInfo *       currentTab; // points into tabs
+    TabInfo *       currentTab = nullptr; // points into tabs
 
-    HWND            hwndFrame;
-    HWND            hwndCanvas;
-    HWND            hwndToolbar;
-    HWND            hwndReBar;
-    HWND            hwndFindText;
-    HWND            hwndFindBox;
-    HWND            hwndFindBg;
-    HWND            hwndPageText;
-    HWND            hwndPageBox;
-    HWND            hwndPageBg;
-    HWND            hwndPageTotal;
+    HWND            hwndFrame = nullptr;
+    HWND            hwndCanvas = nullptr;
+    HWND            hwndToolbar = nullptr;
+    HWND            hwndReBar = nullptr;
+    HWND            hwndFindText = nullptr;
+    HWND            hwndFindBox = nullptr;
+    HWND            hwndFindBg = nullptr;
+    HWND            hwndPageText = nullptr;
+    HWND            hwndPageBox = nullptr;
+    HWND            hwndPageBg = nullptr;
+    HWND            hwndPageTotal = nullptr;
 
     // state related to table of contents (PDF bookmarks etc.)
-    HWND            hwndTocBox;
-    LabelWithCloseWnd *tocLabelWithClose;
-    HWND            hwndTocTree;
+    HWND            hwndTocBox = nullptr;
+    LabelWithCloseWnd *tocLabelWithClose = nullptr;
+    HWND            hwndTocTree = nullptr;
     // whether the current tab's ToC has been loaded into the tree
-    bool            tocLoaded;
+    bool            tocLoaded = false;
     // whether the ToC sidebar is currently visible
-    bool            tocVisible;
+    bool            tocVisible = false;
     // set to temporarily disable UpdateTocSelection
-    bool            tocKeepSelection;
+    bool            tocKeepSelection = false;
 
     // state related to favorites
-    HWND            hwndFavBox;
-    LabelWithCloseWnd *favLabelWithClose;
-    HWND            hwndFavTree;
+    HWND            hwndFavBox = nullptr;
+    LabelWithCloseWnd *favLabelWithClose = nullptr;
+    HWND            hwndFavTree = nullptr;
     Vec<DisplayState *> expandedFavorites;
 
     // vertical splitter for resizing left side panel
-    SplitterWnd *   sidebarSplitter;
+    SplitterWnd *   sidebarSplitter = nullptr;
 
     // horizontal splitter for resizing favorites and bookmars parts
-    SplitterWnd *   favSplitter;
+    SplitterWnd *   favSplitter = nullptr;
 
-    HWND            hwndTabBar;
-    bool            tabsVisible;
-    bool            tabsInTitlebar;
+    HWND            hwndTabBar = nullptr;
+    bool            tabsVisible = false;
+    bool            tabsInTitlebar = false;
     // keeps the sequence of tab selection. This is needed for restoration
     // of the previous tab when the current one is closed. (Points into tabs.)
-    Vec<TabInfo *> *tabSelectionHistory;
+    Vec<TabInfo *> *tabSelectionHistory = nullptr;
 
-    HWND            hwndCaption;
-    CaptionInfo *   caption;
-    int             extendedFrameHeight;
+    HWND            hwndCaption = nullptr;
+    CaptionInfo *   caption = nullptr;
+    int             extendedFrameHeight = 0;
 
-    HWND            hwndInfotip;
+    HWND            hwndInfotip = nullptr;
 
-    bool            infotipVisible;
-    HMENU           menu;
-    bool            isMenuHidden; // not persisted at shutdown
+    bool            infotipVisible = false;
+    HMENU           menu = nullptr;
+    bool            isMenuHidden = false; // not persisted at shutdown
 
-    DoubleBuffer *  buffer;
+    DoubleBuffer *  buffer = nullptr;
 
-    MouseAction     mouseAction;
-    bool            dragStartPending;
+    MouseAction     mouseAction = MA_IDLE;
+    bool            dragStartPending = false;
 
     /* when dragging the document around, this is previous position of the
        cursor. A delta between previous and current is by how much we
@@ -165,10 +165,11 @@ public:
     /* when moving the document by smooth scrolling, this keeps track of
        the speed at which we should scroll, which depends on the distance
        of the mouse from the point where the user middle clicked. */
-    int             xScrollSpeed, yScrollSpeed;
+    int             xScrollSpeed = 0;
+    int             yScrollSpeed = 0;
 
     // true while selecting and when currentTab->selectionOnPage != nullptr
-    bool            showSelection;
+    bool            showSelection = false;
     // selection rectangle in screen coordinates (only needed while selecting)
     RectI           selectionRect;
     // size of the current rectangular selection in document units
@@ -177,32 +178,32 @@ public:
     // a list of static links (mainly used for About and Frequently Read pages)
     Vec<StaticLinkInfo> staticLinks;
 
-    bool            isFullScreen;
-    PresentationMode presentation;
-    int             windowStateBeforePresentation;
+    bool            isFullScreen = false;
+    PresentationMode presentation = PM_DISABLED;
+    int             windowStateBeforePresentation = 0;
 
-    long            nonFullScreenWindowStyle;
+    long            nonFullScreenWindowStyle = 0;
     RectI           nonFullScreenFrameRect;
 
     RectI           canvasRc; // size of the canvas (excluding any scroll bars)
-    int             currPageNo; // cached value, needed to determine when to auto-update the ToC selection
+    int             currPageNo = 0; // cached value, needed to determine when to auto-update the ToC selection
 
-    int             wheelAccumDelta;
-    UINT_PTR        delayedRepaintTimer;
+    int             wheelAccumDelta = 0;
+    UINT_PTR        delayedRepaintTimer = 0;
 
-    Notifications * notifications; // only access from UI thread
+    Notifications * notifications = nullptr; // only access from UI thread
 
-    HANDLE          printThread;
-    bool            printCanceled;
+    HANDLE          printThread = nullptr;
+    bool            printCanceled = false;
 
-    HANDLE          findThread;
-    bool            findCanceled;
+    HANDLE          findThread = nullptr;
+    bool            findCanceled = false;
 
-    LinkHandler *   linkHandler;
-    PageElement *   linkOnLastButtonDown;
-    const WCHAR *   url;
+    LinkHandler *   linkHandler = nullptr;
+    PageElement *   linkOnLastButtonDown = nullptr;
+    const WCHAR *   url = nullptr;
 
-    ControllerCallback *cbHandler;
+    ControllerCallback *cbHandler = nullptr;
 
     /* when doing a forward search, the result location is highlighted with
      * rectangular marks in the document. These variables indicate the position of the markers
@@ -214,13 +215,13 @@ public:
         int hideStep;       // value used to gradually hide the markers
     } fwdSearchMark;
 
-    StressTest *    stressTest;
+    StressTest *    stressTest = nullptr;
 
     TouchState      touchState;
 
-    FrameRateWnd *  frameRateWnd;
+    FrameRateWnd *  frameRateWnd = nullptr;
 
-    SumatraUIAutomationProvider * uia_provider;
+    SumatraUIAutomationProvider * uia_provider = nullptr;
 
     void  UpdateCanvasSize();
     SizeI GetViewPortSize();
