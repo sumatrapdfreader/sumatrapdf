@@ -59,36 +59,29 @@ static inline Color ToColor(COLORREF c) {
 
 class TabPainter {
     WStrVec text;
-    PathData* data;
-    int width, height;
+    PathData* data = nullptr;
+    int width = -1;
+    int height = -1;
     HWND hwnd;
 
   public:
-    int current, highlighted, xClicked, xHighlighted;
-    bool isMouseInClientArea, isDragging;
-    LPARAM mouseCoordinates;
-    int nextTab;
-    bool inTitlebar;
-    COLORREF currBgCol;
+    int current = -1;
+    int highlighted = -1;
+    int xClicked = -1;
+    int xHighlighted = -1;
+    int nextTab = -1;
+    bool isMouseInClientArea = false;
+    bool isDragging = false;
+    bool inTitlebar = false;
+    LPARAM mouseCoordinates = 0;
+    COLORREF currBgCol = DEFAULT_CURRENT_BG_COL;
     struct {
         COLORREF background, highlight, current, outline, bar, text, x_highlight, x_click, x_line;
-    } color;
+    } colors;
 
-    TabPainter(HWND wnd, SizeI tabSize)
-        : hwnd(wnd),
-          data(nullptr),
-          width(0),
-          height(0),
-          current(-1),
-          highlighted(-1),
-          xClicked(-1),
-          xHighlighted(-1),
-          nextTab(-1),
-          isMouseInClientArea(false),
-          isDragging(false),
-          inTitlebar(false),
-          currBgCol(DEFAULT_CURRENT_BG_COL) {
-        memset(&color, 0, sizeof(color));
+    TabPainter(HWND wnd, SizeI tabSize) {
+        ZeroMemory(&colors, sizeof(colors));
+        hwnd = wnd;
         Reshape(tabSize.dx, tabSize.dy);
         EvaluateColors(false);
     }
@@ -195,7 +188,7 @@ class TabPainter {
         if (isTranslucentMode)
             PaintParentBackground(hwnd, hdc);
         else {
-            HBRUSH brush = CreateSolidBrush(color.bar);
+            HBRUSH brush = CreateSolidBrush(colors.bar);
             FillRect(hdc, &rc, brush);
             DeleteObject(brush);
         }
@@ -261,23 +254,23 @@ class TabPainter {
                 graphics.SetTextRenderingHint(TextRenderingHintAntiAliasGridFit);
                 graphics.SetCompositingMode(CompositingModeSourceCopy);
                 // graphics.SetCompositingMode(CompositingModeSourceOver);
-                br.SetColor(ToColor(color.text));
+                br.SetColor(ToColor(colors.text));
                 graphics.DrawString(text.At(i), -1, &f, layout, &sf, &br);
                 graphics.SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
                 continue;
             }
 
-            COLORREF bgCol = color.background;
+            COLORREF bgCol = colors.background;
             ;
             if (current == i) {
-                bgCol = color.current;
+                bgCol = colors.current;
             } else if (highlighted == i) {
-                bgCol = color.highlight;
+                bgCol = colors.highlight;
             }
 
             // ensure contrast between text and background color
             // TODO: adjust threshold (and try adjusting both current/background tabs)
-            COLORREF textCol = color.text;
+            COLORREF textCol = colors.text;
             float bgLight = GetLightness(bgCol), textLight = GetLightness(textCol);
 
             if (textLight < bgLight ? bgLight < 0x70 : bgLight > 0x90) {
@@ -310,16 +303,20 @@ class TabPainter {
             // paint "x"'s circle
             iterator.NextMarker(&shape);
             if (xClicked == i || xHighlighted == i) {
-                br.SetColor(ToColor(i == xClicked ? color.x_click : color.x_highlight));
+                auto col = colors.x_highlight;
+                if (i == xClicked) {
+                    col = colors.x_click;
+                }
+                br.SetColor(ToColor(col));
                 graphics.FillPath(&br, &shape);
             }
 
             // paint "x"
             iterator.NextMarker(&shape);
             if (xClicked == i || xHighlighted == i)
-                pen.SetColor(ToColor(color.x_line));
+                pen.SetColor(ToColor(colors.x_line));
             else
-                pen.SetColor(ToColor(color.outline));
+                pen.SetColor(ToColor(colors.outline));
             graphics.DrawPath(&pen, &shape);
             iterator.Rewind();
         }
@@ -336,23 +333,23 @@ class TabPainter {
             bg = GetSysColor(TAB_COLOR_BG);
             txt = GetSysColor(TAB_COLOR_TEXT);
         }
-        if (!force && bg == color.bar && txt == color.text)
+        if (!force && bg == colors.bar && txt == colors.text)
             return;
 
-        color.bar = bg;
-        color.text = txt;
+        colors.bar = bg;
+        colors.text = txt;
 
-        int sign = GetLightness(color.text) > GetLightness(color.bar) ? -1 : 1;
+        int sign = GetLightness(colors.text) > GetLightness(colors.bar) ? -1 : 1;
 
-        color.current = AdjustLightness2(color.bar, sign * 25.0f);
-        color.highlight = AdjustLightness2(color.bar, sign * 15.0f);
-        color.background = AdjustLightness2(color.bar, -sign * 15.0f);
-        color.outline = AdjustLightness2(color.bar, -sign * 60.0f);
-        color.x_line = COL_CLOSE_X_HOVER;
-        color.x_highlight = COL_CLOSE_HOVER_BG;
-        color.x_click = AdjustLightness2(color.x_highlight, -10.0f);
+        colors.current = AdjustLightness2(colors.bar, sign * 25.0f);
+        colors.highlight = AdjustLightness2(colors.bar, sign * 15.0f);
+        colors.background = AdjustLightness2(colors.bar, -sign * 15.0f);
+        colors.outline = AdjustLightness2(colors.bar, -sign * 60.0f);
+        colors.x_line = COL_CLOSE_X_HOVER;
+        colors.x_highlight = COL_CLOSE_HOVER_BG;
+        colors.x_click = AdjustLightness2(colors.x_highlight, -10.0f);
         if (currBgCol != DEFAULT_CURRENT_BG_COL) {
-            color.current = currBgCol;
+            colors.current = currBgCol;
         }
     }
 
