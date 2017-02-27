@@ -777,8 +777,8 @@ void CreateFavorites(WindowInfo* win) {
     SetFont(l, GetDefaultGuiFont());
     // label is set in UpdateToolbarSidebarText()
 
-    DWORD dwStyle = TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS | TVS_TRACKSELECT |
-                    TVS_DISABLEDRAGDROP | TVS_NOHSCROLL | TVS_INFOTIP | WS_TABSTOP | WS_VISIBLE | WS_CHILD;
+    dwStyle = TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS | TVS_TRACKSELECT |
+              TVS_DISABLEDRAGDROP | TVS_NOHSCROLL | TVS_INFOTIP | WS_TABSTOP | WS_VISIBLE | WS_CHILD;
     win->hwndFavTree = CreateWindowExW(WS_EX_STATICEDGE, WC_TREEVIEW, L"Fav", dwStyle, 0, 0, 0, 0, win->hwndFavBox,
                                        (HMENU)IDC_FAV_TREE, h, nullptr);
 
