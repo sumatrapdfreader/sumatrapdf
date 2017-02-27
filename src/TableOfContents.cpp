@@ -23,8 +23,8 @@
 #include "resource.h"
 #include "AppTools.h"
 #include "TableOfContents.h"
-#include "Tabs.h"
 #include "Translations.h"
+#include "Tabs.h"
 
 /* Define if you want page numbers to be displayed in the ToC sidebar */
 // #define DISPLAY_TOC_PAGE_NUMBERS

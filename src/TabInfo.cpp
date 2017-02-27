@@ -23,19 +23,16 @@
 #include "Selection.h"
 #include "Translations.h"
 
-TabInfo::TabInfo(const WCHAR *filePath) :
-    filePath(str::Dup(filePath)), ctrl(nullptr),
-    showToc(false), showTocPresentation(false), tocRoot(nullptr),
-    reloadOnFocus(false), watcher(nullptr), selectionOnPage(nullptr),
-    prevZoomVirtual(INVALID_ZOOM), prevDisplayMode(DM_AUTOMATIC)
-{
+TabInfo::TabInfo(const WCHAR *filePath) {
+    this->filePath.SetCopy(filePath);
 }
 
 TabInfo::~TabInfo()
 {
     FileWatcherUnsubscribe(watcher);
-    if (AsChm())
+    if (AsChm()) {
         AsChm()->RemoveParentHwnd();
+    }
     delete tocRoot;
     delete selectionOnPage;
     delete ctrl;
@@ -43,15 +40,17 @@ TabInfo::~TabInfo()
 
 EngineType TabInfo::GetEngineType() const
 {
-    if (ctrl && ctrl->AsFixed())
+    if (ctrl && ctrl->AsFixed()) {
         return ctrl->AsFixed()->engineType;
+    }
     return Engine_None;
 }
 
 const WCHAR *TabInfo::GetTabTitle() const
 {
-    if (gGlobalPrefs->fullPathInTitle)
+    if (gGlobalPrefs->fullPathInTitle) {
         return filePath;
+    }
     return path::GetBaseName(filePath);
 }
 
@@ -80,10 +79,12 @@ bool LinkSaver::SaveEmbedded(const unsigned char *data, size_t len)
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
 
     bool ok = GetSaveFileName(&ofn);
-    if (!ok)
+    if (!ok) {
         return false;
+    }
     ok = file::WriteAll(dstFileName, data, len);
-    if (ok && tab && IsUntrustedFile(tab->filePath, gPluginURL))
+    if (ok && tab && IsUntrustedFile(tab->filePath, gPluginURL)) {
         file::SetZoneIdentifier(dstFileName);
+    }
     return ok;
 }
