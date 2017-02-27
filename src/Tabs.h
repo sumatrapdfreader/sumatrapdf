@@ -18,5 +18,3 @@ void TabsOnCtrlTab(WindowInfo* win, bool reverse);
 void UpdateTabWidth(WindowInfo* win);
 void SetTabsInTitlebar(WindowInfo* win, bool set);
 void UpdateCurrentTabBgColor(WindowInfo* win);
-
-COLORREF AdjustLightness2(COLORREF c, float units);
