@@ -23,12 +23,11 @@
 #include "Selection.h"
 #include "Translations.h"
 
-TabInfo::TabInfo(const WCHAR *filePath) {
+TabInfo::TabInfo(const WCHAR* filePath) {
     this->filePath.SetCopy(filePath);
 }
 
-TabInfo::~TabInfo()
-{
+TabInfo::~TabInfo() {
     FileWatcherUnsubscribe(watcher);
     if (AsChm()) {
         AsChm()->RemoveParentHwnd();
@@ -38,24 +37,21 @@ TabInfo::~TabInfo()
     delete ctrl;
 }
 
-EngineType TabInfo::GetEngineType() const
-{
+EngineType TabInfo::GetEngineType() const {
     if (ctrl && ctrl->AsFixed()) {
         return ctrl->AsFixed()->engineType;
     }
     return Engine_None;
 }
 
-const WCHAR *TabInfo::GetTabTitle() const
-{
+const WCHAR* TabInfo::GetTabTitle() const {
     if (gGlobalPrefs->fullPathInTitle) {
         return filePath;
     }
     return path::GetBaseName(filePath);
 }
 
-bool LinkSaver::SaveEmbedded(const unsigned char *data, size_t len)
-{
+bool LinkSaver::SaveEmbedded(const unsigned char* data, size_t len) {
     if (!HasPermission(Perm_DiskAccess))
         return false;
 
@@ -69,7 +65,7 @@ bool LinkSaver::SaveEmbedded(const unsigned char *data, size_t len)
     ScopedMem<WCHAR> fileFilter(str::Format(L"%s\1*.*\1", _TR("All files")));
     str::TransChars(fileFilter, L"\1", L"\0");
 
-    OPENFILENAME ofn = { 0 };
+    OPENFILENAME ofn = {0};
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = this->parentHwnd;
     ofn.lpstrFile = dstFileName;
