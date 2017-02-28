@@ -362,7 +362,7 @@ bool DjVuEngineImpl::Load(const WCHAR *fileName)
     if (!gDjVuContext.Initialize())
         return false;
 
-    SetFileName(str::Dup(fileName));
+    SetFileName(fileName);
     doc = gDjVuContext.OpenFile(fileName);
 
     return FinishLoading();
