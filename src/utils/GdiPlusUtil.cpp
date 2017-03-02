@@ -10,6 +10,8 @@
 #include "WebpReader.h"
 #include "WinUtil.h"
 
+#include "DebugLog.h"
+
 // Get width of each character and add them up.
 // Doesn't seem to be any different than MeasureTextAccurate() i.e. it still
 // underreports the width
@@ -52,8 +54,9 @@ RectF MeasureTextAccurate2(Graphics *g, Font *f, const WCHAR *s, int len)
 // http://www.codeproject.com/KB/GDI-plus/measurestring.aspx
 RectF MeasureTextAccurate(Graphics *g, Font *f, const WCHAR *s, int len)
 {
-    if (0 == len)
+    if (0 == len) {
         return RectF(0, 0, 0, 0); // TODO: should set height to font's height
+    }
     // note: frankly, I don't see a difference between those StringFormat variations
     StringFormat sf(StringFormat::GenericTypographic());
     sf.SetFormatFlags(sf.GetFormatFlags() | StringFormatFlagsMeasureTrailingSpaces);
@@ -64,7 +67,13 @@ RectF MeasureTextAccurate(Graphics *g, Font *f, const WCHAR *s, int len)
     sf.SetMeasurableCharacterRanges(1, &cr);
     Region r;
     Status status = g->MeasureCharacterRanges(s, len, f, layoutRect, &sf, 1, &r);
-    CrashIf(status != Ok);
+    if (status != Ok) {
+        // TODO: remove whem we figure out why we crash
+        auto s2 = s ? str::conv::ToUtf8(s, (size_t)len) : str::Dup("<null>");
+        dbglog::CrashLogF("MeasureTextAccurate: status: %d, len: %d, s: '%s'\n", (int)status, len, s2);
+        CrashIf(status != Ok);
+        free(s2);
+    }
     RectF bbox;
     r.GetBounds(&bbox, g);
     if (bbox.Width != 0)
