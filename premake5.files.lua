@@ -8,6 +8,21 @@ function files_in_dir(dir, files_in_dir)
   files(paths)
 end
 
+function makelzsa_files()
+  files_in_dir("src/utils", {
+    "BaseUtil.cpp",
+    "ByteOrderDecoder.cpp",
+    "StrUtil.cpp",
+    "FileUtil.cpp",
+    "CmdLineParser.cpp",
+    "LzmaSimpleArchive.cpp",
+  })
+
+  files {
+    "src/tools/MakeLzSA.cpp",
+  }
+end
+
 function zlib_files()
   files_in_dir("ext/zlib", {
     "adler32.c",

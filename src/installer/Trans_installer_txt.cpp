@@ -2102,7 +2102,7 @@ const char * gTranslations_es =
   "Error al copiar el desinstalador al directorio temporal\0"\
   "No se pudo crear un acceso directo\0"\
   "Error al eliminar las claves del registro del desinstalador\0"\
-  "\0"\
+  "Fallo al registrar como programa por defecto en Windows 10.\0"\
   "Fallo al escribir informaci\303\263n de la extensi\303\263n de archivo en el registro\0"\
   "Error al escribir informaci\303\263n de desinstalaci\303\263n en el registro\0"\
   "Menos &opciones\0"\
@@ -2237,7 +2237,7 @@ const char * gTranslations_tr =
   "Kald\304\261r\304\261c\304\261y\304\261 ge\303\247ici dizine kopyalama ba\305\237ar\304\261s\304\261z oldu\0"\
   "K\304\261sayol olu\305\237turulamad\304\261\0"\
   "Kald\304\261r\304\261c\304\261 kay\304\261t defteri anahtarlar\304\261n\304\261 silemedi\0"\
-  "\r\nWin 10'da varsay\304\261lan program olarak kay\304\261t edilemedi\0"\
+  "\nWin 10'da varsay\304\261lan program olarak kay\304\261t edilemedi\0"\
   "Kay\304\261t defterine geni\305\237letimi\305\237 dosya uzant\304\261s\304\261 yazma ba\305\237ar\304\261s\304\261z oldu\0"\
   "Kay\304\261t defterine kald\304\261rma bilgisi yazma i\305\237i ba\305\237ar\304\261s\304\261z oldu\0"\
   "Sakla & Se\303\247enekler\0"\

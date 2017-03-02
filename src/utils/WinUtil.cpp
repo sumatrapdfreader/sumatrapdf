@@ -737,7 +737,7 @@ void DeferWinPosHelper::MoveWindow(HWND hWnd, int x, int y, int cx, int cy, BOOL
     this->SetWindowPos(hWnd, 0, x, y, cx, cy, uFlags);
 }
 
-void DeferWinPosHelper::MoveWindow(HWND hWnd, RectI r) { 
+void DeferWinPosHelper::MoveWindow(HWND hWnd, RectI r) {
     this->MoveWindow(hWnd, r.x, r.y, r.dx, r.dy);
 }
 
@@ -1223,6 +1223,16 @@ COLORREF AdjustLightness(COLORREF c, float factor) {
     G = (BYTE)floorf((M == G ? C1 : m != G ? X1 : 0) + m1 + 0.5f);
     B = (BYTE)floorf((M == B ? C1 : m != B ? X1 : 0) + m1 + 0.5f);
     return RGB(R, G, B);
+}
+
+
+// Adjusts lightness by 1/255 units.
+COLORREF AdjustLightness2(COLORREF c, float units) {
+    float lightness = GetLightness(c);
+    units = limitValue(units, -lightness, 255.0f - lightness);
+    if (0.0f == lightness)
+        return RGB(BYTE(units + 0.5f), BYTE(units + 0.5f), BYTE(units + 0.5f));
+    return AdjustLightness(c, 1.0f + units / lightness);
 }
 
 // cf. http://en.wikipedia.org/wiki/HSV_color_space#Lightness

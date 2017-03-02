@@ -1076,6 +1076,7 @@ int APIENTRY WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/,
 
     SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
     InitDynCalls();
+    NoDllHijacking();
 
     ScopedCom com;
     InitAllCommonControls();

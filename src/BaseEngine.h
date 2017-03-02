@@ -340,7 +340,6 @@ protected:
         fileName.SetCopy(s);
     }
 
-private:
     ScopedMem<WCHAR> fileName;
 };
 

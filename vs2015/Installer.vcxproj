@@ -171,7 +171,7 @@
       <TreatLinkerWarningAsErrors>true</TreatLinkerWarningAsErrors>
     </Link>
     <PreBuildEvent>
-      <Command>cd ../dbg &amp; ..\rel\MakeLZSA.exe InstallerData.dat SumatraPDF-no-MUPDF.exe:SumatraPDF.exe libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll Uninstaller.exe:uninstall.exe ..\mupdf\resources\fonts\droid\DroidSansFallback.ttf:DroidSansFallback.ttf</Command>
+      <Command>cd ../dbg &amp; ..\bin\MakeLZSA.exe InstallerData.dat SumatraPDF-no-MUPDF.exe:SumatraPDF.exe libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll Uninstaller.exe:uninstall.exe ..\mupdf\resources\fonts\droid\DroidSansFallback.ttf:DroidSansFallback.ttf</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -182,7 +182,7 @@
       <DisableSpecificWarnings>4127;4324;4458;4800;4018;4100;4131;4244;4267;4302;4311;4312;4456;4457;4838;4702;4706;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;_HAS_EXCEPTIONS=0;DEBUG;NO_LIBWEBP;NO_LIBMUPDF;HAVE_ZLIB;HAVE_BZIP2;HAVE_7Z;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\src\utils;..\ext\zlib;..\ext\unarr;..\ext\lzma\C;..\ext\bzip2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -201,7 +201,7 @@
       <TreatLinkerWarningAsErrors>true</TreatLinkerWarningAsErrors>
     </Link>
     <PreBuildEvent>
-      <Command>cd ../dbg64 &amp; ..\rel\MakeLZSA.exe InstallerData.dat SumatraPDF-no-MUPDF.exe:SumatraPDF.exe libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll Uninstaller.exe:uninstall.exe ..\mupdf\resources\fonts\droid\DroidSansFallback.ttf:DroidSansFallback.ttf</Command>
+      <Command>cd ../dbg64 &amp; ..\bin\MakeLZSA.exe InstallerData.dat SumatraPDF-no-MUPDF.exe:SumatraPDF.exe libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll Uninstaller.exe:uninstall.exe ..\mupdf\resources\fonts\droid\DroidSansFallback.ttf:DroidSansFallback.ttf</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -237,7 +237,7 @@
       <TreatLinkerWarningAsErrors>true</TreatLinkerWarningAsErrors>
     </Link>
     <PreBuildEvent>
-      <Command>cd ../rel &amp; ..\rel\MakeLZSA.exe InstallerData.dat SumatraPDF-no-MUPDF.exe:SumatraPDF.exe libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll Uninstaller.exe:uninstall.exe ..\mupdf\resources\fonts\droid\DroidSansFallback.ttf:DroidSansFallback.ttf</Command>
+      <Command>cd ../rel &amp; ..\bin\MakeLZSA.exe InstallerData.dat SumatraPDF-no-MUPDF.exe:SumatraPDF.exe libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll Uninstaller.exe:uninstall.exe ..\mupdf\resources\fonts\droid\DroidSansFallback.ttf:DroidSansFallback.ttf</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -272,7 +272,7 @@
       <TreatLinkerWarningAsErrors>true</TreatLinkerWarningAsErrors>
     </Link>
     <PreBuildEvent>
-      <Command>cd ../rel64 &amp; ..\rel\MakeLZSA.exe InstallerData.dat SumatraPDF-no-MUPDF.exe:SumatraPDF.exe libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll Uninstaller.exe:uninstall.exe ..\mupdf\resources\fonts\droid\DroidSansFallback.ttf:DroidSansFallback.ttf</Command>
+      <Command>cd ../rel64 &amp; ..\bin\MakeLZSA.exe InstallerData.dat SumatraPDF-no-MUPDF.exe:SumatraPDF.exe libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll Uninstaller.exe:uninstall.exe ..\mupdf\resources\fonts\droid\DroidSansFallback.ttf:DroidSansFallback.ttf</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|Win32'">
@@ -306,7 +306,7 @@
       <AdditionalDependencies>comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;urlmon.lib;version.lib;windowscodecs.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>cd ../relPrefast &amp; ..\rel\MakeLZSA.exe InstallerData.dat SumatraPDF-no-MUPDF.exe:SumatraPDF.exe libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll Uninstaller.exe:uninstall.exe ..\mupdf\resources\fonts\droid\DroidSansFallback.ttf:DroidSansFallback.ttf</Command>
+      <Command>cd ../relPrefast &amp; ..\bin\MakeLZSA.exe InstallerData.dat SumatraPDF-no-MUPDF.exe:SumatraPDF.exe libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll Uninstaller.exe:uninstall.exe ..\mupdf\resources\fonts\droid\DroidSansFallback.ttf:DroidSansFallback.ttf</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|x64'">
@@ -340,7 +340,7 @@
       <AdditionalDependencies>comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;urlmon.lib;version.lib;windowscodecs.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>cd ../relPrefast64 &amp; ..\rel\MakeLZSA.exe InstallerData.dat SumatraPDF-no-MUPDF.exe:SumatraPDF.exe libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll Uninstaller.exe:uninstall.exe ..\mupdf\resources\fonts\droid\DroidSansFallback.ttf:DroidSansFallback.ttf</Command>
+      <Command>cd ../relPrefast64 &amp; ..\bin\MakeLZSA.exe InstallerData.dat SumatraPDF-no-MUPDF.exe:SumatraPDF.exe libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll Uninstaller.exe:uninstall.exe ..\mupdf\resources\fonts\droid\DroidSansFallback.ttf:DroidSansFallback.ttf</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

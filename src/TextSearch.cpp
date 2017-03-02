@@ -8,27 +8,27 @@
 #include "TextSelection.h"
 #include "TextSearch.h"
 
-enum { SEARCH_PAGE, SKIP_PAGE };
-
 #define SkipWhitespace(c) for (; str::IsWs(*(c)); (c)++)
 // ignore spaces between CJK glyphs but not between Latin, Greek, Cyrillic, etc. letters
 // cf. http://code.google.com/p/sumatrapdf/issues/detail?id=959
 #define isnoncjkwordchar(c) (isWordChar(c) && (unsigned short)(c) < 0x2E80)
 
+static void markAllPagesNonSkip(std::vector<bool>& pagesToSkip) {
+    for (size_t i = 0; i < pagesToSkip.size(); i++) {
+        pagesToSkip[i] = false;
+    }
+}
 TextSearch::TextSearch(BaseEngine *engine, PageTextCache *textCache) :
-    TextSelection(engine, textCache),
-    findText(nullptr), anchor(nullptr), pageText(nullptr),
-    caseSensitive(false), forward(true),
-    matchWordStart(false), matchWordEnd(false),
-    findPage(0), findIndex(0), lastText(nullptr)
+    TextSelection(engine, textCache)
 {
-    findCache = AllocArray<BYTE>(this->engine->PageCount());
+    nPages = engine->PageCount();
+    pagesToSkip.resize(nPages);
+    markAllPagesNonSkip(pagesToSkip);
 }
 
 TextSearch::~TextSearch()
 {
     Clear();
-    free(findCache);
 }
 
 void TextSearch::Reset()
@@ -77,16 +77,17 @@ void TextSearch::SetText(const WCHAR *text)
     if (str::EndsWith(this->findText, L" "))
         this->findText[str::Len(this->findText) - 1] = '\0';
 
-    memset(this->findCache, SEARCH_PAGE, this->engine->PageCount());
+    markAllPagesNonSkip(pagesToSkip);
 }
 
 void TextSearch::SetSensitive(bool sensitive)
 {
-    if (caseSensitive == sensitive)
+    if (caseSensitive == sensitive) {
         return;
+    }
     this->caseSensitive = sensitive;
 
-    memset(this->findCache, SEARCH_PAGE, this->engine->PageCount());
+    markAllPagesNonSkip(pagesToSkip);
 }
 
 void TextSearch::SetDirection(TextSearchDirection direction)
@@ -209,13 +210,14 @@ bool TextSearch::FindStartingAtPage(int pageNo, ProgressUpdateUI *tracker)
     if (str::IsEmpty(findText))
         return false;
 
-    int total = engine->PageCount();
-    while (1 <= pageNo && pageNo <= total && (!tracker || !tracker->WasCanceled())) {
-        if (tracker)
-            tracker->UpdateProgress(pageNo, total);
+    int next = forward ? 1 : -1;
+    while (1 <= pageNo && pageNo <= nPages && (!tracker || !tracker->WasCanceled())) {
+        if (tracker) {
+            tracker->UpdateProgress(pageNo, nPages);
+        }
 
-        if (SKIP_PAGE == findCache[pageNo - 1]) {
-            pageNo += forward ? 1 : -1;
+        if (pagesToSkip[pageNo - 1]) {
+            pageNo += next;
             continue;
         }
 
@@ -223,18 +225,20 @@ bool TextSearch::FindStartingAtPage(int pageNo, ProgressUpdateUI *tracker)
 
         pageText = textCache->GetData(pageNo, &findIndex);
         if (pageText) {
-            if (forward)
+            if (forward) {
                 findIndex = 0;
-            if (FindTextInPage(pageNo))
+            }
+            if (FindTextInPage(pageNo)) {
                 return true;
-            findCache[pageNo - 1] = SKIP_PAGE;
+            }
+            pagesToSkip[pageNo - 1] = true;
         }
 
-        pageNo += forward ? 1 : -1;
+        pageNo += next;
     }
 
     // allow for the first/last page to be included in the next search
-    findPage = forward ? total + 1 : 0;
+    findPage = forward ? nPages + 1 : 0;
 
     return false;
 }
@@ -255,14 +259,19 @@ TextSel *TextSearch::FindNext(ProgressUpdateUI *tracker)
         return nullptr;
 
     if (tracker) {
-        if (tracker->WasCanceled())
+        if (tracker->WasCanceled()) {
             return nullptr;
-        tracker->UpdateProgress(findPage, engine->PageCount());
+        }
+        tracker->UpdateProgress(findPage, nPages);
     }
 
-    if (FindTextInPage())
+    if (FindTextInPage()) {
         return &result;
-    if (FindStartingAtPage(findPage + (forward ? 1 : -1), tracker))
+    }
+
+    auto next = forward ? 1 : -1;
+    if (FindStartingAtPage(findPage + next, tracker)) {
         return &result;
+    }
     return nullptr;
 }

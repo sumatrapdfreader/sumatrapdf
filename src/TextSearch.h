@@ -23,23 +23,23 @@ public:
     void SetSensitive(bool sensitive);
     void SetDirection(TextSearchDirection direction);
     void SetLastResult(TextSelection *sel);
-    TextSel *FindFirst(int page, const WCHAR *text, ProgressUpdateUI *tracker=nullptr);
-    TextSel *FindNext(ProgressUpdateUI *tracker=nullptr);
+    TextSel *FindFirst(int page, const WCHAR *text, ProgressUpdateUI *tracker = nullptr);
+    TextSel *FindNext(ProgressUpdateUI *tracker = nullptr);
 
     // note: the result might not be a valid page number!
     int GetCurrentPageNo() const { return findPage; }
 
 protected:
-    WCHAR *findText;
-    WCHAR *anchor;
-    int findPage;
-    bool forward;
-    bool caseSensitive;
+    WCHAR *findText = nullptr;
+    WCHAR *anchor = nullptr;
+    int findPage = 0;
+    bool forward = true;
+    bool caseSensitive = false;
     // these two options are implicitly set when the search text begins
     // resp. ends in a single space (many users already search that way),
     // combining them yields a 'Whole words' search
-    bool matchWordStart;
-    bool matchWordEnd;
+    bool matchWordStart = false;
+    bool matchWordEnd = false;
 
     void SetText(const WCHAR *text);
     bool FindTextInPage(int pageNo = 0);
@@ -56,9 +56,11 @@ protected:
     void Reset();
 
 private:
-    const WCHAR *pageText;
-    int findIndex;
+    const WCHAR *pageText = nullptr;
+    int findIndex = 0;
 
-    WCHAR *lastText;
-    BYTE *findCache;
+    WCHAR *lastText = nullptr;
+    int nPages = 0;
+    std::vector<bool> pagesToSkip;
 };
+

@@ -175,12 +175,16 @@ static DjVuContext gDjVuContext;
 
 class DjVuEngineImpl : public BaseEngine {
 public:
-    DjVuEngineImpl();
+    DjVuEngineImpl() { };
     virtual ~DjVuEngineImpl();
     BaseEngine *Clone() override {
-        if (stream)
+        if (stream != nullptr) {
             return CreateFromStream(stream);
-        return fileName ? CreateFromFile(fileName) : nullptr;
+        }
+        if (FileName() != nullptr) {
+            return CreateFromFile(FileName());
+        }
+        return nullptr;
     }
 
     int PageCount() const override { return pageCount; }
@@ -232,17 +236,16 @@ public:
     static BaseEngine *CreateFromStream(IStream *stream);
 
 protected:
-    WCHAR *fileName;
-    IStream *stream;
+    IStream *stream = nullptr;
 
-    int pageCount;
-    RectD *mediaboxes;
+    int pageCount = 0;
+    RectD *mediaboxes = nullptr;
 
-    ddjvu_document_t *doc;
-    miniexp_t outline;
-    miniexp_t *annos;
+    ddjvu_document_t *doc = nullptr;
+    miniexp_t outline = miniexp_nil;
+    miniexp_t *annos = nullptr;
     Vec<PageAnnotation> userAnnots;
-    bool hasPageLabels;
+    bool hasPageLabels = false;
 
     Vec<ddjvu_fileinfo_t> fileInfo;
 
@@ -257,12 +260,6 @@ protected:
     bool FinishLoading();
     bool LoadMediaboxes();
 };
-
-DjVuEngineImpl::DjVuEngineImpl() : fileName(nullptr), stream(nullptr),
-    pageCount(0), mediaboxes(nullptr), doc(nullptr),
-    outline(miniexp_nil), annos(nullptr), hasPageLabels(false)
-{
-}
 
 DjVuEngineImpl::~DjVuEngineImpl()
 {
@@ -365,7 +362,7 @@ bool DjVuEngineImpl::Load(const WCHAR *fileName)
     if (!gDjVuContext.Initialize())
         return false;
 
-    this->fileName = str::Dup(fileName);
+    SetFileName(fileName);
     doc = gDjVuContext.OpenFile(fileName);
 
     return FinishLoading();
@@ -705,14 +702,16 @@ RectD DjVuEngineImpl::Transform(RectD rect, int pageNo, float zoom, int rotation
 
 unsigned char *DjVuEngineImpl::GetFileData(size_t *cbCount)
 {
-    if (stream) {
+    if (stream != nullptr) {
         ScopedMem<void> data(GetDataFromStream(stream, cbCount));
-        if (data)
+        if (data != nullptr) {
             return (unsigned char *)data.StealData();
+        }
     }
-    if (!fileName)
+    if (FileName() == nullptr) {
         return nullptr;
-    return (unsigned char *)file::ReadAll(fileName, cbCount);
+    }
+    return (unsigned char *)file::ReadAll(FileName(), cbCount);
 }
 
 bool DjVuEngineImpl::SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots)

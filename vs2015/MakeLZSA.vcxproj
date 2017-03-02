@@ -170,7 +170,7 @@
       <DisableSpecificWarnings>4127;4324;4458;4800;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;_HAS_EXCEPTIONS=0;DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src\utils;..\ext\zlib;..\ext\lzma\C;..\ext\unarr;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
@@ -303,13 +303,16 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\src\tools\MakeLzSA.cpp" />
+    <ClCompile Include="..\src\utils\BaseUtil.cpp" />
+    <ClCompile Include="..\src\utils\ByteOrderDecoder.cpp" />
+    <ClCompile Include="..\src\utils\CmdLineParser.cpp" />
+    <ClCompile Include="..\src\utils\FileUtil.cpp" />
+    <ClCompile Include="..\src\utils\LzmaSimpleArchive.cpp" />
+    <ClCompile Include="..\src\utils\StrUtil.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="unarrlib.vcxproj">
       <Project>{C45AE373-B027-3E7F-D940-2C27C56C730D}</Project>
-    </ProjectReference>
-    <ProjectReference Include="utils.vcxproj">
-      <Project>{169C8510-82B0-ADC1-4B32-5121B705AAF2}</Project>
     </ProjectReference>
     <ProjectReference Include="zlib.vcxproj">
       <Project>{16CFA17C-0206-A30D-ABF2-881097081F0F}</Project>

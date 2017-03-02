@@ -32,6 +32,15 @@ HMODULE SafeLoadLibrary(const WCHAR *dllName) {
     return LoadLibraryW(dllPath);
 }
 
+// try to mitigate dll hijacking
+// see http://www.chiark.greenend.org.uk/~sgtatham/putty/wishlist/vuln-indirect-dll-hijack.html
+void NoDllHijacking() {
+    if (DynSetDefaultDllDirectories) {
+        // https://msdn.microsoft.com/en-us/library/windows/desktop/hh310515(v=vs.85).aspx
+        DynSetDefaultDllDirectories(0x00000800); // LOAD_LIBRARY_SEARCH_SYSTEM32
+    }
+}
+
 #define API_LOAD(name) Dyn##name = (Sig_##name)GetProcAddress(h, #name);
 
 void InitDynCalls() {

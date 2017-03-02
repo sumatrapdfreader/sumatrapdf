@@ -21,28 +21,28 @@ per-file basis in FileHistory.
 
 // Favorites is a convenience interface into gFileHistory
 class Favorites {
-    size_t idxCache;
+    size_t idxCache = (size_t)-1;
 
-public:
-    Favorites() : idxCache((size_t)-1) { }
+  public:
+    Favorites() {}
 
-    Favorite *GetByMenuId(int menuId, DisplayState **dsOut=nullptr);
+    Favorite* GetByMenuId(int menuId, DisplayState** dsOut = nullptr);
     void ResetMenuIds();
-    DisplayState *GetFavByFilePath(const WCHAR *filePath);
-    DisplayState *GetByFavorite(Favorite *fn);
-    bool IsPageInFavorites(const WCHAR *filePath, int pageNo);
-    void AddOrReplace(const WCHAR *filePath, int pageNo, const WCHAR *name, const WCHAR *pageLabel=nullptr);
-    void Remove(const WCHAR *filePath, int pageNo);
-    void RemoveAllForFile(const WCHAR *filePath);
+    DisplayState* GetFavByFilePath(const WCHAR* filePath);
+    DisplayState* GetByFavorite(Favorite* fn);
+    bool IsPageInFavorites(const WCHAR* filePath, int pageNo);
+    void AddOrReplace(const WCHAR* filePath, int pageNo, const WCHAR* name, const WCHAR* pageLabel = nullptr);
+    void Remove(const WCHAR* filePath, int pageNo);
+    void RemoveAllForFile(const WCHAR* filePath);
 };
 
-void AddFavorite(WindowInfo *win);
-void DelFavorite(WindowInfo *win);
-void RebuildFavMenu(WindowInfo *win, HMENU menu);
-void CreateFavorites(WindowInfo *win);
-void ToggleFavorites(WindowInfo *win);
-void PopulateFavTreeIfNeeded(WindowInfo *win);
+void AddFavorite(WindowInfo* win);
+void DelFavorite(WindowInfo* win);
+void RebuildFavMenu(WindowInfo* win, HMENU menu);
+void CreateFavorites(WindowInfo* win);
+void ToggleFavorites(WindowInfo* win);
+void PopulateFavTreeIfNeeded(WindowInfo* win);
 void RememberFavTreeExpansionStateForAllWindows();
-void GoToFavoriteByMenuId(WindowInfo *win, int wmId);
-void UpdateFavoritesTree(WindowInfo *win);
+void GoToFavoriteByMenuId(WindowInfo* win, int wmId);
+void UpdateFavoritesTree(WindowInfo* win);
 void UpdateFavoritesTreeForAllWindows();
