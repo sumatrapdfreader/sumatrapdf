@@ -211,8 +211,15 @@ COLORREF GetLogoBgColor()
 COLORREF GetAboutBgColor()
 {
     COLORREF bgColor = ABOUT_BG_GRAY_COLOR;
-    if (ABOUT_BG_COLOR_DEFAULT != gGlobalPrefs->mainWindowBackground)
-        bgColor = gGlobalPrefs->mainWindowBackground;
+    if (gGlobalPrefs->theme.useTheme) {
+        if (ABOUT_BG_COLOR_DEFAULT != gGlobalPrefs->theme.mainBackgroundColor) {
+            bgColor = gGlobalPrefs->theme.mainBackgroundColor;
+        }
+    } else {
+        if (ABOUT_BG_COLOR_DEFAULT != gGlobalPrefs->mainWindowBackground) {
+            bgColor = gGlobalPrefs->mainWindowBackground;
+        }
+    }
     return bgColor;
 }
 

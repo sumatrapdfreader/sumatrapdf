@@ -40,18 +40,21 @@ static void SwapTabs(WindowInfo *win, int tab1, int tab2);
 #define TABBAR_HEIGHT    24
 #define MIN_TAB_WIDTH   100
 
+const char * TABSTYLE_ROUNDED = "rounded";
+const char * TABSTYLE_SQUARE = "square";
+
 static bool g_FirefoxStyle = false;
 
 int GetTabbarHeight(HWND hwnd, float factor)
 {
-    int dy = DpiScaleY(hwnd, TABBAR_HEIGHT);
+    int dy = DpiScaleY(hwnd, gGlobalPrefs->theme.useTheme ? gGlobalPrefs->theme.tabHeight : TABBAR_HEIGHT);
     return (int)(dy * factor);
 }
 
 static inline SizeI GetTabSize(HWND hwnd)
 {
     int dx = DpiScaleX(hwnd, std::max(gGlobalPrefs->prereleaseSettings.tabWidth, MIN_TAB_WIDTH));
-    int dy = DpiScaleY(hwnd, TABBAR_HEIGHT);
+    int dy = DpiScaleY(hwnd, gGlobalPrefs->theme.useTheme ? gGlobalPrefs->theme.tabHeight : TABBAR_HEIGHT);
     return SizeI(dx, dy);
 }
 
@@ -100,11 +103,17 @@ public:
         width = dx; height = dy;
 
         GraphicsPath shape;
+        int c;
+
         // define tab's body
-        int c = int((float)height * 0.6f + 0.5f); // size of bounding square for the arc
-        shape.AddArc(0, 0, c, c, 180.0f, 90.0f);
-        shape.AddArc(width - c, 0, c, c, 270.0f, 90.0f);
-        shape.AddLine(width, height, 0, height);
+        if (gGlobalPrefs->theme.useTheme && !strcmp(TABSTYLE_SQUARE, gGlobalPrefs->theme.tabStyle)) {
+            shape.AddRectangle(Rect(0, 0, width, height));
+        } else {		 // I would put a check for "rounded" here but then it might not draw anything...
+            c = int((float)height * 0.6f + 0.5f); // size of bounding square for the arc
+            shape.AddArc(0, 0, c, c, 180.0f, 90.0f);
+            shape.AddArc(width - c, 0, c, c, 270.0f, 90.0f);
+            shape.AddLine(width, height, 0, height);
+        }
         shape.CloseFigure();
         shape.SetMarker();
 
@@ -206,7 +215,7 @@ public:
         GraphicsPathIterator iterator(&shapes);
 
         SolidBrush br(Color(0, 0, 0));
-        Pen pen(&br, 2.0f);
+        Pen pen(&br, gGlobalPrefs->theme.useTheme ? gGlobalPrefs->theme.tabClosePenWidth : 2.0f);
 
         Font f(hdc, GetDefaultGuiFont());
         // TODO: adjust these constant values for DPI?
@@ -288,8 +297,10 @@ public:
             // paint "x"'s circle
             iterator.NextMarker(&shape);
             if (xClicked == i || xHighlighted == i) {
-                br.SetColor(ToColor(i == xClicked ? color.x_click : color.x_highlight));
-                graphics.FillPath(&br, &shape);
+                if (!gGlobalPrefs->theme.useTheme || gGlobalPrefs->theme.tabCloseCircleEnabled) {
+                    br.SetColor(ToColor(i == xClicked ? color.x_click : color.x_highlight));
+                    graphics.FillPath(&br, &shape);
+                }
             }
 
             // paint "x"
@@ -306,14 +317,18 @@ public:
     // Evaluates the colors for the tab's elements.
     void EvaluateColors(bool force) {
         COLORREF bg, txt;
-        if (inTitlebar) {
-            WindowInfo *win = FindWindowInfoByHwnd(hwnd);
-            bg = win->caption->bgColor;
-            txt = win->caption->textColor;
-        }
-        else {
-            bg = GetSysColor(TAB_COLOR_BG);
-            txt = GetSysColor(TAB_COLOR_TEXT);
+        if (gGlobalPrefs->theme.useTheme) {
+            bg = gGlobalPrefs->theme.tabBackgroundColor;
+            txt = gGlobalPrefs->theme.tabTextColor;
+        } else {
+            if (inTitlebar) {
+                WindowInfo *win = FindWindowInfoByHwnd(hwnd);
+                bg = win->caption->bgColor;
+                txt = win->caption->textColor;
+            } else {
+                bg = GetSysColor(TAB_COLOR_BG);
+                txt = GetSysColor(TAB_COLOR_TEXT);
+            }
         }
         if (!force && bg == color.bar && txt == color.text)
             return;
@@ -323,13 +338,24 @@ public:
 
         int sign = GetLightness(color.text) > GetLightness(color.bar) ? -1 : 1;
 
-        color.current      = AdjustLightness2(color.bar, sign * 25.0f);
-        color.highlight   = AdjustLightness2(color.bar, sign * 15.0f);
-        color.background  = AdjustLightness2(color.bar, -sign * 15.0f);
-        color.outline     = AdjustLightness2(color.bar, -sign * 60.0f);
-        color.x_line      = COL_CLOSE_X_HOVER;
-        color.x_highlight = COL_CLOSE_HOVER_BG;
-        color.x_click     = AdjustLightness2(color.x_highlight, -10.0f);
+        if (gGlobalPrefs->theme.useTheme) {
+            color.current = AdjustLightness2(color.bar, sign * gGlobalPrefs->theme.tabLightnessAdjustments->At(0));
+            color.highlight = AdjustLightness2(color.bar, sign * gGlobalPrefs->theme.tabLightnessAdjustments->At(1));
+            color.background = AdjustLightness2(color.bar, sign * gGlobalPrefs->theme.tabLightnessAdjustments->At(2));
+            color.outline = AdjustLightness2(color.bar, sign * gGlobalPrefs->theme.tabLightnessAdjustments->At(3));
+            color.x_line = gGlobalPrefs->theme.tabCloseHoverColor;									// hover x
+            color.x_highlight = gGlobalPrefs->theme.tabCloseCircleColor;									// hover circle
+            color.x_click = AdjustLightness2(color.x_highlight, gGlobalPrefs->theme.tabLightnessAdjustments->At(4));		// click circle
+        } else {
+            color.current = AdjustLightness2(color.bar, sign * 25.0f);
+            color.highlight = AdjustLightness2(color.bar, sign * 15.0f);
+            color.background = AdjustLightness2(color.bar, -sign * 15.0f);
+            color.outline = AdjustLightness2(color.bar, -sign * 60.0f);
+            color.x_line = COL_CLOSE_X_HOVER;
+            color.x_highlight = COL_CLOSE_HOVER_BG;
+            color.x_click = AdjustLightness2(color.x_highlight, -10.0f);
+        }
+		
         if (currBgCol != DEFAULT_CURRENT_BG_COL) {
             color.current = currBgCol;
         }

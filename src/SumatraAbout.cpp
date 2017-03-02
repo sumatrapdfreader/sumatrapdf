@@ -204,11 +204,13 @@ static void DrawSumatraVersion(HDC hdc, RectI rect)
 
 static RectI DrawBottomRightLink(HWND hwnd, HDC hdc, const WCHAR *txt)
 {
+    COLORREF linkColor = gGlobalPrefs->theme.useTheme ? gGlobalPrefs->theme.mainLinkColor : COL_BLUE_LINK;
+
     ScopedFont fontLeftTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 14));
-    ScopedPen penLinkLine(CreatePen(PS_SOLID, 1, COL_BLUE_LINK));
+    ScopedPen penLinkLine(CreatePen(PS_SOLID, 1, linkColor));
     ScopedHdcSelect font(hdc, fontLeftTxt);
 
-    SetTextColor(hdc, COL_BLUE_LINK);
+    SetTextColor(hdc, linkColor);
     SetBkMode(hdc, TRANSPARENT);
     ClientRect rc(hwnd);
 
@@ -235,9 +237,12 @@ static RectI DrawBottomRightLink(HWND hwnd, HDC hdc, const WCHAR *txt)
    to understand without seeing the design. */
 static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkInfo)
 {
-    ScopedPen penBorder(CreatePen(PS_SOLID, ABOUT_LINE_OUTER_SIZE, WIN_COL_BLACK));
-    ScopedPen penDivideLine(CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, WIN_COL_BLACK));
-    ScopedPen penLinkLine(CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, COL_BLUE_LINK));
+    COLORREF textColor = gGlobalPrefs->theme.useTheme ? gGlobalPrefs->theme.mainTextColor : ABOUT_BORDER_COL;
+    COLORREF linkColor = gGlobalPrefs->theme.useTheme ? gGlobalPrefs->theme.mainLinkColor : COL_BLUE_LINK;
+
+    ScopedPen penBorder(CreatePen(PS_SOLID, ABOUT_LINE_OUTER_SIZE, textColor));
+    ScopedPen penDivideLine(CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, textColor));
+    ScopedPen penLinkLine(CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, linkColor));
 
     ScopedFont fontLeftTxt(CreateSimpleFont(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE));
     ScopedFont fontRightTxt(CreateSimpleFont(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE));
@@ -269,7 +274,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkI
     DrawSumatraVersion(hdc, titleRect);
 
     /* render attribution box */
-    SetTextColor(hdc, ABOUT_BORDER_COL);
+    SetTextColor(hdc, textColor);
     SetBkMode(hdc, TRANSPARENT);
 
 #ifndef ABOUT_USE_LESS_COLORS
@@ -288,7 +293,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkI
     linkInfo.Reset();
     for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++) {
         bool hasUrl = HasPermission(Perm_DiskAccess) && el->url;
-        SetTextColor(hdc, hasUrl ? COL_BLUE_LINK : ABOUT_BORDER_COL);
+        SetTextColor(hdc, hasUrl ? linkColor : textColor);
         size_t txtLen = str::Len(el->rightTxt);
 #ifdef GIT_COMMIT_ID
         if (str::EndsWith(el->rightTxt, GIT_COMMIT_ID_STR))
@@ -614,9 +619,12 @@ void DrawAboutPage(WindowInfo* win, HDC hdc)
 
 void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF textColor, COLORREF backgroundColor)
 {
-    ScopedPen penBorder(CreatePen(PS_SOLID, DOCLIST_SEPARATOR_DY, WIN_COL_BLACK));
-    ScopedPen penThumbBorder(CreatePen(PS_SOLID, DOCLIST_THUMBNAIL_BORDER_W, WIN_COL_BLACK));
-    ScopedPen penLinkLine(CreatePen(PS_SOLID, 1, COL_BLUE_LINK));
+    COLORREF linkColor = gGlobalPrefs->theme.useTheme ? gGlobalPrefs->theme.mainLinkColor : COL_BLUE_LINK;
+    COLORREF foregroundColor = gGlobalPrefs->theme.useTheme ? gGlobalPrefs->theme.mainTextColor : WIN_COL_BLACK;
+
+    ScopedPen penBorder(CreatePen(PS_SOLID, DOCLIST_SEPARATOR_DY, foregroundColor));
+    ScopedPen penThumbBorder(CreatePen(PS_SOLID, DOCLIST_THUMBNAIL_BORDER_W, foregroundColor));
+    ScopedPen penLinkLine(CreatePen(PS_SOLID, 1, linkColor));
 
     ScopedFont fontSumatraTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 24));
     ScopedFont fontLeftTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 14));
@@ -642,7 +650,7 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     /* render recent files list */
     SelectObject(hdc, penThumbBorder);
     SetBkMode(hdc, TRANSPARENT);
-    SetTextColor(hdc, WIN_COL_BLACK);
+    SetTextColor(hdc, foregroundColor);
 
     rc.y += titleBox.dy;
     rc.dy -= titleBox.dy;
@@ -735,8 +743,8 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     /* render bottom links */
     rc.y += DOCLIST_MARGIN_TOP + height * THUMBNAIL_DY + (height - 1) * DOCLIST_MARGIN_BETWEEN_Y + DOCLIST_MARGIN_BOTTOM;
     rc.dy = DOCLIST_BOTTOM_BOX_DY;
-
-    SetTextColor(hdc, COL_BLUE_LINK);
+    
+    SetTextColor(hdc, linkColor);
     SelectObject(hdc, penLinkLine);
 
     HIMAGELIST himl = (HIMAGELIST)SendMessage(win->hwndToolbar, TB_GETIMAGELIST, 0, 0);

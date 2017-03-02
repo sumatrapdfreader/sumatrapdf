@@ -81,7 +81,61 @@ square brackets in pairs</b>! Else you risk losing all the data following them.<
 </div>
 
 <pre class="txt">
-<div><span class="cm" id="MainWindowBackground">background <a href="#color">color</a> of the non-document windows, traditionally yellow</span>
+<div><span class="cm" id="Theme">theme customization</span>
+Theme [
+    <span class="cm" id="Theme_UseTheme">if true, use this theme</span>
+    UseTheme = false
+
+    <span class="cm" id="Theme_ToolbarIconsFileName">the filename for the toolbar icons (BMP file format, should end in _11, child of the src/ 
+    directory), example: toolbar_11.bmp</span>
+    ToolbarIconsFileName = toolbar_google_11.bmp
+
+    <span class="cm" id="Theme_ReloadingIconFileName">the filename for the toolbar icons (BMP file format, child of thesrc/ directory), example: 
+    reloading.bmp</span>
+    ReloadingIconFileName = reloading_google.bmp
+
+    <span class="cm" id="Theme_MainBackgroundColor">overrides global MainWindowBackground preference</span>
+    MainBackgroundColor = #263238
+
+    <span class="cm" id="Theme_MainTextColor">text <a href="#color">color</a> for the main background page</span>
+    MainTextColor = #ffffff
+
+    <span class="cm" id="Theme_MainLinkColor">hyperlink <a href="#color">color</a> for the main background page</span>
+    MainLinkColor = #80cbad
+
+    <span class="cm" id="Theme_DocumentBackgroundColor">background <a href="#color">color</a> behind documents</span>
+    DocumentBackgroundColor = #263238
+
+    <span class="cm" id="Theme_TabBackgroundColor">background <a href="#color">color</a> of the tabs</span>
+    TabBackgroundColor = #009688
+
+    <span class="cm" id="Theme_TabTextColor">text <a href="#color">color</a> of the tabs</span>
+    TabTextColor = #ffffff
+
+    <span class="cm" id="Theme_TabHeight">height of the tabs in pixels</span>
+    TabHeight = 32
+
+    <span class="cm" id="Theme_TabStyle">tab's visual style, one of these values: rounded, square</span>
+    TabStyle = rounded
+
+    <span class="cm" id="Theme_TabLightnessAdjustments">The lightness adjustments for the various states of the tabs (current, highlighted, background, 
+    x, mouseDownX)</span>
+    TabLightnessAdjustments = 1 10 -10 30 -10
+
+    <span class="cm" id="Theme_TabCloseCircleEnabled">if false, the circle around the 'x' on the tab is not displayed</span>
+    TabCloseCircleEnabled = false
+
+    <span class="cm" id="Theme_TabCloseHoverColor">hover <a href="#color">color</a> of the 'x' on the tab</span>
+    TabCloseHoverColor = #f9ebeb
+
+    <span class="cm" id="Theme_TabCloseCircleColor"><a href="#color">color</a> of the circle around the 'x' on the tab</span>
+    TabCloseCircleColor = #c13535
+
+    <span class="cm" id="Theme_TabClosePenWidth">pen width used to draw the 'x' in pixels</span>
+    TabClosePenWidth = 1
+]
+
+<span class="cm" id="MainWindowBackground">background <a href="#color">color</a> of the non-document windows, traditionally yellow</span>
 MainWindowBackground = #fff200
 
 <span class="cm" id="EscToExit">if true, Esc key closes SumatraPDF</span>
