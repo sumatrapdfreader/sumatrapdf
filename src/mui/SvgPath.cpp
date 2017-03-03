@@ -31,7 +31,7 @@ understand.
 
 namespace svg {
 
-enum PathInstrType {
+enum class PathInstr {
     MoveAbs = 0,
     MoveRel, // M, m
     LineToAbs,
@@ -56,68 +56,75 @@ enum PathInstrType {
     Unknown = Count
 };
 
-// the order must match order of PathInstrType enums
+// the order must match order of PathInstr enums
 static char *instructions = "MmLlHhVvCcSsQqTtAaZz";
 
 struct SvgPathInstr {
-    SvgPathInstr(PathInstrType type) : type(type) {}
+    SvgPathInstr(PathInstr type) : type(type) {}
 
-    PathInstrType type;
+    PathInstr type;
     // the meaning of values depends on InstrType. We could be more safe
     // by giving them symbolic names but this gives us simpler parsing
     float v[6];
     bool largeArc, sweep;
 };
 
-static PathInstrType GetInstructionType(char c) {
+static PathInstr GetInstructionType(char c) {
     const char *pos = str::FindChar(instructions, c);
-    if (!pos)
-        return Unknown;
-    return (PathInstrType)(pos - instructions);
+    if (!pos) {
+        return PathInstr::Unknown;
+    }
+    return (PathInstr)(pos - instructions);
+}
+
+static const char *skipWs(const char *s) {
+    while (str::IsWs(*s)) {
+        s++;
+    }
+    return s;
 }
 
 static bool ParseSvgPathData(const char *s, VecSegmented<SvgPathInstr> &instr) {
-    for (; str::IsWs(*s); s++)
-        ;
+    s = skipWs(s);
 
     while (*s) {
         SvgPathInstr i(GetInstructionType(*s++));
         switch (i.type) {
-            case Close:
-            case Close2:
+        case PathInstr::Close:
+            case PathInstr::Close2:
                 break;
 
-            case HLineAbs:
-            case HLineRel:
-            case VLineAbs:
-            case VLineRel:
+            case PathInstr::HLineAbs:
+            case PathInstr::HLineRel:
+            case PathInstr::VLineAbs:
+            case PathInstr::VLineRel:
                 s = str::Parse(s, "%f", &i.v[0]);
                 break;
 
-            case MoveAbs:
-            case MoveRel:
-            case LineToAbs:
-            case LineToRel:
-            case BezierTAbs:
-            case BezierTRel:
+            case PathInstr::MoveAbs:
+            case PathInstr::MoveRel:
+            case PathInstr::LineToAbs:
+            case PathInstr::LineToRel:
+            case PathInstr::BezierTAbs:
+            case PathInstr::BezierTRel:
                 s = str::Parse(s, "%f%_%?,%_%f", &i.v[0], &i.v[1]);
                 break;
 
-            case BezierSAbs:
-            case BezierSRel:
-            case BezierQAbs:
-            case BezierQRel:
+            case PathInstr::BezierSAbs:
+            case PathInstr::BezierSRel:
+            case PathInstr::BezierQAbs:
+            case PathInstr::BezierQRel:
                 s = str::Parse(s, "%f%_%?,%_%f,%f%_%?,%_%f", &i.v[0], &i.v[1], &i.v[2], &i.v[3]);
                 break;
 
-            case BezierCAbs:
-            case BezierCRel:
+            case PathInstr::BezierCAbs:
+            case PathInstr::BezierCRel:
                 s = str::Parse(s, "%f%_%?,%_%f,%f%_%?,%_%f,%f%_%?,%_%f", &i.v[0], &i.v[1], &i.v[2],
                                &i.v[3], &i.v[4], &i.v[5]);
                 break;
 
-            case ArcAbs:
-            case ArcRel: {
+            case PathInstr::ArcAbs:
+            case PathInstr::ArcRel: {
                 int largeArc, sweep;
                 s = str::Parse(s, "%f%_%?,%_%f%_%?,%_%f%_%?,%_%d%_%?,%_%d%_%?,%_%f%_%?,%_%f",
                                &i.v[0], &i.v[1], &i.v[2], &largeArc, &sweep, &i.v[3], &i.v[4]);
@@ -129,12 +136,13 @@ static bool ParseSvgPathData(const char *s, VecSegmented<SvgPathInstr> &instr) {
                 CrashIf(true);
                 return false;
         }
-        if (!s)
+
+        if (!s) {
             return false;
+        }
         instr.Append(i);
 
-        for (; str::IsWs(*s); s++)
-            ;
+        s = skipWs(s);
     }
 
     return true;
@@ -151,49 +159,50 @@ static void RelYToAbs(const PointF &lastEnd, float *y) { *y = lastEnd.Y + *y; }
 
 GraphicsPath *GraphicsPathFromPathData(const char *s) {
     VecSegmented<SvgPathInstr> instr;
-    if (!ParseSvgPathData(s, instr))
+    if (!ParseSvgPathData(s, instr)) {
         return nullptr;
+    }
     GraphicsPath *gp = ::new GraphicsPath();
     PointF prevEnd(0.f, 0.f);
     for (SvgPathInstr &i : instr) {
-        PathInstrType type = i.type;
+        PathInstr type = i.type;
 
         // convert relative coordinates to absolute based on end position of
         // previous element
         // TODO: support the rest of instructions
-        if (MoveRel == type) {
+        if (PathInstr::MoveRel == type) {
             RelPointToAbs(prevEnd, i.v);
-            type = MoveAbs;
-        } else if (LineToRel == type) {
+            type = PathInstr::MoveAbs;
+        } else if (PathInstr::LineToRel == type) {
             RelPointToAbs(prevEnd, i.v);
-            type = LineToAbs;
-        } else if (HLineRel == type) {
+            type = PathInstr::LineToAbs;
+        } else if (PathInstr::HLineRel == type) {
             RelXToAbs(prevEnd, i.v);
-            type = HLineAbs;
-        } else if (VLineRel == type) {
+            type = PathInstr::HLineAbs;
+        } else if (PathInstr::VLineRel == type) {
             RelYToAbs(prevEnd, i.v);
-            type = VLineAbs;
+            type = PathInstr::VLineAbs;
         }
 
-        if (MoveAbs == type) {
+        if (PathInstr::MoveAbs == type) {
             PointF p(i.v[0], i.v[1]);
             prevEnd = p;
             gp->StartFigure();
-        } else if (LineToAbs == type) {
+        } else if (PathInstr::LineToAbs == type) {
             PointF p(i.v[0], i.v[1]);
             gp->AddLine(prevEnd, p);
             prevEnd = p;
-        } else if (HLineAbs == type) {
+        } else if (PathInstr::HLineAbs == type) {
             PointF p(prevEnd);
             p.X = i.v[0];
             gp->AddLine(prevEnd, p);
             prevEnd = p;
-        } else if (VLineAbs == type) {
+        } else if (PathInstr::VLineAbs == type) {
             PointF p(prevEnd);
             p.Y = i.v[0];
             gp->AddLine(prevEnd, p);
             prevEnd = p;
-        } else if ((Close == type) || (Close2 == type)) {
+        } else if ((PathInstr::Close == type) || (PathInstr::Close2 == type)) {
             gp->CloseFigure();
         } else {
             CrashIf(true);
