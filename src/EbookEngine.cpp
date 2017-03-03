@@ -111,8 +111,7 @@ public:
     bool BenchLoadPage(int pageNo) override { UNUSED(pageNo); return true; }
 
 protected:
-    WCHAR *fileName;
-    Vec<HtmlPage *> *pages;
+    Vec<HtmlPage *> *pages = nullptr;
     Vec<PageAnchor> anchors;
     // contains for each page the last anchor indicating
     // a break between two merged documents
@@ -226,10 +225,10 @@ public:
     virtual PageDestination *GetLink() { return dest; }
 };
 
-EbookEngine::EbookEngine() : fileName(nullptr), pages(nullptr),
-    pageRect(0, 0, 5.12 * GetFileDPI(), 7.8 * GetFileDPI()), // "B Format" paperback
-    pageBorder(0.4f * GetFileDPI())
-{
+EbookEngine::EbookEngine() {
+    // "B Format" paperback
+    pageRect = RectD(0, 0, 5.12 * GetFileDPI(), 7.8 * GetFileDPI());
+    pageBorder = 0.4f * GetFileDPI();
     InitializeCriticalSection(&pagesAccess);
 }
 
@@ -708,12 +707,16 @@ public:
 
 class EpubEngineImpl : public EbookEngine {
 public:
-    EpubEngineImpl() : EbookEngine(), doc(nullptr), stream(nullptr) { }
+    EpubEngineImpl() : EbookEngine() { }
     virtual ~EpubEngineImpl();
     BaseEngine *Clone() override {
-        if (stream)
+        if (stream) {
             return CreateFromStream(stream);
-        return fileName ? CreateFromFile(fileName) : nullptr;
+        }
+        if (FileName()) {
+            return CreateFromFile(FileName());
+        }
+        return nullptr;
     }
 
     unsigned char *GetFileData(size_t *cbCount) override;
@@ -733,8 +736,8 @@ public:
     static BaseEngine *CreateFromStream(IStream *stream);
 
 protected:
-    EpubDoc *doc;
-    IStream *stream;
+    EpubDoc *doc = nullptr;
+    IStream *stream = nullptr;
 
     bool Load(const WCHAR *fileName);
     bool Load(IStream *stream);

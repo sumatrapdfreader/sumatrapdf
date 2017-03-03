@@ -885,9 +885,9 @@ LoadEngineInFixedPageUI:
         }
         CrashIf(ctrl && (!ctrl->AsEbook() || ctrl->AsFixed() || ctrl->AsChm()));
     }
-    auto ctrlFilePath = ctrl->FilePath();
-    if (ctrl && !str::Eq(ctrlFilePath, filePath)) {
+    if (ctrl && !str::Eq(ctrl->FilePath(), filePath)) {
         // TODO: remove when we figure out why we crash
+        auto ctrlFilePath = ctrl->FilePath();
         auto s1 = ctrlFilePath ? str::conv::ToUtf8(ctrlFilePath) : str::Dup("<null>");
         auto s2 = filePath ? str::conv::ToUtf8(filePath) : str::Dup("<null>");
         dbglog::CrashLogF("CreateControllerForFile: ctrl->FilePath: '%s', filePath: '%s'\n", s1, s2);
