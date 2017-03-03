@@ -404,9 +404,9 @@ static bool SetupPluginMode(CommandLineInfo& i)
             if (str::StartsWithI(part, L"page=") && str::Parse(part + 4, L"=%d%$", &pageNo))
                 i.pageNumber = pageNo;
             else if (str::StartsWithI(part, L"nameddest=") && part[10])
-                i.destName.Set(str::Dup(part + 10));
+                i.destName.SetCopy(part + 10);
             else if (!str::FindChar(part, '=') && part[0])
-                i.destName.Set(str::Dup(part));
+                i.destName.SetCopy(part);
         }
     }
 

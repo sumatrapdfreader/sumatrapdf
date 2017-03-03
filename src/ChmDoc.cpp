@@ -50,7 +50,7 @@ unsigned char *ChmDoc::GetData(const char *fileName, size_t *lenOut)
     int res = chm_resolve_object(chmHandle, fileName, &info);
     if (CHM_RESOLVE_SUCCESS != res && str::FindChar(fileName, '\\')) {
         // Microsoft's HTML Help CHM viewer tolerates backslashes in URLs
-        fileNameTmp.Set(str::Dup(fileName));
+        fileNameTmp.SetCopy(fileName);
         str::TransChars(fileNameTmp, "\\", "/");
         fileName = fileNameTmp;
         res = chm_resolve_object(chmHandle, fileName, &info);
@@ -287,8 +287,9 @@ bool ChmDoc::Load(const WCHAR *fileName)
             "/index.htm", "/index.html", "/default.htm", "/default.html"
         };
         for (int i = 0; i < dimof(pathsToTest); i++) {
-            if (HasData(pathsToTest[i]))
-                homePath.Set(str::Dup(pathsToTest[i]));
+            if (HasData(pathsToTest[i])) {
+                homePath.SetCopy(pathsToTest[i]);
+            }
         }
         if (!HasData(homePath))
             return false;
@@ -365,8 +366,9 @@ static bool VisitChmTocItem(EbookTocVisitor *visitor, HtmlElement *el, UINT cp, 
             name.Set(attrVal.StealData());
         else if (str::EqI(attrName, L"Local")) {
             // remove the ITS protocol and any filename references from the URLs
-            if (str::Find(attrVal, L"::/"))
-                attrVal.Set(str::Dup(str::Find(attrVal, L"::/") + 3));
+            if (str::Find(attrVal, L"::/")) {
+                attrVal.SetCopy(str::Find(attrVal, L"::/") + 3);
+            }
             local.Set(attrVal.StealData());
         }
     }
@@ -413,12 +415,12 @@ static bool VisitChmIndexItem(EbookTocVisitor *visitor, HtmlElement *el, UINT cp
             name.Set(attrVal.StealData());
             // some CHM documents seem to use a lonely Name instead of Keyword
             if (!keyword)
-                keyword.Set(str::Dup(name));
+                keyword.SetCopy(name);
         }
         else if (str::EqI(attrName, L"Local") && name) {
             // remove the ITS protocol and any filename references from the URLs
             if (str::Find(attrVal, L"::/"))
-                attrVal.Set(str::Dup(str::Find(attrVal, L"::/") + 3));
+                attrVal.SetCopy(str::Find(attrVal, L"::/") + 3);
             references.Append(name.StealData());
             references.Append(attrVal.StealData());
         }

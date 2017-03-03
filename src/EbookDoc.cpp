@@ -1381,7 +1381,7 @@ static const char *TextFindEmailEnd(str::Str<char>& htmlData, const char *curr)
             return nullptr;
         size_t idx = htmlData.Count();
         for (; idx > 1 && IsEmailUsernameChar(htmlData.At(idx - 1)); idx--);
-        beforeAt.Set(str::Dup(&htmlData.At(idx)));
+        beforeAt.SetCopy(&htmlData.At(idx));
     } else {
         CrashIf(!str::StartsWith(curr, "mailto:"));
         end = curr = curr + 7; // skip mailto:

@@ -460,7 +460,7 @@ Usage:
             breakAlloc = _wtoi(argList.At(++i));
 #endif
         else if (!filePath)
-            filePath.Set(str::Dup(argList.At(i)));
+            filePath.SetCopy(argList.At(i));
         else
             goto Usage;
     }

@@ -43,7 +43,7 @@ static float GetDefaultFontSize()
 void SetDefaultEbookFont(const WCHAR *name, float size)
 {
     // intentionally don't validate the input
-    gDefaultFontName.Set(str::Dup(name));
+    gDefaultFontName.SetCopy(name);
     // use a somewhat smaller size than in the EbookUI, since fit page/width
     // is likely to be above 100% for the paperback page dimensions
     gDefaultFontSize = size * 0.8f;
@@ -1662,10 +1662,10 @@ public:
         const WCHAR *id = str::FindChar(relativeURL, '#');
         if (id) {
             value.Set(str::DupN(relativeURL, id - relativeURL));
-            name.Set(str::Dup(id));
+            name.SetCopy(id);
         }
         else
-            value.Set(str::Dup(relativeURL));
+            value.SetCopy(relativeURL);
     }
 
     virtual PageDestType GetDestType() const { return Dest_LaunchFile; }

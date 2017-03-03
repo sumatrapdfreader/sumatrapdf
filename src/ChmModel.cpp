@@ -307,7 +307,7 @@ public:
 
 bool ChmModel::Load(const WCHAR *fileName)
 {
-    this->fileName.Set(str::Dup(fileName));
+    this->fileName.SetCopy(fileName);
     doc = ChmDoc::CreateFromFile(fileName);
     if (!doc)
         return false;
@@ -569,7 +569,7 @@ public:
         this->hw = hw;
         homeUrl.Set(str::conv::FromAnsi(doc->GetHomePath()));
         if (*homeUrl == '/')
-            homeUrl.Set(str::Dup(homeUrl + 1));
+            homeUrl.SetCopy(homeUrl + 1);
         hw->NavigateToDataUrl(homeUrl);
     }
 

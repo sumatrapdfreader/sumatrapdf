@@ -136,7 +136,7 @@ void NotifyFailed(const WCHAR *msg)
 
 void SetMsg(const WCHAR *msg, Color color)
 {
-    gMsg.Set(str::Dup(msg));
+    gMsg.SetCopy(msg);
     gMsgColor = color;
 }
 
@@ -383,7 +383,7 @@ static bool IsUsingInstallation(DWORD procId)
     ScopedMem<WCHAR> libmupdf(path::Join(gGlobalData.installDir, L"libmupdf.dll"));
     ScopedMem<WCHAR> browserPlugin(GetBrowserPluginPath());
 
-    MODULEENTRY32 mod;
+    MODULEENTRY32 mod = { 0 };
     mod.dwSize = sizeof(mod);
     BOOL cont = Module32First(snap, &mod);
     while (cont) {
@@ -405,7 +405,7 @@ static void ProcessesUsingInstallation(WStrVec& names)
     if (INVALID_HANDLE_VALUE == snap)
         return;
 
-    PROCESSENTRY32 proc;
+    PROCESSENTRY32 proc = { 0 };
     proc.dwSize = sizeof(proc);
     BOOL ok = Process32First(snap, &proc);
     while (ok) {

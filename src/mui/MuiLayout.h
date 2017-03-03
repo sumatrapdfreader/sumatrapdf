@@ -15,7 +15,7 @@ class ILayout {
     ScopedMem<char> name;
     void SetName(const char* n) {
         if (n)
-            name.Set(str::Dup(n));
+            name.SetCopy(n);
     }
     bool IsNamed(const char* s) const { return str::EqI(name.Get(), s); }
     virtual ~ILayout(){};

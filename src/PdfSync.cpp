@@ -383,7 +383,7 @@ int Pdfsync::DocToSource(UINT pageNo, PointI pt, ScopedMem<WCHAR>& filename, UIN
     if (!found)
         return PDFSYNCERR_NO_SYNC_AT_LOCATION;
 
-    filename.Set(str::Dup(srcfiles.At(found->file)));
+    filename.SetCopy(srcfiles.At(found->file));
     *line = found->line;
     *col = found->column;
 
@@ -411,7 +411,7 @@ UINT Pdfsync::SourceToRecord(const WCHAR* srcfilename, UINT line, UINT col, Vec<
     if (PathIsRelative(srcfilename))
         srcfilepath.Set(PrependDir(srcfilename));
     else
-        srcfilepath.Set(str::Dup(srcfilename));
+        srcfilepath.SetCopy(srcfilename);
     if (!srcfilepath)
         return PDFSYNCERR_OUTOFMEMORY;
 
@@ -566,7 +566,7 @@ int SyncTex::SourceToDoc(const WCHAR* srcfilename, UINT line, UINT col, UINT *pa
     if (PathIsRelative(srcfilename))
         srcfilepath.Set(PrependDir(srcfilename));
     else
-        srcfilepath.Set(str::Dup(srcfilename));
+        srcfilepath.SetCopy(srcfilename);
     if (!srcfilepath)
         return PDFSYNCERR_OUTOFMEMORY;
 

@@ -8,7 +8,7 @@
 // Start directory traversal in a given dir
 bool DirIter::StartDirIter(const WCHAR *dir)
 {
-    currDir.Set(str::Dup(dir));
+    currDir.SetCopy(dir);
     ScopedMem<WCHAR> pattern(path::Join(currDir, L"*"));
     currFindHandle = FindFirstFile(pattern, &currFindData);
     if (INVALID_HANDLE_VALUE == currFindHandle)

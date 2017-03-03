@@ -312,7 +312,7 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR *filePath)
             ParseCmdLine(ev->commandLine, args, 2);
             if (args.Count() == 0)
                 continue;
-            appName.Set(str::Dup(path::GetBaseName(args.At(0))));
+            appName.SetCopy(path::GetBaseName(args.At(0)));
             *(WCHAR *)path::GetExt(appName) = '\0';
         }
 

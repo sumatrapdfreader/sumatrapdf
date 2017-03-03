@@ -193,7 +193,7 @@ HtmlFormatter::HtmlFormatter(HtmlFormatterArgs *args) :
 
     gfx = mui::AllocGraphicsForMeasureText();
     textMeasure = CreateTextRender(args->textRenderMethod, gfx, 10, 10);
-    defaultFontName.Set(str::Dup(args->GetFontName()));
+    defaultFontName.SetCopy(args->GetFontName());
     defaultFontSize = args->fontSize;
 
     DrawStyle style;

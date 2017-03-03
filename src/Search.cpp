@@ -758,7 +758,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
     if (command) {
         ScopedMem<WCHAR> cmd;
         if (IsWindowUnicode((HWND)wparam))
-            cmd.Set(str::Dup((const WCHAR *)command));
+            cmd.SetCopy((const WCHAR *)command);
         else
             cmd.Set(str::conv::FromAnsi((const char *)command));
         HandleDdeCmds(cmd, ack);

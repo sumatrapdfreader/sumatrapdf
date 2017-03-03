@@ -22,7 +22,7 @@ Doc::Doc(const Doc& other)
     type = other.type;
     generic = other.generic;
     error = other.error;
-    filePath.Set(str::Dup(other.filePath));
+    filePath.SetCopy(other.filePath);
 }
 
 Doc& Doc::operator=(const Doc& other)
@@ -31,7 +31,7 @@ Doc& Doc::operator=(const Doc& other)
         type = other.type;
         generic = other.generic;
         error = other.error;
-        filePath.Set(str::Dup(other.filePath));
+        filePath.SetCopy(other.filePath);
     }
     return *this;
 }
@@ -294,7 +294,7 @@ Doc Doc::CreateFromFile(const WCHAR *filePath)
     if (doc.IsNone()) {
         CrashIf(doc.error);
         doc.error = Error_Unknown;
-        doc.filePath.Set(str::Dup(filePath));
+        doc.filePath.SetCopy(filePath);
     }
     else {
         CrashIf(!Doc::IsSupportedFile(filePath));

@@ -539,7 +539,7 @@ void AddFavorite(WindowInfo* win) {
         DocTocItem* root = tab->ctrl->GetTocTree();
         DocTocItem* item = TocItemForPageNo(root, pageNo);
         if (item) {
-            name.Set(str::Dup(item->title));
+            name.SetCopy(item->title);
         }
         delete root;
     }

@@ -277,7 +277,7 @@ void CommandLineInfo::ParseCommandLine(const WCHAR* cmdLine) {
 #define is_arg_with_param(_argNo) (param && _argNo == arg)
 #define additional_param() argList.At(n + 1)
 #define has_additional_param() ((argCount > n + 1) && ('-' != additional_param()[0]))
-#define handle_string_param(name) name.Set(str::Dup(argList.At(++n)))
+#define handle_string_param(name) name.SetCopy(argList.At(++n))
 #define handle_int_param(name) name = _wtoi(argList.At(++n))
 
     for (size_t n = 1; n < argCount; n++) {
@@ -316,7 +316,7 @@ void CommandLineInfo::ParseCommandLine(const WCHAR* cmdLine) {
             // always exit on print) and -stress-test (useful for profiling)
             exitWhenDone = true;
         } else if (is_arg_with_param(InverseSearch)) {
-            inverseSearchCmdLine.Set(str::Dup(argList.At(++n)));
+            inverseSearchCmdLine.SetCopy(argList.At(++n));
         } else if ((is_arg_with_param(ForwardSearch) || is_arg_with_param(FwdSearch)) && argCount > n + 2) {
             // -forward-search is for consistency with -inverse-search
             // -fwdsearch is for consistency with -fwdsearch-*
@@ -352,7 +352,7 @@ void CommandLineInfo::ParseCommandLine(const WCHAR* cmdLine) {
         } else if (Console == arg) {
             showConsole = true;
         } else if (is_arg_with_param(AppData)) {
-            appdataDir.Set(str::Dup(param));
+            appdataDir.SetCopy(param);
             ++n;
         } else if (is_arg_with_param(Plugin)) {
             // -plugin [<URL>] <parent HWND>

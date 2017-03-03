@@ -289,7 +289,7 @@ bool OpenFileExternally(const WCHAR *path)
     ScopedMem<WCHAR> perceivedType(ReadRegStr(HKEY_CLASSES_ROOT, ext, L"PerceivedType"));
     // since we allow following hyperlinks, also allow opening local webpages
     if (str::EndsWithI(path, L".htm") || str::EndsWithI(path, L".html") || str::EndsWithI(path, L".xhtml"))
-        perceivedType.Set(str::Dup(L"webpage"));
+        perceivedType.SetCopy(L"webpage");
     str::ToLowerInPlace(perceivedType);
     if (gAllowedFileTypes.Contains(L"*"))
         /* allow all file types (not recommended) */;
@@ -1541,7 +1541,7 @@ WindowInfo* LoadDocument(LoadArgs& args)
         win->currentTab = CreateNewTab(win, fullPath);
     }
     else {
-        win->currentTab->filePath.Set(str::Dup(fullPath));
+        win->currentTab->filePath.SetCopy(fullPath);
     }
 
     args.fileName = fullPath;
@@ -1796,7 +1796,7 @@ bool AutoUpdateInitiate(const char *updateData)
         ScopedMem<WCHAR> tmpDir(path::GetTempPath());
         updateExe.Set(path::Join(tmpDir, L"SumatraPDF-install-update.exe"));
         // TODO: make the installer delete itself after the update?
-        updateArgs.Set(str::Dup(L"-autoupdate"));
+        updateArgs.SetCopy(L"-autoupdate");
     }
     else {
         ScopedMem<WCHAR> thisExe(GetExePath());
@@ -2573,11 +2573,11 @@ static void OnMenuSaveBookmark(WindowInfo& win)
     const WCHAR *viewMode = prefs::conv::FromDisplayMode(win.ctrl->GetDisplayMode());
     ScopedMem<WCHAR> ZoomVirtual(str::Format(L"%.2f", win.ctrl->GetZoomVirtual()));
     if (ZOOM_FIT_PAGE == win.ctrl->GetZoomVirtual())
-        ZoomVirtual.Set(str::Dup(L"fitpage"));
+        ZoomVirtual.SetCopy(L"fitpage");
     else if (ZOOM_FIT_WIDTH == win.ctrl->GetZoomVirtual())
-        ZoomVirtual.Set(str::Dup(L"fitwidth"));
+        ZoomVirtual.SetCopy(L"fitwidth");
     else if (ZOOM_FIT_CONTENT == win.ctrl->GetZoomVirtual())
-        ZoomVirtual.Set(str::Dup(L"fitcontent"));
+        ZoomVirtual.SetCopy(L"fitcontent");
 
     ScopedMem<WCHAR> exePath(GetExePath());
     ScopedMem<WCHAR> args(str::Format(L"\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d",

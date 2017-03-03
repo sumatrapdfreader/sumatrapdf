@@ -433,9 +433,9 @@ public:
 
 DirFileProvider::DirFileProvider(const WCHAR *path, const WCHAR *filter)
 {
-    startDir.Set(str::Dup(path));
+    startDir.SetCopy(path);
     if (filter && !str::Eq(filter, L"*"))
-        fileFilter.Set(str::Dup(filter));
+        fileFilter.SetCopy(filter);
     OpenDir(path);
 }
 

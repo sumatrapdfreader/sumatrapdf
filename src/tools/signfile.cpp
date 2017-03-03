@@ -197,7 +197,7 @@ SyntaxError:
         const char *lf = str::Find(data, "\r\n") || !str::FindChar(data, '\n') ? "\r\n" : "\n";
         data.Set(str::Format("%s%s Signature sha1:%s%s", data, inFileCommentSyntax, hexSignature, lf));
         dataLen = str::Len(data);
-        hexSignature.Set(str::Dup(data));
+        hexSignature.SetCopy(data);
     }
     else {
         hexSignature.Set(str::Format("sha1:%s\r\n", hexSignature));

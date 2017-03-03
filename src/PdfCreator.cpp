@@ -20,7 +20,7 @@ static ScopedMem<WCHAR> gPdfProducer;
 void PdfCreator::SetProducerName(const WCHAR *name)
 {
     if (!str::Eq(gPdfProducer, name))
-        gPdfProducer.Set(str::Dup(name));
+        gPdfProducer.SetCopy(name);
 }
 
 static fz_image *render_to_pixmap(fz_context *ctx, HBITMAP hbmp, SizeI size)

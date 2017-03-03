@@ -104,7 +104,7 @@ public:
     REAL            pageDy;
 
     void SetFontName(const WCHAR *s) {
-        fontName.Set(str::Dup(s));
+        fontName.SetCopy(s);
     }
 
     const WCHAR *GetFontName() { return fontName; }
