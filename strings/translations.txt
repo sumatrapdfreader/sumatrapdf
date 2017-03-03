@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-b469c0040daaef20b6c36268f41d9a12621966dc
+99eef0b4ce6ff241d2539d8edf836d6767fc5c1b
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -8190,6 +8190,7 @@ fr:Échec de l'enregistrement comme programme par défaut sous Windows 10.
 he:רישום SumatraPDF כתוכנת ברירת מחדל לקובצי PDF ב- Windows 10 נכשל.
 hr:Neuspješno registriranje kao zadani program na Windows 10
 hu:Sikertelen regisztráció alapértelmezett programként Windows 10-en
+it:Impossibile registrare come programma predefinito su Win 10\r\n
 ja:Windows 10 で既定のプログラムとして登録するのに失敗しました
 kr:Windows 10 상에서 기본 프로그램으로 등록하지 못했습니다.
 lt:Nepavyko programos padaryti numatytąja Windows 10 sistemoje

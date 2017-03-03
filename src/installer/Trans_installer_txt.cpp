@@ -1202,7 +1202,7 @@ const char * gTranslations_it =
   "Impossibile copiare programma disinstallazione nella cartella temporanea\0"\
   "Impossibile creare il collegamento\0"\
   "Impossibile rimuovere chiavi registro\0"\
-  "\0"\
+  "Impossibile registrare come programma predefinito su Win 10\r\n\0"\
   "Scrittura fallita informazione estensione estesa file nel registro\0"\
   "Scrittura fallita informazione disinstallazione nel registro\0"\
   "Nascondi & opzioni\0"\
