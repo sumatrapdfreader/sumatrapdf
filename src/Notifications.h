@@ -14,40 +14,43 @@ class NotificationWnd : public ProgressUpdateUI {
 public:
     static const int TIMEOUT_TIMER_ID = 1;
 
-    HWND self;
-    bool hasProgress;
-    bool hasCancel;
+    HWND self = nullptr;
+    bool hasProgress = false;
+    bool hasCancel = false;
 
-    HFONT font;
-    bool  highlight;
-    NotificationWndCallback *notificationCb;
+    HFONT font = nullptr;
+    bool  highlight = false;
+    NotificationWndCallback *notificationCb = nullptr;
 
     // only used for progress notifications
-    bool isCanceled;
-    int  progress;
-    int  progressWidth;
-    WCHAR *progressMsg; // must contain two %d (for current and total)
+    bool isCanceled = false;
+    int  progress = 0;
+    int  progressWidth = 0;
+    WCHAR *progressMsg = nullptr; // must contain two %d (for current and total)
 
     void CreatePopup(HWND parent, const WCHAR *message);
     void UpdateWindowPosition(const WCHAR *message, bool init=false);
 
-    static const int TL_MARGIN = 8;
-    int groupId; // for use by Notifications
+    int groupId = 0; // for use by Notifications
 
     // to reduce flicker, we might ask the window to shrink the size less often
     // (notifcation windows are only shrunken if by less than factor shrinkLimit)
-    float shrinkLimit;
+    float shrinkLimit = 1.0f;
 
     // Note: in most cases use WindowInfo::ShowNotification()
-    NotificationWnd(HWND parent, const WCHAR *message, int timeoutInMS=0, bool highlight=false, NotificationWndCallback *cb=nullptr) :
-        hasProgress(false), hasCancel(!timeoutInMS), notificationCb(cb), highlight(highlight), progressMsg(nullptr), shrinkLimit(1.0f) {
+    NotificationWnd(HWND parent, const WCHAR *message, int timeoutInMS=0, bool highlight=false, NotificationWndCallback *cb=nullptr) {
+        hasCancel = (0 == timeoutInMS);
+        notificationCb = cb;
+        this->highlight = highlight;
         CreatePopup(parent, message);
         if (timeoutInMS)
             SetTimer(self, TIMEOUT_TIMER_ID, timeoutInMS, nullptr);
     }
 
-    NotificationWnd(HWND parent, const WCHAR *message, const WCHAR *progressMsg, NotificationWndCallback *cb=nullptr) :
-        hasProgress(true), hasCancel(true), notificationCb(cb), highlight(false), isCanceled(false), progress(0), shrinkLimit(1.0f) {
+    NotificationWnd(HWND parent, const WCHAR *message, const WCHAR *progressMsg, NotificationWndCallback *cb=nullptr) {
+        hasProgress = true;
+        hasCancel = true;
+        notificationCb = cb;
         this->progressMsg = str::Dup(progressMsg);
         CreatePopup(parent, message);
     }

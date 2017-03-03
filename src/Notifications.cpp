@@ -18,6 +18,8 @@ static const int PROGRESS_WIDTH = 188;
 static const int PROGRESS_HEIGHT = 5;
 static const int PADDING = 6;
 
+static const int TOP_LEFT_MARGIN = 8;
+
 static RectI GetCancelRect(HWND hwnd) {
     return RectI(ClientRect(hwnd).dx - 16 - PADDING, PADDING, 16, 16);
 }
@@ -34,7 +36,7 @@ void NotificationWnd::CreatePopup(HWND parent, const WCHAR *message)
     ReleaseDC(parent, hdc);
 
     self = CreateWindowEx(WS_EX_TOPMOST, NOTIFICATION_WND_CLASS_NAME, message, WS_CHILD | SS_CENTER,
-                          TL_MARGIN, TL_MARGIN, 0, 0,
+                          TOP_LEFT_MARGIN, TOP_LEFT_MARGIN, 0, 0,
                           parent, (HMENU)0, GetModuleHandle(nullptr), nullptr);
     SetWindowLongPtr(self, GWLP_USERDATA, (LONG_PTR)this);
     ToggleWindowStyle(self, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, IsUIRightToLeft(), GWL_EXSTYLE);
@@ -82,7 +84,7 @@ void NotificationWnd::UpdateWindowPosition(const WCHAR *message, bool init)
     if (IsUIRightToLeft()) {
         HWND parent = GetParent(self);
         RectI rect = MapRectToWindow(WindowRect(self), HWND_DESKTOP, parent);
-        rect.x = WindowRect(parent).dx - rect.dx - TL_MARGIN - GetSystemMetrics(SM_CXVSCROLL);
+        rect.x = WindowRect(parent).dx - rect.dx - TOP_LEFT_MARGIN - GetSystemMetrics(SM_CXVSCROLL);
         SetWindowPos(self, nullptr, rect.x, rect.y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
     }
 }
@@ -108,18 +110,20 @@ void NotificationWnd::UpdateMessage(const WCHAR *message, int timeoutInMS, bool 
 {
     win::SetText(self, message);
     this->highlight = highlight;
-    if (timeoutInMS)
+    if (timeoutInMS != 0) {
         hasCancel = false;
+    }
     ToggleWindowStyle(self, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, IsUIRightToLeft(), GWL_EXSTYLE);
     UpdateWindowPosition(message);
     InvalidateRect(self, nullptr, TRUE);
-    if (timeoutInMS)
+    if (timeoutInMS != 0) {
         SetTimer(self, TIMEOUT_TIMER_ID, timeoutInMS, nullptr);
+    }
 }
 
 static void NotificationWndOnPaint(HWND hwnd, NotificationWnd *wnd)
 {
-    PAINTSTRUCT ps;
+    PAINTSTRUCT ps = { 0 };
     HDC hdcWnd = BeginPaint(hwnd, &ps);
 
     ClientRect rect(hwnd);
@@ -133,18 +137,19 @@ static void NotificationWndOnPaint(HWND hwnd, NotificationWnd *wnd)
         SetBkMode(hdc, OPAQUE);
         SetTextColor(hdc, GetSysColor(COLOR_HIGHLIGHTTEXT));
         SetBkColor(hdc, GetSysColor(COLOR_HIGHLIGHT));
-    }
-    else {
+    } else {
         SetBkMode(hdc, TRANSPARENT);
         SetTextColor(hdc, GetSysColor(COLOR_WINDOWTEXT));
     }
 
     rect.Inflate(-PADDING, -PADDING);
     RectI rectMsg = rect;
-    if (wnd->hasProgress)
+    if (wnd->hasProgress) {
         rectMsg.dy -= PROGRESS_HEIGHT + PADDING / 2;
-    if (wnd->hasCancel)
+    }
+    if (wnd->hasCancel) {
         rectMsg.dx -= 20;
+    }
     ScopedMem<WCHAR> text(win::GetText(hwnd));
     rTmp = rectMsg.ToRECT();
     DrawText(hdc, text, -1, &rTmp, DT_SINGLELINE | DT_NOPREFIX);
@@ -232,35 +237,38 @@ void Notifications::MoveBelow(NotificationWnd *fix, NotificationWnd *move)
     RectI rect = WindowRect(fix->hwnd());
     rect = MapRectToWindow(rect, HWND_DESKTOP, GetParent(fix->hwnd()));
     SetWindowPos(move->hwnd(), nullptr,
-                 GetWndX(move), rect.y + rect.dy + NotificationWnd::TL_MARGIN,
+                 GetWndX(move), rect.y + rect.dy + TOP_LEFT_MARGIN,
                  0, 0, SWP_NOSIZE | SWP_NOZORDER);
 }
 
 void Notifications::Remove(NotificationWnd *wnd)
 {
-    int ix = wnds.Find(wnd);
-    if (ix == -1)
+    int idx = wnds.Find(wnd);
+    if (idx == -1) {
         return;
-    wnds.Remove(wnd);
-    if (ix == 0 && wnds.Count() > 0) {
-        SetWindowPos(wnds.At(0)->hwnd(), nullptr,
-                     GetWndX(wnds.At(0)), NotificationWnd::TL_MARGIN,
-                     0, 0, SWP_NOSIZE | SWP_NOZORDER);
-        ix = 1;
     }
-    for (size_t i = ix; i < wnds.Count(); i++) {
+    wnds.Remove(wnd);
+    if (idx == 0 && wnds.Count() > 0) {
+        SetWindowPos(wnds.At(0)->hwnd(), nullptr,
+                     GetWndX(wnds.At(0)), TOP_LEFT_MARGIN,
+                     0, 0, SWP_NOSIZE | SWP_NOZORDER);
+        idx = 1;
+    }
+    for (size_t i = idx; i < wnds.Count(); i++) {
         MoveBelow(wnds.At(i - 1), wnds.At(i));
     }
 }
 
 void Notifications::Add(NotificationWnd *wnd, int groupId)
 {
-    if (groupId != 0)
+    if (groupId != 0) {
         RemoveForGroup(groupId);
+    }
     wnd->groupId = groupId;
 
-    if (wnds.Count() > 0)
+    if (wnds.Count() > 0) {
         MoveBelow(wnds.At(wnds.Count() - 1), wnd);
+    }
     wnds.Append(wnd);
 }
 
@@ -268,8 +276,9 @@ NotificationWnd *Notifications::GetForGroup(int groupId)
 {
     CrashIf(!groupId);
     for (size_t i = 0; i < wnds.Count(); i++) {
-        if (wnds.At(i)->groupId == groupId)
+        if (wnds.At(i)->groupId == groupId) {
             return wnds.At(i);
+        }
     }
     return nullptr;
 }
@@ -278,8 +287,9 @@ void Notifications::RemoveForGroup(int groupId)
 {
     CrashIf(!groupId);
     for (size_t i = wnds.Count(); i > 0; i--) {
-        if (wnds.At(i - 1)->groupId == groupId)
+        if (wnds.At(i - 1)->groupId == groupId) {
             RemoveNotification(wnds.At(i - 1));
+        }
     }
 }
 
@@ -293,18 +303,20 @@ void Notifications::RemoveNotification(NotificationWnd *wnd)
 
 void Notifications::Relayout()
 {
-    if (wnds.Count() == 0)
+    if (wnds.Count() == 0) {
         return;
+    }
 
     HWND hwndCanvas = GetParent(wnds.At(0)->hwnd());
     ClientRect frame(hwndCanvas);
     for (size_t i = 0; i < wnds.Count(); i++) {
         RectI rect = WindowRect(wnds.At(i)->hwnd());
         rect = MapRectToWindow(rect, HWND_DESKTOP, hwndCanvas);
-        if (IsUIRightToLeft())
-            rect.x = frame.dx - rect.dx - NotificationWnd::TL_MARGIN - GetSystemMetrics(SM_CXVSCROLL);
-        else
-            rect.x = NotificationWnd::TL_MARGIN;
+        if (IsUIRightToLeft()) {
+            rect.x = frame.dx - rect.dx - TOP_LEFT_MARGIN - GetSystemMetrics(SM_CXVSCROLL);
+        } else {
+            rect.x = TOP_LEFT_MARGIN;
+        }
         SetWindowPos(wnds.At(i)->hwnd(), nullptr, rect.x, rect.y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
     }
 }
