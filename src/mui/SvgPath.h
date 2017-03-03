@@ -3,5 +3,5 @@
 
 namespace svg {
 
-Gdiplus::GraphicsPath *GraphicsPathFromPathData(const char *s);
+Gdiplus::GraphicsPath* GraphicsPathFromPathData(const char* s);
 }

@@ -57,7 +57,7 @@ enum class PathInstr {
 };
 
 // the order must match order of PathInstr enums
-static char *instructions = "MmLlHhVvCcSsQqTtAaZz";
+static char* instructions = "MmLlHhVvCcSsQqTtAaZz";
 
 struct SvgPathInstr {
     SvgPathInstr(PathInstr type) : type(type) {}
@@ -70,27 +70,27 @@ struct SvgPathInstr {
 };
 
 static PathInstr GetInstructionType(char c) {
-    const char *pos = str::FindChar(instructions, c);
+    const char* pos = str::FindChar(instructions, c);
     if (!pos) {
         return PathInstr::Unknown;
     }
     return (PathInstr)(pos - instructions);
 }
 
-static const char *skipWs(const char *s) {
+static const char* skipWs(const char* s) {
     while (str::IsWs(*s)) {
         s++;
     }
     return s;
 }
 
-static bool ParseSvgPathData(const char *s, VecSegmented<SvgPathInstr> &instr) {
+static bool ParseSvgPathData(const char* s, VecSegmented<SvgPathInstr>& instr) {
     s = skipWs(s);
 
     while (*s) {
         SvgPathInstr i(GetInstructionType(*s++));
         switch (i.type) {
-        case PathInstr::Close:
+            case PathInstr::Close:
             case PathInstr::Close2:
                 break;
 
@@ -119,15 +119,15 @@ static bool ParseSvgPathData(const char *s, VecSegmented<SvgPathInstr> &instr) {
 
             case PathInstr::BezierCAbs:
             case PathInstr::BezierCRel:
-                s = str::Parse(s, "%f%_%?,%_%f,%f%_%?,%_%f,%f%_%?,%_%f", &i.v[0], &i.v[1], &i.v[2],
-                               &i.v[3], &i.v[4], &i.v[5]);
+                s = str::Parse(s, "%f%_%?,%_%f,%f%_%?,%_%f,%f%_%?,%_%f", &i.v[0], &i.v[1], &i.v[2], &i.v[3], &i.v[4],
+                               &i.v[5]);
                 break;
 
             case PathInstr::ArcAbs:
             case PathInstr::ArcRel: {
                 int largeArc, sweep;
-                s = str::Parse(s, "%f%_%?,%_%f%_%?,%_%f%_%?,%_%d%_%?,%_%d%_%?,%_%f%_%?,%_%f",
-                               &i.v[0], &i.v[1], &i.v[2], &largeArc, &sweep, &i.v[3], &i.v[4]);
+                s = str::Parse(s, "%f%_%?,%_%f%_%?,%_%f%_%?,%_%d%_%?,%_%d%_%?,%_%f%_%?,%_%f", &i.v[0], &i.v[1], &i.v[2],
+                               &largeArc, &sweep, &i.v[3], &i.v[4]);
                 i.largeArc = (largeArc != 0);
                 i.sweep = (sweep != 0);
             } break;
@@ -148,23 +148,27 @@ static bool ParseSvgPathData(const char *s, VecSegmented<SvgPathInstr> &instr) {
     return true;
 }
 
-static void RelPointToAbs(const PointF &lastEnd, float *xy) {
+static void RelPointToAbs(const PointF& lastEnd, float* xy) {
     xy[0] = lastEnd.X + xy[0];
     xy[1] = lastEnd.Y + xy[1];
 }
 
-static void RelXToAbs(const PointF &lastEnd, float *x) { *x = lastEnd.X + *x; }
+static void RelXToAbs(const PointF& lastEnd, float* x) {
+    *x = lastEnd.X + *x;
+}
 
-static void RelYToAbs(const PointF &lastEnd, float *y) { *y = lastEnd.Y + *y; }
+static void RelYToAbs(const PointF& lastEnd, float* y) {
+    *y = lastEnd.Y + *y;
+}
 
-GraphicsPath *GraphicsPathFromPathData(const char *s) {
+GraphicsPath* GraphicsPathFromPathData(const char* s) {
     VecSegmented<SvgPathInstr> instr;
     if (!ParseSvgPathData(s, instr)) {
         return nullptr;
     }
-    GraphicsPath *gp = ::new GraphicsPath();
+    GraphicsPath* gp = ::new GraphicsPath();
     PointF prevEnd(0.f, 0.f);
-    for (SvgPathInstr &i : instr) {
+    for (SvgPathInstr& i : instr) {
         PathInstr type = i.type;
 
         // convert relative coordinates to absolute based on end position of
