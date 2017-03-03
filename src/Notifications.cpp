@@ -35,7 +35,7 @@ void NotificationWnd::CreatePopup(HWND parent, const WCHAR* message) {
     ReleaseDC(parent, hdc);
 
     self = CreateWindowExW(WS_EX_TOPMOST, NOTIFICATION_WND_CLASS_NAME, message, WS_CHILD | SS_CENTER, TOP_LEFT_MARGIN,
-                          TOP_LEFT_MARGIN, 0, 0, parent, (HMENU)0, GetModuleHandle(nullptr), nullptr);
+                           TOP_LEFT_MARGIN, 0, 0, parent, (HMENU)0, GetModuleHandle(nullptr), nullptr);
     SetWindowLongPtr(self, GWLP_USERDATA, (LONG_PTR)this);
     ToggleWindowStyle(self, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, IsUIRightToLeft(), GWL_EXSTYLE);
     UpdateWindowPosition(message, true);
@@ -185,8 +185,8 @@ LRESULT CALLBACK NotificationWnd::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LP
     }
 
     if (WM_TIMER == msg && TIMEOUT_TIMER_ID == wParam) {
-        if (wnd->notificationCb)
-            wnd->notificationCb->RemoveNotification(wnd);
+        if (wnd->wndRemovedCb)
+            wnd->wndRemovedCb(wnd);
         else
             delete wnd;
         return 0;
@@ -207,8 +207,8 @@ LRESULT CALLBACK NotificationWnd::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LP
 
     if (WM_LBUTTONUP == msg && wnd->hasCancel) {
         if (GetCancelRect(hwnd).Contains(PointI(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)))) {
-            if (wnd->notificationCb)
-                wnd->notificationCb->RemoveNotification(wnd);
+            if (wnd->wndRemovedCb)
+                wnd->wndRemovedCb(wnd);
             else
                 delete wnd;
             return 0;

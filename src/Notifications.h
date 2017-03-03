@@ -3,12 +3,7 @@
 
 class NotificationWnd;
 
-class NotificationWndCallback {
-  public:
-    // called after a message has timed out or has been canceled
-    virtual void RemoveNotification(NotificationWnd* wnd) = 0;
-    virtual ~NotificationWndCallback() {}
-};
+typedef std::function<void(NotificationWnd*)> NotificationWndRemovedCallback;
 
 class NotificationWnd : public ProgressUpdateUI {
   public:
@@ -20,7 +15,7 @@ class NotificationWnd : public ProgressUpdateUI {
 
     HFONT font = nullptr;
     bool highlight = false;
-    NotificationWndCallback* notificationCb = nullptr;
+    NotificationWndRemovedCallback wndRemovedCb;
 
     // only used for progress notifications
     bool isCanceled = false;
@@ -39,9 +34,9 @@ class NotificationWnd : public ProgressUpdateUI {
 
     // Note: in most cases use WindowInfo::ShowNotification()
     NotificationWnd(HWND parent, const WCHAR* message, int timeoutInMS = 0, bool highlight = false,
-                    NotificationWndCallback* cb = nullptr) {
+                    NotificationWndRemovedCallback cb = nullptr) {
         hasCancel = (0 == timeoutInMS);
-        notificationCb = cb;
+        wndRemovedCb = cb;
         this->highlight = highlight;
         CreatePopup(parent, message);
         if (timeoutInMS)
@@ -49,10 +44,10 @@ class NotificationWnd : public ProgressUpdateUI {
     }
 
     NotificationWnd(HWND parent, const WCHAR* message, const WCHAR* progressMsg,
-                    NotificationWndCallback* cb = nullptr) {
+                    NotificationWndRemovedCallback cb = nullptr) {
         hasProgress = true;
         hasCancel = true;
-        notificationCb = cb;
+        wndRemovedCb = cb;
         this->progressMsg = str::Dup(progressMsg);
         CreatePopup(parent, message);
     }
@@ -73,7 +68,7 @@ class NotificationWnd : public ProgressUpdateUI {
     virtual bool WasCanceled();
 };
 
-class Notifications : public NotificationWndCallback {
+class Notifications {
     Vec<NotificationWnd*> wnds;
 
     int GetWndX(NotificationWnd* wnd);
@@ -93,7 +88,7 @@ class Notifications : public NotificationWndCallback {
     void Relayout();
 
     // NotificationWndCallback methods
-    virtual void RemoveNotification(NotificationWnd* wnd);
+    void RemoveNotification(NotificationWnd* wnd);
 };
 
 void RegisterNotificationsWndClass();

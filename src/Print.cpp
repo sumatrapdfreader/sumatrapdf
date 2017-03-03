@@ -32,28 +32,32 @@
 struct PrintData {
     ScopedMem<WCHAR> printerName;
     ScopedMem<DEVMODE> devMode;
-    BaseEngine* engine;
+    BaseEngine* engine = nullptr;
     Vec<PRINTPAGERANGE> ranges; // empty when printing a selection
     Vec<SelectionOnPage> sel;   // empty when printing a page range
     Print_Advanced_Data advData;
-    int rotation;
+    int rotation = 0;
 
     PrintData(BaseEngine* engine, PRINTER_INFO_2* printerInfo, DEVMODE* devMode, Vec<PRINTPAGERANGE>& ranges,
-              Print_Advanced_Data& advData, int rotation = 0, Vec<SelectionOnPage>* sel = nullptr)
-        : engine(nullptr), advData(advData), rotation(rotation) {
-        if (engine)
+              Print_Advanced_Data& advData, int rotation = 0, Vec<SelectionOnPage>* sel = nullptr) {
+        this->advData = advData;
+        this->rotation = rotation;
+        if (engine) {
             this->engine = engine->Clone();
+        }
 
         if (printerInfo) {
-            printerName.Set(str::Dup(printerInfo->pPrinterName));
+            printerName.SetCopy(printerInfo->pPrinterName);
         }
-        if (devMode)
+        if (devMode) {
             this->devMode.Set((LPDEVMODE)memdup(devMode, devMode->dmSize + devMode->dmDriverExtra));
+        }
 
-        if (!sel)
+        if (!sel) {
             this->ranges = ranges;
-        else
+        } else {
             this->sel = *sel;
+        }
     }
 
     ~PrintData() { delete engine; }
@@ -99,18 +103,19 @@ class ScopeHDC {
 static RectD BoundSelectionOnPage(const Vec<SelectionOnPage>& sel, int pageNo) {
     RectD bounds;
     for (size_t i = 0; i < sel.Count(); i++) {
-        if (sel.At(i).pageNo == pageNo)
+        if (sel.At(i).pageNo == pageNo) {
             bounds = bounds.Union(sel.At(i).rect);
+        }
     }
     return bounds;
 }
 
 static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nullptr,
                           AbortCookieManager* abortCookie = nullptr) {
-    AssertCrash(pd.engine);
+    CrashIf(!pd.engine);
     if (!pd.engine)
         return false;
-    AssertCrash(pd.printerName);
+    CrashIf(!pd.printerName);
     if (!pd.printerName)
         return false;
 
@@ -299,8 +304,9 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
             do {
                 RenderedBitmap* bmp = engine.RenderBitmap(pageNo, zoom / shrink, rotation, nullptr, Target_Print,
                                                           abortCookie ? &abortCookie->cookie : nullptr);
-                if (abortCookie)
+                if (abortCookie) {
                     abortCookie->Clear();
+                }
                 if (bmp && bmp->GetBitmap()) {
                     RectI rc(offset.x, offset.y, bmp->Size().dx * shrink, bmp->Size().dy * shrink);
                     ok = bmp->StretchDIBits(hdc, rc);
@@ -322,21 +328,34 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
     return true;
 }
 
-class PrintThreadData : public ProgressUpdateUI, public NotificationWndCallback {
-    NotificationWnd* wnd;
+class PrintThreadData : public ProgressUpdateUI {
+    NotificationWnd* wnd = nullptr;
     AbortCookieManager cookie;
-    bool isCanceled;
-    WindowInfo* win;
+    bool isCanceled = false;
+    WindowInfo* win = nullptr;
 
   public:
-    PrintData* data;
-    HANDLE thread; // close the print thread handle after execution
+    PrintData* data = nullptr;
+    HANDLE thread = nullptr; // close the print thread handle after execution
 
-    PrintThreadData(WindowInfo* win, PrintData* data) : win(win), data(data), isCanceled(false), thread(nullptr) {
-        wnd = new NotificationWnd(win->hwndCanvas, L"", _TR("Printing page %d of %d..."), this);
+    PrintThreadData(WindowInfo* win, PrintData* data) {
+        this->win = win;
+        this->data = data;
+        const auto notificationRemovedCb = [=](NotificationWnd* wnd) { this->RemoveNotification(wnd); };
+        wnd = new NotificationWnd(win->hwndCanvas, L"", _TR("Printing page %d of %d..."), notificationRemovedCb);
         // don't use a groupId for this notification so that
         // multiple printing notifications could coexist between tabs
         win->notifications->Add(wnd);
+    }
+
+    // called when printing has been canceled
+    void RemoveNotification(NotificationWnd* wnd) {
+        isCanceled = true;
+        cookie.Abort();
+        this->wnd = nullptr;
+        if (WindowInfoStillValid(win)) {
+            win->notifications->RemoveNotification(wnd);
+        }
     }
 
     ~PrintThreadData() {
@@ -354,15 +373,6 @@ class PrintThreadData : public ProgressUpdateUI, public NotificationWndCallback 
     }
 
     virtual bool WasCanceled() { return isCanceled || !WindowInfoStillValid(win) || win->printCanceled; }
-
-    // called when printing has been canceled
-    virtual void RemoveNotification(NotificationWnd* wnd) {
-        isCanceled = true;
-        cookie.Abort();
-        this->wnd = nullptr;
-        if (WindowInfoStillValid(win))
-            win->notifications->RemoveNotification(wnd);
-    }
 
     static DWORD WINAPI PrintThread(LPVOID data) {
         PrintThreadData* threadData = (PrintThreadData*)data;
