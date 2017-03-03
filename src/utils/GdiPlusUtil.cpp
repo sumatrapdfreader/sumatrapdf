@@ -70,7 +70,7 @@ RectF MeasureTextAccurate(Graphics *g, Font *f, const WCHAR *s, int len)
     if (status != Ok) {
         // TODO: remove whem we figure out why we crash
         auto s2 = s ? str::conv::ToUtf8(s, (size_t)len) : str::Dup("<null>");
-        dbglog::CrashLogF("MeasureTextAccurate: status: %d, len: %d, s: '%s'\n", (int)status, len, s2);
+        dbglog::CrashLogF("MeasureTextAccurate: status: %d, font: %p, len: %d, s: '%s'\n", (int)status, f, len, s2);
         CrashIf(status != Ok);
         free(s2);
     }

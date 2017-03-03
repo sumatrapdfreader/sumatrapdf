@@ -596,7 +596,6 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 #endif
 
     InitDynCalls();
-    NoDllHijacking();
 
     DisableDataExecution();
     // ensure that C functions behave consistently under all OS locales
