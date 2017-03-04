@@ -341,10 +341,8 @@ class PrintThreadData : public ProgressUpdateUI {
     PrintThreadData(WindowInfo* win, PrintData* data) {
         this->win = win;
         this->data = data;
-        auto thisInCb = this;
-        wnd = new NotificationWnd(win->hwndCanvas, L"", _TR("Printing page %d of %d..."), [=](NotificationWnd* wnd) {
-            thisInCb->RemoveNotification(wnd);
-        });
+        wnd = new NotificationWnd(win->hwndCanvas, L"", _TR("Printing page %d of %d..."),
+                                  [this](NotificationWnd* wnd) { this->RemoveNotification(wnd); });
         // don't use a groupId for this notification so that
         // multiple printing notifications could coexist between tabs
         win->notifications->Add(wnd);

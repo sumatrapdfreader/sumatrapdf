@@ -579,8 +579,7 @@ static RenderedBitmap* RenderFirstDocPageToBitmap(Doc doc, SizeI pageSize, SizeI
     PoolAllocator textAllocator;
     auto dx = pageSize.dx - 2 * border;
     auto dy = pageSize.dy - 2 * border;
-    HtmlFormatterArgs* args =
-        CreateFormatterArgsDoc(doc, dx, dy, &textAllocator);
+    HtmlFormatterArgs* args = CreateFormatterArgsDoc(doc, dx, dy, &textAllocator);
     TextRenderMethod renderMethod = args->textRenderMethod;
     HtmlFormatter* formatter = doc.CreateFormatter(args);
     HtmlPage* pd = formatter->Next();
