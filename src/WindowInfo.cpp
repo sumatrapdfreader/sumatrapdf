@@ -230,10 +230,11 @@ void WindowInfo::ShowNotification(const WCHAR *message, int options, Notificatio
     int timeoutMS = (options & NOS_PERSIST) ? 0 : 3000;
     bool highlight = (options & NOS_HIGHLIGHT);
 
-    const auto notificationRemovedCb = [=](NotificationWnd *wnd) {
-        notifications->RemoveNotification(wnd);
-    };
-    NotificationWnd *wnd = new NotificationWnd(hwndCanvas, message, timeoutMS, highlight, notificationRemovedCb);
+    auto notificationsInCb = this->notifications;
+    NotificationWnd *wnd = new NotificationWnd(hwndCanvas, message, timeoutMS, highlight, 
+        [=](NotificationWnd *wnd) {
+        notificationsInCb->RemoveNotification(wnd);
+    });
     if (NG_CURSOR_POS_HELPER == groupId) {
         wnd->shrinkLimit = 0.7f;
     }

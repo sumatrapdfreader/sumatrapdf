@@ -207,9 +207,11 @@ struct FindThreadData : public ProgressUpdateUI {
         const LPARAM disable = (LPARAM)MAKELONG(0, 0);
 
         if (showProgress) {
+            auto winInCb = this->win;
             wnd = new NotificationWnd(win->hwndCanvas, L"",
                 _TR("Searching %d of %d..."), [=](NotificationWnd *wnd) {
-                win->notifications->RemoveNotification(wnd); });
+                winInCb->notifications->RemoveNotification(wnd);
+            });
             win->notifications->Add(wnd, NG_FIND_PROGRESS);
         }
 
