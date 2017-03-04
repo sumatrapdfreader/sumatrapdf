@@ -17,6 +17,7 @@
 #include "ThreadUtil.h"
 #include "UITask.h"
 #include "WinUtil.h"
+#include "DebugLog.h"
 // rendering engines
 #include "BaseEngine.h"
 #include "EngineManager.h"
@@ -869,6 +870,7 @@ Exit:
     // atexit() code etc.) point, but it's very unlikely
     UninstallCrashHandler();
 
+    dbglog::FreeCrashLog();
     // output leaks after all destructors of static objects have run
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 

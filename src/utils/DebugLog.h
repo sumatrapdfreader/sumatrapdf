@@ -41,6 +41,8 @@ void CrashLogF(const char *fmt, ...);
 // returns a copy of the data recorded with CrashLogF
 const char *GetCrashLog();
 
+void FreeCrashLog();
+
 } // namespace dbglog
 
 // short names are important for this use case

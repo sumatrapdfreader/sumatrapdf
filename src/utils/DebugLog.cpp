@@ -65,4 +65,9 @@ const char *GetCrashLog()
     return gCrashLog->LendData();
 }
 
+void FreeCrashLog() {
+    delete gCrashLog;
+    gCrashLog = nullptr;
+}
+
 } // namespace dbglog

@@ -36,8 +36,9 @@ static const WCHAR* GetFontName() {
 
 static float GetFontSize() {
     float fontSize = gGlobalPrefs->ebookUI.fontSize;
-    if (fontSize < 7.f || fontSize > 32.f)
+    if (fontSize < 7.f || fontSize > 32.f) {
         fontSize = 12.5;
+    }
     return fontSize;
 }
 
@@ -86,7 +87,7 @@ struct EbookFormattingData {
 };
 
 class EbookFormattingThread : public ThreadBase {
-    HtmlFormatterArgs* formatterArgs; // we own it
+    HtmlFormatterArgs* formatterArgs = nullptr; // we own it
 
     Doc doc;
     EbookController* controller = nullptr;
@@ -232,8 +233,9 @@ EbookController::~EbookController() {
 // stop layout thread (if we're closing a document we'll delete
 // the ebook data, so we can't have the thread keep using it)
 void EbookController::StopFormattingThread() {
-    if (!formattingThread)
+    if (!formattingThread) {
         return;
+    }
     formattingThread->RequestCancel();
     bool ok = formattingThread->Join();
     CrashIf(!ok);
@@ -334,14 +336,16 @@ void EbookController::TriggerLayout() {
         return;
     }
     // CrashIf(size.dx < 100 || size.dy < 40);
-    if (!doc.IsDocLoaded())
+    if (!doc.IsDocLoaded()) {
         return;
+    }
 
     if (pageSize == size) {
         // lf("EbookController::TriggerLayout() - skipping layout because same as last size");
         return;
     }
 
+    dbglog::CrashLogF("EbookController::TriggerLayout(): starting formatting thread\n");
     // lf("(%3d,%3d) EbookController::TriggerLayout",size.dx, size.dy);
     pageSize = size; // set it early to prevent re-doing layout at the same size
 
@@ -437,8 +441,9 @@ void EbookController::ClickedPage1(Control* c, int x, int y) {
 
     CrashIf(c != ctrls->pagesLayout->GetPage1());
     DrawInstr* link = ctrls->pagesLayout->GetPage1()->GetLinkAt(x, y);
-    if (link)
+    if (link) {
         OnClickedLink(currPageNo, link);
+    }
 }
 
 void EbookController::ClickedPage2(Control* c, int x, int y) {
@@ -447,8 +452,9 @@ void EbookController::ClickedPage2(Control* c, int x, int y) {
     CrashIf(!IsDoublePage());
     CrashIf(c != ctrls->pagesLayout->GetPage2());
     DrawInstr* link = ctrls->pagesLayout->GetPage2()->GetLinkAt(x, y);
-    if (link)
+    if (link) {
         OnClickedLink(currPageNo + 1, link);
+    }
 }
 
 int EbookController::GetMaxPageCount() const {
@@ -457,8 +463,9 @@ int EbookController::GetMaxPageCount() const {
         CrashIf(!FormattingInProgress());
         pagesTmp = incomingPages;
     }
-    if (!pagesTmp)
+    if (!pagesTmp) {
         return 0;
+    }
     return (int)pagesTmp->Count();
 }
 
@@ -491,22 +498,27 @@ void EbookController::GoToPage(int pageNo, bool addNavPoint) {
         return;
     }
 
-    CrashIf(!pages);
     // Hopefully prevent crashes like 55175
     if (!pages) {
+        // TODO: remove when we figure out why this happens
+        dbglog::CrashLogF("EbookController::GoToPage(): pageNo: %d, currentPageNo: %d\n", pageNo, this->currPageNo);
+        CrashIf(!pages);
         return;
     }
 
-    if (addNavPoint)
+    if (addNavPoint) {
         AddNavPoint();
+    }
 
     int pageCount = PageCount();
     int n = IsDoublePage() ? 1 : 0;
-    if (pageNo + n > pageCount)
+    if (pageNo + n > pageCount) {
         pageNo = pageCount - n;
+    }
     // if have only 1 page and showing double, we could go below 1
-    if (pageNo < 1)
+    if (pageNo < 1) {
         pageNo = 1;
+    }
 
     HtmlPage* p = pages->At(pageNo - 1);
     currPageNo = pageNo;
@@ -525,8 +537,9 @@ void EbookController::GoToPage(int pageNo, bool addNavPoint) {
 
 bool EbookController::GoToNextPage() {
     int dist = IsDoublePage() ? 2 : 1;
-    if (currPageNo + dist > PageCount())
+    if (currPageNo + dist > PageCount()) {
         return false;
+    }
     GoToPage(currPageNo + dist, false);
     return true;
 }
@@ -534,20 +547,23 @@ bool EbookController::GoToNextPage() {
 bool EbookController::GoToPrevPage(bool toBottom) {
     UNUSED(toBottom);
     int dist = IsDoublePage() ? 2 : 1;
-    if (currPageNo == 1)
+    if (currPageNo == 1) {
         return false;
+    }
     GoToPage(currPageNo - dist, false);
     return true;
 }
 
 void EbookController::StartLayouting(int startReparseIdxArg, DisplayMode displayMode) {
-    if ((size_t)startReparseIdxArg >= doc.GetHtmlDataSize())
+    if ((size_t)startReparseIdxArg >= doc.GetHtmlDataSize()) {
         startReparseIdxArg = 0;
+    }
     currPageReparseIdx = startReparseIdxArg;
     // displayMode could be any value if alternate UI was used, we have to limit it to
     // either DM_SINGLE_PAGE or DM_FACING
-    if (DM_AUTOMATIC == displayMode)
+    if (DM_AUTOMATIC == displayMode) {
         displayMode = gGlobalPrefs->defaultDisplayModeEnum;
+    }
 
     EnableMessageHandling(true);
     SetDisplayMode(displayMode);
@@ -561,16 +577,19 @@ bool EbookController::IsDoublePage() const {
 
 static RenderedBitmap* RenderFirstDocPageToBitmap(Doc doc, SizeI pageSize, SizeI bmpSize, int border) {
     PoolAllocator textAllocator;
+    auto dx = pageSize.dx - 2 * border;
+    auto dy = pageSize.dy - 2 * border;
     HtmlFormatterArgs* args =
-        CreateFormatterArgsDoc(doc, pageSize.dx - 2 * border, pageSize.dy - 2 * border, &textAllocator);
+        CreateFormatterArgsDoc(doc, dx, dy, &textAllocator);
     TextRenderMethod renderMethod = args->textRenderMethod;
     HtmlFormatter* formatter = doc.CreateFormatter(args);
     HtmlPage* pd = formatter->Next();
     delete formatter;
     delete args;
     args = nullptr;
-    if (!pd)
+    if (!pd) {
         return nullptr;
+    }
 
     Bitmap pageBmp(pageSize.dx, pageSize.dy, PixelFormat24bppRGB);
     Graphics g(&pageBmp);
@@ -591,37 +610,42 @@ static RenderedBitmap* RenderFirstDocPageToBitmap(Doc doc, SizeI pageSize, SizeI
     g2.DrawImage(&pageBmp, Rect(0, 0, bmpSize.dx, bmpSize.dy), 0, 0, pageSize.dx, pageSize.dy, UnitPixel);
 
     HBITMAP hbmp;
-    Status ok = res.GetHBITMAP((ARGB)Color::White, &hbmp);
-    if (ok != Ok)
+    Status status = res.GetHBITMAP((ARGB)Color::White, &hbmp);
+    if (status != Ok) {
         return nullptr;
+    }
     return new RenderedBitmap(hbmp, bmpSize);
 }
 
 static RenderedBitmap* ThumbFromCoverPage(Doc doc, SizeI size) {
     ImageData* coverImage = doc.GetCoverImage();
-    if (!coverImage)
+    if (!coverImage) {
         return nullptr;
+    }
     Bitmap* coverBmp = BitmapFromData(coverImage->data, coverImage->len);
-    if (!coverBmp)
+    if (!coverBmp) {
         return nullptr;
+    }
 
     Bitmap res(size.dx, size.dy, PixelFormat24bppRGB);
     float scale = (float)size.dx / (float)coverBmp->GetWidth();
     int fromDy = size.dy;
-    if (scale < 1.f)
+    if (scale < 1.f) {
         fromDy = (int)((float)coverBmp->GetHeight() * scale);
+    }
     Graphics g(&res);
     g.SetInterpolationMode(InterpolationModeHighQualityBicubic);
-    Status ok = g.DrawImage(coverBmp, Rect(0, 0, size.dx, size.dy), 0, 0, coverBmp->GetWidth(), fromDy, UnitPixel);
-    if (ok != Ok) {
+    Status status = g.DrawImage(coverBmp, Rect(0, 0, size.dx, size.dy), 0, 0, coverBmp->GetWidth(), fromDy, UnitPixel);
+    if (status != Ok) {
         delete coverBmp;
         return nullptr;
     }
     HBITMAP hbmp;
-    ok = res.GetHBITMAP((ARGB)Color::White, &hbmp);
+    status = res.GetHBITMAP((ARGB)Color::White, &hbmp);
     delete coverBmp;
-    if (ok == Ok)
+    if (status == Ok) {
         return new RenderedBitmap(hbmp, SizeI(size.dx, size.dy));
+    }
     return nullptr;
 }
 
@@ -643,14 +667,16 @@ void EbookController::CreateThumbnail(SizeI size, const std::function<void(Rende
 void EbookController::SetDisplayMode(DisplayMode mode, bool keepContinuous) {
     UNUSED(keepContinuous);
     bool newDouble = !IsSingle(mode);
-    if (IsDoublePage() == newDouble)
+    if (IsDoublePage() == newDouble) {
         return;
+    }
     // showing/hiding a control will trigger re-layout which will
     // trigger book re-formatting
-    if (newDouble)
+    if (newDouble) {
         ctrls->pagesLayout->GetPage2()->Show();
-    else
+    } else {
         ctrls->pagesLayout->GetPage2()->Hide();
+    }
 }
 
 void EbookController::ExtractPageAnchors() {
@@ -669,11 +695,13 @@ void EbookController::ExtractPageAnchors() {
     HtmlPullParser parser(data, len);
     HtmlToken* tok;
     while ((tok = parser.Next()) != nullptr && !tok->IsError()) {
-        if (!tok->IsStartTag() && !tok->IsEmptyElementEndTag())
+        if (!tok->IsStartTag() && !tok->IsEmptyElementEndTag()) {
             continue;
+        }
         AttrInfo* attr = tok->GetAttrByName("id");
-        if (!attr && Tag_A == tok->tag && doc.Type() != Doc_Fb2)
+        if (!attr && Tag_A == tok->tag && doc.Type() != Doc_Fb2) {
             attr = tok->GetAttrByName("name");
+        }
         if (attr) {
             ScopedMem<WCHAR> id(str::conv::FromUtf8(attr->val, attr->valLen));
             pageAnchorIds->Append(str::Format(L"%s#%s", epubPagePath ? epubPagePath : L"", id.Get()));
@@ -707,15 +735,18 @@ int EbookController::ResolvePageAnchor(const WCHAR* id) {
     }
 
     int idx = pageAnchorIds->Find(id);
-    if (idx != -1)
+    if (idx != -1) {
         return pageAnchorIdxs->At(idx);
-    if (doc.Type() != Doc_Epub || !str::FindChar(id, '#'))
+    }
+    if (doc.Type() != Doc_Epub || !str::FindChar(id, '#')) {
         return -1;
+    }
 
     ScopedMem<WCHAR> chapterPath(str::DupN(id, str::FindChar(id, '#') - id));
     idx = pageAnchorIds->Find(chapterPath);
-    if (idx != -1)
+    if (idx != -1) {
         return pageAnchorIdxs->At(idx);
+    }
     return -1;
 }
 
@@ -805,8 +836,9 @@ int EbookController::CurrentTocPageNo() const {
 }
 
 void EbookController::UpdateDisplayState(DisplayState* ds) {
-    if (!ds->filePath || !str::EqI(ds->filePath, doc.GetFilePath()))
+    if (!ds->filePath || !str::EqI(ds->filePath, doc.GetFilePath())) {
         str::ReplacePtr(&ds->filePath, doc.GetFilePath());
+    }
 
     ds->useDefaultState = !gGlobalPrefs->rememberStatePerDocument;
 
@@ -853,11 +885,13 @@ void EbookController::RequestRepaint() {
 void EbookController::AddNavPoint() {
     int idx = currPageReparseIdx;
     // remove the current and all Forward history entries
-    if (navHistoryIdx < navHistory.Count())
+    if (navHistoryIdx < navHistory.Count()) {
         navHistory.RemoveAt(navHistoryIdx, navHistory.Count() - navHistoryIdx);
+    }
     // don't add another entry for the exact same position
-    if (navHistoryIdx > 0 && idx == navHistory.At(navHistoryIdx - 1))
+    if (navHistoryIdx > 0 && idx == navHistory.At(navHistoryIdx - 1)) {
         return;
+    }
     // make sure that the history doesn't grow overly large
     if (navHistoryIdx >= MAX_NAV_HISTORY_LEN) {
         CrashIf(navHistoryIdx > MAX_NAV_HISTORY_LEN);
@@ -871,27 +905,32 @@ void EbookController::AddNavPoint() {
 
 bool EbookController::CanNavigate(int dir) const {
     CrashIf(navHistoryIdx > navHistory.Count());
-    if (dir < 0)
+    if (dir < 0) {
         return navHistoryIdx >= (size_t)-dir;
+    }
     return navHistoryIdx + dir < navHistory.Count();
 }
 
 void EbookController::Navigate(int dir) {
-    if (!CanNavigate(dir))
+    if (!CanNavigate(dir)) {
         return;
+    }
     // update the current history entry
     int idx = currPageReparseIdx;
-    if (navHistoryIdx < navHistory.Count())
+    if (navHistoryIdx < navHistory.Count()) {
         navHistory.At(navHistoryIdx) = idx;
-    else
+    } else {
         navHistory.Append(idx);
+    }
     navHistoryIdx += dir;
     idx = navHistory.At(navHistoryIdx);
     int pageNo = PageForReparsePoint(pages, idx);
-    if (0 == pageNo)
+    if (0 == pageNo) {
         pageNo = GetMaxPageCount();
-    if (pageNo > 0)
+    }
+    if (pageNo > 0) {
         GoToPage(pageNo, false);
+    }
 }
 
 void EbookController::CopyNavHistory(EbookController& orig) {
@@ -901,8 +940,9 @@ void EbookController::CopyNavHistory(EbookController& orig) {
 
 EbookController* EbookController::Create(Doc doc, HWND hwnd, ControllerCallback* cb, FrameRateWnd* frameRateWnd) {
     EbookControls* ctrls = CreateEbookControls(hwnd, frameRateWnd);
-    if (!ctrls)
+    if (!ctrls) {
         return nullptr;
+    }
     return new EbookController(doc, ctrls, cb);
 }
 
