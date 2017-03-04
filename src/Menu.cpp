@@ -170,7 +170,7 @@ static MenuDef menuDefSettings[] = {
 //[ ACCESSKEY_GROUP Favorites Menu
 // the entire menu is MF_NOT_FOR_EBOOK_UI
 MenuDef menuDefFavorites[] = {
-    { _TRN("Add to favorites"),             IDM_FAV_ADD,                0 },
+    { _TRN("Add to favorites\tCtrl+B"),     IDM_FAV_ADD,                0 },
     { _TRN("Remove from favorites"),        IDM_FAV_DEL,                0 },
     { _TRN("Show Favorites"),               IDM_FAV_TOGGLE,             MF_REQ_DISK_ACCESS },
 };
@@ -312,7 +312,7 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR *filePath)
             ParseCmdLine(ev->commandLine, args, 2);
             if (args.Count() == 0)
                 continue;
-            appName.SetCopy(path::GetBaseName(args.At(0)));
+            appName.Set(str::Dup(path::GetBaseName(args.At(0))));
             *(WCHAR *)path::GetExt(appName) = '\0';
         }
 
