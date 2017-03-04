@@ -5,7 +5,7 @@
 del src\*.bak
 del src\*.tmp
 
-for %%f in (src\ParseCommandLine* src\Tests* src\Print* src\Favorites.* src\Tabs.* src\TabInfo.* src\mui\SvgPath.* src\Notifications.*) do (
+for %%f in (src\ParseCommandLine* src\Tests* src\Print* src\Favorites.* src\Tabs.* src\TabInfo.* src\mui\SvgPath.* src\Notifications.* src\EbookController.*) do (
     clang-format.exe -i -style=file %%f
 )
 
