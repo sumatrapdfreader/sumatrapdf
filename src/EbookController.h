@@ -83,7 +83,7 @@ class EbookController : public Controller {
     static void DeleteEbookFormattingData(EbookFormattingData* data);
 
   protected:
-    EbookControls* ctrls;
+    EbookControls* ctrls = nullptr;
 
     Doc doc;
 
@@ -91,31 +91,31 @@ class EbookController : public Controller {
     // memory use doesn't grow without bounds
     PoolAllocator textAllocator;
 
-    Vec<HtmlPage*>* pages;
+    Vec<HtmlPage*>* pages = nullptr;
 
     // pages being sent from background formatting thread
-    Vec<HtmlPage*>* incomingPages;
+    Vec<HtmlPage*>* incomingPages = nullptr;
 
     // currPageNo is in range 1..$numberOfPages.
-    int currPageNo;
+    int currPageNo = 0;
     // reparseIdx of the current page (the first one if we're showing 2)
-    int currPageReparseIdx;
+    int currPageReparseIdx = 0;
 
     // size of the page for which pages were generated
     SizeI pageSize;
 
-    EbookFormattingThread* formattingThread;
-    int formattingThreadNo;
+    EbookFormattingThread* formattingThread = nullptr;
+    int formattingThreadNo = -1;
 
     // whether HandleMessage passes messages on to ctrls->mainWnd
-    bool handleMsgs;
+    bool handleMsgs = false;
 
     // parallel lists mapping anchor IDs to reparseIdxs
-    WStrVec* pageAnchorIds;
-    Vec<int>* pageAnchorIdxs;
+    WStrVec* pageAnchorIds = nullptr;
+    Vec<int>* pageAnchorIdxs = nullptr;
 
     Vec<int> navHistory;
-    size_t navHistoryIx;
+    size_t navHistoryIdx = 0;
 
     Vec<HtmlPage*>* GetPages();
     void UpdateStatus();

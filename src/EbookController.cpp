@@ -77,24 +77,30 @@ struct EbookFormattingData {
         CrashIf(pageCount > MAX_PAGES);
         memcpy(this->pages, pages, pageCount * sizeof(*pages));
     }
+
+    void DeletePages() {
+        for (size_t i = 0; i < this->pageCount; i++) {
+            delete this->pages[i];
+        }
+    }
 };
 
 class EbookFormattingThread : public ThreadBase {
     HtmlFormatterArgs* formatterArgs; // we own it
 
     Doc doc;
-    EbookController* controller;
-    ControllerCallback* cb;
+    EbookController* controller = nullptr;
+    ControllerCallback* cb = nullptr;
 
     // state used during layout process
     HtmlPage* pages[EbookFormattingData::MAX_PAGES];
-    int pageCount;
+    int pageCount = 0;
 
     // we want to send 2 pages after reparseIdx as soon as we have them,
     // so that we can show them to the user as quickly as possible
     // We want 2 to accomodate possible 2 page view
-    int reparseIdx;
-    int pagesAfterReparseIdx;
+    int reparseIdx = 0;
+    int pagesAfterReparseIdx = 0;
 
   public:
     void SendPagesIfNecessary(bool force, bool finished);
@@ -110,13 +116,7 @@ class EbookFormattingThread : public ThreadBase {
 
 EbookFormattingThread::EbookFormattingThread(Doc doc, HtmlFormatterArgs* args, EbookController* ctrl, int reparseIdx,
                                              ControllerCallback* cb)
-    : doc(doc),
-      formatterArgs(args),
-      cb(cb),
-      controller(ctrl),
-      pageCount(0),
-      reparseIdx(reparseIdx),
-      pagesAfterReparseIdx(0) {
+    : doc(doc), formatterArgs(args), cb(cb), controller(ctrl), reparseIdx(reparseIdx) {
     CrashIf(reparseIdx < 0);
     AssertCrash(doc.IsDocLoaded() || (doc.IsNone() && (nullptr != args->htmlStr)));
 }
@@ -128,10 +128,12 @@ EbookFormattingThread::~EbookFormattingThread() {
 
 // send accumulated pages if we filled the buffer or the caller forces us
 void EbookFormattingThread::SendPagesIfNecessary(bool force, bool finished) {
-    if (finished)
+    if (finished) {
         force = true;
-    if (!force && (pageCount < dimof(pages)))
+    }
+    if (!force && (pageCount < dimof(pages))) {
         return;
+    }
     EbookFormattingData* msg = new EbookFormattingData(pages, pageCount, finished, GetNo());
     // lf("ThreadLayoutEbook::SendPagesIfNecessary() sending %d pages, finished=%d", pageCount, (int)finished);
     pageCount = 0;
@@ -196,24 +198,13 @@ static void DeletePages(Vec<HtmlPage*>** toDeletePtr) {
 }
 
 EbookController::EbookController(Doc doc, EbookControls* ctrls, ControllerCallback* cb)
-    : doc(doc),
-      Controller(cb),
-      ctrls(ctrls),
-      pages(nullptr),
-      incomingPages(nullptr),
-      currPageNo(0),
-      pageSize(0, 0),
-      formattingThread(nullptr),
-      formattingThreadNo(-1),
-      currPageReparseIdx(0),
-      handleMsgs(false),
-      pageAnchorIds(nullptr),
-      pageAnchorIdxs(nullptr),
-      navHistoryIx(0) {
+    : Controller(cb), pageSize(0, 0) {
+    this->doc = doc;
+    this->ctrls = ctrls;
+
     CrashIf(!doc.IsDocLoaded());
 
     EventMgr* em = ctrls->mainWnd->evtMgr;
-    // TODO: do I need lambada here, can I just pass EbookController::ClickedNext directly?
     em->EventsForName("next")->Clicked = [=](Control* c, int x, int y) { this->ClickedNext(c, x, y); };
     em->EventsForName("prev")->Clicked = [=](Control* c, int x, int y) { this->ClickedPrev(c, x, y); };
     em->EventsForControl(ctrls->progress)->Clicked = [=](Control* c, int x, int y) { this->ClickedProgress(c, x, y); };
@@ -862,27 +853,27 @@ void EbookController::RequestRepaint() {
 void EbookController::AddNavPoint() {
     int idx = currPageReparseIdx;
     // remove the current and all Forward history entries
-    if (navHistoryIx < navHistory.Count())
-        navHistory.RemoveAt(navHistoryIx, navHistory.Count() - navHistoryIx);
+    if (navHistoryIdx < navHistory.Count())
+        navHistory.RemoveAt(navHistoryIdx, navHistory.Count() - navHistoryIdx);
     // don't add another entry for the exact same position
-    if (navHistoryIx > 0 && idx == navHistory.At(navHistoryIx - 1))
+    if (navHistoryIdx > 0 && idx == navHistory.At(navHistoryIdx - 1))
         return;
     // make sure that the history doesn't grow overly large
-    if (navHistoryIx >= MAX_NAV_HISTORY_LEN) {
-        CrashIf(navHistoryIx > MAX_NAV_HISTORY_LEN);
-        navHistory.RemoveAt(0, navHistoryIx - MAX_NAV_HISTORY_LEN + 1);
-        navHistoryIx = MAX_NAV_HISTORY_LEN - 1;
+    if (navHistoryIdx >= MAX_NAV_HISTORY_LEN) {
+        CrashIf(navHistoryIdx > MAX_NAV_HISTORY_LEN);
+        navHistory.RemoveAt(0, navHistoryIdx - MAX_NAV_HISTORY_LEN + 1);
+        navHistoryIdx = MAX_NAV_HISTORY_LEN - 1;
     }
     // add a new Back history entry
     navHistory.Append(idx);
-    navHistoryIx++;
+    navHistoryIdx++;
 }
 
 bool EbookController::CanNavigate(int dir) const {
-    CrashIf(navHistoryIx > navHistory.Count());
+    CrashIf(navHistoryIdx > navHistory.Count());
     if (dir < 0)
-        return navHistoryIx >= (size_t)-dir;
-    return navHistoryIx + dir < navHistory.Count();
+        return navHistoryIdx >= (size_t)-dir;
+    return navHistoryIdx + dir < navHistory.Count();
 }
 
 void EbookController::Navigate(int dir) {
@@ -890,12 +881,12 @@ void EbookController::Navigate(int dir) {
         return;
     // update the current history entry
     int idx = currPageReparseIdx;
-    if (navHistoryIx < navHistory.Count())
-        navHistory.At(navHistoryIx) = idx;
+    if (navHistoryIdx < navHistory.Count())
+        navHistory.At(navHistoryIdx) = idx;
     else
         navHistory.Append(idx);
-    navHistoryIx += dir;
-    idx = navHistory.At(navHistoryIx);
+    navHistoryIdx += dir;
+    idx = navHistory.At(navHistoryIdx);
     int pageNo = PageForReparsePoint(pages, idx);
     if (0 == pageNo)
         pageNo = GetMaxPageCount();
@@ -905,7 +896,7 @@ void EbookController::Navigate(int dir) {
 
 void EbookController::CopyNavHistory(EbookController& orig) {
     navHistory = orig.navHistory;
-    navHistoryIx = orig.navHistoryIx;
+    navHistoryIdx = orig.navHistoryIdx;
 }
 
 EbookController* EbookController::Create(Doc doc, HWND hwnd, ControllerCallback* cb, FrameRateWnd* frameRateWnd) {
@@ -918,8 +909,6 @@ EbookController* EbookController::Create(Doc doc, HWND hwnd, ControllerCallback*
 // not a destructor so that EbookFormattingData don't have to be exposed in EbookController.h
 // and so that EbookFormattingData::pages aren't always deleted (when ownership has been passed on)
 void EbookController::DeleteEbookFormattingData(EbookFormattingData* data) {
-    for (size_t i = 0; i < data->pageCount; i++) {
-        delete data->pages[i];
-    }
+    data->DeletePages();
     delete data;
 }
