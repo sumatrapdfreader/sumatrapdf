@@ -105,6 +105,8 @@
 #define IDM_ADVANCED_OPTIONS            597
 #define IDM_FAV_FIRST                   600
 #define IDM_FAV_LAST                    800
+#define IDM_CHANGE_THEME_FIRST          900
+#define IDM_CHANGE_THEME_LAST           919
 #define IDC_GOTO_PAGE_EDIT              1000
 #define IDC_GOTO_PAGE_GO                1001
 #define IDC_BUTTON2                     1002

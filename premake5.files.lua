@@ -431,6 +431,7 @@ function sumatra_files()
     "Tester.*",
     "TextSearch.*",
     "TextSelection.*",
+    "Theme.*",
     "Toolbar.*",
     "Translations.*",
     "Trans_sumatra_txt.cpp",
@@ -911,7 +912,8 @@ function uninstaller_files()
   files_in_dir("src", {
     "CrashHandler.*",
     "Translations.*",
-    "installer/Installer.*",
+    "installer/Installer.cpp",
+    "installer/Installer.h",
     "installer/Trans_installer_txt.cpp",
   })
 end
