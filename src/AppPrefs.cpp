@@ -240,10 +240,10 @@ void UpdateGlobalPrefs(const CommandLineInfo& i) {
                    str::EqI(i.globalPrefArgs.At(n), L"-bg-color")) {
             // -bgcolor is for backwards compat (was used pre-1.3)
             // -bg-color is for consistency
-            ParseColor(&gGlobalPrefs->mainWindowBackground, i.globalPrefArgs.At(++n));
+            //ParseColor(&gGlobalPrefs->mainWindowBackground, i.globalPrefArgs.At(++n));
         } else if (str::EqI(i.globalPrefArgs.At(n), L"-set-color-range")) {
-            ParseColor(&gGlobalPrefs->fixedPageUI.textColor, i.globalPrefArgs.At(++n));
-            ParseColor(&gGlobalPrefs->fixedPageUI.backgroundColor, i.globalPrefArgs.At(++n));
+            //ParseColor(&gGlobalPrefs->fixedPageUI.textColor, i.globalPrefArgs.At(++n));
+            //ParseColor(&gGlobalPrefs->fixedPageUI.backgroundColor, i.globalPrefArgs.At(++n));
         } else if (str::EqI(i.globalPrefArgs.At(n), L"-fwdsearch-offset")) {
             gGlobalPrefs->forwardSearch.highlightOffset = _wtoi(i.globalPrefArgs.At(++n));
             gGlobalPrefs->enableTeXEnhancements = true;

@@ -197,38 +197,6 @@ static bool RegisterWinClass()
     return true;
 }
 
-// returns the background color for the "SumatraPDF" logo in start page and About window
-COLORREF GetLogoBgColor()
-{
-#ifdef ABOUT_USE_LESS_COLORS
-    return ABOUT_BG_LOGO_COLOR;
-#else
-    return GetAboutBgColor();
-#endif
-}
-
-// returns the background color for start page, About window and Properties dialog
-COLORREF GetAboutBgColor()
-{
-    COLORREF bgColor = ABOUT_BG_GRAY_COLOR;
-    if (ABOUT_BG_COLOR_DEFAULT != gGlobalPrefs->mainWindowBackground)
-        bgColor = gGlobalPrefs->mainWindowBackground;
-    return bgColor;
-}
-
-COLORREF GetNoDocBgColor()
-{
-    // use the system background color if the user has non-default
-    // colors for text (not black-on-white) and also wants to use them
-    bool useSysColor = gGlobalPrefs->useSysColors &&
-                       (GetSysColor(COLOR_WINDOWTEXT) != WIN_COL_BLACK ||
-                        GetSysColor(COLOR_WINDOW) != WIN_COL_WHITE);
-    if (useSysColor)
-        return GetSysColor(COLOR_BTNFACE);
-
-    return COL_WINDOW_BG;
-}
-
 static bool InstanceInit()
 {
     gCursorDrag     = LoadCursor(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDC_CURSORDRAG));

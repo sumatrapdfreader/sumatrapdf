@@ -76,6 +76,7 @@
 #include "Version.h"
 #define NOLOG 0
 #include "DebugLog.h"
+#include "Theme.h"
 
 /* if true, we're in debug mode where we show links as blue rectangle on
    the screen. Makes debugging code related to links easier. */
@@ -2001,14 +2002,9 @@ static void RerenderEverything()
 
 void GetFixedPageUiColors(COLORREF& text, COLORREF& bg)
 {
-    if (gGlobalPrefs->useSysColors) {
-        text = GetSysColor(COLOR_WINDOWTEXT);
-        bg = GetSysColor(COLOR_WINDOW);
-    }
-    else {
-        text = gGlobalPrefs->fixedPageUI.textColor;
-        bg = gGlobalPrefs->fixedPageUI.backgroundColor;
-    }
+    
+    text = GetCurrentTheme()->document.textColor;
+    bg = GetCurrentTheme()->document.backgroundColor;
     if (gGlobalPrefs->fixedPageUI.invertColors) {
         std::swap(text, bg);
     }
@@ -2016,15 +2012,8 @@ void GetFixedPageUiColors(COLORREF& text, COLORREF& bg)
 
 void GetEbookUiColors(COLORREF& text, COLORREF& bg)
 {
-    if (gGlobalPrefs->useSysColors) {
-        text = GetSysColor(COLOR_WINDOWTEXT);
-        bg = GetSysColor(COLOR_WINDOW);
-    }
-    else {
-        text = gGlobalPrefs->ebookUI.textColor;
-        bg = gGlobalPrefs->ebookUI.backgroundColor;
-    }
-    // TODO: respect gGlobalPrefs->fixedPageUI.invertColors?
+    text = GetCurrentTheme()->document.textColor;
+    bg = GetCurrentTheme()->document.backgroundColor;
 }
 
 void UpdateDocumentColors()
@@ -3747,6 +3736,17 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
         GoToFavoriteByMenuId(win, wmId);
     }
 
+    // check if the menuId belongs to a theme
+    if ((wmId >= IDM_CHANGE_THEME_FIRST) && (wmId <= IDM_CHANGE_THEME_LAST)) {
+        str::ReplacePtr(&gGlobalPrefs->themeName, GetThemeByIndex(wmId - IDM_CHANGE_THEME_FIRST)->name);    // update theme name safely (setting directly causes crash on cleanup)
+        RelayoutWindow(win);    // fix tabbar height
+        UpdateDocumentColors();     // update document colors
+        RedrawWindow(win->hwndFrame, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);   // paint new theme
+        UpdateDocumentColors();     // doing this a second time ensures the frequently read documents are updated
+        UpdateMenu(win, (HMENU)wParam); // update the radio buttons
+        prefs::Save();  // save new preferences
+    }
+
     if (!win)
         return DefWindowProc(hwnd, msg, wParam, lParam);
 
@@ -4219,8 +4219,6 @@ InitMouseWheelInfo:
             return 0;
 
         case WM_SYSCOLORCHANGE:
-            if (gGlobalPrefs->useSysColors)
-                UpdateDocumentColors();
             break;
 
         case WM_MOUSEWHEEL:

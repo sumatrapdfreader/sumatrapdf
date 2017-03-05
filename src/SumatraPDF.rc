@@ -1,7 +1,6 @@
 // Microsoft Visual C++ generated resource script.
 //
 #include "resource.h"
-#include "Version.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
@@ -28,8 +27,8 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION VER_RESOURCE
- PRODUCTVERSION VER_RESOURCE
+ FILEVERSION 3,2,0,0
+ PRODUCTVERSION 3,2,0,0
  FILEFLAGSMASK 0x0L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -45,12 +44,12 @@ BEGIN
         BLOCK "040904E4"
         BEGIN
             VALUE "FileDescription", "SumatraPDF"
-            VALUE "FileVersion", VER_RESOURCE_STR
-            VALUE "LegalCopyright", COPYRIGHT_STR
+            VALUE "FileVersion", "3.2"
+            VALUE "LegalCopyright", "Copyright 2006-2016 all authors (GPLv3)"
             VALUE "OriginalFilename", "SumatraPDF.exe"
             VALUE "ProductName", "SumatraPDF"
-            VALUE "ProductVersion", VER_RESOURCE_STR
-            VALUE "CompanyName", PUBLISHER_STR
+            VALUE "ProductVersion", "3.2"
+            VALUE "CompanyName", "Krzysztof Kowalczyk"
         END
     END
     BLOCK "VarFileInfo"
@@ -68,7 +67,9 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDI_SUMATRAPDF          ICON                    "SumatraPDF-smaller.ico"
+
 IDI_PDFDOC              ICON                    "PdfDoc.ico"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -110,19 +111,19 @@ BEGIN
     VK_OEM_PLUS,    IDT_VIEW_ZOOMIN,        VIRTKEY, CONTROL
     VK_OEM_PLUS,    IDM_VIEW_ROTATE_RIGHT,  VIRTKEY, SHIFT, CONTROL
     VK_INSERT,      IDM_COPY_SELECTION,     VIRTKEY, CONTROL
-    VK_F2,          IDM_RENAME_FILE,        VIRTKEY
-    VK_F3,          IDM_FIND_NEXT,          VIRTKEY
+    VK_F2,          IDM_RENAME_FILE,        VIRTKEY 
+    VK_F3,          IDM_FIND_NEXT,          VIRTKEY 
     VK_F3,          IDM_FIND_PREV,          VIRTKEY, SHIFT
     VK_F3,          IDM_FIND_NEXT_SEL,      VIRTKEY, CONTROL
     VK_F3,          IDM_FIND_PREV_SEL,      VIRTKEY, SHIFT, CONTROL
     VK_F4,          IDM_CLOSE,              VIRTKEY, CONTROL
-    VK_F5,          IDM_VIEW_PRESENTATION_MODE, VIRTKEY
-    VK_F6,          IDM_MOVE_FRAME_FOCUS,   VIRTKEY
-    VK_F8,          IDM_VIEW_SHOW_HIDE_TOOLBAR, VIRTKEY
-    VK_F9,          IDM_VIEW_SHOW_HIDE_MENUBAR, VIRTKEY
-    VK_F11,         IDM_VIEW_FULLSCREEN,    VIRTKEY
+    VK_F5,          IDM_VIEW_PRESENTATION_MODE, VIRTKEY 
+    VK_F6,          IDM_MOVE_FRAME_FOCUS,   VIRTKEY 
+    VK_F8,          IDM_VIEW_SHOW_HIDE_TOOLBAR, VIRTKEY 
+    VK_F9,          IDM_VIEW_SHOW_HIDE_MENUBAR, VIRTKEY 
+    VK_F11,         IDM_VIEW_FULLSCREEN,    VIRTKEY 
     VK_F11,         IDM_VIEW_PRESENTATION_MODE, VIRTKEY, SHIFT
-    VK_F12,         IDM_VIEW_BOOKMARKS,     VIRTKEY
+    VK_F12,         IDM_VIEW_BOOKMARKS,     VIRTKEY 
     VK_SUBTRACT,    IDT_VIEW_ZOOMOUT,       VIRTKEY, CONTROL
     VK_SUBTRACT,    IDM_VIEW_ROTATE_LEFT,   VIRTKEY, SHIFT, CONTROL
     VK_OEM_MINUS,   IDT_VIEW_ZOOMOUT,       VIRTKEY, CONTROL
@@ -138,7 +139,9 @@ END
 //
 
 IDB_TOOLBAR             BITMAP                  "toolbar_11.bmp"
+
 IDB_RELOADING_CUE       BITMAP                  "reloading.bmp"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -232,11 +235,11 @@ BEGIN
     CONTROL         "&Remember these settings for each document",IDC_REMEMBER_STATE_PER_DOCUMENT,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,66,216,9
     GROUPBOX        "Advanced",IDC_SECTION_ADVANCED,6,87,228,70
-    CONTROL         "Use &tabs",IDC_USE_TABS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,97,216,9
+    CONTROL         "Use &tabs",IDC_USE_TABS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,97,216,9
     CONTROL         "Automatically check for &updates",IDC_CHECK_FOR_UPDATES,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,110,216,9
-    CONTROL         "Remember &opened files",IDC_REMEMBER_OPENED_FILES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,123,216,9
+    CONTROL         "Remember &opened files",IDC_REMEMBER_OPENED_FILES,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,123,216,9
     PUSHBUTTON      "Make SumatraPDF a default PDF reader",IDC_SET_DEFAULT_READER,12,137,216,14
     GROUPBOX        "Set inverse search command-line",IDC_SECTION_INVERSESEARCH,6,163,228,52
     LTEXT           "Enter the command-line to invoke when you double-click on the PDF document:",IDC_CMDLINE_LABEL,12,175,216,18
@@ -284,10 +287,14 @@ BEGIN
     EDITTEXT        IDC_FAV_NAME_EDIT,7,20,222,14,ES_AUTOHSCROLL
 END
 
-IDD_EBOOK_WIN_DESC  RCDATA                      "EbookWinDesc.txt"
-#ifdef HAS_PUBLIC_APP_KEY
-IDD_PUBLIC_APP_KEY  RCDATA                      "SumatraPDF.key"
-#endif
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// RCDATA
+//
+
+IDD_EBOOK_WIN_DESC      RCDATA                  "EbookWinDesc.txt"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -296,18 +303,19 @@ IDD_PUBLIC_APP_KEY  RCDATA                      "SumatraPDF.key"
 
 1                       RT_MANIFEST             "SumatraPDF.exe.manifest"
 
+
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
 //
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE
+1 TEXTINCLUDE 
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE
+2 TEXTINCLUDE 
 BEGIN
     "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
     "#include ""windows.h""\r\n"
@@ -315,7 +323,7 @@ BEGIN
     "\0"
 END
 
-3 TEXTINCLUDE
+3 TEXTINCLUDE 
 BEGIN
     "\r\n"
     "\0"
@@ -372,6 +380,7 @@ END
 //
 
 IDC_CURSORDRAG          CURSOR                  "dragcursor.cur"
+
 #endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
 
@@ -386,3 +395,4 @@ IDC_CURSORDRAG          CURSOR                  "dragcursor.cur"
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
+
