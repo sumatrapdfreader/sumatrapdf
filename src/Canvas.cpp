@@ -571,7 +571,7 @@ static void DrawDocument(WindowInfo* win, HDC hdc, RECT *rcArea)
         FillRect(hdc, rcArea, brush);
     }
     else if (0 == gGlobalPrefs->fixedPageUI.gradientColors->Count()) {
-        ScopedGdiObj<HBRUSH> brush(CreateSolidBrush(GetNoDocBgColor()));
+        ScopedGdiObj<HBRUSH> brush(CreateSolidBrush(GetCurrentTheme()->document.canvasColor));
         FillRect(hdc, rcArea, brush);
     }
     else {
@@ -1270,7 +1270,7 @@ static void OnPaintError(WindowInfo* win)
 
     ScopedFont fontRightTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 14));
     HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt);
-    ScopedGdiObj<HBRUSH> brush(CreateSolidBrush(GetNoDocBgColor()));
+    ScopedGdiObj<HBRUSH> brush(CreateSolidBrush(GetCurrentTheme()->document.canvasColor));
     FillRect(hdc, &ps.rcPaint, brush);
     // TODO: should this be "Error opening %s"?
     ScopedMem<WCHAR> msg(str::Format(_TR("Error loading %s"), win->currentTab->filePath));

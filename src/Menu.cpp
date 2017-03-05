@@ -157,7 +157,7 @@ static MenuDef menuDefZoom[] = {
 
 //[ ACCESSKEY_GROUP Settings Menu
 static MenuDef menuDefSettings[] = {
-    { _TRN("Change Language"),              IDM_CHANGE_LANGUAGE,        0  },
+    { _TRN("Change Language"),              IDM_CHANGE_LANGUAGE,        0 },
 #if 0
     { _TRN("Contribute Translation"),       IDM_CONTRIBUTE_TRANSLATION, MF_REQ_DISK_ACCESS },
     { SEP_ITEM,                             0,                          MF_REQ_DISK_ACCESS },
@@ -492,6 +492,8 @@ void MenuUpdateStateForWindow(WindowInfo* win)
     if (win->IsDocLoaded() && !fileExists)
         win::menu::SetEnabled(win->menu, IDM_RENAME_FILE, false);
 
+    CheckMenuRadioItem(win->menu, IDM_CHANGE_THEME_FIRST, IDM_CHANGE_THEME_LAST, IDM_CHANGE_THEME_FIRST + GetCurrentThemeIndex(), MF_BYCOMMAND);
+
 #ifdef SHOW_DEBUG_MENU_ITEMS
     win::menu::SetChecked(win->menu, IDM_DEBUG_SHOW_LINKS, gDebugShowLinks);
     win::menu::SetChecked(win->menu, IDM_DEBUG_EBOOK_UI, gGlobalPrefs->ebookUI.useFixedPageUI);
@@ -701,8 +703,18 @@ HMENU BuildMenu(WindowInfo *win)
         RebuildFavMenu(win, m);
         AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("F&avorites"));
     }
+
+    // Build the themes sub-menu of the settings menu
     m = BuildMenuFromMenuDef(menuDefSettings, dimof(menuDefSettings), CreateMenu(), filter);
+    MenuDef menuDefTheme[THEME_COUNT];
+    static_assert(IDM_CHANGE_THEME_LAST - IDM_CHANGE_THEME_FIRST + 1 >= THEME_COUNT, "Too many themes. Either remove some or update IDM_CHANGE_THEME_LAST");
+    for (UINT i = 0; i < THEME_COUNT; i++) {
+        menuDefTheme[i] = { _TRN(GetThemeByIndex(i)->name), IDM_CHANGE_THEME_FIRST + i, 0 };
+    }
+    HMENU m2 = BuildMenuFromMenuDef(menuDefTheme, dimof(menuDefTheme), CreateMenu(), filter);
+    AppendMenu(m, MF_POPUP | MF_STRING, (UINT_PTR)m2, _TR("&Theme"));
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Settings"));
+
     m = BuildMenuFromMenuDef(menuDefHelp, dimof(menuDefHelp), CreateMenu(), filter);
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Help"));
 #if 0
