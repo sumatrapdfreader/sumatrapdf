@@ -3547,7 +3547,15 @@ static void FrameOnChar(WindowInfo& win, WPARAM key, LPARAM info=0)
             if (!win.AsFixed()->userAnnots)
                 win.AsFixed()->userAnnots = new Vec<PageAnnotation>();
             for (SelectionOnPage& sel : *win.currentTab->selectionOnPage) {
-                win.AsFixed()->userAnnots->Append(PageAnnotation(Annot_Highlight, sel.pageNo, sel.rect, PageAnnotation::Color(gGlobalPrefs->annotationDefaults.highlightColor, 0xCC)));
+                auto addedAnnotation = PageAnnotation(Annot_Highlight, sel.pageNo, sel.rect, PageAnnotation::Color(gGlobalPrefs->annotationDefaults.highlightColor, 0xCC));
+                size_t oldLen = win.AsFixed()->userAnnots->Size();
+                for (size_t i = 0; i < oldLen; ++i) {
+                    if (win.AsFixed()->userAnnots->At(i) ==  addedAnnotation)
+                        win.AsFixed()->userAnnots->RemoveAtFast(i);
+                }
+                if (oldLen == win.AsFixed()->userAnnots->Size())
+                    win.AsFixed()->userAnnots->Append(PageAnnotation(Annot_Highlight, sel.pageNo, sel.rect, PageAnnotation::Color(gGlobalPrefs->annotationDefaults.highlightColor, 0xCC)));
+                
                 gRenderCache.Invalidate(win.AsFixed(), sel.pageNo, sel.rect);
             }
             win.AsFixed()->userAnnotsModified = true;
