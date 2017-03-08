@@ -105,8 +105,6 @@
 #define IDM_ADVANCED_OPTIONS            597
 #define IDM_FAV_FIRST                   600
 #define IDM_FAV_LAST                    800
-#define IDM_CHANGE_THEME_FIRST          900
-#define IDM_CHANGE_THEME_LAST           919
 #define IDC_GOTO_PAGE_EDIT              1000
 #define IDC_GOTO_PAGE_GO                1001
 #define IDC_BUTTON2                     1002
@@ -163,6 +161,7 @@
 #define IDC_TABBAR                      1110
 #define IDB_TOOLBAR                     2000
 #define IDB_RELOADING_CUE               2010
+// TODO: which of these are (still) needed?
 #define IDT_FILE_NEW                    3000
 #define IDT_FILE_OPEN                   3001
 #define IDT_FILE_METAPATH               3002
@@ -197,13 +196,13 @@
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
-// 
+//
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        141
 #define _APS_NEXT_COMMAND_VALUE         32771
 #define _APS_NEXT_CONTROL_VALUE         1080
-#define _APS_NEXT_SYMED_VALUE           112
+#define _APS_NEXT_SYMED_VALUE           110
 #endif
 #endif
