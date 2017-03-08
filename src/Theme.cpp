@@ -3,11 +3,18 @@ License: GPLv3 */
 
 /* Adding themes instructions:
 Add one to THEME_COUNT (Theme.h)
-If THEME_COUNT > 20, you will have to update IDM_CHANGE_THEME_FIRST (resource.h)
+If THEME_COUNT > 20, you will have to update IDM_CHANGE_THEME_LAST (resource.h)
 Copy one of the theme declarations below
 Rename it to whatever and change all of the properties as desired
 Add a pointer to your new struct to the g_themes array below
-Note: Colors are in format 0xBBGGRR
+
+Try not to enter a color code twice. If you use it more than once in a theme,
+reference it through the theme struct the second time. See g_themeDark.document for example.
+You can also use methods like AdjustLightness2 to modify existing colors. If you use a
+color in multiple themes, you may want to define it in the color definitions section.This
+makes themes easier to modify and update.
+
+Note: Colors are in format 0xBBGGRR, recommended to use rgb_to_bgr
 */
 
 // utils
@@ -16,27 +23,36 @@ Note: Colors are in format 0xBBGGRR
 // layout controllers
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
+// ui
+#include "Translations.h"
 
+// Color definitions
 #define COL_BLACK 0x000000
 #define COL_WHITE 0xFFFFFF
+#define COL_WHITEISH 0xEBEBF9
+
+// Theme definition helper functions
+COLORREF rgb_to_bgr(COLORREF rgb) {
+    return ((rgb & 0x0000FF) << 16) | (rgb & 0x00FF00) | ((rgb & 0xFF0000) >> 16);
+}
 
 // Themes
 Theme g_themeLight = {
     // Theme Name
-    "Light",
+    _TRN("Light"),
     // Main window theme
     {
         // Main Background Color
-        0xF2F2F2,
+        rgb_to_bgr(0xF2F2F2),
         // Main Text Color
         COL_BLACK,
         // Main Link Color
-        0xA02000,
+        rgb_to_bgr(0x0020A0)
     },
     // Document style
     {
         // Canvas Color
-        0x999999,
+        rgb_to_bgr(0x999999),
         // Background Color
         COL_WHITE,
         // Text color
@@ -49,7 +65,7 @@ Theme g_themeLight = {
         // Current style
         {
             // Background color
-            0x3C68E3,
+            rgb_to_bgr(0xE3683C),
             // Text color
             COL_BLACK,
             // Default close style
@@ -57,7 +73,7 @@ Theme g_themeLight = {
                 // X color
                 AdjustLightness2(g_themeLight.tab.current.backgroundColor, -60),
                 // Circle color
-                0x3535C1
+                rgb_to_bgr(0xC13535)
             }
         },
         // Background style
@@ -85,35 +101,36 @@ Theme g_themeLight = {
         // Hovered close style
         {
             // X color
-            0xEBEBF9,
+            COL_WHITEISH,
             // Circle color
-            0x3535C1
+            g_themeLight.tab.current.close.circleColor
         },
         // Clicked close style
         {
             // X color
-            0xEBEBF9,
+            g_themeLight.tab.hoveredClose.xColor,
             // Circle color
             AdjustLightness2(g_themeLight.tab.current.close.circleColor, -10)
         }
     }
 };
+
 Theme g_themeDark = {
     // Theme Name
-    "Dark",
+    _TRN("Dark"),
     // Main window theme
     {
         // Main Background Color
-        0x383226,
+        rgb_to_bgr(0x263238),
         // Main Text Color
         COL_WHITE,
         // Main Link Color
-        0xADCB80
+        rgb_to_bgr(0x80CBAD)
     },
     // Document style
     {
         // Canvas Color
-        0x2C271E,
+        rgb_to_bgr(0x1E272C),
         // Background Color
         g_themeDark.mainWindow.backgroundColor,
         // Text color
@@ -126,15 +143,13 @@ Theme g_themeDark = {
         // Current style
         {
             // Background color
-            0x889600,
+            rgb_to_bgr(0x009688),
             // Text color
             COL_WHITE,
             // Default close style
             {
                 // X color
-                0xCFD599,
-                // Circle color
-                COL_BLACK
+                rgb_to_bgr(0x99D5CF)
             }
         },
         // Background style
@@ -162,30 +177,29 @@ Theme g_themeDark = {
         // Hovered close style
         {
             // X color
-            0xEBEBF9,
-            // Circle color
-            COL_BLACK
+            COL_WHITEISH
         },
         // Clicked close style
         g_themeDark.tab.hoveredClose
     }
 };
+
 Theme g_themeDarker = {
     // Theme Name
-    "Darker",
+    _TRN("Darker"),
     // Main window theme
     {
         // Main Background Color
-        0x302D2D,
+        rgb_to_bgr(0x2D2D30),
         // Main Text Color
         COL_WHITE,
         // Main Link Color
-        0xD48130
+        rgb_to_bgr(0x3081D4)
     },
     // Document style
     {
         // Canvas Color
-        0x1E1E1E,
+        rgb_to_bgr(0x1E1E1E),
         // Background Color
         g_themeDarker.mainWindow.backgroundColor,
         // Text color
@@ -198,13 +212,13 @@ Theme g_themeDarker = {
         // Current style
         {
             // Background color
-            0xCC7A00,
+            rgb_to_bgr(0x007ACC),
             // Text color
             COL_WHITE,
             // Default close style
             {
                 // X color
-                0xF5E6D0,
+                rgb_to_bgr(0xD0E6F5),
                 // Circle color
                 COL_BLACK
             }
@@ -212,7 +226,7 @@ Theme g_themeDarker = {
         // Background style
         {
             // Background color
-            0xEAEAEA,
+            rgb_to_bgr(0xEAEAEA),
             // Text color
             COL_BLACK,
             // Default close style
@@ -226,7 +240,7 @@ Theme g_themeDarker = {
         // Highlighted style
         {
             // Background color
-            0xEA971C,
+            rgb_to_bgr(0x1C97EA),
             // Text color
             COL_WHITE,
             // Default close style
