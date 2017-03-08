@@ -462,8 +462,8 @@ void OnMenuPrint(WindowInfo* win, bool waitForCompletion) {
     Vec<PRINTPAGERANGE> ranges;
     PRINTER_INFO_2 printerInfo = {0};
 
-    if (!HasPermission(Perm_PrinterAccess))
-        return;
+    //if (!HasPermission(Perm_PrinterAccess))
+    //    return;
     if (!win->IsDocLoaded())
         return;
 
@@ -739,8 +739,8 @@ static void ApplyPrintSettings(const WCHAR* printerName, const WCHAR* settings, 
 
 bool PrintFile(BaseEngine* engine, WCHAR* printerName, bool displayErrors, const WCHAR* settings) {
     bool ok = false;
-    if (!HasPermission(Perm_PrinterAccess))
-        return false;
+    //if (!HasPermission(Perm_PrinterAccess))
+    //    return false;
 
 #ifndef DISABLE_DOCUMENT_RESTRICTIONS
     if (engine && !engine->AllowsPrinting())

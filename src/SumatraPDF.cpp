@@ -184,7 +184,7 @@ void InitializePolicies(bool restrict)
     // (if the file isn't there, everything is allowed)
     ScopedMem<WCHAR> restrictPath(path::GetAppPath(RESTRICTIONS_FILE_NAME));
     if (!file::Exists(restrictPath)) {
-        gPolicyRestrictions = Perm_All;
+        gPolicyRestrictions = Perm_DiskAccess;
         gAllowedLinkProtocols.Split(DEFAULT_LINK_PROTOCOLS, L",");
         gAllowedFileTypes.Split(DEFAULT_FILE_PERCEIVED_TYPES, L",");
         return;
@@ -1253,7 +1253,7 @@ static WindowInfo* CreateWindowInfo()
 
     HWND hwndFrame = CreateWindow(
             FRAME_CLASS_NAME, SUMATRA_WINDOW_TITLE,
-            WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
+            WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_MAXIMIZE,
             windowPos.x, windowPos.y, windowPos.dx, windowPos.dy,
             nullptr, nullptr,
             GetModuleHandle(nullptr), nullptr);
@@ -2918,11 +2918,11 @@ void SetCurrentLanguageAndRefreshUI(const char *langCode)
     prefs::Save();
 }
 
-static void OnMenuChangeLanguage(HWND hwnd)
-{
-    const char *newLangCode = Dialog_ChangeLanguge(hwnd, trans::GetCurrentLangCode());
-    SetCurrentLanguageAndRefreshUI(newLangCode);
-}
+//static void OnMenuChangeLanguage(HWND hwnd)
+//{
+//    const char *newLangCode = Dialog_ChangeLanguge(hwnd, trans::GetCurrentLangCode());
+//    SetCurrentLanguageAndRefreshUI(newLangCode);
+//}
 
 static void OnMenuViewShowHideToolbar()
 {
@@ -3882,11 +3882,11 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
             if (!win->tabsInTitlebar)
                 ShowHideMenuBar(win);
             break;
-
+#if 0
         case IDM_CHANGE_LANGUAGE:
             OnMenuChangeLanguage(win->hwndFrame);
             break;
-
+#endif
         case IDM_VIEW_BOOKMARKS:
             ToggleTocBox(win);
             break;

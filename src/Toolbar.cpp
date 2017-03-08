@@ -36,10 +36,14 @@ struct ToolbarButtonInfo {
 };
 
 static ToolbarButtonInfo gToolbarButtons[] = {
-    { 0,   IDM_OPEN,              _TRN("Open"),           MF_REQ_DISK_ACCESS },
+	
+	{ 0,   IDM_OPEN,              _TRN("Open"),           MF_REQ_DISK_ACCESS },
+	
 // the Open button is replaced with a Save As button in Plugin mode:
-//  { 12,  IDM_SAVEAS,            _TRN("Save As"),        MF_REQ_DISK_ACCESS },
-    { 1,   IDM_PRINT,             _TRN("Print"),          MF_REQ_PRINTER_ACCESS },
+    { 12,  IDM_SAVEAS,            _TRN("Save As"),        MF_REQ_DISK_ACCESS },
+	{ 13,	IDM_SEND_BY_EMAIL,	_TRN("Send By Email"),		MF_REQ_DISK_ACCESS },
+    { 1,   IDM_PRINT,             _TRN("Print"),         0 },
+	
     { -1,  IDM_GOTO_PAGE,         nullptr,                   0 },
     { 2,   IDM_GOTO_PREV_PAGE,    _TRN("Previous Page"),  0 },
     { 3,   IDM_GOTO_NEXT_PAGE,    _TRN("Next Page"),      0 },
@@ -52,6 +56,7 @@ static ToolbarButtonInfo gToolbarButtons[] = {
     { 8,   IDM_FIND_PREV,         _TRN("Find Previous"),  0 },
     { 9,   IDM_FIND_NEXT,         _TRN("Find Next"),      0 },
     { 10,  IDM_FIND_MATCH,        _TRN("Match Case"),     0 },
+	
 };
 
 #define TOOLBAR_BUTTONS_COUNT dimof(gToolbarButtons)

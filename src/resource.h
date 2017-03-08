@@ -84,7 +84,7 @@
 #define IDM_VISIT_WEBSITE               550
 #define IDM_ABOUT                       551
 #define IDM_OPTIONS                     552
-#define IDM_CHANGE_LANGUAGE             553
+//#define IDM_CHANGE_LANGUAGE             553
 #define IDM_CHECK_UPDATE                554
 #define IDM_MANUAL                      555
 #define IDM_MOVE_FRAME_FOCUS            557
