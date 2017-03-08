@@ -19,6 +19,45 @@ class RenderedBitmap;
 
 typedef struct FileState DisplayState;
 
+// theme customization
+struct Theme {
+    // if true, use this theme
+    bool useTheme;
+    // the filename for the toolbar icons (BMP file format, should end in
+    // _11, child of the src/ directory), example: toolbar_11.bmp
+    WCHAR * toolbarIconsFileName;
+    // the filename for the toolbar icons (BMP file format, child of
+    // thesrc/ directory), example: reloading.bmp
+    WCHAR * reloadingIconFileName;
+    // overrides global MainWindowBackground preference
+    COLORREF mainBackgroundColor;
+    // text color for the main background page
+    COLORREF mainTextColor;
+    // hyperlink color for the main background page
+    COLORREF mainLinkColor;
+    // background color behind documents
+    COLORREF documentBackgroundColor;
+    // background color of the tabs
+    COLORREF tabBackgroundColor;
+    // text color of the tabs
+    COLORREF tabTextColor;
+    // height of the tabs in pixels
+    int tabHeight;
+    // tab's visual style, one of these values: rounded, square
+    char * tabStyle;
+    // The lightness adjustments for the various states of the tabs
+    // (current, highlighted, background, x, mouseDownX)
+    Vec<float> * tabLightnessAdjustments;
+    // if false, the circle around the 'x' on the tab is not displayed
+    bool tabCloseCircleEnabled;
+    // hover color of the 'x' on the tab
+    COLORREF tabCloseHoverColor;
+    // color of the circle around the 'x' on the tab
+    COLORREF tabCloseCircleColor;
+    // pen width used to draw the 'x' in pixels
+    float tabClosePenWidth;
+};
+
 // top, right, bottom and left margin (in that order) between window and
 // document
 struct WindowMargin {
@@ -271,6 +310,8 @@ struct SessionData {
 // persisted in SumatraPDF-settings.txt (previously in
 // sumatrapdfprefs.dat)
 struct GlobalPrefs {
+    // theme customization
+    Theme theme;
     // background color of the non-document windows, traditionally yellow
     COLORREF mainWindowBackground;
     // if true, Esc key closes SumatraPDF
@@ -400,6 +441,26 @@ struct GlobalPrefs {
 };
 
 #ifdef INCLUDE_SETTINGSSTRUCTS_METADATA
+
+static const FieldInfo gThemeFields[] = {
+    { offsetof(Theme, useTheme),                Type_Bool,       false                              },
+    { offsetof(Theme, toolbarIconsFileName),    Type_String,     (intptr_t)L"toolbar_google_11.bmp" },
+    { offsetof(Theme, reloadingIconFileName),   Type_String,     (intptr_t)L"reloading_google.bmp"  },
+    { offsetof(Theme, mainBackgroundColor),     Type_Color,      0x383226                           },
+    { offsetof(Theme, mainTextColor),           Type_Color,      0xffffff                           },
+    { offsetof(Theme, mainLinkColor),           Type_Color,      0xadcb80                           },
+    { offsetof(Theme, documentBackgroundColor), Type_Color,      0x383226                           },
+    { offsetof(Theme, tabBackgroundColor),      Type_Color,      0x889600                           },
+    { offsetof(Theme, tabTextColor),            Type_Color,      0xffffff                           },
+    { offsetof(Theme, tabHeight),               Type_Int,        32                                 },
+    { offsetof(Theme, tabStyle),                Type_Utf8String, (intptr_t)"rounded"                },
+    { offsetof(Theme, tabLightnessAdjustments), Type_FloatArray, (intptr_t)"1 10 -10 30 -10"        },
+    { offsetof(Theme, tabCloseCircleEnabled),   Type_Bool,       false                              },
+    { offsetof(Theme, tabCloseHoverColor),      Type_Color,      0xebebf9                           },
+    { offsetof(Theme, tabCloseCircleColor),     Type_Color,      0x3535c1                           },
+    { offsetof(Theme, tabClosePenWidth),        Type_Float,      (intptr_t)"1"                      },
+};
+static const StructInfo gThemeInfo = { sizeof(Theme), 16, gThemeFields, "UseTheme\0ToolbarIconsFileName\0ReloadingIconFileName\0MainBackgroundColor\0MainTextColor\0MainLinkColor\0DocumentBackgroundColor\0TabBackgroundColor\0TabTextColor\0TabHeight\0TabStyle\0TabLightnessAdjustments\0TabCloseCircleEnabled\0TabCloseHoverColor\0TabCloseCircleColor\0TabClosePenWidth" };
 
 static const FieldInfo gWindowMarginFields[] = {
     { offsetof(WindowMargin, top),    Type_Int, 2 },
@@ -587,6 +648,8 @@ static const StructInfo gFILETIMEInfo = { sizeof(FILETIME), 2, gFILETIMEFields, 
 static const FieldInfo gGlobalPrefsFields[] = {
     { (size_t)-1,                                      Type_Comment,     (intptr_t)"For documentation, see http://www.sumatrapdfreader.org/settings3.2.html"                                   },
     { (size_t)-1,                                      Type_Comment,     0                                                                                                                     },
+    { offsetof(GlobalPrefs, theme),                    Type_Struct,      (intptr_t)&gThemeInfo                                                                                                 },
+    { (size_t)-1,                                      Type_Comment,     0                                                                                                                     },
     { offsetof(GlobalPrefs, mainWindowBackground),     Type_Color,       0x8000f2ff                                                                                                            },
     { offsetof(GlobalPrefs, escToExit),                Type_Bool,        false                                                                                                                 },
     { offsetof(GlobalPrefs, reuseInstance),            Type_Bool,        false                                                                                                                 },
@@ -640,6 +703,6 @@ static const FieldInfo gGlobalPrefsFields[] = {
     { (size_t)-1,                                      Type_Comment,     0                                                                                                                     },
     { (size_t)-1,                                      Type_Comment,     (intptr_t)"Settings after this line have not been recognized by the current version"                                  },
 };
-static const StructInfo gGlobalPrefsInfo = { sizeof(GlobalPrefs), 54, gGlobalPrefsFields, "\0\0MainWindowBackground\0EscToExit\0ReuseInstance\0UseSysColors\0RestoreSession\0\0FixedPageUI\0EbookUI\0ComicBookUI\0ChmUI\0ExternalViewers\0PrereleaseSettings\0ShowMenubar\0ReloadModifiedDocuments\0FullPathInTitle\0ZoomLevels\0ZoomIncrement\0\0PrinterDefaults\0ForwardSearch\0AnnotationDefaults\0DefaultPasswords\0CustomScreenDPI\0\0RememberStatePerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0CheckForUpdates\0VersionToSkip\0RememberOpenedFiles\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0ShowStartPage\0UseTabs\0\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0\0" };
+static const StructInfo gGlobalPrefsInfo = { sizeof(GlobalPrefs), 56, gGlobalPrefsFields, "\0\0Theme\0\0MainWindowBackground\0EscToExit\0ReuseInstance\0UseSysColors\0RestoreSession\0\0FixedPageUI\0EbookUI\0ComicBookUI\0ChmUI\0ExternalViewers\0PrereleaseSettings\0ShowMenubar\0ReloadModifiedDocuments\0FullPathInTitle\0ZoomLevels\0ZoomIncrement\0\0PrinterDefaults\0ForwardSearch\0AnnotationDefaults\0DefaultPasswords\0CustomScreenDPI\0\0RememberStatePerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0CheckForUpdates\0VersionToSkip\0RememberOpenedFiles\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0ShowStartPage\0UseTabs\0\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0\0" };
 
 #endif

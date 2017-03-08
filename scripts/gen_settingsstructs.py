@@ -367,8 +367,51 @@ SessionData = [
 		"width of favorites/bookmarks sidebar (if shown)"),
 ]
 
+Theme = [
+	Field("UseTheme", Bool, False,
+		"if true, use this theme"),
+	Field("ToolbarIconsFileName", String, "toolbar_google_11.bmp",
+		"the filename for the toolbar icons (BMP file format, should end in " +
+		"_11, child of the src/ directory), example: toolbar_11.bmp"),
+	Field("ReloadingIconFileName", String, "reloading_google.bmp",
+		"the filename for the toolbar icons (BMP file format, child of the" +
+		"src/ directory), example: reloading.bmp"),
+	Field("MainBackgroundColor", Color, RGB(0x26, 0x32, 0x38),
+		"overrides global MainWindowBackground preference"),
+	Field("MainTextColor", Color, RGB(0xFF, 0xFF, 0xFF),
+		"text color for the main background page"),
+	Field("MainLinkColor", Color, RGB(0x80, 0xCB, 0xAD),
+		"hyperlink color for the main background page"),
+	Field("DocumentBackgroundColor", Color, RGB(0x26, 0x32, 0x38),
+		"background color behind documents"),
+	Field("TabBackgroundColor", Color, RGB(0x00, 0x96, 0x88),
+		"background color of the tabs"),
+	Field("TabTextColor", Color, RGB(0xFF, 0xFF, 0xFF),
+		"text color of the tabs"),
+	Field("TabHeight", Int, 32,
+		"height of the tabs in pixels"),
+	Field("TabStyle", Utf8String, "rounded",
+		"tab's visual style, one of these values: rounded, square"),
+	CompactArray("TabLightnessAdjustments", Float, "1 10 -10 30 -10",
+		"The lightness adjustments for the various states of the tabs (current, " +
+		"highlighted, background, x, mouseDownX)"),
+	Field("TabCloseCircleEnabled", Bool, False,
+		"if false, the circle around the 'x' on the tab is not displayed"),
+	Field("TabCloseHoverColor", Color, RGB(0xf9, 0xeb, 0xeb),
+		"hover color of the 'x' on the tab"),
+	Field("TabCloseCircleColor", Color, RGB(0xc1, 0x35, 0x35),
+		"color of the circle around the 'x' on the tab"),
+	Field("TabClosePenWidth", Float, 1,
+		"pen width used to draw the 'x' in pixels"),
+]
+
 GlobalPrefs = [
 	Comment("For documentation, see http://www.sumatrapdfreader.org/settings%s.html" % util.get_sumatrapdf_version()),
+	EmptyLine(),
+
+	Struct("Theme", Theme,
+		"theme customization",
+		expert=True),
 	EmptyLine(),
 
 	Field("MainWindowBackground", Color, RGB(0xFF, 0xF2, 0x00, a=0x80),

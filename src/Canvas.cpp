@@ -571,7 +571,7 @@ static void DrawDocument(WindowInfo* win, HDC hdc, RECT *rcArea)
         FillRect(hdc, rcArea, brush);
     }
     else if (0 == gGlobalPrefs->fixedPageUI.gradientColors->Count()) {
-        ScopedGdiObj<HBRUSH> brush(CreateSolidBrush(GetNoDocBgColor()));
+        ScopedGdiObj<HBRUSH> brush(CreateSolidBrush(gGlobalPrefs->theme.useTheme ? gGlobalPrefs->theme.documentBackgroundColor : GetNoDocBgColor()));
         FillRect(hdc, rcArea, brush);
     }
     else {
