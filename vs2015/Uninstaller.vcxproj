@@ -355,6 +355,7 @@
     <ClCompile Include="..\src\installer\Trans_installer_txt.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\src\installer\Installer.aps" />
     <None Include="..\src\installer\Installer.exe.manifest" />
   </ItemGroup>
   <ItemGroup>
