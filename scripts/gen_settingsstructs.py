@@ -191,6 +191,12 @@ FixedPageUI = [
 	Field("InvertColors", Bool, False,
 		"if true, TextColor and BackgroundColor will be temporarily swapped",
 		internal=True),
+	Field("NightMode", Bool, False,
+		"if true, NightModeTextColor and NightModeBackgroundColor will be used instead of TextColor and BackgroundColor"),
+	Field("NightModeTextColor", Color, RGB(0x83, 0x94, 0x96),
+		"color value with which black (text) will be substituted if NightMode is enabled"),
+	Field("NightModeBackgroundColor", Color, RGB(0x00, 0x2b, 0x36),
+		"color value with which white (background) will be substituted if NightMode is enabled"),
 ]
 
 EbookUI = [

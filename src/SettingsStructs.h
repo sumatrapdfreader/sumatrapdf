@@ -56,6 +56,15 @@ struct FixedPageUI {
     Vec<COLORREF> * gradientColors;
     // if true, TextColor and BackgroundColor will be temporarily swapped
     bool invertColors;
+    // if true, NightModeTextColor and NightModeBackgroundColor will be
+    // used instead of TextColor and BackgroundColor
+    bool nightMode;
+    // color value with which black (text) will be substituted if NightMode
+    // is enabled
+    COLORREF nightModeTextColor;
+    // color value with which white (background) will be substituted if
+    // NightMode is enabled
+    COLORREF nightModeBackgroundColor;
 };
 
 // customization options for eBooks (EPUB, Mobi, FictionBook) UI. If
@@ -416,14 +425,17 @@ static const FieldInfo gSizeIFields[] = {
 static const StructInfo gSizeIInfo = { sizeof(SizeI), 2, gSizeIFields, "Dx\0Dy" };
 
 static const FieldInfo gFixedPageUIFields[] = {
-    { offsetof(FixedPageUI, textColor),       Type_Color,      0x000000                     },
-    { offsetof(FixedPageUI, backgroundColor), Type_Color,      0xffffff                     },
-    { offsetof(FixedPageUI, selectionColor),  Type_Color,      0x0cfcf5                     },
-    { offsetof(FixedPageUI, windowMargin),    Type_Compact,    (intptr_t)&gWindowMarginInfo },
-    { offsetof(FixedPageUI, pageSpacing),     Type_Compact,    (intptr_t)&gSizeIInfo        },
-    { offsetof(FixedPageUI, gradientColors),  Type_ColorArray, 0                            },
+    { offsetof(FixedPageUI, textColor),                Type_Color,      0x000000                     },
+    { offsetof(FixedPageUI, backgroundColor),          Type_Color,      0xffffff                     },
+    { offsetof(FixedPageUI, selectionColor),           Type_Color,      0x0cfcf5                     },
+    { offsetof(FixedPageUI, windowMargin),             Type_Compact,    (intptr_t)&gWindowMarginInfo },
+    { offsetof(FixedPageUI, pageSpacing),              Type_Compact,    (intptr_t)&gSizeIInfo        },
+    { offsetof(FixedPageUI, gradientColors),           Type_ColorArray, 0                            },
+    { offsetof(FixedPageUI, nightMode),                Type_Bool,       false                        },
+    { offsetof(FixedPageUI, nightModeTextColor),       Type_Color,      0x969483                     },
+    { offsetof(FixedPageUI, nightModeBackgroundColor), Type_Color,      0x362b00                     },
 };
-static const StructInfo gFixedPageUIInfo = { sizeof(FixedPageUI), 6, gFixedPageUIFields, "TextColor\0BackgroundColor\0SelectionColor\0WindowMargin\0PageSpacing\0GradientColors" };
+static const StructInfo gFixedPageUIInfo = { sizeof(FixedPageUI), 9, gFixedPageUIFields, "TextColor\0BackgroundColor\0SelectionColor\0WindowMargin\0PageSpacing\0GradientColors\0NightMode\0NightModeTextColor\0NightModeBackgroundColor" };
 
 static const FieldInfo gEbookUIFields[] = {
     { offsetof(EbookUI, fontName),        Type_String, (intptr_t)L"Georgia" },

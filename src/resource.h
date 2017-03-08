@@ -32,6 +32,7 @@
 #define IDM_VIEW_ROTATE_LEFT            415
 #define IDM_VIEW_ROTATE_RIGHT           416
 #define IDM_VIEW_BOOKMARKS              417
+#define IDM_VIEW_NIGHT_MODE             1337
 #define IDM_VIEW_PRESENTATION_MODE      418
 #define IDM_VIEW_SHOW_HIDE_TOOLBAR      419
 #define IDM_COPY_SELECTION              420

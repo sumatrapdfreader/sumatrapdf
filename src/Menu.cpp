@@ -106,6 +106,7 @@ static MenuDef menuDefView[] = {
     { SEP_ITEM,                             0,                          MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
     { _TRN("Pr&esentation\tF5"),            IDM_VIEW_PRESENTATION_MODE, MF_REQ_FULLSCREEN | MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI },
     { _TRN("F&ullscreen\tF11"),             IDM_VIEW_FULLSCREEN,        MF_REQ_FULLSCREEN },
+    { _TRN("Night Mode\tCtrl+N"),           IDM_VIEW_NIGHT_MODE,        0 },
     { SEP_ITEM,                             0,                          MF_REQ_FULLSCREEN },
     { _TRN("Book&marks\tF12"),              IDM_VIEW_BOOKMARKS,         0 },
     { _TRN("Show &Toolbar"),                IDM_VIEW_SHOW_HIDE_TOOLBAR, MF_NOT_FOR_EBOOK_UI },
@@ -462,6 +463,7 @@ void MenuUpdateStateForWindow(WindowInfo* win)
     bool documentSpecific = win->IsDocLoaded();
     bool checked = documentSpecific ? win->tocVisible : gGlobalPrefs->showToc;
     win::menu::SetChecked(win->menu, IDM_VIEW_BOOKMARKS, checked);
+    win::menu::SetChecked(win->menu, IDM_VIEW_NIGHT_MODE, gGlobalPrefs->fixedPageUI.nightMode);
 
     win::menu::SetChecked(win->menu, IDM_FAV_TOGGLE, gGlobalPrefs->showFavorites);
     win::menu::SetChecked(win->menu, IDM_VIEW_SHOW_HIDE_TOOLBAR, gGlobalPrefs->showToolbar);
