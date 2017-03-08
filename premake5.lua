@@ -1,5 +1,7 @@
 --[[
-To generate Visual Studio files in vs2015 directory, run: premake5 vs2015
+To generate Visual Studio files in vs2015 directory, run:
+premake5 vs2015 : for Visual Studio 2015 files in vs2015 directory
+premake5 vs2017 : for Visual Studio 2017 files in vs2017 directory
 
 I'm using premake5 alpha11 from http://premake.github.io/download.html#v5
 (premake4 won't work, it doesn't support VS 2013+)
@@ -48,6 +50,8 @@ workspace "SumatraPDF"
      architecture "x86"
      toolset "v140_xp"
      buildoptions { "/arch:IA32" } -- disable the default /arch:SSE2 for 32-bit builds
+     filter "action:vs2017"
+      toolset "v141_xp"
      filter "action:vs2013"
       toolset "v120_xp"
   filter {}
@@ -55,6 +59,8 @@ workspace "SumatraPDF"
   filter "platforms:x64"
      architecture "x86_64"
      toolset "v140_xp"
+     filter "action:vs2017"
+      toolset "v141_xp"
      filter "action:vs2013"
       toolset "v120_xp"
   filter {}
@@ -70,6 +76,10 @@ workspace "SumatraPDF"
 
   filter "action:vs2013"
     location "vs2013"
+  filter {}
+
+  filter "action:vs2017"
+    location "vs2017"
   filter {}
 
   filter "action:gmake"
