@@ -284,7 +284,14 @@ class TabPainter {
             graphics.SetCompositingMode(CompositingModeSourceCopy);
             iterator.NextMarker(&shape);
             br.SetColor(ToColor(bgCol));
-            graphics.FillPath(&br, &shape);
+            Point points[4];
+            shape.GetPathPoints(points, 4);
+            Rect body(points[0].X, points[0].Y, points[2].X - points[0].X, points[2].Y - points[0].Y);
+            body.Inflate(0, 0);
+            graphics.SetClip(body);
+            body.Inflate(5, 5);
+            graphics.FillRectangle(&br, body);
+            graphics.ResetClip();
 
             // draw tab's text
             graphics.SetCompositingMode(CompositingModeSourceOver);
