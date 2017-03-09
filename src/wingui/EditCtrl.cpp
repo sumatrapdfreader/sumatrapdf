@@ -34,14 +34,6 @@ static LRESULT CALLBACK EditParentProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
     return DefSubclassProc(hwnd, msg, wp, lp);
 }
 
-#if 0
-static bool HasWsBorder(HWND hwnd)
-{
-    DWORD style = GetWindowStyle(hwnd);
-    return bit::IsMaskSet<DWORD>(style, WS_BORDER);
-}
-#endif
-
 static LRESULT CALLBACK
 EditProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
     UNUSED(uIdSubclass);
