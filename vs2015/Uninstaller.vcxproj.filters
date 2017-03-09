@@ -22,17 +22,4 @@
       <Filter>installer</Filter>
     </ClCompile>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="..\src\installer\Installer.aps">
-      <Filter>installer</Filter>
-    </None>
-    <None Include="..\src\installer\Installer.exe.manifest">
-      <Filter>installer</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="..\src\installer\Installer.rc">
-      <Filter>installer</Filter>
-    </ResourceCompile>
-  </ItemGroup>
 </Project>
