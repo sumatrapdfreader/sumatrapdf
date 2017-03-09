@@ -28,6 +28,19 @@ struct DocumentStyle {
     COLORREF textColor;
 };
 
+struct NotificationStyle {
+    // Background color of the notification window
+    COLORREF backgroundColor;
+    // Text color of the notification window
+    COLORREF textColor;
+    // Color of the highlight box that surrounds the text when a notification is highlighted
+    COLORREF highlightColor;
+    // Color of the text when a notification is highlighted
+    COLORREF highlightTextColor;
+    // Background color of the progress bar in the notification window
+    COLORREF progressColor;
+};
+
 struct TabCloseStyle {
     // Color of the X button
     COLORREF xColor;
@@ -72,6 +85,8 @@ struct Theme {
     DocumentStyle document;
     // Style of tabs
     TabTheme tab;
+    // Style of notifications
+    NotificationStyle notifications;
 };
 
 // Function definitions

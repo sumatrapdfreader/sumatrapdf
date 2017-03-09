@@ -112,6 +112,19 @@ Theme g_themeLight = {
             // Circle color
             AdjustLightness2(g_themeLight.tab.current.close.circleColor, -10)
         }
+    },
+    // Notifications
+    {
+        // Background color
+        g_themeLight.mainWindow.backgroundColor,
+        // Text color
+        g_themeLight.mainWindow.textColor,
+        // Highlight color
+        rgb_to_bgr(0x3399FF),
+        // Highlight text color
+        COL_WHITE,
+        // Progress bar color
+        g_themeLight.mainWindow.linkColor
     }
 };
 
@@ -181,6 +194,19 @@ Theme g_themeDark = {
         },
         // Clicked close style
         g_themeDark.tab.hoveredClose
+    },
+    // Notifications
+    {
+        // Background color
+        AdjustLightness2(g_themeDark.mainWindow.backgroundColor, 10),
+        // Text color
+        g_themeDark.mainWindow.textColor,
+        // Highlight color
+        AdjustLightness2(rgb_to_bgr(0x33434B), 10),
+        // Highlight text color
+        g_themeDark.mainWindow.textColor,
+        // Progress bar color
+        g_themeDark.mainWindow.linkColor
     }
 };
 
@@ -259,6 +285,19 @@ Theme g_themeDarker = {
         },
         // Clicked close style
         g_themeDarker.tab.hoveredClose
+    },
+    // Notifications
+    {
+        // Background color
+        AdjustLightness2(g_themeDarker.mainWindow.backgroundColor, 10),
+        // Text color
+        g_themeDarker.mainWindow.textColor,
+        // Highlight color
+        AdjustLightness2(rgb_to_bgr(0x3E3E42), 10),
+        // Highlight text color
+        g_themeDarker.mainWindow.textColor,
+        // Progress bar color
+        g_themeDarker.mainWindow.linkColor
     }
 };
 
@@ -283,6 +322,7 @@ Theme *GetThemeByName(char* name) {
 }
 
 Theme *GetThemeByIndex(int index) {
+    CrashIf(index < 0 || index >= THEME_COUNT);
     return g_themes[index];
 }
 
