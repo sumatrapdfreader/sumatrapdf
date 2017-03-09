@@ -22,6 +22,7 @@ Note: Colors are in format 0xBBGGRR, recommended to use rgb_to_bgr
 #include "WinUtil.h"
 // layout controllers
 #include "SettingsStructs.h"
+#include "Theme.h"
 #include "GlobalPrefs.h"
 // ui
 #include "Translations.h"

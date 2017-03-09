@@ -16,6 +16,7 @@
 #include "Controller.h"
 #include "DisplayModel.h"
 #include "FileHistory.h"
+#include "Theme.h"
 #include "GlobalPrefs.h"
 // ui
 #include "SumatraPDF.h"
