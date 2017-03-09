@@ -125,8 +125,6 @@ static inline Color ToColor(COLORREF c) {
 
 static void NotificationWndOnPaint(HWND hwnd, NotificationWnd* wnd) {
     PAINTSTRUCT ps = {0};
-{
-    PAINTSTRUCT ps;
     HDC hdcWnd = BeginPaint(hwnd, &ps);
 
     ClientRect rect(hwnd);
