@@ -81,29 +81,20 @@ square brackets in pairs</b>! Else you risk losing all the data following them.<
 </div>
 
 <pre class="txt">
-<div><span class="cm" id="MainWindowBackground">background <a href="#color">color</a> of the non-document windows, traditionally yellow</span>
-MainWindowBackground = #fff200
-
+<span class="cm" id="ThemeName">the name of the theme to use</span>
+ThemeName = light
+<div>
 <span class="cm" id="EscToExit">if true, Esc key closes SumatraPDF</span>
 EscToExit = false
 
 <span class="cm" id="ReuseInstance">if true, we'll always open files using existing SumatraPDF process</span>
 ReuseInstance = false
 
-<span class="cm" id="UseSysColors">if true, we use Windows system <a href="#color">colors</a> for background/text color. Over-rides other settings</span>
-UseSysColors = false
-
 <span class="cm" id="RestoreSession">if true and SessionData isn't empty, that session will be restored at startup</span>
 RestoreSession = true
 
 <span class="cm" id="FixedPageUI">customization options for PDF, XPS, DjVu and PostScript UI</span>
 FixedPageUI [
-    <span class="cm" id="FixedPageUI_TextColor"><a href="#color">color</a> value with which black (text) will be substituted</span>
-    TextColor = #000000
-
-    <span class="cm" id="FixedPageUI_BackgroundColor"><a href="#color">color</a> value with which white (background) will be substituted</span>
-    BackgroundColor = #ffffff
-
     <span class="cm" id="FixedPageUI_SelectionColor"><a href="#color">color</a> value for the text selection rectangle (also used to highlight found text) (introduced in 
     version 2.4)</span>
     SelectionColor = #f5fc0c
@@ -129,12 +120,6 @@ EbookUI [
 
     <span class="cm" id="EbookUI_FontSize">size of the font. takes effect after re-opening the document</span>
     FontSize = 12.5
-
-    <span class="cm" id="EbookUI_TextColor"><a href="#color">color</a> for text</span>
-    TextColor = #5f4b32
-
-    <span class="cm" id="EbookUI_BackgroundColor"><a href="#color">color</a> of the background (page)</span>
-    BackgroundColor = #fbf0d9
 
     <span class="cm" id="EbookUI_UseFixedPageUI">if true, the UI used for PDF documents will be used for ebooks as well (enables printing and 
     searching, disables automatic reflow)</span>

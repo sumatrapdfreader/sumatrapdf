@@ -141,10 +141,6 @@ void  ReloadDocument(WindowInfo *win, bool autorefresh=false);
 void  OnMenuViewFullscreen(WindowInfo* win, bool presentation=false);
 void  RelayoutWindow(WindowInfo *win);
 
-COLORREF GetLogoBgColor();
-COLORREF GetAboutBgColor();
-COLORREF GetNoDocBgColor();
-
 WindowInfo* FindWindowInfoByHwnd(HWND hwnd);
 // note: background tabs are only searched if focusTab is true
 WindowInfo* FindWindowInfoByFile(const WCHAR *file, bool focusTab);

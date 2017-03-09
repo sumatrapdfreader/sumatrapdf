@@ -37,19 +37,18 @@ static void SwapTabs(WindowInfo* win, int tab1, int tab2);
 #define T_CLOSE (TCN_LAST + 2)
 #define T_DRAG (TCN_LAST + 3)
 
-#define TABBAR_HEIGHT 24
 #define MIN_TAB_WIDTH 100
 
 static bool g_FirefoxStyle = false;
 
 int GetTabbarHeight(HWND hwnd, float factor) {
-    int dy = DpiScaleY(hwnd, TABBAR_HEIGHT);
+    int dy = DpiScaleY(hwnd, GetCurrentTheme()->tab.height);
     return (int)(dy * factor);
 }
 
 static inline SizeI GetTabSize(HWND hwnd) {
     int dx = DpiScaleX(hwnd, std::max(gGlobalPrefs->prereleaseSettings.tabWidth, MIN_TAB_WIDTH));
-    int dy = DpiScaleY(hwnd, TABBAR_HEIGHT);
+    int dy = DpiScaleY(hwnd, GetCurrentTheme()->tab.height);
     return SizeI(dx, dy);
 }
 
@@ -83,7 +82,6 @@ class TabPainter {
         ZeroMemory(&colors, sizeof(colors));
         hwnd = wnd;
         Reshape(tabSize.dx, tabSize.dy);
-        EvaluateColors(false);
     }
 
     ~TabPainter() {
@@ -102,15 +100,12 @@ class TabPainter {
 
         GraphicsPath shape;
         // define tab's body
-        int c = int((float)height * 0.6f + 0.5f); // size of bounding square for the arc
-        shape.AddArc(0, 0, c, c, 180.0f, 90.0f);
-        shape.AddArc(width - c, 0, c, c, 270.0f, 90.0f);
-        shape.AddLine(width, height, 0, height);
+        shape.AddRectangle(Rect(0, 0, width, height));
         shape.CloseFigure();
         shape.SetMarker();
 
         // define "x"'s circle
-        c = int((float)height * 0.78f + 0.5f); // size of bounding square for the circle
+        int c = int((float)height * 0.78f + 0.5f); // size of bounding square for the circle
         int maxC = DpiScaleX(hwnd, 17);
         if (height > maxC) {
             c = DpiScaleX(hwnd, 17);
@@ -208,7 +203,7 @@ class TabPainter {
         GraphicsPathIterator iterator(&shapes);
 
         SolidBrush br(Color(0, 0, 0));
-        Pen pen(&br, 2.0f);
+        Pen pen(&br, GetCurrentTheme()->tab.closePenWidth);
 
         Font f(hdc, GetDefaultGuiFont());
         // TODO: adjust these constant values for DPI?
@@ -260,40 +255,43 @@ class TabPainter {
                 continue;
             }
 
-            COLORREF bgCol = colors.background;
-            ;
+            // Get the correct colors based on the state and the current theme
+            COLORREF bgCol = GetCurrentTheme()->tab.background.backgroundColor;
+            COLORREF textCol = GetCurrentTheme()->tab.background.textColor;
+            COLORREF xColor = GetCurrentTheme()->tab.background.close.xColor;
+            COLORREF circleColor = GetCurrentTheme()->tab.background.close.circleColor;
             if (current == i) {
-                bgCol = colors.current;
+                bgCol = GetCurrentTheme()->tab.current.backgroundColor;
+                textCol = GetCurrentTheme()->tab.current.textColor;
+                xColor = GetCurrentTheme()->tab.current.close.xColor;
+                circleColor = GetCurrentTheme()->tab.current.close.circleColor;
             } else if (highlighted == i) {
-                bgCol = colors.highlight;
+                bgCol = GetCurrentTheme()->tab.highlighted.backgroundColor;
+                textCol = GetCurrentTheme()->tab.highlighted.textColor;
+                xColor = GetCurrentTheme()->tab.highlighted.close.xColor;
+                circleColor = GetCurrentTheme()->tab.highlighted.close.circleColor;
             }
-
-            // ensure contrast between text and background color
-            // TODO: adjust threshold (and try adjusting both current/background tabs)
-            COLORREF textCol = colors.text;
-            float bgLight = GetLightness(bgCol), textLight = GetLightness(textCol);
-
-            if (textLight < bgLight ? bgLight < 0x70 : bgLight > 0x90) {
-                if (textLight) {
-                    textCol = AdjustLightness(textCol, 255.0f / textLight - 1.0f);
-                } else {
-                    textCol = RGB(255, 255, 255);
-                }
+            if (xHighlighted == i) {
+                xColor = GetCurrentTheme()->tab.hoveredClose.xColor;
+                circleColor = GetCurrentTheme()->tab.hoveredClose.circleColor;
             }
-
-            if (fabs(textLight - bgLight) < 0x40) {
-                if (bgLight < 0x80) {
-                    textCol = RGB(255, 255, 255);
-                } else {
-                    textCol = RGB(0, 0, 0);
-                }
+            if (xClicked == i) {
+                xColor = GetCurrentTheme()->tab.clickedClose.xColor;
+                circleColor = GetCurrentTheme()->tab.clickedClose.circleColor;
             }
 
             // paint tab's body
             graphics.SetCompositingMode(CompositingModeSourceCopy);
             iterator.NextMarker(&shape);
             br.SetColor(ToColor(bgCol));
-            graphics.FillPath(&br, &shape);
+            Point points[4];
+            shape.GetPathPoints(points, 4);
+            Rect body(points[0].X, points[0].Y, points[2].X - points[0].X, points[2].Y - points[0].Y);
+            body.Inflate(0, 0);
+            graphics.SetClip(body);
+            body.Inflate(5, 5);
+            graphics.FillRectangle(&br, body);
+            graphics.ResetClip();
 
             // draw tab's text
             graphics.SetCompositingMode(CompositingModeSourceOver);
@@ -302,54 +300,16 @@ class TabPainter {
 
             // paint "x"'s circle
             iterator.NextMarker(&shape);
-            if (xClicked == i || xHighlighted == i) {
-                auto col = colors.x_highlight;
-                if (i == xClicked) {
-                    col = colors.x_click;
-                }
-                br.SetColor(ToColor(col));
+            if ((xClicked == i || xHighlighted == i) && GetCurrentTheme()->tab.closeCircleEnabled) {
+                br.SetColor(ToColor(circleColor));
                 graphics.FillPath(&br, &shape);
             }
 
             // paint "x"
             iterator.NextMarker(&shape);
-            if (xClicked == i || xHighlighted == i)
-                pen.SetColor(ToColor(colors.x_line));
-            else
-                pen.SetColor(ToColor(colors.outline));
+            pen.SetColor(ToColor(xColor));
             graphics.DrawPath(&pen, &shape);
             iterator.Rewind();
-        }
-    }
-
-    // Evaluates the colors for the tab's elements.
-    void EvaluateColors(bool force) {
-        COLORREF bg, txt;
-        if (inTitlebar) {
-            WindowInfo* win = FindWindowInfoByHwnd(hwnd);
-            bg = win->caption->bgColor;
-            txt = win->caption->textColor;
-        } else {
-            bg = GetSysColor(TAB_COLOR_BG);
-            txt = GetSysColor(TAB_COLOR_TEXT);
-        }
-        if (!force && bg == colors.bar && txt == colors.text)
-            return;
-
-        colors.bar = bg;
-        colors.text = txt;
-
-        int sign = GetLightness(colors.text) > GetLightness(colors.bar) ? -1 : 1;
-
-        colors.current = AdjustLightness2(colors.bar, sign * 25.0f);
-        colors.highlight = AdjustLightness2(colors.bar, sign * 15.0f);
-        colors.background = AdjustLightness2(colors.bar, -sign * 15.0f);
-        colors.outline = AdjustLightness2(colors.bar, -sign * 60.0f);
-        colors.x_line = COL_CLOSE_X_HOVER;
-        colors.x_highlight = COL_CLOSE_HOVER_BG;
-        colors.x_click = AdjustLightness2(colors.x_highlight, -10.0f);
-        if (currBgCol != DEFAULT_CURRENT_BG_COL) {
-            colors.current = currBgCol;
         }
     }
 
@@ -625,7 +585,6 @@ static LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
             hdc = wParam ? (HDC)wParam : BeginPaint(hwnd, &ps);
 
             DoubleBuffer buffer(hwnd, RectI::FromRECT(rc));
-            tab->EvaluateColors(false);
             tab->Paint(buffer.GetDC(), rc);
             buffer.Flush(hdc);
 
@@ -717,7 +676,6 @@ void UpdateCurrentTabBgColor(WindowInfo* win) {
         // TODO: match either the toolbar (if shown) or background
         tab->currBgCol = DEFAULT_CURRENT_BG_COL;
     }
-    tab->EvaluateColors(true);
     RepaintNow(win->hwndTabBar);
 }
 

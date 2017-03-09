@@ -171,10 +171,6 @@ PageSpacing = [
 ]
 
 FixedPageUI = [
-	Field("TextColor", Color, RGB(0x00, 0x00, 0x00),
-		"color value with which black (text) will be substituted"),
-	Field("BackgroundColor", Color, RGB(0xFF, 0xFF, 0xFF),
-		"color value with which white (background) will be substituted"),
 	Field("SelectionColor", Color, RGB(0xF5, 0xFC, 0x0C),
 		"color value for the text selection rectangle (also used to highlight found text)", version="2.4"),
 	CompactStruct("WindowMargin", WindowMargin_FixedPageUI,
@@ -197,8 +193,6 @@ EbookUI = [
 	# default serif font, a different font is used for monospaced text (currently always "Courier New")
 	Field("FontName", String, "Georgia", "name of the font. takes effect after re-opening the document"),
 	Field("FontSize", Float, 12.5, "size of the font. takes effect after re-opening the document"),
-	Field("TextColor", Color, RGB(0x5F, 0x4B, 0x32), "color for text"),
-	Field("BackgroundColor", Color, RGB(0xFB, 0xF0, 0xD9), "color of the background (page)"),
 	Field("UseFixedPageUI", Bool, False,
 		"if true, the UI used for PDF documents will be used for ebooks as well " +
 		"(enables printing and searching, disables automatic reflow)"),
@@ -371,17 +365,14 @@ GlobalPrefs = [
 	Comment("For documentation, see http://www.sumatrapdfreader.org/settings%s.html" % util.get_sumatrapdf_version()),
 	EmptyLine(),
 
-	Field("MainWindowBackground", Color, RGB(0xFF, 0xF2, 0x00, a=0x80),
-		"background color of the non-document windows, traditionally yellow",
-		expert=True),
+	Field("ThemeName", Utf8String, "light",
+		"the name of the theme to use"),
+
 	Field("EscToExit", Bool, False,
 		"if true, Esc key closes SumatraPDF",
 		expert=True),
 	Field("ReuseInstance", Bool, False,
 		"if true, we'll always open files using existing SumatraPDF process",
-		expert=True),
-	Field("UseSysColors", Bool, False,
-		"if true, we use Windows system colors for background/text color. Over-rides other settings",
 		expert=True),
 	Field("RestoreSession", Bool, True,
 		"if true and SessionData isn't empty, that session will be restored at startup",
