@@ -26,6 +26,12 @@
 #include "Search.h"
 #include "Toolbar.h"
 #include "Translations.h"
+#include "Theme.h"
+
+// TODO: experimenting with matching toolbar colors with theme
+// Doesn't work, probably have to implement a custom toolbar control
+// where we draw everything ourselves.
+// #define USE_THEME_COLORS 1
 
 struct ToolbarButtonInfo {
     /* index in the toolbar bitmap (-1 for separators) */
@@ -238,9 +244,17 @@ static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT message, WPARAM wParam, L
         if ((win && win->hwndFindBg != hStatic && win->hwndPageBg != hStatic) || theme::IsAppThemed())
         {
             HDC hdc = (HDC)wParam;
+#if defined(USE_THEME_COLORS)
             SetTextColor(hdc, GetSysColor(COLOR_WINDOWTEXT));
+            SetBkColor(hdc, GetCurrentTheme()->mainWindow.backgroundColor);
+            //SetBkMode(hdc, TRANSPARENT);
+            auto br = CreateSolidBrush(GetCurrentTheme()->mainWindow.backgroundColor);
+#else
+            SetTextColor(hdc, GetCurrentTheme()->document.textColor);
             SetBkMode(hdc, TRANSPARENT);
-            return (LRESULT)GetStockBrush(NULL_BRUSH);
+            auto br = GetStockBrush(NULL_BRUSH);
+#endif
+            return (LRESULT)br;
         }
     }
     if (WM_COMMAND == message) {
