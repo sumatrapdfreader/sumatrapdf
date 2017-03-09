@@ -15,6 +15,7 @@
 // layout controllers
 #include "SettingsStructs.h"
 #include "Controller.h"
+#include "Theme.h"
 #include "GlobalPrefs.h"
 // ui
 #include "SumatraPDF.h"

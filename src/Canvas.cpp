@@ -19,6 +19,7 @@
 #include "Controller.h"
 #include "DisplayModel.h"
 #include "EbookController.h"
+#include "Theme.h"
 #include "GlobalPrefs.h"
 #include "RenderCache.h"
 #include "TextSelection.h"
@@ -39,7 +40,7 @@
 #include "Tabs.h"
 #include "Toolbar.h"
 #include "Translations.h"
-
+#
 // these can be global, as the mouse wheel can't affect more than one window at once
 static int gDeltaPerLine = 0;
 // set when WM_MOUSEWHEEL has been passed on (to prevent recursion)
@@ -482,7 +483,7 @@ static void PaintPageFrameAndShadow(HDC hdc, RectI& bounds, RectI& pageRect, boo
 
     // Draw frame
     ScopedGdiObj<HPEN> pe(CreatePen(PS_SOLID, 1, presentation ? TRANSPARENT : COL_PAGE_FRAME));
-    ScopedGdiObj<HBRUSH> brush(CreateSolidBrush(gRenderCache.backgroundColor));
+    ScopedGdiObj<HBRUSH> brush(CreateSolidBrush(GetCurrentTheme()->mainWindow.backgroundColor));
     SelectObject(hdc, pe);
     SelectObject(hdc, brush);
     Rectangle(hdc, frame.x, frame.y, frame.x + frame.dx, frame.y + frame.dy);
@@ -492,7 +493,7 @@ static void PaintPageFrameAndShadow(HDC hdc, RectI& bounds, RectI& pageRect, boo
 {
     UNUSED(pageRect);  UNUSED(presentation);
     ScopedPen pen(CreatePen(PS_NULL, 0, 0));
-    ScopedBrush brush(CreateSolidBrush(gRenderCache.backgroundColor));
+    ScopedBrush brush(CreateSolidBrush(GetCurrentTheme()->mainWindow.backgroundColor));
     ScopedHdcSelect restorePen(hdc, pen);
     ScopedHdcSelect restoreBrush(hdc, brush);
     Rectangle(hdc, bounds.x, bounds.y, bounds.x + bounds.dx + 1, bounds.y + bounds.dy + 1);
@@ -642,7 +643,7 @@ static void DrawDocument(WindowInfo* win, HDC hdc, RECT *rcArea)
         if (renderDelay) {
             ScopedFont fontRightTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 14));
             HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt);
-            SetTextColor(hdc, gRenderCache.textColor);
+            SetTextColor(hdc, GetCurrentTheme()->mainWindow.textColor);
             if (renderDelay != RENDER_DELAY_FAILED) {
                 if (renderDelay < REPAINT_MESSAGE_DELAY_IN_MS)
                     win->RepaintAsync(REPAINT_MESSAGE_DELAY_IN_MS / 4);
@@ -1132,8 +1133,9 @@ static void OnPaintAbout(WindowInfo* win)
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(win->hwndCanvas, &ps);
 
+    auto theme = GetCurrentTheme();
     if (HasPermission(Perm_SavePreferences | Perm_DiskAccess) && gGlobalPrefs->rememberOpenedFiles && gGlobalPrefs->showStartPage) {
-        DrawStartPage(win, win->buffer->GetDC(), gFileHistory, gRenderCache.textColor, gRenderCache.backgroundColor);
+        DrawStartPage(win, win->buffer->GetDC(), gFileHistory, theme->mainWindow.textColor, theme->mainWindow.backgroundColor);
     } else {
         DrawAboutPage(win, win->buffer->GetDC());
     }

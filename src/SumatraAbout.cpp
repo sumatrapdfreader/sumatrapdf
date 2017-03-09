@@ -10,6 +10,7 @@
 #include "BaseEngine.h"
 #include "SettingsStructs.h"
 #include "FileHistory.h"
+#include "Theme.h"
 #include "GlobalPrefs.h"
 // ui
 #include "SumatraPDF.h"

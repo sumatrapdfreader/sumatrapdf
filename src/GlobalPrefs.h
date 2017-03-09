@@ -1,8 +1,6 @@
 /* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "Theme.h"
-
 // TODO: move to SettingsStructs.h
 #define ZOOM_FIT_PAGE       -1.f
 #define ZOOM_FIT_WIDTH      -2.f
