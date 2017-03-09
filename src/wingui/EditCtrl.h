@@ -1,4 +1,3 @@
-
 struct EditCtrl;
 
 typedef std::function<LRESULT(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& discardMsg)>
@@ -15,22 +14,21 @@ struct EditCtrl {
     DWORD dwStyle;
     DWORD dwExStyle;
 
-    // private
-    int ncDx;
-    int ncDy;
-    bool hasBorder;
-
-    // public
     HWND hwnd;
 
-    // this data should be set via corresponding API call
+    // this data can be set directly
+    MsgFilter preFilter; // called at start of windows proc to allow intercepting commands
+    EditCtrlCb onTextChanged;
+
+    // set those via SetColors() to keep bgBrush in sync with bgCol
     HBRUSH bgBrush;
     COLORREF bgCol;
     COLORREF txtCol;
 
-    // this data can be set directly
-    MsgFilter preFilter; // called at start of windows proc to
-    EditCtrlCb onTextChanged;
+    // private
+    int ncDx;
+    int ncDy;
+    bool hasBorder;
 };
 
 /* Creation sequence:
