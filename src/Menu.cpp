@@ -709,7 +709,7 @@ HMENU BuildMenu(WindowInfo *win)
     MenuDef menuDefTheme[THEME_COUNT];
     static_assert(IDM_CHANGE_THEME_LAST - IDM_CHANGE_THEME_FIRST + 1 >= THEME_COUNT, "Too many themes. Either remove some or update IDM_CHANGE_THEME_LAST");
     for (UINT i = 0; i < THEME_COUNT; i++) {
-        menuDefTheme[i] = { str::conv::ToUtf8(_TR(GetThemeByIndex(i)->name)) , IDM_CHANGE_THEME_FIRST + i, 0 };
+        menuDefTheme[i] = { GetThemeByIndex(i)->name , IDM_CHANGE_THEME_FIRST + i, 0 };
     }
     HMENU m2 = BuildMenuFromMenuDef(menuDefTheme, dimof(menuDefTheme), CreateMenu(), filter);
     AppendMenu(m, MF_POPUP | MF_STRING, (UINT_PTR)m2, _TR("&Theme"));
