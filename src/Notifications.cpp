@@ -3,12 +3,14 @@
 
 // utils
 #include "BaseUtil.h"
+#include "GdiPlusUtil.h"
 #include "WinUtil.h"
 // layout controllers
 class BaseEngine;
 #include "TextSelection.h"
 #include "TextSearch.h"
 // ui
+#include "Theme.h"
 #include "SumatraPDF.h"
 #include "Notifications.h"
 
@@ -27,6 +29,7 @@ void NotificationWnd::CreatePopup(HWND parent, const WCHAR *message)
     NONCLIENTMETRICS ncm = { 0 };
     ncm.cbSize = sizeof(ncm);
     SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
+    SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
     font = CreateFontIndirect(&ncm.lfMessageFont);
 
     HDC hdc = GetDC(parent);
@@ -37,7 +40,7 @@ void NotificationWnd::CreatePopup(HWND parent, const WCHAR *message)
                           TL_MARGIN, TL_MARGIN, 0, 0,
                           parent, (HMENU)0, GetModuleHandle(nullptr), nullptr);
     SetWindowLongPtr(self, GWLP_USERDATA, (LONG_PTR)this);
-    ToggleWindowStyle(self, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, IsUIRightToLeft(), GWL_EXSTYLE);
+    ToggleWindowStyle(self, CS_DROPSHADOW | WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, IsUIRightToLeft(), GWL_EXSTYLE);
     UpdateWindowPosition(message, true);
     ShowWindow(self, SW_SHOW);
 }
@@ -110,12 +113,17 @@ void NotificationWnd::UpdateMessage(const WCHAR *message, int timeoutInMS, bool 
     this->highlight = highlight;
     if (timeoutInMS)
         hasCancel = false;
-    ToggleWindowStyle(self, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, IsUIRightToLeft(), GWL_EXSTYLE);
+    ToggleWindowStyle(self, CS_DROPSHADOW | WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, IsUIRightToLeft(), GWL_EXSTYLE);
     UpdateWindowPosition(message);
     InvalidateRect(self, nullptr, TRUE);
     if (timeoutInMS)
         SetTimer(self, TIMEOUT_TIMER_ID, timeoutInMS, nullptr);
 }
+
+static inline Color ToColor(COLORREF c) {
+    return Color(GetRValueSafe(c), GetGValueSafe(c), GetBValueSafe(c));
+}
+
 
 static void NotificationWndOnPaint(HWND hwnd, NotificationWnd *wnd)
 {
@@ -128,15 +136,19 @@ static void NotificationWndOnPaint(HWND hwnd, NotificationWnd *wnd)
     HFONT oldfnt = SelectFont(hdc, wnd->font);
 
     RECT rTmp = rect.ToRECT();
-    DrawFrameControl(hdc, &rTmp, DFC_BUTTON, DFCS_BUTTONPUSH);
+
+    Graphics graphics(hdc);
+    SolidBrush br(ToColor(GetCurrentTheme()->notifications.backgroundColor));
+    graphics.FillRectangle(&br, Rect(0, 0, rTmp.right - rTmp.left, rTmp.bottom - rTmp.top));
+
     if (wnd->highlight) {
         SetBkMode(hdc, OPAQUE);
-        SetTextColor(hdc, GetSysColor(COLOR_HIGHLIGHTTEXT));
-        SetBkColor(hdc, GetSysColor(COLOR_HIGHLIGHT));
+        SetTextColor(hdc, GetCurrentTheme()->notifications.highlightTextColor);
+        SetBkColor(hdc, GetCurrentTheme()->notifications.highlightColor);
     }
     else {
         SetBkMode(hdc, TRANSPARENT);
-        SetTextColor(hdc, GetSysColor(COLOR_WINDOWTEXT));
+        SetTextColor(hdc, GetCurrentTheme()->notifications.textColor);
     }
 
     rect.Inflate(-PADDING, -PADDING);
@@ -158,17 +170,17 @@ static void NotificationWndOnPaint(HWND hwnd, NotificationWnd *wnd)
         rect.dx = wnd->progressWidth;
         rect.y += rectMsg.dy + PADDING / 2;
         rect.dy = PROGRESS_HEIGHT;
-        PaintRect(hdc, rect);
+
+        Pen pen(ToColor(GetCurrentTheme()->notifications.progressColor));
+        graphics.DrawRectangle(&pen, Rect(rect.x, rect.y, rect.dx, rect.dy));
 
         rect.x += 2;
         rect.dx = (wnd->progressWidth - 3) * wnd->progress / 100;
         rect.y += 2;
         rect.dy -= 3;
 
-        HBRUSH brush = GetStockBrush(BLACK_BRUSH);
-        rTmp = rect.ToRECT();
-        FillRect(hdc, &rTmp, brush);
-        DeleteObject(brush);
+        br.SetColor(ToColor(GetCurrentTheme()->notifications.progressColor));
+        graphics.FillRectangle(&br, Rect(rect.x, rect.y, rect.dx, rect.dy));
     }
 
     SelectFont(hdc, oldfnt);
