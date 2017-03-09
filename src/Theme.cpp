@@ -330,7 +330,7 @@ Theme *GetCurrentTheme() {
     if (currentTheme == NULL || !str::Eq(currentTheme->name, gGlobalPrefs->themeName)) {
         currentTheme = GetThemeByName(gGlobalPrefs->themeName);
         if (currentTheme == NULL) {
-            gGlobalPrefs->themeName = g_themeLight.name;
+            str::ReplacePtr(&gGlobalPrefs->themeName, g_themeLight.name);
             currentTheme = &g_themeLight;
         }
         currentThemeIndex = GetThemeIndex(currentTheme);

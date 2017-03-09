@@ -3754,7 +3754,8 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
 
     // check if the menuId belongs to a theme
     if ((wmId >= IDM_CHANGE_THEME_FIRST) && (wmId <= IDM_CHANGE_THEME_LAST)) {
-        str::ReplacePtr(&gGlobalPrefs->themeName, GetThemeByIndex(wmId - IDM_CHANGE_THEME_FIRST)->name);    // update theme name safely (setting directly causes crash on cleanup)
+        auto newThemeName = GetThemeByIndex(wmId - IDM_CHANGE_THEME_FIRST)->name;
+        str::ReplacePtr(&gGlobalPrefs->themeName, newThemeName);
         RelayoutWindow(win);    // fix tabbar height
         UpdateDocumentColors();     // update document colors
         RedrawWindow(win->hwndFrame, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);   // paint new theme
