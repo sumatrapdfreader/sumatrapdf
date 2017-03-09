@@ -29,7 +29,6 @@ void NotificationWnd::CreatePopup(HWND parent, const WCHAR *message)
     NONCLIENTMETRICS ncm = { 0 };
     ncm.cbSize = sizeof(ncm);
     SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
-    SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
     font = CreateFontIndirect(&ncm.lfMessageFont);
 
     HDC hdc = GetDC(parent);
