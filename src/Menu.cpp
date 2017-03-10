@@ -34,21 +34,25 @@
 
 void MenuUpdateDisplayMode(WindowInfo* win) {
     bool enabled = win->IsDocLoaded();
-    DisplayMode displayMode = enabled ? win->ctrl->GetDisplayMode() : gGlobalPrefs->defaultDisplayModeEnum;
+    DisplayMode displayMode = gGlobalPrefs->defaultDisplayModeEnum;
+    if (enabled) {
+        displayMode = win->ctrl->GetDisplayMode();
+    }
 
     for (int id = IDM_VIEW_LAYOUT_FIRST; id <= IDM_VIEW_LAYOUT_LAST; id++) {
         win::menu::SetEnabled(win->menu, id, enabled);
     }
 
     UINT id = 0;
-    if (IsSingle(displayMode))
+    if (IsSingle(displayMode)) {
         id = IDM_VIEW_SINGLE_PAGE;
-    else if (IsFacing(displayMode))
+    } else if (IsFacing(displayMode)) {
         id = IDM_VIEW_FACING;
-    else if (IsBookView(displayMode))
+    } else if (IsBookView(displayMode)) {
         id = IDM_VIEW_BOOK;
-    else
+    } else {
         AssertCrash(!win->ctrl && DM_AUTOMATIC == displayMode);
+    }
 
     CheckMenuRadioItem(win->menu, IDM_VIEW_LAYOUT_FIRST, IDM_VIEW_LAYOUT_LAST, id, MF_BYCOMMAND);
     win::menu::SetChecked(win->menu, IDM_VIEW_CONTINUOUS, IsContinuous(displayMode));
@@ -563,33 +567,37 @@ void OnAboutContextMenu(WindowInfo* win, int x, int y) {
     win::menu::SetChecked(popup, IDM_PIN_SELECTED_DOCUMENT, state->isPinned);
     POINT pt = {x, y};
     MapWindowPoints(win->hwndCanvas, HWND_DESKTOP, &pt, 1);
+    MarkMenuOwnerDraw(popup);
     INT cmd = TrackPopupMenu(popup, TPM_RETURNCMD | TPM_RIGHTBUTTON, pt.x, pt.y, 0, win->hwndFrame, nullptr);
-    switch (cmd) {
-        case IDM_OPEN_SELECTED_DOCUMENT: {
-            LoadArgs args(filePath, win);
-            LoadDocument(args);
-        } break;
-
-        case IDM_PIN_SELECTED_DOCUMENT:
-            state->isPinned = !state->isPinned;
-            win->DeleteInfotip();
-            win->RedrawAll(true);
-            break;
-
-        case IDM_FORGET_SELECTED_DOCUMENT:
-            if (state->favorites->Count() > 0) {
-                // just hide documents with favorites
-                gFileHistory.MarkFileInexistent(state->filePath, true);
-            } else {
-                gFileHistory.Remove(state);
-                DeleteDisplayState(state);
-            }
-            CleanUpThumbnailCache(gFileHistory);
-            win->DeleteInfotip();
-            win->RedrawAll(true);
-            break;
-    }
+    FreeMenuOwnerDrawInfoData(popup);
     DestroyMenu(popup);
+
+    if (IDM_OPEN_SELECTED_DOCUMENT == cmd) {
+        LoadArgs args(filePath, win);
+        LoadDocument(args);
+        return;
+    }
+
+    if (IDM_PIN_SELECTED_DOCUMENT == cmd) {
+        state->isPinned = !state->isPinned;
+        win->DeleteInfotip();
+        win->RedrawAll(true);
+        return;
+    }
+
+    if (IDM_FORGET_SELECTED_DOCUMENT == cmd) {
+        if (state->favorites->Count() > 0) {
+            // just hide documents with favorites
+            gFileHistory.MarkFileInexistent(state->filePath, true);
+        } else {
+            gFileHistory.Remove(state);
+            DeleteDisplayState(state);
+        }
+        CleanUpThumbnailCache(gFileHistory);
+        win->DeleteInfotip();
+        win->RedrawAll(true);
+        return;
+    }
 }
 
 void OnContextMenu(WindowInfo* win, int x, int y) {
@@ -624,7 +632,11 @@ void OnContextMenu(WindowInfo* win, int x, int y) {
 
     POINT pt = {x, y};
     MapWindowPoints(win->hwndCanvas, HWND_DESKTOP, &pt, 1);
+    MarkMenuOwnerDraw(popup);
     INT cmd = TrackPopupMenu(popup, TPM_RETURNCMD | TPM_RIGHTBUTTON, pt.x, pt.y, 0, win->hwndFrame, nullptr);
+    FreeMenuOwnerDrawInfoData(popup);
+    DestroyMenu(popup);
+
     switch (cmd) {
         case IDM_COPY_SELECTION:
         case IDM_SELECT_ALL:
@@ -651,7 +663,6 @@ void OnContextMenu(WindowInfo* win, int x, int y) {
             break;
     }
 
-    DestroyMenu(popup);
     delete pageEl;
 }
 
