@@ -678,9 +678,11 @@ static void OnFavTreeContextMenu(WindowInfo* win, PointI pt) {
     Favorite* toDelete = (Favorite*)item.lParam;
 
     HMENU popup = BuildMenuFromMenuDef(menuDefFavContext, dimof(menuDefFavContext), CreatePopupMenu());
-
+    MarkMenuOwnerDraw(popup);
     INT cmd = TrackPopupMenu(popup, TPM_RETURNCMD | TPM_RIGHTBUTTON, pt.x, pt.y, 0, win->hwndFavTree, nullptr);
+    FreeMenuOwnerDrawInfoData(popup);
     DestroyMenu(popup);
+
     if (IDM_FAV_DEL == cmd) {
         RememberFavTreeExpansionStateForAllWindows();
         if (toDelete) {
