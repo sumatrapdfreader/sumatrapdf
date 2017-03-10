@@ -59,7 +59,7 @@ struct TabStyle {
 
 struct TabTheme {
     // Height of the tab bar
-    int         height;
+    int height;
     // Style of the current file tab
     TabStyle current;
     // Style of background tabs
@@ -67,9 +67,9 @@ struct TabTheme {
     // Style of the highlighted tab (hovered over)
     TabStyle highlighted;
     // Whether or not the circle around the tab X is displayed on hover
-    bool        closeCircleEnabled;
+    bool closeCircleEnabled;
     // The width of the pen drawing the tab X
-    float       closePenWidth;
+    float closePenWidth;
     // Style of the close (X button) when the mouse hovers over it
     TabCloseStyle hoveredClose;
     // Style of the close (X button) when the mouse is clicked down over it
@@ -78,7 +78,7 @@ struct TabTheme {
 
 struct Theme {
     // Name of the theme
-    char        *name;
+    char* name;
     // Style of the main window
     MainWindowStyle mainWindow;
     // Style of documents
@@ -90,12 +90,11 @@ struct Theme {
 };
 
 // Function definitions
-Theme *GetThemeByName(char* name);
-Theme *GetThemeByIndex(int index);
-Theme *GetCurrentTheme();
+Theme* GetThemeByName(char* name);
+Theme* GetThemeByIndex(int index);
+Theme* GetCurrentTheme();
 
-int GetThemeIndex(Theme *theme);
+int GetThemeIndex(Theme* theme);
 int GetCurrentThemeIndex();
-
 
 #endif // !THEME
