@@ -746,6 +746,35 @@ void FreeMenuOwnerDrawInfoData(HMENU hmenu) {
     UNUSED(hmenu);
 }
 #else
+struct MenuText {
+    const WCHAR* menuText;
+    int menuTextLen;
+    const WCHAR* shortcutText;
+    int shortcutTextLen;
+};
+
+// menu text consists of potentially 2 parts:
+// - text of the menu item
+// - text for the keyboard shortcut
+// They are separated with \t
+void ParseMenuText(const WCHAR* s, MenuText& mt) {
+    mt.shortcutText = nullptr;
+    mt.menuText = s;
+    while (*s && *s != L'\t') {
+        s++;
+    }
+    mt.menuTextLen = (int)(s - mt.menuText);
+    if (*s != L'\t') {
+        return;
+    }
+    s++;
+    mt.shortcutText = s;
+    while (*s) {
+        s++;
+    }
+    mt.menuTextLen = (int)(s - mt.shortcutText);
+}
+
 void FreeMenuOwnerDrawInfoData(HMENU hmenu) {
     MENUITEMINFOW mii = {0};
     mii.cbSize = sizeof(MENUITEMINFOW);
@@ -765,7 +794,7 @@ void FreeMenuOwnerDrawInfoData(HMENU hmenu) {
         if (mii.hSubMenu != nullptr) {
             MarkMenuOwnerDraw(mii.hSubMenu);
         }
-    }
+    };
 }
 
 void MarkMenuOwnerDraw(HMENU hmenu) {
@@ -790,7 +819,9 @@ void MarkMenuOwnerDraw(HMENU hmenu) {
             auto modi = (MenuOwnerDrawInfo*)mii.dwItemData;
             FreeMenuOwnerDrawInfo(modi);
         }
-        // TODO: this leaks
+        // TODO: this still leaks even though I try to free menu-associated items
+        // Another option would be to keep track of things allocated separately
+        // (std::vector<MenuOwnerDrawInfo*> ?) and free remaining items on exit
         auto modi = AllocStruct<MenuOwnerDrawInfo>();
         modi->fState = mii.fState;
         modi->fType = mii.fType;
@@ -808,14 +839,16 @@ void MarkMenuOwnerDraw(HMENU hmenu) {
 #endif
 
 void MenuOwnerDrawnMesureItem(HWND hwnd, MEASUREITEMSTRUCT* mis) {
-    UNUSED(hwnd);
     if (ODT_MENU != mis->CtlType) {
         return;
     }
     auto modi = (MenuOwnerDrawInfo*)mis->itemData;
     auto text = modi ? modi->text : L"Dummy";
+    // TODO: at this point HWND doesn't have a font, need to ensure
+    // we use the same font here and when drawing
     auto size = TextSizeInHwnd(hwnd, text);
     mis->itemHeight = size.dy;
+    // TODO: add space between menu and shortcut
     // TODO: probably needs to add space of > for sub-menus
     // and better calculations for shortcut text (add some space
     // if \t is there)

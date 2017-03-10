@@ -74,20 +74,21 @@ bool LaunchFile(const WCHAR *path, const WCHAR *params = nullptr, const WCHAR *v
                 bool hidden = false);
 HANDLE LaunchProcess(const WCHAR *cmdLine, const WCHAR *currDir = nullptr, DWORD flags = 0);
 
-void PaintRect(HDC hdc, const RectI &rect);
-void PaintLine(HDC hdc, const RectI &rect);
+void PaintRect(HDC, const RectI &);
+void PaintLine(HDC, const RectI &);
 void DrawCenteredText(HDC hdc, const RectI &r, const WCHAR *txt, bool isRTL = false);
-void DrawCenteredText(HDC hdc, const RECT &r, const WCHAR *txt, bool isRTL = false);
-SizeI TextSizeInHwnd(HWND hwnd, const WCHAR *txt);
+void DrawCenteredText(HDC , const RECT &r, const WCHAR *txt, bool isRTL = false);
+SizeI TextSizeInHwnd(HWND, const WCHAR*);
+SizeI TextSizeInDC(HDC, const WCHAR *);
 
-bool IsCursorOverWindow(HWND hwnd);
-bool GetCursorPosInHwnd(HWND hwnd, PointI &posOut);
+bool IsCursorOverWindow(HWND);
+bool GetCursorPosInHwnd(HWND, PointI&);
 void CenterDialog(HWND hDlg, HWND hParent = nullptr);
 WCHAR *GetDefaultPrinterName();
 bool CopyTextToClipboard(const WCHAR *text, bool appendOnly = false);
 bool CopyImageToClipboard(HBITMAP hbmp, bool appendOnly);
 void ToggleWindowStyle(HWND hwnd, DWORD flag, bool enable, int type = GWL_STYLE);
-RectI ChildPosWithinParent(HWND hwnd);
+RectI ChildPosWithinParent(HWND);
 HFONT GetDefaultGuiFont();
 
 IStream *CreateStreamFromData(const void *data, size_t len);

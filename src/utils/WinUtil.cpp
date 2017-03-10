@@ -542,6 +542,14 @@ SizeI TextSizeInHwnd(HWND hwnd, const WCHAR *txt) {
     return SizeI(sz.cx, sz.cy);
 }
 
+/* Return size of a text <txt> in a given <hdc>, taking into account its font */
+SizeI TextSizeInDC(HDC hdc, const WCHAR *txt) {
+    SIZE sz;
+    size_t txtLen = str::Len(txt);
+    GetTextExtentPoint32(hdc, txt, (int)txtLen, &sz);
+    return SizeI(sz.cx, sz.cy);
+}
+
 bool IsCursorOverWindow(HWND hwnd) {
     POINT pt;
     GetCursorPos(&pt);
