@@ -280,8 +280,9 @@ static void AddFileMenuItem(HMENU menuFile, const WCHAR* filePath, UINT index) {
 }
 
 static void AppendRecentFilesToMenu(HMENU m) {
-    if (!HasPermission(Perm_DiskAccess))
+    if (!HasPermission(Perm_DiskAccess)) {
         return;
+    }
 
     int i;
     for (i = 0; i < FILE_HISTORY_MAX_RECENT; i++) {
@@ -298,27 +299,32 @@ static void AppendRecentFilesToMenu(HMENU m) {
 }
 
 static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR* filePath) {
-    if (0 == gGlobalPrefs->externalViewers->Count())
+    if (0 == gGlobalPrefs->externalViewers->Count()) {
         return;
-    if (!HasPermission(Perm_DiskAccess) || (filePath && !file::Exists(filePath)))
+    }
+    if (!HasPermission(Perm_DiskAccess) || (filePath && !file::Exists(filePath))) {
         return;
+    }
 
     const int maxEntries = IDM_OPEN_WITH_EXTERNAL_LAST - IDM_OPEN_WITH_EXTERNAL_FIRST + 1;
     int count = 0;
     for (size_t i = 0; i < gGlobalPrefs->externalViewers->Count() && count < maxEntries; i++) {
         ExternalViewer* ev = gGlobalPrefs->externalViewers->At(i);
-        if (!ev->commandLine)
+        if (!ev->commandLine) {
             continue;
-        if (ev->filter && !str::Eq(ev->filter, L"*") && !(filePath && path::Match(filePath, ev->filter)))
+        }
+        if (ev->filter && !str::Eq(ev->filter, L"*") && !(filePath && path::Match(filePath, ev->filter))) {
             continue;
+        }
 
         ScopedMem<WCHAR> appName;
         const WCHAR* name = ev->name;
         if (str::IsEmpty(name)) {
             WStrVec args;
             ParseCmdLine(ev->commandLine, args, 2);
-            if (args.Count() == 0)
+            if (args.Count() == 0) {
                 continue;
+            }
             appName.SetCopy(path::GetBaseName(args.At(0)));
             *(WCHAR*)path::GetExt(appName) = '\0';
         }
@@ -326,8 +332,9 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR* filePath) {
         ScopedMem<WCHAR> menuString(str::Format(_TR("Open in %s"), appName ? appName : name));
         UINT menuId = IDM_OPEN_WITH_EXTERNAL_FIRST + count;
         InsertMenu(menuFile, IDM_SEND_BY_EMAIL, MF_BYCOMMAND | MF_ENABLED | MF_STRING, menuId, menuString);
-        if (!filePath)
+        if (!filePath) {
             win::menu::SetEnabled(menuFile, menuId, false);
+        }
         count++;
     }
 }
@@ -360,16 +367,18 @@ static struct {
 
 UINT MenuIdFromVirtualZoom(float virtualZoom) {
     for (int i = 0; i < dimof(gZoomMenuIds); i++) {
-        if (virtualZoom == gZoomMenuIds[i].zoom)
+        if (virtualZoom == gZoomMenuIds[i].zoom) {
             return gZoomMenuIds[i].itemId;
+        }
     }
     return IDM_ZOOM_CUSTOM;
 }
 
 static float ZoomMenuItemToZoom(UINT menuItemId) {
     for (int i = 0; i < dimof(gZoomMenuIds); i++) {
-        if (menuItemId == gZoomMenuIds[i].itemId)
+        if (menuItemId == gZoomMenuIds[i].itemId) {
             return gZoomMenuIds[i].zoom;
+        }
     }
     CrashIf(true);
     return 100.0;
@@ -378,20 +387,24 @@ static float ZoomMenuItemToZoom(UINT menuItemId) {
 static void ZoomMenuItemCheck(HMENU m, UINT menuItemId, bool canZoom) {
     AssertCrash((IDM_ZOOM_FIRST <= menuItemId) && (menuItemId <= IDM_ZOOM_LAST));
 
-    for (int i = 0; i < dimof(gZoomMenuIds); i++)
+    for (int i = 0; i < dimof(gZoomMenuIds); i++) {
         win::menu::SetEnabled(m, gZoomMenuIds[i].itemId, canZoom);
+    }
 
-    if (IDM_ZOOM_100 == menuItemId)
+    if (IDM_ZOOM_100 == menuItemId) {
         menuItemId = IDM_ZOOM_ACTUAL_SIZE;
+    }
     CheckMenuRadioItem(m, IDM_ZOOM_FIRST, IDM_ZOOM_LAST, menuItemId, MF_BYCOMMAND);
-    if (IDM_ZOOM_ACTUAL_SIZE == menuItemId)
+    if (IDM_ZOOM_ACTUAL_SIZE == menuItemId) {
         CheckMenuRadioItem(m, IDM_ZOOM_100, IDM_ZOOM_100, IDM_ZOOM_100, MF_BYCOMMAND);
+    }
 }
 
 void MenuUpdateZoom(WindowInfo* win) {
     float zoomVirtual = gGlobalPrefs->defaultZoomFloat;
-    if (win->IsDocLoaded())
+    if (win->IsDocLoaded()) {
         zoomVirtual = win->ctrl->GetZoomVirtual();
+    }
     UINT menuId = MenuIdFromVirtualZoom(zoomVirtual);
     ZoomMenuItemCheck(win->menu, menuId, win->IsDocLoaded());
 }
@@ -405,8 +418,9 @@ void MenuUpdatePrintItem(WindowInfo* win, HMENU menu, bool disableOnly = false) 
 #endif
 
     int idx;
-    for (idx = 0; idx < dimof(menuDefFile) && menuDefFile[idx].id != IDM_PRINT; idx++)
-        ;
+    for (idx = 0; idx < dimof(menuDefFile) && menuDefFile[idx].id != IDM_PRINT; idx++) {
+        // do nothing
+    }
     if (idx < dimof(menuDefFile)) {
         const WCHAR* printItem = trans::GetTranslation(menuDefFile[idx].title);
         if (!filePrintAllowed) {
@@ -422,8 +436,9 @@ void MenuUpdatePrintItem(WindowInfo* win, HMENU menu, bool disableOnly = false) 
 
 static bool IsFileCloseMenuEnabled() {
     for (size_t i = 0; i < gWindows.Count(); i++) {
-        if (!gWindows.At(i)->IsAboutWindow())
+        if (!gWindows.At(i)->IsAboutWindow()) {
             return true;
+        }
     }
     return false;
 }
@@ -506,11 +521,13 @@ void MenuUpdateStateForWindow(WindowInfo* win) {
         }
     }
 
-    if (tab && tab->AsFixed())
+    if (tab && tab->AsFixed()) {
         win::menu::SetEnabled(win->menu, IDM_FIND_FIRST, !tab->AsFixed()->GetEngine()->IsImageCollection());
+    }
 
-    if (win->IsDocLoaded() && !fileExists)
+    if (win->IsDocLoaded() && !fileExists) {
         win::menu::SetEnabled(win->menu, IDM_RENAME_FILE, false);
+    }
 
     CheckMenuRadioItem(win->menu, IDM_CHANGE_THEME_FIRST, IDM_CHANGE_THEME_LAST,
                        IDM_CHANGE_THEME_FIRST + GetCurrentThemeIndex(), MF_BYCOMMAND);
@@ -527,17 +544,20 @@ void MenuUpdateStateForWindow(WindowInfo* win) {
 
 void OnAboutContextMenu(WindowInfo* win, int x, int y) {
     if (!HasPermission(Perm_SavePreferences | Perm_DiskAccess) || !gGlobalPrefs->rememberOpenedFiles ||
-        !gGlobalPrefs->showStartPage)
+        !gGlobalPrefs->showStartPage) {
         return;
+    }
 
     const WCHAR* filePath = GetStaticLink(win->staticLinks, x, y);
-    if (!filePath || *filePath == '<')
+    if (!filePath || *filePath == '<') {
         return;
+    }
 
     DisplayState* state = gFileHistory.Find(filePath);
     CrashIf(!state);
-    if (!state)
+    if (!state) {
         return;
+    }
 
     HMENU popup = BuildMenuFromMenuDef(menuDefContextStart, dimof(menuDefContextStart), CreatePopupMenu());
     win::menu::SetChecked(popup, IDM_PIN_SELECTED_DOCUMENT, state->isPinned);
@@ -574,24 +594,30 @@ void OnAboutContextMenu(WindowInfo* win, int x, int y) {
 
 void OnContextMenu(WindowInfo* win, int x, int y) {
     CrashIf(!win->AsFixed());
-    if (!win->AsFixed())
+    if (!win->AsFixed()) {
         return;
+    }
 
     PageElement* pageEl = win->AsFixed()->GetElementAtPos(PointI(x, y));
     ScopedMem<WCHAR> value;
-    if (pageEl)
+    if (pageEl) {
         value.Set(pageEl->GetValue());
+    }
 
     HMENU popup = BuildMenuFromMenuDef(menuDefContext, dimof(menuDefContext), CreatePopupMenu());
-    if (!pageEl || pageEl->GetType() != Element_Link || !value)
+    if (!pageEl || pageEl->GetType() != Element_Link || !value) {
         win::menu::Remove(popup, IDM_COPY_LINK_TARGET);
-    if (!pageEl || pageEl->GetType() != Element_Comment || !value)
+    }
+    if (!pageEl || pageEl->GetType() != Element_Comment || !value) {
         win::menu::Remove(popup, IDM_COPY_COMMENT);
-    if (!pageEl || pageEl->GetType() != Element_Image)
+    }
+    if (!pageEl || pageEl->GetType() != Element_Image) {
         win::menu::Remove(popup, IDM_COPY_IMAGE);
+    }
 
-    if (!win->currentTab->selectionOnPage)
+    if (!win->currentTab->selectionOnPage) {
         win::menu::SetEnabled(popup, IDM_COPY_SELECTION, false);
+    }
     MenuUpdatePrintItem(win, popup, true);
     win::menu::SetEnabled(popup, IDM_VIEW_BOOKMARKS, win->ctrl->HasTocTree());
     win::menu::SetChecked(popup, IDM_VIEW_BOOKMARKS, win->tocVisible);
@@ -617,8 +643,9 @@ void OnContextMenu(WindowInfo* win, int x, int y) {
         case IDM_COPY_IMAGE:
             if (pageEl) {
                 RenderedBitmap* bmp = pageEl->GetImage();
-                if (bmp)
+                if (bmp) {
                     CopyImageToClipboard(bmp->GetBitmap(), false);
+                }
                 delete bmp;
             }
             break;
@@ -632,31 +659,37 @@ void OnContextMenu(WindowInfo* win, int x, int y) {
    'zoom' is given as a floating-point number, 1.0 is 100%, 2.0 is 200% etc.
 */
 void OnMenuZoom(WindowInfo* win, UINT menuId) {
-    if (!win->IsDocLoaded())
+    if (!win->IsDocLoaded()) {
         return;
+    }
 
     float zoom = ZoomMenuItemToZoom(menuId);
     ZoomToSelection(win, zoom);
 }
 
 void OnMenuCustomZoom(WindowInfo* win) {
-    if (!win->IsDocLoaded() || win->AsEbook())
+    if (!win->IsDocLoaded() || win->AsEbook()) {
         return;
+    }
 
     float zoom = win->ctrl->GetZoomVirtual();
-    if (!Dialog_CustomZoom(win->hwndFrame, win->AsChm(), &zoom))
+    if (!Dialog_CustomZoom(win->hwndFrame, win->AsChm(), &zoom)) {
         return;
+    }
     ZoomToSelection(win, zoom);
 }
 
 static void RebuildFileMenu(TabInfo* tab, HMENU menu) {
     int filter = 0;
-    if (tab && tab->AsChm())
+    if (tab && tab->AsChm()) {
         filter |= MF_NOT_FOR_CHM;
-    if (tab && tab->AsEbook())
+    }
+    if (tab && tab->AsEbook()) {
         filter |= MF_NOT_FOR_EBOOK_UI;
-    if (!tab || tab->GetEngineType() != Engine_ComicBook)
+    }
+    if (!tab || tab->GetEngineType() != Engine_ComicBook) {
         filter |= MF_CBX_ONLY;
+    }
 
     win::menu::Empty(menu);
     BuildMenuFromMenuDef(menuDefFile, dimof(menuDefFile), menu, filter);
@@ -667,20 +700,26 @@ static void RebuildFileMenu(TabInfo* tab, HMENU menu) {
     // e-mail client, Adobe Reader, Foxit, PDF-XChange
     // Don't hide items here that won't always be hidden
     // (MenuUpdateStateForWindow() is for that)
-    if (!CanSendAsEmailAttachment())
+    if (!CanSendAsEmailAttachment()) {
         win::menu::Remove(menu, IDM_SEND_BY_EMAIL);
+    }
 
     // Also suppress PDF specific items for non-PDF documents
-    if (!CouldBePDFDoc(tab) || !CanViewWithAcrobat())
+    if (!CouldBePDFDoc(tab) || !CanViewWithAcrobat()) {
         win::menu::Remove(menu, IDM_VIEW_WITH_ACROBAT);
-    if (!CouldBePDFDoc(tab) || !CanViewWithFoxit())
+    }
+    if (!CouldBePDFDoc(tab) || !CanViewWithFoxit()) {
         win::menu::Remove(menu, IDM_VIEW_WITH_FOXIT);
-    if (!CouldBePDFDoc(tab) || !CanViewWithPDFXChange())
+    }
+    if (!CouldBePDFDoc(tab) || !CanViewWithPDFXChange()) {
         win::menu::Remove(menu, IDM_VIEW_WITH_PDF_XCHANGE);
-    if (!CanViewWithXPSViewer(tab))
+    }
+    if (!CanViewWithXPSViewer(tab)) {
         win::menu::Remove(menu, IDM_VIEW_WITH_XPS_VIEWER);
-    if (!CanViewWithHtmlHelp(tab))
+    }
+    if (!CanViewWithHtmlHelp(tab)) {
         win::menu::Remove(menu, IDM_VIEW_WITH_HTML_HELP);
+    }
 }
 
 //[ ACCESSKEY_GROUP Main Menubar
@@ -688,12 +727,14 @@ HMENU BuildMenu(WindowInfo* win) {
     HMENU mainMenu = CreateMenu();
 
     int filter = 0;
-    if (win->AsChm())
+    if (win->AsChm()) {
         filter |= MF_NOT_FOR_CHM;
-    else if (win->AsEbook())
+    } else if (win->AsEbook()) {
         filter |= MF_NOT_FOR_EBOOK_UI;
-    if (!win->currentTab || win->currentTab->GetEngineType() != Engine_ComicBook)
+    }
+    if (!win->currentTab || win->currentTab->GetEngineType() != Engine_ComicBook) {
         filter |= MF_CBX_ONLY;
+    }
 
     HMENU m = CreateMenu();
     RebuildFileMenu(win->currentTab, m);
@@ -747,9 +788,9 @@ HMENU BuildMenu(WindowInfo* win) {
 void UpdateMenu(WindowInfo* win, HMENU m) {
     CrashIf(!win);
     UINT id = GetMenuItemID(m, 0);
-    if (id == menuDefFile[0].id)
+    if (id == menuDefFile[0].id) {
         RebuildFileMenu(win->currentTab, m);
-    else if (id == menuDefFavorites[0].id) {
+    }  else if (id == menuDefFavorites[0].id) {
         win::menu::Empty(m);
         BuildMenuFromMenuDef(menuDefFavorites, dimof(menuDefFavorites), m);
         RebuildFavMenu(win, m);
@@ -761,8 +802,9 @@ void UpdateMenu(WindowInfo* win, HMENU m) {
 // so that accidental removal of the menu isn't catastrophic
 void ShowHideMenuBar(WindowInfo* win, bool showTemporarily) {
     CrashIf(!win->menu);
-    if (win->presentation || win->isFullScreen)
+    if (win->presentation || win->isFullScreen) {
         return;
+    }
 
     HWND hwnd = win->hwndFrame;
 
