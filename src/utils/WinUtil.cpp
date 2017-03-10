@@ -766,7 +766,7 @@ void SetText(HMENU m, UINT id, WCHAR *s) {
     mii.fType = MFT_STRING;
     mii.dwTypeData = s;
     mii.cch = (UINT)str::Len(s);
-    SetMenuItemInfo(m, id, FALSE, &mii);
+    SetMenuItemInfoW(m, id, FALSE, &mii);
 }
 
 /* Make a string safe to be displayed as a menu item

@@ -1,6 +1,8 @@
 /* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+// un-comment this for experimental, unfinished theme support for menus
+// by making them owner-drawn
 // #define EXP_MENU_OWNER_DRAW 1
 
 #define SEP_ITEM "-----"
@@ -21,6 +23,19 @@ struct MenuDef {
     UINT id;
     int flags;
 };
+
+// value associated with menu item for owner-drawn purposes
+struct MenuOwnerDrawInfo {
+    const WCHAR* text;
+    UINT fType;  // copy of MENUITEMINFO .fType
+    UINT fState; // copy of MENUITEMINFO.fState
+};
+
+void FreeMenuOwnerDrawInfo(MenuOwnerDrawInfo*);
+void MarkMenuOwnerDraw(HMENU);
+void FreeMenuOwnerDrawInfoData(HMENU);
+void MenuOwnerDrawnMesureItem(HWND, MEASUREITEMSTRUCT*);
+void MenuOwnerDrawnDrawItem(HWND, DRAWITEMSTRUCT*);
 
 HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu, int flagFilter = 0);
 HMENU BuildMenu(WindowInfo* win);

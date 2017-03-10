@@ -4110,28 +4110,6 @@ static LRESULT OnFrameGetMinMaxInfo(MINMAXINFO *info)
     return 0;
 }
 
-#if defined(EXP_MENU_OWNER_DRAW)
-static void OnFrameMeasureItem(HWND hwnd, MEASUREITEMSTRUCT* mi) {
-    if (ODT_MENU != mi->CtlType) {
-        return;
-    }
-    HMENU menu = GetMenu(hwnd);
-    UINT menuID = (UINT)mi->itemData;
-    MENUITEMINFO mif = { 0 };
-    mif.cbSize = sizeof(MENUITEMINFO);
-    BOOL byPosition = FALSE;
-    BOOL ok = GetMenuItemInfo(menu, menuID, byPosition, &mif);
-    CrashIf(!ok);
-}
-
-static void OnFrameDrawItem(HWND hwnd, DRAWITEMSTRUCT* di) {
-    UNUSED(hwnd);
-    if (ODT_MENU != di->CtlType) {
-        return;
-    }
-}
-#endif
-
 LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     WindowInfo *win = FindWindowInfoByHwnd(hwnd);
@@ -4176,11 +4154,11 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 #if defined(EXP_MENU_OWNER_DRAW)
         case WM_MEASUREITEM:
-            OnFrameMeasureItem(hwnd, (MEASUREITEMSTRUCT*)lParam);
+            MenuOwnerDrawnMesureItem(hwnd, (MEASUREITEMSTRUCT*)lParam);
             return TRUE;
 
         case WM_DRAWITEM:
-            OnFrameDrawItem(hwnd, (DRAWITEMSTRUCT*)lParam);
+            MenuOwnerDrawnDrawItem(hwnd, (DRAWITEMSTRUCT*)lParam);
             return TRUE;
 #endif
 
