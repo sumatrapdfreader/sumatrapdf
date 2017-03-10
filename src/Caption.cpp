@@ -13,6 +13,8 @@
 #include "Caption.h"
 #include "Tabs.h"
 #include "Translations.h"
+#include "resource.h"
+#include "Menu.h"
 
 using namespace Gdiplus;
 
@@ -767,8 +769,9 @@ static HMENU GetUpdatedSystemMenu(HWND hwnd)
 static void MenuBarAsPopupMenu(WindowInfo *win, int x, int y)
 {
     int count = GetMenuItemCount(win->menu);
-    if (count <= 0)
+    if (count <= 0) {
         return;
+    }
     HMENU popup = CreatePopupMenu();
 
     MENUITEMINFO mii = { 0 };
@@ -777,8 +780,9 @@ static void MenuBarAsPopupMenu(WindowInfo *win, int x, int y)
     for (int i = 0; i < count; i++) {
         mii.dwTypeData = nullptr;
         GetMenuItemInfo(win->menu, i, TRUE, &mii);
-        if (!mii.hSubMenu || !mii.cch)
+        if (!mii.hSubMenu || !mii.cch) {
             continue;
+        }
         mii.cch++;
         ScopedMem<WCHAR> subMenuName(AllocArray<WCHAR>(mii.cch));
         mii.dwTypeData = subMenuName;
@@ -788,9 +792,13 @@ static void MenuBarAsPopupMenu(WindowInfo *win, int x, int y)
     AppendMenu(popup, MF_POPUP | MF_STRING, (UINT_PTR)GetUpdatedSystemMenu(win->hwndFrame), _TR("&Window"));
     count++;
 
-    if (IsUIRightToLeft())
+    if (IsUIRightToLeft()) {
         x += ClientRect(win->caption->btn[CB_MENU].hwnd).dx;
+    }
+
+    MarkMenuOwnerDraw(popup);
     TrackPopupMenu(popup, TPM_LEFTALIGN, x, y, 0, win->hwndFrame, nullptr);
+    FreeMenuOwnerDrawInfoData(popup);
 
     while (count > 0) {
         --count;

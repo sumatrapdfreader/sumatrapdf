@@ -721,36 +721,135 @@ static void RebuildFileMenu(TabInfo* tab, HMENU menu) {
         win::menu::Remove(menu, IDM_VIEW_WITH_HTML_HELP);
     }
 }
+
+void FreeMenuOwnerDrawInfo(MenuOwnerDrawInfo* modi) {
+    free((void*)modi->text);
+    free(modi);
+}
+
 #if !defined(EXP_MENU_OWNER_DRAW)
-static void MarkMenuOwnerDraw(HMENU menu) {
-    UNUSED(menu);
-    return;
+void MarkMenuOwnerDraw(HMENU hmenu) {
+    UNUSED(hmenu);
+}
+void FreeMenuOwnerDrawInfoData(HMENU hmenu) {
+    UNUSED(hmenu);
 }
 #else
-static void MarkMenuOwnerDraw(HMENU menu) {
-    int n = GetMenuItemCount(menu);
-    CrashIf(n < 0);
-    MENUITEMINFO mi = { 0 };
-    mi.cbSize = sizeof(MENUITEMINFO);
-    BOOL byPosition = TRUE;
-    for (int i = 0; i < n; i++) {
-        mi.fMask = MIIM_SUBMENU | MIIM_FTYPE;
-        BOOL ok = GetMenuItemInfoW(menu, (UINT)i, byPosition, &mi);
-        CrashIf(!ok);
-        mi.fMask = MIIM_FTYPE | MIIM_DATA;
-        mi.fType |= MFT_OWNERDRAW;
-        // set menuID as dwItemData so that we can access it in
-        // WM_MEASUREITEM and WM_DRAWITEM
-        UINT menuID = GetMenuItemID(menu, i);
-        mi.dwItemData = menuID;
-        SetMenuItemInfoW(menu, (UINT)i, byPosition, &mi);
+void FreeMenuOwnerDrawInfoData(HMENU hmenu) {
+    MENUITEMINFOW mii = {0};
+    mii.cbSize = sizeof(MENUITEMINFOW);
 
-        if (mi.hSubMenu != nullptr) {
-            MarkMenuOwnerDraw(mi.hSubMenu);
+    int n = GetMenuItemCount(hmenu);
+    for (int i = 0; i < n; i++) {
+        mii.fMask = MIIM_DATA | MIIM_FTYPE | MIIM_SUBMENU;
+        BOOL ok = GetMenuItemInfoW(hmenu, (UINT)i, TRUE /* by position */, &mii);
+        CrashIf(!ok);
+        auto modi = (MenuOwnerDrawInfo*)mii.dwItemData;
+        if (modi != nullptr) {
+            FreeMenuOwnerDrawInfo(modi);
+            mii.dwItemData = 0;
+            mii.fType &= ~MFT_OWNERDRAW;
+            SetMenuItemInfoW(hmenu, (UINT)i, TRUE /* by position */, &mii);
+        }
+        if (mii.hSubMenu != nullptr) {
+            MarkMenuOwnerDraw(mii.hSubMenu);
+        }
+    }
+}
+
+void MarkMenuOwnerDraw(HMENU hmenu) {
+    WCHAR buf[1024];
+
+    MENUITEMINFOW mii = {0};
+    mii.cbSize = sizeof(MENUITEMINFOW);
+
+    int n = GetMenuItemCount(hmenu);
+
+    for (int i = 0; i < n; i++) {
+        buf[0] = 0;
+        mii.fMask = MIIM_DATA | MIIM_FTYPE | MIIM_STATE | MIIM_SUBMENU | MIIM_STRING;
+        mii.dwTypeData = &(buf[0]);
+        mii.cch = dimof(buf);
+        BOOL ok = GetMenuItemInfoW(hmenu, (UINT)i, TRUE /* by position */, &mii);
+        CrashIf(!ok);
+
+        mii.fMask = MIIM_FTYPE | MIIM_DATA;
+        mii.fType |= MFT_OWNERDRAW;
+        if (mii.dwItemData != 0) {
+            auto modi = (MenuOwnerDrawInfo*)mii.dwItemData;
+            FreeMenuOwnerDrawInfo(modi);
+        }
+        // TODO: this leaks
+        auto modi = AllocStruct<MenuOwnerDrawInfo>();
+        modi->fState = mii.fState;
+        modi->fType = mii.fType;
+        if (str::Len(buf) > 0) {
+            modi->text = str::Dup(buf);
+        }
+        mii.dwItemData = (ULONG_PTR)modi;
+        SetMenuItemInfoW(hmenu, (UINT)i, TRUE /* by position */, &mii);
+
+        if (mii.hSubMenu != nullptr) {
+            MarkMenuOwnerDraw(mii.hSubMenu);
         }
     }
 }
 #endif
+
+void MenuOwnerDrawnMesureItem(HWND hwnd, MEASUREITEMSTRUCT* mis) {
+    UNUSED(hwnd);
+    if (ODT_MENU != mis->CtlType) {
+        return;
+    }
+    auto modi = (MenuOwnerDrawInfo*)mis->itemData;
+    auto text = modi ? modi->text : L"Dummy";
+    auto size = TextSizeInHwnd(hwnd, text);
+    mis->itemHeight = size.dy;
+    // TODO: probably needs to add space of > for sub-menus
+    // and better calculations for shortcut text (add some space
+    // if \t is there)
+    auto cxMenuCheck = GetSystemMetrics(SM_CXMENUCHECK);
+    mis->itemWidth = UINT(size.dx + cxMenuCheck);
+}
+
+// https://gist.github.com/kjk/1df108aa126b7d8e298a5092550a53b7
+void MenuOwnerDrawnDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
+    UNUSED(hwnd);
+    if (ODT_MENU != dis->CtlType) {
+        return;
+    }
+    auto modi = (MenuOwnerDrawInfo*)dis->itemData;
+    if (!modi) {
+        return;
+    }
+    auto theme = GetCurrentTheme();
+    COLORREF bgCol = theme->mainWindow.backgroundColor;
+    COLORREF txtCol = theme->mainWindow.textColor;
+    if (dis->itemState & ODS_SELECTED) {
+        // TODO: probably better colors
+        bgCol = theme->mainWindow.textColor;
+        txtCol = theme->mainWindow.backgroundColor;
+    }
+    auto hbr = CreateSolidBrush(bgCol);
+    FillRect(dis->hDC, &dis->rcItem, hbr);
+    DeleteObject(hbr);
+
+    // TODO: improve how we paint the menu:
+    // - paint checkmark if this is checkbox menu
+    // - position text the right way (not just DT_CENTER)
+    //   taking into account LTR mode
+    // - paint shortcut (part after \t if exists) separately
+    // - paint disabled state better
+    // - fix memory leaks (call MarkMenuOwnerDraw() from WM_DESTRO of main frame)?
+    SetTextColor(dis->hDC, txtCol);
+    SetBkColor(dis->hDC, bgCol);
+    auto s = modi->text;
+    // auto x = dis->rcItem.left;
+    // auto y = dis->rcItem.top;
+    // x += GetSystemMetrics(SM_CXMENUCHECK);
+    // DrawTextEx handles & => underscore drawing
+    DrawTextExW(dis->hDC, (WCHAR*)s, str::Len(s), &dis->rcItem, DT_CENTER, nullptr);
+}
 
 //[ ACCESSKEY_GROUP Main Menubar
 HMENU BuildMenu(WindowInfo* win) {
@@ -821,7 +920,7 @@ void UpdateMenu(WindowInfo* win, HMENU m) {
     UINT id = GetMenuItemID(m, 0);
     if (id == menuDefFile[0].id) {
         RebuildFileMenu(win->currentTab, m);
-    }  else if (id == menuDefFavorites[0].id) {
+    } else if (id == menuDefFavorites[0].id) {
         win::menu::Empty(m);
         BuildMenuFromMenuDef(menuDefFavorites, dimof(menuDefFavorites), m);
         RebuildFavMenu(win, m);
