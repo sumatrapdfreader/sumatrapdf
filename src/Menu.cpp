@@ -841,6 +841,7 @@ void MenuOwnerDrawnDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
     // - paint shortcut (part after \t if exists) separately
     // - paint disabled state better
     // - fix memory leaks (call MarkMenuOwnerDraw() from WM_DESTRO of main frame)?
+    // - paint icons for system menus
     SetTextColor(dis->hDC, txtCol);
     SetBkColor(dis->hDC, bgCol);
     auto s = modi->text;
@@ -848,7 +849,7 @@ void MenuOwnerDrawnDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
     // auto y = dis->rcItem.top;
     // x += GetSystemMetrics(SM_CXMENUCHECK);
     // DrawTextEx handles & => underscore drawing
-    DrawTextExW(dis->hDC, (WCHAR*)s, str::Len(s), &dis->rcItem, DT_CENTER, nullptr);
+    DrawTextExW(dis->hDC, (WCHAR*)s, (int)str::Len(s), &dis->rcItem, DT_CENTER, nullptr);
 }
 
 //[ ACCESSKEY_GROUP Main Menubar
