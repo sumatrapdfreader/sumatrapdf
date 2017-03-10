@@ -37,6 +37,7 @@ COLORREF rgb_to_bgr(COLORREF rgb) {
     return ((rgb & 0x0000FF) << 16) | (rgb & 0x00FF00) | ((rgb & 0xFF0000) >> 16);
 }
 
+// clang-format off
 // Themes
 Theme g_themeLight = {
     // Theme Name
@@ -301,19 +302,18 @@ Theme g_themeDarker = {
         g_themeDarker.mainWindow.linkColor
     }
 };
+// clang-format on
 
 // Master themes list
-Theme *g_themes[THEME_COUNT] = {
-    &g_themeLight,
-    &g_themeDark,
-    &g_themeDarker,
+Theme* g_themes[THEME_COUNT] = {
+    &g_themeLight, &g_themeDark, &g_themeDarker,
 };
 
 // Current theme caching
-Theme *currentTheme = NULL;
+Theme* currentTheme = NULL;
 int currentThemeIndex;
 
-Theme *GetThemeByName(char* name) {
+Theme* GetThemeByName(char* name) {
     for (int i = 0; i < THEME_COUNT; i++) {
         if (str::Eq(g_themes[i]->name, name)) {
             return g_themes[i];
@@ -322,12 +322,12 @@ Theme *GetThemeByName(char* name) {
     return NULL;
 }
 
-Theme *GetThemeByIndex(int index) {
+Theme* GetThemeByIndex(int index) {
     CrashIf(index < 0 || index >= THEME_COUNT);
     return g_themes[index];
 }
 
-Theme *GetCurrentTheme() {
+Theme* GetCurrentTheme() {
     if (currentTheme == NULL || !str::Eq(currentTheme->name, gGlobalPrefs->themeName)) {
         currentTheme = GetThemeByName(gGlobalPrefs->themeName);
         if (currentTheme == NULL) {
@@ -339,7 +339,7 @@ Theme *GetCurrentTheme() {
     return currentTheme;
 }
 
-int GetThemeIndex(Theme *theme) {
+int GetThemeIndex(Theme* theme) {
     for (int i = 0; i < THEME_COUNT; i++) {
         if (g_themes[i] == theme) {
             return i;
