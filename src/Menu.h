@@ -1,6 +1,8 @@
 /* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+// #define EXP_MENU_OWNER_DRAW 1
+
 #define SEP_ITEM "-----"
 
 // those are defined here instead of resource.h to avoid

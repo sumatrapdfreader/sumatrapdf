@@ -721,6 +721,36 @@ static void RebuildFileMenu(TabInfo* tab, HMENU menu) {
         win::menu::Remove(menu, IDM_VIEW_WITH_HTML_HELP);
     }
 }
+#if !defined(EXP_MENU_OWNER_DRAW)
+static void MarkMenuOwnerDraw(HMENU menu) {
+    UNUSED(menu);
+    return;
+}
+#else
+static void MarkMenuOwnerDraw(HMENU menu) {
+    int n = GetMenuItemCount(menu);
+    CrashIf(n < 0);
+    MENUITEMINFO mi = { 0 };
+    mi.cbSize = sizeof(MENUITEMINFO);
+    BOOL byPosition = TRUE;
+    for (int i = 0; i < n; i++) {
+        mi.fMask = MIIM_SUBMENU | MIIM_FTYPE;
+        BOOL ok = GetMenuItemInfoW(menu, (UINT)i, byPosition, &mi);
+        CrashIf(!ok);
+        mi.fMask = MIIM_FTYPE | MIIM_DATA;
+        mi.fType |= MFT_OWNERDRAW;
+        // set menuID as dwItemData so that we can access it in
+        // WM_MEASUREITEM and WM_DRAWITEM
+        UINT menuID = GetMenuItemID(menu, i);
+        mi.dwItemData = menuID;
+        SetMenuItemInfoW(menu, (UINT)i, byPosition, &mi);
+
+        if (mi.hSubMenu != nullptr) {
+            MarkMenuOwnerDraw(mi.hSubMenu);
+        }
+    }
+}
+#endif
 
 //[ ACCESSKEY_GROUP Main Menubar
 HMENU BuildMenu(WindowInfo* win) {
@@ -781,6 +811,7 @@ HMENU BuildMenu(WindowInfo* win) {
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, L"Debug");
 #endif
 
+    MarkMenuOwnerDraw(mainMenu);
     return mainMenu;
 }
 //] ACCESSKEY_GROUP Main Menubar
@@ -796,6 +827,7 @@ void UpdateMenu(WindowInfo* win, HMENU m) {
         RebuildFavMenu(win, m);
     }
     MenuUpdateStateForWindow(win);
+    MarkMenuOwnerDraw(win->menu);
 }
 
 // show/hide top-level menu bar. This doesn't persist across launches
