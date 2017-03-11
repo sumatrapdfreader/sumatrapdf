@@ -31,6 +31,7 @@
 #include "SumatraAbout.h"
 #include "SumatraDialogs.h"
 #include "Translations.h"
+#include "BitManip.h"
 
 void MenuUpdateDisplayMode(WindowInfo* win) {
     bool enabled = win->IsDocLoaded();
@@ -738,7 +739,7 @@ std::vector<MenuOwnerDrawInfo*> g_menuDrawInfos;
 
 void FreeAllMenuDrawInfos() {
     while (g_menuDrawInfos.size() != 0) {
-        // Note: slowish
+        // Note: could be faster
         FreeMenuOwnerDrawInfo(g_menuDrawInfos[0]);
     }
 }
@@ -764,9 +765,9 @@ void FreeMenuOwnerDrawInfoData(HMENU hmenu) {
 }
 #else
 struct MenuText {
-    const WCHAR* menuText;
+    WCHAR* menuText;
     int menuTextLen;
-    const WCHAR* shortcutText;
+    WCHAR* shortcutText;
     int shortcutTextLen;
 };
 
@@ -774,7 +775,7 @@ struct MenuText {
 // - text of the menu item
 // - text for the keyboard shortcut
 // They are separated with \t
-void ParseMenuText(const WCHAR* s, MenuText& mt) {
+static void ParseMenuText(WCHAR* s, MenuText& mt) {
     mt.shortcutText = nullptr;
     mt.menuText = s;
     while (*s && *s != L'\t') {
@@ -824,7 +825,7 @@ void MarkMenuOwnerDraw(HMENU hmenu) {
 
     for (int i = 0; i < n; i++) {
         buf[0] = 0;
-        mii.fMask = MIIM_DATA | MIIM_FTYPE | MIIM_STATE | MIIM_SUBMENU | MIIM_STRING;
+        mii.fMask = MIIM_BITMAP | MIIM_CHECKMARKS | MIIM_DATA | MIIM_FTYPE | MIIM_STATE | MIIM_SUBMENU | MIIM_STRING;
         mii.dwTypeData = &(buf[0]);
         mii.cch = dimof(buf);
         BOOL ok = GetMenuItemInfoW(hmenu, (UINT)i, TRUE /* by position */, &mii);
@@ -840,6 +841,9 @@ void MarkMenuOwnerDraw(HMENU hmenu) {
         g_menuDrawInfos.push_back(modi);
         modi->fState = mii.fState;
         modi->fType = mii.fType;
+        modi->hbmpItem = mii.hbmpItem;
+        modi->hbmpChecked = mii.hbmpChecked;
+        modi->hbmpUnchecked = mii.hbmpUnchecked;
         if (str::Len(buf) > 0) {
             modi->text = str::Dup(buf);
         }
@@ -860,8 +864,6 @@ void MenuOwnerDrawnMesureItem(HWND hwnd, MEASUREITEMSTRUCT* mis) {
     auto modi = (MenuOwnerDrawInfo*)mis->itemData;
     auto text = modi ? modi->text : L"Dummy";
     HFONT font = GetMenuFont();
-    // TODO: at this point HWND doesn't have a font, need to ensure
-    // we use the same font here and when drawing
     auto size = TextSizeInHwnd(hwnd, text, font);
     mis->itemHeight = size.dy;
     // TODO: add space between menu and shortcut
@@ -882,12 +884,50 @@ void MenuOwnerDrawnDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
     if (!modi) {
         return;
     }
+
+    // https://msdn.microsoft.com/en-us/library/windows/desktop/ms647578(v=vs.85).aspx
+
+    // low-order word of the dwTypeData member is the bitmap handle
+    // HBITMAP bmp = (HBITMAP)LOWORD(modi->dwTypeData) ?
+    // bool isBitmap = bit::IsMaskSet(modi->fType, (UINT)MFT_BITMAP);
+
+    // ???
+    // bool isMenuBarBreak = bit::IsMaskSet(modi->fType, (UINT)MFT_MENUBARBREAK);
+
+    // ??
+    // bool isMenuBreak = bit::IsMaskSet(modi->fType, (UINT)MFT_MENUBREAK);
+
+    // bool isRadioCheck = bit::IsMaskSet(modi->fType, (UINT)MFT_RADIOCHECK);
+    // bool isSeparator = bit::IsMaskSet(modi->fType, (UINT)MFT_SEPARATOR);
+
+    // default should be drawn in bold
+    // bool isDefault = bit::IsMaskSet(modi->fState, (UINT)MFS_DEFAULT);
+
+    // disabled should be drawn grayed out
+    // bool isDisabled = bit::IsMaskSet(modi->fState, (UINT)MFS_DISABLED);
+
+    // don't know what that means
+    // bool isHilited = bit::IsMaskSet(modi->fState, (UINT)MFS_HILITE);
+
+    // checked/unchecked state for check and radio menus?
+    // uses hbmpChecked, otherwise use hbmpUnchecked ?
+    // bool isChecked = bit::IsMaskSet(modi->fState, (UINT)MFS_CHECKED);
+
+    // TODO: probably could be separator or bitmap etc.
+    if (!modi->text) {
+        return;
+    }
+
+    MenuText mt;
+    ParseMenuText((WCHAR*)modi->text, mt);
+
     HFONT font = GetMenuFont();
     auto prevFont = SelectObject(dis->hDC, font);
     auto theme = GetCurrentTheme();
     COLORREF bgCol = theme->mainWindow.backgroundColor;
     COLORREF txtCol = theme->mainWindow.textColor;
-    if (dis->itemState & ODS_SELECTED) {
+    bool isSelected = bit::IsMaskSet(dis->itemState, (UINT)ODS_SELECTED);
+    if (isSelected) {
         // TODO: probably better colors
         bgCol = theme->mainWindow.textColor;
         txtCol = theme->mainWindow.backgroundColor;
@@ -905,12 +945,14 @@ void MenuOwnerDrawnDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
     // - paint icons for system menus
     SetTextColor(dis->hDC, txtCol);
     SetBkColor(dis->hDC, bgCol);
-    auto s = modi->text;
+    // auto s = modi->text;
     // auto x = dis->rcItem.left;
     // auto y = dis->rcItem.top;
-    // x += GetSystemMetrics(SM_CXMENUCHECK);
+    // x +=
     // DrawTextEx handles & => underscore drawing
-    DrawTextExW(dis->hDC, (WCHAR*)s, (int)str::Len(s), &dis->rcItem, DT_CENTER, nullptr);
+    RECT rc = dis->rcItem;
+    rc.left += GetSystemMetrics(SM_CXMENUCHECK);
+    DrawTextExW(dis->hDC, mt.menuText, mt.menuTextLen, &rc, DT_LEFT, nullptr);
     SelectObject(dis->hDC, prevFont);
 }
 
