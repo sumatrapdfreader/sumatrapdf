@@ -3,7 +3,7 @@
 
 // un-comment this for experimental, unfinished theme support for menus
 // by making them owner-drawn
-//#define EXP_MENU_OWNER_DRAW 1
+// #define EXP_MENU_OWNER_DRAW 1
 
 #define SEP_ITEM "-----"
 
