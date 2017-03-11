@@ -783,7 +783,7 @@ static void ParseMenuText(WCHAR* s, MenuText& mt) {
     while (*s) {
         s++;
     }
-    mt.menuTextLen = (int)(s - mt.shortcutText);
+    mt.shortcutTextLen = (int)(s - mt.shortcutText);
 }
 
 void FreeMenuOwnerDrawInfoData(HMENU hmenu) {
@@ -864,6 +864,14 @@ void MenuOwnerDrawnMesureItem(HWND hwnd, MEASUREITEMSTRUCT* mis) {
         return;
     }
     auto modi = (MenuOwnerDrawInfo*)mis->itemData;
+
+    bool isSeparator = bit::IsMaskSet(modi->fType, (UINT)MFT_SEPARATOR);
+    if (isSeparator) {
+        mis->itemHeight = DpiScaleY(hwnd, 7);
+        mis->itemWidth = DpiScaleX(hwnd, 33);
+        return;
+    }
+
     auto text = modi && modi->text ? modi->text : L"Dummy";
     HFONT font = GetMenuFont();
     MenuText mt;
@@ -987,6 +995,12 @@ void MenuOwnerDrawnDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
     rc.top += padY;
     rc.left += dxCheckMark;
     DrawTextExW(hdc, mt.menuText, mt.menuTextLen, &rc, DT_LEFT, nullptr);
+    if (mt.shortcutText != nullptr) {
+        rc = dis->rcItem;
+        rc.top += padY;
+        rc.right -= (padX + dxCheckMark / 2);
+        DrawTextExW(hdc, mt.shortcutText, mt.shortcutTextLen, &rc, DT_RIGHT, nullptr);
+    }
     SelectObject(hdc, prevFont);
 }
 
