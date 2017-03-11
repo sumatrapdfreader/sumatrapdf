@@ -806,7 +806,7 @@ void FreeMenuOwnerDrawInfoData(HMENU hmenu) {
         }
     };
 }
-
+#if defined(EXP_MENU_OWNER_DRAW)
 void MarkMenuOwnerDraw(HMENU hmenu) {
     WCHAR buf[1024];
 
@@ -847,6 +847,11 @@ void MarkMenuOwnerDraw(HMENU hmenu) {
         }
     }
 }
+#else
+void MarkMenuOwnerDraw(HMENU hmenu) {
+    UNUSED(hmenu);
+}
+#endif
 
 void MenuOwnerDrawnMesureItem(HWND hwnd, MEASUREITEMSTRUCT* mis) {
     if (ODT_MENU != mis->CtlType) {
