@@ -31,11 +31,13 @@ struct MenuOwnerDrawInfo {
     UINT fState; // copy of MENUITEMINFO.fState
 };
 
+void FreeAllMenuDrawInfos();
 void FreeMenuOwnerDrawInfo(MenuOwnerDrawInfo*);
 void MarkMenuOwnerDraw(HMENU);
 void FreeMenuOwnerDrawInfoData(HMENU);
 void MenuOwnerDrawnMesureItem(HWND, MEASUREITEMSTRUCT*);
 void MenuOwnerDrawnDrawItem(HWND, DRAWITEMSTRUCT*);
+HFONT GetMenuFont();
 
 HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu, int flagFilter = 0);
 HMENU BuildMenu(WindowInfo* win);

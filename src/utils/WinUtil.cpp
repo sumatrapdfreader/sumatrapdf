@@ -528,14 +528,16 @@ void DrawCenteredText(HDC hdc, const RECT &r, const WCHAR *txt, bool isRTL) {
 }
 
 /* Return size of a text <txt> in a given <hwnd>, taking into account its font */
-SizeI TextSizeInHwnd(HWND hwnd, const WCHAR *txt) {
+SizeI TextSizeInHwnd(HWND hwnd, const WCHAR *txt, HFONT font) {
     SIZE sz;
     size_t txtLen = str::Len(txt);
     HDC dc = GetWindowDC(hwnd);
     /* GetWindowDC() returns dc with default state, so we have to first set
        window's current font into dc */
-    HFONT f = (HFONT)SendMessage(hwnd, WM_GETFONT, 0, 0);
-    HGDIOBJ prev = SelectObject(dc, f);
+    if (font == nullptr) {
+        font = (HFONT)SendMessage(hwnd, WM_GETFONT, 0, 0);
+    }
+    HGDIOBJ prev = SelectObject(dc, font);
     GetTextExtentPoint32(dc, txt, (int)txtLen, &sz);
     SelectObject(dc, prev);
     ReleaseDC(hwnd, dc);
