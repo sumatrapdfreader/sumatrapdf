@@ -733,9 +733,26 @@ static void RebuildFileMenu(TabInfo* tab, HMENU menu) {
     }
 }
 
+// so that we can do free everything at exit
+std::vector<MenuOwnerDrawInfo*> g_menuDrawInfos;
+
+void FreeAllMenuDrawInfos() {
+    while (g_menuDrawInfos.size() != 0) {
+        // Note: slowish
+        FreeMenuOwnerDrawInfo(g_menuDrawInfos[0]);
+    }
+}
+
 void FreeMenuOwnerDrawInfo(MenuOwnerDrawInfo* modi) {
+    auto it = std::remove(begin(g_menuDrawInfos), end(g_menuDrawInfos), modi);
+    CrashIf(it == end(g_menuDrawInfos));
+    g_menuDrawInfos.erase(it, end(g_menuDrawInfos));
     free((void*)modi->text);
     free(modi);
+}
+
+HFONT GetMenuFont() {
+    return GetDefaultGuiFont();
 }
 
 #if !defined(EXP_MENU_OWNER_DRAW)
@@ -819,10 +836,8 @@ void MarkMenuOwnerDraw(HMENU hmenu) {
             auto modi = (MenuOwnerDrawInfo*)mii.dwItemData;
             FreeMenuOwnerDrawInfo(modi);
         }
-        // TODO: this still leaks even though I try to free menu-associated items
-        // Another option would be to keep track of things allocated separately
-        // (std::vector<MenuOwnerDrawInfo*> ?) and free remaining items on exit
         auto modi = AllocStruct<MenuOwnerDrawInfo>();
+        g_menuDrawInfos.push_back(modi);
         modi->fState = mii.fState;
         modi->fType = mii.fType;
         if (str::Len(buf) > 0) {
@@ -844,9 +859,10 @@ void MenuOwnerDrawnMesureItem(HWND hwnd, MEASUREITEMSTRUCT* mis) {
     }
     auto modi = (MenuOwnerDrawInfo*)mis->itemData;
     auto text = modi ? modi->text : L"Dummy";
+    HFONT font = GetMenuFont();
     // TODO: at this point HWND doesn't have a font, need to ensure
     // we use the same font here and when drawing
-    auto size = TextSizeInHwnd(hwnd, text);
+    auto size = TextSizeInHwnd(hwnd, text, font);
     mis->itemHeight = size.dy;
     // TODO: add space between menu and shortcut
     // TODO: probably needs to add space of > for sub-menus
@@ -866,6 +882,8 @@ void MenuOwnerDrawnDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
     if (!modi) {
         return;
     }
+    HFONT font = GetMenuFont();
+    auto prevFont = SelectObject(dis->hDC, font);
     auto theme = GetCurrentTheme();
     COLORREF bgCol = theme->mainWindow.backgroundColor;
     COLORREF txtCol = theme->mainWindow.textColor;
@@ -884,7 +902,6 @@ void MenuOwnerDrawnDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
     //   taking into account LTR mode
     // - paint shortcut (part after \t if exists) separately
     // - paint disabled state better
-    // - fix memory leaks (call MarkMenuOwnerDraw() from WM_DESTRO of main frame)?
     // - paint icons for system menus
     SetTextColor(dis->hDC, txtCol);
     SetBkColor(dis->hDC, bgCol);
@@ -894,6 +911,7 @@ void MenuOwnerDrawnDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
     // x += GetSystemMetrics(SM_CXMENUCHECK);
     // DrawTextEx handles & => underscore drawing
     DrawTextExW(dis->hDC, (WCHAR*)s, (int)str::Len(s), &dis->rcItem, DT_CENTER, nullptr);
+    SelectObject(dis->hDC, prevFont);
 }
 
 //[ ACCESSKEY_GROUP Main Menubar

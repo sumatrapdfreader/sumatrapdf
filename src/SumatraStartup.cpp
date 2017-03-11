@@ -55,6 +55,7 @@
 #include "StressTesting.h"
 #include "Version.h"
 #include "Tests.h"
+#include "Menu.h"
 
 // "SumatraPDF yellow" similar to the one use for icon and installer
 #define ABOUT_BG_LOGO_COLOR     RGB(0xFF, 0xF2, 0x00)
@@ -833,6 +834,7 @@ Exit:
     gFileHistory.UpdateStatesSource(nullptr);
     prefs::CleanUp();
 
+    FreeAllMenuDrawInfos();
     // it's still possible to crash after this (destructors of static classes,
     // atexit() code etc.) point, but it's very unlikely
     UninstallCrashHandler();

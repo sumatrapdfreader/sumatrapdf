@@ -78,7 +78,7 @@ void PaintRect(HDC, const RectI &);
 void PaintLine(HDC, const RectI &);
 void DrawCenteredText(HDC hdc, const RectI &r, const WCHAR *txt, bool isRTL = false);
 void DrawCenteredText(HDC , const RECT &r, const WCHAR *txt, bool isRTL = false);
-SizeI TextSizeInHwnd(HWND, const WCHAR*);
+SizeI TextSizeInHwnd(HWND, const WCHAR*, HFONT=nullptr);
 SizeI TextSizeInDC(HDC, const WCHAR *);
 
 bool IsCursorOverWindow(HWND);
