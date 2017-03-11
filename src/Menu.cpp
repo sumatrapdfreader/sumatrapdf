@@ -756,14 +756,6 @@ HFONT GetMenuFont() {
     return GetDefaultGuiFont();
 }
 
-#if !defined(EXP_MENU_OWNER_DRAW)
-void MarkMenuOwnerDraw(HMENU hmenu) {
-    UNUSED(hmenu);
-}
-void FreeMenuOwnerDrawInfoData(HMENU hmenu) {
-    UNUSED(hmenu);
-}
-#else
 struct MenuText {
     WCHAR* menuText;
     int menuTextLen;
@@ -855,7 +847,6 @@ void MarkMenuOwnerDraw(HMENU hmenu) {
         }
     }
 }
-#endif
 
 void MenuOwnerDrawnMesureItem(HWND hwnd, MEASUREITEMSTRUCT* mis) {
     if (ODT_MENU != mis->CtlType) {
