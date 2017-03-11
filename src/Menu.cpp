@@ -32,6 +32,7 @@
 #include "SumatraDialogs.h"
 #include "Translations.h"
 #include "BitManip.h"
+#include "Dpi.h"
 
 void MenuUpdateDisplayMode(WindowInfo* win) {
     bool enabled = win->IsDocLoaded();
@@ -853,21 +854,37 @@ void MarkMenuOwnerDraw(HMENU hmenu) {
 }
 #endif
 
+enum {
+    kMenuPaddingY = 2,
+    kMenuPaddingX = 2,
+};
+
 void MenuOwnerDrawnMesureItem(HWND hwnd, MEASUREITEMSTRUCT* mis) {
     if (ODT_MENU != mis->CtlType) {
         return;
     }
     auto modi = (MenuOwnerDrawInfo*)mis->itemData;
-    auto text = modi ? modi->text : L"Dummy";
+    auto text = modi && modi->text ? modi->text : L"Dummy";
     HFONT font = GetMenuFont();
-    auto size = TextSizeInHwnd(hwnd, text, font);
+    MenuText mt;
+    ParseMenuText((WCHAR*)text, mt);
+
+    auto size = TextSizeInHwnd(hwnd, mt.menuText, font);
     mis->itemHeight = size.dy;
-    // TODO: add space between menu and shortcut
-    // TODO: probably needs to add space of > for sub-menus
-    // and better calculations for shortcut text (add some space
-    // if \t is there)
+    int dx = size.dx;
+    if (mt.shortcutText != nullptr) {
+        // add space betweeen menu text and shortcut
+        size = TextSizeInHwnd(hwnd, L"    ", font);
+        dx += size.dx;
+        size = TextSizeInHwnd(hwnd, mt.shortcutText, font);
+        dx += size.dx;
+    }
+    auto padX = DpiScaleX(hwnd, kMenuPaddingX);
+    auto padY = DpiScaleY(hwnd, kMenuPaddingY);
+
     auto cxMenuCheck = GetSystemMetrics(SM_CXMENUCHECK);
-    mis->itemWidth = UINT(size.dx + cxMenuCheck);
+    mis->itemHeight += padY * 2;
+    mis->itemWidth = UINT(dx + DpiScaleX(hwnd, cxMenuCheck) + (padX * 2));
 }
 
 // https://gist.github.com/kjk/1df108aa126b7d8e298a5092550a53b7
@@ -894,7 +911,8 @@ void MenuOwnerDrawnDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
     // bool isMenuBreak = bit::IsMaskSet(modi->fType, (UINT)MFT_MENUBREAK);
 
     // bool isRadioCheck = bit::IsMaskSet(modi->fType, (UINT)MFT_RADIOCHECK);
-    // bool isSeparator = bit::IsMaskSet(modi->fType, (UINT)MFT_SEPARATOR);
+
+    bool isSeparator = bit::IsMaskSet(modi->fType, (UINT)MFT_SEPARATOR);
 
     // default should be drawn in bold
     // bool isDefault = bit::IsMaskSet(modi->fState, (UINT)MFS_DEFAULT);
@@ -909,16 +927,10 @@ void MenuOwnerDrawnDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
     // uses hbmpChecked, otherwise use hbmpUnchecked ?
     // bool isChecked = bit::IsMaskSet(modi->fState, (UINT)MFS_CHECKED);
 
-    // TODO: probably could be separator or bitmap etc.
-    if (!modi->text) {
-        return;
-    }
-
-    MenuText mt;
-    ParseMenuText((WCHAR*)modi->text, mt);
-
+    auto hdc = dis->hDC;
     HFONT font = GetMenuFont();
-    auto prevFont = SelectObject(dis->hDC, font);
+    auto prevFont = SelectObject(hdc, font);
+
     auto theme = GetCurrentTheme();
     COLORREF bgCol = theme->mainWindow.backgroundColor;
     COLORREF txtCol = theme->mainWindow.textColor;
@@ -928,9 +940,38 @@ void MenuOwnerDrawnDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
         bgCol = theme->mainWindow.textColor;
         txtCol = theme->mainWindow.backgroundColor;
     }
+
+    RECT rc = dis->rcItem;
+
+    int padY = DpiScaleY(hwnd, kMenuPaddingY);
+    int padX = DpiScaleX(hwnd, kMenuPaddingX);
+    int dxCheckMark = DpiScaleX(hwnd, GetSystemMetrics(SM_CXMENUCHECK));
+
     auto hbr = CreateSolidBrush(bgCol);
-    FillRect(dis->hDC, &dis->rcItem, hbr);
+    FillRect(hdc, &rc, hbr);
     DeleteObject(hbr);
+
+    if (isSeparator) {
+        CrashIf(modi->text);
+        int sx = rc.left + dxCheckMark;
+        int y = rc.top + (RectDy(rc) / 2);
+        int ex = rc.right - padX;
+        auto pen = CreatePen(PS_SOLID, 1, txtCol);
+        auto prevPen = SelectObject(hdc, pen);
+        MoveToEx(hdc, sx, y, nullptr);
+        LineTo(hdc, ex, y);
+        SelectObject(hdc, prevPen);
+        DeleteObject(pen);
+        return;
+    }
+
+    // TODO: probably could be a bitmap etc.
+    if (!modi->text) {
+        return;
+    }
+
+    MenuText mt;
+    ParseMenuText((WCHAR*)modi->text, mt);
 
     // TODO: improve how we paint the menu:
     // - paint checkmark if this is checkbox menu
@@ -939,17 +980,14 @@ void MenuOwnerDrawnDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
     // - paint shortcut (part after \t if exists) separately
     // - paint disabled state better
     // - paint icons for system menus
-    SetTextColor(dis->hDC, txtCol);
-    SetBkColor(dis->hDC, bgCol);
-    // auto s = modi->text;
-    // auto x = dis->rcItem.left;
-    // auto y = dis->rcItem.top;
-    // x +=
+    SetTextColor(hdc, txtCol);
+    SetBkColor(hdc, bgCol);
+
     // DrawTextEx handles & => underscore drawing
-    RECT rc = dis->rcItem;
-    rc.left += GetSystemMetrics(SM_CXMENUCHECK);
-    DrawTextExW(dis->hDC, mt.menuText, mt.menuTextLen, &rc, DT_LEFT, nullptr);
-    SelectObject(dis->hDC, prevFont);
+    rc.top += padY;
+    rc.left += dxCheckMark;
+    DrawTextExW(hdc, mt.menuText, mt.menuTextLen, &rc, DT_LEFT, nullptr);
+    SelectObject(hdc, prevFont);
 }
 
 //[ ACCESSKEY_GROUP Main Menubar
