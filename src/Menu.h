@@ -3,7 +3,7 @@
 
 // un-comment this for experimental, unfinished theme support for menus
 // by making them owner-drawn
-#define EXP_MENU_OWNER_DRAW 1
+//#define EXP_MENU_OWNER_DRAW 1
 
 #define SEP_ITEM "-----"
 
@@ -27,8 +27,12 @@ struct MenuDef {
 // value associated with menu item for owner-drawn purposes
 struct MenuOwnerDrawInfo {
     const WCHAR* text;
-    UINT fType;  // copy of MENUITEMINFO .fType
-    UINT fState; // copy of MENUITEMINFO.fState
+    // copy of MENUITEMINFO fields
+    UINT fType;
+    UINT fState;
+    HBITMAP hbmpChecked;
+    HBITMAP hbmpUnchecked;
+    HBITMAP hbmpItem;
 };
 
 void FreeAllMenuDrawInfos();
