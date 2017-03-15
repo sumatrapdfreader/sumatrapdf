@@ -147,8 +147,8 @@ int x86cpuid_GetFirm(const Cx86cpuid *p);
 #define x86cpuid_GetModel(p) (((p)->ver >> 4) & 0xF00F)
 #define x86cpuid_GetStepping(p) ((p)->ver & 0xF)
 
-Bool CPU_Is_InOrder();
-Bool CPU_Is_Aes_Supported();
+Bool CPU_Is_InOrder(void);
+Bool CPU_Is_Aes_Supported(void);
 
 #endif
 
