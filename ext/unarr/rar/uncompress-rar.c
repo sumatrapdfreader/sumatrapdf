@@ -358,7 +358,7 @@ static uint8_t rar_decode_audio(struct AudioState *state, int8_t *channeldelta, 
     return byte;
 }
 
-int64_t rar_expand_v2(ar_archive_rar *rar, int64_t end)
+static int64_t rar_expand_v2(ar_archive_rar *rar, int64_t end)
 {
     static const uint8_t lengthbases[] =
         {   0,   1,   2,   3,   4,   5,   6,
