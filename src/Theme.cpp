@@ -67,7 +67,7 @@ Theme g_themeLight = {
         // Current style
         {
             // Background color
-            rgb_to_bgr(0xE3683C),
+            rgb_to_bgr(0xFfFfFf),
             // Text color
             COL_BLACK,
             // Default close style
@@ -81,7 +81,7 @@ Theme g_themeLight = {
         // Background style
         {
             // Background color
-            AdjustLightness2(g_themeLight.tab.current.backgroundColor, -15),
+            AdjustLightness2(g_themeLight.tab.current.backgroundColor, -25),
             // Text color
             COL_BLACK,
             // Default close style
@@ -154,7 +154,7 @@ Theme g_themeDark = {
     // Tabs
     {
         // Height
-        32,
+        24,
         // Current style
         {
             // Background color

@@ -31,9 +31,6 @@ static void SwapTabs(WindowInfo* win, int tab1, int tab2);
 
 #define DEFAULT_CURRENT_BG_COL (COLORREF) - 1
 
-#define TAB_COLOR_BG COLOR_BTNFACE
-#define TAB_COLOR_TEXT COLOR_BTNTEXT
-
 #define T_CLOSING (TCN_LAST + 1)
 #define T_CLOSE (TCN_LAST + 2)
 #define T_DRAG (TCN_LAST + 3)
@@ -181,9 +178,9 @@ class TabPainter {
 
         // paint the background
         bool isTranslucentMode = inTitlebar && dwm::IsCompositionEnabled();
-        if (isTranslucentMode)
+        if (isTranslucentMode) {
             PaintParentBackground(hwnd, hdc);
-        else {
+        }  else {
             HBRUSH brush = CreateSolidBrush(colors.bar);
             FillRect(hdc, &rc, brush);
             DeleteObject(brush);
