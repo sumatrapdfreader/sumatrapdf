@@ -8,13 +8,11 @@ typedef std::function<void(EditCtrl*)> EditCtrlCb;
 #define NO_CHANGE (COLORREF)(-2) // -1 is taken by NO_COLOR in windows headers
 
 struct EditCtrl {
-    // creation parameters. must be set before CreateEditWnd() call
+    // creation parameters. must be set before CreateEditCtrl() call
     HWND parent;
     RECT initialPos;
     DWORD dwStyle;
     DWORD dwExStyle;
-
-    HWND hwnd;
 
     // this data can be set directly
     MsgFilter preFilter; // called at start of windows proc to allow intercepting commands
@@ -26,6 +24,7 @@ struct EditCtrl {
     COLORREF txtCol;
 
     // private
+    HWND hwnd;
     int ncDx;
     int ncDy;
     bool hasBorder;
