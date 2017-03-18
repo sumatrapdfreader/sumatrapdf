@@ -361,7 +361,7 @@ static void TabNotification(WindowInfo* win, UINT code, int idx1, int idx2) {
 }
 
 static WNDPROC DefWndProcTabBar = nullptr;
-static LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+static LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     PAINTSTRUCT ps;
     HDC hdc;
     int index;
@@ -376,8 +376,8 @@ static LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
             break;
 
         case TCM_INSERTITEM:
-            index = (int)wParam;
-            tcs = (LPTCITEM)lParam;
+            index = (int)wp;
+            tcs = (LPTCITEM)lp;
             CrashIf(!(TCIF_TEXT & tcs->mask));
             tab->Insert(index, tcs->pszText);
             if ((int)index <= tab->current)
@@ -390,8 +390,8 @@ static LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
             break;
 
         case TCM_SETITEM:
-            index = (int)wParam;
-            tcs = (LPTCITEM)lParam;
+            index = (int)wp;
+            tcs = (LPTCITEM)lp;
             if (TCIF_TEXT & tcs->mask) {
                 if (tab->Set(index, tcs->pszText)) {
                     tab->Invalidate(index);
@@ -400,7 +400,7 @@ static LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
             break;
 
         case TCM_DELETEITEM:
-            index = (int)wParam;
+            index = (int)wp;
             if (tab->Delete(index)) {
                 if ((int)index < tab->current) {
                     tab->current--;
@@ -427,7 +427,7 @@ static LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
             break;
 
         case TCM_SETITEMSIZE:
-            if (tab->Reshape(LOWORD(lParam), HIWORD(lParam))) {
+            if (tab->Reshape(LOWORD(lp), HIWORD(lp))) {
                 tab->xClicked = -1;
                 if (tab->isMouseInClientArea) {
                     PostMessage(hwnd, WM_MOUSEMOVE, 0, tab->mouseCoordinates);
@@ -443,7 +443,7 @@ static LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
             return tab->current;
 
         case TCM_SETCURSEL: {
-            index = (int)wParam;
+            index = (int)wp;
             if (index >= tab->Count()) {
                 return -1;
             }
@@ -461,7 +461,7 @@ static LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
             if (!tab->inTitlebar || hwnd == GetCapture()) {
                 return HTCLIENT;
             }
-            POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
+            POINT pt = {GET_X_LPARAM(lp), GET_Y_LPARAM(lp)};
             ScreenToClient(hwnd, &pt);
             if (-1 != tab->IndexFromPoint(pt.x, pt.y)) {
                 return HTCLIENT;
@@ -474,7 +474,7 @@ static LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
             return 0;
 
         case WM_MOUSEMOVE: {
-            tab->mouseCoordinates = lParam;
+            tab->mouseCoordinates = lp;
 
             if (!tab->isMouseInClientArea) {
                 // Track the mouse for leaving the client area.
@@ -485,11 +485,11 @@ static LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
                 if (TrackMouseEvent(&tme))
                     tab->isMouseInClientArea = true;
             }
-            if (wParam == 0xFF) // The mouse left the client area.
+            if (wp == 0xFF) // The mouse left the client area.
                 tab->isMouseInClientArea = false;
 
             bool inX = false;
-            int hl = wParam == 0xFF ? -1 : tab->IndexFromPoint(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), &inX);
+            int hl = wp == 0xFF ? -1 : tab->IndexFromPoint(GET_X_LPARAM(lp), GET_Y_LPARAM(lp), &inX);
             if (tab->isDragging && hl == -1) {
                 // preserve the highlighted tab if it's dragged outside the tabs' area
                 hl = tab->highlighted;
@@ -519,7 +519,7 @@ static LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
 
         case WM_LBUTTONDOWN:
             bool inX;
-            tab->nextTab = tab->IndexFromPoint(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), &inX);
+            tab->nextTab = tab->IndexFromPoint(GET_X_LPARAM(lp), GET_Y_LPARAM(lp), &inX);
             if (inX) {
                 // send request to close the tab
                 WindowInfo* win = FindWindowInfoByHwnd(hwnd);
@@ -554,7 +554,7 @@ static LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
         case WM_MBUTTONDOWN:
             // middle-clicking unconditionally closes the tab
             {
-                tab->nextTab = tab->IndexFromPoint(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+                tab->nextTab = tab->IndexFromPoint(GET_X_LPARAM(lp), GET_Y_LPARAM(lp));
                 // send request to close the tab
                 WindowInfo* win = FindWindowInfoByHwnd(hwnd);
                 int next = tab->nextTab;
@@ -579,15 +579,15 @@ static LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
         case WM_PAINT: {
             RECT rc;
             GetUpdateRect(hwnd, &rc, FALSE);
-            // TODO: when is wParam != nullptr?
-            hdc = wParam ? (HDC)wParam : BeginPaint(hwnd, &ps);
+            // TODO: when is wp != nullptr?
+            hdc = wp ? (HDC)wp : BeginPaint(hwnd, &ps);
 
             DoubleBuffer buffer(hwnd, RectI::FromRECT(rc));
             tab->Paint(buffer.GetDC(), rc);
             buffer.Flush(hdc);
 
             ValidateRect(hwnd, nullptr);
-            if (!wParam)
+            if (!wp)
                 EndPaint(hwnd, &ps);
             return 0;
         }
@@ -599,7 +599,7 @@ static LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
         } break;
     }
 
-    return CallWindowProc(DefWndProcTabBar, hwnd, msg, wParam, lParam);
+    return CallWindowProc(DefWndProcTabBar, hwnd, msg, wp, lp);
 }
 
 void CreateTabbar(WindowInfo* win) {
@@ -694,7 +694,7 @@ TabInfo* CreateNewTab(WindowInfo* win, const WCHAR* filePath) {
     win->tabs.Append(tab);
     tab->canvasRc = win->canvasRc;
 
-    TCITEM tcs;
+    TCITEMW tcs;
     tcs.mask = TCIF_TEXT;
     tcs.pszText = (WCHAR*)tab->GetTabTitle();
 
