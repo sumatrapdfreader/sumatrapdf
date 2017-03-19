@@ -223,15 +223,7 @@ static LRESULT CALLBACK WndProcButton(HWND hwnd, UINT message, WPARAM wParam, LP
                     return 0;
                 }
                 if (win) {
-                    TRACKMOUSEEVENT tme;
-                    tme.cbSize = sizeof(TRACKMOUSEEVENT);
-                    tme.dwFlags = TME_QUERY;
-                    tme.hwndTrack = hwnd;
-                    TrackMouseEvent(&tme);
-                    if (0 == (tme.dwFlags & TME_LEAVE)) {
-                        tme.dwFlags = TME_LEAVE;
-                        tme.hwndTrack = hwnd;
-                        TrackMouseEvent(&tme);
+                    if (TrackMouseLeave(hwnd)) {
                         win->caption->btn[index].highlighted = true;
                         InvalidateRgn(hwnd, nullptr, FALSE);
                     }

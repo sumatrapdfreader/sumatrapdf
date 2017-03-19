@@ -67,7 +67,6 @@ class TabPainter {
     int xClicked = -1;
     int xHighlighted = -1;
     int nextTab = -1;
-    bool isMouseInClientArea = false;
     bool isDragging = false;
     bool inTitlebar = false;
     LPARAM mouseCoordinates = 0;
@@ -405,8 +404,6 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UI
             if ((int)index <= tab->current)
                 tab->current++;
             tab->xClicked = -1;
-            if (tab->isMouseInClientArea)
-                PostMessage(hwnd, WM_MOUSEMOVE, 0, tab->mouseCoordinates);
             InvalidateRgn(hwnd, nullptr, FALSE);
             UpdateWindow(hwnd);
             break;
@@ -430,9 +427,6 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UI
                     tab->current = -1;
                 }
                 tab->xClicked = -1;
-                if (tab->isMouseInClientArea) {
-                    PostMessage(hwnd, WM_MOUSEMOVE, 0, tab->mouseCoordinates);
-                }
                 if (tab->Count()) {
                     InvalidateRgn(hwnd, nullptr, FALSE);
                     UpdateWindow(hwnd);
@@ -451,9 +445,6 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UI
         case TCM_SETITEMSIZE:
             if (tab->Reshape(LOWORD(lp), HIWORD(lp))) {
                 tab->xClicked = -1;
-                if (tab->isMouseInClientArea) {
-                    PostMessage(hwnd, WM_MOUSEMOVE, 0, tab->mouseCoordinates);
-                }
                 if (tab->Count()) {
                     InvalidateRgn(hwnd, nullptr, FALSE);
                     UpdateWindow(hwnd);
@@ -498,17 +489,9 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UI
         case WM_MOUSEMOVE: {
             tab->mouseCoordinates = lp;
 
-            if (!tab->isMouseInClientArea) {
-                // Track the mouse for leaving the client area.
-                TRACKMOUSEEVENT tme = {0};
-                tme.cbSize = sizeof(TRACKMOUSEEVENT);
-                tme.dwFlags = TME_LEAVE;
-                tme.hwndTrack = hwnd;
-                if (TrackMouseEvent(&tme))
-                    tab->isMouseInClientArea = true;
+            if (0xff != wp) {
+                TrackMouseLeave(hwnd);
             }
-            if (wp == 0xFF) // The mouse left the client area.
-                tab->isMouseInClientArea = false;
 
             bool inX = false;
             int hl = wp == 0xFF ? -1 : tab->IndexFromPoint(GET_X_LPARAM(lp), GET_Y_LPARAM(lp), &inX);
