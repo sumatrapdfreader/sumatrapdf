@@ -1516,3 +1516,20 @@ __declspec(noinline) int GetMeasurementSystem() {
     return 1;
 }
 
+// ask for getting WM_MOUSELEAVE for the window
+// returns true if started tracking
+bool TrackMouseLeave(HWND hwnd) {
+    TRACKMOUSEEVENT tme = { 0 };
+    tme.cbSize = sizeof(TRACKMOUSEEVENT);
+    tme.dwFlags = TME_QUERY;
+    tme.hwndTrack = hwnd;
+    TrackMouseEvent(&tme);
+    if (0 != (tme.dwFlags & TME_LEAVE)) {
+        // is already tracking
+        return false;
+    }
+    tme.dwFlags = TME_LEAVE;
+    tme.hwndTrack = hwnd;
+    TrackMouseEvent(&tme);
+    return true;
+}

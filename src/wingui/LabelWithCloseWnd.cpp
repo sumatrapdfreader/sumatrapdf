@@ -173,12 +173,7 @@ static LRESULT CALLBACK WndProcLabelWithClose(HWND hwnd, UINT msg, WPARAM wp, LP
         ScheduleRepaint(w->hwnd);
 
         if (IsMouseOverClose(w)) {
-            // ask for WM_MOUSELEAVE notifications
-            TRACKMOUSEEVENT tme = { 0 };
-            tme.cbSize = sizeof(tme);
-            tme.dwFlags = TME_LEAVE;
-            tme.hwndTrack = hwnd;
-            TrackMouseEvent(&tme);
+            TrackMouseLeave(hwnd);
         }
         goto DoDefault;
     }
