@@ -180,7 +180,7 @@ class TabPainter {
         bool isTranslucentMode = inTitlebar && dwm::IsCompositionEnabled();
         if (isTranslucentMode) {
             PaintParentBackground(hwnd, hdc);
-        }  else {
+        } else {
             HBRUSH brush = CreateSolidBrush(colors.bar);
             FillRect(hdc, &rc, brush);
             DeleteObject(brush);
@@ -360,14 +360,22 @@ static void TabNotification(WindowInfo* win, UINT code, int idx1, int idx2) {
     }
 }
 
-static WNDPROC DefWndProcTabBar = nullptr;
-static LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass,
+                                   DWORD_PTR dwRefData) {
     PAINTSTRUCT ps;
     HDC hdc;
     int index;
     LPTCITEM tcs;
 
+    UNUSED(uIdSubclass);
+    UNUSED(dwRefData);
+
     TabPainter* tab = (TabPainter*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+
+    if (WM_NCDESTROY == msg) {
+        RemoveWindowSubclass(hwnd, TabBarProc, 0);
+        return DefSubclassProc(hwnd, msg, wp, lp);
+    }
 
     switch (msg) {
         case WM_DESTROY:
@@ -599,17 +607,17 @@ static LRESULT CALLBACK WndProcTabBar(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
         } break;
     }
 
-    return CallWindowProc(DefWndProcTabBar, hwnd, msg, wp, lp);
+    return DefSubclassProc(hwnd, msg, wp, lp);
 }
 
 void CreateTabbar(WindowInfo* win) {
-    HWND hwndTabBar = CreateWindow(WC_TABCONTROL, L"", WS_CHILD | WS_CLIPSIBLINGS /*| WS_VISIBLE*/ | TCS_FOCUSNEVER |
-                                                           TCS_FIXEDWIDTH | TCS_FORCELABELLEFT,
-                                   0, 0, 0, 0, win->hwndFrame, (HMENU)IDC_TABBAR, GetModuleHandle(nullptr), nullptr);
+    DWORD dwStyle = WS_CHILD | WS_CLIPSIBLINGS /*| WS_VISIBLE*/ | TCS_FOCUSNEVER | TCS_FIXEDWIDTH | TCS_FORCELABELLEFT;
+    DWORD dwStyleEx = 0;
+    auto h = GetModuleHandleW(nullptr);
+    HWND hwndTabBar = CreateWindowExW(dwStyleEx, WC_TABCONTROL, L"", dwStyle, 0, 0, 0, 0, win->hwndFrame,
+                                      (HMENU)IDC_TABBAR, h, nullptr);
 
-    if (!DefWndProcTabBar)
-        DefWndProcTabBar = (WNDPROC)GetWindowLongPtr(hwndTabBar, GWLP_WNDPROC);
-    SetWindowLongPtr(hwndTabBar, GWLP_WNDPROC, (LONG_PTR)WndProcTabBar);
+    SetWindowSubclass(hwndTabBar, TabBarProc, 0, (DWORD_PTR)win);
 
     SizeI tabSize = GetTabSize(win->hwndFrame);
     TabPainter* tp = new TabPainter(hwndTabBar, tabSize);
