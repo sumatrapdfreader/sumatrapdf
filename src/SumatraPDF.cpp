@@ -4320,13 +4320,6 @@ InitMouseWheelInfo:
                 return MA_ACTIVATEANDEAT;
             return MA_ACTIVATE;
 
-        case WM_NOTIFY:
-            if (wParam == IDC_TABBAR) {
-                if (win)
-                    return TabsOnNotify(win, lParam);
-            }
-            return DefWindowProc(hwnd, msg, wParam, lParam);
-
         case WM_ERASEBKGND:
             return TRUE;
 
