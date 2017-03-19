@@ -360,6 +360,19 @@ static void TabNotification(WindowInfo* win, UINT code, int idx1, int idx2) {
     }
 }
 
+static LRESULT CALLBACK TabBarParentProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass,
+                                         DWORD_PTR dwRefData) {
+    UNUSED(uIdSubclass);
+
+    if (msg == WM_NOTIFY && wp == IDC_TABBAR) {
+        WindowInfo* win = (WindowInfo*)dwRefData;
+        if (win)
+            return TabsOnNotify(win, lp);
+    }
+
+    return DefSubclassProc(hwnd, msg, wp, lp);
+}
+
 static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass,
                                    DWORD_PTR dwRefData) {
     PAINTSTRUCT ps;
@@ -373,6 +386,7 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UI
     TabPainter* tab = (TabPainter*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 
     if (WM_NCDESTROY == msg) {
+        RemoveWindowSubclass(GetParent(hwnd), TabBarParentProc, 0);
         RemoveWindowSubclass(hwnd, TabBarProc, 0);
         return DefSubclassProc(hwnd, msg, wp, lp);
     }
@@ -618,6 +632,7 @@ void CreateTabbar(WindowInfo* win) {
                                       (HMENU)IDC_TABBAR, h, nullptr);
 
     SetWindowSubclass(hwndTabBar, TabBarProc, 0, (DWORD_PTR)win);
+    SetWindowSubclass(GetParent(hwndTabBar), TabBarParentProc, 0, (DWORD_PTR)win);
 
     SizeI tabSize = GetTabSize(win->hwndFrame);
     TabPainter* tp = new TabPainter(hwndTabBar, tabSize);
@@ -795,10 +810,11 @@ LRESULT TabsOnNotify(WindowInfo* win, LPARAM lparam, int tab1, int tab2) {
 
         case T_CLOSE:
             current = TabCtrl_GetCurSel(win->hwndTabBar);
-            if (tab1 == current)
+            if (tab1 == current) {
                 CloseTab(win);
-            else
+            } else {
                 RemoveTab(win, tab1);
+            }
             break;
 
         case T_DRAG:
@@ -809,8 +825,9 @@ LRESULT TabsOnNotify(WindowInfo* win, LPARAM lparam, int tab1, int tab2) {
 }
 
 static void ShowTabBar(WindowInfo* win, bool show) {
-    if (show == win->tabsVisible)
+    if (show == win->tabsVisible) {
         return;
+    }
     win->tabsVisible = show;
     win::SetVisibility(win->hwndTabBar, show);
     RelayoutWindow(win);
@@ -874,8 +891,9 @@ void TabsSelect(WindowInfo* win, int tabIndex) {
 // Selects the next (or previous) tab.
 void TabsOnCtrlTab(WindowInfo* win, bool reverse) {
     int count = (int)win->tabs.Count();
-    if (count < 2)
+    if (count < 2) {
         return;
+    }
 
     int next = (TabCtrl_GetCurSel(win->hwndTabBar) + (reverse ? -1 : 1) + count) % count;
     TabsSelect(win, next);
