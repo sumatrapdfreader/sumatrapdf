@@ -81,7 +81,7 @@ enum {
     RARNumberOfInstructions = 40,
 };
 
-RARProgram *RARCreateProgram();
+RARProgram *RARCreateProgram(void);
 void RARDeleteProgram(RARProgram *prog);
 bool RARProgramAddInstr(RARProgram *prog, uint8_t instruction, bool bytemode);
 bool RARSetLastInstrOperands(RARProgram *prog, uint8_t addressingmode1, uint32_t value1, uint8_t addressingmode2, uint32_t value2);
