@@ -153,7 +153,7 @@ workspace "SumatraPDF"
     language "C++"
     -- TODO: try /D USE_EXCEPTION_EMULATION to see if it reduces the size
     -- and disables the exceptions warnings
-    defines { "NEED_JPEG_DECODER", "THREADMODEL=0", "DDJVUAPI=/**/",  "MINILISPAPI=/**/", "DO_CHANGELOCALE=0" }
+    defines { "NEED_JPEG_DECODER", "THREADMODEL=0", "DDJVUAPI=/**/",  "MINILISPAPI=/**/", "DO_CHANGELOCALE=0", "DEBUGLVL=0" }
     disablewarnings { "4100", "4189", "4244", "4267", "4302", "4311", "4312" }
     disablewarnings { "4456", "4457", "4459", "4530", "4611", "4701", "4702", "4703", "4706" }
     includedirs { "ext/libjpeg-turbo" }
