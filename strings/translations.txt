@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-99eef0b4ce6ff241d2539d8edf836d6767fc5c1b
+895a82ae0922652262246c5d8e73963d7dbe7cfb
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -102,7 +102,7 @@ hi:वास्तविक आकार(&A)\tCtrl+1
 hr:Stvarna veličina\tCtrl+1
 hu:&Tényleges méret\tCtrl+1
 id:&Ukuran Sebenarnya\tCtrl+1
-it:&Dimensioni reali\t<Ctrl>+1
+it:&Dimensioni reali\tCtrl+1
 ja:実際のサイズ(&A)\tCtrl+1
 jv:&Ukuran Nyata\tCtrl+1
 ka:&თავდაპირველი ზომა\tCtrl+1
@@ -177,6 +177,7 @@ lt:&Išplėstiniai nustatymai...
 lv:&Papildu opcijas...
 mk:&Напредни oпции...
 my:&Tetapan terperinci...
+ne:&उन्नत विकल्प
 nl:&Geavanceerde Opties...
 nn:&Avanserte innstillingar
 no:&Avanserte innstillinger
@@ -290,7 +291,7 @@ hi:&वापस\t Alt+बायाँ तीर
 hr:Natrag\tAlt+<-
 hu:Ugrás vissza\tAlt+<-
 id:Kembali\tAlt+<-
-it:&Indietro\t<Alt>+<Freccia sinistra>
+it:&Indietro\tAlt+Freccia Sinistra
 ja:前に戻る(&B)\tAlt+←
 jv:&Mbalik\tAlt+Arah Kiri
 ka:&უკან\tAlt+მარცხენა ისარი
@@ -352,7 +353,7 @@ hi:&पुस्तक के रुप में देखें\tCtrl+8
 hr:&Knjiški pregled\tCtrl+8
 hu:&Könyv-mód (oldalpár címlappal)\tCtrl+8
 id:Tampilan &Buku\tCtrl+8
-it:Vista &libro\t<Ctrl>+8
+it:Vista &libro\tCtrl+8
 ja:ブック ビュー&(B)\tCtrl+B
 jv:&Tampilan Buku\tCtrl+8
 ka:&წიგნის რეჟიმი\tCtrl+8
@@ -543,7 +544,7 @@ hi:च&यनित का नक़ल करें\tCtrl+C
 hr:Kopiraj odabir\tCtrl+C
 hu:Kijelölés másolása\tCtrl+C
 id:Salin Hasil Seleksi\tCtrl+C
-it:&Copia selezione\t<Ctrl>+C
+it:&Copia selezione\tCtrl+C
 ja:選択範囲のコピー(&C)\tCtrl+C
 ka:მონიშნულის &კოპირება\tCtrl+C
 kr:선택한 부분 복사(&C)\tCtrl+C
@@ -731,7 +732,7 @@ hi:&समतल करना\tCtrl+7
 hr:&Dvije stranice\tCtrl+7
 hu:&Oldalpár\tCtrl+7
 id:Meng&hadap\tCtrl+7
-it:Pagine &affiancate\t<Ctrl>+7
+it:Pagine &affiancate\tCtrl+7
 ja:見返し表示(&F)\tCtrl+7
 ka:&ურთიერთ-საპირისპიროდ\tCtrl+7
 kr:두 페이지씩(&F)\tCtrl+7
@@ -1094,6 +1095,7 @@ am:&Անցնել էջի.
 ar:انتقل إلى صفحة&
 az:&Səhifə:
 bg:Отиди на &страница:
+bn:&পেইজে যান
 br:&Ir para a página:
 bs:&Idi na stranicu:
 by:&Перайсці да старонкі
@@ -1253,7 +1255,7 @@ hi:अन्तिम पृष्ठ पर\tHome
 hr:Posljednja stranica\tEnd
 hu:Utolsó oldal\tEnd
 id:Halaman Terakhir\tEnd
-it:&Ultima pagina\t<Fine>
+it:&Ultima pagina\tTasto Fine
 ja:最後のページ(&L)\tEnd
 ka:&ბოლო გვერდი\tEnd
 kr:마지막 페이지(&L)\tEnd
@@ -1511,7 +1513,7 @@ hi:अगले पृष्ठ पर\t->
 hr:Sljedeća stranica\t->
 hu:Következő oldal\t->
 id:Halaman Berikutnya\t->
-it:Pagi&na successiva\t<Freccia destra>
+it:Pagi&na successiva\tFreccia Destra
 ja:次のページ(&N)\t→
 ka:შ&ემდეგი გვერდი\tმარჯვენა ისარი
 kr:다음 페이지(&N)\t오른쪽 방향키
@@ -1868,6 +1870,7 @@ am:&Ընտրանքներ
 ar:&الخيارات
 az:&Seçimlər
 bg:&Настройки
+bn:&অপশন
 br:&Opções
 bs:&Opcije
 ca-xv:&Opcions
@@ -1899,6 +1902,7 @@ lt:&Nuostatos
 lv:&Opcijas
 mk:&Опции
 my:&Tetapan
+ne:&विकल्पहरु
 nl:&Opties
 nn:&Innstillingar
 no:&Tillegg
@@ -1958,7 +1962,7 @@ lt:&Nuostatos...
 lv:&Opcijas...
 mk:&Опции...
 my:&Pilihan...
-ne:&विकल्पहरु
+ne:&विकल्पहरु...
 nl:&Opties...
 nn:&Innstillingar...
 no:&Innstillinger...
@@ -2132,7 +2136,7 @@ hi:पिछले पृष्ठ पर\t<-
 hr:Prethodna stranica\t<-
 hu:Előző oldal\t<-
 id:Halaman Sebelumnya\t<-
-it:&Pagina precedente\t<Freccia sinistra>
+it:&Pagina precedente\tFreccia Sinistra
 ja:前のページ(&P)\t←
 ka:წი&ნა გვერდი\tმარცხენა ისარი
 kr:이전 페이지(&P)\t왼쪽 방향키
@@ -2624,7 +2628,7 @@ hi:इस तरह संभालें(&S)\tCtrl+S
 hr:&Spremi kao...\tCtrl+S
 hu:Ment&és másként...\tCtrl+S
 id:&Simpan Sebagai...\tCtrl+S
-it:&Salva con nome...\t<Ctrl>+S
+it:&Salva con nome...\tCtrl+S
 ja:名前を付けて保存(&S)...\tCtrl+S
 ka:შენახვა &როგორც...\tCtrl+S
 kr:다른 이름으로 저장(&S)...\tCtrl+S
@@ -2810,7 +2814,7 @@ hi:&एकल पृष्ठ\tCtrl+6
 hr:&Jedna stranica\tCtrl+6
 hu:&Egyoldalas\tCtrl+6
 id:Halaman &Tunggal\tCtrl+6
-it:Pagina &singola\t<Ctrl>+6
+it:Pagina &singola\tCtrl+6
 ja:単一ページ(&S)\tCtrl+6
 ka:&თითო გვერდად\tCtrl+6
 kr:한 페이지씩(&S)\tCtrl+6
@@ -3069,6 +3073,7 @@ ku:&پەنجەرە
 lt:&Langas
 lv:&Logs
 mk:&Прозорец
+ne:&सन्झ्याल
 nl:&Venster
 nn:&Vindu
 no:&Vindu
@@ -3476,6 +3481,7 @@ am:Ավելացնել %s էջը ընտրյալներին
 ar:الى المفضلة %s اضافة صفحة
 az:%s. səhifəni seçilmişlərə əlavə et
 bg:Добавяне на страница %s към любимите
+bn:এই পাতাটিকে %s প্রিয়তে যোগ করুন
 br:Adicionar página %s aos Favoritos
 bs:Dodaj stranicu %s u favorite
 by:Дадаць старонку %s да выбраных
@@ -3537,6 +3543,7 @@ am:Ավելացնել %s էջը ընտրյալներին հետևյալ անվա
 ar:(الى المفضلة مع  اسم (إختياري %s اضافة صفحة:
 az:%s. səhifəni bu (istənilən) adla seçilmişlərə əlavə et:
 bg:Добавяне на страница %s към любимите с име (по избор):
+bn:%s পেইজটাকে প্রিয়তে যোগ করুন নাম সহ (ইচ্ছাকৃত) 
 br:Adicionar página %s aos Favoritos com outro nome (opcional):
 bs:Dodaj stranicu %s u favorite sa (opcionalnim) nazivom:
 ca-xv:Afegix la pàgina %s als preferits amb el nom (opcional):
@@ -4247,6 +4254,7 @@ am:Ինքնաշխատ ստուգել &թարմացումները
 ar:التحقق تلقائياً  من وجود &تحديثات
 az:Yeniləmələri avto&matik yoxla
 bg:Автоматична проверка за &обновления
+bn:স্বয়ংক্রিয় &আপডেট যাচাই করুন
 br:&Procurar atualizações automaticamente
 bs:Automatski provjeravaj za &nadogradnju
 by:&Аўтаматычная праверка абнаўленняў
@@ -4404,7 +4412,7 @@ hi:संभाले हुए चिह्न\tF12
 hr:Straničnik\tF12
 hu:Könyvjelzők\tF12
 id:&Markah\tF12
-it:Segna&libri\t<F12>
+it:Segna&libri\tF12
 ja:ブックマーク(&M)\tF12
 ka:&სანიშნები\tF12
 kr:책갈피(&M)\tF12
@@ -5996,7 +6004,7 @@ lt:Nepavyko sukurti laikino katalogo
 lv:Nevarēja izveidot pagaidu direktoriju
 mk:Не можам да создадам привремена папка
 my:Tidak dapat mencipta direktori sementara
-ne:अस्थाई डाइरेक्टरी बनाउन सकिएन
+ne:अस्थाई डाइरेक्टरी सिर्जना गर्न असमर्थ
 nl:Kan tijdelijke map niet aanmaken
 nn:Kunne ikkje lage midlertidig direktiv
 no:Kunne ikke opprette en midlertidig mappe
@@ -6053,6 +6061,7 @@ lt:Nepavyko sukurti įdiegimo katalogo
 lv:Nevarēja izveidot instalācijas direktoriju
 mk:Не можам да ја создадам папката за инсталација
 my:Tidak dapat mencipta direktori pemasangan
+ne:स्थापना डाइरेक्टरी सिर्जना गर्न असमर्थ
 nl:Kan de installatiemap niet aanmaken
 nn:Kunne ikkje lage installasjonsdirektivet
 no:Kunne ikke opprette installasjonsmappen 
@@ -6171,6 +6180,7 @@ lt:Nepavyko įdiegti PDF peržiūros programą
 lv:Nevarēja instalēt PDF priekšskatījumu
 mk:Не можам да инсталирам прикажувачот на PDF
 my:Tidak dapat memasang previewer PDF
+ne:PDF पूर्वावलोकनकर्ता स्थापना गर्न असमर्थ
 nl:Kan PDF-previewer niet installeren
 nn:Kunne ikkje installere PDF-forhandsvisar
 no:Kunne ikke installere PDF forhåndsvisning
@@ -6227,6 +6237,7 @@ lt:Nepavyko įdiegti PDF paieškos filtro
 lv:Nevarēja instalēt PDF meklēšanas filtru
 mk:Не можам да инсталирам филтер за пребарување на PDF
 my:Tidak dapat memasang penapis carian PDF
+ne:PDF खोज फिल्टर स्थापना गर्न असमर्थ
 nl:Kan PDF-zoekfilter niet installeren
 nn:Kunne ikkje installere PDF-søkjefilter
 no:Kunne ikke installere PDF søkefilter
@@ -6281,6 +6292,7 @@ lt:Nepavyko gauti laikinojo katalogo
 lv:Nevarēja iegūt pagaidu direktoriju
 mk:Не можам да пристапам до привремената папка
 my:Tidak boleh mendapatkan direktori sementara
+ne:अस्थाई डाइरेक्टरी प्राप्त गर्न असमर्थ
 nl:Kan tijdelijke map niet verkrijgen
 nn:Kunne ikkje hente midlertidig direktiv
 no:Kunne ikke finne midlertidig mappe
@@ -6305,6 +6317,7 @@ am:Հնարավոր չեղավ ջնջել տեղադրման թղթապանակ�
 ar:لا يمكن إزالة دليل التثبيت
 az:Quraşdırma qovluğunu silmək mümkün olmadı
 bg:Не можа да се изтрие инсталационната директория
+bn:ইনস্টল ডিরেক্টরি মোছা সম্ভব হল না
 br:Não foi possível remover a pasta de instalação
 bs:Neuspješno uklanjanje instalacijskog direktorija
 ca-xv:No es pot suprimir el directori d'instal·lació
@@ -6335,6 +6348,7 @@ lt:Nepavyko pašalinti įdiegimo katalogo
 lv:Nevarēja noņemt instalācijas direktoriju
 mk:Не можам да ја избришам инсталационата папка
 my:Tidak dapat memadamkan direktori pemasangan
+ne:स्थापना डाइरेक्टरी हटाउन गर्न असमर्थ
 nl:Kan installatiemap niet verwijderen
 nn:Kunne ikkje fjerne installasjonsdirektiv
 no:Kunne ikke fjerne installasjonsmappen
@@ -6391,6 +6405,7 @@ lt:Nepavyko pašalinti nuorodos
 lv:Nevarēja noņemt saīsni
 mk:Не можам да ја избришам кратенката
 my:Tidak dapat membuang shortcut
+ne:सर्टकट हटाउन गर्न असमर्थ
 nl:Kon snelkoppeling niet verwijderen
 nn:Kunne ikkje fjerne snarvegen
 no:Kunne ikke fjerne snarveien
@@ -6508,6 +6523,7 @@ lt:Nepavyko pašalinti PDF peržiūros programos
 lv:Nevarēja atinstalēt PDF priekšskatījumu
 mk:Не можам да го избришам прикажувачот на PDF
 my:Tidak dapat membuang previewer PDF
+ne:पूर्वावलोकनकर्ता हटाउन असमर्थ
 nl:Kan PDF-previewer niet verwijderen
 nn:Kunne ikkje avinstallere PDF-forhandsvisar
 no:Kunne ikke avinstallere PDF forhåndsvisning
@@ -6563,6 +6579,7 @@ lt:Nepavyko pašalinti PDF paieškos filtro
 lv:Nevarēja atinstalēt PDF meklēšanas filtru
 mk:Не можам да го избришам филтерот за пребарување на PDF
 my:Tidak dapat memadam penapis carian PDF
+ne:खोज फिल्टर हटाउन असमर्थ
 nl:Kon PDF zoek filter niet deïnstalleren
 nn:Kunne ikkje avinstallere PDF-søkjefilteret
 no:Kunne ikke avinstallere PDF søkefilter
@@ -6618,6 +6635,7 @@ lt:Nepavyko pašalinti naršyklės įskiepio
 lv:Nevarēja atinstalēt pārlūkprogrammas spraudni
 mk:Не можам да го избришам додатокот за прелистувачи
 my:Tidak dapat membuang pelayar plugin
+ne:ब्राउजर प्लगइन हटाउन असमर्थ
 nl:Kan browserplugin niet verwijderen
 nn:Kunne ikkje avinstallere nettlesartillegget
 no:Kunne ikke avinstallere nettlesertillegget
@@ -6857,6 +6875,7 @@ ku:شوێنی نیشانەی ماوس:
 lt:Žymeklio pozicija:
 lv:Kursora pozīcija:
 mk:Местоположба на покажувач:
+ne:कर्सर स्थिति:
 nl:Cursor positie
 nn:Markørposisjon:
 no:Skrivemerkeposisjon:
@@ -6902,7 +6921,7 @@ hi:प्रचलन ज़ूम (&Z)...\tCtrl+Y
 hr:&Prilagođeno uvećanje...\tCtrl+Y
 hu:... Egyéni méret\tCtrl+Y
 id:&Pembesaran Buatan\tCtrl+Y
-it:Ingrandimento personali&zzato\t<Ctrl>+Y
+it:Ingrandimento personali&zzato\tCtrl+Y
 ja:拡大率の指定(&Z)...\tCtrl+Y
 ka:&მასშტაბის მითითება...\tCtrl+Y
 kr:사용자 지정 배율(&Z)...\tCtrl+Y
@@ -6940,6 +6959,7 @@ am:Ծրագրային &դասավորություն.
 ar:التخطيط الافتراضي&
 az:Standart &düzüm:
 bg:&Разположение по подразбиране:
+bn:পুর্বনির্ধারিত &লে্‌আউট
 br:&Visualização Padrão
 bs:Izvorni &izgled:
 by:&Кампаноўка па змаўчанні
@@ -7003,6 +7023,7 @@ am:Ծրագրային &չափը.
 ar:التكبير الافتراضي&:
 az:Standart miq&yas:
 bg:&Увеличение по подразбиране:
+bn:পুর্ব নির্ধারিত &বড় আকৃতি
 br:&Zoom Padrão
 bs:Izvorno &uvećanje:
 by:&Маштаб па змаўчанні
@@ -7066,6 +7087,7 @@ am:Շարժական վիճակում հնարավոր չէ փոխել PDF կար
 ar:لا يمكن تغيير قارئ المستندات المحمولة الافتراضية في وضع المحمول 
 az:Mobil rejimdə PDF fayllarla əlaqə yaratmaq mümkün deyil
 bg:PDF четеца не може да бъде сменен в преносим режим
+bn:পুর্বনির্ধারিত পিডিএফ রিডার বহনযোগ্য অবস্থায় বদলানো যাবে না
 br:Não é possível alterar o leitor PDF padrão no modo portátil
 bs:Glavni preglednik PDF fajlova se ne može promijeniti u portable režimu
 by:У мабільным рэжыме змяніць PDF-в'юер нельга
@@ -7404,7 +7426,7 @@ hi:बाहर निकलें(&x)\tCtrl+Q
 hr:&Izađi\tCtrl+Q
 hu:&Kilépés\tCtrl+Q
 id:&Keluar\tCtrl+Q
-it:Es&ci\t<Ctrl>+Q
+it:Es&ci\tCtrl+Q
 ja:終了(&X)\tCtrl+Q
 ka:&გამოსვლა\tCtrl+Q
 kr:끝내기(&X)\tCtrl+Q
@@ -7446,6 +7468,7 @@ am:EPUB ebooks
 ar:EPUB كتب الكترونية
 az:EPUB e-kitabları
 bg:EPUB документи
+bn:EPUB ইবুকগুলো
 br:Documentos EPUB
 bs:EPUB dokumenti
 ca-xv:Documents EPUB
@@ -7643,6 +7666,7 @@ am:Մուտքագրեք հրաման, որը կկատարվի PDF ֆայլում
 ar:ادخل سطر الاوامر للاستدعاء عند النقر المزدوج فوق وثيقة المستندات المحمولة
 az:PDF sənədinin üstünə iki dəfə basdıqda çağırılan komanda sətrini daxil edin:
 bg:Въведете командата, която ще бъде изпълнена при двоен клик върху PDF документа:
+bn:কমান্ড লাইন লিখুন, যখন আপনি পিডিএফ ফাইলে দুবার ক্লিক করবেন
 br:Digite a linha de comando a ser invocada com um duplo clique sobre o documento PDF:
 bs:Unesite komandnu liniju za izvršavanje prilikom dvostrukog klika na PDF dokument:
 ca-xv:Introduïu la línia d'ordes que voleu executar en fer doble clic al document PDF:
@@ -7840,7 +7864,7 @@ hi:अग&ला\tAlt+दायाँ तीर
 hr:Naprijed\tAlt+->
 hu:Ugrás előre\tAlt+->
 id:Berikutnya\tAlt+->
-it:A&vanti\t<Alt>+<Freccia destra>
+it:A&vanti\tAlt+Freccia Destra
 ja:次に進む(&O)\tAlt+→
 ka:&წინ\tAlt+ისარი მარჯვნივ
 kr:이후에 본 페이지(&O)\tAlt+오른쪽 방향키
@@ -7904,7 +7928,7 @@ hi:पूरा परदा\tCtrl+Shift+L
 hr:Cijeli zaslon\tCtrl+Shift+L
 hu:Teljes képernyő\tCtrl+Shift+L
 id:Selayar Penuh\tCtrl+Shift+L
-it:S&chermo intero\t<Ctrl>+<Maiusc>+L
+it:S&chermo intero\tF11
 ja:全画面表示(&U)\tCtrl+Shift+L
 ka:მთელ &ეკრანზე\tCtrl+Shift+L
 kr:전체 화면(&U)\tCtrl+Shift+L
@@ -8045,6 +8069,7 @@ lt:Nepavyko šalinimo programos nukopijuoti į laikiną katalogą
 lv:Neizdevās iekopēt instalācijas noņemšanas programmu pagaidu direktorijā
 mk:Не успеав да го ископирам деинсталаторот во привремената папка
 my:Gagal untuk menyalin uninstaller untuk direktori sementara
+ne:अनस्थापकको प्रतिलिपि टेम्प फोल्डरमा बनाउन असमर्थ
 nl:Kon deinstallatie programma niet kopieren naar tijdelijke folder
 nn:Mislykkas i å kopiere installasjonsfjernar til det midlertidige direktivet
 no:Kan ikke kopiere avinstalleringsrutinen til midlertidig mappe
@@ -8100,6 +8125,7 @@ lt:Nepavyko sukurti nuorodos
 lv:Neizdevās izveidot saīsni
 mk:Не успеав да создадам кратенка
 my:Gagal untuk mencipta shortcut
+ne:सर्टकट सिर्जना गर्न असमर्थ
 nl:Kon snelkoppeling niet aanmaken
 nn:Klarte ikkje å lage ein snarveg
 no:Kan ikke opprette snarvei
@@ -8154,6 +8180,7 @@ lt:Nepavyko ištrinti šalinimo programos registro raktų
 lv:Neizdevās izdzēst instalācijas noņemšanas programmas reģistra atslēgas
 mk:Не успеав да ги избришам регистарските клучеви на деинсталаторот
 my:Gagal untuk memadam kekunci pendaftaran uninstaller
+ne:अनस्थापकको रजिस्टरी कुञ्जीहरू हटाउन असमर्थ
 nl:Kon deinstallatie register sleutels niet verwijderen
 nn:Mislykkast i å slette avinstalleringsregisternøklane
 no:Kan ikke slette avinstalleringsnøkler i Registeret
@@ -8190,11 +8217,12 @@ fr:Échec de l'enregistrement comme programme par défaut sous Windows 10.
 he:רישום SumatraPDF כתוכנת ברירת מחדל לקובצי PDF ב- Windows 10 נכשל.
 hr:Neuspješno registriranje kao zadani program na Windows 10
 hu:Sikertelen regisztráció alapértelmezett programként Windows 10-en
-it:Impossibile registrare come programma predefinito su Win 10\r\n
+it:Impossibile registrare come programma predefinito su Win 10\n
 ja:Windows 10 で既定のプログラムとして登録するのに失敗しました
 kr:Windows 10 상에서 기본 프로그램으로 등록하지 못했습니다.
 lt:Nepavyko programos padaryti numatytąja Windows 10 sistemoje
 lv:Neizdevās reģistrēt kā noklusējuma programmu Windows 10 vidē
+ne:Win 10 मा पूर्वनिर्धारित कार्यक्रमको रूपमा दर्ता गर्न असमर्थ 
 nl:Als standaard App in Windows 10 aanmelden mislukt
 nn:Klarte ikkje å bli registrert som standardprogram i Windows 10.
 no:Klarte ikke å bli registrert som standardprogram i Windows 10.
@@ -8204,6 +8232,7 @@ sk:Nastavenie predvoleného programu pod Windows 10 zlyhalo.
 sl:Napaka pri registraciji kot win 10 privzeti program
 sp-rs:Neuspelo postavljanje kao podrazumevani program na win 10
 sr-rs:Неуспело постављање као подразумевани програм на wин 10
+sv:Misslyckades med registrering som standardprogram på Win 10.
 tr:\nWin 10'da varsayılan program olarak kayıt edilemedi
 tw:Win 10 默認程式註冊失敗
 uk:Не вдалося зареєструватися як програма по замовчуванню у Windows 10
@@ -8368,6 +8397,7 @@ lt:Nepavyko į registrą įrašyti išplėstinės failo plėtinio informacijos
 lv:Neizdevās ierakstīt failu paplašinājumu informāciju reģistrā
 mk:Не успеав да ги запишам информациите за типови на датотеки во регистарот
 my:Gagal menulis fail lanjutan maklumat tambahan ke dalam registry
+ne:रजिस्ट्रीमा विस्तृत फाइल एक्स्टेनसन जानकारी लेख्न असमर्थ 
 nl:Kan uitgebreide bestandsextensie-informatie niet wegschrijven in register
 nn:Mislykkast i å skrive den utvida filutvidingsinformasjonen til registeret
 no:Kan ikke lagre utvidet filtypeinformasjon i Registeret
@@ -8422,6 +8452,7 @@ lt:Nepavyko į registrą įrašyti programos šalinimo informacijos
 lv:Neizdevās ierakstīt atinstalēšanas informāciju reģistrā
 mk:Не успеав да ги запишам информациите за деинсталаторот во регистарот
 my:Gagal untuk menulis maklumat pemasangan untuk registry
+ne:रजिस्ट्रीमा अनस्थापना जानकारी लेख्न असमर्थ
 nl:Kan deïnstallatie-informatie niet wegschrijven in het register
 nn:Mislykkast i å skrive avinstalleringsinformasjonen til registeret
 no:Kan ikke lagre avinstalleringsinformasjon i Registeret
@@ -8446,6 +8477,7 @@ am:Արագ վեբ դիտում
 ar:عرض سريع على الويب
 az:Sürətli veb-görüntü
 bg:Бърз Web изглед
+bn:দ্রুত ওয়েব ভিউ
 br:Visualização rápida na Web
 bs:Brzi web pregled
 ca-xv:Visualització ràpida de web
@@ -8502,6 +8534,7 @@ am:Ընտրյալներ
 ar:المفضلة
 az:Seçilmişlər
 bg:Любими
+bn:প্রিয়
 br:Favoritos
 bs:Favoriti
 ca-xv:Preferits
@@ -8593,6 +8626,7 @@ lt:FictionBook dokumentai
 lv:FictionBook dokumenti
 mk:Документи на FictionBook
 my:Dokumen FictionBook
+ne:FictionBook कागजातहरु
 nl:FictionBookdocumenten
 nn:FictionBook-dokumentar
 no:FictionBook-dokumenter
@@ -8617,6 +8651,7 @@ am:%s ֆայլը չի գտնվել
 ar:الملف %s غير موجود
 az:Fayl %s tapılmadı
 bg:Файлът %s не е намерен
+bn:%s ফাইলটি পাওয়া যাচ্ছে না
 br:Arquivo %s não encontrado
 bs:Fajl %s nije pronađen
 ca-xv:No s'ha trobat el fitxer %s
@@ -8674,6 +8709,7 @@ am:Ֆայլի չափը՝
 ar:حجم الملف
 az:Faylın həcmi:
 bg:Големина на файла:
+bn:ফাইলের আকার:
 br:Tamanho do arquivo:
 bs:Veličina fajla:
 ca-xv:Mida del fitxer:
@@ -8736,6 +8772,7 @@ am:Ֆայլ՝
 ar:ملف
 az:Fayl:
 bg:Файл:
+bn:ফাইল:
 br:Arquivo:
 bs:Fajl:
 ca-xv:Fitxer:
@@ -8826,7 +8863,7 @@ hi:खोज...\tCtrl+F
 hr:Pronađi...\tCtrl+F
 hu:Keresés...\tCtrl+F
 id:Temukan...\tCtrl+F
-it:Tro&va...\t<Ctrl>+F
+it:Tro&va...\tCtrl+F
 ja:検索(&D)...\tCtrl+F
 ka:&ძიება...\tCtrl+F
 kr:찾기(&D)...\tCtrl+F
@@ -8867,6 +8904,7 @@ am:Գտնել
 ar:بحث
 az:Axtar
 bg:Търсене
+bn:খুজুন
 br:Localizar
 bs:Traži
 by:Знайсці
@@ -9158,7 +9196,7 @@ hi:सामग्री को फ़िट करें \tCtrl+3
 hr:Namjesti po &sadržaju\tCtrl+3
 hu:&Tartalom\tCtrl+3
 id:Sesuaikan Dengan &Konten\tCtrl+3
-it:Adatta al &contenuto\t<Ctrl>+3
+it:Adatta al &contenuto\tCtrl+3
 ja:内容に合わせる(&C)\tCtrl+3
 ka:&შიგთავსის მიხედვით\tCtrl+3
 kr:내용에 맞춤(&C)\tCtrl+3
@@ -9221,7 +9259,7 @@ hi:अनुरूप करें(&P)\tCtrl+0
 hr:Prilagodi &stranici\tCtrl+0
 hu:&Teljes oldal\tCtrl+0
 id:Sesuaikan Dengan &Halaman\tCtrl+0
-it:&Pagina intera\t<Ctrl>+0
+it:&Pagina intera\tCtrl+0
 ja:ページに合わせる(&P)\tCtrl+0
 ka:&გვერდის ზომაზე მორგება\tCtrl+0
 kr:페이지(세로) 맞춤(&P)\tCtrl+0
@@ -9290,7 +9328,7 @@ hi:चौड़ाई के अनुसार(&h)\tCtrl+2
 hr:&Namjesti po širini\tCtrl+2
 hu:Oldal&szélesség\tCtrl+2
 id:Sesuaikan Dengan &Lebar\tCtrl+2
-it:Adatta alla &larghezza della pagina\t<Ctrl>+2
+it:Adatta alla &larghezza della pagina\tCtrl+2
 ja:幅に合わせる(&W)\tCtrl+2
 ka:&სიგანეზე მორგება\tCtrl+2
 kr:너비(가로) 맞춤(&H)\tCtrl+2
@@ -9588,6 +9626,7 @@ am:Ձգել մեկ էջի չափով
 ar:ملائمة صفحة مفردة
 az:Tək səhifəyə sığışdır
 bg:Оразмери една страница
+bn:শুধু এক পৃষ্ঠার মাপমত করুন
 br:Ajustar em uma única página
 bs:Uklopi jednu stranicu
 ca-xv:Ajusta a una única pàgina
@@ -9648,6 +9687,7 @@ am:Տառատեսաներ.
 ar:الخطوط:
 az:Fontlar:
 bg:Шрифтове:
+bn:ফন্ট
 br:Fontes:
 bs:Fontovi:
 ca-xv:Tipus de lletra:
@@ -10110,6 +10150,7 @@ lt:Slėpti &Nuostatas
 lv:Paslēpt &opcijas
 mk:Скриј &опции
 my:Sembunyi &Tetapan
+ne:&विकल्पहरु लुकाउनुहोस्
 nl:Verberg &Opties
 nn:Skjul &innstillingar
 no:Skjule &Tillegg
@@ -10342,6 +10383,7 @@ lt:Įdiegti SumatraPDF
 lv:Instalēt SumatraPDF
 mk:Инсталирај SumatraPDF
 my:Pasang SumatraPDF
+ne:SumatraPDF स्थापना गर्नुहोस
 nl:Installeer SumatraPDF
 nn:Installer SumatraPDF
 no:Installer SumatraPDF
@@ -10397,6 +10439,7 @@ lt:Įdiegti SumatraPDF į &katalogą:
 lv:Instalēt SumatraPDF &mapē:
 mk:Инсталирај SumatraPDF во &папка:
 my:Pasang SumatraPDF dalam &folder
+ne:SumatraPDF स्थापना फोल्डर:
 nl:Installeer SumatraPDF in &map
 nn:Installer SumatraPDF i mappa:
 no:Installere SumatraPDF i &mappe:
@@ -10453,6 +10496,7 @@ lt:Įdiegimas nepavyko!
 lv:Instalēšana neizdevās!
 mk:Инсталирањето не успеа!
 my:Pemasangan gagal!
+ne:स्थापना विफल भयो!
 nl:Installatie mislukt!
 nn:Installering mislykkast!
 no:Feil ved installering!
@@ -10508,6 +10552,7 @@ lt:Vyksta programos įdiegimas...
 lv:Notiek instalēšana...
 mk:Инсталирањето е во тек...
 my:Pemasangan sedang dijalankan...
+ne:स्थापना प्रगति हुँदै...
 nl:Installatie in uitvoering...
 nn:Installering under arbeid...
 no:Installasjon pågår...
@@ -10630,6 +10675,7 @@ ku:هێشتنەوەی پێوەکراوی وێبگەڕ بە دامەزێرێنر�
 lt:Palikti PDF &naršyklės įskiepį įdiegtą (nebepalaikoma)
 lv:Paturēt pārlūka PDF spraudni instalētu (vairs netiek atbalstīts)
 mk:Задржи го додатокот за PDF за &прелистувачи (не е повеќе поддржан)
+ne:PDF ब्राउजर प्लगइन राख्नुहोस् (समर्थनयोग्य छैन)
 nl:Behoud de PDF-&browserplugin geïnstalleerd (niet langer ondersteund)
 nn:Behald installeringa av PDF-&nettlesartillegget (Ikkje lenger støtta)
 no:Fortsett å ha PDF-nettlesertillegget installert (Ikke lenger støttet)
@@ -10681,6 +10727,7 @@ lt:Leisti Windows Desktop Search &ieškoti PDF dokumentų
 lv:&Meklēt PDF dokumentus ar Windows Desktop Search
 mk:Дозволи Windows Desktop Search да пребарува низ PDF-документи
 my:Biarkan Windows Desktop Search &mencari dokumen PDF
+ne:Windows डेस्कटप खोजलाई PDF कागजात खोजी गर्न दिनुहोस्
 nl:Laat Windows Bureaublad Zoeker PDF documenten &zoeken
 nn:Let Windows Skrivebordssøk &søkje gjennom PDF-dokumentar
 no:La Windows søkemotor &søke PDF dokumenter
@@ -10735,6 +10782,7 @@ lt:Leisti Windows rodyti PDF dokumentų &peržiūras
 lv:Ļaut Windows rādīt PDF dokumentu &priekšskatījumus
 mk:Дозволи Windows да прикажува слики за PDF-документи
 my:Biarkan Windows menunjukkan &preview dokumen PDF
+ne:Windows लाई PDF कागजात पूर्वावलोकन देखाउन दिनुहोस्
 nl:Laat Windows &voorbeelden tonen van PDF documenten
 nn:Let Windows vise &forhandsvisingar av PDF-dokumentar
 no:La Windows vise &forhåndsvisning av PDF-dokumenter
@@ -10995,6 +11043,7 @@ lt:Man&ga režimas
 lv:&Manga režīms
 mk:Режим за Man&ga
 my:Mode Man&ga
+ne:Manga मोड
 nl:Man&gamodus
 nn:Man&ga-vising
 no:Man&ga-modus
@@ -11344,6 +11393,7 @@ am:Ոչինչ չի գտնվել
 ar:لا توجد متطابقات
 az:Uyğun mətn tapılmadı
 bg:Няма съвпадения
+bn:কোন মিল খুজে পাওয়া যায় নি
 br:Nenhuma ocorrência encontrada
 bs:Pojam nije pronađen
 by:Узор не знойдзены
@@ -12293,7 +12343,7 @@ hi:&गुण\tCtrl+D
 hr:S&vojstva...\tCtrl+D
 hu:&Tulajdonságok\tCtrl+D
 id:P&roperti\tCtrl+D
-it:P&roprietà\t<Ctrl>+D
+it:P&roprietà\tCtrl+D
 ja:プロパティ(&R)\tCtrl+D
 ka:&თვისებები...\tCtrl+D
 kr:속성(&R)\tCtrl+D
@@ -12660,7 +12710,7 @@ hi:पृष्ठ संख्या पर\tCtrl+G
 hr:Stranica...\tCtrl+G
 hu:Megadott oldal...\tCtrl+G
 id:Halaman...\tCtrl+G
-it:Pa&gina...\t<Ctrl>+G
+it:Pa&gina...\tCtrl+G
 ja:ページ指定(&G)...\tCtrl+G
 ka:&გვერდის მითითება...\tCtrl+G
 kr:페이지 이동(&G)...\tCtrl+G
@@ -13042,6 +13092,7 @@ ku:بەڵگە نامەکانی PalmDoc
 lt:PalmDoc dokumentai
 lv:PalmDoc dokumenti
 mk:документи на PalmDoc
+ne:PalmDoc कागजात
 nl:PalmDoc documenten
 nn:PalmDoc-dokumentar
 no:PalmDoc dokumenter
@@ -13262,7 +13313,7 @@ hi:&प्रस्तुति\tCtrl+L
 hr:Pr&ezentacija\tCtrl+L
 hu:Bemutató\tCtrl+L
 id:Pr&esentasi\tF5
-it:Pr&esentazione\t<Ctrl>+L
+it:Pr&esentazione\tF5
 ja:プレゼンテーション(&E)\tCtrl+L
 ka:წარმოდგ&ენა\tCtrl+L
 kr:프리젠테이션(&E)\tCtrl+L
@@ -13573,6 +13624,7 @@ lv:Notiek drukāšana.
 mk:Печатењето е во тек.
 ml:അച്ചടി പുരോഗമിക്കുന്നു
 my:Cetakan sedang dijalankan.
+ne:मुद्रण प्रगति.
 nl:Aan het printen.
 nn:Utskriving under arbeid.
 no:Utskrift pågår.
@@ -13628,6 +13680,7 @@ lt:Spausdinimas vis dar vyksta. Nutraukti ir išeiti?
 lv:Vēl joprojām notiek drukāšana. Priekšlaikus pārtraukt un beigt?
 mk:Печатењето е сè уште во тек. Да го поништам и прекинам?
 my:Cetakan sedang dilakukan. Batal dan Henti?
+ne:छपाई कार्य प्रगति हुदैछ | परित्याग गरि बन्द गर्ने?
 nl:Nog steeds aan het printen. Annuleren en stoppen?
 nn:Utskrivinga pågår framleis. Vil du stoppe og avslutte?
 no:Skriver ut fortsatt. Avbryte?
@@ -14154,7 +14207,7 @@ hi:बांयी ओर घूमाओ\tCtrl+Shift+-
 hr:Zaokreni nalijevo\tCtrl+Shift+-
 hu:Forgatás balra\tCtrl+Shift+-
 id:Putar Ke Kiri\tCtrl+Shift+-
-it:Ruota a &sinistra\t<Ctrl> <Maiusc> -
+it:Ruota a &sinistra\tCtrl+Maiusc+-
 ja:左に回転(&L)\tCtrl+Shift+-
 ka:მარ&ცხნივ გადაბრუნება\tCtrl+Shift+-
 kr:반시계 방향으로 회전(&L)\tCtrl+Shift+-
@@ -14223,7 +14276,7 @@ hi:दांयी ओर घूमाओ\tCtrl+Shift++
 hr:Zaokreni nadesno\tCtrl+Shift++
 hu:Forgatás jobbra\tCtrl+Shift++
 id:Putar Ke Kanan\tCtrl+Shift++
-it:Ruota a &destra\t<Ctrl> <Maiusc> +
+it:Ruota a &destra\tCtrl+Maiusc++
 ja:右に回転(&R)\tCtrl+Shift++
 ka:მარ&ჯვნივ გადაბრუნება\tCtrl+Shift++
 kr:시계 방향으로 회전(&R)\tCtrl+Shift++
@@ -14357,7 +14410,7 @@ hi:शॉ&र्टकट सहेजें... \tCtrl+Shift+S
 hr:Spremi p&rečac...\tCtrl+Shift+S
 hu:Parancsikon készítése...\tCtrl+Shift+S
 id:Simpan &Jalan Pintas...\tCtrl+Shift+S
-it:Salva &collegamento\t<Ctrl>+<Maiusc>+S
+it:Salva &collegamento\tCtrl+Maiusc+S
 ja:ショートカットを作成(&H)...\tCtrl+Shift+S
 ka:&ჩანიშვნა…\tCtrl+Shift+S
 kr:바로가기 저장(&H)...\tCtrl+Shift+S
@@ -14534,7 +14587,7 @@ hi:सब &चुनें\tCtrl+A
 hr:Obilježi &sve\tCtrl+A
 hu:Összes &kijelölése\tCtrl+A
 id:Pilih Semu&a\tCtrl+A
-it:Selezion&a tutto\t<Ctrl>+A
+it:Selezion&a tutto\tCtrl+A
 ja:すべて選択(&A)\tCtrl+A
 ka:ყ&ველას მონიშვნა\tCtrl+A
 kr:모두 선택(&A)\tCtrl+A
@@ -14593,7 +14646,7 @@ hi:सामग्री का चयन करने के लिये  Ctrl
 hr:Odaberi sadržaj pomoću Ctrl+lijeva tipka miša
 hu:Jelölje ki a másolandó részt Ctrl+Bal egérgombbal
 id:Pilih konten dengan tombol Ctrl+tombol kiri mouse
-it:Seleziona contenuti con <Ctrl>+pulsante sinistro del mouse
+it:Seleziona contenuti con Ctrl+pulsante sinistro del mouse
 ja:Ctrl+左マウス ボタンで内容を選択します
 ka:აირჩიეთ შიგთავსი, Ctrl და მაუსის მარცხენა ღილაკზე დაჭერით
 kr:Ctrl+마우스 왼쪽 버튼으로 내용을 선택하세요.
@@ -14661,6 +14714,7 @@ lt:Pasirinkite kur diegti SumatraPDF:
 lv:Atlasiet mapi, kurā jāinstalē SumatraPDF
 mk:Изберете ја папката каде што треба да се инсталира SumatraPDF:
 my:Pilih folder di mana SumatraPDF harus dipasang:
+ne:SumatraPDF स्थापना गर्ने फोल्डर चयन गर्नुहोस्:
 nl:Kies de folder waar SumatraPDF geinstalleerd moet worden:
 nn:Vel mappa der SumatraPDF skal bli installert:
 no:Velg mappe der SumatraPDF skal installeres:
@@ -14716,6 +14770,7 @@ lt:Pasirinkimas:
 lv:Atlase:
 mk:Селекција:
 my:Pilihan
+ne:चयन:
 nl:Selectie
 nn:Utval:
 no:Valg:
@@ -15326,6 +15381,7 @@ lt:Kai kurių, norimų diegti, failų trūksta arba jie yra pažeisti.
 lv:Kādi faili ir instalēti bojāti vai tie trūkst
 mk:Некои од датотеките што треба да се инсталираат се оштетени или недостасуваат
 my:Sesetengah fail yang akan dipasang akan rosak atau hilang
+ne:स्थापना गर्नुपर्ने केहि फाईलहरु बिग्रिएका अथवा हराएका छन्
 nl:Sommige bestanden voor de installatie zijn beschadigd of ontbreken
 nn:Nokre filar som skal installeres, enten mangler eller har forsvunnet.
 no:Noen filer som skal installeres er skadet eller mangler
@@ -15373,7 +15429,7 @@ hi:क्षमा करें, ऐसा नहीं होना चाह�
 hr:Isprika, ovo se nije trebalo dogoditi!\n\nMolimo kliknite 'Otkaži' ako nam želite pomoći ispraviti uzrok ovog rušenja.
 hu:Sajnáljuk, váratlan hiba történt!\n\nKérjük nyomja meg a Mégse gombot, ha segíteni szeretne nekünk a hiba kijavításában.
 id:Maaf, ini seharusnya tidak terjadi!\n\nHarap tekan 'Batalkan', jika Anda ingin membantu kami membetulkan penyebab kegagalan ini.
-it:Questo non doveva succedere!\n\nSe vuoi aiutarci a capire la causa del blocco del programma seleziona <Annulla>.
+it:Questo non doveva succedere!\n\nSe vuoi aiutarci a capire la causa del blocco del programma seleziona 'Annulla'.
 ja:謎のエラーが発生しました！\n\n「キャンセル」をクリックして、このエラーが起こった状況を報告して下さると助かります。
 ka:ბოდიშს გიხდით, ეს არ უნდა მომხდარიყო!\n\nთუ გსურთ რომ დაგვეხმაროთ ამ პრობლემის მოგვარებაში, გთხოვთ დააწკაპუნეთ ღილაკს 'გაუქმება'.
 kr:미안합니다, 그런 일이 일어날 리가 없는데!\n\n이 충돌의 원인을 해결하는데 도움을 주려면, '취소'를 누르세요.
@@ -15502,6 +15558,7 @@ lt:Paleisti SumatraPDF
 lv:Palaist SumatraPDF
 mk:Стартувај SumatraPDF
 my:Mula SumatraPDF
+ne:SumatraPDF सुरुवात गर्नुहोस
 nl:Start SumatraPDF
 nn:Start SumatraPDF
 no:Start SumatraPDF
@@ -15618,6 +15675,7 @@ lt:SumatraPDF diegimo programa %s
 lv:SumatraPDF %s instalētājs
 mk:Инсталација на SumatraPDF %s
 my:Installer SumatraPDF %s
+ne:Sumatrapdf %s स्थापक
 nl:SumatraPDF %s installatieprogramma
 nn:SumatraPDF %s-installerer
 no:SumatraPDF %s installering 
@@ -15672,6 +15730,7 @@ lt:SumatraPDF šalinimo programa %s
 lv:SumatraPDF %s atinstalētājs
 mk:Деинсталација на SumatraPDF %s
 my:SumatraPDF %s Uninstaller
+ne:SumatraPDF %s अनस्थापक
 nl:SumatraPDF %s deinstallatieprogramma
 nn:SumatraPDF %s-avinstallerer
 no:SumatraPDF %s avinstallering
@@ -15904,6 +15963,7 @@ lt:SumatraPDF buvo pašalinta.
 lv:SumatraPDF ir atinstalēta.
 mk:SumatraPDF е избришан.
 my:SumatraPDF telah dibuang.
+ne:SumatraPDF अनस्थापना भयो.
 nl:SumatraPDF werd verwijderd.
 nn:SumatraPDF har blitt avinstallert.
 no:SumatraPDF har blitt avinstallert.
@@ -15958,6 +16018,7 @@ lt:SumatraPDF įdiegimas nerastas.
 lv:SumatraPDF instalācija nav atrasta.
 mk:Не најдов инсталации на SumatraPDF.
 my:Pemasangan SumatraPDF tidak dijumpai.
+ne:SumatraPDF स्थापना फेला परेन.
 nl:SumatraPDF-installatie niet gevonden.
 nn:SumatraPDF-installeringa blei ikkje funnet.
 no:SumatraPDF installering ikke funnet.
@@ -16317,6 +16378,7 @@ lt:Ačiū, kad pasirinkote SumatraPDF!
 lv:Pateicamies par SumatraPDF izvēlēšanos!
 mk:Ви благодарам што го одбравте SumatraPDF!
 my:Terima kasih kerana memilih SumatraPDF!
+ne:SumatraPDF चयन गर्नुभएकोमा धन्यवाद !
 nl:Dank u om voor SumatraPDF te kiezen!
 nn:Takk for at du valde SumatraPDF!
 no:Takk for at du valgte SumatraPDF!
@@ -16427,6 +16489,7 @@ lt:Diegimo programa sugadinta. Prašome atsisiųsti ją iš naujo.\nAtsiprašome
 lv:Instalēšanas programma ir bijusi bojāta. Lūdzu, lejupielādējiet to vēlreiz.\nPiedodiet par sagādātajām neērtībām!
 mk:Датотеката за инсталирање е расипана. Ве молам преземете ја повторно.\nИзвинете на незгодата!
 my:Installer telah rosak. Sila muat turun sekali lagi.\nMinta maaf atas kesulitan!
+ne:अनस्थापक बिगारिएको छ | कृपया पुनः डाउनलोड गर्नुहोस् | \n असुविधाको लागि क्षमाप्रार्थी छौं।
 nl:Het installatieprogramma is beschadigd. Download het opnieuw aub.\nOnze excuses voor het ongemak!
 nn:Installeringsprogrammet har blitt korrumpert. Venligst installer han igjen.\nVi beklager for problemane!
 no:Installeringsprogrammet er defekt. Vennligst last det ned på nytt. \nBeklager!
@@ -16479,6 +16542,7 @@ kr:이 문서는 지원되지 않는 기능 (%s)을 사용했고, 제대로 렌�
 ku:ئەم بەڵگەنامەیە خزمەتگوزاری نەگونجاوی تێدایە  (%s) لەوانەیە بەباشی دەرنەکەێت
 lt:Šis dokumentas naudoja nepalaikomas funkcijas (%s) ir gali būti atvaizduotas neteisingai
 lv:Šajā dokumentā ir izmantotas neatbalstītas iespējas (%s), un iespējams, netiek atveidots pareizi
+ne:यो कागजातले असमर्थित सुविधा प्रयोग गर्छ (%s) र सहि रेंडर नहुन सक्छ
 nl:Dit document maakt gebruik van niet-ondersteunde functies (%s) en wordt mogelijk niet goed weergegeven
 nn:Dette dokumentet bruker ustøtta funksjoner (%s) og kan kanskje ikkje visast riktig.
 no:Dette dokumentet bruker ustøttede funksjoner (%s) og kan muligens ikke bli vist riktig.
@@ -16596,6 +16660,7 @@ lv:Atinstalēt SumatraPDF
 mk:Избриши SumatraPDF
 ml:സുമാത്ര പി.ഡി.എഫ്.നീക്കം ചെയ്യുക.
 my:Membuang SumatraPDF
+ne:SumatraPDF अनस्थापना गर्नुहोस
 nl:Deinstalleer SumatraPDF
 nn:Avinstaller SumatraPDF
 no:Avinstaller SumatraPDF
@@ -16651,6 +16716,7 @@ lt:Programos šalinimas nepavyko
 lv:Atinstalēšana neizdevās
 mk:Бришењето не успеа
 my:Penyahpasangan gagal
+ne:अनस्थापना विफल
 nl:Deinstallatie mislukt
 nn:Avinstallering mislykkast
 no:Feil ved avinstallering
@@ -16707,6 +16773,7 @@ lt:Vyksta programos šalinimas...
 lv:Notiek atinstalēšana...
 mk:Бришењето е во тек...
 my:Penyahpasangan sedang dijalankan ...
+ne:अनस्थापना प्रगति...
 nl:Deinstallatie is bezig...
 nn:Avinstallasjon under arbeid...
 no:Avinstallering pågår...
@@ -16823,6 +16890,7 @@ ku:بەکارهێنان &شریتەکان
 lt:Naudoti k&orteles
 lv:Lietot &cilnes
 mk:Користи &табови
+ne:&ट्याबहरू प्रयोग गर्नुहोस
 nl:Gebruik &tabs
 nn:Bruk &faner
 no:Bruk &faner
@@ -16875,6 +16943,7 @@ lt:Naudoti SumatraPDF kaip &numatytąją PDF peržiūros programą
 lv:Izmantot SumatraPDF kā &noklusējuma PDF lasītāju
 mk:Користи го SumatraPDF како &основен читач на PDF
 my:Jadikan SumatraPDF sebagai aplikasi utama pembaca PDF anda
+ne:SumatraPDF पूर्वनिर्धारित PDF पाठकको रूपमा प्रयोग गर्नुहोस
 nl:Gebruik SumatraPDF als &standaard PDF lezer
 nn:Bruk SumatraPDF som standard PDF-lesar
 no:Bruk SumatraPDF som &standard PDF-leser
