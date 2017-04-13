@@ -158,6 +158,15 @@ typedef ScopedGdiObj<HFONT> ScopedFont;
 typedef ScopedGdiObj<HPEN> ScopedPen;
 typedef ScopedGdiObj<HBRUSH> ScopedBrush;
 
+class ScopedHDC {
+    HDC hdc;
+
+public:
+    explicit ScopedHDC(HDC hdc) : hdc(hdc) {}
+    ~ScopedHDC() { DeleteDC(hdc); }
+    operator HDC() const { return hdc; }
+};
+
 class ScopedHdcSelect {
     HDC hdc;
     HGDIOBJ prev;
