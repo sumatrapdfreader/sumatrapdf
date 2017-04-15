@@ -365,9 +365,11 @@ struct GlobalPrefs {
     // if true, we show a list of frequently read documents when no
     // document is loaded
     bool showStartPage;
-    // if true, documents are opened in tabs instead of new windows
-    bool useTabs;
-    // information about opened files (in most recently used order)
+	// if true, documents are opened in tabs instead of new windows
+	bool useTabs;
+	// if true, tollbat arrows do BAck/FOrward instead of Prev/Next
+	bool toolbarBackForward;
+	// information about opened files (in most recently used order)
     Vec<FileState *> * fileStates;
     // state of the last session, usage depends on RestoreSession
     Vec<SessionData *> * sessionData;
@@ -614,8 +616,9 @@ static const FieldInfo gGlobalPrefsFields[] = {
     { offsetof(GlobalPrefs, sidebarDx),                Type_Int,         0                                                                                                                     },
     { offsetof(GlobalPrefs, tocDy),                    Type_Int,         0                                                                                                                     },
     { offsetof(GlobalPrefs, showStartPage),            Type_Bool,        true                                                                                                                  },
-    { offsetof(GlobalPrefs, useTabs),                  Type_Bool,        true                                                                                                                  },
-    { (size_t)-1,                                      Type_Comment,     0                                                                                                                     },
+	{ offsetof(GlobalPrefs, useTabs),                  Type_Bool,        true },
+	{ offsetof(GlobalPrefs, toolbarBackForward),       Type_Bool,        false },
+	{ (size_t)-1,                                      Type_Comment,     0                                                                                                                     },
     { offsetof(GlobalPrefs, fileStates),               Type_Array,       (intptr_t)&gFileStateInfo                                                                                             },
     { offsetof(GlobalPrefs, sessionData),              Type_Array,       (intptr_t)&gSessionDataInfo                                                                                           },
     { offsetof(GlobalPrefs, reopenOnce),               Type_StringArray, 0                                                                                                                     },
@@ -624,6 +627,6 @@ static const FieldInfo gGlobalPrefsFields[] = {
     { (size_t)-1,                                      Type_Comment,     0                                                                                                                     },
     { (size_t)-1,                                      Type_Comment,     (intptr_t)"Settings after this line have not been recognized by the current version"                                  },
 };
-static const StructInfo gGlobalPrefsInfo = { sizeof(GlobalPrefs), 53, gGlobalPrefsFields, "\0\0ThemeName\0EscToExit\0ReuseInstance\0RestoreSession\0\0FixedPageUI\0EbookUI\0ComicBookUI\0ChmUI\0ExternalViewers\0PrereleaseSettings\0ShowMenubar\0ReloadModifiedDocuments\0FullPathInTitle\0ZoomLevels\0ZoomIncrement\0\0PrinterDefaults\0ForwardSearch\0AnnotationDefaults\0DefaultPasswords\0CustomScreenDPI\0\0RememberStatePerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0CheckForUpdates\0VersionToSkip\0RememberOpenedFiles\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0ShowStartPage\0UseTabs\0\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0\0" };
+static const StructInfo gGlobalPrefsInfo = { sizeof(GlobalPrefs), 53, gGlobalPrefsFields, "\0\0ThemeName\0EscToExit\0ReuseInstance\0RestoreSession\0\0FixedPageUI\0EbookUI\0ComicBookUI\0ChmUI\0ExternalViewers\0PrereleaseSettings\0ShowMenubar\0ReloadModifiedDocuments\0FullPathInTitle\0ZoomLevels\0ZoomIncrement\0\0PrinterDefaults\0ForwardSearch\0AnnotationDefaults\0DefaultPasswords\0CustomScreenDPI\0\0RememberStatePerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0CheckForUpdates\0VersionToSkip\0RememberOpenedFiles\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0ShowStartPage\0UseTabs\0ToolbarBackForward\0\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0\0" };
 
 #endif

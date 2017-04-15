@@ -3783,6 +3783,10 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
         return 0;
     }
 
+	// Take care of toolbar left/right
+	if (wmId == IDC_TOOLBAR_LEFT) wmId = gGlobalPrefs->toolbarBackForward ? IDM_GOTO_NAV_BACK : IDM_GOTO_PREV_PAGE;
+	if (wmId == IDC_TOOLBAR_RIGHT) wmId = gGlobalPrefs->toolbarBackForward ? IDM_GOTO_NAV_FORWARD : IDM_GOTO_NEXT_PAGE;
+
     // most of them require a win, the few exceptions are no-ops
     switch (wmId)
     {

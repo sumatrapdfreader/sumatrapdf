@@ -4,6 +4,8 @@
 //
 #define IDI_SUMATRAPDF                  1
 #define IDI_PDFDOC                      2
+#define IDC_TOOLBAR_LEFT                110
+#define IDC_TOOLBAR_RIGHT               111
 #define IDD_DIALOG_GOTO_PAGE            129
 #define IDD_DIALOG_GET_PASSWORD         130
 #define IDD_DIALOG_PDF_ASSOCIATE        131
@@ -139,6 +141,7 @@
 #define IDC_SET_DEFAULT_READER          1030
 #define IDC_REMEMBER_OPENED_FILES       1031
 #define IDC_FIND_EDIT                   1032
+#define IDC_TOOLBAR_NAVIGATE            1032
 #define IDC_MATCH_CASE                  1033
 #define IDC_FIND_NEXT_HINT              1034
 #define IDC_SECTION_INVERSESEARCH       1040
@@ -163,7 +166,6 @@
 #define IDC_TABBAR                      1110
 #define IDB_TOOLBAR                     2000
 #define IDB_RELOADING_CUE               2010
-// TODO: which of these are (still) needed?
 #define IDT_FILE_NEW                    3000
 #define IDT_FILE_OPEN                   3001
 #define IDT_FILE_METAPATH               3002
@@ -198,13 +200,13 @@
 #define IDC_STATIC                      -1
 
 // Next default values for new objects
-//
+// 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        141
 #define _APS_NEXT_COMMAND_VALUE         32771
 #define _APS_NEXT_CONTROL_VALUE         1080
-#define _APS_NEXT_SYMED_VALUE           110
+#define _APS_NEXT_SYMED_VALUE           112
 #endif
 #endif

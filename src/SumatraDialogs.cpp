@@ -715,11 +715,12 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wParam,
         CheckDlgButton(hDlg, IDC_DEFAULT_SHOW_TOC, prefs->showToc ? BST_CHECKED : BST_UNCHECKED);
         CheckDlgButton(hDlg, IDC_REMEMBER_STATE_PER_DOCUMENT, prefs->rememberStatePerDocument ? BST_CHECKED : BST_UNCHECKED);
         EnableWindow(GetDlgItem(hDlg, IDC_REMEMBER_STATE_PER_DOCUMENT), prefs->rememberOpenedFiles);
-        CheckDlgButton(hDlg, IDC_USE_TABS, prefs->useTabs? BST_CHECKED : BST_UNCHECKED);
-        CheckDlgButton(hDlg, IDC_CHECK_FOR_UPDATES, prefs->checkForUpdates ? BST_CHECKED : BST_UNCHECKED);
+		CheckDlgButton(hDlg, IDC_USE_TABS, prefs->useTabs? BST_CHECKED : BST_UNCHECKED);
+		CheckDlgButton(hDlg, IDC_CHECK_FOR_UPDATES, prefs->checkForUpdates ? BST_CHECKED : BST_UNCHECKED);
         EnableWindow(GetDlgItem(hDlg, IDC_CHECK_FOR_UPDATES), HasPermission(Perm_InternetAccess));
-        CheckDlgButton(hDlg, IDC_REMEMBER_OPENED_FILES, prefs->rememberOpenedFiles ? BST_CHECKED : BST_UNCHECKED);
-        if (IsExeAssociatedWithPdfExtension()) {
+		CheckDlgButton(hDlg, IDC_REMEMBER_OPENED_FILES, prefs->rememberOpenedFiles ? BST_CHECKED : BST_UNCHECKED);
+		CheckDlgButton(hDlg, IDC_TOOLBAR_NAVIGATE, prefs->toolbarBackForward ? BST_CHECKED : BST_UNCHECKED);
+		if (IsExeAssociatedWithPdfExtension()) {
             SetDlgItemText(hDlg, IDC_SET_DEFAULT_READER, _TR("SumatraPDF is your default PDF reader"));
             EnableWindow(GetDlgItem(hDlg, IDC_SET_DEFAULT_READER), FALSE);
         } else if (IsRunningInPortableMode()) {
@@ -789,6 +790,7 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wParam,
             prefs->useTabs = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_USE_TABS));
             prefs->checkForUpdates = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_CHECK_FOR_UPDATES));
             prefs->rememberOpenedFiles = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_REMEMBER_OPENED_FILES));
+			prefs->toolbarBackForward = (BST_CHECKED == IsDlgButtonChecked(hDlg, IDC_TOOLBAR_NAVIGATE));
             if (prefs->enableTeXEnhancements && HasPermission(Perm_DiskAccess)) {
                 free(prefs->inverseSearchCmdLine);
                 prefs->inverseSearchCmdLine = win::GetText(GetDlgItem(hDlg, IDC_CMDLINE));

@@ -217,32 +217,34 @@ BEGIN
     PUSHBUTTON      "&No, thanks",IDCANCEL,184,49,70,14
 END
 
-IDD_DIALOG_SETTINGS DIALOGEX 0, 0, 240, 241
+IDD_DIALOG_SETTINGS DIALOGEX 0, 0, 241, 246
 STYLE DS_SETFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Settings"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    GROUPBOX        "View",IDC_SECTION_VIEW,6,6,228,75
-    LTEXT           "Default &Layout:",IDC_DEFAULT_LAYOUT_LABEL,12,19,108,9
-    COMBOBOX        IDC_DEFAULT_LAYOUT,120,17,108,64,CBS_DROPDOWNLIST | WS_TABSTOP
-    LTEXT           "Default &Zoom:",IDC_DEFAULT_ZOOM_LABEL,12,36,108,9
-    COMBOBOX        IDC_DEFAULT_ZOOM,120,34,108,149,CBS_DROPDOWN | WS_TABSTOP
-    CONTROL         "Show the &bookmarks sidebar when available",IDC_DEFAULT_SHOW_TOC,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,53,216,9
-    CONTROL         "&Remember these settings for each document",IDC_REMEMBER_STATE_PER_DOCUMENT,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,66,216,9
-    GROUPBOX        "Advanced",IDC_SECTION_ADVANCED,6,87,228,70
-    CONTROL         "Use &tabs",IDC_USE_TABS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,97,216,9
-    CONTROL         "Automatically check for &updates",IDC_CHECK_FOR_UPDATES,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,110,216,9
-    CONTROL         "Remember &opened files",IDC_REMEMBER_OPENED_FILES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,123,216,9
-    PUSHBUTTON      "Make SumatraPDF a default PDF reader",IDC_SET_DEFAULT_READER,12,137,216,14
-    GROUPBOX        "Set inverse search command-line",IDC_SECTION_INVERSESEARCH,6,163,228,52
-    LTEXT           "Enter the command-line to invoke when you double-click on the PDF document:",IDC_CMDLINE_LABEL,12,175,216,18
-    COMBOBOX        IDC_CMDLINE,12,195,216,13,CBS_DROPDOWN | CBS_AUTOHSCROLL | CBS_HASSTRINGS | CBS_DISABLENOSCROLL | WS_TABSTOP
-    DEFPUSHBUTTON   "OK",IDOK,128,221,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,184,221,50,14
+	GROUPBOX        "View", IDC_SECTION_VIEW, 6, 6, 228, 75
+	LTEXT           "Default &Layout:", IDC_DEFAULT_LAYOUT_LABEL, 12, 19, 108, 9
+	COMBOBOX        IDC_DEFAULT_LAYOUT, 120, 17, 108, 64, CBS_DROPDOWNLIST | WS_TABSTOP
+	LTEXT           "Default &Zoom:", IDC_DEFAULT_ZOOM_LABEL, 12, 36, 108, 9
+	COMBOBOX        IDC_DEFAULT_ZOOM, 120, 34, 108, 149, CBS_DROPDOWN | WS_TABSTOP
+	CONTROL         "Show the &bookmarks sidebar when available", IDC_DEFAULT_SHOW_TOC,
+					"Button", BS_AUTOCHECKBOX | WS_TABSTOP, 12, 53, 216, 9
+	CONTROL         "&Remember these settings for each document", IDC_REMEMBER_STATE_PER_DOCUMENT,
+					"Button", BS_AUTOCHECKBOX | WS_TABSTOP, 12, 66, 216, 9
+	GROUPBOX        "Advanced", IDC_SECTION_ADVANCED, 5, 83, 228, 88
+	CONTROL         "Use &tabs", IDC_USE_TABS, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 12, 96, 216, 9
+	CONTROL         "Automatically check for &updates", IDC_CHECK_FOR_UPDATES,
+					"Button", BS_AUTOCHECKBOX | WS_TABSTOP, 12, 110, 216, 9
+	CONTROL         "Remember &opened files", IDC_REMEMBER_OPENED_FILES,
+					"Button", BS_AUTOCHECKBOX | WS_TABSTOP, 12, 124, 216, 9
+	PUSHBUTTON      "Make SumatraPDF a default PDF reader", IDC_SET_DEFAULT_READER, 12, 152, 216, 14
+	GROUPBOX        "Set inverse search command-line", IDC_SECTION_INVERSESEARCH, 6, 173, 228, 52
+	LTEXT           "Enter the command-line to invoke when you double-click on the PDF document:", IDC_CMDLINE_LABEL, 12, 185, 216, 18
+	COMBOBOX        IDC_CMDLINE, 12, 205, 216, 13, CBS_DROPDOWN | CBS_AUTOHSCROLL | CBS_HASSTRINGS | CBS_DISABLENOSCROLL | WS_TABSTOP
+	DEFPUSHBUTTON   "OK", IDOK, 128, 229, 50, 14
+	PUSHBUTTON      "Cancel", IDCANCEL, 184, 229, 50, 14
+	CONTROL         "Toolbar buttons Back/Forward instead of Previous/Next", IDC_TOOLBAR_NAVIGATE,
+					"Button", BS_AUTOCHECKBOX | WS_TABSTOP, 12, 138, 216, 9
 END
 
 IDD_DIALOG_CUSTOM_ZOOM DIALOGEX 0, 0, 116, 60
