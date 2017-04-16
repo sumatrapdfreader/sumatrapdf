@@ -328,16 +328,19 @@
   <ItemGroup>
     <ClInclude Include="..\src\utils\BaseUtil.h" />
     <ClInclude Include="..\src\utils\StrUtil.h" />
-    <ClInclude Include="..\tools\test-app\Resource.h" />
-    <ClInclude Include="..\tools\test-app\stdafx.h" />
+    <ClInclude Include="..\src\wingui\TabsWnd.h" />
+    <ClInclude Include="..\src\wingui\Win32Window.h" />
+    <ClInclude Include="..\tools\test-app\resources.h" />
     <ClInclude Include="..\tools\test-app\targetver.h" />
     <ClInclude Include="..\tools\test-app\test-app.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\utils\BaseUtil.cpp" />
     <ClCompile Include="..\src\utils\StrUtil.cpp" />
-    <ClCompile Include="..\tools\test-app\scratch.cpp" />
-    <ClCompile Include="..\tools\test-app\stdafx.cpp" />
+    <ClCompile Include="..\src\wingui\TabsWnd.cpp" />
+    <ClCompile Include="..\src\wingui\Win32Window.cpp" />
+    <ClCompile Include="..\tools\test-app\TestDirectDraw.cpp" />
+    <ClCompile Include="..\tools\test-app\TestTab.cpp" />
     <ClCompile Include="..\tools\test-app\test-app.cpp" />
   </ItemGroup>
   <ItemGroup>

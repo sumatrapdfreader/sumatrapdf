@@ -7,6 +7,9 @@
     <Filter Include="src\utils">
       <UniqueIdentifier>{6DAA42B6-D914-F72C-2253-A8D28EFCD481}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\wingui">
+      <UniqueIdentifier>{0FE57D82-FB9C-BFCF-64A4-982B507B5AC0}</UniqueIdentifier>
+    </Filter>
     <Filter Include="tools">
       <UniqueIdentifier>{36DF7010-A2F3-98C1-6B75-3C21D74895F2}</UniqueIdentifier>
     </Filter>
@@ -21,10 +24,13 @@
     <ClInclude Include="..\src\utils\StrUtil.h">
       <Filter>src\utils</Filter>
     </ClInclude>
-    <ClInclude Include="..\tools\test-app\Resource.h">
-      <Filter>tools\test-app</Filter>
+    <ClInclude Include="..\src\wingui\TabsWnd.h">
+      <Filter>src\wingui</Filter>
     </ClInclude>
-    <ClInclude Include="..\tools\test-app\stdafx.h">
+    <ClInclude Include="..\src\wingui\Win32Window.h">
+      <Filter>src\wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\tools\test-app\resources.h">
       <Filter>tools\test-app</Filter>
     </ClInclude>
     <ClInclude Include="..\tools\test-app\targetver.h">
@@ -41,10 +47,16 @@
     <ClCompile Include="..\src\utils\StrUtil.cpp">
       <Filter>src\utils</Filter>
     </ClCompile>
-    <ClCompile Include="..\tools\test-app\scratch.cpp">
+    <ClCompile Include="..\src\wingui\TabsWnd.cpp">
+      <Filter>src\wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\Win32Window.cpp">
+      <Filter>src\wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\tools\test-app\TestDirectDraw.cpp">
       <Filter>tools\test-app</Filter>
     </ClCompile>
-    <ClCompile Include="..\tools\test-app\stdafx.cpp">
+    <ClCompile Include="..\tools\test-app\TestTab.cpp">
       <Filter>tools\test-app</Filter>
     </ClCompile>
     <ClCompile Include="..\tools\test-app\test-app.cpp">

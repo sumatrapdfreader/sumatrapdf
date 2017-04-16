@@ -920,19 +920,24 @@ end
 
 function test_app_files()
   files_in_dir("tools/test-app", {
-    "Resource.h",
-    "scratch.cpp",
+    "resources.h",
     "small.ico",
-    "stdafx.*",
     "targetver.h",
     "test-app.cpp",
     "test-app.h",
     "test-app.ico",
     "test-app.rc",
+    "TestDirectDraw.cpp",
+    "TestTab.cpp",
   })
 
   files_in_dir("src/utils", {
     "BaseUtil.*",
     "StrUtil.*",
+  })
+
+  files_in_dir("src/wingui", {
+    "TabsWnd.*",
+    "Win32Window.*",
   })
 end
