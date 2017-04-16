@@ -1,7 +1,8 @@
-#include "stdafx.h"
+#include "BaseUtil.h"
+#include "Dpi.h"
+#include "WinUtil.h"
 
-#include "Tabs.h"
-#include "Util.h"
+#include "TabsWnd.h"
 
 #define COL_BLACK RGB(0x00, 0x00, 0x00)
 #define COL_WHITE RGB(0xff, 0xff, 0xff)
@@ -21,6 +22,48 @@
 #define PADDING_RIGHT 8
 
 // TODO: implement a max width for the tab
+
+class ScopedGetDC {
+    HDC hdc;
+    HWND hwnd;
+public:
+    explicit ScopedGetDC(HWND hwnd) {
+        this->hwnd = hwnd;
+        this->hdc = GetDC(hwnd);
+    }
+    ~ScopedGetDC() {
+        ReleaseDC(hwnd, hdc);
+    }
+    operator HDC() const { return hdc; }
+};
+
+class ScopedSelectHFONT {
+    HDC hdc;
+    HFONT prevFont;
+
+public:
+    explicit ScopedSelectHFONT(HDC hdc, HFONT font) {
+        prevFont = (HFONT)SelectObject(hdc, font);
+    }
+
+    ~ScopedSelectHFONT() {
+        SelectObject(hdc, prevFont);
+    }
+};
+
+class ScopedSelectHHPEN {
+    HDC hdc;
+    HPEN prevPen;
+
+public:
+    explicit ScopedSelectHHPEN(HDC hdc, HPEN pen) {
+        prevPen = (HPEN)SelectObject(hdc, pen);
+    }
+
+    ~ScopedSelectHHPEN() {
+        SelectObject(hdc, prevPen);
+    }
+};
 
 enum class Tab {
     Selected = 0,
@@ -138,7 +181,7 @@ void LayoutTabs(TabsCtrl* ctrl) {
         x += padLeft;
 
         auto sz = ti->titleSize;
-        long titleY = 0;
+        titleY = 0;
         if (dy > sz.cy) {
             titleY = (dy - sz.cy) / 2;
         }
@@ -167,8 +210,9 @@ void LayoutTabs(TabsCtrl* ctrl) {
 static LRESULT CALLBACK TabsParentProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
     UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
     UNUSED(uIdSubclass);
+    UNUSED(dwRefData);
 
-    TabsCtrl *w = (TabsCtrl *)dwRefData;
+    //TabsCtrl *w = (TabsCtrl *)dwRefData;
     //CrashIf(GetParent(ctrl->hwnd) != (HWND)lp);
 
     return DefSubclassProc(hwnd, msg, wp, lp);
@@ -184,7 +228,7 @@ static void PaintClose(HDC hdc, RECT& r, bool isHighlighted) {
     if (isHighlighted) {
         int p = 3;
         DpiScaleX(hdc, p);
-        ScopedHBRUSH brush(CreateSolidBrush(COL_RED));
+        ScopedBrush brush(CreateSolidBrush(COL_RED));
         RECT r2 = r;
         r2.left -= p;
         r2.right += p;
@@ -194,7 +238,7 @@ static void PaintClose(HDC hdc, RECT& r, bool isHighlighted) {
         lineCol = COL_WHITE;
     }
 
-    ScopedHPEN pen(CreatePen(PS_SOLID, 2, lineCol));
+    ScopedPen pen(CreatePen(PS_SOLID, 2, lineCol));
     ScopedSelectHHPEN p(hdc, pen);
     MoveToEx(hdc, x, y, nullptr);
     LineTo(hdc, x + dx, y + dy);
@@ -211,7 +255,7 @@ static void Paint(TabsCtrl *ctrl) {
     RECT rc = GetClientRect(hwnd);
     HDC hdc = BeginPaint(hwnd, &ps);
 
-    ScopedHBRUSH brush(CreateSolidBrush(COL_LIGHTER_GRAY));
+    ScopedBrush brush(CreateSolidBrush(COL_LIGHTER_GRAY));
     FillRect(hdc, &rc, brush);
 
     ScopedSelectHFONT f(hdc, priv->font);
@@ -256,8 +300,8 @@ static void Paint(TabsCtrl *ctrl) {
         SetBkColor(hdc, bgCol);
 
         auto tabRect = ti->tabRect;
-        ScopedHBRUSH brush(CreateSolidBrush(bgCol));
-        FillRect(hdc, &tabRect, brush);
+        ScopedBrush brush2(CreateSolidBrush(bgCol));
+        FillRect(hdc, &tabRect, brush2);
 
         auto pos = ti->titlePos;
         int x = pos.x;
@@ -469,7 +513,7 @@ void SetState(TabsCtrl* ctrl, std::shared_ptr<TabsCtrlState> state) {
         if (!tab->title.empty()) {
             ti->title = wstrFromUtf8(tab->title);
             const WCHAR *s = ti->title.data();
-            ti->titleSize = TextSizeInHwnd(priv->hwnd, s, priv->font);
+            ti->titleSize = TextSizeInHwnd2(priv->hwnd, s, priv->font);
         }
         if (!tab->toolTip.empty()) {
             ti->toolTip = wstrFromUtf8(tab->toolTip);
@@ -486,5 +530,5 @@ SIZE GetIdealSize(TabsCtrl* ctrl) {
 }
 
 void SetPos(TabsCtrl* ctrl, RECT& r) {
-    MoveWindow(ctrl->priv->hwnd, r);
+    MoveWindow(ctrl->priv->hwnd, &r);
 }

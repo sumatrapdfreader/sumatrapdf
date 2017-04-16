@@ -8,11 +8,14 @@ struct Dpi {
 };
 
 Dpi *DpiGet(HWND);
-int DpiGetPreciseX(HWND hwnd);
-int DpiGetPreciseY(HWND hwnd);
-inline int DpiScaleX(HWND hwnd, int x) { return MulDiv(x, DpiGet(hwnd)->dpiX, 96); }
-inline int DpiScaleY(HWND hwnd, int y) { return MulDiv(y, DpiGet(hwnd)->dpiY, 96); }
+int DpiGetPreciseX(HWND);
+int DpiGetPreciseY(HWND);
+int DpiScaleX(HDC, int&);
+int DpiScaleX(HWND, int);
+void DpiScaleX2(HWND, int&, int&);
+void DpiScaleY2(HWND, int&, int&);
+int DpiScaleY(HWND, int y);
 void DpiUpdate(Dpi *);
-inline void DpiUpdate(HWND hwnd) { return DpiUpdate(DpiGet(hwnd)); }
+void DpiUpdate(HWND);
 void DpiRemove(HWND);
 void DpiRemoveAll();

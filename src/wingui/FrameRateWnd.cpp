@@ -28,12 +28,6 @@ that it's actually a part of that window.
 #define COL_WHITE RGB(0xff, 0xff, 0xff)
 #define COL_BLACK RGB(0, 0, 0)
 
-static RECT GetClientRect(HWND hwnd) {
-    RECT r;
-    GetClientRect(hwnd, &r);
-    return r;
-}
-
 static void FrameRatePaint(FrameRateWnd *w, HDC hdc, PAINTSTRUCT &ps) {
     UNUSED(ps);
     RECT rc = GetClientRect(w->hwnd);

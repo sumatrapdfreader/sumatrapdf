@@ -1,6 +1,5 @@
-#include "stdafx.h"
-
-#include "resource.h"
+#include "test-app.h"
+#include "BaseUtil.h"
 
 // in TestDirectDraw.cpp
 extern int TestDirectDraw(HINSTANCE hInstance, int nCmdShow);
@@ -14,7 +13,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 {
     UNUSED(hPrevInstance);
     UNUSED(lpCmdLine);
-    SetProcessDpiAwareness(PROCESS_SYSTEM_DPI_AWARE);
+    //SetProcessDpiAwareness(PROCESS_SYSTEM_DPI_AWARE);
     //SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
 
     INITCOMMONCONTROLSEX cc = { 0 };

@@ -1,5 +1,8 @@
-#include "test-app.h"
 #include "BaseUtil.h"
+#include "WinUtil.h"
+#include <d2d1.h>
+
+#include "test-app.h"
 
 static HINSTANCE hInst;
 static const WCHAR *WIN_CLASS = L"DirectDrawTestWndCls";
@@ -39,6 +42,7 @@ static void InitD2D() {
 
 static ID2D1HwndRenderTarget* gRT = NULL;
 
+#if 0
 static bool CreateSurface(HWND hwnd, RECT rc) {
     auto size = D2D1::SizeU(RectDx(rc), RectDy(rc));
     HRESULT hr = gD2DFactory->CreateHwndRenderTarget(
@@ -55,6 +59,7 @@ static void ReleaseSurface() {
         gRT = nullptr;
     }
 }
+#endif
 
 class ScopedSurface {
 public:

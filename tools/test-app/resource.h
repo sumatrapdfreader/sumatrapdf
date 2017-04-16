@@ -3,17 +3,17 @@
 // Used by render-speed-test.rc
 //
 
-#define IDR_MAINFRAME			128
-#define IDD_RENDERSPEEDTEST_DIALOG	102
-#define IDD_ABOUTBOX			103
-#define IDM_ABOUT				104
-#define IDM_EXIT				105
-#define IDI_RENDERSPEEDTEST			107
-#define IDI_SMALL				108
-#define IDC_RENDERSPEEDTEST			109
-#define IDC_MYICON				2
+#define IDR_MAINFRAME               128
+#define IDD_RENDERSPEEDTEST_DIALOG  102
+#define IDD_ABOUTBOX                103
+#define IDM_ABOUT                   104
+#define IDM_EXIT                    105
+#define IDI_TESTWIN                 107
+#define IDI_SMALL                   108
+#define IDC_TESTWIN                 109
+#define IDC_MYICON                  2
 #ifndef IDC_STATIC
-#define IDC_STATIC				-1
+#define IDC_STATIC                  -1
 #endif
 // Next default values for new objects
 //

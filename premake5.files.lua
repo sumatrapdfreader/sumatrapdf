@@ -920,7 +920,7 @@ end
 
 function test_app_files()
   files_in_dir("tools/test-app", {
-    "resources.h",
+    "resource.h",
     "small.ico",
     "targetver.h",
     "test-app.cpp",
@@ -933,7 +933,13 @@ function test_app_files()
 
   files_in_dir("src/utils", {
     "BaseUtil.*",
+    "DebugLog.*",
+    "Dpi.*",
+    "FileUtil.*",
+    "Scoped.h",
     "StrUtil.*",
+    "WinDynCalls.*",
+    "WinUtil.*",
   })
 
   files_in_dir("src/wingui", {

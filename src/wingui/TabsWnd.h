@@ -1,5 +1,3 @@
-
-
 struct TabsCtrl;
 class TabsCtrlState;
 

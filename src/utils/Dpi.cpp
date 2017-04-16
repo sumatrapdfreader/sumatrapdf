@@ -40,6 +40,20 @@ struct DpiNode {
 
 static DpiNode *g_dpis = nullptr;
 
+class ScopedGetDC {
+    HDC hdc;
+    HWND hwnd;
+public:
+    explicit ScopedGetDC(HWND hwnd) {
+        this->hwnd = hwnd;
+        this->hdc = GetDC(hwnd);
+    }
+    ~ScopedGetDC() {
+        ReleaseDC(hwnd, hdc);
+    }
+    operator HDC() const { return hdc; }
+};
+
 static void GetDpiXY(HWND hwnd, int &scaleX, int &scaleY) {
 #if 0
     // TODO: only available in 8.1
@@ -146,4 +160,36 @@ void DpiRemoveAll() {
         DpiNode *n = g_dpis;
         DpiRemove(n->dpi.hwnd);
     }
+}
+
+int DpiScaleX(HWND hwnd, int x) {
+    return MulDiv(x, DpiGet(hwnd)->dpiX, 96);
+}
+
+int DpiScaleX(HDC hdc, int& x) {
+    auto dpiX = (UINT)GetDeviceCaps(hdc, LOGPIXELSX);
+    x = MulDiv(x, dpiX, 96);
+    return x;
+}
+
+void DpiScaleX2(HWND hwnd, int& x1, int& x2) {
+    ScopedGetDC hdc(hwnd);
+    auto dpiX = (UINT)GetDeviceCaps(hdc, LOGPIXELSX);
+    x1 = MulDiv(x1, dpiX, 96);
+    x2 = MulDiv(x2, dpiX, 96);
+}
+
+int DpiScaleY(HWND hwnd, int y) {
+    return MulDiv(y, DpiGet(hwnd)->dpiY, 96);
+}
+
+void DpiScaleY2(HWND hwnd, int& y1, int& y2) {
+    ScopedGetDC hdc(hwnd);
+    auto dpiY = (UINT)GetDeviceCaps(hdc, LOGPIXELSY);
+    y1 = MulDiv(y1, dpiY, 96);
+    y2 = MulDiv(y2, dpiY, 96);
+}
+
+void DpiUpdate(HWND hwnd) {
+    DpiUpdate(DpiGet(hwnd));
 }

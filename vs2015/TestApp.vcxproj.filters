@@ -21,7 +21,25 @@
     <ClInclude Include="..\src\utils\BaseUtil.h">
       <Filter>src\utils</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\utils\DebugLog.h">
+      <Filter>src\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\Dpi.h">
+      <Filter>src\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\FileUtil.h">
+      <Filter>src\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\Scoped.h">
+      <Filter>src\utils</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\utils\StrUtil.h">
+      <Filter>src\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\WinDynCalls.h">
+      <Filter>src\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\WinUtil.h">
       <Filter>src\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\wingui\TabsWnd.h">
@@ -30,7 +48,7 @@
     <ClInclude Include="..\src\wingui\Win32Window.h">
       <Filter>src\wingui</Filter>
     </ClInclude>
-    <ClInclude Include="..\tools\test-app\resources.h">
+    <ClInclude Include="..\tools\test-app\resource.h">
       <Filter>tools\test-app</Filter>
     </ClInclude>
     <ClInclude Include="..\tools\test-app\targetver.h">
@@ -44,7 +62,22 @@
     <ClCompile Include="..\src\utils\BaseUtil.cpp">
       <Filter>src\utils</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\utils\DebugLog.cpp">
+      <Filter>src\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\Dpi.cpp">
+      <Filter>src\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\FileUtil.cpp">
+      <Filter>src\utils</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\utils\StrUtil.cpp">
+      <Filter>src\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\WinDynCalls.cpp">
+      <Filter>src\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\WinUtil.cpp">
       <Filter>src\utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\wingui\TabsWnd.cpp">

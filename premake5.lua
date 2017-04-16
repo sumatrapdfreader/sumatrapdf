@@ -591,11 +591,11 @@ workspace "SumatraPDF"
     kind "WindowedApp"
     language "C++"
     flags { "NoManifest", "WinMain" }
-    includedirs { "src", "src/utils" }
+    includedirs { "src", "src/utils", "src/wingui" }
     test_app_files()
     links {
       "comctl32", "gdiplus", "msimg32", "shlwapi", "urlmon",
-      "version", "windowscodecs", "wininet"
+      "version", "windowscodecs", "wininet", "d2d1.lib",
     }
 
   -- dummy project that builds all other projects

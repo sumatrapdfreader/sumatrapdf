@@ -64,7 +64,12 @@
 #include <algorithm>
 #include <functional>
 #include <memory>
+#include <string>
+#include <array>
 #include <vector>
+//#include <iostream>
+//#include <locale>
+#include <codecvt>
 
 template <typename T>
 inline T *AllocArray(size_t n)

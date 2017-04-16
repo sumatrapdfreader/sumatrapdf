@@ -12,6 +12,28 @@
 
 static HFONT gDefaultGuiFont = nullptr;
 
+int RectDx(const RECT &r) { return r.right - r.left; }
+int RectDy(const RECT &r) { return r.bottom - r.top; }
+
+POINT MakePoint(long x, long y) {
+    POINT p = { x, y };
+    return p;
+}
+
+SIZE MakeSize(long dx, long dy) {
+    SIZE sz = { dx, dy };
+    return sz;
+}
+
+RECT MakeRect(long x, long y, long dx, long dy) {
+    RECT r;
+    r.left = x;
+    r.right = x + dx;
+    r.top = y;
+    r.bottom = y + dy;
+    return r;
+}
+
 void Edit_SelectAll(HWND hwnd) {
     Edit_SetSel(hwnd, 0, -1);
 }
@@ -35,6 +57,12 @@ void FillWndClassEx(WNDCLASSEX &wcex, const WCHAR *clsName, WNDPROC wndproc) {
     wcex.hCursor = GetCursor(IDC_ARROW);
     wcex.lpszClassName = clsName;
     wcex.lpfnWndProc = wndproc;
+}
+
+RECT GetClientRect(HWND hwnd) {
+    RECT r;
+    GetClientRect(hwnd, &r);
+    return r;
 }
 
 void MoveWindow(HWND hwnd, RectI rect) {
@@ -544,6 +572,24 @@ SizeI TextSizeInHwnd(HWND hwnd, const WCHAR *txt, HFONT font) {
     return SizeI(sz.cx, sz.cy);
 }
 
+// TODO: unify with TextSizeInHwnd
+/* Return size of a text <txt> in a given <hwnd>, taking into account its font */
+SIZE TextSizeInHwnd2(HWND hwnd, const WCHAR *txt, HFONT font) {
+    SIZE sz;
+    size_t txtLen = str::Len(txt);
+    HDC dc = GetWindowDC(hwnd);
+    /* GetWindowDC() returns dc with default state, so we have to first set
+    window's current font into dc */
+    if (font == nullptr) {
+        font = (HFONT)SendMessage(hwnd, WM_GETFONT, 0, 0);
+    }
+    HGDIOBJ prev = SelectObject(dc, font);
+    GetTextExtentPoint32(dc, txt, (int)txtLen, &sz);
+    SelectObject(dc, prev);
+    ReleaseDC(hwnd, dc);
+    return sz;
+}
+
 /* Return size of a text <txt> in a given <hdc>, taking into account its font */
 SizeI TextSizeInDC(HDC hdc, const WCHAR *txt) {
     SIZE sz;
@@ -688,6 +734,13 @@ HFONT GetDefaultGuiFont() {
         gDefaultGuiFont = CreateFontIndirect(&ncm.lfMessageFont);
     }
     return gDefaultGuiFont;
+}
+
+long GetDefaultGuiFontSize() {
+    NONCLIENTMETRICS ncm = { 0 };
+    ncm.cbSize = sizeof(ncm);
+    SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
+    return -ncm.lfMessageFont.lfHeight;
 }
 
 DoubleBuffer::DoubleBuffer(HWND hwnd, RectI rect)
@@ -1532,4 +1585,16 @@ bool TrackMouseLeave(HWND hwnd) {
     tme.hwndTrack = hwnd;
     TrackMouseEvent(&tme);
     return true;
+}
+
+void TriggerRepaint(HWND hwnd) {
+    InvalidateRect(hwnd, nullptr, FALSE);
+}
+
+POINT GetCursorPosInHwnd(HWND hwnd) {
+    POINT pt = { 0, 0 };
+    if (GetCursorPos(&pt)) {
+        ScreenToClient(hwnd, &pt);
+    }
+    return pt;
 }

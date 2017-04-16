@@ -16,8 +16,13 @@
 
 #define DRAGQUERY_NUMFILES 0xFFFFFFFF
 
-inline int RectDx(const RECT &r) { return r.right - r.left; }
-inline int RectDy(const RECT &r) { return r.bottom - r.top; }
+int RectDx(const RECT &r);
+int RectDy(const RECT &r);
+POINT MakePoint(long x, long y);
+SIZE MakeSize(long dx, long dy);
+RECT MakeRect(long x, long y, long dx, long dy);
+
+RECT GetClientRect(HWND);
 
 void Edit_SelectAll(HWND hwnd);
 void ListBox_AppendString_NoSort(HWND hwnd, WCHAR *txt);
@@ -79,6 +84,7 @@ void PaintLine(HDC, const RectI &);
 void DrawCenteredText(HDC hdc, const RectI &r, const WCHAR *txt, bool isRTL = false);
 void DrawCenteredText(HDC , const RECT &r, const WCHAR *txt, bool isRTL = false);
 SizeI TextSizeInHwnd(HWND, const WCHAR*, HFONT=nullptr);
+SIZE TextSizeInHwnd2(HWND, const WCHAR *, HFONT);
 SizeI TextSizeInDC(HDC, const WCHAR *);
 
 bool IsCursorOverWindow(HWND);
@@ -90,6 +96,7 @@ bool CopyImageToClipboard(HBITMAP hbmp, bool appendOnly);
 void ToggleWindowStyle(HWND hwnd, DWORD flag, bool enable, int type = GWL_STYLE);
 RectI ChildPosWithinParent(HWND);
 HFONT GetDefaultGuiFont();
+long GetDefaultGuiFontSize();
 
 IStream *CreateStreamFromData(const void *data, size_t len);
 void *GetDataFromStream(IStream *stream, size_t *len, HRESULT *res_opt = nullptr);
@@ -199,3 +206,5 @@ void DeleteCachedCursors();
 int GetMeasurementSystem();
 bool TrackMouseLeave(HWND);
 
+void TriggerRepaint(HWND);
+POINT GetCursorPosInHwnd(HWND);

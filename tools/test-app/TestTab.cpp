@@ -1,4 +1,7 @@
 #include "BaseUtil.h"
+#include "WinUtil.h"
+#include "test-app.h"
+
 #include "TabsWnd.h"
 
 static HINSTANCE hInst;
@@ -20,7 +23,7 @@ static void UpdateTabsSize() {
 
 static void Draw(HWND hwnd, HDC hdc) {
     RECT rc = GetClientRect(hwnd);
-    ScopedHBRUSH brush(CreateSolidBrush(COL_GRAY));
+    ScopedBrush brush(CreateSolidBrush(COL_GRAY));
     FillRect(hdc, &rc, brush);
 }
 
