@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-895a82ae0922652262246c5d8e73963d7dbe7cfb
+8aa66af40b3f9076a71baf1e8f1224a0cd3a8c6a
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -4701,6 +4701,7 @@ am:CHM ֆայլեր
 ar:CHM ملفات 
 az:CHM sənədləri
 bg:CHM документи
+bn:সিএইচএম নথি
 br:Documentos CHM
 bs:CHM dokumenti
 ca-xv:Documents CHM
@@ -6195,7 +6196,7 @@ sq:Nuk mund të instalojë parashikuesin e PDF-ve
 sr-rs:Прегледач ПДФ немогуће инсталирати
 sv:Kunde inte installera förhandstitt av PDF:er
 ta:PDF முன்னோட்டம் நிறுவ இயலவில்லை
-tr:PDF ön zileyici yüklenemedi
+tr:PDF önizleyici yüklenemedi
 tw:無法安裝 PDF 預覽器
 uk:Не вдалося встановити програму для попереднього перегляду PDF
 uz:PDF ko'rish vositasini o'rnatib bo'lmadi
@@ -7726,6 +7727,7 @@ am:Բացման սխալ %s
 ar:%s خطأ في التحميل  
 az:%s faylının yüklənməsində xəta baş verdi
 bg:Грешка при зареждане на %s
+bn:ভূল লোড হচ্ছে %s
 br:Erro ao carregar %s
 bs:Greška pri učitavanju %s
 ca-xv:S'ha produït un error en carregar %s
@@ -8209,6 +8211,7 @@ br:Falha ao registrar como programa padrão no Windows 10
 bs:Neuspješno registriranje kao zadani program na win 10
 cn:Win 10 默认程序设置失败
 cz:Nepodařilo se nastavit jako výchozí program na Windows 10
+de:Fehler beim registrieren als Standardanwendung auf win 10
 el:Απέτυχε να γίνει το προκαθορισμένο πρόγραμμα ανάγνωσης στα Win 10
 es:Fallo al registrar como programa por defecto en Windows 10.
 et:Vaikeprogrammina registreerumine Windows 10 all ebaõnnestus
@@ -9922,6 +9925,7 @@ am:Հաճախ ընթերցվածներ
 ar:الأكثر قراءة
 az:Ən çox oxunanlar
 bg:Често четени
+bn:প্রায়শই পড়া হয়
 br:Lidos com frequência
 bs:Najčešće čitano
 ca-xv:Llegits més freqüents
@@ -10351,6 +10355,7 @@ am:Տեղակայել SumatraPDF-ը
 ar:المحمولة Sumatra تثبيت مستندات
 az:SumatraPDF-i quraşdır
 bg:Инсталиране на SumatraPDF
+bn:সুমাত্রা পিডিএফ স্থাপন করুন
 br:Instalar SumatraPDF
 bs:Instaliraj SumatraPDF
 ca-xv:Instal·la el SumatraPDF
@@ -10464,6 +10469,7 @@ am:Տեղակայումը ձախողվեց:
 ar:!فشل التثبيت
 az:Quraşdırma baş tutmadı!
 bg:Инсталацията беше неуспешна!
+bn:ইনস্টলেশন ব্যর্থ
 br:Falha na instalação!
 bs:Neuspješna instalacija!
 ca-xv:La instal·lació ha fallat!

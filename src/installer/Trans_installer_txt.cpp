@@ -932,7 +932,7 @@ const char * gTranslations_de =
   "Konnte das Deinstallationsprogramm nicht kopieren\0"\
   "Konnte keine Verkn\303\274pfung erstellen\0"\
   "Konnte nicht alle Registry-Eintr\303\244ge l\303\266schen\0"\
-  "\0"\
+  "Fehler beim registrieren als Standardanwendung auf win 10\0"\
   "Konnte die Dateiformats-Verkn\303\274pfungen nicht vollst\303\244ndig in die Registry schreiben\0"\
   "Konnte keine Deinstallations-Informationen in die Registry schreiben\0"\
   "&Optionen\0"\
@@ -2270,7 +2270,7 @@ const char * gTranslations_tr =
   "Kapat\0"\
   "Ge\303\247ici dizin olu\305\237turulamad\304\261\0"\
   "Kurulum dizini olu\305\237turulamad\304\261\0"\
-  "PDF \303\266n zileyici y\303\274klenemedi\0"\
+  "PDF \303\266nizleyici y\303\274klenemedi\0"\
   "PDF arama filtresi y\303\274klenemedi\0"\
   "Ge\303\247ici dizin bulunamad\304\261\0"\
   "Kurulum dizini kald\304\261r\304\261lamad\304\261\0"\
