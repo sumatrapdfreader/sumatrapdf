@@ -334,7 +334,7 @@
     <ClInclude Include="..\src\utils\StrUtil.h" />
     <ClInclude Include="..\src\utils\WinDynCalls.h" />
     <ClInclude Include="..\src\utils\WinUtil.h" />
-    <ClInclude Include="..\src\wingui\TabsWnd.h" />
+    <ClInclude Include="..\src\wingui\TabsCtrl.h" />
     <ClInclude Include="..\src\wingui\Win32Window.h" />
     <ClInclude Include="..\tools\test-app\resource.h" />
     <ClInclude Include="..\tools\test-app\targetver.h" />
@@ -348,7 +348,7 @@
     <ClCompile Include="..\src\utils\StrUtil.cpp" />
     <ClCompile Include="..\src\utils\WinDynCalls.cpp" />
     <ClCompile Include="..\src\utils\WinUtil.cpp" />
-    <ClCompile Include="..\src\wingui\TabsWnd.cpp" />
+    <ClCompile Include="..\src\wingui\TabsCtrl.cpp" />
     <ClCompile Include="..\src\wingui\Win32Window.cpp" />
     <ClCompile Include="..\tools\test-app\TestDirectDraw.cpp" />
     <ClCompile Include="..\tools\test-app\TestTab.cpp" />

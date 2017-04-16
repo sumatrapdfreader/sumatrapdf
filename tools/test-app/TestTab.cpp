@@ -2,7 +2,7 @@
 #include "WinUtil.h"
 #include "test-app.h"
 
-#include "TabsWnd.h"
+#include "TabsCtrl.h"
 
 static HINSTANCE hInst;
 static const WCHAR *gWindowTitle = L"Test application";

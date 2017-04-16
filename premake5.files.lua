@@ -503,7 +503,7 @@ function utils_files()
     "FrameRateWnd.*",
     "LabelWithCloseWnd.*",
     "SplitterWnd.*",
-    --"TabsWnd.*",
+    --"TabsCtrl.*",
     "Win32Window.*",
   })
 end
@@ -943,7 +943,7 @@ function test_app_files()
   })
 
   files_in_dir("src/wingui", {
-    "TabsWnd.*",
+    "TabsCtrl.*",
     "Win32Window.*",
   })
 end

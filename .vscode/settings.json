@@ -6,6 +6,7 @@
     "rel/*" : true,
     "rel64/*" : true,
     "relPrefast/*" : true,
-    "relPrefast64/*" : true
+    "relPrefast64/*" : true,
+    "build-log.txt" : true
   }
 }

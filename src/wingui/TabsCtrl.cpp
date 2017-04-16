@@ -2,7 +2,7 @@
 #include "Dpi.h"
 #include "WinUtil.h"
 
-#include "TabsWnd.h"
+#include "TabsCtrl.h"
 
 #define COL_BLACK RGB(0x00, 0x00, 0x00)
 #define COL_WHITE RGB(0xff, 0xff, 0xff)
