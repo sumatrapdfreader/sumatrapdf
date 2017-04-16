@@ -587,6 +587,16 @@ workspace "SumatraPDF"
     dependson { "SumatraPDF-no-MUPDF", "PdfFilter", "PdfPreview", "Uninstaller" }
     prebuildcommands { "cd %{cfg.targetdir} & ..\\bin\\MakeLZSA.exe InstallerData.dat SumatraPDF-no-MUPDF.exe:SumatraPDF.exe libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll Uninstaller.exe:uninstall.exe ..\\mupdf\\resources\\fonts\\droid\\DroidSansFallback.ttf:DroidSansFallback.ttf"  }
 
+  project "TestApp"
+    kind "WindowedApp"
+    language "C++"
+    flags { "NoManifest", "WinMain" }
+    includedirs { "src", "src/utils" }
+    test_app_files()
+    links {
+      "comctl32", "gdiplus", "msimg32", "shlwapi", "urlmon",
+      "version", "windowscodecs", "wininet"
+    }
 
   -- dummy project that builds all other projects
   project "all"

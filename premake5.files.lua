@@ -503,7 +503,7 @@ function utils_files()
     "FrameRateWnd.*",
     "LabelWithCloseWnd.*",
     "SplitterWnd.*",
-    "TabsWnd.*",
+    --"TabsWnd.*",
     "Win32Window.*",
   })
 end
@@ -915,5 +915,24 @@ function uninstaller_files()
     "installer/Installer.cpp",
     "installer/Installer.h",
     "installer/Trans_installer_txt.cpp",
+  })
+end
+
+function test_app_files()
+  files_in_dir("tools/test-app", {
+    "Resource.h",
+    "scratch.cpp",
+    "small.ico",
+    "stdafx.*",
+    "targetver.h",
+    "test-app.cpp",
+    "test-app.h",
+    "test-app.ico",
+    "test-app.rc",
+  })
+
+  files_in_dir("src/utils", {
+    "BaseUtil.*",
+    "StrUtil.*",
   })
 end

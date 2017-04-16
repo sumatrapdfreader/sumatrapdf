@@ -1,6 +1,9 @@
 #include "stdafx.h"
 
+#include <cstdint>
 #include "test-app.h"
+
+typedef uint64_t u64;
 
 struct Buf {
     char *s;

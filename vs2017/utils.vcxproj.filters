@@ -144,9 +144,6 @@
     <ClInclude Include="..\src\wingui\SplitterWnd.h">
       <Filter>wingui</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\wingui\TabsWnd.h">
-      <Filter>wingui</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\wingui\Win32Window.h">
       <Filter>wingui</Filter>
     </ClInclude>
@@ -282,9 +279,6 @@
       <Filter>wingui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\wingui\SplitterWnd.cpp">
-      <Filter>wingui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\TabsWnd.cpp">
       <Filter>wingui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\wingui\Win32Window.cpp">
