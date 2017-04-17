@@ -712,7 +712,7 @@ static void ApplyPrintSettings(const WCHAR* printerName, const WCHAR* settings, 
 
     for (size_t i = 0; i < rangeList.Count(); i++) {
         int val;
-        PRINTPAGERANGE pr = { 0 };
+        PRINTPAGERANGE pr = {0};
         if (str::Parse(rangeList.At(i), L"%d-%d%$", &pr.nFromPage, &pr.nToPage)) {
             pr.nFromPage = limitValue(pr.nFromPage, (DWORD)1, (DWORD)pageCount);
             pr.nToPage = limitValue(pr.nToPage, (DWORD)1, (DWORD)pageCount);
