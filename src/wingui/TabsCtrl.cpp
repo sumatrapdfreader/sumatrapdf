@@ -26,14 +26,13 @@
 class ScopedGetDC {
     HDC hdc;
     HWND hwnd;
-public:
+
+  public:
     explicit ScopedGetDC(HWND hwnd) {
         this->hwnd = hwnd;
         this->hdc = GetDC(hwnd);
     }
-    ~ScopedGetDC() {
-        ReleaseDC(hwnd, hdc);
-    }
+    ~ScopedGetDC() { ReleaseDC(hwnd, hdc); }
     operator HDC() const { return hdc; }
 };
 
@@ -41,28 +40,20 @@ class ScopedSelectHFONT {
     HDC hdc;
     HFONT prevFont;
 
-public:
-    explicit ScopedSelectHFONT(HDC hdc, HFONT font) {
-        prevFont = (HFONT)SelectObject(hdc, font);
-    }
+  public:
+    explicit ScopedSelectHFONT(HDC hdc, HFONT font) { prevFont = (HFONT)SelectObject(hdc, font); }
 
-    ~ScopedSelectHFONT() {
-        SelectObject(hdc, prevFont);
-    }
+    ~ScopedSelectHFONT() { SelectObject(hdc, prevFont); }
 };
 
 class ScopedSelectHHPEN {
     HDC hdc;
     HPEN prevPen;
 
-public:
-    explicit ScopedSelectHHPEN(HDC hdc, HPEN pen) {
-        prevPen = (HPEN)SelectObject(hdc, pen);
-    }
+  public:
+    explicit ScopedSelectHHPEN(HDC hdc, HPEN pen) { prevPen = (HPEN)SelectObject(hdc, pen); }
 
-    ~ScopedSelectHHPEN() {
-        SelectObject(hdc, prevPen);
-    }
+    ~ScopedSelectHHPEN() { SelectObject(hdc, prevPen); }
 };
 
 enum class Tab {
@@ -76,14 +67,13 @@ static std::wstring wstrFromUtf8(const std::string& str) {
     return converter.from_bytes(str);
 }
 
-TabItem::TabItem(const std::string & title, const std::string & toolTip)
-{
+TabItem::TabItem(const std::string& title, const std::string& toolTip) {
     this->title = title;
     this->toolTip = toolTip;
 }
 
 class TabItemInfo {
-public:
+  public:
     std::wstring title;
     std::wstring toolTip;
 
@@ -96,13 +86,9 @@ public:
 };
 
 class TabsCtrlPrivate {
-public:
-    TabsCtrlPrivate(HWND hwnd) {
-        this->hwnd = hwnd;
-    }
-    ~TabsCtrlPrivate() {
-        DeleteObject(font);
-    }
+  public:
+    TabsCtrlPrivate(HWND hwnd) { this->hwnd = hwnd; }
+    ~TabsCtrlPrivate() { DeleteObject(font); }
 
     HWND hwnd = nullptr;
     HFONT font = nullptr;
@@ -110,8 +96,8 @@ public:
     LOGFONTW logFont; // info that corresponds to font
     TEXTMETRIC fontMetrics;
     int fontDy;
-    SIZE size; // current size of the control's window
-    SIZE idealSize; // ideal size as calculated during layout
+    SIZE size;                  // current size of the control's window
+    SIZE idealSize;             // ideal size as calculated during layout
     int tabIdxUnderCursor = -1; // -1 if none under cursor
     bool isCursorOverClose = false;
 
@@ -129,19 +115,16 @@ static long GetIdealDy(TabsCtrl* ctrl) {
     return priv->fontDy + padTop + padBottom;
 }
 
-static HWND CreateTooltipForRect(HWND parent, const WCHAR *s, RECT& r) {
+static HWND CreateTooltipForRect(HWND parent, const WCHAR* s, RECT& r) {
     HMODULE h = GetModuleHandleW(nullptr);
     DWORD dwStyleEx = WS_EX_TOPMOST;
     DWORD dwStyle = WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP;
-    HWND hwnd = CreateWindowExW(dwStyleEx, TOOLTIPS_CLASSW, NULL,
-        dwStyle,
-        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-        parent, NULL, h, NULL);
+    HWND hwnd = CreateWindowExW(dwStyleEx, TOOLTIPS_CLASSW, NULL, dwStyle, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+                                CW_USEDEFAULT, parent, NULL, h, NULL);
 
-    SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0,
-        SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+    SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
 
-    TOOLINFOW ti = { 0 };
+    TOOLINFOW ti = {0};
     ti.cbSize = sizeof(TOOLINFO);
     ti.uFlags = TTF_SUBCLASS;
     ti.hwnd = parent;
@@ -207,13 +190,13 @@ void LayoutTabs(TabsCtrl* ctrl) {
     TriggerRepaint(priv->hwnd);
 }
 
-static LRESULT CALLBACK TabsParentProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
-    UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
+static LRESULT CALLBACK TabsParentProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass,
+                                       DWORD_PTR dwRefData) {
     UNUSED(uIdSubclass);
     UNUSED(dwRefData);
 
-    //TabsCtrl *w = (TabsCtrl *)dwRefData;
-    //CrashIf(GetParent(ctrl->hwnd) != (HWND)lp);
+    // TabsCtrl *w = (TabsCtrl *)dwRefData;
+    // CrashIf(GetParent(ctrl->hwnd) != (HWND)lp);
 
     return DefSubclassProc(hwnd, msg, wp, lp);
 }
@@ -247,7 +230,7 @@ static void PaintClose(HDC hdc, RECT& r, bool isHighlighted) {
     LineTo(hdc, x, y + dy);
 }
 
-static void Paint(TabsCtrl *ctrl) {
+static void Paint(TabsCtrl* ctrl) {
     auto priv = ctrl->priv;
     HWND hwnd = priv->hwnd;
 
@@ -280,20 +263,20 @@ static void Paint(TabsCtrl *ctrl) {
 
         bool paintClose = false;
         switch (tabType) {
-        case Tab::Background:
-            bgCol = COL_LIGHTER_GRAY;
-            txtCol = COL_DARK_GRAY;
-            break;
-        case Tab::Selected:
-            bgCol = COL_WHITE;
-            txtCol = COL_DARK_GRAY;
-            paintClose = true;
-            break;
-        case Tab::Highlighted:
-            bgCol = COL_LIGHT_GRAY;
-            txtCol = COL_BLACK;
-            paintClose = true;
-            break;
+            case Tab::Background:
+                bgCol = COL_LIGHTER_GRAY;
+                txtCol = COL_DARK_GRAY;
+                break;
+            case Tab::Selected:
+                bgCol = COL_WHITE;
+                txtCol = COL_DARK_GRAY;
+                paintClose = true;
+                break;
+            case Tab::Highlighted:
+                bgCol = COL_LIGHT_GRAY;
+                txtCol = COL_BLACK;
+                paintClose = true;
+                break;
         }
 
         SetTextColor(hdc, txtCol);
@@ -306,7 +289,7 @@ static void Paint(TabsCtrl *ctrl) {
         auto pos = ti->titlePos;
         int x = pos.x;
         int y = pos.y;
-        const WCHAR *s = ti->title.data();
+        const WCHAR* s = ti->title.data();
         UINT sLen = (UINT)ti->title.size();
         ExtTextOutW(hdc, x, y, opts, nullptr, s, sLen, nullptr);
 
@@ -331,8 +314,8 @@ static void SetTabUnderCursor(TabsCtrl* ctrl, int tabUnderCursor, bool isMouseOv
     TriggerRepaint(priv->hwnd);
 }
 
-static int TabFromMousePos(TabsCtrl *ctrl, int x, int y, bool& isMouseOverClose) {
-    POINT mousePos = { x, y };
+static int TabFromMousePos(TabsCtrl* ctrl, int x, int y, bool& isMouseOverClose) {
+    POINT mousePos = {x, y};
     for (size_t i = 0; i < ctrl->priv->tabInfos.size(); i++) {
         auto& ti = ctrl->priv->tabInfos[i];
         if (PtInRect(&ti->tabRect, mousePos)) {
@@ -343,7 +326,7 @@ static int TabFromMousePos(TabsCtrl *ctrl, int x, int y, bool& isMouseOverClose)
     return -1;
 }
 
-static void OnMouseMove(TabsCtrl *ctrl) {
+static void OnMouseMove(TabsCtrl* ctrl) {
     auto priv = ctrl->priv;
     auto mousePos = GetCursorPosInHwnd(priv->hwnd);
     bool isMouseOverClose = false;
@@ -353,7 +336,7 @@ static void OnMouseMove(TabsCtrl *ctrl) {
     TrackMouseLeave(priv->hwnd);
 }
 
-static void OnLeftButtonUp(TabsCtrl *ctrl) {
+static void OnLeftButtonUp(TabsCtrl* ctrl) {
     auto priv = ctrl->priv;
     auto mousePos = GetCursorPosInHwnd(priv->hwnd);
     bool isMouseOverClose;
@@ -375,14 +358,13 @@ static void OnLeftButtonUp(TabsCtrl *ctrl) {
     }
 }
 
-static LRESULT CALLBACK
-TabsProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
+static LRESULT CALLBACK TabsProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
     UNUSED(uIdSubclass);
-    TabsCtrl *ctrl = (TabsCtrl *)dwRefData;
-    TabsCtrlPrivate *priv = ctrl->priv;
-    //CrashIf(ctrl->hwnd != (HWND)lp);
+    TabsCtrl* ctrl = (TabsCtrl*)dwRefData;
+    TabsCtrlPrivate* priv = ctrl->priv;
+    // CrashIf(ctrl->hwnd != (HWND)lp);
 
-    //TraceMsg(msg);
+    // TraceMsg(msg);
 
     if (WM_ERASEBKGND == msg) {
         return TRUE; // tells Windows we handle background erasing so it doesn't do it
@@ -472,8 +454,8 @@ bool CreateTabsCtrl(TabsCtrl* ctrl) {
     DWORD dwExStyle = 0;
     DWORD dwStyle = WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE | TCS_FOCUSNEVER | TCS_FIXEDWIDTH | TCS_FORCELABELLEFT;
 
-    auto hwnd = CreateWindowExW(dwExStyle, WC_TABCONTROL, L"", dwStyle,
-        x, y, dx, dy, ctrl->parent, nullptr, GetModuleHandle(nullptr), ctrl);
+    auto hwnd = CreateWindowExW(dwExStyle, WC_TABCONTROL, L"", dwStyle, x, y, dx, dy, ctrl->parent, nullptr,
+                                GetModuleHandle(nullptr), ctrl);
 
     if (hwnd == nullptr) {
         return false;
@@ -487,7 +469,7 @@ bool CreateTabsCtrl(TabsCtrl* ctrl) {
     SetFont(ctrl, GetDefaultGuiFont());
 
     SetWindowSubclass(hwnd, TabsProc, 0, (DWORD_PTR)ctrl);
-    //SetWindowSubclass(GetParent(hwnd), TabsParentProc, 0, (DWORD_PTR)ctrl);
+    // SetWindowSubclass(GetParent(hwnd), TabsParentProc, 0, (DWORD_PTR)ctrl);
     return true;
 }
 
@@ -512,7 +494,7 @@ void SetState(TabsCtrl* ctrl, std::shared_ptr<TabsCtrlState> state) {
         ti->titleSize = MakeSize(0, 0);
         if (!tab->title.empty()) {
             ti->title = wstrFromUtf8(tab->title);
-            const WCHAR *s = ti->title.data();
+            const WCHAR* s = ti->title.data();
             ti->titleSize = TextSizeInHwnd2(priv->hwnd, s, priv->font);
         }
         if (!tab->toolTip.empty()) {

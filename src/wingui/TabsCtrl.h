@@ -5,7 +5,7 @@ typedef std::function<void(TabsCtrl*, std::shared_ptr<TabsCtrlState>, int)> TabS
 typedef std::function<void(TabsCtrl*, std::shared_ptr<TabsCtrlState>, int)> TabClosedCb;
 
 class TabItem {
-public:
+  public:
     TabItem(const std::string& title, const std::string& toolTip);
 
     std::string title;
@@ -15,8 +15,8 @@ public:
 };
 
 class TabsCtrlState {
-public:
-    std::vector < std::unique_ptr<TabItem>> tabs;
+  public:
+    std::vector<std::unique_ptr<TabItem>> tabs;
     int selectedItem = 0;
 };
 
@@ -30,7 +30,7 @@ struct TabsCtrl {
     TabSelectedCb onTabSelected;
     TabClosedCb onTabClosed;
 
-    TabsCtrlPrivate *priv;
+    TabsCtrlPrivate* priv;
 };
 
 /* Creation sequence:
