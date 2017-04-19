@@ -154,6 +154,25 @@ void LogLastError(DWORD err) {
     LocalFree(msgBuf);
 }
 
+void DbgOutLastError(DWORD err) {
+    if (0 == err) {
+        err = GetLastError();
+    }
+    if (0 == err) {
+        return;
+    }
+    char *msgBuf = nullptr;
+    DWORD flags =
+        FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS;
+    DWORD lang = MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT);
+    DWORD res = FormatMessageA(flags, nullptr, err, lang, (LPSTR)&msgBuf, 0, nullptr);
+    if (!res || !msgBuf) {
+        return;
+    }
+    OutputDebugStringA(msgBuf);
+    LocalFree(msgBuf);
+}
+
 // return true if a given registry key (path) exists
 bool RegKeyExists(HKEY keySub, const WCHAR *keyName) {
     HKEY hKey;

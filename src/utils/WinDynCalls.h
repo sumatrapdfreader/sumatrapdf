@@ -20,8 +20,8 @@ The intent is to standardize how we do it.
 
 // dbghelp.h is included here so that warning C4091 can be disabled in a single location
 #pragma warning(push)
-#pragma warning(                                                                                   \
-    disable : 4091) // VS2015: 'typedef ': ignored on left of '' when no variable is declared
+// VS2015: 'typedef ': ignored on left of '' when no variable is declared
+#pragma warning(disable : 4091) 
 #include <dbghelp.h>
 #pragma warning(pop)
 #include <tlhelp32.h>
@@ -31,6 +31,22 @@ The intent is to standardize how we do it.
 #define PROCESS_DEP_ENABLE 0x1
 #define PROCESS_DEP_DISABLE_ATL_THUNK_EMULATION 0x2
 #endif
+
+// Note: this might blow up due to re-defining if we compile with newer SDK version
+typedef enum _PROCESS_MITIGATION_POLICY {
+    ProcessDEPPolicy,
+    ProcessASLRPolicy,
+    ProcessDynamicCodePolicy,
+    ProcessStrictHandleCheckPolicy,
+    ProcessSystemCallDisablePolicy,
+    ProcessMitigationOptionsMask,
+    ProcessExtensionPointDisablePolicy,
+    ProcessReserved1Policy,
+    ProcessSignaturePolicy,
+    MaxProcessMitigationPolicy,
+    ProcessImageLoadPolicy
+} PROCESS_MITIGATION_POLICY, *PPROCESS_MITIGATION_POLICY;
+
 typedef BOOL(WINAPI *Sig_SetProcessDEPPolicy)(DWORD dwFlags);
 typedef BOOL(WINAPI *Sig_IsWow64Process)(HANDLE, PBOOL);
 typedef BOOL(WINAPI *Sig_SetDllDirectoryW)(LPCWSTR);
@@ -43,7 +59,8 @@ typedef HANDLE(WINAPI *Sig_CreateFileTransactedW)(LPCWSTR lpFileName, DWORD dwDe
                                                   HANDLE hTransaction, PUSHORT pusMiniVersion,
                                                   PVOID pExtendedParameter);
 typedef BOOL(WINAPI *Sig_DeleteFileTransactedW)(LPCWSTR lpFileName, HANDLE hTransaction);
-typedef BOOL(WINAPI *Sig_SetDefaultDllDirectories)(DWORD directoryFlags);
+typedef BOOL(WINAPI *Sig_SetDefaultDllDirectories)(DWORD);
+typedef BOOL (WINAPI *Sig_SetProcessMitigationPolicy)(PROCESS_MITIGATION_POLICY, PVOID, SIZE_T);
 
 #define KERNEL32_API_LIST(V)                                                                       \
     V(SetProcessDEPPolicy)                                                                         \
@@ -52,7 +69,8 @@ typedef BOOL(WINAPI *Sig_SetDefaultDllDirectories)(DWORD directoryFlags);
     V(SetDefaultDllDirectories)                                                                    \
     V(RtlCaptureContext)                                                                           \
     V(CreateFileTransactedW)                                                                       \
-    V(DeleteFileTransactedW)
+    V(DeleteFileTransactedW)                                                                       \
+    V(SetProcessMitigationPolicy)
 
 // ntdll.dll
 #define PROCESS_EXECUTE_FLAGS 0x22
@@ -385,3 +403,4 @@ HRESULT GetReservedNotSupportedValue(IUnknown **punkNotSupportedValue);
 };
 
 void NoDllHijacking();
+void PrioritizeSystemDirectoriesForDllLoad();

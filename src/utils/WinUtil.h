@@ -43,6 +43,7 @@ bool IsWin10();
 bool IsWin7();
 
 void LogLastError(DWORD err = 0);
+void DbgOutLastError(DWORD err = 0);
 bool RegKeyExists(HKEY keySub, const WCHAR *keyName);
 WCHAR *ReadRegStr(HKEY keySub, const WCHAR *keyName, const WCHAR *valName);
 bool WriteRegStr(HKEY keySub, const WCHAR *keyName, const WCHAR *valName, const WCHAR *value);

@@ -567,6 +567,9 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 
     InitDynCalls();
 
+    //PrioritizeSystemDirectoriesForDllLoad();
+    //NoDllHijacking();
+
     DisableDataExecution();
     // ensure that C functions behave consistently under all OS locales
     // (use Win32 functions where localized input or output is desired)

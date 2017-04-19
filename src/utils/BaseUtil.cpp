@@ -196,3 +196,4 @@ uint32_t MurmurHash2(const void *key, size_t len)
 
     return h;
 }
+
