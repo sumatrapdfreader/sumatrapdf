@@ -9,6 +9,11 @@ import (
 	"time"
 )
 
+var (
+	// either vs2015 or vs2017
+	vsVer string
+)
+
 func cmdToStrLong(cmd *exec.Cmd) string {
 	arr := []string{cmd.Path}
 	arr = append(arr, cmd.Args...)
@@ -60,11 +65,30 @@ func getOsEnvValue(name string) (string, bool) {
 }
 
 func getEnvForVSUncached() []string {
-	val, ok := getOsEnvValue("VS140COMNTOOLS")
+	dir, ok := getOsEnvValue("ProgramFiles(x86)")
 	if !ok {
-		fatalf("VS140COMNTOOLS not set; VS 2015 not installed?\n")
+		dir, ok = getOsEnvValue("ProgramFiles")
 	}
-	return getEnvAfterScript(val, "vsvars32.bat")
+	// TODO: don't know why this doesn't work. The log show I try to execute the
+	// right msbuild but it fails to even start
+	if false && ok {
+		// TODO: Professional or Enterprise would be in different directories, I assume
+		dir = filepath.Join(dir, "Microsoft Visual Studio", "2017", "Community", "VC", "Auxiliary", "Build")
+		path := filepath.Join(dir, "vcvars32.bat")
+		if fileExists(path) {
+			fmt.Printf("Found VS 2017\n")
+			vsVer = "vs2017"
+			return getEnvAfterScript(dir, "vcvars32.bat")
+		}
+	}
+
+	dir, ok = getOsEnvValue("VS140COMNTOOLS")
+	if !ok {
+		fatalf("VS140COMNTOOLS not set; VS 2015 or VS 2017 not installed?\n")
+	}
+	vsVer = "vs2015"
+	fmt.Printf("Found VS 2015\n")
+	return getEnvAfterScript(dir, "vsvars32.bat")
 }
 
 var (
@@ -117,6 +141,9 @@ func lookExeInEnvPathUncachedHelper(env []string, exeName string) string {
 	// 2015 VS. If we pick up 2013 VS, it'll complain about v140_xp toolset
 	// not being installed
 	for _, p := range found {
+		if strings.Contains(p, "15.0") {
+			return p
+		}
 		if strings.Contains(p, "14.0") {
 			return p
 		}
@@ -241,7 +268,7 @@ func runCmdLogged(cmd *exec.Cmd, showProgress bool) ([]byte, error) {
 	if err != nil {
 		args := []string{cmd.Path}
 		args = append(args, cmd.Args...)
-		fmt.Printf("%s failed with %s, out:\n%s\n", args, err, string(out))
+		fmt.Printf("%s failed with %s, out:\n'%s'\n", args, err, string(out))
 		return out, err
 	}
 	fmt.Printf("%s\n", out)
@@ -275,13 +302,13 @@ func runExeLogged(env []string, exeName string, args ...string) ([]byte, error) 
 }
 
 func runMsbuild(showProgress bool, args ...string) error {
-	cmd := getCmdInEnv(getEnvForVS(), "msbuild.exe", args...)
+	cmd := getCmdInEnv(getEnvForVS(), "MSBuild.exe", args...)
 	_, err := runCmdLogged(cmd, showProgress)
 	return err
 }
 
 func runMsbuildGetOutput(showProgress bool, args ...string) ([]byte, error) {
-	cmd := getCmdInEnv(getEnvForVS(), "msbuild.exe", args...)
+	cmd := getCmdInEnv(getEnvForVS(), "MSBuild.exe", args...)
 	return runCmdLogged(cmd, showProgress)
 }
 

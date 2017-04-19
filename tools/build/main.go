@@ -165,6 +165,7 @@ func certPath() string {
 	return pj("scripts", "cert.pfx")
 }
 
+// writes src/utils/BuildConfig.h to over-ride some of build settings
 func setBuildConfig(sha1, preRelVer string) {
 	fatalif(sha1 == "", "sha1 must be set")
 	s := fmt.Sprintf("#define GIT_COMMIT_ID %s\n", sha1)
@@ -329,7 +330,8 @@ func buildPreRelease() {
 	downloadPigzMust()
 
 	setBuildConfig(gitSha1, svnPreReleaseVer)
-	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:SumatraPDF;SumatraPDF-no-MUPDF;PdfFilter;PdfPreview;Uninstaller;test_util", "/p:Configuration=Release;Platform=Win32", "/m")
+	slnPath := filepath.Join(vsVer, "SumatraPDF.sln")
+	err = runMsbuild(true, slnPath, "/t:SumatraPDF;SumatraPDF-no-MUPDF;PdfFilter;PdfPreview;Uninstaller;test_util", "/p:Configuration=Release;Platform=Win32", "/m")
 	fataliferr(err)
 	runTestUtilMust("rel")
 	signMust(pj("rel", "SumatraPDF.exe"))
@@ -338,11 +340,11 @@ func buildPreRelease() {
 	signMust(pj("rel", "PdfPreview.dll"))
 	signMust(pj("rel", "SumatraPDF-no-MUPDF.exe"))
 	signMust(pj("rel", "Uninstaller.exe"))
-	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:Installer", "/p:Configuration=Release;Platform=Win32", "/m")
+	err = runMsbuild(true, slnPath, "/t:Installer", "/p:Configuration=Release;Platform=Win32", "/m")
 	fataliferr(err)
 	signMust(pj("rel", "Installer.exe"))
 
-	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:SumatraPDF;SumatraPDF-no-MUPDF;PdfFilter;PdfPreview;Uninstaller;test_util", "/p:Configuration=Release;Platform=x64", "/m")
+	err = runMsbuild(true, slnPath, "/t:SumatraPDF;SumatraPDF-no-MUPDF;PdfFilter;PdfPreview;Uninstaller;test_util", "/p:Configuration=Release;Platform=x64", "/m")
 	fataliferr(err)
 
 	if isOS64Bit() {
@@ -354,7 +356,7 @@ func buildPreRelease() {
 	signMust(pj("rel", "PdfPreview.dll"))
 	signMust(pj("rel64", "SumatraPDF-no-MUPDF.exe"))
 	signMust(pj("rel64", "Uninstaller.exe"))
-	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:Installer", "/p:Configuration=Release;Platform=x64", "/m")
+	err = runMsbuild(true, slnPath, "/t:Installer", "/p:Configuration=Release;Platform=x64", "/m")
 	fataliferr(err)
 	signMust(pj("rel64", "Installer.exe"))
 
@@ -381,7 +383,9 @@ func buildMakeLzsa() {
 	//verifyGitCleanMust()
 	verifyOnMasterBranchMust()
 
-	err := runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:MakeLZSA", "/p:Configuration=Release;Platform=Win32", "/m")
+	slnPath := filepath.Join(vsVer, "SumatraPDF.sln")
+
+	err := runMsbuild(true, slnPath, "/t:MakeLZSA", "/p:Configuration=Release;Platform=Win32", "/m")
 	fataliferr(err)
 	path := pj("rel", "MakeLZSA.exe")
 	signMust(path)
@@ -401,17 +405,19 @@ func buildRelease() {
 	downloadPigzMust()
 
 	setBuildConfig(gitSha1, "")
-	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:SumatraPDF;SumatraPDF-no-MUPDF;Uninstaller;test_util", "/p:Configuration=Release;Platform=Win32", "/m")
+	slnPath := filepath.Join(vsVer, "SumatraPDF.sln")
+
+	err = runMsbuild(true, slnPath, "/t:SumatraPDF;SumatraPDF-no-MUPDF;Uninstaller;test_util", "/p:Configuration=Release;Platform=Win32", "/m")
 	fataliferr(err)
 	runTestUtilMust("rel")
 	signMust(pj("rel", "SumatraPDF.exe"))
 	signMust(pj("rel", "SumatraPDF-no-MUPDF.exe"))
 	signMust(pj("rel", "Uninstaller.exe"))
-	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:Installer", "/p:Configuration=Release;Platform=Win32", "/m")
+	err = runMsbuild(true, slnPath, "/t:Installer", "/p:Configuration=Release;Platform=Win32", "/m")
 	fataliferr(err)
 	signMust(pj("rel", "Installer.exe"))
 
-	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:SumatraPDF;SumatraPDF-no-MUPDF;Uninstaller;test_util", "/p:Configuration=Release;Platform=x64", "/m")
+	err = runMsbuild(true, slnPath, "/t:SumatraPDF;SumatraPDF-no-MUPDF;Uninstaller;test_util", "/p:Configuration=Release;Platform=x64", "/m")
 	fataliferr(err)
 
 	if isOS64Bit() {
@@ -420,7 +426,7 @@ func buildRelease() {
 	signMust(pj("rel64", "SumatraPDF.exe"))
 	signMust(pj("rel64", "SumatraPDF-no-MUPDF.exe"))
 	signMust(pj("rel64", "Uninstaller.exe"))
-	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:Installer", "/p:Configuration=Release;Platform=x64", "/m")
+	err = runMsbuild(true, slnPath, "/t:Installer", "/p:Configuration=Release;Platform=x64", "/m")
 	fataliferr(err)
 	signMust(pj("rel64", "Installer.exe"))
 
@@ -440,7 +446,8 @@ func buildRelease() {
 func buildAnalyze() {
 	fmt.Printf("Analyze build\n")
 	// I assume 64-bit build will catch more issues
-	out, _ := runMsbuildGetOutput(true, "vs2015\\SumatraPDF.sln", "/t:Installer", "/p:Configuration=ReleasePrefast;Platform=x64", "/m")
+	slnPath := filepath.Join(vsVer, "SumatraPDF.sln")
+	out, _ := runMsbuildGetOutput(true, slnPath, "/t:Installer", "/p:Configuration=ReleasePrefast;Platform=x64", "/m")
 
 	if true {
 		err2 := ioutil.WriteFile("analyze-output.txt", out, 0644)
@@ -454,14 +461,15 @@ func buildAnalyze() {
 func buildSmoke() {
 	fmt.Printf("Smoke build\n")
 	verifyTranslationsMust()
+	slnPath := filepath.Join(vsVer, "SumatraPDF.sln")
 
-	err := runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:Installer;SumatraPDF;Uninstaller;test_util", "/p:Configuration=Release;Platform=Win32", "/m")
+	err := runMsbuild(true, slnPath, "/t:Installer;SumatraPDF;Uninstaller;test_util", "/p:Configuration=Release;Platform=Win32", "/m")
 	fataliferr(err)
 	path := pj("rel", "test_util.exe")
 	runExeMust(path)
-	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:Installer;SumatraPDF;Uninstaller;test_util", "/p:Configuration=Release;Platform=x64", "/m")
+	err = runMsbuild(true, slnPath, "/t:Installer;SumatraPDF;Uninstaller;test_util", "/p:Configuration=Release;Platform=x64", "/m")
 	fataliferr(err)
-	err = runMsbuild(true, "vs2015\\SumatraPDF.sln", "/t:Installer;SumatraPDF;Uninstaller;test_util", "/p:Configuration=Debug;Platform=x64", "/m")
+	err = runMsbuild(true, slnPath, "/t:Installer;SumatraPDF;Uninstaller;test_util", "/p:Configuration=Debug;Platform=x64", "/m")
 	fataliferr(err)
 }
 
@@ -953,6 +961,7 @@ func main() {
 	os.Remove(logFileName)
 	verifyStartedInRightDirectoryMust()
 	detectVersions()
+	getEnvForVS()
 	clean()
 	if flgRelease || flgPreRelease {
 		verifyHasReleaseSecretsMust()
