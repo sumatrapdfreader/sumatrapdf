@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-8aa66af40b3f9076a71baf1e8f1224a0cd3a8c6a
+961c6a6831210c7d242b76a69b5b8ae6cf8fd116
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -145,6 +145,7 @@ am:&Ընդլայնված կարգավորումներ..
 ar:خيارات &متقدمة
 az:&Əlavə seçimlər...
 bg:Разширени опции
+bn:আরো উন্নত অপশন 
 br:Opções &Avançadas...
 bs:N&apredne opcije...
 ca-xv:Opcions &avançades...
@@ -267,6 +268,7 @@ am:&Նախորդը\tAlt+Left Arrow
 ar:للخلف&\tAlt+Left Arrow
 az:&Geri\tAlt+Left Arrow
 bg:На&зад\tAlt+Лява стрелка
+bn:&ব্যাক\অল্ট+বাম-মুখি অ্যারো 
 br:Voltar\tAlt+<-
 bs:Nazad\tAlt+<-
 ca-xv:Arrere\tAlt+Left Arrow
@@ -330,6 +332,7 @@ am:&Գրքի տեսքով\tCtrl+8
 ar:عرض &الكتاب
 az:&Kitab formatı\tCtrl+8
 bg:&Изглед като книга\tCtrl+8
+bn:&বই-এর মত সজ্জা\টি কন্ট্রোল + ৮
 br:Visualizar como livro\tCtrl+8
 bs:&Knjiški pregled\tCtrl+8
 ca-xv:Visualització de &llibre\tCtrl+8
@@ -3097,6 +3100,7 @@ am:&Այո
 ar:&نعم
 az:&Bəli
 bg:&Да
+bn:&হ্যাঁ 
 br:&Sim
 bs:&Da
 by:Да
@@ -4513,6 +4517,7 @@ am:Էջանշել %s էջից %s-ը
 ar:%s من %s اختصار قائمة العناوين الى صفحة
 az:%s. (%s) səhifə yarlıkının əlfəcini
 bg:Кратък път към отметка на страница %s от %s
+bn:বুকমার্ক শর্টকাট %s থেকে %s
 br:Atalho para a página %s de %s
 bs:Kratica zabilješke na stranicu %s od %s
 ca-xv:Drecera del marcador a la pàgina %s de %s
@@ -4762,6 +4767,7 @@ am:Հնարավոր չէ կապնվել (սխալ %#x)։
 ar:لم يتم التمكن من الإتصال بالإنترنت (%#x خطأ).
 az:İnternetə qoşulmaq mümkün deyil (xəta %#x).
 bg:Няма връзка с Интернет (грешка %#x).
+bn:ইন্টারনেট এর সাথে যুক্ত করা যাচ্ছে না (এরর %#x)
 br:Falha na conexão à Internet (erro %#x).
 bs:Ne mogu se povezati na Internet (greška %#x)
 ca-xv:No es pot connectar a internet (error %#x).
@@ -16975,7 +16981,7 @@ am:Տեսք
 ar:العرض
 az:Görüntü
 bg:Изглед
-bn:দর্শন
+bn:এভাবে দেখুন
 br:Exibir
 bs:Prikaz
 by:Выгляд
@@ -17369,6 +17375,7 @@ am:Դիտափոխել
 ar:تكبير/تصغير
 az:Miqyas
 bg:Увеличение
+bn:বিবর্ধন
 br:Zoom
 bs:Uvećanje
 ca-xv:Zoom
@@ -17570,6 +17577,7 @@ am:Չափի գործակիցը
 ar:عامل التكبير/التصغير
 az:Miqyas
 bg:Коефициент на увеличение
+bn:বিবর্ধক অনুপাত
 br:Proporção de Zoom
 bs:Faktor uvećanja
 ca-xv:Factor d'escala
