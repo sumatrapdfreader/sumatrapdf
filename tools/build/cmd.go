@@ -71,6 +71,7 @@ func getEnvForVSUncached() []string {
 	}
 	// TODO: don't know why this doesn't work. The log show I try to execute the
 	// right msbuild but it fails to even start
+	// also: https://github.com/bazelbuild/bazel/commit/321aa540feb2cd0583b824bbb646c885fda17f0b
 	if false && ok {
 		// TODO: Professional or Enterprise would be in different directories, I assume
 		dir = filepath.Join(dir, "Microsoft Visual Studio", "2017", "Community", "VC", "Auxiliary", "Build")
