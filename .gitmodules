@@ -1,0 +1,3 @@
+[submodule "ext2/openjpeg"]
+	path = ext2/openjpeg
+	url = https://github.com/ArtifexSoftware/thirdparty-openjpeg.git

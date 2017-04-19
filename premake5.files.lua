@@ -220,32 +220,9 @@ function jbig2dec_files()
 end
 
 function openjpeg_files()
-  files_in_dir( "ext/openjpeg", {
-    "bio.*",
-    "cidx_manager.*",
-    "cio.*",
-    "dwt.*",
-    "event.*",
-    "function_list.*",
-    "image.*",
-    "invert.*",
-    "j2k.*",
-    "jp2.*",
-    "mct.*",
-    "mqc.*",
-    "openjpeg.*",
-    "opj_clock.*",
-    "opj_config.h",
-    "phix_manager.*",
-    "pi.*",
-    "ppix_manager.",
-    "raw.*",
-    "t1.*",
-    "t2.*",
-    "tcd.*",
-    "tgt.*",
-    "thix_manager.*",
-    "tpix_manager.*",
+  files_in_dir( "ext2/openjpeg/src/lib/openjp2", {
+    "*.c",
+    "*.h",
   })
 end
 

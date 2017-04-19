@@ -20,7 +20,8 @@ Reference for warnings:
  4206 - non-standard extension: translation unit is empty
  4244 - 64bit, conversion with possible loss of data
  4267 - 64bit, conversion with possible loss of data
- 4302 - 64bit, type caset truncation
+ 4302 - 64bit, type cast truncation
+ 4310 - 64bit, cast truncates constant value
  4311 - 64bit, type cast pointer truncation
  4312 - 64bit, conversion to X of greater size
  4324 - 64bit, structure was padded
@@ -184,8 +185,14 @@ workspace "SumatraPDF"
   project "openjpeg"
     kind "StaticLib"
     language "C"
-    disablewarnings { "4100", "4244", "4819" }
-    includedirs { "ext/openjpeg" }
+    disablewarnings { "4100", "4244", "4310", "4819" }
+
+    -- openjpeg has opj_config_private.h for such over-rides
+    -- but we can't change it because we bring openjpeg as submodule
+    -- and we can't provide our own in a different directory because
+    -- msvc will include the one in ext2/openjpeg/src/lib/openjp2 first
+    -- because #include "opj_config_private.h" searches current directory first
+    defines { "USE_JPIP", "OPJ_STATIC", "OPJ_EXPORTS" }
     openjpeg_files()
 
 
@@ -257,12 +264,21 @@ workspace "SumatraPDF"
   project "mupdf"
     kind "StaticLib"
     language "C"
+
+    -- for openjpeg, OPJ_STATIC is alrady defined in load-jpx.c
+    -- so we can't double-define it
+    defines { "USE_JPIP", "OPJ_EXPORTS" }
+
     defines { "NOCJKFONT", "SHARE_JPEG" }
     disablewarnings {  "4244", "4267", }
+    -- force including mupdf/scripts/openjpeg/opj_config_private.h
+    -- with our build over-rides
+    includedirs { "mupdf/scripts/openjpeg" }
+
     includedirs {
       "mupdf/include", "mupdf/generated", "ext/zlib",
       "ext/freetype2/config", "ext/freetype2/include",
-      "ext/jbig2dec", "ext/libjpeg-turbo", "ext/openjpeg"
+      "ext/jbig2dec", "ext/libjpeg-turbo", "ext2/openjpeg/src/lib/openjp2"
     }
     -- .\ext\..\bin\nasm.exe -I .\mupdf\ -f win32 -o .\obj-rel\mupdf\font_base14.obj
     -- .\mupdf\font_base14.asm
