@@ -3542,26 +3542,38 @@ static void FrameOnChar(WindowInfo& win, WPARAM key, LPARAM info=0)
         }
         break;
 #if defined(DEBUG) || defined(SVN_PRE_RELEASE_VER)
-    case 'h': // convert selection to highlight annotation
-        if (win.AsFixed() && win.AsFixed()->GetEngine()->SupportsAnnotation() && win.showSelection && win.currentTab->selectionOnPage) {
-            if (!win.AsFixed()->userAnnots)
-                win.AsFixed()->userAnnots = new Vec<PageAnnotation>();
-            for (SelectionOnPage& sel : *win.currentTab->selectionOnPage) {
-                auto addedAnnotation = PageAnnotation(Annot_Highlight, sel.pageNo, sel.rect, PageAnnotation::Color(gGlobalPrefs->annotationDefaults.highlightColor, 0xCC));
-                size_t oldLen = win.AsFixed()->userAnnots->Size();
-                for (size_t i = 0; i < oldLen; ++i) {
-                    if (win.AsFixed()->userAnnots->At(i) ==  addedAnnotation)
-                        win.AsFixed()->userAnnots->RemoveAtFast(i);
-                }
-                if (oldLen == win.AsFixed()->userAnnots->Size())
-                    win.AsFixed()->userAnnots->Append(PageAnnotation(Annot_Highlight, sel.pageNo, sel.rect, PageAnnotation::Color(gGlobalPrefs->annotationDefaults.highlightColor, 0xCC)));
-                
-                gRenderCache.Invalidate(win.AsFixed(), sel.pageNo, sel.rect);
-            }
-            win.AsFixed()->userAnnotsModified = true;
-            win.AsFixed()->GetEngine()->UpdateUserAnnotations(win.AsFixed()->userAnnots);
-            ClearSearchResult(&win); // causes invalidated tiles to be rerendered
+    case 'h':
+        // converts current selection to annotation (or back to regular text
+        // if it's already an annotation)
+        DisplayModel* dm = win.AsFixed();
+        bool ok = dm && dm->GetEngine()->SupportsAnnotation() && win.showSelection && win.currentTab->selectionOnPage;
+        if (!ok) {
+            return;
         }
+        // TODO: we probably should construct list of new annotations and replace
+        // existing list with a new one at the end
+        // TODO: we need to support overlapping selections better (merge them into existing
+        // annotation?
+        if (!dm->userAnnots) {
+            dm->userAnnots = new Vec<PageAnnotation>();
+        }
+        Vec<PageAnnotation> *annots = dm->userAnnots;
+        for (SelectionOnPage& sel : *win.currentTab->selectionOnPage) {
+            auto addedAnnotation = PageAnnotation(Annot_Highlight, sel.pageNo, sel.rect, PageAnnotation::Color(gGlobalPrefs->annotationDefaults.highlightColor, 0xCC));
+            size_t oldLen = annots->Size();
+            for (size_t i = 0; i < oldLen && i < annots->Size(); ++i) {
+                if (annots->At(i) == addedAnnotation) {
+                    annots->RemoveAtFast(i);
+                }
+            }
+            if (oldLen == annots->Size()) {
+                annots->Append(PageAnnotation(Annot_Highlight, sel.pageNo, sel.rect, PageAnnotation::Color(gGlobalPrefs->annotationDefaults.highlightColor, 0xCC)));
+            }
+            gRenderCache.Invalidate(dm, sel.pageNo, sel.rect);
+        }
+        dm->userAnnotsModified = true;
+        dm->GetEngine()->UpdateUserAnnotations(dm->userAnnots);
+        ClearSearchResult(&win); // causes invalidated tiles to be rerendered
 #endif
     }
 }

@@ -8,5 +8,6 @@
     "relPrefast/*" : true,
     "relPrefast64/*" : true,
     "build-log.txt" : true
-  }
+  },
+  "python.linting.pylintEnabled": false
 }
