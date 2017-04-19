@@ -64,26 +64,47 @@ func getOsEnvValue(name string) (string, bool) {
 	return getEnvValue(os.Environ(), name)
 }
 
-func getEnvForVSUncached() []string {
+func getEnvForVS2017Uncached() []string {
+	if !tryVs2017 {
+		fmt.Printf("Not trying vs 2017\n")
+		return nil
+	}
 	dir, ok := getOsEnvValue("ProgramFiles(x86)")
 	if !ok {
 		dir, ok = getOsEnvValue("ProgramFiles")
 	}
+	if !ok {
+		fmt.Printf("didn't find Program files directory\n")
+		return nil
+	}
+
 	// TODO: don't know why this doesn't work. The log show I try to execute the
 	// right msbuild but it fails to even start
 	// also: https://github.com/bazelbuild/bazel/commit/321aa540feb2cd0583b824bbb646c885fda17f0b
-	if false && ok {
-		// TODO: Professional or Enterprise would be in different directories, I assume
-		dir = filepath.Join(dir, "Microsoft Visual Studio", "2017", "Community", "VC", "Auxiliary", "Build")
-		path := filepath.Join(dir, "vcvars32.bat")
-		if fileExists(path) {
-			fmt.Printf("Found VS 2017\n")
-			vsVer = "vs2017"
-			return getEnvAfterScript(dir, "vcvars32.bat")
-		}
+	// It must have something with the env. If I use standard env, msbuild.exe starts
+	// (but doesn't compile properly). If I pass env from vcvar32
+	// TODO: Professional or Enterprise would be in different directories, I assume
+	dir = filepath.Join(dir, "Microsoft Visual Studio", "2017", "Community", "VC", "Auxiliary", "Build")
+	vcVarsName := "vcvars32.bat"
+	path := filepath.Join(dir, vcVarsName)
+	if !fileExists(path) {
+		return nil
 	}
+	fmt.Printf("Found VS 2017\n")
+	vsVer = "vs2017"
+	env := getEnvAfterScript(dir, vcVarsName)
+	if len(env) == 0 {
+		fmt.Printf("getEnvAfterScript() returned empty\n")
+	}
+	return env
+}
 
-	dir, ok = getOsEnvValue("VS140COMNTOOLS")
+func getEnvForVSUncached() []string {
+	env := getEnvForVS2017Uncached()
+	if env != nil {
+		return env
+	}
+	dir, ok := getOsEnvValue("VS140COMNTOOLS")
 	if !ok {
 		fatalf("VS140COMNTOOLS not set; VS 2015 or VS 2017 not installed?\n")
 	}
@@ -142,9 +163,6 @@ func lookExeInEnvPathUncachedHelper(env []string, exeName string) string {
 	// 2015 VS. If we pick up 2013 VS, it'll complain about v140_xp toolset
 	// not being installed
 	for _, p := range found {
-		if strings.Contains(p, "15.0") {
-			return p
-		}
 		if strings.Contains(p, "14.0") {
 			return p
 		}
@@ -187,7 +205,11 @@ func getCmdInEnv(env []string, exeName string, args ...string) *exec.Cmd {
 	if env == nil {
 		env = os.Environ()
 	}
+
 	exePath := lookExeInEnvPath(env, exeName)
+	if !fileExists(exePath) {
+		fmt.Printf("File '%s' doesn't exists\n", exePath)
+	}
 	cmd := exec.Command(exePath, args...)
 	cmd.Env = env
 	if true {

@@ -61,6 +61,7 @@ var (
 	sumatraVersion   string
 	timeStart        time.Time
 	cachedSecrets    *Secrets
+	tryVs2017        = false // TODO: doesn't work yet
 )
 
 func parseCmdLine() {
