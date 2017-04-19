@@ -837,22 +837,25 @@ WCHAR *DjVuEngineImpl::ExtractPageText(int pageNo, const WCHAR *lineSep, RectI *
 void DjVuEngineImpl::UpdateUserAnnotations(Vec<PageAnnotation> *list)
 {
     ScopedCritSec scope(&gDjVuContext.lock);
-    if (list)
+    if (list) {
         userAnnots = *list;
-    else
+    } else {
         userAnnots.Reset();
+    }
 }
 
 Vec<PageElement *> *DjVuEngineImpl::GetElements(int pageNo)
 {
-    assert(1 <= pageNo && pageNo <= PageCount());
+    AssertCrash(1 <= pageNo && pageNo <= PageCount());
     if (annos && miniexp_dummy == annos[pageNo-1]) {
         ScopedCritSec scope(&gDjVuContext.lock);
-        while ((annos[pageNo-1] = ddjvu_document_get_pageanno(doc, pageNo-1)) == miniexp_dummy)
+        while ((annos[pageNo - 1] = ddjvu_document_get_pageanno(doc, pageNo - 1)) == miniexp_dummy) {
             gDjVuContext.SpinMessageLoop();
+        }
     }
-    if (!annos || !annos[pageNo-1])
+    if (!annos || !annos[pageNo - 1]) {
         return nullptr;
+    }
 
     ScopedCritSec scope(&gDjVuContext.lock);
 
@@ -861,11 +864,13 @@ Vec<PageElement *> *DjVuEngineImpl::GetElements(int pageNo)
 
     ddjvu_status_t status;
     ddjvu_pageinfo_t info;
-    while ((status = ddjvu_document_get_pageinfo(doc, pageNo-1, &info)) < DDJVU_JOB_OK)
+    while ((status = ddjvu_document_get_pageinfo(doc, pageNo - 1, &info)) < DDJVU_JOB_OK) {
         gDjVuContext.SpinMessageLoop();
+    }
     float dpiFactor = 1.0;
-    if (DDJVU_JOB_OK == status)
+    if (DDJVU_JOB_OK == status) {
         dpiFactor = GetFileDPI() / info.dpi;
+    }
 
     miniexp_t *links = ddjvu_anno_get_hyperlinks(annos[pageNo-1]);
     for (int i = 0; links[i]; i++) {
@@ -873,26 +878,30 @@ Vec<PageElement *> *DjVuEngineImpl::GetElements(int pageNo)
 
         miniexp_t url = miniexp_car(anno);
         const char *urlUtf8 = nullptr;
-        if (miniexp_stringp(url))
+        if (miniexp_stringp(url)) {
             urlUtf8 = miniexp_to_str(url);
+        }
         else if (miniexp_consp(url) && miniexp_car(url) == miniexp_symbol("url") &&
                  miniexp_stringp(miniexp_cadr(url)) && miniexp_stringp(miniexp_caddr(url))) {
             urlUtf8 = miniexp_to_str(miniexp_cadr(url));
         }
-        if (!urlUtf8)
+        if (!urlUtf8) {
             continue;
+        }
 
         anno = miniexp_cdr(anno);
         miniexp_t comment = miniexp_car(anno);
         const char *commentUtf8 = nullptr;
-        if (miniexp_stringp(comment))
+        if (miniexp_stringp(comment)) {
             commentUtf8 = miniexp_to_str(comment);
+        }
 
         anno = miniexp_cdr(anno);
         miniexp_t area = miniexp_car(anno);
         miniexp_t type = miniexp_car(area);
-        if (type != miniexp_symbol("rect") && type != miniexp_symbol("oval") && type != miniexp_symbol("text"))
+        if (type != miniexp_symbol("rect") && type != miniexp_symbol("oval") && type != miniexp_symbol("text")) {
             continue; // unsupported shape;
+        }
 
         area = miniexp_cdr(area);
         if (!miniexp_numberp(miniexp_car(area))) continue;
@@ -920,20 +929,24 @@ Vec<PageElement *> *DjVuEngineImpl::GetElements(int pageNo)
 PageElement *DjVuEngineImpl::GetElementAtPos(int pageNo, PointD pt)
 {
     Vec<PageElement *> *els = GetElements(pageNo);
-    if (!els)
+    if (!els) {
         return nullptr;
+    }
 
     // elements are extracted bottom-to-top but are accessed
     // in top-to-bottom order, so reverse the list first
     els->Reverse();
 
     PageElement *el = nullptr;
-    for (size_t i = 0; i < els->Count() && !el; i++)
-        if (els->At(i)->GetRect().Contains(pt))
+    for (size_t i = 0; i < els->Count() && !el; i++) {
+        if (els->At(i)->GetRect().Contains(pt)) {
             el = els->At(i);
+        }
+    }
 
-    if (el)
+    if (el) {
         els->Remove(el);
+    }
     DeleteVecMembers(*els);
     delete els;
 

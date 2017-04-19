@@ -489,17 +489,19 @@ WCHAR *EbookEngine::ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **co
 void EbookEngine::UpdateUserAnnotations(Vec<PageAnnotation> *list)
 {
     ScopedCritSec scope(&pagesAccess);
-    if (list)
+    if (list) {
         userAnnots = *list;
-    else
+    } else {
         userAnnots.Reset();
+    }
 }
 
 PageElement *EbookEngine::CreatePageLink(DrawInstr *link, RectI rect, int pageNo)
 {
     ScopedMem<WCHAR> url(str::conv::FromHtmlUtf8(link->str.s, link->str.len));
-    if (url::IsAbsolute(url))
+    if (url::IsAbsolute(url)) {
         return new EbookLink(link, rect, nullptr, pageNo);
+    }
 
     DrawInstr *baseAnchor = baseAnchors.At(pageNo-1);
     if (baseAnchor) {
@@ -510,8 +512,9 @@ PageElement *EbookEngine::CreatePageLink(DrawInstr *link, RectI rect, int pageNo
     }
 
     PageDestination *dest = GetNamedDest(url);
-    if (!dest)
+    if (!dest) {
         return nullptr;
+    }
     return new EbookLink(link, rect, dest, pageNo);
 }
 
@@ -521,12 +524,13 @@ Vec<PageElement *> *EbookEngine::GetElements(int pageNo)
 
     Vec<DrawInstr> *pageInstrs = GetHtmlPage(pageNo);
     for (DrawInstr& i : *pageInstrs) {
-        if (InstrImage == i.type)
+        if (InstrImage == i.type) {
             els->Append(new ImageDataElement(pageNo, &i.img, GetInstrBbox(i, pageBorder)));
-        else if (InstrLinkStart == i.type && !i.bbox.IsEmptyArea()) {
+        }  else if (InstrLinkStart == i.type && !i.bbox.IsEmptyArea()) {
             PageElement *link = CreatePageLink(&i, GetInstrBbox(i, pageBorder), pageNo);
-            if (link)
+            if (link) {
                 els->Append(link);
+            }
         }
     }
 

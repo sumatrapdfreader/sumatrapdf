@@ -114,8 +114,9 @@ Vec<PageAnnotation> *LoadFileModifications(const WCHAR *filePath)
 
 bool SaveFileModifictions(const WCHAR *filePath, Vec<PageAnnotation> *list)
 {
-    if (!list)
+    if (!list) {
         return false;
+    }
 
     ScopedMem<WCHAR> modificationsPath(str::Join(filePath, SMX_FILE_EXT));
     str::Str<char> data;
@@ -132,8 +133,7 @@ bool SaveFileModifictions(const WCHAR *filePath, Vec<PageAnnotation> *list)
         CrashIfDebugOnly(offset != prevList->Count());
         data.AppendAndFree(prevData.StealData());
         delete prevList;
-    }
-    else {
+    } else {
         data.AppendFmt("# SumatraPDF: modifications to \"%S\"\r\n", path::GetBaseName(filePath));
     }
     data.Append("\r\n");
