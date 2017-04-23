@@ -205,9 +205,11 @@ static BaseEngine *psgz2pdf(const WCHAR *fileName)
 class PsEngineImpl : public BaseEngine {
 public:
     PsEngineImpl() : pdfEngine(nullptr) { }
+
     virtual ~PsEngineImpl() {
         delete pdfEngine;
     }
+
     BaseEngine *Clone() override {
         BaseEngine *newEngine = pdfEngine->Clone();
         if (!newEngine)
@@ -226,6 +228,7 @@ public:
     RectD PageMediabox(int pageNo) override {
         return pdfEngine->PageMediabox(pageNo);
     }
+
     RectD PageContentBox(int pageNo, RenderTarget target=Target_View) override {
         return pdfEngine->PageContentBox(pageNo, target);
     }
@@ -239,6 +242,7 @@ public:
     PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse=false) override {
         return pdfEngine->Transform(pt, pageNo, zoom, rotation, inverse);
     }
+
     RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false) override {
         return pdfEngine->Transform(rect, pageNo, zoom, rotation, inverse);
     }
@@ -246,23 +250,33 @@ public:
     unsigned char *GetFileData(size_t *cbCount) override {
         return (unsigned char *)file::ReadAll(FileName(), cbCount);
     }
-    bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false) override {
+
+    bool SaveFileAs(const char *copyFileName, bool includeUserAnnots=false) override {
         UNUSED(includeUserAnnots);
-        return FileName() ? CopyFile(FileName(), copyFileName, FALSE) : false;
+        if (!FileName()) {
+            return false;
+        }
+        ScopedMem<WCHAR> dstPath(str::conv::FromUtf8(copyFileName));
+        return CopyFileW(FileName(), dstPath, FALSE);
     }
-    bool SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots=false) override {
+
+    bool SaveFileAsPDF(const char *pdfFileName, bool includeUserAnnots=false) override {
         return pdfEngine->SaveFileAs(pdfFileName, includeUserAnnots);
     }
+
     WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coordsOut=nullptr,
                                     RenderTarget target=Target_View) override {
         return pdfEngine->ExtractPageText(pageNo, lineSep, coordsOut, target);
     }
+
     bool HasClipOptimizations(int pageNo) override {
         return pdfEngine->HasClipOptimizations(pageNo);
     }
+
     PageLayoutType PreferredLayout() override {
         return pdfEngine->PreferredLayout();
     }
+
     WCHAR *GetProperty(DocumentProperty prop) override {
         // omit properties created by Ghostscript
         if (!pdfEngine || Prop_CreationDate == prop || Prop_ModificationDate == prop ||
@@ -275,6 +289,7 @@ public:
     bool SupportsAnnotation(bool forSaving=false) const override {
         return !forSaving && pdfEngine->SupportsAnnotation();
     }
+
     void UpdateUserAnnotations(Vec<PageAnnotation> *list) override {
         pdfEngine->UpdateUserAnnotations(list);
     }
@@ -282,6 +297,7 @@ public:
     bool AllowsPrinting() const override {
         return pdfEngine->AllowsPrinting();
     }
+
     bool AllowsCopyingText() const override {
         return pdfEngine->AllowsCopyingText();
     }
@@ -289,6 +305,7 @@ public:
     float GetFileDPI() const override {
         return pdfEngine->GetFileDPI();
     }
+
     const WCHAR *GetDefaultFileExt() const override {
         return !str::EndsWithI(FileName(), L".eps") ? L".ps" : L".eps";
     }
@@ -300,6 +317,7 @@ public:
     Vec<PageElement *> *GetElements(int pageNo) override {
         return pdfEngine->GetElements(pageNo);
     }
+
     PageElement *GetElementAtPos(int pageNo, PointD pt) override {
         return pdfEngine->GetElementAtPos(pageNo, pt);
     }
@@ -307,9 +325,11 @@ public:
     PageDestination *GetNamedDest(const WCHAR *name) override {
         return pdfEngine->GetNamedDest(name);
     }
+
     bool HasTocTree() const override {
         return pdfEngine->HasTocTree();
     }
+
     DocTocItem *GetTocTree() override {
         return pdfEngine->GetTocTree();
     }

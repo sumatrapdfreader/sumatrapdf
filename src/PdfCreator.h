@@ -22,11 +22,11 @@ public:
     bool SetProperty(DocumentProperty prop, const WCHAR *value);
     bool CopyProperties(BaseEngine *engine);
 
-    bool SaveToFile(const WCHAR *filePath);
+    bool SaveToFile(const char *filePath);
 
     // this name is included in all saved PDF files
     static void SetProducerName(const WCHAR *name);
 
     // creates a simple PDF with all pages rendered as a single image
-    static bool RenderToFile(const WCHAR *pdfFileName, BaseEngine *engine, int dpi=150);
+    static bool RenderToFile(const char *pdfFileName, BaseEngine *engine, int dpi=150);
 };

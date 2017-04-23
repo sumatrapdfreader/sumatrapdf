@@ -328,16 +328,15 @@ bool PdfCreator::CopyProperties(BaseEngine *engine)
     return ok;
 }
 
-bool PdfCreator::SaveToFile(const WCHAR *filePath)
+bool PdfCreator::SaveToFile(const char *filePath)
 {
     if (!ctx || !doc) return false;
 
     if (gPdfProducer)
         SetProperty(Prop_PdfProducer, gPdfProducer);
 
-    ScopedMem<char> pathUtf8(str::conv::ToUtf8(filePath));
     fz_try(ctx) {
-        pdf_write_document(doc, pathUtf8, nullptr);
+        pdf_write_document(doc, const_cast<char*>(filePath), nullptr);
     }
     fz_catch(ctx) {
         return false;
@@ -345,7 +344,7 @@ bool PdfCreator::SaveToFile(const WCHAR *filePath)
     return true;
 }
 
-bool PdfCreator::RenderToFile(const WCHAR *pdfFileName, BaseEngine *engine, int dpi)
+bool PdfCreator::RenderToFile(const char *pdfFileName, BaseEngine *engine, int dpi)
 {
     PdfCreator *c = new PdfCreator();
     bool ok = true;

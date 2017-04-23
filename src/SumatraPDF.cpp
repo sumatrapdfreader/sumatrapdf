@@ -2392,6 +2392,7 @@ static void OnMenuSaveAs(WindowInfo& win)
         realDstFileName = str::Format(L"%s%s", dstFileName, defExt);
     }
 
+    ScopedMem<char> pathUtf8(str::conv::ToUtf8(realDstFileName));
     ScopedMem<WCHAR> errorMsg;
     // Extract all text when saving as a plain text file
     if (convertToTXT) {
@@ -2404,39 +2405,36 @@ static void OnMenuSaveAs(WindowInfo& win)
         ScopedMem<char> textUTF8(str::conv::ToUtf8(text.LendData()));
         ScopedMem<char> textUTF8BOM(str::Join(UTF8_BOM, textUTF8));
         ok = file::WriteAll(realDstFileName, textUTF8BOM, str::Len(textUTF8BOM));
-    }
-    // Convert the file into a PDF one
-    else if (convertToPDF) {
+    } else if (convertToPDF) {
+        // Convert the file into a PDF one
         PdfCreator::SetProducerName(APP_NAME_STR L" " CURR_VERSION_STR);
-        ok = engine->SaveFileAsPDF(realDstFileName, gGlobalPrefs->annotationDefaults.saveIntoDocument);
+        ok = engine->SaveFileAsPDF(pathUtf8, gGlobalPrefs->annotationDefaults.saveIntoDocument);
         if (!ok) {
 #ifdef DEBUG
             // rendering includes all page annotations
-            ok = PdfCreator::RenderToFile(realDstFileName, engine);
+            ok = PdfCreator::RenderToFile(pathUtf8, engine);
 #endif
-        }
-        else if (!gGlobalPrefs->annotationDefaults.saveIntoDocument)
+        } else if (!gGlobalPrefs->annotationDefaults.saveIntoDocument) {
             SaveFileModifictions(realDstFileName, win.AsFixed()->userAnnots);
-    }
-    // Recreate inexistant files from memory...
-    else if (!file::Exists(srcFileName) && engine) {
-        ok = engine->SaveFileAs(realDstFileName, gGlobalPrefs->annotationDefaults.saveIntoDocument);
-    }
-    // ... as well as files containing annotations ...
-    else if (gGlobalPrefs->annotationDefaults.saveIntoDocument &&
+        }
+    } else if (!file::Exists(srcFileName) && engine) {
+        // Recreate inexistant files from memory...
+        ok = engine->SaveFileAs(pathUtf8, gGlobalPrefs->annotationDefaults.saveIntoDocument);
+    } else if (gGlobalPrefs->annotationDefaults.saveIntoDocument &&
              engine && engine->SupportsAnnotation(true)) {
-        ok = engine->SaveFileAs(realDstFileName, true);
-    }
-    // ... else just copy the file
-    else if (!path::IsSame(srcFileName, realDstFileName)) {
+        // ... as well as files containing annotations ...
+        ok = engine->SaveFileAs(pathUtf8, true);
+    } else if (!path::IsSame(srcFileName, realDstFileName)) {
+        // ... else just copy the file
         WCHAR *msgBuf;
         ok = CopyFile(srcFileName, realDstFileName, FALSE);
         if (ok) {
             // Make sure that the copy isn't write-locked or hidden
             const DWORD attributesToDrop = FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM;
             DWORD attributes = GetFileAttributes(realDstFileName);
-            if (attributes != INVALID_FILE_ATTRIBUTES && (attributes & attributesToDrop))
+            if (attributes != INVALID_FILE_ATTRIBUTES && (attributes & attributesToDrop)) {
                 SetFileAttributes(realDstFileName, attributes & ~attributesToDrop);
+            }
         } else if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, nullptr, GetLastError(), 0, (LPWSTR)&msgBuf, 0, nullptr)) {
             errorMsg.Set(str::Format(L"%s\n\n%s", _TR("Failed to save a file"), msgBuf));
             LocalFree(msgBuf);
@@ -2451,14 +2449,17 @@ static void OnMenuSaveAs(WindowInfo& win)
         if (ok && path::IsSame(srcFileName, realDstFileName))
             win.AsFixed()->userAnnotsModified = false;
     }
-    if (!ok)
+    if (!ok) {
         MessageBoxWarning(win.hwndFrame, errorMsg ? errorMsg : _TR("Failed to save a file"));
+    }
 
-    if (ok && IsUntrustedFile(win.ctrl->FilePath(), gPluginURL) && !convertToTXT)
+    if (ok && IsUntrustedFile(win.ctrl->FilePath(), gPluginURL) && !convertToTXT) {
         file::SetZoneIdentifier(realDstFileName);
+    }
 
-    if (realDstFileName != dstFileName)
+    if (realDstFileName != dstFileName) {
         free(realDstFileName);
+    }
 }
 
 static void OnMenuRenameFile(WindowInfo &win)
@@ -2469,8 +2470,9 @@ static void OnMenuRenameFile(WindowInfo &win)
 
     ScopedMem<WCHAR> srcFileName(str::Dup(win.ctrl->FilePath()));
     // this happens e.g. for embedded documents and directories
-    if (!file::Exists(srcFileName))
+    if (!file::Exists(srcFileName)) {
         return;
+    }
 
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
@@ -2485,8 +2487,9 @@ static void OnMenuRenameFile(WindowInfo &win)
     WCHAR dstFileName[MAX_PATH];
     str::BufSet(dstFileName, dimof(dstFileName), path::GetBaseName(srcFileName));
     // Remove the extension so that it can be re-added depending on the chosen filter
-    if (str::EndsWithI(dstFileName, defExt))
+    if (str::EndsWithI(dstFileName, defExt)) {
         dstFileName[str::Len(dstFileName) - str::Len(defExt)] = '\0';
+    }
 
     ScopedMem<WCHAR> initDir(path::GetDir(srcFileName));
 
@@ -2504,8 +2507,9 @@ static void OnMenuRenameFile(WindowInfo &win)
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
 
     ok = GetSaveFileName(&ofn);
-    if (!ok)
+    if (!ok) {
         return;
+    }
 
     UpdateTabFileDisplayStateForWin(&win, win.currentTab);
     CloseDocumentInTab(&win, true, true);
@@ -2541,8 +2545,9 @@ static void OnMenuSaveBookmark(WindowInfo& win)
     // Remove the extension so that it can be replaced with .lnk
     str::BufSet(dstFileName, dimof(dstFileName), path::GetBaseName(win.ctrl->FilePath()));
     str::TransChars(dstFileName, L":", L"_");
-    if (str::EndsWithI(dstFileName, defExt))
+    if (str::EndsWithI(dstFileName, defExt)) {
         dstFileName[str::Len(dstFileName) - str::Len(defExt)] = '\0';
+    }
 
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
@@ -2560,24 +2565,28 @@ static void OnMenuSaveBookmark(WindowInfo& win)
     ofn.lpstrDefExt = L"lnk";
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
 
-    if (!GetSaveFileName(&ofn))
+    if (!GetSaveFileName(&ofn)) {
         return;
+    }
 
     ScopedMem<WCHAR> fileName(str::Dup(dstFileName));
-    if (!str::EndsWithI(dstFileName, L".lnk"))
+    if (!str::EndsWithI(dstFileName, L".lnk")) {
         fileName.Set(str::Join(dstFileName, L".lnk"));
+    }
 
     ScrollState ss(win.ctrl->CurrentPageNo());
-    if (win.AsFixed())
+    if (win.AsFixed()) {
         ss = win.AsFixed()->GetScrollState();
+    }
     const WCHAR *viewMode = prefs::conv::FromDisplayMode(win.ctrl->GetDisplayMode());
     ScopedMem<WCHAR> ZoomVirtual(str::Format(L"%.2f", win.ctrl->GetZoomVirtual()));
-    if (ZOOM_FIT_PAGE == win.ctrl->GetZoomVirtual())
+    if (ZOOM_FIT_PAGE == win.ctrl->GetZoomVirtual()) {
         ZoomVirtual.SetCopy(L"fitpage");
-    else if (ZOOM_FIT_WIDTH == win.ctrl->GetZoomVirtual())
+    } else if (ZOOM_FIT_WIDTH == win.ctrl->GetZoomVirtual()) {
         ZoomVirtual.SetCopy(L"fitwidth");
-    else if (ZOOM_FIT_CONTENT == win.ctrl->GetZoomVirtual())
+    } else if (ZOOM_FIT_CONTENT == win.ctrl->GetZoomVirtual()) {
         ZoomVirtual.SetCopy(L"fitcontent");
+    }
 
     ScopedMem<WCHAR> exePath(GetExePath());
     ScopedMem<WCHAR> args(str::Format(L"\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d",

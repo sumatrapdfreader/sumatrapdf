@@ -51,7 +51,7 @@ public:
     RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false) override;
 
     unsigned char *GetFileData(size_t *cbCount) override;
-    bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false) override;
+    bool SaveFileAs(const char *copyFileName, bool includeUserAnnots=false) override;
     WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coordsOut=nullptr,
                                     RenderTarget target=Target_View) override {
         UNUSED(pageNo); UNUSED(lineSep);
@@ -250,19 +250,23 @@ unsigned char *ImagesEngine::GetFileData(size_t *cbCount)
     return nullptr;
 }
 
-bool ImagesEngine::SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots)
+bool ImagesEngine::SaveFileAs(const char *copyFileName, bool includeUserAnnots)
 {
     UNUSED(includeUserAnnots);
-    if (FileName()) {
-        BOOL ok = CopyFile(FileName(), copyFileName, FALSE);
-        if (ok)
+    const WCHAR* srcPath = FileName();
+    ScopedMem<WCHAR> dstPath(str::conv::FromUtf8(copyFileName));
+    if (srcPath) {
+        BOOL ok = CopyFileW(srcPath, dstPath, FALSE);
+        if (ok) {
             return true;
+        }
     }
     size_t dataLen;
     ScopedMem<unsigned char> data(GetFileData(&dataLen));
-    if (data)
-        return file::WriteAll(copyFileName, data.Get(), dataLen);
-    return false;
+    if (!data) {
+        return false;
+    }
+    return file::WriteAll(dstPath, data.Get(), dataLen);
 }
 
 ImagePage *ImagesEngine::GetPage(int pageNo, bool tryOnly)
@@ -333,7 +337,7 @@ public:
     float GetFileDPI() const override { return image->GetHorizontalResolution(); }
     const WCHAR *GetDefaultFileExt() const override { return fileExt; }
 
-    bool SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots=false) override;
+    bool SaveFileAsPDF(const char *pdfFileName, bool includeUserAnnots=false) override;
 
     static BaseEngine *CreateFromFile(const WCHAR *fileName);
     static BaseEngine *CreateFromStream(IStream *stream);
@@ -521,7 +525,7 @@ RectD ImageEngineImpl::LoadMediabox(int pageNo)
     return mbox;
 }
 
-bool ImageEngineImpl::SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots)
+bool ImageEngineImpl::SaveFileAsPDF(const char *pdfFileName, bool includeUserAnnots)
 {
     UNUSED(includeUserAnnots);
     bool ok = true;
@@ -530,8 +534,7 @@ bool ImageEngineImpl::SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAn
         size_t len;
         ScopedMem<char> data(file::ReadAll(FileName(), &len));
         ok = data && c->AddImagePage(data, len, GetFileDPI());
-    }
-    else {
+    } else {
         size_t len;
         ScopedMem<char> data((char *)GetDataFromStream(fileStream, &len));
         ok = data && c->AddImagePage(data, len, GetFileDPI());
@@ -618,7 +621,7 @@ public:
     }
 
     unsigned char *GetFileData(size_t *cbCountOut) override { UNUSED(cbCountOut);  return nullptr; }
-    bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false) override;
+    bool SaveFileAs(const char *copyFileName, bool includeUserAnnots=false) override;
 
     WCHAR *GetProperty(DocumentProperty prop) override { UNUSED(prop); return nullptr; }
 
@@ -634,7 +637,7 @@ public:
     float GetFileDPI() const override { return fileDPI; }
     const WCHAR *GetDefaultFileExt() const override { return L""; }
 
-    bool SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots=false) override;
+    bool SaveFileAsPDF(const char *pdfFileName, bool includeUserAnnots=false) override;
 
     static BaseEngine *CreateFromFile(const WCHAR *fileName);
 
@@ -723,17 +726,19 @@ DocTocItem *ImageDirEngineImpl::GetTocTree()
     return root;
 }
 
-bool ImageDirEngineImpl::SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots)
+bool ImageDirEngineImpl::SaveFileAs(const char *copyFileName, bool includeUserAnnots)
 {
     UNUSED(includeUserAnnots);
     // only copy the files if the target directory doesn't exist yet
-    if (!CreateDirectory(copyFileName, nullptr))
+    ScopedMem<WCHAR> dstPath(str::conv::FromUtf8(copyFileName));
+    if (!CreateDirectoryW(dstPath, nullptr)) {
         return false;
+    }
     bool ok = true;
     for (size_t i = 0; i < pageFileNames.Count(); i++) {
         const WCHAR *filePathOld = pageFileNames.At(i);
-        ScopedMem<WCHAR> filePathNew(path::Join(copyFileName, path::GetBaseName(filePathOld)));
-        ok = ok && CopyFile(filePathOld, filePathNew, TRUE);
+        ScopedMem<WCHAR> filePathNew(path::Join(dstPath, path::GetBaseName(filePathOld)));
+        ok = ok && CopyFileW(filePathOld, filePathNew, TRUE);
     }
     return ok;
 }
@@ -760,7 +765,7 @@ RectD ImageDirEngineImpl::LoadMediabox(int pageNo)
     return RectD();
 }
 
-bool ImageDirEngineImpl::SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots)
+bool ImageDirEngineImpl::SaveFileAsPDF(const char *pdfFileName, bool includeUserAnnots)
 {
     UNUSED(includeUserAnnots);
     bool ok = true;
@@ -823,7 +828,7 @@ public:
         return nullptr;
     }
 
-    bool SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots=false) override;
+    bool SaveFileAsPDF(const char *pdfFileName, bool includeUserAnnots=false) override;
 
     WCHAR *GetProperty(DocumentProperty prop) override;
 
@@ -1033,7 +1038,7 @@ bool CbxEngineImpl::Visit(const char *path, const char *value, json::DataType ty
            !propDate || str::FindChar(propDate, '/') <= propDate;
 }
 
-bool CbxEngineImpl::SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots)
+bool CbxEngineImpl::SaveFileAsPDF(const char *pdfFileName, bool includeUserAnnots)
 {
     UNUSED(includeUserAnnots);
     bool ok = true;

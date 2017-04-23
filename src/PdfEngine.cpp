@@ -1184,8 +1184,8 @@ public:
     RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false) override;
 
     unsigned char *GetFileData(size_t *cbCount) override;
-    bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false) override;
-    virtual bool SaveFileAsPdf(const WCHAR *pdfFileName, bool includeUserAnnots=false) {
+    bool SaveFileAs(const char *copyFileName, bool includeUserAnnots=false) override;
+    virtual bool SaveFileAsPdf(const char *pdfFileName, bool includeUserAnnots=false) {
         return SaveFileAs(pdfFileName, includeUserAnnots);
     }
     WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coordsOut=nullptr,
@@ -1279,7 +1279,7 @@ protected:
     bool            IsLinearizedFile();
 
     bool            SaveEmbedded(LinkSaverUI& saveUI, int num, int gen);
-    bool            SaveUserAnnots(const WCHAR *fileName);
+    bool            SaveUserAnnots(const char *fileName);
 
     RectD         * _mediaboxes;
     fz_outline    * outline;
@@ -2751,18 +2751,19 @@ unsigned char *PdfEngineImpl::GetFileData(size_t *cbCount)
     return data;
 }
 
-bool PdfEngineImpl::SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots)
+bool PdfEngineImpl::SaveFileAs(const char *copyFileName, bool includeUserAnnots)
 {
     size_t dataLen;
+    ScopedMem<WCHAR> dstPath(str::conv::FromUtf8(copyFileName));
     ScopedMem<unsigned char> data(GetFileData(&dataLen));
     if (data) {
-        bool ok = file::WriteAll(copyFileName, data.Get(), dataLen);
+        bool ok = file::WriteAll(dstPath, data.Get(), dataLen);
         if (ok)
             return !includeUserAnnots || SaveUserAnnots(copyFileName);
     }
     if (!FileName())
         return false;
-    bool ok = CopyFile(FileName(), copyFileName, FALSE);
+    bool ok = CopyFileW(FileName(), dstPath, FALSE);
     if (!ok)
         return false;
     // TODO: try to recover when SaveUserAnnots fails?
@@ -2888,7 +2889,7 @@ static bool pdf_file_update_add_annotation(pdf_document *doc, pdf_page *page, pd
     return true;
 }
 
-bool PdfEngineImpl::SaveUserAnnots(const WCHAR *fileName)
+bool PdfEngineImpl::SaveUserAnnots(const char *pathUtf8)
 {
     if (!userAnnots.Count())
         return true;
@@ -2897,7 +2898,6 @@ bool PdfEngineImpl::SaveUserAnnots(const WCHAR *fileName)
     ScopedCritSec scope2(&ctxAccess);
 
     bool ok = true;
-    ScopedMem<char> pathUtf8(str::conv::ToUtf8(fileName));
     Vec<PageAnnotation> pageAnnots;
 
     fz_try(ctx) {
@@ -2929,7 +2929,7 @@ bool PdfEngineImpl::SaveUserAnnots(const WCHAR *fileName)
         if (ok) {
             fz_write_options opts = { 0 };
             opts.do_incremental = 1;
-            pdf_write_document(_doc, pathUtf8, &opts);
+            pdf_write_document(_doc, const_cast<char*>(pathUtf8), &opts);
         }
     }
     fz_catch(ctx) {
@@ -3410,7 +3410,7 @@ public:
     RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse=false) override;
 
     unsigned char *GetFileData(size_t *cbCount) override;
-    bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false) override;
+    bool SaveFileAs(const char *copyFileName, bool includeUserAnnots=false) override;
     WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coordsOut=nullptr,
                                     RenderTarget target=Target_View) override {
         UNUSED(target);
@@ -4114,19 +4114,20 @@ unsigned char *XpsEngineImpl::GetFileData(size_t *cbCount)
     return data;
 }
 
-bool XpsEngineImpl::SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots)
+bool XpsEngineImpl::SaveFileAs(const char *copyFileName, bool includeUserAnnots)
 {
     UNUSED(includeUserAnnots);
     size_t dataLen;
+    ScopedMem<WCHAR> dstPath(str::conv::FromUtf8(copyFileName));
     ScopedMem<unsigned char> data(GetFileData(&dataLen));
     if (data) {
-        bool ok = file::WriteAll(copyFileName, data.Get(), dataLen);
+        bool ok = file::WriteAll(dstPath, data.Get(), dataLen);
         if (ok)
             return true;
     }
     if (!FileName())
         return false;
-    return CopyFile(FileName(), copyFileName, FALSE);
+    return CopyFileW(FileName(), dstPath, FALSE);
 }
 
 WCHAR *XpsEngineImpl::ExtractFontList()

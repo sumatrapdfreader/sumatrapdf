@@ -356,10 +356,15 @@ bool RenderDocument(BaseEngine *engine, const WCHAR *renderPath, float zoom=1.f,
     }
 
     if (str::EndsWithI(renderPath, L".pdf")) {
-        if (silent)
+        if (silent) {
             return false;
+        }
         ScopedMem<WCHAR> pdfFilePath(str::Format(renderPath, 0));
-        return engine->SaveFileAsPDF(pdfFilePath, true) || PdfCreator::RenderToFile(pdfFilePath, engine);
+        ScopedMem<char> pathUtf8(str::conv::ToUtf8(pdfFilePath.Get()));
+        if (engine->SaveFileAsPDF(pathUtf8, true) {
+            return true;
+        }
+        return PdfCreator::RenderToFile(pathUtf8, engine);
     }
 
     bool success = true;

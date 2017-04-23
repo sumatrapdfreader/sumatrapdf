@@ -249,10 +249,10 @@ public:
     virtual unsigned char *GetFileData(size_t *cbCount) = 0;
     // saves a copy of the current file under a different name (overwriting an existing file)
     // (includeUserAnnots only has an effect if SupportsAnnotation(true) returns true)
-    virtual bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false) = 0;
+    virtual bool SaveFileAs(const char *copyFileName, bool includeUserAnnots=false) = 0;
     // converts the current file to a PDF file and saves it (overwriting an existing file),
     // (includeUserAnnots should always have an effect)
-    virtual bool SaveFileAsPDF(const WCHAR *pdfFileName, bool includeUserAnnots=false) {
+    virtual bool SaveFileAsPDF(const char *pdfFileName, bool includeUserAnnots=false) {
         UNUSED(pdfFileName);
         UNUSED(includeUserAnnots);
         return false;

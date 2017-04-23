@@ -90,9 +90,13 @@ public:
     unsigned char *GetFileData(size_t *cbCount) override {
         return fileName ? (unsigned char *)file::ReadAll(fileName, cbCount) : nullptr;
     }
-    bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false) override {
+    bool SaveFileAs(const char *copyFileName, bool includeUserAnnots=false) override {
         UNUSED(includeUserAnnots);
-        return fileName ? CopyFile(fileName, copyFileName, FALSE) : false;
+        if (!fileName) {
+            return false;
+        }
+        ScopedMem<WCHAR> path(str::conv::FromUtf8(copyFileName));
+        return fileName ? CopyFileW(fileName, path, FALSE) : false;
     }
     WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coordsOut=nullptr,
                                     RenderTarget target=Target_View) override;
@@ -724,7 +728,7 @@ public:
     }
 
     unsigned char *GetFileData(size_t *cbCount) override;
-    bool SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots=false) override;
+    bool SaveFileAs(const char *copyFileName, bool includeUserAnnots=false) override;
 
     PageLayoutType PreferredLayout() override;
 
@@ -810,18 +814,21 @@ unsigned char *EpubEngineImpl::GetFileData(size_t *cbCount)
     return (unsigned char *)file::ReadAll(fileName, cbCount);
 }
 
-bool EpubEngineImpl::SaveFileAs(const WCHAR *copyFileName, bool includeUserAnnots)
+bool EpubEngineImpl::SaveFileAs(const char *copyFileName, bool includeUserAnnots)
 {
     UNUSED(includeUserAnnots);
+    ScopedMem<WCHAR> dstPath(str::conv::FromUtf8(copyFileName));
+
     if (stream) {
         size_t len;
         ScopedMem<void> data(GetDataFromStream(stream, &len));
-        if (data && file::WriteAll(copyFileName, data, len))
+        if (data && file::WriteAll(dstPath, data, len))
             return true;
     }
-    if (!fileName)
+    if (!fileName) {
         return false;
-    return CopyFile(fileName, copyFileName, FALSE);
+    }
+    return CopyFileW(fileName, dstPath, FALSE);
 }
 
 PageLayoutType EpubEngineImpl::PreferredLayout()

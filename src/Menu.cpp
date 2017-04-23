@@ -542,9 +542,9 @@ void MenuUpdateStateForWindow(WindowInfo* win) {
     win::menu::SetChecked(win->menu, IDM_DEBUG_SHOW_LINKS, gDebugShowLinks);
     win::menu::SetChecked(win->menu, IDM_DEBUG_EBOOK_UI, gGlobalPrefs->ebookUI.useFixedPageUI);
     win::menu::SetChecked(win->menu, IDM_DEBUG_MUI, mui::IsDebugPaint());
-    win::menu::SetEnabled(win->menu, IDM_DEBUG_ANNOTATION, tab && tab->selectionOnPage && win->showSelection &&
-                                                               tab->AsFixed() &&
-                                                               tab->AsFixed()->GetEngine()->SupportsAnnotation());
+    win::menu::SetEnabled(win->menu, IDM_DEBUG_ANNOTATION,
+                          tab && tab->selectionOnPage && win->showSelection && tab->AsFixed() &&
+                              tab->AsFixed()->GetEngine()->SupportsAnnotation());
 #endif
 }
 
