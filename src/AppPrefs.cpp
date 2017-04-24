@@ -72,12 +72,14 @@ bool Load()
 #endif
 
 #ifdef DISABLE_EBOOK_UI
-    if (!prefsData || !str::Find(prefsData, "UseFixedPageUI ="))
+    if (!prefsData || !str::Find(prefsData, "UseFixedPageUI =")) {
         gGlobalPrefs->ebookUI.useFixedPageUI = gGlobalPrefs->chmUI.useFixedPageUI = true;
+    }
 #endif
 #ifdef DISABLE_TABS
-    if (!prefsData || !str::Find(prefsData, "UseTabs ="))
+    if (!prefsData || !str::Find(prefsData, "UseTabs =")) {
         gGlobalPrefs->useTabs = false;
+    }
 #endif
 
     if (!gGlobalPrefs->uiLanguage || !trans::ValidateLangCode(gGlobalPrefs->uiLanguage)) {
@@ -124,8 +126,9 @@ bool Load()
 bool Save()
 {
     // don't save preferences without the proper permission
-    if (!HasPermission(Perm_SavePreferences))
+    if (!HasPermission(Perm_SavePreferences)) {
         return false;
+    }
 
     // update display states for all tabs
     for (WindowInfo *win : gWindows) {
@@ -142,16 +145,18 @@ bool Save()
 
     std::unique_ptr<WCHAR> path(GetSettingsPath());
     CrashIfDebugOnly(!path);
-    if (!path)
+    if (!path) {
         return false;
+    }
     size_t prevPrefsDataSize = 0;
     std::unique_ptr<char> prevPrefsData(file::ReadAll(path.get(), &prevPrefsDataSize));
     size_t prefsDataSize = 0;
     std::unique_ptr<char> prefsData(SerializeGlobalPrefs(gGlobalPrefs, prevPrefsData.get(), &prefsDataSize));
 
     CrashIf(!prefsData || 0 == prefsDataSize);
-    if (!prefsData || 0 == prefsDataSize)
+    if (!prefsData || 0 == prefsDataSize) {
         return false;
+    }
 
     // only save if anything's changed at all
     if (prevPrefsDataSize == prefsDataSize &&
@@ -160,8 +165,9 @@ bool Save()
     }
 
     bool ok = file::WriteAll(path.get(), prefsData.get(), prefsDataSize);
-    if (!ok)
+    if (!ok) {
         return false;
+    }
     gGlobalPrefs->lastPrefUpdate = file::GetModificationTime(path.get());
     return true;
 }
@@ -171,8 +177,9 @@ bool Save()
 bool Reload()
 {
     std::unique_ptr<WCHAR> path(GetSettingsPath());
-    if (!file::Exists(path.get()))
+    if (!file::Exists(path.get())) {
         return false;
+    }
 
     // make sure that the settings file is readable - else wait
     // a short while to prevent accidental dataloss

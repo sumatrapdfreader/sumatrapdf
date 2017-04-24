@@ -19,21 +19,25 @@
    created by an installer (and should be updated through an installer) */
 bool HasBeenInstalled()
 {
-    ScopedMem<WCHAR> installedPath;
+    std::unique_ptr<WCHAR> installedPath(ReadRegStr(HKEY_CURRENT_USER, REG_PATH_UNINST, L"InstallLocation"));
     // cf. GetInstallationDir() in installer\Installer.cpp
-    installedPath.Set(ReadRegStr(HKEY_CURRENT_USER, REG_PATH_UNINST, L"InstallLocation"));
-    if (!installedPath)
-        installedPath.Set(ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_UNINST, L"InstallLocation"));
-    if (!installedPath)
-        return false;
+    if (!installedPath) {
+        installedPath.reset(ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_UNINST, L"InstallLocation"));
+    }
 
-    ScopedMem<WCHAR> exePath(GetExePath());
-    if (!exePath)
+    if (!installedPath) {
         return false;
+    }
 
-    if (!str::EndsWithI(installedPath, L".exe"))
-        installedPath.Set(path::Join(installedPath, path::GetBaseName(exePath)));
-    return path::IsSame(installedPath, exePath);
+    std::unique_ptr<WCHAR> exePath(GetExePath());
+    if (!exePath) {
+        return false;
+    }
+
+    if (!str::EndsWithI(installedPath.get(), L".exe")) {
+        installedPath.reset(path::Join(installedPath.get(), path::GetBaseName(exePath.get())));
+    }
+    return path::IsSame(installedPath.get(), exePath.get());
 }
 
 /* Return false if this program has been started from "Program Files" directory
@@ -43,8 +47,9 @@ bool IsRunningInPortableMode()
 {
     // cache the result so that it will be consistent during the lifetime of the process
     static int sCacheIsPortable = -1; // -1 == uninitialized, 0 == installed, 1 == portable
-    if (sCacheIsPortable != -1)
+    if (sCacheIsPortable != -1) {
         return sCacheIsPortable != 0;
+    }
     sCacheIsPortable = 1;
 
     if (HasBeenInstalled()) {
@@ -55,8 +60,9 @@ bool IsRunningInPortableMode()
     ScopedMem<WCHAR> exePath(GetExePath());
     ScopedMem<WCHAR> programFilesDir(GetSpecialFolder(CSIDL_PROGRAM_FILES));
     // if we can't get a path, assume we're not running from "Program Files"
-    if (!exePath || !programFilesDir)
+    if (!exePath || !programFilesDir) {
         return true;
+    }
 
     // check if one of the exePath's parent directories is "Program Files"
     // (or a junction to it)
