@@ -361,7 +361,7 @@ bool RenderDocument(BaseEngine *engine, const WCHAR *renderPath, float zoom=1.f,
         }
         ScopedMem<WCHAR> pdfFilePath(str::Format(renderPath, 0));
         ScopedMem<char> pathUtf8(str::conv::ToUtf8(pdfFilePath.Get()));
-        if (engine->SaveFileAsPDF(pathUtf8, true) {
+        if (engine->SaveFileAsPDF(pathUtf8, true)) {
             return true;
         }
         return PdfCreator::RenderToFile(pathUtf8, engine);
