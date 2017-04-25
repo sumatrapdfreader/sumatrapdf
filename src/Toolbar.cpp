@@ -47,10 +47,10 @@ static ToolbarButtonInfo gToolbarButtons[] = {
 //  { 12,  IDM_SAVEAS,            _TRN("Save As"),        MF_REQ_DISK_ACCESS },
     { 1,   IDM_PRINT,             _TRN("Print"),          MF_REQ_PRINTER_ACCESS },
     { -1,  IDM_GOTO_PAGE,         nullptr,                   0 },
-    { 2,   IDM_GOTO_PREV_PAGE,    _TRN("Previous Page"),  0 },
-    { 3,   IDM_GOTO_NEXT_PAGE,    _TRN("Next Page"),      0 },
-    { -1,  0,                     nullptr,                   0 },
-    { 4,   IDT_VIEW_FIT_WIDTH,    _TRN("Fit Width and Show Pages Continuously"), 0 },
+    { 2,   IDC_TOOLBAR_LEFT,    _TRN("Previous Page/Back"),  0 },
+    { 3,   IDC_TOOLBAR_RIGHT,    _TRN("Next Page/Forward"),      0 },
+	{ -1,  0,                     nullptr,                   0 },
+	{ 4,   IDT_VIEW_FIT_WIDTH,    _TRN("Fit Width and Show Pages Continuously"), 0 },
     { 5,   IDT_VIEW_FIT_PAGE,     _TRN("Fit a Single Page"), 0 },
     { 6,   IDT_VIEW_ZOOMOUT,      _TRN("Zoom Out"),       0 },
     { 7,   IDT_VIEW_ZOOMIN,       _TRN("Zoom In"),        0 },
@@ -114,12 +114,22 @@ static bool IsToolbarButtonEnabled(WindowInfo *win, int buttonNo)
         // TODO: Update on whether there's more to find, not just on whether there is text.
         return win::GetTextLen(win->hwndFindBox) > 0;
 
-    case IDM_GOTO_NEXT_PAGE:
-        return win->ctrl->CurrentPageNo() < win->ctrl->PageCount();
-    case IDM_GOTO_PREV_PAGE:
-        return win->ctrl->CurrentPageNo() > 1;
+    case IDC_TOOLBAR_RIGHT:
+		if (gGlobalPrefs->toolbarBackForward) {
+			return win->ctrl->CanNavigate(+1);
+		}
+		else {
+			return win->ctrl->CurrentPageNo() < win->ctrl->PageCount();
+		}
+    case IDC_TOOLBAR_LEFT:
+		if (gGlobalPrefs->toolbarBackForward) {
+			return win->ctrl->CanNavigate(-1);
+		}
+		else {
+			return win->ctrl->CurrentPageNo() > 1;
+		}
 
-    default:
+	default:
         return true;
     }
 }
