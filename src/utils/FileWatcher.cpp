@@ -232,14 +232,15 @@ static void CALLBACK StartMonitoringDirForChangesAPC(ULONG_PTR arg) {
 
     CrashIf(g_threadId != GetCurrentThreadId());
 
+    DWORD dwNotifyFilter = FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_FILE_NAME;
     ReadDirectoryChangesW(wd->hDir,
-                          wd->buf,                                                      // read results buffer
-                          sizeof(wd->buf),                                              // length of buffer
-                          FALSE,                                                        // bWatchSubtree
-                          FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_FILE_NAME, // filter conditions
-                          nullptr,                                                      // bytes returned
-                          overlapped,                                                   // overlapped buffer
-                          ReadDirectoryChangesNotification);                            // completion routine
+                          wd->buf,                           // read results buffer
+                          sizeof(wd->buf),                   // length of buffer
+                          FALSE,                             // bWatchSubtree
+                          dwNotifyFilter,                    // filter conditions
+                          nullptr,                           // bytes returned
+                          overlapped,                        // overlapped buffer
+                          ReadDirectoryChangesNotification); // completion routine
 }
 
 static void StartMonitoringDirForChanges(WatchedDir* wd) {
