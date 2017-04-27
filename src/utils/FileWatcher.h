@@ -3,6 +3,6 @@
 
 struct WatchedFile;
 
-WatchedFile *FileWatcherSubscribe(const WCHAR *path, std::function<void()> onFileChangedCb);
-void         FileWatcherUnsubscribe(WatchedFile *wf);
-void         FileWatcherWaitForShutdown();
+WatchedFile* FileWatcherSubscribe(const WCHAR* path, std::function<void()> onFileChangedCb);
+void FileWatcherUnsubscribe(WatchedFile* wf);
+void FileWatcherWaitForShutdown();
