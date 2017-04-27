@@ -255,7 +255,7 @@ static DWORD GetTimeoutInMs() {
     return INFINITE;
 }
 
-static void RunManualCheck() {
+static void RunManualChecks() {
     ScopedCritSec cs(&g_threadCritSec);
 
     for (WatchedFile* wf = g_watchedFiles; wf; wf = wf->next) {
@@ -279,7 +279,7 @@ static DWORD WINAPI FileWatcherThread(void* param) {
         DWORD timeout = GetTimeoutInMs();
         DWORD obj = WaitForMultipleObjectsEx(1, handles, FALSE, timeout, alertable);
         if (WAIT_TIMEOUT == obj) {
-            RunManualCheck();
+            RunManualChecks();
             continue;
         }
 
