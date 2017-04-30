@@ -86,11 +86,9 @@ bool             gDebugShowLinks = true;
 bool             gDebugShowLinks = false;
 #endif
 
-#ifdef DEBUG
-bool             gShowFrameRate = true;
-#else
+// used to show it in debug, but is not very useful,
+// so always disable
 bool             gShowFrameRate = false;
-#endif
 
 // in plugin mode, the window's frame isn't drawn and closing and
 // fullscreen are disabled, so that SumatraPDF can be displayed
