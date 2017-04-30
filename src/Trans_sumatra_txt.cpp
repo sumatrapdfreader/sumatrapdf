@@ -228,7 +228,7 @@ const char *gOriginalStrings[STRINGS_COUNT] = {
   "Set inverse search command-line",
   "Show &Bookmarks",
   "Show &Pages Continuously",
-  "Show &Toolbar",
+  "Show &Toolbar\tF8",
   "Show Favorites",
   "Show frequently read",
   "Show the &bookmarks sidebar when available",
@@ -10312,7 +10312,7 @@ const char * gTranslations_pl =
   "Ustaw wiersz polece\305\204 do odwrotnego wyszukiwania\0"\
   "Poka\305\274 &Zak\305\202adki\0"\
   "Wy\305\233wietlaj strony w uk\305\202adzie &ci\304\205g\305\202ym\0"\
-  "Poka\305\274 pasek &narz\304\231dzi\0"\
+  "Poka\305\274 pasek &narz\304\231dzi\tF8\0"\
   "Poka\305\274 ulubione\0"\
   "Poka\305\274 cz\304\231sto otwierane\0"\
   "Poka\305\274 panel za&k\305\202adek, gdy s\304\205 dost\304\231pne\0"\

@@ -45,6 +45,7 @@ AppTranslator strings
 &Shrink pages to printable area (if necessary)
 &Single Page\tCtrl+6
 &Skip this version
+&Theme
 &Use original page sizes
 &View
 &Window
@@ -110,6 +111,8 @@ Created:
 Current file
 Cursor position:
 Custom &Zoom...\tCtrl+Y
+Dark
+Darker
 Default &Layout:
 Default &Zoom:
 Default PDF reader can't be changed in portable mode
@@ -173,6 +176,7 @@ KB
 Keep the PDF &browser plugin installed (no longer supported)
 Let Windows Desktop Search &search PDF documents
 Let Windows show &previews of PDF documents
+Light
 MB
 Make SumatraPDF default application for PDF files?
 Make SumatraPDF my default PDF reader
@@ -242,7 +246,7 @@ Send by &E-mail...
 Set inverse search command-line
 Show &Bookmarks
 Show &Pages Continuously
-Show &Toolbar
+Show &Toolbar\tF8
 Show Favorites
 Show frequently read
 Show the &bookmarks sidebar when available

@@ -4,6 +4,7 @@ import sys
 import string
 import httplib
 import urllib
+import json
 import util
 from trans_gen import extract_strings_from_c_files
 
@@ -54,8 +55,12 @@ def uploadStringsToServer(strings, secret):
 
 def uploadStringsIfChanged():
     # needs to have upload secret to protect apptranslator.org server from abuse
-    config = util.load_config()
-    uploadsecret = config.trans_ul_secret
+    path = os.path.join("scripts", "secrets.json")
+    with open(path) as file:
+        d = file.read()
+    config = json.loads(d)
+    print(config)
+    uploadsecret = config["TranslationUploadSecret"]
     if None is uploadsecret:
         print("Skipping string upload because don't have upload secret")
         return

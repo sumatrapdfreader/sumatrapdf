@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-961c6a6831210c7d242b76a69b5b8ae6cf8fd116
+d75d596be114a617fe9bfb693a31d55c7c4d5a3f
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -15044,7 +15044,7 @@ tw:連續顯示頁面(&P)
 uk:Відображати сторінки безперервно
 uz:&Betlarni uzluksiz ko'rsatish
 vn:Xem trang liên tiếp
-:Show &Toolbar
+:Show &Toolbar\tF8
 af:Vertoon Toolbar
 am:Ցուցադրել &գործիքները
 ar:اظهار شريط الأدوات
@@ -15093,7 +15093,7 @@ nl:Werkbalk tonen
 nn:Vis verktylinje
 no:Vis verktøylinje
 pa:ਸੰਦ ਵਾਲੀ ਫੱਟੀ ਵਖਾਓ
-pl:Pokaż pasek &narzędzi
+pl:Pokaż pasek &narzędzi\tF8
 pt:Mostrar &barra de ferramentas
 ro:Arată bara de instrumente
 ru:Панель &инструментов
