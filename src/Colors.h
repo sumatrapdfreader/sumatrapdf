@@ -10,6 +10,7 @@ enum class AppColor {
 
     MainWindowBg,
     MainWindowText,
+    MainWindowLink,
 
     DocumentBg,
     DocumentText,
@@ -24,13 +25,10 @@ enum class AppColor {
 
     NotifcationsProgress,
 
-    Link,
-
-    // TODO: rename to selected
-    TabCurrentBg,
-    TabCurrentText,
-    TabCurrentCloseX,
-    TabCurrentCloseCircle,
+    TabSelectedBg,
+    TabSelectedText,
+    TabSelectedCloseX,
+    TabSelectedCloseCircle,
 
     TabBackgroundBg,
     TabBackgroundText,

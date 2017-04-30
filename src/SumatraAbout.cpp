@@ -203,7 +203,7 @@ static void DrawSumatraVersion(HDC hdc, RectI rect)
 static RectI DrawBottomRightLink(HWND hwnd, HDC hdc, const WCHAR *txt)
 {
     ScopedFont fontLeftTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 14));
-    auto col = GetAppColor(AppColor::Link);
+    auto col = GetAppColor(AppColor::MainWindowLink);
     ScopedPen penLinkLine(CreatePen(PS_SOLID, 1, col));
     ScopedHdcSelect font(hdc, fontLeftTxt);
 
@@ -237,7 +237,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkI
     auto col = GetAppColor(AppColor::MainWindowText);
     ScopedPen penBorder(CreatePen(PS_SOLID, ABOUT_LINE_OUTER_SIZE, col));
     ScopedPen penDivideLine(CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, col));
-    col = GetAppColor(AppColor::Link);
+    col = GetAppColor(AppColor::MainWindowLink);
     ScopedPen penLinkLine(CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, col));
     
     ScopedFont fontLeftTxt(CreateSimpleFont(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE));
@@ -292,7 +292,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkI
     for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++) {
         bool hasUrl = HasPermission(Perm_DiskAccess) && el->url;
         if (hasUrl) {
-            col = GetAppColor(AppColor::Link);
+            col = GetAppColor(AppColor::MainWindowLink);
         } else {
             col = GetAppColor(AppColor::MainWindowText);
         }
@@ -625,7 +625,7 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     auto col = GetAppColor(AppColor::MainWindowText);
     ScopedPen penBorder(CreatePen(PS_SOLID, DOCLIST_SEPARATOR_DY, col));
     ScopedPen penThumbBorder(CreatePen(PS_SOLID, DOCLIST_THUMBNAIL_BORDER_W, col));
-    col = GetAppColor(AppColor::Link);
+    col = GetAppColor(AppColor::MainWindowLink);
     ScopedPen penLinkLine(CreatePen(PS_SOLID, 1, col));
 
     ScopedFont fontSumatraTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 24));
@@ -749,7 +749,7 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     rc.y += DOCLIST_MARGIN_TOP + height * THUMBNAIL_DY + (height - 1) * DOCLIST_MARGIN_BETWEEN_Y + DOCLIST_MARGIN_BOTTOM;
     rc.dy = DOCLIST_BOTTOM_BOX_DY;
 
-    col = GetAppColor(AppColor::Link);
+    col = GetAppColor(AppColor::MainWindowLink);
     SetTextColor(hdc, col);
     SelectObject(hdc, penLinkLine);
 

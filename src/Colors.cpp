@@ -13,6 +13,12 @@
 #define COL_BLACK RGB(0, 0, 0)
 #define COL_BLUE_LINK RGB(0x00, 0x20, 0xa0)
 
+// for tabs
+#define COL_RED RGB(0xff, 0x00, 0x00)
+#define COL_LIGHT_GRAY RGB(0xde, 0xde, 0xde)
+#define COL_LIGHTER_GRAY RGB(0xee, 0xee, 0xee)
+#define COL_DARK_GRAY RGB(0x42, 0x42, 0x42)
+
 // "SumatraPDF yellow" similar to the one use for icon and installer
 #define ABOUT_BG_LOGO_COLOR RGB(0xFF, 0xF2, 0x00)
 
@@ -139,6 +145,10 @@ COLORREF GetAppColor(AppColor col) {
         return COL_BLACK;
     }
 
+    if (col == AppColor::MainWindowLink) {
+        return COL_BLUE_LINK;
+    }
+
     // TODO: different for fixed vs. ebook page
     if (col == AppColor::DocumentBg) {
         return gGlobalPrefs->fixedPageUI.backgroundColor;
@@ -166,50 +176,44 @@ COLORREF GetAppColor(AppColor col) {
     }
 
     if (col == AppColor::NotifcationsProgress) {
-        return GetAppColor(AppColor::Link);
+        return GetAppColor(AppColor::MainWindowLink);
     }
 
-    if (col == AppColor::Link) {
-        return COL_BLUE_LINK;
+    if (col == AppColor::TabSelectedBg) {
+        return COL_WHITE;
     }
 
-    if (col == AppColor::TabCurrentBg) {
-        return rgb_to_bgr(0xE3683C);
+    if (col == AppColor::TabSelectedText) {
+        return COL_DARK_GRAY;
     }
 
-    if (col == AppColor::TabCurrentText) {
-        return COL_BLACK;
-    }
-
-    if (col == AppColor::TabCurrentCloseX) {
+    if (col == AppColor::TabSelectedCloseX) {
         auto c = GetAppColor(AppColor::TabBackgroundBg);
         return AdjustLightness2(c, -60);
     }
 
-    if (col == AppColor::TabCurrentCloseCircle) {
+    if (col == AppColor::TabSelectedCloseCircle) {
         return rgb_to_bgr(0xC13535);
     }
 
     if (col == AppColor::TabBackgroundBg) {
-        auto c = GetAppColor(AppColor::TabCurrentBg);
-        return AdjustLightness2(c, -15);
+        return COL_LIGHTER_GRAY;
     }
 
     if (col == AppColor::TabBackgroundText) {
-        return COL_BLACK;
+        return COL_DARK_GRAY;
     }
 
     if (col == AppColor::TabBackgroundCloseX) {
-        return GetAppColor(AppColor::TabCurrentCloseX);
+        return GetAppColor(AppColor::TabSelectedCloseX);
     }
 
     if (col == AppColor::TabBackgroundCloseCircle) {
-        return GetAppColor(AppColor::TabCurrentCloseCircle);
+        return GetAppColor(AppColor::TabSelectedCloseCircle);
     }
 
     if (col == AppColor::TabHighlightedBg) {
-        auto c = GetAppColor(AppColor::TabCurrentBg);
-        AdjustLightness2(c, 15);
+        return COL_LIGHT_GRAY;
     }
 
     if (col == AppColor::TabHighlightedText) {
@@ -217,11 +221,11 @@ COLORREF GetAppColor(AppColor col) {
     }
 
     if (col == AppColor::TabHighlightedCloseX) {
-        return GetAppColor(AppColor::TabCurrentCloseX);
+        return GetAppColor(AppColor::TabSelectedCloseX);
     }
 
     if (col == AppColor::TabHighlightedCloseCircle) {
-        return GetAppColor(AppColor::TabCurrentCloseCircle);
+        return GetAppColor(AppColor::TabSelectedCloseCircle);
     }
 
     if (col == AppColor::TabHoveredCloseX) {
@@ -229,7 +233,7 @@ COLORREF GetAppColor(AppColor col) {
     }
 
     if (col == AppColor::TabHoveredCloseCircle) {
-        return GetAppColor(AppColor::TabCurrentCloseCircle);
+        return GetAppColor(AppColor::TabSelectedCloseCircle);
     }
 
     if (col == AppColor::TabClickedCloseX) {
@@ -237,7 +241,7 @@ COLORREF GetAppColor(AppColor col) {
     }
 
     if (col == AppColor::TabClickedCloseCircle) {
-        auto c = GetAppColor(AppColor::TabCurrentCloseCircle);
+        auto c = GetAppColor(AppColor::TabSelectedCloseCircle);
         AdjustLightness2(c, -10);
     }
 

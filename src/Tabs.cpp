@@ -38,8 +38,6 @@ static void SwapTabs(WindowInfo* win, int tab1, int tab2);
 #define TABBAR_HEIGHT 24
 #define MIN_TAB_WIDTH 100
 
-static bool g_FirefoxStyle = false;
-
 int GetTabbarHeight(HWND hwnd, float factor) {
     int dy = DpiScaleY(hwnd, TABBAR_HEIGHT);
     return (int)(dy * factor);
@@ -63,7 +61,7 @@ class TabPainter {
     HWND hwnd;
 
   public:
-    int current = -1;
+    int selectedTabIdx = -1;
     int highlighted = -1;
     int xClicked = -1;
     int xHighlighted = -1;
@@ -219,51 +217,17 @@ class TabPainter {
             if (!graphics.IsVisible(0, 0, width + 1, height + 1))
                 continue;
 
-            // in firefox style we only paint current and highlighed tabs
-            // all other tabs only show
-            bool onlyText = g_FirefoxStyle && !((current == i) || (highlighted == i));
-            if (onlyText) {
-#if 0
-                // we need to first paint the background with the same color as caption,
-                // otherwise the text looks funny (because is transparent?)
-                // TODO: what is the damn bg color of caption? bar is too light, outline is too dark
-                Color bgColTmp;
-                bgColTmp.SetFromCOLORREF(color.bar);
-                {
-                    SolidBrush bgBr(bgColTmp);
-                    graphics.FillRectangle(&bgBr, layout);
-                }
-                bgColTmp.SetFromCOLORREF(color.outline);
-                {
-                    SolidBrush bgBr(bgColTmp);
-                    graphics.FillRectangle(&bgBr, layout);
-                }
-#endif
-                // TODO: this is a hack. If I use no background and cleartype, the
-                // text looks funny (is bold).
-                // CompositingModeSourceCopy doesn't work with clear type
-                // another option is to draw background before drawing text, but
-                // I can't figure out what is the actual color of caption
-                graphics.SetTextRenderingHint(TextRenderingHintAntiAliasGridFit);
-                graphics.SetCompositingMode(CompositingModeSourceCopy);
-                // graphics.SetCompositingMode(CompositingModeSourceOver);
-                br.SetColor(ToColor(colors.text));
-                graphics.DrawString(text.At(i), -1, &f, layout, &sf, &br);
-                graphics.SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
-                continue;
-            }
-
             // Get the correct colors based on the state and the current theme
             COLORREF bgCol = GetAppColor(AppColor::TabBackgroundBg);
             COLORREF textCol = GetAppColor(AppColor::TabBackgroundText);
             COLORREF xColor = GetAppColor(AppColor::TabBackgroundCloseX);
             COLORREF circleColor = GetAppColor(AppColor::TabBackgroundCloseCircle);
 
-            if (current == i) {
-                bgCol = GetAppColor(AppColor::TabCurrentBg);
-                textCol = GetAppColor(AppColor::TabCurrentText);
-                xColor = GetAppColor(AppColor::TabCurrentCloseX);
-                circleColor = GetAppColor(AppColor::TabCurrentCloseCircle);
+            if (selectedTabIdx == i) {
+                bgCol = GetAppColor(AppColor::TabSelectedBg);
+                textCol = GetAppColor(AppColor::TabSelectedText);
+                xColor = GetAppColor(AppColor::TabSelectedCloseX);
+                circleColor = GetAppColor(AppColor::TabSelectedCloseCircle);
             } else if (highlighted == i) {
                 bgCol = GetAppColor(AppColor::TabHighlightedBg);
                 textCol = GetAppColor(AppColor::TabHighlightedText);
@@ -353,9 +317,9 @@ static void TabNotification(WindowInfo* win, UINT code, int idx1, int idx2) {
     }
     if (TCN_SELCHANGING == code) {
         // if we have permission to select the tab
-        tab->Invalidate(tab->current);
+        tab->Invalidate(tab->selectedTabIdx);
         tab->Invalidate(tab->nextTab);
-        tab->current = tab->nextTab;
+        tab->selectedTabIdx = tab->nextTab;
         // send notification that the tab is selected
         nmhdr.code = TCN_SELCHANGE;
         TabsOnNotify(win, (LPARAM)&nmhdr);
@@ -404,8 +368,8 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UI
             tcs = (LPTCITEM)lp;
             CrashIf(!(TCIF_TEXT & tcs->mask));
             tab->Insert(index, tcs->pszText);
-            if ((int)index <= tab->current)
-                tab->current++;
+            if (index <= tab->selectedTabIdx)
+                tab->selectedTabIdx++;
             tab->xClicked = -1;
             InvalidateRgn(hwnd, nullptr, FALSE);
             UpdateWindow(hwnd);
@@ -424,10 +388,10 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UI
         case TCM_DELETEITEM:
             index = (int)wp;
             if (tab->Delete(index)) {
-                if ((int)index < tab->current) {
-                    tab->current--;
-                } else if ((int)index == tab->current) {
-                    tab->current = -1;
+                if (index < tab->selectedTabIdx) {
+                    tab->selectedTabIdx--;
+                } else if (index == tab->selectedTabIdx) {
+                    tab->selectedTabIdx = -1;
                 }
                 tab->xClicked = -1;
                 if (tab->Count()) {
@@ -439,7 +403,7 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UI
 
         case TCM_DELETEALLITEMS:
             tab->DeleteAll();
-            tab->current = -1;
+            tab->selectedTabIdx = -1;
             tab->highlighted = -1;
             tab->xClicked = -1;
             tab->xHighlighted = -1;
@@ -456,18 +420,18 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UI
             break;
 
         case TCM_GETCURSEL:
-            return tab->current;
+            return tab->selectedTabIdx;
 
         case TCM_SETCURSEL: {
             index = (int)wp;
             if (index >= tab->Count()) {
                 return -1;
             }
-            int previous = tab->current;
-            if ((int)index != tab->current) {
-                tab->Invalidate(tab->current);
+            int previous = tab->selectedTabIdx;
+            if (index != tab->selectedTabIdx) {
+                tab->Invalidate(tab->selectedTabIdx);
                 tab->Invalidate(index);
-                tab->current = index;
+                tab->selectedTabIdx = index;
                 UpdateWindow(hwnd);
             }
             return previous;
@@ -534,7 +498,7 @@ static LRESULT CALLBACK TabBarProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UI
                 int next = tab->nextTab;
                 uitask::Post([=] { TabNotification(win, T_CLOSING, next, -1); });
             } else if (tab->nextTab != -1) {
-                if (tab->nextTab != tab->current) {
+                if (tab->nextTab != tab->selectedTabIdx) {
                     // send request to select tab
                     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
                     uitask::Post([=] { TabNotification(win, TCN_SELCHANGING, -1, -1); });
