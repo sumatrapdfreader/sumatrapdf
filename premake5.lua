@@ -45,7 +45,7 @@ include("premake5.files.lua")
 workspace "SumatraPDF"
   configurations { "Debug", "Release", "ReleasePrefast" }
   platforms { "x32", "x64" }
-  startproject "SumatraPDF"
+  startproject "SumatraPDF-no-MUPDF"
 
   filter "platforms:x32"
      architecture "x86"

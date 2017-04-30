@@ -1,0 +1,59 @@
+// application-wide colors
+
+enum class AppColor {
+    // background color of the main window
+    NoDocBg,
+    // background color of about window
+    AboutBg,
+    // background color of log
+    LogoBg,
+
+    MainWindowBg,
+    MainWindowText,
+
+    DocumentBg,
+    DocumentText,
+
+    // text color of regular notification
+    NotificationsBg,
+    NotificationsText,
+
+    // text/background color of highlighted notfications
+    NotificationsHighlightBg,
+    NotificationsHighlightText,
+
+    NotifcationsProgress,
+
+    Link,
+
+    // TODO: rename to selected
+    TabCurrentBg,
+    TabCurrentText,
+    TabCurrentCloseX,
+    TabCurrentCloseCircle,
+
+    TabBackgroundBg,
+    TabBackgroundText,
+    TabBackgroundCloseX,
+    TabBackgroundCloseCircle,
+
+    TabHighlightedBg,
+    TabHighlightedText,
+    TabHighlightedCloseX,
+    TabHighlightedCloseCircle,
+
+    TabHoveredCloseX,
+    TabHoveredCloseCircle,
+
+    TabClickedCloseX,
+    TabClickedCloseCircle,
+
+};
+
+COLORREF AdjustLightness(COLORREF c, float factor);
+COLORREF AdjustLightness2(COLORREF c, float units);
+float GetLightness(COLORREF c);
+
+COLORREF GetAppColor(AppColor);
+void GetFixedPageUiColors(COLORREF& text, COLORREF& bg);
+void GetEbookUiColors(COLORREF& text, COLORREF& bg);

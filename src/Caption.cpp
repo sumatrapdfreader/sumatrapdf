@@ -1,13 +1,12 @@
 /* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// utils
 #include "BaseUtil.h"
 #include "WinDynCalls.h"
 #include "WinUtil.h"
-// layout controllers
+
 #include "SettingsStructs.h"
-// ui
+#include "Colors.h"
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 #include "Caption.h"
@@ -429,8 +428,9 @@ static void DrawCaptionButton(DRAWITEMSTRUCT *item, WindowInfo *win)
 
         if (buttonRGB != 1) {
             // paint the background
-            if (GetLightness(win->caption->textColor) > GetLightness(win->caption->bgColor))
+            if (GetLightness(win->caption->textColor) > GetLightness(win->caption->bgColor)) {
                 buttonRGB ^= 0xff;
+            }
             BYTE buttonAlpha = BYTE((255 - abs((int)GetLightness(win->caption->bgColor) - buttonRGB)) / 2);
             SolidBrush br(Color(buttonAlpha, buttonRGB, buttonRGB, buttonRGB));
             graphics.FillRectangle(&br, rc.x, rc.y, rc.dx, rc.dy);

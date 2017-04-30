@@ -1,16 +1,15 @@
 /* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// utils
 #include "BaseUtil.h"
 #include "GdiPlusUtil.h"
 #include "WinUtil.h"
-// layout controllers
+
 class BaseEngine;
 #include "TextSelection.h"
 #include "TextSearch.h"
-// ui
-#include "Theme.h"
+
+#include "Colors.h"
 #include "SumatraPDF.h"
 #include "Notifications.h"
 
@@ -135,16 +134,20 @@ static void NotificationWndOnPaint(HWND hwnd, NotificationWnd* wnd) {
     RECT rTmp = rect.ToRECT();
 
     Graphics graphics(hdc);
-    SolidBrush br(ToColor(GetCurrentTheme()->notifications.backgroundColor));
+    auto col = GetAppColor(AppColor::NotificationsBg);
+    SolidBrush br(ToColor(col));
     graphics.FillRectangle(&br, Rect(0, 0, rTmp.right - rTmp.left, rTmp.bottom - rTmp.top));
 
     if (wnd->highlight) {
         SetBkMode(hdc, OPAQUE);
-        SetTextColor(hdc, GetCurrentTheme()->notifications.highlightTextColor);
-        SetBkColor(hdc, GetCurrentTheme()->notifications.highlightColor);
+        col = GetAppColor(AppColor::NotificationsHighlightText);
+        SetTextColor(hdc, col);
+        col = GetAppColor(AppColor::NotificationsHighlightBg);
+        SetBkColor(hdc, col);
     } else {
         SetBkMode(hdc, TRANSPARENT);
-        SetTextColor(hdc, GetCurrentTheme()->notifications.textColor);
+        col = GetAppColor(AppColor::NotificationsText);
+        SetTextColor(hdc, col);
     }
 
     rect.Inflate(-PADDING, -PADDING);
@@ -169,7 +172,8 @@ static void NotificationWndOnPaint(HWND hwnd, NotificationWnd* wnd) {
         rect.y += rectMsg.dy + PADDING / 2;
         rect.dy = PROGRESS_HEIGHT;
 
-        Pen pen(ToColor(GetCurrentTheme()->notifications.progressColor));
+        col = GetAppColor(AppColor::NotifcationsProgress);
+        Pen pen(ToColor(col));
         graphics.DrawRectangle(&pen, Rect(rect.x, rect.y, rect.dx, rect.dy));
 
         rect.x += 2;
@@ -177,7 +181,7 @@ static void NotificationWndOnPaint(HWND hwnd, NotificationWnd* wnd) {
         rect.y += 2;
         rect.dy -= 3;
 
-        br.SetColor(ToColor(GetCurrentTheme()->notifications.progressColor));
+        br.SetColor(ToColor(col));
         graphics.FillRectangle(&br, Rect(rect.x, rect.y, rect.dx, rect.dy));
     }
 

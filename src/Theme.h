@@ -4,7 +4,8 @@ License: GPLv3 */
 #ifndef SUMATRA_THEME
 #define SUMATRA_THEME
 
-// utils
+#if defined(ENABLE_THEME)
+
 #include "BaseUtil.h"
 
 // The number of themes
@@ -96,5 +97,7 @@ Theme* GetCurrentTheme();
 
 int GetThemeIndex(Theme* theme);
 int GetCurrentThemeIndex();
+
+#endif
 
 #endif // !THEME

@@ -376,6 +376,7 @@ function sumatra_files()
     "Caption.*",
     "Canvas.*",
     "ChmModel.*",
+    "Colors.*",
     "CrashHandler.*",
     "DisplayModel.*",
     "Doc.*",

@@ -17,14 +17,14 @@ makes themes easier to modify and update.
 Note: Colors are in format 0xBBGGRR, recommended to use rgb_to_bgr
 */
 
-// utils
+// temporarily (?) disabled
+#if defined(ENABLE_THEME)
+
 #include "BaseUtil.h"
 #include "WinUtil.h"
-// layout controllers
 #include "SettingsStructs.h"
 #include "Theme.h"
 #include "GlobalPrefs.h"
-// ui
 #include "Translations.h"
 
 // Color definitions
@@ -33,7 +33,7 @@ Note: Colors are in format 0xBBGGRR, recommended to use rgb_to_bgr
 #define COL_WHITEISH 0xEBEBF9
 
 // Theme definition helper functions
-COLORREF rgb_to_bgr(COLORREF rgb) {
+static COLORREF rgb_to_bgr(COLORREF rgb) {
     return ((rgb & 0x0000FF) << 16) | (rgb & 0x00FF00) | ((rgb & 0xFF0000) >> 16);
 }
 
@@ -354,3 +354,5 @@ int GetCurrentThemeIndex() {
     }
     return currentThemeIndex;
 }
+
+#endif

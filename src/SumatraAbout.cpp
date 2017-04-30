@@ -1,18 +1,17 @@
 /* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// utils
 #include "BaseUtil.h"
 #include "Dpi.h"
 #include "FileUtil.h"
 #include "WinUtil.h"
-// layout controllers
+
 #include "BaseEngine.h"
 #include "SettingsStructs.h"
 #include "FileHistory.h"
-#include "Theme.h"
+#include "Colors.h"
 #include "GlobalPrefs.h"
-// ui
+
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 #include "resource.h"
@@ -204,10 +203,11 @@ static void DrawSumatraVersion(HDC hdc, RectI rect)
 static RectI DrawBottomRightLink(HWND hwnd, HDC hdc, const WCHAR *txt)
 {
     ScopedFont fontLeftTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 14));
-    ScopedPen penLinkLine(CreatePen(PS_SOLID, 1, GetCurrentTheme()->mainWindow.linkColor));
+    auto col = GetAppColor(AppColor::Link);
+    ScopedPen penLinkLine(CreatePen(PS_SOLID, 1, col));
     ScopedHdcSelect font(hdc, fontLeftTxt);
 
-    SetTextColor(hdc, GetCurrentTheme()->mainWindow.linkColor);
+    SetTextColor(hdc, col);
     SetBkMode(hdc, TRANSPARENT);
     ClientRect rc(hwnd);
 
@@ -234,9 +234,11 @@ static RectI DrawBottomRightLink(HWND hwnd, HDC hdc, const WCHAR *txt)
    to understand without seeing the design. */
 static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkInfo)
 {
-    ScopedPen penBorder(CreatePen(PS_SOLID, ABOUT_LINE_OUTER_SIZE, GetCurrentTheme()->mainWindow.textColor));
-    ScopedPen penDivideLine(CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, GetCurrentTheme()->mainWindow.textColor));
-    ScopedPen penLinkLine(CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, GetCurrentTheme()->mainWindow.linkColor));
+    auto col = GetAppColor(AppColor::MainWindowText);
+    ScopedPen penBorder(CreatePen(PS_SOLID, ABOUT_LINE_OUTER_SIZE, col));
+    ScopedPen penDivideLine(CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, col));
+    col = GetAppColor(AppColor::Link);
+    ScopedPen penLinkLine(CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, col));
     
     ScopedFont fontLeftTxt(CreateSimpleFont(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE));
     ScopedFont fontRightTxt(CreateSimpleFont(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE));
@@ -245,13 +247,14 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkI
 
     ClientRect rc(hwnd);
     RECT rTmp = rc.ToRECT();
-    ScopedGdiObj<HBRUSH> brushAboutBg(CreateSolidBrush(GetCurrentTheme()->mainWindow.backgroundColor));
+    col = GetAppColor(AppColor::MainWindowBg);
+    ScopedGdiObj<HBRUSH> brushAboutBg(CreateSolidBrush(col));
     FillRect(hdc, &rTmp, brushAboutBg);
 
     /* render title */
     RectI titleRect(rect.TL(), CalcSumatraVersionSize(hwnd, hdc));
 
-    ScopedBrush bgBrush(CreateSolidBrush(GetCurrentTheme()->mainWindow.backgroundColor));
+    ScopedBrush bgBrush(CreateSolidBrush(col));
     ScopedHdcSelect brush(hdc, bgBrush);
     ScopedHdcSelect pen(hdc, penBorder);
 #ifndef ABOUT_USE_LESS_COLORS
@@ -268,7 +271,8 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkI
     DrawSumatraVersion(hdc, titleRect);
 
     /* render attribution box */
-    SetTextColor(hdc, GetCurrentTheme()->mainWindow.textColor);
+    col = GetAppColor(AppColor::MainWindowText);
+    SetTextColor(hdc, col);
     SetBkMode(hdc, TRANSPARENT);
 
 #ifndef ABOUT_USE_LESS_COLORS
@@ -287,7 +291,12 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkI
     linkInfo.Reset();
     for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++) {
         bool hasUrl = HasPermission(Perm_DiskAccess) && el->url;
-        SetTextColor(hdc, hasUrl ? GetCurrentTheme()->mainWindow.linkColor : GetCurrentTheme()->mainWindow.textColor);
+        if (hasUrl) {
+            col = GetAppColor(AppColor::Link);
+        } else {
+            col = GetAppColor(AppColor::MainWindowText);
+        }
+        SetTextColor(hdc, col);
         size_t txtLen = str::Len(el->rightTxt);
 #ifdef GIT_COMMIT_ID
         if (str::EndsWith(el->rightTxt, GIT_COMMIT_ID_STR))
@@ -613,9 +622,11 @@ void DrawAboutPage(WindowInfo* win, HDC hdc)
 
 void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF textColor, COLORREF backgroundColor)
 {
-    ScopedPen penBorder(CreatePen(PS_SOLID, DOCLIST_SEPARATOR_DY, GetCurrentTheme()->mainWindow.textColor));
-    ScopedPen penThumbBorder(CreatePen(PS_SOLID, DOCLIST_THUMBNAIL_BORDER_W, GetCurrentTheme()->mainWindow.textColor));
-    ScopedPen penLinkLine(CreatePen(PS_SOLID, 1, GetCurrentTheme()->mainWindow.linkColor));
+    auto col = GetAppColor(AppColor::MainWindowText);
+    ScopedPen penBorder(CreatePen(PS_SOLID, DOCLIST_SEPARATOR_DY, col));
+    ScopedPen penThumbBorder(CreatePen(PS_SOLID, DOCLIST_THUMBNAIL_BORDER_W, col));
+    col = GetAppColor(AppColor::Link);
+    ScopedPen penLinkLine(CreatePen(PS_SOLID, 1, col));
 
     ScopedFont fontSumatraTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 24));
     ScopedFont fontLeftTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 14));
@@ -624,7 +635,8 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
 
     ClientRect rc(win->hwndCanvas);
     RECT rTmp = rc.ToRECT();
-    ScopedBrush brushLogoBg(CreateSolidBrush(GetCurrentTheme()->mainWindow.backgroundColor));
+    col = GetAppColor(AppColor::MainWindowBg);
+    ScopedBrush brushLogoBg(CreateSolidBrush(col));
     FillRect(hdc, &rTmp, brushLogoBg);
 
     ScopedHdcSelect brush(hdc, brushLogoBg);
@@ -641,12 +653,14 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     /* render recent files list */
     SelectObject(hdc, penThumbBorder);
     SetBkMode(hdc, TRANSPARENT);
-    SetTextColor(hdc, GetCurrentTheme()->mainWindow.textColor);
+    col = GetAppColor(AppColor::MainWindowText);
+    SetTextColor(hdc, col);
 
     rc.y += titleBox.dy;
     rc.dy -= titleBox.dy;
     rTmp = rc.ToRECT();
-    ScopedGdiObj<HBRUSH> brushAboutBg(CreateSolidBrush(GetCurrentTheme()->mainWindow.backgroundColor));
+    col = GetAppColor(AppColor::MainWindowBg);
+    ScopedGdiObj<HBRUSH> brushAboutBg(CreateSolidBrush(col));
     FillRect(hdc, &rTmp, brushAboutBg);
     rc.dy -= DOCLIST_BOTTOM_BOX_DY;
 
@@ -735,7 +749,8 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     rc.y += DOCLIST_MARGIN_TOP + height * THUMBNAIL_DY + (height - 1) * DOCLIST_MARGIN_BETWEEN_Y + DOCLIST_MARGIN_BOTTOM;
     rc.dy = DOCLIST_BOTTOM_BOX_DY;
 
-    SetTextColor(hdc, GetCurrentTheme()->mainWindow.linkColor);
+    col = GetAppColor(AppColor::Link);
+    SetTextColor(hdc, col);
     SelectObject(hdc, penLinkLine);
 
     HIMAGELIST himl = (HIMAGELIST)SendMessage(win->hwndToolbar, TB_GETIMAGELIST, 0, 0);

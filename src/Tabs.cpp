@@ -15,9 +15,9 @@
 // layout controllers
 #include "SettingsStructs.h"
 #include "Controller.h"
-#include "Theme.h"
-#include "GlobalPrefs.h"
 // ui
+#include "Colors.h"
+#include "GlobalPrefs.h"
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 #include "TabInfo.h"
@@ -35,18 +35,19 @@ static void SwapTabs(WindowInfo* win, int tab1, int tab2);
 #define T_CLOSE (TCN_LAST + 2)
 #define T_DRAG (TCN_LAST + 3)
 
+#define TABBAR_HEIGHT 24
 #define MIN_TAB_WIDTH 100
 
 static bool g_FirefoxStyle = false;
 
 int GetTabbarHeight(HWND hwnd, float factor) {
-    int dy = DpiScaleY(hwnd, GetCurrentTheme()->tab.height);
+    int dy = DpiScaleY(hwnd, TABBAR_HEIGHT);
     return (int)(dy * factor);
 }
 
 static inline SizeI GetTabSize(HWND hwnd) {
     int dx = DpiScaleX(hwnd, std::max(gGlobalPrefs->prereleaseSettings.tabWidth, MIN_TAB_WIDTH));
-    int dy = DpiScaleY(hwnd, GetCurrentTheme()->tab.height);
+    int dy = DpiScaleY(hwnd, TABBAR_HEIGHT);
     return SizeI(dx, dy);
 }
 
@@ -200,7 +201,7 @@ class TabPainter {
         GraphicsPathIterator iterator(&shapes);
 
         SolidBrush br(Color(0, 0, 0));
-        Pen pen(&br, GetCurrentTheme()->tab.closePenWidth);
+        Pen pen(&br, 2.0f);
 
         Font f(hdc, GetDefaultGuiFont());
         // TODO: adjust these constant values for DPI?
@@ -253,28 +254,29 @@ class TabPainter {
             }
 
             // Get the correct colors based on the state and the current theme
-            COLORREF bgCol = GetCurrentTheme()->tab.background.backgroundColor;
-            COLORREF textCol = GetCurrentTheme()->tab.background.textColor;
-            COLORREF xColor = GetCurrentTheme()->tab.background.close.xColor;
-            COLORREF circleColor = GetCurrentTheme()->tab.background.close.circleColor;
+            COLORREF bgCol = GetAppColor(AppColor::TabBackgroundBg);
+            COLORREF textCol = GetAppColor(AppColor::TabBackgroundText);
+            COLORREF xColor = GetAppColor(AppColor::TabBackgroundCloseX);
+            COLORREF circleColor = GetAppColor(AppColor::TabBackgroundCloseCircle);
+
             if (current == i) {
-                bgCol = GetCurrentTheme()->tab.current.backgroundColor;
-                textCol = GetCurrentTheme()->tab.current.textColor;
-                xColor = GetCurrentTheme()->tab.current.close.xColor;
-                circleColor = GetCurrentTheme()->tab.current.close.circleColor;
+                bgCol = GetAppColor(AppColor::TabCurrentBg);
+                textCol = GetAppColor(AppColor::TabCurrentText);
+                xColor = GetAppColor(AppColor::TabCurrentCloseX);
+                circleColor = GetAppColor(AppColor::TabCurrentCloseCircle);
             } else if (highlighted == i) {
-                bgCol = GetCurrentTheme()->tab.highlighted.backgroundColor;
-                textCol = GetCurrentTheme()->tab.highlighted.textColor;
-                xColor = GetCurrentTheme()->tab.highlighted.close.xColor;
-                circleColor = GetCurrentTheme()->tab.highlighted.close.circleColor;
+                bgCol = GetAppColor(AppColor::TabHighlightedBg);
+                textCol = GetAppColor(AppColor::TabHighlightedText);
+                xColor = GetAppColor(AppColor::TabHighlightedCloseX);
+                circleColor = GetAppColor(AppColor::TabHighlightedCloseCircle);
             }
             if (xHighlighted == i) {
-                xColor = GetCurrentTheme()->tab.hoveredClose.xColor;
-                circleColor = GetCurrentTheme()->tab.hoveredClose.circleColor;
+                xColor = GetAppColor(AppColor::TabHoveredCloseX);
+                circleColor = GetAppColor(AppColor::TabHoveredCloseCircle);
             }
             if (xClicked == i) {
-                xColor = GetCurrentTheme()->tab.clickedClose.xColor;
-                circleColor = GetCurrentTheme()->tab.clickedClose.circleColor;
+                xColor = GetAppColor(AppColor::TabClickedCloseX);
+                circleColor = GetAppColor(AppColor::TabClickedCloseCircle);
             }
 
             // paint tab's body
@@ -297,7 +299,8 @@ class TabPainter {
 
             // paint "x"'s circle
             iterator.NextMarker(&shape);
-            if ((xClicked == i || xHighlighted == i) && GetCurrentTheme()->tab.closeCircleEnabled) {
+            bool closeCircleEnabled = true;
+            if ((xClicked == i || xHighlighted == i) && closeCircleEnabled) {
                 br.SetColor(ToColor(circleColor));
                 graphics.FillPath(&br, &shape);
             }

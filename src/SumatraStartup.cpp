@@ -57,14 +57,6 @@
 #include "Tests.h"
 #include "Menu.h"
 
-// "SumatraPDF yellow" similar to the one use for icon and installer
-#define ABOUT_BG_LOGO_COLOR     RGB(0xFF, 0xF2, 0x00)
-
-// it's very light gray but not white so that there's contrast between
-// background and thumbnail, which often have white background because
-// most PDFs have white background
-#define ABOUT_BG_GRAY_COLOR     RGB(0xF2, 0xF2, 0xF2)
-
 #define CRASH_DUMP_FILE_NAME         L"sumatrapdfcrash.dmp"
 
 #ifdef DEBUG

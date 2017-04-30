@@ -186,9 +186,6 @@ COLORREF GetPixel(BitmapPixels *bitmap, int x, int y);
 void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor);
 unsigned char *SerializeBitmap(HBITMAP hbmp, size_t *bmpBytesOut);
 HBITMAP CreateMemoryBitmap(SizeI size, HANDLE *hDataMapping = nullptr);
-COLORREF AdjustLightness(COLORREF c, float factor);
-COLORREF AdjustLightness2(COLORREF c, float units);
-float GetLightness(COLORREF c);
 double GetProcessRunningTime();
 
 void RunNonElevated(const WCHAR *exePath);
