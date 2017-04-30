@@ -17,6 +17,7 @@
 #include "TextSelection.h"
 #include "TextSearch.h"
 // ui
+#include "Colors.h"
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 #include "TabInfo.h"
@@ -26,7 +27,6 @@
 #include "Search.h"
 #include "Toolbar.h"
 #include "Translations.h"
-#include "Theme.h"
 
 // TODO: experimenting with matching toolbar colors with theme
 // Doesn't work, probably have to implement a custom toolbar control
@@ -250,7 +250,8 @@ static LRESULT CALLBACK WndProcToolbar(HWND hwnd, UINT message, WPARAM wParam, L
             //SetBkMode(hdc, TRANSPARENT);
             auto br = CreateSolidBrush(GetCurrentTheme()->mainWindow.backgroundColor);
 #else
-            SetTextColor(hdc, GetCurrentTheme()->document.textColor);
+            auto col = GetAppColor(AppColor::DocumentText);
+            SetTextColor(hdc, col);
             SetBkMode(hdc, TRANSPARENT);
             auto br = GetStockBrush(NULL_BRUSH);
 #endif

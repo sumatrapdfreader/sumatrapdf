@@ -5,6 +5,11 @@
 #include "GlobalPrefs.h"
 #include "Colors.h"
 
+// For reference of what used to be:
+// https://github.com/sumatrapdfreader/sumatrapdf/commit/74aca9e1b78f833b0886db5b050c96045c0071a0
+
+#define COL_WHITE RGB(0xff, 0xff, 0xff)
+#define COL_WHITEISH RGB(0xEB, 0xEB, 0xF9);
 #define COL_BLACK RGB(0, 0, 0)
 #define COL_BLUE_LINK RGB(0x00, 0x20, 0xa0)
 
@@ -25,7 +30,7 @@
 // PDF-XChange      0xACA899 with a 1px frame and a gradient shadow
 // Google Chrome    0xCCCCCC with a symmetric gradient shadow
 // Evince           0xD7D1CB with a pronounced frame shadow
-#ifdef DRAW_PAGE_SHADOWS
+#if defined(DRAW_PAGE_SHADOWS)
 // SumatraPDF (old) 0xCCCCCC with a pronounced frame shadow
 #define COL_WINDOW_BG RGB(0xCC, 0xCC, 0xCC)
 #define COL_PAGE_FRAME RGB(0x88, 0x88, 0x88)
@@ -34,6 +39,53 @@
 // SumatraPDF       0x999999 without any frame border
 #define COL_WINDOW_BG RGB(0x99, 0x99, 0x99)
 #endif
+
+static COLORREF rgb_to_bgr(COLORREF rgb) {
+    return ((rgb & 0x0000FF) << 16) | (rgb & 0x00FF00) | ((rgb & 0xFF0000) >> 16);
+}
+
+COLORREF AdjustLightness(COLORREF c, float factor) {
+    BYTE R = GetRValueSafe(c), G = GetGValueSafe(c), B = GetBValueSafe(c);
+    // cf. http://en.wikipedia.org/wiki/HSV_color_space#Hue_and_chroma
+    BYTE M = std::max(std::max(R, G), B), m = std::min(std::min(R, G), B);
+    if (M == m) {
+        // for grayscale values, lightness is proportional to the color value
+        BYTE X = (BYTE)limitValue((int)floorf(M * factor + 0.5f), 0, 255);
+        return RGB(X, X, X);
+    }
+    BYTE C = M - m;
+    BYTE Ha = (BYTE)abs(M == R ? G - B : M == G ? B - R : R - G);
+    // cf. http://en.wikipedia.org/wiki/HSV_color_space#Lightness
+    float L2 = (float)(M + m);
+    // cf. http://en.wikipedia.org/wiki/HSV_color_space#Saturation
+    float S = C / (L2 > 255.0f ? 510.0f - L2 : L2);
+
+    L2 = limitValue(L2 * factor, 0.0f, 510.0f);
+    // cf. http://en.wikipedia.org/wiki/HSV_color_space#From_HSL
+    float C1 = (L2 > 255.0f ? 510.0f - L2 : L2) * S;
+    float X1 = C1 * Ha / C;
+    float m1 = (L2 - C1) / 2;
+    R = (BYTE)floorf((M == R ? C1 : m != R ? X1 : 0) + m1 + 0.5f);
+    G = (BYTE)floorf((M == G ? C1 : m != G ? X1 : 0) + m1 + 0.5f);
+    B = (BYTE)floorf((M == B ? C1 : m != B ? X1 : 0) + m1 + 0.5f);
+    return RGB(R, G, B);
+}
+
+// Adjusts lightness by 1/255 units.
+COLORREF AdjustLightness2(COLORREF c, float units) {
+    float lightness = GetLightness(c);
+    units = limitValue(units, -lightness, 255.0f - lightness);
+    if (0.0f == lightness)
+        return RGB(BYTE(units + 0.5f), BYTE(units + 0.5f), BYTE(units + 0.5f));
+    return AdjustLightness(c, 1.0f + units / lightness);
+}
+
+// cf. http://en.wikipedia.org/wiki/HSV_color_space#Lightness
+float GetLightness(COLORREF c) {
+    BYTE R = GetRValueSafe(c), G = GetGValueSafe(c), B = GetBValueSafe(c);
+    BYTE M = std::max(std::max(R, G), B), m = std::min(std::min(R, G), B);
+    return (M + m) / 2.0f;
+}
 
 // returns the background color for start page, About window and Properties dialog
 static COLORREF GetAboutBgColor() {
@@ -70,38 +122,21 @@ COLORREF GetAppColor(AppColor col) {
         // GetCurrentTheme()->document.canvasColor
         return GetNoDocBgColor();
     }
+
     if (col == AppColor::AboutBg) {
         return GetAboutBgColor();
     }
+
     if (col == AppColor::LogoBg) {
         return GetLogoBgColor();
     }
+
+    if (col == AppColor::MainWindowBg) {
+        return ABOUT_BG_GRAY_COLOR;
+    }
+
     if (col == AppColor::MainWindowText) {
-        return GetSysColor(COLOR_WINDOWTEXT);
-    }
-
-    if (col == AppColor::NotificationsBg) {
-        return GetSysColor(COLOR_WINDOW);
-    }
-
-    if (col == AppColor::NotificationsText) {
-        return GetSysColor(COLOR_WINDOWTEXT);
-    }
-
-    if (col == AppColor::NotificationsHighlightBg) {
-        return GetSysColor(COLOR_HIGHLIGHT);
-    }
-
-    if (col == AppColor::NotificationsHighlightText) {
-        return GetSysColor(COLOR_HIGHLIGHTTEXT);
-    }
-
-    if (col == AppColor::NotifcationsProgress) {
         return COL_BLACK;
-    }
-
-    if (col == AppColor::Link) {
-        return COL_BLUE_LINK;
     }
 
     // TODO: different for fixed vs. ebook page
@@ -112,6 +147,98 @@ COLORREF GetAppColor(AppColor col) {
     // TODO: different for fixed vs. ebook page
     if (col == AppColor::DocumentText) {
         return gGlobalPrefs->fixedPageUI.textColor;
+    }
+
+    if (col == AppColor::NotificationsBg) {
+        return GetAppColor(AppColor::MainWindowBg);
+    }
+
+    if (col == AppColor::NotificationsText) {
+        return GetAppColor(AppColor::MainWindowText);
+    }
+
+    if (col == AppColor::NotificationsHighlightBg) {
+        return rgb_to_bgr(0x3399ff);
+    }
+
+    if (col == AppColor::NotificationsHighlightText) {
+        return COL_WHITE;
+    }
+
+    if (col == AppColor::NotifcationsProgress) {
+        return GetAppColor(AppColor::Link);
+    }
+
+    if (col == AppColor::Link) {
+        return COL_BLUE_LINK;
+    }
+
+    if (col == AppColor::TabCurrentBg) {
+        return rgb_to_bgr(0xE3683C);
+    }
+
+    if (col == AppColor::TabCurrentText) {
+        return COL_BLACK;
+    }
+
+    if (col == AppColor::TabCurrentCloseX) {
+        auto c = GetAppColor(AppColor::TabBackgroundBg);
+        return AdjustLightness2(c, -60);
+    }
+
+    if (col == AppColor::TabCurrentCloseCircle) {
+        return rgb_to_bgr(0xC13535);
+    }
+
+    if (col == AppColor::TabBackgroundBg) {
+        auto c = GetAppColor(AppColor::TabCurrentBg);
+        return AdjustLightness2(c, -15);
+    }
+
+    if (col == AppColor::TabBackgroundText) {
+        return COL_BLACK;
+    }
+
+    if (col == AppColor::TabBackgroundCloseX) {
+        return GetAppColor(AppColor::TabCurrentCloseX);
+    }
+
+    if (col == AppColor::TabBackgroundCloseCircle) {
+        return GetAppColor(AppColor::TabCurrentCloseCircle);
+    }
+
+    if (col == AppColor::TabHighlightedBg) {
+        auto c = GetAppColor(AppColor::TabCurrentBg);
+        AdjustLightness2(c, 15);
+    }
+
+    if (col == AppColor::TabHighlightedText) {
+        return COL_BLACK;
+    }
+
+    if (col == AppColor::TabHighlightedCloseX) {
+        return GetAppColor(AppColor::TabCurrentCloseX);
+    }
+
+    if (col == AppColor::TabHighlightedCloseCircle) {
+        return GetAppColor(AppColor::TabCurrentCloseCircle);
+    }
+
+    if (col == AppColor::TabHoveredCloseX) {
+        return COL_WHITEISH;
+    }
+
+    if (col == AppColor::TabHoveredCloseCircle) {
+        return GetAppColor(AppColor::TabCurrentCloseCircle);
+    }
+
+    if (col == AppColor::TabClickedCloseX) {
+        return GetAppColor(AppColor::TabHoveredCloseX);
+    }
+
+    if (col == AppColor::TabClickedCloseCircle) {
+        auto c = GetAppColor(AppColor::TabCurrentCloseCircle);
+        AdjustLightness2(c, -10);
     }
 
     CrashIf(false);

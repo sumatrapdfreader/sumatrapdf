@@ -25,7 +25,34 @@ enum class AppColor {
     NotifcationsProgress,
 
     Link,
+
+    // TODO: rename to selected
+    TabCurrentBg,
+    TabCurrentText,
+    TabCurrentCloseX,
+    TabCurrentCloseCircle,
+
+    TabBackgroundBg,
+    TabBackgroundText,
+    TabBackgroundCloseX,
+    TabBackgroundCloseCircle,
+
+    TabHighlightedBg,
+    TabHighlightedText,
+    TabHighlightedCloseX,
+    TabHighlightedCloseCircle,
+
+    TabHoveredCloseX,
+    TabHoveredCloseCircle,
+
+    TabClickedCloseX,
+    TabClickedCloseCircle,
+
 };
+
+COLORREF AdjustLightness(COLORREF c, float factor);
+COLORREF AdjustLightness2(COLORREF c, float units);
+float GetLightness(COLORREF c);
 
 COLORREF GetAppColor(AppColor);
 void GetFixedPageUiColors(COLORREF& text, COLORREF& bg);
