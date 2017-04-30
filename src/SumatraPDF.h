@@ -13,22 +13,6 @@
 #define CRASH_REPORT_URL         L"http://www.sumatrapdfreader.org/develop.html"
 #endif
 
-// Background color comparison:
-// Adobe Reader X   0x565656 without any frame border
-// Foxit Reader 5   0x9C9C9C with a pronounced frame shadow
-// PDF-XChange      0xACA899 with a 1px frame and a gradient shadow
-// Google Chrome    0xCCCCCC with a symmetric gradient shadow
-// Evince           0xD7D1CB with a pronounced frame shadow
-#ifdef DRAW_PAGE_SHADOWS
-// SumatraPDF (old) 0xCCCCCC with a pronounced frame shadow
-#define COL_WINDOW_BG           RGB(0xCC, 0xCC, 0xCC)
-#define COL_PAGE_FRAME          RGB(0x88, 0x88, 0x88)
-#define COL_PAGE_SHADOW         RGB(0x40, 0x40, 0x40)
-#else
-// SumatraPDF       0x999999 without any frame border
-#define COL_WINDOW_BG           RGB(0x99, 0x99, 0x99)
-#endif
-
 // scrolls half a page down/up (needed for Shift+Up/Down)
 #define SB_HPAGEUP   (WM_USER + 1)
 #define SB_HPAGEDOWN (WM_USER + 2)
@@ -87,8 +71,6 @@ enum MenuToolbarFlags {
 #define LEFT_TXT_FONT_SIZE      12
 #define RIGHT_TXT_FONT          L"Arial Black"
 #define RIGHT_TXT_FONT_SIZE     12
-// for backward compatibility use a value that older versions will render as yellow
-#define ABOUT_BG_COLOR_DEFAULT  (RGB(0xff, 0xf2, 0) - 0x80000000)
 
 class Controller;
 class Favorites;

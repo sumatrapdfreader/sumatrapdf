@@ -34,6 +34,10 @@ struct WindowMargin {
 
 // customization options for PDF, XPS, DjVu and PostScript UI
 struct FixedPageUI {
+    // color value with which black (text) will be substituted
+    COLORREF textColor;
+    // color value with which white (background) will be substituted
+    COLORREF backgroundColor;
     // color value for the text selection rectangle (also used to highlight
     // found text)
     COLORREF selectionColor;
@@ -61,6 +65,10 @@ struct EbookUI {
     WCHAR * fontName;
     // size of the font. takes effect after re-opening the document
     float fontSize;
+    // color for text
+    COLORREF textColor;
+    // color of the background (page)
+    COLORREF backgroundColor;
     // if true, the UI used for PDF documents will be used for ebooks as
     // well (enables printing and searching, disables automatic reflow)
     bool useFixedPageUI;
@@ -263,12 +271,15 @@ struct SessionData {
 // persisted in SumatraPDF-settings.txt (previously in
 // sumatrapdfprefs.dat)
 struct GlobalPrefs {
-    // the name of the theme to use
-    char * themeName;
+    // background color of the non-document windows, traditionally yellow
+    COLORREF mainWindowBackground;
     // if true, Esc key closes SumatraPDF
     bool escToExit;
     // if true, we'll always open files using existing SumatraPDF process
     bool reuseInstance;
+    // if true, we use Windows system colors for background/text color.
+    // Over-rides other settings
+    bool useSysColors;
     // if true and SessionData isn't empty, that session will be restored
     // at startup
     bool restoreSession;
@@ -405,19 +416,23 @@ static const FieldInfo gSizeIFields[] = {
 static const StructInfo gSizeIInfo = { sizeof(SizeI), 2, gSizeIFields, "Dx\0Dy" };
 
 static const FieldInfo gFixedPageUIFields[] = {
-    { offsetof(FixedPageUI, selectionColor), Type_Color,      0x0cfcf5                     },
-    { offsetof(FixedPageUI, windowMargin),   Type_Compact,    (intptr_t)&gWindowMarginInfo },
-    { offsetof(FixedPageUI, pageSpacing),    Type_Compact,    (intptr_t)&gSizeIInfo        },
-    { offsetof(FixedPageUI, gradientColors), Type_ColorArray, 0                            },
+    { offsetof(FixedPageUI, textColor),       Type_Color,      0x000000                     },
+    { offsetof(FixedPageUI, backgroundColor), Type_Color,      0xffffff                     },
+    { offsetof(FixedPageUI, selectionColor),  Type_Color,      0x0cfcf5                     },
+    { offsetof(FixedPageUI, windowMargin),    Type_Compact,    (intptr_t)&gWindowMarginInfo },
+    { offsetof(FixedPageUI, pageSpacing),     Type_Compact,    (intptr_t)&gSizeIInfo        },
+    { offsetof(FixedPageUI, gradientColors),  Type_ColorArray, 0                            },
 };
-static const StructInfo gFixedPageUIInfo = { sizeof(FixedPageUI), 4, gFixedPageUIFields, "SelectionColor\0WindowMargin\0PageSpacing\0GradientColors" };
+static const StructInfo gFixedPageUIInfo = { sizeof(FixedPageUI), 6, gFixedPageUIFields, "TextColor\0BackgroundColor\0SelectionColor\0WindowMargin\0PageSpacing\0GradientColors" };
 
 static const FieldInfo gEbookUIFields[] = {
-    { offsetof(EbookUI, fontName),       Type_String, (intptr_t)L"Georgia" },
-    { offsetof(EbookUI, fontSize),       Type_Float,  (intptr_t)"12.5"     },
-    { offsetof(EbookUI, useFixedPageUI), Type_Bool,   false                },
+    { offsetof(EbookUI, fontName),        Type_String, (intptr_t)L"Georgia" },
+    { offsetof(EbookUI, fontSize),        Type_Float,  (intptr_t)"12.5"     },
+    { offsetof(EbookUI, textColor),       Type_Color,  0x324b5f             },
+    { offsetof(EbookUI, backgroundColor), Type_Color,  0xd9f0fb             },
+    { offsetof(EbookUI, useFixedPageUI),  Type_Bool,   false                },
 };
-static const StructInfo gEbookUIInfo = { sizeof(EbookUI), 3, gEbookUIFields, "FontName\0FontSize\0UseFixedPageUI" };
+static const StructInfo gEbookUIInfo = { sizeof(EbookUI), 5, gEbookUIFields, "FontName\0FontSize\0TextColor\0BackgroundColor\0UseFixedPageUI" };
 
 static const FieldInfo gWindowMargin_1_Fields[] = {
     { offsetof(WindowMargin, top),    Type_Int, 0 },
@@ -572,9 +587,10 @@ static const StructInfo gFILETIMEInfo = { sizeof(FILETIME), 2, gFILETIMEFields, 
 static const FieldInfo gGlobalPrefsFields[] = {
     { (size_t)-1,                                      Type_Comment,     (intptr_t)"For documentation, see http://www.sumatrapdfreader.org/settings3.2.html"                                   },
     { (size_t)-1,                                      Type_Comment,     0                                                                                                                     },
-    { offsetof(GlobalPrefs, themeName),                Type_Utf8String,  (intptr_t)"light"                                                                                                     },
+    { offsetof(GlobalPrefs, mainWindowBackground),     Type_Color,       0x8000f2ff                                                                                                            },
     { offsetof(GlobalPrefs, escToExit),                Type_Bool,        false                                                                                                                 },
     { offsetof(GlobalPrefs, reuseInstance),            Type_Bool,        false                                                                                                                 },
+    { offsetof(GlobalPrefs, useSysColors),             Type_Bool,        false                                                                                                                 },
     { offsetof(GlobalPrefs, restoreSession),           Type_Bool,        true                                                                                                                  },
     { (size_t)-1,                                      Type_Comment,     0                                                                                                                     },
     { offsetof(GlobalPrefs, fixedPageUI),              Type_Struct,      (intptr_t)&gFixedPageUIInfo                                                                                           },
@@ -624,6 +640,6 @@ static const FieldInfo gGlobalPrefsFields[] = {
     { (size_t)-1,                                      Type_Comment,     0                                                                                                                     },
     { (size_t)-1,                                      Type_Comment,     (intptr_t)"Settings after this line have not been recognized by the current version"                                  },
 };
-static const StructInfo gGlobalPrefsInfo = { sizeof(GlobalPrefs), 53, gGlobalPrefsFields, "\0\0ThemeName\0EscToExit\0ReuseInstance\0RestoreSession\0\0FixedPageUI\0EbookUI\0ComicBookUI\0ChmUI\0ExternalViewers\0PrereleaseSettings\0ShowMenubar\0ReloadModifiedDocuments\0FullPathInTitle\0ZoomLevels\0ZoomIncrement\0\0PrinterDefaults\0ForwardSearch\0AnnotationDefaults\0DefaultPasswords\0CustomScreenDPI\0\0RememberStatePerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0CheckForUpdates\0VersionToSkip\0RememberOpenedFiles\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0ShowStartPage\0UseTabs\0\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0\0" };
+static const StructInfo gGlobalPrefsInfo = { sizeof(GlobalPrefs), 54, gGlobalPrefsFields, "\0\0MainWindowBackground\0EscToExit\0ReuseInstance\0UseSysColors\0RestoreSession\0\0FixedPageUI\0EbookUI\0ComicBookUI\0ChmUI\0ExternalViewers\0PrereleaseSettings\0ShowMenubar\0ReloadModifiedDocuments\0FullPathInTitle\0ZoomLevels\0ZoomIncrement\0\0PrinterDefaults\0ForwardSearch\0AnnotationDefaults\0DefaultPasswords\0CustomScreenDPI\0\0RememberStatePerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0CheckForUpdates\0VersionToSkip\0RememberOpenedFiles\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0ShowStartPage\0UseTabs\0\0FileStates\0SessionData\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0\0" };
 
 #endif

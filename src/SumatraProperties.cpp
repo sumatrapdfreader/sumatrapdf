@@ -13,7 +13,7 @@
 #include "Controller.h"
 #include "DisplayModel.h"
 // ui
-#include "Theme.h"
+#include "Colors.h"
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 #include "resource.h"
@@ -532,10 +532,12 @@ static void DrawProperties(HWND hwnd, HDC hdc)
 
     ClientRect rcClient(hwnd);
     RECT rTmp = rcClient.ToRECT();
-    ScopedGdiObj<HBRUSH> brushAboutBg(CreateSolidBrush(GetCurrentTheme()->mainWindow.backgroundColor));
+    auto col = GetAppColor(AppColor::MainWindowBg);
+    ScopedGdiObj<HBRUSH> brushAboutBg(CreateSolidBrush(col));
     FillRect(hdc, &rTmp, brushAboutBg);
 
-    SetTextColor(hdc, GetCurrentTheme()->mainWindow.textColor);
+    col = GetAppColor(AppColor::MainWindowText);
+    SetTextColor(hdc, col);
 
     /* render text on the left*/
     SelectObject(hdc, fontLeftTxt);

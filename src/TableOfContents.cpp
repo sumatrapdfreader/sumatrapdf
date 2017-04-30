@@ -1,7 +1,6 @@
 /* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// utils
 #include "BaseUtil.h"
 #include "Dpi.h"
 #include "GdiPlusUtil.h"
@@ -9,15 +8,15 @@
 #include "SplitterWnd.h"
 #include "UITask.h"
 #include "WinUtil.h"
-// rendering engines
+
 #include "BaseEngine.h"
 #include "EngineManager.h"
-// layout controllers
+
 #include "SettingsStructs.h"
 #include "Controller.h"
-#include "Theme.h"
 #include "GlobalPrefs.h"
-// ui
+
+#include "Colors.h"
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 #include "TabInfo.h"
@@ -332,8 +331,8 @@ void UpdateTocColors(WindowInfo *win)
     bool flatTreeWnd = false;
 
     if (win->AsEbook()) {
-        labelBgCol = GetCurrentTheme()->document.backgroundColor;
-        labelTxtCol = GetCurrentTheme()->document.textColor;
+        labelBgCol = GetAppColor(AppColor::DocumentBg);
+        labelTxtCol = GetAppColor(AppColor::DocumentText);
 
         treeBgCol = labelBgCol;
         float factor = 14.f;

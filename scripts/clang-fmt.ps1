@@ -4,7 +4,20 @@
 
 Remove-Item src\*.bak, src\*.tmp
 
-$files = "src\ParseCommandLine*", "src\Tests*", "src\Print*", "src\Favorites.*", "src\Tabs.*", "src\TabInfo.*", "src\mui\SvgPath.*", "src\Notifications.*", "src\EbookController.*", "src\Menu.*", "src\Theme.*", "src\wingui\TabsCtrl.*", "src\utils\FileWatcher.*"
+$files = "src\Colors.*",
+  "src\EbookController.*",
+  "src\Favorites.*",
+  "src\Menu.*",
+  "src\Notifications.*",
+  "src\ParseCommandLine*",
+  "src\Print*",
+  "src\TabInfo.*",
+  "src\Tabs.*",
+  "src\Theme.*",
+  "src\Tests*",
+  "src\mui\SvgPath.*",
+  "src\utils\FileWatcher.*",
+  "src\wingui\TabsCtrl.*"
 
 foreach ($file in $files) {
   $files2 = Get-ChildItem $file

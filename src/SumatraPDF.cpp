@@ -41,6 +41,7 @@
 #include "TextSelection.h"
 #include "TextSearch.h"
 // ui
+#include "Colors.h"
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 #include "TabInfo.h"
@@ -76,7 +77,6 @@
 #include "Version.h"
 #define NOLOG 0
 #include "DebugLog.h"
-#include "Theme.h"
 
 /* if true, we're in debug mode where we show links as blue rectangle on
    the screen. Makes debugging code related to links easier. */
@@ -2010,22 +2010,6 @@ static void RerenderEverything()
     }
 }
 
-void GetFixedPageUiColors(COLORREF& text, COLORREF& bg)
-{
-    
-    text = GetCurrentTheme()->document.textColor;
-    bg = GetCurrentTheme()->document.backgroundColor;
-    if (gGlobalPrefs->fixedPageUI.invertColors) {
-        std::swap(text, bg);
-    }
-}
-
-void GetEbookUiColors(COLORREF& text, COLORREF& bg)
-{
-    text = GetCurrentTheme()->document.textColor;
-    bg = GetCurrentTheme()->document.backgroundColor;
-}
-
 void UpdateDocumentColors()
 {
     // TODO: only do this if colors have actually changed?
@@ -3784,6 +3768,7 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
         GoToFavoriteByMenuId(win, wmId);
     }
 
+#if defined(ENABLE_THEME)
     // check if the menuId belongs to a theme
     if ((wmId >= IDM_CHANGE_THEME_FIRST) && (wmId <= IDM_CHANGE_THEME_LAST)) {
         auto newThemeName = GetThemeByIndex(wmId - IDM_CHANGE_THEME_FIRST)->name;
@@ -3795,6 +3780,7 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
         UpdateMenu(win, (HMENU)wParam); // update the radio buttons
         prefs::Save();  // save new preferences
     }
+#endif
 
     if (!win)
         return DefWindowProc(hwnd, msg, wParam, lParam);
@@ -4278,6 +4264,9 @@ InitMouseWheelInfo:
             return 0;
 
         case WM_SYSCOLORCHANGE:
+            if (gGlobalPrefs->useSysColors) {
+                UpdateDocumentColors();
+            }
             break;
 
         case WM_MOUSEWHEEL:

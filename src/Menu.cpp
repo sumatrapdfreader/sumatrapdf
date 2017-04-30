@@ -1,24 +1,24 @@
 /* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// utils
 #include "BaseUtil.h"
 #include "CmdLineParser.h"
 #include "FileUtil.h"
 #include "HtmlParserLookup.h"
 #include "Mui.h"
 #include "WinUtil.h"
-// rendering engines
+
 #include "BaseEngine.h"
 #include "EngineManager.h"
-// layout controllers
+
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "DisplayModel.h"
 #include "FileHistory.h"
 #include "Theme.h"
 #include "GlobalPrefs.h"
-// ui
+#include "Colors.h"
+
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 #include "TabInfo.h"
@@ -535,8 +535,10 @@ void MenuUpdateStateForWindow(WindowInfo* win) {
         win::menu::SetEnabled(win->menu, IDM_RENAME_FILE, false);
     }
 
+#if defined(ENABLE_THEME)
     CheckMenuRadioItem(win->menu, IDM_CHANGE_THEME_FIRST, IDM_CHANGE_THEME_LAST,
                        IDM_CHANGE_THEME_FIRST + GetCurrentThemeIndex(), MF_BYCOMMAND);
+#endif
 
 #ifdef SHOW_DEBUG_MENU_ITEMS
     win::menu::SetChecked(win->menu, IDM_DEBUG_SHOW_LINKS, gDebugShowLinks);
@@ -947,14 +949,13 @@ void MenuOwnerDrawnDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
     HFONT font = GetMenuFont();
     auto prevFont = SelectObject(hdc, font);
 
-    auto theme = GetCurrentTheme();
-    COLORREF bgCol = theme->mainWindow.backgroundColor;
-    COLORREF txtCol = theme->mainWindow.textColor;
+    COLORREF bgCol = GetAppColor(AppColor::MainWindowBg);
+    COLORREF txtCol = GetAppColor(AppColor::MainWindowText);
+
     bool isSelected = bit::IsMaskSet(dis->itemState, (UINT)ODS_SELECTED);
     if (isSelected) {
         // TODO: probably better colors
-        bgCol = theme->mainWindow.textColor;
-        txtCol = theme->mainWindow.backgroundColor;
+        std::swap(bgCol, txtCol);
     }
 
     RECT rc = dis->rcItem;
@@ -1047,6 +1048,7 @@ HMENU BuildMenu(WindowInfo* win) {
         AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("F&avorites"));
     }
 
+#if defined(ENABLE_THEME)
     // Build the themes sub-menu of the settings menu
     m = BuildMenuFromMenuDef(menuDefSettings, dimof(menuDefSettings), CreateMenu(), filter);
     MenuDef menuDefTheme[THEME_COUNT];
@@ -1057,6 +1059,7 @@ HMENU BuildMenu(WindowInfo* win) {
     }
     HMENU m2 = BuildMenuFromMenuDef(menuDefTheme, dimof(menuDefTheme), CreateMenu(), filter);
     AppendMenu(m, MF_POPUP | MF_STRING, (UINT_PTR)m2, _TR("&Theme"));
+#endif
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Settings"));
 
     m = BuildMenuFromMenuDef(menuDefHelp, dimof(menuDefHelp), CreateMenu(), filter);

@@ -1,7 +1,6 @@
 /* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// utils
 #include "BaseUtil.h"
 #include "WinDynCalls.h"
 #include "Dpi.h"
@@ -10,11 +9,12 @@
 #include "Timer.h"
 #include "UITask.h"
 #include "WinUtil.h"
-// rendering engines
+#include "Colors.h"
+
 #include "BaseEngine.h"
 #include "EngineManager.h"
 #include "Doc.h"
-// layout controllers
+
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "DisplayModel.h"
@@ -24,7 +24,7 @@
 #include "RenderCache.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
-// ui
+
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 #include "TabInfo.h"
@@ -493,7 +493,8 @@ static void PaintPageFrameAndShadow(HDC hdc, RectI& bounds, RectI& pageRect, boo
 {
     UNUSED(pageRect);  UNUSED(presentation);
     ScopedPen pen(CreatePen(PS_NULL, 0, 0));
-    ScopedBrush brush(CreateSolidBrush(GetCurrentTheme()->mainWindow.backgroundColor));
+    auto col = GetAppColor(AppColor::MainWindowBg);
+    ScopedBrush brush(CreateSolidBrush(col));
     ScopedHdcSelect restorePen(hdc, pen);
     ScopedHdcSelect restoreBrush(hdc, brush);
     Rectangle(hdc, bounds.x, bounds.y, bounds.x + bounds.dx + 1, bounds.y + bounds.dy + 1);
@@ -560,7 +561,7 @@ static void GetGradientColor(COLORREF a, COLORREF b, float perc, TRIVERTEX *tv)
 
 static void DrawDocument(WindowInfo* win, HDC hdc, RECT *rcArea)
 {
-    AssertCrash(win->AsFixed());
+    CrashIf(!win->AsFixed());
     if (!win->AsFixed()) return;
     DisplayModel* dm = win->AsFixed();
 
@@ -572,7 +573,8 @@ static void DrawDocument(WindowInfo* win, HDC hdc, RECT *rcArea)
         FillRect(hdc, rcArea, brush);
     }
     else if (0 == gGlobalPrefs->fixedPageUI.gradientColors->Count()) {
-        ScopedGdiObj<HBRUSH> brush(CreateSolidBrush(GetCurrentTheme()->document.canvasColor));
+        auto col = GetAppColor(AppColor::NoDocBg);
+        ScopedGdiObj<HBRUSH> brush(CreateSolidBrush(col));
         FillRect(hdc, rcArea, brush);
     }
     else {
@@ -605,18 +607,20 @@ static void DrawDocument(WindowInfo* win, HDC hdc, RECT *rcArea)
             GetGradientColor(colors[0], colors[1], 2 * percTop, &tv[0]);
         else
             GetGradientColor(colors[1], colors[2], 2 * (percTop - 0.5f), &tv[0]);
+
         if (percBot < 0.5f)
             GetGradientColor(colors[0], colors[1], 2 * percBot, &tv[3]);
         else
             GetGradientColor(colors[1], colors[2], 2 * (percBot - 0.5f), &tv[3]);
+
         bool needCenter = percTop < 0.5f && percBot > 0.5f;
         if (needCenter) {
             GetGradientColor(colors[1], colors[1], 0, &tv[1]);
             GetGradientColor(colors[1], colors[1], 0, &tv[2]);
             tv[1].y = tv[2].y = (LONG)((0.5f - percTop) / (percBot - percTop) * vp.dy);
-        }
-        else
+        } else {
             gr[0].LowerRight = 3;
+        }
         // TODO: disable for less than about two screen heights?
         GradientFill(hdc, tv, dimof(tv), gr, needCenter ? 2 : 1, GRADIENT_FILL_RECT_V);
     }
@@ -628,7 +632,7 @@ static void DrawDocument(WindowInfo* win, HDC hdc, RECT *rcArea)
         PageInfo *pageInfo = dm->GetPageInfo(pageNo);
         if (!pageInfo || 0.0f == pageInfo->visibleRatio)
             continue;
-        AssertCrash(pageInfo->shown);
+        CrashIf(!pageInfo->shown);
         if (!pageInfo->shown)
             continue;
 
@@ -643,12 +647,14 @@ static void DrawDocument(WindowInfo* win, HDC hdc, RECT *rcArea)
         if (renderDelay) {
             ScopedFont fontRightTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 14));
             HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt);
-            SetTextColor(hdc, GetCurrentTheme()->mainWindow.textColor);
+            auto col = GetAppColor(AppColor::MainWindowText);
+            SetTextColor(hdc, col);
             if (renderDelay != RENDER_DELAY_FAILED) {
-                if (renderDelay < REPAINT_MESSAGE_DELAY_IN_MS)
+                if (renderDelay < REPAINT_MESSAGE_DELAY_IN_MS) {
                     win->RepaintAsync(REPAINT_MESSAGE_DELAY_IN_MS / 4);
-                else
+                } else {
                     DrawCenteredText(hdc, bounds, _TR("Please wait - rendering..."), IsUIRightToLeft());
+                }
                 rendering = true;
             } else {
                 DrawCenteredText(hdc, bounds, _TR("Couldn't render the page"), IsUIRightToLeft());
@@ -1133,9 +1139,10 @@ static void OnPaintAbout(WindowInfo* win)
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(win->hwndCanvas, &ps);
 
-    auto theme = GetCurrentTheme();
+    auto txtCol = GetAppColor(AppColor::MainWindowText);
+    auto bgCol = GetAppColor(AppColor::MainWindowBg);
     if (HasPermission(Perm_SavePreferences | Perm_DiskAccess) && gGlobalPrefs->rememberOpenedFiles && gGlobalPrefs->showStartPage) {
-        DrawStartPage(win, win->buffer->GetDC(), gFileHistory, theme->mainWindow.textColor, theme->mainWindow.backgroundColor);
+        DrawStartPage(win, win->buffer->GetDC(), gFileHistory, txtCol, bgCol);
     } else {
         DrawAboutPage(win, win->buffer->GetDC());
     }
@@ -1272,8 +1279,9 @@ static void OnPaintError(WindowInfo* win)
 
     ScopedFont fontRightTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 14));
     HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt);
-    ScopedGdiObj<HBRUSH> brush(CreateSolidBrush(GetCurrentTheme()->document.canvasColor));
-    FillRect(hdc, &ps.rcPaint, brush);
+    auto bgCol = GetAppColor(AppColor::NoDocBg);
+    ScopedGdiObj<HBRUSH> bgBrush(CreateSolidBrush(bgCol));
+    FillRect(hdc, &ps.rcPaint, bgBrush);
     // TODO: should this be "Error opening %s"?
     ScopedMem<WCHAR> msg(str::Format(_TR("Error loading %s"), win->currentTab->filePath));
     DrawCenteredText(hdc, ClientRect(win->hwndCanvas), msg, IsUIRightToLeft());
