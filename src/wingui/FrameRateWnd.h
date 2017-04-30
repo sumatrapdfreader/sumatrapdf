@@ -12,10 +12,10 @@ struct FrameRateWnd {
     int frameRate;
 };
 
-FrameRateWnd *AllocFrameRateWnd(HWND hwndAssociatedWith);
-bool CreateFrameRateWnd(FrameRateWnd *);
-void DeleteFrameRateWnd(FrameRateWnd *);
-void ShowFrameRate(FrameRateWnd *, int frameRate);
-void ShowFrameRateDur(FrameRateWnd *, double durMs);
+FrameRateWnd* AllocFrameRateWnd(HWND hwndAssociatedWith);
+bool CreateFrameRateWnd(FrameRateWnd*);
+void DeleteFrameRateWnd(FrameRateWnd*);
+void ShowFrameRate(FrameRateWnd*, int frameRate);
+void ShowFrameRateDur(FrameRateWnd*, double durMs);
 
 int FrameRateFromDuration(double durMs);

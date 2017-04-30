@@ -1,7 +1,6 @@
 struct EditCtrl;
 
-typedef std::function<LRESULT(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& discardMsg)>
-    MsgFilter;
+typedef std::function<LRESULT(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& discardMsg)> MsgFilter;
 typedef std::function<void(EditCtrl*)> EditCtrlCb;
 
 // pass to SetColor() function to indicate this color should not change

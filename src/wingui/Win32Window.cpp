@@ -11,13 +11,13 @@ static ATOM wndClass = 0;
 
 static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     if (WM_CREATE == msg) {
-        CREATESTRUCT *cs = (CREATESTRUCT *)lp;
-        Win32Window *w = (Win32Window *)cs->lpCreateParams;
+        CREATESTRUCT* cs = (CREATESTRUCT*)lp;
+        Win32Window* w = (Win32Window*)cs->lpCreateParams;
         SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)w);
         return DefWindowProc(hwnd, msg, wp, lp);
     }
 
-    Win32Window *w = (Win32Window *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+    Win32Window* w = (Win32Window*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 
     // don't allow intercepting those messages
     if (WM_DESTROY == msg) {
@@ -62,12 +62,12 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     return DefWindowProc(hwnd, msg, wp, lp);
 }
 
-static ATOM RegisterClass(Win32Window *w) {
+static ATOM RegisterClass(Win32Window* w) {
     if (wndClass != 0) {
         return wndClass;
     }
 
-    WNDCLASSEXW wcex = { 0 };
+    WNDCLASSEXW wcex = {0};
     auto hInst = GetInstance();
     wcex.cbSize = sizeof(WNDCLASSEXW);
 
@@ -87,7 +87,7 @@ static ATOM RegisterClass(Win32Window *w) {
     return wndClass;
 }
 
-void InitWin32Window(Win32Window *w, HWND parent, RECT *initialPosition) {
+void InitWin32Window(Win32Window* w, HWND parent, RECT* initialPosition) {
     w->parent = parent;
     if (initialPosition) {
         w->initialPos = *initialPosition;
@@ -100,13 +100,13 @@ void InitWin32Window(Win32Window *w, HWND parent, RECT *initialPosition) {
     }
 }
 
-Win32Window *AllocWin32Window(HWND parent, RECT *initialPosition) {
+Win32Window* AllocWin32Window(HWND parent, RECT* initialPosition) {
     auto w = AllocStruct<Win32Window>();
     InitWin32Window(w, parent, initialPosition);
     return w;
 }
 
-bool CreateWin32Window(Win32Window *w, const WCHAR *title) {
+bool CreateWin32Window(Win32Window* w, const WCHAR* title) {
     RegisterClass(w);
 
     RECT rc = w->initialPos;
@@ -120,13 +120,13 @@ bool CreateWin32Window(Win32Window *w, const WCHAR *title) {
         dx = CW_USEDEFAULT;
         dy = CW_USEDEFAULT;
     }
-    w->hwnd = CreateWindowExW(w->dwExStyle, WIN_CLASS, title, w->dwStyle, x, y, dx, dy, w->parent,
-                              nullptr, GetInstance(), (void *)w);
+    w->hwnd = CreateWindowExW(w->dwExStyle, WIN_CLASS, title, w->dwStyle, x, y, dx, dy, w->parent, nullptr,
+                              GetInstance(), (void*)w);
 
     return w->hwnd != nullptr;
 }
 
-void DeleteWin32Window(Win32Window *w) {
+void DeleteWin32Window(Win32Window* w) {
     if (!w)
         return;
 

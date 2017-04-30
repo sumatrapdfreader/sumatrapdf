@@ -17,7 +17,7 @@ $files = "src\Colors.*",
   "src\Tests*",
   "src\mui\SvgPath.*",
   "src\utils\FileWatcher.*",
-  "src\wingui\TabsCtrl.*"
+  "src\wingui\*"
 
 foreach ($file in $files) {
   $files2 = Get-ChildItem $file

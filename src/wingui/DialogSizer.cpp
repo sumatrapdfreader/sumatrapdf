@@ -10,18 +10,17 @@ static LRESULT CALLBACK SizingProc(HWND, UINT, WPARAM, LPARAM);
 
 class DialogData {
   public:
-    DialogData(HWND hwnd, const DialogSizerSizingItem *psd, bool bShowSizingGrip)
+    DialogData(HWND hwnd, const DialogSizerSizingItem* psd, bool bShowSizingGrip)
         : hwnd(hwnd), bMaximised(false), bShowSizingGrip(bShowSizingGrip) {
         // Given an array of dialog item structures determine how many of them there
         // are by scanning along them until we reach the last.
         nItemCount = 0;
-        for (const DialogSizerSizingItem *psi = psd; psi->uSizeInfo != 0xFFFFFFFF; psi++)
+        for (const DialogSizerSizingItem* psi = psd; psi->uSizeInfo != 0xFFFFFFFF; psi++)
             nItemCount++;
 
         // Copy all of the user controls etc. for later, this way the user can quite happily
         // let the structure go out of scope.
-        this->psd = (DialogSizerSizingItem *)memdup((void *)psd,
-                                                    nItemCount * sizeof(DialogSizerSizingItem));
+        this->psd = (DialogSizerSizingItem*)memdup((void*)psd, nItemCount * sizeof(DialogSizerSizingItem));
         if (!this->psd)
             nItemCount = 0;
 
@@ -36,7 +35,7 @@ class DialogData {
 
         // Because we have successfully created our data we need to subclass the control now, if not
         // we could end up in a situation where our data was never freed.
-        SetProp(hwnd, DIALOG_DATA_PROPERTY, (HANDLE) this);
+        SetProp(hwnd, DIALOG_DATA_PROPERTY, (HANDLE)this);
         wndProc = (WNDPROC)SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)SizingProc);
     }
     ~DialogData() {
@@ -47,7 +46,7 @@ class DialogData {
 
     // The number of items contained in the psd member.
     int nItemCount;
-    DialogSizerSizingItem *psd;
+    DialogSizerSizingItem* psd;
 
     // We need the smallest to respond to the WM_GETMINMAXINFO message
     POINT ptSmallest;
@@ -98,8 +97,8 @@ class DialogData {
 // WM_SIZE messages.
 //
 // Returns non-zero for success and zero if it fails
-extern "C" BOOL DialogSizer_Set(HWND hwnd, const DialogSizerSizingItem *psd, BOOL bShowSizingGrip) {
-    DialogData *pdd = (DialogData *)GetProp(hwnd, DIALOG_DATA_PROPERTY);
+extern "C" BOOL DialogSizer_Set(HWND hwnd, const DialogSizerSizingItem* psd, BOOL bShowSizingGrip) {
+    DialogData* pdd = (DialogData*)GetProp(hwnd, DIALOG_DATA_PROPERTY);
     // Overwrite previous settings (if there are any)
     delete pdd;
 
@@ -112,13 +111,13 @@ extern "C" BOOL DialogSizer_Set(HWND hwnd, const DialogSizerSizingItem *psd, BOO
     return TRUE;
 }
 
-void UpdateWindowSize(DialogData *pdd, const int cx, const int cy, HWND hwnd) {
+void UpdateWindowSize(DialogData* pdd, const int cx, const int cy, HWND hwnd) {
     const int nDeltaX = cx - pdd->sizeClient.dx;
     const int nDeltaY = cy - pdd->sizeClient.dy;
 
     HDWP hdwp = BeginDeferWindowPos(pdd->nItemCount);
     for (int i = 0; i < pdd->nItemCount; i++) {
-        const DialogSizerSizingItem *psd = pdd->psd + i;
+        const DialogSizerSizingItem* psd = pdd->psd + i;
         HWND hwndChild = GetDlgItem(hwnd, psd->uControlID);
         RectI rect = MapRectToWindow(WindowRect(hwndChild), HWND_DESKTOP, hwnd);
 
@@ -135,8 +134,7 @@ void UpdateWindowSize(DialogData *pdd, const int cx, const int cy, HWND hwnd) {
         if (psd->uSizeInfo & DS_SizeY)
             rect.dy += nDeltaY;
 
-        DeferWindowPos(hdwp, hwndChild, nullptr, rect.x, rect.y, rect.dx, rect.dy,
-                       SWP_NOACTIVATE | SWP_NOZORDER);
+        DeferWindowPos(hdwp, hwndChild, nullptr, rect.x, rect.y, rect.dx, rect.dy, SWP_NOACTIVATE | SWP_NOZORDER);
     }
     EndDeferWindowPos(hdwp);
 
@@ -148,7 +146,7 @@ void UpdateWindowSize(DialogData *pdd, const int cx, const int cy, HWND hwnd) {
 // Actual window procedure that will handle saving window size/position and moving
 // the controls whilst the window sizes.
 static LRESULT CALLBACK SizingProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-    DialogData *pdd = (DialogData *)GetProp(hwnd, DIALOG_DATA_PROPERTY);
+    DialogData* pdd = (DialogData*)GetProp(hwnd, DIALOG_DATA_PROPERTY);
     if (!pdd)
         return DefWindowProc(hwnd, msg, wParam, lParam);
 
@@ -168,7 +166,7 @@ static LRESULT CALLBACK SizingProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 
         case WM_NCHITTEST: {
             // If the gripper is enabled then perform a simple hit test on our gripper area.
-            POINT pt = { LOWORD(lParam), HIWORD(lParam) };
+            POINT pt = {LOWORD(lParam), HIWORD(lParam)};
             ScreenToClient(hwnd, &pt);
             if (pdd->InsideGripper(PointI(pt.x, pt.y)))
                 return HTBOTTOMRIGHT;

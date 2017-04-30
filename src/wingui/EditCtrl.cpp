@@ -12,10 +12,10 @@
 //   etc., http://www.catch22.net/tuts/insert-buttons-edit-control
 // - include value we remember in WM_NCCALCSIZE in GetIdealSize()
 
-static LRESULT CALLBACK EditParentProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
-                                       UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
+static LRESULT CALLBACK EditParentProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass,
+                                       DWORD_PTR dwRefData) {
     UNUSED(uIdSubclass);
-    EditCtrl *w = (EditCtrl *)dwRefData;
+    EditCtrl* w = (EditCtrl*)dwRefData;
     CrashIf(GetParent(w->hwnd) != (HWND)lp);
     if ((WM_CTLCOLOREDIT == msg) && (w->bgBrush != nullptr)) {
         HDC hdc = (HDC)wp;
@@ -34,10 +34,9 @@ static LRESULT CALLBACK EditParentProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
     return DefSubclassProc(hwnd, msg, wp, lp);
 }
 
-static LRESULT CALLBACK
-EditProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
+static LRESULT CALLBACK EditProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
     UNUSED(uIdSubclass);
-    EditCtrl *w = (EditCtrl *)dwRefData;
+    EditCtrl* w = (EditCtrl*)dwRefData;
     CrashIf(w->hwnd != (HWND)lp);
 
     if (w->preFilter) {
@@ -58,7 +57,7 @@ EditProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass, DWORD_
     // subclass the window yet)
     // currently, we force it with SetWindowPos(... SMP_FRAMECHANGED)
     if (WM_NCCALCSIZE == msg) {
-        NCCALCSIZE_PARAMS *p = (NCCALCSIZE_PARAMS *)lp;
+        NCCALCSIZE_PARAMS* p = (NCCALCSIZE_PARAMS*)lp;
         RECT orig = p->rgrc[0];
         LRESULT res = DefSubclassProc(hwnd, msg, wp, lp);
         RECT curr = p->rgrc[0];
@@ -70,9 +69,11 @@ EditProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass, DWORD_
     return DefSubclassProc(hwnd, msg, wp, lp);
 }
 
-void SetFont(EditCtrl *w, HFONT f) { SetWindowFont(w->hwnd, f, TRUE); }
+void SetFont(EditCtrl* w, HFONT f) {
+    SetWindowFont(w->hwnd, f, TRUE);
+}
 
-void SetColors(EditCtrl *w, COLORREF txtCol, COLORREF bgCol) {
+void SetColors(EditCtrl* w, COLORREF txtCol, COLORREF bgCol) {
     DeleteObject(w->bgBrush);
     w->bgBrush = nullptr;
     if (txtCol != NO_CHANGE) {
@@ -87,23 +88,27 @@ void SetColors(EditCtrl *w, COLORREF txtCol, COLORREF bgCol) {
     InvalidateRect(w->hwnd, nullptr, FALSE);
 }
 
-void SetText(EditCtrl *w, const WCHAR *s) { SetWindowTextW(w->hwnd, s); }
+void SetText(EditCtrl* w, const WCHAR* s) {
+    SetWindowTextW(w->hwnd, s);
+}
 
-bool SetCueText(EditCtrl *w, const WCHAR *s) {
+bool SetCueText(EditCtrl* w, const WCHAR* s) {
     CrashIf(!w->hwnd);
     return Edit_SetCueBannerText(w->hwnd, s) == TRUE;
 }
 
 // caller must free() the result
-WCHAR *GetTextW(EditCtrl *w) { return win::GetText(w->hwnd); }
+WCHAR* GetTextW(EditCtrl* w) {
+    return win::GetText(w->hwnd);
+}
 
 // caller must free() the result
-char *GetText(EditCtrl *w) {
+char* GetText(EditCtrl* w) {
     ScopedMem<WCHAR> su(GetTextW(w));
     return str::conv::ToUtf8(su.Get());
 }
 
-EditCtrl *AllocEditCtrl(HWND parent, RECT *initialPosition) {
+EditCtrl* AllocEditCtrl(HWND parent, RECT* initialPosition) {
     auto w = AllocStruct<EditCtrl>();
     w->parent = parent;
     if (initialPosition) {
@@ -122,15 +127,15 @@ EditCtrl *AllocEditCtrl(HWND parent, RECT *initialPosition) {
     return w;
 }
 
-bool CreateEditCtrl(EditCtrl *w) {
+bool CreateEditCtrl(EditCtrl* w) {
     // Note: has to remember this here because when I GetWindowStyle() later on,
     // WS_BORDER is not set, which is a mystery, because it is being drawn.
     // also, WS_BORDER seems to be painted in client areay
     w->hasBorder = bit::IsMaskSet<DWORD>(w->dwStyle, WS_BORDER);
 
     RECT rc = w->initialPos;
-    w->hwnd = CreateWindowExW(w->dwExStyle, WC_EDIT, L"", w->dwStyle, rc.left, rc.top, RectDx(rc),
-                              RectDy(rc), w->parent, nullptr, GetModuleHandleW(nullptr), nullptr);
+    w->hwnd = CreateWindowExW(w->dwExStyle, WC_EDIT, L"", w->dwStyle, rc.left, rc.top, RectDx(rc), RectDy(rc),
+                              w->parent, nullptr, GetModuleHandleW(nullptr), nullptr);
 
     if (!w->hwnd) {
         return false;
@@ -141,7 +146,7 @@ bool CreateEditCtrl(EditCtrl *w) {
     return true;
 }
 
-void DeleteEditCtrl(EditCtrl *w) {
+void DeleteEditCtrl(EditCtrl* w) {
     if (!w)
         return;
 
@@ -149,11 +154,10 @@ void DeleteEditCtrl(EditCtrl *w) {
     free(w);
 }
 
-SIZE GetIdealSize(EditCtrl *w) {
+SIZE GetIdealSize(EditCtrl* w) {
     // force sending WM_NCCALCSIZE
-    SetWindowPos(w->hwnd, nullptr, 0, 0, 0, 0,
-                 SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOMOVE);
-    WCHAR *txt = GetTextW(w);
+    SetWindowPos(w->hwnd, nullptr, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOMOVE);
+    WCHAR* txt = GetTextW(w);
     if (str::Len(txt) == 0) {
         free(txt);
         txt = str::Dup(L"Sample");
@@ -172,4 +176,6 @@ SIZE GetIdealSize(EditCtrl *w) {
     return res;
 }
 
-void SetPos(EditCtrl *w, RECT *r) { MoveWindow(w->hwnd, r); }
+void SetPos(EditCtrl* w, RECT* r) {
+    MoveWindow(w->hwnd, r);
+}

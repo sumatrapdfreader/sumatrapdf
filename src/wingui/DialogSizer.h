@@ -31,21 +31,18 @@ Purpose:	Main include file for sizeable dialogs API
 #define DS_SizeX 4
 #define DS_SizeY 8
 
-typedef struct DialogSizerSizingItem //	sdi
-    {
+typedef struct DialogSizerSizingItem {
     UINT uControlID;
     UINT uSizeInfo;
 } DialogSizerSizingItem;
 
 #define DIALOG_SIZER_START(name) DialogSizerSizingItem name[] = {
-#define DIALOG_SIZER_ENTRY(controlID, flags)                                                       \
-    { controlID, flags }                                                                           \
-    ,
-#define DIALOG_SIZER_END()                                                                         \
-    { 0xFFFFFFFF, 0xFFFFFFFF }                                                                     \
-    }                                                                                              \
+#define DIALOG_SIZER_ENTRY(controlID, flags) {controlID, flags},
+#define DIALOG_SIZER_END()     \
+    { 0xFFFFFFFF, 0xFFFFFFFF } \
+    }                          \
     ;
 
 // SumatraPDF: removed the fourth argument and fixed the comment:
 //	Set a window as sizeable, passing the sizing data for each control.
-extern "C" BOOL DialogSizer_Set(HWND hwnd, const DialogSizerSizingItem *psd, BOOL bShowSizingGrip);
+extern "C" BOOL DialogSizer_Set(HWND hwnd, const DialogSizerSizingItem* psd, BOOL bShowSizingGrip);

@@ -11,12 +11,12 @@ enum SplitterType {
 // called when user drags the splitter ('done' is false) and when drag is finished ('done' is
 // true). the owner can constrain splitter by using current cursor
 // position and returning false if it's not allowed to go there
-typedef bool (*SplitterCallback)(void *ctx, bool done);
+typedef bool (*SplitterCallback)(void* ctx, bool done);
 
 void RegisterSplitterWndClass();
-SplitterWnd *CreateSplitter(HWND parent, SplitterType type, void *ctx, SplitterCallback cb);
-HWND GetHwnd(SplitterWnd *);
-void SetBgCol(SplitterWnd *, COLORREF);
+SplitterWnd* CreateSplitter(HWND parent, SplitterType type, void* ctx, SplitterCallback cb);
+HWND GetHwnd(SplitterWnd*);
+void SetBgCol(SplitterWnd*, COLORREF);
 
 // call at the end of program
 void DeleteSplitterBrush();
@@ -25,4 +25,4 @@ void DeleteSplitterBrush();
 // otherwise we'll draw an indicator of where the splitter will be
 // at the end of resize and the owner only re-layouts when callback is called
 // with 'done' set to true
-void SetSplitterLive(SplitterWnd *, bool live);
+void SetSplitterLive(SplitterWnd*, bool live);
