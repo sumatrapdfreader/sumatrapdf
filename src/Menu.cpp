@@ -1048,9 +1048,9 @@ HMENU BuildMenu(WindowInfo* win) {
         AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("F&avorites"));
     }
 
+    m = BuildMenuFromMenuDef(menuDefSettings, dimof(menuDefSettings), CreateMenu(), filter);
 #if defined(ENABLE_THEME)
     // Build the themes sub-menu of the settings menu
-    m = BuildMenuFromMenuDef(menuDefSettings, dimof(menuDefSettings), CreateMenu(), filter);
     MenuDef menuDefTheme[THEME_COUNT];
     static_assert(IDM_CHANGE_THEME_LAST - IDM_CHANGE_THEME_FIRST + 1 >= THEME_COUNT,
                   "Too many themes. Either remove some or update IDM_CHANGE_THEME_LAST");
