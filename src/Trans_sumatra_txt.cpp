@@ -4596,7 +4596,7 @@ const char * gTranslations_fr =
   "&R\303\251duire les pages \303\240 la zone d'impression (si n\303\251cessaire)\0"\
   "Une &seule page\tCtrl+6\0"\
   "&Ignorer cette version\0"\
-  "\0"\
+  "Th\303\250me\0"\
   "&Utiliser les dimensions d'origine\0"\
   "&Affichage\0"\
   "F&en\303\252tre\0"\
@@ -4649,8 +4649,8 @@ const char * gTranslations_fr =
   "Fichier actuel\0"\
   "Position du curseur :\0"\
   "&Zoom personnalis\303\251...\tCtrl+Y\0"\
-  "\0"\
-  "\0"\
+  "Sombre\0"\
+  "Plus sombre\0"\
   "Mise en &page par d\303\251faut\302\240:\0"\
   "&Zoom par d\303\251faut\302\240:\0"\
   "Le lecteur de PDF ne peut \303\252tre chang\303\251 en mode portable\0"\
@@ -4700,7 +4700,7 @@ const char * gTranslations_fr =
   "Remarque\302\240: utilisez la touche F3 pour trouver de nouveau\0"\
   "Fichiers-images (*.%s)\0"\
   "Ko\0"\
-  "\0"\
+  "Clair\0"\
   "Mo\0"\
   "Faire de SumatraPDF l\342\200\231application par d\303\251faut pour les fichiers PDF\302\240?\0"\
   "D\303\251finir SumatraPDF comme lecteur PDF par d\303\251faut\0"\
@@ -10392,7 +10392,7 @@ const char * gTranslations_br =
   "Reduzir p\303\241gina&s \303\240 \303\241rea de impress\303\243o (se necess\303\241rio)\0"\
   "P\303\241gina \303\272nica\tCtrl+6\0"\
   "Ignorar esta vers\303\243o\0"\
-  "\0"\
+  "&Tema\0"\
   "&Usar tamanhos de p\303\241gina originais\0"\
   "&Ver\0"\
   "&Janela\0"\
@@ -10445,8 +10445,8 @@ const char * gTranslations_br =
   "Arquivo atual\0"\
   "Posi\303\247\303\243o do cursor:\0"\
   "&Zoom personalizado...\tCtrl+Y\0"\
-  "\0"\
-  "\0"\
+  "Escuro\0"\
+  "Muito escuro\0"\
   "&Visualiza\303\247\303\243o Padr\303\243o\0"\
   "&Zoom Padr\303\243o\0"\
   "N\303\243o \303\251 poss\303\255vel alterar o leitor PDF padr\303\243o no modo port\303\241til\0"\
@@ -10496,7 +10496,7 @@ const char * gTranslations_br =
   "Dica: tecle F3 para achar a pr\303\263xima ocorr\303\252ncia\0"\
   "Arquivos de imagem (*.%s)\0"\
   "\0"\
-  "\0"\
+  "Claro\0"\
   "\0"\
   "Fazer do SumatraPDF o programa padr\303\243o para arquivos PDF?\0"\
   "Tornar o SumatraPDF o leitor PDF padr\303\243o\0"\

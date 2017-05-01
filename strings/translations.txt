@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-d75d596be114a617fe9bfb693a31d55c7c4d5a3f
+ce6be0aad1c5270ff3142dfa301625f587e2987b
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -770,7 +770,7 @@ am:&Ֆայլ
 ar:ملف&
 az:&Fayl
 bg:&Файл
-bn:&সঞ্চিকা
+bn:&ফাইল
 br:&Arquivo
 bs:&Fajl
 by:Файл
@@ -2914,6 +2914,9 @@ tw:略過此版本(&S)
 uk:Пропустити цю версію.
 uz:&Ushbu versiyani o'tkazib yuborish
 vn:Bỏ qua phiên bản này.
+:&Theme
+br:&Tema
+fr:Thème
 :&Use original page sizes
 am:&Օգտագործել էջերի իրական չափը
 ar:&استخدام الحجم الأصلي للصفحة
@@ -4961,6 +4964,7 @@ am:Հնարավոր չէ որոնել։ Ստուգեք հրամանների տո
 ar:لا يمكن بدء تشغيل الأمر بحث عكسي. الرجاء التحقق من سطر الأوامر في الإعدادات
 az:Tərs axtarış komandasını icra etmək mümkün deyil. Komanda sətrinin parametrlərini yoxlayın.
 bg:Обратното търсене не може да започне. Моля проверете параметрите в настройките.
+bn:বিপরীত অনুসন্ধান কমান্ড শুরু করা যাবে না। সেটিংস এ কমান্ড লাইন চেক করুন.
 br:Não é possível acionar a pesquisa inversa. Verifique a linha de comando nas preferências.
 bs:Ne mogu pokrenuti komandu pretraživanja unazad. Molimo da provjerite komandnu liniju u postavkama.
 ca-xv:No es pot iniciar l'ordre de cerca inversa. Comproveu la línia de comandes a les preferencies.
@@ -5677,6 +5681,7 @@ am:Պատճենել &հղումը
 ar:نسخ &رابط العنوان
 az:Keçidin &ünvanını kopyala
 bg:Копиране на интернет &адреса
+bn:কপি & লিঙ্ক অ্যাড্রেস 
 br:Copiar Ata&lho
 bs:Kopiraj adresu &linka
 ca-xv:Copia l'adreça de l'enllaç
@@ -6961,6 +6966,12 @@ tw:自訂縮放(&Z)...\tCtrl+Y
 uk:Вказати масштаб...\tCtrl+Y
 uz:&Miqyosni ko'rsatish...\tCtrl+Y
 vn:Thu phóng &tuỳ ý...\tCtrl+Y
+:Dark
+br:Escuro
+fr:Sombre
+:Darker
+br:Muito escuro
+fr:Plus sombre
 :Default &Layout:
 am:Ծրագրային &դասավորություն.
 ar:التخطيط الافتراضي&
@@ -10814,6 +10825,9 @@ tw:讓 Windows 顯示 PDF 文件的預覽(&P)
 uk:Дозволити Windows здійснювати попередній перегляд для PDF
 uz:Windows yordamida PDF hujjatlarini oldindan &ko'rish
 vn:Cho phép Windows hiển thị hình ảnh &xem trước của các tài liệu PDF
+:Light
+br:Claro
+fr:Clair
 :MB
 af:MB
 am:ՄԲ
@@ -16924,6 +16938,7 @@ am:Օգտ. SumatraPDF-ը որպես &PDF-ի հիմնական ծրագիր
 ar: المحمولة باسم& قارئ مستندات محمولة افتراضي Sumatra استخدم مستندات
 az:SumatraPDF &standart PDF oxuyucusu kimi istifadə olunsun
 bg:Използване на SumatraPDF като основен четец на PDF файлове
+bn:ডিফল্ট পিডিএফ রিডার হিসাবে সুমাত্রা পিডিএফ ব্যবহার করুন।
 br:Usar o SumatraPDF como o leitor PDF pa&drão
 bs:Koristi SumatraPDF kao &izvorni PDF čitač
 ca-xv:Usa el SumatraPDF com a visor PDF &predeterminat
