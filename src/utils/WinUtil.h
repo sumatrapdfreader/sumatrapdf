@@ -56,6 +56,7 @@ WCHAR *GetSpecialFolder(int csidl, bool createIfMissing = false);
 void DisableDataExecution();
 void RedirectIOToConsole();
 WCHAR *GetExePath();
+WCHAR *GetExeDir();
 int FileTimeDiffInSecs(const FILETIME &ft1, const FILETIME &ft2);
 
 WCHAR *ResolveLnk(const WCHAR *path);

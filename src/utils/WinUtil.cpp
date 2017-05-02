@@ -341,6 +341,14 @@ WCHAR *GetExePath() {
     return path::Normalize(buf);
 }
 
+/* Return directory where this executable is located.
+Caller needs to free()
+*/
+WCHAR *GetExeDir() {
+    std::unique_ptr<WCHAR> path(GetExePath());
+    return path::GetDir(path.get());
+}
+
 static ULARGE_INTEGER FileTimeToLargeInteger(const FILETIME &ft) {
     ULARGE_INTEGER res;
     res.LowPart = ft.dwLowDateTime;

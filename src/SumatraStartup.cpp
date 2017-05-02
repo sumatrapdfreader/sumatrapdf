@@ -783,6 +783,14 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     // call this once it's clear whether Perm_SavePreferences has been granted
     prefs::RegisterForFileChanges();
 
+    // when launched by double-clicking on a file name, current directory of the
+    // process is set to directory where a file is. This prevents deleting directory
+    // where the file is while Sumatra is running, even if the file is close
+    // We combat that by changing current directory to where our .exe is
+    auto currDir = GetExeDir();
+    SetCurrentDirectoryW(currDir);
+    free(currDir);
+
     retCode = RunMessageLoop();
     SafeCloseHandle(&hMutex);
     CleanUpThumbnailCache(gFileHistory);
