@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-ce6be0aad1c5270ff3142dfa301625f587e2987b
+d9c33c0a914802193e277f0a3625351677c23124
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -2915,8 +2915,14 @@ uk:Пропустити цю версію.
 uz:&Ushbu versiyani o'tkazib yuborish
 vn:Bỏ qua phiên bản này.
 :&Theme
+am:&Ոճը
 br:&Tema
 fr:Thème
+he:ערכת נושא
+nl:&Uiterlijk
+sp-rs:Tema
+sr-rs:Тема
+sv:&Tema
 :&Use original page sizes
 am:&Օգտագործել էջերի իրական չափը
 ar:&استخدام الحجم الأصلي للصفحة
@@ -6967,11 +6973,23 @@ uk:Вказати масштаб...\tCtrl+Y
 uz:&Miqyosni ko'rsatish...\tCtrl+Y
 vn:Thu phóng &tuỳ ý...\tCtrl+Y
 :Dark
+am:Մուգ
 br:Escuro
 fr:Sombre
+he:כהה
+nl:Donker
+sp-rs:Tamno
+sr-rs:Тамно
+sv:Mörk
 :Darker
+am:Շատ մուգ
 br:Muito escuro
 fr:Plus sombre
+he:כהה מאוד
+nl:Zwart
+sp-rs:Tamnije
+sr-rs:Тамније
+sv:Mörkare
 :Default &Layout:
 am:Ծրագրային &դասավորություն.
 ar:التخطيط الافتراضي&
@@ -10826,8 +10844,14 @@ uk:Дозволити Windows здійснювати попередній пер
 uz:Windows yordamida PDF hujjatlarini oldindan &ko'rish
 vn:Cho phép Windows hiển thị hình ảnh &xem trước của các tài liệu PDF
 :Light
+am:Լուսավոր
 br:Claro
 fr:Clair
+he:בהירה
+nl:Wit
+sp-rs:Svetlo
+sr-rs:Светло
+sv:Ljus
 :MB
 af:MB
 am:ՄԲ
