@@ -5,12 +5,12 @@
 #define FRAME_CLASS_NAME        L"SUMATRA_PDF_FRAME"
 #define SUMATRA_WINDOW_TITLE    L"SumatraPDF"
 
-#define WEBSITE_MAIN_URL         L"http://www.sumatrapdfreader.org/"
-#define WEBSITE_MANUAL_URL       L"http://www.sumatrapdfreader.org/manual.html"
-#define WEBSITE_TRANSLATIONS_URL L"https://github.com/sumatrapdfreader/sumatrapdf/wiki/Contribute-translation"
+#define WEBSITE_MAIN_URL         L"https://www.sumatrapdfreader.org/"
+#define WEBSITE_MANUAL_URL       L"https://www.sumatrapdfreader.org/manual.html"
+#define WEBSITE_TRANSLATIONS_URL L"https://www.notion.so/How-to-contribute-translation-da023536e9774982b09937c8ed8cf6c1"
 
 #ifndef CRASH_REPORT_URL
-#define CRASH_REPORT_URL         L"http://www.sumatrapdfreader.org/develop.html"
+#define CRASH_REPORT_URL         L"https://www.notion.so/Join-the-project-as-a-developer-be6ef085e89f49038c2b671c0743b690"
 #endif
 
 // scrolls half a page down/up (needed for Shift+Up/Down)

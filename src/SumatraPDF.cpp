@@ -155,9 +155,9 @@ void SetCurrentLang(const char *langCode)
 
 #ifndef SVN_UPDATE_LINK
 #ifdef SVN_PRE_RELEASE_VER
-#define SVN_UPDATE_LINK         L"http://www.sumatrapdfreader.org/prerelease.html"
+#define SVN_UPDATE_LINK         L"https://www.sumatrapdfreader.org/prerelease.html"
 #else
-#define SVN_UPDATE_LINK         L"http://www.sumatrapdfreader.org/download-free-pdf-viewer.html"
+#define SVN_UPDATE_LINK         L"https://www.sumatrapdfreader.org/download-free-pdf-viewer.html"
 #endif
 #endif
 
