@@ -1075,6 +1075,17 @@ int APIENTRY WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/,
     int ret = 1;
 
     SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
+
+    // Change current directory to prevent dll hijacking.
+    // LoadLibrary first loads from current directory which could be
+    // browser's download directory, which is an easy target
+    // for attackers to put their own fake dlls).
+    // For this to work we also have to /delayload all libraries otherwise
+    // they will be loaded even before WinMain executes.
+    auto currDir = GetSystem32Dir();
+    SetCurrentDirectoryW(currDir);
+    free(currDir);
+
     InitDynCalls();
 
     ScopedCom com;

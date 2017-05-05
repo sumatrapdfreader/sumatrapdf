@@ -57,6 +57,7 @@ void DisableDataExecution();
 void RedirectIOToConsole();
 WCHAR *GetExePath();
 WCHAR *GetExeDir();
+WCHAR *GetSystem32Dir();
 int FileTimeDiffInSecs(const FILETIME &ft1, const FILETIME &ft2);
 
 WCHAR *ResolveLnk(const WCHAR *path);

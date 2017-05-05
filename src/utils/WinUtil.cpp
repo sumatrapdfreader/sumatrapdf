@@ -349,6 +349,20 @@ WCHAR *GetExeDir() {
     return path::GetDir(path.get());
 }
 
+/*
+Returns ${SystemRoot}\system32 directory.
+Caller has to free() the result.
+*/
+WCHAR *GetSystem32Dir() {
+    WCHAR buf[1024] = { 0 };
+    DWORD n = GetEnvironmentVariableW(L"SystemRoot", &buf[0], dimof(buf));
+    if ((n == 0) || (n >= dimof(buf))) {
+        CrashIf(false);
+        return str::Dup(L"c:\\windows\\system32");
+    }
+    return path::Join(buf, L"system32");
+}
+
 static ULARGE_INTEGER FileTimeToLargeInteger(const FILETIME &ft) {
     ULARGE_INTEGER res;
     res.LowPart = ft.dwLowDateTime;
