@@ -565,8 +565,7 @@ workspace "SumatraPDF"
     includedirs { "src", "src/utils", "ext/zlib", "ext/unarr", "ext/lzma/C" }
     links { "utils", "zlib", "unarrlib" }
     links {
-      "comctl32", "gdiplus", "msimg32", "shlwapi", "urlmon",
-       "version", "wininet"
+      "comctl32", "gdiplus", "shlwapi", "version", "wininet"
     }
 
 
@@ -583,9 +582,10 @@ workspace "SumatraPDF"
     installer_files()
     includedirs { "src", "src/utils", "ext/zlib", "ext/unarr", "ext/lzma/C", "ext/bzip2" }
     links {
-      "comctl32", "gdiplus", "msimg32", "shlwapi", "urlmon",
-      "version", "wininet"
+      "comctl32", "delayimp", "gdiplus", "shlwapi", "version", "wininet"
     }
+    -- this is to prevent dll hijacking
+    linkoptions { "/DELAYLOAD:comctl32.dll /DELAYLOAD:gdiplus.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll"}
 
 
   project "Installer"
@@ -601,11 +601,10 @@ workspace "SumatraPDF"
     installer_files()
     includedirs { "src", "src/utils", "ext/zlib", "ext/unarr", "ext/lzma/C", "ext/bzip2" }
     links {
-      "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",
-      "version", "wininet"
+      "comctl32", "delayimp", "gdiplus", "shlwapi", "version", "wininet"
     }
     -- this is to prevent dll hijacking
-    linkoptions { "/DELAYLOAD:comctl32.dll /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll"}
+    linkoptions { "/DELAYLOAD:comctl32.dll /DELAYLOAD:gdiplus.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll"}
 
     dependson { "SumatraPDF-no-MUPDF", "PdfFilter", "PdfPreview", "Uninstaller" }
     prebuildcommands { "cd %{cfg.targetdir} & ..\\bin\\MakeLZSA.exe InstallerData.dat SumatraPDF-no-MUPDF.exe:SumatraPDF.exe libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll Uninstaller.exe:uninstall.exe ..\\mupdf\\resources\\fonts\\droid\\DroidSansFallback.ttf:DroidSansFallback.ttf"  }
