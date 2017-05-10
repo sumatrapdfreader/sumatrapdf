@@ -705,8 +705,8 @@ static short GetPaperSourceByName(const WCHAR* printerName, const WCHAR* binName
     // try to determine the paper bin number by name
     ScopedMem<WORD> bins(AllocArray<WORD>(count));
     ScopedMem<WCHAR> binNames(AllocArray<WCHAR>(24 * count + 1));
-    DeviceCapabilities(printerName, nullptr, DC_BINS, (WCHAR*)bins.Get(), nullptr);
-    DeviceCapabilities(printerName, nullptr, DC_BINNAMES, binNames.Get(), nullptr);
+    DeviceCapabilitiesW(printerName, nullptr, DC_BINS, (WCHAR*)bins.Get(), nullptr);
+    DeviceCapabilitiesW(printerName, nullptr, DC_BINNAMES, binNames.Get(), nullptr);
     for (DWORD i = 0; i < count; i++) {
         const WCHAR* currName = binNames.Get() + 24 * i;
         if (str::EqIS(currName, binName)) {

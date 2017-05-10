@@ -68,6 +68,11 @@ bool EqI(const WCHAR *s1, const WCHAR *s2)
 // compares two strings ignoring case and whitespace
 bool EqIS(const char *s1, const char *s2)
 {
+    if (s1 == s2)
+        return true;
+    if (!s1 || !s2)
+        return false;
+
     while (*s1 && *s2) {
         // skip whitespace
         for (; IsWs(*s1); s1++);
@@ -84,6 +89,11 @@ bool EqIS(const char *s1, const char *s2)
 // compares two strings ignoring case and whitespace
 bool EqIS(const WCHAR *s1, const WCHAR *s2)
 {
+    if (s1 == s2)
+        return true;
+    if (!s1 || !s2)
+        return false;
+
     while (*s1 && *s2) {
         // skip whitespace
         for (; IsWs(*s1); s1++);
