@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-d9c33c0a914802193e277f0a3625351677c23124
+ae84c163498664b0e54b4de23b3bffd4a7b908df
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -45,7 +45,7 @@ mk:&За SumatraPDF...
 ml:പറ്റി
 mm:အကြောင်း
 my:&Mengenai
-ne:SumatraPDF &बारेमा
+ne:&बारेमा
 nl:&Over
 nn:&Om
 no:&Om
@@ -1135,7 +1135,7 @@ lv:&Doties uz lappusi:
 mk:&Појди на страница:
 ml:താളിലേക്ക് പോകുക
 my:&Pergi ke halaman:
-ne:&पृष्ठमा जानुहोस्
+ne:&पृष्ठमा जानुहोस्:
 nl:&Ga naar pagina:
 nn:&Hopp til side:
 no:&Gå til side:
@@ -1334,7 +1334,7 @@ lt:&Mastelis
 lv:&Palielinājums:
 mk:&Зголемување
 my:&Pembesaran:
-ne:&आवर्धन:
+ne:&बृहत्तरकरण:
 nl:&Vergroting:
 nn:&Forstørring:
 no:&Forstørrelse:
@@ -1594,7 +1594,7 @@ lt:&Ne
 lv:&Nē
 mk:&Не
 my:&Tidak
-ne:&बेठिक
+ne:&नाइँ/हैन
 nl:&Nee
 nn:&Nei
 no:&Nei
@@ -2919,10 +2919,12 @@ am:&Ոճը
 br:&Tema
 fr:Thème
 he:ערכת נושא
+ne:&थिम
 nl:&Uiterlijk
 sp-rs:Tema
 sr-rs:Тема
 sv:&Tema
+uk:&Тема
 :&Use original page sizes
 am:&Օգտագործել էջերի իրական չափը
 ar:&استخدام الحجم الأصلي للصفحة
@@ -3145,7 +3147,7 @@ lt:&Taip
 lv:&Jā
 mk:&Да
 my:&Ya
-ne:&ठिक
+ne:&हुन्छ
 nl:&Ja
 nn:&Ja
 no:&Ja
@@ -3590,7 +3592,7 @@ lt:Sukurti žymą į %s puslapį, suteikiant jai šį pavadinimą (neprivalomas)
 lv:Pievienot %s lappusi izlasei ar (neobligātu) nosaukumu:
 mk:Додај страница %s во омилени со име по избор:
 my:Tambah halaman %s pada kegemaran dengan nama (pilihan):
-ne:पृष्ठ %s लाई मनपर्नेमा (ऐच्छिक) नाम सहित थप्नुहोस्
+ne:पृष्ठ %s लाई मनपर्नेमा (ऐच्छिक) नाम सहित थप्नुहोस् :
 nl:Voeg pagina %s toe aan favorieten met (optionele) naam:
 nn:Legg til side %s i favorittane med (valfritt) namn:
 no:Legg til side %s i favoritter med (valgfritt) navn:
@@ -4172,7 +4174,7 @@ lv:Autors:
 mk:Автор:
 ml:രചയിതാവ്
 my:Pengarang
-ne:लेखक
+ne:लेखक:
 nl:Auteur:
 nn:Skapar:
 no:Forfatter:
@@ -5328,7 +5330,7 @@ lv:Saderība
 mk:Компатибилност
 ml:പൊരുത്തം
 my:Kesesuaian
-ne:मिल्दोजुल्दो
+ne:अनुकूलता
 nl:Compatibiliteit
 nn:Kompatibilitet
 no:Kompatibilitet
@@ -6022,7 +6024,7 @@ lt:Nepavyko sukurti laikino katalogo
 lv:Nevarēja izveidot pagaidu direktoriju
 mk:Не можам да создадам привремена папка
 my:Tidak dapat mencipta direktori sementara
-ne:अस्थाई डाइरेक्टरी सिर्जना गर्न असमर्थ
+ne:अस्थाई निर्देशिका सिर्जना गर्न सकिएन
 nl:Kan tijdelijke map niet aanmaken
 nn:Kunne ikkje lage midlertidig direktiv
 no:Kunne ikke opprette en midlertidig mappe
@@ -6079,7 +6081,7 @@ lt:Nepavyko sukurti įdiegimo katalogo
 lv:Nevarēja izveidot instalācijas direktoriju
 mk:Не можам да ја создадам папката за инсталација
 my:Tidak dapat mencipta direktori pemasangan
-ne:स्थापना डाइरेक्टरी सिर्जना गर्न असमर्थ
+ne:स्थापना निर्देशिका सिर्जना गर्न सकिएन
 nl:Kan de installatiemap niet aanmaken
 nn:Kunne ikkje lage installasjonsdirektivet
 no:Kunne ikke opprette installasjonsmappen 
@@ -6198,7 +6200,7 @@ lt:Nepavyko įdiegti PDF peržiūros programą
 lv:Nevarēja instalēt PDF priekšskatījumu
 mk:Не можам да инсталирам прикажувачот на PDF
 my:Tidak dapat memasang previewer PDF
-ne:PDF पूर्वावलोकनकर्ता स्थापना गर्न असमर्थ
+ne:PDF पूर्वावलोकनकर्ता स्थापना गर्न सकिएन
 nl:Kan PDF-previewer niet installeren
 nn:Kunne ikkje installere PDF-forhandsvisar
 no:Kunne ikke installere PDF forhåndsvisning
@@ -6255,7 +6257,7 @@ lt:Nepavyko įdiegti PDF paieškos filtro
 lv:Nevarēja instalēt PDF meklēšanas filtru
 mk:Не можам да инсталирам филтер за пребарување на PDF
 my:Tidak dapat memasang penapis carian PDF
-ne:PDF खोज फिल्टर स्थापना गर्न असमर्थ
+ne:PDF खोज फिल्टर स्थापना गर्न सकिएन
 nl:Kan PDF-zoekfilter niet installeren
 nn:Kunne ikkje installere PDF-søkjefilter
 no:Kunne ikke installere PDF søkefilter
@@ -6310,7 +6312,7 @@ lt:Nepavyko gauti laikinojo katalogo
 lv:Nevarēja iegūt pagaidu direktoriju
 mk:Не можам да пристапам до привремената папка
 my:Tidak boleh mendapatkan direktori sementara
-ne:अस्थाई डाइरेक्टरी प्राप्त गर्न असमर्थ
+ne:अस्थाई निर्देशिका प्राप्त गर्न सकिएन
 nl:Kan tijdelijke map niet verkrijgen
 nn:Kunne ikkje hente midlertidig direktiv
 no:Kunne ikke finne midlertidig mappe
@@ -6366,7 +6368,7 @@ lt:Nepavyko pašalinti įdiegimo katalogo
 lv:Nevarēja noņemt instalācijas direktoriju
 mk:Не можам да ја избришам инсталационата папка
 my:Tidak dapat memadamkan direktori pemasangan
-ne:स्थापना डाइरेक्टरी हटाउन गर्न असमर्थ
+ne:स्थापना निर्देशिका हटाउन सकिएन
 nl:Kan installatiemap niet verwijderen
 nn:Kunne ikkje fjerne installasjonsdirektiv
 no:Kunne ikke fjerne installasjonsmappen
@@ -6423,7 +6425,7 @@ lt:Nepavyko pašalinti nuorodos
 lv:Nevarēja noņemt saīsni
 mk:Не можам да ја избришам кратенката
 my:Tidak dapat membuang shortcut
-ne:सर्टकट हटाउन गर्न असमर्थ
+ne:सर्टकट हटाउन सकिएन
 nl:Kon snelkoppeling niet verwijderen
 nn:Kunne ikkje fjerne snarvegen
 no:Kunne ikke fjerne snarveien
@@ -6483,7 +6485,7 @@ lt:Nepavyko atvaizduoti puslapio
 lv:Nevarēja atveidot lappusi
 mk:Не можам да ја прикажам страницата
 my:Tidak dapat memuatkan halaman
-ne:पृष्ठ रेन्डर गर्न सकिएन
+ne:पृष्ठ प्रस्तुत गर्न सकिएन
 nl:Kan deze pagina niet weergegeven
 nn:Kunne ikkje rendre siden
 no:Kunne ikke vise siden
@@ -6541,7 +6543,7 @@ lt:Nepavyko pašalinti PDF peržiūros programos
 lv:Nevarēja atinstalēt PDF priekšskatījumu
 mk:Не можам да го избришам прикажувачот на PDF
 my:Tidak dapat membuang previewer PDF
-ne:पूर्वावलोकनकर्ता हटाउन असमर्थ
+ne:PDF देखाउनेलाई हटाउन सकिएन
 nl:Kan PDF-previewer niet verwijderen
 nn:Kunne ikkje avinstallere PDF-forhandsvisar
 no:Kunne ikke avinstallere PDF forhåndsvisning
@@ -6597,7 +6599,7 @@ lt:Nepavyko pašalinti PDF paieškos filtro
 lv:Nevarēja atinstalēt PDF meklēšanas filtru
 mk:Не можам да го избришам филтерот за пребарување на PDF
 my:Tidak dapat memadam penapis carian PDF
-ne:खोज फिल्टर हटाउन असमर्थ
+ne:PDF खोज फिल्टर हटाउन सकिएन
 nl:Kon PDF zoek filter niet deïnstalleren
 nn:Kunne ikkje avinstallere PDF-søkjefilteret
 no:Kunne ikke avinstallere PDF søkefilter
@@ -6653,7 +6655,7 @@ lt:Nepavyko pašalinti naršyklės įskiepio
 lv:Nevarēja atinstalēt pārlūkprogrammas spraudni
 mk:Не можам да го избришам додатокот за прелистувачи
 my:Tidak dapat membuang pelayar plugin
-ne:ब्राउजर प्लगइन हटाउन असमर्थ
+ne:ब्राउजर प्लगइन हटाउन सकिएन
 nl:Kan browserplugin niet verwijderen
 nn:Kunne ikkje avinstallere nettlesartillegget
 no:Kunne ikke avinstallere nettlesertillegget
@@ -6977,19 +6979,23 @@ am:Մուգ
 br:Escuro
 fr:Sombre
 he:כהה
+ne:गाढ़ा
 nl:Donker
 sp-rs:Tamno
 sr-rs:Тамно
 sv:Mörk
+uk:Темна
 :Darker
 am:Շատ մուգ
 br:Muito escuro
 fr:Plus sombre
 he:כהה מאוד
+ne:अझै गाढ़ा
 nl:Zwart
 sp-rs:Tamnije
 sr-rs:Тамније
 sv:Mörkare
+uk:Темніша
 :Default &Layout:
 am:Ծրագրային &դասավորություն.
 ar:التخطيط الافتراضي&
@@ -7095,7 +7101,7 @@ lt:Numatytasis &mastelis
 lv:Noklusējuma &tālummaiņa
 mk:Основно &зумирање:
 my:Default &Zum:
-ne:पूर्वनिर्धारित &आकार:
+ne:पूर्वनिर्धारित &जुम:
 nl:Standaard &zoom:
 nn:Standard &zooming:
 no:Standard&zoom:
@@ -8106,7 +8112,7 @@ lt:Nepavyko šalinimo programos nukopijuoti į laikiną katalogą
 lv:Neizdevās iekopēt instalācijas noņemšanas programmu pagaidu direktorijā
 mk:Не успеав да го ископирам деинсталаторот во привремената папка
 my:Gagal untuk menyalin uninstaller untuk direktori sementara
-ne:अनस्थापकको प्रतिलिपि टेम्प फोल्डरमा बनाउन असमर्थ
+ne:अनस्थापकको प्रतिलिपि temp फोल्डरमा बनाउन असफल भयो
 nl:Kon deinstallatie programma niet kopieren naar tijdelijke folder
 nn:Mislykkas i å kopiere installasjonsfjernar til det midlertidige direktivet
 no:Kan ikke kopiere avinstalleringsrutinen til midlertidig mappe
@@ -8162,7 +8168,7 @@ lt:Nepavyko sukurti nuorodos
 lv:Neizdevās izveidot saīsni
 mk:Не успеав да создадам кратенка
 my:Gagal untuk mencipta shortcut
-ne:सर्टकट सिर्जना गर्न असमर्थ
+ne:सर्टकट सिर्जना गर्न असफल भयो
 nl:Kon snelkoppeling niet aanmaken
 nn:Klarte ikkje å lage ein snarveg
 no:Kan ikke opprette snarvei
@@ -8217,7 +8223,7 @@ lt:Nepavyko ištrinti šalinimo programos registro raktų
 lv:Neizdevās izdzēst instalācijas noņemšanas programmas reģistra atslēgas
 mk:Не успеав да ги избришам регистарските клучеви на деинсталаторот
 my:Gagal untuk memadam kekunci pendaftaran uninstaller
-ne:अनस्थापकको रजिस्टरी कुञ्जीहरू हटाउन असमर्थ
+ne:अनस्थापकको रजिस्टरी कुञ्जीहरू हटाउन असफल भयो
 nl:Kon deinstallatie register sleutels niet verwijderen
 nn:Mislykkast i å slette avinstalleringsregisternøklane
 no:Kan ikke slette avinstalleringsnøkler i Registeret
@@ -8260,7 +8266,7 @@ ja:Windows 10 で既定のプログラムとして登録するのに失敗しま
 kr:Windows 10 상에서 기본 프로그램으로 등록하지 못했습니다.
 lt:Nepavyko programos padaryti numatytąja Windows 10 sistemoje
 lv:Neizdevās reģistrēt kā noklusējuma programmu Windows 10 vidē
-ne:Win 10 मा पूर्वनिर्धारित कार्यक्रमको रूपमा दर्ता गर्न असमर्थ 
+ne:Win 10 मा पूर्वनिर्धारित कार्यक्रमको रूपमा दर्ता गर्न असफल भयो
 nl:Als standaard App in Windows 10 aanmelden mislukt
 nn:Klarte ikkje å bli registrert som standardprogram i Windows 10.
 no:Klarte ikke å bli registrert som standardprogram i Windows 10.
@@ -8311,7 +8317,7 @@ lt:Nepavyko pervadinti failo!
 lv:Neizdevās pārdēvēt failu!
 mk:Не успеав да ја преименувам датотеката!
 my:Gagal menamakan semula fail!
-ne:नाम फेराई असफल
+ne:नाम फेराई असफल भयो
 nl:Naam niet kunnen wijzigen!
 nn:Klarte ikkje å omdøpe fila!
 no:Kunne ikke endre navn på filen!
@@ -8375,7 +8381,7 @@ mk:Зачувување на PDF-документот не успеа
 ml:ഫയല്‍ സുക്ഷിക്കാന്‍ സാധിച്ചില്ല
 mm:ဖိုင် သိမ်းမရပါ
 my:Gagal menyimpan fail
-ne:फाइल बचत असफल
+ne:फाइल सुरक्षित गर्न असफल भयो
 nl:Fout bij opslaan bestand
 nn:Feil under lagring av fil
 no:Feil ved lagring av filen
@@ -8435,7 +8441,7 @@ lt:Nepavyko į registrą įrašyti išplėstinės failo plėtinio informacijos
 lv:Neizdevās ierakstīt failu paplašinājumu informāciju reģistrā
 mk:Не успеав да ги запишам информациите за типови на датотеки во регистарот
 my:Gagal menulis fail lanjutan maklumat tambahan ke dalam registry
-ne:रजिस्ट्रीमा विस्तृत फाइल एक्स्टेनसन जानकारी लेख्न असमर्थ 
+ne:रजिस्ट्रीमा विस्तृत फाइल एक्स्टेनसन जानकारी लेख्न असफल भयो
 nl:Kan uitgebreide bestandsextensie-informatie niet wegschrijven in register
 nn:Mislykkast i å skrive den utvida filutvidingsinformasjonen til registeret
 no:Kan ikke lagre utvidet filtypeinformasjon i Registeret
@@ -8490,7 +8496,7 @@ lt:Nepavyko į registrą įrašyti programos šalinimo informacijos
 lv:Neizdevās ierakstīt atinstalēšanas informāciju reģistrā
 mk:Не успеав да ги запишам информациите за деинсталаторот во регистарот
 my:Gagal untuk menulis maklumat pemasangan untuk registry
-ne:रजिस्ट्रीमा अनस्थापना जानकारी लेख्न असमर्थ
+ne:रजिस्ट्रीमा अनस्थापना जानकारी लेख्न असफल भयो
 nl:Kan deïnstallatie-informatie niet wegschrijven in het register
 nn:Mislykkast i å skrive avinstalleringsinformasjonen til registeret
 no:Kan ikke lagre avinstalleringsinformasjon i Registeret
@@ -8783,7 +8789,7 @@ lv:Faila lielums:
 mk:Големина на датотека:
 ml:ഫയല്‍ വലുപ്പം
 my:Saiz fail:
-ne:फाइल साइज
+ne:फाइल साइज:
 nl:Bestandsgrootte
 nn:Filstørrelse:
 no:Filstørrelse:
@@ -10537,7 +10543,7 @@ lt:Įdiegimas nepavyko!
 lv:Instalēšana neizdevās!
 mk:Инсталирањето не успеа!
 my:Pemasangan gagal!
-ne:स्थापना विफल भयो!
+ne:स्थापना असफल भयो !
 nl:Installatie mislukt!
 nn:Installering mislykkast!
 no:Feil ved installering!
@@ -10848,10 +10854,12 @@ am:Լուսավոր
 br:Claro
 fr:Clair
 he:בהירה
+ne:हल्का
 nl:Wit
 sp-rs:Svetlo
 sr-rs:Светло
 sv:Ljus
+uk:Світла
 :MB
 af:MB
 am:ՄԲ
@@ -12525,7 +12533,7 @@ lt:PDF optimizacijos:
 lv:PDF optimizācija:
 mk:Оптимизации за PDF:
 my:Pengoptimuman PDF:
-ne:PDF अप्टिमाइजेसन
+ne:PDF अप्टिमाइजेसन:
 nl:PDF Optimalisaties
 nn:PDF-optimaliseringer:
 no:PDF Optimalisering:
@@ -12583,7 +12591,7 @@ lt:PDF leidėjas:
 lv:PDF veidotājs:
 mk:PDF-генератор:
 my:PDF Producer:
-ne:PDF निर्माता
+ne:PDF निर्माता:
 nl:PDF-maker:
 nn:PDF-lagar:
 no:PDF-produsent:
@@ -12643,7 +12651,7 @@ lt:PDF versija:
 lv:PDF versija:
 mk:Верзија на PDF:
 my:Versi PDF:
-ne:PDF संस्करण
+ne:PDF संस्करण:
 nl:PDF-versie:
 nn:PDF-versjon:
 no:PDF-versjon:
@@ -13256,7 +13264,7 @@ lt:Prašome palaukti – atvaizduojama...
 lv:Lūdzu, uzgaidiet — notiek atveidošana...
 mk:Ве молам почекајте - создавам приказ...
 my:Sila tunggu - memaparkan...
-ne:कृपया पर्खनुहोस - रेन्डरिङ हुदैछ ...
+ne:कृपया पर्खनुहोस - प्रतिपादन हुदैछ ...
 nl:Een ogenblik - weergeven...
 nn:Venligst vent - Visar...
 no:Vennligst vent - arbeider...
@@ -13674,7 +13682,7 @@ lv:Notiek drukāšana.
 mk:Печатењето е во тек.
 ml:അച്ചടി പുരോഗമിക്കുന്നു
 my:Cetakan sedang dijalankan.
-ne:मुद्रण प्रगति.
+ne:मुद्रण/छपाई हुदै छ |
 nl:Aan het printen.
 nn:Utskriving under arbeid.
 no:Utskrift pågår.
@@ -13730,7 +13738,7 @@ lt:Spausdinimas vis dar vyksta. Nutraukti ir išeiti?
 lv:Vēl joprojām notiek drukāšana. Priekšlaikus pārtraukt un beigt?
 mk:Печатењето е сè уште во тек. Да го поништам и прекинам?
 my:Cetakan sedang dilakukan. Batal dan Henti?
-ne:छपाई कार्य प्रगति हुदैछ | परित्याग गरि बन्द गर्ने?
+ne:छपाई हुदैछ | परित्याग गरि बन्द गर्ने?
 nl:Nog steeds aan het printen. Annuleren en stoppen?
 nn:Utskrivinga pågår framleis. Vil du stoppe og avslutte?
 no:Skriver ut fortsatt. Avbryte?
@@ -13787,7 +13795,7 @@ lt:Spausdinimas dar nebaigtas. Ar norite jį nutraukti ir pradėti iš naujo?
 lv:Vēl joprojām notiek drukāšana. Priekšlaikus pārtraukt un sākt no jauna?
 mk:Печатењето трае сè уште. Да го запрам и да почнам одново?
 my:Cetakan masih lagi dijalankan. Batalkan dan mulakan semula?
-ne:छपाई कार्य प्रगति हुदैछ | परित्याग गरि पुनः सुरु गर्ने?
+ne:छपाई हुदैछ | परित्याग गरि पुनः सुरु गर्ने?
 nl:Afdrukken is nog niet voltooid. Afbreken en opnieuw beginnen?
 nn:Utskrivinga pågår framleis. Vil du stoppe og starte på nytt?
 no:Utskriften pågår fortsatt. Avbryte og starte på nytt?
@@ -15666,7 +15674,7 @@ lt:Tema:
 lv:Tēma:
 mk:Предмет:
 my:Subjek
-ne:बिषय
+ne:बिषय:
 nl:Onderwerp:
 nn:Tema:
 no:Emne:
@@ -16592,7 +16600,7 @@ kr:이 문서는 지원되지 않는 기능 (%s)을 사용했고, 제대로 렌�
 ku:ئەم بەڵگەنامەیە خزمەتگوزاری نەگونجاوی تێدایە  (%s) لەوانەیە بەباشی دەرنەکەێت
 lt:Šis dokumentas naudoja nepalaikomas funkcijas (%s) ir gali būti atvaizduotas neteisingai
 lv:Šajā dokumentā ir izmantotas neatbalstītas iespējas (%s), un iespējams, netiek atveidots pareizi
-ne:यो कागजातले असमर्थित सुविधा प्रयोग गर्छ (%s) र सहि रेंडर नहुन सक्छ
+ne:यो कागजातले असमर्थित सुविधा प्रयोग गर्छ (%s) र सहि रुपमा प्रस्तुत नहुन सक्छ
 nl:Dit document maakt gebruik van niet-ondersteunde functies (%s) en wordt mogelijk niet goed weergegeven
 nn:Dette dokumentet bruker ustøtta funksjoner (%s) og kan kanskje ikkje visast riktig.
 no:Dette dokumentet bruker ustøttede funksjoner (%s) og kan muligens ikke bli vist riktig.
