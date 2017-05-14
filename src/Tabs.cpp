@@ -70,9 +70,6 @@ class TabPainter {
     bool inTitlebar = false;
     LPARAM mouseCoordinates = 0;
     COLORREF currBgCol = DEFAULT_CURRENT_BG_COL;
-    struct {
-        COLORREF background, highlight, current, outline, bar, text, x_highlight, x_click, x_line;
-    } colors;
 
     TabPainter(HWND wnd, SizeI tabSize) {
         ZeroMemory(&colors, sizeof(colors));
@@ -125,7 +122,7 @@ class TabPainter {
     // Finds the index of the tab, which contains the given point.
     int IndexFromPoint(int x, int y, bool* inXbutton = nullptr) {
         Point point(x, y);
-        Graphics graphics(hwnd);
+        Graphics gfx(hwnd);
         GraphicsPath shapes(data->Points, data->Types, data->Count);
         GraphicsPath shape;
         GraphicsPathIterator iterator(&shapes);
@@ -133,17 +130,17 @@ class TabPainter {
 
         ClientRect rClient(hwnd);
         REAL yPosTab = inTitlebar ? 0.0f : REAL(rClient.dy - height - 1);
-        graphics.TranslateTransform(1.0f, yPosTab);
+        gfx.TranslateTransform(1.0f, yPosTab);
         for (int i = 0; i < Count(); i++) {
             Point pt(point);
-            graphics.TransformPoints(CoordinateSpaceWorld, CoordinateSpaceDevice, &pt, 1);
-            if (shape.IsVisible(pt, &graphics)) {
+            gfx.TransformPoints(CoordinateSpaceWorld, CoordinateSpaceDevice, &pt, 1);
+            if (shape.IsVisible(pt, &gfx)) {
                 iterator.NextMarker(&shape);
                 if (inXbutton)
-                    *inXbutton = shape.IsVisible(pt, &graphics) ? true : false;
+                    *inXbutton = shape.IsVisible(pt, &gfx) ? true : false;
                 return i;
             }
-            graphics.TranslateTransform(REAL(width + 1), 0.0f);
+            gfx.TranslateTransform(REAL(width + 1), 0.0f);
         }
         if (inXbutton)
             *inXbutton = false;
@@ -155,7 +152,7 @@ class TabPainter {
         if (index < 0)
             return;
 
-        Graphics graphics(hwnd);
+        Graphics gfx(hwnd);
         GraphicsPath shapes(data->Points, data->Types, data->Count);
         GraphicsPath shape;
         GraphicsPathIterator iterator(&shapes);
@@ -164,8 +161,8 @@ class TabPainter {
 
         ClientRect rClient(hwnd);
         REAL yPosTab = inTitlebar ? 0.0f : REAL(rClient.dy - height - 1);
-        graphics.TranslateTransform(REAL((width + 1) * index) + 1.0f, yPosTab);
-        HRGN hRgn = region.GetHRGN(&graphics);
+        gfx.TranslateTransform(REAL((width + 1) * index) + 1.0f, yPosTab);
+        HRGN hRgn = region.GetHRGN(&gfx);
         InvalidateRgn(hwnd, hRgn, FALSE);
         DeleteObject(hRgn);
     }
@@ -176,24 +173,26 @@ class TabPainter {
 
         // paint the background
         bool isTranslucentMode = inTitlebar && dwm::IsCompositionEnabled();
-        if (isTranslucentMode) {
+        if (true || isTranslucentMode) {
             PaintParentBackground(hwnd, hdc);
         } else {
-            HBRUSH brush = CreateSolidBrush(colors.bar);
+            // note: not sure what color should be used here and painting
+            // background works fine
+            /*HBRUSH brush = CreateSolidBrush(colors.bar);
             FillRect(hdc, &rc, brush);
-            DeleteObject(brush);
+            DeleteObject(brush);*/
         }
 
         // TODO: GDI+ doesn't seem to cope well with SetWorldTransform
         XFORM ctm = {1.0, 0, 0, 1.0, 0, 0};
         SetWorldTransform(hdc, &ctm);
 
-        Graphics graphics(hdc);
-        graphics.SetCompositingMode(CompositingModeSourceCopy);
-        graphics.SetCompositingQuality(CompositingQualityHighQuality);
-        graphics.SetSmoothingMode(SmoothingModeHighQuality);
-        graphics.SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
-        graphics.SetPageUnit(UnitPixel);
+        Graphics gfx(hdc);
+        gfx.SetCompositingMode(CompositingModeSourceCopy);
+        gfx.SetCompositingQuality(CompositingQualityHighQuality);
+        gfx.SetSmoothingMode(SmoothingModeHighQuality);
+        gfx.SetTextRenderingHint(TextRenderingHintClearTypeGridFit);
+        gfx.SetPageUnit(UnitPixel);
         GraphicsPath shapes(data->Points, data->Types, data->Count);
         GraphicsPath shape;
         GraphicsPathIterator iterator(&shapes);
@@ -211,10 +210,10 @@ class TabPainter {
 
         REAL yPosTab = inTitlebar ? 0.0f : REAL(ClientRect(hwnd).dy - height - 1);
         for (int i = 0; i < Count(); i++) {
-            graphics.ResetTransform();
-            graphics.TranslateTransform(1.f + (REAL)(width + 1) * i - (REAL)rc.left, yPosTab - (REAL)rc.top);
+            gfx.ResetTransform();
+            gfx.TranslateTransform(1.f + (REAL)(width + 1) * i - (REAL)rc.left, yPosTab - (REAL)rc.top);
 
-            if (!graphics.IsVisible(0, 0, width + 1, height + 1))
+            if (!gfx.IsVisible(0, 0, width + 1, height + 1))
                 continue;
 
             // Get the correct colors based on the state and the current theme
@@ -244,35 +243,35 @@ class TabPainter {
             }
 
             // paint tab's body
-            graphics.SetCompositingMode(CompositingModeSourceCopy);
+            gfx.SetCompositingMode(CompositingModeSourceCopy);
             iterator.NextMarker(&shape);
             br.SetColor(ToColor(bgCol));
             Point points[4];
             shape.GetPathPoints(points, 4);
             Rect body(points[0].X, points[0].Y, points[2].X - points[0].X, points[2].Y - points[0].Y);
             body.Inflate(0, 0);
-            graphics.SetClip(body);
+            gfx.SetClip(body);
             body.Inflate(5, 5);
-            graphics.FillRectangle(&br, body);
-            graphics.ResetClip();
+            gfx.FillRectangle(&br, body);
+            gfx.ResetClip();
 
             // draw tab's text
-            graphics.SetCompositingMode(CompositingModeSourceOver);
+            gfx.SetCompositingMode(CompositingModeSourceOver);
             br.SetColor(ToColor(textCol));
-            graphics.DrawString(text.At(i), -1, &f, layout, &sf, &br);
+            gfx.DrawString(text.At(i), -1, &f, layout, &sf, &br);
 
             // paint "x"'s circle
             iterator.NextMarker(&shape);
             bool closeCircleEnabled = true;
             if ((xClicked == i || xHighlighted == i) && closeCircleEnabled) {
                 br.SetColor(ToColor(circleColor));
-                graphics.FillPath(&br, &shape);
+                gfx.FillPath(&br, &shape);
             }
 
             // paint "x"
             iterator.NextMarker(&shape);
             pen.SetColor(ToColor(xColor));
-            graphics.DrawPath(&pen, &shape);
+            gfx.DrawPath(&pen, &shape);
             iterator.Rewind();
         }
     }

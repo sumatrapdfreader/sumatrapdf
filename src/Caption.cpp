@@ -462,16 +462,16 @@ static void PaintCaptionBackground(HDC hdc, WindowInfo* win, bool useDoubleBuffe
     if (win->caption->bgAlpha == 0) {
         PaintParentBackground(win->hwndCaption, hdc);
     } else if (win->caption->bgAlpha == 255) {
-        Graphics graphics(hdc);
+        Graphics gfx(hdc);
         SolidBrush br(Color(GetRValueSafe(c), GetGValueSafe(c), GetBValueSafe(c)));
-        graphics.FillRectangle(&br, r.x, r.y, r.dx, r.dy);
+        gfx.FillRectangle(&br, r.x, r.y, r.dx, r.dy);
     } else {
         DoubleBuffer buffer(win->hwndCaption, r);
         HDC memDC = useDoubleBuffer ? buffer.GetDC() : hdc;
         PaintParentBackground(win->hwndCaption, memDC);
-        Graphics graphics(memDC);
+        Graphics gfx(memDC);
         SolidBrush br(Color(win->caption->bgAlpha, GetRValueSafe(c), GetGValueSafe(c), GetBValueSafe(c)));
-        graphics.FillRectangle(&br, r.x, r.y, r.dx, r.dy);
+        gfx.FillRectangle(&br, r.x, r.y, r.dx, r.dy);
         if (useDoubleBuffer)
             buffer.Flush(hdc);
     }
