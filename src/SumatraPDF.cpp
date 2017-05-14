@@ -4302,7 +4302,11 @@ InitMouseWheelInfo:
 
         case WM_ENDSESSION:
             // TODO: check for unfinished print jobs in WM_QUERYENDSESSION?
-            prefs::Save();
+            if (wParam == TRUE) {
+                prefs::Save();
+                // we must quit so that we restore opened files on start.
+                DestroyWindow(hwnd);
+            }
             return 0;
 
         case WM_DDE_INITIATE:
