@@ -171,8 +171,9 @@ class TabPainter {
         IntersectClipRect(hdc, rc.left, rc.top, rc.right, rc.bottom);
 
         // paint the background
+#if 0
         bool isTranslucentMode = inTitlebar && dwm::IsCompositionEnabled();
-        if (true || isTranslucentMode) {
+        if (isTranslucentMode) {
             PaintParentBackground(hwnd, hdc);
         } else {
             // note: not sure what color should be used here and painting
@@ -181,7 +182,9 @@ class TabPainter {
             FillRect(hdc, &rc, brush);
             DeleteObject(brush);*/
         }
-
+#else
+        PaintParentBackground(hwnd, hdc);
+#endif
         // TODO: GDI+ doesn't seem to cope well with SetWorldTransform
         XFORM ctm = {1.0, 0, 0, 1.0, 0, 0};
         SetWorldTransform(hdc, &ctm);
