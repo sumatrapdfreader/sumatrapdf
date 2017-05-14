@@ -72,7 +72,6 @@ class TabPainter {
     COLORREF currBgCol = DEFAULT_CURRENT_BG_COL;
 
     TabPainter(HWND wnd, SizeI tabSize) {
-        ZeroMemory(&colors, sizeof(colors));
         hwnd = wnd;
         Reshape(tabSize.dx, tabSize.dy);
     }
