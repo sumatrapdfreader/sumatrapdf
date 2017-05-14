@@ -17,44 +17,46 @@
 
 using namespace Gdiplus;
 
-#define CUSTOM_CAPTION_CLASS_NAME  L"CustomCaption"
+#define CUSTOM_CAPTION_CLASS_NAME L"CustomCaption"
 #define UNDOCUMENTED_MENU_CLASS_NAME L"#32768"
 
-#define BTN_ID_FIRST  100
+#define BTN_ID_FIRST 100
 
 // This will prevent menu reopening, if we click the menu button,
 // while the menu is open.
-#define DO_NOT_REOPEN_MENU_TIMER_ID       1
-#define DO_NOT_REOPEN_MENU_DELAY_IN_MS    1
+#define DO_NOT_REOPEN_MENU_TIMER_ID 1
+#define DO_NOT_REOPEN_MENU_DELAY_IN_MS 1
 
 // undocumented caption buttons state
-#define CBS_INACTIVE  5
+#define CBS_INACTIVE 5
 
 // undocumented window messages
-#define WM_NCUAHDRAWCAPTION  0xAE
-#define WM_NCUAHDRAWFRAME    0xAF
-#define WM_POPUPSYSTEMMENU   0x313
+#define WM_NCUAHDRAWCAPTION 0xAE
+#define WM_NCUAHDRAWFRAME 0xAF
+#define WM_POPUPSYSTEMMENU 0x313
 
 // When a top level window is maximized the window manager checks whether its client
 // area covers the entire screen. If it does, the manager assumes that this is a fullscreen
 // window and hides the taskbar and any topmost window. A simple workaround is to
 // expand the non-client border at the expense of client area.
-#define NON_CLIENT_BAND  1
+#define NON_CLIENT_BAND 1
 // This non-client-band hack is only needed for maximized non-fullscreen windows:
-static inline bool NeedsNonClientBandHack(HWND hwnd) { return IsZoomed(hwnd) && win::HasCaption(hwnd); }
+static inline bool NeedsNonClientBandHack(HWND hwnd) {
+    return IsZoomed(hwnd) && win::HasCaption(hwnd);
+}
 
 // http://withinwindows.com/2010/07/01/retrieving-aero-glass-base-color-for-opaque-surface-rendering/
-#define REG_DWM  L"Software\\Microsoft\\Windows\\DWM"
+#define REG_DWM L"Software\\Microsoft\\Windows\\DWM"
 
 // When DWM composition is enabled, this is the ratio between alpha channels of active and inactive caption colors.
-#define ACTIVE_INACTIVE_ALPHA_RATIO  2.0f
+#define ACTIVE_INACTIVE_ALPHA_RATIO 2.0f
 
-static void DrawCaptionButton(DRAWITEMSTRUCT *item, WindowInfo *win);
-static void PaintCaptionBackground(HDC hdc, WindowInfo *win, bool useDoubleBuffer);
+static void DrawCaptionButton(DRAWITEMSTRUCT* item, WindowInfo* win);
+static void PaintCaptionBackground(HDC hdc, WindowInfo* win, bool useDoubleBuffer);
 static HMENU GetUpdatedSystemMenu(HWND hwnd);
-static void MenuBarAsPopupMenu(WindowInfo *win, int x, int y);
+static void MenuBarAsPopupMenu(WindowInfo* win, int x, int y);
 
-CaptionInfo::CaptionInfo(HWND hwndCaption): hwnd(hwndCaption), theme(nullptr), isMenuOpen(false) {
+CaptionInfo::CaptionInfo(HWND hwndCaption) : hwnd(hwndCaption), theme(nullptr), isMenuOpen(false) {
     UpdateTheme();
     UpdateColors(true);
     UpdateBackgroundAlpha();
@@ -65,13 +67,11 @@ CaptionInfo::~CaptionInfo() {
         theme::CloseThemeData(theme);
 }
 
-void CaptionInfo::UpdateBackgroundAlpha()
-{
+void CaptionInfo::UpdateBackgroundAlpha() {
     bgAlpha = dwm::IsCompositionEnabled() ? 0 : 255;
 }
 
-void CaptionInfo::UpdateTheme()
-{
+void CaptionInfo::UpdateTheme() {
     if (theme) {
         theme::CloseThemeData(theme);
         theme = nullptr;
@@ -80,156 +80,158 @@ void CaptionInfo::UpdateTheme()
         theme = theme::OpenThemeData(hwnd, L"WINDOW");
 }
 
-void CaptionInfo::UpdateColors(bool activeWindow)
-{
+void CaptionInfo::UpdateColors(bool activeWindow) {
     ARGB colorizationColor;
     if (dwm::IsCompositionEnabled() &&
         // get the color from the Registry and blend it with white background
         ReadRegDWORD(HKEY_CURRENT_USER, REG_DWM, L"ColorizationColor", colorizationColor)) {
-            BYTE A, R, G, B, white;
-            A = BYTE((colorizationColor >> 24) & 0xff);
-            if (!activeWindow)
-                A = (BYTE)floor(A / ACTIVE_INACTIVE_ALPHA_RATIO + 0.5f);
-            R = BYTE((colorizationColor >> 16) & 0xff);
-            G = BYTE((colorizationColor >> 8) & 0xff);
-            B = BYTE(colorizationColor & 0xff);
-            white = BYTE(255 - A);
-            float factor = A / 255.0f;
-            R = BYTE((int)floor(R * factor + 0.5f) + white);
-            G = BYTE((int)floor(G * factor + 0.5f) + white);
-            B = BYTE((int)floor(B * factor + 0.5f) + white);
-            bgColor = RGB(R, G, B);
+        BYTE A, R, G, B, white;
+        A = BYTE((colorizationColor >> 24) & 0xff);
+        if (!activeWindow)
+            A = (BYTE)floor(A / ACTIVE_INACTIVE_ALPHA_RATIO + 0.5f);
+        R = BYTE((colorizationColor >> 16) & 0xff);
+        G = BYTE((colorizationColor >> 8) & 0xff);
+        B = BYTE(colorizationColor & 0xff);
+        white = BYTE(255 - A);
+        float factor = A / 255.0f;
+        R = BYTE((int)floor(R * factor + 0.5f) + white);
+        G = BYTE((int)floor(G * factor + 0.5f) + white);
+        B = BYTE((int)floor(B * factor + 0.5f) + white);
+        bgColor = RGB(R, G, B);
+    } else if (!theme ||
+               !SUCCEEDED(theme::GetThemeColor(theme, WP_CAPTION, 0,
+                                               activeWindow ? TMT_FILLCOLORHINT : TMT_BORDERCOLORHINT, &bgColor))) {
+        bgColor = activeWindow ? GetSysColor(COLOR_GRADIENTACTIVECAPTION) : GetSysColor(COLOR_GRADIENTINACTIVECAPTION);
     }
-    else if (!theme || !SUCCEEDED(theme::GetThemeColor(theme, WP_CAPTION, 0,
-        activeWindow ? TMT_FILLCOLORHINT : TMT_BORDERCOLORHINT, &bgColor))) {
-            bgColor = activeWindow ? GetSysColor(COLOR_GRADIENTACTIVECAPTION)
-                                   : GetSysColor(COLOR_GRADIENTINACTIVECAPTION);
-    }
-    if (!theme || !SUCCEEDED(theme::GetThemeColor(theme, WP_CAPTION, 0,
-        (activeWindow || dwm::IsCompositionEnabled()) ? TMT_CAPTIONTEXT : TMT_INACTIVECAPTIONTEXT, &textColor))) {
-            textColor = (activeWindow || dwm::IsCompositionEnabled()) ? GetSysColor(COLOR_CAPTIONTEXT)
-                                                                      : GetSysColor(COLOR_INACTIVECAPTIONTEXT);
+    if (!theme ||
+        !SUCCEEDED(theme::GetThemeColor(
+            theme, WP_CAPTION, 0,
+            (activeWindow || dwm::IsCompositionEnabled()) ? TMT_CAPTIONTEXT : TMT_INACTIVECAPTIONTEXT, &textColor))) {
+        textColor = (activeWindow || dwm::IsCompositionEnabled()) ? GetSysColor(COLOR_CAPTIONTEXT)
+                                                                  : GetSysColor(COLOR_INACTIVECAPTIONTEXT);
     }
 }
 
-ButtonInfo::ButtonInfo(): hwnd(nullptr), highlighted(false), inactive(false) {
+ButtonInfo::ButtonInfo() : hwnd(nullptr), highlighted(false), inactive(false) {
     SetMargins(0, 0, 0, 0);
 }
 
-void ButtonInfo::SetMargins(LONG left, LONG top, LONG right, LONG bottom)
-{
-    margins.left   = left;
-    margins.top    = top;
-    margins.right  = right;
+void ButtonInfo::SetMargins(LONG left, LONG top, LONG right, LONG bottom) {
+    margins.left = left;
+    margins.top = top;
+    margins.right = right;
     margins.bottom = bottom;
 }
 
-static LRESULT CALLBACK WndProcCaption(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    WindowInfo *win = FindWindowInfoByHwnd(hwnd);
+static LRESULT CALLBACK WndProcCaption(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
+    WindowInfo* win = FindWindowInfoByHwnd(hwnd);
 
-    switch (message)
-    {
-    case WM_COMMAND:
-        if (win && BN_CLICKED == HIWORD(wParam)) {
-            WPARAM cmd;
-            WORD button = LOWORD(wParam) - BTN_ID_FIRST;
-            switch (button)
-            {
-                case CB_MINIMIZE:  cmd = SC_MINIMIZE; break;
-                case CB_MAXIMIZE:  cmd = SC_MAXIMIZE; break;
-                case CB_RESTORE:   cmd = SC_RESTORE;  break;
-                case CB_CLOSE:     cmd = SC_CLOSE;    break;
-                default:           cmd = 0;           break;
-            }
-            if (cmd)
-                PostMessage(win->hwndFrame, WM_SYSCOMMAND, cmd, 0);
-
-            if (button == CB_MENU) {
-                if (!KillTimer(hwnd, DO_NOT_REOPEN_MENU_TIMER_ID) && !win->caption->isMenuOpen) {
-                    HWND hMenuButton = win->caption->btn[CB_MENU].hwnd;
-                    WindowRect wr(hMenuButton);
-                    win->caption->isMenuOpen = true;
-                    if (!lParam)    // if the WM_COMMAND message was sent as a result of keyboard command
-                        InvalidateRgn(hMenuButton, nullptr, FALSE);
-                    MenuBarAsPopupMenu(win, wr.x, wr.y + wr.dy);
-                    win->caption->isMenuOpen = false;
-                    if (!lParam)
-                        InvalidateRgn(hMenuButton, nullptr, FALSE);
-                    SetTimer(hwnd, DO_NOT_REOPEN_MENU_TIMER_ID, DO_NOT_REOPEN_MENU_DELAY_IN_MS, nullptr);
+    switch (message) {
+        case WM_COMMAND:
+            if (win && BN_CLICKED == HIWORD(wParam)) {
+                WPARAM cmd;
+                WORD button = LOWORD(wParam) - BTN_ID_FIRST;
+                switch (button) {
+                    case CB_MINIMIZE:
+                        cmd = SC_MINIMIZE;
+                        break;
+                    case CB_MAXIMIZE:
+                        cmd = SC_MAXIMIZE;
+                        break;
+                    case CB_RESTORE:
+                        cmd = SC_RESTORE;
+                        break;
+                    case CB_CLOSE:
+                        cmd = SC_CLOSE;
+                        break;
+                    default:
+                        cmd = 0;
+                        break;
                 }
-                SetFocus(win->hwndFrame);
+                if (cmd)
+                    PostMessage(win->hwndFrame, WM_SYSCOMMAND, cmd, 0);
+
+                if (button == CB_MENU) {
+                    if (!KillTimer(hwnd, DO_NOT_REOPEN_MENU_TIMER_ID) && !win->caption->isMenuOpen) {
+                        HWND hMenuButton = win->caption->btn[CB_MENU].hwnd;
+                        WindowRect wr(hMenuButton);
+                        win->caption->isMenuOpen = true;
+                        if (!lParam) // if the WM_COMMAND message was sent as a result of keyboard command
+                            InvalidateRgn(hMenuButton, nullptr, FALSE);
+                        MenuBarAsPopupMenu(win, wr.x, wr.y + wr.dy);
+                        win->caption->isMenuOpen = false;
+                        if (!lParam)
+                            InvalidateRgn(hMenuButton, nullptr, FALSE);
+                        SetTimer(hwnd, DO_NOT_REOPEN_MENU_TIMER_ID, DO_NOT_REOPEN_MENU_DELAY_IN_MS, nullptr);
+                    }
+                    SetFocus(win->hwndFrame);
+                }
             }
-        }
-        break;
+            break;
 
-    case WM_TIMER:
-        if (wParam == DO_NOT_REOPEN_MENU_TIMER_ID)
-            KillTimer(hwnd, DO_NOT_REOPEN_MENU_TIMER_ID);
-        break;
+        case WM_TIMER:
+            if (wParam == DO_NOT_REOPEN_MENU_TIMER_ID)
+                KillTimer(hwnd, DO_NOT_REOPEN_MENU_TIMER_ID);
+            break;
 
-    case WM_SIZE:
-        if (win)
-            RelayoutCaption(win);
-        break;
+        case WM_SIZE:
+            if (win)
+                RelayoutCaption(win);
+            break;
 
-    case WM_NCHITTEST:
-        return HTTRANSPARENT;
+        case WM_NCHITTEST:
+            return HTTRANSPARENT;
 
-    case WM_ERASEBKGND:
-        if (win)
-            PaintCaptionBackground((HDC)wParam, win, true);
-        return TRUE;
+        case WM_ERASEBKGND:
+            if (win)
+                PaintCaptionBackground((HDC)wParam, win, true);
+            return TRUE;
 
-    case WM_DRAWITEM:
-        if (win) {
-            DRAWITEMSTRUCT *dis = (DRAWITEMSTRUCT *)lParam;
-            int index = dis->CtlID - BTN_ID_FIRST;
-            if (CB_MENU == index && win->caption->isMenuOpen)
-                dis->itemState |= ODS_SELECTED;
-            if (win->caption->btn[index].highlighted)
-                dis->itemState |= ODS_HOTLIGHT;
-            else if (win->caption->btn[index].inactive)
-                dis->itemState |= ODS_INACTIVE;
-            DrawCaptionButton(dis, win);
-        }
-        return TRUE;
+        case WM_DRAWITEM:
+            if (win) {
+                DRAWITEMSTRUCT* dis = (DRAWITEMSTRUCT*)lParam;
+                int index = dis->CtlID - BTN_ID_FIRST;
+                if (CB_MENU == index && win->caption->isMenuOpen)
+                    dis->itemState |= ODS_SELECTED;
+                if (win->caption->btn[index].highlighted)
+                    dis->itemState |= ODS_HOTLIGHT;
+                else if (win->caption->btn[index].inactive)
+                    dis->itemState |= ODS_INACTIVE;
+                DrawCaptionButton(dis, win);
+            }
+            return TRUE;
 
-    case WM_THEMECHANGED:
-        if (win)
-            win->caption->UpdateTheme();
-        break;
+        case WM_THEMECHANGED:
+            if (win)
+                win->caption->UpdateTheme();
+            break;
 
-    default:
-        return DefWindowProc(hwnd, message, wParam, lParam);
+        default:
+            return DefWindowProc(hwnd, message, wParam, lParam);
     }
     return 0;
 }
 
 static WNDPROC DefWndProcButton = nullptr;
-static LRESULT CALLBACK WndProcButton(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    WindowInfo *win = FindWindowInfoByHwnd(hwnd);
+static LRESULT CALLBACK WndProcButton(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
+    WindowInfo* win = FindWindowInfoByHwnd(hwnd);
     int index = (int)GetWindowLongPtr(hwnd, GWLP_ID) - BTN_ID_FIRST;
 
-    switch (message)
-    {
-        case WM_MOUSEMOVE:
-            {
-                ClientRect rc(hwnd);
-                if (!rc.Contains(PointI(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)))) {
-                    ReleaseCapture();
-                    return 0;
-                }
-                if (win) {
-                    if (TrackMouseLeave(hwnd)) {
-                        win->caption->btn[index].highlighted = true;
-                        InvalidateRgn(hwnd, nullptr, FALSE);
-                    }
-                    return 0;
-                }
+    switch (message) {
+        case WM_MOUSEMOVE: {
+            ClientRect rc(hwnd);
+            if (!rc.Contains(PointI(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)))) {
+                ReleaseCapture();
+                return 0;
             }
-            break;
+            if (win) {
+                if (TrackMouseLeave(hwnd)) {
+                    win->caption->btn[index].highlighted = true;
+                    InvalidateRgn(hwnd, nullptr, FALSE);
+                }
+                return 0;
+            }
+        } break;
 
         case WM_MOUSELEAVE:
             if (win) {
@@ -256,16 +258,15 @@ static LRESULT CALLBACK WndProcButton(HWND hwnd, UINT message, WPARAM wParam, LP
     return CallWindowProc(DefWndProcButton, hwnd, message, wParam, lParam);
 }
 
-void CreateCaption(WindowInfo *win)
-{
-    win->hwndCaption = CreateWindow(CUSTOM_CAPTION_CLASS_NAME, L"", WS_CHILDWINDOW | WS_CLIPCHILDREN,
-        0, 0, 0, 0, win->hwndFrame, (HMENU)0, GetModuleHandle(nullptr), nullptr);
+void CreateCaption(WindowInfo* win) {
+    win->hwndCaption = CreateWindow(CUSTOM_CAPTION_CLASS_NAME, L"", WS_CHILDWINDOW | WS_CLIPCHILDREN, 0, 0, 0, 0,
+                                    win->hwndFrame, (HMENU)0, GetModuleHandle(nullptr), nullptr);
 
     win->caption = new CaptionInfo(win->hwndCaption);
 
     for (UINT_PTR i = CB_BTN_FIRST; i < CB_BTN_COUNT; i++) {
-        HWND btn = CreateWindowExW(0, L"BUTTON", L"", WS_CHILDWINDOW | WS_VISIBLE | BS_OWNERDRAW,
-            0, 0, 0, 0, win->hwndCaption, (HMENU)(BTN_ID_FIRST + i), GetModuleHandle(nullptr), nullptr);
+        HWND btn = CreateWindowExW(0, L"BUTTON", L"", WS_CHILDWINDOW | WS_VISIBLE | BS_OWNERDRAW, 0, 0, 0, 0,
+                                   win->hwndCaption, (HMENU)(BTN_ID_FIRST + i), GetModuleHandle(nullptr), nullptr);
 
         if (!DefWndProcButton)
             DefWndProcButton = (WNDPROC)GetWindowLongPtr(btn, GWLP_WNDPROC);
@@ -275,19 +276,17 @@ void CreateCaption(WindowInfo *win)
     }
 }
 
-void RegisterCaptionWndClass()
-{
+void RegisterCaptionWndClass() {
     WNDCLASSEX wcex;
     FillWndClassEx(wcex, CUSTOM_CAPTION_CLASS_NAME, WndProcCaption);
     wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     RegisterClassEx(&wcex);
 }
 
-void RelayoutCaption(WindowInfo *win)
-{
+void RelayoutCaption(WindowInfo* win) {
     ClientRect rc(win->hwndCaption);
-    CaptionInfo *ci = win->caption;
-    ButtonInfo *button;
+    CaptionInfo* ci = win->caption;
+    ButtonInfo* button;
     DeferWinPosHelper dh;
 
     if (dwm::IsCompositionEnabled()) {
@@ -295,8 +294,7 @@ void RelayoutCaption(WindowInfo *win)
         for (int i = CB_MINIMIZE; i <= CB_CLOSE; i++) {
             ShowWindow(ci->btn[i].hwnd, SW_HIDE);
         }
-    }
-    else {
+    } else {
         int xEdge = GetSystemMetrics(SM_CXEDGE);
         int yEdge = GetSystemMetrics(SM_CYEDGE);
         bool isClassicStyle = win->caption->theme == nullptr;
@@ -311,7 +309,8 @@ void RelayoutCaption(WindowInfo *win)
         button = &ci->btn[CB_CLOSE];
         rc.dx -= btnDx + xEdge;
         int rightMargin = maximized ? xEdge : 0;
-        dh.SetWindowPos(button->hwnd, nullptr, rc.x + rc.dx, yPosBtn, btnDx + rightMargin, btnDy + topMargin, SWP_NOZORDER | SWP_SHOWWINDOW);
+        dh.SetWindowPos(button->hwnd, nullptr, rc.x + rc.dx, yPosBtn, btnDx + rightMargin, btnDy + topMargin,
+                        SWP_NOZORDER | SWP_SHOWWINDOW);
         button->SetMargins(0, topMargin, rightMargin, 0);
 
         button = &ci->btn[CB_RESTORE];
@@ -327,7 +326,8 @@ void RelayoutCaption(WindowInfo *win)
 
         button = &ci->btn[CB_MINIMIZE];
         rc.dx -= btnDx + (isClassicStyle ? 0 : xEdge);
-        dh.SetWindowPos(button->hwnd, nullptr, rc.x + rc.dx, yPosBtn, btnDx, btnDy + topMargin, SWP_NOZORDER | SWP_SHOWWINDOW);
+        dh.SetWindowPos(button->hwnd, nullptr, rc.x + rc.dx, yPosBtn, btnDx, btnDy + topMargin,
+                        SWP_NOZORDER | SWP_SHOWWINDOW);
         button->SetMargins(0, topMargin, 0, 0);
     }
 
@@ -343,8 +343,7 @@ void RelayoutCaption(WindowInfo *win)
     dh.End();
 }
 
-static void DrawCaptionButton(DRAWITEMSTRUCT *item, WindowInfo *win)
-{
+static void DrawCaptionButton(DRAWITEMSTRUCT* item, WindowInfo* win) {
     if (!item || item->CtlType != ODT_BUTTON)
         return;
 
@@ -354,7 +353,7 @@ static void DrawCaptionButton(DRAWITEMSTRUCT *item, WindowInfo *win)
     HDC memDC = buffer.GetDC();
 
     UINT button = item->CtlID - BTN_ID_FIRST;
-    ButtonInfo *bi = &win->caption->btn[button];
+    ButtonInfo* bi = &win->caption->btn[button];
     RectI rc(rButton);
     rc.x += bi->margins.left;
     rc.y += bi->margins.top;
@@ -363,8 +362,7 @@ static void DrawCaptionButton(DRAWITEMSTRUCT *item, WindowInfo *win)
 
     int partId = 0, stateId;
     UINT state = (UINT)-1;
-    switch (button)
-    {
+    switch (button) {
         case CB_MINIMIZE:
             partId = WP_MINBUTTON;
             state = DFCS_CAPTIONMIN;
@@ -386,16 +384,13 @@ static void DrawCaptionButton(DRAWITEMSTRUCT *item, WindowInfo *win)
     if (ODS_SELECTED & item->itemState) {
         stateId = CBS_PUSHED;
         state |= DFCS_PUSHED;
-    }
-    else if (ODS_HOTLIGHT & item->itemState) {
+    } else if (ODS_HOTLIGHT & item->itemState) {
         stateId = CBS_HOT;
         state |= DFCS_HOT;
-    }
-    else if (ODS_DISABLED & item->itemState) {
+    } else if (ODS_DISABLED & item->itemState) {
         stateId = CBS_DISABLED;
         state |= DFCS_INACTIVE;
-    }
-    else if (ODS_INACTIVE & item->itemState)
+    } else if (ODS_INACTIVE & item->itemState)
         stateId = CBS_INACTIVE;
     else
         stateId = CBS_NORMAL;
@@ -415,10 +410,11 @@ static void DrawCaptionButton(DRAWITEMSTRUCT *item, WindowInfo *win)
     // draw menu's button
     if (button == CB_MENU) {
         PaintCaptionBackground(memDC, win, false);
-        Graphics graphics(memDC);
+        Graphics gfx(memDC);
 
-        if (CBS_PUSHED != stateId && ODS_FOCUS & item->itemState)
+        if (CBS_PUSHED != stateId && ODS_FOCUS & item->itemState) {
             stateId = CBS_HOT;
+        }
 
         BYTE buttonRGB = 1;
         if (CBS_PUSHED == stateId)
@@ -433,22 +429,21 @@ static void DrawCaptionButton(DRAWITEMSTRUCT *item, WindowInfo *win)
             }
             BYTE buttonAlpha = BYTE((255 - abs((int)GetLightness(win->caption->bgColor) - buttonRGB)) / 2);
             SolidBrush br(Color(buttonAlpha, buttonRGB, buttonRGB, buttonRGB));
-            graphics.FillRectangle(&br, rc.x, rc.y, rc.dx, rc.dy);
+            gfx.FillRectangle(&br, rc.x, rc.y, rc.dx, rc.dy);
         }
         // draw the three lines
         COLORREF c = win->caption->textColor;
         Pen p(Color(GetRValueSafe(c), GetGValueSafe(c), GetBValueSafe(c)), floor((float)rc.dy / 8.0f));
         rc.Inflate(-int(rc.dx * 0.2f + 0.5f), -int(rc.dy * 0.3f + 0.5f));
         for (int i = 0; i < 3; i++) {
-            graphics.DrawLine(&p, rc.x, rc.y + i * rc.dy / 2, rc.x + rc.dx, rc.y + i * rc.dy / 2);
+            gfx.DrawLine(&p, rc.x, rc.y + i * rc.dy / 2, rc.x + rc.dx, rc.y + i * rc.dy / 2);
         }
     }
 
     buffer.Flush(item->hDC);
 }
 
-void PaintParentBackground(HWND hwnd, HDC hdc)
-{
+void PaintParentBackground(HWND hwnd, HDC hdc) {
     HWND parent = GetParent(hwnd);
     POINT pt = {0, 0};
     MapWindowPoints(hwnd, parent, &pt, 1);
@@ -457,8 +452,7 @@ void PaintParentBackground(HWND hwnd, HDC hdc)
     SetViewportOrgEx(hdc, pt.x, pt.y, nullptr);
 }
 
-static void PaintCaptionBackground(HDC hdc, WindowInfo *win, bool useDoubleBuffer)
-{
+static void PaintCaptionBackground(HDC hdc, WindowInfo* win, bool useDoubleBuffer) {
     RECT rClip;
     GetClipBox(hdc, &rClip);
     RectI r = RectI::FromRECT(rClip);
@@ -467,13 +461,11 @@ static void PaintCaptionBackground(HDC hdc, WindowInfo *win, bool useDoubleBuffe
 
     if (win->caption->bgAlpha == 0) {
         PaintParentBackground(win->hwndCaption, hdc);
-    }
-    else if (win->caption->bgAlpha == 255) {
+    } else if (win->caption->bgAlpha == 255) {
         Graphics graphics(hdc);
         SolidBrush br(Color(GetRValueSafe(c), GetGValueSafe(c), GetBValueSafe(c)));
         graphics.FillRectangle(&br, r.x, r.y, r.dx, r.dy);
-    }
-    else {
+    } else {
         DoubleBuffer buffer(win->hwndCaption, r);
         HDC memDC = useDoubleBuffer ? buffer.GetDC() : hdc;
         PaintParentBackground(win->hwndCaption, memDC);
@@ -485,8 +477,7 @@ static void PaintCaptionBackground(HDC hdc, WindowInfo *win, bool useDoubleBuffe
     }
 }
 
-static void DrawFrame(HWND hwnd, COLORREF color, bool drawEdge=true)
-{
+static void DrawFrame(HWND hwnd, COLORREF color, bool drawEdge = true) {
     HDC hdc = GetWindowDC(hwnd);
 
     RECT rWindow, rClient;
@@ -512,8 +503,7 @@ static void DrawFrame(HWND hwnd, COLORREF color, bool drawEdge=true)
 // (can be static because there can only be one menu active at a time)
 static WCHAR gMenuAccelPressed = 0;
 
-LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, bool *callDef, WindowInfo *win)
-{
+LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, bool* callDef, WindowInfo* win) {
     if (dwm::IsCompositionEnabled()) {
         // Pass the messages to DwmDefWindowProc first. It serves the hit testing for the buttons.
         LRESULT res;
@@ -522,17 +512,15 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             return res;
         }
 
-        switch (msg)
-        {
-        case WM_NCPAINT:
+        switch (msg) {
+            case WM_NCPAINT:
 #if NON_CLIENT_BAND > 0
-            if (NeedsNonClientBandHack(hwnd))
-                DrawFrame(hwnd, RGB(0,0,0), false);
+                if (NeedsNonClientBandHack(hwnd))
+                    DrawFrame(hwnd, RGB(0, 0, 0), false);
 #endif
-            break;
+                break;
 
-        case WM_ERASEBKGND:
-            {
+            case WM_ERASEBKGND: {
                 // Erase the background only under the extended frame.
                 *callDef = false;
                 if (win->extendedFrameHeight == 0)
@@ -545,94 +533,92 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
                 if (newRegionComplexity == NULLREGION)
                     return TRUE;
             }
-            return DefWindowProc(hwnd, msg, wParam, lParam);
+                return DefWindowProc(hwnd, msg, wParam, lParam);
 
-        case WM_SIZE:
-            // Extend the translucent frame in the client area.
-            if (wParam == SIZE_MAXIMIZED || wParam == SIZE_RESTORED) {
-                int frameThickness = 0;
-                if (win::HasFrameThickness(hwnd)) {
-                    frameThickness = GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER);
-                }
-                int captionHeight = 0;
-                if (win::HasCaption(hwnd)) {
-                    float tabScale = CAPTION_TABBAR_HEIGHT_FACTOR;
-                    if (IsZoomed(hwnd)) {
-                        tabScale = 1.f;
+            case WM_SIZE:
+                // Extend the translucent frame in the client area.
+                if (wParam == SIZE_MAXIMIZED || wParam == SIZE_RESTORED) {
+                    int frameThickness = 0;
+                    if (win::HasFrameThickness(hwnd)) {
+                        frameThickness = GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER);
                     }
-                    captionHeight = GetTabbarHeight(win->hwndFrame, tabScale);
+                    int captionHeight = 0;
+                    if (win::HasCaption(hwnd)) {
+                        float tabScale = CAPTION_TABBAR_HEIGHT_FACTOR;
+                        if (IsZoomed(hwnd)) {
+                            tabScale = 1.f;
+                        }
+                        captionHeight = GetTabbarHeight(win->hwndFrame, tabScale);
+                    }
+                    int top = frameThickness + captionHeight;
+                    int bottom = NeedsNonClientBandHack(hwnd) ? NON_CLIENT_BAND : 0;
+                    MARGINS margins = {0, 0, top, bottom};
+                    dwm::ExtendFrameIntoClientArea(hwnd, &margins);
+                    win->extendedFrameHeight = frameThickness + captionHeight;
                 }
-                int top = frameThickness + captionHeight;
-                int bottom = NeedsNonClientBandHack(hwnd) ? NON_CLIENT_BAND : 0;
-                MARGINS margins = { 0, 0, top, bottom };
-                dwm::ExtendFrameIntoClientArea(hwnd, &margins);
-                win->extendedFrameHeight = frameThickness + captionHeight;
-            }
-            break;
+                break;
 
-        case WM_NCACTIVATE:
-            win->caption->UpdateColors((bool)wParam);
-            if (!IsIconic(hwnd))
-                RedrawWindow(win->hwndCaption, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
-            break;
+            case WM_NCACTIVATE:
+                win->caption->UpdateColors((bool)wParam);
+                if (!IsIconic(hwnd))
+                    RedrawWindow(win->hwndCaption, nullptr, nullptr,
+                                 RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
+                break;
         }
-    }
-    else {
-        switch (msg)
-        {
-        case WM_SETTINGCHANGE:
-            if (wParam == SPI_SETNONCLIENTMETRICS)
-                RelayoutCaption(win);
-            break;
+    } else {
+        switch (msg) {
+            case WM_SETTINGCHANGE:
+                if (wParam == SPI_SETNONCLIENTMETRICS)
+                    RelayoutCaption(win);
+                break;
 
-        case WM_NCPAINT:
-            DrawFrame(hwnd, win->caption->bgColor);
-            *callDef = false;
-            return 0;
-
-        case WM_NCACTIVATE:
-            win->caption->UpdateColors((bool)wParam);
-            for (int i = CB_BTN_FIRST; i < CB_BTN_COUNT; i++)
-                win->caption->btn[i].inactive = wParam == FALSE;
-            if (!IsIconic(hwnd)) {
+            case WM_NCPAINT:
                 DrawFrame(hwnd, win->caption->bgColor);
-                RedrawWindow(win->hwndCaption, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
+                *callDef = false;
+                return 0;
+
+            case WM_NCACTIVATE:
+                win->caption->UpdateColors((bool)wParam);
+                for (int i = CB_BTN_FIRST; i < CB_BTN_COUNT; i++)
+                    win->caption->btn[i].inactive = wParam == FALSE;
+                if (!IsIconic(hwnd)) {
+                    DrawFrame(hwnd, win->caption->bgColor);
+                    RedrawWindow(win->hwndCaption, nullptr, nullptr,
+                                 RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
+                    *callDef = false;
+                    return TRUE;
+                }
+                break;
+
+            case WM_NCUAHDRAWCAPTION:
+            case WM_NCUAHDRAWFRAME:
+                DrawFrame(hwnd, win->caption->bgColor);
                 *callDef = false;
                 return TRUE;
-            }
-            break;
 
-        case WM_NCUAHDRAWCAPTION:
-        case WM_NCUAHDRAWFRAME:
-            DrawFrame(hwnd, win->caption->bgColor);
-            *callDef = false;
-            return TRUE;
-
-        case WM_POPUPSYSTEMMENU:
-        case WM_SETCURSOR:
-        case WM_SETTEXT:
-        case WM_SETICON:
-            if (!win->caption->theme && IsWindowVisible(hwnd)) {
-                // Remove the WS_VISIBLE style to prevent DefWindowProc from drawing
-                // in the caption's area when processing these mesages.
-                // TODO: can't such drawing be prevented by handling WM_(NC)PAINT instead?
-                ToggleWindowStyle(hwnd, WS_VISIBLE, false);
-                LRESULT res = DefWindowProc(hwnd, msg, wParam, lParam);
-                ToggleWindowStyle(hwnd, WS_VISIBLE, true);
-                *callDef = false;
-                return res;
-            }
-            break;
+            case WM_POPUPSYSTEMMENU:
+            case WM_SETCURSOR:
+            case WM_SETTEXT:
+            case WM_SETICON:
+                if (!win->caption->theme && IsWindowVisible(hwnd)) {
+                    // Remove the WS_VISIBLE style to prevent DefWindowProc from drawing
+                    // in the caption's area when processing these mesages.
+                    // TODO: can't such drawing be prevented by handling WM_(NC)PAINT instead?
+                    ToggleWindowStyle(hwnd, WS_VISIBLE, false);
+                    LRESULT res = DefWindowProc(hwnd, msg, wParam, lParam);
+                    ToggleWindowStyle(hwnd, WS_VISIBLE, true);
+                    *callDef = false;
+                    return res;
+                }
+                break;
         }
     }
 
     // These messages must be handled in both modes - with or without DWM composition.
-    switch (msg)
-    {
-    case WM_NCCALCSIZE:
-        {
+    switch (msg) {
+        case WM_NCCALCSIZE: {
             // In order to have custom caption, we have to include its area in the client rectangle.
-            RECT *r = wParam == TRUE ? &((NCCALCSIZE_PARAMS *)lParam)->rgrc[0] : (RECT *)lParam;
+            RECT* r = wParam == TRUE ? &((NCCALCSIZE_PARAMS*)lParam)->rgrc[0] : (RECT*)lParam;
             RECT rWindow = *r;
             // Let DefWindowProc calculate the client rectangle.
             DefWindowProc(hwnd, msg, wParam, lParam);
@@ -648,10 +634,9 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             *r = rClient;
             *callDef = false;
         }
-        return 0;
+            return 0;
 
-    case WM_NCHITTEST:
-        {
+        case WM_NCHITTEST: {
             // Provide hit testing for the caption.
             PointI pt(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
             RectI rClient = MapRectToWindow(ClientRect(hwnd), hwnd, HWND_DESKTOP);
@@ -662,81 +647,80 @@ LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
                     return HTTOP;
                 return HTCAPTION;
             }
-        }
-        break;
+        } break;
 
-    case WM_NCRBUTTONUP:
-        // Prepare and show the system menu.
-        if (wParam == HTCAPTION) {
-            HMENU menu = GetUpdatedSystemMenu(hwnd);
-            UINT flags = TPM_RIGHTBUTTON | TPM_NONOTIFY | TPM_RETURNCMD;
-            if (GetSystemMetrics(SM_MENUDROPALIGNMENT))
-                flags |= TPM_RIGHTALIGN;
-            WPARAM cmd = TrackPopupMenu(menu, flags, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), 0, hwnd, nullptr);
-            if (cmd)
-                PostMessage(hwnd, WM_SYSCOMMAND, cmd, 0);
+        case WM_NCRBUTTONUP:
+            // Prepare and show the system menu.
+            if (wParam == HTCAPTION) {
+                HMENU menu = GetUpdatedSystemMenu(hwnd);
+                UINT flags = TPM_RIGHTBUTTON | TPM_NONOTIFY | TPM_RETURNCMD;
+                if (GetSystemMetrics(SM_MENUDROPALIGNMENT))
+                    flags |= TPM_RIGHTALIGN;
+                WPARAM cmd = TrackPopupMenu(menu, flags, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), 0, hwnd, nullptr);
+                if (cmd)
+                    PostMessage(hwnd, WM_SYSCOMMAND, cmd, 0);
+                *callDef = false;
+                return 0;
+            }
+            break;
+
+        case WM_SYSCOMMAND:
+            if (wParam == SC_KEYMENU) {
+                // Show the "menu bar" (and the desired submenu)
+                gMenuAccelPressed = (WCHAR)lParam;
+                if (' ' == gMenuAccelPressed) {
+                    // map space to the accelerator of the Window menu
+                    if (str::FindChar(_TR("&Window"), '&'))
+                        gMenuAccelPressed = *(str::FindChar(_TR("&Window"), '&') + 1);
+                }
+                PostMessage(win->hwndCaption, WM_COMMAND, MAKELONG(BTN_ID_FIRST + CB_MENU, BN_CLICKED), 0);
+                *callDef = false;
+                return 0;
+            }
+            break;
+
+        case WM_INITMENUPOPUP:
+            if (gMenuAccelPressed) {
+                // poorly documented hack: find the menu window and send it the accelerator key
+                HWND hMenu = FindWindow(UNDOCUMENTED_MENU_CLASS_NAME, nullptr);
+                if (hMenu) {
+                    if ('a' <= gMenuAccelPressed && gMenuAccelPressed <= 'z')
+                        gMenuAccelPressed -= 'a' - 'A';
+                    if ('A' <= gMenuAccelPressed && gMenuAccelPressed <= 'Z')
+                        PostMessage(hMenu, WM_KEYDOWN, gMenuAccelPressed, 0);
+                    else
+                        PostMessage(hMenu, WM_CHAR, gMenuAccelPressed, 0);
+                }
+                gMenuAccelPressed = 0;
+            }
+            break;
+
+        case WM_SYSCOLORCHANGE:
+            win->caption->UpdateColors(hwnd == GetForegroundWindow());
+            break;
+
+        case WM_DWMCOLORIZATIONCOLORCHANGED:
+            win->caption->UpdateColors(hwnd == GetForegroundWindow());
+            if (!IsIconic(hwnd))
+                RedrawWindow(win->hwndCaption, nullptr, nullptr,
+                             RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
+            break;
+
+        case WM_DWMCOMPOSITIONCHANGED:
+            win->caption->UpdateBackgroundAlpha();
+            ClientRect cr(hwnd);
+            SetWindowPos(hwnd, nullptr, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOMOVE);
+            if (ClientRect(hwnd) == cr)
+                SendMessage(hwnd, WM_SIZE, 0, MAKELONG(cr.dx, cr.dy));
             *callDef = false;
             return 0;
-        }
-        break;
-
-    case WM_SYSCOMMAND:
-        if (wParam == SC_KEYMENU) {
-            // Show the "menu bar" (and the desired submenu)
-            gMenuAccelPressed = (WCHAR)lParam;
-            if (' ' == gMenuAccelPressed) {
-                // map space to the accelerator of the Window menu
-                if (str::FindChar(_TR("&Window"), '&'))
-                    gMenuAccelPressed = *(str::FindChar(_TR("&Window"), '&') + 1);
-            }
-            PostMessage(win->hwndCaption, WM_COMMAND, MAKELONG(BTN_ID_FIRST + CB_MENU, BN_CLICKED), 0);
-            *callDef = false;
-            return 0;
-        }
-        break;
-
-    case WM_INITMENUPOPUP:
-        if (gMenuAccelPressed) {
-            // poorly documented hack: find the menu window and send it the accelerator key
-            HWND hMenu = FindWindow(UNDOCUMENTED_MENU_CLASS_NAME, nullptr);
-            if (hMenu) {
-                if ('a' <= gMenuAccelPressed && gMenuAccelPressed <= 'z')
-                    gMenuAccelPressed -= 'a' - 'A';
-                if ('A' <= gMenuAccelPressed && gMenuAccelPressed <= 'Z')
-                    PostMessage(hMenu, WM_KEYDOWN, gMenuAccelPressed, 0);
-                else
-                    PostMessage(hMenu, WM_CHAR, gMenuAccelPressed, 0);
-            }
-            gMenuAccelPressed = 0;
-        }
-        break;
-
-    case WM_SYSCOLORCHANGE:
-        win->caption->UpdateColors(hwnd == GetForegroundWindow());
-        break;
-
-    case WM_DWMCOLORIZATIONCOLORCHANGED:
-        win->caption->UpdateColors(hwnd == GetForegroundWindow());
-        if (!IsIconic(hwnd))
-            RedrawWindow(win->hwndCaption, nullptr, nullptr, RDW_ERASE | RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
-        break;
-
-    case WM_DWMCOMPOSITIONCHANGED:
-        win->caption->UpdateBackgroundAlpha();
-        ClientRect cr(hwnd);
-        SetWindowPos(hwnd, nullptr, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOMOVE);
-        if (ClientRect(hwnd) == cr)
-            SendMessage(hwnd, WM_SIZE, 0, MAKELONG(cr.dx, cr.dy));
-        *callDef = false;
-        return 0;
     }
 
     *callDef = true;
     return 0;
 }
 
-static HMENU GetUpdatedSystemMenu(HWND hwnd)
-{
+static HMENU GetUpdatedSystemMenu(HWND hwnd) {
     // don't reset the system menu (in case other applications have added to it)
     HMENU menu = GetSystemMenu(hwnd, FALSE);
 
@@ -758,15 +742,14 @@ static HMENU GetUpdatedSystemMenu(HWND hwnd)
     return menu;
 }
 
-static void MenuBarAsPopupMenu(WindowInfo *win, int x, int y)
-{
+static void MenuBarAsPopupMenu(WindowInfo* win, int x, int y) {
     int count = GetMenuItemCount(win->menu);
     if (count <= 0) {
         return;
     }
     HMENU popup = CreatePopupMenu();
 
-    MENUITEMINFO mii = { 0 };
+    MENUITEMINFO mii = {0};
     mii.cbSize = sizeof(MENUITEMINFO);
     mii.fMask = MIIM_SUBMENU | MIIM_STRING;
     for (int i = 0; i < count; i++) {
@@ -798,4 +781,3 @@ static void MenuBarAsPopupMenu(WindowInfo *win, int x, int y)
     }
     DestroyMenu(popup);
 }
-

@@ -2,13 +2,13 @@
    License: GPLv3 */
 
 // factor by how large the non-maximized caption should be in relation to the tabbar
-#define CAPTION_TABBAR_HEIGHT_FACTOR  1.25f
+#define CAPTION_TABBAR_HEIGHT_FACTOR 1.25f
 
-void CreateCaption(WindowInfo *win);
+void CreateCaption(WindowInfo* win);
 void RegisterCaptionWndClass();
-LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, bool *callDef, WindowInfo *win);
+LRESULT CustomCaptionFrameProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, bool* callDef, WindowInfo* win);
 void PaintParentBackground(HWND hwnd, HDC hdc);
-void RelayoutCaption(WindowInfo *win);
+void RelayoutCaption(WindowInfo* win);
 
 enum CaptionButtons {
     CB_BTN_FIRST = 0,
@@ -20,8 +20,7 @@ enum CaptionButtons {
     CB_BTN_COUNT
 };
 
-struct ButtonInfo
-{
+struct ButtonInfo {
     HWND hwnd;
     bool highlighted;
     bool inactive;
@@ -33,17 +32,16 @@ struct ButtonInfo
     void SetMargins(LONG left, LONG top, LONG right, LONG bottom);
 };
 
-class CaptionInfo
-{
+class CaptionInfo {
     HWND hwnd;
 
-public:
-    ButtonInfo  btn[CB_BTN_COUNT];
-    HTHEME      theme;
-    COLORREF    bgColor;
-    COLORREF    textColor;
-    BYTE        bgAlpha;
-    bool        isMenuOpen;
+  public:
+    ButtonInfo btn[CB_BTN_COUNT];
+    HTHEME theme;
+    COLORREF bgColor;
+    COLORREF textColor;
+    BYTE bgAlpha;
+    bool isMenuOpen;
 
     explicit CaptionInfo(HWND hwndCaption);
     ~CaptionInfo();
