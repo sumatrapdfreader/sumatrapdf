@@ -1053,10 +1053,8 @@ static LRESULT WndProcCanvasFixedPageUI(WindowInfo* win, HWND hwnd, UINT msg, WP
             return 0;
 
         case WM_MOUSEWHEEL:
-            return CanvasOnMouseWheel(win, msg, wParam, lParam);
-
         case WM_MOUSEHWHEEL:
-            return CanvasOnMouseHWheel(win, msg, wParam, lParam);
+            return CanvasOnMouseWheel(win, msg, wParam, lParam);
 
         case WM_SETCURSOR:
             if (OnSetCursor(win, hwnd))

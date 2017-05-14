@@ -4303,7 +4303,7 @@ InitMouseWheelInfo:
         case WM_ENDSESSION:
             // TODO: check for unfinished print jobs in WM_QUERYENDSESSION?
             prefs::Save();
-            break;
+            return 0;
 
         case WM_DDE_INITIATE:
             if (gPluginMode)
