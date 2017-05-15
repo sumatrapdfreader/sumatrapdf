@@ -20,12 +20,6 @@ SET _VS_VERSION=VS 2015
 REM defining _USING_V140_SDK71_ is only needed for MFC/ATL headers
 GOTO SELECT_PLATFORM
 
-:VS_2013
-CALL "%VS120COMNTOOLS%\vsvars32.bat"
-SET _VS_VERSION=VS 2013
-REM defining _USING_V120_SDK71_ is only needed for MFC/ATL headers
-GOTO SELECT_PLATFORM
-
 :SELECT_PLATFORM
 IF NOT "%ProgramFiles(x86)%"=="" GOTO XP_WIN64
 REM TODO: for /analyze, we shouldn't use XP toolset
