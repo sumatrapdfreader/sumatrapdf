@@ -29,14 +29,14 @@ func md5B64OfBytes(d []byte) string {
 
 func md5B64OfFile(path string) string {
 	d, err := ioutil.ReadFile(path)
-	fataliferr(err)
+	fatalIfErr(err)
 	return md5B64OfBytes(d)
 }
 
 func s3VerifyHasSecrets() {
-	fatalif(s3AwsAccess == "", "invalid s3AwsAccess\n")
-	fatalif(s3AwsSecret == "", "invalid s3AwsSsecret\n")
-	fatalif(s3AwsSecret == s3AwsAccess, "s3AwsSecret == s3AwsAccess")
+	fatalIf(s3AwsAccess == "", "invalid s3AwsAccess\n")
+	fatalIf(s3AwsSecret == "", "invalid s3AwsSsecret\n")
+	fatalIf(s3AwsSecret == s3AwsAccess, "s3AwsSecret == s3AwsAccess")
 }
 
 // must be called before any other call

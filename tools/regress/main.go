@@ -90,7 +90,7 @@ func getCacheDirMust() string {
 	if cacheDir == "" {
 		d := filepath.Join("..", "sumatra-test-files")
 		err := os.MkdirAll(d, 0755)
-		fataliferr(err)
+		fatalIfErr(err)
 		cacheDir = d
 	}
 	return cacheDir
@@ -102,7 +102,7 @@ func fatalf(format string, args ...interface{}) {
 	os.Exit(1)
 }
 
-func fatalif(cond bool, format string, args ...interface{}) {
+func fatalIf(cond bool, format string, args ...interface{}) {
 	if cond {
 		if inFatal {
 			os.Exit(1)
@@ -114,7 +114,7 @@ func fatalif(cond bool, format string, args ...interface{}) {
 	}
 }
 
-func fataliferr(err error) {
+func fatalIfErr(err error) {
 	if err != nil {
 		fatalf("%s\n", err.Error())
 	}
@@ -162,14 +162,14 @@ func parseTest(lines []string) (*Test, []string) {
 		}
 
 		parts := strings.SplitN(l, ":", 2)
-		fatalif(len(parts) != 2, "invalid line: '%s'", l)
+		fatalIf(len(parts) != 2, "invalid line: '%s'", l)
 		name := strings.ToLower(parts[0])
 		val := strings.TrimSpace(parts[1])
 		switch name {
 		case "url":
 			t.FileURL = val
 		case "sha1":
-			fatalif(len(val) != 40, "len(val) != 40 (%d)", len(val))
+			fatalIf(len(val) != 40, "len(val) != 40 (%d)", len(val))
 			t.FileSha1Hex = val
 		case "cmd":
 			t.CmdUnparsed = val
@@ -177,10 +177,10 @@ func parseTest(lines []string) (*Test, []string) {
 			t.ExpectedOutput = val
 		}
 	}
-	fatalif(t.FileURL == "", "Url: filed missing")
-	fatalif(t.FileSha1Hex == "", "Sha1: field missing")
-	fatalif(t.CmdUnparsed == "", "Cmd: field missing")
-	fatalif(t.ExpectedOutput == "", "Out: field missing")
+	fatalIf(t.FileURL == "", "Url: filed missing")
+	fatalIf(t.FileSha1Hex == "", "Sha1: field missing")
+	fatalIf(t.CmdUnparsed == "", "Cmd: field missing")
+	fatalIf(t.ExpectedOutput == "", "Out: field missing")
 
 	parts := strings.Split(t.CmdUnparsed, " ")
 	t.CmdName = parts[0]
@@ -192,7 +192,7 @@ func parseTestsMust(path string) []*Test {
 	var res []*Test
 	var test *Test
 	d, err := ioutil.ReadFile(path)
-	fataliferr(err)
+	fatalIfErr(err)
 	lines := toTrimmedLines(d)
 	lines = collapseMultipleEmptyLines(lines)
 	for {
@@ -306,11 +306,11 @@ func sha1HexOfBytes(data []byte) string {
 
 func sha1OfFile(path string) ([]byte, error) {
 	f, err := os.Open(path)
-	fataliferr(err)
+	fatalIfErr(err)
 	defer f.Close()
 	h := sha1.New()
 	_, err = io.Copy(h, f)
-	fataliferr(err)
+	fatalIfErr(err)
 	return h.Sum(nil), nil
 }
 
@@ -324,10 +324,10 @@ func sha1HexOfFile(path string) (string, error) {
 
 func httpDlMust(uri string) []byte {
 	res, err := http.Get(uri)
-	fataliferr(err)
+	fatalIfErr(err)
 	d, err := ioutil.ReadAll(res.Body)
 	res.Body.Close()
-	fataliferr(err)
+	fatalIfErr(err)
 	return d
 }
 
@@ -342,12 +342,12 @@ func dlIfNotExistsMust(uri, sha1Hex string) {
 	fmt.Printf("downloading '%s'...", uri)
 	d := httpDlMust(uri)
 	realSha1Hex := sha1HexOfBytes(d)
-	fatalif(sha1Hex != realSha1Hex, "sha1Hex != realSha1Hex (%s != %s)", sha1Hex, realSha1Hex)
+	fatalIf(sha1Hex != realSha1Hex, "sha1Hex != realSha1Hex (%s != %s)", sha1Hex, realSha1Hex)
 	ext := filepath.Ext(uri)
 	fileName := sha1Hex + ext
 	path := filepath.Join(getCacheDirMust(), fileName)
 	err := ioutil.WriteFile(path, d, 0644)
-	fataliferr(err)
+	fatalIfErr(err)
 	fmt.Printf(" saved to '%s'\n", path)
 	testFilesBySha1[sha1Hex] = &TestFile{
 		Path:    path,
@@ -378,14 +378,14 @@ func removeExt(s string) string {
 func verifyTestFiles() {
 	d := getCacheDirMust()
 	files, err := ioutil.ReadDir(d)
-	fataliferr(err)
+	fatalIfErr(err)
 	for _, fi := range files {
 		path := filepath.Join(d, fi.Name())
 		sha1HexFromName := removeExt(fi.Name())
-		fatalif(len(sha1HexFromName) != 40, "len(sha1HexFromName) != 40 (%d)", len(sha1HexFromName))
+		fatalIf(len(sha1HexFromName) != 40, "len(sha1HexFromName) != 40 (%d)", len(sha1HexFromName))
 		sha1Hex, err := sha1HexOfFile(path)
-		fataliferr(err)
-		fatalif(sha1Hex != sha1HexFromName, "sha1Hex != sha1HexFromName (%s != %s)", sha1Hex, sha1HexFromName)
+		fatalIfErr(err)
+		fatalIf(sha1Hex != sha1HexFromName, "sha1Hex != sha1HexFromName (%s != %s)", sha1Hex, sha1HexFromName)
 		testFilesBySha1[sha1Hex] = &TestFile{
 			Path:    path,
 			Sha1Hex: sha1Hex,
@@ -424,7 +424,7 @@ func verifyCommandsMust(tests []*Test) {
 		dirsToCheck = append(dirsToCheck, "rel")
 	}
 	// TODO: also check dbg64 and dbg?
-	fatalif(len(dirsToCheck) == 0, "there is no rel or rel64 directory with executables")
+	fatalIf(len(dirsToCheck) == 0, "there is no rel or rel64 directory with executables")
 	for _, test := range tests {
 		cmds[test.CmdName] = true
 	}
@@ -445,7 +445,7 @@ func verifyCommandsMust(tests []*Test) {
 			fmt.Printf("dir '%s' has only %d out of %d commands\n", dir, len(cmdsFound), len(cmds))
 		}
 	}
-	fatalif(dirWithCommands == "", "didn't find a directory with all tests commands %v\n", cmds)
+	fatalIf(dirWithCommands == "", "didn't find a directory with all tests commands %v\n", cmds)
 	for _, test := range tests {
 		test.CmdPath = filepath.Join(dirWithCommands, test.CmdName)
 	}
@@ -465,7 +465,7 @@ func substFileVarAll(tests []*Test) {
 	for _, test := range tests {
 		sha1Hex := test.FileSha1Hex
 		tf := testFilesBySha1[sha1Hex]
-		fatalif(tf == nil, "no test file for '%s'\n", sha1Hex)
+		fatalIf(tf == nil, "no test file for '%s'\n", sha1Hex)
 		test.FilePath = tf.Path
 		test.ExpectedOutput = substFileVar(test.ExpectedOutput, tf.Path)
 		for i, arg := range test.CmdArgs {

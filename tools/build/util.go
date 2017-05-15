@@ -84,7 +84,7 @@ func fatalf(format string, args ...interface{}) {
 	os.Exit(1)
 }
 
-func fatalif(cond bool, format string, args ...interface{}) {
+func fatalIf(cond bool, format string, args ...interface{}) {
 	if cond {
 		if inFatal {
 			os.Exit(1)
@@ -97,7 +97,7 @@ func fatalif(cond bool, format string, args ...interface{}) {
 	}
 }
 
-func fataliferr(err error) {
+func fatalIfErr(err error) {
 	if err != nil {
 		fatalf("%s\n", err.Error())
 	}
@@ -136,22 +136,22 @@ func toTrimmedLines(d []byte) []string {
 
 func fileSizeMust(path string) int64 {
 	fi, err := os.Stat(path)
-	fataliferr(err)
+	fatalIfErr(err)
 	return fi.Size()
 }
 
 func fileCopyMust(dst, src string) {
 	in, err := os.Open(src)
-	fataliferr(err)
+	fatalIfErr(err)
 	defer in.Close()
 
 	out, err := os.Create(dst)
-	fataliferr(err)
+	fatalIfErr(err)
 
 	_, err = io.Copy(out, in)
 	cerr := out.Close()
-	fataliferr(err)
-	fataliferr(cerr)
+	fatalIfErr(err)
+	fatalIfErr(cerr)
 }
 
 func isNum(s string) bool {
@@ -161,14 +161,14 @@ func isNum(s string) bool {
 
 func isGitClean() bool {
 	out, err := runExe("git", "status", "--porcelain")
-	fataliferr(err)
+	fatalIfErr(err)
 	s := strings.TrimSpace(string(out))
 	return len(s) == 0
 }
 
 func removeDirMust(dir string) {
 	err := os.RemoveAll(dir)
-	fataliferr(err)
+	fatalIfErr(err)
 }
 
 func removeFileMust(path string) {
@@ -176,23 +176,23 @@ func removeFileMust(path string) {
 		return
 	}
 	err := os.Remove(path)
-	fataliferr(err)
+	fatalIfErr(err)
 }
 
 // Version must be in format x.y.z
 func verifyCorrectVersionMust(ver string) {
 	parts := strings.Split(ver, ".")
-	fatalif(len(parts) == 0 || len(parts) > 3, "%s is not a valid version number", ver)
+	fatalIf(len(parts) == 0 || len(parts) > 3, "%s is not a valid version number", ver)
 	for _, part := range parts {
-		fatalif(!isNum(part), "%s is not a valid version number", ver)
+		fatalIf(!isNum(part), "%s is not a valid version number", ver)
 	}
 }
 
 func getGitSha1Must() string {
 	out, err := runExe("git", "rev-parse", "HEAD")
-	fataliferr(err)
+	fatalIfErr(err)
 	s := strings.TrimSpace(string(out))
-	fatalif(len(s) != 40, "getGitSha1Must(): %s doesn't look like sha1\n", s)
+	fatalIf(len(s) != 40, "getGitSha1Must(): %s doesn't look like sha1\n", s)
 	return s
 }
 
@@ -212,24 +212,24 @@ func fileSha1Hex(path string) (string, error) {
 
 func httpDlMust(uri string) []byte {
 	res, err := http.Get(uri)
-	fataliferr(err)
+	fatalIfErr(err)
 	d, err := ioutil.ReadAll(res.Body)
 	res.Body.Close()
-	fataliferr(err)
+	fatalIfErr(err)
 	return d
 }
 
 func httpDlToFileMust(uri string, path string, sha1Hex string) {
 	if fileExists(path) {
 		sha1File, err := fileSha1Hex(path)
-		fataliferr(err)
-		fatalif(sha1File != sha1Hex, "file '%s' exists but has sha1 of %s and we expected %s", path, sha1File, sha1Hex)
+		fatalIfErr(err)
+		fatalIf(sha1File != sha1Hex, "file '%s' exists but has sha1 of %s and we expected %s", path, sha1File, sha1Hex)
 		return
 	}
 	fmt.Printf("Downloading '%s'\n", uri)
 	d := httpDlMust(uri)
 	sha1File := dataSha1Hex(d)
-	fatalif(sha1File != sha1Hex, "downloaded '%s' but it has sha1 of %s and we expected %s", uri, sha1File, sha1Hex)
+	fatalIf(sha1File != sha1Hex, "downloaded '%s' but it has sha1 of %s and we expected %s", uri, sha1File, sha1Hex)
 	err := ioutil.WriteFile(path, d, 0755)
-	fataliferr(err)
+	fatalIfErr(err)
 }

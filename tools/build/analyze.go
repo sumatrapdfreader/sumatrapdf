@@ -50,7 +50,7 @@ var (
 func currDirLen() int {
 	if currDirLenCached == 0 {
 		dir, err := os.Getwd()
-		fataliferr(err)
+		fatalIfErr(err)
 		currDirLenCached = len(dir)
 	}
 	return currDirLenCached
@@ -124,17 +124,17 @@ func parseAnalyzeLine(s string) AnalyzeLine {
 	sOrig := s
 	// remove " [C:\Users\kjk\src\sumatrapdf\vs2015\Installer.vcxproj]" from the end
 	end := strings.LastIndex(s, " [")
-	fatalif(end == -1, "invalid line '%s'\n", sOrig)
+	fatalIf(end == -1, "invalid line '%s'\n", sOrig)
 	s = s[:end]
 	parts := strings.SplitN(s, "): ", 2)
-	fatalif(len(parts) != 2, "invalid line '%s'\n", sOrig)
+	fatalIf(len(parts) != 2, "invalid line '%s'\n", sOrig)
 	res := AnalyzeLine{
 		OrigLine: sOrig,
 		Message:  parts[1],
 	}
 	s = parts[0]
 	end = strings.LastIndex(s, "(")
-	fatalif(end == -1, "invalid line '%s'\n", sOrig)
+	fatalIf(end == -1, "invalid line '%s'\n", sOrig)
 	// change
 	// c:\users\kjk\src\sumatrapdf\ext\unarr\rar\uncompress-rar.c
 	// =>
@@ -149,7 +149,7 @@ func parseAnalyzeLine(s string) AnalyzeLine {
 	start = currDirLen() + 1
 	res.FilePath = path[start:]
 	n, err := strconv.Atoi(s[end+1:])
-	fataliferr(err)
+	fatalIfErr(err)
 	res.LineNo = n
 	return res
 }
@@ -220,12 +220,12 @@ func parseAnalyzeOutput(d []byte) {
 
 	s := genAnalyzeHTML(deDuped)
 	err := ioutil.WriteFile("analyze-errors.html", []byte(s), 0644)
-	fataliferr(err)
+	fatalIfErr(err)
 	// TODO: open a browser with analyze-errors.html
 }
 
 func parseSavedAnalyzeOuptut() {
 	d, err := ioutil.ReadFile("analyze-output.txt")
-	fataliferr(err)
+	fatalIfErr(err)
 	parseAnalyzeOutput(d)
 }
