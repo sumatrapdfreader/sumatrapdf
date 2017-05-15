@@ -6,27 +6,26 @@
 #error BUILD_UNINSTALLER must not be defined!!!
 #endif
 
-#define ID_CHECKBOX_MAKE_DEFAULT      14
-#define ID_CHECKBOX_BROWSER_PLUGIN    15
-#define ID_BUTTON_START_SUMATRA       16
-#define ID_BUTTON_OPTIONS             17
-#define ID_BUTTON_BROWSE              18
-#define ID_CHECKBOX_PDF_FILTER        19
-#define ID_CHECKBOX_PDF_PREVIEWER     20
+#define ID_CHECKBOX_MAKE_DEFAULT 14
+#define ID_CHECKBOX_BROWSER_PLUGIN 15
+#define ID_BUTTON_START_SUMATRA 16
+#define ID_BUTTON_OPTIONS 17
+#define ID_BUTTON_BROWSE 18
+#define ID_CHECKBOX_PDF_FILTER 19
+#define ID_CHECKBOX_PDF_PREVIEWER 20
 
-static HWND             gHwndButtonOptions = nullptr;
-       HWND             gHwndButtonRunSumatra = nullptr;
-static HWND             gHwndStaticInstDir = nullptr;
-static HWND             gHwndTextboxInstDir = nullptr;
-static HWND             gHwndButtonBrowseDir = nullptr;
-static HWND             gHwndCheckboxRegisterDefault = nullptr;
-static HWND             gHwndCheckboxRegisterPdfFilter = nullptr;
-static HWND             gHwndCheckboxRegisterPdfPreviewer = nullptr;
-static HWND             gHwndCheckboxKeepBrowserPlugin = nullptr;
-static HWND             gHwndProgressBar = nullptr;
+static HWND gHwndButtonOptions = nullptr;
+HWND gHwndButtonRunSumatra = nullptr;
+static HWND gHwndStaticInstDir = nullptr;
+static HWND gHwndTextboxInstDir = nullptr;
+static HWND gHwndButtonBrowseDir = nullptr;
+static HWND gHwndCheckboxRegisterDefault = nullptr;
+static HWND gHwndCheckboxRegisterPdfFilter = nullptr;
+static HWND gHwndCheckboxRegisterPdfPreviewer = nullptr;
+static HWND gHwndCheckboxKeepBrowserPlugin = nullptr;
+static HWND gHwndProgressBar = nullptr;
 
-static int GetInstallationStepCount()
-{
+static int GetInstallationStepCount() {
     /* Installation steps
      * - Create directory
      * - One per file to be copied (count extracted from gPayloadData)
@@ -45,16 +44,14 @@ static int GetInstallationStepCount()
     return count;
 }
 
-static inline void ProgressStep()
-{
+static inline void ProgressStep() {
     if (gHwndProgressBar)
         PostMessage(gHwndProgressBar, PBM_STEPIT, 0, 0);
 }
 
-static bool ExtractFiles(lzma::SimpleArchive *archive)
-{
-    lzma::FileInfo *fi;
-    char *uncompressed;
+static bool ExtractFiles(lzma::SimpleArchive* archive) {
+    lzma::FileInfo* fi;
+    char* uncompressed;
 
     FileTransaction trans;
     for (int i = 0; gPayloadData[i].fileName; i++) {
@@ -69,7 +66,8 @@ static bool ExtractFiles(lzma::SimpleArchive *archive)
         fi = &archive->files[idx];
         uncompressed = lzma::GetFileDataByIdx(archive, idx, nullptr);
         if (!uncompressed) {
-            NotifyFailed(_TR("The installer has been corrupted. Please download it again.\nSorry for the inconvenience!"));
+            NotifyFailed(
+                _TR("The installer has been corrupted. Please download it again.\nSorry for the inconvenience!"));
             return false;
         }
         ScopedMem<WCHAR> filePath(str::conv::FromUtf8(fi->name));
@@ -99,8 +97,7 @@ static bool IsValidInstaller()
 }
 #endif
 
-static bool InstallCopyFiles()
-{
+static bool InstallCopyFiles() {
     bool ok;
     HGLOBAL res = 0;
     HRSRC resSrc = FindResource(GetModuleHandle(nullptr), MAKEINTRESOURCE(1), RT_RCDATA);
@@ -110,7 +107,7 @@ static bool InstallCopyFiles()
     if (!res)
         goto Corrupted;
 
-    const char *data = (const char*)LockResource(res);
+    const char* data = (const char*)LockResource(res);
     DWORD dataSize = SizeofResource(nullptr, resSrc);
 
     lzma::SimpleArchive archive;
@@ -130,39 +127,35 @@ Corrupted:
 }
 
 /* Caller needs to free() the result. */
-static WCHAR *GetDefaultPdfViewer()
-{
+static WCHAR* GetDefaultPdfViewer() {
     ScopedMem<WCHAR> buf(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT L"\\UserChoice", PROG_ID));
     if (buf)
         return buf.StealData();
     return ReadRegStr(HKEY_CLASSES_ROOT, L".pdf", nullptr);
 }
 
-static bool IsBrowserPluginInstalled()
-{
+static bool IsBrowserPluginInstalled() {
     ScopedMem<WCHAR> dllPath(GetInstalledBrowserPluginPath());
     return file::Exists(dllPath);
 }
 
-bool IsPdfFilterInstalled()
-{
+bool IsPdfFilterInstalled() {
     ScopedMem<WCHAR> handler_iid(ReadRegStr(HKEY_CLASSES_ROOT, L".pdf\\PersistentHandler", nullptr));
     if (!handler_iid)
         return false;
     return str::EqI(handler_iid, SZ_PDF_FILTER_HANDLER);
 }
 
-bool IsPdfPreviewerInstalled()
-{
-    ScopedMem<WCHAR> handler_iid(ReadRegStr(HKEY_CLASSES_ROOT, L".pdf\\shellex\\{8895b1c6-b41f-4c1c-a562-0d564250836f}", nullptr));
+bool IsPdfPreviewerInstalled() {
+    ScopedMem<WCHAR> handler_iid(
+        ReadRegStr(HKEY_CLASSES_ROOT, L".pdf\\shellex\\{8895b1c6-b41f-4c1c-a562-0d564250836f}", nullptr));
     if (!handler_iid)
         return false;
     return str::EqI(handler_iid, SZ_PDF_PREVIEW_CLSID);
 }
 
 // Note: doesn't handle (total) sizes above 4GB
-static DWORD GetDirSize(const WCHAR *dir)
-{
+static DWORD GetDirSize(const WCHAR* dir) {
     ScopedMem<WCHAR> dirPattern(path::Join(dir, L"*"));
     WIN32_FIND_DATA findData;
 
@@ -174,8 +167,7 @@ static DWORD GetDirSize(const WCHAR *dir)
     do {
         if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
             totalSize += findData.nFileSizeLow;
-        }
-        else if (!str::Eq(findData.cFileName, L".") && !str::Eq(findData.cFileName, L"..")) {
+        } else if (!str::Eq(findData.cFileName, L".") && !str::Eq(findData.cFileName, L"..")) {
             ScopedMem<WCHAR> subdir(path::Join(dir, findData.cFileName));
             totalSize += GetDirSize(subdir);
         }
@@ -186,15 +178,13 @@ static DWORD GetDirSize(const WCHAR *dir)
 }
 
 // caller needs to free() the result
-static WCHAR *GetInstallDate()
-{
+static WCHAR* GetInstallDate() {
     SYSTEMTIME st;
     GetSystemTime(&st);
     return str::Format(L"%04d%02d%02d", st.wYear, st.wMonth, st.wDay);
 }
 
-static bool WriteUninstallerRegistryInfo(HKEY hkey)
-{
+static bool WriteUninstallerRegistryInfo(HKEY hkey) {
     bool ok = true;
 
     ScopedMem<WCHAR> installedExePath(GetInstalledExePath());
@@ -203,10 +193,10 @@ static bool WriteUninstallerRegistryInfo(HKEY hkey)
     ScopedMem<WCHAR> uninstallCmdLine(str::Format(L"\"%s\"", ScopedMem<WCHAR>(GetUninstallerPath())));
 
     // path to installed executable (or "$path,0" to force the first icon)
-    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, L"DisplayIcon", installedExePath);
-    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, L"DisplayName", APP_NAME_STR);
+    ok &= WriteRegStr(hkey, REG_PATH_UNINST, L"DisplayIcon", installedExePath);
+    ok &= WriteRegStr(hkey, REG_PATH_UNINST, L"DisplayName", APP_NAME_STR);
     // version format: "1.2"
-    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, L"DisplayVersion", CURR_VERSION_STR);
+    ok &= WriteRegStr(hkey, REG_PATH_UNINST, L"DisplayVersion", CURR_VERSION_STR);
     // Windows XP doesn't allow to view the version number at a glance,
     // so include it in the DisplayName
     if (!IsVistaOrGreater())
@@ -215,39 +205,38 @@ static bool WriteUninstallerRegistryInfo(HKEY hkey)
     // size of installed directory after copying files
     ok &= WriteRegDWORD(hkey, REG_PATH_UNINST, L"EstimatedSize", size);
     // current date as YYYYMMDD
-    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, L"InstallDate", installDate);
-    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, L"InstallLocation", installDir);
+    ok &= WriteRegStr(hkey, REG_PATH_UNINST, L"InstallDate", installDate);
+    ok &= WriteRegStr(hkey, REG_PATH_UNINST, L"InstallLocation", installDir);
     ok &= WriteRegDWORD(hkey, REG_PATH_UNINST, L"NoModify", 1);
     ok &= WriteRegDWORD(hkey, REG_PATH_UNINST, L"NoRepair", 1);
-    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, L"Publisher", TEXT(PUBLISHER_STR));
+    ok &= WriteRegStr(hkey, REG_PATH_UNINST, L"Publisher", TEXT(PUBLISHER_STR));
     // command line for uninstaller
-    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, L"UninstallString", uninstallCmdLine);
-    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, L"URLInfoAbout", L"http://www.sumatrapdfreader.org/");
-    ok &= WriteRegStr(hkey,   REG_PATH_UNINST, L"URLUpdateInfo", L"http://www.sumatrapdfreader.org/news.html");
+    ok &= WriteRegStr(hkey, REG_PATH_UNINST, L"UninstallString", uninstallCmdLine);
+    ok &= WriteRegStr(hkey, REG_PATH_UNINST, L"URLInfoAbout", L"http://www.sumatrapdfreader.org/");
+    ok &= WriteRegStr(hkey, REG_PATH_UNINST, L"URLUpdateInfo", L"http://www.sumatrapdfreader.org/news.html");
 
     return ok;
 }
 
 // https://msdn.microsoft.com/en-us/library/windows/desktop/cc144154(v=vs.85).aspx
 // http://www.tenforums.com/software-apps/23509-how-add-my-own-program-list-default-programs.html#post407794
-static bool ListAsDefaultProgramWin10()
-{
+static bool ListAsDefaultProgramWin10() {
     HKEY hkey = HKEY_LOCAL_MACHINE;
     bool ok = true;
 
     ok &= WriteRegStr(hkey, L"SOFTWARE\\RegisteredApplications", L"SumatraPDF", L"SOFTWARE\\SumatraPDF\\Capabilities");
-    ok &= WriteRegStr(hkey, L"SOFTWARE\\SumatraPDF\\Capabilities", L"ApplicationDescription", L"SumatraPDF is a PDF reader.");
+    ok &= WriteRegStr(hkey, L"SOFTWARE\\SumatraPDF\\Capabilities", L"ApplicationDescription",
+                      L"SumatraPDF is a PDF reader.");
     ok &= WriteRegStr(hkey, L"SOFTWARE\\SumatraPDF\\Capabilities", L"ApplicationName", L"SumatraPDF Reader");
 
     for (int i = 0; nullptr != gSupportedExts[i]; i++) {
-        WCHAR *ext = gSupportedExts[i];
+        WCHAR* ext = gSupportedExts[i];
         ok &= WriteRegStr(hkey, L"SOFTWARE\\SumatraPDF\\Capabilities\\FileAssociations", ext, L"SumatraPDF.exe");
     }
     return ok;
 }
 
-static bool ListAsDefaultProgramPreWin10(HKEY hkey)
-{
+static bool ListAsDefaultProgramPreWin10(HKEY hkey) {
     // add the installed SumatraPDF.exe to the Open With lists of the supported file extensions
     // TODO: per http://msdn.microsoft.com/en-us/library/cc144148(v=vs.85).aspx we shouldn't be
     // using OpenWithList but OpenWithProgIds. Also, it doesn't seem to work on my win7 32bit
@@ -269,8 +258,7 @@ static bool ListAsDefaultProgramPreWin10(HKEY hkey)
 }
 
 // cf. http://msdn.microsoft.com/en-us/library/cc144148(v=vs.85).aspx
-static bool WriteExtendedFileExtensionInfo(HKEY hkey)
-{
+static bool WriteExtendedFileExtensionInfo(HKEY hkey) {
     bool ok = true;
 
     ScopedMem<WCHAR> exePath(GetInstalledExePath());
@@ -298,8 +286,7 @@ static bool WriteExtendedFileExtensionInfo(HKEY hkey)
     return ok;
 }
 
-static bool CreateInstallationDirectory()
-{
+static bool CreateInstallationDirectory() {
     bool ok = dir::CreateAll(gGlobalData.installDir);
     if (!ok) {
         LogLastError();
@@ -308,13 +295,11 @@ static bool CreateInstallationDirectory()
     return ok;
 }
 
-static void CreateButtonRunSumatra(HWND hwndParent)
-{
+static void CreateButtonRunSumatra(HWND hwndParent) {
     gHwndButtonRunSumatra = CreateDefaultButton(hwndParent, _TR("Start SumatraPDF"), ID_BUTTON_START_SUMATRA);
 }
 
-static bool CreateAppShortcut(bool allUsers)
-{
+static bool CreateAppShortcut(bool allUsers) {
     ScopedMem<WCHAR> shortcutPath(GetShortcutPath(allUsers));
     if (!shortcutPath.Get())
         return false;
@@ -322,8 +307,7 @@ static bool CreateAppShortcut(bool allUsers)
     return CreateShortcut(shortcutPath, installedExePath);
 }
 
-DWORD WINAPI InstallerThread(LPVOID data)
-{
+DWORD WINAPI InstallerThread(LPVOID data) {
     UNUSED(data);
     gGlobalData.success = false;
 
@@ -366,17 +350,15 @@ DWORD WINAPI InstallerThread(LPVOID data)
     // (still warn, if we've failed to create the uninstaller, though)
     gGlobalData.success = true;
 
-    if (!WriteUninstallerRegistryInfo(HKEY_LOCAL_MACHINE) &&
-        !WriteUninstallerRegistryInfo(HKEY_CURRENT_USER)) {
+    if (!WriteUninstallerRegistryInfo(HKEY_LOCAL_MACHINE) && !WriteUninstallerRegistryInfo(HKEY_CURRENT_USER)) {
         NotifyFailed(_TR("Failed to write the uninstallation information to the registry"));
     }
-    if (!WriteExtendedFileExtensionInfo(HKEY_LOCAL_MACHINE) &&
-        !WriteExtendedFileExtensionInfo(HKEY_CURRENT_USER)) {
+    if (!WriteExtendedFileExtensionInfo(HKEY_LOCAL_MACHINE) && !WriteExtendedFileExtensionInfo(HKEY_CURRENT_USER)) {
         NotifyFailed(_TR("Failed to write the extended file extension information to the registry"));
     }
 
     if (!ListAsDefaultProgramWin10()) {
-        NotifyFailed(_TR("Failed to register as default program on win 10"));        
+        NotifyFailed(_TR("Failed to register as default program on win 10"));
     }
 
     ProgressStep();
@@ -392,13 +374,11 @@ Error:
 
 static void OnButtonOptions();
 
-static bool IsCheckboxChecked(HWND hwnd)
-{
+static bool IsCheckboxChecked(HWND hwnd) {
     return (Button_GetState(hwnd) & BST_CHECKED) == BST_CHECKED;
 }
 
-static void OnButtonInstall()
-{
+static void OnButtonInstall() {
     CrashAlwaysIf(gForceCrash);
 
     if (gShowOptions)
@@ -409,31 +389,30 @@ static void OnButtonInstall()
     if (!CheckInstallUninstallPossible())
         return;
 
-    WCHAR *userInstallDir = win::GetText(gHwndTextboxInstDir);
+    WCHAR* userInstallDir = win::GetText(gHwndTextboxInstDir);
     if (!str::IsEmpty(userInstallDir))
         str::ReplacePtr(&gGlobalData.installDir, userInstallDir);
     free(userInstallDir);
 
     // note: this checkbox isn't created if we're already registered as default
     //       (in which case we're just going to re-register)
-    gGlobalData.registerAsDefault = gHwndCheckboxRegisterDefault == nullptr ||
-                                    IsCheckboxChecked(gHwndCheckboxRegisterDefault);
+    gGlobalData.registerAsDefault =
+        gHwndCheckboxRegisterDefault == nullptr || IsCheckboxChecked(gHwndCheckboxRegisterDefault);
 
     // note: this checkbox isn't created when running inside Wow64
-    gGlobalData.installPdfFilter = gHwndCheckboxRegisterPdfFilter != nullptr &&
-                                   IsCheckboxChecked(gHwndCheckboxRegisterPdfFilter);
+    gGlobalData.installPdfFilter =
+        gHwndCheckboxRegisterPdfFilter != nullptr && IsCheckboxChecked(gHwndCheckboxRegisterPdfFilter);
     // note: this checkbox isn't created on Windows 2000 and XP
-    gGlobalData.installPdfPreviewer = gHwndCheckboxRegisterPdfPreviewer != nullptr &&
-                                      IsCheckboxChecked(gHwndCheckboxRegisterPdfPreviewer);
+    gGlobalData.installPdfPreviewer =
+        gHwndCheckboxRegisterPdfPreviewer != nullptr && IsCheckboxChecked(gHwndCheckboxRegisterPdfPreviewer);
     // note: this checkbox isn't created if the browser plugin hasn't been installed before
-    gGlobalData.keepBrowserPlugin = gHwndCheckboxKeepBrowserPlugin != nullptr &&
-                                    IsCheckboxChecked(gHwndCheckboxKeepBrowserPlugin);
+    gGlobalData.keepBrowserPlugin =
+        gHwndCheckboxKeepBrowserPlugin != nullptr && IsCheckboxChecked(gHwndCheckboxKeepBrowserPlugin);
 
     // create a progress bar in place of the Options button
     RectI rc(0, 0, dpiAdjust(INSTALLER_WIN_DX / 2), gButtonDy);
     rc = MapRectToWindow(rc, gHwndButtonOptions, gHwndFrame);
-    gHwndProgressBar = CreateWindow(PROGRESS_CLASS, nullptr, WS_CHILD | WS_VISIBLE,
-                                    rc.x, rc.y, rc.dx, rc.dy,
+    gHwndProgressBar = CreateWindow(PROGRESS_CLASS, nullptr, WS_CHILD | WS_VISIBLE, rc.x, rc.y, rc.dx, rc.dy,
                                     gHwndFrame, 0, GetModuleHandle(nullptr), nullptr);
     SendMessage(gHwndProgressBar, PBM_SETRANGE32, 0, GetInstallationStepCount());
     SendMessage(gHwndProgressBar, PBM_SETSTEP, 1, 0);
@@ -456,8 +435,7 @@ static void OnButtonInstall()
     gGlobalData.hThread = CreateThread(nullptr, 0, InstallerThread, nullptr, 0, 0);
 }
 
-void OnInstallationFinished()
-{
+void OnInstallationFinished() {
     SafeDestroyWindow(&gHwndButtonInstUninst);
     SafeDestroyWindow(&gHwndProgressBar);
 
@@ -479,23 +457,20 @@ void OnInstallationFinished()
     }
 }
 
-static void OnButtonStartSumatra()
-{
+static void OnButtonStartSumatra() {
     ScopedMem<WCHAR> exePath(GetInstalledExePath());
     RunNonElevated(exePath);
     OnButtonExit();
 }
 
-inline void EnableAndShow(HWND hwnd, bool enable)
-{
+inline void EnableAndShow(HWND hwnd, bool enable) {
     if (!hwnd)
         return;
     win::SetVisibility(hwnd, enable);
     EnableWindow(hwnd, enable);
 }
 
-static void OnButtonOptions()
-{
+static void OnButtonOptions() {
     gShowOptions = !gShowOptions;
 
     EnableAndShow(gHwndStaticInstDir, gShowOptions);
@@ -506,15 +481,15 @@ static void OnButtonOptions()
     EnableAndShow(gHwndCheckboxRegisterPdfPreviewer, gShowOptions);
     EnableAndShow(gHwndCheckboxKeepBrowserPlugin, gShowOptions);
 
-//[ ACCESSKEY_GROUP Installer
-//[ ACCESSKEY_ALTERNATIVE // ideally, the same accesskey is used for both
+    //[ ACCESSKEY_GROUP Installer
+    //[ ACCESSKEY_ALTERNATIVE // ideally, the same accesskey is used for both
     if (gShowOptions)
         SetButtonTextAndResize(gHwndButtonOptions, _TR("Hide &Options"));
-//| ACCESSKEY_ALTERNATIVE
+    //| ACCESSKEY_ALTERNATIVE
     else
         SetButtonTextAndResize(gHwndButtonOptions, _TR("&Options"));
-//] ACCESSKEY_ALTERNATIVE
-//] ACCESSKEY_GROUP Installer
+    //] ACCESSKEY_ALTERNATIVE
+    //] ACCESSKEY_GROUP Installer
 
     ClientRect rc(gHwndFrame);
     RECT rcTmp = rc.ToRECT();
@@ -523,50 +498,47 @@ static void OnButtonOptions()
     SetFocus(gHwndButtonOptions);
 }
 
-static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT msg, LPARAM lParam, LPARAM lpData)
-{
+static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT msg, LPARAM lParam, LPARAM lpData) {
     switch (msg) {
-    case BFFM_INITIALIZED:
-        if (!str::IsEmpty((WCHAR *)lpData))
-            SendMessage(hwnd, BFFM_SETSELECTION, TRUE, lpData);
-        break;
+        case BFFM_INITIALIZED:
+            if (!str::IsEmpty((WCHAR*)lpData))
+                SendMessage(hwnd, BFFM_SETSELECTION, TRUE, lpData);
+            break;
 
-    // disable the OK button for non-filesystem and inaccessible folders (and shortcuts to folders)
-    case BFFM_SELCHANGED:
-        {
+        // disable the OK button for non-filesystem and inaccessible folders (and shortcuts to folders)
+        case BFFM_SELCHANGED: {
             WCHAR path[MAX_PATH];
             if (SHGetPathFromIDList((LPITEMIDLIST)lParam, path) && dir::Exists(path)) {
-                SHFILEINFO sfi = { 0 };
+                SHFILEINFO sfi = {0};
                 SHGetFileInfo((LPCWSTR)lParam, 0, &sfi, sizeof(sfi), SHGFI_PIDL | SHGFI_ATTRIBUTES);
                 if (!(sfi.dwAttributes & SFGAO_LINK))
                     break;
             }
             EnableWindow(GetDlgItem(hwnd, IDOK), FALSE);
-        }
-        break;
+        } break;
     }
 
     return 0;
 }
 
-static BOOL BrowseForFolder(HWND hwnd, const WCHAR *lpszInitialFolder, const WCHAR *lpszCaption, WCHAR *lpszBuf, DWORD dwBufSize)
-{
+static BOOL BrowseForFolder(HWND hwnd, const WCHAR* lpszInitialFolder, const WCHAR* lpszCaption, WCHAR* lpszBuf,
+                            DWORD dwBufSize) {
     if (lpszBuf == nullptr || dwBufSize < MAX_PATH)
         return FALSE;
 
-    BROWSEINFO bi = { 0 };
+    BROWSEINFO bi = {0};
     bi.hwndOwner = hwnd;
-    bi.ulFlags   = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
+    bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
     bi.lpszTitle = lpszCaption;
-    bi.lpfn      = BrowseCallbackProc;
-    bi.lParam    = (LPARAM)lpszInitialFolder;
+    bi.lpfn = BrowseCallbackProc;
+    bi.lParam = (LPARAM)lpszInitialFolder;
 
     BOOL ok = FALSE;
     LPITEMIDLIST pidlFolder = SHBrowseForFolder(&bi);
     if (pidlFolder) {
         ok = SHGetPathFromIDList(pidlFolder, lpszBuf);
 
-        IMalloc *pMalloc = nullptr;
+        IMalloc* pMalloc = nullptr;
         if (SUCCEEDED(SHGetMalloc(&pMalloc)) && pMalloc) {
             pMalloc->Free(pidlFolder);
             pMalloc->Release();
@@ -576,21 +548,21 @@ static BOOL BrowseForFolder(HWND hwnd, const WCHAR *lpszInitialFolder, const WCH
     return ok;
 }
 
-static void OnButtonBrowse()
-{
+static void OnButtonBrowse() {
     ScopedMem<WCHAR> installDir(win::GetText(gHwndTextboxInstDir));
     // strip a trailing "\SumatraPDF" if that directory doesn't exist (yet)
     if (!dir::Exists(installDir))
         installDir.Set(path::GetDir(installDir));
 
     WCHAR path[MAX_PATH];
-    BOOL ok = BrowseForFolder(gHwndFrame, installDir, _TR("Select the folder where SumatraPDF should be installed:"), path, dimof(path));
+    BOOL ok = BrowseForFolder(gHwndFrame, installDir, _TR("Select the folder where SumatraPDF should be installed:"),
+                              path, dimof(path));
     if (!ok) {
         SetFocus(gHwndButtonBrowseDir);
         return;
     }
 
-    WCHAR *installPath = path;
+    WCHAR* installPath = path;
     // force paths that aren't entered manually to end in ...\SumatraPDF
     // to prevent unintended installations into e.g. %ProgramFiles% itself
     if (!str::EndsWithI(path, L"\\" APP_NAME_STR))
@@ -602,10 +574,8 @@ static void OnButtonBrowse()
         free(installPath);
 }
 
-bool OnWmCommand(WPARAM wParam)
-{
-    switch (LOWORD(wParam))
-    {
+bool OnWmCommand(WPARAM wParam) {
+    switch (LOWORD(wParam)) {
         case IDOK:
             if (gHwndButtonInstUninst)
                 OnButtonInstall();
@@ -639,8 +609,7 @@ bool OnWmCommand(WPARAM wParam)
 }
 
 //[ ACCESSKEY_GROUP Installer
-void OnCreateWindow(HWND hwnd)
-{
+void OnCreateWindow(HWND hwnd) {
     ClientRect r(hwnd);
     gHwndButtonInstUninst = CreateDefaultButton(hwnd, _TR("Install SumatraPDF"), IDOK);
 
@@ -670,11 +639,10 @@ void OnCreateWindow(HWND hwnd)
 
     // only show this checkbox if the browser plugin has been installed before
     if (IsBrowserPluginInstalled()) {
-        gHwndCheckboxKeepBrowserPlugin = CreateWindowExW(
-            0, WC_BUTTON, _TR("Keep the PDF &browser plugin installed (no longer supported)"),
-            WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
-            x, y, dx, staticDy,
-            hwnd, (HMENU) ID_CHECKBOX_BROWSER_PLUGIN, GetModuleHandle(nullptr), nullptr);
+        gHwndCheckboxKeepBrowserPlugin =
+            CreateWindowExW(0, WC_BUTTON, _TR("Keep the PDF &browser plugin installed (no longer supported)"),
+                            WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP, x, y, dx, staticDy, hwnd,
+                            (HMENU)ID_CHECKBOX_BROWSER_PLUGIN, GetModuleHandle(nullptr), nullptr);
         SetWindowFont(gHwndCheckboxKeepBrowserPlugin, gFontDefault, TRUE);
         Button_SetCheck(gHwndCheckboxKeepBrowserPlugin, gGlobalData.keepBrowserPlugin);
         y -= staticDy;
@@ -685,19 +653,17 @@ void OnCreateWindow(HWND hwnd)
     if (IsProcessAndOsArchSame()) {
         // for Windows XP, this means only basic thumbnail support
         gHwndCheckboxRegisterPdfPreviewer = CreateWindowExW(
-            0, WC_BUTTON, _TR("Let Windows show &previews of PDF documents"),
-            WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
-            x, y, dx, staticDy,
-            hwnd, (HMENU) ID_CHECKBOX_PDF_PREVIEWER, GetModuleHandle(nullptr), nullptr);
+            0, WC_BUTTON, _TR("Let Windows show &previews of PDF documents"), WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
+            x, y, dx, staticDy, hwnd, (HMENU)ID_CHECKBOX_PDF_PREVIEWER, GetModuleHandle(nullptr), nullptr);
         SetWindowFont(gHwndCheckboxRegisterPdfPreviewer, gFontDefault, TRUE);
-        Button_SetCheck(gHwndCheckboxRegisterPdfPreviewer, gGlobalData.installPdfPreviewer || IsPdfPreviewerInstalled());
+        Button_SetCheck(gHwndCheckboxRegisterPdfPreviewer,
+                        gGlobalData.installPdfPreviewer || IsPdfPreviewerInstalled());
         y -= staticDy;
 
-        gHwndCheckboxRegisterPdfFilter = CreateWindowEx(
-            0, WC_BUTTON, _TR("Let Windows Desktop Search &search PDF documents"),
-            WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
-            x, y, dx, staticDy,
-            hwnd, (HMENU) ID_CHECKBOX_PDF_FILTER, GetModuleHandle(nullptr), nullptr);
+        gHwndCheckboxRegisterPdfFilter =
+            CreateWindowEx(0, WC_BUTTON, _TR("Let Windows Desktop Search &search PDF documents"),
+                           WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP, x, y, dx, staticDy, hwnd,
+                           (HMENU)ID_CHECKBOX_PDF_FILTER, GetModuleHandle(nullptr), nullptr);
         SetWindowFont(gHwndCheckboxRegisterPdfFilter, gFontDefault, TRUE);
         Button_SetCheck(gHwndCheckboxRegisterPdfFilter, gGlobalData.installPdfFilter || IsPdfFilterInstalled());
         y -= staticDy;
@@ -707,10 +673,8 @@ void OnCreateWindow(HWND hwnd)
     // the alternative (disabling the checkbox) is more confusing
     if (!isSumatraDefaultViewer) {
         gHwndCheckboxRegisterDefault = CreateWindowExW(
-            0, WC_BUTTON, _TR("Use SumatraPDF as the &default PDF reader"),
-            WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
-            x, y, dx, staticDy,
-            hwnd, (HMENU) ID_CHECKBOX_MAKE_DEFAULT, GetModuleHandle(nullptr), nullptr);
+            0, WC_BUTTON, _TR("Use SumatraPDF as the &default PDF reader"), WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP, x,
+            y, dx, staticDy, hwnd, (HMENU)ID_CHECKBOX_MAKE_DEFAULT, GetModuleHandle(nullptr), nullptr);
         SetWindowFont(gHwndCheckboxRegisterDefault, gFontDefault, TRUE);
         // only check the "Use as default" checkbox when no other PDF viewer
         // is currently selected (not going to intrude)
@@ -720,27 +684,25 @@ void OnCreateWindow(HWND hwnd)
     // a bit more space between text box and checkboxes
     y -= (dpiAdjust(4) + WINDOW_MARGIN);
 
-    const WCHAR *s = L"&...";
+    const WCHAR* s = L"&...";
     SizeI btnSize2 = TextSizeInHwnd(hwnd, s);
     btnSize.cx += dpiAdjust(4);
     gHwndButtonBrowseDir = CreateButton(hwnd, s, ID_BUTTON_BROWSE, BS_PUSHBUTTON, btnSize);
     x = r.dx - WINDOW_MARGIN - btnSize2.dx;
-    SetWindowPos(gHwndButtonBrowseDir, nullptr, x, y, btnSize2.dx, staticDy, SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW | SWP_FRAMECHANGED);
+    SetWindowPos(gHwndButtonBrowseDir, nullptr, x, y, btnSize2.dx, staticDy,
+                 SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW | SWP_FRAMECHANGED);
 
     x = WINDOW_MARGIN;
     dx = r.dx - (2 * WINDOW_MARGIN) - btnSize2.dx - dpiAdjust(4);
     gHwndTextboxInstDir = CreateWindowExW(0, WC_EDIT, gGlobalData.installDir,
-        WS_CHILD | WS_TABSTOP | WS_BORDER | ES_LEFT | ES_AUTOHSCROLL,
-        x, y, dx, staticDy,
-        hwnd, nullptr, GetModuleHandle(nullptr), nullptr);
+                                          WS_CHILD | WS_TABSTOP | WS_BORDER | ES_LEFT | ES_AUTOHSCROLL, x, y, dx,
+                                          staticDy, hwnd, nullptr, GetModuleHandle(nullptr), nullptr);
     SetWindowFont(gHwndTextboxInstDir, gFontDefault, TRUE);
 
     y -= staticDy;
 
-    gHwndStaticInstDir = CreateWindowExW(
-        0, WC_STATIC, _TR("Install SumatraPDF in &folder:"),WS_CHILD,
-        x, y, r.dx, staticDy,
-        hwnd, nullptr, GetModuleHandle(nullptr), nullptr);
+    gHwndStaticInstDir = CreateWindowExW(0, WC_STATIC, _TR("Install SumatraPDF in &folder:"), WS_CHILD, x, y, r.dx,
+                                         staticDy, hwnd, nullptr, GetModuleHandle(nullptr), nullptr);
     SetWindowFont(gHwndStaticInstDir, gFontDefault, TRUE);
 
     gShowOptions = !gShowOptions;
@@ -755,22 +717,16 @@ void OnCreateWindow(HWND hwnd)
 }
 //] ACCESSKEY_GROUP Installer
 
-void CreateMainWindow()
-{
+void CreateMainWindow() {
     ScopedMem<WCHAR> title(str::Format(_TR("SumatraPDF %s Installer"), CURR_VERSION_STR));
 
-    gHwndFrame = CreateWindowEx(
-        trans::IsCurrLangRtl() ? WS_EX_LAYOUTRTL : 0,
-        INSTALLER_FRAME_CLASS_NAME, title.Get(),
-        WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
-        CW_USEDEFAULT, CW_USEDEFAULT,
-        dpiAdjust(INSTALLER_WIN_DX), dpiAdjust(INSTALLER_WIN_DY),
-        nullptr, nullptr,
-        GetModuleHandle(nullptr), nullptr);
+    gHwndFrame = CreateWindowEx(trans::IsCurrLangRtl() ? WS_EX_LAYOUTRTL : 0, INSTALLER_FRAME_CLASS_NAME, title.Get(),
+                                WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU, CW_USEDEFAULT, CW_USEDEFAULT,
+                                dpiAdjust(INSTALLER_WIN_DX), dpiAdjust(INSTALLER_WIN_DY), nullptr, nullptr,
+                                GetModuleHandle(nullptr), nullptr);
 }
 
-void ShowUsage()
-{
+void ShowUsage() {
     // Note: translation services aren't initialized at this point, so English only
     MessageBox(nullptr, APP_NAME_STR L"-install.exe [/s][/d <path>][/register][/opt pdffilter,...][/x][/autoupdate]\n\
     \n\

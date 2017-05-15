@@ -55,42 +55,42 @@ using namespace Gdiplus;
 #define DRAW_TEXT_SHADOW 1
 #define DRAW_MSG_TEXT_SHADOW 0
 
-HWND            gHwndFrame = nullptr;
-HWND            gHwndButtonExit = nullptr;
-HWND            gHwndButtonInstUninst = nullptr;
-HFONT           gFontDefault;
-bool            gShowOptions = false;
-bool            gForceCrash = false;
-WCHAR *         gMsgError = nullptr;
-int             gBottomPartDy = 0;
-int             gButtonDy = 0;
+HWND gHwndFrame = nullptr;
+HWND gHwndButtonExit = nullptr;
+HWND gHwndButtonInstUninst = nullptr;
+HFONT gFontDefault;
+bool gShowOptions = false;
+bool gForceCrash = false;
+WCHAR* gMsgError = nullptr;
+int gBottomPartDy = 0;
+int gButtonDy = 0;
 
-static WStrVec          gProcessesToClose;
-static float            gUiDPIFactor = 1.0f;
+static WStrVec gProcessesToClose;
+static float gUiDPIFactor = 1.0f;
 
 static ScopedMem<WCHAR> gMsg;
-static Color            gMsgColor;
+static Color gMsgColor;
 
-Color gCol1(196, 64, 50); Color gCol1Shadow(134, 48, 39);
-Color gCol2(227, 107, 35); Color gCol2Shadow(155, 77, 31);
-Color gCol3(93,  160, 40); Color gCol3Shadow(51, 87, 39);
-Color gCol4(69, 132, 190); Color gCol4Shadow(47, 89, 127);
-Color gCol5(112, 115, 207); Color gCol5Shadow(66, 71, 118);
+Color gCol1(196, 64, 50);
+Color gCol1Shadow(134, 48, 39);
+Color gCol2(227, 107, 35);
+Color gCol2Shadow(155, 77, 31);
+Color gCol3(93, 160, 40);
+Color gCol3Shadow(51, 87, 39);
+Color gCol4(69, 132, 190);
+Color gCol4Shadow(47, 89, 127);
+Color gCol5(112, 115, 207);
+Color gCol5Shadow(66, 71, 118);
 
-Color            COLOR_MSG_WELCOME(gCol5);
-Color            COLOR_MSG_OK(gCol5);
-Color            COLOR_MSG_INSTALLATION(gCol5);
-Color            COLOR_MSG_FAILED(gCol1);
+Color COLOR_MSG_WELCOME(gCol5);
+Color COLOR_MSG_OK(gCol5);
+Color COLOR_MSG_INSTALLATION(gCol5);
+Color COLOR_MSG_FAILED(gCol1);
 
 // list of supported file extensions for which SumatraPDF.exe will
 // be registered as a candidate for the Open With dialog's suggestions
-WCHAR *gSupportedExts[] = {
-    L".pdf", L".xps", L".oxps",
-    L".cbz", L".cbr", L".cb7", L".cbt",
-    L".djvu", L".chm",
-    L".mobi", L".epub", L".fb2", L".fb2z",
-    nullptr
-};
+WCHAR* gSupportedExts[] = {L".pdf",  L".xps", L".oxps", L".cbz",  L".cbr", L".cb7",  L".cbt",
+                           L".djvu", L".chm", L".mobi", L".epub", L".fb2", L".fb2z", nullptr};
 
 // The following list is used to verify that all the required files have been
 // installed (install flag set) and to know what files are to be removed at
@@ -98,21 +98,15 @@ WCHAR *gSupportedExts[] = {
 // When a file is no longer shipped, just disable the install flag so that the
 // file is still correctly removed when SumatraPDF is eventually uninstalled.
 PayloadInfo gPayloadData[] = {
-    { "libmupdf.dll",           true    },
-    { "SumatraPDF.exe",         true    },
-    { "sumatrapdfprefs.dat",    false   },
-    { "DroidSansFallback.ttf",  true    },
-    { "npPdfViewer.dll",        false   },
-    { "PdfFilter.dll",          true    },
-    { "PdfPreview.dll",         true    },
-    { "uninstall.exe",          true    },
-    { nullptr,                     false   },
+    {"libmupdf.dll", true},          {"SumatraPDF.exe", true},   {"sumatrapdfprefs.dat", false},
+    {"DroidSansFallback.ttf", true}, {"npPdfViewer.dll", false}, {"PdfFilter.dll", true},
+    {"PdfPreview.dll", true},        {"uninstall.exe", true},    {nullptr, false},
 };
 
 GlobalData gGlobalData = {
-    false, /* bool silent */
-    false, /* bool showUsageAndQuit */
-    nullptr,  /* WCHAR *installDir */
+    false,   /* bool silent */
+    false,   /* bool showUsageAndQuit */
+    nullptr, /* WCHAR *installDir */
 #ifndef BUILD_UNINSTALLER
     false, /* bool registerAsDefault */
     false, /* bool installPdfFilter */
@@ -122,33 +116,30 @@ GlobalData gGlobalData = {
     false, /* bool autoUpdate */
 #endif
 
-    nullptr,  /* WCHAR *firstError */
-    nullptr,  /* HANDLE hThread */
-    false, /* bool success */
+    nullptr, /* WCHAR *firstError */
+    nullptr, /* HANDLE hThread */
+    false,   /* bool success */
 };
 
-void NotifyFailed(const WCHAR *msg)
-{
+void NotifyFailed(const WCHAR* msg) {
     if (!gGlobalData.firstError)
         gGlobalData.firstError = str::Dup(msg);
     plogf(L"%s", msg);
 }
 
-void SetMsg(const WCHAR *msg, Color color)
-{
+void SetMsg(const WCHAR* msg, Color color) {
     gMsg.SetCopy(msg);
     gMsgColor = color;
 }
 
-#define TEN_SECONDS_IN_MS 10*1000
+#define TEN_SECONDS_IN_MS 10 * 1000
 
-static bool IsProcWithName(DWORD processId, const WCHAR *modulePath)
-{
+static bool IsProcWithName(DWORD processId, const WCHAR* modulePath) {
     ScopedHandle hModSnapshot(CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, processId));
     if (!hModSnapshot.IsValid())
         return false;
 
-    MODULEENTRY32W me32 = { 0 };
+    MODULEENTRY32W me32 = {0};
     me32.dwSize = sizeof(me32);
     BOOL ok = Module32FirstW(hModSnapshot, &me32);
     while (ok) {
@@ -162,8 +153,7 @@ static bool IsProcWithName(DWORD processId, const WCHAR *modulePath)
 // Kill a process with given <processId> if it has a module (dll or exe) <modulePath>.
 // If <waitUntilTerminated> is true, will wait until process is fully killed.
 // Returns TRUE if killed a process
-static bool KillProcIdWithName(DWORD processId, const WCHAR *modulePath, bool waitUntilTerminated)
-{
+static bool KillProcIdWithName(DWORD processId, const WCHAR* modulePath, bool waitUntilTerminated) {
     if (!IsProcWithName(processId, modulePath))
         return false;
 
@@ -181,14 +171,13 @@ static bool KillProcIdWithName(DWORD processId, const WCHAR *modulePath, bool wa
     if (waitUntilTerminated)
         WaitForSingleObject(hProcess, TEN_SECONDS_IN_MS);
 
-    return  true;
+    return true;
 }
 
 // returns number of killed processes that have a module (exe or dll) with a given
 // modulePath
 // returns -1 on error, 0 if no matching processes
-int KillProcess(const WCHAR *modulePath, bool waitUntilTerminated)
-{
+int KillProcess(const WCHAR* modulePath, bool waitUntilTerminated) {
     ScopedHandle hProcSnapshot(CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0));
     if (INVALID_HANDLE_VALUE == hProcSnapshot)
         return -1;
@@ -211,8 +200,7 @@ int KillProcess(const WCHAR *modulePath, bool waitUntilTerminated)
     return killCount;
 }
 
-const WCHAR *GetOwnPath()
-{
+const WCHAR* GetOwnPath() {
     static WCHAR exePath[MAX_PATH];
     exePath[0] = '\0';
     GetModuleFileName(nullptr, exePath, dimof(exePath));
@@ -220,10 +208,10 @@ const WCHAR *GetOwnPath()
     return exePath;
 }
 
-static WCHAR *GetInstallationDir()
-{
+static WCHAR* GetInstallationDir() {
     ScopedMem<WCHAR> dir(ReadRegStr(HKEY_CURRENT_USER, REG_PATH_UNINST, L"InstallLocation"));
-    if (!dir) dir.Set(ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_UNINST, L"InstallLocation"));
+    if (!dir)
+        dir.Set(ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_UNINST, L"InstallLocation"));
     if (dir) {
         if (str::EndsWithI(dir, L".exe")) {
             dir.Set(path::GetDir(dir));
@@ -245,41 +233,34 @@ static WCHAR *GetInstallationDir()
 #endif
 }
 
-WCHAR *GetUninstallerPath()
-{
+WCHAR* GetUninstallerPath() {
     return path::Join(gGlobalData.installDir, L"uninstall.exe");
 }
 
-WCHAR *GetInstalledExePath()
-{
+WCHAR* GetInstalledExePath() {
     return path::Join(gGlobalData.installDir, EXENAME);
 }
 
-static WCHAR *GetBrowserPluginPath()
-{
+static WCHAR* GetBrowserPluginPath() {
     return path::Join(gGlobalData.installDir, L"npPdfViewer.dll");
 }
 
-WCHAR *GetInstalledBrowserPluginPath()
-{
-    WCHAR *path = ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_PLUGIN, L"Path");
+WCHAR* GetInstalledBrowserPluginPath() {
+    WCHAR* path = ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_PLUGIN, L"Path");
     if (!path)
         path = ReadRegStr(HKEY_CURRENT_USER, REG_PATH_PLUGIN, L"Path");
     return path;
 }
 
-static WCHAR *GetPdfFilterPath()
-{
+static WCHAR* GetPdfFilterPath() {
     return path::Join(gGlobalData.installDir, L"PdfFilter.dll");
 }
 
-static WCHAR *GetPdfPreviewerPath()
-{
+static WCHAR* GetPdfPreviewerPath() {
     return path::Join(gGlobalData.installDir, L"PdfPreview.dll");
 }
 
-WCHAR *GetShortcutPath(bool allUsers)
-{
+WCHAR* GetShortcutPath(bool allUsers) {
     // CSIDL_COMMON_PROGRAMS => installing for all users
     ScopedMem<WCHAR> dir(GetSpecialFolder(allUsers ? CSIDL_COMMON_PROGRAMS : CSIDL_PROGRAMS));
     if (!dir)
@@ -288,15 +269,13 @@ WCHAR *GetShortcutPath(bool allUsers)
 }
 
 /* if the app is running, we have to kill it so that we can over-write the executable */
-void KillSumatra()
-{
+void KillSumatra() {
     ScopedMem<WCHAR> exePath(GetInstalledExePath());
     KillProcess(exePath, true);
 }
 
 #if 1
-static HFONT CreateDefaultGuiFont()
-{
+static HFONT CreateDefaultGuiFont() {
     NONCLIENTMETRICSW ncm;
     ncm.cbSize = sizeof(ncm);
     SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
@@ -304,8 +283,7 @@ static HFONT CreateDefaultGuiFont()
     return f;
 }
 #else
-static HFONT CreateDefaultGuiFont()
-{
+static HFONT CreateDefaultGuiFont() {
     HDC hdc = GetDC(nullptr);
     HFONT font = CreateSimpleFont(hdc, L"MS Shell Dlg", 14);
     ReleaseDC(nullptr, hdc);
@@ -313,28 +291,24 @@ static HFONT CreateDefaultGuiFont()
 }
 #endif
 
-int dpiAdjust(int value)
-{
+int dpiAdjust(int value) {
     return (int)(value * gUiDPIFactor);
 }
 
-void InvalidateFrame()
-{
+void InvalidateFrame() {
     ClientRect rc(gHwndFrame);
     RECT rcTmp = rc.ToRECT();
     InvalidateRect(gHwndFrame, &rcTmp, FALSE);
 }
 
-bool CreateProcessHelper(const WCHAR *exe, const WCHAR *args)
-{
+bool CreateProcessHelper(const WCHAR* exe, const WCHAR* args) {
     ScopedMem<WCHAR> cmd(str::Format(L"\"%s\" %s", exe, args ? args : L""));
     ScopedHandle process(LaunchProcess(cmd));
     return process != nullptr;
 }
 
 // cf. http://support.microsoft.com/default.aspx?scid=kb;en-us;207132
-static bool RegisterServerDLL(const WCHAR *dllPath, bool install, const WCHAR *args=nullptr)
-{
+static bool RegisterServerDLL(const WCHAR* dllPath, bool install, const WCHAR* args = nullptr) {
     if (FAILED(OleInitialize(nullptr)))
         return false;
 
@@ -348,8 +322,8 @@ static bool RegisterServerDLL(const WCHAR *dllPath, bool install, const WCHAR *a
     bool ok = false;
     HMODULE lib = LoadLibrary(dllPath);
     if (lib) {
-        typedef HRESULT (WINAPI *DllInstallProc)(BOOL, LPCWSTR);
-        typedef HRESULT (WINAPI *DllRegUnregProc)(VOID);
+        typedef HRESULT(WINAPI * DllInstallProc)(BOOL, LPCWSTR);
+        typedef HRESULT(WINAPI * DllRegUnregProc)(VOID);
         if (args) {
             DllInstallProc DllInstall = (DllInstallProc)GetProcAddress(lib, "DllInstall");
             if (DllInstall)
@@ -358,7 +332,7 @@ static bool RegisterServerDLL(const WCHAR *dllPath, bool install, const WCHAR *a
                 args = nullptr;
         }
         if (!args) {
-            const char *func = install ? "DllRegisterServer" : "DllUnregisterServer";
+            const char* func = install ? "DllRegisterServer" : "DllUnregisterServer";
             DllRegUnregProc DllRegUnreg = (DllRegUnregProc)GetProcAddress(lib, func);
             if (DllRegUnreg)
                 ok = SUCCEEDED(DllRegUnreg());
@@ -374,8 +348,7 @@ static bool RegisterServerDLL(const WCHAR *dllPath, bool install, const WCHAR *a
     return ok;
 }
 
-static bool IsUsingInstallation(DWORD procId)
-{
+static bool IsUsingInstallation(DWORD procId) {
     ScopedHandle snap(CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, procId));
     if (snap == INVALID_HANDLE_VALUE)
         return false;
@@ -383,12 +356,11 @@ static bool IsUsingInstallation(DWORD procId)
     ScopedMem<WCHAR> libmupdf(path::Join(gGlobalData.installDir, L"libmupdf.dll"));
     ScopedMem<WCHAR> browserPlugin(GetBrowserPluginPath());
 
-    MODULEENTRY32 mod = { 0 };
+    MODULEENTRY32 mod = {0};
     mod.dwSize = sizeof(mod);
     BOOL cont = Module32First(snap, &mod);
     while (cont) {
-        if (path::IsSame(libmupdf, mod.szExePath) ||
-            path::IsSame(browserPlugin, mod.szExePath)) {
+        if (path::IsSame(libmupdf, mod.szExePath) || path::IsSame(browserPlugin, mod.szExePath)) {
             return true;
         }
         cont = Module32Next(snap, &mod);
@@ -399,13 +371,12 @@ static bool IsUsingInstallation(DWORD procId)
 
 // return names of processes that are running part of the installation
 // (i.e. have libmupdf.dll or npPdfViewer.dll loaded)
-static void ProcessesUsingInstallation(WStrVec& names)
-{
+static void ProcessesUsingInstallation(WStrVec& names) {
     ScopedHandle snap(CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0));
     if (INVALID_HANDLE_VALUE == snap)
         return;
 
-    PROCESSENTRY32 proc = { 0 };
+    PROCESSENTRY32 proc = {0};
     proc.dwSize = sizeof(proc);
     BOOL ok = Process32First(snap, &proc);
     while (ok) {
@@ -417,8 +388,7 @@ static void ProcessesUsingInstallation(WStrVec& names)
     }
 }
 
-static void SetDefaultMsg()
-{
+static void SetDefaultMsg() {
 #ifdef BUILD_UNINSTALLER
     SetMsg(_TR("Are you sure you want to uninstall SumatraPDF?"), COLOR_MSG_WELCOME);
 #else
@@ -426,16 +396,12 @@ static void SetDefaultMsg()
 #endif
 }
 
-static const WCHAR *ReadableProcName(const WCHAR *procPath)
-{
-    const WCHAR *nameList[] = {
-        EXENAME, APP_NAME_STR,
-        L"plugin-container.exe", L"Mozilla Firefox",
-        L"chrome.exe", L"Google Chrome",
-        L"prevhost.exe", L"Windows Explorer",
-        L"dllhost.exe", L"Windows Explorer",
+static const WCHAR* ReadableProcName(const WCHAR* procPath) {
+    const WCHAR* nameList[] = {
+        EXENAME,          APP_NAME_STR,    L"plugin-container.exe", L"Mozilla Firefox", L"chrome.exe",
+        L"Google Chrome", L"prevhost.exe", L"Windows Explorer",     L"dllhost.exe",     L"Windows Explorer",
     };
-    const WCHAR *procName = path::GetBaseName(procPath);
+    const WCHAR* procName = path::GetBaseName(procPath);
     for (size_t i = 0; i < dimof(nameList); i += 2) {
         if (str::EqI(procName, nameList[i]))
             return nameList[i + 1];
@@ -443,11 +409,10 @@ static const WCHAR *ReadableProcName(const WCHAR *procPath)
     return procName;
 }
 
-static void SetCloseProcessMsg()
-{
+static void SetCloseProcessMsg() {
     ScopedMem<WCHAR> procNames(str::Dup(ReadableProcName(gProcessesToClose.At(0))));
     for (size_t i = 1; i < gProcessesToClose.Count(); i++) {
-        const WCHAR *name = ReadableProcName(gProcessesToClose.At(i));
+        const WCHAR* name = ReadableProcName(gProcessesToClose.At(i));
         if (i < gProcessesToClose.Count() - 1)
             procNames.Set(str::Join(procNames, L", ", name));
         else
@@ -457,8 +422,7 @@ static void SetCloseProcessMsg()
     SetMsg(s, COLOR_MSG_FAILED);
 }
 
-bool CheckInstallUninstallPossible(bool silent)
-{
+bool CheckInstallUninstallPossible(bool silent) {
     gProcessesToClose.Reset();
     ProcessesUsingInstallation(gProcessesToClose);
 
@@ -475,8 +439,7 @@ bool CheckInstallUninstallPossible(bool silent)
     return possible;
 }
 
-void UninstallBrowserPlugin()
-{
+void UninstallBrowserPlugin() {
     ScopedMem<WCHAR> dllPath(GetBrowserPluginPath());
     if (!file::Exists(dllPath)) {
         // uninstall the detected plugin, even if it isn't in the target installation path
@@ -488,30 +451,26 @@ void UninstallBrowserPlugin()
         NotifyFailed(_TR("Couldn't uninstall browser plugin"));
 }
 
-void InstallPdfFilter()
-{
+void InstallPdfFilter() {
     ScopedMem<WCHAR> dllPath(GetPdfFilterPath());
     if (!RegisterServerDLL(dllPath, true))
         NotifyFailed(_TR("Couldn't install PDF search filter"));
 }
 
-void UninstallPdfFilter()
-{
+void UninstallPdfFilter() {
     ScopedMem<WCHAR> dllPath(GetPdfFilterPath());
     if (!RegisterServerDLL(dllPath, false))
         NotifyFailed(_TR("Couldn't uninstall PDF search filter"));
 }
 
-void InstallPdfPreviewer()
-{
+void InstallPdfPreviewer() {
     ScopedMem<WCHAR> dllPath(GetPdfPreviewerPath());
     // TODO: RegisterServerDLL(dllPath, true, L"exts:pdf,...");
     if (!RegisterServerDLL(dllPath, true))
         NotifyFailed(_TR("Couldn't install PDF previewer"));
 }
 
-void UninstallPdfPreviewer()
-{
+void UninstallPdfPreviewer() {
     ScopedMem<WCHAR> dllPath(GetPdfPreviewerPath());
     // TODO: RegisterServerDLL(dllPath, false, L"exts:pdf,...");
     if (!RegisterServerDLL(dllPath, false))
@@ -528,29 +487,26 @@ SIZE GetIdealButtonSize(HWND hwnd) {
     return s;
 }
 
-SIZE SetButtonTextAndResize(HWND hwnd, const WCHAR * s)
-{
+SIZE SetButtonTextAndResize(HWND hwnd, const WCHAR* s) {
     win::SetText(hwnd, s);
     SIZE size = GetIdealButtonSize(hwnd);
-    SetWindowPos(hwnd, nullptr, 0, 0, size.cx, size.cy, SWP_NOMOVE | SWP_NOZORDER | SWP_NOREDRAW | SWP_NOACTIVATE | SWP_FRAMECHANGED);
+    SetWindowPos(hwnd, nullptr, 0, 0, size.cx, size.cy,
+                 SWP_NOMOVE | SWP_NOZORDER | SWP_NOREDRAW | SWP_NOACTIVATE | SWP_FRAMECHANGED);
     return size;
 }
 
 // Creates a button that has a right size for it's text,
-HWND CreateButton(HWND hwndParent, const WCHAR *s, int id, DWORD style, SIZE& sizeOut)
-{
-    HMENU idMenu = (HMENU) (UINT_PTR) id;
+HWND CreateButton(HWND hwndParent, const WCHAR* s, int id, DWORD style, SIZE& sizeOut) {
+    HMENU idMenu = (HMENU)(UINT_PTR)id;
     style |= WS_CHILD | WS_TABSTOP;
-    HWND hwnd = CreateWindowExW(0, WC_BUTTON, L"", style,
-        0, 0, 100, 20, hwndParent,
-        idMenu, GetModuleHandle(nullptr), nullptr);
+    HWND hwnd =
+        CreateWindowExW(0, WC_BUTTON, L"", style, 0, 0, 100, 20, hwndParent, idMenu, GetModuleHandle(nullptr), nullptr);
     SetWindowFont(hwnd, gFontDefault, TRUE);
     sizeOut = SetButtonTextAndResize(hwnd, s);
     return hwnd;
 }
 
-HWND CreateDefaultButton(HWND hwndParent, const WCHAR *s, int id)
-{
+HWND CreateDefaultButton(HWND hwndParent, const WCHAR* s, int id) {
     SIZE size;
     HWND hwnd = CreateButton(hwndParent, s, id, BS_DEFPUSHBUTTON, size);
 
@@ -561,13 +517,11 @@ HWND CreateDefaultButton(HWND hwndParent, const WCHAR *s, int id)
     return hwnd;
 }
 
-void CreateButtonExit(HWND hwndParent)
-{
+void CreateButtonExit(HWND hwndParent) {
     gHwndButtonExit = CreateDefaultButton(hwndParent, _TR("Close"), ID_BUTTON_EXIT);
 }
 
-void OnButtonExit()
-{
+void OnButtonExit() {
     SendMessage(gHwndFrame, WM_CLOSE, 0, 0);
 }
 
@@ -584,18 +538,11 @@ typedef struct {
     REAL x;
 } LetterInfo;
 
-LetterInfo gLetters[] = {
-    { 'S', gCol1, gCol1Shadow, -3.f,     0, 0, 0 },
-    { 'U', gCol2, gCol2Shadow,  0.f,     0, 0, 0 },
-    { 'M', gCol3, gCol3Shadow,  2.f,  -2.f, 0, 0 },
-    { 'A', gCol4, gCol4Shadow,  0.f, -2.4f, 0, 0 },
-    { 'T', gCol5, gCol5Shadow,  0.f,     0, 0, 0 },
-    { 'R', gCol5, gCol5Shadow, 2.3f, -1.4f, 0, 0 },
-    { 'A', gCol4, gCol4Shadow,  0.f,     0, 0, 0 },
-    { 'P', gCol3, gCol3Shadow,  0.f, -2.3f, 0, 0 },
-    { 'D', gCol2, gCol2Shadow,  0.f,   3.f, 0, 0 },
-    { 'F', gCol1, gCol1Shadow,  0.f,     0, 0, 0 }
-};
+LetterInfo gLetters[] = {{'S', gCol1, gCol1Shadow, -3.f, 0, 0, 0},   {'U', gCol2, gCol2Shadow, 0.f, 0, 0, 0},
+                         {'M', gCol3, gCol3Shadow, 2.f, -2.f, 0, 0}, {'A', gCol4, gCol4Shadow, 0.f, -2.4f, 0, 0},
+                         {'T', gCol5, gCol5Shadow, 0.f, 0, 0, 0},    {'R', gCol5, gCol5Shadow, 2.3f, -1.4f, 0, 0},
+                         {'A', gCol4, gCol4Shadow, 0.f, 0, 0, 0},    {'P', gCol3, gCol3Shadow, 0.f, -2.3f, 0, 0},
+                         {'D', gCol2, gCol2Shadow, 0.f, 3.f, 0, 0},  {'F', gCol1, gCol1Shadow, 0.f, 0, 0, 0}};
 
 #define SUMATRA_LETTERS_COUNT (dimof(gLetters))
 
@@ -618,9 +565,8 @@ static void RandomizeLetters()
 }
 #endif
 
-static void SetLettersSumatraUpTo(int n)
-{
-    char *s = "SUMATRAPDF";
+static void SetLettersSumatraUpTo(int n) {
+    char* s = "SUMATRAPDF";
     for (int i = 0; i < dimof(gLetters); i++) {
         if (i < n) {
             gLetters[i].c = s[i];
@@ -630,8 +576,7 @@ static void SetLettersSumatraUpTo(int n)
     }
 }
 
-static void SetLettersSumatra()
-{
+static void SetLettersSumatra() {
     SetLettersSumatraUpTo(SUMATRA_LETTERS_COUNT);
 }
 
@@ -640,28 +585,25 @@ static void SetLettersSumatra()
 // how long the animation lasts, in seconds
 #define REVEALING_ANIM_DUR double(2)
 
-static FrameTimeoutCalculator *gRevealingLettersAnim = nullptr;
+static FrameTimeoutCalculator* gRevealingLettersAnim = nullptr;
 
 int gRevealingLettersAnimLettersToShow;
 
-static void RevealingLettersAnimStart()
-{
+static void RevealingLettersAnimStart() {
     int framesPerSec = (int)(double(SUMATRA_LETTERS_COUNT) / REVEALING_ANIM_DUR);
     gRevealingLettersAnim = new FrameTimeoutCalculator(framesPerSec);
     gRevealingLettersAnimLettersToShow = 0;
     SetLettersSumatraUpTo(0);
 }
 
-static void RevealingLettersAnimStop()
-{
+static void RevealingLettersAnimStop() {
     delete gRevealingLettersAnim;
     gRevealingLettersAnim = nullptr;
     SetLettersSumatra();
     InvalidateFrame();
 }
 
-static void RevealingLettersAnim()
-{
+static void RevealingLettersAnim() {
     if (gRevealingLettersAnim->ElapsedTotal() > REVEALING_ANIM_DUR) {
         RevealingLettersAnimStop();
         return;
@@ -674,22 +616,21 @@ static void RevealingLettersAnim()
     InvalidateFrame();
 }
 
-static void AnimStep()
-{
+static void AnimStep() {
     if (gRevealingLettersAnim)
         RevealingLettersAnim();
 }
 
-static void CalcLettersLayout(Graphics& g, Font *f, int dx)
-{
+static void CalcLettersLayout(Graphics& g, Font* f, int dx) {
     static BOOL didLayout = FALSE;
-    if (didLayout) return;
+    if (didLayout)
+        return;
 
-    LetterInfo *li;
+    LetterInfo* li;
     StringFormat sfmt;
     const REAL letterSpacing = -12.f;
     REAL totalDx = -letterSpacing; // counter last iteration of the loop
-    WCHAR s[2] = { 0 };
+    WCHAR s[2] = {0};
     PointF origin(0.f, 0.f);
     RectF bbox;
     for (int i = 0; i < dimof(gLetters); i++) {
@@ -713,8 +654,7 @@ static void CalcLettersLayout(Graphics& g, Font *f, int dx)
     didLayout = TRUE;
 }
 
-static REAL DrawMessage(Graphics &g, const WCHAR *msg, REAL y, REAL dx, Color color)
-{
+static REAL DrawMessage(Graphics& g, const WCHAR* msg, REAL y, REAL dx, Color color) {
     ScopedMem<WCHAR> s(str::Dup(msg));
 
     Font f(L"Impact", 16, FontStyleRegular);
@@ -729,10 +669,12 @@ static REAL DrawMessage(Graphics &g, const WCHAR *msg, REAL y, REAL dx, Color co
         sft.SetFormatFlags(StringFormatFlagsDirectionRightToLeft);
 #if DRAW_MSG_TEXT_SHADOW
     {
-        bbox.X--; bbox.Y++;
+        bbox.X--;
+        bbox.Y++;
         SolidBrush b(Color(0xff, 0xff, 0xff));
         g.DrawString(s, -1, &f, bbox, &sft, &b);
-        bbox.X++; bbox.Y--;
+        bbox.X++;
+        bbox.Y--;
     }
 #endif
     SolidBrush b(color);
@@ -741,10 +683,9 @@ static REAL DrawMessage(Graphics &g, const WCHAR *msg, REAL y, REAL dx, Color co
     return bbox.Height;
 }
 
-static void DrawSumatraLetters(Graphics &g, Font *f, Font *fVer, REAL y)
-{
-    LetterInfo *li;
-    WCHAR s[2] = { 0 };
+static void DrawSumatraLetters(Graphics& g, Font* f, Font* fVer, REAL y) {
+    LetterInfo* li;
+    WCHAR s[2] = {0};
     for (int i = 0; i < dimof(gLetters); i++) {
         li = &gLetters[i];
         s[0] = li->c;
@@ -767,12 +708,13 @@ static void DrawSumatraLetters(Graphics &g, Font *f, Font *fVer, REAL y)
     }
 
     // draw version number
-    REAL x = gLetters[dimof(gLetters)-1].x;
+    REAL x = gLetters[dimof(gLetters) - 1].x;
     g.TranslateTransform(x, y);
     g.RotateTransform(45.f);
-    REAL x2 = 15; REAL y2 = -34;
+    REAL x2 = 15;
+    REAL y2 = -34;
 
-    WCHAR *ver_s = L"v" CURR_VERSION_STR;
+    WCHAR* ver_s = L"v" CURR_VERSION_STR;
 #if DRAW_TEXT_SHADOW
     SolidBrush b1(Color(0, 0, 0));
     g.DrawString(ver_s, -1, fVer, PointF(x2 - 2, y2 - 1), &b1);
@@ -782,8 +724,7 @@ static void DrawSumatraLetters(Graphics &g, Font *f, Font *fVer, REAL y)
     g.ResetTransform();
 }
 
-static void DrawFrame2(Graphics &g, RectI r)
-{
+static void DrawFrame2(Graphics& g, RectI r) {
     g.SetCompositingQuality(CompositingQualityHighQuality);
     g.SetSmoothingMode(SmoothingModeAntiAlias);
     g.SetPageUnit(UnitPixel);
@@ -811,8 +752,7 @@ static void DrawFrame2(Graphics &g, RectI r)
         DrawMessage(g, gMsgError, msgY, (REAL)r.dx, COLOR_MSG_FAILED);
 }
 
-static void DrawFrame(HWND hwnd, HDC dc, PAINTSTRUCT *)
-{
+static void DrawFrame(HWND hwnd, HDC dc, PAINTSTRUCT*) {
     // TODO: cache bmp object?
     Graphics g(dc);
     ClientRect rc(hwnd);
@@ -822,8 +762,7 @@ static void DrawFrame(HWND hwnd, HDC dc, PAINTSTRUCT *)
     g.DrawImage(&bmp, 0, 0);
 }
 
-static void OnPaintFrame(HWND hwnd)
-{
+static void OnPaintFrame(HWND hwnd) {
     PAINTSTRUCT ps;
     HDC dc = BeginPaint(hwnd, &ps);
     DrawFrame(hwnd, dc, &ps);
@@ -832,15 +771,14 @@ static void OnPaintFrame(HWND hwnd)
 
 HBRUSH ghbrBackground = nullptr;
 
-static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
+static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
     bool handled;
-    switch (message)
-    {
+    switch (message) {
         case WM_CREATE:
 #ifdef BUILD_UNINSTALLER
             if (!IsUninstallerNeeded()) {
-                MessageBox(nullptr, _TR("SumatraPDF installation not found."), _TR("Uninstallation failed"),  MB_ICONEXCLAMATION | MB_OK);
+                MessageBox(nullptr, _TR("SumatraPDF installation not found."), _TR("Uninstallation failed"),
+                           MB_ICONEXCLAMATION | MB_OK);
                 PostQuitMessage(0);
                 return -1;
             }
@@ -848,15 +786,14 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
             OnCreateWindow(hwnd);
             break;
 
-        case WM_CTLCOLORSTATIC:
-        {
+        case WM_CTLCOLORSTATIC: {
             if (ghbrBackground == nullptr) {
                 ghbrBackground = CreateSolidBrush(RGB(0xff, 0xf2, 0));
             }
-            HDC hdc = (HDC) wParam;
+            HDC hdc = (HDC)wParam;
             SetTextColor(hdc, RGB(0, 0, 0));
             SetBkMode(hdc, TRANSPARENT);
-            return (LRESULT) ghbrBackground;
+            return (LRESULT)ghbrBackground;
         }
 
         case WM_DESTROY:
@@ -895,9 +832,8 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
     return 0;
 }
 
-static bool RegisterWinClass()
-{
-    WNDCLASSEX  wcex;
+static bool RegisterWinClass() {
+    WNDCLASSEX wcex;
 
     FillWndClassEx(wcex, INSTALLER_FRAME_CLASS_NAME, WndProcFrame);
     wcex.hIcon = LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_SUMATRAPDF));
@@ -907,8 +843,7 @@ static bool RegisterWinClass()
     return atom != 0;
 }
 
-static BOOL InstanceInit()
-{
+static BOOL InstanceInit() {
     gFontDefault = CreateDefaultGuiFont();
     gUiDPIFactor = (float)DpiGet(HWND_DESKTOP)->dpiX / 96.f;
     trans::SetCurrentLangByCode(trans::DetectUserLang());
@@ -926,8 +861,7 @@ static BOOL InstanceInit()
 }
 
 // inspired by http://engineering.imvu.com/2010/11/24/how-to-write-an-interactive-60-hz-desktop-application/
-static int RunApp()
-{
+static int RunApp() {
     MSG msg;
     FrameTimeoutCalculator ftc(60);
     Timer t;
@@ -954,16 +888,14 @@ static int RunApp()
         // check if there are processes that need to be closed but
         // not more frequently than once per ten seconds and
         // only before (un)installation starts.
-        if (t.GetTimeInMs() > 10000 &&
-            gHwndButtonInstUninst && IsWindowEnabled(gHwndButtonInstUninst)) {
+        if (t.GetTimeInMs() > 10000 && gHwndButtonInstUninst && IsWindowEnabled(gHwndButtonInstUninst)) {
             CheckInstallUninstallPossible(true);
             t.Start();
         }
     }
 }
 
-static void ParseCommandLine(WCHAR *cmdLine)
-{
+static void ParseCommandLine(WCHAR* cmdLine) {
     WStrVec argList;
     ParseCmdLine(cmdLine, argList);
 
@@ -972,7 +904,7 @@ static void ParseCommandLine(WCHAR *cmdLine)
 
     // skip the first arg (exe path)
     for (size_t i = 1; i < argList.Count(); i++) {
-        WCHAR *arg = argList.At(i);
+        WCHAR* arg = argList.At(i);
         if ('-' != *arg && '/' != *arg)
             continue;
 
@@ -984,7 +916,7 @@ static void ParseCommandLine(WCHAR *cmdLine)
         else if (is_arg("register"))
             gGlobalData.registerAsDefault = true;
         else if (is_arg_with_param("opt")) {
-            WCHAR *opts = argList.At(++i);
+            WCHAR* opts = argList.At(++i);
             str::ToLowerInPlace(opts);
             str::TransChars(opts, L" ;", L",,");
             WStrVec optlist;
@@ -997,15 +929,13 @@ static void ParseCommandLine(WCHAR *cmdLine)
             // explicitly listed (only applies if the /opt flag is used)
             if (!optlist.Contains(L"plugin"))
                 gGlobalData.keepBrowserPlugin = false;
-        }
-        else if (is_arg("x")) {
+        } else if (is_arg("x")) {
             gGlobalData.justExtractFiles = true;
             // silently extract files to the current directory (if /d isn't used)
             gGlobalData.silent = true;
             if (!gGlobalData.installDir)
                 str::ReplacePtr(&gGlobalData.installDir, L".");
-        }
-        else if (is_arg("autoupdate")) {
+        } else if (is_arg("autoupdate")) {
             gGlobalData.autoUpdate = true;
         }
 #endif
@@ -1021,14 +951,15 @@ static void ParseCommandLine(WCHAR *cmdLine)
     }
 }
 
-#define CRASH_DUMP_FILE_NAME         L"suminstaller.dmp"
+#define CRASH_DUMP_FILE_NAME L"suminstaller.dmp"
 
 // no-op but must be defined for CrashHandler.cpp
-void ShowCrashHandlerMessage() { }
-void GetStressTestInfo(str::Str<char>* s) { UNUSED(s); }
+void ShowCrashHandlerMessage() {}
+void GetStressTestInfo(str::Str<char>* s) {
+    UNUSED(s);
+}
 
-void GetProgramInfo(str::Str<char>& s)
-{
+void GetProgramInfo(str::Str<char>& s) {
     s.AppendFmt("Ver: %s", CURR_VERSION_STRA);
 #ifdef SVN_PRE_RELEASE_VER
     s.AppendFmt(" pre-release");
@@ -1042,24 +973,23 @@ void GetProgramInfo(str::Str<char>& s)
 #endif
     s.Append("\r\n");
 #if defined(GIT_COMMIT_ID)
-    const char *gitSha1 = QM(GIT_COMMIT_ID);
+    const char* gitSha1 = QM(GIT_COMMIT_ID);
     s.AppendFmt("Git: %s (https://github.com/sumatrapdfreader/sumatrapdf/tree/%s)\r\n", gitSha1, gitSha1);
 #endif
 }
 
-bool CrashHandlerCanUseNet()
-{
+bool CrashHandlerCanUseNet() {
     return true;
 }
 
 #ifndef BUILD_UNINSTALLER
-static void InstallInstallerCrashHandler()
-{
+static void InstallInstallerCrashHandler() {
     // save symbols directly into %TEMP% (so that the installer doesn't
     // unnecessarily leave an empty directory behind if it doesn't have to)
     ScopedMem<WCHAR> tempDir(path::GetTempPath());
     if (!tempDir || !dir::Exists(tempDir))
-        tempDir.Set(GetSpecialFolder(CSIDL_LOCAL_APPDATA, true)); {
+        tempDir.Set(GetSpecialFolder(CSIDL_LOCAL_APPDATA, true));
+    {
         if (!tempDir || !dir::Exists(tempDir))
             return;
     }
@@ -1068,9 +998,7 @@ static void InstallInstallerCrashHandler()
 }
 #endif
 
-int APIENTRY WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/,
-                     LPSTR /* lpCmdLine*/, int nCmdShow)
-{
+int APIENTRY WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPSTR /* lpCmdLine*/, int nCmdShow) {
     UNUSED(nCmdShow);
     int ret = 1;
 

@@ -20,6 +20,7 @@ def extract_accesskey_groups(path):
 	alt_group = None
 
 	for line in open(path, "r").readlines():
+		line = line.strip()
 		if line.startswith("//[ ACCESSKEY_GROUP ") or line.startswith("//] ACCESSKEY_GROUP "):
 			new_name = line[20:].strip()
 			if line[2] == '[':

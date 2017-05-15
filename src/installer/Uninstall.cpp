@@ -6,14 +6,13 @@
 #error "BUILD_UNINSTALLER must be defined!!!"
 #endif
 
-#define UNINSTALLER_WIN_DX  INSTALLER_WIN_DX
-#define UNINSTALLER_WIN_DY  INSTALLER_WIN_DY
+#define UNINSTALLER_WIN_DX INSTALLER_WIN_DX
+#define UNINSTALLER_WIN_DY INSTALLER_WIN_DY
 
 // Try harder getting temporary directory
 // Caller needs to free() the result.
 // Returns nullptr if fails for any reason.
-static WCHAR *GetValidTempDir()
-{
+static WCHAR* GetValidTempDir() {
     ScopedMem<WCHAR> d(path::GetTempPath());
     if (!d) {
         NotifyFailed(_TR("Couldn't obtain temporary directory"));
@@ -28,8 +27,7 @@ static WCHAR *GetValidTempDir()
     return d.StealData();
 }
 
-static WCHAR *GetTempUninstallerPath()
-{
+static WCHAR* GetTempUninstallerPath() {
     ScopedMem<WCHAR> tempDir(GetValidTempDir());
     if (!tempDir)
         return nullptr;
@@ -38,14 +36,12 @@ static WCHAR *GetTempUninstallerPath()
     return path::Join(tempDir, L"sum~inst.exe");
 }
 
-BOOL IsUninstallerNeeded()
-{
+BOOL IsUninstallerNeeded() {
     ScopedMem<WCHAR> exePath(GetInstalledExePath());
     return file::Exists(exePath);
 }
 
-static bool RemoveUninstallerRegistryInfo(HKEY hkey)
-{
+static bool RemoveUninstallerRegistryInfo(HKEY hkey) {
     bool ok1 = DeleteRegKey(hkey, REG_PATH_UNINST);
     // legacy, this key was added by installers up to version 1.8
     bool ok2 = DeleteRegKey(hkey, L"Software\\" APP_NAME_STR);
@@ -53,8 +49,7 @@ static bool RemoveUninstallerRegistryInfo(HKEY hkey)
 }
 
 /* Undo what DoAssociateExeWithPdfExtension() in AppTools.cpp did */
-static void UnregisterFromBeingDefaultViewer(HKEY hkey)
-{
+static void UnregisterFromBeingDefaultViewer(HKEY hkey) {
     ScopedMem<WCHAR> curr(ReadRegStr(hkey, REG_CLASSES_PDF, nullptr));
     ScopedMem<WCHAR> prev(ReadRegStr(hkey, REG_CLASSES_APP, L"previous.pdf"));
     if (!curr || !str::Eq(curr, APP_NAME_STR)) {
@@ -63,7 +58,8 @@ static void UnregisterFromBeingDefaultViewer(HKEY hkey)
         WriteRegStr(hkey, REG_CLASSES_PDF, nullptr, prev);
     } else {
 #pragma warning(push)
-#pragma warning(disable : 6387) // silence /analyze: '_Param_(3)' could be '0':  this does not adhere to the specification for the function 'SHDeleteValueW'
+#pragma warning(disable : 6387) // silence /analyze: '_Param_(3)' could be '0':  this does not adhere to the
+                                // specification for the function 'SHDeleteValueW'
         SHDeleteValue(hkey, REG_CLASSES_PDF, nullptr);
 #pragma warning(pop)
     }
@@ -86,16 +82,15 @@ static void UnregisterFromBeingDefaultViewer(HKEY hkey)
         DeleteRegKey(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT L"\\UserChoice", true);
 }
 
-static bool DeleteEmptyRegKey(HKEY root, const WCHAR *keyName)
-{
+static bool DeleteEmptyRegKey(HKEY root, const WCHAR* keyName) {
     HKEY hkey;
     if (RegOpenKeyEx(root, keyName, 0, KEY_READ, &hkey) != ERROR_SUCCESS)
         return true;
 
     DWORD subkeys, values;
     bool isEmpty = false;
-    if (RegQueryInfoKey(hkey, nullptr, nullptr, nullptr, &subkeys, nullptr, nullptr,
-                        &values, nullptr, nullptr, nullptr, nullptr) == ERROR_SUCCESS) {
+    if (RegQueryInfoKey(hkey, nullptr, nullptr, nullptr, &subkeys, nullptr, nullptr, &values, nullptr, nullptr, nullptr,
+                        nullptr) == ERROR_SUCCESS) {
         isEmpty = 0 == subkeys && 0 == values;
     }
     RegCloseKey(hkey);
@@ -105,9 +100,8 @@ static bool DeleteEmptyRegKey(HKEY root, const WCHAR *keyName)
     return isEmpty;
 }
 
-static void RemoveOwnRegistryKeys()
-{
-    HKEY keys[] = { HKEY_LOCAL_MACHINE, HKEY_CURRENT_USER };
+static void RemoveOwnRegistryKeys() {
+    HKEY keys[] = {HKEY_LOCAL_MACHINE, HKEY_CURRENT_USER};
     // remove all keys from both HKLM and HKCU (wherever they exist)
     for (int i = 0; i < dimof(keys); i++) {
         UnregisterFromBeingDefaultViewer(keys[i]);
@@ -124,10 +118,10 @@ static void RemoveOwnRegistryKeys()
             if (!DeleteRegKey(keys[i], keyname))
                 continue;
             // remove empty keys that the installer might have created
-            *(WCHAR *)str::FindCharLast(keyname, '\\') = '\0';
+            *(WCHAR*)str::FindCharLast(keyname, '\\') = '\0';
             if (!DeleteEmptyRegKey(keys[i], keyname))
                 continue;
-            *(WCHAR *)str::FindCharLast(keyname, '\\') = '\0';
+            *(WCHAR*)str::FindCharLast(keyname, '\\') = '\0';
             DeleteEmptyRegKey(keys[i], keyname);
         }
     }
@@ -138,22 +132,19 @@ static void RemoveOwnRegistryKeys()
     DeleteRegKey(hkey, L"SOFTWARE\\SumatraPDF\\Capabilities");
 }
 
-static BOOL RemoveEmptyDirectory(const WCHAR *dir)
-{
+static BOOL RemoveEmptyDirectory(const WCHAR* dir) {
     WIN32_FIND_DATA findData;
     BOOL success = TRUE;
 
     ScopedMem<WCHAR> dirPattern(path::Join(dir, L"*"));
     HANDLE h = FindFirstFile(dirPattern, &findData);
-    if (h != INVALID_HANDLE_VALUE)
-    {
+    if (h != INVALID_HANDLE_VALUE) {
         do {
             ScopedMem<WCHAR> path(path::Join(dir, findData.cFileName));
             DWORD attrs = findData.dwFileAttributes;
             // filter out directories. Even though there shouldn't be any
             // subdirectories, it also filters out the standard "." and ".."
-            if ((attrs & FILE_ATTRIBUTE_DIRECTORY) &&
-                !str::Eq(findData.cFileName, L".") &&
+            if ((attrs & FILE_ATTRIBUTE_DIRECTORY) && !str::Eq(findData.cFileName, L".") &&
                 !str::Eq(findData.cFileName, L"..")) {
                 success &= RemoveEmptyDirectory(path);
             }
@@ -172,8 +163,7 @@ static BOOL RemoveEmptyDirectory(const WCHAR *dir)
     return success;
 }
 
-static BOOL RemoveInstalledFiles()
-{
+static BOOL RemoveInstalledFiles() {
     BOOL success = TRUE;
 
     for (int i = 0; nullptr != gPayloadData[i].fileName; i++) {
@@ -194,8 +184,7 @@ static BOOL RemoveInstalledFiles()
 // from installation directory and remove installation directory
 // If returns TRUE, this is an installer and we sublaunched ourselves,
 // so the caller needs to exit
-bool ExecuteUninstallerFromTempDir()
-{
+bool ExecuteUninstallerFromTempDir() {
     // only need to sublaunch if running from installation dir
     ScopedMem<WCHAR> ownDir(path::GetDir(GetOwnPath()));
     ScopedMem<WCHAR> tempPath(GetTempUninstallerPath());
@@ -227,8 +216,7 @@ bool ExecuteUninstallerFromTempDir()
     return ok;
 }
 
-static bool RemoveShortcut(bool allUsers)
-{
+static bool RemoveShortcut(bool allUsers) {
     ScopedMem<WCHAR> p(GetShortcutPath(allUsers));
     if (!p.Get())
         return false;
@@ -240,18 +228,16 @@ static bool RemoveShortcut(bool allUsers)
     return true;
 }
 
-DWORD WINAPI UninstallerThread(LPVOID data)
-{
+DWORD WINAPI UninstallerThread(LPVOID data) {
     UNUSED(data);
     // also kill the original uninstaller, if it's just spawned
     // a DELETE_ON_CLOSE copy from the temp directory
-    WCHAR *exePath = GetUninstallerPath();
+    WCHAR* exePath = GetUninstallerPath();
     if (!path::IsSame(exePath, GetOwnPath()))
         KillProcess(exePath, TRUE);
     free(exePath);
 
-    if (!RemoveUninstallerRegistryInfo(HKEY_LOCAL_MACHINE) &&
-        !RemoveUninstallerRegistryInfo(HKEY_CURRENT_USER)) {
+    if (!RemoveUninstallerRegistryInfo(HKEY_LOCAL_MACHINE) && !RemoveUninstallerRegistryInfo(HKEY_CURRENT_USER)) {
         NotifyFailed(_TR("Failed to delete uninstaller registry keys"));
     }
 
@@ -274,8 +260,7 @@ DWORD WINAPI UninstallerThread(LPVOID data)
     return 0;
 }
 
-static void OnButtonUninstall()
-{
+static void OnButtonUninstall() {
     KillSumatra();
 
     if (!CheckInstallUninstallPossible())
@@ -289,8 +274,7 @@ static void OnButtonUninstall()
     gGlobalData.hThread = CreateThread(nullptr, 0, UninstallerThread, nullptr, 0, 0);
 }
 
-void OnUninstallationFinished()
-{
+void OnUninstallationFinished() {
     DestroyWindow(gHwndButtonInstUninst);
     gHwndButtonInstUninst = nullptr;
     CreateButtonExit(gHwndFrame);
@@ -301,10 +285,8 @@ void OnUninstallationFinished()
     CloseHandle(gGlobalData.hThread);
 }
 
-bool OnWmCommand(WPARAM wParam)
-{
-    switch (LOWORD(wParam))
-    {
+bool OnWmCommand(WPARAM wParam) {
+    switch (LOWORD(wParam)) {
         case IDOK:
             if (gHwndButtonInstUninst)
                 OnButtonUninstall();
@@ -323,25 +305,18 @@ bool OnWmCommand(WPARAM wParam)
     return true;
 }
 
-void OnCreateWindow(HWND hwnd)
-{
+void OnCreateWindow(HWND hwnd) {
     gHwndButtonInstUninst = CreateDefaultButton(hwnd, _TR("Uninstall SumatraPDF"), IDOK);
 }
 
-void CreateMainWindow()
-{
+void CreateMainWindow() {
     ScopedMem<WCHAR> title(str::Format(_TR("SumatraPDF %s Uninstaller"), CURR_VERSION_STR));
-    gHwndFrame = CreateWindow(
-        INSTALLER_FRAME_CLASS_NAME, title.Get(),
-        WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
-        CW_USEDEFAULT, CW_USEDEFAULT,
-        dpiAdjust(INSTALLER_WIN_DX), dpiAdjust(INSTALLER_WIN_DY),
-        nullptr, nullptr,
-        GetModuleHandle(nullptr), nullptr);
+    gHwndFrame = CreateWindow(INSTALLER_FRAME_CLASS_NAME, title.Get(), WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
+                              CW_USEDEFAULT, CW_USEDEFAULT, dpiAdjust(INSTALLER_WIN_DX), dpiAdjust(INSTALLER_WIN_DY),
+                              nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
 }
 
-void ShowUsage()
-{
+void ShowUsage() {
     // Note: translation services aren't initialized at this point, so English only
     MessageBox(nullptr, L"uninstall.exe [/s][/d <path>]\n\
     \n\

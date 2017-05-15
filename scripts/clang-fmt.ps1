@@ -20,7 +20,11 @@ $files = "src\Caption.*",
 "src\mui\SvgPath.*",
 "src\utils\FileWatcher.*",
 "src\utils\StrUtil.*",
-"src\wingui\*"
+"src\wingui\*",
+"src\installer\Install.cpp",
+"src\installer\Installer.cpp",
+"src\installer\Installer.h",
+"src\installer\Uninstall.cpp"
 
 foreach ($file in $files) {
   $files2 = Get-ChildItem $file
@@ -30,4 +34,5 @@ foreach ($file in $files) {
   }
 }
 
-Remove-Item src\*.bak, src\*.tmp
+Get-ChildItem -Recur -Filter "*.tmp" | Remove-Item
+Get-ChildItem -Recur -Filter "*.bak" | Remove-Item
