@@ -58,6 +58,8 @@ void RedirectIOToConsole();
 WCHAR *GetExePath();
 WCHAR *GetExeDir();
 WCHAR *GetSystem32Dir();
+WCHAR *GetCurrentDir();
+void ChangeCurrDirToSystem32();
 int FileTimeDiffInSecs(const FILETIME &ft1, const FILETIME &ft2);
 
 WCHAR *ResolveLnk(const WCHAR *path);

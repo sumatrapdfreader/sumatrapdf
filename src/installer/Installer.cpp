@@ -536,7 +536,7 @@ SIZE SetButtonTextAndResize(HWND hwnd, const WCHAR * s)
     return size;
 }
 
-// Creates a button that has a right size for it's text, 
+// Creates a button that has a right size for it's text,
 HWND CreateButton(HWND hwndParent, const WCHAR *s, int id, DWORD style, SIZE& sizeOut)
 {
     HMENU idMenu = (HMENU) (UINT_PTR) id;
@@ -1087,6 +1087,7 @@ int APIENTRY WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/,
     free(currDir);
 
     InitDynCalls();
+    NoDllHijacking();
 
     ScopedCom com;
     InitAllCommonControls();

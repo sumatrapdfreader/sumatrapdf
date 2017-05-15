@@ -363,6 +363,30 @@ WCHAR *GetSystem32Dir() {
     return path::Join(buf, L"system32");
 }
 
+/*
+Returns current directory.
+Caller has to free() the result.
+*/
+WCHAR *GetCurrentDir() {
+    DWORD n = GetCurrentDirectoryW(0, nullptr);
+    if (0 == n) {
+        return nullptr;
+    }
+    WCHAR *buf = AllocArray<WCHAR>(n + 1);
+    DWORD res = GetCurrentDirectoryW(n, buf);
+    if (0 == res) {
+        return nullptr;
+    }
+    CrashIf(res > n);
+    return buf;
+}
+
+void ChangeCurrDirToSystem32() {
+    auto sysDir = GetSystem32Dir();
+    SetCurrentDirectoryW(sysDir);
+    free(sysDir);
+}
+
 static ULARGE_INTEGER FileTimeToLargeInteger(const FILETIME &ft) {
     ULARGE_INTEGER res;
     res.LowPart = ft.dwLowDateTime;

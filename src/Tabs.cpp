@@ -170,7 +170,7 @@ class TabPainter {
     void Paint(HDC hdc, RECT& rc) {
         IntersectClipRect(hdc, rc.left, rc.top, rc.right, rc.bottom);
 
-        // paint the background
+// paint the background
 #if 0
         bool isTranslucentMode = inTitlebar && dwm::IsCompositionEnabled();
         if (isTranslucentMode) {

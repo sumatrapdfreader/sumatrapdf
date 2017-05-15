@@ -230,12 +230,15 @@ HRESULT GetReservedNotSupportedValue(IUnknown **punkNotSupportedValue) {
 }
 };
 
-// try to mitigate dll hijacking
-// see http://www.chiark.greenend.org.uk/~sgtatham/putty/wishlist/vuln-indirect-dll-hijack.html
+static const WCHAR *dllsToPreload = L"comctl32.dll\0gdiplus.dll\0msimg32.dll\0shlwapi.dll\0urlmon.dll\0version.dll\0windowscodecs.dll\0wininet.dll\0\0";
+
+// try to mitigate dll hijacking by pre-loading all the dlls that we delay load or might
+// be loaded indirectly
 void NoDllHijacking() {
-    if (DynSetDefaultDllDirectories) {
-        // https://msdn.microsoft.com/en-us/library/windows/desktop/hh310515(v=vs.85).aspx
-        DynSetDefaultDllDirectories(0x00000800); // LOAD_LIBRARY_SEARCH_SYSTEM32
+    const WCHAR *dll = dllsToPreload;
+    while (*dll) {
+        SafeLoadLibrary(dll);
+        seqstrings::SkipStr(dll);
     }
 }
 

@@ -548,21 +548,6 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 
     CrashIf(hInstance != GetInstance());
 
-    // Change current directory for 2 reasons:
-    // * prevent dll hijacking (LoadLibrary first loads from current directory
-    //   which could be browser's download directory, which is an easy target
-    //   for attackers to put their own fake dlls).
-    //   For this to work we also have to /delayload all libraries otherwise
-    //   they will be loaded even before WinMain executes.
-    // * to not keep a directory opened (and therefore un-deletable) when
-    //   launched by double-clicking on a file. In that case the OS sets
-    //   current directory to where the file is which means we keep it open
-    //   even if the file itself is closed.
-    //  c:\windows\system32 is a good directory to use
-    auto currDir = GetSystem32Dir();
-    SetCurrentDirectoryW(currDir);
-    free(currDir);
-
 #ifdef DEBUG
     // Memory leak detection (only enable _CRTDBG_LEAK_CHECK_DF for
     // regular termination so that leaks aren't checked on exceptions,
@@ -572,11 +557,8 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     TryLoadMemTrace();
 #endif
 
-
     InitDynCalls();
-
-    //PrioritizeSystemDirectoriesForDllLoad();
-    //NoDllHijacking();
+    NoDllHijacking();
 
     DisableDataExecution();
     // ensure that C functions behave consistently under all OS locales
@@ -798,6 +780,19 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     }
     // call this once it's clear whether Perm_SavePreferences has been granted
     prefs::RegisterForFileChanges();
+
+    // Change current directory for 2 reasons:
+    // * prevent dll hijacking (LoadLibrary first loads from current directory
+    //   which could be browser's download directory, which is an easy target
+    //   for attackers to put their own fake dlls).
+    //   For this to work we also have to /delayload all libraries otherwise
+    //   they will be loaded even before WinMain executes.
+    // * to not keep a directory opened (and therefore un-deletable) when
+    //   launched by double-clicking on a file. In that case the OS sets
+    //   current directory to where the file is which means we keep it open
+    //   even if the file itself is closed.
+    //  c:\windows\system32 is a good directory to use
+    ChangeCurrDirToSystem32();
 
     retCode = RunMessageLoop();
     SafeCloseHandle(&hMutex);

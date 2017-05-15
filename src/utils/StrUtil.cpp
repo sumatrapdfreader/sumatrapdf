@@ -1406,19 +1406,35 @@ WCHAR* GetFileName(const WCHAR* url) {
 namespace seqstrings {
 
 // advance to next string
-void SkipStr(char*& s) {
+// return false if end of strings
+bool SkipStr(const char*& s) {
+    if (!*s) {
+        return false;
+    }
     while (*s) {
         s++;
     }
     s++;
+    return true;
 }
 
 // advance to next string
-void SkipStr(const char*& s) {
+// return false if end of strings
+bool SkipStr(char*& s) {
+    return SkipStr((const char*&)s);
+}
+
+// advance to next string
+// return false if end of strings
+bool SkipStr(const WCHAR*& s) {
+    if (!*s) {
+        return false;
+    }
     while (*s) {
         s++;
     }
     s++;
+    return true;
 }
 
 // Returns nullptr if s is the same as toFind

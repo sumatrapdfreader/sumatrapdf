@@ -9,5 +9,8 @@
     "relPrefast64/*" : true,
     "build-log.txt" : true
   },
-  "python.linting.pylintEnabled": false
+  "python.linting.pylintEnabled": false,
+  "files.associations": {
+    "xstring": "cpp"
+  }
 }
