@@ -104,7 +104,7 @@ WCHAR* GetTextW(EditCtrl* w) {
 
 // caller must free() the result
 char* GetText(EditCtrl* w) {
-    ScopedMem<WCHAR> su(GetTextW(w));
+    AutoFreeW su(GetTextW(w));
     return str::conv::ToUtf8(su.Get());
 }
 

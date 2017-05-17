@@ -51,7 +51,7 @@ HtmlFormatterArgs* CreateFormatterArgsDoc(Doc doc, int dx, int dy, Allocator* te
 }
 
 class EbookTocDest : public DocTocItem, public PageDestination {
-    ScopedMem<WCHAR> url;
+    AutoFreeW url;
 
   public:
     EbookTocDest(const WCHAR* title, int reparseIdx) : DocTocItem(str::Dup(title), reparseIdx), url(nullptr) {}
@@ -399,7 +399,7 @@ void EbookController::ClickedProgress(Control* c, int x, int y) {
 }
 
 void EbookController::OnClickedLink(int pageNo, DrawInstr* link) {
-    ScopedMem<WCHAR> url(str::conv::FromHtmlUtf8(link->str.s, link->str.len));
+    AutoFreeW url(str::conv::FromHtmlUtf8(link->str.s, link->str.len));
     if (url::IsAbsolute(url)) {
         EbookTocDest dest(nullptr, url);
         cb->GotoLink(&dest);
@@ -473,13 +473,13 @@ int EbookController::GetMaxPageCount() const {
 void EbookController::UpdateStatus() {
     int pageCount = GetMaxPageCount();
     if (FormattingInProgress()) {
-        ScopedMem<WCHAR> s(str::Format(_TR("Formatting the book... %d pages"), pageCount));
+        AutoFreeW s(str::Format(_TR("Formatting the book... %d pages"), pageCount));
         ctrls->status->SetText(s);
         ctrls->progress->SetFilled(0.f);
         return;
     }
 
-    ScopedMem<WCHAR> s(str::Format(L"%s %d / %d", _TR("Page:"), currPageNo, pageCount));
+    AutoFreeW s(str::Format(L"%s %d / %d", _TR("Page:"), currPageNo, pageCount));
     ctrls->status->SetText(s);
 #if 1
     ctrls->progress->SetFilled(PercFromInt(pageCount, currPageNo));
@@ -687,7 +687,7 @@ void EbookController::ExtractPageAnchors() {
     pageAnchorIds = new WStrVec();
     pageAnchorIdxs = new Vec<int>();
 
-    ScopedMem<WCHAR> epubPagePath;
+    AutoFreeW epubPagePath;
     int fb2TitleCount = 0;
     size_t len;
     const char* data = doc.GetHtmlData(len);
@@ -702,7 +702,7 @@ void EbookController::ExtractPageAnchors() {
             attr = tok->GetAttrByName("name");
         }
         if (attr) {
-            ScopedMem<WCHAR> id(str::conv::FromUtf8(attr->val, attr->valLen));
+            AutoFreeW id(str::conv::FromUtf8(attr->val, attr->valLen));
             pageAnchorIds->Append(str::Format(L"%s#%s", epubPagePath ? epubPagePath : L"", id.Get()));
             pageAnchorIdxs->Append((int)(tok->GetReparsePoint() - parser.Start()));
         }
@@ -716,7 +716,7 @@ void EbookController::ExtractPageAnchors() {
         }
         // create FB2 title anchors (cf. Fb2Doc::ParseToc)
         if (Tag_Title == tok->tag && tok->IsStartTag() && Doc_Fb2 == doc.Type()) {
-            ScopedMem<WCHAR> id(str::Format(TEXT(FB2_TOC_ENTRY_MARK) L"%d", ++fb2TitleCount));
+            AutoFreeW id(str::Format(TEXT(FB2_TOC_ENTRY_MARK) L"%d", ++fb2TitleCount));
             pageAnchorIds->Append(id.StealData());
             pageAnchorIdxs->Append((int)(tok->GetReparsePoint() - parser.Start()));
         }
@@ -741,7 +741,7 @@ int EbookController::ResolvePageAnchor(const WCHAR* id) {
         return -1;
     }
 
-    ScopedMem<WCHAR> chapterPath(str::DupN(id, str::FindChar(id, '#') - id));
+    AutoFreeW chapterPath(str::DupN(id, str::FindChar(id, '#') - id));
     idx = pageAnchorIds->Find(chapterPath);
     if (idx != -1) {
         return pageAnchorIdxs->At(idx);
@@ -766,7 +766,7 @@ class EbookTocCollector : public EbookTocVisitor {
         else {
             int idx = ctrl->ResolvePageAnchor(url);
             if (-1 == idx && str::FindChar(url, '%')) {
-                ScopedMem<WCHAR> decodedUrl(str::Dup(url));
+                AutoFreeW decodedUrl(str::Dup(url));
                 url::DecodeInPlace(decodedUrl);
                 idx = ctrl->ResolvePageAnchor(decodedUrl);
             }
@@ -819,7 +819,7 @@ PageDestination* EbookController::GetNamedDest(const WCHAR* name) {
         (size_t)reparseIdx <= doc.GetHtmlDataSize()) {
         // Mobi uses filepos (reparseIdx) for in-document links
     } else if (!str::FindChar(name, '#')) {
-        ScopedMem<WCHAR> id(str::Format(L"#%s", name));
+        AutoFreeW id(str::Format(L"#%s", name));
         reparseIdx = ResolvePageAnchor(id);
     } else {
         reparseIdx = ResolvePageAnchor(name);

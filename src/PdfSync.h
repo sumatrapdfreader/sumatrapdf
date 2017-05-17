@@ -32,7 +32,7 @@ public:
     //  - filename: receives the name of the source file
     //  - line: receives the line number
     //  - col: receives the column number
-    virtual int DocToSource(UINT pageNo, PointI pt, ScopedMem<WCHAR>& filename, UINT *line, UINT *col) = 0;
+    virtual int DocToSource(UINT pageNo, PointI pt, AutoFreeW& filename, UINT *line, UINT *col) = 0;
 
     // Forward-search:
     // The result is returned in page and rects (list of rectangles to highlight).
@@ -50,7 +50,7 @@ protected:
     int RebuildIndex();
     WCHAR * PrependDir(const WCHAR* filename) const;
 
-    ScopedMem<WCHAR> syncfilepath;  // path to the synchronization file
+    AutoFreeW syncfilepath;  // path to the synchronization file
 
 public:
     static int Create(const WCHAR *pdffilename, BaseEngine *engine, Synchronizer **sync);

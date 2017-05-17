@@ -27,7 +27,7 @@ static WCHAR *GetGhostscriptPath()
 TryAgain64Bit:
     for (int i = 0; i < dimof(gsProducts); i++) {
         HKEY hkey;
-        ScopedMem<WCHAR> keyName(str::Join(L"Software\\", gsProducts[i]));
+        AutoFreeW keyName(str::Join(L"Software\\", gsProducts[i]));
         if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, keyName, 0, access, &hkey) != ERROR_SUCCESS)
             continue;
         WCHAR subkey[32];
@@ -49,13 +49,13 @@ TryAgain64Bit:
     // return the path to the newest installation
     for (size_t ix = versions.Count(); ix > 0; ix--) {
         for (int i = 0; i < dimof(gsProducts); i++) {
-            ScopedMem<WCHAR> keyName(str::Format(L"Software\\%s\\%s",
+            AutoFreeW keyName(str::Format(L"Software\\%s\\%s",
                                                  gsProducts[i], versions.At(ix - 1)));
-            ScopedMem<WCHAR> GS_DLL(ReadRegStr(HKEY_LOCAL_MACHINE, keyName, L"GS_DLL"));
+            AutoFreeW GS_DLL(ReadRegStr(HKEY_LOCAL_MACHINE, keyName, L"GS_DLL"));
             if (!GS_DLL)
                 continue;
-            ScopedMem<WCHAR> dir(path::GetDir(GS_DLL));
-            ScopedMem<WCHAR> exe(path::Join(dir, L"gswin32c.exe"));
+            AutoFreeW dir(path::GetDir(GS_DLL));
+            AutoFreeW exe(path::Join(dir, L"gswin32c.exe"));
             if (file::Exists(exe))
                 return exe.StealData();
             exe.Set(path::Join(dir, L"gswin64c.exe"));
@@ -66,13 +66,13 @@ TryAgain64Bit:
 
     // if Ghostscript isn't found in the Registry, try finding it in the %PATH%
     DWORD size = GetEnvironmentVariable(L"PATH", nullptr, 0);
-    ScopedMem<WCHAR> envpath(AllocArray<WCHAR>(size));
+    AutoFreeW envpath(AllocArray<WCHAR>(size));
     if (size > 0 && envpath) {
         GetEnvironmentVariable(L"PATH", envpath, size);
         WStrVec paths;
         paths.Split(envpath, L";", true);
         for (size_t ix = 0; ix < paths.Count(); ix++) {
-            ScopedMem<WCHAR> exe(path::Join(paths.At(ix), L"gswin32c.exe"));
+            AutoFreeW exe(path::Join(paths.At(ix), L"gswin32c.exe"));
             if (file::Exists(exe))
                 return exe.StealData();
             exe.Set(path::Join(paths.At(ix), L"gswin64c.exe"));
@@ -85,7 +85,7 @@ TryAgain64Bit:
 }
 
 class ScopedFile {
-    ScopedMem<WCHAR> path;
+    AutoFreeW path;
 
 public:
     explicit ScopedFile(const WCHAR *path) : path(str::Dup(path)) { }
@@ -121,20 +121,20 @@ static RectI ExtractDSCPageSize(const WCHAR *fileName)
 static BaseEngine *ps2pdf(const WCHAR *fileName)
 {
     // TODO: read from gswin32c's stdout instead of using a TEMP file
-    ScopedMem<WCHAR> shortPath(path::ShortPath(fileName));
-    ScopedMem<WCHAR> tmpFile(path::GetTempPath(L"PsE"));
+    AutoFreeW shortPath(path::ShortPath(fileName));
+    AutoFreeW tmpFile(path::GetTempPath(L"PsE"));
     ScopedFile tmpFileScope(tmpFile);
-    ScopedMem<WCHAR> gswin32c(GetGhostscriptPath());
+    AutoFreeW gswin32c(GetGhostscriptPath());
     if (!shortPath || !tmpFile || !gswin32c)
         return nullptr;
 
     // try to help Ghostscript determine the intended page size
-    ScopedMem<WCHAR> psSetup;
+    AutoFreeW psSetup;
     RectI page = ExtractDSCPageSize(fileName);
     if (!page.IsEmpty())
         psSetup.Set(str::Format(L" << /PageSize [%i %i] >> setpagedevice", page.dx, page.dy));
 
-    ScopedMem<WCHAR> cmdLine(str::Format(
+    AutoFreeW cmdLine(str::Format(
         L"\"%s\" -q -dSAFER -dNOPAUSE -dBATCH -dEPSCrop -sOutputFile=\"%s\" -sDEVICE=pdfwrite -c \".setpdfwrite%s\" -f \"%s\"",
         gswin32c.Get(), tmpFile.Get(), psSetup ? psSetup.Get() : L"", shortPath.Get()));
     fprintf(stderr, "- %s:%d: using '%ls' for creating '%%TEMP%%\\%ls'\n", path::GetBaseName(__FILE__), __LINE__, gswin32c.Get(), path::GetBaseName(tmpFile));
@@ -172,7 +172,7 @@ static BaseEngine *ps2pdf(const WCHAR *fileName)
 
 static BaseEngine *psgz2pdf(const WCHAR *fileName)
 {
-    ScopedMem<WCHAR> tmpFile(path::GetTempPath(L"PsE"));
+    AutoFreeW tmpFile(path::GetTempPath(L"PsE"));
     ScopedFile tmpFileScope(tmpFile);
     if (!tmpFile)
         return nullptr;
@@ -256,7 +256,7 @@ public:
         if (!FileName()) {
             return false;
         }
-        ScopedMem<WCHAR> dstPath(str::conv::FromUtf8(copyFileName));
+        AutoFreeW dstPath(str::conv::FromUtf8(copyFileName));
         return CopyFileW(FileName(), dstPath, FALSE);
     }
 
@@ -370,7 +370,7 @@ namespace PsEngine {
 
 bool IsAvailable()
 {
-    ScopedMem<WCHAR> gswin32c(GetGhostscriptPath());
+    AutoFreeW gswin32c(GetGhostscriptPath());
     return gswin32c.Get() != nullptr;
 }
 

@@ -448,8 +448,8 @@ static void GetGraphicsDriverInfo(str::Str<char>& s)
     // There can be more than one driver, they are in 0000, 0001 etc.
     for (int i=0; ; i++)
     {
-        ScopedMem<WCHAR> key(str::Format(GFX_DRIVER_KEY_FMT, i));
-        ScopedMem<WCHAR> v1(ReadRegStr(HKEY_LOCAL_MACHINE, key, L"DriverDesc"));
+        AutoFreeW key(str::Format(GFX_DRIVER_KEY_FMT, i));
+        AutoFreeW v1(ReadRegStr(HKEY_LOCAL_MACHINE, key, L"DriverDesc"));
         // I assume that if I can't read the value, there are no more drivers
         if (!v1)
             break;
@@ -595,7 +595,7 @@ static bool BuildSymbolPath()
 #endif
 #if 0
     // when running local builds, *.pdb is in the same dir as *.exe
-    ScopedMem<WCHAR> exePath(GetExePath());
+    AutoFreeW exePath(GetExePath());
     path.Append(exePath);
 #endif
     gSymbolPathW = path.StealData();

@@ -53,7 +53,7 @@ public:
 };
 
 class ChmNamedDest : public ChmTocItem {
-    ScopedMem<WCHAR> myUrl;
+    AutoFreeW myUrl;
 
 public:
     ChmNamedDest(const WCHAR *url, int pageNo) :
@@ -182,7 +182,7 @@ void ChmModel::DisplayPage(const WCHAR *pageUrl)
         return;
     }
 
-    int pageNo = pages.Find(ScopedMem<WCHAR>(url::GetFullPath(pageUrl))) + 1;
+    int pageNo = pages.Find(AutoFreeW(url::GetFullPath(pageUrl))) + 1;
     if (pageNo)
         currentPageNo = pageNo;
 
@@ -206,7 +206,7 @@ void ChmModel::DisplayPage(const WCHAR *pageUrl)
 void ChmModel::ScrollToLink(PageDestination *link)
 {
     CrashIf(link->GetDestType() != Dest_ScrollTo);
-    ScopedMem<WCHAR> url(link->GetDestName());
+    AutoFreeW url(link->GetDestName());
     if (url)
         DisplayPage(url);
 }
@@ -274,7 +274,7 @@ class ChmTocBuilder : public EbookTocVisitor {
         if (!url || IsExternalUrl(url))
             return 0;
 
-        ScopedMem<WCHAR> plainUrl(url::GetFullPath(url));
+        AutoFreeW plainUrl(url::GetFullPath(url));
         int pageNo = (int)pages->Count() + 1;
         bool inserted = urlsSet.Insert(plainUrl, pageNo, &pageNo);
         if (inserted) {
@@ -352,7 +352,7 @@ void ChmModel::OnDocumentComplete(const WCHAR *url)
         return;
     if (*url == '/')
         ++url;
-    int pageNo = pages.Find(ScopedMem<WCHAR>(url::GetFullPath(url))) + 1;
+    int pageNo = pages.Find(AutoFreeW(url::GetFullPath(url))) + 1;
     if (pageNo) {
         currentPageNo = pageNo;
         // TODO: setting zoom before the first page is loaded seems not to work
@@ -391,7 +391,7 @@ bool ChmModel::OnBeforeNavigate(const WCHAR *url, bool newWindow)
 const unsigned char *ChmModel::GetDataForUrl(const WCHAR *url, size_t *len)
 {
     ScopedCritSec scope(&docAccess);
-    ScopedMem<WCHAR> plainUrl(url::GetFullPath(url));
+    AutoFreeW plainUrl(url::GetFullPath(url));
     ChmCacheEntry *e = FindDataForUrl(plainUrl);
     if (!e) {
         e = new ChmCacheEntry(Allocator::StrDup(&poolAlloc, plainUrl));
@@ -423,7 +423,7 @@ void ChmModel::OnLButtonDown()
 // named destinations are either in-document URLs or Alias topic IDs
 PageDestination *ChmModel::GetNamedDest(const WCHAR *name)
 {
-    ScopedMem<WCHAR> plainUrl(url::GetFullPath(name));
+    AutoFreeW plainUrl(url::GetFullPath(name));
     ScopedMem<char> urlUtf8(str::conv::ToUtf8(plainUrl));
     if (!doc->HasData(urlUtf8)) {
         unsigned int topicID;
@@ -545,7 +545,7 @@ class ChmThumbnailTask : public HtmlWindowCallback
     HtmlWindow *hw;
     SizeI size;
     std::function<void(RenderedBitmap*)> saveThumbnail;
-    ScopedMem<WCHAR> homeUrl;
+    AutoFreeW homeUrl;
     Vec<unsigned char *> data;
     CRITICAL_SECTION docAccess;
 
@@ -592,12 +592,12 @@ public:
     virtual const unsigned char *GetDataForUrl(const WCHAR *url, size_t *len) {
         UNUSED(len);
         ScopedCritSec scope(&docAccess);
-        ScopedMem<WCHAR> plainUrl(url::GetFullPath(url));
+        AutoFreeW plainUrl(url::GetFullPath(url));
         ScopedMem<char> urlUtf8(str::conv::ToUtf8(plainUrl));
         data.Append(doc->GetData(urlUtf8, len));
         return data.Last();
     }
-    virtual void DownloadData(const WCHAR *url, const unsigned char *data, size_t len) { 
+    virtual void DownloadData(const WCHAR *url, const unsigned char *data, size_t len) {
         UNUSED(url); UNUSED(data); UNUSED(len);
     }
 };

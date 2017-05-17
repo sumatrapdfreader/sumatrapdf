@@ -104,7 +104,7 @@ void TextSearch::SetLastResult(TextSelection *sel)
 {
     CopySelection(sel);
 
-    ScopedMem<WCHAR> selection(ExtractText(L" "));
+    AutoFreeW selection(ExtractText(L" "));
     str::NormalizeWS(selection);
     SetText(selection);
 

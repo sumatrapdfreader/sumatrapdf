@@ -352,7 +352,7 @@ char* ToMultiByte(const char* src, UINT codePageSrc, UINT codePageDest) {
     if (codePageSrc == codePageDest)
         return str::Dup(src);
 
-    ScopedMem<WCHAR> tmp(ToWideChar(src, codePageSrc));
+    AutoFreeW tmp(ToWideChar(src, codePageSrc));
     if (!tmp)
         return nullptr;
 
@@ -801,7 +801,7 @@ WCHAR* FormatNumWithThousandSep(size_t num, LCID locale) {
     WCHAR thousandSep[4] = {0};
     if (!GetLocaleInfo(locale, LOCALE_STHOUSAND, thousandSep, dimof(thousandSep)))
         str::BufSet(thousandSep, dimof(thousandSep), L",");
-    ScopedMem<WCHAR> buf(str::Format(L"%Iu", num));
+    AutoFreeW buf(str::Format(L"%Iu", num));
 
     size_t resLen = str::Len(buf) + str::Len(thousandSep) * (str::Len(buf) + 3) / 3 + 1;
     WCHAR* res = AllocArray<WCHAR>(resLen);
@@ -825,13 +825,13 @@ WCHAR* FormatNumWithThousandSep(size_t num, LCID locale) {
 WCHAR* FormatFloatWithThousandSep(double number, LCID locale) {
     size_t num = (size_t)(number * 100 + 0.5);
 
-    ScopedMem<WCHAR> tmp(FormatNumWithThousandSep(num / 100, locale));
+    AutoFreeW tmp(FormatNumWithThousandSep(num / 100, locale));
     WCHAR decimal[4];
     if (!GetLocaleInfo(locale, LOCALE_SDECIMAL, decimal, dimof(decimal)))
         str::BufSet(decimal, dimof(decimal), L".");
 
     // always add between one and two decimals after the point
-    ScopedMem<WCHAR> buf(str::Format(L"%s%s%02d", tmp, decimal, num % 100));
+    AutoFreeW buf(str::Format(L"%s%s%02d", tmp, decimal, num % 100));
     if (str::EndsWith(buf, L"0"))
         buf[str::Len(buf) - 1] = '\0';
 
@@ -977,7 +977,7 @@ static const WCHAR* ParseLimitedNumber(const WCHAR* str, const WCHAR* format, co
      %f - parses a float
      %c - parses a single WCHAR
      %s - parses a string (pass in a WCHAR**, free after use - also on failure!)
-     %S - parses a string into a ScopedMem<WCHAR>
+     %S - parses a string into a AutoFreeW
      %? - makes the next single character optional (e.g. "x%?,y" parses both "xy" and "x,y")
      %$ - causes the parsing to fail if it's encountered when not at the end of the string
      %  - skips a single whitespace character
@@ -1105,7 +1105,7 @@ const WCHAR* Parse(const WCHAR* str, const WCHAR* format, ...) {
         else if ('s' == *f)
             *va_arg(args, WCHAR**) = ExtractUntil(str, *(f + 1), &end);
         else if ('S' == *f)
-            va_arg(args, ScopedMem<WCHAR>*)->Set(ExtractUntil(str, *(f + 1), &end));
+            va_arg(args, AutoFreeW*)->Set(ExtractUntil(str, *(f + 1), &end));
         else if ('$' == *f && !*str)
             continue; // don't fail, if we're indeed at the end of the string
         else if ('%' == *f && *f == *str)
@@ -1326,7 +1326,7 @@ char* UnknownToUtf8(const char* s, size_t len) {
     if (isLegalUTF8String(&tmp, tmp + len))
         return (char*)s;
 
-    ScopedMem<WCHAR> uni(str::conv::FromAnsi(s, len));
+    AutoFreeW uni(str::conv::FromAnsi(s, len));
     return str::conv::ToUtf8(uni.Get());
 }
 
@@ -1381,7 +1381,7 @@ WCHAR* GetFullPath(const WCHAR* url) {
 }
 
 WCHAR* GetFileName(const WCHAR* url) {
-    ScopedMem<WCHAR> path(str::Dup(url));
+    AutoFreeW path(str::Dup(url));
     str::TransChars(path, L"#?", L"\0\0");
     WCHAR* base = path + str::Len(path);
     for (; base > path; base--) {

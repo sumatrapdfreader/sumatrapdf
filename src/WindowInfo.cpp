@@ -230,7 +230,7 @@ void WindowInfo::ShowNotification(const WCHAR *message, int options, Notificatio
     int timeoutMS = (options & NOS_PERSIST) ? 0 : 3000;
     bool highlight = (options & NOS_HIGHLIGHT);
 
-    NotificationWnd *wnd = new NotificationWnd(hwndCanvas, message, timeoutMS, highlight, 
+    NotificationWnd *wnd = new NotificationWnd(hwndCanvas, message, timeoutMS, highlight,
         [this](NotificationWnd *wnd) {
         this->notifications->RemoveNotification(wnd);
     });
@@ -258,8 +258,8 @@ class RemoteDestination : public PageDestination {
     PageDestType type;
     int pageNo;
     RectD rect;
-    ScopedMem<WCHAR> value;
-    ScopedMem<WCHAR> name;
+    AutoFreeW value;
+    AutoFreeW name;
 
 public:
     RemoteDestination(PageDestination *dest) :
@@ -282,7 +282,7 @@ void LinkHandler::GotoLink(PageDestination *link)
         return;
 
     TabInfo *tab = owner->currentTab;
-    ScopedMem<WCHAR> path(link->GetDestValue());
+    AutoFreeW path(link->GetDestValue());
     PageDestType type = link->GetDestType();
     if (Dest_ScrollTo == type) {
         // TODO: respect link->ld.gotor.new_window for PDF documents ?
@@ -392,7 +392,7 @@ void LinkHandler::LaunchFile(const WCHAR *path, PageDestination *link)
         link = nullptr;
     }
 
-    ScopedMem<WCHAR> fullPath(path::GetDir(owner->ctrl->FilePath()));
+    AutoFreeW fullPath(path::GetDir(owner->ctrl->FilePath()));
     fullPath.Set(path::Join(fullPath, path));
     fullPath.Set(path::Normalize(fullPath));
     // TODO: respect link->ld.gotor.new_window for PDF documents ?
@@ -414,7 +414,7 @@ void LinkHandler::LaunchFile(const WCHAR *path, PageDestination *link)
         // consider bad UI and thus simply don't)
         bool ok = OpenFileExternally(fullPath);
         if (!ok) {
-            ScopedMem<WCHAR> msg(str::Format(_TR("Error loading %s"), fullPath));
+            AutoFreeW msg(str::Format(_TR("Error loading %s"), fullPath));
             owner->ShowNotification(msg, NOS_HIGHLIGHT);
         }
         delete remoteLink;
@@ -425,7 +425,7 @@ void LinkHandler::LaunchFile(const WCHAR *path, PageDestination *link)
     if (!remoteLink)
         return;
 
-    ScopedMem<WCHAR> destName(remoteLink->GetDestName());
+    AutoFreeW destName(remoteLink->GetDestName());
     if (destName) {
         PageDestination *dest = newWin->ctrl->GetNamedDest(destName);
         if (dest) {
@@ -468,7 +468,7 @@ static bool MatchFuzzy(const WCHAR *s1, const WCHAR *s2, bool partially=false)
 PageDestination *LinkHandler::FindTocItem(DocTocItem *item, const WCHAR *name, bool partially)
 {
     for (; item; item = item->next) {
-        ScopedMem<WCHAR> fuzTitle(NormalizeFuzzy(item->title));
+        AutoFreeW fuzTitle(NormalizeFuzzy(item->title));
         if (MatchFuzzy(fuzTitle, name, partially))
             return item->GetLink();
         PageDestination *dest = FindTocItem(item->child, name, partially);
@@ -498,7 +498,7 @@ void LinkHandler::GotoNamedDest(const WCHAR *name)
     }
     else if (ctrl->HasTocTree()) {
         DocTocItem *root = ctrl->GetTocTree();
-        ScopedMem<WCHAR> fuzName(NormalizeFuzzy(name));
+        AutoFreeW fuzName(NormalizeFuzzy(name));
         dest = FindTocItem(root, fuzName);
         if (!dest)
             dest = FindTocItem(root, fuzName, true);

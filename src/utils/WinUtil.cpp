@@ -449,7 +449,7 @@ bool CreateShortcut(const WCHAR *shortcutPath, const WCHAR *exePath, const WCHAR
     if (FAILED(hr))
         return false;
 
-    lnk->SetWorkingDirectory(ScopedMem<WCHAR>(path::GetDir(exePath)));
+    lnk->SetWorkingDirectory(AutoFreeW(path::GetDir(exePath)));
     // lnk->SetShowCmd(SW_SHOWNORMAL);
     // lnk->SetHotkey(0);
     lnk->SetIconLocation(exePath, iconIndex);
@@ -470,7 +470,7 @@ IDataObject *GetDataObjectForFile(const WCHAR *filePath, HWND hwnd) {
         return nullptr;
 
     IDataObject *pDataObject = nullptr;
-    ScopedMem<WCHAR> lpWPath(str::Dup(filePath));
+    AutoFreeW lpWPath(str::Dup(filePath));
     LPITEMIDLIST pidl;
     hr = pDesktopFolder->ParseDisplayName(nullptr, nullptr, lpWPath, nullptr, &pidl, nullptr);
     if (SUCCEEDED(hr)) {
@@ -526,7 +526,7 @@ HANDLE LaunchProcess(const WCHAR *cmdLine, const WCHAR *currDir, DWORD flags) {
 
     // CreateProcess() might modify cmd line argument, so make a copy
     // in case caller provides a read-only string
-    ScopedMem<WCHAR> cmdLineCopy(str::Dup(cmdLine));
+    AutoFreeW cmdLineCopy(str::Dup(cmdLine));
     if (!CreateProcessW(nullptr, cmdLineCopy, nullptr, nullptr, FALSE, flags, nullptr, currDir, &si,
                         &pi))
         return nullptr;
@@ -901,10 +901,10 @@ void SetText(HMENU m, UINT id, WCHAR *s) {
    (preserving all & so that they don't get swallowed)
    if no change is needed, the string is returned as is,
    else it's also saved in newResult for automatic freeing */
-const WCHAR *ToSafeString(const WCHAR *str, ScopedMem<WCHAR> &newResult) {
+const WCHAR *ToSafeString(const WCHAR *str, AutoFreeW &newResult) {
     if (!str::FindChar(str, '&'))
         return str;
-    newResult = str::Replace(str, L"&", L"&&");
+    newResult.Set(str::Replace(str, L"&", L"&&"));
     return newResult.Get();
 }
 }
@@ -1041,7 +1041,7 @@ WCHAR *NormalizeString(const WCHAR *str, int /* NORM_FORM */ form) {
     // according to MSDN the estimate may be off somewhat:
     // http://msdn.microsoft.com/en-us/library/windows/desktop/dd319093(v=vs.85).aspx
     sizeEst = sizeEst * 3 / 2 + 1;
-    ScopedMem<WCHAR> res(AllocArray<WCHAR>(sizeEst));
+    AutoFreeW res(AllocArray<WCHAR>(sizeEst));
     sizeEst = DynNormalizeString(form, str, -1, res, sizeEst);
     if (sizeEst <= 0)
         return nullptr;
@@ -1379,7 +1379,7 @@ BOOL SafeDestroyWindow(HWND *hwnd) {
 // It'll always run the process, might fail to run non-elevated if fails to find explorer.exe
 // Also, if explorer.exe is running elevated, it'll probably run elevated as well.
 void RunNonElevated(const WCHAR *exePath) {
-    ScopedMem<WCHAR> cmd, explorerPath;
+    AutoFreeW cmd, explorerPath;
     WCHAR buf[MAX_PATH] = { 0 };
     UINT res = GetWindowsDirectory(buf, dimof(buf));
     if (0 == res || res >= dimof(buf))

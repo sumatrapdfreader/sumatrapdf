@@ -162,7 +162,7 @@ static SizeI CalcSumatraVersionSize(HWND hwnd, HDC hdc)
 
     /* consider version and version-sub strings */
     SelectObject(hdc, fontVersionTxt);
-    ScopedMem<WCHAR> ver(GetSumatraVersion());
+    AutoFreeW ver(GetSumatraVersion());
     GetTextExtentPoint32(hdc, ver.Get(), (int)str::Len(ver.Get()), &txtSize);
     LONG minWidth = txtSize.cx + DpiScaleX(hwnd, 8);
     txt = VERSION_SUB_TXT;
@@ -192,7 +192,7 @@ static void DrawSumatraVersion(HDC hdc, RectI rect)
     SelectObject(hdc, fontVersionTxt);
     PointI pt(mainRect.x + mainRect.dx + ABOUT_INNER_PADDING, mainRect.y);
 
-    ScopedMem<WCHAR> ver(GetSumatraVersion());
+    AutoFreeW ver(GetSumatraVersion());
     TextOut(hdc, pt.x, pt.y, ver.Get(), (int)str::Len(ver.Get()));
     txt = VERSION_SUB_TXT;
     TextOut(hdc, pt.x, pt.y + 16, txt, (int)str::Len(txt));
@@ -239,7 +239,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkI
     ScopedPen penDivideLine(CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, col));
     col = GetAppColor(AppColor::MainWindowLink);
     ScopedPen penLinkLine(CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, col));
-    
+
     ScopedFont fontLeftTxt(CreateSimpleFont(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE));
     ScopedFont fontRightTxt(CreateSimpleFont(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE));
 
@@ -416,7 +416,7 @@ static void CopyAboutInfoToClipboard(HWND hwnd)
 {
     UNUSED(hwnd);
     str::Str<WCHAR> info(512);
-    ScopedMem<WCHAR> ver(GetSumatraVersion());
+    AutoFreeW ver(GetSumatraVersion());
     info.AppendFmt(L"%s %s\r\n", APP_NAME_STR, ver.Get());
     for (size_t i = info.Size() - 2; i > 0; i--) {
         info.Append('-');

@@ -36,10 +36,10 @@ static WCHAR *GetThumbnailPath(const WCHAR *filePath)
     CalcMD5Digest((unsigned char *)pathU.Get(), str::Len(pathU), digest);
     ScopedMem<char> fingerPrint(_MemToHex(&digest));
 
-    ScopedMem<WCHAR> thumbsPath(AppGenDataFilename(THUMBNAILS_DIR_NAME));
+    AutoFreeW thumbsPath(AppGenDataFilename(THUMBNAILS_DIR_NAME));
     if (!thumbsPath)
         return nullptr;
-    ScopedMem<WCHAR> fname(str::conv::FromAnsi(fingerPrint));
+    AutoFreeW fname(str::conv::FromAnsi(fingerPrint));
 
     return str::Format(L"%s\\%s.png", thumbsPath.Get(), fname.Get());
 }
@@ -47,10 +47,10 @@ static WCHAR *GetThumbnailPath(const WCHAR *filePath)
 // removes thumbnails that don't belong to any frequently used item in file history
 void CleanUpThumbnailCache(FileHistory& fileHistory)
 {
-    ScopedMem<WCHAR> thumbsPath(AppGenDataFilename(THUMBNAILS_DIR_NAME));
+    AutoFreeW thumbsPath(AppGenDataFilename(THUMBNAILS_DIR_NAME));
     if (!thumbsPath)
         return;
-    ScopedMem<WCHAR> pattern(path::Join(thumbsPath, L"*.png"));
+    AutoFreeW pattern(path::Join(thumbsPath, L"*.png"));
 
     WStrVec files;
     WIN32_FIND_DATA fdata;
@@ -67,7 +67,7 @@ void CleanUpThumbnailCache(FileHistory& fileHistory)
     Vec<DisplayState *> list;
     fileHistory.GetFrequencyOrder(list);
     for (size_t i = 0; i < list.Count() && i < FILE_HISTORY_MAX_FREQUENT * 2; i++) {
-        ScopedMem<WCHAR> bmpPath(GetThumbnailPath(list.At(i)->filePath));
+        AutoFreeW bmpPath(GetThumbnailPath(list.At(i)->filePath));
         if (!bmpPath)
             continue;
         int idx = files.Find(path::GetBaseName(bmpPath));
@@ -78,7 +78,7 @@ void CleanUpThumbnailCache(FileHistory& fileHistory)
     }
 
     for (size_t i = 0; i < files.Count(); i++) {
-        ScopedMem<WCHAR> bmpPath(path::Join(thumbsPath, files.At(i)));
+        AutoFreeW bmpPath(path::Join(thumbsPath, files.At(i)));
         file::Delete(bmpPath);
     }
 }
@@ -107,7 +107,7 @@ bool LoadThumbnail(DisplayState& ds)
     delete ds.thumbnail;
     ds.thumbnail = nullptr;
 
-    ScopedMem<WCHAR> bmpPath(GetThumbnailPath(ds.filePath));
+    AutoFreeW bmpPath(GetThumbnailPath(ds.filePath));
     if (!bmpPath)
         return false;
 
@@ -126,7 +126,7 @@ bool HasThumbnail(DisplayState& ds)
     if (!ds.thumbnail && !LoadThumbnail(ds))
         return false;
 
-    ScopedMem<WCHAR> bmpPath(GetThumbnailPath(ds.filePath));
+    AutoFreeW bmpPath(GetThumbnailPath(ds.filePath));
     if (!bmpPath)
         return true;
     FILETIME bmpTime = file::GetModificationTime(bmpPath);
@@ -157,10 +157,10 @@ void SaveThumbnail(DisplayState& ds)
     if (!ds.thumbnail)
         return;
 
-    ScopedMem<WCHAR> bmpPath(GetThumbnailPath(ds.filePath));
+    AutoFreeW bmpPath(GetThumbnailPath(ds.filePath));
     if (!bmpPath)
         return;
-    ScopedMem<WCHAR> thumbsPath(path::GetDir(bmpPath));
+    AutoFreeW thumbsPath(path::GetDir(bmpPath));
     if (dir::Create(thumbsPath)) {
         CrashIf(!str::EndsWithI(bmpPath, L".png"));
         Bitmap bmp(ds.thumbnail->GetBitmap(), nullptr);
@@ -174,7 +174,7 @@ void RemoveThumbnail(DisplayState& ds)
     if (!HasThumbnail(ds))
         return;
 
-    ScopedMem<WCHAR> bmpPath(GetThumbnailPath(ds.filePath));
+    AutoFreeW bmpPath(GetThumbnailPath(ds.filePath));
     if (bmpPath)
         file::Delete(bmpPath);
     delete ds.thumbnail;

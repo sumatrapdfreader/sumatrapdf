@@ -258,9 +258,9 @@ static RARGetDllVersionProc RARGetDllVersion = nullptr;
 UnRarDll::UnRarDll()
 {
     if (!RARGetDllVersion) {
-        ScopedMem<WCHAR> dllPath(path::GetAppPath(L"unrar.dll"));
+        AutoFreeW dllPath(path::GetAppPath(L"unrar.dll"));
 #ifdef _WIN64
-        ScopedMem<WCHAR> dll64Path(path::GetAppPath(L"unrar64.dll"));
+        AutoFreeW dll64Path(path::GetAppPath(L"unrar64.dll"));
         if (file::Exists(dll64Path))
             dllPath.Set(dll64Path.StealData());
 #endif

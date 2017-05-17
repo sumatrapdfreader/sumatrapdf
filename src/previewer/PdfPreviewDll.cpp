@@ -188,7 +188,7 @@ static struct {
 
 STDAPI DllRegisterServer()
 {
-    ScopedMem<WCHAR> dllPath(path::GetAppPath());
+    AutoFreeW dllPath(path::GetAppPath());
     if (!dllPath)
         return HRESULT_FROM_WIN32(GetLastError());
 
@@ -198,9 +198,9 @@ STDAPI DllRegisterServer()
     for (int i = 0; i < dimof(gPreviewers); i++) {
         if (gPreviewers[i].skip)
             continue;
-        ScopedMem<WCHAR> displayName(str::Format(L"SumatraPDF Preview (*%s)", gPreviewers[i].ext));
+        AutoFreeW displayName(str::Format(L"SumatraPDF Preview (*%s)", gPreviewers[i].ext));
         // register class
-        ScopedMem<WCHAR> key(str::Format(L"Software\\Classes\\CLSID\\%s", gPreviewers[i].clsid));
+        AutoFreeW key(str::Format(L"Software\\Classes\\CLSID\\%s", gPreviewers[i].clsid));
         WriteOrFail_(key, nullptr, displayName);
         WriteOrFail_(key, L"AppId", IsRunningInWow64() ? APPID_PREVHOST_EXE_WOW64 : APPID_PREVHOST_EXE);
         WriteOrFail_(key, L"DisplayName", displayName);
@@ -254,7 +254,7 @@ STDAPI DllUnregisterServer()
         SHDeleteValue(HKEY_LOCAL_MACHINE, REG_KEY_PREVIEW_HANDLERS, gPreviewers[i].clsid);
         SHDeleteValue(HKEY_CURRENT_USER, REG_KEY_PREVIEW_HANDLERS, gPreviewers[i].clsid);
         // remove class data
-        ScopedMem<WCHAR> key(str::Format(L"Software\\Classes\\CLSID\\%s", gPreviewers[i].clsid));
+        AutoFreeW key(str::Format(L"Software\\Classes\\CLSID\\%s", gPreviewers[i].clsid));
         DeleteOrFail_(key);
         // IThumbnailProvider
         key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_THUMBNAIL_PROVIDER, gPreviewers[i].ext));
@@ -287,7 +287,7 @@ STDAPI DllInstall(BOOL bInstall, LPCWSTR pszCmdLine)
 {
     // allows installing only a subset of available preview handlers
     if (str::StartsWithI(pszCmdLine, L"exts:")) {
-        ScopedMem<WCHAR> extsList(str::Dup(pszCmdLine + 5));
+        AutoFreeW extsList(str::Dup(pszCmdLine + 5));
         str::ToLowerInPlace(extsList);
         str::TransChars(extsList, L";. :", L",,,\0");
         WStrVec exts;

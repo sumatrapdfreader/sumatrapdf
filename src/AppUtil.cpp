@@ -91,7 +91,7 @@ bool AdjustVariableDriveLetter(WCHAR *path)
 // an untrusted zone (e.g. by the browser that's downloaded them)
 bool IsUntrustedFile(const WCHAR *filePath, const WCHAR *fileURL)
 {
-    ScopedMem<WCHAR> protocol;
+    AutoFreeW protocol;
     if (fileURL && str::Parse(fileURL, L"%S:", &protocol))
         if (str::Len(protocol) > 1 && !str::EqI(protocol, L"file"))
             return true;
@@ -100,7 +100,7 @@ bool IsUntrustedFile(const WCHAR *filePath, const WCHAR *fileURL)
         return true;
 
     // check all parents of embedded files and ADSs as well
-    ScopedMem<WCHAR> path(str::Dup(filePath));
+    AutoFreeW path(str::Dup(filePath));
     while (str::Len(path) > 2 && str::FindChar(path + 2, ':')) {
         *str::FindCharLast(path, ':') = '\0';
         if (file::GetZoneIdentifier(path) >= URLZONE_INTERNET)

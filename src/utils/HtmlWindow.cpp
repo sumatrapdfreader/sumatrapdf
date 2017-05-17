@@ -361,7 +361,7 @@ STDMETHODIMP HW_IInternetProtocol::QueryInterface(REFIID riid, void **ppv)
 // given url in the form "its://$htmlWindowId/$urlRest, parses
 // out $htmlWindowId and $urlRest. Returns false if url doesn't conform
 // to this pattern.
-static bool ParseProtoUrl(const WCHAR *url, int *htmlWindowId, ScopedMem<WCHAR> *urlRest)
+static bool ParseProtoUrl(const WCHAR *url, int *htmlWindowId, AutoFreeW *urlRest)
 {
     const WCHAR *rest = str::Parse(url, HW_PROTO_PREFIX L"://%d/%S", htmlWindowId, urlRest);
     return rest && !*rest;
@@ -379,7 +379,7 @@ static WCHAR *MimeFromUrl(const WCHAR *url, const WCHAR *imgExt=nullptr)
     if (str::FindChar(ext, ';')) {
         // some CHM documents use (image) URLs that are followed by
         // a semi-colon and a number after the file's extension
-        ScopedMem<WCHAR> newUrl(str::DupN(url, str::FindChar(ext, ';') - url));
+        AutoFreeW newUrl(str::DupN(url, str::FindChar(ext, ';') - url));
         return MimeFromUrl(newUrl, imgExt);
     }
 
@@ -412,7 +412,7 @@ static WCHAR *MimeFromUrl(const WCHAR *url, const WCHAR *imgExt=nullptr)
         }
     }
 
-    ScopedMem<WCHAR> contentType(ReadRegStr(HKEY_CLASSES_ROOT, ext, L"Content Type"));
+    AutoFreeW contentType(ReadRegStr(HKEY_CLASSES_ROOT, ext, L"Content Type"));
     if (contentType)
         return contentType.StealData();
 
@@ -431,7 +431,7 @@ STDMETHODIMP HW_IInternetProtocol::Start(
     //       leaked and to DISPID_DOCUMENTCOMPLETE never being fired
 
     int htmlWindowId;
-    ScopedMem<WCHAR> urlRest;
+    AutoFreeW urlRest;
     bool ok = ParseProtoUrl(szUrl, &htmlWindowId, &urlRest);
     if (!ok)
         return INET_E_INVALID_URL;
@@ -454,7 +454,7 @@ STDMETHODIMP HW_IInternetProtocol::Start(
         return INET_E_DATA_NOT_AVAILABLE;
 
     const WCHAR *imgExt = GfxFileExtFromData((const char *)data, dataLen);
-    ScopedMem<WCHAR> mime(MimeFromUrl(urlRest, imgExt));
+    AutoFreeW mime(MimeFromUrl(urlRest, imgExt));
     pIProtSink->ReportProgress(BINDSTATUS_VERIFIEDMIMETYPEAVAILABLE, mime);
 #ifdef _WIN64
     // not going to report data in parts for unexpectedly huge webpages
@@ -827,7 +827,7 @@ public:
     STDMETHODIMP GetHostInfo(DOCHOSTUIINFO *pInfo);
     STDMETHODIMP ShowUI(DWORD dwID, IOleInPlaceActiveObject *pActiveObject, IOleCommandTarget *pCommandTarget, IOleInPlaceFrame *pFrame, IOleInPlaceUIWindow *pDoc){
         UNUSED(dwID); UNUSED(pActiveObject); UNUSED(pCommandTarget); UNUSED(pFrame); UNUSED(pDoc);
-        return S_FALSE; 
+        return S_FALSE;
     }
     STDMETHODIMP HideUI() { return E_NOTIMPL; }
     STDMETHODIMP UpdateUI() { return E_NOTIMPL; }
@@ -843,20 +843,20 @@ public:
         return S_FALSE;
     }
     STDMETHODIMP GetOptionKeyPath(LPOLESTR *pchKey, DWORD dw) { UNUSED(pchKey); UNUSED(dw); return S_FALSE; }
-    STDMETHODIMP GetDropTarget(IDropTarget *pDropTarget, IDropTarget **ppDropTarget) { 
+    STDMETHODIMP GetDropTarget(IDropTarget *pDropTarget, IDropTarget **ppDropTarget) {
         UNUSED(pDropTarget);
         return fs->QueryInterface(IID_PPV_ARGS(ppDropTarget));
     }
     STDMETHODIMP GetExternal(IDispatch **ppDispatch) { if (ppDispatch) *ppDispatch = nullptr; return S_FALSE; }
-    STDMETHODIMP TranslateUrl(DWORD dwTranslate, OLECHAR *pchURLIn, OLECHAR **ppchURLOut) { 
+    STDMETHODIMP TranslateUrl(DWORD dwTranslate, OLECHAR *pchURLIn, OLECHAR **ppchURLOut) {
         UNUSED(dwTranslate); UNUSED(pchURLIn); UNUSED(ppchURLOut);
         return S_FALSE;
     }
     STDMETHODIMP FilterDataObject(IDataObject *pDO, IDataObject **ppDORet) {
         UNUSED(pDO);
-        if (ppDORet) 
-            *ppDORet = nullptr; 
-        return S_FALSE; 
+        if (ppDORet)
+            *ppDORet = nullptr;
+        return S_FALSE;
     }
 };
 
@@ -964,7 +964,7 @@ public:
             return hr;
         // parse the URL (only internal its:// URLs are supported)
         int htmlWindowId;
-        ScopedMem<WCHAR> urlRest;
+        AutoFreeW urlRest;
         bool ok = ParseProtoUrl(urlToFile, &htmlWindowId, &urlRest);
         // free urlToFile using IMalloc::Free
         IMalloc *pMalloc;
@@ -1037,7 +1037,7 @@ public:
         return E_NOTIMPL;
     }
     STDMETHODIMP ComposeWith(IMoniker *pmkRight, BOOL fOnlyIfNotGeneric, IMoniker **ppmkComposite) {
-        UNUSED(pmkRight); UNUSED(fOnlyIfNotGeneric); UNUSED(ppmkComposite); 
+        UNUSED(pmkRight); UNUSED(fOnlyIfNotGeneric); UNUSED(ppmkComposite);
         return E_NOTIMPL;
     }
     STDMETHODIMP Enum(BOOL fForward, IEnumMoniker **ppenumMoniker) { UNUSED(fForward);  UNUSED(ppenumMoniker); return E_NOTIMPL; }
@@ -1398,7 +1398,7 @@ void HtmlWindow::SetVisible(bool visible)
 // (will be called from OnBeforeNavigate())
 void HtmlWindow::NavigateToDataUrl(const WCHAR *url)
 {
-    ScopedMem<WCHAR> fullUrl(str::Format(L"its://%d/%s", windowId, url));
+    AutoFreeW fullUrl(str::Format(L"its://%d/%s", windowId, url));
     NavigateToUrl(fullUrl);
 }
 
@@ -1495,7 +1495,7 @@ void HtmlWindow::SetHtmlReal(const char *s, size_t len)
         htmlContent->Release();
     htmlContent = new HtmlMoniker();
     htmlContent->SetHtml(s, len);
-    ScopedMem<WCHAR> baseUrl(str::Format(HW_PROTO_PREFIX L"://%d/", windowId));
+    AutoFreeW baseUrl(str::Format(HW_PROTO_PREFIX L"://%d/", windowId));
     htmlContent->SetBaseUrl(baseUrl);
 
     ScopedComPtr<IDispatch> docDispatch;
@@ -1596,7 +1596,7 @@ bool HtmlWindow::OnBeforeNavigate(const WCHAR *url, bool newWindow)
     // if it's url for our internal protocol, strip the protocol
     // part as we don't want to expose it to clients.
     int protoWindowId;
-    ScopedMem<WCHAR> urlReal(str::Dup(url));
+    AutoFreeW urlReal(str::Dup(url));
     bool ok = ParseProtoUrl(url, &protoWindowId, &urlReal);
     AssertCrash(!ok || protoWindowId == windowId);
     bool shouldNavigate = htmlWinCb->OnBeforeNavigate(urlReal, newWindow);
@@ -1635,7 +1635,7 @@ void HtmlWindow::OnDocumentComplete(const WCHAR *url)
     // if it's url for our internal protocol, strip the protocol
     // part as we don't want to expose it to clients.
     int protoWindowId;
-    ScopedMem<WCHAR> urlReal(str::Dup(url));
+    AutoFreeW urlReal(str::Dup(url));
     bool ok = ParseProtoUrl(url, &protoWindowId, &urlReal);
     AssertCrash(!ok || protoWindowId == windowId);
 

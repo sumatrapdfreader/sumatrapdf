@@ -37,7 +37,7 @@ static void FrameRatePaint(FrameRateWnd* w, HDC hdc, PAINTSTRUCT& ps) {
     SetTextColor(hdc, COL_WHITE);
 
     ScopedHdcSelect selFont(hdc, w->font);
-    ScopedMem<WCHAR> txt(str::Format(L"%d", w->frameRate));
+    AutoFreeW txt(str::Format(L"%d", w->frameRate));
     DrawCenteredText(hdc, rc, txt);
 }
 

@@ -192,7 +192,7 @@ static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, DWORD bytes
     // collect files that changed, removing duplicates
     WStrVec changedFiles;
     for (;;) {
-        ScopedMem<WCHAR> fileName(str::DupN(notify->FileName, notify->FileNameLength / sizeof(WCHAR)));
+        AutoFreeW fileName(str::DupN(notify->FileName, notify->FileNameLength / sizeof(WCHAR)));
         // files can get updated either by writing to them directly or
         // by writing to a .tmp file first and then moving that file in place
         // (the latter only yields a RENAMED action with the expected file name)
@@ -351,7 +351,7 @@ static WatchedDir* NewWatchedDir(const WCHAR* dirPath) {
 
 static WatchedFile* NewWatchedFile(const WCHAR* filePath, std::function<void()> onFileChangedCb) {
     bool isManualCheck = PathIsNetworkPath(filePath);
-    ScopedMem<WCHAR> dirPath(path::GetDir(filePath));
+    AutoFreeW dirPath(path::GetDir(filePath));
     WatchedDir* wd = nullptr;
     bool newDir = false;
     if (!isManualCheck) {

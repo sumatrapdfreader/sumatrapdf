@@ -126,7 +126,7 @@ public:
     int             reparseIdx;
 
 private:
-    ScopedMem<WCHAR> fontName;
+    AutoFreeW fontName;
 };
 
 class HtmlPullParser;
@@ -201,7 +201,7 @@ protected:
     float               lineSpacing;
     float               spaceDx;
     Graphics *          gfx; // for measuring text
-    ScopedMem<WCHAR>    defaultFontName;
+    AutoFreeW    defaultFontName;
     float               defaultFontSize;
     Allocator *         textAllocator;
     mui::ITextRender *  textMeasure;

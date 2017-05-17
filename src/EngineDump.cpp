@@ -21,7 +21,7 @@
 // caller must free() the result
 char *Escape(WCHAR *string)
 {
-    ScopedMem<WCHAR> freeOnReturn(string);
+    AutoFreeW freeOnReturn(string);
 
     if (str::IsEmpty(string))
         return nullptr;
@@ -93,7 +93,7 @@ void DumpProperties(BaseEngine *engine, bool fullDump)
     Out("\t/>\n");
 
     if (fullDump) {
-        ScopedMem<WCHAR> fontlist(engine->GetProperty(Prop_FontList));
+        AutoFreeW fontlist(engine->GetProperty(Prop_FontList));
         if (fontlist) {
             WStrVec fonts;
             fonts.Split(fontlist, L"\n");
@@ -106,7 +106,7 @@ void DumpProperties(BaseEngine *engine, bool fullDump)
 // caller must free() the result
 char *DestRectToStr(BaseEngine *engine, PageDestination *dest)
 {
-    if (ScopedMem<WCHAR>(dest->GetDestName())) {
+    if (AutoFreeW(dest->GetDestName())) {
         ScopedMem<char> name(Escape(dest->GetDestName()));
         return str::Format("Name=\"%s\"", name);
     }
@@ -349,7 +349,7 @@ bool RenderDocument(BaseEngine *engine, const WCHAR *renderPath, float zoom=1.f,
             text.AppendAndFree(engine->ExtractPageText(pageNo, L"\r\n", nullptr, Target_Export));
         if (silent)
             return true;
-        ScopedMem<WCHAR> txtFilePath(str::Format(renderPath, 0));
+        AutoFreeW txtFilePath(str::Format(renderPath, 0));
         ScopedMem<char> textUTF8(str::conv::ToUtf8(text.Get()));
         ScopedMem<char> textUTF8BOM(str::Join(UTF8_BOM, textUTF8));
         return file::WriteAll(txtFilePath, textUTF8BOM, str::Len(textUTF8BOM));
@@ -359,7 +359,7 @@ bool RenderDocument(BaseEngine *engine, const WCHAR *renderPath, float zoom=1.f,
         if (silent) {
             return false;
         }
-        ScopedMem<WCHAR> pdfFilePath(str::Format(renderPath, 0));
+        AutoFreeW pdfFilePath(str::Format(renderPath, 0));
         ScopedMem<char> pathUtf8(str::conv::ToUtf8(pdfFilePath.Get()));
         if (engine->SaveFileAsPDF(pathUtf8, true)) {
             return true;
@@ -377,7 +377,7 @@ bool RenderDocument(BaseEngine *engine, const WCHAR *renderPath, float zoom=1.f,
             delete bmp;
             continue;
         }
-        ScopedMem<WCHAR> pageBmpPath(str::Format(renderPath, pageNo));
+        AutoFreeW pageBmpPath(str::Format(renderPath, pageNo));
         if (str::EndsWithI(pageBmpPath, L".png")) {
             Bitmap gbmp(bmp->GetBitmap(), nullptr);
             CLSID pngEncId = GetEncoderClsid(L"image/png");
@@ -428,7 +428,7 @@ Usage:
         return 2;
     }
 
-    ScopedMem<WCHAR> filePath;
+    AutoFreeW filePath;
     WCHAR *password = nullptr;
     bool fullDump = true;
     WCHAR *renderPath = nullptr;
@@ -493,7 +493,7 @@ Usage:
     // embedded documents are referred to by an invalid path
     // containing more information after a colon (e.g. "C:\file.pdf:3:0")
     if (INVALID_HANDLE_VALUE != hfind) {
-        ScopedMem<WCHAR> dir(path::GetDir(filePath));
+        AutoFreeW dir(path::GetDir(filePath));
         filePath.Set(path::Join(dir, fdata.cFileName));
         FindClose(hfind);
     }

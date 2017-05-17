@@ -55,7 +55,7 @@ protected:
     DWORD               adviseCookie;
     bool                blankWasShown;
 
-    ScopedMem<WCHAR>    currentURL;
+    AutoFreeW    currentURL;
 
     HtmlWindow(HWND hwndParent, HtmlWindowCallback *cb);
 

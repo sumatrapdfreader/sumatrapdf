@@ -300,7 +300,7 @@ bool ChmDoc::Load(const WCHAR *fileName)
 
 WCHAR *ChmDoc::GetProperty(DocumentProperty prop)
 {
-    ScopedMem<WCHAR> result;
+    AutoFreeW result;
     if (Prop_Title == prop && title)
         result.Set(ToStr(title));
     else if (Prop_CreatorApp == prop && creator)
@@ -350,12 +350,12 @@ static bool VisitChmTocItem(EbookTocVisitor *visitor, HtmlElement *el, UINT cp, 
 {
     CrashIf(el->tag != Tag_Object || level > 1 && (!el->up || el->up->tag != Tag_Li));
 
-    ScopedMem<WCHAR> name, local;
+    AutoFreeW name, local;
     for (el = el->GetChildByTag(Tag_Param); el; el = el->next) {
         if (Tag_Param != el->tag)
             continue;
-        ScopedMem<WCHAR> attrName(el->GetAttribute("name"));
-        ScopedMem<WCHAR> attrVal(el->GetAttribute("value"));
+        AutoFreeW attrName(el->GetAttribute("name"));
+        AutoFreeW attrVal(el->GetAttribute("value"));
         if (attrName && attrVal && cp != CP_CHM_DEFAULT) {
             ScopedMem<char> bytes(str::conv::ToCodePage(attrVal, CP_CHM_DEFAULT));
             attrVal.Set(str::conv::FromCodePage(bytes, cp));
@@ -397,12 +397,12 @@ static bool VisitChmIndexItem(EbookTocVisitor *visitor, HtmlElement *el, UINT cp
     CrashIf(el->tag != Tag_Object || level > 1 && (!el->up || el->up->tag != Tag_Li));
 
     WStrVec references;
-    ScopedMem<WCHAR> keyword, name;
+    AutoFreeW keyword, name;
     for (el = el->GetChildByTag(Tag_Param); el; el = el->next) {
         if (Tag_Param != el->tag)
             continue;
-        ScopedMem<WCHAR> attrName(el->GetAttribute("name"));
-        ScopedMem<WCHAR> attrVal(el->GetAttribute("value"));
+        AutoFreeW attrName(el->GetAttribute("name"));
+        AutoFreeW attrVal(el->GetAttribute("value"));
         if (attrName && attrVal && cp != CP_CHM_DEFAULT) {
             ScopedMem<char> bytes(str::conv::ToCodePage(attrVal, CP_CHM_DEFAULT));
             attrVal.Set(str::conv::FromCodePage(bytes, cp));
@@ -477,7 +477,7 @@ static bool WalkBrokenChmTocOrIndex(EbookTocVisitor *visitor, HtmlParser& p, UIN
 
     HtmlElement *el = p.FindElementByName("body");
     while ((el = p.FindElementByName("object", el)) != nullptr) {
-        ScopedMem<WCHAR> type(el->GetAttribute("type"));
+        AutoFreeW type(el->GetAttribute("type"));
         if (!str::EqI(type, L"text/sitemap"))
             continue;
         if (isIndex)

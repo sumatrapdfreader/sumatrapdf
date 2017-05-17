@@ -717,7 +717,7 @@ unsigned char *DjVuEngineImpl::GetFileData(size_t *cbCount)
 bool DjVuEngineImpl::SaveFileAs(const char *copyFileName, bool includeUserAnnots)
 {
     UNUSED(includeUserAnnots);
-    ScopedMem<WCHAR> path(str::conv::FromUtf8(copyFileName));
+    AutoFreeW path(str::conv::FromUtf8(copyFileName));
     if (stream) {
         size_t len;
         ScopedMem<void> data(GetDataFromStream(stream, &len));

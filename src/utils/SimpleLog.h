@@ -12,7 +12,7 @@ public:
     {
         va_list args;
         va_start(args, fmt);
-        ScopedMem<WCHAR> s(str::FmtV(fmt, args));
+        AutoFreeW s(str::FmtV(fmt, args));
         Log(s);
         va_end(args);
     }
@@ -68,7 +68,7 @@ public:
     {
         if (s) {
             // DbgView displays one line per OutputDebugString call
-            OutputDebugString(ScopedMem<WCHAR>(str::Format(L"%s\n", s)));
+            OutputDebugString(AutoFreeW(str::Format(L"%s\n", s)));
         }
     }
 };

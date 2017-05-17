@@ -25,7 +25,7 @@ LRESULT CALLBACK PluginParentWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
     if (WM_CREATE == msg) {
         // run SumatraPDF.exe with the -plugin command line argument
         PluginStartData *data = (PluginStartData *)((CREATESTRUCT *)lParam)->lpCreateParams;
-        ScopedMem<WCHAR> cmdLine(str::Format(L"-plugin %d \"%s\"", hwnd, data->filePath));
+        AutoFreeW cmdLine(str::Format(L"-plugin %d \"%s\"", hwnd, data->filePath));
         if (data->fileOriginUrl) {
             cmdLine.Set(str::Format(L"-plugin \"%s\" %d \"%s\"", data->fileOriginUrl, hwnd, data->filePath));
         }
@@ -48,7 +48,7 @@ LRESULT CALLBACK PluginParentWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
         HWND hChild = FindWindowEx(hwnd, nullptr, nullptr, nullptr);
         COPYDATASTRUCT *cds = (COPYDATASTRUCT *)lParam;
         if (cds && 0x4C5255 /* URL */ == cds->dwData && (HWND)wParam == hChild) {
-            ScopedMem<WCHAR> url(str::conv::FromUtf8((const char *)cds->lpData));
+            AutoFreeW url(str::conv::FromUtf8((const char *)cds->lpData));
             ShellExecute(hChild, L"open", url, nullptr, nullptr, SW_SHOW);
             return TRUE;
         }
@@ -83,7 +83,7 @@ LRESULT CALLBACK PluginParentWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 WCHAR *GetSumatraExePath()
 {
     // run SumatraPDF.exe either from plugin-test.exe's or the current directory
-    ScopedMem<WCHAR> path(path::GetAppPath(L"SumatraPDF.exe"));
+    AutoFreeW path(path::GetAppPath(L"SumatraPDF.exe"));
     if (!file::Exists(path))
         return str::Dup(L"SumatraPDF.exe");
     return path.StealData();
@@ -96,7 +96,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     ParseCmdLine(GetCommandLine(), argList);
 
     if (argList.Count() == 1) {
-        ScopedMem<WCHAR> msg(str::Format(L"Syntax: %s [<SumatraPDF.exe>] [<URL>] <filename.ext>", path::GetBaseName(argList.At(0))));
+        AutoFreeW msg(str::Format(L"Syntax: %s [<SumatraPDF.exe>] [<URL>] <filename.ext>", path::GetBaseName(argList.At(0))));
         MessageBox(nullptr, msg, PLUGIN_TEST_NAME, MB_OK | MB_ICONINFORMATION);
         return 1;
     }

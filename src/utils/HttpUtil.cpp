@@ -202,7 +202,7 @@ Exit:
 void HttpGetAsync(const WCHAR *url, const std::function<void(HttpRsp *)> &f) {
     RunAsync([=] {
         auto rsp = new HttpRsp;
-        rsp->url = str::Dup(url);
+        rsp->url.SetCopy(url);
         HttpGet(url, rsp);
         f(rsp);
     });
@@ -212,7 +212,7 @@ void HttpGetAsync(const WCHAR *url, const std::function<void(HttpRsp *)> &f) {
 // returns false if failed to download or status code is not 200
 // for other scenarios, check HttpRsp
 static bool  HttpGet(const char *url, HttpRsp *rspOut) {
-    ScopedMem<WCHAR> urlW(str::conv::FromUtf8(url));
+    AutoFreeW urlW(str::conv::FromUtf8(url));
     return HttpGet(urlW, rspOut);
 }
 

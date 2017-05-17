@@ -59,7 +59,7 @@ public:
 class UnRarDll;
 
 class RarFile : public ArchFile {
-    ScopedMem<WCHAR> path;
+    AutoFreeW path;
     UnRarDll *fallback;
 
     void ExtractFilenamesWithFallback();

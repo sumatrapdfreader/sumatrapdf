@@ -64,7 +64,7 @@ void OnMenuFind(WindowInfo *win)
     DisplayModel *dm = win->AsFixed();
     if (dm->textSelection->result.len > 0 &&
         Edit_GetTextLength(win->hwndFindBox) == 0) {
-        ScopedMem<WCHAR> selection(dm->textSelection->ExtractText(L" "));
+        AutoFreeW selection(dm->textSelection->ExtractText(L" "));
         str::NormalizeWS(selection);
         if (!str::IsEmpty(selection.Get())) {
             win::SetText(win->hwndFindBox, selection);
@@ -81,11 +81,11 @@ void OnMenuFind(WindowInfo *win)
         return;
     }
 
-    ScopedMem<WCHAR> previousFind(win::GetText(win->hwndFindBox));
+    AutoFreeW previousFind(win::GetText(win->hwndFindBox));
     WORD state = (WORD)SendMessage(win->hwndToolbar, TB_GETSTATE, IDM_FIND_MATCH, 0);
     bool matchCase = (state & TBSTATE_CHECKED) != 0;
 
-    ScopedMem<WCHAR> findString(Dialog_Find(win->hwndFrame, previousFind, &matchCase));
+    AutoFreeW findString(Dialog_Find(win->hwndFrame, previousFind, &matchCase));
     if (!findString)
         return;
 
@@ -138,7 +138,7 @@ void OnMenuFindSel(WindowInfo *win, TextSearchDirection direction)
     if (!win->currentTab->selectionOnPage || 0 == dm->textSelection->result.len)
         return;
 
-    ScopedMem<WCHAR> selection(dm->textSelection->ExtractText(L" "));
+    AutoFreeW selection(dm->textSelection->ExtractText(L" "));
     str::NormalizeWS(selection);
     if (str::IsEmpty(selection.Get()))
         return;
@@ -192,7 +192,7 @@ struct FindThreadData : public ProgressUpdateUI {
     WindowInfo *win;
     TextSearchDirection direction;
     bool wasModified;
-    ScopedMem<WCHAR> text;
+    AutoFreeW text;
     // owned by win->notifications, as FindThreadData
     // can be deleted before the notification times out
     NotificationWnd *wnd;
@@ -234,8 +234,8 @@ struct FindThreadData : public ProgressUpdateUI {
         else if (!success && loopedAround)
             wnd->UpdateMessage(_TR("No matches were found"), 3000);
         else {
-            ScopedMem<WCHAR> label(win->ctrl->GetPageLabel(win->AsFixed()->textSearch->GetCurrentPageNo()));
-            ScopedMem<WCHAR> buf(str::Format(_TR("Found text at page %s"), label.Get()));
+            AutoFreeW label(win->ctrl->GetPageLabel(win->AsFixed()->textSearch->GetCurrentPageNo()));
+            AutoFreeW buf(str::Format(_TR("Found text at page %s"), label.Get()));
             if (loopedAround) {
                 buf.Set(str::Format(_TR("Found text at page %s (again)"), label.Get()));
                 MessageBeep(MB_ICONINFORMATION);
@@ -422,7 +422,7 @@ bool OnInverseSearch(WindowInfo *win, int x, int y)
         return false;
 
     PointI pt = dm->CvtFromScreen(PointI(x, y), pageNo).ToInt();
-    ScopedMem<WCHAR> srcfilepath;
+    AutoFreeW srcfilepath;
     UINT line, col;
     int err = dm->pdfSync->DocToSource(pageNo, pt, srcfilepath, &line, &col);
     if (err != PDFSYNCERR_SUCCESS) {
@@ -433,7 +433,7 @@ bool OnInverseSearch(WindowInfo *win, int x, int y)
     if (!file::Exists(srcfilepath)) {
         // if the source file is missing, check if it's been moved to the same place as
         // the PDF document (which happens if all files are moved together)
-        ScopedMem<WCHAR> altsrcpath(path::GetDir(tab->filePath));
+        AutoFreeW altsrcpath(path::GetDir(tab->filePath));
         altsrcpath.Set(path::Join(altsrcpath, path::GetBaseName(srcfilepath)));
         if (!str::Eq(altsrcpath, srcfilepath) && file::Exists(altsrcpath))
             srcfilepath.Set(altsrcpath.StealData());
@@ -444,12 +444,12 @@ bool OnInverseSearch(WindowInfo *win, int x, int y)
         // Detect a text editor and use it as the default inverse search handler for now
         inverseSearch = AutoDetectInverseSearchCommands();
 
-    ScopedMem<WCHAR> cmdline;
+    AutoFreeW cmdline;
     if (inverseSearch)
         cmdline.Set(dm->pdfSync->PrepareCommandline(inverseSearch, srcfilepath, line, col));
     if (!str::IsEmpty(cmdline.Get())) {
         // resolve relative paths with relation to SumatraPDF.exe's directory
-        ScopedMem<WCHAR> appDir(GetExePath());
+        AutoFreeW appDir(GetExePath());
         if (appDir)
             appDir.Set(path::GetDir(appDir));
         ScopedHandle process(LaunchProcess(cmdline, appDir));
@@ -497,7 +497,7 @@ void ShowForwardSearchResult(WindowInfo *win, const WCHAR *fileName, UINT line, 
         return;
     }
 
-    ScopedMem<WCHAR> buf;
+    AutoFreeW buf;
     if (ret == PDFSYNCERR_SYNCFILE_NOTFOUND)
         win->ShowNotification(_TR("No synchronization file found"));
     else if (ret == PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED)
@@ -541,7 +541,7 @@ LRESULT OnDDEInitiate(HWND hwnd, WPARAM wparam, LPARAM lparam)
 // [<DDECOMMAND_SYNC>(["<pdffile>",]"<srcfile>",<line>,<col>[,<newwindow>,<setfocus>])]
 static const WCHAR *HandleSyncCmd(const WCHAR *cmd, DDEACK& ack)
 {
-    ScopedMem<WCHAR> pdfFile, srcFile;
+    AutoFreeW pdfFile, srcFile;
     BOOL line = 0, col = 0, newWindow = 0, setFocus = 0;
     const WCHAR *next = str::Parse(cmd, L"[" DDECOMMAND_SYNC L"(\"%S\",%? \"%S\",%u,%u)]",
                                    &pdfFile, &srcFile, &line, &col);
@@ -604,7 +604,7 @@ static const WCHAR *HandleSyncCmd(const WCHAR *cmd, DDEACK& ack)
 // [<DDECOMMAND_OPEN>("<pdffilepath>"[,<newwindow>,<setfocus>,<forcerefresh>])]
 static const WCHAR *HandleOpenCmd(const WCHAR *cmd, DDEACK& ack)
 {
-    ScopedMem<WCHAR> pdfFile;
+    AutoFreeW pdfFile;
     BOOL newWindow = 0, setFocus = 0, forceRefresh = 0;
     const WCHAR *next = str::Parse(cmd, L"[" DDECOMMAND_OPEN L"(\"%S\")]", &pdfFile);
     if (!next)
@@ -639,7 +639,7 @@ static const WCHAR *HandleOpenCmd(const WCHAR *cmd, DDEACK& ack)
 // [<DDECOMMAND_GOTO>("<pdffilepath>", "<destination name>")]
 static const WCHAR *HandleGotoCmd(const WCHAR *cmd, DDEACK& ack)
 {
-    ScopedMem<WCHAR> pdfFile, destName;
+    AutoFreeW pdfFile, destName;
     const WCHAR *next = str::Parse(cmd, L"[" DDECOMMAND_GOTO L"(\"%S\",%? \"%S\")]",
                                    &pdfFile, &destName);
     if (!next)
@@ -664,7 +664,7 @@ static const WCHAR *HandleGotoCmd(const WCHAR *cmd, DDEACK& ack)
 // [<DDECOMMAND_PAGE>("<pdffilepath>", <page number>)]
 static const WCHAR *HandlePageCmd(const WCHAR *cmd, DDEACK& ack)
 {
-    ScopedMem<WCHAR> pdfFile;
+    AutoFreeW pdfFile;
     UINT page;
     const WCHAR *next = str::Parse(cmd, L"[" DDECOMMAND_PAGE L"(\"%S\",%u)]",
                                    &pdfFile, &page);
@@ -694,7 +694,7 @@ static const WCHAR *HandlePageCmd(const WCHAR *cmd, DDEACK& ack)
 // [<DDECOMMAND_SETVIEW>("<pdffilepath>", "<view mode>", <zoom level>[, <scrollX>, <scrollY>])]
 static const WCHAR *HandleSetViewCmd(const WCHAR *cmd, DDEACK& ack)
 {
-    ScopedMem<WCHAR> pdfFile, viewMode;
+    AutoFreeW pdfFile, viewMode;
     float zoom = INVALID_ZOOM;
     PointI scroll(-1, -1);
     const WCHAR *next = str::Parse(cmd, L"[" DDECOMMAND_SETVIEW L"(\"%S\",%? \"%S\",%f)]",
@@ -743,7 +743,7 @@ static void HandleDdeCmds(const WCHAR *cmd, DDEACK& ack)
         if (!nextCmd) nextCmd = HandlePageCmd(cmd, ack);
         if (!nextCmd) nextCmd = HandleSetViewCmd(cmd, ack);
         if (!nextCmd) {
-            ScopedMem<WCHAR> tmp;
+            AutoFreeW tmp;
             nextCmd = str::Parse(cmd, L"%S]", &tmp);
         }
         cmd = nextCmd;
@@ -758,7 +758,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam)
     DDEACK ack = { 0 };
     LPVOID command = GlobalLock((HGLOBAL)hi);
     if (command) {
-        ScopedMem<WCHAR> cmd;
+        AutoFreeW cmd;
         if (IsWindowUnicode((HWND)wparam))
             cmd.SetCopy((const WCHAR *)command);
         else

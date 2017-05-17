@@ -416,8 +416,8 @@ public:
 
 class DirFileProvider : public TestFileProvider {
 
-    ScopedMem<WCHAR>  startDir;
-    ScopedMem<WCHAR>  fileFilter;
+    AutoFreeW  startDir;
+    AutoFreeW  fileFilter;
 
     // current state of directory traversal
     WStrVec           filesToOpen;
@@ -450,7 +450,7 @@ bool DirFileProvider::OpenDir(const WCHAR *dirPath)
     bool hasFiles = CollectStressTestSupportedFilesFromDirectory(dirPath, fileFilter, filesToOpen);
     filesToOpen.SortNatural();
 
-    ScopedMem<WCHAR> pattern(str::Format(L"%s\\*", dirPath));
+    AutoFreeW pattern(str::Format(L"%s\\*", dirPath));
     bool hasSubDirs = CollectPathsFromDirectory(pattern, dirsToVisit, true);
 
     return hasFiles || hasSubDirs;
@@ -464,7 +464,7 @@ WCHAR *DirFileProvider::NextFile()
 
     if (dirsToVisit.Count() > 0) {
         // test next directory
-        ScopedMem<WCHAR> path(dirsToVisit.PopAt(0));
+        AutoFreeW path(dirsToVisit.PopAt(0));
         OpenDir(path);
         return NextFile();
     }
@@ -488,9 +488,9 @@ static size_t GetAllMatchingFiles(const WCHAR *dir, const WCHAR *filter, WStrVec
             fflush(stdout);
         }
 
-        ScopedMem<WCHAR> path(dirsToVisit.PopAt(0));
+        AutoFreeW path(dirsToVisit.PopAt(0));
         CollectStressTestSupportedFilesFromDirectory(path, filter, files);
-        ScopedMem<WCHAR> pattern(str::Format(L"%s\\*", path));
+        AutoFreeW pattern(str::Format(L"%s\\*", path));
         CollectPathsFromDirectory(pattern, dirsToVisit, true);
     }
     return files.Count();
@@ -575,7 +575,7 @@ void StressTest::Start(const WCHAR *path, const WCHAR *filter, const WCHAR *rang
     }
     else {
         // Note: string dev only, don't translate
-        ScopedMem<WCHAR> s(str::Format(L"Path '%s' doesn't exist", path));
+        AutoFreeW s(str::Format(L"Path '%s' doesn't exist", path));
         win->ShowNotification(s, NOS_WARNING, NG_STRESS_TEST_SUMMARY);
         Finished(false);
     }
@@ -587,8 +587,8 @@ void StressTest::Finished(bool success)
 
     if (success) {
         int secs = SecsSinceSystemTime(stressStartTime);
-        ScopedMem<WCHAR> tm(FormatTime(secs));
-        ScopedMem<WCHAR> s(str::Format(L"Stress test complete, rendered %d files in %s", filesCount, tm));
+        AutoFreeW tm(FormatTime(secs));
+        AutoFreeW s(str::Format(L"Stress test complete, rendered %d files in %s", filesCount, tm));
         win->ShowNotification(s, NOS_PERSIST, NG_STRESS_TEST_SUMMARY);
     }
 
@@ -599,7 +599,7 @@ void StressTest::Finished(bool success)
 bool StressTest::GoToNextFile()
 {
     for (;;) {
-        ScopedMem<WCHAR> nextFile(fileProvider->NextFile());
+        AutoFreeW nextFile(fileProvider->NextFile());
         if (nextFile) {
             if (!IsInRange(fileRanges, ++fileIndex))
                 continue;
@@ -675,8 +675,8 @@ bool StressTest::OpenFile(const WCHAR *fileName)
     }
 
     int secs = SecsSinceSystemTime(stressStartTime);
-    ScopedMem<WCHAR> tm(FormatTime(secs));
-    ScopedMem<WCHAR> s(str::Format(L"File %d: %s, time: %s", filesCount, fileName, tm));
+    AutoFreeW tm(FormatTime(secs));
+    AutoFreeW s(str::Format(L"File %d: %s, time: %s", filesCount, fileName, tm));
     win->ShowNotification(s, NOS_PERSIST, NG_STRESS_TEST_SUMMARY);
 
     return true;
@@ -685,7 +685,7 @@ bool StressTest::OpenFile(const WCHAR *fileName)
 bool StressTest::GoToNextPage()
 {
     double pageRenderTime = currPageRenderTime.GetTimeInMs();
-    ScopedMem<WCHAR> s(str::Format(L"Page %d rendered in %d milliseconds", currPage, (int)pageRenderTime));
+    AutoFreeW s(str::Format(L"Page %d rendered in %d milliseconds", currPage, (int)pageRenderTime));
     win->ShowNotification(s, NOS_DEFAULT, NG_STRESS_TEST_BENCHMARK);
 
     ++currPage;

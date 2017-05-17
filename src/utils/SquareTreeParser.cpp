@@ -205,7 +205,7 @@ SquareTree::SquareTree(const char *data) : root(nullptr)
     else if (str::StartsWith(data, UTF16_BOM))
         dataUtf8.Set(str::conv::ToUtf8((const WCHAR *)(data + 2)));
     else if (data)
-        dataUtf8.Set(str::conv::ToUtf8(ScopedMem<WCHAR>(str::conv::FromAnsi(data))));
+        dataUtf8.Set(str::conv::ToUtf8(AutoFreeW(str::conv::FromAnsi(data))));
     if (!dataUtf8)
         return;
 

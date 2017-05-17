@@ -75,7 +75,7 @@ public:
     void DownloadData(const WCHAR *url, const unsigned char *data, size_t len);
 
 protected:
-    ScopedMem<WCHAR> fileName;
+    AutoFreeW fileName;
     ChmDoc *doc;
     CRITICAL_SECTION docAccess;
     Vec<ChmTocTraceItem> *tocTrace;

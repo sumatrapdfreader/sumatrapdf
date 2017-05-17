@@ -70,12 +70,12 @@ static bool ExtractFiles(lzma::SimpleArchive* archive) {
                 _TR("The installer has been corrupted. Please download it again.\nSorry for the inconvenience!"));
             return false;
         }
-        ScopedMem<WCHAR> filePath(str::conv::FromUtf8(fi->name));
-        ScopedMem<WCHAR> extPath(path::Join(gGlobalData.installDir, filePath));
+        AutoFreeW filePath(str::conv::FromUtf8(fi->name));
+        AutoFreeW extPath(path::Join(gGlobalData.installDir, filePath));
         bool ok = trans.WriteAll(extPath, uncompressed, fi->uncompressedSize);
         free(uncompressed);
         if (!ok) {
-            ScopedMem<WCHAR> msg(str::Format(_TR("Couldn't write %s to disk"), filePath));
+            AutoFreeW msg(str::Format(_TR("Couldn't write %s to disk"), filePath));
             NotifyFailed(msg);
             return false;
         }
@@ -128,26 +128,26 @@ Corrupted:
 
 /* Caller needs to free() the result. */
 static WCHAR* GetDefaultPdfViewer() {
-    ScopedMem<WCHAR> buf(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT L"\\UserChoice", PROG_ID));
+    AutoFreeW buf(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT L"\\UserChoice", PROG_ID));
     if (buf)
         return buf.StealData();
     return ReadRegStr(HKEY_CLASSES_ROOT, L".pdf", nullptr);
 }
 
 static bool IsBrowserPluginInstalled() {
-    ScopedMem<WCHAR> dllPath(GetInstalledBrowserPluginPath());
+    AutoFreeW dllPath(GetInstalledBrowserPluginPath());
     return file::Exists(dllPath);
 }
 
 bool IsPdfFilterInstalled() {
-    ScopedMem<WCHAR> handler_iid(ReadRegStr(HKEY_CLASSES_ROOT, L".pdf\\PersistentHandler", nullptr));
+    AutoFreeW handler_iid(ReadRegStr(HKEY_CLASSES_ROOT, L".pdf\\PersistentHandler", nullptr));
     if (!handler_iid)
         return false;
     return str::EqI(handler_iid, SZ_PDF_FILTER_HANDLER);
 }
 
 bool IsPdfPreviewerInstalled() {
-    ScopedMem<WCHAR> handler_iid(
+    AutoFreeW handler_iid(
         ReadRegStr(HKEY_CLASSES_ROOT, L".pdf\\shellex\\{8895b1c6-b41f-4c1c-a562-0d564250836f}", nullptr));
     if (!handler_iid)
         return false;
@@ -156,7 +156,7 @@ bool IsPdfPreviewerInstalled() {
 
 // Note: doesn't handle (total) sizes above 4GB
 static DWORD GetDirSize(const WCHAR* dir) {
-    ScopedMem<WCHAR> dirPattern(path::Join(dir, L"*"));
+    AutoFreeW dirPattern(path::Join(dir, L"*"));
     WIN32_FIND_DATA findData;
 
     HANDLE h = FindFirstFile(dirPattern, &findData);
@@ -168,7 +168,7 @@ static DWORD GetDirSize(const WCHAR* dir) {
         if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
             totalSize += findData.nFileSizeLow;
         } else if (!str::Eq(findData.cFileName, L".") && !str::Eq(findData.cFileName, L"..")) {
-            ScopedMem<WCHAR> subdir(path::Join(dir, findData.cFileName));
+            AutoFreeW subdir(path::Join(dir, findData.cFileName));
             totalSize += GetDirSize(subdir);
         }
     } while (FindNextFile(h, &findData) != 0);
@@ -187,10 +187,10 @@ static WCHAR* GetInstallDate() {
 static bool WriteUninstallerRegistryInfo(HKEY hkey) {
     bool ok = true;
 
-    ScopedMem<WCHAR> installedExePath(GetInstalledExePath());
-    ScopedMem<WCHAR> installDate(GetInstallDate());
-    ScopedMem<WCHAR> installDir(path::GetDir(installedExePath));
-    ScopedMem<WCHAR> uninstallCmdLine(str::Format(L"\"%s\"", ScopedMem<WCHAR>(GetUninstallerPath())));
+    AutoFreeW installedExePath(GetInstalledExePath());
+    AutoFreeW installDate(GetInstallDate());
+    AutoFreeW installDir(path::GetDir(installedExePath));
+    AutoFreeW uninstallCmdLine(str::Format(L"\"%s\"", AutoFreeW(GetUninstallerPath())));
 
     // path to installed executable (or "$path,0" to force the first icon)
     ok &= WriteRegStr(hkey, REG_PATH_UNINST, L"DisplayIcon", installedExePath);
@@ -251,7 +251,7 @@ static bool ListAsDefaultProgramPreWin10(HKEY hkey) {
     // PDF icon will be shown (we need icons and properly configure them)
     bool ok = true;
     for (int i = 0; nullptr != gSupportedExts[i]; i++) {
-        ScopedMem<WCHAR> keyname(str::Join(L"Software\\Classes\\", gSupportedExts[i], L"\\OpenWithList\\" EXENAME));
+        AutoFreeW keyname(str::Join(L"Software\\Classes\\", gSupportedExts[i], L"\\OpenWithList\\" EXENAME));
         ok &= CreateRegKey(hkey, keyname);
     }
     return ok;
@@ -261,18 +261,18 @@ static bool ListAsDefaultProgramPreWin10(HKEY hkey) {
 static bool WriteExtendedFileExtensionInfo(HKEY hkey) {
     bool ok = true;
 
-    ScopedMem<WCHAR> exePath(GetInstalledExePath());
+    AutoFreeW exePath(GetInstalledExePath());
     if (HKEY_LOCAL_MACHINE == hkey)
         ok &= WriteRegStr(hkey, L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\" EXENAME, nullptr, exePath);
 
     // mirroring some of what DoAssociateExeWithPdfExtension() does (cf. AppTools.cpp)
-    ScopedMem<WCHAR> iconPath(str::Join(exePath, L",1"));
+    AutoFreeW iconPath(str::Join(exePath, L",1"));
     ok &= WriteRegStr(hkey, REG_CLASSES_APPS L"\\DefaultIcon", nullptr, iconPath);
-    ScopedMem<WCHAR> cmdPath(str::Format(L"\"%s\" \"%%1\" %%*", exePath));
+    AutoFreeW cmdPath(str::Format(L"\"%s\" \"%%1\" %%*", exePath));
     ok &= WriteRegStr(hkey, REG_CLASSES_APPS L"\\Shell\\Open\\Command", nullptr, cmdPath);
-    ScopedMem<WCHAR> printPath(str::Format(L"\"%s\" -print-to-default \"%%1\"", exePath));
+    AutoFreeW printPath(str::Format(L"\"%s\" -print-to-default \"%%1\"", exePath));
     ok &= WriteRegStr(hkey, REG_CLASSES_APPS L"\\Shell\\Print\\Command", nullptr, printPath);
-    ScopedMem<WCHAR> printToPath(str::Format(L"\"%s\" -print-to \"%%2\" \"%%1\"", exePath));
+    AutoFreeW printToPath(str::Format(L"\"%s\" -print-to \"%%2\" \"%%1\"", exePath));
     ok &= WriteRegStr(hkey, REG_CLASSES_APPS L"\\Shell\\PrintTo\\Command", nullptr, printToPath);
 
     // don't add REG_CLASSES_APPS L"\\SupportedTypes", as that prevents SumatraPDF.exe to
@@ -300,10 +300,10 @@ static void CreateButtonRunSumatra(HWND hwndParent) {
 }
 
 static bool CreateAppShortcut(bool allUsers) {
-    ScopedMem<WCHAR> shortcutPath(GetShortcutPath(allUsers));
+    AutoFreeW shortcutPath(GetShortcutPath(allUsers));
     if (!shortcutPath.Get())
         return false;
-    ScopedMem<WCHAR> installedExePath(GetInstalledExePath());
+    AutoFreeW installedExePath(GetInstalledExePath());
     return CreateShortcut(shortcutPath, installedExePath);
 }
 
@@ -324,7 +324,7 @@ DWORD WINAPI InstallerThread(LPVOID data) {
     if (gGlobalData.registerAsDefault) {
         // need to sublaunch SumatraPDF.exe instead of replicating the code
         // because registration uses translated strings
-        ScopedMem<WCHAR> installedExePath(GetInstalledExePath());
+        AutoFreeW installedExePath(GetInstalledExePath());
         CreateProcessHelper(installedExePath, L"-register-for-pdf");
     }
 
@@ -458,7 +458,7 @@ void OnInstallationFinished() {
 }
 
 static void OnButtonStartSumatra() {
-    ScopedMem<WCHAR> exePath(GetInstalledExePath());
+    AutoFreeW exePath(GetInstalledExePath());
     RunNonElevated(exePath);
     OnButtonExit();
 }
@@ -549,7 +549,7 @@ static BOOL BrowseForFolder(HWND hwnd, const WCHAR* lpszInitialFolder, const WCH
 }
 
 static void OnButtonBrowse() {
-    ScopedMem<WCHAR> installDir(win::GetText(gHwndTextboxInstDir));
+    AutoFreeW installDir(win::GetText(gHwndTextboxInstDir));
     // strip a trailing "\SumatraPDF" if that directory doesn't exist (yet)
     if (!dir::Exists(installDir))
         installDir.Set(path::GetDir(installDir));
@@ -633,7 +633,7 @@ void OnCreateWindow(HWND hwnd) {
     // build options controls going from the bottom
     y -= (staticDy + WINDOW_MARGIN);
 
-    ScopedMem<WCHAR> defaultViewer(GetDefaultPdfViewer());
+    AutoFreeW defaultViewer(GetDefaultPdfViewer());
     BOOL hasOtherViewer = !str::EqI(defaultViewer, APP_NAME_STR);
     BOOL isSumatraDefaultViewer = defaultViewer && !hasOtherViewer;
 
@@ -718,7 +718,7 @@ void OnCreateWindow(HWND hwnd) {
 //] ACCESSKEY_GROUP Installer
 
 void CreateMainWindow() {
-    ScopedMem<WCHAR> title(str::Format(_TR("SumatraPDF %s Installer"), CURR_VERSION_STR));
+    AutoFreeW title(str::Format(_TR("SumatraPDF %s Installer"), CURR_VERSION_STR));
 
     gHwndFrame = CreateWindowEx(trans::IsCurrLangRtl() ? WS_EX_LAYOUTRTL : 0, INSTALLER_FRAME_CLASS_NAME, title.Get(),
                                 WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU, CW_USEDEFAULT, CW_USEDEFAULT,

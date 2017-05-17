@@ -20,12 +20,12 @@ class CommandLineInfo {
     bool makeDefault;
     bool exitWhenDone;
     bool printDialog;
-    ScopedMem<WCHAR> printerName;
-    ScopedMem<WCHAR> printSettings;
-    ScopedMem<WCHAR> forwardSearchOrigin;
+    AutoFreeW printerName;
+    AutoFreeW printSettings;
+    AutoFreeW forwardSearchOrigin;
     int forwardSearchLine;
     bool reuseDdeInstance;
-    ScopedMem<WCHAR> destName;
+    AutoFreeW destName;
     int pageNumber;
     bool restrictedUse;
     bool enterPresentation;
@@ -35,17 +35,17 @@ class CommandLineInfo {
     PointI startScroll;
     bool showConsole;
     HWND hwndPluginParent;
-    ScopedMem<WCHAR> pluginURL;
+    AutoFreeW pluginURL;
     bool exitImmediately;
     bool silent;
-    ScopedMem<WCHAR> appdataDir;
-    ScopedMem<WCHAR> inverseSearchCmdLine;
+    AutoFreeW appdataDir;
+    AutoFreeW inverseSearchCmdLine;
     bool invertColors;
 
     // stress-testing related
-    ScopedMem<WCHAR> stressTestPath;
-    ScopedMem<WCHAR> stressTestFilter; // nullptr is equivalent to "*" (i.e. all files)
-    ScopedMem<WCHAR> stressTestRanges;
+    AutoFreeW stressTestPath;
+    AutoFreeW stressTestFilter; // nullptr is equivalent to "*" (i.e. all files)
+    AutoFreeW stressTestRanges;
     int stressTestCycles;
     int stressParallelCount;
     bool stressRandomizeFiles;

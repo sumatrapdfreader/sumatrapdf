@@ -268,7 +268,7 @@ bool EpubDoc::Load()
     node = parser.FindElementByNameNS("rootfile", EPUB_CONTAINER_NS);
     if (!node)
         return false;
-    ScopedMem<WCHAR> contentPath(node->GetAttribute("full-path"));
+    AutoFreeW contentPath(node->GetAttribute("full-path"));
     if (!contentPath)
         return false;
     url::DecodeInPlace(contentPath);
@@ -309,11 +309,11 @@ bool EpubDoc::Load()
     WStrList idList, pathList;
 
     for (node = node->down; node; node = node->next) {
-        ScopedMem<WCHAR> mediatype(node->GetAttribute("media-type"));
+        AutoFreeW mediatype(node->GetAttribute("media-type"));
         if (str::Eq(mediatype, L"image/png")  ||
             str::Eq(mediatype, L"image/jpeg") ||
             str::Eq(mediatype, L"image/gif")) {
-            ScopedMem<WCHAR> imgPath(node->GetAttribute("href"));
+            AutoFreeW imgPath(node->GetAttribute("href"));
             if (!imgPath)
                 continue;
             url::DecodeInPlace(imgPath);
@@ -331,16 +331,16 @@ bool EpubDoc::Load()
                  str::Eq(mediatype, L"application/x-dtbncx+xml") ||
                  str::Eq(mediatype, L"text/html") ||
                  str::Eq(mediatype, L"text/xml")) {
-            ScopedMem<WCHAR> htmlPath(node->GetAttribute("href"));
+            AutoFreeW htmlPath(node->GetAttribute("href"));
             if (!htmlPath)
                 continue;
             url::DecodeInPlace(htmlPath);
-            ScopedMem<WCHAR> htmlId(node->GetAttribute("id"));
+            AutoFreeW htmlId(node->GetAttribute("id"));
             // EPUB 3 ToC
-            ScopedMem<WCHAR> properties(node->GetAttribute("properties"));
+            AutoFreeW properties(node->GetAttribute("properties"));
             if (properties && str::Find(properties, L"nav") && str::Eq(mediatype, L"application/xhtml+xml"))
                 tocPath.Set(str::Join(contentPath, htmlPath));
-            if (encList.Count() > 0 && encList.Contains(ScopedMem<WCHAR>(str::Join(contentPath, htmlPath))))
+            if (encList.Count() > 0 && encList.Contains(AutoFreeW(str::Join(contentPath, htmlPath))))
                 continue;
             if (htmlPath && htmlId) {
                 idList.Append(htmlId.StealData());
@@ -353,23 +353,23 @@ bool EpubDoc::Load()
     if (!node)
         return false;
     // EPUB 2 ToC
-    ScopedMem<WCHAR> tocId(node->GetAttribute("toc"));
+    AutoFreeW tocId(node->GetAttribute("toc"));
     if (tocId && !tocPath && idList.Contains(tocId)) {
         tocPath.Set(str::Join(contentPath, pathList.At(idList.Find(tocId))));
         isNcxToc = true;
     }
-    ScopedMem<WCHAR> readingDir(node->GetAttribute("page-progression-direction"));
+    AutoFreeW readingDir(node->GetAttribute("page-progression-direction"));
     if (readingDir)
         isRtlDoc = str::EqI(readingDir, L"rtl");
 
     for (node = node->down; node; node = node->next) {
         if (!node->NameIsNS("itemref", EPUB_OPF_NS))
             continue;
-        ScopedMem<WCHAR> idref(node->GetAttribute("idref"));
+        AutoFreeW idref(node->GetAttribute("idref"));
         if (!idref || !idList.Contains(idref))
             continue;
 
-        ScopedMem<WCHAR> fullPath(str::Join(contentPath, pathList.At(idList.Find(idref))));
+        AutoFreeW fullPath(str::Join(contentPath, pathList.At(idList.Find(idref))));
         ScopedMem<char> html(zip.GetFileDataByName(fullPath));
         if (!html)
             continue;
@@ -482,7 +482,7 @@ ImageData *EpubDoc::GetImageData(const char *id, const char *pagePath)
 
     // try to also load images which aren't registered in the manifest
     ImageData2 data = { 0 };
-    ScopedMem<WCHAR> imgPath(str::conv::FromUtf8(url));
+    AutoFreeW imgPath(str::conv::FromUtf8(url));
     data.idx = zip.GetFileIndex(imgPath);
     if (data.idx != (size_t)-1) {
         data.base.data = zip.GetFileDataByIdx(data.idx, &data.base.len);
@@ -506,7 +506,7 @@ char *EpubDoc::GetFileData(const char *relPath, const char *pagePath, size_t *le
     ScopedCritSec scope(&zipAccess);
 
     ScopedMem<char> url(NormalizeURL(relPath, pagePath));
-    ScopedMem<WCHAR> zipPath(str::conv::FromUtf8(url));
+    AutoFreeW zipPath(str::conv::FromUtf8(url));
     return zip.GetFileDataByName(zipPath, lenOut);
 }
 
@@ -572,9 +572,9 @@ bool EpubDoc::ParseNavToc(const char *data, size_t dataLen, const char *pagePath
             }
             if (!text)
                 continue;
-            ScopedMem<WCHAR> itemText(str::conv::FromUtf8(text));
+            AutoFreeW itemText(str::conv::FromUtf8(text));
             str::NormalizeWS(itemText);
-            ScopedMem<WCHAR> itemSrc;
+            AutoFreeW itemSrc;
             if (href) {
                 href.Set(NormalizeURL(href, pagePath));
                 itemSrc.Set(str::conv::FromHtmlUtf8(href, str::Len(href)));
@@ -598,7 +598,7 @@ bool EpubDoc::ParseNcxToc(const char *data, size_t dataLen, const char *pagePath
     if (!tok || tok->IsError())
         return false;
 
-    ScopedMem<WCHAR> itemText, itemSrc;
+    AutoFreeW itemText, itemSrc;
     int level = 0;
     while ((tok = parser.Next()) != nullptr && !tok->IsError() &&
            (!tok->IsEndTag() || !tok->NameIsNS("navMap", EPUB_NCX_NS))) {
@@ -922,7 +922,7 @@ bool Fb2Doc::HasToc() const
 
 bool Fb2Doc::ParseToc(EbookTocVisitor *visitor)
 {
-    ScopedMem<WCHAR> itemText;
+    AutoFreeW itemText;
     bool inTitle = false;
     int titleCount = 0;
     int level = 0;
@@ -944,14 +944,14 @@ bool Fb2Doc::ParseToc(EbookTocVisitor *visitor)
             if (itemText)
                 str::NormalizeWS(itemText);
             if (!str::IsEmpty(itemText.Get())) {
-                ScopedMem<WCHAR> url(str::Format(TEXT(FB2_TOC_ENTRY_MARK) L"%d", titleCount));
+                AutoFreeW url(str::Format(TEXT(FB2_TOC_ENTRY_MARK) L"%d", titleCount));
                 visitor->Visit(itemText, url, level);
                 itemText.Set(nullptr);
             }
             inTitle = false;
         }
         else if (inTitle && tok->IsText()) {
-            ScopedMem<WCHAR> text(str::conv::FromHtmlUtf8(tok->s, tok->sLen));
+            AutoFreeW text(str::conv::FromHtmlUtf8(tok->s, tok->sLen));
             if (str::IsEmpty(itemText.Get()))
                 itemText.Set(text.StealData());
             else
@@ -1147,7 +1147,7 @@ bool PalmDoc::HasToc() const
 bool PalmDoc::ParseToc(EbookTocVisitor *visitor)
 {
     for (size_t i = 0; i < tocEntries.Count(); i++) {
-        ScopedMem<WCHAR> name(str::Format(TEXT(PDB_TOC_ENTRY_MARK) L"%d", i + 1));
+        AutoFreeW name(str::Format(TEXT(PDB_TOC_ENTRY_MARK) L"%d", i + 1));
         visitor->Visit(tocEntries.At(i), name, 1);
     }
     return true;
@@ -1263,7 +1263,7 @@ char *HtmlDoc::LoadURL(const char *url, size_t *lenOut)
         return DecodeDataURI(url, lenOut);
     if (str::FindChar(url, ':'))
         return nullptr;
-    ScopedMem<WCHAR> path(str::conv::FromUtf8(url));
+    AutoFreeW path(str::conv::FromUtf8(url));
     str::TransChars(path, L"/", L"\\");
     return file::ReadAll(path, lenOut);
 }
@@ -1542,8 +1542,8 @@ bool TxtDoc::ParseToc(EbookTocVisitor *visitor)
     parser.Parse(htmlData.Get(), CP_UTF8);
     HtmlElement *el = nullptr;
     while ((el = parser.FindElementByName("b", el)) != nullptr) {
-        ScopedMem<WCHAR> title(el->GetAttribute("title"));
-        ScopedMem<WCHAR> id(el->GetAttribute("id"));
+        AutoFreeW title(el->GetAttribute("title"));
+        AutoFreeW id(el->GetAttribute("id"));
         int level = 1;
         if (str::IsDigit(*title)) {
             const WCHAR *dot = SkipDigits(title);

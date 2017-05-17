@@ -254,7 +254,7 @@ bool ImagesEngine::SaveFileAs(const char *copyFileName, bool includeUserAnnots)
 {
     UNUSED(includeUserAnnots);
     const WCHAR* srcPath = FileName();
-    ScopedMem<WCHAR> dstPath(str::conv::FromUtf8(copyFileName));
+    AutoFreeW dstPath(str::conv::FromUtf8(copyFileName));
     if (srcPath) {
         BOOL ok = CopyFileW(srcPath, dstPath, FALSE);
         if (ok) {
@@ -655,7 +655,7 @@ bool ImageDirEngineImpl::LoadImageDir(const WCHAR *dirName)
 {
     SetFileName(dirName);
 
-    ScopedMem<WCHAR> pattern(path::Join(dirName, L"*"));
+    AutoFreeW pattern(path::Join(dirName, L"*"));
 
     WIN32_FIND_DATA fdata;
     HANDLE hfind = FindFirstFile(pattern, &fdata);
@@ -730,14 +730,14 @@ bool ImageDirEngineImpl::SaveFileAs(const char *copyFileName, bool includeUserAn
 {
     UNUSED(includeUserAnnots);
     // only copy the files if the target directory doesn't exist yet
-    ScopedMem<WCHAR> dstPath(str::conv::FromUtf8(copyFileName));
+    AutoFreeW dstPath(str::conv::FromUtf8(copyFileName));
     if (!CreateDirectoryW(dstPath, nullptr)) {
         return false;
     }
     bool ok = true;
     for (size_t i = 0; i < pageFileNames.Count(); i++) {
         const WCHAR *filePathOld = pageFileNames.At(i);
-        ScopedMem<WCHAR> filePathNew(path::Join(dstPath, path::GetBaseName(filePathOld)));
+        AutoFreeW filePathNew(path::Join(dstPath, path::GetBaseName(filePathOld)));
         ok = ok && CopyFileW(filePathOld, filePathNew, TRUE);
     }
     return ok;
@@ -861,14 +861,14 @@ protected:
     Vec<size_t> fileIdxs;
 
     // extracted metadata
-    ScopedMem<WCHAR> propTitle;
+    AutoFreeW propTitle;
     WStrVec propAuthors;
-    ScopedMem<WCHAR> propDate;
-    ScopedMem<WCHAR> propModDate;
-    ScopedMem<WCHAR> propCreator;
-    ScopedMem<WCHAR> propSummary;
+    AutoFreeW propDate;
+    AutoFreeW propModDate;
+    AutoFreeW propCreator;
+    AutoFreeW propSummary;
     // temporary state needed for extracting metadata
-    ScopedMem<WCHAR> propAuthorTmp;
+    AutoFreeW propAuthorTmp;
 };
 
 bool CbxEngineImpl::LoadFromFile(const WCHAR *file)

@@ -30,7 +30,7 @@
 #include "Translations.h"
 
 struct PrintData {
-    ScopedMem<WCHAR> printerName;
+    AutoFreeW printerName;
     ScopedMem<DEVMODE> devMode;
     BaseEngine* engine = nullptr;
     Vec<PRINTPAGERANGE> ranges; // empty when printing a selection
@@ -114,7 +114,7 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
     }
 
     BaseEngine& engine = *pd.engine;
-    ScopedMem<WCHAR> fileName;
+    AutoFreeW fileName;
 
     DOCINFO di = {0};
     di.cbSize = sizeof(DOCINFO);
@@ -704,7 +704,7 @@ static short GetPaperSourceByName(const WCHAR* printerName, const WCHAR* binName
     }
     // try to determine the paper bin number by name
     ScopedMem<WORD> bins(AllocArray<WORD>(count));
-    ScopedMem<WCHAR> binNames(AllocArray<WCHAR>(24 * count + 1));
+    AutoFreeW binNames(AllocArray<WCHAR>(24 * count + 1));
     DeviceCapabilitiesW(printerName, nullptr, DC_BINS, (WCHAR*)bins.Get(), nullptr);
     DeviceCapabilitiesW(printerName, nullptr, DC_BINNAMES, binNames.Get(), nullptr);
     for (DWORD i = 0; i < count; i++) {
@@ -790,7 +790,7 @@ bool PrintFile(BaseEngine* engine, WCHAR* printerName, bool displayErrors, const
         return false;
     }
 
-    ScopedMem<WCHAR> defaultPrinter;
+    AutoFreeW defaultPrinter;
     if (!printerName) {
         defaultPrinter.Set(GetDefaultPrinterName());
         printerName = defaultPrinter;
@@ -872,7 +872,7 @@ Exit:
 }
 
 bool PrintFile(const WCHAR* fileName, WCHAR* printerName, bool displayErrors, const WCHAR* settings) {
-    ScopedMem<WCHAR> fileName2(path::Normalize(fileName));
+    AutoFreeW fileName2(path::Normalize(fileName));
     BaseEngine* engine = EngineManager::CreateEngine(fileName2);
     bool ok = PrintFile(engine, printerName, displayErrors, settings);
     delete engine;

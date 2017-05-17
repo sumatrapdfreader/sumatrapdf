@@ -57,8 +57,8 @@ bool IsRunningInPortableMode()
         return false;
     }
 
-    ScopedMem<WCHAR> exePath(GetExePath());
-    ScopedMem<WCHAR> programFilesDir(GetSpecialFolder(CSIDL_PROGRAM_FILES));
+    AutoFreeW exePath(GetExePath());
+    AutoFreeW programFilesDir(GetSpecialFolder(CSIDL_PROGRAM_FILES));
     // if we can't get a path, assume we're not running from "Program Files"
     if (!exePath || !programFilesDir) {
         return true;
@@ -78,7 +78,7 @@ bool IsRunningInPortableMode()
     return true;
 }
 
-static ScopedMem<WCHAR> gAppDataPath;
+static AutoFreeW gAppDataPath;
 
 void SetAppDataPath(const WCHAR *path)
 {
@@ -102,7 +102,7 @@ WCHAR *AppGenDataFilename(const WCHAR *fileName)
     }
 
     /* Use %APPDATA% */
-    ScopedMem<WCHAR> path(GetSpecialFolder(CSIDL_APPDATA, true));
+    AutoFreeW path(GetSpecialFolder(CSIDL_APPDATA, true));
     CrashIf(!path);
     if (!path)
         return nullptr;
@@ -165,11 +165,11 @@ UnregisterFromBeingDefaultViewer() and RemoveOwnRegistryKeys() in Installer.cpp.
 
 void DoAssociateExeWithPdfExtension(HKEY hkey)
 {
-    ScopedMem<WCHAR> exePath(GetExePath());
+    AutoFreeW exePath(GetExePath());
     if (!exePath)
         return;
 
-    ScopedMem<WCHAR> prevHandler(nullptr);
+    AutoFreeW prevHandler(nullptr);
     // Remember the previous default app for the Uninstaller
     prevHandler.Set(ReadRegStr(hkey, REG_CLASSES_PDF, nullptr));
     if (prevHandler && !str::Eq(prevHandler, APP_NAME_STR))
@@ -182,7 +182,7 @@ void DoAssociateExeWithPdfExtension(HKEY hkey)
 
     WriteRegStr(hkey, REG_CLASSES_APP L"\\shell", nullptr, L"open");
 
-    ScopedMem<WCHAR> cmdPath(str::Format(L"\"%s\" \"%%1\" %%*", exePath.Get())); // "${exePath}" "%1" %*
+    AutoFreeW cmdPath(str::Format(L"\"%s\" \"%%1\" %%*", exePath.Get())); // "${exePath}" "%1" %*
     bool ok = WriteRegStr(hkey, REG_CLASSES_APP L"\\shell\\open\\command", nullptr, cmdPath);
 
     // also register for printing
@@ -213,7 +213,7 @@ void DoAssociateExeWithPdfExtension(HKEY hkey)
 bool IsExeAssociatedWithPdfExtension()
 {
     // this one doesn't have to exist but if it does, it must be APP_NAME_STR
-    ScopedMem<WCHAR> tmp(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, L"Progid"));
+    AutoFreeW tmp(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, L"Progid"));
     if (tmp && !str::Eq(tmp, APP_NAME_STR))
         return false;
 
@@ -244,7 +244,7 @@ bool IsExeAssociatedWithPdfExtension()
 
     WStrVec argList;
     ParseCmdLine(tmp, argList);
-    ScopedMem<WCHAR> exePath(GetExePath());
+    AutoFreeW exePath(GetExePath());
     if (!exePath || !argList.Contains(L"%1") || !str::Find(tmp, L"\"%1\""))
         return false;
 
@@ -317,14 +317,14 @@ WCHAR *AutoDetectInverseSearchCommands(HWND hwndCombo)
     WStrList foundExes;
 
     for (int i = 0; i < dimof(editor_rules); i++) {
-        ScopedMem<WCHAR> path(ReadRegStr(editor_rules[i].RegRoot, editor_rules[i].RegKey, editor_rules[i].RegValue));
+        AutoFreeW path(ReadRegStr(editor_rules[i].RegRoot, editor_rules[i].RegKey, editor_rules[i].RegValue));
         if (!path)
             continue;
 
-        ScopedMem<WCHAR> exePath;
+        AutoFreeW exePath;
         if (editor_rules[i].Type == SiblingPath) {
             // remove file part
-            ScopedMem<WCHAR> dir(path::GetDir(path));
+            AutoFreeW dir(path::GetDir(path));
             exePath.Set(path::Join(dir, editor_rules[i].BinaryFilename));
         }
         else if (editor_rules[i].Type == BinaryDir)
@@ -340,7 +340,7 @@ WCHAR *AutoDetectInverseSearchCommands(HWND hwndCombo)
             continue;
         }
 
-        ScopedMem<WCHAR> editorCmd(str::Format(L"\"%s\" %s", exePath.Get(), editor_rules[i].InverseSearchArgs));
+        AutoFreeW editorCmd(str::Format(L"\"%s\" %s", exePath.Get(), editor_rules[i].InverseSearchArgs));
 
         if (!hwndCombo) {
             // no need to fill a combo box: return immeditately after finding an editor.
@@ -408,7 +408,7 @@ bool ExtendedEditWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     case UWM_DELAYED_CTRL_BACK:
         {
-            ScopedMem<WCHAR> text(win::GetText(hwnd));
+            AutoFreeW text(win::GetText(hwnd));
             int selStart = LOWORD(Edit_GetSel(hwnd)), selEnd = selStart;
             // remove the rectangle produced by Ctrl+Backspace
             if (selStart > 0 && text[selStart - 1] == '\x7F') {
@@ -472,7 +472,7 @@ void SaveCallstackLogs()
     char *s = dbghelp::GetCallstacks();
     if (!s)
         return;
-    ScopedMem<WCHAR> filePath(AppGenDataFilename(L"callstacks.txt"));
+    AutoFreeW filePath(AppGenDataFilename(L"callstacks.txt"));
     file::WriteAll(filePath.Get(), s, str::Len(s));
     free(s);
 }

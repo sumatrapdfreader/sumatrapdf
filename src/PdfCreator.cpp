@@ -15,7 +15,7 @@ extern "C" {
 #include "BaseEngine.h"
 #include "PdfCreator.h"
 
-static ScopedMem<WCHAR> gPdfProducer;
+static AutoFreeW gPdfProducer;
 
 void PdfCreator::SetProducerName(const WCHAR *name)
 {
@@ -320,7 +320,7 @@ bool PdfCreator::CopyProperties(BaseEngine *engine)
     };
     bool ok = true;
     for (int i = 0; i < dimof(props); i++) {
-        ScopedMem<WCHAR> value(engine->GetProperty(props[i]));
+        AutoFreeW value(engine->GetProperty(props[i]));
         if (value) {
             ok = ok && SetProperty(props[i], value);
         }

@@ -489,7 +489,7 @@ static const WCHAR *LinkifyFindEnd(const WCHAR *start, WCHAR prevChar)
 static const WCHAR *LinkifyMultilineText(LinkRectList *list, const WCHAR *pageText, const WCHAR *start, const WCHAR *next, RectI *coords)
 {
     size_t lastIx = list->coords.Count() - 1;
-    ScopedMem<WCHAR> uri(list->links.At(lastIx));
+    AutoFreeW uri(list->links.At(lastIx));
     const WCHAR *end = next;
     bool multiline = false;
 
@@ -497,7 +497,7 @@ static const WCHAR *LinkifyMultilineText(LinkRectList *list, const WCHAR *pageTe
         end = LinkifyFindEnd(next, start > pageText ? start[-1] : ' ');
         multiline = LinkifyCheckMultiline(pageText, end, coords);
 
-        ScopedMem<WCHAR> part(str::DupN(next, end - next));
+        AutoFreeW part(str::DupN(next, end - next));
         uri.Set(str::Join(uri, part));
         RectI bbox = coords[next - pageText].Union(coords[end - pageText - 1]);
         list->coords.Append(fz_RectD_to_rect(bbox.Convert<double>()));
@@ -587,7 +587,7 @@ static LinkRectList *LinkifyText(const WCHAR *pageText, RectI *coords)
         if (!end)
             continue;
 
-        ScopedMem<WCHAR> part(str::DupN(start, end - start));
+        AutoFreeW part(str::DupN(start, end - start));
         WCHAR *uri = protocol ? str::Join(protocol, part) : part.StealData();
         list->links.Append(uri);
         RectI bbox = coords[start - pageText].Union(coords[end - pageText - 1]);
@@ -897,7 +897,7 @@ namespace str {
 
 inline WCHAR *FromPdf(pdf_obj *obj)
 {
-    ScopedMem<WCHAR> str(AllocArray<WCHAR>(pdf_to_str_len(obj) + 1));
+    AutoFreeW str(AllocArray<WCHAR>(pdf_to_str_len(obj) + 1));
     pdf_to_ucs2_buf((unsigned short *)str.Get(), obj);
     return str.StealData();
 }
@@ -976,7 +976,7 @@ WCHAR *FormatPageLabel(const char *type, int pageNo, const WCHAR *prefix)
         return str::Format(L"%s%d", prefix, pageNo);
     if (str::EqI(type, "R")) {
         // roman numbering style
-        ScopedMem<WCHAR> number(str::FormatRomanNumeral(pageNo));
+        AutoFreeW number(str::FormatRomanNumeral(pageNo));
         if (*type == 'r')
             str::ToLowerInPlace(number.Get());
         return str::Format(L"%s%s", prefix, number);
@@ -1042,7 +1042,7 @@ WStrVec *BuildPageLabelVec(pdf_obj *root, int pageCount)
         int secLen = pageCount + 1 - data.At(i).startAt;
         if (i < data.Count() - 1 && data.At(i + 1).startAt <= pageCount)
             secLen = data.At(i + 1).startAt - data.At(i).startAt;
-        ScopedMem<WCHAR> prefix(str::conv::FromPdf(data.At(i).prefix));
+        AutoFreeW prefix(str::conv::FromPdf(data.At(i).prefix));
         for (int j = 0; j < secLen; j++) {
             free(labels->At(data.At(i).startAt + j - 1));
             labels->At(data.At(i).startAt + j - 1) =
@@ -1061,7 +1061,7 @@ WStrVec *BuildPageLabelVec(pdf_obj *root, int pageCount)
             continue;
         int ix = labels->Find(dups.At(i)), counter = 0;
         while ((ix = labels->Find(dups.At(i), ix + 1)) != -1) {
-            ScopedMem<WCHAR> unique;
+            AutoFreeW unique;
             do {
                 unique.Set(str::Format(L"%s.%d", dups.At(i), ++counter));
             } while (labels->Contains(unique));
@@ -1327,7 +1327,7 @@ public:
 
 class PdfComment : public PageElement {
     PageAnnotation annot;
-    ScopedMem<WCHAR> content;
+    AutoFreeW content;
 
 public:
     PdfComment(const WCHAR *content, RectD rect, int pageNo) :
@@ -1625,7 +1625,7 @@ bool PdfEngineImpl::LoadFromStream(fz_stream *stm, PasswordUI *pwdUI)
 
     bool ok = false, saveKey = false;
     while (!ok) {
-        ScopedMem<WCHAR> pwd(pwdUI->GetPassword(FileName(), digest, pdf_crypt_key(_doc), &saveKey));
+        AutoFreeW pwd(pwdUI->GetPassword(FileName(), digest, pdf_crypt_key(_doc), &saveKey));
         if (!pwd) {
             // password not given or encryption key has been remembered
             ok = saveKey;
@@ -1649,7 +1649,7 @@ bool PdfEngineImpl::LoadFromStream(fz_stream *stm, PasswordUI *pwdUI)
         // note: such passwords aren't portable when stored as Unicode text
         if (!ok && GetACP() != 1252) {
             ScopedMem<char> pwd_ansi(str::conv::ToAnsi(pwd));
-            ScopedMem<WCHAR> pwd_cp1252(str::conv::FromCodePage(pwd_ansi, 1252));
+            AutoFreeW pwd_cp1252(str::conv::FromCodePage(pwd_ansi, 1252));
             pwd_utf8.Set(str::conv::ToUtf8(pwd_cp1252));
             ok = pwd_utf8 && pdf_authenticate_password(_doc, pwd_utf8);
         }
@@ -2192,7 +2192,7 @@ PageElement *PdfEngineImpl::GetElementAtPos(int pageNo, PointD pt)
             if (fz_is_pt_in_rect(rect, p)) {
                 ScopedCritSec scope(&ctxAccess);
 
-                ScopedMem<WCHAR> contents(str::conv::FromPdf(pdf_dict_gets(annot->obj, "Contents")));
+                AutoFreeW contents(str::conv::FromPdf(pdf_dict_gets(annot->obj, "Contents")));
                 // TODO: use separate classes for comments and tooltips?
                 if (str::IsEmpty(contents.Get()) && FZ_ANNOT_WIDGET == annot->annot_type)
                     contents.Set(str::conv::FromPdf(pdf_dict_gets(annot->obj, "TU")));
@@ -2234,7 +2234,7 @@ Vec<PageElement *> *PdfEngineImpl::GetElements(int pageNo)
             pdf_annot *annot = pageAnnots[pageNo-1][i];
             fz_rect rect = annot->rect;
             fz_transform_rect(&rect, &page->ctm);
-            ScopedMem<WCHAR> contents(str::conv::FromPdf(pdf_dict_gets(annot->obj, "Contents")));
+            AutoFreeW contents(str::conv::FromPdf(pdf_dict_gets(annot->obj, "Contents")));
             if (str::IsEmpty(contents.Get()) && FZ_ANNOT_WIDGET == annot->annot_type)
                 contents.Set(str::conv::FromPdf(pdf_dict_gets(annot->obj, "TU")));
             els->Append(new PdfComment(contents, fz_rect_to_RectD(rect), pageNo));
@@ -2257,7 +2257,7 @@ void PdfEngineImpl::LinkifyPageText(pdf_page *page)
     assert(!page->links || page->links->refs == 1);
 
     RectI *coords;
-    ScopedMem<WCHAR> pageText(ExtractPageText(page, L"\n", &coords, Target_View, true));
+    AutoFreeW pageText(ExtractPageText(page, L"\n", &coords, Target_View, true));
     if (!pageText)
         return;
 
@@ -2601,7 +2601,7 @@ WCHAR *PdfEngineImpl::ExtractFontList()
             info.Append(")");
         }
 
-        ScopedMem<WCHAR> fontInfo(str::conv::FromUtf8(info.LendData()));
+        AutoFreeW fontInfo(str::conv::FromUtf8(info.LendData()));
         if (fontInfo && !fonts.Contains(fontInfo))
             fonts.Append(fontInfo.StealData());
     }
@@ -2754,7 +2754,7 @@ unsigned char *PdfEngineImpl::GetFileData(size_t *cbCount)
 bool PdfEngineImpl::SaveFileAs(const char *copyFileName, bool includeUserAnnots)
 {
     size_t dataLen;
-    ScopedMem<WCHAR> dstPath(str::conv::FromUtf8(copyFileName));
+    AutoFreeW dstPath(str::conv::FromUtf8(copyFileName));
     ScopedMem<unsigned char> data(GetFileData(&dataLen));
     if (data) {
         bool ok = file::WriteAll(dstPath, data.Get(), dataLen);
@@ -3012,7 +3012,7 @@ WCHAR *PdfLink::GetValue() const
     case FZ_LINK_URI:
         path = str::conv::FromUtf8(link->ld.uri.uri);
         if (IsRelativeURI(path)) {
-            ScopedMem<WCHAR> base;
+            AutoFreeW base;
             fz_try(engine->ctx) {
                 pdf_obj *obj = pdf_dict_gets(pdf_trailer(engine->_doc), "Root");
                 obj = pdf_dict_gets(pdf_dict_gets(obj, "URI"), "Base");
@@ -3021,7 +3021,7 @@ WCHAR *PdfLink::GetValue() const
             }
             fz_catch(engine->ctx) { }
             if (!str::IsEmpty(base.Get())) {
-                ScopedMem<WCHAR> uri(str::Join(base, path));
+                AutoFreeW uri(str::Join(base, path));
                 free(path);
                 path = uri.StealData();
             }
@@ -3032,7 +3032,7 @@ WCHAR *PdfLink::GetValue() const
                 x = (int)(pt.x - rect.x + 0.5);
                 y = (int)(pt.y - rect.y + 0.5);
             }
-            ScopedMem<WCHAR> uri(str::Format(L"%s?%d,%d", path, x, y));
+            AutoFreeW uri(str::Format(L"%s?%d,%d", path, x, y));
             free(path);
             path = uri.StealData();
         }
@@ -3277,11 +3277,11 @@ xps_bound_page_quick(xps_document *doc, int number)
 
 class xps_doc_props {
 public:
-    ScopedMem<WCHAR> title;
-    ScopedMem<WCHAR> author;
-    ScopedMem<WCHAR> subject;
-    ScopedMem<WCHAR> creation_date;
-    ScopedMem<WCHAR> modification_date;
+    AutoFreeW title;
+    AutoFreeW author;
+    AutoFreeW subject;
+    AutoFreeW creation_date;
+    AutoFreeW modification_date;
 };
 
 static fz_xml *
@@ -4118,7 +4118,7 @@ bool XpsEngineImpl::SaveFileAs(const char *copyFileName, bool includeUserAnnots)
 {
     UNUSED(includeUserAnnots);
     size_t dataLen;
-    ScopedMem<WCHAR> dstPath(str::conv::FromUtf8(copyFileName));
+    AutoFreeW dstPath(str::conv::FromUtf8(copyFileName));
     ScopedMem<unsigned char> data(GetFileData(&dataLen));
     if (data) {
         bool ok = file::WriteAll(dstPath, data.Get(), dataLen);
@@ -4141,8 +4141,8 @@ WCHAR *XpsEngineImpl::ExtractFontList()
     // collect a list of all included fonts
     WStrVec fonts;
     for (xps_font_cache *font = _doc->font_table; font; font = font->next) {
-        ScopedMem<WCHAR> path(str::conv::FromUtf8(font->name));
-        ScopedMem<WCHAR> name(str::conv::FromUtf8(font->font->name));
+        AutoFreeW path(str::conv::FromUtf8(font->name));
+        AutoFreeW name(str::conv::FromUtf8(font->font->name));
         fonts.Append(str::Format(L"%s (%s)", name.Get(), path::GetBaseName(path)));
     }
     if (fonts.Count() == 0)
@@ -4244,7 +4244,7 @@ void XpsEngineImpl::LinkifyPageText(xps_page *page, int pageNo)
     assert(!page->links || page->links->refs == 1);
 
     RectI *coords;
-    ScopedMem<WCHAR> pageText(ExtractPageText(page, L"\n", &coords, true));
+    AutoFreeW pageText(ExtractPageText(page, L"\n", &coords, true));
     if (!pageText)
         return;
 
@@ -4417,7 +4417,7 @@ bool IsSupportedFile(const WCHAR *fileName, bool sniff)
     if (sniff) {
         if (dir::Exists(fileName)) {
             // allow opening uncompressed XPS files as well
-            ScopedMem<WCHAR> relsPath(path::Join(fileName, L"_rels\\.rels"));
+            AutoFreeW relsPath(path::Join(fileName, L"_rels\\.rels"));
             return file::Exists(relsPath) || dir::Exists(relsPath);
         }
         ZipFile zip(fileName, true);

@@ -30,12 +30,14 @@ enum Magnitudes { KB = 1024, MB = 1024 * KB, GB = 1024 * MB };
 class PropertyEl {
 public:
     PropertyEl(const WCHAR *leftTxt, WCHAR *rightTxt, bool isPath=false)
-        : leftTxt(leftTxt), rightTxt(rightTxt), isPath(isPath) { }
+        : leftTxt(leftTxt), isPath(isPath) {
+        this->rightTxt.Set(rightTxt);
+    }
 
     // A property is always in format: Name (left): Value (right)
     // (leftTxt is static, rightTxt will be freed)
     const WCHAR *   leftTxt;
-    ScopedMem<WCHAR>rightTxt;
+    AutoFreeW rightTxt;
 
     // data calculated by the layout
     RectI           leftPos;
@@ -187,7 +189,7 @@ static WCHAR *FormatSizeSuccint(size_t size)
         unit = _TR("KB");
     }
 
-    ScopedMem<WCHAR> sizestr(str::FormatFloatWithThousandSep(s));
+    AutoFreeW sizestr(str::FormatFloatWithThousandSep(s));
     if (!unit)
         return sizestr.StealData();
     return str::Format(L"%s %s", sizestr.Get(), unit);
@@ -198,8 +200,8 @@ static WCHAR *FormatSizeSuccint(size_t size)
 // Caller needs to free the result
 static WCHAR *FormatFileSize(size_t size)
 {
-    ScopedMem<WCHAR> n1(FormatSizeSuccint(size));
-    ScopedMem<WCHAR> n2(str::FormatNumWithThousandSep(size));
+    AutoFreeW n1(FormatSizeSuccint(size));
+    AutoFreeW n2(str::FormatNumWithThousandSep(size));
 
     return str::Format(L"%s (%s %s)", n1.Get(), n2.Get(), _TR("Bytes"));
 }
@@ -255,15 +257,15 @@ static WCHAR *FormatPageSize(BaseEngine *engine, int pageNo, int rotation)
     if (((int)(height * 100)) % 100 == 99)
         height += 0.01;
 
-    ScopedMem<WCHAR> strWidth(str::FormatFloatWithThousandSep(width));
-    ScopedMem<WCHAR> strHeight(str::FormatFloatWithThousandSep(height));
+    AutoFreeW strWidth(str::FormatFloatWithThousandSep(width));
+    AutoFreeW strHeight(str::FormatFloatWithThousandSep(height));
 
     return str::Format(L"%s x %s %s%s", strWidth.Get(), strHeight.Get(), unit, formatName);
 }
 
 static WCHAR *FormatPdfFileStructure(Controller *ctrl)
 {
-    ScopedMem<WCHAR> fstruct(ctrl->GetProperty(Prop_PdfFileStructure));
+    AutoFreeW fstruct(ctrl->GetProperty(Prop_PdfFileStructure));
     if (str::IsEmpty(fstruct.Get()))
         return nullptr;
     WStrVec parts;

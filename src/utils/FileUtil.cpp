@@ -102,20 +102,20 @@ WCHAR *Normalize(const WCHAR *path) {
     DWORD cch = GetFullPathName(path, 0, nullptr, nullptr);
     if (!cch)
         return str::Dup(path);
-    ScopedMem<WCHAR> fullpath(AllocArray<WCHAR>(cch));
+    AutoFreeW fullpath(AllocArray<WCHAR>(cch));
     GetFullPathName(path, cch, fullpath, nullptr);
     // convert to long form
     cch = GetLongPathName(fullpath, nullptr, 0);
     if (!cch)
         return fullpath.StealData();
-    ScopedMem<WCHAR> normpath(AllocArray<WCHAR>(cch));
+    AutoFreeW normpath(AllocArray<WCHAR>(cch));
     GetLongPathName(fullpath, normpath, cch);
     if (cch <= MAX_PATH)
         return normpath.StealData();
     // handle overlong paths: first, try to shorten the path
     cch = GetShortPathName(fullpath, nullptr, 0);
     if (cch && cch <= MAX_PATH) {
-        ScopedMem<WCHAR> shortpath(AllocArray<WCHAR>(cch));
+        AutoFreeW shortpath(AllocArray<WCHAR>(cch));
         GetShortPathName(fullpath, shortpath, cch);
         if (str::Len(path::GetBaseName(normpath)) + path::GetBaseName(shortpath) - shortpath <
             MAX_PATH) {
@@ -134,7 +134,7 @@ WCHAR *Normalize(const WCHAR *path) {
 // Normalizes the file path and the converts it into a short form that
 // can be used for interaction with non-UNICODE aware applications
 WCHAR *ShortPath(const WCHAR *path) {
-    ScopedMem<WCHAR> normpath(Normalize(path));
+    AutoFreeW normpath(Normalize(path));
     DWORD cch = GetShortPathName(normpath, nullptr, 0);
     if (!cch)
         return normpath.StealData();
@@ -176,8 +176,8 @@ bool IsSame(const WCHAR *path1, const WCHAR *path2) {
     if (!needFallback)
         return isSame;
 
-    ScopedMem<WCHAR> npath1(Normalize(path1));
-    ScopedMem<WCHAR> npath2(Normalize(path2));
+    AutoFreeW npath1(Normalize(path1));
+    AutoFreeW npath2(Normalize(path2));
     // consider the files different, if their paths can't be normalized
     return npath1 && str::EqI(npath1, npath2);
 }
@@ -268,7 +268,7 @@ WCHAR *GetAppPath(const WCHAR *fileName) {
     modulePath[dimof(modulePath) - 1] = '\0';
     if (!fileName)
         return str::Dup(modulePath);
-    ScopedMem<WCHAR> moduleDir(path::GetDir(modulePath));
+    AutoFreeW moduleDir(path::GetDir(modulePath));
     return path::Join(moduleDir, fileName);
 }
 }
@@ -422,13 +422,13 @@ bool StartsWith(const WCHAR *filePath, const char *s) {
 }
 
 int GetZoneIdentifier(const WCHAR *filePath) {
-    ScopedMem<WCHAR> path(str::Join(filePath, L":Zone.Identifier"));
+    AutoFreeW path(str::Join(filePath, L":Zone.Identifier"));
     return GetPrivateProfileInt(L"ZoneTransfer", L"ZoneId", URLZONE_INVALID, path);
 }
 
 bool SetZoneIdentifier(const WCHAR *filePath, int zoneId) {
-    ScopedMem<WCHAR> path(str::Join(filePath, L":Zone.Identifier"));
-    ScopedMem<WCHAR> id(str::Format(L"%d", zoneId));
+    AutoFreeW path(str::Join(filePath, L":Zone.Identifier"));
+    AutoFreeW id(str::Format(L"%d", zoneId));
     return WritePrivateProfileString(L"ZoneTransfer", L"ZoneId", id, path);
 }
 }
@@ -459,7 +459,7 @@ bool Create(const WCHAR *dir) {
 
 // creates a directory and all its parent directories that don't exist yet
 bool CreateAll(const WCHAR *dir) {
-    ScopedMem<WCHAR> parent(path::GetDir(dir));
+    AutoFreeW parent(path::GetDir(dir));
     if (!str::Eq(parent, dir) && !Exists(parent))
         CreateAll(parent);
     return Create(dir);

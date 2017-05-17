@@ -877,7 +877,7 @@ bool MobiDoc::HasToc()
         AttrInfo *attr = tok->GetAttrByName("type");
         if (!attr)
             continue;
-        ScopedMem<WCHAR> val(str::conv::FromHtmlUtf8(attr->val, attr->valLen));
+        AutoFreeW val(str::conv::FromHtmlUtf8(attr->val, attr->valLen));
         attr = tok->GetAttrByName("filepos");
         if (!str::EqI(val, L"toc") || !attr)
             continue;
@@ -896,8 +896,8 @@ bool MobiDoc::ParseToc(EbookTocVisitor *visitor)
     if (!HasToc())
         return false;
 
-    ScopedMem<WCHAR> itemText;
-    ScopedMem<WCHAR> itemLink;
+    AutoFreeW itemText;
+    AutoFreeW itemLink;
     int itemLevel = 0;
 
     // there doesn't seem to be a standard for Mobi ToCs, so we try to
@@ -906,7 +906,7 @@ bool MobiDoc::ParseToc(EbookTocVisitor *visitor)
     HtmlToken *tok;
     while ((tok = parser.Next()) != nullptr && !tok->IsError()) {
         if (itemLink && tok->IsText()) {
-            ScopedMem<WCHAR> linkText(str::conv::FromHtmlUtf8(tok->s, tok->sLen));
+            AutoFreeW linkText(str::conv::FromHtmlUtf8(tok->s, tok->sLen));
             if (itemText)
                 itemText.Set(str::Join(itemText, L" ", linkText));
             else

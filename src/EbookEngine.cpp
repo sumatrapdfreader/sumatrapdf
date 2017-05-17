@@ -25,7 +25,7 @@
 #include "HtmlFormatter.h"
 #include "EbookFormatter.h"
 
-static ScopedMem<WCHAR> gDefaultFontName;
+static AutoFreeW gDefaultFontName;
 static float gDefaultFontSize = 10.f;
 
 static const WCHAR *GetDefaultFontName()
@@ -95,7 +95,7 @@ public:
         if (!fileName) {
             return false;
         }
-        ScopedMem<WCHAR> path(str::conv::FromUtf8(copyFileName));
+        AutoFreeW path(str::conv::FromUtf8(copyFileName));
         return fileName ? CopyFileW(fileName, path, FALSE) : false;
     }
     WCHAR * ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **coordsOut=nullptr,
@@ -150,7 +150,7 @@ class SimpleDest2 : public PageDestination {
 protected:
     int pageNo;
     RectD rect;
-    ScopedMem<WCHAR> value;
+    AutoFreeW value;
 
 public:
     SimpleDest2(int pageNo, RectD rect, WCHAR *value=nullptr) :
@@ -440,7 +440,7 @@ WCHAR *EbookEngine::ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **co
             }
             insertSpace = false;
             {
-                ScopedMem<WCHAR> s(str::conv::FromHtmlUtf8(i.str.s, i.str.len));
+                AutoFreeW s(str::conv::FromHtmlUtf8(i.str.s, i.str.len));
                 content.Append(s);
                 size_t len = str::Len(s);
                 double cwidth = 1.0 * bbox.dx / len;
@@ -464,7 +464,7 @@ WCHAR *EbookEngine::ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **co
             }
             insertSpace = false;
             {
-                ScopedMem<WCHAR> s(str::conv::FromHtmlUtf8(i.str.s, i.str.len));
+                AutoFreeW s(str::conv::FromHtmlUtf8(i.str.s, i.str.len));
                 content.Append(s);
                 size_t len = str::Len(s);
                 double cwidth = 1.0 * bbox.dx / len;
@@ -502,7 +502,7 @@ void EbookEngine::UpdateUserAnnotations(Vec<PageAnnotation> *list)
 
 PageElement *EbookEngine::CreatePageLink(DrawInstr *link, RectI rect, int pageNo)
 {
-    ScopedMem<WCHAR> url(str::conv::FromHtmlUtf8(link->str.s, link->str.len));
+    AutoFreeW url(str::conv::FromHtmlUtf8(link->str.s, link->str.len));
     if (url::IsAbsolute(url)) {
         return new EbookLink(link, rect, nullptr, pageNo);
     }
@@ -692,7 +692,7 @@ public:
         else {
             dest = engine->GetNamedDest(url);
             if (!dest && str::FindChar(url, '%')) {
-                ScopedMem<WCHAR> decodedUrl(str::Dup(url));
+                AutoFreeW decodedUrl(str::Dup(url));
                 url::DecodeInPlace(decodedUrl);
                 dest = engine->GetNamedDest(decodedUrl);
             }
@@ -761,7 +761,7 @@ EpubEngineImpl::~EpubEngineImpl()
 
 bool EpubEngineImpl::Load(const WCHAR *fileName)
 {
-    this->fileName = str::Dup(fileName);
+    this->fileName.SetCopy(fileName);
     if (dir::Exists(fileName)) {
         // load uncompressed documents as a recompressed ZIP stream
         ScopedComPtr<IStream> zipStream(OpenDirAsZipStream(fileName, true));
@@ -817,7 +817,7 @@ unsigned char *EpubEngineImpl::GetFileData(size_t *cbCount)
 bool EpubEngineImpl::SaveFileAs(const char *copyFileName, bool includeUserAnnots)
 {
     UNUSED(includeUserAnnots);
-    ScopedMem<WCHAR> dstPath(str::conv::FromUtf8(copyFileName));
+    AutoFreeW dstPath(str::conv::FromUtf8(copyFileName));
 
     if (stream) {
         size_t len;
@@ -873,7 +873,7 @@ namespace EpubEngine {
 bool IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
     if (sniff && dir::Exists(fileName)) {
-        ScopedMem<WCHAR> mimetypePath(path::Join(fileName, L"mimetype"));
+        AutoFreeW mimetypePath(path::Join(fileName, L"mimetype"));
         return file::StartsWith(mimetypePath, "application/epub+zip");
     }
     return EpubDoc::IsSupportedFile(fileName, sniff);
@@ -924,7 +924,7 @@ protected:
 
 bool Fb2EngineImpl::Load(const WCHAR *fileName)
 {
-    this->fileName = str::Dup(fileName);
+    this->fileName.SetCopy(fileName);
     doc = Fb2Doc::CreateFromFile(fileName);
     return FinishLoading();
 }
@@ -1039,7 +1039,7 @@ protected:
 
 bool MobiEngineImpl::Load(const WCHAR *fileName)
 {
-    this->fileName = str::Dup(fileName);
+    this->fileName.SetCopy(fileName);
     doc = MobiDoc::CreateFromFile(fileName);
     return FinishLoading();
 }
@@ -1183,7 +1183,7 @@ protected:
 
 bool PdbEngineImpl::Load(const WCHAR *fileName)
 {
-    this->fileName = str::Dup(fileName);
+    this->fileName.SetCopy(fileName);
 
     doc = PalmDoc::CreateFromFile(fileName);
     if (!doc)
@@ -1443,7 +1443,7 @@ public:
     char *GetHtml() {
         // first add the homepage
         const char *index = doc->GetHomePath();
-        ScopedMem<WCHAR> url(doc->ToStr(index));
+        AutoFreeW url(doc->ToStr(index));
         Visit(nullptr, url, 0);
 
         // then add all pages linked to from the table of contents
@@ -1470,7 +1470,7 @@ public:
         UNUSED(name); UNUSED(level);
         if (!url || url::IsAbsolute(url))
             return;
-        ScopedMem<WCHAR> plainUrl(url::GetFullPath(url));
+        AutoFreeW plainUrl(url::GetFullPath(url));
         if (added.FindI(plainUrl) != -1)
             return;
         ScopedMem<char> urlUtf8(str::conv::ToUtf8(plainUrl));
@@ -1486,7 +1486,7 @@ public:
 
 bool ChmEngineImpl::Load(const WCHAR *fileName)
 {
-    this->fileName = str::Dup(fileName);
+    this->fileName.SetCopy(fileName);
     doc = ChmDoc::CreateFromFile(fileName);
     if (!doc)
         return false;
@@ -1518,7 +1518,7 @@ PageDestination *ChmEngineImpl::GetNamedDest(const WCHAR *name)
         if (str::Parse(name, L"%u%$", &topicID)) {
             ScopedMem<char> urlUtf8(doc->ResolveTopicID(topicID));
             if (urlUtf8) {
-                ScopedMem<WCHAR> url(str::conv::FromUtf8(urlUtf8));
+                AutoFreeW url(str::conv::FromUtf8(urlUtf8));
                 dest = EbookEngine::GetNamedDest(url);
             }
         }
@@ -1643,7 +1643,7 @@ protected:
 
 bool HtmlEngineImpl::Load(const WCHAR *fileName)
 {
-    this->fileName = str::Dup(fileName);
+    this->fileName.SetCopy(fileName);
 
     doc = HtmlDoc::CreateFromFile(fileName);
     if (!doc)
@@ -1666,7 +1666,7 @@ bool HtmlEngineImpl::Load(const WCHAR *fileName)
 }
 
 class RemoteHtmlDest : public SimpleDest2 {
-    ScopedMem<WCHAR> name;
+    AutoFreeW name;
 
 public:
     explicit RemoteHtmlDest(const WCHAR *relativeURL) : SimpleDest2(0, RectD()) {
@@ -1688,7 +1688,7 @@ PageElement *HtmlEngineImpl::CreatePageLink(DrawInstr *link, RectI rect, int pag
     if (0 == link->str.len)
         return nullptr;
 
-    ScopedMem<WCHAR> url(str::conv::FromHtmlUtf8(link->str.s, link->str.len));
+    AutoFreeW url(str::conv::FromHtmlUtf8(link->str.s, link->str.len));
     if (url::IsAbsolute(url) || '#' == *url)
         return EbookEngine::CreatePageLink(link, rect, pageNo);
 
@@ -1754,7 +1754,7 @@ protected:
 
 bool TxtEngineImpl::Load(const WCHAR *fileName)
 {
-    this->fileName = str::Dup(fileName);
+    this->fileName.SetCopy(fileName);
 
     doc = TxtDoc::CreateFromFile(fileName);
     if (!doc)

@@ -32,8 +32,8 @@ class EpubDoc {
 
     str::Str<char> htmlData;
     Vec<ImageData2> images;
-    ScopedMem<WCHAR> tocPath;
-    ScopedMem<WCHAR> fileName;
+    AutoFreeW tocPath;
+    AutoFreeW fileName;
     PropertyMap props;
     bool isNcxToc;
     bool isRtlDoc;
@@ -70,7 +70,7 @@ public:
 #define FB2_TOC_ENTRY_MARK "ToC!Entry!"
 
 class Fb2Doc {
-    ScopedMem<WCHAR> fileName;
+    AutoFreeW fileName;
     IStream *stream;
 
     str::Str<char> xmlData;
@@ -110,7 +110,7 @@ public:
 class PdbReader;
 
 class PalmDoc {
-    ScopedMem<WCHAR> fileName;
+    AutoFreeW fileName;
     str::Str<char> htmlData;
     WStrVec tocEntries;
 
@@ -136,7 +136,7 @@ public:
 /* ********** Plain HTML ********** */
 
 class HtmlDoc {
-    ScopedMem<WCHAR> fileName;
+    AutoFreeW fileName;
     ScopedMem<char> htmlData;
     ScopedMem<char> pagePath;
     Vec<ImageData2> images;
@@ -163,7 +163,7 @@ public:
 /* ********** Plain Text (and RFCs and TCR) ********** */
 
 class TxtDoc {
-    ScopedMem<WCHAR> fileName;
+    AutoFreeW fileName;
     str::Str<char> htmlData;
     bool isRFC;
 

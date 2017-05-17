@@ -14,7 +14,7 @@ void FileUtilTest()
     const WCHAR *baseName = path::GetBaseName(path1);
     utassert(str::Eq(baseName, L"SumatraPDF.exe"));
 
-    ScopedMem<WCHAR> dirName(path::GetDir(path1));
+    AutoFreeW dirName(path::GetDir(path1));
     utassert(str::Eq(dirName, L"C:\\Program Files\\SumatraPDF"));
     baseName = path::GetBaseName(dirName);
     utassert(str::Eq(baseName, L"SumatraPDF"));

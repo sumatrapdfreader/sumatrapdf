@@ -340,7 +340,7 @@ protected:
         fileName.SetCopy(s);
     }
 
-    ScopedMem<WCHAR> fileName;
+    AutoFreeW fileName;
 };
 
 class PasswordUI {

@@ -62,7 +62,7 @@ bool LinkSaver::SaveEmbedded(const unsigned char* data, size_t len) {
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
-    ScopedMem<WCHAR> fileFilter(str::Format(L"%s\1*.*\1", _TR("All files")));
+    AutoFreeW fileFilter(str::Format(L"%s\1*.*\1", _TR("All files")));
     str::TransChars(fileFilter, L"\1", L"\0");
 
     OPENFILENAME ofn = {0};

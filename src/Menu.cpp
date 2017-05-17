@@ -256,7 +256,7 @@ HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu, int flag
             }
             wasSeparator = true;
         } else if (MF_NO_TRANSLATE == (md.flags & MF_NO_TRANSLATE)) {
-            ScopedMem<WCHAR> tmp(str::conv::FromUtf8(md.title));
+            AutoFreeW tmp(str::conv::FromUtf8(md.title));
             AppendMenu(menu, MF_STRING, (UINT_PTR)md.id, tmp);
             wasSeparator = false;
         } else {
@@ -277,10 +277,10 @@ static void AddFileMenuItem(HMENU menuFile, const WCHAR* filePath, UINT index) {
         return;
     }
 
-    ScopedMem<WCHAR> menuString;
+    AutoFreeW menuString;
     const WCHAR* fileName = win::menu::ToSafeString(path::GetBaseName(filePath), menuString);
     int menuIdx = (int)((index + 1) % 10);
-    menuString = str::Format(L"&%d) %s", menuIdx, fileName);
+    menuString.Set(str::Format(L"&%d) %s", menuIdx, fileName));
     UINT menuId = IDM_FILE_HISTORY_FIRST + index;
     InsertMenu(menuFile, IDM_EXIT, MF_BYCOMMAND | MF_ENABLED | MF_STRING, menuId, menuString);
 }
@@ -323,7 +323,7 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR* filePath) {
             continue;
         }
 
-        ScopedMem<WCHAR> appName;
+        AutoFreeW appName;
         const WCHAR* name = ev->name;
         if (str::IsEmpty(name)) {
             WStrVec args;
@@ -335,7 +335,7 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR* filePath) {
             *(WCHAR*)path::GetExt(appName) = '\0';
         }
 
-        ScopedMem<WCHAR> menuString(str::Format(_TR("Open in %s"), appName ? appName : name));
+        AutoFreeW menuString(str::Format(_TR("Open in %s"), appName ? appName : name));
         UINT menuId = IDM_OPEN_WITH_EXTERNAL_FIRST + count;
         InsertMenu(menuFile, IDM_SEND_BY_EMAIL, MF_BYCOMMAND | MF_ENABLED | MF_STRING, menuId, menuString);
         if (!filePath) {
@@ -611,7 +611,7 @@ void OnContextMenu(WindowInfo* win, int x, int y) {
     }
 
     PageElement* pageEl = win->AsFixed()->GetElementAtPos(PointI(x, y));
-    ScopedMem<WCHAR> value;
+    AutoFreeW value;
     if (pageEl) {
         value.Set(pageEl->GetValue());
     }

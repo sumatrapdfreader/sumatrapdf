@@ -49,7 +49,7 @@ static void TreeView_ExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, b
 static void CustomizeTocInfoTip(LPNMTVGETINFOTIP nmit)
 {
     PageDestination *link = ((DocTocItem *)nmit->lParam)->GetLink();
-    ScopedMem<WCHAR> path(link ? link->GetDestValue() : nullptr);
+    AutoFreeW path(link ? link->GetDestValue() : nullptr);
     if (!path)
         return;
     CrashIf(!link); // /analyze claims that this could happen - it really can't
@@ -113,7 +113,7 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd)
     // Draw the page number right-aligned (if there is one)
     WindowInfo *win = FindWindowInfoByHwnd(hTV);
     DocTocItem *tocItem = (DocTocItem *)item.lParam;
-    ScopedMem<WCHAR> label;
+    AutoFreeW label;
     if (tocItem->pageNo && win && win->IsDocLoaded()) {
         label.Set(win->ctrl->GetPageLabel(tocItem->pageNo));
         label.Set(str::Join(L"  ", label));
@@ -231,8 +231,8 @@ static HTREEITEM AddTocItemToView(HWND hwnd, DocTocItem *entry, HTREEITEM parent
 #ifdef DISPLAY_TOC_PAGE_NUMBERS
     WindowInfo *win = FindWindowInfoByHwnd(hwnd);
     if (entry->pageNo && win && win->IsDocLoaded() && !win->AsEbook()) {
-        ScopedMem<WCHAR> label(win->ctrl->GetPageLabel(entry->pageNo));
-        ScopedMem<WCHAR> text(str::Format(L"%s  %s", entry->title, label));
+        AutoFreeW label(win->ctrl->GetPageLabel(entry->pageNo));
+        AutoFreeW text(str::Format(L"%s  %s", entry->title, label));
         tvinsert.itemex.pszText = text;
         return TreeView_InsertItem(hwnd, &tvinsert);
     }

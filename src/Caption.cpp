@@ -759,7 +759,7 @@ static void MenuBarAsPopupMenu(WindowInfo* win, int x, int y) {
             continue;
         }
         mii.cch++;
-        ScopedMem<WCHAR> subMenuName(AllocArray<WCHAR>(mii.cch));
+        AutoFreeW subMenuName(AllocArray<WCHAR>(mii.cch));
         mii.dwTypeData = subMenuName;
         GetMenuItemInfo(win->menu, i, TRUE, &mii);
         AppendMenu(popup, MF_POPUP | MF_STRING, (UINT_PTR)mii.hSubMenu, subMenuName);

@@ -139,7 +139,7 @@ bool CreateArchive(const WCHAR *archivePath, WStrVec& files, size_t skipFiles=0)
     lzsaHeader.Write32((uint32_t)(files.Count() - skipFiles));
 
     for (size_t i = skipFiles; i < files.Count(); i++) {
-        ScopedMem<WCHAR> filePath(str::Dup(files.At(i)));
+        AutoFreeW filePath(str::Dup(files.At(i)));
         WCHAR *sep = str::FindCharLast(filePath, ':');
         ScopedMem<char> utf8Name;
         if (sep) {

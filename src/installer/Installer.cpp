@@ -68,7 +68,7 @@ int gButtonDy = 0;
 static WStrVec gProcessesToClose;
 static float gUiDPIFactor = 1.0f;
 
-static ScopedMem<WCHAR> gMsg;
+static AutoFreeW gMsg;
 static Color gMsgColor;
 
 Color gCol1(196, 64, 50);
@@ -209,7 +209,7 @@ const WCHAR* GetOwnPath() {
 }
 
 static WCHAR* GetInstallationDir() {
-    ScopedMem<WCHAR> dir(ReadRegStr(HKEY_CURRENT_USER, REG_PATH_UNINST, L"InstallLocation"));
+    AutoFreeW dir(ReadRegStr(HKEY_CURRENT_USER, REG_PATH_UNINST, L"InstallLocation"));
     if (!dir)
         dir.Set(ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_UNINST, L"InstallLocation"));
     if (dir) {
@@ -262,7 +262,7 @@ static WCHAR* GetPdfPreviewerPath() {
 
 WCHAR* GetShortcutPath(bool allUsers) {
     // CSIDL_COMMON_PROGRAMS => installing for all users
-    ScopedMem<WCHAR> dir(GetSpecialFolder(allUsers ? CSIDL_COMMON_PROGRAMS : CSIDL_PROGRAMS));
+    AutoFreeW dir(GetSpecialFolder(allUsers ? CSIDL_COMMON_PROGRAMS : CSIDL_PROGRAMS));
     if (!dir)
         return nullptr;
     return path::Join(dir, APP_NAME_STR L".lnk");
@@ -270,7 +270,7 @@ WCHAR* GetShortcutPath(bool allUsers) {
 
 /* if the app is running, we have to kill it so that we can over-write the executable */
 void KillSumatra() {
-    ScopedMem<WCHAR> exePath(GetInstalledExePath());
+    AutoFreeW exePath(GetInstalledExePath());
     KillProcess(exePath, true);
 }
 
@@ -302,7 +302,7 @@ void InvalidateFrame() {
 }
 
 bool CreateProcessHelper(const WCHAR* exe, const WCHAR* args) {
-    ScopedMem<WCHAR> cmd(str::Format(L"\"%s\" %s", exe, args ? args : L""));
+    AutoFreeW cmd(str::Format(L"\"%s\" %s", exe, args ? args : L""));
     ScopedHandle process(LaunchProcess(cmd));
     return process != nullptr;
 }
@@ -315,7 +315,7 @@ static bool RegisterServerDLL(const WCHAR* dllPath, bool install, const WCHAR* a
     // make sure that the DLL can find any DLLs it depends on and
     // which reside in the same directory (in this case: libmupdf.dll)
     if (DynSetDllDirectoryW) {
-        ScopedMem<WCHAR> dllDir(path::GetDir(dllPath));
+        AutoFreeW dllDir(path::GetDir(dllPath));
         DynSetDllDirectoryW(dllDir);
     }
 
@@ -353,8 +353,8 @@ static bool IsUsingInstallation(DWORD procId) {
     if (snap == INVALID_HANDLE_VALUE)
         return false;
 
-    ScopedMem<WCHAR> libmupdf(path::Join(gGlobalData.installDir, L"libmupdf.dll"));
-    ScopedMem<WCHAR> browserPlugin(GetBrowserPluginPath());
+    AutoFreeW libmupdf(path::Join(gGlobalData.installDir, L"libmupdf.dll"));
+    AutoFreeW browserPlugin(GetBrowserPluginPath());
 
     MODULEENTRY32 mod = {0};
     mod.dwSize = sizeof(mod);
@@ -410,7 +410,7 @@ static const WCHAR* ReadableProcName(const WCHAR* procPath) {
 }
 
 static void SetCloseProcessMsg() {
-    ScopedMem<WCHAR> procNames(str::Dup(ReadableProcName(gProcessesToClose.At(0))));
+    AutoFreeW procNames(str::Dup(ReadableProcName(gProcessesToClose.At(0))));
     for (size_t i = 1; i < gProcessesToClose.Count(); i++) {
         const WCHAR* name = ReadableProcName(gProcessesToClose.At(i));
         if (i < gProcessesToClose.Count() - 1)
@@ -418,7 +418,7 @@ static void SetCloseProcessMsg() {
         else
             procNames.Set(str::Join(procNames, L" and ", name));
     }
-    ScopedMem<WCHAR> s(str::Format(_TR("Please close %s to proceed!"), procNames));
+    AutoFreeW s(str::Format(_TR("Please close %s to proceed!"), procNames));
     SetMsg(s, COLOR_MSG_FAILED);
 }
 
@@ -440,7 +440,7 @@ bool CheckInstallUninstallPossible(bool silent) {
 }
 
 void UninstallBrowserPlugin() {
-    ScopedMem<WCHAR> dllPath(GetBrowserPluginPath());
+    AutoFreeW dllPath(GetBrowserPluginPath());
     if (!file::Exists(dllPath)) {
         // uninstall the detected plugin, even if it isn't in the target installation path
         dllPath.Set(GetInstalledBrowserPluginPath());
@@ -452,26 +452,26 @@ void UninstallBrowserPlugin() {
 }
 
 void InstallPdfFilter() {
-    ScopedMem<WCHAR> dllPath(GetPdfFilterPath());
+    AutoFreeW dllPath(GetPdfFilterPath());
     if (!RegisterServerDLL(dllPath, true))
         NotifyFailed(_TR("Couldn't install PDF search filter"));
 }
 
 void UninstallPdfFilter() {
-    ScopedMem<WCHAR> dllPath(GetPdfFilterPath());
+    AutoFreeW dllPath(GetPdfFilterPath());
     if (!RegisterServerDLL(dllPath, false))
         NotifyFailed(_TR("Couldn't uninstall PDF search filter"));
 }
 
 void InstallPdfPreviewer() {
-    ScopedMem<WCHAR> dllPath(GetPdfPreviewerPath());
+    AutoFreeW dllPath(GetPdfPreviewerPath());
     // TODO: RegisterServerDLL(dllPath, true, L"exts:pdf,...");
     if (!RegisterServerDLL(dllPath, true))
         NotifyFailed(_TR("Couldn't install PDF previewer"));
 }
 
 void UninstallPdfPreviewer() {
-    ScopedMem<WCHAR> dllPath(GetPdfPreviewerPath());
+    AutoFreeW dllPath(GetPdfPreviewerPath());
     // TODO: RegisterServerDLL(dllPath, false, L"exts:pdf,...");
     if (!RegisterServerDLL(dllPath, false))
         NotifyFailed(_TR("Couldn't uninstall PDF previewer"));
@@ -655,7 +655,7 @@ static void CalcLettersLayout(Graphics& g, Font* f, int dx) {
 }
 
 static REAL DrawMessage(Graphics& g, const WCHAR* msg, REAL y, REAL dx, Color color) {
-    ScopedMem<WCHAR> s(str::Dup(msg));
+    AutoFreeW s(str::Dup(msg));
 
     Font f(L"Impact", 16, FontStyleRegular);
     RectF maxbox(0, y, dx, 0);
@@ -986,14 +986,14 @@ bool CrashHandlerCanUseNet() {
 static void InstallInstallerCrashHandler() {
     // save symbols directly into %TEMP% (so that the installer doesn't
     // unnecessarily leave an empty directory behind if it doesn't have to)
-    ScopedMem<WCHAR> tempDir(path::GetTempPath());
+    AutoFreeW tempDir(path::GetTempPath());
     if (!tempDir || !dir::Exists(tempDir))
         tempDir.Set(GetSpecialFolder(CSIDL_LOCAL_APPDATA, true));
     {
         if (!tempDir || !dir::Exists(tempDir))
             return;
     }
-    ScopedMem<WCHAR> crashDumpPath(path::Join(tempDir, CRASH_DUMP_FILE_NAME));
+    AutoFreeW crashDumpPath(path::Join(tempDir, CRASH_DUMP_FILE_NAME));
     InstallCrashHandler(crashDumpPath, tempDir);
 }
 #endif

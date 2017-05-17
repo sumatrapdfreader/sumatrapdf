@@ -127,7 +127,7 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 
 STDAPI DllRegisterServer()
 {
-    ScopedMem<WCHAR> dllPath(path::GetAppPath());
+    AutoFreeW dllPath(path::GetAppPath());
     if (!dllPath)
         return HRESULT_FROM_WIN32(GetLastError());
 

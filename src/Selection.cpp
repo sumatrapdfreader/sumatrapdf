@@ -247,7 +247,7 @@ void CopySelectionToClipboard(WindowInfo *win)
     else
 #endif
     if (!dm->GetEngine()->IsImageCollection()) {
-        ScopedMem<WCHAR> selText;
+        AutoFreeW selText;
         bool isTextSelection = dm->textSelection->result.len > 0;
         if (isTextSelection) {
             selText.Set(dm->textSelection->ExtractText(L"\r\n"));

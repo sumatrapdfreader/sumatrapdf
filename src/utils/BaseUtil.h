@@ -422,8 +422,8 @@ public:
 };
 
 #include "GeomUtil.h"
-#include "Scoped.h"
 #include "StrUtil.h"
+#include "Scoped.h"
 #include "Vec.h"
 
 /* In debug mode, VS 2010 instrumentations complains about GetRValue() etc.

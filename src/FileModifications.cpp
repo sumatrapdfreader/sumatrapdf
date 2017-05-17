@@ -107,7 +107,7 @@ static Vec<PageAnnotation> *ParseFileModifications(const char *data)
 
 Vec<PageAnnotation> *LoadFileModifications(const WCHAR *filePath)
 {
-    ScopedMem<WCHAR> modificationsPath(str::Join(filePath, SMX_FILE_EXT));
+    AutoFreeW modificationsPath(str::Join(filePath, SMX_FILE_EXT));
     ScopedMem<char> data(file::ReadAll(modificationsPath, nullptr));
     return ParseFileModifications(data);
 }
@@ -118,7 +118,7 @@ bool SaveFileModifictions(const WCHAR *filePath, Vec<PageAnnotation> *list)
         return false;
     }
 
-    ScopedMem<WCHAR> modificationsPath(str::Join(filePath, SMX_FILE_EXT));
+    AutoFreeW modificationsPath(str::Join(filePath, SMX_FILE_EXT));
     str::Str<char> data;
     size_t offset = 0;
 
@@ -177,6 +177,6 @@ bool IsModificationsFile(const WCHAR *filePath)
 {
     if (!str::EndsWithI(filePath, SMX_FILE_EXT))
         return false;
-    ScopedMem<WCHAR> origPath(str::DupN(filePath, str::Len(filePath) - str::Len(SMX_FILE_EXT)));
+    AutoFreeW origPath(str::DupN(filePath, str::Len(filePath) - str::Len(SMX_FILE_EXT)));
     return file::Exists(origPath);
 }

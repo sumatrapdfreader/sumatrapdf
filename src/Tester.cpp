@@ -114,7 +114,7 @@ static void MobiSaveHtml(const WCHAR *filePathBase, MobiDoc *mb)
 {
     CrashAlwaysIf(!gSaveHtml);
 
-    ScopedMem<WCHAR> outFile(str::Join(filePathBase, L"_pp.html"));
+    AutoFreeW outFile(str::Join(filePathBase, L"_pp.html"));
 
     size_t htmlLen;
     const char *html = mb->GetHtmlData(htmlLen);
@@ -133,7 +133,7 @@ static void MobiSaveImage(const WCHAR *filePathBase, size_t imgNo, ImageData *im
         return;
     const WCHAR *ext = GfxFileExtFromData(img->data, img->len);
     CrashAlwaysIf(!ext);
-    ScopedMem<WCHAR> fileName(str::Format(L"%s_img_%d%s", filePathBase, imgNo, ext));
+    AutoFreeW fileName(str::Format(L"%s_img_%d%s", filePathBase, imgNo, ext));
     file::WriteAll(fileName.Get(), img->data, img->len);
 }
 
@@ -185,8 +185,8 @@ static void MobiTestFile(const WCHAR *filePath)
         // remove the file extension
         WCHAR *dir = MOBI_SAVE_DIR;
         dir::CreateAll(dir);
-        ScopedMem<WCHAR> fileName(str::Dup(path::GetBaseName(filePath)));
-        ScopedMem<WCHAR> filePathBase(path::Join(dir, fileName));
+        AutoFreeW fileName(str::Dup(path::GetBaseName(filePath)));
+        AutoFreeW filePathBase(path::Join(dir, fileName));
         WCHAR *ext = (WCHAR*)str::FindCharLast(filePathBase.Get(), '.');
         *ext = 0;
 

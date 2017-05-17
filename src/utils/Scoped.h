@@ -37,6 +37,33 @@ class ScopedMem {
     operator T*() const { return ptr; }
 };
 
+class AutoFreeW {
+    WCHAR* ptr;
+
+  public:
+    AutoFreeW() : ptr(nullptr) {}
+    explicit AutoFreeW(WCHAR* ptr) : ptr(ptr) {}
+    ~AutoFreeW() { free(ptr); }
+    void Set(WCHAR* newPtr) {
+        free(ptr);
+        ptr = newPtr;
+    }
+    void SetCopy(const WCHAR* newPtr) {
+        free(ptr);
+        ptr = nullptr;
+        if (newPtr) {
+            ptr = str::Dup(newPtr);
+        }
+    }
+    WCHAR* Get() const { return ptr; }
+    WCHAR* StealData() {
+        WCHAR* tmp = ptr;
+        ptr = nullptr;
+        return tmp;
+    }
+    operator WCHAR*() const { return ptr; }
+};
+
 class ScopedCritSec {
     CRITICAL_SECTION* cs;
 

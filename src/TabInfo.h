@@ -9,10 +9,10 @@ struct WatchedFile;
    be moved between windows once this is supported) */
 class TabInfo {
   public:
-    ScopedMem<WCHAR> filePath;
+    AutoFreeW filePath;
     Controller* ctrl = nullptr;
     // text of win->hwndFrame when the tab is selected
-    ScopedMem<WCHAR> frameTitle;
+    AutoFreeW frameTitle;
     // state of the table of contents
     bool showToc = false;
     bool showTocPresentation = false;

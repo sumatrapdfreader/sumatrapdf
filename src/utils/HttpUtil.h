@@ -3,7 +3,7 @@
 
 class HttpRsp {
 public:
-    ScopedMem<WCHAR> url;
+    AutoFreeW url;
     str::Str<char>  data;
     DWORD           error;
     DWORD           httpStatusCode;

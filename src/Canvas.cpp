@@ -763,7 +763,7 @@ static LRESULT OnSetCursor(WindowInfo* win, HWND hwnd) {
                 DisplayModel* dm = win->AsFixed();
                 PageElement* pageEl = dm->GetElementAtPos(pt);
                 if (pageEl) {
-                    ScopedMem<WCHAR> text(pageEl->GetValue());
+                    AutoFreeW text(pageEl->GetValue());
                     RectI rc = dm->CvtToScreen(pageEl->GetPageNo(), pageEl->GetRect());
                     win->CreateInfotip(text, rc, true);
 
@@ -1280,7 +1280,7 @@ static void OnPaintError(WindowInfo* win) {
     ScopedGdiObj<HBRUSH> bgBrush(CreateSolidBrush(bgCol));
     FillRect(hdc, &ps.rcPaint, bgBrush);
     // TODO: should this be "Error opening %s"?
-    ScopedMem<WCHAR> msg(str::Format(_TR("Error loading %s"), win->currentTab->filePath));
+    AutoFreeW msg(str::Format(_TR("Error loading %s"), win->currentTab->filePath));
     DrawCenteredText(hdc, ClientRect(win->hwndCanvas), msg, IsUIRightToLeft());
     SelectObject(hdc, hPrevFont);
 
@@ -1383,7 +1383,7 @@ static void OnDropFiles(HDROP hDrop, bool dragFinish) {
     for (int i = 0; i < count; i++) {
         DragQueryFile(hDrop, i, filePath, dimof(filePath));
         if (str::EndsWithI(filePath, L".lnk")) {
-            ScopedMem<WCHAR> resolved(ResolveLnk(filePath));
+            AutoFreeW resolved(ResolveLnk(filePath));
             if (resolved)
                 str::BufSet(filePath, dimof(filePath), resolved);
         }
