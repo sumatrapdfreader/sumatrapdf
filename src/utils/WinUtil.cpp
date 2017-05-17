@@ -901,11 +901,13 @@ void SetText(HMENU m, UINT id, WCHAR *s) {
    (preserving all & so that they don't get swallowed)
    if no change is needed, the string is returned as is,
    else it's also saved in newResult for automatic freeing */
-const WCHAR *ToSafeString(const WCHAR *str, AutoFreeW &newResult) {
-    if (!str::FindChar(str, '&'))
+const WCHAR *ToSafeString(AutoFreeW& s) {
+    auto str = s.Get();
+    if (!str::FindChar(str, '&')) {
         return str;
-    newResult.Set(str::Replace(str, L"&", L"&&"));
-    return newResult.Get();
+    }
+    s.Set(str::Replace(str, L"&", L"&&"));
+    return s.Get();
 }
 }
 }

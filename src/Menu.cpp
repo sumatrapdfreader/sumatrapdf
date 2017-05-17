@@ -278,7 +278,8 @@ static void AddFileMenuItem(HMENU menuFile, const WCHAR* filePath, UINT index) {
     }
 
     AutoFreeW menuString;
-    const WCHAR* fileName = win::menu::ToSafeString(path::GetBaseName(filePath), menuString);
+    menuString.SetCopy(path::GetBaseName(filePath));
+    auto fileName = win::menu::ToSafeString(menuString);
     int menuIdx = (int)((index + 1) % 10);
     menuString.Set(str::Format(L"&%d) %s", menuIdx, fileName));
     UINT menuId = IDM_FILE_HISTORY_FIRST + index;

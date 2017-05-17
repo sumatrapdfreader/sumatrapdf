@@ -6,22 +6,15 @@
 // auto-free memory for arbitrary malloc()ed memory of type T*
 template <typename T>
 class ScopedMem {
+  public:
     T* ptr;
 
-  public:
     ScopedMem() : ptr(nullptr) {}
     explicit ScopedMem(T* ptr) : ptr(ptr) {}
     ~ScopedMem() { free(ptr); }
     void Set(T* newPtr) {
         free(ptr);
         ptr = newPtr;
-    }
-    void SetCopy(const T* newPtr) {
-        free(ptr);
-        ptr = nullptr;
-        if (newPtr) {
-            ptr = str::Dup(newPtr);
-        }
     }
     T* Get() const { return ptr; }
     T* StealData() {
@@ -32,8 +25,22 @@ class ScopedMem {
     operator T*() const { return ptr; }
 };
 
-typedef ScopedMem<char> AutoFree;
-typedef ScopedMem<WCHAR> AutoFreeW;
+template <typename T>
+class AutoFreeStr : public ScopedMem<T> {
+  public:
+    AutoFreeStr() { this->ptr = nullptr; }
+    explicit AutoFreeStr(T* ptr) { this->ptr = ptr; }
+    void SetCopy(const T* newPtr) {
+        free(ptr);
+        ptr = nullptr;
+        if (newPtr) {
+            ptr = str::Dup(newPtr);
+        }
+    }
+};
+
+typedef AutoFreeStr<char> AutoFree;
+typedef AutoFreeStr<WCHAR> AutoFreeW;
 
 class ScopedCritSec {
     CRITICAL_SECTION* cs;
