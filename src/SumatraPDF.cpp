@@ -369,8 +369,9 @@ WindowInfo* FindWindowInfoBySyncFile(const WCHAR *file, bool focusTab)
     for (WindowInfo *win : gWindows) {
         Vec<RectI> rects;
         UINT page;
-        if (win->AsFixed() && win->AsFixed()->pdfSync &&
-            win->AsFixed()->pdfSync->SourceToDoc(file, 0, 0, &page, rects) != PDFSYNCERR_UNKNOWN_SOURCEFILE) {
+        auto dm = win->AsFixed();
+        if (dm && dm->pdfSync &&
+            dm->pdfSync->SourceToDoc(file, 0, 0, &page, rects) != PDFSYNCERR_UNKNOWN_SOURCEFILE) {
             return win;
         }
         if (focusTab && win->tabs.Count() > 1) {
