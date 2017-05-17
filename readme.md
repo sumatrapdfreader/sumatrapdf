@@ -15,6 +15,10 @@ To get the code:
 
 Note: we use git submodules, so `--recursive` option is important.
 
+If you've already checked out without `--recursive` option, you can fix it with:
+* `git submodule init`
+* `git submodule update`
+
 Open:
 * `vs2017/SumatraPDF.sln` when using Visual Studio 2017
 * `vs2015/SumatraPDF.sln` when using Visual Studio 2015
