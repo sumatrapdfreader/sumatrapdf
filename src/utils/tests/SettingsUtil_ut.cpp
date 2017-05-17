@@ -141,7 +141,7 @@ Key = Value";
     for (int i = 0; i < 3; i++) {
         data = (SutStruct *)DeserializeStruct(&gSutStructInfo, serialized, data);
         utassert(data->internal == i);
-        ScopedMem<char> reserialized(SerializeStruct(&gSutStructInfo, data, i < 2 ? unknownOnly : serialized));
+        AutoFree reserialized(SerializeStruct(&gSutStructInfo, data, i < 2 ? unknownOnly : serialized));
         utassert(str::Eq(serialized, reserialized));
         data->internal++;
     }
@@ -159,9 +159,9 @@ Key = Value";
     utassert(2 == data->sutStructItems->At(1)->nested.colorArray->Count());
     utassert(0x12785634 == data->sutStructItems->At(1)->nested.colorArray->At(0));
     utassert(!data->internalString);
-    utassert(!str::Eq(serialized, ScopedMem<char>(SerializeStruct(&gSutStructInfo, data))));
+    utassert(!str::Eq(serialized, AutoFree(SerializeStruct(&gSutStructInfo, data))));
     data->sutStructItems->At(0)->nested.point.x++;
-    utassert(!str::Eq(serialized, ScopedMem<char>(SerializeStruct(&gSutStructInfo, data, unknownOnly))));
+    utassert(!str::Eq(serialized, AutoFree(SerializeStruct(&gSutStructInfo, data, unknownOnly))));
     FreeStruct(&gSutStructInfo, data);
 
     data = (SutStruct *)DeserializeStruct(&gSutStructInfo, nullptr);

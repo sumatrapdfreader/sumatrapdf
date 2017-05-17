@@ -395,7 +395,7 @@ const unsigned char *ChmModel::GetDataForUrl(const WCHAR *url, size_t *len)
     ChmCacheEntry *e = FindDataForUrl(plainUrl);
     if (!e) {
         e = new ChmCacheEntry(Allocator::StrDup(&poolAlloc, plainUrl));
-        ScopedMem<char> urlUtf8(str::conv::ToUtf8(plainUrl));
+        AutoFree urlUtf8(str::conv::ToUtf8(plainUrl));
         e->data = doc->GetData(urlUtf8, &e->size);
         if (!e->data) {
             delete e;
@@ -424,7 +424,7 @@ void ChmModel::OnLButtonDown()
 PageDestination *ChmModel::GetNamedDest(const WCHAR *name)
 {
     AutoFreeW plainUrl(url::GetFullPath(name));
-    ScopedMem<char> urlUtf8(str::conv::ToUtf8(plainUrl));
+    AutoFree urlUtf8(str::conv::ToUtf8(plainUrl));
     if (!doc->HasData(urlUtf8)) {
         unsigned int topicID;
         if (str::Parse(name, L"%u%$", &topicID)) {
@@ -593,7 +593,7 @@ public:
         UNUSED(len);
         ScopedCritSec scope(&docAccess);
         AutoFreeW plainUrl(url::GetFullPath(url));
-        ScopedMem<char> urlUtf8(str::conv::ToUtf8(plainUrl));
+        AutoFree urlUtf8(str::conv::ToUtf8(plainUrl));
         data.Append(doc->GetData(urlUtf8, len));
         return data.Last();
     }

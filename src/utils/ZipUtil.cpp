@@ -265,7 +265,7 @@ bool ZipCreator::AddFileData(const char *nameUtf8, const void *data, size_t size
 
     uint16_t method = Z_DEFLATED;
     uLongf compressedSize = (uint32_t)size;
-    ScopedMem<char> compressed((char *)malloc(size));
+    AutoFree compressed((char *)malloc(size));
     if (!compressed)
         return false;
     compressedSize = zip_deflate(compressed, (uint32_t)size, data, (uint32_t)size);
@@ -319,7 +319,7 @@ bool ZipCreator::AddFileData(const char *nameUtf8, const void *data, size_t size
 bool ZipCreator::AddFile(const WCHAR *filePath, const WCHAR *nameInZip)
 {
     size_t filelen;
-    ScopedMem<char> filedata(file::ReadAll(filePath, &filelen));
+    AutoFree filedata(file::ReadAll(filePath, &filelen));
     if (!filedata)
         return false;
 
@@ -336,7 +336,7 @@ bool ZipCreator::AddFile(const WCHAR *filePath, const WCHAR *nameInZip)
 
     if (!nameInZip)
         nameInZip = path::IsAbsolute(filePath) ? path::GetBaseName(filePath) : filePath;
-    ScopedMem<char> nameUtf8(str::conv::ToUtf8(nameInZip));
+    AutoFree nameUtf8(str::conv::ToUtf8(nameInZip));
     str::TransChars(nameUtf8, "\\", "/");
 
     return AddFileData(nameUtf8, filedata, filelen, dosdatetime);

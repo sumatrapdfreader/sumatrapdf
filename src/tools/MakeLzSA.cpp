@@ -92,7 +92,7 @@ ReusePrevious:
     }
 
     size_t fileDataLen;
-    ScopedMem<char> fileData(file::ReadAll(filePath, &fileDataLen));
+    AutoFree fileData(file::ReadAll(filePath, &fileDataLen));
     if (!fileData || fileDataLen >= UINT32_MAX) {
         fprintf(stderr, "Failed to read \"%S\" for compression\n", filePath);
         return false;
@@ -102,7 +102,7 @@ ReusePrevious:
         goto ReusePrevious;
 
     size_t compressedSize = fileDataLen + 1;
-    ScopedMem<char> compressed((char *)malloc(compressedSize));
+    AutoFree compressed((char *)malloc(compressedSize));
     if (!compressed)
         return false;
     if (!Compress(fileData, fileDataLen, compressed, &compressedSize))
@@ -126,7 +126,7 @@ ReusePrevious:
 bool CreateArchive(const WCHAR *archivePath, WStrVec& files, size_t skipFiles=0)
 {
     size_t prevDataLen = 0;
-    ScopedMem<char> prevData(file::ReadAll(archivePath, &prevDataLen));
+    AutoFree prevData(file::ReadAll(archivePath, &prevDataLen));
     lzma::SimpleArchive prevArchive;
     if (!lzma::ParseSimpleArchive(prevData, prevDataLen, &prevArchive))
         prevArchive.filesCount = 0;
@@ -141,7 +141,7 @@ bool CreateArchive(const WCHAR *archivePath, WStrVec& files, size_t skipFiles=0)
     for (size_t i = skipFiles; i < files.Count(); i++) {
         AutoFreeW filePath(str::Dup(files.At(i)));
         WCHAR *sep = str::FindCharLast(filePath, ':');
-        ScopedMem<char> utf8Name;
+        AutoFree utf8Name;
         if (sep) {
             utf8Name.Set(str::conv::ToUtf8(sep + 1));
             *sep = '\0';
@@ -180,7 +180,7 @@ int mainVerify(const WCHAR *archivePath)
 {
     int errorStep = 1;
     size_t fileDataLen;
-    ScopedMem<char> fileData(file::ReadAll(archivePath, &fileDataLen));
+    AutoFree fileData(file::ReadAll(archivePath, &fileDataLen));
     FailIf(!fileData, "Failed to read \"%S\"", archivePath);
 
     lzma::SimpleArchive lzsa;
@@ -188,7 +188,7 @@ int mainVerify(const WCHAR *archivePath)
     FailIf(!ok, "\"%S\" is no valid LzSA file", archivePath);
 
     for (int i = 0; i < lzsa.filesCount; i++) {
-        ScopedMem<char> data(lzma::GetFileDataByIdx(&lzsa, i, nullptr));
+        AutoFree data(lzma::GetFileDataByIdx(&lzsa, i, nullptr));
         FailIf(!data, "Failed to extract data for \"%s\"", lzsa.files[i].name);
     }
 

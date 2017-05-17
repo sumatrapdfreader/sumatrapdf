@@ -11,7 +11,7 @@ static bool TestDigestMD5(const char *data, size_t size, const char *verify)
 {
     unsigned char digest[16];
     CalcMD5Digest((const unsigned char *)data, size, digest);
-    ScopedMem<char> hash(_MemToHex(&digest));
+    AutoFree hash(_MemToHex(&digest));
     return str::Eq(hash, verify);
 }
 
@@ -19,7 +19,7 @@ static bool TestDigestSHA1(const char *data, size_t size, const char *verify)
 {
     unsigned char digest[20];
     CalcSHA1Digest((const unsigned char *)data, size, digest);
-    ScopedMem<char> hash(_MemToHex(&digest));
+    AutoFree hash(_MemToHex(&digest));
     return str::Eq(hash, verify);
 }
 
@@ -27,7 +27,7 @@ static bool TestDigestSHA2(const char *data, size_t size, const char *verify)
 {
     unsigned char digest[32];
     CalcSHA2Digest((const unsigned char *)data, size, digest);
-    ScopedMem<char> hash(_MemToHex(&digest));
+    AutoFree hash(_MemToHex(&digest));
     return str::Eq(hash, verify);
 }
 

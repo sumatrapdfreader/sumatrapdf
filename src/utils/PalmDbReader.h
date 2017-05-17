@@ -5,7 +5,7 @@
 #define kPdbHeaderLen 78
 
 class PdbReader {
-    ScopedMem<char> data;
+    AutoFree data;
     size_t          dataSize;
     // offset of each pdb record within the file + a sentinel
     // value equal to file size to simplify use

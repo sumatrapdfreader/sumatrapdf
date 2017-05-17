@@ -10,7 +10,7 @@
 void HtmlPrettyPrintTest()
 {
     size_t lenOut;
-    ScopedMem<char> data;
+    AutoFree data;
 
     data.Set(PrettyPrintHtml("<p><b>Test</b></p>", (size_t)-1, lenOut));
     utassert(str::Len(data) == lenOut && str::Eq(data, "<p><b>Test</b></p>\n"));

@@ -189,7 +189,7 @@ void InitializePolicies(bool restrict)
         return;
     }
 
-    ScopedMem<char> restrictData(file::ReadAll(restrictPath, nullptr));
+    AutoFree restrictData(file::ReadAll(restrictPath, nullptr));
     SquareTree sqt(restrictData);
     SquareTreeNode *polsec = sqt.root ? sqt.root->GetChild("Policies") : nullptr;
     // if the restriction file is broken, err on the side of full restriction
@@ -255,7 +255,7 @@ bool LaunchBrowser(const WCHAR *url)
             return false;
         HWND plugin = gWindows.At(0)->hwndFrame;
         HWND parent = GetAncestor(plugin, GA_PARENT);
-        ScopedMem<char> urlUtf8(str::conv::ToUtf8(url));
+        AutoFree urlUtf8(str::conv::ToUtf8(url));
         if (!parent || !urlUtf8 || str::Len(urlUtf8) > 4096)
             return false;
         COPYDATASTRUCT cds = { 0x4C5255 /* URL */, (DWORD)str::Len(urlUtf8) + 1, urlUtf8.Get() };
@@ -419,7 +419,7 @@ WCHAR *HwndPasswordUI::GetPassword(const WCHAR *fileName, unsigned char *fileDig
 {
     DisplayState *fileFromHistory = gFileHistory.Find(fileName);
     if (fileFromHistory && fileFromHistory->decryptionKey) {
-        ScopedMem<char> fingerprint(str::MemToHex(fileDigest, 16));
+        AutoFree fingerprint(str::MemToHex(fileDigest, 16));
         *saveKey = str::StartsWith(fileFromHistory->decryptionKey, fingerprint.Get());
         if (*saveKey && str::HexToMem(fileFromHistory->decryptionKey + 32, decryptionKeyOut, 32))
             return nullptr;
@@ -692,7 +692,7 @@ static void CreateThumbnailForFile(WindowInfo& win, DisplayState& ds)
     // don't create thumbnails for password protected documents
     // (unless we're also remembering the decryption key anyway)
     if (win.AsFixed() && win.AsFixed()->GetEngine()->IsPasswordProtected() &&
-        !ScopedMem<char>(win.AsFixed()->GetEngine()->GetDecryptionKey())) {
+        !AutoFree(win.AsFixed()->GetEngine()->GetDecryptionKey())) {
         RemoveThumbnail(ds);
         return;
     }
@@ -1206,7 +1206,7 @@ void ReloadDocument(WindowInfo *win, bool autorefresh)
     if (tab->AsFixed()) {
         // save a newly remembered password into file history so that
         // we don't ask again at the next refresh
-        ScopedMem<char> decryptionKey(tab->AsFixed()->GetEngine()->GetDecryptionKey());
+        AutoFree decryptionKey(tab->AsFixed()->GetEngine()->GetDecryptionKey());
         if (decryptionKey) {
             DisplayState *state = gFileHistory.Find(ds->filePath);
             if (state && !str::Eq(state->decryptionKey, decryptionKey)) {
@@ -1792,7 +1792,7 @@ bool AutoUpdateInitiate(const char *updateData)
 
     unsigned char digest[32];
     CalcSHA2Digest((const unsigned char *)rsp.data.Get(), rsp.data.Size(), digest);
-    ScopedMem<char> fingerPrint(_MemToHex(&digest));
+    AutoFree fingerPrint(_MemToHex(&digest));
     if (!str::EqI(fingerPrint, hash))
         return false;
 
@@ -2378,7 +2378,7 @@ static void OnMenuSaveAs(WindowInfo& win)
         realDstFileName = str::Format(L"%s%s", dstFileName, defExt);
     }
 
-    ScopedMem<char> pathUtf8(str::conv::ToUtf8(realDstFileName));
+    AutoFree pathUtf8(str::conv::ToUtf8(realDstFileName));
     AutoFreeW errorMsg;
     // Extract all text when saving as a plain text file
     if (convertToTXT) {
@@ -2388,8 +2388,8 @@ static void OnMenuSaveAs(WindowInfo& win)
             text.AppendAndFree(tmp);
         }
 
-        ScopedMem<char> textUTF8(str::conv::ToUtf8(text.LendData()));
-        ScopedMem<char> textUTF8BOM(str::Join(UTF8_BOM, textUTF8));
+        AutoFree textUTF8(str::conv::ToUtf8(text.LendData()));
+        AutoFree textUTF8BOM(str::Join(UTF8_BOM, textUTF8));
         ok = file::WriteAll(realDstFileName, textUTF8BOM, str::Len(textUTF8BOM));
     } else if (convertToPDF) {
         // Convert the file into a PDF one

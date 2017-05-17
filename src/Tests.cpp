@@ -32,7 +32,7 @@ void TestRenderPage(const CommandLineInfo& i) {
         zoom = i.startZoom;
     }
     for (auto fileName : files) {
-        ScopedMem<char> fileNameUtf(str::conv::ToUtf8(fileName));
+        AutoFree fileNameUtf(str::conv::ToUtf8(fileName));
         printf("rendering page %d for '%s', zoom: %.2f\n", i.pageNumber, fileNameUtf.Get(), zoom);
         auto engine = EngineManager::CreateEngine(fileName);
         if (engine == nullptr) {
@@ -64,7 +64,7 @@ void TestExtractPage(const CommandLineInfo& i) {
         return;
     }
     for (auto fileName : files) {
-        ScopedMem<char> fileNameUtf(str::conv::ToUtf8(fileName));
+        AutoFree fileNameUtf(str::conv::ToUtf8(fileName));
         auto engine = EngineManager::CreateEngine(fileName);
         if (engine == nullptr) {
             printf("failed to create engine for file '%s'\n", fileNameUtf.Get());

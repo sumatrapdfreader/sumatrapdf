@@ -25,7 +25,7 @@ public:
 };
 
 class SquareTree {
-    ScopedMem<char> dataUtf8;
+    AutoFree dataUtf8;
 
 public:
     explicit SquareTree(const char *data);

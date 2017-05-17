@@ -409,7 +409,7 @@ static void GetProcessorName(str::Str<char>& s)
     if (!name)
         return;
 
-    ScopedMem<char> tmp(str::conv::ToUtf8(name));
+    AutoFree tmp(str::conv::ToUtf8(name));
     s.AppendFmt("Processor: %s\r\n", tmp.Get());
     free(name);
 }
@@ -418,8 +418,8 @@ static void GetMachineName(str::Str<char>& s)
 {
     WCHAR *s1 = ReadRegStr(HKEY_LOCAL_MACHINE, L"HARDWARE\\DESCRIPTION\\System\\BIOS", L"SystemFamily");
     WCHAR *s2 = ReadRegStr(HKEY_LOCAL_MACHINE, L"HARDWARE\\DESCRIPTION\\System\\BIOS", L"SystemVersion");
-    ScopedMem<char> s1u(s1 ? str::conv::ToUtf8(s1) : nullptr);
-    ScopedMem<char> s2u(s2 ? str::conv::ToUtf8(s2) : nullptr);
+    AutoFree s1u(s1 ? str::conv::ToUtf8(s1) : nullptr);
+    AutoFree s2u(s2 ? str::conv::ToUtf8(s2) : nullptr);
 
     if (!s1u && !s2u)
         ; // pass
@@ -453,7 +453,7 @@ static void GetGraphicsDriverInfo(str::Str<char>& s)
         // I assume that if I can't read the value, there are no more drivers
         if (!v1)
             break;
-        ScopedMem<char> v1a(str::conv::ToUtf8(v1));
+        AutoFree v1a(str::conv::ToUtf8(v1));
         s.AppendFmt("Graphics driver %d\r\n", i);
         s.AppendFmt("  DriverDesc:         %s\r\n", v1.Get());
         v1.Set(ReadRegStr(HKEY_LOCAL_MACHINE, key, L"DriverVersion"));
@@ -514,10 +514,10 @@ static bool GetModules(str::Str<char>& s)
     mod.dwSize = sizeof(mod);
     BOOL cont = Module32First(snap, &mod);
     while (cont) {
-        ScopedMem<char> nameA(str::conv::ToUtf8(mod.szModule));
+        AutoFree nameA(str::conv::ToUtf8(mod.szModule));
         if (str::EqI(nameA.Get(), "winex11.drv"))
             isWine = true;
-        ScopedMem<char> pathA(str::conv::ToUtf8(mod.szExePath));
+        AutoFree pathA(str::conv::ToUtf8(mod.szExePath));
         s.AppendFmt("Module: %p %06X %-16s %s\r\n", mod.modBaseAddr, mod.modBaseSize, nameA.Get(), pathA.Get());
         cont = Module32Next(snap, &mod);
     }

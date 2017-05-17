@@ -27,7 +27,7 @@ class DjVuDestination : public PageDestination {
     //   #[+-]<pageCount>  e.g. #+1 for NextPage and #-1 for PrevPage
     //   #filename.djvu    use ResolveNamedDest to get a link in #<pageNo> format
     //   http://example.net/#hyperlink
-    ScopedMem<char> link;
+    AutoFree link;
 
     bool IsPageLink(const char *link) const {
         return link && link[0] == '#' && (str::IsDigit(link[1]) || link[1] == ' ' && str::IsDigit(link[2]));
@@ -155,7 +155,7 @@ public:
 
     ddjvu_document_t *OpenFile(const WCHAR *fileName) {
         ScopedCritSec scope(&lock);
-        ScopedMem<char> fileNameUtf8(str::conv::ToUtf8(fileName));
+        AutoFree fileNameUtf8(str::conv::ToUtf8(fileName));
         // TODO: libdjvu sooner or later crashes inside its caching code; cf.
         //       http://code.google.com/p/sumatrapdf/issues/detail?id=1434
         return ddjvu_document_create_by_filename_utf8(ctx, fileNameUtf8, /* cache */ FALSE);
@@ -164,7 +164,7 @@ public:
     ddjvu_document_t *OpenStream(IStream *stream) {
         ScopedCritSec scope(&lock);
         size_t datalen;
-        ScopedMem<char> data((char *)GetDataFromStream(stream, &datalen));
+        AutoFree data((char *)GetDataFromStream(stream, &datalen));
         if (!data || datalen > ULONG_MAX)
             return nullptr;
         return ddjvu_document_create_by_data(ctx, data, (ULONG)datalen);
@@ -576,7 +576,7 @@ RenderedBitmap *DjVuEngineImpl::RenderBitmap(int pageNo, float zoom, int rotatio
 
     RenderedBitmap *bmp = nullptr;
     int stride = ((screen.dx * (isBitonal ? 1 : 3) + 3) / 4) * 4;
-    ScopedMem<char> bmpData(AllocArray<char>(stride * (screen.dy + 5)));
+    AutoFree bmpData(AllocArray<char>(stride * (screen.dy + 5)));
     if (bmpData) {
 #ifndef DEBUG
         ddjvu_render_mode_t mode = isBitonal ? DDJVU_RENDER_MASKONLY : DDJVU_RENDER_COLOR;
@@ -623,7 +623,7 @@ RectD DjVuEngineImpl::PageContentBox(int pageNo, RenderTarget target)
     RectI full = RectD(0, 0, pageRc.dx * zoom, pageRc.dy * zoom).Round();
     ddjvu_rect_t prect = { full.x, full.y, full.dx, full.dy }, rrect = prect;
 
-    ScopedMem<char> bmpData(AllocArray<char>(full.dx * full.dy + 1));
+    AutoFree bmpData(AllocArray<char>(full.dx * full.dy + 1));
     if (bmpData && ddjvu_page_render(page, DDJVU_RENDER_MASKONLY, &prect, &rrect, fmt, full.dx, bmpData.Get())) {
         // determine the content box by counting white pixels from the edges
         RectD content(full.dx, -1, 0, 0);
@@ -921,7 +921,7 @@ Vec<PageElement *> *DjVuEngineImpl::GetElements(int pageNo)
         }
         RectI rect(x, page.dy - y - h, w, h);
 
-        ScopedMem<char> link(ResolveNamedDest(urlUtf8));
+        AutoFree link(ResolveNamedDest(urlUtf8));
         els->Append(new DjVuLink(pageNo, rect, link ? link : urlUtf8, commentUtf8));
     }
     ddjvu_free(links);
@@ -971,11 +971,11 @@ char *DjVuEngineImpl::ResolveNamedDest(const char *name)
 
 PageDestination *DjVuEngineImpl::GetNamedDest(const WCHAR *name)
 {
-    ScopedMem<char> nameUtf8(str::conv::ToUtf8(name));
+    AutoFree nameUtf8(str::conv::ToUtf8(name));
     if (!str::StartsWith(nameUtf8.Get(), "#"))
         nameUtf8.Set(str::Join("#", nameUtf8));
 
-    ScopedMem<char> link(ResolveNamedDest(nameUtf8));
+    AutoFree link(ResolveNamedDest(nameUtf8));
     if (link)
         return new DjVuDestination(link);
     return nullptr;
@@ -995,7 +995,7 @@ DjVuTocItem *DjVuEngineImpl::BuildTocTree(miniexp_t entry, int& idCounter)
         const char *link = miniexp_to_str(miniexp_cadr(item));
 
         DjVuTocItem *tocItem = nullptr;
-        ScopedMem<char> linkNo(ResolveNamedDest(link));
+        AutoFree linkNo(ResolveNamedDest(link));
         if (!linkNo)
             tocItem = new DjVuTocItem(name, link);
         else if (!str::IsEmpty(name) && !str::Eq(name, link + 1))
@@ -1043,7 +1043,7 @@ WCHAR *DjVuEngineImpl::GetPageLabel(int pageNo) const
 
 int DjVuEngineImpl::GetPageByLabel(const WCHAR *label) const
 {
-    ScopedMem<char> labelUtf8(str::conv::ToUtf8(label));
+    AutoFree labelUtf8(str::conv::ToUtf8(label));
     for (size_t i = 0; i < fileInfo.Count(); i++) {
         ddjvu_fileinfo_t& info = fileInfo.At(i);
         if (str::EqI(info.title, labelUtf8) && !str::Eq(info.title, info.id))

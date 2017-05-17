@@ -23,11 +23,6 @@ class ScopedMem {
             ptr = str::Dup(newPtr);
         }
     }
-    ScopedMem& operator=(T* newPtr) {
-        free(ptr);
-        ptr = newPtr;
-        return *this;
-    }
     T* Get() const { return ptr; }
     T* StealData() {
         T* tmp = ptr;
@@ -37,32 +32,8 @@ class ScopedMem {
     operator T*() const { return ptr; }
 };
 
-class AutoFreeW {
-    WCHAR* ptr;
-
-  public:
-    AutoFreeW() : ptr(nullptr) {}
-    explicit AutoFreeW(WCHAR* ptr) : ptr(ptr) {}
-    ~AutoFreeW() { free(ptr); }
-    void Set(WCHAR* newPtr) {
-        free(ptr);
-        ptr = newPtr;
-    }
-    void SetCopy(const WCHAR* newPtr) {
-        free(ptr);
-        ptr = nullptr;
-        if (newPtr) {
-            ptr = str::Dup(newPtr);
-        }
-    }
-    WCHAR* Get() const { return ptr; }
-    WCHAR* StealData() {
-        WCHAR* tmp = ptr;
-        ptr = nullptr;
-        return tmp;
-    }
-    operator WCHAR*() const { return ptr; }
-};
+typedef ScopedMem<char> AutoFree;
+typedef ScopedMem<WCHAR> AutoFreeW;
 
 class ScopedCritSec {
     CRITICAL_SECTION* cs;

@@ -378,7 +378,7 @@ bool ImageEngineImpl::LoadSingleFile(const WCHAR *file)
     SetFileName(file);
 
     size_t len;
-    ScopedMem<char> data(file::ReadAll(file, &len));
+    AutoFree data(file::ReadAll(file, &len));
     fileExt = GfxFileExtFromData(data, len);
 
     image = BitmapFromData(data, len);
@@ -399,7 +399,7 @@ bool ImageEngineImpl::LoadFromStream(IStream *stream)
         return false;
 
     size_t len;
-    ScopedMem<char> data((char *)GetDataFromStream(stream, &len));
+    AutoFree data((char *)GetDataFromStream(stream, &len));
     if (IsGdiPlusNativeFormat(data, len))
         image = Bitmap::FromStream(stream);
     else
@@ -532,11 +532,11 @@ bool ImageEngineImpl::SaveFileAsPDF(const char *pdfFileName, bool includeUserAnn
     PdfCreator *c = new PdfCreator();
     if (FileName()) {
         size_t len;
-        ScopedMem<char> data(file::ReadAll(FileName(), &len));
+        AutoFree data(file::ReadAll(FileName(), &len));
         ok = data && c->AddImagePage(data, len, GetFileDPI());
     } else {
         size_t len;
-        ScopedMem<char> data((char *)GetDataFromStream(fileStream, &len));
+        AutoFree data((char *)GetDataFromStream(fileStream, &len));
         ok = data && c->AddImagePage(data, len, GetFileDPI());
     }
     for (int i = 2; i <= PageCount() && ok; i++) {
@@ -746,7 +746,7 @@ bool ImageDirEngineImpl::SaveFileAs(const char *copyFileName, bool includeUserAn
 Bitmap *ImageDirEngineImpl::LoadBitmap(int pageNo, bool& deleteAfterUse)
 {
     size_t len;
-    ScopedMem<char> bmpData(file::ReadAll(pageFileNames.At(pageNo - 1), &len));
+    AutoFree bmpData(file::ReadAll(pageFileNames.At(pageNo - 1), &len));
     if (bmpData) {
         deleteAfterUse = true;
         return BitmapFromData(bmpData, len);
@@ -757,7 +757,7 @@ Bitmap *ImageDirEngineImpl::LoadBitmap(int pageNo, bool& deleteAfterUse)
 RectD ImageDirEngineImpl::LoadMediabox(int pageNo)
 {
     size_t len;
-    ScopedMem<char> bmpData(file::ReadAll(pageFileNames.At(pageNo - 1), &len));
+    AutoFree bmpData(file::ReadAll(pageFileNames.At(pageNo - 1), &len));
     if (bmpData) {
         Size size = BitmapSizeFromData(bmpData, len);
         return RectD(0, 0, size.Width, size.Height);
@@ -772,7 +772,7 @@ bool ImageDirEngineImpl::SaveFileAsPDF(const char *pdfFileName, bool includeUser
     PdfCreator *c = new PdfCreator();
     for (int i = 1; i <= PageCount() && ok; i++) {
         size_t len;
-        ScopedMem<char> data(file::ReadAll(pageFileNames.At(i - 1), &len));
+        AutoFree data(file::ReadAll(pageFileNames.At(i - 1), &len));
         ok = data && c->AddImagePage(data, len, GetFileDPI());
     }
     ok = ok && c->SaveToFile(pdfFileName);
@@ -922,7 +922,7 @@ bool CbxEngineImpl::FinishLoading()
     }
     AssertCrash(allFileNames.Count() == cbxFile->GetFileCount());
 
-    ScopedMem<char> metadata(cbxFile->GetFileDataByName(L"ComicInfo.xml"));
+    AutoFree metadata(cbxFile->GetFileDataByName(L"ComicInfo.xml"));
     if (metadata)
         ParseComicInfoXml(metadata);
     metadata.Set(cbxFile->GetComment());
@@ -968,34 +968,34 @@ void CbxEngineImpl::ParseComicInfoXml(const char *xmlData)
         if (!tok->IsStartTag())
             continue;
         if (tok->NameIs("Title")) {
-            ScopedMem<char> value(GetTextContent(parser));
+            AutoFree value(GetTextContent(parser));
             if (value)
                 Visit("/ComicBookInfo/1.0/title", value, json::Type_String);
         }
         else if (tok->NameIs("Year")) {
-            ScopedMem<char> value(GetTextContent(parser));
+            AutoFree value(GetTextContent(parser));
             if (value)
                 Visit("/ComicBookInfo/1.0/publicationYear", value, json::Type_Number);
         }
         else if (tok->NameIs("Month")) {
-            ScopedMem<char> value(GetTextContent(parser));
+            AutoFree value(GetTextContent(parser));
             if (value)
                 Visit("/ComicBookInfo/1.0/publicationMonth", value, json::Type_Number);
         }
         else if (tok->NameIs("Summary")) {
-            ScopedMem<char> value(GetTextContent(parser));
+            AutoFree value(GetTextContent(parser));
             if (value)
                 Visit("/X-summary", value, json::Type_String);
         }
         else if (tok->NameIs("Writer")) {
-            ScopedMem<char> value(GetTextContent(parser));
+            AutoFree value(GetTextContent(parser));
             if (value) {
                 Visit("/ComicBookInfo/1.0/credits[0]/person", value, json::Type_String);
                 Visit("/ComicBookInfo/1.0/credits[0]/primary", "true", json::Type_Bool);
             }
         }
         else if (tok->NameIs("Penciller")) {
-            ScopedMem<char> value(GetTextContent(parser));
+            AutoFree value(GetTextContent(parser));
             if (value) {
                 Visit("/ComicBookInfo/1.0/credits[1]/person", value, json::Type_String);
                 Visit("/ComicBookInfo/1.0/credits[1]/primary", "true", json::Type_Bool);
@@ -1045,7 +1045,7 @@ bool CbxEngineImpl::SaveFileAsPDF(const char *pdfFileName, bool includeUserAnnot
     PdfCreator *c = new PdfCreator();
     for (int i = 1; i <= PageCount() && ok; i++) {
         size_t len;
-        ScopedMem<char> data(GetImageData(i, len));
+        AutoFree data(GetImageData(i, len));
         ok = data && c->AddImagePage(data, len, GetFileDPI());
     }
     if (ok) {
@@ -1091,7 +1091,7 @@ const WCHAR *CbxEngineImpl::GetDefaultFileExt() const
 Bitmap *CbxEngineImpl::LoadBitmap(int pageNo, bool& deleteAfterUse)
 {
     size_t len;
-    ScopedMem<char> bmpData(GetImageData(pageNo, len));
+    AutoFree bmpData(GetImageData(pageNo, len));
     if (bmpData) {
         deleteAfterUse = true;
         return BitmapFromData(bmpData, len);
@@ -1110,7 +1110,7 @@ RectD CbxEngineImpl::LoadMediabox(int pageNo)
     }
 
     size_t len;
-    ScopedMem<char> bmpData(GetImageData(pageNo, len));
+    AutoFree bmpData(GetImageData(pageNo, len));
     if (bmpData) {
         Size size = BitmapSizeFromData(bmpData, len);
         return RectD(0, 0, size.Width, size.Height);

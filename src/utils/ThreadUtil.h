@@ -12,7 +12,7 @@ class ThreadBase {
 
   protected:
     // for debugging
-    ScopedMem<char> threadName;
+    AutoFree threadName;
 
     virtual ~ThreadBase();
 

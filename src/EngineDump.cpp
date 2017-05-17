@@ -46,7 +46,7 @@ char *Escape(WCHAR *string)
 void DumpProperties(BaseEngine *engine, bool fullDump)
 {
     Out("\t<Properties\n");
-    ScopedMem<char> str;
+    AutoFree str;
     str.Set(Escape(str::Dup(engine->FileName())));
     Out("\t\tFilePath=\"%s\"\n", str.Get());
     str.Set(Escape(engine->GetProperty(Prop_Title)));
@@ -107,7 +107,7 @@ void DumpProperties(BaseEngine *engine, bool fullDump)
 char *DestRectToStr(BaseEngine *engine, PageDestination *dest)
 {
     if (AutoFreeW(dest->GetDestName())) {
-        ScopedMem<char> name(Escape(dest->GetDestName()));
+        AutoFree name(Escape(dest->GetDestName()));
         return str::Format("Name=\"%s\"", name);
     }
     // as handled by LinkHandler::ScrollTo in WindowInfo.cpp
@@ -133,7 +133,7 @@ char *DestRectToStr(BaseEngine *engine, PageDestination *dest)
 void DumpTocItem(BaseEngine *engine, DocTocItem *item, int level, int& idCounter)
 {
     for (; item; item = item->next) {
-        ScopedMem<char> title(Escape(str::Dup(item->title)));
+        AutoFree title(Escape(str::Dup(item->title)));
         for (int i = 0; i < level; i++) Out("\t");
         Out("<Item Title=\"%s\"", title.Get());
         if (item->pageNo)
@@ -142,12 +142,12 @@ void DumpTocItem(BaseEngine *engine, DocTocItem *item, int level, int& idCounter
             Out(" Id=\"%d\"", item->id);
         if (item->GetLink()) {
             PageDestination *dest = item->GetLink();
-            ScopedMem<char> target(Escape(dest->GetDestValue()));
+            AutoFree target(Escape(dest->GetDestValue()));
             if (target)
                 Out(" Target=\"%s\"", target.Get());
             if (item->pageNo != dest->GetDestPageNo())
                 Out(" TargetPage=\"%d\"", dest->GetDestPageNo());
-            ScopedMem<char> rectStr(DestRectToStr(engine, dest));
+            AutoFree rectStr(DestRectToStr(engine, dest));
             if (rectStr)
                 Out(" Target%s", rectStr.Get());
         }
@@ -223,7 +223,7 @@ void DumpPageContent(BaseEngine *engine, int pageNo, bool fullDump)
 
     Out("\t<Page Number=\"%d\"\n", pageNo);
     if (engine->HasPageLabels()) {
-        ScopedMem<char> label(Escape(engine->GetPageLabel(pageNo)));
+        AutoFree label(Escape(engine->GetPageLabel(pageNo)));
         Out("\t\tLabel=\"%s\"\n", label.Get());
     }
     RectI bbox = engine->PageMediabox(pageNo).Round();
@@ -236,7 +236,7 @@ void DumpPageContent(BaseEngine *engine, int pageNo, bool fullDump)
     Out("\t>\n");
 
     if (fullDump) {
-        ScopedMem<char> text(Escape(engine->ExtractPageText(pageNo, L"\n")));
+        AutoFree text(Escape(engine->ExtractPageText(pageNo, L"\n")));
         if (text)
             Out("\t\t<TextContent>\n%s\t\t</TextContent>\n", text.Get());
     }
@@ -252,16 +252,16 @@ void DumpPageContent(BaseEngine *engine, int pageNo, bool fullDump)
             if (dest) {
                 if (dest->GetDestType() != Dest_None)
                     Out("\t\t\t\tLinkType=\"%s\"\n", PageDestToStr(dest->GetDestType()));
-                ScopedMem<char> value(Escape(dest->GetDestValue()));
+                AutoFree value(Escape(dest->GetDestValue()));
                 if (value)
                     Out("\t\t\t\tLinkTarget=\"%s\"\n", value.Get());
                 if (dest->GetDestPageNo())
                     Out("\t\t\t\tLinkedPage=\"%d\"\n", dest->GetDestPageNo());
-                ScopedMem<char> rectStr(DestRectToStr(engine, dest));
+                AutoFree rectStr(DestRectToStr(engine, dest));
                 if (rectStr)
                     Out("\t\t\t\tLinked%s\n", rectStr.Get());
             }
-            ScopedMem<char> name(Escape(els->At(i)->GetValue()));
+            AutoFree name(Escape(els->At(i)->GetValue()));
             if (name)
                 Out("\t\t\t\tLabel=\"%s\"\n", name.Get());
             Out("\t\t\t/>\n");
@@ -293,7 +293,7 @@ void DumpThumbnail(BaseEngine *engine)
 
     size_t len;
     ScopedMem<unsigned char> data(tga::SerializeBitmap(bmp->GetBitmap(), &len));
-    ScopedMem<char> hexData(data ? str::MemToHex(data, len) : nullptr);
+    AutoFree hexData(data ? str::MemToHex(data, len) : nullptr);
     if (hexData)
         Out("\t<Thumbnail>\n\t\t%s\n\t</Thumbnail>\n", hexData.Get());
     else
@@ -350,8 +350,8 @@ bool RenderDocument(BaseEngine *engine, const WCHAR *renderPath, float zoom=1.f,
         if (silent)
             return true;
         AutoFreeW txtFilePath(str::Format(renderPath, 0));
-        ScopedMem<char> textUTF8(str::conv::ToUtf8(text.Get()));
-        ScopedMem<char> textUTF8BOM(str::Join(UTF8_BOM, textUTF8));
+        AutoFree textUTF8(str::conv::ToUtf8(text.Get()));
+        AutoFree textUTF8BOM(str::Join(UTF8_BOM, textUTF8));
         return file::WriteAll(txtFilePath, textUTF8BOM, str::Len(textUTF8BOM));
     }
 
@@ -360,7 +360,7 @@ bool RenderDocument(BaseEngine *engine, const WCHAR *renderPath, float zoom=1.f,
             return false;
         }
         AutoFreeW pdfFilePath(str::Format(renderPath, 0));
-        ScopedMem<char> pathUtf8(str::conv::ToUtf8(pdfFilePath.Get()));
+        AutoFree pathUtf8(str::conv::ToUtf8(pdfFilePath.Get()));
         if (engine->SaveFileAsPDF(pathUtf8, true)) {
             return true;
         }
@@ -385,7 +385,7 @@ bool RenderDocument(BaseEngine *engine, const WCHAR *renderPath, float zoom=1.f,
         }
         else if (str::EndsWithI(pageBmpPath, L".bmp")) {
             size_t bmpDataLen;
-            ScopedMem<char> bmpData((char *)SerializeBitmap(bmp->GetBitmap(), &bmpDataLen));
+            AutoFree bmpData((char *)SerializeBitmap(bmp->GetBitmap(), &bmpDataLen));
             if (bmpData)
                 file::WriteAll(pageBmpPath, bmpData, bmpDataLen);
         }

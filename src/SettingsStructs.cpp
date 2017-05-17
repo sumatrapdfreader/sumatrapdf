@@ -70,7 +70,7 @@
          dbglog::CrashLogF("Invalid ds->zoom: %g", zoom);
          const WCHAR *ext = path::GetExt(stateForIssue2140->filePath);
          if (!str::IsEmpty(ext)) {
-             ScopedMem<char> extA(str::conv::ToUtf8(ext));
+             AutoFree extA(str::conv::ToUtf8(ext));
              dbglog::CrashLogF("File type: %s", extA.Get());
          }
          dbglog::CrashLogF("DisplayMode: %S", stateForIssue2140->displayMode);

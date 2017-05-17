@@ -35,7 +35,7 @@ public:
 
     virtual void Log(const WCHAR *s)
     {
-        ScopedMem<char> utf8s(str::conv::ToUtf8(s));
+        AutoFree utf8s(str::conv::ToUtf8(s));
         if (utf8s && INVALID_HANDLE_VALUE != fh) {
             DWORD len;
             BOOL ok = WriteFile(fh, utf8s.Get(), (DWORD)str::Len(utf8s), &len, nullptr);

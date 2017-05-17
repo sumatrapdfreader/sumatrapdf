@@ -159,7 +159,7 @@ static BaseEngine *ps2pdf(const WCHAR *fileName)
         return nullptr;
 
     size_t len;
-    ScopedMem<char> pdfData(file::ReadAll(tmpFile, &len));
+    AutoFree pdfData(file::ReadAll(tmpFile, &len));
     if (!pdfData)
         return nullptr;
 

@@ -203,7 +203,7 @@ static char *Advance0Line(char *line, char *end)
 int Pdfsync::RebuildIndex()
 {
     size_t len;
-    ScopedMem<char> data(file::ReadAll(syncfilepath, &len));
+    AutoFree data(file::ReadAll(syncfilepath, &len));
     if (!data)
         return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
     // convert the file data into a list of zero-terminated strings
@@ -497,7 +497,7 @@ int SyncTex::RebuildIndex() {
     synctex_scanner_free(scanner);
     scanner = nullptr;
 
-    ScopedMem<char> syncfname(str::conv::ToAnsi(syncfilepath));
+    AutoFree syncfname(str::conv::ToAnsi(syncfilepath));
     if (!syncfname)
         return PDFSYNCERR_OUTOFMEMORY;
 

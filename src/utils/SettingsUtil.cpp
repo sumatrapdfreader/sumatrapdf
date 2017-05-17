@@ -178,7 +178,7 @@ static_assert(sizeof(float) == sizeof(int) && sizeof(COLORREF) == sizeof(int),
 static bool SerializeField(str::Str<char>& out, const uint8_t *base, const FieldInfo& field)
 {
     const uint8_t *fieldPtr = base + field.offset;
-    ScopedMem<char> value;
+    AutoFree value;
     COLORREF c;
 
     switch (field.type) {
@@ -286,7 +286,7 @@ static void DeserializeField(const FieldInfo& field, uint8_t *base, const char *
     case Type_String:
         free(*(WCHAR **)fieldPtr);
         if (value)
-            *(WCHAR **)fieldPtr = str::conv::FromUtf8(ScopedMem<char>(UnescapeStr(value)));
+            *(WCHAR **)fieldPtr = str::conv::FromUtf8(AutoFree(UnescapeStr(value)));
         else
             *(WCHAR **)fieldPtr = str::Dup((const WCHAR *)field.value);
         break;
@@ -329,7 +329,7 @@ static void DeserializeField(const FieldInfo& field, uint8_t *base, const char *
         FreeStringArray(*(Vec<WCHAR *> **)fieldPtr);
         *(Vec<WCHAR *> **)fieldPtr = new Vec<WCHAR *>();
         if (value)
-            DeserializeStringArray(*(Vec<WCHAR *> **)fieldPtr, ScopedMem<char>(UnescapeStr(value)));
+            DeserializeStringArray(*(Vec<WCHAR *> **)fieldPtr, AutoFree(UnescapeStr(value)));
         else if (field.value)
             DeserializeStringArray(*(Vec<WCHAR *> **)fieldPtr, (const char *)field.value);
         break;

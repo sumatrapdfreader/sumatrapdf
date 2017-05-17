@@ -24,7 +24,7 @@ bool ChmDoc::HasData(const char *fileName)
     if (!fileName)
         return nullptr;
 
-    ScopedMem<char> tmpName;
+    AutoFree tmpName;
     if (!str::StartsWith(fileName, "/")) {
         tmpName.Set(str::Join("/", fileName));
         fileName = tmpName;
@@ -38,7 +38,7 @@ bool ChmDoc::HasData(const char *fileName)
 
 unsigned char *ChmDoc::GetData(const char *fileName, size_t *lenOut)
 {
-    ScopedMem<char> fileNameTmp;
+    AutoFree fileNameTmp;
     if (!str::StartsWith(fileName, "/")) {
         fileNameTmp.Set(str::Join("/", fileName));
         fileName = fileNameTmp;
@@ -238,12 +238,12 @@ char *ChmDoc::ResolveTopicID(unsigned int id)
     return nullptr;
 }
 
-void ChmDoc::FixPathCodepage(ScopedMem<char>& path, UINT& fileCP)
+void ChmDoc::FixPathCodepage(AutoFree& path, UINT& fileCP)
 {
     if (!path || HasData(path))
         return;
 
-    ScopedMem<char> utf8Path(ToUtf8((unsigned char *)path.Get()));
+    AutoFree utf8Path(ToUtf8((unsigned char *)path.Get()));
     if (HasData(utf8Path)) {
         path.Set(utf8Path.StealData());
         fileCP = codepage;
@@ -357,7 +357,7 @@ static bool VisitChmTocItem(EbookTocVisitor *visitor, HtmlElement *el, UINT cp, 
         AutoFreeW attrName(el->GetAttribute("name"));
         AutoFreeW attrVal(el->GetAttribute("value"));
         if (attrName && attrVal && cp != CP_CHM_DEFAULT) {
-            ScopedMem<char> bytes(str::conv::ToCodePage(attrVal, CP_CHM_DEFAULT));
+            AutoFree bytes(str::conv::ToCodePage(attrVal, CP_CHM_DEFAULT));
             attrVal.Set(str::conv::FromCodePage(bytes, cp));
         }
         if (!attrName || !attrVal)
@@ -404,7 +404,7 @@ static bool VisitChmIndexItem(EbookTocVisitor *visitor, HtmlElement *el, UINT cp
         AutoFreeW attrName(el->GetAttribute("name"));
         AutoFreeW attrVal(el->GetAttribute("value"));
         if (attrName && attrVal && cp != CP_CHM_DEFAULT) {
-            ScopedMem<char> bytes(str::conv::ToCodePage(attrVal, CP_CHM_DEFAULT));
+            AutoFree bytes(str::conv::ToCodePage(attrVal, CP_CHM_DEFAULT));
             attrVal.Set(str::conv::FromCodePage(bytes, cp));
         }
         if (!attrName || !attrVal)

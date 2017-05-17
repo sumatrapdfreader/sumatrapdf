@@ -139,7 +139,7 @@ void EpubFormatter::HandleTagImg(HtmlToken *t)
     bool needAlt = true;
     AttrInfo *attr = t->GetAttrByName("src");
     if (attr) {
-        ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
+        AutoFree src(str::DupN(attr->val, attr->valLen));
         url::DecodeInPlace(src);
         ImageData *img = epubDoc->GetImageData(src, pagePath);
         needAlt = !img || !EmitImage(img);
@@ -178,9 +178,9 @@ void EpubFormatter::HandleTagLink(HtmlToken *t)
         return;
 
     size_t len;
-    ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
+    AutoFree src(str::DupN(attr->val, attr->valLen));
     url::DecodeInPlace(src);
-    ScopedMem<char> data(epubDoc->GetFileData(src, pagePath, &len));
+    AutoFree data(epubDoc->GetFileData(src, pagePath, &len));
     if (data)
         ParseStyleSheet(data, len);
 }
@@ -195,7 +195,7 @@ void EpubFormatter::HandleTagSvgImage(HtmlToken *t)
     AttrInfo *attr = t->GetAttrByNameNS("href", "http://www.w3.org/1999/xlink");
     if (!attr)
         return;
-    ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
+    AutoFree src(str::DupN(attr->val, attr->valLen));
     url::DecodeInPlace(src);
     ImageData *img = epubDoc->GetImageData(src, pagePath);
     if (img)
@@ -255,7 +255,7 @@ void Fb2Formatter::HandleTagImg(HtmlToken *t)
     ImageData *img = nullptr;
     AttrInfo *attr = t->GetAttrByNameNS("href", "http://www.w3.org/1999/xlink");
     if (attr) {
-        ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
+        AutoFree src(str::DupN(attr->val, attr->valLen));
         url::DecodeInPlace(src);
         img = fb2Doc->GetImageData(src);
     }
@@ -275,7 +275,7 @@ void Fb2Formatter::HandleHtmlTag(HtmlToken *t)
 {
     if (Tag_Title == t->tag || Tag_Subtitle == t->tag) {
         bool isSubtitle = Tag_Subtitle == t->tag;
-        ScopedMem<char> name(str::Format("h%d", section + (isSubtitle ? 1 : 0)));
+        AutoFree name(str::Format("h%d", section + (isSubtitle ? 1 : 0)));
         HtmlToken tok;
         tok.SetTag(t->type, name, name + str::Len(name));
         HandleTagHx(&tok);
@@ -332,7 +332,7 @@ void HtmlFileFormatter::HandleTagImg(HtmlToken *t)
     bool needAlt = true;
     AttrInfo *attr = t->GetAttrByName("src");
     if (attr) {
-        ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
+        AutoFree src(str::DupN(attr->val, attr->valLen));
         url::DecodeInPlace(src);
         ImageData *img = htmlDoc->GetImageData(src);
         needAlt = !img || !EmitImage(img);
@@ -357,9 +357,9 @@ void HtmlFileFormatter::HandleTagLink(HtmlToken *t)
         return;
 
     size_t len;
-    ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
+    AutoFree src(str::DupN(attr->val, attr->valLen));
     url::DecodeInPlace(src);
-    ScopedMem<char> data(htmlDoc->GetFileData(src, &len));
+    AutoFree data(htmlDoc->GetFileData(src, &len));
     if (data)
         ParseStyleSheet(data, len);
 }

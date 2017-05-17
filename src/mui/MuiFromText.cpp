@@ -212,7 +212,7 @@ static Gdiplus::FontStyle ParseFontWeight(const char *s) {
 }
 
 static void AddStyleProp(Style *style, TxtNode *prop) {
-    ScopedMem<char> tmp(prop->ValDup());
+    AutoFree tmp(prop->ValDup());
 
     if (prop->IsTextWithKey("name")) {
         style->SetName(tmp);
@@ -297,7 +297,7 @@ static void CacheStyleFromStruct(TxtNode *def) {
     CrashIf(!def->IsStructWithName("style"));
     TxtNode *nameNode = TxtChildNodeWithKey(def, "name");
     CrashIf(!nameNode); // must have name or else no way to refer to it
-    ScopedMem<char> tmp(nameNode->ValDup());
+    AutoFree tmp(nameNode->ValDup());
     if (StyleByName(tmp))
         return;
 
@@ -434,7 +434,7 @@ static void ParseMuiDefinition(TxtNode *root, ParsedMui &res) {
             VerticalLayout *l = VerticalLayoutFromDef(res, node);
             res.layouts.Append(l);
         } else {
-            ScopedMem<char> keyName(node->KeyDup());
+            AutoFree keyName(node->KeyDup());
             ControlCreatorFunc creatorFunc = FindControlCreatorFuncFor(keyName);
             if (creatorFunc) {
                 Control *c = creatorFunc(node);

@@ -509,9 +509,9 @@ PageElement *EbookEngine::CreatePageLink(DrawInstr *link, RectI rect, int pageNo
 
     DrawInstr *baseAnchor = baseAnchors.At(pageNo-1);
     if (baseAnchor) {
-        ScopedMem<char> basePath(str::DupN(baseAnchor->str.s, baseAnchor->str.len));
-        ScopedMem<char> relPath(ResolveHtmlEntities(link->str.s, link->str.len));
-        ScopedMem<char> absPath(NormalizeURL(relPath, basePath));
+        AutoFree basePath(str::DupN(baseAnchor->str.s, baseAnchor->str.len));
+        AutoFree relPath(ResolveHtmlEntities(link->str.s, link->str.len));
+        AutoFree absPath(NormalizeURL(relPath, basePath));
         url.Set(str::conv::FromUtf8(absPath));
     }
 
@@ -562,7 +562,7 @@ PageElement *EbookEngine::GetElementAtPos(int pageNo, PointD pt)
 
 PageDestination *EbookEngine::GetNamedDest(const WCHAR *name)
 {
-    ScopedMem<char> name_utf8(str::conv::ToUtf8(name));
+    AutoFree name_utf8(str::conv::ToUtf8(name));
     const char *id = name_utf8;
     if (str::FindChar(id, '#'))
         id = str::FindChar(id, '#') + 1;
@@ -1242,7 +1242,7 @@ BaseEngine *CreateFromFile(const WCHAR *fileName)
 
 class ChmDataCache {
     ChmDoc *doc; // owned by creator
-    ScopedMem<char> html;
+    AutoFree html;
     Vec<ImageData2> images;
 
 public:
@@ -1260,7 +1260,7 @@ public:
     }
 
     ImageData *GetImageData(const char *id, const char *pagePath) {
-        ScopedMem<char> url(NormalizeURL(id, pagePath));
+        AutoFree url(NormalizeURL(id, pagePath));
         for (size_t i = 0; i < images.Count(); i++) {
             if (str::Eq(images.At(i).id, url))
                 return &images.At(i).base;
@@ -1276,7 +1276,7 @@ public:
     }
 
     char *GetFileData(const char *relPath, const char *pagePath, size_t *lenOut) {
-        ScopedMem<char> url(NormalizeURL(relPath, pagePath));
+        AutoFree url(NormalizeURL(relPath, pagePath));
         return (char *)doc->GetData(url, lenOut);
     }
 };
@@ -1288,7 +1288,7 @@ protected:
     virtual void HandleTagLink(HtmlToken *t);
 
     ChmDataCache *chmDoc;
-    ScopedMem<char> pagePath;
+    AutoFree pagePath;
 
 public:
     ChmFormatter(HtmlFormatterArgs *args, ChmDataCache *doc) :
@@ -1303,7 +1303,7 @@ void ChmFormatter::HandleTagImg(HtmlToken *t)
     bool needAlt = true;
     AttrInfo *attr = t->GetAttrByName("src");
     if (attr) {
-        ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
+        AutoFree src(str::DupN(attr->val, attr->valLen));
         url::DecodeInPlace(src);
         ImageData *img = chmDoc->GetImageData(src, pagePath);
         needAlt = !img || !EmitImage(img);
@@ -1342,9 +1342,9 @@ void ChmFormatter::HandleTagLink(HtmlToken *t)
         return;
 
     size_t len;
-    ScopedMem<char> src(str::DupN(attr->val, attr->valLen));
+    AutoFree src(str::DupN(attr->val, attr->valLen));
     url::DecodeInPlace(src);
-    ScopedMem<char> data(chmDoc->GetFileData(src, pagePath, &len));
+    AutoFree data(chmDoc->GetFileData(src, pagePath, &len));
     if (data)
         ParseStyleSheet(data, len);
 }
@@ -1407,7 +1407,7 @@ static UINT ExtractHttpCharset(const char *html, size_t htmlLen)
         if (!attr || !attr->ValIs("Content-Type"))
             continue;
         attr = tok->GetAttrByName("content");
-        ScopedMem<char> mimetype, charset;
+        AutoFree mimetype, charset;
         if (!attr || !str::Parse(attr->val, attr->valLen, "%S;%_charset=%S", &mimetype, &charset))
             continue;
 
@@ -1473,7 +1473,7 @@ public:
         AutoFreeW plainUrl(url::GetFullPath(url));
         if (added.FindI(plainUrl) != -1)
             return;
-        ScopedMem<char> urlUtf8(str::conv::ToUtf8(plainUrl));
+        AutoFree urlUtf8(str::conv::ToUtf8(plainUrl));
         size_t pageHtmlLen;
         ScopedMem<unsigned char> pageHtml(doc->GetData(urlUtf8, &pageHtmlLen));
         if (!pageHtml)
@@ -1516,7 +1516,7 @@ PageDestination *ChmEngineImpl::GetNamedDest(const WCHAR *name)
     if (!dest) {
         unsigned int topicID;
         if (str::Parse(name, L"%u%$", &topicID)) {
-            ScopedMem<char> urlUtf8(doc->ResolveTopicID(topicID));
+            AutoFree urlUtf8(doc->ResolveTopicID(topicID));
             if (urlUtf8) {
                 AutoFreeW url(str::conv::FromUtf8(urlUtf8));
                 dest = EbookEngine::GetNamedDest(url);
@@ -1546,7 +1546,7 @@ DocTocItem *ChmEngineImpl::GetTocTree()
 
 class ChmEmbeddedDest : public PageDestination {
     ChmEngineImpl *engine;
-    ScopedMem<char> path;
+    AutoFree path;
 
 public:
     ChmEmbeddedDest(ChmEngineImpl *engine, const char *path) : engine(engine), path(str::Dup(path)) { }
@@ -1566,8 +1566,8 @@ PageElement *ChmEngineImpl::CreatePageLink(DrawInstr *link, RectI rect, int page
         return linkEl;
 
     DrawInstr *baseAnchor = baseAnchors.At(pageNo-1);
-    ScopedMem<char> basePath(str::DupN(baseAnchor->str.s, baseAnchor->str.len));
-    ScopedMem<char> url(str::DupN(link->str.s, link->str.len));
+    AutoFree basePath(str::DupN(baseAnchor->str.s, baseAnchor->str.len));
+    AutoFree url(str::DupN(link->str.s, link->str.len));
     url.Set(NormalizeURL(url, basePath));
     if (!doc->HasData(url))
         return nullptr;

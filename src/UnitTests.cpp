@@ -165,7 +165,7 @@ static void hexstrTest()
 {
     unsigned char buf[6] = { 1, 2, 33, 255, 0, 18 };
     unsigned char buf2[6] = { 0 };
-    ScopedMem<char> s(_MemToHex(&buf));
+    AutoFree s(_MemToHex(&buf));
     utassert(str::Eq(s, "010221ff0012"));
     bool ok = _HexToMem(s, &buf2);
     utassert(ok);

@@ -1012,7 +1012,7 @@ static const char* ParseV(const char* str, const char* format, va_list args) {
         else if ('s' == *f)
             *va_arg(args, char**) = ExtractUntil(str, *(f + 1), &end);
         else if ('S' == *f)
-            va_arg(args, ScopedMem<char>*)->Set(ExtractUntil(str, *(f + 1), &end));
+            va_arg(args, AutoFree*)->Set(ExtractUntil(str, *(f + 1), &end));
         else if ('$' == *f && !*str)
             continue; // don't fail, if we're indeed at the end of the string
         else if ('%' == *f && *f == *str)
@@ -1366,7 +1366,7 @@ void DecodeInPlace(WCHAR* url) {
     if (!str::FindChar(url, '%'))
         return;
     // URLs are usually UTF-8 encoded
-    ScopedMem<char> urlUtf8(str::conv::ToUtf8(url));
+    AutoFree urlUtf8(str::conv::ToUtf8(url));
     DecodeInPlace(urlUtf8);
     // convert back in place
     CrashIf(str::Len(url) >= INT_MAX);

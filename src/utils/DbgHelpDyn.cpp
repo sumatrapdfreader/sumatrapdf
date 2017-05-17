@@ -84,7 +84,7 @@ static bool SetupSymbolPath()
         if (!ok)
             plog("DynSymSetSearchPathW() failed");
     } else {
-        ScopedMem<char> tmp(str::conv::ToAnsi(tpath));
+        AutoFree tmp(str::conv::ToAnsi(tpath));
         ok = DynSymSetSearchPath(GetCurrentProcess(), tmp);
         if (!ok)
             plog("DynSymSetSearchPath() failed");

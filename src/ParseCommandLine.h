@@ -58,7 +58,7 @@ class CommandLineInfo {
     bool crashOnOpen;
 
     // deprecated flags
-    ScopedMem<char> lang;
+    AutoFree lang;
     WStrVec globalPrefArgs;
 
     CommandLineInfo()

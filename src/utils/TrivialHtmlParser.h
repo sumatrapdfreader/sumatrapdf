@@ -95,7 +95,7 @@ namespace str {
 
 inline WCHAR *FromHtmlUtf8(const char *s, size_t len)
 {
-    ScopedMem<char> tmp(str::DupN(s, len));
+    AutoFree tmp(str::DupN(s, len));
     return DecodeHtmlEntitites(tmp, CP_UTF8);
 }
 

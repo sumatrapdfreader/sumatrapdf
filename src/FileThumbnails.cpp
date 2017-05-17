@@ -28,13 +28,13 @@ static WCHAR *GetThumbnailPath(const WCHAR *filePath)
     // TODO: why is this happening? Seen in crash reports e.g. 35043
     if (!filePath)
         return nullptr;
-    ScopedMem<char> pathU(str::conv::ToUtf8(filePath));
+    AutoFree pathU(str::conv::ToUtf8(filePath));
     if (!pathU)
         return nullptr;
     if (path::HasVariableDriveLetter(filePath))
         pathU[0] = '?'; // ignore the drive letter, if it might change
     CalcMD5Digest((unsigned char *)pathU.Get(), str::Len(pathU), digest);
-    ScopedMem<char> fingerPrint(_MemToHex(&digest));
+    AutoFree fingerPrint(_MemToHex(&digest));
 
     AutoFreeW thumbsPath(AppGenDataFilename(THUMBNAILS_DIR_NAME));
     if (!thumbsPath)
@@ -86,7 +86,7 @@ void CleanUpThumbnailCache(FileHistory& fileHistory)
 static RenderedBitmap *LoadRenderedBitmap(const WCHAR *filePath)
 {
     size_t len;
-    ScopedMem<char> data(file::ReadAll(filePath, &len));
+    AutoFree data(file::ReadAll(filePath, &len));
     if (!data)
         return nullptr;
     Bitmap *bmp = BitmapFromData(data, len);

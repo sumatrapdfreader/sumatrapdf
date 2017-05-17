@@ -1633,7 +1633,7 @@ bool PdfEngineImpl::LoadFromStream(fz_stream *stm, PasswordUI *pwdUI)
         }
 
         // MuPDF expects passwords to be UTF-8 encoded
-        ScopedMem<char> pwd_utf8(str::conv::ToUtf8(pwd));
+        AutoFree pwd_utf8(str::conv::ToUtf8(pwd));
         ok = pwd_utf8 && pdf_authenticate_password(_doc, pwd_utf8);
         // according to the spec (1.7 ExtensionLevel 3), the password
         // for crypt revisions 5 and above are in SASLprep normalization
@@ -1648,7 +1648,7 @@ bool PdfEngineImpl::LoadFromStream(fz_stream *stm, PasswordUI *pwdUI)
         // older Acrobat versions seem to have considered passwords to be in codepage 1252
         // note: such passwords aren't portable when stored as Unicode text
         if (!ok && GetACP() != 1252) {
-            ScopedMem<char> pwd_ansi(str::conv::ToAnsi(pwd));
+            AutoFree pwd_ansi(str::conv::ToAnsi(pwd));
             AutoFreeW pwd_cp1252(str::conv::FromCodePage(pwd_ansi, 1252));
             pwd_utf8.Set(str::conv::ToUtf8(pwd_cp1252));
             ok = pwd_utf8 && pdf_authenticate_password(_doc, pwd_utf8);
@@ -1803,7 +1803,7 @@ PageDestination *PdfEngineImpl::GetNamedDest(const WCHAR *name)
     ScopedCritSec scope1(&pagesAccess);
     ScopedCritSec scope2(&ctxAccess);
 
-    ScopedMem<char> name_utf8(str::conv::ToUtf8(name));
+    AutoFree name_utf8(str::conv::ToUtf8(name));
     pdf_obj *dest = nullptr;
     fz_try(ctx) {
         pdf_obj *nameobj = pdf_new_string(_doc, name_utf8, (int)str::Len(name_utf8));
@@ -2267,7 +2267,7 @@ void PdfEngineImpl::LinkifyPageText(pdf_page *page)
         for (fz_link *next = page->links; next && !overlaps; next = next->next)
             overlaps = fz_calc_overlap(list->coords.At(i), next->rect) >= 0.25f;
         if (!overlaps) {
-            ScopedMem<char> uri(str::conv::ToUtf8(list->links.At(i)));
+            AutoFree uri(str::conv::ToUtf8(list->links.At(i)));
             if (!uri) continue;
             fz_link_dest ld = { FZ_LINK_URI, 0 };
             ld.ld.uri.uri = fz_strdup(ctx, uri);
@@ -2535,7 +2535,7 @@ WCHAR *PdfEngineImpl::ExtractFontList()
     WStrVec fonts;
     for (size_t i = 0; i < fontList.Count(); i++) {
         const char *name = nullptr, *type = nullptr, *encoding = nullptr;
-        ScopedMem<char> anonFontName;
+        AutoFree anonFontName;
         bool embedded = false;
         fz_try(ctx) {
             pdf_obj *font = fontList.At(i);
@@ -2586,7 +2586,7 @@ WCHAR *PdfEngineImpl::ExtractFontList()
 
         str::Str<char> info;
         if (name[0] < 0 && MultiByteToWideChar(936, MB_ERR_INVALID_CHARS, name, -1, nullptr, 0))
-            info.Append(ScopedMem<char>(str::ToMultiByte(name, 936, CP_UTF8)));
+            info.Append(AutoFree(str::ToMultiByte(name, 936, CP_UTF8)));
         else
             info.Append(name);
         if (!str::IsEmpty(encoding) || !str::IsEmpty(type) || embedded) {
@@ -2812,7 +2812,7 @@ static bool pdf_file_update_add_annotation(pdf_document *doc, pdf_page *page, pd
         std::swap(dx, dy);
     float rgb[3] = { annot.color.r / 255.f, annot.color.g / 255.f, annot.color.b / 255.f };
     // rotate the QuadPoints to match the page
-    ScopedMem<char> quad_tpl;
+    AutoFree quad_tpl;
     if (0 == rotation)
         quad_tpl.Set(str::Format(obj_quad_tpl, r.x0, r.y1, r.x1, r.y1, r.x0, r.y0, r.x1, r.y0));
     else if (90 == rotation)
@@ -2821,12 +2821,12 @@ static bool pdf_file_update_add_annotation(pdf_document *doc, pdf_page *page, pd
         quad_tpl.Set(str::Format(obj_quad_tpl, r.x1, r.y0, r.x0, r.y0, r.x1, r.y1, r.x0, r.y1));
     else // if (270 == rotation)
         quad_tpl.Set(str::Format(obj_quad_tpl, r.x1, r.y1, r.x1, r.y0, r.x0, r.y1, r.x0, r.y0));
-    ScopedMem<char> annot_tpl(str::Format(obj_dict, subtype,
+    AutoFree annot_tpl(str::Format(obj_dict, subtype,
         r.x0, r.y0, r.x1, r.y1, rgb[0], rgb[1], rgb[2], //Rect and Color
         F_Print, pdf_to_num(page_obj), pdf_to_gen(page_obj), //F and P
         quad_tpl.Get()));
-    ScopedMem<char> annot_ap_dict(str::Format(ap_dict, dx, dy, annot.color.a / 255.f));
-    ScopedMem<char> annot_ap_stream;
+    AutoFree annot_ap_dict(str::Format(ap_dict, dx, dy, annot.color.a / 255.f));
+    AutoFree annot_ap_stream;
 
     fz_try(ctx) {
         annot_obj = pdf_new_obj_from_str(doc, annot_tpl);
@@ -3242,7 +3242,7 @@ xps_bound_page_quick(xps_document *doc, int number)
     const char *data = (const char *)part->data;
     size_t data_size = part->size;
 
-    ScopedMem<char> dataUtf8;
+    AutoFree dataUtf8;
     if (str::StartsWith(data, UTF16BE_BOM)) {
         for (int i = 0; i + 1 < part->size; i += 2) {
             std::swap(part->data[i], part->data[i+1]);
@@ -4254,7 +4254,7 @@ void XpsEngineImpl::LinkifyPageText(xps_page *page, int pageNo)
         for (fz_link *next = page->links; next && !overlaps; next = next->next)
             overlaps = fz_calc_overlap(list->coords.At(i), next->rect) >= 0.25f;
         if (!overlaps) {
-            ScopedMem<char> uri(str::conv::ToUtf8(list->links.At(i)));
+            AutoFree uri(str::conv::ToUtf8(list->links.At(i)));
             if (!uri) continue;
             fz_link_dest ld = { FZ_LINK_URI, 0 };
             ld.ld.uri.uri = fz_strdup(ctx, uri);
@@ -4331,7 +4331,7 @@ fz_rect XpsEngineImpl::FindDestRect(const char *target)
 
 PageDestination *XpsEngineImpl::GetNamedDest(const WCHAR *name)
 {
-    ScopedMem<char> name_utf8(str::conv::ToUtf8(name));
+    AutoFree name_utf8(str::conv::ToUtf8(name));
     if (!str::StartsWith(name_utf8.Get(), "#"))
         name_utf8.Set(str::Join("#", name_utf8));
 

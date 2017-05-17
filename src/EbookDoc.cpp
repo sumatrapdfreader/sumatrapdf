@@ -32,7 +32,7 @@ static UINT GetCodepageFromPI(const char *xmlPI)
     if (!enc)
         return CP_ACP;
 
-    ScopedMem<char> encoding(str::DupN(enc->val, enc->valLen));
+    AutoFree encoding(str::DupN(enc->val, enc->valLen));
     struct {
         const char *namePart;
         UINT codePage;
@@ -74,7 +74,7 @@ static bool IsValidUtf8(const char *string)
 
 static char *DecodeTextToUtf8(const char *s, bool isXML=false)
 {
-    ScopedMem<char> tmp;
+    AutoFree tmp;
     if (str::StartsWith(s, UTF16BE_BOM)) {
         size_t byteCount = (str::Len((WCHAR *)s) + 1) * sizeof(WCHAR);
         tmp.Set((char *)memdup(s, byteCount));
@@ -113,8 +113,8 @@ char *NormalizeURL(const char *url, const char *base)
         baseEnd++;
     else
         baseEnd = base;
-    ScopedMem<char> basePath(str::DupN(base, baseEnd - base));
-    ScopedMem<char> norm(str::Join(basePath, url));
+    AutoFree basePath(str::DupN(base, baseEnd - base));
+    AutoFree norm(str::Join(basePath, url));
 
     char *dst = norm;
     for (char *src = norm; *src; src++) {
@@ -257,7 +257,7 @@ EpubDoc::~EpubDoc()
 
 bool EpubDoc::Load()
 {
-    ScopedMem<char> container(zip.GetFileDataByName(L"META-INF/container.xml"));
+    AutoFree container(zip.GetFileDataByName(L"META-INF/container.xml"));
     if (!container)
         return false;
     HtmlParser parser;
@@ -275,7 +275,7 @@ bool EpubDoc::Load()
 
     // encrypted files will be ignored (TODO: support decryption)
     WStrList encList;
-    ScopedMem<char> encryption(zip.GetFileDataByName(L"META-INF/encryption.xml"));
+    AutoFree encryption(zip.GetFileDataByName(L"META-INF/encryption.xml"));
     if (encryption) {
         (void)parser.ParseInPlace(encryption);
         HtmlElement *cr = parser.FindElementByNameNS("CipherReference", EPUB_ENC_NS);
@@ -289,7 +289,7 @@ bool EpubDoc::Load()
         }
     }
 
-    ScopedMem<char> content(zip.GetFileDataByName(contentPath));
+    AutoFree content(zip.GetFileDataByName(contentPath));
     if (!content)
         return false;
     ParseMetadata(content);
@@ -370,7 +370,7 @@ bool EpubDoc::Load()
             continue;
 
         AutoFreeW fullPath(str::Join(contentPath, pathList.At(idList.Find(idref))));
-        ScopedMem<char> html(zip.GetFileDataByName(fullPath));
+        AutoFree html(zip.GetFileDataByName(fullPath));
         if (!html)
             continue;
         html.Set(DecodeTextToUtf8(html, true));
@@ -378,7 +378,7 @@ bool EpubDoc::Load()
             continue;
         // insert explicit page-breaks between sections including
         // an anchor with the file name at the top (for internal links)
-        ScopedMem<char> utf8_path(str::conv::ToUtf8(fullPath));
+        AutoFree utf8_path(str::conv::ToUtf8(fullPath));
         CrashIfDebugOnly(str::FindChar(utf8_path, '"'));
         str::TransChars(utf8_path, "\"", "'");
         htmlData.AppendFmt("<pagebreak page_path=\"%s\" page_marker />", utf8_path.Get());
@@ -466,7 +466,7 @@ ImageData *EpubDoc::GetImageData(const char *id, const char *pagePath)
         return nullptr;
     }
 
-    ScopedMem<char> url(NormalizeURL(id, pagePath));
+    AutoFree url(NormalizeURL(id, pagePath));
     // some EPUB producers use wrong path separators
     if (str::FindChar(url, '\\'))
         str::TransChars(url, "\\", "/");
@@ -505,7 +505,7 @@ char *EpubDoc::GetFileData(const char *relPath, const char *pagePath, size_t *le
 
     ScopedCritSec scope(&zipAccess);
 
-    ScopedMem<char> url(NormalizeURL(relPath, pagePath));
+    AutoFree url(NormalizeURL(relPath, pagePath));
     AutoFreeW zipPath(str::conv::FromUtf8(url));
     return zip.GetFileDataByName(zipPath, lenOut);
 }
@@ -554,7 +554,7 @@ bool EpubDoc::ParseNavToc(const char *data, size_t dataLen, const char *pagePath
             level--;
         if (tok->IsStartTag() && (Tag_A == tok->tag || Tag_Span == tok->tag)) {
             HtmlTag itemTag = tok->tag;
-            ScopedMem<char> text, href;
+            AutoFree text, href;
             if (Tag_A == tok->tag) {
                 AttrInfo *attrInfo = tok->GetAttrByName("href");
                 if (attrInfo)
@@ -563,7 +563,7 @@ bool EpubDoc::ParseNavToc(const char *data, size_t dataLen, const char *pagePath
             while ((tok = parser.Next()) != nullptr && !tok->IsError() &&
                    (!tok->IsEndTag() || itemTag != tok->tag)) {
                 if (tok->IsText()) {
-                    ScopedMem<char> part(str::DupN(tok->s, tok->sLen));
+                    AutoFree part(str::DupN(tok->s, tok->sLen));
                     if (!text)
                         text.Set(part.StealData());
                     else
@@ -622,7 +622,7 @@ bool EpubDoc::ParseNcxToc(const char *data, size_t dataLen, const char *pagePath
         else if (tok->IsTag() && !tok->IsEndTag() && tok->NameIsNS("content", EPUB_NCX_NS)) {
             AttrInfo *attrInfo = tok->GetAttrByName("src");
             if (attrInfo) {
-                ScopedMem<char> src(str::DupN(attrInfo->val, attrInfo->valLen));
+                AutoFree src(str::DupN(attrInfo->val, attrInfo->valLen));
                 src.Set(NormalizeURL(src, pagePath));
                 itemSrc.Set(str::conv::FromHtmlUtf8(src, str::Len(src)));
             }
@@ -637,7 +637,7 @@ bool EpubDoc::ParseToc(EbookTocVisitor *visitor)
     if (!tocPath)
         return false;
     size_t tocDataLen;
-    ScopedMem<char> tocData;
+    AutoFree tocData;
     {
         ScopedCritSec scope(&zipAccess);
         tocData.Set(zip.GetFileDataByName(tocPath, &tocDataLen));
@@ -645,7 +645,7 @@ bool EpubDoc::ParseToc(EbookTocVisitor *visitor)
     if (!tocData)
         return false;
 
-    ScopedMem<char> pagePath(str::conv::ToUtf8(tocPath));
+    AutoFree pagePath(str::conv::ToUtf8(tocPath));
     if (isNcxToc)
         return ParseNcxToc(tocData, tocDataLen, pagePath, visitor);
     return ParseNavToc(tocData, tocDataLen, pagePath, visitor);
@@ -655,7 +655,7 @@ bool EpubDoc::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
     if (sniff) {
         ZipFile zip(fileName, true);
-        ScopedMem<char> mimetype(zip.GetFileDataByName(L"mimetype"));
+        AutoFree mimetype(zip.GetFileDataByName(L"mimetype"));
         if (!mimetype)
             return false;
         // trailing whitespace is allowed for the mimetype file
@@ -723,7 +723,7 @@ Fb2Doc::~Fb2Doc()
 bool Fb2Doc::Load()
 {
     CrashIf(!stream && !fileName);
-    ScopedMem<char> data;
+    AutoFree data;
     if (fileName) {
         ZipFile archive(fileName);
         isZipped = archive.GetFileCount() > 0;
@@ -795,11 +795,11 @@ bool Fb2Doc::Load()
                 props.Set(Prop_Title, ResolveHtmlEntities(tok->s, tok->sLen));
         }
         else if ((inTitleInfo || inDocInfo) && tok->IsStartTag() && tok->NameIsNS("author", FB2_MAIN_NS)) {
-            ScopedMem<char> docAuthor;
+            AutoFree docAuthor;
             while ((tok = parser.Next()) != nullptr && !tok->IsError() &&
                 !(tok->IsEndTag() && tok->NameIsNS("author", FB2_MAIN_NS))) {
                 if (tok->IsText()) {
-                    ScopedMem<char> author(ResolveHtmlEntities(tok->s, tok->sLen));
+                    AutoFree author(ResolveHtmlEntities(tok->s, tok->sLen));
                     if (docAuthor)
                         docAuthor.Set(str::Join(docAuthor, " ", author));
                     else
@@ -853,7 +853,7 @@ bool Fb2Doc::Load()
 
 void Fb2Doc::ExtractImage(HtmlPullParser *parser, HtmlToken *tok)
 {
-    ScopedMem<char> id;
+    AutoFree id;
     AttrInfo *attrInfo = tok->GetAttrByNameNS("id", FB2_MAIN_NS);
     if (attrInfo) {
         id.Set(str::DupN(attrInfo->val, attrInfo->valLen));
@@ -1099,7 +1099,7 @@ bool PalmDoc::Load()
     size_t textLen;
     const char *text = mobiDoc->GetHtmlData(textLen);
     UINT codePage = GuessTextCodepage(text, textLen, CP_ACP);
-    ScopedMem<char> textUtf8(str::ToMultiByte(text, codePage, CP_UTF8));
+    AutoFree textUtf8(str::ToMultiByte(text, codePage, CP_UTF8));
     textLen = str::Len(textUtf8);
 
     for (const char *curr = textUtf8; curr < textUtf8 + textLen; curr++) {
@@ -1189,7 +1189,7 @@ HtmlDoc::~HtmlDoc()
 
 bool HtmlDoc::Load()
 {
-    ScopedMem<char> data(file::ReadAll(fileName, nullptr));
+    AutoFree data(file::ReadAll(fileName, nullptr));
     if (!data)
         return false;
     htmlData.Set(DecodeTextToUtf8(data, true));
@@ -1236,7 +1236,7 @@ ImageData *HtmlDoc::GetImageData(const char *id)
     // TODO: this isn't thread-safe (might leak image data when called concurrently),
     //       so add a critical section once it's used for EbookController
 
-    ScopedMem<char> url(NormalizeURL(id, pagePath));
+    AutoFree url(NormalizeURL(id, pagePath));
     for (size_t i = 0; i < images.Count(); i++) {
         if (str::Eq(images.At(i).id, url))
             return &images.At(i).base;
@@ -1253,7 +1253,7 @@ ImageData *HtmlDoc::GetImageData(const char *id)
 
 char *HtmlDoc::GetFileData(const char *relPath, size_t *lenOut)
 {
-    ScopedMem<char> url(NormalizeURL(relPath, pagePath));
+    AutoFree url(NormalizeURL(relPath, pagePath));
     return LoadURL(url, lenOut);
 }
 
@@ -1374,7 +1374,7 @@ inline bool IsEmailDomainChar(char c)
 
 static const char *TextFindEmailEnd(str::Str<char>& htmlData, const char *curr)
 {
-    ScopedMem<char> beforeAt;
+    AutoFree beforeAt;
     const char *end = curr;
     if ('@' == *curr) {
         if (htmlData.Count() == 0 || !IsEmailUsernameChar(htmlData.Last()))
@@ -1428,7 +1428,7 @@ static const char *TextFindRfcEnd(str::Str<char>& htmlData, const char *curr)
 bool TxtDoc::Load()
 {
     size_t dataLen;
-    ScopedMem<char> text(file::ReadAll(fileName, &dataLen));
+    AutoFree text(file::ReadAll(fileName, &dataLen));
     if (str::EndsWithI(fileName, L".tcr") && str::StartsWith(text.Get(), TCR_HEADER))
         text.Set(DecompressTcrText(text, dataLen));
     if (!text)

@@ -284,7 +284,7 @@ bool PdfCreator::SetProperty(DocumentProperty prop, const WCHAR *value)
     if (!name)
         return false;
 
-    ScopedMem<char> encValue;
+    AutoFree encValue;
     int encValueLen;
     if (Is7BitAscii(value)) {
         encValue.Set(str::conv::ToUtf8(value));

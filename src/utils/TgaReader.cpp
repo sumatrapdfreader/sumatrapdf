@@ -353,7 +353,7 @@ unsigned char *SerializeBitmap(HBITMAP hbmp, size_t *bmpBytesOut)
     WORD w = (WORD)bmpInfo.bmWidth;
     WORD h = (WORD)bmpInfo.bmHeight;
     int stride = ((w * 3 + 3) / 4) * 4;
-    ScopedMem<char> bmpData((char *)malloc(stride * h));
+    AutoFree bmpData((char *)malloc(stride * h));
     if (!bmpData)
         return nullptr;
 
