@@ -12,16 +12,20 @@
 
 static HFONT gDefaultGuiFont = nullptr;
 
-int RectDx(const RECT &r) { return r.right - r.left; }
-int RectDy(const RECT &r) { return r.bottom - r.top; }
+int RectDx(const RECT& r) {
+    return r.right - r.left;
+}
+int RectDy(const RECT& r) {
+    return r.bottom - r.top;
+}
 
 POINT MakePoint(long x, long y) {
-    POINT p = { x, y };
+    POINT p = {x, y};
     return p;
 }
 
 SIZE MakeSize(long dx, long dy) {
-    SIZE sz = { dx, dy };
+    SIZE sz = {dx, dy};
     return sz;
 }
 
@@ -38,18 +42,18 @@ void Edit_SelectAll(HWND hwnd) {
     Edit_SetSel(hwnd, 0, -1);
 }
 
-void ListBox_AppendString_NoSort(HWND hwnd, WCHAR *txt) {
+void ListBox_AppendString_NoSort(HWND hwnd, WCHAR* txt) {
     ListBox_InsertString(hwnd, -1, txt);
 }
 
 void InitAllCommonControls() {
-    INITCOMMONCONTROLSEX cex = { 0 };
+    INITCOMMONCONTROLSEX cex = {0};
     cex.dwSize = sizeof(INITCOMMONCONTROLSEX);
     cex.dwICC = ICC_WIN95_CLASSES | ICC_DATE_CLASSES | ICC_USEREX_CLASSES | ICC_COOL_CLASSES;
     InitCommonControlsEx(&cex);
 }
 
-void FillWndClassEx(WNDCLASSEX &wcex, const WCHAR *clsName, WNDPROC wndproc) {
+void FillWndClassEx(WNDCLASSEX& wcex, const WCHAR* clsName, WNDPROC wndproc) {
     ZeroMemory(&wcex, sizeof(WNDCLASSEX));
     wcex.cbSize = sizeof(WNDCLASSEX);
     wcex.style = CS_HREDRAW | CS_VREDRAW;
@@ -69,17 +73,16 @@ void MoveWindow(HWND hwnd, RectI rect) {
     MoveWindow(hwnd, rect.x, rect.y, rect.dx, rect.dy, TRUE);
 }
 
-void MoveWindow(HWND hwnd, RECT *r) {
+void MoveWindow(HWND hwnd, RECT* r) {
     MoveWindow(hwnd, r->left, r->top, RectDx(*r), RectDy(*r), TRUE);
 }
 
-void GetOsVersion(OSVERSIONINFOEX& ver)
-{
+void GetOsVersion(OSVERSIONINFOEX& ver) {
     ZeroMemory(&ver, sizeof(ver));
     ver.dwOSVersionInfoSize = sizeof(ver);
 #pragma warning(push)
-#pragma warning(disable: 4996) // 'GetVersionEx': was declared deprecated
-#pragma warning(disable: 28159) // Consider using 'IsWindows*' instead of 'GetVersionExW'
+#pragma warning(disable : 4996)  // 'GetVersionEx': was declared deprecated
+#pragma warning(disable : 28159) // Consider using 'IsWindows*' instead of 'GetVersionExW'
     // see: https://msdn.microsoft.com/en-us/library/windows/desktop/dn424972(v=vs.85).aspx
     // starting with Windows 8.1, GetVersionEx will report a wrong version number
     // unless the OS's GUID has been explicitly added to the compatibility manifest
@@ -103,7 +106,7 @@ bool IsWin7() {
 
 /* Vista is major: 6, minor: 0 */
 bool IsVistaOrGreater() {
-    OSVERSIONINFOEX osver = { 0 };
+    OSVERSIONINFOEX osver = {0};
     ULONGLONG condMask = 0;
     osver.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
     osver.dwMajorVersion = 6;
@@ -143,9 +146,8 @@ void LogLastError(DWORD err) {
     // allow to set a breakpoint in release builds
     if (0 == err)
         err = GetLastError();
-    char *msgBuf = nullptr;
-    DWORD flags =
-        FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS;
+    char* msgBuf = nullptr;
+    DWORD flags = FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS;
     DWORD lang = MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT);
     DWORD res = FormatMessageA(flags, nullptr, err, lang, (LPSTR)&msgBuf, 0, nullptr);
     if (!res || !msgBuf)
@@ -161,9 +163,8 @@ void DbgOutLastError(DWORD err) {
     if (0 == err) {
         return;
     }
-    char *msgBuf = nullptr;
-    DWORD flags =
-        FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS;
+    char* msgBuf = nullptr;
+    DWORD flags = FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS;
     DWORD lang = MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT);
     DWORD res = FormatMessageA(flags, nullptr, err, lang, (LPSTR)&msgBuf, 0, nullptr);
     if (!res || !msgBuf) {
@@ -174,7 +175,7 @@ void DbgOutLastError(DWORD err) {
 }
 
 // return true if a given registry key (path) exists
-bool RegKeyExists(HKEY keySub, const WCHAR *keyName) {
+bool RegKeyExists(HKEY keySub, const WCHAR* keyName) {
     HKEY hKey;
     LONG res = RegOpenKey(keySub, keyName, &hKey);
     if (ERROR_SUCCESS == res) {
@@ -188,8 +189,8 @@ bool RegKeyExists(HKEY keySub, const WCHAR *keyName) {
 }
 
 // called needs to free() the result
-WCHAR *ReadRegStr(HKEY keySub, const WCHAR *keyName, const WCHAR *valName) {
-    WCHAR *val = nullptr;
+WCHAR* ReadRegStr(HKEY keySub, const WCHAR* keyName, const WCHAR* valName) {
+    WCHAR* val = nullptr;
     REGSAM access = KEY_READ;
     HKEY hKey;
 TryAgainWOW64:
@@ -218,28 +219,26 @@ TryAgainWOW64:
     return val;
 }
 
-bool WriteRegStr(HKEY keySub, const WCHAR *keyName, const WCHAR *valName, const WCHAR *value) {
+bool WriteRegStr(HKEY keySub, const WCHAR* keyName, const WCHAR* valName, const WCHAR* value) {
     DWORD cbData = (DWORD)(str::Len(value) + 1) * sizeof(WCHAR);
-    LSTATUS res = SHSetValueW(keySub, keyName, valName, REG_SZ, (const void *)value, cbData);
+    LSTATUS res = SHSetValueW(keySub, keyName, valName, REG_SZ, (const void*)value, cbData);
     return ERROR_SUCCESS == res;
 }
 
-bool ReadRegDWORD(HKEY keySub, const WCHAR *keyName, const WCHAR *valName, DWORD &value) {
+bool ReadRegDWORD(HKEY keySub, const WCHAR* keyName, const WCHAR* valName, DWORD& value) {
     DWORD size = sizeof(DWORD);
     LSTATUS res = SHGetValue(keySub, keyName, valName, nullptr, &value, &size);
     return ERROR_SUCCESS == res && sizeof(DWORD) == size;
 }
 
-bool WriteRegDWORD(HKEY keySub, const WCHAR *keyName, const WCHAR *valName, DWORD value) {
-    LSTATUS res =
-        SHSetValueW(keySub, keyName, valName, REG_DWORD, (const void *)&value, sizeof(DWORD));
+bool WriteRegDWORD(HKEY keySub, const WCHAR* keyName, const WCHAR* valName, DWORD value) {
+    LSTATUS res = SHSetValueW(keySub, keyName, valName, REG_DWORD, (const void*)&value, sizeof(DWORD));
     return ERROR_SUCCESS == res;
 }
 
-bool CreateRegKey(HKEY keySub, const WCHAR *keyName) {
+bool CreateRegKey(HKEY keySub, const WCHAR* keyName) {
     HKEY hKey;
-    LSTATUS res =
-        RegCreateKeyEx(keySub, keyName, 0, nullptr, 0, KEY_WRITE, nullptr, &hKey, nullptr);
+    LSTATUS res = RegCreateKeyEx(keySub, keyName, 0, nullptr, 0, KEY_WRITE, nullptr, &hKey, nullptr);
     if (res != ERROR_SUCCESS)
         return false;
     RegCloseKey(hKey);
@@ -251,7 +250,7 @@ bool CreateRegKey(HKEY keySub, const WCHAR *keyName) {
                                 // an unprotected object"
 // try to remove any access restrictions on the key
 // by granting everybody all access to this key (nullptr DACL)
-static void ResetRegKeyAcl(HKEY keySub, const WCHAR *keyName) {
+static void ResetRegKeyAcl(HKEY keySub, const WCHAR* keyName) {
     HKEY hKey;
     LONG res = RegOpenKeyEx(keySub, keyName, 0, WRITE_DAC, &hKey);
     if (ERROR_SUCCESS != res)
@@ -264,7 +263,7 @@ static void ResetRegKeyAcl(HKEY keySub, const WCHAR *keyName) {
 }
 #pragma warning(pop)
 
-bool DeleteRegKey(HKEY keySub, const WCHAR *keyName, bool resetACLFirst) {
+bool DeleteRegKey(HKEY keySub, const WCHAR* keyName, bool resetACLFirst) {
     if (resetACLFirst)
         ResetRegKeyAcl(keySub, keyName);
 
@@ -272,10 +271,10 @@ bool DeleteRegKey(HKEY keySub, const WCHAR *keyName, bool resetACLFirst) {
     return ERROR_SUCCESS == res || ERROR_FILE_NOT_FOUND == res;
 }
 
-WCHAR *GetSpecialFolder(int csidl, bool createIfMissing) {
+WCHAR* GetSpecialFolder(int csidl, bool createIfMissing) {
     if (createIfMissing)
         csidl = csidl | CSIDL_FLAG_CREATE;
-    WCHAR path[MAX_PATH] = { 0 };
+    WCHAR path[MAX_PATH] = {0};
     HRESULT res = SHGetFolderPath(nullptr, csidl, nullptr, 0, path);
     if (S_OK != res)
         return nullptr;
@@ -292,8 +291,7 @@ void DisableDataExecution() {
     // now try undocumented NtSetInformationProcess
     if (DynNtSetInformationProcess) {
         DWORD depMode = MEM_EXECUTE_OPTION_DISABLE | MEM_EXECUTE_OPTION_DISABLE_ATL;
-        DynNtSetInformationProcess(GetCurrentProcess(), PROCESS_EXECUTE_FLAGS, &depMode,
-                                   sizeof(depMode));
+        DynNtSetInformationProcess(GetCurrentProcess(), PROCESS_EXECUTE_FLAGS, &depMode, sizeof(depMode));
     }
 }
 
@@ -309,18 +307,18 @@ void RedirectIOToConsole() {
     coninfo.dwSize.Y = 500;
     SetConsoleScreenBufferSize(GetStdHandle(STD_OUTPUT_HANDLE), coninfo.dwSize);
 
-    // redirect STDIN, STDOUT and STDERR to the console
+// redirect STDIN, STDOUT and STDERR to the console
 #if _MSC_VER < 1900
     int hConHandle = _open_osfhandle((intptr_t)GetStdHandle(STD_OUTPUT_HANDLE), _O_TEXT);
     *stdout = *_fdopen(hConHandle, "w");
 
-    hConHandle = _open_osfhandle((intptr_t) GetStdHandle(STD_ERROR_HANDLE), _O_TEXT);
+    hConHandle = _open_osfhandle((intptr_t)GetStdHandle(STD_ERROR_HANDLE), _O_TEXT);
     *stderr = *_fdopen(hConHandle, "w");
 
-    hConHandle = _open_osfhandle((intptr_t) GetStdHandle(STD_INPUT_HANDLE), _O_TEXT);
+    hConHandle = _open_osfhandle((intptr_t)GetStdHandle(STD_INPUT_HANDLE), _O_TEXT);
     *stdin = *_fdopen(hConHandle, "r");
 #else
-    FILE *con;
+    FILE* con;
     freopen_s(&con, "CONOUT$", "w", stdout);
     freopen_s(&con, "CONOUT$", "w", stderr);
     freopen_s(&con, "CONIN$", "r", stdin);
@@ -334,8 +332,8 @@ void RedirectIOToConsole() {
 
 /* Return the full exe path of my own executable.
    Caller needs to free() the result. */
-WCHAR *GetExePath() {
-    WCHAR buf[MAX_PATH] = { 0 };
+WCHAR* GetExePath() {
+    WCHAR buf[MAX_PATH] = {0};
     GetModuleFileName(nullptr, buf, dimof(buf));
     // TODO: is normalization needed here at all?
     return path::Normalize(buf);
@@ -344,7 +342,7 @@ WCHAR *GetExePath() {
 /* Return directory where this executable is located.
 Caller needs to free()
 */
-WCHAR *GetExeDir() {
+WCHAR* GetExeDir() {
     std::unique_ptr<WCHAR> path(GetExePath());
     return path::GetDir(path.get());
 }
@@ -353,8 +351,8 @@ WCHAR *GetExeDir() {
 Returns ${SystemRoot}\system32 directory.
 Caller has to free() the result.
 */
-WCHAR *GetSystem32Dir() {
-    WCHAR buf[1024] = { 0 };
+WCHAR* GetSystem32Dir() {
+    WCHAR buf[1024] = {0};
     DWORD n = GetEnvironmentVariableW(L"SystemRoot", &buf[0], dimof(buf));
     if ((n == 0) || (n >= dimof(buf))) {
         CrashIf(false);
@@ -367,12 +365,12 @@ WCHAR *GetSystem32Dir() {
 Returns current directory.
 Caller has to free() the result.
 */
-WCHAR *GetCurrentDir() {
+WCHAR* GetCurrentDir() {
     DWORD n = GetCurrentDirectoryW(0, nullptr);
     if (0 == n) {
         return nullptr;
     }
-    WCHAR *buf = AllocArray<WCHAR>(n + 1);
+    WCHAR* buf = AllocArray<WCHAR>(n + 1);
     DWORD res = GetCurrentDirectoryW(n, buf);
     if (0 == res) {
         return nullptr;
@@ -387,7 +385,7 @@ void ChangeCurrDirToSystem32() {
     free(sysDir);
 }
 
-static ULARGE_INTEGER FileTimeToLargeInteger(const FILETIME &ft) {
+static ULARGE_INTEGER FileTimeToLargeInteger(const FILETIME& ft) {
     ULARGE_INTEGER res;
     res.LowPart = ft.dwLowDateTime;
     res.HighPart = ft.dwHighDateTime;
@@ -395,7 +393,7 @@ static ULARGE_INTEGER FileTimeToLargeInteger(const FILETIME &ft) {
 }
 
 /* Return <ft1> - <ft2> in seconds */
-int FileTimeDiffInSecs(const FILETIME &ft1, const FILETIME &ft2) {
+int FileTimeDiffInSecs(const FILETIME& ft1, const FILETIME& ft2) {
     ULARGE_INTEGER t1 = FileTimeToLargeInteger(ft1);
     ULARGE_INTEGER t2 = FileTimeToLargeInteger(ft2);
     // diff is in 100 nanoseconds
@@ -404,7 +402,7 @@ int FileTimeDiffInSecs(const FILETIME &ft1, const FILETIME &ft2) {
     return (int)diff;
 }
 
-WCHAR *ResolveLnk(const WCHAR *path) {
+WCHAR* ResolveLnk(const WCHAR* path) {
     ScopedMem<OLECHAR> olePath(str::Dup(path));
     if (!olePath)
         return nullptr;
@@ -425,7 +423,7 @@ WCHAR *ResolveLnk(const WCHAR *path) {
     if (FAILED(hRes))
         return nullptr;
 
-    WCHAR newPath[MAX_PATH] = { 0 };
+    WCHAR newPath[MAX_PATH] = {0};
     hRes = lnk->GetPath(newPath, MAX_PATH, nullptr, 0);
     if (FAILED(hRes))
         return nullptr;
@@ -433,8 +431,8 @@ WCHAR *ResolveLnk(const WCHAR *path) {
     return str::Dup(newPath);
 }
 
-bool CreateShortcut(const WCHAR *shortcutPath, const WCHAR *exePath, const WCHAR *args,
-                    const WCHAR *description, int iconIndex) {
+bool CreateShortcut(const WCHAR* shortcutPath, const WCHAR* exePath, const WCHAR* args, const WCHAR* description,
+                    int iconIndex) {
     ScopedCom com;
 
     ScopedComPtr<IShellLink> lnk;
@@ -463,23 +461,22 @@ bool CreateShortcut(const WCHAR *shortcutPath, const WCHAR *exePath, const WCHAR
 }
 
 /* adapted from http://blogs.msdn.com/oldnewthing/archive/2004/09/20/231739.aspx */
-IDataObject *GetDataObjectForFile(const WCHAR *filePath, HWND hwnd) {
+IDataObject* GetDataObjectForFile(const WCHAR* filePath, HWND hwnd) {
     ScopedComPtr<IShellFolder> pDesktopFolder;
     HRESULT hr = SHGetDesktopFolder(&pDesktopFolder);
     if (FAILED(hr))
         return nullptr;
 
-    IDataObject *pDataObject = nullptr;
+    IDataObject* pDataObject = nullptr;
     AutoFreeW lpWPath(str::Dup(filePath));
     LPITEMIDLIST pidl;
     hr = pDesktopFolder->ParseDisplayName(nullptr, nullptr, lpWPath, nullptr, &pidl, nullptr);
     if (SUCCEEDED(hr)) {
         ScopedComPtr<IShellFolder> pShellFolder;
         LPCITEMIDLIST pidlChild;
-        hr = SHBindToParent(pidl, IID_IShellFolder, (void **)&pShellFolder, &pidlChild);
+        hr = SHBindToParent(pidl, IID_IShellFolder, (void**)&pShellFolder, &pidlChild);
         if (SUCCEEDED(hr)) {
-            hr = pShellFolder->GetUIObjectOf(hwnd, 1, &pidlChild, IID_IDataObject, nullptr,
-                                             (void **)&pDataObject);
+            hr = pShellFolder->GetUIObjectOf(hwnd, 1, &pidlChild, IID_IDataObject, nullptr, (void**)&pDataObject);
             if (FAILED(hr))
                 pDataObject = nullptr;
         }
@@ -490,26 +487,26 @@ IDataObject *GetDataObjectForFile(const WCHAR *filePath, HWND hwnd) {
 }
 
 // The result value contains major and minor version in the high resp. the low WORD
-DWORD GetFileVersion(const WCHAR *path) {
+DWORD GetFileVersion(const WCHAR* path) {
     DWORD fileVersion = 0;
     DWORD size = GetFileVersionInfoSize(path, nullptr);
     ScopedMem<void> versionInfo(malloc(size));
 
     if (versionInfo && GetFileVersionInfo(path, 0, size, versionInfo)) {
-        VS_FIXEDFILEINFO *fileInfo;
+        VS_FIXEDFILEINFO* fileInfo;
         UINT len;
-        if (VerQueryValue(versionInfo, L"\\", (LPVOID *)&fileInfo, &len))
+        if (VerQueryValue(versionInfo, L"\\", (LPVOID*)&fileInfo, &len))
             fileVersion = fileInfo->dwFileVersionMS;
     }
 
     return fileVersion;
 }
 
-bool LaunchFile(const WCHAR *path, const WCHAR *params, const WCHAR *verb, bool hidden) {
+bool LaunchFile(const WCHAR* path, const WCHAR* params, const WCHAR* verb, bool hidden) {
     if (!path)
         return false;
 
-    SHELLEXECUTEINFO sei = { 0 };
+    SHELLEXECUTEINFO sei = {0};
     sei.cbSize = sizeof(sei);
     sei.fMask = SEE_MASK_FLAG_NO_UI;
     sei.lpVerb = verb;
@@ -519,16 +516,15 @@ bool LaunchFile(const WCHAR *path, const WCHAR *params, const WCHAR *verb, bool 
     return ShellExecuteEx(&sei);
 }
 
-HANDLE LaunchProcess(const WCHAR *cmdLine, const WCHAR *currDir, DWORD flags) {
-    PROCESS_INFORMATION pi = { 0 };
-    STARTUPINFO si = { 0 };
+HANDLE LaunchProcess(const WCHAR* cmdLine, const WCHAR* currDir, DWORD flags) {
+    PROCESS_INFORMATION pi = {0};
+    STARTUPINFO si = {0};
     si.cb = sizeof(si);
 
     // CreateProcess() might modify cmd line argument, so make a copy
     // in case caller provides a read-only string
     AutoFreeW cmdLineCopy(str::Dup(cmdLine));
-    if (!CreateProcessW(nullptr, cmdLineCopy, nullptr, nullptr, FALSE, flags, nullptr, currDir, &si,
-                        &pi))
+    if (!CreateProcessW(nullptr, cmdLineCopy, nullptr, nullptr, FALSE, flags, nullptr, currDir, &si, &pi))
         return nullptr;
 
     CloseHandle(pi.hThread);
@@ -543,16 +539,14 @@ RectI ShiftRectToWorkArea(RectI rect, bool bFully) {
     if (rect.y + rect.dy <= monitor.y || bFully && rect.y < monitor.y)
         /* Rectangle is too far above work area */
         rect.Offset(0, monitor.y - rect.y);
-    else if (rect.y >= monitor.y + monitor.dy ||
-             bFully && rect.y + rect.dy > monitor.y + monitor.dy)
+    else if (rect.y >= monitor.y + monitor.dy || bFully && rect.y + rect.dy > monitor.y + monitor.dy)
         /* Rectangle is too far below */
         rect.Offset(0, monitor.y - rect.y + monitor.dy - rect.dy);
 
     if (rect.x + rect.dx <= monitor.x || bFully && rect.x < monitor.x)
         /* Too far left */
         rect.Offset(monitor.x - rect.x, 0);
-    else if (rect.x >= monitor.x + monitor.dx ||
-             bFully && rect.x + rect.dx > monitor.x + monitor.dx)
+    else if (rect.x >= monitor.x + monitor.dx || bFully && rect.x + rect.dx > monitor.x + monitor.dx)
         /* Too far right */
         rect.Offset(monitor.x - rect.x + monitor.dx - rect.dx, 0);
 
@@ -560,7 +554,7 @@ RectI ShiftRectToWorkArea(RectI rect, bool bFully) {
 }
 
 RectI GetWorkAreaRect(RectI rect) {
-    MONITORINFO mi = { 0 };
+    MONITORINFO mi = {0};
     mi.cbSize = sizeof mi;
     RECT tmpRect = rect.ToRECT();
     HMONITOR monitor = MonitorFromRect(&tmpRect, MONITOR_DEFAULTTONEAREST);
@@ -572,7 +566,7 @@ RectI GetWorkAreaRect(RectI rect) {
 
 // returns the dimensions the given window has to have in order to be a fullscreen window
 RectI GetFullscreenRect(HWND hwnd) {
-    MONITORINFO mi = { 0 };
+    MONITORINFO mi = {0};
     mi.cbSize = sizeof(mi);
     if (GetMonitorInfo(MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST), &mi))
         return RectI::FromRECT(mi.rcMonitor);
@@ -583,7 +577,7 @@ RectI GetFullscreenRect(HWND hwnd) {
 static BOOL CALLBACK GetMonitorRectProc(HMONITOR hMonitor, HDC hdc, LPRECT rcMonitor, LPARAM data) {
     UNUSED(hMonitor);
     UNUSED(hdc);
-    RectI *rcAll = (RectI *)data;
+    RectI* rcAll = (RectI*)data;
     *rcAll = rcAll->Union(RectI::FromRECT(*rcMonitor));
     return TRUE;
 }
@@ -595,7 +589,7 @@ RectI GetVirtualScreenRect() {
     return result;
 }
 
-void PaintRect(HDC hdc, const RectI &rect) {
+void PaintRect(HDC hdc, const RectI& rect) {
     MoveToEx(hdc, rect.x, rect.y, nullptr);
     LineTo(hdc, rect.x + rect.dx - 1, rect.y);
     LineTo(hdc, rect.x + rect.dx - 1, rect.y + rect.dy - 1);
@@ -603,25 +597,25 @@ void PaintRect(HDC hdc, const RectI &rect) {
     LineTo(hdc, rect.x, rect.y);
 }
 
-void PaintLine(HDC hdc, const RectI &rect) {
+void PaintLine(HDC hdc, const RectI& rect) {
     MoveToEx(hdc, rect.x, rect.y, nullptr);
     LineTo(hdc, rect.x + rect.dx, rect.y + rect.dy);
 }
 
-void DrawCenteredText(HDC hdc, const RectI &r, const WCHAR *txt, bool isRTL) {
+void DrawCenteredText(HDC hdc, const RectI& r, const WCHAR* txt, bool isRTL) {
     SetBkMode(hdc, TRANSPARENT);
     RECT tmpRect = r.ToRECT();
     DrawText(hdc, txt, -1, &tmpRect,
              DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | (isRTL ? DT_RTLREADING : 0));
 }
 
-void DrawCenteredText(HDC hdc, const RECT &r, const WCHAR *txt, bool isRTL) {
+void DrawCenteredText(HDC hdc, const RECT& r, const WCHAR* txt, bool isRTL) {
     RectI rc = RectI::FromRECT(r);
     DrawCenteredText(hdc, rc, txt, isRTL);
 }
 
 /* Return size of a text <txt> in a given <hwnd>, taking into account its font */
-SizeI TextSizeInHwnd(HWND hwnd, const WCHAR *txt, HFONT font) {
+SizeI TextSizeInHwnd(HWND hwnd, const WCHAR* txt, HFONT font) {
     SIZE sz;
     size_t txtLen = str::Len(txt);
     HDC dc = GetWindowDC(hwnd);
@@ -639,7 +633,7 @@ SizeI TextSizeInHwnd(HWND hwnd, const WCHAR *txt, HFONT font) {
 
 // TODO: unify with TextSizeInHwnd
 /* Return size of a text <txt> in a given <hwnd>, taking into account its font */
-SIZE TextSizeInHwnd2(HWND hwnd, const WCHAR *txt, HFONT font) {
+SIZE TextSizeInHwnd2(HWND hwnd, const WCHAR* txt, HFONT font) {
     SIZE sz;
     size_t txtLen = str::Len(txt);
     HDC dc = GetWindowDC(hwnd);
@@ -656,7 +650,7 @@ SIZE TextSizeInHwnd2(HWND hwnd, const WCHAR *txt, HFONT font) {
 }
 
 /* Return size of a text <txt> in a given <hdc>, taking into account its font */
-SizeI TextSizeInDC(HDC hdc, const WCHAR *txt) {
+SizeI TextSizeInDC(HDC hdc, const WCHAR* txt) {
     SIZE sz;
     size_t txtLen = str::Len(txt);
     GetTextExtentPoint32(hdc, txt, (int)txtLen, &sz);
@@ -670,7 +664,7 @@ bool IsCursorOverWindow(HWND hwnd) {
     return rcWnd.Contains(PointI(pt.x, pt.y));
 }
 
-bool GetCursorPosInHwnd(HWND hwnd, PointI &posOut) {
+bool GetCursorPosInHwnd(HWND hwnd, PointI& posOut) {
     POINT pt;
     if (!GetCursorPos(&pt))
         return false;
@@ -701,7 +695,7 @@ void CenterDialog(HWND hDlg, HWND hParent) {
 
 /* Get the name of default printer or nullptr if not exists.
    The caller needs to free() the result */
-WCHAR *GetDefaultPrinterName() {
+WCHAR* GetDefaultPrinterName() {
     WCHAR buf[512];
     DWORD bufSize = dimof(buf);
     if (GetDefaultPrinter(buf, &bufSize))
@@ -709,7 +703,7 @@ WCHAR *GetDefaultPrinterName() {
     return nullptr;
 }
 
-bool CopyTextToClipboard(const WCHAR *text, bool appendOnly) {
+bool CopyTextToClipboard(const WCHAR* text, bool appendOnly) {
     CrashIf(!text);
     if (!text)
         return false;
@@ -723,7 +717,7 @@ bool CopyTextToClipboard(const WCHAR *text, bool appendOnly) {
     size_t n = str::Len(text) + 1;
     HGLOBAL handle = GlobalAlloc(GMEM_MOVEABLE, n * sizeof(WCHAR));
     if (handle) {
-        WCHAR *globalText = (WCHAR *)GlobalLock(handle);
+        WCHAR* globalText = (WCHAR*)GlobalLock(handle);
         if (globalText) {
             str::BufSet(globalText, n, text);
         }
@@ -748,8 +742,7 @@ static bool SetClipboardImage(HBITMAP hbmp) {
         // GDI+ produced HBITMAPs are DIBs instead of DDBs which
         // aren't correctly handled by the clipboard, so create a
         // clipboard-safe clone
-        ScopedGdiObj<HBITMAP> ddbBmp(
-            (HBITMAP)CopyImage(hbmp, IMAGE_BITMAP, bmpInfo.bmWidth, bmpInfo.bmHeight, 0));
+        ScopedGdiObj<HBITMAP> ddbBmp((HBITMAP)CopyImage(hbmp, IMAGE_BITMAP, bmpInfo.bmWidth, bmpInfo.bmHeight, 0));
         h = SetClipboardData(CF_BITMAP, ddbBmp);
     } else {
         h = SetClipboardData(CF_BITMAP, hbmp);
@@ -784,7 +777,7 @@ void ToggleWindowStyle(HWND hwnd, DWORD flag, bool enable, int type) {
 }
 
 RectI ChildPosWithinParent(HWND hwnd) {
-    POINT pt = { 0, 0 };
+    POINT pt = {0, 0};
     ClientToScreen(GetParent(hwnd), &pt);
     WindowRect rc(hwnd);
     rc.Offset(-pt.x, -pt.y);
@@ -793,7 +786,7 @@ RectI ChildPosWithinParent(HWND hwnd) {
 
 HFONT GetDefaultGuiFont() {
     if (!gDefaultGuiFont) {
-        NONCLIENTMETRICS ncm = { 0 };
+        NONCLIENTMETRICS ncm = {0};
         ncm.cbSize = sizeof(ncm);
         SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
         gDefaultGuiFont = CreateFontIndirect(&ncm.lfMessageFont);
@@ -802,7 +795,7 @@ HFONT GetDefaultGuiFont() {
 }
 
 long GetDefaultGuiFontSize() {
-    NONCLIENTMETRICS ncm = { 0 };
+    NONCLIENTMETRICS ncm = {0};
     ncm.cbSize = sizeof(ncm);
     SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
     return -ncm.lfMessageFont.lfHeight;
@@ -825,7 +818,7 @@ DoubleBuffer::DoubleBuffer(HWND hwnd, RectI rect)
 
     if (rect.x != 0 || rect.y != 0) {
         SetGraphicsMode(hdcBuffer, GM_ADVANCED);
-        XFORM ctm = { 1.0, 0, 0, 1.0, (float)-rect.x, (float)-rect.y };
+        XFORM ctm = {1.0, 0, 0, 1.0, (float)-rect.x, (float)-rect.y};
         SetWorldTransform(hdcBuffer, &ctm);
     }
     DeleteObject(SelectObject(hdcBuffer, doubleBuffer));
@@ -843,9 +836,13 @@ void DoubleBuffer::Flush(HDC hdc) {
         BitBlt(hdc, rect.x, rect.y, rect.dx, rect.dy, hdcBuffer, 0, 0, SRCCOPY);
 }
 
-DeferWinPosHelper::DeferWinPosHelper() { hdwp = ::BeginDeferWindowPos(32); }
+DeferWinPosHelper::DeferWinPosHelper() {
+    hdwp = ::BeginDeferWindowPos(32);
+}
 
-DeferWinPosHelper::~DeferWinPosHelper() { End(); }
+DeferWinPosHelper::~DeferWinPosHelper() {
+    End();
+}
 
 void DeferWinPosHelper::End() {
     if (hdwp) {
@@ -881,14 +878,16 @@ bool SetEnabled(HMENU m, UINT id, bool isEnabled) {
     return ret != -1;
 }
 
-void Remove(HMENU m, UINT id) { RemoveMenu(m, id, MF_BYCOMMAND); }
+void Remove(HMENU m, UINT id) {
+    RemoveMenu(m, id, MF_BYCOMMAND);
+}
 void Empty(HMENU m) {
     while (RemoveMenu(m, 0, MF_BYPOSITION))
         ;
 }
 
-void SetText(HMENU m, UINT id, WCHAR *s) {
-    MENUITEMINFO mii = { 0 };
+void SetText(HMENU m, UINT id, WCHAR* s) {
+    MENUITEMINFO mii = {0};
     mii.cbSize = sizeof(mii);
     mii.fMask = MIIM_STRING;
     mii.fType = MFT_STRING;
@@ -901,7 +900,7 @@ void SetText(HMENU m, UINT id, WCHAR *s) {
    (preserving all & so that they don't get swallowed)
    if no change is needed, the string is returned as is,
    else it's also saved in newResult for automatic freeing */
-const WCHAR *ToSafeString(AutoFreeW& s) {
+const WCHAR* ToSafeString(AutoFreeW& s) {
     auto str = s.Get();
     if (!str::FindChar(str, '&')) {
         return str;
@@ -912,8 +911,8 @@ const WCHAR *ToSafeString(AutoFreeW& s) {
 }
 }
 
-HFONT CreateSimpleFont(HDC hdc, const WCHAR *fontName, int fontSize) {
-    LOGFONT lf = { 0 };
+HFONT CreateSimpleFont(HDC hdc, const WCHAR* fontName, int fontSize) {
+    LOGFONT lf = {0};
 
     lf.lfWidth = 0;
     lf.lfHeight = -MulDiv(fontSize, GetDeviceCaps(hdc, LOGPIXELSY), USER_DEFAULT_SCREEN_DPI);
@@ -933,7 +932,7 @@ HFONT CreateSimpleFont(HDC hdc, const WCHAR *fontName, int fontSize) {
     return CreateFontIndirect(&lf);
 }
 
-IStream *CreateStreamFromData(const void *data, size_t len) {
+IStream* CreateStreamFromData(const void* data, size_t len) {
     if (!data)
         return nullptr;
 
@@ -945,14 +944,14 @@ IStream *CreateStreamFromData(const void *data, size_t len) {
     if (FAILED(stream->Write(data, (ULONG)len, &written)) || written != len)
         return nullptr;
 
-    LARGE_INTEGER zero = { 0 };
+    LARGE_INTEGER zero = {0};
     stream->Seek(zero, STREAM_SEEK_SET, nullptr);
 
     stream->AddRef();
     return stream;
 }
 
-static HRESULT GetDataFromStream(IStream *stream, void **data, ULONG *len) {
+static HRESULT GetDataFromStream(IStream* stream, void** data, ULONG* len) {
     if (!stream)
         return E_INVALIDARG;
 
@@ -966,12 +965,12 @@ static HRESULT GetDataFromStream(IStream *stream, void **data, ULONG *len) {
     ULONG n = stat.cbSize.LowPart;
     // zero-terminate the stream's content, so that it could be
     // used directly as either a char* or a WCHAR* string
-    char *d = AllocArray<char>(n + sizeof(WCHAR) + 1);
+    char* d = AllocArray<char>(n + sizeof(WCHAR) + 1);
     if (!d)
         return E_OUTOFMEMORY;
 
     ULONG read;
-    LARGE_INTEGER zero = { 0 };
+    LARGE_INTEGER zero = {0};
     stream->Seek(zero, STREAM_SEEK_SET, nullptr);
     res = stream->Read(d, stat.cbSize.LowPart, &read);
     if (FAILED(res) || read != n) {
@@ -984,8 +983,8 @@ static HRESULT GetDataFromStream(IStream *stream, void **data, ULONG *len) {
     return S_OK;
 }
 
-void *GetDataFromStream(IStream *stream, size_t *len, HRESULT *res_opt) {
-    void *data;
+void* GetDataFromStream(IStream* stream, size_t* len, HRESULT* res_opt) {
+    void* data;
     ULONG size;
     HRESULT res = GetDataFromStream(stream, &data, &size);
     if (len)
@@ -997,7 +996,7 @@ void *GetDataFromStream(IStream *stream, size_t *len, HRESULT *res_opt) {
     return data;
 }
 
-bool ReadDataFromStream(IStream *stream, void *buffer, size_t len, size_t offset) {
+bool ReadDataFromStream(IStream* stream, void* buffer, size_t len, size_t offset) {
     LARGE_INTEGER off;
     off.QuadPart = offset;
     HRESULT res = stream->Seek(off, STREAM_SEEK_SET, nullptr);
@@ -1010,14 +1009,14 @@ bool ReadDataFromStream(IStream *stream, void *buffer, size_t len, size_t offset
         if (FAILED(res) || read != ULONG_MAX)
             return false;
         len -= ULONG_MAX;
-        buffer = (char *)buffer + ULONG_MAX;
+        buffer = (char*)buffer + ULONG_MAX;
     }
 #endif
     res = stream->Read(buffer, (ULONG)len, &read);
     return SUCCEEDED(res) && read == len;
 }
 
-UINT GuessTextCodepage(const char *data, size_t len, UINT defVal) {
+UINT GuessTextCodepage(const char* data, size_t len, UINT defVal) {
     // try to guess the codepage
     ScopedComPtr<IMultiLanguage2> pMLang;
     if (!pMLang.Create(CLSID_CMultiLanguage))
@@ -1025,15 +1024,14 @@ UINT GuessTextCodepage(const char *data, size_t len, UINT defVal) {
 
     int ilen = std::min((int)len, INT_MAX);
     int count = 1;
-    DetectEncodingInfo info = { 0 };
-    HRESULT hr =
-        pMLang->DetectInputCodepage(MLDETECTCP_NONE, CP_ACP, (char *)data, &ilen, &info, &count);
+    DetectEncodingInfo info = {0};
+    HRESULT hr = pMLang->DetectInputCodepage(MLDETECTCP_NONE, CP_ACP, (char*)data, &ilen, &info, &count);
     if (FAILED(hr) || count != 1)
         return defVal;
     return info.nCodePage;
 }
 
-WCHAR *NormalizeString(const WCHAR *str, int /* NORM_FORM */ form) {
+WCHAR* NormalizeString(const WCHAR* str, int /* NORM_FORM */ form) {
     if (!DynNormalizeString) {
         return nullptr;
     }
@@ -1065,9 +1063,9 @@ void ToForeground(HWND hwnd) {
 
 /* return text of window or edit control, nullptr in case of an error.
 caller needs to free() the result */
-WCHAR *GetText(HWND hwnd) {
+WCHAR* GetText(HWND hwnd) {
     size_t cchTxtLen = GetTextLen(hwnd);
-    WCHAR *txt = AllocArray<WCHAR>(cchTxtLen + 1);
+    WCHAR* txt = AllocArray<WCHAR>(cchTxtLen + 1);
     if (nullptr == txt)
         return nullptr;
     SendMessage(hwnd, WM_GETTEXT, cchTxtLen + 1, (LPARAM)txt);
@@ -1075,17 +1073,25 @@ WCHAR *GetText(HWND hwnd) {
     return txt;
 }
 
-size_t GetTextLen(HWND hwnd) { return (size_t)SendMessage(hwnd, WM_GETTEXTLENGTH, 0, 0); }
+size_t GetTextLen(HWND hwnd) {
+    return (size_t)SendMessage(hwnd, WM_GETTEXTLENGTH, 0, 0);
+}
 
-void SetText(HWND hwnd, const WCHAR *txt) { SendMessage(hwnd, WM_SETTEXT, 0, (LPARAM)txt); }
+void SetText(HWND hwnd, const WCHAR* txt) {
+    SendMessage(hwnd, WM_SETTEXT, 0, (LPARAM)txt);
+}
 
-void SetVisibility(HWND hwnd, bool visible) { ShowWindow(hwnd, visible ? SW_SHOW : SW_HIDE); }
+void SetVisibility(HWND hwnd, bool visible) {
+    ShowWindow(hwnd, visible ? SW_SHOW : SW_HIDE);
+}
 
 bool HasFrameThickness(HWND hwnd) {
     return bit::IsMaskSet(GetWindowLong(hwnd, GWL_STYLE), WS_THICKFRAME);
 }
 
-bool HasCaption(HWND hwnd) { return bit::IsMaskSet(GetWindowLong(hwnd, GWL_STYLE), WS_CAPTION); }
+bool HasCaption(HWND hwnd) {
+    return bit::IsMaskSet(GetWindowLong(hwnd, GWL_STYLE), WS_CAPTION);
+}
 }
 
 SizeI GetBitmapSize(HBITMAP hbmp) {
@@ -1104,7 +1110,8 @@ inline int mul255(int a, int b) {
 void FinalizeBitmapPixels(BitmapPixels* bitmapPixels) {
     HDC hdc = bitmapPixels->hdc;
     if (hdc) {
-        SetDIBits(bitmapPixels->hdc, bitmapPixels->hbmp, 0, bitmapPixels->size.dy, bitmapPixels->pixels, &bitmapPixels->bmi, DIB_RGB_COLORS);
+        SetDIBits(bitmapPixels->hdc, bitmapPixels->hbmp, 0, bitmapPixels->size.dy, bitmapPixels->pixels,
+                  &bitmapPixels->bmi, DIB_RGB_COLORS);
         DeleteDC(hdc);
     }
     free(bitmapPixels);
@@ -1114,11 +1121,11 @@ static bool IsPalettedBitmap(DIBSECTION& info, int nBytes) {
     return sizeof(info) == nBytes && info.dsBmih.biBitCount != 0 && info.dsBmih.biBitCount <= 8;
 }
 
-COLORREF GetPixel(BitmapPixels *bitmap, int x, int y) {
+COLORREF GetPixel(BitmapPixels* bitmap, int x, int y) {
     CrashIf(x < 0 || x >= bitmap->size.dx);
     CrashIf(y < 0 || y >= bitmap->size.dy);
-    uint8 *pixels = bitmap->pixels;
-    uint8 *pixel = pixels + y * bitmap->nBytesPerRow + x * bitmap->nBytesPerPixel;
+    uint8* pixels = bitmap->pixels;
+    uint8* pixel = pixels + y * bitmap->nBytesPerRow + x * bitmap->nBytesPerPixel;
     // color order in DIB is blue-green-red-alpha
     COLORREF c = 0;
     if (3 == bitmap->nBytesPerPixel) {
@@ -1131,10 +1138,10 @@ COLORREF GetPixel(BitmapPixels *bitmap, int x, int y) {
     return c;
 }
 
-BitmapPixels *GetBitmapPixels(HBITMAP hbmp) {
-    BitmapPixels *res = AllocStruct<BitmapPixels>();
+BitmapPixels* GetBitmapPixels(HBITMAP hbmp) {
+    BitmapPixels* res = AllocStruct<BitmapPixels>();
 
-    DIBSECTION info = { 0 };
+    DIBSECTION info = {0};
     int nBytes = GetObject(hbmp, sizeof(info), &info);
     CrashIf(nBytes < sizeof(info.dsBm));
     SizeI size(info.dsBm.bmWidth, info.dsBm.bmHeight);
@@ -1143,7 +1150,7 @@ BitmapPixels *GetBitmapPixels(HBITMAP hbmp) {
     res->hbmp = hbmp;
 
     if (nBytes >= sizeof(info.dsBm)) {
-        res->pixels = (uint8_t *)info.dsBm.bmBits;
+        res->pixels = (uint8_t*)info.dsBm.bmBits;
     }
 
     // for mapped 32-bit DI bitmaps: directly access the pixel data
@@ -1168,7 +1175,7 @@ BitmapPixels *GetBitmapPixels(HBITMAP hbmp) {
         return nullptr;
     }
 
-    BITMAPINFO bmi = { 0 };
+    BITMAPINFO bmi = {0};
     bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
     bmi.bmiHeader.biWidth = size.dx;
     bmi.bmiHeader.biHeight = size.dy;
@@ -1178,7 +1185,7 @@ BitmapPixels *GetBitmapPixels(HBITMAP hbmp) {
 
     HDC hdc = CreateCompatibleDC(nullptr);
     int bmpBytes = size.dx * size.dy * 4;
-    ScopedMem<uint8> bmpData((uint8 *)malloc(bmpBytes));
+    ScopedMem<uint8> bmpData((uint8*)malloc(bmpBytes));
     CrashIf(!bmpData);
 
     if (!GetDIBits(hdc, hbmp, 0, size.dy, bmpData, &bmi, DIB_RGB_COLORS)) {
@@ -1195,12 +1202,11 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor) {
         return;
 
     // color order in DIB is blue-green-red-alpha
-    int base[4] = { GetBValueSafe(textColor), GetGValueSafe(textColor), GetRValueSafe(textColor),
-                    0 };
-    int diff[4] = { GetBValueSafe(bgColor) - base[0], GetGValueSafe(bgColor) - base[1],
-                    GetRValueSafe(bgColor) - base[2], 255 };
+    int base[4] = {GetBValueSafe(textColor), GetGValueSafe(textColor), GetRValueSafe(textColor), 0};
+    int diff[4] = {GetBValueSafe(bgColor) - base[0], GetGValueSafe(bgColor) - base[1], GetRValueSafe(bgColor) - base[2],
+                   255};
 
-    DIBSECTION info = { 0 };
+    DIBSECTION info = {0};
     int ret = GetObject(hbmp, sizeof(info), &info);
     CrashIf(ret < sizeof(info.dsBm));
     SizeI size(info.dsBm.bmWidth, info.dsBm.bmHeight);
@@ -1209,7 +1215,7 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor) {
     if (ret >= sizeof(info.dsBm) && info.dsBm.bmBits && 32 == info.dsBm.bmBitsPixel &&
         size.dx * 4 == info.dsBm.bmWidthBytes) {
         int bmpBytes = size.dx * size.dy * 4;
-        uint8 *bmpData = (uint8 *)info.dsBm.bmBits;
+        uint8* bmpData = (uint8*)info.dsBm.bmBits;
         for (int i = 0; i < bmpBytes; i++) {
             int k = i % 4;
             bmpData[i] = (uint8)(base[k] + mul255(bmpData[i], diff[k]));
@@ -1220,7 +1226,7 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor) {
     // for mapped 24-bit DI bitmaps: directly access the pixel data
     if (ret >= sizeof(info.dsBm) && info.dsBm.bmBits && 24 == info.dsBm.bmBitsPixel &&
         info.dsBm.bmWidthBytes >= size.dx * 3) {
-        uint8 *bmpData = (uint8 *)info.dsBm.bmBits;
+        uint8* bmpData = (uint8*)info.dsBm.bmBits;
         for (int y = 0; y < size.dy; y++) {
             for (int x = 0; x < size.dx * 3; x++) {
                 int k = x % 3;
@@ -1249,7 +1255,7 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor) {
         return;
     }
 
-    BITMAPINFO bmi = { 0 };
+    BITMAPINFO bmi = {0};
     bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
     bmi.bmiHeader.biWidth = size.dx;
     bmi.bmiHeader.biHeight = size.dy;
@@ -1259,7 +1265,7 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor) {
 
     HDC hDC = CreateCompatibleDC(nullptr);
     int bmpBytes = size.dx * size.dy * 4;
-    ScopedMem<uint8> bmpData((uint8 *)malloc(bmpBytes));
+    ScopedMem<uint8> bmpData((uint8*)malloc(bmpBytes));
     CrashIf(!bmpData);
 
     if (GetDIBits(hDC, hbmp, 0, size.dy, bmpData, &bmi, DIB_RGB_COLORS)) {
@@ -1276,15 +1282,15 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor) {
 // create data for a .bmp file from this bitmap (if saved to disk, the HBITMAP
 // can be deserialized with LoadImage(nullptr, ..., LD_LOADFROMFILE) and its
 // dimensions determined again with GetBitmapSize(...))
-unsigned char *SerializeBitmap(HBITMAP hbmp, size_t *bmpBytesOut) {
+unsigned char* SerializeBitmap(HBITMAP hbmp, size_t* bmpBytesOut) {
     SizeI size = GetBitmapSize(hbmp);
     DWORD bmpHeaderLen = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFO);
     DWORD bmpBytes = ((size.dx * 3 + 3) / 4) * 4 * size.dy + bmpHeaderLen;
-    unsigned char *bmpData = AllocArray<unsigned char>(bmpBytes);
+    unsigned char* bmpData = AllocArray<unsigned char>(bmpBytes);
     if (!bmpData)
         return nullptr;
 
-    BITMAPINFO *bmi = (BITMAPINFO *)(bmpData + sizeof(BITMAPFILEHEADER));
+    BITMAPINFO* bmi = (BITMAPINFO*)(bmpData + sizeof(BITMAPFILEHEADER));
     bmi->bmiHeader.biSize = sizeof(bmi->bmiHeader);
     bmi->bmiHeader.biWidth = size.dx;
     bmi->bmiHeader.biHeight = size.dy;
@@ -1294,7 +1300,7 @@ unsigned char *SerializeBitmap(HBITMAP hbmp, size_t *bmpBytesOut) {
 
     HDC hDC = GetDC(nullptr);
     if (GetDIBits(hDC, hbmp, 0, size.dy, bmpData + bmpHeaderLen, bmi, DIB_RGB_COLORS)) {
-        BITMAPFILEHEADER *bmpfh = (BITMAPFILEHEADER *)bmpData;
+        BITMAPFILEHEADER* bmpfh = (BITMAPFILEHEADER*)bmpData;
         bmpfh->bfType = MAKEWORD('B', 'M');
         bmpfh->bfOffBits = bmpHeaderLen;
         bmpfh->bfSize = bmpBytes;
@@ -1309,8 +1315,8 @@ unsigned char *SerializeBitmap(HBITMAP hbmp, size_t *bmpBytesOut) {
     return bmpData;
 }
 
-HBITMAP CreateMemoryBitmap(SizeI size, HANDLE *hDataMapping) {
-    BITMAPINFO bmi = { 0 };
+HBITMAP CreateMemoryBitmap(SizeI size, HANDLE* hDataMapping) {
+    BITMAPINFO bmi = {0};
     bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     bmi.bmiHeader.biWidth = size.dx;
     bmi.bmiHeader.biHeight = -size.dy;
@@ -1320,12 +1326,11 @@ HBITMAP CreateMemoryBitmap(SizeI size, HANDLE *hDataMapping) {
     bmi.bmiHeader.biBitCount = 32;
     bmi.bmiHeader.biSizeImage = size.dx * 4 * size.dy;
 
-    void *data = nullptr;
+    void* data = nullptr;
     if (hDataMapping && !*hDataMapping)
-        *hDataMapping = CreateFileMapping(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0,
-                                          bmi.bmiHeader.biSizeImage, nullptr);
-    return CreateDIBSection(nullptr, &bmi, DIB_RGB_COLORS, &data,
-                            hDataMapping ? *hDataMapping : nullptr, 0);
+        *hDataMapping =
+            CreateFileMapping(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, bmi.bmiHeader.biSizeImage, nullptr);
+    return CreateDIBSection(nullptr, &bmi, DIB_RGB_COLORS, &data, hDataMapping ? *hDataMapping : nullptr, 0);
 }
 
 // This is meant to measure program startup time from the user perspective.
@@ -1351,7 +1356,7 @@ double GetProcessRunningTime() {
 
 // This is just to satisfy /analyze. CloseHandle(nullptr) works perfectly fine
 // but /analyze complains anyway
-BOOL SafeCloseHandle(HANDLE *h) {
+BOOL SafeCloseHandle(HANDLE* h) {
     if (!*h)
         return TRUE;
     BOOL ok = CloseHandle(*h);
@@ -1361,7 +1366,7 @@ BOOL SafeCloseHandle(HANDLE *h) {
 
 // This is just to satisfy /analyze. DestroyWindow(nullptr) works perfectly fine
 // but /analyze complains anyway
-BOOL SafeDestroyWindow(HWND *hwnd) {
+BOOL SafeDestroyWindow(HWND* hwnd) {
     if (!hwnd || !*hwnd)
         return TRUE;
     BOOL ok = DestroyWindow(*hwnd);
@@ -1380,9 +1385,9 @@ BOOL SafeDestroyWindow(HWND *hwnd) {
 // - using CreateProcessAsUser() with hand-crafted token
 // It'll always run the process, might fail to run non-elevated if fails to find explorer.exe
 // Also, if explorer.exe is running elevated, it'll probably run elevated as well.
-void RunNonElevated(const WCHAR *exePath) {
+void RunNonElevated(const WCHAR* exePath) {
     AutoFreeW cmd, explorerPath;
-    WCHAR buf[MAX_PATH] = { 0 };
+    WCHAR buf[MAX_PATH] = {0};
     UINT res = GetWindowsDirectory(buf, dimof(buf));
     if (0 == res || res >= dimof(buf))
         goto Run;
@@ -1396,11 +1401,11 @@ Run:
 }
 
 void ResizeHwndToClientArea(HWND hwnd, int dx, int dy, bool hasMenu) {
-    WINDOWINFO wi = { 0 };
+    WINDOWINFO wi = {0};
     wi.cbSize = sizeof(wi);
     GetWindowInfo(hwnd, &wi);
 
-    RECT r = { 0 };
+    RECT r = {0};
     r.right = dx;
     r.bottom = dy;
     DWORD style = wi.dwStyle;
@@ -1439,28 +1444,28 @@ void RepaintNow(HWND hwnd) {
     UpdateWindow(hwnd);
 }
 
-void VariantInitBstr(VARIANT &urlVar, const WCHAR *s) {
+void VariantInitBstr(VARIANT& urlVar, const WCHAR* s) {
     VariantInit(&urlVar);
     urlVar.vt = VT_BSTR;
     urlVar.bstrVal = SysAllocString(s);
 }
 
-char *LoadTextResource(int resId, size_t *sizeOut) {
+char* LoadTextResource(int resId, size_t* sizeOut) {
     HRSRC resSrc = FindResource(nullptr, MAKEINTRESOURCE(resId), RT_RCDATA);
     CrashIf(!resSrc);
     HGLOBAL res = LoadResource(nullptr, resSrc);
     CrashIf(!res);
     DWORD size = SizeofResource(nullptr, resSrc);
-    const char *resData = (const char *)LockResource(res);
-    char *s = str::DupN(resData, size);
+    const char* resData = (const char*)LockResource(res);
+    char* s = str::DupN(resData, size);
     if (sizeOut)
         *sizeOut = size;
     UnlockResource(res);
     return s;
 }
 
-static HDDEDATA CALLBACK DdeCallback(UINT uType, UINT uFmt, HCONV hconv, HSZ hsz1, HSZ hsz2,
-                                     HDDEDATA hdata, ULONG_PTR dwData1, ULONG_PTR dwData2) {
+static HDDEDATA CALLBACK DdeCallback(UINT uType, UINT uFmt, HCONV hconv, HSZ hsz1, HSZ hsz2, HDDEDATA hdata,
+                                     ULONG_PTR dwData1, ULONG_PTR dwData2) {
     UNUSED(uType);
     UNUSED(uFmt);
     UNUSED(hconv);
@@ -1472,7 +1477,7 @@ static HDDEDATA CALLBACK DdeCallback(UINT uType, UINT uFmt, HCONV hconv, HSZ hsz
     return 0;
 }
 
-bool DDEExecute(const WCHAR *server, const WCHAR *topic, const WCHAR *command) {
+bool DDEExecute(const WCHAR* server, const WCHAR* topic, const WCHAR* command) {
     DWORD inst = 0;
     HSZ hszServer = nullptr, hszTopic = nullptr;
     HCONV hconv = nullptr;
@@ -1500,8 +1505,7 @@ bool DDEExecute(const WCHAR *server, const WCHAR *topic, const WCHAR *command) {
         goto Exit;
 
     cbLen = ((DWORD)str::Len(command) + 1) * sizeof(WCHAR);
-    answer = DdeClientTransaction((BYTE *)command, cbLen, hconv, 0, CF_UNICODETEXT, XTYP_EXECUTE,
-                                  10000, nullptr);
+    answer = DdeClientTransaction((BYTE*)command, cbLen, hconv, 0, CF_UNICODETEXT, XTYP_EXECUTE, 10000, nullptr);
     if (answer) {
         DdeFreeDataHandle(answer);
         ok = true;
@@ -1524,7 +1528,7 @@ Exit:
 //  [ r1 ][  r2 ][ r3 ]
 //        ^     ^
 //        y     y+dy
-void DivideRectV(const RECT &r, int x, int dx, RECT &r1, RECT &r2, RECT &r3) {
+void DivideRectV(const RECT& r, int x, int dx, RECT& r1, RECT& r2, RECT& r3) {
     r1 = r2 = r3 = r;
     r1.right = x;
     r2.left = x;
@@ -1533,7 +1537,7 @@ void DivideRectV(const RECT &r, int x, int dx, RECT &r1, RECT &r2, RECT &r3) {
 }
 
 // like DivideRectV
-void DivideRectH(const RECT &r, int y, int dy, RECT &r1, RECT &r2, RECT &r3) {
+void DivideRectH(const RECT& r, int y, int dy, RECT& r1, RECT& r2, RECT& r3) {
     r1 = r2 = r3 = r;
     r1.bottom = y;
     r2.top = y;
@@ -1541,13 +1545,13 @@ void DivideRectH(const RECT &r, int y, int dy, RECT &r1, RECT &r2, RECT &r3) {
     r3.top = y + dy + 1;
 }
 
-void RectInflateTB(RECT &r, int top, int bottom) {
+void RectInflateTB(RECT& r, int top, int bottom) {
     r.top += top;
     r.bottom += bottom;
 }
 
-static LPWSTR knownCursorIds[] = { IDC_ARROW,  IDC_IBEAM,  IDC_HAND, IDC_SIZEALL,
-                                   IDC_SIZEWE, IDC_SIZENS, IDC_NO,   IDC_CROSS };
+static LPWSTR knownCursorIds[] = {IDC_ARROW,  IDC_IBEAM,  IDC_HAND, IDC_SIZEALL,
+                                  IDC_SIZEWE, IDC_SIZENS, IDC_NO,   IDC_CROSS};
 
 static HCURSOR cachedCursors[dimof(knownCursorIds)] = {};
 
@@ -1567,7 +1571,9 @@ HCURSOR GetCursor(LPWSTR id) {
     return cachedCursors[cursorIdx];
 }
 
-void SetCursor(LPWSTR id) { SetCursor(GetCursor(id)); }
+void SetCursor(LPWSTR id) {
+    SetCursor(GetCursor(id));
+}
 
 void DeleteCachedCursors() {
     for (int i = 0; i < dimof(knownCursorIds); i++) {
@@ -1584,7 +1590,7 @@ void DeleteCachedCursors() {
 // this triggers drmemory. Force no inlining so that it's easy to write a
 // localized suppression
 __declspec(noinline) int GetMeasurementSystem() {
-    WCHAR unitSystem[2] = { 0 };
+    WCHAR unitSystem[2] = {0};
     GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_IMEASURE, unitSystem, dimof(unitSystem));
     if (unitSystem[0] == '0') {
         return 0;
@@ -1595,7 +1601,7 @@ __declspec(noinline) int GetMeasurementSystem() {
 // ask for getting WM_MOUSELEAVE for the window
 // returns true if started tracking
 bool TrackMouseLeave(HWND hwnd) {
-    TRACKMOUSEEVENT tme = { 0 };
+    TRACKMOUSEEVENT tme = {0};
     tme.cbSize = sizeof(TRACKMOUSEEVENT);
     tme.dwFlags = TME_QUERY;
     tme.hwndTrack = hwnd;
@@ -1615,7 +1621,7 @@ void TriggerRepaint(HWND hwnd) {
 }
 
 POINT GetCursorPosInHwnd(HWND hwnd) {
-    POINT pt = { 0, 0 };
+    POINT pt = {0, 0};
     if (GetCursorPos(&pt)) {
         ScreenToClient(hwnd, &pt);
     }
