@@ -37,6 +37,8 @@ static bool gSaveImages = false;
 static bool gLayout = false;
 // directory to which we'll save mobi html and images
 #define MOBI_SAVE_DIR L"..\\ebooks-converted"
+// if true, we'll test the search functionality
+static bool gSearch = false;
 
 static int Usage()
 {
@@ -47,6 +49,7 @@ static int Usage()
     printf("  -save-images - will save images extracted from mobi files\n");
     printf("  -zip-create - creates a sample zip file that needs to be manually checked that it worked\n");
     printf("  -bench-md5 - compare Window's md5 vs. our code\n");
+    printf("  -search file searchString - test search");
     system("pause");
     return 1;
 }
@@ -248,6 +251,17 @@ void ZipCreateTest()
     }
 }
 
+void SearchTest(WCHAR *searchFile, WCHAR *searchTerm)
+{
+	wprintf(L"Testing file '%s', looking for '%s'\n", searchFile, searchTerm);
+	// PdfDoc *pdfDoc = PdfDoc::CreateFromFile(searchFile);
+	if (!searchFile) {
+		printf(" error: failed to parse the file\n");
+		return;
+	}
+	printf("OK");
+}
+
 int TesterMain()
 {
     RedirectIOToConsole();
@@ -262,6 +276,9 @@ int TesterMain()
     mui::Initialize();
 
     WCHAR *dirOrFile = nullptr;
+
+    WCHAR *searchFile = nullptr;
+    WCHAR *searchTerm = nullptr;
 
     bool mobiTest = false;
     size_t i = 2; // skip program name and "/tester"
@@ -288,6 +305,17 @@ int TesterMain()
         } else if (str::Eq(argv[i], L"-bench-md5")) {
             BenchMD5();
             ++i;
+        } else if (str::Eq(argv[i], L"-search")) {
+            ++i;
+            if (i == argv.Count())
+                return Usage();
+            gSearch = true;
+            searchFile = argv[i];
+            ++i;
+            if (i == argv.Count())
+                return Usage();
+            searchTerm = argv[i];
+            ++i;
         } else {
             // unknown argument
             return Usage();
@@ -300,6 +328,10 @@ int TesterMain()
 
     if (mobiTest) {
         MobiTest(dirOrFile);
+    }
+
+    if (gSearch) {
+        SearchTest(searchFile, searchTerm);
     }
 
     mui::Destroy();
