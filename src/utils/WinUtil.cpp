@@ -355,7 +355,7 @@ WCHAR* GetSystem32Dir() {
     WCHAR buf[1024] = {0};
     DWORD n = GetEnvironmentVariableW(L"SystemRoot", &buf[0], dimof(buf));
     if ((n == 0) || (n >= dimof(buf))) {
-        CrashIf(false);
+        CrashIf(true);
         return str::Dup(L"c:\\windows\\system32");
     }
     return path::Join(buf, L"system32");

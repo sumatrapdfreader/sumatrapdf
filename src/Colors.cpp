@@ -245,7 +245,7 @@ COLORREF GetAppColor(AppColor col) {
         AdjustLightness2(c, -10);
     }
 
-    CrashIf(false);
+    CrashIf(true);
     return COL_WINDOW_BG;
 }
 
