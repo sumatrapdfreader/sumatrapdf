@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-ae84c163498664b0e54b4de23b3bffd4a7b908df
+15572addf096836b4547df4c1c66275b58b09451
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -2664,7 +2664,7 @@ ta:எனச் சேமி...\tCtrl+S
 th:บันทึกเป็น...\tCtrl+S
 tl:I-save Bilang...\tCtrl+S
 tr:&Farklı kaydet...\tCtrl+S
-tw:另存為(&A)...\tCtrl+A
+tw:另存為(&A)...\tCtrl+S
 uk:Зб&ерегти як...\tCtrl+S
 uz:&Quyidagicha saqlash...\tCtrl+S
 vn:Lưu thành...\tCtrl+S
@@ -2917,10 +2917,12 @@ vn:Bỏ qua phiên bản này.
 :&Theme
 am:&Ոճը
 br:&Tema
+es:&Tema
 fr:Thème
 he:ערכת נושא
 ne:&थिम
 nl:&Uiterlijk
+ru:&Тема
 sp-rs:Tema
 sr-rs:Тема
 sv:&Tema
@@ -6977,10 +6979,12 @@ vn:Thu phóng &tuỳ ý...\tCtrl+Y
 :Dark
 am:Մուգ
 br:Escuro
+es:Oscuro
 fr:Sombre
 he:כהה
 ne:गाढ़ा
 nl:Donker
+ru:Темная
 sp-rs:Tamno
 sr-rs:Тамно
 sv:Mörk
@@ -6988,10 +6992,12 @@ uk:Темна
 :Darker
 am:Շատ մուգ
 br:Muito escuro
+es:Más oscuro
 fr:Plus sombre
 he:כהה מאוד
 ne:अझै गाढ़ा
 nl:Zwart
+ru:Более темная
 sp-rs:Tamnije
 sr-rs:Тамније
 sv:Mörkare
@@ -10852,10 +10858,12 @@ vn:Cho phép Windows hiển thị hình ảnh &xem trước của các tài li�
 :Light
 am:Լուսավոր
 br:Claro
+es:Claro
 fr:Clair
 he:בהירה
 ne:हल्का
 nl:Wit
+ru:Светлая
 sp-rs:Svetlo
 sr-rs:Светло
 sv:Ljus
