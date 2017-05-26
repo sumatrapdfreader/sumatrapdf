@@ -25,6 +25,8 @@
 #include "HtmlFormatter.h"
 #include "EbookFormatter.h"
 
+#include "TestTextSearch.h"
+
 // if true, we'll save html content of a mobi ebook as well
 // as pretty-printed html to MOBI_SAVE_DIR. The name will be
 // ${file}.html and ${file}_pp.html
@@ -49,7 +51,7 @@ static int Usage()
     printf("  -save-images - will save images extracted from mobi files\n");
     printf("  -zip-create - creates a sample zip file that needs to be manually checked that it worked\n");
     printf("  -bench-md5 - compare Window's md5 vs. our code\n");
-    printf("  -search file searchString - test search");
+    printf("  -search file searchString logFile - test search");
     system("pause");
     return 1;
 }
@@ -251,17 +253,6 @@ void ZipCreateTest()
     }
 }
 
-void SearchTest(WCHAR *searchFile, WCHAR *searchTerm)
-{
-	wprintf(L"Testing file '%s', looking for '%s'\n", searchFile, searchTerm);
-	// PdfDoc *pdfDoc = PdfDoc::CreateFromFile(searchFile);
-	if (!searchFile) {
-		printf(" error: failed to parse the file\n");
-		return;
-	}
-	printf("OK");
-}
-
 int TesterMain()
 {
     RedirectIOToConsole();
@@ -279,6 +270,7 @@ int TesterMain()
 
     WCHAR *searchFile = nullptr;
     WCHAR *searchTerm = nullptr;
+    WCHAR *searchLog = nullptr;
 
     bool mobiTest = false;
     size_t i = 2; // skip program name and "/tester"
@@ -316,6 +308,10 @@ int TesterMain()
                 return Usage();
             searchTerm = argv[i];
             ++i;
+            if (i == argv.Count())
+                return Usage();
+            searchLog = argv[i];
+            ++i;
         } else {
             // unknown argument
             return Usage();
@@ -331,7 +327,7 @@ int TesterMain()
     }
 
     if (gSearch) {
-        SearchTest(searchFile, searchTerm);
+        SearchTest(searchFile, searchTerm, searchLog);
     }
 
     mui::Destroy();
