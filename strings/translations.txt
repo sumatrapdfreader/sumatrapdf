@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-15572addf096836b4547df4c1c66275b58b09451
+94ea31d3045f4de7fcb88346cef8d685caf07f28
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -9973,7 +9973,7 @@ ar:الأكثر قراءة
 az:Ən çox oxunanlar
 bg:Често четени
 bn:প্রায়শই পড়া হয়
-br:Lidos com frequência
+br:Lidos com freqüência
 bs:Najčešće čitano
 ca-xv:Llegits més freqüents
 ca:Llegits més freqüents
@@ -10226,7 +10226,7 @@ am:Թաքցնել հաճախակի բացվածները
 ar:إخفاء الأكثر قراءة
 az:Ən çox oxunanları gizlət
 bg:Скриване на често четените
-br:Ocultar Lidos com frequência
+br:Ocultar Lidos com freqüência
 bs:Sakrij najčešće čitano
 ca-xv:Amaga els més llegits
 ca:Amaga els més llegits
@@ -15229,7 +15229,7 @@ am:Ցուցադրել հաճախակի բացվածները
 ar:إظهار الأكثر قراءة
 az:Ən çox oxunanları göstər
 bg:Покажи често четените
-br:Mostrar Lidos com frequência
+br:Mostrar Lidos com freqüência
 bs:Prikaži najčešće čitano
 ca-xv:Mostra els més llegits
 ca:Mostra els més llegits

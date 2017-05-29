@@ -10489,10 +10489,10 @@ const char * gTranslations_br =
   "Formatando o livro... %d p\303\241ginas\0"\
   "Texto encontrado na p\303\241gina %s\0"\
   "Texto encontrado (de novo) na p\303\241gina %s\0"\
-  "Lidos com frequ\303\252ncia\0"\
+  "Lidos com freq\303\274\303\252ncia\0"\
   "\0"\
   "Ir para a p\303\241gina\0"\
-  "Ocultar Lidos com frequ\303\252ncia\0"\
+  "Ocultar Lidos com freq\303\274\303\252ncia\0"\
   "Dica: tecle F3 para achar a pr\303\263xima ocorr\303\252ncia\0"\
   "Arquivos de imagem (*.%s)\0"\
   "\0"\
@@ -10566,7 +10566,7 @@ const char * gTranslations_br =
   "Exibir p\303\241ginas de modo cont\303\255nuo\0"\
   "Mostrar barra de ferramentas\0"\
   "Mostrar Favoritos\0"\
-  "Mostrar Lidos com frequ\303\252ncia\0"\
+  "Mostrar Lidos com freq\303\274\303\252ncia\0"\
   "Mostrar barra lateral de marcadores quando dispon\303\255vel\0"\
   "P\303\241gina \303\272nica\0"\
   "Desculpe, isso n\303\243o deveria ter acontecido!\n\nAperte 'Cancelar' se quiser nos ajudar a corrigir a causa deste erro.\0"\
