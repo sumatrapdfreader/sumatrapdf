@@ -51,7 +51,7 @@ static int Usage()
     printf("  -save-images - will save images extracted from mobi files\n");
     printf("  -zip-create - creates a sample zip file that needs to be manually checked that it worked\n");
     printf("  -bench-md5 - compare Window's md5 vs. our code\n");
-    printf("  -search file searchString logFile - test search");
+    printf("  -search file searchString logFile - test search\n");
     system("pause");
     return 1;
 }
@@ -331,6 +331,10 @@ int TesterMain()
     }
 
     mui::Destroy();
-    system("pause");
+    if (!gSearch) {
+        // no need to wait after search test: results are 
+        // logged to a file, not to the console
+        system("pause");
+    }
     return 0;
 }
