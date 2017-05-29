@@ -1,0 +1,135 @@
+suspendisse in ./scripts/loremipsum.pdf
+findCount=1
+ pages[0]=1 rects[i]=(293, 140, 58, 14)
+findCount=2
+ pages[0]=2 rects[i]=(335, 130, 59, 14)
+findCount=3
+ pages[0]=2 rects[i]=(56, 671, 59, 14)
+findCount=4
+ pages[0]=3 rects[i]=(315, 458, 58, 15)
+findCount=5
+ pages[0]=3 rects[i]=(221, 525, 59, 14)
+findCount=6
+ pages[0]=4 rects[i]=(109, 163, 59, 14)
+findCount=7
+ pages[0]=4 rects[i]=(323, 229, 59, 14)
+findCount=8
+ pages[0]=4 rects[i]=(56, 302, 59, 15)
+findCount=9
+ pages[0]=4 rects[i]=(56, 508, 59, 14)
+findCount=10
+ pages[0]=4 rects[i]=(131, 598, 59, 14)
+findCount=11
+ pages[0]=5 rects[i]=(255, 515, 59, 14)
+findCount=12
+ pages[0]=5 rects[i]=(302, 695, 58, 14)
+findCount=13
+ pages[0]=6 rects[i]=(395, 246, 58, 14)
+findCount=14
+ pages[0]=6 rects[i]=(390, 697, 59, 14)
+findCount=15
+ pages[0]=7 rects[i]=(323, 196, 58, 14)
+findCount=16
+ pages[0]=7 rects[i]=(266, 302, 59, 15)
+findCount=17
+ pages[0]=7 rects[i]=(339, 728, 59, 14)
+findCount=18
+ pages[0]=7 rects[i]=(430, 744, 58, 14)
+findCount=19
+ pages[0]=8 rects[i]=(292, 279, 59, 14)
+findCount=20
+ pages[0]=8 rects[i]=(218, 508, 59, 14)
+findCount=21
+ pages[0]=8 rects[i]=(269, 638, 59, 14)
+findCount=22
+ pages[0]=9 rects[i]=(300, 465, 59, 15)
+findCount=23
+ pages[0]=9 rects[i]=(56, 612, 59, 14)
+findCount=24
+ pages[0]=9 rects[i]=(116, 735, 59, 14)
+findCount=25
+ pages[0]=10 rects[i]=(146, 229, 59, 14)
+findCount=26
+ pages[0]=10 rects[i]=(56, 754, 59, 14)
+findCount=27
+ pages[0]=11 rects[i]=(56, 196, 59, 14)
+findCount=28
+ pages[0]=11 rects[i]=(338, 376, 59, 14)
+findCount=29
+ pages[0]=11 rects[i]=(292, 515, 58, 14)
+findCount=30
+ pages[0]=11 rects[i]=(56, 605, 59, 14)
+findCount=31
+ pages[0]=11 rects[i]=(359, 605, 59, 14)
+findCount=32
+ pages[0]=11 rects[i]=(409, 671, 58, 14)
+findCount=33
+ pages[0]=12 rects[i]=(313, 106, 59, 15)
+findCount=34
+ pages[0]=12 rects[i]=(56, 489, 59, 14)
+findCount=35
+ pages[0]=12 rects[i]=(384, 768, 58, 14)
+findCount=36
+ pages[0]=13 rects[i]=(177, 425, 59, 15)
+findCount=37
+ pages[0]=14 rects[i]=(335, 302, 59, 15)
+findCount=38
+ pages[0]=14 rects[i]=(161, 458, 59, 15)
+findCount=39
+ pages[0]=14 rects[i]=(324, 548, 59, 14)
+findCount=40
+ pages[0]=15 rects[i]=(56, 196, 59, 14)
+findCount=41
+ pages[0]=16 rects[i]=(431, 90, 58, 14)
+findCount=42
+ pages[0]=16 rects[i]=(56, 286, 59, 14)
+findCount=43
+ pages[0]=18 rects[i]=(475, 57, 60, 14)
+findCount=44
+ pages[0]=18 rects[i]=(56, 130, 59, 14)
+findCount=45
+ pages[0]=18 rects[i]=(188, 546, 59, 14)
+findCount=46
+ pages[0]=19 rects[i]=(204, 286, 58, 14)
+findCount=47
+ pages[0]=19 rects[i]=(352, 302, 59, 15)
+findCount=48
+ pages[0]=19 rects[i]=(56, 499, 59, 14)
+findCount=49
+ pages[0]=19 rects[i]=(464, 768, 60, 14)
+findCount=50
+ pages[0]=20 rects[i]=(288, 180, 59, 14)
+findCount=51
+ pages[0]=20 rects[i]=(365, 515, 59, 14)
+findCount=52
+ pages[0]=20 rects[i]=(86, 671, 58, 14)
+findCount=53
+ pages[0]=20 rects[i]=(281, 671, 59, 14)
+findCount=54
+ pages[0]=20 rects[i]=(193, 704, 58, 14)
+findCount=55
+ pages[0]=21 rects[i]=(56, 180, 59, 14)
+findCount=56
+ pages[0]=21 rects[i]=(425, 352, 58, 14)
+findCount=57
+ pages[0]=21 rects[i]=(71, 508, 59, 14)
+findCount=58
+ pages[0]=22 rects[i]=(92, 90, 58, 14)
+findCount=59
+ pages[0]=22 rects[i]=(108, 196, 58, 14)
+findCount=60
+ pages[0]=22 rects[i]=(94, 295, 59, 15)
+findCount=61
+ pages[0]=23 rects[i]=(352, 130, 58, 14)
+findCount=62
+ pages[0]=23 rects[i]=(56, 286, 59, 14)
+findCount=63
+ pages[0]=23 rects[i]=(56, 532, 59, 14)
+findCount=64
+ pages[0]=23 rects[i]=(471, 605, 59, 14)
+findCount=65
+ pages[0]=25 rects[i]=(104, 458, 58, 15)
+findCount=66
+ pages[0]=25 rects[i]=(313, 515, 58, 14)
+total=66
+Time: 1444.43ms
