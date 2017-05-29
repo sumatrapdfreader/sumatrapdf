@@ -12,15 +12,13 @@
 // per RFC 1945 10.15 and 3.7, a user agent product token shouldn't contain whitespace
 #define USER_AGENT L"BaseHTTP"
 
-bool HttpRspOk(const HttpRsp* rsp)
-{
+bool HttpRspOk(const HttpRsp* rsp) {
     return (rsp->error == ERROR_SUCCESS) && (rsp->httpStatusCode == 200);
 }
 
 // returns false if failed to download or status code is not 200
 // for other scenarios, check HttpRsp
-bool  HttpGet(const WCHAR *url, HttpRsp *rspOut)
-{
+bool HttpGet(const WCHAR* url, HttpRsp* rspOut) {
     HINTERNET hReq = nullptr;
     DWORD headerBuffSize = sizeof(DWORD);
     DWORD flags = INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_RELOAD;
@@ -34,7 +32,8 @@ bool  HttpGet(const WCHAR *url, HttpRsp *rspOut)
     if (!hReq)
         goto Error;
 
-    if (!HttpQueryInfoW(hReq, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &rspOut->httpStatusCode, &headerBuffSize, nullptr)) {
+    if (!HttpQueryInfoW(hReq, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &rspOut->httpStatusCode, &headerBuffSize,
+                        nullptr)) {
         goto Error;
     }
 
@@ -67,17 +66,16 @@ Error:
 }
 
 // Download content of a url to a file
-bool HttpGetToFile(const WCHAR *url, const WCHAR *destFilePath)
-{
+bool HttpGetToFile(const WCHAR* url, const WCHAR* destFilePath) {
     bool ok = false;
-    HINTERNET  hReq = nullptr, hInet = nullptr;
+    HINTERNET hReq = nullptr, hInet = nullptr;
     DWORD dwRead = 0;
     DWORD headerBuffSize = sizeof(DWORD);
     DWORD statusCode = 0;
     char buf[1024];
 
-    HANDLE hf = CreateFile(destFilePath, GENERIC_WRITE, FILE_SHARE_READ, nullptr,
-            CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,  nullptr);
+    HANDLE hf = CreateFile(destFilePath, GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,
+                           nullptr);
     if (INVALID_HANDLE_VALUE == hf)
         goto Exit;
 
@@ -122,15 +120,14 @@ Exit:
     return ok;
 }
 
-bool HttpPost(const WCHAR *server, const WCHAR *url, str::Str<char> *headers, str::Str<char> *data)
-{
+bool HttpPost(const WCHAR* server, const WCHAR* url, str::Str<char>* headers, str::Str<char>* data) {
     str::Str<char> resp(2048);
     bool ok = false;
     DWORD flags = 0;
-    char *hdr = nullptr;
+    char* hdr = nullptr;
     DWORD hdrLen = 0;
     HINTERNET hConn = nullptr, hReq = nullptr;
-    void *d = nullptr;
+    void* d = nullptr;
     DWORD dLen = 0;
     unsigned int timeoutMs = 15 * 1000;
     // Get the response status.
@@ -138,15 +135,15 @@ bool HttpPost(const WCHAR *server, const WCHAR *url, str::Str<char> *headers, st
     DWORD respHttpCodeSize = sizeof(respHttpCode);
     DWORD dwRead = 0;
 
-    HINTERNET hInet = InternetOpen(USER_AGENT, INTERNET_OPEN_TYPE_PRECONFIG, nullptr, nullptr, 0);
+    HINTERNET hInet = InternetOpenW(USER_AGENT, INTERNET_OPEN_TYPE_PRECONFIG, nullptr, nullptr, 0);
     if (!hInet)
         goto Exit;
-    hConn = InternetConnect(hInet, server, INTERNET_DEFAULT_HTTP_PORT,
-                            nullptr, nullptr, INTERNET_SERVICE_HTTP, 0, 1);
+    INTERNET_PORT port = INTERNET_DEFAULT_HTTP_PORT;
+    hConn = InternetConnectW(hInet, server, port, nullptr, nullptr, INTERNET_SERVICE_HTTP, 0, 1);
     if (!hConn)
         goto Exit;
 
-    hReq = HttpOpenRequest(hConn, L"POST", url, nullptr, nullptr, nullptr, flags, 0);
+    hReq = HttpOpenRequestW(hConn, L"POST", url, nullptr, nullptr, nullptr, flags, 0);
     if (!hReq)
         goto Exit;
     if (headers && headers->Count() > 0) {
@@ -158,17 +155,14 @@ bool HttpPost(const WCHAR *server, const WCHAR *url, str::Str<char> *headers, st
         dLen = (DWORD)data->Count();
     }
 
-    InternetSetOption(hReq, INTERNET_OPTION_SEND_TIMEOUT,
-                      &timeoutMs, sizeof(timeoutMs));
+    InternetSetOptionW(hReq, INTERNET_OPTION_SEND_TIMEOUT, &timeoutMs, sizeof(timeoutMs));
 
-    InternetSetOption(hReq, INTERNET_OPTION_RECEIVE_TIMEOUT,
-                      &timeoutMs, sizeof(timeoutMs));
+    InternetSetOptionW(hReq, INTERNET_OPTION_RECEIVE_TIMEOUT, &timeoutMs, sizeof(timeoutMs));
 
     if (!HttpSendRequestA(hReq, hdr, hdrLen, d, dLen))
         goto Exit;
 
-    HttpQueryInfo(hReq, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER,
-                       &respHttpCode, &respHttpCodeSize, 0);
+    HttpQueryInfoW(hReq, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &respHttpCode, &respHttpCodeSize, 0);
 
     do {
         char buf[1024];
@@ -199,7 +193,7 @@ Exit:
 }
 
 // callback function f is responsible for deleting HttpRsp
-void HttpGetAsync(const WCHAR *url, const std::function<void(HttpRsp *)> &f) {
+void HttpGetAsync(const WCHAR* url, const std::function<void(HttpRsp*)>& f) {
     RunAsync([=] {
         auto rsp = new HttpRsp;
         rsp->url.SetCopy(url);

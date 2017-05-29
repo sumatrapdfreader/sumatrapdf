@@ -1,18 +1,17 @@
 /* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD */
 
-// utils
 #include "BaseUtil.h"
 #include <exception>
 #include <tlhelp32.h>
 #include <signal.h>
+
 #include "WinDynCalls.h"
 #include "DbgHelpDyn.h"
 #include "FileUtil.h"
 #include "HttpUtil.h"
 #include "LzmaSimpleArchive.h"
 #include "WinUtil.h"
-// ui
 #include "SumatraPDF.h"
 #include "AppTools.h"
 #include "CrashHandler.h"
@@ -22,6 +21,7 @@
 
 #if !defined(CRASH_SUBMIT_SERVER) || !defined(CRASH_SUBMIT_URL)
 #define CRASH_SUBMIT_SERVER L"kjktools.org"
+//#define CRASH_SUBMIT_SERVER L"127.0.0.1"
 #define CRASH_SUBMIT_URL    L"/crashreports/submit?app=SumatraPDF&ver=" CURR_VERSION_STR
 #endif
 
