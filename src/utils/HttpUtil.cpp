@@ -3,7 +3,6 @@
 
 #include "BaseUtil.h"
 #include <Wininet.h>
-#include <memory>
 #include "HttpUtil.h"
 #include "ThreadUtil.h"
 #include "FileUtil.h"
@@ -120,10 +119,9 @@ Exit:
     return ok;
 }
 
-bool HttpPost(const WCHAR* server, const WCHAR* url, str::Str<char>* headers, str::Str<char>* data) {
+bool HttpPost(const WCHAR* server, const WCHAR* url, str::Str<char>* headers, str::Str<char>* data, int port) {
     str::Str<char> resp(2048);
     bool ok = false;
-    DWORD flags = 0;
     char* hdr = nullptr;
     DWORD hdrLen = 0;
     HINTERNET hConn = nullptr, hReq = nullptr;
@@ -138,11 +136,15 @@ bool HttpPost(const WCHAR* server, const WCHAR* url, str::Str<char>* headers, st
     HINTERNET hInet = InternetOpenW(USER_AGENT, INTERNET_OPEN_TYPE_PRECONFIG, nullptr, nullptr, 0);
     if (!hInet)
         goto Exit;
-    INTERNET_PORT port = INTERNET_DEFAULT_HTTP_PORT;
-    hConn = InternetConnectW(hInet, server, port, nullptr, nullptr, INTERNET_SERVICE_HTTP, 0, 1);
+    DWORD dwService = INTERNET_SERVICE_HTTP;
+    hConn = InternetConnectW(hInet, server, (INTERNET_PORT)port, nullptr, nullptr, dwService, 0, 1);
     if (!hConn)
         goto Exit;
 
+    DWORD flags = INTERNET_FLAG_NO_UI;
+    if (port == 443) {
+        flags |= INTERNET_FLAG_SECURE;
+    }
     hReq = HttpOpenRequestW(hConn, L"POST", url, nullptr, nullptr, nullptr, flags, 0);
     if (!hReq)
         goto Exit;
