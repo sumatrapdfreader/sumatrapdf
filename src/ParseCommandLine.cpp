@@ -331,7 +331,7 @@ void CommandLineInfo::ParseCommandLine(const WCHAR* cmdLine) {
         } else if (Restrict == arg) {
             restrictedUse = true;
         } else if (InvertColors1 == arg || InvertColors2 == arg) {
-			// -invertcolors is for backwards compat (was used pre-1.3)
+            // -invertcolors is for backwards compat (was used pre-1.3)
             // -invert-colors is for consistency
             // -invert-colors used to be a shortcut for -set-color-range 0xFFFFFF 0x000000
             // now it non-permanently swaps textColor and backgroundColor
