@@ -171,8 +171,15 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
     const float dpiFactor = std::min(GetDeviceCaps(hdc, LOGPIXELSX) / engine.GetFileDPI(),
                                      GetDeviceCaps(hdc, LOGPIXELSY) / engine.GetFileDPI());
     bool bPrintPortrait = paperSize.dx < paperSize.dy;
+
     if (pd.devMode && (pd.devMode.Get()->dmFields & DM_ORIENTATION))
         bPrintPortrait = DMORIENT_PORTRAIT == pd.devMode.Get()->dmOrientation;
+	if (pd.advData.rotation == PrintRotationPortrait) {
+		bPrintPortrait = true;
+	}
+	else if (pd.advData.rotation == PrintRotationLandscape) {
+		bPrintPortrait = false;
+	}
 
     if (pd.sel.Count() > 0) {
         for (int pageNo = 1; pageNo <= engine.PageCount(); pageNo++) {
@@ -747,6 +754,12 @@ static void ApplyPrintSettings(const WCHAR* printerName, const WCHAR* settings, 
             advanced.scale = PrintScaleShrink;
         } else if (str::EqI(rangeList.At(i), L"fit")) {
             advanced.scale = PrintScaleFit;
+		} else if (str::EqI(rangeList.At(i), L"autorotation")) {
+			advanced.rotation = PrintRotationAuto;
+		} else if (str::EqI(rangeList.At(i), L"portrait")) {
+			advanced.rotation = PrintRotationPortrait;
+		} else if (str::EqI(rangeList.At(i), L"landscape")) {
+			advanced.rotation = PrintRotationLandscape;
         } else if (str::Parse(rangeList.At(i), L"%dx%$", &val) && 0 < val && val < 1000) {
             devMode->dmCopies = (short)val;
         } else if (str::EqI(rangeList.At(i), L"simplex")) {
