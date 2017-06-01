@@ -330,11 +330,11 @@ void CommandLineInfo::ParseCommandLine(const WCHAR* cmdLine) {
             handle_int_param(pageNumber);
         } else if (Restrict == arg) {
             restrictedUse = true;
-		} else if (InvertColors1 == arg || InvertColors2 == arg) {
+        } else if (InvertColors1 == arg || InvertColors2 == arg) {
 			// -invertcolors is for backwards compat (was used pre-1.3)
-			// -invert-colors is for consistency
-			// -invert-colors used to be a shortcut for -set-color-range 0xFFFFFF 0x000000
-			// now it non-permanently swaps textColor and backgroundColor
+            // -invert-colors is for consistency
+            // -invert-colors used to be a shortcut for -set-color-range 0xFFFFFF 0x000000
+            // now it non-permanently swaps textColor and backgroundColor
             invertColors = true;
         } else if (Presentation == arg) {
             enterPresentation = true;
