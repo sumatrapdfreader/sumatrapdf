@@ -306,7 +306,7 @@ void CommandLineInfo::ParseCommandLine(const WCHAR* cmdLine) {
             printDialog = true;
         } else if (is_arg_with_param(PrintSettings)) {
             // argument is a comma separated list of page ranges and
-            // advanced options [even|odd] and [noscale|shrink|fit]
+            // advanced options [even|odd], [noscale|shrink|fit] and [autorotation|portrait|landscape]
             // e.g. -print-settings "1-3,5,10-8,odd,fit"
             handle_string_param(printSettings);
             str::RemoveChars(printSettings, L" ");
@@ -330,11 +330,11 @@ void CommandLineInfo::ParseCommandLine(const WCHAR* cmdLine) {
             handle_int_param(pageNumber);
         } else if (Restrict == arg) {
             restrictedUse = true;
-        } else if (InvertColors1 == arg || InvertColors2 == arg) {
-            // -invertcolors is for backwards compat (was used pre-1.3)
-            // -invert-colors is for consistency
-            // -invert-colors used to be a shortcut for -set-color-range 0xFFFFFF 0x000000
-            // now it non-permanently swaps textColor and backgroundColor
+		} else if (InvertColors1 == arg || InvertColors2 == arg) {
+			// -invertcolors is for backwards compat (was used pre-1.3)
+			// -invert-colors is for consistency
+			// -invert-colors used to be a shortcut for -set-color-range 0xFFFFFF 0x000000
+			// now it non-permanently swaps textColor and backgroundColor
             invertColors = true;
         } else if (Presentation == arg) {
             enterPresentation = true;
