@@ -13,18 +13,18 @@ bool      Dialog_CustomZoom(HWND hwnd, bool forChm, float *currZoomInOut);
 INT_PTR   Dialog_Settings(HWND hwnd, GlobalPrefs *prefs);
 bool      Dialog_AddFavorite(HWND hwnd, const WCHAR *pageNo, AutoFreeW& favName);
 
-enum PrintRangeAdv { PrintRangeAll = 0, PrintRangeEven, PrintRangeOdd };
-enum PrintScaleAdv { PrintScaleNone = 0, PrintScaleShrink, PrintScaleFit };
-enum PrintRotatationAdv { PrintRotationAuto = 0, PrintRotationPortrait, PrintRotationLandscape };
+enum class PrintRangeAdv { All = 0, Even, Odd };
+enum class PrintScaleAdv { None = 0, Shrink, Fit };
+enum class PrintRotationAdv { Auto = 0, Portrait, Landscape };
 
 struct Print_Advanced_Data {
     PrintRangeAdv range;
     PrintScaleAdv scale;
-    PrintRotatationAdv rotation;
+    PrintRotationAdv rotation;
 
-    explicit Print_Advanced_Data(PrintRangeAdv range=PrintRangeAll,
-                        PrintScaleAdv scale=PrintScaleShrink,
-                        PrintRotatationAdv rotation = PrintRotationAuto) :
+    explicit Print_Advanced_Data(PrintRangeAdv range=PrintRangeAdv::All,
+                        PrintScaleAdv scale=PrintScaleAdv::Shrink,
+                        PrintRotationAdv rotation = PrintRotationAdv::Auto) :
         range(range), scale(scale), rotation(rotation) { }
 };
 

@@ -1,15 +1,14 @@
 /* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// utils
 #include "BaseUtil.h"
 #include "FileUtil.h"
 #include "UITask.h"
 #include "WinUtil.h"
-// rendering engines
+
 #include "BaseEngine.h"
 #include "EngineManager.h"
-// layout controllers
+
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "ChmModel.h"
@@ -17,7 +16,7 @@
 #include "GlobalPrefs.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
-// ui
+
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 #include "TabInfo.h"
@@ -173,10 +172,9 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
     bool bPrintPortrait = paperSize.dx < paperSize.dy;
     if (pd.devMode && (pd.devMode.Get()->dmFields & DM_ORIENTATION))
         bPrintPortrait = DMORIENT_PORTRAIT == pd.devMode.Get()->dmOrientation;
-    if (pd.advData.rotation == PrintRotationPortrait) {
+    if (pd.advData.rotation == PrintRotationAdv::Portrait) {
         bPrintPortrait = true;
-    }
-    else if (pd.advData.rotation == PrintRotationLandscape) {
+    } else if (pd.advData.rotation == PrintRotationAdv::Landscape) {
         bPrintPortrait = false;
     }
 
@@ -197,9 +195,9 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
             float zoom = std::min((float)printable.dx / bSize.dx, (float)printable.dy / bSize.dy);
             // use the correct zoom values, if the page fits otherwise
             // and the user didn't ask for anything else (default setting)
-            if (PrintScaleShrink == pd.advData.scale) {
+            if (PrintScaleAdv::Shrink == pd.advData.scale) {
                 zoom = std::min(dpiFactor, zoom);
-            } else if (PrintScaleNone == pd.advData.scale) {
+            } else if (PrintScaleAdv::None == pd.advData.scale) {
                 zoom = dpiFactor;
             }
 
@@ -210,7 +208,7 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
 
                 RectD* clipRegion = &pd.sel.At(i).rect;
                 PointI offset((int)((clipRegion->x - bounds.x) * zoom), (int)((clipRegion->y - bounds.y) * zoom));
-                if (pd.advData.scale != PrintScaleNone) {
+                if (pd.advData.scale != PrintScaleAdv::None) {
                     // center the selection on the physical paper
                     offset.x += (int)(printable.dx - bSize.dx * zoom) / 2;
                     offset.y += (int)(printable.dy - bSize.dy * zoom) / 2;
@@ -250,8 +248,8 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
     for (size_t i = 0; i < pd.ranges.Count(); i++) {
         int dir = pd.ranges.At(i).nFromPage > pd.ranges.At(i).nToPage ? -1 : 1;
         for (DWORD pageNo = pd.ranges.At(i).nFromPage; pageNo != pd.ranges.At(i).nToPage + dir; pageNo += dir) {
-            if ((PrintRangeEven == pd.advData.range && pageNo % 2 != 0) ||
-                (PrintRangeOdd == pd.advData.range && pageNo % 2 == 0)) {
+            if ((PrintRangeAdv::Even == pd.advData.range && pageNo % 2 != 0) ||
+                (PrintRangeAdv::Odd == pd.advData.range && pageNo % 2 == 0)) {
                 continue;
             }
             if (progressUI) {
@@ -286,7 +284,7 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
             // that printing forms/labels of varying size remains reliably possible)
             PointI offset(-printable.x, -printable.y);
 
-            if (pd.advData.scale != PrintScaleNone) {
+            if (pd.advData.scale != PrintScaleAdv::None) {
                 // make sure to fit all content into the printable area when scaling
                 // and the whole document page on the physical paper
                 RectD rect = engine.PageContentBox(pageNo, Target_Print);
@@ -296,7 +294,7 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
                                          std::min((float)paperSize.dx / pSize.dx, (float)paperSize.dy / pSize.dy)));
                 // use the correct zoom values, if the page fits otherwise
                 // and the user didn't ask for anything else (default setting)
-                if (PrintScaleShrink == pd.advData.scale && dpiFactor < zoom)
+                if (PrintScaleAdv::Shrink == pd.advData.scale && dpiFactor < zoom)
                     zoom = dpiFactor;
                 // center the page on the physical paper
                 offset.x += (int)(paperSize.dx - pSize.dx * zoom) / 2;
@@ -466,15 +464,15 @@ enum { MAXPAGERANGES = 10 };
 void OnMenuPrint(WindowInfo* win, bool waitForCompletion) {
     // we remember some printer settings per process
     static ScopedMem<DEVMODE> defaultDevMode;
-    static PrintScaleAdv defaultScaleAdv = PrintScaleShrink;
+    static PrintScaleAdv defaultScaleAdv = PrintScaleAdv::Shrink;
 
     static bool hasDefaults = false;
     if (!hasDefaults) {
         hasDefaults = true;
         if (str::EqI(gGlobalPrefs->printerDefaults.printScale, "fit")) {
-            defaultScaleAdv = PrintScaleFit;
+            defaultScaleAdv = PrintScaleAdv::Fit;
         } else if (str::EqI(gGlobalPrefs->printerDefaults.printScale, "none")) {
-            defaultScaleAdv = PrintScaleNone;
+            defaultScaleAdv = PrintScaleAdv::None;
         }
     }
 
@@ -548,7 +546,7 @@ void OnMenuPrint(WindowInfo* win, bool waitForCompletion) {
     pd.nMaxPage = dm->PageCount();
     pd.nStartPage = START_PAGE_GENERAL;
 
-    Print_Advanced_Data advanced(PrintRangeAll, defaultScaleAdv);
+    Print_Advanced_Data advanced(PrintRangeAdv::All, defaultScaleAdv);
     ScopedMem<DLGTEMPLATE> dlgTemplate; // needed for RTL languages
     HPROPSHEETPAGE hPsp = CreatePrintAdvancedPropSheet(&advanced, dlgTemplate);
     pd.lphPropertyPages = &hPsp;
@@ -744,21 +742,19 @@ static void ApplyPrintSettings(const WCHAR* printerName, const WCHAR* settings, 
             pr.nFromPage = pr.nToPage = limitValue(pr.nFromPage, (DWORD)1, (DWORD)pageCount);
             ranges.Append(pr);
         } else if (str::EqI(rangeList.At(i), L"even")) {
-            advanced.range = PrintRangeEven;
+            advanced.range = PrintRangeAdv::Even;
         } else if (str::EqI(rangeList.At(i), L"odd")) {
-            advanced.range = PrintRangeOdd;
+            advanced.range = PrintRangeAdv::Odd;
         } else if (str::EqI(rangeList.At(i), L"noscale")) {
-            advanced.scale = PrintScaleNone;
+            advanced.scale = PrintScaleAdv::None;
         } else if (str::EqI(rangeList.At(i), L"shrink")) {
-            advanced.scale = PrintScaleShrink;
+            advanced.scale = PrintScaleAdv::Shrink;
         } else if (str::EqI(rangeList.At(i), L"fit")) {
-            advanced.scale = PrintScaleFit;
-        } else if (str::EqI(rangeList.At(i), L"autorotation")) {
-            advanced.rotation = PrintRotationAuto;
+            advanced.scale = PrintScaleAdv::Fit;
         } else if (str::EqI(rangeList.At(i), L"portrait")) {
-            advanced.rotation = PrintRotationPortrait;
+            advanced.rotation = PrintRotationAdv::Portrait;
         } else if (str::EqI(rangeList.At(i), L"landscape")) {
-            advanced.rotation = PrintRotationLandscape;
+            advanced.rotation = PrintRotationAdv::Landscape;
         } else if (str::Parse(rangeList.At(i), L"%dx%$", &val) && 0 < val && val < 1000) {
             devMode->dmCopies = (short)val;
         } else if (str::EqI(rangeList.At(i), L"simplex")) {
