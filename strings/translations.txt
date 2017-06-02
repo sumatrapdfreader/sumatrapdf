@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-94ea31d3045f4de7fcb88346cef8d685caf07f28
+4972847ad78d9ab739f10f537d13d94566fd30f7
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -2920,6 +2920,7 @@ br:&Tema
 es:&Tema
 fr:Thème
 he:ערכת נושא
+ja:配色テーマ(&T)
 ne:&थिम
 nl:&Uiterlijk
 ru:&Тема
@@ -6982,6 +6983,7 @@ br:Escuro
 es:Oscuro
 fr:Sombre
 he:כהה
+ja:濃色
 ne:गाढ़ा
 nl:Donker
 ru:Темная
@@ -6995,6 +6997,7 @@ br:Muito escuro
 es:Más oscuro
 fr:Plus sombre
 he:כהה מאוד
+ja:黒
 ne:अझै गाढ़ा
 nl:Zwart
 ru:Более темная
@@ -10861,6 +10864,7 @@ br:Claro
 es:Claro
 fr:Clair
 he:בהירה
+ja:淡色
 ne:हल्का
 nl:Wit
 ru:Светлая
