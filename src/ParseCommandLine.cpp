@@ -306,7 +306,7 @@ void CommandLineInfo::ParseCommandLine(const WCHAR* cmdLine) {
             printDialog = true;
         } else if (is_arg_with_param(PrintSettings)) {
             // argument is a comma separated list of page ranges and
-            // advanced options [even|odd] and [noscale|shrink|fit]
+            // advanced options [even|odd], [noscale|shrink|fit] and [autorotation|portrait|landscape]
             // e.g. -print-settings "1-3,5,10-8,odd,fit"
             handle_string_param(printSettings);
             str::RemoveChars(printSettings, L" ");
