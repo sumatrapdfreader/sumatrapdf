@@ -1,0 +1,7 @@
+sit amet massa in scripts/loremipsum.pdf
+findCount=1
+ pages[0]=6 rects[i]=(337, 196, 70, 14)
+findCount=2
+ pages[0]=9 rects[i]=(145, 343, 69, 14)
+total=2
+Time: 1681.52ms
