@@ -30,6 +30,11 @@ public:
     int GetCurrentPageNo() const { return findPage; }
 
 protected:
+    // Lightweight container for page and offset within the page to use as return value of MatchEnd
+    typedef struct _PageAndOffset {
+        int page; int offset;
+    } PageAndOffset;
+
     WCHAR *findText = nullptr;
     WCHAR *anchor = nullptr;
     int findPage = 0;
@@ -44,7 +49,7 @@ protected:
     void SetText(const WCHAR *text);
     bool FindTextInPage(int pageNo = 0);
     bool FindStartingAtPage(int pageNo, ProgressUpdateUI *tracker);
-    int MatchLen(const WCHAR *start) const;
+    PageAndOffset MatchEnd(const WCHAR *start) const;
 
     void Clear()
     {

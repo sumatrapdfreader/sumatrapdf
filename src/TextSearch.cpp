@@ -116,19 +116,21 @@ void TextSearch::SetLastResult(TextSelection *sel)
 
 // try to match "findText" from "start" with whitespace tolerance
 // (ignore all whitespace except after alphanumeric characters)
-int TextSearch::MatchLen(const WCHAR *start) const
+TextSearch::PageAndOffset TextSearch::MatchEnd(const WCHAR *start) const
 {
+    int currentPage = findPage;
     const WCHAR *match = findText, *end = start;
+    const PageAndOffset invalid = { -1, -1 };
 
     if (matchWordStart && start > pageText && isWordChar(start[-1]) && isWordChar(start[0]))
-        return -1;
+        return invalid;
 
     if (!match)
-        return -1;
+        return invalid;
 
     while (*match) {
         if (!*end)
-            return -1;
+            return invalid;
         if (caseSensitive ? *match == *end : CharLower((LPWSTR)LOWORD(*match)) == CharLower((LPWSTR)LOWORD(*end)))
             /* characters are identical */;
         else if (str::IsWs(*match) && str::IsWs(*end))
@@ -143,7 +145,7 @@ int TextSearch::MatchLen(const WCHAR *start) const
         else if (*match == '"' && (0x201c <= *end && *end <= 0x201f))
             /* make QUOTATION MARK also match LEFT/RIGHT DOUBLE QUOTATION MARK */;
         else
-            return -1;
+            return invalid;
         match++;
         end++;
         // treat "??" and "? ?" differently, since '?' could have been a word
@@ -157,9 +159,9 @@ int TextSearch::MatchLen(const WCHAR *start) const
     }
 
     if (matchWordEnd && end > pageText && isWordChar(end[-1]) && isWordChar(end[0]))
-        return -1;
+        return invalid;
 
-    return (int)(end - start);
+    return { currentPage, (end - pageText) };
 }
 
 static const WCHAR *GetNextIndex(const WCHAR *base, int offset, bool forward)
@@ -179,7 +181,7 @@ bool TextSearch::FindTextInPage(int pageNo)
     findPage = pageNo;
 
     const WCHAR *found;
-    int length;
+    PageAndOffset finalGlyph;
     do {
         if (!anchor)
             found = GetNextIndex(pageText, findIndex, forward);
@@ -190,13 +192,13 @@ bool TextSearch::FindTextInPage(int pageNo)
         if (!found)
             return false;
         findIndex = (int)(found - pageText) + (forward ? 1 : 0);
-        length = MatchLen(found);
-    } while (length <= 0);
+        finalGlyph = MatchEnd(found);
+    } while (finalGlyph.page <= 0);
 
     int offset = (int)(found - pageText);
     StartAt(pageNo, offset);
-    SelectUpTo(pageNo, offset + length);
-    findIndex = offset + (forward ? length : 0);
+    SelectUpTo(finalGlyph.page, finalGlyph.offset);
+    findIndex = forward ? finalGlyph.offset : offset;
 
     // try again if the found text is completely outside the page's mediabox
     if (result.len == 0)
