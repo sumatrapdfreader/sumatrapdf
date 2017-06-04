@@ -243,6 +243,7 @@ COLORREF GetAppColor(AppColor col) {
     if (col == AppColor::TabClickedCloseCircle) {
         auto c = GetAppColor(AppColor::TabSelectedCloseCircle);
         AdjustLightness2(c, -10);
+        return c;
     }
 
     CrashIf(true);
