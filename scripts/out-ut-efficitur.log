@@ -1,7 +1,16 @@
-ut efficitur in ./scripts/loremipsum.pdf
+ut efficitur in scripts/loremipsum.pdf
 findCount=1
  pages[0]=2 rects[i]=(164, 319, 54, 14)
 findCount=2
  pages[0]=25 rects[i]=(199, 425, 51, 15)
 total=2
-Time: 1443.35ms
+Time: 1558.36ms
+
+
+Backward:
+findCount=1
+ pages[0]=25 rects[i]=(199, 425, 51, 15)
+findCount=2
+ pages[0]=2 rects[i]=(164, 319, 54, 14)
+total=2
+Time: 1714.47ms

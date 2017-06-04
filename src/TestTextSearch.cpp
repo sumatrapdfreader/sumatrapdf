@@ -59,7 +59,7 @@ void _lossyWcharOut(std::ofstream &lf, const WCHAR *s)
     }
 }
 
-void SearchTest(WCHAR *searchFile, WCHAR *searchTerm, WCHAR* resultFile)
+void SearchTestWithDir(WCHAR *searchFile, WCHAR *searchTerm, std::ofstream &logFile, TextSearchDirection direction)
 {
     DummyControllerCallback dummyCb = DummyControllerCallback();
     EngineType engineType;
@@ -69,14 +69,10 @@ void SearchTest(WCHAR *searchFile, WCHAR *searchTerm, WCHAR* resultFile)
     // Controller *ctrl = new DisplayModel(engine, engineType, &dummyCb);
     PageTextCache *textCache = new PageTextCache(engine);
     TextSearch *tsrch = new TextSearch(engine, textCache);
+    tsrch->SetDirection(direction);
     TextSel *tsel = nullptr;
-    std::ofstream logFile(resultFile);
-    _lossyWcharOut(logFile, searchTerm);
-    logFile << " in ";
-    _lossyWcharOut(logFile, searchFile);
-    logFile << "\n";
     Timer t1;
-    tsel = tsrch->FindFirst(1, searchTerm);
+    tsel = tsrch->FindFirst((FIND_FORWARD == direction)?1:engine->PageCount(), searchTerm);
     int findCount = 0;
     if (nullptr != tsel) {
         do {
@@ -93,7 +89,19 @@ void SearchTest(WCHAR *searchFile, WCHAR *searchTerm, WCHAR* resultFile)
     double dur = t1.GetTimeInMs();
     logFile << "total=" << findCount << "\n";
     logFile << "Time: " << dur << "ms\n";
-    logFile.close();
     delete tsrch;
     delete textCache;
+}
+
+void SearchTest(WCHAR *searchFile, WCHAR *searchTerm, WCHAR* resultFile)
+{
+    std::ofstream logFile(resultFile);
+    _lossyWcharOut(logFile, searchTerm);
+    logFile << " in ";
+    _lossyWcharOut(logFile, searchFile);
+    logFile << "\n";
+    SearchTestWithDir(searchFile, searchTerm, logFile, FIND_FORWARD);
+    logFile << "\n\nBackward:\n";
+    SearchTestWithDir(searchFile, searchTerm, logFile, FIND_BACKWARD);
+    logFile.close();
 }

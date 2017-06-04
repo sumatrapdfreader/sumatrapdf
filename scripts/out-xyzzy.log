@@ -1,3 +1,8 @@
-xyzzy in ./scripts/loremipsum.pdf
+xyzzy in scripts/loremipsum.pdf
 total=0
-Time: 1485.11ms
+Time: 1448.56ms
+
+
+Backward:
+total=0
+Time: 1529.24ms
