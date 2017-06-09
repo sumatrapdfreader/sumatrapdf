@@ -118,9 +118,16 @@ void TextSearch::SetLastResult(TextSelection *sel)
 // (ignore all whitespace except after alphanumeric characters)
 TextSearch::PageAndOffset TextSearch::MatchEnd(const WCHAR *start) const
 {
-    int currentPage = findPage;
     const WCHAR *match = findText, *end = start;
     const PageAndOffset invalid = { -1, -1 };
+    int currentPage = findPage;
+    const WCHAR *currentPageText = pageText;
+#define _advance_page \
+       do { \
+           ++currentPage; \
+           end = currentPageText = textCache->GetData(currentPage); \
+       } while (false)
+    bool lookingAtWs;
 
     if (matchWordStart && start > pageText && isWordChar(start[-1]) && isWordChar(start[0]))
         return invalid;
@@ -131,10 +138,13 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(const WCHAR *start) const
     while (*match) {
         if (!*end)
             return invalid;
+        /* Going from page n to page n+1 is a space, too.*/
+        lookingAtWs = (!*end && (currentPage < nPages)) || str::IsWs(*end);
         if (caseSensitive ? *match == *end : CharLower((LPWSTR)LOWORD(*match)) == CharLower((LPWSTR)LOWORD(*end)))
             /* characters are identical */;
-        else if (str::IsWs(*match) && str::IsWs(*end))
-            /* treat all whitespace as identical */;
+        else if (str::IsWs(*match) && lookingAtWs)
+            /* treat all whitespace as identical and end of page as whitespace.
+               The end of the document is NOT seen as whitespace */;
         // TODO: Adobe Reader seems to have a more extensive list of
         //       normalizations - is there an easier way?
         else if (*match == '-' && (0x2010 <= *end && *end <= 0x2014))
@@ -147,21 +157,34 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(const WCHAR *start) const
         else
             return invalid;
         match++;
-        end++;
+        // We might get here either ...
+        if (*end) {
+            // ... because there's a genuine match -> consider next character in next loop iteration
+            end++;
+        } else {
+            // ... or because we were looking at whitespace in the pattern and we were at a page break
+            // -> skip to next page
+            _advance_page;
+        }
         // treat "??" and "? ?" differently, since '?' could have been a word
         // character that's just missing an encoding (and '?' is the replacement
         // character); cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1574
         if (*match && !isnoncjkwordchar(*(match - 1)) && (*(match - 1) != '?' || *match != '?') ||
-            str::IsWs(*(match - 1)) && str::IsWs(*(end - 1))) {
+            lookingAtWs && str::IsWs(*(match - 1))) {
             SkipWhitespace(match);
             SkipWhitespace(end);
+            while ((!*end) && (currentPage < nPages)) {
+                // treat page break as whitespace, too
+                _advance_page;
+                SkipWhitespace(end);
+            }
         }
     }
-
-    if (matchWordEnd && end > pageText && isWordChar(end[-1]) && isWordChar(end[0]))
+#undef _skip_page
+    if (matchWordEnd && end > currentPageText && isWordChar(end[-1]) && isWordChar(end[0]))
         return invalid;
 
-    return { currentPage, (end - pageText) };
+    return { currentPage, (end - currentPageText) };
 }
 
 static const WCHAR *GetNextIndex(const WCHAR *base, int offset, bool forward)
@@ -172,16 +195,19 @@ static const WCHAR *GetNextIndex(const WCHAR *base, int offset, bool forward)
     return c;
 }
 
-bool TextSearch::FindTextInPage(int pageNo)
+bool TextSearch::FindTextInPage(int pageNo, TextSearch::PageAndOffset *finalGlyph)
 {
     if (str::IsEmpty(findText))
         return false;
     if (!pageNo)
         pageNo = findPage;
+    // According to my analysis of 69912675c766b6325f38036913dcf0505a00be36, when we
+    // get here with pageNo != 0 the findText has already been set so I didn't add
+    // a findText = textCache->GetData(findPage) here.
     findPage = pageNo;
 
     const WCHAR *found;
-    PageAndOffset finalGlyph;
+    PageAndOffset fg;
     do {
         if (!anchor)
             found = GetNextIndex(pageText, findIndex, forward);
@@ -192,18 +218,21 @@ bool TextSearch::FindTextInPage(int pageNo)
         if (!found)
             return false;
         findIndex = (int)(found - pageText) + (forward ? 1 : 0);
-        finalGlyph = MatchEnd(found);
-    } while (finalGlyph.page <= 0);
+        fg = MatchEnd(found);
+    } while (fg.page <= 0);
 
     int offset = (int)(found - pageText);
     StartAt(pageNo, offset);
-    SelectUpTo(finalGlyph.page, finalGlyph.offset);
-    findIndex = forward ? finalGlyph.offset : offset;
+    SelectUpTo(fg.page, fg.offset);
+    findIndex = forward ? fg.offset : offset;
 
     // try again if the found text is completely outside the page's mediabox
     if (result.len == 0)
-        return FindTextInPage(pageNo);
+        return FindTextInPage(pageNo, finalGlyph);
 
+    if (finalGlyph) {
+        *finalGlyph = fg;
+    }
     return true;
 }
 
@@ -230,7 +259,15 @@ bool TextSearch::FindStartingAtPage(int pageNo, ProgressUpdateUI *tracker)
             if (forward) {
                 findIndex = 0;
             }
-            if (FindTextInPage(pageNo)) {
+            PageAndOffset r;
+            if (FindTextInPage(pageNo, &r)) {
+                if (forward) {
+                    if (findPage != r.page) {
+                        findPage = r.page;
+                        pageText = textCache->GetData(findPage);
+                    }
+                    findIndex = r.offset;
+                }
                 return true;
             }
             pagesToSkip[pageNo - 1] = true;
@@ -267,7 +304,13 @@ TextSel *TextSearch::FindNext(ProgressUpdateUI *tracker)
         tracker->UpdateProgress(findPage, nPages);
     }
 
-    if (FindTextInPage()) {
+    PageAndOffset finalGlyph;
+    if (FindTextInPage(findPage, &finalGlyph)) {
+        if (forward) {
+            findPage = finalGlyph.page;
+            findIndex = finalGlyph.offset;
+            pageText = textCache->GetData(findPage);
+        }
         return &result;
     }
 

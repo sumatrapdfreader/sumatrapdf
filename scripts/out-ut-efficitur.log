@@ -4,7 +4,7 @@ findCount=1
 findCount=2
  pages[0]=25 rects[i]=(199, 425, 51, 15)
 total=2
-Time: 1558.36ms
+Time: 1573.63ms
 
 
 Backward:
@@ -13,4 +13,4 @@ findCount=1
 findCount=2
  pages[0]=2 rects[i]=(164, 319, 54, 14)
 total=2
-Time: 1714.47ms
+Time: 1652.71ms

@@ -47,7 +47,7 @@ protected:
     bool matchWordEnd = false;
 
     void SetText(const WCHAR *text);
-    bool FindTextInPage(int pageNo = 0);
+    bool FindTextInPage(int pageNo, PageAndOffset *finalGlyph);
     bool FindStartingAtPage(int pageNo, ProgressUpdateUI *tracker);
     PageAndOffset MatchEnd(const WCHAR *start) const;
 

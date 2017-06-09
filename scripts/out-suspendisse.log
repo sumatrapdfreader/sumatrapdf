@@ -132,7 +132,7 @@ findCount=65
 findCount=66
  pages[0]=25 rects[i]=(313, 515, 58, 14)
 total=66
-Time: 1550.33ms
+Time: 1654.32ms
 
 
 Backward:
@@ -269,4 +269,4 @@ findCount=65
 findCount=66
  pages[0]=1 rects[i]=(293, 140, 58, 14)
 total=66
-Time: 1559.24ms
+Time: 1614.82ms

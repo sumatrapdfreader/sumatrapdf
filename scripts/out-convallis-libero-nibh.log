@@ -1,8 +1,14 @@
 convallis libero nibh in scripts/loremipsum.pdf
-total=0
-Time: 1578.2ms
+findCount=1
+ pages[0]=8 rects[i]=(479, 744, 44, 14)
+ pages[1]=9 rects[i]=(56, 57, 53, 14)
+total=1
+Time: 2490.82ms
 
 
 Backward:
-total=0
-Time: 1506.83ms
+findCount=1
+ pages[0]=8 rects[i]=(479, 744, 44, 14)
+ pages[1]=9 rects[i]=(56, 57, 53, 14)
+total=1
+Time: 2401.38ms

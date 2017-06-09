@@ -12838,7 +12838,7 @@ findCount=6418
 findCount=6419
  pages[0]=25 rects[i]=(333, 548, 5, 14)
 total=6419
-Time: 2400.07ms
+Time: 2626.56ms
 
 
 Backward:
@@ -25681,4 +25681,4 @@ findCount=6418
 findCount=6419
  pages[0]=1 rects[i]=(138, 57, 5, 14)
 total=6419
-Time: 3748.03ms
+Time: 3927.06ms

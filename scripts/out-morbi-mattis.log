@@ -1,8 +1,14 @@
 morbi mattis in scripts/loremipsum.pdf
-total=0
-Time: 1542.77ms
+findCount=1
+ pages[0]=1 rects[i]=(488, 761, 31, 14)
+ pages[1]=2 rects[i]=(56, 57, 30, 14)
+total=1
+Time: 2176.89ms
 
 
 Backward:
-total=0
-Time: 1516.41ms
+findCount=1
+ pages[0]=1 rects[i]=(488, 761, 31, 14)
+ pages[1]=2 rects[i]=(56, 57, 30, 14)
+total=1
+Time: 1995.36ms
