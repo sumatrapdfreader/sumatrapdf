@@ -1,6 +1,6 @@
 spendis in scripts/loremipsum.pdf
 findCount=1
- pages[0]=1 rects[i]=(305, 140, 36, 14)
+ pages[0]=1 rects[i]=(305, 126, 36, 14)
 findCount=2
  pages[0]=2 rects[i]=(348, 130, 36, 14)
 findCount=3
@@ -132,7 +132,7 @@ findCount=65
 findCount=66
  pages[0]=25 rects[i]=(325, 515, 36, 14)
 total=66
-Time: 1589.72ms
+Time: 1613.18ms
 
 
 Backward:
@@ -267,6 +267,6 @@ findCount=64
 findCount=65
  pages[0]=2 rects[i]=(348, 130, 36, 14)
 findCount=66
- pages[0]=1 rects[i]=(305, 140, 36, 14)
+ pages[0]=1 rects[i]=(305, 126, 36, 14)
 total=66
-Time: 1501.38ms
+Time: 1525.58ms

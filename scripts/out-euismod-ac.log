@@ -6,7 +6,7 @@ findCount=2
 findCount=3
  pages[0]=9 rects[i]=(183, 57, 54, 14)
 total=3
-Time: 1538.43ms
+Time: 1576.24ms
 
 
 Backward:
@@ -17,4 +17,4 @@ findCount=2
 findCount=3
  pages[0]=2 rects[i]=(232, 376, 54, 14)
 total=3
-Time: 1532.01ms
+Time: 1501.67ms

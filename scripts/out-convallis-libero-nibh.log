@@ -3,7 +3,7 @@ findCount=1
  pages[0]=8 rects[i]=(479, 744, 44, 14)
  pages[1]=9 rects[i]=(56, 57, 53, 14)
 total=1
-Time: 2490.82ms
+Time: 1554.63ms
 
 
 Backward:
@@ -11,4 +11,4 @@ findCount=1
  pages[0]=8 rects[i]=(479, 744, 44, 14)
  pages[1]=9 rects[i]=(56, 57, 53, 14)
 total=1
-Time: 2401.38ms
+Time: 1537.21ms

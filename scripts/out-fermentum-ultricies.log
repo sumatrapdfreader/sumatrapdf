@@ -2,11 +2,11 @@ fermentum ultricies in scripts/loremipsum.pdf
 findCount=1
  pages[0]=21 rects[i]=(156, 319, 94, 14)
 total=1
-Time: 1618.25ms
+Time: 1578.41ms
 
 
 Backward:
 findCount=1
  pages[0]=21 rects[i]=(156, 319, 94, 14)
 total=1
-Time: 1559.65ms
+Time: 1573.48ms

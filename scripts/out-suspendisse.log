@@ -1,6 +1,6 @@
 suspendisse in scripts/loremipsum.pdf
 findCount=1
- pages[0]=1 rects[i]=(293, 140, 58, 14)
+ pages[0]=1 rects[i]=(293, 126, 58, 14)
 findCount=2
  pages[0]=2 rects[i]=(335, 130, 59, 14)
 findCount=3
@@ -132,7 +132,7 @@ findCount=65
 findCount=66
  pages[0]=25 rects[i]=(313, 515, 58, 14)
 total=66
-Time: 1654.32ms
+Time: 1577.15ms
 
 
 Backward:
@@ -267,6 +267,6 @@ findCount=64
 findCount=65
  pages[0]=2 rects[i]=(335, 130, 59, 14)
 findCount=66
- pages[0]=1 rects[i]=(293, 140, 58, 14)
+ pages[0]=1 rects[i]=(293, 126, 58, 14)
 total=66
-Time: 1614.82ms
+Time: 1543.82ms
