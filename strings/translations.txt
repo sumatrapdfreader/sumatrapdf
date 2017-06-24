@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-4972847ad78d9ab739f10f537d13d94566fd30f7
+d3b494225a0f744596d38a4f820db9239e727976
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -2917,10 +2917,13 @@ vn:Bỏ qua phiên bản này.
 :&Theme
 am:&Ոճը
 br:&Tema
+ca:&Tema
+cn:主题
 es:&Tema
 fr:Thème
 he:ערכת נושא
 ja:配色テーマ(&T)
+kr:테마(&T)
 ne:&थिम
 nl:&Uiterlijk
 ru:&Тема
@@ -2928,6 +2931,7 @@ sp-rs:Tema
 sr-rs:Тема
 sv:&Tema
 uk:&Тема
+vn:&Chủ đề
 :&Use original page sizes
 am:&Օգտագործել էջերի իրական չափը
 ar:&استخدام الحجم الأصلي للصفحة
@@ -3950,7 +3954,7 @@ bn:আপনি কি নিশ্চিত যে আপনি সুমাত
 br:Tem certeza de que quer desinstalar o SumatraPDF?
 bs:Da li ste sigurni da želite deinstalirati SumatraPDF?
 ca-xv:Esteu segur de voler desinstal·lar el SumatraPDF?
-ca:Esteu segur de voler desinstal·lar el SumatraPDF?
+ca:Segur que voleu desinstal·lar el SumatraPDF?
 cn:你确实要卸载 SumatraPDF 吗？
 cy:Ydych chi'n siŵr eich bod am ddadosod SumatraPDF
 cz:Opravdu chcete odinstalovat SumatraPDF?
@@ -6980,10 +6984,12 @@ vn:Thu phóng &tuỳ ý...\tCtrl+Y
 :Dark
 am:Մուգ
 br:Escuro
+ca:Fosc
 es:Oscuro
 fr:Sombre
 he:כהה
 ja:濃色
+kr:어두운
 ne:गाढ़ा
 nl:Donker
 ru:Темная
@@ -6991,13 +6997,16 @@ sp-rs:Tamno
 sr-rs:Тамно
 sv:Mörk
 uk:Темна
+vn:Tối
 :Darker
 am:Շատ մուգ
 br:Muito escuro
+ca:Molt fosc
 es:Más oscuro
 fr:Plus sombre
 he:כהה מאוד
 ja:黒
+kr:더 어두운
 ne:अझै गाढ़ा
 nl:Zwart
 ru:Более темная
@@ -7005,6 +7014,7 @@ sp-rs:Tamnije
 sr-rs:Тамније
 sv:Mörkare
 uk:Темніша
+vn:Tối hơn
 :Default &Layout:
 am:Ծրագրային &դասավորություն.
 ar:التخطيط الافتراضي&
@@ -8259,6 +8269,7 @@ az:win 10 da əsas proqram olaraq qeydiyyatdan keçirmək uğursuz oldu
 bg:Грешка при регистрация като програма по подразбиране на Windows 10
 br:Falha ao registrar como programa padrão no Windows 10
 bs:Neuspješno registriranje kao zadani program na win 10
+ca:Ha fallat en registrar com a programa per defecte en Windows 10
 cn:Win 10 默认程序设置失败
 cz:Nepodařilo se nastavit jako výchozí program na Windows 10
 de:Fehler beim registrieren als Standardanwendung auf win 10
@@ -8289,6 +8300,7 @@ sv:Misslyckades med registrering som standardprogram på Win 10.
 tr:\nWin 10'da varsayılan program olarak kayıt edilemedi
 tw:Win 10 默認程式註冊失敗
 uk:Не вдалося зареєструватися як програма по замовчуванню у Windows 10
+vn:Không thể đăng ký làm chương trình mặc định trên Windows 10
 :Failed to rename the file!
 am:Հնարավոր չեղավ վերանվանել ֆայլը։
 ar:فشل في إعادة تسمية الملف!
@@ -10861,10 +10873,13 @@ vn:Cho phép Windows hiển thị hình ảnh &xem trước của các tài li�
 :Light
 am:Լուսավոր
 br:Claro
+ca:Clar
+cn:明亮
 es:Claro
 fr:Clair
 he:בהירה
 ja:淡色
+kr:밝은
 ne:हल्का
 nl:Wit
 ru:Светлая
@@ -10872,6 +10887,7 @@ sp-rs:Svetlo
 sr-rs:Светло
 sv:Ljus
 uk:Світла
+vn:Sáng
 :MB
 af:MB
 am:ՄԲ
@@ -16117,7 +16133,7 @@ br:O SumatraPDF é o seu leitor PDF padrão
 bs:SumatraPDF je vaš glavni čitač PDF fajlova
 by:SumatraPDF асацыявана з файламі PDF
 ca-xv:El SumatraPDF és el seu lector PDF predeterminat
-ca:El SumatraPDF és el seu lector PDF predeterminat
+ca:El SumatraPDF és el vostre lector PDF per defecte
 cn:SumatraPDF 是默认 PDF 阅读器
 cy:SumatraPDF yw eich prif ddarllenydd PDF
 cz:SumatraPDF je výchozím PDF prohlížečem

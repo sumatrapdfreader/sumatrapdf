@@ -376,7 +376,7 @@ const char * gTranslations_bg =
 
 const char * gTranslations_ca = 
   "&Opcions\0"\
-  "Esteu segur de voler desinstal\302\267lar el SumatraPDF?\0"\
+  "Segur que voleu desinstal\302\267lar el SumatraPDF?\0"\
   "Tanca\0"\
   "No es pot crear el directori temporal\0"\
   "No es pot crear el directori d'instal\302\267laci\303\263\0"\
@@ -392,7 +392,7 @@ const char * gTranslations_ca =
   "No es pot copiar el desinstal\302\267lador al directori temporal\0"\
   "No es pot crear una drecera\0"\
   "No es poden suprimir les claus de registre del desinstal\302\267lador\0"\
-  "\0"\
+  "Ha fallat en registrar com a programa per defecte en Windows 10\0"\
   "No es pot escriure la informaci\303\263 d'extensi\303\263 de fitxer extesa al registre\0"\
   "No es pot escriure la informaci\303\263 de desinstal\302\267laci\303\263 al registre\0"\
   "Amaga les &opcions\0"\
@@ -2417,7 +2417,7 @@ const char * gTranslations_vn =
   "Kh\303\264ng th\341\273\203 ch\303\251p b\341\273\231 g\341\273\241 c\303\240i \304\221\341\272\267t v\303\240o th\306\260 m\341\273\245c t\341\272\241m\0"\
   "Kh\303\264ng th\341\273\203 t\341\272\241o Shortcut\0"\
   "Kh\303\264ng th\341\273\203 x\303\263a c\303\241c kh\303\263a Registry c\341\273\247a b\341\273\231 g\341\273\241 c\303\240i \304\221\341\272\267t\0"\
-  "\0"\
+  "Kh\303\264ng th\341\273\203 \304\221\304\203ng k\303\275 l\303\240m ch\306\260\306\241ng tr\303\254nh m\341\272\267c \304\221\341\273\213nh tr\303\252n Windows 10\0"\
   "Kh\303\264ng th\341\273\203 ghi th\303\264ng tin v\341\273\201 ph\341\272\247n m\341\273\237 r\341\273\231ng c\341\273\247a t\341\272\255p tin v\303\240o kh\303\263a Registry\0"\
   "Kh\303\264ng th\341\273\203 ghi th\303\264ng tin v\341\273\201 vi\341\273\207c g\341\273\241 c\303\240i \304\221\341\272\267t v\303\240o kh\303\263a Registry\0"\
   "Thi\341\272\277t l\341\272\255p \341\272\251n v\303\240 t\303\271y ch\341\273\215n\0"\
