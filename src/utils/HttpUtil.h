@@ -13,7 +13,7 @@ class HttpRsp {
 
 bool HttpRspOk(const HttpRsp*);
 
-bool HttpPost(const WCHAR* server, const WCHAR* url, str::Str<char>* headers, str::Str<char>* data, int port = 80);
+bool HttpPost(const WCHAR* server, int port, const WCHAR* url, str::Str<char>* headers, str::Str<char>* data);
 bool HttpGet(const WCHAR* url, HttpRsp* rspOut);
 bool HttpGetToFile(const WCHAR* url, const WCHAR* destFilePath);
 // void  HttpGetAsync(const char *url, const std::function<void(HttpRsp *)> &);

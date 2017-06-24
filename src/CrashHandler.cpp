@@ -21,7 +21,11 @@
 
 #if !defined(CRASH_SUBMIT_SERVER) || !defined(CRASH_SUBMIT_URL)
 #define CRASH_SUBMIT_SERVER L"kjktools.org"
+#define CRASH_SUBMIT_PORT 443
+
 //#define CRASH_SUBMIT_SERVER L"127.0.0.1"
+//#define CRASH_SUBMIT_PORT 6020
+
 #define CRASH_SUBMIT_URL    L"/crashreports/submit?app=SumatraPDF&ver=" CURR_VERSION_STR
 #endif
 
@@ -132,12 +136,12 @@ static void SendCrashInfo(char *s)
 
     str::Str<char> data(2048, gCrashHandlerAllocator);
     data.AppendFmt("--%s\r\n", boundary);
-    data.Append("Content-Disposition: form-data; name=\"file\"; filename=\"test.bin\"\r\n\r\n");
+    data.Append("Content-Disposition: form-data; name=\"file\"; filename=\"sumcrash.txt\"\r\n\r\n");
     data.Append(s);
     data.Append("\r\n");
     data.AppendFmt("\r\n--%s--\r\n", boundary);
 
-    HttpPost(CRASH_SUBMIT_SERVER, CRASH_SUBMIT_URL, &headers, &data);
+    HttpPost(CRASH_SUBMIT_SERVER, CRASH_SUBMIT_PORT, CRASH_SUBMIT_URL, &headers, &data);
     plogf("SendCrashInfo() finished");
 }
 
