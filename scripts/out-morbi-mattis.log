@@ -1,0 +1,18 @@
+morbi mattis in scripts/loremipsum.pdf
+findCount=1
+ pages[0]=1 rects[i]=(287, 250, 62, 14)
+findCount=2
+ pages[0]=1 rects[i]=(488, 609, 31, 14)
+ pages[1]=2 rects[i]=(56, 57, 30, 14)
+total=2
+Time: 1560.82ms
+
+
+Backward:
+findCount=1
+ pages[0]=1 rects[i]=(488, 609, 31, 14)
+ pages[1]=2 rects[i]=(56, 57, 30, 14)
+findCount=2
+ pages[0]=1 rects[i]=(287, 250, 62, 14)
+total=2
+Time: 1513.24ms

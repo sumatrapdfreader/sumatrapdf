@@ -25,6 +25,8 @@
 #include "HtmlFormatter.h"
 #include "EbookFormatter.h"
 
+#include "TestTextSearch.h"
+
 // if true, we'll save html content of a mobi ebook as well
 // as pretty-printed html to MOBI_SAVE_DIR. The name will be
 // ${file}.html and ${file}_pp.html
@@ -37,6 +39,8 @@ static bool gSaveImages = false;
 static bool gLayout = false;
 // directory to which we'll save mobi html and images
 #define MOBI_SAVE_DIR L"..\\ebooks-converted"
+// if true, we'll test the search functionality
+static bool gSearch = false;
 
 static int Usage()
 {
@@ -47,6 +51,7 @@ static int Usage()
     printf("  -save-images - will save images extracted from mobi files\n");
     printf("  -zip-create - creates a sample zip file that needs to be manually checked that it worked\n");
     printf("  -bench-md5 - compare Window's md5 vs. our code\n");
+    printf("  -search file searchString logFile - test search\n");
     system("pause");
     return 1;
 }
@@ -263,6 +268,10 @@ int TesterMain()
 
     WCHAR *dirOrFile = nullptr;
 
+    WCHAR *searchFile = nullptr;
+    WCHAR *searchTerm = nullptr;
+    WCHAR *searchLog = nullptr;
+
     bool mobiTest = false;
     size_t i = 2; // skip program name and "/tester"
     while (i < argv.Count()) {
@@ -288,6 +297,21 @@ int TesterMain()
         } else if (str::Eq(argv[i], L"-bench-md5")) {
             BenchMD5();
             ++i;
+        } else if (str::Eq(argv[i], L"-search")) {
+            ++i;
+            if (i == argv.Count())
+                return Usage();
+            gSearch = true;
+            searchFile = argv[i];
+            ++i;
+            if (i == argv.Count())
+                return Usage();
+            searchTerm = argv[i];
+            ++i;
+            if (i == argv.Count())
+                return Usage();
+            searchLog = argv[i];
+            ++i;
         } else {
             // unknown argument
             return Usage();
@@ -302,7 +326,15 @@ int TesterMain()
         MobiTest(dirOrFile);
     }
 
+    if (gSearch) {
+        SearchTest(searchFile, searchTerm, searchLog);
+    }
+
     mui::Destroy();
-    system("pause");
+    if (!gSearch) {
+        // no need to wait after search test: results are 
+        // logged to a file, not to the console
+        system("pause");
+    }
     return 0;
 }

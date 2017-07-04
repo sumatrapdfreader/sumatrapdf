@@ -1,0 +1,14 @@
+rhoncus posuere in scripts/loremipsum.pdf
+findCount=1
+ pages[0]=2 rects[i]=(497, 721, 39, 14)
+ pages[1]=2 rects[i]=(56, 737, 38, 14)
+total=1
+Time: 1593.37ms
+
+
+Backward:
+findCount=1
+ pages[0]=2 rects[i]=(497, 721, 39, 14)
+ pages[1]=2 rects[i]=(56, 737, 38, 14)
+total=1
+Time: 1529.08ms

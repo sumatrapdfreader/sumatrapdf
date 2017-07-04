@@ -18,6 +18,9 @@
     <ClCompile Include="..\src\Tests.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\TestTextSearch.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\docs\releasenotes.txt">
@@ -31,5 +34,10 @@
     <ResourceCompile Include="..\src\SumatraPDF.rc">
       <Filter>src</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\TestTextSearch.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

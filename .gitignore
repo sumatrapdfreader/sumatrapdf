@@ -34,3 +34,6 @@ analyze-output.txt
 analyze-errors.html
 CoverageReport*
 LastCoverageResults.log
+*~
+out-*.log
+*.bak

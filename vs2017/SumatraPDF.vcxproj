@@ -335,6 +335,7 @@
     <ClCompile Include="..\src\SumatraPDF.cpp" />
     <ClCompile Include="..\src\SumatraStartup.cpp" />
     <ClCompile Include="..\src\Tests.cpp" />
+    <ClCompile Include="..\src\TestTextSearch.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\docs\releasenotes.txt" />
@@ -374,6 +375,9 @@
     <ProjectReference Include="utils.vcxproj">
       <Project>{169C8510-82B0-ADC1-4B32-5121B705AAF2}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\TestTextSearch.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
