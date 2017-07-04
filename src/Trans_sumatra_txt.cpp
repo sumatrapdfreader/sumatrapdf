@@ -1320,7 +1320,7 @@ const char * gTranslations_eu =
   "&Txikitu orrialdeak eremu irarkigarrira (beharrezkoa bada)\0"\
   "&Orrialde Bakarra\tKtrl+6\0"\
   "&Ahaztu bertsio hau\0"\
-  "\0"\
+  "&Azalgaia\0"\
   "E&rabili jatorrizko orrilde neurria\0"\
   "I&kusi\0"\
   "Lei&hoa\0"\
@@ -1373,8 +1373,8 @@ const char * gTranslations_eu =
   "Oraingo agiria\0"\
   "Kurtsorearen kokapena:\0"\
   "Egile Zoo&ma...\tKtrl+Y\0"\
-  "\0"\
-  "\0"\
+  "Iluna\0"\
+  "Ilunagoa\0"\
   "Berezko &Egitura:\0"\
   "Berezko &Zooma:\0"\
   "Berezko PDF irakurtzailea ezin da eramangarri moduan aldatu\0"\
@@ -1424,7 +1424,7 @@ const char * gTranslations_eu =
   "Oharra: Erabili F3 tekla berriro bilatzeko\0"\
   "Irudi agiriak (*.%s)\0"\
   "\0"\
-  "\0"\
+  "Argia\0"\
   "\0"\
   "Egin SumatraPFD berezko aplikazioa PDF agirientzat?\0"\
   "Egin SumatraPDF nire berezko PDF irakurlea\0"\
@@ -8124,7 +8124,7 @@ const char * gTranslations_lv =
   "&Samazin\304\201t lappuses l\304\253dz apdruk\304\201jamai zonai (ja ir nepiecie\305\241ams)\0"\
   "&Viena lappuse\tCtrl+6\0"\
   "&Izlaist \305\241o versiju\0"\
-  "\0"\
+  "&Dizains\0"\
   "&Lietot s\304\201kotn\304\223jos lappu\305\241u izm\304\223rus\n\0"\
   "&Skats\0"\
   "&Logs\0"\
@@ -8177,8 +8177,8 @@ const char * gTranslations_lv =
   "Pa\305\241reiz\304\223jais fails\0"\
   "Kursora poz\304\253cija:\0"\
   "Piel\304\201got &t\304\201lummai\305\206u...\tCtrl+Y\0"\
-  "\0"\
-  "\0"\
+  "Tum\305\241s\0"\
+  "Tum\305\241\304\201ks\0"\
   "Noklus\304\223juma &izk\304\201rtojums\0"\
   "Noklus\304\223juma &t\304\201lummai\305\206a\0"\
   "Noklus\304\223juma PDF las\304\253t\304\201ju nevar izmain\304\253t p\304\201rnesamam re\305\276\304\253mam\0"\
@@ -8228,7 +8228,7 @@ const char * gTranslations_lv =
   "Ieteikums: izmantojiet tausti\305\206u F3, lai atrastu atkal\0"\
   "Att\304\223lu faili (*.%s)\0"\
   "\0"\
-  "\0"\
+  "Gai\305\241s\0"\
   "\0"\
   "Vai iestat\304\253t SumatraPDF k\304\201 noklus\304\223juma lietojumprogrammu PDF failiem?\0"\
   "Padar\304\253t SumatraPDF par manu noklus\304\223juma PDF las\304\253t\304\201ju\0"\
@@ -10140,7 +10140,7 @@ const char * gTranslations_pl =
   "&Zmniejsz strony do rozmiaru wydruku (w razie potrzeby)\0"\
   "&Pojedyncza strona\tCtrl+6\0"\
   "&Pomi\305\204 t\304\231 wersj\304\231\0"\
-  "\0"\
+  "&Motyw\0"\
   "U\305\274yj &oryginalnego rozmiaru stron\0"\
   "&Widok\0"\
   "&Okno\0"\
@@ -10193,8 +10193,8 @@ const char * gTranslations_pl =
   "Bie\305\274\304\205cy plik\0"\
   "Pozycja kursora:\0"\
   "&W\305\202asne powi\304\231kszenie...\tCtrl+Y\0"\
-  "\0"\
-  "\0"\
+  "Ciemny\0"\
+  "Ciemniejszy\0"\
   "&Uk\305\202ad domy\305\233lny:\0"\
   "Domy\305\233lne &powi\304\231kszenie:\0"\
   "Domy\305\233lna przegl\304\205darka PDF nie mo\305\274e by\304\207 zmieniona w trybie przeno\305\233nym\0"\
@@ -10244,7 +10244,7 @@ const char * gTranslations_pl =
   "Wskaz\303\263wka: u\305\274yj klawisza F3, aby szuka\304\207 dalej\0"\
   "Pliki graficzne (*.%s)\0"\
   "\0"\
-  "\0"\
+  "Jasny\0"\
   "\0"\
   "Ustawi\304\207 program SumatraPDF jako domy\305\233ln\304\205 przegl\304\205dark\304\231 plik\303\263w PDF?\0"\
   "Ustaw SumatraPDF jako domy\305\233ln\304\205 przegl\304\205dark\304\231 PDF\0"\

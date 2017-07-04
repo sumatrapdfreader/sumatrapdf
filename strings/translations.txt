@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-d3b494225a0f744596d38a4f820db9239e727976
+1b50efec0d6268a9371c04519135eced5f1e1855
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -2920,12 +2920,15 @@ br:&Tema
 ca:&Tema
 cn:主题
 es:&Tema
+eu:&Azalgaia
 fr:Thème
 he:ערכת נושא
 ja:配色テーマ(&T)
 kr:테마(&T)
+lv:&Dizains
 ne:&थिम
 nl:&Uiterlijk
+pl:&Motyw
 ru:&Тема
 sp-rs:Tema
 sr-rs:Тема
@@ -6986,12 +6989,15 @@ am:Մուգ
 br:Escuro
 ca:Fosc
 es:Oscuro
+eu:Iluna
 fr:Sombre
 he:כהה
 ja:濃色
 kr:어두운
+lv:Tumšs
 ne:गाढ़ा
 nl:Donker
+pl:Ciemny
 ru:Темная
 sp-rs:Tamno
 sr-rs:Тамно
@@ -7003,12 +7009,15 @@ am:Շատ մուգ
 br:Muito escuro
 ca:Molt fosc
 es:Más oscuro
+eu:Ilunagoa
 fr:Plus sombre
 he:כהה מאוד
 ja:黒
 kr:더 어두운
+lv:Tumšāks
 ne:अझै गाढ़ा
 nl:Zwart
+pl:Ciemniejszy
 ru:Более темная
 sp-rs:Tamnije
 sr-rs:Тамније
@@ -10876,12 +10885,15 @@ br:Claro
 ca:Clar
 cn:明亮
 es:Claro
+eu:Argia
 fr:Clair
 he:בהירה
 ja:淡色
 kr:밝은
+lv:Gaišs
 ne:हल्का
 nl:Wit
+pl:Jasny
 ru:Светлая
 sp-rs:Svetlo
 sr-rs:Светло
