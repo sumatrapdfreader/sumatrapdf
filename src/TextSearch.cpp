@@ -89,8 +89,14 @@ void TextSearch::SetDirection(TextSearchDirection direction) {
     if (forward == this->forward)
         return;
     this->forward = forward;
-    if (findText)
-        findIndex += (int)str::Len(findText) * (forward ? 1 : -1);
+    if (findText) {
+        int n = (int)str::Len(findText);
+        if (forward) {
+            findIndex += n;
+        } else {
+            findIndex -= n;
+        }
+    }
 }
 
 void TextSearch::SetLastResult(TextSelection* sel) {
@@ -195,12 +201,18 @@ bool TextSearch::FindTextInPage(int pageNo, TextSearch::PageAndOffset* finalGlyp
     const WCHAR* found;
     PageAndOffset fg;
     do {
-        if (!anchor)
+        if (!anchor) {
             found = GetNextIndex(pageText, findIndex, forward);
-        else if (forward)
-            found = (caseSensitive ? StrStr : StrStrI)(pageText + findIndex, anchor);
-        else
+        } else if (forward) {
+            const WCHAR* s = pageText + findIndex;
+            if (caseSensitive) {
+                found = StrStr(s, anchor);
+            } else {
+                found = StrStrI(s, anchor);
+            }
+        } else {
             found = StrRStrI(pageText, pageText + findIndex, anchor);
+        }
         if (!found)
             return false;
         findIndex = (int)(found - pageText) + (forward ? 1 : 0);
