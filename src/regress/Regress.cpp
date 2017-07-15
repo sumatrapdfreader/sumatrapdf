@@ -33,6 +33,10 @@ To write new regression test:
 #include "HtmlFormatter.h"
 #include "EbookFormatter.h"
 #include "Doc.h"
+// For Regress03 (Text Search)
+#include "EngineManager.h"
+#include "TextSelection.h"
+#include "TextSearch.h"
 
 static WCHAR *gTestFilesDir;
 
@@ -169,12 +173,14 @@ static void UninstallCrashHandler()
 }
 
 #include "Regress00.cpp"
+#include "Regress03.cpp"
 
 static void RunTests()
 {
     Regress00();
     Regress01();
     Regress02();
+    Regress03();
 }
 
 int RegressMain()

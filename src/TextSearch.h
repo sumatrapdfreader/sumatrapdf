@@ -29,10 +29,20 @@ public:
     // note: the result might not be a valid page number!
     int GetCurrentPageNo() const { return findPage; }
 
+    // note: the result might not be a valid page number!
+    int GetSearchHitStartPageNo() const { return searchHitStartAt; }
+
 protected:
+    // Lightweight container for page and offset within the page to use as return value of MatchEnd
+    struct PageAndOffset {
+        int page;
+        int offset;
+    };
+
     WCHAR *findText = nullptr;
     WCHAR *anchor = nullptr;
     int findPage = 0;
+    int searchHitStartAt = 0; // when text found spans several pages, searchHitStartAt < findPage
     bool forward = true;
     bool caseSensitive = false;
     // these two options are implicitly set when the search text begins
@@ -42,9 +52,9 @@ protected:
     bool matchWordEnd = false;
 
     void SetText(const WCHAR *text);
-    bool FindTextInPage(int pageNo = 0);
+    bool FindTextInPage(int pageNo, PageAndOffset *finalGlyph);
     bool FindStartingAtPage(int pageNo, ProgressUpdateUI *tracker);
-    int MatchLen(const WCHAR *start) const;
+    PageAndOffset MatchEnd(const WCHAR *start) const;
 
     void Clear()
     {
