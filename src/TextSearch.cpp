@@ -180,7 +180,8 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(const WCHAR *start) const
     if (matchWordEnd && end > currentPageText && isWordChar(end[-1]) && isWordChar(end[0]))
         return notFound;
 
-    return { currentPage, (end - currentPageText) };
+    int off = (int)(end - currentPageText);
+    return { currentPage, off };
 }
 
 static const WCHAR *GetNextIndex(const WCHAR *base, int offset, bool forward)
