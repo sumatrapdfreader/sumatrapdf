@@ -1,30 +1,25 @@
 /* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-enum TextSearchDirection {
-    FIND_BACKWARD = false,
-    FIND_FORWARD  = true
-};
+enum TextSearchDirection { FIND_BACKWARD = false, FIND_FORWARD = true };
 
-class ProgressUpdateUI
-{
-public:
+class ProgressUpdateUI {
+  public:
     virtual void UpdateProgress(int current, int total) = 0;
     virtual bool WasCanceled() = 0;
-    virtual ~ProgressUpdateUI() { }
+    virtual ~ProgressUpdateUI() {}
 };
 
-class TextSearch : public TextSelection
-{
-public:
-    TextSearch(BaseEngine *engine, PageTextCache *textCache);
+class TextSearch : public TextSelection {
+  public:
+    TextSearch(BaseEngine* engine, PageTextCache* textCache);
     ~TextSearch();
 
     void SetSensitive(bool sensitive);
     void SetDirection(TextSearchDirection direction);
-    void SetLastResult(TextSelection *sel);
-    TextSel *FindFirst(int page, const WCHAR *text, ProgressUpdateUI *tracker = nullptr);
-    TextSel *FindNext(ProgressUpdateUI *tracker = nullptr);
+    void SetLastResult(TextSelection* sel);
+    TextSel* FindFirst(int page, const WCHAR* text, ProgressUpdateUI* tracker = nullptr);
+    TextSel* FindNext(ProgressUpdateUI* tracker = nullptr);
 
     // note: the result might not be a valid page number!
     int GetCurrentPageNo() const { return findPage; }
@@ -32,15 +27,15 @@ public:
     // note: the result might not be a valid page number!
     int GetSearchHitStartPageNo() const { return searchHitStartAt; }
 
-protected:
+  protected:
     // Lightweight container for page and offset within the page to use as return value of MatchEnd
     struct PageAndOffset {
         int page;
         int offset;
     };
 
-    WCHAR *findText = nullptr;
-    WCHAR *anchor = nullptr;
+    WCHAR* findText = nullptr;
+    WCHAR* anchor = nullptr;
     int findPage = 0;
     int searchHitStartAt = 0; // when text found spans several pages, searchHitStartAt < findPage
     bool forward = true;
@@ -51,13 +46,12 @@ protected:
     bool matchWordStart = false;
     bool matchWordEnd = false;
 
-    void SetText(const WCHAR *text);
-    bool FindTextInPage(int pageNo, PageAndOffset *finalGlyph);
-    bool FindStartingAtPage(int pageNo, ProgressUpdateUI *tracker);
-    PageAndOffset MatchEnd(const WCHAR *start) const;
+    void SetText(const WCHAR* text);
+    bool FindTextInPage(int pageNo, PageAndOffset* finalGlyph);
+    bool FindStartingAtPage(int pageNo, ProgressUpdateUI* tracker);
+    PageAndOffset MatchEnd(const WCHAR* start) const;
 
-    void Clear()
-    {
+    void Clear() {
         str::ReplacePtr(&findText, nullptr);
         str::ReplacePtr(&anchor, nullptr);
         str::ReplacePtr(&lastText, nullptr);
@@ -65,12 +59,11 @@ protected:
     }
     void Reset();
 
-private:
-    const WCHAR *pageText = nullptr;
+  private:
+    const WCHAR* pageText = nullptr;
     int findIndex = 0;
 
-    WCHAR *lastText = nullptr;
+    WCHAR* lastText = nullptr;
     int nPages = 0;
     std::vector<bool> pagesToSkip;
 };
-

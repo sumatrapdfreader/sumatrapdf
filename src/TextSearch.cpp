@@ -18,27 +18,22 @@ static void markAllPagesNonSkip(std::vector<bool>& pagesToSkip) {
         pagesToSkip[i] = false;
     }
 }
-TextSearch::TextSearch(BaseEngine *engine, PageTextCache *textCache) :
-    TextSelection(engine, textCache)
-{
+TextSearch::TextSearch(BaseEngine* engine, PageTextCache* textCache) : TextSelection(engine, textCache) {
     nPages = engine->PageCount();
     pagesToSkip.resize(nPages);
     markAllPagesNonSkip(pagesToSkip);
 }
 
-TextSearch::~TextSearch()
-{
+TextSearch::~TextSearch() {
     Clear();
 }
 
-void TextSearch::Reset()
-{
+void TextSearch::Reset() {
     pageText = nullptr;
     TextSelection::Reset();
 }
 
-void TextSearch::SetText(const WCHAR *text)
-{
+void TextSearch::SetText(const WCHAR* text) {
     // search text starting with a single space enables the 'Match word start'
     // and search text ending in a single space enables the 'Match word end' option
     // (that behavior already "kind of" exists without special treatment, but
@@ -59,7 +54,7 @@ void TextSearch::SetText(const WCHAR *text)
 
     // extract anchor string (the first word or the first symbol) for faster searching
     if (isnoncjkwordchar(*text)) {
-        const WCHAR *end;
+        const WCHAR* end;
         for (end = text; isnoncjkwordchar(*end); end++)
             ;
         anchor = str::DupN(text, end - text);
@@ -80,8 +75,7 @@ void TextSearch::SetText(const WCHAR *text)
     markAllPagesNonSkip(pagesToSkip);
 }
 
-void TextSearch::SetSensitive(bool sensitive)
-{
+void TextSearch::SetSensitive(bool sensitive) {
     if (caseSensitive == sensitive) {
         return;
     }
@@ -90,8 +84,7 @@ void TextSearch::SetSensitive(bool sensitive)
     markAllPagesNonSkip(pagesToSkip);
 }
 
-void TextSearch::SetDirection(TextSearchDirection direction)
-{
+void TextSearch::SetDirection(TextSearchDirection direction) {
     bool forward = FIND_FORWARD == direction;
     if (forward == this->forward)
         return;
@@ -100,8 +93,7 @@ void TextSearch::SetDirection(TextSearchDirection direction)
         findIndex += (int)str::Len(findText) * (forward ? 1 : -1);
 }
 
-void TextSearch::SetLastResult(TextSelection *sel)
-{
+void TextSearch::SetLastResult(TextSelection* sel) {
     CopySelection(sel);
 
     AutoFreeW selection(ExtractText(L" "));
@@ -116,12 +108,11 @@ void TextSearch::SetLastResult(TextSelection *sel)
 
 // try to match "findText" from "start" with whitespace tolerance
 // (ignore all whitespace except after alphanumeric characters)
-TextSearch::PageAndOffset TextSearch::MatchEnd(const WCHAR *start) const
-{
+TextSearch::PageAndOffset TextSearch::MatchEnd(const WCHAR* start) const {
     const WCHAR *match = findText, *end = start;
-    const PageAndOffset notFound = { -1, -1 };
+    const PageAndOffset notFound = {-1, -1};
     int currentPage = findPage;
-    const WCHAR *currentPageText = pageText;
+    const WCHAR* currentPageText = pageText;
     bool lookingAtWs;
 
     if (matchWordStart && start > pageText && isWordChar(start[-1]) && isWordChar(start[0]))
@@ -181,19 +172,17 @@ TextSearch::PageAndOffset TextSearch::MatchEnd(const WCHAR *start) const
         return notFound;
 
     int off = (int)(end - currentPageText);
-    return { currentPage, off };
+    return {currentPage, off};
 }
 
-static const WCHAR *GetNextIndex(const WCHAR *base, int offset, bool forward)
-{
-    const WCHAR *c = base + offset + (forward ? 0 : -1);
+static const WCHAR* GetNextIndex(const WCHAR* base, int offset, bool forward) {
+    const WCHAR* c = base + offset + (forward ? 0 : -1);
     if (c < base || !*c)
         return nullptr;
     return c;
 }
 
-bool TextSearch::FindTextInPage(int pageNo, TextSearch::PageAndOffset *finalGlyph)
-{
+bool TextSearch::FindTextInPage(int pageNo, TextSearch::PageAndOffset* finalGlyph) {
     if (str::IsEmpty(findText))
         return false;
     if (!pageNo)
@@ -203,7 +192,7 @@ bool TextSearch::FindTextInPage(int pageNo, TextSearch::PageAndOffset *finalGlyp
     // a findText = textCache->GetData(findPage) here.
     findPage = pageNo;
 
-    const WCHAR *found;
+    const WCHAR* found;
     PageAndOffset fg;
     do {
         if (!anchor)
@@ -234,8 +223,7 @@ bool TextSearch::FindTextInPage(int pageNo, TextSearch::PageAndOffset *finalGlyp
     return true;
 }
 
-bool TextSearch::FindStartingAtPage(int pageNo, ProgressUpdateUI *tracker)
-{
+bool TextSearch::FindStartingAtPage(int pageNo, ProgressUpdateUI* tracker) {
     if (str::IsEmpty(findText))
         return false;
 
@@ -280,8 +268,7 @@ bool TextSearch::FindStartingAtPage(int pageNo, ProgressUpdateUI *tracker)
     return false;
 }
 
-TextSel *TextSearch::FindFirst(int page, const WCHAR *text, ProgressUpdateUI *tracker)
-{
+TextSel* TextSearch::FindFirst(int page, const WCHAR* text, ProgressUpdateUI* tracker) {
     SetText(text);
 
     if (FindStartingAtPage(page, tracker))
@@ -289,8 +276,7 @@ TextSel *TextSearch::FindFirst(int page, const WCHAR *text, ProgressUpdateUI *tr
     return nullptr;
 }
 
-TextSel *TextSearch::FindNext(ProgressUpdateUI *tracker)
-{
+TextSel* TextSearch::FindNext(ProgressUpdateUI* tracker) {
     CrashIf(!findText);
     if (!findText)
         return nullptr;
