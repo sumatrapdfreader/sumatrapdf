@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-1b50efec0d6268a9371c04519135eced5f1e1855
+4e641dcd71cc3324e739ad6204a4f2f19f7d2f17
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -974,7 +974,7 @@ br:Ajustar páginas à área de impressão
 bs:Uklopi stranice na područje za štampu
 ca-xv:Ajusta les pàgines a l'àrea imprimible
 ca:Ajusta les pàgines a l'àrea imprimible
-cn:缩放页面以匹配可打印区域(&F)
+cn:符合页面以可打印区域(&F)
 cy:&Ffitio tudalennau i ardal argraffu
 cz:Přizpůsobit &stránky na tisknutelnou plochu
 de:Seiten in Druckbereich &einpassen
@@ -2918,7 +2918,7 @@ vn:Bỏ qua phiên bản này.
 am:&Ոճը
 br:&Tema
 ca:&Tema
-cn:主题
+cn:主题(&T)
 es:&Tema
 eu:&Azalgaia
 fr:Thème
@@ -2928,11 +2928,14 @@ kr:테마(&T)
 lv:&Dizains
 ne:&थिम
 nl:&Uiterlijk
+nn:&Tema
+no:&Tema
 pl:&Motyw
 ru:&Тема
 sp-rs:Tema
 sr-rs:Тема
 sv:&Tema
+tw:主題(&T)
 uk:&Тема
 vn:&Chủ đề
 :&Use original page sizes
@@ -6988,6 +6991,7 @@ vn:Thu phóng &tuỳ ý...\tCtrl+Y
 am:Մուգ
 br:Escuro
 ca:Fosc
+cn:暗(&D)
 es:Oscuro
 eu:Iluna
 fr:Sombre
@@ -6997,17 +7001,21 @@ kr:어두운
 lv:Tumšs
 ne:गाढ़ा
 nl:Donker
+nn:Mørkt
+no:Mørkt
 pl:Ciemny
 ru:Темная
 sp-rs:Tamno
 sr-rs:Тамно
 sv:Mörk
+tw:暗(&D)
 uk:Темна
 vn:Tối
 :Darker
 am:Շատ մուգ
 br:Muito escuro
 ca:Molt fosc
+cn:更暗(&R)
 es:Más oscuro
 eu:Ilunagoa
 fr:Plus sombre
@@ -7017,11 +7025,14 @@ kr:더 어두운
 lv:Tumšāks
 ne:अझै गाढ़ा
 nl:Zwart
+nn:Mørkare
+no:Mørkere
 pl:Ciemniejszy
 ru:Более темная
 sp-rs:Tamnije
 sr-rs:Тамније
 sv:Mörkare
+tw:更暗(&R)
 uk:Темніша
 vn:Tối hơn
 :Default &Layout:
@@ -9251,7 +9262,7 @@ br:Ajustar ao &conteúdo\tCtrl+3
 bs:Uklopi s&adržaj\tCtrl+3
 ca-xv:Ajusta el &contingut\tCtrl+3
 ca:Ajusta el &contingut\tCtrl+3
-cn:适合内容(&C)\tCtrl+3
+cn:符合内容(&C)\tCtrl+3
 cy:Ffitio'r &Cynnwys\tCtrl+3
 cz:Přizpůsobit &obsah\tCtrl+3
 de:An &Inhalt anpassen\tStrg+3
@@ -9313,7 +9324,7 @@ bs:Uklopi &stranicu\tCtrl+0
 by:Змясціць старонку\tCtrl+0
 ca-xv:Ajusta a la &pàgina\tCtrl+0
 ca:Ajusta a la &pàgina\tCtrl+0
-cn:适合页面(&P)\tCtrl+0
+cn:符合页面(&P)\tCtrl+0
 cy:&Ffitio'r Dudalen\tCtrl+0
 cz:Podle &stránky\tCtrl+0
 de:An &Seite anpassen\tStrg+0
@@ -9382,7 +9393,7 @@ bs:&Uklopi po širini\tCtrl+2
 by:Змясціць па шырыне
 ca-xv:Ajusta a l'am&plada\tCtrl+2
 ca:Ajusta a l'am&plada\tCtrl+2
-cn:适合宽度(&W)\tCtrl+2
+cn:符合宽度(&W)\tCtrl+2
 cy:&Fitio'r Lled\tCtrl+2
 cz:&Podle šířky\tCtrl+2
 de:An &Breite anpassen\tStrg+2
@@ -9448,7 +9459,7 @@ br:Ajustar ao conteúdo
 bs:Uklopi sadržaj
 ca-xv:Ajusta el contingut
 ca:Ajusta el contingut
-cn:适合内容
+cn:符合内容(&T)
 cy:Ffitio'r Cynnwys
 cz:Přizpůsobit obsah
 de:An Inhalt anpassen
@@ -9494,7 +9505,7 @@ sv:Passa innehåll
 ta:உள்ளடக்கம் பொருந்துக
 tl:Pagkasyahin ang laman
 tr:İçeriğe ölçekle
-tw:合適內容(&T)
+tw:符合內容(&T)
 uk:Розмістити вміст
 uz:Tarkibiga moslash
 vn:Vừa nội dung
@@ -9510,7 +9521,7 @@ bs:Uklopi stranicu
 by:Змясціць старонку
 ca-xv:Ajusta a la pàgina
 ca:Ajusta a la pàgina
-cn:适合页面
+cn:符合页面(&P)
 cy:Ffitio'r Dudalen
 cz:Podle stránky
 de:An Seite anpassen
@@ -9579,7 +9590,7 @@ bs:Uklopi po širini
 by:Змясціць па шырыне
 ca-xv:Ajusta a l'amplada
 ca:Ajusta a l'amplada
-cn:适合宽度
+cn:符合宽度(&W)
 cy:Fitio'r Lled
 cz:Podle šířky
 de:An Breite anpassen
@@ -9632,7 +9643,7 @@ ta:அகலத்திற்கு பொருத்து
 th:พอดีความกว้าง
 tl:Ipagkasya ang Lapad
 tr:Genişliğe sığdır
-tw:合適寬度
+tw:符合寬度(&W)
 uk:Припасувати до ширини
 uz:Eniga moslash
 vn:Vừa chiều rộng
@@ -9645,7 +9656,7 @@ br:Ajustar pela largura e exibir páginas de modo contínuo
 bs:Uklopi po širini i prikaži stranice slijedno
 ca-xv:Ajusta l'amplada i mostra les pàgines de forma contínua
 ca:Ajusta l'amplada i mostra les pàgines de forma contínua
-cn:自适应宽度连续模式
+cn:符合宽度连续模式(&W)
 cy:Ffitio'r Lled a Dangos Tudalennau'n Barhaus
 cz:Přizpůsobit šířce okna a zobrazit stránky průběžně
 de:An Breite anpassen und Seiten fortlaufend anzeigen
@@ -9691,7 +9702,7 @@ sv:Anpassa bredd och visa sidor fortlöpande
 ta:அகலம் பொருத்தி பக்கங்கள் காட்டுக
 tl:Pagkasyahin ang lapad at ipakita nang tuluy-tuloy ang mga pahina
 tr:Genişliğe ölçekle ve sayfaları devamlı göster
-tw:符合寬度且連續顯示頁面
+tw:符合寬度且連續顯示頁面(&U)
 uk:Розмістити по ширині на безперервній сторінці
 uz:Eniga moslash va uzluksiz
 vn:Vừa chiều rộng và Xem trang liên tiếp
@@ -9705,7 +9716,7 @@ br:Ajustar em uma única página
 bs:Uklopi jednu stranicu
 ca-xv:Ajusta a una única pàgina
 ca:Ajusta a una única pàgina
-cn:自适应单页模式
+cn:符合单页(&P)
 cy:Ffitio Tudalen Unigol
 cz:Přizpůsobit pro jednu celou stránku v okně
 de:An eine einzelne Seite anpassen
@@ -9752,7 +9763,7 @@ sv:Anpassa till helsida
 ta:ஒற்றை பக்கம் பொருந்துக
 tl:Pagkasyahin ang isang pahina
 tr:Tek sayfaya ölçekle
-tw:符合單頁
+tw:符合單頁(&T)
 uk:Вмістити на сторінку
 uz:Bitta betga moslash
 vn:Vừa một trang đơn
@@ -10893,11 +10904,14 @@ kr:밝은
 lv:Gaišs
 ne:हल्का
 nl:Wit
+nn:Lyst
+no:Lyst
 pl:Jasny
 ru:Светлая
 sp-rs:Svetlo
 sr-rs:Светло
 sv:Ljus
+tw:亮(&L)
 uk:Світла
 vn:Sáng
 :MB
