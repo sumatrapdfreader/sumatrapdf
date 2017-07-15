@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-4e641dcd71cc3324e739ad6204a4f2f19f7d2f17
+a518f96a298ccdc8d843bcd00d4ca7f70a4ff90b
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -5046,7 +5046,7 @@ vn:Không thể bắt đầu lệnh tìm kiếm ngược. Xin kiểm tra phần 
 :Change Language
 af:Verander Taal (Change Language)
 am:Փոխել լեզուն (Change Language)
-ar:تغيير اللغة 
+ar:تغيير اللغة  (Change Language)
 az:Dili dəyişdir (Change Language)
 bg:Смяна на езика на програмата (Change Language)
 bn:ভাষা পরিবর্তন (Change Language)
@@ -5055,27 +5055,27 @@ bs:Promijeni jezik (Change Language)
 by:Змяніць мову (Change Language)
 ca-xv:Canvia la llengua (Change Language)
 ca:Canvia la llengua (Change Language)
-cn:更改语言 (Language)
-cy:Newid Iaith
-cz:Změnit jazyk... (Language)
-de:Sprache ändern… (Change Language)
+cn:更改语言 (Change Language)
+cy:Newid Iaith (Change Language)
+cz:Změnit jazyk... (Change Language)
+de:Sprache ändern (Change Language)
 dk:Skift sprog (Change Language)
 el:Αλλαγή γλώσσας (Change Language)
 es:Cambiar idioma (Change Language)
 et:Vali keel (Change Language)
-eu:&Aldatu Hizkuntza
+eu:Aldatu Hizkuntza (Change Language)
 fa:تغییر زبان (Change Language)
 fi:Valitse kieli (Change Language)
 fr:Changer de langue (Change Language)
 fy-nl:Taal kieze (Change Language)
 ga:Athraigh an Teanga (Change Language)
-gl:Cambiar a lingua
+gl:Cambiar a lingua (Change Language)
 he:שנה שפת ממשק (Change language)
 hi:भाषा बदलें (Change Language)
 hr:Promijeni jezik (Change Language)
 hu:Nyelv kiválasztása (Change Language)
 id:Ubah Bahasa (Change Language)
-it:Lingua dell'interfaccia
+it:Lingua dell'interfaccia (Change Language)
 ja:言語の変更 (Change Language)
 ka:ენის შეცვლა (Change Language)
 kr:언어 바꾸기(Change Language)
@@ -5093,25 +5093,25 @@ nn:Byt språk (Change Language)
 no:Endre språk (Change Language)
 pa:ਭਾਸ਼ਾ ਬਦਲੋ (Change Language)
 pl:Zmień język (Change Language)
-pt:Mudar idioma
+pt:Mudar idioma (Change Language)
 ro:Schimbare limbă (Change Language)
-ru:Изменить &язык (Change Language)
+ru:Изменить язык (Change Language)
 si:භාෂාව වෙනස්කරන්න (Change Language)
 sk:Zmeniť jazyk (Change Language)
 sl:Spremeni jezik (Change Language)
 sn:Chinja mutauro (Change Language)
 sp-rs:Promeni jezik (Change Language)
-sq:Ndryshoj gjuhën
+sq:Ndryshoj gjuhën (Change Language)
 sr-rs:Промени језик (Change Language)
 sv:Byt språk (Change Language)
-ta:மொழியை மாற்று
+ta:மொழியை மாற்று (Change Language)
 th:เปลี่ยนภาษา (Change Language)
 tl:Ibahin ang Wika (Change Language)
 tr:Dil değiştir (Change Language)
-tw:變更語言 (Language)
+tw:變更語言 (Change Language)
 uk:Змінити мову (Change Language)
 uz:Tilni o'zgartirish (Change Language)
-vn:Đổi ngôn ngữ
+vn:Đổi ngôn ngữ (Change Language)
 :Check for &Updates
 af:Kyk Vir Nuwe Uitgawe
 am:&Ստուգել նոր տարբերակը
