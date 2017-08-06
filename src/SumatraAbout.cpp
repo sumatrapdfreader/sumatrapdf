@@ -617,7 +617,7 @@ void DrawAboutPage(WindowInfo* win, HDC hdc)
 #define DOCLIST_MARGIN_TOP          DpiScaleY(win->hwndFrame, 60)
 #define DOCLIST_MARGIN_BETWEEN_Y    DpiScaleY(win->hwndFrame, 50)
 #define DOCLIST_MARGIN_BOTTOM       DpiScaleY(win->hwndFrame, 40)
-#define DOCLIST_MAX_THUMBNAILS_X    5
+#define DOCLIST_MAX_THUMBNAILS_X    15
 #define DOCLIST_BOTTOM_BOX_DY       DpiScaleY(win->hwndFrame, 50)
 
 void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF textColor, COLORREF backgroundColor)
@@ -628,8 +628,8 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     col = GetAppColor(AppColor::MainWindowLink);
     ScopedPen penLinkLine(CreatePen(PS_SOLID, 1, col));
 
-    ScopedFont fontSumatraTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 24));
-    ScopedFont fontLeftTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 14));
+	ScopedFont fontSumatraTxt(CreateSimpleFont(hdc, L"Segoe UI", 24));
+	ScopedFont fontLeftTxt(CreateSimpleFont(hdc, L"Segoe UI", 13));
 
     ScopedHdcSelect font(hdc, fontSumatraTxt);
 
@@ -667,9 +667,9 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     Vec<DisplayState *> list;
     fileHistory.GetFrequencyOrder(list);
 
-    int width = limitValue((rc.dx - DOCLIST_MARGIN_LEFT - DOCLIST_MARGIN_RIGHT + DOCLIST_MARGIN_BETWEEN_X) / (THUMBNAIL_DX + DOCLIST_MARGIN_BETWEEN_X), 1, DOCLIST_MAX_THUMBNAILS_X);
-    int height = std::min((rc.dy - DOCLIST_MARGIN_TOP - DOCLIST_MARGIN_BOTTOM + DOCLIST_MARGIN_BETWEEN_Y) / (THUMBNAIL_DY + DOCLIST_MARGIN_BETWEEN_Y), FILE_HISTORY_MAX_FREQUENT / width);
-    PointI offset(rc.x + DOCLIST_MARGIN_LEFT + (rc.dx - width * THUMBNAIL_DX - (width - 1) * DOCLIST_MARGIN_BETWEEN_X - DOCLIST_MARGIN_LEFT - DOCLIST_MARGIN_RIGHT) / 2, rc.y + DOCLIST_MARGIN_TOP);
+	int width = std::max((rc.dx - DOCLIST_MARGIN_LEFT - DOCLIST_MARGIN_RIGHT + DOCLIST_MARGIN_BETWEEN_X) / (THUMBNAIL_DX + DOCLIST_MARGIN_BETWEEN_X), 1);
+	int height = std::max((rc.dy - DOCLIST_MARGIN_TOP - DOCLIST_MARGIN_BOTTOM + DOCLIST_MARGIN_BETWEEN_Y) / (THUMBNAIL_DY + DOCLIST_MARGIN_BETWEEN_Y), 1);
+	PointI offset(rc.x + DOCLIST_MARGIN_LEFT + (rc.dx - width * THUMBNAIL_DX - (width - 1) * DOCLIST_MARGIN_BETWEEN_X - DOCLIST_MARGIN_LEFT - DOCLIST_MARGIN_RIGHT) / 2, rc.y + DOCLIST_MARGIN_TOP);
     if (offset.x < ABOUT_INNER_PADDING)
         offset.x = ABOUT_INNER_PADDING;
     else if (list.Count() == 0)

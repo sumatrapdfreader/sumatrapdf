@@ -8,7 +8,7 @@
 
 // maximum number of most frequently used files that will be shown on the
 // Frequent Read list (space permitting)
-#define FILE_HISTORY_MAX_FREQUENT   10
+#define FILE_HISTORY_MAX_FREQUENT   60
 
 class FileHistory {
     // owned by gGlobalPrefs->fileStates
