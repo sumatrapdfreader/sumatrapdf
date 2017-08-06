@@ -2,7 +2,6 @@
    License: GPLv3 */
 
 // thumbnails are 150px high and have a ratio of sqrt(2) : 1
-// 212 150
 #define THUMBNAIL_DX        96
 #define THUMBNAIL_DY        68 
 
