@@ -17,7 +17,6 @@
 #include "ThreadUtil.h"
 #include "UITask.h"
 #include "WinUtil.h"
-#include "DebugLog.h"
 // rendering engines
 #include "BaseEngine.h"
 #include "EngineManager.h"
@@ -55,14 +54,21 @@
 #include "StressTesting.h"
 #include "Version.h"
 #include "Tests.h"
-#include "Menu.h"
+
+// "SumatraPDF yellow" similar to the one use for icon and installer
+#define ABOUT_BG_LOGO_COLOR     RGB(0xFF, 0xF2, 0x00)
+
+// it's very light gray but not white so that there's contrast between
+// background and thumbnail, which often have white background because
+// most PDFs have white background
+#define ABOUT_BG_GRAY_COLOR     RGB(0xF2, 0xF2, 0xF2)
 
 #define CRASH_DUMP_FILE_NAME         L"sumatrapdfcrash.dmp"
 
 #ifdef DEBUG
 static bool TryLoadMemTrace()
 {
-    AutoFreeW dllPath(path::GetAppPath(L"memtrace.dll"));
+    ScopedMem<WCHAR> dllPath(path::GetAppPath(L"memtrace.dll"));
     if (!LoadLibrary(dllPath))
         return false;
     return true;
@@ -191,6 +197,38 @@ static bool RegisterWinClass()
     return true;
 }
 
+// returns the background color for the "SumatraPDF" logo in start page and About window
+COLORREF GetLogoBgColor()
+{
+#ifdef ABOUT_USE_LESS_COLORS
+    return ABOUT_BG_LOGO_COLOR;
+#else
+    return GetAboutBgColor();
+#endif
+}
+
+// returns the background color for start page, About window and Properties dialog
+COLORREF GetAboutBgColor()
+{
+    COLORREF bgColor = ABOUT_BG_GRAY_COLOR;
+    if (ABOUT_BG_COLOR_DEFAULT != gGlobalPrefs->mainWindowBackground)
+        bgColor = gGlobalPrefs->mainWindowBackground;
+    return bgColor;
+}
+
+COLORREF GetNoDocBgColor()
+{
+    // use the system background color if the user has non-default
+    // colors for text (not black-on-white) and also wants to use them
+    bool useSysColor = gGlobalPrefs->useSysColors &&
+                       (GetSysColor(COLOR_WINDOWTEXT) != WIN_COL_BLACK ||
+                        GetSysColor(COLOR_WINDOW) != WIN_COL_WHITE);
+    if (useSysColor)
+        return GetSysColor(COLOR_BTNFACE);
+
+    return COL_WINDOW_BG;
+}
+
 static bool InstanceInit()
 {
     gCursorDrag     = LoadCursor(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDC_CURSORDRAG));
@@ -222,7 +260,7 @@ static void OpenUsingDde(HWND targetWnd, const WCHAR *filePath, CommandLineInfo&
                       fullpath, viewMode, i.startZoom, i.startScroll.x, i.startScroll.y);
     }
     if (i.forwardSearchOrigin && i.forwardSearchLine) {
-        AutoFreeW sourcePath(path::Normalize(i.forwardSearchOrigin));
+        ScopedMem<WCHAR> sourcePath(path::Normalize(i.forwardSearchOrigin));
         cmd.AppendFmt(L"[" DDECOMMAND_SYNC L"(\"%s\", \"%s\", %d, 0, 0, 1)]",
                       fullpath, sourcePath, i.forwardSearchLine);
     }
@@ -275,7 +313,7 @@ static WindowInfo *LoadOnStartup(const WCHAR *filePath, CommandLineInfo& i, bool
     if (i.forwardSearchOrigin && i.forwardSearchLine && win->AsFixed() && win->AsFixed()->pdfSync) {
         UINT page;
         Vec<RectI> rects;
-        AutoFreeW sourcePath(path::Normalize(i.forwardSearchOrigin));
+        ScopedMem<WCHAR> sourcePath(path::Normalize(i.forwardSearchOrigin));
         int ret = win->AsFixed()->pdfSync->SourceToDoc(sourcePath, i.forwardSearchLine, 0, &page, rects);
         ShowForwardSearchResult(win, sourcePath, i.forwardSearchLine, 0, ret, page, rects);
     }
@@ -356,7 +394,7 @@ static bool SetupPluginMode(CommandLineInfo& i)
     // extract some command line arguments from the URL's hash fragment where available
     // see http://www.adobe.com/devnet/acrobat/pdfs/pdf_open_parameters.pdf#nameddest=G4.1501531
     if (i.pluginURL && str::FindChar(i.pluginURL, '#')) {
-        AutoFreeW args(str::Dup(str::FindChar(i.pluginURL, '#') + 1));
+        ScopedMem<WCHAR> args(str::Dup(str::FindChar(i.pluginURL, '#') + 1));
         str::TransChars(args, L"#", L"&");
         WStrVec parts;
         parts.Split(args, L"&", true);
@@ -366,9 +404,9 @@ static bool SetupPluginMode(CommandLineInfo& i)
             if (str::StartsWithI(part, L"page=") && str::Parse(part + 4, L"=%d%$", &pageNo))
                 i.pageNumber = pageNo;
             else if (str::StartsWithI(part, L"nameddest=") && part[10])
-                i.destName.SetCopy(part + 10);
+                i.destName.Set(str::Dup(part + 10));
             else if (!str::FindChar(part, '=') && part[0])
-                i.destName.SetCopy(part);
+                i.destName.Set(str::Dup(part));
         }
     }
 
@@ -377,13 +415,13 @@ static bool SetupPluginMode(CommandLineInfo& i)
 
 static void SetupCrashHandler()
 {
-    AutoFreeW symDir;
-    AutoFreeW tmpDir(path::GetTempPath());
+    ScopedMem<WCHAR> symDir;
+    ScopedMem<WCHAR> tmpDir(path::GetTempPath());
     if (tmpDir)
         symDir.Set(path::Join(tmpDir, L"SumatraPDF-symbols"));
     else
         symDir.Set(AppGenDataFilename(L"SumatraPDF-symbols"));
-    AutoFreeW crashDumpPath(AppGenDataFilename(CRASH_DUMP_FILE_NAME));
+    ScopedMem<WCHAR> crashDumpPath(AppGenDataFilename(CRASH_DUMP_FILE_NAME));
     InstallCrashHandler(crashDumpPath, symDir);
 }
 
@@ -391,10 +429,10 @@ static HWND FindPrevInstWindow(HANDLE *hMutex)
 {
     // create a unique identifier for this executable
     // (allows independent side-by-side installations)
-    AutoFreeW exePath(GetExePath());
+    ScopedMem<WCHAR> exePath(GetExePath());
     str::ToLowerInPlace(exePath);
     uint32_t hash = MurmurHash2(exePath.Get(), str::Len(exePath) * sizeof(WCHAR));
-    AutoFreeW mapId(str::Format(L"SumatraPDF-%08x", hash));
+    ScopedMem<WCHAR> mapId(str::Format(L"SumatraPDF-%08x", hash));
 
     int retriesLeft = 3;
 Retry:
@@ -503,7 +541,7 @@ static bool AutoUpdateMain()
     }
     if (str::Eq(argList.At(2), L"replace")) {
         // older 2.6 prerelease versions used implicit paths
-        AutoFreeW exePath(GetExePath());
+        ScopedMem<WCHAR> exePath(GetExePath());
         CrashIf(!str::EndsWith(exePath, L".exe-updater.exe"));
         exePath[str::Len(exePath) - 12] = '\0';
         free(argList.At(2));
@@ -523,10 +561,10 @@ static bool AutoUpdateMain()
         // continue startup, restoring the previous session
         return false;
     }
-    AutoFreeW thisExe(GetExePath());
+    ScopedMem<WCHAR> thisExe(GetExePath());
     RetryIO([&] { return CopyFile(thisExe, otherExe, FALSE) != 0; });
     // TODO: somehow indicate success or failure
-    AutoFreeW cleanupArgs(str::Format(L"-autoupdate cleanup:\"%s\"", thisExe));
+    ScopedMem<WCHAR> cleanupArgs(str::Format(L"-autoupdate cleanup:\"%s\"", thisExe));
     RetryIO([&] { return LaunchFile(otherExe, cleanupArgs); });
     return true;
 }
@@ -558,7 +596,6 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 #endif
 
     InitDynCalls();
-    NoDllHijacking();
 
     DisableDataExecution();
     // ensure that C functions behave consistently under all OS locales
@@ -714,7 +751,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
                          gGlobalPrefs->rememberOpenedFiles && gGlobalPrefs->showStartPage;
     if (showStartPage) {
         // make the shell prepare the image list, so that it's ready when the first window's loaded
-        SHFILEINFO sfi = { 0 };
+        SHFILEINFO sfi;
         SHGetFileInfo(L".pdf", 0, &sfi, sizeof(sfi), SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
     }
 
@@ -781,22 +818,10 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     // call this once it's clear whether Perm_SavePreferences has been granted
     prefs::RegisterForFileChanges();
 
-    // Change current directory for 2 reasons:
-    // * prevent dll hijacking (LoadLibrary first loads from current directory
-    //   which could be browser's download directory, which is an easy target
-    //   for attackers to put their own fake dlls).
-    //   For this to work we also have to /delayload all libraries otherwise
-    //   they will be loaded even before WinMain executes.
-    // * to not keep a directory opened (and therefore un-deletable) when
-    //   launched by double-clicking on a file. In that case the OS sets
-    //   current directory to where the file is which means we keep it open
-    //   even if the file itself is closed.
-    //  c:\windows\system32 is a good directory to use
-    ChangeCurrDirToSystem32();
-
     retCode = RunMessageLoop();
+
     SafeCloseHandle(&hMutex);
-    CleanUpThumbnailCache(gFileHistory);
+ // CleanUpThumbnailCache(gFileHistory);
 
 Exit:
     prefs::UnregisterForFileChanges();
@@ -840,12 +865,10 @@ Exit:
     gFileHistory.UpdateStatesSource(nullptr);
     prefs::CleanUp();
 
-    FreeAllMenuDrawInfos();
     // it's still possible to crash after this (destructors of static classes,
     // atexit() code etc.) point, but it's very unlikely
     UninstallCrashHandler();
 
-    dbglog::FreeCrashLog();
     // output leaks after all destructors of static objects have run
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 
