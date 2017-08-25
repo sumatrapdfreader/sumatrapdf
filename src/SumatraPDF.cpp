@@ -3437,7 +3437,7 @@ static void FrameOnChar(WindowInfo& win, WPARAM key, LPARAM info=0)
         return;
 
     switch (key) {
-    case VK_SPACE:
+    case VK_SPACE: 
     case VK_RETURN:
         FrameOnKeydown(&win, IsShiftPressed() ? VK_PRIOR : VK_NEXT, 0);
         break;
@@ -3535,6 +3535,16 @@ static void FrameOnChar(WindowInfo& win, WPARAM key, LPARAM info=0)
             if (GetCursorPosInHwnd(win.hwndCanvas, pt)) {
                 UpdateCursorPositionHelper(&win, pt, nullptr);
             }
+        }
+        break;
+    case 'y':
+        // manually add the current page as a naviation point
+        // only DisplayModel and Ebook controllers support this
+        if (win.AsFixed()) {
+            win.AsFixed()->AddNavPoint();
+        }
+        if (win.AsEbook()) {
+            win.AsEbook()->AddNavPoint();
         }
         break;
 #if defined(DEBUG) || defined(SVN_PRE_RELEASE_VER)

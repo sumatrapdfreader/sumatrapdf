@@ -82,6 +82,7 @@ class EbookController : public Controller {
 
     static void DeleteEbookFormattingData(EbookFormattingData* data);
 
+    void AddNavPoint();
   protected:
     EbookControls* ctrls = nullptr;
 
@@ -125,7 +126,6 @@ class EbookController : public Controller {
     int GetMaxPageCount() const;
     bool IsDoublePage() const;
     void ExtractPageAnchors();
-    void AddNavPoint();
     void OnClickedLink(int pageNo, DrawInstr* link);
 
     // event handlers
