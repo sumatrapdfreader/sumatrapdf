@@ -186,6 +186,7 @@ public:
     bool            dontRenderFlag;
 
     bool            GetPresentationMode() const { return presentationMode; }
+    void            AddNavPoint();
 
 protected:
 
@@ -196,7 +197,6 @@ protected:
     PointI          GetContentStart(int pageNo);
     void            RecalcVisibleParts();
     void            RenderVisibleParts();
-    void            AddNavPoint();
     RectD           GetContentBox(int pageNo, RenderTarget target=Target_View);
     void            CalcZoomVirtual(float zoomVirtual);
     void            GoToPage(int pageNo, int scrollY, bool addNavPt=false, int scrollX=-1);
