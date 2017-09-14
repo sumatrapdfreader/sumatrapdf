@@ -11,7 +11,7 @@ More information:
 To compile you need Visual Studio 2017 or 2015. [Free Community edition](https://www.visualstudio.com/vs/community/) works.
 
 To get the code:
-* `git checkout --recursive git@github.com:sumatrapdfreader/sumatrapdf.git`
+* `git clone --recursive git@github.com:sumatrapdfreader/sumatrapdf.git`
 
 Note: we use git submodules, so `--recursive` option is important.
 
