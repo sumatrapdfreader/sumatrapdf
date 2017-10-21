@@ -2294,7 +2294,7 @@ static void OnMenuSaveAs(WindowInfo& win)
     bool canConvertToPDF = engine && win.currentTab->GetEngineType() != EngineType::PDF;
 #ifndef DEBUG
     // not ready for document types other than PS and image collections
-    if (canConvertToPDF && win.currentTab->GetEngineType() != EngineType::PS && !engine->IsImageCollection())
+    if (canConvertToPDF && win.currentTab->GetEngineType() != EngineType::PostScript && !engine->IsImageCollection())
         canConvertToPDF = false;
 #endif
 #ifndef DISABLE_DOCUMENT_RESTRICTIONS
