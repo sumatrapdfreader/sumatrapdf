@@ -199,7 +199,7 @@ unsigned char *fz_extract_stream_data(fz_stream *stream, size_t *cbCount)
     fz_seek(stream, 0, 0);
 
     fz_buffer *buffer = fz_read_all(stream, fileLen);
-    assert(fileLen == buffer->len);
+    AssertCrash(fileLen == buffer->len);
 
     unsigned char *data = (unsigned char *)memdup(buffer->data, buffer->len);
     if (cbCount)
@@ -431,7 +431,7 @@ fz_matrix fz_create_view_ctm(const fz_rect *mediabox, float zoom, int rotation)
     fz_matrix ctm;
     fz_pre_scale(fz_rotate(&ctm, (float)rotation), zoom, zoom);
 
-    assert(0 == mediabox->x0 && 0 == mediabox->y0);
+    AssertCrash(0 == mediabox->x0 && 0 == mediabox->y0);
     rotation = (rotation + 360) % 360;
     if (90 == rotation)
         fz_pre_translate(&ctm, 0, -mediabox->y1);
@@ -440,7 +440,7 @@ fz_matrix fz_create_view_ctm(const fz_rect *mediabox, float zoom, int rotation)
     else if (270 == rotation)
         fz_pre_translate(&ctm, -mediabox->x1, 0);
 
-    assert(fz_matrix_expansion(&ctm) > 0);
+    AssertCrash(fz_matrix_expansion(&ctm) > 0);
     if (fz_matrix_expansion(&ctm) == 0)
         return fz_identity;
 
@@ -621,8 +621,8 @@ static fz_link *FixupPageLinks(fz_link *root)
             std::swap(link->rect.x0, link->rect.x1);
         if (link->rect.y0 > link->rect.y1)
             std::swap(link->rect.y0, link->rect.y1);
-        assert(link->rect.x1 >= link->rect.x0);
-        assert(link->rect.y1 >= link->rect.y0);
+        AssertCrash(link->rect.x1 >= link->rect.x0);
+        AssertCrash(link->rect.y1 >= link->rect.y0);
     }
     return new_root;
 }
@@ -1423,7 +1423,7 @@ PdfEngineImpl::~PdfEngineImpl()
     }
 
     while (runCache.Count() > 0) {
-        assert(runCache.Last()->refs == 1);
+        AssertCrash(runCache.Last()->refs == 1);
         DropPageRun(runCache.Last(), true);
     }
 
@@ -1540,7 +1540,7 @@ OpenEmbeddedFile:
 
     int num, gen;
     embedMarks = (WCHAR *)str::Parse(embedMarks, L":%d:%d", &num, &gen);
-    assert(embedMarks);
+    CrashIf(!embedMarks);
     if (!embedMarks || !pdf_is_stream(_doc, num, gen))
         return false;
 
@@ -1565,7 +1565,7 @@ OpenEmbeddedFile:
 
 bool PdfEngineImpl::Load(IStream *stream, PasswordUI *pwdUI)
 {
-    assert(!FileName() && !_doc && ctx);
+    AssertCrash(!FileName() && !_doc && ctx);
     if (!ctx)
         return false;
 
@@ -1583,7 +1583,7 @@ bool PdfEngineImpl::Load(IStream *stream, PasswordUI *pwdUI)
 
 bool PdfEngineImpl::Load(fz_stream *stm, PasswordUI *pwdUI)
 {
-    assert(!FileName() && !_doc && ctx);
+    AssertCrash(!FileName() && !_doc && ctx);
     if (!ctx)
         return false;
 
@@ -1920,7 +1920,7 @@ PdfPageRun *PdfEngineImpl::GetPageRun(pdf_page *page, bool tryOnly)
                 mem += runCache.At(i)->size_est;
         }
         if (runCache.Count() >= MAX_PAGE_RUN_CACHE) {
-            assert(runCache.Count() == MAX_PAGE_RUN_CACHE);
+            AssertCrash(runCache.Count() == MAX_PAGE_RUN_CACHE);
             DropPageRun(runCache.Last(), true);
         }
 
@@ -2023,7 +2023,7 @@ void PdfEngineImpl::DropPageRun(PdfPageRun *run, bool forceRemove)
 
 RectD PdfEngineImpl::PageMediabox(int pageNo)
 {
-    assert(1 <= pageNo && pageNo <= PageCount());
+    AssertCrash(1 <= pageNo && pageNo <= PageCount());
     if (!_mediaboxes[pageNo-1].IsEmpty())
         return _mediaboxes[pageNo-1];
 
@@ -2069,7 +2069,7 @@ RectD PdfEngineImpl::PageMediabox(int pageNo)
 
 RectD PdfEngineImpl::PageContentBox(int pageNo, RenderTarget target)
 {
-    assert(1 <= pageNo && pageNo <= PageCount());
+    AssertCrash(1 <= pageNo && pageNo <= PageCount());
     pdf_page *page = GetPdfPage(pageNo);
     if (!page)
         return RectD();
@@ -2254,7 +2254,7 @@ Vec<PageElement *> *PdfEngineImpl::GetElements(int pageNo)
 void PdfEngineImpl::LinkifyPageText(pdf_page *page)
 {
     page->links = FixupPageLinks(page->links);
-    assert(!page->links || page->links->refs == 1);
+    AssertCrash(!page->links || page->links->refs == 1);
 
     RectI *coords;
     AutoFreeW pageText(ExtractPageText(page, L"\n", &coords, Target_View, true));
@@ -2354,7 +2354,7 @@ RenderedBitmap *PdfEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
     RunPage(page, dev, &fz_identity);
 
     if (imageIx >= positions.Count() || fz_rect_to_RectD(positions.At(imageIx).rect) != rect) {
-        assert(0);
+        AssertCrash(0);
         return nullptr;
     }
 
@@ -3581,7 +3581,7 @@ XpsEngineImpl::~XpsEngineImpl()
 
     if (_pages) {
         // xps_pages are freed by xps_close_document -> xps_free_page_list
-        assert(_doc);
+        AssertCrash(_doc);
         free(_pages);
     }
 
@@ -3595,7 +3595,7 @@ XpsEngineImpl::~XpsEngineImpl()
     }
 
     while (runCache.Count() > 0) {
-        assert(runCache.Last()->refs == 1);
+        AssertCrash(runCache.Last()->refs == 1);
         DropPageRun(runCache.Last(), true);
     }
 
@@ -3662,7 +3662,7 @@ bool XpsEngineImpl::Load(const WCHAR *fileName)
 
 bool XpsEngineImpl::Load(IStream *stream)
 {
-    assert(!_doc && !_docStream && ctx);
+    AssertCrash(!_doc && !_docStream && ctx);
     if (!ctx)
         return false;
 
@@ -3678,7 +3678,7 @@ bool XpsEngineImpl::Load(IStream *stream)
 
 bool XpsEngineImpl::Load(fz_stream *stm)
 {
-    assert(!FileName() && !_doc && !_docStream && ctx);
+    AssertCrash(!FileName() && !_doc && !_docStream && ctx);
     if (!ctx)
         return false;
 
@@ -3751,7 +3751,7 @@ xps_page *XpsEngineImpl::GetXpsPage(int pageNo, bool failIfBusy)
             page = xps_load_page(_doc, pageNo - 1);
             _pages[pageNo-1] = page;
             LinkifyPageText(page, pageNo);
-            assert(page->links_resolved);
+            AssertCrash(page->links_resolved);
         }
         fz_catch(ctx) { }
     }
@@ -3820,7 +3820,7 @@ XpsPageRun *XpsEngineImpl::GetPageRun(xps_page *page, bool tryOnly)
                 mem += runCache.At(i)->size_est;
         }
         if (runCache.Count() >= MAX_PAGE_RUN_CACHE) {
-            assert(runCache.Count() == MAX_PAGE_RUN_CACHE);
+            AssertCrash(runCache.Count() == MAX_PAGE_RUN_CACHE);
             DropPageRun(runCache.Last(), true);
         }
 
@@ -3921,7 +3921,7 @@ void XpsEngineImpl::DropPageRun(XpsPageRun *run, bool forceRemove)
 
 RectD XpsEngineImpl::PageMediabox(int pageNo)
 {
-    assert(1 <= pageNo && pageNo <= PageCount());
+    AssertCrash(1 <= pageNo && pageNo <= PageCount());
     if (!_mediaboxes)
         return RectD();
 
@@ -4234,14 +4234,14 @@ void XpsEngineImpl::LinkifyPageText(xps_page *page, int pageNo)
 {
     UNUSED(pageNo);
     // make MuXPS extract all links and named destinations from the page
-    assert(!GetPageRun(page, true));
+    AssertCrash(!GetPageRun(page, true));
     XpsPageRun *run = GetPageRun(page);
-    assert(!run == !page->links_resolved);
+    AssertCrash(!run == !page->links_resolved);
     if (run)
         DropPageRun(run);
     else
         page->links_resolved = 1;
-    assert(!page->links || page->links->refs == 1);
+    AssertCrash(!page->links || page->links->refs == 1);
 
     RectI *coords;
     AutoFreeW pageText(ExtractPageText(page, L"\n", &coords, true));
@@ -4293,7 +4293,7 @@ RenderedBitmap *XpsEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
     RunPage(page, dev, &fz_identity);
 
     if (imageIx >= positions.Count() || fz_rect_to_RectD(positions.At(imageIx).rect) != rect) {
-        assert(0);
+        AssertCrash(0);
         return nullptr;
     }
 
