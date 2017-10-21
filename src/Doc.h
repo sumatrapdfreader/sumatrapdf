@@ -18,7 +18,7 @@ class HtmlFormatter;
 class HtmlFormatterArgs;
 
 enum class DocType { None, Epub, Fb2, Mobi, Pdb };
-enum DocError { Error_None, Error_Unknown };
+enum class DocError { None, Unknown };
 
 class Doc {
   protected:
@@ -65,8 +65,8 @@ class Doc {
     DocType Type() const { return type; }
 
     bool LoadingFailed() const {
-        CrashIf(error && !IsNone());
-        return error != Error_None;
+        CrashIf((error != DocError::None) && !IsNone());
+        return error != DocError::None;
     }
 
     // instead of adding these to Doc, they could also be part

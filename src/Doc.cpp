@@ -88,7 +88,7 @@ Doc::Doc(PalmDoc* doc) {
 void Doc::Clear() {
     type = DocType::None;
     generic = nullptr;
-    error = Error_None;
+    error = DocError::None;
     filePath.Set(nullptr);
 }
 
@@ -270,8 +270,8 @@ Doc Doc::CreateFromFile(const WCHAR* filePath) {
     // if failed to load and more specific error message hasn't been
     // set above, set a generic error message
     if (doc.IsNone()) {
-        CrashIf(doc.error);
-        doc.error = Error_Unknown;
+        CrashIf(doc.error != DocError::None);
+        doc.error = DocError::Unknown;
         doc.filePath.SetCopy(filePath);
     } else {
         CrashIf(!Doc::IsSupportedFile(filePath));
