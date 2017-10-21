@@ -2261,7 +2261,7 @@ static bool AppendFileFilterForDoc(Controller *ctrl, str::Str<WCHAR>& fileFilter
         case EngineType::ComicBook: fileFilter.Append(_TR("Comic books")); break;
         case EngineType::Image:  fileFilter.AppendFmt(_TR("Image files (*.%s)"), ctrl->DefaultFileExt() + 1); break;
         case EngineType::ImageDir: return false; // only show "All files"
-        case EngineType::PS:     fileFilter.Append(_TR("Postscript documents")); break;
+        case EngineType::PostScript:     fileFilter.Append(_TR("Postscript documents")); break;
         case EngineType::Chm:    fileFilter.Append(_TR("CHM documents")); break;
         case EngineType::Epub:   fileFilter.Append(_TR("EPUB ebooks")); break;
         case EngineType::Mobi:   fileFilter.Append(_TR("Mobi documents")); break;

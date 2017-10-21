@@ -51,9 +51,9 @@ RetrySniffing:
     } else if (CbxEngine::IsSupportedFile(filePath, sniff) && engineType != EngineType::ComicBook) {
         engine = CbxEngine::CreateFromFile(filePath);
         engineType = EngineType::ComicBook;
-    } else if (PsEngine::IsSupportedFile(filePath, sniff) && engineType != EngineType::PS) {
+    } else if (PsEngine::IsSupportedFile(filePath, sniff) && engineType != EngineType::PostScript) {
         engine = PsEngine::CreateFromFile(filePath);
-        engineType = EngineType::PS;
+        engineType = EngineType::PostScript;
     } else if (enableChmEngine && ChmEngine::IsSupportedFile(filePath, sniff) && engineType != EngineType::Chm) {
         engine = ChmEngine::CreateFromFile(filePath);
         engineType = EngineType::Chm;

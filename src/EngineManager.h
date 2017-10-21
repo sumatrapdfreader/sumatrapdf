@@ -12,7 +12,7 @@ enum class EngineType {
     Image,
     ImageDir,
     ComicBook,
-    PS,
+    PostScript,
     Epub,
     Fb2,
     Mobi,
