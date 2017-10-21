@@ -2248,10 +2248,10 @@ static bool AppendFileFilterForDoc(Controller *ctrl, str::Str<WCHAR>& fileFilter
         type = Engine_Chm;
     else if (ctrl->AsEbook()) {
         switch (ctrl->AsEbook()->GetDocType()) {
-        case Doc_Epub: type = Engine_Epub; break;
-        case Doc_Fb2:  type = Engine_Fb2;  break;
-        case Doc_Mobi: type = Engine_Mobi; break;
-        case Doc_Pdb:  type = Engine_Pdb;  break;
+        case DocType::Epub: type = Engine_Epub; break;
+        case DocType::Fb2:  type = Engine_Fb2;  break;
+        case DocType::Mobi: type = Engine_Mobi; break;
+        case DocType::Pdb:  type = Engine_Pdb;  break;
         default: type = Engine_None; break;
         }
     }

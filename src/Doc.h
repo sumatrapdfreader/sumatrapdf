@@ -17,7 +17,7 @@ class EbookTocVisitor;
 class HtmlFormatter;
 class HtmlFormatterArgs;
 
-enum DocType { Doc_None, Doc_Epub, Doc_Fb2, Doc_Mobi, Doc_Pdb };
+enum class DocType { None, Epub, Fb2, Mobi, Pdb };
 enum DocError { Error_None, Error_Unknown };
 
 class Doc
@@ -61,7 +61,7 @@ public:
     void Delete();
 
     // note: find a better name, if possible
-    bool IsNone() const { return Doc_None == type; }
+    bool IsNone() const { return DocType::None == type; }
     bool IsDocLoaded() const { return !IsNone(); }
     DocType Type() const { return type; }
 

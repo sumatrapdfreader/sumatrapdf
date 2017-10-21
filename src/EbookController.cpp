@@ -406,7 +406,7 @@ void EbookController::OnClickedLink(int pageNo, DrawInstr* link) {
         return;
     }
 
-    if (Doc_Epub == doc.Type() && pages && (size_t)pageNo <= pages->Count()) {
+    if (DocType::Epub == doc.Type() && pages && (size_t)pageNo <= pages->Count()) {
         // normalize the URL by combining it with the chapter's base path
         for (int j = pageNo; j > 0; j--) {
             HtmlPage* p = pages->At(j - 1);
@@ -698,7 +698,7 @@ void EbookController::ExtractPageAnchors() {
             continue;
         }
         AttrInfo* attr = tok->GetAttrByName("id");
-        if (!attr && Tag_A == tok->tag && doc.Type() != Doc_Fb2) {
+        if (!attr && Tag_A == tok->tag && doc.Type() != DocType::Fb2) {
             attr = tok->GetAttrByName("name");
         }
         if (attr) {
@@ -709,13 +709,13 @@ void EbookController::ExtractPageAnchors() {
         // update EPUB page paths and create an anchor per chapter
         if (Tag_Pagebreak == tok->tag && (attr = tok->GetAttrByName("page_path")) != nullptr &&
             str::StartsWith(attr->val + attr->valLen, "\" page_marker />")) {
-            CrashIf(doc.Type() != Doc_Epub);
+            CrashIf(doc.Type() != DocType::Epub);
             epubPagePath.Set(str::conv::FromUtf8(attr->val, attr->valLen));
             pageAnchorIds->Append(str::Dup(epubPagePath));
             pageAnchorIdxs->Append((int)(tok->GetReparsePoint() - parser.Start()));
         }
         // create FB2 title anchors (cf. Fb2Doc::ParseToc)
-        if (Tag_Title == tok->tag && tok->IsStartTag() && Doc_Fb2 == doc.Type()) {
+        if (Tag_Title == tok->tag && tok->IsStartTag() && DocType::Fb2 == doc.Type()) {
             AutoFreeW id(str::Format(TEXT(FB2_TOC_ENTRY_MARK) L"%d", ++fb2TitleCount));
             pageAnchorIds->Append(id.StealData());
             pageAnchorIdxs->Append((int)(tok->GetReparsePoint() - parser.Start()));
@@ -727,7 +727,7 @@ int EbookController::ResolvePageAnchor(const WCHAR* id) {
     ExtractPageAnchors();
 
     int reparseIdx = -1;
-    if (Doc_Mobi == doc.Type() && str::Parse(id, L"%d%$", &reparseIdx) && 0 <= reparseIdx &&
+    if (DocType::Mobi == doc.Type() && str::Parse(id, L"%d%$", &reparseIdx) && 0 <= reparseIdx &&
         (size_t)reparseIdx <= doc.GetHtmlDataSize()) {
         // Mobi uses filepos (reparseIdx) for in-document links
         return reparseIdx;
@@ -737,7 +737,7 @@ int EbookController::ResolvePageAnchor(const WCHAR* id) {
     if (idx != -1) {
         return pageAnchorIdxs->At(idx);
     }
-    if (doc.Type() != Doc_Epub || !str::FindChar(id, '#')) {
+    if (doc.Type() != DocType::Epub || !str::FindChar(id, '#')) {
         return -1;
     }
 
@@ -815,7 +815,7 @@ void EbookController::ScrollToLink(PageDestination* dest) {
 
 PageDestination* EbookController::GetNamedDest(const WCHAR* name) {
     int reparseIdx = -1;
-    if (Doc_Mobi == doc.Type() && str::Parse(name, L"%d%$", &reparseIdx) && 0 <= reparseIdx &&
+    if (DocType::Mobi == doc.Type() && str::Parse(name, L"%d%$", &reparseIdx) && 0 <= reparseIdx &&
         (size_t)reparseIdx <= doc.GetHtmlDataSize()) {
         // Mobi uses filepos (reparseIdx) for in-document links
     } else if (!str::FindChar(name, '#')) {

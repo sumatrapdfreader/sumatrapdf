@@ -44,19 +44,19 @@ Doc::~Doc()
 void Doc::Delete()
 {
     switch (type) {
-    case Doc_Epub:
+    case DocType::Epub:
         delete epubDoc;
         break;
-    case Doc_Fb2:
+    case DocType::Fb2:
         delete fb2Doc;
         break;
-    case Doc_Mobi:
+    case DocType::Mobi:
         delete mobiDoc;
         break;
-    case Doc_Pdb:
+    case DocType::Pdb:
         delete palmDoc;
         break;
-    case Doc_None:
+    case DocType::None:
         break;
     default:
         CrashIf(true);
@@ -69,34 +69,34 @@ void Doc::Delete()
 Doc::Doc(EpubDoc *doc)
 {
     Clear();
-    type = doc ? Doc_Epub : Doc_None;
+    type = doc ? DocType::Epub : DocType::None;
     epubDoc = doc;
 }
 
 Doc::Doc(Fb2Doc *doc)
 {
     Clear();
-    type = doc ? Doc_Fb2 : Doc_None;
+    type = doc ? DocType::Fb2 : DocType::None;
     fb2Doc = doc;
 }
 
 Doc::Doc(MobiDoc *doc)
 {
     Clear();
-    type = doc ? Doc_Mobi : Doc_None;
+    type = doc ? DocType::Mobi : DocType::None;
     mobiDoc = doc;
 }
 
 Doc::Doc(PalmDoc *doc)
 {
     Clear();
-    type = doc ? Doc_Pdb : Doc_None;
+    type = doc ? DocType::Pdb : DocType::None;
     palmDoc = doc;
 }
 
 void Doc::Clear()
 {
-    type = Doc_None;
+    type = DocType::None;
     generic = nullptr;
     error = Error_None;
     filePath.Set(nullptr);
@@ -106,15 +106,15 @@ void Doc::Clear()
 const WCHAR *Doc::GetFilePathFromDoc() const
 {
     switch (type) {
-    case Doc_Epub:
+    case DocType::Epub:
         return epubDoc->GetFileName();
-    case Doc_Fb2:
+    case DocType::Fb2:
         return fb2Doc->GetFileName();
-    case Doc_Mobi:
+    case DocType::Mobi:
         return mobiDoc->GetFileName();
-    case Doc_Pdb:
+    case DocType::Pdb:
         return palmDoc->GetFileName();
-    case Doc_None:
+    case DocType::None:
         return nullptr;
     default:
         CrashIf(true);
@@ -137,15 +137,15 @@ const WCHAR *Doc::GetFilePath() const
 const WCHAR *Doc::GetDefaultFileExt() const
 {
     switch (type) {
-    case Doc_Epub:
+    case DocType::Epub:
         return L".epub";
-    case Doc_Fb2:
+    case DocType::Fb2:
         return fb2Doc->IsZipped() ? L".fb2z" : L".fb2";
-    case Doc_Mobi:
+    case DocType::Mobi:
         return L".mobi";
-    case Doc_Pdb:
+    case DocType::Pdb:
         return L".pdb";
-    case Doc_None:
+    case DocType::None:
         return nullptr;
     default:
         CrashIf(true);
@@ -156,15 +156,15 @@ const WCHAR *Doc::GetDefaultFileExt() const
 WCHAR *Doc::GetProperty(DocumentProperty prop) const
 {
     switch (type) {
-    case Doc_Epub:
+    case DocType::Epub:
         return epubDoc->GetProperty(prop);
-    case Doc_Fb2:
+    case DocType::Fb2:
         return fb2Doc->GetProperty(prop);
-    case Doc_Mobi:
+    case DocType::Mobi:
         return mobiDoc->GetProperty(prop);
-    case Doc_Pdb:
+    case DocType::Pdb:
         return palmDoc->GetProperty(prop);
-    case Doc_None:
+    case DocType::None:
         return nullptr;
     default:
         CrashIf(true);
@@ -175,13 +175,13 @@ WCHAR *Doc::GetProperty(DocumentProperty prop) const
 const char *Doc::GetHtmlData(size_t &len) const
 {
     switch (type) {
-    case Doc_Epub:
+    case DocType::Epub:
         return epubDoc->GetHtmlData(&len);
-    case Doc_Fb2:
+    case DocType::Fb2:
         return fb2Doc->GetXmlData(&len);
-    case Doc_Mobi:
+    case DocType::Mobi:
         return mobiDoc->GetHtmlData(len);
-    case Doc_Pdb:
+    case DocType::Pdb:
         return palmDoc->GetHtmlData(&len);
     default:
         CrashIf(true);
@@ -192,13 +192,13 @@ const char *Doc::GetHtmlData(size_t &len) const
 size_t Doc::GetHtmlDataSize() const
 {
     switch (type) {
-    case Doc_Epub:
+    case DocType::Epub:
         return epubDoc->GetHtmlDataSize();
-    case Doc_Fb2:
+    case DocType::Fb2:
         return fb2Doc->GetXmlDataSize();
-    case Doc_Mobi:
+    case DocType::Mobi:
         return mobiDoc->GetHtmlDataSize();
-    case Doc_Pdb:
+    case DocType::Pdb:
         return palmDoc->GetHtmlDataSize();
     default:
         CrashIf(true);
@@ -209,12 +209,12 @@ size_t Doc::GetHtmlDataSize() const
 ImageData *Doc::GetCoverImage() const
 {
     switch (type) {
-    case Doc_Fb2:
+    case DocType::Fb2:
         return fb2Doc->GetCoverImage();
-    case Doc_Mobi:
+    case DocType::Mobi:
         return mobiDoc->GetCoverImage();
-    case Doc_Epub:
-    case Doc_Pdb:
+    case DocType::Epub:
+    case DocType::Pdb:
     default:
         return nullptr;
     }
@@ -223,13 +223,13 @@ ImageData *Doc::GetCoverImage() const
 bool Doc::HasToc() const
 {
     switch (type) {
-    case Doc_Epub:
+    case DocType::Epub:
         return epubDoc->HasToc();
-    case Doc_Fb2:
+    case DocType::Fb2:
         return fb2Doc->HasToc();
-    case Doc_Mobi:
+    case DocType::Mobi:
         return mobiDoc->HasToc();
-    case Doc_Pdb:
+    case DocType::Pdb:
         return palmDoc->HasToc();
     default:
         return false;
@@ -239,13 +239,13 @@ bool Doc::HasToc() const
 bool Doc::ParseToc(EbookTocVisitor *visitor) const
 {
     switch (type) {
-    case Doc_Epub:
+    case DocType::Epub:
         return epubDoc->ParseToc(visitor);
-    case Doc_Fb2:
+    case DocType::Fb2:
         return fb2Doc->ParseToc(visitor);
-    case Doc_Mobi:
+    case DocType::Mobi:
         return mobiDoc->ParseToc(visitor);
-    case Doc_Pdb:
+    case DocType::Pdb:
         return palmDoc->ParseToc(visitor);
     default:
         return false;
@@ -255,13 +255,13 @@ bool Doc::ParseToc(EbookTocVisitor *visitor) const
 HtmlFormatter *Doc::CreateFormatter(HtmlFormatterArgs *args) const
 {
     switch (type) {
-    case Doc_Epub:
+    case DocType::Epub:
         return new EpubFormatter(args, epubDoc);
-    case Doc_Fb2:
+    case DocType::Fb2:
         return new Fb2Formatter(args, fb2Doc);
-    case Doc_Mobi:
+    case DocType::Mobi:
         return new MobiFormatter(args, mobiDoc);
-    case Doc_Pdb:
+    case DocType::Pdb:
         return new HtmlFormatter(args);
     default:
         CrashIf(true);
