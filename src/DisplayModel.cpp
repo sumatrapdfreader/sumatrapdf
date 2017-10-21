@@ -70,12 +70,12 @@ static int ColumnsFromDisplayMode(DisplayMode displayMode)
 
 int NormalizeRotation(int rotation)
 {
-    assert((rotation % 90) == 0);
+    AssertCrash((rotation % 90) == 0);
     rotation = rotation % 360;
     if (rotation < 0)
         rotation += 360;
     if (rotation < 0 || rotation >= 360 || (rotation % 90) != 0) {
-        assert(0);
+        AssertCrash(0);
         return 0;
     }
     return rotation;
@@ -194,7 +194,7 @@ PageInfo *DisplayModel::GetPageInfo(int pageNo) const
 {
     if (!ValidPageNo(pageNo))
         return nullptr;
-    assert(pagesInfo);
+    AssertCrash(pagesInfo);
     if (!pagesInfo) return nullptr;
     return &(pagesInfo[pageNo-1]);
 }
@@ -354,7 +354,7 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) co
         row.dx += pageSpacing.dx * (columns - 1);
     }
 
-    assert(!RectD(PointD(), row).IsEmpty());
+    AssertCrash(!RectD(PointD(), row).IsEmpty());
     if (RectD(PointD(), row).IsEmpty())
         return 0;
 
@@ -372,7 +372,7 @@ float DisplayModel::ZoomRealFromVirtualForPage(float zoomVirtual, int pageNo) co
 
 int DisplayModel::FirstVisiblePageNo() const
 {
-    assert(pagesInfo);
+    AssertCrash(pagesInfo);
     if (!pagesInfo) return INVALID_PAGE_NO;
 
     for (int pageNo = 1; pageNo <= PageCount(); ++pageNo) {
@@ -392,7 +392,7 @@ int DisplayModel::CurrentPageNo() const
     if (!IsContinuous(GetDisplayMode()))
         return startPage;
 
-    assert(pagesInfo);
+    AssertCrash(pagesInfo);
     if (!pagesInfo) return INVALID_PAGE_NO;
     // determine the most visible page
     int mostVisiblePage = INVALID_PAGE_NO;
@@ -434,7 +434,7 @@ void DisplayModel::CalcZoomVirtual(float newZoomVirtual)
                     minZoom = thisPageZoom;
             }
         }
-        assert(minZoom != (float)HUGE_VAL);
+        AssertCrash(minZoom != (float)HUGE_VAL);
         zoomReal = minZoom;
     } else if (ZOOM_FIT_CONTENT == newZoomVirtual) {
         float newZoom = ZoomRealFromVirtualForPage(newZoomVirtual, CurrentPageNo());
@@ -471,7 +471,7 @@ float DisplayModel::GetZoomReal(int pageNo) const
      * navigating to another page in non-continuous mode */
 void DisplayModel::Relayout(float newZoomVirtual, int newRotation)
 {
-    assert(pagesInfo);
+    AssertCrash(pagesInfo);
     if (!pagesInfo)
         return;
 
@@ -500,7 +500,7 @@ RestartLayout:
     for (int pageNo = 1; pageNo <= PageCount(); ++pageNo) {
         PageInfo *pageInfo = GetPageInfo(pageNo);
         if (!pageInfo->shown) {
-            assert(0.0 == pageInfo->visibleRatio);
+            AssertCrash(0.0 == pageInfo->visibleRatio);
             continue;
         }
         SizeD pageSize = PageSizeAfterRotation(pageNo);
@@ -535,7 +535,7 @@ RestartLayout:
         pageInfo->pos = pos;
 
         pageInARow++;
-        assert(pageInARow <= columns);
+        AssertCrash(pageInARow <= columns);
         if (pageInARow == columns) {
             /* starting next row */
             currPosY += rowMaxPageDy + pageSpacing.dy;
@@ -582,13 +582,13 @@ RestartLayout:
         canvasDx = viewPort.dx;
     }
 
-    assert(offX >= 0);
+    AssertCrash(offX >= 0);
     pageInARow = 0;
     int pageOffX = offX + windowMargin.left;
     for (int pageNo = 1; pageNo <= PageCount(); ++pageNo) {
         PageInfo *pageInfo = GetPageInfo(pageNo);
         if (!pageInfo->shown) {
-            assert(0.0 == pageInfo->visibleRatio);
+            AssertCrash(0.0 == pageInfo->visibleRatio);
             continue;
         }
         // leave first spot empty in cover page mode
@@ -616,7 +616,7 @@ RestartLayout:
         CrashIf(pageInARow >= dimof(columnMaxWidth));
         pageOffX += columnMaxWidth[pageInARow] + pageSpacing.dx;
         ++pageInARow;
-        assert(pageOffX >= 0 && pageInfo->pos.x >= 0);
+        AssertCrash(pageOffX >= 0 && pageInfo->pos.x >= 0);
 
         if (pageInARow == columns) {
             pageOffX = offX + windowMargin.left;
@@ -632,11 +632,11 @@ RestartLayout:
     /* if a page is smaller than drawing area in y axis, y-center the page */
     if (canvasDy < viewPort.dy) {
         int offY = windowMargin.top + (viewPort.dy - canvasDy) / 2;
-        assert(offY >= 0.0);
+        AssertCrash(offY >= 0.0);
         for (int pageNo = 1; pageNo <= PageCount(); ++pageNo) {
             PageInfo *pageInfo = GetPageInfo(pageNo);
             if (!pageInfo->shown) {
-                assert(0.0 == pageInfo->visibleRatio);
+                AssertCrash(0.0 == pageInfo->visibleRatio);
                 continue;
             }
             pageInfo->pos.y += offY;
@@ -648,8 +648,8 @@ RestartLayout:
 
 void DisplayModel::ChangeStartPage(int newStartPage)
 {
-    assert(ValidPageNo(newStartPage));
-    assert(!IsContinuous(GetDisplayMode()));
+    AssertCrash(ValidPageNo(newStartPage));
+    AssertCrash(!IsContinuous(GetDisplayMode()));
 
     int columns = ColumnsFromDisplayMode(GetDisplayMode());
     startPage = newStartPage;
@@ -675,14 +675,14 @@ void DisplayModel::ChangeStartPage(int newStartPage)
    Needs to be recalucated after scrolling the view. */
 void DisplayModel::RecalcVisibleParts()
 {
-    assert(pagesInfo);
+    AssertCrash(pagesInfo);
     if (!pagesInfo)
         return;
 
     for (int pageNo = 1; pageNo <= PageCount(); ++pageNo) {
         PageInfo *pageInfo = GetPageInfo(pageNo);
         if (!pageInfo->shown) {
-            assert(0.0 == pageInfo->visibleRatio);
+            AssertCrash(0.0 == pageInfo->visibleRatio);
             continue;
         }
 
@@ -691,7 +691,7 @@ void DisplayModel::RecalcVisibleParts()
 
         pageInfo->visibleRatio = 0.0;
         if (!visiblePart.IsEmpty()) {
-            assert(pageRect.dx > 0 && pageRect.dy > 0);
+            AssertCrash(pageRect.dx > 0 && pageRect.dy > 0);
             // calculate with floating point precision to prevent an integer overflow
             pageInfo->visibleRatio = 1.0f * visiblePart.dx * visiblePart.dy / ((float)pageRect.dx * pageRect.dy);
         }
@@ -834,7 +834,7 @@ void DisplayModel::RenderVisibleParts()
     for (int pageNo = 1; pageNo <= PageCount(); ++pageNo) {
         PageInfo *pageInfo = GetPageInfo(pageNo);
         if (pageInfo->visibleRatio > 0.0) {
-            assert(pageInfo->shown);
+            AssertCrash(pageInfo->shown);
             if (0 == firstVisiblePage)
                 firstVisiblePage = pageNo;
             lastVisiblePage = pageNo;
@@ -927,7 +927,7 @@ PointI DisplayModel::GetContentStart(int pageNo)
 // TODO: what's GoToPage supposed to do for Facing at 400% zoom?
 void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
 {
-    assert(ValidPageNo(pageNo));
+    AssertCrash(ValidPageNo(pageNo));
     if (!ValidPageNo(pageNo))
         return;
 
@@ -1133,7 +1133,7 @@ bool DisplayModel::GoToFirstPage()
             return false;
         }
     } else {
-        assert(PageShown(startPage));
+        AssertCrash(PageShown(startPage));
         if (1 == startPage) {
             /* we're on a first page already */
             return false;
@@ -1185,7 +1185,7 @@ void DisplayModel::ScrollYBy(int dy, bool changePage)
     int             newPageNo;
     int             currPageNo;
 
-    assert(0 != dy);
+    AssertCrash(0 != dy);
     if (0 == dy) return;
 
     int newYOff = currYOff;
@@ -1194,7 +1194,7 @@ void DisplayModel::ScrollYBy(int dy, bool changePage)
         if ((dy < 0) && (0 == currYOff)) {
             if (startPage > 1) {
                 newPageNo = startPage - 1;
-                assert(ValidPageNo(newPageNo));
+                AssertCrash(ValidPageNo(newPageNo));
                 pageInfo = GetPageInfo(newPageNo);
                 newYOff = pageInfo->pos.dy - viewPort.dy;
                 if (newYOff < 0)
@@ -1353,7 +1353,7 @@ float DisplayModel::GetNextZoomStep(float towardsLevel) const
 void DisplayModel::RotateBy(int newRotation)
 {
     newRotation = NormalizeRotation(newRotation);
-    assert(0 != newRotation);
+    AssertCrash(0 != newRotation);
     if (0 == newRotation)
         return;
     newRotation = NormalizeRotation(newRotation + rotation);

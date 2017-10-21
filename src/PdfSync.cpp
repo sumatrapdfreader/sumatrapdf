@@ -45,7 +45,7 @@ public:
     Pdfsync(const WCHAR* syncfilename, BaseEngine *engine) :
         Synchronizer(syncfilename), engine(engine)
     {
-        assert(str::EndsWithI(syncfilename, PDFSYNC_EXTENSION));
+        AssertCrash(str::EndsWithI(syncfilename, PDFSYNC_EXTENSION));
     }
 
     virtual int DocToSource(UINT pageNo, PointI pt, AutoFreeW& filename, UINT *line, UINT *col);
@@ -70,7 +70,7 @@ public:
     SyncTex(const WCHAR* syncfilename, BaseEngine *engine) :
         Synchronizer(syncfilename), engine(engine), scanner(nullptr)
     {
-        assert(str::EndsWithI(syncfilename, SYNCTEX_EXTENSION));
+        AssertCrash(str::EndsWithI(syncfilename, SYNCTEX_EXTENSION));
     }
     virtual ~SyncTex()
     {
@@ -316,7 +316,7 @@ int Pdfsync::RebuildIndex()
     }
 
     fileIndex.At(0).end = lines.Count();
-    assert(filestack.Count() == 1);
+    AssertCrash(filestack.Count() == 1);
 
     return Synchronizer::RebuildIndex();
 }
@@ -379,7 +379,7 @@ int Pdfsync::DocToSource(UINT pageNo, PointI pt, AutoFreeW& filename, UINT *line
     // We have a record number, we need to find its declaration ('l ...') in the syncfile
     PdfsyncLine cmp; cmp.record = selected_record;
     PdfsyncLine *found = (PdfsyncLine *)bsearch(&cmp, lines.LendData(), lines.Count(), sizeof(PdfsyncLine), cmpLineRecords);
-    assert(found);
+    AssertCrash(found);
     if (!found)
         return PDFSYNCERR_NO_SYNC_AT_LOCATION;
 
@@ -556,10 +556,11 @@ TryAgainAnsi:
 
 int SyncTex::SourceToDoc(const WCHAR* srcfilename, UINT line, UINT col, UINT *page, Vec<RectI> &rects)
 {
-    if (IsIndexDiscarded())
+    if (IsIndexDiscarded()) {
         if (RebuildIndex() != PDFSYNCERR_SUCCESS)
             return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
-    assert(this->scanner);
+    }
+    AssertCrash(this->scanner);
 
     AutoFreeW srcfilepath;
     // convert the source file to an absolute path

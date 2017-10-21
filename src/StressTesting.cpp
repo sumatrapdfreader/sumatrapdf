@@ -220,7 +220,7 @@ static void BenchFile(const WCHAR *filePath, const WCHAR *pagesSpec)
         }
     }
 
-    assert(!pagesSpec || IsBenchPagesInfo(pagesSpec));
+    AssertCrash(!pagesSpec || IsBenchPagesInfo(pagesSpec));
     Vec<PageRange> ranges;
     if (ParsePageRanges(pagesSpec, ranges)) {
         for (size_t i = 0; i < ranges.Count(); i++) {
@@ -445,7 +445,7 @@ DirFileProvider::~DirFileProvider()
 
 bool DirFileProvider::OpenDir(const WCHAR *dirPath)
 {
-    assert(filesToOpen.Count() == 0);
+    AssertCrash(filesToOpen.Count() == 0);
 
     bool hasFiles = CollectStressTestSupportedFilesFromDirectory(dirPath, fileFilter, filesToOpen);
     filesToOpen.SortNatural();
@@ -634,7 +634,7 @@ bool StressTest::OpenFile(const WCHAR *fileName)
 
     // transfer ownership of stressTest object to a new window and close the
     // current one
-    assert(this == win->stressTest);
+    AssertCrash(this == win->stressTest);
     if (w != win) {
         if (win->IsDocLoaded()) {
             // try to provoke a crash in RenderCache cleanup code

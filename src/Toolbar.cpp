@@ -163,7 +163,7 @@ void UpdateToolbarButtonsToolTipsForWindow(WindowInfo *win)
         const WCHAR *translation = trans::GetTranslation(txt);
         BuildTBBUTTONINFO(buttonInfo, translation);
         res = SendMessage(hwnd, TB_SETBUTTONINFO, buttonId, (LPARAM)&buttonInfo);
-        assert(0 != res);
+        AssertCrash(0 != res);
     }
 }
 

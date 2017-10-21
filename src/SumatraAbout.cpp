@@ -340,7 +340,7 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RectI *rect)
         if (el == &gAboutLayoutInfo[0])
             leftDy = el->leftPos.dy;
         else
-            assert(leftDy == el->leftPos.dy);
+            AssertCrash(leftDy == el->leftPos.dy);
         if (leftLargestDx < el->leftPos.dx)
             leftLargestDx = el->leftPos.dx;
     }
@@ -363,7 +363,7 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RectI *rect)
         if (el == &gAboutLayoutInfo[0])
             rightDy = el->rightPos.dy;
         else
-            assert(rightDy == el->rightPos.dy);
+            AssertCrash(rightDy == el->rightPos.dy);
         if (rightLargestDx < el->rightPos.dx)
             rightLargestDx = el->rightPos.dx;
     }
@@ -495,7 +495,7 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
     switch (message)
     {
         case WM_CREATE:
-            assert(!gHwndAbout);
+            AssertCrash(!gHwndAbout);
             break;
 
         case WM_ERASEBKGND:
@@ -540,7 +540,7 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 
         case WM_DESTROY:
             ClearInfotip();
-            assert(gHwndAbout);
+            AssertCrash(gHwndAbout);
             gHwndAbout = nullptr;
             break;
 

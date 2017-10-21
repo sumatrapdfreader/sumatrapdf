@@ -602,7 +602,7 @@ static const WCHAR* HandleOpenCmd(const WCHAR* cmd, DDEACK& ack) {
         forceRefresh = 0;
     }
 
-    assert(!win || !win->IsAboutWindow());
+    AssertCrash(!win || !win->IsAboutWindow());
     if (!win)
         return next;
 

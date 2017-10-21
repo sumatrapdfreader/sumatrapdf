@@ -39,7 +39,7 @@ RenderCache::RenderCache()
 
     startRendering = CreateEvent(nullptr, FALSE, FALSE, nullptr);
     renderThread = CreateThread(nullptr, 0, RenderCacheThread, this, 0, 0);
-    assert(nullptr != renderThread);
+    AssertCrash(nullptr != renderThread);
 }
 
 RenderCache::~RenderCache()
@@ -49,7 +49,7 @@ RenderCache::~RenderCache()
 
     CloseHandle(renderThread);
     CloseHandle(startRendering);
-    assert(!curReq && 0 == requestCount && 0 == cacheCount);
+    AssertCrash(!curReq && 0 == requestCount && 0 == cacheCount);
 
     LeaveCriticalSection(&cacheAccess);
     DeleteCriticalSection(&cacheAccess);
@@ -86,7 +86,7 @@ bool RenderCache::Exists(DisplayModel *dm, int pageNo, int rotation, float zoom,
 void RenderCache::DropCacheEntry(BitmapCacheEntry *entry)
 {
     ScopedCritSec scope(&cacheAccess);
-    assert(entry);
+    AssertCrash(entry);
     if (!entry) return;
     if (0 == --entry->refs) {
         delete entry;
@@ -96,10 +96,10 @@ void RenderCache::DropCacheEntry(BitmapCacheEntry *entry)
 void RenderCache::Add(PageRenderRequest &req, RenderedBitmap *bitmap)
 {
     ScopedCritSec scope(&cacheAccess);
-    assert(req.dm);
+    AssertCrash(req.dm);
 
     req.rotation = NormalizeRotation(req.rotation);
-    assert(cacheCount <= MAX_BITMAPS_CACHED);
+    AssertCrash(cacheCount <= MAX_BITMAPS_CACHED);
 
     /* It's possible there still is a cached bitmap with different zoom/rotation */
     FreePage(req.dm, req.pageNo, &req.tile);
@@ -350,7 +350,7 @@ void RenderCache::RequestRendering(DisplayModel *dm, int pageNo)
 void RenderCache::RequestRendering(DisplayModel *dm, int pageNo, TilePosition tile, bool clearQueueForPage)
 {
     ScopedCritSec scope(&requestAccess);
-    assert(dm);
+    AssertCrash(dm);
     if (!dm || dm->dontRenderFlag)
         return;
 
@@ -411,11 +411,11 @@ void RenderCache::Render(DisplayModel *dm, int pageNo, int rotation, float zoom,
 bool RenderCache::Render(DisplayModel *dm, int pageNo, int rotation, float zoom,
                          TilePosition *tile, RectD *pageRect, RenderingCallback *renderCb)
 {
-    assert(dm);
+    AssertCrash(dm);
     if (!dm || dm->dontRenderFlag)
         return false;
 
-    assert(tile || pageRect && renderCb);
+    AssertCrash(tile || pageRect && renderCb);
     if (!tile && !(pageRect && renderCb))
         return false;
 
@@ -433,7 +433,7 @@ bool RenderCache::Render(DisplayModel *dm, int pageNo, int rotation, float zoom,
         newRequest = &(requests[requestCount]);
         requestCount++;
     }
-    assert(requestCount <= MAX_PAGE_REQUESTS);
+    AssertCrash(requestCount <= MAX_PAGE_REQUESTS);
 
     newRequest->dm = dm;
     newRequest->pageNo = pageNo;
@@ -446,10 +446,10 @@ bool RenderCache::Render(DisplayModel *dm, int pageNo, int rotation, float zoom,
     else if (pageRect) {
         newRequest->pageRect = *pageRect;
         // can't cache bitmaps that aren't for a given tile
-        assert(renderCb);
+        AssertCrash(renderCb);
     }
     else
-        assert(0);
+        AssertCrash(0);
     newRequest->abort = false;
     newRequest->abortCookie = nullptr;
     newRequest->timestamp = GetTickCount();
@@ -481,13 +481,13 @@ bool RenderCache::GetNextRequest(PageRenderRequest *req)
     if (requestCount == 0)
         return false;
 
-    assert(requestCount > 0);
-    assert(requestCount <= MAX_PAGE_REQUESTS);
+    AssertCrash(requestCount > 0);
+    AssertCrash(requestCount <= MAX_PAGE_REQUESTS);
     requestCount--;
     *req = requests[requestCount];
     curReq = req;
-    assert(requestCount >= 0);
-    assert(!req->abort);
+    AssertCrash(requestCount >= 0);
+    AssertCrash(!req->abort);
 
     return true;
 }
@@ -691,7 +691,7 @@ static int cmpTilePosition(const void *a, const void *b)
 UINT RenderCache::Paint(HDC hdc, RectI bounds, DisplayModel *dm, int pageNo,
                         PageInfo *pageInfo, bool *renderOutOfDateCue)
 {
-    assert(pageInfo->shown && 0.0 != pageInfo->visibleRatio);
+    AssertCrash(pageInfo->shown && 0.0 != pageInfo->visibleRatio);
 
     if (!dm->ShouldCacheRendering(pageNo)) {
         int rotation = dm->GetRotation();

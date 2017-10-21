@@ -675,7 +675,7 @@ int __cdecl _purecall() {
 
 void InstallCrashHandler(const WCHAR *crashDumpPath, const WCHAR *symDir)
 {
-    assert(!gDumpEvent && !gDumpThread);
+    AssertCrash(!gDumpEvent && !gDumpThread);
 
     if (!crashDumpPath)
         return;

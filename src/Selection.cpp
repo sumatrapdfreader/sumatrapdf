@@ -42,7 +42,7 @@ Vec<SelectionOnPage> *SelectionOnPage::FromRectangle(DisplayModel *dm, RectI rec
 
     for (int pageNo = dm->GetEngine()->PageCount(); pageNo >= 1; --pageNo) {
         PageInfo *pageInfo = dm->GetPageInfo(pageNo);
-        assert(!pageInfo || 0.0 == pageInfo->visibleRatio || pageInfo->shown);
+        AssertCrash(!pageInfo || 0.0 == pageInfo->visibleRatio || pageInfo->shown);
         if (!pageInfo || !pageInfo->shown)
             continue;
 
