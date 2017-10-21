@@ -502,7 +502,7 @@ Usage:
     PasswordHolder pwdUI(password);
     BaseEngine *engine = EngineManager::CreateEngine(filePath, &pwdUI, &engineType);
 #ifdef DEBUG
-    bool couldLeak = engineType == Engine_DjVu || DjVuEngine::IsSupportedFile(filePath) || DjVuEngine::IsSupportedFile(filePath, true);
+    bool couldLeak = engineType == EngineType::DjVu || DjVuEngine::IsSupportedFile(filePath) || DjVuEngine::IsSupportedFile(filePath, true);
     if (!couldLeak) {
         // report memory leaks on stderr for engines that shouldn't leak
         _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);

@@ -119,7 +119,7 @@ static bool CanViewExternally(TabInfo *tab)
 bool CouldBePDFDoc(TabInfo *tab)
 {
     // consider any error state a potential PDF document
-    return !tab || !tab->ctrl || tab->GetEngineType() == Engine_PDF;
+    return !tab || !tab->ctrl || tab->GetEngineType() == EngineType::PDF;
 }
 
 bool CanViewWithFoxit(TabInfo *tab)
@@ -226,7 +226,7 @@ bool CanViewWithXPSViewer(TabInfo *tab)
     if (!tab || !CanViewExternally(tab))
         return false;
     // allow viewing with XPS-Viewer, if either an XPS document is loaded...
-    if (tab->ctrl && tab->GetEngineType() != Engine_XPS)
+    if (tab->ctrl && tab->GetEngineType() != EngineType::XPS)
         return false;
     // or a file ending in .xps or .oxps has failed to be loaded
     if (!tab->ctrl && !str::EndsWithI(tab->filePath, L".xps") && !str::EndsWithI(tab->filePath, L".oxps"))
@@ -261,7 +261,7 @@ bool CanViewWithHtmlHelp(TabInfo *tab)
     if (!tab || !CanViewExternally(tab))
         return false;
     // allow viewing with HTML Help, if either an CHM document is loaded...
-    if (tab->ctrl && tab->GetEngineType() != Engine_Chm && !tab->AsChm())
+    if (tab->ctrl && tab->GetEngineType() != EngineType::Chm && !tab->AsChm())
         return false;
     // or a file ending in .chm has failed to be loaded
     if (!tab->ctrl && !str::EndsWithI(tab->filePath, L".chm"))

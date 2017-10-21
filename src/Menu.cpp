@@ -59,7 +59,7 @@ void MenuUpdateDisplayMode(WindowInfo* win) {
     CheckMenuRadioItem(win->menu, IDM_VIEW_LAYOUT_FIRST, IDM_VIEW_LAYOUT_LAST, id, MF_BYCOMMAND);
     win::menu::SetChecked(win->menu, IDM_VIEW_CONTINUOUS, IsContinuous(displayMode));
 
-    if (win->currentTab && win->currentTab->GetEngineType() == Engine_ComicBook) {
+    if (win->currentTab && win->currentTab->GetEngineType() == EngineType::ComicBook) {
         bool mangaMode = win->AsFixed()->GetDisplayR2L();
         win::menu::SetChecked(win->menu, IDM_VIEW_MANGA_MODE, mangaMode);
     }
@@ -703,7 +703,7 @@ static void RebuildFileMenu(TabInfo* tab, HMENU menu) {
     if (tab && tab->AsEbook()) {
         filter |= MF_NOT_FOR_EBOOK_UI;
     }
-    if (!tab || tab->GetEngineType() != Engine_ComicBook) {
+    if (!tab || tab->GetEngineType() != EngineType::ComicBook) {
         filter |= MF_CBX_ONLY;
     }
 
@@ -1024,7 +1024,7 @@ HMENU BuildMenu(WindowInfo* win) {
     } else if (win->AsEbook()) {
         filter |= MF_NOT_FOR_EBOOK_UI;
     }
-    if (!win->currentTab || win->currentTab->GetEngineType() != Engine_ComicBook) {
+    if (!win->currentTab || win->currentTab->GetEngineType() != EngineType::ComicBook) {
         filter |= MF_CBX_ONLY;
     }
 

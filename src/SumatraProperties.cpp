@@ -426,14 +426,14 @@ static void GetProps(Controller *ctrl, PropertiesLayout *layoutData, bool extend
     layoutData->AddProperty(_TR("Copyright:"), str);
 
     str = ctrl->GetProperty(Prop_CreationDate);
-    if (str && ctrl->AsFixed() && Engine_PDF == ctrl->AsFixed()->engineType)
+    if (str && ctrl->AsFixed() && EngineType::PDF == ctrl->AsFixed()->engineType)
         ConvDateToDisplay(&str, PdfDateParse);
     else
         ConvDateToDisplay(&str, IsoDateParse);
     layoutData->AddProperty(_TR("Created:"), str);
 
     str = ctrl->GetProperty(Prop_ModificationDate);
-    if (str && ctrl->AsFixed() && Engine_PDF == ctrl->AsFixed()->engineType)
+    if (str && ctrl->AsFixed() && EngineType::PDF == ctrl->AsFixed()->engineType)
         ConvDateToDisplay(&str, PdfDateParse);
     else
         ConvDateToDisplay(&str, IsoDateParse);

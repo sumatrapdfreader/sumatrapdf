@@ -38,7 +38,7 @@ class TabInfo {
     DisplayModel* AsFixed() const { return ctrl ? ctrl->AsFixed() : nullptr; }
     ChmModel* AsChm() const { return ctrl ? ctrl->AsChm() : nullptr; }
     EbookController* AsEbook() const { return ctrl ? ctrl->AsEbook() : nullptr; }
-    // returns Engine_None if !AsFixed()
+    // returns EngineType::None if !AsFixed()
     EngineType GetEngineType() const;
 
     const WCHAR* GetTabTitle() const;

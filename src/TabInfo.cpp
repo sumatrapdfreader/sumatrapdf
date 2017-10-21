@@ -41,7 +41,7 @@ EngineType TabInfo::GetEngineType() const {
     if (ctrl && ctrl->AsFixed()) {
         return ctrl->AsFixed()->engineType;
     }
-    return Engine_None;
+    return EngineType::None;
 }
 
 const WCHAR* TabInfo::GetTabTitle() const {
