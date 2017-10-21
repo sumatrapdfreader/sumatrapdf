@@ -10,47 +10,47 @@ class ChmCacheEntry;
 class ChmModel : public Controller {
 public:
     explicit ChmModel(ControllerCallback *cb);
-    virtual ~ChmModel();
+    ~ChmModel() override;
 
     // meta data
-    virtual const WCHAR *FilePath() const { return fileName; }
-    virtual const WCHAR *DefaultFileExt() const { return L".chm"; }
-    virtual int PageCount() const;
-    virtual WCHAR *GetProperty(DocumentProperty prop);
+    const WCHAR *FilePath() const override { return fileName; }
+    const WCHAR *DefaultFileExt() const override { return L".chm"; }
+    int PageCount() const override;
+    WCHAR *GetProperty(DocumentProperty prop) override;
 
     // page navigation (stateful)
-    virtual int CurrentPageNo() const { return currentPageNo; }
-    virtual void GoToPage(int pageNo, bool addNavPoint) {
+    int CurrentPageNo() const override { return currentPageNo; }
+    void GoToPage(int pageNo, bool addNavPoint) override {
         UNUSED(addNavPoint);
         CrashIf(!ValidPageNo(pageNo));
         if (ValidPageNo(pageNo))
             DisplayPage(pages.At(pageNo - 1));
     }
-    virtual bool CanNavigate(int dir) const;
-    virtual void Navigate(int dir);
+    bool CanNavigate(int dir) const override;
+    void Navigate(int dir) override;
 
     // view settings
-    virtual void SetDisplayMode(DisplayMode mode, bool keepContinuous = false) { UNUSED(mode); UNUSED(keepContinuous); /* not supported */ }
-    virtual DisplayMode GetDisplayMode() const { return DM_SINGLE_PAGE; }
-    virtual void SetPresentationMode(bool enable) { UNUSED(enable); /* not supported */ }
-    virtual void SetZoomVirtual(float zoom, PointI *fixPt=nullptr);
-    virtual float GetZoomVirtual(bool absolute=false) const;
-    virtual float GetNextZoomStep(float towards) const;
-    virtual void SetViewPortSize(SizeI size) { UNUSED(size); /* not needed(?) */ }
+    void SetDisplayMode(DisplayMode mode, bool keepContinuous = false) override { UNUSED(mode); UNUSED(keepContinuous); /* not supported */ }
+    DisplayMode GetDisplayMode() const override { return DM_SINGLE_PAGE; }
+    void SetPresentationMode(bool enable) override { UNUSED(enable); /* not supported */ }
+    void SetZoomVirtual(float zoom, PointI *fixPt=nullptr) override;
+    float GetZoomVirtual(bool absolute=false) const override;
+    float GetNextZoomStep(float towards) const override;
+    void SetViewPortSize(SizeI size)  override { UNUSED(size); /* not needed(?) */ }
 
     // table of contents
-    virtual bool HasTocTree() const;
-    virtual DocTocItem *GetTocTree();
-    virtual void ScrollToLink(PageDestination *dest);
-    virtual PageDestination *GetNamedDest(const WCHAR *name);
+    bool HasTocTree() const override;
+    DocTocItem *GetTocTree() override;
+    void ScrollToLink(PageDestination *dest) override;
+    PageDestination *GetNamedDest(const WCHAR *name) override;
 
     // state export
-    virtual void UpdateDisplayState(DisplayState *ds);
+    void UpdateDisplayState(DisplayState *ds) override;
     // asynchronously calls saveThumbnail (fails silently)
-    virtual void CreateThumbnail(SizeI size, const std::function<void(RenderedBitmap*)> &saveThumbnail);
+    void CreateThumbnail(SizeI size, const onBitmapRenderedCb& saveThumbnail) override;
 
     // for quick type determination and type-safe casting
-    virtual ChmModel *AsChm() { return this; }
+    ChmModel *AsChm() override { return this; }
 
     static bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
     static ChmModel *Create(const WCHAR *fileName, ControllerCallback *cb=nullptr);

@@ -544,13 +544,13 @@ class ChmThumbnailTask : public HtmlWindowCallback
     HWND hwnd;
     HtmlWindow *hw;
     SizeI size;
-    std::function<void(RenderedBitmap*)> saveThumbnail;
+    onBitmapRenderedCb saveThumbnail;
     AutoFreeW homeUrl;
     Vec<unsigned char *> data;
     CRITICAL_SECTION docAccess;
 
 public:
-    ChmThumbnailTask(ChmDoc *doc, HWND hwnd, SizeI size, const std::function<void(RenderedBitmap*)> saveThumbnail) :
+    ChmThumbnailTask(ChmDoc *doc, HWND hwnd, SizeI size, const onBitmapRenderedCb saveThumbnail) :
         doc(doc), hwnd(hwnd), hw(nullptr), size(size), saveThumbnail(saveThumbnail) {
         InitializeCriticalSection(&docAccess);
     }
@@ -604,7 +604,7 @@ public:
 
 // Create a thumbnail of chm document by loading it again and rendering
 // its first page to a hwnd specially created for it.
-void ChmModel::CreateThumbnail(SizeI size, const std::function<void(RenderedBitmap*)> &saveThumbnail)
+void ChmModel::CreateThumbnail(SizeI size, const onBitmapRenderedCb& saveThumbnail)
 {
     // doc and window will be destroyed by the callback once it's invoked
     ChmDoc *doc = ChmDoc::CreateFromFile(fileName);

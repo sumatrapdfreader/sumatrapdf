@@ -648,7 +648,7 @@ static RenderedBitmap* ThumbFromCoverPage(Doc doc, SizeI size) {
     return nullptr;
 }
 
-void EbookController::CreateThumbnail(SizeI size, const std::function<void(RenderedBitmap*)>& saveThumbnail) {
+void EbookController::CreateThumbnail(SizeI size, const onBitmapRenderedCb& saveThumbnail) {
     // TODO: create thumbnail asynchronously
     CrashIf(!doc.IsDocLoaded());
     // if there is cover image, we use it to generate thumbnail by scaling

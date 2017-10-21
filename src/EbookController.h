@@ -55,7 +55,7 @@ class EbookController : public Controller {
     virtual PageDestination* GetNamedDest(const WCHAR* name);
 
     virtual void UpdateDisplayState(DisplayState* ds);
-    virtual void CreateThumbnail(SizeI size, const std::function<void(RenderedBitmap*)>&);
+    virtual void CreateThumbnail(SizeI size, const onBitmapRenderedCb&);
 
     virtual bool GoToNextPage();
     virtual bool GoToPrevPage(bool toBottom = false);

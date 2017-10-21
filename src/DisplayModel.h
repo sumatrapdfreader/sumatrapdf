@@ -92,7 +92,7 @@ public:
     // state export
     virtual void UpdateDisplayState(DisplayState *ds);
     // asynchronously calls saveThumbnail (fails silently)
-    virtual void CreateThumbnail(SizeI size, const std::function<void(RenderedBitmap*)> &saveThumbnail) {
+    virtual void CreateThumbnail(SizeI size, const onBitmapRenderedCb& saveThumbnail) {
         cb->RenderThumbnail(this, size, saveThumbnail);
     }
 

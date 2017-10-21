@@ -648,22 +648,22 @@ class ControllerCallbackHandler : public ControllerCallback {
 
 public:
     ControllerCallbackHandler(WindowInfo *win) : win(win) { }
-    virtual ~ControllerCallbackHandler() { }
+    ~ControllerCallbackHandler() override { }
 
-    virtual void Repaint() { win->RepaintAsync(); }
-    virtual void PageNoChanged(Controller *ctrl, int pageNo);
-    virtual void UpdateScrollbars(SizeI canvas);
-    virtual void RequestRendering(int pageNo);
-    virtual void CleanUp(DisplayModel *dm);
-    virtual void RenderThumbnail(DisplayModel *dm, SizeI size, const std::function<void(RenderedBitmap*)>&);
-    virtual void GotoLink(PageDestination *dest) { win->linkHandler->GotoLink(dest); }
-    virtual void FocusFrame(bool always);
-    virtual void SaveDownload(const WCHAR *url, const unsigned char *data, size_t len);
-    virtual void HandleLayoutedPages(EbookController *ctrl, EbookFormattingData *data);
-    virtual void RequestDelayedLayout(int delay);
+    void Repaint() override { win->RepaintAsync(); }
+    void PageNoChanged(Controller *ctrl, int pageNo) override;
+    void UpdateScrollbars(SizeI canvas) override;
+    void RequestRendering(int pageNo) override;
+    void CleanUp(DisplayModel *dm) override;
+    void RenderThumbnail(DisplayModel *dm, SizeI size, const onBitmapRenderedCb&) override;
+    void GotoLink(PageDestination *dest)  override { win->linkHandler->GotoLink(dest); }
+    void FocusFrame(bool always) override;
+    void SaveDownload(const WCHAR *url, const unsigned char *data, size_t len) override;
+    void HandleLayoutedPages(EbookController *ctrl, EbookFormattingData *data) override;
+    void RequestDelayedLayout(int delay) override;
 };
 
-void ControllerCallbackHandler::RenderThumbnail(DisplayModel *dm, SizeI size, const std::function<void(RenderedBitmap*)>& saveThumbnail)
+void ControllerCallbackHandler::RenderThumbnail(DisplayModel *dm, SizeI size, const onBitmapRenderedCb& saveThumbnail)
 {
     RectD pageRect = dm->GetEngine()->PageMediabox(1);
     if (pageRect.IsEmpty()) {
