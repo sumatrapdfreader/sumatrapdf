@@ -63,25 +63,33 @@ void Doc::Delete() {
 
 Doc::Doc(EpubDoc* doc) {
     Clear();
-    type = doc ? DocType::Epub : DocType::None;
+    if (doc == nullptr)
+        return;
+    type = DocType::Epub;
     epubDoc = doc;
 }
 
 Doc::Doc(Fb2Doc* doc) {
     Clear();
-    type = doc ? DocType::Fb2 : DocType::None;
+    if (doc == nullptr)
+        return;
+    type = DocType::Fb2;
     fb2Doc = doc;
 }
 
 Doc::Doc(MobiDoc* doc) {
     Clear();
-    type = doc ? DocType::Mobi : DocType::None;
+    if (doc == nullptr)
+        return;
+    type = DocType::Mobi;
     mobiDoc = doc;
 }
 
 Doc::Doc(PalmDoc* doc) {
     Clear();
-    type = doc ? DocType::Pdb : DocType::None;
+    if (doc == nullptr)
+        return;
+    type = DocType::Pdb;
     palmDoc = doc;
 }
 
