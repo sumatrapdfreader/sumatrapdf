@@ -4,7 +4,7 @@
 // define the following if you want shadows drawn around the pages
 // #define DRAW_PAGE_SHADOWS
 
-#define INVALID_PAGE_NO     -1
+constexpr int INVALID_PAGE_NO = -1;
 
 /* Describes many attributes of one page in one, convenient place */
 struct PageInfo {
