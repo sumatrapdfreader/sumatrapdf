@@ -102,8 +102,8 @@ const WCHAR *    gPluginURL = nullptr; // owned by CommandLineInfo in WinMain
 #define TOC_MIN_DY          100
 
 // minimum size of the window
-#define MIN_WIN_DX 480
-#define MIN_WIN_DY 320
+constexpr LONG MIN_WIN_DX = 480;
+constexpr LONG MIN_WIN_DY = 320;
 
 Vec<WindowInfo*>             gWindows;
 FileHistory                  gFileHistory;
