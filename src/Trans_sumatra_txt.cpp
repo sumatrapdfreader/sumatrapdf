@@ -3084,7 +3084,7 @@ const char * gTranslations_hr =
   "Smanji stranice do podru\304\215ja za ispis (ako je potrebno)\0"\
   "&Jedna stranica\tCtrl+6\0"\
   "&Propusti ovu ina\304\215icu.\0"\
-  "\0"\
+  "&Tema\0"\
   "Koristi &originalne veli\304\215ine stranica\0"\
   "&Pogled\0"\
   "P&rozor\0"\
@@ -3137,8 +3137,8 @@ const char * gTranslations_hr =
   "Trenutna datoteka\0"\
   "Pozicija pokaziva\304\215a:\0"\
   "&Prilago\304\221eno uve\304\207anje...\tCtrl+Y\0"\
-  "\0"\
-  "\0"\
+  "Tamna\0"\
+  "Tamnija\0"\
   "Pretpostavljeni &izgled:\0"\
   "Pretpostavljeno &uve\304\207anje:\0"\
   "Glavni preglednik PDF datoteka se ne mo\305\276e mijenjati u prenosivom na\304\215inu\0"\
@@ -3188,7 +3188,7 @@ const char * gTranslations_hr =
   "Pomo\304\207: upotrijebite tipku F3 za ponovnu pretragu\0"\
   "Slikovne datoteke (*.%s)\0"\
   "KiB\0"\
-  "\0"\
+  "Svijetla\0"\
   "MiB\0"\
   "Postaviti SumatruPDF pretpostavljenim preglednikom PDF datoteka?\0"\
   "Neka SumatraPDF bude pretpostavljeni preglednik PDF datoteka\0"\
@@ -10644,7 +10644,7 @@ const char * gTranslations_pt =
   "&Reduzir p\303\241ginas \303\240 \303\241rea de impress\303\243o (se necess\303\241rio)\0"\
   "Uma &p\303\241gina\tCtrl+6\0"\
   "Ignorar &esta vers\303\243o\0"\
-  "\0"\
+  "&Tema\0"\
   "&Utilizar tamanho original\0"\
   "&Ver\0"\
   "&Janela\0"\
@@ -10666,7 +10666,7 @@ const char * gTranslations_pt =
   "Autor:\0"\
   "Autom\303\241tico\0"\
   "&Procurar atualiza\303\247\303\265es automaticamente\0"\
-  "Como livro\0"\
+  "Vista de Livro\0"\
   "M&arcadores\tF12\0"\
   "Atalhos de marcadores\0"\
   "Atalho para a p\303\241gina %s de %s\0"\
@@ -10697,8 +10697,8 @@ const char * gTranslations_pt =
   "Ficheiro atual\0"\
   "Posi\303\247\303\243o do cursor:\0"\
   "&Personalizar...\tCtrl+Y\0"\
-  "\0"\
-  "\0"\
+  "Escuro\0"\
+  "Mais escuro\0"\
   "&Exibi\303\247\303\243o padr\303\243o:\0"\
   "&Amplia\303\247\303\243o padr\303\243o:\0"\
   "No modo port\303\241til, n\303\243o pode alterar o leitor pr\303\251-definido dos PDFs\0"\
@@ -10748,7 +10748,7 @@ const char * gTranslations_pt =
   "Dica: utilize F3 para procurar a seguinte\0"\
   "Imagens (*.%s)\0"\
   "\0"\
-  "\0"\
+  "Claro\0"\
   "\0"\
   "Tornar SumatraPDF a aplica\303\247\303\243o principal para PDFs?\0"\
   "Tornar SumatraPDF o leitor principal dos PDF\0"\
@@ -12617,7 +12617,7 @@ const char * gTranslations_es =
 const char * gTranslations_sv = 
   "&Om\0"\
   "&Verklig storlek\tCtrl+1\0"\
-  "&Avancerade Inst\303\244llningar\0"\
+  "&Avancerade inst\303\244llningar\0"\
   "&Alla valda sidor\0"\
   "Tillbaka\tAlt+Pil v\303\244nster\0"\
   "&Bokvy\tCtrl+8\0"\
@@ -12630,7 +12630,7 @@ const char * gTranslations_sv =
   "&Arkiv\0"\
   "&S\303\266k efter:\0"\
   "F\303\266rsta sidan\tHome\0"\
-  "Anpassa sidor till utskrivbart &omr\303\245de\0"\
+  "&Anpassa sidor till utskrivbart omr\303\245de\0"\
   "&G\303\245 till\0"\
   "&G\303\245 till sida:\0"\
   "&Hj\303\244lp\0"\
@@ -12669,10 +12669,10 @@ const char * gTranslations_sv =
   "(av %d)\0"\
   "(sida %s)\0"\
   "Om SumatraPDF\0"\
-  "L\303\244gg till favorit\0"\
-  "L\303\244gg till sida %s i favoriter\0"\
-  "L\303\244gg till sida %s i favoriter med (valfritt) namn:\0"\
-  "L\303\244gg till i favoriter\0"\
+  "L\303\244gg till Favorit\0"\
+  "L\303\244gg till sida %s i Favoriter\0"\
+  "L\303\244gg till sida %s i Favoriter med (valfritt) namn:\0"\
+  "L\303\244gg till i Favoriter\0"\
   "Avancerat\0"\
   "Alla filer\0"\
   "Alla dokument som st\303\266ds\0"\
@@ -12681,8 +12681,8 @@ const char * gTranslations_sv =
   "Bilagor: %s\0"\
   "F\303\266rfattare:\0"\
   "Automatiskt\0"\
-  "S\303\266k &automatisk efter uppdateringar\0"\
-  "Bokuppslag\0"\
+  "S\303\266k &automatiskt efter uppdateringar\0"\
+  "Bokvy\0"\
   "Bokm\303\244rken\tF12\0"\
   "Bokm\303\244rkesgenv\303\244gar\0"\
   "Bokm\303\244rk genv\303\244g till sida %s av %s\0"\
@@ -13164,7 +13164,7 @@ const char * gTranslations_tr =
   "Sayfalar\304\261 bask\304\261 alan\304\261na &indirgele (gerekirse)\0"\
   "&Tek Sayfa\tCtrl+6\0"\
   "Bu s&\303\274r\303\274m\303\274 atla\0"\
-  "\0"\
+  "&Tema\0"\
   "Orijinal sayfa boyutlar\304\261n\304\261 &kullan\0"\
   "G\303\266s&ter\0"\
   "&Pencere\0"\
@@ -13217,8 +13217,8 @@ const char * gTranslations_tr =
   "Y\303\274r\303\274rl\303\274kteki dosya\0"\
   "\304\260mle\303\247 konumu:\0"\
   "Ki\305\237iselle\305\237tirilmi\305\237 &Yak\304\261nla\305\237t\304\261rma... \tCtrl+Y\0"\
-  "\0"\
-  "\0"\
+  "Karanl\304\261k\0"\
+  "Daha karanl\304\261k\0"\
   "Varsay\304\261lan &D\303\274zen:\0"\
   "Varsay\304\261lan &Yak\304\261nla\305\237t\304\261rma:\0"\
   "Varsay\304\261lan PDF okuyucu ta\305\237\304\261nabilir modunda de\304\237i\305\237tirilemez\0"\
@@ -13268,7 +13268,7 @@ const char * gTranslations_tr =
   "\304\260pucu: yeniden bulmak i\303\247in F3 tu\305\237unu kullan\304\261n\0"\
   "G\303\266r\303\274nt\303\274 dosyalar\304\261 (*.%s)\0"\
   "\0"\
-  "\0"\
+  "Ayd\304\261nl\304\261k\0"\
   "\0"\
   "SumatraPDF'i PDF dosyalar\304\261 i\303\247in varsay\304\261lan uygulama yapmak ister misiniz?\0"\
   "Varsay\304\261lan PDF okuyucusu yap\0"\

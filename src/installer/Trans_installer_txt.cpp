@@ -1832,7 +1832,7 @@ const char * gTranslations_pt =
   "Falha ao copiar o desinstalador para a pasta tempor\303\241ria\0"\
   "Erro ao criar atalho\0"\
   "Falha ao eliminar as chaves do registo\0"\
-  "\0"\
+  "Falha ao registar como programa pr\303\251-definido no Windows 10\0"\
   "Falha ao escrever as informa\303\247\303\265es do tipo de ficheiro nas chaves de registo\0"\
   "Falha ao escrever as informa\303\247\303\265es de desinstala\303\247\303\243o no registo\0"\
   "&Ocultar op\303\247\303\265es\0"\
@@ -2194,7 +2194,7 @@ const char * gTranslations_sv =
   "Misslyckades med att ta bort registernycklar\0"\
   "Misslyckades med registrering som standardprogram p\303\245 Win 10.\0"\
   "Misslyckades med att spara registernycklar f\303\266r den ut\303\266kade filhanteringen\0"\
-  "Missluckades spara data f\303\266r avinstallation i registret\0"\
+  "Misslyckades med att spara data f\303\266r avinstallation i registret\0"\
   "G\303\266m Alternativ\0"\
   "Installera SumatraPDF\0"\
   "Installera SumatraPDF i katalog:\0"\

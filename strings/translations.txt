@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-a518f96a298ccdc8d843bcd00d4ca7f70a4ff90b
+c2f09eb6601c743c8667ccd108a0816c42f444a6
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -191,7 +191,7 @@ sl:N&apredne možnosti …
 sp-rs:Napredna podešavanja...
 sq:Opsionet e &avancuara...
 sr-rs:Напредне опције
-sv:&Avancerade Inställningar
+sv:&Avancerade inställningar
 ta:&மேம்பட்ட விருப்பங்கள்
 th:yyyy
 tr:Gelişmiş Ayarlar
@@ -653,6 +653,7 @@ am:&Միայն զույգ էջերը
 ar:الصفحات &الزوجية فقط
 az:Yalnız &cüt səhifələr
 bg:Само &четни страници
+bn:&শুধুমাত্র জোর পৃষ্ঠাগুলো
 br:Apenas as páginas par&es
 bs:Samo &parne stranice
 ca-xv:Només les pàgines parelles
@@ -1016,7 +1017,7 @@ sl:Prilagodi strani na področje tiskanja
 sp-rs:Podesi stranice prema oblasti štampanja
 sq:&Përshtat faqet në hapësirën e printuar
 sr-rs:Подеси странице према области штампања
-sv:Anpassa sidor till utskrivbart &område
+sv:&Anpassa sidor till utskrivbart område
 ta:அச்சிடும் அளவில் பக்கத்தை காட்டு
 tl:Pagkasyahin ang mga pahina sa printable na area
 tr:Sayfaları &yazdırılabilecek alana ölçekle
@@ -1559,6 +1560,7 @@ am:&Ոչ
 ar:لا&
 az:&Xeyr
 bg:&Не
+bn:&না
 br:&Não
 bs:&Ne
 by:Нет
@@ -2181,6 +2183,7 @@ am:&Տպել...
 ar:&طباعة...
 az:&Çap et...
 bg:&Отпечатване...
+bn:&প্রিন্ট
 br:Im&primir...
 bs:Š&tampaj...
 ca-xv:Im&primeix...
@@ -2673,6 +2676,7 @@ am:&Կարգավորումներ
 ar:&الإعدادات
 az:&Parametrlər
 bg:&Настройки
+bn:&সেটিং
 br:&Preferências
 bs:&Postavke
 by:Налады
@@ -2923,6 +2927,7 @@ es:&Tema
 eu:&Azalgaia
 fr:Thème
 he:ערכת נושא
+hr:&Tema
 ja:配色テーマ(&T)
 kr:테마(&T)
 lv:&Dizains
@@ -2931,10 +2936,12 @@ nl:&Uiterlijk
 nn:&Tema
 no:&Tema
 pl:&Motyw
+pt:&Tema
 ru:&Тема
 sp-rs:Tema
 sr-rs:Тема
 sv:&Tema
+tr:&Tema
 tw:主題(&T)
 uk:&Тема
 vn:&Chủ đề
@@ -3496,7 +3503,7 @@ sl:Dodaj Priljubljene
 sp-rs:Dodavanje u odabir
 sq:Shënoj te pëlqimet
 sr-rs:Додавање у одабир
-sv:Lägg till favorit
+sv:Lägg till Favorit
 ta:விருப்பகளில்  சேர்
 th:เพิ่มรายการโปรด
 tr:Sık kullanılanlara ekle
@@ -3558,7 +3565,7 @@ sl:Dodaj stran %s med priljubljene
 sp-rs:Dodaj stranicu %s među odabrane
 sq:Shënoj faqen %s te pëlqimet
 sr-rs:Додај страницу %s међу одабране
-sv:Lägg till sida %s i favoriter
+sv:Lägg till sida %s i Favoriter
 ta:விருப்பகளில்  பக்கம் %s ஐ சேர்
 th:เพิ่มหน้า %s ไปยังรายการโปรด
 tr:%s no.lu sayfayı sık kullanılanlara ekle
@@ -3619,7 +3626,7 @@ sl:Dodaj stran %s med priljubljene z (neobveznim) imenom:
 sp-rs:Dodaj stranicu %s među odabrane pod (opciono) imenom:
 sq:Mbani shënim faqen %s nën emrin (fakultativ):
 sr-rs:Додај страницу %s међу одабране под (опционо) именом:
-sv:Lägg till sida %s i favoriter med (valfritt) namn:
+sv:Lägg till sida %s i Favoriter med (valfritt) namn:
 ta:விருப்பகளில்  பக்கம் %s ஐ பெயருடன் சேர்
 th:เพิ่มหน้า %s ไปยังรายการโปรดพร้อม (สามารถเลือกได้) ชื่อ:
 tr:%s no.lu sayfayı sık kullanılanlara (tercihe bağlı isimle) ekle:
@@ -3682,7 +3689,7 @@ sl:Dodaj med priljubljene
 sp-rs:Dodaj među odabrane
 sq:Shënoj te pëlqimet
 sr-rs:Додај међу одабране
-sv:Lägg till i favoriter
+sv:Lägg till i Favoriter
 ta:விருப்பகளில் சேர்
 th:เพิ่มไปยังรายการโปรด
 tr:Sık kullanılanlara ekle
@@ -4334,7 +4341,7 @@ sl:&Samodejno preveri za posodobitve
 sp-rs:Automatski proveravaj dostupnost nove verzije
 sq:Verifikoj automatikisht &azhurnimet
 sr-rs:Аутоматски проверавај доступност нове верзије
-sv:Sök &automatisk efter uppdateringar
+sv:Sök &automatiskt efter uppdateringar
 ta:தானாக புதுப்பித்த பதிப்பை தேடு
 th:ตรวจสอบการปรับปรุงให้ทันสมัยโดยอัตโนมัติ
 tl:Awtomatikong tignan kung may mga pagbabago
@@ -4389,7 +4396,7 @@ nl:Boekweergave
 nn:Bokvising
 no:Bokvisning
 pl:Widok odczytu
-pt:Como livro
+pt:Vista de Livro
 ro:Vizualizare în format carte
 ru:В разворот
 si:පොත් දසුන
@@ -4399,7 +4406,7 @@ sn:Maonero egwaro
 sp-rs:Izgled knjige
 sq:Libër
 sr-rs:Изглед књиге
-sv:Bokuppslag
+sv:Bokvy
 ta:ஏடு வடிவி நோக்கு
 th:แสดงแบบหนังสือ
 tl:Pang-aklat na tingin
@@ -6989,6 +6996,7 @@ uz:&Miqyosni ko'rsatish...\tCtrl+Y
 vn:Thu phóng &tuỳ ý...\tCtrl+Y
 :Dark
 am:Մուգ
+bn:অন্ধকার
 br:Escuro
 ca:Fosc
 cn:暗(&D)
@@ -6996,6 +7004,7 @@ es:Oscuro
 eu:Iluna
 fr:Sombre
 he:כהה
+hr:Tamna
 ja:濃色
 kr:어두운
 lv:Tumšs
@@ -7004,15 +7013,18 @@ nl:Donker
 nn:Mørkt
 no:Mørkt
 pl:Ciemny
+pt:Escuro
 ru:Темная
 sp-rs:Tamno
 sr-rs:Тамно
 sv:Mörk
+tr:Karanlık
 tw:暗(&D)
 uk:Темна
 vn:Tối
 :Darker
 am:Շատ մուգ
+bn:গাঢ় অন্ধকার
 br:Muito escuro
 ca:Molt fosc
 cn:更暗(&R)
@@ -7020,6 +7032,7 @@ es:Más oscuro
 eu:Ilunagoa
 fr:Plus sombre
 he:כהה מאוד
+hr:Tamnija
 ja:黒
 kr:더 어두운
 lv:Tumšāks
@@ -7028,10 +7041,12 @@ nl:Zwart
 nn:Mørkare
 no:Mørkere
 pl:Ciemniejszy
+pt:Mais escuro
 ru:Более темная
 sp-rs:Tamnije
 sr-rs:Тамније
 sv:Mörkare
+tr:Daha karanlık
 tw:更暗(&R)
 uk:Темніша
 vn:Tối hơn
@@ -8176,6 +8191,7 @@ am:Հնարավոր չեղավ ստեղծել պիտակը
 ar:فشل في إنشاء رابط اختصار للبرنامج
 az:Yarlık yaratmaq mümkün olmadı
 bg:Не може да се създаде командата за бърз достъп
+bn:শর্টকাট তৈরি ব্যর্থ হয়েছে
 br:Falha na criação do atalho
 bs:Neuspješno kreiranje kratice
 ca-xv:No es pot crear una drecera
@@ -8311,6 +8327,7 @@ nl:Als standaard App in Windows 10 aanmelden mislukt
 nn:Klarte ikkje å bli registrert som standardprogram i Windows 10.
 no:Klarte ikke å bli registrert som standardprogram i Windows 10.
 pl:Nie udało się zarejestrować jako domyślny program na Windows 10
+pt:Falha ao registar como programa pré-definido no Windows 10
 ru:Не удалось зарегистрировать как программу по умолчанию в Windows 10
 sk:Nastavenie predvoleného programu pod Windows 10 zlyhalo.
 sl:Napaka pri registraciji kot win 10 privzeti program
@@ -8326,6 +8343,7 @@ am:Հնարավոր չեղավ վերանվանել ֆայլը։
 ar:فشل في إعادة تسمية الملف!
 az:Faylın adını dəyişmək mümkün olmadı!
 bg:Преименуването не беше успешно!
+bn:নতুন নামকরণ ব্যর্থ হয়েছে
 br:Falha ao renomear o arquivo!
 bs:Neuspješna promjena naziva faja!
 ca-xv:S'ha produÏt un error en canviar el nom del fitxer!
@@ -8550,7 +8568,7 @@ sl:Pisanje v register informacij o odstranitvi ni uspelo
 sp-rs:Neuspeli upis instalacionih informacija u registri
 sq:Dështoi shkrimi në regjistër i informacionit për çinstalimin
 sr-rs:Неуспео упис информација о деинсталацији у регистри базу
-sv:Missluckades spara data för avinstallation i registret
+sv:Misslyckades med att spara data för avinstallation i registret
 ta:நிறுவி நீக்கும் தகவலை பதிவில் எழுத முடியவில்லை
 tr:Kayıt defterine kaldırma bilgisi yazma işi başarısız oldu
 tw:寫入解除安裝資訊到註冊項目失敗。
@@ -10261,6 +10279,7 @@ am:Թաքցնել հաճախակի բացվածները
 ar:إخفاء الأكثر قراءة
 az:Ən çox oxunanları gizlət
 bg:Скриване на често четените
+bn:বারবার পঠিত বই গোপন করুন
 br:Ocultar Lidos com freqüência
 bs:Sakrij najčešće čitano
 ca-xv:Amaga els més llegits
@@ -10892,6 +10911,7 @@ uz:Windows yordamida PDF hujjatlarini oldindan &ko'rish
 vn:Cho phép Windows hiển thị hình ảnh &xem trước của các tài liệu PDF
 :Light
 am:Լուսավոր
+bn:উজ্জ্বল
 br:Claro
 ca:Clar
 cn:明亮
@@ -10899,6 +10919,7 @@ es:Claro
 eu:Argia
 fr:Clair
 he:בהירה
+hr:Svijetla
 ja:淡色
 kr:밝은
 lv:Gaišs
@@ -10907,10 +10928,12 @@ nl:Wit
 nn:Lyst
 no:Lyst
 pl:Jasny
+pt:Claro
 ru:Светлая
 sp-rs:Svetlo
 sr-rs:Светло
 sv:Ljus
+tr:Aydınlık
 tw:亮(&L)
 uk:Світла
 vn:Sáng
@@ -11247,6 +11270,7 @@ am:XPS ֆայլեր
 ar:وثائق Mobi
 az:Mobi sənədləri
 bg:Mobi документи
+bn:মোবি ফাইল
 br:Documentos Mobi
 bs:Mobi dokumenti
 ca-xv:Documents Mobi
@@ -11307,6 +11331,7 @@ am:Փոփոխված՝
 ar:التعديل
 az:Dəyişiklik tarixi:
 bg:Променен:
+bn:পরিবর্তিত
 br:Modificado:
 bs:Izmijenjeno:
 ca-xv:Modificat:
@@ -11752,6 +11777,7 @@ am:Էջերի քանակը.
 ar:عدد الصفحات
 az:Səhifə sayı:
 bg:Брой страници:
+bn:পৃষ্ঠা সংখ্যা
 br:Número de páginas:
 bs:Broj stranica:
 ca-xv:Nombre de pàgines:
@@ -11814,6 +11840,7 @@ am:ԼԱՎ
 ar:موافق
 az:OK
 bg:OK
+bn:ঠিক আছে
 br:OK
 bs:OK
 by:ДА
@@ -12009,6 +12036,7 @@ am:Բացել փաստաթուղթ...
 ar:فتح مستند...
 az:Sənədi aç...
 bg:Отворяне на документ...
+bn:কোন ফাইল খুলুন
 br:Abrir um documento...
 bs:Otvori dokument...
 ca-xv:Obri un document...
@@ -12672,6 +12700,7 @@ am:PDF-ի տարբերակ՝
 ar:اصدارالمستندات المحمولة
 az:PDF versiyası:
 bg:PDF версия:
+bn:PDF সংস্করণ
 br:Versão do PDF:
 bs:Verzija PDF-a:
 ca-xv:Versió de PDF:
@@ -12924,6 +12953,7 @@ am:Էջի չափը.
 ar:حجم الصفحة
 az:Səhifə ölçüsü:
 bg:Размери на страницата:
+bn:পৃষ্ঠার আকার
 br:Tamanho da página:
 bs:Veličina stranice:
 ca-xv:Mida de pàgina:
@@ -13283,6 +13313,7 @@ am:Խնդրում ենք սպասել...
 ar:الرجاء الإنتظار - اعادة...
 az:Görüntü hazırlanır, lütfən gözləyin...
 bg:Моля изчакайте - изображението се създава
+bn:দয়া করে অপেক্ষা করুন, লোড হচ্ছে....
 br:Por favor aguarde, renderizando...
 bs:Molim pričekajte, iscrtavam...
 by:Пачакайце - фармуецца малюнак...
@@ -13529,6 +13560,7 @@ am:Տպել
 ar:طباعة
 az:Çap et
 bg:Отпечатване
+bn:প্রিন্ট
 br:Imprimir
 bs:Štampaj
 ca-xv:Impressora
@@ -13588,6 +13620,7 @@ am:Տպելու կարգը
 ar:نطاق الطباعة
 az:Çap diapazonu
 bg:Отпечатване на някои страници
+bn:প্রিন্ট করার সীমা
 br:Intervalo de impressão
 bs:Štampaj raspon
 ca-xv:Interval d'impressió
@@ -13703,6 +13736,7 @@ am:Տպում է:
 ar:الطباعة في التقدم.
 az:Çap davam edir.
 bg:Печатане...
+bn:প্রিন্ট হচ্ছে
 br:Imprimindo...
 bs:Štampanje u napretku.
 ca-xv:La impresió és en procés.
@@ -14120,6 +14154,7 @@ am:Հեռացնել ընտրյալներից
 ar:ازالة من المفضلة
 az:Seçilmişlərdən sil
 bg:Премахни от любимите
+bn:পছন্দের তালিকা থেকে বাদ দিন
 br:Remover dos Favoritos
 bs:Ukloni iz favorita
 ca-xv:Suprimeix dels preferits
@@ -14235,6 +14270,7 @@ am:Վերանվանել՝
 ar:إعادة تسمية إلى
 az:Adını dəyişdir
 bg:Преименувай на
+bn:নতুন নাম
 br:Renomear para
 bs:Promije&ni naziv u
 ca-xv:Canvia el nom a
@@ -14618,6 +14654,7 @@ am:Նշել &բոլորը
 ar:حدد &الكل
 az:&Hamısını seç
 bg:Избери всичко
+bn:বাছাই করুন & সবগুলো
 br:Selecion&ar tudo
 bs:Označi &sve
 ca-xv:Selecciona-ho &tot
@@ -14851,6 +14888,7 @@ am:Նշվածը.
 ar:التحديد
 az:Seçmə:
 bg:Избор:
+bn:বাছাই :
 br:Seleção:
 bs:Selekcija:
 ca-xv:Selecció:
@@ -15218,6 +15256,7 @@ am:Ցուցադրել ընտրյալները
 ar:إظهار المفضلة
 az:Seçilmişləri göstər
 bg:Покажи Любими
+bn:পছন্দসমূহ
 br:Mostrar Favoritos
 bs:Prikaži favorite
 ca-xv:Mostra els preferits
@@ -15696,6 +15735,7 @@ am:Ֆայլը.
 ar:الموضوع
 az:Mövzu:
 bg:Относно (тема):
+bn:বিষয়
 br:Assunto:
 bs:Tema:
 ca-xv:Assumpte:
@@ -15929,6 +15969,7 @@ am:SumatraPDF-ի թարմացումներ
 ar:تحديث  مستندات Sumatra المحمولة
 az:SumatraPDF yeniləməsi
 bg:Обновяване на SumatraPDF
+bn:SumatraPDF হালনাগাদ করুন
 br:Atualização do SumatraPDF
 bs:SumatraPDF nadogradnja
 ca-xv:Actualització del SumatraPDF
@@ -16458,6 +16499,7 @@ am:Շնորհակալություն SumatraPDF-ը նախընտրելու համ�
 ar:نشكركم لاختياركم مستندات Sumatra المحمولة  
 az:SumatraPDF-i seçdiyiniz üçün təşəkkür edirik!
 bg:Благодаря че избрахте SumatraPDF!
+bn:SumatraPDF কে বেছে নেয়ার জন্য ধন্যবাদ।
 br:Obrigado por escolher o SumatraPDF!
 bs:Hvala Vam što ste izabrali SumatraPDF!
 ca-xv:Gràcies per triar el SumatraPDF!
@@ -16677,6 +16719,7 @@ am:Անունը.
 ar:العنوان
 az:Başlıq:
 bg:Заглавие:
+bn:শিরোনাম
 br:Título:
 bs:Naslov:
 ca-xv:Títol:
@@ -17220,6 +17263,7 @@ am:Զգուշացում
 ar:تحذير
 az:Xəbərdarlıq
 bg:Внимание
+bn:সতর্কীকরণ
 br:Aviso
 bs:Upozorenje
 by:Папярэджанне
