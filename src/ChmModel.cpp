@@ -358,7 +358,7 @@ void ChmModel::OnDocumentComplete(const WCHAR *url)
         // TODO: setting zoom before the first page is loaded seems not to work
         // (might be a regression from between r4593 and r4629)
         if (IsValidZoom(initZoom)) {
-            SetZoomVirtual(initZoom);
+            SetZoomVirtual(initZoom, nullptr);
             initZoom = INVALID_ZOOM;
         }
         if (cb)

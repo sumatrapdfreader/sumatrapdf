@@ -1040,7 +1040,7 @@ void DisplayModel::SetPresentationMode(bool enable)
         // disable the window margin during presentations
         windowMargin.top = windowMargin.right = windowMargin.bottom = windowMargin.left = 0;
         SetDisplayMode(DM_SINGLE_PAGE);
-        SetZoomVirtual(ZOOM_FIT_PAGE);
+        SetZoomVirtual(ZOOM_FIT_PAGE, nullptr);
     }
     else {
         if (engine && engine->IsImageCollection())
@@ -1054,7 +1054,7 @@ void DisplayModel::SetPresentationMode(bool enable)
         SetDisplayMode(presDisplayMode);
         if (!IsValidZoom(presZoomVirtual))
             presZoomVirtual = zoomVirtual;
-        SetZoomVirtual(presZoomVirtual);
+        SetZoomVirtual(presZoomVirtual, nullptr);
     }
 }
 

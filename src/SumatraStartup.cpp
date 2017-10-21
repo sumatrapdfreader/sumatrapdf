@@ -305,7 +305,7 @@ static void RestoreTabOnStartup(WindowInfo *win, TabState *state)
         if (tab->AsFixed())
             tab->AsFixed()->Relayout(zoom, state->rotation);
         else
-            tab->ctrl->SetZoomVirtual(zoom);
+            tab->ctrl->SetZoomVirtual(zoom, nullptr);
     }
     if (tab->AsFixed())
         tab->AsFixed()->SetScrollState(ScrollState(state->pageNo, state->scrollPos.x, state->scrollPos.y));

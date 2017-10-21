@@ -656,7 +656,7 @@ bool StressTest::OpenFile(const WCHAR *fileName)
         return false;
 
     win->ctrl->SetDisplayMode(DM_CONTINUOUS);
-    win->ctrl->SetZoomVirtual(ZOOM_FIT_PAGE);
+    win->ctrl->SetZoomVirtual(ZOOM_FIT_PAGE, nullptr);
     win->ctrl->GoToFirstPage();
     if (win->tocVisible || gGlobalPrefs->showFavorites)
         SetSidebarVisibility(win, win->tocVisible, gGlobalPrefs->showFavorites);

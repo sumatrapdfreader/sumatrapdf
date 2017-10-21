@@ -35,7 +35,7 @@ class EbookController : public Controller {
     void SetDisplayMode(DisplayMode mode, bool keepContinuous = false) override;
     DisplayMode GetDisplayMode() const override { return IsDoublePage() ? DM_FACING : DM_SINGLE_PAGE; }
     void SetPresentationMode(bool enable) override { UNUSED(enable); /* not supported */ }
-    void SetZoomVirtual(float zoom, PointI* fixPt = nullptr) override {
+    void SetZoomVirtual(float zoom, PointI* fixPt) override {
         UNUSED(zoom);
         UNUSED(fixPt); /* not supported */
     }

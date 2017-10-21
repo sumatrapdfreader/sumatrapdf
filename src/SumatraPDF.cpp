@@ -1085,7 +1085,7 @@ static void LoadDocIntoCurrentTab(LoadArgs& args, Controller *ctrl, DisplayState
     if (win->AsFixed())
         win->AsFixed()->Relayout(zoomVirtual, rotation);
     else if (win->IsDocLoaded())
-        win->ctrl->SetZoomVirtual(zoomVirtual);
+        win->ctrl->SetZoomVirtual(zoomVirtual, nullptr);
 
     // TODO: why is this needed?
     if (!args.isNewWindow && win->IsDocLoaded())

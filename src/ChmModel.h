@@ -33,7 +33,7 @@ public:
     void SetDisplayMode(DisplayMode mode, bool keepContinuous = false) override { UNUSED(mode); UNUSED(keepContinuous); /* not supported */ }
     DisplayMode GetDisplayMode() const override { return DM_SINGLE_PAGE; }
     void SetPresentationMode(bool enable) override { UNUSED(enable); /* not supported */ }
-    void SetZoomVirtual(float zoom, PointI *fixPt=nullptr) override;
+    void SetZoomVirtual(float zoom, PointI *fixPt) override;
     float GetZoomVirtual(bool absolute=false) const override;
     float GetNextZoomStep(float towards) const override;
     void SetViewPortSize(SizeI size)  override { UNUSED(size); /* not needed(?) */ }

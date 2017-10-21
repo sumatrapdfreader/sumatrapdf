@@ -167,11 +167,11 @@ void WindowInfo::ToggleZoom()
     if (!this->IsDocLoaded()) return;
 
     if (ZOOM_FIT_PAGE == this->ctrl->GetZoomVirtual())
-        this->ctrl->SetZoomVirtual(ZOOM_FIT_WIDTH);
+        this->ctrl->SetZoomVirtual(ZOOM_FIT_WIDTH, nullptr);
     else if (ZOOM_FIT_WIDTH == this->ctrl->GetZoomVirtual())
-        this->ctrl->SetZoomVirtual(ZOOM_FIT_CONTENT);
+        this->ctrl->SetZoomVirtual(ZOOM_FIT_CONTENT, nullptr);
     else
-        this->ctrl->SetZoomVirtual(ZOOM_FIT_PAGE);
+        this->ctrl->SetZoomVirtual(ZOOM_FIT_PAGE, nullptr);
 }
 
 void WindowInfo::MoveDocBy(int dx, int dy)
