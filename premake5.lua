@@ -3,7 +3,7 @@ To generate Visual Studio files in vs2015 directory, run:
 premake5 vs2015 : for Visual Studio 2015 files in vs2015 directory
 premake5 vs2017 : for Visual Studio 2017 files in vs2017 directory
 
-I'm using premake5 alpha11 from http://premake.github.io/download.html#v5
+I'm using premake5 alpha12 from http://premake.github.io/download.html#v5
 (premake4 won't work, it doesn't support VS 2013+)
 
 Note about nasm: when providing "-I foo/bar/" flag to nasm.exe, it must be
@@ -120,7 +120,6 @@ workspace "SumatraPDF"
   rtti "Off"
 
   defines { "WIN32", "_WIN32", "_CRT_SECURE_NO_WARNINGS", "WINVER=0x0501", "_WIN32_WINNT=0x0501" }
-  defines { "_HAS_EXCEPTIONS=0" }
 
   filter "configurations:Debug"
     defines { "DEBUG" }
@@ -253,6 +252,7 @@ workspace "SumatraPDF"
   project "engines"
     kind "StaticLib"
     language "C++"
+    cppdialect "C++17"
     disablewarnings { "4018", "4057", "4189", "4244", "4267", "4295", "4819" }
     disablewarnings { "4701", "4706", "4838"  }
     includedirs { "src/utils", "src/wingui", "src/mui" }
@@ -333,6 +333,7 @@ workspace "SumatraPDF"
   project "utils"
     kind "StaticLib"
     language "C++"
+    cppdialect "C++17"
     -- QITABENT in shlwapi.h has incorrect definition and causes 4838
     disablewarnings { "4838" }
     includedirs { "src/utils", "src/wingui", "src/mui", "ext/zlib", "ext/lzma/C" }
@@ -343,6 +344,7 @@ workspace "SumatraPDF"
   project "mui"
     kind "StaticLib"
     language "C++"
+    cppdialect "C++17"
     includedirs { "src/utils", "src/wingui", "src/mui" }
     mui_files()
 
@@ -350,6 +352,7 @@ workspace "SumatraPDF"
   project "uia"
     kind "StaticLib"
     language "C++"
+    cppdialect "C++17"
     disablewarnings { "4302", "4311", "4838" }
     includedirs { "src", "src/utils" }
     uia_files()
@@ -358,6 +361,7 @@ workspace "SumatraPDF"
   project "sumatra"
     kind "StaticLib"
     language "C++"
+    cppdialect "C++17"
     -- TODO: 4838 only in settingsstructs.h(642)
     disablewarnings { "4838" }
     includedirs { "src", "src/utils", "src/wingui", "src/mui", "ext/synctex" }
@@ -368,6 +372,7 @@ workspace "SumatraPDF"
   project "efi"
     kind "ConsoleApp"
     language "C++"
+    cppdialect "C++17"
     disablewarnings { "4091", "4577" }
     includedirs { "src/utils" }
     efi_files()
@@ -423,6 +428,7 @@ workspace "SumatraPDF"
   project "enginedump"
     kind "ConsoleApp"
     language "C++"
+    cppdialect "C++17"
     includedirs { "src", "src/utils", "src/mui", "mupdf/include" }
     engine_dump_files()
     links { "engines", "utils", "mupdf", "unarrlib", "libwebp", "libdjvu" }
@@ -443,6 +449,7 @@ workspace "SumatraPDF"
   project "test_util"
     kind "ConsoleApp"
     language "C++"
+    cppdialect "C++17"
     disablewarnings { "4838" }
     defines { "NO_LIBMUPDF" }
     includedirs { "src/utils" }
@@ -462,7 +469,8 @@ workspace "SumatraPDF"
   project "plugin-test"
     kind "WindowedApp"
     language "C++"
-    flags { "WinMain" }
+    cppdialect "C++17"
+    entrypoint "WinMainCRTStartup"
     includedirs { "src/utils" }
     files { "src/tools/plugin-test.cpp" }
     links { "utils", "mupdf" }
@@ -472,6 +480,7 @@ workspace "SumatraPDF"
   project "MakeLZSA"
     kind "ConsoleApp"
     language "C++"
+    cppdialect "C++17"
     makelzsa_files()
     includedirs { "src/utils", "ext/zlib", "ext/lzma/C", "ext/unarr" }
     links { "unarrlib", "zlib" }
@@ -481,6 +490,7 @@ workspace "SumatraPDF"
   project "PdfFilter"
     kind "SharedLib"
     language "C++"
+    cppdialect "C++17"
     disablewarnings { "4838" }
     filter {"configurations:Debug"}
       defines { "BUILD_TEX_IFILTER", "BUILD_EPUB_IFILTER" }
@@ -494,6 +504,7 @@ workspace "SumatraPDF"
   project "PdfPreview"
     kind "SharedLib"
     language "C++"
+    cppdialect "C++17"
     disablewarnings { "4838" }
     includedirs {
       "src", "src/utils", "src/wingui", "src/mui", "mupdf/include",
@@ -517,7 +528,9 @@ workspace "SumatraPDF"
   project "SumatraPDF"
     kind "WindowedApp"
     language "C++"
-    flags { "NoManifest", "WinMain" }
+    cppdialect "C++17"
+    entrypoint "WinMainCRTStartup"
+    flags { "NoManifest" }
     includedirs { "src", "src/utils", "src/wingui", "src/mui" }
     sumatrapdf_files()
     files {
@@ -539,7 +552,9 @@ workspace "SumatraPDF"
   project "SumatraPDF-no-MUPDF"
     kind "WindowedApp"
     language "C++"
-    flags { "NoManifest", "WinMain" }
+    cppdialect "C++17"
+    entrypoint "WinMainCRTStartup"
+    flags { "NoManifest" }
     includedirs { "src", "src/utils", "src/wingui", "src/mui", "mupdf/include" }
     sumatrapdf_files()
     files { "src/MuPDF_Exports.cpp" }
@@ -558,8 +573,10 @@ workspace "SumatraPDF"
   project "Uninstaller"
     kind "WindowedApp"
     language "C++"
+    cppdialect "C++17"
     defines { "BUILD_UNINSTALLER" }
-    flags { "NoManifest", "WinMain" }
+    entrypoint "WinMainCRTStartup"
+    flags { "NoManifest" }
     disablewarnings { "4018", "4244", "4264", "4838", "4702", "4706" }
     uninstaller_files()
     includedirs { "src", "src/utils", "ext/zlib", "ext/unarr", "ext/lzma/C" }
@@ -573,7 +590,9 @@ workspace "SumatraPDF"
   project "InstallerNoData"
     kind "WindowedApp"
     language "C++"
-    flags { "NoManifest", "WinMain" }
+    cppdialect "C++17"
+    entrypoint "WinMainCRTStartup"
+    flags { "NoManifest" }
     defines { "NO_LIBWEBP", "NO_LIBMUPDF", "HAVE_ZLIB", "HAVE_BZIP2", "HAVE_7Z" }
     disablewarnings {
       "4018", "4100", "4131", "4244", "4267", "4302", "4311", "4312", "4456",
@@ -591,7 +610,9 @@ workspace "SumatraPDF"
   project "Installer"
     kind "WindowedApp"
     language "C++"
-    flags { "NoManifest", "WinMain" }
+    cppdialect "C++17"
+    entrypoint "WinMainCRTStartup"
+    flags { "NoManifest" }
     defines { "NO_LIBWEBP", "NO_LIBMUPDF", "HAVE_ZLIB", "HAVE_BZIP2", "HAVE_7Z" }
     resdefines { "INSTALL_PAYLOAD_ZIP=.\\%{cfg.targetdir}\\InstallerData.dat" }
     disablewarnings {
@@ -612,7 +633,9 @@ workspace "SumatraPDF"
   project "TestApp"
     kind "WindowedApp"
     language "C++"
-    flags { "NoManifest", "WinMain" }
+    cppdialect "C++17"
+    entrypoint "WinMainCRTStartup"
+    flags { "NoManifest" }
     includedirs { "src", "src/utils", "src/wingui" }
     test_app_files()
     links {
