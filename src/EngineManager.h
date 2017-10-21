@@ -6,17 +6,25 @@ enum class EngineType {
     // the EngineManager tries to create a new engine
     // in the following order (types on the same line
     // share common code and reside in the same file)
-    PDF, XPS,
+    PDF,
+    XPS,
     DjVu,
-    Image, ImageDir, ComicBook,
+    Image,
+    ImageDir,
+    ComicBook,
     PS,
-    Epub, Fb2, Mobi, Pdb,
-    Chm, Html, Txt,
+    Epub,
+    Fb2,
+    Mobi,
+    Pdb,
+    Chm,
+    Html,
+    Txt,
 };
 
 namespace EngineManager {
 
-bool IsSupportedFile(const WCHAR *filePath, bool sniff=false, bool enableEbookEngines=true);
-BaseEngine *CreateEngine(const WCHAR *filePath, PasswordUI *pwdUI=nullptr, EngineType *typeOut=nullptr, bool enableChmEngine=true, bool enableEbookEngines=true);
-
+bool IsSupportedFile(const WCHAR* filePath, bool sniff = false, bool enableEbookEngines = true);
+BaseEngine* CreateEngine(const WCHAR* filePath, PasswordUI* pwdUI = nullptr, EngineType* typeOut = nullptr,
+                         bool enableChmEngine = true, bool enableEbookEngines = true);
 }

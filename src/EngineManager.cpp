@@ -14,31 +14,22 @@
 
 namespace EngineManager {
 
-bool IsSupportedFile(const WCHAR *filePath, bool sniff, bool enableEbookEngines)
-{
-    return PdfEngine::IsSupportedFile(filePath, sniff)  ||
-           XpsEngine::IsSupportedFile(filePath, sniff)  ||
-           DjVuEngine::IsSupportedFile(filePath, sniff) ||
-           ImageEngine::IsSupportedFile(filePath, sniff)||
-           ImageDirEngine::IsSupportedFile(filePath, sniff) ||
-           CbxEngine::IsSupportedFile(filePath, sniff)  ||
-           PsEngine::IsSupportedFile(filePath, sniff)   ||
-           ChmEngine::IsSupportedFile(filePath, sniff) ||
-           enableEbookEngines && (
-               EpubEngine::IsSupportedFile(filePath, sniff) ||
-               Fb2Engine::IsSupportedFile(filePath, sniff)  ||
-               MobiEngine::IsSupportedFile(filePath, sniff) ||
-               PdbEngine::IsSupportedFile(filePath, sniff)  ||
-               HtmlEngine::IsSupportedFile(filePath, sniff) ||
-               TxtEngine::IsSupportedFile(filePath, sniff)
-           );
+bool IsSupportedFile(const WCHAR* filePath, bool sniff, bool enableEbookEngines) {
+    return PdfEngine::IsSupportedFile(filePath, sniff) || XpsEngine::IsSupportedFile(filePath, sniff) ||
+           DjVuEngine::IsSupportedFile(filePath, sniff) || ImageEngine::IsSupportedFile(filePath, sniff) ||
+           ImageDirEngine::IsSupportedFile(filePath, sniff) || CbxEngine::IsSupportedFile(filePath, sniff) ||
+           PsEngine::IsSupportedFile(filePath, sniff) || ChmEngine::IsSupportedFile(filePath, sniff) ||
+           enableEbookEngines &&
+               (EpubEngine::IsSupportedFile(filePath, sniff) || Fb2Engine::IsSupportedFile(filePath, sniff) ||
+                MobiEngine::IsSupportedFile(filePath, sniff) || PdbEngine::IsSupportedFile(filePath, sniff) ||
+                HtmlEngine::IsSupportedFile(filePath, sniff) || TxtEngine::IsSupportedFile(filePath, sniff));
 }
 
-BaseEngine *CreateEngine(const WCHAR *filePath, PasswordUI *pwdUI, EngineType *typeOut, bool enableChmEngine, bool enableEbookEngines)
-{
+BaseEngine* CreateEngine(const WCHAR* filePath, PasswordUI* pwdUI, EngineType* typeOut, bool enableChmEngine,
+                         bool enableEbookEngines) {
     CrashIf(!filePath);
 
-    BaseEngine *engine = nullptr;
+    BaseEngine* engine = nullptr;
     EngineType engineType = EngineType::None;
     bool sniff = false;
 RetrySniffing:

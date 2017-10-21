@@ -18,24 +18,26 @@
 #include "TabInfo.h"
 #include "ExternalViewers.h"
 
-static WCHAR *GetAcrobatPath()
-{
+static WCHAR* GetAcrobatPath() {
     // Try Adobe Acrobat as a fall-back, if the Reader isn't installed
-    AutoFreeW path(ReadRegStr(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\AcroRd32.exe", nullptr));
+    AutoFreeW path(ReadRegStr(HKEY_LOCAL_MACHINE,
+                              L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\AcroRd32.exe", nullptr));
     if (!path)
-        path.Set(ReadRegStr(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\Acrobat.exe", nullptr));
+        path.Set(ReadRegStr(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\Acrobat.exe",
+                            nullptr));
     if (path && file::Exists(path))
         return path.StealData();
     return nullptr;
 }
 
-static WCHAR *GetFoxitPath()
-{
-    AutoFreeW path(ReadRegStr(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Foxit Reader", L"DisplayIcon"));
+static WCHAR* GetFoxitPath() {
+    AutoFreeW path(ReadRegStr(
+        HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Foxit Reader", L"DisplayIcon"));
     if (path && file::Exists(path))
         return path.StealData();
     // Registry value for Foxit 5 (and maybe later)
-    path.Set(ReadRegStr(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Foxit Reader_is1", L"DisplayIcon"));
+    path.Set(ReadRegStr(HKEY_LOCAL_MACHINE,
+                        L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Foxit Reader_is1", L"DisplayIcon"));
     if (path && file::Exists(path))
         return path.StealData();
     // Registry value for Foxit 5.5 MSI installer
@@ -47,8 +49,7 @@ static WCHAR *GetFoxitPath()
     return nullptr;
 }
 
-static WCHAR *GetPDFXChangePath()
-{
+static WCHAR* GetPDFXChangePath() {
     AutoFreeW path(ReadRegStr(HKEY_LOCAL_MACHINE, L"Software\\Tracker Software\\PDFViewer", L"InstallPath"));
     if (!path)
         path.Set(ReadRegStr(HKEY_CURRENT_USER, L"Software\\Tracker Software\\PDFViewer", L"InstallPath"));
@@ -60,8 +61,7 @@ static WCHAR *GetPDFXChangePath()
     return nullptr;
 }
 
-static WCHAR *GetXPSViewerPath()
-{
+static WCHAR* GetXPSViewerPath() {
     // the XPS-Viewer seems to always be installed into %WINDIR%\system32
     WCHAR buffer[MAX_PATH];
     UINT res = GetSystemDirectory(buffer, dimof(buffer));
@@ -86,8 +86,7 @@ static WCHAR *GetXPSViewerPath()
     return nullptr;
 }
 
-static WCHAR *GetHtmlHelpPath()
-{
+static WCHAR* GetHtmlHelpPath() {
     // the Html Help viewer seems to be installed either into %WINDIR% or %WINDIR%\system32
     WCHAR buffer[MAX_PATH];
     UINT res = GetWindowsDirectory(buffer, dimof(buffer));
@@ -105,8 +104,7 @@ static WCHAR *GetHtmlHelpPath()
     return nullptr;
 }
 
-static bool CanViewExternally(TabInfo *tab)
-{
+static bool CanViewExternally(TabInfo* tab) {
     if (!HasPermission(Perm_DiskAccess))
         return false;
     // if tab is nullptr, we're queried for the
@@ -116,14 +114,12 @@ static bool CanViewExternally(TabInfo *tab)
     return file::Exists(tab->filePath);
 }
 
-bool CouldBePDFDoc(TabInfo *tab)
-{
+bool CouldBePDFDoc(TabInfo* tab) {
     // consider any error state a potential PDF document
     return !tab || !tab->ctrl || tab->GetEngineType() == EngineType::PDF;
 }
 
-bool CanViewWithFoxit(TabInfo *tab)
-{
+bool CanViewWithFoxit(TabInfo* tab) {
     // Requirements: a valid filename and a valid path to Foxit
     if (!CouldBePDFDoc(tab) || !CanViewExternally(tab))
         return false;
@@ -131,8 +127,7 @@ bool CanViewWithFoxit(TabInfo *tab)
     return path != nullptr;
 }
 
-bool ViewWithFoxit(TabInfo *tab, const WCHAR *args)
-{
+bool ViewWithFoxit(TabInfo* tab, const WCHAR* args) {
     if (!tab || !CanViewWithFoxit(tab))
         return false;
 
@@ -153,8 +148,7 @@ bool ViewWithFoxit(TabInfo *tab, const WCHAR *args)
     return LaunchFile(exePath, params);
 }
 
-bool CanViewWithPDFXChange(TabInfo *tab)
-{
+bool CanViewWithPDFXChange(TabInfo* tab) {
     // Requirements: a valid filename and a valid path to PDF X-Change
     if (!CouldBePDFDoc(tab) || !CanViewExternally(tab))
         return false;
@@ -162,8 +156,7 @@ bool CanViewWithPDFXChange(TabInfo *tab)
     return path != nullptr;
 }
 
-bool ViewWithPDFXChange(TabInfo *tab, const WCHAR *args)
-{
+bool ViewWithPDFXChange(TabInfo* tab, const WCHAR* args) {
     if (!tab || !CanViewWithPDFXChange(tab))
         return false;
 
@@ -184,8 +177,7 @@ bool ViewWithPDFXChange(TabInfo *tab, const WCHAR *args)
     return LaunchFile(exePath, params);
 }
 
-bool CanViewWithAcrobat(TabInfo *tab)
-{
+bool CanViewWithAcrobat(TabInfo* tab) {
     // Requirements: a valid filename and a valid path to Adobe Reader
     if (!CouldBePDFDoc(tab) || !CanViewExternally(tab))
         return false;
@@ -193,8 +185,7 @@ bool CanViewWithAcrobat(TabInfo *tab)
     return exePath != nullptr;
 }
 
-bool ViewWithAcrobat(TabInfo *tab, const WCHAR *args)
-{
+bool ViewWithAcrobat(TabInfo* tab, const WCHAR* args) {
     if (!tab || !CanViewWithAcrobat(tab))
         return false;
 
@@ -220,8 +211,7 @@ bool ViewWithAcrobat(TabInfo *tab, const WCHAR *args)
     return LaunchFile(exePath, params);
 }
 
-bool CanViewWithXPSViewer(TabInfo *tab)
-{
+bool CanViewWithXPSViewer(TabInfo* tab) {
     // Requirements: a valid filename and a valid path to XPS-Viewer
     if (!tab || !CanViewExternally(tab))
         return false;
@@ -235,8 +225,7 @@ bool CanViewWithXPSViewer(TabInfo *tab)
     return path != nullptr;
 }
 
-bool ViewWithXPSViewer(TabInfo *tab, const WCHAR *args)
-{
+bool ViewWithXPSViewer(TabInfo* tab, const WCHAR* args) {
     if (!tab || !CanViewWithXPSViewer(tab))
         return false;
 
@@ -255,8 +244,7 @@ bool ViewWithXPSViewer(TabInfo *tab, const WCHAR *args)
     return LaunchFile(exePath, params);
 }
 
-bool CanViewWithHtmlHelp(TabInfo *tab)
-{
+bool CanViewWithHtmlHelp(TabInfo* tab) {
     // Requirements: a valid filename and a valid path to HTML Help
     if (!tab || !CanViewExternally(tab))
         return false;
@@ -270,8 +258,7 @@ bool CanViewWithHtmlHelp(TabInfo *tab)
     return path != nullptr;
 }
 
-bool ViewWithHtmlHelp(TabInfo *tab, const WCHAR *args)
-{
+bool ViewWithHtmlHelp(TabInfo* tab, const WCHAR* args) {
     if (!tab || !CanViewWithHtmlHelp(tab))
         return false;
 
@@ -290,12 +277,11 @@ bool ViewWithHtmlHelp(TabInfo *tab, const WCHAR *args)
     return LaunchFile(exePath, params);
 }
 
-bool ViewWithExternalViewer(TabInfo *tab, size_t idx)
-{
+bool ViewWithExternalViewer(TabInfo* tab, size_t idx) {
     if (!HasPermission(Perm_DiskAccess) || !tab || !file::Exists(tab->filePath))
         return false;
     for (size_t i = 0; i < gGlobalPrefs->externalViewers->Count() && i <= idx; i++) {
-        ExternalViewer *ev = gGlobalPrefs->externalViewers->At(i);
+        ExternalViewer* ev = gGlobalPrefs->externalViewers->At(i);
         // cf. AppendExternalViewersToMenu in Menu.cpp
         if (!ev->commandLine || ev->filter && !str::Eq(ev->filter, L"*") && !path::Match(tab->filePath, ev->filter))
             idx++;
@@ -303,7 +289,7 @@ bool ViewWithExternalViewer(TabInfo *tab, size_t idx)
     if (idx >= gGlobalPrefs->externalViewers->Count() || !gGlobalPrefs->externalViewers->At(idx)->commandLine)
         return false;
 
-    ExternalViewer *ev = gGlobalPrefs->externalViewers->At(idx);
+    ExternalViewer* ev = gGlobalPrefs->externalViewers->At(idx);
     WStrVec args;
     ParseCmdLine(ev->commandLine, args, 2);
     if (args.Count() == 0 || !file::Exists(args.At(0)))
@@ -311,7 +297,7 @@ bool ViewWithExternalViewer(TabInfo *tab, size_t idx)
 
     // if the command line contains %p, it's replaced with the current page number
     // if it contains %1, it's replaced with the file path (else the file path is appended)
-    const WCHAR *cmdLine = args.Count() > 1 ? args.At(1) : L"\"%1\"";
+    const WCHAR* cmdLine = args.Count() > 1 ? args.At(1) : L"\"%1\"";
     AutoFreeW params;
     if (str::Find(cmdLine, L"%p")) {
         AutoFreeW pageNoStr(str::Format(L"%d", tab->ctrl ? tab->ctrl->CurrentPageNo() : 0));
@@ -326,11 +312,10 @@ bool ViewWithExternalViewer(TabInfo *tab, size_t idx)
 }
 
 #define DEFINE_GUID_STATIC(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
-    static const GUID name = { l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } }
+    static const GUID name = {l, w1, w2, {b1, b2, b3, b4, b5, b6, b7, b8}}
 DEFINE_GUID_STATIC(CLSID_SendMail, 0x9E56BE60, 0xC50F, 0x11CF, 0x9A, 0x2C, 0x00, 0xA0, 0xC9, 0x0A, 0x90, 0xCE);
 
-bool CanSendAsEmailAttachment(TabInfo *tab)
-{
+bool CanSendAsEmailAttachment(TabInfo* tab) {
     // Requirements: a valid filename and access to SendMail's IDropTarget interface
     if (!CanViewExternally(tab))
         return false;
@@ -339,8 +324,7 @@ bool CanSendAsEmailAttachment(TabInfo *tab)
     return pDropTarget.Create(CLSID_SendMail);
 }
 
-bool SendAsEmailAttachment(TabInfo *tab, HWND hwndParent)
-{
+bool SendAsEmailAttachment(TabInfo* tab, HWND hwndParent) {
     if (!tab || !CanSendAsEmailAttachment(tab))
         return false;
 
@@ -355,7 +339,7 @@ bool SendAsEmailAttachment(TabInfo *tab, HWND hwndParent)
     if (!pDropTarget.Create(CLSID_SendMail))
         return false;
 
-    POINTL pt = { 0, 0 };
+    POINTL pt = {0, 0};
     DWORD dwEffect = 0;
     pDropTarget->DragEnter(pDataObject, MK_LBUTTON, pt, &dwEffect);
     HRESULT hr = pDropTarget->Drop(pDataObject, MK_LBUTTON, pt, &dwEffect);
