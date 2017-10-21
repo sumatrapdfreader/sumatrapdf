@@ -20,47 +20,47 @@ using namespace mui;
 class EbookController : public Controller {
   public:
     EbookController(Doc doc, EbookControls* ctrls, ControllerCallback* cb);
-    virtual ~EbookController();
+    ~EbookController() override;
 
-    virtual const WCHAR* FilePath() const { return doc.GetFilePath(); }
-    virtual const WCHAR* DefaultFileExt() const { return doc.GetDefaultFileExt(); }
-    virtual int PageCount() const { return GetMaxPageCount(); }
-    virtual WCHAR* GetProperty(DocumentProperty prop) { return doc.GetProperty(prop); }
+    const WCHAR* FilePath() const override { return doc.GetFilePath(); }
+    const WCHAR* DefaultFileExt() const override { return doc.GetDefaultFileExt(); }
+    int PageCount() const override { return GetMaxPageCount(); }
+    WCHAR* GetProperty(DocumentProperty prop) override { return doc.GetProperty(prop); }
 
-    virtual int CurrentPageNo() const { return currPageNo; }
-    virtual void GoToPage(int pageNo, bool addNavPoint);
-    virtual bool CanNavigate(int dir) const;
-    virtual void Navigate(int dir);
+    int CurrentPageNo() const override { return currPageNo; }
+    void GoToPage(int pageNo, bool addNavPoint) override;
+    bool CanNavigate(int dir) const override;
+    void Navigate(int dir) override;
 
-    virtual void SetDisplayMode(DisplayMode mode, bool keepContinuous = false);
-    virtual DisplayMode GetDisplayMode() const { return IsDoublePage() ? DM_FACING : DM_SINGLE_PAGE; }
-    virtual void SetPresentationMode(bool enable) { UNUSED(enable); /* not supported */ }
-    virtual void SetZoomVirtual(float zoom, PointI* fixPt = nullptr) {
+    void SetDisplayMode(DisplayMode mode, bool keepContinuous = false) override;
+    DisplayMode GetDisplayMode() const override { return IsDoublePage() ? DM_FACING : DM_SINGLE_PAGE; }
+    void SetPresentationMode(bool enable) override { UNUSED(enable); /* not supported */ }
+    void SetZoomVirtual(float zoom, PointI* fixPt = nullptr) override {
         UNUSED(zoom);
         UNUSED(fixPt); /* not supported */
     }
-    virtual float GetZoomVirtual(bool absolute = false) const {
+    float GetZoomVirtual(bool absolute = false) const override {
         UNUSED(absolute);
         return 100;
     }
-    virtual float GetNextZoomStep(float towards) const {
+    float GetNextZoomStep(float towards) const override {
         UNUSED(towards);
         return 100;
     }
-    virtual void SetViewPortSize(SizeI size);
+    void SetViewPortSize(SizeI size) override;
 
-    virtual bool HasTocTree() const { return doc.HasToc(); }
-    virtual DocTocItem* GetTocTree();
-    virtual void ScrollToLink(PageDestination* dest);
-    virtual PageDestination* GetNamedDest(const WCHAR* name);
+    bool HasTocTree() const override { return doc.HasToc(); }
+    DocTocItem* GetTocTree() override;
+    void ScrollToLink(PageDestination* dest) override;
+    PageDestination* GetNamedDest(const WCHAR* name) override;
 
-    virtual void UpdateDisplayState(DisplayState* ds);
-    virtual void CreateThumbnail(SizeI size, const onBitmapRenderedCb&);
+    void UpdateDisplayState(DisplayState* ds) override;
+    void CreateThumbnail(SizeI size, const onBitmapRenderedCb&) override;
 
-    virtual bool GoToNextPage();
-    virtual bool GoToPrevPage(bool toBottom = false);
+    bool GoToNextPage() override;
+    bool GoToPrevPage(bool toBottom = false) override;
 
-    virtual EbookController* AsEbook() { return this; }
+    EbookController* AsEbook() override { return this; }
 
   public:
     // the following is specific to EbookController
