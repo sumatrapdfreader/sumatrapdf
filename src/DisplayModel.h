@@ -63,53 +63,53 @@ public:
     ~DisplayModel();
 
     // meta data
-    virtual const WCHAR *FilePath() const { return engine->FileName(); }
-    virtual const WCHAR *DefaultFileExt() const { return engine->GetDefaultFileExt(); }
-    virtual int PageCount() const { return engine->PageCount(); }
-    virtual WCHAR *GetProperty(DocumentProperty prop) { return engine->GetProperty(prop); }
+    const WCHAR *FilePath() const override { return engine->FileName(); }
+    const WCHAR *DefaultFileExt() const override { return engine->GetDefaultFileExt(); }
+    int PageCount() const override { return engine->PageCount(); }
+    WCHAR *GetProperty(DocumentProperty prop) override { return engine->GetProperty(prop); }
 
     // page navigation (stateful)
-    virtual int CurrentPageNo() const;
-    virtual void GoToPage(int pageNo, bool addNavPoint) { GoToPage(pageNo, 0, addNavPoint); }
-    virtual bool CanNavigate(int dir) const;
-    virtual void Navigate(int dir);
+    int CurrentPageNo() const override;
+    void GoToPage(int pageNo, bool addNavPoint) override { GoToPage(pageNo, 0, addNavPoint); }
+    bool CanNavigate(int dir) const override;
+    void Navigate(int dir) override;
 
     // view settings
-    virtual void SetDisplayMode(DisplayMode mode, bool keepContinuous=false);
-    virtual DisplayMode GetDisplayMode() const { return displayMode; }
-    virtual void SetPresentationMode(bool enable);
-    virtual void SetZoomVirtual(float zoom, PointI *fixPt=nullptr);
-    virtual float GetZoomVirtual(bool absolute=false) const;
-    virtual float GetNextZoomStep(float towards) const;
-    virtual void SetViewPortSize(SizeI size);
+    void SetDisplayMode(DisplayMode mode, bool keepContinuous=false) override;
+    DisplayMode GetDisplayMode() const override { return displayMode; }
+    void SetPresentationMode(bool enable) override;
+    void SetZoomVirtual(float zoom, PointI *fixPt=nullptr) override;
+    float GetZoomVirtual(bool absolute=false) const override;
+    float GetNextZoomStep(float towards) const override;
+    void SetViewPortSize(SizeI size) override;
 
     // table of contents
-    virtual bool HasTocTree() const { return engine->HasTocTree(); }
-    virtual DocTocItem *GetTocTree() { return engine->GetTocTree(); }
-    virtual void ScrollToLink(PageDestination *dest);
-    virtual PageDestination *GetNamedDest(const WCHAR *name) { return engine->GetNamedDest(name); }
+    bool HasTocTree() const  override { return engine->HasTocTree(); }
+    DocTocItem *GetTocTree()  override { return engine->GetTocTree(); }
+    void ScrollToLink(PageDestination *dest) override;
+    PageDestination *GetNamedDest(const WCHAR *name)  override { return engine->GetNamedDest(name); }
 
     // state export
-    virtual void UpdateDisplayState(DisplayState *ds);
+    void UpdateDisplayState(DisplayState *ds) override;
     // asynchronously calls saveThumbnail (fails silently)
-    virtual void CreateThumbnail(SizeI size, const onBitmapRenderedCb& saveThumbnail) {
+    void CreateThumbnail(SizeI size, const onBitmapRenderedCb& saveThumbnail)  override {
         cb->RenderThumbnail(this, size, saveThumbnail);
     }
 
     // page labels (optional)
-    virtual bool HasPageLabels() const { return engine->HasPageLabels(); }
-    virtual WCHAR *GetPageLabel(int pageNo) const { return engine->GetPageLabel(pageNo); }
-    virtual int GetPageByLabel(const WCHAR *label) const { return engine->GetPageByLabel(label); }
+    bool HasPageLabels() const  override { return engine->HasPageLabels(); }
+    WCHAR *GetPageLabel(int pageNo) const override { return engine->GetPageLabel(pageNo); }
+    int GetPageByLabel(const WCHAR *label) const override { return engine->GetPageByLabel(label); }
 
     // common shortcuts
-    virtual bool ValidPageNo(int pageNo) const { return 1 <= pageNo && pageNo <= engine->PageCount(); }
-    virtual bool GoToNextPage();
-    virtual bool GoToPrevPage(bool toBottom=false) { return GoToPrevPage(toBottom ? -1 : 0); }
-    virtual bool GoToFirstPage();
-    virtual bool GoToLastPage();
+    bool ValidPageNo(int pageNo) const override { return 1 <= pageNo && pageNo <= engine->PageCount(); }
+    bool GoToNextPage() override;
+    bool GoToPrevPage(bool toBottom=false) override { return GoToPrevPage(toBottom ? -1 : 0); }
+    bool GoToFirstPage() override;
+    bool GoToLastPage() override;
 
     // for quick type determination and type-safe casting
-    virtual DisplayModel *AsFixed() { return this; }
+    DisplayModel *AsFixed() override { return this; }
 
 public:
     // the following is specific to DisplayModel
