@@ -7,6 +7,7 @@ Remove-Item src\*.bak, src\*.tmp
 $files = "src\Caption.*",
 "src\Canvas.*",
 "src\Colors.*",
+"src\Doc.*",
 "src\EbookController.*",
 "src\Favorites.*",
 "src\Menu.*",
