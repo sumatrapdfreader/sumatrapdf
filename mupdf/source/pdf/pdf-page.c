@@ -168,7 +168,13 @@ pdf_lookup_page_number(pdf_document *doc, pdf_obj *node)
 	pdf_obj *parent, *parent2;
 
 	if (strcmp(pdf_to_name(pdf_dict_gets(node, "Type")), "Page") != 0)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "invalid page object");
+	{
+		/* SumatraPDF: Issue #619 Relax page type check */
+		if (pdf_dict_gets(node, "Kids") != NULL)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "invalid page object");
+		else
+			fz_warn(ctx, "invalid page object");
+	}
 
 	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=695761 */
 	if (doc->page_objs)
