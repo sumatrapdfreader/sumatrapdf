@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-c2f09eb6601c743c8667ccd108a0816c42f444a6
+f5044705783afa57b5c65ac063b1ecf81d9a4aa5
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -273,7 +273,7 @@ br:Voltar\tAlt+<-
 bs:Nazad\tAlt+<-
 ca-xv:Arrere\tAlt+Left Arrow
 ca:Enrere\tAlt+Left Arrow
-cn:上一页(&B)\tAlt+左箭头
+cn:向前翻(&B)\tAlt+左箭头
 cy:Nôl\tAlt+Saeth Chwith
 cz:Z&pět\tAlt+Šipka vlevo
 de:&Zurück\tAlt+<-
@@ -1105,7 +1105,7 @@ bs:&Idi na stranicu:
 by:&Перайсці да старонкі
 ca-xv:&Vés a la pàgina:
 ca:&Vés a la pàgina:
-cn:前往页(&G):
+cn:前往指定页(&G):
 cy:&Mynd i dudalen:
 cz:&Přejít na stránku:
 de:&Gehe zu Seite:
@@ -2920,6 +2920,7 @@ uz:&Ushbu versiyani o'tkazib yuborish
 vn:Bỏ qua phiên bản này.
 :&Theme
 am:&Ոճը
+ar:&قالب
 br:&Tema
 ca:&Tema
 cn:主题(&T)
@@ -6996,6 +6997,7 @@ uz:&Miqyosni ko'rsatish...\tCtrl+Y
 vn:Thu phóng &tuỳ ý...\tCtrl+Y
 :Dark
 am:Մուգ
+ar:مظلم
 bn:অন্ধকার
 br:Escuro
 ca:Fosc
@@ -7024,6 +7026,7 @@ uk:Темна
 vn:Tối
 :Darker
 am:Շատ մուգ
+ar:غامق
 bn:গাঢ় অন্ধকার
 br:Muito escuro
 ca:Molt fosc
@@ -7632,7 +7635,7 @@ bs:Unesite lozinku
 by:Увядзіце пароль
 ca-xv:Introduïu la contrasenya
 ca:Introduïu la contrasenya
-cn:键入密码
+cn:请输入密码
 cy:Rhoi cyfrinair
 cz:Zadejte heslo
 de:Bitte Passwort eingeben
@@ -7701,7 +7704,7 @@ bs:Unesite lozinku za %s
 by:Увядзіце пароль для %s
 ca-xv:Introduïu la constrasenya per a %s
 ca:Introduïu la constrasenya per a %s
-cn:键入 %s 的密码
+cn:请输入 %s 的密码
 cy:Rhoi cyfrinair ar gyfer %s
 cz:Zadejte heslo pro %s
 de:Bitte Passwort für %s eingeben
@@ -7767,7 +7770,7 @@ br:Digite a linha de comando a ser invocada com um duplo clique sobre o document
 bs:Unesite komandnu liniju za izvršavanje prilikom dvostrukog klika na PDF dokument:
 ca-xv:Introduïu la línia d'ordes que voleu executar en fer doble clic al document PDF:
 ca:Introduïu la línia d'ordres que voleu executar en fer doble clic al document PDF:
-cn:请键入双击 PDF 文件时，应运行的命令(&E):
+cn:请输入您双击 PDF 文件后调用的命令行(&E):
 cy:Rhowch y llinell orchymyn i'w gychwyn pan yn rhoi clic dwbl i ddogfen PDF:
 cz:Dvojité kliknutí na PDF dokument vykoná zadaný příkazový řádek:
 de:Beim Doppelklicken im PDF Dokument wird der folgende Befehl ausgeführt:
@@ -7941,7 +7944,7 @@ br:Avançar\tAlt+->
 bs:Naprijed\tAlt+->
 ca-xv:Avan&t\tAlt+Right Arrow
 ca:En&davant\tAlt+Right Arrow
-cn:下一页面(&O)\tAlt+右箭头
+cn:向后翻(&O)\tAlt+右箭头
 cy:Ymlaen\tAlt+Saeth Dde
 cz:V&před\tAlt+Šipka vpravo
 de:Vor&wärts\tAlt+->
@@ -10160,7 +10163,7 @@ bs:Idi na stranicu
 by:Перайсці на старонку
 ca-xv:Vés a la pàgina
 ca:Vés a la pàgina
-cn:前往页
+cn:前往指定页
 cy:Mynd i dudalen
 cz:Přejít na stránku
 de:Gehe zu Seite
@@ -10911,6 +10914,7 @@ uz:Windows yordamida PDF hujjatlarini oldindan &ko'rish
 vn:Cho phép Windows hiển thị hình ảnh &xem trước của các tài liệu PDF
 :Light
 am:Լուսավոր
+ar:خفيف
 bn:উজ্জ্বল
 br:Claro
 ca:Clar
@@ -13319,7 +13323,7 @@ bs:Molim pričekajte, iscrtavam...
 by:Пачакайце - фармуецца малюнак...
 ca-xv:S'està renderitzant...
 ca:S'està renderitzant...
-cn:请稍等─正在渲染...
+cn:请稍等——正在渲染...
 cy:Arhoswch, wrthi'n cyflwyno...
 cz:Prosím čekejte, probíhá vykreslování...
 de:Bitte einen Moment Geduld…
@@ -15318,7 +15322,7 @@ br:Mostrar Lidos com freqüência
 bs:Prikaži najčešće čitano
 ca-xv:Mostra els més llegits
 ca:Mostra els més llegits
-cn:显示最常阅读
+cn:显示经常阅读
 cy:Dangos darllenwyd yn aml
 cz:Zobrazit často čtené dokumenty
 de:Oft gelesene Dokumente einblenden
@@ -16504,7 +16508,7 @@ br:Obrigado por escolher o SumatraPDF!
 bs:Hvala Vam što ste izabrali SumatraPDF!
 ca-xv:Gràcies per triar el SumatraPDF!
 ca:Gràcies per triar el SumatraPDF!
-cn:谢谢选用SumatraPDF!
+cn:谢谢您选用 SumatraPDF！
 cy:Diolch am ddefnyddio SumatraPDF!
 cz:Děkujeme, že jste si vybrali SumatraPDF!
 de:Vielen Dank dafür, dass Sie SumatraPDF verwenden!
@@ -16561,7 +16565,7 @@ br:Obrigado! O SumatraPDF foi instalado.
 bs:Hvala Vam! SumatraPDF je instaliran.
 ca-xv:Gràcies! S'ha instal·lat el SumatraPDF.
 ca:Gràcies! S'ha instal·lat el SumatraPDF.
-cn:谢谢! SumatraPDF已经安装好.
+cn:SumatraPDF 安装完成。
 cy:Diolch yn fawr! Mae SumatraPDF wedi ei gosod
 cz:Děkujeme! Program SumatraPDF byl nainstalován.
 de:Vielen Dank! SumatraPDF wurde erfolgreich installiert.
