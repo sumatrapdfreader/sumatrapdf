@@ -7,10 +7,10 @@ REM scripts\appveyor-build-2.bat
 CALL scripts\vc.bat
 IF ERRORLEVEL 1 EXIT /B 1
 
-msbuild.exe "vs2015\SumatraPDF.sln" "/t:SumatraPDF;Installer;test_util" "/p:Configuration=Release;Platform=Win32" /m
+msbuild.exe "vs2017\SumatraPDF.sln" "/t:SumatraPDF;Installer;test_util" "/p:Configuration=Release;Platform=Win32" /m
 IF ERRORLEVEL 1 EXIT /B 1
 
-msbuild.exe "vs2015\SumatraPDF.sln" "/t:SumatraPDF;Installer;test_util" "/p:Configuration=Release;Platform=x64" /m
+msbuild.exe "vs2017\SumatraPDF.sln" "/t:SumatraPDF;Installer;test_util" "/p:Configuration=Release;Platform=x64" /m
 IF ERRORLEVEL 1 EXIT /B 1
 
 rel\test_util.exe
