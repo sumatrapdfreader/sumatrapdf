@@ -13,8 +13,10 @@
 #include "GdiPlusUtil.h"
 
 // An important (to Sumatra) use case is displaying CHM documents. First we used
-// IE's built-in support form CHM documents (using its: protocol http://msdn.microsoft.com/en-us/library/aa164814(v=office.10).aspx).
-// However, that doesn't work for CHM documents from network drives (http://code.google.com/p/sumatrapdf/issues/detail?id=1706)
+// IE's built-in support form CHM documents (using its: protocol
+// http://msdn.microsoft.com/en-us/library/aa164814(v=office.10).aspx).
+// However, that doesn't work for CHM documents from network drives
+// (http://code.google.com/p/sumatrapdf/issues/detail?id=1706)
 // To solve that we ended up the following solution:
 // * an app can provide html as data in memory. We write the data using custom
 //   IMoniker implementation with IE's IPersistentMoniker::Load() function.
@@ -120,28 +122,24 @@ class HW_IDocHostUIHandler;
 class HW_IDropTarget;
 class HW_IServiceProvider;
 
-inline void VariantSetBool(VARIANT *res, bool val)
-{
+inline void VariantSetBool(VARIANT* res, bool val) {
     res->vt = VT_BOOL;
     res->boolVal = val ? VARIANT_TRUE : VARIANT_FALSE;
 }
 
-inline void VariantSetLong(VARIANT *res, long val)
-{
+inline void VariantSetLong(VARIANT* res, long val) {
     res->vt = VT_I4;
     res->lVal = val;
 }
 
-bool IsBlankUrl(const WCHAR *url)
-{
+bool IsBlankUrl(const WCHAR* url) {
     return str::EqI(L"about:blank", url);
 }
 
 // HW stands for HtmlWindow
 // FrameSite ties together HtmlWindow and all the COM interfaces we need to implement
 // to support it
-class FrameSite : public IUnknown
-{
+class FrameSite : public IUnknown {
     friend class HtmlWindow;
     friend class HW_IOleInPlaceFrame;
     friend class HW_IOleInPlaceSiteWindowless;
@@ -155,33 +153,33 @@ class FrameSite : public IUnknown
     friend class HW_IDropTarget;
     friend class HW_IServiceProvider;
 
-public:
-    explicit FrameSite(HtmlWindow * win);
+  public:
+    explicit FrameSite(HtmlWindow* win);
     ~FrameSite();
 
     // IUnknown
-    STDMETHODIMP QueryInterface(REFIID iid, void **ppvObject);
+    STDMETHODIMP QueryInterface(REFIID iid, void** ppvObject);
     ULONG STDMETHODCALLTYPE AddRef() { return InterlockedIncrement(&refCount); }
     ULONG STDMETHODCALLTYPE Release();
 
-protected:
+  protected:
     LONG refCount;
 
-    HW_IOleInPlaceFrame *           oleInPlaceFrame;
-    HW_IOleInPlaceSiteWindowless *  oleInPlaceSiteWindowless;
-    HW_IOleClientSite *             oleClientSite;
-    HW_IOleControlSite *            oleControlSite;
-    HW_IOleCommandTarget *          oleCommandTarget;
-    HW_IOleItemContainer *          oleItemContainer;
-    HW_DWebBrowserEvents2 *         hwDWebBrowserEvents2;
-    HW_IAdviseSink2 *               adviseSink2;
-    HW_IDocHostUIHandler *          docHostUIHandler;
-    HW_IDropTarget *                dropTarget;
-    HW_IServiceProvider *           serviceProvider;
+    HW_IOleInPlaceFrame* oleInPlaceFrame;
+    HW_IOleInPlaceSiteWindowless* oleInPlaceSiteWindowless;
+    HW_IOleClientSite* oleClientSite;
+    HW_IOleControlSite* oleControlSite;
+    HW_IOleCommandTarget* oleCommandTarget;
+    HW_IOleItemContainer* oleItemContainer;
+    HW_DWebBrowserEvents2* hwDWebBrowserEvents2;
+    HW_IAdviseSink2* adviseSink2;
+    HW_IDocHostUIHandler* docHostUIHandler;
+    HW_IDropTarget* dropTarget;
+    HW_IServiceProvider* serviceProvider;
 
-    HtmlWindow * htmlWindow;
+    HtmlWindow* htmlWindow;
 
-    //HDC m_hDCBuffer;
+    // HDC m_hDCBuffer;
     HWND hwndParent;
 
     bool supportsWindowlessActivation;
@@ -190,13 +188,13 @@ protected:
     bool uiActive;
     bool isWindowless;
 
-    LCID        ambientLocale;
-    COLORREF    ambientForeColor;
-    COLORREF    ambientBackColor;
-    bool        ambientShowHatching;
-    bool        ambientShowGrabHandles;
-    bool        ambientUserMode;
-    bool        ambientAppearance;
+    LCID ambientLocale;
+    COLORREF ambientForeColor;
+    COLORREF ambientBackColor;
+    bool ambientShowHatching;
+    bool ambientShowGrabHandles;
+    bool ambientUserMode;
+    bool ambientAppearance;
 };
 
 // For simplicity, we just add to the array. We don't bother
@@ -205,21 +203,18 @@ protected:
 // (1 thousand objects is just 4K of memory for the vector)
 static Vec<HtmlWindow*> gHtmlWindows;
 
-HtmlWindow *FindHtmlWindowById(int windowId)
-{
+HtmlWindow* FindHtmlWindowById(int windowId) {
     return gHtmlWindows.At(windowId);
 }
 
-static int GenNewWindowId(HtmlWindow *htmlWin)
-{
+static int GenNewWindowId(HtmlWindow* htmlWin) {
     int newWindowId = (int)gHtmlWindows.Count();
     gHtmlWindows.Append(htmlWin);
     AssertCrash(htmlWin == FindHtmlWindowById(newWindowId));
     return newWindowId;
 }
 
-static void FreeWindowId(int windowId)
-{
+static void FreeWindowId(int windowId) {
     AssertCrash(nullptr != gHtmlWindows.At(windowId));
     gHtmlWindows.At(windowId) = nullptr;
 }
@@ -228,61 +223,73 @@ static void FreeWindowId(int windowId)
 #define HW_PROTO_PREFIX L"its"
 
 // {F1EC293F-DBBD-4A4B-94F4-FA52BA0BA6EE}
-static const GUID CLSID_HW_IInternetProtocol = { 0xf1ec293f, 0xdbbd, 0x4a4b, { 0x94, 0xf4, 0xfa, 0x52, 0xba, 0xb, 0xa6, 0xee } };
+static const GUID CLSID_HW_IInternetProtocol = {0xf1ec293f,
+                                                0xdbbd,
+                                                0x4a4b,
+                                                {0x94, 0xf4, 0xfa, 0x52, 0xba, 0xb, 0xa6, 0xee}};
 
-class HW_IInternetProtocolInfo : public IInternetProtocolInfo
-{
-public:
-    HW_IInternetProtocolInfo() : refCount(1) { }
+class HW_IInternetProtocolInfo : public IInternetProtocolInfo {
+  public:
+    HW_IInternetProtocolInfo() : refCount(1) {}
 
-protected:
-    virtual ~HW_IInternetProtocolInfo() { }
+  protected:
+    virtual ~HW_IInternetProtocolInfo() {}
 
-public:
+  public:
     // IUnknown
-    STDMETHODIMP QueryInterface(REFIID riid, void **ppvObject);
+    STDMETHODIMP QueryInterface(REFIID riid, void** ppvObject);
     ULONG STDMETHODCALLTYPE AddRef() { return InterlockedIncrement(&refCount); }
     ULONG STDMETHODCALLTYPE Release();
 
     // IInternetProtocolInfo
-    STDMETHODIMP ParseUrl(LPCWSTR pwzUrl, PARSEACTION parseAction, DWORD dwParseFlags,
-        LPWSTR pwzResult, DWORD cchResult, DWORD *pcchResult, DWORD dwReserved)
-    {
-        UNUSED(pwzUrl); UNUSED(parseAction); UNUSED(dwParseFlags);
-        UNUSED(pwzResult); UNUSED(cchResult); UNUSED(pcchResult); UNUSED(dwReserved);
-        return INET_E_DEFAULT_ACTION;
-    }
-
-    STDMETHODIMP CombineUrl(LPCWSTR pwzBaseUrl, LPCWSTR pwzRelativeUrl,
-        DWORD dwCombineFlags, LPWSTR pwzResult, DWORD cchResult, DWORD *pcchResult,
-        DWORD dwReserved)
-    {
-        UNUSED(pwzBaseUrl); UNUSED(pwzRelativeUrl);
-        UNUSED(dwCombineFlags); UNUSED(pwzResult); UNUSED(cchResult); UNUSED(pcchResult);
+    STDMETHODIMP ParseUrl(LPCWSTR pwzUrl, PARSEACTION parseAction, DWORD dwParseFlags, LPWSTR pwzResult,
+                          DWORD cchResult, DWORD* pcchResult, DWORD dwReserved) {
+        UNUSED(pwzUrl);
+        UNUSED(parseAction);
+        UNUSED(dwParseFlags);
+        UNUSED(pwzResult);
+        UNUSED(cchResult);
+        UNUSED(pcchResult);
         UNUSED(dwReserved);
         return INET_E_DEFAULT_ACTION;
     }
 
-    STDMETHODIMP CompareUrl(LPCWSTR pwzUrl1, LPCWSTR pwzUrl2, DWORD dwCompareFlags)
-    {
-        UNUSED(pwzUrl1); UNUSED(pwzUrl2); UNUSED(dwCompareFlags);
+    STDMETHODIMP CombineUrl(LPCWSTR pwzBaseUrl, LPCWSTR pwzRelativeUrl, DWORD dwCombineFlags, LPWSTR pwzResult,
+                            DWORD cchResult, DWORD* pcchResult, DWORD dwReserved) {
+        UNUSED(pwzBaseUrl);
+        UNUSED(pwzRelativeUrl);
+        UNUSED(dwCombineFlags);
+        UNUSED(pwzResult);
+        UNUSED(cchResult);
+        UNUSED(pcchResult);
+        UNUSED(dwReserved);
         return INET_E_DEFAULT_ACTION;
     }
 
-    STDMETHODIMP QueryInfo(LPCWSTR pwzUrl, QUERYOPTION queryOption, DWORD dwQueryFlags,
-        LPVOID pBuffer, DWORD cbBuffer, DWORD *pcbBuf, DWORD dwReserved)
-    {
-        UNUSED(pwzUrl); UNUSED(queryOption); UNUSED(dwQueryFlags);
-        UNUSED(pBuffer); UNUSED(cbBuffer); UNUSED(pcbBuf); UNUSED(dwReserved);
+    STDMETHODIMP CompareUrl(LPCWSTR pwzUrl1, LPCWSTR pwzUrl2, DWORD dwCompareFlags) {
+        UNUSED(pwzUrl1);
+        UNUSED(pwzUrl2);
+        UNUSED(dwCompareFlags);
         return INET_E_DEFAULT_ACTION;
     }
 
-protected:
+    STDMETHODIMP QueryInfo(LPCWSTR pwzUrl, QUERYOPTION queryOption, DWORD dwQueryFlags, LPVOID pBuffer, DWORD cbBuffer,
+                           DWORD* pcbBuf, DWORD dwReserved) {
+        UNUSED(pwzUrl);
+        UNUSED(queryOption);
+        UNUSED(dwQueryFlags);
+        UNUSED(pBuffer);
+        UNUSED(cbBuffer);
+        UNUSED(pcbBuf);
+        UNUSED(dwReserved);
+        return INET_E_DEFAULT_ACTION;
+    }
+
+  protected:
     LONG refCount;
 };
 
-ULONG STDMETHODCALLTYPE HW_IInternetProtocolInfo::Release()
-{
+ULONG STDMETHODCALLTYPE HW_IInternetProtocolInfo::Release() {
     LONG res = InterlockedDecrement(&refCount);
     CrashIf(res < 0);
     if (0 == res)
@@ -290,57 +297,61 @@ ULONG STDMETHODCALLTYPE HW_IInternetProtocolInfo::Release()
     return res;
 }
 
-STDMETHODIMP HW_IInternetProtocolInfo::QueryInterface(REFIID riid, void **ppv)
-{
-    static const QITAB qit[] = {
-        QITABENT(HW_IInternetProtocolInfo, IInternetProtocolInfo),
-        { 0 }
-    };
+STDMETHODIMP HW_IInternetProtocolInfo::QueryInterface(REFIID riid, void** ppv) {
+    static const QITAB qit[] = {QITABENT(HW_IInternetProtocolInfo, IInternetProtocolInfo), {0}};
     return QISearch(this, qit, riid, ppv);
 }
 
-class HW_IInternetProtocol :public IInternetProtocol
-{
-public:
-    HW_IInternetProtocol() : refCount(1), data(nullptr), dataLen(0), dataCurrPos(0) { }
+class HW_IInternetProtocol : public IInternetProtocol {
+  public:
+    HW_IInternetProtocol() : refCount(1), data(nullptr), dataLen(0), dataCurrPos(0) {}
 
-protected:
-    virtual ~HW_IInternetProtocol() { }
+  protected:
+    virtual ~HW_IInternetProtocol() {}
 
-public:
+  public:
     // IUnknown
-    STDMETHODIMP QueryInterface(REFIID riid, void **ppvObject);
+    STDMETHODIMP QueryInterface(REFIID riid, void** ppvObject);
     ULONG STDMETHODCALLTYPE AddRef() { return InterlockedIncrement(&refCount); }
     ULONG STDMETHODCALLTYPE Release();
 
     // IInternetProtocol
-    STDMETHODIMP Start(
-            LPCWSTR szUrl,
-            IInternetProtocolSink *pIProtSink,
-            IInternetBindInfo *pIBindInfo,
-            DWORD grfSTI,
-            HANDLE_PTR dwReserved);
-    STDMETHODIMP Continue(PROTOCOLDATA *pStateInfo) { UNUSED(pStateInfo); return S_OK; }
-    STDMETHODIMP Abort(HRESULT hrReason, DWORD dwOptions) { UNUSED(hrReason); UNUSED(dwOptions); return S_OK; }
-    STDMETHODIMP Terminate(DWORD dwOptions) { UNUSED(dwOptions); return S_OK; }
+    STDMETHODIMP Start(LPCWSTR szUrl, IInternetProtocolSink* pIProtSink, IInternetBindInfo* pIBindInfo, DWORD grfSTI,
+                       HANDLE_PTR dwReserved);
+    STDMETHODIMP Continue(PROTOCOLDATA* pStateInfo) {
+        UNUSED(pStateInfo);
+        return S_OK;
+    }
+    STDMETHODIMP Abort(HRESULT hrReason, DWORD dwOptions) {
+        UNUSED(hrReason);
+        UNUSED(dwOptions);
+        return S_OK;
+    }
+    STDMETHODIMP Terminate(DWORD dwOptions) {
+        UNUSED(dwOptions);
+        return S_OK;
+    }
     STDMETHODIMP Suspend() { return E_NOTIMPL; }
     STDMETHODIMP Resume() { return E_NOTIMPL; }
-    STDMETHODIMP Read(void *pv,ULONG cb,ULONG *pcbRead);
-    STDMETHODIMP Seek(LARGE_INTEGER dlibMove, DWORD dwOrigin, ULARGE_INTEGER *plibNewPosition);
-    STDMETHODIMP LockRequest(DWORD dwOptions) { UNUSED(dwOptions);  return S_OK; }
+    STDMETHODIMP Read(void* pv, ULONG cb, ULONG* pcbRead);
+    STDMETHODIMP Seek(LARGE_INTEGER dlibMove, DWORD dwOrigin, ULARGE_INTEGER* plibNewPosition);
+    STDMETHODIMP LockRequest(DWORD dwOptions) {
+        UNUSED(dwOptions);
+        return S_OK;
+    }
     STDMETHODIMP UnlockRequest() { return S_OK; }
-protected:
+
+  protected:
     LONG refCount;
 
     // those are filled in Start() and represent data to be sent
     // for a given url
-    const unsigned char *data;
+    const unsigned char* data;
     size_t dataLen;
     size_t dataCurrPos;
 };
 
-ULONG STDMETHODCALLTYPE HW_IInternetProtocol::Release()
-{
+ULONG STDMETHODCALLTYPE HW_IInternetProtocol::Release() {
     LONG res = InterlockedDecrement(&refCount);
     CrashIf(res < 0);
     if (0 == res)
@@ -348,31 +359,25 @@ ULONG STDMETHODCALLTYPE HW_IInternetProtocol::Release()
     return res;
 }
 
-STDMETHODIMP HW_IInternetProtocol::QueryInterface(REFIID riid, void **ppv)
-{
+STDMETHODIMP HW_IInternetProtocol::QueryInterface(REFIID riid, void** ppv) {
     static const QITAB qit[] = {
-        QITABENT(HW_IInternetProtocol, IInternetProtocol),
-        QITABENT(HW_IInternetProtocol, IInternetProtocolRoot),
-        { 0 }
-    };
+        QITABENT(HW_IInternetProtocol, IInternetProtocol), QITABENT(HW_IInternetProtocol, IInternetProtocolRoot), {0}};
     return QISearch(this, qit, riid, ppv);
 }
 
 // given url in the form "its://$htmlWindowId/$urlRest, parses
 // out $htmlWindowId and $urlRest. Returns false if url doesn't conform
 // to this pattern.
-static bool ParseProtoUrl(const WCHAR *url, int *htmlWindowId, AutoFreeW *urlRest)
-{
-    const WCHAR *rest = str::Parse(url, HW_PROTO_PREFIX L"://%d/%S", htmlWindowId, urlRest);
+static bool ParseProtoUrl(const WCHAR* url, int* htmlWindowId, AutoFreeW* urlRest) {
+    const WCHAR* rest = str::Parse(url, HW_PROTO_PREFIX L"://%d/%S", htmlWindowId, urlRest);
     return rest && !*rest;
 }
 
-#define DEFAULT_MIME_TYPE   L"text/html"
+#define DEFAULT_MIME_TYPE L"text/html"
 
 // caller must free() the result
-static WCHAR *MimeFromUrl(const WCHAR *url, const WCHAR *imgExt=nullptr)
-{
-    const WCHAR *ext = str::FindCharLast(url, '.');
+static WCHAR* MimeFromUrl(const WCHAR* url, const WCHAR* imgExt = nullptr) {
+    const WCHAR* ext = str::FindCharLast(url, '.');
     if (!ext)
         return str::Dup(DEFAULT_MIME_TYPE);
 
@@ -384,25 +389,18 @@ static WCHAR *MimeFromUrl(const WCHAR *url, const WCHAR *imgExt=nullptr)
     }
 
     static const struct {
-        const WCHAR *ext;
-        const WCHAR *mimetype;
+        const WCHAR* ext;
+        const WCHAR* mimetype;
     } mimeTypes[] = {
-        { L".html",  L"text/html" },
-        { L".htm",   L"text/html" },
-        { L".gif",   L"image/gif" },
-        { L".png",   L"image/png" },
-        { L".jpg",   L"image/jpeg" },
-        { L".jpeg",  L"image/jpeg" },
-        { L".bmp",   L"image/bmp" },
-        { L".css",   L"text/css" },
-        { L".txt",   L"text/plain" },
+        {L".html", L"text/html"}, {L".htm", L"text/html"},  {L".gif", L"image/gif"},
+        {L".png", L"image/png"},  {L".jpg", L"image/jpeg"}, {L".jpeg", L"image/jpeg"},
+        {L".bmp", L"image/bmp"},  {L".css", L"text/css"},   {L".txt", L"text/plain"},
     };
 
     for (int i = 0; i < dimof(mimeTypes); i++) {
         if (str::EqI(ext, mimeTypes[i].ext)) {
             // trust an image's data more than its extension
-            if (imgExt && !str::Eq(imgExt, mimeTypes[i].ext) &&
-                str::StartsWith(mimeTypes[i].mimetype, L"image/")) {
+            if (imgExt && !str::Eq(imgExt, mimeTypes[i].ext) && str::StartsWith(mimeTypes[i].mimetype, L"image/")) {
                 for (int j = 0; j < dimof(mimeTypes); j++) {
                     if (str::Eq(imgExt, mimeTypes[j].ext))
                         return str::Dup(mimeTypes[j].mimetype);
@@ -420,11 +418,11 @@ static WCHAR *MimeFromUrl(const WCHAR *url, const WCHAR *imgExt=nullptr)
 }
 
 // TODO: return an error page html in case of errors?
-STDMETHODIMP HW_IInternetProtocol::Start(
-    LPCWSTR szUrl, IInternetProtocolSink *pIProtSink, IInternetBindInfo *pIBindInfo,
-    DWORD grfSTI, HANDLE_PTR dwReserved)
-{
-    UNUSED(pIBindInfo); UNUSED(grfSTI); UNUSED(dwReserved);
+STDMETHODIMP HW_IInternetProtocol::Start(LPCWSTR szUrl, IInternetProtocolSink* pIProtSink,
+                                         IInternetBindInfo* pIBindInfo, DWORD grfSTI, HANDLE_PTR dwReserved) {
+    UNUSED(pIBindInfo);
+    UNUSED(grfSTI);
+    UNUSED(dwReserved);
     // TODO: others seem to return S_OK even if there is no content
     //       for a URL (unless the PI_PARSE_URL bit is set on grfSTI),
     //       this does however lead to this HW_IInternetProtocol being
@@ -440,11 +438,11 @@ STDMETHODIMP HW_IInternetProtocol::Start(
     pIProtSink->ReportProgress(BINDSTATUS_CONNECTING, urlRest);
     pIProtSink->ReportProgress(BINDSTATUS_SENDINGREQUEST, urlRest);
 
-    HtmlWindow *win = FindHtmlWindowById(htmlWindowId);
-    //TODO: this now happens due to events happening on HtmlWindow
-    //used to take a screenshot, so ignore it. Is there a way
-    //to cancel things and not get her?
-    //AssertCrash(win);
+    HtmlWindow* win = FindHtmlWindowById(htmlWindowId);
+    // TODO: this now happens due to events happening on HtmlWindow
+    // used to take a screenshot, so ignore it. Is there a way
+    // to cancel things and not get her?
+    // AssertCrash(win);
     if (!win)
         return INET_E_OBJECT_NOT_FOUND;
     if (!win->htmlWinCb)
@@ -453,20 +451,20 @@ STDMETHODIMP HW_IInternetProtocol::Start(
     if (!data)
         return INET_E_DATA_NOT_AVAILABLE;
 
-    const WCHAR *imgExt = GfxFileExtFromData((const char *)data, dataLen);
+    const WCHAR* imgExt = GfxFileExtFromData((const char*)data, dataLen);
     AutoFreeW mime(MimeFromUrl(urlRest, imgExt));
     pIProtSink->ReportProgress(BINDSTATUS_VERIFIEDMIMETYPEAVAILABLE, mime);
 #ifdef _WIN64
     // not going to report data in parts for unexpectedly huge webpages
     CrashIf(dataLen > ULONG_MAX);
 #endif
-    pIProtSink->ReportData(BSCF_FIRSTDATANOTIFICATION | BSCF_LASTDATANOTIFICATION | BSCF_DATAFULLYAVAILABLE, (ULONG)dataLen, (ULONG)dataLen);
+    pIProtSink->ReportData(BSCF_FIRSTDATANOTIFICATION | BSCF_LASTDATANOTIFICATION | BSCF_DATAFULLYAVAILABLE,
+                           (ULONG)dataLen, (ULONG)dataLen);
     pIProtSink->ReportResult(S_OK, 200, nullptr);
     return S_OK;
 }
 
-STDMETHODIMP HW_IInternetProtocol::Read(void *pv, ULONG cb, ULONG *pcbRead)
-{
+STDMETHODIMP HW_IInternetProtocol::Read(void* pv, ULONG cb, ULONG* pcbRead) {
     if (!data)
         return S_FALSE;
     size_t dataAvail = dataLen - dataCurrPos;
@@ -475,45 +473,43 @@ STDMETHODIMP HW_IInternetProtocol::Read(void *pv, ULONG cb, ULONG *pcbRead)
     ULONG toRead = cb;
     if (toRead > dataAvail)
         toRead = (ULONG)dataAvail;
-    const unsigned char *dataToRead = data + dataCurrPos;
+    const unsigned char* dataToRead = data + dataCurrPos;
     memcpy(pv, dataToRead, toRead);
     dataCurrPos += toRead;
     *pcbRead = toRead;
     return S_OK;
 }
 
-STDMETHODIMP HW_IInternetProtocol::Seek(
-    LARGE_INTEGER /*dlibMove*/,
-    DWORD /*dwOrigin*/,
-    ULARGE_INTEGER * /*plibNewPosition*/)
-{
+STDMETHODIMP HW_IInternetProtocol::Seek(LARGE_INTEGER /*dlibMove*/, DWORD /*dwOrigin*/,
+                                        ULARGE_INTEGER* /*plibNewPosition*/) {
     // doesn't seem to be called
     return E_NOTIMPL;
 }
 
-class HW_IInternetProtocolFactory : public IClassFactory
-{
-protected:
-    virtual ~HW_IInternetProtocolFactory() { }
+class HW_IInternetProtocolFactory : public IClassFactory {
+  protected:
+    virtual ~HW_IInternetProtocolFactory() {}
 
-public:
-    HW_IInternetProtocolFactory() : refCount(1) { }
+  public:
+    HW_IInternetProtocolFactory() : refCount(1) {}
 
     // IUnknown
-    STDMETHODIMP QueryInterface(REFIID riid, void **ppvObject);
+    STDMETHODIMP QueryInterface(REFIID riid, void** ppvObject);
     ULONG STDMETHODCALLTYPE AddRef() { return InterlockedIncrement(&refCount); }
     ULONG STDMETHODCALLTYPE Release();
 
     // IClassFactory
-    STDMETHODIMP CreateInstance(IUnknown *pUnkOuter, REFIID riid, void **ppvObject);
-    STDMETHODIMP LockServer(BOOL fLock) { UNUSED(fLock); return S_OK; }
+    STDMETHODIMP CreateInstance(IUnknown* pUnkOuter, REFIID riid, void** ppvObject);
+    STDMETHODIMP LockServer(BOOL fLock) {
+        UNUSED(fLock);
+        return S_OK;
+    }
 
-protected:
+  protected:
     LONG refCount;
 };
 
-STDMETHODIMP_(ULONG) HW_IInternetProtocolFactory::Release()
-{
+STDMETHODIMP_(ULONG) HW_IInternetProtocolFactory::Release() {
     LONG res = InterlockedDecrement(&refCount);
     CrashIf(res < 0);
     if (0 == res)
@@ -521,17 +517,12 @@ STDMETHODIMP_(ULONG) HW_IInternetProtocolFactory::Release()
     return res;
 }
 
-STDMETHODIMP HW_IInternetProtocolFactory::QueryInterface(REFIID riid, void **ppv)
-{
-    static const QITAB qit[] = {
-        QITABENT(HW_IInternetProtocolFactory, IClassFactory),
-        { 0 }
-    };
+STDMETHODIMP HW_IInternetProtocolFactory::QueryInterface(REFIID riid, void** ppv) {
+    static const QITAB qit[] = {QITABENT(HW_IInternetProtocolFactory, IClassFactory), {0}};
     return QISearch(this, qit, riid, ppv);
 }
 
-STDMETHODIMP HW_IInternetProtocolFactory::CreateInstance(IUnknown *pUnkOuter, REFIID riid, void **ppvObject)
-{
+STDMETHODIMP HW_IInternetProtocolFactory::CreateInstance(IUnknown* pUnkOuter, REFIID riid, void** ppvObject) {
     if (pUnkOuter != nullptr)
         return CLASS_E_NOAGGREGATION;
     if (riid == IID_IInternetProtocol) {
@@ -546,12 +537,11 @@ STDMETHODIMP HW_IInternetProtocolFactory::CreateInstance(IUnknown *pUnkOuter, RE
 }
 
 static LONG gProtocolFactoryRefCount = 0;
-HW_IInternetProtocolFactory *gInternetProtocolFactory = nullptr;
+HW_IInternetProtocolFactory* gInternetProtocolFactory = nullptr;
 
 // Register our protocol so that urlmon will call us for every
 // url that starts with HW_PROTO_PREFIX
-static void RegisterInternetProtocolFactory()
-{
+static void RegisterInternetProtocolFactory() {
     LONG val = InterlockedIncrement(&gProtocolFactoryRefCount);
     if (val > 1)
         return;
@@ -561,12 +551,12 @@ static void RegisterInternetProtocolFactory()
     AssertCrash(!FAILED(hr));
     AssertCrash(nullptr == gInternetProtocolFactory);
     gInternetProtocolFactory = new HW_IInternetProtocolFactory();
-    hr = internetSession->RegisterNameSpace(gInternetProtocolFactory, CLSID_HW_IInternetProtocol, HW_PROTO_PREFIX, 0, nullptr, 0);
+    hr = internetSession->RegisterNameSpace(gInternetProtocolFactory, CLSID_HW_IInternetProtocol, HW_PROTO_PREFIX, 0,
+                                            nullptr, 0);
     AssertCrash(!FAILED(hr));
 }
 
-static void UnregisterInternetProtocolFactory()
-{
+static void UnregisterInternetProtocolFactory() {
     LONG val = InterlockedDecrement(&gProtocolFactoryRefCount);
     if (val > 0)
         return;
@@ -579,16 +569,13 @@ static void UnregisterInternetProtocolFactory()
     gInternetProtocolFactory = nullptr;
 }
 
-class HW_IOleInPlaceFrame : public IOleInPlaceFrame
-{
-public:
-    explicit HW_IOleInPlaceFrame(FrameSite* fs) : fs(fs)
-    {
-    }
+class HW_IOleInPlaceFrame : public IOleInPlaceFrame {
+  public:
+    explicit HW_IOleInPlaceFrame(FrameSite* fs) : fs(fs) {}
     ~HW_IOleInPlaceFrame() {}
 
     // IUnknown
-    STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
+    STDMETHODIMP QueryInterface(REFIID iid, void** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
     ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
     ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
 
@@ -609,33 +596,30 @@ public:
     STDMETHODIMP SetStatusText(LPCOLESTR) { return S_OK; }
     STDMETHODIMP EnableModeless(BOOL) { return S_OK; }
     STDMETHODIMP TranslateAccelerator(LPMSG, WORD) { return E_NOTIMPL; }
-protected:
-    FrameSite * fs;
+
+  protected:
+    FrameSite* fs;
 };
 
-class HW_IOleInPlaceSiteWindowless : public IOleInPlaceSiteWindowless
-{
-public:
-    explicit HW_IOleInPlaceSiteWindowless(FrameSite* fs) : fs(fs) { }
+class HW_IOleInPlaceSiteWindowless : public IOleInPlaceSiteWindowless {
+  public:
+    explicit HW_IOleInPlaceSiteWindowless(FrameSite* fs) : fs(fs) {}
     ~HW_IOleInPlaceSiteWindowless() {}
 
     // IUnknown
-    STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
+    STDMETHODIMP QueryInterface(REFIID iid, void** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
     ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
     ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
 
     // IOleWindow
-    STDMETHODIMP GetWindow(HWND* h)
-    { return fs->oleInPlaceFrame->GetWindow(h); }
-    STDMETHODIMP ContextSensitiveHelp(BOOL b)
-    { return fs->oleInPlaceFrame->ContextSensitiveHelp(b); }
+    STDMETHODIMP GetWindow(HWND* h) { return fs->oleInPlaceFrame->GetWindow(h); }
+    STDMETHODIMP ContextSensitiveHelp(BOOL b) { return fs->oleInPlaceFrame->ContextSensitiveHelp(b); }
 
     // IOleInPlaceSite
     STDMETHODIMP CanInPlaceActivate() { return S_OK; }
     STDMETHODIMP OnInPlaceActivate();
     STDMETHODIMP OnUIActivate();
-    STDMETHODIMP GetWindowContext(IOleInPlaceFrame**, IOleInPlaceUIWindow**,
-            LPRECT, LPRECT, LPOLEINPLACEFRAMEINFO);
+    STDMETHODIMP GetWindowContext(IOleInPlaceFrame**, IOleInPlaceUIWindow**, LPRECT, LPRECT, LPOLEINPLACEFRAMEINFO);
     STDMETHODIMP Scroll(SIZE) { return S_OK; }
     STDMETHODIMP OnUIDeactivate(BOOL);
     STDMETHODIMP OnInPlaceDeactivate();
@@ -661,18 +645,18 @@ public:
     STDMETHODIMP ScrollRect(INT, INT, LPCRECT, LPCRECT) { return E_NOTIMPL; }
     STDMETHODIMP AdjustRect(LPRECT) { return E_NOTIMPL; }
     STDMETHODIMP OnDefWindowMessage(UINT, WPARAM, LPARAM, LRESULT*) { return E_NOTIMPL; }
-protected:
-    FrameSite *fs;
+
+  protected:
+    FrameSite* fs;
 };
 
-class HW_IOleClientSite : public IOleClientSite
-{
-public:
-    explicit HW_IOleClientSite(FrameSite* fs) : fs(fs) { }
+class HW_IOleClientSite : public IOleClientSite {
+  public:
+    explicit HW_IOleClientSite(FrameSite* fs) : fs(fs) {}
     ~HW_IOleClientSite() {}
 
     // IUnknown
-    STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
+    STDMETHODIMP QueryInterface(REFIID iid, void** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
     ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
     ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
 
@@ -683,18 +667,18 @@ public:
     STDMETHODIMP ShowObject() { return S_OK; }
     STDMETHODIMP OnShowWindow(BOOL) { return S_OK; }
     STDMETHODIMP RequestNewObjectLayout() { return E_NOTIMPL; }
-protected:
-    FrameSite * fs;
+
+  protected:
+    FrameSite* fs;
 };
 
-class HW_IOleControlSite : public IOleControlSite
-{
-public:
-    explicit HW_IOleControlSite(FrameSite* fs) : fs(fs) { }
+class HW_IOleControlSite : public IOleControlSite {
+  public:
+    explicit HW_IOleControlSite(FrameSite* fs) : fs(fs) {}
     ~HW_IOleControlSite() {}
 
     // IUnknown
-    STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
+    STDMETHODIMP QueryInterface(REFIID iid, void** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
     ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
     ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
 
@@ -706,36 +690,36 @@ public:
     STDMETHODIMP TranslateAccelerator(LPMSG, DWORD) { return E_NOTIMPL; }
     STDMETHODIMP OnFocus(BOOL) { return S_OK; }
     STDMETHODIMP ShowPropertyFrame() { return E_NOTIMPL; }
-protected:
-    FrameSite * fs;
+
+  protected:
+    FrameSite* fs;
 };
 
-class HW_IOleCommandTarget : public IOleCommandTarget
-{
-public:
-    explicit HW_IOleCommandTarget(FrameSite* fs) : fs(fs) { }
+class HW_IOleCommandTarget : public IOleCommandTarget {
+  public:
+    explicit HW_IOleCommandTarget(FrameSite* fs) : fs(fs) {}
     ~HW_IOleCommandTarget() {}
 
     // IUnknown
-    STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
+    STDMETHODIMP QueryInterface(REFIID iid, void** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
     ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
     ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
 
     // IOleCommandTarget
     STDMETHODIMP QueryStatus(const GUID*, ULONG, OLECMD[], OLECMDTEXT*);
     STDMETHODIMP Exec(const GUID*, DWORD, DWORD, VARIANTARG*, VARIANTARG*) { return OLECMDERR_E_NOTSUPPORTED; }
-protected:
-    FrameSite * fs;
+
+  protected:
+    FrameSite* fs;
 };
 
-class HW_IOleItemContainer : public IOleItemContainer
-{
-public:
-    explicit HW_IOleItemContainer(FrameSite* fs) : fs(fs) { }
+class HW_IOleItemContainer : public IOleItemContainer {
+  public:
+    explicit HW_IOleItemContainer(FrameSite* fs) : fs(fs) {}
     ~HW_IOleItemContainer() {}
 
     // IUnknown
-    STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
+    STDMETHODIMP QueryInterface(REFIID iid, void** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
     ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
     ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
 
@@ -750,22 +734,22 @@ public:
     STDMETHODIMP GetObject(LPOLESTR, DWORD, IBindCtx*, REFIID, void**);
     STDMETHODIMP GetObjectStorage(LPOLESTR, IBindCtx*, REFIID, void**);
     STDMETHODIMP IsRunning(LPOLESTR);
-protected:
-    FrameSite * fs;
+
+  protected:
+    FrameSite* fs;
 };
 
-class HW_DWebBrowserEvents2 : public DWebBrowserEvents2
-{
-    FrameSite * fs;
+class HW_DWebBrowserEvents2 : public DWebBrowserEvents2 {
+    FrameSite* fs;
 
-    HRESULT DispatchPropGet(DISPID dispIdMember, VARIANT *res);
+    HRESULT DispatchPropGet(DISPID dispIdMember, VARIANT* res);
 
-public:
-    explicit HW_DWebBrowserEvents2(FrameSite* fs) : fs(fs) { }
+  public:
+    explicit HW_DWebBrowserEvents2(FrameSite* fs) : fs(fs) {}
     ~HW_DWebBrowserEvents2() {}
 
     // IUnknown
-    STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
+    STDMETHODIMP QueryInterface(REFIID iid, void** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
     ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
     ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
 
@@ -776,83 +760,113 @@ public:
     STDMETHODIMP Invoke(DISPID, REFIID, LCID, WORD, DISPPARAMS*, VARIANT*, EXCEPINFO*, UINT*);
 };
 
-class HW_IAdviseSink2 : public IAdviseSink2, public IAdviseSinkEx
-{
-    FrameSite * fs;
+class HW_IAdviseSink2 : public IAdviseSink2, public IAdviseSinkEx {
+    FrameSite* fs;
 
-public:
-    explicit HW_IAdviseSink2(FrameSite* fs) : fs(fs) { }
+  public:
+    explicit HW_IAdviseSink2(FrameSite* fs) : fs(fs) {}
     ~HW_IAdviseSink2() {}
 
     // IUnknown
-    STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
+    STDMETHODIMP QueryInterface(REFIID iid, void** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
     ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
     ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
 
     // IAdviseSink
-    void STDMETHODCALLTYPE OnDataChange(FORMATETC*, STGMEDIUM*) { }
+    void STDMETHODCALLTYPE OnDataChange(FORMATETC*, STGMEDIUM*) {}
     void STDMETHODCALLTYPE OnViewChange(DWORD, LONG) {
         // redraw the control
         fs->oleInPlaceSiteWindowless->InvalidateRect(nullptr, FALSE);
     }
-    void STDMETHODCALLTYPE OnRename(IMoniker*) { }
-    void STDMETHODCALLTYPE OnSave() { }
-    void STDMETHODCALLTYPE OnClose() { }
+    void STDMETHODCALLTYPE OnRename(IMoniker*) {}
+    void STDMETHODCALLTYPE OnSave() {}
+    void STDMETHODCALLTYPE OnClose() {}
 
     // IAdviseSink2
-    void STDMETHODCALLTYPE OnLinkSrcChange(IMoniker*) { }
+    void STDMETHODCALLTYPE OnLinkSrcChange(IMoniker*) {}
 
     // IAdviseSinkEx
-    void STDMETHODCALLTYPE OnViewStatusChange(DWORD) { }
+    void STDMETHODCALLTYPE OnViewStatusChange(DWORD) {}
 };
 
 // http://www.popkistopki.ru/ch09b.shtml
-class HW_IDocHostUIHandler : public IDocHostUIHandler
-{
-    FrameSite * fs;
-public:
-    explicit HW_IDocHostUIHandler(FrameSite* fs) : fs(fs) { }
+class HW_IDocHostUIHandler : public IDocHostUIHandler {
+    FrameSite* fs;
+
+  public:
+    explicit HW_IDocHostUIHandler(FrameSite* fs) : fs(fs) {}
     ~HW_IDocHostUIHandler() {}
 
     // IUnknown
-    STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
+    STDMETHODIMP QueryInterface(REFIID iid, void** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
     ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
     ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
 
     // IDocHostUIHandler
-    STDMETHODIMP ShowContextMenu(DWORD dwID, POINT *ppt, IUnknown *pcmdtReserved, IDispatch *pdispReserved) {
-        UNUSED(dwID); UNUSED(ppt); UNUSED(pcmdtReserved); UNUSED(pdispReserved);
+    STDMETHODIMP ShowContextMenu(DWORD dwID, POINT* ppt, IUnknown* pcmdtReserved, IDispatch* pdispReserved) {
+        UNUSED(dwID);
+        UNUSED(ppt);
+        UNUSED(pcmdtReserved);
+        UNUSED(pdispReserved);
         return S_FALSE;
     }
-    STDMETHODIMP GetHostInfo(DOCHOSTUIINFO *pInfo);
-    STDMETHODIMP ShowUI(DWORD dwID, IOleInPlaceActiveObject *pActiveObject, IOleCommandTarget *pCommandTarget, IOleInPlaceFrame *pFrame, IOleInPlaceUIWindow *pDoc){
-        UNUSED(dwID); UNUSED(pActiveObject); UNUSED(pCommandTarget); UNUSED(pFrame); UNUSED(pDoc);
+    STDMETHODIMP GetHostInfo(DOCHOSTUIINFO* pInfo);
+    STDMETHODIMP ShowUI(DWORD dwID, IOleInPlaceActiveObject* pActiveObject, IOleCommandTarget* pCommandTarget,
+                        IOleInPlaceFrame* pFrame, IOleInPlaceUIWindow* pDoc) {
+        UNUSED(dwID);
+        UNUSED(pActiveObject);
+        UNUSED(pCommandTarget);
+        UNUSED(pFrame);
+        UNUSED(pDoc);
         return S_FALSE;
     }
     STDMETHODIMP HideUI() { return E_NOTIMPL; }
     STDMETHODIMP UpdateUI() { return E_NOTIMPL; }
-    STDMETHODIMP EnableModeless(BOOL fEnable) { UNUSED(fEnable); return E_NOTIMPL; }
-    STDMETHODIMP OnDocWindowActivate(BOOL fActivate) { UNUSED(fActivate); return E_NOTIMPL; }
-    STDMETHODIMP OnFrameWindowActivate(BOOL fActivate) { UNUSED(fActivate); return E_NOTIMPL; }
-    STDMETHODIMP ResizeBorder(LPCRECT prcBorder, IOleInPlaceUIWindow *pUIWindow, BOOL fRameWindow) {
-        UNUSED(prcBorder); UNUSED(pUIWindow); UNUSED(fRameWindow);
+    STDMETHODIMP EnableModeless(BOOL fEnable) {
+        UNUSED(fEnable);
         return E_NOTIMPL;
     }
-    STDMETHODIMP TranslateAccelerator(LPMSG lpMsg, const GUID *pguidCmdGroup, DWORD nCmdID) {
-        UNUSED(lpMsg); UNUSED(pguidCmdGroup); UNUSED(nCmdID);
+    STDMETHODIMP OnDocWindowActivate(BOOL fActivate) {
+        UNUSED(fActivate);
+        return E_NOTIMPL;
+    }
+    STDMETHODIMP OnFrameWindowActivate(BOOL fActivate) {
+        UNUSED(fActivate);
+        return E_NOTIMPL;
+    }
+    STDMETHODIMP ResizeBorder(LPCRECT prcBorder, IOleInPlaceUIWindow* pUIWindow, BOOL fRameWindow) {
+        UNUSED(prcBorder);
+        UNUSED(pUIWindow);
+        UNUSED(fRameWindow);
+        return E_NOTIMPL;
+    }
+    STDMETHODIMP TranslateAccelerator(LPMSG lpMsg, const GUID* pguidCmdGroup, DWORD nCmdID) {
+        UNUSED(lpMsg);
+        UNUSED(pguidCmdGroup);
+        UNUSED(nCmdID);
         return S_FALSE;
     }
-    STDMETHODIMP GetOptionKeyPath(LPOLESTR *pchKey, DWORD dw) { UNUSED(pchKey); UNUSED(dw); return S_FALSE; }
-    STDMETHODIMP GetDropTarget(IDropTarget *pDropTarget, IDropTarget **ppDropTarget) {
+    STDMETHODIMP GetOptionKeyPath(LPOLESTR* pchKey, DWORD dw) {
+        UNUSED(pchKey);
+        UNUSED(dw);
+        return S_FALSE;
+    }
+    STDMETHODIMP GetDropTarget(IDropTarget* pDropTarget, IDropTarget** ppDropTarget) {
         UNUSED(pDropTarget);
         return fs->QueryInterface(IID_PPV_ARGS(ppDropTarget));
     }
-    STDMETHODIMP GetExternal(IDispatch **ppDispatch) { if (ppDispatch) *ppDispatch = nullptr; return S_FALSE; }
-    STDMETHODIMP TranslateUrl(DWORD dwTranslate, OLECHAR *pchURLIn, OLECHAR **ppchURLOut) {
-        UNUSED(dwTranslate); UNUSED(pchURLIn); UNUSED(ppchURLOut);
+    STDMETHODIMP GetExternal(IDispatch** ppDispatch) {
+        if (ppDispatch)
+            *ppDispatch = nullptr;
         return S_FALSE;
     }
-    STDMETHODIMP FilterDataObject(IDataObject *pDO, IDataObject **ppDORet) {
+    STDMETHODIMP TranslateUrl(DWORD dwTranslate, OLECHAR* pchURLIn, OLECHAR** ppchURLOut) {
+        UNUSED(dwTranslate);
+        UNUSED(pchURLIn);
+        UNUSED(ppchURLOut);
+        return S_FALSE;
+    }
+    STDMETHODIMP FilterDataObject(IDataObject* pDO, IDataObject** ppDORet) {
         UNUSED(pDO);
         if (ppDORet)
             *ppDORet = nullptr;
@@ -860,8 +874,7 @@ public:
     }
 };
 
-STDMETHODIMP HW_IDocHostUIHandler::GetHostInfo(DOCHOSTUIINFO *pInfo)
-{
+STDMETHODIMP HW_IDocHostUIHandler::GetHostInfo(DOCHOSTUIINFO* pInfo) {
     if (!pInfo)
         return S_FALSE;
     pInfo->pchHostCss = nullptr;
@@ -875,33 +888,36 @@ STDMETHODIMP HW_IDocHostUIHandler::GetHostInfo(DOCHOSTUIINFO *pInfo)
     return S_OK;
 }
 
-class HW_IDropTarget : public IDropTarget
-{
-    FrameSite * fs;
-public:
-    explicit HW_IDropTarget(FrameSite* fs) : fs(fs) { }
+class HW_IDropTarget : public IDropTarget {
+    FrameSite* fs;
+
+  public:
+    explicit HW_IDropTarget(FrameSite* fs) : fs(fs) {}
     ~HW_IDropTarget() {}
 
     // IUnknown
-    STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
+    STDMETHODIMP QueryInterface(REFIID iid, void** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
     ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
     ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
 
-    STDMETHODIMP DragEnter(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect) {
-        UNUSED(grfKeyState); UNUSED(pt);
+    STDMETHODIMP DragEnter(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect) {
+        UNUSED(grfKeyState);
+        UNUSED(pt);
         HRESULT hr = fs->htmlWindow->OnDragEnter(pDataObj);
         if (SUCCEEDED(hr))
             *pdwEffect = DROPEFFECT_COPY;
         return hr;
     }
-    STDMETHODIMP DragOver(DWORD grfKeyState, POINTL pt, DWORD *pdwEffect) {
-        UNUSED(grfKeyState); UNUSED(pt);
+    STDMETHODIMP DragOver(DWORD grfKeyState, POINTL pt, DWORD* pdwEffect) {
+        UNUSED(grfKeyState);
+        UNUSED(pt);
         *pdwEffect = DROPEFFECT_COPY;
         return S_OK;
     }
     STDMETHODIMP DragLeave() { return S_OK; }
-    STDMETHODIMP Drop(IDataObject *pDataObj, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect) {
-        UNUSED(grfKeyState); UNUSED(pt);
+    STDMETHODIMP Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect) {
+        UNUSED(grfKeyState);
+        UNUSED(pt);
         *pdwEffect = DROPEFFECT_COPY;
         return fs->htmlWindow->OnDragDrop(pDataObj);
     }
@@ -911,40 +927,33 @@ public:
 #define __IDownloadManager_INTERFACE_DEFINED__
 
 #define DEFINE_GUID_STATIC(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
-    static const GUID name = { l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } }
+    static const GUID name = {l, w1, w2, {b1, b2, b3, b4, b5, b6, b7, b8}}
 DEFINE_GUID_STATIC(IID_IDownloadManager, 0x988934a4, 0x064b, 0x11d3, 0xbb, 0x80, 0x0, 0x10, 0x4b, 0x35, 0xe7, 0xf9);
 #define SID_SDownloadManager IID_IDownloadManager
 
 MIDL_INTERFACE("988934A4-064B-11D3-BB80-00104B35E7F9")
-IDownloadManager : public IUnknown
-{
-public:
-    virtual STDMETHODIMP Download(IMoniker __RPC_FAR *pmk, IBindCtx __RPC_FAR *pbc, DWORD dwBindVerb,
-                                  LONG grfBINDF, BINDINFO __RPC_FAR *pBindInfo, LPCOLESTR pszHeaders,
-                                  LPCOLESTR pszRedir, UINT uiCP) = 0;
+IDownloadManager : public IUnknown {
+  public:
+    virtual STDMETHODIMP Download(IMoniker __RPC_FAR * pmk, IBindCtx __RPC_FAR * pbc, DWORD dwBindVerb, LONG grfBINDF,
+                                  BINDINFO __RPC_FAR * pBindInfo, LPCOLESTR pszHeaders, LPCOLESTR pszRedir,
+                                  UINT uiCP) = 0;
 };
 
 #endif
 
-class HW_IDownloadManager : public IDownloadManager
-{
+class HW_IDownloadManager : public IDownloadManager {
     LONG refCount;
 
-public:
-    HW_IDownloadManager() : refCount(1) { }
-    ~HW_IDownloadManager() { }
+  public:
+    HW_IDownloadManager() : refCount(1) {}
+    ~HW_IDownloadManager() {}
 
     // IUnknown
-    STDMETHODIMP QueryInterface(REFIID riid, void **ppv) {
-        static const QITAB qit[] = {
-            QITABENT(HW_IDownloadManager, IDownloadManager),
-            { 0 }
-        };
+    STDMETHODIMP QueryInterface(REFIID riid, void** ppv) {
+        static const QITAB qit[] = {QITABENT(HW_IDownloadManager, IDownloadManager), {0}};
         return QISearch(this, qit, riid, ppv);
     }
-    ULONG STDMETHODCALLTYPE AddRef() {
-        return InterlockedIncrement(&refCount);
-    }
+    ULONG STDMETHODCALLTYPE AddRef() { return InterlockedIncrement(&refCount); }
     ULONG STDMETHODCALLTYPE Release() {
         LONG res = InterlockedDecrement(&refCount);
         CrashIf(res < 0);
@@ -954,10 +963,14 @@ public:
     }
 
     // IDownloadManager
-    STDMETHODIMP Download(IMoniker __RPC_FAR *pmk, IBindCtx __RPC_FAR *pbc, DWORD dwBindVerb,
-                          LONG grfBINDF, BINDINFO __RPC_FAR *pBindInfo, LPCOLESTR pszHeaders,
-                          LPCOLESTR pszRedir, UINT uiCP) {
-        UNUSED(dwBindVerb); UNUSED(grfBINDF); UNUSED(pBindInfo); UNUSED(pszHeaders); UNUSED(pszRedir); UNUSED(uiCP);
+    STDMETHODIMP Download(IMoniker __RPC_FAR* pmk, IBindCtx __RPC_FAR* pbc, DWORD dwBindVerb, LONG grfBINDF,
+                          BINDINFO __RPC_FAR* pBindInfo, LPCOLESTR pszHeaders, LPCOLESTR pszRedir, UINT uiCP) {
+        UNUSED(dwBindVerb);
+        UNUSED(grfBINDF);
+        UNUSED(pBindInfo);
+        UNUSED(pszHeaders);
+        UNUSED(pszRedir);
+        UNUSED(uiCP);
         LPOLESTR urlToFile;
         HRESULT hr = pmk->GetDisplayName(pbc, nullptr, &urlToFile);
         if (FAILED(hr))
@@ -967,7 +980,7 @@ public:
         AutoFreeW urlRest;
         bool ok = ParseProtoUrl(urlToFile, &htmlWindowId, &urlRest);
         // free urlToFile using IMalloc::Free
-        IMalloc *pMalloc;
+        IMalloc* pMalloc;
         if (SUCCEEDED(CoGetMalloc(1, &pMalloc)))
             pMalloc->Free(urlToFile);
         else
@@ -975,11 +988,11 @@ public:
         if (!ok)
             return INET_E_INVALID_URL;
         // fetch the data
-        HtmlWindow *win = FindHtmlWindowById(htmlWindowId);
+        HtmlWindow* win = FindHtmlWindowById(htmlWindowId);
         if (!win || !win->htmlWinCb)
             return INET_E_OBJECT_NOT_FOUND;
         size_t len;
-        const unsigned char *data = win->htmlWinCb->GetDataForUrl(urlRest, &len);
+        const unsigned char* data = win->htmlWinCb->GetDataForUrl(urlRest, &len);
         if (!data)
             return INET_E_DATA_NOT_AVAILABLE;
         // ask the UI to let the user save the file
@@ -988,20 +1001,20 @@ public:
     }
 };
 
-class HW_IServiceProvider : public IServiceProvider
-{
-    FrameSite * fs;
-public:
-    explicit HW_IServiceProvider(FrameSite* fs) : fs(fs) { }
+class HW_IServiceProvider : public IServiceProvider {
+    FrameSite* fs;
+
+  public:
+    explicit HW_IServiceProvider(FrameSite* fs) : fs(fs) {}
     ~HW_IServiceProvider() {}
 
     // IUnknown
-    STDMETHODIMP QueryInterface(REFIID iid, void ** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
+    STDMETHODIMP QueryInterface(REFIID iid, void** ppvObject) { return fs->QueryInterface(iid, ppvObject); }
     ULONG STDMETHODCALLTYPE AddRef() { return fs->AddRef(); }
     ULONG STDMETHODCALLTYPE Release() { return fs->Release(); }
 
     // IServiceProvider
-    STDMETHODIMP QueryService(REFGUID guidService, REFIID riid, void **ppv) {
+    STDMETHODIMP QueryService(REFGUID guidService, REFIID riid, void** ppv) {
         if (guidService == SID_SDownloadManager) {
             ScopedComPtr<IDownloadManager> dm(new HW_IDownloadManager());
             return dm->QueryInterface(riid, ppv);
@@ -1010,50 +1023,85 @@ public:
     }
 };
 
-class HtmlMoniker : public IMoniker
-{
-public:
+class HtmlMoniker : public IMoniker {
+  public:
     HtmlMoniker();
     virtual ~HtmlMoniker();
 
-    HRESULT SetHtml(const char *s, size_t len);
-    HRESULT SetBaseUrl(const WCHAR *baseUrl);
+    HRESULT SetHtml(const char* s, size_t len);
+    HRESULT SetBaseUrl(const WCHAR* baseUrl);
 
-public:
+  public:
     // IUnknown
-    STDMETHODIMP QueryInterface(REFIID riid, void **ppvObject);
+    STDMETHODIMP QueryInterface(REFIID riid, void** ppvObject);
     ULONG STDMETHODCALLTYPE AddRef(void);
     ULONG STDMETHODCALLTYPE Release(void);
 
     // IMoniker
-    STDMETHODIMP BindToStorage(IBindCtx *pbc, IMoniker *pmkToLeft, REFIID riid, void **ppvObj);
-    STDMETHODIMP GetDisplayName(IBindCtx *pbc, IMoniker *pmkToLeft, LPOLESTR *ppszDisplayName);
-    STDMETHODIMP BindToObject(IBindCtx *pbc, IMoniker *pmkToLeft, REFIID riidResult, void **ppvResult) {
-        UNUSED(pbc); UNUSED(pmkToLeft); UNUSED(riidResult); UNUSED(ppvResult);
+    STDMETHODIMP BindToStorage(IBindCtx* pbc, IMoniker* pmkToLeft, REFIID riid, void** ppvObj);
+    STDMETHODIMP GetDisplayName(IBindCtx* pbc, IMoniker* pmkToLeft, LPOLESTR* ppszDisplayName);
+    STDMETHODIMP BindToObject(IBindCtx* pbc, IMoniker* pmkToLeft, REFIID riidResult, void** ppvResult) {
+        UNUSED(pbc);
+        UNUSED(pmkToLeft);
+        UNUSED(riidResult);
+        UNUSED(ppvResult);
         return E_NOTIMPL;
     }
-    STDMETHODIMP Reduce(IBindCtx *pbc, DWORD dwReduceHowFar, IMoniker **ppmkToLeft, IMoniker **ppmkReduced) {
-        UNUSED(pbc); UNUSED(dwReduceHowFar); UNUSED(ppmkToLeft); UNUSED(ppmkReduced);
+    STDMETHODIMP Reduce(IBindCtx* pbc, DWORD dwReduceHowFar, IMoniker** ppmkToLeft, IMoniker** ppmkReduced) {
+        UNUSED(pbc);
+        UNUSED(dwReduceHowFar);
+        UNUSED(ppmkToLeft);
+        UNUSED(ppmkReduced);
         return E_NOTIMPL;
     }
-    STDMETHODIMP ComposeWith(IMoniker *pmkRight, BOOL fOnlyIfNotGeneric, IMoniker **ppmkComposite) {
-        UNUSED(pmkRight); UNUSED(fOnlyIfNotGeneric); UNUSED(ppmkComposite);
+    STDMETHODIMP ComposeWith(IMoniker* pmkRight, BOOL fOnlyIfNotGeneric, IMoniker** ppmkComposite) {
+        UNUSED(pmkRight);
+        UNUSED(fOnlyIfNotGeneric);
+        UNUSED(ppmkComposite);
         return E_NOTIMPL;
     }
-    STDMETHODIMP Enum(BOOL fForward, IEnumMoniker **ppenumMoniker) { UNUSED(fForward);  UNUSED(ppenumMoniker); return E_NOTIMPL; }
-    STDMETHODIMP IsEqual(IMoniker *pmkOtherMoniker) { UNUSED(pmkOtherMoniker); return E_NOTIMPL; }
-    STDMETHODIMP Hash(DWORD *pdwHash) { UNUSED(pdwHash);  return E_NOTIMPL;}
-    STDMETHODIMP IsRunning(IBindCtx *pbc, IMoniker *pmkToLeft, IMoniker *pmkNewlyRunning) {
-        UNUSED(pbc); UNUSED(pmkToLeft); UNUSED(pmkNewlyRunning);
+    STDMETHODIMP Enum(BOOL fForward, IEnumMoniker** ppenumMoniker) {
+        UNUSED(fForward);
+        UNUSED(ppenumMoniker);
         return E_NOTIMPL;
     }
-    STDMETHODIMP GetTimeOfLastChange(IBindCtx *pbc, IMoniker *pmkToLeft, FILETIME *pFileTime) { UNUSED(pbc); UNUSED(pmkToLeft); UNUSED(pFileTime); return E_NOTIMPL; }
-    STDMETHODIMP Inverse(IMoniker **ppmk) { UNUSED(ppmk);  return E_NOTIMPL; }
-    STDMETHODIMP CommonPrefixWith(IMoniker *pmkOther, IMoniker **ppmkPrefix) { UNUSED(pmkOther); UNUSED(ppmkPrefix); return E_NOTIMPL; }
-    STDMETHODIMP RelativePathTo(IMoniker *pmkOther, IMoniker **ppmkRelPath) { UNUSED(pmkOther); UNUSED(ppmkRelPath);  return E_NOTIMPL; }
-    STDMETHODIMP ParseDisplayName(IBindCtx *pbc, IMoniker *pmkToLeft,LPOLESTR pszDisplayName,
-        ULONG *pchEaten, IMoniker **ppmkOut);
-    STDMETHODIMP IsSystemMoniker(DWORD *pdwMksys) {
+    STDMETHODIMP IsEqual(IMoniker* pmkOtherMoniker) {
+        UNUSED(pmkOtherMoniker);
+        return E_NOTIMPL;
+    }
+    STDMETHODIMP Hash(DWORD* pdwHash) {
+        UNUSED(pdwHash);
+        return E_NOTIMPL;
+    }
+    STDMETHODIMP IsRunning(IBindCtx* pbc, IMoniker* pmkToLeft, IMoniker* pmkNewlyRunning) {
+        UNUSED(pbc);
+        UNUSED(pmkToLeft);
+        UNUSED(pmkNewlyRunning);
+        return E_NOTIMPL;
+    }
+    STDMETHODIMP GetTimeOfLastChange(IBindCtx* pbc, IMoniker* pmkToLeft, FILETIME* pFileTime) {
+        UNUSED(pbc);
+        UNUSED(pmkToLeft);
+        UNUSED(pFileTime);
+        return E_NOTIMPL;
+    }
+    STDMETHODIMP Inverse(IMoniker** ppmk) {
+        UNUSED(ppmk);
+        return E_NOTIMPL;
+    }
+    STDMETHODIMP CommonPrefixWith(IMoniker* pmkOther, IMoniker** ppmkPrefix) {
+        UNUSED(pmkOther);
+        UNUSED(ppmkPrefix);
+        return E_NOTIMPL;
+    }
+    STDMETHODIMP RelativePathTo(IMoniker* pmkOther, IMoniker** ppmkRelPath) {
+        UNUSED(pmkOther);
+        UNUSED(ppmkRelPath);
+        return E_NOTIMPL;
+    }
+    STDMETHODIMP ParseDisplayName(IBindCtx* pbc, IMoniker* pmkToLeft, LPOLESTR pszDisplayName, ULONG* pchEaten,
+                                  IMoniker** ppmkOut);
+    STDMETHODIMP IsSystemMoniker(DWORD* pdwMksys) {
         if (!pdwMksys)
             return E_POINTER;
         *pdwMksys = MKSYS_NONE;
@@ -1061,33 +1109,39 @@ public:
     }
 
     // IPersistStream methods
-    STDMETHODIMP Save(IStream *pStm, BOOL fClearDirty) { UNUSED(pStm); UNUSED(fClearDirty); return E_NOTIMPL; }
+    STDMETHODIMP Save(IStream* pStm, BOOL fClearDirty) {
+        UNUSED(pStm);
+        UNUSED(fClearDirty);
+        return E_NOTIMPL;
+    }
     STDMETHODIMP IsDirty() { return E_NOTIMPL; }
-    STDMETHODIMP Load(IStream *pStm) { UNUSED(pStm);  return E_NOTIMPL; }
-    STDMETHODIMP GetSizeMax(ULARGE_INTEGER *pcbSize) { UNUSED(pcbSize); return E_NOTIMPL; }
+    STDMETHODIMP Load(IStream* pStm) {
+        UNUSED(pStm);
+        return E_NOTIMPL;
+    }
+    STDMETHODIMP GetSizeMax(ULARGE_INTEGER* pcbSize) {
+        UNUSED(pcbSize);
+        return E_NOTIMPL;
+    }
 
     // IPersist
-    STDMETHODIMP GetClassID(CLSID *pClassID) { UNUSED(pClassID); return E_NOTIMPL; }
+    STDMETHODIMP GetClassID(CLSID* pClassID) {
+        UNUSED(pClassID);
+        return E_NOTIMPL;
+    }
 
-private:
-    LONG        refCount;
+  private:
+    LONG refCount;
 
-    char *      htmlData;
-    IStream *   htmlStream;
+    char* htmlData;
+    IStream* htmlStream;
 
-    WCHAR *     baseUrl;
+    WCHAR* baseUrl;
 };
 
-HtmlMoniker::HtmlMoniker()
-    : refCount(1),
-      htmlData(nullptr),
-      htmlStream(nullptr),
-      baseUrl(nullptr)
-{
-}
+HtmlMoniker::HtmlMoniker() : refCount(1), htmlData(nullptr), htmlStream(nullptr), baseUrl(nullptr) {}
 
-HtmlMoniker::~HtmlMoniker()
-{
+HtmlMoniker::~HtmlMoniker() {
     if (htmlStream)
         htmlStream->Release();
 
@@ -1095,8 +1149,7 @@ HtmlMoniker::~HtmlMoniker()
     free(baseUrl);
 }
 
-HRESULT HtmlMoniker::SetHtml(const char *s, size_t len)
-{
+HRESULT HtmlMoniker::SetHtml(const char* s, size_t len) {
     free(htmlData);
     htmlData = str::DupN(s, len);
     if (htmlStream)
@@ -1105,23 +1158,21 @@ HRESULT HtmlMoniker::SetHtml(const char *s, size_t len)
     return S_OK;
 }
 
-HRESULT HtmlMoniker::SetBaseUrl(const WCHAR *newBaseUrl)
-{
+HRESULT HtmlMoniker::SetBaseUrl(const WCHAR* newBaseUrl) {
     free(baseUrl);
     baseUrl = str::Dup(newBaseUrl);
     return S_OK;
 }
 
-STDMETHODIMP HtmlMoniker::BindToStorage(IBindCtx *pbc, IMoniker *pmkToLeft, REFIID riid, void **ppvObj)
-{
-    UNUSED(pbc); UNUSED(pmkToLeft);
+STDMETHODIMP HtmlMoniker::BindToStorage(IBindCtx* pbc, IMoniker* pmkToLeft, REFIID riid, void** ppvObj) {
+    UNUSED(pbc);
+    UNUSED(pmkToLeft);
     LARGE_INTEGER seek = {0};
     htmlStream->Seek(seek, STREAM_SEEK_SET, nullptr);
     return htmlStream->QueryInterface(riid, ppvObj);
 }
 
-static LPOLESTR OleStrDup(WCHAR *s)
-{
+static LPOLESTR OleStrDup(WCHAR* s) {
     size_t cb = sizeof(WCHAR) * (str::Len(s) + 1);
     LPOLESTR ret = (LPOLESTR)CoTaskMemAlloc(cb);
     if (ret)
@@ -1129,41 +1180,36 @@ static LPOLESTR OleStrDup(WCHAR *s)
     return ret;
 }
 
-STDMETHODIMP HtmlMoniker::GetDisplayName(IBindCtx *pbc, IMoniker *pmkToLeft,
-    LPOLESTR *ppszDisplayName)
-{
-    UNUSED(pbc); UNUSED(pmkToLeft);
+STDMETHODIMP HtmlMoniker::GetDisplayName(IBindCtx* pbc, IMoniker* pmkToLeft, LPOLESTR* ppszDisplayName) {
+    UNUSED(pbc);
+    UNUSED(pmkToLeft);
     if (!ppszDisplayName)
         return E_POINTER;
     *ppszDisplayName = OleStrDup(baseUrl ? baseUrl : L"");
     return *ppszDisplayName ? S_OK : E_OUTOFMEMORY;
 }
 
-STDMETHODIMP HtmlMoniker::ParseDisplayName(IBindCtx *pbc, IMoniker *pmkToLeft,
-    LPOLESTR pszDisplayName, ULONG *pchEaten, IMoniker **ppmkOut)
-{
-    UNUSED(pbc); UNUSED(pmkToLeft); UNUSED(pszDisplayName); UNUSED(pchEaten); UNUSED(ppmkOut);
+STDMETHODIMP HtmlMoniker::ParseDisplayName(IBindCtx* pbc, IMoniker* pmkToLeft, LPOLESTR pszDisplayName, ULONG* pchEaten,
+                                           IMoniker** ppmkOut) {
+    UNUSED(pbc);
+    UNUSED(pmkToLeft);
+    UNUSED(pszDisplayName);
+    UNUSED(pchEaten);
+    UNUSED(ppmkOut);
     return E_NOTIMPL;
 }
 
-STDMETHODIMP HtmlMoniker::QueryInterface(REFIID riid, void **ppv)
-{
+STDMETHODIMP HtmlMoniker::QueryInterface(REFIID riid, void** ppv) {
     static const QITAB qit[] = {
-        QITABENT(HtmlMoniker, IMoniker),
-        QITABENT(HtmlMoniker, IPersistStream),
-        QITABENT(HtmlMoniker, IPersist),
-        { 0 }
-    };
+        QITABENT(HtmlMoniker, IMoniker), QITABENT(HtmlMoniker, IPersistStream), QITABENT(HtmlMoniker, IPersist), {0}};
     return QISearch(this, qit, riid, ppv);
 }
 
-ULONG STDMETHODCALLTYPE HtmlMoniker::AddRef()
-{
+ULONG STDMETHODCALLTYPE HtmlMoniker::AddRef() {
     return InterlockedIncrement(&refCount);
 }
 
-ULONG STDMETHODCALLTYPE HtmlMoniker::Release()
-{
+ULONG STDMETHODCALLTYPE HtmlMoniker::Release() {
     LONG res = InterlockedDecrement(&refCount);
     CrashIf(res < 0);
     if (0 == res)
@@ -1171,8 +1217,7 @@ ULONG STDMETHODCALLTYPE HtmlMoniker::Release()
     return res;
 }
 
-static HWND GetBrowserControlHwnd(HWND hwndControlParent)
-{
+static HWND GetBrowserControlHwnd(HWND hwndControlParent) {
     // This is a fragile way to get the actual hwnd of the browser control
     // that is responsible for processing keyboard messages (I believe the
     // hierarchy might change depending on how the browser control is configured
@@ -1185,9 +1230,8 @@ static HWND GetBrowserControlHwnd(HWND hwndControlParent)
 }
 
 // WndProc of the window that is a parent hwnd of embedded browser control.
-static LRESULT CALLBACK WndProcParent(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-    HtmlWindow *win = (HtmlWindow*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+static LRESULT CALLBACK WndProcParent(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    HtmlWindow* win = (HtmlWindow*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
     if (!win)
         return DefWindowProc(hwnd, msg, wParam, lParam);
 
@@ -1220,28 +1264,33 @@ static LRESULT CALLBACK WndProcParent(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
     return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
-void HtmlWindow::SubclassHwnd()
-{
+void HtmlWindow::SubclassHwnd() {
     wndProcBrowserPrev = (WNDPROC)SetWindowLongPtr(hwndParent, GWLP_WNDPROC, (LONG_PTR)WndProcParent);
     userDataBrowserPrev = SetWindowLongPtr(hwndParent, GWLP_USERDATA, (LONG_PTR)this);
 }
 
-void HtmlWindow::UnsubclassHwnd()
-{
+void HtmlWindow::UnsubclassHwnd() {
     if (!wndProcBrowserPrev)
         return;
     SetWindowLongPtr(hwndParent, GWLP_WNDPROC, (LONG_PTR)wndProcBrowserPrev);
     SetWindowLongPtr(hwndParent, GWLP_USERDATA, (LONG_PTR)userDataBrowserPrev);
 }
 
-HtmlWindow::HtmlWindow(HWND hwndParent, HtmlWindowCallback *cb) :
-    hwndParent(hwndParent), webBrowser(nullptr), oleObject(nullptr),
-    oleInPlaceObject(nullptr), viewObject(nullptr),
-    connectionPoint(nullptr), htmlContent(nullptr), oleObjectHwnd(nullptr),
-    adviseCookie(0), htmlWinCb(cb),
-    wndProcBrowserPrev(nullptr), userDataBrowserPrev(0),
-    canGoBack(false), canGoForward(false)
-{
+HtmlWindow::HtmlWindow(HWND hwndParent, HtmlWindowCallback* cb)
+    : hwndParent(hwndParent),
+      webBrowser(nullptr),
+      oleObject(nullptr),
+      oleInPlaceObject(nullptr),
+      viewObject(nullptr),
+      connectionPoint(nullptr),
+      htmlContent(nullptr),
+      oleObjectHwnd(nullptr),
+      adviseCookie(0),
+      htmlWinCb(cb),
+      wndProcBrowserPrev(nullptr),
+      userDataBrowserPrev(0),
+      canGoBack(false),
+      canGoForward(false) {
     AssertCrash(hwndParent);
     RegisterInternetProtocolFactory();
     windowId = GenNewWindowId(this);
@@ -1249,23 +1298,26 @@ HtmlWindow::HtmlWindow(HWND hwndParent, HtmlWindowCallback *cb) :
     htmlSetInProgressUrl = nullptr;
 }
 
-bool HtmlWindow::CreateBrowser()
-{
+bool HtmlWindow::CreateBrowser() {
     HRESULT hr;
     ScopedComPtr<IUnknown> p;
-    if (!p.Create(CLSID_WebBrowser)) return false;
+    if (!p.Create(CLSID_WebBrowser))
+        return false;
     hr = p->QueryInterface(&viewObject);
-    if (FAILED(hr)) return false;
+    if (FAILED(hr))
+        return false;
     hr = p->QueryInterface(&oleObject);
-    if (FAILED(hr)) return false;
+    if (FAILED(hr))
+        return false;
 
     DWORD status;
     hr = oleObject->GetMiscStatus(DVASPECT_CONTENT, &status);
-    if (FAILED(hr)) return false;
+    if (FAILED(hr))
+        return false;
     bool setClientSiteFirst = 0 != (status & OLEMISC_SETCLIENTSITEFIRST);
     bool invisibleAtRuntime = 0 != (status & OLEMISC_INVISIBLEATRUNTIME);
 
-    FrameSite *fs = new FrameSite(this);
+    FrameSite* fs = new FrameSite(this);
     ScopedComPtr<IUnknown> fsScope(fs);
 
     if (setClientSiteFirst)
@@ -1278,17 +1330,18 @@ bool HtmlWindow::CreateBrowser()
     }
 
     hr = p->QueryInterface(&oleInPlaceObject);
-    if (FAILED(hr)) return false;
+    if (FAILED(hr))
+        return false;
     hr = oleInPlaceObject->GetWindow(&oleObjectHwnd);
-    if (FAILED(hr)) return false;
+    if (FAILED(hr))
+        return false;
 
     ::SetActiveWindow(oleObjectHwnd);
     RECT rc = ClientRect(hwndParent).ToRECT();
 
     oleInPlaceObject->SetObjectRects(&rc, &rc);
     if (!invisibleAtRuntime) {
-        hr = oleObject->DoVerb(OLEIVERB_INPLACEACTIVATE, nullptr,
-                fs->oleClientSite, 0, hwndParent, &rc);
+        hr = oleObject->DoVerb(OLEIVERB_INPLACEACTIVATE, nullptr, fs->oleClientSite, 0, hwndParent, &rc);
 #if 0 // is this necessary?
         hr = oleObject->DoVerb(OLEIVERB_SHOW, 0, fs->oleClientSite, 0,
                 hwnd, &rc);
@@ -1299,16 +1352,19 @@ bool HtmlWindow::CreateBrowser()
         oleObject->SetClientSite(fs->oleClientSite);
 
     hr = p->QueryInterface(&webBrowser);
-    if (FAILED(hr)) return false;
+    if (FAILED(hr))
+        return false;
 
     ScopedComQIPtr<IConnectionPointContainer> cpContainer(p);
-    if (!cpContainer) return false;
+    if (!cpContainer)
+        return false;
     hr = cpContainer->FindConnectionPoint(DIID_DWebBrowserEvents2, &connectionPoint);
-    if (FAILED(hr)) return false;
+    if (FAILED(hr))
+        return false;
     connectionPoint->Advise(fs->hwDWebBrowserEvents2, &adviseCookie);
 
     // TODO: disallow accessing any random url?
-    //webBrowser->put_Offline(VARIANT_TRUE);
+    // webBrowser->put_Offline(VARIANT_TRUE);
 
     webBrowser->put_MenuBar(VARIANT_FALSE);
     webBrowser->put_AddressBar(VARIANT_FALSE);
@@ -1320,15 +1376,14 @@ bool HtmlWindow::CreateBrowser()
     webBrowser->put_RegisterAsDropTarget(VARIANT_TRUE);
 
     // TODO: do I need this anymore?
-    //NavigateToAboutBlank();
+    // NavigateToAboutBlank();
     SubclassHwnd();
 
     return true;
 }
 
-HtmlWindow *HtmlWindow::Create(HWND hwndParent, HtmlWindowCallback *cb)
-{
-    HtmlWindow *htmlWin = new HtmlWindow(hwndParent, cb);
+HtmlWindow* HtmlWindow::Create(HWND hwndParent, HtmlWindowCallback* cb) {
+    HtmlWindow* htmlWin = new HtmlWindow(hwndParent, cb);
     if (!htmlWin->CreateBrowser()) {
         delete htmlWin;
         return nullptr;
@@ -1336,8 +1391,7 @@ HtmlWindow *HtmlWindow::Create(HWND hwndParent, HtmlWindowCallback *cb)
     return htmlWin;
 }
 
-HtmlWindow::~HtmlWindow()
-{
+HtmlWindow::~HtmlWindow() {
     UnsubclassHwnd();
     if (oleInPlaceObject) {
         oleInPlaceObject->InPlaceDeactivate();
@@ -1368,8 +1422,7 @@ HtmlWindow::~HtmlWindow()
     FreeHtmlSetInProgressData();
 }
 
-void HtmlWindow::OnSize(SizeI size)
-{
+void HtmlWindow::OnSize(SizeI size) {
     if (webBrowser) {
         webBrowser->put_Width(size.dx);
         webBrowser->put_Height(size.dy);
@@ -1381,14 +1434,12 @@ void HtmlWindow::OnSize(SizeI size)
     }
 }
 
-void HtmlWindow::OnLButtonDown() const
-{
+void HtmlWindow::OnLButtonDown() const {
     if (htmlWinCb)
         htmlWinCb->OnLButtonDown();
 }
 
-void HtmlWindow::SetVisible(bool visible)
-{
+void HtmlWindow::SetVisible(bool visible) {
     win::SetVisibility(hwndParent, visible);
     if (webBrowser)
         webBrowser->put_Visible(visible ? VARIANT_TRUE : VARIANT_FALSE);
@@ -1396,14 +1447,12 @@ void HtmlWindow::SetVisible(bool visible)
 
 // Use for urls for which data will be provided by HtmlWindowCallback::GetHtmlForUrl()
 // (will be called from OnBeforeNavigate())
-void HtmlWindow::NavigateToDataUrl(const WCHAR *url)
-{
+void HtmlWindow::NavigateToDataUrl(const WCHAR* url) {
     AutoFreeW fullUrl(str::Format(L"its://%d/%s", windowId, url));
     NavigateToUrl(fullUrl);
 }
 
-void HtmlWindow::NavigateToUrl(const WCHAR *url)
-{
+void HtmlWindow::NavigateToUrl(const WCHAR* url) {
     VARIANT urlVar;
     VariantInitBstr(urlVar, url);
     currentURL.Set(nullptr);
@@ -1411,65 +1460,53 @@ void HtmlWindow::NavigateToUrl(const WCHAR *url)
     VariantClear(&urlVar);
 }
 
-void HtmlWindow::GoBack()
-{
+void HtmlWindow::GoBack() {
     if (webBrowser)
         webBrowser->GoBack();
 }
 
-void HtmlWindow::GoForward()
-{
+void HtmlWindow::GoForward() {
     if (webBrowser)
         webBrowser->GoForward();
 }
 
-int HtmlWindow::GetZoomPercent()
-{
-    VARIANT vtOut = { 0 };
-    HRESULT hr = webBrowser->ExecWB(OLECMDID_OPTICAL_ZOOM, OLECMDEXECOPT_DONTPROMPTUSER,
-                                    nullptr, &vtOut);
+int HtmlWindow::GetZoomPercent() {
+    VARIANT vtOut = {0};
+    HRESULT hr = webBrowser->ExecWB(OLECMDID_OPTICAL_ZOOM, OLECMDEXECOPT_DONTPROMPTUSER, nullptr, &vtOut);
     if (FAILED(hr))
         return 100;
     return vtOut.lVal;
 }
 
-void HtmlWindow::SetZoomPercent(int zoom)
-{
-    VARIANT vtIn = { 0 };
-    VARIANT vtOut = { 0 };
+void HtmlWindow::SetZoomPercent(int zoom) {
+    VARIANT vtIn = {0};
+    VARIANT vtOut = {0};
     VariantSetLong(&vtIn, zoom);
-    webBrowser->ExecWB(OLECMDID_OPTICAL_ZOOM, OLECMDEXECOPT_DONTPROMPTUSER,
-                       &vtIn, &vtOut);
+    webBrowser->ExecWB(OLECMDID_OPTICAL_ZOOM, OLECMDEXECOPT_DONTPROMPTUSER, &vtIn, &vtOut);
 }
 
-void HtmlWindow::PrintCurrentPage(bool showUI)
-{
+void HtmlWindow::PrintCurrentPage(bool showUI) {
     OLECMDEXECOPT cmdexecopt = showUI ? OLECMDEXECOPT_PROMPTUSER : OLECMDEXECOPT_DONTPROMPTUSER;
     webBrowser->ExecWB(OLECMDID_PRINT, cmdexecopt, nullptr, nullptr);
 }
 
-void HtmlWindow::FindInCurrentPage()
-{
+void HtmlWindow::FindInCurrentPage() {
     webBrowser->ExecWB(OLECMDID_FIND, OLECMDEXECOPT_PROMPTUSER, nullptr, nullptr);
 }
 
-void HtmlWindow::SelectAll()
-{
+void HtmlWindow::SelectAll() {
     webBrowser->ExecWB(OLECMDID_SELECTALL, OLECMDEXECOPT_DODEFAULT, nullptr, nullptr);
 }
 
-void HtmlWindow::CopySelection()
-{
+void HtmlWindow::CopySelection() {
     webBrowser->ExecWB(OLECMDID_COPY, OLECMDEXECOPT_DODEFAULT, nullptr, nullptr);
 }
 
-void HtmlWindow::NavigateToAboutBlank()
-{
+void HtmlWindow::NavigateToAboutBlank() {
     NavigateToUrl(L"about:blank");
 }
 
-void HtmlWindow::SetHtml(const char *s, size_t len, const WCHAR *url)
-{
+void HtmlWindow::SetHtml(const char* s, size_t len, const WCHAR* url) {
     FreeHtmlSetInProgressData();
     if (len == (size_t)-1) {
         len = str::Len(s);
@@ -1486,8 +1523,7 @@ void HtmlWindow::SetHtml(const char *s, size_t len, const WCHAR *url)
 // TODO: IHtmlDocument2->write() seems like a simpler method
 // http://www.codeproject.com/Articles/3365/Embed-an-HTML-control-in-your-own-window-using-pla#BUFFER
 // https://github.com/ReneNyffenegger/development_misc/blob/master/windows/mshtml/HTMLWindow.cpp#L143
-void HtmlWindow::SetHtmlReal(const char *s, size_t len)
-{
+void HtmlWindow::SetHtmlReal(const char* s, size_t len) {
     if (-1 == len)
         len = str::Len(s);
 
@@ -1518,8 +1554,7 @@ void HtmlWindow::SetHtmlReal(const char *s, size_t len)
 // http://stackoverflow.com/questions/8630173/hide-scrollbars-in-webbrowser-control-mfc
 // This is equivalent of <body scroll=auto> but for any html
 // This seems to be the only way to hide vertical scrollbar if it's not necessary
-void HtmlWindow::SetScrollbarToAuto()
-{
+void HtmlWindow::SetScrollbarToAuto() {
     ScopedComPtr<IDispatch> docDispatch;
     HRESULT hr = webBrowser->get_Document(&docDispatch);
     if (FAILED(hr) || !docDispatch)
@@ -1546,8 +1581,7 @@ void HtmlWindow::SetScrollbarToAuto()
 // Take a screenshot of a given <area> inside an html window and resize
 // it to <finalSize>. It's up to the caller to make sure <area> fits
 // within window (we don't check that's the case)
-HBITMAP HtmlWindow::TakeScreenshot(RectI area, SizeI finalSize)
-{
+HBITMAP HtmlWindow::TakeScreenshot(RectI area, SizeI finalSize) {
     ScopedComPtr<IDispatch> docDispatch;
     HRESULT hr = webBrowser->get_Document(&docDispatch);
     if (FAILED(hr) || !docDispatch)
@@ -1564,7 +1598,7 @@ HBITMAP HtmlWindow::TakeScreenshot(RectI area, SizeI finalSize)
     Graphics g(&image);
 
     HDC dc = g.GetHDC();
-    RECTL rc = { 0, 0, winRc.dx, winRc.dy };
+    RECTL rc = {0, 0, winRc.dx, winRc.dy};
     hr = view->Draw(DVASPECT_CONTENT, -1, nullptr, nullptr, dc, dc, &rc, nullptr, nullptr, 0);
     g.ReleaseHDC(dc);
     if (FAILED(hr))
@@ -1573,8 +1607,7 @@ HBITMAP HtmlWindow::TakeScreenshot(RectI area, SizeI finalSize)
     Bitmap imageRes(finalSize.dx, finalSize.dy, PixelFormat24bppRGB);
     Graphics g2(&imageRes);
     g2.SetInterpolationMode(InterpolationModeHighQualityBicubic);
-    g2.DrawImage(&image, Rect(0, 0, finalSize.dx, finalSize.dy),
-                 area.x, area.y, area.dx, area.dy, UnitPixel);
+    g2.DrawImage(&image, Rect(0, 0, finalSize.dx, finalSize.dy), area.x, area.y, area.dx, area.dy, UnitPixel);
 
     HBITMAP hbmp;
     Status ok = imageRes.GetHBITMAP((ARGB)Color::White, &hbmp);
@@ -1585,8 +1618,7 @@ HBITMAP HtmlWindow::TakeScreenshot(RectI area, SizeI finalSize)
 
 // called before an url is shown. If returns false, will cancel
 // the navigation.
-bool HtmlWindow::OnBeforeNavigate(const WCHAR *url, bool newWindow)
-{
+bool HtmlWindow::OnBeforeNavigate(const WCHAR* url, bool newWindow) {
     currentURL.Set(nullptr);
     if (!htmlWinCb)
         return true;
@@ -1603,16 +1635,14 @@ bool HtmlWindow::OnBeforeNavigate(const WCHAR *url, bool newWindow)
     return shouldNavigate;
 }
 
-void HtmlWindow::FreeHtmlSetInProgressData()
-{
+void HtmlWindow::FreeHtmlSetInProgressData() {
     free((void*)htmlSetInProgress);
     free((void*)htmlSetInProgressUrl);
     htmlSetInProgress = nullptr;
     htmlSetInProgressUrl = nullptr;
 }
 
-void HtmlWindow::OnDocumentComplete(const WCHAR *url)
-{
+void HtmlWindow::OnDocumentComplete(const WCHAR* url) {
     if (IsBlankUrl(url)) {
         if (htmlSetInProgress != nullptr) {
             // TODO: I think this triggers another OnDocumentComplete() for "about:blank",
@@ -1645,26 +1675,24 @@ void HtmlWindow::OnDocumentComplete(const WCHAR *url)
     SetScrollbarToAuto();
 }
 
-HRESULT HtmlWindow::OnDragEnter(IDataObject *dataObj)
-{
+HRESULT HtmlWindow::OnDragEnter(IDataObject* dataObj) {
     ScopedComQIPtr<IDataObject> data(dataObj);
     if (!data)
         return E_INVALIDARG;
-    FORMATETC fe = { CF_HDROP, nullptr, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
-    STGMEDIUM stg = { 0 };
+    FORMATETC fe = {CF_HDROP, nullptr, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
+    STGMEDIUM stg = {0};
     if (FAILED(data->GetData(&fe, &stg)))
         return E_FAIL;
     ReleaseStgMedium(&stg);
     return S_OK;
 }
 
-HRESULT HtmlWindow::OnDragDrop(IDataObject *dataObj)
-{
+HRESULT HtmlWindow::OnDragDrop(IDataObject* dataObj) {
     ScopedComQIPtr<IDataObject> data(dataObj);
     if (!data)
         return E_INVALIDARG;
-    FORMATETC fe = { CF_HDROP, nullptr, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
-    STGMEDIUM stg = { 0 };
+    FORMATETC fe = {CF_HDROP, nullptr, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
+    STGMEDIUM stg = {0};
     if (FAILED(data->GetData(&fe, &stg)))
         return E_FAIL;
 
@@ -1677,14 +1705,12 @@ HRESULT HtmlWindow::OnDragDrop(IDataObject *dataObj)
     return hDrop != nullptr ? S_OK : E_FAIL;
 }
 
-LRESULT HtmlWindow::SendMsg(UINT msg, WPARAM wp, LPARAM lp)
-{
+LRESULT HtmlWindow::SendMsg(UINT msg, WPARAM wp, LPARAM lp) {
     HWND hwndBrowser = GetBrowserControlHwnd(hwndParent);
     return SendMessage(hwndBrowser, msg, wp, lp);
 }
 
-FrameSite::FrameSite(HtmlWindow * win)
-{
+FrameSite::FrameSite(HtmlWindow* win) {
     refCount = 1;
 
     htmlWindow = win;
@@ -1702,24 +1728,23 @@ FrameSite::FrameSite(HtmlWindow * win)
     ambientShowGrabHandles = true;
     ambientAppearance = true;
 
-    //m_hDCBuffer = nullptr;
+    // m_hDCBuffer = nullptr;
     hwndParent = htmlWindow->hwndParent;
 
-    oleInPlaceFrame             = new HW_IOleInPlaceFrame(this);
-    oleInPlaceSiteWindowless    = new HW_IOleInPlaceSiteWindowless(this);
-    oleClientSite               = new HW_IOleClientSite(this);
-    oleControlSite              = new HW_IOleControlSite(this);
-    oleCommandTarget            = new HW_IOleCommandTarget(this);
-    oleItemContainer            = new HW_IOleItemContainer(this);
-    hwDWebBrowserEvents2        = new HW_DWebBrowserEvents2(this);
-    adviseSink2                 = new HW_IAdviseSink2(this);
-    docHostUIHandler            = new HW_IDocHostUIHandler(this);
-    dropTarget                  = new HW_IDropTarget(this);
-    serviceProvider             = new HW_IServiceProvider(this);
+    oleInPlaceFrame = new HW_IOleInPlaceFrame(this);
+    oleInPlaceSiteWindowless = new HW_IOleInPlaceSiteWindowless(this);
+    oleClientSite = new HW_IOleClientSite(this);
+    oleControlSite = new HW_IOleControlSite(this);
+    oleCommandTarget = new HW_IOleCommandTarget(this);
+    oleItemContainer = new HW_IOleItemContainer(this);
+    hwDWebBrowserEvents2 = new HW_DWebBrowserEvents2(this);
+    adviseSink2 = new HW_IAdviseSink2(this);
+    docHostUIHandler = new HW_IDocHostUIHandler(this);
+    dropTarget = new HW_IDropTarget(this);
+    serviceProvider = new HW_IServiceProvider(this);
 }
 
-FrameSite::~FrameSite()
-{
+FrameSite::~FrameSite() {
     delete serviceProvider;
     delete dropTarget;
     delete docHostUIHandler;
@@ -1734,21 +1759,16 @@ FrameSite::~FrameSite()
 }
 
 // IUnknown
-STDMETHODIMP FrameSite::QueryInterface(REFIID riid, void **ppv)
-{
+STDMETHODIMP FrameSite::QueryInterface(REFIID riid, void** ppv) {
     if (ppv == nullptr)
         return E_INVALIDARG;
 
     *ppv = nullptr;
     if (riid == IID_IUnknown)
         *ppv = this;
-    else if (riid == IID_IOleWindow ||
-        riid == IID_IOleInPlaceUIWindow ||
-        riid == IID_IOleInPlaceFrame)
+    else if (riid == IID_IOleWindow || riid == IID_IOleInPlaceUIWindow || riid == IID_IOleInPlaceFrame)
         *ppv = oleInPlaceFrame;
-    else if (riid == IID_IOleInPlaceSite ||
-        riid == IID_IOleInPlaceSiteEx ||
-        riid == IID_IOleInPlaceSiteWindowless)
+    else if (riid == IID_IOleInPlaceSite || riid == IID_IOleInPlaceSiteEx || riid == IID_IOleInPlaceSiteWindowless)
         *ppv = oleInPlaceSiteWindowless;
     else if (riid == IID_IOleClientSite)
         *ppv = oleClientSite;
@@ -1756,16 +1776,11 @@ STDMETHODIMP FrameSite::QueryInterface(REFIID riid, void **ppv)
         *ppv = oleControlSite;
     else if (riid == IID_IOleCommandTarget)
         *ppv = oleCommandTarget;
-    else if (riid == IID_IOleItemContainer ||
-        riid == IID_IOleContainer ||
-        riid == IID_IParseDisplayName)
+    else if (riid == IID_IOleItemContainer || riid == IID_IOleContainer || riid == IID_IParseDisplayName)
         *ppv = oleItemContainer;
-    else if (riid == IID_IDispatch ||
-        riid == DIID_DWebBrowserEvents2)
+    else if (riid == IID_IDispatch || riid == DIID_DWebBrowserEvents2)
         *ppv = hwDWebBrowserEvents2;
-    else if (riid == IID_IAdviseSink ||
-        riid == IID_IAdviseSink2 ||
-        riid == IID_IAdviseSinkEx)
+    else if (riid == IID_IAdviseSink || riid == IID_IAdviseSink2 || riid == IID_IAdviseSinkEx)
         *ppv = adviseSink2;
     else if (riid == IID_IDocHostUIHandler)
         *ppv = docHostUIHandler;
@@ -1781,8 +1796,7 @@ STDMETHODIMP FrameSite::QueryInterface(REFIID riid, void **ppv)
     return S_OK;
 }
 
-ULONG STDMETHODCALLTYPE FrameSite::Release()
-{
+ULONG STDMETHODCALLTYPE FrameSite::Release() {
     LONG res = InterlockedDecrement(&refCount);
     CrashIf(res < 0);
     if (0 == res)
@@ -1791,13 +1805,11 @@ ULONG STDMETHODCALLTYPE FrameSite::Release()
 }
 
 // IDispatch
-HRESULT HW_DWebBrowserEvents2::DispatchPropGet(DISPID dispIdMember, VARIANT *res)
-{
+HRESULT HW_DWebBrowserEvents2::DispatchPropGet(DISPID dispIdMember, VARIANT* res) {
     if (res == nullptr)
         return E_INVALIDARG;
 
-    switch (dispIdMember)
-    {
+    switch (dispIdMember) {
         case DISPID_AMBIENT_APPEARANCE:
             VariantSetBool(res, fs->ambientAppearance);
             break;
@@ -1832,27 +1844,24 @@ HRESULT HW_DWebBrowserEvents2::DispatchPropGet(DISPID dispIdMember, VARIANT *res
     return S_OK;
 }
 
-static BSTR BstrFromVariant(VARIANT *vurl)
-{
+static BSTR BstrFromVariant(VARIANT* vurl) {
     if (vurl->vt & VT_BYREF)
         return *vurl->pbstrVal;
     else
         return vurl->bstrVal;
 }
 
-HRESULT HW_DWebBrowserEvents2::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid,
-    WORD flags, DISPPARAMS * pDispParams, VARIANT * pVarResult,
-    EXCEPINFO * pExcepInfo, unsigned int * puArgErr)
-{
-    UNUSED(pExcepInfo); UNUSED(puArgErr);
-    UNUSED(riid); UNUSED(lcid);
+HRESULT HW_DWebBrowserEvents2::Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD flags, DISPPARAMS* pDispParams,
+                                      VARIANT* pVarResult, EXCEPINFO* pExcepInfo, unsigned int* puArgErr) {
+    UNUSED(pExcepInfo);
+    UNUSED(puArgErr);
+    UNUSED(riid);
+    UNUSED(lcid);
     if (flags & DISPATCH_PROPERTYGET)
         return DispatchPropGet(dispIdMember, pVarResult);
 
-    switch (dispIdMember)
-    {
-        case DISPID_BEFORENAVIGATE2:
-        {
+    switch (dispIdMember) {
+        case DISPID_BEFORENAVIGATE2: {
             BSTR url = BstrFromVariant(pDispParams->rgvarg[5].pvarVal);
             bool shouldCancel = !fs->htmlWindow->OnBeforeNavigate(url, false);
             *pDispParams->rgvarg[0].pboolVal = shouldCancel ? VARIANT_TRUE : VARIANT_FALSE;
@@ -1869,8 +1878,7 @@ HRESULT HW_DWebBrowserEvents2::Invoke(DISPID dispIdMember, REFIID riid, LCID lci
         }
 #endif
 
-        case DISPID_DOCUMENTCOMPLETE:
-        {
+        case DISPID_DOCUMENTCOMPLETE: {
             // TODO: there are complexities related to multi-frame documents. This
             // gets called on every frame and we should probably only notify
             // on completion of top-level frame. On the other hand, I haven't
@@ -1880,25 +1888,23 @@ HRESULT HW_DWebBrowserEvents2::Invoke(DISPID dispIdMember, REFIID riid, LCID lci
             break;
         }
 
-        case DISPID_NAVIGATEERROR:
-        {
+        case DISPID_NAVIGATEERROR: {
             // TODO: probably should notify about that too
             break;
         }
 
         case DISPID_COMMANDSTATECHANGE:
             switch (pDispParams->rgvarg[1].lVal) {
-            case CSC_NAVIGATEBACK:
-                fs->htmlWindow->canGoBack = pDispParams->rgvarg[0].boolVal;
-                break;
-            case CSC_NAVIGATEFORWARD:
-                fs->htmlWindow->canGoForward = pDispParams->rgvarg[0].boolVal;
-                break;
+                case CSC_NAVIGATEBACK:
+                    fs->htmlWindow->canGoBack = pDispParams->rgvarg[0].boolVal;
+                    break;
+                case CSC_NAVIGATEFORWARD:
+                    fs->htmlWindow->canGoForward = pDispParams->rgvarg[0].boolVal;
+                    break;
             }
             break;
 
-        case DISPID_NEWWINDOW3:
-        {
+        case DISPID_NEWWINDOW3: {
             BSTR url = pDispParams->rgvarg[0].bstrVal;
             bool shouldCancel = !fs->htmlWindow->OnBeforeNavigate(url, true);
             *pDispParams->rgvarg[3].pboolVal = shouldCancel ? VARIANT_TRUE : VARIANT_FALSE;
@@ -1916,8 +1922,7 @@ HRESULT HW_DWebBrowserEvents2::Invoke(DISPID dispIdMember, REFIID riid, LCID lci
 }
 
 // IOleWindow
-HRESULT HW_IOleInPlaceFrame::GetWindow(HWND *phwnd)
-{
+HRESULT HW_IOleInPlaceFrame::GetWindow(HWND* phwnd) {
     if (phwnd == nullptr)
         return E_INVALIDARG;
     *phwnd = fs->hwndParent;
@@ -1925,41 +1930,34 @@ HRESULT HW_IOleInPlaceFrame::GetWindow(HWND *phwnd)
 }
 
 // IOleInPlaceUIWindow
-HRESULT HW_IOleInPlaceFrame::GetBorder(LPRECT lprectBorder)
-{
+HRESULT HW_IOleInPlaceFrame::GetBorder(LPRECT lprectBorder) {
     if (lprectBorder == nullptr)
         return E_INVALIDARG;
     return INPLACE_E_NOTOOLSPACE;
 }
 
-HRESULT HW_IOleInPlaceFrame::RequestBorderSpace(LPCBORDERWIDTHS pborderwidths)
-{
+HRESULT HW_IOleInPlaceFrame::RequestBorderSpace(LPCBORDERWIDTHS pborderwidths) {
     if (pborderwidths == nullptr)
         return E_INVALIDARG;
     return INPLACE_E_NOTOOLSPACE;
 }
 
 // IOleInPlaceSite
-HRESULT HW_IOleInPlaceSiteWindowless::OnInPlaceActivate()
-{
+HRESULT HW_IOleInPlaceSiteWindowless::OnInPlaceActivate() {
     fs->inPlaceActive = true;
     return S_OK;
 }
 
-HRESULT HW_IOleInPlaceSiteWindowless::OnUIActivate()
-{
+HRESULT HW_IOleInPlaceSiteWindowless::OnUIActivate() {
     fs->uiActive = true;
     return S_OK;
 }
 
-HRESULT HW_IOleInPlaceSiteWindowless::GetWindowContext(
-    IOleInPlaceFrame **ppFrame, IOleInPlaceUIWindow **ppDoc,
-    LPRECT lprcPosRect, LPRECT lprcClipRect,
-    LPOLEINPLACEFRAMEINFO lpFrameInfo)
-{
-    if (ppFrame == nullptr || ppDoc == nullptr || lprcPosRect == nullptr ||
-            lprcClipRect == nullptr || lpFrameInfo == nullptr)
-    {
+HRESULT HW_IOleInPlaceSiteWindowless::GetWindowContext(IOleInPlaceFrame** ppFrame, IOleInPlaceUIWindow** ppDoc,
+                                                       LPRECT lprcPosRect, LPRECT lprcClipRect,
+                                                       LPOLEINPLACEFRAMEINFO lpFrameInfo) {
+    if (ppFrame == nullptr || ppDoc == nullptr || lprcPosRect == nullptr || lprcClipRect == nullptr ||
+        lpFrameInfo == nullptr) {
         if (ppFrame != nullptr)
             *ppFrame = nullptr;
         if (ppDoc != nullptr)
@@ -1979,22 +1977,19 @@ HRESULT HW_IOleInPlaceSiteWindowless::GetWindowContext(
     return S_OK;
 }
 
-HRESULT HW_IOleInPlaceSiteWindowless::OnUIDeactivate(BOOL fUndoable)
-{
+HRESULT HW_IOleInPlaceSiteWindowless::OnUIDeactivate(BOOL fUndoable) {
     UNUSED(fUndoable);
     fs->uiActive = false;
     return S_OK;
 }
 
-HRESULT HW_IOleInPlaceSiteWindowless::OnInPlaceDeactivate()
-{
+HRESULT HW_IOleInPlaceSiteWindowless::OnInPlaceDeactivate() {
     fs->inPlaceActive = false;
     return S_OK;
 }
 
 // IOleInPlaceSiteEx
-HRESULT HW_IOleInPlaceSiteWindowless::OnInPlaceActivateEx(BOOL * pfNoRedraw, DWORD dwFlags)
-{
+HRESULT HW_IOleInPlaceSiteWindowless::OnInPlaceActivateEx(BOOL* pfNoRedraw, DWORD dwFlags) {
     UNUSED(dwFlags);
     if (pfNoRedraw)
         *pfNoRedraw = FALSE;
@@ -2002,13 +1997,11 @@ HRESULT HW_IOleInPlaceSiteWindowless::OnInPlaceActivateEx(BOOL * pfNoRedraw, DWO
 }
 
 // IOleInPlaceSiteWindowless
-HRESULT HW_IOleInPlaceSiteWindowless::CanWindowlessActivate()
-{
+HRESULT HW_IOleInPlaceSiteWindowless::CanWindowlessActivate() {
     return fs->supportsWindowlessActivation ? S_OK : S_FALSE;
 }
 
-HRESULT HW_IOleInPlaceSiteWindowless::GetDC(LPCRECT pRect, DWORD grfFlags, HDC* phDC)
-{
+HRESULT HW_IOleInPlaceSiteWindowless::GetDC(LPCRECT pRect, DWORD grfFlags, HDC* phDC) {
     UNUSED(pRect);
     if (phDC == nullptr)
         return E_INVALIDARG;
@@ -2028,26 +2021,25 @@ HRESULT HW_IOleInPlaceSiteWindowless::GetDC(LPCRECT pRect, DWORD grfFlags, HDC* 
     return E_NOTIMPL;
 }
 
-HRESULT HW_IOleInPlaceSiteWindowless::InvalidateRect(LPCRECT pRect, BOOL fErase)
-{
+HRESULT HW_IOleInPlaceSiteWindowless::InvalidateRect(LPCRECT pRect, BOOL fErase) {
     UNUSED(pRect);
     ::InvalidateRect(fs->hwndParent, nullptr, fErase);
     return S_OK;
 }
 
 // IOleClientSite
-HRESULT HW_IOleClientSite::GetContainer(LPOLECONTAINER * ppContainer)
-{
+HRESULT HW_IOleClientSite::GetContainer(LPOLECONTAINER* ppContainer) {
     if (ppContainer == nullptr)
         return E_INVALIDARG;
     return QueryInterface(IID_IOleContainer, (void**)ppContainer);
 }
 
 // IOleItemContainer
-HRESULT HW_IOleItemContainer::GetObject(LPOLESTR pszItem,
-    DWORD dwSpeedNeeded, IBindCtx * pbc, REFIID riid, void ** ppvObject)
-{
-    UNUSED(dwSpeedNeeded); UNUSED(pbc); UNUSED(riid);
+HRESULT HW_IOleItemContainer::GetObject(LPOLESTR pszItem, DWORD dwSpeedNeeded, IBindCtx* pbc, REFIID riid,
+                                        void** ppvObject) {
+    UNUSED(dwSpeedNeeded);
+    UNUSED(pbc);
+    UNUSED(riid);
     if (pszItem == nullptr)
         return E_INVALIDARG;
     if (ppvObject == nullptr)
@@ -2056,10 +2048,9 @@ HRESULT HW_IOleItemContainer::GetObject(LPOLESTR pszItem,
     return MK_E_NOOBJECT;
 }
 
-HRESULT HW_IOleItemContainer::GetObjectStorage(LPOLESTR pszItem,
-    IBindCtx * pbc, REFIID riid, void ** ppvStorage)
-{
-    UNUSED(pbc); UNUSED(riid);
+HRESULT HW_IOleItemContainer::GetObjectStorage(LPOLESTR pszItem, IBindCtx* pbc, REFIID riid, void** ppvStorage) {
+    UNUSED(pbc);
+    UNUSED(riid);
     if (pszItem == nullptr)
         return E_INVALIDARG;
     if (ppvStorage == nullptr)
@@ -2068,37 +2059,34 @@ HRESULT HW_IOleItemContainer::GetObjectStorage(LPOLESTR pszItem,
     return MK_E_NOOBJECT;
 }
 
-HRESULT HW_IOleItemContainer::IsRunning(LPOLESTR pszItem)
-{
+HRESULT HW_IOleItemContainer::IsRunning(LPOLESTR pszItem) {
     if (pszItem == nullptr)
         return E_INVALIDARG;
     return MK_E_NOOBJECT;
 }
 
 // IOleControlSite
-HRESULT HW_IOleControlSite::LockInPlaceActive(BOOL fLock)
-{
+HRESULT HW_IOleControlSite::LockInPlaceActive(BOOL fLock) {
     fs->inPlaceLocked = (fLock == TRUE);
     return S_OK;
 }
 
-HRESULT HW_IOleControlSite::TransformCoords(POINTL *pPtlHimetric,
-    POINTF *pPtfContainer, DWORD dwFlags)
-{
+HRESULT HW_IOleControlSite::TransformCoords(POINTL* pPtlHimetric, POINTF* pPtfContainer, DWORD dwFlags) {
     UNUSED(dwFlags);
     HRESULT hr = S_OK;
     if (pPtlHimetric == nullptr)
-            return E_INVALIDARG;
+        return E_INVALIDARG;
     if (pPtfContainer == nullptr)
-            return E_INVALIDARG;
+        return E_INVALIDARG;
     return hr;
 }
 
 // IOleCommandTarget
-HRESULT HW_IOleCommandTarget::QueryStatus(const GUID *pguidCmdGroup,
-    ULONG cCmds, OLECMD *prgCmds, OLECMDTEXT *pCmdTet)
-{
-    UNUSED(pguidCmdGroup); UNUSED(cCmds); UNUSED(pCmdTet);
+HRESULT HW_IOleCommandTarget::QueryStatus(const GUID* pguidCmdGroup, ULONG cCmds, OLECMD* prgCmds,
+                                          OLECMDTEXT* pCmdTet) {
+    UNUSED(pguidCmdGroup);
+    UNUSED(cCmds);
+    UNUSED(pCmdTet);
     if (prgCmds == nullptr)
         return E_INVALIDARG;
     return OLECMDERR_E_UNKNOWNGROUP;
