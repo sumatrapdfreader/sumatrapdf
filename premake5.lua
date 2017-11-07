@@ -56,9 +56,6 @@ workspace "SumatraPDF"
 
   filter "platforms:x64"
      architecture "x86_64"
-     toolset "v140_xp"
-     filter "action:vs2017"
-      toolset "v141_xp"
   filter {}
 
   disablewarnings { "4127", "4324", "4458", "4800" }
