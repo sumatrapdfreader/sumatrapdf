@@ -3,7 +3,6 @@
 
 // utils
 #include "BaseUtil.h"
-#include "FileTransactions.h"
 #include "FileUtil.h"
 #include "SquareTreeParser.h"
 // rendering engines
@@ -169,8 +168,7 @@ bool SaveFileModifictions(const WCHAR *filePath, Vec<PageAnnotation> *list)
     }
     data.RemoveAt(data.Size() - 2, 2);
 
-    FileTransaction trans;
-    return trans.WriteAll(modificationsPath, data.LendData(), data.Size()) && trans.Commit();
+    return file::WriteAll(modificationsPath, data.LendData(), data.Size());
 }
 
 bool IsModificationsFile(const WCHAR *filePath)

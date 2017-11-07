@@ -21,7 +21,7 @@ The intent is to standardize how we do it.
 // dbghelp.h is included here so that warning C4091 can be disabled in a single location
 #pragma warning(push)
 // VS2015: 'typedef ': ignored on left of '' when no variable is declared
-#pragma warning(disable : 4091) 
+#pragma warning(disable : 4091)
 #include <dbghelp.h>
 #pragma warning(pop)
 #include <tlhelp32.h>
@@ -51,14 +51,6 @@ typedef BOOL(WINAPI *Sig_SetProcessDEPPolicy)(DWORD dwFlags);
 typedef BOOL(WINAPI *Sig_IsWow64Process)(HANDLE, PBOOL);
 typedef BOOL(WINAPI *Sig_SetDllDirectoryW)(LPCWSTR);
 typedef void(WINAPI *Sig_RtlCaptureContext)(PCONTEXT);
-typedef HANDLE(WINAPI *Sig_CreateFileTransactedW)(LPCWSTR lpFileName, DWORD dwDesiredAccess,
-                                                  DWORD dwShareMode,
-                                                  LPSECURITY_ATTRIBUTES lpSecurityAttributes,
-                                                  DWORD dwCreationDisposition,
-                                                  DWORD dwFlagsAndAttributes, HANDLE hTemplateFile,
-                                                  HANDLE hTransaction, PUSHORT pusMiniVersion,
-                                                  PVOID pExtendedParameter);
-typedef BOOL(WINAPI *Sig_DeleteFileTransactedW)(LPCWSTR lpFileName, HANDLE hTransaction);
 typedef BOOL(WINAPI *Sig_SetDefaultDllDirectories)(DWORD);
 typedef BOOL (WINAPI *Sig_SetProcessMitigationPolicy)(PROCESS_MITIGATION_POLICY, PVOID, SIZE_T);
 
@@ -68,8 +60,6 @@ typedef BOOL (WINAPI *Sig_SetProcessMitigationPolicy)(PROCESS_MITIGATION_POLICY,
     V(SetDllDirectoryW)                                                                            \
     V(SetDefaultDllDirectories)                                                                    \
     V(RtlCaptureContext)                                                                           \
-    V(CreateFileTransactedW)                                                                       \
-    V(DeleteFileTransactedW)                                                                       \
     V(SetProcessMitigationPolicy)
 
 // ntdll.dll
