@@ -668,19 +668,15 @@ TabInfo* CreateNewTab(WindowInfo* win, const WCHAR* filePath) {
     win->tabs.Append(tab);
     tab->canvasRc = win->canvasRc;
 
-    TCITEMW tcs;
+    TCITEMW tcs = {0};
     tcs.mask = TCIF_TEXT;
     tcs.pszText = (WCHAR*)tab->GetTabTitle();
 
-    int index = (int)win->tabs.Count() - 1;
-    if (-1 != TabCtrl_InsertItem(win->hwndTabBar, index, &tcs)) {
-        TabCtrl_SetCurSel(win->hwndTabBar, index);
-        UpdateTabWidth(win);
-    } else {
-        // TODO: what now?
-        CrashIf(true);
-    }
-
+    int idx = (int)win->tabs.Count() - 1;
+    auto insertedIdx = TabCtrl_InsertItem(win->hwndTabBar, idx, &tcs);
+    CrashIf(insertedIdx == -1);
+    TabCtrl_SetCurSel(win->hwndTabBar, idx);
+    UpdateTabWidth(win);
     return tab;
 }
 
@@ -787,16 +783,17 @@ static void ShowTabBar(WindowInfo* win, bool show) {
 void UpdateTabWidth(WindowInfo* win) {
     int count = (int)win->tabs.Count();
     bool showSingleTab = gGlobalPrefs->useTabs || win->tabsInTitlebar;
-    if (count > (showSingleTab ? 0 : 1)) {
-        ShowTabBar(win, true);
-        ClientRect rect(win->hwndTabBar);
-        SizeI tabSize = GetTabSize(win->hwndFrame);
-        if (tabSize.dx > (rect.dx - 3) / count)
-            tabSize.dx = (rect.dx - 3) / count;
-        TabCtrl_SetItemSize(win->hwndTabBar, tabSize.dx, tabSize.dy);
-    } else {
+    bool showTabs = (count > 1) || (showSingleTab && (count > 0));
+    if (!showTabs) {
         ShowTabBar(win, false);
+        return;
     }
+    ShowTabBar(win, true);
+    ClientRect rect(win->hwndTabBar);
+    SizeI tabSize = GetTabSize(win->hwndFrame);
+    auto maxDx = (rect.dx - 3) / count;
+    tabSize.dx = std::min(tabSize.dx, maxDx);
+    TabCtrl_SetItemSize(win->hwndTabBar, tabSize.dx, tabSize.dy);
 }
 
 void SetTabsInTitlebar(WindowInfo* win, bool set) {

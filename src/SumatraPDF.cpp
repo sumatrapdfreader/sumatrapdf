@@ -1458,8 +1458,7 @@ void scheduleReloadTab(TabInfo *tab) {
 // window or creating a new window for the document)
 WindowInfo* LoadDocument(LoadArgs& args)
 {
-    if (gCrashOnOpen)
-        CrashMe();
+    CrashAlwaysIf(gCrashOnOpen);
 
     AutoFreeW fullPath(path::Normalize(args.fileName));
     WindowInfo *win = args.win;

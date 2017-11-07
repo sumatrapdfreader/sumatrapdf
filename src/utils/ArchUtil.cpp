@@ -81,7 +81,9 @@ char *ArchFile::GetFileDataByIdx(size_t fileindex, size_t *len)
     if (!ar_entry_uncompress(ar, data, size))
         return GetFileFromFallback(fileindex, len);
     // zero-terminate for convenience
-    data[size] = data[size + 1] = data[size + 2] = '\0';
+    data[size] = 0;
+    data[size + 1] = 0;
+    data[size + 2] = 0;
 
     if (len)
         *len = size;

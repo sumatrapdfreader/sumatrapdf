@@ -920,7 +920,7 @@ bool CbxEngineImpl::FinishLoading()
             allFileNames.Append(nullptr);
         }
     }
-    AssertCrash(allFileNames.Count() == cbxFile->GetFileCount());
+    CrashIf(allFileNames.Count() != cbxFile->GetFileCount());
 
     AutoFree metadata(cbxFile->GetFileDataByName(L"ComicInfo.xml"));
     if (metadata)
@@ -933,7 +933,7 @@ bool CbxEngineImpl::FinishLoading()
     for (const WCHAR *fn : pageFileNames) {
         fileIdxs.Append(allFileNames.Find(fn));
     }
-    AssertCrash(pageFileNames.Count() == fileIdxs.Count());
+    CrashIf(pageFileNames.Count() != fileIdxs.Count());
     if (fileIdxs.Count() == 0)
         return false;
 
