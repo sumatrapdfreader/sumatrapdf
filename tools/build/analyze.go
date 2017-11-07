@@ -15,7 +15,7 @@ import (
 //
 // c:\users\kjk\src\sumatrapdf\ext\unarr\rar\uncompress-rar.c(171): warning C6011:
 // Dereferencing NULL pointer 'code->table'. : Lines: 163, 165, 169, 170,
-// 171 [C:\Users\kjk\src\sumatrapdf\vs2015\Installer.vcxproj]
+// 171 [C:\Users\kjk\src\sumatrapdf\vs2017\Installer.vcxproj]
 //
 // FilePath will be: "ext\unarr\rar\uncompress-rar.c"
 // LineNo will be: 171
@@ -122,7 +122,7 @@ func genAnalyzeHTML(errors []*AnalyzeLine) string {
 
 func parseAnalyzeLine(s string) AnalyzeLine {
 	sOrig := s
-	// remove " [C:\Users\kjk\src\sumatrapdf\vs2015\Installer.vcxproj]" from the end
+	// remove " [C:\Users\kjk\src\sumatrapdf\vs2017\Installer.vcxproj]" from the end
 	end := strings.LastIndex(s, " [")
 	fatalIf(end == -1, "invalid line '%s'\n", sOrig)
 	s = s[:end]

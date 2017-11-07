@@ -3,5 +3,4 @@ if (!(Test-Path ".\\bin\\premake5.exe")) {
   exit
 }
 
-bin\premake5.exe vs2015
 bin\premake5.exe vs2017

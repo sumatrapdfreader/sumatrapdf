@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	// either vs2015 or vs2017
+	// vs2017
 	vsVer        string
 	envForVS     []string
 	msbuildPath  string // full path to msbuild.exe
@@ -107,22 +107,6 @@ func getEnvForVS2017() []string {
 	return env
 }
 
-func getEnvForVS2015() []string {
-	dir, ok := getOsEnvValue("VS140COMNTOOLS")
-	if !ok {
-		fatalf("VS140COMNTOOLS not set; VS 2015 or VS 2017 not installed?\n")
-	}
-	// TODO: probably should be vcvars32.bat on 32-bit windows
-	env := getEnvAfterScript(dir, "vcvars64.bat")
-	if len(env) == 0 {
-		fmt.Printf("getEnvAfterScript() returned empty, no VS 2015\n")
-		return nil
-	}
-	vsVer = "vs2015"
-	fmt.Printf("Found VS 2015\n")
-	return env
-}
-
 func lookExeInEnvPathUncachedHelper(env []string, exeName string) string {
 	var found []string
 	paths := getPaths(env)
@@ -182,9 +166,6 @@ func lookExeInEnvPath(env []string, exeName string) string {
 func detectVisualStudio() {
 	fatalIf(envForVS != nil, "called detectVisualStudio() second time")
 	envForVS = getEnvForVS2017()
-	if envForVS == nil {
-		envForVS = getEnvForVS2015()
-	}
 	fatalIf(envForVS == nil, "didn't find Visual Studio")
 	msbuildPath = lookExeInEnvPath(envForVS, "msbuild.exe")
 	fatalIf(msbuildPath == "", "didn't find msbuild.exe")
