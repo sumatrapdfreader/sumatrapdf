@@ -47,11 +47,10 @@ timestamp = 2013-03-10T05:43:21Z
 (Currently, the only supported modifications are adding annotations.)
 */
 
-#define SMX_FILE_EXT        L".smx"
-#define SMX_CURR_VERSION    CURR_VERSION_STRA
+#define SMX_FILE_EXT L".smx"
+#define SMX_CURR_VERSION CURR_VERSION_STRA
 
-static Vec<PageAnnotation> *ParseFileModifications(const char *data)
-{
+static Vec<PageAnnotation>* ParseFileModifications(const char* data) {
     if (!data)
         return nullptr;
 
@@ -67,13 +66,15 @@ static Vec<PageAnnotation> *ParseFileModifications(const char *data)
         return nullptr;
     }
 
-    Vec<PageAnnotation> *list = new Vec<PageAnnotation>();
+    Vec<PageAnnotation>* list = new Vec<PageAnnotation>();
     for (SquareTreeNode::DataItem& i : sqt.root->data) {
-        PageAnnotType type = str::EqI(i.key, "highlight") ? Annot_Highlight :
-                             str::EqI(i.key, "underline") ? Annot_Underline :
-                             str::EqI(i.key, "strikeout") ? Annot_StrikeOut :
-                             str::EqI(i.key, "squiggly")  ? Annot_Squiggly  :
-                             Annot_None;
+        PageAnnotType type = str::EqI(i.key, "highlight")
+                                 ? Annot_Highlight
+                                 : str::EqI(i.key, "underline")
+                                       ? Annot_Underline
+                                       : str::EqI(i.key, "strikeout")
+                                             ? Annot_StrikeOut
+                                             : str::EqI(i.key, "squiggly") ? Annot_Squiggly : Annot_None;
         CrashIf(!i.isChild);
         if (Annot_None == type || !i.isChild)
             continue;
@@ -84,8 +85,8 @@ static Vec<PageAnnotation> *ParseFileModifications(const char *data)
         float opacity;
         int r, g, b;
 
-        SquareTreeNode *node = i.value.child;
-        const char *value = node->GetValue("page");
+        SquareTreeNode* node = i.value.child;
+        const char* value = node->GetValue("page");
         if (!value || !str::Parse(value, "%d%$", &pageNo))
             continue;
         value = node->GetValue("rect");
@@ -104,15 +105,13 @@ static Vec<PageAnnotation> *ParseFileModifications(const char *data)
     return list;
 }
 
-Vec<PageAnnotation> *LoadFileModifications(const WCHAR *filePath)
-{
+Vec<PageAnnotation>* LoadFileModifications(const WCHAR* filePath) {
     AutoFreeW modificationsPath(str::Join(filePath, SMX_FILE_EXT));
     AutoFree data(file::ReadAll(modificationsPath, nullptr));
     return ParseFileModifications(data);
 }
 
-bool SaveFileModifictions(const WCHAR *filePath, Vec<PageAnnotation> *list)
-{
+bool SaveFileModifictions(const WCHAR* filePath, Vec<PageAnnotation>* list) {
     if (!list) {
         return false;
     }
@@ -122,13 +121,14 @@ bool SaveFileModifictions(const WCHAR *filePath, Vec<PageAnnotation> *list)
     size_t offset = 0;
 
     AutoFree prevData(file::ReadAll(modificationsPath, nullptr));
-    Vec<PageAnnotation> *prevList = ParseFileModifications(prevData);
+    Vec<PageAnnotation>* prevList = ParseFileModifications(prevData);
     bool isUpdate = prevList != nullptr;
     if (isUpdate) {
         // in the case of an update, append changed annotations to the existing ones
         // (don't rewrite the existing ones in case they're by a newer version which
         // added annotation types and properties this version doesn't know anything about)
-        for (; offset < prevList->Count() && prevList->At(offset) == list->At(offset); offset++);
+        for (; offset < prevList->Count() && prevList->At(offset) == list->At(offset); offset++)
+            ;
         CrashIfDebugOnly(offset != prevList->Count());
         data.AppendAndFree(prevData.StealData());
         delete prevList;
@@ -147,18 +147,27 @@ bool SaveFileModifictions(const WCHAR *filePath, Vec<PageAnnotation> *list)
         data.AppendFmt("filesize = %u\r\n", (UINT)size);
     SYSTEMTIME time;
     GetSystemTime(&time);
-    data.AppendFmt("timestamp = %04d-%02d-%02dT%02d:%02d:%02dZ\r\n",
-        time.wYear, time.wMonth, time.wDay, time.wHour, time.wMinute, time.wSecond);
+    data.AppendFmt("timestamp = %04d-%02d-%02dT%02d:%02d:%02dZ\r\n", time.wYear, time.wMonth, time.wDay, time.wHour,
+                   time.wMinute, time.wSecond);
     data.Append("\r\n");
 
     for (size_t i = offset; i < list->Count(); i++) {
         PageAnnotation& annot = list->At(i);
         switch (annot.type) {
-        case Annot_Highlight: data.Append("[highlight]\r\n"); break;
-        case Annot_Underline: data.Append("[underline]\r\n"); break;
-        case Annot_StrikeOut: data.Append("[strikeout]\r\n"); break;
-        case Annot_Squiggly:  data.Append("[squiggly]\r\n");  break;
-        default: continue;
+            case Annot_Highlight:
+                data.Append("[highlight]\r\n");
+                break;
+            case Annot_Underline:
+                data.Append("[underline]\r\n");
+                break;
+            case Annot_StrikeOut:
+                data.Append("[strikeout]\r\n");
+                break;
+            case Annot_Squiggly:
+                data.Append("[squiggly]\r\n");
+                break;
+            default:
+                continue;
         }
         data.AppendFmt("page = %d\r\n", annot.pageNo);
         data.AppendFmt("rect = %g %g %g %g\r\n", annot.rect.x, annot.rect.y, annot.rect.dx, annot.rect.dy);
@@ -171,8 +180,7 @@ bool SaveFileModifictions(const WCHAR *filePath, Vec<PageAnnotation> *list)
     return file::WriteAll(modificationsPath, data.LendData(), data.Size());
 }
 
-bool IsModificationsFile(const WCHAR *filePath)
-{
+bool IsModificationsFile(const WCHAR* filePath) {
     if (!str::EndsWithI(filePath, SMX_FILE_EXT))
         return false;
     AutoFreeW origPath(str::DupN(filePath, str::Len(filePath) - str::Len(SMX_FILE_EXT)));
