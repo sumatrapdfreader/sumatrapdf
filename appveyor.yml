@@ -4,6 +4,7 @@
 version: 3.1.{build}
 
 image: Visual Studio 2017
+shallow_clone: true # reduce traffic
 
 branches:
   only:
@@ -16,7 +17,7 @@ environment:
 
 # https://github.com/appveyor/ci/issues/899
 clone_script:
-  - cmd: git clone -q --branch=%APPVEYOR_REPO_BRANCH% https://github.com/%APPVEYOR_REPO_NAME%.git %APPVEYOR_BUILD_FOLDER%
+  - cmd: git clone -q --depth 1 --branch=%APPVEYOR_REPO_BRANCH% https://github.com/%APPVEYOR_REPO_NAME%.git %APPVEYOR_BUILD_FOLDER%
   - cmd: git checkout -qf %APPVEYOR_REPO_COMMIT%
 
 skip_tags: true

@@ -4,8 +4,8 @@ SETLOCAL
 REM assumes we're being run from top-level directory as:
 REM scripts\appveyor-build-2.bat
 
-CALL scripts\vc.bat
-IF ERRORLEVEL 1 EXIT /B 1
+REM CALL scripts\vc.bat
+REM IF ERRORLEVEL 1 EXIT /B 1
 
 REM TODO: appveyor complains about lack of v141_xp toolset
 REM msbuild.exe "vs2017\SumatraPDF.sln" "/t:SumatraPDF;Installer;test_util" "/p:Configuration=Release;Platform=Win32" /m
