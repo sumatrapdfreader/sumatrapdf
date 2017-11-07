@@ -25,10 +25,6 @@ skip_tags: true
 build_script:
   - scripts\appveyor-build.bat
 
-test_script:
-  - rel\test_util.exe
-  - rel64\test_util.exe
-
 artifacts:
   - path: rel\SumatraPDF.exe
   - path: rel\Installer.exe
