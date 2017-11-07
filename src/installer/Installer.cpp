@@ -24,7 +24,6 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include <tlhelp32.h>
 #include <io.h>
 #include "FileUtil.h"
-#include "FileTransactions.h"
 #include "Translations.h"
 #include "Resource.h"
 #include "Timer.h"

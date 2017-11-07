@@ -157,8 +157,7 @@ static void FreeArray(Vec<void *> *array, const FieldInfo& field)
     delete array;
 }
 
-#ifndef NDEBUG
-static bool IsCompactable(const StructInfo *info)
+bool IsCompactable(const StructInfo *info)
 {
     for (size_t i = 0; i < info->fieldCount; i++) {
         switch (info->fields[i].type) {
@@ -170,7 +169,6 @@ static bool IsCompactable(const StructInfo *info)
     }
     return info->fieldCount > 0;
 }
-#endif
 
 static_assert(sizeof(float) == sizeof(int) && sizeof(COLORREF) == sizeof(int),
               "compact array code can't be simplified if int, float and colorref are of different sizes");

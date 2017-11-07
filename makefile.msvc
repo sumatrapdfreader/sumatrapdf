@@ -1,3 +1,6 @@
+# Note: this is for historical reference only
+# We now use premake5-based build, see premake5.lua and premake5.files.lua
+
 # nmake -f makefile.msvc
 # Arguments:
 # CFG=dbg|rel (default: dbg)
@@ -162,7 +165,7 @@ FORMAT_LIBS = $(MUPDF_LIB) $(DJVU_OBJS) $(UNARR_LIB) $(WEBP_OBJS)
 UTILS_OBJS = \
 	$(OU)\FileUtil.obj $(OU)\HttpUtil.obj \
 	$(OU)\StrUtil.obj $(OU)\WinUtil.obj $(OU)\GdiPlusUtil.obj \
-	$(OU)\DialogSizer.obj $(OU)\FileTransactions.obj \
+	$(OU)\DialogSizer.obj \
 	$(OU)\TrivialHtmlParser.obj $(OU)\HtmlWindow.obj \
 	$(OU)\DirIter.obj $(OU)\BitReader.obj $(OU)\HtmlPullParser.obj \
 	$(OU)\HtmlPrettyPrint.obj $(OU)\ThreadUtil.obj $(OU)\DebugLog.obj \
@@ -497,4 +500,3 @@ $(SYMBOLS_LZSA): $(MAKELZSA_APP) $(SUMATRA_APP) $(INSTALLER_APP)
 	$(MAKELZSA_APP) $@ $(O)\libmupdf.pdb:libmupdf.pdb $(O)\Installer.pdb:Installer.pdb $(O)\SumatraPDF-no-MuPDF.pdb:SumatraPDF-no-MuPDF.pdb $(O)\SumatraPDF.pdb:SumatraPDF.pdb
 
 ## Header-dependencies for $(SRCDIR)\* and $(SRCDIR)\*\*
-!INCLUDE makefile.deps

@@ -372,7 +372,6 @@
     <ClInclude Include="..\src\utils\Dict.h" />
     <ClInclude Include="..\src\utils\DirIter.h" />
     <ClInclude Include="..\src\utils\Dpi.h" />
-    <ClInclude Include="..\src\utils\FileTransactions.h" />
     <ClInclude Include="..\src\utils\FileUtil.h" />
     <ClInclude Include="..\src\utils\FzImgReader.h" />
     <ClInclude Include="..\src\utils\GdiPlusUtil.h" />
@@ -456,7 +455,6 @@
     <ClCompile Include="..\src\utils\Dict.cpp" />
     <ClCompile Include="..\src\utils\DirIter.cpp" />
     <ClCompile Include="..\src\utils\Dpi.cpp" />
-    <ClCompile Include="..\src\utils\FileTransactions.cpp" />
     <ClCompile Include="..\src\utils\FileUtil.cpp" />
     <ClCompile Include="..\src\utils\FzImgReader.cpp" />
     <ClCompile Include="..\src\utils\GdiPlusUtil.cpp" />

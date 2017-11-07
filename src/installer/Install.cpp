@@ -53,7 +53,6 @@ static bool ExtractFiles(lzma::SimpleArchive* archive) {
     lzma::FileInfo* fi;
     char* uncompressed;
 
-    FileTransaction trans;
     for (int i = 0; gPayloadData[i].fileName; i++) {
         if (!gPayloadData[i].install)
             continue;
@@ -72,19 +71,19 @@ static bool ExtractFiles(lzma::SimpleArchive* archive) {
         }
         AutoFreeW filePath(str::conv::FromUtf8(fi->name));
         AutoFreeW extPath(path::Join(gGlobalData.installDir, filePath));
-        bool ok = trans.WriteAll(extPath, uncompressed, fi->uncompressedSize);
+        bool ok = file::WriteAll(extPath, uncompressed, fi->uncompressedSize);
         free(uncompressed);
         if (!ok) {
             AutoFreeW msg(str::Format(_TR("Couldn't write %s to disk"), filePath));
             NotifyFailed(msg);
             return false;
         }
-        trans.SetModificationTime(extPath, fi->ftModified);
+        file::SetModificationTime(extPath, fi->ftModified);
 
         ProgressStep();
     }
 
-    return trans.Commit();
+    return true;
 }
 
 // TODO: also check if valid lzma::ParseSimpleArchive()
