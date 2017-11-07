@@ -29,7 +29,7 @@ ArchFile::ArchFile(ar_stream *data, ar_archive *(* openFormat)(ar_stream *)) : d
             filenames.Append(str::conv::FromUtf8(name));
         else
             filenames.Append(nullptr);
-        filepos.Append(ar_entry_get_offset(ar));
+        filepos.push_back(ar_entry_get_offset(ar));
     }
     // extract (further) filenames with fallback in derived class constructor
     // once GetFileFromFallback has been correctly set in the vtable
@@ -48,7 +48,7 @@ size_t ArchFile::GetFileIndex(const WCHAR *fileName)
 
 size_t ArchFile::GetFileCount() const
 {
-    CrashIf(filenames.Count() != filepos.Count());
+    CrashIf(filenames.Count() != filepos.size());
     return filenames.Count();
 }
 
@@ -69,7 +69,7 @@ char *ArchFile::GetFileDataByIdx(size_t fileindex, size_t *len)
     if (fileindex >= filenames.Count())
         return nullptr;
 
-    if (!ar || !ar_parse_entry_at(ar, filepos.At(fileindex)))
+    if (!ar || !ar_parse_entry_at(ar, filepos.at(fileindex)))
         return GetFileFromFallback(fileindex, len);
 
     size_t size = ar_entry_get_size(ar);
@@ -98,7 +98,7 @@ FILETIME ArchFile::GetFileTime(const WCHAR *fileName)
 FILETIME ArchFile::GetFileTime(size_t fileindex)
 {
     FILETIME ft = { (DWORD)-1, (DWORD)-1 };
-    if (ar && fileindex < filepos.Count() && ar_parse_entry_at(ar, filepos.At(fileindex))) {
+    if (ar && fileindex < filepos.size() && ar_parse_entry_at(ar, filepos.at(fileindex))) {
         time64_t filetime = ar_entry_get_filetime(ar);
         LocalFileTimeToFileTime((FILETIME *)&filetime, &ft);
     }
@@ -171,14 +171,14 @@ char *RarFile::GetFileFromFallback(size_t fileindex, size_t *len)
             fallback = new UnRarDll();
         if (fileindex != (size_t)-1) {
             // always use the fallback for this file from now on
-            filepos.At(fileindex) = -1;
+            filepos.at(fileindex) = -1;
             return fallback->GetFileByName(path, filenames.At(fileindex), len);
         }
         // if fileindex == -1, (re)load the entire archive listing using UnRAR
         fallback->ExtractFilenames(path, filenames);
         // always use the fallback for all additionally found files
-        while (filepos.Count() < filenames.Count()) {
-            filepos.Append(-1);
+        while (filepos.size() < filenames.Count()) {
+            filepos.push_back(-1);
         }
     }
 #endif

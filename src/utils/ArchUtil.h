@@ -9,7 +9,7 @@ typedef struct ar_archive_s ar_archive;
 class ArchFile {
 protected:
     WStrList filenames;
-    Vec<int64_t> filepos;
+    std::vector<int64_t> filepos;
 
     ar_stream *data;
     ar_archive *ar;
