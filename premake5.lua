@@ -1,7 +1,6 @@
 --[[
-To generate Visual Studio files in vs2015 directory, run:
-premake5 vs2015 : for Visual Studio 2015 files in vs2015 directory
-premake5 vs2017 : for Visual Studio 2017 files in vs2017 directory
+To generate Visual Studio files (in vs2017/ directory), run:
+scripts\premake-regenerate-vs-projects.ps1
 
 I'm using premake5 alpha12 from http://premake.github.io/download.html#v5
 (premake4 won't work, it doesn't support VS 2013+)
@@ -53,8 +52,6 @@ workspace "SumatraPDF"
      buildoptions { "/arch:IA32" } -- disable the default /arch:SSE2 for 32-bit builds
      filter "action:vs2017"
       toolset "v141_xp"
-     filter "action:vs2013"
-      toolset "v120_xp"
   filter {}
 
   filter "platforms:x64"
@@ -62,8 +59,6 @@ workspace "SumatraPDF"
      toolset "v140_xp"
      filter "action:vs2017"
       toolset "v141_xp"
-     filter "action:vs2013"
-      toolset "v120_xp"
   filter {}
 
   disablewarnings { "4127", "4324", "4458", "4800" }
@@ -71,16 +66,12 @@ workspace "SumatraPDF"
 
   location "this_is_invalid_location"
 
-  filter "action:vs2015"
-    location "vs2015"
-  filter {}
-
-  filter "action:vs2013"
-    location "vs2013"
-  filter {}
-
   filter "action:vs2017"
     location "vs2017"
+  filter {}
+
+  filter "action:vs2015"
+    location "vs2015"
   filter {}
 
   filter "action:gmake"
@@ -189,7 +180,7 @@ workspace "SumatraPDF"
     -- openjpeg has opj_config_private.h for such over-rides
     -- but we can't change it because we bring openjpeg as submodule
     -- and we can't provide our own in a different directory because
-    -- msvc will include the one in ext2/openjpeg/src/lib/openjp2 first
+    -- msvc will include the one in ext/openjpeg/src/lib/openjp2 first
     -- because #include "opj_config_private.h" searches current directory first
     defines { "USE_JPIP", "OPJ_STATIC", "OPJ_EXPORTS" }
     openjpeg_files()
@@ -278,7 +269,7 @@ workspace "SumatraPDF"
     includedirs {
       "mupdf/include", "mupdf/generated", "ext/zlib",
       "ext/freetype2/config", "ext/freetype2/include",
-      "ext/jbig2dec", "ext/libjpeg-turbo", "ext2/openjpeg/src/lib/openjp2"
+      "ext/jbig2dec", "ext/libjpeg-turbo", "ext/openjpeg/src/lib/openjp2"
     }
     -- .\ext\..\bin\nasm.exe -I .\mupdf\ -f win32 -o .\obj-rel\mupdf\font_base14.obj
     -- .\mupdf\font_base14.asm

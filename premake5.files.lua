@@ -220,7 +220,7 @@ function jbig2dec_files()
 end
 
 function openjpeg_files()
-  files_in_dir( "ext2/openjpeg/src/lib/openjp2", {
+  files_in_dir( "ext/openjpeg/src/lib/openjp2", {
     "*.c",
     "*.h",
   })
