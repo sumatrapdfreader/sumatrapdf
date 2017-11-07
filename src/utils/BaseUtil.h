@@ -202,7 +202,7 @@ inline void CrashIfDebugOnlyFunc(bool cond) {
 template <typename T>
 inline T limitValue(T val, T min, T max)
 {
-    assert(max >= min);
+    AssertCrash(max >= min);
     if (val < min) return min;
     if (val > max) return max;
     return val;

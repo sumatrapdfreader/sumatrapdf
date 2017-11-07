@@ -855,7 +855,7 @@ WCHAR* FormatRomanNumeral(int number) {
             len += romandata[i].numeral[1] ? 2 : 1;
         }
     }
-    assert(len > 0);
+    AssertCrash(len > 0);
 
     WCHAR *roman = AllocArray<WCHAR>(len + 1), *c = roman;
     for (int n = number, i = 0; i < dimof(romandata); i++) {

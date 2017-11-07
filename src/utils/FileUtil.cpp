@@ -373,7 +373,7 @@ bool WriteAll(const WCHAR *filePath, const void *data, size_t dataLen) {
 
     DWORD size;
     BOOL ok = WriteFile(h, data, (DWORD)dataLen, &size, nullptr);
-    assert(!ok || (dataLen == (size_t)size));
+    AssertCrash(!ok || (dataLen == (size_t)size));
     return ok && dataLen == (size_t)size;
 }
 

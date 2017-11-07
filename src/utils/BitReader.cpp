@@ -38,7 +38,7 @@ size_t BitReader::BitsLeft() {
 // Read bitsCount (up to 32) bits, without advancing the position in the bit stream
 // If asked for more bits than we have left, the extra bits will be 0
 uint32_t BitReader::Peek(size_t bitsCount) {
-    assert(bitsCount <= 32);
+    AssertCrash(bitsCount <= 32);
     size_t currBytePos = currBitPos / 8;
     uint8_t currByte = GetByte(currBytePos);
     uint8_t currBit = currBitPos % 8;
@@ -46,7 +46,7 @@ uint32_t BitReader::Peek(size_t bitsCount) {
     uint8_t bitsLeft = 8 - currBit;
     uint32_t ret = 0;
     while (bitsCount > 0) {
-        assert(bitsLeft >= 0);
+        AssertCrash(bitsLeft >= 0);
         if (0 == bitsLeft) {
             ++currBytePos;
             currByte = GetByte(currBytePos);

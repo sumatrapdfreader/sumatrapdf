@@ -214,13 +214,13 @@ static int GenNewWindowId(HtmlWindow *htmlWin)
 {
     int newWindowId = (int)gHtmlWindows.Count();
     gHtmlWindows.Append(htmlWin);
-    assert(htmlWin == FindHtmlWindowById(newWindowId));
+    AssertCrash(htmlWin == FindHtmlWindowById(newWindowId));
     return newWindowId;
 }
 
 static void FreeWindowId(int windowId)
 {
-    assert(nullptr != gHtmlWindows.At(windowId));
+    AssertCrash(nullptr != gHtmlWindows.At(windowId));
     gHtmlWindows.At(windowId) = nullptr;
 }
 
@@ -444,7 +444,7 @@ STDMETHODIMP HW_IInternetProtocol::Start(
     //TODO: this now happens due to events happening on HtmlWindow
     //used to take a screenshot, so ignore it. Is there a way
     //to cancel things and not get her?
-    //assert(win);
+    //AssertCrash(win);
     if (!win)
         return INET_E_OBJECT_NOT_FOUND;
     if (!win->htmlWinCb)
@@ -558,11 +558,11 @@ static void RegisterInternetProtocolFactory()
 
     ScopedComPtr<IInternetSession> internetSession;
     HRESULT hr = CoInternetGetSession(0, &internetSession, 0);
-    assert(!FAILED(hr));
-    assert(nullptr == gInternetProtocolFactory);
+    AssertCrash(!FAILED(hr));
+    AssertCrash(nullptr == gInternetProtocolFactory);
     gInternetProtocolFactory = new HW_IInternetProtocolFactory();
     hr = internetSession->RegisterNameSpace(gInternetProtocolFactory, CLSID_HW_IInternetProtocol, HW_PROTO_PREFIX, 0, nullptr, 0);
-    assert(!FAILED(hr));
+    AssertCrash(!FAILED(hr));
 }
 
 static void UnregisterInternetProtocolFactory()
@@ -1242,7 +1242,7 @@ HtmlWindow::HtmlWindow(HWND hwndParent, HtmlWindowCallback *cb) :
     wndProcBrowserPrev(nullptr), userDataBrowserPrev(0),
     canGoBack(false), canGoForward(false)
 {
-    assert(hwndParent);
+    AssertCrash(hwndParent);
     RegisterInternetProtocolFactory();
     windowId = GenNewWindowId(this);
     htmlSetInProgress = nullptr;
@@ -1274,7 +1274,7 @@ bool HtmlWindow::CreateBrowser()
     ScopedComQIPtr<IPersistStreamInit> psInit(p);
     if (psInit) {
         hr = psInit->InitNew();
-        assert(SUCCEEDED(hr));
+        AssertCrash(SUCCEEDED(hr));
     }
 
     hr = p->QueryInterface(&oleInPlaceObject);

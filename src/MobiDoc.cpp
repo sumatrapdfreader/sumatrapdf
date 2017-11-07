@@ -319,7 +319,7 @@ bool HuffDicDecompressor::SetHuffData(uint8 *huffData, size_t huffDataLen)
 {
     // for now catch cases where we don't have both big endian and little endian
     // versions of the data
-    assert(kHuffRecordLen == huffDataLen);
+    AssertCrash(kHuffRecordLen == huffDataLen);
     // but conservatively assume we only need big endian version
     if (huffDataLen < kHuffRecordMinLen)
         return false;
@@ -337,7 +337,7 @@ bool HuffDicDecompressor::SetHuffData(uint8 *huffData, size_t huffDataLen)
     if (!str::EqN(huffHdr.id, "HUFF", 4))
         return false;
 
-    assert(huffHdr.hdrLen == kHuffHeaderLen);
+    AssertCrash(huffHdr.hdrLen == kHuffHeaderLen);
     if (huffHdr.hdrLen != kHuffHeaderLen)
         return false;
     if (huffHdr.cacheOffset != kHuffHeaderLen)
@@ -365,13 +365,13 @@ bool HuffDicDecompressor::AddCdicData(uint8 *cdicData, uint32 cdicDataLen)
         return false;
     uint32 hdrLen = UInt32BE(cdicData + 4);
     uint32 codeLen = UInt32BE(cdicData + 12);
-    if (0 == codeLength)
+    if (0 == codeLength) {
         codeLength = codeLen;
-    else {
-        assert(codeLen == codeLength);
+    } else {
+        AssertCrash(codeLen == codeLength);
         codeLength = std::min(codeLength, codeLen);
     }
-    assert(hdrLen == kCdicHeaderLen);
+    AssertCrash(hdrLen == kCdicHeaderLen);
     if (hdrLen != kCdicHeaderLen)
         return false;
     uint32 size = cdicDataLen - hdrLen;
@@ -583,12 +583,12 @@ bool MobiDoc::ParseHeader()
         const char *recData = pdbReader->GetRecord(mobiHdr.huffmanFirstRec, &huffRecSize);
         if (!recData)
             return false;
-        assert(nullptr == huffDic);
+        AssertCrash(nullptr == huffDic);
         huffDic = new HuffDicDecompressor();
         if (!huffDic->SetHuffData((uint8*)recData, huffRecSize))
             return false;
         size_t cdicsCount = mobiHdr.huffmanRecCount - 1;
-        assert(cdicsCount <= kCdicsMax);
+        AssertCrash(cdicsCount <= kCdicsMax);
         if (cdicsCount > kCdicsMax)
             return false;
         for (size_t i = 0; i < cdicsCount; i++) {
@@ -815,7 +815,7 @@ bool MobiDoc::LoadDocRecordIntoBuffer(size_t recNo, str::Str<char>& strOut)
         return true;
     }
 
-    assert(0);
+    AssertCrash(0);
     return false;
 }
 
@@ -825,7 +825,7 @@ bool MobiDoc::LoadDocument(PdbReader *pdbReader)
     if (!ParseHeader())
         return false;
 
-    assert(!doc);
+    AssertCrash(!doc);
     doc = new str::Str<char>(docUncompressedSize);
     for (size_t i = 1; i <= docRecCount; i++) {
         if (!LoadDocRecordIntoBuffer(i, *doc))

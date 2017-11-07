@@ -143,8 +143,8 @@ void FileExistenceChecker::Run()
 
 static void MakePluginWindow(WindowInfo& win, HWND hwndParent)
 {
-    assert(IsWindow(hwndParent));
-    assert(gPluginMode);
+    AssertCrash(IsWindow(hwndParent));
+    AssertCrash(gPluginMode);
 
     long ws = GetWindowLong(win.hwndFrame, GWL_STYLE);
     ws &= ~(WS_POPUP | WS_BORDER | WS_CAPTION | WS_THICKFRAME);
@@ -321,7 +321,7 @@ static bool SetupPluginMode(CommandLineInfo& i)
     if (!gPluginURL)
         gPluginURL = i.fileNames.At(0);
 
-    assert(i.fileNames.Count() == 1);
+    AssertCrash(i.fileNames.Count() == 1);
     while (i.fileNames.Count() > 1) {
         free(i.fileNames.Pop());
     }

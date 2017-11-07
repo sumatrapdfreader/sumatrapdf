@@ -253,7 +253,7 @@ HtmlElement *HtmlParser::ParseInPlace(char *s, UINT codepage)
         }
         if (!tok->IsTag()) {
             // ignore text content
-            assert(tok->IsText());
+            AssertCrash(tok->IsText());
             continue;
         }
         if (!tok->IsEndTag()) {

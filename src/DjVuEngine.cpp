@@ -190,7 +190,7 @@ public:
     int PageCount() const override { return pageCount; }
 
     RectD PageMediabox(int pageNo) override {
-        assert(1 <= pageNo && pageNo <= PageCount());
+        AssertCrash(1 <= pageNo && pageNo <= PageCount());
         return mediaboxes[pageNo-1];
     }
     RectD PageContentBox(int pageNo, RenderTarget target=Target_View) override;
@@ -661,7 +661,7 @@ RectD DjVuEngineImpl::PageContentBox(int pageNo, RenderTarget target)
 
 PointD DjVuEngineImpl::Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse)
 {
-    assert(zoom > 0);
+    AssertCrash(zoom > 0);
     if (zoom <= 0)
         return pt;
 
@@ -807,7 +807,7 @@ WCHAR *DjVuEngineImpl::ExtractPageText(int pageNo, const WCHAR *lineSep, RectI *
     if (extracted.Count() > 0 && !str::EndsWith(extracted.Get(), lineSep))
         AppendNewline(extracted, coords, lineSep);
 
-    assert(str::Len(extracted.Get()) == coords.Count());
+    AssertCrash(str::Len(extracted.Get()) == coords.Count());
     if (coordsOut) {
         ddjvu_status_t status;
         ddjvu_pageinfo_t info;

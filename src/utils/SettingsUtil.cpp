@@ -220,7 +220,7 @@ static bool SerializeField(str::Str<char>& out, const uint8_t *base, const Field
             EscapeStr(out, *(const char **)fieldPtr);
         return true;
     case Type_Compact:
-        assert(IsCompactable(GetSubstruct(field)));
+        AssertCrash(IsCompactable(GetSubstruct(field)));
         for (size_t i = 0; i < GetSubstruct(field)->fieldCount; i++) {
             if (i > 0)
                 out.Append(' ');
@@ -298,7 +298,7 @@ static void DeserializeField(const FieldInfo& field, uint8_t *base, const char *
             *(char **)fieldPtr = str::Dup((const char *)field.value);
         break;
     case Type_Compact:
-        assert(IsCompactable(GetSubstruct(field)));
+        AssertCrash(IsCompactable(GetSubstruct(field)));
         for (size_t i = 0; i < GetSubstruct(field)->fieldCount; i++) {
             if (value) {
                 for (; str::IsWs(*value); value++);

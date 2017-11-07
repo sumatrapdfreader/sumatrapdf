@@ -48,7 +48,7 @@ bool FileTransaction::WriteAll(const WCHAR *filePath, const void *data, size_t d
 
     DWORD size;
     BOOL ok = WriteFile(hFile, data, (DWORD)dataLen, &size, nullptr);
-    assert(!ok || (dataLen == (size_t)size));
+    AssertCrash(!ok || (dataLen == (size_t)size));
 
     return ok && dataLen == (size_t)size;
 }
