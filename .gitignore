@@ -12,10 +12,12 @@ scripts/config.py
 scripts/secrets.json
 rel/
 rel64/
+rel64_unix/
 relPrefast/
 relPrefast64/
 dbg/
 dbg64/
+dbg64_unix/
 rel-mac/
 dbg-mac/
 builds/

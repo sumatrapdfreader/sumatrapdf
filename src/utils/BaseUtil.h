@@ -4,15 +4,50 @@
 #ifndef BaseUtil_h
 #define BaseUtil_h
 
+/*
+To use:
+#if OS(WIN)
+...
+#endif
+*/
+#define OS(FEATURE) (defined BASE_OS_##FEATURE  && BASE_OS_##FEATURE)
+
+/* OS(DARWIN) - Any Darwin-based OS, including Mac OS X and iPhone OS */
+#ifdef __APPLE__
+#define BASE_OS_DARWIN 1
+#endif
+
+/* OS(LINUX) - Linux */
+#ifdef __linux__
+#define BASE_OS_LINUX 1
+#endif
+
+/* OS(WIN) - Any version of Windows */
+#if defined(WIN32) || defined(_WIN32)
+#define BASE_OS_WIN 1
+#endif
+
+/* OS(UNIX) - Any Unix-like system */
+#if OS(DARWIN)          \
+|| OS(LINUX)            \
+|| defined(unix)        \
+|| defined(__unix)      \
+|| defined(__unix__)
+#define BASE_OS_UNIX 1
+#endif
+
+#if OS(WIN)
 #ifndef UNICODE
 #define UNICODE
 #endif
 #ifndef _UNICODE
 #define _UNICODE
 #endif
+#endif
 
 #include "BuildConfig.h"
 
+#if OS(WIN)
 #include <windows.h>
 #include <unknwn.h>
 #include <shlwapi.h>
@@ -37,6 +72,8 @@
 // don't get leaked memory allocation source
 #define DEBUG_NEW new(_NORMAL_BLOCK, __FILE__, __LINE__)
 #define new DEBUG_NEW
+#endif
+
 #endif
 
 // Most common C includes
@@ -119,8 +156,10 @@ static_assert(8 == sizeof(int64) && 8 == sizeof(uint64), "(u)int64 must be eight
     #endif
 #endif
 
+#ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable: 6011) // silence /analyze: de-referencing a nullptr pointer
+#endif
 // Note: it's inlined to make it easier on crash reports analyzer (if wasn't inlined
 // CrashMe() would show up as the cause of several different crash sites)
 //
@@ -131,7 +170,9 @@ inline void CrashMe()
     char *p = nullptr;
     *p = 0;
 }
+#ifdef _MSC_VER
 #pragma warning(pop)
+#endif
 
 // CrashIf() is like assert() except it crashes in debug and pre-release builds.
 // The idea is that assert() indicates "can't possibly happen" situation and if
@@ -284,7 +325,9 @@ public:
     static void* Realloc(Allocator *a, void *mem, size_t size);
     static void *Dup(Allocator *a, const void *mem, size_t size, size_t padding=0);
     static char *StrDup(Allocator *a, const char *str);
+#if OS(WIN)
     static WCHAR *StrDup(Allocator *a, const WCHAR *str);
+#endif
 };
 
 // PoolAllocator is for the cases where we need to allocate pieces of memory

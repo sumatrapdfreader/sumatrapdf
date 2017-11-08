@@ -4,3 +4,4 @@ if (!(Test-Path ".\\bin\\premake5.exe")) {
 }
 
 bin\premake5.exe vs2017
+bin\premake5.exe --file=premake5.unix.lua gmake
