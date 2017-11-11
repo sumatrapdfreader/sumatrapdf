@@ -4092,7 +4092,7 @@ const char * gTranslations_et =
   "Mahuta lehek\303\274ljed pr&inditavale alale (kui vaja)\0"\
   "\303\234&helehek\303\274ljeline\tCtrl+6\0"\
   "&J\303\244ta see versioon vahele\0"\
-  "\0"\
+  "&Kujundus\0"\
   "&Kasuta algseid lehek\303\274lje suuruseid\0"\
   "&Vaade\0"\
   "A&ken\0"\
@@ -4145,8 +4145,8 @@ const char * gTranslations_et =
   "Praegune fail\0"\
   "Kursori asukoht\0"\
   "&Muu suurendus...\tCtrl+Y\0"\
-  "\0"\
-  "\0"\
+  "Tume\0"\
+  "Tumedam\0"\
   "Vaike&k\303\274ljend:\0"\
   "Vaike&suurendus:\0"\
   "PDF-failide vaikeprogrammi ei saa muuta portatiivses re\305\276iimis\0"\
@@ -4196,7 +4196,7 @@ const char * gTranslations_et =
   "Soovitus: Uuesti otsimiseks vajuta F3-klahvi\0"\
   "Pildifailid (*.%s)\0"\
   "kB\0"\
-  "\0"\
+  "Hele\0"\
   "\0"\
   "Tee SumatraPDF PDF-failide vaikerakenduseks?\0"\
   "Tee SumatraPDF PDF-failide vaikerakenduseks\0"\

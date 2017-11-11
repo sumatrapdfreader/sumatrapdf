@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-f5044705783afa57b5c65ac063b1ecf81d9a4aa5
+aa7031563f3f066d497bd5e54b7570107e14b3b9
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -2925,6 +2925,7 @@ br:&Tema
 ca:&Tema
 cn:主题(&T)
 es:&Tema
+et:&Kujundus
 eu:&Azalgaia
 fr:Thème
 he:ערכת נושא
@@ -7003,6 +7004,7 @@ br:Escuro
 ca:Fosc
 cn:暗(&D)
 es:Oscuro
+et:Tume
 eu:Iluna
 fr:Sombre
 he:כהה
@@ -7032,6 +7034,7 @@ br:Muito escuro
 ca:Molt fosc
 cn:更暗(&R)
 es:Más oscuro
+et:Tumedam
 eu:Ilunagoa
 fr:Plus sombre
 he:כהה מאוד
@@ -10920,6 +10923,7 @@ br:Claro
 ca:Clar
 cn:明亮
 es:Claro
+et:Hele
 eu:Argia
 fr:Clair
 he:בהירה
