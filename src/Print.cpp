@@ -66,9 +66,9 @@ class AbortCookieManager {
     CRITICAL_SECTION cookieAccess;
 
   public:
-    AbortCookie* cookie;
+    AbortCookie* cookie = nullptr;
 
-    AbortCookieManager() : cookie(nullptr) { InitializeCriticalSection(&cookieAccess); }
+    AbortCookieManager() { InitializeCriticalSection(&cookieAccess); }
     ~AbortCookieManager() {
         Clear();
         DeleteCriticalSection(&cookieAccess);
@@ -757,20 +757,28 @@ static void ApplyPrintSettings(const WCHAR* printerName, const WCHAR* settings, 
             advanced.rotation = PrintRotationAdv::Landscape;
         } else if (str::Parse(rangeList.At(i), L"%dx%$", &val) && 0 < val && val < 1000) {
             devMode->dmCopies = (short)val;
+            devMode->dmFields |= DM_COPIES;
         } else if (str::EqI(rangeList.At(i), L"simplex")) {
             devMode->dmDuplex = DMDUP_SIMPLEX;
+            devMode->dmFields |= DM_DUPLEX;
         } else if (str::EqI(rangeList.At(i), L"duplex") || str::EqI(rangeList.At(i), L"duplexlong")) {
             devMode->dmDuplex = DMDUP_VERTICAL;
+            devMode->dmFields |= DM_DUPLEX;
         } else if (str::EqI(rangeList.At(i), L"duplexshort")) {
             devMode->dmDuplex = DMDUP_HORIZONTAL;
+            devMode->dmFields |= DM_DUPLEX;
         } else if (str::EqI(rangeList.At(i), L"color")) {
             devMode->dmColor = DMCOLOR_COLOR;
+            devMode->dmFields |= DM_COLOR;
         } else if (str::EqI(rangeList.At(i), L"monochrome")) {
             devMode->dmColor = DMCOLOR_MONOCHROME;
+            devMode->dmFields |= DM_COLOR;
         } else if (str::StartsWithI(rangeList.At(i), L"bin=")) {
             devMode->dmDefaultSource = GetPaperSourceByName(printerName, rangeList.At(i) + 4, devMode);
+            devMode->dmFields |= DM_DEFAULTSOURCE;
         } else if (str::StartsWithI(rangeList.At(i), L"paper=")) {
             devMode->dmPaperSize = GetPaperByName(rangeList.At(i) + 6);
+            devMode->dmFields |= DM_PAPERSIZE;
         }
     }
 
@@ -837,7 +845,7 @@ bool PrintFile(BaseEngine* engine, WCHAR* printerName, bool displayErrors, const
         }
         goto Exit;
     }
-    devMode = (LPDEVMODE)calloc(structSize, 1);
+    devMode = AllocStruct<DEVMODE>();
 
     // Get the default DevMode for the printer and modify it for your needs.
     returnCode = DocumentProperties(nullptr, printer, printerName, devMode, /* The address of the buffer to fill. */
