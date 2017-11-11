@@ -204,7 +204,7 @@ class FrameSite : public IUnknown {
 static Vec<HtmlWindow*> gHtmlWindows;
 
 HtmlWindow* FindHtmlWindowById(int windowId) {
-    return gHtmlWindows.At(windowId);
+    return gHtmlWindows.at(windowId);
 }
 
 static int GenNewWindowId(HtmlWindow* htmlWin) {
@@ -215,8 +215,8 @@ static int GenNewWindowId(HtmlWindow* htmlWin) {
 }
 
 static void FreeWindowId(int windowId) {
-    AssertCrash(nullptr != gHtmlWindows.At(windowId));
-    gHtmlWindows.At(windowId) = nullptr;
+    AssertCrash(nullptr != gHtmlWindows.at(windowId));
+    gHtmlWindows.at(windowId) = nullptr;
 }
 
 // Re-using its protocol, see comments at the top.

@@ -65,25 +65,25 @@ int main()
     const WCHAR *pubkeyPath = nullptr;
     AutoFree inFileCommentSyntax;
 
-#define is_arg(name, var) (str::EqI(args.At(i), TEXT(name)) && i + 1 < args.Count() && !var)
+#define is_arg(name, var) (str::EqI(args.at(i), TEXT(name)) && i + 1 < args.Count() && !var)
     for (size_t i = 1; i < args.Count(); i++) {
         if (is_arg("-cert", certName))
-            certName = args.At(++i);
+            certName = args.at(++i);
         else if (is_arg("-out", signFilePath))
-            signFilePath = args.At(++i);
+            signFilePath = args.at(++i);
         else if (is_arg("-pubkey", pubkeyPath))
-            pubkeyPath = args.At(++i);
+            pubkeyPath = args.at(++i);
         else if (is_arg("-comment", inFileCommentSyntax))
-            inFileCommentSyntax.Set(str::conv::ToUtf8(args.At(++i)));
+            inFileCommentSyntax.Set(str::conv::ToUtf8(args.at(++i)));
         else if (!filePath)
-            filePath = args.At(i);
+            filePath = args.at(i);
         else
             goto SyntaxError;
     }
 #undef is_arg
     if (!filePath && !pubkeyPath) {
 SyntaxError:
-        ShowUsage(args.At(0));
+        ShowUsage(args.at(0));
         return 1;
     }
 

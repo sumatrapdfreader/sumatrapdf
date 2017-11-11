@@ -252,12 +252,12 @@ void Notifications::Remove(NotificationWnd* wnd) {
     }
     wnds.Remove(wnd);
     if (idx == 0 && wnds.Count() > 0) {
-        SetWindowPos(wnds.At(0)->hwnd(), nullptr, GetWndX(wnds.At(0)), TOP_LEFT_MARGIN, 0, 0,
+        SetWindowPos(wnds.at(0)->hwnd(), nullptr, GetWndX(wnds.at(0)), TOP_LEFT_MARGIN, 0, 0,
                      SWP_NOSIZE | SWP_NOZORDER);
         idx = 1;
     }
     for (size_t i = idx; i < wnds.Count(); i++) {
-        MoveBelow(wnds.At(i - 1), wnds.At(i));
+        MoveBelow(wnds.at(i - 1), wnds.at(i));
     }
 }
 
@@ -268,7 +268,7 @@ void Notifications::Add(NotificationWnd* wnd, int groupId) {
     wnd->groupId = groupId;
 
     if (wnds.Count() > 0) {
-        MoveBelow(wnds.At(wnds.Count() - 1), wnd);
+        MoveBelow(wnds.at(wnds.Count() - 1), wnd);
     }
     wnds.Append(wnd);
 }
@@ -276,8 +276,8 @@ void Notifications::Add(NotificationWnd* wnd, int groupId) {
 NotificationWnd* Notifications::GetForGroup(int groupId) {
     CrashIf(!groupId);
     for (size_t i = 0; i < wnds.Count(); i++) {
-        if (wnds.At(i)->groupId == groupId) {
-            return wnds.At(i);
+        if (wnds.at(i)->groupId == groupId) {
+            return wnds.at(i);
         }
     }
     return nullptr;
@@ -286,8 +286,8 @@ NotificationWnd* Notifications::GetForGroup(int groupId) {
 void Notifications::RemoveForGroup(int groupId) {
     CrashIf(!groupId);
     for (size_t i = wnds.Count(); i > 0; i--) {
-        if (wnds.At(i - 1)->groupId == groupId) {
-            RemoveNotification(wnds.At(i - 1));
+        if (wnds.at(i - 1)->groupId == groupId) {
+            RemoveNotification(wnds.at(i - 1));
         }
     }
 }
@@ -304,17 +304,17 @@ void Notifications::Relayout() {
         return;
     }
 
-    HWND hwndCanvas = GetParent(wnds.At(0)->hwnd());
+    HWND hwndCanvas = GetParent(wnds.at(0)->hwnd());
     ClientRect frame(hwndCanvas);
     for (size_t i = 0; i < wnds.Count(); i++) {
-        RectI rect = WindowRect(wnds.At(i)->hwnd());
+        RectI rect = WindowRect(wnds.at(i)->hwnd());
         rect = MapRectToWindow(rect, HWND_DESKTOP, hwndCanvas);
         if (IsUIRightToLeft()) {
             rect.x = frame.dx - rect.dx - TOP_LEFT_MARGIN - GetSystemMetrics(SM_CXVSCROLL);
         } else {
             rect.x = TOP_LEFT_MARGIN;
         }
-        SetWindowPos(wnds.At(i)->hwnd(), nullptr, rect.x, rect.y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+        SetWindowPos(wnds.at(i)->hwnd(), nullptr, rect.x, rect.y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
     }
 }
 

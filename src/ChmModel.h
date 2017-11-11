@@ -24,7 +24,7 @@ public:
         UNUSED(addNavPoint);
         CrashIf(!ValidPageNo(pageNo));
         if (ValidPageNo(pageNo))
-            DisplayPage(pages.At(pageNo - 1));
+            DisplayPage(pages.at(pageNo - 1));
     }
     bool CanNavigate(int dir) const override;
     void Navigate(int dir) override;

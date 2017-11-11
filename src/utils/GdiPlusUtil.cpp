@@ -113,7 +113,7 @@ RectF MeasureTextQuick(Graphics *g, Font *f, const WCHAR *s, int len)
         idx = (int)fontCache.Count() - 1;
     }
     // most documents look good enough with these adjustments
-    if (!fixCache.At(idx)) {
+    if (!fixCache.at(idx)) {
         REAL correct = 0;
         for (int i = 0; i < len; i++) {
             switch (s[i]) {

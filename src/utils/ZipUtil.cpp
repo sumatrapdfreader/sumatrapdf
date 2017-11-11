@@ -71,7 +71,7 @@ const WCHAR *ZipFileAlloc::GetFileName(size_t fileindex)
 {
     if (fileindex >= filenames.Count())
         return nullptr;
-    return filenames.At(fileindex);
+    return filenames.at(fileindex);
 }
 
 char *ZipFileAlloc::GetFileDataByName(const WCHAR *fileName, size_t *len)
@@ -86,7 +86,7 @@ char *ZipFileAlloc::GetFileDataByIdx(size_t fileindex, size_t *len)
     if (fileindex >= filenames.Count())
         return nullptr;
 
-    if (!ar_parse_entry_at(ar, filepos.At(fileindex)))
+    if (!ar_parse_entry_at(ar, filepos.at(fileindex)))
         return nullptr;
 
     size_t size = ar_entry_get_size(ar);
@@ -115,7 +115,7 @@ FILETIME ZipFileAlloc::GetFileTime(const WCHAR *fileName)
 FILETIME ZipFileAlloc::GetFileTime(size_t fileindex)
 {
     FILETIME ft = { (DWORD)-1, (DWORD)-1 };
-    if (ar && fileindex < filepos.Count() && ar_parse_entry_at(ar, filepos.At(fileindex))) {
+    if (ar && fileindex < filepos.Count() && ar_parse_entry_at(ar, filepos.at(fileindex))) {
         time64_t filetime = ar_entry_get_filetime(ar);
         LocalFileTimeToFileTime((FILETIME *)&filetime, &ft);
     }

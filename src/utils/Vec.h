@@ -137,15 +137,15 @@ public:
         memset(buf, 0, sizeof(buf));
     }
 
-    // use &At() if you need a pointer to the element (e.g. if T is a struct)
-    T& At(size_t idx) const {
+    // use AtPtr() if you need a pointer to the element (e.g. if T is a struct)
+    T& at(size_t idx) const {
         CrashIf(idx >= len);
         return els[idx];
     }
 
     T *AtPtr(size_t idx) const {
         CrashIf(idx >= len);
-        CrashIf(&els[idx] != &At(idx));
+        CrashIf(&els[idx] != &at(idx));
         return &els[idx];
     }
 
@@ -219,21 +219,21 @@ public:
 
     T Pop() {
         CrashIf(0 == len);
-        T el = At(len - 1);
+        T el = at(len - 1);
         RemoveAtFast(len - 1);
         return el;
     }
 
     T PopAt(size_t idx) {
         CrashIf(idx >= len);
-        T el = At(idx);
+        T el = at(idx);
         RemoveAt(idx);
         return el;
     }
 
     T& Last() const {
         CrashIf(0 == len);
-        return At(len - 1);
+        return at(len - 1);
     }
 
     // perf hack for using as a buffer: client can get accumulated data
@@ -304,7 +304,7 @@ public:
             return pos != other.pos;
         }
         T& operator*() const {
-            return vec->At(pos);
+            return vec->at(pos);
         }
         Iter& operator++() {
             pos++;
@@ -392,7 +392,7 @@ public:
         if (len == 0) {
             return 0;
         }
-        return At(len - 1);
+        return at(len - 1);
     }
 };
 
@@ -406,8 +406,8 @@ public:
     WStrVec(const WStrVec& orig) : Vec(orig) {
         // make sure not to share string pointers between StrVecs
         for (size_t i = 0; i < len; i++) {
-            if (At(i))
-                At(i) = str::Dup(At(i));
+            if (at(i))
+                at(i) = str::Dup(at(i));
         }
     }
     ~WStrVec() {
@@ -419,8 +419,8 @@ public:
             FreeMembers();
             Vec::operator=(that);
             for (size_t i = 0; i < that.len; i++) {
-                if (At(i))
-                    At(i) = str::Dup(At(i));
+                if (at(i))
+                    at(i) = str::Dup(at(i));
             }
         }
         return *this;
@@ -434,7 +434,7 @@ public:
         str::Str<WCHAR> tmp(256);
         size_t jointLen = str::Len(joint);
         for (size_t i = 0; i < len; i++) {
-            WCHAR *s = At(i);
+            WCHAR *s = at(i);
             if (i > 0 && jointLen > 0)
                 tmp.Append(joint, jointLen);
             tmp.Append(s);
@@ -444,7 +444,7 @@ public:
 
     int Find(const WCHAR *s, size_t startAt=0) const {
         for (size_t i = startAt; i < len; i++) {
-            WCHAR *item = At(i);
+            WCHAR *item = at(i);
             if (str::Eq(s, item))
                 return (int)i;
         }
@@ -457,7 +457,7 @@ public:
 
     int FindI(const WCHAR *s, size_t startAt=0) const {
         for (size_t i = startAt; i < len; i++) {
-            WCHAR *item = At(i);
+            WCHAR *item = at(i);
             if (str::EqI(s, item))
                 return (int)i;
         }
@@ -534,8 +534,8 @@ public:
         }
     }
 
-    const WCHAR *At(size_t idx) const {
-        return items.At(idx).string;
+    const WCHAR *at(size_t idx) const {
+        return items.at(idx).string;
     }
 
     const WCHAR *Last() const {

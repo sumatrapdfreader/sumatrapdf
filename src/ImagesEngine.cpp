@@ -111,9 +111,9 @@ ImagesEngine::~ImagesEngine()
 RectD ImagesEngine::PageMediabox(int pageNo)
 {
     AssertCrash(1 <= pageNo && pageNo <= PageCount());
-    if (mediaboxes.At(pageNo - 1).IsEmpty())
-        mediaboxes.At(pageNo - 1) = LoadMediabox(pageNo);
-    return mediaboxes.At(pageNo - 1);
+    if (mediaboxes.at(pageNo - 1).IsEmpty())
+        mediaboxes.at(pageNo - 1) = LoadMediabox(pageNo);
+    return mediaboxes.at(pageNo - 1);
 }
 
 RenderedBitmap *ImagesEngine::RenderBitmap(int pageNo, float zoom, int rotation, RectD *pageRect, RenderTarget target, AbortCookie **cookieOut)
@@ -276,8 +276,8 @@ ImagePage *ImagesEngine::GetPage(int pageNo, bool tryOnly)
     ImagePage *result = nullptr;
 
     for (size_t i = 0; i < pageCache.Count(); i++) {
-        if (pageCache.At(i)->pageNo == pageNo) {
-            result = pageCache.At(i);
+        if (pageCache.at(i)->pageNo == pageNo) {
+            result = pageCache.at(i);
             break;
         }
     }
@@ -294,7 +294,7 @@ ImagePage *ImagesEngine::GetPage(int pageNo, bool tryOnly)
         result->bmp = LoadBitmap(pageNo, result->ownBmp);
         pageCache.InsertAt(0, result);
     }
-    else if (result != pageCache.At(0)) {
+    else if (result != pageCache.at(0)) {
         // keep the list Most Recently Used first
         pageCache.Remove(result);
         pageCache.InsertAt(0, result);
@@ -690,14 +690,14 @@ WCHAR *ImageDirEngineImpl::GetPageLabel(int pageNo) const
     if (pageNo < 1 || PageCount() < pageNo)
         return BaseEngine::GetPageLabel(pageNo);
 
-    const WCHAR *fileName = path::GetBaseName(pageFileNames.At(pageNo - 1));
+    const WCHAR *fileName = path::GetBaseName(pageFileNames.at(pageNo - 1));
     return str::DupN(fileName, path::GetExt(fileName) - fileName);
 }
 
 int ImageDirEngineImpl::GetPageByLabel(const WCHAR *label) const
 {
     for (size_t i = 0; i < pageFileNames.Count(); i++) {
-        const WCHAR *fileName = path::GetBaseName(pageFileNames.At(i));
+        const WCHAR *fileName = path::GetBaseName(pageFileNames.at(i));
         const WCHAR *fileExt = path::GetExt(fileName);
         if (str::StartsWithI(fileName, label) &&
             (fileName + str::Len(label) == fileExt || fileName[str::Len(label)] == '\0'))
@@ -736,7 +736,7 @@ bool ImageDirEngineImpl::SaveFileAs(const char *copyFileName, bool includeUserAn
     }
     bool ok = true;
     for (size_t i = 0; i < pageFileNames.Count(); i++) {
-        const WCHAR *filePathOld = pageFileNames.At(i);
+        const WCHAR *filePathOld = pageFileNames.at(i);
         AutoFreeW filePathNew(path::Join(dstPath, path::GetBaseName(filePathOld)));
         ok = ok && CopyFileW(filePathOld, filePathNew, TRUE);
     }
@@ -746,7 +746,7 @@ bool ImageDirEngineImpl::SaveFileAs(const char *copyFileName, bool includeUserAn
 Bitmap *ImageDirEngineImpl::LoadBitmap(int pageNo, bool& deleteAfterUse)
 {
     size_t len;
-    AutoFree bmpData(file::ReadAll(pageFileNames.At(pageNo - 1), &len));
+    AutoFree bmpData(file::ReadAll(pageFileNames.at(pageNo - 1), &len));
     if (bmpData) {
         deleteAfterUse = true;
         return BitmapFromData(bmpData, len);
@@ -757,7 +757,7 @@ Bitmap *ImageDirEngineImpl::LoadBitmap(int pageNo, bool& deleteAfterUse)
 RectD ImageDirEngineImpl::LoadMediabox(int pageNo)
 {
     size_t len;
-    AutoFree bmpData(file::ReadAll(pageFileNames.At(pageNo - 1), &len));
+    AutoFree bmpData(file::ReadAll(pageFileNames.at(pageNo - 1), &len));
     if (bmpData) {
         Size size = BitmapSizeFromData(bmpData, len);
         return RectD(0, 0, size.Width, size.Height);
@@ -772,7 +772,7 @@ bool ImageDirEngineImpl::SaveFileAsPDF(const char *pdfFileName, bool includeUser
     PdfCreator *c = new PdfCreator();
     for (int i = 1; i <= PageCount() && ok; i++) {
         size_t len;
-        AutoFree data(file::ReadAll(pageFileNames.At(i - 1), &len));
+        AutoFree data(file::ReadAll(pageFileNames.at(i - 1), &len));
         ok = data && c->AddImagePage(data, len, GetFileDPI());
     }
     ok = ok && c->SaveToFile(pdfFileName);
@@ -946,7 +946,7 @@ char *CbxEngineImpl::GetImageData(int pageNo, size_t& len)
 {
     AssertCrash(1 <= pageNo && pageNo <= PageCount());
     ScopedCritSec scope(&cacheAccess);
-    return cbxFile->GetFileDataByIdx(fileIdxs.At(pageNo - 1), &len);
+    return cbxFile->GetFileDataByIdx(fileIdxs.at(pageNo - 1), &len);
 }
 
 static char *GetTextContent(HtmlPullParser& parser)

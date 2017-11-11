@@ -55,7 +55,7 @@ Size HwndWrapper::Measure(const Size availableSize) {
         return layout->Measure(availableSize);
     }
     if (children.Count() == 1) {
-        ILayout *l = children.At(0);
+        ILayout *l = children.at(0);
         return l->Measure(availableSize);
     }
     desiredSize = Size();
@@ -68,7 +68,7 @@ void HwndWrapper::Arrange(const Rect finalRect) {
         layout->Arrange(finalRect);
     } else {
         if (children.Count() == 1) {
-            ILayout *l = children.At(0);
+            ILayout *l = children.at(0);
             l->Arrange(finalRect);
         }
     }

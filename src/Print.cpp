@@ -94,8 +94,8 @@ class AbortCookieManager {
 static RectD BoundSelectionOnPage(const Vec<SelectionOnPage>& sel, int pageNo) {
     RectD bounds;
     for (size_t i = 0; i < sel.Count(); i++) {
-        if (sel.At(i).pageNo == pageNo) {
-            bounds = bounds.Union(sel.At(i).rect);
+        if (sel.at(i).pageNo == pageNo) {
+            bounds = bounds.Union(sel.at(i).rect);
         }
     }
     return bounds;
@@ -128,10 +128,10 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
     int current = 1, total = 0;
     if (pd.sel.Count() == 0) {
         for (size_t i = 0; i < pd.ranges.Count(); i++) {
-            if (pd.ranges.At(i).nToPage < pd.ranges.At(i).nFromPage) {
-                total += pd.ranges.At(i).nFromPage - pd.ranges.At(i).nToPage + 1;
+            if (pd.ranges.at(i).nToPage < pd.ranges.at(i).nFromPage) {
+                total += pd.ranges.at(i).nFromPage - pd.ranges.at(i).nToPage + 1;
             } else {
-                total += pd.ranges.At(i).nToPage - pd.ranges.At(i).nFromPage + 1;
+                total += pd.ranges.at(i).nToPage - pd.ranges.at(i).nFromPage + 1;
             }
         }
     } else {
@@ -202,11 +202,11 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
             }
 
             for (size_t i = 0; i < pd.sel.Count(); i++) {
-                if (pd.sel.At(i).pageNo != pageNo) {
+                if (pd.sel.at(i).pageNo != pageNo) {
                     continue;
                 }
 
-                RectD* clipRegion = &pd.sel.At(i).rect;
+                RectD* clipRegion = &pd.sel.at(i).rect;
                 PointI offset((int)((clipRegion->x - bounds.x) * zoom), (int)((clipRegion->y - bounds.y) * zoom));
                 if (pd.advData.scale != PrintScaleAdv::None) {
                     // center the selection on the physical paper
@@ -218,7 +218,7 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
                 short shrink = 1;
                 do {
                     RenderedBitmap* bmp =
-                        engine.RenderBitmap(pd.sel.At(i).pageNo, zoom / shrink, pd.rotation, clipRegion, Target_Print,
+                        engine.RenderBitmap(pd.sel.at(i).pageNo, zoom / shrink, pd.rotation, clipRegion, Target_Print,
                                             abortCookie ? &abortCookie->cookie : nullptr);
                     if (abortCookie) {
                         abortCookie->Clear();
@@ -246,8 +246,8 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
 
     // print all the pages the user requested
     for (size_t i = 0; i < pd.ranges.Count(); i++) {
-        int dir = pd.ranges.At(i).nFromPage > pd.ranges.At(i).nToPage ? -1 : 1;
-        for (DWORD pageNo = pd.ranges.At(i).nFromPage; pageNo != pd.ranges.At(i).nToPage + dir; pageNo += dir) {
+        int dir = pd.ranges.at(i).nFromPage > pd.ranges.at(i).nToPage ? -1 : 1;
+        for (DWORD pageNo = pd.ranges.at(i).nFromPage; pageNo != pd.ranges.at(i).nToPage + dir; pageNo += dir) {
             if ((PrintRangeAdv::Even == pd.advData.range && pageNo % 2 != 0) ||
                 (PrintRangeAdv::Odd == pd.advData.range && pageNo % 2 == 0)) {
                 continue;
@@ -734,50 +734,50 @@ static void ApplyPrintSettings(const WCHAR* printerName, const WCHAR* settings, 
     for (size_t i = 0; i < rangeList.Count(); i++) {
         int val;
         PRINTPAGERANGE pr = {0};
-        if (str::Parse(rangeList.At(i), L"%d-%d%$", &pr.nFromPage, &pr.nToPage)) {
+        if (str::Parse(rangeList.at(i), L"%d-%d%$", &pr.nFromPage, &pr.nToPage)) {
             pr.nFromPage = limitValue(pr.nFromPage, (DWORD)1, (DWORD)pageCount);
             pr.nToPage = limitValue(pr.nToPage, (DWORD)1, (DWORD)pageCount);
             ranges.Append(pr);
-        } else if (str::Parse(rangeList.At(i), L"%d%$", &pr.nFromPage)) {
+        } else if (str::Parse(rangeList.at(i), L"%d%$", &pr.nFromPage)) {
             pr.nFromPage = pr.nToPage = limitValue(pr.nFromPage, (DWORD)1, (DWORD)pageCount);
             ranges.Append(pr);
-        } else if (str::EqI(rangeList.At(i), L"even")) {
+        } else if (str::EqI(rangeList.at(i), L"even")) {
             advanced.range = PrintRangeAdv::Even;
-        } else if (str::EqI(rangeList.At(i), L"odd")) {
+        } else if (str::EqI(rangeList.at(i), L"odd")) {
             advanced.range = PrintRangeAdv::Odd;
-        } else if (str::EqI(rangeList.At(i), L"noscale")) {
+        } else if (str::EqI(rangeList.at(i), L"noscale")) {
             advanced.scale = PrintScaleAdv::None;
-        } else if (str::EqI(rangeList.At(i), L"shrink")) {
+        } else if (str::EqI(rangeList.at(i), L"shrink")) {
             advanced.scale = PrintScaleAdv::Shrink;
-        } else if (str::EqI(rangeList.At(i), L"fit")) {
+        } else if (str::EqI(rangeList.at(i), L"fit")) {
             advanced.scale = PrintScaleAdv::Fit;
-        } else if (str::EqI(rangeList.At(i), L"portrait")) {
+        } else if (str::EqI(rangeList.at(i), L"portrait")) {
             advanced.rotation = PrintRotationAdv::Portrait;
-        } else if (str::EqI(rangeList.At(i), L"landscape")) {
+        } else if (str::EqI(rangeList.at(i), L"landscape")) {
             advanced.rotation = PrintRotationAdv::Landscape;
-        } else if (str::Parse(rangeList.At(i), L"%dx%$", &val) && 0 < val && val < 1000) {
+        } else if (str::Parse(rangeList.at(i), L"%dx%$", &val) && 0 < val && val < 1000) {
             devMode->dmCopies = (short)val;
             devMode->dmFields |= DM_COPIES;
-        } else if (str::EqI(rangeList.At(i), L"simplex")) {
+        } else if (str::EqI(rangeList.at(i), L"simplex")) {
             devMode->dmDuplex = DMDUP_SIMPLEX;
             devMode->dmFields |= DM_DUPLEX;
-        } else if (str::EqI(rangeList.At(i), L"duplex") || str::EqI(rangeList.At(i), L"duplexlong")) {
+        } else if (str::EqI(rangeList.at(i), L"duplex") || str::EqI(rangeList.at(i), L"duplexlong")) {
             devMode->dmDuplex = DMDUP_VERTICAL;
             devMode->dmFields |= DM_DUPLEX;
-        } else if (str::EqI(rangeList.At(i), L"duplexshort")) {
+        } else if (str::EqI(rangeList.at(i), L"duplexshort")) {
             devMode->dmDuplex = DMDUP_HORIZONTAL;
             devMode->dmFields |= DM_DUPLEX;
-        } else if (str::EqI(rangeList.At(i), L"color")) {
+        } else if (str::EqI(rangeList.at(i), L"color")) {
             devMode->dmColor = DMCOLOR_COLOR;
             devMode->dmFields |= DM_COLOR;
-        } else if (str::EqI(rangeList.At(i), L"monochrome")) {
+        } else if (str::EqI(rangeList.at(i), L"monochrome")) {
             devMode->dmColor = DMCOLOR_MONOCHROME;
             devMode->dmFields |= DM_COLOR;
-        } else if (str::StartsWithI(rangeList.At(i), L"bin=")) {
-            devMode->dmDefaultSource = GetPaperSourceByName(printerName, rangeList.At(i) + 4, devMode);
+        } else if (str::StartsWithI(rangeList.at(i), L"bin=")) {
+            devMode->dmDefaultSource = GetPaperSourceByName(printerName, rangeList.at(i) + 4, devMode);
             devMode->dmFields |= DM_DEFAULTSOURCE;
-        } else if (str::StartsWithI(rangeList.At(i), L"paper=")) {
-            devMode->dmPaperSize = GetPaperByName(rangeList.At(i) + 6);
+        } else if (str::StartsWithI(rangeList.at(i), L"paper=")) {
+            devMode->dmPaperSize = GetPaperByName(rangeList.at(i) + 6);
             devMode->dmFields |= DM_PAPERSIZE;
         }
     }

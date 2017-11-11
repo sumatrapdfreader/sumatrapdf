@@ -101,7 +101,7 @@ void PaintTransparentRectangles(HDC hdc, RectI screenRc, Vec<RectI>& rects, COLO
     GraphicsPath path(FillModeWinding);
     screenRc.Inflate(margin, margin);
     for (size_t i = 0; i < rects.Count(); i++) {
-        RectI rc = rects.At(i).Intersect(screenRc);
+        RectI rc = rects.at(i).Intersect(screenRc);
         if (!rc.IsEmpty())
             path.AddRectangle(rc.ToGdipRect());
     }
@@ -274,7 +274,7 @@ void CopySelectionToClipboard(WindowInfo *win)
     }
 
     /* also copy a screenshot of the current selection to the clipboard */
-    SelectionOnPage *selOnPage = &win->currentTab->selectionOnPage->At(0);
+    SelectionOnPage *selOnPage = &win->currentTab->selectionOnPage->at(0);
     RenderedBitmap * bmp = dm->GetEngine()->RenderBitmap(selOnPage->pageNo,
         dm->GetZoomReal(), dm->GetRotation(), &selOnPage->rect, Target_Export);
     if (bmp)

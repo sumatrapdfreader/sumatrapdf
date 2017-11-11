@@ -51,7 +51,7 @@ size_t ArchFile::GetFileCount() const {
 const WCHAR* ArchFile::GetFileName(size_t fileindex) {
     if (fileindex >= filenames.Count())
         return nullptr;
-    return filenames.At(fileindex);
+    return filenames.at(fileindex);
 }
 
 char* ArchFile::GetFileDataByName(const WCHAR* fileName, size_t* len) {
@@ -170,7 +170,7 @@ char* RarFile::GetFileFromFallback(size_t fileindex, size_t* len) {
         if (fileindex != (size_t)-1) {
             // always use the fallback for this file from now on
             filepos.at(fileindex) = -1;
-            return fallback->GetFileByName(path, filenames.At(fileindex), len);
+            return fallback->GetFileByName(path, filenames.at(fileindex), len);
         }
         // if fileindex == -1, (re)load the entire archive listing using UnRAR
         fallback->ExtractFilenames(path, filenames);
@@ -302,7 +302,7 @@ bool UnRarDll::ExtractFilenames(const WCHAR* rarPath, WStrList& filenames) {
         if (filenames.Count() == idx)
             filenames.Append(str::Dup(rarHeader.FileNameW));
         else
-            CrashIf(!str::Eq(filenames.At(idx), rarHeader.FileNameW));
+            CrashIf(!str::Eq(filenames.at(idx), rarHeader.FileNameW));
         RARProcessFile(hArc, RAR_SKIP, nullptr, nullptr);
     }
 

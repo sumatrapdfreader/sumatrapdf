@@ -253,7 +253,7 @@ bool LaunchBrowser(const WCHAR *url)
         CrashIf(gWindows.Count() == 0);
         if (gWindows.Count() == 0)
             return false;
-        HWND plugin = gWindows.At(0)->hwndFrame;
+        HWND plugin = gWindows.at(0)->hwndFrame;
         HWND parent = GetAncestor(plugin, GA_PARENT);
         AutoFree urlUtf8(str::conv::ToUtf8(url));
         if (!parent || !urlUtf8 || str::Len(urlUtf8) > 4096)
@@ -312,7 +312,7 @@ WindowInfo *FindWindowInfoByHwnd(HWND hwnd)
 {
     HWND parent = GetParent(hwnd);
     for (size_t i = 0; i < gWindows.Count(); i++) {
-        WindowInfo *win = gWindows.At(i);
+        WindowInfo *win = gWindows.at(i);
         if (hwnd == win->hwndFrame)
             return win;
         if (!parent)
@@ -430,7 +430,7 @@ WCHAR *HwndPasswordUI::GetPassword(const WCHAR *fileName, unsigned char *fileDig
 
     // try the list of default passwords before asking the user
     if (pwdIdx < gGlobalPrefs->defaultPasswords->Count())
-        return str::Dup(gGlobalPrefs->defaultPasswords->At(pwdIdx++));
+        return str::Dup(gGlobalPrefs->defaultPasswords->at(pwdIdx++));
 
     if (IsStressTesting())
         return nullptr;
@@ -1486,8 +1486,8 @@ WindowInfo* LoadDocument(LoadArgs& args)
         if (gFileHistory.MarkFileInexistent(fullPath)) {
             prefs::Save();
             // update the Frequently Read list
-            if (1 == gWindows.Count() && gWindows.At(0)->IsAboutWindow())
-                gWindows.At(0)->RedrawAll(true);
+            if (1 == gWindows.Count() && gWindows.at(0)->IsAboutWindow())
+                gWindows.at(0)->RedrawAll(true);
         }
         return nullptr;
     }
@@ -1502,8 +1502,8 @@ WindowInfo* LoadDocument(LoadArgs& args)
         }
     }
 
-    if (!win && 1 == gWindows.Count() && gWindows.At(0)->IsAboutWindow()) {
-        win = gWindows.At(0);
+    if (!win && 1 == gWindows.Count() && gWindows.at(0)->IsAboutWindow()) {
+        win = gWindows.at(0);
         args.win = win;
         args.isNewWindow = false;
     } else if (!win || !openNewTab && !args.forceReuse && win->IsDocLoaded()) {
@@ -1879,7 +1879,7 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp *rsp, bool silent)
     // If a user configures os-wide proxy that is not regular ie proxy
     // (which we pick up) we might get complete garbage in response to
     // our query. Make sure to check whether the returned data is sane.
-    if (!str::StartsWith(data->Get(), '[' == data->At(0) ? "[SumatraPDF]" : "SumatraPDF"))
+    if (!str::StartsWith(data->Get(), '[' == data->at(0) ? "[SumatraPDF]" : "SumatraPDF"))
         return ERROR_INTERNET_LOGIN_FAILURE;
 
 #ifdef HAS_PUBLIC_APP_KEY
@@ -2003,12 +2003,12 @@ void UpdateCheckAsync(WindowInfo *win, bool autoCheck)
 static void RerenderEverything()
 {
     for (size_t i = 0; i < gWindows.Count(); i++) {
-        if (!gWindows.At(i)->AsFixed())
+        if (!gWindows.at(i)->AsFixed())
             continue;
-        DisplayModel *dm = gWindows.At(i)->AsFixed();
+        DisplayModel *dm = gWindows.at(i)->AsFixed();
         gRenderCache.CancelRendering(dm);
         gRenderCache.KeepForDisplayModel(dm, dm);
-        gWindows.At(i)->RedrawAll(true);
+        gWindows.at(i)->RedrawAll(true);
     }
 }
 
@@ -2728,8 +2728,8 @@ static void BrowseFolder(WindowInfo& win, bool forward)
 
     // remove unsupported files that have never been successfully loaded
     for (size_t i = files.Count(); i > 0; i--) {
-        if (!EngineManager::IsSupportedFile(files.At(i - 1), false, gGlobalPrefs->ebookUI.useFixedPageUI) &&
-            !Doc::IsSupportedFile(files.At(i - 1)) && !gFileHistory.Find(files.At(i - 1))) {
+        if (!EngineManager::IsSupportedFile(files.at(i - 1), false, gGlobalPrefs->ebookUI.useFixedPageUI) &&
+            !Doc::IsSupportedFile(files.at(i - 1)) && !gFileHistory.Find(files.at(i - 1))) {
             free(files.PopAt(i - 1));
         }
     }
@@ -2746,7 +2746,7 @@ static void BrowseFolder(WindowInfo& win, bool forward)
 
     // TODO: check for unsaved modifications
     UpdateTabFileDisplayStateForWin(&win, tab);
-    LoadArgs args(files.At(index), &win);
+    LoadArgs args(files.at(index), &win);
     args.forceReuse = true;
     LoadDocument(args);
 }
@@ -2961,8 +2961,8 @@ static void OnMenuOptions(HWND hwnd)
 static void OnMenuOptions(WindowInfo& win)
 {
     OnMenuOptions(win.hwndFrame);
-    if (gWindows.Count() > 0 && gWindows.At(0)->IsAboutWindow())
-        gWindows.At(0)->RedrawAll(true);
+    if (gWindows.Count() > 0 && gWindows.at(0)->IsAboutWindow())
+        gWindows.at(0)->RedrawAll(true);
 }
 
 // toggles 'show pages continuously' state
@@ -3557,7 +3557,7 @@ static void FrameOnChar(WindowInfo& win, WPARAM key, LPARAM info=0)
             auto addedAnnotation = PageAnnotation(Annot_Highlight, sel.pageNo, sel.rect, PageAnnotation::Color(gGlobalPrefs->annotationDefaults.highlightColor, 0xCC));
             size_t oldLen = annots->Size();
             for (size_t i = 0; i < oldLen && i < annots->Size(); ++i) {
-                if (annots->At(i) == addedAnnotation) {
+                if (annots->at(i) == addedAnnotation) {
                     annots->RemoveAtFast(i);
                 }
             }
@@ -4077,7 +4077,7 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
         case IDM_DEBUG_SHOW_LINKS:
             gDebugShowLinks = !gDebugShowLinks;
             for (size_t i = 0; i < gWindows.Count(); i++)
-                gWindows.At(i)->RedrawAll(true);
+                gWindows.at(i)->RedrawAll(true);
             break;
 
         case IDM_DEBUG_EBOOK_UI:
@@ -4090,7 +4090,7 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
             SetDebugPaint(!IsDebugPaint());
             win::menu::SetChecked(GetMenu(win->hwndFrame), IDM_DEBUG_MUI, !IsDebugPaint());
             for (size_t i = 0; i < gWindows.Count(); i++)
-                gWindows.At(i)->RedrawAll(true);
+                gWindows.at(i)->RedrawAll(true);
             break;
 
         case IDM_DEBUG_ANNOTATION:

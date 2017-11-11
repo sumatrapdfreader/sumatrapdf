@@ -104,7 +104,7 @@ void InitializeBase() {
 }
 
 void DestroyBase() {
-    FreeGraphicsForMeasureText(gGraphicsCache->At(0).gfx);
+    FreeGraphicsForMeasureText(gGraphicsCache->at(0).gfx);
     for (GraphicsCacheEntry &e : *gGraphicsCache) {
         e.Free();
     }
@@ -184,7 +184,7 @@ Graphics *AllocGraphicsForMeasureText() {
     // try to limit the size of cache by evicting the oldest entries, but don't remove
     // first (for ui thread) or last (one we just added) entries
     for (size_t i = 1; i < gGraphicsCache->Count() - 1; i++) {
-        GraphicsCacheEntry e = gGraphicsCache->At(i);
+        GraphicsCacheEntry e = gGraphicsCache->at(i);
         if (0 == e.refCount) {
             e.Free();
             gGraphicsCache->RemoveAt(i);

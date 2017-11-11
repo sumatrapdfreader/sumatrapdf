@@ -20,29 +20,29 @@ static void ParseCommandLineTest()
         CommandLineInfo i;
         i.ParseCommandLine(L"SumatraPDF.exe -bench foo.pdf");
         utassert(2 == i.pathsToBenchmark.Count());
-        utassert(str::Eq(L"foo.pdf", i.pathsToBenchmark.At(0)));
-        utassert(nullptr == i.pathsToBenchmark.At(1));
+        utassert(str::Eq(L"foo.pdf", i.pathsToBenchmark.at(0)));
+        utassert(nullptr == i.pathsToBenchmark.at(1));
     }
 
     {
         CommandLineInfo i;
         i.ParseCommandLine(L"SumatraPDF.exe -bench foo.pdf -fwdsearch-width 5");
         utassert(i.globalPrefArgs.Count() == 2);
-        const WCHAR *s = i.globalPrefArgs.At(0);
+        const WCHAR *s = i.globalPrefArgs.at(0);
         utassert(str::Eq(s, L"-fwdsearch-width"));
-        s = i.globalPrefArgs.At(1);
+        s = i.globalPrefArgs.at(1);
         utassert(str::Eq(s, L"5"));
         utassert(2 == i.pathsToBenchmark.Count());
-        utassert(str::Eq(L"foo.pdf", i.pathsToBenchmark.At(0)));
-        utassert(nullptr == i.pathsToBenchmark.At(1));
+        utassert(str::Eq(L"foo.pdf", i.pathsToBenchmark.at(0)));
+        utassert(nullptr == i.pathsToBenchmark.at(1));
     }
 
     {
         CommandLineInfo i;
         i.ParseCommandLine(L"SumatraPDF.exe -bench bar.pdf loadonly");
         utassert(2 == i.pathsToBenchmark.Count());
-        utassert(str::Eq(L"bar.pdf", i.pathsToBenchmark.At(0)));
-        utassert(str::Eq(L"loadonly", i.pathsToBenchmark.At(1)));
+        utassert(str::Eq(L"bar.pdf", i.pathsToBenchmark.at(0)));
+        utassert(str::Eq(L"loadonly", i.pathsToBenchmark.at(1)));
     }
 
     {
@@ -50,18 +50,18 @@ static void ParseCommandLineTest()
         i.ParseCommandLine(L"SumatraPDF.exe -bench bar.pdf 1 -set-color-range 0x123456 #abCDef");
         utassert(i.globalPrefArgs.Count() == 3);
         utassert(2 == i.pathsToBenchmark.Count());
-        utassert(str::Eq(L"bar.pdf", i.pathsToBenchmark.At(0)));
-        utassert(str::Eq(L"1", i.pathsToBenchmark.At(1)));
+        utassert(str::Eq(L"bar.pdf", i.pathsToBenchmark.at(0)));
+        utassert(str::Eq(L"1", i.pathsToBenchmark.at(1)));
     }
 
     {
         CommandLineInfo i;
         i.ParseCommandLine(L"SumatraPDF.exe -bench bar.pdf 1-5,3   -bench some.pdf 1,3,8-34");
         utassert(4 == i.pathsToBenchmark.Count());
-        utassert(str::Eq(L"bar.pdf", i.pathsToBenchmark.At(0)));
-        utassert(str::Eq(L"1-5,3", i.pathsToBenchmark.At(1)));
-        utassert(str::Eq(L"some.pdf", i.pathsToBenchmark.At(2)));
-        utassert(str::Eq(L"1,3,8-34", i.pathsToBenchmark.At(3)));
+        utassert(str::Eq(L"bar.pdf", i.pathsToBenchmark.at(0)));
+        utassert(str::Eq(L"1-5,3", i.pathsToBenchmark.at(1)));
+        utassert(str::Eq(L"some.pdf", i.pathsToBenchmark.at(2)));
+        utassert(str::Eq(L"1,3,8-34", i.pathsToBenchmark.at(3)));
     }
 
     {

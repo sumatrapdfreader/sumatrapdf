@@ -542,9 +542,9 @@ static void DebugShowLinks(DisplayModel& dm, HDC hdc) {
         Vec<PageElement*>* els = dm.GetEngine()->GetElements(pageNo);
         if (els) {
             for (size_t i = 0; i < els->Count(); i++) {
-                if (els->At(i)->GetType() == Element_Image)
+                if (els->at(i)->GetType() == Element_Image)
                     continue;
-                RectI rect = dm.CvtToScreen(pageNo, els->At(i)->GetRect());
+                RectI rect = dm.CvtToScreen(pageNo, els->at(i)->GetRect());
                 RectI isect = viewPortRect.Intersect(rect);
                 if (!isect.IsEmpty())
                     PaintRect(hdc, isect);
@@ -600,17 +600,17 @@ static void DrawDocument(WindowInfo* win, HDC hdc, RECT* rcArea) {
         FillRect(hdc, rcArea, brush);
     } else {
         COLORREF colors[3];
-        colors[0] = gGlobalPrefs->fixedPageUI.gradientColors->At(0);
+        colors[0] = gGlobalPrefs->fixedPageUI.gradientColors->at(0);
         if (gGlobalPrefs->fixedPageUI.gradientColors->Count() == 1) {
             colors[1] = colors[2] = colors[0];
         } else if (gGlobalPrefs->fixedPageUI.gradientColors->Count() == 2) {
-            colors[2] = gGlobalPrefs->fixedPageUI.gradientColors->At(1);
+            colors[2] = gGlobalPrefs->fixedPageUI.gradientColors->at(1);
             colors[1] = RGB((GetRValueSafe(colors[0]) + GetRValueSafe(colors[2])) / 2,
                             (GetGValueSafe(colors[0]) + GetGValueSafe(colors[2])) / 2,
                             (GetBValueSafe(colors[0]) + GetBValueSafe(colors[2])) / 2);
         } else {
-            colors[1] = gGlobalPrefs->fixedPageUI.gradientColors->At(1);
-            colors[2] = gGlobalPrefs->fixedPageUI.gradientColors->At(2);
+            colors[1] = gGlobalPrefs->fixedPageUI.gradientColors->at(1);
+            colors[2] = gGlobalPrefs->fixedPageUI.gradientColors->at(2);
         }
         SizeI size = dm->GetCanvasSize();
         float percTop = 1.0f * dm->GetViewPort().y / size.dy;

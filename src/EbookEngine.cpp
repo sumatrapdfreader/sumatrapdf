@@ -142,7 +142,7 @@ protected:
         CrashIf(pageNo < 1 || PageCount() < pageNo);
         if (pageNo < 1 || PageCount() < pageNo)
             return nullptr;
-        return &pages->At(pageNo - 1)->instructions;
+        return &pages->at(pageNo - 1)->instructions;
     }
 };
 
@@ -259,7 +259,7 @@ bool EbookEngine::ExtractPageAnchors()
             return false;
 
         for (size_t k = 0; k < pageInstrs->Count(); k++) {
-            DrawInstr *i = &pageInstrs->At(k);
+            DrawInstr *i = &pageInstrs->at(k);
             if (InstrAnchor != i->type)
                 continue;
             anchors.Append(PageAnchor(i, pageNo));
@@ -310,7 +310,7 @@ static inline Gdiplus::Color FromColor(PageAnnotation::Color c)
 static void DrawAnnotations(Graphics& g, Vec<PageAnnotation>& userAnnots, int pageNo)
 {
     for (size_t i = 0; i < userAnnots.Count(); i++) {
-        PageAnnotation& annot = userAnnots.At(i);
+        PageAnnotation& annot = userAnnots.at(i);
         if (annot.pageNo != pageNo)
             continue;
         PointF p1, p2;
@@ -507,7 +507,7 @@ PageElement *EbookEngine::CreatePageLink(DrawInstr *link, RectI rect, int pageNo
         return new EbookLink(link, rect, nullptr, pageNo);
     }
 
-    DrawInstr *baseAnchor = baseAnchors.At(pageNo-1);
+    DrawInstr *baseAnchor = baseAnchors.at(pageNo-1);
     if (baseAnchor) {
         AutoFree basePath(str::DupN(baseAnchor->str.s, baseAnchor->str.len));
         AutoFree relPath(ResolveHtmlEntities(link->str.s, link->str.len));
@@ -549,8 +549,8 @@ PageElement *EbookEngine::GetElementAtPos(int pageNo, PointD pt)
 
     PageElement *el = nullptr;
     for (size_t i = 0; i < els->Count() && !el; i++)
-        if (els->At(i)->GetRect().Contains(pt))
-            el = els->At(i);
+        if (els->at(i)->GetRect().Contains(pt))
+            el = els->at(i);
 
     if (el)
         els->Remove(el);
@@ -576,7 +576,7 @@ PageDestination *EbookEngine::GetNamedDest(const WCHAR *name)
     if (id > name_utf8 + 1) {
         size_t base_len = id - name_utf8 - 1;
         for (size_t i = 0; i < baseAnchors.Count(); i++) {
-            DrawInstr *anchor = baseAnchors.At(i);
+            DrawInstr *anchor = baseAnchors.at(i);
             if (anchor && base_len == anchor->str.len &&
                 str::EqNI(name_utf8, anchor->str.s, base_len)) {
                 baseAnchor = anchor;
@@ -588,7 +588,7 @@ PageDestination *EbookEngine::GetNamedDest(const WCHAR *name)
 
     size_t id_len = str::Len(id);
     for (size_t i = 0; i < anchors.Count(); i++) {
-        PageAnchor *anchor = &anchors.At(i);
+        PageAnchor *anchor = &anchors.at(i);
         if (baseAnchor) {
             if (anchor->instr == baseAnchor)
                 baseAnchor = nullptr;
@@ -1078,7 +1078,7 @@ PageDestination *MobiEngineImpl::GetNamedDest(const WCHAR *name)
         return nullptr;
     int pageNo;
     for (pageNo = 1; pageNo < PageCount(); pageNo++) {
-        if (pages->At(pageNo)->reparseIdx > filePos)
+        if (pages->at(pageNo)->reparseIdx > filePos)
             break;
     }
     CrashIf(pageNo < 1 || pageNo > PageCount());
@@ -1249,8 +1249,8 @@ public:
     ChmDataCache(ChmDoc *doc, char *html) : doc(doc), html(html) { }
     ~ChmDataCache() {
         for (size_t i = 0; i < images.Count(); i++) {
-            free(images.At(i).base.data);
-            free(images.At(i).id);
+            free(images.at(i).base.data);
+            free(images.at(i).id);
         }
     }
 
@@ -1262,8 +1262,8 @@ public:
     ImageData *GetImageData(const char *id, const char *pagePath) {
         AutoFree url(NormalizeURL(id, pagePath));
         for (size_t i = 0; i < images.Count(); i++) {
-            if (str::Eq(images.At(i).id, url))
-                return &images.At(i).base;
+            if (str::Eq(images.at(i).id, url))
+                return &images.at(i).base;
         }
 
         ImageData2 data = { 0 };
@@ -1452,7 +1452,7 @@ public:
         // finally add all the remaining HTML files
         Vec<char *> *paths = doc->GetAllPaths();
         for (size_t i = 0; i < paths->Count(); i++) {
-            char *path = paths->At(i);
+            char *path = paths->at(i);
             if (str::EndsWithI(path, ".htm") || str::EndsWithI(path, ".html")) {
                 if (*path == '/')
                     path++;
@@ -1565,7 +1565,7 @@ PageElement *ChmEngineImpl::CreatePageLink(DrawInstr *link, RectI rect, int page
     if (linkEl)
         return linkEl;
 
-    DrawInstr *baseAnchor = baseAnchors.At(pageNo-1);
+    DrawInstr *baseAnchor = baseAnchors.at(pageNo-1);
     AutoFree basePath(str::DupN(baseAnchor->str.s, baseAnchor->str.len));
     AutoFree url(str::DupN(link->str.s, link->str.len));
     url.Set(NormalizeURL(url, basePath));

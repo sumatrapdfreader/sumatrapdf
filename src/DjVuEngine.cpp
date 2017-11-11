@@ -465,7 +465,7 @@ void DjVuEngineImpl::AddUserAnnots(RenderedBitmap *bmp, int pageNo, float zoom, 
         g.SetPageUnit(UnitPixel);
 
         for (size_t i = 0; i < userAnnots.Count(); i++) {
-            PageAnnotation& annot = userAnnots.At(i);
+            PageAnnotation& annot = userAnnots.at(i);
             if (annot.pageNo != pageNo)
                 continue;
             RectD arect;
@@ -820,14 +820,14 @@ WCHAR *DjVuEngineImpl::ExtractPageText(int pageNo, const WCHAR *lineSep, RectI *
         // TODO: the coordinates aren't completely correct yet
         RectI page = PageMediabox(pageNo).Round();
         for (size_t i = 0; i < coords.Count(); i++) {
-            if (coords.At(i) != RectI()) {
+            if (coords.at(i) != RectI()) {
                 if (dpiFactor != 1.0) {
-                    geomutil::RectT<float> pageF = coords.At(i).Convert<float>();
+                    geomutil::RectT<float> pageF = coords.at(i).Convert<float>();
                     pageF.x *= dpiFactor; pageF.dx *= dpiFactor;
                     pageF.y *= dpiFactor; pageF.dy *= dpiFactor;
-                    coords.At(i) = pageF.Round();
+                    coords.at(i) = pageF.Round();
                 }
-                coords.At(i).y = page.dy - coords.At(i).y - coords.At(i).dy;
+                coords.at(i).y = page.dy - coords.at(i).y - coords.at(i).dy;
             }
         }
         CrashIf(coords.Count() != extracted.Count());
@@ -942,8 +942,8 @@ PageElement *DjVuEngineImpl::GetElementAtPos(int pageNo, PointD pt)
 
     PageElement *el = nullptr;
     for (size_t i = 0; i < els->Count() && !el; i++) {
-        if (els->At(i)->GetRect().Contains(pt)) {
-            el = els->At(i);
+        if (els->at(i)->GetRect().Contains(pt)) {
+            el = els->at(i);
         }
     }
 
@@ -963,8 +963,8 @@ char *DjVuEngineImpl::ResolveNamedDest(const char *name)
     if (!str::StartsWith(name, "#"))
         return nullptr;
     for (size_t i = 0; i < fileInfo.Count(); i++) {
-        if (str::EqI(name + 1, fileInfo.At(i).id))
-            return str::Format("#%d", fileInfo.At(i).pageno + 1);
+        if (str::EqI(name + 1, fileInfo.at(i).id))
+            return str::Format("#%d", fileInfo.at(i).pageno + 1);
     }
     return nullptr;
 }
@@ -1034,7 +1034,7 @@ DocTocItem *DjVuEngineImpl::GetTocTree()
 WCHAR *DjVuEngineImpl::GetPageLabel(int pageNo) const
 {
     for (size_t i = 0; i < fileInfo.Count(); i++) {
-        ddjvu_fileinfo_t& info = fileInfo.At(i);
+        ddjvu_fileinfo_t& info = fileInfo.at(i);
         if (pageNo - 1 == info.pageno && !str::Eq(info.title, info.id))
             return str::conv::FromUtf8(info.title);
     }
@@ -1045,7 +1045,7 @@ int DjVuEngineImpl::GetPageByLabel(const WCHAR *label) const
 {
     AutoFree labelUtf8(str::conv::ToUtf8(label));
     for (size_t i = 0; i < fileInfo.Count(); i++) {
-        ddjvu_fileinfo_t& info = fileInfo.At(i);
+        ddjvu_fileinfo_t& info = fileInfo.at(i);
         if (str::EqI(info.title, labelUtf8) && !str::Eq(info.title, info.id))
             return info.pageno + 1;
     }

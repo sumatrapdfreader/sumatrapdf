@@ -81,7 +81,7 @@ bool PdbReader::ParseHeader()
 
     // validate offsets
     for (int i = 0; i < pdbHeader.numRecords; i++) {
-        if (recOffsets.At(i + 1) < recOffsets.At(i))
+        if (recOffsets.at(i + 1) < recOffsets.at(i))
             return false;
         // technically PDB record size should be less than 64K,
         // but it's not true for mobi files, so we don't validate that
@@ -106,8 +106,8 @@ const char *PdbReader::GetRecord(size_t recNo, size_t *sizeOut)
 {
     if (recNo + 1 >= recOffsets.Count())
         return nullptr;
-    size_t offset = recOffsets.At(recNo);
+    size_t offset = recOffsets.at(recNo);
     if (sizeOut)
-        *sizeOut = recOffsets.At(recNo + 1) - offset;
+        *sizeOut = recOffsets.at(recNo + 1) - offset;
     return data + offset;
 }

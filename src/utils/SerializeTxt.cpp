@@ -38,7 +38,7 @@ void FreeStruct(uint8_t *structStart, const StructMetadata *def)
             Vec<uint8_t*> *vec = *vecPtr;
             CrashIf(!vec);
             for (size_t j = 0; j < vec->Count(); j++) {
-                FreeStruct(vec->At(j), GetStructDef(fieldDef));
+                FreeStruct(vec->at(j), GetStructDef(fieldDef));
             }
             delete vec;
             *vecPtr = nullptr;
@@ -320,7 +320,7 @@ static TxtNode *FindNode(TxtNode *curr, const char *name, size_t nameLen)
     TxtNode *child;
     TxtNode *found = nullptr;
     for (size_t i = 0; i < curr->children->Count(); i++) {
-        child = curr->children->At(i);
+        child = curr->children->at(i);
         if (TextNode == child->type || StructNode == child->type) {
             nodeName = child->keyStart;
             nodeNameLen = child->keyEnd - nodeName;
@@ -349,7 +349,7 @@ static void FreeTxtNode(TxtNode *node)
 {
     if (node->children) {
         for (size_t i = 0; i < node->children->Count(); i++) {
-            TxtNode *child = node->children->At(i);
+            TxtNode *child = node->children->at(i);
             CrashIf(TextNode != child->type);
             delete child;
         }
@@ -489,7 +489,7 @@ static bool DecodeField(DecodeState& ds, TxtNode *firstNode, const char *fieldNa
         WriteStructPtrVal(structDataPtr, (void*)vec);
         TxtNode *child;
         for (size_t i = 0; i < node->children->Count(); i++) {
-            child = node->children->At(i);
+            child = node->children->at(i);
             uint8_t *d = DecodeStruct(ds, fieldDef, child, isCompact);
             if (d)
                 vec->Append(d);
@@ -540,7 +540,7 @@ uint8_t* Deserialize(char *data, size_t dataSize, const StructMetadata *def)
     if (!ok)
         return nullptr;
 
-    return DeserializeRec(ds, ds.parser.nodes.At(0), def);
+    return DeserializeRec(ds, ds.parser.nodes.at(0), def);
 }
 
 static void AppendNest(str::Str<char>& s, int nest)
@@ -700,7 +700,7 @@ static void SerializeField(EncodeState& es, const char *fieldName, const FieldMe
         for (size_t i = 0; vec && (i < vec->Count()); i++) {
             AppendNest(res, es.nest);
             res.Append("[" NL);
-            const uint8_t *elData = vec->At(i);
+            const uint8_t *elData = vec->at(i);
             ++es.nest;
             SerializeRec(es, elData, GetStructDef(fieldDef));
             --es.nest;

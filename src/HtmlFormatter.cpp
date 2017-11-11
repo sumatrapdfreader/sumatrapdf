@@ -529,7 +529,7 @@ bool HtmlFormatter::FlushCurrLine(bool isParagraphBreak)
         currLineTopPadding = 0;
         // remove all spaces (only keep SetFont, LinkStart and Anchor instructions)
         for (size_t k = currLineInstr.Count(); k > 0; k--) {
-            DrawInstr& i = currLineInstr.At(k - 1);
+            DrawInstr& i = currLineInstr.at(k - 1);
             if (InstrFixedSpace == i.type || InstrElasticSpace == i.type)
                 currLineInstr.RemoveAt(k - 1);
         }
@@ -561,7 +561,7 @@ bool HtmlFormatter::FlushCurrLine(bool isParagraphBreak)
 
     DrawInstr link;
     if (currLinkIdx) {
-        link = currLineInstr.At(currLinkIdx - 1);
+        link = currLineInstr.at(currLinkIdx - 1);
         // TODO: this occasionally leads to empty links
         AppendInstr(DrawInstr(InstrLinkEnd));
     }
@@ -594,7 +594,7 @@ void HtmlFormatter::EmitEmptyLine(float lineDy)
         currX = NewLineX();
         // remove all spaces (only keep SetFont, LinkStart and Anchor instructions)
         for (size_t k = currLineInstr.Count(); k > 0; k--) {
-            DrawInstr& i = currLineInstr.At(k - 1);
+            DrawInstr& i = currLineInstr.at(k - 1);
             if (InstrFixedSpace == i.type || InstrElasticSpace == i.type)
                 currLineInstr.RemoveAt(k - 1);
 
@@ -608,7 +608,7 @@ static bool HasPreviousLineSingleImage(Vec<DrawInstr>& instrs)
 {
     REAL imageY = -1;
     for (size_t idx = instrs.Count(); idx > 0; idx--) {
-        DrawInstr& i = instrs.At(idx - 1);
+        DrawInstr& i = instrs.at(idx - 1);
         if (!IsVisibleDrawInstr(i))
             continue;
         if (-1 != imageY) {
@@ -709,7 +709,7 @@ static bool CanEmitElasticSpace(float currX, float NewLineX, float maxCurrX, Vec
     DrawInstr& di = currLineInstr.Last();
     // don't add a space if only an anchor would be in between them
     if (InstrAnchor == di.type && currLineInstr.Count() > 1)
-        di = currLineInstr.At(currLineInstr.Count() - 2);
+        di = currLineInstr.at(currLineInstr.Count() - 2);
     return (InstrElasticSpace != di.type) && (InstrFixedSpace != di.type);
 }
 
@@ -971,7 +971,7 @@ StyleRule *HtmlFormatter::FindStyleRule(HtmlTag tag, const char *clazz, size_t c
 {
     uint32_t classHash = clazz ? MurmurHash2(clazz, clazzLen) : 0;
     for (size_t i = 0; i < styleRules.Count(); i++) {
-        StyleRule& rule = styleRules.At(i);
+        StyleRule& rule = styleRules.at(i);
         if (tag == rule.tag && classHash == rule.classHash)
             return &rule;
     }
@@ -1105,14 +1105,14 @@ void HtmlFormatter::UpdateTagNesting(HtmlToken *t)
             return;
         }
         // close all tags that can't contain this new block-level tag
-        for (; idx > 0 && AutoCloseOnOpen(t->tag, tagNesting.At(idx - 1)); idx--);
+        for (; idx > 0 && AutoCloseOnOpen(t->tag, tagNesting.at(idx - 1)); idx--);
     }
     else {
         // close all tags that were contained within the current tag
         // (for inline tags just up to the next block-level tag)
-        for (; idx > 0 && (!isInline || IsInlineTag(tagNesting.At(idx - 1))) &&
-                                        t->tag != tagNesting.At(idx - 1); idx--);
-        if (0 == idx || tagNesting.At(idx - 1) != t->tag)
+        for (; idx > 0 && (!isInline || IsInlineTag(tagNesting.at(idx - 1))) &&
+                                        t->tag != tagNesting.at(idx - 1); idx--);
+        if (0 == idx || tagNesting.at(idx - 1) != t->tag)
             return;
     }
 

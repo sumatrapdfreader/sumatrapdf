@@ -489,7 +489,7 @@ static const WCHAR *LinkifyFindEnd(const WCHAR *start, WCHAR prevChar)
 static const WCHAR *LinkifyMultilineText(LinkRectList *list, const WCHAR *pageText, const WCHAR *start, const WCHAR *next, RectI *coords)
 {
     size_t lastIx = list->coords.Count() - 1;
-    AutoFreeW uri(list->links.At(lastIx));
+    AutoFreeW uri(list->links.at(lastIx));
     const WCHAR *end = next;
     bool multiline = false;
 
@@ -506,7 +506,7 @@ static const WCHAR *LinkifyMultilineText(LinkRectList *list, const WCHAR *pageTe
     } while (multiline);
 
     // update the link URL for all partial links
-    list->links.At(lastIx) = str::Dup(uri);
+    list->links.at(lastIx) = str::Dup(uri);
     for (size_t i = lastIx + 1; i < list->coords.Count(); i++)
         list->links.Append(str::Dup(uri));
 
@@ -792,7 +792,7 @@ static Vec<PageAnnotation> fz_get_user_page_annots(Vec<PageAnnotation>& userAnno
 {
     Vec<PageAnnotation> result;
     for (size_t i = 0; i < userAnnots.Count(); i++) {
-        PageAnnotation& annot = userAnnots.At(i);
+        PageAnnotation& annot = userAnnots.at(i);
         if (annot.pageNo != pageNo)
             continue;
         // include all annotations for pageNo that can be rendered by fz_run_user_annots
@@ -808,7 +808,7 @@ static Vec<PageAnnotation> fz_get_user_page_annots(Vec<PageAnnotation>& userAnno
 static void fz_run_user_page_annots(Vec<PageAnnotation>& pageAnnots, fz_device *dev, const fz_matrix *ctm, const fz_rect *cliprect, fz_cookie *cookie)
 {
     for (size_t i = 0; i < pageAnnots.Count() && (!cookie || !cookie->abort); i++) {
-        PageAnnotation& annot = pageAnnots.At(i);
+        PageAnnotation& annot = pageAnnots.at(i);
         // skip annotation if it isn't visible
         fz_rect rect = fz_RectD_to_rect(annot.rect);
         fz_transform_rect(&rect, ctm);
@@ -873,7 +873,7 @@ static void fz_run_page_transparency(Vec<PageAnnotation>& pageAnnots, fz_device 
         return;
     bool needsTransparency = false;
     for (size_t i = 0; i < pageAnnots.Count(); i++) {
-        if (Annot_Highlight == pageAnnots.At(i).type) {
+        if (Annot_Highlight == pageAnnots.at(i).type) {
             needsTransparency = true;
             break;
         }
@@ -986,7 +986,7 @@ WCHAR *FormatPageLabel(const char *type, int pageNo, const WCHAR *prefix)
         str::Str<WCHAR> number;
         number.Append('A' + (pageNo - 1) % 26);
         for (int i = 0; i < (pageNo - 1) / 26; i++)
-            number.Append(number.At(0));
+            number.Append(number.at(0));
         if (*type == 'a')
             str::ToLowerInPlace(number.Get());
         return str::Format(L"%s%s", prefix, number.Get());
@@ -1029,8 +1029,8 @@ WStrVec *BuildPageLabelVec(pdf_obj *root, int pageCount)
     if (data.Count() == 0)
         return nullptr;
 
-    if (data.Count() == 1 && data.At(0).startAt == 1 && data.At(0).countFrom == 1 &&
-        !data.At(0).prefix && str::Eq(data.At(0).type, "D")) {
+    if (data.Count() == 1 && data.at(0).startAt == 1 && data.at(0).countFrom == 1 &&
+        !data.at(0).prefix && str::Eq(data.at(0).type, "D")) {
         // this is the default case, no need for special treatment
         return nullptr;
     }
@@ -1038,36 +1038,36 @@ WStrVec *BuildPageLabelVec(pdf_obj *root, int pageCount)
     WStrVec *labels = new WStrVec();
     labels->AppendBlanks(pageCount);
 
-    for (size_t i = 0; i < data.Count() && data.At(i).startAt <= pageCount; i++) {
-        int secLen = pageCount + 1 - data.At(i).startAt;
-        if (i < data.Count() - 1 && data.At(i + 1).startAt <= pageCount)
-            secLen = data.At(i + 1).startAt - data.At(i).startAt;
-        AutoFreeW prefix(str::conv::FromPdf(data.At(i).prefix));
+    for (size_t i = 0; i < data.Count() && data.at(i).startAt <= pageCount; i++) {
+        int secLen = pageCount + 1 - data.at(i).startAt;
+        if (i < data.Count() - 1 && data.at(i + 1).startAt <= pageCount)
+            secLen = data.at(i + 1).startAt - data.at(i).startAt;
+        AutoFreeW prefix(str::conv::FromPdf(data.at(i).prefix));
         for (int j = 0; j < secLen; j++) {
-            free(labels->At(data.At(i).startAt + j - 1));
-            labels->At(data.At(i).startAt + j - 1) =
-                FormatPageLabel(data.At(i).type, data.At(i).countFrom + j, prefix);
+            free(labels->at(data.at(i).startAt + j - 1));
+            labels->at(data.at(i).startAt + j - 1) =
+                FormatPageLabel(data.at(i).type, data.at(i).countFrom + j, prefix);
         }
     }
 
     for (int ix = 0; (ix = labels->Find(nullptr, ix)) != -1; ix++)
-        labels->At(ix) = str::Dup(L"");
+        labels->at(ix) = str::Dup(L"");
 
     // ensure that all page labels are unique (by appending a number to duplicates)
     WStrVec dups(*labels);
     dups.Sort();
     for (size_t i = 1; i < dups.Count(); i++) {
-        if (!str::Eq(dups.At(i), dups.At(i - 1)))
+        if (!str::Eq(dups.at(i), dups.at(i - 1)))
             continue;
-        int ix = labels->Find(dups.At(i)), counter = 0;
-        while ((ix = labels->Find(dups.At(i), ix + 1)) != -1) {
+        int ix = labels->Find(dups.at(i)), counter = 0;
+        while ((ix = labels->Find(dups.at(i), ix + 1)) != -1) {
             AutoFreeW unique;
             do {
-                unique.Set(str::Format(L"%s.%d", dups.At(i), ++counter));
+                unique.Set(str::Format(L"%s.%d", dups.at(i), ++counter));
             } while (labels->Contains(unique));
-            str::ReplacePtr(&labels->At(ix), unique);
+            str::ReplacePtr(&labels->at(ix), unique);
         }
-        for (; i + 1 < dups.Count() && str::Eq(dups.At(i), dups.At(i + 1)); i++);
+        for (; i + 1 < dups.Count() && str::Eq(dups.at(i), dups.at(i + 1)); i++);
     }
 
     return labels;
@@ -1133,7 +1133,7 @@ pdf_load_page_objs(pdf_document *doc, pdf_obj **page_objs)
     }
     fz_catch(ctx) {
         for (size_t i = 0; i < stack.Size(); i++) {
-            pdf_unmark_obj(stack.At(i).kids);
+            pdf_unmark_obj(stack.at(i).kids);
         }
         pdf_unmark_obj(top.kids);
         fz_rethrow(ctx);
@@ -1888,7 +1888,7 @@ PdfPageRun *PdfEngineImpl::CreatePageRun(pdf_page *page, fz_display_list *list)
         fz_rect *rects = AllocArray<fz_rect>(positions.Count() + 1);
         if (rects) {
             for (size_t i = 0; i < positions.Count(); i++) {
-                rects[i] = positions.At(i).rect;
+                rects[i] = positions.at(i).rect;
             }
             imageRects[pageNo-1] = rects;
         }
@@ -1904,8 +1904,8 @@ PdfPageRun *PdfEngineImpl::GetPageRun(pdf_page *page, bool tryOnly)
     ScopedCritSec scope(&pagesAccess);
 
     for (size_t i = 0; i < runCache.Count(); i++) {
-        if (runCache.At(i)->page == page) {
-            result = runCache.At(i);
+        if (runCache.at(i)->page == page) {
+            result = runCache.at(i);
             break;
         }
     }
@@ -1914,10 +1914,10 @@ PdfPageRun *PdfEngineImpl::GetPageRun(pdf_page *page, bool tryOnly)
         for (size_t i = 0; i < runCache.Count(); i++) {
             // drop page runs that take up too much memory due to huge images
             // (except for the very recently used ones)
-            if (i >= 2 && mem + runCache.At(i)->size_est >= MAX_PAGE_RUN_MEMORY)
-                DropPageRun(runCache.At(i--), true);
+            if (i >= 2 && mem + runCache.at(i)->size_est >= MAX_PAGE_RUN_MEMORY)
+                DropPageRun(runCache.at(i--), true);
             else
-                mem += runCache.At(i)->size_est;
+                mem += runCache.at(i)->size_est;
         }
         if (runCache.Count() >= MAX_PAGE_RUN_CACHE) {
             AssertCrash(runCache.Count() == MAX_PAGE_RUN_CACHE);
@@ -1946,7 +1946,7 @@ PdfPageRun *PdfEngineImpl::GetPageRun(pdf_page *page, bool tryOnly)
             runCache.InsertAt(0, result);
         }
     }
-    else if (result && result != runCache.At(0)) {
+    else if (result && result != runCache.at(0)) {
         // keep the list Most Recently Used first
         runCache.Remove(result);
         runCache.InsertAt(0, result);
@@ -2265,14 +2265,14 @@ void PdfEngineImpl::LinkifyPageText(pdf_page *page)
     for (size_t i = 0; i < list->links.Count(); i++) {
         bool overlaps = false;
         for (fz_link *next = page->links; next && !overlaps; next = next->next)
-            overlaps = fz_calc_overlap(list->coords.At(i), next->rect) >= 0.25f;
+            overlaps = fz_calc_overlap(list->coords.at(i), next->rect) >= 0.25f;
         if (!overlaps) {
-            AutoFree uri(str::conv::ToUtf8(list->links.At(i)));
+            AutoFree uri(str::conv::ToUtf8(list->links.at(i)));
             if (!uri) continue;
             fz_link_dest ld = { FZ_LINK_URI, 0 };
             ld.ld.uri.uri = fz_strdup(ctx, uri);
             // add links in top-to-bottom order (i.e. last-to-first)
-            fz_link *link = fz_new_link(ctx, &list->coords.At(i), ld);
+            fz_link *link = fz_new_link(ctx, &list->coords.at(i), ld);
             CrashIf(!link); // TODO: if fz_new_link throws, there are memory leaks
             link->next = page->links;
             page->links = link;
@@ -2353,7 +2353,7 @@ RenderedBitmap *PdfEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
 
     RunPage(page, dev, &fz_identity);
 
-    if (imageIx >= positions.Count() || fz_rect_to_RectD(positions.At(imageIx).rect) != rect) {
+    if (imageIx >= positions.Count() || fz_rect_to_RectD(positions.at(imageIx).rect) != rect) {
         AssertCrash(0);
         return nullptr;
     }
@@ -2362,7 +2362,7 @@ RenderedBitmap *PdfEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
 
     fz_pixmap *pixmap = nullptr;
     fz_try(ctx) {
-        fz_image *image = positions.At(imageIx).image;
+        fz_image *image = positions.at(imageIx).image;
         pixmap = fz_new_pixmap_from_image(ctx, image, image->w, image->h);
     }
     fz_catch(ctx) {
@@ -2538,7 +2538,7 @@ WCHAR *PdfEngineImpl::ExtractFontList()
         AutoFree anonFontName;
         bool embedded = false;
         fz_try(ctx) {
-            pdf_obj *font = fontList.At(i);
+            pdf_obj *font = fontList.at(i);
             pdf_obj *font2 = pdf_array_get(pdf_dict_gets(font, "DescendantFonts"), 0);
             if (!font2)
                 font2 = font;
@@ -2923,7 +2923,7 @@ bool PdfEngineImpl::SaveUserAnnots(const char *pathUtf8)
             }
             // append all annotations for the current page
             for (size_t i = 0; i < pageAnnots.Count(); i++) {
-                ok &= pdf_file_update_add_annotation(_doc, page, _pageObjs[pageNo - 1], pageAnnots.At(i), annots);
+                ok &= pdf_file_update_add_annotation(_doc, page, _pageObjs[pageNo - 1], pageAnnots.at(i), annots);
             }
         }
         if (ok) {
@@ -2975,7 +2975,7 @@ WCHAR *PdfEngineImpl::GetPageLabel(int pageNo) const
     if (!_pagelabels || pageNo < 1 || PageCount() < pageNo)
         return BaseEngine::GetPageLabel(pageNo);
 
-    return str::Dup(_pagelabels->At(pageNo - 1));
+    return str::Dup(_pagelabels->at(pageNo - 1));
 }
 
 int PdfEngineImpl::GetPageByLabel(const WCHAR *label) const
@@ -3788,7 +3788,7 @@ XpsPageRun *XpsEngineImpl::CreatePageRun(xps_page *page, fz_display_list *list)
         fz_rect *rects = AllocArray<fz_rect>(positions.Count() + 1);
         if (rects) {
             for (size_t i = 0; i < positions.Count(); i++) {
-                rects[i] = positions.At(i).rect;
+                rects[i] = positions.at(i).rect;
             }
             imageRects[pageNo-1] = rects;
         }
@@ -3804,8 +3804,8 @@ XpsPageRun *XpsEngineImpl::GetPageRun(xps_page *page, bool tryOnly)
     XpsPageRun *result = nullptr;
 
     for (size_t i = 0; i < runCache.Count(); i++) {
-        if (runCache.At(i)->page == page) {
-            result = runCache.At(i);
+        if (runCache.at(i)->page == page) {
+            result = runCache.at(i);
             break;
         }
     }
@@ -3814,10 +3814,10 @@ XpsPageRun *XpsEngineImpl::GetPageRun(xps_page *page, bool tryOnly)
         for (size_t i = 0; i < runCache.Count(); i++) {
             // drop page runs that take up too much memory due to huge images
             // (except for the very recently used ones)
-            if (i >= 2 && mem + runCache.At(i)->size_est >= MAX_PAGE_RUN_MEMORY)
-                DropPageRun(runCache.At(i--), true);
+            if (i >= 2 && mem + runCache.at(i)->size_est >= MAX_PAGE_RUN_MEMORY)
+                DropPageRun(runCache.at(i--), true);
             else
-                mem += runCache.At(i)->size_est;
+                mem += runCache.at(i)->size_est;
         }
         if (runCache.Count() >= MAX_PAGE_RUN_CACHE) {
             AssertCrash(runCache.Count() == MAX_PAGE_RUN_CACHE);
@@ -3846,7 +3846,7 @@ XpsPageRun *XpsEngineImpl::GetPageRun(xps_page *page, bool tryOnly)
             runCache.InsertAt(0, result);
         }
     }
-    else if (result && result != runCache.At(0)) {
+    else if (result && result != runCache.at(0)) {
         // keep the list Most Recently Used first
         runCache.Remove(result);
         runCache.InsertAt(0, result);
@@ -4252,14 +4252,14 @@ void XpsEngineImpl::LinkifyPageText(xps_page *page, int pageNo)
     for (size_t i = 0; i < list->links.Count(); i++) {
         bool overlaps = false;
         for (fz_link *next = page->links; next && !overlaps; next = next->next)
-            overlaps = fz_calc_overlap(list->coords.At(i), next->rect) >= 0.25f;
+            overlaps = fz_calc_overlap(list->coords.at(i), next->rect) >= 0.25f;
         if (!overlaps) {
-            AutoFree uri(str::conv::ToUtf8(list->links.At(i)));
+            AutoFree uri(str::conv::ToUtf8(list->links.at(i)));
             if (!uri) continue;
             fz_link_dest ld = { FZ_LINK_URI, 0 };
             ld.ld.uri.uri = fz_strdup(ctx, uri);
             // add links in top-to-bottom order (i.e. last-to-first)
-            fz_link *link = fz_new_link(ctx, &list->coords.At(i), ld);
+            fz_link *link = fz_new_link(ctx, &list->coords.at(i), ld);
             CrashIf(!link); // TODO: if fz_new_link throws, there are memory leaks
             link->next = page->links;
             page->links = link;
@@ -4292,7 +4292,7 @@ RenderedBitmap *XpsEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
 
     RunPage(page, dev, &fz_identity);
 
-    if (imageIx >= positions.Count() || fz_rect_to_RectD(positions.At(imageIx).rect) != rect) {
+    if (imageIx >= positions.Count() || fz_rect_to_RectD(positions.at(imageIx).rect) != rect) {
         AssertCrash(0);
         return nullptr;
     }
@@ -4301,7 +4301,7 @@ RenderedBitmap *XpsEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
 
     fz_pixmap *pixmap = nullptr;
     fz_try(ctx) {
-        fz_image *image = positions.At(imageIx).image;
+        fz_image *image = positions.at(imageIx).image;
         pixmap = fz_new_pixmap_from_image(ctx, image, image->w, image->h);
     }
     fz_catch(ctx) {

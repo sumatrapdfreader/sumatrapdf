@@ -286,7 +286,7 @@ static void ParseNodes(TxtParser& parser)
             parser.nodes.Pop();
             continue;
         }
-        TxtNode *currParent = parser.nodes.At(parser.nodes.Count() - 1);
+        TxtNode *currParent = parser.nodes.at(parser.nodes.Count() - 1);
         currParent->children->Append(currNode);
         if (TextNode != currNode->type)
             parser.nodes.Append(currNode);
@@ -374,7 +374,7 @@ static void PrettyPrintNode(TxtNode *curr, int nest, str::Str<char>& res)
 
     TxtNode *child;
     for (size_t i = 0; i < curr->children->Count(); i++) {
-        child = curr->children->At(i);
+        child = curr->children->at(i);
         PrettyPrintNode(child, nest + 1, res);
     }
 
@@ -387,6 +387,6 @@ static void PrettyPrintNode(TxtNode *curr, int nest, str::Str<char>& res)
 char *PrettyPrintTxt(const TxtParser& parser)
 {
     str::Str<char> res;
-    PrettyPrintNode(parser.nodes.At(0), -1, res);
+    PrettyPrintNode(parser.nodes.at(0), -1, res);
     return res.StealData();
 }

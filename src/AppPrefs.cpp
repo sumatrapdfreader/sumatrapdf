@@ -102,7 +102,7 @@ bool Load()
     // make sure that zoom levels are in the order expected by DisplayModel
     gGlobalPrefs->zoomLevels->Sort(cmpFloat);
     while (gGlobalPrefs->zoomLevels->Count() > 0 &&
-           gGlobalPrefs->zoomLevels->At(0) < ZOOM_MIN) {
+           gGlobalPrefs->zoomLevels->at(0) < ZOOM_MIN) {
         gGlobalPrefs->zoomLevels->PopAt(0);
     }
     while (gGlobalPrefs->zoomLevels->Count() > 0 &&
@@ -212,10 +212,10 @@ bool Reload()
     gGlobalPrefs->fixedPageUI.invertColors = invertColors;
 
     // TODO: about window doesn't have to be at position 0
-    if (gWindows.Count() > 0 && gWindows.At(0)->IsAboutWindow()) {
-        gWindows.At(0)->DeleteInfotip();
-        gWindows.At(0)->staticLinks.Reset();
-        gWindows.At(0)->RedrawAll(true);
+    if (gWindows.Count() > 0 && gWindows.at(0)->IsAboutWindow()) {
+        gWindows.at(0)->DeleteInfotip();
+        gWindows.at(0)->staticLinks.Reset();
+        gWindows.at(0)->RedrawAll(true);
     }
 
     if (!str::Eq(uiLanguage.get(), gGlobalPrefs->uiLanguage))
@@ -240,30 +240,30 @@ void UpdateGlobalPrefs(const CommandLineInfo& i) {
     gGlobalPrefs->fixedPageUI.invertColors = i.invertColors;
 
     for (size_t n = 0; n <i.globalPrefArgs.Count(); n++) {
-        if (str::EqI(i.globalPrefArgs.At(n), L"-esc-to-exit")) {
+        if (str::EqI(i.globalPrefArgs.at(n), L"-esc-to-exit")) {
             gGlobalPrefs->escToExit = true;
-        } else if (str::EqI(i.globalPrefArgs.At(n), L"-bgcolor") ||
-                   str::EqI(i.globalPrefArgs.At(n), L"-bg-color")) {
+        } else if (str::EqI(i.globalPrefArgs.at(n), L"-bgcolor") ||
+                   str::EqI(i.globalPrefArgs.at(n), L"-bg-color")) {
             // -bgcolor is for backwards compat (was used pre-1.3)
             // -bg-color is for consistency
-            ParseColor(&gGlobalPrefs->mainWindowBackground, i.globalPrefArgs.At(++n));
-        } else if (str::EqI(i.globalPrefArgs.At(n), L"-set-color-range")) {
-            ParseColor(&gGlobalPrefs->fixedPageUI.textColor, i.globalPrefArgs.At(++n));
-            ParseColor(&gGlobalPrefs->fixedPageUI.backgroundColor, i.globalPrefArgs.At(++n));
-        } else if (str::EqI(i.globalPrefArgs.At(n), L"-fwdsearch-offset")) {
-            gGlobalPrefs->forwardSearch.highlightOffset = _wtoi(i.globalPrefArgs.At(++n));
+            ParseColor(&gGlobalPrefs->mainWindowBackground, i.globalPrefArgs.at(++n));
+        } else if (str::EqI(i.globalPrefArgs.at(n), L"-set-color-range")) {
+            ParseColor(&gGlobalPrefs->fixedPageUI.textColor, i.globalPrefArgs.at(++n));
+            ParseColor(&gGlobalPrefs->fixedPageUI.backgroundColor, i.globalPrefArgs.at(++n));
+        } else if (str::EqI(i.globalPrefArgs.at(n), L"-fwdsearch-offset")) {
+            gGlobalPrefs->forwardSearch.highlightOffset = _wtoi(i.globalPrefArgs.at(++n));
             gGlobalPrefs->enableTeXEnhancements = true;
-        } else if (str::EqI(i.globalPrefArgs.At(n), L"-fwdsearch-width")) {
-            gGlobalPrefs->forwardSearch.highlightWidth = _wtoi(i.globalPrefArgs.At(++n));
+        } else if (str::EqI(i.globalPrefArgs.at(n), L"-fwdsearch-width")) {
+            gGlobalPrefs->forwardSearch.highlightWidth = _wtoi(i.globalPrefArgs.at(++n));
             gGlobalPrefs->enableTeXEnhancements = true;
-        } else if (str::EqI(i.globalPrefArgs.At(n), L"-fwdsearch-color")) {
-            ParseColor(&gGlobalPrefs->forwardSearch.highlightColor, i.globalPrefArgs.At(++n));
+        } else if (str::EqI(i.globalPrefArgs.at(n), L"-fwdsearch-color")) {
+            ParseColor(&gGlobalPrefs->forwardSearch.highlightColor, i.globalPrefArgs.at(++n));
             gGlobalPrefs->enableTeXEnhancements = true;
-        } else if (str::EqI(i.globalPrefArgs.At(n), L"-fwdsearch-permanent")) {
-            gGlobalPrefs->forwardSearch.highlightPermanent = _wtoi(i.globalPrefArgs.At(++n));
+        } else if (str::EqI(i.globalPrefArgs.at(n), L"-fwdsearch-permanent")) {
+            gGlobalPrefs->forwardSearch.highlightPermanent = _wtoi(i.globalPrefArgs.at(++n));
             gGlobalPrefs->enableTeXEnhancements = true;
-        } else if (str::EqI(i.globalPrefArgs.At(n), L"-manga-mode")) {
-            const WCHAR *s = i.globalPrefArgs.At(++n);
+        } else if (str::EqI(i.globalPrefArgs.at(n), L"-manga-mode")) {
+            const WCHAR *s = i.globalPrefArgs.at(++n);
             gGlobalPrefs->comicBookUI.cbxMangaMode = str::EqI(L"true", s) || str::Eq(L"1", s);
         }
     }

@@ -139,7 +139,7 @@ bool CreateArchive(const WCHAR *archivePath, WStrVec& files, size_t skipFiles=0)
     lzsaHeader.Write32((uint32_t)(files.Count() - skipFiles));
 
     for (size_t i = skipFiles; i < files.Count(); i++) {
-        AutoFreeW filePath(str::Dup(files.At(i)));
+        AutoFreeW filePath(str::Dup(files.at(i)));
         WCHAR *sep = str::FindCharLast(filePath, ':');
         AutoFree utf8Name;
         if (sep) {
@@ -210,13 +210,13 @@ int main(int argc, char **argv)
     ParseCmdLine(GetCommandLine(), args);
     int errorStep = 1;
 
-    if (args.Count() == 2 && file::Exists(args.At(1)))
-        return mainVerify(args.At(1));
+    if (args.Count() == 2 && file::Exists(args.at(1)))
+        return mainVerify(args.at(1));
 
-    FailIf(args.Count() < 3, "Syntax: %S <archive.lzsa> <filename>[:<in-archive name>] [...]", path::GetBaseName(args.At(0)));
+    FailIf(args.Count() < 3, "Syntax: %S <archive.lzsa> <filename>[:<in-archive name>] [...]", path::GetBaseName(args.at(0)));
 
-    bool ok = lzsa::CreateArchive(args.At(1), args, 2);
-    FailIf(!ok, "Failed to create \"%S\"", args.At(1));
+    bool ok = lzsa::CreateArchive(args.at(1), args, 2);
+    FailIf(!ok, "Failed to create \"%S\"", args.at(1));
 
     return 0;
 }

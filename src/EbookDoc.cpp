@@ -247,8 +247,8 @@ EpubDoc::~EpubDoc()
     EnterCriticalSection(&zipAccess);
 
     for (size_t i = 0; i < images.Count(); i++) {
-        free(images.At(i).base.data);
-        free(images.At(i).id);
+        free(images.at(i).base.data);
+        free(images.at(i).id);
     }
 
     LeaveCriticalSection(&zipAccess);
@@ -355,7 +355,7 @@ bool EpubDoc::Load()
     // EPUB 2 ToC
     AutoFreeW tocId(node->GetAttribute("toc"));
     if (tocId && !tocPath && idList.Contains(tocId)) {
-        tocPath.Set(str::Join(contentPath, pathList.At(idList.Find(tocId))));
+        tocPath.Set(str::Join(contentPath, pathList.at(idList.Find(tocId))));
         isNcxToc = true;
     }
     AutoFreeW readingDir(node->GetAttribute("page-progression-direction"));
@@ -369,7 +369,7 @@ bool EpubDoc::Load()
         if (!idref || !idList.Contains(idref))
             continue;
 
-        AutoFreeW fullPath(str::Join(contentPath, pathList.At(idList.Find(idref))));
+        AutoFreeW fullPath(str::Join(contentPath, pathList.at(idList.Find(idref))));
         AutoFree html(zip.GetFileDataByName(fullPath));
         if (!html)
             continue;
@@ -455,7 +455,7 @@ ImageData *EpubDoc::GetImageData(const char *id, const char *pagePath)
         // format specific state such as hiddenDepth and titleCount) and store it
         // in every HtmlPage, but this should work well enough for now
         for (size_t i = 0; i < images.Count(); i++) {
-            ImageData2 *img = &images.At(i);
+            ImageData2 *img = &images.at(i);
             if (str::EndsWithI(img->id, id)) {
                 if (!img->base.data)
                     img->base.data = zip.GetFileDataByIdx(img->idx, &img->base.len);
@@ -471,7 +471,7 @@ ImageData *EpubDoc::GetImageData(const char *id, const char *pagePath)
     if (str::FindChar(url, '\\'))
         str::TransChars(url, "\\", "/");
     for (size_t i = 0; i < images.Count(); i++) {
-        ImageData2 *img = &images.At(i);
+        ImageData2 *img = &images.at(i);
         if (str::Eq(img->id, url)) {
             if (!img->base.data)
                 img->base.data = zip.GetFileDataByIdx(img->idx, &img->base.len);
@@ -713,8 +713,8 @@ Fb2Doc::Fb2Doc(IStream *stream) : fileName(nullptr),
 Fb2Doc::~Fb2Doc()
 {
     for (size_t i = 0; i < images.Count(); i++) {
-        free(images.At(i).base.data);
-        free(images.At(i).id);
+        free(images.at(i).base.data);
+        free(images.at(i).id);
     }
     if (stream)
         stream->Release();
@@ -887,8 +887,8 @@ size_t Fb2Doc::GetXmlDataSize() const
 ImageData *Fb2Doc::GetImageData(const char *id)
 {
     for (size_t i = 0; i < images.Count(); i++) {
-        if (str::Eq(images.At(i).id, id))
-            return &images.At(i).base;
+        if (str::Eq(images.at(i).id, id))
+            return &images.at(i).base;
     }
     return nullptr;
 }
@@ -1148,7 +1148,7 @@ bool PalmDoc::ParseToc(EbookTocVisitor *visitor)
 {
     for (size_t i = 0; i < tocEntries.Count(); i++) {
         AutoFreeW name(str::Format(TEXT(PDB_TOC_ENTRY_MARK) L"%d", i + 1));
-        visitor->Visit(tocEntries.At(i), name, 1);
+        visitor->Visit(tocEntries.at(i), name, 1);
     }
     return true;
 }
@@ -1182,8 +1182,8 @@ HtmlDoc::HtmlDoc(const WCHAR *fileName) : fileName(str::Dup(fileName)) { }
 HtmlDoc::~HtmlDoc()
 {
     for (size_t i = 0; i < images.Count(); i++) {
-        free(images.At(i).base.data);
-        free(images.At(i).id);
+        free(images.at(i).base.data);
+        free(images.at(i).id);
     }
 }
 
@@ -1238,8 +1238,8 @@ ImageData *HtmlDoc::GetImageData(const char *id)
 
     AutoFree url(NormalizeURL(id, pagePath));
     for (size_t i = 0; i < images.Count(); i++) {
-        if (str::Eq(images.At(i).id, url))
-            return &images.At(i).base;
+        if (str::Eq(images.at(i).id, url))
+            return &images.at(i).base;
     }
 
     ImageData2 data = { 0 };
@@ -1380,8 +1380,8 @@ static const char *TextFindEmailEnd(str::Str<char>& htmlData, const char *curr)
         if (htmlData.Count() == 0 || !IsEmailUsernameChar(htmlData.Last()))
             return nullptr;
         size_t idx = htmlData.Count();
-        for (; idx > 1 && IsEmailUsernameChar(htmlData.At(idx - 1)); idx--);
-        beforeAt.SetCopy(&htmlData.At(idx));
+        for (; idx > 1 && IsEmailUsernameChar(htmlData.at(idx - 1)); idx--);
+        beforeAt.SetCopy(&htmlData.at(idx));
     } else {
         CrashIf(!str::StartsWith(curr, "mailto:"));
         end = curr = curr + 7; // skip mailto:

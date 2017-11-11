@@ -245,10 +245,10 @@ void DumpPageContent(BaseEngine *engine, int pageNo, bool fullDump)
     if (els && els->Count() > 0) {
         Out("\t\t<PageElements>\n");
         for (size_t i = 0; i < els->Count(); i++) {
-            RectD rect = els->At(i)->GetRect();
+            RectD rect = els->at(i)->GetRect();
             Out("\t\t\t<Element Type=\"%s\"\n\t\t\t\tRect=\"%.0f %.0f %.0f %.0f\"\n",
-                ElementTypeToStr(els->At(i)), rect.x, rect.y, rect.dx, rect.dy);
-            PageDestination *dest = els->At(i)->AsLink();
+                ElementTypeToStr(els->at(i)), rect.x, rect.y, rect.dx, rect.dy);
+            PageDestination *dest = els->at(i)->AsLink();
             if (dest) {
                 if (dest->GetDestType() != Dest_None)
                     Out("\t\t\t\tLinkType=\"%s\"\n", PageDestToStr(dest->GetDestType()));
@@ -261,7 +261,7 @@ void DumpPageContent(BaseEngine *engine, int pageNo, bool fullDump)
                 if (rectStr)
                     Out("\t\t\t\tLinked%s\n", rectStr.Get());
             }
-            AutoFree name(Escape(els->At(i)->GetValue()));
+            AutoFree name(Escape(els->at(i)->GetValue()));
             if (name)
                 Out("\t\t\t\tLabel=\"%s\"\n", name.Get());
             Out("\t\t\t/>\n");
@@ -424,7 +424,7 @@ int main(int argc, char **argv)
     if (argList.Count() < 2) {
 Usage:
         ErrOut("%s [-pwd <password>][-quick][-render <path-%%d.tga>] <filename>",
-            path::GetBaseName(argList.At(0)));
+            path::GetBaseName(argList.at(0)));
         return 2;
     }
 
@@ -439,33 +439,33 @@ Usage:
 #endif
 
     for (size_t i = 1; i < argList.Count(); i++) {
-        if (str::Eq(argList.At(i), L"-pwd") && i + 1 < argList.Count() && !password)
-            password = argList.At(++i);
-        else if (str::Eq(argList.At(i), L"-quick"))
+        if (str::Eq(argList.at(i), L"-pwd") && i + 1 < argList.Count() && !password)
+            password = argList.at(++i);
+        else if (str::Eq(argList.at(i), L"-quick"))
             fullDump = false;
-        else if (str::Eq(argList.At(i), L"-render") && i + 1 < argList.Count() && !renderPath) {
+        else if (str::Eq(argList.at(i), L"-render") && i + 1 < argList.Count() && !renderPath) {
             // optional zoom argument (e.g. -render 50% file.pdf)
             float zoom;
-            if (i + 2 < argList.Count() && str::Parse(argList.At(i + 1), L"%f%%%$", &zoom) && zoom > 0.f) {
+            if (i + 2 < argList.Count() && str::Parse(argList.at(i + 1), L"%f%%%$", &zoom) && zoom > 0.f) {
                 renderZoom = zoom / 100.f;
                 i++;
             }
-            renderPath = argList.At(++i);
+            renderPath = argList.at(++i);
         }
         // -loadonly and -silent are only meant for profiling
-        else if (str::Eq(argList.At(i), L"-loadonly"))
+        else if (str::Eq(argList.at(i), L"-loadonly"))
             loadOnly = true;
-        else if (str::Eq(argList.At(i), L"-silent"))
+        else if (str::Eq(argList.at(i), L"-silent"))
             silent = true;
         // -full is for backward compatibility
-        else if (str::Eq(argList.At(i), L"-full"))
+        else if (str::Eq(argList.at(i), L"-full"))
             fullDump = true;
 #ifdef DEBUG
-        else if (str::Eq(argList.At(i), L"-breakalloc") && i + 1 < argList.Count())
-            breakAlloc = _wtoi(argList.At(++i));
+        else if (str::Eq(argList.at(i), L"-breakalloc") && i + 1 < argList.Count())
+            breakAlloc = _wtoi(argList.at(++i));
 #endif
         else if (!filePath)
-            filePath.SetCopy(argList.At(i));
+            filePath.SetCopy(argList.at(i));
         else
             goto Usage;
     }

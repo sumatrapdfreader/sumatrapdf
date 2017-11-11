@@ -248,7 +248,7 @@ bool IsExeAssociatedWithPdfExtension()
     if (!exePath || !argList.Contains(L"%1") || !str::Find(tmp, L"\"%1\""))
         return false;
 
-    return path::IsSame(exePath, argList.At(0));
+    return path::IsSame(exePath, argList.at(0));
 }
 
 // List of rules used to detect TeX editors.

@@ -98,7 +98,7 @@ void FileExistenceChecker::GetFilePathsToCheck()
     Vec<DisplayState *> frequencyList;
     gFileHistory.GetFrequencyOrder(frequencyList);
     for (size_t i = 0; i < 2 * FILE_HISTORY_MAX_FREQUENT && i < frequencyList.Count(); i++) {
-        state = frequencyList.At(i);
+        state = frequencyList.at(i);
         if (!paths.Contains(state->filePath))
             paths.Append(str::Dup(state->filePath));
     }
@@ -110,8 +110,8 @@ void FileExistenceChecker::HideMissingFiles()
         gFileHistory.MarkFileInexistent(path, true);
     }
     // update the Frequently Read page in case it's been displayed already
-    if (paths.Count() > 0 && gWindows.Count() > 0 && gWindows.At(0)->IsAboutWindow()) {
-        gWindows.At(0)->RedrawAll(true);
+    if (paths.Count() > 0 && gWindows.Count() > 0 && gWindows.at(0)->IsAboutWindow()) {
+        gWindows.at(0)->RedrawAll(true);
     }
 }
 
@@ -128,7 +128,7 @@ void FileExistenceChecker::Run()
     // all paths which still exist from the list (remaining paths will
     // be marked as inexistent in gFileHistory)
     for (size_t i = 0; i < paths.Count(); i++) {
-        const WCHAR *path = paths.At(i);
+        const WCHAR *path = paths.at(i);
         if (!path || !path::IsOnFixedDrive(path) || DocumentPathExists(path)) {
             free(paths.PopAt(i--));
         }
@@ -319,7 +319,7 @@ static bool SetupPluginMode(CommandLineInfo& i)
 
     gPluginURL = i.pluginURL;
     if (!gPluginURL)
-        gPluginURL = i.fileNames.At(0);
+        gPluginURL = i.fileNames.at(0);
 
     AssertCrash(i.fileNames.Count() == 1);
     while (i.fileNames.Count() > 1) {
@@ -361,7 +361,7 @@ static bool SetupPluginMode(CommandLineInfo& i)
         WStrVec parts;
         parts.Split(args, L"&", true);
         for (size_t k = 0; k < parts.Count(); k++) {
-            WCHAR *part = parts.At(k);
+            WCHAR *part = parts.at(k);
             int pageNo;
             if (str::StartsWithI(part, L"page=") && str::Parse(part + 4, L"=%d%$", &pageNo))
                 i.pageNumber = pageNo;
@@ -497,29 +497,29 @@ static bool AutoUpdateMain()
 {
     WStrVec argList;
     ParseCmdLine(GetCommandLine(), argList, 4);
-    if (argList.Count() != 3 || !str::Eq(argList.At(1), L"-autoupdate")) {
+    if (argList.Count() != 3 || !str::Eq(argList.at(1), L"-autoupdate")) {
         // the argument was misinterpreted, let SumatraPDF start as usual
         return false;
     }
-    if (str::Eq(argList.At(2), L"replace")) {
+    if (str::Eq(argList.at(2), L"replace")) {
         // older 2.6 prerelease versions used implicit paths
         AutoFreeW exePath(GetExePath());
         CrashIf(!str::EndsWith(exePath, L".exe-updater.exe"));
         exePath[str::Len(exePath) - 12] = '\0';
-        free(argList.At(2));
-        argList.At(2) = str::Format(L"replace:%s", exePath);
+        free(argList.at(2));
+        argList.at(2) = str::Format(L"replace:%s", exePath);
     }
     const WCHAR *otherExe = nullptr;
-    if (str::StartsWith(argList.At(2), L"replace:"))
-        otherExe = argList.At(2) + 8;
-    else if (str::StartsWith(argList.At(2), L"cleanup:"))
-        otherExe = argList.At(2) + 8;
+    if (str::StartsWith(argList.at(2), L"replace:"))
+        otherExe = argList.at(2) + 8;
+    else if (str::StartsWith(argList.at(2), L"cleanup:"))
+        otherExe = argList.at(2) + 8;
     if (!str::EndsWithI(otherExe, L".exe") || !file::Exists(otherExe)) {
         // continue startup
         return false;
     }
     RetryIO([&] { return file::Delete(otherExe); });
-    if (str::StartsWith(argList.At(2), L"cleanup:")) {
+    if (str::StartsWith(argList.at(2), L"cleanup:")) {
         // continue startup, restoring the previous session
         return false;
     }
@@ -667,7 +667,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
         // note: this prints all PDF files. Another option would be to
         // print only the first one
         for (size_t n = 0; n < i.fileNames.Count(); n++) {
-            bool ok = PrintFile(i.fileNames.At(n), i.printerName, !i.silent, i.printSettings);
+            bool ok = PrintFile(i.fileNames.at(n), i.printerName, !i.silent, i.printSettings);
             if (!ok)
                 retCode++;
         }
@@ -688,7 +688,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     }
     if (hPrevWnd) {
         for (size_t n = 0; n < i.fileNames.Count(); n++) {
-            OpenUsingDde(hPrevWnd, i.fileNames.At(n), i, 0 == n);
+            OpenUsingDde(hPrevWnd, i.fileNames.at(n), i, 0 == n);
         }
         if (0 == i.fileNames.Count()) {
             win::ToForeground(hPrevWnd);
@@ -701,7 +701,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
         restoreSession = gGlobalPrefs->restoreSession;
     }
     if (gGlobalPrefs->reopenOnce->Count() > 0 && !gPluginURL) {
-        if (gGlobalPrefs->reopenOnce->Count() == 1 && str::EqI(gGlobalPrefs->reopenOnce->At(0), L"SessionData")) {
+        if (gGlobalPrefs->reopenOnce->Count() == 1 && str::EqI(gGlobalPrefs->reopenOnce->at(0), L"SessionData")) {
             gGlobalPrefs->reopenOnce->FreeMembers();
             restoreSession = true;
         }
@@ -802,7 +802,7 @@ Exit:
     prefs::UnregisterForFileChanges();
 
     while (gWindows.Count() > 0) {
-        DeleteWindowInfo(gWindows.At(0));
+        DeleteWindowInfo(gWindows.at(0));
     }
 
 #ifndef DEBUG

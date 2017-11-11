@@ -53,7 +53,7 @@ bool IsStressTesting()
 static bool IsInRange(Vec<PageRange>& ranges, int pageNo)
 {
     for (size_t i = 0; i < ranges.Count(); i++) {
-        if (ranges.At(i).start <= pageNo && pageNo <= ranges.At(i).end)
+        if (ranges.at(i).start <= pageNo && pageNo <= ranges.at(i).end)
             return true;
     }
     return false;
@@ -224,7 +224,7 @@ static void BenchFile(const WCHAR *filePath, const WCHAR *pagesSpec)
     Vec<PageRange> ranges;
     if (ParsePageRanges(pagesSpec, ranges)) {
         for (size_t i = 0; i < ranges.Count(); i++) {
-            for (int j = ranges.At(i).start; j <= ranges.At(i).end; j++) {
+            for (int j = ranges.at(i).start; j <= ranges.at(i).end; j++) {
                 if (1 <= j && j <= pages)
                     BenchLoadRender(engine, j);
             }
@@ -261,7 +261,7 @@ static void BenchDir(WCHAR *dir)
     WStrVec files;
     CollectFilesToBench(dir, files);
     for (size_t i = 0; i < files.Count(); i++) {
-        BenchFile(files.At(i), nullptr);
+        BenchFile(files.at(i), nullptr);
     }
 }
 
@@ -271,9 +271,9 @@ void BenchFileOrDir(WStrVec& pathsToBench)
 
     size_t n = pathsToBench.Count() / 2;
     for (size_t i = 0; i < n; i++) {
-        WCHAR *path = pathsToBench.At(2 * i);
+        WCHAR *path = pathsToBench.at(2 * i);
         if (file::Exists(path))
-            BenchFile(path, pathsToBench.At(2 * i + 1));
+            BenchFile(path, pathsToBench.at(2 * i + 1));
         else if (dir::Exists(path))
             BenchDir(path);
         else
@@ -395,7 +395,7 @@ public:
     FilesProvider(WStrVec& newFiles, int n, int offset) {
         // get every n-th file starting at offset
         for (size_t i = offset; i < newFiles.Count(); i += n) {
-            const WCHAR *f = newFiles.At(i);
+            const WCHAR *f = newFiles.at(i);
             files.Append(str::Dup(f));
         }
         provided = 0;
@@ -406,7 +406,7 @@ public:
     virtual WCHAR *NextFile() {
         if (provided >= files.Count())
             return nullptr;
-        return str::Dup(files.At(provided++));
+        return str::Dup(files.at(provided++));
     }
 
     virtual void Restart() {
@@ -661,7 +661,7 @@ bool StressTest::OpenFile(const WCHAR *fileName)
     if (win->tocVisible || gGlobalPrefs->showFavorites)
         SetSidebarVisibility(win, win->tocVisible, gGlobalPrefs->showFavorites);
 
-    currPage = pageRanges.At(0).start;
+    currPage = pageRanges.at(0).start;
     win->ctrl->GoToPage(currPage, false);
     currPageRenderTime.Start();
     ++filesCount;
@@ -795,7 +795,7 @@ void GetStressTestInfo(str::Str<char>* s)
         return;
 
     for (size_t i = 0; i < gWindows.Count(); i++) {
-        WindowInfo *w = gWindows.At(i);
+        WindowInfo *w = gWindows.at(i);
         if (!w || !w->currentTab || !w->currentTab->filePath)
             continue;
 
@@ -819,7 +819,7 @@ static void RandomizeFiles(WStrVec& files, int maxPerType)
     Vec<WStrVec *> filesPerType;
 
     for (size_t i = 0; i < files.Count(); i++) {
-        const WCHAR *file = files.At(i);
+        const WCHAR *file = files.at(i);
         const WCHAR *ext = path::GetExt(file);
         CrashAlwaysIf(!ext);
         int typeNo = fileExts.FindI(ext);
@@ -828,21 +828,21 @@ static void RandomizeFiles(WStrVec& files, int maxPerType)
             filesPerType.Append(new WStrVec());
             typeNo = (int)filesPerType.Count() - 1;
         }
-        filesPerType.At(typeNo)->Append(str::Dup(file));
+        filesPerType.at(typeNo)->Append(str::Dup(file));
     }
 
     for (size_t j = 0; j < filesPerType.Count(); j++) {
-        WStrVec *all = filesPerType.At(j);
+        WStrVec *all = filesPerType.at(j);
         WStrVec *random = new WStrVec();
 
         for (int n = 0; n < maxPerType && all->Count() > 0; n++) {
             int idx = rand() % all->Count();
-            WCHAR *file = all->At(idx);
+            WCHAR *file = all->at(idx);
             random->Append(file);
             all->RemoveAtFast(idx);
         }
 
-        filesPerType.At(j) = random;
+        filesPerType.at(j) = random;
         delete all;
     }
 
@@ -852,10 +852,10 @@ static void RandomizeFiles(WStrVec& files, int maxPerType)
     while (!gotAll) {
         gotAll = true;
         for (size_t j = 0; j < filesPerType.Count(); j++) {
-            WStrVec *random = filesPerType.At(j);
+            WStrVec *random = filesPerType.at(j);
             if (random->Count() > 0) {
                 gotAll = false;
-                WCHAR *file = random->At(0);
+                WCHAR *file = random->at(0);
                 files.Append(file);
                 random->RemoveAtFast(0);
             }
@@ -863,7 +863,7 @@ static void RandomizeFiles(WStrVec& files, int maxPerType)
     }
 
     for (size_t j = 0; j < filesPerType.Count(); j++) {
-        delete filesPerType.At(j);
+        delete filesPerType.at(j);
     }
 }
 

@@ -291,7 +291,7 @@ public:
         doc(doc), pages(pages), tocTrace(tocTrace), allocator(allocator)
         {
             for (int i = 0; i < (int)pages->Count(); i++) {
-                const WCHAR *url = pages->At(i);
+                const WCHAR *url = pages->at(i);
                 bool inserted = urlsSet.Insert(url, i + 1, nullptr);
                 CrashIf(!inserted);
             }
@@ -336,7 +336,7 @@ public:
 ChmCacheEntry *ChmModel::FindDataForUrl(const WCHAR *url)
 {
     for (size_t i = 0; i < urlDataCache.Count(); i++) {
-        ChmCacheEntry *e = urlDataCache.At(i);
+        ChmCacheEntry *e = urlDataCache.at(i);
         if (str::Eq(url, e->url))
             return e;
     }
@@ -499,23 +499,23 @@ float ChmModel::GetNextZoomStep(float towardsLevel) const
     }
 
     Vec<float> *zoomLevels = gGlobalPrefs->zoomLevels;
-    CrashIf(zoomLevels->Count() != 0 && (zoomLevels->At(0) < ZOOM_MIN || zoomLevels->Last() > ZOOM_MAX));
-    CrashIf(zoomLevels->Count() != 0 && zoomLevels->At(0) > zoomLevels->Last());
+    CrashIf(zoomLevels->Count() != 0 && (zoomLevels->at(0) < ZOOM_MIN || zoomLevels->Last() > ZOOM_MAX));
+    CrashIf(zoomLevels->Count() != 0 && zoomLevels->at(0) > zoomLevels->Last());
 
     const float FUZZ = 0.01f;
     float newZoom = towardsLevel;
     if (currZoom < towardsLevel) {
         for (size_t i = 0; i < zoomLevels->Count(); i++) {
-            if (zoomLevels->At(i) - FUZZ > currZoom) {
-                newZoom = zoomLevels->At(i);
+            if (zoomLevels->at(i) - FUZZ > currZoom) {
+                newZoom = zoomLevels->at(i);
                 break;
             }
         }
     }
     else if (currZoom > towardsLevel) {
         for (size_t i = zoomLevels->Count(); i > 0; i--) {
-            if (zoomLevels->At(i - 1) + FUZZ < currZoom) {
-                newZoom = zoomLevels->At(i - 1);
+            if (zoomLevels->at(i - 1) + FUZZ < currZoom) {
+                newZoom = zoomLevels->at(i - 1);
                 break;
             }
         }

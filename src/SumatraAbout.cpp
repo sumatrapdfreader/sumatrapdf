@@ -443,10 +443,10 @@ const WCHAR *GetStaticLink(Vec<StaticLinkInfo>& linkInfo, int x, int y, StaticLi
 
     PointI pt(x, y);
     for (size_t i = 0; i < linkInfo.Count(); i++) {
-        if (linkInfo.At(i).rect.Contains(pt)) {
+        if (linkInfo.at(i).rect.Contains(pt)) {
             if (info)
-                *info = linkInfo.At(i);
-            return linkInfo.At(i).target;
+                *info = linkInfo.at(i);
+            return linkInfo.at(i).target;
         }
     }
 
@@ -696,7 +696,7 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
                 height = w > 0 ? h + 1 : h;
                 break;
             }
-            DisplayState *state = list.At(h * width + w);
+            DisplayState *state = list.at(h * width + w);
 
             RectI page(offset.x + w * (THUMBNAIL_DX + DOCLIST_MARGIN_BETWEEN_X),
                        offset.y + h * (THUMBNAIL_DY + DOCLIST_MARGIN_BETWEEN_Y),

@@ -260,7 +260,7 @@ class TabPainter {
             // draw tab's text
             gfx.SetCompositingMode(CompositingModeSourceOver);
             br.SetColor(ToColor(textCol));
-            gfx.DrawString(text.At(i), -1, &f, layout, &sf, &br);
+            gfx.DrawString(text.at(i), -1, &f, layout, &sf, &br);
 
             // paint "x"'s circle
             iterator.NextMarker(&shape);
@@ -284,7 +284,7 @@ class TabPainter {
 
     bool Set(int index, const WCHAR* t) {
         if (index < Count()) {
-            str::ReplacePtr(&text.At(index), t);
+            str::ReplacePtr(&text.at(index), t);
             return true;
         }
         return false;
@@ -622,7 +622,7 @@ void SaveCurrentTabInfo(WindowInfo* win) {
     int current = TabCtrl_GetCurSel(win->hwndTabBar);
     if (-1 == current)
         return;
-    CrashIf(win->currentTab != win->tabs.At(current));
+    CrashIf(win->currentTab != win->tabs.at(current));
 
     TabInfo* tdata = win->currentTab;
     CrashIf(!tdata);
@@ -693,7 +693,7 @@ void TabsOnChangedDoc(WindowInfo* win) {
 }
 
 static void RemoveTab(WindowInfo* win, int idx) {
-    TabInfo* tab = win->tabs.At(idx);
+    TabInfo* tab = win->tabs.at(idx);
     UpdateTabFileDisplayStateForWin(win, tab);
     win->tabSelectionHistory->Remove(tab);
     win->tabs.Remove(tab);
@@ -748,7 +748,7 @@ LRESULT TabsOnNotify(WindowInfo* win, LPARAM lparam, int tab1, int tab2) {
 
         case TCN_SELCHANGE:
             current = TabCtrl_GetCurSel(win->hwndTabBar);
-            LoadModelIntoTab(win, win->tabs.At(current));
+            LoadModelIntoTab(win, win->tabs.at(current));
             break;
 
         case T_CLOSING:
@@ -828,7 +828,7 @@ void TabsSelect(WindowInfo* win, int tabIndex) {
     NMHDR ntd = {nullptr, 0, TCN_SELCHANGING};
     if (TabsOnNotify(win, (LPARAM)&ntd))
         return;
-    win->currentTab = win->tabs.At(tabIndex);
+    win->currentTab = win->tabs.at(tabIndex);
     int prevIndex = TabCtrl_SetCurSel(win->hwndTabBar, tabIndex);
     if (prevIndex != -1) {
         ntd.code = TCN_SELCHANGE;
@@ -851,9 +851,9 @@ static void SwapTabs(WindowInfo* win, int tab1, int tab2) {
     if (tab1 == tab2 || tab1 < 0 || tab2 < 0)
         return;
 
-    std::swap(win->tabs.At(tab1), win->tabs.At(tab2));
-    SetTabTitle(win, win->tabs.At(tab1));
-    SetTabTitle(win, win->tabs.At(tab2));
+    std::swap(win->tabs.at(tab1), win->tabs.at(tab2));
+    SetTabTitle(win, win->tabs.at(tab1));
+    SetTabTitle(win, win->tabs.at(tab2));
 
     int current = TabCtrl_GetCurSel(win->hwndTabBar);
     if (tab1 == current)

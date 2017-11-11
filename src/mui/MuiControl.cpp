@@ -106,7 +106,7 @@ Control::~Control() {
 
 void Control::SetParent(Control *newParent) { parent = newParent; }
 
-Control *Control::GetChild(size_t idx) const { return children.At(idx); }
+Control *Control::GetChild(size_t idx) const { return children.at(idx); }
 
 size_t Control::GetChildCount() const { return children.Count(); }
 
@@ -146,7 +146,7 @@ Size Control::Measure(const Size availableSize) {
         return layout->Measure(availableSize);
     }
     if (children.Count() == 1) {
-        ILayout *l = children.At(0);
+        ILayout *l = children.at(0);
         return l->Measure(availableSize);
     }
     desiredSize = Size();
@@ -168,7 +168,7 @@ void Control::Arrange(const Rect finalRect) {
         layout->Arrange(finalRect);
     } else {
         if (children.Count() == 1) {
-            ILayout *l = children.At(0);
+            ILayout *l = children.at(0);
             l->Arrange(finalRect);
         }
     }

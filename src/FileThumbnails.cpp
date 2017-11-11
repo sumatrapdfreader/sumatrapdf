@@ -67,7 +67,7 @@ void CleanUpThumbnailCache(FileHistory& fileHistory)
     Vec<DisplayState *> list;
     fileHistory.GetFrequencyOrder(list);
     for (size_t i = 0; i < list.Count() && i < FILE_HISTORY_MAX_FREQUENT * 2; i++) {
-        AutoFreeW bmpPath(GetThumbnailPath(list.At(i)->filePath));
+        AutoFreeW bmpPath(GetThumbnailPath(list.at(i)->filePath));
         if (!bmpPath)
             continue;
         int idx = files.Find(path::GetBaseName(bmpPath));
@@ -78,7 +78,7 @@ void CleanUpThumbnailCache(FileHistory& fileHistory)
     }
 
     for (size_t i = 0; i < files.Count(); i++) {
-        AutoFreeW bmpPath(path::Join(thumbsPath, files.At(i)));
+        AutoFreeW bmpPath(path::Join(thumbsPath, files.at(i)));
         file::Delete(bmpPath);
     }
 }

@@ -316,7 +316,7 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR* filePath) {
     const int maxEntries = IDM_OPEN_WITH_EXTERNAL_LAST - IDM_OPEN_WITH_EXTERNAL_FIRST + 1;
     int count = 0;
     for (size_t i = 0; i < gGlobalPrefs->externalViewers->Count() && count < maxEntries; i++) {
-        ExternalViewer* ev = gGlobalPrefs->externalViewers->At(i);
+        ExternalViewer* ev = gGlobalPrefs->externalViewers->at(i);
         if (!ev->commandLine) {
             continue;
         }
@@ -332,7 +332,7 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR* filePath) {
             if (args.Count() == 0) {
                 continue;
             }
-            appName.SetCopy(path::GetBaseName(args.At(0)));
+            appName.SetCopy(path::GetBaseName(args.at(0)));
             *(WCHAR*)path::GetExt(appName) = '\0';
         }
 
@@ -443,7 +443,7 @@ void MenuUpdatePrintItem(WindowInfo* win, HMENU menu, bool disableOnly = false) 
 
 static bool IsFileCloseMenuEnabled() {
     for (size_t i = 0; i < gWindows.Count(); i++) {
-        if (!gWindows.At(i)->IsAboutWindow()) {
+        if (!gWindows.at(i)->IsAboutWindow()) {
             return true;
         }
     }

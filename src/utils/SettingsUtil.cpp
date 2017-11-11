@@ -89,7 +89,7 @@ static char *SerializeStringArray(const Vec<WCHAR *> *strArray)
     for (size_t i = 0; i < strArray->Count(); i++) {
         if (i > 0)
             serialized.Append(' ');
-        const WCHAR *str = strArray->At(i);
+        const WCHAR *str = strArray->at(i);
         bool needsQuotes = !*str;
         for (const WCHAR *c = str; !needsQuotes && *c; c++) {
             needsQuotes = str::IsWs(*c) || '"' == *c;
@@ -152,7 +152,7 @@ static void FreeStringArray(Vec<WCHAR *> *strArray)
 static void FreeArray(Vec<void *> *array, const FieldInfo& field)
 {
     for (size_t j = 0; array && j < array->Count(); j++) {
-        FreeStruct(GetSubstruct(field), array->At(j));
+        FreeStruct(GetSubstruct(field), array->at(j));
     }
     delete array;
 }
@@ -233,7 +233,7 @@ static bool SerializeField(str::Str<char>& out, const uint8_t *base, const Field
             info.type = Type_IntArray == field.type ? Type_Int : Type_FloatArray == field.type ? Type_Float : Type_Color;
             if (i > 0)
                 out.Append(' ');
-            SerializeField(out, (const uint8_t *)&(*(Vec<int> **)fieldPtr)->At(i), info);
+            SerializeField(out, (const uint8_t *)&(*(Vec<int> **)fieldPtr)->at(i), info);
         }
         // prevent empty arrays from being replaced with the defaults
         return (*(Vec<int> **)fieldPtr)->Count() > 0 || field.value != 0;
@@ -349,13 +349,13 @@ static void MarkFieldKnown(SquareTreeNode *node, const char *fieldName, SettingT
     size_t off = 0;
     if (Type_Struct == type || Type_Prerelease == type) {
         if (node->GetChild(fieldName, &off)) {
-            delete node->data.At(off - 1).value.child;
+            delete node->data.at(off - 1).value.child;
             node->data.RemoveAt(off - 1);
         }
     }
     else if (Type_Array == type) {
         while (node->GetChild(fieldName, &off)) {
-            delete node->data.At(off - 1).value.child;
+            delete node->data.at(off - 1).value.child;
             node->data.RemoveAt(off - 1);
             off--;
         }
@@ -370,7 +370,7 @@ static void SerializeUnknownFields(str::Str<char>& out, SquareTreeNode *node, in
     if (!node)
         return;
     for (size_t i = 0; i < node->data.Count(); i++) {
-        SquareTreeNode::DataItem& item = node->data.At(i);
+        SquareTreeNode::DataItem& item = node->data.at(i);
         Indent(out, indent);
         out.Append(item.key);
         if (item.isChild) {
@@ -417,7 +417,7 @@ static void SerializeStructRec(str::Str<char>& out, const StructInfo *info, cons
                 for (size_t j = 0; j < array->Count(); j++) {
                     Indent(out, indent + 1);
                     out.Append("[\r\n");
-                    SerializeStructRec(out, GetSubstruct(field), array->At(j), nullptr, indent + 2);
+                    SerializeStructRec(out, GetSubstruct(field), array->at(j), nullptr, indent + 2);
                     Indent(out, indent + 1);
                     out.Append("]\r\n");
                 }

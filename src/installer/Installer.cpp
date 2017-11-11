@@ -409,9 +409,9 @@ static const WCHAR* ReadableProcName(const WCHAR* procPath) {
 }
 
 static void SetCloseProcessMsg() {
-    AutoFreeW procNames(str::Dup(ReadableProcName(gProcessesToClose.At(0))));
+    AutoFreeW procNames(str::Dup(ReadableProcName(gProcessesToClose.at(0))));
     for (size_t i = 1; i < gProcessesToClose.Count(); i++) {
-        const WCHAR* name = ReadableProcName(gProcessesToClose.At(i));
+        const WCHAR* name = ReadableProcName(gProcessesToClose.at(i));
         if (i < gProcessesToClose.Count() - 1)
             procNames.Set(str::Join(procNames, L", ", name));
         else
@@ -903,19 +903,19 @@ static void ParseCommandLine(WCHAR* cmdLine) {
 
     // skip the first arg (exe path)
     for (size_t i = 1; i < argList.Count(); i++) {
-        WCHAR* arg = argList.At(i);
+        WCHAR* arg = argList.at(i);
         if ('-' != *arg && '/' != *arg)
             continue;
 
         if (is_arg("s"))
             gGlobalData.silent = true;
         else if (is_arg_with_param("d"))
-            str::ReplacePtr(&gGlobalData.installDir, argList.At(++i));
+            str::ReplacePtr(&gGlobalData.installDir, argList.at(++i));
 #ifndef BUILD_UNINSTALLER
         else if (is_arg("register"))
             gGlobalData.registerAsDefault = true;
         else if (is_arg_with_param("opt")) {
-            WCHAR* opts = argList.At(++i);
+            WCHAR* opts = argList.at(++i);
             str::ToLowerInPlace(opts);
             str::TransChars(opts, L" ;", L",,");
             WStrVec optlist;

@@ -32,7 +32,7 @@ public:
 
 #if 0
     // use &At() if you need a pointer to the element (e.g. if T is a struct)
-    T& At(size_t idx) const {
+    T& at(size_t idx) const {
         T *elp = allocator.GetAtPtr<T>(idx);
         return *elp;
     }

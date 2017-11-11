@@ -57,7 +57,7 @@ static Vec<PageAnnotation>* ParseFileModifications(const char* data) {
     SquareTree sqt(data);
     if (!sqt.root || sqt.root->data.Count() == 0)
         return nullptr;
-    SquareTreeNode::DataItem& item = sqt.root->data.At(0);
+    SquareTreeNode::DataItem& item = sqt.root->data.at(0);
     if (!item.isChild || !str::EqI(item.key, "@meta"))
         return nullptr;
     if (!item.value.child->GetValue("version")) {
@@ -127,7 +127,7 @@ bool SaveFileModifictions(const WCHAR* filePath, Vec<PageAnnotation>* list) {
         // in the case of an update, append changed annotations to the existing ones
         // (don't rewrite the existing ones in case they're by a newer version which
         // added annotation types and properties this version doesn't know anything about)
-        for (; offset < prevList->Count() && prevList->At(offset) == list->At(offset); offset++)
+        for (; offset < prevList->Count() && prevList->at(offset) == list->at(offset); offset++)
             ;
         CrashIfDebugOnly(offset != prevList->Count());
         data.AppendAndFree(prevData.StealData());
@@ -152,7 +152,7 @@ bool SaveFileModifictions(const WCHAR* filePath, Vec<PageAnnotation>* list) {
     data.Append("\r\n");
 
     for (size_t i = offset; i < list->Count(); i++) {
-        PageAnnotation& annot = list->At(i);
+        PageAnnotation& annot = list->at(i);
         switch (annot.type) {
             case Annot_Highlight:
                 data.Append("[highlight]\r\n");

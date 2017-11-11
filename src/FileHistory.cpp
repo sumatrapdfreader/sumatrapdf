@@ -58,11 +58,11 @@ void FileHistory::Clear(bool keepFavorites) {
         return;
     Vec<DisplayState *> keep;
     for (size_t i = 0; i < states->Count(); i++) {
-        if (keepFavorites && states->At(i)->favorites->Count() > 0) {
-            states->At(i)->openCount = 0;
-            keep.Append(states->At(i));
+        if (keepFavorites && states->at(i)->favorites->Count() > 0) {
+            states->at(i)->openCount = 0;
+            keep.Append(states->at(i));
         } else {
-            DeleteDisplayState(states->At(i));
+            DeleteDisplayState(states->at(i));
         }
     }
     *states = keep;
@@ -70,16 +70,16 @@ void FileHistory::Clear(bool keepFavorites) {
 
 DisplayState *FileHistory::Get(size_t index) const {
     if (index < states->Count())
-        return states->At(index);
+        return states->at(index);
     return nullptr;
 }
 
 DisplayState *FileHistory::Find(const WCHAR *filePath, size_t *idxOut) const {
     for (size_t i = 0; i < states->Count(); i++) {
-        if (str::EqI(states->At(i)->filePath, filePath)) {
+        if (str::EqI(states->at(i)->filePath, filePath)) {
             if (idxOut)
                 *idxOut = i;
-            return states->At(i);
+            return states->at(i);
         }
     }
     return nullptr;
@@ -157,11 +157,11 @@ void FileHistory::Purge(bool alwaysUseDefaultState) {
         Vec<DisplayState *> frequencyList;
         GetFrequencyOrder(frequencyList);
         if (frequencyList.Count() > FILE_HISTORY_MAX_RECENT)
-            minOpenCount = frequencyList.At(FILE_HISTORY_MAX_FREQUENT)->openCount / 2;
+            minOpenCount = frequencyList.at(FILE_HISTORY_MAX_FREQUENT)->openCount / 2;
     }
 
     for (size_t j = states->Count(); j > 0; j--) {
-        DisplayState *state = states->At(j - 1);
+        DisplayState *state = states->at(j - 1);
         // never forget pinned documents, documents we've remembered a password for and
         // documents for which there are favorites
         if (state->isPinned || state->decryptionKey != nullptr || state->favorites->Count() > 0)

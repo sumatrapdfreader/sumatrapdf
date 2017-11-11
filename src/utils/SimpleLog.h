@@ -106,7 +106,7 @@ public:
     {
         ScopedCritSec scope(&cs);
         for (size_t i = 0; i < loggers.Count(); i++) {
-            loggers.At(i)->Log(s);
+            loggers.at(i)->Log(s);
         }
     }
 

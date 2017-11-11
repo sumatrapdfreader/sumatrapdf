@@ -1303,8 +1303,8 @@ float DisplayModel::GetNextZoomStep(float towardsLevel) const
     CrashIf(zoomLevels[0] != ZOOM_MIN || zoomLevels[dimof(zoomLevels)-1] != ZOOM_MAX);
 #endif
     Vec<float> *zoomLevels = gGlobalPrefs->zoomLevels;
-    CrashIf(zoomLevels->Count() != 0 && (zoomLevels->At(0) < ZOOM_MIN || zoomLevels->Last() > ZOOM_MAX));
-    CrashIf(zoomLevels->Count() != 0 && zoomLevels->At(0) > zoomLevels->Last());
+    CrashIf(zoomLevels->Count() != 0 && (zoomLevels->at(0) < ZOOM_MIN || zoomLevels->Last() > ZOOM_MAX));
+    CrashIf(zoomLevels->Count() != 0 && zoomLevels->at(0) > zoomLevels->Last());
 
     float currZoom = GetZoomVirtual(true);
     float pageZoom = (float)HUGE_VAL, widthZoom = (float)HUGE_VAL;
@@ -1324,8 +1324,8 @@ float DisplayModel::GetNextZoomStep(float towardsLevel) const
     float newZoom = towardsLevel;
     if (currZoom < towardsLevel) {
         for (size_t i = 0; i < zoomLevels->Count(); i++) {
-            if (zoomLevels->At(i) - FUZZ > currZoom) {
-                newZoom = zoomLevels->At(i);
+            if (zoomLevels->at(i) - FUZZ > currZoom) {
+                newZoom = zoomLevels->at(i);
                 break;
             }
         }
@@ -1335,8 +1335,8 @@ float DisplayModel::GetNextZoomStep(float towardsLevel) const
             newZoom = ZOOM_FIT_WIDTH;
     } else if (currZoom > towardsLevel) {
         for (size_t i = zoomLevels->Count(); i > 0; i--) {
-            if (zoomLevels->At(i - 1) + FUZZ < currZoom) {
-                newZoom = zoomLevels->At(i - 1);
+            if (zoomLevels->at(i - 1) + FUZZ < currZoom) {
+                newZoom = zoomLevels->at(i - 1);
                 break;
             }
         }
@@ -1493,7 +1493,7 @@ void DisplayModel::AddNavPoint()
     if (navHistoryIx < navHistory.Count())
         navHistory.RemoveAt(navHistoryIx, navHistory.Count() - navHistoryIx);
     // don't add another entry for the exact same position
-    if (navHistoryIx > 0 && ss == navHistory.At(navHistoryIx - 1))
+    if (navHistoryIx > 0 && ss == navHistory.at(navHistoryIx - 1))
         return;
     // make sure that the history doesn't grow overly large
     if (navHistoryIx >= MAX_NAV_HISTORY_LEN) {
@@ -1522,11 +1522,11 @@ void DisplayModel::Navigate(int dir)
     // update the current history entry
     ScrollState ss = GetScrollState();
     if (navHistoryIx < navHistory.Count())
-        navHistory.At(navHistoryIx) = ss;
+        navHistory.at(navHistoryIx) = ss;
     else
         navHistory.Append(ss);
     navHistoryIx += dir;
-    SetScrollState(navHistory.At(navHistoryIx));
+    SetScrollState(navHistory.at(navHistoryIx));
 }
 
 void DisplayModel::CopyNavHistory(DisplayModel& orig)
@@ -1535,7 +1535,7 @@ void DisplayModel::CopyNavHistory(DisplayModel& orig)
     navHistoryIx = orig.navHistoryIx;
     // remove navigation history entries for all no longer valid pages
     for (size_t i = navHistory.Count(); i > 0; i--) {
-        if (!ValidPageNo(navHistory.At(i - 1).page)) {
+        if (!ValidPageNo(navHistory.at(i - 1).page)) {
             navHistory.RemoveAt(i - 1);
             if (i - 1 < navHistoryIx)
                 navHistoryIx--;

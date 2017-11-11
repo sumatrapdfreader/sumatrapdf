@@ -90,7 +90,7 @@ static bool IsBracketLine(char *s)
 SquareTreeNode::~SquareTreeNode()
 {
     for (size_t i = 0; i < data.Count(); i++) {
-        DataItem& item = data.At(i);
+        DataItem& item = data.at(i);
         if (item.isChild)
             delete item.value.child;
     }
@@ -99,7 +99,7 @@ SquareTreeNode::~SquareTreeNode()
 const char *SquareTreeNode::GetValue(const char *key, size_t *startIdx) const
 {
     for (size_t i = startIdx ? *startIdx : 0; i < data.Count(); i++) {
-        DataItem& item = data.At(i);
+        DataItem& item = data.at(i);
         if (str::EqI(key, item.key) && !item.isChild) {
             if (startIdx)
                 *startIdx = i + 1;
@@ -112,7 +112,7 @@ const char *SquareTreeNode::GetValue(const char *key, size_t *startIdx) const
 SquareTreeNode *SquareTreeNode::GetChild(const char *key, size_t *startIdx) const
 {
     for (size_t i = startIdx ? *startIdx : 0; i < data.Count(); i++) {
-        DataItem& item = data.At(i);
+        DataItem& item = data.at(i);
         if (str::EqI(key, item.key) && item.isChild) {
             if (startIdx)
                 *startIdx = i + 1;

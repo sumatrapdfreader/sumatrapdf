@@ -141,7 +141,7 @@ static bool PalmdocUncompress(const char *src, size_t srcLen, str::Str<char>& ds
             if (back > dst.Size() || 0 == back)
                 return false;
             for (uint8 n = (c2 & 7) + 3; n > 0; n--) {
-                dst.Append(dst.At(dst.Size() - back));
+                dst.Append(dst.at(dst.Size() - back));
             }
         } else if (c >= 192) {
             dst.Append(' ');
@@ -478,7 +478,7 @@ MobiDoc::~MobiDoc()
     delete doc;
     delete pdbReader;
     for (size_t i = 0; i < props.Count(); i++) {
-        free(props.At(i).value);
+        free(props.at(i).value);
     }
 }
 
@@ -856,8 +856,8 @@ char *MobiDoc::GetHtmlData(size_t& lenOut) const
 WCHAR *MobiDoc::GetProperty(DocumentProperty prop)
 {
     for (size_t i = 0; i < props.Count(); i++) {
-        if (props.At(i).prop == prop)
-            return str::conv::FromCodePage(props.At(i).value, textEncoding);
+        if (props.at(i).prop == prop)
+            return str::conv::FromCodePage(props.at(i).value, textEncoding);
     }
     return nullptr;
 }

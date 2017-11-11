@@ -50,7 +50,7 @@ TryAgain64Bit:
     for (size_t ix = versions.Count(); ix > 0; ix--) {
         for (int i = 0; i < dimof(gsProducts); i++) {
             AutoFreeW keyName(str::Format(L"Software\\%s\\%s",
-                                                 gsProducts[i], versions.At(ix - 1)));
+                                                 gsProducts[i], versions.at(ix - 1)));
             AutoFreeW GS_DLL(ReadRegStr(HKEY_LOCAL_MACHINE, keyName, L"GS_DLL"));
             if (!GS_DLL)
                 continue;
@@ -72,10 +72,10 @@ TryAgain64Bit:
         WStrVec paths;
         paths.Split(envpath, L";", true);
         for (size_t ix = 0; ix < paths.Count(); ix++) {
-            AutoFreeW exe(path::Join(paths.At(ix), L"gswin32c.exe"));
+            AutoFreeW exe(path::Join(paths.at(ix), L"gswin32c.exe"));
             if (file::Exists(exe))
                 return exe.StealData();
-            exe.Set(path::Join(paths.At(ix), L"gswin64c.exe"));
+            exe.Set(path::Join(paths.at(ix), L"gswin64c.exe"));
             if (file::Exists(exe))
                 return exe.StealData();
         }
