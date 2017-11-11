@@ -1,7 +1,7 @@
 /* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-/* VecSegmented has (mostly) the same API as Vec but allocates
+/* VecSegmented has (mostly) the same API as std::vector but allocates
    using PoolAllocator. This means it's append only (we have no
    easy way to remove an item). The upside is that we can retain
    pointers to elements within the vector because we never
@@ -30,38 +30,16 @@ public:
         return reinterpret_cast<T*>(p);
     }
 
-#if 0
-    // use &At() if you need a pointer to the element (e.g. if T is a struct)
-    T& at(size_t idx) const {
-        T *elp = allocator.GetAtPtr<T>(idx);
-        return *elp;
-    }
-
-    T* AtPtr(size_t idx) const {
-        return allocator.GetAtPtr<T>(idx);
-    }
-#endif
-
-    size_t Count() const {
+    size_t size() const {
         return len;
     }
 
-    size_t Size() const {
-        return len;
-    }
-
-    T* Append(const T& el) {
+    // TODO: push_back() should return void
+    T* push_back(const T& el) {
         T *elPtr = AllocAtEnd();
         *elPtr = el;
         return elPtr;
     }
-
-#if 0
-    void Append(const T* src, size_t count) {
-        T *els = AllocAtEnd(count);
-        memcpy(els, src, count * sizeof(T));
-    }
-#endif
 
     PoolAllocator::Iter<T> begin() {
         return allocator.begin<T>();
@@ -70,27 +48,3 @@ public:
         return allocator.end<T>();
     }
 };
-
-#if 0
-// only suitable for T that are pointers that were malloc()ed
-template <typename T>
-inline void FreeVecMembers(VecSegmented<T>& v)
-{
-    T *data = v.LendData();
-    for (size_t i = 0; i < v.Count(); i++) {
-        free(data[i]);
-    }
-    v.Reset();
-}
-
-// only suitable for T that are pointers to C++ objects
-template <typename T>
-inline void DeleteVecMembers(VecSegmented<T>& v)
-{
-    T *data = v.LendData();
-    for (size_t i = 0; i < v.Count(); i++) {
-        delete data[i];
-    }
-    v.Reset();
-}
-#endif

@@ -11,6 +11,9 @@
   },
   "python.linting.pylintEnabled": false,
   "files.associations": {
-    "xstring": "cpp"
+    "xstring": "cpp",
+    "xhash": "cpp",
+    "xtree": "cpp",
+    "xutility": "cpp"
   }
 }

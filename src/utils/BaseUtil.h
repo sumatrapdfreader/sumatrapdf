@@ -382,12 +382,6 @@ public:
 
     void *FindNthPieceOfSize(size_t size, size_t n) const;
 
-    template <typename T>
-    T *GetAtPtr(size_t idx) const {
-        void *mem = FindNthPieceOfSize(sizeof(T), idx);
-        return reinterpret_cast<T*>(mem);
-    }
-
     // only valid for structs, could alloc objects with
     // placement new()
     template <typename T>
