@@ -246,7 +246,7 @@ EpubDoc::~EpubDoc()
 {
     EnterCriticalSection(&zipAccess);
 
-    for (size_t i = 0; i < images.Count(); i++) {
+    for (size_t i = 0; i < images.size(); i++) {
         free(images.at(i).base.data);
         free(images.at(i).id);
     }
@@ -340,7 +340,7 @@ bool EpubDoc::Load()
             AutoFreeW properties(node->GetAttribute("properties"));
             if (properties && str::Find(properties, L"nav") && str::Eq(mediatype, L"application/xhtml+xml"))
                 tocPath.Set(str::Join(contentPath, htmlPath));
-            if (encList.Count() > 0 && encList.Contains(AutoFreeW(str::Join(contentPath, htmlPath))))
+            if (encList.size() > 0 && encList.Contains(AutoFreeW(str::Join(contentPath, htmlPath))))
                 continue;
             if (htmlPath && htmlId) {
                 idList.Append(htmlId.StealData());
@@ -385,7 +385,7 @@ bool EpubDoc::Load()
         htmlData.Append(html);
     }
 
-    return htmlData.Count() > 0;
+    return htmlData.size() > 0;
 }
 
 void EpubDoc::ParseMetadata(const char *content)
@@ -432,13 +432,13 @@ void EpubDoc::ParseMetadata(const char *content)
 
 const char *EpubDoc::GetHtmlData(size_t *lenOut) const
 {
-    *lenOut = htmlData.Count();
+    *lenOut = htmlData.size();
     return htmlData.Get();
 }
 
 size_t EpubDoc::GetHtmlDataSize() const
 {
-    return htmlData.Count();
+    return htmlData.size();
 }
 
 ImageData *EpubDoc::GetImageData(const char *id, const char *pagePath)
@@ -454,7 +454,7 @@ ImageData *EpubDoc::GetImageData(const char *id, const char *pagePath)
         // styling related state (such as nextPageStyle, listDepth, etc. including
         // format specific state such as hiddenDepth and titleCount) and store it
         // in every HtmlPage, but this should work well enough for now
-        for (size_t i = 0; i < images.Count(); i++) {
+        for (size_t i = 0; i < images.size(); i++) {
             ImageData2 *img = &images.at(i);
             if (str::EndsWithI(img->id, id)) {
                 if (!img->base.data)
@@ -470,7 +470,7 @@ ImageData *EpubDoc::GetImageData(const char *id, const char *pagePath)
     // some EPUB producers use wrong path separators
     if (str::FindChar(url, '\\'))
         str::TransChars(url, "\\", "/");
-    for (size_t i = 0; i < images.Count(); i++) {
+    for (size_t i = 0; i < images.size(); i++) {
         ImageData2 *img = &images.at(i);
         if (str::Eq(img->id, url)) {
             if (!img->base.data)
@@ -712,7 +712,7 @@ Fb2Doc::Fb2Doc(IStream *stream) : fileName(nullptr),
 
 Fb2Doc::~Fb2Doc()
 {
-    for (size_t i = 0; i < images.Count(); i++) {
+    for (size_t i = 0; i < images.size(); i++) {
         free(images.at(i).base.data);
         free(images.at(i).id);
     }
@@ -773,7 +773,7 @@ bool Fb2Doc::Load()
         }
         else if (inBody && tok->IsEndTag() && Tag_Body == tok->tag) {
             if (!--inBody) {
-                if (xmlData.Count() > 0)
+                if (xmlData.size() > 0)
                     xmlData.Append("<pagebreak />");
                 xmlData.Append('<');
                 xmlData.Append(bodyStart, tok->s - bodyStart + tok->sLen);
@@ -848,7 +848,7 @@ bool Fb2Doc::Load()
             ExtractImage(&parser, tok);
     }
 
-    return xmlData.Count() > 0;
+    return xmlData.size() > 0;
 }
 
 void Fb2Doc::ExtractImage(HtmlPullParser *parser, HtmlToken *tok)
@@ -869,24 +869,24 @@ void Fb2Doc::ExtractImage(HtmlPullParser *parser, HtmlToken *tok)
     if (!data.base.data)
         return;
     data.id = str::Join("#", id);
-    data.idx = images.Count();
+    data.idx = images.size();
     images.Append(data);
 }
 
 const char *Fb2Doc::GetXmlData(size_t *lenOut) const
 {
-    *lenOut = xmlData.Count();
+    *lenOut = xmlData.size();
     return xmlData.Get();
 }
 
 size_t Fb2Doc::GetXmlDataSize() const
 {
-    return xmlData.Count();
+    return xmlData.size();
 }
 
 ImageData *Fb2Doc::GetImageData(const char *id)
 {
-    for (size_t i = 0; i < images.Count(); i++) {
+    for (size_t i = 0; i < images.size(); i++) {
         if (str::Eq(images.at(i).id, id))
             return &images.at(i).base;
     }
@@ -1028,7 +1028,7 @@ Fallback:
         AttrInfo *attr = tok->GetAttrByName("NAME");
         if (attr && attr->valLen > 0) {
             tocEntries.Append(str::conv::FromHtmlUtf8(attr->val, attr->valLen));
-            builder.AppendFmt("<a name=" PDB_TOC_ENTRY_MARK "%d>", tocEntries.Count());
+            builder.AppendFmt("<a name=" PDB_TOC_ENTRY_MARK "%d>", tocEntries.size());
             return tok->s + tok->sLen;
         }
     }
@@ -1119,13 +1119,13 @@ bool PalmDoc::Load()
 
 const char *PalmDoc::GetHtmlData(size_t *lenOut) const
 {
-    *lenOut = htmlData.Count();
+    *lenOut = htmlData.size();
     return htmlData.Get();
 }
 
 size_t PalmDoc::GetHtmlDataSize() const
 {
-    return htmlData.Count();
+    return htmlData.size();
 }
 
 WCHAR *PalmDoc::GetProperty(DocumentProperty prop) const
@@ -1141,12 +1141,12 @@ const WCHAR *PalmDoc::GetFileName() const
 
 bool PalmDoc::HasToc() const
 {
-    return tocEntries.Count() > 0;
+    return tocEntries.size() > 0;
 }
 
 bool PalmDoc::ParseToc(EbookTocVisitor *visitor)
 {
-    for (size_t i = 0; i < tocEntries.Count(); i++) {
+    for (size_t i = 0; i < tocEntries.size(); i++) {
         AutoFreeW name(str::Format(TEXT(PDB_TOC_ENTRY_MARK) L"%d", i + 1));
         visitor->Visit(tocEntries.at(i), name, 1);
     }
@@ -1181,7 +1181,7 @@ HtmlDoc::HtmlDoc(const WCHAR *fileName) : fileName(str::Dup(fileName)) { }
 
 HtmlDoc::~HtmlDoc()
 {
-    for (size_t i = 0; i < images.Count(); i++) {
+    for (size_t i = 0; i < images.size(); i++) {
         free(images.at(i).base.data);
         free(images.at(i).id);
     }
@@ -1237,7 +1237,7 @@ ImageData *HtmlDoc::GetImageData(const char *id)
     //       so add a critical section once it's used for EbookController
 
     AutoFree url(NormalizeURL(id, pagePath));
-    for (size_t i = 0; i < images.Count(); i++) {
+    for (size_t i = 0; i < images.size(); i++) {
         if (str::Eq(images.at(i).id, url))
             return &images.at(i).base;
     }
@@ -1377,9 +1377,9 @@ static const char *TextFindEmailEnd(str::Str<char>& htmlData, const char *curr)
     AutoFree beforeAt;
     const char *end = curr;
     if ('@' == *curr) {
-        if (htmlData.Count() == 0 || !IsEmailUsernameChar(htmlData.Last()))
+        if (htmlData.size() == 0 || !IsEmailUsernameChar(htmlData.Last()))
             return nullptr;
-        size_t idx = htmlData.Count();
+        size_t idx = htmlData.size();
         for (; idx > 1 && IsEmailUsernameChar(htmlData.at(idx - 1)); idx--);
         beforeAt.SetCopy(&htmlData.at(idx));
     } else {
@@ -1400,8 +1400,8 @@ static const char *TextFindEmailEnd(str::Str<char>& htmlData, const char *curr)
     } while ('.' == *end && IsEmailDomainChar(*(end + 1)));
 
     if (beforeAt) {
-        size_t idx = htmlData.Count() - str::Len(beforeAt);
-        htmlData.RemoveAt(idx, htmlData.Count() - idx);
+        size_t idx = htmlData.size() - str::Len(beforeAt);
+        htmlData.RemoveAt(idx, htmlData.size() - idx);
     }
     htmlData.Append("<a href=\"mailto:");
     htmlData.Append(beforeAt);
@@ -1501,7 +1501,7 @@ bool TxtDoc::Load()
 
 const char *TxtDoc::GetHtmlData(size_t *lenOut) const
 {
-    *lenOut = htmlData.Count();
+    *lenOut = htmlData.size();
     return htmlData.Get();
 }
 

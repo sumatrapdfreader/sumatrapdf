@@ -44,12 +44,12 @@ size_t ArchFile::GetFileIndex(const WCHAR* fileName) {
 }
 
 size_t ArchFile::GetFileCount() const {
-    CrashIf(filenames.Count() != filepos.size());
-    return filenames.Count();
+    CrashIf(filenames.size() != filepos.size());
+    return filenames.size();
 }
 
 const WCHAR* ArchFile::GetFileName(size_t fileindex) {
-    if (fileindex >= filenames.Count())
+    if (fileindex >= filenames.size())
         return nullptr;
     return filenames.at(fileindex);
 }
@@ -59,7 +59,7 @@ char* ArchFile::GetFileDataByName(const WCHAR* fileName, size_t* len) {
 }
 
 char* ArchFile::GetFileDataByIdx(size_t fileindex, size_t* len) {
-    if (fileindex >= filenames.Count())
+    if (fileindex >= filenames.size())
         return nullptr;
 
     if (!ar || !ar_parse_entry_at(ar, filepos.at(fileindex)))
@@ -175,7 +175,7 @@ char* RarFile::GetFileFromFallback(size_t fileindex, size_t* len) {
         // if fileindex == -1, (re)load the entire archive listing using UnRAR
         fallback->ExtractFilenames(path, filenames);
         // always use the fallback for all additionally found files
-        while (filepos.size() < filenames.Count()) {
+        while (filepos.size() < filenames.size()) {
             filepos.push_back(-1);
         }
     }
@@ -299,7 +299,7 @@ bool UnRarDll::ExtractFilenames(const WCHAR* rarPath, WStrList& filenames) {
         if (0 != res)
             break;
         str::TransChars(rarHeader.FileNameW, L"\\", L"/");
-        if (filenames.Count() == idx)
+        if (filenames.size() == idx)
             filenames.Append(str::Dup(rarHeader.FileNameW));
         else
             CrashIf(!str::Eq(filenames.at(idx), rarHeader.FileNameW));
@@ -352,7 +352,7 @@ char* UnRarDll::GetFileByName(const WCHAR* rarPath, const WCHAR* filename, size_
             res = 1;
         } else {
             res = RARProcessFile(hArc, RAR_TEST, nullptr, nullptr);
-            if (rarHeader.UnpSize != data.Count()) {
+            if (rarHeader.UnpSize != data.size()) {
                 res = 1;
             }
         }
@@ -366,7 +366,7 @@ char* UnRarDll::GetFileByName(const WCHAR* rarPath, const WCHAR* filename, size_
     if (0 != res)
         return nullptr;
     if (len)
-        *len = data.Count() - 2;
+        *len = data.size() - 2;
     return data.StealData();
 }
 

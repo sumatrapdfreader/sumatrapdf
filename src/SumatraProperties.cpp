@@ -60,7 +60,7 @@ public:
             free(value);
     }
     bool HasProperty(const WCHAR *key) {
-        for (size_t i = 0; i < Count(); i++) {
+        for (size_t i = 0; i < size(); i++) {
             if (str::Eq(key, at(i)->leftTxt))
                 return true;
         }
@@ -75,7 +75,7 @@ static Vec<PropertiesLayout*> gPropertiesWindows;
 
 static PropertiesLayout* FindPropertyWindowByParent(HWND hwndParent)
 {
-    for (size_t i = 0; i < gPropertiesWindows.Count(); i++) {
+    for (size_t i = 0; i < gPropertiesWindows.size(); i++) {
         PropertiesLayout *pl = gPropertiesWindows.at(i);
         if (pl->hwndParent == hwndParent)
             return pl;
@@ -85,7 +85,7 @@ static PropertiesLayout* FindPropertyWindowByParent(HWND hwndParent)
 
 static PropertiesLayout* FindPropertyWindowByHwnd(HWND hwnd)
 {
-    for (size_t i = 0; i < gPropertiesWindows.Count(); i++) {
+    for (size_t i = 0; i < gPropertiesWindows.size(); i++) {
         PropertiesLayout *pl = gPropertiesWindows.at(i);
         if (pl->hwnd == hwnd)
             return pl;
@@ -314,7 +314,7 @@ static void UpdatePropertiesLayout(PropertiesLayout *layoutData, HDC hdc, RectI 
     /* calculate text dimensions for the left side */
     SelectObject(hdc, fontLeftTxt);
     int leftMaxDx = 0;
-    for (size_t i = 0; i < layoutData->Count(); i++) {
+    for (size_t i = 0; i < layoutData->size(); i++) {
         PropertyEl *el = layoutData->at(i);
         const WCHAR *txt = el->leftTxt;
         RECT rc = { 0 };
@@ -331,7 +331,7 @@ static void UpdatePropertiesLayout(PropertiesLayout *layoutData, HDC hdc, RectI 
     int rightMaxDx = 0;
     int lineCount = 0;
     int textDy = 0;
-    for (size_t i = 0; i < layoutData->Count(); i++) {
+    for (size_t i = 0; i < layoutData->size(); i++) {
         PropertyEl *el = layoutData->at(i);
         const WCHAR *txt = el->rightTxt;
         RECT rc = { 0 };
@@ -357,7 +357,7 @@ static void UpdatePropertiesLayout(PropertiesLayout *layoutData, HDC hdc, RectI 
         *rect = RectI(0, 0, totalDx + 2 * offset, totalDy + offset);
 
     int currY = 0;
-    for (size_t i = 0; i < layoutData->Count(); i++) {
+    for (size_t i = 0; i < layoutData->size(); i++) {
         PropertyEl *el = layoutData->at(i);
         el->leftPos = RectI(offset, offset + currY, leftMaxDx, el->leftPos.dy);
         el->rightPos.x = offset + leftMaxDx + PROPERTIES_LEFT_RIGHT_SPACE_DX;
@@ -543,7 +543,7 @@ static void DrawProperties(HWND hwnd, HDC hdc)
 
     /* render text on the left*/
     SelectObject(hdc, fontLeftTxt);
-    for (size_t i = 0; i < layoutData->Count(); i++) {
+    for (size_t i = 0; i < layoutData->size(); i++) {
         PropertyEl *el = layoutData->at(i);
         const WCHAR *txt = el->leftTxt;
         rTmp = el->leftPos.ToRECT();
@@ -552,7 +552,7 @@ static void DrawProperties(HWND hwnd, HDC hdc)
 
     /* render text on the right */
     SelectObject(hdc, fontRightTxt);
-    for (size_t i = 0; i < layoutData->Count(); i++) {
+    for (size_t i = 0; i < layoutData->size(); i++) {
         PropertyEl *el = layoutData->at(i);
         const WCHAR *txt = el->rightTxt;
         RectI rc = el->rightPos;
@@ -584,7 +584,7 @@ static void CopyPropertiesToClipboard(HWND hwnd)
 
     // concatenate all the properties into a multi-line string
     str::Str<WCHAR> lines(256);
-    for (size_t i = 0; i < layoutData->Count(); i++) {
+    for (size_t i = 0; i < layoutData->size(); i++) {
         PropertyEl *el = layoutData->at(i);
         lines.AppendFmt(L"%s %s\r\n", el->leftTxt, el->rightTxt);
     }

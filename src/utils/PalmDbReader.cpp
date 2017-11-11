@@ -55,7 +55,7 @@ PdbReader::PdbReader(IStream *stream) :
 
 bool PdbReader::ParseHeader()
 {
-    CrashIf(recOffsets.Count() > 0);
+    CrashIf(recOffsets.size() > 0);
 
     PdbHeader pdbHeader;
     if (!data || dataSize < sizeof(pdbHeader))
@@ -92,19 +92,19 @@ bool PdbReader::ParseHeader()
 
 const char *PdbReader::GetDbType()
 {
-    if (recOffsets.Count() == 0)
+    if (recOffsets.size() == 0)
         return nullptr;
     return dbType;
 }
 
 size_t PdbReader::GetRecordCount()
 {
-    return recOffsets.Count() - 1;
+    return recOffsets.size() - 1;
 }
 
 const char *PdbReader::GetRecord(size_t recNo, size_t *sizeOut)
 {
-    if (recNo + 1 >= recOffsets.Count())
+    if (recNo + 1 >= recOffsets.size())
         return nullptr;
     size_t offset = recOffsets.at(recNo);
     if (sizeOut)

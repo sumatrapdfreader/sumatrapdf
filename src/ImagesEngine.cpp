@@ -39,7 +39,7 @@ public:
     ImagesEngine();
     virtual ~ImagesEngine();
 
-    int PageCount() const override { return (int)mediaboxes.Count(); }
+    int PageCount() const override { return (int)mediaboxes.size(); }
 
     RectD PageMediabox(int pageNo) override;
 
@@ -99,7 +99,7 @@ ImagesEngine::ImagesEngine()
 ImagesEngine::~ImagesEngine()
 {
     EnterCriticalSection(&cacheAccess);
-    while (pageCache.Count() > 0) {
+    while (pageCache.size() > 0) {
         CrashIf(pageCache.Last()->refs != 1);
         DropPage(pageCache.Last(), true);
     }
@@ -275,7 +275,7 @@ ImagePage *ImagesEngine::GetPage(int pageNo, bool tryOnly)
 
     ImagePage *result = nullptr;
 
-    for (size_t i = 0; i < pageCache.Count(); i++) {
+    for (size_t i = 0; i < pageCache.size(); i++) {
         if (pageCache.at(i)->pageNo == pageNo) {
             result = pageCache.at(i);
             break;
@@ -286,8 +286,8 @@ ImagePage *ImagesEngine::GetPage(int pageNo, bool tryOnly)
     if (!result) {
         // TODO: drop most memory intensive pages first
         // (i.e. formats which aren't IsGdiPlusNativeFormat)?
-        if (pageCache.Count() >= MAX_IMAGE_PAGE_CACHE) {
-            CrashIf(pageCache.Count() != MAX_IMAGE_PAGE_CACHE);
+        if (pageCache.size() >= MAX_IMAGE_PAGE_CACHE) {
+            CrashIf(pageCache.size() != MAX_IMAGE_PAGE_CACHE);
             DropPage(pageCache.Last(), true);
         }
         result = new ImagePage(pageNo, nullptr);
@@ -414,7 +414,7 @@ bool ImageEngineImpl::FinishLoading()
         return false;
 
     mediaboxes.Append(RectD(0, 0, image->GetWidth(), image->GetHeight()));
-    AssertCrash(mediaboxes.Count() == 1);
+    AssertCrash(mediaboxes.size() == 1);
 
     // extract all frames from multi-page TIFFs and animated GIFs
     if (str::Eq(fileExt, L".tif") || str::Eq(fileExt, L".gif")) {
@@ -505,7 +505,7 @@ RectD ImageEngineImpl::LoadMediabox(int pageNo)
         return RectD(0, 0, image->GetWidth(), image->GetHeight());
 
     // fill the cache to prevent the first few frames from being unpacked twice
-    ImagePage *page = GetPage(pageNo, MAX_IMAGE_PAGE_CACHE == pageCache.Count());
+    ImagePage *page = GetPage(pageNo, MAX_IMAGE_PAGE_CACHE == pageCache.size());
     if (page) {
         RectD mbox(0, 0, page->bmp->GetWidth(), page->bmp->GetHeight());
         DropPage(page);
@@ -670,11 +670,11 @@ bool ImageDirEngineImpl::LoadImageDir(const WCHAR *dirName)
     } while (FindNextFile(hfind, &fdata));
     FindClose(hfind);
 
-    if (pageFileNames.Count() == 0)
+    if (pageFileNames.size() == 0)
         return false;
     pageFileNames.SortNatural();
 
-    mediaboxes.AppendBlanks(pageFileNames.Count());
+    mediaboxes.AppendBlanks(pageFileNames.size());
 
     ImagePage *page = GetPage(1);
     if (page) {
@@ -696,7 +696,7 @@ WCHAR *ImageDirEngineImpl::GetPageLabel(int pageNo) const
 
 int ImageDirEngineImpl::GetPageByLabel(const WCHAR *label) const
 {
-    for (size_t i = 0; i < pageFileNames.Count(); i++) {
+    for (size_t i = 0; i < pageFileNames.size(); i++) {
         const WCHAR *fileName = path::GetBaseName(pageFileNames.at(i));
         const WCHAR *fileExt = path::GetExt(fileName);
         if (str::StartsWithI(fileName, label) &&
@@ -735,7 +735,7 @@ bool ImageDirEngineImpl::SaveFileAs(const char *copyFileName, bool includeUserAn
         return false;
     }
     bool ok = true;
-    for (size_t i = 0; i < pageFileNames.Count(); i++) {
+    for (size_t i = 0; i < pageFileNames.size(); i++) {
         const WCHAR *filePathOld = pageFileNames.at(i);
         AutoFreeW filePathNew(path::Join(dstPath, path::GetBaseName(filePathOld)));
         ok = ok && CopyFileW(filePathOld, filePathNew, TRUE);
@@ -920,7 +920,7 @@ bool CbxEngineImpl::FinishLoading()
             allFileNames.Append(nullptr);
         }
     }
-    CrashIf(allFileNames.Count() != cbxFile->GetFileCount());
+    CrashIf(allFileNames.size() != cbxFile->GetFileCount());
 
     AutoFree metadata(cbxFile->GetFileDataByName(L"ComicInfo.xml"));
     if (metadata)
@@ -933,11 +933,11 @@ bool CbxEngineImpl::FinishLoading()
     for (const WCHAR *fn : pageFileNames) {
         fileIdxs.Append(allFileNames.Find(fn));
     }
-    CrashIf(pageFileNames.Count() != fileIdxs.Count());
-    if (fileIdxs.Count() == 0)
+    CrashIf(pageFileNames.size() != fileIdxs.size());
+    if (fileIdxs.size() == 0)
         return false;
 
-    mediaboxes.AppendBlanks(fileIdxs.Count());
+    mediaboxes.AppendBlanks(fileIdxs.size());
 
     return true;
 }
@@ -1034,7 +1034,7 @@ bool CbxEngineImpl::Visit(const char *path, const char *value, json::DataType ty
         return true;
     }
     // stop parsing once we have all desired information
-    return !propTitle || propAuthors.Count() == 0 || !propCreator ||
+    return !propTitle || propAuthors.size() == 0 || !propCreator ||
            !propDate || str::FindChar(propDate, '/') <= propDate;
 }
 
@@ -1062,7 +1062,7 @@ WCHAR *CbxEngineImpl::GetProperty(DocumentProperty prop)
     case Prop_Title:
         return str::Dup(propTitle);
     case Prop_Author:
-        return propAuthors.Count() ? propAuthors.Join(L", ") : nullptr;
+        return propAuthors.size() ? propAuthors.Join(L", ") : nullptr;
     case Prop_CreationDate:
         return str::Dup(propDate);
     case Prop_ModificationDate:
@@ -1102,7 +1102,7 @@ Bitmap *CbxEngineImpl::LoadBitmap(int pageNo, bool& deleteAfterUse)
 RectD CbxEngineImpl::LoadMediabox(int pageNo)
 {
     // fill the cache to prevent the first few images from being unpacked twice
-    ImagePage *page = GetPage(pageNo, MAX_IMAGE_PAGE_CACHE == pageCache.Count());
+    ImagePage *page = GetPage(pageNo, MAX_IMAGE_PAGE_CACHE == pageCache.size());
     if (page) {
         RectD mbox(0, 0, page->bmp->GetWidth(), page->bmp->GetHeight());
         DropPage(page);

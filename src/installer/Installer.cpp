@@ -410,9 +410,9 @@ static const WCHAR* ReadableProcName(const WCHAR* procPath) {
 
 static void SetCloseProcessMsg() {
     AutoFreeW procNames(str::Dup(ReadableProcName(gProcessesToClose.at(0))));
-    for (size_t i = 1; i < gProcessesToClose.Count(); i++) {
+    for (size_t i = 1; i < gProcessesToClose.size(); i++) {
         const WCHAR* name = ReadableProcName(gProcessesToClose.at(i));
-        if (i < gProcessesToClose.Count() - 1)
+        if (i < gProcessesToClose.size() - 1)
             procNames.Set(str::Join(procNames, L", ", name));
         else
             procNames.Set(str::Join(procNames, L" and ", name));
@@ -425,7 +425,7 @@ bool CheckInstallUninstallPossible(bool silent) {
     gProcessesToClose.Reset();
     ProcessesUsingInstallation(gProcessesToClose);
 
-    bool possible = gProcessesToClose.Count() == 0;
+    bool possible = gProcessesToClose.size() == 0;
     if (possible) {
         SetDefaultMsg();
     } else {
@@ -899,10 +899,10 @@ static void ParseCommandLine(WCHAR* cmdLine) {
     ParseCmdLine(cmdLine, argList);
 
 #define is_arg(param) str::EqI(arg + 1, TEXT(param))
-#define is_arg_with_param(param) (is_arg(param) && i < argList.Count() - 1)
+#define is_arg_with_param(param) (is_arg(param) && i < argList.size() - 1)
 
     // skip the first arg (exe path)
-    for (size_t i = 1; i < argList.Count(); i++) {
+    for (size_t i = 1; i < argList.size(); i++) {
         WCHAR* arg = argList.at(i);
         if ('-' != *arg && '/' != *arg)
             continue;

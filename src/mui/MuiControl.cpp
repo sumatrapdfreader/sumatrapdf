@@ -108,7 +108,7 @@ void Control::SetParent(Control *newParent) { parent = newParent; }
 
 Control *Control::GetChild(size_t idx) const { return children.at(idx); }
 
-size_t Control::GetChildCount() const { return children.Count(); }
+size_t Control::GetChildCount() const { return children.size(); }
 
 bool Control::WantsMouseClick() const { return bit::IsSet(wantedInputBits, WantsMouseClickBit); }
 
@@ -127,7 +127,7 @@ void Control::SetIsMouseOver(bool isOver) {
 
 void Control::AddChild(Control *c, int pos) {
     CrashIf(nullptr == c);
-    if ((pos < 0) || (pos >= (int)children.Count()))
+    if ((pos < 0) || (pos >= (int)children.size()))
         children.Append(c);
     else
         children.InsertAt(pos, c);
@@ -145,7 +145,7 @@ Size Control::Measure(const Size availableSize) {
     if (layout) {
         return layout->Measure(availableSize);
     }
-    if (children.Count() == 1) {
+    if (children.size() == 1) {
         ILayout *l = children.at(0);
         return l->Measure(availableSize);
     }
@@ -167,7 +167,7 @@ void Control::Arrange(const Rect finalRect) {
         // might over-write position if our layout knows about us
         layout->Arrange(finalRect);
     } else {
-        if (children.Count() == 1) {
+        if (children.size() == 1) {
             ILayout *l = children.at(0);
             l->Arrange(finalRect);
         }

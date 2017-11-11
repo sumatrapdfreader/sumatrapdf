@@ -289,7 +289,7 @@ void HtmlFormatter::SetAlignment(AlignAttr align)
 
 void HtmlFormatter::RevertStyleChange()
 {
-    if (styleStack.Count() > 1) {
+    if (styleStack.size() > 1) {
         DrawStyle style = styleStack.Pop();
         if (style.font != CurrFont())
             AppendInstr(DrawInstr::SetFont(CurrFont()));
@@ -528,7 +528,7 @@ bool HtmlFormatter::FlushCurrLine(bool isParagraphBreak)
         currX = NewLineX();
         currLineTopPadding = 0;
         // remove all spaces (only keep SetFont, LinkStart and Anchor instructions)
-        for (size_t k = currLineInstr.Count(); k > 0; k--) {
+        for (size_t k = currLineInstr.size(); k > 0; k--) {
             DrawInstr& i = currLineInstr.at(k - 1);
             if (InstrFixedSpace == i.type || InstrElasticSpace == i.type)
                 currLineInstr.RemoveAt(k - 1);
@@ -565,14 +565,14 @@ bool HtmlFormatter::FlushCurrLine(bool isParagraphBreak)
         // TODO: this occasionally leads to empty links
         AppendInstr(DrawInstr(InstrLinkEnd));
     }
-    currPage->instructions.Append(currLineInstr.LendData(), currLineInstr.Count());
+    currPage->instructions.Append(currLineInstr.LendData(), currLineInstr.size());
     currLineInstr.Reset();
     currLineReparseIdx = -1; // mark as not set
     currLineTopPadding = 0;
     currX = NewLineX();
     if (currLinkIdx) {
         AppendInstr(DrawInstr::LinkStart(link.str.s, link.str.len));
-        currLinkIdx = currLineInstr.Count();
+        currLinkIdx = currLineInstr.size();
     }
     nextPageStyle = styleStack.Last();
     return createdPage;
@@ -593,7 +593,7 @@ void HtmlFormatter::EmitEmptyLine(float lineDy)
     if (currY <= pageDy) {
         currX = NewLineX();
         // remove all spaces (only keep SetFont, LinkStart and Anchor instructions)
-        for (size_t k = currLineInstr.Count(); k > 0; k--) {
+        for (size_t k = currLineInstr.size(); k > 0; k--) {
             DrawInstr& i = currLineInstr.at(k - 1);
             if (InstrFixedSpace == i.type || InstrElasticSpace == i.type)
                 currLineInstr.RemoveAt(k - 1);
@@ -607,7 +607,7 @@ void HtmlFormatter::EmitEmptyLine(float lineDy)
 static bool HasPreviousLineSingleImage(Vec<DrawInstr>& instrs)
 {
     REAL imageY = -1;
-    for (size_t idx = instrs.Count(); idx > 0; idx--) {
+    for (size_t idx = instrs.size(); idx > 0; idx--) {
         DrawInstr& i = instrs.at(idx - 1);
         if (!IsVisibleDrawInstr(i))
             continue;
@@ -700,7 +700,7 @@ bool HtmlFormatter::EnsureDx(float dx)
 // at the beginning of the line
 static bool CanEmitElasticSpace(float currX, float NewLineX, float maxCurrX, Vec<DrawInstr>& currLineInstr)
 {
-    if (NewLineX == currX || 0 == currLineInstr.Count())
+    if (NewLineX == currX || 0 == currLineInstr.size())
         return false;
     // prevent elastic spaces from being flushed to the
     // beginning of the next line
@@ -708,8 +708,8 @@ static bool CanEmitElasticSpace(float currX, float NewLineX, float maxCurrX, Vec
         return false;
     DrawInstr& di = currLineInstr.Last();
     // don't add a space if only an anchor would be in between them
-    if (InstrAnchor == di.type && currLineInstr.Count() > 1)
-        di = currLineInstr.at(currLineInstr.Count() - 2);
+    if (InstrAnchor == di.type && currLineInstr.size() > 1)
+        di = currLineInstr.at(currLineInstr.size() - 2);
     return (InstrElasticSpace != di.type) && (InstrFixedSpace != di.type);
 }
 
@@ -896,7 +896,7 @@ bool HtmlFormatter::HandleTagA(HtmlToken *t, const char *linkAttr, const char *a
         AttrInfo *attr = attrNS ? t->GetAttrByNameNS(linkAttr, attrNS) : t->GetAttrByName(linkAttr);
         if (attr) {
             AppendInstr(DrawInstr::LinkStart(attr->val, attr->valLen));
-            currLinkIdx = currLineInstr.Count();
+            currLinkIdx = currLineInstr.size();
             return true;
         }
     }
@@ -970,7 +970,7 @@ void HtmlFormatter::HandleTagPre(HtmlToken *t)
 StyleRule *HtmlFormatter::FindStyleRule(HtmlTag tag, const char *clazz, size_t clazzLen)
 {
     uint32_t classHash = clazz ? MurmurHash2(clazz, clazzLen) : 0;
-    for (size_t i = 0; i < styleRules.Count(); i++) {
+    for (size_t i = 0; i < styleRules.size(); i++) {
         StyleRule& rule = styleRules.at(i);
         if (tag == rule.tag && classHash == rule.classHash)
             return &rule;
@@ -1097,7 +1097,7 @@ void HtmlFormatter::UpdateTagNesting(HtmlToken *t)
         return;
     }
 
-    size_t idx = tagNesting.Count();
+    size_t idx = tagNesting.size();
     bool isInline = IsInlineTag(t->tag);
     if (t->IsStartTag()) {
         if (IsInlineTag(t->tag)) {
@@ -1116,7 +1116,7 @@ void HtmlFormatter::UpdateTagNesting(HtmlToken *t)
             return;
     }
 
-    AutoCloseTags(tagNesting.Count() - idx);
+    AutoCloseTags(tagNesting.size() - idx);
 
     if (t->IsStartTag())
         tagNesting.Push(t->tag);
@@ -1309,7 +1309,7 @@ HtmlPage *HtmlFormatter::Next(bool skipEmptyPages)
     for (;;)
     {
         // send out all pages accumulated so far
-        while (pagesToSend.Count() > 0) {
+        while (pagesToSend.size() > 0) {
             HtmlPage *ret = pagesToSend.PopAt(0);
             pageCount++;
             if (skipEmptyPages && IsEmptyPage(ret))
@@ -1334,7 +1334,7 @@ HtmlPage *HtmlFormatter::Next(bool skipEmptyPages)
             HandleText(t);
     }
     // force layout of the last line
-    AutoCloseTags(tagNesting.Count());
+    AutoCloseTags(tagNesting.size());
     FlushCurrLine(true);
 
     UpdateLinkBboxes(currPage);

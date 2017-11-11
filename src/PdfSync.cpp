@@ -236,7 +236,7 @@ int Pdfsync::RebuildIndex()
     sheetIndex.Append(0);
 
     // add the initial tex file to the source file stack
-    filestack.Push(srcfiles.Count());
+    filestack.Push(srcfiles.size());
     srcfiles.Append(jobName.StealData());
     PdfsyncFileIndex findex = { 0 };
     fileIndex.Append(findex);
@@ -263,7 +263,7 @@ int Pdfsync::RebuildIndex()
 
         case 's':
             if (str::Parse(line, "s %u", &page))
-                sheetIndex.Append(points.Count());
+                sheetIndex.Append(points.size());
             // else dbg("Bad 's' line in the pdfsync file");
             // if (0 == page || page > maxPageNo)
             //     dbg("'s' line with invalid page number in the pdfsync file");
@@ -296,16 +296,16 @@ int Pdfsync::RebuildIndex()
                 if (PathIsRelative(filename))
                     filename.Set(PrependDir(filename));
 
-                filestack.Push(srcfiles.Count());
+                filestack.Push(srcfiles.size());
                 srcfiles.Append(filename.StealData());
-                findex.start = findex.end = lines.Count();
+                findex.start = findex.end = lines.size();
                 fileIndex.Append(findex);
             }
             break;
 
         case ')':
-            if (filestack.Count() > 1)
-                fileIndex.at(filestack.Pop()).end = lines.Count();
+            if (filestack.size() > 1)
+                fileIndex.at(filestack.Pop()).end = lines.size();
             // else dbg("Unbalanced ')' line in the pdfsync file");
             break;
 
@@ -315,8 +315,8 @@ int Pdfsync::RebuildIndex()
         }
     }
 
-    fileIndex.at(0).end = lines.Count();
-    AssertCrash(filestack.Count() == 1);
+    fileIndex.at(0).end = lines.size();
+    AssertCrash(filestack.size() == 1);
 
     return Synchronizer::RebuildIndex();
 }
@@ -336,7 +336,7 @@ int Pdfsync::DocToSource(UINT pageNo, PointI pt, AutoFreeW& filename, UINT *line
             return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
 
     // find the entry in the index corresponding to this page
-    if (pageNo <= 0 || pageNo >= sheetIndex.Count() || pageNo > (UINT)engine->PageCount())
+    if (pageNo <= 0 || pageNo >= sheetIndex.size() || pageNo > (UINT)engine->PageCount())
         return PDFSYNCERR_INVALID_PAGE_NUMBER;
 
     // PdfSync coordinates are y-inversed
@@ -354,7 +354,7 @@ int Pdfsync::DocToSource(UINT pageNo, PointI pt, AutoFreeW& filename, UINT *line
     UINT closest_ydist_record = UINT_MAX; // vertically-closest record
 
     // read all the sections of 'p' declarations for this pdf sheet
-    for (size_t i = sheetIndex.at(pageNo); i < points.Count() && points.at(i).page == pageNo; i++) {
+    for (size_t i = sheetIndex.at(pageNo); i < points.size() && points.at(i).page == pageNo; i++) {
         // check whether it is closer than the closest point found so far
         UINT dx = abs(pt.x - (int)SYNC_TO_PDF_COORDINATE(points.at(i).x));
         UINT dy = abs(pt.y - (int)SYNC_TO_PDF_COORDINATE(points.at(i).y));
@@ -378,7 +378,7 @@ int Pdfsync::DocToSource(UINT pageNo, PointI pt, AutoFreeW& filename, UINT *line
 
     // We have a record number, we need to find its declaration ('l ...') in the syncfile
     PdfsyncLine cmp; cmp.record = selected_record;
-    PdfsyncLine *found = (PdfsyncLine *)bsearch(&cmp, lines.LendData(), lines.Count(), sizeof(PdfsyncLine), cmpLineRecords);
+    PdfsyncLine *found = (PdfsyncLine *)bsearch(&cmp, lines.LendData(), lines.size(), sizeof(PdfsyncLine), cmpLineRecords);
     AssertCrash(found);
     if (!found)
         return PDFSYNCERR_NO_SYNC_AT_LOCATION;
@@ -417,10 +417,10 @@ UINT Pdfsync::SourceToRecord(const WCHAR* srcfilename, UINT line, UINT col, Vec<
 
     // find the source file entry
     size_t isrc;
-    for (isrc = 0; isrc < srcfiles.Count(); isrc++)
+    for (isrc = 0; isrc < srcfiles.size(); isrc++)
         if (path::IsSame(srcfilepath, srcfiles.at(isrc)))
             break;
-    if (isrc == srcfiles.Count())
+    if (isrc == srcfiles.size())
         return PDFSYNCERR_UNKNOWN_SOURCEFILE;
 
     if (fileIndex.at(isrc).start == fileIndex.at(isrc).end)
@@ -448,7 +448,7 @@ UINT Pdfsync::SourceToRecord(const WCHAR* srcfilename, UINT line, UINT col, Vec<
         return PDFSYNCERR_NORECORD_FOR_THATLINE;
 
     // we read all the consecutive records until we reach a record belonging to another line
-    for (size_t i = lineIx; i < lines.Count() && lines.at(i).line == lines.at(lineIx).line; i++)
+    for (size_t i = lineIx; i < lines.size() && lines.at(i).line == lines.at(lineIx).line; i++)
         records.Push(lines.at(i).record);
 
     return PDFSYNCERR_SUCCESS;
@@ -462,7 +462,7 @@ int Pdfsync::SourceToDoc(const WCHAR* srcfilename, UINT line, UINT col, UINT *pa
 
     Vec<size_t> found_records;
     UINT ret = SourceToRecord(srcfilename, line, col, found_records);
-    if (ret != PDFSYNCERR_SUCCESS || found_records.Count() == 0)
+    if (ret != PDFSYNCERR_SUCCESS || found_records.size() == 0)
         return ret;
 
     rects.Reset();
@@ -470,7 +470,7 @@ int Pdfsync::SourceToDoc(const WCHAR* srcfilename, UINT line, UINT col, UINT *pa
     // records have been found for the desired source position:
     // we now find the page and positions in the PDF corresponding to these found records
     UINT firstPage = UINT_MAX;
-    for (size_t i = 0; i < points.Count(); i++) {
+    for (size_t i = 0; i < points.size(); i++) {
         if (!found_records.Contains(points.at(i).record))
             continue;
         if (firstPage != UINT_MAX && firstPage != points.at(i).page)
@@ -485,7 +485,7 @@ int Pdfsync::SourceToDoc(const WCHAR* srcfilename, UINT line, UINT col, UINT *pa
         rects.Push(rc.Round());
     }
 
-    if (rects.Count() > 0)
+    if (rects.size() > 0)
         return PDFSYNCERR_SUCCESS;
     // the record does not correspond to any point in the PDF: this is possible...
     return PDFSYNCERR_NOSYNCPOINT_FOR_LINERECORD;

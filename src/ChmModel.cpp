@@ -111,7 +111,7 @@ ChmModel::~ChmModel()
 
 int ChmModel::PageCount() const
 {
-    return (int)pages.Count();
+    return (int)pages.size();
 }
 
 WCHAR *ChmModel::GetProperty(DocumentProperty prop)
@@ -275,13 +275,13 @@ class ChmTocBuilder : public EbookTocVisitor {
             return 0;
 
         AutoFreeW plainUrl(url::GetFullPath(url));
-        int pageNo = (int)pages->Count() + 1;
+        int pageNo = (int)pages->size() + 1;
         bool inserted = urlsSet.Insert(plainUrl, pageNo, &pageNo);
         if (inserted) {
             pages->Append(plainUrl.StealData());
-            CrashIf((size_t)pageNo != pages->Count());
+            CrashIf((size_t)pageNo != pages->size());
         } else {
-            CrashIf((size_t)pageNo == pages->Count() + 1);
+            CrashIf((size_t)pageNo == pages->size() + 1);
         }
         return pageNo;
     }
@@ -290,7 +290,7 @@ public:
     ChmTocBuilder(ChmDoc *doc, WStrList *pages, Vec<ChmTocTraceItem> *tocTrace, Allocator *allocator) :
         doc(doc), pages(pages), tocTrace(tocTrace), allocator(allocator)
         {
-            for (int i = 0; i < (int)pages->Count(); i++) {
+            for (int i = 0; i < (int)pages->size(); i++) {
                 const WCHAR *url = pages->at(i);
                 bool inserted = urlsSet.Insert(url, i + 1, nullptr);
                 CrashIf(!inserted);
@@ -319,8 +319,8 @@ bool ChmModel::Load(const WCHAR *fileName)
     tocTrace = new Vec<ChmTocTraceItem>();
     ChmTocBuilder tmpTocBuilder(doc, &pages, tocTrace, &poolAlloc);
     doc->ParseToc(&tmpTocBuilder);
-    CrashIf(pages.Count() == 0);
-    return pages.Count() > 0;
+    CrashIf(pages.size() == 0);
+    return pages.size() > 0;
 }
 
 class ChmCacheEntry {
@@ -335,7 +335,7 @@ public:
 
 ChmCacheEntry *ChmModel::FindDataForUrl(const WCHAR *url)
 {
-    for (size_t i = 0; i < urlDataCache.Count(); i++) {
+    for (size_t i = 0; i < urlDataCache.size(); i++) {
         ChmCacheEntry *e = urlDataCache.at(i);
         if (str::Eq(url, e->url))
             return e;
@@ -453,7 +453,7 @@ PageDestination *ChmModel::GetNamedDest(const WCHAR *name)
 
 bool ChmModel::HasTocTree() const
 {
-     return tocTrace->Count() > 0;
+     return tocTrace->size() > 0;
 }
 
 // Callers delete the ToC tree, so we re-create it from prerecorded
@@ -469,8 +469,8 @@ DocTocItem *ChmModel::GetTocTree()
         item->id = ++idCounter;
         // append the item at the correct level
         CrashIf(ti.level < 1);
-        if ((size_t)ti.level <= levels.Count()) {
-            levels.RemoveAt(ti.level, levels.Count() - ti.level);
+        if ((size_t)ti.level <= levels.size()) {
+            levels.RemoveAt(ti.level, levels.size() - ti.level);
             levels.Last()->AddSibling(item);
         }
         else {
@@ -499,13 +499,13 @@ float ChmModel::GetNextZoomStep(float towardsLevel) const
     }
 
     Vec<float> *zoomLevels = gGlobalPrefs->zoomLevels;
-    CrashIf(zoomLevels->Count() != 0 && (zoomLevels->at(0) < ZOOM_MIN || zoomLevels->Last() > ZOOM_MAX));
-    CrashIf(zoomLevels->Count() != 0 && zoomLevels->at(0) > zoomLevels->Last());
+    CrashIf(zoomLevels->size() != 0 && (zoomLevels->at(0) < ZOOM_MIN || zoomLevels->Last() > ZOOM_MAX));
+    CrashIf(zoomLevels->size() != 0 && zoomLevels->at(0) > zoomLevels->Last());
 
     const float FUZZ = 0.01f;
     float newZoom = towardsLevel;
     if (currZoom < towardsLevel) {
-        for (size_t i = 0; i < zoomLevels->Count(); i++) {
+        for (size_t i = 0; i < zoomLevels->size(); i++) {
             if (zoomLevels->at(i) - FUZZ > currZoom) {
                 newZoom = zoomLevels->at(i);
                 break;
@@ -513,7 +513,7 @@ float ChmModel::GetNextZoomStep(float towardsLevel) const
         }
     }
     else if (currZoom > towardsLevel) {
-        for (size_t i = zoomLevels->Count(); i > 0; i--) {
+        for (size_t i = zoomLevels->size(); i > 0; i--) {
             if (zoomLevels->at(i - 1) + FUZZ < currZoom) {
                 newZoom = zoomLevels->at(i - 1);
                 break;

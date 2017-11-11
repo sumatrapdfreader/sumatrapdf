@@ -32,7 +32,7 @@ MobiFormatter::MobiFormatter(HtmlFormatterArgs* args, MobiDoc *doc) :
     // TODO: vertically center the cover image?
     EmitImage(img);
     // only add a new page if the image isn't broken
-    if (currLineInstr.Count() > 0)
+    if (currLineInstr.size() > 0)
         ForceNewPage();
 }
 
@@ -205,14 +205,14 @@ void EpubFormatter::HandleTagSvgImage(HtmlToken *t)
 void EpubFormatter::HandleHtmlTag(HtmlToken *t)
 {
     CrashIf(!t->IsTag());
-    if (hiddenDepth && t->IsEndTag() && tagNesting.Count() == hiddenDepth &&
+    if (hiddenDepth && t->IsEndTag() && tagNesting.size() == hiddenDepth &&
         t->tag == tagNesting.Last()) {
         hiddenDepth = 0;
         UpdateTagNesting(t);
         return;
     }
     if (0 == hiddenDepth && t->IsStartTag() && t->GetAttrByName("hidden"))
-        hiddenDepth = tagNesting.Count() + 1;
+        hiddenDepth = tagNesting.size() + 1;
     if (hiddenDepth > 0)
         UpdateTagNesting(t);
     else if (Tag_Image == t->tag || Tag_Svg_Image == t->tag)
@@ -239,7 +239,7 @@ Fb2Formatter::Fb2Formatter(HtmlFormatterArgs *args, Fb2Doc *doc) :
     EmitImage(cover);
     // render larger images alone on the cover page,
     // smaller images just separated by a horizontal line
-    if (0 == currLineInstr.Count())
+    if (0 == currLineInstr.size())
         /* the image was broken */;
     else if (currLineInstr.Last().bbox.Height > args->pageDy / 2)
         ForceNewPage();

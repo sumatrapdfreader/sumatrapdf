@@ -48,7 +48,7 @@ void EventMgr::SetMaxSize(Size s) {
 }
 
 void EventMgr::RemoveEventsForControl(Control *c) {
-    for (size_t i = 0; i < eventHandlers.Count(); i++) {
+    for (size_t i = 0; i < eventHandlers.size(); i++) {
         EventHandler h = eventHandlers.at(i);
         if (h.ctrlSource == c) {
             ControlEvents *events = eventHandlers.at(i).events;

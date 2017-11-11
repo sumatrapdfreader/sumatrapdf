@@ -92,7 +92,7 @@ void FreeLayoutCreators() {
 }
 
 Button *FindButtonNamed(const ParsedMui &muiInfo, const char *name) {
-    for (size_t i = 0; i < muiInfo.buttons.Count(); i++) {
+    for (size_t i = 0; i < muiInfo.buttons.size(); i++) {
         Button *c = muiInfo.buttons.at(i);
         if (c->IsNamed(name))
             return c;
@@ -101,7 +101,7 @@ Button *FindButtonNamed(const ParsedMui &muiInfo, const char *name) {
 }
 
 ButtonVector *FindButtonVectorNamed(const ParsedMui &muiInfo, const char *name) {
-    for (size_t i = 0; i < muiInfo.vecButtons.Count(); i++) {
+    for (size_t i = 0; i < muiInfo.vecButtons.size(); i++) {
         ButtonVector *c = muiInfo.vecButtons.at(i);
         if (c->IsNamed(name))
             return c;
@@ -110,7 +110,7 @@ ButtonVector *FindButtonVectorNamed(const ParsedMui &muiInfo, const char *name) 
 }
 
 ScrollBar *FindScrollBarNamed(const ParsedMui &muiInfo, const char *name) {
-    for (size_t i = 0; i < muiInfo.scrollBars.Count(); i++) {
+    for (size_t i = 0; i < muiInfo.scrollBars.size(); i++) {
         ScrollBar *c = muiInfo.scrollBars.at(i);
         if (c->IsNamed(name))
             return c;
@@ -119,7 +119,7 @@ ScrollBar *FindScrollBarNamed(const ParsedMui &muiInfo, const char *name) {
 }
 
 Control *FindControlNamed(const ParsedMui &muiInfo, const char *name) {
-    for (size_t i = 0; i < muiInfo.allControls.Count(); i++) {
+    for (size_t i = 0; i < muiInfo.allControls.size(); i++) {
         Control *c = muiInfo.allControls.at(i);
         if (c->IsNamed(name))
             return c;
@@ -128,7 +128,7 @@ Control *FindControlNamed(const ParsedMui &muiInfo, const char *name) {
 }
 
 ILayout *FindLayoutNamed(const ParsedMui &muiInfo, const char *name) {
-    for (size_t i = 0; i < muiInfo.layouts.Count(); i++) {
+    for (size_t i = 0; i < muiInfo.layouts.size(); i++) {
         ILayout *l = muiInfo.layouts.at(i);
         if (l->IsNamed(name))
             return l;
@@ -282,7 +282,7 @@ static void AddStyleProp(Style *style, TxtNode *prop) {
 }
 
 static TxtNode *TxtChildNodeWithKey(TxtNode *top, const char *keyName) {
-    size_t n = top->children->Count();
+    size_t n = top->children->size();
     for (size_t i = 0; i < n; i++) {
         TxtNode *node = top->children->at(i);
         if (node->IsTextWithKey(keyName))
@@ -302,7 +302,7 @@ static void CacheStyleFromStruct(TxtNode *def) {
         return;
 
     Style *style = new Style();
-    size_t n = def->children->Count();
+    size_t n = def->children->size();
     for (size_t i = 0; i < n; i++) {
         TxtNode *node = def->children->at(i);
         CrashIf(!node->IsText());
@@ -383,7 +383,7 @@ static HorizontalLayout *HorizontalLayoutFromDef(ParsedMui &parsed, TxtNode *str
     Vec<DirectionalLayoutDataDef *> *children = def->children;
 
     DirectionalLayoutData ld;
-    for (size_t i = 0; children && i < children->Count(); i++) {
+    for (size_t i = 0; children && i < children->size(); i++) {
         SetDirectionalLayouData(ld, parsed, children->at(i));
         l->Add(ld);
     }
@@ -400,7 +400,7 @@ static VerticalLayout *VerticalLayoutFromDef(ParsedMui &parsed, TxtNode *structD
     Vec<DirectionalLayoutDataDef *> *children = def->children;
 
     DirectionalLayoutData ld;
-    for (size_t i = 0; children && i < children->Count(); i++) {
+    for (size_t i = 0; children && i < children->size(); i++) {
         SetDirectionalLayouData(ld, parsed, children->at(i));
         l->Add(ld);
     }

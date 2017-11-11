@@ -454,7 +454,7 @@ void DjVuEngineImpl::AddUserAnnots(RenderedBitmap *bmp, int pageNo, float zoom, 
 {
     using namespace Gdiplus;
 
-    if (!bmp || userAnnots.Count() == 0)
+    if (!bmp || userAnnots.size() == 0)
         return;
 
     HDC hdc = CreateCompatibleDC(nullptr);
@@ -464,7 +464,7 @@ void DjVuEngineImpl::AddUserAnnots(RenderedBitmap *bmp, int pageNo, float zoom, 
         g.SetCompositingQuality(CompositingQualityHighQuality);
         g.SetPageUnit(UnitPixel);
 
-        for (size_t i = 0; i < userAnnots.Count(); i++) {
+        for (size_t i = 0; i < userAnnots.size(); i++) {
             PageAnnotation& annot = userAnnots.at(i);
             if (annot.pageNo != pageNo)
                 continue;
@@ -733,7 +733,7 @@ bool DjVuEngineImpl::SaveFileAs(const char *copyFileName, bool includeUserAnnots
 
 static void AppendNewline(str::Str<WCHAR>& extracted, Vec<RectI>& coords, const WCHAR *lineSep)
 {
-    if (extracted.Count() > 0 && ' ' == extracted.Last()) {
+    if (extracted.size() > 0 && ' ' == extracted.Last()) {
         extracted.Pop();
         coords.Pop();
     }
@@ -761,7 +761,7 @@ bool DjVuEngineImpl::ExtractPageText(miniexp_t item, const WCHAR *lineSep, str::
     miniexp_t str = miniexp_car(item);
     if (miniexp_stringp(str) && !miniexp_cdr(item)) {
         if (type != miniexp_symbol("char") && type != miniexp_symbol("word") ||
-            coords.Count() > 0 && rect.y < coords.Last().y - coords.Last().dy * 0.8) {
+            coords.size() > 0 && rect.y < coords.Last().y - coords.Last().dy * 0.8) {
             AppendNewline(extracted, coords, lineSep);
         }
         const char *content = miniexp_to_str(str);
@@ -804,10 +804,10 @@ WCHAR *DjVuEngineImpl::ExtractPageText(int pageNo, const WCHAR *lineSep, RectI *
     ddjvu_miniexp_release(doc, pagetext);
     if (!success)
         return nullptr;
-    if (extracted.Count() > 0 && !str::EndsWith(extracted.Get(), lineSep))
+    if (extracted.size() > 0 && !str::EndsWith(extracted.Get(), lineSep))
         AppendNewline(extracted, coords, lineSep);
 
-    AssertCrash(str::Len(extracted.Get()) == coords.Count());
+    AssertCrash(str::Len(extracted.Get()) == coords.size());
     if (coordsOut) {
         ddjvu_status_t status;
         ddjvu_pageinfo_t info;
@@ -819,7 +819,7 @@ WCHAR *DjVuEngineImpl::ExtractPageText(int pageNo, const WCHAR *lineSep, RectI *
 
         // TODO: the coordinates aren't completely correct yet
         RectI page = PageMediabox(pageNo).Round();
-        for (size_t i = 0; i < coords.Count(); i++) {
+        for (size_t i = 0; i < coords.size(); i++) {
             if (coords.at(i) != RectI()) {
                 if (dpiFactor != 1.0) {
                     geomutil::RectT<float> pageF = coords.at(i).Convert<float>();
@@ -830,7 +830,7 @@ WCHAR *DjVuEngineImpl::ExtractPageText(int pageNo, const WCHAR *lineSep, RectI *
                 coords.at(i).y = page.dy - coords.at(i).y - coords.at(i).dy;
             }
         }
-        CrashIf(coords.Count() != extracted.Count());
+        CrashIf(coords.size() != extracted.size());
         *coordsOut = coords.StealData();
     }
 
@@ -941,7 +941,7 @@ PageElement *DjVuEngineImpl::GetElementAtPos(int pageNo, PointD pt)
     els->Reverse();
 
     PageElement *el = nullptr;
-    for (size_t i = 0; i < els->Count() && !el; i++) {
+    for (size_t i = 0; i < els->size() && !el; i++) {
         if (els->at(i)->GetRect().Contains(pt)) {
             el = els->at(i);
         }
@@ -962,7 +962,7 @@ char *DjVuEngineImpl::ResolveNamedDest(const char *name)
 {
     if (!str::StartsWith(name, "#"))
         return nullptr;
-    for (size_t i = 0; i < fileInfo.Count(); i++) {
+    for (size_t i = 0; i < fileInfo.size(); i++) {
         if (str::EqI(name + 1, fileInfo.at(i).id))
             return str::Format("#%d", fileInfo.at(i).pageno + 1);
     }
@@ -1033,7 +1033,7 @@ DocTocItem *DjVuEngineImpl::GetTocTree()
 
 WCHAR *DjVuEngineImpl::GetPageLabel(int pageNo) const
 {
-    for (size_t i = 0; i < fileInfo.Count(); i++) {
+    for (size_t i = 0; i < fileInfo.size(); i++) {
         ddjvu_fileinfo_t& info = fileInfo.at(i);
         if (pageNo - 1 == info.pageno && !str::Eq(info.title, info.id))
             return str::conv::FromUtf8(info.title);
@@ -1044,7 +1044,7 @@ WCHAR *DjVuEngineImpl::GetPageLabel(int pageNo) const
 int DjVuEngineImpl::GetPageByLabel(const WCHAR *label) const
 {
     AutoFree labelUtf8(str::conv::ToUtf8(label));
-    for (size_t i = 0; i < fileInfo.Count(); i++) {
+    for (size_t i = 0; i < fileInfo.size(); i++) {
         ddjvu_fileinfo_t& info = fileInfo.at(i);
         if (str::EqI(info.title, labelUtf8) && !str::Eq(info.title, info.id))
             return info.pageno + 1;

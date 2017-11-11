@@ -428,12 +428,12 @@ static bool VisitChmIndexItem(EbookTocVisitor *visitor, HtmlElement *el, UINT cp
     if (!keyword)
         return false;
 
-    if (references.Count() == 2) {
+    if (references.size() == 2) {
         visitor->Visit(keyword, references.at(1), level);
         return true;
     }
     visitor->Visit(keyword, nullptr, level);
-    for (size_t i = 0; i < references.Count(); i += 2) {
+    for (size_t i = 0; i < references.size(); i += 2) {
         visitor->Visit(references.at(i), references.at(i + 1), level + 1);
     }
     return true;

@@ -153,7 +153,7 @@ static void GetInternedStringsReport(str::Str<char>& resOut)
 
 static void AddReportSepLine()
 {
-    if (g_report.Count() > 0)
+    if (g_report.size() > 0)
         g_report.Append("\n");
 }
 

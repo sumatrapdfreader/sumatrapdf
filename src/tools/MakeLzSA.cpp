@@ -136,9 +136,9 @@ bool CreateArchive(const WCHAR *archivePath, WStrVec& files, size_t skipFiles=0)
 
     ByteWriterLE lzsaHeader(data.AppendBlanks(8), 8);
     lzsaHeader.Write32(LZMA_MAGIC_ID);
-    lzsaHeader.Write32((uint32_t)(files.Count() - skipFiles));
+    lzsaHeader.Write32((uint32_t)(files.size() - skipFiles));
 
-    for (size_t i = skipFiles; i < files.Count(); i++) {
+    for (size_t i = skipFiles; i < files.size(); i++) {
         AutoFreeW filePath(str::Dup(files.at(i)));
         WCHAR *sep = str::FindCharLast(filePath, ':');
         AutoFree utf8Name;
@@ -164,12 +164,12 @@ bool CreateArchive(const WCHAR *archivePath, WStrVec& files, size_t skipFiles=0)
             return false;
     }
 
-    uint32_t headerCrc32 = crc32(0, (const uint8_t *)data.Get(), (uint32_t)data.Count());
+    uint32_t headerCrc32 = crc32(0, (const uint8_t *)data.Get(), (uint32_t)data.size());
     ByteWriterLE(data.AppendBlanks(4), 4).Write32(headerCrc32);
-    if (!data.AppendChecked(content.Get(), content.Count()))
+    if (!data.AppendChecked(content.Get(), content.size()))
         return false;
 
-    return file::WriteAll(archivePath, data.Get(), data.Count());
+    return file::WriteAll(archivePath, data.Get(), data.size());
 }
 
 }
@@ -210,10 +210,10 @@ int main(int argc, char **argv)
     ParseCmdLine(GetCommandLine(), args);
     int errorStep = 1;
 
-    if (args.Count() == 2 && file::Exists(args.at(1)))
+    if (args.size() == 2 && file::Exists(args.at(1)))
         return mainVerify(args.at(1));
 
-    FailIf(args.Count() < 3, "Syntax: %S <archive.lzsa> <filename>[:<in-archive name>] [...]", path::GetBaseName(args.at(0)));
+    FailIf(args.size() < 3, "Syntax: %S <archive.lzsa> <filename>[:<in-archive name>] [...]", path::GetBaseName(args.at(0)));
 
     bool ok = lzsa::CreateArchive(args.at(1), args, 2);
     FailIf(!ok, "Failed to create \"%S\"", args.at(1));

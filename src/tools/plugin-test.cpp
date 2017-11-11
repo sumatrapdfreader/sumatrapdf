@@ -95,15 +95,15 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     WStrVec argList;
     ParseCmdLine(GetCommandLine(), argList);
 
-    if (argList.Count() == 1) {
+    if (argList.size() == 1) {
         AutoFreeW msg(str::Format(L"Syntax: %s [<SumatraPDF.exe>] [<URL>] <filename.ext>", path::GetBaseName(argList.at(0))));
         MessageBox(nullptr, msg, PLUGIN_TEST_NAME, MB_OK | MB_ICONINFORMATION);
         return 1;
     }
-    if (argList.Count() == 2 || !str::EndsWithI(argList.at(1), L".exe")) {
+    if (argList.size() == 2 || !str::EndsWithI(argList.at(1), L".exe")) {
         argList.InsertAt(1, GetSumatraExePath());
     }
-    if (argList.Count() == 3) {
+    if (argList.size() == 3) {
         argList.InsertAt(2, nullptr);
     }
 

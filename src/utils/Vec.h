@@ -142,7 +142,7 @@ public:
         return els[idx];
     }
 
-    size_t Count() const {
+    size_t size() const {
         return len;
     }
 
@@ -531,7 +531,7 @@ public:
         return items.Last().string;
     }
 
-    size_t Count() const {
+    size_t size() const {
         return count;
     }
 

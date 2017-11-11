@@ -280,24 +280,24 @@ bool ViewWithHtmlHelp(TabInfo* tab, const WCHAR* args) {
 bool ViewWithExternalViewer(TabInfo* tab, size_t idx) {
     if (!HasPermission(Perm_DiskAccess) || !tab || !file::Exists(tab->filePath))
         return false;
-    for (size_t i = 0; i < gGlobalPrefs->externalViewers->Count() && i <= idx; i++) {
+    for (size_t i = 0; i < gGlobalPrefs->externalViewers->size() && i <= idx; i++) {
         ExternalViewer* ev = gGlobalPrefs->externalViewers->at(i);
         // cf. AppendExternalViewersToMenu in Menu.cpp
         if (!ev->commandLine || ev->filter && !str::Eq(ev->filter, L"*") && !path::Match(tab->filePath, ev->filter))
             idx++;
     }
-    if (idx >= gGlobalPrefs->externalViewers->Count() || !gGlobalPrefs->externalViewers->at(idx)->commandLine)
+    if (idx >= gGlobalPrefs->externalViewers->size() || !gGlobalPrefs->externalViewers->at(idx)->commandLine)
         return false;
 
     ExternalViewer* ev = gGlobalPrefs->externalViewers->at(idx);
     WStrVec args;
     ParseCmdLine(ev->commandLine, args, 2);
-    if (args.Count() == 0 || !file::Exists(args.at(0)))
+    if (args.size() == 0 || !file::Exists(args.at(0)))
         return false;
 
     // if the command line contains %p, it's replaced with the current page number
     // if it contains %1, it's replaced with the file path (else the file path is appended)
-    const WCHAR* cmdLine = args.Count() > 1 ? args.at(1) : L"\"%1\"";
+    const WCHAR* cmdLine = args.size() > 1 ? args.at(1) : L"\"%1\"";
     AutoFreeW params;
     if (str::Find(cmdLine, L"%p")) {
         AutoFreeW pageNoStr(str::Format(L"%d", tab->ctrl ? tab->ctrl->CurrentPageNo() : 0));

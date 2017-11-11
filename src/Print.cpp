@@ -93,7 +93,7 @@ class AbortCookieManager {
 
 static RectD BoundSelectionOnPage(const Vec<SelectionOnPage>& sel, int pageNo) {
     RectD bounds;
-    for (size_t i = 0; i < sel.Count(); i++) {
+    for (size_t i = 0; i < sel.size(); i++) {
         if (sel.at(i).pageNo == pageNo) {
             bounds = bounds.Union(sel.at(i).rect);
         }
@@ -126,8 +126,8 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
     }
 
     int current = 1, total = 0;
-    if (pd.sel.Count() == 0) {
-        for (size_t i = 0; i < pd.ranges.Count(); i++) {
+    if (pd.sel.size() == 0) {
+        for (size_t i = 0; i < pd.ranges.size(); i++) {
             if (pd.ranges.at(i).nToPage < pd.ranges.at(i).nFromPage) {
                 total += pd.ranges.at(i).nFromPage - pd.ranges.at(i).nToPage + 1;
             } else {
@@ -178,7 +178,7 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
         bPrintPortrait = false;
     }
 
-    if (pd.sel.Count() > 0) {
+    if (pd.sel.size() > 0) {
         for (int pageNo = 1; pageNo <= engine.PageCount(); pageNo++) {
             RectD bounds = BoundSelectionOnPage(pd.sel, pageNo);
             if (bounds.IsEmpty()) {
@@ -201,7 +201,7 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
                 zoom = dpiFactor;
             }
 
-            for (size_t i = 0; i < pd.sel.Count(); i++) {
+            for (size_t i = 0; i < pd.sel.size(); i++) {
                 if (pd.sel.at(i).pageNo != pageNo) {
                     continue;
                 }
@@ -245,7 +245,7 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
     }
 
     // print all the pages the user requested
-    for (size_t i = 0; i < pd.ranges.Count(); i++) {
+    for (size_t i = 0; i < pd.ranges.size(); i++) {
         int dir = pd.ranges.at(i).nFromPage > pd.ranges.at(i).nToPage ? -1 : 1;
         for (DWORD pageNo = pd.ranges.at(i).nFromPage; pageNo != pd.ranges.at(i).nToPage + dir; pageNo += dir) {
             if ((PrintRangeAdv::Even == pd.advData.range && pageNo % 2 != 0) ||
@@ -731,7 +731,7 @@ static void ApplyPrintSettings(const WCHAR* printerName, const WCHAR* settings, 
         rangeList.Split(settings, L",", true);
     }
 
-    for (size_t i = 0; i < rangeList.Count(); i++) {
+    for (size_t i = 0; i < rangeList.size(); i++) {
         int val;
         PRINTPAGERANGE pr = {0};
         if (str::Parse(rangeList.at(i), L"%d-%d%$", &pr.nFromPage, &pr.nToPage)) {
@@ -782,7 +782,7 @@ static void ApplyPrintSettings(const WCHAR* printerName, const WCHAR* settings, 
         }
     }
 
-    if (ranges.Count() == 0) {
+    if (ranges.size() == 0) {
         PRINTPAGERANGE pr = {1, (DWORD)pageCount};
         ranges.Append(pr);
     }

@@ -55,7 +55,7 @@ static Vec<PageAnnotation>* ParseFileModifications(const char* data) {
         return nullptr;
 
     SquareTree sqt(data);
-    if (!sqt.root || sqt.root->data.Count() == 0)
+    if (!sqt.root || sqt.root->data.size() == 0)
         return nullptr;
     SquareTreeNode::DataItem& item = sqt.root->data.at(0);
     if (!item.isChild || !str::EqI(item.key, "@meta"))
@@ -127,9 +127,9 @@ bool SaveFileModifictions(const WCHAR* filePath, Vec<PageAnnotation>* list) {
         // in the case of an update, append changed annotations to the existing ones
         // (don't rewrite the existing ones in case they're by a newer version which
         // added annotation types and properties this version doesn't know anything about)
-        for (; offset < prevList->Count() && prevList->at(offset) == list->at(offset); offset++)
+        for (; offset < prevList->size() && prevList->at(offset) == list->at(offset); offset++)
             ;
-        CrashIfDebugOnly(offset != prevList->Count());
+        CrashIfDebugOnly(offset != prevList->size());
         data.AppendAndFree(prevData.StealData());
         delete prevList;
     } else {
@@ -137,7 +137,7 @@ bool SaveFileModifictions(const WCHAR* filePath, Vec<PageAnnotation>* list) {
     }
     data.Append("\r\n");
 
-    if (list->Count() == offset)
+    if (list->size() == offset)
         return true; // nothing (new) to save
 
     data.AppendFmt("[@%s]\r\n", isUpdate ? "update" : "meta");
@@ -151,7 +151,7 @@ bool SaveFileModifictions(const WCHAR* filePath, Vec<PageAnnotation>* list) {
                    time.wMinute, time.wSecond);
     data.Append("\r\n");
 
-    for (size_t i = offset; i < list->Count(); i++) {
+    for (size_t i = offset; i < list->size(); i++) {
         PageAnnotation& annot = list->at(i);
         switch (annot.type) {
             case Annot_Highlight:
@@ -175,9 +175,9 @@ bool SaveFileModifictions(const WCHAR* filePath, Vec<PageAnnotation>* list) {
         data.AppendFmt("opacity = %g\r\n", annot.color.a / 255.f);
         data.Append("\r\n");
     }
-    data.RemoveAt(data.Count() - 2, 2);
+    data.RemoveAt(data.size() - 2, 2);
 
-    return file::WriteAll(modificationsPath, data.LendData(), data.Count());
+    return file::WriteAll(modificationsPath, data.LendData(), data.size());
 }
 
 bool IsModificationsFile(const WCHAR* filePath) {

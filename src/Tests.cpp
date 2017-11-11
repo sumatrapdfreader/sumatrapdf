@@ -23,7 +23,7 @@ void TestRenderPage(const CommandLineInfo& i) {
         return;
     }
     auto files = i.fileNames;
-    if (files.Count() == 0) {
+    if (files.size() == 0) {
         printf("no file provided\n");
         return;
     }
@@ -59,7 +59,7 @@ void TestExtractPage(const CommandLineInfo& i) {
         return;
     }
     auto files = i.fileNames;
-    if (files.Count() == 0) {
+    if (files.size() == 0) {
         printf("no file provided\n");
         return;
     }

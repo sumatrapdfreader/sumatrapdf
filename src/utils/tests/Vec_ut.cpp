@@ -14,18 +14,18 @@ static void WStrVecTest()
     v.Append(str::Dup(L"foo"));
     v.Append(str::Dup(L"bar"));
     WCHAR *s = v.Join();
-    utassert(v.Count() == 2);
+    utassert(v.size() == 2);
     utassert(str::Eq(L"foobar", s));
     free(s);
 
     s = v.Join(L";");
-    utassert(v.Count() == 2);
+    utassert(v.size() == 2);
     utassert(str::Eq(L"foo;bar", s));
     free(s);
 
     v.Append(str::Dup(L"glee"));
     s = v.Join(L"_ _");
-    utassert(v.Count() == 3);
+    utassert(v.size() == 3);
     utassert(str::Eq(L"foo_ _bar_ _glee", s));
     free(s);
 
@@ -40,7 +40,7 @@ static void WStrVecTest()
         v2.Append(str::Dup(L"nobar"));
         utassert(str::Eq(v2.at(3), L"nobar"));
         v2 = v;
-        utassert(v2.Count() == 3 && v2.at(0) != v.at(0));
+        utassert(v2.size() == 3 && v2.at(0) != v.at(0));
         utassert(str::Eq(v2.at(1), L"foo"));
     }
 
@@ -61,18 +61,18 @@ static void WStrVecTest()
         AutoFreeW joined(v2.Join(L";"));
         utassert(str::Eq(joined, L"a;b;c"));
         AutoFreeW last(v2.Pop());
-        utassert(v2.Count() == 2 && str::Eq(last, L"c"));
+        utassert(v2.size() == 2 && str::Eq(last, L"c"));
     }
 }
 
 static void StrListTest()
 {
     WStrList l;
-    utassert(l.Count() == 0);
+    utassert(l.size() == 0);
     l.Append(str::Dup(L"one"));
     l.Append(str::Dup(L"two"));
     l.Append(str::Dup(L"One"));
-    utassert(l.Count() == 3);
+    utassert(l.size() == 3);
     utassert(str::Eq(l.at(0), L"one"));
     utassert(str::EqI(l.at(2), L"one"));
     utassert(l.Find(L"One") == 2);
@@ -89,36 +89,36 @@ static size_t VecTestAppendFmt()
         val = (val * 3) / 2; // somewhat exponential growth
         val += 15;
     }
-    size_t l = v.Count();
+    size_t l = v.size();
     return l;
 }
 
 void VecTest()
 {
     Vec<int> ints;
-    utassert(ints.Count() == 0);
+    utassert(ints.size() == 0);
     ints.Append(1);
     ints.Push(2);
     ints.InsertAt(0, -1);
-    utassert(ints.Count() == 3);
+    utassert(ints.size() == 3);
     utassert(ints.at(0) == -1 && ints.at(1) == 1 && ints.at(2) == 2);
     utassert(ints.at(0) == -1 && ints.Last() == 2);
     int last = ints.Pop();
     utassert(last == 2);
-    utassert(ints.Count() == 2);
+    utassert(ints.size() == 2);
     ints.Push(3);
     ints.RemoveAt(0);
-    utassert(ints.Count() == 2);
+    utassert(ints.size() == 2);
     utassert(ints.at(0) == 1 && ints.at(1) == 3);
     ints.Reset();
-    utassert(ints.Count() == 0);
+    utassert(ints.size() == 0);
 
     for (int i = 0; i < 1000; i++) {
         ints.Push(i);
     }
-    utassert(ints.Count() == 1000 && ints.at(500) == 500);
+    utassert(ints.size() == 1000 && ints.at(500) == 500);
     ints.Remove(500);
-    utassert(ints.Count() == 999 && ints.at(500) == 501);
+    utassert(ints.size() == 999 && ints.at(500) == 501);
     last = ints.Pop();
     utassert(last == 999);
     ints.Append(last);
@@ -131,12 +131,12 @@ void VecTest()
 
     {
         Vec<int> ints2(ints);
-        utassert(ints2.Count() == 999);
+        utassert(ints2.size() == 999);
         utassert(ints.LendData() != ints2.LendData());
         ints.Remove(600);
-        utassert(ints.Count() < ints2.Count());
+        utassert(ints.size() < ints2.size());
         ints2 = ints;
-        utassert(ints2.Count() == 998);
+        utassert(ints2.size() == 998);
     }
 
     {
@@ -148,9 +148,9 @@ void VecTest()
         }
         char *s = v.LendData();
         utassert(str::Eq("abcdefg", s));
-        utassert(7 == v.Count());
+        utassert(7 == v.size());
         v.Set("helo");
-        utassert(4 == v.Count());
+        utassert(4 == v.size());
         utassert(str::Eq("helo", v.LendData()));
     }
 
@@ -158,26 +158,26 @@ void VecTest()
         str::Str<char> v(128);
         v.Append("boo", 3);
         utassert(str::Eq("boo", v.LendData()));
-        utassert(v.Count() == 3);
+        utassert(v.size() == 3);
         v.Append("fop");
         utassert(str::Eq("boofop", v.LendData()));
-        utassert(v.Count() == 6);
+        utassert(v.size() == 6);
         v.RemoveAt(2, 3);
-        utassert(v.Count() == 3);
+        utassert(v.size() == 3);
         utassert(str::Eq("bop", v.LendData()));
         v.Append('a');
-        utassert(v.Count() == 4);
+        utassert(v.size() == 4);
         utassert(str::Eq("bopa", v.LendData()));
         char *s = v.StealData();
         utassert(str::Eq("bopa", s));
         free(s);
-        utassert(v.Count() == 0);
+        utassert(v.size() == 0);
     }
 
     {
         str::Str<char> v(0);
         for (size_t i = 0; i < 32; i++) {
-            utassert(v.Count() == i * 6);
+            utassert(v.size() == i * 6);
             v.Append("lambd", 5);
             if (i % 2 == 0)
                 v.Append('a');
@@ -187,17 +187,17 @@ void VecTest()
 
         for (size_t i=1; i<=16; i++) {
             v.RemoveAt((16 - i) * 6, 6);
-            utassert(v.Count() == (32 - i) * 6);
+            utassert(v.size() == (32 - i) * 6);
         }
 
         v.RemoveAt(0, 6 * 15);
-        utassert(v.Count() == 6);
+        utassert(v.size() == 6);
         char *s = v.LendData();
         utassert(str::Eq(s, "lambda"));
         s = v.StealData();
         utassert(str::Eq(s, "lambda"));
         free(s);
-        utassert(v.Count() == 0);
+        utassert(v.size() == 0);
 
         v.Append("lambda");
         utassert(str::Eq(v.LendData(), "lambda"));
@@ -213,13 +213,13 @@ void VecTest()
         srand((unsigned int)time(nullptr));
         for (int i = 0; i < 128; i++) {
             v.Append(new PointI(i, i));
-            size_t pos = rand() % v.Count();
+            size_t pos = rand() % v.size();
             v.InsertAt(pos, new PointI(i, i));
         }
-        utassert(v.Count() == 128 * 2);
+        utassert(v.size() == 128 * 2);
 
-        while (v.Count() > 64) {
-            size_t pos = rand() % v.Count();
+        while (v.size() > 64) {
+            size_t pos = rand() % v.size();
             PointI *f = v.at(pos);
             v.Remove(f);
             delete f;
@@ -234,16 +234,16 @@ void VecTest()
             v.Append(4);
         v.at(250) = 5;
         v.Reverse();
-        utassert(v.Count() == 501 && v.at(0) == 4 && v.at(249) == v.at(251) && v.at(250) == 5 && v.at(500) == 2);
+        utassert(v.size() == 501 && v.at(0) == 4 && v.at(249) == v.at(251) && v.at(250) == 5 && v.at(500) == 2);
         v.Remove(4);
         v.Reverse();
-        utassert(v.Count() == 500 && v.at(0) == 2 && v.at(249) == v.at(251) && v.at(250) == 5 && v.at(499) == 4);
+        utassert(v.size() == 500 && v.at(0) == 2 && v.at(249) == v.at(251) && v.at(250) == 5 && v.at(499) == 4);
     }
 
     {
         Vec<int> v;
         v.InsertAt(2, 2);
-        utassert(v.Count() == 3 && v.at(0) == 0 && v.at(2) == 2);
+        utassert(v.size() == 3 && v.at(0) == 0 && v.at(2) == 2);
     }
 
     WStrVecTest();

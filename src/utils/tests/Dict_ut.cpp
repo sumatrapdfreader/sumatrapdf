@@ -68,7 +68,7 @@ void DictTestMapStrToInt()
         if (!ok)
             continue;
         toRemove.Append(str::Dup(k));
-        utassert(toRemove.Count() == d.Count());
+        utassert(toRemove.size() == d.Count());
         ok = d.Get(k, &val);
         CrashIf(!ok);
         CrashIf(i != val);

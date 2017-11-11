@@ -52,7 +52,7 @@ bool IsStressTesting()
 
 static bool IsInRange(Vec<PageRange>& ranges, int pageNo)
 {
-    for (size_t i = 0; i < ranges.Count(); i++) {
+    for (size_t i = 0; i < ranges.size(); i++) {
         if (ranges.at(i).start <= pageNo && pageNo <= ranges.at(i).end)
             return true;
     }
@@ -223,7 +223,7 @@ static void BenchFile(const WCHAR *filePath, const WCHAR *pagesSpec)
     AssertCrash(!pagesSpec || IsBenchPagesInfo(pagesSpec));
     Vec<PageRange> ranges;
     if (ParsePageRanges(pagesSpec, ranges)) {
-        for (size_t i = 0; i < ranges.Count(); i++) {
+        for (size_t i = 0; i < ranges.size(); i++) {
             for (int j = ranges.at(i).start; j <= ranges.at(i).end; j++) {
                 if (1 <= j && j <= pages)
                     BenchLoadRender(engine, j);
@@ -260,7 +260,7 @@ static void BenchDir(WCHAR *dir)
 {
     WStrVec files;
     CollectFilesToBench(dir, files);
-    for (size_t i = 0; i < files.Count(); i++) {
+    for (size_t i = 0; i < files.size(); i++) {
         BenchFile(files.at(i), nullptr);
     }
 }
@@ -269,7 +269,7 @@ void BenchFileOrDir(WStrVec& pathsToBench)
 {
     gLog = new slog::StderrLogger();
 
-    size_t n = pathsToBench.Count() / 2;
+    size_t n = pathsToBench.size() / 2;
     for (size_t i = 0; i < n; i++) {
         WCHAR *path = pathsToBench.at(2 * i);
         if (file::Exists(path))
@@ -394,7 +394,7 @@ public:
     }
     FilesProvider(WStrVec& newFiles, int n, int offset) {
         // get every n-th file starting at offset
-        for (size_t i = offset; i < newFiles.Count(); i += n) {
+        for (size_t i = offset; i < newFiles.size(); i += n) {
             const WCHAR *f = newFiles.at(i);
             files.Append(str::Dup(f));
         }
@@ -404,7 +404,7 @@ public:
     virtual ~FilesProvider() {}
 
     virtual WCHAR *NextFile() {
-        if (provided >= files.Count())
+        if (provided >= files.size())
             return nullptr;
         return str::Dup(files.at(provided++));
     }
@@ -445,7 +445,7 @@ DirFileProvider::~DirFileProvider()
 
 bool DirFileProvider::OpenDir(const WCHAR *dirPath)
 {
-    AssertCrash(filesToOpen.Count() == 0);
+    AssertCrash(filesToOpen.size() == 0);
 
     bool hasFiles = CollectStressTestSupportedFilesFromDirectory(dirPath, fileFilter, filesToOpen);
     filesToOpen.SortNatural();
@@ -458,11 +458,11 @@ bool DirFileProvider::OpenDir(const WCHAR *dirPath)
 
 WCHAR *DirFileProvider::NextFile()
 {
-    if (filesToOpen.Count() > 0) {
+    if (filesToOpen.size() > 0) {
         return filesToOpen.PopAt(0);
     }
 
-    if (dirsToVisit.Count() > 0) {
+    if (dirsToVisit.size() > 0) {
         // test next directory
         AutoFreeW path(dirsToVisit.PopAt(0));
         OpenDir(path);
@@ -482,7 +482,7 @@ static size_t GetAllMatchingFiles(const WCHAR *dir, const WCHAR *filter, WStrVec
     WStrVec dirsToVisit;
     dirsToVisit.Append(str::Dup(dir));
 
-    while (dirsToVisit.Count() > 0) {
+    while (dirsToVisit.size() > 0) {
         if (showProgress) {
             wprintf(L".");
             fflush(stdout);
@@ -493,7 +493,7 @@ static size_t GetAllMatchingFiles(const WCHAR *dir, const WCHAR *filter, WStrVec
         AutoFreeW pattern(str::Format(L"%s\\*", path));
         CollectPathsFromDirectory(pattern, dirsToVisit, true);
     }
-    return files.Count();
+    return files.size();
 }
 
 /* The idea of StressTest is to render a lot of PDFs sequentially, simulating
@@ -553,9 +553,9 @@ void StressTest::Start(TestFileProvider *fileProvider, int cycles)
     this->fileProvider = fileProvider;
     this->cycles = cycles;
 
-    if (pageRanges.Count() == 0)
+    if (pageRanges.size() == 0)
         pageRanges.Append(PageRange());
-    if (fileRanges.Count() == 0)
+    if (fileRanges.size() == 0)
         fileRanges.Append(PageRange());
 
     TickTimer();
@@ -794,7 +794,7 @@ void GetStressTestInfo(str::Str<char>* s)
     if (!IsStressTesting())
         return;
 
-    for (size_t i = 0; i < gWindows.Count(); i++) {
+    for (size_t i = 0; i < gWindows.size(); i++) {
         WindowInfo *w = gWindows.at(i);
         if (!w || !w->currentTab || !w->currentTab->filePath)
             continue;
@@ -818,7 +818,7 @@ static void RandomizeFiles(WStrVec& files, int maxPerType)
     WStrVec fileExts;
     Vec<WStrVec *> filesPerType;
 
-    for (size_t i = 0; i < files.Count(); i++) {
+    for (size_t i = 0; i < files.size(); i++) {
         const WCHAR *file = files.at(i);
         const WCHAR *ext = path::GetExt(file);
         CrashAlwaysIf(!ext);
@@ -826,17 +826,17 @@ static void RandomizeFiles(WStrVec& files, int maxPerType)
         if (-1 == typeNo) {
             fileExts.Append(str::Dup(ext));
             filesPerType.Append(new WStrVec());
-            typeNo = (int)filesPerType.Count() - 1;
+            typeNo = (int)filesPerType.size() - 1;
         }
         filesPerType.at(typeNo)->Append(str::Dup(file));
     }
 
-    for (size_t j = 0; j < filesPerType.Count(); j++) {
+    for (size_t j = 0; j < filesPerType.size(); j++) {
         WStrVec *all = filesPerType.at(j);
         WStrVec *random = new WStrVec();
 
-        for (int n = 0; n < maxPerType && all->Count() > 0; n++) {
-            int idx = rand() % all->Count();
+        for (int n = 0; n < maxPerType && all->size() > 0; n++) {
+            int idx = rand() % all->size();
             WCHAR *file = all->at(idx);
             random->Append(file);
             all->RemoveAtFast(idx);
@@ -851,9 +851,9 @@ static void RandomizeFiles(WStrVec& files, int maxPerType)
     bool gotAll = false;
     while (!gotAll) {
         gotAll = true;
-        for (size_t j = 0; j < filesPerType.Count(); j++) {
+        for (size_t j = 0; j < filesPerType.size(); j++) {
             WStrVec *random = filesPerType.at(j);
-            if (random->Count() > 0) {
+            if (random->size() > 0) {
                 gotAll = false;
                 WCHAR *file = random->at(0);
                 files.Append(file);
@@ -862,7 +862,7 @@ static void RandomizeFiles(WStrVec& files, int maxPerType)
         }
     }
 
-    for (size_t j = 0; j < filesPerType.Count(); j++) {
+    for (size_t j = 0; j < filesPerType.size(); j++) {
         delete filesPerType.at(j);
     }
 }
@@ -904,7 +904,7 @@ void StartStressTest(CommandLineInfo *i, WindowInfo *win)
         if (i->stressRandomizeFiles) {
             // TODO: should probably allow over-writing the 100 limit
             RandomizeFiles(filesToTest, 100);
-            filesCount = filesToTest.Count();
+            filesCount = filesToTest.size();
             wprintf(L"\nAfter randomization: %d files", (int)filesCount);
         }
         wprintf(L"\n");

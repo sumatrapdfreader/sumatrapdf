@@ -54,7 +54,7 @@ Size HwndWrapper::Measure(const Size availableSize) {
     if (layout) {
         return layout->Measure(availableSize);
     }
-    if (children.Count() == 1) {
+    if (children.size() == 1) {
         ILayout *l = children.at(0);
         return l->Measure(availableSize);
     }
@@ -67,7 +67,7 @@ void HwndWrapper::Arrange(const Rect finalRect) {
         // might over-write position if our layout knows about us
         layout->Arrange(finalRect);
     } else {
-        if (children.Count() == 1) {
+        if (children.size() == 1) {
             ILayout *l = children.at(0);
             l->Arrange(finalRect);
         }

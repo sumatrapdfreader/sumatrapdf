@@ -56,7 +56,7 @@ Vec<SelectionOnPage> *SelectionOnPage::FromRectangle(DisplayModel *dm, RectI rec
     }
     sel->Reverse();
 
-    if (sel->Count() == 0) {
+    if (sel->size() == 0) {
         delete sel;
         return nullptr;
     }
@@ -73,7 +73,7 @@ Vec<SelectionOnPage> *SelectionOnPage::FromTextSelect(TextSel *textSel)
     }
     sel->Reverse();
 
-    if (sel->Count() == 0) {
+    if (sel->size() == 0) {
         delete sel;
         return nullptr;
     }
@@ -100,7 +100,7 @@ void PaintTransparentRectangles(HDC hdc, RectI screenRc, Vec<RectI>& rects, COLO
     // create path from rectangles
     GraphicsPath path(FillModeWinding);
     screenRc.Inflate(margin, margin);
-    for (size_t i = 0; i < rects.Count(); i++) {
+    for (size_t i = 0; i < rects.size(); i++) {
         RectI rc = rects.at(i).Intersect(screenRc);
         if (!rc.IsEmpty())
             path.AddRectangle(rc.ToGdipRect());
@@ -232,8 +232,8 @@ void ZoomToSelection(WindowInfo *win, float factor, bool scrollToFit, bool relat
 void CopySelectionToClipboard(WindowInfo *win)
 {
     if (!win->currentTab || !win->currentTab->selectionOnPage) return;
-    CrashIf(win->currentTab->selectionOnPage->Count() == 0 && win->mouseAction != MA_SELECTING_TEXT);
-    if (win->currentTab->selectionOnPage->Count() == 0) return;
+    CrashIf(win->currentTab->selectionOnPage->size() == 0 && win->mouseAction != MA_SELECTING_TEXT);
+    if (win->currentTab->selectionOnPage->size() == 0) return;
     CrashIf(!win->AsFixed());
     if (!win->AsFixed()) return;
 

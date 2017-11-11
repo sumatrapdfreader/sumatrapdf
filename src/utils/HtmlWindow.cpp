@@ -208,7 +208,7 @@ HtmlWindow* FindHtmlWindowById(int windowId) {
 }
 
 static int GenNewWindowId(HtmlWindow* htmlWin) {
-    int newWindowId = (int)gHtmlWindows.Count();
+    int newWindowId = (int)gHtmlWindows.size();
     gHtmlWindows.Append(htmlWin);
     AssertCrash(htmlWin == FindHtmlWindowById(newWindowId));
     return newWindowId;

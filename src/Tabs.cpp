@@ -278,7 +278,7 @@ class TabPainter {
         }
     }
 
-    int Count() { return (int)text.Count(); }
+    int Count() { return (int)text.size(); }
 
     void Insert(int index, const WCHAR* t) { text.InsertAt(index, str::Dup(t)); }
 
@@ -672,7 +672,7 @@ TabInfo* CreateNewTab(WindowInfo* win, const WCHAR* filePath) {
     tcs.mask = TCIF_TEXT;
     tcs.pszText = (WCHAR*)tab->GetTabTitle();
 
-    int idx = (int)win->tabs.Count() - 1;
+    int idx = (int)win->tabs.size() - 1;
     auto insertedIdx = TabCtrl_InsertItem(win->hwndTabBar, idx, &tcs);
     CrashIf(insertedIdx == -1);
     TabCtrl_SetCurSel(win->hwndTabBar, idx);
@@ -683,7 +683,7 @@ TabInfo* CreateNewTab(WindowInfo* win, const WCHAR* filePath) {
 // Refresh the tab's title
 void TabsOnChangedDoc(WindowInfo* win) {
     TabInfo* tab = win->currentTab;
-    CrashIf(!tab != !win->tabs.Count());
+    CrashIf(!tab != !win->tabs.size());
     if (!tab)
         return;
 
@@ -708,7 +708,7 @@ static void RemoveTab(WindowInfo* win, int idx) {
 
 // Called when we're closing a document
 void TabsOnCloseDoc(WindowInfo* win) {
-    if (win->tabs.Count() == 0)
+    if (win->tabs.size() == 0)
         return;
 
     /* if (win->AsFixed() && win->AsFixed()->userAnnots && win->AsFixed()->userAnnotsModified) {
@@ -718,7 +718,7 @@ void TabsOnCloseDoc(WindowInfo* win) {
     int current = TabCtrl_GetCurSel(win->hwndTabBar);
     RemoveTab(win, current);
 
-    if (win->tabs.Count() > 0) {
+    if (win->tabs.size() > 0) {
         TabInfo* tab = win->tabSelectionHistory->Pop();
         TabCtrl_SetCurSel(win->hwndTabBar, win->tabs.Find(tab));
         LoadModelIntoTab(win, tab);
@@ -781,7 +781,7 @@ static void ShowTabBar(WindowInfo* win, bool show) {
 }
 
 void UpdateTabWidth(WindowInfo* win) {
-    int count = (int)win->tabs.Count();
+    int count = (int)win->tabs.size();
     bool showSingleTab = gGlobalPrefs->useTabs || win->tabsInTitlebar;
     bool showTabs = (count > 1) || (showSingleTab && (count > 0));
     if (!showTabs) {
@@ -822,7 +822,7 @@ void SetTabsInTitlebar(WindowInfo* win, bool set) {
 
 // Selects the given tab (0-based index).
 void TabsSelect(WindowInfo* win, int tabIndex) {
-    int count = (int)win->tabs.Count();
+    int count = (int)win->tabs.size();
     if (count < 2 || tabIndex < 0 || tabIndex >= count)
         return;
     NMHDR ntd = {nullptr, 0, TCN_SELCHANGING};
@@ -838,7 +838,7 @@ void TabsSelect(WindowInfo* win, int tabIndex) {
 
 // Selects the next (or previous) tab.
 void TabsOnCtrlTab(WindowInfo* win, bool reverse) {
-    int count = (int)win->tabs.Count();
+    int count = (int)win->tabs.size();
     if (count < 2) {
         return;
     }

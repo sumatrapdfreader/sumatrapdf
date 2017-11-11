@@ -92,7 +92,7 @@ static WCHAR *ExtractHtmlText(EpubDoc *doc)
                 tagNesting.Append(t->tag);
         }
         else if (t->IsEndTag()) {
-            if (!IsInlineTag(t->tag) && text.Count() > 0 && text.Last() == ' ') {
+            if (!IsInlineTag(t->tag) && text.size() > 0 && text.Last() == ' ') {
                 text.Pop();
                 text.Append("\r\n");
             }
@@ -103,7 +103,7 @@ static WCHAR *ExtractHtmlText(EpubDoc *doc)
                 while (tagNesting.Last() != t->tag)
                     tagNesting.Pop();
             }
-            if (tagNesting.Count() > 0 && tagNesting.Last() == t->tag)
+            if (tagNesting.size() > 0 && tagNesting.Last() == t->tag)
                 tagNesting.Pop();
         }
     }

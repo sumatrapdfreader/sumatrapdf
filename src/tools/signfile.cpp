@@ -65,8 +65,8 @@ int main()
     const WCHAR *pubkeyPath = nullptr;
     AutoFree inFileCommentSyntax;
 
-#define is_arg(name, var) (str::EqI(args.at(i), TEXT(name)) && i + 1 < args.Count() && !var)
-    for (size_t i = 1; i < args.Count(); i++) {
+#define is_arg(name, var) (str::EqI(args.at(i), TEXT(name)) && i + 1 < args.size() && !var)
+    for (size_t i = 1; i < args.size(); i++) {
         if (is_arg("-cert", certName))
             certName = args.at(++i);
         else if (is_arg("-out", signFilePath))

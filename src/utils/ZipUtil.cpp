@@ -63,13 +63,13 @@ size_t ZipFileAlloc::GetFileIndex(const WCHAR *fileName)
 
 size_t ZipFileAlloc::GetFileCount() const
 {
-    CrashIf(filenames.Count() != filepos.Count());
-    return filenames.Count();
+    CrashIf(filenames.size() != filepos.size());
+    return filenames.size();
 }
 
 const WCHAR *ZipFileAlloc::GetFileName(size_t fileindex)
 {
-    if (fileindex >= filenames.Count())
+    if (fileindex >= filenames.size())
         return nullptr;
     return filenames.at(fileindex);
 }
@@ -83,7 +83,7 @@ char *ZipFileAlloc::GetFileDataByIdx(size_t fileindex, size_t *len)
 {
     if (!ar)
         return nullptr;
-    if (fileindex >= filenames.Count())
+    if (fileindex >= filenames.size())
         return nullptr;
 
     if (!ar_parse_entry_at(ar, filepos.at(fileindex)))
@@ -115,7 +115,7 @@ FILETIME ZipFileAlloc::GetFileTime(const WCHAR *fileName)
 FILETIME ZipFileAlloc::GetFileTime(size_t fileindex)
 {
     FILETIME ft = { (DWORD)-1, (DWORD)-1 };
-    if (ar && fileindex < filepos.Count() && ar_parse_entry_at(ar, filepos.at(fileindex))) {
+    if (ar && fileindex < filepos.size() && ar_parse_entry_at(ar, filepos.at(fileindex))) {
         time64_t filetime = ar_entry_get_filetime(ar);
         LocalFileTimeToFileTime((FILETIME *)&filetime, &ft);
     }
@@ -377,11 +377,11 @@ bool ZipCreator::Finish()
     eocd.Write16(0); // disk number of central directory
     eocd.Write16((uint16_t)fileCount);
     eocd.Write16((uint16_t)fileCount);
-    eocd.Write32((uint32_t)centraldir.Count());
+    eocd.Write32((uint32_t)centraldir.size());
     eocd.Write32((uint32_t)bytesWritten);
     eocd.Write16(0); // comment len
 
-    return WriteData(centraldir.Get(), centraldir.Count()) &&
+    return WriteData(centraldir.Get(), centraldir.size()) &&
            WriteData(endOfCentralDir, sizeof(endOfCentralDir));
 }
 

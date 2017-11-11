@@ -47,7 +47,7 @@ TryAgain64Bit:
     versions.SortNatural();
 
     // return the path to the newest installation
-    for (size_t ix = versions.Count(); ix > 0; ix--) {
+    for (size_t ix = versions.size(); ix > 0; ix--) {
         for (int i = 0; i < dimof(gsProducts); i++) {
             AutoFreeW keyName(str::Format(L"Software\\%s\\%s",
                                                  gsProducts[i], versions.at(ix - 1)));
@@ -71,7 +71,7 @@ TryAgain64Bit:
         GetEnvironmentVariable(L"PATH", envpath, size);
         WStrVec paths;
         paths.Split(envpath, L";", true);
-        for (size_t ix = 0; ix < paths.Count(); ix++) {
+        for (size_t ix = 0; ix < paths.size(); ix++) {
             AutoFreeW exe(path::Join(paths.at(ix), L"gswin32c.exe"));
             if (file::Exists(exe))
                 return exe.StealData();

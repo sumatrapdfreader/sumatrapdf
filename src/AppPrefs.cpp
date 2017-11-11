@@ -101,11 +101,11 @@ bool Load()
 
     // make sure that zoom levels are in the order expected by DisplayModel
     gGlobalPrefs->zoomLevels->Sort(cmpFloat);
-    while (gGlobalPrefs->zoomLevels->Count() > 0 &&
+    while (gGlobalPrefs->zoomLevels->size() > 0 &&
            gGlobalPrefs->zoomLevels->at(0) < ZOOM_MIN) {
         gGlobalPrefs->zoomLevels->PopAt(0);
     }
-    while (gGlobalPrefs->zoomLevels->Count() > 0 &&
+    while (gGlobalPrefs->zoomLevels->size() > 0 &&
            gGlobalPrefs->zoomLevels->Last() > ZOOM_MAX) {
         gGlobalPrefs->zoomLevels->Pop();
     }
@@ -212,7 +212,7 @@ bool Reload()
     gGlobalPrefs->fixedPageUI.invertColors = invertColors;
 
     // TODO: about window doesn't have to be at position 0
-    if (gWindows.Count() > 0 && gWindows.at(0)->IsAboutWindow()) {
+    if (gWindows.size() > 0 && gWindows.at(0)->IsAboutWindow()) {
         gWindows.at(0)->DeleteInfotip();
         gWindows.at(0)->staticLinks.Reset();
         gWindows.at(0)->RedrawAll(true);
@@ -239,7 +239,7 @@ void UpdateGlobalPrefs(const CommandLineInfo& i) {
     }
     gGlobalPrefs->fixedPageUI.invertColors = i.invertColors;
 
-    for (size_t n = 0; n <i.globalPrefArgs.Count(); n++) {
+    for (size_t n = 0; n <i.globalPrefArgs.size(); n++) {
         if (str::EqI(i.globalPrefArgs.at(n), L"-esc-to-exit")) {
             gGlobalPrefs->escToExit = true;
         } else if (str::EqI(i.globalPrefArgs.at(n), L"-bgcolor") ||

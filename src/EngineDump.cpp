@@ -242,9 +242,9 @@ void DumpPageContent(BaseEngine *engine, int pageNo, bool fullDump)
     }
 
     Vec<PageElement *> *els = engine->GetElements(pageNo);
-    if (els && els->Count() > 0) {
+    if (els && els->size() > 0) {
         Out("\t\t<PageElements>\n");
-        for (size_t i = 0; i < els->Count(); i++) {
+        for (size_t i = 0; i < els->size(); i++) {
             RectD rect = els->at(i)->GetRect();
             Out("\t\t\t<Element Type=\"%s\"\n\t\t\t\tRect=\"%.0f %.0f %.0f %.0f\"\n",
                 ElementTypeToStr(els->at(i)), rect.x, rect.y, rect.dx, rect.dy);
@@ -421,7 +421,7 @@ int main(int argc, char **argv)
 
     WStrVec argList;
     ParseCmdLine(GetCommandLine(), argList);
-    if (argList.Count() < 2) {
+    if (argList.size() < 2) {
 Usage:
         ErrOut("%s [-pwd <password>][-quick][-render <path-%%d.tga>] <filename>",
             path::GetBaseName(argList.at(0)));
@@ -438,15 +438,15 @@ Usage:
     int breakAlloc = 0;
 #endif
 
-    for (size_t i = 1; i < argList.Count(); i++) {
-        if (str::Eq(argList.at(i), L"-pwd") && i + 1 < argList.Count() && !password)
+    for (size_t i = 1; i < argList.size(); i++) {
+        if (str::Eq(argList.at(i), L"-pwd") && i + 1 < argList.size() && !password)
             password = argList.at(++i);
         else if (str::Eq(argList.at(i), L"-quick"))
             fullDump = false;
-        else if (str::Eq(argList.at(i), L"-render") && i + 1 < argList.Count() && !renderPath) {
+        else if (str::Eq(argList.at(i), L"-render") && i + 1 < argList.size() && !renderPath) {
             // optional zoom argument (e.g. -render 50% file.pdf)
             float zoom;
-            if (i + 2 < argList.Count() && str::Parse(argList.at(i + 1), L"%f%%%$", &zoom) && zoom > 0.f) {
+            if (i + 2 < argList.size() && str::Parse(argList.at(i + 1), L"%f%%%$", &zoom) && zoom > 0.f) {
                 renderZoom = zoom / 100.f;
                 i++;
             }
@@ -461,7 +461,7 @@ Usage:
         else if (str::Eq(argList.at(i), L"-full"))
             fullDump = true;
 #ifdef DEBUG
-        else if (str::Eq(argList.at(i), L"-breakalloc") && i + 1 < argList.Count())
+        else if (str::Eq(argList.at(i), L"-breakalloc") && i + 1 < argList.size())
             breakAlloc = _wtoi(argList.at(++i));
 #endif
         else if (!filePath)

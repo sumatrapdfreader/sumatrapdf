@@ -57,8 +57,8 @@ void FileHistory::Clear(bool keepFavorites) {
     if (!states)
         return;
     Vec<DisplayState *> keep;
-    for (size_t i = 0; i < states->Count(); i++) {
-        if (keepFavorites && states->at(i)->favorites->Count() > 0) {
+    for (size_t i = 0; i < states->size(); i++) {
+        if (keepFavorites && states->at(i)->favorites->size() > 0) {
             states->at(i)->openCount = 0;
             keep.Append(states->at(i));
         } else {
@@ -69,13 +69,13 @@ void FileHistory::Clear(bool keepFavorites) {
 }
 
 DisplayState *FileHistory::Get(size_t index) const {
-    if (index < states->Count())
+    if (index < states->size())
         return states->at(index);
     return nullptr;
 }
 
 DisplayState *FileHistory::Find(const WCHAR *filePath, size_t *idxOut) const {
-    for (size_t i = 0; i < states->Count(); i++) {
+    for (size_t i = 0; i < states->size(); i++) {
         if (str::EqI(states->at(i)->filePath, filePath)) {
             if (idxOut)
                 *idxOut = i;
@@ -117,7 +117,7 @@ bool FileHistory::MarkFileInexistent(const WCHAR *filePath, bool hide) {
     int idx = states->Find(state);
     if (idx < newIdx && state != states->Last()) {
         states->Remove(state);
-        if (states->Count() <= (size_t) newIdx)
+        if (states->size() <= (size_t) newIdx)
             states->Append(state);
         else
             states->InsertAt(newIdx, state);
@@ -136,7 +136,7 @@ bool FileHistory::MarkFileInexistent(const WCHAR *filePath, bool hide) {
 // and with all missing states filtered out
 // caller needs to delete the result (but not the contained states)
 void FileHistory::GetFrequencyOrder(Vec<DisplayState *>& list) {
-    CrashIf(list.Count() > 0);
+    CrashIf(list.size() > 0);
     size_t i = 0;
     for (DisplayState *ds : *states) {
         ds->index = i++;
@@ -156,15 +156,15 @@ void FileHistory::Purge(bool alwaysUseDefaultState) {
     if (alwaysUseDefaultState) {
         Vec<DisplayState *> frequencyList;
         GetFrequencyOrder(frequencyList);
-        if (frequencyList.Count() > FILE_HISTORY_MAX_RECENT)
+        if (frequencyList.size() > FILE_HISTORY_MAX_RECENT)
             minOpenCount = frequencyList.at(FILE_HISTORY_MAX_FREQUENT)->openCount / 2;
     }
 
-    for (size_t j = states->Count(); j > 0; j--) {
+    for (size_t j = states->size(); j > 0; j--) {
         DisplayState *state = states->at(j - 1);
         // never forget pinned documents, documents we've remembered a password for and
         // documents for which there are favorites
-        if (state->isPinned || state->decryptionKey != nullptr || state->favorites->Count() > 0)
+        if (state->isPinned || state->decryptionKey != nullptr || state->favorites->size() > 0)
             continue;
         // forget about missing documents without valuable state
         if (state->isMissing && (alwaysUseDefaultState || state->useDefaultState))

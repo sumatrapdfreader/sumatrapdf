@@ -72,9 +72,9 @@ static void PaintWindowsInZOrder(Graphics *g, Control *c) {
                 ++paintedCount;
             }
         }
-        if (paintedCount == toPaint.Count())
+        if (paintedCount == toPaint.size())
             return;
-        CrashIf(paintedCount > toPaint.Count());
+        CrashIf(paintedCount > toPaint.size());
         lastPaintedZOrder = minUnpaintedZOrder;
     }
 }

@@ -70,7 +70,7 @@ public:
     EbookEngine();
     virtual ~EbookEngine();
 
-    int PageCount() const override { return pages ? (int)pages->Count() : 0; }
+    int PageCount() const override { return pages ? (int)pages->size() : 0; }
 
     RectD PageMediabox(int pageNo) override { UNUSED(pageNo);  return pageRect; }
     RectD PageContentBox(int pageNo, RenderTarget target=Target_View) override {
@@ -258,7 +258,7 @@ bool EbookEngine::ExtractPageAnchors()
         if (!pageInstrs)
             return false;
 
-        for (size_t k = 0; k < pageInstrs->Count(); k++) {
+        for (size_t k = 0; k < pageInstrs->size(); k++) {
             DrawInstr *i = &pageInstrs->at(k);
             if (InstrAnchor != i->type)
                 continue;
@@ -269,7 +269,7 @@ bool EbookEngine::ExtractPageAnchors()
         baseAnchors.Append(baseAnchor);
     }
 
-    CrashIf(baseAnchors.Count() != pages->Count());
+    CrashIf(baseAnchors.size() != pages->size());
     return true;
 }
 
@@ -309,7 +309,7 @@ static inline Gdiplus::Color FromColor(PageAnnotation::Color c)
 
 static void DrawAnnotations(Graphics& g, Vec<PageAnnotation>& userAnnots, int pageNo)
 {
-    for (size_t i = 0; i < userAnnots.Count(); i++) {
+    for (size_t i = 0; i < userAnnots.size(); i++) {
         PageAnnotation& annot = userAnnots.at(i);
         if (annot.pageNo != pageNo)
             continue;
@@ -425,13 +425,13 @@ WCHAR *EbookEngine::ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **co
         RectI bbox = GetInstrBbox(i, pageBorder);
         switch (i.type) {
         case InstrString:
-            if (coords.Count() > 0 && (bbox.x < coords.Last().BR().x ||
+            if (coords.size() > 0 && (bbox.x < coords.Last().BR().x ||
                                        bbox.y > coords.Last().y + coords.Last().dy * 0.8)) {
                 content.Append(lineSep);
                 coords.AppendBlanks(str::Len(lineSep));
                 CrashIf(*lineSep && !coords.Last().IsEmpty());
             }
-            else if (insertSpace && coords.Count() > 0) {
+            else if (insertSpace && coords.size() > 0) {
                 int swidth = bbox.x - coords.Last().BR().x;
                 if (swidth > 0) {
                     content.Append(' ');
@@ -449,13 +449,13 @@ WCHAR *EbookEngine::ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **co
             }
             break;
         case InstrRtlString:
-            if (coords.Count() > 0 && (bbox.BR().x > coords.Last().x ||
+            if (coords.size() > 0 && (bbox.BR().x > coords.Last().x ||
                                        bbox.y > coords.Last().y + coords.Last().dy * 0.8)) {
                 content.Append(lineSep);
                 coords.AppendBlanks(str::Len(lineSep));
                 CrashIf(*lineSep && !coords.Last().IsEmpty());
             }
-            else if (insertSpace && coords.Count() > 0) {
+            else if (insertSpace && coords.size() > 0) {
                 int swidth = coords.Last().x - bbox.BR().x;
                 if (swidth > 0) {
                     content.Append(' ');
@@ -478,13 +478,13 @@ WCHAR *EbookEngine::ExtractPageText(int pageNo, const WCHAR *lineSep, RectI **co
             break;
         }
     }
-    if (content.Count() > 0 && !str::EndsWith(content.Get(), lineSep)) {
+    if (content.size() > 0 && !str::EndsWith(content.Get(), lineSep)) {
         content.Append(lineSep);
         coords.AppendBlanks(str::Len(lineSep));
     }
 
     if (coordsOut) {
-        CrashIf(coords.Count() != content.Count());
+        CrashIf(coords.size() != content.size());
         *coordsOut = coords.StealData();
     }
     return content.StealData();
@@ -548,7 +548,7 @@ PageElement *EbookEngine::GetElementAtPos(int pageNo, PointD pt)
         return nullptr;
 
     PageElement *el = nullptr;
-    for (size_t i = 0; i < els->Count() && !el; i++)
+    for (size_t i = 0; i < els->size() && !el; i++)
         if (els->at(i)->GetRect().Contains(pt))
             el = els->at(i);
 
@@ -575,7 +575,7 @@ PageDestination *EbookEngine::GetNamedDest(const WCHAR *name)
     int basePageNo = 0;
     if (id > name_utf8 + 1) {
         size_t base_len = id - name_utf8 - 1;
-        for (size_t i = 0; i < baseAnchors.Count(); i++) {
+        for (size_t i = 0; i < baseAnchors.size(); i++) {
             DrawInstr *anchor = baseAnchors.at(i);
             if (anchor && base_len == anchor->str.len &&
                 str::EqNI(name_utf8, anchor->str.s, base_len)) {
@@ -587,7 +587,7 @@ PageDestination *EbookEngine::GetNamedDest(const WCHAR *name)
     }
 
     size_t id_len = str::Len(id);
-    for (size_t i = 0; i < anchors.Count(); i++) {
+    for (size_t i = 0; i < anchors.size(); i++) {
         PageAnchor *anchor = &anchors.at(i);
         if (baseAnchor) {
             if (anchor->instr == baseAnchor)
@@ -646,7 +646,7 @@ WCHAR *EbookEngine::ExtractFontList()
             fonts.Append(str::Dup(fontName));
         }
     }
-    if (fonts.Count() == 0)
+    if (fonts.size() == 0)
         return nullptr;
 
     fonts.SortNatural();
@@ -799,7 +799,7 @@ bool EpubEngineImpl::FinishLoading()
     if (!ExtractPageAnchors())
         return false;
 
-    return pages->Count() > 0;
+    return pages->size() > 0;
 }
 
 unsigned char *EpubEngineImpl::GetFileData(size_t *cbCount)
@@ -953,7 +953,7 @@ bool Fb2EngineImpl::FinishLoading()
     if (!ExtractPageAnchors())
         return false;
 
-    return pages->Count() > 0;
+    return pages->size() > 0;
 }
 
 DocTocItem *Fb2EngineImpl::GetTocTree()
@@ -1068,7 +1068,7 @@ bool MobiEngineImpl::FinishLoading()
     if (!ExtractPageAnchors())
         return false;
 
-    return pages->Count() > 0;
+    return pages->size() > 0;
 }
 
 PageDestination *MobiEngineImpl::GetNamedDest(const WCHAR *name)
@@ -1202,7 +1202,7 @@ bool PdbEngineImpl::Load(const WCHAR *fileName)
     if (!ExtractPageAnchors())
         return false;
 
-    return pages->Count() > 0;
+    return pages->size() > 0;
 }
 
 DocTocItem *PdbEngineImpl::GetTocTree()
@@ -1248,7 +1248,7 @@ class ChmDataCache {
 public:
     ChmDataCache(ChmDoc *doc, char *html) : doc(doc), html(html) { }
     ~ChmDataCache() {
-        for (size_t i = 0; i < images.Count(); i++) {
+        for (size_t i = 0; i < images.size(); i++) {
             free(images.at(i).base.data);
             free(images.at(i).id);
         }
@@ -1261,7 +1261,7 @@ public:
 
     ImageData *GetImageData(const char *id, const char *pagePath) {
         AutoFree url(NormalizeURL(id, pagePath));
-        for (size_t i = 0; i < images.Count(); i++) {
+        for (size_t i = 0; i < images.size(); i++) {
             if (str::Eq(images.at(i).id, url))
                 return &images.at(i).base;
         }
@@ -1451,7 +1451,7 @@ public:
 
         // finally add all the remaining HTML files
         Vec<char *> *paths = doc->GetAllPaths();
-        for (size_t i = 0; i < paths->Count(); i++) {
+        for (size_t i = 0; i < paths->size(); i++) {
             char *path = paths->at(i);
             if (str::EndsWithI(path, ".htm") || str::EndsWithI(path, ".html")) {
                 if (*path == '/')
@@ -1507,7 +1507,7 @@ bool ChmEngineImpl::Load(const WCHAR *fileName)
     if (!ExtractPageAnchors())
         return false;
 
-    return pages->Count() > 0;
+    return pages->size() > 0;
 }
 
 PageDestination *ChmEngineImpl::GetNamedDest(const WCHAR *name)
@@ -1662,7 +1662,7 @@ bool HtmlEngineImpl::Load(const WCHAR *fileName)
     if (!ExtractPageAnchors())
         return false;
 
-    return pages->Count() > 0;
+    return pages->size() > 0;
 }
 
 class RemoteHtmlDest : public SimpleDest2 {
@@ -1778,7 +1778,7 @@ bool TxtEngineImpl::Load(const WCHAR *fileName)
     if (!ExtractPageAnchors())
         return false;
 
-    return pages->Count() > 0;
+    return pages->size() > 0;
 }
 
 DocTocItem *TxtEngineImpl::GetTocTree()

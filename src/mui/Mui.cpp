@@ -110,7 +110,7 @@ size_t CollectWindowsAt(Control *wndRoot, int x, int y, uint16 wantedInputMask,
     WndInputWantedFilter filter(x, y, wantedInputMask);
     controls->Reset();
     CollectWindowsBreathFirst(wndRoot, 0, 0, &filter, controls);
-    return controls->Count();
+    return controls->size();
 }
 
 static void DrawLine(Graphics *gfx, const Point &p1, const Point &p2, float width, Brush *br) {

@@ -233,7 +233,7 @@ EbookControls *CreateEbookControls(HWND hwnd, FrameRateWnd *frameRateWnd)
     ctrls->mainWnd->layout = FindLayoutNamed(*muiDef, "mainLayout");
     CrashIf(!ctrls->mainWnd->layout);
 
-    for (size_t i = 0; i < muiDef->allControls.Count(); i++) {
+    for (size_t i = 0; i < muiDef->allControls.size(); i++) {
         Control *c = muiDef->allControls.at(i);
         ctrls->mainWnd->AddChild(c);
     }

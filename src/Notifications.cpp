@@ -251,12 +251,12 @@ void Notifications::Remove(NotificationWnd* wnd) {
         return;
     }
     wnds.Remove(wnd);
-    if (idx == 0 && wnds.Count() > 0) {
+    if (idx == 0 && wnds.size() > 0) {
         SetWindowPos(wnds.at(0)->hwnd(), nullptr, GetWndX(wnds.at(0)), TOP_LEFT_MARGIN, 0, 0,
                      SWP_NOSIZE | SWP_NOZORDER);
         idx = 1;
     }
-    for (size_t i = idx; i < wnds.Count(); i++) {
+    for (size_t i = idx; i < wnds.size(); i++) {
         MoveBelow(wnds.at(i - 1), wnds.at(i));
     }
 }
@@ -267,15 +267,15 @@ void Notifications::Add(NotificationWnd* wnd, int groupId) {
     }
     wnd->groupId = groupId;
 
-    if (wnds.Count() > 0) {
-        MoveBelow(wnds.at(wnds.Count() - 1), wnd);
+    if (wnds.size() > 0) {
+        MoveBelow(wnds.at(wnds.size() - 1), wnd);
     }
     wnds.Append(wnd);
 }
 
 NotificationWnd* Notifications::GetForGroup(int groupId) {
     CrashIf(!groupId);
-    for (size_t i = 0; i < wnds.Count(); i++) {
+    for (size_t i = 0; i < wnds.size(); i++) {
         if (wnds.at(i)->groupId == groupId) {
             return wnds.at(i);
         }
@@ -285,7 +285,7 @@ NotificationWnd* Notifications::GetForGroup(int groupId) {
 
 void Notifications::RemoveForGroup(int groupId) {
     CrashIf(!groupId);
-    for (size_t i = wnds.Count(); i > 0; i--) {
+    for (size_t i = wnds.size(); i > 0; i--) {
         if (wnds.at(i - 1)->groupId == groupId) {
             RemoveNotification(wnds.at(i - 1));
         }
@@ -300,13 +300,13 @@ void Notifications::RemoveNotification(NotificationWnd* wnd) {
 }
 
 void Notifications::Relayout() {
-    if (wnds.Count() == 0) {
+    if (wnds.size() == 0) {
         return;
     }
 
     HWND hwndCanvas = GetParent(wnds.at(0)->hwnd());
     ClientRect frame(hwndCanvas);
-    for (size_t i = 0; i < wnds.Count(); i++) {
+    for (size_t i = 0; i < wnds.size(); i++) {
         RectI rect = WindowRect(wnds.at(i)->hwnd());
         rect = MapRectToWindow(rect, HWND_DESKTOP, hwndCanvas);
         if (IsUIRightToLeft()) {

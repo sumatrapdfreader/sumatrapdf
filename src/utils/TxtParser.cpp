@@ -266,7 +266,7 @@ static void ParseNodes(TxtParser& parser)
 
         if (TokenFinished == tok.type) {
             // we expect to end up with the implicit array node we created at start
-            if (parser.nodes.Count() != 1)
+            if (parser.nodes.size() != 1)
                 goto Failed;
             return;
         }
@@ -281,12 +281,12 @@ static void ParseNodes(TxtParser& parser)
             CrashIf(TokenClose != tok.type);
             // if the only node left is the implict array node we created,
             // this is an error
-            if (1 == parser.nodes.Count())
+            if (1 == parser.nodes.size())
                 goto Failed;
             parser.nodes.Pop();
             continue;
         }
-        TxtNode *currParent = parser.nodes.at(parser.nodes.Count() - 1);
+        TxtNode *currParent = parser.nodes.at(parser.nodes.size() - 1);
         currParent->children->Append(currNode);
         if (TextNode != currNode->type)
             parser.nodes.Append(currNode);
@@ -317,7 +317,7 @@ void TxtParser::SetToParse(char *s, size_t sLen)
     toParse.Init(s, n);
 
     // we create an implicit array node to hold the nodes we'll parse
-    CrashIf(0 != nodes.Count());
+    CrashIf(0 != nodes.size());
     nodes.Append(AllocTxtNode(allocator, ArrayNode));
 }
 
@@ -373,7 +373,7 @@ static void PrettyPrintNode(TxtNode *curr, int nest, str::Str<char>& res)
     }
 
     TxtNode *child;
-    for (size_t i = 0; i < curr->children->Count(); i++) {
+    for (size_t i = 0; i < curr->children->size(); i++) {
         child = curr->children->at(i);
         PrettyPrintNode(child, nest + 1, res);
     }

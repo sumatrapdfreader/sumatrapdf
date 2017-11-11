@@ -178,12 +178,12 @@ Graphics *AllocGraphicsForMeasureText() {
     GraphicsCacheEntry ce;
     ce.Create();
     gGraphicsCache->Append(ce);
-    if (gGraphicsCache->Count() < 64)
+    if (gGraphicsCache->size() < 64)
         return ce.gfx;
 
     // try to limit the size of cache by evicting the oldest entries, but don't remove
     // first (for ui thread) or last (one we just added) entries
-    for (size_t i = 1; i < gGraphicsCache->Count() - 1; i++) {
+    for (size_t i = 1; i < gGraphicsCache->size() - 1; i++) {
         GraphicsCacheEntry e = gGraphicsCache->at(i);
         if (0 == e.refCount) {
             e.Free();

@@ -259,7 +259,7 @@ void EbookController::CloseCurrentDocument() {
 // returns 0 if not found (or maybe on the last page)
 // returns -1 if no pages are available
 static int PageForReparsePoint(Vec<HtmlPage*>* pages, int reparseIdx) {
-    if (!pages || pages->Count() == 0) {
+    if (!pages || pages->size() == 0) {
         return -1;
     }
 
@@ -269,7 +269,7 @@ static int PageForReparsePoint(Vec<HtmlPage*>* pages, int reparseIdx) {
         return 1;
     }
 
-    for (size_t i = 0; i < pages->Count(); i++) {
+    for (size_t i = 0; i < pages->size(); i++) {
         HtmlPage* pd = pages->at(i);
         if (pd->reparseIdx == reparseIdx) {
             return (int)i + 1;
@@ -393,7 +393,7 @@ void EbookController::ClickedProgress(Control* c, int x, int y) {
     UNUSED(y);
     CrashIf(c != ctrls->progress);
     float perc = ctrls->progress->GetPercAt(x);
-    int pageCount = (int)GetPages()->Count();
+    int pageCount = (int)GetPages()->size();
     int newPageNo = IntFromPerc(pageCount, perc) + 1;
     GoToPage(newPageNo, true);
 }
@@ -406,12 +406,12 @@ void EbookController::OnClickedLink(int pageNo, DrawInstr* link) {
         return;
     }
 
-    if (DocType::Epub == doc.Type() && pages && (size_t)pageNo <= pages->Count()) {
+    if (DocType::Epub == doc.Type() && pages && (size_t)pageNo <= pages->size()) {
         // normalize the URL by combining it with the chapter's base path
         for (int j = pageNo; j > 0; j--) {
             HtmlPage* p = pages->at(j - 1);
             // <pagebreak src="..." page_marker /> is usually the second instruction on a page
-            for (size_t k = 0; k < std::min((size_t)2, p->instructions.Count()); k++) {
+            for (size_t k = 0; k < std::min((size_t)2, p->instructions.size()); k++) {
                 DrawInstr& di = p->instructions.at(k);
                 if (InstrAnchor == di.type && str::StartsWith(di.str.s + di.str.len, "\" page_marker />")) {
                     AutoFree basePath(str::DupN(di.str.s, di.str.len));
@@ -466,7 +466,7 @@ int EbookController::GetMaxPageCount() const {
     if (!pagesTmp) {
         return 0;
     }
-    return (int)pagesTmp->Count();
+    return (int)pagesTmp->size();
 }
 
 // show the status text based on current state
@@ -524,7 +524,7 @@ void EbookController::GoToPage(int pageNo, bool addNavPoint) {
     currPageNo = pageNo;
     currPageReparseIdx = p->reparseIdx;
     ctrls->pagesLayout->GetPage1()->SetPage(p);
-    if (IsDoublePage() && pages->Count() > 1) {
+    if (IsDoublePage() && pages->size() > 1) {
         p = pages->at(pageNo);
         ctrls->pagesLayout->GetPage2()->SetPage(p);
     } else {
@@ -884,8 +884,8 @@ void EbookController::RequestRepaint() {
 void EbookController::AddNavPoint() {
     int idx = currPageReparseIdx;
     // remove the current and all Forward history entries
-    if (navHistoryIdx < navHistory.Count()) {
-        navHistory.RemoveAt(navHistoryIdx, navHistory.Count() - navHistoryIdx);
+    if (navHistoryIdx < navHistory.size()) {
+        navHistory.RemoveAt(navHistoryIdx, navHistory.size() - navHistoryIdx);
     }
     // don't add another entry for the exact same position
     if (navHistoryIdx > 0 && idx == navHistory.at(navHistoryIdx - 1)) {
@@ -903,11 +903,11 @@ void EbookController::AddNavPoint() {
 }
 
 bool EbookController::CanNavigate(int dir) const {
-    CrashIf(navHistoryIdx > navHistory.Count());
+    CrashIf(navHistoryIdx > navHistory.size());
     if (dir < 0) {
         return navHistoryIdx >= (size_t)-dir;
     }
-    return navHistoryIdx + dir < navHistory.Count();
+    return navHistoryIdx + dir < navHistory.size();
 }
 
 void EbookController::Navigate(int dir) {
@@ -916,7 +916,7 @@ void EbookController::Navigate(int dir) {
     }
     // update the current history entry
     int idx = currPageReparseIdx;
-    if (navHistoryIdx < navHistory.Count()) {
+    if (navHistoryIdx < navHistory.size()) {
         navHistory.at(navHistoryIdx) = idx;
     } else {
         navHistory.Append(idx);

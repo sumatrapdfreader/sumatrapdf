@@ -86,7 +86,7 @@ bool ParsePageRanges(const WCHAR* ranges, Vec<PageRange>& result) {
     rangeList.Split(ranges, L",", true);
     rangeList.SortNatural();
 
-    for (size_t i = 0; i < rangeList.Count(); i++) {
+    for (size_t i = 0; i < rangeList.size(); i++) {
         int start, end;
         if (str::Parse(rangeList.at(i), L"%d-%d%$", &start, &end) && 0 < start && start <= end)
             result.Append(PageRange(start, end));
@@ -98,7 +98,7 @@ bool ParsePageRanges(const WCHAR* ranges, Vec<PageRange>& result) {
             return false;
     }
 
-    return result.Count() > 0;
+    return result.size() > 0;
 }
 
 // a valid page range is a non-empty, comma separated list of either
@@ -272,7 +272,7 @@ static int GetArgNo(const WCHAR* argName) {
 void CommandLineInfo::ParseCommandLine(const WCHAR* cmdLine) {
     WStrVec argList;
     ParseCmdLine(cmdLine, argList);
-    size_t argCount = argList.Count();
+    size_t argCount = argList.size();
 
 #define is_arg_with_param(_argNo) (param && _argNo == arg)
 #define additional_param() argList.at(n + 1)

@@ -97,7 +97,8 @@ void FileExistenceChecker::GetFilePathsToCheck()
     // add missing paths from the list of most frequently opened documents
     Vec<DisplayState *> frequencyList;
     gFileHistory.GetFrequencyOrder(frequencyList);
-    for (size_t i = 0; i < 2 * FILE_HISTORY_MAX_FREQUENT && i < frequencyList.Count(); i++) {
+    size_t iMax = std::min<size_t>(2 * FILE_HISTORY_MAX_FREQUENT, frequencyList.size());
+    for (size_t i = 0; i < iMax; i++) {
         state = frequencyList.at(i);
         if (!paths.Contains(state->filePath))
             paths.Append(str::Dup(state->filePath));
@@ -110,7 +111,7 @@ void FileExistenceChecker::HideMissingFiles()
         gFileHistory.MarkFileInexistent(path, true);
     }
     // update the Frequently Read page in case it's been displayed already
-    if (paths.Count() > 0 && gWindows.Count() > 0 && gWindows.at(0)->IsAboutWindow()) {
+    if (paths.size() > 0 && gWindows.size() > 0 && gWindows.at(0)->IsAboutWindow()) {
         gWindows.at(0)->RedrawAll(true);
     }
 }
@@ -127,7 +128,7 @@ void FileExistenceChecker::Run()
     // filters all file paths on network drives, removable drives and
     // all paths which still exist from the list (remaining paths will
     // be marked as inexistent in gFileHistory)
-    for (size_t i = 0; i < paths.Count(); i++) {
+    for (size_t i = 0; i < paths.size(); i++) {
         const WCHAR *path = paths.at(i);
         if (!path || !path::IsOnFixedDrive(path) || DocumentPathExists(path)) {
             free(paths.PopAt(i--));
@@ -229,7 +230,7 @@ static void OpenUsingDde(HWND targetWnd, const WCHAR *filePath, CommandLineInfo&
 
     if (!i.reuseDdeInstance) {
         // try WM_COPYDATA first, as that allows targetting a specific window
-        COPYDATASTRUCT cds = { 0x44646557 /* DdeW */, (DWORD)(cmd.Count() + 1) * sizeof(WCHAR), cmd.Get() };
+        COPYDATASTRUCT cds = { 0x44646557 /* DdeW */, (DWORD)(cmd.size() + 1) * sizeof(WCHAR), cmd.Get() };
         LRESULT res = SendMessage(targetWnd, WM_COPYDATA, 0, (LPARAM)&cds);
         if (res)
             return;
@@ -314,15 +315,15 @@ static void RestoreTabOnStartup(WindowInfo *win, TabState *state)
 
 static bool SetupPluginMode(CommandLineInfo& i)
 {
-    if (!IsWindow(i.hwndPluginParent) || i.fileNames.Count() == 0)
+    if (!IsWindow(i.hwndPluginParent) || i.fileNames.size() == 0)
         return false;
 
     gPluginURL = i.pluginURL;
     if (!gPluginURL)
         gPluginURL = i.fileNames.at(0);
 
-    AssertCrash(i.fileNames.Count() == 1);
-    while (i.fileNames.Count() > 1) {
+    AssertCrash(i.fileNames.size() == 1);
+    while (i.fileNames.size() > 1) {
         free(i.fileNames.Pop());
     }
 
@@ -360,7 +361,7 @@ static bool SetupPluginMode(CommandLineInfo& i)
         str::TransChars(args, L"#", L"&");
         WStrVec parts;
         parts.Split(args, L"&", true);
-        for (size_t k = 0; k < parts.Count(); k++) {
+        for (size_t k = 0; k < parts.size(); k++) {
             WCHAR *part = parts.at(k);
             int pageNo;
             if (str::StartsWithI(part, L"page=") && str::Parse(part + 4, L"=%d%$", &pageNo))
@@ -497,7 +498,7 @@ static bool AutoUpdateMain()
 {
     WStrVec argList;
     ParseCmdLine(GetCommandLine(), argList, 4);
-    if (argList.Count() != 3 || !str::Eq(argList.at(1), L"-autoupdate")) {
+    if (argList.size() != 3 || !str::Eq(argList.at(1), L"-autoupdate")) {
         // the argument was misinterpreted, let SumatraPDF start as usual
         return false;
     }
@@ -640,7 +641,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     }
     if (i.makeDefault)
         AssociateExeWithPdfExtension();
-    if (i.pathsToBenchmark.Count() > 0) {
+    if (i.pathsToBenchmark.size() > 0) {
         BenchFileOrDir(i.pathsToBenchmark);
         if (i.showConsole)
             system("pause");
@@ -666,7 +667,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     if (i.printerName) {
         // note: this prints all PDF files. Another option would be to
         // print only the first one
-        for (size_t n = 0; n < i.fileNames.Count(); n++) {
+        for (size_t n = 0; n < i.fileNames.size(); n++) {
             bool ok = PrintFile(i.fileNames.at(n), i.printerName, !i.silent, i.printSettings);
             if (!ok)
                 retCode++;
@@ -687,30 +688,30 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
         hPrevWnd = FindPrevInstWindow(&hMutex);
     }
     if (hPrevWnd) {
-        for (size_t n = 0; n < i.fileNames.Count(); n++) {
+        for (size_t n = 0; n < i.fileNames.size(); n++) {
             OpenUsingDde(hPrevWnd, i.fileNames.at(n), i, 0 == n);
         }
-        if (0 == i.fileNames.Count()) {
+        if (0 == i.fileNames.size()) {
             win::ToForeground(hPrevWnd);
         }
         goto Exit;
     }
 
     bool restoreSession = false;
-    if (gGlobalPrefs->sessionData->Count() > 0 && !gPluginURL) {
+    if (gGlobalPrefs->sessionData->size() > 0 && !gPluginURL) {
         restoreSession = gGlobalPrefs->restoreSession;
     }
-    if (gGlobalPrefs->reopenOnce->Count() > 0 && !gPluginURL) {
-        if (gGlobalPrefs->reopenOnce->Count() == 1 && str::EqI(gGlobalPrefs->reopenOnce->at(0), L"SessionData")) {
+    if (gGlobalPrefs->reopenOnce->size() > 0 && !gPluginURL) {
+        if (gGlobalPrefs->reopenOnce->size() == 1 && str::EqI(gGlobalPrefs->reopenOnce->at(0), L"SessionData")) {
             gGlobalPrefs->reopenOnce->FreeMembers();
             restoreSession = true;
         }
-        while (gGlobalPrefs->reopenOnce->Count() > 0) {
+        while (gGlobalPrefs->reopenOnce->size() > 0) {
             i.fileNames.Append(gGlobalPrefs->reopenOnce->Pop());
         }
     }
 
-    bool showStartPage = !restoreSession && i.fileNames.Count() == 0 &&
+    bool showStartPage = !restoreSession && i.fileNames.size() == 0 &&
                          gGlobalPrefs->rememberOpenedFiles && gGlobalPrefs->showStartPage;
     if (showStartPage) {
         // make the shell prepare the image list, so that it's ready when the first window's loaded
@@ -744,7 +745,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
         if (i.printDialog)
             OnMenuPrint(win, i.exitWhenDone);
     }
-    if (i.fileNames.Count() > 0 && !win) {
+    if (i.fileNames.size() > 0 && !win) {
         // failed to create any window, even though there
         // were files to load (or show a failure message for)
         goto Exit;
@@ -801,7 +802,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 Exit:
     prefs::UnregisterForFileChanges();
 
-    while (gWindows.Count() > 0) {
+    while (gWindows.size() > 0) {
         DeleteWindowInfo(gWindows.at(0));
     }
 

@@ -418,7 +418,7 @@ static void CopyAboutInfoToClipboard(HWND hwnd)
     str::Str<WCHAR> info(512);
     AutoFreeW ver(GetSumatraVersion());
     info.AppendFmt(L"%s %s\r\n", APP_NAME_STR, ver.Get());
-    for (size_t i = info.Count() - 2; i > 0; i--) {
+    for (size_t i = info.size() - 2; i > 0; i--) {
         info.Append('-');
     }
     info.Append(L"\r\n");
@@ -442,7 +442,7 @@ const WCHAR *GetStaticLink(Vec<StaticLinkInfo>& linkInfo, int x, int y, StaticLi
         return nullptr;
 
     PointI pt(x, y);
-    for (size_t i = 0; i < linkInfo.Count(); i++) {
+    for (size_t i = 0; i < linkInfo.size(); i++) {
         if (linkInfo.at(i).rect.Contains(pt)) {
             if (info)
                 *info = linkInfo.at(i);
@@ -672,7 +672,7 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     PointI offset(rc.x + DOCLIST_MARGIN_LEFT + (rc.dx - width * THUMBNAIL_DX - (width - 1) * DOCLIST_MARGIN_BETWEEN_X - DOCLIST_MARGIN_LEFT - DOCLIST_MARGIN_RIGHT) / 2, rc.y + DOCLIST_MARGIN_TOP);
     if (offset.x < ABOUT_INNER_PADDING)
         offset.x = ABOUT_INNER_PADDING;
-    else if (list.Count() == 0)
+    else if (list.size() == 0)
         offset.x = DOCLIST_MARGIN_LEFT;
 
     SelectObject(hdc, fontSumatraTxt);
@@ -691,7 +691,7 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     win->staticLinks.Reset();
     for (int h = 0; h < height; h++) {
         for (int w = 0; w < width; w++) {
-            if (h * width + w >= (int)list.Count()) {
+            if (h * width + w >= (int)list.size()) {
                 // display the "Open a document" link right below the last row
                 height = w > 0 ? h + 1 : h;
                 break;

@@ -172,7 +172,7 @@ void InitializePolicies(bool restrict)
 {
     // default configuration should be to restrict everything
     CrashIf(gPolicyRestrictions != Perm_RestrictedUse);
-    CrashIf(gAllowedLinkProtocols.Count() != 0 || gAllowedFileTypes.Count() != 0);
+    CrashIf(gAllowedLinkProtocols.size() != 0 || gAllowedFileTypes.size() != 0);
 
     // the -restrict command line flag overrides any sumatrapdfrestrict.ini configuration
     if (restrict)
@@ -250,8 +250,8 @@ bool LaunchBrowser(const WCHAR *url)
 {
     if (gPluginMode) {
         // pass the URI back to the browser
-        CrashIf(gWindows.Count() == 0);
-        if (gWindows.Count() == 0)
+        CrashIf(gWindows.size() == 0);
+        if (gWindows.size() == 0)
             return false;
         HWND plugin = gWindows.at(0)->hwndFrame;
         HWND parent = GetAncestor(plugin, GA_PARENT);
@@ -311,7 +311,7 @@ void SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode, bool keepCont
 WindowInfo *FindWindowInfoByHwnd(HWND hwnd)
 {
     HWND parent = GetParent(hwnd);
-    for (size_t i = 0; i < gWindows.Count(); i++) {
+    for (size_t i = 0; i < gWindows.size(); i++) {
         WindowInfo *win = gWindows.at(i);
         if (hwnd == win->hwndFrame)
             return win;
@@ -350,7 +350,7 @@ WindowInfo* FindWindowInfoByFile(const WCHAR *file, bool focusTab)
     for (WindowInfo *win : gWindows) {
         if (!win->IsAboutWindow() && path::IsSame(win->currentTab->filePath, normFile))
             return win;
-        if (focusTab && win->tabs.Count() > 1) {
+        if (focusTab && win->tabs.size() > 1) {
             // bring a background tab to the foreground
             for (TabInfo *tab : win->tabs) {
                 if (tab != win->currentTab && path::IsSame(tab->filePath, normFile)) {
@@ -374,7 +374,7 @@ WindowInfo* FindWindowInfoBySyncFile(const WCHAR *file, bool focusTab)
             dm->pdfSync->SourceToDoc(file, 0, 0, &page, rects) != PDFSYNCERR_UNKNOWN_SOURCEFILE) {
             return win;
         }
-        if (focusTab && win->tabs.Count() > 1) {
+        if (focusTab && win->tabs.size() > 1) {
             // bring a background tab to the foreground
             for (TabInfo *tab : win->tabs) {
                 if (tab != win->currentTab && tab->AsFixed() && tab->AsFixed()->pdfSync &&
@@ -429,7 +429,7 @@ WCHAR *HwndPasswordUI::GetPassword(const WCHAR *fileName, unsigned char *fileDig
     *saveKey = false;
 
     // try the list of default passwords before asking the user
-    if (pwdIdx < gGlobalPrefs->defaultPasswords->Count())
+    if (pwdIdx < gGlobalPrefs->defaultPasswords->size())
         return str::Dup(gGlobalPrefs->defaultPasswords->at(pwdIdx++));
 
     if (IsStressTesting())
@@ -1387,7 +1387,7 @@ static void RenameFileInHistory(const WCHAR *oldPath, const WCHAR *newPath)
         oldOpenCount = ds->openCount;
         gFileHistory.Remove(ds);
         // TODO: merge favorites as well?
-        if (ds->favorites->Count() > 0)
+        if (ds->favorites->size() > 0)
             UpdateFavoritesTreeForAllWindows();
         DeleteDisplayState(ds);
     }
@@ -1486,7 +1486,7 @@ WindowInfo* LoadDocument(LoadArgs& args)
         if (gFileHistory.MarkFileInexistent(fullPath)) {
             prefs::Save();
             // update the Frequently Read list
-            if (1 == gWindows.Count() && gWindows.at(0)->IsAboutWindow())
+            if (1 == gWindows.size() && gWindows.at(0)->IsAboutWindow())
                 gWindows.at(0)->RedrawAll(true);
         }
         return nullptr;
@@ -1496,13 +1496,13 @@ WindowInfo* LoadDocument(LoadArgs& args)
     if (openNewTab && !args.win) {
         // modify the args so that we always reuse the same window
         // TODO: enable the tab bar if tabs haven't been initialized
-        if (gWindows.Count() > 0) {
+        if (gWindows.size() > 0) {
             win = args.win = gWindows.Last();
             args.isNewWindow = false;
         }
     }
 
-    if (!win && 1 == gWindows.Count() && gWindows.at(0)->IsAboutWindow()) {
+    if (!win && 1 == gWindows.size() && gWindows.at(0)->IsAboutWindow()) {
         win = gWindows.at(0);
         args.win = win;
         args.isNewWindow = false;
@@ -1738,7 +1738,7 @@ static void RememberSessionState()
 
     ResetSessionState(gGlobalPrefs->sessionData);
     for (WindowInfo *win : gWindows) {
-        if (win->tabs.Count() == 0)
+        if (win->tabs.size() == 0)
             continue;
         SessionData *data = NewSessionData();
         for (TabInfo *tab : win->tabs) {
@@ -1791,7 +1791,7 @@ bool AutoUpdateInitiate(const char *updateData)
         return false;
 
     unsigned char digest[32];
-    CalcSHA2Digest((const unsigned char *)rsp.data.Get(), rsp.data.Count(), digest);
+    CalcSHA2Digest((const unsigned char *)rsp.data.Get(), rsp.data.size(), digest);
     AutoFree fingerPrint(_MemToHex(&digest));
     if (!str::EqI(fingerPrint, hash))
         return false;
@@ -1809,12 +1809,12 @@ bool AutoUpdateInitiate(const char *updateData)
         updateArgs.Set(str::Format(L"-autoupdate replace:\"%s\"", thisExe));
     }
 
-    bool ok = file::WriteAll(updateExe, rsp.data.Get(), rsp.data.Count());
+    bool ok = file::WriteAll(updateExe, rsp.data.Get(), rsp.data.size());
     if (!ok)
         return false;
 
     // remember currently opened files for reloading after the update
-    CrashIf(gGlobalPrefs->reopenOnce->Count() > 0);
+    CrashIf(gGlobalPrefs->reopenOnce->size() > 0);
 #if 0
     RememberSessionState();
     gGlobalPrefs->reopenOnce->Append(str::Dup(L"SessionData"));
@@ -1872,7 +1872,7 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp *rsp, bool silent)
     if (!str::StartsWith(rsp->url.Get(), SUMATRA_UPDATE_INFO_URL))
         return ERROR_INTERNET_INVALID_URL;
     str::Str<char> *data = &rsp->data;
-    if (0 == data->Count())
+    if (0 == data->size())
         return ERROR_INTERNET_CONNECTION_ABORTED;
 
     // See https://code.google.com/p/sumatrapdf/issues/detail?id=725
@@ -2002,7 +2002,7 @@ void UpdateCheckAsync(WindowInfo *win, bool autoCheck)
 
 static void RerenderEverything()
 {
-    for (size_t i = 0; i < gWindows.Count(); i++) {
+    for (size_t i = 0; i < gWindows.size(); i++) {
         if (!gWindows.at(i)->AsFixed())
             continue;
         DisplayModel *dm = gWindows.at(i)->AsFixed();
@@ -2107,7 +2107,7 @@ static void CloseDocumentInTab(WindowInfo *win, bool keepUIEnabled, bool deleteM
         ShowScrollBar(win->hwndCanvas, SB_BOTH, FALSE);
         win->RedrawAll();
         win::SetText(win->hwndFrame, SUMATRA_WINDOW_TITLE);
-        CrashIf(win->tabs.Count() != 0 || win->currentTab);
+        CrashIf(win->tabs.size() != 0 || win->currentTab);
     }
 
     // Note: this causes https://code.google.com/p/sumatrapdf/issues/detail?id=2702. For whatever reason
@@ -2130,7 +2130,7 @@ void CloseTab(WindowInfo *win, bool quitIfLast)
     CrashIf(!win);
     if (!win) return;
 
-    size_t tabCount = win->tabs.Count();
+    size_t tabCount = win->tabs.size();
     if (tabCount == 1 || (tabCount == 0 && quitIfLast)) {
         if (MayCloseWindow(win))
             CloseWindow(win, quitIfLast);
@@ -2194,7 +2194,7 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
         ExitFullScreen(win);
     }
 
-    bool lastWindow = (1 == gWindows.Count());
+    bool lastWindow = (1 == gWindows.size());
     // RememberDefaultWindowPosition becomes a no-op once the window is hidden
     RememberDefaultWindowPosition(*win);
     // hide the window before saving prefs (closing seems slightly faster that way)
@@ -2204,7 +2204,7 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
     if (lastWindow) {
         // don't call RememberSessionState if OnMenuExit already has
         // also don't remember a single document (unless quitting through Menu -> Exit)
-        if (quitIfLast && gGlobalPrefs->sessionData->Count() == 0 && win->tabs.Count() > 1) {
+        if (quitIfLast && gGlobalPrefs->sessionData->size() == 0 && win->tabs.size() > 1) {
             RememberSessionState();
         }
         prefs::Save();
@@ -2232,7 +2232,7 @@ void CloseWindow(WindowInfo *win, bool quitIfLast, bool forceClose)
     }
 
     if (lastWindow && quitIfLast) {
-        CrashIf(gWindows.Count() != 0);
+        CrashIf(gWindows.size() != 0);
         PostQuitMessage(0);
     }
 }
@@ -2727,7 +2727,7 @@ static void BrowseFolder(WindowInfo& win, bool forward)
         return;
 
     // remove unsupported files that have never been successfully loaded
-    for (size_t i = files.Count(); i > 0; i--) {
+    for (size_t i = files.size(); i > 0; i--) {
         if (!EngineManager::IsSupportedFile(files.at(i - 1), false, gGlobalPrefs->ebookUI.useFixedPageUI) &&
             !Doc::IsSupportedFile(files.at(i - 1)) && !gFileHistory.Find(files.at(i - 1))) {
             free(files.PopAt(i - 1));
@@ -2740,9 +2740,9 @@ static void BrowseFolder(WindowInfo& win, bool forward)
 
     int index = files.Find(tab->filePath);
     if (forward)
-        index = (index + 1) % files.Count();
+        index = (index + 1) % files.size();
     else
-        index = (int)(index + files.Count() - 1) % files.Count();
+        index = (int)(index + files.size() - 1) % files.size();
 
     // TODO: check for unsaved modifications
     UpdateTabFileDisplayStateForWin(&win, tab);
@@ -2961,7 +2961,7 @@ static void OnMenuOptions(HWND hwnd)
 static void OnMenuOptions(WindowInfo& win)
 {
     OnMenuOptions(win.hwndFrame);
-    if (gWindows.Count() > 0 && gWindows.at(0)->IsAboutWindow())
+    if (gWindows.size() > 0 && gWindows.at(0)->IsAboutWindow())
         gWindows.at(0)->RedrawAll(true);
 }
 
@@ -3555,13 +3555,13 @@ static void FrameOnChar(WindowInfo& win, WPARAM key, LPARAM info=0)
         Vec<PageAnnotation> *annots = dm->userAnnots;
         for (SelectionOnPage& sel : *win.currentTab->selectionOnPage) {
             auto addedAnnotation = PageAnnotation(Annot_Highlight, sel.pageNo, sel.rect, PageAnnotation::Color(gGlobalPrefs->annotationDefaults.highlightColor, 0xCC));
-            size_t oldLen = annots->Count();
-            for (size_t i = 0; i < oldLen && i < annots->Count(); ++i) {
+            size_t oldLen = annots->size();
+            for (size_t i = 0; i < oldLen && i < annots->size(); ++i) {
                 if (annots->at(i) == addedAnnotation) {
                     annots->RemoveAtFast(i);
                 }
             }
-            if (oldLen == annots->Count()) {
+            if (oldLen == annots->size()) {
                 annots->Append(PageAnnotation(Annot_Highlight, sel.pageNo, sel.rect, PageAnnotation::Color(gGlobalPrefs->annotationDefaults.highlightColor, 0xCC)));
             }
             gRenderCache.Invalidate(dm, sel.pageNo, sel.rect);
@@ -3577,7 +3577,7 @@ static bool FrameOnSysChar(WindowInfo& win, WPARAM key)
 {
     // use Alt+1 to Alt+8 for selecting the first 8 tabs and Alt+9 for the last tab
     if (win.tabsVisible && ('1' <= key && key <= '9')) {
-        TabsSelect(&win, key < '9' ? (int)(key - '1') : (int)win.tabs.Count() - 1);
+        TabsSelect(&win, key < '9' ? (int)(key - '1') : (int)win.tabs.size() - 1);
         return true;
     }
 
@@ -4076,7 +4076,7 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
 #ifdef SHOW_DEBUG_MENU_ITEMS
         case IDM_DEBUG_SHOW_LINKS:
             gDebugShowLinks = !gDebugShowLinks;
-            for (size_t i = 0; i < gWindows.Count(); i++)
+            for (size_t i = 0; i < gWindows.size(); i++)
                 gWindows.at(i)->RedrawAll(true);
             break;
 
@@ -4089,7 +4089,7 @@ static LRESULT FrameOnCommand(WindowInfo *win, HWND hwnd, UINT msg, WPARAM wPara
         case IDM_DEBUG_MUI:
             SetDebugPaint(!IsDebugPaint());
             win::menu::SetChecked(GetMenu(win->hwndFrame), IDM_DEBUG_MUI, !IsDebugPaint());
-            for (size_t i = 0; i < gWindows.Count(); i++)
+            for (size_t i = 0; i < gWindows.size(); i++)
                 gWindows.at(i)->RedrawAll(true);
             break;
 

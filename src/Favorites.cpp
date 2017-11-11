@@ -33,7 +33,7 @@
 Favorite* Favorites::GetByMenuId(int menuId, DisplayState** dsOut) {
     DisplayState* ds;
     for (size_t i = 0; (ds = gFileHistory.Get(i)) != nullptr; i++) {
-        for (size_t j = 0; j < ds->favorites->Count(); j++) {
+        for (size_t j = 0; j < ds->favorites->size(); j++) {
             if (menuId == ds->favorites->at(j)->menuId) {
                 if (dsOut) {
                     *dsOut = ds;
@@ -58,7 +58,7 @@ DisplayState* Favorites::GetByFavorite(Favorite* fn) {
 void Favorites::ResetMenuIds() {
     DisplayState* ds;
     for (size_t i = 0; (ds = gFileHistory.Get(i)) != nullptr; i++) {
-        for (size_t j = 0; j < ds->favorites->Count(); j++) {
+        for (size_t j = 0; j < ds->favorites->size(); j++) {
             ds->favorites->at(j)->menuId = 0;
         }
     }
@@ -79,7 +79,7 @@ bool Favorites::IsPageInFavorites(const WCHAR* filePath, int pageNo) {
     if (!fav) {
         return false;
     }
-    for (size_t i = 0; i < fav->favorites->Count(); i++) {
+    for (size_t i = 0; i < fav->favorites->size(); i++) {
         if (pageNo == fav->favorites->at(i)->pageNo)
             return true;
     }
@@ -88,13 +88,13 @@ bool Favorites::IsPageInFavorites(const WCHAR* filePath, int pageNo) {
 
 static Favorite* FindByPage(DisplayState* ds, int pageNo, const WCHAR* pageLabel = nullptr) {
     if (pageLabel) {
-        for (size_t i = 0; i < ds->favorites->Count(); i++) {
+        for (size_t i = 0; i < ds->favorites->size(); i++) {
             if (str::Eq(ds->favorites->at(i)->pageLabel, pageLabel)) {
                 return ds->favorites->at(i);
             }
         }
     }
-    for (size_t i = 0; i < ds->favorites->Count(); i++) {
+    for (size_t i = 0; i < ds->favorites->size(); i++) {
         if (pageNo == ds->favorites->at(i)->pageNo) {
             return ds->favorites->at(i);
         }
@@ -141,7 +141,7 @@ void Favorites::Remove(const WCHAR* filePath, int pageNo) {
     fav->favorites->Remove(fn);
     DeleteFavorite(fn);
 
-    if (!gGlobalPrefs->rememberOpenedFiles && 0 == fav->favorites->Count()) {
+    if (!gGlobalPrefs->rememberOpenedFiles && 0 == fav->favorites->size()) {
         gFileHistory.Remove(fav);
         DeleteDisplayState(fav);
     }
@@ -153,7 +153,7 @@ void Favorites::RemoveAllForFile(const WCHAR* filePath) {
         return;
     }
 
-    for (size_t i = 0; i < fav->favorites->Count(); i++) {
+    for (size_t i = 0; i < fav->favorites->size(); i++) {
         DeleteFavorite(fav->favorites->at(i));
     }
     fav->favorites->Reset();
@@ -173,7 +173,7 @@ MenuDef menuDefFavContext[] = {{_TRN("Remove from favorites"), IDM_FAV_DEL, 0}};
 static bool HasFavorites() {
     DisplayState* ds;
     for (size_t i = 0; (ds = gFileHistory.Get(i)) != nullptr; i++) {
-        if (ds->favorites->Count() > 0) {
+        if (ds->favorites->size() > 0) {
             return true;
         }
     }
@@ -202,7 +202,7 @@ static WCHAR* FavCompactReadableName(DisplayState* fav, Favorite* fn, bool isCur
 }
 
 static void AppendFavMenuItems(HMENU m, DisplayState* f, UINT& idx, bool combined, bool isCurrent) {
-    for (size_t i = 0; i < f->favorites->Count(); i++) {
+    for (size_t i = 0; i < f->favorites->size(); i++) {
         if (i >= MAX_FAV_MENUS) {
             return;
         }
@@ -228,7 +228,7 @@ static int SortByBaseFileName(const void* a, const void* b) {
 static void GetSortedFilePaths(Vec<const WCHAR*>& filePathsSortedOut, DisplayState* toIgnore = nullptr) {
     DisplayState* ds;
     for (size_t i = 0; (ds = gFileHistory.Get(i)) != nullptr; i++) {
-        if (ds->favorites->Count() > 0 && ds != toIgnore) {
+        if (ds->favorites->size() > 0 && ds != toIgnore) {
             filePathsSortedOut.Append(ds->filePath);
         }
     }
@@ -260,11 +260,11 @@ static void AppendFavMenus(HMENU m, const WCHAR* currFilePath) {
         // only show favorites for other files, if we're allowed to open them
         GetSortedFilePaths(filePathsSorted, currFileFav);
     }
-    if (currFileFav && currFileFav->favorites->Count() > 0) {
+    if (currFileFav && currFileFav->favorites->size() > 0) {
         filePathsSorted.InsertAt(0, currFileFav->filePath);
     }
 
-    if (filePathsSorted.Count() == 0) {
+    if (filePathsSorted.size() == 0) {
         return;
     }
 
@@ -273,7 +273,7 @@ static void AppendFavMenus(HMENU m, const WCHAR* currFilePath) {
     gFavorites.ResetMenuIds();
     UINT menuId = IDM_FAV_FIRST;
 
-    size_t menusCount = filePathsSorted.Count();
+    size_t menusCount = filePathsSorted.size();
     if (menusCount > MAX_FAV_MENUS) {
         menusCount = MAX_FAV_MENUS;
     }
@@ -283,7 +283,7 @@ static void AppendFavMenus(HMENU m, const WCHAR* currFilePath) {
         DisplayState* f = gFavorites.GetFavByFilePath(filePath);
         CrashIf(!f);
         HMENU sub = m;
-        bool combined = (f->favorites->Count() == 1);
+        bool combined = (f->favorites->size() == 1);
         if (!combined) {
             sub = CreateMenu();
         }
@@ -433,14 +433,14 @@ static HTREEITEM InsertFavSecondLevelNode(HWND hwnd, HTREEITEM parent, Favorite*
 }
 
 static void InsertFavSecondLevelNodes(HWND hwnd, HTREEITEM parent, DisplayState* f) {
-    for (size_t i = 0; i < f->favorites->Count(); i++) {
+    for (size_t i = 0; i < f->favorites->size(); i++) {
         InsertFavSecondLevelNode(hwnd, parent, f->favorites->at(i));
     }
 }
 
 static HTREEITEM InsertFavTopLevelNode(HWND hwnd, DisplayState* fav, bool isExpanded) {
     WCHAR* s = nullptr;
-    bool collapsed = fav->favorites->Count() == 1;
+    bool collapsed = fav->favorites->size() == 1;
     if (collapsed) {
         isExpanded = false;
     }
@@ -474,11 +474,11 @@ void PopulateFavTreeIfNeeded(WindowInfo* win) {
     GetSortedFilePaths(filePathsSorted);
 
     SendMessage(hwndTree, WM_SETREDRAW, FALSE, 0);
-    for (size_t i = 0; i < filePathsSorted.Count(); i++) {
+    for (size_t i = 0; i < filePathsSorted.size(); i++) {
         DisplayState* f = gFavorites.GetFavByFilePath(filePathsSorted.at(i));
         bool isExpanded = win->expandedFavorites.Contains(f);
         HTREEITEM node = InsertFavTopLevelNode(hwndTree, f, isExpanded);
-        if (f->favorites->Count() > 1) {
+        if (f->favorites->size() > 1) {
             InsertFavSecondLevelNodes(hwndTree, node, f);
         }
     }
@@ -559,7 +559,7 @@ void AddFavorite(WindowInfo* win) {
     gFavorites.AddOrReplace(tab->filePath, pageNo, name, needsLabel ? pageLabel.Get() : nullptr);
     // expand newly added favorites by default
     DisplayState* fav = gFavorites.GetFavByFilePath(tab->filePath);
-    if (fav && fav->favorites->Count() == 2) {
+    if (fav && fav->favorites->size() == 2) {
         win->expandedFavorites.Append(fav);
     }
     UpdateFavoritesTreeForAllWindows();
@@ -597,7 +597,7 @@ void RememberFavTreeExpansionState(WindowInfo* win) {
 }
 
 void RememberFavTreeExpansionStateForAllWindows() {
-    for (size_t i = 0; i < gWindows.Count(); i++) {
+    for (size_t i = 0; i < gWindows.size(); i++) {
         RememberFavTreeExpansionState(gWindows.at(i));
     }
 }

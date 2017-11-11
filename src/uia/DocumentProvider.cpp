@@ -315,7 +315,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetVisibleRanges(
     // return all pages' ranges that are even partially visible
     Vec<SumatraUIAutomationTextRange*> rangeArray;
     SumatraUIAutomationPageProvider* it = child_first;
-    while (it && rangeArray.Count() > ULONG_MAX) {
+    while (it && rangeArray.size() > ULONG_MAX) {
         if (it->dm->GetPageInfo(it->pageNum) &&
             it->dm->GetPageInfo(it->pageNum)->shown &&
             it->dm->GetPageInfo(it->pageNum)->visibleRatio > 0.0f) {
@@ -323,17 +323,17 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetVisibleRanges(
         }
         it = it->sibling_next;
     }
-    CrashIf(ULONG_MAX == rangeArray.Count());
+    CrashIf(ULONG_MAX == rangeArray.size());
 
-    SAFEARRAY *psa = SafeArrayCreateVector(VT_UNKNOWN, 0, (ULONG)rangeArray.Count());
+    SAFEARRAY *psa = SafeArrayCreateVector(VT_UNKNOWN, 0, (ULONG)rangeArray.size());
     if (!psa) {
-        for (size_t i = 0; i < rangeArray.Count(); i++) {
+        for (size_t i = 0; i < rangeArray.size(); i++) {
             rangeArray[i]->Release();
         }
         return E_OUTOFMEMORY;
     }
 
-    for (LONG i = 0; i < (LONG)rangeArray.Count(); i++) {
+    for (LONG i = 0; i < (LONG)rangeArray.size(); i++) {
         HRESULT hr = SafeArrayPutElement(psa, &i, rangeArray[i]);
         CrashIf(FAILED(hr));
         rangeArray[i]->Release();

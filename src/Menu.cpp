@@ -306,7 +306,7 @@ static void AppendRecentFilesToMenu(HMENU m) {
 }
 
 static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR* filePath) {
-    if (0 == gGlobalPrefs->externalViewers->Count()) {
+    if (0 == gGlobalPrefs->externalViewers->size()) {
         return;
     }
     if (!HasPermission(Perm_DiskAccess) || (filePath && !file::Exists(filePath))) {
@@ -315,7 +315,7 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR* filePath) {
 
     const int maxEntries = IDM_OPEN_WITH_EXTERNAL_LAST - IDM_OPEN_WITH_EXTERNAL_FIRST + 1;
     int count = 0;
-    for (size_t i = 0; i < gGlobalPrefs->externalViewers->Count() && count < maxEntries; i++) {
+    for (size_t i = 0; i < gGlobalPrefs->externalViewers->size() && count < maxEntries; i++) {
         ExternalViewer* ev = gGlobalPrefs->externalViewers->at(i);
         if (!ev->commandLine) {
             continue;
@@ -329,7 +329,7 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR* filePath) {
         if (str::IsEmpty(name)) {
             WStrVec args;
             ParseCmdLine(ev->commandLine, args, 2);
-            if (args.Count() == 0) {
+            if (args.size() == 0) {
                 continue;
             }
             appName.SetCopy(path::GetBaseName(args.at(0)));
@@ -442,7 +442,7 @@ void MenuUpdatePrintItem(WindowInfo* win, HMENU menu, bool disableOnly = false) 
 }
 
 static bool IsFileCloseMenuEnabled() {
-    for (size_t i = 0; i < gWindows.Count(); i++) {
+    for (size_t i = 0; i < gWindows.size(); i++) {
         if (!gWindows.at(i)->IsAboutWindow()) {
             return true;
         }
@@ -591,7 +591,7 @@ void OnAboutContextMenu(WindowInfo* win, int x, int y) {
     }
 
     if (IDM_FORGET_SELECTED_DOCUMENT == cmd) {
-        if (state->favorites->Count() > 0) {
+        if (state->favorites->size() > 0) {
             // just hide documents with favorites
             gFileHistory.MarkFileInexistent(state->filePath, true);
         } else {

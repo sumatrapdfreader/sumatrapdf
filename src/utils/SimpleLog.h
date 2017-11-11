@@ -105,7 +105,7 @@ public:
     virtual void Log(const WCHAR *s)
     {
         ScopedCritSec scope(&cs);
-        for (size_t i = 0; i < loggers.Count(); i++) {
+        for (size_t i = 0; i < loggers.size(); i++) {
             loggers.at(i)->Log(s);
         }
     }
@@ -123,7 +123,7 @@ public:
     size_t CountLoggers()
     {
         ScopedCritSec scope(&cs);
-        return loggers.Count();
+        return loggers.size();
     }
 };
 

@@ -11,7 +11,7 @@ static void HtmlAddWithNesting(str::Str<char>* out, HtmlToken *tok, size_t nesti
     CrashIf(!tok->IsStartTag() && !tok->IsEndTag() && !tok->IsEmptyElementEndTag());
     bool isInline = IsInlineTag(tok->tag);
     // add a newline before block start tags (unless there already is one)
-    bool onNewLine = out->Count() == 0 || out->Last() == '\n';
+    bool onNewLine = out->size() == 0 || out->Last() == '\n';
     if (!onNewLine && !isInline && !tok->IsEndTag()) {
         out->Append('\n');
         onNewLine = true;
@@ -62,7 +62,7 @@ char *PrettyPrintHtml(const char *s, size_t len, size_t& lenOut)
         if (!t->IsTag())
             continue;
 
-        HtmlAddWithNesting(&res, t, tagNesting.Count());
+        HtmlAddWithNesting(&res, t, tagNesting.size());
 
         if (t->IsStartTag()) {
             if (!IsTagSelfClosing(t->tag))
@@ -76,10 +76,10 @@ char *PrettyPrintHtml(const char *s, size_t len, size_t& lenOut)
                 while (tagNesting.Last() != t->tag)
                     tagNesting.Pop();
             }
-            if (tagNesting.Count() > 0 && tagNesting.Last() == t->tag)
+            if (tagNesting.size() > 0 && tagNesting.Last() == t->tag)
                 tagNesting.Pop();
         }
     }
-    lenOut = res.Count();
+    lenOut = res.size();
     return res.StealData();
 }

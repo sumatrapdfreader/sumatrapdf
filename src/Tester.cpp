@@ -260,10 +260,10 @@ int TesterMain()
 
     bool mobiTest = false;
     size_t i = 2; // skip program name and "/tester"
-    while (i < argv.Count()) {
+    while (i < argv.size()) {
         if (str::Eq(argv[i], L"-mobi")) {
             ++i;
-            if (i == argv.Count())
+            if (i == argv.size())
                 return Usage();
             mobiTest = true;
             dirOrFile = argv[i];

@@ -406,8 +406,8 @@ unsigned char *SerializeBitmap(HBITMAP hbmp, size_t *bmpBytesOut)
     tgaData.Append((char *)&footerLE, sizeof(footerLE));
 
     // don't compress the image data if that increases the file size
-    if (tgaData.Count() > sizeof(headerLE) + w * h * 3 + sizeof(footerLE)) {
-        tgaData.RemoveAt(0, tgaData.Count());
+    if (tgaData.size() > sizeof(headerLE) + w * h * 3 + sizeof(footerLE)) {
+        tgaData.RemoveAt(0, tgaData.size());
         headerLE.imageType = Type_Truecolor;
         tgaData.Append((char *)&headerLE, sizeof(headerLE));
         for (int k = 0; k < h; k++) {
@@ -417,7 +417,7 @@ unsigned char *SerializeBitmap(HBITMAP hbmp, size_t *bmpBytesOut)
     }
 
     if (bmpBytesOut)
-        *bmpBytesOut = tgaData.Count();
+        *bmpBytesOut = tgaData.size();
     return (unsigned char *)tgaData.StealData();
 }
 

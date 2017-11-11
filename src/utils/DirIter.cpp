@@ -18,7 +18,7 @@ bool DirIter::StartDirIter(const WCHAR *dir)
 
 bool DirIter::TryNextDir()
 {
-    while (dirsToVisit.Count() > 0) {
+    while (dirsToVisit.size() > 0) {
         AutoFreeW nextDir(dirsToVisit.Pop());
         // it's ok if we fail, this might be an auth problem,
         // we keep going
@@ -113,5 +113,5 @@ bool CollectPathsFromDirectory(const WCHAR *pattern, WStrVec& paths, bool dirsIn
     } while (FindNextFile(hfind, &fdata));
     FindClose(hfind);
 
-    return paths.Count() > 0;
+    return paths.size() > 0;
 }

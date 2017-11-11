@@ -110,7 +110,7 @@ RectF MeasureTextQuick(Graphics *g, Font *f, const WCHAR *s, int len)
                                    str::EndsWith(lfw.lfFaceName, L"Typewriter");
         fontCache.Append(f);
         fixCache.Append(isItalicOrMonospace);
-        idx = (int)fontCache.Count() - 1;
+        idx = (int)fontCache.size() - 1;
     }
     // most documents look good enough with these adjustments
     if (!fixCache.at(idx)) {

@@ -45,7 +45,7 @@ WindowInfo::~WindowInfo()
 {
     FinishStressTest(this);
 
-    CrashIf(tabs.Count() > 0);
+    CrashIf(tabs.size() > 0);
     CrashIf(ctrl || linkOnLastButtonDown);
 
     // release our copy of UIA provider

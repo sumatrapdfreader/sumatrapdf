@@ -37,7 +37,7 @@ void FreeStruct(uint8_t *structStart, const StructMetadata *def)
             Vec<uint8_t*> **vecPtr = (Vec<uint8_t*> **)data;
             Vec<uint8_t*> *vec = *vecPtr;
             CrashIf(!vec);
-            for (size_t j = 0; j < vec->Count(); j++) {
+            for (size_t j = 0; j < vec->size(); j++) {
                 FreeStruct(vec->at(j), GetStructDef(fieldDef));
             }
             delete vec;
@@ -319,7 +319,7 @@ static TxtNode *FindNode(TxtNode *curr, const char *name, size_t nameLen)
 
     TxtNode *child;
     TxtNode *found = nullptr;
-    for (size_t i = 0; i < curr->children->Count(); i++) {
+    for (size_t i = 0; i < curr->children->size(); i++) {
         child = curr->children->at(i);
         if (TextNode == child->type || StructNode == child->type) {
             nodeName = child->keyStart;
@@ -348,7 +348,7 @@ static void WriteDefaultValue(uint8_t *structDataPtr, Type type)
 static void FreeTxtNode(TxtNode *node)
 {
     if (node->children) {
-        for (size_t i = 0; i < node->children->Count(); i++) {
+        for (size_t i = 0; i < node->children->size(); i++) {
             TxtNode *child = node->children->at(i);
             CrashIf(TextNode != child->type);
             delete child;
@@ -488,7 +488,7 @@ static bool DecodeField(DecodeState& ds, TxtNode *firstNode, const char *fieldNa
         // we remember it right away, so that it gets freed in case of error
         WriteStructPtrVal(structDataPtr, (void*)vec);
         TxtNode *child;
-        for (size_t i = 0; i < node->children->Count(); i++) {
+        for (size_t i = 0; i < node->children->size(); i++) {
             child = node->children->at(i);
             uint8_t *d = DecodeStruct(ds, fieldDef, child, isCompact);
             if (d)
@@ -697,7 +697,7 @@ static void SerializeField(EncodeState& es, const char *fieldName, const FieldMe
         res.Append(" [" NL);
         Vec<const uint8_t*> *vec = (Vec<const uint8_t*> *)ReadStructPtr(data);
         ++es.nest;
-        for (size_t i = 0; vec && (i < vec->Count()); i++) {
+        for (size_t i = 0; vec && (i < vec->size()); i++) {
             AppendNest(res, es.nest);
             res.Append("[" NL);
             const uint8_t *elData = vec->at(i);
@@ -734,7 +734,7 @@ uint8_t *Serialize(const uint8_t *rootStruct, const StructMetadata *def, size_t 
     es.nest = 0;
     SerializeRec(es, rootStruct, def);
     if (sizeOut)
-        *sizeOut = es.res.Count();
+        *sizeOut = es.res.size();
     return (uint8_t *)es.res.StealData();
 }
 

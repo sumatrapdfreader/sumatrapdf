@@ -59,7 +59,7 @@ public:
     StringInterner() : nInternCalls(0) {}
 
     int             Intern(const char *s, bool *alreadyPresent=nullptr);
-    size_t          StringsCount() const { return intToStr.Count(); }
+    size_t          StringsCount() const { return intToStr.size(); }
     const char *    GetByIndex(size_t n) const { return intToStr.at(n); }
 
     int             nInternCalls; // so we know how effective interning is

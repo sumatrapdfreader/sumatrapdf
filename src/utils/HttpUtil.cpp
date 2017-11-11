@@ -148,13 +148,13 @@ bool HttpPost(const WCHAR* server, int port, const WCHAR* url, str::Str<char>* h
     hReq = HttpOpenRequestW(hConn, L"POST", url, nullptr, nullptr, nullptr, flags, 0);
     if (!hReq)
         goto Exit;
-    if (headers && headers->Count() > 0) {
+    if (headers && headers->size() > 0) {
         hdr = headers->Get();
-        hdrLen = (DWORD)headers->Count();
+        hdrLen = (DWORD)headers->size();
     }
-    if (data && data->Count() > 0) {
+    if (data && data->size() > 0) {
         d = data->Get();
-        dLen = (DWORD)data->Count();
+        dLen = (DWORD)data->size();
     }
 
     InternetSetOptionW(hReq, INTERNET_OPTION_SEND_TIMEOUT, &timeoutMs, sizeof(timeoutMs));
