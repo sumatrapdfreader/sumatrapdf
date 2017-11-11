@@ -418,7 +418,7 @@ static void CopyAboutInfoToClipboard(HWND hwnd)
     str::Str<WCHAR> info(512);
     AutoFreeW ver(GetSumatraVersion());
     info.AppendFmt(L"%s %s\r\n", APP_NAME_STR, ver.Get());
-    for (size_t i = info.Size() - 2; i > 0; i--) {
+    for (size_t i = info.Count() - 2; i > 0; i--) {
         info.Append('-');
     }
     info.Append(L"\r\n");

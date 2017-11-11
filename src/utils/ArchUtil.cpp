@@ -352,7 +352,7 @@ char* UnRarDll::GetFileByName(const WCHAR* rarPath, const WCHAR* filename, size_
             res = 1;
         } else {
             res = RARProcessFile(hArc, RAR_TEST, nullptr, nullptr);
-            if (rarHeader.UnpSize != data.Size()) {
+            if (rarHeader.UnpSize != data.Count()) {
                 res = 1;
             }
         }
@@ -366,7 +366,7 @@ char* UnRarDll::GetFileByName(const WCHAR* rarPath, const WCHAR* filename, size_
     if (0 != res)
         return nullptr;
     if (len)
-        *len = data.Size() - 2;
+        *len = data.Count() - 2;
     return data.StealData();
 }
 

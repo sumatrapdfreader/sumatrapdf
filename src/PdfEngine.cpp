@@ -1102,7 +1102,7 @@ pdf_load_page_objs(pdf_document *doc, pdf_obj **page_objs)
                 pdf_unmark_obj(top.kids);
                 if (page_no < top.next_page_no)
                     page_no = top.next_page_no;
-                if (stack.Size() == 0)
+                if (stack.Count() == 0)
                     break;
                 top = stack.Pop();
                 continue;
@@ -1132,7 +1132,7 @@ pdf_load_page_objs(pdf_document *doc, pdf_obj **page_objs)
         }
     }
     fz_catch(ctx) {
-        for (size_t i = 0; i < stack.Size(); i++) {
+        for (size_t i = 0; i < stack.Count(); i++) {
             pdf_unmark_obj(stack.at(i).kids);
         }
         pdf_unmark_obj(top.kids);

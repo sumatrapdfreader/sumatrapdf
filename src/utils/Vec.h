@@ -153,10 +153,6 @@ public:
         return len;
     }
 
-    size_t Size() const {
-        return len;
-    }
-
     void InsertAt(size_t idx, const T& el) {
         MakeSpaceAt(idx, 1)[0] = el;
     }

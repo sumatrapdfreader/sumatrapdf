@@ -434,7 +434,7 @@ static void SerializeStructRec(str::Str<char>& out, const StructInfo *info, cons
             out.Append("\r\n");
         }
         else {
-            size_t offset = out.Size();
+            size_t offset = out.Count();
             Indent(out, indent);
             out.Append(fieldName);
             out.Append(" = ");
@@ -442,7 +442,7 @@ static void SerializeStructRec(str::Str<char>& out, const StructInfo *info, cons
             if (keep)
                 out.Append("\r\n");
             else
-                out.RemoveAt(offset, out.Size() - offset);
+                out.RemoveAt(offset, out.Count() - offset);
         }
         MarkFieldKnown(prevNode, fieldName, field.type);
     }
@@ -499,7 +499,7 @@ char *SerializeStruct(const StructInfo *info, const void *strct, const char *pre
     SquareTree prevSqt(prevData);
     SerializeStructRec(out, info, strct, prevSqt.root);
     if (sizeOut)
-        *sizeOut = out.Size();
+        *sizeOut = out.Count();
     return out.StealData();
 }
 

@@ -377,11 +377,11 @@ bool ZipCreator::Finish()
     eocd.Write16(0); // disk number of central directory
     eocd.Write16((uint16_t)fileCount);
     eocd.Write16((uint16_t)fileCount);
-    eocd.Write32((uint32_t)centraldir.Size());
+    eocd.Write32((uint32_t)centraldir.Count());
     eocd.Write32((uint32_t)bytesWritten);
     eocd.Write16(0); // comment len
 
-    return WriteData(centraldir.Get(), centraldir.Size()) &&
+    return WriteData(centraldir.Get(), centraldir.Count()) &&
            WriteData(endOfCentralDir, sizeof(endOfCentralDir));
 }
 

@@ -138,10 +138,10 @@ static bool PalmdocUncompress(const char *src, size_t srcLen, str::Str<char>& ds
                 return false;
             uint16 c2 = (c << 8) | (uint8)*src++;
             uint16 back = (c2 >> 3) & 0x07ff;
-            if (back > dst.Size() || 0 == back)
+            if (back > dst.Count() || 0 == back)
                 return false;
             for (uint8 n = (c2 & 7) + 3; n > 0; n--) {
-                dst.Append(dst.at(dst.Size() - back));
+                dst.Append(dst.at(dst.Count() - back));
             }
         } else if (c >= 192) {
             dst.Append(' ');
@@ -833,7 +833,7 @@ bool MobiDoc::LoadDocument(PdbReader *pdbReader)
     }
     // replace unexpected \0 with spaces
     // cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2529
-    char *s = doc->Get(), *end = s + doc->Size();
+    char *s = doc->Get(), *end = s + doc->Count();
     while ((s = (char *)memchr(s, '\0', end - s)) != nullptr) {
         *s = ' ';
     }
@@ -849,7 +849,7 @@ bool MobiDoc::LoadDocument(PdbReader *pdbReader)
 
 char *MobiDoc::GetHtmlData(size_t& lenOut) const
 {
-    lenOut = doc->Size();
+    lenOut = doc->Count();
     return doc->Get();
 }
 
@@ -865,11 +865,11 @@ WCHAR *MobiDoc::GetProperty(DocumentProperty prop)
 bool MobiDoc::HasToc()
 {
     if (docTocIndex != (size_t)-1)
-        return docTocIndex < doc->Size();
-    docTocIndex = doc->Size(); // no ToC
+        return docTocIndex < doc->Count();
+    docTocIndex = doc->Count(); // no ToC
 
     // search for <reference type=toc filepos=\d+/>
-    HtmlPullParser parser(doc->Get(), doc->Size());
+    HtmlPullParser parser(doc->Get(), doc->Count());
     HtmlToken *tok;
     while ((tok = parser.Next()) != nullptr && !tok->IsError()) {
         if (!tok->IsStartTag() && !tok->IsEmptyElementEndTag() || !tok->NameIs("reference"))
@@ -885,7 +885,7 @@ bool MobiDoc::HasToc()
         unsigned int pos;
         if (str::Parse(val, L"%u%$", &pos)) {
             docTocIndex = pos;
-            return docTocIndex < doc->Size();
+            return docTocIndex < doc->Count();
         }
     }
     return false;
@@ -902,7 +902,7 @@ bool MobiDoc::ParseToc(EbookTocVisitor *visitor)
 
     // there doesn't seem to be a standard for Mobi ToCs, so we try to
     // determine the author's intentions by looking at commonly used tags
-    HtmlPullParser parser(doc->Get() + docTocIndex, doc->Size() - docTocIndex);
+    HtmlPullParser parser(doc->Get() + docTocIndex, doc->Count() - docTocIndex);
     HtmlToken *tok;
     while ((tok = parser.Next()) != nullptr && !tok->IsError()) {
         if (itemLink && tok->IsText()) {

@@ -1791,7 +1791,7 @@ bool AutoUpdateInitiate(const char *updateData)
         return false;
 
     unsigned char digest[32];
-    CalcSHA2Digest((const unsigned char *)rsp.data.Get(), rsp.data.Size(), digest);
+    CalcSHA2Digest((const unsigned char *)rsp.data.Get(), rsp.data.Count(), digest);
     AutoFree fingerPrint(_MemToHex(&digest));
     if (!str::EqI(fingerPrint, hash))
         return false;
@@ -1809,7 +1809,7 @@ bool AutoUpdateInitiate(const char *updateData)
         updateArgs.Set(str::Format(L"-autoupdate replace:\"%s\"", thisExe));
     }
 
-    bool ok = file::WriteAll(updateExe, rsp.data.Get(), rsp.data.Size());
+    bool ok = file::WriteAll(updateExe, rsp.data.Get(), rsp.data.Count());
     if (!ok)
         return false;
 
@@ -1872,7 +1872,7 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp *rsp, bool silent)
     if (!str::StartsWith(rsp->url.Get(), SUMATRA_UPDATE_INFO_URL))
         return ERROR_INTERNET_INVALID_URL;
     str::Str<char> *data = &rsp->data;
-    if (0 == data->Size())
+    if (0 == data->Count())
         return ERROR_INTERNET_CONNECTION_ABORTED;
 
     // See https://code.google.com/p/sumatrapdf/issues/detail?id=725
@@ -3555,13 +3555,13 @@ static void FrameOnChar(WindowInfo& win, WPARAM key, LPARAM info=0)
         Vec<PageAnnotation> *annots = dm->userAnnots;
         for (SelectionOnPage& sel : *win.currentTab->selectionOnPage) {
             auto addedAnnotation = PageAnnotation(Annot_Highlight, sel.pageNo, sel.rect, PageAnnotation::Color(gGlobalPrefs->annotationDefaults.highlightColor, 0xCC));
-            size_t oldLen = annots->Size();
-            for (size_t i = 0; i < oldLen && i < annots->Size(); ++i) {
+            size_t oldLen = annots->Count();
+            for (size_t i = 0; i < oldLen && i < annots->Count(); ++i) {
                 if (annots->at(i) == addedAnnotation) {
                     annots->RemoveAtFast(i);
                 }
             }
-            if (oldLen == annots->Size()) {
+            if (oldLen == annots->Count()) {
                 annots->Append(PageAnnotation(Annot_Highlight, sel.pageNo, sel.rect, PageAnnotation::Color(gGlobalPrefs->annotationDefaults.highlightColor, 0xCC)));
             }
             gRenderCache.Invalidate(dm, sel.pageNo, sel.rect);

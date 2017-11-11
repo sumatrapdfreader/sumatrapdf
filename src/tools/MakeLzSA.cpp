@@ -164,12 +164,12 @@ bool CreateArchive(const WCHAR *archivePath, WStrVec& files, size_t skipFiles=0)
             return false;
     }
 
-    uint32_t headerCrc32 = crc32(0, (const uint8_t *)data.Get(), (uint32_t)data.Size());
+    uint32_t headerCrc32 = crc32(0, (const uint8_t *)data.Get(), (uint32_t)data.Count());
     ByteWriterLE(data.AppendBlanks(4), 4).Write32(headerCrc32);
-    if (!data.AppendChecked(content.Get(), content.Size()))
+    if (!data.AppendChecked(content.Get(), content.Count()))
         return false;
 
-    return file::WriteAll(archivePath, data.Get(), data.Size());
+    return file::WriteAll(archivePath, data.Get(), data.Count());
 }
 
 }

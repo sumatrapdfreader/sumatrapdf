@@ -214,7 +214,7 @@ static bool ExtractSignature(const char *hexSignature, const void *data, size_t&
             return false;
         signatureBytes.Append((BYTE)val);
     }
-    signatureLen = signatureBytes.Size();
+    signatureLen = signatureBytes.Count();
     signature.Set(signatureBytes.StealData());
     return true;
 }

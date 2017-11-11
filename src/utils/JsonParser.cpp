@@ -115,7 +115,7 @@ static const char *ParseObject(ParseArgs& args, const char *data)
     if ('}' == *data)
         return data + 1;
 
-    size_t pathIdx = args.path.Size();
+    size_t pathIdx = args.path.Count();
     for (;;) {
         data = SkipWS(data);
         if ('"' != *data)
@@ -131,7 +131,7 @@ static const char *ParseObject(ParseArgs& args, const char *data)
         data = ParseValue(args, data + 1);
         if (args.canceled || !data)
             return data;
-        args.path.RemoveAt(pathIdx, args.path.Size() - pathIdx);
+        args.path.RemoveAt(pathIdx, args.path.Count() - pathIdx);
 
         data = SkipWS(data);
         if ('}' == *data)
@@ -148,13 +148,13 @@ static const char *ParseArray(ParseArgs& args, const char *data)
     if (']' == *data)
         return data + 1;
 
-    size_t pathIdx = args.path.Size();
+    size_t pathIdx = args.path.Count();
     for (int idx = 0; ; idx++) {
         args.path.AppendFmt("[%d]", idx);
         data = ParseValue(args, data);
         if (args.canceled || !data)
             return data;
-        args.path.RemoveAt(pathIdx, args.path.Size() - pathIdx);
+        args.path.RemoveAt(pathIdx, args.path.Count() - pathIdx);
 
         data = SkipWS(data);
         if (']' == *data)

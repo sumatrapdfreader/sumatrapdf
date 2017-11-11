@@ -734,7 +734,7 @@ uint8_t *Serialize(const uint8_t *rootStruct, const StructMetadata *def, size_t 
     es.nest = 0;
     SerializeRec(es, rootStruct, def);
     if (sizeOut)
-        *sizeOut = es.res.Size();
+        *sizeOut = es.res.Count();
     return (uint8_t *)es.res.StealData();
 }
 

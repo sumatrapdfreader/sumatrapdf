@@ -51,7 +51,7 @@ public:
     ~MobiDoc();
 
     char *              GetHtmlData(size_t& lenOut) const;
-    size_t              GetHtmlDataSize() const { return doc->Size(); }
+    size_t              GetHtmlDataSize() const { return doc->Count(); }
     ImageData *         GetCoverImage();
     ImageData *         GetImage(size_t imgRecIndex) const;
     const WCHAR *       GetFileName() const { return fileName; }

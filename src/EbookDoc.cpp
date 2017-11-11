@@ -432,13 +432,13 @@ void EpubDoc::ParseMetadata(const char *content)
 
 const char *EpubDoc::GetHtmlData(size_t *lenOut) const
 {
-    *lenOut = htmlData.Size();
+    *lenOut = htmlData.Count();
     return htmlData.Get();
 }
 
 size_t EpubDoc::GetHtmlDataSize() const
 {
-    return htmlData.Size();
+    return htmlData.Count();
 }
 
 ImageData *EpubDoc::GetImageData(const char *id, const char *pagePath)
@@ -848,7 +848,7 @@ bool Fb2Doc::Load()
             ExtractImage(&parser, tok);
     }
 
-    return xmlData.Size() > 0;
+    return xmlData.Count() > 0;
 }
 
 void Fb2Doc::ExtractImage(HtmlPullParser *parser, HtmlToken *tok)
@@ -875,13 +875,13 @@ void Fb2Doc::ExtractImage(HtmlPullParser *parser, HtmlToken *tok)
 
 const char *Fb2Doc::GetXmlData(size_t *lenOut) const
 {
-    *lenOut = xmlData.Size();
+    *lenOut = xmlData.Count();
     return xmlData.Get();
 }
 
 size_t Fb2Doc::GetXmlDataSize() const
 {
-    return xmlData.Size();
+    return xmlData.Count();
 }
 
 ImageData *Fb2Doc::GetImageData(const char *id)
@@ -1119,13 +1119,13 @@ bool PalmDoc::Load()
 
 const char *PalmDoc::GetHtmlData(size_t *lenOut) const
 {
-    *lenOut = htmlData.Size();
+    *lenOut = htmlData.Count();
     return htmlData.Get();
 }
 
 size_t PalmDoc::GetHtmlDataSize() const
 {
-    return htmlData.Size();
+    return htmlData.Count();
 }
 
 WCHAR *PalmDoc::GetProperty(DocumentProperty prop) const
@@ -1501,7 +1501,7 @@ bool TxtDoc::Load()
 
 const char *TxtDoc::GetHtmlData(size_t *lenOut) const
 {
-    *lenOut = htmlData.Size();
+    *lenOut = htmlData.Count();
     return htmlData.Get();
 }
 

@@ -175,9 +175,9 @@ bool SaveFileModifictions(const WCHAR* filePath, Vec<PageAnnotation>* list) {
         data.AppendFmt("opacity = %g\r\n", annot.color.a / 255.f);
         data.Append("\r\n");
     }
-    data.RemoveAt(data.Size() - 2, 2);
+    data.RemoveAt(data.Count() - 2, 2);
 
-    return file::WriteAll(modificationsPath, data.LendData(), data.Size());
+    return file::WriteAll(modificationsPath, data.LendData(), data.Count());
 }
 
 bool IsModificationsFile(const WCHAR* filePath) {

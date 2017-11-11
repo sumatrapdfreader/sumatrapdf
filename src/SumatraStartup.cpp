@@ -229,7 +229,7 @@ static void OpenUsingDde(HWND targetWnd, const WCHAR *filePath, CommandLineInfo&
 
     if (!i.reuseDdeInstance) {
         // try WM_COPYDATA first, as that allows targetting a specific window
-        COPYDATASTRUCT cds = { 0x44646557 /* DdeW */, (DWORD)(cmd.Size() + 1) * sizeof(WCHAR), cmd.Get() };
+        COPYDATASTRUCT cds = { 0x44646557 /* DdeW */, (DWORD)(cmd.Count() + 1) * sizeof(WCHAR), cmd.Get() };
         LRESULT res = SendMessage(targetWnd, WM_COPYDATA, 0, (LPARAM)&cds);
         if (res)
             return;

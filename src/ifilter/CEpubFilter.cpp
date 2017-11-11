@@ -92,7 +92,7 @@ static WCHAR *ExtractHtmlText(EpubDoc *doc)
                 tagNesting.Append(t->tag);
         }
         else if (t->IsEndTag()) {
-            if (!IsInlineTag(t->tag) && text.Size() > 0 && text.Last() == ' ') {
+            if (!IsInlineTag(t->tag) && text.Count() > 0 && text.Last() == ' ') {
                 text.Pop();
                 text.Append("\r\n");
             }
