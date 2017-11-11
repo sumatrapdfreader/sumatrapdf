@@ -42,7 +42,6 @@ static void WStrVecTest()
         v2 = v;
         utassert(v2.Count() == 3 && v2.at(0) != v.at(0));
         utassert(str::Eq(v2.at(1), L"foo"));
-        utassert(&v2.at(2) == v2.AtPtr(2) && str::Eq(*v2.AtPtr(2), L"glee"));
     }
 
     {
@@ -123,7 +122,6 @@ void VecTest()
     last = ints.Pop();
     utassert(last == 999);
     ints.Append(last);
-    utassert(ints.AtPtr(501) == &ints.at(501));
 
     for (int& value : ints) {
         utassert(0 <= value && value < 1000);

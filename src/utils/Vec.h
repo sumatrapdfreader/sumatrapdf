@@ -137,16 +137,9 @@ public:
         memset(buf, 0, sizeof(buf));
     }
 
-    // use AtPtr() if you need a pointer to the element (e.g. if T is a struct)
     T& at(size_t idx) const {
         CrashIf(idx >= len);
         return els[idx];
-    }
-
-    T *AtPtr(size_t idx) const {
-        CrashIf(idx >= len);
-        CrashIf(&els[idx] != &at(idx));
-        return &els[idx];
     }
 
     size_t Count() const {
