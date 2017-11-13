@@ -65,6 +65,7 @@ all: prebuild prelink $(TARGET)
 endif
 
 OBJECTS := \
+	$(OBJDIR)/StrUtil.o \
 	$(OBJDIR)/main.o \
 
 RESOURCES := \
@@ -117,6 +118,14 @@ endif
 	$(SILENT) $(CXX) -x c++-header $(ALL_CXXFLAGS) -o "$@" -MF "$(@:%.gch=%.d)" -c "$<"
 endif
 
+$(OBJDIR)/StrUtil.o: src/utils/StrUtil.cpp
+	@echo $(notdir $<)
+ifeq (posix,$(SHELLTYPE))
+	$(SILENT) mkdir -p $(OBJDIR)
+else
+	$(SILENT) mkdir $(subst /,\\,$(OBJDIR))
+endif
+	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/main.o: tools/test_unix/main.cpp
 	@echo $(notdir $<)
 ifeq (posix,$(SHELLTYPE))

@@ -82,6 +82,7 @@ To use:
 #include <assert.h>
 #include <float.h>
 #include <stddef.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <time.h>

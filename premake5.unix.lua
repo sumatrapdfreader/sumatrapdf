@@ -59,5 +59,6 @@ workspace "SumatraPDF"
     language "C++"
     includedirs { "src", "src/utils", "ext/zlib", "ext/unarr", "ext/lzma/C", "ext/bzip2" }
     files {
+      "src/utils/StrUtil.cpp",
       "tools/test_unix/main.cpp",
     }
