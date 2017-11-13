@@ -53,10 +53,10 @@ class AutoFreeStr : public ScopedMem<T> {
     AutoFreeStr() { this->ptr = nullptr; }
     explicit AutoFreeStr(T* ptr) { this->ptr = ptr; }
     void SetCopy(const T* newPtr) {
-        free(this.ptr);
-        this.ptr = nullptr;
+        free(this->ptr);
+        this->ptr = nullptr;
         if (newPtr) {
-            this.ptr = str::Dup(newPtr);
+            this->ptr = str::Dup(newPtr);
         }
     }
 };

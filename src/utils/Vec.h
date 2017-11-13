@@ -378,7 +378,7 @@ public:
     }
 
     T LastChar() const {
-        auto n = this.len;
+        auto n = this->len;
         if (n == 0) {
             return 0;
         }
