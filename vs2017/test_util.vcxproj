@@ -357,6 +357,7 @@
     <ClCompile Include="..\src\utils\SquareTreeParser.cpp" />
     <ClCompile Include="..\src\utils\StrFormat.cpp" />
     <ClCompile Include="..\src\utils\StrUtil.cpp" />
+    <ClCompile Include="..\src\utils\StrUtil_win.cpp" />
     <ClCompile Include="..\src\utils\TrivialHtmlParser.cpp" />
     <ClCompile Include="..\src\utils\UtAssert.cpp" />
     <ClCompile Include="..\src\utils\VarintGob.cpp" />

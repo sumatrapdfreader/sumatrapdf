@@ -13,6 +13,7 @@ function makelzsa_files()
     "BaseUtil.cpp",
     "ByteOrderDecoder.cpp",
     "StrUtil.cpp",
+    "StrUtil_win.cpp",
     "FileUtil.cpp",
     "CmdLineParser.cpp",
     "LzmaSimpleArchive.cpp",
@@ -460,6 +461,7 @@ function utils_files()
     "SerializeTxt.*",
     "SettingsUtil.*",
     "StrUtil.*",
+    "StrUtil_win.cpp",
     "StrFormat.*",
     "StrSlice.*",
     "SquareTreeParser.*",
@@ -740,6 +742,7 @@ function efi_files()
     "src/utils/BitManip.h",
     "src/utils/Dict*",
     "src/utils/StrUtil*",
+    "src/utils/StrUtil_win.cpp",
   }
 end
 
@@ -764,6 +767,7 @@ function test_util_files()
     "SimpleLog*",
     "StrFormat*",
     "StrUtil*",
+    "StrUtil_win.cpp",
     "SquareTreeParser*",
     "TrivialHtmlParser*",
     "UtAssert*",
@@ -858,6 +862,7 @@ function installer_utils_files()
     "HttpUtil.*",
     "LzmaSimpleArchive.*",
     "StrUtil.*",
+    "StrUtil_win.cpp",
     "StrFormat.*",
     "StrSlice.*",
     "ThreadUtil.*",
@@ -914,6 +919,7 @@ function test_app_files()
     "FileUtil.*",
     "Scoped.h",
     "StrUtil.*",
+    "StrUtil_win.cpp",
     "WinDynCalls.*",
     "WinUtil.*",
   })

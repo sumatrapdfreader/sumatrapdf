@@ -307,6 +307,7 @@
     <ClCompile Include="..\src\utils\BaseUtil.cpp" />
     <ClCompile Include="..\src\utils\Dict.cpp" />
     <ClCompile Include="..\src\utils\StrUtil.cpp" />
+    <ClCompile Include="..\src\utils\StrUtil_win.cpp" />
     <ClCompile Include="..\tools\efi\Util.cpp" />
     <ClCompile Include="..\tools\efi\main.cpp" />
   </ItemGroup>

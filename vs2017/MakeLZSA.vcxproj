@@ -309,6 +309,7 @@
     <ClCompile Include="..\src\utils\FileUtil.cpp" />
     <ClCompile Include="..\src\utils\LzmaSimpleArchive.cpp" />
     <ClCompile Include="..\src\utils\StrUtil.cpp" />
+    <ClCompile Include="..\src\utils\StrUtil_win.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="unarrlib.vcxproj">

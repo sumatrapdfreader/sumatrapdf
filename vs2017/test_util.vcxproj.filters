@@ -162,6 +162,9 @@
     <ClCompile Include="..\src\utils\StrUtil.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\utils\StrUtil_win.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\utils\TrivialHtmlParser.cpp">
       <Filter>utils</Filter>
     </ClCompile>
