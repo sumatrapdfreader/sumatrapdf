@@ -2,9 +2,9 @@
    License: GPLv3 */
 
 /* Code related to:
-* user-initiated search
-* DDE commands, including search
-*/
+ * user-initiated search
+ * DDE commands, including search
+ */
 
 // utils
 #include "BaseUtil.h"

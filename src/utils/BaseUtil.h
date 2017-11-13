@@ -88,6 +88,7 @@ To use:
 #include <time.h>
 #include <locale.h>
 #include <malloc.h>
+#include <errno.h>
 
 #if OS(WIN)
 #include <io.h>
@@ -98,10 +99,6 @@ To use:
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-#if defined(__MINGW32__)
-#include "mingw_compat.h"
-#endif
-
 // most common c++ includes
 #include <algorithm>
 #include <functional>
@@ -109,21 +106,19 @@ To use:
 #include <string>
 #include <array>
 #include <vector>
+#include <limits>
 //#include <iostream>
 //#include <locale>
 #include <codecvt>
 
-template <typename T>
-inline T *AllocArray(size_t n)
-{
-    return (T*)calloc(n, sizeof(T));
-}
+// TODO: don't use INT_MAX and UINT_MAX
+#ifndef INT_MAX
+#define INT_MAX std::numeric_limits<int>::max()
+#endif
 
-template <typename T>
-inline T *AllocStruct()
-{
-    return (T*)calloc(1, sizeof(T));
-}
+#ifndef UINT_MAX
+#define UINT_MAX std::numeric_limits<unsigned int>::max()
+#endif
 
 #if defined(_MSC_VER)
 #define NO_INLINE __declspec(noinline)
@@ -157,8 +152,15 @@ static_assert(8 == sizeof(int64) && 8 == sizeof(uint64), "(u)int64 must be eight
     #if defined(UNREFERENCED_PARAMETER)
         #define UNUSED UNREFERENCED_PARAMETER
     #else
-        #define UNUSED(P) (P)
+        #define UNUSED(P) ((void)P)
     #endif
+#endif
+
+// TODO: is there a better way?
+#if defined(_MSC_VER)
+#define IS_UNUSED
+#else
+#define IS_UNUSED __attribute__((unused))
 #endif
 
 #if defined(_MSC_VER)
@@ -216,7 +218,6 @@ inline void CrashIfDebugOnlyFunc(bool cond) {
 #endif
 }
 
-
 #if defined(_MSC_VER)
 #define while_0_nowarn __pragma(warning(push)) __pragma(warning(disable:4127)) while (0) __pragma(warning(pop))
 #else
@@ -256,6 +257,18 @@ inline void CrashIfDebugOnlyFunc(bool cond) {
     } while_0_nowarn
 
 template <typename T>
+inline T *AllocArray(size_t n)
+{
+    return (T*)calloc(n, sizeof(T));
+}
+
+template <typename T>
+inline T *AllocStruct()
+{
+    return (T*)calloc(1, sizeof(T));
+}
+
+template <typename T>
 inline T limitValue(T val, T min, T max)
 {
     AssertCrash(max >= min);
@@ -263,6 +276,12 @@ inline T limitValue(T val, T min, T max)
     if (val > max) return max;
     return val;
 }
+
+#if !OS(WIN)
+inline void ZeroMemory(void *p, size_t len) {
+    memset(p, 0, len);
+}
+#endif
 
 inline void *memdup(const void *data, size_t len)
 {

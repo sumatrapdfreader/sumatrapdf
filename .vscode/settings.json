@@ -14,6 +14,11 @@
     "xstring": "cpp",
     "xhash": "cpp",
     "xtree": "cpp",
-    "xutility": "cpp"
+    "xutility": "cpp",
+    "array": "cpp",
+    "initializer_list": "cpp",
+    "list": "cpp",
+    "type_traits": "cpp",
+    "vector": "cpp"
   }
 }

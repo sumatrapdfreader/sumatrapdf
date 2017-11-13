@@ -378,15 +378,17 @@ public:
     }
 
     T LastChar() const {
-        if (len == 0) {
+        auto n = this.len;
+        if (n == 0) {
             return 0;
         }
-        return at(len - 1);
+        return at(n - 1);
     }
 };
 
 }
 
+#if OS(WIN)
 // WStrVec owns the strings in the list
 class WStrVec : public Vec<WCHAR *>
 {
@@ -484,7 +486,9 @@ private:
         return wcscmp(*(const WCHAR **)a, *(const WCHAR **)b);
     }
 };
+#endif
 
+#if OS(WIN)
 // WStrList is a subset of WStrVec that's optimized for appending and searching
 // WStrList owns the strings it contains and frees them at destruction
 class WStrList {
@@ -565,3 +569,4 @@ public:
         return -1 != Find(str);
     }
 };
+#endif

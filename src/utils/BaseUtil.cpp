@@ -40,10 +40,11 @@ char *Allocator::StrDup(Allocator *a, const char *str) {
     return str ? (char *)Dup(a, str, strlen(str) + 1) : nullptr;
 }
 
+#if OS(WIN)
 WCHAR *Allocator::StrDup(Allocator *a, const WCHAR *str) {
     return str ? (WCHAR *)Dup(a, str, (wcslen(str) + 1) * sizeof(WCHAR)) : nullptr;
 }
-
+#endif
 
 void PoolAllocator::Init() {
     currBlock = nullptr;

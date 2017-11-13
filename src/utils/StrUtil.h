@@ -95,13 +95,13 @@ inline bool IsWs(char c) {
     return (' ' == c) || (('\t' <= c) && (c <= '\r'));
 }
 
-#if OS(WIN)
 // Note: I tried an optimization: return (unsigned)(c - '0') < 10;
 // but it seems to mis-compile in release builds
 inline bool IsDigit(char c) {
     return ('0' <= c) && (c <= '9');
 }
 
+#if OS(WIN)
 inline const WCHAR* FindChar(const WCHAR* str, const WCHAR c) {
     return wcschr(str, c);
 }

@@ -603,7 +603,7 @@ static INT_PTR CALLBACK Dialog_CustomZoom_Proc(HWND hDlg, UINT msg, WPARAM wPara
             CenterDialog(hDlg);
             SetFocus(GetDlgItem(hDlg, IDC_DEFAULT_ZOOM));
             return FALSE;
-        //] ACCESSKEY_GROUP Zoom Dialog
+            //] ACCESSKEY_GROUP Zoom Dialog
 
         case WM_COMMAND:
             switch (LOWORD(wParam)) {
@@ -742,7 +742,7 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wParam,
             CenterDialog(hDlg);
             SetFocus(GetDlgItem(hDlg, IDC_DEFAULT_LAYOUT));
             return FALSE;
-        //] ACCESSKEY_GROUP Settings Dialog
+            //] ACCESSKEY_GROUP Settings Dialog
 
         case WM_COMMAND:
             switch (LOWORD(wParam)) {
@@ -840,7 +840,7 @@ static INT_PTR CALLBACK Sheet_Print_Advanced_Proc(HWND hDlg, UINT msg, WPARAM wP
                     : data->scale == PrintScaleAdv::Shrink ? IDC_PRINT_SCALE_SHRINK : IDC_PRINT_SCALE_NONE);
 
             return FALSE;
-        //] ACCESSKEY_GROUP Advanced Print Tab
+            //] ACCESSKEY_GROUP Advanced Print Tab
 
         case WM_NOTIFY:
             if (((LPNMHDR)lParam)->code == PSN_APPLY) {

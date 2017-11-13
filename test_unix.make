@@ -19,8 +19,8 @@ ifeq ($(config),debug_x64)
   INCLUDES += -Isrc -Isrc/utils -Iext/zlib -Iext/unarr -Iext/lzma/C -Iext/bzip2
   FORCE_INCLUDE +=
   ALL_CPPFLAGS += $(CPPFLAGS) -MMD -MP $(DEFINES) $(INCLUDES)
-  ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m64 -Werror -g -Wall -Wextra -Wno-expansion-to-defined
-  ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -Werror -g -Wall -Wextra -fno-exceptions -fno-rtti -Wno-expansion-to-defined
+  ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m64 -Werror -g -Wall -Wextra -Wno-expansion-to-defined -Wno-implicit-fallthrough
+  ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -Werror -g -Wall -Wextra -fno-exceptions -fno-rtti -Wno-expansion-to-defined -Wno-implicit-fallthrough
   ALL_RESFLAGS += $(RESFLAGS) $(DEFINES) $(INCLUDES)
   LIBS +=
   LDDEPS +=
@@ -46,8 +46,8 @@ ifeq ($(config),release_x64)
   INCLUDES += -Isrc -Isrc/utils -Iext/zlib -Iext/unarr -Iext/lzma/C -Iext/bzip2
   FORCE_INCLUDE +=
   ALL_CPPFLAGS += $(CPPFLAGS) -MMD -MP $(DEFINES) $(INCLUDES)
-  ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m64 -Werror -O2 -g -Wall -Wextra -Wno-expansion-to-defined
-  ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -Werror -O2 -g -Wall -Wextra -fno-exceptions -fno-rtti -Wno-expansion-to-defined
+  ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m64 -Werror -O2 -g -Wall -Wextra -Wno-expansion-to-defined -Wno-implicit-fallthrough
+  ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -Werror -O2 -g -Wall -Wextra -fno-exceptions -fno-rtti -Wno-expansion-to-defined -Wno-implicit-fallthrough
   ALL_RESFLAGS += $(RESFLAGS) $(DEFINES) $(INCLUDES)
   LIBS +=
   LDDEPS +=
@@ -65,6 +65,7 @@ all: prebuild prelink $(TARGET)
 endif
 
 OBJECTS := \
+	$(OBJDIR)/BaseUtil.o \
 	$(OBJDIR)/StrUtil.o \
 	$(OBJDIR)/main.o \
 
@@ -118,6 +119,14 @@ endif
 	$(SILENT) $(CXX) -x c++-header $(ALL_CXXFLAGS) -o "$@" -MF "$(@:%.gch=%.d)" -c "$<"
 endif
 
+$(OBJDIR)/BaseUtil.o: src/utils/BaseUtil.cpp
+	@echo $(notdir $<)
+ifeq (posix,$(SHELLTYPE))
+	$(SILENT) mkdir -p $(OBJDIR)
+else
+	$(SILENT) mkdir $(subst /,\\,$(OBJDIR))
+endif
+	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/StrUtil.o: src/utils/StrUtil.cpp
 	@echo $(notdir $<)
 ifeq (posix,$(SHELLTYPE))

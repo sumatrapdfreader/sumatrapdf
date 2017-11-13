@@ -908,8 +908,8 @@ const WCHAR* ToSafeString(AutoFreeW& s) {
     s.Set(str::Replace(str, L"&", L"&&"));
     return s.Get();
 }
-}
-}
+} // namespace menu
+} // namespace win
 
 HFONT CreateSimpleFont(HDC hdc, const WCHAR* fontName, int fontSize) {
     LOGFONT lf = {0};
@@ -1092,7 +1092,7 @@ bool HasFrameThickness(HWND hwnd) {
 bool HasCaption(HWND hwnd) {
     return bit::IsMaskSet(GetWindowLong(hwnd, GWL_STYLE), WS_CAPTION);
 }
-}
+} // namespace win
 
 SizeI GetBitmapSize(HBITMAP hbmp) {
     BITMAP bmpInfo;

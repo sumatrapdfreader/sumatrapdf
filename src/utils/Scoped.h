@@ -25,41 +25,6 @@ class ScopedMem {
     operator T*() const { return ptr; }
 };
 
-template <typename T>
-class AutoFreeStr : public ScopedMem<T> {
-  public:
-    AutoFreeStr() { this->ptr = nullptr; }
-    explicit AutoFreeStr(T* ptr) { this->ptr = ptr; }
-    void SetCopy(const T* newPtr) {
-        free(ptr);
-        ptr = nullptr;
-        if (newPtr) {
-            ptr = str::Dup(newPtr);
-        }
-    }
-};
-
-typedef AutoFreeStr<char> AutoFree;
-typedef AutoFreeStr<WCHAR> AutoFreeW;
-
-class ScopedCritSec {
-    CRITICAL_SECTION* cs;
-
-  public:
-    explicit ScopedCritSec(CRITICAL_SECTION* cs) : cs(cs) { EnterCriticalSection(cs); }
-    ~ScopedCritSec() { LeaveCriticalSection(cs); }
-};
-
-class ScopedHandle {
-    HANDLE handle;
-
-  public:
-    explicit ScopedHandle(HANDLE handle) : handle(handle) {}
-    ~ScopedHandle() { CloseHandle(handle); }
-    operator HANDLE() const { return handle; }
-    bool IsValid() const { return handle != NULL && handle != INVALID_HANDLE_VALUE; }
-};
-
 // deletes any object at the end of the scope
 template <class T>
 class ScopedPtr {
@@ -80,6 +45,43 @@ class ScopedPtr {
         delete obj;
         return (obj = newObj);
     }
+};
+
+template <typename T>
+class AutoFreeStr : public ScopedMem<T> {
+  public:
+    AutoFreeStr() { this->ptr = nullptr; }
+    explicit AutoFreeStr(T* ptr) { this->ptr = ptr; }
+    void SetCopy(const T* newPtr) {
+        free(this.ptr);
+        this.ptr = nullptr;
+        if (newPtr) {
+            this.ptr = str::Dup(newPtr);
+        }
+    }
+};
+
+typedef AutoFreeStr<char> AutoFree;
+
+#if OS(WIN)
+typedef AutoFreeStr<WCHAR> AutoFreeW;
+
+class ScopedCritSec {
+    CRITICAL_SECTION* cs;
+
+  public:
+    explicit ScopedCritSec(CRITICAL_SECTION* cs) : cs(cs) { EnterCriticalSection(cs); }
+    ~ScopedCritSec() { LeaveCriticalSection(cs); }
+};
+
+class ScopedHandle {
+    HANDLE handle;
+
+  public:
+    explicit ScopedHandle(HANDLE handle) : handle(handle) {}
+    ~ScopedHandle() { CloseHandle(handle); }
+    operator HANDLE() const { return handle; }
+    bool IsValid() const { return handle != NULL && handle != INVALID_HANDLE_VALUE; }
 };
 
 template <class T>
@@ -218,3 +220,4 @@ class ScopedGdiPlus {
         Gdiplus::GdiplusShutdown(token);
     }
 };
+#endif

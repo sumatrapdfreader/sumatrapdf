@@ -604,8 +604,8 @@ void RememberFavTreeExpansionStateForAllWindows() {
 
 static LRESULT OnFavTreeNotify(WindowInfo* win, LPNMTREEVIEW pnmtv) {
     switch (pnmtv->hdr.code) {
-        // TVN_SELCHANGED intentionally not implemented (mouse clicks are handled
-        // in NM_CLICK, and keyboard navigation in NM_RETURN and TVN_KEYDOWN)
+            // TVN_SELCHANGED intentionally not implemented (mouse clicks are handled
+            // in NM_CLICK, and keyboard navigation in NM_RETURN and TVN_KEYDOWN)
 
         case TVN_KEYDOWN: {
             TV_KEYDOWN* ptvkd = (TV_KEYDOWN*)pnmtv;

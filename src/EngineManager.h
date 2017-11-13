@@ -27,4 +27,4 @@ namespace EngineManager {
 bool IsSupportedFile(const WCHAR* filePath, bool sniff = false, bool enableEbookEngines = true);
 BaseEngine* CreateEngine(const WCHAR* filePath, PasswordUI* pwdUI = nullptr, EngineType* typeOut = nullptr,
                          bool enableChmEngine = true, bool enableEbookEngines = true);
-}
+} // namespace EngineManager

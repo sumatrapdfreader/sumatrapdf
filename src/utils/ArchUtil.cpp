@@ -185,8 +185,8 @@ char* RarFile::GetFileFromFallback(size_t fileindex, size_t* len) {
 
 #ifdef ENABLE_UNRARDLL_FALLBACK
 
-// the following has been extracted from UnRARDLL.exe -> unrar.h
-// publicly available from http://www.rarlab.com/rar_add.htm
+    // the following has been extracted from UnRARDLL.exe -> unrar.h
+    // publicly available from http://www.rarlab.com/rar_add.htm
 
 #define RAR_DLL_VERSION 6
 #define RAR_OM_EXTRACT 1

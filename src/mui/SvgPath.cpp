@@ -214,4 +214,4 @@ GraphicsPath* GraphicsPathFromPathData(const char* s) {
     }
     return gp;
 }
-}
+} // namespace svg

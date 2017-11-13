@@ -10,6 +10,9 @@
 #define _strdup strdup
 #define _stricmp strcasecmp
 #define _strnicmp strncasecmp
+// TODO: not sure if that's correct
+#define sprintf_s snprintf
+#define sscanf_s sscanf
 #endif
 
 namespace str {
@@ -758,6 +761,100 @@ size_t RemoveChars(WCHAR* str, const WCHAR* toRemove) {
 }
 #endif
 
+#if !defined(_MSC_VER)
+typedef int errno_t;
+
+// based on https://github.com/coruus/safeclib/blob/88a3bf7c7e4cd6f0b7a8559050523bacb31362f3/src/safeclib/strncpy_s.c
+// TODO: is this defined in <string.h> in C11? http://en.cppreference.com/w/c/string/byte/strncpy
+// TODO: if not available, rewrite in a simpler way
+errno_t strncpy_s(char* dest, size_t dmax, const char* src, size_t slen) {
+    const char* overlap_bumper;
+
+    if (dest == nullptr) {
+        return (errno_t)-1;
+    }
+
+    if (dmax == 0) {
+        return (errno_t)-1;
+    }
+
+    if (src == nullptr) {
+        return (errno_t)-1;
+    }
+
+    if (slen == 0) {
+        return (errno_t)-1;
+    }
+
+    if (dest < src) {
+        overlap_bumper = src;
+
+        while (dmax > 0) {
+            if (dest == overlap_bumper) {
+                return (errno_t)-1;
+            }
+
+            if (slen == 0) {
+                /*
+                 * Copying truncated to slen chars.  Note that the TR says to
+                 * copy slen chars plus the null char.  We null the slack.
+                 */
+                *dest = '\0';
+                return (errno_t)0;
+            }
+
+            *dest = *src;
+            if (*dest == '\0') {
+                return (errno_t)0;
+            }
+
+            dmax--;
+            slen--;
+            dest++;
+            src++;
+        }
+
+    } else {
+        overlap_bumper = dest;
+
+        while (dmax > 0) {
+            if (src == overlap_bumper) {
+                return (errno_t)-1;
+            }
+
+            if (slen == 0) {
+                /*
+                 * Copying truncated to slen chars.  Note that the TR says to
+                 * copy slen chars plus the null char.  We null the slack.
+                 */
+                *dest = '\0';
+                return (errno_t)0;
+            }
+
+            *dest = *src;
+            if (*dest == '\0') {
+                return (errno_t)0;
+            }
+
+            dmax--;
+            slen--;
+            dest++;
+            src++;
+        }
+    }
+
+    /*
+     * the entire src was not copied, so zero the string
+     */
+    return (errno_t)-1;
+}
+
+errno_t strncat_s(char* dest IS_UNUSED, size_t destsz IS_UNUSED, const char* src IS_UNUSED, size_t count IS_UNUSED) {
+    CrashAlwaysIf(true);
+    return (errno_t)0;
+}
+#endif
+
 // Note: BufSet() should only be used when absolutely necessary (e.g. when
 // handling buffers in OS-defined structures)
 // returns the number of characters written (without the terminating \0)
@@ -1201,6 +1298,7 @@ Failure:
 }
 #endif
 
+#if OS(WIN)
 size_t Utf8ToWcharBuf(const char* s, size_t cbLen, WCHAR* bufOut, size_t cchBufOutSize) {
     CrashIf(!bufOut || (0 == cchBufOutSize));
     int cchConverted = MultiByteToWideChar(CP_UTF8, 0, s, (int)cbLen, bufOut, (int)cchBufOutSize);
@@ -1214,7 +1312,6 @@ size_t Utf8ToWcharBuf(const char* s, size_t cbLen, WCHAR* bufOut, size_t cchBufO
     return cchConverted;
 }
 
-#if OS(WIN)
 size_t WcharToUtf8Buf(const WCHAR* s, char* bufOut, size_t cbBufOutSize) {
     CrashIf(!bufOut || (0 == cbBufOutSize));
     int cbConverted = WideCharToMultiByte(CP_UTF8, 0, s, -1, nullptr, 0, nullptr, nullptr);
@@ -1346,9 +1443,9 @@ bool isLegalUTF8Sequence(const UTF8* source, const UTF8* sourceEnd) {
 }
 
 /*
-* Exported function to return whether a UTF-8 string is legal or not.
-* This is not used here; it's just exported.
-*/
+ * Exported function to return whether a UTF-8 string is legal or not.
+ * This is not used here; it's just exported.
+ */
 bool isLegalUTF8String(const UTF8** source, const UTF8* sourceEnd) {
     while (*source != sourceEnd) {
         int n = trailingBytesForUTF8[**source] + 1;
