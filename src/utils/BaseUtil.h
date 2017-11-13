@@ -87,7 +87,11 @@ To use:
 #include <time.h>
 #include <locale.h>
 #include <malloc.h>
+
+#if OS(WIN)
 #include <io.h>
+#endif
+
 #include <fcntl.h>
 
 #define _USE_MATH_DEFINES
@@ -156,7 +160,7 @@ static_assert(8 == sizeof(int64) && 8 == sizeof(uint64), "(u)int64 must be eight
     #endif
 #endif
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER)
 #pragma warning(push)
 #pragma warning(disable: 6011) // silence /analyze: de-referencing a nullptr pointer
 #endif
@@ -170,7 +174,7 @@ inline void CrashMe()
     char *p = nullptr;
     *p = 0;
 }
-#ifdef _MSC_VER
+#if defined(_MSC_VER)
 #pragma warning(pop)
 #endif
 
@@ -211,7 +215,17 @@ inline void CrashIfDebugOnlyFunc(bool cond) {
 #endif
 }
 
+
+#if defined(_MSC_VER)
 #define while_0_nowarn __pragma(warning(push)) __pragma(warning(disable:4127)) while (0) __pragma(warning(pop))
+#else
+#define while_0_nowarn while (0)
+#endif
+
+// __analysis_assume is defined by msvc for prefast analysis
+#if !defined(__analysis_assume)
+#define __analysis_assume(x)
+#endif
 
 #define CrashIfDebugOnly(cond) \
     do { \
@@ -467,6 +481,7 @@ public:
 This adds equivalent functions that don't have this problem and ugly
 substitutions to make sure we don't use Get*Value() in the future */
 
+#if OS(WIN)
 static inline BYTE GetRValueSafe(COLORREF rgb)
 {
     rgb = rgb & 0xff;
@@ -491,6 +506,7 @@ static inline BYTE GetBValueSafe(COLORREF rgb)
 #define GetGValue UseGetGValueSafeInstead
 #undef GetBValue
 #define GetBValue UseGetBValueSafeInstead
+#endif
 
 #ifdef lstrcpy
 #undef lstrcpy

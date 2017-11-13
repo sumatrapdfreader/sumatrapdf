@@ -35,6 +35,10 @@ workspace "SumatraPDF"
     -- "Unicode", TODO: breaks libdjuv?
   }
 
+  -- expansion-to-defined reports as error commonly used pattern
+  -- https://stackoverflow.com/questions/42074035/how-to-deal-with-clangs-3-9-wexpansion-to-defined-warning
+  -- it's used in https://abseil.io/ headers so should be safe
+  disablewarnings { "expansion-to-defined"}
   flags { "FatalWarnings" }
 
   exceptionhandling "Off"
@@ -53,7 +57,7 @@ workspace "SumatraPDF"
   project "test_unix"
     kind "ConsoleApp"
     language "C++"
-
+    includedirs { "src", "src/utils", "ext/zlib", "ext/unarr", "ext/lzma/C", "ext/bzip2" }
     files {
       "tools/test_unix/main.cpp",
     }
