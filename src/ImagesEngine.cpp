@@ -799,7 +799,7 @@ enum CbxFormat { Arch_Zip, Arch_Rar, Arch_7z, Arch_Tar };
 
 class CbxEngineImpl : public ImagesEngine, public json::ValueVisitor {
   public:
-    CbxEngineImpl(ArchFile* arch, CbxFormat cbxFormat) : cbxFile(arch), cbxFormat(cbxFormat) {}
+    CbxEngineImpl(Archive* arch, CbxFormat cbxFormat) : cbxFile(arch), cbxFormat(cbxFormat) {}
     virtual ~CbxEngineImpl() { delete cbxFile; }
 
     virtual BaseEngine* Clone() override {
@@ -842,7 +842,7 @@ class CbxEngineImpl : public ImagesEngine, public json::ValueVisitor {
     void ParseComicInfoXml(const char* xmlData);
 
     // access to cbxFile must be protected after initialization (with cacheAccess)
-    ArchFile* cbxFile;
+    Archive* cbxFile;
     CbxFormat cbxFormat;
     std::vector<ArchFileInfo*> files;
 
@@ -1121,14 +1121,14 @@ BaseEngine* CbxEngineImpl::CreateFromFile(const WCHAR* fileName) {
     }
     if (str::EndsWithI(fileName, L".cb7") || str::EndsWithI(fileName, L".7z") ||
         file::StartsWith(fileName, "7z\xBC\xAF\x27\x1C")) {
-        ArchFile* archive = Open7zArchive(fileName);
+        Archive* archive = Open7zArchive(fileName);
         CbxEngineImpl* engine = new CbxEngineImpl(archive, Arch_7z);
         if (engine->LoadFromFile(fileName))
             return engine;
         delete engine;
     }
     if (str::EndsWithI(fileName, L".cbt") || str::EndsWithI(fileName, L".tar")) {
-        ArchFile* archive = OpenTarArchive(fileName);
+        Archive* archive = OpenTarArchive(fileName);
         CbxEngineImpl* engine = new CbxEngineImpl(archive, Arch_Tar);
         if (engine->LoadFromFile(fileName))
             return engine;

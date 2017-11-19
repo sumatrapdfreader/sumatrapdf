@@ -630,7 +630,7 @@ bool EpubDoc::ParseToc(EbookTocVisitor* visitor) {
 
 bool EpubDoc::IsSupportedFile(const WCHAR* fileName, bool sniff) {
     if (sniff) {
-        ArchFile* archive = OpenZipArchive(fileName, true);
+        Archive* archive = OpenZipArchive(fileName, true);
         AutoFree mimetype(archive->GetFileDataByName("mimetype"));
         if (!mimetype)
             return false;
@@ -695,7 +695,7 @@ bool Fb2Doc::Load() {
     CrashIf(!stream && !fileName);
     AutoFree data;
     if (fileName) {
-        ArchFile* archive = OpenZipArchive(fileName, false);
+        Archive* archive = OpenZipArchive(fileName, false);
         auto& fileInfos = archive->GetFileInfos();
         size_t nFiles = fileInfos.size();
         isZipped = nFiles > 0;
@@ -724,7 +724,7 @@ bool Fb2Doc::Load() {
     } else if (stream) {
         data.Set((char*)GetDataFromStream(stream, nullptr));
         if (str::StartsWith(data.Get(), "PK\x03\x04")) {
-            ArchFile* archive = OpenZipArchive(stream, false);
+            Archive* archive = OpenZipArchive(stream, false);
             size_t nFiles = archive->GetFileInfos().size();
             if (nFiles == 1) {
                 isZipped = true;

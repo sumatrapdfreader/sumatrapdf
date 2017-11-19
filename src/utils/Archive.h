@@ -20,7 +20,7 @@ struct ArchFileInfo {
 #endif
 };
 
-class ArchFile {
+class Archive {
   protected:
     // used for allocating strings that are referenced by ArchFileInfo::name
     PoolAllocator allocator_;
@@ -37,8 +37,8 @@ class ArchFile {
     }
 
   public:
-    ArchFile(ar_stream* data, ar_archive* (*openFormat)(ar_stream*));
-    virtual ~ArchFile();
+    Archive(ar_stream* data, ar_archive* (*openFormat)(ar_stream*));
+    virtual ~Archive();
 
     std::vector<ArchFileInfo*> const& GetFileInfos();
 
@@ -55,26 +55,26 @@ class ArchFile {
     char* GetComment(size_t* len = nullptr);
 };
 
-ArchFile* OpenZipArchive(const char* path, bool deflatedOnly);
-ArchFile* Open7zArchive(const char* path);
-ArchFile* OpenTarArchive(const char* path);
+Archive* OpenZipArchive(const char* path, bool deflatedOnly);
+Archive* Open7zArchive(const char* path);
+Archive* OpenTarArchive(const char* path);
 
 // TODO: remove those
 #if OS_WIN
-ArchFile* OpenZipArchive(const WCHAR* path, bool deflatedOnly);
-ArchFile* Open7zArchive(const WCHAR* path);
-ArchFile* OpenTarArchive(const WCHAR* path);
+Archive* OpenZipArchive(const WCHAR* path, bool deflatedOnly);
+Archive* Open7zArchive(const WCHAR* path);
+Archive* OpenTarArchive(const WCHAR* path);
 #endif
 
 #if OS_WIN
-ArchFile* OpenZipArchive(IStream* stream, bool deflatedOnly);
-ArchFile* Open7zArchive(IStream* stream);
-ArchFile* OpenTarArchive(IStream* stream);
+Archive* OpenZipArchive(IStream* stream, bool deflatedOnly);
+Archive* Open7zArchive(IStream* stream);
+Archive* OpenTarArchive(IStream* stream);
 #endif
 
 class UnRarDll;
 
-class RarFile : public ArchFile {
+class RarFile : public Archive {
     AutoFreeW path;
     UnRarDll* fallback;
 

@@ -23,7 +23,7 @@ FILETIME ArchFileInfo::GetWinFileTime() const {
 #endif
 
 // TODO: move the code into Open() function
-ArchFile::ArchFile(ar_stream* data, ar_archive* (*openFormat)(ar_stream*)) : data_(data) {
+Archive::Archive(ar_stream* data, ar_archive* (*openFormat)(ar_stream*)) : data_(data) {
     if (data_ && openFormat)
         ar_ = openFormat(data);
     if (!ar_)
@@ -49,7 +49,7 @@ ArchFile::ArchFile(ar_stream* data, ar_archive* (*openFormat)(ar_stream*)) : dat
     // once GetFileFromFallback has been correctly set in the vtable
 }
 
-ArchFile::~ArchFile() {
+Archive::~Archive() {
     ar_close_archive(ar_);
     ar_close(data_);
 }
@@ -63,27 +63,27 @@ size_t getFileIdByName(std::vector<ArchFileInfo*>& fileInfos, const char* name) 
     return (size_t)-1;
 }
 
-std::vector<ArchFileInfo*> const& ArchFile::GetFileInfos() {
+std::vector<ArchFileInfo*> const& Archive::GetFileInfos() {
     return fileInfos_;
 }
 
-size_t ArchFile::GetFileId(const char* fileName) {
+size_t Archive::GetFileId(const char* fileName) {
     return getFileIdByName(fileInfos_, fileName);
 }
 
 #if OS_WIN
-char* ArchFile::GetFileDataByName(const WCHAR* fileName, size_t* len) {
+char* Archive::GetFileDataByName(const WCHAR* fileName, size_t* len) {
     AutoFree fileNameUtf8(str::conv::ToUtf8(fileName));
     return GetFileDataByName(fileNameUtf8.Get(), len);
 }
 #endif
 
-char* ArchFile::GetFileDataByName(const char* fileName, size_t* len) {
+char* Archive::GetFileDataByName(const char* fileName, size_t* len) {
     size_t fileId = getFileIdByName(fileInfos_, fileName);
     return GetFileDataById(fileId, len);
 }
 
-char* ArchFile::GetFileDataById(size_t fileId, size_t* len) {
+char* Archive::GetFileDataById(size_t fileId, size_t* len) {
     if (!ar_ || (fileId >= fileInfos_.size())) {
         return nullptr;
     }
@@ -112,7 +112,7 @@ char* ArchFile::GetFileDataById(size_t fileId, size_t* len) {
     return data.StealData();
 }
 
-char* ArchFile::GetComment(size_t* len) {
+char* Archive::GetComment(size_t* len) {
     if (!ar_)
         return nullptr;
     size_t commentLen = ar_get_global_comment(ar_, nullptr, 0);
@@ -139,59 +139,59 @@ static ar_archive* ar_open_zip_archive_deflated(ar_stream* stream) {
     return ar_open_zip_archive(stream, true);
 }
 
-ArchFile* OpenZipArchive(const char* path, bool deflatedOnly) {
+Archive* OpenZipArchive(const char* path, bool deflatedOnly) {
     auto opener = ar_open_zip_archive_any;
     if (deflatedOnly) {
         opener = ar_open_zip_archive_deflated;
     }
     FILE* f = file::OpenFILE(path);
-    return new ArchFile(ar_open(f), opener);
+    return new Archive(ar_open(f), opener);
 }
 
-ArchFile* Open7zArchive(const char* path) {
+Archive* Open7zArchive(const char* path) {
     FILE* f = file::OpenFILE(path);
-    return new ArchFile(ar_open(f), ar_open_7z_archive);
+    return new Archive(ar_open(f), ar_open_7z_archive);
 }
 
-ArchFile* OpenTarArchive(const char* path) {
+Archive* OpenTarArchive(const char* path) {
     FILE* f = file::OpenFILE(path);
-    return new ArchFile(ar_open(f), ar_open_tar_archive);
+    return new Archive(ar_open(f), ar_open_tar_archive);
 }
 
 #if OS_WIN
-ArchFile* OpenZipArchive(const WCHAR* path, bool deflatedOnly) {
+Archive* OpenZipArchive(const WCHAR* path, bool deflatedOnly) {
     auto opener = ar_open_zip_archive_any;
     if (deflatedOnly) {
         opener = ar_open_zip_archive_deflated;
     }
     FILE* f = file::OpenFILE(path);
-    return new ArchFile(ar_open(f), opener);
+    return new Archive(ar_open(f), opener);
 }
 
-ArchFile* Open7zArchive(const WCHAR* path) {
+Archive* Open7zArchive(const WCHAR* path) {
     FILE* f = file::OpenFILE(path);
-    return new ArchFile(ar_open(f), ar_open_7z_archive);
+    return new Archive(ar_open(f), ar_open_7z_archive);
 }
 
-ArchFile* OpenTarArchive(const WCHAR* path) {
+Archive* OpenTarArchive(const WCHAR* path) {
     FILE* f = file::OpenFILE(path);
-    return new ArchFile(ar_open(f), ar_open_tar_archive);
+    return new Archive(ar_open(f), ar_open_tar_archive);
 }
 
-ArchFile* OpenZipArchive(IStream* stream, bool deflatedOnly) {
+Archive* OpenZipArchive(IStream* stream, bool deflatedOnly) {
     auto opener = ar_open_zip_archive_any;
     if (deflatedOnly) {
         opener = ar_open_zip_archive_deflated;
     }
-    return new ArchFile(ar_open_istream(stream), opener);
+    return new Archive(ar_open_istream(stream), opener);
 }
 
-ArchFile* Open7zArchive(IStream* stream) {
-    return new ArchFile(ar_open_istream(stream), ar_open_7z_archive);
+Archive* Open7zArchive(IStream* stream) {
+    return new Archive(ar_open_istream(stream), ar_open_7z_archive);
 }
 
-ArchFile* OpenTarArchive(IStream* stream) {
-    return new ArchFile(ar_open_istream(stream), ar_open_tar_archive);
+Archive* OpenTarArchive(IStream* stream) {
+    return new Archive(ar_open_istream(stream), ar_open_tar_archive);
 }
 #endif
 
@@ -208,12 +208,12 @@ class UnRarDll {};
 #endif
 
 RarFile::RarFile(const WCHAR* path)
-    : ArchFile(ar_open_file_w(path), ar_open_rar_archive), path(str::Dup(path)), fallback(nullptr) {
+    : Archive(ar_open_file_w(path), ar_open_rar_archive), path(str::Dup(path)), fallback(nullptr) {
     ExtractFilenamesWithFallback();
 }
 
 RarFile::RarFile(IStream* stream)
-    : ArchFile(ar_open_istream(stream), ar_open_rar_archive), path(nullptr), fallback(nullptr) {
+    : Archive(ar_open_istream(stream), ar_open_rar_archive), path(nullptr), fallback(nullptr) {
     ExtractFilenamesWithFallback();
 }
 
