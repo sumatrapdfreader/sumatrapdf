@@ -3,7 +3,6 @@
 
 // utils
 #include "BaseUtil.h"
-#include <wininet.h>
 #include "WinDynCalls.h"
 #include "CryptoUtil.h"
 #include "DirIter.h"
@@ -2111,15 +2110,8 @@ static void CloseDocumentInTab(WindowInfo *win, bool keepUIEnabled, bool deleteM
     }
 
     // Note: this causes https://code.google.com/p/sumatrapdf/issues/detail?id=2702. For whatever reason
-    // edit ctrl doesn't receive WM_KILLFOCUS if we do SetFocus() here, even if we call SetFocus() later
-    // on.
+    // edit ctrl doesn't receive WM_KILLFOCUS if we do SetFocus() here, even if we call SetFocus() later on
     //SetFocus(win->hwndFrame);
-#ifdef DEBUG
-    // cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2039
-    // HeapValidate() is left here to help us catch the possibility that the fix
-    // in FileWatcher::SynchronousAbort() isn't correct
-    HeapValidate((HANDLE)_get_heap_handle(), 0, nullptr);
-#endif
 }
 
 // closes the current tab, selecting the next one

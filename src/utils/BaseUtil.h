@@ -77,6 +77,7 @@
 #include <commctrl.h>
 #include <windowsx.h>
 #include <winsafer.h>
+#include <wininet.h>
 
 // nasty but necessary
 #if defined(min) || defined(max)
@@ -112,9 +113,6 @@
 #include <stdio.h>
 #include <time.h>
 #include <locale.h>
-#if !OS_DARWIN
-#include <malloc.h>
-#endif
 #include <errno.h>
 
 #include <fcntl.h>

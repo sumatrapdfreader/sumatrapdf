@@ -7,7 +7,6 @@
 #include <mshtmhst.h>
 #include <oaidl.h>
 #include <exdispid.h>
-#include <wininet.h>
 #include "Timer.h"
 #include "WinUtil.h"
 #include "GdiPlusUtil.h"

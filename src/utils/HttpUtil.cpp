@@ -2,7 +2,6 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
-#include <Wininet.h>
 #include "HttpUtil.h"
 #include "ThreadUtil.h"
 #include "FileUtil.h"
