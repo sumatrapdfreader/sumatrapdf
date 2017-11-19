@@ -20,6 +20,8 @@ struct ArchFileInfo {
 #endif
 };
 
+typedef ar_archive* (*archive_opener_t)(ar_stream*);
+
 class Archive {
   protected:
     // used for allocating strings that are referenced by ArchFileInfo::name
@@ -37,8 +39,12 @@ class Archive {
     }
 
   public:
-    Archive(ar_stream* data, ar_archive* (*openFormat)(ar_stream*));
+    enum class Format { Zip, Rar, SevenZip, Tar };
+
+    Archive(ar_stream* data, archive_opener_t opener, Format format);
     virtual ~Archive();
+
+    Format format;
 
     std::vector<ArchFileInfo*> const& GetFileInfos();
 

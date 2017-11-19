@@ -23,9 +23,9 @@ FILETIME ArchFileInfo::GetWinFileTime() const {
 #endif
 
 // TODO: move the code into Open() function
-Archive::Archive(ar_stream* data, ar_archive* (*openFormat)(ar_stream*)) : data_(data) {
-    if (data_ && openFormat)
-        ar_ = openFormat(data);
+Archive::Archive(ar_stream* data, archive_opener_t opener, Archive::Format format) : data_(data), format(format) {
+    if (data_ && opener)
+        ar_ = opener(data);
     if (!ar_)
         return;
     size_t fileId = 0;
@@ -145,17 +145,17 @@ Archive* OpenZipArchive(const char* path, bool deflatedOnly) {
         opener = ar_open_zip_archive_deflated;
     }
     FILE* f = file::OpenFILE(path);
-    return new Archive(ar_open(f), opener);
+    return new Archive(ar_open(f), opener, Archive::Format::Zip);
 }
 
 Archive* Open7zArchive(const char* path) {
     FILE* f = file::OpenFILE(path);
-    return new Archive(ar_open(f), ar_open_7z_archive);
+    return new Archive(ar_open(f), ar_open_7z_archive, Archive::Format::SevenZip);
 }
 
 Archive* OpenTarArchive(const char* path) {
     FILE* f = file::OpenFILE(path);
-    return new Archive(ar_open(f), ar_open_tar_archive);
+    return new Archive(ar_open(f), ar_open_tar_archive, Archive::Format::Tar);
 }
 
 #if OS_WIN
@@ -165,17 +165,17 @@ Archive* OpenZipArchive(const WCHAR* path, bool deflatedOnly) {
         opener = ar_open_zip_archive_deflated;
     }
     FILE* f = file::OpenFILE(path);
-    return new Archive(ar_open(f), opener);
+    return new Archive(ar_open(f), opener, Archive::Format::Zip);
 }
 
 Archive* Open7zArchive(const WCHAR* path) {
     FILE* f = file::OpenFILE(path);
-    return new Archive(ar_open(f), ar_open_7z_archive);
+    return new Archive(ar_open(f), ar_open_7z_archive, Archive::Format::SevenZip);
 }
 
 Archive* OpenTarArchive(const WCHAR* path) {
     FILE* f = file::OpenFILE(path);
-    return new Archive(ar_open(f), ar_open_tar_archive);
+    return new Archive(ar_open(f), ar_open_tar_archive, Archive::Format::Tar);
 }
 
 Archive* OpenZipArchive(IStream* stream, bool deflatedOnly) {
@@ -183,15 +183,15 @@ Archive* OpenZipArchive(IStream* stream, bool deflatedOnly) {
     if (deflatedOnly) {
         opener = ar_open_zip_archive_deflated;
     }
-    return new Archive(ar_open_istream(stream), opener);
+    return new Archive(ar_open_istream(stream), opener, Archive::Format::Zip);
 }
 
 Archive* Open7zArchive(IStream* stream) {
-    return new Archive(ar_open_istream(stream), ar_open_7z_archive);
+    return new Archive(ar_open_istream(stream), ar_open_7z_archive, Archive::Format::SevenZip);
 }
 
 Archive* OpenTarArchive(IStream* stream) {
-    return new Archive(ar_open_istream(stream), ar_open_tar_archive);
+    return new Archive(ar_open_istream(stream), ar_open_tar_archive, Archive::Format::Tar);
 }
 #endif
 
@@ -208,12 +208,14 @@ class UnRarDll {};
 #endif
 
 RarFile::RarFile(const WCHAR* path)
-    : Archive(ar_open_file_w(path), ar_open_rar_archive), path(str::Dup(path)), fallback(nullptr) {
+    : Archive(ar_open_file_w(path), ar_open_rar_archive, Archive::Format::Rar),
+      path(str::Dup(path)),
+      fallback(nullptr) {
     ExtractFilenamesWithFallback();
 }
 
 RarFile::RarFile(IStream* stream)
-    : Archive(ar_open_istream(stream), ar_open_rar_archive), path(nullptr), fallback(nullptr) {
+    : Archive(ar_open_istream(stream), ar_open_rar_archive, Archive::Format::Rar), path(nullptr), fallback(nullptr) {
     ExtractFilenamesWithFallback();
 }
 

@@ -795,11 +795,9 @@ BaseEngine* CreateFromFile(const WCHAR* fileName) {
 
 ///// CbxEngine handles comic book files (either .cbz, .cbr, .cb7 or .cbt) /////
 
-enum CbxFormat { Arch_Zip, Arch_Rar, Arch_7z, Arch_Tar };
-
 class CbxEngineImpl : public ImagesEngine, public json::ValueVisitor {
   public:
-    CbxEngineImpl(Archive* arch, CbxFormat cbxFormat) : cbxFile(arch), cbxFormat(cbxFormat) {}
+    CbxEngineImpl(Archive* arch) : cbxFile(arch) {}
     virtual ~CbxEngineImpl() { delete cbxFile; }
 
     virtual BaseEngine* Clone() override {
@@ -843,7 +841,6 @@ class CbxEngineImpl : public ImagesEngine, public json::ValueVisitor {
 
     // access to cbxFile must be protected after initialization (with cacheAccess)
     Archive* cbxFile;
-    CbxFormat cbxFormat;
     std::vector<ArchFileInfo*> files;
 
     // extracted metadata
@@ -894,7 +891,7 @@ bool CbxEngineImpl::FinishLoading() {
         if (str::Len(fileName) == 0) {
             continue;
         }
-        if (Arch_Zip == cbxFormat && str::StartsWithI(fileName, "_rels/.rels")) {
+        if (Archive::Format::Zip == cbxFile->format && str::StartsWithI(fileName, "_rels/.rels")) {
             // bail, if we accidentally try to load an XPS file
             return false;
         }
@@ -1052,14 +1049,14 @@ WCHAR* CbxEngineImpl::GetProperty(DocumentProperty prop) {
 }
 
 const WCHAR* CbxEngineImpl::GetDefaultFileExt() const {
-    switch (cbxFormat) {
-        case Arch_Zip:
+    switch (cbxFile->format) {
+        case Archive::Format::Zip:
             return L".cbz";
-        case Arch_Rar:
+        case Archive::Format::Rar:
             return L".cbr";
-        case Arch_7z:
+        case Archive::Format::SevenZip:
             return L".cb7";
-        case Arch_Tar:
+        case Archive::Format::Tar:
             return L".cbt";
         default:
             CrashIf(true);
@@ -1104,7 +1101,7 @@ BaseEngine* CbxEngineImpl::CreateFromFile(const WCHAR* fileName) {
     if (str::EndsWithI(fileName, L".cbz") || str::EndsWithI(fileName, L".zip") ||
         file::StartsWithN(fileName, "PK\x03\x04", 4)) {
         auto* archive = OpenZipArchive(fileName, false);
-        CbxEngineImpl* engine = new CbxEngineImpl(archive, Arch_Zip);
+        CbxEngineImpl* engine = new CbxEngineImpl(archive);
         if (engine->LoadFromFile(fileName))
             return engine;
         delete engine;
@@ -1114,7 +1111,7 @@ BaseEngine* CbxEngineImpl::CreateFromFile(const WCHAR* fileName) {
     if (str::EndsWithI(fileName, L".cbr") || str::EndsWithI(fileName, L".rar") ||
         file::StartsWithN(fileName, RAR_SIGNATURE, RAR_SIGNATURE_LEN) ||
         file::StartsWithN(fileName, RAR5_SIGNATURE, RAR5_SIGNATURE_LEN)) {
-        CbxEngineImpl* engine = new CbxEngineImpl(new RarFile(fileName), Arch_Rar);
+        CbxEngineImpl* engine = new CbxEngineImpl(new RarFile(fileName));
         if (engine->LoadFromFile(fileName))
             return engine;
         delete engine;
@@ -1122,14 +1119,14 @@ BaseEngine* CbxEngineImpl::CreateFromFile(const WCHAR* fileName) {
     if (str::EndsWithI(fileName, L".cb7") || str::EndsWithI(fileName, L".7z") ||
         file::StartsWith(fileName, "7z\xBC\xAF\x27\x1C")) {
         Archive* archive = Open7zArchive(fileName);
-        CbxEngineImpl* engine = new CbxEngineImpl(archive, Arch_7z);
+        CbxEngineImpl* engine = new CbxEngineImpl(archive);
         if (engine->LoadFromFile(fileName))
             return engine;
         delete engine;
     }
     if (str::EndsWithI(fileName, L".cbt") || str::EndsWithI(fileName, L".tar")) {
         Archive* archive = OpenTarArchive(fileName);
-        CbxEngineImpl* engine = new CbxEngineImpl(archive, Arch_Tar);
+        CbxEngineImpl* engine = new CbxEngineImpl(archive);
         if (engine->LoadFromFile(fileName))
             return engine;
         delete engine;
@@ -1139,22 +1136,22 @@ BaseEngine* CbxEngineImpl::CreateFromFile(const WCHAR* fileName) {
 
 BaseEngine* CbxEngineImpl::CreateFromStream(IStream* stream) {
     auto* archive = OpenZipArchive(stream, false);
-    CbxEngineImpl* engine = new CbxEngineImpl(archive, Arch_Zip);
+    CbxEngineImpl* engine = new CbxEngineImpl(archive);
     if (engine->LoadFromStream(stream))
         return engine;
     delete engine;
 
-    engine = new CbxEngineImpl(new RarFile(stream), Arch_Rar);
+    engine = new CbxEngineImpl(new RarFile(stream));
     if (engine->LoadFromStream(stream))
         return engine;
     delete engine;
 
-    engine = new CbxEngineImpl(Open7zArchive(stream), Arch_7z);
+    engine = new CbxEngineImpl(Open7zArchive(stream));
     if (engine->LoadFromStream(stream))
         return engine;
     delete engine;
 
-    engine = new CbxEngineImpl(OpenTarArchive(stream), Arch_Tar);
+    engine = new CbxEngineImpl(OpenTarArchive(stream));
     if (engine->LoadFromStream(stream))
         return engine;
     delete engine;
