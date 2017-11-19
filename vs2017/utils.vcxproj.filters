@@ -24,6 +24,9 @@
     <ClInclude Include="..\src\utils\ByteOrderDecoder.h">
       <Filter>utils</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\utils\ByteWriter.h">
+      <Filter>utils</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\utils\CmdLineParser.h">
       <Filter>utils</Filter>
     </ClInclude>

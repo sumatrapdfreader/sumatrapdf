@@ -154,7 +154,7 @@ static RenderedBitmap* new_rendered_fz_pixmap(fz_context* ctx, fz_pixmap* pixmap
 
 fz_stream* fz_open_file2(fz_context* ctx, const WCHAR* filePath) {
     fz_stream* file = nullptr;
-    int64 fileSize = file::GetSize(filePath);
+    int64_t fileSize = file::GetSize(filePath);
     // load small files entirely into memory so that they can be
     // overwritten even by programs that don't open files with FILE_SHARE_READ
     if (fileSize > 0 && fileSize < MAX_MEMORY_FILE_SIZE) {

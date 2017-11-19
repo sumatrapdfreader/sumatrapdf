@@ -27,7 +27,7 @@ inline bool IsEmpty(T* s) {
     return !s || (0 == *s);
 }
 
-#if OS(WIN)
+#if OS_WIN
 size_t Len(const WCHAR* s);
 WCHAR* Dup(const WCHAR* s);
 void ReplacePtr(WCHAR** s, const WCHAR* snew);
@@ -55,7 +55,7 @@ inline bool EqNIx(const char* s, size_t len, const char* s2) {
 char* DupN(const char* s, size_t lenCch);
 char* ToLowerInPlace(char* s);
 
-#if OS(WIN)
+#if OS_WIN
 bool StartsWithI(const WCHAR* str, const WCHAR* txt);
 bool EndsWith(const WCHAR* txt, const WCHAR* end);
 bool EndsWithI(const WCHAR* txt, const WCHAR* end);
@@ -101,7 +101,7 @@ inline bool IsDigit(char c) {
     return ('0' <= c) && (c <= '9');
 }
 
-#if OS(WIN)
+#if OS_WIN
 inline const WCHAR* FindChar(const WCHAR* str, const WCHAR c) {
     return wcschr(str, c);
 }
@@ -157,7 +157,7 @@ bool HexToMem(const char* s, unsigned char* buf, size_t bufLen);
 const char* Parse(const char* str, const char* format, ...);
 const char* Parse(const char* str, size_t len, const char* format, ...);
 
-#if OS(WIN)
+#if OS_WIN
 size_t TransChars(WCHAR* str, const WCHAR* oldChars, const WCHAR* newChars);
 WCHAR* Replace(const WCHAR* s, const WCHAR* toReplace, const WCHAR* replaceWith);
 size_t NormalizeWS(WCHAR* str);
@@ -179,7 +179,7 @@ size_t WcharToUtf8Buf(const WCHAR* s, char* bufOut, size_t cbBufOutSize);
 
 namespace conv {
 
-#if OS(WIN)
+#if OS_WIN
 inline WCHAR* FromCodePage(const char* src, UINT cp) {
     return ToWideChar(src, cp);
 }
@@ -220,7 +220,7 @@ namespace url {
 
 void DecodeInPlace(char* urlUtf8);
 
-#if OS(WIN)
+#if OS_WIN
 bool IsAbsolute(const WCHAR* url);
 void DecodeInPlace(WCHAR* url);
 WCHAR* GetFullPath(const WCHAR* url);
@@ -235,7 +235,7 @@ bool SkipStr(const char*& s);
 int StrToIdx(const char* strings, const char* toFind);
 const char* IdxToStr(const char* strings, int idx);
 
-#if OS(WIN)
+#if OS_WIN
 bool SkipStr(const WCHAR*& s);
 int StrToIdx(const char* strings, const WCHAR* toFind);
 #endif

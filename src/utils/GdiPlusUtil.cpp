@@ -2,7 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
-#if defined(_MSC_VER)
+#if COMPILER_MSVC
 #pragma warning (disable : 4668)
 #endif
 #include <wincodec.h>

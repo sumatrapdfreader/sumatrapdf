@@ -142,7 +142,7 @@ bool SaveFileModifictions(const WCHAR* filePath, Vec<PageAnnotation>* list) {
 
     data.AppendFmt("[@%s]\r\n", isUpdate ? "update" : "meta");
     data.AppendFmt("version = %s\r\n", SMX_CURR_VERSION);
-    int64 size = file::GetSize(filePath);
+    int64_t size = file::GetSize(filePath);
     if (0 <= size && size <= UINT_MAX)
         data.AppendFmt("filesize = %u\r\n", (UINT)size);
     SYSTEMTIME time;

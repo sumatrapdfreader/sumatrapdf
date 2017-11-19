@@ -14,7 +14,7 @@ extern "C" {
 // fails to open or extract and uses that as a fallback
 //#define ENABLE_UNRARDLL_FALLBACK
 
-#if OS(WIN)
+#if OS_WIN
 FILETIME ArchFileInfo::GetWinFileTime() const {
     FILETIME ft = {(DWORD)-1, (DWORD)-1};
     LocalFileTimeToFileTime((FILETIME*)&fileTime, &ft);
@@ -71,7 +71,7 @@ size_t ArchFile::GetFileId(const char* fileName) {
     return getFileIdByName(fileInfos_, fileName);
 }
 
-#if OS(WIN)
+#if OS_WIN
 char* ArchFile::GetFileDataByName(const WCHAR* fileName, size_t* len) {
     AutoFree fileNameUtf8(str::conv::ToUtf8(fileName));
     return GetFileDataByName(fileNameUtf8.Get(), len);
@@ -158,7 +158,7 @@ ArchFile* OpenTarArchive(const char* path) {
     return new ArchFile(ar_open(f), ar_open_tar_archive);
 }
 
-#if OS(WIN)
+#if OS_WIN
 ArchFile* OpenZipArchive(const WCHAR* path, bool deflatedOnly) {
     auto opener = ar_open_zip_archive_any;
     if (deflatedOnly) {

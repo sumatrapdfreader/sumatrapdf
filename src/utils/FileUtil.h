@@ -40,7 +40,7 @@ char* ReadAllUtf(const char* path, size_t* fileSizeOut, Allocator* allocator = n
 bool ReadN(const WCHAR* path, char* buf, size_t toRead);
 bool WriteAll(const WCHAR* path, const void* data, size_t dataLen);
 bool WriteAllUtf(const char* path, const void* data, size_t dataLen);
-int64 GetSize(const WCHAR* path);
+int64_t GetSize(const WCHAR* path);
 bool Delete(const WCHAR* path);
 FILETIME GetModificationTime(const WCHAR* path);
 bool SetModificationTime(const WCHAR* path, FILETIME lastMod);

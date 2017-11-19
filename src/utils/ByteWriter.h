@@ -15,8 +15,13 @@ class ByteWriter {
         this->isLE = o.isLE;
     }
 
+    size_t Left() const {
+        CrashIf(dst > end);
+        return end - dst;
+    }
+
     bool Write8(uint8_t b) {
-        if (dst + 1 > end) {
+        if (Left() < 1) {
             return false;
         }
         *dst++ = b;
@@ -24,7 +29,7 @@ class ByteWriter {
     }
 
     bool Write8x2(uint8_t b1, uint8_t b2) {
-        if (dst + 2 > end) {
+        if (Left() < 2) {
             return false;
         }
         *dst++ = b1;
@@ -71,9 +76,9 @@ ByteWriter MakeByteWriterLE(char* dst, size_t len) {
 }
 
 ByteWriter MakeByteWriterBE(unsigned char* dst, size_t len) {
-    return ByteWriter((uint8_t*)dst, len, true);
+    return ByteWriter((uint8_t*)dst, len, false);
 }
 
 ByteWriter MakeByteWriterBE(char* dst, size_t len) {
-    return ByteWriter((uint8_t*)dst, len, true);
+    return ByteWriter((uint8_t*)dst, len, false);
 }

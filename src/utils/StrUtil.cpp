@@ -211,7 +211,7 @@ void Utf8Encode(char*& dst, int c) {
 // the hope here is to avoid allocating memory (assuming vsnprintf
 // doesn't allocate)
 bool BufFmtV(char* buf, size_t bufCchSize, const char* fmt, va_list args) {
-#if defined(_MSC_VER)
+#if COMPILER_MSVC
     int count = _vsnprintf_s(buf, bufCchSize, _TRUNCATE, fmt, args);
 #else
     int count = vsnprintf(buf, bufCchSize, fmt, args);
@@ -227,7 +227,7 @@ char* FmtV(const char* fmt, va_list args) {
     size_t bufCchSize = dimof(message);
     char* buf = message;
     for (;;) {
-#if defined(_MSC_VER)
+#if COMPILER_MSVC
         int count = _vsnprintf_s(buf, bufCchSize, _TRUNCATE, fmt, args);
 #else
         int count = vsnprintf(buf, bufCchSize, fmt, args);

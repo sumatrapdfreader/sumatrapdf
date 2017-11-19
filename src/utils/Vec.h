@@ -388,7 +388,7 @@ public:
 
 }
 
-#if OS(WIN)
+#if OS_WIN
 // WStrVec owns the strings in the list
 class WStrVec : public Vec<WCHAR *>
 {
@@ -488,7 +488,7 @@ private:
 };
 #endif
 
-#if OS(WIN)
+#if OS_WIN
 // WStrList is a subset of WStrVec that's optimized for appending and searching
 // WStrList owns the strings it contains and frees them at destruction
 class WStrList {

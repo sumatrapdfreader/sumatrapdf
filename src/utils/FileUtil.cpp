@@ -307,7 +307,7 @@ FILE* OpenFILE(const char* path) {
     if (!path) {
         return nullptr;
     }
-#if OS(WIN)
+#if OS_WIN
     AutoFreeW pathW(str::conv::FromUtf8(path));
     return OpenFILE(pathW.Get());
 #else
@@ -330,7 +330,7 @@ bool Exists(const WCHAR* filePath) {
 }
 
 // returns -1 on error (can't use INVALID_FILE_SIZE because it won't cast right)
-int64 GetSize(const WCHAR* filePath) {
+int64_t GetSize(const WCHAR* filePath) {
     CrashIf(!filePath);
     if (!filePath)
         return -1;
@@ -349,7 +349,7 @@ int64 GetSize(const WCHAR* filePath) {
 }
 
 char* ReadAll(const WCHAR* filePath, size_t* fileSizeOut, Allocator* allocator) {
-    int64 size64 = GetSize(filePath);
+    int64_t size64 = GetSize(filePath);
     if (size64 < 0)
         return nullptr;
     size_t size = (size_t)size64;

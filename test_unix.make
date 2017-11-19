@@ -11,17 +11,9 @@ endif
 .PHONY: clean prebuild prelink
 
 ifeq ($(config),debug_x64)
-  ifeq ($(origin CC), default)
-    CC = clang
-  endif
-  ifeq ($(origin CXX), default)
-    CXX = clang++
-  endif
-  ifeq ($(origin AR), default)
-    AR = ar
-  endif
+  RESCOMP = windres
   TARGETDIR = dbg64_unix
-  TARGET = $(TARGETDIR)/test_unix
+  TARGET = $(TARGETDIR)/test_unix.exe
   OBJDIR = dbg64_unix/obj
   DEFINES += -DDEBUG
   INCLUDES += -Isrc -Isrc/utils -Iext/zlib -Iext/unarr -Iext/lzma/C -Iext/bzip2
@@ -32,7 +24,7 @@ ifeq ($(config),debug_x64)
   ALL_RESFLAGS += $(RESFLAGS) $(DEFINES) $(INCLUDES)
   LIBS +=
   LDDEPS +=
-  ALL_LDFLAGS += $(LDFLAGS) -m64
+  ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib64 -m64
   LINKCMD = $(CXX) -o "$@" $(OBJECTS) $(RESOURCES) $(ALL_LDFLAGS) $(LIBS)
   define PREBUILDCMDS
   endef
@@ -46,17 +38,9 @@ all: prebuild prelink $(TARGET)
 endif
 
 ifeq ($(config),release_x64)
-  ifeq ($(origin CC), default)
-    CC = clang
-  endif
-  ifeq ($(origin CXX), default)
-    CXX = clang++
-  endif
-  ifeq ($(origin AR), default)
-    AR = ar
-  endif
+  RESCOMP = windres
   TARGETDIR = rel64_unix
-  TARGET = $(TARGETDIR)/test_unix
+  TARGET = $(TARGETDIR)/test_unix.exe
   OBJDIR = rel64_unix/obj
   DEFINES += -DNDEBUG
   INCLUDES += -Isrc -Isrc/utils -Iext/zlib -Iext/unarr -Iext/lzma/C -Iext/bzip2
@@ -67,7 +51,7 @@ ifeq ($(config),release_x64)
   ALL_RESFLAGS += $(RESFLAGS) $(DEFINES) $(INCLUDES)
   LIBS +=
   LDDEPS +=
-  ALL_LDFLAGS += $(LDFLAGS) -m64
+  ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib64 -m64
   LINKCMD = $(CXX) -o "$@" $(OBJECTS) $(RESOURCES) $(ALL_LDFLAGS) $(LIBS)
   define PREBUILDCMDS
   endef
@@ -83,6 +67,7 @@ endif
 OBJECTS := \
 	$(OBJDIR)/BaseUtil.o \
 	$(OBJDIR)/StrUtil.o \
+	$(OBJDIR)/UtAssert.o \
 	$(OBJDIR)/main.o \
 
 RESOURCES := \
@@ -144,6 +129,14 @@ else
 endif
 	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
 $(OBJDIR)/StrUtil.o: src/utils/StrUtil.cpp
+	@echo $(notdir $<)
+ifeq (posix,$(SHELLTYPE))
+	$(SILENT) mkdir -p $(OBJDIR)
+else
+	$(SILENT) mkdir $(subst /,\\,$(OBJDIR))
+endif
+	$(SILENT) $(CXX) $(ALL_CXXFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
+$(OBJDIR)/UtAssert.o: src/utils/UtAssert.cpp
 	@echo $(notdir $<)
 ifeq (posix,$(SHELLTYPE))
 	$(SILENT) mkdir -p $(OBJDIR)

@@ -451,7 +451,7 @@ static void GetProps(Controller *ctrl, PropertiesLayout *layoutData, bool extend
     str = FormatPdfFileStructure(ctrl);
     layoutData->AddProperty(_TR("PDF Optimizations:"), str);
 
-    int64 fileSize = file::GetSize(ctrl->FilePath());
+    int64_t fileSize = file::GetSize(ctrl->FilePath());
     if (-1 == fileSize && ctrl->AsFixed()) {
         size_t fileSizeT;
         if (ScopedMem<unsigned char>(ctrl->AsFixed()->GetEngine()->GetFileData(&fileSizeT)))

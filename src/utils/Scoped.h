@@ -63,7 +63,7 @@ class AutoFreeStr : public ScopedMem<T> {
 
 typedef AutoFreeStr<char> AutoFree;
 
-#if OS(WIN)
+#if OS_WIN
 typedef AutoFreeStr<WCHAR> AutoFreeW;
 
 class ScopedCritSec {

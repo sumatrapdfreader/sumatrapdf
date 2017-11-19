@@ -64,5 +64,6 @@ workspace "SumatraPDF"
     files {
       "src/utils/BaseUtil.cpp",
       "src/utils/StrUtil.cpp",
+      "src/utils/UtAssert.cpp",
       "tools/test_unix/main.cpp",
     }

@@ -15,7 +15,7 @@ struct ArchFileInfo {
     // internal use
     int64_t filePos;
 
-#if OS(WIN)
+#if OS_WIN
     FILETIME GetWinFileTime() const;
 #endif
 };
@@ -45,7 +45,7 @@ class ArchFile {
     size_t GetFileId(const char* fileName);
 
 // caller must free() the result
-#if OS(WIN)
+#if OS_WIN
     char* GetFileDataByName(const WCHAR* filename, size_t* len = nullptr);
 #endif
     char* GetFileDataByName(const char* filename, size_t* len = nullptr);
@@ -60,13 +60,13 @@ ArchFile* Open7zArchive(const char* path);
 ArchFile* OpenTarArchive(const char* path);
 
 // TODO: remove those
-#if OS(WIN)
+#if OS_WIN
 ArchFile* OpenZipArchive(const WCHAR* path, bool deflatedOnly);
 ArchFile* Open7zArchive(const WCHAR* path);
 ArchFile* OpenTarArchive(const WCHAR* path);
 #endif
 
-#if OS(WIN)
+#if OS_WIN
 ArchFile* OpenZipArchive(IStream* stream, bool deflatedOnly);
 ArchFile* Open7zArchive(IStream* stream);
 ArchFile* OpenTarArchive(IStream* stream);
