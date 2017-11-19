@@ -11,20 +11,28 @@ endif
 .PHONY: clean prebuild prelink
 
 ifeq ($(config),debug_x64)
-  RESCOMP = windres
+  ifeq ($(origin CC), default)
+    CC = clang
+  endif
+  ifeq ($(origin CXX), default)
+    CXX = clang++
+  endif
+  ifeq ($(origin AR), default)
+    AR = ar
+  endif
   TARGETDIR = dbg64_unix
-  TARGET = $(TARGETDIR)/test_unix.exe
+  TARGET = $(TARGETDIR)/test_unix
   OBJDIR = dbg64_unix/obj
   DEFINES += -DDEBUG
   INCLUDES += -Isrc -Isrc/utils -Iext/zlib -Iext/unarr -Iext/lzma/C -Iext/bzip2
   FORCE_INCLUDE +=
   ALL_CPPFLAGS += $(CPPFLAGS) -MMD -MP $(DEFINES) $(INCLUDES)
-  ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m64 -Werror -g -Wall -Wextra -Wno-expansion-to-defined -Wno-implicit-fallthrough
-  ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -Werror -g -Wall -Wextra -fno-exceptions -fno-rtti -Wno-expansion-to-defined -Wno-implicit-fallthrough
+  ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m64 -Werror -g -Wall -Wextra -Wno-implicit-fallthrough
+  ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -Werror -g -Wall -Wextra -std=c++1z -fno-exceptions -fno-rtti -Wno-implicit-fallthrough
   ALL_RESFLAGS += $(RESFLAGS) $(DEFINES) $(INCLUDES)
   LIBS +=
   LDDEPS +=
-  ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib64 -m64
+  ALL_LDFLAGS += $(LDFLAGS) -m64
   LINKCMD = $(CXX) -o "$@" $(OBJECTS) $(RESOURCES) $(ALL_LDFLAGS) $(LIBS)
   define PREBUILDCMDS
   endef
@@ -38,20 +46,28 @@ all: prebuild prelink $(TARGET)
 endif
 
 ifeq ($(config),release_x64)
-  RESCOMP = windres
+  ifeq ($(origin CC), default)
+    CC = clang
+  endif
+  ifeq ($(origin CXX), default)
+    CXX = clang++
+  endif
+  ifeq ($(origin AR), default)
+    AR = ar
+  endif
   TARGETDIR = rel64_unix
-  TARGET = $(TARGETDIR)/test_unix.exe
+  TARGET = $(TARGETDIR)/test_unix
   OBJDIR = rel64_unix/obj
   DEFINES += -DNDEBUG
   INCLUDES += -Isrc -Isrc/utils -Iext/zlib -Iext/unarr -Iext/lzma/C -Iext/bzip2
   FORCE_INCLUDE +=
   ALL_CPPFLAGS += $(CPPFLAGS) -MMD -MP $(DEFINES) $(INCLUDES)
-  ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m64 -Werror -O2 -g -Wall -Wextra -Wno-expansion-to-defined -Wno-implicit-fallthrough
-  ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -Werror -O2 -g -Wall -Wextra -fno-exceptions -fno-rtti -Wno-expansion-to-defined -Wno-implicit-fallthrough
+  ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m64 -Werror -O2 -g -Wall -Wextra -Wno-implicit-fallthrough
+  ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -Werror -O2 -g -Wall -Wextra -std=c++1z -fno-exceptions -fno-rtti -Wno-implicit-fallthrough
   ALL_RESFLAGS += $(RESFLAGS) $(DEFINES) $(INCLUDES)
   LIBS +=
   LDDEPS +=
-  ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib64 -m64
+  ALL_LDFLAGS += $(LDFLAGS) -m64
   LINKCMD = $(CXX) -o "$@" $(OBJECTS) $(RESOURCES) $(ALL_LDFLAGS) $(LIBS)
   define PREBUILDCMDS
   endef

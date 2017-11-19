@@ -36,9 +36,10 @@ workspace "SumatraPDF"
   }
 
   -- expansion-to-defined reports as error commonly used pattern
+  -- but not present in mac os x clang
   -- https://stackoverflow.com/questions/42074035/how-to-deal-with-clangs-3-9-wexpansion-to-defined-warning
   -- it's used in https://abseil.io/ headers so should be safe
-  disablewarnings { "expansion-to-defined", "implicit-fallthrough" }
+  disablewarnings { "implicit-fallthrough" }
   flags { "FatalWarnings" }
 
   exceptionhandling "Off"
@@ -57,6 +58,8 @@ workspace "SumatraPDF"
   project "test_unix"
     kind "ConsoleApp"
     language "C++"
+    cppdialect "C++17"
+
     includedirs { "src", "src/utils", "ext/zlib", "ext/unarr", "ext/lzma/C", "ext/bzip2" }
     files {
       "src/utils/BaseUtil.cpp",

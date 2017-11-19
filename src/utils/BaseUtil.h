@@ -86,7 +86,9 @@ To use:
 #include <stdio.h>
 #include <time.h>
 #include <locale.h>
+#if !OS(DARWIN)
 #include <malloc.h>
+#endif
 #include <errno.h>
 
 #if OS(WIN)

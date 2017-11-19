@@ -14,156 +14,6 @@ extern "C" {
 #include <zlib.h>
 }
 
-ZipFileAlloc::ZipFileAlloc(const WCHAR *path, bool deflatedOnly, Allocator *allocator) :
-    ar_(nullptr), filenames(0, allocator), filepos(0, allocator), allocator(allocator)
-{
-    data = ar_open_file_w(path);
-    if (data)
-        ar_ = ar_open_zip_archive(data, deflatedOnly);
-    ExtractFilenames();
-}
-
-ZipFileAlloc::ZipFileAlloc(IStream *stream, bool deflatedOnly, Allocator *allocator) :
-    ar_(nullptr), filenames(0, allocator), filepos(0, allocator), allocator(allocator)
-{
-    data = ar_open_istream(stream);
-    if (data)
-        ar_ = ar_open_zip_archive(data, deflatedOnly);
-    ExtractFilenames();
-}
-
-ZipFileAlloc::~ZipFileAlloc()
-{
-    ar_close_archive(ar_);
-    ar_close(data);
-}
-
-void ZipFileAlloc::ExtractFilenames()
-{
-    if (!ar_)
-        return;
-    while (ar_parse_entry(ar_)) {
-        const char *nameUtf8 = ar_entry_get_name(ar_);
-        if (nameUtf8) {
-            int len = MultiByteToWideChar(CP_UTF8, 0, nameUtf8, -1, nullptr, 0);
-            WCHAR *name = Allocator::Alloc<WCHAR>(allocator, len);
-            str::Utf8ToWcharBuf(nameUtf8, str::Len(nameUtf8), name, len);
-            filenames.Append(name);
-        }
-        else
-            filenames.Append(nullptr);
-        filepos.Append(ar_entry_get_offset(ar_));
-    }
-}
-
-size_t ZipFileAlloc::GetFileIndex(const WCHAR *fileName)
-{
-    return filenames.FindI(fileName);
-}
-
-size_t ZipFileAlloc::GetFileCount() const
-{
-    CrashIf(filenames.size() != filepos.size());
-    return filenames.size();
-}
-
-const WCHAR *ZipFileAlloc::GetFileName(size_t fileindex)
-{
-    if (fileindex >= filenames.size())
-        return nullptr;
-    return filenames.at(fileindex);
-}
-
-char *ZipFileAlloc::GetFileDataByName(const WCHAR *fileName, size_t *len)
-{
-    return GetFileDataByIdx(GetFileIndex(fileName), len);
-}
-
-char *ZipFileAlloc::GetFileDataByIdx(size_t fileindex, size_t *len)
-{
-    if (!ar_)
-        return nullptr;
-    if (fileindex >= filenames.size())
-        return nullptr;
-
-    if (!ar_parse_entry_at(ar_, filepos.at(fileindex)))
-        return nullptr;
-
-    size_t size = ar_entry_get_size(ar_);
-    if (size > SIZE_MAX - 3)
-        return nullptr;
-    char *data = (char *)Allocator::Alloc(allocator, size + 3);
-    if (!data)
-        return nullptr;
-    if (!ar_entry_uncompress(ar_, data, size)) {
-        Allocator::Free(allocator, data);
-        return nullptr;
-    }
-    // zero-terminate for convenience
-    data[size] = data[size + 1] = data[size + 2] = '\0';
-
-    if (len)
-        *len = size;
-    return data;
-}
-
-FILETIME ZipFileAlloc::GetFileTime(const WCHAR *fileName)
-{
-    return GetFileTime(GetFileIndex(fileName));
-}
-
-FILETIME ZipFileAlloc::GetFileTime(size_t fileindex)
-{
-    FILETIME ft = { (DWORD)-1, (DWORD)-1 };
-    if (ar_ && fileindex < filepos.size() && ar_parse_entry_at(ar_, filepos.at(fileindex))) {
-        time64_t filetime = ar_entry_get_filetime(ar_);
-        LocalFileTimeToFileTime((FILETIME *)&filetime, &ft);
-    }
-    return ft;
-}
-
-char *ZipFileAlloc::GetComment(size_t *len)
-{
-    if (!ar_)
-        return nullptr;
-    size_t commentLen = ar_get_global_comment(ar_, nullptr, 0);
-    char *comment = (char *)Allocator::Alloc(allocator, commentLen + 1);
-    if (!comment)
-        return nullptr;
-    size_t read = ar_get_global_comment(ar_, comment, commentLen);
-    if (read != commentLen) {
-        Allocator::Free(allocator, comment);
-        return nullptr;
-    }
-    comment[commentLen] = '\0';
-    if (len)
-        *len = commentLen;
-    return comment;
-}
-
-bool ZipFileAlloc::UnzipFile(const WCHAR *fileName, const WCHAR *dir, const WCHAR *unzippedName)
-{
-    size_t len;
-    char *data = GetFileDataByName(fileName, &len);
-    if (!data)
-        return false;
-
-    str::Str<WCHAR> filePath(MAX_PATH, allocator);
-    filePath.Append(dir);
-    if (!str::EndsWith(filePath.Get(), L"\\"))
-        filePath.Append(L"\\");
-    if (unzippedName) {
-        filePath.Append(unzippedName);
-    } else {
-        filePath.Append(fileName);
-        str::TransChars(filePath.Get(), L"/", L"\\");
-    }
-
-    bool ok = file::WriteAll(filePath.Get(), data, len);
-    Allocator::Free(allocator, data);
-    return ok;
-}
-
 /***** ZipCreator *****/
 
 class FileWriteStream : public ISequentialStream {
@@ -228,7 +78,7 @@ bool ZipCreator::WriteData(const void *data, size_t size)
     return true;
 }
 
-static uint32_t zip_deflate(void *dst, uint32_t dstlen, const void *src, uint32_t srclen)
+static uint32_t zip_compress(void *dst, uint32_t dstlen, const void *src, uint32_t srclen)
 {
     z_stream stream = { 0 };
     stream.next_in = (Bytef *)src;
@@ -268,7 +118,7 @@ bool ZipCreator::AddFileData(const char *nameUtf8, const void *data, size_t size
     AutoFree compressed((char *)malloc(size));
     if (!compressed)
         return false;
-    compressedSize = zip_deflate(compressed, (uint32_t)size, data, (uint32_t)size);
+    compressedSize = zip_compress(compressed, (uint32_t)size, data, (uint32_t)size);
     if (!compressedSize) {
         method = 0; // Store
         memcpy(compressed.Get(), data, size);
