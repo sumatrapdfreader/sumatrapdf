@@ -841,7 +841,7 @@ class CbxEngineImpl : public ImagesEngine, public json::ValueVisitor {
 
     // access to cbxFile must be protected after initialization (with cacheAccess)
     Archive* cbxFile;
-    std::vector<ArchFileInfo*> files;
+    std::vector<Archive::FileInfo*> files;
 
     // extracted metadata
     AutoFreeW propTitle;
@@ -871,7 +871,7 @@ bool CbxEngineImpl::LoadFromStream(IStream* stream) {
     return FinishLoading();
 }
 
-static bool cmpArchFileInfoByName(ArchFileInfo* f1, ArchFileInfo* f2) {
+static bool cmpArchFileInfoByName(Archive::FileInfo* f1, Archive::FileInfo* f2) {
     const char* s1 = f1->name.data();
     const char* s2 = f2->name.data();
     int res = strcmp(s1, s2);
@@ -883,7 +883,7 @@ bool CbxEngineImpl::FinishLoading() {
     if (!cbxFile)
         return false;
 
-    std::vector<ArchFileInfo*> pageFiles;
+    std::vector<Archive::FileInfo*> pageFiles;
 
     auto& fileInfos = cbxFile->GetFileInfos();
     for (auto* fileInfo : fileInfos) {

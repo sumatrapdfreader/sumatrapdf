@@ -15,7 +15,7 @@ extern "C" {
 //#define ENABLE_UNRARDLL_FALLBACK
 
 #if OS_WIN
-FILETIME ArchFileInfo::GetWinFileTime() const {
+FILETIME Archive::FileInfo::GetWinFileTime() const {
     FILETIME ft = {(DWORD)-1, (DWORD)-1};
     LocalFileTimeToFileTime((FILETIME*)&fileTime, &ft);
     return ft;
@@ -35,7 +35,7 @@ Archive::Archive(ar_stream* data, archive_opener_t opener, Archive::Format forma
             name = "";
         }
 
-        ArchFileInfo* i = allocator_.AllocStruct<ArchFileInfo>();
+        FileInfo* i = allocator_.AllocStruct<FileInfo>();
         i->fileId = fileId;
         i->fileSizeUncompressed = ar_entry_get_size(ar_);
         i->filePos = ar_entry_get_offset(ar_);
@@ -54,7 +54,7 @@ Archive::~Archive() {
     ar_close(data_);
 }
 
-size_t getFileIdByName(std::vector<ArchFileInfo*>& fileInfos, const char* name) {
+size_t getFileIdByName(std::vector<Archive::FileInfo*>& fileInfos, const char* name) {
     for (auto fileInfo : fileInfos) {
         if (str::EqI(fileInfo->name.data(), name)) {
             return fileInfo->fileId;
@@ -63,7 +63,7 @@ size_t getFileIdByName(std::vector<ArchFileInfo*>& fileInfos, const char* name) 
     return (size_t)-1;
 }
 
-std::vector<ArchFileInfo*> const& Archive::GetFileInfos() {
+std::vector<Archive::FileInfo*> const& Archive::GetFileInfos() {
     return fileInfos_;
 }
 

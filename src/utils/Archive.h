@@ -6,47 +6,31 @@ typedef struct ar_stream_s ar_stream;
 typedef struct ar_archive_s ar_archive;
 }
 
-struct ArchFileInfo {
-    size_t fileId;
-    std::string_view name;
-    int64_t fileTime; // this is typedef'ed as time64_t in unrar.h
-    size_t fileSizeUncompressed;
-
-    // internal use
-    int64_t filePos;
-
-#if OS_WIN
-    FILETIME GetWinFileTime() const;
-#endif
-};
-
 typedef ar_archive* (*archive_opener_t)(ar_stream*);
 
 class Archive {
-  protected:
-    // used for allocating strings that are referenced by ArchFileInfo::name
-    PoolAllocator allocator_;
-    std::vector<ArchFileInfo*> fileInfos_;
-
-    ar_stream* data_ = nullptr;
-    ar_archive* ar_ = nullptr;
-
-    // call with fileindex = -1 for filename extraction using the fallback
-    virtual char* GetFileFromFallback(size_t fileId, size_t* len = nullptr) {
-        UNUSED(fileId);
-        UNUSED(len);
-        return nullptr;
-    }
-
   public:
     enum class Format { Zip, Rar, SevenZip, Tar };
+    struct FileInfo {
+        size_t fileId;
+        std::string_view name;
+        int64_t fileTime; // this is typedef'ed as time64_t in unrar.h
+        size_t fileSizeUncompressed;
+
+        // internal use
+        int64_t filePos;
+
+#if OS_WIN
+        FILETIME GetWinFileTime() const;
+#endif
+    };
 
     Archive(ar_stream* data, archive_opener_t opener, Format format);
     virtual ~Archive();
 
     Format format;
 
-    std::vector<ArchFileInfo*> const& GetFileInfos();
+    std::vector<FileInfo*> const& GetFileInfos();
 
     size_t GetFileId(const char* fileName);
 
@@ -59,6 +43,21 @@ class Archive {
 
     // caller must free() the result
     char* GetComment(size_t* len = nullptr);
+
+  protected:
+    // used for allocating strings that are referenced by ArchFileInfo::name
+    PoolAllocator allocator_;
+    std::vector<FileInfo*> fileInfos_;
+
+    ar_stream* data_ = nullptr;
+    ar_archive* ar_ = nullptr;
+
+    // call with fileindex = -1 for filename extraction using the fallback
+    virtual char* GetFileFromFallback(size_t fileId, size_t* len = nullptr) {
+        UNUSED(fileId);
+        UNUSED(len);
+        return nullptr;
+    }
 };
 
 Archive* OpenZipArchive(const char* path, bool deflatedOnly);
