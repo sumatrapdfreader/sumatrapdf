@@ -787,9 +787,9 @@ size_t FromCodePageBuf(WCHAR* buf, int cchBufSize, const char* s, UINT cp) {
     return MultiByteToWideChar(cp, 0, s, -1, buf, cchBufSize);
 }
 
-} // namespace str::conv
+} // namespace conv
 
-}
+} // namespace str
 
 namespace url {
 
@@ -831,7 +831,7 @@ WCHAR* GetFileName(const WCHAR* url) {
     return str::Dup(base);
 }
 
-}
+} // namespace url
 
 namespace seqstrings {
 
@@ -889,4 +889,4 @@ int StrToIdx(const char* strings, const WCHAR* toFind) {
     return -1;
 }
 
-}
+} // namespace seqstrings
