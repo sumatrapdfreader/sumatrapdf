@@ -1112,7 +1112,7 @@ const char * gTranslations_id =
   "Gagal mengkopi uninstaller ke direktori temp\0"\
   "Gagal membuat shortcut.\0"\
   "Gagal menghapus kunci registry uninstaller\0"\
-  "\0"\
+  "Gagal mengatur sebagai aplikasi Windows 10\0"\
   "Gagal menulis info ekstensi file lanjutan ke registry\0"\
   "Gagal menulis info penghapusan program ke registry\0"\
   "Sembunyikan &Opsi\0"\

@@ -6612,12 +6612,12 @@ const char * gTranslations_id =
   "&Perkecil halaman ke area cetakan (jika dibutuhkan)\0"\
   "Halaman &Tunggal\tCtrl+6\0"\
   "&Lewatkan versi ini\0"\
-  "\0"\
+  "Tema\0"\
   "&Gunakan ukuran halaman sebenarnya\0"\
   "&Tampilan\0"\
   "&Jendela\0"\
   "&Ya\0"\
-  "&Ukuran\0"\
+  "&Perbesar\0"\
   "(dari %d)\0"\
   "(halaman %s)\0"\
   "Tentang SumatraPDF\0"\
@@ -6665,8 +6665,8 @@ const char * gTranslations_id =
   "Berkas ini\0"\
   "Posisi kursor:\0"\
   "&Pembesaran Buatan\tCtrl+Y\0"\
-  "\0"\
-  "\0"\
+  "Gelap\0"\
+  "Lebih Gelap\0"\
   "Tampilan &Standar\0"\
   "Pembesaran &Standar\0"\
   "Pembaca PDF utama tidak dapat diubah dalam mode portabel\0"\
@@ -6716,7 +6716,7 @@ const char * gTranslations_id =
   "Tips : Gunakan tombol F3 untuk mengulangi pencarian\0"\
   "Berkas Gambar (*.%s)\0"\
   "\0"\
-  "\0"\
+  "Terang\0"\
   "\0"\
   "Jadikan SumatraPDF sebagai aplikasi standar untuk membuka berkas PDF?\0"\
   "Jadikan SumatraPDF sebagai pembaca PDF utama\0"\

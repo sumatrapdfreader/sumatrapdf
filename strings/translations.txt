@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-aa7031563f3f066d497bd5e54b7570107e14b3b9
+e21d6310060e474cda616b3b286af62d3ce01777
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -2930,6 +2930,7 @@ eu:&Azalgaia
 fr:Thème
 he:ערכת נושא
 hr:&Tema
+id:Tema
 ja:配色テーマ(&T)
 kr:테마(&T)
 lv:&Dizains
@@ -3222,7 +3223,7 @@ he:&זום
 hi:&बडा करें
 hr:&Uvećaj
 hu:&Nagyítás
-id:&Ukuran
+id:&Perbesar
 it:&Ingrandimento
 ja:ズーム(&Z)
 ka:მას&შტაბი
@@ -7009,6 +7010,7 @@ eu:Iluna
 fr:Sombre
 he:כהה
 hr:Tamna
+id:Gelap
 ja:濃色
 kr:어두운
 lv:Tumšs
@@ -7039,6 +7041,7 @@ eu:Ilunagoa
 fr:Plus sombre
 he:כהה מאוד
 hr:Tamnija
+id:Lebih Gelap
 ja:黒
 kr:더 어두운
 lv:Tumšāks
@@ -8323,6 +8326,7 @@ fr:Échec de l'enregistrement comme programme par défaut sous Windows 10.
 he:רישום SumatraPDF כתוכנת ברירת מחדל לקובצי PDF ב- Windows 10 נכשל.
 hr:Neuspješno registriranje kao zadani program na Windows 10
 hu:Sikertelen regisztráció alapértelmezett programként Windows 10-en
+id:Gagal mengatur sebagai aplikasi Windows 10
 it:Impossibile registrare come programma predefinito su Win 10\n
 ja:Windows 10 で既定のプログラムとして登録するのに失敗しました
 kr:Windows 10 상에서 기본 프로그램으로 등록하지 못했습니다.
@@ -10928,6 +10932,7 @@ eu:Argia
 fr:Clair
 he:בהירה
 hr:Svijetla
+id:Terang
 ja:淡色
 kr:밝은
 lv:Gaišs
