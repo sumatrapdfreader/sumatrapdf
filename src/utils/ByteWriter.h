@@ -2,14 +2,12 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 class ByteWriter {
-    uint8_t *dst;
-    uint8_t *end;
+    uint8_t* dst;
+    uint8_t* end;
     bool isLE;
 
-public:
-    ByteWriter(uint8_t* dst, size_t bytesLeft, bool isLE) : dst(dst), isLE(isLE) {
-        end = dst + bytesLeft;
-    }
+  public:
+    ByteWriter(uint8_t* dst, size_t bytesLeft, bool isLE) : dst(dst), isLE(isLE) { end = dst + bytesLeft; }
 
     ByteWriter(const ByteWriter& o) {
         this->dst = o.dst;
@@ -64,18 +62,18 @@ public:
     }
 };
 
-ByteWriter MakeByteWriterLE(unsigned char *dst, size_t len) {
+ByteWriter MakeByteWriterLE(unsigned char* dst, size_t len) {
     return ByteWriter((uint8_t*)dst, len, true);
 }
 
-ByteWriter MakeByteWriterLE(char *dst, size_t len) {
+ByteWriter MakeByteWriterLE(char* dst, size_t len) {
     return ByteWriter((uint8_t*)dst, len, true);
 }
 
-ByteWriter MakeByteWriterBE(unsigned char *dst, size_t len) {
+ByteWriter MakeByteWriterBE(unsigned char* dst, size_t len) {
     return ByteWriter((uint8_t*)dst, len, true);
 }
 
-ByteWriter MakeByteWriterBE(char *dst, size_t len) {
+ByteWriter MakeByteWriterBE(char* dst, size_t len) {
     return ByteWriter((uint8_t*)dst, len, true);
 }

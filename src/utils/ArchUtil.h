@@ -44,7 +44,7 @@ class ArchFile {
 
     size_t GetFileId(const char* fileName);
 
-    // caller must free() the result
+// caller must free() the result
 #if OS(WIN)
     char* GetFileDataByName(const WCHAR* filename, size_t* len = nullptr);
 #endif
