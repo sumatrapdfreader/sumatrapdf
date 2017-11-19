@@ -1103,7 +1103,7 @@ RectD CbxEngineImpl::LoadMediabox(int pageNo) {
 BaseEngine* CbxEngineImpl::CreateFromFile(const WCHAR* fileName) {
     if (str::EndsWithI(fileName, L".cbz") || str::EndsWithI(fileName, L".zip") ||
         file::StartsWithN(fileName, "PK\x03\x04", 4)) {
-        auto* archive = CreateZipArchive(fileName, false);
+        auto* archive = OpenZipArchive(fileName, false);
         CbxEngineImpl* engine = new CbxEngineImpl(archive, Arch_Zip);
         if (engine->LoadFromFile(fileName))
             return engine;
@@ -1121,14 +1121,14 @@ BaseEngine* CbxEngineImpl::CreateFromFile(const WCHAR* fileName) {
     }
     if (str::EndsWithI(fileName, L".cb7") || str::EndsWithI(fileName, L".7z") ||
         file::StartsWith(fileName, "7z\xBC\xAF\x27\x1C")) {
-        ArchFile* archive = Create7zArchive(fileName);
+        ArchFile* archive = Open7zArchive(fileName);
         CbxEngineImpl* engine = new CbxEngineImpl(archive, Arch_7z);
         if (engine->LoadFromFile(fileName))
             return engine;
         delete engine;
     }
     if (str::EndsWithI(fileName, L".cbt") || str::EndsWithI(fileName, L".tar")) {
-        ArchFile* archive = CreateTarArchive(fileName);
+        ArchFile* archive = OpenTarArchive(fileName);
         CbxEngineImpl* engine = new CbxEngineImpl(archive, Arch_Tar);
         if (engine->LoadFromFile(fileName))
             return engine;
@@ -1138,7 +1138,7 @@ BaseEngine* CbxEngineImpl::CreateFromFile(const WCHAR* fileName) {
 }
 
 BaseEngine* CbxEngineImpl::CreateFromStream(IStream* stream) {
-    auto* archive = CreateZipArchive(stream, false);
+    auto* archive = OpenZipArchive(stream, false);
     CbxEngineImpl* engine = new CbxEngineImpl(archive, Arch_Zip);
     if (engine->LoadFromStream(stream))
         return engine;
@@ -1149,12 +1149,12 @@ BaseEngine* CbxEngineImpl::CreateFromStream(IStream* stream) {
         return engine;
     delete engine;
 
-    engine = new CbxEngineImpl(Create7zArchive(stream), Arch_7z);
+    engine = new CbxEngineImpl(Open7zArchive(stream), Arch_7z);
     if (engine->LoadFromStream(stream))
         return engine;
     delete engine;
 
-    engine = new CbxEngineImpl(CreateTarArchive(stream), Arch_Tar);
+    engine = new CbxEngineImpl(OpenTarArchive(stream), Arch_Tar);
     if (engine->LoadFromStream(stream))
         return engine;
     delete engine;

@@ -55,14 +55,22 @@ class ArchFile {
     char* GetComment(size_t* len = nullptr);
 };
 
-ArchFile* CreateZipArchive(const WCHAR* path, bool deflatedOnly);
-ArchFile* CreateZipArchive(IStream* stream, bool deflatedOnly);
+ArchFile* OpenZipArchive(const char* path, bool deflatedOnly);
+ArchFile* Open7zArchive(const char* path);
+ArchFile* OpenTarArchive(const char* path);
 
-ArchFile* Create7zArchive(const WCHAR* path);
-ArchFile* Create7zArchive(IStream* stream);
+// TODO: remove those
+#if OS(WIN)
+ArchFile* OpenZipArchive(const WCHAR* path, bool deflatedOnly);
+ArchFile* Open7zArchive(const WCHAR* path);
+ArchFile* OpenTarArchive(const WCHAR* path);
+#endif
 
-ArchFile* CreateTarArchive(const WCHAR* path);
-ArchFile* CreateTarArchive(IStream* stream);
+#if OS(WIN)
+ArchFile* OpenZipArchive(IStream* stream, bool deflatedOnly);
+ArchFile* Open7zArchive(IStream* stream);
+ArchFile* OpenTarArchive(IStream* stream);
+#endif
 
 class UnRarDll;
 

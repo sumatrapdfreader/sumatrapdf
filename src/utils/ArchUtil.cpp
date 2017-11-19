@@ -139,15 +139,46 @@ static ar_archive* ar_open_zip_archive_deflated(ar_stream* stream) {
     return ar_open_zip_archive(stream, true);
 }
 
-ArchFile* CreateZipArchive(const WCHAR* path, bool deflatedOnly) {
+ArchFile* OpenZipArchive(const char* path, bool deflatedOnly) {
     auto opener = ar_open_zip_archive_any;
     if (deflatedOnly) {
         opener = ar_open_zip_archive_deflated;
     }
-    return new ArchFile(ar_open_file_w(path), opener);
+    FILE* f = file::OpenFILE(path);
+    return new ArchFile(ar_open(f), opener);
 }
 
-ArchFile* CreateZipArchive(IStream* stream, bool deflatedOnly) {
+ArchFile* Open7zArchive(const char* path) {
+    FILE* f = file::OpenFILE(path);
+    return new ArchFile(ar_open(f), ar_open_7z_archive);
+}
+
+ArchFile* OpenTarArchive(const char* path) {
+    FILE* f = file::OpenFILE(path);
+    return new ArchFile(ar_open(f), ar_open_tar_archive);
+}
+
+#if OS(WIN)
+ArchFile* OpenZipArchive(const WCHAR* path, bool deflatedOnly) {
+    auto opener = ar_open_zip_archive_any;
+    if (deflatedOnly) {
+        opener = ar_open_zip_archive_deflated;
+    }
+    FILE* f = file::OpenFILE(path);
+    return new ArchFile(ar_open(f), opener);
+}
+
+ArchFile* Open7zArchive(const WCHAR* path) {
+    FILE* f = file::OpenFILE(path);
+    return new ArchFile(ar_open(f), ar_open_7z_archive);
+}
+
+ArchFile* OpenTarArchive(const WCHAR* path) {
+    FILE* f = file::OpenFILE(path);
+    return new ArchFile(ar_open(f), ar_open_tar_archive);
+}
+
+ArchFile* OpenZipArchive(IStream* stream, bool deflatedOnly) {
     auto opener = ar_open_zip_archive_any;
     if (deflatedOnly) {
         opener = ar_open_zip_archive_deflated;
@@ -155,21 +186,14 @@ ArchFile* CreateZipArchive(IStream* stream, bool deflatedOnly) {
     return new ArchFile(ar_open_istream(stream), opener);
 }
 
-ArchFile* Create7zArchive(const WCHAR* path) {
-    return new ArchFile(ar_open_file_w(path), ar_open_7z_archive);
-}
-
-ArchFile* Create7zArchive(IStream* stream) {
+ArchFile* Open7zArchive(IStream* stream) {
     return new ArchFile(ar_open_istream(stream), ar_open_7z_archive);
 }
 
-ArchFile* CreateTarArchive(const WCHAR* path) {
-    return new ArchFile(ar_open_file_w(path), ar_open_tar_archive);
-}
-
-ArchFile* CreateTarArchive(IStream* stream) {
+ArchFile* OpenTarArchive(IStream* stream) {
     return new ArchFile(ar_open_istream(stream), ar_open_tar_archive);
 }
+#endif
 
 #ifdef ENABLE_UNRARDLL_FALLBACK
 class UnRarDll {

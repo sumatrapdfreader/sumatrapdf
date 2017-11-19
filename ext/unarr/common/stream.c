@@ -83,21 +83,24 @@ static off64_t file_tell(void *data)
 #endif
 }
 
-ar_stream *ar_open_file(const char *path)
+ar_stream *ar_open(FILE *f)
 {
-    FILE *f = path ? fopen(path, "rb") : NULL;
     if (!f)
         return NULL;
     return ar_open_stream(f, file_close, file_read, file_seek, file_tell);
+}
+
+ar_stream *ar_open_file(const char *path)
+{
+    FILE *f = path ? fopen(path, "rb") : NULL;
+    return ar_open(f);
 }
 
 #ifdef _WIN32
 ar_stream *ar_open_file_w(const wchar_t *path)
 {
     FILE *f = path ? _wfopen(path, L"rb") : NULL;
-    if (!f)
-        return NULL;
-    return ar_open_stream(f, file_close, file_read, file_seek, file_tell);
+    return ar_open(f);
 }
 #endif
 

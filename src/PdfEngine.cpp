@@ -4168,7 +4168,7 @@ bool IsSupportedFile(const WCHAR* fileName, bool sniff) {
         return file::Exists(relsPath) || dir::Exists(relsPath);
     }
 
-    ArchFile* archive = CreateZipArchive(fileName, true);
+    ArchFile* archive = OpenZipArchive(fileName, true);
     bool res = archive->GetFileId("_rels/.rels") != (size_t)-1 ||
                archive->GetFileId("_rels/.rels/[0].piece") != (size_t)-1 ||
                archive->GetFileId("_rels/.rels/[0].last.piece") != (size_t)-1;

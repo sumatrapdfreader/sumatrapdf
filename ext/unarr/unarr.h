@@ -7,6 +7,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdio.h>
 typedef int64_t off64_t;
 typedef int64_t time64_t;
 
@@ -16,6 +17,8 @@ typedef int64_t time64_t;
 
 typedef struct ar_stream_s ar_stream;
 
+/* opens a read-only stream for the given FILE; returns NULL on error */
+ar_stream *ar_open(FILE *f);
 /* opens a read-only stream for the given file path; returns NULL on error */
 ar_stream *ar_open_file(const char *path);
 #ifdef _WIN32

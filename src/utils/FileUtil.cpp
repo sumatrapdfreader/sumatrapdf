@@ -299,6 +299,25 @@ HANDLE OpenReadOnly(const WCHAR *filePath) {
                       FILE_ATTRIBUTE_NORMAL, nullptr);
 }
 
+FILE *OpenFILE(const WCHAR *path) {
+    if (!path) {
+        return nullptr;
+    }
+    return _wfopen(path, L"rb");
+}
+
+FILE *OpenFILE(const char *path) {
+    if (!path) {
+        return nullptr;
+    }
+#if OS(WIN)
+    AutoFreeW pathW(str::conv::FromUtf8(path));
+    return OpenFILE(pathW.Get());
+#else
+    return fopen(path, "rb");
+#endif
+}
+
 bool Exists(const WCHAR *filePath) {
     if (nullptr == filePath)
         return false;

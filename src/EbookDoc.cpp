@@ -239,12 +239,12 @@ const char* EPUB_ENC_NS = "http://www.w3.org/2001/04/xmlenc#";
 EpubDoc::EpubDoc(const WCHAR* fileName) {
     this->fileName.SetCopy(fileName);
     InitializeCriticalSection(&zipAccess);
-    zip = CreateZipArchive(fileName, true);
+    zip = OpenZipArchive(fileName, true);
 }
 
 EpubDoc::EpubDoc(IStream* stream) {
     InitializeCriticalSection(&zipAccess);
-    zip = CreateZipArchive(stream, true);
+    zip = OpenZipArchive(stream, true);
 }
 
 EpubDoc::~EpubDoc() {
@@ -630,7 +630,7 @@ bool EpubDoc::ParseToc(EbookTocVisitor* visitor) {
 
 bool EpubDoc::IsSupportedFile(const WCHAR* fileName, bool sniff) {
     if (sniff) {
-        ArchFile* archive = CreateZipArchive(fileName, true);
+        ArchFile* archive = OpenZipArchive(fileName, true);
         AutoFree mimetype(archive->GetFileDataByName("mimetype"));
         if (!mimetype)
             return false;
@@ -695,7 +695,7 @@ bool Fb2Doc::Load() {
     CrashIf(!stream && !fileName);
     AutoFree data;
     if (fileName) {
-        ArchFile* archive = CreateZipArchive(fileName, false);
+        ArchFile* archive = OpenZipArchive(fileName, false);
         auto& fileInfos = archive->GetFileInfos();
         size_t nFiles = fileInfos.size();
         isZipped = nFiles > 0;
@@ -724,7 +724,7 @@ bool Fb2Doc::Load() {
     } else if (stream) {
         data.Set((char*)GetDataFromStream(stream, nullptr));
         if (str::StartsWith(data.Get(), "PK\x03\x04")) {
-            ArchFile* archive = CreateZipArchive(stream, false);
+            ArchFile* archive = OpenZipArchive(stream, false);
             size_t nFiles = archive->GetFileInfos().size();
             if (nFiles == 1) {
                 isZipped = true;
