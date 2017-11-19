@@ -42,11 +42,8 @@ class ArchFile {
     char* GetComment(size_t* len = nullptr);
 };
 
-class ZipFile : public ArchFile {
-  public:
-    explicit ZipFile(const WCHAR* path, bool deflatedOnly = false);
-    explicit ZipFile(IStream* stream, bool deflatedOnly = false);
-};
+ArchFile* CreateZipArchive(const WCHAR* path, bool deflatedOnly = false);
+ArchFile* CreateZipArchive(IStream* stream, bool deflatedOnly = false);
 
 class _7zFile : public ArchFile {
   public:

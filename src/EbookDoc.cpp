@@ -230,16 +230,15 @@ const char *EPUB_OPF_NS = "http://www.idpf.org/2007/opf";
 const char *EPUB_NCX_NS = "http://www.daisy.org/z3986/2005/ncx/";
 const char *EPUB_ENC_NS = "http://www.w3.org/2001/04/xmlenc#";
 
-EpubDoc::EpubDoc(const WCHAR *fileName) :
-    zip(fileName, true), fileName(str::Dup(fileName)),
-    isNcxToc(false), isRtlDoc(false) {
+EpubDoc::EpubDoc(const WCHAR *fileName) {
+    this->fileName.SetCopy(fileName);
     InitializeCriticalSection(&zipAccess);
+    zip = CreateZipArchive(fileName, true);
 }
 
-EpubDoc::EpubDoc(IStream *stream) :
-    zip(stream, true), fileName(nullptr),
-    isNcxToc(false), isRtlDoc(false) {
+EpubDoc::EpubDoc(IStream *stream) {
     InitializeCriticalSection(&zipAccess);
+    zip = CreateZipArchive(stream, true);
 }
 
 EpubDoc::~EpubDoc()
@@ -253,11 +252,12 @@ EpubDoc::~EpubDoc()
 
     LeaveCriticalSection(&zipAccess);
     DeleteCriticalSection(&zipAccess);
+    delete zip;
 }
 
 bool EpubDoc::Load()
 {
-    AutoFree container(zip.GetFileDataByName(L"META-INF/container.xml"));
+    AutoFree container(zip->GetFileDataByName(L"META-INF/container.xml"));
     if (!container)
         return false;
     HtmlParser parser;
@@ -275,7 +275,7 @@ bool EpubDoc::Load()
 
     // encrypted files will be ignored (TODO: support decryption)
     WStrList encList;
-    AutoFree encryption(zip.GetFileDataByName(L"META-INF/encryption.xml"));
+    AutoFree encryption(zip->GetFileDataByName(L"META-INF/encryption.xml"));
     if (encryption) {
         (void)parser.ParseInPlace(encryption);
         HtmlElement *cr = parser.FindElementByNameNS("CipherReference", EPUB_ENC_NS);
@@ -289,7 +289,7 @@ bool EpubDoc::Load()
         }
     }
 
-    AutoFree content(zip.GetFileDataByName(contentPath));
+    AutoFree content(zip->GetFileDataByName(contentPath));
     if (!content)
         return false;
     ParseMetadata(content);
@@ -323,7 +323,7 @@ bool EpubDoc::Load()
             // load the image lazily
             ImageData2 data = { 0 };
             data.id = str::conv::ToUtf8(imgPath);
-            data.idx = zip.GetFileIndex(imgPath);
+            data.idx = zip->GetFileIndex(imgPath);
             images.Append(data);
         }
         else if (str::Eq(mediatype, L"application/xhtml+xml") ||
@@ -370,7 +370,7 @@ bool EpubDoc::Load()
             continue;
 
         AutoFreeW fullPath(str::Join(contentPath, pathList.at(idList.Find(idref))));
-        AutoFree html(zip.GetFileDataByName(fullPath));
+        AutoFree html(zip->GetFileDataByName(fullPath));
         if (!html)
             continue;
         html.Set(DecodeTextToUtf8(html, true));
@@ -458,7 +458,7 @@ ImageData *EpubDoc::GetImageData(const char *id, const char *pagePath)
             ImageData2 *img = &images.at(i);
             if (str::EndsWithI(img->id, id)) {
                 if (!img->base.data)
-                    img->base.data = zip.GetFileDataByIdx(img->idx, &img->base.len);
+                    img->base.data = zip->GetFileDataByIdx(img->idx, &img->base.len);
                 if (img->base.data)
                     return &img->base;
             }
@@ -474,7 +474,7 @@ ImageData *EpubDoc::GetImageData(const char *id, const char *pagePath)
         ImageData2 *img = &images.at(i);
         if (str::Eq(img->id, url)) {
             if (!img->base.data)
-                img->base.data = zip.GetFileDataByIdx(img->idx, &img->base.len);
+                img->base.data = zip->GetFileDataByIdx(img->idx, &img->base.len);
             if (img->base.data)
                 return &img->base;
         }
@@ -483,9 +483,9 @@ ImageData *EpubDoc::GetImageData(const char *id, const char *pagePath)
     // try to also load images which aren't registered in the manifest
     ImageData2 data = { 0 };
     AutoFreeW imgPath(str::conv::FromUtf8(url));
-    data.idx = zip.GetFileIndex(imgPath);
+    data.idx = zip->GetFileIndex(imgPath);
     if (data.idx != (size_t)-1) {
-        data.base.data = zip.GetFileDataByIdx(data.idx, &data.base.len);
+        data.base.data = zip->GetFileDataByIdx(data.idx, &data.base.len);
         if (data.base.data) {
             data.id = str::Dup(url);
             images.Append(data);
@@ -507,7 +507,7 @@ char *EpubDoc::GetFileData(const char *relPath, const char *pagePath, size_t *le
 
     AutoFree url(NormalizeURL(relPath, pagePath));
     AutoFreeW zipPath(str::conv::FromUtf8(url));
-    return zip.GetFileDataByName(zipPath, lenOut);
+    return zip->GetFileDataByName(zipPath, lenOut);
 }
 
 WCHAR *EpubDoc::GetProperty(DocumentProperty prop) const
@@ -640,7 +640,7 @@ bool EpubDoc::ParseToc(EbookTocVisitor *visitor)
     AutoFree tocData;
     {
         ScopedCritSec scope(&zipAccess);
-        tocData.Set(zip.GetFileDataByName(tocPath, &tocDataLen));
+        tocData.Set(zip->GetFileDataByName(tocPath, &tocDataLen));
     }
     if (!tocData)
         return false;
@@ -654,8 +654,8 @@ bool EpubDoc::ParseToc(EbookTocVisitor *visitor)
 bool EpubDoc::IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
     if (sniff) {
-        ZipFile zip(fileName, true);
-        AutoFree mimetype(zip.GetFileDataByName(L"mimetype"));
+        ArchFile* archive = CreateZipArchive(fileName, true);
+        AutoFree mimetype(archive->GetFileDataByName(L"mimetype"));
         if (!mimetype)
             return false;
         // trailing whitespace is allowed for the mimetype file
@@ -725,35 +725,39 @@ bool Fb2Doc::Load()
     CrashIf(!stream && !fileName);
     AutoFree data;
     if (fileName) {
-        ZipFile archive(fileName);
-        isZipped = archive.GetFileCount() > 0;
-        if (archive.GetFileCount() > 1) {
+        ArchFile* archive = CreateZipArchive(fileName);
+        isZipped = archive->GetFileCount() > 0;
+        if (archive->GetFileCount() > 1) {
             // if the ZIP file contains more than one file, we try to be rather
             // restrictive in what we accept in order not to accidentally accept
             // too many archives which only contain FB2 files among others:
             // the file must contain a single .fb2 file and may only contain
             // .url files in addition (TODO: anything else?)
-            for (size_t i = 0; i < archive.GetFileCount(); i++) {
-                const WCHAR *ext = path::GetExt(archive.GetFileName(i));
-                if (str::EqI(ext, L".fb2") && !data)
-                    data.Set(archive.GetFileDataByIdx(i));
-                else if (!str::EqI(ext, L".url"))
+            for (size_t i = 0; i < archive->GetFileCount(); i++) {
+                const WCHAR *ext = path::GetExt(archive->GetFileName(i));
+                if (str::EqI(ext, L".fb2") && !data) {
+                    data.Set(archive->GetFileDataByIdx(i));
+                }  else if (!str::EqI(ext, L".url")) {
+                    delete archive;
                     return false;
+                }
             }
-        }
-        else if (isZipped)
-            data.Set(archive.GetFileDataByIdx(0));
-        else
+        } else if (isZipped) {
+            data.Set(archive->GetFileDataByIdx(0));
+        } else {
             data.Set(file::ReadAll(fileName, nullptr));
+        }
+        delete archive;
     }
     else if (stream) {
         data.Set((char *)GetDataFromStream(stream, nullptr));
         if (str::StartsWith(data.Get(), "PK\x03\x04")) {
-            ZipFile archive(stream);
-            if (archive.GetFileCount() == 1) {
+            ArchFile* archive = CreateZipArchive(stream);
+            if (archive->GetFileCount() == 1) {
                 isZipped = true;
-                data.Set(archive.GetFileDataByIdx(0));
+                data.Set(archive->GetFileDataByIdx(0));
             }
+            delete archive;
         }
     }
     if (!data)

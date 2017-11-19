@@ -1127,7 +1127,7 @@ BaseEngine *CbxEngineImpl::CreateFromFile(const WCHAR *fileName)
 {
     if (str::EndsWithI(fileName, L".cbz") || str::EndsWithI(fileName, L".zip") ||
         file::StartsWithN(fileName, "PK\x03\x04", 4)) {
-        CbxEngineImpl *engine = new CbxEngineImpl(new ZipFile(fileName), Arch_Zip);
+        CbxEngineImpl *engine = new CbxEngineImpl(CreateZipArchive(fileName), Arch_Zip);
         if (engine->LoadFromFile(fileName))
             return engine;
         delete engine;
@@ -1160,7 +1160,8 @@ BaseEngine *CbxEngineImpl::CreateFromFile(const WCHAR *fileName)
 
 BaseEngine *CbxEngineImpl::CreateFromStream(IStream *stream)
 {
-    CbxEngineImpl *engine = new CbxEngineImpl(new ZipFile(stream), Arch_Zip);
+    auto *archive = CreateZipArchive(stream);
+    CbxEngineImpl *engine = new CbxEngineImpl(archive, Arch_Zip);
     if (engine->LoadFromStream(stream))
         return engine;
     delete engine;

@@ -4414,19 +4414,22 @@ namespace XpsEngine {
 
 bool IsSupportedFile(const WCHAR *fileName, bool sniff)
 {
-    if (sniff) {
-        if (dir::Exists(fileName)) {
-            // allow opening uncompressed XPS files as well
-            AutoFreeW relsPath(path::Join(fileName, L"_rels\\.rels"));
-            return file::Exists(relsPath) || dir::Exists(relsPath);
-        }
-        ZipFile zip(fileName, true);
-        return zip.GetFileIndex(L"_rels/.rels") != (size_t)-1 ||
-               zip.GetFileIndex(L"_rels/.rels/[0].piece") != (size_t)-1 ||
-               zip.GetFileIndex(L"_rels/.rels/[0].last.piece") != (size_t)-1;
+    if (!sniff) {
+        return str::EndsWithI(fileName, L".xps") || str::EndsWithI(fileName, L".oxps");
     }
 
-    return str::EndsWithI(fileName, L".xps") || str::EndsWithI(fileName, L".oxps");
+    if (dir::Exists(fileName)) {
+        // allow opening uncompressed XPS files as well
+        AutoFreeW relsPath(path::Join(fileName, L"_rels\\.rels"));
+        return file::Exists(relsPath) || dir::Exists(relsPath);
+    }
+
+    ArchFile* archive = CreateZipArchive(fileName, true);
+    bool res = archive->GetFileIndex(L"_rels/.rels") != (size_t)-1 ||
+        archive->GetFileIndex(L"_rels/.rels/[0].piece") != (size_t)-1 ||
+        archive->GetFileIndex(L"_rels/.rels/[0].last.piece") != (size_t)-1;
+    delete archive;
+    return res;
 }
 
 BaseEngine *CreateFromFile(const WCHAR *fileName)

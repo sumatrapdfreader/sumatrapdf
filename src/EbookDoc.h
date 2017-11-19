@@ -25,7 +25,7 @@ public:
 /* ********** EPUB ********** */
 
 class EpubDoc {
-    ZipFile zip;
+    ArchFile* zip = nullptr;
     // zip and images are the only mutable members of EpubDoc after initialization;
     // access to them must be serialized for multi-threaded users (such as EbookController)
     CRITICAL_SECTION zipAccess;
@@ -35,8 +35,8 @@ class EpubDoc {
     AutoFreeW tocPath;
     AutoFreeW fileName;
     PropertyMap props;
-    bool isNcxToc;
-    bool isRtlDoc;
+    bool isNcxToc = false;
+    bool isRtlDoc = false;
 
     bool Load();
     void ParseMetadata(const char *content);

@@ -124,8 +124,13 @@ static ar_archive* ar_open_zip_archive_deflated(ar_stream* stream) {
 }
 #define GetZipOpener(deflatedOnly) ((deflatedOnly) ? ar_open_zip_archive_deflated : ar_open_zip_archive_any)
 
-ZipFile::ZipFile(const WCHAR* path, bool deflatedOnly) : ArchFile(ar_open_file_w(path), GetZipOpener(deflatedOnly)) {}
-ZipFile::ZipFile(IStream* stream, bool deflatedOnly) : ArchFile(ar_open_istream(stream), GetZipOpener(deflatedOnly)) {}
+ArchFile* CreateZipArchive(const WCHAR* path, bool deflatedOnly) {
+    return new ArchFile(ar_open_file_w(path), GetZipOpener(deflatedOnly));
+}
+
+ArchFile* CreateZipArchive(IStream* stream, bool deflatedOnly) {
+    return new ArchFile(ar_open_istream(stream), GetZipOpener(deflatedOnly));
+}
 
 _7zFile::_7zFile(const WCHAR* path) : ArchFile(ar_open_file_w(path), ar_open_7z_archive) {}
 _7zFile::_7zFile(IStream* stream) : ArchFile(ar_open_istream(stream), ar_open_7z_archive) {}
