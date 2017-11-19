@@ -33,7 +33,7 @@ $files =
 #"src\HtmlFormatter.*",
 "src\ImagesEngine.*",
 "src\Menu.*",
-#"src\MobiDoc.*",
+"src\MobiDoc.*",
 #"src\MuiEbookPageDef.*",
 "src\Notifications.*",
 #"src\PagesLayoutDef*",
