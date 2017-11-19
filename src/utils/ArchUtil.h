@@ -47,7 +47,6 @@ class ArchFile {
 
     std::vector<ArchFileInfo*> const& GetFileInfos();
 
-    size_t GetFileId(const WCHAR* fileName);
     size_t GetFileId(const char* fileName);
 
     // caller must free() the result

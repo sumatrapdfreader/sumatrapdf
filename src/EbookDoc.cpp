@@ -252,7 +252,7 @@ EpubDoc::~EpubDoc() {
 
     for (size_t i = 0; i < images.size(); i++) {
         free(images.at(i).base.data);
-        free(images.at(i).id);
+        free(images.at(i).fileName);
     }
 
     LeaveCriticalSection(&zipAccess);
@@ -324,8 +324,8 @@ bool EpubDoc::Load() {
                 continue;
             // load the image lazily
             ImageData2 data = {0};
-            data.id = str::conv::ToUtf8(imgPath);
-            data.idx = zip->GetFileId(imgPath);
+            data.fileName = str::conv::ToUtf8(imgPath);
+            data.fileId = zip->GetFileId(data.fileName);
             images.Append(data);
         } else if (str::Eq(mediatype, L"application/xhtml+xml") || str::Eq(mediatype, L"application/html+xml") ||
                    str::Eq(mediatype, L"application/x-dtbncx+xml") || str::Eq(mediatype, L"text/html") ||
@@ -433,7 +433,7 @@ size_t EpubDoc::GetHtmlDataSize() const {
     return htmlData.size();
 }
 
-ImageData* EpubDoc::GetImageData(const char* id, const char* pagePath) {
+ImageData* EpubDoc::GetImageData(const char* fileName, const char* pagePath) {
     ScopedCritSec scope(&zipAccess);
 
     if (!pagePath) {
@@ -447,9 +447,9 @@ ImageData* EpubDoc::GetImageData(const char* id, const char* pagePath) {
         // in every HtmlPage, but this should work well enough for now
         for (size_t i = 0; i < images.size(); i++) {
             ImageData2* img = &images.at(i);
-            if (str::EndsWithI(img->id, id)) {
+            if (str::EndsWithI(img->fileName, fileName)) {
                 if (!img->base.data)
-                    img->base.data = zip->GetFileDataById(img->idx, &img->base.len);
+                    img->base.data = zip->GetFileDataById(img->fileId, &img->base.len);
                 if (img->base.data)
                     return &img->base;
             }
@@ -457,15 +457,15 @@ ImageData* EpubDoc::GetImageData(const char* id, const char* pagePath) {
         return nullptr;
     }
 
-    AutoFree url(NormalizeURL(id, pagePath));
+    AutoFree url(NormalizeURL(fileName, pagePath));
     // some EPUB producers use wrong path separators
     if (str::FindChar(url, '\\'))
         str::TransChars(url, "\\", "/");
     for (size_t i = 0; i < images.size(); i++) {
         ImageData2* img = &images.at(i);
-        if (str::Eq(img->id, url)) {
+        if (str::Eq(img->fileName, url)) {
             if (!img->base.data)
-                img->base.data = zip->GetFileDataById(img->idx, &img->base.len);
+                img->base.data = zip->GetFileDataById(img->fileId, &img->base.len);
             if (img->base.data)
                 return &img->base;
         }
@@ -473,12 +473,11 @@ ImageData* EpubDoc::GetImageData(const char* id, const char* pagePath) {
 
     // try to also load images which aren't registered in the manifest
     ImageData2 data = {0};
-    AutoFreeW imgPath(str::conv::FromUtf8(url));
-    data.idx = zip->GetFileId(imgPath);
-    if (data.idx != (size_t)-1) {
-        data.base.data = zip->GetFileDataById(data.idx, &data.base.len);
+    data.fileId = zip->GetFileId(url);
+    if (data.fileId != (size_t)-1) {
+        data.base.data = zip->GetFileDataById(data.fileId, &data.base.len);
         if (data.base.data) {
-            data.id = str::Dup(url);
+            data.fileName = str::Dup(url);
             images.Append(data);
             return &images.Last().base;
         }
@@ -687,7 +686,7 @@ Fb2Doc::Fb2Doc(IStream* stream) : fileName(nullptr), stream(stream), isZipped(fa
 Fb2Doc::~Fb2Doc() {
     for (size_t i = 0; i < images.size(); i++) {
         free(images.at(i).base.data);
-        free(images.at(i).id);
+        free(images.at(i).fileName);
     }
     if (stream)
         stream->Release();
@@ -838,8 +837,8 @@ void Fb2Doc::ExtractImage(HtmlPullParser* parser, HtmlToken* tok) {
     data.base.data = Base64Decode(tok->s, tok->sLen, &data.base.len);
     if (!data.base.data)
         return;
-    data.id = str::Join("#", id);
-    data.idx = images.size();
+    data.fileName = str::Join("#", id);
+    data.fileId = images.size();
     images.Append(data);
 }
 
@@ -852,9 +851,9 @@ size_t Fb2Doc::GetXmlDataSize() const {
     return xmlData.size();
 }
 
-ImageData* Fb2Doc::GetImageData(const char* id) {
+ImageData* Fb2Doc::GetImageData(const char* fileName) {
     for (size_t i = 0; i < images.size(); i++) {
-        if (str::Eq(images.at(i).id, id))
+        if (str::Eq(images.at(i).fileName, fileName))
             return &images.at(i).base;
     }
     return nullptr;
@@ -1116,7 +1115,7 @@ HtmlDoc::HtmlDoc(const WCHAR* fileName) : fileName(str::Dup(fileName)) {}
 HtmlDoc::~HtmlDoc() {
     for (size_t i = 0; i < images.size(); i++) {
         free(images.at(i).base.data);
-        free(images.at(i).id);
+        free(images.at(i).fileName);
     }
 }
 
@@ -1161,13 +1160,13 @@ const char* HtmlDoc::GetHtmlData(size_t* lenOut) const {
     return htmlData;
 }
 
-ImageData* HtmlDoc::GetImageData(const char* id) {
+ImageData* HtmlDoc::GetImageData(const char* fileName) {
     // TODO: this isn't thread-safe (might leak image data when called concurrently),
     //       so add a critical section once it's used for EbookController
 
-    AutoFree url(NormalizeURL(id, pagePath));
+    AutoFree url(NormalizeURL(fileName, pagePath));
     for (size_t i = 0; i < images.size(); i++) {
-        if (str::Eq(images.at(i).id, url))
+        if (str::Eq(images.at(i).fileName, url))
             return &images.at(i).base;
     }
 
@@ -1175,7 +1174,7 @@ ImageData* HtmlDoc::GetImageData(const char* id) {
     data.base.data = LoadURL(url, &data.base.len);
     if (!data.base.data)
         return nullptr;
-    data.id = url.StealData();
+    data.fileName = url.StealData();
     images.Append(data);
     return &images.Last().base;
 }

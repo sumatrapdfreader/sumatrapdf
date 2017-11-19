@@ -1250,7 +1250,7 @@ public:
     ~ChmDataCache() {
         for (size_t i = 0; i < images.size(); i++) {
             free(images.at(i).base.data);
-            free(images.at(i).id);
+            free(images.at(i).fileName);
         }
     }
 
@@ -1262,7 +1262,7 @@ public:
     ImageData *GetImageData(const char *id, const char *pagePath) {
         AutoFree url(NormalizeURL(id, pagePath));
         for (size_t i = 0; i < images.size(); i++) {
-            if (str::Eq(images.at(i).id, url))
+            if (str::Eq(images.at(i).fileName, url))
                 return &images.at(i).base;
         }
 
@@ -1270,7 +1270,7 @@ public:
         data.base.data = (char *)doc->GetData(url, &data.base.len);
         if (!data.base.data)
             return nullptr;
-        data.id = url.StealData();
+        data.fileName = url.StealData();
         images.Append(data);
         return &images.Last().base;
     }

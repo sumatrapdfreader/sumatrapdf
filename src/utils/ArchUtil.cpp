@@ -74,16 +74,13 @@ std::vector<ArchFileInfo*> const& ArchFile::GetFileInfos() {
     return fileInfos_;
 }
 
-size_t ArchFile::GetFileId(const WCHAR* fileName) {
-    return fileNames_.FindI(fileName);
-}
-
 size_t ArchFile::GetFileId(const char* fileName) {
     return getFileIdByName(fileInfos_, fileName);
 }
 
 char* ArchFile::GetFileDataByName(const WCHAR* fileName, size_t* len) {
-    return GetFileDataById(GetFileId(fileName), len);
+    AutoFree fileNameUtf8(str::conv::ToUtf8(fileName));
+    return GetFileDataByName(fileNameUtf8.Get(), len);
 }
 
 char* ArchFile::GetFileDataByName(const char* fileName, size_t* len) {
