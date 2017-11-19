@@ -24,7 +24,7 @@ void ByteOrderTests()
     };
 
     {
-        uint16 vu16; uint32 vu32;
+        uint16_t vu16; uint32_t vu32;
         char b[3];
         ByteOrderDecoder d(d1, sizeof(d1), ByteOrderDecoder::LittleEndian);
         utassert(0 == d.Offset());
@@ -67,7 +67,7 @@ void ByteOrderTests()
     }
 
     {
-        uint16 vu16; uint32 vu32;
+        uint16_t vu16; uint32_t vu32;
         char b[3];
         ByteOrderDecoder d(d1, sizeof(d1), ByteOrderDecoder::BigEndian);
         vu16 = d.UInt16();
@@ -95,7 +95,7 @@ void ByteOrderTests()
     }
 
     {
-        int16 v16; int32 v32;
+        int16_t v16; int32_t v32;
         char b[3];
         ByteOrderDecoder d(d1, sizeof(d1), ByteOrderDecoder::LittleEndian);
         v16 = d.Int16();
@@ -123,7 +123,7 @@ void ByteOrderTests()
     }
 
     {
-        int16 v16; int32 v32;
+        int16_t v16; int32_t v32;
         char b[3];
         ByteOrderDecoder d(d1, sizeof(d1), ByteOrderDecoder::BigEndian);
         v16 = d.Int16();
