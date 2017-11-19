@@ -3,7 +3,7 @@
 
 #include "BaseUtil.h"
 
-#pragma warning (disable : 4668)
+#pragma warning(disable : 4668)
 #include <exception>
 #include <tlhelp32.h>
 #include <signal.h>
@@ -28,7 +28,7 @@
 //#define CRASH_SUBMIT_SERVER L"127.0.0.1"
 //#define CRASH_SUBMIT_PORT 6020
 
-#define CRASH_SUBMIT_URL    L"/crashreports/submit?app=SumatraPDF&ver=" CURR_VERSION_STR
+#define CRASH_SUBMIT_URL L"/crashreports/submit?app=SumatraPDF&ver=" CURR_VERSION_STR
 #endif
 
 // The following functions allow crash handler to be used by both installer
@@ -53,22 +53,12 @@ is still possible, the probability should be greatly reduced. */
 class CrashHandlerAllocator : public Allocator {
     HANDLE allocHeap;
 
-public:
-    CrashHandlerAllocator() {
-        allocHeap = HeapCreate(0, 128 * 1024, 0);
-    }
-    virtual ~CrashHandlerAllocator() {
-        HeapDestroy(allocHeap);
-    }
-    virtual void *Alloc(size_t size) {
-        return HeapAlloc(allocHeap, 0, size);
-    }
-    virtual void *Realloc(void *mem, size_t size) {
-        return HeapReAlloc(allocHeap, 0, mem, size);
-    }
-    virtual void Free(void *mem) {
-        HeapFree(allocHeap, 0, mem);
-    }
+  public:
+    CrashHandlerAllocator() { allocHeap = HeapCreate(0, 128 * 1024, 0); }
+    virtual ~CrashHandlerAllocator() { HeapDestroy(allocHeap); }
+    virtual void* Alloc(size_t size) { return HeapAlloc(allocHeap, 0, size); }
+    virtual void* Realloc(void* mem, size_t size) { return HeapReAlloc(allocHeap, 0, mem, size); }
+    virtual void Free(void* mem) { HeapFree(allocHeap, 0, mem); }
 };
 
 enum ExeType {
@@ -80,30 +70,29 @@ enum ExeType {
     ExeSumatraLib
 };
 
-static CrashHandlerAllocator *gCrashHandlerAllocator = nullptr;
+static CrashHandlerAllocator* gCrashHandlerAllocator = nullptr;
 
 // Note: intentionally not using ScopedMem<> to avoid
 // static initializers/destructors, which are bad
-static WCHAR *  gSymbolsUrl = nullptr;
-static WCHAR *  gCrashDumpPath = nullptr;
-static WCHAR *  gSymbolPathW = nullptr;
-static WCHAR *  gSymbolsDir = nullptr;
-static WCHAR *  gPdbZipPath = nullptr;
-static WCHAR *  gLibMupdfPdbPath = nullptr;
-static WCHAR *  gSumatraPdfPdbPath = nullptr;
-static WCHAR *  gInstallerPdbPath = nullptr;
-static char *   gSystemInfo = nullptr;
-static char *   gModulesInfo = nullptr;
-static HANDLE   gDumpEvent = nullptr;
-static HANDLE   gDumpThread = nullptr;
-static ExeType  gExeType = ExeSumatraStatic;
-static bool     gCrashed = false;
+static WCHAR* gSymbolsUrl = nullptr;
+static WCHAR* gCrashDumpPath = nullptr;
+static WCHAR* gSymbolPathW = nullptr;
+static WCHAR* gSymbolsDir = nullptr;
+static WCHAR* gPdbZipPath = nullptr;
+static WCHAR* gLibMupdfPdbPath = nullptr;
+static WCHAR* gSumatraPdfPdbPath = nullptr;
+static WCHAR* gInstallerPdbPath = nullptr;
+static char* gSystemInfo = nullptr;
+static char* gModulesInfo = nullptr;
+static HANDLE gDumpEvent = nullptr;
+static HANDLE gDumpThread = nullptr;
+static ExeType gExeType = ExeSumatraStatic;
+static bool gCrashed = false;
 
-static MINIDUMP_EXCEPTION_INFORMATION gMei = { 0 };
+static MINIDUMP_EXCEPTION_INFORMATION gMei = {0};
 static LPTOP_LEVEL_EXCEPTION_FILTER gPrevExceptionFilter = nullptr;
 
-static char *BuildCrashInfoText()
-{
+static char* BuildCrashInfoText() {
     lf("BuildCrashInfoText(): start");
 
     str::Str<char> s(16 * 1024, gCrashHandlerAllocator);
@@ -124,15 +113,14 @@ static char *BuildCrashInfoText()
     return s.StealData();
 }
 
-static void SendCrashInfo(char *s)
-{
+static void SendCrashInfo(char* s) {
     lf("SendCrashInfo(): started");
     if (str::IsEmpty(s)) {
         plog("SendCrashInfo(): s is empty");
         return;
     }
 
-    const char *boundary = "0xKhTmLbOuNdArY";
+    const char* boundary = "0xKhTmLbOuNdArY";
     str::Str<char> headers(256, gCrashHandlerAllocator);
     headers.AppendFmt("Content-Type: multipart/form-data; boundary=%s", boundary);
 
@@ -150,8 +138,7 @@ static void SendCrashInfo(char *s)
 // We might have symbol files for older builds. If we're here, then we
 // didn't get the symbols so we assume it's because symbols didn't match
 // Returns false if files were there but we couldn't delete them
-static bool DeleteSymbolsIfExist()
-{
+static bool DeleteSymbolsIfExist() {
     bool ok1 = file::Delete(gLibMupdfPdbPath);
     bool ok2 = file::Delete(gSumatraPdfPdbPath);
     bool ok3 = file::Delete(gInstallerPdbPath);
@@ -163,10 +150,9 @@ static bool DeleteSymbolsIfExist()
 
 #ifndef DEBUG
 // static (single .exe) build
-static bool UnpackStaticSymbols(const char *pdbZipPath, const char *symDir)
-{
+static bool UnpackStaticSymbols(const char* pdbZipPath, const char* symDir) {
     lf("UnpackStaticSymbols(): unpacking %s to dir %s", pdbZipPath, symDir);
-    const char *files[2] = { "SumatraPDF.pdb", nullptr };
+    const char* files[2] = {"SumatraPDF.pdb", nullptr};
     bool ok = lzma::ExtractFiles(pdbZipPath, symDir, &files[0], gCrashHandlerAllocator);
     if (!ok) {
         plog("Failed to unpack SumatraPDF.pdb");
@@ -176,10 +162,9 @@ static bool UnpackStaticSymbols(const char *pdbZipPath, const char *symDir)
 }
 
 // lib (.exe + libmupdf.dll) release and pre-release builds
-static bool UnpackLibSymbols(const char *pdbZipPath, const char *symDir)
-{
+static bool UnpackLibSymbols(const char* pdbZipPath, const char* symDir) {
     lf("UnpackLibSymbols(): unpacking %s to dir %s", pdbZipPath, symDir);
-    const char *files[3] = { "libmupdf.pdb", "SumatraPDF-no-MuPDF.pdb", nullptr };
+    const char* files[3] = {"libmupdf.pdb", "SumatraPDF-no-MuPDF.pdb", nullptr};
     bool ok = lzma::ExtractFiles(pdbZipPath, symDir, &files[0], gCrashHandlerAllocator);
     if (!ok) {
         plog("Failed to unpack libmupdf.pdb or SumatraPDF-no-MuPDF.pdb");
@@ -188,10 +173,9 @@ static bool UnpackLibSymbols(const char *pdbZipPath, const char *symDir)
     return true;
 }
 
-static bool UnpackInstallerSymbols(const char *pdbZipPath, const char *symDir)
-{
+static bool UnpackInstallerSymbols(const char* pdbZipPath, const char* symDir) {
     lf("UnpackInstallerSymbols(): unpacking %s to dir %s", pdbZipPath, symDir);
-    const char *files[2] = { "Installer.pdb", nullptr };
+    const char* files[2] = {"Installer.pdb", nullptr};
     bool ok = lzma::ExtractFiles(pdbZipPath, symDir, &files[0], gCrashHandlerAllocator);
     if (!ok) {
         plog("Failed to unpack Installer.pdb");
@@ -207,8 +191,7 @@ static bool UnpackInstallerSymbols(const char *pdbZipPath, const char *symDir)
 // Returns false if downloading or extracting failed
 // note: to simplify callers, it could choose pdbZipPath by itself (in a temporary
 // directory) as the file is deleted on exit anyway
-static bool DownloadAndUnzipSymbols(const WCHAR *pdbZipPath, const WCHAR *symDir)
-{
+static bool DownloadAndUnzipSymbols(const WCHAR* pdbZipPath, const WCHAR* symDir) {
     lf("DownloadAndUnzipSymbols() started");
     if (!symDir || !dir::Exists(symDir)) {
         plog("DownloadAndUnzipSymbols(): exiting because symDir doesn't exist");
@@ -260,8 +243,7 @@ static bool DownloadAndUnzipSymbols(const WCHAR *pdbZipPath, const WCHAR *symDir
 // If we can't resolve the symbols, we assume it's because we don't have symbols
 // so we'll try to download them and retry. If we can resolve symbols, we'll
 // get the callstacks etc. and submit to our server for analysis.
-void SubmitCrashInfo()
-{
+void SubmitCrashInfo() {
     if (!dir::Create(gSymbolsDir)) {
         plog("SubmitCrashInfo(): couldn't create symbols dir");
         return;
@@ -274,7 +256,7 @@ void SubmitCrashInfo()
         return;
     }
 
-    char *s = nullptr;
+    char* s = nullptr;
     if (!dbghelp::Initialize(gSymbolPathW, false)) {
         plog("SubmitCrashInfo(): dbghelp::Initialize() failed");
         return;
@@ -304,8 +286,7 @@ void SubmitCrashInfo()
     gCrashHandlerAllocator->Free(s);
 }
 
-static DWORD WINAPI CrashDumpThread(LPVOID data)
-{
+static DWORD WINAPI CrashDumpThread(LPVOID data) {
     UNUSED(data);
     WaitForSingleObject(gDumpEvent, INFINITE);
     if (!gCrashed)
@@ -322,8 +303,7 @@ static DWORD WINAPI CrashDumpThread(LPVOID data)
     return 0;
 }
 
-static LONG WINAPI DumpExceptionHandler(EXCEPTION_POINTERS *exceptionInfo)
-{
+static LONG WINAPI DumpExceptionHandler(EXCEPTION_POINTERS* exceptionInfo) {
     if (!exceptionInfo || (EXCEPTION_BREAKPOINT == exceptionInfo->ExceptionRecord->ExceptionCode))
         return EXCEPTION_CONTINUE_SEARCH;
 
@@ -347,8 +327,7 @@ static LONG WINAPI DumpExceptionHandler(EXCEPTION_POINTERS *exceptionInfo)
     return EXCEPTION_CONTINUE_SEARCH;
 }
 
-static const char *OsNameFromVer(OSVERSIONINFOEX ver)
-{
+static const char* OsNameFromVer(OSVERSIONINFOEX ver) {
     if (VER_PLATFORM_WIN32_NT != ver.dwPlatformId)
         return "9x";
     if (ver.dwMajorVersion == 6 && ver.dwMinorVersion == 3)
@@ -376,13 +355,12 @@ static const char *OsNameFromVer(OSVERSIONINFOEX ver)
     return osVerStr;
 }
 
-static void GetOsVersion(str::Str<char>& s)
-{
-    OSVERSIONINFOEX ver = { 0 };
+static void GetOsVersion(str::Str<char>& s) {
+    OSVERSIONINFOEX ver = {0};
     ver.dwOSVersionInfoSize = sizeof(ver);
 #pragma warning(push)
-#pragma warning(disable: 4996) // 'GetVersionEx': was declared deprecated
-#pragma warning(disable: 28159) // Consider using 'IsWindows*' instead of 'GetVersionExW'
+#pragma warning(disable : 4996)  // 'GetVersionEx': was declared deprecated
+#pragma warning(disable : 28159) // Consider using 'IsWindows*' instead of 'GetVersionExW'
     // see: https://msdn.microsoft.com/en-us/library/windows/desktop/dn424972(v=vs.85).aspx
     // starting with Windows 8.1, GetVersionEx will report a wrong version number
     // unless the OS's GUID has been explicitly added to the compatibility manifest
@@ -390,14 +368,14 @@ static void GetOsVersion(str::Str<char>& s)
 #pragma warning(pop)
     if (!ok)
         return;
-    const char *os = OsNameFromVer(ver);
+    const char* os = OsNameFromVer(ver);
     int servicePackMajor = ver.wServicePackMajor;
     int servicePackMinor = ver.wServicePackMinor;
     int buildNumber = ver.dwBuildNumber & 0xFFFF;
 #ifdef _WIN64
-    const char *arch = "64-bit";
+    const char* arch = "64-bit";
 #else
-    const char *arch = IsRunningInWow64() ? "Wow64" : "32-bit";
+    const char* arch = IsRunningInWow64() ? "Wow64" : "32-bit";
 #endif
     if (0 == servicePackMajor)
         s.AppendFmt("OS: Windows %s build %d %s\r\n", os, buildNumber, arch);
@@ -407,11 +385,12 @@ static void GetOsVersion(str::Str<char>& s)
         s.AppendFmt("OS: Windows %s %d.%d build %d %s\r\n", os, servicePackMajor, servicePackMinor, buildNumber, arch);
 }
 
-static void GetProcessorName(str::Str<char>& s)
-{
-    WCHAR *name = ReadRegStr(HKEY_LOCAL_MACHINE, L"HARDWARE\\DESCRIPTION\\System\\CentralProcessor", L"ProcessorNameString");
+static void GetProcessorName(str::Str<char>& s) {
+    WCHAR* name =
+        ReadRegStr(HKEY_LOCAL_MACHINE, L"HARDWARE\\DESCRIPTION\\System\\CentralProcessor", L"ProcessorNameString");
     if (!name) // if more than one processor
-        name = ReadRegStr(HKEY_LOCAL_MACHINE, L"HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0", L"ProcessorNameString");
+        name = ReadRegStr(HKEY_LOCAL_MACHINE, L"HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0",
+                          L"ProcessorNameString");
     if (!name)
         return;
 
@@ -420,10 +399,9 @@ static void GetProcessorName(str::Str<char>& s)
     free(name);
 }
 
-static void GetMachineName(str::Str<char>& s)
-{
-    WCHAR *s1 = ReadRegStr(HKEY_LOCAL_MACHINE, L"HARDWARE\\DESCRIPTION\\System\\BIOS", L"SystemFamily");
-    WCHAR *s2 = ReadRegStr(HKEY_LOCAL_MACHINE, L"HARDWARE\\DESCRIPTION\\System\\BIOS", L"SystemVersion");
+static void GetMachineName(str::Str<char>& s) {
+    WCHAR* s1 = ReadRegStr(HKEY_LOCAL_MACHINE, L"HARDWARE\\DESCRIPTION\\System\\BIOS", L"SystemFamily");
+    WCHAR* s2 = ReadRegStr(HKEY_LOCAL_MACHINE, L"HARDWARE\\DESCRIPTION\\System\\BIOS", L"SystemVersion");
     AutoFree s1u(s1 ? str::conv::ToUtf8(s1) : nullptr);
     AutoFree s2u(s2 ? str::conv::ToUtf8(s2) : nullptr);
 
@@ -442,8 +420,7 @@ static void GetMachineName(str::Str<char>& s)
 
 #define GFX_DRIVER_KEY_FMT L"SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\%04d"
 
-static void GetGraphicsDriverInfo(str::Str<char>& s)
-{
+static void GetGraphicsDriverInfo(str::Str<char>& s) {
     // the info is in registry in:
     // HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000\
     //   Device Description REG_SZ (same as DriverDesc, so we don't read it)
@@ -452,8 +429,7 @@ static void GetGraphicsDriverInfo(str::Str<char>& s)
     //   UserModeDriverName REG_MULTI_SZ
     //
     // There can be more than one driver, they are in 0000, 0001 etc.
-    for (int i=0; ; i++)
-    {
+    for (int i = 0;; i++) {
         AutoFreeW key(str::Format(GFX_DRIVER_KEY_FMT, i));
         AutoFreeW v1(ReadRegStr(HKEY_LOCAL_MACHINE, key, L"DriverDesc"));
         // I assume that if I can't read the value, there are no more drivers
@@ -475,16 +451,14 @@ static void GetGraphicsDriverInfo(str::Str<char>& s)
     }
 }
 
-static void GetLanguage(str::Str<char>& s)
-{
-    char country[32] = { 0 }, lang[32] = { 0 };
+static void GetLanguage(str::Str<char>& s) {
+    char country[32] = {0}, lang[32] = {0};
     GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SISO3166CTRYNAME, country, dimof(country) - 1);
     GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SISO639LANGNAME, lang, dimof(lang) - 1);
     s.AppendFmt("Lang: %s %s\r\n", lang, country);
 }
 
-static void GetSystemInfo(str::Str<char>& s)
-{
+static void GetSystemInfo(str::Str<char>& s) {
     SYSTEM_INFO si;
     GetSystemInfo(&si);
     s.AppendFmt("Number Of Processors: %d\r\n", si.dwNumberOfProcessors);
@@ -494,10 +468,11 @@ static void GetSystemInfo(str::Str<char>& s)
     ms.dwLength = sizeof(ms);
     GlobalMemoryStatusEx(&ms);
 
-    float physMemGB   = (float)ms.ullTotalPhys     / (float)(1024 * 1024 * 1024);
+    float physMemGB = (float)ms.ullTotalPhys / (float)(1024 * 1024 * 1024);
     float totalPageGB = (float)ms.ullTotalPageFile / (float)(1024 * 1024 * 1024);
     DWORD usedPerc = ms.dwMemoryLoad;
-    s.AppendFmt("Physical Memory: %.2f GB\r\nCommit Charge Limit: %.2f GB\r\nMemory Used: %d%%\r\n", physMemGB, totalPageGB, usedPerc);
+    s.AppendFmt("Physical Memory: %.2f GB\r\nCommit Charge Limit: %.2f GB\r\nMemory Used: %d%%\r\n", physMemGB,
+                totalPageGB, usedPerc);
 
     GetMachineName(s);
     GetLanguage(s);
@@ -509,8 +484,7 @@ static void GetSystemInfo(str::Str<char>& s)
 
 // returns true if running on wine (winex11.drv is present)
 // it's not a logical, but convenient place to do it
-static bool GetModules(str::Str<char>& s)
-{
+static bool GetModules(str::Str<char>& s) {
     bool isWine = false;
     HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
     if (snap == INVALID_HANDLE_VALUE)
@@ -532,16 +506,14 @@ static bool GetModules(str::Str<char>& s)
 }
 
 // returns true if running on wine
-static bool BuildModulesInfo()
-{
+static bool BuildModulesInfo() {
     str::Str<char> s(1024);
     bool isWine = GetModules(s);
     gModulesInfo = s.StealData();
     return isWine;
 }
 
-static void BuildSystemInfo()
-{
+static void BuildSystemInfo() {
     str::Str<char> s(1024);
     GetProgramInfo(s);
     GetOsVersion(s);
@@ -549,8 +521,7 @@ static void BuildSystemInfo()
     gSystemInfo = s.StealData();
 }
 
-static bool StoreCrashDumpPaths(const WCHAR *symDir)
-{
+static bool StoreCrashDumpPaths(const WCHAR* symDir) {
     if (!symDir)
         return false;
     gSymbolsDir = str::Dup(symDir);
@@ -571,8 +542,7 @@ Note: I've decided to use just one, known to me location rather than the
 more comprehensive list. It works so why give dbghelp.dll more directories
 to scan?
 */
-static bool BuildSymbolPath()
-{
+static bool BuildSymbolPath() {
     str::Str<WCHAR> path(1024);
 
 #if 0
@@ -590,7 +560,7 @@ static bool BuildSymbolPath()
 #endif
 
     path.Append(gSymbolsDir);
-    //path.Append(L";");
+    // path.Append(L";");
 #if 0
     // this probably wouldn't work anyway because it requires symsrv.dll in the same directory
     // as dbghelp.dll and it's not present with the os-provided dbghelp.dll
@@ -611,23 +581,23 @@ static bool BuildSymbolPath()
 }
 
 // Get url for file with symbols. Caller needs to free().
-static WCHAR *BuildSymbolsUrl() {
+static WCHAR* BuildSymbolsUrl() {
 #ifdef SYMBOL_DOWNLOAD_URL
     return str::Dup(SYMBOL_DOWNLOAD_URL);
 #else
 #ifdef SVN_PRE_RELEASE_VER
-    WCHAR *urlBase = L"https://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-" TEXT(QM(SVN_PRE_RELEASE_VER));
+    WCHAR* urlBase =
+        L"https://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-" TEXT(QM(SVN_PRE_RELEASE_VER));
 #else
-    WCHAR *urlBase = L"https://kjkpub.s3.amazonaws.com/sumatrapdf/rel/SumatraPDF-" TEXT(QM(CURR_VERSION));
+    WCHAR* urlBase = L"https://kjkpub.s3.amazonaws.com/sumatrapdf/rel/SumatraPDF-" TEXT(QM(CURR_VERSION));
 #endif
-    WCHAR *is64 = IsProcess64() ? L"-64" : L"";
+    WCHAR* is64 = IsProcess64() ? L"-64" : L"";
     return str::Format(L"%s%s.pdb.lzsa", urlBase, is64);
 #endif
 }
 
 // detect which exe it is (installer, sumatra static or sumatra with dlls)
-static ExeType DetectExeType()
-{
+static ExeType DetectExeType() {
     ExeType exeType = ExeSumatraStatic;
     HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
     if (snap == INVALID_HANDLE_VALUE) {
@@ -638,7 +608,7 @@ static ExeType DetectExeType()
     mod.dwSize = sizeof(mod);
     BOOL cont = Module32First(snap, &mod);
     while (cont) {
-        WCHAR *name = mod.szModule;
+        WCHAR* name = mod.szModule;
         if (str::EqI(name, L"libmupdf.dll")) {
             exeType = ExeSumatraLib;
             break;
@@ -675,8 +645,7 @@ int __cdecl _purecall() {
     return 0;
 }
 
-void InstallCrashHandler(const WCHAR *crashDumpPath, const WCHAR *symDir)
-{
+void InstallCrashHandler(const WCHAR* crashDumpPath, const WCHAR* symDir) {
     AssertCrash(!gDumpEvent && !gDumpThread);
 
     if (!crashDumpPath)
@@ -688,7 +657,7 @@ void InstallCrashHandler(const WCHAR *crashDumpPath, const WCHAR *symDir)
 
     // don't bother sending crash reports when running under Wine
     // as they're not helpful
-    bool isWine= BuildModulesInfo();
+    bool isWine = BuildModulesInfo();
     if (isWine)
         return;
 
@@ -712,7 +681,7 @@ void InstallCrashHandler(const WCHAR *crashDumpPath, const WCHAR *symDir)
     gPrevExceptionFilter = SetUnhandledExceptionFilter(DumpExceptionHandler);
 
     signal(SIGABRT, onSignalAbort);
-#if defined(_MSC_VER)
+#if COMPILER_MSVC
     // those are only in msvc? There is std::set_terminate() and
     // std::set_unexpected() in C++ in <exception>
     std::set_terminate(onTerminate);
@@ -720,8 +689,7 @@ void InstallCrashHandler(const WCHAR *crashDumpPath, const WCHAR *symDir)
 #endif
 }
 
-void UninstallCrashHandler()
-{
+void UninstallCrashHandler() {
     if (!gDumpEvent || !gDumpThread)
         return;
 

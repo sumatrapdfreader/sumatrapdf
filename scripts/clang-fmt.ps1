@@ -13,7 +13,7 @@ $files =
 #"src\ChmDoc.*",
 #"src\ChmModel.*",
 "src\Colors.*",
-#"src\CrashHandler.*",
+"src\CrashHandler.*",
 #"src\DisplayModel.*",
 #"src\DjVuEngine.*",
 "src\Doc.*",
