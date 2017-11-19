@@ -82,8 +82,8 @@
 #if defined(min) || defined(max)
 #error "min or max defined"
 #endif
-#define min(x,y) ((x) < (y) ? (x) : (y))
-#define max(x,y) ((x) > (y) ? (x) : (y))
+#define min(x, y) ((x) < (y) ? (x) : (y))
+#define max(x, y) ((x) > (y) ? (x) : (y))
 #include <gdiplus.h>
 #undef NOMINMAX
 #undef min
