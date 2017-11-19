@@ -12,9 +12,6 @@ struct ArchFileInfo {
     int64_t fileTime; // this is typedef'ed as time64_t in unrar.h
     size_t fileSizeUncompressed;
 
-    // TODO: remove this one
-    WCHAR* nameW;
-
     // internal use
     int64_t filePos;
 
@@ -29,14 +26,12 @@ class ArchFile {
     PoolAllocator allocator_;
     std::vector<ArchFileInfo*> fileInfos_;
 
-    WStrList fileNames_;
-
     ar_stream* data_ = nullptr;
     ar_archive* ar_ = nullptr;
 
     // call with fileindex = -1 for filename extraction using the fallback
-    virtual char* GetFileFromFallback(size_t fileIndex, size_t* len = nullptr) {
-        UNUSED(fileIndex);
+    virtual char* GetFileFromFallback(size_t fileId, size_t* len = nullptr) {
+        UNUSED(fileId);
         UNUSED(len);
         return nullptr;
     }
@@ -50,7 +45,9 @@ class ArchFile {
     size_t GetFileId(const char* fileName);
 
     // caller must free() the result
+#if OS(WIN)
     char* GetFileDataByName(const WCHAR* filename, size_t* len = nullptr);
+#endif
     char* GetFileDataByName(const char* filename, size_t* len = nullptr);
     char* GetFileDataById(size_t fileId, size_t* len = nullptr);
 

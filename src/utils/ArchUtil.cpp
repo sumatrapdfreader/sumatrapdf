@@ -3,6 +3,7 @@
 
 #include "BaseUtil.h"
 #include "ArchUtil.h"
+#include "FileUtil.h"
 
 extern "C" {
 #include <unarr.h>
@@ -11,11 +12,7 @@ extern "C" {
 // if this is defined, SumatraPDF will look for unrar.dll in
 // the same directory as SumatraPDF.exe whenever a RAR archive
 // fails to open or extract and uses that as a fallback
-#define ENABLE_UNRARDLL_FALLBACK
-
-#ifdef ENABLE_UNRARDLL_FALLBACK
-#include "FileUtil.h"
-#endif
+//#define ENABLE_UNRARDLL_FALLBACK
 
 #if OS(WIN)
 FILETIME ArchFileInfo::GetWinFileTime() const {
@@ -38,16 +35,12 @@ ArchFile::ArchFile(ar_stream* data, ar_archive* (*openFormat)(ar_stream*)) : dat
             name = "";
         }
 
-        auto* nameW = str::conv::FromUtf8(name);
-        fileNames_.Append(nameW);
-
         ArchFileInfo* i = allocator_.AllocStruct<ArchFileInfo>();
         i->fileId = fileId;
         i->fileSizeUncompressed = ar_entry_get_size(ar_);
         i->filePos = ar_entry_get_offset(ar_);
         i->fileTime = ar_entry_get_filetime(ar_);
         i->name = allocator_.AllocString(name);
-        i->nameW = nameW;
         fileInfos_.push_back(i);
 
         fileId++;
@@ -78,10 +71,12 @@ size_t ArchFile::GetFileId(const char* fileName) {
     return getFileIdByName(fileInfos_, fileName);
 }
 
+#if OS(WIN)
 char* ArchFile::GetFileDataByName(const WCHAR* fileName, size_t* len) {
     AutoFree fileNameUtf8(str::conv::ToUtf8(fileName));
     return GetFileDataByName(fileNameUtf8.Get(), len);
 }
+#endif
 
 char* ArchFile::GetFileDataByName(const char* fileName, size_t* len) {
     size_t fileId = getFileIdByName(fileInfos_, fileName);
@@ -192,10 +187,12 @@ RarFile::RarFile(const WCHAR* path)
     : ArchFile(ar_open_file_w(path), ar_open_rar_archive), path(str::Dup(path)), fallback(nullptr) {
     ExtractFilenamesWithFallback();
 }
+
 RarFile::RarFile(IStream* stream)
     : ArchFile(ar_open_istream(stream), ar_open_rar_archive), path(nullptr), fallback(nullptr) {
     ExtractFilenamesWithFallback();
 }
+
 RarFile::~RarFile() {
     delete fallback;
 }
@@ -210,35 +207,38 @@ char* RarFile::GetFileFromFallback(size_t fileId, size_t* len) {
     // TODO: not tested yet
     CrashAlwaysIf(true);
 
-    if (!path) {
+    if (!path)
         return nullptr;
-    }
+}
 
-    if (!fallback)
-        fallback = new UnRarDll();
+if (!fallback)
+    fallback = new UnRarDll();
 
-    if (fileId != (size_t)-1) {
-        // always use the fallback for this file from now on
-        auto* e = fileInfos_.at(fileId);
-        e->filePos = -1;
-        return fallback->GetFileByName(path, fileNames_.at(fileId), len);
-    }
-    // if fileindex == -1, (re)load the entire archive listing using UnRAR
-    fallback->ExtractFilenames(path, fileNames_);
-    // always use the fallback for all additionally found files
-#if 0
-    while (filepos.size() < fileNames_.size()) {
-        filepos.push_back(-1);
-    }
-#endif
-#endif
+if (fileId != (size_t)-1) {
+    // always use the fallback for this file from now on
+    auto* e = fileInfos_.at(fileId);
+    e->filePos = -1;
+    return fallback->GetFileByName(path, fileNames_.at(fileId), len);
+}
+// if fileindex == -1, (re)load the entire archive listing using UnRAR
+fallback->ExtractFilenames(path, fileNames_);
+// always use the fallback for all additionally found files
+
+while (filepos.size() < fileNames_.size()) {
+    filepos.push_back(-1);
+}
+return nullptr;
+#else
+    UNUSED(fileId);
+    UNUSED(len);
     return nullptr;
+#endif
 }
 
 #ifdef ENABLE_UNRARDLL_FALLBACK
 
-    // the following has been extracted from UnRARDLL.exe -> unrar.h
-    // publicly available from http://www.rarlab.com/rar_add.htm
+// the following has been extracted from UnRARDLL.exe -> unrar.h
+// publicly available from http://www.rarlab.com/rar_add.htm
 
 #define RAR_DLL_VERSION 6
 #define RAR_OM_EXTRACT 1

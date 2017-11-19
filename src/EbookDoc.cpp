@@ -495,8 +495,7 @@ char* EpubDoc::GetFileData(const char* relPath, const char* pagePath, size_t* le
     ScopedCritSec scope(&zipAccess);
 
     AutoFree url(NormalizeURL(relPath, pagePath));
-    AutoFreeW zipPath(str::conv::FromUtf8(url));
-    return zip->GetFileDataByName(zipPath, lenOut);
+    return zip->GetFileDataByName(url, lenOut);
 }
 
 WCHAR* EpubDoc::GetProperty(DocumentProperty prop) const {
