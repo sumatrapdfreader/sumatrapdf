@@ -47,11 +47,13 @@ class ArchFile {
 
     std::vector<ArchFileInfo*> const& GetFileInfos();
 
-    size_t GetFileIndex(const WCHAR* filename);
+    size_t GetFileId(const WCHAR* fileName);
+    size_t GetFileId(const char* fileName);
 
     // caller must free() the result
     char* GetFileDataByName(const WCHAR* filename, size_t* len = nullptr);
-    char* GetFileDataByIdx(size_t fileindex, size_t* len = nullptr);
+    char* GetFileDataByName(const char* filename, size_t* len = nullptr);
+    char* GetFileDataById(size_t fileId, size_t* len = nullptr);
 
     // caller must free() the result
     char* GetComment(size_t* len = nullptr);

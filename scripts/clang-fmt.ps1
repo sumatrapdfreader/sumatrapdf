@@ -72,6 +72,7 @@ $files =
 "src\utils\HtmlWindow.*",
 "src\utils\Scoped.*",
 "src\utils\StrUtil.*",
+#"src\utils\TrivialHtmlParser.*",
 "src\utils\WinUtil.*",
 "src\wingui\*",
 "src\installer\Install.cpp",

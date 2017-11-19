@@ -556,13 +556,16 @@ BaseEngine* ImageEngineImpl::CreateFromStream(IStream* stream) {
 namespace ImageEngine {
 
 bool IsSupportedFile(const WCHAR* fileName, bool sniff) {
+    const WCHAR* ext = path::GetExt(fileName);
     if (sniff) {
         char header[32] = {0};
         file::ReadN(fileName, header, sizeof(header));
-        fileName = GfxFileExtFromData(header, sizeof(header));
+        const WCHAR* ext2 = GfxFileExtFromData(header, sizeof(header));
+        if (ext2 != nullptr) {
+            ext = ext2;
+        }
     }
-    const WCHAR* ext = path::GetExt(fileName);
-    if (!*ext) {
+    if (str::Len(ext) == 0) {
         return false;
     }
     // TODO: replace with seqstr
@@ -574,7 +577,7 @@ bool IsSupportedFile(const WCHAR* fileName, bool sniff) {
 
 bool IsSupportedFile(const char* fileName) {
     const char* ext = path::GetExt(fileName);
-    if (!*ext) {
+    if (str::Len(ext) == 0) {
         return false;
     }
     // TODO: replace with seqstr
@@ -903,7 +906,7 @@ bool CbxEngineImpl::FinishLoading() {
         }
     }
 
-    AutoFree metadata(cbxFile->GetFileDataByName(L"ComicInfo.xml"));
+    AutoFree metadata(cbxFile->GetFileDataByName("ComicInfo.xml"));
     if (metadata) {
         ParseComicInfoXml(metadata);
     }
@@ -927,7 +930,7 @@ char* CbxEngineImpl::GetImageData(int pageNo, size_t& len) {
     AssertCrash(1 <= pageNo && pageNo <= PageCount());
     ScopedCritSec scope(&cacheAccess);
     size_t fileId = files[pageNo - 1]->fileId;
-    return cbxFile->GetFileDataByIdx(fileId, &len);
+    return cbxFile->GetFileDataById(fileId, &len);
 }
 
 static char* GetTextContent(HtmlPullParser& parser) {

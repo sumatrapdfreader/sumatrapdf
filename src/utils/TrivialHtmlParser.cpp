@@ -65,7 +65,8 @@ static WCHAR IntToChar(int codepoint)
 // caller needs to free() the result
 WCHAR *DecodeHtmlEntitites(const char *string, UINT codepage)
 {
-    WCHAR *fixed = str::conv::FromCodePage(string, codepage), *dst = fixed;
+    WCHAR *fixed = str::conv::FromCodePage(string, codepage);
+    WCHAR *dst = fixed;
     const WCHAR *src = fixed;
 
     while (*src) {
@@ -86,8 +87,10 @@ WCHAR *DecodeHtmlEntitites(const char *string, UINT codepage)
         // named entities
         int rune = -1;
         const WCHAR *entityEnd = src;
-        while (iswalnum(*entityEnd))
+        while (iswalnum(*entityEnd)) {
             entityEnd++;
+        }
+
         if (entityEnd != src) {
             size_t entityLen = entityEnd - src;
             rune = HtmlEntityNameToRune(src, entityLen);

@@ -4169,9 +4169,9 @@ bool IsSupportedFile(const WCHAR* fileName, bool sniff) {
     }
 
     ArchFile* archive = CreateZipArchive(fileName, true);
-    bool res = archive->GetFileIndex(L"_rels/.rels") != (size_t)-1 ||
-               archive->GetFileIndex(L"_rels/.rels/[0].piece") != (size_t)-1 ||
-               archive->GetFileIndex(L"_rels/.rels/[0].last.piece") != (size_t)-1;
+    bool res = archive->GetFileId("_rels/.rels") != (size_t)-1 ||
+               archive->GetFileId("_rels/.rels/[0].piece") != (size_t)-1 ||
+               archive->GetFileId("_rels/.rels/[0].last.piece") != (size_t)-1;
     delete archive;
     return res;
 }

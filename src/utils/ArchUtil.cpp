@@ -61,19 +61,37 @@ ArchFile::~ArchFile() {
     ar_close(data_);
 }
 
+size_t getFileIdByName(std::vector<ArchFileInfo*>& fileInfos, const char* name) {
+    for (auto fileInfo : fileInfos) {
+        if (str::EqI(fileInfo->name.data(), name)) {
+            return fileInfo->fileId;
+        }
+    }
+    return (size_t)-1;
+}
+
 std::vector<ArchFileInfo*> const& ArchFile::GetFileInfos() {
     return fileInfos_;
 }
 
-size_t ArchFile::GetFileIndex(const WCHAR* fileName) {
+size_t ArchFile::GetFileId(const WCHAR* fileName) {
     return fileNames_.FindI(fileName);
 }
 
-char* ArchFile::GetFileDataByName(const WCHAR* fileName, size_t* len) {
-    return GetFileDataByIdx(GetFileIndex(fileName), len);
+size_t ArchFile::GetFileId(const char* fileName) {
+    return getFileIdByName(fileInfos_, fileName);
 }
 
-char* ArchFile::GetFileDataByIdx(size_t fileId, size_t* len) {
+char* ArchFile::GetFileDataByName(const WCHAR* fileName, size_t* len) {
+    return GetFileDataById(GetFileId(fileName), len);
+}
+
+char* ArchFile::GetFileDataByName(const char* fileName, size_t* len) {
+    size_t fileId = getFileIdByName(fileInfos_, fileName);
+    return GetFileDataById(fileId, len);
+}
+
+char* ArchFile::GetFileDataById(size_t fileId, size_t* len) {
     if (!ar_ || (fileId >= fileInfos_.size())) {
         return nullptr;
     }
