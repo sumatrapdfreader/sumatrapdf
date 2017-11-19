@@ -9,12 +9,18 @@ typedef struct ar_archive_s ar_archive;
 struct ArchFileInfo {
     size_t fileId;
     std::string_view name;
-    WCHAR* nameW;      // TODO: remove this one
-    FILETIME fileTime; // TOOD: make portable
+    int64_t fileTime; // this is typedef'ed as time64_t in unrar.h
     size_t fileSizeUncompressed;
+
+    // TODO: remove this one
+    WCHAR* nameW;
 
     // internal use
     int64_t filePos;
+
+#if OS(WIN)
+    FILETIME GetWinFileTime() const;
+#endif
 };
 
 class ArchFile {
@@ -51,9 +57,6 @@ class ArchFile {
     // caller must free() the result
     char* GetFileDataByName(const WCHAR* filename, size_t* len = nullptr);
     char* GetFileDataByIdx(size_t fileindex, size_t* len = nullptr);
-
-    FILETIME GetFileTime(const WCHAR* filename);
-    FILETIME GetFileTime(size_t fileindex);
 
     // caller must free() the result
     char* GetComment(size_t* len = nullptr);

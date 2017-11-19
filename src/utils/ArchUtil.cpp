@@ -17,6 +17,14 @@ extern "C" {
 #include "FileUtil.h"
 #endif
 
+#if OS(WIN)
+FILETIME ArchFileInfo::GetWinFileTime() const {
+    FILETIME ft = { (DWORD)-1, (DWORD)-1 };
+    LocalFileTimeToFileTime((FILETIME*)&fileTime, &ft);
+    return ft;
+}
+#endif
+
 // TODO: move the code into Open() function
 ArchFile::ArchFile(ar_stream* data, ar_archive* (*openFormat)(ar_stream*)) : data_(data) {
     if (data_ && openFormat)
@@ -30,10 +38,6 @@ ArchFile::ArchFile(ar_stream* data, ar_archive* (*openFormat)(ar_stream*)) : dat
             name = "";
         }
 
-        FILETIME ft = {(DWORD)-1, (DWORD)-1};
-        time64_t filetime = ar_entry_get_filetime(ar_);
-        LocalFileTimeToFileTime((FILETIME*)&filetime, &ft);
-
         auto* nameW = str::conv::FromUtf8(name);
         fileNames_.Append(nameW);
 
@@ -41,9 +45,9 @@ ArchFile::ArchFile(ar_stream* data, ar_archive* (*openFormat)(ar_stream*)) : dat
         i.fileId = fileId;
         i.fileSizeUncompressed = ar_entry_get_size(ar_);
         i.filePos = ar_entry_get_offset(ar_);
+        i.fileTime = ar_entry_get_filetime(ar_);
         i.name = allocator_.AllocString(name);
         i.nameW = nameW;
-        i.fileTime = ft;
         fileInfos_.emplace_back(i);
 
         fileId++;
@@ -107,17 +111,6 @@ char* ArchFile::GetFileDataByIdx(size_t fileId, size_t* len) {
     if (len)
         *len = size;
     return data.StealData();
-}
-
-FILETIME ArchFile::GetFileTime(const WCHAR* fileName) {
-    return GetFileTime(GetFileIndex(fileName));
-}
-
-FILETIME ArchFile::GetFileTime(size_t fileId) {
-    CrashIf(fileId >= fileInfos_.size());
-    auto* e = &(fileInfos_[fileId]);
-    CrashIf(fileId != e->fileId);
-    return e->fileTime;
 }
 
 char* ArchFile::GetComment(size_t* len) {
