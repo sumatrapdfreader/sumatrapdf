@@ -80,7 +80,7 @@ static bool AppendEntry(str::Str<char>& data, str::Str<char>& content, const WCH
     FILETIME ft = file::GetModificationTime(filePath);
     if (fi && FileTimeEq(ft, fi->ftModified)) {
 ReusePrevious:
-        ByteWriterLE meta(data.AppendBlanks(24), 24);
+        ByteWriter meta = MakeByteWriterLE(data.AppendBlanks(24), 24);
         meta.Write32(headerSize);
         meta.Write32(fi->compressedSize);
         meta.Write32(fi->uncompressedSize);
@@ -108,7 +108,7 @@ ReusePrevious:
     if (!Compress(fileData, fileDataLen, compressed, &compressedSize))
         return false;
 
-    ByteWriterLE meta(data.AppendBlanks(24), 24);
+    ByteWriter meta = MakeByteWriterLE(data.AppendBlanks(24), 24);
     meta.Write32(headerSize);
     meta.Write32((uint32_t)compressedSize);
     meta.Write32((uint32_t)fileDataLen);
@@ -134,7 +134,7 @@ bool CreateArchive(const WCHAR *archivePath, WStrVec& files, size_t skipFiles=0)
     str::Str<char> data;
     str::Str<char> content;
 
-    ByteWriterLE lzsaHeader(data.AppendBlanks(8), 8);
+    ByteWriter lzsaHeader = MakeByteWriterLE(data.AppendBlanks(8), 8);
     lzsaHeader.Write32(LZMA_MAGIC_ID);
     lzsaHeader.Write32((uint32_t)(files.size() - skipFiles));
 
@@ -165,7 +165,7 @@ bool CreateArchive(const WCHAR *archivePath, WStrVec& files, size_t skipFiles=0)
     }
 
     uint32_t headerCrc32 = crc32(0, (const uint8_t *)data.Get(), (uint32_t)data.size());
-    ByteWriterLE(data.AppendBlanks(4), 4).Write32(headerCrc32);
+    MakeByteWriterLE(data.AppendBlanks(4), 4).Write32(headerCrc32);
     if (!data.AppendChecked(content.Get(), content.size()))
         return false;
 

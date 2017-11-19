@@ -126,7 +126,7 @@ bool ZipCreator::AddFileData(const char *nameUtf8, const void *data, size_t size
     }
 
     char localHeader[30];
-    ByteWriterLE local(localHeader, sizeof(localHeader));
+    ByteWriter local = MakeByteWriterLE(localHeader, sizeof(localHeader));
     local.Write32(0x04034B50); // signature
     local.Write16(20); // version needed to extract
     local.Write16(flags);
@@ -142,7 +142,7 @@ bool ZipCreator::AddFileData(const char *nameUtf8, const void *data, size_t size
               WriteData(nameUtf8, namelen) &&
               WriteData(compressed, compressedSize);
 
-    ByteWriterLE central(centraldir.AppendBlanks(46), 46);
+    ByteWriter central = MakeByteWriterLE(centraldir.AppendBlanks(46), 46);
     central.Write32(0x02014B50); // signature
     central.Write16(20); // version made by
     central.Write16(20); // version needed to extract
@@ -221,7 +221,7 @@ bool ZipCreator::Finish()
         return false;
 
     char endOfCentralDir[22];
-    ByteWriterLE eocd(endOfCentralDir, sizeof(endOfCentralDir));
+    ByteWriter eocd = MakeByteWriterLE(endOfCentralDir, sizeof(endOfCentralDir));
     eocd.Write32(0x06054B50); // signature
     eocd.Write16(0); // disk number
     eocd.Write16(0); // disk number of central directory
