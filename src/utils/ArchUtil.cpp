@@ -69,19 +69,6 @@ size_t ArchFile::GetFileIndex(const WCHAR* fileName) {
     return fileNames_.FindI(fileName);
 }
 
-#if 0
-size_t ArchFile::GetFileCount() const {
-    return fileInfos_.size();
-}
-#endif
-
-const WCHAR* ArchFile::GetFileName(size_t fileId) {
-    CrashIf(fileId >= fileInfos_.size());
-    auto* e = fileInfos_[fileId];
-    CrashIf(fileId != e->fileId);
-    return e->nameW;
-}
-
 char* ArchFile::GetFileDataByName(const WCHAR* fileName, size_t* len) {
     return GetFileDataByIdx(GetFileIndex(fileName), len);
 }

@@ -47,10 +47,6 @@ class ArchFile {
 
     std::vector<ArchFileInfo*> const& GetFileInfos();
 
-    // size_t GetFileCount() const;
-    // the result is owned by ArchFile
-    const WCHAR* GetFileName(size_t fileId);
-    // reverts GetFileName
     size_t GetFileIndex(const WCHAR* filename);
 
     // caller must free() the result
