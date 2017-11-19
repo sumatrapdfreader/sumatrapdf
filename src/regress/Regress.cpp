@@ -18,7 +18,7 @@ To write new regression test:
 // utils
 #include "BaseUtil.h"
 #include "WinDynCalls.h"
-#include "ArchUtil.h"
+#include "Archive.h"
 #include "DbgHelpDyn.h"
 #include "DirIter.h"
 #include "FileUtil.h"

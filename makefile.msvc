@@ -176,7 +176,7 @@ UTILS_OBJS = \
 	$(OU)\StrSlice.obj $(OU)\TxtParser.obj $(OU)\SerializeTxt.obj \
 	$(OU)\SquareTreeParser.obj $(OU)\SettingsUtil.obj $(OU)\SplitterWnd.obj \
 	$(OU)\WebpReader.obj $(OU)\FzImgReader.obj \
-	$(OU)\ArchUtil.obj $(OU)\ZipUtil.obj $(OU)\LzmaSimpleArchive.obj \
+	$(OU)\Archive.obj $(OU)\ZipUtil.obj $(OU)\LzmaSimpleArchive.obj \
 	$(OU)\LabelWithCloseWnd.obj $(OU)\FrameRateWnd.obj \
 	$(OU)\Dpi.obj $(OU)\EditCtrl.obj $(OU)\Win32Window.obj \
 	$(OU)\WinDynCalls.obj

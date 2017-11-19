@@ -6,7 +6,7 @@
 
 // utils
 #include "BaseUtil.h"
-#include "ArchUtil.h"
+#include "Archive.h"
 #include "Dpi.h"
 #include "FileUtil.h"
 #include "GdiPlusUtil.h"

@@ -348,7 +348,7 @@
     <ClInclude Include="..\src\Translations.h" />
     <ClInclude Include="..\src\installer\Installer.h" />
     <ClInclude Include="..\src\installer\Resource.h" />
-    <ClInclude Include="..\src\utils\ArchUtil.h" />
+    <ClInclude Include="..\src\utils\Archive.h" />
     <ClInclude Include="..\src\utils\BaseUtil.h" />
     <ClInclude Include="..\src\utils\BitReader.h" />
     <ClInclude Include="..\src\utils\ByteOrderDecoder.h" />
@@ -431,7 +431,7 @@
     <ClCompile Include="..\src\Translations.cpp" />
     <ClCompile Include="..\src\installer\Installer.cpp" />
     <ClCompile Include="..\src\installer\Trans_installer_txt.cpp" />
-    <ClCompile Include="..\src\utils\ArchUtil.cpp" />
+    <ClCompile Include="..\src\utils\Archive.cpp" />
     <ClCompile Include="..\src\utils\BaseUtil.cpp" />
     <ClCompile Include="..\src\utils\BitReader.cpp" />
     <ClCompile Include="..\src\utils\ByteOrderDecoder.cpp" />

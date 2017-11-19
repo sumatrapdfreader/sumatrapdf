@@ -60,7 +60,7 @@
     <ClInclude Include="..\src\installer\Resource.h">
       <Filter>src\installer</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\utils\ArchUtil.h">
+    <ClInclude Include="..\src\utils\Archive.h">
       <Filter>src\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\BaseUtil.h">
@@ -293,7 +293,7 @@
     <ClCompile Include="..\src\installer\Trans_installer_txt.cpp">
       <Filter>src\installer</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\utils\ArchUtil.cpp">
+    <ClCompile Include="..\src\utils\Archive.cpp">
       <Filter>src\utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\BaseUtil.cpp">

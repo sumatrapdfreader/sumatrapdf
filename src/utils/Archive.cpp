@@ -2,7 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
-#include "ArchUtil.h"
+#include "Archive.h"
 #include "FileUtil.h"
 
 extern "C" {

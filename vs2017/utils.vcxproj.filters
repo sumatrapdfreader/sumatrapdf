@@ -9,7 +9,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\utils\ArchUtil.h">
+    <ClInclude Include="..\src\utils\Archive.h">
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\BaseUtil.h">
@@ -149,7 +149,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\utils\ArchUtil.cpp">
+    <ClCompile Include="..\src\utils\Archive.cpp">
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\BaseUtil.cpp">

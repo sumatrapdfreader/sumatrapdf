@@ -434,7 +434,7 @@ end
 
 function utils_files()
   files_in_dir("src/utils", {
-    "ArchUtil.*",
+    "Archive.*",
     "BaseUtil.*",
     "BitReader.*",
     "BuildConfig.h",
@@ -847,7 +847,7 @@ end
 
 function installer_utils_files()
   files_in_dir("src/utils", {
-    "ArchUtil.*",
+    "Archive.*",
     "BaseUtil.*",
     "BitReader.*",
     "ByteOrderDecoder.*",

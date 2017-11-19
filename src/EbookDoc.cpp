@@ -3,7 +3,7 @@
 
 // utils
 #include "BaseUtil.h"
-#include "ArchUtil.h"
+#include "Archive.h"
 #include "FileUtil.h"
 #include "HtmlParserLookup.h"
 #include "HtmlPullParser.h"

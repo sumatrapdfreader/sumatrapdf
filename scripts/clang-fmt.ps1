@@ -66,7 +66,7 @@ $files =
 #"src\UnitTests.*",
 #"src\WindowInfo.*",
 "src\mui\SvgPath.*",
-"src\utils\ArchUtil.*",
+"src\utils\Archive.*",
 "src\utils\BaseUtil.*",
 #"src\utils\BitReader.*",
 #"src\utils\ByteOrderDecoder.*",
