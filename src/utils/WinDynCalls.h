@@ -32,27 +32,12 @@ The intent is to standardize how we do it.
 #define PROCESS_DEP_DISABLE_ATL_THUNK_EMULATION 0x2
 #endif
 
-// Note: this might blow up due to re-defining if we compile with newer SDK version
-typedef enum _PROCESS_MITIGATION_POLICY {
-    ProcessDEPPolicy,
-    ProcessASLRPolicy,
-    ProcessDynamicCodePolicy,
-    ProcessStrictHandleCheckPolicy,
-    ProcessSystemCallDisablePolicy,
-    ProcessMitigationOptionsMask,
-    ProcessExtensionPointDisablePolicy,
-    ProcessReserved1Policy,
-    ProcessSignaturePolicy,
-    MaxProcessMitigationPolicy,
-    ProcessImageLoadPolicy
-} PROCESS_MITIGATION_POLICY, *PPROCESS_MITIGATION_POLICY;
-
 typedef BOOL(WINAPI *Sig_SetProcessDEPPolicy)(DWORD dwFlags);
 typedef BOOL(WINAPI *Sig_IsWow64Process)(HANDLE, PBOOL);
 typedef BOOL(WINAPI *Sig_SetDllDirectoryW)(LPCWSTR);
 typedef void(WINAPI *Sig_RtlCaptureContext)(PCONTEXT);
 typedef BOOL(WINAPI *Sig_SetDefaultDllDirectories)(DWORD);
-typedef BOOL (WINAPI *Sig_SetProcessMitigationPolicy)(PROCESS_MITIGATION_POLICY, PVOID, SIZE_T);
+typedef BOOL (WINAPI *Sig_SetProcessMitigationPolicy)(int, PVOID, SIZE_T);
 
 #define KERNEL32_API_LIST(V)                                                                       \
     V(SetProcessDEPPolicy)                                                                         \

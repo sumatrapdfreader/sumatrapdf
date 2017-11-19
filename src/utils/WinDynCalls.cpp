@@ -259,12 +259,13 @@ typedef struct _PROCESS_MITIGATION_IMAGE_LOAD_POLICY {
 } PROCESS_MITIGATION_IMAGE_LOAD_POLICY, *PPROCESS_MITIGATION_IMAGE_LOAD_POLICY;
 #pragma warning(pop)
 
+// https://msdn.microsoft.com/en-us/library/windows/desktop/hh871470(v=vs.85).aspx
+constexpr int ProcessImageLoadPolicy = 10;
+
 // https://github.com/videolan/vlc/blob/8663561d3f71595ebf116f17279a495b67cac713/bin/winvlc.c#L84
 // https://msdn.microsoft.com/en-us/library/windows/desktop/hh769088(v=vs.85).aspx
-// Note: on win 10 it doesn't seem to prevent loading bad Version.dll from the same directory
-// as sumatra. Is it because it's loaded before I get a chance to call this function?
-// Am I calling it wrong?
-// What happens for other dlls?
+// Note: dlls we explicitly link to (like version.dll) get loaded before main is called
+// so this only works for explicit LoadLibrary calls or delay loaded libraries
 void PrioritizeSystemDirectoriesForDllLoad() {
     if (!DynSetProcessMitigationPolicy) {
         return;

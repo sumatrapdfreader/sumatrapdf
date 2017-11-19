@@ -84,7 +84,6 @@ To use:
 #include <stddef.h>
 #include <stdarg.h>
 #include <stdio.h>
-#include <stdint.h>
 #include <time.h>
 #include <locale.h>
 #include <malloc.h>
@@ -100,6 +99,7 @@ To use:
 #include <math.h>
 
 // most common c++ includes
+#include <cstdint>
 #include <algorithm>
 #include <functional>
 #include <memory>
@@ -154,6 +154,12 @@ static_assert(8 == sizeof(int64) && 8 == sizeof(uint64), "(u)int64 must be eight
     #else
         #define UNUSED(P) ((void)P)
     #endif
+#endif
+
+#if defined(_MSC_VER)
+// https://msdn.microsoft.com/en-us/library/4dt9kyhy.aspx
+// equivalent of -Wundef gcc option, warns when doing "#if FOO" and FOO is not defined
+#pragma warning (default : 4668)
 #endif
 
 // TODO: is there a better way?

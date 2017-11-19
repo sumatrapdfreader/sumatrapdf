@@ -48,10 +48,8 @@ workspace "SumatraPDF"
 
   filter "platforms:x32"
      architecture "x86"
-     toolset "v140_xp"
+     toolset "v141_xp"
      buildoptions { "/arch:IA32" } -- disable the default /arch:SSE2 for 32-bit builds
-     filter "action:vs2017"
-      toolset "v141_xp"
   filter {}
 
   filter "platforms:x64"
@@ -65,10 +63,6 @@ workspace "SumatraPDF"
 
   filter "action:vs2017"
     location "vs2017"
-  filter {}
-
-  filter "action:vs2015"
-    location "vs2015"
   filter {}
 
   filter "action:gmake"
@@ -120,7 +114,7 @@ workspace "SumatraPDF"
     optimize "On"
 
     filter "configurations:ReleasePrefast"
-      toolset "v140" -- xp toolset doesn't have prefast
+      toolset "v141" -- xp toolset doesn't have prefast
       -- TODO: somehow /analyze- is default which creates warning about
       -- over-ride from cl.exe. Don't know how to disable the warning
       buildoptions { "/analyze" }

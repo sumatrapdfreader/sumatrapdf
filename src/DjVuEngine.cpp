@@ -142,7 +142,7 @@ public:
     void SpinMessageLoop(bool wait=true) {
         UNUSED(wait);
         const ddjvu_message_t *msg;
-#if THREADMODEL!=NOTHREADS
+#if defined(THREADMODEL) && THREADMODEL!=NOTHREADS
         if (wait)
             ddjvu_message_wait(ctx);
 #endif

@@ -2,6 +2,9 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
+#if defined(_MSC_VER)
+#pragma warning (disable : 4668)
+#endif
 #include <wincodec.h>
 #include "GdiPlusUtil.h"
 #include "ByteReader.h"

@@ -2,6 +2,8 @@
    License: Simplified BSD */
 
 #include "BaseUtil.h"
+
+#pragma warning (disable : 4668)
 #include <exception>
 #include <tlhelp32.h>
 #include <signal.h>
