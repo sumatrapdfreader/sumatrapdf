@@ -561,13 +561,27 @@ bool IsSupportedFile(const WCHAR* fileName, bool sniff) {
         file::ReadN(fileName, header, sizeof(header));
         fileName = GfxFileExtFromData(header, sizeof(header));
     }
+    const WCHAR* ext = path::GetExt(fileName);
+    if (!*ext) {
+        return false;
+    }
+    // TODO: replace with seqstr
+    return str::EqI(ext, L".png") || str::EqI(ext, L".jpg") || str::EqI(ext, L".jpeg") || str::EqI(ext, L".gif") ||
+           str::EqI(ext, L".tif") || str::EqI(ext, L".tiff") || str::EqI(ext, L".bmp") || str::EqI(ext, L".tga") ||
+           str::EqI(ext, L".jxr") || str::EqI(ext, L".hdp") || str::EqI(ext, L".wdp") || str::EqI(ext, L".webp") ||
+           str::EqI(ext, L".jp2");
+}
 
-    return str::EndsWithI(fileName, L".png") || str::EndsWithI(fileName, L".jpg") ||
-           str::EndsWithI(fileName, L".jpeg") || str::EndsWithI(fileName, L".gif") ||
-           str::EndsWithI(fileName, L".tif") || str::EndsWithI(fileName, L".tiff") ||
-           str::EndsWithI(fileName, L".bmp") || str::EndsWithI(fileName, L".tga") ||
-           str::EndsWithI(fileName, L".jxr") || str::EndsWithI(fileName, L".hdp") ||
-           str::EndsWithI(fileName, L".wdp") || str::EndsWithI(fileName, L".webp") || str::EndsWithI(fileName, L".jp2");
+bool IsSupportedFile(const char* fileName) {
+    const char* ext = path::GetExt(fileName);
+    if (!*ext) {
+        return false;
+    }
+    // TODO: replace with seqstr
+    return str::EqI(ext, ".png") || str::EqI(ext, ".jpg") || str::EqI(ext, ".jpeg") || str::EqI(ext, ".gif") ||
+           str::EqI(ext, ".tif") || str::EqI(ext, ".tiff") || str::EqI(ext, ".bmp") || str::EqI(ext, ".tga") ||
+           str::EqI(ext, ".jxr") || str::EqI(ext, ".hdp") || str::EqI(ext, ".wdp") || str::EqI(ext, ".webp") ||
+           str::EqI(ext, ".jp2");
 }
 
 BaseEngine* CreateFromFile(const WCHAR* fileName) {
@@ -827,7 +841,7 @@ class CbxEngineImpl : public ImagesEngine, public json::ValueVisitor {
     // access to cbxFile must be protected after initialization (with cacheAccess)
     ArchFile* cbxFile;
     CbxFormat cbxFormat;
-    Vec<size_t> fileIdxs;
+    std::vector<ArchFileInfo*> files;
 
     // extracted metadata
     AutoFreeW propTitle;
@@ -857,8 +871,11 @@ bool CbxEngineImpl::LoadFromStream(IStream* stream) {
     return FinishLoading();
 }
 
-static int cmpAscii(const void* a, const void* b) {
-    return wcscmp(*(const WCHAR**)a, *(const WCHAR**)b);
+static bool cmpArchFileInfoByName(ArchFileInfo* f1, ArchFileInfo* f2) {
+    const char* s1 = f1->name.data();
+    const char* s2 = f2->name.data();
+    int res = strcmp(s1, s2);
+    return res < 0;
 }
 
 bool CbxEngineImpl::FinishLoading() {
@@ -866,49 +883,51 @@ bool CbxEngineImpl::FinishLoading() {
     if (!cbxFile)
         return false;
 
-    Vec<const WCHAR*> allFileNames;
-    Vec<const WCHAR*> pageFileNames;
+    std::vector<ArchFileInfo*> pageFiles;
 
-    for (size_t idx = 0; idx < cbxFile->GetFileCount(); idx++) {
-        const WCHAR* fileName = cbxFile->GetFileName(idx);
-        if (fileName && ImageEngine::IsSupportedFile(fileName) &&
-            // OS X occasionally leaves metadata with image extensions
-            !str::StartsWith(path::GetBaseName(fileName), L".")) {
-            allFileNames.Append(fileName);
-            pageFileNames.Append(fileName);
-        } else if (Arch_Zip == cbxFormat && str::StartsWith(fileName, L"_rels/.rels")) {
+    auto& fileInfos = cbxFile->GetFileInfos();
+    for (auto* fileInfo : fileInfos) {
+        const char* fileName = fileInfo->name.data();
+        if (str::Len(fileName) == 0) {
+            continue;
+        }
+        if (Arch_Zip == cbxFormat && str::StartsWithI(fileName, "_rels/.rels")) {
             // bail, if we accidentally try to load an XPS file
             return false;
-        } else {
-            allFileNames.Append(nullptr);
+        }
+
+        if (ImageEngine::IsSupportedFile(fileName) &&
+            // OS X occasionally leaves metadata with image extensions
+            !str::StartsWith(path::GetBaseName(fileName), ".")) {
+            pageFiles.push_back(fileInfo);
         }
     }
-    CrashIf(allFileNames.size() != cbxFile->GetFileCount());
 
     AutoFree metadata(cbxFile->GetFileDataByName(L"ComicInfo.xml"));
-    if (metadata)
+    if (metadata) {
         ParseComicInfoXml(metadata);
-    metadata.Set(cbxFile->GetComment());
-    if (metadata)
-        json::Parse(metadata, this);
-
-    pageFileNames.Sort(cmpAscii);
-    for (const WCHAR* fn : pageFileNames) {
-        fileIdxs.Append(allFileNames.Find(fn));
     }
-    CrashIf(pageFileNames.size() != fileIdxs.size());
-    if (fileIdxs.size() == 0)
+    metadata.Set(cbxFile->GetComment());
+    if (metadata) {
+        json::Parse(metadata, this);
+    }
+
+    std::sort(pageFiles.begin(), pageFiles.end(), cmpArchFileInfoByName);
+    size_t nFiles = pageFiles.size();
+    if (nFiles == 0) {
         return false;
+    }
 
-    mediaboxes.AppendBlanks(fileIdxs.size());
-
+    mediaboxes.AppendBlanks(nFiles);
+    files = std::move(pageFiles);
     return true;
 }
 
 char* CbxEngineImpl::GetImageData(int pageNo, size_t& len) {
     AssertCrash(1 <= pageNo && pageNo <= PageCount());
     ScopedCritSec scope(&cacheAccess);
-    return cbxFile->GetFileDataByIdx(fileIdxs.at(pageNo - 1), &len);
+    size_t fileId = files[pageNo - 1]->fileId;
+    return cbxFile->GetFileDataByIdx(fileId, &len);
 }
 
 static char* GetTextContent(HtmlPullParser& parser) {

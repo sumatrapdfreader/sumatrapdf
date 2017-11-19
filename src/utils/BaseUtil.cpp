@@ -46,12 +46,6 @@ WCHAR *Allocator::StrDup(Allocator *a, const WCHAR *str) {
 }
 #endif
 
-void PoolAllocator::Init() {
-    currBlock = nullptr;
-    firstBlock = nullptr;
-    allocRounding = 8;
-}
-
 void PoolAllocator::SetMinBlockSize(size_t newMinBlockSize) {
     CrashIf(currBlock); // can only be changed before first allocation
     minBlockSize = newMinBlockSize;
@@ -69,7 +63,8 @@ void PoolAllocator::FreeAll() {
         free(curr);
         curr = next;
     }
-    Init();
+    currBlock = nullptr;
+    firstBlock = nullptr;
 }
 
 PoolAllocator::~PoolAllocator() {
@@ -105,8 +100,9 @@ void *PoolAllocator::Realloc(void *mem, size_t size) {
 
 void *PoolAllocator::Alloc(size_t size) {
     size = RoundUp(size, allocRounding);
-    if (!currBlock || (currBlock->free < size))
+    if (!currBlock || (currBlock->free < size)) {
         AllocBlock(size);
+    }
 
     void *mem = (void*)(currBlock->DataStart() + currBlock->Used());
     currBlock->free -= size;

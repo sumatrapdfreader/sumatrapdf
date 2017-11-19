@@ -27,7 +27,7 @@ class ArchFile {
   protected:
     // used for allocating strings that are referenced by ArchFileInfo::name
     PoolAllocator allocator_;
-    std::vector<ArchFileInfo> fileInfos_;
+    std::vector<ArchFileInfo*> fileInfos_;
 
     WStrList fileNames_;
 
@@ -45,10 +45,9 @@ class ArchFile {
     ArchFile(ar_stream* data, ar_archive* (*openFormat)(ar_stream*));
     virtual ~ArchFile();
 
-    // the result is owned by ArchFile
-    std::vector<ArchFileInfo>* GetFileInfos();
+    std::vector<ArchFileInfo*> const& GetFileInfos();
 
-    size_t GetFileCount() const;
+    // size_t GetFileCount() const;
     // the result is owned by ArchFile
     const WCHAR* GetFileName(size_t fileId);
     // reverts GetFileName

@@ -9,6 +9,7 @@ bool IsSep(char c);
 const WCHAR *GetBaseName(const WCHAR *path);
 const char *GetBaseName(const char *path);
 const WCHAR *GetExt(const WCHAR *path);
+const char *GetExt(const char *path);
 
 WCHAR *GetDir(const WCHAR *path);
 WCHAR *Join(const WCHAR *path, const WCHAR *fileName);

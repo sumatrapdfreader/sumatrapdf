@@ -46,6 +46,25 @@ const WCHAR *GetExt(const WCHAR *path) {
     return path + str::Len(path);
 }
 
+// Note: returns pointer inside <path>, do not free
+const char *GetExt(const char *path) {
+    const char *ext = nullptr;
+    char c = *path;
+    while (c) {
+        if (c == '.') {
+            ext = path;
+        } else if (IsSep(c)) {
+            ext = nullptr;
+        }
+        path++;
+        c = *path;
+    }
+    if (nullptr == ext) {
+        return path; // empty string
+    }
+    return ext;
+}
+
 // Caller has to free()
 WCHAR *GetDir(const WCHAR *path) {
     const WCHAR *baseName = GetBaseName(path);

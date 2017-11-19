@@ -382,8 +382,8 @@ class PoolAllocator : public Allocator {
 
     // we'll allocate block of the minBlockSize unless
     // asked for a block of bigger size
-    size_t  minBlockSize;
-    size_t  allocRounding;
+    size_t  minBlockSize = 4096;
+    size_t  allocRounding = 8;
 
     struct MemBlockNode {
         struct MemBlockNode *next;
@@ -395,15 +395,11 @@ class PoolAllocator : public Allocator {
         // data follows here
     };
 
-    MemBlockNode *  currBlock;
-    MemBlockNode *  firstBlock;
-
-    void Init();
+    MemBlockNode *  currBlock = nullptr;
+    MemBlockNode *  firstBlock = nullptr;
 
 public:
-    explicit PoolAllocator(size_t rounding=8) : minBlockSize(4096), allocRounding(rounding) {
-        Init();
-    }
+    explicit PoolAllocator() { }
 
     void SetMinBlockSize(size_t newMinBlockSize);
     void SetAllocRounding(size_t newRounding);

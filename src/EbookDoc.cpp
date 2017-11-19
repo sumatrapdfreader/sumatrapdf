@@ -698,18 +698,21 @@ bool Fb2Doc::Load() {
     AutoFree data;
     if (fileName) {
         ArchFile* archive = CreateZipArchive(fileName, false);
-        isZipped = archive->GetFileCount() > 0;
-        if (archive->GetFileCount() > 1) {
+        auto& fileInfos = archive->GetFileInfos();
+        size_t nFiles = fileInfos.size();
+        isZipped = nFiles > 0;
+        if (nFiles > 1) {
             // if the ZIP file contains more than one file, we try to be rather
             // restrictive in what we accept in order not to accidentally accept
             // too many archives which only contain FB2 files among others:
             // the file must contain a single .fb2 file and may only contain
             // .url files in addition (TODO: anything else?)
-            for (size_t i = 0; i < archive->GetFileCount(); i++) {
-                const WCHAR* ext = path::GetExt(archive->GetFileName(i));
-                if (str::EqI(ext, L".fb2") && !data) {
-                    data.Set(archive->GetFileDataByIdx(i));
-                } else if (!str::EqI(ext, L".url")) {
+            for (auto fileInfo : fileInfos) {
+                auto fileName = fileInfo->name;
+                const char* ext = path::GetExt(fileName.data());
+                if (str::EqI(ext, ".fb2") && !data) {
+                    data.Set(archive->GetFileDataByIdx(fileInfo->fileId));
+                } else if (!str::EqI(ext, ".url")) {
                     delete archive;
                     return false;
                 }
@@ -724,7 +727,8 @@ bool Fb2Doc::Load() {
         data.Set((char*)GetDataFromStream(stream, nullptr));
         if (str::StartsWith(data.Get(), "PK\x03\x04")) {
             ArchFile* archive = CreateZipArchive(stream, false);
-            if (archive->GetFileCount() == 1) {
+            size_t nFiles = archive->GetFileInfos().size();
+            if (nFiles == 1) {
                 isZipped = true;
                 data.Set(archive->GetFileDataByIdx(0));
             }

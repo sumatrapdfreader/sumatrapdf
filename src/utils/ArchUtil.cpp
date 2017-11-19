@@ -19,7 +19,7 @@ extern "C" {
 
 #if OS(WIN)
 FILETIME ArchFileInfo::GetWinFileTime() const {
-    FILETIME ft = { (DWORD)-1, (DWORD)-1 };
+    FILETIME ft = {(DWORD)-1, (DWORD)-1};
     LocalFileTimeToFileTime((FILETIME*)&fileTime, &ft);
     return ft;
 }
@@ -41,14 +41,14 @@ ArchFile::ArchFile(ar_stream* data, ar_archive* (*openFormat)(ar_stream*)) : dat
         auto* nameW = str::conv::FromUtf8(name);
         fileNames_.Append(nameW);
 
-        ArchFileInfo i = {0};
-        i.fileId = fileId;
-        i.fileSizeUncompressed = ar_entry_get_size(ar_);
-        i.filePos = ar_entry_get_offset(ar_);
-        i.fileTime = ar_entry_get_filetime(ar_);
-        i.name = allocator_.AllocString(name);
-        i.nameW = nameW;
-        fileInfos_.emplace_back(i);
+        ArchFileInfo* i = allocator_.AllocStruct<ArchFileInfo>();
+        i->fileId = fileId;
+        i->fileSizeUncompressed = ar_entry_get_size(ar_);
+        i->filePos = ar_entry_get_offset(ar_);
+        i->fileTime = ar_entry_get_filetime(ar_);
+        i->name = allocator_.AllocString(name);
+        i->nameW = nameW;
+        fileInfos_.push_back(i);
 
         fileId++;
     }
@@ -61,21 +61,23 @@ ArchFile::~ArchFile() {
     ar_close(data_);
 }
 
-std::vector<ArchFileInfo>* ArchFile::GetFileInfos() {
-    return &fileInfos_;
+std::vector<ArchFileInfo*> const& ArchFile::GetFileInfos() {
+    return fileInfos_;
 }
 
 size_t ArchFile::GetFileIndex(const WCHAR* fileName) {
     return fileNames_.FindI(fileName);
 }
 
+#if 0
 size_t ArchFile::GetFileCount() const {
     return fileInfos_.size();
 }
+#endif
 
 const WCHAR* ArchFile::GetFileName(size_t fileId) {
     CrashIf(fileId >= fileInfos_.size());
-    auto* e = &(fileInfos_[fileId]);
+    auto* e = fileInfos_[fileId];
     CrashIf(fileId != e->fileId);
     return e->nameW;
 }
@@ -89,7 +91,7 @@ char* ArchFile::GetFileDataByIdx(size_t fileId, size_t* len) {
         return nullptr;
     }
 
-    auto* fileInfo = &fileInfos_[fileId];
+    auto* fileInfo = fileInfos_[fileId];
     auto filePos = fileInfo->filePos;
     CrashIf(fileInfo->fileId != fileId);
     if (!ar_parse_entry_at(ar_, filePos))
@@ -215,7 +217,7 @@ char* RarFile::GetFileFromFallback(size_t fileId, size_t* len) {
 
     if (fileId != (size_t)-1) {
         // always use the fallback for this file from now on
-        auto* e = &(fileInfos_.at(fileId));
+        auto* e = fileInfos_.at(fileId);
         e->filePos = -1;
         return fallback->GetFileByName(path, fileNames_.at(fileId), len);
     }
