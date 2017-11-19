@@ -113,6 +113,21 @@ void *PoolAllocator::Alloc(size_t size) {
     return mem;
 }
 
+// allocates a copy of the source string inside the allocator.
+// it's only safe in PoolAllocator because allocated data
+// never moves in memory
+std::string_view PoolAllocator::AllocString(std::string_view str) {
+    size_t n = str.size();
+    size_t toCopy = n + 1;
+    const char *src = str.data();
+    if (!src) {
+        src = "";
+    }
+    void *dst = Alloc(toCopy);
+    memcpy(dst, (const void*)src, toCopy);
+    return std::string_view((const char*)dst, n);
+}
+
 // assuming allocated memory was for pieces of uniform size,
 // find the address of n-th piece
 void *PoolAllocator::FindNthPieceOfSize(size_t size, size_t n) const {

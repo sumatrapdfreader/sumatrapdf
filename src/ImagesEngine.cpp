@@ -1081,7 +1081,8 @@ RectD CbxEngineImpl::LoadMediabox(int pageNo) {
 BaseEngine* CbxEngineImpl::CreateFromFile(const WCHAR* fileName) {
     if (str::EndsWithI(fileName, L".cbz") || str::EndsWithI(fileName, L".zip") ||
         file::StartsWithN(fileName, "PK\x03\x04", 4)) {
-        CbxEngineImpl* engine = new CbxEngineImpl(CreateZipArchive(fileName), Arch_Zip);
+        auto* archive = CreateZipArchive(fileName, false);
+        CbxEngineImpl* engine = new CbxEngineImpl(archive, Arch_Zip);
         if (engine->LoadFromFile(fileName))
             return engine;
         delete engine;
@@ -1115,7 +1116,7 @@ BaseEngine* CbxEngineImpl::CreateFromFile(const WCHAR* fileName) {
 }
 
 BaseEngine* CbxEngineImpl::CreateFromStream(IStream* stream) {
-    auto* archive = CreateZipArchive(stream);
+    auto* archive = CreateZipArchive(stream, false);
     CbxEngineImpl* engine = new CbxEngineImpl(archive, Arch_Zip);
     if (engine->LoadFromStream(stream))
         return engine;

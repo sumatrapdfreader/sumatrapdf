@@ -429,6 +429,8 @@ public:
         return (T *)Alloc(sizeof(T));
     }
 
+    std::string_view AllocString(std::string_view str);
+
     // Iterator for easily traversing allocated memory as array
     // of values of type T. The caller has to enforce the fact
     // that the values stored are indeed values of T

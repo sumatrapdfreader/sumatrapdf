@@ -697,7 +697,7 @@ bool Fb2Doc::Load() {
     CrashIf(!stream && !fileName);
     AutoFree data;
     if (fileName) {
-        ArchFile* archive = CreateZipArchive(fileName);
+        ArchFile* archive = CreateZipArchive(fileName, false);
         isZipped = archive->GetFileCount() > 0;
         if (archive->GetFileCount() > 1) {
             // if the ZIP file contains more than one file, we try to be rather
@@ -723,7 +723,7 @@ bool Fb2Doc::Load() {
     } else if (stream) {
         data.Set((char*)GetDataFromStream(stream, nullptr));
         if (str::StartsWith(data.Get(), "PK\x03\x04")) {
-            ArchFile* archive = CreateZipArchive(stream);
+            ArchFile* archive = CreateZipArchive(stream, false);
             if (archive->GetFileCount() == 1) {
                 isZipped = true;
                 data.Set(archive->GetFileDataByIdx(0));

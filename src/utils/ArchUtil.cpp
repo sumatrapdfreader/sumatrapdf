@@ -17,62 +17,88 @@ extern "C" {
 #include "FileUtil.h"
 #endif
 
-ArchFile::ArchFile(ar_stream* data, ar_archive* (*openFormat)(ar_stream*)) : data(data), ar(nullptr) {
-    if (data && openFormat)
-        ar = openFormat(data);
-    if (!ar)
+// TODO: move the code into Open() function
+ArchFile::ArchFile(ar_stream* data, ar_archive* (*openFormat)(ar_stream*)) : data_(data) {
+    if (data_ && openFormat)
+        ar_ = openFormat(data);
+    if (!ar_)
         return;
-    while (ar_parse_entry(ar)) {
-        const char* name = ar_entry_get_name(ar);
-        if (name)
-            filenames.Append(str::conv::FromUtf8(name));
-        else
-            filenames.Append(nullptr);
-        filepos.push_back(ar_entry_get_offset(ar));
+    size_t fileId = 0;
+    while (ar_parse_entry(ar_)) {
+        const char* name = ar_entry_get_name(ar_);
+        if (!name) {
+            name = "";
+        }
+
+        FILETIME ft = {(DWORD)-1, (DWORD)-1};
+        time64_t filetime = ar_entry_get_filetime(ar_);
+        LocalFileTimeToFileTime((FILETIME*)&filetime, &ft);
+
+        auto* nameW = str::conv::FromUtf8(name);
+        fileNames_.Append(nameW);
+
+        ArchFileInfo i = {0};
+        i.fileId = fileId;
+        i.fileSizeUncompressed = ar_entry_get_size(ar_);
+        i.filePos = ar_entry_get_offset(ar_);
+        i.name = allocator_.AllocString(name);
+        i.nameW = nameW;
+        i.fileTime = ft;
+        fileInfos_.emplace_back(i);
+
+        fileId++;
     }
     // extract (further) filenames with fallback in derived class constructor
     // once GetFileFromFallback has been correctly set in the vtable
 }
 
 ArchFile::~ArchFile() {
-    ar_close_archive(ar);
-    ar_close(data);
+    ar_close_archive(ar_);
+    ar_close(data_);
+}
+
+std::vector<ArchFileInfo>* ArchFile::GetFileInfos() {
+    return &fileInfos_;
 }
 
 size_t ArchFile::GetFileIndex(const WCHAR* fileName) {
-    return filenames.FindI(fileName);
+    return fileNames_.FindI(fileName);
 }
 
 size_t ArchFile::GetFileCount() const {
-    CrashIf(filenames.size() != filepos.size());
-    return filenames.size();
+    return fileInfos_.size();
 }
 
-const WCHAR* ArchFile::GetFileName(size_t fileindex) {
-    if (fileindex >= filenames.size())
-        return nullptr;
-    return filenames.at(fileindex);
+const WCHAR* ArchFile::GetFileName(size_t fileId) {
+    CrashIf(fileId >= fileInfos_.size());
+    auto* e = &(fileInfos_[fileId]);
+    CrashIf(fileId != e->fileId);
+    return e->nameW;
 }
 
 char* ArchFile::GetFileDataByName(const WCHAR* fileName, size_t* len) {
     return GetFileDataByIdx(GetFileIndex(fileName), len);
 }
 
-char* ArchFile::GetFileDataByIdx(size_t fileindex, size_t* len) {
-    if (fileindex >= filenames.size())
+char* ArchFile::GetFileDataByIdx(size_t fileId, size_t* len) {
+    if (!ar_ || (fileId >= fileInfos_.size())) {
         return nullptr;
+    }
 
-    if (!ar || !ar_parse_entry_at(ar, filepos.at(fileindex)))
-        return GetFileFromFallback(fileindex, len);
+    auto* fileInfo = &fileInfos_[fileId];
+    auto filePos = fileInfo->filePos;
+    CrashIf(fileInfo->fileId != fileId);
+    if (!ar_parse_entry_at(ar_, filePos))
+        return GetFileFromFallback(fileId, len);
 
-    size_t size = ar_entry_get_size(ar);
+    size_t size = fileInfo->fileSizeUncompressed;
     if (size > SIZE_MAX - 3)
         return nullptr;
     AutoFree data((char*)malloc(size + 3));
     if (!data)
         return nullptr;
-    if (!ar_entry_uncompress(ar, data, size))
-        return GetFileFromFallback(fileindex, len);
+    if (!ar_entry_uncompress(ar_, data, size))
+        return GetFileFromFallback(fileId, len);
     // zero-terminate for convenience
     data[size] = 0;
     data[size + 1] = 0;
@@ -87,25 +113,23 @@ FILETIME ArchFile::GetFileTime(const WCHAR* fileName) {
     return GetFileTime(GetFileIndex(fileName));
 }
 
-FILETIME ArchFile::GetFileTime(size_t fileindex) {
-    FILETIME ft = {(DWORD)-1, (DWORD)-1};
-    if (ar && fileindex < filepos.size() && ar_parse_entry_at(ar, filepos.at(fileindex))) {
-        time64_t filetime = ar_entry_get_filetime(ar);
-        LocalFileTimeToFileTime((FILETIME*)&filetime, &ft);
-    }
-    return ft;
+FILETIME ArchFile::GetFileTime(size_t fileId) {
+    CrashIf(fileId >= fileInfos_.size());
+    auto* e = &(fileInfos_[fileId]);
+    CrashIf(fileId != e->fileId);
+    return e->fileTime;
 }
 
 char* ArchFile::GetComment(size_t* len) {
-    if (!ar)
+    if (!ar_)
         return nullptr;
-    size_t commentLen = ar_get_global_comment(ar, nullptr, 0);
+    size_t commentLen = ar_get_global_comment(ar_, nullptr, 0);
     if (0 == commentLen || (size_t)-1 == commentLen)
         return nullptr;
     AutoFree comment((char*)malloc(commentLen + 1));
     if (!comment)
         return nullptr;
-    size_t read = ar_get_global_comment(ar, comment, commentLen);
+    size_t read = ar_get_global_comment(ar_, comment, commentLen);
     if (read != commentLen)
         return nullptr;
     comment[commentLen] = '\0';
@@ -123,8 +147,6 @@ static ar_archive* ar_open_zip_archive_deflated(ar_stream* stream) {
     return ar_open_zip_archive(stream, true);
 }
 
-#define GetZipOpener(deflatedOnly) ((deflatedOnly) ? ar_open_zip_archive_deflated : ar_open_zip_archive_any)
-
 ArchFile* CreateZipArchive(const WCHAR* path, bool deflatedOnly) {
     auto opener = ar_open_zip_archive_any;
     if (deflatedOnly) {
@@ -134,7 +156,11 @@ ArchFile* CreateZipArchive(const WCHAR* path, bool deflatedOnly) {
 }
 
 ArchFile* CreateZipArchive(IStream* stream, bool deflatedOnly) {
-    return new ArchFile(ar_open_istream(stream), GetZipOpener(deflatedOnly));
+    auto opener = ar_open_zip_archive_any;
+    if (deflatedOnly) {
+        opener = ar_open_zip_archive_deflated;
+    }
+    return new ArchFile(ar_open_istream(stream), opener);
 }
 
 ArchFile* Create7zArchive(const WCHAR* path) {
@@ -178,27 +204,36 @@ RarFile::~RarFile() {
 }
 
 void RarFile::ExtractFilenamesWithFallback() {
-    if (!ar || !ar_at_eof(ar))
+    if (!ar_ || !ar_at_eof(ar_))
         (void)GetFileFromFallback((size_t)-1);
 }
 
-char* RarFile::GetFileFromFallback(size_t fileindex, size_t* len) {
+char* RarFile::GetFileFromFallback(size_t fileId, size_t* len) {
 #ifdef ENABLE_UNRARDLL_FALLBACK
-    if (path) {
-        if (!fallback)
-            fallback = new UnRarDll();
-        if (fileindex != (size_t)-1) {
-            // always use the fallback for this file from now on
-            filepos.at(fileindex) = -1;
-            return fallback->GetFileByName(path, filenames.at(fileindex), len);
-        }
-        // if fileindex == -1, (re)load the entire archive listing using UnRAR
-        fallback->ExtractFilenames(path, filenames);
-        // always use the fallback for all additionally found files
-        while (filepos.size() < filenames.size()) {
-            filepos.push_back(-1);
-        }
+    // TODO: not tested yet
+    CrashAlwaysIf(true);
+
+    if (!path) {
+        return nullptr;
     }
+
+    if (!fallback)
+        fallback = new UnRarDll();
+
+    if (fileId != (size_t)-1) {
+        // always use the fallback for this file from now on
+        auto* e = &(fileInfos_.at(fileId));
+        e->filePos = -1;
+        return fallback->GetFileByName(path, fileNames_.at(fileId), len);
+    }
+    // if fileindex == -1, (re)load the entire archive listing using UnRAR
+    fallback->ExtractFilenames(path, fileNames_);
+    // always use the fallback for all additionally found files
+#if 0
+    while (filepos.size() < fileNames_.size()) {
+        filepos.push_back(-1);
+    }
+#endif
 #endif
     return nullptr;
 }

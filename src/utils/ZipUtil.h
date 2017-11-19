@@ -13,7 +13,7 @@ class ZipFileAlloc {
     Vec<int64_t> filepos;
 
     ar_stream *data;
-    ar_archive *ar;
+    ar_archive *ar_;
 
     void ExtractFilenames();
 

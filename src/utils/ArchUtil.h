@@ -6,13 +6,27 @@ typedef struct ar_stream_s ar_stream;
 typedef struct ar_archive_s ar_archive;
 }
 
+struct ArchFileInfo {
+    size_t fileId;
+    std::string_view name;
+    WCHAR* nameW;      // TODO: remove this one
+    FILETIME fileTime; // TOOD: make portable
+    size_t fileSizeUncompressed;
+
+    // internal use
+    int64_t filePos;
+};
+
 class ArchFile {
   protected:
-    WStrList filenames;
-    std::vector<int64_t> filepos;
+    // used for allocating strings that are referenced by ArchFileInfo::name
+    PoolAllocator allocator_;
+    std::vector<ArchFileInfo> fileInfos_;
 
-    ar_stream* data;
-    ar_archive* ar;
+    WStrList fileNames_;
+
+    ar_stream* data_ = nullptr;
+    ar_archive* ar_ = nullptr;
 
     // call with fileindex = -1 for filename extraction using the fallback
     virtual char* GetFileFromFallback(size_t fileIndex, size_t* len = nullptr) {
@@ -25,9 +39,12 @@ class ArchFile {
     ArchFile(ar_stream* data, ar_archive* (*openFormat)(ar_stream*));
     virtual ~ArchFile();
 
+    // the result is owned by ArchFile
+    std::vector<ArchFileInfo>* GetFileInfos();
+
     size_t GetFileCount() const;
     // the result is owned by ArchFile
-    const WCHAR* GetFileName(size_t fileindex);
+    const WCHAR* GetFileName(size_t fileId);
     // reverts GetFileName
     size_t GetFileIndex(const WCHAR* filename);
 
@@ -42,8 +59,8 @@ class ArchFile {
     char* GetComment(size_t* len = nullptr);
 };
 
-ArchFile* CreateZipArchive(const WCHAR* path, bool deflatedOnly = false);
-ArchFile* CreateZipArchive(IStream* stream, bool deflatedOnly = false);
+ArchFile* CreateZipArchive(const WCHAR* path, bool deflatedOnly);
+ArchFile* CreateZipArchive(IStream* stream, bool deflatedOnly);
 
 ArchFile* Create7zArchive(const WCHAR* path);
 ArchFile* Create7zArchive(IStream* stream);
