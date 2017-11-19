@@ -447,12 +447,12 @@ static void DecodeMobiDocHeader(const char *buf, MobiHeader* hdr)
 static PdbDocType GetPdbDocType(const char *typeCreator)
 {
     if (str::Eq(typeCreator, MOBI_TYPE_CREATOR))
-        return Pdb_Mobipocket;
+        return PdbDocType::Mobipocket;
     if (str::Eq(typeCreator, PALMDOC_TYPE_CREATOR))
-        return Pdb_PalmDoc;
+        return PdbDocType::PalmDoc;
     if (str::Eq(typeCreator, TEALDOC_TYPE_CREATOR))
-        return Pdb_TealDoc;
-    return Pdb_Unknown;
+        return PdbDocType::TealDoc;
+    return PdbDocType::Unknown;
 }
 
 static bool IsValidCompression(int comprType)
@@ -464,7 +464,7 @@ static bool IsValidCompression(int comprType)
 
 MobiDoc::MobiDoc(const WCHAR *filePath) :
     fileName(str::Dup(filePath)), pdbReader(nullptr),
-    docType(Pdb_Unknown), docRecCount(0), compressionType(0), docUncompressedSize(0),
+    docType(PdbDocType::Unknown), docRecCount(0), compressionType(0), docUncompressedSize(0),
     doc(nullptr), multibyte(false), trailersCount(0), imageFirstRec(0), coverImageRec(0),
     imagesCount(0), images(nullptr), huffDic(nullptr), textEncoding(CP_UTF8), docTocIndex((size_t)-1)
 {
@@ -491,7 +491,7 @@ bool MobiDoc::ParseHeader()
         return false;
 
     docType = GetPdbDocType(pdbReader->GetDbType());
-    if (Pdb_Unknown == docType) {
+    if (PdbDocType::Unknown == docType) {
         lf("unknown pdb type/creator");
         return false;
     }
@@ -510,7 +510,7 @@ bool MobiDoc::ParseHeader()
         lf("unknown compression type");
         return false;
     }
-    if (Pdb_Mobipocket == docType) {
+    if (PdbDocType::Mobipocket == docType) {
         // TODO: this needs to be surfaced to the client so
         // that we can show the right error message
         if (palmDocHdr.mobi.encrType != ENCRYPTION_NONE) {
@@ -528,7 +528,7 @@ bool MobiDoc::ParseHeader()
 
     if (kPalmDocHeaderLen == recSize) {
         // TODO: calculate imageFirstRec / imagesCount
-        return Pdb_Mobipocket != docType;
+        return PdbDocType::Mobipocket != docType;
     }
     if (kPalmDocHeaderLen + kMobiHeaderMinLen > recSize) {
         lf("not enough data for decoding MobiHeader");
@@ -578,7 +578,7 @@ bool MobiDoc::ParseHeader()
     }
 
     if (COMPRESSION_HUFF == compressionType) {
-        CrashIf(Pdb_Mobipocket != docType);
+        CrashIf(PdbDocType::Mobipocket != docType);
         size_t huffRecSize;
         const char *recData = pdbReader->GetRecord(mobiHdr.huffmanFirstRec, &huffRecSize);
         if (!recData)
@@ -949,7 +949,7 @@ bool MobiDoc::IsSupportedFile(const WCHAR *fileName, bool sniff)
         // in most cases, we're only interested in Mobipocket files
         // (PalmDoc uses MobiDoc for loading other formats based on MOBI,
         // but implements sniffing itself in PalmDoc::IsSupportedFile)
-        return Pdb_Mobipocket == GetPdbDocType(pdbReader.GetDbType());
+        return PdbDocType::Mobipocket == GetPdbDocType(pdbReader.GetDbType());
     }
 
     return str::EndsWithI(fileName, L".mobi") ||

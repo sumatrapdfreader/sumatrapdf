@@ -1033,7 +1033,7 @@ bool PalmDoc::Load() {
     MobiDoc* mobiDoc = MobiDoc::CreateFromFile(fileName);
     if (!mobiDoc)
         return false;
-    if (Pdb_PalmDoc != mobiDoc->GetDocType() && Pdb_TealDoc != mobiDoc->GetDocType()) {
+    if (PdbDocType::PalmDoc != mobiDoc->GetDocType() && PdbDocType::TealDoc != mobiDoc->GetDocType()) {
         delete mobiDoc;
         return false;
     }

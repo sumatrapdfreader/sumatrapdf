@@ -4,7 +4,7 @@
 class HuffDicDecompressor;
 class PdbReader;
 
-enum PdbDocType { Pdb_Unknown, Pdb_Mobipocket, Pdb_PalmDoc, Pdb_TealDoc };
+enum class PdbDocType { Unknown, Mobipocket, PalmDoc, TealDoc };
 
 class MobiDoc
 {

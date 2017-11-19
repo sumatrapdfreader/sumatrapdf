@@ -1002,10 +1002,10 @@ bool MobiEngineImpl::Load(IStream* stream) {
 }
 
 bool MobiEngineImpl::FinishLoading() {
-    if (!doc || Pdb_Mobipocket != doc->GetDocType())
+    if (!doc || PdbDocType::Mobipocket != doc->GetDocType())
         return false;
 
-    HtmlFormatterArgs args;
+    HtmlFormatterArgs args = { 0 };
     args.htmlStr = doc->GetHtmlData(args.htmlStrLen);
     args.pageDx = (float)pageRect.dx - 2 * pageBorder;
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
