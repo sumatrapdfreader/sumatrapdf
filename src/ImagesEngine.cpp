@@ -1098,13 +1098,15 @@ BaseEngine* CbxEngineImpl::CreateFromFile(const WCHAR* fileName) {
     }
     if (str::EndsWithI(fileName, L".cb7") || str::EndsWithI(fileName, L".7z") ||
         file::StartsWith(fileName, "7z\xBC\xAF\x27\x1C")) {
-        CbxEngineImpl* engine = new CbxEngineImpl(new _7zFile(fileName), Arch_7z);
+        ArchFile* archive = Create7zArchive(fileName);
+        CbxEngineImpl* engine = new CbxEngineImpl(archive, Arch_7z);
         if (engine->LoadFromFile(fileName))
             return engine;
         delete engine;
     }
     if (str::EndsWithI(fileName, L".cbt") || str::EndsWithI(fileName, L".tar")) {
-        CbxEngineImpl* engine = new CbxEngineImpl(new TarFile(fileName), Arch_Tar);
+        ArchFile* archive = CreateTarArchive(fileName);
+        CbxEngineImpl* engine = new CbxEngineImpl(archive, Arch_Tar);
         if (engine->LoadFromFile(fileName))
             return engine;
         delete engine;
@@ -1124,12 +1126,12 @@ BaseEngine* CbxEngineImpl::CreateFromStream(IStream* stream) {
         return engine;
     delete engine;
 
-    engine = new CbxEngineImpl(new _7zFile(stream), Arch_7z);
+    engine = new CbxEngineImpl(Create7zArchive(stream), Arch_7z);
     if (engine->LoadFromStream(stream))
         return engine;
     delete engine;
 
-    engine = new CbxEngineImpl(new TarFile(stream), Arch_Tar);
+    engine = new CbxEngineImpl(CreateTarArchive(stream), Arch_Tar);
     if (engine->LoadFromStream(stream))
         return engine;
     delete engine;

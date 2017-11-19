@@ -45,17 +45,11 @@ class ArchFile {
 ArchFile* CreateZipArchive(const WCHAR* path, bool deflatedOnly = false);
 ArchFile* CreateZipArchive(IStream* stream, bool deflatedOnly = false);
 
-class _7zFile : public ArchFile {
-  public:
-    explicit _7zFile(const WCHAR* path);
-    explicit _7zFile(IStream* stream);
-};
+ArchFile* Create7zArchive(const WCHAR* path);
+ArchFile* Create7zArchive(IStream* stream);
 
-class TarFile : public ArchFile {
-  public:
-    explicit TarFile(const WCHAR* path);
-    explicit TarFile(IStream* stream);
-};
+ArchFile* CreateTarArchive(const WCHAR* path);
+ArchFile* CreateTarArchive(IStream* stream);
 
 class UnRarDll;
 

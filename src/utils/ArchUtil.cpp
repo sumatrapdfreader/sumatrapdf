@@ -122,21 +122,36 @@ static ar_archive* ar_open_zip_archive_any(ar_stream* stream) {
 static ar_archive* ar_open_zip_archive_deflated(ar_stream* stream) {
     return ar_open_zip_archive(stream, true);
 }
+
 #define GetZipOpener(deflatedOnly) ((deflatedOnly) ? ar_open_zip_archive_deflated : ar_open_zip_archive_any)
 
 ArchFile* CreateZipArchive(const WCHAR* path, bool deflatedOnly) {
-    return new ArchFile(ar_open_file_w(path), GetZipOpener(deflatedOnly));
+    auto opener = ar_open_zip_archive_any;
+    if (deflatedOnly) {
+        opener = ar_open_zip_archive_deflated;
+    }
+    return new ArchFile(ar_open_file_w(path), opener);
 }
 
 ArchFile* CreateZipArchive(IStream* stream, bool deflatedOnly) {
     return new ArchFile(ar_open_istream(stream), GetZipOpener(deflatedOnly));
 }
 
-_7zFile::_7zFile(const WCHAR* path) : ArchFile(ar_open_file_w(path), ar_open_7z_archive) {}
-_7zFile::_7zFile(IStream* stream) : ArchFile(ar_open_istream(stream), ar_open_7z_archive) {}
+ArchFile* Create7zArchive(const WCHAR* path) {
+    return new ArchFile(ar_open_file_w(path), ar_open_7z_archive);
+}
 
-TarFile::TarFile(const WCHAR* path) : ArchFile(ar_open_file_w(path), ar_open_tar_archive) {}
-TarFile::TarFile(IStream* stream) : ArchFile(ar_open_istream(stream), ar_open_tar_archive) {}
+ArchFile* Create7zArchive(IStream* stream) {
+    return new ArchFile(ar_open_istream(stream), ar_open_7z_archive);
+}
+
+ArchFile* CreateTarArchive(const WCHAR* path) {
+    return new ArchFile(ar_open_file_w(path), ar_open_tar_archive);
+}
+
+ArchFile* CreateTarArchive(IStream* stream) {
+    return new ArchFile(ar_open_istream(stream), ar_open_tar_archive);
+}
 
 #ifdef ENABLE_UNRARDLL_FALLBACK
 class UnRarDll {
