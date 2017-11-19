@@ -4,9 +4,10 @@ I'm using premake5 alpha12 from http://premake.github.io/download.html#v5
 (premake4 won't work, it doesn't support VS 2013+)
 --]]
 
---include("premake5.files.lua")
+include("premake5.files.lua")
 
 workspace "SumatraPDF"
+  toolset "gcc"
   configurations { "Debug", "Release" }
   platforms { "x64" }
   startproject "test_unix"
@@ -55,12 +56,30 @@ workspace "SumatraPDF"
     optimize "On"
   filter {}
 
+  project "unarrlib"
+    kind "StaticLib"
+    language "C"
+    -- TODO: for bzip2, need BZ_NO_STDIO and BZ_DEBUG=0
+    -- TODO: for lzma, need _7ZIP_PPMD_SUPPPORT
+    defines { "HAVE_ZLIB", "HAVE_BZIP2", "BZ_NO_STDIO" }
+    -- TODO: most of these warnings are due to bzip2 and lzma
+
+    filter "toolset:gcc"
+      disablewarnings { "unused-parameter", "unused-but-set-variable", "int-conversion", "implicit-function-declaration", "type-limits", "sign-compare" }
+    filter {}
+
+    includedirs { "ext/zlib", "ext/bzip2" }
+    unarr_no_lzma_files()
+
   project "test_unix"
     kind "ConsoleApp"
     language "C++"
     cppdialect "C++17"
 
-    includedirs { "src", "src/utils", "ext/zlib", "ext/unarr", "ext/lzma/C", "ext/bzip2" }
+    includedirs { "src", "src/utils", "ext/zlib", "ext/unarr", "ext/bzip2" }
+
+    links { "unarrlib" }
+
     files {
       "src/utils/BaseUtil.cpp",
       "src/utils/StrUtil.cpp",

@@ -152,6 +152,33 @@ function unarr_files()
   }
 end
 
+function unarr_no_lzma_files()
+  files {
+    "ext/unarr/common/conv.c",
+    "ext/unarr/common/crc32.c",
+    "ext/unarr/common/stream.c",
+    "ext/unarr/common/unarr.c",
+
+    "ext/unarr/rar/filter-rar.c",
+    "ext/unarr/rar/parse-rar.c",
+    "ext/unarr/rar/rar.c",
+    "ext/unarr/rar/rarvm.c",
+    "ext/unarr/rar/uncompress-rar.c",
+    "ext/unarr/rar/huffman-rar.c",
+
+    "ext/unarr/zip/parse-zip.c",
+    "ext/unarr/zip/uncompress-zip.c",
+    "ext/unarr/zip/zip.c",
+    "ext/unarr/zip/inflate.c",
+
+    "ext/unarr/tar/tar.c",
+    "ext/unarr/tar/parse-tar.c",
+
+    "ext/bzip2/bzip_all.c",
+  }
+end
+
+
 function unarr_no_bzip_files()
   files {
     "ext/unarr/common/conv.c",
