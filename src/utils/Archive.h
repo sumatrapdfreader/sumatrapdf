@@ -8,6 +8,8 @@ typedef struct ar_archive_s ar_archive;
 
 typedef ar_archive* (*archive_opener_t)(ar_stream*);
 
+class UnRarDll;
+
 class Archive {
   public:
     enum class Format { Zip, Rar, SevenZip, Tar };
@@ -25,10 +27,12 @@ class Archive {
 #endif
     };
 
-    Archive(ar_stream* data, archive_opener_t opener, Format format);
-    virtual ~Archive();
+    Archive(archive_opener_t opener, Format format);
+    ~Archive();
 
     Format format;
+
+    bool Open(ar_stream* data);
 
     std::vector<FileInfo*> const& GetFileInfos();
 
@@ -49,15 +53,14 @@ class Archive {
     PoolAllocator allocator_;
     std::vector<FileInfo*> fileInfos_;
 
+    archive_opener_t opener_ = nullptr;
     ar_stream* data_ = nullptr;
     ar_archive* ar_ = nullptr;
 
-    // call with fileindex = -1 for filename extraction using the fallback
-    virtual char* GetFileFromFallback(size_t fileId, size_t* len = nullptr) {
-        UNUSED(fileId);
-        UNUSED(len);
-        return nullptr;
-    }
+    // only for rar archives
+    UnRarDll* fallback = nullptr;
+
+    bool OpenUnrarFallback();
 };
 
 Archive* OpenZipArchive(const char* path, bool deflatedOnly);
@@ -69,25 +72,12 @@ Archive* OpenTarArchive(const char* path);
 Archive* OpenZipArchive(const WCHAR* path, bool deflatedOnly);
 Archive* Open7zArchive(const WCHAR* path);
 Archive* OpenTarArchive(const WCHAR* path);
+Archive* OpenRarArchive(const WCHAR* path);
 #endif
 
 #if OS_WIN
 Archive* OpenZipArchive(IStream* stream, bool deflatedOnly);
 Archive* Open7zArchive(IStream* stream);
 Archive* OpenTarArchive(IStream* stream);
+Archive* OpenRarArchive(IStream* stream);
 #endif
-
-class UnRarDll;
-
-class RarFile : public Archive {
-    AutoFreeW path;
-    UnRarDll* fallback;
-
-    void ExtractFilenamesWithFallback();
-    virtual char* GetFileFromFallback(size_t fileindex, size_t* len = nullptr);
-
-  public:
-    explicit RarFile(const WCHAR* path);
-    explicit RarFile(IStream* stream);
-    virtual ~RarFile();
-};

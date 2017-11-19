@@ -1111,7 +1111,7 @@ BaseEngine* CbxEngineImpl::CreateFromFile(const WCHAR* fileName) {
     if (str::EndsWithI(fileName, L".cbr") || str::EndsWithI(fileName, L".rar") ||
         file::StartsWithN(fileName, RAR_SIGNATURE, RAR_SIGNATURE_LEN) ||
         file::StartsWithN(fileName, RAR5_SIGNATURE, RAR5_SIGNATURE_LEN)) {
-        CbxEngineImpl* engine = new CbxEngineImpl(new RarFile(fileName));
+        CbxEngineImpl* engine = new CbxEngineImpl(OpenRarArchive(fileName));
         if (engine->LoadFromFile(fileName))
             return engine;
         delete engine;
@@ -1141,7 +1141,7 @@ BaseEngine* CbxEngineImpl::CreateFromStream(IStream* stream) {
         return engine;
     delete engine;
 
-    engine = new CbxEngineImpl(new RarFile(stream));
+    engine = new CbxEngineImpl(OpenRarArchive(stream));
     if (engine->LoadFromStream(stream))
         return engine;
     delete engine;

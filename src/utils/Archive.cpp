@@ -9,10 +9,26 @@ extern "C" {
 #include <unarr.h>
 }
 
-// if this is defined, SumatraPDF will look for unrar.dll in
+// if this is defined, SumatraPDF will look for unrar.dll/unrar64.dll in
 // the same directory as SumatraPDF.exe whenever a RAR archive
 // fails to open or extract and uses that as a fallback
-//#define ENABLE_UNRARDLL_FALLBACK
+#if OS_WIN
+#define ENABLE_UNRARDLL_FALLBACK 1
+#else
+#define ENABLE_UNRARDLL_FALLBACK 0
+#endif
+
+#if ENABLE_UNRARDLL_FALLBACK
+class UnRarDll {
+  public:
+    UnRarDll();
+
+    bool ExtractFilenames(const WCHAR* rarPath, WStrList& filenames);
+    char* GetFileByName(const WCHAR* rarPath, const WCHAR* filename, size_t* len = nullptr);
+};
+#else
+class UnRarDll {};
+#endif
 
 #if OS_WIN
 FILETIME Archive::FileInfo::GetWinFileTime() const {
@@ -22,12 +38,23 @@ FILETIME Archive::FileInfo::GetWinFileTime() const {
 }
 #endif
 
-// TODO: move the code into Open() function
-Archive::Archive(ar_stream* data, archive_opener_t opener, Archive::Format format) : data_(data), format(format) {
-    if (data_ && opener)
-        ar_ = opener(data);
-    if (!ar_)
-        return;
+Archive::Archive(archive_opener_t opener, Archive::Format format) : opener_(opener), format(format) {
+    CrashIf(!opener);
+}
+
+bool Archive::Open(ar_stream* data) {
+    data_ = data;
+    if (!data) {
+        return false;
+    }
+    ar_ = opener_(data);
+    if (!ar_ || ar_at_eof(ar_)) {
+        if (format == Format::Rar) {
+            return OpenUnrarFallback();
+        }
+        return false;
+    }
+
     size_t fileId = 0;
     while (ar_parse_entry(ar_)) {
         const char* name = ar_entry_get_name(ar_);
@@ -45,8 +72,7 @@ Archive::Archive(ar_stream* data, archive_opener_t opener, Archive::Format forma
 
         fileId++;
     }
-    // extract (further) filenames with fallback in derived class constructor
-    // once GetFileFromFallback has been correctly set in the vtable
+    return true;
 }
 
 Archive::~Archive() {
@@ -89,19 +115,25 @@ char* Archive::GetFileDataById(size_t fileId, size_t* len) {
     }
 
     auto* fileInfo = fileInfos_[fileId];
-    auto filePos = fileInfo->filePos;
     CrashIf(fileInfo->fileId != fileId);
-    if (!ar_parse_entry_at(ar_, filePos))
-        return GetFileFromFallback(fileId, len);
 
+    auto filePos = fileInfo->filePos;
+    if (!ar_parse_entry_at(ar_, filePos)) {
+        // TODO: also try rar fallback?
+        return nullptr;
+    }
     size_t size = fileInfo->fileSizeUncompressed;
-    if (size > SIZE_MAX - 3)
+    if (size > SIZE_MAX - 3) {
         return nullptr;
+    }
     AutoFree data((char*)malloc(size + 3));
-    if (!data)
+    if (!data) {
         return nullptr;
-    if (!ar_entry_uncompress(ar_, data, size))
-        return GetFileFromFallback(fileId, len);
+    }
+    if (!ar_entry_uncompress(ar_, data, size)) {
+        // TODO: also try rar fallback?
+        return nullptr;
+    }
     // zero-terminate for convenience
     data[size] = 0;
     data[size + 1] = 0;
@@ -139,23 +171,47 @@ static ar_archive* ar_open_zip_archive_deflated(ar_stream* stream) {
     return ar_open_zip_archive(stream, true);
 }
 
+static Archive* open(Archive* archive, const char* path) {
+    FILE* f = file::OpenFILE(path);
+    archive->Open(ar_open(f));
+    return archive;
+}
+
+#if OS_WIN
+static Archive* open(Archive* archive, const WCHAR* path) {
+    FILE* f = file::OpenFILE(path);
+    archive->Open(ar_open(f));
+    return archive;
+}
+
+static Archive* open(Archive* archive, IStream* stream) {
+    archive->Open(ar_open_istream(stream));
+    return archive;
+}
+#endif
+
 Archive* OpenZipArchive(const char* path, bool deflatedOnly) {
     auto opener = ar_open_zip_archive_any;
     if (deflatedOnly) {
         opener = ar_open_zip_archive_deflated;
     }
-    FILE* f = file::OpenFILE(path);
-    return new Archive(ar_open(f), opener, Archive::Format::Zip);
+    auto* archive = new Archive(opener, Archive::Format::Zip);
+    return open(archive, path);
 }
 
 Archive* Open7zArchive(const char* path) {
-    FILE* f = file::OpenFILE(path);
-    return new Archive(ar_open(f), ar_open_7z_archive, Archive::Format::SevenZip);
+    auto* archive = new Archive(ar_open_7z_archive, Archive::Format::SevenZip);
+    return open(archive, path);
 }
 
 Archive* OpenTarArchive(const char* path) {
-    FILE* f = file::OpenFILE(path);
-    return new Archive(ar_open(f), ar_open_tar_archive, Archive::Format::Tar);
+    auto* archive = new Archive(ar_open_tar_archive, Archive::Format::Tar);
+    return open(archive, path);
+}
+
+Archive* OpenRarArchive(const char* path) {
+    auto* archive = new Archive(ar_open_rar_archive, Archive::Format::Rar);
+    return open(archive, path);
 }
 
 #if OS_WIN
@@ -164,107 +220,82 @@ Archive* OpenZipArchive(const WCHAR* path, bool deflatedOnly) {
     if (deflatedOnly) {
         opener = ar_open_zip_archive_deflated;
     }
-    FILE* f = file::OpenFILE(path);
-    return new Archive(ar_open(f), opener, Archive::Format::Zip);
+    auto* archive = new Archive(opener, Archive::Format::Zip);
+    return open(archive, path);
 }
 
 Archive* Open7zArchive(const WCHAR* path) {
-    FILE* f = file::OpenFILE(path);
-    return new Archive(ar_open(f), ar_open_7z_archive, Archive::Format::SevenZip);
+    auto* archive = new Archive(ar_open_7z_archive, Archive::Format::SevenZip);
+    return open(archive, path);
 }
 
 Archive* OpenTarArchive(const WCHAR* path) {
-    FILE* f = file::OpenFILE(path);
-    return new Archive(ar_open(f), ar_open_tar_archive, Archive::Format::Tar);
+    auto* archive = new Archive(ar_open_tar_archive, Archive::Format::Tar);
+    return open(archive, path);
 }
 
+Archive* OpenRarArchive(const WCHAR* path) {
+    auto* archive = new Archive(ar_open_rar_archive, Archive::Format::Rar);
+    return open(archive, path);
+}
+#endif
+
+#if OS_WIN
 Archive* OpenZipArchive(IStream* stream, bool deflatedOnly) {
     auto opener = ar_open_zip_archive_any;
     if (deflatedOnly) {
         opener = ar_open_zip_archive_deflated;
     }
-    return new Archive(ar_open_istream(stream), opener, Archive::Format::Zip);
+    auto* archive = new Archive(opener, Archive::Format::Zip);
+    return open(archive, stream);
 }
 
 Archive* Open7zArchive(IStream* stream) {
-    return new Archive(ar_open_istream(stream), ar_open_7z_archive, Archive::Format::SevenZip);
+    auto* archive = new Archive(ar_open_7z_archive, Archive::Format::SevenZip);
+    return open(archive, stream);
 }
 
 Archive* OpenTarArchive(IStream* stream) {
-    return new Archive(ar_open_istream(stream), ar_open_tar_archive, Archive::Format::Tar);
+    auto* archive = new Archive(ar_open_tar_archive, Archive::Format::Tar);
+    return open(archive, stream);
+}
+
+Archive* OpenRarArchive(IStream* stream) {
+    auto* archive = new Archive(ar_open_rar_archive, Archive::Format::Rar);
+    return open(archive, stream);
 }
 #endif
 
-#ifdef ENABLE_UNRARDLL_FALLBACK
-class UnRarDll {
-  public:
-    UnRarDll();
-
-    bool ExtractFilenames(const WCHAR* rarPath, WStrList& filenames);
-    char* GetFileByName(const WCHAR* rarPath, const WCHAR* filename, size_t* len = nullptr);
-};
-#else
-class UnRarDll {};
-#endif
-
-RarFile::RarFile(const WCHAR* path)
-    : Archive(ar_open_file_w(path), ar_open_rar_archive, Archive::Format::Rar),
-      path(str::Dup(path)),
-      fallback(nullptr) {
-    ExtractFilenamesWithFallback();
-}
-
-RarFile::RarFile(IStream* stream)
-    : Archive(ar_open_istream(stream), ar_open_rar_archive, Archive::Format::Rar), path(nullptr), fallback(nullptr) {
-    ExtractFilenamesWithFallback();
-}
-
-RarFile::~RarFile() {
-    delete fallback;
-}
-
-void RarFile::ExtractFilenamesWithFallback() {
-    if (!ar_ || !ar_at_eof(ar_))
-        (void)GetFileFromFallback((size_t)-1);
-}
+#if ENABLE_UNRARDLL_FALLBACK && defined(NOT_DEFINED)
 
 char* RarFile::GetFileFromFallback(size_t fileId, size_t* len) {
-#ifdef ENABLE_UNRARDLL_FALLBACK
     // TODO: not tested yet
     CrashAlwaysIf(true);
 
     if (!path)
         return nullptr;
-}
 
-if (!fallback)
-    fallback = new UnRarDll();
+    if (fileId != (size_t)-1) {
+        // always use the fallback for this file from now on
+        auto* e = fileInfos_.at(fileId);
+        e->filePos = -1;
+        return fallback->GetFileByName(path, fileNames_.at(fileId), len);
+    }
+    // if fileindex == -1, (re)load the entire archive listing using UnRAR
+    fallback->ExtractFilenames(path, fileNames_);
+    // always use the fallback for all additionally found files
 
-if (fileId != (size_t)-1) {
-    // always use the fallback for this file from now on
-    auto* e = fileInfos_.at(fileId);
-    e->filePos = -1;
-    return fallback->GetFileByName(path, fileNames_.at(fileId), len);
-}
-// if fileindex == -1, (re)load the entire archive listing using UnRAR
-fallback->ExtractFilenames(path, fileNames_);
-// always use the fallback for all additionally found files
-
-while (filepos.size() < fileNames_.size()) {
-    filepos.push_back(-1);
-}
-return nullptr;
-#else
-    UNUSED(fileId);
-    UNUSED(len);
+    while (filepos.size() < fileNames_.size()) {
+        filepos.push_back(-1);
+    }
     return nullptr;
-#endif
 }
+#endif
 
-#ifdef ENABLE_UNRARDLL_FALLBACK
+#if ENABLE_UNRARDLL_FALLBACK
 
-// the following has been extracted from UnRARDLL.exe -> unrar.h
-// publicly available from http://www.rarlab.com/rar_add.htm
+    // the following has been extracted from UnRARDLL.exe -> unrar.h
+    // publicly available from http://www.rarlab.com/rar_add.htm
 
 #define RAR_DLL_VERSION 6
 #define RAR_OM_EXTRACT 1
@@ -447,5 +478,13 @@ char* UnRarDll::GetFileByName(const WCHAR* rarPath, const WCHAR* filename, size_
         *len = data.size() - 2;
     return data.StealData();
 }
-
 #endif
+
+bool Archive::OpenUnrarFallback() {
+#if ENABLE_UNRARDLL_FALLBACK
+    fallback = new UnRarDll();
+    return false;
+#else
+    return false;
+#endif
+}
