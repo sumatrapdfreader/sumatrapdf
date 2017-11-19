@@ -78,7 +78,7 @@ $files =
 #"src\utils\Dict.*",
 #"src\utils\DirIter.*",
 #"src\utils\Dpi.*",
-#"src\utils\FileUtil.*",
+"src\utils\FileUtil.*",
 "src\utils\FileWatcher.*",
 #"src\utils\FzImgReader.*",
 #"src\utils\GdiPlusUtil.*",
