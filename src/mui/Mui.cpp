@@ -105,7 +105,7 @@ void CollectWindowsBreathFirst(Control *c, int offX, int offY, WndFilter *wndFil
 // in windows array before child windows. In most cases caller can use the last
 // window in returned array (but can use a custom logic as well).
 // Returns number of matched windows as a convenience.
-size_t CollectWindowsAt(Control *wndRoot, int x, int y, uint16 wantedInputMask,
+size_t CollectWindowsAt(Control *wndRoot, int x, int y, uint16_t wantedInputMask,
                         Vec<CtrlAndOffset> *controls) {
     WndInputWantedFilter filter(x, y, wantedInputMask);
     controls->Reset();

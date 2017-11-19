@@ -1005,7 +1005,7 @@ bool MobiEngineImpl::FinishLoading() {
     if (!doc || PdbDocType::Mobipocket != doc->GetDocType())
         return false;
 
-    HtmlFormatterArgs args = { 0 };
+    HtmlFormatterArgs args;
     args.htmlStr = doc->GetHtmlData(args.htmlStrLen);
     args.pageDx = (float)pageRect.dx - 2 * pageBorder;
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;

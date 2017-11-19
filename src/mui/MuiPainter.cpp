@@ -53,12 +53,12 @@ static void PaintWindowsInZOrder(Graphics *g, Control *c) {
 
     CollectWindowsBreathFirst(c, 0, 0, &wndFilter, &toPaint);
     size_t paintedCount = 0;
-    int16 lastPaintedZOrder = MY_INT16_MIN;
+    int16_t lastPaintedZOrder = MY_INT16_MIN;
     for (;;) {
         // find which z-order should we paint now
-        int16 minUnpaintedZOrder = MY_INT16_MAX;
+        int16_t minUnpaintedZOrder = MY_INT16_MAX;
         for (CtrlAndOffset &coff : toPaint) {
-            int16 zOrder = coff.c->zOrder;
+            int16_t zOrder = coff.c->zOrder;
             if ((zOrder > lastPaintedZOrder) && (zOrder < minUnpaintedZOrder))
                 minUnpaintedZOrder = zOrder;
         }

@@ -180,7 +180,7 @@ class DeferWinPosHelper {
 };
 
 struct BitmapPixels {
-    uint8* pixels;
+    uint8_t* pixels;
     SizeI size;
     int nBytes;
     int nBytesPerPixel;

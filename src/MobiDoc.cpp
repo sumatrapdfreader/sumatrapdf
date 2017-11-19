@@ -125,7 +125,7 @@ static bool PalmdocUncompress(const char *src, size_t srcLen, str::Str<char>& ds
 {
     const char *srcEnd = src + srcLen;
     while (src < srcEnd) {
-        uint8 c = (uint8)*src++;
+        uint8_t c = (uint8_t)*src++;
         if ((c >= 1) && (c <= 8)) {
             if (src + c > srcEnd)
                 return false;
@@ -136,11 +136,11 @@ static bool PalmdocUncompress(const char *src, size_t srcLen, str::Str<char>& ds
         } else if ((c >= 128) && (c < 192)) {
             if (src + 1 > srcEnd)
                 return false;
-            uint16 c2 = (c << 8) | (uint8)*src++;
-            uint16 back = (c2 >> 3) & 0x07ff;
+            uint16_t c2 = (c << 8) | (uint8_t)*src++;
+            uint16_t back = (c2 >> 3) & 0x07ff;
             if (back > dst.size() || 0 == back)
                 return false;
-            for (uint8 n = (c2 & 7) + 3; n > 0; n--) {
+            for (uint8_t n = (c2 & 7) + 3; n > 0; n--) {
                 dst.Append(dst.at(dst.size() - back));
             }
         } else if (c >= 192) {
@@ -220,20 +220,20 @@ HuffDicDecompressor::HuffDicDecompressor() : codeLength(0), dictsCount(0) { }
 
 bool HuffDicDecompressor::DecodeOne(uint32_t code, str::Str<char>& dst)
 {
-    uint16 dict = (uint16_t)(code >> codeLength);
+    uint16_t dict = (uint16_t)(code >> codeLength);
     if (dict >= dictsCount) {
         lf("invalid dict value");
         return false;
     }
     code &= ((1 << (codeLength)) - 1);
-    uint16 offset = UInt16BE(dicts[dict] + code * 2);
+    uint16_t offset = UInt16BE(dicts[dict] + code * 2);
 
     if ((uint32_t)offset + 2 > dictSize[dict]) {
         lf("invalid offset");
         return false;
     }
-    uint16 symLen = UInt16BE(dicts[dict] + offset);
-    uint8 *p = dicts[dict] + offset + 2;
+    uint16_t symLen = UInt16BE(dicts[dict] + offset);
+    uint8_t *p = dicts[dict] + offset + 2;
     if ((uint32_t)(symLen & 0x7fff) > dictSize[dict] - offset - 2) {
         lf("invalid symLen");
         return false;
@@ -259,7 +259,7 @@ bool HuffDicDecompressor::DecodeOne(uint32_t code, str::Str<char>& dst)
     return true;
 }
 
-bool HuffDicDecompressor::Decompress(uint8 *src, size_t srcSize, str::Str<char>& dst)
+bool HuffDicDecompressor::Decompress(uint8_t *src, size_t srcSize, str::Str<char>& dst)
 {
     uint32_t    bitsConsumed = 0;
     uint32_t    bits = 0;
@@ -568,7 +568,7 @@ bool MobiDoc::ParseHeader()
 
     bool hasExtraFlags = (mobiHdr.hdrLen >= 228); // TODO: also only if mobiFormatVersion >= 5?
     if (hasExtraFlags) {
-        uint16 flags = mobiHdr.extraDataFlags;
+        uint16_t flags = mobiHdr.extraDataFlags;
         multibyte = ((flags & 1) != 0);
         while (flags > 1) {
             if (0 != (flags & 2))
@@ -583,12 +583,12 @@ bool MobiDoc::ParseHeader()
         const char *recData = pdbReader->GetRecord(mobiHdr.huffmanFirstRec, &huffRecSize);
         if (!recData)
             return false;
-        AssertCrash(nullptr == huffDic);
+        CrashIf(nullptr != huffDic);
         huffDic = new HuffDicDecompressor();
-        if (!huffDic->SetHuffData((uint8*)recData, huffRecSize))
+        if (!huffDic->SetHuffData((uint8_t*)recData, huffRecSize))
             return false;
         size_t cdicsCount = mobiHdr.huffmanRecCount - 1;
-        AssertCrash(cdicsCount <= kCdicsMax);
+        CrashIf(cdicsCount > kCdicsMax);
         if (cdicsCount > kCdicsMax)
             return false;
         for (size_t i = 0; i < cdicsCount; i++) {
@@ -597,7 +597,7 @@ bool MobiDoc::ParseHeader()
                 return false;
             if (huffRecSize > (uint32_t)-1)
                 return false;
-            if (!huffDic->AddCdicData((uint8*)recData, (uint32_t)huffRecSize))
+            if (!huffDic->AddCdicData((uint8_t*)recData, (uint32_t)huffRecSize))
                 return false;
         }
     }
@@ -664,12 +664,12 @@ bool MobiDoc::DecodeExthHeader(const char *data, size_t dataLen)
 #define SRCS_REC  0x53524353 // 'SRCS'
 #define VIDE_REC  0x56494445 // 'VIDE'
 
-static bool IsEofRecord(uint8 *data, size_t dataLen)
+static bool IsEofRecord(uint8_t *data, size_t dataLen)
 {
     return (4 == dataLen) && (EOF_REC == UInt32BE(data));
 }
 
-static bool KnownNonImageRec(uint8 *data, size_t dataLen)
+static bool KnownNonImageRec(uint8_t *data, size_t dataLen)
 {
     if (dataLen < 4)
         return false;
@@ -699,9 +699,9 @@ bool MobiDoc::LoadImage(size_t imageNo)
     const char *imgData = pdbReader->GetRecord(imageRec, &imgDataLen);
     if (!imgData || (0 == imgDataLen))
         return true;
-    if (IsEofRecord((uint8 *)imgData, imgDataLen))
+    if (IsEofRecord((uint8_t *)imgData, imgDataLen))
         return false;
-    if (KnownNonImageRec((uint8 *)imgData, imgDataLen))
+    if (KnownNonImageRec((uint8_t *)imgData, imgDataLen))
         return true;
     if (!KnownImageFormat(imgData, imgDataLen)) {
         lf("Unknown image format");
@@ -751,14 +751,14 @@ ImageData *MobiDoc::GetCoverImage()
 
 // each record can have extra data at the end, which we must discard
 // returns (size_t)-1 on error
-static size_t GetRealRecordSize(uint8 *recData, size_t recLen, size_t trailersCount, bool multibyte)
+static size_t GetRealRecordSize(uint8_t *recData, size_t recLen, size_t trailersCount, bool multibyte)
 {
     for (size_t i = 0; i < trailersCount; i++) {
         if (recLen < 4)
             return (size_t)-1;
         uint32_t n = 0;
         for (size_t j = 0; j < 4; j++) {
-            uint8 v = recData[recLen - 4 + j];
+            uint8_t v = recData[recLen - 4 + j];
             if (0 != (v & 0x80))
                 n = 0;
             n = (n << 7) | (v & 0x7f);
@@ -771,7 +771,7 @@ static size_t GetRealRecordSize(uint8 *recData, size_t recLen, size_t trailersCo
     if (multibyte) {
         if (0 == recLen)
             return (size_t)-1;
-        uint8 n = (recData[recLen-1] & 3) + 1;
+        uint8_t n = (recData[recLen-1] & 3) + 1;
         if (n > recLen)
             return (size_t)-1;
         recLen -= n;
@@ -788,7 +788,7 @@ bool MobiDoc::LoadDocRecordIntoBuffer(size_t recNo, str::Str<char>& strOut)
     const char *recData = pdbReader->GetRecord(recNo, &recSize);
     if (nullptr == recData)
         return false;
-    recSize = GetRealRecordSize((uint8*)recData, recSize, trailersCount, multibyte);
+    recSize = GetRealRecordSize((uint8_t*)recData, recSize, trailersCount, multibyte);
     if ((size_t)-1 == recSize)
         return false;
 
@@ -803,7 +803,7 @@ bool MobiDoc::LoadDocRecordIntoBuffer(size_t recNo, str::Str<char>& strOut)
         return ok;
     }
     if (COMPRESSION_HUFF == compressionType && huffDic) {
-        bool ok = huffDic->Decompress((uint8*)recData, recSize, strOut);
+        bool ok = huffDic->Decompress((uint8_t*)recData, recSize, strOut);
         if (!ok)
             lf("HuffDic decompression failed");
         return ok;

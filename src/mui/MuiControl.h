@@ -71,10 +71,10 @@ class Control : public ILayout {
     void MapMyToRootPos(int &x, int &y) const;
     void MapRootToMyPos(int &x, int &y) const;
 
-    uint16 wantedInputBits; // WndWantedInputBits
-    uint16 stateBits;       // WndStateBits
+    uint16_t wantedInputBits; // WndWantedInputBits
+    uint16_t stateBits;       // WndStateBits
     // windows with bigger z-order are painted on top, 0 is default
-    int16 zOrder;
+    int16_t zOrder;
 
     ILayout *layout;
     Control *parent;

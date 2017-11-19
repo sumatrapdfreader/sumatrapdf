@@ -156,11 +156,6 @@
 template <typename T, size_t N>
 char (&DimofSizeHelper(T (&array)[N]))[N];
 
-typedef unsigned char uint8;
-typedef int16_t int16;
-typedef uint16_t uint16;
-typedef int32_t int32;
-
 // UNUSED is for marking unreferenced function arguments/variables
 // UNREFERENCED_PARAMETER is in windows SDK but too long. We use it if available,
 // otherwise we define our own version.
@@ -175,7 +170,8 @@ typedef int32_t int32;
 
 #if COMPILER_MSVC
 // https://msdn.microsoft.com/en-us/library/4dt9kyhy.aspx
-// equivalent of -Wundef gcc option, warns when doing "#if FOO" and FOO is not defined
+// enable msvc equivalent of -Wundef gcc option, warns when doing "#if FOO" and FOO is not defined
+// can't be turned on globally because windows headers have those
 #pragma warning(default : 4668)
 #endif
 
