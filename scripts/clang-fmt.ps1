@@ -20,7 +20,7 @@ $files =
 "src\EbookController.*",
 #"src\EbookControls.*",
 "src\EbookDoc.*",
-#"src\EbookEngine.*",
+"src\EbookEngine.*",
 #"src\EbookFormatter.*",
 #"src\EngineDump.*",
 "src\EngineManager.*",
