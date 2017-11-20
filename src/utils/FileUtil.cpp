@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "FileUtil.h"
 
+#if OS_WIN
 // cf. http://blogs.msdn.com/b/oldnewthing/archive/2004/10/25/247180.aspx
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 
@@ -11,25 +12,12 @@ EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 HINSTANCE GetInstance() {
     return (HINSTANCE)&__ImageBase;
 }
+#endif
 
 namespace path {
 
-bool IsSep(WCHAR c) {
-    return '\\' == c || '/' == c;
-}
-
 bool IsSep(char c) {
     return '\\' == c || '/' == c;
-}
-
-// Note: returns pointer inside <path>, do not free
-const WCHAR* GetBaseName(const WCHAR* path) {
-    const WCHAR* fileBaseName = path + str::Len(path);
-    for (; fileBaseName > path; fileBaseName--) {
-        if (IsSep(fileBaseName[-1]))
-            break;
-    }
-    return fileBaseName;
 }
 
 // Note: returns pointer inside <path>, do not free
@@ -40,16 +28,6 @@ const char* GetBaseName(const char* path) {
             break;
     }
     return fileBaseName;
-}
-
-// Note: returns pointer inside <path>, do not free
-const WCHAR* GetExt(const WCHAR* path) {
-    const WCHAR* ext = path + str::Len(path);
-    for (; ext > path && !IsSep(*ext); ext--) {
-        if (*ext == '.')
-            return ext;
-    }
-    return path + str::Len(path);
 }
 
 // Note: returns pointer inside <path>, do not free
@@ -69,6 +47,40 @@ const char* GetExt(const char* path) {
         return path; // empty string
     }
     return ext;
+}
+
+char* JoinUtf(const char* path, const char* fileName, Allocator* allocator) {
+    if (IsSep(*fileName))
+        fileName++;
+    const char* sepStr = nullptr;
+    if (!IsSep(path[str::Len(path) - 1]))
+        sepStr = "\\";
+    return str::Join(path, sepStr, fileName, allocator);
+}
+
+#if OS_WIN
+bool IsSep(WCHAR c) {
+    return '\\' == c || '/' == c;
+}
+
+// Note: returns pointer inside <path>, do not free
+const WCHAR* GetBaseName(const WCHAR* path) {
+    const WCHAR* fileBaseName = path + str::Len(path);
+    for (; fileBaseName > path; fileBaseName--) {
+        if (IsSep(fileBaseName[-1]))
+            break;
+    }
+    return fileBaseName;
+}
+
+// Note: returns pointer inside <path>, do not free
+const WCHAR* GetExt(const WCHAR* path) {
+    const WCHAR* ext = path + str::Len(path);
+    for (; ext > path && !IsSep(*ext); ext--) {
+        if (*ext == '.')
+            return ext;
+    }
+    return path + str::Len(path);
 }
 
 // Caller has to free()
@@ -93,15 +105,6 @@ WCHAR* Join(const WCHAR* path, const WCHAR* fileName) {
     if (!IsSep(path[str::Len(path) - 1]))
         sepStr = L"\\";
     return str::Join(path, sepStr, fileName);
-}
-
-char* JoinUtf(const char* path, const char* fileName, Allocator* allocator) {
-    if (IsSep(*fileName))
-        fileName++;
-    char* sepStr = nullptr;
-    if (!IsSep(path[str::Len(path) - 1]))
-        sepStr = "\\";
-    return str::Join(path, sepStr, fileName, allocator);
 }
 
 // Normalize a file path.
@@ -288,20 +291,10 @@ WCHAR* GetAppPath(const WCHAR* fileName) {
     AutoFreeW moduleDir(path::GetDir(modulePath));
     return path::Join(moduleDir, fileName);
 }
+#endif // OS_WIN
 } // namespace path
 
 namespace file {
-
-HANDLE OpenReadOnly(const WCHAR* filePath) {
-    return CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-}
-
-FILE* OpenFILE(const WCHAR* path) {
-    if (!path) {
-        return nullptr;
-    }
-    return _wfopen(path, L"rb");
-}
 
 FILE* OpenFILE(const char* path) {
     if (!path) {
@@ -313,6 +306,46 @@ FILE* OpenFILE(const char* path) {
 #else
     return fopen(path, "rb");
 #endif
+}
+
+char* ReadAllUtf(const char* filePath, size_t* fileSizeOut, Allocator* allocator) {
+#if OS_WIN
+    WCHAR buf[512];
+    str::Utf8ToWcharBuf(filePath, str::Len(filePath), buf, dimof(buf));
+    return ReadAll(buf, fileSizeOut, allocator);
+#else
+    CrashAlwaysIf(true);
+    UNUSED(filePath);
+    UNUSED(fileSizeOut);
+    UNUSED(allocator);
+    return nullptr;
+#endif
+}
+
+bool WriteAllUtf(const char* filePath, const void* data, size_t dataLen) {
+#if OS_WIN
+    WCHAR buf[512];
+    str::Utf8ToWcharBuf(filePath, str::Len(filePath), buf, dimof(buf));
+    return WriteAll(buf, data, dataLen);
+#else
+    CrashAlwaysIf(true);
+    UNUSED(filePath);
+    UNUSED(data);
+    UNUSED(dataLen);
+    return false;
+#endif
+}
+
+#if OS_WIN
+HANDLE OpenReadOnly(const WCHAR* filePath) {
+    return CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+}
+
+FILE* OpenFILE(const WCHAR* path) {
+    if (!path) {
+        return nullptr;
+    }
+    return _wfopen(path, L"rb");
 }
 
 bool Exists(const WCHAR* filePath) {
@@ -383,12 +416,6 @@ char* ReadAll(const WCHAR* filePath, size_t* fileSizeOut, Allocator* allocator) 
     return data;
 }
 
-char* ReadAllUtf(const char* filePath, size_t* fileSizeOut, Allocator* allocator) {
-    WCHAR buf[512];
-    str::Utf8ToWcharBuf(filePath, str::Len(filePath), buf, dimof(buf));
-    return ReadAll(buf, fileSizeOut, allocator);
-}
-
 // buf must be at least toRead in size (note: it won't be zero-terminated)
 bool ReadN(const WCHAR* filePath, char* buf, size_t toRead) {
     ScopedHandle h(OpenReadOnly(filePath));
@@ -410,12 +437,6 @@ bool WriteAll(const WCHAR* filePath, const void* data, size_t dataLen) {
     BOOL ok = WriteFile(h, data, (DWORD)dataLen, &size, nullptr);
     AssertCrash(!ok || (dataLen == (size_t)size));
     return ok && dataLen == (size_t)size;
-}
-
-bool WriteAllUtf(const char* filePath, const void* data, size_t dataLen) {
-    WCHAR buf[512];
-    str::Utf8ToWcharBuf(filePath, str::Len(filePath), buf, dimof(buf));
-    return WriteAll(buf, data, dataLen);
 }
 
 // Return true if the file wasn't there or was successfully deleted
@@ -465,10 +486,13 @@ bool SetZoneIdentifier(const WCHAR* filePath, int zoneId) {
     AutoFreeW id(str::Format(L"%d", zoneId));
     return WritePrivateProfileString(L"ZoneTransfer", L"ZoneId", id, path);
 }
+
+#endif // OS_WIN
 } // namespace file
 
 namespace dir {
 
+#if OS_WIN
 bool Exists(const WCHAR* dir) {
     if (nullptr == dir)
         return false;
@@ -498,4 +522,6 @@ bool CreateAll(const WCHAR* dir) {
         CreateAll(parent);
     return Create(dir);
 }
+#endif // OS_WIN
+
 } // namespace dir

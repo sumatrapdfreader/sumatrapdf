@@ -38,7 +38,7 @@ FILETIME Archive::FileInfo::GetWinFileTime() const {
 }
 #endif
 
-Archive::Archive(archive_opener_t opener, Archive::Format format) : opener_(opener), format(format) {
+Archive::Archive(archive_opener_t opener, Archive::Format format) : format(format), opener_(opener) {
     CrashIf(!opener);
 }
 

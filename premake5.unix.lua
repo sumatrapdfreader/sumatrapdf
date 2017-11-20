@@ -81,7 +81,9 @@ workspace "SumatraPDF"
     links { "unarrlib" }
 
     files {
+      "src/utils/Archive.cpp",
       "src/utils/BaseUtil.cpp",
+      "src/utils/FileUtil.cpp",
       "src/utils/StrUtil.cpp",
       "src/utils/UtAssert.cpp",
       "tools/test_unix/main.cpp",
