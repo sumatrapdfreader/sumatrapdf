@@ -1,9 +1,10 @@
+@echo on
 SETLOCAL
 
 REM assumes we're being run from top-level directory as:
 REM scripts\appveyor-build.bat
 
-msbuild.exe "vs2017\SumatraPDF.sln" "/t:all" "/p:Configuration=Release;Platform=Win32" /m
+msbuild.exe "vs2017\SumatraPDF.sln" "/t:all;Installer" "/p:Configuration=Release;Platform=Win32" /m
 IF ERRORLEVEL 1 EXIT /B 1
 
 msbuild.exe "vs2017\SumatraPDF.sln" "/t:SumatraPDF;Installer;test_util" "/p:Configuration=Release;Platform=x64" /m
