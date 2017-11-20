@@ -6,7 +6,8 @@
 #include "mupdf/pdf.h" /* for pdf output */
 
 #ifdef _MSC_VER
-#include <winsock2.h>
+// SumatraPDF: was <winsock2.h> but that fails on latest SDK (VS 2017 15.3.2)
+#include <windows.h>
 #define main main_utf8
 #else
 #include <sys/time.h>
