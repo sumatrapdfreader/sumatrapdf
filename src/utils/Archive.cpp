@@ -9,27 +9,6 @@ extern "C" {
 #include <unarr.h>
 }
 
-// if this is defined, SumatraPDF will look for unrar.dll/unrar64.dll in
-// the same directory as SumatraPDF.exe whenever a RAR archive
-// fails to open or extract and uses that as a fallback
-#if OS_WIN
-#define ENABLE_UNRARDLL_FALLBACK 1
-#else
-#define ENABLE_UNRARDLL_FALLBACK 0
-#endif
-
-#if ENABLE_UNRARDLL_FALLBACK
-class UnRarDll {
-  public:
-    UnRarDll();
-
-    bool ExtractFilenames(const WCHAR* rarPath, WStrList& filenames);
-    char* GetFileByName(const WCHAR* rarPath, const WCHAR* filename, size_t* len = nullptr);
-};
-#else
-class UnRarDll {};
-#endif
-
 #if OS_WIN
 FILETIME Archive::FileInfo::GetWinFileTime() const {
     FILETIME ft = {(DWORD)-1, (DWORD)-1};
@@ -42,16 +21,20 @@ Archive::Archive(archive_opener_t opener, Archive::Format format) : format(forma
     CrashIf(!opener);
 }
 
-bool Archive::Open(ar_stream* data) {
+bool Archive::Open(ar_stream* data, const char* archivePath) {
     data_ = data;
     if (!data) {
         return false;
     }
     ar_ = opener_(data);
     if (!ar_ || ar_at_eof(ar_)) {
+#if ENABLE_UNRARDLL_FALLBACK
         if (format == Format::Rar) {
-            return OpenUnrarFallback();
+            return OpenUnrarDllFallback(archivePath);
         }
+#else
+        UNUSED(archivePath);
+#endif
         return false;
     }
 
@@ -110,7 +93,18 @@ char* Archive::GetFileDataByName(const char* fileName, size_t* len) {
 }
 
 char* Archive::GetFileDataById(size_t fileId, size_t* len) {
-    if (!ar_ || (fileId >= fileInfos_.size())) {
+    if (fileId == (size_t)-1) {
+        return nullptr;
+    }
+    CrashIf(fileId >= fileInfos_.size());
+
+#if ENABLE_UNRARDLL_FALLBACK
+    if (LoadedUsingUnrarDll()) {
+        return GetFileDataByIdUnarrDll(fileId, len);
+    }
+#endif
+
+    if (!ar_) {
         return nullptr;
     }
 
@@ -119,7 +113,6 @@ char* Archive::GetFileDataById(size_t fileId, size_t* len) {
 
     auto filePos = fileInfo->filePos;
     if (!ar_parse_entry_at(ar_, filePos)) {
-        // TODO: also try rar fallback?
         return nullptr;
     }
     size_t size = fileInfo->fileSizeUncompressed;
@@ -131,7 +124,6 @@ char* Archive::GetFileDataById(size_t fileId, size_t* len) {
         return nullptr;
     }
     if (!ar_entry_uncompress(ar_, data, size)) {
-        // TODO: also try rar fallback?
         return nullptr;
     }
     // zero-terminate for convenience
@@ -173,19 +165,20 @@ static ar_archive* ar_open_zip_archive_deflated(ar_stream* stream) {
 
 static Archive* open(Archive* archive, const char* path) {
     FILE* f = file::OpenFILE(path);
-    archive->Open(ar_open(f));
+    archive->Open(ar_open(f), path);
     return archive;
 }
 
 #if OS_WIN
 static Archive* open(Archive* archive, const WCHAR* path) {
     FILE* f = file::OpenFILE(path);
-    archive->Open(ar_open(f));
+    AutoFree pathUtf(str::conv::ToUtf8(path));
+    archive->Open(ar_open(f), pathUtf.Get());
     return archive;
 }
 
 static Archive* open(Archive* archive, IStream* stream) {
-    archive->Open(ar_open_istream(stream));
+    archive->Open(ar_open_istream(stream), nullptr);
     return archive;
 }
 #endif
@@ -266,32 +259,6 @@ Archive* OpenRarArchive(IStream* stream) {
 }
 #endif
 
-#if ENABLE_UNRARDLL_FALLBACK && defined(NOT_DEFINED)
-
-char* RarFile::GetFileFromFallback(size_t fileId, size_t* len) {
-    // TODO: not tested yet
-    CrashAlwaysIf(true);
-
-    if (!path)
-        return nullptr;
-
-    if (fileId != (size_t)-1) {
-        // always use the fallback for this file from now on
-        auto* e = fileInfos_.at(fileId);
-        e->filePos = -1;
-        return fallback->GetFileByName(path, fileNames_.at(fileId), len);
-    }
-    // if fileindex == -1, (re)load the entire archive listing using UnRAR
-    fallback->ExtractFilenames(path, fileNames_);
-    // always use the fallback for all additionally found files
-
-    while (filepos.size() < fileNames_.size()) {
-        filepos.push_back(-1);
-    }
-    return nullptr;
-}
-#endif
-
 #if ENABLE_UNRARDLL_FALLBACK
 
     // the following has been extracted from UnRARDLL.exe -> unrar.h
@@ -362,61 +329,36 @@ static RARProcessFileProc RARProcessFile = nullptr;
 static RARCloseArchiveProc RARCloseArchive = nullptr;
 static RARGetDllVersionProc RARGetDllVersion = nullptr;
 
-UnRarDll::UnRarDll() {
-    if (!RARGetDllVersion) {
-        AutoFreeW dllPath(path::GetAppPath(L"unrar.dll"));
-#ifdef _WIN64
-        AutoFreeW dll64Path(path::GetAppPath(L"unrar64.dll"));
-        if (file::Exists(dll64Path))
-            dllPath.Set(dll64Path.StealData());
-#endif
-        if (!file::Exists(dllPath))
-            return;
-        HMODULE h = LoadLibrary(dllPath);
-        if (!h)
-            return;
-#define LoadProcOrFail(name)                     \
-    name = (name##Proc)GetProcAddress(h, #name); \
-    if (!name)                                   \
-    return
-        LoadProcOrFail(RAROpenArchiveEx);
-        LoadProcOrFail(RARReadHeaderEx);
-        LoadProcOrFail(RARProcessFile);
-        LoadProcOrFail(RARCloseArchive);
-        // only load RARGetDllVersion if everything else has succeeded so far
-        LoadProcOrFail(RARGetDllVersion);
-#undef LoadProc
-    }
+static bool IsUnrarDllLoaded() {
+    return RAROpenArchiveEx && RARReadHeaderEx && RARProcessFile && RARCloseArchive && RARGetDllVersion;
 }
 
-bool UnRarDll::ExtractFilenames(const WCHAR* rarPath, WStrList& filenames) {
-    // assume that unrar.dll is forward compatible (as indicated by its documentation)
-    if (!RARGetDllVersion || RARGetDllVersion() < RAR_DLL_VERSION || !rarPath)
-        return false;
+static bool IsValidUnrarDll() {
+    return RARGetDllVersion() < RAR_DLL_VERSION;
+}
 
-    RAROpenArchiveDataEx arcData = {0};
-    arcData.ArcNameW = (WCHAR*)rarPath;
-    arcData.OpenMode = RAR_OM_EXTRACT;
-
-    HANDLE hArc = RAROpenArchiveEx(&arcData);
-    if (!hArc || arcData.OpenResult != 0)
-        return false;
-
-    for (size_t idx = 0;; idx++) {
-        RARHeaderDataEx rarHeader;
-        int res = RARReadHeaderEx(hArc, &rarHeader);
-        if (0 != res)
-            break;
-        str::TransChars(rarHeader.FileNameW, L"\\", L"/");
-        if (filenames.size() == idx)
-            filenames.Append(str::Dup(rarHeader.FileNameW));
-        else
-            CrashIf(!str::Eq(filenames.at(idx), rarHeader.FileNameW));
-        RARProcessFile(hArc, RAR_SKIP, nullptr, nullptr);
+static bool TryLoadUnrarDll() {
+    if (IsUnrarDllLoaded()) {
+        return IsValidUnrarDll();
     }
 
-    RARCloseArchive(hArc);
-    return true;
+    AutoFreeW dllPath(path::GetAppPath(L"unrar.dll"));
+#ifdef _WIN64
+    AutoFreeW dll64Path(path::GetAppPath(L"unrar64.dll"));
+    if (file::Exists(dll64Path))
+        dllPath.Set(dll64Path.StealData());
+#endif
+    if (!file::Exists(dllPath))
+        return false;
+    HMODULE h = LoadLibrary(dllPath);
+    if (!h)
+        return false;
+    RAROpenArchiveEx = (RAROpenArchiveExProc)GetProcAddress(h, "RAROpenArchiveEx");
+    RARReadHeaderEx = (RARReadHeaderExProc)GetProcAddress(h, "RARReadHeaderEx");
+    RARProcessFile = (RARProcessFileProc)GetProcAddress(h, "RARProcessFile");
+    RARCloseArchive = (RARCloseArchiveProc)GetProcAddress(h, "RARCloseArchiveProc");
+    RARGetDllVersion = (RARGetDllVersionProc)GetProcAddress(h, "RARGetDllVersion");
+    return IsUnrarDllLoaded() && IsValidUnrarDll();
 }
 
 static int CALLBACK unrarCallback(UINT msg, LPARAM userData, LPARAM rarBuffer, LPARAM bytesProcessed) {
@@ -427,32 +369,43 @@ static int CALLBACK unrarCallback(UINT msg, LPARAM userData, LPARAM rarBuffer, L
     return ok ? 1 : -1;
 }
 
-char* UnRarDll::GetFileByName(const WCHAR* rarPath, const WCHAR* filename, size_t* len) {
-    // assume that unrar.dll is forward compatible (as indicated by its documentation)
-    if (!RARGetDllVersion || RARGetDllVersion() < RAR_DLL_VERSION || !rarPath)
-        return false;
+char* Archive::GetFileDataByIdUnarrDll(size_t fileId, size_t* len) {
+    CrashIf(!IsUnrarDllLoaded());
+    CrashIf(IsValidUnrarDll());
+    CrashIf(!rarFilePath_);
 
+    AutoFreeW rarPath(str::conv::FromUtf8(rarFilePath_));
+
+    // TODO: change to malloc()ing the whole buffer and
+    // using std::string_view for data
     str::Str<char> data;
 
     RAROpenArchiveDataEx arcData = {0};
-    arcData.ArcNameW = (WCHAR*)rarPath;
+    arcData.ArcNameW = rarPath.Get();
     arcData.OpenMode = RAR_OM_EXTRACT;
     arcData.Callback = unrarCallback;
     arcData.UserData = (LPARAM)&data;
 
     HANDLE hArc = RAROpenArchiveEx(&arcData);
-    if (!hArc || arcData.OpenResult != 0)
+    if (!hArc || arcData.OpenResult != 0) {
         return nullptr;
+    }
+
+    auto* fileInfo = fileInfos_[fileId];
+    CrashIf(fileInfo->fileId != fileId);
+
+    AutoFreeW fileName(str::conv::FromUtf8(fileInfo->name.data()));
 
     int res = 0;
-    RARHeaderDataEx rarHeader;
+    RARHeaderDataEx rarHeader = {0};
     for (;;) {
         res = RARReadHeaderEx(hArc, &rarHeader);
         if (0 != res)
             break;
         str::TransChars(rarHeader.FileNameW, L"\\", L"/");
-        if (str::EqI(rarHeader.FileNameW, filename))
+        if (str::EqI(rarHeader.FileNameW, fileName.Get())) {
             break;
+        }
         RARProcessFile(hArc, RAR_SKIP, nullptr, nullptr);
     }
 
@@ -478,13 +431,47 @@ char* UnRarDll::GetFileByName(const WCHAR* rarPath, const WCHAR* filename, size_
         *len = data.size() - 2;
     return data.StealData();
 }
-#endif
 
-bool Archive::OpenUnrarFallback() {
-#if ENABLE_UNRARDLL_FALLBACK
-    fallback = new UnRarDll();
-    return false;
-#else
-    return false;
-#endif
+bool Archive::OpenUnrarDllFallback(const char* rarPathUtf) {
+    if (!rarPathUtf || !TryLoadUnrarDll()) {
+        return false;
+    }
+    AutoFreeW rarPath(str::conv::FromUtf8(rarPathUtf));
+
+    RAROpenArchiveDataEx arcData = {0};
+    arcData.ArcNameW = (WCHAR*)rarPath;
+    arcData.OpenMode = RAR_OM_EXTRACT;
+
+    HANDLE hArc = RAROpenArchiveEx(&arcData);
+    if (!hArc || arcData.OpenResult != 0)
+        return false;
+
+    size_t fileId = 0;
+    while (true) {
+        RARHeaderDataEx rarHeader = {0};
+        int res = RARReadHeaderEx(hArc, &rarHeader);
+        if (0 != res)
+            break;
+
+        str::TransChars(rarHeader.FileNameW, L"\\", L"/");
+        AutoFree name(str::conv::ToUtf8(rarHeader.FileNameW));
+
+        FileInfo* i = allocator_.AllocStruct<FileInfo>();
+        i->fileId = fileId;
+        i->fileSizeUncompressed = (size_t)rarHeader.UnpSize;
+        i->filePos = 0;
+        i->fileTime = (int64_t)rarHeader.FileTime;
+        i->name = allocator_.AllocString(name.Get());
+        fileInfos_.push_back(i);
+
+        fileId++;
+
+        RARProcessFile(hArc, RAR_SKIP, nullptr, nullptr);
+    }
+
+    RARCloseArchive(hArc);
+
+    rarFilePath_ = allocator_.AllocString(rarPathUtf).data();
+    return true;
 }
+#endif

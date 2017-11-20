@@ -1,6 +1,14 @@
 /* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+// if ENABLE_UNRARDLL_FALLBACK is 1, SumatraPDF will look for unrar.dll/unrar64.dll
+// in the same directory as SumatraPDF.exe whenever a RAR archive
+// fails to open or extract and uses that as a fallback.
+// If not set externally, we enable unarr fallback on Windows
+#if !defined(ENABLE_UNRARDLL_FALLBACK)
+#define ENABLE_UNRARDLL_FALLBACK OS_WIN
+#endif
+
 extern "C" {
 typedef struct ar_stream_s ar_stream;
 typedef struct ar_archive_s ar_archive;
@@ -8,11 +16,10 @@ typedef struct ar_archive_s ar_archive;
 
 typedef ar_archive* (*archive_opener_t)(ar_stream*);
 
-class UnRarDll;
-
 class Archive {
   public:
     enum class Format { Zip, Rar, SevenZip, Tar };
+
     struct FileInfo {
         size_t fileId;
         std::string_view name;
@@ -32,7 +39,7 @@ class Archive {
 
     Format format;
 
-    bool Open(ar_stream* data);
+    bool Open(ar_stream* data, const char* archivePath);
 
     std::vector<FileInfo*> const& GetFileInfos();
 
@@ -57,10 +64,14 @@ class Archive {
     ar_stream* data_ = nullptr;
     ar_archive* ar_ = nullptr;
 
-    // only for rar archives
-    UnRarDll* fallback = nullptr;
+#if ENABLE_UNRARDLL_FALLBACK
+    // only set when we loaded file infos using unrar.dll fallback
+    const char* rarFilePath_ = nullptr;
 
-    bool OpenUnrarFallback();
+    bool OpenUnrarDllFallback(const char* rarPathUtf);
+    char* GetFileDataByIdUnarrDll(size_t fileId, size_t* len);
+    bool LoadedUsingUnrarDll() const { return rarFilePath_ != nullptr; }
+#endif
 };
 
 Archive* OpenZipArchive(const char* path, bool deflatedOnly);
