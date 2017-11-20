@@ -48,6 +48,33 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\ext\unarr\_7z\_7z.h">
+      <Filter>ext\unarr\_7z</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\unarr\common\allocator.h">
+      <Filter>ext\unarr\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\unarr\common\unarr-imp.h">
+      <Filter>ext\unarr\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\unarr\rar\lzss.h">
+      <Filter>ext\unarr\rar</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\unarr\rar\rar.h">
+      <Filter>ext\unarr\rar</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\unarr\rar\rarvm.h">
+      <Filter>ext\unarr\rar</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\unarr\tar\tar.h">
+      <Filter>ext\unarr\tar</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\unarr\zip\inflate.h">
+      <Filter>ext\unarr\zip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\unarr\zip\zip.h">
+      <Filter>ext\unarr\zip</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\CrashHandler.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -183,6 +210,9 @@
       <Filter>ext\unarr\common</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\unarr\common\crc32.c">
+      <Filter>ext\unarr\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\common\custalloc.c">
       <Filter>ext\unarr\common</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\unarr\common\stream.c">

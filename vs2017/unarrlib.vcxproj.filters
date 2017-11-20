@@ -33,6 +33,35 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\ext\unarr\_7z\_7z.h">
+      <Filter>unarr\_7z</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\unarr\common\allocator.h">
+      <Filter>unarr\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\unarr\common\unarr-imp.h">
+      <Filter>unarr\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\unarr\rar\lzss.h">
+      <Filter>unarr\rar</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\unarr\rar\rar.h">
+      <Filter>unarr\rar</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\unarr\rar\rarvm.h">
+      <Filter>unarr\rar</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\unarr\tar\tar.h">
+      <Filter>unarr\tar</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\unarr\zip\inflate.h">
+      <Filter>unarr\zip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\unarr\zip\zip.h">
+      <Filter>unarr\zip</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
     <ClCompile Include="..\ext\bzip2\bzip_all.c">
       <Filter>bzip2</Filter>
     </ClCompile>
@@ -82,6 +111,9 @@
       <Filter>unarr\common</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\unarr\common\crc32.c">
+      <Filter>unarr\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\common\custalloc.c">
       <Filter>unarr\common</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\unarr\common\stream.c">

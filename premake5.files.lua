@@ -26,203 +26,83 @@ end
 
 function zlib_files()
   files_in_dir("ext/zlib", {
-    "adler32.c",
-    "compress.c",
-    "crc32.c",
-    "deflate.c",
-    "inffast.c",
-    "inflate.c",
-    "inftrees.c",
-    "trees.c",
-    "zutil.c",
-    "gzlib.c",
-    "gzread.c",
-    "gzwrite.c",
-    "gzclose.c",
+    "adler32.c", "compress.c", "crc32.c", "deflate.c", "inffast.c",
+    "inflate.c", "inftrees.c", "trees.c", "zutil.c", "gzlib.c",
+    "gzread.c", "gzwrite.c", "gzclose.c",
   })
 end
 
 function libdjvu_files()
   files_in_dir("ext/libdjvu", {
-    "Arrays.cpp",
-    "atomic.cpp",
-    "BSByteStream.cpp",
-    "BSEncodeByteStream.cpp",
-    "ByteStream.cpp",
-    "DataPool.cpp",
-    "DjVmDir0.cpp",
-    "DjVmDoc.cpp",
-    "DjVmNav.cpp",
-    "DjVuAnno.cpp",
-    "DjVuDocEditor.cpp",
-    "DjVuDocument.cpp",
-    "DjVuDumpHelper.cpp",
-    "DjVuErrorList.cpp",
-    "DjVuFile.cpp",
-    "DjVuFileCache.cpp",
-    "DjVuGlobal.cpp",
-    "DjVuGlobalMemory.cpp",
-    "DjVuImage.cpp",
-    "DjVuInfo.cpp",
-    "DjVuMessage.cpp",
-    "DjVuMessageLite.cpp",
-    "DjVuNavDir.cpp",
-    "DjVuPalette.cpp",
-    "DjVuPort.cpp",
-    "DjVuText.cpp",
-    "DjVuToPS.cpp",
-    "GBitmap.cpp",
-    "GContainer.cpp",
-    "GException.cpp",
-    "GIFFManager.cpp",
-    "GMapAreas.cpp",
-    "GOS.cpp",
-    "GPixmap.cpp",
-    "GRect.cpp",
-    "GScaler.cpp",
-    "GSmartPointer.cpp",
-    "GString.cpp",
-    "GThreads.cpp",
-    "GUnicode.cpp",
-    "GURL.cpp",
-    "IFFByteStream.cpp",
-    "IW44EncodeCodec.cpp",
-    "IW44Image.cpp",
-    "JB2EncodeCodec.cpp",
-    "DjVmDir.cpp",
-    "JB2Image.cpp",
-    "JPEGDecoder.cpp",
-    "MMRDecoder.cpp",
-    "MMX.cpp",
-    "UnicodeByteStream.cpp",
-    "XMLParser.cpp",
-    "XMLTags.cpp",
-    "ZPCodec.cpp",
-    "ddjvuapi.cpp",
-    "debug.cpp",
+    "Arrays.cpp", "atomic.cpp", "BSByteStream.cpp", "BSEncodeByteStream.cpp",
+    "ByteStream.cpp", "DataPool.cpp", "DjVmDir0.cpp", "DjVmDoc.cpp", "DjVmNav.cpp",
+    "DjVuAnno.cpp", "DjVuDocEditor.cpp", "DjVuDocument.cpp", "DjVuDumpHelper.cpp",
+    "DjVuErrorList.cpp", "DjVuFile.cpp", "DjVuFileCache.cpp", "DjVuGlobal.cpp",
+    "DjVuGlobalMemory.cpp", "DjVuImage.cpp", "DjVuInfo.cpp", "DjVuMessage.cpp",
+    "DjVuMessageLite.cpp", "DjVuNavDir.cpp", "DjVuPalette.cpp", "DjVuPort.cpp",
+    "DjVuText.cpp", "DjVuToPS.cpp", "GBitmap.cpp", "GContainer.cpp", "GException.cpp",
+    "GIFFManager.cpp", "GMapAreas.cpp", "GOS.cpp", "GPixmap.cpp", "GRect.cpp",
+    "GScaler.cpp", "GSmartPointer.cpp", "GString.cpp", "GThreads.cpp",
+    "GUnicode.cpp", "GURL.cpp", "IFFByteStream.cpp", "IW44EncodeCodec.cpp",
+    "IW44Image.cpp", "JB2EncodeCodec.cpp", "DjVmDir.cpp", "JB2Image.cpp",
+    "JPEGDecoder.cpp", "MMRDecoder.cpp", "MMX.cpp", "UnicodeByteStream.cpp",
+    "XMLParser.cpp", "XMLTags.cpp", "ZPCodec.cpp", "ddjvuapi.cpp", "debug.cpp",
     "miniexp.cpp",
+  })
+end
+
+function unarrr_lzmasdk_files()
+  files_in_dir("ext/unarr/lzmasdk", {
+    "CpuArch.c", "Ppmd7.c", "Ppmd7Dec.c", "Ppmd8.c", "Ppmd8Dec.c",
+  })
+end
+
+function unarr_lzma_files()
+  files_in_dir("ext/lzma/C", {
+    "LzmaDec.c", "Bra86.c", "LzmaEnc.c", "LzFind.c", "LzFindMt.c", "Threads.c",
+    "7zBuf.c", "7zDec.c", "7zIn.c", "7zStream.c", "Bcj2.c", "Bra.c", "Lzma2Dec.c",
   })
 end
 
 function unarr_files()
   files {
-    "ext/unarr/common/conv.c",
-    "ext/unarr/common/crc32.c",
-    "ext/unarr/common/stream.c",
-    "ext/unarr/common/unarr.c",
-
-    "ext/unarr/lzmasdk/CpuArch.c",
-    "ext/unarr/lzmasdk/Ppmd7.c",
-    "ext/unarr/lzmasdk/Ppmd7Dec.c",
-    "ext/unarr/lzmasdk/Ppmd8.c",
-    "ext/unarr/lzmasdk/Ppmd8Dec.c",
-
-    "ext/unarr/rar/filter-rar.c",
-    "ext/unarr/rar/parse-rar.c",
-    "ext/unarr/rar/rar.c",
-    "ext/unarr/rar/rarvm.c",
-    "ext/unarr/rar/uncompress-rar.c",
-    "ext/unarr/rar/huffman-rar.c",
-
-    "ext/unarr/zip/parse-zip.c",
-    "ext/unarr/zip/uncompress-zip.c",
-    "ext/unarr/zip/zip.c",
-    "ext/unarr/zip/inflate.c",
-
-    "ext/unarr/_7z/_7z.c",
-
-    "ext/unarr/tar/tar.c",
-    "ext/unarr/tar/parse-tar.c",
+    "ext/unarr/common/*",
+    "ext/unarr/rar/*",
+    "ext/unarr/zip/*",
+    "ext/unarr/tar/*",
+    "ext/unarr/_7z/*",
 
     "ext/bzip2/bzip_all.c",
-
-    "ext/lzma/C/LzmaDec.c",
-    "ext/lzma/C/Bra86.c",
-    "ext/lzma/C/LzmaEnc.c",
-    "ext/lzma/C/LzFind.c",
-    "ext/lzma/C/LzFindMt.c",
-    "ext/lzma/C/Threads.c",
-    "ext/lzma/C/7zBuf.c",
-    "ext/lzma/C/7zDec.c",
-    "ext/lzma/C/7zIn.c",
-    "ext/lzma/C/7zStream.c",
-    "ext/lzma/C/Bcj2.c",
-    "ext/lzma/C/Bra.c",
-    "ext/lzma/C/Lzma2Dec.c",
   }
+  unarrr_lzmasdk_files()
+  unarr_lzma_files()
 end
 
 function unarr_no_lzma_files()
   files {
-    "ext/unarr/common/conv.c",
-    "ext/unarr/common/crc32.c",
-    "ext/unarr/common/stream.c",
-    "ext/unarr/common/unarr.c",
+    "ext/unarr/common/*",
+    "ext/unarr/rar/*",
+    "ext/unarr/zip/*",
+    "ext/unarr/tar/*",
+    "ext/unarr/_7z/*",
 
-    "ext/unarr/rar/filter-rar.c",
-    "ext/unarr/rar/parse-rar.c",
-    "ext/unarr/rar/rar.c",
-    "ext/unarr/rar/rarvm.c",
-    "ext/unarr/rar/uncompress-rar.c",
-    "ext/unarr/rar/huffman-rar.c",
-
-    "ext/unarr/zip/parse-zip.c",
-    "ext/unarr/zip/uncompress-zip.c",
-    "ext/unarr/zip/zip.c",
-    "ext/unarr/zip/inflate.c",
-
-    "ext/unarr/tar/tar.c",
-    "ext/unarr/tar/parse-tar.c",
-
+    "ext/unarr/lzmasdk/LzmaDec.*",
     "ext/bzip2/bzip_all.c",
   }
+  unarrr_lzmasdk_files()
 end
 
 
 function unarr_no_bzip_files()
   files {
-    "ext/unarr/common/conv.c",
-    "ext/unarr/common/crc32.c",
-    "ext/unarr/common/stream.c",
-    "ext/unarr/common/unarr.c",
-
-    "ext/unarr/lzmasdk/CpuArch.c",
-    "ext/unarr/lzmasdk/Ppmd7.c",
-    "ext/unarr/lzmasdk/Ppmd7Dec.c",
-    "ext/unarr/lzmasdk/Ppmd8.c",
-    "ext/unarr/lzmasdk/Ppmd8Dec.c",
-
-    "ext/unarr/rar/filter-rar.c",
-    "ext/unarr/rar/parse-rar.c",
-    "ext/unarr/rar/rar.c",
-    "ext/unarr/rar/rarvm.c",
-    "ext/unarr/rar/uncompress-rar.c",
-    "ext/unarr/rar/huffman-rar.c",
-
-    "ext/unarr/zip/parse-zip.c",
-    "ext/unarr/zip/uncompress-zip.c",
-    "ext/unarr/zip/zip.c",
-    "ext/unarr/zip/inflate.c",
-
-    "ext/unarr/_7z/_7z.c",
-
-    "ext/unarr/tar/tar.c",
-    "ext/unarr/tar/parse-tar.c",
-
-    "ext/lzma/C/LzmaDec.c",
-    "ext/lzma/C/Bra86.c",
-    "ext/lzma/C/LzmaEnc.c",
-    "ext/lzma/C/LzFind.c",
-    "ext/lzma/C/LzFindMt.c",
-    "ext/lzma/C/Threads.c",
-    "ext/lzma/C/7zBuf.c",
-    "ext/lzma/C/7zDec.c",
-    "ext/lzma/C/7zIn.c",
-    "ext/lzma/C/7zStream.c",
-    "ext/lzma/C/Bcj2.c",
-    "ext/lzma/C/Bra.c",
-    "ext/lzma/C/Lzma2Dec.c",
+    "ext/unarr/common/*",
+    "ext/unarr/rar/*",
+    "ext/unarr/zip/*",
+    "ext/unarr/tar/*",
+    "ext/unarr/_7z/*",
   }
+  unarrr_lzmasdk_files()
+  unarr_lzma_files()
 end
 
 function jbig2dec_files()
@@ -255,78 +135,31 @@ function openjpeg_files()
 end
 
 function libwebp_files()
-  files_in_dir("ext/libwebp", {
-    "dec/alpha.c",
-    "dec/buffer.c",
-    "dec/frame.c",
-    "dec/idec.c",
-    "dec/io.c",
-    "dec/quant.c",
-    "dec/tree.c",
-    "dec/vp8.c",
-    "dec/vp8l.c",
-    "dec/webp.c",
+  files_in_dir("ext/libwebp/dec", {
+    "alpha.c", "buffer.c", "frame.c", "idec.c", "io.c", "quant.c",
+    "tree.c", "vp8.c", "vp8l.c", "webp.c",
+  })
 
-    "dsp/alpha_processing.c",
-    "dsp/cpu.c",
-    "dsp/dec.c",
-    "dsp/dec_sse2.c",
-    "dsp/lossless.c",
-    "dsp/lossless_sse2.c",
-    "dsp/upsampling.c",
-    "dsp/upsampling_sse2.c",
-    "dsp/yuv.c",
-    "dsp/yuv_sse2.c",
-    "dsp/dec_clip_tables.c",
-    "dsp/alpha_processing_sse2.c",
+  files_in_dir("ext/libwebp/dsp", {
+    "alpha_processing.c", "cpu.c", "dec.c", "dec_sse2.c", "lossless.c",
+    "lossless_sse2.c", "upsampling.c", "upsampling_sse2.c", "yuv.c",
+    "yuv_sse2.c", "dec_clip_tables.c", "alpha_processing_sse2.c",
+  })
 
-    "utils/bit_reader.c",
-    "utils/color_cache.c",
-    "utils/filters.c",
-    "utils/huffman.c",
-    "utils/quant_levels_dec.c",
-    "utils/rescaler.c",
-    "utils/thread.c",
-    "utils/utils.c",
-    "utils/random.c",
+  files_in_dir("ext/libwebp/utils", {
+    "bit_reader.c", "color_cache.c", "filters.c", "huffman.c",
+    "quant_levels_dec.c", "rescaler.c", "thread.c", "utils.c", "random.c",
   })
 end
 
 function libjpeg_turbo_files()
   files_in_dir("ext/libjpeg-turbo", {
-    "jcomapi.c",
-    "jdapimin.c",
-    "jdapistd.c",
-    "jdatadst.c",
-    "jdatasrc.c",
-    "jdcoefct.c",
-    "jdcolor.c",
-    "jddctmgr.c",
-    "jdhuff.c",
-    "jdinput.c",
-    "jdmainct.c",
-    "jdmarker.c",
-    "jdmaster.c",
-    "jdmerge.c",
-    "jdpostct.c",
-    "jdsample.c",
-    "jdtrans.c",
-    "jerror.c",
-    "jfdctflt.c",
-    "jfdctint.c",
-    "jidctflt.c",
-    "jidctfst.c",
-    "jidctint.c",
-    "jquant1.c",
-    "jquant2.c",
-    "jutils.c",
-    "jmemmgr.c",
-    "jmemnobs.c",
-    "jaricom.c",
-    "jdarith.c",
-    "jfdctfst.c",
-    "jdphuff.c",
-    "jidctred.c",
+    "jcomapi.c", "jdapimin.c", "jdapistd.c", "jdatadst.c", "jdatasrc.c",
+    "jdcoefct.c", "jdcolor.c", "jddctmgr.c", "jdhuff.c", "jdinput.c", "jdmainct.c",
+    "jdmarker.c", "jdmaster.c", "jdmerge.c", "jdpostct.c", "jdsample.c", "jdtrans.c",
+    "jerror.c", "jfdctflt.c", "jfdctint.c", "jidctflt.c", "jidctfst.c",
+    "jidctint.c", "jquant1.c", "jquant2.c", "jutils.c", "jmemmgr.c", "jmemnobs.c",
+    "jaricom.c", "jdarith.c", "jfdctfst.c", "jdphuff.c", "jidctred.c",
   })
 
   --to build non-assembly version, use this:
@@ -361,18 +194,8 @@ end
 
 function freetype_files()
   files_in_dir("ext/freetype2/src/base", {
-    "ftbase.c",
-    "ftbbox.c",
-    "ftbitmap.c",
-    "ftgasp.c",
-    "ftglyph.c",
-    "ftinit.c",
-    "ftstroke.c",
-    "ftsynth.c",
-    "ftsystem.c",
-    "fttype1.c",
-    "ftxf86.c",
-    "ftotval.c",
+    "ftbase.c", "ftbbox.c", "ftbitmap.c", "ftgasp.c", "ftglyph.c", "ftinit.c",
+    "ftstroke.c", "ftsynth.c", "ftsystem.c", "fttype1.c", "ftxf86.c", "ftotval.c",
   })
 
   files_in_dir("ext/freetype2/src", {

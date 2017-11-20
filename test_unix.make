@@ -16,14 +16,14 @@ ifeq ($(config),debug_x64)
   TARGET = $(TARGETDIR)/test_unix.exe
   OBJDIR = dbg64_unix/obj/x64/Debug/test_unix
   DEFINES += -DDEBUG
-  INCLUDES += -Isrc -Isrc/utils -Iext/zlib -Iext/unarr -Iext/bzip2
+  INCLUDES += -Isrc -Isrc/utils -Iext/unarr
   FORCE_INCLUDE +=
   ALL_CPPFLAGS += $(CPPFLAGS) -MMD -MP $(DEFINES) $(INCLUDES)
   ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m64 -Werror -g -Wall -Wextra -Wno-implicit-fallthrough
   ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -Werror -g -Wall -Wextra -std=c++1z -fno-exceptions -fno-rtti -Wno-implicit-fallthrough
   ALL_RESFLAGS += $(RESFLAGS) $(DEFINES) $(INCLUDES)
-  LIBS += dbg64_unix/unarrlib.lib
-  LDDEPS += dbg64_unix/unarrlib.lib
+  LIBS += dbg64_unix/unarrlib.lib dbg64_unix/zlib.lib
+  LDDEPS += dbg64_unix/unarrlib.lib dbg64_unix/zlib.lib
   ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib64 -m64
   LINKCMD = $(CXX) -o "$@" $(OBJECTS) $(RESOURCES) $(ALL_LDFLAGS) $(LIBS)
   define PREBUILDCMDS
@@ -43,14 +43,14 @@ ifeq ($(config),release_x64)
   TARGET = $(TARGETDIR)/test_unix.exe
   OBJDIR = rel64_unix/obj/x64/Release/test_unix
   DEFINES += -DNDEBUG
-  INCLUDES += -Isrc -Isrc/utils -Iext/zlib -Iext/unarr -Iext/bzip2
+  INCLUDES += -Isrc -Isrc/utils -Iext/unarr
   FORCE_INCLUDE +=
   ALL_CPPFLAGS += $(CPPFLAGS) -MMD -MP $(DEFINES) $(INCLUDES)
   ALL_CFLAGS += $(CFLAGS) $(ALL_CPPFLAGS) -m64 -Werror -O2 -g -Wall -Wextra -Wno-implicit-fallthrough
   ALL_CXXFLAGS += $(CXXFLAGS) $(ALL_CPPFLAGS) -m64 -Werror -O2 -g -Wall -Wextra -std=c++1z -fno-exceptions -fno-rtti -Wno-implicit-fallthrough
   ALL_RESFLAGS += $(RESFLAGS) $(DEFINES) $(INCLUDES)
-  LIBS += rel64_unix/unarrlib.lib
-  LDDEPS += rel64_unix/unarrlib.lib
+  LIBS += rel64_unix/unarrlib.lib rel64_unix/zlib.lib
+  LDDEPS += rel64_unix/unarrlib.lib rel64_unix/zlib.lib
   ALL_LDFLAGS += $(LDFLAGS) -L/usr/lib64 -m64
   LINKCMD = $(CXX) -o "$@" $(OBJECTS) $(RESOURCES) $(ALL_LDFLAGS) $(LIBS)
   define PREBUILDCMDS

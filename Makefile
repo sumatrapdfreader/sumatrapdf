@@ -10,14 +10,18 @@ endif
 
 ifeq ($(config),debug_x64)
   unarrlib_config = debug_x64
+  zlib_config = debug_x64
+  unarr_config = debug_x64
   test_unix_config = debug_x64
 endif
 ifeq ($(config),release_x64)
   unarrlib_config = release_x64
+  zlib_config = release_x64
+  unarr_config = release_x64
   test_unix_config = release_x64
 endif
 
-PROJECTS := unarrlib test_unix
+PROJECTS := unarrlib zlib unarr test_unix
 
 .PHONY: all clean help $(PROJECTS) 
 
@@ -29,7 +33,19 @@ ifneq (,$(unarrlib_config))
 	@${MAKE} --no-print-directory -C . -f unarrlib.make config=$(unarrlib_config)
 endif
 
-test_unix: unarrlib
+zlib:
+ifneq (,$(zlib_config))
+	@echo "==== Building zlib ($(zlib_config)) ===="
+	@${MAKE} --no-print-directory -C . -f zlib.make config=$(zlib_config)
+endif
+
+unarr: unarrlib zlib
+ifneq (,$(unarr_config))
+	@echo "==== Building unarr ($(unarr_config)) ===="
+	@${MAKE} --no-print-directory -C . -f unarr.make config=$(unarr_config)
+endif
+
+test_unix: unarrlib zlib
 ifneq (,$(test_unix_config))
 	@echo "==== Building test_unix ($(test_unix_config)) ===="
 	@${MAKE} --no-print-directory -C . -f test_unix.make config=$(test_unix_config)
@@ -37,6 +53,8 @@ endif
 
 clean:
 	@${MAKE} --no-print-directory -C . -f unarrlib.make clean
+	@${MAKE} --no-print-directory -C . -f zlib.make clean
+	@${MAKE} --no-print-directory -C . -f unarr.make clean
 	@${MAKE} --no-print-directory -C . -f test_unix.make clean
 
 help:
@@ -50,6 +68,8 @@ help:
 	@echo "   all (default)"
 	@echo "   clean"
 	@echo "   unarrlib"
+	@echo "   zlib"
+	@echo "   unarr"
 	@echo "   test_unix"
 	@echo ""
 	@echo "For more information, see http://industriousone.com/premake/quick-start"

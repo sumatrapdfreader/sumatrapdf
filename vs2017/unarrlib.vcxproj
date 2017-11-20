@@ -292,6 +292,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\ext\unarr\_7z\_7z.h" />
+    <ClInclude Include="..\ext\unarr\common\allocator.h" />
+    <ClInclude Include="..\ext\unarr\common\unarr-imp.h" />
+    <ClInclude Include="..\ext\unarr\rar\lzss.h" />
+    <ClInclude Include="..\ext\unarr\rar\rar.h" />
+    <ClInclude Include="..\ext\unarr\rar\rarvm.h" />
+    <ClInclude Include="..\ext\unarr\tar\tar.h" />
+    <ClInclude Include="..\ext\unarr\zip\inflate.h" />
+    <ClInclude Include="..\ext\unarr\zip\zip.h" />
+  </ItemGroup>
+  <ItemGroup>
     <ClCompile Include="..\ext\bzip2\bzip_all.c" />
     <ClCompile Include="..\ext\lzma\C\7zBuf.c" />
     <ClCompile Include="..\ext\lzma\C\7zDec.c" />
@@ -309,6 +320,7 @@
     <ClCompile Include="..\ext\unarr\_7z\_7z.c" />
     <ClCompile Include="..\ext\unarr\common\conv.c" />
     <ClCompile Include="..\ext\unarr\common\crc32.c" />
+    <ClCompile Include="..\ext\unarr\common\custalloc.c" />
     <ClCompile Include="..\ext\unarr\common\stream.c" />
     <ClCompile Include="..\ext\unarr\common\unarr.c" />
     <ClCompile Include="..\ext\unarr\lzmasdk\CpuArch.c" />

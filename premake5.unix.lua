@@ -71,14 +71,29 @@ workspace "SumatraPDF"
     includedirs { "ext/zlib", "ext/bzip2" }
     unarr_no_lzma_files()
 
-  project "test_unix"
+  project "zlib"
+    kind "StaticLib"
+    language "C"
+    filter "toolset:gcc"
+      disablewarnings { "implicit-function-declaration", "shift-negative-value" }
+    filter {}
+    zlib_files()
+
+  project "unarr"
+    kind "ConsoleApp"
+    language "C"
+    disablewarnings { "4100" }
+    files { "ext/unarr/main.c" }
+    links { "unarrlib", "zlib" }
+
+    project "test_unix"
     kind "ConsoleApp"
     language "C++"
     cppdialect "C++17"
 
-    includedirs { "src", "src/utils", "ext/zlib", "ext/unarr", "ext/bzip2" }
+    includedirs { "src", "src/utils", "ext/unarr" }
 
-    links { "unarrlib" }
+    links { "unarrlib", "zlib" }
 
     files {
       "src/utils/Archive.cpp",
