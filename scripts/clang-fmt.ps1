@@ -114,7 +114,8 @@ $files =
 "src\installer\Install.cpp",
 "src\installer\Installer.cpp",
 "src\installer\Installer.h",
-"src\installer\Uninstall.cpp"
+"src\installer\Uninstall.cpp",
+"src\tools\signfile.cpp"
 
 foreach ($file in $files) {
   $files2 = Get-ChildItem $file

@@ -10,7 +10,8 @@
 
 // To produce a usable certificate, use the SDK's makecert.exe tool:
 // makecert -r -n "CN=SumatraPDF Authority" -cy authority -a sha1 -sv sumatra.pvk sumatra.cer
-// makecert -n "CN=SumatraPDF" -ic sumatra.cer -iv sumatra.pvk -a sha1 -sky signature -pe -sr currentuser -ss My sumatra-app.cer
+// makecert -n "CN=SumatraPDF" -ic sumatra.cer -iv sumatra.pvk -a sha1 -sky signature -pe -sr currentuser -ss My
+// sumatra-app.cer
 
 #include "BaseUtil.h"
 #include "CmdLineParser.h"
@@ -19,13 +20,13 @@
 
 #define ErrOut(msg, ...) fwprintf(stderr, TEXT(msg) TEXT("\n"), __VA_ARGS__)
 
-void ShowUsage(const WCHAR *exeName)
-{
+void ShowUsage(const WCHAR* exeName) {
     ErrOut("Syntax: %s", path::GetBaseName(exeName));
-    ErrOut("\t[-cert CertName]\t- name of the certificate to use"); // when omitted uses first available
+    ErrOut("\t[-cert CertName]\t- name of the certificate to use");      // when omitted uses first available
     ErrOut("\t[-out filename.out]\t- where to save the signature file"); // when omitted uses stdout
-    ErrOut("\t[-comment #]\t\t- comment syntax for signed text files"); // needed when saving the signature into the signed file
-    ErrOut("\t[-pubkey public.key]\t- where to save the public key"); // usually not needed
+    ErrOut("\t[-comment #]\t\t- comment syntax for signed text files");  // needed when saving the signature into the
+                                                                         // signed file
+    ErrOut("\t[-pubkey public.key]\t- where to save the public key");    // usually not needed
     ErrOut("\tfilename.in"); // usually needed, optional when -pubkey is present
     ErrOut("");
 
@@ -54,15 +55,14 @@ void ShowUsage(const WCHAR *exeName)
     CertCloseStore(hStore, 0);
 }
 
-int main()
-{
+int main() {
     WStrVec args;
     ParseCmdLine(GetCommandLine(), args);
 
-    const WCHAR *filePath = nullptr;
-    const WCHAR *certName = nullptr;
-    const WCHAR *signFilePath = nullptr;
-    const WCHAR *pubkeyPath = nullptr;
+    const WCHAR* filePath = nullptr;
+    const WCHAR* certName = nullptr;
+    const WCHAR* signFilePath = nullptr;
+    const WCHAR* pubkeyPath = nullptr;
     AutoFree inFileCommentSyntax;
 
 #define is_arg(name, var) (str::EqI(args.at(i), TEXT(name)) && i + 1 < args.size() && !var)
@@ -82,7 +82,7 @@ int main()
     }
 #undef is_arg
     if (!filePath && !pubkeyPath) {
-SyntaxError:
+    SyntaxError:
         ShowUsage(args.at(0));
         return 1;
     }
@@ -102,7 +102,11 @@ SyntaxError:
     ScopedMem<BYTE> signature;
     BOOL ok;
 
-#define QuitIfNot(cond, msg, ...) if (!(cond)) { ErrOut(msg, __VA_ARGS__); goto ErrorQuit; }
+#define QuitIfNot(cond, msg, ...) \
+    if (!(cond)) {                \
+        ErrOut(msg, __VA_ARGS__); \
+        goto ErrorQuit;           \
+    }
 
     // find a certificate for hash signing
     if (!certName) {
@@ -118,11 +122,11 @@ SyntaxError:
                 break;
         }
         QuitIfNot(pCertCtx, "Error: Failed to find a signature certificate in store \"My\"!");
-    }
-    else {
+    } else {
         DWORD keySpec;
         do {
-            pCertCtx = CertFindCertificateInStore(hStore, X509_ASN_ENCODING | PKCS_7_ASN_ENCODING, 0, CERT_FIND_SUBJECT_STR, certName, pCertCtx);
+            pCertCtx = CertFindCertificateInStore(hStore, X509_ASN_ENCODING | PKCS_7_ASN_ENCODING, 0,
+                                                  CERT_FIND_SUBJECT_STR, certName, pCertCtx);
             if (!pCertCtx)
                 break;
             keySpec = 0;
@@ -158,15 +162,14 @@ SyntaxError:
     QuitIfNot(ok, "Error: Can't put signature comment into binary or empty file!");
     if (inFileCommentSyntax) {
         // cut previous signature from file
-        char *lastLine = data + dataLen - 1;
+        char* lastLine = data + dataLen - 1;
         while (lastLine > data.Get() && *(lastLine - 1) != '\n')
             lastLine--;
-        const char *lf = str::Find(data, "\r\n") || !str::FindChar(data, '\n') ? "\r\n" : "\n";
+        const char* lf = str::Find(data, "\r\n") || !str::FindChar(data, '\n') ? "\r\n" : "\n";
         if (lastLine > data && str::StartsWith(lastLine, inFileCommentSyntax.Get()) &&
             str::StartsWith(lastLine + str::Len(inFileCommentSyntax), " Signature sha1:")) {
             strcpy_s(lastLine, 3, lf);
-        }
-        else {
+        } else {
             data.Set(str::Format("%s%s", data, lf));
         }
         dataLen = str::Len(data);
@@ -177,7 +180,7 @@ SyntaxError:
     QuitIfNot(ok, "Error: Failed to create a SHA-1 hash!");
 #ifdef _WIN64
     {
-        const BYTE *bytes = (const BYTE *)data.Get();
+        const BYTE* bytes = (const BYTE*)data.Get();
         size_t bytesLen = dataLen;
         for (; bytesLen > ULONG_MAX; bytes += ULONG_MAX, bytesLen -= ULONG_MAX) {
             ok = ok && CryptHashData(hHash, bytes, ULONG_MAX, 0);
@@ -185,7 +188,7 @@ SyntaxError:
         ok = ok && CryptHashData(hHash, bytes, (ULONG)bytesLen, 0);
     }
 #else
-    ok = CryptHashData(hHash, (const BYTE *)data.Get(), dataLen, 0);
+    ok = CryptHashData(hHash, (const BYTE*)data.Get(), dataLen, 0);
 #endif
     QuitIfNot(ok, "Error: Failed to calculate the SHA-1 hash!");
     DWORD sigLen = 0;
@@ -196,27 +199,28 @@ SyntaxError:
     QuitIfNot(ok, "Error: Failed to sign the SHA-1 hash!");
 
     // convert signature to ASCII text
-    hexSignature.Set(str::MemToHex((const unsigned char *)signature.Get(), sigLen));
+    hexSignature.Set(str::MemToHex((const unsigned char*)signature.Get(), sigLen));
     if (inFileCommentSyntax) {
-        const char *lf = str::Find(data, "\r\n") || !str::FindChar(data, '\n') ? "\r\n" : "\n";
+        const char* lf = str::Find(data, "\r\n") || !str::FindChar(data, '\n') ? "\r\n" : "\n";
         data.Set(str::Format("%s%s Signature sha1:%s%s", data, inFileCommentSyntax, hexSignature, lf));
         dataLen = str::Len(data);
         hexSignature.SetCopy(data);
-    }
-    else {
+    } else {
         hexSignature.Set(str::Format("sha1:%s\r\n", hexSignature));
     }
 
-    // verify signature
-    ok = VerifySHA1Signature(data.Get(), dataLen, inFileCommentSyntax ? nullptr : hexSignature.Get(), pubkey, pubkeyLen);
+    const char* sig = nullptr;
+    if (!inFileCommentSyntax) {
+        sig = hexSignature.Get();
+    }
+    ok = VerifySHA1Signature(data.Get(), dataLen, sig, pubkey, pubkeyLen);
     QuitIfNot(ok, "Error: Failed to verify signature!");
 
     // save/display signature
     if (signFilePath) {
         ok = file::WriteAll(signFilePath, hexSignature.Get(), str::Len(hexSignature));
         QuitIfNot(ok, "Error: Failed to write signature to \"%s\"!", signFilePath);
-    }
-    else {
+    } else {
         fprintf(stdout, "%s", hexSignature.Get());
     }
     errorCode = 0;
