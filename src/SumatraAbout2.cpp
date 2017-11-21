@@ -19,35 +19,34 @@ using namespace mui;
 /* This is an experiment to re-implement About window using a generic
 layout logic */
 
-#define WND_CLASS_ABOUT2        L"WND_CLASS_SUMATRA_ABOUT2"
-#define ABOUT_WIN_TITLE         _TR("About SumatraPDF")
-#define TABLE_BORDER_WIDTH      2.f
+#define WND_CLASS_ABOUT2 L"WND_CLASS_SUMATRA_ABOUT2"
+#define ABOUT_WIN_TITLE _TR("About SumatraPDF")
+#define TABLE_BORDER_WIDTH 2.f
 
-#define VERSION_TXT             L"v" CURR_VERSION_STR
+#define VERSION_TXT L"v" CURR_VERSION_STR
 #ifdef SVN_PRE_RELEASE_VER
- #define VERSION_SUB_TXT        L"Pre-release"
+#define VERSION_SUB_TXT L"Pre-release"
 #else
- #define VERSION_SUB_TXT        L""
+#define VERSION_SUB_TXT L""
 #endif
 
-#define SUMATRA_TXT_FONT        L"Arial Black"
-#define SUMATRA_TXT_FONT_SIZE   18.f
+#define SUMATRA_TXT_FONT L"Arial Black"
+#define SUMATRA_TXT_FONT_SIZE 18.f
 
 static ATOM gAboutWndAtom = 0;
 static HWND gHwndAbout2 = nullptr;
-static HwndWrapper *mainWnd = nullptr;
+static HwndWrapper* mainWnd = nullptr;
 
-static Style *   styleMainWnd = nullptr;
-static Style *   styleGrid = nullptr;
-static Style *   styleCellLeft = nullptr;
-static Style *   styleCellVer = nullptr;
-static Style *   styleLogo = nullptr;
-static Style *   styleBtnVer = nullptr;
-static Style *   styleBtnLeft = nullptr;
-static Style *   styleBtnRight = nullptr;
+static Style* styleMainWnd = nullptr;
+static Style* styleGrid = nullptr;
+static Style* styleCellLeft = nullptr;
+static Style* styleCellVer = nullptr;
+static Style* styleLogo = nullptr;
+static Style* styleBtnVer = nullptr;
+static Style* styleBtnLeft = nullptr;
+static Style* styleBtnRight = nullptr;
 
-static void CreateAboutStyles()
-{
+static void CreateAboutStyles() {
     // only create styles once
     if (styleMainWnd)
         return;
@@ -102,9 +101,9 @@ static void CreateAboutStyles()
 
 struct AboutLayoutInfoEl {
     /* static data, must be provided */
-    const WCHAR *   leftTxt;
-    const WCHAR *   rightTxt;
-    const WCHAR *   url;
+    const WCHAR* leftTxt;
+    const WCHAR* rightTxt;
+    const WCHAR* url;
 };
 
 // TODO: replace this link with a better one where license information is nicely collected/linked
@@ -119,48 +118,46 @@ struct AboutLayoutInfoEl {
 #endif
 
 static AboutLayoutInfoEl gAboutLayoutInfo[] = {
-    { L"website",        L"SumatraPDF website",   WEBSITE_MAIN_URL},
-    { L"manual",         L"SumatraPDF manual",    WEBSITE_MANUAL_URL },
-    { L"forums",         L"SumatraPDF forums",    L"https://forum.sumatrapdfreader.org/" },
-    { L"programming",    L"The Programmers",      URL_AUTHORS },
-    { L"translations",   L"The Translators",      URL_TRANSLATORS },
-    { L"licenses",       L"Various Open Source",  URL_LICENSE },
+    {L"website", L"SumatraPDF website", WEBSITE_MAIN_URL},
+    {L"manual", L"SumatraPDF manual", WEBSITE_MANUAL_URL},
+    {L"forums", L"SumatraPDF forums", L"https://forum.sumatrapdfreader.org/"},
+    {L"programming", L"The Programmers", URL_AUTHORS},
+    {L"translations", L"The Translators", URL_TRANSLATORS},
+    {L"licenses", L"Various Open Source", URL_LICENSE},
 #ifdef SVN_PRE_RELEASE_VER
-    { L"a note",         L"Pre-release version, for testing only!", nullptr },
+    {L"a note", L"Pre-release version, for testing only!", nullptr},
 #endif
 #ifdef DEBUG
-    { L"a note",         L"Debug version, for testing only!", nullptr },
+    {L"a note", L"Debug version, for testing only!", nullptr},
 #endif
 };
 
 #define COL1 RGB(196, 64, 50)
 #define COL2 RGB(227, 107, 35)
-#define COL3 RGB(93,  160, 40)
+#define COL3 RGB(93, 160, 40)
 #define COL4 RGB(69, 132, 190)
 #define COL5 RGB(112, 115, 207)
 
 #define LOGO_TEXT L"SumatraPDF"
 
-static COLORREF gSumatraLogoCols[] = { COL1, COL2, COL3, COL4, COL5, COL5, COL4, COL3, COL2, COL1 };
+static COLORREF gSumatraLogoCols[] = {COL1, COL2, COL3, COL4, COL5, COL5, COL4, COL3, COL2, COL1};
 
-class SumatraLogo : public Control
-{
-public:
+class SumatraLogo : public Control {
+  public:
     SumatraLogo() {}
     virtual ~SumatraLogo() {}
     virtual Size Measure(const Size availableSize);
-    virtual void Paint(Graphics *gfx, int offX, int offY);
+    virtual void Paint(Graphics* gfx, int offX, int offY);
 };
 
-Size SumatraLogo::Measure(const Size availableSize)
-{
+Size SumatraLogo::Measure(const Size availableSize) {
     UNUSED(availableSize);
-    Graphics *gfx = AllocGraphicsForMeasureText();
-    CachedStyle *s = cachedStyle;
-    CachedFont *cachedFont = GetCachedFont(s->fontName, s->fontSize, s->fontWeight);
-    Font *font = cachedFont->font;
+    Graphics* gfx = AllocGraphicsForMeasureText();
+    CachedStyle* s = cachedStyle;
+    CachedFont* cachedFont = GetCachedFont(s->fontName, s->fontSize, s->fontWeight);
+    Font* font = cachedFont->font;
     CrashIf(!font);
-    const WCHAR *txt = LOGO_TEXT;
+    const WCHAR* txt = LOGO_TEXT;
     RectF bbox;
     int textDx = 0;
     while (*txt) {
@@ -174,18 +171,18 @@ Size SumatraLogo::Measure(const Size availableSize)
     return desiredSize;
 }
 
-void SumatraLogo::Paint(Graphics *gfx, int offX, int offY)
-{
+void SumatraLogo::Paint(Graphics* gfx, int offX, int offY) {
     CrashIf(!IsVisible());
 
-    CachedStyle *s = cachedStyle;
-    CachedFont *cachedFont = GetCachedFont(s->fontName, s->fontSize, s->fontWeight);
-    Font *font = cachedFont->font;
+    CachedStyle* s = cachedStyle;
+    CachedFont* cachedFont = GetCachedFont(s->fontName, s->fontSize, s->fontWeight);
+    Font* font = cachedFont->font;
     CrashIf(!font);
 
-    int x = offX; int y = offY;
+    int x = offX;
+    int y = offY;
     int n = 0;
-    const WCHAR *txt = LOGO_TEXT;
+    const WCHAR* txt = LOGO_TEXT;
     RectF bbox;
     while (*txt) {
         Color c;
@@ -200,24 +197,22 @@ void SumatraLogo::Paint(Graphics *gfx, int offX, int offY)
     }
 }
 
-class ButtonUrlHandler
-{
-public:
-    void Clicked(Control *c, int x, int y);
+class ButtonUrlHandler {
+  public:
+    void Clicked(Control* c, int x, int y);
 };
 
-void ButtonUrlHandler::Clicked(Control *c, int x, int y)
-{
-    UNUSED(x); UNUSED(y);
-    WCHAR *url = c->toolTip;
+void ButtonUrlHandler::Clicked(Control* c, int x, int y) {
+    UNUSED(x);
+    UNUSED(y);
+    WCHAR* url = c->toolTip;
     LaunchBrowser(url);
 }
 
 // we only need one instance
-static ButtonUrlHandler *gButtonUrlHandler = nullptr;
+static ButtonUrlHandler* gButtonUrlHandler = nullptr;
 
-static void CreateAboutMuiWindow(HWND hwnd)
-{
+static void CreateAboutMuiWindow(HWND hwnd) {
     if (!gButtonUrlHandler)
         gButtonUrlHandler = new ButtonUrlHandler();
 
@@ -225,19 +220,19 @@ static void CreateAboutMuiWindow(HWND hwnd)
     mainWnd = new HwndWrapper(hwnd);
     mainWnd->centerContent = true;
     mainWnd->SetStyle(styleMainWnd);
-    EventMgr *em = mainWnd->evtMgr;
+    EventMgr* em = mainWnd->evtMgr;
     CrashIf(!em);
 
-    Grid *grid = new Grid(styleGrid);
+    Grid* grid = new Grid(styleGrid);
     Grid::CellData ld;
 
-    SumatraLogo *logo = new SumatraLogo();
+    SumatraLogo* logo = new SumatraLogo();
     logo->SetStyle(styleLogo);
     ld.Set(logo, 0, 0, ElAlign::Center);
     ld.colSpan = 2;
     grid->Add(ld);
 
-    Button *b = new Button(VERSION_TXT, styleBtnVer, styleBtnVer);
+    Button* b = new Button(VERSION_TXT, styleBtnVer, styleBtnVer);
     ld.Set(b, 1, 0, ElAlign::Center);
     ld.colSpan = 2;
     ld.SetStyle(styleCellVer);
@@ -245,9 +240,9 @@ static void CreateAboutMuiWindow(HWND hwnd)
 
     int rows = dimof(gAboutLayoutInfo);
     for (int n = 0; n < rows; n++) {
-        const WCHAR *left = gAboutLayoutInfo[n].leftTxt;
-        const WCHAR *right = gAboutLayoutInfo[n].rightTxt;
-        const WCHAR *url = gAboutLayoutInfo[n].url;
+        const WCHAR* left = gAboutLayoutInfo[n].leftTxt;
+        const WCHAR* right = gAboutLayoutInfo[n].rightTxt;
+        const WCHAR* url = gAboutLayoutInfo[n].url;
 
         int row = n + 2;
         b = new Button(left, styleBtnLeft, styleBtnLeft);
@@ -262,17 +257,14 @@ static void CreateAboutMuiWindow(HWND hwnd)
         } else {
             b = new Button(right, styleBtnLeft, styleBtnLeft);
         }
-        em->EventsForControl(b)->Clicked = [&](Control*c, int x, int y) {
-            gButtonUrlHandler->Clicked(c, x, y);
-        };
+        em->EventsForControl(b)->Clicked = [&](Control* c, int x, int y) { gButtonUrlHandler->Clicked(c, x, y); };
         ld.Set(b, row, 1);
         grid->Add(ld);
     }
     mainWnd->AddChild(grid);
 }
 
-static void DestroyAboutMuiWindow()
-{
+static void DestroyAboutMuiWindow() {
     gHwndAbout2 = nullptr;
     delete mainWnd;
     mainWnd = nullptr;
@@ -280,8 +272,7 @@ static void DestroyAboutMuiWindow()
     gButtonUrlHandler = nullptr;
 }
 
-static void CopyAboutInfoToClipboard(HWND hwnd)
-{
+static void CopyAboutInfoToClipboard(HWND hwnd) {
     UNUSED(hwnd);
     str::Str<WCHAR> info(512);
     info.AppendFmt(L"%s %s\r\n", APP_NAME_STR, VERSION_TXT);
@@ -305,8 +296,7 @@ static void CopyAboutInfoToClipboard(HWND hwnd)
     CopyTextToClipboard(info.LendData());
 }
 
-static LRESULT CALLBACK WndProcAbout2(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
+static LRESULT CALLBACK WndProcAbout2(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     if (mainWnd) {
         bool wasHandled;
         LRESULT res = mainWnd->evtMgr->OnMessage(msg, wParam, lParam, wasHandled);
@@ -339,9 +329,8 @@ static LRESULT CALLBACK WndProcAbout2(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
     return 0;
 }
 
-void OnMenuAbout2()
-{
-    WNDCLASSEX  wcex;
+void OnMenuAbout2() {
+    WNDCLASSEX wcex;
 
     if (gHwndAbout2) {
         SetActiveWindow(gHwndAbout2);
@@ -354,13 +343,9 @@ void OnMenuAbout2()
         gAboutWndAtom = RegisterClassEx(&wcex);
         CrashIf(!gAboutWndAtom);
     }
-    gHwndAbout2 = CreateWindow(
-            WND_CLASS_ABOUT2, ABOUT_WIN_TITLE,
-            WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
-            CW_USEDEFAULT, CW_USEDEFAULT,
-            520, 400,
-            nullptr, nullptr,
-            GetModuleHandle(nullptr), nullptr);
+    gHwndAbout2 =
+        CreateWindow(WND_CLASS_ABOUT2, ABOUT_WIN_TITLE, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU, CW_USEDEFAULT,
+                     CW_USEDEFAULT, 520, 400, nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
     if (!gHwndAbout2)
         return;
 
