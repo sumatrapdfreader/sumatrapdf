@@ -46,7 +46,7 @@ $files =
 "src\RenderCache.*",
 "src\Search.*",
 "src\Selection.*",
-#"src\SetiingsStructs.*",
+#"src\SetiingsStructs.*",      # auto-generated
 "src\StressTesting.*",
 "src\SumatraAbout.*",
 "src\SumatraAbout2.*",
@@ -67,6 +67,7 @@ $files =
 "src\UnitTests.*",
 "src\WindowInfo.*",
 "src\mui\SvgPath.*",
+# TODO: the rest of src\mui\
 "src\utils\Archive.*",
 "src\utils\BaseUtil.*",
 "src\utils\BitReader.*",
@@ -82,7 +83,7 @@ $files =
 "src\utils\Dpi.*",
 "src\utils\FileUtil.*",
 "src\utils\FileWatcher.*",
-#"src\utils\FzImgReader.*",
+"src\utils\FzImgReader.*",
 "src\utils\GdiPlusUtil.*",
 #"src\utils\HtmlParserLookup.*",
 #"src\utils\HtmlPrettyPrint.*",
