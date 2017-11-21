@@ -6,45 +6,37 @@
 // must be last due to assert() over-write
 #include "UtAssert.h"
 
-static void StrReplaceTestOne(const char *s, const char *toReplace, const char *replaceWith, const char *expected)
-{
-    char *res = str::Replace(s, toReplace, replaceWith);
+static void StrReplaceTestOne(const char* s, const char* toReplace, const char* replaceWith, const char* expected) {
+    char* res = str::Replace(s, toReplace, replaceWith);
     utassert(str::Eq(res, expected));
     free(res);
 }
 
-static void StrReplaceTest()
-{
-    const char *d[] = {
-        "golagon", "gon", "rabato", "golarabato",
-        "a", "a", "bor", "bor",
-        "abora", "a", "", "bor",
-        "aaaaaa", "a", "b", "bbbbbb",
-        "aba", "a", "ccc", "cccbccc",
-        "Aba", "a", "c", "Abc",
-        "abc", "abc", "", "",
-        nullptr, "a", "b", nullptr,
-        "a", "", "b", nullptr,
-        "a", "b", nullptr, nullptr,
+static void StrReplaceTest() {
+    const char* d[] = {
+        "golagon", "gon",   "rabato", "golarabato", "a",   "a",      "bor", "bor", "abora", "a",
+        "",        "bor",   "aaaaaa", "a",          "b",   "bbbbbb", "aba", "a",   "ccc",   "cccbccc",
+        "Aba",     "a",     "c",      "Abc",        "abc", "abc",    "",    "",    nullptr, "a",
+        "b",       nullptr, "a",      "",           "b",   nullptr,  "a",   "b",   nullptr, nullptr,
     };
     size_t n = dimof(d) / 4;
     for (size_t i = 0; i < n; i++) {
-        StrReplaceTestOne(d[i*4], d[i*4+1], d[i*4+2], d[i*4+3]);
+        StrReplaceTestOne(d[i * 4], d[i * 4 + 1], d[i * 4 + 2], d[i * 4 + 3]);
     }
 
     struct {
         const WCHAR *string, *find, *replace, *result;
     } data[] = {
-        { L"golagon", L"gon", L"rabato", L"golarabato" },
-        { L"a", L"a", L"bor", L"bor" },
-        { L"abora", L"a", L"", L"bor" },
-        { L"aaaaaa", L"a", L"b", L"bbbbbb" },
-        { L"aba", L"a", L"ccc", L"cccbccc" },
-        { L"Aba", L"a", L"c", L"Abc" },
-        { L"abc", L"abc", L"", L"" },
-        { nullptr, L"a", L"b", nullptr },
-        { L"a", L"", L"b", nullptr },
-        { L"a", L"b", nullptr, nullptr },
+        {L"golagon", L"gon", L"rabato", L"golarabato"},
+        {L"a", L"a", L"bor", L"bor"},
+        {L"abora", L"a", L"", L"bor"},
+        {L"aaaaaa", L"a", L"b", L"bbbbbb"},
+        {L"aba", L"a", L"ccc", L"cccbccc"},
+        {L"Aba", L"a", L"c", L"Abc"},
+        {L"abc", L"abc", L"", L""},
+        {nullptr, L"a", L"b", nullptr},
+        {L"a", L"", L"b", nullptr},
+        {L"a", L"b", nullptr, nullptr},
     };
     for (size_t i = 0; i < dimof(data); i++) {
         AutoFreeW result(str::Replace(data[i].string, data[i].find, data[i].replace));
@@ -52,9 +44,8 @@ static void StrReplaceTest()
     }
 }
 
-static void StrSeqTest()
-{
-    const char *s = "foo\0a\0bar\0";
+static void StrSeqTest() {
+    const char* s = "foo\0a\0bar\0";
     utassert(0 == seqstrings::StrToIdx(s, "foo"));
     utassert(1 == seqstrings::StrToIdx(s, "a"));
     utassert(2 == seqstrings::StrToIdx(s, "bar"));
@@ -86,10 +77,9 @@ static void StrSeqTest()
     utassert(-1 == seqstrings::StrToIdx(s, L"ba"));
 }
 
-static void StrIsDigitTest()
-{
-    const char *nonDigits = "/:.bz{}";
-    const char *digits = "0123456789";
+static void StrIsDigitTest() {
+    const char* nonDigits = "/:.bz{}";
+    const char* digits = "0123456789";
     for (size_t i = 0; i < str::Len(nonDigits); i++) {
 #if 0
         if (str::IsDigit(nonDigits[i])) {
@@ -103,8 +93,8 @@ static void StrIsDigitTest()
         utassert(str::IsDigit(digits[i]));
     }
 
-    const WCHAR *nonDigitsW = L"/:.bz{}";
-    const WCHAR *digitsW = L"0123456789";
+    const WCHAR* nonDigitsW = L"/:.bz{}";
+    const WCHAR* digitsW = L"0123456789";
     for (size_t i = 0; i < str::Len(nonDigitsW); i++) {
         utassert(!str::IsDigit(nonDigitsW[i]));
     }
@@ -113,8 +103,7 @@ static void StrIsDigitTest()
     }
 }
 
-static void StrConvTest()
-{
+static void StrConvTest() {
     WCHAR wbuf[4];
     char cbuf[4];
     size_t conv = str::Utf8ToWcharBuf("testing", 4, wbuf, dimof(wbuf));
@@ -131,8 +120,7 @@ static void StrConvTest()
     utassert(conv == 0 && str::Eq(cbuf, ""));
 }
 
-static void StrUrlExtractTest()
-{
+static void StrUrlExtractTest() {
     utassert(!url::GetFileName(L""));
     utassert(!url::GetFileName(L"#hash_only"));
     utassert(!url::GetFileName(L"?query=only"));
@@ -145,13 +133,12 @@ static void StrUrlExtractTest()
     fileName.Set(url::GetFileName(L"http://example.net/pa%74h/na%2f%6d%65%2ee%78t"));
     utassert(str::Eq(fileName, L"na/me.ext"));
     fileName.Set(url::GetFileName(L"http://example.net/%E2%82%AC"));
-    utassert(str::Eq((char *)fileName.Get(), "\xAC\x20"));
+    utassert(str::Eq((char*)fileName.Get(), "\xAC\x20"));
 }
 
-void StrTest()
-{
+void StrTest() {
     WCHAR buf[32];
-    WCHAR *str = L"a string";
+    WCHAR* str = L"a string";
     utassert(str::Len(str) == 8);
     utassert(str::Eq(str, L"a string") && str::Eq(str, str));
     utassert(!str::Eq(str, nullptr) && !str::Eq(str, L"A String"));
@@ -163,7 +150,7 @@ void StrTest()
     utassert(!str::StartsWith(str, L"Astr"));
     utassert(str::EndsWith(str, L"ing") && str::EndsWithI(str, L"ING"));
     utassert(!str::EndsWith(str, L"ung"));
-    utassert(str::IsEmpty((char*)nullptr) && str::IsEmpty((WCHAR*)nullptr)&& str::IsEmpty(L"") && !str::IsEmpty(str));
+    utassert(str::IsEmpty((char*)nullptr) && str::IsEmpty((WCHAR*)nullptr) && str::IsEmpty(L"") && !str::IsEmpty(str));
     utassert(str::FindChar(str, 's') && !str::FindChar(str, 'S'));
     size_t len = str::BufSet(buf, dimof(buf), str);
     utassert(len == str::Len(buf) && str::Eq(buf, str));
@@ -233,8 +220,8 @@ void StrTest()
     str = L"[Open(\"filename.pdf\",0,1,0)]";
     {
         UINT u1 = 0;
-        WCHAR *str1 = nullptr;
-        const WCHAR *end = str::Parse(str, L"[Open(\"%s\",%? 0,%u,0)]", &str1, &u1);
+        WCHAR* str1 = nullptr;
+        const WCHAR* end = str::Parse(str, L"[Open(\"%s\",%? 0,%u,0)]", &str1, &u1);
         utassert(end && !*end);
         utassert(u1 == 1 && str::Eq(str1, L"filename.pdf"));
         free(str1);
@@ -243,7 +230,7 @@ void StrTest()
     {
         UINT u1 = 0;
         AutoFreeW str1;
-        const WCHAR *end = str::Parse(str, L"[Open(\"%S\",0%?,%u,0)]", &str1, &u1);
+        const WCHAR* end = str::Parse(str, L"[Open(\"%S\",0%?,%u,0)]", &str1, &u1);
         utassert(end && !*end);
         utassert(u1 == 1 && str::Eq(str1, L"filename.pdf"));
 
@@ -255,7 +242,7 @@ void StrTest()
 
     {
         int i1, i2;
-        const WCHAR *end = str::Parse(L"1, 2+3", L"%d,%d", &i1, &i2);
+        const WCHAR* end = str::Parse(L"1, 2+3", L"%d,%d", &i1, &i2);
         utassert(end && str::Eq(end, L"+3"));
         utassert(i1 == 1 && i2 == 2);
         end = str::Parse(end, L"+3");
@@ -289,21 +276,22 @@ void StrTest()
     utassert(!str::Parse("abcd", 3, "abcd"));
 
     {
-        const char *str1 = "string";
+        const char* str1 = "string";
         utassert(str::Parse(str1, 4, "str") == str1 + 3);
 
         float f1, f2;
-        const WCHAR *end = str::Parse(L"%1.23y -2e-3z", L"%%%fy%fz%$", &f1, &f2);
+        const WCHAR* end = str::Parse(L"%1.23y -2e-3z", L"%%%fy%fz%$", &f1, &f2);
         utassert(end && !*end);
         utassert(f1 == 1.23f && f2 == -2e-3f);
-        f1 = 0; f2 = 0;
-        const char *end2 = str::Parse("%1.23y -2e-3zlah", 13, "%%%fy%fz%$", &f1, &f2);
+        f1 = 0;
+        f2 = 0;
+        const char* end2 = str::Parse("%1.23y -2e-3zlah", 13, "%%%fy%fz%$", &f1, &f2);
         utassert(end2 && str::Eq(end2, "lah"));
         utassert(f1 == 1.23f && f2 == -2e-3f);
     }
 
     {
-        WCHAR *str1 = nullptr;
+        WCHAR* str1 = nullptr;
         WCHAR c1;
         utassert(!str::Parse(L"no exclamation mark?", L"%s!", &str1));
         utassert(!str1);
@@ -329,10 +317,11 @@ void StrTest()
     }
 
     {
-        const char *path = "M10 80 C 40 10, 65\r\n10,\t95\t80 S 150 150, 180 80\nA 45 45, 0, 1, 0, 125 125\nA 1 2 3\n0\n1\n20  -20";
+        const char* path =
+            "M10 80 C 40 10, 65\r\n10,\t95\t80 S 150 150, 180 80\nA 45 45, 0, 1, 0, 125 125\nA 1 2 3\n0\n1\n20  -20";
         float f[6];
         int b[2];
-        const char *s = str::Parse(path, "M%f%_%f", &f[0], &f[1]);
+        const char* s = str::Parse(path, "M%f%_%f", &f[0], &f[1]);
         utassert(s && f[0] == 10 && f[1] == 80);
         s = str::Parse(s + 1, "C%f%_%f,%f%_%f,%f%_%f", &f[0], &f[1], &f[2], &f[3], &f[4], &f[5]);
         utassert(s && f[0] == 40 && f[1] == 10 && f[2] == 65 && f[3] == 10 && f[4] == 95 && f[5] == 80);
@@ -344,10 +333,10 @@ void StrTest()
         utassert(s && f[0] == 1 && f[1] == 2 && f[2] == 3 && b[0] == 0 && b[1] == 1 && f[4] == 20 && f[5] == -20);
     }
 
-    // the test string should only contain ASCII characters,
-    // as all others might not be available in all code pages
+        // the test string should only contain ASCII characters,
+        // as all others might not be available in all code pages
 #define TEST_STRING "aBc"
-    char *strA = str::conv::ToAnsi(TEXT(TEST_STRING));
+    char* strA = str::conv::ToAnsi(TEXT(TEST_STRING));
     utassert(str::Eq(strA, TEST_STRING));
     str = str::conv::FromAnsi(strA);
     free(strA);
@@ -371,16 +360,10 @@ void StrTest()
 
     struct {
         size_t number;
-        const WCHAR *result;
+        const WCHAR* result;
     } formatNumData[] = {
-        { 1,        L"1" },
-        { 12,       L"12" },
-        { 123,      L"123" },
-        { 1234,     L"1,234" },
-        { 12345,    L"12,345" },
-        { 123456,   L"123,456" },
-        { 1234567,  L"1,234,567" },
-        { 12345678, L"12,345,678" },
+        {1, L"1"},          {12, L"12"},          {123, L"123"},           {1234, L"1,234"},
+        {12345, L"12,345"}, {123456, L"123,456"}, {1234567, L"1,234,567"}, {12345678, L"12,345,678"},
     };
 
     for (int i = 0; i < dimof(formatNumData); i++) {
@@ -390,15 +373,10 @@ void StrTest()
 
     struct {
         double number;
-        const WCHAR *result;
+        const WCHAR* result;
     } formatFloatData[] = {
-        { 1,        L"1.0" },
-        { 1.2,      L"1.2" },
-        { 1.23,     L"1.23" },
-        { 1.234,    L"1.23" },
-        { 12.345,   L"12.35" },
-        { 123.456,  L"123.46" },
-        { 1234.5678,L"1,234.57" },
+        {1, L"1.0"},        {1.2, L"1.2"},        {1.23, L"1.23"},          {1.234, L"1.23"},
+        {12.345, L"12.35"}, {123.456, L"123.46"}, {1234.5678, L"1,234.57"},
     };
 
     for (int i = 0; i < dimof(formatFloatData); i++) {
@@ -418,20 +396,11 @@ void StrTest()
 
     struct {
         int number;
-        const WCHAR *result;
+        const WCHAR* result;
     } formatRomanData[] = {
-        { 1,    L"I" },
-        { 3,    L"III" },
-        { 6,    L"VI" },
-        { 14,   L"XIV" },
-        { 49,   L"XLIX" },
-        { 176,  L"CLXXVI" },
-        { 499,  L"CDXCIX" },
-        { 1666, L"MDCLXVI" },
-        { 2011, L"MMXI" },
-        { 12345,L"MMMMMMMMMMMMCCCXLV" },
-        { 0,    nullptr },
-        { -133, nullptr },
+        {1, L"I"},        {3, L"III"},      {6, L"VI"},         {14, L"XIV"},    {49, L"XLIX"},
+        {176, L"CLXXVI"}, {499, L"CDXCIX"}, {1666, L"MDCLXVI"}, {2011, L"MMXI"}, {12345, L"MMMMMMMMMMMMCCCXLV"},
+        {0, nullptr},     {-133, nullptr},
     };
 
     for (int i = 0; i < dimof(formatRomanData); i++) {
@@ -441,7 +410,7 @@ void StrTest()
 
     {
         size_t trimmed;
-        WCHAR *s = str::Dup(L"");
+        WCHAR* s = str::Dup(L"");
         trimmed = str::TrimWS(s);
         utassert(trimmed == 0);
         utassert(str::Eq(s, L""));
@@ -452,47 +421,56 @@ void StrTest()
         utassert(trimmed == 0);
         utassert(str::Eq(s, L""));
 
-        free(s); s = str::Dup(L"  \n\t  ");
+        free(s);
+        s = str::Dup(L"  \n\t  ");
         trimmed = str::TrimWS(s);
         utassert(trimmed == 6);
         utassert(str::Eq(s, L""));
 
-        free(s); s = str::Dup(L"  \n\t  ");
+        free(s);
+        s = str::Dup(L"  \n\t  ");
         trimmed = str::TrimWS(s, str::TrimRight);
         utassert(trimmed == 6);
         utassert(str::Eq(s, L""));
 
-        free(s); s = str::Dup(L"  \n\t  ");
+        free(s);
+        s = str::Dup(L"  \n\t  ");
         trimmed = str::TrimWS(s, str::TrimLeft);
         utassert(trimmed == 6);
         utassert(str::Eq(s, L""));
 
-        free(s); s = str::Dup(L"  lola");
+        free(s);
+        s = str::Dup(L"  lola");
         trimmed = str::TrimWS(s);
         utassert(trimmed == 2);
         utassert(str::Eq(s, L"lola"));
 
-        free(s); s = str::Dup(L"  lola");
+        free(s);
+        s = str::Dup(L"  lola");
         trimmed = str::TrimWS(s, str::TrimLeft);
         utassert(trimmed == 2);
         utassert(str::Eq(s, L"lola"));
 
-        free(s); s = str::Dup(L"  lola");
+        free(s);
+        s = str::Dup(L"  lola");
         trimmed = str::TrimWS(s, str::TrimRight);
         utassert(trimmed == 0);
         utassert(str::Eq(s, L"  lola"));
 
-        free(s); s = str::Dup(L"lola\r\t");
+        free(s);
+        s = str::Dup(L"lola\r\t");
         trimmed = str::TrimWS(s);
         utassert(trimmed == 2);
         utassert(str::Eq(s, L"lola"));
 
-        free(s); s = str::Dup(L"lola\r\t");
+        free(s);
+        s = str::Dup(L"lola\r\t");
         trimmed = str::TrimWS(s, str::TrimRight);
         utassert(trimmed == 2);
         utassert(str::Eq(s, L"lola"));
 
-        free(s); s = str::Dup(L"lola\r\t");
+        free(s);
+        s = str::Dup(L"lola\r\t");
         trimmed = str::TrimWS(s, str::TrimLeft);
         utassert(trimmed == 0);
         utassert(str::Eq(s, L"lola\r\t"));
@@ -506,7 +484,7 @@ void StrTest()
     utassert(!str::conv::ToCodePage(L"abc", 987654));
 
     {
-        char buf1[6] = { 0 };
+        char buf1[6] = {0};
         size_t cnt = str::BufAppend(buf1, dimof(buf1), "");
         utassert(0 == cnt);
         cnt = str::BufAppend(buf1, dimof(buf1), "1234");
@@ -521,7 +499,7 @@ void StrTest()
     }
 
     {
-        WCHAR buf1[6] = { 0 };
+        WCHAR buf1[6] = {0};
         size_t cnt = str::BufAppend(buf1, dimof(buf1), L"");
         utassert(0 == cnt);
         cnt = str::BufAppend(buf1, dimof(buf1), L"1234");

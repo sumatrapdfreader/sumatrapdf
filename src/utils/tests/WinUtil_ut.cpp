@@ -7,26 +7,25 @@
 // must be last due to assert() over-write
 #include "UtAssert.h"
 
-void WinUtilTest()
-{
+void WinUtilTest() {
     ScopedCom comScope;
 
     {
-        char *string = "abcde";
+        char* string = "abcde";
         size_t stringSize = 5, len;
         ScopedComPtr<IStream> stream(CreateStreamFromData(string, stringSize));
         utassert(stream);
-        char *data = (char *)GetDataFromStream(stream, &len);
+        char* data = (char*)GetDataFromStream(stream, &len);
         utassert(data && stringSize == len && str::Eq(data, string));
         free(data);
     }
 
     {
-        WCHAR *string = L"abcde";
+        WCHAR* string = L"abcde";
         size_t stringSize = 10, len;
         ScopedComPtr<IStream> stream(CreateStreamFromData(string, stringSize));
         utassert(stream);
-        WCHAR *data = (WCHAR *)GetDataFromStream(stream, &len);
+        WCHAR* data = (WCHAR*)GetDataFromStream(stream, &len);
         utassert(data && stringSize == len && str::Eq(data, string));
         free(data);
     }
@@ -37,7 +36,7 @@ void WinUtilTest()
         utassert(allScreens.Intersect(oneScreen) == oneScreen);
     }
 
-    // TODO: moved AdjustLigthness() to Colors.[h|cpp] which is outside of utils directory
+        // TODO: moved AdjustLigthness() to Colors.[h|cpp] which is outside of utils directory
 #if 0
     {
         COLORREF c = AdjustLightness(RGB(255, 0, 0), 1.0f);
@@ -52,5 +51,4 @@ void WinUtilTest()
         utassert(c == RGB(128, 128, 128));
     }
 #endif
-
 }

@@ -10,10 +10,9 @@
 // must be last due to assert() over-write
 #include "UtAssert.h"
 
-static void HtmlParser00()
-{
+static void HtmlParser00() {
     HtmlParser p;
-    HtmlElement *root = p.Parse("<a></A>");
+    HtmlElement* root = p.Parse("<a></A>");
     utassert(p.ElementsCount() == 1);
     utassert(root);
     utassert(Tag_A == root->tag && !root->name);
@@ -26,15 +25,14 @@ static void HtmlParser00()
     utassert(root->NameIs("b"));
 }
 
-static void HtmlParser01()
-{
+static void HtmlParser01() {
     HtmlParser p;
-    HtmlElement *root = p.Parse("<A><bAh></a>");
+    HtmlElement* root = p.Parse("<A><bAh></a>");
     utassert(p.ElementsCount() == 2);
     utassert(Tag_A == root->tag && !root->name);
     utassert(nullptr == root->up);
     utassert(nullptr == root->next);
-    HtmlElement *el = root->down;
+    HtmlElement* el = root->down;
     utassert(nullptr == el->firstAttr);
     utassert(el->NameIs("bah") && el->NameIs("BAH"));
     utassert(Tag_NotFound == el->tag && str::Eq("bAh", el->name));
@@ -43,18 +41,19 @@ static void HtmlParser01()
     utassert(nullptr == el->next);
 }
 
-static void HtmlParser05()
-{
+static void HtmlParser05() {
     HtmlParser p;
-    HtmlElement *root = p.Parse("<!doctype><html><HEAD><meta name=foo></head><body><object t=la><param name=foo val=bar></object><ul><li></ul></object></body></Html>");
+    HtmlElement* root = p.Parse(
+        "<!doctype><html><HEAD><meta name=foo></head><body><object t=la><param name=foo "
+        "val=bar></object><ul><li></ul></object></body></Html>");
     utassert(8 == p.ElementsCount());
     utassert(4 == p.TotalAttrCount());
     utassert(root->NameIs("html"));
     utassert(nullptr == root->up);
     utassert(nullptr == root->next);
-    HtmlElement *el = root->down;
+    HtmlElement* el = root->down;
     utassert(el->NameIs("head"));
-    HtmlElement *el2 = el->down;
+    HtmlElement* el2 = el->down;
     utassert(el2->NameIs("meta"));
     utassert(nullptr == el2->next);
     utassert(nullptr == el2->down);
@@ -72,10 +71,9 @@ static void HtmlParser05()
     utassert(el);
 }
 
-static void HtmlParser04()
-{
+static void HtmlParser04() {
     HtmlParser p;
-    HtmlElement *root = p.Parse("<el att=  va&apos;l></ el >");
+    HtmlElement* root = p.Parse("<el att=  va&apos;l></ el >");
     utassert(1 == p.ElementsCount());
     utassert(1 == p.TotalAttrCount());
     utassert(root->NameIs("el"));
@@ -87,10 +85,9 @@ static void HtmlParser04()
     utassert(!root->firstAttr->next);
 }
 
-static void HtmlParser03()
-{
+static void HtmlParser03() {
     HtmlParser p;
-    HtmlElement *root = p.Parse("<el   att  =v&quot;al/>");
+    HtmlElement* root = p.Parse("<el   att  =v&quot;al/>");
     utassert(1 == p.ElementsCount());
     utassert(1 == p.TotalAttrCount());
     utassert(root->NameIs("el"));
@@ -102,15 +99,15 @@ static void HtmlParser03()
     utassert(!root->firstAttr->next);
 }
 
-static void HtmlParser02()
-{
+static void HtmlParser02() {
     HtmlParser p;
-    HtmlElement *root = p.Parse("<a><b/><c></c  ><d at1=\"&lt;quo&amp;ted&gt;\" at2='also quoted'   att3=notquoted att4=&#101;&#x6e;d/></a>");
+    HtmlElement* root = p.Parse(
+        "<a><b/><c></c  ><d at1=\"&lt;quo&amp;ted&gt;\" at2='also quoted'   att3=notquoted att4=&#101;&#x6e;d/></a>");
     utassert(4 == p.ElementsCount());
     utassert(4 == p.TotalAttrCount());
     utassert(root->NameIs("a"));
     utassert(nullptr == root->next);
-    HtmlElement *el = root->down;
+    HtmlElement* el = root->down;
     utassert(el->NameIs("b"));
     utassert(root == el->up);
     el = el->next;
@@ -130,15 +127,14 @@ static void HtmlParser02()
     utassert(str::Eq(val, L"end"));
 }
 
-static void HtmlParser06()
-{
+static void HtmlParser06() {
     HtmlParser p;
-    HtmlElement *root = p.Parse("<ul><p>ignore<li><br><meta><li><ol><li></ul><dropme>");
+    HtmlElement* root = p.Parse("<ul><p>ignore<li><br><meta><li><ol><li></ul><dropme>");
     utassert(9 == p.ElementsCount());
     utassert(0 == p.TotalAttrCount());
     utassert(root->NameIs("ul"));
     utassert(!root->next);
-    HtmlElement *el = root->GetChildByTag(Tag_Li);
+    HtmlElement* el = root->GetChildByTag(Tag_Li);
     utassert(el);
     utassert(el->down->NameIs("br"));
     utassert(el->down->next->NameIs("meta"));
@@ -152,10 +148,9 @@ static void HtmlParser06()
     utassert(!el->down->down);
 }
 
-static void HtmlParser07()
-{
+static void HtmlParser07() {
     HtmlParser p;
-    HtmlElement *root = p.Parse("<test umls=&auml;\xC3\xB6&#xFC; Zero=&#1;&#0;&#-1;>", CP_UTF8);
+    HtmlElement* root = p.Parse("<test umls=&auml;\xC3\xB6&#xFC; Zero=&#1;&#0;&#-1;>", CP_UTF8);
     utassert(1 == p.ElementsCount());
     AutoFreeW val(root->GetAttribute("umls"));
     utassert(str::Eq(val, L"\xE4\xF6\xFC"));
@@ -163,16 +158,14 @@ static void HtmlParser07()
     utassert(str::Eq(val, L"\x01??"));
 }
 
-static void HtmlParser08()
-{
+static void HtmlParser08() {
     AutoFreeW val(DecodeHtmlEntitites("&auml&test;&&ouml-", CP_ACP));
     utassert(str::Eq(val, L"\xE4&test;&\xF6-"));
 }
 
-static void HtmlParser09()
-{
+static void HtmlParser09() {
     HtmlParser p;
-    HtmlElement *root = p.Parse("<?xml version='1.0'?><!-- <html><body></html> --><root attr='<!-- comment -->' />");
+    HtmlElement* root = p.Parse("<?xml version='1.0'?><!-- <html><body></html> --><root attr='<!-- comment -->' />");
     utassert(1 == p.ElementsCount());
     utassert(1 == p.TotalAttrCount());
     utassert(root->NameIs("root"));
@@ -185,15 +178,14 @@ static void HtmlParser09()
     utassert(root->NameIs("main"));
 }
 
-static void HtmlParser10()
-{
+static void HtmlParser10() {
     HtmlParser p;
-    HtmlElement *root = p.Parse("<!xml version='1.0'?><x:a xmlns:x='http://example.org/ns/x'><x:b attr='val'/></x:a>");
+    HtmlElement* root = p.Parse("<!xml version='1.0'?><x:a xmlns:x='http://example.org/ns/x'><x:b attr='val'/></x:a>");
     utassert(2 == p.ElementsCount());
     utassert(2 == p.TotalAttrCount());
     utassert(root->NameIs("x:a") && root->NameIsNS("a", "http://example.org/ns/x"));
 
-    HtmlElement *node = p.FindElementByName("b");
+    HtmlElement* node = p.FindElementByName("b");
     utassert(!node);
     node = p.FindElementByNameNS("b", "http://example.org/ns/x");
     utassert(node);
@@ -205,10 +197,9 @@ static void HtmlParser10()
     utassert(node && node->NameIs("X:B"));
 }
 
-static void HtmlParser11()
-{
+static void HtmlParser11() {
     HtmlParser p;
-    HtmlElement *root = p.Parse("<root/><!-- comment -->");
+    HtmlElement* root = p.Parse("<root/><!-- comment -->");
     utassert(1 == p.ElementsCount());
     utassert(0 == p.TotalAttrCount());
     utassert(root && root->NameIs("root"));
@@ -217,13 +208,12 @@ static void HtmlParser11()
     utassert(!root);
 }
 
-static void HtmlParserFile()
-{
-    WCHAR *fileName = L"HtmlParseTest00.html";
+static void HtmlParserFile() {
+    WCHAR* fileName = L"HtmlParseTest00.html";
     // We assume we're being run from obj-[dbg|rel], so the test
     // files are in ..\src\utils directory relative to exe's dir
     AutoFreeW exePath(GetExePath());
-    const WCHAR *exeDir = path::GetBaseName(exePath);
+    const WCHAR* exeDir = path::GetBaseName(exePath);
     AutoFreeW p1(path::Join(exeDir, L"..\\src\\utils"));
     AutoFreeW p2(path::Join(p1, fileName));
     OwnedData d(file::ReadAll(p2));
@@ -233,12 +223,12 @@ static void HtmlParserFile()
         return;
     }
     HtmlParser p;
-    HtmlElement *root = p.ParseInPlace(d.data);
+    HtmlElement* root = p.ParseInPlace(d.data);
     utassert(root);
     utassert(709 == p.ElementsCount());
     utassert(955 == p.TotalAttrCount());
     utassert(root->NameIs("html"));
-    HtmlElement *el = root->down;
+    HtmlElement* el = root->down;
     utassert(el->NameIs("head"));
     el = el->next;
     utassert(el->NameIs("body"));
@@ -268,8 +258,7 @@ static void HtmlParserFile()
     utassert(18 == count);
 }
 
-void TrivialHtmlParser_UnitTests()
-{
+void TrivialHtmlParser_UnitTests() {
     HtmlParserFile();
     HtmlParser11();
     HtmlParser10();

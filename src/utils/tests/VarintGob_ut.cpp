@@ -12,8 +12,7 @@
 // the same encoded data
 #define GEN_PYTHON_TESTS 0
 
-static void GenPythonIntTest(int64_t val, uint8_t *d, int dLen)
-{
+static void GenPythonIntTest(int64_t val, uint8_t* d, int dLen) {
 #if GEN_PYTHON_TESTS == 1
     str::Str<char> s;
     s.AppendFmt("  utassert gob_varint_encode(%I64d) == ", val);
@@ -26,12 +25,13 @@ static void GenPythonIntTest(int64_t val, uint8_t *d, int dLen)
     }
     plogf("%s", s.Get());
 #else
-    UNUSED(val); UNUSED(d); UNUSED(dLen);
+    UNUSED(val);
+    UNUSED(d);
+    UNUSED(dLen);
 #endif
 }
 
-static void GenPythonUIntTest(uint64_t val, uint8_t *d, int dLen)
-{
+static void GenPythonUIntTest(uint64_t val, uint8_t* d, int dLen) {
 #if GEN_PYTHON_TESTS == 1
     str::Str<char> s;
     s.AppendFmt("  utassert gob_uvarint_encode(%I64u) == ", val);
@@ -44,29 +44,27 @@ static void GenPythonUIntTest(uint64_t val, uint8_t *d, int dLen)
     }
     plogf("%s", s.Get());
 #else
-    UNUSED(val); UNUSED(d); UNUSED(dLen);
+    UNUSED(val);
+    UNUSED(d);
+    UNUSED(dLen);
 #endif
 }
 
-static void GobEncodingTest()
-{
+static void GobEncodingTest() {
     uint8_t buf[2048];
-    int64_t intVals[] = {
-        0, 1, 0x7f, 0x80, 0x81, 0xfe, 0xff, 0x100, 0x1234, 0x12345, 0x123456,
-        0x1234567, 0x12345678, 0x7fffffff, -1, -2, -255, -256, -257, -0x1234,
-        -0x12345, -0x123456, -0x124567, -0x1245678
-    };
-    uint64_t uintVals[] = {
-        0, 1, 0x7f, 0x80, 0x81, 0xfe, 0xff, 0x100, 0x1234, 0x12345, 0x123456,
-        0x1234567, 0x12345678, 0x7fffffff, 0x80000000, 0x80000001, 0xfffffffe,
-        0xffffffff
-    };
+    int64_t intVals[] = {0,      1,       0x7f,     0x80,      0x81,       0xfe,       0xff,      0x100,
+                         0x1234, 0x12345, 0x123456, 0x1234567, 0x12345678, 0x7fffffff, -1,        -2,
+                         -255,   -256,    -257,     -0x1234,   -0x12345,   -0x123456,  -0x124567, -0x1245678};
+    uint64_t uintVals[] = {0,          1,          0x7f,       0x80,       0x81,       0xfe,
+                           0xff,       0x100,      0x1234,     0x12345,    0x123456,   0x1234567,
+                           0x12345678, 0x7fffffff, 0x80000000, 0x80000001, 0xfffffffe, 0xffffffff};
     int n, dLen, n2;
-    uint8_t *d;
+    uint8_t* d;
     int64_t val, expVal;
     uint64_t uval, expUval;
 
-    d = buf; dLen = dimof(buf);
+    d = buf;
+    dLen = dimof(buf);
     for (int i = 0; i < dimof(intVals); i++) {
         val = intVals[i];
         n = VarintGobEncode(val, d, dLen);
@@ -91,7 +89,8 @@ static void GobEncodingTest()
     }
     utassert(0 == dLen);
 
-    d = buf; dLen = dimof(buf);
+    d = buf;
+    dLen = dimof(buf);
     for (int i = 0; i < dimof(uintVals); i++) {
         uval = uintVals[i];
         n = UVarintGobEncode(uval, d, dLen);
@@ -117,7 +116,6 @@ static void GobEncodingTest()
     utassert(0 == dLen);
 }
 
-void VarintGobTest()
-{
+void VarintGobTest() {
     GobEncodingTest();
 }

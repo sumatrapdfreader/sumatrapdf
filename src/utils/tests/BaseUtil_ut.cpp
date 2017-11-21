@@ -6,8 +6,7 @@
 // must be last due to assert() over-write
 #include "UtAssert.h"
 
-static void GeomTest()
-{
+static void GeomTest() {
     PointD ptD(12.4, -13.6);
     utassert(ptD.x == 12.4 && ptD.y == -13.6);
     PointI ptI = ptD.ToInt();
@@ -27,22 +26,22 @@ static void GeomTest()
     utassert(SizeI().IsEmpty() && SizeD().IsEmpty());
 
     struct SRIData {
-        int     x1s, x1e, y1s, y1e;
-        int     x2s, x2e, y2s, y2e;
-        bool    intersect;
-        int     i_xs, i_xe, i_ys, i_ye;
-        int     u_xs, u_xe, u_ys, u_ye;
+        int x1s, x1e, y1s, y1e;
+        int x2s, x2e, y2s, y2e;
+        bool intersect;
+        int i_xs, i_xe, i_ys, i_ye;
+        int u_xs, u_xe, u_ys, u_ye;
     } testData[] = {
-        { 0,10, 0,10,   0,10, 0,10,  true,  0,10, 0,10,  0,10, 0,10 }, /* complete intersect */
-        { 0,10, 0,10,  20,30,20,30,  false, 0, 0, 0, 0,  0,30, 0,30 }, /* no intersect */
-        { 0,10, 0,10,   5,15, 0,10,  true,  5,10, 0,10,  0,15, 0,10 }, /* { | } | */
-        { 0,10, 0,10,   5, 7, 0,10,  true,  5, 7, 0,10,  0,10, 0,10 }, /* { | | } */
-        { 0,10, 0,10,   5, 7, 5, 7,  true,  5, 7, 5, 7,  0,10, 0,10 },
-        { 0,10, 0,10,   5, 15,5,15,  true,  5,10, 5,10,  0,15, 0,15 },
+        {0, 10, 0, 10, 0, 10, 0, 10, true, 0, 10, 0, 10, 0, 10, 0, 10},  /* complete intersect */
+        {0, 10, 0, 10, 20, 30, 20, 30, false, 0, 0, 0, 0, 0, 30, 0, 30}, /* no intersect */
+        {0, 10, 0, 10, 5, 15, 0, 10, true, 5, 10, 0, 10, 0, 15, 0, 10},  /* { | } | */
+        {0, 10, 0, 10, 5, 7, 0, 10, true, 5, 7, 0, 10, 0, 10, 0, 10},    /* { | | } */
+        {0, 10, 0, 10, 5, 7, 5, 7, true, 5, 7, 5, 7, 0, 10, 0, 10},
+        {0, 10, 0, 10, 5, 15, 5, 15, true, 5, 10, 5, 10, 0, 15, 0, 15},
     };
 
     for (size_t i = 0; i < dimof(testData); i++) {
-        struct SRIData *curr = &testData[i];
+        struct SRIData* curr = &testData[i];
 
         RectI rx1(curr->x1s, curr->y1s, curr->x1e - curr->x1s, curr->y1e - curr->y1s);
         RectI rx2 = RectI::FromXY(curr->x2s, curr->y2s, curr->x2e, curr->y2e);
@@ -51,8 +50,7 @@ static void GeomTest()
             utassert(!isect.IsEmpty());
             utassert(isect.x == curr->i_xs && isect.y == curr->i_ys);
             utassert(isect.x + isect.dx == curr->i_xe && isect.y + isect.dy == curr->i_ye);
-        }
-        else {
+        } else {
             utassert(isect.IsEmpty());
         }
         RectI urect = rx1.Union(rx2);
@@ -66,8 +64,7 @@ static void GeomTest()
             utassert(!isect.IsEmpty());
             utassert(isect.x == curr->i_xs && isect.y == curr->i_ys);
             utassert(isect.x + isect.dx == curr->i_xe && isect.y + isect.dy == curr->i_ye);
-        }
-        else {
+        } else {
             utassert(isect.IsEmpty());
         }
         urect = rx1.Union(rx2);
@@ -80,8 +77,7 @@ static void GeomTest()
     }
 }
 
-void BaseUtilTest()
-{
+void BaseUtilTest() {
     utassert(RoundToPowerOf2(0) == 1);
     utassert(RoundToPowerOf2(1) == 1);
     utassert(RoundToPowerOf2(2) == 2);

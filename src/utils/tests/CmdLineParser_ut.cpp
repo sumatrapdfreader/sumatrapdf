@@ -7,8 +7,7 @@
 // must be last due to assert() over-write
 #include "UtAssert.h"
 
-void CmdLineParserTest()
-{
+void CmdLineParserTest() {
     WStrVec args;
 
     ParseCmdLine(L"test.exe -arg foo.pdf", args);

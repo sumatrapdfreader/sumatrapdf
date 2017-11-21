@@ -7,11 +7,10 @@
 // must be last due to assert() over-write
 #include "UtAssert.h"
 
-void FileUtilTest()
-{
-    WCHAR *path1 = L"C:\\Program Files\\SumatraPDF\\SumatraPDF.exe";
+void FileUtilTest() {
+    WCHAR* path1 = L"C:\\Program Files\\SumatraPDF\\SumatraPDF.exe";
 
-    const WCHAR *baseName = path::GetBaseName(path1);
+    const WCHAR* baseName = path::GetBaseName(path1);
     utassert(str::Eq(baseName, L"SumatraPDF.exe"));
 
     AutoFreeW dirName(path::GetDir(path1));
@@ -31,7 +30,7 @@ void FileUtilTest()
     utassert(str::Eq(dirName, L"/"));
 
     path1 = L"C:\\Program Files";
-    WCHAR *path2 = path::Join(L"C:\\", L"Program Files");
+    WCHAR* path2 = path::Join(L"C:\\", L"Program Files");
     utassert(str::Eq(path1, path2));
     free(path2);
     path2 = path::Join(path1, L"SumatraPDF");

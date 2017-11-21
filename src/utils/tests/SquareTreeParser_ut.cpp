@@ -7,18 +7,11 @@
 // must be last due to assert() over-write
 #include "UtAssert.h"
 
-void SquareTreeTest()
-{
-    static const char *keyValueData[] = {
-        UTF8_BOM "key = value",
-        UTF8_BOM "key = value",
-        UTF8_BOM "key=value",
-        UTF8_BOM " key =value ",
-        UTF8_BOM "  key= value  ",
-        UTF8_BOM "key: value",
-        UTF8_BOM "key : value",
-        UTF8_BOM "key :value",
-        UTF8_BOM "# key and value:\n\tkey value\n",
+void SquareTreeTest() {
+    static const char* keyValueData[] = {
+        UTF8_BOM "key = value",  UTF8_BOM "key = value",    UTF8_BOM "key=value",
+        UTF8_BOM " key =value ", UTF8_BOM "  key= value  ", UTF8_BOM "key: value",
+        UTF8_BOM "key : value",  UTF8_BOM "key :value",     UTF8_BOM "# key and value:\n\tkey value\n",
         UTF8_BOM "key\t\tvalue",
     };
 
@@ -34,15 +27,11 @@ void SquareTreeTest()
         utassert(!keyValue.root->GetValue("key", &off));
     }
 
-    static const char *nodeData[] = {
-        UTF8_BOM "node [\nkey = value\n]",
-        UTF8_BOM "node[ # ignore comment\n\tkey: value\n] # end of node\n",
-        UTF8_BOM "node\n[\nkey:value",
-        UTF8_BOM "node\n# node content:\n\t[\n\tkey: value\n\t]\n",
-        UTF8_BOM "node [\n  key : value\n]\n]",
-        UTF8_BOM "node[\nkey=value\n]]]",
-        UTF8_BOM "[node]\nkey = value\n",
-        UTF8_BOM "[ node ]\nkey = value\n",
+    static const char* nodeData[] = {
+        UTF8_BOM "node [\nkey = value\n]",      UTF8_BOM "node[ # ignore comment\n\tkey: value\n] # end of node\n",
+        UTF8_BOM "node\n[\nkey:value",          UTF8_BOM "node\n# node content:\n\t[\n\tkey: value\n\t]\n",
+        UTF8_BOM "node [\n  key : value\n]\n]", UTF8_BOM "node[\nkey=value\n]]]",
+        UTF8_BOM "[node]\nkey = value\n",       UTF8_BOM "[ node ]\nkey = value\n",
     };
 
     for (size_t i = 0; i < dimof(nodeData); i++) {
@@ -57,7 +46,7 @@ void SquareTreeTest()
         utassert(str::Eq(item.value.child->GetValue("key"), "value"));
     }
 
-    static const char *arrayData[] = {
+    static const char* arrayData[] = {
         UTF8_BOM "array [\n item = 0 \n] [\n item = 1 \n]",
         UTF8_BOM "array [\n item = 0 \n]\n array [\n item = 1 \n]",
         UTF8_BOM "[array]\n item = 0 \n[array]\n item = 1 \n",
@@ -68,7 +57,7 @@ void SquareTreeTest()
         SquareTree array(arrayData[i]);
         utassert(array.root && 2 == array.root->data.size());
         size_t off = 0;
-        SquareTreeNode *node = array.root->GetChild("array", &off);
+        SquareTreeNode* node = array.root->GetChild("array", &off);
         utassert(node && 1 == node->data.size() && str::Eq(node->GetValue("item"), "0"));
         node = array.root->GetChild("array", &off);
         utassert(node && 1 == node->data.size() && str::Eq(node->GetValue("item"), "1"));
@@ -76,13 +65,14 @@ void SquareTreeTest()
         utassert(!node && 2 == off);
     }
 
-    static const char *serArrayData[] = {
+    static const char* serArrayData[] = {
         UTF8_BOM "array [\n[\n item = 0 \n]\n[\n item = 1 \n]\n]\n",
         UTF8_BOM "array [\n[\n item = 0 \n] [\n item = 1 \n]]",
-        UTF8_BOM "array \n# serialized array with two items: \n[\n"
-            "# first item: \n[\n item = 0 \n] # end of first item\n"
-            "# second item: \n[\n item = 1 \n] # end of second item\n"
-            "] # end of array",
+        UTF8_BOM
+        "array \n# serialized array with two items: \n[\n"
+        "# first item: \n[\n item = 0 \n] # end of first item\n"
+        "# second item: \n[\n item = 1 \n] # end of second item\n"
+        "] # end of array",
         UTF8_BOM "array [\n[\n item = 0 \n] [\n item = 1",
         UTF8_BOM "[array]\n[\n item = 0 \n] [\n item = 1 \n]",
     };
@@ -90,10 +80,10 @@ void SquareTreeTest()
     for (size_t i = 0; i < dimof(serArrayData); i++) {
         SquareTree serArray(serArrayData[i]);
         utassert(serArray.root && 1 == serArray.root->data.size());
-        SquareTreeNode *array = serArray.root->GetChild("array");
+        SquareTreeNode* array = serArray.root->GetChild("array");
         utassert(2 == array->data.size());
         size_t off = 0;
-        SquareTreeNode *node = array->GetChild("", &off);
+        SquareTreeNode* node = array->GetChild("", &off);
         utassert(node && 1 == node->data.size() && str::Eq(node->GetValue("item"), "0"));
         node = array->GetChild("", &off);
         utassert(node && 1 == node->data.size() && str::Eq(node->GetValue("item"), "1"));
@@ -101,7 +91,7 @@ void SquareTreeTest()
         utassert(!node && 2 == off);
     }
 
-    static const char *valueArrayData[] = {
+    static const char* valueArrayData[] = {
         UTF8_BOM "count = 0\ncount = 1",
         UTF8_BOM "count:0\ncount:1\n",
         UTF8_BOM "# first:\n count : 0 \n#second:\n count : 1 \n",
@@ -111,7 +101,7 @@ void SquareTreeTest()
         SquareTree valueArray(valueArrayData[i]);
         utassert(valueArray.root && 2 == valueArray.root->data.size());
         size_t off = 0;
-        const char *value = valueArray.root->GetValue("count", &off);
+        const char* value = valueArray.root->GetValue("count", &off);
         utassert(str::Eq(value, "0") && 1 == off);
         value = valueArray.root->GetValue("count", &off);
         utassert(str::Eq(value, "1") && 2 == off);
@@ -119,13 +109,9 @@ void SquareTreeTest()
         utassert(!value && 2 == off);
     }
 
-    static const char *emptyNodeData[] = {
-        UTF8_BOM "node [\n]",
-        UTF8_BOM "node \n [ \n ] \n",
-        UTF8_BOM "node [",
-        UTF8_BOM "[node] \n",
-        UTF8_BOM "[node]",
-        UTF8_BOM "  [  node  ]  ",
+    static const char* emptyNodeData[] = {
+        UTF8_BOM "node [\n]", UTF8_BOM "node \n [ \n ] \n", UTF8_BOM "node [", UTF8_BOM "[node] \n",
+        UTF8_BOM "[node]",    UTF8_BOM "  [  node  ]  ",
     };
 
     for (size_t i = 0; i < dimof(emptyNodeData); i++) {
@@ -135,7 +121,7 @@ void SquareTreeTest()
         utassert(0 == emptyNode.root->GetChild("node")->data.size());
     }
 
-    static const char *halfBrokenData[] = {
+    static const char* halfBrokenData[] = {
         "node [\n child = \n]\n key = value",
         "node [\nchild\n]\n]\n key = value",
         "node[\n[node\nchild\nchild [ node\n]\n key = value",
@@ -146,7 +132,7 @@ void SquareTreeTest()
         SquareTree halfBroken(halfBrokenData[i]);
         utassert(halfBroken.root && 2 == halfBroken.root->data.size());
         utassert(halfBroken.root->GetChild("node") == halfBroken.root->data.at(0).value.child);
-        SquareTreeNode *node = halfBroken.root->GetChild("Node");
+        SquareTreeNode* node = halfBroken.root->GetChild("Node");
         utassert(node && 1 == node->data.size() && str::Eq(node->GetValue("child"), ""));
         utassert(str::Eq(halfBroken.root->GetValue("key"), "value"));
         utassert(!halfBroken.root->GetValue("node") && !halfBroken.root->GetChild("key"));
@@ -162,7 +148,7 @@ void SquareTreeTest()
     utassert(onlyBom.root && 0 == onlyBom.root->data.size());
 
     SquareTree nested(UTF8_BOM "node [\n node [\n node [\n node [\n node [\n depth 5 \n]\n]\n]\n]\n]");
-    SquareTreeNode *node = nested.root;
+    SquareTreeNode* node = nested.root;
     for (size_t i = 0; i < 5; i++) {
         utassert(node && 1 == node->data.size());
         node = node->GetChild("node");

@@ -110,6 +110,7 @@ $files =
 #"src\utils\WinDynCalls.*",
 "src\utils\WinUtil.*",
 "src\utils\ZipUtil.*",
+"src\utils\tests\*.cpp",
 "src\wingui\*",
 "src\installer\Install.cpp",
 "src\installer\Installer.cpp",

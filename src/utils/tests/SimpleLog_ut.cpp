@@ -7,8 +7,7 @@
 // must be last due to assert() over-write
 #include "UtAssert.h"
 
-void SimpleLogTest()
-{
+void SimpleLogTest() {
     slog::MultiLogger log;
     log.LogAndFree(str::Dup(L"Don't leak me!"));
 
@@ -37,7 +36,7 @@ void SimpleLogTest()
         log.RemoveLogger(&fl);
 
         char pipeData[32];
-        char *expected = "Test2\r\nFL\r\nfilen\xC3\xA4me.pdf : 25\r\n";
+        char* expected = "Test2\r\nFL\r\nfilen\xC3\xA4me.pdf : 25\r\n";
         DWORD len;
         BOOL ok = ReadFile(hRead, pipeData, sizeof(pipeData), &len, nullptr);
         utassert(ok && len == str::Len(expected));

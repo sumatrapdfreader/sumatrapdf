@@ -8,12 +8,11 @@
 // must be last due to assert() over-write
 #include "UtAssert.h"
 
-static void WStrVecTest()
-{
+static void WStrVecTest() {
     WStrVec v;
     v.Append(str::Dup(L"foo"));
     v.Append(str::Dup(L"bar"));
-    WCHAR *s = v.Join();
+    WCHAR* s = v.Join();
     utassert(v.size() == 2);
     utassert(str::Eq(L"foobar", s));
     free(s);
@@ -65,8 +64,7 @@ static void WStrVecTest()
     }
 }
 
-static void StrListTest()
-{
+static void StrListTest() {
     WStrList l;
     utassert(l.size() == 0);
     l.Append(str::Dup(L"one"));
@@ -80,8 +78,7 @@ static void StrListTest()
     utassert(l.Find(L"Two") == -1);
 }
 
-static size_t VecTestAppendFmt()
-{
+static size_t VecTestAppendFmt() {
     str::Str<char> v(256);
     int64_t val = 1;
     for (int i = 0; i < 10000; i++) {
@@ -93,8 +90,7 @@ static size_t VecTestAppendFmt()
     return l;
 }
 
-void VecTest()
-{
+void VecTest() {
     Vec<int> ints;
     utassert(ints.size() == 0);
     ints.Append(1);
@@ -146,7 +142,7 @@ void VecTest()
             v.Append(buf, 1);
             buf[0] = buf[0] + 1;
         }
-        char *s = v.LendData();
+        char* s = v.LendData();
         utassert(str::Eq("abcdefg", s));
         utassert(7 == v.size());
         v.Set("helo");
@@ -168,7 +164,7 @@ void VecTest()
         v.Append('a');
         utassert(v.size() == 4);
         utassert(str::Eq("bopa", v.LendData()));
-        char *s = v.StealData();
+        char* s = v.StealData();
         utassert(str::Eq("bopa", s));
         free(s);
         utassert(v.size() == 0);
@@ -185,14 +181,14 @@ void VecTest()
                 v.Push('a');
         }
 
-        for (size_t i=1; i<=16; i++) {
+        for (size_t i = 1; i <= 16; i++) {
             v.RemoveAt((16 - i) * 6, 6);
             utassert(v.size() == (32 - i) * 6);
         }
 
         v.RemoveAt(0, 6 * 15);
         utassert(v.size() == 6);
-        char *s = v.LendData();
+        char* s = v.LendData();
         utassert(str::Eq(s, "lambda"));
         s = v.StealData();
         utassert(str::Eq(s, "lambda"));
@@ -209,7 +205,7 @@ void VecTest()
     VecTestAppendFmt();
 
     {
-        Vec<PointI *> v;
+        Vec<PointI*> v;
         srand((unsigned int)time(nullptr));
         for (int i = 0; i < 128; i++) {
             v.Append(new PointI(i, i));
@@ -220,7 +216,7 @@ void VecTest()
 
         while (v.size() > 64) {
             size_t pos = rand() % v.size();
-            PointI *f = v.at(pos);
+            PointI* f = v.at(pos);
             v.Remove(f);
             delete f;
         }

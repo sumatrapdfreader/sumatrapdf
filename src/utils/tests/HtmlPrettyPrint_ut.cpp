@@ -7,8 +7,7 @@
 // must be last due to assert() over-write
 #include "UtAssert.h"
 
-void HtmlPrettyPrintTest()
-{
+void HtmlPrettyPrintTest() {
     size_t lenOut;
     AutoFree data;
 
