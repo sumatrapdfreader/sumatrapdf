@@ -7,12 +7,7 @@
 // must be last due to assert() over-write
 #include "UtAssert.h"
 
-#define check(s, expected)              \
-    \
-{                                  \
-        utassert(str::Eq(s, expected)); \
-    \
-}
+#define check(got, expected) utassert(str::Eq(got, expected))
 
 void StrFormatTest() {
     fmt::Fmt f("int: %d, s: %s");

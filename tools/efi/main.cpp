@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "BitManip.h"
 #include "Dict.h"
+#include "ScopedWin.h"
 
 #include "Dia2Subset.h"
 //#include <Dia2.h>

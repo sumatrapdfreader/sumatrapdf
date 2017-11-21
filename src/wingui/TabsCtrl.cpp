@@ -1,4 +1,5 @@
 #include "BaseUtil.h"
+#include "ScopedWin.h"
 #include "Dpi.h"
 #include "WinUtil.h"
 

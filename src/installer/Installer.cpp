@@ -20,6 +20,7 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #endif
 
 #include "BaseUtil.h"
+#include "ScopedWin.h"
 #include "WinDynCalls.h"
 #include <tlhelp32.h>
 #include <io.h>

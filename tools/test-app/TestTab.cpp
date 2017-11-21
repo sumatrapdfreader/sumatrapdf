@@ -1,4 +1,5 @@
 #include "BaseUtil.h"
+#include "ScopedWin.h"
 #include "WinUtil.h"
 #include "test-app.h"
 
