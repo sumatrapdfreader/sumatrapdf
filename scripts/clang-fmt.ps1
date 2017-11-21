@@ -30,13 +30,13 @@ $files =
 "src\FileModifications.*",
 "src\FileThumbnails.*",
 "src\GlobalPrefs.*",
-#"src\HtmlFormatter.*",
+"src\HtmlFormatter.*",
 "src\ImagesEngine.*",
 "src\Menu.*",
 "src\MobiDoc.*",
-#"src\MuiEbookPageDef.*",
+#"src\MuiEbookPageDef.*",  # this one is auto-generated!
 "src\Notifications.*",
-#"src\PagesLayoutDef*",
+#"src\PagesLayoutDef*",    # this one is auto-generated!
 "src\ParseCommandLine*",
 #"src\PdfCreator.*",
 "src\PdfEngine.*",
