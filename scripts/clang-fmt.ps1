@@ -63,7 +63,7 @@ $files =
 "src\TextSearch*",
 #"src\TextSelection.*",
 "src\Theme.*",
-#"src\Toolbar.*",
+"src\Toolbar.*",
 #"src\UnitTests.*",
 #"src\WindowInfo.*",
 "src\mui\SvgPath.*",
