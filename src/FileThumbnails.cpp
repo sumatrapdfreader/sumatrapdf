@@ -18,8 +18,7 @@
 #define THUMBNAILS_DIR_NAME L"sumatrapdfcache"
 
 // TODO: create in TEMP directory instead?
-static WCHAR *GetThumbnailPath(const WCHAR *filePath)
-{
+static WCHAR* GetThumbnailPath(const WCHAR* filePath) {
     // create a fingerprint of a (normalized) path for the file name
     // I'd have liked to also include the file's last modification time
     // in the fingerprint (much quicker than hashing the entire file's
@@ -33,7 +32,7 @@ static WCHAR *GetThumbnailPath(const WCHAR *filePath)
         return nullptr;
     if (path::HasVariableDriveLetter(filePath))
         pathU[0] = '?'; // ignore the drive letter, if it might change
-    CalcMD5Digest((unsigned char *)pathU.Get(), str::Len(pathU), digest);
+    CalcMD5Digest((unsigned char*)pathU.Get(), str::Len(pathU), digest);
     AutoFree fingerPrint(_MemToHex(&digest));
 
     AutoFreeW thumbsPath(AppGenDataFilename(THUMBNAILS_DIR_NAME));
@@ -45,8 +44,7 @@ static WCHAR *GetThumbnailPath(const WCHAR *filePath)
 }
 
 // removes thumbnails that don't belong to any frequently used item in file history
-void CleanUpThumbnailCache(FileHistory& fileHistory)
-{
+void CleanUpThumbnailCache(FileHistory& fileHistory) {
     AutoFreeW thumbsPath(AppGenDataFilename(THUMBNAILS_DIR_NAME));
     if (!thumbsPath)
         return;
@@ -64,7 +62,7 @@ void CleanUpThumbnailCache(FileHistory& fileHistory)
     } while (FindNextFile(hfind, &fdata));
     FindClose(hfind);
 
-    Vec<DisplayState *> list;
+    Vec<DisplayState*> list;
     fileHistory.GetFrequencyOrder(list);
     for (size_t i = 0; i < list.size() && i < FILE_HISTORY_MAX_FREQUENT * 2; i++) {
         AutoFreeW bmpPath(GetThumbnailPath(list.at(i)->filePath));
@@ -83,18 +81,17 @@ void CleanUpThumbnailCache(FileHistory& fileHistory)
     }
 }
 
-static RenderedBitmap *LoadRenderedBitmap(const WCHAR *filePath)
-{
+static RenderedBitmap* LoadRenderedBitmap(const WCHAR* filePath) {
     size_t len;
     AutoFree data(file::ReadAll(filePath, &len));
     if (!data)
         return nullptr;
-    Bitmap *bmp = BitmapFromData(data, len);
+    Bitmap* bmp = BitmapFromData(data, len);
     if (!bmp)
         return nullptr;
 
     HBITMAP hbmp;
-    RenderedBitmap *rendered = nullptr;
+    RenderedBitmap* rendered = nullptr;
     if (bmp->GetHBITMAP((ARGB)Color::White, &hbmp) == Ok)
         rendered = new RenderedBitmap(hbmp, SizeI(bmp->GetWidth(), bmp->GetHeight()));
     delete bmp;
@@ -102,8 +99,7 @@ static RenderedBitmap *LoadRenderedBitmap(const WCHAR *filePath)
     return rendered;
 }
 
-bool LoadThumbnail(DisplayState& ds)
-{
+bool LoadThumbnail(DisplayState& ds) {
     delete ds.thumbnail;
     ds.thumbnail = nullptr;
 
@@ -111,7 +107,7 @@ bool LoadThumbnail(DisplayState& ds)
     if (!bmpPath)
         return false;
 
-    RenderedBitmap *bmp = LoadRenderedBitmap(bmpPath);
+    RenderedBitmap* bmp = LoadRenderedBitmap(bmpPath);
     if (!bmp || bmp->Size().IsEmpty()) {
         delete bmp;
         return false;
@@ -121,8 +117,7 @@ bool LoadThumbnail(DisplayState& ds)
     return true;
 }
 
-bool HasThumbnail(DisplayState& ds)
-{
+bool HasThumbnail(DisplayState& ds) {
     if (!ds.thumbnail && !LoadThumbnail(ds))
         return false;
 
@@ -140,8 +135,7 @@ bool HasThumbnail(DisplayState& ds)
     return ds.thumbnail != nullptr;
 }
 
-void SetThumbnail(DisplayState *ds, RenderedBitmap *bmp)
-{
+void SetThumbnail(DisplayState* ds, RenderedBitmap* bmp) {
     CrashIf(bmp && bmp->Size().IsEmpty());
     if (!ds || !bmp || bmp->Size().IsEmpty()) {
         delete bmp;
@@ -152,8 +146,7 @@ void SetThumbnail(DisplayState *ds, RenderedBitmap *bmp)
     SaveThumbnail(*ds);
 }
 
-void SaveThumbnail(DisplayState& ds)
-{
+void SaveThumbnail(DisplayState& ds) {
     if (!ds.thumbnail)
         return;
 
@@ -169,8 +162,7 @@ void SaveThumbnail(DisplayState& ds)
     }
 }
 
-void RemoveThumbnail(DisplayState& ds)
-{
+void RemoveThumbnail(DisplayState& ds) {
     if (!HasThumbnail(ds))
         return;
 

@@ -28,7 +28,7 @@ $files =
 "src\Favorites.*",
 #"src\FileHistory.*",
 "src\FileModifications.*",
-#"src\FileThumbnails.*",
+"src\FileThumbnails.*",
 #"src\GlobalPrefs.*",
 #"src\HtmlFormatter.*",
 "src\ImagesEngine.*",
