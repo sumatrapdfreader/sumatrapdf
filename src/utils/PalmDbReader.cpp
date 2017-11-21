@@ -39,28 +39,41 @@ struct PdbRecordHeader {
 static_assert(sizeof(PdbHeader) == kPdbHeaderLen, "wrong size of PdbHeader structure");
 static_assert(sizeof(PdbRecordHeader) == 8, "wrong size of PdbRecordHeader structure");
 
-PdbReader::PdbReader(const WCHAR *filePath) :
-    data(file::ReadAll(filePath, &dataSize))
-{
-    if (!ParseHeader())
+// TODO: don't do so much work in constructor
+PdbReader::PdbReader(const WCHAR *filePath) {
+    size_t size;
+    char *tmp = file::ReadAll(filePath, &size);
+    if (!tmp) {
+        return;
+    }
+    data.Set(tmp, size);
+    if (!ParseHeader()) {
         recOffsets.Reset();
+    }
 }
 
-PdbReader::PdbReader(IStream *stream) :
-    data((char *)GetDataFromStream(stream, &dataSize))
-{
-    if (!ParseHeader())
+// TODO: don't do so much work in constructor
+PdbReader::PdbReader(IStream *stream) {
+    size_t size;
+    char *tmp = (char *)GetDataFromStream(stream, &size);
+    if (!tmp) {
+        return;
+    }
+    data.Set(tmp, size);
+    if (!ParseHeader()) {
         recOffsets.Reset();
+    }
 }
 
 bool PdbReader::ParseHeader()
 {
     CrashIf(recOffsets.size() > 0);
 
-    PdbHeader pdbHeader;
-    if (!data || dataSize < sizeof(pdbHeader))
+    PdbHeader pdbHeader = { 0 };
+    if (!data.data || data.size < sizeof(pdbHeader)) {
         return false;
-    ByteReader r(data, dataSize);
+    }
+    ByteReader r(data.data, data.size);
 
     bool ok = r.UnpackBE(&pdbHeader, sizeof(pdbHeader), "32b2w6d8b2dw");
     CrashIf(!ok);
@@ -69,20 +82,22 @@ bool PdbReader::ParseHeader()
     pdbHeader.name[dimof(pdbHeader.name) - 1] = '\0';
     str::BufSet(dbType, dimof(dbType), pdbHeader.typeCreator);
 
-    if (0 == pdbHeader.numRecords)
+    if (0 == pdbHeader.numRecords) {
         return false;
+    }
 
     for (int i = 0; i < pdbHeader.numRecords; i++) {
         uint32_t off = r.DWordBE(sizeof(pdbHeader) + i * sizeof(PdbRecordHeader));
         recOffsets.Append(off);
     }
     // add sentinel value to simplify use
-    recOffsets.Append(std::min((uint32_t)dataSize, (uint32_t)-1));
+    recOffsets.Append(std::min((uint32_t)data.size, (uint32_t)-1));
 
     // validate offsets
     for (int i = 0; i < pdbHeader.numRecords; i++) {
-        if (recOffsets.at(i + 1) < recOffsets.at(i))
+        if (recOffsets.at(i + 1) < recOffsets.at(i)) {
             return false;
+        }
         // technically PDB record size should be less than 64K,
         // but it's not true for mobi files, so we don't validate that
     }
@@ -92,8 +107,9 @@ bool PdbReader::ParseHeader()
 
 const char *PdbReader::GetDbType()
 {
-    if (recOffsets.size() == 0)
+    if (recOffsets.size() == 0) {
         return nullptr;
+    }
     return dbType;
 }
 
@@ -102,12 +118,16 @@ size_t PdbReader::GetRecordCount()
     return recOffsets.size() - 1;
 }
 
+// don't free, memory is owned by us
 const char *PdbReader::GetRecord(size_t recNo, size_t *sizeOut)
 {
-    if (recNo + 1 >= recOffsets.size())
+    if (recNo + 1 >= recOffsets.size()) {
         return nullptr;
+    }
     size_t offset = recOffsets.at(recNo);
-    if (sizeOut)
+    if (sizeOut) {
         *sizeOut = recOffsets.at(recNo + 1) - offset;
-    return data + offset;
+    }
+    return data.data + offset;
 }
+

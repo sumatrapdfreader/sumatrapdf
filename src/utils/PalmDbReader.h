@@ -5,8 +5,7 @@
 #define kPdbHeaderLen 78
 
 class PdbReader {
-    AutoFree data;
-    size_t          dataSize;
+    OwnedData data;
     // offset of each pdb record within the file + a sentinel
     // value equal to file size to simplify use
     Vec<uint32_t>   recOffsets;

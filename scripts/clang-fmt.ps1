@@ -90,7 +90,7 @@ $files =
 "src\utils\HttpUtil.*",
 #"src\utils\JsonParser.*",
 #"src\utils\LzmaSimpleArchive.*",
-#"src\utils\PalmDbReader.*",
+"src\utils\PalmDbReader.*",
 "src\utils\Scoped.*",
 #"src\utils\SerializeTxt.*",
 #"src\utils\SettingsUtil.*",
