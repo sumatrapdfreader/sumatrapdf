@@ -5,9 +5,7 @@ License: Simplified BSD (see COPYING.BSD) */
 #include "WinDynCalls.h"
 #include "WinUtil.h"
 
-#define API_DECLARATION(name)                                                                      \
-    \
-Sig_##name Dyn##name = nullptr;
+#define API_DECLARATION(name) Sig_##name Dyn##name = nullptr;
 
 KERNEL32_API_LIST(API_DECLARATION)
 NTDLL_API_LIST(API_DECLARATION)
@@ -24,14 +22,16 @@ DBGHELP_API_LIST(API_DECLARATION)
 #define API_LOAD(name) Dyn##name = (Sig_##name)GetProcAddress(h, #name);
 
 // Loads a DLL explicitly from the system's library collection
-HMODULE SafeLoadLibrary(const WCHAR *dllName) {
+HMODULE SafeLoadLibrary(const WCHAR* dllName) {
     WCHAR dllPath[MAX_PATH];
     UINT res = GetSystemDirectoryW(dllPath, dimof(dllPath));
-    if (!res || res >= dimof(dllPath))
+    if (!res || res >= dimof(dllPath)) {
         return nullptr;
+    }
     BOOL ok = PathAppendW(dllPath, dllName);
-    if (!ok)
+    if (!ok) {
         return nullptr;
+    }
     return LoadLibraryW(dllPath);
 }
 
@@ -88,27 +88,31 @@ void InitDynCalls() {
 
 namespace touch {
 
-bool SupportsGestures() { return DynGetGestureInfo && DynCloseGestureInfoHandle; }
+bool SupportsGestures() {
+    return DynGetGestureInfo && DynCloseGestureInfoHandle;
+}
 
 BOOL GetGestureInfo(HGESTUREINFO hGestureInfo, PGESTUREINFO pGestureInfo) {
-    if (!DynGetGestureInfo)
+    if (!DynGetGestureInfo) {
         return FALSE;
+    }
     return DynGetGestureInfo(hGestureInfo, pGestureInfo);
 }
 
 BOOL CloseGestureInfoHandle(HGESTUREINFO hGestureInfo) {
-    if (!DynCloseGestureInfoHandle)
+    if (!DynCloseGestureInfoHandle) {
         return FALSE;
+    }
     return DynCloseGestureInfoHandle(hGestureInfo);
 }
 
-BOOL SetGestureConfig(HWND hwnd, DWORD dwReserved, UINT cIDs, PGESTURECONFIG pGestureConfig,
-                      UINT cbSize) {
-    if (!DynSetGestureConfig)
+BOOL SetGestureConfig(HWND hwnd, DWORD dwReserved, UINT cIDs, PGESTURECONFIG pGestureConfig, UINT cbSize) {
+    if (!DynSetGestureConfig) {
         return FALSE;
+    }
     return DynSetGestureConfig(hwnd, dwReserved, cIDs, pGestureConfig, cbSize);
 }
-}
+} // namespace touch
 
 namespace theme {
 
@@ -133,8 +137,7 @@ HRESULT CloseThemeData(HTHEME hTheme) {
     return E_NOTIMPL;
 }
 
-HRESULT DrawThemeBackground(HTHEME hTheme, HDC hdc, int iPartId, int iStateId, LPCRECT pRect,
-                            LPCRECT pClipRect) {
+HRESULT DrawThemeBackground(HTHEME hTheme, HDC hdc, int iPartId, int iStateId, LPCRECT pRect, LPCRECT pClipRect) {
     if (DynDrawThemeBackground) {
         return DynDrawThemeBackground(hTheme, hdc, iPartId, iStateId, pRect, pClipRect);
     }
@@ -155,87 +158,95 @@ BOOL IsThemeBackgroundPartiallyTransparent(HTHEME hTheme, int iPartId, int iStat
     return FALSE;
 }
 
-HRESULT GetThemeColor(HTHEME hTheme, int iPartId, int iStateId, int iPropId, COLORREF *pColor) {
+HRESULT GetThemeColor(HTHEME hTheme, int iPartId, int iStateId, int iPropId, COLORREF* pColor) {
     if (DynGetThemeColor) {
         return DynGetThemeColor(hTheme, iPartId, iStateId, iPropId, pColor);
     }
     return E_NOTIMPL;
 }
-};
+}; // namespace theme
 
 namespace dwm {
 
 BOOL IsCompositionEnabled() {
-    if (!DynDwmIsCompositionEnabled)
+    if (!DynDwmIsCompositionEnabled) {
         return FALSE;
+    }
     BOOL isEnabled;
-    if (SUCCEEDED(DynDwmIsCompositionEnabled(&isEnabled)))
+    if (SUCCEEDED(DynDwmIsCompositionEnabled(&isEnabled))) {
         return isEnabled;
+    }
     return FALSE;
 }
 
-HRESULT ExtendFrameIntoClientArea(HWND hwnd, const MARGINS *pMarInset) {
-    if (!DynDwmExtendFrameIntoClientArea)
+HRESULT ExtendFrameIntoClientArea(HWND hwnd, const MARGINS* pMarInset) {
+    if (!DynDwmExtendFrameIntoClientArea) {
         return E_NOTIMPL;
+    }
     return DynDwmExtendFrameIntoClientArea(hwnd, pMarInset);
 }
 
-BOOL DefWindowProc_(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *plResult) {
-    if (!DynDwmDefWindowProc)
+BOOL DefWindowProc_(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, LRESULT* plResult) {
+    if (!DynDwmDefWindowProc) {
         return FALSE;
+    }
     return DynDwmDefWindowProc(hwnd, msg, wParam, lParam, plResult);
 }
 
-HRESULT GetWindowAttribute(HWND hwnd, DWORD dwAttribute, void *pvAttribute, DWORD cbAttribute) {
-    if (!DynDwmGetWindowAttribute)
+HRESULT GetWindowAttribute(HWND hwnd, DWORD dwAttribute, void* pvAttribute, DWORD cbAttribute) {
+    if (!DynDwmGetWindowAttribute) {
         return E_NOTIMPL;
+    }
     return DynDwmGetWindowAttribute(hwnd, dwAttribute, pvAttribute, cbAttribute);
 }
-};
+}; // namespace dwm
 
 namespace uia {
 
-LRESULT ReturnRawElementProvider(HWND hwnd, WPARAM wParam, LPARAM lParam,
-                                 IRawElementProviderSimple *provider) {
-    if (!DynUiaReturnRawElementProvider)
+LRESULT ReturnRawElementProvider(HWND hwnd, WPARAM wParam, LPARAM lParam, IRawElementProviderSimple* provider) {
+    if (!DynUiaReturnRawElementProvider) {
         return 0;
+    }
     return DynUiaReturnRawElementProvider(hwnd, wParam, lParam, provider);
 }
 
-HRESULT HostProviderFromHwnd(HWND hwnd, IRawElementProviderSimple **pProvider) {
-    if (!DynUiaHostProviderFromHwnd)
+HRESULT HostProviderFromHwnd(HWND hwnd, IRawElementProviderSimple** pProvider) {
+    if (!DynUiaHostProviderFromHwnd) {
         return E_NOTIMPL;
+    }
     return DynUiaHostProviderFromHwnd(hwnd, pProvider);
 }
 
-HRESULT RaiseAutomationEvent(IRawElementProviderSimple *pProvider, EVENTID id) {
-    if (!DynUiaRaiseAutomationEvent)
+HRESULT RaiseAutomationEvent(IRawElementProviderSimple* pProvider, EVENTID id) {
+    if (!DynUiaRaiseAutomationEvent) {
         return E_NOTIMPL;
+    }
     return DynUiaRaiseAutomationEvent(pProvider, id);
 }
 
-HRESULT RaiseStructureChangedEvent(IRawElementProviderSimple *pProvider,
-                                   StructureChangeType structureChangeType, int *pRuntimeId,
-                                   int cRuntimeIdLen) {
-    if (!DynUiaRaiseStructureChangedEvent)
+HRESULT RaiseStructureChangedEvent(IRawElementProviderSimple* pProvider, StructureChangeType structureChangeType,
+                                   int* pRuntimeId, int cRuntimeIdLen) {
+    if (!DynUiaRaiseStructureChangedEvent) {
         return E_NOTIMPL;
-    return DynUiaRaiseStructureChangedEvent(pProvider, structureChangeType, pRuntimeId,
-                                            cRuntimeIdLen);
+    }
+    return DynUiaRaiseStructureChangedEvent(pProvider, structureChangeType, pRuntimeId, cRuntimeIdLen);
 }
 
-HRESULT GetReservedNotSupportedValue(IUnknown **punkNotSupportedValue) {
-    if (!DynUiaRaiseStructureChangedEvent)
+HRESULT GetReservedNotSupportedValue(IUnknown** punkNotSupportedValue) {
+    if (!DynUiaRaiseStructureChangedEvent) {
         return E_NOTIMPL;
+    }
     return DynUiaGetReservedNotSupportedValue(punkNotSupportedValue);
 }
-};
+}; // namespace uia
 
-static const WCHAR *dllsToPreload = L"comctl32.dll\0gdiplus.dll\0msimg32.dll\0shlwapi.dll\0urlmon.dll\0version.dll\0windowscodecs.dll\0wininet.dll\0\0";
+static const WCHAR* dllsToPreload =
+    L"comctl32.dll\0gdiplus.dll\0msimg32.dll\0shlwapi.dll\0urlmon.dll\0version.dll\0windowscodecs.dll\0wininet.dll\0\0";
 
 // try to mitigate dll hijacking by pre-loading all the dlls that we delay load or might
 // be loaded indirectly
 void NoDllHijacking() {
-    const WCHAR *dll = dllsToPreload;
+    const WCHAR* dll = dllsToPreload;
     while (*dll) {
         SafeLoadLibrary(dll);
         seqstrings::SkipStr(dll);
@@ -248,7 +259,7 @@ void NoDllHijacking() {
 // https://msdn.microsoft.com/en-us/library/windows/desktop/mt706245(v=vs.85).aspx
 typedef struct _PROCESS_MITIGATION_IMAGE_LOAD_POLICY {
     union {
-        DWORD  Flags;
+        DWORD Flags;
         struct {
             DWORD NoRemoteImages : 1;
             DWORD NoLowMandatoryLabelImages : 1;
@@ -271,7 +282,7 @@ void PrioritizeSystemDirectoriesForDllLoad() {
         return;
     }
     // Only supported since Win 10
-    PROCESS_MITIGATION_IMAGE_LOAD_POLICY m = { 0 };
+    PROCESS_MITIGATION_IMAGE_LOAD_POLICY m = {0};
     m.PreferSystem32Images = 1;
     DynSetProcessMitigationPolicy(ProcessImageLoadPolicy, &m, sizeof(m));
     DbgOutLastError();

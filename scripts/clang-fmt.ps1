@@ -107,7 +107,7 @@ $files =
 "src\utils\UITask.*",
 "src\utils\UtAssert.*",
 #"src\utils\WebpReader.*",
-#"src\utils\WinDynCalls.*",
+"src\utils\WinDynCalls.*",
 "src\utils\WinUtil.*",
 "src\utils\ZipUtil.*",
 "src\utils\tests\*.cpp",
