@@ -108,7 +108,7 @@ $files =
 #"src\utils\WebpReader.*",
 #"src\utils\WinDynCalls.*",
 "src\utils\WinUtil.*",
-#"src\utils\ZipUtil.*",
+"src\utils\ZipUtil.*",
 "src\wingui\*",
 "src\installer\Install.cpp",
 "src\installer\Installer.cpp",
