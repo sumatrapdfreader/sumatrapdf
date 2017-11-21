@@ -153,6 +153,16 @@ OwnedData::OwnedData(OwnedData&& other) {
     other.size = 0;
 }
 
+OwnedData& OwnedData::operator=(OwnedData&& other) {
+    if (this != &other) {
+        this->data = other.data;
+        this->size = other.size;
+        other.data = nullptr;
+        other.size = 0;
+    }
+    return *this;
+}
+
 void OwnedData::Set(char* s, size_t len) {
     if (len == 0) {
         len = str::Len(s);

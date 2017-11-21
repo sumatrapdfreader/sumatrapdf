@@ -41,12 +41,10 @@ static_assert(sizeof(PdbRecordHeader) == 8, "wrong size of PdbRecordHeader struc
 
 // TODO: don't do so much work in constructor
 PdbReader::PdbReader(const WCHAR* filePath) {
-    size_t size;
-    char* tmp = file::ReadAll(filePath, &size);
-    if (!tmp) {
+    data = std::move(file::ReadAll(filePath));
+    if (!data.data) {
         return;
     }
-    data.Set(tmp, size);
     if (!ParseHeader()) {
         recOffsets.Reset();
     }

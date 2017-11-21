@@ -504,7 +504,7 @@ class OwnedData {
 
     OwnedData(const OwnedData& other) = delete;
     OwnedData& operator=(const OwnedData& other) = delete;
-    OwnedData& operator=(OwnedData&& other) = delete;
+    OwnedData& operator=(OwnedData&& other);
 
     OwnedData(OwnedData&& other);
     void Set(char* s, size_t len = 0);

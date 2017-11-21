@@ -40,7 +40,7 @@ $files =
 "src\ParseCommandLine*",
 #"src\PdfCreator.*",
 "src\PdfEngine.*",
-#"src\PdfSync.*",
+"src\PdfSync.*",
 "src\Print*",
 #"src\PsEngine.*",
 #"src\RenderCache.*",
