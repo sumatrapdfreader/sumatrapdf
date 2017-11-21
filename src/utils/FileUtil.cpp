@@ -421,13 +421,9 @@ char* ReadAllWithAllocator(const WCHAR* path, size_t* fileSizeOut, Allocator* al
     return data;
 }
 
-char* ReadAll(const WCHAR* path, size_t* fileSizeOut) {
-    return ReadAllWithAllocator(path, fileSizeOut, nullptr);
-}
-
 OwnedData ReadAll(const WCHAR* path) {
     size_t size;
-    char* data = ReadAll(path, &size);
+    char* data = ReadAllWithAllocator(path, &size, nullptr);
     return {data, size};
 }
 

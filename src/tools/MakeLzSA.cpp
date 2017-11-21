@@ -91,27 +91,26 @@ ReusePrevious:
         return content.AppendChecked(fi->compressedData, fi->compressedSize);
     }
 
-    size_t fileDataLen;
-    AutoFree fileData(file::ReadAll(filePath, &fileDataLen));
-    if (!fileData || fileDataLen >= UINT32_MAX) {
+    OwnedData fileData(file::ReadAll(filePath));
+    if (!fileData.data || fileData.size >= UINT32_MAX) {
         fprintf(stderr, "Failed to read \"%S\" for compression\n", filePath);
         return false;
     }
-    uint32_t fileDataCrc = crc32(0, (const uint8_t *)fileData.Get(), (uint32_t)fileDataLen);
-    if (fi && fi->uncompressedCrc32 == fileDataCrc && fi->uncompressedSize == fileDataLen)
+    uint32_t fileDataCrc = crc32(0, (const u8*)fileData.data, (uint32_t)fileData.size);
+    if (fi && fi->uncompressedCrc32 == fileDataCrc && fi->uncompressedSize == fileData.size)
         goto ReusePrevious;
 
-    size_t compressedSize = fileDataLen + 1;
+    size_t compressedSize = fileData.size + 1;
     AutoFree compressed((char *)malloc(compressedSize));
     if (!compressed)
         return false;
-    if (!Compress(fileData, fileDataLen, compressed, &compressedSize))
+    if (!Compress(fileData.data, fileData.size, compressed, &compressedSize))
         return false;
 
     ByteWriter meta = MakeByteWriterLE(data.AppendBlanks(24), 24);
     meta.Write32(headerSize);
     meta.Write32((uint32_t)compressedSize);
-    meta.Write32((uint32_t)fileDataLen);
+    meta.Write32((uint32_t)fileData.size);
     meta.Write32(fileDataCrc);
     meta.Write32(ft.dwLowDateTime);
     meta.Write32(ft.dwHighDateTime);
@@ -125,10 +124,10 @@ ReusePrevious:
 // (this is required for absolute paths)
 bool CreateArchive(const WCHAR *archivePath, WStrVec& files, size_t skipFiles=0)
 {
-    size_t prevDataLen = 0;
-    AutoFree prevData(file::ReadAll(archivePath, &prevDataLen));
+    OwnedData prevData(file::ReadAll(archivePath));
+    size_t prevDataLen = prevData.size;
     lzma::SimpleArchive prevArchive;
-    if (!lzma::ParseSimpleArchive(prevData, prevDataLen, &prevArchive))
+    if (!lzma::ParseSimpleArchive(prevData.data, prevDataLen, &prevArchive))
         prevArchive.filesCount = 0;
 
     str::Str<char> data;
@@ -179,12 +178,11 @@ bool CreateArchive(const WCHAR *archivePath, WStrVec& files, size_t skipFiles=0)
 int mainVerify(const WCHAR *archivePath)
 {
     int errorStep = 1;
-    size_t fileDataLen;
-    AutoFree fileData(file::ReadAll(archivePath, &fileDataLen));
-    FailIf(!fileData, "Failed to read \"%S\"", archivePath);
+    OwnedData fileData(file::ReadAll(archivePath));
+    FailIf(!fileData.data, "Failed to read \"%S\"", archivePath);
 
     lzma::SimpleArchive lzsa;
-    bool ok = lzma::ParseSimpleArchive(fileData, fileDataLen, &lzsa);
+    bool ok = lzma::ParseSimpleArchive(fileData.data, fileData.size, &lzsa);
     FailIf(!ok, "\"%S\" is no valid LzSA file", archivePath);
 
     for (int i = 0; i < lzsa.filesCount; i++) {

@@ -153,17 +153,19 @@ static BaseEngine* ps2pdf(const WCHAR* fileName) {
     GetExitCodeProcess(process, &exitCode);
     TerminateProcess(process, 1);
     CloseHandle(process);
-    if (exitCode != EXIT_SUCCESS)
+    if (exitCode != EXIT_SUCCESS) {
         return nullptr;
+    }
 
-    size_t len;
-    AutoFree pdfData(file::ReadAll(tmpFile, &len));
-    if (!pdfData)
+    OwnedData pdfData(file::ReadAll(tmpFile));
+    if (!pdfData.data) {
         return nullptr;
+    }
 
-    ScopedComPtr<IStream> stream(CreateStreamFromData(pdfData, len));
-    if (!stream)
+    ScopedComPtr<IStream> stream(CreateStreamFromData(pdfData.data, pdfData.size));
+    if (!stream) {
         return nullptr;
+    }
 
     return PdfEngine::CreateFromStream(stream);
 }
@@ -171,12 +173,14 @@ static BaseEngine* ps2pdf(const WCHAR* fileName) {
 static BaseEngine* psgz2pdf(const WCHAR* fileName) {
     AutoFreeW tmpFile(path::GetTempPath(L"PsE"));
     ScopedFile tmpFileScope(tmpFile);
-    if (!tmpFile)
+    if (!tmpFile) {
         return nullptr;
+    }
 
     gzFile inFile = gzopen_w(fileName, "rb");
-    if (!inFile)
+    if (!inFile) {
         return nullptr;
+    }
     FILE* outFile = nullptr;
     errno_t err = _wfopen_s(&outFile, tmpFile, L"wb");
     if (err != 0 || !outFile) {
@@ -187,8 +191,9 @@ static BaseEngine* psgz2pdf(const WCHAR* fileName) {
     char buffer[12 * 1024];
     for (;;) {
         int len = gzread(inFile, buffer, sizeof(buffer));
-        if (len <= 0)
+        if (len <= 0) {
             break;
+        }
         fwrite(buffer, 1, len, outFile);
     }
     fclose(outFile);
@@ -238,7 +243,17 @@ class PsEngineImpl : public BaseEngine {
         return pdfEngine->Transform(rect, pageNo, zoom, rotation, inverse);
     }
 
-    unsigned char* GetFileData(size_t* cbCount) override { return (unsigned char*)file::ReadAll(FileName(), cbCount); }
+    u8* GetFileData(size_t* cbCount) override {
+        const WCHAR* name = FileName();
+        if (!name) {
+            return nullptr;
+        }
+        OwnedData data(file::ReadAll(fileName));
+        if (cbCount) {
+            *cbCount = data.size;
+        }
+        return (u8*)data.StealData();
+    }
 
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override {
         UNUSED(includeUserAnnots);

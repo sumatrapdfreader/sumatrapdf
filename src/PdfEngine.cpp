@@ -2585,17 +2585,21 @@ PageLayoutType PdfEngineImpl::PreferredLayout() {
     return layout;
 }
 
-unsigned char* PdfEngineImpl::GetFileData(size_t* cbCount) {
-    unsigned char* data = nullptr;
+u8* PdfEngineImpl::GetFileData(size_t* cbCount) {
+    u8* res = nullptr;
     ScopedCritSec scope(&ctxAccess);
-    fz_try(ctx) { data = fz_extract_stream_data(_doc->file, cbCount); }
+    fz_try(ctx) { res = fz_extract_stream_data(_doc->file, cbCount); }
     fz_catch(ctx) {
-        data = nullptr;
+        res = nullptr;
         if (FileName()) {
-            data = (unsigned char*)file::ReadAll(FileName(), cbCount);
+            OwnedData data(file::ReadAll(FileName()));
+            if (cbCount) {
+                *cbCount = data.size;
+            }
+            res = (u8*)data.StealData();
         }
     }
-    return data;
+    return res;
 }
 
 bool PdfEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
@@ -2604,14 +2608,17 @@ bool PdfEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots)
     ScopedMem<unsigned char> data(GetFileData(&dataLen));
     if (data) {
         bool ok = file::WriteAll(dstPath, data.Get(), dataLen);
-        if (ok)
+        if (ok) {
             return !includeUserAnnots || SaveUserAnnots(copyFileName);
+        }
     }
-    if (!FileName())
+    if (!FileName()) {
         return false;
+    }
     bool ok = CopyFileW(FileName(), dstPath, FALSE);
-    if (!ok)
+    if (!ok) {
         return false;
+    }
     // TODO: try to recover when SaveUserAnnots fails?
     return !includeUserAnnots || SaveUserAnnots(copyFileName);
 }
@@ -3859,17 +3866,21 @@ WCHAR* XpsEngineImpl::ExtractPageText(xps_page* page, const WCHAR* lineSep, Rect
     return content;
 }
 
-unsigned char* XpsEngineImpl::GetFileData(size_t* cbCount) {
-    unsigned char* data = nullptr;
+u8* XpsEngineImpl::GetFileData(size_t* cbCount) {
+    u8* res = nullptr;
     ScopedCritSec scope(&ctxAccess);
-    fz_try(ctx) { data = fz_extract_stream_data(_docStream, cbCount); }
+    fz_try(ctx) { res = fz_extract_stream_data(_docStream, cbCount); }
     fz_catch(ctx) {
-        data = nullptr;
+        res = nullptr;
         if (FileName()) {
-            data = (unsigned char*)file::ReadAll(FileName(), cbCount);
+            OwnedData data(file::ReadAll(FileName()));
+            if (cbCount) {
+                *cbCount = data.size;
+            }
+            res = (u8*)data.StealData();
         }
     }
-    return data;
+    return res;
 }
 
 bool XpsEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {

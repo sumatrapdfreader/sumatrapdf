@@ -82,18 +82,20 @@ void CleanUpThumbnailCache(FileHistory& fileHistory) {
 }
 
 static RenderedBitmap* LoadRenderedBitmap(const WCHAR* filePath) {
-    size_t len;
-    AutoFree data(file::ReadAll(filePath, &len));
-    if (!data)
+    OwnedData data(file::ReadAll(filePath));
+    if (!data.data) {
         return nullptr;
-    Bitmap* bmp = BitmapFromData(data, len);
-    if (!bmp)
+    }
+    Bitmap* bmp = BitmapFromData(data.data, data.size);
+    if (!bmp) {
         return nullptr;
+    }
 
     HBITMAP hbmp;
     RenderedBitmap* rendered = nullptr;
-    if (bmp->GetHBITMAP((ARGB)Color::White, &hbmp) == Ok)
+    if (bmp->GetHBITMAP((ARGB)Color::White, &hbmp) == Ok) {
         rendered = new RenderedBitmap(hbmp, SizeI(bmp->GetWidth(), bmp->GetHeight()));
+    }
     delete bmp;
 
     return rendered;
@@ -104,8 +106,9 @@ bool LoadThumbnail(DisplayState& ds) {
     ds.thumbnail = nullptr;
 
     AutoFreeW bmpPath(GetThumbnailPath(ds.filePath));
-    if (!bmpPath)
+    if (!bmpPath) {
         return false;
+    }
 
     RenderedBitmap* bmp = LoadRenderedBitmap(bmpPath);
     if (!bmp || bmp->Size().IsEmpty()) {
@@ -118,12 +121,14 @@ bool LoadThumbnail(DisplayState& ds) {
 }
 
 bool HasThumbnail(DisplayState& ds) {
-    if (!ds.thumbnail && !LoadThumbnail(ds))
+    if (!ds.thumbnail && !LoadThumbnail(ds)) {
         return false;
+    }
 
     AutoFreeW bmpPath(GetThumbnailPath(ds.filePath));
-    if (!bmpPath)
+    if (!bmpPath) {
         return true;
+    }
     FILETIME bmpTime = file::GetModificationTime(bmpPath);
     FILETIME fileTime = file::GetModificationTime(ds.filePath);
     // delete the thumbnail if the file is newer than the thumbnail
@@ -147,12 +152,14 @@ void SetThumbnail(DisplayState* ds, RenderedBitmap* bmp) {
 }
 
 void SaveThumbnail(DisplayState& ds) {
-    if (!ds.thumbnail)
+    if (!ds.thumbnail) {
         return;
+    }
 
     AutoFreeW bmpPath(GetThumbnailPath(ds.filePath));
-    if (!bmpPath)
+    if (!bmpPath) {
         return;
+    }
     AutoFreeW thumbsPath(path::GetDir(bmpPath));
     if (dir::Create(thumbsPath)) {
         CrashIf(!str::EndsWithI(bmpPath, L".png"));
@@ -163,12 +170,14 @@ void SaveThumbnail(DisplayState& ds) {
 }
 
 void RemoveThumbnail(DisplayState& ds) {
-    if (!HasThumbnail(ds))
+    if (!HasThumbnail(ds)) {
         return;
+    }
 
     AutoFreeW bmpPath(GetThumbnailPath(ds.filePath));
-    if (bmpPath)
+    if (bmpPath) {
         file::Delete(bmpPath);
+    }
     delete ds.thumbnail;
     ds.thumbnail = nullptr;
 }

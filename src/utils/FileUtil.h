@@ -41,7 +41,6 @@ bool WriteAll(const char* path, const void* data, size_t dataLen);
 FILE* OpenFILE(const WCHAR* path);
 bool Exists(const WCHAR* path);
 char* ReadAllWithAllocator(const WCHAR* path, size_t* fileSizeOut, Allocator* allocator);
-char* ReadAll(const WCHAR* path, size_t* fileSizeOut);
 OwnedData ReadAll(const WCHAR* path);
 bool ReadN(const WCHAR* path, char* buf, size_t toRead);
 bool WriteAll(const WCHAR* path, const void* data, size_t dataLen);

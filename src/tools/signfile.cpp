@@ -148,7 +148,11 @@ SyntaxError:
 
     // prepare data for signing
     size_t dataLen;
-    data.Set(file::ReadAll(filePath, &dataLen));
+    {
+        OwnedData tmp(file::ReadAll(filePath));
+        dataLen = tmp.size;
+        data.Set(tmp.StealData());
+    }
     QuitIfNot(data && dataLen <= UINT_MAX, "Error: Failed to read from \"%s\" (or file is too large)!", filePath);
     ok = !inFileCommentSyntax || (dataLen > 0 && !memchr(data.Get(), 0, dataLen));
     QuitIfNot(ok, "Error: Can't put signature comment into binary or empty file!");

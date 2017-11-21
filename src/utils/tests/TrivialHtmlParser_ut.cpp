@@ -226,13 +226,14 @@ static void HtmlParserFile()
     const WCHAR *exeDir = path::GetBaseName(exePath);
     AutoFreeW p1(path::Join(exeDir, L"..\\src\\utils"));
     AutoFreeW p2(path::Join(p1, fileName));
-    char *d = file::ReadAll(p2, nullptr);
+    OwnedData d(file::ReadAll(p2));
     // it's ok if we fail - we assume we were not run from the
     // right location
-    if (!d)
+    if (!d.data) {
         return;
+    }
     HtmlParser p;
-    HtmlElement *root = p.ParseInPlace(d);
+    HtmlElement *root = p.ParseInPlace(d.data);
     utassert(root);
     utassert(709 == p.ElementsCount());
     utassert(955 == p.TotalAttrCount());
@@ -265,7 +266,6 @@ static void HtmlParserFile()
         el = p.FindElementByName("ul", el);
     }
     utassert(18 == count);
-    free(d);
 }
 
 void TrivialHtmlParser_UnitTests()
