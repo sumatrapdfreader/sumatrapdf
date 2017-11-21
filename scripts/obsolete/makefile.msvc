@@ -248,13 +248,13 @@ MAKELZSA_OBJS = \
 
 TEST_UTIL_OBJS = \
 	$(OU)\test_util.obj $(OS)\UnitTests.obj $(UTILS_LIB) $(MUPDF_LIB) \
-	$(OU)\UtAssert.obj $(OU)\VarintGob.obj $(OMUI)\SvgPath.obj \
+	$(OU)\UtAssert.obj $(OMUI)\SvgPath.obj \
 	$(OU)\BaseUtil_ut.obj $(OU)\ByteOrderDecoder_ut.obj $(OU)\CmdLineParser_ut.obj \
 	$(OU)\CryptoUtil_ut.obj $(OU)\CssParser_ut.obj $(OU)\Dict_ut.obj \
 	$(OU)\FileUtil_ut.obj $(OU)\HtmlPrettyPrint_ut.obj $(OU)\HtmlPullParser_ut.obj \
 	$(OU)\JsonParser_ut.obj $(OU)\SettingsUtil_ut.obj $(OU)\SimpleLog_ut.obj \
 	$(OU)\SquareTreeParser_ut.obj $(OU)\StrFormat_ut.obj $(OU)\StrUtil_ut.obj \
-	$(OU)\TrivialHtmlParser_ut.obj $(OU)\VarintGob_ut.obj $(OU)\Vec_ut.obj \
+	$(OU)\TrivialHtmlParser_ut.obj $(OU)\Vec_ut.obj \
 	$(OU)\WinUtil_ut.obj $(OMUI)\SvgPath_ut.obj $(OS)\AppUtil.obj
 
 MEMTRACE_OBJS = \

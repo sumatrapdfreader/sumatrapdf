@@ -622,7 +622,7 @@ function test_util_files()
     "SquareTreeParser*",
     "TrivialHtmlParser*",
     "UtAssert*",
-    "VarintGob*",
+    --"VarintGob*",
     "Vec.*",
     "WinUtil*",
     "WinDynCalls.*",

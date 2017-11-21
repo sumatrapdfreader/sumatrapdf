@@ -105,7 +105,6 @@ $files =
 #"src\utils\TxtParser.*",
 "src\utils\UITask.*",
 "src\utils\UtAssert.*",
-"src\utils\VarintGob.*",
 #"src\utils\WebpReader.*",
 #"src\utils\WinDynCalls.*",
 "src\utils\WinUtil.*",
@@ -116,7 +115,7 @@ $files =
 "src\installer\Installer.cpp",
 "src\installer\Installer.h",
 "src\installer\Uninstall.cpp",
-"src\tools\signfile.cpp"
+"src\tools\*.cpp"
 
 foreach ($file in $files) {
   $files2 = Get-ChildItem $file

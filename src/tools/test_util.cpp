@@ -29,14 +29,14 @@ extern void SquareTreeTest();
 extern void StrFormatTest();
 extern void StrTest();
 extern void TrivialHtmlParser_UnitTests();
-extern void VarintGobTest();
+// extern void VarintGobTest();
 extern void VecTest();
 extern void WinUtilTest();
 extern void StrFormatTest();
 
-int main(int argc, char **argv)
-{
-    UNUSED(argc); UNUSED(argv);
+int main(int argc, char** argv) {
+    UNUSED(argc);
+    UNUSED(argv);
     printf("Running unit tests\n");
     InitDynCalls();
     BaseUtilTest();
@@ -54,7 +54,7 @@ int main(int argc, char **argv)
     SquareTreeTest();
     StrTest();
     TrivialHtmlParser_UnitTests();
-    VarintGobTest();
+    // VarintGobTest();
     VecTest();
     WinUtilTest();
     SumatraPDF_UnitTests();

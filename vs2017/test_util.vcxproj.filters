@@ -87,9 +87,6 @@
     <ClInclude Include="..\src\utils\UtAssert.h">
       <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\utils\VarintGob.h">
-      <Filter>utils</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\utils\Vec.h">
       <Filter>utils</Filter>
     </ClInclude>
@@ -171,9 +168,6 @@
     <ClCompile Include="..\src\utils\UtAssert.cpp">
       <Filter>utils</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\utils\VarintGob.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\utils\WinDynCalls.cpp">
       <Filter>utils</Filter>
     </ClCompile>
@@ -226,9 +220,6 @@
       <Filter>utils\tests</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\tests\TrivialHtmlParser_ut.cpp">
-      <Filter>utils\tests</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\utils\tests\VarintGob_ut.cpp">
       <Filter>utils\tests</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\tests\Vec_ut.cpp">
