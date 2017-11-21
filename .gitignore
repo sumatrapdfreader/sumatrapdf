@@ -28,7 +28,6 @@ vs2017/.vs/
 .vscode/.BROWSE.VC.DB-wal
 bin/cmapdump.exe
 bin/pigz.exe
-bin/premake5.exe
 drmemlogs/
 src/utils/BuildConfig.h
 build-log.txt
