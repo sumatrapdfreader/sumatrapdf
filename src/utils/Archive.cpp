@@ -281,7 +281,7 @@ Archive* OpenRarArchive(IStream* stream) {
     // the following has been extracted from UnRARDLL.exe -> unrar.h
     // publicly available from http://www.rarlab.com/rar_add.htm
 
-#define RAR_DLL_VERSION 6
+#define RAR_MIN_DLL_VERSION 6
 #define RAR_OM_EXTRACT 1
 #define RAR_SKIP 0
 #define RAR_TEST 1
@@ -351,7 +351,8 @@ static bool IsUnrarDllLoaded() {
 }
 
 static bool IsValidUnrarDll() {
-    return RARGetDllVersion() < RAR_DLL_VERSION;
+    int ver = RARGetDllVersion();
+    return ver >= RAR_MIN_DLL_VERSION;
 }
 
 static bool TryLoadUnrarDll() {
@@ -362,33 +363,54 @@ static bool TryLoadUnrarDll() {
     AutoFreeW dllPath(path::GetAppPath(L"unrar.dll"));
 #ifdef _WIN64
     AutoFreeW dll64Path(path::GetAppPath(L"unrar64.dll"));
-    if (file::Exists(dll64Path))
+    if (file::Exists(dll64Path)) {
         dllPath.Set(dll64Path.StealData());
+    }
 #endif
-    if (!file::Exists(dllPath))
+    if (!file::Exists(dllPath)) {
         return false;
+    }
     HMODULE h = LoadLibrary(dllPath);
-    if (!h)
+    if (!h) {
         return false;
+    }
     RAROpenArchiveEx = (RAROpenArchiveExProc)GetProcAddress(h, "RAROpenArchiveEx");
     RARReadHeaderEx = (RARReadHeaderExProc)GetProcAddress(h, "RARReadHeaderEx");
     RARProcessFile = (RARProcessFileProc)GetProcAddress(h, "RARProcessFile");
-    RARCloseArchive = (RARCloseArchiveProc)GetProcAddress(h, "RARCloseArchiveProc");
+    RARCloseArchive = (RARCloseArchiveProc)GetProcAddress(h, "RARCloseArchive");
     RARGetDllVersion = (RARGetDllVersionProc)GetProcAddress(h, "RARGetDllVersion");
     return IsUnrarDllLoaded() && IsValidUnrarDll();
 }
 
+// return 1 on success. Other values for msg that we don't handle: UCM_CHANGEVOLUME, UCM_NEEDPASSWORD
 static int CALLBACK unrarCallback(UINT msg, LPARAM userData, LPARAM rarBuffer, LPARAM bytesProcessed) {
-    if (UCM_PROCESSDATA != msg || !userData)
+    if (UCM_PROCESSDATA != msg || !userData) {
         return -1;
+    }
     str::Str<char>* data = (str::Str<char>*)userData;
     bool ok = data->AppendChecked((char*)rarBuffer, bytesProcessed);
     return ok ? 1 : -1;
 }
 
+static bool FindFile(HANDLE hArc, RARHeaderDataEx *rarHeader, const WCHAR *fileName) {
+    int res;
+    for (;;) {
+        res = RARReadHeaderEx(hArc, rarHeader);
+        if (0 != res) {
+            return false;
+        }
+        str::TransChars(rarHeader->FileNameW, L"\\", L"/");
+        if (str::EqI(rarHeader->FileNameW, fileName)) {
+            // don't support files whose uncompressed size is greater than 4GB
+            return rarHeader->UnpSizeHigh == 0;
+        }
+        RARProcessFile(hArc, RAR_SKIP, nullptr, nullptr);
+    }
+}
+
 char* Archive::GetFileDataByIdUnarrDll(size_t fileId, size_t* len) {
     CrashIf(!IsUnrarDllLoaded());
-    CrashIf(IsValidUnrarDll());
+    CrashIf(!IsValidUnrarDll());
     CrashIf(!rarFilePath_);
 
     AutoFreeW rarPath(str::conv::FromUtf8(rarFilePath_));
@@ -412,40 +434,28 @@ char* Archive::GetFileDataByIdUnarrDll(size_t fileId, size_t* len) {
     CrashIf(fileInfo->fileId != fileId);
 
     AutoFreeW fileName(str::conv::FromUtf8(fileInfo->name.data()));
-
-    int res = 0;
     RARHeaderDataEx rarHeader = {0};
-    for (;;) {
-        res = RARReadHeaderEx(hArc, &rarHeader);
-        if (0 != res)
-            break;
-        str::TransChars(rarHeader.FileNameW, L"\\", L"/");
-        if (str::EqI(rarHeader.FileNameW, fileName.Get())) {
-            break;
-        }
-        RARProcessFile(hArc, RAR_SKIP, nullptr, nullptr);
-    }
-
-    if (0 == res) {
-        if (rarHeader.UnpSizeHigh != 0) {
-            res = 1;
-        } else {
-            res = RARProcessFile(hArc, RAR_TEST, nullptr, nullptr);
-            if (rarHeader.UnpSize != data.size()) {
-                res = 1;
+    bool ok = FindFile(hArc, &rarHeader, fileName.Get());
+    if (ok) {
+        int res = RARProcessFile(hArc, RAR_TEST, nullptr, nullptr);
+        if ((res == 0) && (rarHeader.UnpSize == data.size())) {
+            // zero-terminate for convenience
+            if (!data.AppendChecked("\0\0\0", 3)) {
+                ok = false;
             }
+        } else {
+            ok = false;
         }
-        // zero-terminate for convenience
-        if (!data.AppendChecked("\0\0\0", 3))
-            res = 1;
     }
 
     RARCloseArchive(hArc);
 
-    if (0 != res)
+    if (!ok) {
         return nullptr;
-    if (len)
-        *len = data.size() - 2;
+    }
+    if (len) {
+        *len = rarHeader.UnpSize;
+    }
     return data.StealData();
 }
 
@@ -453,6 +463,7 @@ bool Archive::OpenUnrarDllFallback(const char* rarPathUtf) {
     if (!rarPathUtf || !TryLoadUnrarDll()) {
         return false;
     }
+    CrashIf(rarFilePath_);
     AutoFreeW rarPath(str::conv::FromUtf8(rarPathUtf));
 
     RAROpenArchiveDataEx arcData = {0};
@@ -460,15 +471,17 @@ bool Archive::OpenUnrarDllFallback(const char* rarPathUtf) {
     arcData.OpenMode = RAR_OM_EXTRACT;
 
     HANDLE hArc = RAROpenArchiveEx(&arcData);
-    if (!hArc || arcData.OpenResult != 0)
+    if (!hArc || arcData.OpenResult != 0) {
         return false;
+    }
 
     size_t fileId = 0;
     while (true) {
         RARHeaderDataEx rarHeader = {0};
         int res = RARReadHeaderEx(hArc, &rarHeader);
-        if (0 != res)
+        if (0 != res) {
             break;
+        }
 
         str::TransChars(rarHeader.FileNameW, L"\\", L"/");
         AutoFree name(str::conv::ToUtf8(rarHeader.FileNameW));
