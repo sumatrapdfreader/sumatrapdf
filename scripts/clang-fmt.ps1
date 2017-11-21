@@ -83,7 +83,7 @@ $files =
 "src\utils\FileUtil.*",
 "src\utils\FileWatcher.*",
 #"src\utils\FzImgReader.*",
-#"src\utils\GdiPlusUtil.*",
+"src\utils\GdiPlusUtil.*",
 #"src\utils\HtmlParserLookup.*",
 #"src\utils\HtmlPrettyPrint.*",
 #"src\utils\HtmlPullParser.*",
