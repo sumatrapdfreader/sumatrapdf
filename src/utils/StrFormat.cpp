@@ -21,12 +21,12 @@ static Type typeFromChar(char c) {
     return Invalid;
 }
 
-Fmt::Fmt(const char *fmt) {
+Fmt::Fmt(const char* fmt) {
     threadId = GetCurrentThreadId();
     ParseFormat(fmt);
 }
 
-void Fmt::addFormatStr(const char *s, size_t len) {
+void Fmt::addFormatStr(const char* s, size_t len) {
     if (len == 0) {
         return;
     }
@@ -43,7 +43,7 @@ void Fmt::addFormatStr(const char *s, size_t len) {
     --currArgFromFormatNo;
 }
 
-const char *Fmt::parseArgDefPositional(const char *fmt) {
+const char* Fmt::parseArgDefPositional(const char* fmt) {
     CrashIf(*fmt != '{');
     ++fmt;
     int n = 0;
@@ -59,7 +59,7 @@ const char *Fmt::parseArgDefPositional(const char *fmt) {
     return fmt + 1;
 }
 
-const char *Fmt::parseArgDefPerc(const char *fmt) {
+const char* Fmt::parseArgDefPerc(const char* fmt) {
     CrashIf(*fmt != '%');
     // TODO: more features
     instructions[nInst].t = typeFromChar(fmt[1]);
@@ -69,7 +69,7 @@ const char *Fmt::parseArgDefPerc(const char *fmt) {
     return fmt + 2;
 }
 
-static bool hasInstructionWithArgNo(Inst *insts, int nInst, int argNo) {
+static bool hasInstructionWithArgNo(Inst* insts, int nInst, int argNo) {
     for (int i = 0; i < nInst; i++) {
         if (insts[i].argNo == argNo) {
             return true;
@@ -80,15 +80,14 @@ static bool hasInstructionWithArgNo(Inst *insts, int nInst, int argNo) {
 
 // as an optimization, we can re-use object by calling ParseFormat() only once
 // and then using Reset() to restore the output
-Fmt &Fmt::Reset() {
+Fmt& Fmt::Reset() {
     CrashIf(threadId != GetCurrentThreadId()); // check no cross-thread use
     CrashIf(format != nullptr);
     res.Reset();
     return *this;
 }
 
-Fmt &Fmt::ParseFormat(const char *fmt) {
-
+Fmt& Fmt::ParseFormat(const char* fmt) {
     // we can use Fmt in an optimized way by having only one global instance per
     // thread or an instance for a given format expression. To make that a bit
     // safer, we check that they are not used cross-thread
@@ -105,7 +104,7 @@ Fmt &Fmt::ParseFormat(const char *fmt) {
 
     // parse formatting string, until a %$c or {$n}
     // %% is how we escape %, \{ is how we escape {
-    const char *start = fmt;
+    const char* start = fmt;
     char c;
     while (*fmt) {
         c = *fmt;
@@ -165,7 +164,7 @@ Fmt &Fmt::ParseFormat(const char *fmt) {
     return *this;
 }
 
-Fmt &Fmt::addArgType(Type t) {
+Fmt& Fmt::addArgType(Type t) {
     CrashIf(nArgsUsed >= MaxArgs);
     args[nArgs].t = t;
     nArgs++;
@@ -173,32 +172,32 @@ Fmt &Fmt::addArgType(Type t) {
     return *this;
 }
 
-Fmt &Fmt::i(int i) {
+Fmt& Fmt::i(int i) {
     args[nArgs].i = i;
     return addArgType(Int);
 }
 
-Fmt &Fmt::s(const char *s) {
+Fmt& Fmt::s(const char* s) {
     args[nArgs].s = s;
     return addArgType(Str);
 }
 
-Fmt &Fmt::s(const WCHAR *s) {
+Fmt& Fmt::s(const WCHAR* s) {
     args[nArgs].ws = s;
     return addArgType(WStr);
 }
 
-Fmt &Fmt::c(char c) {
+Fmt& Fmt::c(char c) {
     args[nArgs].c = c;
     return addArgType(Char);
 }
 
-Fmt &Fmt::f(float f) {
+Fmt& Fmt::f(float f) {
     args[nArgs].f = f;
     return addArgType(Float);
 }
 
-Fmt &Fmt::f(double d) {
+Fmt& Fmt::f(double d) {
     args[nArgs].d = d;
     return addArgType(Double);
 }
@@ -264,13 +263,13 @@ void Fmt::serializeInst(int n) {
             res.Append(arg.s);
             break;
         case WStr:
-            char *sUtf8 = str::conv::ToUtf8(arg.ws);
+            char* sUtf8 = str::conv::ToUtf8(arg.ws);
             res.AppendAndFree(sUtf8);
             break;
     };
 }
 
-char *Fmt::Get() {
+char* Fmt::Get() {
     CrashIf(nArgs != maxArgNo + 1);
     for (int i = 0; isOk && i < nInst; i++) {
         serializeInst(i);
@@ -283,5 +282,7 @@ char *Fmt::Get() {
     return res.Get();
 }
 
-char *Fmt::GetDup() { return str::Dup(Get()); }
+char* Fmt::GetDup() {
+    return str::Dup(Get());
 }
+} // namespace fmt

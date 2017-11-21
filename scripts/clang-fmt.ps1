@@ -98,7 +98,7 @@ $files =
 "src\utils\SerializeTxt.*",
 "src\utils\SettingsUtil.*",
 #"src\utils\SquareTreeParser.*",
-#"src\utils\StrFormat.*",
+"src\utils\StrFormat.*",
 "src\utils\StrSlice.*",
 "src\utils\StrUtil*",
 "src\utils\TgaReader.*",
