@@ -43,12 +43,14 @@ protected:
         size_t allocSize = newElCount * sizeof(T);
         size_t newPadding = allocSize - len * sizeof(T);
         T *newEls;
-        if (buf == els)
-            newEls = (T *)Allocator::Dup(allocator, buf, len * sizeof(T), newPadding);
-        else
+        if (buf == els) {
+            newEls = (T *)Allocator::MemDup(allocator, buf, len * sizeof(T), newPadding);
+        } else {
             newEls = (T *)Allocator::Realloc(allocator, els, allocSize);
-        if (!newEls)
+        }
+        if (!newEls) {
             return false;
+        }
         els = newEls;
         memset(els + len, 0, newPadding);
         cap = newCap;
@@ -231,8 +233,9 @@ public:
     // it doesn't matter
     T *StealData() {
         T* res = els;
-        if (els == buf)
-            res = (T *)Allocator::Dup(allocator, buf, (len + PADDING) * sizeof(T));
+        if (els == buf) {
+            res = (T *)Allocator::MemDup(allocator, buf, (len + PADDING) * sizeof(T));
+        }
         els = buf;
         Reset();
         return res;

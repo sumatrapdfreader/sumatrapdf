@@ -69,7 +69,7 @@ bool Archive::Open(ar_stream* data, const char* archivePath) {
         i->fileSizeUncompressed = ar_entry_get_size(ar_);
         i->filePos = ar_entry_get_offset(ar_);
         i->fileTime = ar_entry_get_filetime(ar_);
-        i->name = allocator_.AllocString(name);
+        i->name = Allocator::AllocString(&allocator_, name);
         fileInfos_.push_back(i);
 
         fileId++;
@@ -151,22 +151,24 @@ OwnedData Archive::GetFileDataById(size_t fileId) {
     return data;
 }
 
-char* Archive::GetComment(size_t* len) {
-    if (!ar_)
-        return nullptr;
-    size_t commentLen = ar_get_global_comment(ar_, nullptr, 0);
-    if (0 == commentLen || (size_t)-1 == commentLen)
-        return nullptr;
-    AutoFree comment((char*)malloc(commentLen + 1));
-    if (!comment)
-        return nullptr;
-    size_t read = ar_get_global_comment(ar_, comment, commentLen);
-    if (read != commentLen)
-        return nullptr;
-    comment[commentLen] = '\0';
-    if (len)
-        *len = commentLen;
-    return comment.StealData();
+std::string_view Archive::GetComment() {
+    if (!ar_) {
+        return {};
+    }
+
+    size_t n = ar_get_global_comment(ar_, nullptr, 0);
+    if (0 == n || (size_t)-1 == n) {
+        return {};
+    }
+    char* comment = Allocator::Alloc<char>(&allocator_, n + 1);
+    if (!comment) {
+        return {};
+    }
+    size_t nRead = ar_get_global_comment(ar_, comment, n);
+    if (nRead != n) {
+        return {};
+    }
+    return std::string_view(comment, n);
 }
 
 ///// format specific handling /////
@@ -501,7 +503,7 @@ bool Archive::OpenUnrarDllFallback(const char* rarPathUtf) {
         i->fileSizeUncompressed = (size_t)rarHeader.UnpSize;
         i->filePos = 0;
         i->fileTime = (int64_t)rarHeader.FileTime;
-        i->name = allocator_.AllocString(name.Get());
+        i->name = Allocator::AllocString(&allocator_, name.Get());
         fileInfos_.push_back(i);
 
         fileId++;
@@ -511,7 +513,8 @@ bool Archive::OpenUnrarDllFallback(const char* rarPathUtf) {
 
     RARCloseArchive(hArc);
 
-    rarFilePath_ = allocator_.AllocString(rarPathUtf).data();
+    auto tmp = Allocator::AllocString(&allocator_, rarPathUtf);
+    rarFilePath_ = tmp.data();
     return true;
 }
 #endif

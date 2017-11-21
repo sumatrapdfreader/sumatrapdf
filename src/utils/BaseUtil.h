@@ -362,8 +362,10 @@ class Allocator {
     static void* AllocZero(Allocator* a, size_t size);
     static void Free(Allocator* a, void* p);
     static void* Realloc(Allocator* a, void* mem, size_t size);
-    static void* Dup(Allocator* a, const void* mem, size_t size, size_t padding = 0);
+    static void* MemDup(Allocator* a, const void* mem, size_t size, size_t padding = 0);
     static char* StrDup(Allocator* a, const char* str);
+    static std::string_view AllocString(Allocator* a, std::string_view str);
+
 #if OS_WIN
     static WCHAR* StrDup(Allocator* a, const WCHAR* str);
 #endif
@@ -422,8 +424,6 @@ class PoolAllocator : public Allocator {
     T* AllocStruct() {
         return (T*)Alloc(sizeof(T));
     }
-
-    std::string_view AllocString(std::string_view str);
 
     // Iterator for easily traversing allocated memory as array
     // of values of type T. The caller has to enforce the fact

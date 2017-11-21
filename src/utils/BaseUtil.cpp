@@ -4,45 +4,73 @@
 #include "BaseUtil.h"
 
 void* Allocator::Alloc(Allocator* a, size_t size) {
-    if (!a)
+    if (!a) {
         return malloc(size);
+    }
     return a->Alloc(size);
 }
 
 void* Allocator::AllocZero(Allocator* a, size_t size) {
     void* m = Allocator::Alloc(a, size);
-    if (m)
+    if (m) {
         ZeroMemory(m, size);
+    }
     return m;
 }
 
 void Allocator::Free(Allocator* a, void* p) {
-    if (!a)
+    if (!a) {
         free(p);
-    else
+    } else {
         a->Free(p);
+    }
 }
 
 void* Allocator::Realloc(Allocator* a, void* mem, size_t size) {
-    if (!a)
+    if (!a) {
         return realloc(mem, size);
+    }
     return a->Realloc(mem, size);
 }
 
-void* Allocator::Dup(Allocator* a, const void* mem, size_t size, size_t padding) {
+void* Allocator::MemDup(Allocator* a, const void* mem, size_t size, size_t padding) {
     void* newMem = Alloc(a, size + padding);
-    if (newMem)
+    if (newMem) {
         memcpy(newMem, mem, size);
+    }
     return newMem;
 }
 
-char* Allocator::StrDup(Allocator* a, const char* str) {
-    return str ? (char*)Dup(a, str, strlen(str) + 1) : nullptr;
+char* Allocator::StrDup(Allocator* a, const char* s) {
+    if (!s) {
+        return nullptr;
+    }
+    size_t n = str::Len(s);
+    return (char*)Allocator::MemDup(a, s, n + 1);
+}
+
+// allocates a copy of the source string inside the allocator.
+// it's only safe in PoolAllocator because allocated data
+// never moves in memory
+std::string_view Allocator::AllocString(Allocator* a, std::string_view str) {
+    size_t n = str.size();
+    size_t toCopy = n + 1;
+    const char* src = str.data();
+    if (!src) {
+        src = "";
+    }
+    void* dst = Allocator::Alloc(a, toCopy);
+    memcpy(dst, (const void*)src, toCopy);
+    return std::string_view((const char*)dst, n);
 }
 
 #if OS_WIN
-WCHAR* Allocator::StrDup(Allocator* a, const WCHAR* str) {
-    return str ? (WCHAR*)Dup(a, str, (wcslen(str) + 1) * sizeof(WCHAR)) : nullptr;
+WCHAR* Allocator::StrDup(Allocator* a, const WCHAR* s) {
+    if (!s) {
+        return nullptr;
+    }
+    size_t n = (str::Len(s) + 1) * sizeof(WCHAR);
+    return (WCHAR*)Allocator::MemDup(a, s, n);
 }
 #endif
 
@@ -74,16 +102,19 @@ PoolAllocator::~PoolAllocator() {
 void PoolAllocator::AllocBlock(size_t minSize) {
     minSize = RoundUp(minSize, allocRounding);
     size_t size = minBlockSize;
-    if (minSize > size)
+    if (minSize > size) {
         size = minSize;
+    }
     MemBlockNode* node = (MemBlockNode*)calloc(1, sizeof(MemBlockNode) + size);
     CrashAlwaysIf(!node);
-    if (!firstBlock)
+    if (!firstBlock) {
         firstBlock = node;
+    }
     node->size = size;
     node->free = size;
-    if (currBlock)
+    if (currBlock) {
         currBlock->next = node;
+    }
     currBlock = node;
 }
 
@@ -107,21 +138,6 @@ void* PoolAllocator::Alloc(size_t size) {
     void* mem = (void*)(currBlock->DataStart() + currBlock->Used());
     currBlock->free -= size;
     return mem;
-}
-
-// allocates a copy of the source string inside the allocator.
-// it's only safe in PoolAllocator because allocated data
-// never moves in memory
-std::string_view PoolAllocator::AllocString(std::string_view str) {
-    size_t n = str.size();
-    size_t toCopy = n + 1;
-    const char* src = str.data();
-    if (!src) {
-        src = "";
-    }
-    void* dst = Alloc(toCopy);
-    memcpy(dst, (const void*)src, toCopy);
-    return std::string_view((const char*)dst, n);
 }
 
 // assuming allocated memory was for pieces of uniform size,

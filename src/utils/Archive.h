@@ -52,8 +52,7 @@ class Archive {
     OwnedData GetFileDataByName(const char* filename);
     OwnedData GetFileDataById(size_t fileId);
 
-    // caller must free() the result
-    char* GetComment(size_t* len = nullptr);
+    std::string_view GetComment();
 
   protected:
     // used for allocating strings that are referenced by ArchFileInfo::name

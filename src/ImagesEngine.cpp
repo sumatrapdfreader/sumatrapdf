@@ -924,9 +924,9 @@ bool CbxEngineImpl::FinishLoading() {
     if (metadata.data) {
         ParseComicInfoXml(metadata.data);
     }
-    metadata.Set(cbxFile->GetComment());
-    if (metadata.data) {
-        json::Parse(metadata.data, this);
+    std::string_view comment = cbxFile->GetComment();
+    if (comment.data()) {
+        json::Parse(comment.data(), this);
     }
 
     std::sort(pageFiles.begin(), pageFiles.end(), cmpArchFileInfoByName);
