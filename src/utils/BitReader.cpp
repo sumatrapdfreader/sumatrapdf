@@ -7,22 +7,20 @@
 // Bit reader is a streaming reader of bits from underlying memory data
 
 // data has to be valid for the lifetime of this class
-BitReader::BitReader(uint8_t *data, size_t len) :
-    data(data), dataLen(len), currBitPos(0)
-{
+BitReader::BitReader(uint8_t* data, size_t len) : data(data), dataLen(len), currBitPos(0) {
     bitsCount = len * 8;
 }
 
-BitReader::~BitReader() {
-}
+BitReader::~BitReader() {}
 
 uint8_t BitReader::GetByte(size_t pos) {
-    if (pos >= dataLen)
+    if (pos >= dataLen) {
         return 0;
+    }
     return data[pos];
 }
 
-    // advance position in the bit stream
+// advance position in the bit stream
 // returns false if we've eaten bits more than we have
 bool BitReader::Eat(size_t bitsCount) {
     currBitPos += bitsCount;
@@ -30,15 +28,16 @@ bool BitReader::Eat(size_t bitsCount) {
 }
 
 size_t BitReader::BitsLeft() {
-    if (currBitPos < bitsCount)
+    if (currBitPos < bitsCount) {
         return bitsCount - currBitPos;
+    }
     return 0;
 }
 
 // Read bitsCount (up to 32) bits, without advancing the position in the bit stream
 // If asked for more bits than we have left, the extra bits will be 0
 uint32_t BitReader::Peek(size_t bitsCount) {
-    AssertCrash(bitsCount <= 32);
+    CrashIf((bitsCount == 0) || (bitsCount > 32));
     size_t currBytePos = currBitPos / 8;
     uint8_t currByte = GetByte(currBytePos);
     uint8_t currBit = currBitPos % 8;
@@ -46,7 +45,7 @@ uint32_t BitReader::Peek(size_t bitsCount) {
     uint8_t bitsLeft = 8 - currBit;
     uint32_t ret = 0;
     while (bitsCount > 0) {
-        AssertCrash(bitsLeft >= 0);
+        CrashIf(bitsLeft < 0);
         if (0 == bitsLeft) {
             ++currBytePos;
             currByte = GetByte(currBytePos);
@@ -62,11 +61,12 @@ uint32_t BitReader::Peek(size_t bitsCount) {
         } else {
             // slow path - 1 bit at a time
             ret = ret << 1;
-            if ((0x80 & currByte) != 0)
+            if ((0x80 & currByte) != 0) {
                 ret |= 1;
+            }
             currByte = currByte << 1;
-            --bitsLeft;
-            --bitsCount;
+            bitsLeft--;
+            bitsCount--;
         }
     }
     return ret;

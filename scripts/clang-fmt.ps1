@@ -69,7 +69,7 @@ $files =
 "src\mui\SvgPath.*",
 "src\utils\Archive.*",
 "src\utils\BaseUtil.*",
-#"src\utils\BitReader.*",
+"src\utils\BitReader.*",
 "src\utils\ByteOrderDecoder.*",
 "src\utils\ByteWriter.*",
 #"src\utils\CmdLineParser.*",
