@@ -25,9 +25,19 @@ the deserialization of such a settings file.
 */
 
 enum SettingType {
-    Type_Struct, Type_Array, Type_Compact,
-    Type_Bool, Type_Color, Type_Float, Type_Int, Type_String, Type_Utf8String,
-    Type_ColorArray, Type_FloatArray, Type_IntArray, Type_StringArray,
+    Type_Struct,
+    Type_Array,
+    Type_Compact,
+    Type_Bool,
+    Type_Color,
+    Type_Float,
+    Type_Int,
+    Type_String,
+    Type_Utf8String,
+    Type_ColorArray,
+    Type_FloatArray,
+    Type_IntArray,
+    Type_StringArray,
     Type_Comment,
     Type_Prerelease, // same as Type_Struct but won't be written out in release builds
 };
@@ -41,11 +51,12 @@ struct FieldInfo {
 struct StructInfo {
     uint16_t structSize;
     uint16_t fieldCount;
-    const FieldInfo *fields;
+    const FieldInfo* fields;
     // one string of fieldCount zero-terminated names of all fields in the order of fields
-    const char *fieldNames;
+    const char* fieldNames;
 };
 
-char *SerializeStruct(const StructInfo *info, const void *strct, const char *prevData=nullptr, size_t *sizeOut=nullptr);
-void *DeserializeStruct(const StructInfo *info, const char *data, void *strct=nullptr);
-void FreeStruct(const StructInfo *info, void *strct);
+char* SerializeStruct(const StructInfo* info, const void* strct, const char* prevData = nullptr,
+                      size_t* sizeOut = nullptr);
+void* DeserializeStruct(const StructInfo* info, const char* data, void* strct = nullptr);
+void FreeStruct(const StructInfo* info, void* strct);
