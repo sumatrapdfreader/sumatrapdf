@@ -87,8 +87,15 @@ class EbookEngine : public BaseEngine {
     PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse = false) override;
     RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
-    unsigned char* GetFileData(size_t* cbCount) override {
-        return fileName ? (unsigned char*)file::ReadAll(fileName, cbCount) : nullptr;
+    u8* GetFileData(size_t* cbCount) override {
+        if (!fileName) {
+            return nullptr;
+        }
+        OwnedData data(file::ReadAll(fileName));
+        if (cbCount) {
+            *cbCount = data.size;
+        }
+        return (u8*)data.StealData();
     }
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override {
         UNUSED(includeUserAnnots);
@@ -779,15 +786,21 @@ bool EpubEngineImpl::FinishLoading() {
     return pages->size() > 0;
 }
 
-unsigned char* EpubEngineImpl::GetFileData(size_t* cbCount) {
+u8* EpubEngineImpl::GetFileData(size_t* cbCount) {
     if (stream) {
         ScopedMem<void> data(GetDataFromStream(stream, cbCount));
-        if (data)
-            return (unsigned char*)data.StealData();
+        if (data) {
+            return (u8*)data.StealData();
+        }
     }
-    if (!fileName)
+    if (!fileName) {
         return nullptr;
-    return (unsigned char*)file::ReadAll(fileName, cbCount);
+    }
+    OwnedData data(file::ReadAll(fileName));
+    if (cbCount) {
+        *cbCount = data.size;
+    }
+    return (u8*)data.StealData();
 }
 
 bool EpubEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
@@ -797,8 +810,9 @@ bool EpubEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots
     if (stream) {
         size_t len;
         ScopedMem<void> data(GetDataFromStream(stream, &len));
-        if (data && file::WriteAll(dstPath, data, len))
+        if (data && file::WriteAll(dstPath, data, len)) {
             return true;
+        }
     }
     if (!fileName) {
         return false;
@@ -807,8 +821,9 @@ bool EpubEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots
 }
 
 PageLayoutType EpubEngineImpl::PreferredLayout() {
-    if (doc->IsRTL())
+    if (doc->IsRTL()) {
         return (PageLayoutType)(Layout_Book | Layout_R2L);
+    }
     return Layout_Book;
 }
 
@@ -816,8 +831,9 @@ DocTocItem* EpubEngineImpl::GetTocTree() {
     EbookTocBuilder builder(this);
     doc->ParseToc(&builder);
     EbookTocItem* root = builder.GetRoot();
-    if (root)
+    if (root) {
         root->OpenSingleNode();
+    }
     return root;
 }
 
@@ -898,8 +914,9 @@ bool Fb2EngineImpl::Load(IStream* stream) {
 }
 
 bool Fb2EngineImpl::FinishLoading() {
-    if (!doc)
+    if (!doc) {
         return false;
+    }
 
     HtmlFormatterArgs args;
     args.htmlStr = doc->GetXmlData(&args.htmlStrLen);
@@ -911,8 +928,9 @@ bool Fb2EngineImpl::FinishLoading() {
     args.textRenderMethod = mui::TextRenderMethodGdiplusQuick;
 
     pages = Fb2Formatter(&args, doc).FormatAllPages(false);
-    if (!ExtractPageAnchors())
+    if (!ExtractPageAnchors()) {
         return false;
+    }
 
     return pages->size() > 0;
 }
@@ -921,8 +939,9 @@ DocTocItem* Fb2EngineImpl::GetTocTree() {
     EbookTocBuilder builder(this);
     doc->ParseToc(&builder);
     EbookTocItem* root = builder.GetRoot();
-    if (root)
+    if (root) {
         root->OpenSingleNode();
+    }
     return root;
 }
 
@@ -1002,8 +1021,9 @@ bool MobiEngineImpl::Load(IStream* stream) {
 }
 
 bool MobiEngineImpl::FinishLoading() {
-    if (!doc || PdbDocType::Mobipocket != doc->GetDocType())
+    if (!doc || PdbDocType::Mobipocket != doc->GetDocType()) {
         return false;
+    }
 
     HtmlFormatterArgs args;
     args.htmlStr = doc->GetHtmlData(args.htmlStrLen);
@@ -1015,27 +1035,31 @@ bool MobiEngineImpl::FinishLoading() {
     args.textRenderMethod = mui::TextRenderMethodGdiplusQuick;
 
     pages = MobiFormatter(&args, doc).FormatAllPages();
-    if (!ExtractPageAnchors())
+    if (!ExtractPageAnchors()) {
         return false;
+    }
 
     return pages->size() > 0;
 }
 
 PageDestination* MobiEngineImpl::GetNamedDest(const WCHAR* name) {
     int filePos = _wtoi(name);
-    if (filePos < 0 || 0 == filePos && *name != '0')
+    if (filePos < 0 || 0 == filePos && *name != '0') {
         return nullptr;
+    }
     int pageNo;
     for (pageNo = 1; pageNo < PageCount(); pageNo++) {
-        if (pages->at(pageNo)->reparseIdx > filePos)
+        if (pages->at(pageNo)->reparseIdx > filePos) {
             break;
+        }
     }
     CrashIf(pageNo < 1 || pageNo > PageCount());
 
     size_t htmlLen;
     char* start = doc->GetHtmlData(htmlLen);
-    if ((size_t)filePos > htmlLen)
+    if ((size_t)filePos > htmlLen) {
         return nullptr;
+    }
 
     ScopedCritSec scope(&pagesAccess);
     Vec<DrawInstr>* pageInstrs = GetHtmlPage(pageNo);
