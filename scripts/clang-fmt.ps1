@@ -11,7 +11,7 @@ $files =
 "src\Canvas.*",
 "src\Caption.*",
 "src\ChmDoc.*",
-#"src\ChmModel.*",
+"src\ChmModel.*",
 "src\Colors.*",
 "src\CrashHandler.*",
 #"src\DisplayModel.*",
