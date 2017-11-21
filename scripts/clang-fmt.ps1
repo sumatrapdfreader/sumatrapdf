@@ -38,7 +38,7 @@ $files =
 "src\Notifications.*",
 #"src\PagesLayoutDef*",    # this one is auto-generated!
 "src\ParseCommandLine*",
-#"src\PdfCreator.*",
+"src\PdfCreator.*",
 "src\PdfEngine.*",
 "src\PdfSync.*",
 "src\Print*",
