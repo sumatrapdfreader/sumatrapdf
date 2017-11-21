@@ -65,7 +65,7 @@ $files =
 "src\Theme.*",
 "src\Toolbar.*",
 #"src\UnitTests.*",
-#"src\WindowInfo.*",
+"src\WindowInfo.*",
 "src\mui\SvgPath.*",
 "src\utils\Archive.*",
 "src\utils\BaseUtil.*",
