@@ -96,7 +96,7 @@ $files =
 #"src\utils\SettingsUtil.*",
 #"src\utils\SquareTreeParser.*",
 #"src\utils\StrFormat.*",
-#"src\utils\StrSlice.*",
+"src\utils\StrSlice.*",
 "src\utils\StrUtil*",
 #"src\utils\TgaReader.*",
 #"src\utils\ThreadUtil.*",

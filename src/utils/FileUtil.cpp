@@ -308,11 +308,11 @@ FILE* OpenFILE(const char* path) {
 #endif
 }
 
-char* ReadAll(const char* filePath, size_t* fileSizeOut, Allocator* allocator) {
+char* ReadAllWithAllocator(const char* filePath, size_t* fileSizeOut, Allocator* allocator) {
 #if OS_WIN
     WCHAR buf[512];
     str::Utf8ToWcharBuf(filePath, str::Len(filePath), buf, dimof(buf));
-    return ReadAll(buf, fileSizeOut, allocator);
+    return ReadAllWithAllocator(buf, fileSizeOut, allocator);
 #else
     CrashAlwaysIf(true);
     UNUSED(filePath);
@@ -381,29 +381,33 @@ int64_t GetSize(const WCHAR* filePath) {
     return size.QuadPart;
 }
 
-char* ReadAll(const WCHAR* filePath, size_t* fileSizeOut, Allocator* allocator) {
-    int64_t size64 = GetSize(filePath);
-    if (size64 < 0)
+char* ReadAllWithAllocator(const WCHAR* path, size_t* fileSizeOut, Allocator* allocator) {
+    int64_t size64 = GetSize(path);
+    if (size64 < 0) {
         return nullptr;
+    }
     size_t size = (size_t)size64;
 #ifdef _WIN64
     CrashIf(size != (size_t)size64);
 #else
-    if (size != size64)
+    if (size != size64) {
         return nullptr;
+    }
 #endif
 
     // overflow check
-    if (size + 1 + sizeof(WCHAR) < sizeof(WCHAR) + 1)
+    if (size + 1 + sizeof(WCHAR) < sizeof(WCHAR) + 1) {
         return nullptr;
+    }
     /* allocate one character more and zero-terminate just in case it's a
        text file we'll want to treat as C string. Doesn't hurt for binary
        files (note: three byte terminator for UTF-16 files) */
     char* data = (char*)Allocator::Alloc(allocator, size + sizeof(WCHAR) + 1);
-    if (!data)
+    if (!data) {
         return nullptr;
+    }
 
-    if (!ReadN(filePath, data, size)) {
+    if (!ReadN(path, data, size)) {
         Allocator::Free(allocator, data);
         return nullptr;
     }
@@ -411,9 +415,20 @@ char* ReadAll(const WCHAR* filePath, size_t* fileSizeOut, Allocator* allocator) 
     // zero-terminate for convenience
     data[size] = data[size + 1] = data[size + 2] = '\0';
 
-    if (fileSizeOut)
+    if (fileSizeOut) {
         *fileSizeOut = size;
+    }
     return data;
+}
+
+char* ReadAll(const WCHAR* path, size_t* fileSizeOut) {
+    return ReadAllWithAllocator(path, fileSizeOut, nullptr);
+}
+
+OwnedData ReadAll(const WCHAR* path) {
+    size_t size;
+    char *data = ReadAll(path, &size);
+    return { data, size };
 }
 
 // buf must be at least toRead in size (note: it won't be zero-terminated)

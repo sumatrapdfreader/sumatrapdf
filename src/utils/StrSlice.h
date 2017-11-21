@@ -3,7 +3,7 @@
 
 namespace str {
 
-// a class to help scanning through text
+// a class to help scanning through text. doesn't own th edata
 struct Slice {
     char *  begin;
     char *  end;

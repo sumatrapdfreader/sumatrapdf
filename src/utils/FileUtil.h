@@ -34,13 +34,15 @@ WCHAR* GetAppPath(const WCHAR* fileName = nullptr);
 namespace file {
 
 FILE* OpenFILE(const char* path);
-char* ReadAll(const char* path, size_t* fileSizeOut, Allocator* allocator = nullptr);
+char* ReadAllWithAllocator(const char* path, size_t* fileSizeOut, Allocator* allocator);
 bool WriteAll(const char* path, const void* data, size_t dataLen);
 
 #if OS_WIN
 FILE* OpenFILE(const WCHAR* path);
 bool Exists(const WCHAR* path);
-char* ReadAll(const WCHAR* path, size_t* fileSizeOut, Allocator* allocator = nullptr);
+char* ReadAllWithAllocator(const WCHAR* path, size_t* fileSizeOut, Allocator* allocator);
+char* ReadAll(const WCHAR* path, size_t* fileSizeOut);
+OwnedData ReadAll(const WCHAR* path);
 bool ReadN(const WCHAR* path, char* buf, size_t toRead);
 bool WriteAll(const WCHAR* path, const void* data, size_t dataLen);
 int64_t GetSize(const WCHAR* path);

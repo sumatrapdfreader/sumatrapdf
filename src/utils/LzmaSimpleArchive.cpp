@@ -255,7 +255,7 @@ static bool ExtractFileByIdx(SimpleArchive* archive, int idx, const char* dstDir
 
 bool ExtractFiles(const char* archivePath, const char* dstDir, const char** files, Allocator* allocator) {
     size_t archiveDataSize;
-    char* archiveData = file::ReadAll(archivePath, &archiveDataSize, allocator);
+    char* archiveData = file::ReadAllWithAllocator(archivePath, &archiveDataSize, allocator);
     if (!archiveData) {
         return false;
     }

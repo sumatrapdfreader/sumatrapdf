@@ -26,8 +26,9 @@ ptrdiff_t Slice::SkipWsUntilNewline()
 {
     char *start = curr;
     for (; !Finished(); ++curr) {
-        if (!IsWsNoNewline(*curr))
+        if (!IsWsNoNewline(*curr)) {
             break;
+        }
     }
     return curr - start;
 }
@@ -37,8 +38,9 @@ ptrdiff_t Slice::SkipNonWs()
 {
     char *start = curr;
     for (; !Finished(); ++curr) {
-        if (IsWsOrNewline(*curr))
+        if (IsWsOrNewline(*curr)) {
             break;
+        }
     }
     return curr - start;
 }
@@ -48,23 +50,26 @@ ptrdiff_t Slice::SkipUntil(char toFind)
 {
     char *start = curr;
     for (; !Finished(); ++curr) {
-        if (*curr == toFind)
+        if (*curr == toFind) {
             break;
+        }
     }
     return curr - start;
 }
 
 char Slice::PrevChar() const
 {
-    if (curr > begin)
+    if (curr > begin) {
         return curr[-1];
+    }
     return 0;
 }
 
 char Slice::CurrChar() const
 {
-    if (curr < end)
+    if (curr < end) {
         return *curr;
+    }
     return 0;
 }
 
@@ -82,8 +87,9 @@ ptrdiff_t Slice::Skip(int n)
 
 void Slice::ZeroCurr()
 {
-    if (curr < end)
+    if (curr < end) {
         *curr = 0;
+    }
 }
 
 } // namespace str
