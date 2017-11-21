@@ -6,8 +6,8 @@ Remove-Item src\*.bak, src\*.tmp
 
 $files =
 "src\AppPrefs.*",
-#"src\AppTools.*",
-#"src\AppUtil.*",
+"src\AppTools.*",
+"src\AppUtil.*",
 "src\Canvas.*",
 "src\Caption.*",
 #"src\ChmDoc.*",

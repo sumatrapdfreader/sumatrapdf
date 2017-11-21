@@ -3,13 +3,13 @@
 
 bool HasBeenInstalled();
 bool IsRunningInPortableMode();
-WCHAR *AppGenDataFilename(const WCHAR *pFilename);
-void SetAppDataPath(const WCHAR *path);
+WCHAR* AppGenDataFilename(const WCHAR* pFilename);
+void SetAppDataPath(const WCHAR* path);
 
 void DoAssociateExeWithPdfExtension(HKEY hkey);
 bool IsExeAssociatedWithPdfExtension();
 
-WCHAR* AutoDetectInverseSearchCommands(HWND hwndCombo=nullptr);
+WCHAR* AutoDetectInverseSearchCommands(HWND hwndCombo = nullptr);
 
 bool ExtendedEditWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 

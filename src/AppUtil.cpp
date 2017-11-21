@@ -12,8 +12,7 @@
 // the only valid chars are 0-9, . and newlines.
 // a valid version has to match the regex /^\d+(\.\d+)*(\r?\n)?$/
 // Return false if it contains anything else.
-bool IsValidProgramVersion(const char *txt)
-{
+bool IsValidProgramVersion(const char* txt) {
     if (!str::IsDigit(*txt))
         return false;
 
@@ -33,10 +32,9 @@ bool IsValidProgramVersion(const char *txt)
 }
 
 // extract the next (positive) number from the string *txt
-static unsigned int ExtractNextNumber(const WCHAR **txt)
-{
+static unsigned int ExtractNextNumber(const WCHAR** txt) {
     unsigned int val = 0;
-    const WCHAR *next = str::Parse(*txt, L"%u%?.", &val);
+    const WCHAR* next = str::Parse(*txt, L"%u%?.", &val);
     *txt = next ? next : *txt + str::Len(*txt);
     return val;
 }
@@ -47,8 +45,7 @@ static unsigned int ExtractNextNumber(const WCHAR **txt)
 //   0.9.3.900 is greater than 0.9.3
 //   1.09.300 is greater than 1.09.3 which is greater than 1.9.1
 //   1.2.0 is the same as 1.2
-int CompareVersion(const WCHAR *txt1, const WCHAR *txt2)
-{
+int CompareVersion(const WCHAR* txt1, const WCHAR* txt2) {
     while (*txt1 || *txt2) {
         unsigned int v1 = ExtractNextNumber(&txt1);
         unsigned int v2 = ExtractNextNumber(&txt2);
@@ -62,8 +59,7 @@ int CompareVersion(const WCHAR *txt1, const WCHAR *txt2)
 // Updates the drive letter for a path that could have been on a removable drive,
 // if that same path can be found on a different removable drive
 // returns true if the path has been changed
-bool AdjustVariableDriveLetter(WCHAR *path)
-{
+bool AdjustVariableDriveLetter(WCHAR* path) {
     // Don't bother if the file path is still valid
     if (file::Exists(path))
         return false;
@@ -89,8 +85,7 @@ bool AdjustVariableDriveLetter(WCHAR *path)
 // files are considered untrusted, if they're either loaded from a
 // non-file URL in plugin mode, or if they're marked as being from
 // an untrusted zone (e.g. by the browser that's downloaded them)
-bool IsUntrustedFile(const WCHAR *filePath, const WCHAR *fileURL)
-{
+bool IsUntrustedFile(const WCHAR* filePath, const WCHAR* fileURL) {
     AutoFreeW protocol;
     if (fileURL && str::Parse(fileURL, L"%S:", &protocol))
         if (str::Len(protocol) > 1 && !str::EqI(protocol, L"file"))
