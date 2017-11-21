@@ -427,8 +427,8 @@ char* ReadAll(const WCHAR* path, size_t* fileSizeOut) {
 
 OwnedData ReadAll(const WCHAR* path) {
     size_t size;
-    char *data = ReadAll(path, &size);
-    return { data, size };
+    char* data = ReadAll(path, &size);
+    return {data, size};
 }
 
 // buf must be at least toRead in size (note: it won't be zero-terminated)

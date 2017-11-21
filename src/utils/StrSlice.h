@@ -5,19 +5,15 @@ namespace str {
 
 // a class to help scanning through text. doesn't own th edata
 struct Slice {
-    char *  begin;
-    char *  end;
-    char *  curr;
+    char* begin;
+    char* end;
+    char* curr;
 
-    Slice() : begin(nullptr), end(nullptr), curr(nullptr) { }
+    Slice() : begin(nullptr), end(nullptr), curr(nullptr) {}
 
-    Slice(char *txt, size_t len) {
-        Init(txt, len);
-    }
+    Slice(char* txt, size_t len) { Init(txt, len); }
 
-    Slice(char *start, char *end) {
-        Init(start, end-start);
-    }
+    Slice(char* start, char* end) { Init(start, end - start); }
 
     Slice(const Slice& other) {
         this->begin = other.begin;
@@ -25,7 +21,7 @@ struct Slice {
         this->curr = other.curr;
     }
 
-    void Init(char *txt, size_t len) {
+    void Init(char* txt, size_t len) {
         begin = txt;
         curr = txt;
         end = txt + len;
