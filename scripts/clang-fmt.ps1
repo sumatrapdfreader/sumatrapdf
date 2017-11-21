@@ -102,7 +102,7 @@ $files =
 "src\utils\StrUtil*",
 "src\utils\TgaReader.*",
 "src\utils\ThreadUtil.*",
-#"src\utils\TrivialHtmlParser.*",
+"src\utils\TrivialHtmlParser.*",
 "src\utils\TxtParser.*",
 "src\utils\UITask.*",
 "src\utils\UtAssert.*",
