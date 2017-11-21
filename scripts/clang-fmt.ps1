@@ -7,8 +7,8 @@ Remove-Item src\*.bak, src\*.tmp
 $files =
 "src\*.cpp",
 "src\*.h",
-"src\mui\SvgPath.*",
-# TODO: the rest of src\mui\
+"src\mui\*.cpp",
+"src\mui\*.h",
 "src\utils\*.cpp",
 "src\utils\*.h",
 "src\utils\tests\*.cpp",

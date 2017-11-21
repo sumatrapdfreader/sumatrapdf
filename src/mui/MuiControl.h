@@ -25,18 +25,18 @@ class Control : public ILayout {
         StateBitLast
     };
 
-    Control(Control *newParent = nullptr);
+    Control(Control* newParent = nullptr);
     virtual ~Control();
 
-    void SetParent(Control *newParent);
-    void AddChild(Control *c, int pos = -1);
-    void AddChild(Control *c1, Control *c2, Control *c3 = nullptr);
-    Control *GetChild(size_t idx) const;
+    void SetParent(Control* newParent);
+    void AddChild(Control* c, int pos = -1);
+    void AddChild(Control* c1, Control* c2, Control* c3 = nullptr);
+    Control* GetChild(size_t idx) const;
     size_t GetChildCount() const;
 
-    void SetPosition(const Rect &p);
+    void SetPosition(const Rect& p);
 
-    virtual void Paint(Graphics *gfx, int offX, int offY);
+    virtual void Paint(Graphics* gfx, int offX, int offY);
 
     // ILayout
     virtual Size Measure(const Size availableSize);
@@ -64,30 +64,30 @@ class Control : public ILayout {
     void Hide();
     void Show();
 
-    void SetToolTip(const WCHAR *);
-    void SetNamedEventClick(const char *);
+    void SetToolTip(const WCHAR*);
+    void SetNamedEventClick(const char*);
 
     void MeasureChildren(Size availableSize) const;
-    void MapMyToRootPos(int &x, int &y) const;
-    void MapRootToMyPos(int &x, int &y) const;
+    void MapMyToRootPos(int& x, int& y) const;
+    void MapRootToMyPos(int& x, int& y) const;
 
     uint16_t wantedInputBits; // WndWantedInputBits
     uint16_t stateBits;       // WndStateBits
     // windows with bigger z-order are painted on top, 0 is default
     int16_t zOrder;
 
-    ILayout *layout;
-    Control *parent;
+    ILayout* layout;
+    Control* parent;
 
-    WCHAR *toolTip;
+    WCHAR* toolTip;
 
-    const char *namedEventClick;
+    const char* namedEventClick;
 
     // we cache properties for the current style during SetStyle() which
     // makes if fast to access them anywhere without repeating the work
     // of searching the style inheritance chain
-    CachedStyle *cachedStyle;
-    bool SetStyle(Style *style);
+    CachedStyle* cachedStyle;
+    bool SetStyle(Style* style);
 
     // only used by HwndWrapper but we need it here
     // TODO: figure out to not have it in every Control
@@ -103,7 +103,7 @@ class Control : public ILayout {
     Rect pos;
 
   protected:
-    Vec<Control *> children;
+    Vec<Control*> children;
 
     // desired size calculated in Measure()
     Size desiredSize;

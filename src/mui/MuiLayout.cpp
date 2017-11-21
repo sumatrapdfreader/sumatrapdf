@@ -68,7 +68,7 @@ void HorizontalLayout::Arrange(const Rect finalRect) {
     Vec<SizeInfo> sizes;
 
     for (DirectionalLayoutData& e : els) {
-        SizeInfo sizeInfo = { e.desiredSize.Width, e.sizeLayoutAxis, 0, 0 };
+        SizeInfo sizeInfo = {e.desiredSize.Width, e.sizeLayoutAxis, 0, 0};
         sizes.Append(sizeInfo);
     }
     RedistributeSizes(sizes, finalRect.Width);
@@ -87,7 +87,7 @@ void VerticalLayout::Arrange(const Rect finalRect) {
     Vec<SizeInfo> sizes;
 
     for (DirectionalLayoutData& e : els) {
-        SizeInfo sizeInfo = { e.desiredSize.Height, e.sizeLayoutAxis, 0, 0 };
+        SizeInfo sizeInfo = {e.desiredSize.Height, e.sizeLayoutAxis, 0, 0};
         sizes.Append(sizeInfo);
     }
     RedistributeSizes(sizes, finalRect.Height);

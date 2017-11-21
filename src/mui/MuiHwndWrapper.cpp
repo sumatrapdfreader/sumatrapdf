@@ -34,14 +34,18 @@ HwndWrapper::~HwndWrapper() {
 // Default size is (0,0) which is unlimited.
 // For top-level windows it's the size of the whole window, including
 // non-client area like borders, title area etc.
-void HwndWrapper::SetMinSize(Size s) { evtMgr->SetMinSize(s); }
+void HwndWrapper::SetMinSize(Size s) {
+    evtMgr->SetMinSize(s);
+}
 
 // Set maximum size for the HWND represented by this HwndWrapper.
 // It is enforced in EventManager.
 // Default size is (0,0) which is unlimited.
 // For top-level windows it's the size of the whole window, including
 // non-client area like borders, title area etc.
-void HwndWrapper::SetMaxSize(Size s) { evtMgr->SetMaxSize(s); }
+void HwndWrapper::SetMaxSize(Size s) {
+    evtMgr->SetMaxSize(s);
+}
 
 void HwndWrapper::SetHwnd(HWND hwnd) {
     CrashIf(nullptr != hwndParent);
@@ -55,7 +59,7 @@ Size HwndWrapper::Measure(const Size availableSize) {
         return layout->Measure(availableSize);
     }
     if (children.size() == 1) {
-        ILayout *l = children.at(0);
+        ILayout* l = children.at(0);
         return l->Measure(availableSize);
     }
     desiredSize = Size();
@@ -68,7 +72,7 @@ void HwndWrapper::Arrange(const Rect finalRect) {
         layout->Arrange(finalRect);
     } else {
         if (children.size() == 1) {
-            ILayout *l = children.at(0);
+            ILayout* l = children.at(0);
             l->Arrange(finalRect);
         }
     }
@@ -134,5 +138,7 @@ void HwndWrapper::OnPaint(HWND hwnd) {
     markedForRepaint = false;
 }
 
-bool HwndWrapper::IsInSizeMove() const { return evtMgr->IsInSizeMove(); }
+bool HwndWrapper::IsInSizeMove() const {
+    return evtMgr->IsInSizeMove();
 }
+} // namespace mui

@@ -7,8 +7,8 @@
 class Grid : public Control {
   public:
     struct CellData {
-        Control *el;
-        CachedStyle *cachedStyle;
+        Control* el;
+        CachedStyle* cachedStyle;
         int row, col;
         int colSpan;
         // cell of the grid can be bigger than the element.
@@ -26,7 +26,7 @@ class Grid : public Control {
               vertAlign(GetElAlignTop()),
               horizAlign(GetElAlignLeft()) {}
 
-        CellData(const CellData &other)
+        CellData(const CellData& other)
             : el(other.el),
               cachedStyle(other.cachedStyle),
               row(other.row),
@@ -35,7 +35,7 @@ class Grid : public Control {
               vertAlign(other.vertAlign),
               horizAlign(other.horizAlign) {}
 
-        void Set(Control *el, int row, int col, ElAlign horizAlign = ElAlign::Left,
+        void Set(Control* el, int row, int col, ElAlign horizAlign = ElAlign::Left,
                  ElAlign vertAlign = ElAlign::Bottom) {
             this->el = el;
             this->cachedStyle = nullptr;
@@ -46,7 +46,7 @@ class Grid : public Control {
             this->horizAlign = GetElAlign(horizAlign);
         }
 
-        bool SetStyle(Style *s) {
+        bool SetStyle(Style* s) {
             bool changed;
             cachedStyle = CacheStyle(s, &changed);
             return changed;
@@ -65,30 +65,30 @@ class Grid : public Control {
     // if dirty is true, rows/cols and ld must be rebuilt from els
     bool dirty;
     // cells is rows * cols in size
-    Cell *cells;
+    Cell* cells;
     // maxColWidth is an array of cols size and contains
     // maximum width of each column (the width of the widest
     // cell in that column)
-    int *maxColWidth;
-    int *maxRowHeight;
+    int* maxColWidth;
+    int* maxRowHeight;
 
     Size desiredSize; // calculated in Measure()
 
     void RebuildCellDataIfNeeded();
-    Cell *GetCell(int row, int col) const;
+    Cell* GetCell(int row, int col) const;
     Point GetCellPos(int row, int col) const;
-    Rect GetCellBbox(Grid::CellData *d);
+    Rect GetCellBbox(Grid::CellData* d);
 
   public:
     Vec<CellData> els;
 
-    Grid(Style *style = nullptr);
+    Grid(Style* style = nullptr);
     virtual ~Grid();
 
-    Grid &Add(CellData &);
+    Grid& Add(CellData&);
 
     // Control
-    virtual void Paint(Graphics *gfx, int offX, int offY);
+    virtual void Paint(Graphics* gfx, int offX, int offY);
 
     // ILayout
     virtual Size Measure(const Size availableSize);

@@ -19,31 +19,31 @@ at runtime).
 namespace mui {
 
 struct ControlCreatorNode {
-    ControlCreatorNode *next;
-    const char *typeName;
+    ControlCreatorNode* next;
+    const char* typeName;
     ControlCreatorFunc creator;
 };
 
 struct LayoutCreatorNode {
-    LayoutCreatorNode *next;
-    const char *typeName;
+    LayoutCreatorNode* next;
+    const char* typeName;
     LayoutCreatorFunc creator;
 };
 
 // This is an extensiblity point that allows creating custom controls and layouts
 // unknown to mui that appear in text description
-static ControlCreatorNode *gControlCreators = nullptr;
-static LayoutCreatorNode *gLayoutCreators = nullptr;
+static ControlCreatorNode* gControlCreators = nullptr;
+static LayoutCreatorNode* gLayoutCreators = nullptr;
 
-void RegisterControlCreatorFor(const char *typeName, ControlCreatorFunc creator) {
-    ControlCreatorNode *cc = AllocStruct<ControlCreatorNode>();
+void RegisterControlCreatorFor(const char* typeName, ControlCreatorFunc creator) {
+    ControlCreatorNode* cc = AllocStruct<ControlCreatorNode>();
     cc->typeName = str::Dup(typeName);
     cc->creator = creator;
     ListInsert(&gControlCreators, cc);
 }
 
-static ControlCreatorFunc FindControlCreatorFuncFor(const char *typeName) {
-    ControlCreatorNode *curr = gControlCreators;
+static ControlCreatorFunc FindControlCreatorFuncFor(const char* typeName) {
+    ControlCreatorNode* curr = gControlCreators;
     while (curr) {
         if (str::EqI(typeName, curr->typeName))
             return curr->creator;
@@ -53,25 +53,25 @@ static ControlCreatorFunc FindControlCreatorFuncFor(const char *typeName) {
 }
 
 void FreeControlCreators() {
-    ControlCreatorNode *curr = gControlCreators;
-    ControlCreatorNode *next;
+    ControlCreatorNode* curr = gControlCreators;
+    ControlCreatorNode* next;
     while (curr) {
         next = curr->next;
-        free((void *)curr->typeName);
+        free((void*)curr->typeName);
         free(curr);
         curr = next;
     }
 }
 
-void RegisterLayoutCreatorFor(const char *layoutName, LayoutCreatorFunc creator) {
-    LayoutCreatorNode *lc = AllocStruct<LayoutCreatorNode>();
+void RegisterLayoutCreatorFor(const char* layoutName, LayoutCreatorFunc creator) {
+    LayoutCreatorNode* lc = AllocStruct<LayoutCreatorNode>();
     lc->typeName = str::Dup(layoutName);
     lc->creator = creator;
     ListInsert(&gLayoutCreators, lc);
 }
 
-static LayoutCreatorFunc FindLayoutCreatorFuncFor(const char *typeName) {
-    LayoutCreatorNode *curr = gLayoutCreators;
+static LayoutCreatorFunc FindLayoutCreatorFuncFor(const char* typeName) {
+    LayoutCreatorNode* curr = gLayoutCreators;
     while (curr) {
         if (str::EqI(typeName, curr->typeName))
             return curr->creator;
@@ -81,76 +81,76 @@ static LayoutCreatorFunc FindLayoutCreatorFuncFor(const char *typeName) {
 }
 
 void FreeLayoutCreators() {
-    LayoutCreatorNode *curr = gLayoutCreators;
-    LayoutCreatorNode *next;
+    LayoutCreatorNode* curr = gLayoutCreators;
+    LayoutCreatorNode* next;
     while (curr) {
         next = curr->next;
-        free((void *)curr->typeName);
+        free((void*)curr->typeName);
         free(curr);
         curr = next;
     }
 }
 
-Button *FindButtonNamed(const ParsedMui &muiInfo, const char *name) {
+Button* FindButtonNamed(const ParsedMui& muiInfo, const char* name) {
     for (size_t i = 0; i < muiInfo.buttons.size(); i++) {
-        Button *c = muiInfo.buttons.at(i);
+        Button* c = muiInfo.buttons.at(i);
         if (c->IsNamed(name))
             return c;
     }
     return nullptr;
 }
 
-ButtonVector *FindButtonVectorNamed(const ParsedMui &muiInfo, const char *name) {
+ButtonVector* FindButtonVectorNamed(const ParsedMui& muiInfo, const char* name) {
     for (size_t i = 0; i < muiInfo.vecButtons.size(); i++) {
-        ButtonVector *c = muiInfo.vecButtons.at(i);
+        ButtonVector* c = muiInfo.vecButtons.at(i);
         if (c->IsNamed(name))
             return c;
     }
     return nullptr;
 }
 
-ScrollBar *FindScrollBarNamed(const ParsedMui &muiInfo, const char *name) {
+ScrollBar* FindScrollBarNamed(const ParsedMui& muiInfo, const char* name) {
     for (size_t i = 0; i < muiInfo.scrollBars.size(); i++) {
-        ScrollBar *c = muiInfo.scrollBars.at(i);
+        ScrollBar* c = muiInfo.scrollBars.at(i);
         if (c->IsNamed(name))
             return c;
     }
     return nullptr;
 }
 
-Control *FindControlNamed(const ParsedMui &muiInfo, const char *name) {
+Control* FindControlNamed(const ParsedMui& muiInfo, const char* name) {
     for (size_t i = 0; i < muiInfo.allControls.size(); i++) {
-        Control *c = muiInfo.allControls.at(i);
+        Control* c = muiInfo.allControls.at(i);
         if (c->IsNamed(name))
             return c;
     }
     return nullptr;
 }
 
-ILayout *FindLayoutNamed(const ParsedMui &muiInfo, const char *name) {
+ILayout* FindLayoutNamed(const ParsedMui& muiInfo, const char* name) {
     for (size_t i = 0; i < muiInfo.layouts.size(); i++) {
-        ILayout *l = muiInfo.layouts.at(i);
+        ILayout* l = muiInfo.layouts.at(i);
         if (l->IsNamed(name))
             return l;
     }
     return nullptr;
 }
 
-ILayout *FindElementNamed(ParsedMui &muiInfo, const char *name) {
-    Control *c = FindControlNamed(muiInfo, name);
+ILayout* FindElementNamed(ParsedMui& muiInfo, const char* name) {
+    Control* c = FindControlNamed(muiInfo, name);
     if (c)
         return c;
     return FindLayoutNamed(muiInfo, name);
 }
 
-static TxtNode *GetRootArray(TxtParser *parser) {
-    TxtNode *root = parser->nodes.at(0);
+static TxtNode* GetRootArray(TxtParser* parser) {
+    TxtNode* root = parser->nodes.at(0);
     CrashIf(!root->IsArray());
     return root;
 }
 
-static float ParseFloat(const char *s) {
-    char *end = (char *)s;
+static float ParseFloat(const char* s) {
+    char* end = (char*)s;
     return (float)strtod(s, &end);
 }
 
@@ -161,7 +161,7 @@ struct ParsedPadding {
     int left;
 };
 
-static void ParsePadding(const char *s, ParsedPadding &p) {
+static void ParsePadding(const char* s, ParsedPadding& p) {
     if (str::Parse(s, "%d%_%d%_%d%_%d%_%$", &p.top, &p.right, &p.bottom, &p.left))
         return;
     if (str::Parse(s, "%d%_%d%_%$", &p.top, &p.right)) {
@@ -172,10 +172,12 @@ static void ParsePadding(const char *s, ParsedPadding &p) {
     }
 }
 
-static AlignAttr ParseAlignAttr(const char *s) { return FindAlignAttr(s, str::Len(s)); }
+static AlignAttr ParseAlignAttr(const char* s) {
+    return FindAlignAttr(s, str::Len(s));
+}
 
 // TODO: optimize using seqstrings
-static ElAlign ParseElAlign(const char *s) {
+static ElAlign ParseElAlign(const char* s) {
     if (str::EqI(s, "center"))
         return ElAlign::Center;
     if (str::EqI(s, "top"))
@@ -190,7 +192,7 @@ static ElAlign ParseElAlign(const char *s) {
     return ElAlign::Left;
 }
 
-static ElAlignData ParseElAlignData(const char *s) {
+static ElAlignData ParseElAlignData(const char* s) {
     ElAlign align = ParseElAlign(s);
     return GetElAlign(align);
 }
@@ -203,7 +205,7 @@ static ElAlignData ParseElAlignData(const char *s) {
     FontStyleUnderline  = 4,
     FontStyleStrikeout  = 8
 #endif
-static Gdiplus::FontStyle ParseFontWeight(const char *s) {
+static Gdiplus::FontStyle ParseFontWeight(const char* s) {
     if (str::EqI(s, "regular"))
         return FontStyleRegular;
     CrashIf(true);
@@ -211,7 +213,7 @@ static Gdiplus::FontStyle ParseFontWeight(const char *s) {
     return FontStyleRegular;
 }
 
-static void AddStyleProp(Style *style, TxtNode *prop) {
+static void AddStyleProp(Style* style, TxtNode* prop) {
     AutoFree tmp(prop->ValDup());
 
     if (prop->IsTextWithKey("name")) {
@@ -230,7 +232,7 @@ static void AddStyleProp(Style *style, TxtNode *prop) {
     }
 
     if (prop->IsTextWithKey("parent")) {
-        Style *parentStyle = StyleByName(tmp);
+        Style* parentStyle = StyleByName(tmp);
         CrashIf(!parentStyle);
         style->SetInheritsFrom(parentStyle);
         return;
@@ -242,7 +244,7 @@ static void AddStyleProp(Style *style, TxtNode *prop) {
     }
 
     if (prop->IsTextWithKey("padding")) {
-        ParsedPadding padding = { 0 };
+        ParsedPadding padding = {0};
         ParsePadding(tmp, padding);
         style->SetPadding(padding.top, padding.right, padding.bottom, padding.left);
         return;
@@ -281,10 +283,10 @@ static void AddStyleProp(Style *style, TxtNode *prop) {
     CrashIf(true);
 }
 
-static TxtNode *TxtChildNodeWithKey(TxtNode *top, const char *keyName) {
+static TxtNode* TxtChildNodeWithKey(TxtNode* top, const char* keyName) {
     size_t n = top->children->size();
     for (size_t i = 0; i < n; i++) {
-        TxtNode *node = top->children->at(i);
+        TxtNode* node = top->children->at(i);
         if (node->IsTextWithKey(keyName))
             return node;
     }
@@ -293,42 +295,42 @@ static TxtNode *TxtChildNodeWithKey(TxtNode *top, const char *keyName) {
 
 // styles are cached globally, so we only add a style if it doesn't
 // exist already
-static void CacheStyleFromStruct(TxtNode *def) {
+static void CacheStyleFromStruct(TxtNode* def) {
     CrashIf(!def->IsStructWithName("style"));
-    TxtNode *nameNode = TxtChildNodeWithKey(def, "name");
+    TxtNode* nameNode = TxtChildNodeWithKey(def, "name");
     CrashIf(!nameNode); // must have name or else no way to refer to it
     AutoFree tmp(nameNode->ValDup());
     if (StyleByName(tmp))
         return;
 
-    Style *style = new Style();
+    Style* style = new Style();
     size_t n = def->children->size();
     for (size_t i = 0; i < n; i++) {
-        TxtNode *node = def->children->at(i);
+        TxtNode* node = def->children->at(i);
         CrashIf(!node->IsText());
         AddStyleProp(style, node);
     }
     CacheStyle(style, nullptr);
 }
 
-static ButtonVector *ButtonVectorFromDef(TxtNode *structDef) {
+static ButtonVector* ButtonVectorFromDef(TxtNode* structDef) {
     CrashIf(!structDef->IsStructWithName("ButtonVector"));
-    ButtonVectorDef *def = DeserializeButtonVectorDef(structDef);
-    ButtonVector *b = new ButtonVector();
+    ButtonVectorDef* def = DeserializeButtonVectorDef(structDef);
+    ButtonVector* b = new ButtonVector();
     b->SetName(def->name);
     b->SetNamedEventClick(def->clicked);
 
     if (def->path) {
-        GraphicsPath *gp = svg::GraphicsPathFromPathData(def->path);
+        GraphicsPath* gp = svg::GraphicsPathFromPathData(def->path);
         b->SetGraphicsPath(gp);
     }
     if (def->styleDefault) {
-        Style *style = StyleByName(def->styleDefault);
+        Style* style = StyleByName(def->styleDefault);
         CrashIf(!style);
         b->SetDefaultStyle(style);
     }
     if (def->styleMouseOver) {
-        Style *style = StyleByName(def->styleMouseOver);
+        Style* style = StyleByName(def->styleMouseOver);
         CrashIf(!style);
         b->SetMouseOverStyle(style);
     }
@@ -336,21 +338,21 @@ static ButtonVector *ButtonVectorFromDef(TxtNode *structDef) {
     return b;
 }
 
-static Button *ButtonFromDef(TxtNode *structDef) {
+static Button* ButtonFromDef(TxtNode* structDef) {
     CrashIf(!structDef->IsStructWithName("Button"));
-    ButtonDef *def = DeserializeButtonDef(structDef);
-    Style *style = StyleByName(def->style);
-    Button *b = new Button(def->text, style, style);
+    ButtonDef* def = DeserializeButtonDef(structDef);
+    Style* style = StyleByName(def->style);
+    Button* b = new Button(def->text, style, style);
     b->SetName(def->name);
     FreeButtonDef(def);
     return b;
 }
 
-static ScrollBar *ScrollBarFromDef(TxtNode *structDef) {
+static ScrollBar* ScrollBarFromDef(TxtNode* structDef) {
     CrashIf(!structDef->IsStructWithName("ScrollBar"));
-    ScrollBarDef *def = DeserializeScrollBarDef(structDef);
-    ScrollBar *sb = new ScrollBar();
-    Style *style = StyleByName(def->style);
+    ScrollBarDef* def = DeserializeScrollBarDef(structDef);
+    ScrollBar* sb = new ScrollBar();
+    Style* style = StyleByName(def->style);
     sb->SetStyle(style);
     sb->SetName(def->name);
 
@@ -360,27 +362,26 @@ static ScrollBar *ScrollBarFromDef(TxtNode *structDef) {
     return sb;
 }
 
-static float ParseLayoutFloat(const char *s) {
+static float ParseLayoutFloat(const char* s) {
     if (str::EqI(s, "self"))
         return SizeSelf;
     return ParseFloat(s);
 }
 
-static void SetDirectionalLayouData(DirectionalLayoutData &ld, ParsedMui &parsed,
-                                    DirectionalLayoutDataDef *def) {
+static void SetDirectionalLayouData(DirectionalLayoutData& ld, ParsedMui& parsed, DirectionalLayoutDataDef* def) {
     float sla = ParseLayoutFloat(def->sla);
     float snla = ParseLayoutFloat(def->snla);
     ElAlignData elAlign = ParseElAlignData(def->align);
-    ILayout *el = FindElementNamed(parsed, def->controlName);
+    ILayout* el = FindElementNamed(parsed, def->controlName);
     ld.Set(el, sla, snla, elAlign);
 }
 
-static HorizontalLayout *HorizontalLayoutFromDef(ParsedMui &parsed, TxtNode *structDef) {
+static HorizontalLayout* HorizontalLayoutFromDef(ParsedMui& parsed, TxtNode* structDef) {
     CrashIf(!structDef->IsStructWithName("HorizontalLayout"));
-    HorizontalLayoutDef *def = DeserializeHorizontalLayoutDef(structDef);
-    HorizontalLayout *l = new HorizontalLayout();
+    HorizontalLayoutDef* def = DeserializeHorizontalLayoutDef(structDef);
+    HorizontalLayout* l = new HorizontalLayout();
     l->SetName(def->name);
-    Vec<DirectionalLayoutDataDef *> *children = def->children;
+    Vec<DirectionalLayoutDataDef*>* children = def->children;
 
     DirectionalLayoutData ld;
     for (size_t i = 0; children && i < children->size(); i++) {
@@ -392,12 +393,12 @@ static HorizontalLayout *HorizontalLayoutFromDef(ParsedMui &parsed, TxtNode *str
     return l;
 }
 
-static VerticalLayout *VerticalLayoutFromDef(ParsedMui &parsed, TxtNode *structDef) {
+static VerticalLayout* VerticalLayoutFromDef(ParsedMui& parsed, TxtNode* structDef) {
     CrashIf(!structDef->IsStructWithName("VerticalLayout"));
-    VerticalLayoutDef *def = DeserializeVerticalLayoutDef(structDef);
-    VerticalLayout *l = new VerticalLayout();
+    VerticalLayoutDef* def = DeserializeVerticalLayoutDef(structDef);
+    VerticalLayout* l = new VerticalLayout();
     l->SetName(def->name);
-    Vec<DirectionalLayoutDataDef *> *children = def->children;
+    Vec<DirectionalLayoutDataDef*>* children = def->children;
 
     DirectionalLayoutData ld;
     for (size_t i = 0; children && i < children->size(); i++) {
@@ -410,34 +411,34 @@ static VerticalLayout *VerticalLayoutFromDef(ParsedMui &parsed, TxtNode *structD
 }
 
 // TODO: create the rest of controls
-static void ParseMuiDefinition(TxtNode *root, ParsedMui &res) {
-    for (TxtNode *node : *root->children) {
+static void ParseMuiDefinition(TxtNode* root, ParsedMui& res) {
+    for (TxtNode* node : *root->children) {
         CrashIf(!node->IsStruct());
         if (node->IsStructWithName("Style")) {
             CacheStyleFromStruct(node);
         } else if (node->IsStructWithName("ButtonVector")) {
-            ButtonVector *b = ButtonVectorFromDef(node);
+            ButtonVector* b = ButtonVectorFromDef(node);
             res.allControls.Append(b);
             res.vecButtons.Append(b);
         } else if (node->IsStructWithName("Button")) {
-            Button *b = ButtonFromDef(node);
+            Button* b = ButtonFromDef(node);
             res.allControls.Append(b);
             res.buttons.Append(b);
         } else if (node->IsStructWithName("ScrollBar")) {
-            ScrollBar *sb = ScrollBarFromDef(node);
+            ScrollBar* sb = ScrollBarFromDef(node);
             res.allControls.Append(sb);
             res.scrollBars.Append(sb);
         } else if (node->IsStructWithName("HorizontalLayout")) {
-            HorizontalLayout *l = HorizontalLayoutFromDef(res, node);
+            HorizontalLayout* l = HorizontalLayoutFromDef(res, node);
             res.layouts.Append(l);
         } else if (node->IsStructWithName("VerticalLayout")) {
-            VerticalLayout *l = VerticalLayoutFromDef(res, node);
+            VerticalLayout* l = VerticalLayoutFromDef(res, node);
             res.layouts.Append(l);
         } else {
             AutoFree keyName(node->KeyDup());
             ControlCreatorFunc creatorFunc = FindControlCreatorFuncFor(keyName);
             if (creatorFunc) {
-                Control *c = creatorFunc(node);
+                Control* c = creatorFunc(node);
                 if (c)
                     res.allControls.Append(c);
                 continue;
@@ -445,14 +446,14 @@ static void ParseMuiDefinition(TxtNode *root, ParsedMui &res) {
 
             LayoutCreatorFunc layoutCreatorFunc = FindLayoutCreatorFuncFor(keyName);
             CrashIf(!layoutCreatorFunc);
-            ILayout *layout = layoutCreatorFunc(&res, node);
+            ILayout* layout = layoutCreatorFunc(&res, node);
             if (layout)
                 res.layouts.Append(layout);
         }
     }
 }
 
-bool MuiFromText(char *s, ParsedMui &res) {
+bool MuiFromText(char* s, ParsedMui& res) {
     TxtParser parser;
     parser.SetToParse(s, str::Len(s));
     bool ok = ParseTxt(parser);

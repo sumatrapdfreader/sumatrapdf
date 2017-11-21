@@ -6,13 +6,13 @@ class Control;
 
 class ControlEvents {
   public:
-    std::function<void(Control *, int, int)> Clicked;
-    std::function<void(Control *, int, int)> SizeChanged;
+    std::function<void(Control*, int, int)> Clicked;
+    std::function<void(Control*, int, int)> SizeChanged;
 };
 
 class NamedEvents {
   public:
-    std::function<void(Control *, int, int)> Clicked;
+    std::function<void(Control*, int, int)> Clicked;
 };
 
 // A single EventMgr is associated with a single HwndWrapper
@@ -20,9 +20,9 @@ class NamedEvents {
 // win32 messages for that HWND needed to make the whole system
 // work.
 class EventMgr {
-    HwndWrapper *wndRoot;
+    HwndWrapper* wndRoot;
     // current window over which the mouse is
-    Control *currOver;
+    Control* currOver;
 
     Size minSize;
     Size maxSize;
@@ -30,36 +30,36 @@ class EventMgr {
     bool inSizeMove;
 
     struct EventHandler {
-        Control *ctrlSource;
-        ControlEvents *events;
+        Control* ctrlSource;
+        ControlEvents* events;
     };
     Vec<EventHandler> eventHandlers;
 
     struct NamedEventHandler {
-        const char *name;
-        NamedEvents *namedEvents;
+        const char* name;
+        NamedEvents* namedEvents;
     };
     Vec<NamedEventHandler> namedEventHandlers;
 
-    LRESULT OnSetCursor(int x, int y, bool &wasHandled);
-    LRESULT OnMouseMove(WPARAM keys, int x, int y, bool &wasHandled);
-    LRESULT OnLButtonUp(WPARAM keys, int x, int y, bool &wasHandled);
-    LRESULT OnGetMinMaxInfo(MINMAXINFO *info, bool &wasHandled);
+    LRESULT OnSetCursor(int x, int y, bool& wasHandled);
+    LRESULT OnMouseMove(WPARAM keys, int x, int y, bool& wasHandled);
+    LRESULT OnLButtonUp(WPARAM keys, int x, int y, bool& wasHandled);
+    LRESULT OnGetMinMaxInfo(MINMAXINFO* info, bool& wasHandled);
 
   public:
-    EventMgr(HwndWrapper *wndRoot);
+    EventMgr(HwndWrapper* wndRoot);
     ~EventMgr();
 
-    LRESULT OnMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool &handledOut);
+    LRESULT OnMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& handledOut);
 
-    ControlEvents *EventsForControl(Control *c);
-    NamedEvents *EventsForName(const char *name);
+    ControlEvents* EventsForControl(Control* c);
+    NamedEvents* EventsForName(const char* name);
 
-    void RemoveEventsForControl(Control *c);
+    void RemoveEventsForControl(Control* c);
 
-    void NotifyClicked(Control *c, int x, int y);
-    void NotifySizeChanged(Control *c, int dx, int dy);
-    void NotifyNamedEventClicked(Control *c, int x, int y);
+    void NotifyClicked(Control* c, int x, int y);
+    void NotifySizeChanged(Control* c, int dx, int dy);
+    void NotifyNamedEventClicked(Control* c, int x, int y);
 
     bool IsInSizeMove() const { return inSizeMove; }
 

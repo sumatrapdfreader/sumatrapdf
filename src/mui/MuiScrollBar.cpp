@@ -15,7 +15,9 @@ float PercFromInt(int total, int n) {
     return (float)n / (float)total;
 }
 
-int IntFromPerc(int total, float perc) { return (int)(total * perc); }
+int IntFromPerc(int total, float perc) {
+    return (int)(total * perc);
+}
 
 ScrollBar::ScrollBar(int onOverDy, int inactiveDy) : onOverDy(onOverDy), inactiveDy(inactiveDy) {
     filledPerc = 0.f;
@@ -57,19 +59,21 @@ void ScrollBar::SetFilled(float perc) {
         RequestRepaint(this);
 }
 
-float ScrollBar::GetPercAt(int x) { return PercFromInt(pos.Width, x); }
+float ScrollBar::GetPercAt(int x) {
+    return PercFromInt(pos.Width, x);
+}
 
-void ScrollBar::Paint(Graphics *gfx, int offX, int offY) {
+void ScrollBar::Paint(Graphics* gfx, int offX, int offY) {
     CrashIf(!IsVisible());
     // TODO: take padding into account
-    CachedStyle *s = cachedStyle;
+    CachedStyle* s = cachedStyle;
 
     int dy = inactiveDy;
     if (IsMouseOver())
         dy = onOverDy;
 
     Rect r(offX, offY + pos.Height - dy, pos.Width, dy);
-    Brush *br = BrushFromColorData(s->bgColor, r);
+    Brush* br = BrushFromColorData(s->bgColor, r);
     gfx->FillRectangle(br, r);
 
     int filledDx = IntFromPerc(pos.Width, filledPerc);
@@ -80,4 +84,4 @@ void ScrollBar::Paint(Graphics *gfx, int offX, int offY) {
     br = BrushFromColorData(s->color, r);
     gfx->FillRectangle(br, r);
 }
-}
+} // namespace mui

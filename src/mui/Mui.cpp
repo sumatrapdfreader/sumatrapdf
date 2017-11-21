@@ -54,40 +54,43 @@ void Destroy() {
 
 // the caller needs to manually invalidate all windows
 // for this to take place
-void SetDebugPaint(bool debug) { gDebugPaint = debug; }
+void SetDebugPaint(bool debug) {
+    gDebugPaint = debug;
+}
 
-bool IsDebugPaint() { return gDebugPaint; }
+bool IsDebugPaint() {
+    return gDebugPaint;
+}
 
-#define RECTFromRect(r)                                                                            \
+#define RECTFromRect(r) \
     { r.GetLeft(), r.GetTop(), r.GetRight(), r.GetBottom() }
 
-HwndWrapper *GetRootHwndWnd(const Control *c) {
+HwndWrapper* GetRootHwndWnd(const Control* c) {
     while (c->parent) {
         c = c->parent;
     }
     if (!c->hwndParent)
         return nullptr;
-    return (HwndWrapper *)c;
+    return (HwndWrapper*)c;
 }
 
 // traverse tree upwards to find HWND that is ultimately backing
 // this window
-HWND GetHwndParent(const Control *c) {
-    HwndWrapper *wHwnd = GetRootHwndWnd(c);
+HWND GetHwndParent(const Control* c) {
+    HwndWrapper* wHwnd = GetRootHwndWnd(c);
     if (wHwnd)
         return wHwnd->hwndParent;
     return nullptr;
 }
 
-void CollectWindowsBreathFirst(Control *c, int offX, int offY, WndFilter *wndFilter,
-                               Vec<CtrlAndOffset> *ctrls) {
+void CollectWindowsBreathFirst(Control* c, int offX, int offY, WndFilter* wndFilter, Vec<CtrlAndOffset>* ctrls) {
     if (wndFilter->skipInvisibleSubtrees && !c->IsVisible())
         return;
 
     offX += c->pos.X;
     offY += c->pos.Y;
     if (wndFilter->Matches(c, offX, offY)) {
-        CtrlAndOffset coff = { c, offX, offY };
+        CtrlAndOffset coff = {c, offX, offY};
         ctrls->Append(coff);
     }
 
@@ -105,22 +108,21 @@ void CollectWindowsBreathFirst(Control *c, int offX, int offY, WndFilter *wndFil
 // in windows array before child windows. In most cases caller can use the last
 // window in returned array (but can use a custom logic as well).
 // Returns number of matched windows as a convenience.
-size_t CollectWindowsAt(Control *wndRoot, int x, int y, uint16_t wantedInputMask,
-                        Vec<CtrlAndOffset> *controls) {
+size_t CollectWindowsAt(Control* wndRoot, int x, int y, uint16_t wantedInputMask, Vec<CtrlAndOffset>* controls) {
     WndInputWantedFilter filter(x, y, wantedInputMask);
     controls->Reset();
     CollectWindowsBreathFirst(wndRoot, 0, 0, &filter, controls);
     return controls->size();
 }
 
-static void DrawLine(Graphics *gfx, const Point &p1, const Point &p2, float width, Brush *br) {
+static void DrawLine(Graphics* gfx, const Point& p1, const Point& p2, float width, Brush* br) {
     if (0 == width)
         return;
     Pen p(br, width);
     gfx->DrawLine(&p, p1, p2);
 }
 
-void DrawBorder(Graphics *gfx, const Rect r, CachedStyle *s) {
+void DrawBorder(Graphics* gfx, const Rect r, CachedStyle* s) {
     Point p1, p2;
     float width;
 
@@ -130,7 +132,7 @@ void DrawBorder(Graphics *gfx, const Rect r, CachedStyle *s) {
     p2.X = r.X + r.Width;
     p2.Y = p1.Y;
     width = s->borderWidth.top;
-    Brush *br = BrushFromColorData(s->borderColors.top, r);
+    Brush* br = BrushFromColorData(s->borderColors.top, r);
     DrawLine(gfx, p1, p2, width, br);
 
     // right
@@ -158,7 +160,7 @@ void DrawBorder(Graphics *gfx, const Rect r, CachedStyle *s) {
     DrawLine(gfx, p1, p2, width, br);
 }
 
-static void InvalidateAtOff(HWND hwnd, const Rect *r, int offX, int offY) {
+static void InvalidateAtOff(HWND hwnd, const Rect* r, int offX, int offY) {
     RECT rc = RECTFromRect((*r));
     rc.left += offX;
     rc.right += offX;
@@ -168,7 +170,7 @@ static void InvalidateAtOff(HWND hwnd, const Rect *r, int offX, int offY) {
 }
 
 // r1 and r2 are relative to w. If both are nullptr, we invalidate the whole w
-void RequestRepaint(Control *c, const Rect *r1, const Rect *r2) {
+void RequestRepaint(Control* c, const Rect* r1, const Rect* r2) {
     // we might be called when the control hasn't yet been
     // placed in the window hierarchy
     if (!c->parent && !c->hwndParent)
@@ -183,7 +185,7 @@ void RequestRepaint(Control *c, const Rect *r1, const Rect *r2) {
     }
     HWND hwnd = c->hwndParent;
     CrashIf(!hwnd);
-    HwndWrapper *wnd = GetRootHwndWnd(c);
+    HwndWrapper* wnd = GetRootHwndWnd(c);
     if (wnd)
         wnd->MarkForRepaint();
 
@@ -205,9 +207,9 @@ void RequestRepaint(Control *c, const Rect *r1, const Rect *r2) {
     InvalidateAtOff(hwnd, &wRect, offX, offY);
 }
 
-void RequestLayout(Control *c) {
-    HwndWrapper *wnd = GetRootHwndWnd(c);
+void RequestLayout(Control* c) {
+    HwndWrapper* wnd = GetRootHwndWnd(c);
     if (wnd)
         wnd->RequestLayout();
 }
-}
+} // namespace mui

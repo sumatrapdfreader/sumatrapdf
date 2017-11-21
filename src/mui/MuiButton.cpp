@@ -9,7 +9,7 @@
 
 namespace mui {
 
-Button::Button(const WCHAR *s, Style *def, Style *mouseOver) {
+Button::Button(const WCHAR* s, Style* def, Style* mouseOver) {
     text = nullptr;
     wantedInputBits = (uint16_t)-1; // wants everything
     styleDefault = def;
@@ -18,7 +18,9 @@ Button::Button(const WCHAR *s, Style *def, Style *mouseOver) {
     SetText(s);
 }
 
-Button::~Button() { free(text); }
+Button::~Button() {
+    free(text);
+}
 
 void Button::NotifyMouseEnter() {
     Control::NotifyMouseEnter();
@@ -44,10 +46,10 @@ void Button::RecalculateSize(bool repaintIfSizeDidntChange) {
     Size prevSize = desiredSize;
 
     desiredSize = GetBorderAndPaddingSize(cachedStyle);
-    Graphics *gfx = AllocGraphicsForMeasureText();
-    CachedStyle *s = cachedStyle;
-    CachedFont *cachedFont = GetCachedFont(s->fontName, s->fontSize, s->fontWeight);
-    Font *font = cachedFont->font;
+    Graphics* gfx = AllocGraphicsForMeasureText();
+    CachedStyle* s = cachedStyle;
+    CachedFont* cachedFont = GetCachedFont(s->fontName, s->fontSize, s->fontWeight);
+    Font* font = cachedFont->font;
 
     textDx = 0;
     float fontDy = font->GetHeight(gfx);
@@ -64,11 +66,10 @@ void Button::RecalculateSize(bool repaintIfSizeDidntChange) {
             fontDy = bbox.Height;
             float diff = fontDy + maxDiff - bbox.Height;
             if (diff < 0) {
-                char *fontName = str::conv::ToUtf8(s->fontName);
-                char *tmp = str::conv::ToUtf8(text);
-                dbglog::CrashLogF(
-                    "fontDy=%.2f, bbox.Height=%.2f, diff=%.2f (should be > 0) font: %s, text='%s'",
-                    fontDy, bbox.Height, diff, fontName, tmp);
+                char* fontName = str::conv::ToUtf8(s->fontName);
+                char* tmp = str::conv::ToUtf8(text);
+                dbglog::CrashLogF("fontDy=%.2f, bbox.Height=%.2f, diff=%.2f (should be > 0) font: %s, text='%s'",
+                                  fontDy, bbox.Height, diff, fontName, tmp);
                 CrashIf(true);
             }
         }
@@ -83,7 +84,7 @@ void Button::RecalculateSize(bool repaintIfSizeDidntChange) {
         RequestRepaint(this);
 }
 
-void Button::SetText(const WCHAR *s) {
+void Button::SetText(const WCHAR* s) {
     str::ReplacePtr(&text, s);
     RecalculateSize(true);
 }
@@ -106,18 +107,18 @@ void Button::UpdateAfterStyleChange() {
     RecalculateSize(true);
 }
 
-void Button::SetStyles(Style *def, Style *mouseOver) {
+void Button::SetStyles(Style* def, Style* mouseOver) {
     styleDefault = def;
     styleMouseOver = mouseOver;
     UpdateAfterStyleChange();
 }
 
-void Button::SetDefaultStyle(Style *style) {
+void Button::SetDefaultStyle(Style* style) {
     styleDefault = style;
     UpdateAfterStyleChange();
 }
 
-void Button::SetMouseOverStyle(Style *style) {
+void Button::SetMouseOverStyle(Style* style) {
     styleMouseOver = style;
     UpdateAfterStyleChange();
 }
@@ -134,13 +135,13 @@ static int AlignedOffset(int containerDx, int elDx, AlignAttr align) {
     return (containerDx - elDx) / 2;
 }
 
-void Button::Paint(Graphics *gfx, int offX, int offY) {
+void Button::Paint(Graphics* gfx, int offX, int offY) {
     CrashIf(!IsVisible());
 
-    CachedStyle *s = cachedStyle;
+    CachedStyle* s = cachedStyle;
 
     RectF bbox((REAL)offX, (REAL)offY, (REAL)pos.Width, (REAL)pos.Height);
-    Brush *brBgColor = BrushFromColorData(s->bgColor, bbox);
+    Brush* brBgColor = BrushFromColorData(s->bgColor, bbox);
     gfx->FillRectangle(brBgColor, bbox);
 
     Rect r(offX, offY, pos.Width, pos.Height);
@@ -152,10 +153,10 @@ void Button::Paint(Graphics *gfx, int offX, int offY) {
     int alignedOffX = AlignedOffset(pos.Width - pad.left - pad.right, textDx, s->textAlign);
     int x = offX + alignedOffX + pad.left + (int)s->borderWidth.left;
     int y = offY + pad.top + (int)s->borderWidth.top;
-    Brush *brColor = BrushFromColorData(s->color, bbox); // restrict bbox to just the text?
+    Brush* brColor = BrushFromColorData(s->color, bbox); // restrict bbox to just the text?
 
-    CachedFont *cachedFont = GetCachedFont(s->fontName, s->fontSize, s->fontWeight);
-    Font *font = cachedFont->font;
+    CachedFont* cachedFont = GetCachedFont(s->fontName, s->fontSize, s->fontWeight);
+    Font* font = cachedFont->font;
     gfx->DrawString(text, (int)str::Len(text), font, PointF((REAL)x, (REAL)y), nullptr, brColor);
 }
 
@@ -167,7 +168,7 @@ ButtonVector::ButtonVector() {
     SetStyle(styleDefault);
 }
 
-ButtonVector::ButtonVector(GraphicsPath *gp) {
+ButtonVector::ButtonVector(GraphicsPath* gp) {
     wantedInputBits = (uint16_t)-1; // wants everything
     styleDefault = nullptr;
     styleMouseOver = nullptr;
@@ -176,7 +177,9 @@ ButtonVector::ButtonVector(GraphicsPath *gp) {
     SetGraphicsPath(gp);
 }
 
-ButtonVector::~ButtonVector() { ::delete graphicsPath; }
+ButtonVector::~ButtonVector() {
+    ::delete graphicsPath;
+}
 
 void ButtonVector::NotifyMouseEnter() {
     Control::NotifyMouseEnter();
@@ -192,7 +195,7 @@ void ButtonVector::NotifyMouseLeave() {
         RecalculateSize(true);
 }
 
-void ButtonVector::SetGraphicsPath(GraphicsPath *gp) {
+void ButtonVector::SetGraphicsPath(GraphicsPath* gp) {
     ::delete graphicsPath;
     graphicsPath = gp;
     RecalculateSize(true);
@@ -202,11 +205,11 @@ void ButtonVector::SetGraphicsPath(GraphicsPath *gp) {
 void ButtonVector::RecalculateSize(bool repaintIfSizeDidntChange) {
     Size prevSize = desiredSize;
 
-    CachedStyle *s = cachedStyle;
+    CachedStyle* s = cachedStyle;
     desiredSize = GetBorderAndPaddingSize(s);
 
     Rect bbox;
-    Brush *brStroke = BrushFromColorData(s->stroke, bbox);
+    Brush* brStroke = BrushFromColorData(s->stroke, bbox);
     if (0.f == s->strokeWidth) {
         graphicsPath->GetBounds(&bbox);
     } else {
@@ -232,13 +235,13 @@ Size ButtonVector::Measure(const Size availableSize) {
     return desiredSize;
 }
 
-void ButtonVector::Paint(Graphics *gfx, int offX, int offY) {
+void ButtonVector::Paint(Graphics* gfx, int offX, int offY) {
     CrashIf(!IsVisible());
 
-    CachedStyle *s = cachedStyle;
+    CachedStyle* s = cachedStyle;
 
     RectF bbox((REAL)offX, (REAL)offY, (REAL)pos.Width, (REAL)pos.Height);
-    Brush *brBgColor = BrushFromColorData(s->bgColor, bbox);
+    Brush* brBgColor = BrushFromColorData(s->bgColor, bbox);
     gfx->FillRectangle(brBgColor, bbox);
 
     Rect r(offX, offY, pos.Width, pos.Height);
@@ -248,8 +251,8 @@ void ButtonVector::Paint(Graphics *gfx, int offX, int offY) {
 
     // graphicsPath bbox can have non-zero X,Y
     Rect gpBbox;
-    Brush *brFill = BrushFromColorData(s->fill, bbox);
-    Brush *brStroke = BrushFromColorData(s->stroke, bbox);
+    Brush* brFill = BrushFromColorData(s->fill, bbox);
+    Brush* brStroke = BrushFromColorData(s->stroke, bbox);
     Pen pen(brStroke, s->strokeWidth);
     pen.SetMiterLimit(1.f);
     pen.SetAlignment(PenAlignmentInset);
@@ -270,7 +273,7 @@ void ButtonVector::Paint(Graphics *gfx, int offX, int offY) {
     int y = offY + elOffY + s->padding.top + (int)s->borderWidth.top + gpBbox.Y;
 
     // TODO: can I avoid making a copy of GraphicsPath?
-    GraphicsPath *tmp = graphicsPath->Clone();
+    GraphicsPath* tmp = graphicsPath->Clone();
     Matrix m;
     m.Translate((float)x, (float)y);
     tmp->Transform(&m);
@@ -290,19 +293,19 @@ void ButtonVector::UpdateAfterStyleChange() {
     RecalculateSize(true);
 }
 
-void ButtonVector::SetStyles(Style *def, Style *mouseOver) {
+void ButtonVector::SetStyles(Style* def, Style* mouseOver) {
     styleDefault = def;
     styleMouseOver = mouseOver;
     UpdateAfterStyleChange();
 }
 
-void ButtonVector::SetDefaultStyle(Style *style) {
+void ButtonVector::SetDefaultStyle(Style* style) {
     styleDefault = style;
     UpdateAfterStyleChange();
 }
 
-void ButtonVector::SetMouseOverStyle(Style *style) {
+void ButtonVector::SetMouseOverStyle(Style* style) {
     styleMouseOver = style;
     UpdateAfterStyleChange();
 }
-}
+} // namespace mui

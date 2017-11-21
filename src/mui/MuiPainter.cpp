@@ -8,7 +8,7 @@
 
 namespace mui {
 
-static bool BitmapNotBigEnough(Bitmap *bmp, int dx, int dy) {
+static bool BitmapNotBigEnough(Bitmap* bmp, int dx, int dy) {
     if (nullptr == bmp)
         return true;
     if (bmp->GetWidth() < (UINT)dx)
@@ -18,20 +18,22 @@ static bool BitmapNotBigEnough(Bitmap *bmp, int dx, int dy) {
     return false;
 }
 
-Painter::Painter(HwndWrapper *wnd) : wnd(wnd), cacheBmp(nullptr) {}
+Painter::Painter(HwndWrapper* wnd) : wnd(wnd), cacheBmp(nullptr) {}
 
-Painter::~Painter() { ::delete cacheBmp; }
+Painter::~Painter() {
+    ::delete cacheBmp;
+}
 
 // we paint the background in Painter() because I don't
 // want to add an artificial Control window just to cover
 // the whole HWND and paint the background.
-void Painter::PaintBackground(Graphics *g, Rect r) {
+void Painter::PaintBackground(Graphics* g, Rect r) {
     // TODO: don't quite get why I need to expand the rectangle, but
     // sometimes there's a seemingly 1 pixel artifact on the left and
     // at the top if I don't do this
     r.Inflate(1, 1);
-    ColorData *bgColor = wnd->cachedStyle->bgColor;
-    Brush *br = BrushFromColorData(bgColor, r);
+    ColorData* bgColor = wnd->cachedStyle->bgColor;
+    Brush* br = BrushFromColorData(bgColor, r);
     g->FillRectangle(br, r);
 }
 
@@ -46,7 +48,7 @@ void Painter::PaintBackground(Graphics *g, Rect r) {
 // We don't sort because we want to preserve the order of
 // containment of windows with the same z-order and non-stable
 // sort could change it.
-static void PaintWindowsInZOrder(Graphics *g, Control *c) {
+static void PaintWindowsInZOrder(Graphics* g, Control* c) {
     Vec<CtrlAndOffset> toPaint;
     WndFilter wndFilter;
     Pen debugPen(Color(255, 0, 0), 1);
@@ -57,12 +59,12 @@ static void PaintWindowsInZOrder(Graphics *g, Control *c) {
     for (;;) {
         // find which z-order should we paint now
         int16_t minUnpaintedZOrder = MY_INT16_MAX;
-        for (CtrlAndOffset &coff : toPaint) {
+        for (CtrlAndOffset& coff : toPaint) {
             int16_t zOrder = coff.c->zOrder;
             if ((zOrder > lastPaintedZOrder) && (zOrder < minUnpaintedZOrder))
                 minUnpaintedZOrder = zOrder;
         }
-        for (CtrlAndOffset &coff : toPaint) {
+        for (CtrlAndOffset& coff : toPaint) {
             if (minUnpaintedZOrder == coff.c->zOrder) {
                 coff.c->Paint(g, coff.offX, coff.offY);
                 if (IsDebugPaint()) {
@@ -137,7 +139,7 @@ void Painter::Paint(HWND hwnd, bool isDirty) {
     // this step and just blit cached bitmap because the caller
     // knows it didn't change
     if (isDirty) {
-        Graphics g((Image *)cacheBmp);
+        Graphics g((Image*)cacheBmp);
         InitGraphicsMode(&g);
         g.SetClip(&clip, CombineModeReplace);
 
@@ -150,4 +152,4 @@ void Painter::Paint(HWND hwnd, bool isDirty) {
     gDC.DrawImage(cacheBmp, 0, 0);
     EndPaint(hwnd, &ps);
 }
-}
+} // namespace mui

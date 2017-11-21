@@ -26,7 +26,7 @@ using namespace css;
 #define SizeInfinite ((INT)-1)
 
 struct CtrlAndOffset {
-    Control *c;
+    Control* c;
     int offX, offY;
 };
 
@@ -38,7 +38,7 @@ class WndFilter {
 
     virtual ~WndFilter() {}
 
-    virtual bool Matches(Control *w, int offX, int offY) {
+    virtual bool Matches(Control* w, int offX, int offY) {
         UNUSED(w);
         UNUSED(offX);
         UNUSED(offY);
@@ -51,10 +51,9 @@ class WndInputWantedFilter : public WndFilter {
     uint16_t wantedInputMask;
 
   public:
-    WndInputWantedFilter(int x, int y, uint16_t wantedInputMask)
-        : x(x), y(y), wantedInputMask(wantedInputMask) {}
+    WndInputWantedFilter(int x, int y, uint16_t wantedInputMask) : x(x), y(y), wantedInputMask(wantedInputMask) {}
     virtual ~WndInputWantedFilter() {}
-    virtual bool Matches(Control *c, int offX, int offY) {
+    virtual bool Matches(Control* c, int offX, int offY) {
         if ((c->wantedInputBits & wantedInputMask) != 0) {
             Rect r = Rect(offX, offY, c->pos.Width, c->pos.Height);
             return r.Contains(x, y);
@@ -67,13 +66,11 @@ void Initialize();
 void Destroy();
 void SetDebugPaint(bool debug);
 bool IsDebugPaint();
-size_t CollectWindowsAt(Control *wndRoot, int x, int y, uint16_t wantedInputMask,
-                        Vec<CtrlAndOffset> *ctrls);
-void CollectWindowsBreathFirst(Control *c, int offX, int offY, WndFilter *wndFilter,
-                               Vec<CtrlAndOffset> *ctrls);
-void RequestRepaint(Control *c, const Rect *r1 = nullptr, const Rect *r2 = nullptr);
-void RequestLayout(Control *c);
-void DrawBorder(Graphics *gfx, const Rect r, CachedStyle *s);
-HwndWrapper *GetRootHwndWnd(const Control *c);
+size_t CollectWindowsAt(Control* wndRoot, int x, int y, uint16_t wantedInputMask, Vec<CtrlAndOffset>* ctrls);
+void CollectWindowsBreathFirst(Control* c, int offX, int offY, WndFilter* wndFilter, Vec<CtrlAndOffset>* ctrls);
+void RequestRepaint(Control* c, const Rect* r1 = nullptr, const Rect* r2 = nullptr);
+void RequestLayout(Control* c);
+void DrawBorder(Graphics* gfx, const Rect r, CachedStyle* s);
+HwndWrapper* GetRootHwndWnd(const Control* c);
 
 } // namespace mui

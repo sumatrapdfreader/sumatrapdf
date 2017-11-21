@@ -12,14 +12,17 @@ namespace mui {
 // we use only one for simplicity as long as contention is not a problem
 static CRITICAL_SECTION gMuiCs;
 
-void EnterMuiCriticalSection() { EnterCriticalSection(&gMuiCs); }
+void EnterMuiCriticalSection() {
+    EnterCriticalSection(&gMuiCs);
+}
 
-void LeaveMuiCriticalSection() { LeaveCriticalSection(&gMuiCs); }
+void LeaveMuiCriticalSection() {
+    LeaveCriticalSection(&gMuiCs);
+}
 
 class FontListItem {
   public:
-    FontListItem(const WCHAR *name, float sizePt, FontStyle style, Font *font, HFONT hFont)
-        : next(nullptr) {
+    FontListItem(const WCHAR* name, float sizePt, FontStyle style, Font* font, HFONT hFont) : next(nullptr) {
         cf.name = str::Dup(name);
         cf.sizePt = sizePt;
         cf.style = style;
@@ -27,18 +30,18 @@ class FontListItem {
         cf.hFont = hFont;
     }
     ~FontListItem() {
-        free((void *)cf.name);
+        free((void*)cf.name);
         ::delete cf.font;
         DeleteObject(cf.hFont);
         delete next;
     }
 
     CachedFont cf;
-    FontListItem *next;
+    FontListItem* next;
 };
 
 // Global, thread-safe font cache. Font objects live forever.
-static FontListItem *gFontsCache = nullptr;
+static FontListItem* gFontsCache = nullptr;
 
 // Graphics objects cannot be used across threads. We have a per-thread
 // cache so that it's easy to grab Graphics object to be used for
@@ -53,19 +56,19 @@ struct GraphicsCacheEntry {
     DWORD threadId;
     int refCount;
 
-    Graphics *gfx;
-    Bitmap *bmp;
+    Graphics* gfx;
+    Bitmap* bmp;
     BYTE data[bmpDx * bmpDy * 4];
 
     bool Create();
     void Free();
 };
 
-static Vec<GraphicsCacheEntry> *gGraphicsCache = nullptr;
+static Vec<GraphicsCacheEntry>* gGraphicsCache = nullptr;
 
 // set consistent mode for our graphics objects so that we get
 // the same results when measuring text
-void InitGraphicsMode(Graphics *g) {
+void InitGraphicsMode(Graphics* g) {
     g->SetCompositingQuality(CompositingQualityHighQuality);
     g->SetSmoothingMode(SmoothingModeAntiAlias);
     // g.SetSmoothingMode(SmoothingModeHighQuality);
@@ -82,7 +85,7 @@ bool GraphicsCacheEntry::Create() {
     bmp = ::new Bitmap(bmpDx, bmpDy, stride, PixelFormat32bppARGB, data);
     if (!bmp)
         return false;
-    gfx = ::new Graphics((Image *)bmp);
+    gfx = ::new Graphics((Image*)bmp);
     if (!gfx)
         return false;
     InitGraphicsMode(gfx);
@@ -105,7 +108,7 @@ void InitializeBase() {
 
 void DestroyBase() {
     FreeGraphicsForMeasureText(gGraphicsCache->at(0).gfx);
-    for (GraphicsCacheEntry &e : *gGraphicsCache) {
+    for (GraphicsCacheEntry& e : *gGraphicsCache) {
         e.Free();
     }
     delete gGraphicsCache;
@@ -113,7 +116,7 @@ void DestroyBase() {
     DeleteCriticalSection(&gMuiCs);
 }
 
-bool CachedFont::SameAs(const WCHAR *otherName, float otherSizePt, FontStyle otherStyle) const {
+bool CachedFont::SameAs(const WCHAR* otherName, float otherSizePt, FontStyle otherStyle) const {
     if (sizePt != otherSizePt)
         return false;
     if (style != otherStyle)
@@ -128,7 +131,7 @@ HFONT CachedFont::GetHFont() {
         // TODO: Graphics is probably only used for metrics,
         // so this might not be 100% correct (e.g. 2 monitors with different DPIs?)
         // but previous code wasn't much better
-        Graphics *gfx = AllocGraphicsForMeasureText();
+        Graphics* gfx = AllocGraphicsForMeasureText();
         Status status = font->GetLogFontW(gfx, &lf);
         FreeGraphicsForMeasureText(gfx);
         CrashIf(status != Ok);
@@ -142,16 +145,16 @@ HFONT CachedFont::GetHFont() {
 // convenience function: given cached style, get a Font object matching the font
 // properties.
 // Caller should not delete the font - it's cached for performance and deleted at exit
-CachedFont *GetCachedFont(const WCHAR *name, float sizePt, FontStyle style) {
+CachedFont* GetCachedFont(const WCHAR* name, float sizePt, FontStyle style) {
     ScopedMuiCritSec muiCs;
 
-    for (FontListItem *item = gFontsCache; item; item = item->next) {
+    for (FontListItem* item = gFontsCache; item; item = item->next) {
         if (item->cf.SameAs(name, sizePt, style) && item->cf.font != nullptr) {
             return &item->cf;
         }
     }
 
-    Font *font = ::new Font(name, sizePt, style);
+    Font* font = ::new Font(name, sizePt, style);
     if (!font) {
         font = ::new Font(L"Times New Roman", sizePt, style);
         if (!font) {
@@ -160,16 +163,16 @@ CachedFont *GetCachedFont(const WCHAR *name, float sizePt, FontStyle style) {
         }
     }
 
-    FontListItem *item = new FontListItem(name, sizePt, style, font, nullptr);
+    FontListItem* item = new FontListItem(name, sizePt, style, font, nullptr);
     ListInsert(&gFontsCache, item);
     return &item->cf;
 }
 
-Graphics *AllocGraphicsForMeasureText() {
+Graphics* AllocGraphicsForMeasureText() {
     ScopedMuiCritSec muiCs;
 
     DWORD threadId = GetCurrentThreadId();
-    for (GraphicsCacheEntry &e : *gGraphicsCache) {
+    for (GraphicsCacheEntry& e : *gGraphicsCache) {
         if (e.threadId == threadId) {
             e.refCount++;
             return e.gfx;
@@ -196,11 +199,11 @@ Graphics *AllocGraphicsForMeasureText() {
     return ce.gfx;
 }
 
-void FreeGraphicsForMeasureText(Graphics *gfx) {
+void FreeGraphicsForMeasureText(Graphics* gfx) {
     ScopedMuiCritSec muiCs;
 
     DWORD threadId = GetCurrentThreadId();
-    for (GraphicsCacheEntry &e : *gGraphicsCache) {
+    for (GraphicsCacheEntry& e : *gGraphicsCache) {
         if (e.gfx == gfx) {
             CrashIf(e.threadId != threadId);
             e.refCount--;
@@ -215,4 +218,4 @@ int CeilI(float n) {
     n = ceil(n);
     return (int)n;
 }
-}
+} // namespace mui

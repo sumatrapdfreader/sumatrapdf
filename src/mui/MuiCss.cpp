@@ -36,16 +36,15 @@ namespace css {
 #define MKRGB(r, g, b) (((ARGB)(b)) | ((ARGB)(g) << 8) | ((ARGB)(r) << 16) | ((ARGB)(0xff) << 24))
 
 struct FontCacheEntry {
-    Prop *fontName;
-    Prop *fontSize;
-    Prop *fontWeight;
-    Font *font;
+    Prop* fontName;
+    Prop* fontSize;
+    Prop* fontWeight;
+    Font* font;
 
     // Prop objects are interned, so if the pointer is
     // the same, the value is the same too
-    bool operator==(FontCacheEntry &other) const {
-        return ((fontName == other.fontName) && (fontSize == other.fontSize) &&
-                (fontWeight == other.fontWeight));
+    bool operator==(FontCacheEntry& other) const {
+        return ((fontName == other.fontName) && (fontSize == other.fontSize) && (fontWeight == other.fontWeight));
     }
 };
 
@@ -55,23 +54,23 @@ struct FontCacheEntry {
 // An app might modify gStyleDefault but it should be done
 // as a first thing to avoid stale props from caching (cache
 // will be correctly refreshed if Control::SetStyle() is called)
-static Style *gStyleDefault = nullptr;
+static Style* gStyleDefault = nullptr;
 // default button styles for convenience. The user must explicitly
 // use them in inheritance chain of their custom button styles
 // They can be obtained via GetStyleButtonDefault() and GetStyleButtonDefaultMouseOver()
-static Style *gStyleButtonDefault = nullptr;
-static Style *gStyleButtonMouseOver = nullptr;
+static Style* gStyleButtonDefault = nullptr;
+static Style* gStyleButtonMouseOver = nullptr;
 
 struct StyleCacheEntry {
-    Style *style;
+    Style* style;
     size_t styleId;
     CachedStyle cachedStyle;
 };
 
 // Those must be VecSegmented so that code can retain pointers to
 // their elements (we can't move the memory)
-static VecSegmented<Prop> *gAllProps = nullptr;
-static VecSegmented<StyleCacheEntry> *gStyleCache = nullptr;
+static VecSegmented<Prop>* gAllProps = nullptr;
+static VecSegmented<StyleCacheEntry>* gStyleCache = nullptr;
 
 void Initialize() {
     CrashIf(gAllProps);
@@ -93,8 +92,7 @@ void Initialize() {
     ARGB c1 = MKRGB(0xf5, 0xf6, 0xf6);
     ARGB c2 = MKRGB(0xe4, 0xe4, 0xe3);
 #endif
-    gStyleDefault->Set(
-        Prop::AllocColorLinearGradient(PropBgColor, LinearGradientModeVertical, c1, c2));
+    gStyleDefault->Set(Prop::AllocColorLinearGradient(PropBgColor, LinearGradientModeVertical, c1, c2));
     gStyleDefault->SetBorderWidth(1);
     gStyleDefault->SetBorderColor(MKRGB(0x99, 0x99, 0x99));
     gStyleDefault->Set(Prop::AllocColorSolid(PropBorderBottomColor, "#888"));
@@ -128,50 +126,51 @@ void Initialize() {
 }
 
 void Destroy() {
-    for (Prop &p : *gAllProps) {
+    for (Prop& p : *gAllProps) {
         p.Free();
     }
     delete gAllProps;
 
-    for (StyleCacheEntry &e : *gStyleCache) {
+    for (StyleCacheEntry& e : *gStyleCache) {
         delete e.style;
     }
     delete gStyleCache;
 }
 
 bool IsWidthProp(PropType type) {
-    return (PropBorderTopWidth == type) || (PropBorderRightWidth == type) ||
-           (PropBorderBottomWidth == type) || (PropBorderLeftWidth == type) ||
-           (PropStrokeWidth == type);
+    return (PropBorderTopWidth == type) || (PropBorderRightWidth == type) || (PropBorderBottomWidth == type) ||
+           (PropBorderLeftWidth == type) || (PropStrokeWidth == type);
 }
 
 bool IsColorProp(PropType type) {
     return (PropColor == type) || (PropBgColor == type) || (PropBorderTopColor == type) ||
-           (PropBorderRightColor == type) || (PropBorderBottomColor == type) ||
-           (PropBorderLeftColor == type) || (PropFill == type) || (PropStroke == type);
+           (PropBorderRightColor == type) || (PropBorderBottomColor == type) || (PropBorderLeftColor == type) ||
+           (PropFill == type) || (PropStroke == type);
 }
 
-bool IsAlignProp(PropType type) { return ((PropVertAlign == type) || (PropHorizAlign == type)); }
+bool IsAlignProp(PropType type) {
+    return ((PropVertAlign == type) || (PropHorizAlign == type));
+}
 
 // TODO: use FindCssColor from gen_fast_string_lookup.py
 //       once there are significantly more colors
 static struct {
-    const char *name;
+    const char* name;
     ARGB value;
 } gCssKnownColors[] = {
-    { "black", (ARGB)Color::Black },
-    { "blue", (ARGB)Color::Blue },
-    { "gray", (ARGB)Color::Gray },
-    { "green", (ARGB)Color::Green },
-    { "red", (ARGB)Color::Red },
-    { "white", (ARGB)Color::White },
-    { "transparent", MKARGB(0, 0, 0, 0) },
-    { "sepia", MKRGB(0xfb, 0xf0, 0xd9) },
-    { "light blue", MKRGB(0x64, 0xc7, 0xef) },
-    { "light gray", MKRGB(0xf0, 0xf0, 0xf0) },
+    {"black", (ARGB)Color::Black},
+    {"blue", (ARGB)Color::Blue},
+    {"gray", (ARGB)Color::Gray},
+    {"green", (ARGB)Color::Green},
+    {"red", (ARGB)Color::Red},
+    {"white", (ARGB)Color::White},
+    {"transparent", MKARGB(0, 0, 0, 0)},
+    {"sepia", MKRGB(0xfb, 0xf0, 0xd9)},
+    {"light blue", MKRGB(0x64, 0xc7, 0xef)},
+    {"light gray", MKRGB(0xf0, 0xf0, 0xf0)},
 };
 
-static bool GetKnownCssColor(const char *name, ARGB &colOut) {
+static bool GetKnownCssColor(const char* name, ARGB& colOut) {
     for (size_t i = 0; i < dimof(gCssKnownColors); i++) {
         if (str::EqI(name, gCssKnownColors[i].name)) {
             colOut = gCssKnownColors[i].value;
@@ -185,7 +184,7 @@ static bool GetKnownCssColor(const char *name, ARGB &colOut) {
 // rrggbb, #rrggbb, #aarrggbb, #rgb, 0xrgb, 0xrrggbb
 // rgb(r,g,b), rgba(r,g,b,a) rgb(r%, g%, b%), rgba(r%, g%, b%, a%)
 // cf. https://developer.mozilla.org/en/CSS/color_value
-ARGB ParseCssColor(const char *color) {
+ARGB ParseCssColor(const char* color) {
     // parse #RRGGBB and #RGB and rgb(R,G,B)
     int a, r, g, b;
 
@@ -206,14 +205,12 @@ ARGB ParseCssColor(const char *color) {
     }
 
     // parse rrggbb, #rrggbb, 0xrrggbb and rgb(n,n,n)
-    if (str::Parse(color, "%2x%2x%2x%$", &r, &g, &b) ||
-        str::Parse(color, "rgb(%d,%d,%d)", &r, &g, &b)) {
+    if (str::Parse(color, "%2x%2x%2x%$", &r, &g, &b) || str::Parse(color, "rgb(%d,%d,%d)", &r, &g, &b)) {
         return MKRGB(r, g, b);
     }
 
     // parse aarrggbb, #aarrggbb, 0xaarrggbb and rgba(R,G,B,A)
-    if (str::Parse(color, "%2x%2x%2x%2x%$", &a, &r, &g, &b) ||
-        str::Parse(color, "rgba(%d,%d,%d,%d)", &r, &g, &b, &a)) {
+    if (str::Parse(color, "%2x%2x%2x%2x%$", &a, &r, &g, &b) || str::Parse(color, "rgba(%d,%d,%d,%d)", &r, &g, &b, &a)) {
         return MKARGB(a, r, g, b);
     }
 
@@ -230,7 +227,7 @@ ARGB ParseCssColor(const char *color) {
     return colVal;
 }
 
-bool ColorData::operator==(const ColorData &other) const {
+bool ColorData::operator==(const ColorData& other) const {
     if (type != other.type)
         return false;
 
@@ -246,17 +243,17 @@ bool ColorData::operator==(const ColorData &other) const {
     return false;
 }
 
-bool ElAlignData::operator==(const ElAlignData &other) const {
+bool ElAlignData::operator==(const ElAlignData& other) const {
     return ((elementPoint == other.elementPoint) && (containerPoint == other.containerPoint));
 }
 
 // Note: the order must match enum ElAlign
 struct ElAlignData g_ElAlignVals[5] = {
-    { .5f, .5f }, // ElAlign::Center
-    { 0.f, 0.f }, // ElAlign::Top
-    { 1.f, 1.f }, // ElAlign::Bottom
-    { 0.f, 0.f }, // ElAlign::Left
-    { 1.f, 1.f }, // ElAlign::Right
+    {.5f, .5f}, // ElAlign::Center
+    {0.f, 0.f}, // ElAlign::Top
+    {1.f, 1.f}, // ElAlign::Bottom
+    {0.f, 0.f}, // ElAlign::Left
+    {1.f, 1.f}, // ElAlign::Right
 };
 
 // calculates the offset of an element within container
@@ -279,7 +276,7 @@ void Prop::Free() {
     }
 }
 
-bool Prop::Eq(const Prop *other) const {
+bool Prop::Eq(const Prop* other) const {
     if (type != other->type)
         return false;
 
@@ -311,16 +308,16 @@ bool Prop::Eq(const Prop *other) const {
     return false;
 }
 
-static Prop *FindExistingProp(Prop *prop) {
-    for (Prop &p : *gAllProps) {
+static Prop* FindExistingProp(Prop* prop) {
+    for (Prop& p : *gAllProps) {
         if (p.Eq(prop))
             return &p;
     }
     return nullptr;
 }
 
-static Prop *UniqifyProp(Prop &p) {
-    Prop *existing = FindExistingProp(&p);
+static Prop* UniqifyProp(Prop& p) {
+    Prop* existing = FindExistingProp(&p);
     if (existing) {
         p.Free();
         return existing;
@@ -328,71 +325,71 @@ static Prop *UniqifyProp(Prop &p) {
     return gAllProps->push_back(p);
 }
 
-Prop *Prop::AllocStyleName(const char *styleName) {
+Prop* Prop::AllocStyleName(const char* styleName) {
     Prop p(PropStyleName);
     p.styleName = str::Dup(styleName);
     return UniqifyProp(p);
 }
 
-Prop *Prop::AllocFontName(const WCHAR *name) {
+Prop* Prop::AllocFontName(const WCHAR* name) {
     Prop p(PropFontName);
     p.fontName = str::Dup(name);
     return UniqifyProp(p);
 }
 
-Prop *Prop::AllocFontSize(float size) {
+Prop* Prop::AllocFontSize(float size) {
     Prop p(PropFontSize);
     p.fontSize = size;
     return UniqifyProp(p);
 }
 
-Prop *Prop::AllocFontWeight(FontStyle style) {
+Prop* Prop::AllocFontWeight(FontStyle style) {
     Prop p(PropFontWeight);
     p.fontWeight = style;
     return UniqifyProp(p);
 }
 
-Prop *Prop::AllocWidth(PropType type, float width) {
+Prop* Prop::AllocWidth(PropType type, float width) {
     CrashIf(!IsWidthProp(type));
     Prop p(type);
     p.width = width;
     return UniqifyProp(p);
 }
 
-Prop *Prop::AllocTextAlign(AlignAttr align) {
+Prop* Prop::AllocTextAlign(AlignAttr align) {
     Prop p(PropTextAlign);
     p.textAlign = align;
     return UniqifyProp(p);
 }
 
-Prop *Prop::AllocAlign(PropType type, float elPoint, float containerPoint) {
+Prop* Prop::AllocAlign(PropType type, float elPoint, float containerPoint) {
     CrashIf(!IsAlignProp(type));
     Prop p(type);
     p.elAlign = GetElAlign(elPoint, containerPoint);
     return UniqifyProp(p);
 }
 
-Prop *Prop::AllocAlign(PropType type, ElAlign align) {
+Prop* Prop::AllocAlign(PropType type, ElAlign align) {
     CrashIf(!IsAlignProp(type));
     Prop p(type);
     p.elAlign = GetElAlign(align);
     return UniqifyProp(p);
 }
 
-Prop *Prop::AllocPadding(int top, int right, int bottom, int left) {
-    Padding pd = { top, right, bottom, left };
+Prop* Prop::AllocPadding(int top, int right, int bottom, int left) {
+    Padding pd = {top, right, bottom, left};
     Prop p(PropPadding);
     p.padding = pd;
     return UniqifyProp(p);
 }
 
-Prop *Prop::AllocColorSolid(PropType type, ARGB color) {
+Prop* Prop::AllocColorSolid(PropType type, ARGB color) {
     CrashIf(!IsColorProp(type));
     Prop p(type);
     p.color.type = ColorSolid;
     p.color.solid.color = color;
     p.color.solid.cachedBrush = nullptr;
-    Prop *res = UniqifyProp(p);
+    Prop* res = UniqifyProp(p);
     CrashIf(res->color.type != ColorSolid);
     CrashIf(res->color.solid.color != color);
     if (!res->color.solid.cachedBrush)
@@ -400,16 +397,15 @@ Prop *Prop::AllocColorSolid(PropType type, ARGB color) {
     return res;
 }
 
-Prop *Prop::AllocColorSolid(PropType type, int a, int r, int g, int b) {
+Prop* Prop::AllocColorSolid(PropType type, int a, int r, int g, int b) {
     return AllocColorSolid(type, MKARGB(a, r, g, b));
 }
 
-Prop *Prop::AllocColorSolid(PropType type, int r, int g, int b) {
+Prop* Prop::AllocColorSolid(PropType type, int r, int g, int b) {
     return AllocColorSolid(type, MKARGB(0xff, r, g, b));
 }
 
-Prop *Prop::AllocColorLinearGradient(PropType type, LinearGradientMode mode, ARGB startColor,
-                                     ARGB endColor) {
+Prop* Prop::AllocColorLinearGradient(PropType type, LinearGradientMode mode, ARGB startColor, ARGB endColor) {
     Prop p(type);
     p.color.type = ColorGradientLinear;
     p.color.gradientLinear.mode = mode;
@@ -421,24 +417,26 @@ Prop *Prop::AllocColorLinearGradient(PropType type, LinearGradientMode mode, ARG
     return UniqifyProp(p);
 }
 
-Prop *Prop::AllocColorLinearGradient(PropType type, LinearGradientMode mode, const char *startColor,
-                                     const char *endColor) {
+Prop* Prop::AllocColorLinearGradient(PropType type, LinearGradientMode mode, const char* startColor,
+                                     const char* endColor) {
     ARGB c1 = ParseCssColor(startColor);
     ARGB c2 = ParseCssColor(endColor);
     return AllocColorLinearGradient(type, mode, c1, c2);
 }
 
-Prop *Prop::AllocColorSolid(PropType type, const char *color) {
+Prop* Prop::AllocColorSolid(PropType type, const char* color) {
     ARGB col = ParseCssColor(color);
     return AllocColorSolid(type, col);
 }
 
-Style *Style::GetInheritsFrom() const { return inheritsFrom; }
+Style* Style::GetInheritsFrom() const {
+    return inheritsFrom;
+}
 
 // Identity is a way to track changes to Style
 size_t Style::GetIdentity() const {
     size_t identity = gen;
-    Style *curr = inheritsFrom;
+    Style* curr = inheritsFrom;
     while (curr) {
         identity += curr->gen;
         curr = curr->inheritsFrom;
@@ -449,9 +447,9 @@ size_t Style::GetIdentity() const {
 
 // Add a property to a set, if a given PropType doesn't exist,
 // replace if a given PropType already exists in the set.
-void Style::Set(Prop *prop) {
+void Style::Set(Prop* prop) {
     CrashIf(!prop);
-    Prop *&p = props.FindEl([&](Prop *p2) { return p2->type == prop->type; });
+    Prop*& p = props.FindEl([&](Prop* p2) { return p2->type == prop->type; });
     if (p) {
         if (!prop->Eq(p))
             ++gen;
@@ -462,9 +460,13 @@ void Style::Set(Prop *prop) {
     ++gen;
 }
 
-void Style::SetName(const char *styleName) { Set(Prop::AllocStyleName(styleName)); }
+void Style::SetName(const char* styleName) {
+    Set(Prop::AllocStyleName(styleName));
+}
 
-void Style::SetPadding(int width) { Set(Prop::AllocPadding(width, width, width, width)); }
+void Style::SetPadding(int width) {
+    Set(Prop::AllocPadding(width, width, width, width));
+}
 
 void Style::SetPadding(int topBottom, int leftRight) {
     Set(Prop::AllocPadding(topBottom, leftRight, topBottom, leftRight));
@@ -488,7 +490,7 @@ void Style::SetBorderColor(ARGB color) {
     Set(Prop::AllocColorSolid(PropBorderLeftColor, color));
 }
 
-static bool FoundAllProps(Prop **props) {
+static bool FoundAllProps(Prop** props) {
     for (size_t i = 0; i < (size_t)PropsCount; i++) {
         if (!props[i])
             return false;
@@ -502,10 +504,10 @@ static bool FoundAllProps(Prop **props) {
 // array if it's not already set (it should be all NULLs the first
 // time).
 // As an optimization it returns true if we got all props
-static bool GetAllProps(Style *style, Prop **props) {
+static bool GetAllProps(Style* style, Prop** props) {
     bool inherited = false;
     while (style) {
-        for (Prop *p : style->props) {
+        for (Prop* p : style->props) {
             // PropStyleName is not inheritable
             if ((PropStyleName == p->type) && inherited)
                 continue;
@@ -525,7 +527,7 @@ static bool GetAllProps(Style *style, Prop **props) {
     return false;
 }
 
-static size_t GetStyleId(Style *style) {
+static size_t GetStyleId(Style* style) {
     if (!style)
         return 0;
     return style->GetIdentity();
@@ -537,16 +539,16 @@ static size_t GetStyleId(Style *style) {
 // If a given style doesn't exist, we add it to the cache.
 // If it exists but it was modified or gStyleDefault was modified, we update the cache.
 // If it exists and didn't change, we return cached entry.
-CachedStyle *CacheStyle(Style *style, bool *changedOut) {
+CachedStyle* CacheStyle(Style* style, bool* changedOut) {
     bool changedTmp;
     if (!changedOut)
         changedOut = &changedTmp;
     *changedOut = false;
 
     ScopedMuiCritSec muiCs;
-    StyleCacheEntry *e = nullptr;
+    StyleCacheEntry* e = nullptr;
 
-    for (StyleCacheEntry &e2 : *gStyleCache) {
+    for (StyleCacheEntry& e2 : *gStyleCache) {
         if (e2.style == style) {
             if (e2.styleId == GetStyleId(style)) {
                 return &e2.cachedStyle;
@@ -557,7 +559,7 @@ CachedStyle *CacheStyle(Style *style, bool *changedOut) {
     }
 
     *changedOut = true;
-    Prop *props[PropsCount] = { 0 };
+    Prop* props[PropsCount] = {0};
     if (!GetAllProps(style, props))
         GetAllProps(gStyleDefault, props);
     for (size_t i = 0; i < dimof(props); i++) {
@@ -593,38 +595,38 @@ CachedStyle *CacheStyle(Style *style, bool *changedOut) {
         return &e->cachedStyle;
     }
 
-    StyleCacheEntry newEntry = { style, GetStyleId(style), s };
+    StyleCacheEntry newEntry = {style, GetStyleId(style), s};
     e = gStyleCache->push_back(newEntry);
     return &e->cachedStyle;
 }
 
-CachedStyle *CachedStyleByName(const char *name) {
+CachedStyle* CachedStyleByName(const char* name) {
     if (!name)
         return nullptr;
-    for (StyleCacheEntry &e : *gStyleCache) {
+    for (StyleCacheEntry& e : *gStyleCache) {
         if (str::Eq(e.cachedStyle.styleName, name))
             return &e.cachedStyle;
     }
     return nullptr;
 }
 
-Style *StyleByName(const char *name) {
+Style* StyleByName(const char* name) {
     if (!name)
         return nullptr;
-    for (StyleCacheEntry &e : *gStyleCache) {
+    for (StyleCacheEntry& e : *gStyleCache) {
         if (str::Eq(e.cachedStyle.styleName, name))
             return e.style;
     }
     return nullptr;
 }
 
-Brush *BrushFromColorData(ColorData *color, const RectF &r) {
+Brush* BrushFromColorData(ColorData* color, const RectF& r) {
     if (ColorSolid == color->type)
         return color->solid.cachedBrush;
 
     if (ColorGradientLinear == color->type) {
-        ColorDataGradientLinear *d = &color->gradientLinear;
-        LinearGradientBrush *br = d->cachedBrush;
+        ColorDataGradientLinear* d = &color->gradientLinear;
+        LinearGradientBrush* br = d->cachedBrush;
         if (!br || !r.Equals(*d->rect)) {
             ::delete br;
             br = ::new LinearGradientBrush(r, d->startColor, d->endColor, d->mode);
@@ -638,19 +640,18 @@ Brush *BrushFromColorData(ColorData *color, const RectF &r) {
     return ::new SolidBrush(0);
 }
 
-Brush *BrushFromColorData(ColorData *color, const Rect &r) {
-    return BrushFromColorData(color,
-                              RectF((float)r.X, (float)r.Y, (float)r.Width, (float)r.Height));
+Brush* BrushFromColorData(ColorData* color, const Rect& r) {
+    return BrushFromColorData(color, RectF((float)r.X, (float)r.Y, (float)r.Width, (float)r.Height));
 }
 
-static void AddBorders(int &dx, int &dy, CachedStyle *s) {
-    const BorderWidth &bw = s->borderWidth;
+static void AddBorders(int& dx, int& dy, CachedStyle* s) {
+    const BorderWidth& bw = s->borderWidth;
     // note: width is a float, not sure how I should round them
     dx += (int)(bw.left + bw.right);
     dy += (int)(bw.top + bw.bottom);
 }
 
-Size GetBorderAndPaddingSize(CachedStyle *s) {
+Size GetBorderAndPaddingSize(CachedStyle* s) {
     Padding pad = s->padding;
     int dx = pad.left + pad.right;
     int dy = pad.top + pad.bottom;
@@ -658,9 +659,11 @@ Size GetBorderAndPaddingSize(CachedStyle *s) {
     return Size(dx, dy);
 }
 
-Style *GetStyleDefault() { return gStyleDefault; }
+Style* GetStyleDefault() {
+    return gStyleDefault;
+}
 
-Style *GetStyleButtonDefault() {
+Style* GetStyleButtonDefault() {
 #ifdef DEBUG
     return StyleByName("buttonDefault");
 #else
@@ -668,7 +671,7 @@ Style *GetStyleButtonDefault() {
 #endif
 }
 
-Style *GetStyleButtonDefaultMouseOver() {
+Style* GetStyleButtonDefaultMouseOver() {
 #ifdef DEBUG
     return StyleByName("buttonDefaultMouseOver");
 #else

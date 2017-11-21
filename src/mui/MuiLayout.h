@@ -57,8 +57,7 @@ struct DirectionalLayoutData {
     // desiredSize of the element after Measure() step
     Size desiredSize;
 
-    DirectionalLayoutData()
-        : alignNonLayoutAxis(GetElAlignCenter()) {}
+    DirectionalLayoutData() : alignNonLayoutAxis(GetElAlignCenter()) {}
 
     DirectionalLayoutData(const DirectionalLayoutData& other)
         : element(other.element),

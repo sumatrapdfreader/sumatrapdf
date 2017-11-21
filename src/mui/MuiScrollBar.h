@@ -38,7 +38,7 @@ class ScrollBar : public Control {
     virtual void NotifyMouseEnter();
     virtual void NotifyMouseLeave();
 
-    virtual void Paint(Graphics *gfx, int offX, int offY);
+    virtual void Paint(Graphics* gfx, int offX, int offY);
 
     void SetFilled(float perc);
     float GetPercAt(int x);
