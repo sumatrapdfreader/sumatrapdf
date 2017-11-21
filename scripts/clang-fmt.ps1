@@ -21,7 +21,7 @@ $files =
 "src\EbookControls.*",
 "src\EbookDoc.*",
 "src\EbookEngine.*",
-#"src\EbookFormatter.*",
+"src\EbookFormatter.*",
 #"src\EngineDump.*",
 "src\EngineManager.*",
 "src\ExternalViewers.*",
