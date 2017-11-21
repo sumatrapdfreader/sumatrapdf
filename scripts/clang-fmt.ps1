@@ -34,9 +34,9 @@ $files =
 "src\ImagesEngine.*",
 "src\Menu.*",
 "src\MobiDoc.*",
-#"src\MuiEbookPageDef.*",  # this one is auto-generated!
+"src\MuiEbookPageDef.*",  # this one is auto-generated!
 "src\Notifications.*",
-#"src\PagesLayoutDef*",    # this one is auto-generated!
+"src\PagesLayoutDef*",    # this one is auto-generated!
 "src\ParseCommandLine*",
 "src\PdfCreator.*",
 "src\PdfEngine.*",
@@ -46,7 +46,7 @@ $files =
 "src\RenderCache.*",
 "src\Search.*",
 "src\Selection.*",
-#"src\SetiingsStructs.*",      # auto-generated
+"src\SetiingsStructs.*",      # auto-generated
 "src\StressTesting.*",
 "src\SumatraAbout.*",
 "src\SumatraAbout2.*",
