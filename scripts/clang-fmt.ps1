@@ -89,7 +89,7 @@ $files =
 #"src\utils\HtmlPullParser.*",
 "src\utils\HtmlWindow.*",
 "src\utils\HttpUtil.*",
-#"src\utils\JsonParser.*",
+"src\utils\JsonParser.*",
 "src\utils\LzmaSimpleArchive.*",
 "src\utils\PalmDbReader.*",
 "src\utils\Scoped.h",
