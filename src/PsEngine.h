@@ -4,7 +4,7 @@
 namespace PsEngine {
 
 bool IsAvailable();
-bool IsSupportedFile(const WCHAR *fileName, bool sniff=false);
-BaseEngine *CreateFromFile(const WCHAR *fileName);
+bool IsSupportedFile(const WCHAR* fileName, bool sniff = false);
+BaseEngine* CreateFromFile(const WCHAR* fileName);
 
-}
+} // namespace PsEngine
