@@ -11,13 +11,12 @@
 // * a single backslash in front of a quotation mark prevents this special treatment
 // * an even number of backslashes followed by either a backslash and a quotation
 //   mark or just a quotation mark is collapsed into half as many backslashes
-void ParseCmdLine(const WCHAR *cmdLine, WStrVec& out, int maxParts)
-{
+void ParseCmdLine(const WCHAR* cmdLine, WStrVec& out, int maxParts) {
     if (!cmdLine)
         return;
 
     str::Str<WCHAR> arg(MAX_PATH / 2);
-    const WCHAR *s;
+    const WCHAR* s;
 
     while (--maxParts != 0) {
         while (str::IsWs(*cmdLine))
@@ -35,7 +34,8 @@ void ParseCmdLine(const WCHAR *cmdLine, WStrVec& out, int maxParts)
                 break;
             }
             if ('\\' == *cmdLine) {
-                for (s = cmdLine + 1; '\\' == *s; s++);
+                for (s = cmdLine + 1; '\\' == *s; s++)
+                    ;
                 // backslashes escape only when followed by a quotation mark
                 if ('"' == *s)
                     cmdLine++;

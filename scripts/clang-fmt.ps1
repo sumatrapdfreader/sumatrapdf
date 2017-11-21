@@ -72,7 +72,7 @@ $files =
 "src\utils\BitReader.*",
 "src\utils\ByteOrderDecoder.*",
 "src\utils\ByteWriter.*",
-#"src\utils\CmdLineParser.*",
+"src\utils\CmdLineParser.*",
 #"src\utils\CryptoUtil.*",
 #"src\utils\CssParser.*",
 #"src\utils\DbgHelpDyn.*",
