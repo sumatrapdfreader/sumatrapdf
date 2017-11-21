@@ -471,7 +471,7 @@ Exit:
         free(data);
         return {};
     }
-    return { data, size };
+    return {data, size};
 }
 
 bool Archive::OpenUnrarDllFallback(const char* rarPathUtf) {

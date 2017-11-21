@@ -492,12 +492,12 @@ class FixedArray {
 // It cannot be copied, only moved, so that it's clear that ownership of
 // data is being passed.
 class OwnedData {
-public:
-    char *data = nullptr;
+  public:
+    char* data = nullptr;
     size_t size = 0;
 
-    OwnedData() {};
-    OwnedData(char *data, size_t size);
+    OwnedData(){};
+    OwnedData(char* data, size_t size);
     ~OwnedData();
 
     OwnedData(const OwnedData& other) = delete;
@@ -506,7 +506,7 @@ public:
 
     OwnedData(OwnedData&& other);
     void Set(char* s, size_t len = 0);
-    char *StealData();
+    char* StealData();
 };
 
 #include "GeomUtil.h"

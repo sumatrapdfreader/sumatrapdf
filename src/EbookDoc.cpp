@@ -650,7 +650,7 @@ bool EpubDoc::IsSupportedFile(const WCHAR* fileName, bool sniff) {
         if (!mimetype.data) {
             return false;
         }
-        char *d = mimetype.data;
+        char* d = mimetype.data;
         // trailing whitespace is allowed for the mimetype file
         for (size_t i = mimetype.size; i > 0; i--) {
             if (!str::IsWs(d[i - 1])) {

@@ -141,8 +141,10 @@ void* PoolAllocator::FindNthPieceOfSize(size_t size, size_t n) const {
     return nullptr;
 }
 
-OwnedData::OwnedData(char *data, size_t size) : data(data), size(size) {}
-OwnedData::~OwnedData() { free(data); }
+OwnedData::OwnedData(char* data, size_t size) : data(data), size(size) {}
+OwnedData::~OwnedData() {
+    free(data);
+}
 
 OwnedData::OwnedData(OwnedData&& other) {
     this->data = other.data;
@@ -160,7 +162,7 @@ void OwnedData::Set(char* s, size_t len) {
     size = len;
 }
 
-char *OwnedData::StealData() {
+char* OwnedData::StealData() {
     auto* res = data;
     data = nullptr;
     size = 0;
@@ -277,4 +279,3 @@ BYTE GetBValueSafe(COLORREF rgb) {
     rgb = (rgb >> 16) & 0xff;
     return (BYTE)rgb;
 }
-
