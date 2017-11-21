@@ -261,11 +261,11 @@ EpubDoc::~EpubDoc() {
 }
 
 bool EpubDoc::Load() {
-    AutoFree container(zip->GetFileDataByName("META-INF/container.xml"));
-    if (!container)
+    OwnedData container(zip->GetFileDataByName("META-INF/container.xml"));
+    if (!container.data)
         return false;
     HtmlParser parser;
-    HtmlElement* node = parser.ParseInPlace(container);
+    HtmlElement* node = parser.ParseInPlace(container.data);
     if (!node)
         return false;
     // only consider the first <rootfile> element (default rendition)
@@ -279,9 +279,9 @@ bool EpubDoc::Load() {
 
     // encrypted files will be ignored (TODO: support decryption)
     WStrList encList;
-    AutoFree encryption(zip->GetFileDataByName("META-INF/encryption.xml"));
-    if (encryption) {
-        (void)parser.ParseInPlace(encryption);
+    OwnedData encryption(zip->GetFileDataByName("META-INF/encryption.xml"));
+    if (encryption.data) {
+        (void)parser.ParseInPlace(encryption.data);
         HtmlElement* cr = parser.FindElementByNameNS("CipherReference", EPUB_ENC_NS);
         while (cr) {
             WCHAR* uri = cr->GetAttribute("URI");
@@ -293,16 +293,19 @@ bool EpubDoc::Load() {
         }
     }
 
-    AutoFree content(zip->GetFileDataByName(contentPath));
-    if (!content)
+    OwnedData content(zip->GetFileDataByName(contentPath));
+    if (!content.data) {
         return false;
-    ParseMetadata(content);
-    node = parser.ParseInPlace(content);
-    if (!node)
+    }
+    ParseMetadata(content.data);
+    node = parser.ParseInPlace(content.data);
+    if (!node) {
         return false;
+    }
     node = parser.FindElementByNameNS("manifest", EPUB_OPF_NS);
-    if (!node)
+    if (!node) {
         return false;
+    }
 
     WCHAR* slashPos = str::FindCharLast(contentPath, '/');
     if (slashPos)
@@ -369,19 +372,21 @@ bool EpubDoc::Load() {
             continue;
 
         AutoFreeW fullPath(str::Join(contentPath, pathList.at(idList.Find(idref))));
-        AutoFree html(zip->GetFileDataByName(fullPath));
-        if (!html)
+        OwnedData html(zip->GetFileDataByName(fullPath));
+        if (!html.data) {
             continue;
-        html.Set(DecodeTextToUtf8(html, true));
-        if (!html)
+        }
+        html.Set(DecodeTextToUtf8(html.data, true));
+        if (!html.data) {
             continue;
+        }
         // insert explicit page-breaks between sections including
         // an anchor with the file name at the top (for internal links)
         AutoFree utf8_path(str::conv::ToUtf8(fullPath));
         CrashIfDebugOnly(str::FindChar(utf8_path, '"'));
         str::TransChars(utf8_path, "\"", "'");
         htmlData.AppendFmt("<pagebreak page_path=\"%s\" page_marker />", utf8_path.Get());
-        htmlData.Append(html);
+        htmlData.Append(html.data);
     }
 
     return htmlData.size() > 0;
@@ -448,8 +453,11 @@ ImageData* EpubDoc::GetImageData(const char* fileName, const char* pagePath) {
         for (size_t i = 0; i < images.size(); i++) {
             ImageData2* img = &images.at(i);
             if (str::EndsWithI(img->fileName, fileName)) {
-                if (!img->base.data)
-                    img->base.data = zip->GetFileDataById(img->fileId, &img->base.len);
+                if (!img->base.data) {
+                    auto res = zip->GetFileDataById(img->fileId);
+                    img->base.len = res.size;
+                    img->base.data = res.StealData();
+                }
                 if (img->base.data)
                     return &img->base;
             }
@@ -464,8 +472,11 @@ ImageData* EpubDoc::GetImageData(const char* fileName, const char* pagePath) {
     for (size_t i = 0; i < images.size(); i++) {
         ImageData2* img = &images.at(i);
         if (str::Eq(img->fileName, url)) {
-            if (!img->base.data)
-                img->base.data = zip->GetFileDataById(img->fileId, &img->base.len);
+            if (!img->base.data) {
+                auto res = zip->GetFileDataById(img->fileId);
+                img->base.len = res.size;
+                img->base.data = res.StealData();
+            }
             if (img->base.data)
                 return &img->base;
         }
@@ -475,7 +486,9 @@ ImageData* EpubDoc::GetImageData(const char* fileName, const char* pagePath) {
     ImageData2 data = {0};
     data.fileId = zip->GetFileId(url);
     if (data.fileId != (size_t)-1) {
-        data.base.data = zip->GetFileDataById(data.fileId, &data.base.len);
+        auto res = zip->GetFileDataById(data.fileId);
+        data.base.len = res.size;
+        data.base.data = res.StealData();
         if (data.base.data) {
             data.fileName = str::Dup(url);
             images.Append(data);
@@ -486,16 +499,16 @@ ImageData* EpubDoc::GetImageData(const char* fileName, const char* pagePath) {
     return nullptr;
 }
 
-char* EpubDoc::GetFileData(const char* relPath, const char* pagePath, size_t* lenOut) {
+OwnedData EpubDoc::GetFileData(const char* relPath, const char* pagePath) {
     if (!pagePath) {
         CrashIf(true);
-        return nullptr;
+        return {};
     }
 
     ScopedCritSec scope(&zipAccess);
 
     AutoFree url(NormalizeURL(relPath, pagePath));
-    return zip->GetFileDataByName(url, lenOut);
+    return zip->GetFileDataByName(url);
 }
 
 WCHAR* EpubDoc::GetProperty(DocumentProperty prop) const {
@@ -617,7 +630,9 @@ bool EpubDoc::ParseToc(EbookTocVisitor* visitor) {
     AutoFree tocData;
     {
         ScopedCritSec scope(&zipAccess);
-        tocData.Set(zip->GetFileDataByName(tocPath, &tocDataLen));
+        auto res = zip->GetFileDataByName(tocPath);
+        tocDataLen = res.size;
+        tocData.Set(res.StealData());
     }
     if (!tocData)
         return false;
@@ -631,24 +646,27 @@ bool EpubDoc::ParseToc(EbookTocVisitor* visitor) {
 bool EpubDoc::IsSupportedFile(const WCHAR* fileName, bool sniff) {
     if (sniff) {
         Archive* archive = OpenZipArchive(fileName, true);
-        AutoFree mimetype(archive->GetFileDataByName("mimetype"));
-        if (!mimetype)
+        OwnedData mimetype(archive->GetFileDataByName("mimetype"));
+        if (!mimetype.data) {
             return false;
+        }
+        char *d = mimetype.data;
         // trailing whitespace is allowed for the mimetype file
-        for (size_t i = str::Len(mimetype); i > 0; i--) {
-            if (!str::IsWs(mimetype[i - 1]))
+        for (size_t i = mimetype.size; i > 0; i--) {
+            if (!str::IsWs(d[i - 1])) {
                 break;
-            mimetype[i - 1] = '\0';
+            }
+            d[i - 1] = '\0';
         }
         // a proper EPUB document has a "mimetype" file with content
         // "application/epub+zip" as the first entry in its ZIP structure
         /* cf. http://forums.fofou.org/sumatrapdf/topic?id=2599331
         if (!str::Eq(zip.GetFileName(0), L"mimetype"))
             return false; */
-        return str::Eq(mimetype, "application/epub+zip") ||
+        return str::Eq(mimetype.data, "application/epub+zip") ||
                // also open renamed .ibooks files
                // cf. http://en.wikipedia.org/wiki/IBooks#Formats
-               str::Eq(mimetype, "application/x-ibooks+zip");
+               str::Eq(mimetype.data, "application/x-ibooks+zip");
     }
     return str::EndsWithI(fileName, L".epub");
 }
@@ -709,14 +727,16 @@ bool Fb2Doc::Load() {
                 auto fileName = fileInfo->name;
                 const char* ext = path::GetExt(fileName.data());
                 if (str::EqI(ext, ".fb2") && !data) {
-                    data.Set(archive->GetFileDataById(fileInfo->fileId));
+                    OwnedData tmp = archive->GetFileDataById(fileInfo->fileId);
+                    data.Set(tmp.StealData());
                 } else if (!str::EqI(ext, ".url")) {
                     delete archive;
                     return false;
                 }
             }
         } else if (isZipped) {
-            data.Set(archive->GetFileDataById(0));
+            OwnedData tmp = archive->GetFileDataById(0);
+            data.Set(tmp.StealData());
         } else {
             data.Set(file::ReadAll(fileName, nullptr));
         }
@@ -728,7 +748,8 @@ bool Fb2Doc::Load() {
             size_t nFiles = archive->GetFileInfos().size();
             if (nFiles == 1) {
                 isZipped = true;
-                data.Set(archive->GetFileDataById(0));
+                OwnedData tmp = archive->GetFileDataById(0);
+                data.Set(tmp.StealData());
             }
             delete archive;
         }

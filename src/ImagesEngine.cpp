@@ -836,7 +836,7 @@ class CbxEngineImpl : public ImagesEngine, public json::ValueVisitor {
     bool LoadFromStream(IStream* stream);
     bool FinishLoading();
 
-    char* GetImageData(int pageNo, size_t& len);
+    OwnedData GetImageData(int pageNo);
     void ParseComicInfoXml(const char* xmlData);
 
     // access to cbxFile must be protected after initialization (with cacheAccess)
@@ -903,13 +903,13 @@ bool CbxEngineImpl::FinishLoading() {
         }
     }
 
-    AutoFree metadata(cbxFile->GetFileDataByName("ComicInfo.xml"));
-    if (metadata) {
-        ParseComicInfoXml(metadata);
+    OwnedData metadata(cbxFile->GetFileDataByName("ComicInfo.xml"));
+    if (metadata.data) {
+        ParseComicInfoXml(metadata.data);
     }
     metadata.Set(cbxFile->GetComment());
-    if (metadata) {
-        json::Parse(metadata, this);
+    if (metadata.data) {
+        json::Parse(metadata.data, this);
     }
 
     std::sort(pageFiles.begin(), pageFiles.end(), cmpArchFileInfoByName);
@@ -923,11 +923,11 @@ bool CbxEngineImpl::FinishLoading() {
     return true;
 }
 
-char* CbxEngineImpl::GetImageData(int pageNo, size_t& len) {
-    AssertCrash(1 <= pageNo && pageNo <= PageCount());
+OwnedData CbxEngineImpl::GetImageData(int pageNo) {
+    CrashIf((pageNo < 1) || (pageNo > PageCount()));
     ScopedCritSec scope(&cacheAccess);
     size_t fileId = files[pageNo - 1]->fileId;
-    return cbxFile->GetFileDataById(fileId, &len);
+    return cbxFile->GetFileDataById(fileId);
 }
 
 static char* GetTextContent(HtmlPullParser& parser) {
@@ -1016,9 +1016,8 @@ bool CbxEngineImpl::SaveFileAsPDF(const char* pdfFileName, bool includeUserAnnot
     bool ok = true;
     PdfCreator* c = new PdfCreator();
     for (int i = 1; i <= PageCount() && ok; i++) {
-        size_t len;
-        AutoFree data(GetImageData(i, len));
-        ok = data && c->AddImagePage(data, len, GetFileDPI());
+        OwnedData data(GetImageData(i));
+        ok = data.data && c->AddImagePage(data.data, data.size, GetFileDPI());
     }
     if (ok) {
         c->CopyProperties(this);
@@ -1065,11 +1064,10 @@ const WCHAR* CbxEngineImpl::GetDefaultFileExt() const {
 }
 
 Bitmap* CbxEngineImpl::LoadBitmap(int pageNo, bool& deleteAfterUse) {
-    size_t len;
-    AutoFree bmpData(GetImageData(pageNo, len));
-    if (bmpData) {
+    OwnedData bmpData(GetImageData(pageNo));
+    if (bmpData.data) {
         deleteAfterUse = true;
-        return BitmapFromData(bmpData, len);
+        return BitmapFromData(bmpData.data, bmpData.size);
     }
     return nullptr;
 }
@@ -1083,10 +1081,9 @@ RectD CbxEngineImpl::LoadMediabox(int pageNo) {
         return mbox;
     }
 
-    size_t len;
-    AutoFree bmpData(GetImageData(pageNo, len));
-    if (bmpData) {
-        Size size = BitmapSizeFromData(bmpData, len);
+    OwnedData bmpData(GetImageData(pageNo));
+    if (bmpData.data) {
+        Size size = BitmapSizeFromData(bmpData.data, bmpData.size);
         return RectD(0, 0, size.Width, size.Height);
     }
     return RectD();

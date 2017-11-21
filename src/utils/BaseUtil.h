@@ -301,32 +301,18 @@ inline T limitValue(T val, T min, T max) {
 }
 
 #if !OS_WIN
-inline void ZeroMemory(void* p, size_t len) {
-    memset(p, 0, len);
-}
+void ZeroMemory(void* p, size_t len);
 #endif
 
-inline void* memdup(const void* data, size_t len) {
-    void* dup = malloc(len);
-    if (dup)
-        memcpy(dup, data, len);
-    return dup;
-}
+void* memdup(const void* data, size_t len);
 
-inline bool memeq(const void* s1, const void* s2, size_t len) {
-    return 0 == memcmp(s1, s2, len);
-}
+bool memeq(const void* s1, const void* s2, size_t len);
 
 size_t RoundToPowerOf2(size_t size);
 uint32_t MurmurHash2(const void* key, size_t len);
 
-static inline size_t RoundUp(size_t n, size_t rounding) {
-    return ((n + rounding - 1) / rounding) * rounding;
-}
-
-static inline int RoundUp(int n, int rounding) {
-    return ((n + rounding - 1) / rounding) * rounding;
-}
+size_t RoundUp(size_t n, size_t rounding);
+int RoundUp(int n, int rounding);
 
 template <typename T>
 void ListInsert(T** root, T* el) {
@@ -501,30 +487,40 @@ class FixedArray {
     }
 };
 
+// OwnedData is for returning data. It combines pointer to data and size.
+// It owns the data i.e. frees it in destructor.
+// It cannot be copied, only moved, so that it's clear that ownership of
+// data is being passed.
+class OwnedData {
+public:
+    char *data = nullptr;
+    size_t size = 0;
+
+    OwnedData() {};
+    OwnedData(char *data, size_t size);
+    ~OwnedData();
+
+    OwnedData(const OwnedData& other) = delete;
+    OwnedData& operator=(const OwnedData& other) = delete;
+    OwnedData& operator=(OwnedData&& other) = delete;
+
+    OwnedData(OwnedData&& other);
+    void Set(char* s, size_t len = 0);
+    char *StealData();
+};
+
 #include "GeomUtil.h"
 #include "StrUtil.h"
 #include "Scoped.h"
 #include "Vec.h"
 
+#if OS_WIN
 /* In debug mode, VS 2010 instrumentations complains about GetRValue() etc.
 This adds equivalent functions that don't have this problem and ugly
 substitutions to make sure we don't use Get*Value() in the future */
-
-#if OS_WIN
-static inline BYTE GetRValueSafe(COLORREF rgb) {
-    rgb = rgb & 0xff;
-    return (BYTE)rgb;
-}
-
-static inline BYTE GetGValueSafe(COLORREF rgb) {
-    rgb = (rgb >> 8) & 0xff;
-    return (BYTE)rgb;
-}
-
-static inline BYTE GetBValueSafe(COLORREF rgb) {
-    rgb = (rgb >> 16) & 0xff;
-    return (BYTE)rgb;
-}
+BYTE GetRValueSafe(COLORREF rgb);
+BYTE GetGValueSafe(COLORREF rgb);
+BYTE GetBValueSafe(COLORREF rgb);
 
 #undef GetRValue
 #define GetRValue UseGetRValueSafeInstead

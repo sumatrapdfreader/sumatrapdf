@@ -98,31 +98,31 @@ size_t Archive::GetFileId(const char* fileName) {
 }
 
 #if OS_WIN
-char* Archive::GetFileDataByName(const WCHAR* fileName, size_t* len) {
+OwnedData Archive::GetFileDataByName(const WCHAR* fileName) {
     AutoFree fileNameUtf8(str::conv::ToUtf8(fileName));
-    return GetFileDataByName(fileNameUtf8.Get(), len);
+    return GetFileDataByName(fileNameUtf8.Get());
 }
 #endif
 
-char* Archive::GetFileDataByName(const char* fileName, size_t* len) {
+OwnedData Archive::GetFileDataByName(const char* fileName) {
     size_t fileId = getFileIdByName(fileInfos_, fileName);
-    return GetFileDataById(fileId, len);
+    return GetFileDataById(fileId);
 }
 
-char* Archive::GetFileDataById(size_t fileId, size_t* len) {
+OwnedData Archive::GetFileDataById(size_t fileId) {
     if (fileId == (size_t)-1) {
-        return nullptr;
+        return {};
     }
     CrashIf(fileId >= fileInfos_.size());
 
 #if ENABLE_UNRARDLL_FALLBACK
     if (LoadedUsingUnrarDll()) {
-        return GetFileDataByIdUnarrDll(fileId, len);
+        return GetFileDataByIdUnarrDll(fileId);
     }
 #endif
 
     if (!ar_) {
-        return nullptr;
+        return {};
     }
 
     auto* fileInfo = fileInfos_[fileId];
@@ -130,26 +130,23 @@ char* Archive::GetFileDataById(size_t fileId, size_t* len) {
 
     auto filePos = fileInfo->filePos;
     if (!ar_parse_entry_at(ar_, filePos)) {
-        return nullptr;
+        return {};
     }
     size_t size = fileInfo->fileSizeUncompressed;
     // for conveninence we zero-terminate with 2 bytes (so that the caller can
     // treat it as zero-terminated string (ascii or unicode)
     if (size > SIZE_MAX - 2) {
-        return nullptr;
+        return {};
     }
-    AutoFree data(AllocArray<char>(size + 2));
-    if (!data) {
-        return nullptr;
+    OwnedData data(AllocArray<char>(size + 2), size);
+    if (!data.data) {
+        return {};
     }
-    if (!ar_entry_uncompress(ar_, data, size)) {
-        return nullptr;
+    if (!ar_entry_uncompress(ar_, data.data, size)) {
+        return {};
     }
 
-    if (len) {
-        *len = size;
-    }
-    return data.StealData();
+    return data;
 }
 
 char* Archive::GetComment(size_t* len) {
@@ -418,7 +415,7 @@ static bool FindFile(HANDLE hArc, RARHeaderDataEx* rarHeader, const WCHAR* fileN
     }
 }
 
-char* Archive::GetFileDataByIdUnarrDll(size_t fileId, size_t* len) {
+OwnedData Archive::GetFileDataByIdUnarrDll(size_t fileId) {
     CrashIf(!IsUnrarDllLoaded());
     CrashIf(!IsValidUnrarDll());
     CrashIf(!rarFilePath_);
@@ -435,21 +432,21 @@ char* Archive::GetFileDataByIdUnarrDll(size_t fileId, size_t* len) {
 
     HANDLE hArc = RAROpenArchiveEx(&arcData);
     if (!hArc || arcData.OpenResult != 0) {
-        return nullptr;
+        return {};
     }
 
     auto* fileInfo = fileInfos_[fileId];
     CrashIf(fileInfo->fileId != fileId);
 
     char* data = nullptr;
-
+    size_t size = 0;
     AutoFreeW fileName(str::conv::FromUtf8(fileInfo->name.data()));
     RARHeaderDataEx rarHeader = {0};
     bool ok = FindFile(hArc, &rarHeader, fileName.Get());
     if (!ok) {
         goto Exit;
     }
-    size_t size = fileInfo->fileSizeUncompressed;
+    size = fileInfo->fileSizeUncompressed;
     CrashIf(size != rarHeader.UnpSize);
     // for conveninence we zero-terminate with 2 bytes (so that the caller can
     // treat it as zero-terminated string (ascii or unicode)
@@ -470,15 +467,11 @@ char* Archive::GetFileDataByIdUnarrDll(size_t fileId, size_t* len) {
 
 Exit:
     RARCloseArchive(hArc);
-
     if (!ok) {
         free(data);
-        return nullptr;
+        return {};
     }
-    if (len) {
-        *len = rarHeader.UnpSize;
-    }
-    return data;
+    return { data, size };
 }
 
 bool Archive::OpenUnrarDllFallback(const char* rarPathUtf) {

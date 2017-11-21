@@ -141,6 +141,58 @@ void* PoolAllocator::FindNthPieceOfSize(size_t size, size_t n) const {
     return nullptr;
 }
 
+OwnedData::OwnedData(char *data, size_t size) : data(data), size(size) {}
+OwnedData::~OwnedData() { free(data); }
+
+OwnedData::OwnedData(OwnedData&& other) {
+    this->data = other.data;
+    this->size = other.size;
+    other.data = nullptr;
+    other.size = 0;
+}
+
+void OwnedData::Set(char* s, size_t len) {
+    if (len == 0) {
+        len = str::Len(s);
+    }
+    free(data);
+    data = s;
+    size = len;
+}
+
+char *OwnedData::StealData() {
+    auto* res = data;
+    data = nullptr;
+    size = 0;
+    return res;
+}
+
+#if !OS_WIN
+void ZeroMemory(void* p, size_t len) {
+    memset(p, 0, len);
+}
+#endif
+
+void* memdup(const void* data, size_t len) {
+    void* dup = malloc(len);
+    if (dup) {
+        memcpy(dup, data, len);
+    }
+    return dup;
+}
+
+bool memeq(const void* s1, const void* s2, size_t len) {
+    return 0 == memcmp(s1, s2, len);
+}
+
+size_t RoundUp(size_t n, size_t rounding) {
+    return ((n + rounding - 1) / rounding) * rounding;
+}
+
+int RoundUp(int n, int rounding) {
+    return ((n + rounding - 1) / rounding) * rounding;
+}
+
 size_t RoundToPowerOf2(size_t size) {
     size_t n = 1;
     while (n < size) {
@@ -210,3 +262,19 @@ uint32_t MurmurHash2(const void* key, size_t len) {
 
     return h;
 }
+
+BYTE GetRValueSafe(COLORREF rgb) {
+    rgb = rgb & 0xff;
+    return (BYTE)rgb;
+}
+
+BYTE GetGValueSafe(COLORREF rgb) {
+    rgb = (rgb >> 8) & 0xff;
+    return (BYTE)rgb;
+}
+
+BYTE GetBValueSafe(COLORREF rgb) {
+    rgb = (rgb >> 16) & 0xff;
+    return (BYTE)rgb;
+}
+

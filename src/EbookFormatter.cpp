@@ -177,12 +177,12 @@ void EpubFormatter::HandleTagLink(HtmlToken *t)
     if (!attr)
         return;
 
-    size_t len;
     AutoFree src(str::DupN(attr->val, attr->valLen));
     url::DecodeInPlace(src);
-    AutoFree data(epubDoc->GetFileData(src, pagePath, &len));
-    if (data)
-        ParseStyleSheet(data, len);
+    OwnedData data(epubDoc->GetFileData(src, pagePath));
+    if (data.data) {
+        ParseStyleSheet(data.data, data.size);
+    }
 }
 
 void EpubFormatter::HandleTagSvgImage(HtmlToken *t)

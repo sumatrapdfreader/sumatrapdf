@@ -47,10 +47,10 @@ class Archive {
 
 // caller must free() the result
 #if OS_WIN
-    char* GetFileDataByName(const WCHAR* filename, size_t* len = nullptr);
+    OwnedData GetFileDataByName(const WCHAR* filename);
 #endif
-    char* GetFileDataByName(const char* filename, size_t* len = nullptr);
-    char* GetFileDataById(size_t fileId, size_t* len = nullptr);
+    OwnedData GetFileDataByName(const char* filename);
+    OwnedData GetFileDataById(size_t fileId);
 
     // caller must free() the result
     char* GetComment(size_t* len = nullptr);
@@ -69,7 +69,7 @@ class Archive {
     const char* rarFilePath_ = nullptr;
 
     bool OpenUnrarDllFallback(const char* rarPathUtf);
-    char* GetFileDataByIdUnarrDll(size_t fileId, size_t* len);
+    OwnedData GetFileDataByIdUnarrDll(size_t fileId);
     bool LoadedUsingUnrarDll() const { return rarFilePath_ != nullptr; }
 #endif
 };

@@ -51,7 +51,7 @@ class EpubDoc {
     const char* GetHtmlData(size_t* lenOut) const;
     size_t GetHtmlDataSize() const;
     ImageData* GetImageData(const char* id, const char* pagePath);
-    char* GetFileData(const char* relPath, const char* pagePath, size_t* lenOut);
+    OwnedData GetFileData(const char* relPath, const char* pagePath);
 
     WCHAR* GetProperty(DocumentProperty prop) const;
     const WCHAR* GetFileName() const;
