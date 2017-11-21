@@ -74,7 +74,7 @@ $files =
 "src\utils\ByteWriter.*",
 "src\utils\CmdLineParser.*",
 "src\utils\CryptoUtil.*",
-#"src\utils\CssParser.*",
+"src\utils\CssParser.*",
 #"src\utils\DbgHelpDyn.*",
 #"src\utils\DebugLog.*",
 #"src\utils\Dict.*",
