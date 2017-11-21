@@ -61,7 +61,7 @@ $files =
 #"src\Tester.*",
 "src\Tests*",
 "src\TextSearch*",
-#"src\TextSelection.*",
+"src\TextSelection.*",
 "src\Theme.*",
 "src\Toolbar.*",
 #"src\UnitTests.*",
