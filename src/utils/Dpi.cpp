@@ -34,27 +34,26 @@ always call GetDpiXY() ?
 */
 
 struct DpiNode {
-    DpiNode *next;
+    DpiNode* next;
     Dpi dpi;
 };
 
-static DpiNode *g_dpis = nullptr;
+static DpiNode* g_dpis = nullptr;
 
 class ScopedGetDC {
     HDC hdc;
     HWND hwnd;
-public:
+
+  public:
     explicit ScopedGetDC(HWND hwnd) {
         this->hwnd = hwnd;
         this->hdc = GetDC(hwnd);
     }
-    ~ScopedGetDC() {
-        ReleaseDC(hwnd, hdc);
-    }
+    ~ScopedGetDC() { ReleaseDC(hwnd, hdc); }
     operator HDC() const { return hdc; }
 };
 
-static void GetDpiXY(HWND hwnd, int &scaleX, int &scaleY) {
+static void GetDpiXY(HWND hwnd, int& scaleX, int& scaleY) {
 #if 0
     // TODO: only available in 8.1
     UINT dpiX = 96, dpiY = 96;
@@ -85,8 +84,8 @@ static HWND GetTopLevelParent(HWND hwnd) {
     return topLevel;
 }
 
-static DpiNode *DpiNodeFindByHwnd(HWND hwnd) {
-    DpiNode *n = g_dpis;
+static DpiNode* DpiNodeFindByHwnd(HWND hwnd) {
+    DpiNode* n = g_dpis;
     while (n != nullptr) {
         if (n->dpi.hwnd == hwnd) {
             return n;
@@ -96,15 +95,15 @@ static DpiNode *DpiNodeFindByHwnd(HWND hwnd) {
     return nullptr;
 }
 
-static Dpi *DpiFindByHwnd(HWND hwnd) {
-    DpiNode *n = DpiNodeFindByHwnd(hwnd);
+static Dpi* DpiFindByHwnd(HWND hwnd) {
+    DpiNode* n = DpiNodeFindByHwnd(hwnd);
     if (n == nullptr) {
         return nullptr;
     }
     return &n->dpi;
 }
 
-void DpiUpdate(Dpi *dpi) {
+void DpiUpdate(Dpi* dpi) {
     dpi->dpiX = 96;
     dpi->dpiY = 96;
     GetDpiXY(dpi->hwnd, dpi->dpiX, dpi->dpiY);
@@ -113,8 +112,8 @@ void DpiUpdate(Dpi *dpi) {
     dpi->dpiY = RoundUp(dpi->dpiY, 4);
 }
 
-Dpi *DpiGet(HWND hwnd) {
-    Dpi *dpi = DpiFindByHwnd(hwnd);
+Dpi* DpiGet(HWND hwnd) {
+    Dpi* dpi = DpiFindByHwnd(hwnd);
     if (nullptr != dpi) {
         return dpi;
     }
@@ -128,7 +127,7 @@ Dpi *DpiGet(HWND hwnd) {
         }
     }
     // create if doesn't exist
-    DpiNode *n = AllocStruct<DpiNode>();
+    DpiNode* n = AllocStruct<DpiNode>();
     n->dpi.hwnd = hwnd;
     DpiUpdate(&n->dpi);
     n->next = g_dpis;
@@ -149,7 +148,7 @@ int DpiGetPreciseY(HWND hwnd) {
 }
 
 void DpiRemove(HWND hwnd) {
-    DpiNode *n = DpiNodeFindByHwnd(hwnd);
+    DpiNode* n = DpiNodeFindByHwnd(hwnd);
     CrashIf(nullptr == n);
     ListRemove(&g_dpis, n);
     free(n);
@@ -157,7 +156,7 @@ void DpiRemove(HWND hwnd) {
 
 void DpiRemoveAll() {
     while (g_dpis != nullptr) {
-        DpiNode *n = g_dpis;
+        DpiNode* n = g_dpis;
         DpiRemove(n->dpi.hwnd);
     }
 }

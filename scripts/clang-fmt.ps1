@@ -79,7 +79,7 @@ $files =
 #"src\utils\DebugLog.*",
 #"src\utils\Dict.*",
 #"src\utils\DirIter.*",
-#"src\utils\Dpi.*",
+"src\utils\Dpi.*",
 "src\utils\FileUtil.*",
 "src\utils\FileWatcher.*",
 #"src\utils\FzImgReader.*",
