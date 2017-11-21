@@ -28,19 +28,19 @@ a given line either as a simple string or key/value pair. It's
 up to the caller to interpret the data.
 */
 
-static TxtNode* AllocTxtNode(Allocator* allocator, TxtNodeType nodeType) {
-    void* p = Allocator::AllocZero(allocator, sizeof(TxtNode));
+static TxtNode* AllocTxtNode(Allocator* allocator, TxtNode::Type nodeType) {
+    void* p = Allocator::Alloc<TxtNode>(allocator);
     TxtNode* node = new (p) TxtNode(nodeType);
     CrashIf(!node);
-    if (TextNode != nodeType) {
+    if (TxtNode::Type::Text != nodeType) {
         p = Allocator::AllocZero(allocator, sizeof(Vec<TxtNode*>));
         node->children = new (p) Vec<TxtNode*>(0, allocator);
     }
     return node;
 }
 
-static TxtNode* TxtNodeFromToken(Allocator* allocator, TokenVal& tok, TxtNodeType nodeType) {
-    AssertCrash((TextNode == nodeType) || (StructNode == nodeType));
+static TxtNode* TxtNodeFromToken(Allocator* allocator, Token& tok, TxtNode::Type nodeType) {
+    AssertCrash((TxtNode::Type::Text == nodeType) || (TxtNode::Type::Struct == nodeType));
     TxtNode* node = AllocTxtNode(allocator, nodeType);
     node->lineStart = tok.lineStart;
     node->valStart = tok.valStart;
@@ -137,8 +137,8 @@ static bool ParseStructStart(TxtParser& parser) {
     if (!(slice.Finished() || ('\n' == slice.CurrChar())))
         return false;
 
-    TokenVal& tok = parser.tok;
-    tok.type = TokenStructStart;
+    Token& tok = parser.tok;
+    tok.type = Token::Type::StructStart;
     tok.keyStart = keyStart;
     tok.keyEnd = keyEnd;
     *keyEnd = 0;
@@ -191,8 +191,8 @@ static bool ParseKey(TxtParser& parser) {
 // foo: [1 3 4]
 // i.e. a child on a single line
 static void ParseNextToken(TxtParser& parser) {
-    TokenVal& tok = parser.tok;
-    ZeroMemory(&tok, sizeof(TokenVal));
+    Token& tok = parser.tok;
+    ZeroMemory(&tok, sizeof(Token));
     str::Slice& slice = parser.toParse;
 
 Again:
@@ -201,7 +201,7 @@ Again:
     tok.lineStart = slice.curr;
     slice.SkipWsUntilNewline();
     if (slice.Finished()) {
-        tok.type = TokenFinished;
+        tok.type = Token::Type::Finished;
         return;
     }
 
@@ -217,7 +217,7 @@ Again:
     }
 
     if ('[' == c || ']' == c) {
-        tok.type = ('[' == c) ? TokenArrayStart : TokenClose;
+        tok.type = ('[' == c) ? Token::Type::ArrayStart : Token::Type::Close;
         slice.ZeroCurr();
         slice.Skip(1);
         slice.SkipWsUntilNewline();
@@ -231,7 +231,7 @@ Again:
     if (ParseStructStart(parser))
         return;
 
-    tok.type = TokenString;
+    tok.type = Token::Type::String;
     ParseKey(parser);
 
     // "  foo:  bar"
@@ -254,34 +254,37 @@ static void ParseNodes(TxtParser& parser) {
     TxtNode* currNode = nullptr;
     for (;;) {
         ParseNextToken(parser);
-        TokenVal& tok = parser.tok;
+        Token& tok = parser.tok;
 
-        if (TokenFinished == tok.type) {
+        if (Token::Type::Finished == tok.type) {
             // we expect to end up with the implicit array node we created at start
-            if (parser.nodes.size() != 1)
+            if (parser.nodes.size() != 1) {
                 goto Failed;
+            }
             return;
         }
 
-        if (TokenString == tok.type || TokenKeyVal == tok.type) {
-            currNode = TxtNodeFromToken(parser.allocator, tok, TextNode);
-        } else if (TokenArrayStart == tok.type) {
-            currNode = AllocTxtNode(parser.allocator, ArrayNode);
-        } else if (TokenStructStart == tok.type) {
-            currNode = TxtNodeFromToken(parser.allocator, tok, StructNode);
+        if (Token::Type::String == tok.type || Token::Type::KeyVal == tok.type) {
+            currNode = TxtNodeFromToken(&parser.allocator, tok, TxtNode::Type::Text);
+        } else if (Token::Type::ArrayStart == tok.type) {
+            currNode = AllocTxtNode(&parser.allocator, TxtNode::Type::Array);
+        } else if (Token::Type::StructStart == tok.type) {
+            currNode = TxtNodeFromToken(&parser.allocator, tok, TxtNode::Type::Struct);
         } else {
-            CrashIf(TokenClose != tok.type);
+            CrashIf(Token::Type::Close != tok.type);
             // if the only node left is the implict array node we created,
             // this is an error
-            if (1 == parser.nodes.size())
+            if (1 == parser.nodes.size()) {
                 goto Failed;
+            }
             parser.nodes.Pop();
             continue;
         }
         TxtNode* currParent = parser.nodes.at(parser.nodes.size() - 1);
         currParent->children->Append(currNode);
-        if (TextNode != currNode->type)
+        if (TxtNode::Type::Text != currNode->type) {
             parser.nodes.Append(currNode);
+        }
     }
 Failed:
     parser.failed = true;
@@ -292,6 +295,64 @@ static void SkipUtf8Bom(char*& s, size_t& sLen) {
         s += 3;
         sLen -= 3;
     }
+}
+size_t TxtNode::KeyLen() const {
+    return keyEnd - keyStart;
+}
+
+size_t TxtNode::ValLen() const {
+    return valEnd - valStart;
+}
+
+bool TxtNode::IsArray() const {
+    return Type::Array == type;
+}
+
+bool TxtNode::IsStruct() const {
+    return Type::Struct == type;
+}
+
+bool TxtNode::IsStructWithName(const char* name, size_t nameLen) const {
+    if (Type::Struct != type) {
+        return false;
+    }
+    if (nameLen != KeyLen()) {
+        return false;
+    }
+    return str::EqNI(keyStart, name, nameLen);
+}
+
+bool TxtNode::IsStructWithName(const char* name) const {
+    return IsStructWithName(name, str::Len(name));
+}
+
+bool TxtNode::IsText() const {
+    return Type::Text == type;
+}
+
+bool TxtNode::IsTextWithKey(const char* name) const {
+    if (!keyStart) {
+        return false;
+    }
+    size_t nameLen = str::Len(name);
+    if (nameLen != KeyLen()) {
+        return false;
+    }
+    return str::EqNI(keyStart, name, nameLen);
+}
+
+char* TxtNode::KeyDup() const {
+    if (!keyStart) {
+        return nullptr;
+    }
+    return str::DupN(keyStart, KeyLen());
+}
+
+char* TxtNode::ValDup() const {
+    if (!valStart) {
+        return nullptr;
+    }
+    return str::DupN(valStart, ValLen());
 }
 
 // we will modify s in-place
@@ -308,13 +369,14 @@ void TxtParser::SetToParse(char* s, size_t sLen) {
 
     // we create an implicit array node to hold the nodes we'll parse
     CrashIf(0 != nodes.size());
-    nodes.Append(AllocTxtNode(allocator, ArrayNode));
+    nodes.Append(AllocTxtNode(&allocator, TxtNode::Type::Array));
 }
 
 bool ParseTxt(TxtParser& parser) {
     ParseNodes(parser);
-    if (parser.failed)
+    if (parser.failed) {
         return false;
+    }
     return true;
 }
 
@@ -334,25 +396,27 @@ static void PrettyPrintKeyVal(TxtNode* curr, int nest, str::Str<char>& res) {
     AppendNest(res, nest);
     if (curr->keyStart) {
         AppendWsTrimEnd(res, curr->keyStart, curr->keyEnd);
-        if (StructNode != curr->type)
+        if (!curr->IsStruct()) {
             res.Append(" + ");
+        }
     }
     AppendWsTrimEnd(res, curr->valStart, curr->valEnd);
-    if (StructNode != curr->type)
+    if (!curr->IsStruct()) {
         res.Append("\n");
+    }
 }
 
 static void PrettyPrintNode(TxtNode* curr, int nest, str::Str<char>& res) {
-    if (TextNode == curr->type) {
+    if (curr->IsText()) {
         PrettyPrintKeyVal(curr, nest, res);
         return;
     }
 
-    if (StructNode == curr->type) {
+    if (curr->IsStruct()) {
         PrettyPrintKeyVal(curr, nest, res);
         res.Append(" + [\n");
     } else if (nest >= 0) {
-        CrashIf(ArrayNode != curr->type);
+        CrashIf(!curr->IsArray());
         AppendNest(res, nest);
         res.Append("[\n");
     }

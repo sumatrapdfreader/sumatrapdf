@@ -94,7 +94,7 @@ $files =
 "src\utils\PalmDbReader.*",
 "src\utils\Scoped.h",
 "src\utils\ScopedWin.h",
-#"src\utils\SerializeTxt.*",
+"src\utils\SerializeTxt.*",
 #"src\utils\SettingsUtil.*",
 #"src\utils\SquareTreeParser.*",
 #"src\utils\StrFormat.*",

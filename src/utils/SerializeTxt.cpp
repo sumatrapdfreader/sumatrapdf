@@ -321,17 +321,19 @@ static TxtNode *FindNode(TxtNode *curr, const char *name, size_t nameLen)
     TxtNode *found = nullptr;
     for (size_t i = 0; i < curr->children->size(); i++) {
         child = curr->children->at(i);
-        if (TextNode == child->type || StructNode == child->type) {
+        if (child->IsText() || child->IsStruct()) {
             nodeName = child->keyStart;
             nodeNameLen = child->keyEnd - nodeName;
             if (nameLen == nodeNameLen && str::EqNI(name, nodeName, nameLen))
                 return child;
         }
-        if (TextNode == child->type)
+        if (child->IsText()) {
             continue;
+        }
         found = FindNode(child, name, nameLen);
-        if (found)
+        if (found) {
             return found;
+        }
     }
     return nullptr;
 }
@@ -350,7 +352,7 @@ static void FreeTxtNode(TxtNode *node)
     if (node->children) {
         for (size_t i = 0; i < node->children->size(); i++) {
             TxtNode *child = node->children->at(i);
-            CrashIf(TextNode != child->type);
+            CrashIf(!child->IsText());
             delete child;
         }
     }
@@ -361,9 +363,9 @@ static void FreeTxtNode(TxtNode *node)
 static TxtNode *StructNodeFromTextNode(DecodeState& ds, TxtNode *txtNode, const StructMetadata *structDef)
 {
     UNUSED(ds);
-    CrashIf(TextNode != txtNode->type);
+    CrashIf(!txtNode->IsText());
     str::Slice slice(txtNode->valStart, txtNode->valEnd);
-    TxtNode *node = new TxtNode(StructNode);
+    TxtNode *node = new TxtNode(TxtNode::Type::Struct);
     node->children = new Vec<TxtNode*>();
     uint16_t fieldNo = 0;
     char *fieldName = (char*)structDef->fieldNames;
@@ -372,7 +374,7 @@ static TxtNode *StructNodeFromTextNode(DecodeState& ds, TxtNode *txtNode, const 
         slice.SkipWsUntilNewline();
         if (slice.Finished())
             goto Error;
-        child = new TxtNode(TextNode);
+        child = new TxtNode(TxtNode::Type::Text);
         child->valStart = slice.curr;
         slice.SkipNonWs();
         child->valEnd = slice.curr;
@@ -392,10 +394,11 @@ Error:
 
 static uint8_t *DeserializeCompact(DecodeState& ds, TxtNode *node, const StructMetadata *structDef)
 {
-    CrashIf(TextNode != node->type);
+    CrashIf(!node->IsText());
     TxtNode *structNode = StructNodeFromTextNode(ds, node, structDef);
-    if (!structNode)
+    if (!structNode) {
         return nullptr;
+    }
     uint8_t *res = DeserializeRec(ds, structNode, structDef);
     FreeTxtNode(structNode);
     return res;
@@ -404,10 +407,10 @@ static uint8_t *DeserializeCompact(DecodeState& ds, TxtNode *node, const StructM
 static uint8_t *DecodeStruct(DecodeState& ds, const FieldMetadata *fieldDef, TxtNode *node, bool isCompact)
 {
     uint8_t *d = nullptr;
-    if (isCompact && (TextNode == node->type)) {
+    if (isCompact && node->IsText()) {
         d = DeserializeCompact(ds, node, GetStructDef(fieldDef));
     } else {
-        if (StructNode == node->type)
+        if (node->IsStruct())
             d = DeserializeRec(ds, node, GetStructDef(fieldDef));
     }
     return d;
@@ -482,8 +485,9 @@ static bool DecodeField(DecodeState& ds, TxtNode *firstNode, const char *fieldNa
         if (ok)
             WriteStructFloat(structDataPtr, f);
     } else if (TYPE_ARRAY == type) {
-        if (StructNode != node->type)
+        if (!node->IsStruct()) {
             return false;
+        }
         Vec<uint8_t*> *vec = new Vec<uint8_t*>();
         // we remember it right away, so that it gets freed in case of error
         WriteStructPtrVal(structDataPtr, (void*)vec);
@@ -491,8 +495,9 @@ static bool DecodeField(DecodeState& ds, TxtNode *firstNode, const char *fieldNa
         for (size_t i = 0; i < node->children->size(); i++) {
             child = node->children->at(i);
             uint8_t *d = DecodeStruct(ds, fieldDef, child, isCompact);
-            if (d)
+            if (d) {
                 vec->Append(d);
+            }
         }
     } else {
         CrashIf(true);

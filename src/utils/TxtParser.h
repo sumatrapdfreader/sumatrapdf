@@ -3,23 +3,14 @@
 
 #define SERIALIZE_ESCAPE_CHAR '$'
 
-enum Token {
-    TokenFinished = 0,
-    TokenArrayStart,  // [
-    TokenStructStart, // foo [
-    TokenClose,       // ]
-    TokenKeyVal,      // foo: bar
-    TokenString,      // foo
-};
-
-enum TxtNodeType {
-    StructNode,
-    ArrayNode,
-    TextNode,
-};
-
 struct TxtNode {
-    TxtNodeType type;
+    enum class Type {
+        Struct,
+        Array,
+        Text,
+    };
+
+    Type type;
     Vec<TxtNode*>* children;
 
     char* lineStart;
@@ -28,87 +19,54 @@ struct TxtNode {
     char* keyStart;
     char* keyEnd;
 
-    explicit TxtNode(TxtNodeType tp) { type = tp; }
+    explicit TxtNode(TxtNode::Type tp) { type = tp; }
     ~TxtNode() {}
 
-    size_t KeyLen() const { return keyEnd - keyStart; }
-
-    size_t ValLen() const { return valEnd - valStart; }
-
-    bool IsArray() const { return ArrayNode == type; }
-
-    bool IsStruct() const { return StructNode == type; }
-
-    // TODO: move to TxtParser.cpp
-    bool IsStructWithName(const char* name, size_t nameLen) const {
-        if (StructNode != type)
-            return false;
-        if (nameLen != KeyLen())
-            return false;
-        return str::EqNI(keyStart, name, nameLen);
-    }
-
-    bool IsStructWithName(const char* name) const { return IsStructWithName(name, str::Len(name)); }
-
-    bool IsText() const { return TextNode == type; }
-
-    // TODO: move to TxtParser.cpp
-    bool IsTextWithKey(const char* name) const {
-        if (!keyStart)
-            return false;
-        size_t nameLen = str::Len(name);
-        if (nameLen != KeyLen())
-            return false;
-        return str::EqNI(keyStart, name, nameLen);
-    }
-
-    // TODO: move to TxtParser.cpp
-    char* KeyDup() const {
-        if (!keyStart)
-            return nullptr;
-        return str::DupN(keyStart, KeyLen());
-    }
-
-    // TODO: move to TxtParser.cpp
-    char* ValDup() const {
-        if (!valStart)
-            return nullptr;
-        return str::DupN(valStart, ValLen());
-    }
+    size_t KeyLen() const;
+    size_t ValLen() const;
+    bool IsArray() const;
+    bool IsStruct() const;
+    bool IsStructWithName(const char* name, size_t nameLen) const;
+    bool IsStructWithName(const char* name) const;
+    bool IsText() const;
+    bool IsTextWithKey(const char* name) const;
+    char* KeyDup() const;
+    char* ValDup() const;
 };
 
-struct TokenVal {
-    Token type;
+struct Token {
+    enum class Type {
+        Finished = 0,
+        ArrayStart,  // [
+        StructStart, // foo [
+        Close,       // ]
+        KeyVal,      // foo: bar
+        String,      // foo
+    };
+
+    Type type = Type::Finished;
 
     // TokenString, TokenKeyVal
-    char* lineStart;
-    char* valStart;
-    char* valEnd;
+    char* lineStart = nullptr;
+    char* valStart = nullptr;
+    char* valEnd = nullptr;
 
     // TokenKeyVal
-    char* keyStart;
-    char* keyEnd;
+    char* keyStart = nullptr;
+    char* keyEnd = nullptr;
 };
 
 struct TxtParser {
-    Allocator* allocator;
+    PoolAllocator allocator;
     str::Slice toParse;
-    TokenVal tok;
-    char escapeChar;
-    bool failed;
+    Token tok;
+    char escapeChar = SERIALIZE_ESCAPE_CHAR;
+    bool failed = false;
     Vec<TxtNode*> nodes;
-    char* toFree;
+    char* toFree = nullptr;
 
-    TxtParser() {
-        allocator = new PoolAllocator();
-        escapeChar = SERIALIZE_ESCAPE_CHAR;
-        failed = false;
-        toFree = nullptr;
-    }
-    ~TxtParser() {
-        delete allocator;
-        free(toFree);
-    }
+    TxtParser() {}
+    ~TxtParser() { free(toFree); }
     void SetToParse(char* s, size_t sLen);
 };
 
