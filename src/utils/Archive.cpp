@@ -9,6 +9,13 @@ extern "C" {
 #include <unarr.h>
 }
 
+#if ENABLE_UNRARDLL_FALLBACK
+// for debugging of unrar.dll fallback, if set to true we'll try to
+// open .rar files using unrar.dll (otherwise it only happens if unarr
+// fails to open
+static bool tryUnrarDllFirst = true;
+#endif
+
 #if OS_WIN
 FILETIME Archive::FileInfo::GetWinFileTime() const {
     FILETIME ft = {(DWORD)-1, (DWORD)-1};
@@ -26,17 +33,27 @@ bool Archive::Open(ar_stream* data, const char* archivePath) {
     if (!data) {
         return false;
     }
+#if ENABLE_UNRARDLL_FALLBACK
+    if ((format == Format::Rar) && archivePath && tryUnrarDllFirst) {
+        bool ok = OpenUnrarDllFallback(archivePath);
+        if (ok) {
+            return true;
+        }
+    }
     ar_ = opener_(data);
     if (!ar_ || ar_at_eof(ar_)) {
-#if ENABLE_UNRARDLL_FALLBACK
-        if (format == Format::Rar) {
+        if (format == Format::Rar && archivePath) {
             return OpenUnrarDllFallback(archivePath);
         }
-#else
-        UNUSED(archivePath);
-#endif
         return false;
     }
+#else
+    UNUSED(archivePath);
+    ar_ = opener_(data);
+    if (!ar_ || ar_at_eof(ar_)) {
+        return false;
+    }
+#endif
 
     size_t fileId = 0;
     while (ar_parse_entry(ar_)) {
