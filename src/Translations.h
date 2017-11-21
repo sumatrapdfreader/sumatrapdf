@@ -5,22 +5,22 @@ namespace trans {
 
 int GetLangsCount();
 
-const char *GetCurrentLangCode();
+const char* GetCurrentLangCode();
 
-void            SetCurrentLangByCode(const char *langCode);
-const char *    ValidateLangCode(const char *langCode);
+void SetCurrentLangByCode(const char* langCode);
+const char* ValidateLangCode(const char* langCode);
 
-const WCHAR *   GetTranslation(const char *s);
-const char *    GetLangCodeByIdx(int idx);
-const char *    GetLangNameByIdx(int idx);
-bool            IsCurrLangRtl();
-const char *    DetectUserLang();
-void            Destroy();
+const WCHAR* GetTranslation(const char* s);
+const char* GetLangCodeByIdx(int idx);
+const char* GetLangNameByIdx(int idx);
+bool IsCurrLangRtl();
+const char* DetectUserLang();
+void Destroy();
 
 } // namespace trans
 
 // _TR() marks strings that need to be translated
-#define _TR(x)  trans::GetTranslation(x)
+#define _TR(x) trans::GetTranslation(x)
 
 // _TRN() marks strings that need to be translated but are used in a context
 // that doesn't allow calling Trans::GetTranslation() (e.g. when used as part

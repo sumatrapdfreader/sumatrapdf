@@ -13,16 +13,18 @@ extern "C" {
 
 // copied from mupdf/source/fitz/geometry.c
 
-const fz_matrix fz_identity = { 1, 0, 0, 1, 0, 0 };
+const fz_matrix fz_identity = {1, 0, 0, 1, 0, 0};
 
-const fz_rect fz_infinite_rect = { 1, 1, -1, -1 };
-const fz_rect fz_empty_rect = { 0, 0, 0, 0 };
-const fz_rect fz_unit_rect = { 0, 0, 1, 1 };
+const fz_rect fz_infinite_rect = {1, 1, -1, -1};
+const fz_rect fz_empty_rect = {0, 0, 0, 0};
+const fz_rect fz_unit_rect = {0, 0, 1, 1};
 
-const fz_irect fz_infinite_irect = { 1, 1, -1, -1 };
-const fz_irect fz_empty_irect = { 0, 0, 0, 0 };
-const fz_irect fz_unit_bbox = { 0, 0, 1, 1 };
+const fz_irect fz_infinite_irect = {1, 1, -1, -1};
+const fz_irect fz_empty_irect = {0, 0, 0, 0};
+const fz_irect fz_unit_bbox = {0, 0, 1, 1};
 
 // adapted for mupdf/source/fitz/time.c
 
-extern "C" void fz_redirect_dll_io_to_console() { fz_redirect_io_to_console(); }
+extern "C" void fz_redirect_dll_io_to_console() {
+    fz_redirect_io_to_console();
+}

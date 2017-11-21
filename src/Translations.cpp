@@ -21,25 +21,27 @@
 //#define ZLIB_INTERNAL
 #include "zlib.h"
 
-int uncompress(Bytef *dest, uLongf *destLen, const Bytef *source, uLong sourceLen)
-{
+int uncompress(Bytef* dest, uLongf* destLen, const Bytef* source, uLong sourceLen) {
     z_stream stream;
     int err;
 
     stream.next_in = (Bytef*)source;
     stream.avail_in = (uInt)sourceLen;
     /* Check for source > 64K on 16-bit machine: */
-    if ((uLong)stream.avail_in != sourceLen) return Z_BUF_ERROR;
+    if ((uLong)stream.avail_in != sourceLen)
+        return Z_BUF_ERROR;
 
     stream.next_out = dest;
     stream.avail_out = (uInt)*destLen;
-    if ((uLong)stream.avail_out != *destLen) return Z_BUF_ERROR;
+    if ((uLong)stream.avail_out != *destLen)
+        return Z_BUF_ERROR;
 
     stream.zalloc = (alloc_func)0;
     stream.zfree = (free_func)0;
 
     err = inflateInit(&stream);
-    if (err != Z_OK) return err;
+    if (err != Z_OK)
+        return err;
 
     err = inflate(&stream, Z_FINISH);
     if (err != Z_STREAM_END) {
@@ -65,37 +67,37 @@ TODO:
 namespace trans {
 
 // defined in Trans*_txt.cpp
-extern int              gLangsCount;
-extern int              gStringsCount;
-extern const char *     gLangNames;
-extern const char *     gLangCodes;
-const LANGID *          GetLangIds();
-bool                    IsLangRtl(int langIdx);
-const char **           GetOriginalStrings();
+extern int gLangsCount;
+extern int gStringsCount;
+extern const char* gLangNames;
+extern const char* gLangCodes;
+const LANGID* GetLangIds();
+bool IsLangRtl(int langIdx);
+const char** GetOriginalStrings();
 
 // used locally, gCurrLangCode points into gLangCodes
-static const char *     gCurrLangCode = nullptr;
-static int              gCurrLangIdx = 0;
+static const char* gCurrLangCode = nullptr;
+static int gCurrLangIdx = 0;
 
 // Note: we don't have access to STRINGS_COUNT and LANGS_COUNT
 // hence foo[] => *foo here
 // const char *gCurrLangStrings[STRINGS_COUNT];
-const char **           gCurrLangStrings = nullptr;
+const char** gCurrLangStrings = nullptr;
 // WCHAR ** gLangsTransCache[LANGS_COUNT];
-WCHAR ***               gLangsTransCache = nullptr;
+WCHAR*** gLangsTransCache = nullptr;
 
 #if COMPRESSED == 1
 // const char *gLangsStringsUncompressed[LANGS_COUNT];
-const unsigned char *   GetTranslationsForLang(int langIdx, uint32_t *uncompressedSizeOut, uint32_t *compressedSizeOut);
-const char **           gLangsStringsUncompressed = nullptr;
+const unsigned char* GetTranslationsForLang(int langIdx, uint32_t* uncompressedSizeOut, uint32_t* compressedSizeOut);
+const char** gLangsStringsUncompressed = nullptr;
 #else
-const char *   GetTranslationsForLang(int langIdx);
+const char* GetTranslationsForLang(int langIdx);
 #endif
 
 #ifdef ADD_EN_RTL_TEST_LANGUAGE
 #define EN_RTL_CODE "en-rtl"
 #define EN_RTL_NAME "English RTL for testing"
-#define EN_RTL_IDX  gLangsCount
+#define EN_RTL_IDX gLangsCount
 #endif
 
 /* In general, after adding new _TR() strings, one has to re-generate Translations_txt.cpp, but
@@ -105,24 +107,22 @@ To support adding new strings without re-generating Translatiosn_txt.cpp, we hav
 of missing translations. */
 
 struct MissingTranslation {
-    const char *s;
-    const WCHAR *translation;
+    const char* s;
+    const WCHAR* translation;
 };
 
 // number of missing translations should be small
-static MissingTranslation  gMissingTranslations[64];
-static int                 gMissingTranslationsCount = 0;
+static MissingTranslation gMissingTranslations[64];
+static int gMissingTranslationsCount = 0;
 
-static void FreeMissingTranslations()
-{
-    for (int i=0; i < gMissingTranslationsCount; i++) {
+static void FreeMissingTranslations() {
+    for (int i = 0; i < gMissingTranslationsCount; i++) {
         free((void*)gMissingTranslations[i].translation);
     }
     gMissingTranslationsCount = 0;
 }
 
-static const WCHAR *FindOrAddMissingTranslation(const char *s)
-{
+static const WCHAR* FindOrAddMissingTranslation(const char* s) {
     for (int i = 0; i < gMissingTranslationsCount; i++) {
         if (s == gMissingTranslations[i].s) {
             return gMissingTranslations[i].translation;
@@ -132,14 +132,13 @@ static const WCHAR *FindOrAddMissingTranslation(const char *s)
         return L"missing translation";
 
     gMissingTranslations[gMissingTranslationsCount].s = s;
-    const WCHAR *res = str::conv::FromUtf8(s);
+    const WCHAR* res = str::conv::FromUtf8(s);
     gMissingTranslations[gMissingTranslationsCount].translation = res;
     gMissingTranslationsCount++;
     return res;
 }
 
-int GetLangsCount()
-{
+int GetLangsCount() {
 #ifdef ADD_EN_RTL_TEST_LANGUAGE
     return gLangsCount + 1;
 #else
@@ -147,26 +146,23 @@ int GetLangsCount()
 #endif
 }
 
-const char *GetCurrentLangCode()
-{
+const char* GetCurrentLangCode() {
     return gCurrLangCode;
 }
 
-static WCHAR **GetTransCacheForLang(int langIdx)
-{
+static WCHAR** GetTransCacheForLang(int langIdx) {
 #ifdef ADD_EN_RTL_TEST_LANGUAGE
     if (langIdx == EN_RTL_IDX)
         langIdx = 0;
 #endif
     if (!gLangsTransCache[langIdx])
-        gLangsTransCache[langIdx] = AllocArray<WCHAR *>(gStringsCount);
+        gLangsTransCache[langIdx] = AllocArray<WCHAR*>(gStringsCount);
     return gLangsTransCache[langIdx];
 }
 
-static void FreeTransCache()
-{
+static void FreeTransCache() {
     for (int langIdx = 0; langIdx < gLangsCount; langIdx++) {
-        WCHAR **transCache = gLangsTransCache[langIdx];
+        WCHAR** transCache = gLangsTransCache[langIdx];
         for (int i = 0; transCache && i < gStringsCount; i++) {
             free(transCache[i]);
         }
@@ -183,14 +179,13 @@ static void FreeTransCache()
 #endif
 }
 
-static void BuildStringsIndexForLang(int langIdx)
-{
+static void BuildStringsIndexForLang(int langIdx) {
 #ifdef ADD_EN_RTL_TEST_LANGUAGE
     if (0 == gCurrLangIdx || EN_RTL_IDX == gCurrLangIdx) {
 #else
     if (0 == gCurrLangIdx) {
 #endif
-        const char **origStrings = GetOriginalStrings();
+        const char** origStrings = GetOriginalStrings();
         for (int idx = 0; idx < gStringsCount; idx++) {
             gCurrLangStrings[idx] = origStrings[idx];
             CrashIf(!gCurrLangStrings[idx]);
@@ -199,20 +194,20 @@ static void BuildStringsIndexForLang(int langIdx)
     }
 
 #if COMPRESSED == 1
-    const char *s =  gLangsStringsUncompressed[langIdx];
+    const char* s = gLangsStringsUncompressed[langIdx];
     if (nullptr == s) {
         uint32_t uncompressedSize, compressedSize;
-        const unsigned char *compressed = GetTranslationsForLang(langIdx, &uncompressedSize, &compressedSize);
-        void *uncompressed = malloc(uncompressedSize);
+        const unsigned char* compressed = GetTranslationsForLang(langIdx, &uncompressedSize, &compressedSize);
+        void* uncompressed = malloc(uncompressedSize);
         uLongf uncompressedSizeReal;
         int res = uncompress((Bytef*)uncompressed, &uncompressedSizeReal, compressed, compressedSize);
         CrashAlwaysIf(Z_OK != res);
         CrashAlwaysIf(uncompressedSize != uncompressedSizeReal);
-        gLangsStringsUncompressed[langIdx] = (const char *)uncompressed;
+        gLangsStringsUncompressed[langIdx] = (const char*)uncompressed;
         s = gLangsStringsUncompressed[langIdx];
     }
 #else
-    const char *s = GetTranslationsForLang(langIdx);
+    const char* s = GetTranslationsForLang(langIdx);
 #endif
     for (int i = 0; i < gStringsCount; i++) {
         if (0 == *s)
@@ -227,11 +222,10 @@ static void BuildStringsIndexForLang(int langIdx)
     }
 }
 
-void SetCurrentLangByCode(const char *langCode)
-{
+void SetCurrentLangByCode(const char* langCode) {
     if (!gCurrLangStrings) {
         gCurrLangStrings = AllocArray<const char*>(gStringsCount);
-        gLangsTransCache = AllocArray<WCHAR **>(gLangsCount);
+        gLangsTransCache = AllocArray<WCHAR**>(gLangsCount);
 #if COMPRESSED == 1
         gLangsStringsUncompressed = AllocArray<const char*>(gLangsCount);
 #endif
@@ -251,8 +245,7 @@ void SetCurrentLangByCode(const char *langCode)
     BuildStringsIndexForLang(gCurrLangIdx);
 }
 
-const char *ValidateLangCode(const char *langCode)
-{
+const char* ValidateLangCode(const char* langCode) {
     int idx = seqstrings::StrToIdx(gLangCodes, langCode);
 #ifdef ADD_EN_RTL_TEST_LANGUAGE
     if (-1 == idx && str::Eq(langCode, EN_RTL_CODE))
@@ -263,8 +256,7 @@ const char *ValidateLangCode(const char *langCode)
     return GetLangCodeByIdx(idx);
 }
 
-const char *GetLangCodeByIdx(int idx)
-{
+const char* GetLangCodeByIdx(int idx) {
 #ifdef ADD_EN_RTL_TEST_LANGUAGE
     if (idx == EN_RTL_IDX)
         return EN_RTL_CODE;
@@ -272,8 +264,7 @@ const char *GetLangCodeByIdx(int idx)
     return seqstrings::IdxToStr(gLangCodes, idx);
 }
 
-const char *GetLangNameByIdx(int idx)
-{
+const char* GetLangNameByIdx(int idx) {
 #ifdef ADD_EN_RTL_TEST_LANGUAGE
     if (idx == EN_RTL_IDX)
         return EN_RTL_NAME;
@@ -281,8 +272,7 @@ const char *GetLangNameByIdx(int idx)
     return seqstrings::IdxToStr(gLangNames, idx);
 }
 
-bool IsCurrLangRtl()
-{
+bool IsCurrLangRtl() {
 #ifdef ADD_EN_RTL_TEST_LANGUAGE
     if (gCurrLangIdx == EN_RTL_IDX)
         return true;
@@ -290,9 +280,8 @@ bool IsCurrLangRtl()
     return IsLangRtl(gCurrLangIdx);
 }
 
-const char *DetectUserLang()
-{
-    const LANGID *langIds = GetLangIds();
+const char* DetectUserLang() {
+    const LANGID* langIds = GetLangIds();
     LANGID langId = GetUserDefaultUILanguage();
     // try the exact match
     for (int i = 0; i < gLangsCount; i++) {
@@ -311,19 +300,17 @@ const char *DetectUserLang()
     return "en";
 }
 
-static int GetEnglishStringIndex(const char* txt)
-{
-    const char **origStrings = GetOriginalStrings();
+static int GetEnglishStringIndex(const char* txt) {
+    const char** origStrings = GetOriginalStrings();
     for (int idx = 0; idx < gStringsCount; idx++) {
-        const char *s = origStrings[idx];
+        const char* s = origStrings[idx];
         if (str::Eq(s, txt))
             return idx;
     }
     return -1;
 }
 
-const WCHAR *GetTranslation(const char *s)
-{
+const WCHAR* GetTranslation(const char* s) {
     if (nullptr == gCurrLangCode)
         SetCurrentLangByCode("en");
 
@@ -331,19 +318,18 @@ const WCHAR *GetTranslation(const char *s)
     if (-1 == idx)
         return FindOrAddMissingTranslation(s);
 
-    const char *trans = gCurrLangStrings[idx];
+    const char* trans = gCurrLangStrings[idx];
     // fall back to English if the language doesn't have a translations for this string
     if (!trans)
         trans = s;
 
-    WCHAR **transCache = GetTransCacheForLang(gCurrLangIdx);
+    WCHAR** transCache = GetTransCacheForLang(gCurrLangIdx);
     if (!transCache[idx])
         transCache[idx] = str::conv::FromUtf8(trans);
     return transCache[idx];
 }
 
-void Destroy()
-{
+void Destroy() {
     if (!gCurrLangCode) {
         // no need for clean-up if translations were never initialized
         return;

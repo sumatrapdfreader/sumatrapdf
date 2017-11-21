@@ -5,12 +5,12 @@
 // useful for more than one ebook format
 
 struct ImageData {
-    char *      data;
-    size_t      len;
+    char* data;
+    size_t len;
 };
 
 class EbookTocVisitor {
-public:
-    virtual void Visit(const WCHAR *name, const WCHAR *url, int level) = 0;
-    virtual ~EbookTocVisitor() { }
+  public:
+    virtual void Visit(const WCHAR* name, const WCHAR* url, int level) = 0;
+    virtual ~EbookTocVisitor() {}
 };
