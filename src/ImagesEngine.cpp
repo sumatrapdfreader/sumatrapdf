@@ -235,15 +235,21 @@ PageElement* ImagesEngine::GetElementAtPos(int pageNo, PointD pt) {
     return new ImageElement(this, page);
 }
 
-unsigned char* ImagesEngine::GetFileData(size_t* cbCount) {
+u8* ImagesEngine::GetFileData(size_t* cbCount) {
     if (fileStream) {
         void* data = GetDataFromStream(fileStream, cbCount);
-        if (data)
-            return (unsigned char*)data;
+        if (data) {
+            return (u8*)data;
+        }
     }
-    if (FileName())
-        return (unsigned char*)file::ReadAll(FileName(), cbCount);
-    return nullptr;
+    if (!FileName()) {
+        return nullptr;
+    }
+    OwnedData data(file::ReadAll(FileName()));
+    if (cbCount) {
+        *cbCount = data.size;
+    }
+    return (u8*)data.StealData();
 }
 
 bool ImagesEngine::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
@@ -363,43 +369,48 @@ BaseEngine* ImageEngineImpl::Clone() {
 }
 
 bool ImageEngineImpl::LoadSingleFile(const WCHAR* file) {
-    if (!file)
+    if (!file) {
         return false;
+    }
     SetFileName(file);
 
-    size_t len;
-    AutoFree data(file::ReadAll(file, &len));
-    fileExt = GfxFileExtFromData(data, len);
+    OwnedData data(file::ReadAll(file));
+    fileExt = GfxFileExtFromData(data.data, data.size);
 
-    image = BitmapFromData(data, len);
+    image = BitmapFromData(data.data, data.size);
     return FinishLoading();
 }
 
 bool ImageEngineImpl::LoadFromStream(IStream* stream) {
-    if (!stream)
+    if (!stream) {
         return false;
+    }
     fileStream = stream;
     fileStream->AddRef();
 
     char header[18];
-    if (ReadDataFromStream(stream, header, sizeof(header)))
+    if (ReadDataFromStream(stream, header, sizeof(header))) {
         fileExt = GfxFileExtFromData(header, sizeof(header));
-    if (!fileExt)
+    }
+    if (!fileExt) {
         return false;
+    }
 
     size_t len;
     AutoFree data((char*)GetDataFromStream(stream, &len));
-    if (IsGdiPlusNativeFormat(data, len))
+    if (IsGdiPlusNativeFormat(data, len)) {
         image = Bitmap::FromStream(stream);
-    else
+    } else {
         image = BitmapFromData(data, len);
+    }
 
     return FinishLoading();
 }
 
 bool ImageEngineImpl::FinishLoading() {
-    if (!image || image->GetLastStatus() != Ok)
+    if (!image || image->GetLastStatus() != Ok) {
         return false;
+    }
 
     mediaboxes.Append(RectD(0, 0, image->GetWidth(), image->GetHeight()));
     AssertCrash(mediaboxes.size() == 1);
@@ -428,17 +439,18 @@ static WCHAR* GetImageProperty(Bitmap* bmp, PROPID id, PROPID altId = 0) {
     UINT size = bmp->GetPropertyItemSize(id);
     PropertyItem* item = (PropertyItem*)malloc(size);
     Status ok = item ? bmp->GetPropertyItem(id, size, item) : OutOfMemory;
-    if (Ok != ok)
+    if (Ok != ok) {
         /* property didn't exist */;
-    else if (PropertyTagTypeASCII == item->type)
+    } else if (PropertyTagTypeASCII == item->type) {
         value = str::conv::FromAnsi((char*)item->value);
-    else if (PropertyTagTypeByte == item->type && item->length > 0 && 0 == (item->length % 2) &&
-             !((WCHAR*)item->value)[item->length / 2 - 1]) {
+    } else if (PropertyTagTypeByte == item->type && item->length > 0 && 0 == (item->length % 2) &&
+               !((WCHAR*)item->value)[item->length / 2 - 1]) {
         value = str::Dup((WCHAR*)item->value);
     }
     free(item);
-    if (!value && altId)
+    if (!value && altId) {
         return GetImageProperty(bmp, altId);
+    }
     return value;
 }
 
@@ -473,8 +485,9 @@ Bitmap* ImageEngineImpl::LoadBitmap(int pageNo, bool& deleteAfterUse) {
     UINT frameCount = image->GetFrameCount(frameDimension);
     CrashIf((unsigned int)pageNo > frameCount);
     Bitmap* frame = image->Clone(0, 0, image->GetWidth(), image->GetHeight(), PixelFormat32bppARGB);
-    if (!frame)
+    if (!frame) {
         return nullptr;
+    }
     Status ok = frame->SelectActiveFrame(frameDimension, pageNo - 1);
     if (ok != Ok) {
         delete frame;
@@ -485,8 +498,9 @@ Bitmap* ImageEngineImpl::LoadBitmap(int pageNo, bool& deleteAfterUse) {
 }
 
 RectD ImageEngineImpl::LoadMediabox(int pageNo) {
-    if (1 == pageNo)
+    if (1 == pageNo) {
         return RectD(0, 0, image->GetWidth(), image->GetHeight());
+    }
 
     // fill the cache to prevent the first few frames from being unpacked twice
     ImagePage* page = GetPage(pageNo, MAX_IMAGE_PAGE_CACHE == pageCache.size());
@@ -499,12 +513,14 @@ RectD ImageEngineImpl::LoadMediabox(int pageNo) {
     CrashIf(!str::Eq(fileExt, L".tif") && !str::Eq(fileExt, L".gif"));
     RectD mbox = RectD(0, 0, image->GetWidth(), image->GetHeight());
     Bitmap* frame = image->Clone(0, 0, image->GetWidth(), image->GetHeight(), PixelFormat32bppARGB);
-    if (!frame)
+    if (!frame) {
         return mbox;
+    }
     const GUID* frameDimension = str::Eq(fileExt, L".tif") ? &FrameDimensionPage : &FrameDimensionTime;
     Status ok = frame->SelectActiveFrame(frameDimension, pageNo - 1);
-    if (Ok == ok)
+    if (Ok == ok) {
         mbox = RectD(0, 0, frame->GetWidth(), frame->GetHeight());
+    }
     delete frame;
     return mbox;
 }
@@ -514,9 +530,8 @@ bool ImageEngineImpl::SaveFileAsPDF(const char* pdfFileName, bool includeUserAnn
     bool ok = true;
     PdfCreator* c = new PdfCreator();
     if (FileName()) {
-        size_t len;
-        AutoFree data(file::ReadAll(FileName(), &len));
-        ok = data && c->AddImagePage(data, len, GetFileDPI());
+        OwnedData data(file::ReadAll(FileName()));
+        ok = data.data && c->AddImagePage(data.data, data.size, GetFileDPI());
     } else {
         size_t len;
         AutoFree data((char*)GetDataFromStream(fileStream, &len));
@@ -736,20 +751,18 @@ bool ImageDirEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAn
 }
 
 Bitmap* ImageDirEngineImpl::LoadBitmap(int pageNo, bool& deleteAfterUse) {
-    size_t len;
-    AutoFree bmpData(file::ReadAll(pageFileNames.at(pageNo - 1), &len));
-    if (bmpData) {
+    OwnedData bmpData(file::ReadAll(pageFileNames.at(pageNo - 1)));
+    if (bmpData.data) {
         deleteAfterUse = true;
-        return BitmapFromData(bmpData, len);
+        return BitmapFromData(bmpData.data, bmpData.size);
     }
     return nullptr;
 }
 
 RectD ImageDirEngineImpl::LoadMediabox(int pageNo) {
-    size_t len;
-    AutoFree bmpData(file::ReadAll(pageFileNames.at(pageNo - 1), &len));
-    if (bmpData) {
-        Size size = BitmapSizeFromData(bmpData, len);
+    OwnedData bmpData(file::ReadAll(pageFileNames.at(pageNo - 1)));
+    if (bmpData.data) {
+        Size size = BitmapSizeFromData(bmpData.data, bmpData.size);
         return RectD(0, 0, size.Width, size.Height);
     }
     return RectD();
@@ -760,9 +773,8 @@ bool ImageDirEngineImpl::SaveFileAsPDF(const char* pdfFileName, bool includeUser
     bool ok = true;
     PdfCreator* c = new PdfCreator();
     for (int i = 1; i <= PageCount() && ok; i++) {
-        size_t len;
-        AutoFree data(file::ReadAll(pageFileNames.at(i - 1), &len));
-        ok = data && c->AddImagePage(data, len, GetFileDPI());
+        OwnedData data(file::ReadAll(pageFileNames.at(i - 1)));
+        ok = data.data && c->AddImagePage(data.data, data.size, GetFileDPI());
     }
     ok = ok && c->SaveToFile(pdfFileName);
     delete c;
@@ -804,11 +816,13 @@ class CbxEngineImpl : public ImagesEngine, public json::ValueVisitor {
         if (fileStream) {
             ScopedComPtr<IStream> stm;
             HRESULT res = fileStream->Clone(&stm);
-            if (SUCCEEDED(res))
+            if (SUCCEEDED(res)) {
                 return CreateFromStream(stm);
+            }
         }
-        if (FileName())
+        if (FileName()) {
             return CreateFromFile(FileName());
+        }
         return nullptr;
     }
 
@@ -863,8 +877,9 @@ bool CbxEngineImpl::LoadFromFile(const WCHAR* file) {
 }
 
 bool CbxEngineImpl::LoadFromStream(IStream* stream) {
-    if (!stream)
+    if (!stream) {
         return false;
+    }
     fileStream = stream;
     fileStream->AddRef();
 
@@ -880,8 +895,9 @@ static bool cmpArchFileInfoByName(Archive::FileInfo* f1, Archive::FileInfo* f2) 
 
 bool CbxEngineImpl::FinishLoading() {
     CrashIf(!cbxFile);
-    if (!cbxFile)
+    if (!cbxFile) {
         return false;
+    }
 
     std::vector<Archive::FileInfo*> pageFiles;
 

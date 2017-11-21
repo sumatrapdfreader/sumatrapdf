@@ -188,12 +188,13 @@ void InitializePolicies(bool restrict)
         return;
     }
 
-    AutoFree restrictData(file::ReadAll(restrictPath, nullptr));
-    SquareTree sqt(restrictData);
+    OwnedData restrictData(file::ReadAll(restrictPath));
+    SquareTree sqt(restrictData.data);
     SquareTreeNode *polsec = sqt.root ? sqt.root->GetChild("Policies") : nullptr;
     // if the restriction file is broken, err on the side of full restriction
-    if (!polsec)
+    if (!polsec) {
         return;
+    }
 
     static struct {
         const char *name;
@@ -211,8 +212,9 @@ void InitializePolicies(bool restrict)
     // enable policies as indicated in sumatrapdfrestrict.ini
     for (size_t i = 0; i < dimof(policies); i++) {
         const char *value = polsec->GetValue(policies[i].name);
-        if (value && atoi(value) != 0)
+        if (value && atoi(value) != 0) {
             gPolicyRestrictions = gPolicyRestrictions | policies[i].perm;
+        }
     }
 
     // determine the list of allowed link protocols and perceived file types
