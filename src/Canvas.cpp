@@ -10,6 +10,7 @@
 #include "UITask.h"
 #include "WinUtil.h"
 #include "Colors.h"
+#include "ScopedWin.h"
 
 #include "BaseEngine.h"
 #include "EngineManager.h"

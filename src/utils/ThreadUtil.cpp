@@ -3,6 +3,7 @@
 
 #include "BaseUtil.h"
 #include "ThreadUtil.h"
+#include "ScopedWin.h"
 
 #if COMPILER_MSVC
 

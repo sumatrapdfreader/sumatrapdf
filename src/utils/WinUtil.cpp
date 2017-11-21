@@ -2,11 +2,13 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
+#include <mlang.h>
+
 #include "BitManip.h"
+#include "ScopedWin.h"
 #include "FileUtil.h"
 #include "WinDynCalls.h"
 #include "WinUtil.h"
-#include <mlang.h>
 
 #include "DebugLog.h"
 

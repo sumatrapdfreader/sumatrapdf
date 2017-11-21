@@ -1,8 +1,8 @@
 /* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// utils
 #include "BaseUtil.h"
+#include "ScopedWin.h"
 #include "Archive.h"
 #include "GdiPlusUtil.h"
 #include "HtmlParserLookup.h"
@@ -11,19 +11,19 @@
 #include "ThreadUtil.h"
 #include "Timer.h"
 #include "TrivialHtmlParser.h"
-// rendering engines
+
 #include "BaseEngine.h"
 #include "EbookBase.h"
 #include "EbookDoc.h"
 #include "MobiDoc.h"
 #include "HtmlFormatter.h"
 #include "Doc.h"
-// layout controllers
+
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "EbookController.h"
 #include "GlobalPrefs.h"
-// ui
+
 #include "EbookControls.h"
 #include "Translations.h"
 //#define NOLOG 0

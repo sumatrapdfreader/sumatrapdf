@@ -6,15 +6,13 @@
  * DDE commands, including search
  */
 
-// utils
 #include "BaseUtil.h"
+#include "ScopedWin.h"
 #include "FileUtil.h"
 #include "UITask.h"
 #include "WinUtil.h"
-// rendering engines
 #include "BaseEngine.h"
 #include "EngineManager.h"
-// layout controllers
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "ChmModel.h"
@@ -23,7 +21,6 @@
 #include "PdfSync.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
-// ui
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 #include "TabInfo.h"

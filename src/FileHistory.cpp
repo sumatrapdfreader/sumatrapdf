@@ -1,10 +1,10 @@
 /* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
 License: GPLv3 */
 
-// utils
 #include "BaseUtil.h"
 #include "FileUtil.h"
-// layout controllers
+#include "ScopedWin.h"
+
 #include "BaseEngine.h"
 #include "SettingsStructs.h"
 #include "FileHistory.h"
@@ -37,9 +37,9 @@ quits.
 #define FILE_HISTORY_MAX_FILES 1000
 
 // sorts the most often used files first
-static int cmpOpenCount(const void *a, const void *b) {
-    DisplayState *dsA = *(DisplayState **) a;
-    DisplayState *dsB = *(DisplayState **) b;
+static int cmpOpenCount(const void* a, const void* b) {
+    DisplayState* dsA = *(DisplayState**)a;
+    DisplayState* dsB = *(DisplayState**)b;
     // sort pinned documents before unpinned ones
     if (dsA->isPinned != dsB->isPinned)
         return dsA->isPinned ? -1 : 1;
@@ -56,7 +56,7 @@ static int cmpOpenCount(const void *a, const void *b) {
 void FileHistory::Clear(bool keepFavorites) {
     if (!states)
         return;
-    Vec<DisplayState *> keep;
+    Vec<DisplayState*> keep;
     for (size_t i = 0; i < states->size(); i++) {
         if (keepFavorites && states->at(i)->favorites->size() > 0) {
             states->at(i)->openCount = 0;
@@ -68,13 +68,13 @@ void FileHistory::Clear(bool keepFavorites) {
     *states = keep;
 }
 
-DisplayState *FileHistory::Get(size_t index) const {
+DisplayState* FileHistory::Get(size_t index) const {
     if (index < states->size())
         return states->at(index);
     return nullptr;
 }
 
-DisplayState *FileHistory::Find(const WCHAR *filePath, size_t *idxOut) const {
+DisplayState* FileHistory::Find(const WCHAR* filePath, size_t* idxOut) const {
     for (size_t i = 0; i < states->size(); i++) {
         if (str::EqI(states->at(i)->filePath, filePath)) {
             if (idxOut)
@@ -85,12 +85,12 @@ DisplayState *FileHistory::Find(const WCHAR *filePath, size_t *idxOut) const {
     return nullptr;
 }
 
-DisplayState *FileHistory::MarkFileLoaded(const WCHAR *filePath) {
+DisplayState* FileHistory::MarkFileLoaded(const WCHAR* filePath) {
     CrashIf(!filePath);
     // if a history entry with the same name already exists,
     // then reuse it. That way we don't have duplicates and
     // the file moves to the front of the list
-    DisplayState *state = Find(filePath);
+    DisplayState* state = Find(filePath);
     if (!state) {
         state = NewDisplayState(filePath);
         state->useDefaultState = true;
@@ -103,9 +103,9 @@ DisplayState *FileHistory::MarkFileLoaded(const WCHAR *filePath) {
     return state;
 }
 
-bool FileHistory::MarkFileInexistent(const WCHAR *filePath, bool hide) {
+bool FileHistory::MarkFileInexistent(const WCHAR* filePath, bool hide) {
     CrashIf(!filePath);
-    DisplayState *state = Find(filePath);
+    DisplayState* state = Find(filePath);
     if (!state)
         return false;
     // move the file history entry to the end of the list
@@ -117,7 +117,7 @@ bool FileHistory::MarkFileInexistent(const WCHAR *filePath, bool hide) {
     int idx = states->Find(state);
     if (idx < newIdx && state != states->Last()) {
         states->Remove(state);
-        if (states->size() <= (size_t) newIdx)
+        if (states->size() <= (size_t)newIdx)
             states->Append(state);
         else
             states->InsertAt(newIdx, state);
@@ -135,10 +135,10 @@ bool FileHistory::MarkFileInexistent(const WCHAR *filePath, bool hide) {
 // by open count (which has a pre-multiplied recency factor)
 // and with all missing states filtered out
 // caller needs to delete the result (but not the contained states)
-void FileHistory::GetFrequencyOrder(Vec<DisplayState *>& list) {
+void FileHistory::GetFrequencyOrder(Vec<DisplayState*>& list) {
     CrashIf(list.size() > 0);
     size_t i = 0;
-    for (DisplayState *ds : *states) {
+    for (DisplayState* ds : *states) {
         ds->index = i++;
         if (!ds->isMissing || ds->isPinned)
             list.Append(ds);
@@ -154,14 +154,14 @@ void FileHistory::Purge(bool alwaysUseDefaultState) {
     // information about the file to be remembered)
     int minOpenCount = 0;
     if (alwaysUseDefaultState) {
-        Vec<DisplayState *> frequencyList;
+        Vec<DisplayState*> frequencyList;
         GetFrequencyOrder(frequencyList);
         if (frequencyList.size() > FILE_HISTORY_MAX_RECENT)
             minOpenCount = frequencyList.at(FILE_HISTORY_MAX_FREQUENT)->openCount / 2;
     }
 
     for (size_t j = states->size(); j > 0; j--) {
-        DisplayState *state = states->at(j - 1);
+        DisplayState* state = states->at(j - 1);
         // never forget pinned documents, documents we've remembered a password for and
         // documents for which there are favorites
         if (state->isPinned || state->decryptionKey != nullptr || state->favorites->size() > 0)

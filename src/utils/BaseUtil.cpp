@@ -147,6 +147,7 @@ OwnedData::~OwnedData() {
 }
 
 OwnedData::OwnedData(OwnedData&& other) {
+    CrashIf(this == &other);
     this->data = other.data;
     this->size = other.size;
     other.data = nullptr;
@@ -154,12 +155,11 @@ OwnedData::OwnedData(OwnedData&& other) {
 }
 
 OwnedData& OwnedData::operator=(OwnedData&& other) {
-    if (this != &other) {
-        this->data = other.data;
-        this->size = other.size;
-        other.data = nullptr;
-        other.size = 0;
-    }
+    CrashIf(this == &other);
+    this->data = other.data;
+    this->size = other.size;
+    other.data = nullptr;
+    other.size = 0;
     return *this;
 }
 

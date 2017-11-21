@@ -5,8 +5,8 @@
    executable and related makefile additions for each test, we have one test
    driver which dispatches desired test based on cmd-line arguments. */
 
-// utils
 #include "BaseUtil.h"
+#include "ScopedWin.h"
 #include "CmdLineParser.h"
 #include "CryptoUtil.h"
 #include "DirIter.h"
@@ -18,7 +18,6 @@
 #include "Timer.h"
 #include "WinUtil.h"
 #include "ZipUtil.h"
-// rendering engines
 #include "BaseEngine.h"
 #include "EbookBase.h"
 #include "MobiDoc.h"
@@ -38,8 +37,7 @@ static bool gLayout = false;
 // directory to which we'll save mobi html and images
 #define MOBI_SAVE_DIR L"..\\ebooks-converted"
 
-static int Usage()
-{
+static int Usage() {
     printf("Tester.exe\n");
     printf("  -mobi dirOrFile : run mobi tests in a given directory or for a given file\n");
     printf("  -layout - will also layout mobi files\n");
@@ -80,8 +78,7 @@ CalcMD5DigestWin: 2.605000 ms
 diff: 0.929000
 */
 
-static void BenchMD5Size(void *data, size_t dataSize, char *desc)
-{
+static void BenchMD5Size(void* data, size_t dataSize, char* desc) {
     unsigned char d1[16], d2[16];
     Timer t1;
     CalcMD5Digest((unsigned char*)data, dataSize, d1);
@@ -96,10 +93,9 @@ static void BenchMD5Size(void *data, size_t dataSize, char *desc)
     printf("%s\nCalcMD5Digest   : %f ms\nCalcMD5DigestWin: %f ms\ndiff: %f\n", desc, dur1, dur2, diff);
 }
 
-static void BenchMD5()
-{
-    size_t dataSize = 10*1024*1024;
-    void *data = malloc(dataSize);
+static void BenchMD5() {
+    size_t dataSize = 10 * 1024 * 1024;
+    void* data = malloc(dataSize);
     BenchMD5Size(data, dataSize, "10MB");
     BenchMD5Size(data, dataSize / 2, "5MB");
     BenchMD5Size(data, dataSize / 10, "1MB");
@@ -110,43 +106,39 @@ static void BenchMD5()
     free(data);
 }
 
-static void MobiSaveHtml(const WCHAR *filePathBase, MobiDoc *mb)
-{
+static void MobiSaveHtml(const WCHAR* filePathBase, MobiDoc* mb) {
     CrashAlwaysIf(!gSaveHtml);
 
     AutoFreeW outFile(str::Join(filePathBase, L"_pp.html"));
 
     size_t htmlLen;
-    const char *html = mb->GetHtmlData(htmlLen);
+    const char* html = mb->GetHtmlData(htmlLen);
     size_t ppHtmlLen;
-    char *ppHtml = PrettyPrintHtml(html, htmlLen, ppHtmlLen);
+    char* ppHtml = PrettyPrintHtml(html, htmlLen, ppHtmlLen);
     file::WriteAll(outFile.Get(), ppHtml, ppHtmlLen);
 
     outFile.Set(str::Join(filePathBase, L".html"));
     file::WriteAll(outFile.Get(), html, htmlLen);
 }
 
-static void MobiSaveImage(const WCHAR *filePathBase, size_t imgNo, ImageData *img)
-{
+static void MobiSaveImage(const WCHAR* filePathBase, size_t imgNo, ImageData* img) {
     // it's valid to not have image data at a given index
     if (!img || !img->data)
         return;
-    const WCHAR *ext = GfxFileExtFromData(img->data, img->len);
+    const WCHAR* ext = GfxFileExtFromData(img->data, img->len);
     CrashAlwaysIf(!ext);
     AutoFreeW fileName(str::Format(L"%s_img_%d%s", filePathBase, imgNo, ext));
     file::WriteAll(fileName.Get(), img->data, img->len);
 }
 
-static void MobiSaveImages(const WCHAR *filePathBase, MobiDoc *mb)
-{
+static void MobiSaveImages(const WCHAR* filePathBase, MobiDoc* mb) {
     for (size_t i = 0; i < mb->imagesCount; i++) {
-        MobiSaveImage(filePathBase, i, mb->GetImage(i+1));
+        MobiSaveImage(filePathBase, i, mb->GetImage(i + 1));
     }
 }
 
 // This loads and layouts a given mobi file. Used for profiling layout process.
-static void MobiLayout(MobiDoc *mobiDoc)
-{
+static void MobiLayout(MobiDoc* mobiDoc) {
     PoolAllocator textAllocator;
 
     HtmlFormatterArgs args;
@@ -158,15 +150,14 @@ static void MobiLayout(MobiDoc *mobiDoc)
     args.textAllocator = &textAllocator;
 
     MobiFormatter mf(&args, mobiDoc);
-    Vec<HtmlPage*> *pages = mf.FormatAllPages();
+    Vec<HtmlPage*>* pages = mf.FormatAllPages();
     DeleteVecMembers<HtmlPage*>(*pages);
     delete pages;
 }
 
-static void MobiTestFile(const WCHAR *filePath)
-{
+static void MobiTestFile(const WCHAR* filePath) {
     wprintf(L"Testing file '%s'\n", filePath);
-    MobiDoc *mobiDoc = MobiDoc::CreateFromFile(filePath);
+    MobiDoc* mobiDoc = MobiDoc::CreateFromFile(filePath);
     if (!mobiDoc) {
         printf(" error: failed to parse the file\n");
         return;
@@ -183,11 +174,11 @@ static void MobiTestFile(const WCHAR *filePath)
         // construct a base name for extracted html/image files in the form
         // "${MOBI_SAVE_DIR}/${file}" i.e. change dir to MOBI_SAVE_DIR and
         // remove the file extension
-        WCHAR *dir = MOBI_SAVE_DIR;
+        WCHAR* dir = MOBI_SAVE_DIR;
         dir::CreateAll(dir);
         AutoFreeW fileName(str::Dup(path::GetBaseName(filePath)));
         AutoFreeW filePathBase(path::Join(dir, fileName));
-        WCHAR *ext = (WCHAR*)str::FindCharLast(filePathBase.Get(), '.');
+        WCHAR* ext = (WCHAR*)str::FindCharLast(filePathBase.Get(), '.');
         *ext = 0;
 
         if (gSaveHtml)
@@ -199,26 +190,21 @@ static void MobiTestFile(const WCHAR *filePath)
     delete mobiDoc;
 }
 
-static bool IsMobiFile(const WCHAR *f)
-{
-    return str::EndsWithI(f, L".mobi") ||
-           str::EndsWithI(f, L".azw") ||
-           str::EndsWithI(f, L".azw1") ||
+static bool IsMobiFile(const WCHAR* f) {
+    return str::EndsWithI(f, L".mobi") || str::EndsWithI(f, L".azw") || str::EndsWithI(f, L".azw1") ||
            str::EndsWithI(f, L".prc");
 }
 
-static void MobiTestDir(WCHAR *dir)
-{
+static void MobiTestDir(WCHAR* dir) {
     wprintf(L"Testing mobi files in '%s'\n", dir);
     DirIter di(dir, true);
-    for (const WCHAR *p = di.First(); p; p = di.Next()) {
+    for (const WCHAR* p = di.First(); p; p = di.Next()) {
         if (IsMobiFile(p))
             MobiTestFile(p);
     }
 }
 
-static void MobiTest(WCHAR *dirOrFile)
-{
+static void MobiTest(WCHAR* dirOrFile) {
     if (file::Exists(dirOrFile) && IsMobiFile(dirOrFile))
         MobiTestFile(dirOrFile);
     else
@@ -227,9 +213,8 @@ static void MobiTest(WCHAR *dirOrFile)
 
 // we assume this is called from main sumatradirectory, e.g. as:
 // ./obj-dbg/tester.exe, so we use the known files
-void ZipCreateTest()
-{
-    WCHAR *zipFileName = L"tester-tmp.zip";
+void ZipCreateTest() {
+    WCHAR* zipFileName = L"tester-tmp.zip";
     file::Delete(zipFileName);
     ZipCreator zc(zipFileName);
     auto ok = zc.AddFile(L"makefile.msvc");
@@ -243,11 +228,10 @@ void ZipCreateTest()
     }
 }
 
-int TesterMain()
-{
+int TesterMain() {
     RedirectIOToConsole();
 
-    WCHAR *cmdLine = GetCommandLine();
+    WCHAR* cmdLine = GetCommandLine();
 
     WStrVec argv;
     ParseCmdLine(cmdLine, argv);
@@ -256,7 +240,7 @@ int TesterMain()
     ScopedGdiPlus gdi;
     mui::Initialize();
 
-    WCHAR *dirOrFile = nullptr;
+    WCHAR* dirOrFile = nullptr;
 
     bool mobiTest = false;
     size_t i = 2; // skip program name and "/tester"

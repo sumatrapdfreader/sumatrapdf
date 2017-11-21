@@ -8,6 +8,7 @@
 #include <oaidl.h>
 #include <exdispid.h>
 #include "Timer.h"
+#include "ScopedWin.h"
 #include "WinUtil.h"
 #include "GdiPlusUtil.h"
 

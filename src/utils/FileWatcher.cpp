@@ -3,6 +3,7 @@
 
 #include "BaseUtil.h"
 #include "FileWatcher.h"
+#include "ScopedWin.h"
 #include "FileUtil.h"
 #include "ThreadUtil.h"
 #include "WinUtil.h"

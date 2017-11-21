@@ -4,8 +4,8 @@
 // engines which render flowed ebook formats into fixed pages through the BaseEngine API
 // (pages are mostly layed out the same as for a "B Format" paperback: 5.12" x 7.8")
 
-// utils
 #include "BaseUtil.h"
+#include "ScopedWin.h"
 #include "Archive.h"
 #include "Dpi.h"
 #include "FileUtil.h"
@@ -17,7 +17,7 @@
 #include "TrivialHtmlParser.h"
 #include "WinUtil.h"
 #include "ZipUtil.h"
-// rendering engines
+
 #include "BaseEngine.h"
 #include "EbookEngine.h"
 #include "EbookBase.h"

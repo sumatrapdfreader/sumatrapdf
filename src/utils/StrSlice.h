@@ -3,38 +3,28 @@
 
 namespace str {
 
-// a class to help scanning through text. doesn't own th edata
+// a class to help scanning through text. doesn't own the edata
 struct Slice {
-    char* begin;
-    char* end;
-    char* curr;
+    char* begin = nullptr;
+    char* end = nullptr;
+    char* curr = nullptr;
 
-    Slice() : begin(nullptr), end(nullptr), curr(nullptr) {}
+    Slice() {}
+    Slice(char* s, size_t len);
+    Slice(char* start, char* end);
+    Slice(const Slice& other);
 
-    Slice(char* txt, size_t len) { Init(txt, len); }
+    void Set(char* s, size_t len);
 
-    Slice(char* start, char* end) { Init(start, end - start); }
-
-    Slice(const Slice& other) {
-        this->begin = other.begin;
-        this->end = other.end;
-        this->curr = other.curr;
-    }
-
-    void Init(char* txt, size_t len) {
-        begin = txt;
-        curr = txt;
-        end = txt + len;
-    }
-
-    bool Finished() const { return curr >= end; }
+    size_t Left() const;
+    bool Finished() const;
 
     char PrevChar() const;
     char CurrChar() const;
-    ptrdiff_t SkipWsUntilNewline();
-    ptrdiff_t SkipUntil(char toFind);
-    ptrdiff_t SkipNonWs();
-    ptrdiff_t Skip(int n);
+    size_t SkipWsUntilNewline();
+    size_t SkipUntil(char toFind);
+    size_t SkipNonWs();
+    size_t Skip(int n);
     void ZeroCurr();
 };
 

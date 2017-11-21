@@ -9,7 +9,8 @@
 #include "FileUtil.h"
 #include "HtmlParserLookup.h"
 #include "TrivialHtmlParser.h"
-// rendering engines
+#include "ScopedWin.h"
+
 #include "BaseEngine.h"
 #include "EbookBase.h"
 #include "ChmDoc.h"

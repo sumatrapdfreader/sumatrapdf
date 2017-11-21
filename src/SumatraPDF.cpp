@@ -1,8 +1,8 @@
 /* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// utils
 #include "BaseUtil.h"
+#include "ScopedWin.h"
 #include "WinDynCalls.h"
 #include "CryptoUtil.h"
 #include "DirIter.h"
@@ -20,14 +20,12 @@
 #include "ThreadUtil.h"
 #include "UITask.h"
 #include "WinUtil.h"
-// rendering engines
 #include "BaseEngine.h"
 #include "PsEngine.h"
 #include "EngineManager.h"
 #include "Doc.h"
 #include "FileModifications.h"
 #include "PdfCreator.h"
-// layout controllers
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "ChmModel.h"
@@ -39,7 +37,6 @@
 #include "RenderCache.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
-// ui
 #include "Colors.h"
 #include "SumatraPDF.h"
 #include "WindowInfo.h"

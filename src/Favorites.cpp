@@ -1,23 +1,23 @@
 /* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// utils
 #include "BaseUtil.h"
+#include "ScopedWin.h"
 #include "Dpi.h"
 #include "FileUtil.h"
 #include "GdiPlusUtil.h"
 #include "LabelWithCloseWnd.h"
 #include "UITask.h"
 #include "WinUtil.h"
-// rendering engines
+
 #include "BaseEngine.h"
 #include "EngineManager.h"
-// layout controllers
+
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "FileHistory.h"
 #include "GlobalPrefs.h"
-// ui
+
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 #include "TabInfo.h"

@@ -2,8 +2,8 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
+#include "ScopedWin.h"
 #include "WinUtil.h"
-
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
 #include "ParseCommandLine.h"

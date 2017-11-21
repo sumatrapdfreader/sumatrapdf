@@ -1,7 +1,6 @@
 /* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// utils
 #include "BaseUtil.h"
 #include "Archive.h"
 #include "FileUtil.h"
@@ -10,7 +9,8 @@
 #include "PalmDbReader.h"
 #include "TrivialHtmlParser.h"
 #include "WinUtil.h"
-// rendering engines
+#include "ScopedWin.h"
+
 #include "BaseEngine.h"
 #include "EbookBase.h"
 #include "EbookDoc.h"

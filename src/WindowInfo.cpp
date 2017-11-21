@@ -1,18 +1,16 @@
 /* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// utils
 #include "BaseUtil.h"
 #include <UIAutomationCore.h>
 #include <UIAutomationCoreApi.h>
+#include "ScopedWin.h"
 #include "FileUtil.h"
 #include "FrameRateWnd.h"
 #include "WinUtil.h"
-// rendering engines
 #include "BaseEngine.h"
 #include "EngineManager.h"
 #include "Doc.h"
-// layout controllers
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "ChmModel.h"
@@ -21,7 +19,6 @@
 #include "GlobalPrefs.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
-// ui
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 #include "TabInfo.h"
@@ -41,8 +38,7 @@ WindowInfo::WindowInfo(HWND hwnd) {
     fwdSearchMark.show = false;
 }
 
-WindowInfo::~WindowInfo()
-{
+WindowInfo::~WindowInfo() {
     FinishStressTest(this);
 
     CrashIf(tabs.size() > 0);
@@ -73,25 +69,28 @@ WindowInfo::~WindowInfo()
     free(favLabelWithClose);
 }
 
-bool WindowInfo::IsAboutWindow() const
-{
+bool WindowInfo::IsAboutWindow() const {
     return nullptr == currentTab;
 }
 
-bool WindowInfo::IsDocLoaded() const
-{
+bool WindowInfo::IsDocLoaded() const {
     CrashIf(!this->ctrl != !(currentTab && currentTab->ctrl));
     return this->ctrl != nullptr;
 }
 
-DisplayModel *WindowInfo::AsFixed() const { return ctrl ? ctrl->AsFixed() : nullptr; }
-ChmModel *WindowInfo::AsChm() const { return ctrl ? ctrl->AsChm() : nullptr; }
-EbookController *WindowInfo::AsEbook() const { return ctrl ? ctrl->AsEbook() : nullptr; }
+DisplayModel* WindowInfo::AsFixed() const {
+    return ctrl ? ctrl->AsFixed() : nullptr;
+}
+ChmModel* WindowInfo::AsChm() const {
+    return ctrl ? ctrl->AsChm() : nullptr;
+}
+EbookController* WindowInfo::AsEbook() const {
+    return ctrl ? ctrl->AsEbook() : nullptr;
+}
 
 // Notify both display model and double-buffer (if they exist)
 // about a potential change of available canvas size
-void WindowInfo::UpdateCanvasSize()
-{
+void WindowInfo::UpdateCanvasSize() {
     RectI rc = ClientRect(hwndCanvas);
     if (buffer && canvasRc == rc)
         return;
@@ -115,8 +114,7 @@ void WindowInfo::UpdateCanvasSize()
         notifications->Relayout();
 }
 
-SizeI WindowInfo::GetViewPortSize()
-{
+SizeI WindowInfo::GetViewPortSize() {
     SizeI size = canvasRc.Size();
 
     DWORD style = GetWindowLong(hwndCanvas, GWL_STYLE);
@@ -129,8 +127,7 @@ SizeI WindowInfo::GetViewPortSize()
     return size;
 }
 
-void WindowInfo::RedrawAll(bool update)
-{
+void WindowInfo::RedrawAll(bool update) {
     InvalidateRect(this->hwndCanvas, nullptr, false);
     if (this->AsEbook())
         this->AsEbook()->RequestRepaint();
@@ -138,8 +135,7 @@ void WindowInfo::RedrawAll(bool update)
         UpdateWindow(this->hwndCanvas);
 }
 
-void WindowInfo::ChangePresentationMode(PresentationMode mode)
-{
+void WindowInfo::ChangePresentationMode(PresentationMode mode) {
     presentation = mode;
     if (PM_BLACK_SCREEN == mode || PM_WHITE_SCREEN == mode) {
         DeleteInfotip();
@@ -147,8 +143,7 @@ void WindowInfo::ChangePresentationMode(PresentationMode mode)
     RedrawAll();
 }
 
-void WindowInfo::Focus()
-{
+void WindowInfo::Focus() {
     win::ToForeground(hwndFrame);
     // set focus to an owned modal dialog if there is one
     HWND hwnd = nullptr;
@@ -161,10 +156,10 @@ void WindowInfo::Focus()
     SetFocus(hwndFrame);
 }
 
-void WindowInfo::ToggleZoom()
-{
+void WindowInfo::ToggleZoom() {
     CrashIf(!this->ctrl);
-    if (!this->IsDocLoaded()) return;
+    if (!this->IsDocLoaded())
+        return;
 
     if (ZOOM_FIT_PAGE == this->ctrl->GetZoomVirtual())
         this->ctrl->SetZoomVirtual(ZOOM_FIT_WIDTH, nullptr);
@@ -174,13 +169,14 @@ void WindowInfo::ToggleZoom()
         this->ctrl->SetZoomVirtual(ZOOM_FIT_PAGE, nullptr);
 }
 
-void WindowInfo::MoveDocBy(int dx, int dy)
-{
+void WindowInfo::MoveDocBy(int dx, int dy) {
     CrashIf(!this->AsFixed());
-    if (!this->AsFixed()) return;
+    if (!this->AsFixed())
+        return;
     CrashIf(this->linkOnLastButtonDown);
-    if (this->linkOnLastButtonDown) return;
-    DisplayModel *dm = this->ctrl->AsFixed();
+    if (this->linkOnLastButtonDown)
+        return;
+    DisplayModel* dm = this->ctrl->AsFixed();
     if (0 != dx)
         dm->ScrollXBy(dx);
     if (0 != dy)
@@ -189,18 +185,17 @@ void WindowInfo::MoveDocBy(int dx, int dy)
 
 #define MULTILINE_INFOTIP_WIDTH_PX 500
 
-void WindowInfo::CreateInfotip(const WCHAR *text, RectI& rc, bool multiline)
-{
+void WindowInfo::CreateInfotip(const WCHAR* text, RectI& rc, bool multiline) {
     if (str::IsEmpty(text)) {
         this->DeleteInfotip();
         return;
     }
 
-    TOOLINFO ti = { 0 };
+    TOOLINFO ti = {0};
     ti.cbSize = sizeof(ti);
     ti.hwnd = this->hwndCanvas;
     ti.uFlags = TTF_SUBCLASS;
-    ti.lpszText = (WCHAR *)text;
+    ti.lpszText = (WCHAR*)text;
     ti.rect = rc.ToRECT();
 
     if (multiline || str::FindChar(text, '\n'))
@@ -212,12 +207,11 @@ void WindowInfo::CreateInfotip(const WCHAR *text, RectI& rc, bool multiline)
     this->infotipVisible = true;
 }
 
-void WindowInfo::DeleteInfotip()
-{
+void WindowInfo::DeleteInfotip() {
     if (!infotipVisible)
         return;
 
-    TOOLINFO ti = { 0 };
+    TOOLINFO ti = {0};
     ti.cbSize = sizeof(ti);
     ti.hwnd = hwndCanvas;
 
@@ -225,13 +219,11 @@ void WindowInfo::DeleteInfotip()
     infotipVisible = false;
 }
 
-void WindowInfo::ShowNotification(const WCHAR *message, int options, NotificationGroup groupId)
-{
+void WindowInfo::ShowNotification(const WCHAR* message, int options, NotificationGroup groupId) {
     int timeoutMS = (options & NOS_PERSIST) ? 0 : 3000;
     bool highlight = (options & NOS_HIGHLIGHT);
 
-    NotificationWnd *wnd = new NotificationWnd(hwndCanvas, message, timeoutMS, highlight,
-        [this](NotificationWnd *wnd) {
+    NotificationWnd* wnd = new NotificationWnd(hwndCanvas, message, timeoutMS, highlight, [this](NotificationWnd* wnd) {
         this->notifications->RemoveNotification(wnd);
     });
     if (NG_CURSOR_POS_HELPER == groupId) {
@@ -240,8 +232,7 @@ void WindowInfo::ShowNotification(const WCHAR *message, int options, Notificatio
     notifications->Add(wnd, groupId);
 }
 
-bool WindowInfo::CreateUIAProvider()
-{
+bool WindowInfo::CreateUIAProvider() {
     if (!uia_provider) {
         uia_provider = new SumatraUIAutomationProvider(this->hwndCanvas);
         if (!uia_provider)
@@ -261,39 +252,39 @@ class RemoteDestination : public PageDestination {
     AutoFreeW value;
     AutoFreeW name;
 
-public:
-    RemoteDestination(PageDestination *dest) :
-        type(dest->GetDestType()), pageNo(dest->GetDestPageNo()),
-        rect(dest->GetDestRect()), value(dest->GetDestValue()),
-        name(dest->GetDestName()) { }
-    virtual ~RemoteDestination() { }
+  public:
+    RemoteDestination(PageDestination* dest)
+        : type(dest->GetDestType()),
+          pageNo(dest->GetDestPageNo()),
+          rect(dest->GetDestRect()),
+          value(dest->GetDestValue()),
+          name(dest->GetDestName()) {}
+    virtual ~RemoteDestination() {}
 
     PageDestType GetDestType() const override { return type; }
     int GetDestPageNo() const override { return pageNo; }
     RectD GetDestRect() const override { return rect; }
-    WCHAR *GetDestValue() const override { return str::Dup(value); }
-    WCHAR *GetDestName() const override { return str::Dup(name); }
+    WCHAR* GetDestValue() const override { return str::Dup(value); }
+    WCHAR* GetDestName() const override { return str::Dup(name); }
 };
 
-void LinkHandler::GotoLink(PageDestination *link)
-{
+void LinkHandler::GotoLink(PageDestination* link) {
     CrashIf(!owner || owner->linkHandler != this);
     if (!link || !owner->IsDocLoaded())
         return;
 
-    TabInfo *tab = owner->currentTab;
+    TabInfo* tab = owner->currentTab;
     AutoFreeW path(link->GetDestValue());
     PageDestType type = link->GetDestType();
     if (Dest_ScrollTo == type) {
         // TODO: respect link->ld.gotor.new_window for PDF documents ?
         ScrollTo(link);
-    }
-    else if (Dest_LaunchURL == type) {
+    } else if (Dest_LaunchURL == type) {
         if (!path)
             /* ignore missing URLs */;
         else {
-            WCHAR *colon = str::FindChar(path, ':');
-            WCHAR *hash = str::FindChar(path, '#');
+            WCHAR* colon = str::FindChar(path, ':');
+            WCHAR* hash = str::FindChar(path, '#');
             if (!colon || (hash && colon > hash)) {
                 // treat relative URIs as file paths (without fragment identifier)
                 if (hash)
@@ -302,18 +293,16 @@ void LinkHandler::GotoLink(PageDestination *link)
                 url::DecodeInPlace(path.Get());
                 // LaunchFile will reject unsupported file types
                 LaunchFile(path, nullptr);
-            }
-            else {
+            } else {
                 // LaunchBrowser will reject unsupported URI schemes
                 // TODO: support file URIs?
                 LaunchBrowser(path);
             }
         }
-    }
-    else if (Dest_LaunchEmbedded == type) {
+    } else if (Dest_LaunchEmbedded == type) {
         // open embedded PDF documents in a new window
         if (path && str::StartsWith(path.Get(), tab->filePath.Get())) {
-            WindowInfo *newWin = FindWindowInfoByFile(path, true);
+            WindowInfo* newWin = FindWindowInfoByFile(path, true);
             if (!newWin) {
                 LoadArgs args(path, owner);
                 newWin = LoadDocument(args);
@@ -326,8 +315,7 @@ void LinkHandler::GotoLink(PageDestination *link)
             LinkSaver linkSaverTmp(tab, owner->hwndFrame, path);
             link->SaveEmbedded(linkSaverTmp);
         }
-    }
-    else if (Dest_LaunchFile == type) {
+    } else if (Dest_LaunchFile == type) {
         if (path) {
             // LaunchFile only opens files inside SumatraPDF
             // (except for allowed perceived file types)
@@ -364,8 +352,7 @@ void LinkHandler::GotoLink(PageDestination *link)
         CrashIf(Dest_None != type);
 }
 
-void LinkHandler::ScrollTo(PageDestination *dest)
-{
+void LinkHandler::ScrollTo(PageDestination* dest) {
     CrashIf(!owner || owner->linkHandler != this);
     if (!dest || !owner->IsDocLoaded())
         return;
@@ -375,8 +362,7 @@ void LinkHandler::ScrollTo(PageDestination *dest)
         owner->ctrl->ScrollToLink(dest);
 }
 
-void LinkHandler::LaunchFile(const WCHAR *path, PageDestination *link)
-{
+void LinkHandler::LaunchFile(const WCHAR* path, PageDestination* link) {
     // for safety, only handle relative paths and only open them in SumatraPDF
     // (unless they're of an allowed perceived type) and never launch any external
     // file in plugin mode (where documents are supposed to be self-contained)
@@ -386,7 +372,7 @@ void LinkHandler::LaunchFile(const WCHAR *path, PageDestination *link)
     }
 
     // TODO: link is deleted when opening the document in a new tab
-    RemoteDestination *remoteLink = nullptr;
+    RemoteDestination* remoteLink = nullptr;
     if (link) {
         remoteLink = new RemoteDestination(link);
         link = nullptr;
@@ -396,7 +382,7 @@ void LinkHandler::LaunchFile(const WCHAR *path, PageDestination *link)
     fullPath.Set(path::Join(fullPath, path));
     fullPath.Set(path::Normalize(fullPath));
     // TODO: respect link->ld.gotor.new_window for PDF documents ?
-    WindowInfo *newWin = FindWindowInfoByFile(fullPath, true);
+    WindowInfo* newWin = FindWindowInfoByFile(fullPath, true);
     // TODO: don't show window until it's certain that there was no error
     if (!newWin) {
         LoadArgs args(fullPath, owner);
@@ -427,13 +413,12 @@ void LinkHandler::LaunchFile(const WCHAR *path, PageDestination *link)
 
     AutoFreeW destName(remoteLink->GetDestName());
     if (destName) {
-        PageDestination *dest = newWin->ctrl->GetNamedDest(destName);
+        PageDestination* dest = newWin->ctrl->GetNamedDest(destName);
         if (dest) {
             newWin->linkHandler->ScrollTo(dest);
             delete dest;
         }
-    }
-    else {
+    } else {
         newWin->linkHandler->ScrollTo(remoteLink);
     }
     delete remoteLink;
@@ -441,22 +426,20 @@ void LinkHandler::LaunchFile(const WCHAR *path, PageDestination *link)
 
 // normalizes case and whitespace in the string
 // caller needs to free() the result
-static WCHAR *NormalizeFuzzy(const WCHAR *str)
-{
-    WCHAR *dup = str::Dup(str);
+static WCHAR* NormalizeFuzzy(const WCHAR* str) {
+    WCHAR* dup = str::Dup(str);
     CharLower(dup);
     str::NormalizeWS(dup);
     // cf. AddTocItemToView
     return dup;
 }
 
-static bool MatchFuzzy(const WCHAR *s1, const WCHAR *s2, bool partially=false)
-{
+static bool MatchFuzzy(const WCHAR* s1, const WCHAR* s2, bool partially = false) {
     if (!partially)
         return str::Eq(s1, s2);
 
     // only match at the start of a word (at the beginning and after a space)
-    for (const WCHAR *last = s1; (last = str::Find(last, s2)) != nullptr; last++) {
+    for (const WCHAR* last = s1; (last = str::Find(last, s2)) != nullptr; last++) {
         if (last == s1 || *(last - 1) == ' ')
             return true;
     }
@@ -465,23 +448,21 @@ static bool MatchFuzzy(const WCHAR *s1, const WCHAR *s2, bool partially=false)
 
 // finds the first ToC entry that (partially) matches a given normalized name
 // (ignoring case and whitespace differences)
-PageDestination *LinkHandler::FindTocItem(DocTocItem *item, const WCHAR *name, bool partially)
-{
+PageDestination* LinkHandler::FindTocItem(DocTocItem* item, const WCHAR* name, bool partially) {
     for (; item; item = item->next) {
         AutoFreeW fuzTitle(NormalizeFuzzy(item->title));
         if (MatchFuzzy(fuzTitle, name, partially))
             return item->GetLink();
-        PageDestination *dest = FindTocItem(item->child, name, partially);
+        PageDestination* dest = FindTocItem(item->child, name, partially);
         if (dest)
             return dest;
     }
     return nullptr;
 }
 
-void LinkHandler::GotoNamedDest(const WCHAR *name)
-{
+void LinkHandler::GotoNamedDest(const WCHAR* name) {
     CrashIf(!owner || owner->linkHandler != this);
-    Controller *ctrl = owner->ctrl;
+    Controller* ctrl = owner->ctrl;
     if (!ctrl)
         return;
 
@@ -490,14 +471,13 @@ void LinkHandler::GotoNamedDest(const WCHAR *name)
     // 2. Fuzzy match on full ToC item title
     // 3. Fuzzy match on a part of a ToC item title
     // 4. Exact match on page label
-    PageDestination *dest = ctrl->GetNamedDest(name);
+    PageDestination* dest = ctrl->GetNamedDest(name);
     bool hasDest = dest != NULL;
     if (dest) {
         ScrollTo(dest);
         delete dest;
-    }
-    else if (ctrl->HasTocTree()) {
-        DocTocItem *root = ctrl->GetTocTree();
+    } else if (ctrl->HasTocTree()) {
+        DocTocItem* root = ctrl->GetTocTree();
         AutoFreeW fuzName(NormalizeFuzzy(name));
         dest = FindTocItem(root, fuzName);
         if (!dest)

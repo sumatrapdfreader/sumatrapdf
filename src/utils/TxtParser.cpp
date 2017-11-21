@@ -314,7 +314,7 @@ void TxtParser::SetToParse(char *s, size_t sLen)
     }
     SkipUtf8Bom(s, sLen);
     size_t n = str::NormalizeNewlinesInPlace(s, s + sLen);
-    toParse.Init(s, n);
+    toParse.Set(s, n);
 
     // we create an implicit array node to hold the nodes we'll parse
     CrashIf(0 != nodes.size());

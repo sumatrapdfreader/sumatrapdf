@@ -6,11 +6,12 @@
 #include "Dict.h"
 #include "HtmlWindow.h"
 #include "UITask.h"
-// rendering engines
+#include "ScopedWin.h"
+
 #include "BaseEngine.h"
 #include "EbookBase.h"
 #include "ChmDoc.h"
-// layout controllers
+
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "ChmModel.h"

@@ -9,6 +9,8 @@
 
 #include "BaseUtil.h"
 #include "FrameRateWnd.h"
+
+#include "ScopedWin.h"
 #include "WinUtil.h"
 
 /*

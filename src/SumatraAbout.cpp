@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
+#include "ScopedWin.h"
 #include "Dpi.h"
 #include "FileUtil.h"
 #include "WinUtil.h"
@@ -21,38 +22,38 @@
 #include "Version.h"
 
 #ifndef ABOUT_USE_LESS_COLORS
-#define ABOUT_LINE_OUTER_SIZE       2
+#define ABOUT_LINE_OUTER_SIZE 2
 #else
-#define ABOUT_LINE_OUTER_SIZE       1
+#define ABOUT_LINE_OUTER_SIZE 1
 #endif
-#define ABOUT_LINE_SEP_SIZE         1
-#define ABOUT_LEFT_RIGHT_SPACE_DX   8
-#define ABOUT_MARGIN_DX            10
-#define ABOUT_BOX_MARGIN_DY         6
-#define ABOUT_BORDER_COL            RGB(0, 0, 0)
-#define ABOUT_TXT_DY                6
-#define ABOUT_RECT_PADDING          8
-#define ABOUT_INNER_PADDING         6
+#define ABOUT_LINE_SEP_SIZE 1
+#define ABOUT_LEFT_RIGHT_SPACE_DX 8
+#define ABOUT_MARGIN_DX 10
+#define ABOUT_BOX_MARGIN_DY 6
+#define ABOUT_BORDER_COL RGB(0, 0, 0)
+#define ABOUT_TXT_DY 6
+#define ABOUT_RECT_PADDING 8
+#define ABOUT_INNER_PADDING 6
 
-#define ABOUT_CLASS_NAME        L"SUMATRA_PDF_ABOUT"
+#define ABOUT_CLASS_NAME L"SUMATRA_PDF_ABOUT"
 
-#define ABOUT_WIN_TITLE         _TR("About SumatraPDF")
+#define ABOUT_WIN_TITLE _TR("About SumatraPDF")
 
-#define SUMATRA_TXT_FONT        L"Arial Black"
-#define SUMATRA_TXT_FONT_SIZE   24
+#define SUMATRA_TXT_FONT L"Arial Black"
+#define SUMATRA_TXT_FONT_SIZE 24
 
-#define VERSION_TXT_FONT        L"Arial Black"
-#define VERSION_TXT_FONT_SIZE   12
+#define VERSION_TXT_FONT L"Arial Black"
+#define VERSION_TXT_FONT_SIZE 12
 
-#define VERSION_TXT             L"v" CURR_VERSION_STR
+#define VERSION_TXT L"v" CURR_VERSION_STR
 #ifdef SVN_PRE_RELEASE_VER
- #define VERSION_SUB_TXT        L"Pre-release"
+#define VERSION_SUB_TXT L"Pre-release"
 #else
- #define VERSION_SUB_TXT        L""
+#define VERSION_SUB_TXT L""
 #endif
 
 #ifdef GIT_COMMIT_ID
-#define GIT_COMMIT_ID_STR       TEXT(QM(GIT_COMMIT_ID))
+#define GIT_COMMIT_ID_STR TEXT(QM(GIT_COMMIT_ID))
 #endif
 
 // TODO: replace this link with a better one where license information is nicely collected/linked
@@ -66,62 +67,61 @@
 #define URL_TRANSLATORS L"https://github.com/sumatrapdfreader/sumatrapdf/blob/" UPDATE_CHECK_VER L"rel/TRANSLATORS"
 #endif
 
-#define LAYOUT_LTR              0
+#define LAYOUT_LTR 0
 
 static ATOM gAtomAbout;
 static HWND gHwndAbout;
 static HWND gHwndAboutTooltip = nullptr;
-static const WCHAR *gClickedURL = nullptr;
+static const WCHAR* gClickedURL = nullptr;
 
 struct AboutLayoutInfoEl {
     /* static data, must be provided */
-    const WCHAR *   leftTxt;
-    const WCHAR *   rightTxt;
-    const WCHAR *   url;
+    const WCHAR* leftTxt;
+    const WCHAR* rightTxt;
+    const WCHAR* url;
 
     /* data calculated by the layout */
-    RectI           leftPos;
-    RectI           rightPos;
+    RectI leftPos;
+    RectI rightPos;
 };
 
 static AboutLayoutInfoEl gAboutLayoutInfo[] = {
-    { L"website",        L"SumatraPDF website",   WEBSITE_MAIN_URL},
-    { L"manual",         L"SumatraPDF manual",    WEBSITE_MANUAL_URL },
-    { L"forums",         L"SumatraPDF forums",    L"https://forum.sumatrapdfreader.org/" },
-    { L"programming",    L"The Programmers",      URL_AUTHORS },
-    { L"translations",   L"The Translators",      URL_TRANSLATORS },
-    { L"licenses",       L"Various Open Source",  URL_LICENSE },
+    {L"website", L"SumatraPDF website", WEBSITE_MAIN_URL},
+    {L"manual", L"SumatraPDF manual", WEBSITE_MANUAL_URL},
+    {L"forums", L"SumatraPDF forums", L"https://forum.sumatrapdfreader.org/"},
+    {L"programming", L"The Programmers", URL_AUTHORS},
+    {L"translations", L"The Translators", URL_TRANSLATORS},
+    {L"licenses", L"Various Open Source", URL_LICENSE},
 #ifdef GIT_COMMIT_ID
     // TODO: use short ID for rightTxt (only first 7 digits) with less hackery
-    { L"last change",    L"git commit " GIT_COMMIT_ID_STR, L"https://github.com/sumatrapdfreader/sumatrapdf/commit/" GIT_COMMIT_ID_STR },
+    {L"last change", L"git commit " GIT_COMMIT_ID_STR,
+     L"https://github.com/sumatrapdfreader/sumatrapdf/commit/" GIT_COMMIT_ID_STR},
 #endif
 #ifdef SVN_PRE_RELEASE_VER
-    { L"a note",         L"Pre-release version, for testing only!", nullptr },
+    {L"a note", L"Pre-release version, for testing only!", nullptr},
 #endif
 #ifdef DEBUG
-    { L"a note",         L"Debug version, for testing only!", nullptr },
+    {L"a note", L"Debug version, for testing only!", nullptr},
 #endif
-    { nullptr, nullptr, nullptr }
-};
+    {nullptr, nullptr, nullptr}};
 
 static Vec<StaticLinkInfo> gLinkInfo;
 
 #define COL1 RGB(196, 64, 50)
 #define COL2 RGB(227, 107, 35)
-#define COL3 RGB(93,  160, 40)
+#define COL3 RGB(93, 160, 40)
 #define COL4 RGB(69, 132, 190)
 #define COL5 RGB(112, 115, 207)
 
-static void DrawSumatraPDF(HDC hdc, PointI pt)
-{
-    const WCHAR *txt = APP_NAME_STR;
+static void DrawSumatraPDF(HDC hdc, PointI pt) {
+    const WCHAR* txt = APP_NAME_STR;
 #ifdef ABOUT_USE_LESS_COLORS
     // simple black version
     SetTextColor(hdc, ABOUT_BORDER_COL);
     TextOut(hdc, pt.x, pt.y, txt, (int)str::Len(txt));
 #else
     // colorful version
-    COLORREF cols[] = { COL1, COL2, COL3, COL4, COL5, COL5, COL4, COL3, COL2, COL1 };
+    COLORREF cols[] = {COL1, COL2, COL3, COL4, COL5, COL5, COL4, COL3, COL2, COL1};
     for (size_t i = 0; i < str::Len(txt); i++) {
         SetTextColor(hdc, cols[i % dimof(cols)]);
         TextOut(hdc, pt.x, pt.y, txt + i, 1);
@@ -133,7 +133,7 @@ static void DrawSumatraPDF(HDC hdc, PointI pt)
 #endif
 }
 
-static WCHAR *GetSumatraVersion() {
+static WCHAR* GetSumatraVersion() {
     str::Str<WCHAR> s;
     s.Set(VERSION_TXT);
     if (IsProcess64()) {
@@ -145,8 +145,7 @@ static WCHAR *GetSumatraVersion() {
     return s.StealData();
 }
 
-static SizeI CalcSumatraVersionSize(HWND hwnd, HDC hdc)
-{
+static SizeI CalcSumatraVersionSize(HWND hwnd, HDC hdc) {
     SizeI result;
 
     ScopedFont fontSumatraTxt(CreateSimpleFont(hdc, SUMATRA_TXT_FONT, SUMATRA_TXT_FONT_SIZE));
@@ -155,7 +154,7 @@ static SizeI CalcSumatraVersionSize(HWND hwnd, HDC hdc)
 
     SIZE txtSize;
     /* calculate minimal top box size */
-    const WCHAR *txt = APP_NAME_STR;
+    const WCHAR* txt = APP_NAME_STR;
     GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
     result.dy = txtSize.cy + ABOUT_BOX_MARGIN_DY * 2;
     result.dx = txtSize.cx;
@@ -173,8 +172,7 @@ static SizeI CalcSumatraVersionSize(HWND hwnd, HDC hdc)
     return result;
 }
 
-static void DrawSumatraVersion(HDC hdc, RectI rect)
-{
+static void DrawSumatraVersion(HDC hdc, RectI rect) {
     ScopedFont fontSumatraTxt(CreateSimpleFont(hdc, SUMATRA_TXT_FONT, SUMATRA_TXT_FONT_SIZE));
     ScopedFont fontVersionTxt(CreateSimpleFont(hdc, VERSION_TXT_FONT, VERSION_TXT_FONT_SIZE));
     HGDIOBJ oldFont = SelectObject(hdc, fontSumatraTxt);
@@ -182,10 +180,9 @@ static void DrawSumatraVersion(HDC hdc, RectI rect)
     SetBkMode(hdc, TRANSPARENT);
 
     SIZE txtSize;
-    const WCHAR *txt = APP_NAME_STR;
+    const WCHAR* txt = APP_NAME_STR;
     GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
-    RectI mainRect(rect.x + (rect.dx - txtSize.cx) / 2,
-                   rect.y + (rect.dy - txtSize.cy) / 2, txtSize.cx, txtSize.cy);
+    RectI mainRect(rect.x + (rect.dx - txtSize.cx) / 2, rect.y + (rect.dy - txtSize.cy) / 2, txtSize.cx, txtSize.cy);
     DrawSumatraPDF(hdc, mainRect.TL());
 
     SetTextColor(hdc, WIN_COL_BLACK);
@@ -200,8 +197,7 @@ static void DrawSumatraVersion(HDC hdc, RectI rect)
     SelectObject(hdc, oldFont);
 }
 
-static RectI DrawBottomRightLink(HWND hwnd, HDC hdc, const WCHAR *txt)
-{
+static RectI DrawBottomRightLink(HWND hwnd, HDC hdc, const WCHAR* txt) {
     ScopedFont fontLeftTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 14));
     auto col = GetAppColor(AppColor::MainWindowLink);
     ScopedPen penLinkLine(CreatePen(PS_SOLID, 1, col));
@@ -213,8 +209,8 @@ static RectI DrawBottomRightLink(HWND hwnd, HDC hdc, const WCHAR *txt)
 
     SIZE txtSize;
     GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
-    RectI rect(rc.dx - txtSize.cx - ABOUT_INNER_PADDING,
-               rc.y + rc.dy - txtSize.cy - ABOUT_INNER_PADDING, txtSize.cx, txtSize.cy);
+    RectI rect(rc.dx - txtSize.cx - ABOUT_INNER_PADDING, rc.y + rc.dy - txtSize.cy - ABOUT_INNER_PADDING, txtSize.cx,
+               txtSize.cy);
     if (IsUIRightToLeft())
         rect.x = ABOUT_INNER_PADDING;
     RECT rTmp = rect.ToRECT();
@@ -232,8 +228,7 @@ static RectI DrawBottomRightLink(HWND hwnd, HDC hdc, const WCHAR *txt)
 /* Draws the about screen and remembers some state for hyperlinking.
    It transcribes the design I did in graphics software - hopeless
    to understand without seeing the design. */
-static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkInfo)
-{
+static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkInfo) {
     auto col = GetAppColor(AppColor::MainWindowText);
     ScopedPen penBorder(CreatePen(PS_SOLID, ABOUT_LINE_OUTER_SIZE, col));
     ScopedPen penDivideLine(CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, col));
@@ -258,7 +253,8 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkI
     ScopedHdcSelect brush(hdc, bgBrush);
     ScopedHdcSelect pen(hdc, penBorder);
 #ifndef ABOUT_USE_LESS_COLORS
-    Rectangle(hdc, rect.x, rect.y + ABOUT_LINE_OUTER_SIZE, rect.x + rect.dx, rect.y + titleRect.dy + ABOUT_LINE_OUTER_SIZE);
+    Rectangle(hdc, rect.x, rect.y + ABOUT_LINE_OUTER_SIZE, rect.x + rect.dx,
+              rect.y + titleRect.dy + ABOUT_LINE_OUTER_SIZE);
 #else
     RectI titleBgBand(0, rect.y, rc.dx, titleRect.dy);
     RECT rcLogoBg = titleBgBand.ToRECT();
@@ -281,7 +277,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkI
 
     /* render text on the left*/
     SelectObject(hdc, fontLeftTxt);
-    for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++) {
+    for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
         TextOut(hdc, el->leftPos.x, el->leftPos.y, el->leftTxt, (int)str::Len(el->leftTxt));
     }
 
@@ -289,7 +285,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkI
     SelectObject(hdc, fontRightTxt);
     SelectObject(hdc, penLinkLine);
     linkInfo.Reset();
-    for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++) {
+    for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
         bool hasUrl = HasPermission(Perm_DiskAccess) && el->url;
         if (hasUrl) {
             col = GetAppColor(AppColor::MainWindowLink);
@@ -312,13 +308,12 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkI
     }
 
     SelectObject(hdc, penDivideLine);
-    RectI divideLine(gAboutLayoutInfo[0].rightPos.x - ABOUT_LEFT_RIGHT_SPACE_DX,
-                     rect.y + titleRect.dy + 4, 0, rect.y + rect.dy - 4 - gAboutLayoutInfo[0].rightPos.y);
+    RectI divideLine(gAboutLayoutInfo[0].rightPos.x - ABOUT_LEFT_RIGHT_SPACE_DX, rect.y + titleRect.dy + 4, 0,
+                     rect.y + rect.dy - 4 - gAboutLayoutInfo[0].rightPos.y);
     PaintLine(hdc, divideLine);
 }
 
-static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RectI *rect)
-{
+static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RectI* rect) {
     ScopedFont fontLeftTxt(CreateSimpleFont(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE));
     ScopedFont fontRightTxt(CreateSimpleFont(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE));
 
@@ -331,7 +326,7 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RectI *rect)
     SelectObject(hdc, fontLeftTxt);
     int leftLargestDx = 0;
     int leftDy = 0;
-    for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++) {
+    for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
         SIZE txtSize;
         GetTextExtentPoint32(hdc, el->leftTxt, (int)str::Len(el->leftTxt), &txtSize);
         el->leftPos.dx = txtSize.cx;
@@ -349,7 +344,7 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RectI *rect)
     SelectObject(hdc, fontRightTxt);
     int rightLargestDx = 0;
     int rightDy = 0;
-    for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++) {
+    for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
         SIZE txtSize;
         size_t txtLen = str::Len(el->rightTxt);
 #ifdef GIT_COMMIT_ID
@@ -370,13 +365,14 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RectI *rect)
 
     /* calculate total dimension and position */
     RectI minRect;
-    minRect.dx = ABOUT_LEFT_RIGHT_SPACE_DX + leftLargestDx + ABOUT_LINE_SEP_SIZE + rightLargestDx + ABOUT_LEFT_RIGHT_SPACE_DX;
+    minRect.dx =
+        ABOUT_LEFT_RIGHT_SPACE_DX + leftLargestDx + ABOUT_LINE_SEP_SIZE + rightLargestDx + ABOUT_LEFT_RIGHT_SPACE_DX;
     if (minRect.dx < headerSize.dx)
         minRect.dx = headerSize.dx;
     minRect.dx += 2 * ABOUT_LINE_OUTER_SIZE + 2 * ABOUT_MARGIN_DX;
 
     minRect.dy = headerSize.dy;
-    for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++)
+    for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++)
         minRect.dy += rightDy + ABOUT_TXT_DY;
     minRect.dy += 2 * ABOUT_LINE_OUTER_SIZE + 4;
 
@@ -390,7 +386,7 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RectI *rect)
     /* calculate text positions */
     int linePosX = ABOUT_LINE_OUTER_SIZE + ABOUT_MARGIN_DX + leftLargestDx + ABOUT_LEFT_RIGHT_SPACE_DX;
     int currY = minRect.y + headerSize.dy + 4;
-    for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++) {
+    for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
         el->leftPos.x = minRect.x + linePosX - ABOUT_LEFT_RIGHT_SPACE_DX - el->leftPos.dx;
         el->leftPos.y = currY + (rightDy - leftDy) / 2;
         el->rightPos.x = minRect.x + linePosX + ABOUT_LEFT_RIGHT_SPACE_DX;
@@ -401,8 +397,7 @@ static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RectI *rect)
     SelectObject(hdc, origFont);
 }
 
-static void OnPaintAbout(HWND hwnd)
-{
+static void OnPaintAbout(HWND hwnd) {
     PAINTSTRUCT ps;
     RectI rc;
     HDC hdc = BeginPaint(hwnd, &ps);
@@ -412,8 +407,7 @@ static void OnPaintAbout(HWND hwnd)
     EndPaint(hwnd, &ps);
 }
 
-static void CopyAboutInfoToClipboard(HWND hwnd)
-{
+static void CopyAboutInfoToClipboard(HWND hwnd) {
     UNUSED(hwnd);
     str::Str<WCHAR> info(512);
     AutoFreeW ver(GetSumatraVersion());
@@ -425,10 +419,10 @@ static void CopyAboutInfoToClipboard(HWND hwnd)
     // concatenate all the information into a single string
     // (cf. CopyPropertiesToClipboard in SumatraProperties.cpp)
     size_t maxLen = 0;
-    for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++) {
+    for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
         maxLen = std::max(maxLen, str::Len(el->leftTxt));
     }
-    for (AboutLayoutInfoEl *el = gAboutLayoutInfo; el->leftTxt; el++) {
+    for (AboutLayoutInfoEl* el = gAboutLayoutInfo; el->leftTxt; el++) {
         for (size_t i = maxLen - str::Len(el->leftTxt); i > 0; i--)
             info.Append(' ');
         info.AppendFmt(L"%s: %s\r\n", el->leftTxt, el->url ? el->url : el->rightTxt);
@@ -436,8 +430,7 @@ static void CopyAboutInfoToClipboard(HWND hwnd)
     CopyTextToClipboard(info.LendData());
 }
 
-const WCHAR *GetStaticLink(Vec<StaticLinkInfo>& linkInfo, int x, int y, StaticLinkInfo *info)
-{
+const WCHAR* GetStaticLink(Vec<StaticLinkInfo>& linkInfo, int x, int y, StaticLinkInfo* info) {
     if (!HasPermission(Perm_DiskAccess))
         return nullptr;
 
@@ -453,32 +446,29 @@ const WCHAR *GetStaticLink(Vec<StaticLinkInfo>& linkInfo, int x, int y, StaticLi
     return nullptr;
 }
 
-static void CreateInfotipForLink(StaticLinkInfo& linkInfo)
-{
+static void CreateInfotipForLink(StaticLinkInfo& linkInfo) {
     if (gHwndAboutTooltip)
         return;
 
-    gHwndAboutTooltip = CreateWindowEx(WS_EX_TOPMOST,
-        TOOLTIPS_CLASS, nullptr, WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP,
-        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-        gHwndAbout, nullptr, GetModuleHandle(nullptr), nullptr);
+    gHwndAboutTooltip = CreateWindowEx(WS_EX_TOPMOST, TOOLTIPS_CLASS, nullptr, WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP,
+                                       CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, gHwndAbout, nullptr,
+                                       GetModuleHandle(nullptr), nullptr);
 
-    TOOLINFO ti = { 0 };
+    TOOLINFO ti = {0};
     ti.cbSize = sizeof(ti);
     ti.hwnd = gHwndAbout;
     ti.uFlags = TTF_SUBCLASS;
-    ti.lpszText = (WCHAR *)linkInfo.infotip;
+    ti.lpszText = (WCHAR*)linkInfo.infotip;
     ti.rect = linkInfo.rect.ToRECT();
 
     SendMessage(gHwndAboutTooltip, TTM_ADDTOOL, 0, (LPARAM)&ti);
 }
 
-static void ClearInfotip()
-{
+static void ClearInfotip() {
     if (!gHwndAboutTooltip)
         return;
 
-    TOOLINFO ti = { 0 };
+    TOOLINFO ti = {0};
     ti.cbSize = sizeof(ti);
     ti.hwnd = gHwndAbout;
 
@@ -487,13 +477,11 @@ static void ClearInfotip()
     gHwndAboutTooltip = nullptr;
 }
 
-LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    const WCHAR * url;
+LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
+    const WCHAR* url;
     PointI pt;
 
-    switch (message)
-    {
+    switch (message) {
         case WM_CREATE:
             AssertCrash(!gHwndAbout);
             break;
@@ -550,28 +538,23 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
     return 0;
 }
 
-void OnMenuAbout()
-{
+void OnMenuAbout() {
     if (gHwndAbout) {
         SetActiveWindow(gHwndAbout);
         return;
     }
 
     if (!gAtomAbout) {
-        WNDCLASSEX  wcex;
+        WNDCLASSEX wcex;
         FillWndClassEx(wcex, ABOUT_CLASS_NAME, WndProcAbout);
         wcex.hIcon = LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_SUMATRAPDF));
         gAtomAbout = RegisterClassEx(&wcex);
         CrashIf(!gAtomAbout);
     }
 
-    gHwndAbout = CreateWindow(
-            ABOUT_CLASS_NAME, ABOUT_WIN_TITLE,
-            WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
-            CW_USEDEFAULT, CW_USEDEFAULT,
-            CW_USEDEFAULT, CW_USEDEFAULT,
-            nullptr, nullptr,
-            GetModuleHandle(nullptr), nullptr);
+    gHwndAbout =
+        CreateWindow(ABOUT_CLASS_NAME, ABOUT_WIN_TITLE, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU, CW_USEDEFAULT,
+                     CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
     if (!gHwndAbout)
         return;
 
@@ -596,8 +579,7 @@ void OnMenuAbout()
     ShowWindow(gHwndAbout, SW_SHOW);
 }
 
-void DrawAboutPage(WindowInfo* win, HDC hdc)
-{
+void DrawAboutPage(WindowInfo* win, HDC hdc) {
     ClientRect rc(win->hwndCanvas);
     UpdateAboutLayoutInfo(win->hwndCanvas, hdc, &rc);
     DrawAbout(win->hwndCanvas, hdc, rc, win->staticLinks);
@@ -607,21 +589,20 @@ void DrawAboutPage(WindowInfo* win, HDC hdc)
     }
 }
 
-/* alternate static page to display when no document is loaded */
+    /* alternate static page to display when no document is loaded */
 
-#define DOCLIST_SEPARATOR_DY        2
-#define DOCLIST_THUMBNAIL_BORDER_W  1
-#define DOCLIST_MARGIN_LEFT         DpiScaleX(win->hwndFrame, 40)
-#define DOCLIST_MARGIN_BETWEEN_X    DpiScaleX(win->hwndFrame, 30)
-#define DOCLIST_MARGIN_RIGHT        DpiScaleX(win->hwndFrame, 40)
-#define DOCLIST_MARGIN_TOP          DpiScaleY(win->hwndFrame, 60)
-#define DOCLIST_MARGIN_BETWEEN_Y    DpiScaleY(win->hwndFrame, 50)
-#define DOCLIST_MARGIN_BOTTOM       DpiScaleY(win->hwndFrame, 40)
-#define DOCLIST_MAX_THUMBNAILS_X    5
-#define DOCLIST_BOTTOM_BOX_DY       DpiScaleY(win->hwndFrame, 50)
+#define DOCLIST_SEPARATOR_DY 2
+#define DOCLIST_THUMBNAIL_BORDER_W 1
+#define DOCLIST_MARGIN_LEFT DpiScaleX(win->hwndFrame, 40)
+#define DOCLIST_MARGIN_BETWEEN_X DpiScaleX(win->hwndFrame, 30)
+#define DOCLIST_MARGIN_RIGHT DpiScaleX(win->hwndFrame, 40)
+#define DOCLIST_MARGIN_TOP DpiScaleY(win->hwndFrame, 60)
+#define DOCLIST_MARGIN_BETWEEN_Y DpiScaleY(win->hwndFrame, 50)
+#define DOCLIST_MARGIN_BOTTOM DpiScaleY(win->hwndFrame, 40)
+#define DOCLIST_MAX_THUMBNAILS_X 5
+#define DOCLIST_BOTTOM_BOX_DY DpiScaleY(win->hwndFrame, 50)
 
-void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF textColor, COLORREF backgroundColor)
-{
+void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF textColor, COLORREF backgroundColor) {
     auto col = GetAppColor(AppColor::MainWindowText);
     ScopedPen penBorder(CreatePen(PS_SOLID, DOCLIST_SEPARATOR_DY, col));
     ScopedPen penThumbBorder(CreatePen(PS_SOLID, DOCLIST_THUMBNAIL_BORDER_W, col));
@@ -664,12 +645,20 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     FillRect(hdc, &rTmp, brushAboutBg);
     rc.dy -= DOCLIST_BOTTOM_BOX_DY;
 
-    Vec<DisplayState *> list;
+    Vec<DisplayState*> list;
     fileHistory.GetFrequencyOrder(list);
 
-    int width = limitValue((rc.dx - DOCLIST_MARGIN_LEFT - DOCLIST_MARGIN_RIGHT + DOCLIST_MARGIN_BETWEEN_X) / (THUMBNAIL_DX + DOCLIST_MARGIN_BETWEEN_X), 1, DOCLIST_MAX_THUMBNAILS_X);
-    int height = std::min((rc.dy - DOCLIST_MARGIN_TOP - DOCLIST_MARGIN_BOTTOM + DOCLIST_MARGIN_BETWEEN_Y) / (THUMBNAIL_DY + DOCLIST_MARGIN_BETWEEN_Y), FILE_HISTORY_MAX_FREQUENT / width);
-    PointI offset(rc.x + DOCLIST_MARGIN_LEFT + (rc.dx - width * THUMBNAIL_DX - (width - 1) * DOCLIST_MARGIN_BETWEEN_X - DOCLIST_MARGIN_LEFT - DOCLIST_MARGIN_RIGHT) / 2, rc.y + DOCLIST_MARGIN_TOP);
+    int width = limitValue((rc.dx - DOCLIST_MARGIN_LEFT - DOCLIST_MARGIN_RIGHT + DOCLIST_MARGIN_BETWEEN_X) /
+                               (THUMBNAIL_DX + DOCLIST_MARGIN_BETWEEN_X),
+                           1, DOCLIST_MAX_THUMBNAILS_X);
+    int height = std::min((rc.dy - DOCLIST_MARGIN_TOP - DOCLIST_MARGIN_BOTTOM + DOCLIST_MARGIN_BETWEEN_Y) /
+                              (THUMBNAIL_DY + DOCLIST_MARGIN_BETWEEN_Y),
+                          FILE_HISTORY_MAX_FREQUENT / width);
+    PointI offset(rc.x + DOCLIST_MARGIN_LEFT +
+                      (rc.dx - width * THUMBNAIL_DX - (width - 1) * DOCLIST_MARGIN_BETWEEN_X - DOCLIST_MARGIN_LEFT -
+                       DOCLIST_MARGIN_RIGHT) /
+                          2,
+                  rc.y + DOCLIST_MARGIN_TOP);
     if (offset.x < ABOUT_INNER_PADDING)
         offset.x = ABOUT_INNER_PADDING;
     else if (list.size() == 0)
@@ -677,7 +666,7 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
 
     SelectObject(hdc, fontSumatraTxt);
     SIZE txtSize;
-    const WCHAR *txt = _TR("Frequently Read");
+    const WCHAR* txt = _TR("Frequently Read");
     GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
     RectI headerRect(offset.x, rc.y + (DOCLIST_MARGIN_TOP - txtSize.cy) / 2, txtSize.cx, txtSize.cy);
     if (isRtl)
@@ -696,11 +685,10 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
                 height = w > 0 ? h + 1 : h;
                 break;
             }
-            DisplayState *state = list.at(h * width + w);
+            DisplayState* state = list.at(h * width + w);
 
             RectI page(offset.x + w * (THUMBNAIL_DX + DOCLIST_MARGIN_BETWEEN_X),
-                       offset.y + h * (THUMBNAIL_DY + DOCLIST_MARGIN_BETWEEN_Y),
-                       THUMBNAIL_DX, THUMBNAIL_DY);
+                       offset.y + h * (THUMBNAIL_DY + DOCLIST_MARGIN_BETWEEN_Y), THUMBNAIL_DX, THUMBNAIL_DY);
             if (isRtl)
                 page.x = rc.dx - page.x - page.dx;
             bool loadOk = true;
@@ -714,13 +702,12 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
                 }
                 HRGN clip = CreateRoundRectRgn(page.x, page.y, page.x + page.dx, page.y + page.dy, 10, 10);
                 SelectClipRgn(hdc, clip);
-                RenderedBitmap *clone = state->thumbnail->Clone();
+                RenderedBitmap* clone = state->thumbnail->Clone();
                 if (clone) {
                     UpdateBitmapColors(clone->GetBitmap(), textColor, backgroundColor);
                     clone->StretchDIBits(hdc, page);
                     delete clone;
-                }
-                else {
+                } else {
                     state->thumbnail->StretchDIBits(hdc, page);
                 }
                 SelectClipRgn(hdc, nullptr);
@@ -733,12 +720,13 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
             if (isRtl)
                 rect.x -= iconSpace;
             rTmp = rect.ToRECT();
-            DrawText(hdc, path::GetBaseName(state->filePath), -1, &rTmp, DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT));
+            DrawText(hdc, path::GetBaseName(state->filePath), -1, &rTmp,
+                     DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT));
 
-            SHFILEINFO sfi = { 0 };
-            HIMAGELIST himl = (HIMAGELIST)SHGetFileInfo(state->filePath, 0, &sfi, sizeof(sfi), SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
-            ImageList_Draw(himl, sfi.iIcon, hdc,
-                           isRtl ? page.x + page.dx - DpiScaleX(win->hwndFrame, 16) : page.x,
+            SHFILEINFO sfi = {0};
+            HIMAGELIST himl = (HIMAGELIST)SHGetFileInfo(state->filePath, 0, &sfi, sizeof(sfi),
+                                                        SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
+            ImageList_Draw(himl, sfi.iIcon, hdc, isRtl ? page.x + page.dx - DpiScaleX(win->hwndFrame, 16) : page.x,
                            rect.y, ILD_TRANSPARENT);
 
             win->staticLinks.Append(StaticLinkInfo(rect.Union(page), state->filePath, state->filePath));
@@ -746,7 +734,8 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     }
 
     /* render bottom links */
-    rc.y += DOCLIST_MARGIN_TOP + height * THUMBNAIL_DY + (height - 1) * DOCLIST_MARGIN_BETWEEN_Y + DOCLIST_MARGIN_BOTTOM;
+    rc.y +=
+        DOCLIST_MARGIN_TOP + height * THUMBNAIL_DY + (height - 1) * DOCLIST_MARGIN_BETWEEN_Y + DOCLIST_MARGIN_BOTTOM;
     rc.dy = DOCLIST_BOTTOM_BOX_DY;
 
     col = GetAppColor(AppColor::MainWindowLink);

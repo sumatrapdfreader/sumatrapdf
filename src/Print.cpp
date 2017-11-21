@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
+#include "ScopedWin.h"
 #include "FileUtil.h"
 #include "UITask.h"
 #include "WinUtil.h"

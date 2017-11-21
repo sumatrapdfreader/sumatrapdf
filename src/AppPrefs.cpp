@@ -6,14 +6,14 @@
 #include "FileUtil.h"
 #include "FileWatcher.h"
 #include "UITask.h"
-// rendering engines
+#include "ScopedWin.h"
+
 #include "BaseEngine.h"
 #include "EbookEngine.h"
-// layout controllers
+
 #include "SettingsStructs.h"
 #include "FileHistory.h"
 #include "GlobalPrefs.h"
-// ui
 #include "SumatraPDF.h"
 #include "ParseCommandLine.h"
 #include "WindowInfo.h"

@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
+#include "ScopedWin.h"
 #include "CmdLineParser.h"
 #include "FileUtil.h"
 #include "HtmlParserLookup.h"

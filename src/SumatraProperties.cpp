@@ -3,16 +3,14 @@
 
 // utils
 #include "BaseUtil.h"
+#include "ScopedWin.h"
 #include "FileUtil.h"
 #include "WinUtil.h"
-// rendering engines
 #include "BaseEngine.h"
 #include "EngineManager.h"
-// layout controllers
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "DisplayModel.h"
-// ui
 #include "Colors.h"
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
@@ -20,46 +18,45 @@
 #include "SumatraProperties.h"
 #include "Translations.h"
 
-#define PROPERTIES_LEFT_RIGHT_SPACE_DX  8
-#define PROPERTIES_RECT_PADDING         8
-#define PROPERTIES_TXT_DY_PADDING       2
-#define PROPERTIES_WIN_TITLE    _TR("Document Properties")
+#define PROPERTIES_LEFT_RIGHT_SPACE_DX 8
+#define PROPERTIES_RECT_PADDING 8
+#define PROPERTIES_TXT_DY_PADDING 2
+#define PROPERTIES_WIN_TITLE _TR("Document Properties")
 
 enum Magnitudes { KB = 1024, MB = 1024 * KB, GB = 1024 * MB };
 
 class PropertyEl {
-public:
-    PropertyEl(const WCHAR *leftTxt, WCHAR *rightTxt, bool isPath=false)
-        : leftTxt(leftTxt), isPath(isPath) {
+  public:
+    PropertyEl(const WCHAR* leftTxt, WCHAR* rightTxt, bool isPath = false) : leftTxt(leftTxt), isPath(isPath) {
         this->rightTxt.Set(rightTxt);
     }
 
     // A property is always in format: Name (left): Value (right)
     // (leftTxt is static, rightTxt will be freed)
-    const WCHAR *   leftTxt;
+    const WCHAR* leftTxt;
     AutoFreeW rightTxt;
 
     // data calculated by the layout
-    RectI           leftPos;
-    RectI           rightPos;
+    RectI leftPos;
+    RectI rightPos;
 
     // overlong paths get the ellipsis in the middle instead of at the end
-    bool            isPath;
+    bool isPath;
 };
 
-class PropertiesLayout : public Vec<PropertyEl *> {
-public:
-    PropertiesLayout() : hwnd(nullptr), hwndParent(nullptr) { }
+class PropertiesLayout : public Vec<PropertyEl*> {
+  public:
+    PropertiesLayout() : hwnd(nullptr), hwndParent(nullptr) {}
     ~PropertiesLayout() { DeleteVecMembers(*this); }
 
-    void AddProperty(const WCHAR *key, WCHAR *value, bool isPath=false) {
+    void AddProperty(const WCHAR* key, WCHAR* value, bool isPath = false) {
         // don't display value-less properties
         if (!str::IsEmpty(value))
             Append(new PropertyEl(key, value, isPath));
         else
             free(value);
     }
-    bool HasProperty(const WCHAR *key) {
+    bool HasProperty(const WCHAR* key) {
         for (size_t i = 0; i < size(); i++) {
             if (str::Eq(key, at(i)->leftTxt))
                 return true;
@@ -67,35 +64,32 @@ public:
         return false;
     }
 
-    HWND    hwnd;
-    HWND    hwndParent;
+    HWND hwnd;
+    HWND hwndParent;
 };
 
 static Vec<PropertiesLayout*> gPropertiesWindows;
 
-static PropertiesLayout* FindPropertyWindowByParent(HWND hwndParent)
-{
+static PropertiesLayout* FindPropertyWindowByParent(HWND hwndParent) {
     for (size_t i = 0; i < gPropertiesWindows.size(); i++) {
-        PropertiesLayout *pl = gPropertiesWindows.at(i);
+        PropertiesLayout* pl = gPropertiesWindows.at(i);
         if (pl->hwndParent == hwndParent)
             return pl;
     }
     return nullptr;
 }
 
-static PropertiesLayout* FindPropertyWindowByHwnd(HWND hwnd)
-{
+static PropertiesLayout* FindPropertyWindowByHwnd(HWND hwnd) {
     for (size_t i = 0; i < gPropertiesWindows.size(); i++) {
-        PropertiesLayout *pl = gPropertiesWindows.at(i);
+        PropertiesLayout* pl = gPropertiesWindows.at(i);
         if (pl->hwnd == hwnd)
             return pl;
     }
     return nullptr;
 }
 
-void DeletePropertiesWindow(HWND hwndParent)
-{
-    PropertiesLayout *pl = FindPropertyWindowByParent(hwndParent);
+void DeletePropertiesWindow(HWND hwndParent) {
+    PropertiesLayout* pl = FindPropertyWindowByParent(hwndParent);
     if (pl)
         DestroyWindow(pl->hwnd);
 }
@@ -103,34 +97,33 @@ void DeletePropertiesWindow(HWND hwndParent)
 // See: http://www.verypdf.com/pdfinfoeditor/pdf-date-format.htm
 // Format:  "D:YYYYMMDDHHMMSSxxxxxxx"
 // Example: "D:20091222171933-05'00'"
-static bool PdfDateParse(const WCHAR *pdfDate, SYSTEMTIME *timeOut)
-{
+static bool PdfDateParse(const WCHAR* pdfDate, SYSTEMTIME* timeOut) {
     ZeroMemory(timeOut, sizeof(SYSTEMTIME));
     // "D:" at the beginning is optional
     if (str::StartsWith(pdfDate, L"D:"))
         pdfDate += 2;
-    return str::Parse(pdfDate, L"%4d%2d%2d" L"%2d%2d%2d",
-        &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay,
-        &timeOut->wHour, &timeOut->wMinute, &timeOut->wSecond) != nullptr;
+    return str::Parse(pdfDate,
+                      L"%4d%2d%2d"
+                      L"%2d%2d%2d",
+                      &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay, &timeOut->wHour, &timeOut->wMinute,
+                      &timeOut->wSecond) != nullptr;
     // don't bother about the day of week, we won't display it anyway
 }
 
 // See: ISO 8601 specification
 // Format:  "YYYY-MM-DDTHH:MM:SSZ"
 // Example: "2011-04-19T22:10:48Z"
-static bool IsoDateParse(const WCHAR *isoDate, SYSTEMTIME *timeOut)
-{
+static bool IsoDateParse(const WCHAR* isoDate, SYSTEMTIME* timeOut) {
     ZeroMemory(timeOut, sizeof(SYSTEMTIME));
-    const WCHAR *end = str::Parse(isoDate, L"%4d-%2d-%2d", &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay);
+    const WCHAR* end = str::Parse(isoDate, L"%4d-%2d-%2d", &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay);
     if (end) // time is optional
         str::Parse(end, L"T%2d:%2d:%2dZ", &timeOut->wHour, &timeOut->wMinute, &timeOut->wSecond);
     return end != nullptr;
     // don't bother about the day of week, we won't display it anyway
 }
 
-static WCHAR *FormatSystemTime(SYSTEMTIME& date)
-{
-    WCHAR buf[512] = { 0 };
+static WCHAR* FormatSystemTime(SYSTEMTIME& date) {
+    WCHAR buf[512] = {0};
     int cchBufLen = dimof(buf);
     int ret = GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &date, nullptr, buf, cchBufLen);
     if (ret < 2) // GetDateFormat() failed or returned an empty result
@@ -140,7 +133,7 @@ static WCHAR *FormatSystemTime(SYSTEMTIME& date)
     if (0 == date.wHour && 0 == date.wMinute && 0 == date.wSecond)
         return str::Dup(buf);
 
-    WCHAR *tmp = buf + ret;
+    WCHAR* tmp = buf + ret;
     tmp[-1] = ' ';
     ret = GetTimeFormat(LOCALE_USER_DEFAULT, 0, &date, nullptr, tmp, cchBufLen - ret);
     if (ret < 2) // GetTimeFormat() failed or returned an empty result
@@ -153,17 +146,16 @@ static WCHAR *FormatSystemTime(SYSTEMTIME& date)
 // format e.g. "12/22/2009 5:19:33 PM"
 // See: http://www.verypdf.com/pdfinfoeditor/pdf-date-format.htm
 // The conversion happens in place
-static void ConvDateToDisplay(WCHAR **s, bool (* DateParse)(const WCHAR *date, SYSTEMTIME *timeOut))
-{
+static void ConvDateToDisplay(WCHAR** s, bool (*DateParse)(const WCHAR* date, SYSTEMTIME* timeOut)) {
     if (!s || !*s || !DateParse)
         return;
 
-    SYSTEMTIME date = { 0 };
+    SYSTEMTIME date = {0};
     bool ok = DateParse(*s, &date);
     if (!ok)
         return;
 
-    WCHAR *formatted = FormatSystemTime(date);
+    WCHAR* formatted = FormatSystemTime(date);
     if (formatted) {
         free(*s);
         *s = formatted;
@@ -173,9 +165,8 @@ static void ConvDateToDisplay(WCHAR **s, bool (* DateParse)(const WCHAR *date, S
 // Format the file size in a short form that rounds to the largest size unit
 // e.g. "3.48 GB", "12.38 MB", "23 KB"
 // Caller needs to free the result.
-static WCHAR *FormatSizeSuccint(size_t size)
-{
-    const WCHAR *unit = nullptr;
+static WCHAR* FormatSizeSuccint(size_t size) {
+    const WCHAR* unit = nullptr;
     double s = (double)size;
 
     if (size > GB) {
@@ -198,16 +189,14 @@ static WCHAR *FormatSizeSuccint(size_t size)
 // format file size in a readable way e.g. 1348258 is shown
 // as "1.29 MB (1,348,258 Bytes)"
 // Caller needs to free the result
-static WCHAR *FormatFileSize(size_t size)
-{
+static WCHAR* FormatFileSize(size_t size) {
     AutoFreeW n1(FormatSizeSuccint(size));
     AutoFreeW n2(str::FormatNumWithThousandSep(size));
 
     return str::Format(L"%s (%s %s)", n1.Get(), n2.Get(), _TR("Bytes"));
 }
 
-PaperFormat GetPaperFormat(SizeD size)
-{
+PaperFormat GetPaperFormat(SizeD size) {
     SizeD sizeP = size.dx < size.dy ? size : SizeD(size.dy, size.dx);
     // common ISO 216 formats (metric)
     if (limitValue(sizeP.dx, 8.26, 8.28) == sizeP.dx && limitValue(sizeP.dy, 11.68, 11.70) == sizeP.dy)
@@ -230,25 +219,38 @@ PaperFormat GetPaperFormat(SizeD size)
 
 // format page size according to locale (e.g. "29.7 x 21.0 cm" or "11.69 x 8.27 in")
 // Caller needs to free the result
-static WCHAR *FormatPageSize(BaseEngine *engine, int pageNo, int rotation)
-{
+static WCHAR* FormatPageSize(BaseEngine* engine, int pageNo, int rotation) {
     RectD mediabox = engine->PageMediabox(pageNo);
     SizeD size = engine->Transform(mediabox, pageNo, 1.0f / engine->GetFileDPI(), rotation).Size();
 
-    const WCHAR *formatName = L"";
+    const WCHAR* formatName = L"";
     switch (GetPaperFormat(size)) {
-    case Paper_A4: formatName = L" (A4)"; break;
-    case Paper_A3: formatName = L" (A3)"; break;
-    case Paper_A5: formatName = L" (A5)"; break;
-    case Paper_Letter: formatName = L" (Letter)"; break;
-    case Paper_Legal: formatName = L" (Legal)"; break;
-    case Paper_Tabloid: formatName = L" (Tabloid)"; break;
-    case Paper_Statement: formatName = L" (Statement)"; break;
+        case Paper_A4:
+            formatName = L" (A4)";
+            break;
+        case Paper_A3:
+            formatName = L" (A3)";
+            break;
+        case Paper_A5:
+            formatName = L" (A5)";
+            break;
+        case Paper_Letter:
+            formatName = L" (Letter)";
+            break;
+        case Paper_Legal:
+            formatName = L" (Legal)";
+            break;
+        case Paper_Tabloid:
+            formatName = L" (Tabloid)";
+            break;
+        case Paper_Statement:
+            formatName = L" (Statement)";
+            break;
     }
 
     bool isMetric = GetMeasurementSystem() == 0;
     double unitsPerInch = isMetric ? 2.54 : 1.0;
-    const WCHAR *unit = isMetric ? L"cm" : L"in";
+    const WCHAR* unit = isMetric ? L"cm" : L"in";
 
     double width = size.dx * unitsPerInch;
     double height = size.dy * unitsPerInch;
@@ -263,8 +265,7 @@ static WCHAR *FormatPageSize(BaseEngine *engine, int pageNo, int rotation)
     return str::Format(L"%s x %s %s%s", strWidth.Get(), strHeight.Get(), unit, formatName);
 }
 
-static WCHAR *FormatPdfFileStructure(Controller *ctrl)
-{
+static WCHAR* FormatPdfFileStructure(Controller* ctrl) {
     AutoFreeW fstruct(ctrl->GetProperty(Prop_PdfFileStructure));
     if (str::IsEmpty(fstruct.Get()))
         return nullptr;
@@ -289,14 +290,13 @@ static WCHAR *FormatPdfFileStructure(Controller *ctrl)
 
 // returns a list of permissions denied by this document
 // Caller needs to free the result
-static WCHAR *FormatPermissions(Controller *ctrl)
-{
+static WCHAR* FormatPermissions(Controller* ctrl) {
     if (!ctrl->AsFixed())
         return nullptr;
 
     WStrVec denials;
 
-    BaseEngine *engine = ctrl->AsFixed()->GetEngine();
+    BaseEngine* engine = ctrl->AsFixed()->GetEngine();
     if (!engine->AllowsPrinting())
         denials.Push(str::Dup(_TR("printing document")));
     if (!engine->AllowsCopyingText())
@@ -305,8 +305,7 @@ static WCHAR *FormatPermissions(Controller *ctrl)
     return denials.Join(L", ");
 }
 
-static void UpdatePropertiesLayout(PropertiesLayout *layoutData, HDC hdc, RectI *rect)
-{
+static void UpdatePropertiesLayout(PropertiesLayout* layoutData, HDC hdc, RectI* rect) {
     ScopedFont fontLeftTxt(CreateSimpleFont(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE));
     ScopedFont fontRightTxt(CreateSimpleFont(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE));
     HGDIOBJ origFont = SelectObject(hdc, fontLeftTxt);
@@ -315,9 +314,9 @@ static void UpdatePropertiesLayout(PropertiesLayout *layoutData, HDC hdc, RectI 
     SelectObject(hdc, fontLeftTxt);
     int leftMaxDx = 0;
     for (size_t i = 0; i < layoutData->size(); i++) {
-        PropertyEl *el = layoutData->at(i);
-        const WCHAR *txt = el->leftTxt;
-        RECT rc = { 0 };
+        PropertyEl* el = layoutData->at(i);
+        const WCHAR* txt = el->leftTxt;
+        RECT rc = {0};
         DrawText(hdc, txt, -1, &rc, DT_NOPREFIX | DT_CALCRECT);
         el->leftPos.dx = rc.right - rc.left;
         // el->leftPos.dy is set below to be equal to el->rightPos.dy
@@ -332,9 +331,9 @@ static void UpdatePropertiesLayout(PropertiesLayout *layoutData, HDC hdc, RectI 
     int lineCount = 0;
     int textDy = 0;
     for (size_t i = 0; i < layoutData->size(); i++) {
-        PropertyEl *el = layoutData->at(i);
-        const WCHAR *txt = el->rightTxt;
-        RECT rc = { 0 };
+        PropertyEl* el = layoutData->at(i);
+        const WCHAR* txt = el->rightTxt;
+        RECT rc = {0};
         DrawText(hdc, txt, -1, &rc, DT_NOPREFIX | DT_CALCRECT);
         el->rightPos.dx = rc.right - rc.left;
         el->leftPos.dy = el->rightPos.dy = rc.bottom - rc.top;
@@ -358,7 +357,7 @@ static void UpdatePropertiesLayout(PropertiesLayout *layoutData, HDC hdc, RectI 
 
     int currY = 0;
     for (size_t i = 0; i < layoutData->size(); i++) {
-        PropertyEl *el = layoutData->at(i);
+        PropertyEl* el = layoutData->at(i);
         el->leftPos = RectI(offset, offset + currY, leftMaxDx, el->leftPos.dy);
         el->rightPos.x = offset + leftMaxDx + PROPERTIES_LEFT_RIGHT_SPACE_DX;
         el->rightPos.y = offset + currY;
@@ -368,16 +367,11 @@ static void UpdatePropertiesLayout(PropertiesLayout *layoutData, HDC hdc, RectI 
     SelectObject(hdc, origFont);
 }
 
-static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData)
-{
+static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData) {
     CrashIf(layoutData->hwnd);
-    HWND hwnd = CreateWindow(
-           PROPERTIES_CLASS_NAME, PROPERTIES_WIN_TITLE,
-           WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
-           CW_USEDEFAULT, CW_USEDEFAULT,
-           CW_USEDEFAULT, CW_USEDEFAULT,
-           nullptr, nullptr,
-           GetModuleHandle(nullptr), nullptr);
+    HWND hwnd = CreateWindow(PROPERTIES_CLASS_NAME, PROPERTIES_WIN_TITLE, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
+                             CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, nullptr, nullptr,
+                             GetModuleHandle(nullptr), nullptr);
     if (!hwnd)
         return false;
 
@@ -406,11 +400,10 @@ static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData)
     return true;
 }
 
-static void GetProps(Controller *ctrl, PropertiesLayout *layoutData, bool extended)
-{
+static void GetProps(Controller* ctrl, PropertiesLayout* layoutData, bool extended) {
     CrashIf(!ctrl);
 
-    WCHAR *str = str::Dup(gPluginMode ? gPluginURL : ctrl->FilePath());
+    WCHAR* str = str::Dup(gPluginMode ? gPluginURL : ctrl->FilePath());
     layoutData->AddProperty(_TR("File:"), str, true);
 
     str = ctrl->GetProperty(Prop_Title);
@@ -473,7 +466,7 @@ static void GetProps(Controller *ctrl, PropertiesLayout *layoutData, bool extend
         if (IsUIRightToLeft() && IsVistaOrGreater()) {
             // ensure that the size remains ungarbled left-to-right
             // (note: XP doesn't know about \u202A...\u202C)
-            WCHAR *tmp = str;
+            WCHAR* tmp = str;
             str = str::Format(L"\u202A%s\u202C", tmp);
             free(tmp);
         }
@@ -498,9 +491,8 @@ static void GetProps(Controller *ctrl, PropertiesLayout *layoutData, bool extend
 #endif
 }
 
-static void ShowProperties(HWND parent, Controller *ctrl, bool extended=false)
-{
-    PropertiesLayout *layoutData = FindPropertyWindowByParent(parent);
+static void ShowProperties(HWND parent, Controller* ctrl, bool extended = false) {
+    PropertiesLayout* layoutData = FindPropertyWindowByParent(parent);
     if (layoutData) {
         SetActiveWindow(layoutData->hwnd);
         return;
@@ -516,14 +508,12 @@ static void ShowProperties(HWND parent, Controller *ctrl, bool extended=false)
         delete layoutData;
 }
 
-void OnMenuProperties(WindowInfo *win)
-{
+void OnMenuProperties(WindowInfo* win) {
     ShowProperties(win->hwndFrame, win->ctrl);
 }
 
-static void DrawProperties(HWND hwnd, HDC hdc)
-{
-    PropertiesLayout *layoutData = FindPropertyWindowByHwnd(hwnd);
+static void DrawProperties(HWND hwnd, HDC hdc) {
+    PropertiesLayout* layoutData = FindPropertyWindowByHwnd(hwnd);
 
     ScopedFont fontLeftTxt(CreateSimpleFont(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE));
     ScopedFont fontRightTxt(CreateSimpleFont(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE));
@@ -544,8 +534,8 @@ static void DrawProperties(HWND hwnd, HDC hdc)
     /* render text on the left*/
     SelectObject(hdc, fontLeftTxt);
     for (size_t i = 0; i < layoutData->size(); i++) {
-        PropertyEl *el = layoutData->at(i);
-        const WCHAR *txt = el->leftTxt;
+        PropertyEl* el = layoutData->at(i);
+        const WCHAR* txt = el->leftTxt;
         rTmp = el->leftPos.ToRECT();
         DrawText(hdc, txt, -1, &rTmp, DT_RIGHT | DT_NOPREFIX);
     }
@@ -553,8 +543,8 @@ static void DrawProperties(HWND hwnd, HDC hdc)
     /* render text on the right */
     SelectObject(hdc, fontRightTxt);
     for (size_t i = 0; i < layoutData->size(); i++) {
-        PropertyEl *el = layoutData->at(i);
-        const WCHAR *txt = el->rightTxt;
+        PropertyEl* el = layoutData->at(i);
+        const WCHAR* txt = el->rightTxt;
         RectI rc = el->rightPos;
         if (rc.x + rc.dx > rcClient.x + rcClient.dx - PROPERTIES_RECT_PADDING)
             rc.dx = rcClient.x + rcClient.dx - PROPERTIES_RECT_PADDING - rc.x;
@@ -566,8 +556,7 @@ static void DrawProperties(HWND hwnd, HDC hdc)
     SelectObject(hdc, origFont);
 }
 
-static void OnPaintProperties(HWND hwnd)
-{
+static void OnPaintProperties(HWND hwnd) {
     PAINTSTRUCT ps;
     RectI rc;
     HDC hdc = BeginPaint(hwnd, &ps);
@@ -576,52 +565,48 @@ static void OnPaintProperties(HWND hwnd)
     EndPaint(hwnd, &ps);
 }
 
-static void CopyPropertiesToClipboard(HWND hwnd)
-{
-    PropertiesLayout *layoutData = FindPropertyWindowByHwnd(hwnd);
+static void CopyPropertiesToClipboard(HWND hwnd) {
+    PropertiesLayout* layoutData = FindPropertyWindowByHwnd(hwnd);
     if (!layoutData)
         return;
 
     // concatenate all the properties into a multi-line string
     str::Str<WCHAR> lines(256);
     for (size_t i = 0; i < layoutData->size(); i++) {
-        PropertyEl *el = layoutData->at(i);
+        PropertyEl* el = layoutData->at(i);
         lines.AppendFmt(L"%s %s\r\n", el->leftTxt, el->rightTxt);
     }
 
     CopyTextToClipboard(lines.LendData());
 }
 
-static void PropertiesOnCommand(HWND hwnd, WPARAM wParam)
-{
+static void PropertiesOnCommand(HWND hwnd, WPARAM wParam) {
     switch (LOWORD(wParam)) {
-    case IDM_COPY_SELECTION:
-        CopyPropertiesToClipboard(hwnd);
-        break;
+        case IDM_COPY_SELECTION:
+            CopyPropertiesToClipboard(hwnd);
+            break;
 
-    case IDM_PROPERTIES:
+        case IDM_PROPERTIES:
 #if defined(DEBUG) || defined(ENABLE_EXTENDED_PROPERTIES)
-        // make a repeated Ctrl+D display some extended properties
-        // TODO: expose this through a UI button or similar
-        PropertiesLayout *pl = FindPropertyWindowByHwnd(hwnd);
-        if (pl) {
-            WindowInfo *win = FindWindowInfoByHwnd(pl->hwndParent);
-            if (win && !pl->HasProperty(_TR("Fonts:"))) {
-                DestroyWindow(hwnd);
-                ShowProperties(win->hwndFrame, win->ctrl, true);
+            // make a repeated Ctrl+D display some extended properties
+            // TODO: expose this through a UI button or similar
+            PropertiesLayout* pl = FindPropertyWindowByHwnd(hwnd);
+            if (pl) {
+                WindowInfo* win = FindWindowInfoByHwnd(pl->hwndParent);
+                if (win && !pl->HasProperty(_TR("Fonts:"))) {
+                    DestroyWindow(hwnd);
+                    ShowProperties(win->hwndFrame, win->ctrl, true);
+                }
             }
-        }
 #endif
-        break;
+            break;
     }
 }
 
-LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    PropertiesLayout *pl;
+LRESULT CALLBACK WndProcProperties(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
+    PropertiesLayout* pl;
 
-    switch (message)
-    {
+    switch (message) {
         case WM_CREATE:
             break;
 

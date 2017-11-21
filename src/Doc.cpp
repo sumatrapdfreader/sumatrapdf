@@ -3,11 +3,12 @@
 
 // utils
 #include "BaseUtil.h"
+#include "ScopedWin.h"
 #include "Archive.h"
 #include "HtmlParserLookup.h"
 #include "HtmlPullParser.h"
 #include "Mui.h"
-// rendering engines
+
 #include "BaseEngine.h"
 #include "EbookBase.h"
 #include "EbookDoc.h"

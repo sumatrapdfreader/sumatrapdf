@@ -1,14 +1,14 @@
 /* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// utils
 #include "BaseUtil.h"
+#include "ScopedWin.h"
+
 #include "FileUtil.h"
 #include "SquareTreeParser.h"
-// rendering engines
+
 #include "BaseEngine.h"
 #include "FileModifications.h"
-// ui
 #include "Version.h"
 
 /*

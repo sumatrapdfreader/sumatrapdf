@@ -2,6 +2,7 @@
    License: GPLv3 */
 
 #include "BaseUtil.h"
+#include "ScopedWin.h"
 #include "Dpi.h"
 #include "GdiPlusUtil.h"
 #include "LabelWithCloseWnd.h"
@@ -30,11 +31,10 @@
 // #define DISPLAY_TOC_PAGE_NUMBERS
 
 #ifdef DISPLAY_TOC_PAGE_NUMBERS
-#define WM_APP_REPAINT_TOC     (WM_APP + 1)
+#define WM_APP_REPAINT_TOC (WM_APP + 1)
 #endif
 
-static void TreeView_ExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, bool subtree=false)
-{
+static void TreeView_ExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, bool subtree = false) {
     while (hItem) {
         TreeView_Expand(hTree, hItem, flag);
         HTREEITEM child = TreeView_GetChild(hTree, hItem);
@@ -46,14 +46,14 @@ static void TreeView_ExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, b
     }
 }
 
-static void CustomizeTocInfoTip(LPNMTVGETINFOTIP nmit)
-{
-    PageDestination *link = ((DocTocItem *)nmit->lParam)->GetLink();
+static void CustomizeTocInfoTip(LPNMTVGETINFOTIP nmit) {
+    PageDestination* link = ((DocTocItem*)nmit->lParam)->GetLink();
     AutoFreeW path(link ? link->GetDestValue() : nullptr);
     if (!path)
         return;
     CrashIf(!link); // /analyze claims that this could happen - it really can't
-    CrashIf(link->GetDestType() != Dest_LaunchURL && link->GetDestType() != Dest_LaunchFile && link->GetDestType() != Dest_LaunchEmbedded);
+    CrashIf(link->GetDestType() != Dest_LaunchURL && link->GetDestType() != Dest_LaunchFile &&
+            link->GetDestType() != Dest_LaunchEmbedded);
 
     str::Str<WCHAR> infotip;
 
@@ -63,7 +63,7 @@ static void CustomizeTocInfoTip(LPNMTVGETINFOTIP nmit)
     TreeView_GetItemRect(hTV, nmit->hItem, &rcLine, FALSE);
     TreeView_GetItemRect(hTV, nmit->hItem, &rcLabel, TRUE);
     if (rcLine.right + 2 < rcLabel.right) {
-        WCHAR buf[INFOTIPSIZE+1] = { 0 };  // +1 just in case
+        WCHAR buf[INFOTIPSIZE + 1] = {0}; // +1 just in case
         TVITEM item;
         item.hItem = nmit->hItem;
         item.mask = TVIF_TEXT;
@@ -82,8 +82,7 @@ static void CustomizeTocInfoTip(LPNMTVGETINFOTIP nmit)
 }
 
 #ifdef DISPLAY_TOC_PAGE_NUMBERS
-static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd)
-{
+static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd) {
     // code inspired by http://www.codeguru.com/cpp/controls/treeview/multiview/article.php/c3985/
     LPNMCUSTOMDRAW ncd = &ntvcd->nmcd;
     HWND hTV = ncd->hdr.hwndFrom;
@@ -111,8 +110,8 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd)
     TreeView_GetItem(hTV, &item);
 
     // Draw the page number right-aligned (if there is one)
-    WindowInfo *win = FindWindowInfoByHwnd(hTV);
-    DocTocItem *tocItem = (DocTocItem *)item.lParam;
+    WindowInfo* win = FindWindowInfoByHwnd(hTV);
+    DocTocItem* tocItem = (DocTocItem*)item.lParam;
     AutoFreeW label;
     if (tocItem->pageNo && win && win->IsDocLoaded()) {
         label.Set(win->ctrl->GetPageLabel(tocItem->pageNo));
@@ -150,8 +149,7 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd)
 }
 #endif
 
-
-static void GoToTocLinkTask(WindowInfo *win, DocTocItem *tocItem, TabInfo *tab, Controller *ctrl) {
+static void GoToTocLinkTask(WindowInfo* win, DocTocItem* tocItem, TabInfo* tab, Controller* ctrl) {
     // tocItem is invalid if the Controller has been replaced
     if (!WindowInfoStillValid(win) || win->currentTab != tab || tab->ctrl != ctrl)
         return;
@@ -166,8 +164,7 @@ static void GoToTocLinkTask(WindowInfo *win, DocTocItem *tocItem, TabInfo *tab, 
     win->tocKeepSelection = false;
 }
 
-static void GoToTocLinkForTVItem(WindowInfo* win, HWND hTV, HTREEITEM hItem=nullptr, bool allowExternal=true)
-{
+static void GoToTocLinkForTVItem(WindowInfo* win, HWND hTV, HTREEITEM hItem = nullptr, bool allowExternal = true) {
     if (!hItem)
         hItem = TreeView_GetSelection(hTV);
 
@@ -175,21 +172,19 @@ static void GoToTocLinkForTVItem(WindowInfo* win, HWND hTV, HTREEITEM hItem=null
     item.hItem = hItem;
     item.mask = TVIF_PARAM;
     TreeView_GetItem(hTV, &item);
-    DocTocItem *tocItem = (DocTocItem *)item.lParam;
+    DocTocItem* tocItem = (DocTocItem*)item.lParam;
     if (!tocItem || !win->IsDocLoaded())
         return;
-    if ((allowExternal || tocItem->GetLink() && Dest_ScrollTo == tocItem->GetLink()->GetDestType()) || tocItem->pageNo) {
+    if ((allowExternal || tocItem->GetLink() && Dest_ScrollTo == tocItem->GetLink()->GetDestType()) ||
+        tocItem->pageNo) {
         // delay changing the page until the tree messages have been handled
-        TabInfo *tab = win->currentTab;
-        Controller *ctrl = win->ctrl;
-        uitask::Post([=] {
-            GoToTocLinkTask(win, tocItem, tab, ctrl);
-        });
+        TabInfo* tab = win->currentTab;
+        Controller* ctrl = win->ctrl;
+        uitask::Post([=] { GoToTocLinkTask(win, tocItem, tab, ctrl); });
     }
 }
 
-void ClearTocBox(WindowInfo *win)
-{
+void ClearTocBox(WindowInfo* win) {
     if (!win->tocLoaded)
         return;
 
@@ -202,21 +197,19 @@ void ClearTocBox(WindowInfo *win)
     win->tocLoaded = false;
 }
 
-void ToggleTocBox(WindowInfo *win)
-{
+void ToggleTocBox(WindowInfo* win) {
     if (!win->IsDocLoaded())
         return;
     if (win->tocVisible) {
         SetSidebarVisibility(win, false, gGlobalPrefs->showFavorites);
     } else {
-        SetSidebarVisibility(win, true,  gGlobalPrefs->showFavorites);
+        SetSidebarVisibility(win, true, gGlobalPrefs->showFavorites);
         if (win->tocVisible)
             SetFocus(win->hwndTocTree);
     }
 }
 
-static HTREEITEM AddTocItemToView(HWND hwnd, DocTocItem *entry, HTREEITEM parent, bool toggleItem)
-{
+static HTREEITEM AddTocItemToView(HWND hwnd, DocTocItem* entry, HTREEITEM parent, bool toggleItem) {
     TV_INSERTSTRUCT tvinsert;
     tvinsert.hParent = parent;
     tvinsert.hInsertAfter = TVI_LAST;
@@ -229,7 +222,7 @@ static HTREEITEM AddTocItemToView(HWND hwnd, DocTocItem *entry, HTREEITEM parent
     tvinsert.itemex.pszText = entry->title;
 
 #ifdef DISPLAY_TOC_PAGE_NUMBERS
-    WindowInfo *win = FindWindowInfoByHwnd(hwnd);
+    WindowInfo* win = FindWindowInfoByHwnd(hwnd);
     if (entry->pageNo && win && win->IsDocLoaded() && !win->AsEbook()) {
         AutoFreeW label(win->ctrl->GetPageLabel(entry->pageNo));
         AutoFreeW text(str::Format(L"%s  %s", entry->title, label));
@@ -241,8 +234,7 @@ static HTREEITEM AddTocItemToView(HWND hwnd, DocTocItem *entry, HTREEITEM parent
     return TreeView_InsertItem(hwnd, &tvinsert);
 }
 
-static void PopulateTocTreeView(HWND hwnd, DocTocItem *entry, Vec<int>& tocState, HTREEITEM parent = nullptr)
-{
+static void PopulateTocTreeView(HWND hwnd, DocTocItem* entry, Vec<int>& tocState, HTREEITEM parent = nullptr) {
     for (; entry; entry = entry->next) {
         bool toggle = tocState.Contains(entry->id);
         HTREEITEM node = AddTocItemToView(hwnd, entry, parent, toggle);
@@ -250,8 +242,8 @@ static void PopulateTocTreeView(HWND hwnd, DocTocItem *entry, Vec<int>& tocState
     }
 }
 
-static void TreeItemForPageNoRec(WindowInfo *win, HTREEITEM hItem, int pageNo, HTREEITEM& bestMatchItem, int& bestMatchPageNo)
-{
+static void TreeItemForPageNoRec(WindowInfo* win, HTREEITEM hItem, int pageNo, HTREEITEM& bestMatchItem,
+                                 int& bestMatchPageNo) {
     while (hItem && bestMatchPageNo < pageNo) {
         TVITEM item;
         item.hItem = hItem;
@@ -261,7 +253,7 @@ static void TreeItemForPageNoRec(WindowInfo *win, HTREEITEM hItem, int pageNo, H
 
         // remember this item if it is on the specified page (or on a previous page and closer than all other items)
         if (item.lParam) {
-            int page = ((DocTocItem *)item.lParam)->pageNo;
+            int page = ((DocTocItem*)item.lParam)->pageNo;
             if (page <= pageNo && page >= bestMatchPageNo && page >= 1) {
                 bestMatchItem = hItem;
                 bestMatchPageNo = page;
@@ -270,14 +262,14 @@ static void TreeItemForPageNoRec(WindowInfo *win, HTREEITEM hItem, int pageNo, H
 
         // find any child item closer to the specified page
         if ((item.state & TVIS_EXPANDED))
-            TreeItemForPageNoRec(win, TreeView_GetChild(win->hwndTocTree, hItem), pageNo, bestMatchItem, bestMatchPageNo);
+            TreeItemForPageNoRec(win, TreeView_GetChild(win->hwndTocTree, hItem), pageNo, bestMatchItem,
+                                 bestMatchPageNo);
 
         hItem = TreeView_GetNextSibling(win->hwndTocTree, hItem);
     }
 }
 
-static HTREEITEM TreeItemForPageNo(WindowInfo *win, HTREEITEM hRoot, int pageNo)
-{
+static HTREEITEM TreeItemForPageNo(WindowInfo* win, HTREEITEM hRoot, int pageNo) {
     HTREEITEM bestMatchItem = hRoot;
     int bestMatchPageNo = 0;
 
@@ -286,8 +278,7 @@ static HTREEITEM TreeItemForPageNo(WindowInfo *win, HTREEITEM hRoot, int pageNo)
     return bestMatchItem;
 }
 
-void UpdateTocSelection(WindowInfo *win, int currPageNo)
-{
+void UpdateTocSelection(WindowInfo* win, int currPageNo) {
     if (!win->tocLoaded || !win->tocVisible || win->tocKeepSelection)
         return;
 
@@ -300,8 +291,7 @@ void UpdateTocSelection(WindowInfo *win, int currPageNo)
     TreeView_SelectItem(win->hwndTocTree, hItem);
 }
 
-void UpdateTocExpansionState(TabInfo *tab, HWND hwndTocTree, HTREEITEM hItem)
-{
+void UpdateTocExpansionState(TabInfo* tab, HWND hwndTocTree, HTREEITEM hItem) {
     while (hItem) {
         TVITEM item;
         item.hItem = hItem;
@@ -309,7 +299,7 @@ void UpdateTocExpansionState(TabInfo *tab, HWND hwndTocTree, HTREEITEM hItem)
         item.stateMask = TVIS_EXPANDED;
         TreeView_GetItem(hwndTocTree, &item);
 
-        DocTocItem *tocItem = item.lParam ? (DocTocItem *)item.lParam : nullptr;
+        DocTocItem* tocItem = item.lParam ? (DocTocItem*)item.lParam : nullptr;
         if (tocItem && tocItem->child) {
             // add the ids of toggled items to tocState
             bool wasToggled = !(item.state & TVIS_EXPANDED) == tocItem->open;
@@ -322,8 +312,7 @@ void UpdateTocExpansionState(TabInfo *tab, HWND hwndTocTree, HTREEITEM hItem)
     }
 }
 
-void UpdateTocColors(WindowInfo *win)
-{
+void UpdateTocColors(WindowInfo* win) {
     COLORREF labelBgCol = GetSysColor(COLOR_BTNFACE);
     COLORREF labelTxtCol = GetSysColor(COLOR_BTNTEXT);
     COLORREF treeBgCol = (DWORD)-1;
@@ -349,9 +338,9 @@ void UpdateTocColors(WindowInfo *win)
     SetWindowPos(win->hwndTocTree, nullptr, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED);
 
     // TODO: if we have favorites in ebook view, we'll need this
-    //SetBgCol(win->favLabelWithClose, labelBgCol);
-    //SetTextCol(win->favLabelWithClose, labelTxtCol);
-    //SetBgCol(win->favSplitter, labelTxtCol);
+    // SetBgCol(win->favLabelWithClose, labelBgCol);
+    // SetTextCol(win->favLabelWithClose, labelTxtCol);
+    // SetBgCol(win->favSplitter, labelTxtCol);
 
     // TODO: more work needed to to ensure consistent look of the ebook window:
     // - tab bar should match the color
@@ -362,15 +351,17 @@ void UpdateTocColors(WindowInfo *win)
 }
 
 // copied from mupdf/fitz/dev_text.c
-#define ISLEFTTORIGHTCHAR(c) ((0x0041 <= (c) && (c) <= 0x005A) || (0x0061 <= (c) && (c) <= 0x007A) || (0xFB00 <= (c) && (c) <= 0xFB06))
-#define ISRIGHTTOLEFTCHAR(c) ((0x0590 <= (c) && (c) <= 0x05FF) || (0x0600 <= (c) && (c) <= 0x06FF) || (0x0750 <= (c) && (c) <= 0x077F) || (0xFB50 <= (c) && (c) <= 0xFDFF) || (0xFE70 <= (c) && (c) <= 0xFEFF))
+#define ISLEFTTORIGHTCHAR(c) \
+    ((0x0041 <= (c) && (c) <= 0x005A) || (0x0061 <= (c) && (c) <= 0x007A) || (0xFB00 <= (c) && (c) <= 0xFB06))
+#define ISRIGHTTOLEFTCHAR(c)                                                                                     \
+    ((0x0590 <= (c) && (c) <= 0x05FF) || (0x0600 <= (c) && (c) <= 0x06FF) || (0x0750 <= (c) && (c) <= 0x077F) || \
+     (0xFB50 <= (c) && (c) <= 0xFDFF) || (0xFE70 <= (c) && (c) <= 0xFEFF))
 
-static void GetLeftRightCounts(DocTocItem *node, int& l2r, int& r2l)
-{
+static void GetLeftRightCounts(DocTocItem* node, int& l2r, int& r2l) {
     if (!node)
         return;
     if (node->title) {
-        for (const WCHAR *c = node->title; *c; c++) {
+        for (const WCHAR* c = node->title; *c; c++) {
             if (ISLEFTTORIGHTCHAR(*c))
                 l2r++;
             else if (ISRIGHTTOLEFTCHAR(*c))
@@ -381,9 +372,8 @@ static void GetLeftRightCounts(DocTocItem *node, int& l2r, int& r2l)
     GetLeftRightCounts(node->next, l2r, r2l);
 }
 
-void LoadTocTree(WindowInfo *win)
-{
-    TabInfo *tab = win->currentTab;
+void LoadTocTree(WindowInfo* win) {
+    TabInfo* tab = win->currentTab;
     CrashIf(!tab);
 
     if (win->tocLoaded)
@@ -411,14 +401,12 @@ void LoadTocTree(WindowInfo *win)
     RedrawWindow(win->hwndTocTree, nullptr, nullptr, fl);
 }
 
-static LRESULT OnTocTreeNotify(WindowInfo *win, LPNMTREEVIEW pnmtv)
-{
-    switch (pnmtv->hdr.code)
-    {
+static LRESULT OnTocTreeNotify(WindowInfo* win, LPNMTREEVIEW pnmtv) {
+    switch (pnmtv->hdr.code) {
         case TVN_SELCHANGED:
             // When the focus is set to the toc window the first item in the treeview is automatically
-            // selected and a TVN_SELCHANGEDW notification message is sent with the special code pnmtv->action == 0x00001000.
-            // We have to ignore this message to prevent the current page to be changed.
+            // selected and a TVN_SELCHANGEDW notification message is sent with the special code pnmtv->action ==
+            // 0x00001000. We have to ignore this message to prevent the current page to be changed.
             if (TVC_BYKEYBOARD == pnmtv->action || TVC_BYMOUSE == pnmtv->action)
                 GoToTocLinkForTVItem(win, pnmtv->hdr.hwndFrom, pnmtv->itemNew.hItem, TVC_BYMOUSE == pnmtv->action);
             // The case pnmtv->action==TVC_UNKNOWN is ignored because
@@ -427,7 +415,7 @@ static LRESULT OnTocTreeNotify(WindowInfo *win, LPNMTREEVIEW pnmtv)
             break;
 
         case TVN_KEYDOWN: {
-            TV_KEYDOWN *ptvkd = (TV_KEYDOWN *)pnmtv;
+            TV_KEYDOWN* ptvkd = (TV_KEYDOWN*)pnmtv;
             if (VK_TAB == ptvkd->wVKey) {
                 if (win->tabsVisible && IsCtrlPressed())
                     TabsOnCtrlTab(win, IsShiftPressed());
@@ -439,7 +427,7 @@ static LRESULT OnTocTreeNotify(WindowInfo *win, LPNMTREEVIEW pnmtv)
         }
         case NM_CLICK: {
             // Determine which item has been clicked (if any)
-            TVHITTESTINFO ht = { 0 };
+            TVHITTESTINFO ht = {0};
             DWORD pos = GetMessagePos();
             ht.pt.x = GET_X_LPARAM(pos);
             ht.pt.y = GET_Y_LPARAM(pos);
@@ -460,15 +448,15 @@ static LRESULT OnTocTreeNotify(WindowInfo *win, LPNMTREEVIEW pnmtv)
             if (win->AsEbook())
                 return CDRF_DODEFAULT;
             switch (((LPNMCUSTOMDRAW)pnmtv)->dwDrawStage) {
-            case CDDS_PREPAINT:
-                return CDRF_NOTIFYITEMDRAW;
-            case CDDS_ITEMPREPAINT:
-                return CDRF_DODEFAULT | CDRF_NOTIFYPOSTPAINT;
-            case CDDS_ITEMPOSTPAINT:
-                RelayoutTocItem((LPNMTVCUSTOMDRAW)pnmtv);
-                // fall through
-            default:
-                return CDRF_DODEFAULT;
+                case CDDS_PREPAINT:
+                    return CDRF_NOTIFYITEMDRAW;
+                case CDDS_ITEMPREPAINT:
+                    return CDRF_DODEFAULT | CDRF_NOTIFYPOSTPAINT;
+                case CDDS_ITEMPOSTPAINT:
+                    RelayoutTocItem((LPNMTVCUSTOMDRAW)pnmtv);
+                    // fall through
+                default:
+                    return CDRF_DODEFAULT;
             }
             break;
 #else
@@ -483,9 +471,8 @@ static LRESULT OnTocTreeNotify(WindowInfo *win, LPNMTREEVIEW pnmtv)
 }
 
 static WNDPROC DefWndProcTocTree = nullptr;
-static LRESULT CALLBACK WndProcTocTree(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    WindowInfo *win = FindWindowInfoByHwnd(hwnd);
+static LRESULT CALLBACK WndProcTocTree(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
+    WindowInfo* win = FindWindowInfoByHwnd(hwnd);
     if (!win)
         return CallWindowProc(DefWndProcTocTree, hwnd, message, wParam, lParam);
 
@@ -507,8 +494,7 @@ static LRESULT CALLBACK WndProcTocTree(HWND hwnd, UINT message, WPARAM wParam, L
                 if (!TreeView_GetNextSibling(hwnd, root))
                     root = TreeView_GetChild(hwnd, root);
                 TreeView_ExpandRecursively(hwnd, root, TVE_COLLAPSE);
-            }
-            else if (VK_DIVIDE == wParam)
+            } else if (VK_DIVIDE == wParam)
                 TreeView_ExpandRecursively(hwnd, TreeView_GetSelection(hwnd), TVE_COLLAPSE, true);
             else
                 break;
@@ -536,9 +522,8 @@ static LRESULT CALLBACK WndProcTocTree(HWND hwnd, UINT message, WPARAM wParam, L
 }
 
 static WNDPROC DefWndProcTocBox = nullptr;
-static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-    WindowInfo *win = FindWindowInfoByHwnd(hwnd);
+static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    WindowInfo* win = FindWindowInfoByHwnd(hwnd);
     if (!win)
         return CallWindowProc(DefWndProcTocBox, hwnd, msg, wParam, lParam);
 
@@ -563,23 +548,21 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wParam, LPARAM
     return CallWindowProc(DefWndProcTocBox, hwnd, msg, wParam, lParam);
 }
 
-void CreateToc(WindowInfo *win)
-{
-    win->hwndTocBox = CreateWindow(WC_STATIC, L"", WS_CHILD|WS_CLIPCHILDREN,
-                                   0, 0, gGlobalPrefs->sidebarDx, 0,
+void CreateToc(WindowInfo* win) {
+    win->hwndTocBox = CreateWindow(WC_STATIC, L"", WS_CHILD | WS_CLIPCHILDREN, 0, 0, gGlobalPrefs->sidebarDx, 0,
                                    win->hwndFrame, (HMENU)0, GetModuleHandle(nullptr), nullptr);
 
-    LabelWithCloseWnd *l = CreateLabelWithCloseWnd(win->hwndTocBox, IDC_TOC_LABEL_WITH_CLOSE);
+    LabelWithCloseWnd* l = CreateLabelWithCloseWnd(win->hwndTocBox, IDC_TOC_LABEL_WITH_CLOSE);
     win->tocLabelWithClose = l;
     SetPaddingXY(l, 2, 2);
     SetFont(l, GetDefaultGuiFont());
     // label is set in UpdateToolbarSidebarText()
 
-    win->hwndTocTree = CreateWindowEx(WS_EX_STATICEDGE, WC_TREEVIEW, L"TOC",
-                                      TVS_HASBUTTONS|TVS_HASLINES|TVS_LINESATROOT|TVS_SHOWSELALWAYS|
-                                      TVS_TRACKSELECT|TVS_DISABLEDRAGDROP|TVS_NOHSCROLL|TVS_INFOTIP|
-                                      WS_TABSTOP|WS_VISIBLE|WS_CHILD,
-                                      0, 0, 0, 0, win->hwndTocBox, (HMENU)IDC_TOC_TREE, GetModuleHandle(nullptr), nullptr);
+    win->hwndTocTree =
+        CreateWindowEx(WS_EX_STATICEDGE, WC_TREEVIEW, L"TOC",
+                       TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS | TVS_TRACKSELECT |
+                           TVS_DISABLEDRAGDROP | TVS_NOHSCROLL | TVS_INFOTIP | WS_TABSTOP | WS_VISIBLE | WS_CHILD,
+                       0, 0, 0, 0, win->hwndTocBox, (HMENU)IDC_TOC_TREE, GetModuleHandle(nullptr), nullptr);
 
     TreeView_SetUnicodeFormat(win->hwndTocTree, true);
 

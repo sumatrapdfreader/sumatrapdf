@@ -6,6 +6,7 @@
 #include "ZipUtil.h"
 
 #include "ByteWriter.h"
+#include "ScopedWin.h"
 #include "DirIter.h"
 #include "FileUtil.h"
 

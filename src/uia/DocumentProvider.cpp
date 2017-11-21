@@ -5,6 +5,7 @@
 #include <UIAutomationCore.h>
 #include <UIAutomationCoreApi.h>
 #include <OleAcc.h>
+#include "ScopedWin.h"
 #include "BaseEngine.h"
 #include "SettingsStructs.h"
 #include "Controller.h"
@@ -17,28 +18,30 @@
 #include "uia/Provider.h"
 #include "uia/TextRange.h"
 
-SumatraUIAutomationDocumentProvider::SumatraUIAutomationDocumentProvider(HWND canvasHwnd, SumatraUIAutomationProvider* root) :
-    refCount(1), canvasHwnd(canvasHwnd), root(root),
-    released(true), child_first(nullptr), child_last(nullptr),
-    dm(nullptr)
-{
-    //root->AddRef(); Don't add refs to our parent & owner.
+SumatraUIAutomationDocumentProvider::SumatraUIAutomationDocumentProvider(HWND canvasHwnd,
+                                                                         SumatraUIAutomationProvider* root)
+    : refCount(1),
+      canvasHwnd(canvasHwnd),
+      root(root),
+      released(true),
+      child_first(nullptr),
+      child_last(nullptr),
+      dm(nullptr) {
+    // root->AddRef(); Don't add refs to our parent & owner.
 }
 
-SumatraUIAutomationDocumentProvider::~SumatraUIAutomationDocumentProvider()
-{
+SumatraUIAutomationDocumentProvider::~SumatraUIAutomationDocumentProvider() {
     this->FreeDocument();
 }
 
-void SumatraUIAutomationDocumentProvider::LoadDocument(DisplayModel* newDm)
-{
+void SumatraUIAutomationDocumentProvider::LoadDocument(DisplayModel* newDm) {
     this->FreeDocument();
 
     // no mutexes needed, this function is called from thread that created dm
 
     // create page element for each page
     SumatraUIAutomationPageProvider* prevPage = nullptr;
-    for (int i=1; i<=newDm->PageCount(); ++i) {
+    for (int i = 1; i <= newDm->PageCount(); ++i) {
         SumatraUIAutomationPageProvider* currentPage = new SumatraUIAutomationPageProvider(i, canvasHwnd, newDm, this);
         currentPage->sibling_prev = prevPage;
         if (prevPage)
@@ -54,8 +57,7 @@ void SumatraUIAutomationDocumentProvider::LoadDocument(DisplayModel* newDm)
     released = false;
 }
 
-void SumatraUIAutomationDocumentProvider::FreeDocument()
-{
+void SumatraUIAutomationDocumentProvider::FreeDocument() {
     // release our refs to the page elements
     if (released)
         return;
@@ -78,49 +80,40 @@ void SumatraUIAutomationDocumentProvider::FreeDocument()
     child_last = nullptr;
 }
 
-bool SumatraUIAutomationDocumentProvider::IsDocumentLoaded() const
-{
+bool SumatraUIAutomationDocumentProvider::IsDocumentLoaded() const {
     return !released;
 }
 
-DisplayModel* SumatraUIAutomationDocumentProvider::GetDM()
-{
+DisplayModel* SumatraUIAutomationDocumentProvider::GetDM() {
     AssertCrash(IsDocumentLoaded());
     AssertCrash(dm);
     return dm;
 }
 
-SumatraUIAutomationPageProvider* SumatraUIAutomationDocumentProvider::GetFirstPage()
-{
+SumatraUIAutomationPageProvider* SumatraUIAutomationDocumentProvider::GetFirstPage() {
     AssertCrash(IsDocumentLoaded());
     return child_first;
 }
 
-SumatraUIAutomationPageProvider* SumatraUIAutomationDocumentProvider::GetLastPage()
-{
+SumatraUIAutomationPageProvider* SumatraUIAutomationDocumentProvider::GetLastPage() {
     AssertCrash(IsDocumentLoaded());
     return child_last;
 }
 
-HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::QueryInterface(REFIID riid, void **ppv)
-{
-    static const QITAB qit[] = {
-        QITABENT(SumatraUIAutomationDocumentProvider, IRawElementProviderSimple),
-        QITABENT(SumatraUIAutomationDocumentProvider, IRawElementProviderFragment),
-        QITABENT(SumatraUIAutomationDocumentProvider, ITextProvider),
-        QITABENT(SumatraUIAutomationDocumentProvider, IAccIdentity),
-        { 0 }
-    };
+HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::QueryInterface(REFIID riid, void** ppv) {
+    static const QITAB qit[] = {QITABENT(SumatraUIAutomationDocumentProvider, IRawElementProviderSimple),
+                                QITABENT(SumatraUIAutomationDocumentProvider, IRawElementProviderFragment),
+                                QITABENT(SumatraUIAutomationDocumentProvider, ITextProvider),
+                                QITABENT(SumatraUIAutomationDocumentProvider, IAccIdentity),
+                                {0}};
     return QISearch(this, qit, riid, ppv);
 }
 
-ULONG STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::AddRef(void)
-{
+ULONG STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::AddRef(void) {
     return InterlockedIncrement(&refCount);
 }
 
-ULONG STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::Release(void)
-{
+ULONG STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::Release(void) {
     LONG res = InterlockedDecrement(&refCount);
     CrashIf(res < 0);
     if (0 == res)
@@ -128,17 +121,15 @@ ULONG STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::Release(void)
     return res;
 }
 
-HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::Navigate(enum NavigateDirection direction, IRawElementProviderFragment **pRetVal)
-{
+HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::Navigate(enum NavigateDirection direction,
+                                                                        IRawElementProviderFragment** pRetVal) {
     if (pRetVal == nullptr)
         return E_POINTER;
 
-    if (direction == NavigateDirection_NextSibling ||
-        direction == NavigateDirection_PreviousSibling) {
+    if (direction == NavigateDirection_NextSibling || direction == NavigateDirection_PreviousSibling) {
         *pRetVal = nullptr;
         return S_OK;
-    } else if (direction == NavigateDirection_FirstChild ||
-             direction == NavigateDirection_LastChild) {
+    } else if (direction == NavigateDirection_FirstChild || direction == NavigateDirection_LastChild) {
         // don't allow traversion to enter invalid nodes
         if (released) {
             *pRetVal = nullptr;
@@ -160,17 +151,16 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::Navigate(enum Nav
     }
 }
 
-HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetRuntimeId(SAFEARRAY **pRetVal)
-{
+HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetRuntimeId(SAFEARRAY** pRetVal) {
     if (pRetVal == nullptr)
         return E_POINTER;
 
-    SAFEARRAY *psa = SafeArrayCreateVector(VT_I4, 0, 2);
+    SAFEARRAY* psa = SafeArrayCreateVector(VT_I4, 0, 2);
     if (!psa)
         return E_OUTOFMEMORY;
 
     // RuntimeID magic, use hwnd to differentiate providers of different windows
-    LONG rId[] = { (LONG)canvasHwnd, SUMATRA_UIA_DOCUMENT_RUNTIME_ID };
+    LONG rId[] = {(LONG)canvasHwnd, SUMATRA_UIA_DOCUMENT_RUNTIME_ID};
     for (LONG i = 0; i < 2; i++) {
         HRESULT hr = SafeArrayPutElement(psa, &i, (void*)&(rId[i]));
         CrashIf(FAILED(hr));
@@ -180,8 +170,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetRuntimeId(SAFE
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetEmbeddedFragmentRoots(SAFEARRAY **pRetVal)
-{
+HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetEmbeddedFragmentRoots(SAFEARRAY** pRetVal) {
     if (pRetVal == nullptr)
         return E_POINTER;
 
@@ -190,19 +179,17 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetEmbeddedFragme
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::SetFocus(void)
-{
+HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::SetFocus(void) {
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::get_BoundingRectangle(struct UiaRect *pRetVal)
-{
+HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::get_BoundingRectangle(struct UiaRect* pRetVal) {
     // share area with the canvas uia provider
     return root->get_BoundingRectangle(pRetVal);
 }
 
-HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::get_FragmentRoot(IRawElementProviderFragmentRoot **pRetVal)
-{
+HRESULT STDMETHODCALLTYPE
+SumatraUIAutomationDocumentProvider::get_FragmentRoot(IRawElementProviderFragmentRoot** pRetVal) {
     if (pRetVal == nullptr)
         return E_POINTER;
 
@@ -212,8 +199,8 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::get_FragmentRoot(
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetPatternProvider(PATTERNID patternId,IUnknown **pRetVal)
-{
+HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetPatternProvider(PATTERNID patternId,
+                                                                                  IUnknown** pRetVal) {
     if (pRetVal == nullptr)
         return E_POINTER;
 
@@ -227,8 +214,8 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetPatternProvide
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetPropertyValue(PROPERTYID propertyId,VARIANT *pRetVal)
-{
+HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetPropertyValue(PROPERTYID propertyId,
+                                                                                VARIANT* pRetVal) {
     if (pRetVal == nullptr)
         return E_POINTER;
     if (released)
@@ -265,30 +252,28 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetPropertyValue(
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::get_HostRawElementProvider(IRawElementProviderSimple **pRetVal)
-{
+HRESULT STDMETHODCALLTYPE
+SumatraUIAutomationDocumentProvider::get_HostRawElementProvider(IRawElementProviderSimple** pRetVal) {
     if (pRetVal == nullptr)
         return E_POINTER;
     *pRetVal = nullptr;
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::get_ProviderOptions(ProviderOptions *pRetVal)
-{
+HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::get_ProviderOptions(ProviderOptions* pRetVal) {
     if (pRetVal == nullptr)
         return E_POINTER;
     *pRetVal = ProviderOptions_ServerSideProvider;
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetSelection(SAFEARRAY * *pRetVal)
-{
+HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetSelection(SAFEARRAY** pRetVal) {
     if (pRetVal == nullptr)
         return E_POINTER;
     if (released)
         return E_FAIL;
 
-    SAFEARRAY *psa = SafeArrayCreateVector(VT_UNKNOWN, 0, 1);
+    SAFEARRAY* psa = SafeArrayCreateVector(VT_UNKNOWN, 0, 1);
     if (!psa)
         return E_OUTOFMEMORY;
 
@@ -305,8 +290,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetSelection(SAFE
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetVisibleRanges(SAFEARRAY * *pRetVal)
-{
+HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetVisibleRanges(SAFEARRAY** pRetVal) {
     if (pRetVal == nullptr)
         return E_POINTER;
     if (released)
@@ -316,8 +300,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetVisibleRanges(
     Vec<SumatraUIAutomationTextRange*> rangeArray;
     SumatraUIAutomationPageProvider* it = child_first;
     while (it && rangeArray.size() > ULONG_MAX) {
-        if (it->dm->GetPageInfo(it->pageNum) &&
-            it->dm->GetPageInfo(it->pageNum)->shown &&
+        if (it->dm->GetPageInfo(it->pageNum) && it->dm->GetPageInfo(it->pageNum)->shown &&
             it->dm->GetPageInfo(it->pageNum)->visibleRatio > 0.0f) {
             rangeArray.Append(new SumatraUIAutomationTextRange(this, it->pageNum));
         }
@@ -325,7 +308,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetVisibleRanges(
     }
     CrashIf(ULONG_MAX == rangeArray.size());
 
-    SAFEARRAY *psa = SafeArrayCreateVector(VT_UNKNOWN, 0, (ULONG)rangeArray.size());
+    SAFEARRAY* psa = SafeArrayCreateVector(VT_UNKNOWN, 0, (ULONG)rangeArray.size());
     if (!psa) {
         for (size_t i = 0; i < rangeArray.size(); i++) {
             rangeArray[i]->Release();
@@ -343,8 +326,8 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetVisibleRanges(
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::RangeFromChild(IRawElementProviderSimple *childElement, ITextRangeProvider **pRetVal)
-{
+HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::RangeFromChild(IRawElementProviderSimple* childElement,
+                                                                              ITextRangeProvider** pRetVal) {
     if (pRetVal == nullptr || childElement == nullptr)
         return E_POINTER;
     if (released)
@@ -356,16 +339,16 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::RangeFromChild(IR
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::RangeFromPoint(struct UiaPoint point, ITextRangeProvider **pRetVal)
-{
-    UNUSED(point); UNUSED(pRetVal);
+HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::RangeFromPoint(struct UiaPoint point,
+                                                                              ITextRangeProvider** pRetVal) {
+    UNUSED(point);
+    UNUSED(pRetVal);
     // TODO: Is this even used? We wont support editing either way
     // so there won't be even a caret visible. Hence empty ranges are useless?
     return E_NOTIMPL;
 }
 
-HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::get_DocumentRange(ITextRangeProvider **pRetVal)
-{
+HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::get_DocumentRange(ITextRangeProvider** pRetVal) {
     if (pRetVal == nullptr)
         return E_POINTER;
     if (released)
@@ -378,16 +361,16 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::get_DocumentRange
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::get_SupportedTextSelection(enum SupportedTextSelection *pRetVal)
-{
+HRESULT STDMETHODCALLTYPE
+SumatraUIAutomationDocumentProvider::get_SupportedTextSelection(enum SupportedTextSelection* pRetVal) {
     if (pRetVal == nullptr)
         return E_POINTER;
     *pRetVal = SupportedTextSelection_Single;
     return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetIdentityString(DWORD dwIDChild, BYTE **ppIDString, DWORD *pdwIDStringLen)
-{
+HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetIdentityString(DWORD dwIDChild, BYTE** ppIDString,
+                                                                                 DWORD* pdwIDStringLen) {
     if (ppIDString == nullptr || pdwIDStringLen == nullptr)
         return E_POINTER;
     if (released)
@@ -396,7 +379,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetIdentityString
     for (SumatraUIAutomationPageProvider* it = child_first; it; it = it->sibling_next) {
         if (it->pageNum == (int)dwIDChild + 1) {
             // Use memory address as identification. Use 8 bytes just in case
-            *ppIDString = (BYTE*) CoTaskMemAlloc(8);
+            *ppIDString = (BYTE*)CoTaskMemAlloc(8);
             if (!(*ppIDString))
                 return E_OUTOFMEMORY;
 

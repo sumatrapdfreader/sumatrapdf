@@ -1,46 +1,31 @@
 /* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// utils
 #include "BaseUtil.h"
+#include "ScopedWin.h"
 #include "FileUtil.h"
 #include "WinUtil.h"
-// rendering engines
 #include "BaseEngine.h"
-// ui
 #include "PdfPreview.h"
 #include "PdfPreviewBase.h"
 
 long g_lRefCount = 0;
 
-class CClassFactory : public IClassFactory
-{
-public:
-    CClassFactory(REFCLSID rclsid) : m_lRef(1), m_clsid(rclsid)
-    {
-        InterlockedIncrement(&g_lRefCount);
-    }
+class CClassFactory : public IClassFactory {
+  public:
+    CClassFactory(REFCLSID rclsid) : m_lRef(1), m_clsid(rclsid) { InterlockedIncrement(&g_lRefCount); }
 
     ~CClassFactory() { InterlockedDecrement(&g_lRefCount); }
 
     // IUnknown
-    IFACEMETHODIMP QueryInterface(REFIID riid, void **ppv)
-    {
-        static const QITAB qit[] =
-        {
-            QITABENT(CClassFactory, IClassFactory),
-            { 0 }
-        };
+    IFACEMETHODIMP QueryInterface(REFIID riid, void** ppv) {
+        static const QITAB qit[] = {QITABENT(CClassFactory, IClassFactory), {0}};
         return QISearch(this, qit, riid, ppv);
     }
 
-    IFACEMETHODIMP_(ULONG) AddRef()
-    {
-        return InterlockedIncrement(&m_lRef);
-    }
+    IFACEMETHODIMP_(ULONG) AddRef() { return InterlockedIncrement(&m_lRef); }
 
-    IFACEMETHODIMP_(ULONG) Release()
-    {
+    IFACEMETHODIMP_(ULONG) Release() {
         long cRef = InterlockedDecrement(&m_lRef);
         if (cRef == 0)
             delete this;
@@ -48,8 +33,7 @@ public:
     }
 
     // IClassFactory
-    IFACEMETHODIMP CreateInstance(IUnknown *punkOuter, REFIID riid, void **ppv)
-    {
+    IFACEMETHODIMP CreateInstance(IUnknown* punkOuter, REFIID riid, void** ppv) {
         *ppv = nullptr;
         if (punkOuter)
             return CLASS_E_NOAGGREGATION;
@@ -95,8 +79,7 @@ public:
         return pObject->QueryInterface(riid, ppv);
     }
 
-    IFACEMETHODIMP LockServer(BOOL bLock)
-    {
+    IFACEMETHODIMP LockServer(BOOL bLock) {
         if (bLock)
             InterlockedIncrement(&g_lRefCount);
         else
@@ -104,13 +87,12 @@ public:
         return S_OK;
     }
 
-private:
+  private:
     long m_lRef;
     CLSID m_clsid;
 };
 
-STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
-{
+STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved) {
     UNUSED(lpReserved);
     if (dwReason == DLL_PROCESS_ATTACH) {
         CrashIf(hInstance != GetInstance());
@@ -119,18 +101,17 @@ STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID lpReserved)
     return TRUE;
 }
 
-STDAPI DllCanUnloadNow(VOID)
-{
+STDAPI DllCanUnloadNow(VOID) {
     return g_lRefCount == 0 ? S_OK : S_FALSE;
 }
 
 // disable warning C6387 which is wrongly issued due to a compiler bug; cf.
 // http://connect.microsoft.com/VisualStudio/feedback/details/498862/c6387-warning-on-stock-dllgetclassobject-code-with-static-analyser
 #pragma warning(push)
-#pragma warning(disable: 6387) /* '*ppv' might be '0': this does not adhere to the specification for the function 'DllGetClassObject' */
+#pragma warning(disable : 6387) /* '*ppv' might be '0': this does not adhere to the specification for the function \
+                                   'DllGetClassObject' */
 
-STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
-{
+STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv) {
     *ppv = nullptr;
     ScopedComPtr<CClassFactory> pClassFactory(new CClassFactory(rclsid));
     if (!pClassFactory)
@@ -140,60 +121,61 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 
 #pragma warning(pop)
 
-#define CLSID_I_THUMBNAIL_PROVIDER  L"{e357fccd-a995-4576-b01f-234630154e96}"
-#define CLSID_I_EXTRACT_IMAGE       L"{bb2e617c-0920-11d1-9a0b-00c04fc2d6c1}"
-#define CLSID_I_PREVIEW_HANDLER     L"{8895b1c6-b41f-4c1c-a562-0d564250836f}"
-#define APPID_PREVHOST_EXE          L"{6d2b5079-2f0b-48dd-ab7f-97cec514d30b}"
-#define APPID_PREVHOST_EXE_WOW64    L"{534a1e02-d58f-44f0-b58b-36cbed287c7c}"
+#define CLSID_I_THUMBNAIL_PROVIDER L"{e357fccd-a995-4576-b01f-234630154e96}"
+#define CLSID_I_EXTRACT_IMAGE L"{bb2e617c-0920-11d1-9a0b-00c04fc2d6c1}"
+#define CLSID_I_PREVIEW_HANDLER L"{8895b1c6-b41f-4c1c-a562-0d564250836f}"
+#define APPID_PREVHOST_EXE L"{6d2b5079-2f0b-48dd-ab7f-97cec514d30b}"
+#define APPID_PREVHOST_EXE_WOW64 L"{534a1e02-d58f-44f0-b58b-36cbed287c7c}"
 
-#define REG_KEY_PREVIEW_HANDLERS    L"Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers"
+#define REG_KEY_PREVIEW_HANDLERS L"Software\\Microsoft\\Windows\\CurrentVersion\\PreviewHandlers"
 
 static struct {
-    const WCHAR *clsid;
+    const WCHAR* clsid;
     const WCHAR *ext, *ext2;
     bool skip;
 } gPreviewers[] = {
-    { SZ_PDF_PREVIEW_CLSID, L".pdf" },
+    {SZ_PDF_PREVIEW_CLSID, L".pdf"},
 #ifdef BUILD_XPS_PREVIEW
-    { SZ_XPS_PREVIEW_CLSID, L".xps", L".oxps" },
+    {SZ_XPS_PREVIEW_CLSID, L".xps", L".oxps"},
 #endif
 #ifdef BUILD_DJVU_PREVIEW
-    { SZ_DJVU_PREVIEW_CLSID,L".djvu" },
+    {SZ_DJVU_PREVIEW_CLSID, L".djvu"},
 #endif
 #ifdef BUILD_EPUB_PREVIEW
-    { SZ_EPUB_PREVIEW_CLSID,L".epub" },
+    {SZ_EPUB_PREVIEW_CLSID, L".epub"},
 #endif
 #ifdef BUILD_FB2_PREVIEW
-    { SZ_FB2_PREVIEW_CLSID, L".fb2", L".fb2z" },
+    {SZ_FB2_PREVIEW_CLSID, L".fb2", L".fb2z"},
 #endif
 #ifdef BUILD_MOBI_PREVIEW
-    { SZ_MOBI_PREVIEW_CLSID,L".mobi" },
+    {SZ_MOBI_PREVIEW_CLSID, L".mobi"},
 #endif
 #ifdef BUILD_CBZ_PREVIEW
-    { SZ_CBX_PREVIEW_CLSID, L".cbz" },
+    {SZ_CBX_PREVIEW_CLSID, L".cbz"},
 #endif
 #ifdef BUILD_CBR_PREVIEW
-    { SZ_CBX_PREVIEW_CLSID, L".cbr" },
+    {SZ_CBX_PREVIEW_CLSID, L".cbr"},
 #endif
 #ifdef BUILD_CB7_PREVIEW
-    { SZ_CBX_PREVIEW_CLSID, L".cb7" },
+    {SZ_CBX_PREVIEW_CLSID, L".cb7"},
 #endif
 #ifdef BUILD_CBT_PREVIEW
-    { SZ_CBX_PREVIEW_CLSID, L".cbt" },
+    {SZ_CBX_PREVIEW_CLSID, L".cbt"},
 #endif
 #ifdef BUILD_TGA_PREVIEW
-    { SZ_TGA_PREVIEW_CLSID, L".tga" },
+    {SZ_TGA_PREVIEW_CLSID, L".tga"},
 #endif
 };
 
-STDAPI DllRegisterServer()
-{
+STDAPI DllRegisterServer() {
     AutoFreeW dllPath(path::GetAppPath());
     if (!dllPath)
         return HRESULT_FROM_WIN32(GetLastError());
 
-#define WriteOrFail_(key, value, data) WriteRegStr(HKEY_LOCAL_MACHINE, key, value, data); \
-    if (!WriteRegStr(HKEY_CURRENT_USER, key, value, data)) return E_FAIL
+#define WriteOrFail_(key, value, data)                     \
+    WriteRegStr(HKEY_LOCAL_MACHINE, key, value, data);     \
+    if (!WriteRegStr(HKEY_CURRENT_USER, key, value, data)) \
+    return E_FAIL
 
     for (int i = 0; i < dimof(gPreviewers); i++) {
         if (gPreviewers[i].skip)
@@ -233,19 +215,19 @@ STDAPI DllRegisterServer()
             WriteOrFail_(key, nullptr, gPreviewers[i].clsid);
         }
         WriteOrFail_(REG_KEY_PREVIEW_HANDLERS, gPreviewers[i].clsid, displayName);
-
     }
 #undef WriteOrFail_
 
     return S_OK;
 }
 
-STDAPI DllUnregisterServer()
-{
+STDAPI DllUnregisterServer() {
     HRESULT hr = S_OK;
 
-#define DeleteOrFail_(key) DeleteRegKey(HKEY_LOCAL_MACHINE, key); \
-    if (!DeleteRegKey(HKEY_CURRENT_USER, key)) hr = E_FAIL
+#define DeleteOrFail_(key)                     \
+    DeleteRegKey(HKEY_LOCAL_MACHINE, key);     \
+    if (!DeleteRegKey(HKEY_CURRENT_USER, key)) \
+    hr = E_FAIL
 
     for (int i = 0; i < dimof(gPreviewers); i++) {
         if (gPreviewers[i].skip)
@@ -283,8 +265,7 @@ STDAPI DllUnregisterServer()
     return hr;
 }
 
-STDAPI DllInstall(BOOL bInstall, LPCWSTR pszCmdLine)
-{
+STDAPI DllInstall(BOOL bInstall, LPCWSTR pszCmdLine) {
     // allows installing only a subset of available preview handlers
     if (str::StartsWithI(pszCmdLine, L"exts:")) {
         AutoFreeW extsList(str::Dup(pszCmdLine + 5));

@@ -1,26 +1,24 @@
 /* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// utils
 #include "BaseUtil.h"
+#include "ScopedWin.h"
 #include "WinUtil.h"
-// rendering engines
 #include "BaseEngine.h"
 #include "PdfEngine.h"
 #if defined(BUILD_EPUB_PREVIEW) || defined(BUILD_FB2_PREVIEW) || defined(BUILD_MOBI_PREVIEW)
 #include "MiniMui.h"
 #include "EbookEngine.h"
 #endif
-#if defined(BUILD_CBZ_PREVIEW) || defined(BUILD_CBR_PREVIEW) || defined(BUILD_CB7_PREVIEW) || defined(BUILD_CBT_PREVIEW) || defined(BUILD_TGA_PREVIEW)
+#if defined(BUILD_CBZ_PREVIEW) || defined(BUILD_CBR_PREVIEW) || defined(BUILD_CB7_PREVIEW) || \
+    defined(BUILD_CBT_PREVIEW) || defined(BUILD_TGA_PREVIEW)
 #include "ImagesEngine.h"
 #endif
-// ui
 #include "PdfPreview.h"
 #include "PdfPreviewBase.h"
 
-IFACEMETHODIMP PreviewBase::GetThumbnail(UINT cx, HBITMAP *phbmp, WTS_ALPHATYPE *pdwAlpha)
-{
-    BaseEngine *engine = GetEngine();
+IFACEMETHODIMP PreviewBase::GetThumbnail(UINT cx, HBITMAP* phbmp, WTS_ALPHATYPE* pdwAlpha) {
+    BaseEngine* engine = GetEngine();
     if (!engine)
         return E_FAIL;
 
@@ -28,7 +26,7 @@ IFACEMETHODIMP PreviewBase::GetThumbnail(UINT cx, HBITMAP *phbmp, WTS_ALPHATYPE 
     float zoom = std::min(cx / (float)page.dx, cx / (float)page.dy) - 0.001f;
     RectI thumb = RectD(0, 0, page.dx * zoom, page.dy * zoom).Round();
 
-    BITMAPINFO bmi = { 0 };
+    BITMAPINFO bmi = {0};
     bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
     bmi.bmiHeader.biHeight = thumb.dy;
     bmi.bmiHeader.biWidth = thumb.dx;
@@ -36,13 +34,13 @@ IFACEMETHODIMP PreviewBase::GetThumbnail(UINT cx, HBITMAP *phbmp, WTS_ALPHATYPE 
     bmi.bmiHeader.biBitCount = 32;
     bmi.bmiHeader.biCompression = BI_RGB;
 
-    unsigned char *bmpData = nullptr;
-    HBITMAP hthumb = CreateDIBSection(nullptr, &bmi, DIB_RGB_COLORS, (void **)&bmpData, nullptr, 0);
+    unsigned char* bmpData = nullptr;
+    HBITMAP hthumb = CreateDIBSection(nullptr, &bmi, DIB_RGB_COLORS, (void**)&bmpData, nullptr, 0);
     if (!hthumb)
         return E_OUTOFMEMORY;
 
     page = engine->Transform(thumb.Convert<double>(), 1, zoom, 0, true);
-    RenderedBitmap *bmp = engine->RenderBitmap(1, zoom, 0, &page);
+    RenderedBitmap* bmp = engine->RenderBitmap(1, zoom, 0, &page);
 
     HDC hdc = GetDC(nullptr);
     if (bmp && GetDIBits(hdc, bmp->GetBitmap(), 0, thumb.dy, bmpData, &bmi, DIB_RGB_COLORS)) {
@@ -53,8 +51,7 @@ IFACEMETHODIMP PreviewBase::GetThumbnail(UINT cx, HBITMAP *phbmp, WTS_ALPHATYPE 
         *phbmp = hthumb;
         if (pdwAlpha)
             *pdwAlpha = WTSAT_RGB;
-    }
-    else {
+    } else {
         DeleteObject(hthumb);
         hthumb = nullptr;
     }
@@ -65,23 +62,23 @@ IFACEMETHODIMP PreviewBase::GetThumbnail(UINT cx, HBITMAP *phbmp, WTS_ALPHATYPE 
     return hthumb ? S_OK : E_NOTIMPL;
 }
 
-#define COL_WINDOW_BG   RGB(0x99, 0x99, 0x99)
-#define PREVIEW_MARGIN  2
+#define COL_WINDOW_BG RGB(0x99, 0x99, 0x99)
+#define PREVIEW_MARGIN 2
 #define UWM_PAINT_AGAIN (WM_USER + 1)
 
 class PageRenderer {
-    BaseEngine *engine;
+    BaseEngine* engine;
     HWND hwnd;
 
     int currPage;
-    RenderedBitmap *currBmp;
+    RenderedBitmap* currBmp;
     // due to rounding differences, currBmp->Size() and currSize can differ slightly
     SizeI currSize;
     int reqPage;
     float reqZoom;
     SizeI reqSize;
     bool reqAbort;
-    AbortCookie *abortCookie;
+    AbortCookie* abortCookie;
 
     CRITICAL_SECTION currAccess;
     HANDLE thread;
@@ -93,10 +90,18 @@ class PageRenderer {
     // sections can't prevent recursion without the risk of deadlock)
     bool preventRecursion;
 
-public:
-    PageRenderer(BaseEngine *engine, HWND hwnd) : engine(engine), hwnd(hwnd),
-        currPage(0), currBmp(nullptr), reqPage(0), reqZoom(0), reqAbort(false),
-        abortCookie(nullptr), thread(nullptr), preventRecursion(false) {
+  public:
+    PageRenderer(BaseEngine* engine, HWND hwnd)
+        : engine(engine),
+          hwnd(hwnd),
+          currPage(0),
+          currBmp(nullptr),
+          reqPage(0),
+          reqZoom(0),
+          reqAbort(false),
+          abortCookie(nullptr),
+          thread(nullptr),
+          preventRecursion(false) {
         InitializeCriticalSection(&currAccess);
     }
     ~PageRenderer() {
@@ -128,20 +133,20 @@ public:
             reqSize = target.Size();
             reqAbort = false;
             thread = CreateThread(nullptr, 0, RenderThread, this, 0, 0);
-        }
-        else if (reqPage != pageNo || reqSize != target.Size()) {
+        } else if (reqPage != pageNo || reqSize != target.Size()) {
             if (abortCookie)
                 abortCookie->Abort();
             reqAbort = true;
         }
     }
 
-protected:
+  protected:
     static DWORD WINAPI RenderThread(LPVOID data) {
         ScopedCom comScope; // because the engine reads data from a COM IStream
 
-        PageRenderer *pr = (PageRenderer *)data;
-        RenderedBitmap *bmp = pr->engine->RenderBitmap(pr->reqPage, pr->reqZoom, 0, nullptr, Target_View, &pr->abortCookie);
+        PageRenderer* pr = (PageRenderer*)data;
+        RenderedBitmap* bmp =
+            pr->engine->RenderBitmap(pr->reqPage, pr->reqZoom, 0, nullptr, Target_View, &pr->abortCookie);
 
         ScopedCritSec scope(&pr->currAccess);
 
@@ -150,8 +155,7 @@ protected:
             pr->currBmp = bmp;
             pr->currPage = pr->reqPage;
             pr->currSize = pr->reqSize;
-        }
-        else
+        } else
             delete bmp;
         delete pr->abortCookie;
         pr->abortCookie = nullptr;
@@ -165,8 +169,7 @@ protected:
     }
 };
 
-static LRESULT OnPaint(HWND hwnd)
-{
+static LRESULT OnPaint(HWND hwnd) {
     ClientRect rect(hwnd);
     DoubleBuffer buffer(hwnd, rect);
     HDC hdc = buffer.GetDC();
@@ -175,7 +178,7 @@ static LRESULT OnPaint(HWND hwnd)
     RECT rcClient = rect.ToRECT();
     FillRect(hdc, &rcClient, brushBg);
 
-    PreviewBase *preview = (PreviewBase *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+    PreviewBase* preview = (PreviewBase*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
     if (preview && preview->renderer) {
         int pageNo = GetScrollPos(hwnd, SB_VERT);
         RectD page = preview->renderer->GetPageRect(pageNo);
@@ -200,21 +203,34 @@ static LRESULT OnPaint(HWND hwnd)
     return 0;
 }
 
-static LRESULT OnVScroll(HWND hwnd, WPARAM wParam)
-{
-    SCROLLINFO si = { 0 };
-    si.cbSize = sizeof (si);
-    si.fMask  = SIF_ALL;
+static LRESULT OnVScroll(HWND hwnd, WPARAM wParam) {
+    SCROLLINFO si = {0};
+    si.cbSize = sizeof(si);
+    si.fMask = SIF_ALL;
     GetScrollInfo(hwnd, SB_VERT, &si);
 
     switch (LOWORD(wParam)) {
-    case SB_TOP:        si.nPos = si.nMin; break;
-    case SB_BOTTOM:     si.nPos = si.nMax; break;
-    case SB_LINEUP:     si.nPos--; break;
-    case SB_LINEDOWN:   si.nPos++; break;
-    case SB_PAGEUP:     si.nPos--; break;
-    case SB_PAGEDOWN:   si.nPos++; break;
-    case SB_THUMBTRACK: si.nPos = si.nTrackPos; break;
+        case SB_TOP:
+            si.nPos = si.nMin;
+            break;
+        case SB_BOTTOM:
+            si.nPos = si.nMax;
+            break;
+        case SB_LINEUP:
+            si.nPos--;
+            break;
+        case SB_LINEDOWN:
+            si.nPos++;
+            break;
+        case SB_PAGEUP:
+            si.nPos--;
+            break;
+        case SB_PAGEDOWN:
+            si.nPos++;
+            break;
+        case SB_THUMBTRACK:
+            si.nPos = si.nTrackPos;
+            break;
     }
     si.fMask = SIF_POS;
     SetScrollInfo(hwnd, SB_VERT, &si, TRUE);
@@ -224,25 +240,27 @@ static LRESULT OnVScroll(HWND hwnd, WPARAM wParam)
     return 0;
 }
 
-static LRESULT OnKeydown(HWND hwnd, WPARAM key)
-{
+static LRESULT OnKeydown(HWND hwnd, WPARAM key) {
     switch (key) {
-    case VK_DOWN: case VK_RIGHT: case VK_NEXT:
-        return OnVScroll(hwnd, SB_PAGEDOWN);
-    case VK_UP: case VK_LEFT: case VK_PRIOR:
-        return OnVScroll(hwnd, SB_PAGEUP);
-    case VK_HOME:
-        return OnVScroll(hwnd, SB_TOP);
-    case VK_END:
-        return OnVScroll(hwnd, SB_BOTTOM);
-    default:
-        return 0;
+        case VK_DOWN:
+        case VK_RIGHT:
+        case VK_NEXT:
+            return OnVScroll(hwnd, SB_PAGEDOWN);
+        case VK_UP:
+        case VK_LEFT:
+        case VK_PRIOR:
+            return OnVScroll(hwnd, SB_PAGEUP);
+        case VK_HOME:
+            return OnVScroll(hwnd, SB_TOP);
+        case VK_END:
+            return OnVScroll(hwnd, SB_BOTTOM);
+        default:
+            return 0;
     }
 }
 
-static LRESULT OnDestroy(HWND hwnd)
-{
-    PreviewBase *preview = (PreviewBase *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+static LRESULT OnDestroy(HWND hwnd) {
+    PreviewBase* preview = (PreviewBase*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
     if (preview) {
         delete preview->renderer;
         preview->renderer = nullptr;
@@ -250,34 +268,32 @@ static LRESULT OnDestroy(HWND hwnd)
     return 0;
 }
 
-static LRESULT CALLBACK PreviewWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
+static LRESULT CALLBACK PreviewWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
     switch (message) {
-    case WM_PAINT:
-        return OnPaint(hwnd);
-    case WM_VSCROLL:
-        return OnVScroll(hwnd, wParam);
-    case WM_KEYDOWN:
-        return OnKeydown(hwnd, wParam);
-    case WM_LBUTTONDOWN:
-        SetFocus(hwnd);
-        return 0;
-    case WM_MOUSEWHEEL:
-        return OnVScroll(hwnd, GET_WHEEL_DELTA_WPARAM(wParam) > 0 ? SB_LINEUP : SB_LINEDOWN);
-    case WM_DESTROY:
-        return OnDestroy(hwnd);
-    case UWM_PAINT_AGAIN:
-        InvalidateRect(hwnd, nullptr, TRUE);
-        UpdateWindow(hwnd);
-        return 0;
-    default:
-        return DefWindowProc(hwnd, message, wParam, lParam);
+        case WM_PAINT:
+            return OnPaint(hwnd);
+        case WM_VSCROLL:
+            return OnVScroll(hwnd, wParam);
+        case WM_KEYDOWN:
+            return OnKeydown(hwnd, wParam);
+        case WM_LBUTTONDOWN:
+            SetFocus(hwnd);
+            return 0;
+        case WM_MOUSEWHEEL:
+            return OnVScroll(hwnd, GET_WHEEL_DELTA_WPARAM(wParam) > 0 ? SB_LINEUP : SB_LINEDOWN);
+        case WM_DESTROY:
+            return OnDestroy(hwnd);
+        case UWM_PAINT_AGAIN:
+            InvalidateRect(hwnd, nullptr, TRUE);
+            UpdateWindow(hwnd);
+            return 0;
+        default:
+            return DefWindowProc(hwnd, message, wParam, lParam);
     }
 }
 
-IFACEMETHODIMP PreviewBase::DoPreview()
-{
-    WNDCLASSEX wcex = { 0 };
+IFACEMETHODIMP PreviewBase::DoPreview() {
+    WNDCLASSEX wcex = {0};
     wcex.cbSize = sizeof(wcex);
     wcex.lpfnWndProc = PreviewWndProc;
     wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
@@ -285,16 +301,15 @@ IFACEMETHODIMP PreviewBase::DoPreview()
     wcex.style = CS_HREDRAW | CS_VREDRAW;
     RegisterClassEx(&wcex);
 
-    m_hwnd = CreateWindow(wcex.lpszClassName, nullptr, WS_CHILD | WS_VSCROLL | WS_VISIBLE,
-                          m_rcParent.x, m_rcParent.x, m_rcParent.dx, m_rcParent.dy,
-                          m_hwndParent, nullptr, nullptr, nullptr);
+    m_hwnd = CreateWindow(wcex.lpszClassName, nullptr, WS_CHILD | WS_VSCROLL | WS_VISIBLE, m_rcParent.x, m_rcParent.x,
+                          m_rcParent.dx, m_rcParent.dy, m_hwndParent, nullptr, nullptr, nullptr);
     if (!m_hwnd)
         return HRESULT_FROM_WIN32(GetLastError());
 
     this->renderer = nullptr;
     SetWindowLongPtr(m_hwnd, GWLP_USERDATA, (LONG_PTR)this);
 
-    BaseEngine *engine = GetEngine();
+    BaseEngine* engine = GetEngine();
     int pageCount = 1;
     if (engine) {
         pageCount = engine->PageCount();
@@ -303,7 +318,7 @@ IFACEMETHODIMP PreviewBase::DoPreview()
         engine = nullptr;
     }
 
-    SCROLLINFO si = { 0 };
+    SCROLLINFO si = {0};
     si.cbSize = sizeof(si);
     si.fMask = SIF_ALL;
     si.nPos = 1;
@@ -316,14 +331,12 @@ IFACEMETHODIMP PreviewBase::DoPreview()
     return S_OK;
 }
 
-BaseEngine *CPdfPreview::LoadEngine(IStream *stream)
-{
+BaseEngine* CPdfPreview::LoadEngine(IStream* stream) {
     return PdfEngine::CreateFromStream(stream);
 }
 
 #ifdef BUILD_XPS_PREVIEW
-BaseEngine *CXpsPreview::LoadEngine(IStream *stream)
-{
+BaseEngine* CXpsPreview::LoadEngine(IStream* stream) {
     return XpsEngine::CreateFromStream(stream);
 }
 #endif
@@ -331,81 +344,69 @@ BaseEngine *CXpsPreview::LoadEngine(IStream *stream)
 #ifdef BUILD_DJVU_PREVIEW
 #include "DjVuEngine.h"
 
-BaseEngine *CDjVuPreview::LoadEngine(IStream *stream)
-{
+BaseEngine* CDjVuPreview::LoadEngine(IStream* stream) {
     return DjVuEngine::CreateFromStream(stream);
 }
 #endif
 
 #ifdef BUILD_EPUB_PREVIEW
 
-CEpubPreview::CEpubPreview(long *plRefCount) : PreviewBase(plRefCount, SZ_EPUB_PREVIEW_CLSID)
-{
+CEpubPreview::CEpubPreview(long* plRefCount) : PreviewBase(plRefCount, SZ_EPUB_PREVIEW_CLSID) {
     m_gdiScope = new ScopedGdiPlus();
     mui::Initialize();
 }
 
-CEpubPreview::~CEpubPreview()
-{
+CEpubPreview::~CEpubPreview() {
     mui::Destroy();
 }
 
-BaseEngine *CEpubPreview::LoadEngine(IStream *stream)
-{
+BaseEngine* CEpubPreview::LoadEngine(IStream* stream) {
     return EpubEngine::CreateFromStream(stream);
 }
 #endif
 
 #ifdef BUILD_FB2_PREVIEW
 
-CFb2Preview::CFb2Preview(long *plRefCount) : PreviewBase(plRefCount, SZ_FB2_PREVIEW_CLSID)
-{
+CFb2Preview::CFb2Preview(long* plRefCount) : PreviewBase(plRefCount, SZ_FB2_PREVIEW_CLSID) {
     m_gdiScope = new ScopedGdiPlus();
     mui::Initialize();
 }
 
-CFb2Preview::~CFb2Preview()
-{
+CFb2Preview::~CFb2Preview() {
     mui::Destroy();
 }
 
-BaseEngine *CFb2Preview::LoadEngine(IStream *stream)
-{
+BaseEngine* CFb2Preview::LoadEngine(IStream* stream) {
     return Fb2Engine::CreateFromStream(stream);
 }
 #endif
 
 #ifdef BUILD_MOBI_PREVIEW
 
-CMobiPreview::CMobiPreview(long *plRefCount) : PreviewBase(plRefCount, SZ_MOBI_PREVIEW_CLSID)
-{
+CMobiPreview::CMobiPreview(long* plRefCount) : PreviewBase(plRefCount, SZ_MOBI_PREVIEW_CLSID) {
     m_gdiScope = new ScopedGdiPlus();
     mui::Initialize();
 }
 
-CMobiPreview::~CMobiPreview()
-{
+CMobiPreview::~CMobiPreview() {
     mui::Destroy();
 }
 
-BaseEngine *CMobiPreview::LoadEngine(IStream *stream)
-{
+BaseEngine* CMobiPreview::LoadEngine(IStream* stream) {
     return MobiEngine::CreateFromStream(stream);
 }
 #endif
 
 #if defined(BUILD_CBZ_PREVIEW) || defined(BUILD_CBR_PREVIEW) || defined(BUILD_CB7_PREVIEW) || defined(BUILD_CBT_PREVIEW)
 
-BaseEngine *CCbxPreview::LoadEngine(IStream *stream)
-{
+BaseEngine* CCbxPreview::LoadEngine(IStream* stream) {
     return CbxEngine::CreateFromStream(stream);
 }
 #endif
 
 #ifdef BUILD_TGA_PREVIEW
 
-BaseEngine *CTgaPreview::LoadEngine(IStream *stream)
-{
+BaseEngine* CTgaPreview::LoadEngine(IStream* stream) {
     return ImageEngine::CreateFromStream(stream);
 }
 #endif
