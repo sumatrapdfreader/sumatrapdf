@@ -56,7 +56,7 @@ $files =
 #"src\SumatraProperties.*",
 #"src\SumatraStartup.*",
 "src\TabInfo.*",
-#"src\TableOfContents.*",
+"src\TableOfContents.*",
 "src\Tabs.*",
 #"src\Tester.*",
 "src\Tests*",
