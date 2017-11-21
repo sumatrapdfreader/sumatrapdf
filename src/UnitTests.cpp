@@ -14,8 +14,7 @@
 // must be last to over-write assert()
 #include "UtAssert.h"
 
-static void ParseCommandLineTest()
-{
+static void ParseCommandLineTest() {
     {
         CommandLineInfo i;
         i.ParseCommandLine(L"SumatraPDF.exe -bench foo.pdf");
@@ -28,7 +27,7 @@ static void ParseCommandLineTest()
         CommandLineInfo i;
         i.ParseCommandLine(L"SumatraPDF.exe -bench foo.pdf -fwdsearch-width 5");
         utassert(i.globalPrefArgs.size() == 2);
-        const WCHAR *s = i.globalPrefArgs.at(0);
+        const WCHAR* s = i.globalPrefArgs.at(0);
         utassert(str::Eq(s, L"-fwdsearch-width"));
         s = i.globalPrefArgs.at(1);
         utassert(str::Eq(s, L"5"));
@@ -93,7 +92,8 @@ static void ParseCommandLineTest()
 
     {
         CommandLineInfo i;
-        i.ParseCommandLine(L"SumatraPDF.exe -page 37 -view continuousfacing -zoom fitcontent -scroll 45,1234 -reuse-instance");
+        i.ParseCommandLine(
+            L"SumatraPDF.exe -page 37 -view continuousfacing -zoom fitcontent -scroll 45,1234 -reuse-instance");
         utassert(0 == i.fileNames.size());
         utassert(i.pageNumber == 37);
         utassert(i.startView == DM_CONTINUOUS_FACING);
@@ -125,8 +125,7 @@ static void ParseCommandLineTest()
     }
 }
 
-static void BenchRangeTest()
-{
+static void BenchRangeTest() {
     utassert(IsBenchPagesInfo(L"1"));
     utassert(IsBenchPagesInfo(L"2-4"));
     utassert(IsBenchPagesInfo(L"5,7"));
@@ -143,8 +142,7 @@ static void BenchRangeTest()
     utassert(!IsBenchPagesInfo(nullptr));
 }
 
-static void versioncheck_test()
-{
+static void versioncheck_test() {
     utassert(IsValidProgramVersion("1"));
     utassert(IsValidProgramVersion("1.1"));
     utassert(IsValidProgramVersion("1.1.1\r\n"));
@@ -161,10 +159,9 @@ static void versioncheck_test()
     utassert(CompareVersion(L"1.3.0", L"2662") < 0);
 }
 
-static void hexstrTest()
-{
-    unsigned char buf[6] = { 1, 2, 33, 255, 0, 18 };
-    unsigned char buf2[6] = { 0 };
+static void hexstrTest() {
+    unsigned char buf[6] = {1, 2, 33, 255, 0, 18};
+    unsigned char buf2[6] = {0};
     AutoFree s(_MemToHex(&buf));
     utassert(str::Eq(s, "010221ff0012"));
     bool ok = _HexToMem(s, &buf2);
@@ -185,8 +182,7 @@ static void hexstrTest()
     utassert(ok);
 }
 
-void SumatraPDF_UnitTests()
-{
+void SumatraPDF_UnitTests() {
     BenchRangeTest();
     ParseCommandLineTest();
     versioncheck_test();
