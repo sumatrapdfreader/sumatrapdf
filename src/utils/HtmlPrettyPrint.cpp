@@ -6,8 +6,7 @@
 #include "HtmlParserLookup.h"
 #include "HtmlPullParser.h"
 
-static void HtmlAddWithNesting(str::Str<char>* out, HtmlToken *tok, size_t nesting)
-{
+static void HtmlAddWithNesting(str::Str<char>* out, HtmlToken* tok, size_t nesting) {
     CrashIf(!tok->IsStartTag() && !tok->IsEndTag() && !tok->IsEmptyElementEndTag());
     bool isInline = IsInlineTag(tok->tag);
     // add a newline before block start tags (unless there already is one)
@@ -37,22 +36,21 @@ static void HtmlAddWithNesting(str::Str<char>* out, HtmlToken *tok, size_t nesti
         out->Append('\n');
 }
 
-static bool IsWsText(const char *s, size_t len)
-{
-    const char *end = s + len;
-    for (; s < end && str::IsWs(*s); s++);
+static bool IsWsText(const char* s, size_t len) {
+    const char* end = s + len;
+    for (; s < end && str::IsWs(*s); s++)
+        ;
     return s == end;
 }
 
-char *PrettyPrintHtml(const char *s, size_t len, size_t& lenOut)
-{
+char* PrettyPrintHtml(const char* s, size_t len, size_t& lenOut) {
     if ((size_t)-1 == len)
         len = str::Len(s);
 
     str::Str<char> res(len);
     HtmlPullParser parser(s, len);
     Vec<HtmlTag> tagNesting;
-    HtmlToken *t;
+    HtmlToken* t;
     while ((t = parser.Next()) != nullptr && !t->IsError()) {
         if (t->IsText()) {
             // TODO: normalize whitespace instead?
@@ -67,8 +65,7 @@ char *PrettyPrintHtml(const char *s, size_t len, size_t& lenOut)
         if (t->IsStartTag()) {
             if (!IsTagSelfClosing(t->tag))
                 tagNesting.Append(t->tag);
-        }
-        else if (t->IsEndTag()) {
+        } else if (t->IsEndTag()) {
             // when closing a tag, if the top tag doesn't match but
             // there are only potentially self-closing tags on the
             // stack between the matching tag, we pop all of them
