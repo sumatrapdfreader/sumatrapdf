@@ -12,26 +12,26 @@
 
 // cf. http://wiki.mobileread.com/wiki/PDB
 struct PdbHeader {
-     /* 31 chars + 1 null terminator */
-    char        name[32];
-    uint16_t    attributes;
-    uint16_t    version;
-    uint32_t    createTime;
-    uint32_t    modifyTime;
-    uint32_t    backupTime;
-    uint32_t    modificationNumber;
-    uint32_t    appInfoID;
-    uint32_t    sortInfoID;
-    char        typeCreator[8];
-    uint32_t    idSeed;
-    uint32_t    nextRecordList;
-    uint16_t    numRecords;
+    /* 31 chars + 1 null terminator */
+    char name[32];
+    uint16_t attributes;
+    uint16_t version;
+    uint32_t createTime;
+    uint32_t modifyTime;
+    uint32_t backupTime;
+    uint32_t modificationNumber;
+    uint32_t appInfoID;
+    uint32_t sortInfoID;
+    char typeCreator[8];
+    uint32_t idSeed;
+    uint32_t nextRecordList;
+    uint16_t numRecords;
 };
 
 struct PdbRecordHeader {
     uint32_t offset;
-    uint8_t  flags; // deleted, dirty, busy, secret, category
-    char     uniqueID[3];
+    uint8_t flags; // deleted, dirty, busy, secret, category
+    char uniqueID[3];
 };
 
 #include <poppack.h>
@@ -40,9 +40,9 @@ static_assert(sizeof(PdbHeader) == kPdbHeaderLen, "wrong size of PdbHeader struc
 static_assert(sizeof(PdbRecordHeader) == 8, "wrong size of PdbRecordHeader structure");
 
 // TODO: don't do so much work in constructor
-PdbReader::PdbReader(const WCHAR *filePath) {
+PdbReader::PdbReader(const WCHAR* filePath) {
     size_t size;
-    char *tmp = file::ReadAll(filePath, &size);
+    char* tmp = file::ReadAll(filePath, &size);
     if (!tmp) {
         return;
     }
@@ -53,9 +53,9 @@ PdbReader::PdbReader(const WCHAR *filePath) {
 }
 
 // TODO: don't do so much work in constructor
-PdbReader::PdbReader(IStream *stream) {
+PdbReader::PdbReader(IStream* stream) {
     size_t size;
-    char *tmp = (char *)GetDataFromStream(stream, &size);
+    char* tmp = (char*)GetDataFromStream(stream, &size);
     if (!tmp) {
         return;
     }
@@ -65,11 +65,10 @@ PdbReader::PdbReader(IStream *stream) {
     }
 }
 
-bool PdbReader::ParseHeader()
-{
+bool PdbReader::ParseHeader() {
     CrashIf(recOffsets.size() > 0);
 
-    PdbHeader pdbHeader = { 0 };
+    PdbHeader pdbHeader = {0};
     if (!data.data || data.size < sizeof(pdbHeader)) {
         return false;
     }
@@ -105,22 +104,19 @@ bool PdbReader::ParseHeader()
     return true;
 }
 
-const char *PdbReader::GetDbType()
-{
+const char* PdbReader::GetDbType() {
     if (recOffsets.size() == 0) {
         return nullptr;
     }
     return dbType;
 }
 
-size_t PdbReader::GetRecordCount()
-{
+size_t PdbReader::GetRecordCount() {
     return recOffsets.size() - 1;
 }
 
 // don't free, memory is owned by us
-const char *PdbReader::GetRecord(size_t recNo, size_t *sizeOut)
-{
+const char* PdbReader::GetRecord(size_t recNo, size_t* sizeOut) {
     if (recNo + 1 >= recOffsets.size()) {
         return nullptr;
     }
@@ -130,4 +126,3 @@ const char *PdbReader::GetRecord(size_t recNo, size_t *sizeOut)
     }
     return data.data + offset;
 }
-
