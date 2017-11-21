@@ -87,7 +87,7 @@ $files =
 "src\utils\GdiPlusUtil.*",
 #"src\utils\HtmlParserLookup.*",   # auto-generated
 "src\utils\HtmlPrettyPrint.*",
-#"src\utils\HtmlPullParser.*",
+"src\utils\HtmlPullParser.*",
 "src\utils\HtmlWindow.*",
 "src\utils\HttpUtil.*",
 "src\utils\JsonParser.*",
