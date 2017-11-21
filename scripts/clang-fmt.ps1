@@ -78,7 +78,7 @@ $files =
 #"src\utils\DbgHelpDyn.*",
 #"src\utils\DebugLog.*",
 #"src\utils\Dict.*",
-#"src\utils\DirIter.*",
+"src\utils\DirIter.*",
 "src\utils\Dpi.*",
 "src\utils\FileUtil.*",
 "src\utils\FileWatcher.*",

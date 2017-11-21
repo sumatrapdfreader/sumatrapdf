@@ -9,29 +9,29 @@ for (const WCHAR *filePath = di.First(); filePath; filePath = di.Next()) {
 }
 
 */
-class DirIter
-{
-    bool                recursive;
+class DirIter {
+    bool recursive;
 
-    WStrVec             dirsToVisit;
-    AutoFreeW    startDir;
-    AutoFreeW    currDir;
-    AutoFreeW    currPath;
-    HANDLE              currFindHandle;
-    WIN32_FIND_DATA     currFindData;
-    bool                foundNext;
+    WStrVec dirsToVisit;
+    AutoFreeW startDir;
+    AutoFreeW currDir;
+    AutoFreeW currPath;
+    HANDLE currFindHandle;
+    WIN32_FIND_DATA currFindData;
+    bool foundNext;
 
-    bool StartDirIter(const WCHAR *dir);
+    bool StartDirIter(const WCHAR* dir);
     bool TryNextDir();
 
-public:
-    DirIter(const WCHAR *dir, bool recursive=false) : foundNext(false), currFindHandle(nullptr), recursive(recursive) {
+  public:
+    DirIter(const WCHAR* dir, bool recursive = false)
+        : foundNext(false), currFindHandle(nullptr), recursive(recursive) {
         startDir.SetCopy(dir);
     }
     ~DirIter() { FindClose(currFindHandle); }
 
-    const WCHAR *First();
-    const WCHAR *Next();
+    const WCHAR* First();
+    const WCHAR* Next();
 };
 
-bool CollectPathsFromDirectory(const WCHAR *pattern, WStrVec& paths, bool dirsInsteadOfFiles=false);
+bool CollectPathsFromDirectory(const WCHAR* pattern, WStrVec& paths, bool dirsInsteadOfFiles = false);
