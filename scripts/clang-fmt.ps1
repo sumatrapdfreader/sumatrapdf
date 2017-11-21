@@ -100,7 +100,7 @@ $files =
 #"src\utils\StrFormat.*",
 "src\utils\StrSlice.*",
 "src\utils\StrUtil*",
-#"src\utils\TgaReader.*",
+"src\utils\TgaReader.*",
 "src\utils\ThreadUtil.*",
 #"src\utils\TrivialHtmlParser.*",
 "src\utils\TxtParser.*",
