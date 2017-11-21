@@ -18,17 +18,25 @@
 namespace lzsa {
 
 struct ISzCrtAlloc : ISzAlloc {
-    static void *_Alloc(void *p, size_t size) { UNUSED(p);  return malloc(size); }
-    static void _Free(void *p, void *ptr) { UNUSED(p); free(ptr); }
+    static void* _Alloc(void* p, size_t size) {
+        UNUSED(p);
+        return malloc(size);
+    }
+    static void _Free(void* p, void* ptr) {
+        UNUSED(p);
+        free(ptr);
+    }
 
-    ISzCrtAlloc() { this->Alloc = _Alloc; this->Free = _Free; }
+    ISzCrtAlloc() {
+        this->Alloc = _Alloc;
+        this->Free = _Free;
+    }
 };
 
 #define LZMA_MAGIC_ID 0x41537a4c
 #define LZMA_HEADER_SIZE (1 + LZMA_PROPS_SIZE)
 
-static bool Compress(const char *uncompressed, size_t uncompressedSize, char *compressed, size_t *compressedSize)
-{
+static bool Compress(const char* uncompressed, size_t uncompressedSize, char* compressed, size_t* compressedSize) {
     CrashIf(*compressedSize < uncompressedSize + 1);
     if (*compressedSize < uncompressedSize + 1)
         return false;
@@ -52,18 +60,17 @@ static bool Compress(const char *uncompressed, size_t uncompressedSize, char *co
 
         SizeT outSize = *compressedSize - LZMA_HEADER_SIZE;
         SizeT propsSize = LZMA_PROPS_SIZE;
-        SRes res = LzmaEncode((Byte *)compressed + LZMA_HEADER_SIZE, &outSize,
-                              bcj_enc ? bcj_enc : (const Byte *)uncompressed, uncompressedSize,
-                              &props, (Byte *)compressed + 1, &propsSize,
-                              TRUE /* add EOS marker */, nullptr, &lzmaAlloc, &lzmaAlloc);
+        SRes res =
+            LzmaEncode((Byte*)compressed + LZMA_HEADER_SIZE, &outSize, bcj_enc ? bcj_enc : (const Byte*)uncompressed,
+                       uncompressedSize, &props, (Byte*)compressed + 1, &propsSize, TRUE /* add EOS marker */, nullptr,
+                       &lzmaAlloc, &lzmaAlloc);
         if (SZ_OK == res && propsSize == LZMA_PROPS_SIZE)
             lzma_size = outSize + LZMA_HEADER_SIZE;
     }
 
     if (lzma_size <= uncompressedSize) {
         *compressedSize = lzma_size;
-    }
-    else {
+    } else {
         compressed[0] = (uint8_t)-1;
         memcpy(compressed + 1, uncompressed, uncompressedSize);
         *compressedSize = uncompressedSize + 1;
@@ -72,14 +79,14 @@ static bool Compress(const char *uncompressed, size_t uncompressedSize, char *co
     return true;
 }
 
-static bool AppendEntry(str::Str<char>& data, str::Str<char>& content, const WCHAR *filePath, const char *inArchiveName, lzma::FileInfo *fi=nullptr)
-{
+static bool AppendEntry(str::Str<char>& data, str::Str<char>& content, const WCHAR* filePath, const char* inArchiveName,
+                        lzma::FileInfo* fi = nullptr) {
     size_t nameLen = str::Len(inArchiveName);
     CrashIf(nameLen > UINT32_MAX - 25);
     uint32_t headerSize = 25 + (uint32_t)nameLen;
     FILETIME ft = file::GetModificationTime(filePath);
     if (fi && FileTimeEq(ft, fi->ftModified)) {
-ReusePrevious:
+    ReusePrevious:
         ByteWriter meta = MakeByteWriterLE(data.AppendBlanks(24), 24);
         meta.Write32(headerSize);
         meta.Write32(fi->compressedSize);
@@ -101,7 +108,7 @@ ReusePrevious:
         goto ReusePrevious;
 
     size_t compressedSize = fileData.size + 1;
-    AutoFree compressed((char *)malloc(compressedSize));
+    AutoFree compressed((char*)malloc(compressedSize));
     if (!compressed)
         return false;
     if (!Compress(fileData.data, fileData.size, compressed, &compressedSize))
@@ -122,8 +129,7 @@ ReusePrevious:
 // file paths may be relative to the current directory or absolute and
 // may end in a colon followed by the desired path in the archive
 // (this is required for absolute paths)
-bool CreateArchive(const WCHAR *archivePath, WStrVec& files, size_t skipFiles=0)
-{
+bool CreateArchive(const WCHAR* archivePath, WStrVec& files, size_t skipFiles = 0) {
     OwnedData prevData(file::ReadAll(archivePath));
     size_t prevDataLen = prevData.size;
     lzma::SimpleArchive prevArchive;
@@ -139,13 +145,12 @@ bool CreateArchive(const WCHAR *archivePath, WStrVec& files, size_t skipFiles=0)
 
     for (size_t i = skipFiles; i < files.size(); i++) {
         AutoFreeW filePath(str::Dup(files.at(i)));
-        WCHAR *sep = str::FindCharLast(filePath, ':');
+        WCHAR* sep = str::FindCharLast(filePath, ':');
         AutoFree utf8Name;
         if (sep) {
             utf8Name.Set(str::conv::ToUtf8(sep + 1));
             *sep = '\0';
-        }
-        else {
+        } else {
             utf8Name.Set(str::conv::ToUtf8(filePath));
         }
 
@@ -156,14 +161,14 @@ bool CreateArchive(const WCHAR *archivePath, WStrVec& files, size_t skipFiles=0)
         }
 
         int idx = GetIdxFromName(&prevArchive, utf8Name);
-        lzma::FileInfo *fi = nullptr;
+        lzma::FileInfo* fi = nullptr;
         if (idx != -1)
             fi = &prevArchive.files[idx];
         if (!AppendEntry(data, content, filePath, utf8Name, fi))
             return false;
     }
 
-    uint32_t headerCrc32 = crc32(0, (const uint8_t *)data.Get(), (uint32_t)data.size());
+    uint32_t headerCrc32 = crc32(0, (const uint8_t*)data.Get(), (uint32_t)data.size());
     MakeByteWriterLE(data.AppendBlanks(4), 4).Write32(headerCrc32);
     if (!data.AppendChecked(content.Get(), content.size()))
         return false;
@@ -171,12 +176,16 @@ bool CreateArchive(const WCHAR *archivePath, WStrVec& files, size_t skipFiles=0)
     return file::WriteAll(archivePath, data.Get(), data.size());
 }
 
-}
+} // namespace lzsa
 
-#define FailIf(cond, msg, ...) if (cond) { fprintf(stderr, msg "\n", __VA_ARGS__); return errorStep; } errorStep++
+#define FailIf(cond, msg, ...)                  \
+    if (cond) {                                 \
+        fprintf(stderr, msg "\n", __VA_ARGS__); \
+        return errorStep;                       \
+    }                                           \
+    errorStep++
 
-int mainVerify(const WCHAR *archivePath)
-{
+int mainVerify(const WCHAR* archivePath) {
     int errorStep = 1;
     OwnedData fileData(file::ReadAll(archivePath));
     FailIf(!fileData.data, "Failed to read \"%S\"", archivePath);
@@ -194,9 +203,9 @@ int mainVerify(const WCHAR *archivePath)
     return 0;
 }
 
-int main(int argc, char **argv)
-{
-    UNUSED(argc); UNUSED(argv);
+int main(int argc, char** argv) {
+    UNUSED(argc);
+    UNUSED(argv);
 #ifdef DEBUG
     // report memory leaks on stderr
     _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
@@ -211,7 +220,8 @@ int main(int argc, char **argv)
     if (args.size() == 2 && file::Exists(args.at(1)))
         return mainVerify(args.at(1));
 
-    FailIf(args.size() < 3, "Syntax: %S <archive.lzsa> <filename>[:<in-archive name>] [...]", path::GetBaseName(args.at(0)));
+    FailIf(args.size() < 3, "Syntax: %S <archive.lzsa> <filename>[:<in-archive name>] [...]",
+           path::GetBaseName(args.at(0)));
 
     bool ok = lzsa::CreateArchive(args.at(1), args, 2);
     FailIf(!ok, "Failed to create \"%S\"", args.at(1));
