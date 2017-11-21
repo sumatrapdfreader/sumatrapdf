@@ -43,7 +43,7 @@ $files =
 "src\PdfSync.*",
 "src\Print*",
 "src\PsEngine.*",
-#"src\RenderCache.*",
+"src\RenderCache.*",
 "src\Search.*",
 "src\Selection.*",
 #"src\SetiingsStructs.*",
