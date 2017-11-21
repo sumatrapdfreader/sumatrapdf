@@ -738,7 +738,8 @@ bool Fb2Doc::Load() {
             OwnedData tmp = archive->GetFileDataById(0);
             data.Set(tmp.StealData());
         } else {
-            data.Set(file::ReadAll(fileName, nullptr));
+            OwnedData tmp = file::ReadAll(fileName);
+            data.Set(tmp.StealData());
         }
         delete archive;
     } else if (stream) {
@@ -754,11 +755,13 @@ bool Fb2Doc::Load() {
             delete archive;
         }
     }
-    if (!data)
+    if (!data) {
         return false;
+    }
     data.Set(DecodeTextToUtf8(data, true));
-    if (!data)
+    if (!data) {
         return false;
+    }
 
     HtmlPullParser parser(data, str::Len(data));
     HtmlToken* tok;
@@ -1140,10 +1143,11 @@ HtmlDoc::~HtmlDoc() {
 }
 
 bool HtmlDoc::Load() {
-    AutoFree data(file::ReadAll(fileName, nullptr));
-    if (!data)
+    OwnedData data(file::ReadAll(fileName));
+    if (!data.data) {
         return false;
-    htmlData.Set(DecodeTextToUtf8(data, true));
+    }
+    htmlData.Set(DecodeTextToUtf8(data.data, true));
     if (!htmlData)
         return false;
 
@@ -1204,14 +1208,21 @@ char* HtmlDoc::GetFileData(const char* relPath, size_t* lenOut) {
     return LoadURL(url, lenOut);
 }
 
+// TODO: convert to return OwnedData
 char* HtmlDoc::LoadURL(const char* url, size_t* lenOut) {
-    if (str::StartsWith(url, "data:"))
+    if (str::StartsWith(url, "data:")) {
         return DecodeDataURI(url, lenOut);
-    if (str::FindChar(url, ':'))
+    }
+    if (str::FindChar(url, ':')) {
         return nullptr;
+    }
     AutoFreeW path(str::conv::FromUtf8(url));
     str::TransChars(path, L"/", L"\\");
-    return file::ReadAll(path, lenOut);
+    OwnedData tmp(file::ReadAll(path));
+    if (lenOut) {
+        *lenOut = tmp.size;
+    }
+    return tmp.StealData();
 }
 
 WCHAR* HtmlDoc::GetProperty(DocumentProperty prop) const {
@@ -1365,15 +1376,17 @@ static const char* TextFindRfcEnd(str::Str<char>& htmlData, const char* curr) {
 }
 
 bool TxtDoc::Load() {
-    size_t dataLen;
-    AutoFree text(file::ReadAll(fileName, &dataLen));
-    if (str::EndsWithI(fileName, L".tcr") && str::StartsWith(text.Get(), TCR_HEADER))
-        text.Set(DecompressTcrText(text, dataLen));
-    if (!text)
+    OwnedData text(file::ReadAll(fileName));
+    if (str::EndsWithI(fileName, L".tcr") && str::StartsWith(text.data, TCR_HEADER)) {
+        text.Set(DecompressTcrText(text.data, text.size));
+    }
+    if (!text.data) {
         return false;
-    text.Set(DecodeTextToUtf8(text));
-    if (!text)
+    }
+    text.Set(DecodeTextToUtf8(text.data));
+    if (!text.data) {
         return false;
+    }
 
     int rfc;
     isRFC = str::Parse(path::GetBaseName(fileName), L"rfc%d.txt%$", &rfc) != nullptr;
@@ -1383,7 +1396,8 @@ bool TxtDoc::Load() {
     int sectionCount = 0;
 
     htmlData.Append("<pre>");
-    for (const char* curr = text; *curr; curr++) {
+    char* d = text.data;
+    for (const char* curr = d; *curr; curr++) {
         // similar logic to LinkifyText in PdfEngine.cpp
         if (linkEnd == curr) {
             htmlData.Append("</a>");
@@ -1392,27 +1406,28 @@ bool TxtDoc::Load() {
             /* don't check for hyperlinks inside a link */;
         else if ('@' == *curr)
             linkEnd = TextFindEmailEnd(htmlData, curr);
-        else if (curr > text && ('/' == curr[-1] || isalnum((unsigned char)curr[-1])))
+        else if (curr > d && ('/' == curr[-1] || isalnum((unsigned char)curr[-1])))
             /* don't check for a link at this position */;
         else if ('h' == *curr && str::Parse(curr, "http%?s://"))
-            linkEnd = TextFindLinkEnd(htmlData, curr, curr > text ? curr[-1] : ' ');
+            linkEnd = TextFindLinkEnd(htmlData, curr, curr > d ? curr[-1] : ' ');
         else if ('w' == *curr && str::StartsWith(curr, "www."))
-            linkEnd = TextFindLinkEnd(htmlData, curr, curr > text ? curr[-1] : ' ', true);
+            linkEnd = TextFindLinkEnd(htmlData, curr, curr > d ? curr[-1] : ' ', true);
         else if ('m' == *curr && str::StartsWith(curr, "mailto:"))
             linkEnd = TextFindEmailEnd(htmlData, curr);
-        else if (isRFC && curr > text && 'R' == *curr && str::Parse(curr, "RFC %d", &rfc))
+        else if (isRFC && curr > d && 'R' == *curr && str::Parse(curr, "RFC %d", &rfc))
             linkEnd = TextFindRfcEnd(htmlData, curr);
 
         // RFCs use (among others) form feeds as page separators
-        if ('\f' == *curr && (curr == text || '\n' == *(curr - 1)) &&
+        if ('\f' == *curr && (curr == d || '\n' == *(curr - 1)) &&
             (!*(curr + 1) || '\r' == *(curr + 1) || '\n' == *(curr + 1))) {
             // only insert pagebreaks if not at the very beginning or end
-            if (curr > text && *(curr + 2) && (*(curr + 3) || *(curr + 2) != '\n'))
+            if (curr > d && *(curr + 2) && (*(curr + 3) || *(curr + 2) != '\n')) {
                 htmlData.Append("<pagebreak />");
+            }
             continue;
         }
 
-        if (isRFC && curr > text && '\n' == *(curr - 1) && (str::IsDigit(*curr) || str::StartsWith(curr, "APPENDIX")) &&
+        if (isRFC && curr > d && '\n' == *(curr - 1) && (str::IsDigit(*curr) || str::StartsWith(curr, "APPENDIX")) &&
             str::FindChar(curr, '\n') && str::Parse(str::FindChar(curr, '\n') + 1, "%?\r\n")) {
             htmlData.AppendFmt("<b id='section%d' title=\"", ++sectionCount);
             for (const char* c = curr; *c != '\r' && *c != '\n'; c++) {
