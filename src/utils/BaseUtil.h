@@ -133,6 +133,8 @@
 //#include <locale>
 #include <codecvt>
 
+typedef uint8_t u8;
+
 // TODO: don't use INT_MAX and UINT_MAX
 #ifndef INT_MAX
 #define INT_MAX std::numeric_limits<int>::max()

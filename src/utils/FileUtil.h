@@ -34,8 +34,8 @@ WCHAR* GetAppPath(const WCHAR* fileName = nullptr);
 namespace file {
 
 FILE* OpenFILE(const char* path);
-char* ReadAllUtf(const char* path, size_t* fileSizeOut, Allocator* allocator = nullptr);
-bool WriteAllUtf(const char* path, const void* data, size_t dataLen);
+char* ReadAll(const char* path, size_t* fileSizeOut, Allocator* allocator = nullptr);
+bool WriteAll(const char* path, const void* data, size_t dataLen);
 
 #if OS_WIN
 FILE* OpenFILE(const WCHAR* path);

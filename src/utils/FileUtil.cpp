@@ -308,7 +308,7 @@ FILE* OpenFILE(const char* path) {
 #endif
 }
 
-char* ReadAllUtf(const char* filePath, size_t* fileSizeOut, Allocator* allocator) {
+char* ReadAll(const char* filePath, size_t* fileSizeOut, Allocator* allocator) {
 #if OS_WIN
     WCHAR buf[512];
     str::Utf8ToWcharBuf(filePath, str::Len(filePath), buf, dimof(buf));
@@ -322,7 +322,7 @@ char* ReadAllUtf(const char* filePath, size_t* fileSizeOut, Allocator* allocator
 #endif
 }
 
-bool WriteAllUtf(const char* filePath, const void* data, size_t dataLen) {
+bool WriteAll(const char* filePath, const void* data, size_t dataLen) {
 #if OS_WIN
     WCHAR buf[512];
     str::Utf8ToWcharBuf(filePath, str::Len(filePath), buf, dimof(buf));
