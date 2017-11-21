@@ -133,23 +133,22 @@ char* Archive::GetFileDataById(size_t fileId, size_t* len) {
         return nullptr;
     }
     size_t size = fileInfo->fileSizeUncompressed;
-    if (size > SIZE_MAX - 3) {
+    // for conveninence we zero-terminate with 2 bytes (so that the caller can
+    // treat it as zero-terminated string (ascii or unicode)
+    if (size > SIZE_MAX - 2) {
         return nullptr;
     }
-    AutoFree data((char*)malloc(size + 3));
+    AutoFree data(AllocArray<char>(size + 2));
     if (!data) {
         return nullptr;
     }
     if (!ar_entry_uncompress(ar_, data, size)) {
         return nullptr;
     }
-    // zero-terminate for convenience
-    data[size] = 0;
-    data[size + 1] = 0;
-    data[size + 2] = 0;
 
-    if (len)
+    if (len) {
         *len = size;
+    }
     return data.StealData();
 }
 
@@ -382,17 +381,28 @@ static bool TryLoadUnrarDll() {
     return IsUnrarDllLoaded() && IsValidUnrarDll();
 }
 
+struct DataBuf {
+    char* data;
+    size_t sizeLeft;
+};
+
 // return 1 on success. Other values for msg that we don't handle: UCM_CHANGEVOLUME, UCM_NEEDPASSWORD
 static int CALLBACK unrarCallback(UINT msg, LPARAM userData, LPARAM rarBuffer, LPARAM bytesProcessed) {
     if (UCM_PROCESSDATA != msg || !userData) {
         return -1;
     }
-    str::Str<char>* data = (str::Str<char>*)userData;
-    bool ok = data->AppendChecked((char*)rarBuffer, bytesProcessed);
-    return ok ? 1 : -1;
+    DataBuf* buf = (DataBuf*)userData;
+    size_t bytesGot = (size_t)bytesProcessed;
+    if (bytesGot > buf->sizeLeft) {
+        return -1;
+    }
+    memcpy(buf->data, (char*)rarBuffer, bytesGot);
+    buf->data += bytesGot;
+    buf->sizeLeft -= bytesGot;
+    return 1;
 }
 
-static bool FindFile(HANDLE hArc, RARHeaderDataEx *rarHeader, const WCHAR *fileName) {
+static bool FindFile(HANDLE hArc, RARHeaderDataEx* rarHeader, const WCHAR* fileName) {
     int res;
     for (;;) {
         res = RARReadHeaderEx(hArc, rarHeader);
@@ -415,15 +425,13 @@ char* Archive::GetFileDataByIdUnarrDll(size_t fileId, size_t* len) {
 
     AutoFreeW rarPath(str::conv::FromUtf8(rarFilePath_));
 
-    // TODO: change to malloc()ing the whole buffer and
-    // using std::string_view for data
-    str::Str<char> data;
+    DataBuf uncompressedBuf;
 
     RAROpenArchiveDataEx arcData = {0};
     arcData.ArcNameW = rarPath.Get();
     arcData.OpenMode = RAR_OM_EXTRACT;
     arcData.Callback = unrarCallback;
-    arcData.UserData = (LPARAM)&data;
+    arcData.UserData = (LPARAM)&uncompressedBuf;
 
     HANDLE hArc = RAROpenArchiveEx(&arcData);
     if (!hArc || arcData.OpenResult != 0) {
@@ -433,30 +441,44 @@ char* Archive::GetFileDataByIdUnarrDll(size_t fileId, size_t* len) {
     auto* fileInfo = fileInfos_[fileId];
     CrashIf(fileInfo->fileId != fileId);
 
+    char* data = nullptr;
+
     AutoFreeW fileName(str::conv::FromUtf8(fileInfo->name.data()));
     RARHeaderDataEx rarHeader = {0};
     bool ok = FindFile(hArc, &rarHeader, fileName.Get());
-    if (ok) {
-        int res = RARProcessFile(hArc, RAR_TEST, nullptr, nullptr);
-        if ((res == 0) && (rarHeader.UnpSize == data.size())) {
-            // zero-terminate for convenience
-            if (!data.AppendChecked("\0\0\0", 3)) {
-                ok = false;
-            }
-        } else {
-            ok = false;
-        }
+    if (!ok) {
+        goto Exit;
+    }
+    size_t size = fileInfo->fileSizeUncompressed;
+    CrashIf(size != rarHeader.UnpSize);
+    // for conveninence we zero-terminate with 2 bytes (so that the caller can
+    // treat it as zero-terminated string (ascii or unicode)
+    if (size > SIZE_MAX - 2) {
+        ok = false;
+        goto Exit;
     }
 
+    data = AllocArray<char>(size + 2);
+    if (!data) {
+        ok = false;
+        goto Exit;
+    }
+    uncompressedBuf.data = data;
+    uncompressedBuf.sizeLeft = size;
+    int res = RARProcessFile(hArc, RAR_TEST, nullptr, nullptr);
+    ok = (res == 0) && (uncompressedBuf.sizeLeft == 0);
+
+Exit:
     RARCloseArchive(hArc);
 
     if (!ok) {
+        free(data);
         return nullptr;
     }
     if (len) {
         *len = rarHeader.UnpSize;
     }
-    return data.StealData();
+    return data;
 }
 
 bool Archive::OpenUnrarDllFallback(const char* rarPathUtf) {
