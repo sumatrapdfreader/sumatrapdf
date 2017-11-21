@@ -124,8 +124,9 @@ void HwndWrapper::RequestLayout() {
 }
 
 void HwndWrapper::LayoutIfRequested() {
-    if (layoutRequested)
+    if (layoutRequested) {
         TopLevelLayout();
+    }
 }
 
 void HwndWrapper::OnPaint(HWND hwnd) {

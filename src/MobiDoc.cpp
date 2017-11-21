@@ -863,8 +863,8 @@ bool MobiDoc::LoadDocument(PdbReader* pdbReader) {
     }
     // replace unexpected \0 with spaces
     // cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2529
-    char *s = doc->Get();
-    char *end = s + doc->size();
+    char* s = doc->Get();
+    char* end = s + doc->size();
     while ((s = (char*)memchr(s, '\0', end - s)) != nullptr) {
         *s = ' ';
     }
