@@ -12,45 +12,39 @@
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
 
-GlobalPrefs *gGlobalPrefs = nullptr;
+GlobalPrefs* gGlobalPrefs = nullptr;
 
-DisplayState *NewDisplayState(const WCHAR *filePath)
-{
-    DisplayState *ds = (DisplayState *)DeserializeStruct(&gFileStateInfo, nullptr);
+DisplayState* NewDisplayState(const WCHAR* filePath) {
+    DisplayState* ds = (DisplayState*)DeserializeStruct(&gFileStateInfo, nullptr);
     str::ReplacePtr(&ds->filePath, filePath);
     return ds;
 }
 
-void DeleteDisplayState(DisplayState *ds)
-{
+void DeleteDisplayState(DisplayState* ds) {
     delete ds->thumbnail;
     FreeStruct(&gFileStateInfo, ds);
 }
 
-Favorite *NewFavorite(int pageNo, const WCHAR *name, const WCHAR *pageLabel)
-{
-    Favorite *fav = (Favorite *)DeserializeStruct(&gFavoriteInfo, nullptr);
+Favorite* NewFavorite(int pageNo, const WCHAR* name, const WCHAR* pageLabel) {
+    Favorite* fav = (Favorite*)DeserializeStruct(&gFavoriteInfo, nullptr);
     fav->pageNo = pageNo;
     fav->name = str::Dup(name);
     fav->pageLabel = str::Dup(pageLabel);
     return fav;
 }
 
-void DeleteFavorite(Favorite *fav)
-{
+void DeleteFavorite(Favorite* fav) {
     FreeStruct(&gFavoriteInfo, fav);
 }
 
-GlobalPrefs *NewGlobalPrefs(const char *data)
-{
-    return (GlobalPrefs *)DeserializeStruct(&gGlobalPrefsInfo, data);
+GlobalPrefs* NewGlobalPrefs(const char* data) {
+    return (GlobalPrefs*)DeserializeStruct(&gGlobalPrefsInfo, data);
 }
 
 // TODO: return OwnedData
-char *SerializeGlobalPrefs(GlobalPrefs *gp, const char *prevData, size_t *sizeOut)
-{
+char* SerializeGlobalPrefs(GlobalPrefs* gp, const char* prevData, size_t* sizeOut) {
     if (!gp->rememberStatePerDocument || !gp->rememberOpenedFiles) {
-        for (DisplayState *ds : *gp->fileStates) {
+        for (DisplayState* ds : *gp->fileStates) {
             ds->useDefaultState = true;
         }
         // prevent unnecessary settings from being written out
@@ -65,7 +59,7 @@ char *SerializeGlobalPrefs(GlobalPrefs *gp, const char *prevData, size_t *sizeOu
         gFileStateInfo.fieldCount = fieldCount;
     }
 
-    char *serialized = SerializeStruct(&gGlobalPrefsInfo, gp, prevData, sizeOut);
+    char* serialized = SerializeStruct(&gGlobalPrefsInfo, gp, prevData, sizeOut);
 
     if (!gp->rememberStatePerDocument || !gp->rememberOpenedFiles) {
         gFileStateInfo.fieldCount = dimof(gFileStateFields);
@@ -74,26 +68,23 @@ char *SerializeGlobalPrefs(GlobalPrefs *gp, const char *prevData, size_t *sizeOu
     return serialized;
 }
 
-void DeleteGlobalPrefs(GlobalPrefs *gp)
-{
+void DeleteGlobalPrefs(GlobalPrefs* gp) {
     if (!gp) {
         return;
     }
 
-    for (DisplayState *ds : *gp->fileStates) {
+    for (DisplayState* ds : *gp->fileStates) {
         delete ds->thumbnail;
     }
     FreeStruct(&gGlobalPrefsInfo, gp);
 }
 
-SessionData *NewSessionData()
-{
-    return (SessionData *)DeserializeStruct(&gSessionDataInfo, nullptr);
+SessionData* NewSessionData() {
+    return (SessionData*)DeserializeStruct(&gSessionDataInfo, nullptr);
 }
 
-TabState *NewTabState(DisplayState *ds)
-{
-    TabState *state = (TabState *)DeserializeStruct(&gTabStateInfo, nullptr);
+TabState* NewTabState(DisplayState* ds) {
+    TabState* state = (TabState*)DeserializeStruct(&gTabStateInfo, nullptr);
     str::ReplacePtr(&state->filePath, ds->filePath);
     str::ReplacePtr(&state->displayMode, ds->displayMode);
     state->pageNo = ds->pageNo;
@@ -105,10 +96,9 @@ TabState *NewTabState(DisplayState *ds)
     return state;
 }
 
-void ResetSessionState(Vec<SessionData *> *sessionData)
-{
+void ResetSessionState(Vec<SessionData*>* sessionData) {
     CrashIf(!sessionData);
-    for (SessionData *data : *sessionData) {
+    for (SessionData* data : *sessionData) {
         FreeStruct(&gSessionDataInfo, data);
     }
     sessionData->Reset();

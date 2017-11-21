@@ -29,7 +29,7 @@ $files =
 #"src\FileHistory.*",
 "src\FileModifications.*",
 "src\FileThumbnails.*",
-#"src\GlobalPrefs.*",
+"src\GlobalPrefs.*",
 #"src\HtmlFormatter.*",
 "src\ImagesEngine.*",
 "src\Menu.*",
