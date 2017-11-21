@@ -58,16 +58,17 @@ bool Load()
     CrashIf(gGlobalPrefs);
 
     std::unique_ptr<WCHAR> path(GetSettingsPath());
-    std::unique_ptr<char> prefsData(file::ReadAll(path.get(), nullptr));
-    gGlobalPrefs = NewGlobalPrefs(prefsData.get());
+    OwnedData prefsData(file::ReadAll(path.get()));
+    gGlobalPrefs = NewGlobalPrefs(prefsData.data);
     CrashAlwaysIf(!gGlobalPrefs);
 
     // in pre-release builds between 3.1.10079 and 3.1.10377,
     // RestoreSession was a string with the additional option "auto"
     // TODO: remove this after 3.2 has been released
 #if defined(DEBUG) || defined(SVN_PRE_RELEASE_VER)
-    if (!gGlobalPrefs->restoreSession && prefsData && str::Find(prefsData.get(), "\nRestoreSession = auto"))
+    if (!gGlobalPrefs->restoreSession && prefsData.data && str::Find(prefsData.data, "\nRestoreSession = auto")) {
         gGlobalPrefs->restoreSession = true;
+    }
 #endif
 
 #ifdef DISABLE_EBOOK_UI
@@ -114,8 +115,9 @@ bool Load()
     gFileHistory.UpdateStatesSource(gGlobalPrefs->fileStates);
     SetDefaultEbookFont(gGlobalPrefs->ebookUI.fontName, gGlobalPrefs->ebookUI.fontSize);
 
-    if (!file::Exists(path.get()))
+    if (!file::Exists(path.get())) {
         Save();
+    }
     return true;
 }
 
@@ -147,10 +149,9 @@ bool Save()
     if (!path) {
         return false;
     }
-    size_t prevPrefsDataSize = 0;
-    std::unique_ptr<char> prevPrefsData(file::ReadAll(path.get(), &prevPrefsDataSize));
+    OwnedData prevPrefsData(file::ReadAll(path.get()));
     size_t prefsDataSize = 0;
-    std::unique_ptr<char> prefsData(SerializeGlobalPrefs(gGlobalPrefs, prevPrefsData.get(), &prefsDataSize));
+    std::unique_ptr<char> prefsData(SerializeGlobalPrefs(gGlobalPrefs, prevPrefsData.data, &prefsDataSize));
 
     CrashIf(!prefsData || 0 == prefsDataSize);
     if (!prefsData || 0 == prefsDataSize) {
@@ -158,8 +159,8 @@ bool Save()
     }
 
     // only save if anything's changed at all
-    if (prevPrefsDataSize == prefsDataSize &&
-        str::Eq(prefsData.get(), prevPrefsData.get())) {
+    if (prevPrefsData.size == prefsDataSize &&
+        str::Eq(prefsData.get(), prevPrefsData.data)) {
         return true;
     }
 

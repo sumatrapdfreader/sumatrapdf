@@ -5,7 +5,7 @@
 Remove-Item src\*.bak, src\*.tmp
 
 $files =
-#"src\AppPrefs.*",
+"src\AppPrefs.*",
 #"src\AppTools.*",
 #"src\AppUtil.*",
 "src\Canvas.*",

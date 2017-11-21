@@ -46,6 +46,7 @@ GlobalPrefs *NewGlobalPrefs(const char *data)
     return (GlobalPrefs *)DeserializeStruct(&gGlobalPrefsInfo, data);
 }
 
+// TODO: return OwnedData
 char *SerializeGlobalPrefs(GlobalPrefs *gp, const char *prevData, size_t *sizeOut)
 {
     if (!gp->rememberStatePerDocument || !gp->rememberOpenedFiles) {
@@ -56,8 +57,9 @@ char *SerializeGlobalPrefs(GlobalPrefs *gp, const char *prevData, size_t *sizeOu
         uint16_t fieldCount = 0;
         while (++fieldCount <= dimof(gFileStateFields)) {
             // count the number of fields up to and including useDefaultState
-            if (gFileStateFields[fieldCount - 1].offset == offsetof(FileState, useDefaultState))
+            if (gFileStateFields[fieldCount - 1].offset == offsetof(FileState, useDefaultState)) {
                 break;
+            }
         }
         // restore the correct fieldCount ASAP after serialization
         gFileStateInfo.fieldCount = fieldCount;
@@ -65,16 +67,18 @@ char *SerializeGlobalPrefs(GlobalPrefs *gp, const char *prevData, size_t *sizeOu
 
     char *serialized = SerializeStruct(&gGlobalPrefsInfo, gp, prevData, sizeOut);
 
-    if (!gp->rememberStatePerDocument || !gp->rememberOpenedFiles)
+    if (!gp->rememberStatePerDocument || !gp->rememberOpenedFiles) {
         gFileStateInfo.fieldCount = dimof(gFileStateFields);
+    }
 
     return serialized;
 }
 
 void DeleteGlobalPrefs(GlobalPrefs *gp)
 {
-    if (!gp)
-      return;
+    if (!gp) {
+        return;
+    }
 
     for (DisplayState *ds : *gp->fileStates) {
         delete ds->thumbnail;
