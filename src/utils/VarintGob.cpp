@@ -25,8 +25,7 @@
 // decodes unsigned 64-bit int from data d of dLen size
 // returns 0 on error
 // returns the number of consumed bytes from d on success
-int UVarintGobDecode(const uint8_t *d, int dLen, uint64_t *resOut)
-{
+int UVarintGobDecode(const uint8_t* d, int dLen, uint64_t* resOut) {
     if (dLen < 1)
         return 0;
     uint8_t b = *d++;
@@ -44,7 +43,7 @@ int UVarintGobDecode(const uint8_t *d, int dLen, uint64_t *resOut)
     if (numLen > dLen)
         return 0;
     uint64_t res = 0;
-    for (int i=0; i < numLen; i++) {
+    for (int i = 0; i < numLen; i++) {
         b = *d++;
         res = (res << 8) | b;
     }
@@ -52,8 +51,7 @@ int UVarintGobDecode(const uint8_t *d, int dLen, uint64_t *resOut)
     return 1 + numLen;
 }
 
-int VarintGobDecode(const uint8_t *d, int dLen, int64_t *resOut)
-{
+int VarintGobDecode(const uint8_t* d, int dLen, int64_t* resOut) {
     uint64_t val;
     int n = UVarintGobDecode(d, dLen, &val);
     if (n == 0)
@@ -74,8 +72,7 @@ static const int UInt64SizeOf = 8;
 
 // encodes unsigned integer val into a buffer d of dLen size (must be at least 9 bytes)
 // returns number of bytes used
-int UVarintGobEncode(uint64_t val, uint8_t *d, int dLen)
-{
+int UVarintGobEncode(uint64_t val, uint8_t* d, int dLen) {
     uint8_t b;
     CrashIf(dLen < MinGobEncodeBufferSize);
     if (val <= 0x7f) {
@@ -84,7 +81,7 @@ int UVarintGobEncode(uint64_t val, uint8_t *d, int dLen)
     }
 
     uint8_t buf[UInt64SizeOf];
-    uint8_t *bufPtr = buf + UInt64SizeOf;
+    uint8_t* bufPtr = buf + UInt64SizeOf;
     int len8Minus = UInt64SizeOf;
     while (val > 0) {
         b = (uint8_t)(val & 0xff);
@@ -94,19 +91,18 @@ int UVarintGobEncode(uint64_t val, uint8_t *d, int dLen)
         --len8Minus;
     }
     CrashIf(len8Minus < 1);
-    int realLen = 8-len8Minus;
+    int realLen = 8 - len8Minus;
     CrashIf(realLen > 8);
     int lenEncoded = (len8Minus - UInt64SizeOf);
     uint8_t lenEncodedU = (uint8_t)lenEncoded;
     *d++ = lenEncodedU;
     memcpy(d, bufPtr, realLen);
-    return (int)realLen+1; // +1 for the length byte
+    return (int)realLen + 1; // +1 for the length byte
 }
 
 // encodes signed integer val into a buffer d of dLen size (must be at least 9 bytes)
 // returns number of bytes used
-int VarintGobEncode(int64_t val, uint8_t *d, int dLen)
-{
+int VarintGobEncode(int64_t val, uint8_t* d, int dLen) {
     uint64_t uVal;
     if (val < 0) {
         val = ~val;
