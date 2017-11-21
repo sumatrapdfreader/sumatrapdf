@@ -8,10 +8,10 @@ namespace sertxt {
 struct FieldMetadata;
 
 typedef struct {
-    uint16_t                size;
-    uint16_t                nFields;
-    const char *            fieldNames;
-    const FieldMetadata *   fields;
+    uint16_t size;
+    uint16_t nFields;
+    const char* fieldNames;
+    const FieldMetadata* fields;
 } StructMetadata;
 
 typedef enum {
@@ -39,16 +39,16 @@ typedef enum {
 // information about a single field
 struct FieldMetadata {
     // offset of the value from the beginning of the struct
-    uint16_t         offset;
-    Type             type;
+    uint16_t offset;
+    Type type;
     // StructMetadata * for TYP_ARRAY and TYPE_STRUCT_PT
     // otherwise default value for this field
-    uintptr_t        defValOrDefinition;
+    uintptr_t defValOrDefinition;
 };
 
-uint8_t *   Serialize(const uint8_t *data,  const StructMetadata *def, size_t *sizeOut);
-uint8_t*    Deserialize(struct TxtNode *root, const StructMetadata *def);
-uint8_t*    Deserialize(char *data, size_t dataSize, const StructMetadata *def);
-void        FreeStruct(uint8_t *data, const StructMetadata *def);
+uint8_t* Serialize(const uint8_t* data, const StructMetadata* def, size_t* sizeOut);
+uint8_t* Deserialize(struct TxtNode* root, const StructMetadata* def);
+uint8_t* Deserialize(char* data, size_t dataSize, const StructMetadata* def);
+void FreeStruct(uint8_t* data, const StructMetadata* def);
 
 } // namespace sertxt
