@@ -8,7 +8,7 @@ class ThreadBase {
     HANDLE hThread;
     bool cancelRequested;
 
-    static DWORD WINAPI ThreadProc(void *data);
+    static DWORD WINAPI ThreadProc(void* data);
 
   protected:
     // for debugging
@@ -22,7 +22,7 @@ class ThreadBase {
 
   public:
     // name is for debugging purposes, can be nullptr.
-    explicit ThreadBase(const char *name = nullptr);
+    explicit ThreadBase(const char* name = nullptr);
 
     // call this to start executing Run() function.
     void Start();
@@ -44,6 +44,6 @@ class ThreadBase {
     virtual void Run() = 0;
 };
 
-void SetThreadName(DWORD threadId, const char *threadName);
+void SetThreadName(DWORD threadId, const char* threadName);
 
-void RunAsync(const std::function<void()> &);
+void RunAsync(const std::function<void()>&);
