@@ -106,7 +106,7 @@ $files =
 #"src\utils\TxtParser.*",
 "src\utils\UITask.*",
 "src\utils\UtAssert.*",
-#"src\utils\WebpReader.*",
+"src\utils\WebpReader.*",
 "src\utils\WinDynCalls.*",
 "src\utils\WinUtil.*",
 "src\utils\ZipUtil.*",

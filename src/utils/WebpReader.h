@@ -3,8 +3,8 @@
 
 namespace webp {
 
-bool                HasSignature(const char *data, size_t len);
-Gdiplus::Size       SizeFromData(const char *data, size_t len);
-Gdiplus::Bitmap *   ImageFromData(const char *data, size_t len);
+bool HasSignature(const char* data, size_t len);
+Gdiplus::Size SizeFromData(const char* data, size_t len);
+Gdiplus::Bitmap* ImageFromData(const char* data, size_t len);
 
-}
+} // namespace webp
