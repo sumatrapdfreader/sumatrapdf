@@ -11,7 +11,7 @@ enum {
 
 namespace prefs {
 
-WCHAR *GetSettingsPath();
+WCHAR* GetSettingsPath();
 
 bool Load();
 bool Save();
@@ -22,4 +22,4 @@ void RegisterForFileChanges();
 void UnregisterForFileChanges();
 void UpdateGlobalPrefs(const CommandLineInfo& i);
 
-};
+}; // namespace prefs
