@@ -14,7 +14,7 @@ static HWND gTaskDispatchHwnd = nullptr;
 
 static LRESULT CALLBACK WndProcTaskDispatch(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     if (WM_EXECUTE_TASK == msg) {
-        auto func = (std::function<void()> *)lParam;
+        auto func = (std::function<void()>*)lParam;
         (*func)();
         delete func;
         return 0;
@@ -28,9 +28,8 @@ void Initialize() {
     RegisterClassEx(&wcex);
 
     CrashIf(gTaskDispatchHwnd);
-    gTaskDispatchHwnd =
-        CreateWindow(UITASK_CLASS_NAME, L"UITask Dispatch Window", WS_OVERLAPPED, 0, 0, 0, 0,
-                     HWND_MESSAGE, nullptr, GetModuleHandle(nullptr), nullptr);
+    gTaskDispatchHwnd = CreateWindow(UITASK_CLASS_NAME, L"UITask Dispatch Window", WS_OVERLAPPED, 0, 0, 0, 0,
+                                     HWND_MESSAGE, nullptr, GetModuleHandle(nullptr), nullptr);
 }
 
 void DrainQueue() {
@@ -47,8 +46,8 @@ void Destroy() {
     gTaskDispatchHwnd = nullptr;
 }
 
-void Post(const std::function<void()> &f) {
+void Post(const std::function<void()>& f) {
     auto func = new std::function<void()>(f);
     PostMessage(gTaskDispatchHwnd, WM_EXECUTE_TASK, 0, (LPARAM)func);
 }
-}
+} // namespace uitask

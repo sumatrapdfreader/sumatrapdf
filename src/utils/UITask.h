@@ -10,5 +10,5 @@ void Destroy();
 // call only from the same thread as Initialize() and Destroy()
 void DrainQueue();
 
-void Post(const std::function<void()> &);
-}
+void Post(const std::function<void()>&);
+} // namespace uitask

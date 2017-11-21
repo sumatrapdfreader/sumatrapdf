@@ -103,7 +103,7 @@ $files =
 #"src\utils\ThreadUtil.*",
 #"src\utils\TrivialHtmlParser.*",
 #"src\utils\TxtParser.*",
-#"src\utils\UITask.*",
+"src\utils\UITask.*",
 "src\utils\UtAssert.*",
 #"src\utils\VarintGob.*",
 #"src\utils\WebpReader.*",
