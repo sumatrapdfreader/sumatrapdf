@@ -107,8 +107,8 @@ static Vec<PageAnnotation>* ParseFileModifications(const char* data) {
 
 Vec<PageAnnotation>* LoadFileModifications(const WCHAR* filePath) {
     AutoFreeW modificationsPath(str::Join(filePath, SMX_FILE_EXT));
-    AutoFree data(file::ReadAll(modificationsPath, nullptr));
-    return ParseFileModifications(data);
+    OwnedData data(file::ReadAll(modificationsPath));
+    return ParseFileModifications(data.data);
 }
 
 bool SaveFileModifictions(const WCHAR* filePath, Vec<PageAnnotation>* list) {
@@ -120,15 +120,16 @@ bool SaveFileModifictions(const WCHAR* filePath, Vec<PageAnnotation>* list) {
     str::Str<char> data;
     size_t offset = 0;
 
-    AutoFree prevData(file::ReadAll(modificationsPath, nullptr));
-    Vec<PageAnnotation>* prevList = ParseFileModifications(prevData);
+    OwnedData prevData(file::ReadAll(modificationsPath));
+    Vec<PageAnnotation>* prevList = ParseFileModifications(prevData.data);
     bool isUpdate = prevList != nullptr;
     if (isUpdate) {
         // in the case of an update, append changed annotations to the existing ones
         // (don't rewrite the existing ones in case they're by a newer version which
         // added annotation types and properties this version doesn't know anything about)
-        for (; offset < prevList->size() && prevList->at(offset) == list->at(offset); offset++)
-            ;
+        for (; offset < prevList->size() && prevList->at(offset) == list->at(offset); offset++) {
+            // do nothing
+        }
         CrashIfDebugOnly(offset != prevList->size());
         data.AppendAndFree(prevData.StealData());
         delete prevList;
@@ -137,14 +138,16 @@ bool SaveFileModifictions(const WCHAR* filePath, Vec<PageAnnotation>* list) {
     }
     data.Append("\r\n");
 
-    if (list->size() == offset)
+    if (list->size() == offset) {
         return true; // nothing (new) to save
+    }
 
     data.AppendFmt("[@%s]\r\n", isUpdate ? "update" : "meta");
     data.AppendFmt("version = %s\r\n", SMX_CURR_VERSION);
     int64_t size = file::GetSize(filePath);
-    if (0 <= size && size <= UINT_MAX)
+    if (0 <= size && size <= UINT_MAX) {
         data.AppendFmt("filesize = %u\r\n", (UINT)size);
+    }
     SYSTEMTIME time;
     GetSystemTime(&time);
     data.AppendFmt("timestamp = %04d-%02d-%02dT%02d:%02d:%02dZ\r\n", time.wYear, time.wMonth, time.wDay, time.wHour,
@@ -181,8 +184,9 @@ bool SaveFileModifictions(const WCHAR* filePath, Vec<PageAnnotation>* list) {
 }
 
 bool IsModificationsFile(const WCHAR* filePath) {
-    if (!str::EndsWithI(filePath, SMX_FILE_EXT))
+    if (!str::EndsWithI(filePath, SMX_FILE_EXT)) {
         return false;
+    }
     AutoFreeW origPath(str::DupN(filePath, str::Len(filePath) - str::Len(SMX_FILE_EXT)));
     return file::Exists(origPath);
 }
