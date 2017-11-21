@@ -97,7 +97,7 @@ $files =
 "src\utils\ScopedWin.h",
 "src\utils\SerializeTxt.*",
 "src\utils\SettingsUtil.*",
-#"src\utils\SquareTreeParser.*",
+"src\utils\SquareTreeParser.*",
 "src\utils\StrFormat.*",
 "src\utils\StrSlice.*",
 "src\utils\StrUtil*",

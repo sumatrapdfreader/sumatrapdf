@@ -52,31 +52,30 @@ Final note: Whitespace at the start and end of a line as well as around key-valu
 separators is always ignored.
 */
 
-static inline char *SkipWs(char *s, bool stopAtLineEnd=false)
-{
-    for (; str::IsWs(*s) && (!stopAtLineEnd || *s != '\n'); s++);
+static inline char* SkipWs(char* s, bool stopAtLineEnd = false) {
+    for (; str::IsWs(*s) && (!stopAtLineEnd || *s != '\n'); s++)
+        ;
     return s;
 }
-static inline char *SkipWsRev(char *begin, char *s)
-{
-    for (; s > begin && str::IsWs(*(s - 1)); s--);
+static inline char* SkipWsRev(char* begin, char* s) {
+    for (; s > begin && str::IsWs(*(s - 1)); s--)
+        ;
     return s;
 }
 
-static char *SkipWsAndComments(char *s)
-{
+static char* SkipWsAndComments(char* s) {
     do {
         s = SkipWs(s);
         if ('#' == *s || ';' == *s) {
             // skip entire comment line
-            for (; *s && *s != '\n'; s++);
+            for (; *s && *s != '\n'; s++)
+                ;
         }
     } while (str::IsWs(*s));
     return s;
 }
 
-static bool IsBracketLine(char *s)
-{
+static bool IsBracketLine(char* s) {
     if (*s != '[')
         return false;
     // the line may only contain whitespace and a comment
@@ -87,8 +86,7 @@ static bool IsBracketLine(char *s)
     return true;
 }
 
-SquareTreeNode::~SquareTreeNode()
-{
+SquareTreeNode::~SquareTreeNode() {
     for (size_t i = 0; i < data.size(); i++) {
         DataItem& item = data.at(i);
         if (item.isChild)
@@ -96,8 +94,7 @@ SquareTreeNode::~SquareTreeNode()
     }
 }
 
-const char *SquareTreeNode::GetValue(const char *key, size_t *startIdx) const
-{
+const char* SquareTreeNode::GetValue(const char* key, size_t* startIdx) const {
     for (size_t i = startIdx ? *startIdx : 0; i < data.size(); i++) {
         DataItem& item = data.at(i);
         if (str::EqI(key, item.key) && !item.isChild) {
@@ -109,8 +106,7 @@ const char *SquareTreeNode::GetValue(const char *key, size_t *startIdx) const
     return nullptr;
 }
 
-SquareTreeNode *SquareTreeNode::GetChild(const char *key, size_t *startIdx) const
-{
+SquareTreeNode* SquareTreeNode::GetChild(const char* key, size_t* startIdx) const {
     for (size_t i = startIdx ? *startIdx : 0; i < data.size(); i++) {
         DataItem& item = data.at(i);
         if (str::EqI(key, item.key) && item.isChild) {
@@ -122,28 +118,30 @@ SquareTreeNode *SquareTreeNode::GetChild(const char *key, size_t *startIdx) cons
     return nullptr;
 }
 
-static SquareTreeNode *ParseSquareTreeRec(char *& data, bool isTopLevel=false)
-{
-    SquareTreeNode *node = new SquareTreeNode();
+static SquareTreeNode* ParseSquareTreeRec(char*& data, bool isTopLevel = false) {
+    SquareTreeNode* node = new SquareTreeNode();
 
     while (*(data = SkipWsAndComments(data))) {
         // all non-empty non-comment lines contain a key-value pair
         // where the value is either a string (separated by '=' or ':')
         // or a list of child nodes (if the key is followed by '[' alone)
-        char *key = data;
-        for (data = key; *data && *data != '=' && *data != ':' && *data != '[' && *data != ']' && *data != '\n'; data++);
+        char* key = data;
+        for (data = key; *data && *data != '=' && *data != ':' && *data != '[' && *data != ']' && *data != '\n'; data++)
+            ;
         if (!*data || '\n' == *data) {
             // use first whitespace as a fallback separator
-            for (data = key; *data && !str::IsWs(*data); data++);
+            for (data = key; *data && !str::IsWs(*data); data++)
+                ;
         }
-        char *separator = data;
+        char* separator = data;
         if (*data && *data != '\n') {
             // skip to the first non-whitespace character on the same line (value)
             data = SkipWs(data + 1, true);
         }
-        char *value = data;
+        char* value = data;
         // skip to the end of the line
-        for (; *data && *data != '\n'; data++);
+        for (; *data && *data != '\n'; data++)
+            ;
         if (IsBracketLine(separator) ||
             // also tolerate "key \n [ \n ... \n ]" (else the key
             // gets an empty value and the child node an empty key)
@@ -158,16 +156,14 @@ static SquareTreeNode *ParseSquareTreeRec(char *& data, bool isTopLevel=false)
                 data++;
                 node->data.Append(SquareTreeNode::DataItem(key, ParseSquareTreeRec(data)));
             }
-        }
-        else if (']' == *key) {
+        } else if (']' == *key) {
             // finish parsing child node
             data = key + 1;
             if (!isTopLevel)
                 return node;
             // ignore superfluous closing square brackets instead of
             // ignoring all content following them
-        }
-        else if ('[' == *key && ']' == SkipWsRev(value, data)[-1]) {
+        } else if ('[' == *key && ']' == SkipWsRev(value, data)[-1]) {
             // treat INI section headers as top-level node names
             // (else "[Section]" would be ignored)
             if (!isTopLevel) {
@@ -178,11 +174,9 @@ static SquareTreeNode *ParseSquareTreeRec(char *& data, bool isTopLevel=false)
             key = SkipWs(key + 1);
             *SkipWsRev(key, SkipWsRev(value, data) - 1) = '\0';
             node->data.Append(SquareTreeNode::DataItem(key, ParseSquareTreeRec(data)));
-        }
-        else if ('[' == *separator || ']' == *separator) {
+        } else if ('[' == *separator || ']' == *separator) {
             // invalid line (ignored)
-        }
-        else {
+        } else {
             // string value (decoding is left to the consumer)
             bool hasMoreLines = '\n' == *data;
             *SkipWsRev(key, separator) = '\0';
@@ -197,19 +191,18 @@ static SquareTreeNode *ParseSquareTreeRec(char *& data, bool isTopLevel=false)
     return node;
 }
 
-SquareTree::SquareTree(const char *data) : root(nullptr)
-{
+SquareTree::SquareTree(const char* data) : root(nullptr) {
     // convert the file content to UTF-8
     if (str::StartsWith(data, UTF8_BOM))
         dataUtf8.SetCopy(data + 3);
     else if (str::StartsWith(data, UTF16_BOM))
-        dataUtf8.Set(str::conv::ToUtf8((const WCHAR *)(data + 2)));
+        dataUtf8.Set(str::conv::ToUtf8((const WCHAR*)(data + 2)));
     else if (data)
         dataUtf8.Set(str::conv::ToUtf8(AutoFreeW(str::conv::FromAnsi(data))));
     if (!dataUtf8)
         return;
 
-    char *start = dataUtf8.Get();
+    char* start = dataUtf8.Get();
     root = ParseSquareTreeRec(start, true);
     CrashIf(*start || !root);
 }
