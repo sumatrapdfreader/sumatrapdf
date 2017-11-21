@@ -4,12 +4,11 @@
 namespace slog {
 
 class Logger {
-public:
-    virtual ~Logger() { }
-    virtual void Log(const WCHAR *s) = 0;
+  public:
+    virtual ~Logger() {}
+    virtual void Log(const WCHAR* s) = 0;
 
-    void LogFmt(const WCHAR *fmt, ...)
-    {
+    void LogFmt(const WCHAR* fmt, ...) {
         va_list args;
         va_start(args, fmt);
         AutoFreeW s(str::FmtV(fmt, args));
@@ -17,8 +16,7 @@ public:
         va_end(args);
     }
 
-    void LogAndFree(WCHAR *s)
-    {
+    void LogAndFree(WCHAR* s) {
         Log(s);
         free(s);
     }
@@ -27,9 +25,8 @@ public:
 class MemoryLogger : public Logger {
     str::Str<WCHAR> log;
 
-public:
-    virtual void Log(const WCHAR *s)
-    {
+  public:
+    virtual void Log(const WCHAR* s) {
         if (s) {
             log.Append(s);
             log.Append(L"\r\n");
@@ -38,13 +35,12 @@ public:
 
     // caller MUST NOT free the result
     // (str::Dup data, if the logger is in use)
-    WCHAR *GetData() { return log.LendData(); }
+    WCHAR* GetData() { return log.LendData(); }
 };
 
 class DebugLogger : public Logger {
-public:
-    virtual void Log(const WCHAR *s)
-    {
+  public:
+    virtual void Log(const WCHAR* s) {
         if (s) {
             // DbgView displays one line per OutputDebugString call
             OutputDebugString(AutoFreeW(str::Format(L"%s\n", s)));
@@ -53,14 +49,10 @@ public:
 };
 
 class StderrLogger : public Logger {
-public:
-    virtual ~StderrLogger()
-    {
-        fflush(stderr);
-    }
+  public:
+    virtual ~StderrLogger() { fflush(stderr); }
 
-    virtual void Log(const WCHAR *s)
-    {
+    virtual void Log(const WCHAR* s) {
         if (s)
             fwprintf(stderr, L"%s\n", s);
     }

@@ -2,14 +2,13 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 class FrameTimeoutCalculator {
+    LARGE_INTEGER timeStart;
+    LARGE_INTEGER timeLast;
+    LONGLONG ticksPerFrame;
+    LONGLONG ticsPerMs;
+    LARGE_INTEGER timeFreq;
 
-    LARGE_INTEGER   timeStart;
-    LARGE_INTEGER   timeLast;
-    LONGLONG        ticksPerFrame;
-    LONGLONG        ticsPerMs;
-    LARGE_INTEGER   timeFreq;
-
-public:
+  public:
     explicit FrameTimeoutCalculator(int framesPerSecond) {
         QueryPerformanceFrequency(&timeFreq); // number of ticks per second
         ticsPerMs = timeFreq.QuadPart / 1000;
@@ -22,7 +21,7 @@ public:
     double ElapsedTotal() {
         LARGE_INTEGER timeCurr;
         QueryPerformanceCounter(&timeCurr);
-        LONGLONG elapsedTicks =  timeCurr.QuadPart - timeStart.QuadPart;
+        LONGLONG elapsedTicks = timeCurr.QuadPart - timeStart.QuadPart;
         double res = (double)elapsedTicks / (double)timeFreq.QuadPart;
         return res;
     }
@@ -40,7 +39,5 @@ public:
         }
     }
 
-    void Step() {
-        timeLast.QuadPart += ticksPerFrame;
-    }
+    void Step() { timeLast.QuadPart += ticksPerFrame; }
 };

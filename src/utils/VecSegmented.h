@@ -11,40 +11,30 @@
 */
 template <typename T>
 class VecSegmented {
-protected:
-    size_t        len;
+  protected:
+    size_t len;
     PoolAllocator allocator;
 
-public:
-    VecSegmented() : len(0) {
-        allocator.SetAllocRounding(sizeof(T));
-    }
+  public:
+    VecSegmented() : len(0) { allocator.SetAllocRounding(sizeof(T)); }
 
-    ~VecSegmented() {
-        allocator.FreeAll();
-    }
+    ~VecSegmented() { allocator.FreeAll(); }
 
     T* AllocAtEnd(size_t count = 1) {
-        void *p = allocator.Alloc(count * sizeof(T));
+        void* p = allocator.Alloc(count * sizeof(T));
         len += count;
         return reinterpret_cast<T*>(p);
     }
 
-    size_t size() const {
-        return len;
-    }
+    size_t size() const { return len; }
 
     // TODO: push_back() should return void
     T* push_back(const T& el) {
-        T *elPtr = AllocAtEnd();
+        T* elPtr = AllocAtEnd();
         *elPtr = el;
         return elPtr;
     }
 
-    PoolAllocator::Iter<T> begin() {
-        return allocator.begin<T>();
-    }
-    PoolAllocator::Iter<T> end() {
-        return allocator.end<T>();
-    }
+    PoolAllocator::Iter<T> begin() { return allocator.begin<T>(); }
+    PoolAllocator::Iter<T> end() { return allocator.end<T>(); }
 };

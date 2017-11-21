@@ -14,15 +14,15 @@ not useful for other types, the code is simpler if we always do it
 */
 template <typename T>
 class Vec {
-protected:
+  protected:
     static const size_t PADDING = 1;
 
-    size_t      len;
-    size_t      cap;
-    size_t      capacityHint;
-    T *         els;
-    T           buf[16];
-    Allocator * allocator;
+    size_t len;
+    size_t cap;
+    size_t capacityHint;
+    T* els;
+    T buf[16];
+    Allocator* allocator;
 
     bool EnsureCapTry(size_t needed) {
         if (cap >= needed)
@@ -42,11 +42,11 @@ protected:
 
         size_t allocSize = newElCount * sizeof(T);
         size_t newPadding = allocSize - len * sizeof(T);
-        T *newEls;
+        T* newEls;
         if (buf == els) {
-            newEls = (T *)Allocator::MemDup(allocator, buf, len * sizeof(T), newPadding);
+            newEls = (T*)Allocator::MemDup(allocator, buf, len * sizeof(T), newPadding);
         } else {
-            newEls = (T *)Allocator::Realloc(allocator, els, allocSize);
+            newEls = (T*)Allocator::Realloc(allocator, els, allocSize);
         }
         if (!newEls) {
             return false;
@@ -62,7 +62,7 @@ protected:
         CrashAlwaysIf(!ok);
     }
 
-    T* MakeSpaceAt(size_t idx, size_t count, bool allowFailure=false) {
+    T* MakeSpaceAt(size_t idx, size_t count, bool allowFailure = false) {
         size_t newLen = std::max(len, idx) + count;
         if (!allowFailure)
             EnsureCapCrash(newLen);
@@ -83,18 +83,14 @@ protected:
             Allocator::Free(allocator, els);
     }
 
-public:
+  public:
     // allocator is not owned by Vec and must outlive it
-    explicit Vec(size_t capHint=0, Allocator *allocator=nullptr) :
-        capacityHint(capHint), allocator(allocator)
-    {
+    explicit Vec(size_t capHint = 0, Allocator* allocator = nullptr) : capacityHint(capHint), allocator(allocator) {
         els = buf;
         Reset();
     }
 
-    ~Vec() {
-        FreeEls();
-    }
+    ~Vec() { FreeEls(); }
 
     // ensure that a Vec never shares its els buffer with another after a clone/copy
     // note: we don't inherit allocator as it's not needed for our use cases
@@ -144,17 +140,11 @@ public:
         return els[idx];
     }
 
-    size_t size() const {
-        return len;
-    }
+    size_t size() const { return len; }
 
-    void InsertAt(size_t idx, const T& el) {
-        MakeSpaceAt(idx, 1)[0] = el;
-    }
+    void InsertAt(size_t idx, const T& el) { MakeSpaceAt(idx, 1)[0] = el; }
 
-    void Append(const T& el) {
-        InsertAt(len, el);
-    }
+    void Append(const T& el) { InsertAt(len, el); }
 
     void Append(const T* src, size_t count) {
         if (0 == count)
@@ -174,14 +164,12 @@ public:
     }
 
     // appends count blank (i.e. zeroed-out) elements at the end
-    T* AppendBlanks(size_t count) {
-        return MakeSpaceAt(len, count);
-    }
+    T* AppendBlanks(size_t count) { return MakeSpaceAt(len, count); }
 
-    void RemoveAt(size_t idx, size_t count=1) {
+    void RemoveAt(size_t idx, size_t count = 1) {
         if (len > idx + count) {
-            T *dst = els + idx;
-            T *src = els + idx + count;
+            T* dst = els + idx;
+            T* src = els + idx + count;
             memmove(dst, src, (len - idx - count) * sizeof(T));
         }
         len -= count;
@@ -195,18 +183,17 @@ public:
     // TODO: could be extend to take number of elements to remove
     void RemoveAtFast(size_t idx) {
         CrashIf(idx >= len);
-        if (idx >= len) return;
-        T *toRemove = els + idx;
-        T *last = els + len - 1;
+        if (idx >= len)
+            return;
+        T* toRemove = els + idx;
+        T* last = els + len - 1;
         if (toRemove != last)
             memcpy(toRemove, last, sizeof(T));
         memset(last, 0, sizeof(T));
         --len;
     }
 
-    void Push(T el) {
-        Append(el);
-    }
+    void Push(T el) { Append(el); }
 
     T Pop() {
         CrashIf(0 == len);
@@ -231,21 +218,19 @@ public:
     // without duplicate allocation. Note: since Vec over-allocates, this
     // is likely to use more memory than strictly necessary, but in most cases
     // it doesn't matter
-    T *StealData() {
+    T* StealData() {
         T* res = els;
         if (els == buf) {
-            res = (T *)Allocator::MemDup(allocator, buf, (len + PADDING) * sizeof(T));
+            res = (T*)Allocator::MemDup(allocator, buf, (len + PADDING) * sizeof(T));
         }
         els = buf;
         Reset();
         return res;
     }
 
-    T *LendData() const {
-        return els;
-    }
+    T* LendData() const { return els; }
 
-    int Find(T el, size_t startAt=0) const {
+    int Find(T el, size_t startAt = 0) const {
         for (size_t i = startAt; i < len; i++) {
             if (els[i] == el)
                 return (int)i;
@@ -253,9 +238,7 @@ public:
         return -1;
     }
 
-    bool Contains(T el) const {
-        return -1 != Find(el);
-    }
+    bool Contains(T el) const { return -1 != Find(el); }
 
     // returns true if removed
     bool Remove(T el) {
@@ -266,9 +249,7 @@ public:
         return true;
     }
 
-    void Sort(int (*cmpFunc)(const void *a, const void *b)) {
-        qsort(els, len, sizeof(T), cmpFunc);
-    }
+    void Sort(int (*cmpFunc)(const void* a, const void* b)) { qsort(els, len, sizeof(T), cmpFunc); }
 
     void Reverse() {
         for (size_t i = 0; i < len / 2; i++) {
@@ -276,7 +257,7 @@ public:
         }
     }
 
-    T& FindEl(const std::function<bool (T&)> check) {
+    T& FindEl(const std::function<bool(T&)> check) {
         for (size_t i = 0; i < len; i++) {
             if (check(els[i]))
                 return els[i];
@@ -286,36 +267,27 @@ public:
 
     // cf. http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html
     class Iter {
-        Vec<T> *vec;
+        Vec<T>* vec;
         size_t pos;
 
-    public:
-        Iter(Vec<T> *vec, size_t pos) : vec(vec), pos(pos) { }
+      public:
+        Iter(Vec<T>* vec, size_t pos) : vec(vec), pos(pos) {}
 
-        bool operator!=(const Iter& other) const {
-            return pos != other.pos;
-        }
-        T& operator*() const {
-            return vec->at(pos);
-        }
+        bool operator!=(const Iter& other) const { return pos != other.pos; }
+        T& operator*() const { return vec->at(pos); }
         Iter& operator++() {
             pos++;
             return *this;
         }
     };
 
-    Iter begin() {
-        return Iter(this, 0);
-    }
-    Iter end() {
-        return Iter(this, len);
-    }
+    Iter begin() { return Iter(this, 0); }
+    Iter end() { return Iter(this, len); }
 };
 
 // only suitable for T that are pointers to C++ objects
 template <typename T>
-inline void DeleteVecMembers(Vec<T>& v)
-{
+inline void DeleteVecMembers(Vec<T>& v) {
     for (T& el : v) {
         delete el;
     }
@@ -326,59 +298,48 @@ namespace str {
 
 template <typename T>
 class Str : public Vec<T> {
-public:
-    explicit Str(size_t capHint=0, Allocator *allocator=nullptr) : Vec<T>(capHint, allocator) { }
+  public:
+    explicit Str(size_t capHint = 0, Allocator* allocator = nullptr) : Vec<T>(capHint, allocator) {}
 
-    void Append(T c)
-    {
-        Vec<T>::InsertAt(Vec<T>::len, c);
-    }
+    void Append(T c) { Vec<T>::InsertAt(Vec<T>::len, c); }
 
-    void Append(const T* src, size_t size=-1)
-    {
+    void Append(const T* src, size_t size = -1) {
         if ((size_t)-1 == size)
             size = Len(src);
         Vec<T>::Append(src, size);
     }
 
-    void AppendFmt(const T* fmt, ...)
-    {
+    void AppendFmt(const T* fmt, ...) {
         va_list args;
         va_start(args, fmt);
-        T *res = FmtV(fmt, args);
+        T* res = FmtV(fmt, args);
         AppendAndFree(res);
         va_end(args);
     }
 
-    void AppendAndFree(T* s)
-    {
+    void AppendAndFree(T* s) {
         if (s)
             Append(s);
         free(s);
     }
 
     // returns true if was replaced
-    bool Replace(const T *toReplace, const T *replaceWith)
-    {
+    bool Replace(const T* toReplace, const T* replaceWith) {
         // fast path: nothing to replace
         if (!str::Find(Vec<T>::els, toReplace))
             return false;
-        char *newStr = str::Replace(Vec<T>::els, toReplace, replaceWith);
+        char* newStr = str::Replace(Vec<T>::els, toReplace, replaceWith);
         Vec<T>::Reset();
         AppendAndFree(newStr);
         return true;
     }
 
-    void Set(const T* s)
-    {
+    void Set(const T* s) {
         Vec<T>::Reset();
         Append(s);
     }
 
-    T *Get() const
-    {
-        return Vec<T>::els;
-    }
+    T* Get() const { return Vec<T>::els; }
 
     T LastChar() const {
         auto n = this->len;
@@ -389,14 +350,13 @@ public:
     }
 };
 
-}
+} // namespace str
 
 #if OS_WIN
 // WStrVec owns the strings in the list
-class WStrVec : public Vec<WCHAR *>
-{
-public:
-    WStrVec() : Vec() { }
+class WStrVec : public Vec<WCHAR*> {
+  public:
+    WStrVec() : Vec() {}
     WStrVec(const WStrVec& orig) : Vec(orig) {
         // make sure not to share string pointers between StrVecs
         for (size_t i = 0; i < len; i++) {
@@ -404,9 +364,7 @@ public:
                 at(i) = str::Dup(at(i));
         }
     }
-    ~WStrVec() {
-        FreeMembers();
-    }
+    ~WStrVec() { FreeMembers(); }
 
     WStrVec& operator=(const WStrVec& that) {
         if (this != &that) {
@@ -420,15 +378,13 @@ public:
         return *this;
     }
 
-    void Reset() {
-        FreeMembers();
-    }
+    void Reset() { FreeMembers(); }
 
-    WCHAR *Join(const WCHAR *joint=nullptr) {
+    WCHAR* Join(const WCHAR* joint = nullptr) {
         str::Str<WCHAR> tmp(256);
         size_t jointLen = str::Len(joint);
         for (size_t i = 0; i < len; i++) {
-            WCHAR *s = at(i);
+            WCHAR* s = at(i);
             if (i > 0 && jointLen > 0)
                 tmp.Append(joint, jointLen);
             tmp.Append(s);
@@ -436,22 +392,20 @@ public:
         return tmp.StealData();
     }
 
-    int Find(const WCHAR *s, size_t startAt=0) const {
+    int Find(const WCHAR* s, size_t startAt = 0) const {
         for (size_t i = startAt; i < len; i++) {
-            WCHAR *item = at(i);
+            WCHAR* item = at(i);
             if (str::Eq(s, item))
                 return (int)i;
         }
         return -1;
     }
 
-    bool Contains(const WCHAR *s) const {
-        return -1 != Find(s);
-    }
+    bool Contains(const WCHAR* s) const { return -1 != Find(s); }
 
-    int FindI(const WCHAR *s, size_t startAt=0) const {
+    int FindI(const WCHAR* s, size_t startAt = 0) const {
         for (size_t i = startAt; i < len; i++) {
-            WCHAR *item = at(i);
+            WCHAR* item = at(i);
             if (str::EqI(s, item))
                 return (int)i;
         }
@@ -462,9 +416,9 @@ public:
        (optionally collapsing several consecutive separators into one);
        e.g. splitting "a,b,,c," by "," results in the list "a", "b", "", "c", ""
        (resp. "a", "b", "c" if separators are collapsed) */
-    size_t Split(const WCHAR *s, const WCHAR *separator, bool collapse=false) {
+    size_t Split(const WCHAR* s, const WCHAR* separator, bool collapse = false) {
         size_t start = len;
-        const WCHAR *next;
+        const WCHAR* next;
 
         while ((next = str::Find(s, separator)) != nullptr) {
             if (!collapse || next > s)
@@ -480,14 +434,12 @@ public:
     void Sort() { Vec::Sort(cmpAscii); }
     void SortNatural() { Vec::Sort(cmpNatural); }
 
-private:
-    static int cmpNatural(const void *a, const void *b) {
-        return str::CmpNatural(*(const WCHAR **)a, *(const WCHAR **)b);
+  private:
+    static int cmpNatural(const void* a, const void* b) {
+        return str::CmpNatural(*(const WCHAR**)a, *(const WCHAR**)b);
     }
 
-    static int cmpAscii(const void *a, const void *b) {
-        return wcscmp(*(const WCHAR **)a, *(const WCHAR **)b);
-    }
+    static int cmpAscii(const void* a, const void* b) { return wcscmp(*(const WCHAR**)a, *(const WCHAR**)b); }
 };
 #endif
 
@@ -496,33 +448,33 @@ private:
 // WStrList owns the strings it contains and frees them at destruction
 class WStrList {
     struct Item {
-        WCHAR *string;
+        WCHAR* string;
         uint32_t hash;
 
-        explicit Item(WCHAR *string=nullptr, uint32_t hash=0) : string(string), hash(hash) { }
+        explicit Item(WCHAR* string = nullptr, uint32_t hash = 0) : string(string), hash(hash) {}
     };
 
     Vec<Item> items;
     size_t count;
-    Allocator *allocator;
+    Allocator* allocator;
 
     // variation of MurmurHash2 which deals with strings that are
     // mostly ASCII and should be treated case independently
     // TODO: I'm guessing would be much faster when done as MurmuserHash2I()
     // with lower-casing done in-line, without the need to allocate memory for the copy
-    static uint32_t GetQuickHashI(const WCHAR *str) {
+    static uint32_t GetQuickHashI(const WCHAR* str) {
         size_t len = str::Len(str);
         AutoFree data(AllocArray<char>(len));
         WCHAR c;
-        for (char *dst = data; (c = *str++) != 0; dst++) {
+        for (char* dst = data; (c = *str++) != 0; dst++) {
             *dst = (c & 0xFF80) ? 0x80 : 'A' <= c && c <= 'Z' ? (char)(c + 'a' - 'A') : (char)c;
         }
         return MurmurHash2(data, len);
     }
 
-public:
-    explicit WStrList(size_t capHint=0, Allocator *allocator=nullptr) :
-        items(capHint, allocator), count(0), allocator(allocator) { }
+  public:
+    explicit WStrList(size_t capHint = 0, Allocator* allocator = nullptr)
+        : items(capHint, allocator), count(0), allocator(allocator) {}
 
     ~WStrList() {
         for (Item& item : items) {
@@ -530,27 +482,21 @@ public:
         }
     }
 
-    const WCHAR *at(size_t idx) const {
-        return items.at(idx).string;
-    }
+    const WCHAR* at(size_t idx) const { return items.at(idx).string; }
 
-    const WCHAR *Last() const {
-        return items.Last().string;
-    }
+    const WCHAR* Last() const { return items.Last().string; }
 
-    size_t size() const {
-        return count;
-    }
+    size_t size() const { return count; }
 
     // str must have been allocated by allocator and is owned by StrList
-    void Append(WCHAR *str) {
+    void Append(WCHAR* str) {
         items.Append(Item(str, GetQuickHashI(str)));
         count++;
     }
 
-    int Find(const WCHAR *str, size_t startAt=0) const {
+    int Find(const WCHAR* str, size_t startAt = 0) const {
         uint32_t hash = GetQuickHashI(str);
-        Item *item = items.LendData();
+        Item* item = items.LendData();
         for (size_t i = startAt; i < count; i++) {
             if (item[i].hash == hash && str::Eq(item[i].string, str))
                 return (int)i;
@@ -558,9 +504,9 @@ public:
         return -1;
     }
 
-    int FindI(const WCHAR *str, size_t startAt=0) const {
+    int FindI(const WCHAR* str, size_t startAt = 0) const {
         uint32_t hash = GetQuickHashI(str);
-        Item *item = items.LendData();
+        Item* item = items.LendData();
         for (size_t i = startAt; i < count; i++) {
             if (item[i].hash == hash && str::EqI(item[i].string, str))
                 return (int)i;
@@ -568,8 +514,6 @@ public:
         return -1;
     }
 
-    bool Contains(const WCHAR *str) const {
-        return -1 != Find(str);
-    }
+    bool Contains(const WCHAR* str) const { return -1 != Find(str); }
 };
 #endif
