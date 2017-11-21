@@ -294,7 +294,7 @@ inline T* AllocStruct() {
 
 template <typename T>
 inline T limitValue(T val, T min, T max) {
-    AssertCrash(max >= min);
+    CrashIf(min > max);
     if (val < min)
         return min;
     if (val > max)
@@ -302,12 +302,19 @@ inline T limitValue(T val, T min, T max) {
     return val;
 }
 
+// return true if adding n to val overflows. Only valid for n > 0
+template <typename T>
+inline bool addOverflows(T val, T n) {
+    CrashIf(n <= 0);
+    T res = val + n;
+    return val > res;
+}
+
 #if !OS_WIN
 void ZeroMemory(void* p, size_t len);
 #endif
 
 void* memdup(const void* data, size_t len);
-
 bool memeq(const void* s1, const void* s2, size_t len);
 
 size_t RoundToPowerOf2(size_t size);

@@ -382,6 +382,11 @@ int64_t GetSize(const WCHAR* filePath) {
     return size.QuadPart;
 }
 
+// we pad data read with 3 zeros for convenience. That way returned
+// data is a valid null-terminated string or WCHAR*.
+// 3 is for absolute worst case of WCHAR* where last char was partially written
+#define ZERO_PADDING_COUNT 3
+
 char* ReadAllWithAllocator(const WCHAR* path, size_t* fileSizeOut, Allocator* allocator) {
     int64_t size64 = GetSize(path);
     if (size64 < 0) {
@@ -396,14 +401,13 @@ char* ReadAllWithAllocator(const WCHAR* path, size_t* fileSizeOut, Allocator* al
     }
 #endif
 
-    // overflow check
-    if (size + 1 + sizeof(WCHAR) < sizeof(WCHAR) + 1) {
+    if (addOverflows<size_t>(size, ZERO_PADDING_COUNT)) {
         return nullptr;
     }
     /* allocate one character more and zero-terminate just in case it's a
        text file we'll want to treat as C string. Doesn't hurt for binary
        files (note: three byte terminator for UTF-16 files) */
-    char* data = (char*)Allocator::Alloc(allocator, size + sizeof(WCHAR) + 1);
+    char* data = (char*)Allocator::AllocZero(allocator, size + ZERO_PADDING_COUNT);
     if (!data) {
         return nullptr;
     }
@@ -412,9 +416,6 @@ char* ReadAllWithAllocator(const WCHAR* path, size_t* fileSizeOut, Allocator* al
         Allocator::Free(allocator, data);
         return nullptr;
     }
-
-    // zero-terminate for convenience
-    data[size] = data[size + 1] = data[size + 2] = '\0';
 
     if (fileSizeOut) {
         *fileSizeOut = size;

@@ -11,6 +11,11 @@ extern "C" {
 #include <unarr.h>
 }
 
+// we pad data read with 3 zeros for convenience. That way returned
+// data is a valid null-terminated string or WCHAR*.
+// 3 is for absolute worst case of WCHAR* where last char was partially written
+#define ZERO_PADDING_COUNT 3
+
 #if ENABLE_UNRARDLL_FALLBACK
 // for debugging of unrar.dll fallback, if set to true we'll try to
 // open .rar files using unrar.dll (otherwise it only happens if unarr
@@ -135,12 +140,10 @@ OwnedData Archive::GetFileDataById(size_t fileId) {
         return {};
     }
     size_t size = fileInfo->fileSizeUncompressed;
-    // for conveninence we zero-terminate with 2 bytes (so that the caller can
-    // treat it as zero-terminated string (ascii or unicode)
-    if (size > SIZE_MAX - 2) {
+    if (addOverflows<size_t>(size, ZERO_PADDING_COUNT)) {
         return {};
     }
-    OwnedData data(AllocArray<char>(size + 2), size);
+    OwnedData data(AllocArray<char>(size + ZERO_PADDING_COUNT), size);
     if (!data.data) {
         return {};
     }
@@ -446,14 +449,12 @@ OwnedData Archive::GetFileDataByIdUnarrDll(size_t fileId) {
     }
     size = fileInfo->fileSizeUncompressed;
     CrashIf(size != rarHeader.UnpSize);
-    // for conveninence we zero-terminate with 2 bytes (so that the caller can
-    // treat it as zero-terminated string (ascii or unicode)
-    if (size > SIZE_MAX - 2) {
+    if (addOverflows<size_t>(size, ZERO_PADDING_COUNT)) {
         ok = false;
         goto Exit;
     }
 
-    data = AllocArray<char>(size + 2);
+    data = AllocArray<char>(size + ZERO_PADDING_COUNT);
     if (!data) {
         ok = false;
         goto Exit;

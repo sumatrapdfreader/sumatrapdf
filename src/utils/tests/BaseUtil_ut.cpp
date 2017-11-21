@@ -89,5 +89,14 @@ void BaseUtilTest() {
     utassert(MurmurHash2(nullptr, 0) == 0x342CE6C);
     utassert(MurmurHash2("test", 4) != MurmurHash2("Test", 4));
 
+    utassert(addOverflows<u8>(255, 1));
+    utassert(addOverflows<u8>(255, 2));
+    utassert(addOverflows<u8>(255, 255));
+    utassert(!addOverflows<u8>(254, 1));
+    utassert(!addOverflows<u8>(127, 1));
+    utassert(!addOverflows<u8>(127, 127));
+    utassert(!addOverflows<u8>(127, 128));
+    utassert(addOverflows<u8>(127, 129));
+    utassert(addOverflows<u8>(127, 255));
     GeomTest();
 }
