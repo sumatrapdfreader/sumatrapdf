@@ -5,11 +5,11 @@
 
 enum Token {
     TokenFinished = 0,
-    TokenArrayStart,   // [
-    TokenStructStart,  // foo [
-    TokenClose,        // ]
-    TokenKeyVal,       // foo: bar
-    TokenString,       // foo
+    TokenArrayStart,  // [
+    TokenStructStart, // foo [
+    TokenClose,       // ]
+    TokenKeyVal,      // foo: bar
+    TokenString,      // foo
 };
 
 enum TxtNodeType {
@@ -19,38 +19,28 @@ enum TxtNodeType {
 };
 
 struct TxtNode {
-    TxtNodeType     type;
-    Vec<TxtNode*>*  children;
+    TxtNodeType type;
+    Vec<TxtNode*>* children;
 
-    char *          lineStart;
-    char *          valStart;
-    char *          valEnd;
-    char *          keyStart;
-    char *          keyEnd;
+    char* lineStart;
+    char* valStart;
+    char* valEnd;
+    char* keyStart;
+    char* keyEnd;
 
-    explicit TxtNode(TxtNodeType tp) {
-        type = tp;
-    }
-    ~TxtNode() { }
+    explicit TxtNode(TxtNodeType tp) { type = tp; }
+    ~TxtNode() {}
 
-    size_t KeyLen() const {
-        return keyEnd - keyStart;
-    }
+    size_t KeyLen() const { return keyEnd - keyStart; }
 
-    size_t ValLen() const {
-        return valEnd - valStart;
-    }
+    size_t ValLen() const { return valEnd - valStart; }
 
-    bool IsArray() const {
-        return ArrayNode == type;
-    }
+    bool IsArray() const { return ArrayNode == type; }
 
-    bool IsStruct() const {
-        return StructNode == type;
-    }
+    bool IsStruct() const { return StructNode == type; }
 
     // TODO: move to TxtParser.cpp
-    bool IsStructWithName(const char *name, size_t nameLen) const {
+    bool IsStructWithName(const char* name, size_t nameLen) const {
         if (StructNode != type)
             return false;
         if (nameLen != KeyLen())
@@ -58,16 +48,12 @@ struct TxtNode {
         return str::EqNI(keyStart, name, nameLen);
     }
 
-    bool IsStructWithName(const char *name) const {
-        return IsStructWithName(name, str::Len(name));
-    }
+    bool IsStructWithName(const char* name) const { return IsStructWithName(name, str::Len(name)); }
 
-    bool IsText() const {
-        return TextNode == type;
-    }
+    bool IsText() const { return TextNode == type; }
 
     // TODO: move to TxtParser.cpp
-    bool IsTextWithKey(const char *name) const {
+    bool IsTextWithKey(const char* name) const {
         if (!keyStart)
             return false;
         size_t nameLen = str::Len(name);
@@ -77,14 +63,14 @@ struct TxtNode {
     }
 
     // TODO: move to TxtParser.cpp
-    char *KeyDup() const {
+    char* KeyDup() const {
         if (!keyStart)
             return nullptr;
         return str::DupN(keyStart, KeyLen());
     }
 
     // TODO: move to TxtParser.cpp
-    char *ValDup() const {
+    char* ValDup() const {
         if (!valStart)
             return nullptr;
         return str::DupN(valStart, ValLen());
@@ -92,26 +78,26 @@ struct TxtNode {
 };
 
 struct TokenVal {
-    Token   type;
+    Token type;
 
     // TokenString, TokenKeyVal
-    char *  lineStart;
-    char *  valStart;
-    char *  valEnd;
+    char* lineStart;
+    char* valStart;
+    char* valEnd;
 
     // TokenKeyVal
-    char *  keyStart;
-    char *  keyEnd;
+    char* keyStart;
+    char* keyEnd;
 };
 
 struct TxtParser {
-    Allocator *     allocator;
-    str::Slice      toParse;
-    TokenVal        tok;
-    char            escapeChar;
-    bool            failed;
-    Vec<TxtNode*>   nodes;
-    char *          toFree;
+    Allocator* allocator;
+    str::Slice toParse;
+    TokenVal tok;
+    char escapeChar;
+    bool failed;
+    Vec<TxtNode*> nodes;
+    char* toFree;
 
     TxtParser() {
         allocator = new PoolAllocator();
@@ -123,8 +109,8 @@ struct TxtParser {
         delete allocator;
         free(toFree);
     }
-    void SetToParse(char *s, size_t sLen);
+    void SetToParse(char* s, size_t sLen);
 };
 
 bool ParseTxt(TxtParser& parser);
-char *PrettyPrintTxt(const TxtParser& parser);
+char* PrettyPrintTxt(const TxtParser& parser);

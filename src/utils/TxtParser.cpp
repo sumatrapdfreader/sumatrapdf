@@ -4,7 +4,7 @@
 #include "BaseUtil.h"
 #include "StrSlice.h"
 #include "TxtParser.h"
-#include <new>  // for placement new
+#include <new> // for placement new
 
 // unbreak placement new introduced by defining new as DEBUG_NEW
 #ifdef new
@@ -28,10 +28,9 @@ a given line either as a simple string or key/value pair. It's
 up to the caller to interpret the data.
 */
 
-static TxtNode *AllocTxtNode(Allocator *allocator, TxtNodeType nodeType)
-{
-    void *p = Allocator::AllocZero(allocator, sizeof(TxtNode));
-    TxtNode *node = new (p) TxtNode(nodeType);
+static TxtNode* AllocTxtNode(Allocator* allocator, TxtNodeType nodeType) {
+    void* p = Allocator::AllocZero(allocator, sizeof(TxtNode));
+    TxtNode* node = new (p) TxtNode(nodeType);
     CrashIf(!node);
     if (TextNode != nodeType) {
         p = Allocator::AllocZero(allocator, sizeof(Vec<TxtNode*>));
@@ -40,10 +39,9 @@ static TxtNode *AllocTxtNode(Allocator *allocator, TxtNodeType nodeType)
     return node;
 }
 
-static TxtNode *TxtNodeFromToken(Allocator *allocator, TokenVal& tok, TxtNodeType nodeType)
-{
+static TxtNode* TxtNodeFromToken(Allocator* allocator, TokenVal& tok, TxtNodeType nodeType) {
     AssertCrash((TextNode == nodeType) || (StructNode == nodeType));
-    TxtNode *node = AllocTxtNode(allocator, nodeType);
+    TxtNode* node = AllocTxtNode(allocator, nodeType);
     node->lineStart = tok.lineStart;
     node->valStart = tok.valStart;
     node->valEnd = tok.valEnd;
@@ -52,17 +50,15 @@ static TxtNode *TxtNodeFromToken(Allocator *allocator, TokenVal& tok, TxtNodeTyp
     return node;
 }
 
-static bool IsCommentStartChar(char c)
-{
-    return (';' == c ) || ('#' == c);
+static bool IsCommentStartChar(char c) {
+    return (';' == c) || ('#' == c);
 }
 
 // unescapes a string until a newline (\n)
 // returns the end of unescaped string
-static char *UnescapeLineInPlace(char *&sInOut, char *e, char escapeChar)
-{
-    char *s = sInOut;
-    char *dst = s;
+static char* UnescapeLineInPlace(char*& sInOut, char* e, char escapeChar) {
+    char* s = sInOut;
+    char* dst = s;
     while ((s < e) && (*s != '\n')) {
         if (escapeChar != *s) {
             *dst++ = *s++;
@@ -70,7 +66,7 @@ static char *UnescapeLineInPlace(char *&sInOut, char *e, char escapeChar)
         }
 
         // ignore unexpected lone escape char
-        if (s+1 >= e) {
+        if (s + 1 >= e) {
             *dst++ = *s++;
             continue;
         }
@@ -83,21 +79,21 @@ static char *UnescapeLineInPlace(char *&sInOut, char *e, char escapeChar)
         }
 
         switch (c) {
-        case '[':
-        case ']':
-            *dst++ = c;
-            break;
-        case 'r':
-            *dst++ = '\r';
-            break;
-        case 'n':
-            *dst++ = '\n';
-            break;
-        default:
-            // invalid escaping sequence. we preserve it
-            *dst++ = escapeChar;
-            *dst++ = c;
-            break;
+            case '[':
+            case ']':
+                *dst++ = c;
+                break;
+            case 'r':
+                *dst++ = '\r';
+                break;
+            case 'n':
+                *dst++ = '\n';
+                break;
+            default:
+                // invalid escaping sequence. we preserve it
+                *dst++ = escapeChar;
+                *dst++ = c;
+                break;
         }
     }
     sInOut = s;
@@ -105,17 +101,16 @@ static char *UnescapeLineInPlace(char *&sInOut, char *e, char escapeChar)
 }
 
 // parses "foo[: | (WS*=]WS*[WS*\n" (WS == whitespace
-static bool ParseStructStart(TxtParser& parser)
-{
+static bool ParseStructStart(TxtParser& parser) {
     // work on a copy in case we fail
     str::Slice slice = parser.toParse;
 
-    char *keyStart = slice.curr;
+    char* keyStart = slice.curr;
     slice.SkipNonWs();
     // "foo:  ["
     //      ^
 
-    char *keyEnd = slice.curr;
+    char* keyEnd = slice.curr;
     if (':' == slice.PrevChar()) {
         // "foo:  [  "
         //     ^ <- keyEnd
@@ -159,15 +154,14 @@ static bool ParseStructStart(TxtParser& parser)
 // parses "foo:WS${rest}" or "fooWS=WS${rest}"
 // if finds this pattern, sets parser.tok.keyStart and parser.tok.keyEnd
 // and positions slice at the beginning of ${rest}
-static bool ParseKey(TxtParser& parser)
-{
+static bool ParseKey(TxtParser& parser) {
     str::Slice slice = parser.toParse;
-    char *keyStart = slice.curr;
+    char* keyStart = slice.curr;
     slice.SkipNonWs();
     // "foo:  bar"
     //      ^
 
-    char *keyEnd = slice.curr;
+    char* keyEnd = slice.curr;
     if (':' == slice.PrevChar()) {
         // "foo:  bar"
         //     ^ <- keyEnd
@@ -196,8 +190,7 @@ static bool ParseKey(TxtParser& parser)
 // TODO: maybe also allow things like:
 // foo: [1 3 4]
 // i.e. a child on a single line
-static void ParseNextToken(TxtParser& parser)
-{
+static void ParseNextToken(TxtParser& parser) {
     TokenVal& tok = parser.tok;
     ZeroMemory(&tok, sizeof(TokenVal));
     str::Slice& slice = parser.toParse;
@@ -244,8 +237,8 @@ Again:
     // "  foo:  bar"
     //          ^
     tok.valStart = slice.curr;
-    char *origEnd = slice.curr;
-    char *valEnd = UnescapeLineInPlace(origEnd, slice.end, parser.escapeChar);
+    char* origEnd = slice.curr;
+    char* valEnd = UnescapeLineInPlace(origEnd, slice.end, parser.escapeChar);
     CrashIf((origEnd < slice.end) && (*origEnd != '\n'));
     if (valEnd < slice.end)
         *valEnd = 0;
@@ -257,9 +250,8 @@ Again:
     return;
 }
 
-static void ParseNodes(TxtParser& parser)
-{
-    TxtNode *currNode = nullptr;
+static void ParseNodes(TxtParser& parser) {
+    TxtNode* currNode = nullptr;
     for (;;) {
         ParseNextToken(parser);
         TokenVal& tok = parser.tok;
@@ -286,7 +278,7 @@ static void ParseNodes(TxtParser& parser)
             parser.nodes.Pop();
             continue;
         }
-        TxtNode *currParent = parser.nodes.at(parser.nodes.size() - 1);
+        TxtNode* currParent = parser.nodes.at(parser.nodes.size() - 1);
         currParent->children->Append(currNode);
         if (TextNode != currNode->type)
             parser.nodes.Append(currNode);
@@ -295,8 +287,7 @@ Failed:
     parser.failed = true;
 }
 
-static void SkipUtf8Bom(char *& s, size_t& sLen)
-{
+static void SkipUtf8Bom(char*& s, size_t& sLen) {
     if (sLen >= 3 && str::EqN(s, UTF8_BOM, 3)) {
         s += 3;
         sLen -= 3;
@@ -304,9 +295,8 @@ static void SkipUtf8Bom(char *& s, size_t& sLen)
 }
 
 // we will modify s in-place
-void TxtParser::SetToParse(char *s, size_t sLen)
-{
-    char *tmp = str::conv::UnknownToUtf8(s, sLen);
+void TxtParser::SetToParse(char* s, size_t sLen) {
+    char* tmp = str::conv::UnknownToUtf8(s, sLen);
     if (tmp != s) {
         toFree = tmp;
         s = tmp;
@@ -321,30 +311,26 @@ void TxtParser::SetToParse(char *s, size_t sLen)
     nodes.Append(AllocTxtNode(allocator, ArrayNode));
 }
 
-bool ParseTxt(TxtParser& parser)
-{
+bool ParseTxt(TxtParser& parser) {
     ParseNodes(parser);
     if (parser.failed)
         return false;
     return true;
 }
 
-static void AppendNest(str::Str<char>& s, int nest)
-{
+static void AppendNest(str::Str<char>& s, int nest) {
     while (nest > 0) {
         s.Append("  ");
         --nest;
     }
 }
 
-static void AppendWsTrimEnd(str::Str<char>& res, char *s, char *e)
-{
+static void AppendWsTrimEnd(str::Str<char>& res, char* s, char* e) {
     str::TrimWsEnd(s, e);
     res.Append(s, e - s);
 }
 
-static void PrettyPrintKeyVal(TxtNode *curr, int nest, str::Str<char>& res)
-{
+static void PrettyPrintKeyVal(TxtNode* curr, int nest, str::Str<char>& res) {
     AppendNest(res, nest);
     if (curr->keyStart) {
         AppendWsTrimEnd(res, curr->keyStart, curr->keyEnd);
@@ -356,8 +342,7 @@ static void PrettyPrintKeyVal(TxtNode *curr, int nest, str::Str<char>& res)
         res.Append("\n");
 }
 
-static void PrettyPrintNode(TxtNode *curr, int nest, str::Str<char>& res)
-{
+static void PrettyPrintNode(TxtNode* curr, int nest, str::Str<char>& res) {
     if (TextNode == curr->type) {
         PrettyPrintKeyVal(curr, nest, res);
         return;
@@ -372,7 +357,7 @@ static void PrettyPrintNode(TxtNode *curr, int nest, str::Str<char>& res)
         res.Append("[\n");
     }
 
-    TxtNode *child;
+    TxtNode* child;
     for (size_t i = 0; i < curr->children->size(); i++) {
         child = curr->children->at(i);
         PrettyPrintNode(child, nest + 1, res);
@@ -384,8 +369,7 @@ static void PrettyPrintNode(TxtNode *curr, int nest, str::Str<char>& res)
     }
 }
 
-char *PrettyPrintTxt(const TxtParser& parser)
-{
+char* PrettyPrintTxt(const TxtParser& parser) {
     str::Str<char> res;
     PrettyPrintNode(parser.nodes.at(0), -1, res);
     return res.StealData();
