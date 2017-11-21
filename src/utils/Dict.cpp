@@ -33,17 +33,17 @@ TODO:
 namespace dict {
 
 class HasherComparator {
-public:
+  public:
     virtual size_t Hash(uintptr_t key) = 0;
     virtual bool Equal(uintptr_t k1, uintptr_t k2) = 0;
-    virtual ~HasherComparator() { }
+    virtual ~HasherComparator() {}
 };
 
 class StrKeyHasherComparator : public HasherComparator {
     virtual size_t Hash(uintptr_t key) { return MurmurHash2((const void*)key, str::Len((const char*)key)); }
     virtual bool Equal(uintptr_t k1, uintptr_t k2) {
-        const char *s1 = (const char *)k1;
-        const char *s2 = (const char *)k2;
+        const char* s1 = (const char*)k1;
+        const char* s2 = (const char*)k2;
         return str::Eq(s1, s2);
     }
 };
@@ -54,8 +54,8 @@ class WStrKeyHasherComparator : public HasherComparator {
         return MurmurHash2((const void*)key, cbLen);
     }
     virtual bool Equal(uintptr_t k1, uintptr_t k2) {
-        const WCHAR *s1 = (const WCHAR *)k1;
-        const WCHAR *s2 = (const WCHAR *)k2;
+        const WCHAR* s1 = (const WCHAR*)k1;
+        const WCHAR* s2 = (const WCHAR*)k2;
         return str::Eq(s1, s2);
     }
 };
@@ -66,13 +66,13 @@ static WStrKeyHasherComparator gWStrKeyHasherComparator;
 struct HashTableEntry {
     uintptr_t key;
     uintptr_t val;
-    struct HashTableEntry *next;
+    struct HashTableEntry* next;
 };
 
 // not a class so that it can be allocated with an allocator
 struct HashTable {
-    HashTableEntry **entries;
-    HashTableEntry *freeList;
+    HashTableEntry** entries;
+    HashTableEntry* freeList;
 
     size_t nEntries;
     size_t nUsed; // total number of inserted entries
@@ -82,10 +82,9 @@ struct HashTable {
     size_t nCollisions;
 };
 
-static HashTable *NewHashTable(size_t size, Allocator *allocator)
-{
+static HashTable* NewHashTable(size_t size, Allocator* allocator) {
     CrashIf(!allocator); // we'll leak otherwise
-    HashTable *h = (HashTable*)Allocator::AllocZero(allocator, sizeof(HashTable));
+    HashTable* h = (HashTable*)Allocator::AllocZero(allocator, sizeof(HashTable));
     // number of hash table entries should be power of 2
     size = RoundToPowerOf2(size);
     // entries are not allocated with allocator since those are large blocks
@@ -95,17 +94,15 @@ static HashTable *NewHashTable(size_t size, Allocator *allocator)
     return h;
 }
 
-static void DeleteHashTable(HashTable *h)
-{
+static void DeleteHashTable(HashTable* h) {
     free(h->entries);
     // the rest is freed by allocator
 }
 
-static void HashTableResize(HashTable *h, HasherComparator *hc)
-{
+static void HashTableResize(HashTable* h, HasherComparator* hc) {
     size_t newSize = RoundToPowerOf2(h->nEntries + 1);
     CrashIf(newSize <= h->nEntries);
-    HashTableEntry **newEntries = AllocArray<HashTableEntry*>(newSize);
+    HashTableEntry** newEntries = AllocArray<HashTableEntry*>(newSize);
     HashTableEntry *e, *next;
     size_t hash, pos;
     for (size_t i = 0; i < h->nEntries; i++) {
@@ -129,8 +126,7 @@ static void HashTableResize(HashTable *h, HasherComparator *hc)
 
 // micro optimization: this is called often, so we want this check inlined. Resizing logic
 // is called rarely, so doesn't need to be inlined
-static inline void HashTableResizeIfNeeded(HashTable *h, HasherComparator *hc)
-{
+static inline void HashTableResizeIfNeeded(HashTable* h, HasherComparator* hc) {
     // per http://stackoverflow.com/questions/1603712/when-should-i-do-rehashing-of-entire-hash-table/1604428#1604428
     // when using collision chaining, load factor can be 150%
     if (h->nUsed < (h->nEntries * 3) / 2)
@@ -139,12 +135,12 @@ static inline void HashTableResizeIfNeeded(HashTable *h, HasherComparator *hc)
 }
 
 // note: allocator must be nullptr for get, non-nullptr for create
-static HashTableEntry *GetOrCreateEntry(HashTable *h, HasherComparator *hc, uintptr_t key, Allocator *allocator, bool& newEntry)
-{
+static HashTableEntry* GetOrCreateEntry(HashTable* h, HasherComparator* hc, uintptr_t key, Allocator* allocator,
+                                        bool& newEntry) {
     bool shouldCreate = (allocator != nullptr);
     size_t hash = hc->Hash(key);
     size_t pos = hash % h->nEntries;
-    HashTableEntry *e = h->entries[pos];
+    HashTableEntry* e = h->entries[pos];
     newEntry = false;
     while (e) {
         if (hc->Equal(key, e->key))
@@ -169,11 +165,10 @@ static HashTableEntry *GetOrCreateEntry(HashTable *h, HasherComparator *hc, uint
     return e;
 }
 
-static bool RemoveEntry(HashTable *h, HasherComparator *hc, uintptr_t key, uintptr_t *removedValOut)
-{
+static bool RemoveEntry(HashTable* h, HasherComparator* hc, uintptr_t key, uintptr_t* removedValOut) {
     size_t hash = hc->Hash(key);
     size_t pos = hash % h->nEntries;
-    HashTableEntry *e = h->entries[pos];
+    HashTableEntry* e = h->entries[pos];
     while (e) {
         if (hc->Equal(key, e->key))
             break;
@@ -183,7 +178,7 @@ static bool RemoveEntry(HashTable *h, HasherComparator *hc, uintptr_t key, uintp
         return false;
 
     // remove the the entry from the list
-    HashTableEntry *e2 = h->entries[pos];
+    HashTableEntry* e2 = h->entries[pos];
     if (e2 == e) {
         h->entries[pos] = e->next;
     } else {
@@ -200,8 +195,7 @@ static bool RemoveEntry(HashTable *h, HasherComparator *hc, uintptr_t key, uintp
     return true;
 }
 
-MapStrToInt::MapStrToInt(size_t initialSize)
-{
+MapStrToInt::MapStrToInt(size_t initialSize) {
     // we use PoolAllocator to allocate HashTableEntry entries
     // and copies of string keys
     allocator = new PoolAllocator();
@@ -209,14 +203,12 @@ MapStrToInt::MapStrToInt(size_t initialSize)
     h = NewHashTable(initialSize, allocator);
 }
 
-MapStrToInt::~MapStrToInt()
-{
+MapStrToInt::~MapStrToInt() {
     DeleteHashTable(h);
     delete allocator;
 }
 
-size_t MapStrToInt::Count() const
-{
+size_t MapStrToInt::Count() const {
     return h->nUsed;
 }
 
@@ -229,28 +221,26 @@ size_t MapStrToInt::Count() const
 //   * returns true
 //   * inserts a copy of the key allocated with allocator
 //   * sets existingKeyOut to (interned) key
-bool MapStrToInt::Insert(const char *key, int val, int *existingValOut, const char **existingKeyOut)
-{
+bool MapStrToInt::Insert(const char* key, int val, int* existingValOut, const char** existingKeyOut) {
     bool newEntry;
-    HashTableEntry *e = GetOrCreateEntry(h, &gStrKeyHasherComparator, (uintptr_t)key, allocator, newEntry);
+    HashTableEntry* e = GetOrCreateEntry(h, &gStrKeyHasherComparator, (uintptr_t)key, allocator, newEntry);
     if (!newEntry) {
         if (existingValOut)
             *existingValOut = (int)e->val;
         if (existingKeyOut)
-            *existingKeyOut = (const char *)e->key;
+            *existingKeyOut = (const char*)e->key;
         return false;
     }
     e->key = (intptr_t)Allocator::StrDup(allocator, key);
     e->val = (intptr_t)val;
     if (existingKeyOut)
-        *existingKeyOut = (const char *)e->key;
+        *existingKeyOut = (const char*)e->key;
 
     HashTableResizeIfNeeded(h, &gStrKeyHasherComparator);
     return true;
 }
 
-bool MapStrToInt::Remove(const char *key, int *removedValOut)
-{
+bool MapStrToInt::Remove(const char* key, int* removedValOut) {
     uintptr_t removedVal;
     bool removed = RemoveEntry(h, &gStrKeyHasherComparator, (uintptr_t)key, &removedVal);
     if (removed && removedValOut)
@@ -258,19 +248,17 @@ bool MapStrToInt::Remove(const char *key, int *removedValOut)
     return removed;
 }
 
-bool MapStrToInt::Get(const char *key, int* valOut)
-{
+bool MapStrToInt::Get(const char* key, int* valOut) {
     StrKeyHasherComparator hc;
     bool newEntry;
-    HashTableEntry *e = GetOrCreateEntry(h, &hc, (uintptr_t)key, nullptr, newEntry);
+    HashTableEntry* e = GetOrCreateEntry(h, &hc, (uintptr_t)key, nullptr, newEntry);
     if (!e)
         return false;
     *valOut = (int)e->val;
     return true;
 }
 
-MapWStrToInt::MapWStrToInt(size_t initialSize)
-{
+MapWStrToInt::MapWStrToInt(size_t initialSize) {
     // we use PoolAllocator to allocate HashTableEntry entries
     // and copies of string keys
     allocator = new PoolAllocator();
@@ -278,21 +266,18 @@ MapWStrToInt::MapWStrToInt(size_t initialSize)
     h = NewHashTable(initialSize, allocator);
 }
 
-MapWStrToInt::~MapWStrToInt()
-{
+MapWStrToInt::~MapWStrToInt() {
     DeleteHashTable(h);
     delete allocator;
 }
 
-size_t MapWStrToInt::Count() const
-{
+size_t MapWStrToInt::Count() const {
     return h->nUsed;
 }
 
-bool MapWStrToInt::Insert(const WCHAR *key, int val, int *prevVal)
-{
+bool MapWStrToInt::Insert(const WCHAR* key, int val, int* prevVal) {
     bool newEntry;
-    HashTableEntry *e = GetOrCreateEntry(h, &gWStrKeyHasherComparator, (uintptr_t)key, allocator, newEntry);
+    HashTableEntry* e = GetOrCreateEntry(h, &gWStrKeyHasherComparator, (uintptr_t)key, allocator, newEntry);
     if (!newEntry) {
         if (prevVal)
             *prevVal = (int)e->val;
@@ -305,8 +290,7 @@ bool MapWStrToInt::Insert(const WCHAR *key, int val, int *prevVal)
     return true;
 }
 
-bool MapWStrToInt::Remove(const WCHAR *key, int *removedValOut)
-{
+bool MapWStrToInt::Remove(const WCHAR* key, int* removedValOut) {
     uintptr_t removedVal;
     bool removed = RemoveEntry(h, &gStrKeyHasherComparator, (uintptr_t)key, &removedVal);
     if (removed && removedValOut)
@@ -314,24 +298,22 @@ bool MapWStrToInt::Remove(const WCHAR *key, int *removedValOut)
     return removed;
 }
 
-bool MapWStrToInt::Get(const WCHAR *key, int* valOut)
-{
+bool MapWStrToInt::Get(const WCHAR* key, int* valOut) {
     WStrKeyHasherComparator hc;
     bool newEntry;
-    HashTableEntry *e = GetOrCreateEntry(h, &hc, (uintptr_t)key, nullptr, newEntry);
+    HashTableEntry* e = GetOrCreateEntry(h, &hc, (uintptr_t)key, nullptr, newEntry);
     if (!e)
         return false;
     *valOut = (int)e->val;
     return true;
 }
 
-}
+} // namespace dict
 
-int StringInterner::Intern(const char *s, bool *alreadyPresent)
-{
+int StringInterner::Intern(const char* s, bool* alreadyPresent) {
     nInternCalls++;
     int idx = (int)intToStr.size();
-    const char *internedString;
+    const char* internedString;
     bool inserted = strToInt.Insert(s, idx, &idx, &internedString);
     if (!inserted) {
         if (alreadyPresent)
