@@ -14,7 +14,7 @@ $files =
 "src\ChmModel.*",
 "src\Colors.*",
 "src\CrashHandler.*",
-#"src\DisplayModel.*",
+"src\DisplayModel.*",
 "src\DjVuEngine.*",
 "src\Doc.*",
 "src\EbookController.*",
