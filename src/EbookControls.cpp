@@ -24,27 +24,23 @@
 #define NOLOG 1
 #include "DebugLog.h"
 
-PageControl::PageControl() : page(nullptr), cursorX(-1), cursorY(-1)
-{
+PageControl::PageControl() : page(nullptr), cursorX(-1), cursorY(-1) {
     bit::Set(wantedInputBits, WantsMouseMoveBit, WantsMouseClickBit);
 }
 
-PageControl::~PageControl()
-{
+PageControl::~PageControl() {
     if (toolTip) {
         // TODO: make Control's destructor clear the tooltip?
         Control::NotifyMouseLeave();
     }
 }
 
-void PageControl::SetPage(HtmlPage *newPage)
-{
+void PageControl::SetPage(HtmlPage* newPage) {
     page = newPage;
     RequestRepaint(this);
 }
 
-DrawInstr *PageControl::GetLinkAt(int x, int y) const
-{
+DrawInstr* PageControl::GetLinkAt(int x, int y) const {
     if (!page)
         return nullptr;
 
@@ -57,9 +53,8 @@ DrawInstr *PageControl::GetLinkAt(int x, int y) const
     return nullptr;
 }
 
-void PageControl::NotifyMouseMove(int x, int y)
-{
-    DrawInstr *link = GetLinkAt(x, y);
+void PageControl::NotifyMouseMove(int x, int y) {
+    DrawInstr* link = GetLinkAt(x, y);
     if (!link) {
         SetCursor(IDC_ARROW);
         if (toolTip) {
@@ -82,29 +77,27 @@ void PageControl::NotifyMouseMove(int x, int y)
 }
 
 // size of the drawable area i.e. size minus padding
-Size PageControl::GetDrawableSize() const
-{
+Size PageControl::GetDrawableSize() const {
     Size s;
     pos.GetSize(&s);
     Padding pad = cachedStyle->padding;
-    s.Width  -= (pad.left + pad.right);
+    s.Width -= (pad.left + pad.right);
     s.Height -= (pad.top + pad.bottom);
     if ((s.Width <= 0) || (s.Height <= 0))
         return Size();
     return s;
 }
 
-void PageControl::Paint(Graphics *gfx, int offX, int offY)
-{
+void PageControl::Paint(Graphics* gfx, int offX, int offY) {
     CrashIf(!IsVisible());
 
     Timer timerAll;
 
-    CachedStyle *s = cachedStyle;
+    CachedStyle* s = cachedStyle;
     Timer timerFill;
     Rect r(offX, offY, pos.Width, pos.Height);
     if (!s->bgColor->IsTransparent()) {
-        Brush *br = BrushFromColorData(s->bgColor, r);
+        Brush* br = BrushFromColorData(s->bgColor, r);
         gfx->FillRectangle(br, r);
     }
     double durFill = timerFill.Stop();
@@ -118,9 +111,9 @@ void PageControl::Paint(Graphics *gfx, int offX, int offY)
     gfx->GetClip(&origClipRegion);
     r.X += s->padding.left;
     r.Y += s->padding.top;
-    r.Width  -= (s->padding.left + s->padding.right);
-    r.Height -= (s->padding.top  + s->padding.bottom);
-    r.Inflate(1,0);
+    r.Width -= (s->padding.left + s->padding.right);
+    r.Height -= (s->padding.top + s->padding.bottom);
+    r.Inflate(1, 0);
     gfx->SetClip(r, CombineModeReplace);
 
     COLORREF txtCol, bgCol;
@@ -128,8 +121,8 @@ void PageControl::Paint(Graphics *gfx, int offX, int offY)
     Color textColor, bgColor;
     textColor.SetFromCOLORREF(txtCol);
 
-    ITextRender *textRender = CreateTextRender(GetTextRenderMethod(), gfx, pos.Width, pos.Height);
-    //ITextRender *textRender = CreateTextRender(TextRenderMethodHdc, gfx, pos.Width, pos.Height);
+    ITextRender* textRender = CreateTextRender(GetTextRenderMethod(), gfx, pos.Width, pos.Height);
+    // ITextRender *textRender = CreateTextRender(TextRenderMethodHdc, gfx, pos.Width, pos.Height);
 
     bgColor.SetFromCOLORREF(bgCol);
     textRender->SetTextBgColor(bgColor);
@@ -144,12 +137,11 @@ void PageControl::Paint(Graphics *gfx, int offX, int offY)
     lf("all: %.2f, fill: %.2f, draw html: %.2f", durAll, durFill, durDraw);
 }
 
-Control *CreatePageControl(TxtNode *structDef)
-{
+Control* CreatePageControl(TxtNode* structDef) {
     CrashIf(!structDef->IsStructWithName("EbookPage"));
-    EbookPageDef *def = DeserializeEbookPageDef(structDef);
-    PageControl *c = new PageControl();
-    Style *style = StyleByName(def->style);
+    EbookPageDef* def = DeserializeEbookPageDef(structDef);
+    PageControl* c = new PageControl();
+    Style* style = StyleByName(def->style);
     c->SetStyle(style);
 
     if (def->name)
@@ -159,33 +151,33 @@ Control *CreatePageControl(TxtNode *structDef)
     return c;
 }
 
-ILayout *CreatePagesLayout(ParsedMui *parsedMui, TxtNode *structDef)
-{
+ILayout* CreatePagesLayout(ParsedMui* parsedMui, TxtNode* structDef) {
     CrashIf(!structDef->IsStructWithName("PagesLayout"));
-    PagesLayoutDef *def = DeserializePagesLayoutDef(structDef);
+    PagesLayoutDef* def = DeserializePagesLayoutDef(structDef);
     CrashIf(!def->page1 || !def->page2);
-    PageControl *page1 = static_cast<PageControl*>(FindControlNamed(*parsedMui, def->page1));
-    PageControl *page2 = static_cast<PageControl*>(FindControlNamed(*parsedMui, def->page2));
+    PageControl* page1 = static_cast<PageControl*>(FindControlNamed(*parsedMui, def->page1));
+    PageControl* page2 = static_cast<PageControl*>(FindControlNamed(*parsedMui, def->page2));
     CrashIf(!page1 || !page2);
-    PagesLayout *layout = new PagesLayout(page1, page2, def->spaceDx);
+    PagesLayout* layout = new PagesLayout(page1, page2, def->spaceDx);
     if (def->name)
         layout->SetName(def->name);
     FreePagesLayoutDef(def);
     return layout;
 }
 
-void SetMainWndBgCol(EbookControls *ctrls)
-{
+void SetMainWndBgCol(EbookControls* ctrls) {
     COLORREF txtColor, bgColor;
     GetEbookUiColors(txtColor, bgColor);
 
-    Style *styleMainWnd = StyleByName("styleMainWnd");
+    Style* styleMainWnd = StyleByName("styleMainWnd");
     CrashIf(!styleMainWnd);
-    styleMainWnd->Set(Prop::AllocColorSolid(PropBgColor, GetRValueSafe(bgColor), GetGValueSafe(bgColor), GetBValueSafe(bgColor)));
+    styleMainWnd->Set(
+        Prop::AllocColorSolid(PropBgColor, GetRValueSafe(bgColor), GetGValueSafe(bgColor), GetBValueSafe(bgColor)));
     ctrls->mainWnd->SetStyle(styleMainWnd);
 
-    Style *styleStatus = StyleByName("styleStatus");
-    styleStatus->Set(Prop::AllocColorSolid(PropBgColor, GetRValueSafe(bgColor), GetGValueSafe(bgColor), GetBValueSafe(bgColor)));
+    Style* styleStatus = StyleByName("styleStatus");
+    styleStatus->Set(
+        Prop::AllocColorSolid(PropBgColor, GetRValueSafe(bgColor), GetGValueSafe(bgColor), GetBValueSafe(bgColor)));
     ctrls->status->SetStyle(styleStatus);
 
     // TODO: should also allow to change text color
@@ -196,8 +188,7 @@ void SetMainWndBgCol(EbookControls *ctrls)
     // other colors that are supposed to match background color
 }
 
-EbookControls *CreateEbookControls(HWND hwnd, FrameRateWnd *frameRateWnd)
-{
+EbookControls* CreateEbookControls(HWND hwnd, FrameRateWnd* frameRateWnd) {
     static bool wasRegistered = false;
     if (!wasRegistered) {
         RegisterControlCreatorFor("EbookPage", &CreatePageControl);
@@ -205,12 +196,12 @@ EbookControls *CreateEbookControls(HWND hwnd, FrameRateWnd *frameRateWnd)
         wasRegistered = true;
     }
 
-    ParsedMui *muiDef = new ParsedMui();
-    char *s = LoadTextResource(IDD_EBOOK_WIN_DESC);
+    ParsedMui* muiDef = new ParsedMui();
+    char* s = LoadTextResource(IDD_EBOOK_WIN_DESC);
     MuiFromText(s, *muiDef);
     free(s);
 
-    EbookControls *ctrls = new EbookControls;
+    EbookControls* ctrls = new EbookControls;
     ctrls->muiDef = muiDef;
     CrashIf(!FindButtonVectorNamed(*muiDef, "nextButton"));
     CrashIf(!FindButtonVectorNamed(*muiDef, "prevButton"));
@@ -234,14 +225,13 @@ EbookControls *CreateEbookControls(HWND hwnd, FrameRateWnd *frameRateWnd)
     CrashIf(!ctrls->mainWnd->layout);
 
     for (size_t i = 0; i < muiDef->allControls.size(); i++) {
-        Control *c = muiDef->allControls.at(i);
+        Control* c = muiDef->allControls.at(i);
         ctrls->mainWnd->AddChild(c);
     }
     return ctrls;
 }
 
-void DestroyEbookControls(EbookControls* ctrls)
-{
+void DestroyEbookControls(EbookControls* ctrls) {
     delete ctrls->mainWnd;
     delete ctrls->topPart;
     delete ctrls->pagesLayout;
@@ -249,14 +239,12 @@ void DestroyEbookControls(EbookControls* ctrls)
     delete ctrls;
 }
 
-Size PagesLayout::Measure(const Size availableSize)
-{
+Size PagesLayout::Measure(const Size availableSize) {
     desiredSize = availableSize;
     return desiredSize;
 }
 
-void PagesLayout::Arrange(const Rect finalRect)
-{
+void PagesLayout::Arrange(const Rect finalRect) {
     // only page2 can be hidden
     CrashIf(!page1->IsVisible());
 
@@ -274,7 +262,7 @@ void PagesLayout::Arrange(const Rect finalRect)
         // protect against excessive spaceDx values
         if (dx <= 100) {
             spaceDx = 0;
-            dx = dx /2;
+            dx = dx / 2;
             CrashIf(dx < 10);
         }
     }

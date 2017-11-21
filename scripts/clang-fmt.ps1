@@ -18,7 +18,7 @@ $files =
 "src\DjVuEngine.*",
 "src\Doc.*",
 "src\EbookController.*",
-#"src\EbookControls.*",
+"src\EbookControls.*",
 "src\EbookDoc.*",
 "src\EbookEngine.*",
 #"src\EbookFormatter.*",
