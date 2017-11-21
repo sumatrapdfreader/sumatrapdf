@@ -260,21 +260,23 @@ HtmlFormatter* Doc::CreateFormatter(HtmlFormatterArgs* args) const {
 
 Doc Doc::CreateFromFile(const WCHAR* filePath) {
     Doc doc;
-    if (EpubDoc::IsSupportedFile(filePath))
+    if (EpubDoc::IsSupportedFile(filePath)) {
         doc = Doc(EpubDoc::CreateFromFile(filePath));
-    else if (Fb2Doc::IsSupportedFile(filePath))
+    } else if (Fb2Doc::IsSupportedFile(filePath)) {
         doc = Doc(Fb2Doc::CreateFromFile(filePath));
-    else if (MobiDoc::IsSupportedFile(filePath)) {
+    } else if (MobiDoc::IsSupportedFile(filePath)) {
         doc = Doc(MobiDoc::CreateFromFile(filePath));
         // MobiDoc is also used for loading PalmDoc - don't expose that to Doc users, though
         if (doc.mobiDoc && doc.mobiDoc->GetDocType() != PdbDocType::Mobipocket) {
             doc.Delete();
             // .prc files can be both MobiDoc or PalmDoc
-            if (PalmDoc::IsSupportedFile(filePath))
+            if (PalmDoc::IsSupportedFile(filePath)) {
                 doc = Doc(PalmDoc::CreateFromFile(filePath));
+            }
         }
-    } else if (PalmDoc::IsSupportedFile(filePath))
+    } else if (PalmDoc::IsSupportedFile(filePath)) {
         doc = Doc(PalmDoc::CreateFromFile(filePath));
+    }
 
     // if failed to load and more specific error message hasn't been
     // set above, set a generic error message

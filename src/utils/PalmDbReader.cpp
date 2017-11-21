@@ -46,7 +46,7 @@ PdbReader::PdbReader(const WCHAR* filePath) {
         return;
     }
     if (!ParseHeader()) {
-        recOffsets.Reset();
+        recOffsets.clear();
     }
 }
 
@@ -59,7 +59,7 @@ PdbReader::PdbReader(IStream* stream) {
     }
     data.Set(tmp, size);
     if (!ParseHeader()) {
-        recOffsets.Reset();
+        recOffsets.clear();
     }
 }
 
@@ -85,10 +85,10 @@ bool PdbReader::ParseHeader() {
 
     for (int i = 0; i < pdbHeader.numRecords; i++) {
         uint32_t off = r.DWordBE(sizeof(pdbHeader) + i * sizeof(PdbRecordHeader));
-        recOffsets.Append(off);
+        recOffsets.push_back(off);
     }
     // add sentinel value to simplify use
-    recOffsets.Append(std::min((uint32_t)data.size, (uint32_t)-1));
+    recOffsets.push_back(std::min((uint32_t)data.size, (uint32_t)-1));
 
     // validate offsets
     for (int i = 0; i < pdbHeader.numRecords; i++) {
@@ -114,13 +114,11 @@ size_t PdbReader::GetRecordCount() {
 }
 
 // don't free, memory is owned by us
-const char* PdbReader::GetRecord(size_t recNo, size_t* sizeOut) {
+std::string_view PdbReader::GetRecord(size_t recNo) {
     if (recNo + 1 >= recOffsets.size()) {
-        return nullptr;
+        return {};
     }
     size_t offset = recOffsets.at(recNo);
-    if (sizeOut) {
-        *sizeOut = recOffsets.at(recNo + 1) - offset;
-    }
-    return data.data + offset;
+    size_t size = recOffsets.at(recNo + 1) - offset;
+    return {data.data + offset, size};
 }

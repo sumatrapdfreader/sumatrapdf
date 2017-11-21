@@ -8,7 +8,7 @@ class PdbReader {
     OwnedData data;
     // offset of each pdb record within the file + a sentinel
     // value equal to file size to simplify use
-    Vec<uint32_t> recOffsets;
+    std::vector<uint32_t> recOffsets;
     // cache so that we can compare with str::Eq
     char dbType[9];
 
@@ -20,5 +20,5 @@ class PdbReader {
 
     const char* GetDbType();
     size_t GetRecordCount();
-    const char* GetRecord(size_t recNo, size_t* sizeOut);
+    std::string_view GetRecord(size_t recNo);
 };
