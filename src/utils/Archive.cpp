@@ -3,6 +3,8 @@
 
 #include "BaseUtil.h"
 #include "Archive.h"
+
+#include "StrSlice.h"
 #include "FileUtil.h"
 
 extern "C" {
@@ -378,24 +380,18 @@ static bool TryLoadUnrarDll() {
     return IsUnrarDllLoaded() && IsValidUnrarDll();
 }
 
-struct DataBuf {
-    char* data;
-    size_t sizeLeft;
-};
-
 // return 1 on success. Other values for msg that we don't handle: UCM_CHANGEVOLUME, UCM_NEEDPASSWORD
 static int CALLBACK unrarCallback(UINT msg, LPARAM userData, LPARAM rarBuffer, LPARAM bytesProcessed) {
     if (UCM_PROCESSDATA != msg || !userData) {
         return -1;
     }
-    DataBuf* buf = (DataBuf*)userData;
+    str::Slice* buf = (str::Slice*)userData;
     size_t bytesGot = (size_t)bytesProcessed;
-    if (bytesGot > buf->sizeLeft) {
+    if (bytesGot > buf->Left()) {
         return -1;
     }
-    memcpy(buf->data, (char*)rarBuffer, bytesGot);
-    buf->data += bytesGot;
-    buf->sizeLeft -= bytesGot;
+    memcpy(buf->curr, (char*)rarBuffer, bytesGot);
+    buf->curr += bytesGot;
     return 1;
 }
 
@@ -422,7 +418,7 @@ OwnedData Archive::GetFileDataByIdUnarrDll(size_t fileId) {
 
     AutoFreeW rarPath(str::conv::FromUtf8(rarFilePath_));
 
-    DataBuf uncompressedBuf;
+    str::Slice uncompressedBuf;
 
     RAROpenArchiveDataEx arcData = {0};
     arcData.ArcNameW = rarPath.Get();
@@ -460,10 +456,9 @@ OwnedData Archive::GetFileDataByIdUnarrDll(size_t fileId) {
         ok = false;
         goto Exit;
     }
-    uncompressedBuf.data = data;
-    uncompressedBuf.sizeLeft = size;
+    uncompressedBuf.Set(data, size);
     int res = RARProcessFile(hArc, RAR_TEST, nullptr, nullptr);
-    ok = (res == 0) && (uncompressedBuf.sizeLeft == 0);
+    ok = (res == 0) && (uncompressedBuf.Left() == 0);
 
 Exit:
     RARCloseArchive(hArc);
