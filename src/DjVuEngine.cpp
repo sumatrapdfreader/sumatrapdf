@@ -711,7 +711,11 @@ unsigned char *DjVuEngineImpl::GetFileData(size_t *cbCount)
     if (FileName() == nullptr) {
         return nullptr;
     }
-    return (unsigned char *)file::ReadAll(FileName(), cbCount);
+    OwnedData tmp(file::ReadAll(FileName()));
+    if (cbCount) {
+        *cbCount = tmp.size;
+    }
+    return (unsigned char *)tmp.StealData();
 }
 
 bool DjVuEngineImpl::SaveFileAs(const char *copyFileName, bool includeUserAnnots)
