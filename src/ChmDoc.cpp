@@ -14,13 +14,11 @@
 #include "EbookBase.h"
 #include "ChmDoc.h"
 
-ChmDoc::~ChmDoc()
-{
+ChmDoc::~ChmDoc() {
     chm_close(chmHandle);
 }
 
-bool ChmDoc::HasData(const char *fileName)
-{
+bool ChmDoc::HasData(const char* fileName) {
     if (!fileName)
         return nullptr;
 
@@ -28,16 +26,14 @@ bool ChmDoc::HasData(const char *fileName)
     if (!str::StartsWith(fileName, "/")) {
         tmpName.Set(str::Join("/", fileName));
         fileName = tmpName;
-    }
-    else if (str::StartsWith(fileName, "///"))
+    } else if (str::StartsWith(fileName, "///"))
         fileName += 2;
 
     struct chmUnitInfo info;
     return chm_resolve_object(chmHandle, fileName, &info) == CHM_RESOLVE_SUCCESS;
 }
 
-unsigned char *ChmDoc::GetData(const char *fileName, size_t *lenOut)
-{
+unsigned char* ChmDoc::GetData(const char* fileName, size_t* lenOut) {
     AutoFree fileNameTmp;
     if (!str::StartsWith(fileName, "/")) {
         fileNameTmp.Set(str::Join("/", fileName));
@@ -64,7 +60,7 @@ unsigned char *ChmDoc::GetData(const char *fileName, size_t *lenOut)
     }
 
     // +1 for 0 terminator for C string compatibility
-    ScopedMem<unsigned char> data((unsigned char *)malloc(len + 1));
+    ScopedMem<unsigned char> data((unsigned char*)malloc(len + 1));
     if (!data)
         return nullptr;
     if (!chm_retrieve_object(chmHandle, &info, data.Get(), 0, len))
@@ -76,9 +72,8 @@ unsigned char *ChmDoc::GetData(const char *fileName, size_t *lenOut)
     return data.StealData();
 }
 
-char *ChmDoc::ToUtf8(const unsigned char *text, UINT overrideCP)
-{
-    const char *s = (char *)text;
+char* ChmDoc::ToUtf8(const unsigned char* text, UINT overrideCP) {
+    const char* s = (char*)text;
     if (str::StartsWith(s, UTF8_BOM))
         return str::Dup(s + 3);
     if (overrideCP)
@@ -88,25 +83,22 @@ char *ChmDoc::ToUtf8(const unsigned char *text, UINT overrideCP)
     return str::ToMultiByte(s, codepage, CP_UTF8);
 }
 
-WCHAR *ChmDoc::ToStr(const char *text)
-{
+WCHAR* ChmDoc::ToStr(const char* text) {
     return str::conv::FromCodePage(text, codepage);
 }
 
-static char *GetCharZ(const unsigned char *data, size_t len, size_t off)
-{
+static char* GetCharZ(const unsigned char* data, size_t len, size_t off) {
     if (off >= len)
         return nullptr;
     CrashIf(!memchr(data + off, '\0', len - off + 1)); // data is zero-terminated
-    const char *str = (char *)data + off;
+    const char* str = (char*)data + off;
     if (str::IsEmpty(str))
         return nullptr;
     return str::Dup(str);
 }
 
 // http://www.nongnu.org/chmspec/latest/Internal.html#WINDOWS
-void ChmDoc::ParseWindowsData()
-{
+void ChmDoc::ParseWindowsData() {
     size_t windowsLen, stringsLen;
     ScopedMem<unsigned char> windowsData(GetData("/#WINDOWS", &windowsLen));
     ScopedMem<unsigned char> stringsData(GetData("/#STRINGS", &stringsLen));
@@ -144,17 +136,14 @@ void ChmDoc::ParseWindowsData()
 
 #define CP_CHM_DEFAULT 1252
 
-static UINT LcidToCodepage(DWORD lcid)
-{
+static UINT LcidToCodepage(DWORD lcid) {
     // cf. http://msdn.microsoft.com/en-us/library/bb165625(v=VS.90).aspx
     static struct {
         DWORD lcid;
         UINT codepage;
     } lcidToCodepage[] = {
-        { 1025, 1256 }, { 2052,  936 }, { 1028,  950 }, { 1029, 1250 },
-        { 1032, 1253 }, { 1037, 1255 }, { 1038, 1250 }, { 1041,  932 },
-        { 1042,  949 }, { 1045, 1250 }, { 1049, 1251 }, { 1051, 1250 },
-        { 1060, 1250 }, { 1055, 1254 }, { 1026, 1251 },
+        {1025, 1256}, {2052, 936},  {1028, 950},  {1029, 1250}, {1032, 1253}, {1037, 1255}, {1038, 1250}, {1041, 932},
+        {1042, 949},  {1045, 1250}, {1049, 1251}, {1051, 1250}, {1060, 1250}, {1055, 1254}, {1026, 1251},
     };
 
     for (int i = 0; i < dimof(lcidToCodepage); i++) {
@@ -166,8 +155,7 @@ static UINT LcidToCodepage(DWORD lcid)
 }
 
 // http://www.nongnu.org/chmspec/latest/Internal.html#SYSTEM
-bool ChmDoc::ParseSystemData()
-{
+bool ChmDoc::ParseSystemData() {
     size_t dataLen;
     ScopedMem<unsigned char> data(GetData("/#SYSTEM", &dataLen));
     if (!data)
@@ -184,44 +172,43 @@ bool ChmDoc::ParseSystemData()
             continue;
         WORD type = r.WordLE(off);
         switch (type) {
-        case 0:
-            if (!tocPath)
-                tocPath.Set(GetCharZ(data, dataLen, off + 4));
-            break;
-        case 1:
-            if (!indexPath)
-                indexPath.Set(GetCharZ(data, dataLen, off + 4));
-            break;
-        case 2:
-            if (!homePath)
-                homePath.Set(GetCharZ(data, dataLen, off + 4));
-            break;
-        case 3:
-            if (!title)
-                title.Set(GetCharZ(data, dataLen, off + 4));
-            break;
-        case 4:
-            if (!codepage && len >= 4)
-                codepage = LcidToCodepage(r.DWordLE(off + 4));
-            break;
-        case 6:
-            // compiled file - ignore
-            break;
-        case 9:
-            if (!creator)
-                creator.Set(GetCharZ(data, dataLen, off + 4));
-            break;
-        case 16:
-            // default font - ignore
-            break;
+            case 0:
+                if (!tocPath)
+                    tocPath.Set(GetCharZ(data, dataLen, off + 4));
+                break;
+            case 1:
+                if (!indexPath)
+                    indexPath.Set(GetCharZ(data, dataLen, off + 4));
+                break;
+            case 2:
+                if (!homePath)
+                    homePath.Set(GetCharZ(data, dataLen, off + 4));
+                break;
+            case 3:
+                if (!title)
+                    title.Set(GetCharZ(data, dataLen, off + 4));
+                break;
+            case 4:
+                if (!codepage && len >= 4)
+                    codepage = LcidToCodepage(r.DWordLE(off + 4));
+                break;
+            case 6:
+                // compiled file - ignore
+                break;
+            case 9:
+                if (!creator)
+                    creator.Set(GetCharZ(data, dataLen, off + 4));
+                break;
+            case 16:
+                // default font - ignore
+                break;
         }
     }
 
     return true;
 }
 
-char *ChmDoc::ResolveTopicID(unsigned int id)
-{
+char* ChmDoc::ResolveTopicID(unsigned int id) {
     size_t ivbLen = 0;
     ScopedMem<unsigned char> ivbData(GetData("/#IVB", &ivbLen));
     ByteReader br(ivbData, ivbLen);
@@ -238,18 +225,16 @@ char *ChmDoc::ResolveTopicID(unsigned int id)
     return nullptr;
 }
 
-void ChmDoc::FixPathCodepage(AutoFree& path, UINT& fileCP)
-{
+void ChmDoc::FixPathCodepage(AutoFree& path, UINT& fileCP) {
     if (!path || HasData(path))
         return;
 
-    AutoFree utf8Path(ToUtf8((unsigned char *)path.Get()));
+    AutoFree utf8Path(ToUtf8((unsigned char*)path.Get()));
     if (HasData(utf8Path)) {
         path.Set(utf8Path.StealData());
         fileCP = codepage;
-    }
-    else if (fileCP != codepage) {
-        utf8Path.Set(ToUtf8((unsigned char *)path.Get(), fileCP));
+    } else if (fileCP != codepage) {
+        utf8Path.Set(ToUtf8((unsigned char*)path.Get(), fileCP));
         if (HasData(utf8Path)) {
             path.Set(utf8Path.StealData());
             codepage = fileCP;
@@ -257,9 +242,8 @@ void ChmDoc::FixPathCodepage(AutoFree& path, UINT& fileCP)
     }
 }
 
-bool ChmDoc::Load(const WCHAR *fileName)
-{
-    chmHandle = chm_open((WCHAR *)fileName);
+bool ChmDoc::Load(const WCHAR* fileName) {
+    chmHandle = chm_open((WCHAR*)fileName);
     if (!chmHandle)
         return false;
 
@@ -268,7 +252,7 @@ bool ChmDoc::Load(const WCHAR *fileName)
         return false;
 
     UINT fileCodepage = codepage;
-    char header[24] = { 0 };
+    char header[24] = {0};
     if (file::ReadN(fileName, header, sizeof(header))) {
         DWORD lcid = ByteReader(header, sizeof(header)).DWordLE(20);
         fileCodepage = LcidToCodepage(lcid);
@@ -283,9 +267,7 @@ bool ChmDoc::Load(const WCHAR *fileName)
         codepage = CP_ACP;
 
     if (!HasData(homePath)) {
-        const char *pathsToTest[] = {
-            "/index.htm", "/index.html", "/default.htm", "/default.html"
-        };
+        const char* pathsToTest[] = {"/index.htm", "/index.html", "/default.htm", "/default.html"};
         for (int i = 0; i < dimof(pathsToTest); i++) {
             if (HasData(pathsToTest[i])) {
                 homePath.SetCopy(pathsToTest[i]);
@@ -298,8 +280,7 @@ bool ChmDoc::Load(const WCHAR *fileName)
     return true;
 }
 
-WCHAR *ChmDoc::GetProperty(DocumentProperty prop)
-{
+WCHAR* ChmDoc::GetProperty(DocumentProperty prop) {
     AutoFreeW result;
     if (Prop_Title == prop && title)
         result.Set(ToStr(title));
@@ -313,24 +294,21 @@ WCHAR *ChmDoc::GetProperty(DocumentProperty prop)
     return result.StealData();
 }
 
-const char *ChmDoc::GetHomePath()
-{
+const char* ChmDoc::GetHomePath() {
     return homePath;
 }
 
-static int ChmEnumerateEntry(struct chmFile *chmHandle, struct chmUnitInfo *info, void *data)
-{
+static int ChmEnumerateEntry(struct chmFile* chmHandle, struct chmUnitInfo* info, void* data) {
     UNUSED(chmHandle);
     if (info->path) {
-        Vec<char *> *paths = (Vec<char *> *)data;
+        Vec<char*>* paths = (Vec<char*>*)data;
         paths->Append(str::Dup(info->path));
     }
     return CHM_ENUMERATOR_CONTINUE;
 }
 
-Vec<char *> *ChmDoc::GetAllPaths()
-{
-    Vec<char *> *paths = new Vec<char *>();
+Vec<char*>* ChmDoc::GetAllPaths() {
+    Vec<char*>* paths = new Vec<char*>();
     chm_enumerate(chmHandle, CHM_ENUMERATE_FILES | CHM_ENUMERATE_NORMAL, ChmEnumerateEntry, paths);
     return paths;
 }
@@ -346,8 +324,7 @@ Vec<char *> *ChmDoc::GetAllPaths()
 <li>
   ... siblings ...
 */
-static bool VisitChmTocItem(EbookTocVisitor *visitor, HtmlElement *el, UINT cp, int level)
-{
+static bool VisitChmTocItem(EbookTocVisitor* visitor, HtmlElement* el, UINT cp, int level) {
     CrashIf(el->tag != Tag_Object || level > 1 && (!el->up || el->up->tag != Tag_Li));
 
     AutoFreeW name, local;
@@ -392,8 +369,7 @@ static bool VisitChmTocItem(EbookTocVisitor *visitor, HtmlElement *el, UINT cp, 
 <li>
   ... siblings ...
 */
-static bool VisitChmIndexItem(EbookTocVisitor *visitor, HtmlElement *el, UINT cp, int level)
-{
+static bool VisitChmIndexItem(EbookTocVisitor* visitor, HtmlElement* el, UINT cp, int level) {
     CrashIf(el->tag != Tag_Object || level > 1 && (!el->up || el->up->tag != Tag_Li));
 
     WStrVec references;
@@ -416,8 +392,7 @@ static bool VisitChmIndexItem(EbookTocVisitor *visitor, HtmlElement *el, UINT cp
             // some CHM documents seem to use a lonely Name instead of Keyword
             if (!keyword)
                 keyword.SetCopy(name);
-        }
-        else if (str::EqI(attrName, L"Local") && name) {
+        } else if (str::EqI(attrName, L"Local") && name) {
             // remove the ITS protocol and any filename references from the URLs
             if (str::Find(attrVal, L"::/"))
                 attrVal.SetCopy(str::Find(attrVal, L"::/") + 3);
@@ -439,18 +414,17 @@ static bool VisitChmIndexItem(EbookTocVisitor *visitor, HtmlElement *el, UINT cp
     return true;
 }
 
-static void WalkChmTocOrIndex(EbookTocVisitor *visitor, HtmlElement *list, UINT cp, bool isIndex, int level=1)
-{
+static void WalkChmTocOrIndex(EbookTocVisitor* visitor, HtmlElement* list, UINT cp, bool isIndex, int level = 1) {
     CrashIf(Tag_Ul != list->tag);
 
     // some broken ToCs wrap every <li> into its own <ul>
     for (; list && Tag_Ul == list->tag; list = list->next) {
-        for (HtmlElement *el = list->down; el; el = el->next) {
+        for (HtmlElement* el = list->down; el; el = el->next) {
             if (Tag_Li != el->tag)
                 continue; // ignore unexpected elements
 
             bool valid;
-            HtmlElement *elObj = el->GetChildByTag(Tag_Object);
+            HtmlElement* elObj = el->GetChildByTag(Tag_Object);
             if (!elObj)
                 valid = false;
             else if (isIndex)
@@ -460,7 +434,7 @@ static void WalkChmTocOrIndex(EbookTocVisitor *visitor, HtmlElement *list, UINT 
             if (!valid)
                 continue; // skip incomplete elements and all their children
 
-            HtmlElement *nested = el->GetChildByTag(Tag_Ul);
+            HtmlElement* nested = el->GetChildByTag(Tag_Ul);
             // some broken ToCs have the <ul> follow right *after* a <li>
             if (!nested && el->next && Tag_Ul == el->next->tag)
                 nested = el->next;
@@ -471,11 +445,10 @@ static void WalkChmTocOrIndex(EbookTocVisitor *visitor, HtmlElement *list, UINT 
 }
 
 // ignores any <ul><li> list structure and just extracts a linear list of <object type="text/sitemap">...</object>
-static bool WalkBrokenChmTocOrIndex(EbookTocVisitor *visitor, HtmlParser& p, UINT cp, bool isIndex)
-{
+static bool WalkBrokenChmTocOrIndex(EbookTocVisitor* visitor, HtmlParser& p, UINT cp, bool isIndex) {
     bool hadOne = false;
 
-    HtmlElement *el = p.FindElementByName("body");
+    HtmlElement* el = p.FindElementByName("body");
     while ((el = p.FindElementByName("object", el)) != nullptr) {
         AutoFreeW type(el->GetAttribute("type"));
         if (!str::EqI(type, L"text/sitemap"))
@@ -489,12 +462,11 @@ static bool WalkBrokenChmTocOrIndex(EbookTocVisitor *visitor, HtmlParser& p, UIN
     return hadOne;
 }
 
-bool ChmDoc::ParseTocOrIndex(EbookTocVisitor *visitor, const char *path, bool isIndex)
-{
+bool ChmDoc::ParseTocOrIndex(EbookTocVisitor* visitor, const char* path, bool isIndex) {
     if (!path)
         return false;
     ScopedMem<unsigned char> htmlData(GetData(path, nullptr));
-    const char *html = (char *)htmlData.Get();
+    const char* html = (char*)htmlData.Get();
     if (!html)
         return false;
 
@@ -508,7 +480,7 @@ bool ChmDoc::ParseTocOrIndex(EbookTocVisitor *visitor, const char *path, bool is
     // enforce the default codepage, so that pre-encoded text and
     // entities are in the same codepage and VisitChmTocItem yields
     // consistent results
-    HtmlElement *el = p.Parse(html, CP_CHM_DEFAULT);
+    HtmlElement* el = p.Parse(html, CP_CHM_DEFAULT);
     if (!el)
         return false;
     el = p.FindElementByName("body");
@@ -520,37 +492,31 @@ bool ChmDoc::ParseTocOrIndex(EbookTocVisitor *visitor, const char *path, bool is
     return true;
 }
 
-bool ChmDoc::HasToc() const
-{
+bool ChmDoc::HasToc() const {
     return tocPath != nullptr;
 }
 
-bool ChmDoc::ParseToc(EbookTocVisitor *visitor)
-{
+bool ChmDoc::ParseToc(EbookTocVisitor* visitor) {
     return ParseTocOrIndex(visitor, tocPath, false);
 }
 
-bool ChmDoc::HasIndex() const
-{
+bool ChmDoc::HasIndex() const {
     return indexPath != nullptr;
 }
 
-bool ChmDoc::ParseIndex(EbookTocVisitor *visitor)
-{
+bool ChmDoc::ParseIndex(EbookTocVisitor* visitor) {
     return ParseTocOrIndex(visitor, indexPath, true);
 }
 
-bool ChmDoc::IsSupportedFile(const WCHAR *fileName, bool sniff)
-{
+bool ChmDoc::IsSupportedFile(const WCHAR* fileName, bool sniff) {
     if (sniff)
         return file::StartsWith(fileName, "ITSF");
 
     return str::EndsWithI(fileName, L".chm");
 }
 
-ChmDoc *ChmDoc::CreateFromFile(const WCHAR *fileName)
-{
-    ChmDoc *doc = new ChmDoc();
+ChmDoc* ChmDoc::CreateFromFile(const WCHAR* fileName) {
+    ChmDoc* doc = new ChmDoc();
     if (!doc || !doc->Load(fileName)) {
         delete doc;
         return nullptr;

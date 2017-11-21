@@ -10,7 +10,7 @@ $files =
 "src\AppUtil.*",
 "src\Canvas.*",
 "src\Caption.*",
-#"src\ChmDoc.*",
+"src\ChmDoc.*",
 #"src\ChmModel.*",
 "src\Colors.*",
 "src\CrashHandler.*",
