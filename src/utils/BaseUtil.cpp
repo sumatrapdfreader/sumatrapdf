@@ -291,6 +291,7 @@ uint32_t MurmurHash2(const void* key, size_t len) {
     return h;
 }
 
+#if OS_WIN
 BYTE GetRValueSafe(COLORREF rgb) {
     rgb = rgb & 0xff;
     return (BYTE)rgb;
@@ -305,3 +306,4 @@ BYTE GetBValueSafe(COLORREF rgb) {
     rgb = (rgb >> 16) & 0xff;
     return (BYTE)rgb;
 }
+#endif

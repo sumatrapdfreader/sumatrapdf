@@ -3,7 +3,9 @@
 
 #include "BaseUtil.h"
 #include "FileUtil.h"
+#if OS_WIN
 #include "ScopedWin.h"
+#endif
 
 #if OS_WIN
 // cf. http://blogs.msdn.com/b/oldnewthing/archive/2004/10/25/247180.aspx
