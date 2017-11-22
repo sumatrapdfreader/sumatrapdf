@@ -283,9 +283,7 @@ static void AddStyleProp(Style* style, TxtNode* prop) {
 }
 
 static TxtNode* TxtChildNodeWithKey(TxtNode* top, const char* keyName) {
-    size_t n = top->children->size();
-    for (size_t i = 0; i < n; i++) {
-        TxtNode* node = top->children->at(i);
+    for (TxtNode* node : top->children) {
         if (node->IsTextWithKey(keyName))
             return node;
     }
@@ -303,9 +301,7 @@ static void CacheStyleFromStruct(TxtNode* def) {
         return;
 
     Style* style = new Style();
-    size_t n = def->children->size();
-    for (size_t i = 0; i < n; i++) {
-        TxtNode* node = def->children->at(i);
+    for (TxtNode* node : def->children) {
         CrashIf(!node->IsText());
         AddStyleProp(style, node);
     }
@@ -411,7 +407,7 @@ static VerticalLayout* VerticalLayoutFromDef(ParsedMui& parsed, TxtNode* structD
 
 // TODO: create the rest of controls
 static void ParseMuiDefinition(TxtNode* root, ParsedMui& res) {
-    for (TxtNode* node : *root->children) {
+    for (TxtNode* node : root->children) {
         CrashIf(!node->IsStruct());
         if (node->IsStructWithName("Style")) {
             CacheStyleFromStruct(node);

@@ -292,10 +292,8 @@ static TxtNode* FindNode(TxtNode* curr, const char* name, size_t nameLen) {
     char* nodeName;
     size_t nodeNameLen;
 
-    TxtNode* child;
     TxtNode* found = nullptr;
-    for (size_t i = 0; i < curr->children->size(); i++) {
-        child = curr->children->at(i);
+    for (TxtNode* child : curr->children) {
         if (child->IsText() || child->IsStruct()) {
             nodeName = child->keyStart;
             nodeNameLen = child->keyEnd - nodeName;
@@ -322,14 +320,10 @@ static void WriteDefaultValue(uint8_t* structDataPtr, Type type) {
 }
 
 static void FreeTxtNode(TxtNode* node) {
-    if (node->children) {
-        for (size_t i = 0; i < node->children->size(); i++) {
-            TxtNode* child = node->children->at(i);
-            CrashIf(!child->IsText());
-            delete child;
-        }
+    for (TxtNode* child : node->children) {
+        CrashIf(!child->IsText());
+        delete child;
     }
-    delete node->children;
     delete node;
 }
 
@@ -338,7 +332,6 @@ static TxtNode* StructNodeFromTextNode(DecodeState& ds, TxtNode* txtNode, const 
     CrashIf(!txtNode->IsText());
     str::Slice slice(txtNode->valStart, txtNode->valEnd);
     TxtNode* node = new TxtNode(TxtNode::Type::Struct);
-    node->children = new Vec<TxtNode*>();
     uint16_t fieldNo = 0;
     char* fieldName = (char*)structDef->fieldNames;
     TxtNode* child;
@@ -352,7 +345,7 @@ static TxtNode* StructNodeFromTextNode(DecodeState& ds, TxtNode* txtNode, const 
         child->valEnd = slice.curr;
         child->keyStart = fieldName;
         child->keyEnd = fieldName + str::Len(fieldName);
-        node->children->Append(child);
+        node->children.push_back(child);
         ++fieldNo;
         if (fieldNo == structDef->nFields)
             break;
@@ -461,9 +454,7 @@ static bool DecodeField(DecodeState& ds, TxtNode* firstNode, const char* fieldNa
         Vec<uint8_t*>* vec = new Vec<uint8_t*>();
         // we remember it right away, so that it gets freed in case of error
         WriteStructPtrVal(structDataPtr, (void*)vec);
-        TxtNode* child;
-        for (size_t i = 0; i < node->children->size(); i++) {
-            child = node->children->at(i);
+        for (TxtNode* child : node->children) {
             uint8_t* d = DecodeStruct(ds, fieldDef, child, isCompact);
             if (d) {
                 vec->Append(d);

@@ -11,7 +11,7 @@ struct TxtNode {
     };
 
     Type type;
-    Vec<TxtNode*>* children;
+    std::vector<TxtNode*> children;
 
     char* lineStart;
     char* valStart;
@@ -62,7 +62,7 @@ struct TxtParser {
     Token tok;
     char escapeChar = SERIALIZE_ESCAPE_CHAR;
     bool failed = false;
-    Vec<TxtNode*> nodes;
+    std::vector<TxtNode*> nodes;
 
     void SetToParse(const char* s, size_t sLen);
 };
