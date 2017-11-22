@@ -32,10 +32,6 @@ static TxtNode* AllocTxtNode(Allocator* allocator, TxtNode::Type nodeType) {
     void* p = Allocator::Alloc<TxtNode>(allocator);
     TxtNode* node = new (p) TxtNode(nodeType);
     CrashIf(!node);
-    if (TxtNode::Type::Text != nodeType) {
-        p = Allocator::AllocZero(allocator, sizeof(Vec<TxtNode*>));
-        node->children = new (p) Vec<TxtNode*>(0, allocator);
-    }
     return node;
 }
 
@@ -277,13 +273,13 @@ static void ParseNodes(TxtParser& parser) {
             if (1 == parser.nodes.size()) {
                 goto Failed;
             }
-            parser.nodes.Pop();
+            parser.nodes.pop_back();
             continue;
         }
         TxtNode* currParent = parser.nodes.at(parser.nodes.size() - 1);
-        currParent->children->Append(currNode);
+        currParent->children.push_back(currNode);
         if (TxtNode::Type::Text != currNode->type) {
-            parser.nodes.Append(currNode);
+            parser.nodes.push_back(currNode);
         }
     }
 Failed:
@@ -361,11 +357,10 @@ char* TxtNode::ValDup() const {
 // we will modify s in-place
 void TxtParser::SetToParse(const char* s, size_t sLen) {
     char* data = str::DupN(s, sLen);
-    char* tmp = str::conv::UnknownToUtf8(s, sLen);
+    char* tmp = str::conv::UnknownToUtf8(data, sLen);
     if (tmp != data) {
-        char* toFree = data;
+        ScopedMem<char> toFree(data);
         data = tmp;
-        free(toFree);
         sLen = str::Len(data);
     }
     SkipUtf8Bom(data, sLen);
@@ -374,7 +369,7 @@ void TxtParser::SetToParse(const char* s, size_t sLen) {
 
     // we create an implicit array node to hold the nodes we'll parse
     CrashIf(0 != nodes.size());
-    nodes.Append(AllocTxtNode(&allocator, TxtNode::Type::Array));
+    nodes.push_back(AllocTxtNode(&allocator, TxtNode::Type::Array));
 }
 
 bool ParseTxt(TxtParser& parser) {
@@ -426,9 +421,7 @@ static void PrettyPrintNode(TxtNode* curr, int nest, str::Str<char>& res) {
         res.Append("[\n");
     }
 
-    TxtNode* child;
-    for (size_t i = 0; i < curr->children->size(); i++) {
-        child = curr->children->at(i);
+    for (TxtNode* child : curr->children) {
         PrettyPrintNode(child, nest + 1, res);
     }
 

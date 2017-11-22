@@ -336,7 +336,7 @@ static bool isNl(char c) {
     return '\r' == c || '\n' == c;
 }
 
-// replaces '\r\n' and 'r\' with just '\n' and removes empty lines
+// replaces '\r\n' and '\r' with just '\n' and removes empty lines
 size_t NormalizeNewlinesInPlace(char* s, char* e) {
     char* start = s;
     char* dst = s;
