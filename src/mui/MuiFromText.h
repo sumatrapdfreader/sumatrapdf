@@ -3,11 +3,11 @@
 
 class ParsedMui {
   public:
-    Vec<Control*> allControls;
-    Vec<ButtonVector*> vecButtons;
-    Vec<Button*> buttons;
-    Vec<ScrollBar*> scrollBars;
-    Vec<ILayout*> layouts;
+    std::vector<Control*> allControls;
+    std::vector<ButtonVector*> vecButtons;
+    std::vector<Button*> buttons;
+    std::vector<ScrollBar*> scrollBars;
+    std::vector<ILayout*> layouts;
 };
 
 bool MuiFromText(const char* s, ParsedMui& res);
