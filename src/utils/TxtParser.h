@@ -63,11 +63,8 @@ struct TxtParser {
     char escapeChar = SERIALIZE_ESCAPE_CHAR;
     bool failed = false;
     Vec<TxtNode*> nodes;
-    char* toFree = nullptr;
 
-    TxtParser() {}
-    ~TxtParser() { free(toFree); }
-    void SetToParse(char* s, size_t sLen);
+    void SetToParse(const char* s, size_t sLen);
 };
 
 bool ParseTxt(TxtParser& parser);

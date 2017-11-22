@@ -331,6 +331,9 @@ bool TxtNode::IsText() const {
 }
 
 bool TxtNode::IsTextWithKey(const char* name) const {
+    if (Type::Text != type) {
+        return false;
+    }
     if (!keyStart) {
         return false;
     }
@@ -356,16 +359,18 @@ char* TxtNode::ValDup() const {
 }
 
 // we will modify s in-place
-void TxtParser::SetToParse(char* s, size_t sLen) {
+void TxtParser::SetToParse(const char* s, size_t sLen) {
+    char* data = str::DupN(s, sLen);
     char* tmp = str::conv::UnknownToUtf8(s, sLen);
-    if (tmp != s) {
-        toFree = tmp;
-        s = tmp;
-        sLen = str::Len(s);
+    if (tmp != data) {
+        char* toFree = data;
+        data = tmp;
+        free(toFree);
+        sLen = str::Len(data);
     }
-    SkipUtf8Bom(s, sLen);
-    size_t n = str::NormalizeNewlinesInPlace(s, s + sLen);
-    toParse.Set(s, n);
+    SkipUtf8Bom(data, sLen);
+    size_t n = str::NormalizeNewlinesInPlace(data, data + sLen);
+    toParse.Set(data, n);
 
     // we create an implicit array node to hold the nodes we'll parse
     CrashIf(0 != nodes.size());

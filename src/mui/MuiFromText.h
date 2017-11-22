@@ -10,7 +10,7 @@ class ParsedMui {
     Vec<ILayout*> layouts;
 };
 
-bool MuiFromText(char* s, ParsedMui& res);
+bool MuiFromText(const char* s, ParsedMui& res);
 Button* FindButtonNamed(const ParsedMui& muiInfo, const char* name);
 ButtonVector* FindButtonVectorNamed(const ParsedMui& muiInfo, const char* name);
 ScrollBar* FindScrollBarNamed(const ParsedMui& muiInfo, const char* name);

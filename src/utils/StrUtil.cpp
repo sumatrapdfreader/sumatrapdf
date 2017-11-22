@@ -168,12 +168,14 @@ char* Join(const char* s1, const char* s2, const char* s3, Allocator* allocator)
     return res;
 }
 
-char* DupN(const char* s, size_t lenCch) {
-    if (!s)
+char* DupN(const char* s, size_t n) {
+    if (!s) {
         return nullptr;
-    char* res = (char*)memdup((void*)s, lenCch + 1);
-    if (res)
-        res[lenCch] = 0;
+    }
+    char* res = (char*)memdup((void*)s, n + 1);
+    if (res) {
+        res[n] = 0;
+    }
     return res;
 }
 

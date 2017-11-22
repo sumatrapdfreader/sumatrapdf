@@ -13,7 +13,6 @@
 /*
 Code to create mui controls from text description (so that it can be loaded
 at runtime).
-
 */
 
 namespace mui {
@@ -453,7 +452,8 @@ static void ParseMuiDefinition(TxtNode* root, ParsedMui& res) {
     }
 }
 
-bool MuiFromText(char* s, ParsedMui& res) {
+// s might be modified in-place
+bool MuiFromText(const char* s, ParsedMui& res) {
     TxtParser parser;
     parser.SetToParse(s, str::Len(s));
     bool ok = ParseTxt(parser);
