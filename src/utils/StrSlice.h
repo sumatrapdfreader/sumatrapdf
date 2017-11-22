@@ -9,7 +9,7 @@ struct Slice {
     char* end = nullptr;
     char* curr = nullptr;
 
-    Slice() {}
+    Slice();
     Slice(char* s, size_t len);
     Slice(char* start, char* end);
     Slice(const Slice& other);
@@ -21,6 +21,7 @@ struct Slice {
 
     char PrevChar() const;
     char CurrChar() const;
+    size_t AdvanceCurrTo(char* s);
     size_t SkipWsUntilNewline();
     size_t SkipUntil(char toFind);
     size_t SkipNonWs();

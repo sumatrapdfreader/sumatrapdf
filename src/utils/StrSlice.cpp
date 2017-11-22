@@ -14,28 +14,29 @@ static inline bool IsWsNoNewline(char c) {
     return (' ' == c) || ('\r' == c) || ('\t' == c);
 }
 
-Slice::Slice(const Slice& other) {
-    CrashIf(this == &other);
-    this->begin = other.begin;
-    this->end = other.end;
-    this->curr = other.curr;
+Slice::Slice() {
+    // nothing to do
+}
+
+Slice::Slice(char* s, char* e) : begin(s), curr(s), end(e) {
+    CrashIf(begin > end);
 }
 
 Slice::Slice(char* s, size_t len) {
     Set(s, len);
 }
 
-Slice::Slice(char* start, char* end) {
-    CrashIf(start > end);
-    begin = start;
-    curr = start;
-    end = end;
-}
-
 void Slice::Set(char* s, size_t len) {
     begin = s;
     curr = s;
     end = s + len;
+}
+
+Slice::Slice(const Slice& other) {
+    CrashIf(this == &other);
+    this->begin = other.begin;
+    this->end = other.end;
+    this->curr = other.curr;
 }
 
 size_t Slice::Left() const {
@@ -45,6 +46,13 @@ size_t Slice::Left() const {
 
 bool Slice::Finished() const {
     return curr >= end;
+}
+
+size_t Slice::AdvanceCurrTo(char* s) {
+    CrashIf(curr > s);
+    size_t res = s - curr;
+    curr = s;
+    return res;
 }
 
 // returns number of characters skipped
@@ -58,33 +66,33 @@ size_t Slice::SkipWsUntilNewline() {
         }
         s++;
     }
-    size_t res = s - curr;
-    curr = s;
-    return res;
+    return AdvanceCurrTo(s);
 }
 
 // returns number of characters skipped
 size_t Slice::SkipNonWs() {
-    char* start = curr;
-    while (!Finished()) {
-        if (IsWsOrNewline(*curr)) {
+    char* s = curr;
+    char* e = end;
+    while (s < e) {
+        if (IsWsOrNewline(*s)) {
             break;
         }
-        curr++;
+        s++;
     }
-    return curr - start;
+    return AdvanceCurrTo(s);
 }
 
 // advances to a given character or end
 size_t Slice::SkipUntil(char toFind) {
-    char* start = curr;
-    while (!Finished()) {
-        if (*curr == toFind) {
+    char* s = curr;
+    char* e = end;
+    while (s < e) {
+        if (toFind == *s) {
             break;
         }
-        curr++;
+        s++;
     }
-    return curr - start;
+    return AdvanceCurrTo(s);
 }
 
 char Slice::PrevChar() const {
@@ -104,12 +112,10 @@ char Slice::CurrChar() const {
 // skip up to n characters
 // returns the number of characters skipped
 size_t Slice::Skip(int n) {
-    char* start = curr;
-    while ((curr < end) && (n > 0)) {
-        ++curr;
-        --n;
-    }
-    return curr - start;
+    size_t toSkip = std::min<size_t>(Left(), (size_t)n);
+    curr += toSkip;
+    CrashIf(curr > end);
+    return toSkip;
 }
 
 void Slice::ZeroCurr() {
