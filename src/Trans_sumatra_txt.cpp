@@ -6864,7 +6864,7 @@ const char * gTranslations_ga =
   "&Crap na leathanaigh go limist\303\251ar inchl\303\263bhuailte (m\303\241s g\303\241)\0"\
   "&Leathanach amh\303\241in\tCtrl+6\0"\
   "&N\303\241 bac leis an leagan seo\0"\
-  "\0"\
+  "&T\303\251ama\0"\
   "&Bain feidhm as m\303\251ideanna bunaidh an leathanaigh\0"\
   "&Amharc\0"\
   "&Fuinneog\0"\
@@ -6917,8 +6917,8 @@ const char * gTranslations_ga =
   "Comhad reatha\0"\
   "Su\303\255omh an ch\303\272rs\303\263ra:\0"\
   "Formh\303\251ad\303\272 saincheaptha...\tCtrl+Y\0"\
-  "\0"\
-  "\0"\
+  "dorcha\0"\
+  "nios dorcha\0"\
   "&Leagan amach r\303\251amhshocraithe:\0"\
   "Formh\303\251ad\303\272 r\303\251amhshocraithe:\0"\
   "N\303\255 f\303\251idir an l\303\251itheoir PDF r\303\251amhshocraithe a athr\303\272 sa mhodh soghluaiste\0"\
@@ -6968,7 +6968,7 @@ const char * gTranslations_ga =
   "Leid: Bain feidhm as an gcnaipe F3 chun nithe a aimsi\303\272 ar\303\255s\0"\
   "Comhaid \303\255omh\303\241nna (*.%s)\0"\
   "\0"\
-  "\0"\
+  "\303\251adroime\0"\
   "\0"\
   "B\303\255odh SumatraPDF mar an l\303\251itheoir PDF r\303\251amhshocruithe?\0"\
   "B\303\255odh SumatraPDF mar an l\303\251itheoir PDF r\303\251amhshocruithe\0"\

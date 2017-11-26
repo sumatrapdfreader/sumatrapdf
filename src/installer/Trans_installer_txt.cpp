@@ -1157,7 +1157,7 @@ const char * gTranslations_ga =
   "Theip air an d\303\255shuite\303\241la\303\255 a mhacasamhl\303\272 chuig an chomhadlann sealadach\0"\
   "Theip air aicearra a chruth\303\272\0"\
   "Theip air eochracha cl\303\241rlainne an d\303\255shuite\303\241laithe a scriosadh\0"\
-  "\0"\
+  "Theip ar chl\303\241r\303\272 mar chl\303\241r  r\303\251amhshocraithe ar Win 10\0"\
   "Theip air faisn\303\251is fhairsingthe iarmh\303\255r comhadainm a scr\303\255obh chuig an chl\303\241rlann\0"\
   "Theip air an fhaisn\303\251is d\303\255shuite\303\241laithe a scr\303\255obh chuig an chl\303\241rlann\0"\
   "Cuir na roghanna i bhfolach\0"\
