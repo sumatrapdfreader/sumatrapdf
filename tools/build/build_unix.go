@@ -72,8 +72,20 @@ func setMacCompiler(ctx *BuildContext) {
 			ctx.ArCmd = "/usr/local/opt/llvm/bin/llvm-ar"
 		}
 	} else {
-		// gcc
+		// gcc 7.2 as installed with with brew install gcc
+		// gcc available as /usr/bin/gcc is just a symlink
+		// to clang from xcode
+		gccPath := "/usr/local/opt/gcc/bin/gcc-7"
+		panicIf(!fileExists(gccPath), fmt.Sprintf("gcc not installed in '%s'", gccPath))
+		ctx.CcCmd = gccPath
+		ctx.LinkCmd = ctx.CcCmd
+		ctx.ArCmd = "/usr/local/opt/gcc/bin/gcc-ar-7"
 	}
+	ctx.RemoveCFlag("-Wextra")
+	// those trigger in system headers
+	ctx.CFlags = append(ctx.CFlags, "-Wno-expansion-to-defined", "-Wno-nullability-completeness")
+	ctx.CFlags = append(ctx.CFlags, "-isysroot", "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk")
+	// ctx.IncDirs = append(ctx.IncDirs, "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include")
 }
 
 func setLinuxCompiler(ctx *BuildContext) {
@@ -108,10 +120,6 @@ func setCompiler(ctx *BuildContext) {
 		return
 	}
 	panicIf(true, fmt.Sprintf("unsupported runtime.GOOS: '%s'", runtime.GOOS))
-}
-
-func commonCFlags() []string {
-	return []string{"-g", "-Wall", "-Werror"}
 }
 
 func getDebugBuildContext() *BuildContext {
@@ -184,7 +192,6 @@ func dupStrArray(a []string) []string {
 func (c *BuildContext) GetCopy(wg *sync.WaitGroup) *BuildContext {
 	res := *c
 	res.CDefines = dupStrArray(res.CDefines)
-	res.CDefines = dupStrArray(res.CDefines)
 	res.IncDirs = dupStrArray(res.IncDirs)
 	res.CFlags = dupStrArray(res.CFlags)
 	res.CxxFlags = dupStrArray(res.CxxFlags)
@@ -203,6 +210,22 @@ func (c *BuildContext) Lock() {
 // Unlock locks build context
 func (c *BuildContext) Unlock() {
 	c.Mu.Unlock()
+}
+
+func removeFromStrArray(a []string, toRemove string) []string {
+	var res []string
+	for _, s := range a {
+		if s == toRemove {
+			continue
+		}
+		res = append(res, s)
+	}
+	return res
+}
+
+// RemoveCFlag removes CFlag
+func (c *BuildContext) RemoveCFlag(s string) {
+	c.CFlags = removeFromStrArray(c.CFlags, s)
 }
 
 // InOutDir returns path of the file in OutDir
