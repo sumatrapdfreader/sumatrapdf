@@ -36,11 +36,14 @@ type BuildContext struct {
 }
 
 var (
-	echo             = true // TODO: make them part of BuildContext?
-	showTimings      = true // TODO: make them part of BuildContext?
-	silentIfSkipping = true
-	flgClean         bool
-	flgRelease       bool
+	echo                   = true // TODO: make them part of BuildContext?
+	showTimings            = true // TODO: make them part of BuildContext?
+	silentIfSkipping       = true
+	flgClean               bool
+	flgRelease             bool
+	flgReleaseSanitizeAddr bool
+	flgReleaseSanitizeMem  bool
+	flgClang               bool
 
 	jobLimiter     chan bool
 	useConcurrency = true
@@ -50,37 +53,114 @@ var (
 )
 
 func DefaultBuildContext() BuildContext {
-	return BuildContext{
-		CcCmd:     "gcc",
+	cc := "gcc"
+	if flgClang {
+		cc = "clang-5.0"
+	}
+	ctx := BuildContext{
+		CcCmd:     cc,
 		CFlags:    []string{"-g", "-O0", "-Wall", "-Werror"},
 		CxxFlags:  []string{"-fno-exceptions", "-fno-rtti", "-std=c++1z"},
 		CDefines:  []string{"DEBUG"},
 		ArCmd:     "ar",
 		ArFlags:   []string{},
-		LinkCmd:   "g++",
-		LinkFlags: []string{"-g", "-static-libstdc++"},
+		LinkCmd:   cc,
+		LinkFlags: []string{"-g"},
 		IncDirs:   []string{"ext/unarr", "src/utils"},
 		OutDir:    "linux_dbg64",
 		Wg:        &gBuildContextWaitGroup,
 		Mu:        &gBuildContextMutex,
 	}
+	if !flgClang {
+		// only in gcc
+		ctx.LinkFlags = append(ctx.LinkFlags, "-static-libstdc++")
+	}
+	return ctx
 }
 
 func DefaultReleaseBuildContext() BuildContext {
-	return BuildContext{
-		CcCmd:     "gcc",
+	cc := "gcc"
+	if flgClang {
+		cc = "clang-5.0"
+	}
+	ctx := BuildContext{
+		CcCmd:     cc,
 		CFlags:    []string{"-g", "-Os", "-Wall", "-Werror"},
 		CxxFlags:  []string{"-fno-exceptions", "-fno-rtti", "-std=c++1z"},
 		CDefines:  []string{"NDEBUG"},
 		ArCmd:     "ar",
 		ArFlags:   []string{},
-		LinkCmd:   "g++",
-		LinkFlags: []string{"-g", "-static-libstdc++"},
+		LinkCmd:   cc,
+		LinkFlags: []string{"-g"},
 		IncDirs:   []string{"ext/unarr", "src/utils"},
 		OutDir:    "linux_rel64",
 		Wg:        &gBuildContextWaitGroup,
 		Mu:        &gBuildContextMutex,
 	}
+	if !flgClang {
+		// only in gcc
+		ctx.LinkFlags = append(ctx.LinkFlags, "-static-libstdc++")
+	}
+	return ctx
+}
+
+func DefaultReleaseSanitizeAddressBuildContext() BuildContext {
+	cc := "gcc"
+	if flgClang {
+		cc = "clang-5.0"
+	}
+	ctx := BuildContext{
+		CcCmd:     cc,
+		CFlags:    []string{"-g", "-Os", "-Wall", "-Werror", "-fsanitize=address", "-fno-omit-frame-pointer"},
+		CxxFlags:  []string{"-fno-exceptions", "-fno-rtti", "-std=c++1z"},
+		CDefines:  []string{"NDEBUG"},
+		ArCmd:     "ar",
+		ArFlags:   []string{},
+		LinkCmd:   cc,
+		LinkFlags: []string{"-g", "-fsanitize=address"},
+		IncDirs:   []string{"ext/unarr", "src/utils"},
+		OutDir:    "linux_relSanitizeAddr64",
+		Wg:        &gBuildContextWaitGroup,
+		Mu:        &gBuildContextMutex,
+	}
+	if flgClang {
+		ctx.OutDir = "linux_relClangSanitizeAddr64"
+	}
+	if !flgClang {
+		// only in gcc
+		ctx.LinkFlags = append(ctx.LinkFlags, "-static-libstdc++")
+	}
+	return ctx
+}
+
+func DefaultReleaseSanitizeMemoryBuildContext() BuildContext {
+	cc := "gcc"
+	if flgClang {
+		cc = "clang-5.0"
+	}
+	ctx := BuildContext{
+		CcCmd:     cc,
+		CFlags:    []string{"-g", "-Os", "-Wall", "-Werror", "-fsanitize=memory", "-fno-omit-frame-pointer"},
+		CxxFlags:  []string{"-fno-exceptions", "-fno-rtti", "-std=c++1z"},
+		CDefines:  []string{"NDEBUG"},
+		ArCmd:     "ar",
+		ArFlags:   []string{},
+		LinkCmd:   cc,
+		LinkFlags: []string{"-g", "-fsanitize=memory"},
+		IncDirs:   []string{"ext/unarr", "src/utils"},
+		OutDir:    "linux_relSanitizeMem64",
+		Wg:        &gBuildContextWaitGroup,
+		Mu:        &gBuildContextMutex,
+	}
+	if flgClang {
+		ctx.OutDir = "linux_relClangSanitizeMem64"
+		ctx.LinkFlags = append(ctx.LinkFlags, "-lstdc++")
+	}
+	if !flgClang {
+		// only in gcc
+		ctx.LinkFlags = append(ctx.LinkFlags, "-static-libstdc++")
+	}
+	return ctx
 }
 
 func dupStrArray(a []string) []string {
@@ -307,6 +387,9 @@ func ccMulti(ctx *BuildContext, srcPaths ...string) {
 func parseFlags() {
 	flag.BoolVar(&flgClean, "clean", false, "if true, do a clean build")
 	flag.BoolVar(&flgRelease, "release", false, "if true, make release build")
+	flag.BoolVar(&flgReleaseSanitizeMem, "release-sanitize-mem", false, "if true, make release sanitize memory build")
+	flag.BoolVar(&flgReleaseSanitizeAddr, "release-sanitize-addr", false, "if true, make release sanitize address build")
+	flag.BoolVar(&flgClang, "clang", false, "if true, use clang instead of gcc")
 	flag.Parse()
 }
 
@@ -341,7 +424,10 @@ func builUnarrArchive(ctx *BuildContext) string {
 	var localWg sync.WaitGroup
 	localCtx := ctx.GetCopy(&localWg)
 	localCtx.CDefines = append(localCtx.CDefines, "HAVE_ZLIB", "HAVE_BZIP2", "BZ_NO_STDIO")
-	localCtx.CFlags = append(localCtx.CFlags, "-Wno-implicit-function-declaration", "-Wno-unused-but-set-variable")
+	localCtx.CFlags = append(localCtx.CFlags, "-Wno-implicit-function-declaration")
+	if !flgClang {
+		localCtx.CFlags = append(localCtx.CFlags, "-Wno-unused-but-set-variable")
+	}
 	localCtx.IncDirs = append(localCtx.IncDirs, "ext/zlib", "ext/bzip2")
 	localCtx.OutDir = filepath.Join(normalizePath(localCtx.OutDir), "unarr")
 
@@ -362,6 +448,9 @@ func buildZlibArchive(ctx *BuildContext) string {
 	var localWg sync.WaitGroup
 	localCtx := ctx.GetCopy(&localWg)
 	localCtx.CFlags = append(localCtx.CFlags, "-Wno-implicit-function-declaration")
+	if flgClang {
+		localCtx.CFlags = append(localCtx.CFlags, "-Wno-shift-negative-value")
+	}
 	localCtx.OutDir = filepath.Join(normalizePath(localCtx.OutDir), "zlib")
 
 	ccMulti(&localCtx, zlibFiles()...)
@@ -382,6 +471,19 @@ func buildTestUnixFiles(ctx *BuildContext) []string {
 	return localCtx.CcOutputs
 }
 
+func clean() {
+	fileInfos, err := ioutil.ReadDir(".")
+	panicIfErr(err)
+	for _, fi := range fileInfos {
+		if !fi.IsDir() {
+			continue
+		}
+		if strings.HasPrefix(fi.Name(), "linux_") {
+			os.RemoveAll(fi.Name())
+		}
+	}
+}
+
 func main() {
 	nProcs := runtime.GOMAXPROCS(-1)
 	jobLimiter = make(chan bool, nProcs)
@@ -390,13 +492,16 @@ func main() {
 	fmt.Printf("Building for linux, using %d processors\n", nProcs)
 	unitTests()
 	if flgClean {
-		os.RemoveAll("linux_dbg64")
-		os.RemoveAll("linux_rel64")
+		clean()
 	}
 
 	ctx := DefaultBuildContext()
 	if flgRelease {
 		ctx = DefaultReleaseBuildContext()
+	} else if flgReleaseSanitizeMem {
+		ctx = DefaultReleaseSanitizeMemoryBuildContext()
+	} else if flgReleaseSanitizeAddr {
+		ctx = DefaultReleaseSanitizeAddressBuildContext()
 	}
 	var wg sync.WaitGroup
 	ctx.Wg = &wg
