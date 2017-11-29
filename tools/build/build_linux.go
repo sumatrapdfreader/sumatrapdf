@@ -53,7 +53,7 @@ func DefaultBuildContext() BuildContext {
 	return BuildContext{
 		CcCmd:     "gcc",
 		CFlags:    []string{"-g", "-O0", "-Wall", "-Werror"},
-		CxxFlags:  []string{"-g", "-O0", "-fno-exceptions", "-fno-rtti", "-std=c++1z", "-Wall", "-Werror"},
+		CxxFlags:  []string{"-fno-exceptions", "-fno-rtti", "-std=c++1z"},
 		CDefines:  []string{"DEBUG"},
 		ArCmd:     "ar",
 		ArFlags:   []string{},
@@ -70,7 +70,7 @@ func DefaultReleaseBuildContext() BuildContext {
 	return BuildContext{
 		CcCmd:     "gcc",
 		CFlags:    []string{"-g", "-Os", "-Wall", "-Werror"},
-		CxxFlags:  []string{"-g", "-Os", "-fno-exceptions", "-fno-rtti", "-std=c++1z", "-Wall", "-Werror"},
+		CxxFlags:  []string{"-fno-exceptions", "-fno-rtti", "-std=c++1z"},
 		CDefines:  []string{"NDEBUG"},
 		ArCmd:     "ar",
 		ArFlags:   []string{},
@@ -230,19 +230,23 @@ func isCxxFile(path string) bool {
 	return ext == ".cpp" || ext == ".cc" || ext == ".cxx"
 }
 
+func isCOrCxxFile(path string) bool {
+	ext := strings.ToLower(filepath.Ext(path))
+	return ext == ".cpp" || ext == ".cc" || ext == ".cxx" || ext == ".c"
+}
+
 func cc(ctx *BuildContext, srcPath string) {
 	srcName := filepath.Base(srcPath)
 	dstName := replaceExt(srcName, ".o")
 	dstPath := filepath.Join(ctx.OutDir, dstName)
 	ctx.CcOutputs = append(ctx.CcOutputs, dstPath)
 
-	var args []string
-	if isCFile(srcPath) {
-		args = append(args, ctx.CFlags...)
-	} else {
-		panicIf(!isCxxFile(srcPath), fmt.Sprintf("%s is not C or C++ file", srcPath))
+	args := dupStrArray(ctx.CFlags)
+	panicIf(!isCOrCxxFile(srcPath), fmt.Sprintf("%s is not C or C++ file", srcPath))
+	if isCxxFile(srcPath) {
 		args = append(args, ctx.CxxFlags...)
 	}
+
 	for _, incDir := range ctx.IncDirs {
 		verifyFileExists(incDir)
 		args = append(args, "-I"+incDir)
@@ -371,7 +375,6 @@ func buildTestUnixFiles(ctx *BuildContext) []string {
 	var localWg sync.WaitGroup
 	localCtx := ctx.GetCopy(&localWg)
 	localCtx.OutDir = filepath.Join(normalizePath(localCtx.OutDir), "test_unix_obj")
-
 	files := filesInDir("src/utils", "Archive.cpp", "BaseUtil.cpp", "FileUtil.cpp", "StrUtil.cpp", "UtAssert.cpp")
 	ccMulti(&localCtx, files...)
 	cc(&localCtx, "tools/test_unix/main.cpp")
