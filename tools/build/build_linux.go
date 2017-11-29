@@ -1,38 +1,100 @@
 package main
 
 import (
+	"flag"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
+	"sync"
 	"time"
 )
 
 type BuildContext struct {
-	Cc       string
-	CxxFlags []string
+	OutDir string
+
+	CcCmd    string
+	CDefines []string
 	IncDirs  []string
-	OutDir   string
+	CFlags   []string // for C files
+	CxxFlags []string // for C++ files
+
+	ArCmd   string
+	ArFlags []string
+
+	LinkCmd   string
+	LinkFlags []string
 
 	CcOutputs []string
+
+	// must be pointer to preserve idnetity even when we copy BuildContext by value
+	Wg *sync.WaitGroup
+	Mu *sync.Mutex
 }
 
 var (
-	echo        = true // TODO: make them part of BuildContext?
-	showTimings = true // TODO: make them part of BuildContext?
-	clean       = true
+	echo             = true // TODO: make them part of BuildContext?
+	showTimings      = true // TODO: make them part of BuildContext?
+	silentIfSkipping = true
+	flgClean         bool
+
+	jobLimiter     chan bool
+	useConcurrency = true
+
+	gBuildContextMutex     sync.Mutex
+	gBuildContextWaitGroup sync.WaitGroup
 )
 
 func DefaultBuildContext() BuildContext {
-	extUnarrIncludeDir := filepath.Join("ext", "unarr")
-	srcUtilsIncludeDir := filepath.Join("src", "utils")
 	return BuildContext{
-		Cc:       "gcc",
-		CxxFlags: []string{"-Wall", "-g", "-fno-exceptions", "-fno-rtti", "-std=c++1z"},
-		IncDirs:  []string{extUnarrIncludeDir, srcUtilsIncludeDir},
-		OutDir:   filepath.Join("linux_dbg64"),
+		CcCmd:     "gcc",
+		CFlags:    []string{"-g", "-O0", "-Wall"},
+		CxxFlags:  []string{"-g", "-O0", "-fno-exceptions", "-fno-rtti", "-std=c++1z", "-Wall"},
+		CDefines:  []string{"DEBUG"},
+		ArCmd:     "ar",
+		ArFlags:   []string{},
+		LinkCmd:   "g++",
+		LinkFlags: []string{"-g", "-static-libstdc++"},
+		IncDirs:   []string{"ext/unarr", "src/utils"},
+		OutDir:    "linux_dbg64",
+		Wg:        &gBuildContextWaitGroup,
+		Mu:        &gBuildContextMutex,
 	}
+}
+
+func dupStrArray(a []string) []string {
+	return append([]string{}, a...)
+}
+
+// GetCopy creates a deep copy of BuildContext. We must duplicate arrays
+// manually, to prevent sharing with source
+func (c *BuildContext) GetCopy(wg *sync.WaitGroup) BuildContext {
+	res := *c
+	res.CDefines = dupStrArray(res.CDefines)
+	res.CDefines = dupStrArray(res.CDefines)
+	res.IncDirs = dupStrArray(res.IncDirs)
+	res.CFlags = dupStrArray(res.CFlags)
+	res.CxxFlags = dupStrArray(res.CxxFlags)
+	res.ArFlags = dupStrArray(res.ArFlags)
+	res.LinkFlags = dupStrArray(res.LinkFlags)
+	res.CcOutputs = []string{}
+	res.Wg = wg
+	return res
+}
+
+func (c *BuildContext) Lock() {
+	c.Mu.Lock()
+}
+
+func (c *BuildContext) Unlock() {
+	c.Mu.Unlock()
+}
+
+func (c *BuildContext) InOutDir(name string) string {
+	return filepath.Join(c.OutDir, name)
 }
 
 func panicIfErr(err error) {
@@ -67,54 +129,134 @@ func createDirForFile(filePath string) {
 
 // for dependency checking: return true if srcPath needs to be rebuild based
 // on state of dstPath i.e. dstPath doesn't exist or dstPath is older than srcPath
-func needsRebuild(srcPath string, dstPath string) bool {
+func needsRebuild(dstPath string, srcPaths ...string) bool {
 	dstStat, err := os.Lstat(dstPath)
 	// need to rebuild if dstPath doesn't exist
 	if err != nil {
 		return true
 	}
-	srcStat, err := os.Lstat(srcPath)
-	panicIf(err != nil, "")
-	return srcStat.ModTime().After(dstStat.ModTime())
+	for _, srcPath := range srcPaths {
+		srcStat, err := os.Lstat(srcPath)
+		panicIf(err != nil, "")
+		isOlder := srcStat.ModTime().After(dstStat.ModTime())
+		if isOlder {
+			return true
+		}
+	}
+	return false
+}
+
+func runCmd(ctx *BuildContext, cmd *exec.Cmd) {
+	ctx.Wg.Add(1)
+	jobLimiter <- true
+	go func() {
+		timeStart := time.Now()
+		out, err := cmd.CombinedOutput()
+		if echo {
+			if showTimings {
+				fmt.Printf("%s in %s\n", strings.Join(cmd.Args, " "), time.Since(timeStart))
+			} else {
+				fmt.Printf("%s", strings.Join(cmd.Args, " "))
+			}
+			if len(out) > 0 {
+				fmt.Printf("%s\n", string(out))
+			}
+		}
+		panicIfErr(err)
+		<-jobLimiter
+		ctx.Wg.Done()
+	}()
+}
+
+func link(ctx *BuildContext, dstPath string, srcPaths []string) {
+	args := dupStrArray(ctx.LinkFlags)
+	args = append(args, "-o", dstPath)
+	args = append(args, srcPaths...)
+	cmd := exec.Command(ctx.LinkCmd, args...)
+
+	createDirForFile(dstPath)
+	if !needsRebuild(dstPath, srcPaths...) {
+		if echo && !silentIfSkipping {
+			fmt.Printf("skipping '%s' because output already exists\n", strings.Join(cmd.Args, " "))
+		}
+		return
+	}
+
+	runCmd(ctx, cmd)
+}
+
+func ar(ctx *BuildContext, dstPath string, srcPaths []string) {
+	args := append([]string{"cr"}, ctx.ArFlags...)
+	args = append(args, dstPath)
+	args = append(args, srcPaths...)
+	cmd := exec.Command(ctx.ArCmd, args...)
+
+	createDirForFile(dstPath)
+	if !needsRebuild(dstPath, srcPaths...) {
+		if echo && !silentIfSkipping {
+			fmt.Printf("skipping '%s' because output already exists\n", strings.Join(cmd.Args, " "))
+		}
+		return
+	}
+
+	runCmd(ctx, cmd)
+}
+
+func isCFile(path string) bool {
+	ext := strings.ToLower(filepath.Ext(path))
+	return ext == ".c"
+}
+
+func isCxxFile(path string) bool {
+	ext := strings.ToLower(filepath.Ext(path))
+	return ext == ".cpp" || ext == ".cc" || ext == ".cxx"
 }
 
 func cc(ctx *BuildContext, srcPath string) {
 	srcName := filepath.Base(srcPath)
 	dstName := replaceExt(srcName, ".o")
 	dstPath := filepath.Join(ctx.OutDir, dstName)
-
 	ctx.CcOutputs = append(ctx.CcOutputs, dstPath)
 
-	args := append([]string{}, ctx.CxxFlags...)
+	var args []string
+	if isCFile(srcPath) {
+		args = append(args, ctx.CFlags...)
+	} else {
+		panicIf(!isCxxFile(srcPath), fmt.Sprintf("%s is not C or C++ file", srcPath))
+		args = append(args, ctx.CxxFlags...)
+	}
 	for _, incDir := range ctx.IncDirs {
 		verifyFileExists(incDir)
 		args = append(args, "-I"+incDir)
 	}
+	for _, def := range ctx.CDefines {
+		args = append(args, "-D"+def)
+	}
+
 	args = append(args, "-c")
 	args = append(args, "-o", dstPath, srcPath)
-	cmd := exec.Command("gcc", args...)
+	cmd := exec.Command(ctx.CcCmd, args...)
 
-	skip := !needsRebuild(srcPath, dstPath)
-	if skip {
-		if echo {
+	if !needsRebuild(dstPath, srcPath) {
+		if echo && !silentIfSkipping {
 			fmt.Printf("skipping '%s' because output already exists\n", strings.Join(cmd.Args, " "))
 		}
 		return
 	}
 
 	createDirForFile(dstPath)
-	if echo && !showTimings {
-		fmt.Printf("%s\n", strings.Join(cmd.Args, " "))
+
+	runCmd(ctx, cmd)
+}
+
+func normalizePath(s string) string {
+	// convert to unix path
+	s = strings.Replace(s, "\\", "/", -1)
+	pathSepStr := string(byte(os.PathSeparator))
+	if pathSepStr != "/" {
+		s = strings.Replace(s, "/", pathSepStr, -1)
 	}
-	timeStart := time.Now()
-	out, err := cmd.CombinedOutput()
-	if echo && showTimings {
-		fmt.Printf("%s in %s\n", strings.Join(cmd.Args, " "), time.Since(timeStart))
-	}
-	if echo && len(out) > 0 {
-		fmt.Printf("%s\n", string(out))
-	}
-	panicIfErr(err)
+	return s
 }
 
 func filesInDir(dir string, files ...string) []string {
@@ -140,18 +282,102 @@ func ccMulti(ctx *BuildContext, srcPaths ...string) {
 	}
 }
 
+func parseFlags() {
+	flag.BoolVar(&flgClean, "clean", false, "if true, do a clean build")
+	flag.Parse()
+}
+
+func cFilesInDir(dir string) []string {
+	dir = normalizePath(dir)
+	fileInfos, err := ioutil.ReadDir(dir)
+	panicIfErr(err)
+	var res []string
+	for _, fi := range fileInfos {
+		path := filepath.Join(dir, fi.Name())
+		if isCFile(path) {
+			res = append(res, path)
+		}
+	}
+	return res
+}
+
+func unarrMoLzmaFiles() []string {
+	files := cFilesInDir("ext/unarr/common")
+	files = append(files, cFilesInDir("ext/unarr/rar")...)
+	files = append(files, cFilesInDir("ext/unarr/zip")...)
+	files = append(files, cFilesInDir("ext/unarr/tar")...)
+	files = append(files, cFilesInDir("ext/unarr/_7z")...)
+	files = append(files, "ext/unarr/lzmasdk/LzmaDec.c", "ext/bzip2/bzip_all.c")
+	files = append(files, filesInDir("ext/unarr/lzmasdk", "CpuArch.c", "Ppmd7.c", "Ppmd7Dec.c", "Ppmd8.c", "Ppmd8Dec.c")...)
+	return files
+}
+
+func builUnarrArchive(ctx *BuildContext) string {
+	archivePath := ctx.InOutDir("unarr.a")
+
+	var localWg sync.WaitGroup
+	localCtx := ctx.GetCopy(&localWg)
+	localCtx.CDefines = append(localCtx.CDefines, "HAVE_ZLIB", "HAVE_BZIP2", "BZ_NO_STDIO")
+	localCtx.CFlags = append(localCtx.CFlags, "-Wno-implicit-function-declaration", "-Wno-unused-but-set-variable")
+	localCtx.IncDirs = append(localCtx.IncDirs, "ext/zlib", "ext/bzip2")
+	localCtx.OutDir = filepath.Join(normalizePath(localCtx.OutDir), "unarr")
+
+	ccMulti(&localCtx, unarrMoLzmaFiles()...)
+	localCtx.Wg.Wait()
+
+	ar(ctx, archivePath, localCtx.CcOutputs)
+	return archivePath
+}
+
+func zlibFiles() []string {
+	return filesInDir("ext/zlib", "adler32.c", "compress.c", "crc32.c", "deflate.c", "inffast.c", "inflate.c", "inftrees.c", "trees.c", "zutil.c", "gzlib.c", "gzread.c", "gzwrite.c", "gzclose.c")
+}
+
+func buildZlibArchive(ctx *BuildContext) string {
+	archivePath := ctx.InOutDir("zlib.a")
+
+	var localWg sync.WaitGroup
+	localCtx := ctx.GetCopy(&localWg)
+	localCtx.CFlags = append(localCtx.CFlags, "-Wno-implicit-function-declaration")
+	localCtx.OutDir = filepath.Join(normalizePath(localCtx.OutDir), "zlib")
+
+	ccMulti(&localCtx, zlibFiles()...)
+	localCtx.Wg.Wait()
+
+	ar(ctx, archivePath, localCtx.CcOutputs)
+	return archivePath
+}
+
 func main() {
-	fmt.Printf("Building for linux\n")
+	nProcs := runtime.GOMAXPROCS(-1)
+	jobLimiter = make(chan bool, nProcs)
+
+	parseFlags()
+	fmt.Printf("Building for linux, using %d processors\n", nProcs)
 	unitTests()
-	if clean {
+	if flgClean {
 		os.RemoveAll("linux_dbg64")
 		os.RemoveAll("linux_rel64")
 	}
 
 	ctx := DefaultBuildContext()
+	var wg sync.WaitGroup
+	ctx.Wg = &wg
+
 	timeStart := time.Now()
-	files := filesInDir(filepath.Join("src", "utils"), "Archive.cpp", "BaseUtil.cpp", "FileUtil.cpp", "StrUtil.cpp", "UtAssert.cpp")
+	files := filesInDir("src/utils", "Archive.cpp", "BaseUtil.cpp", "FileUtil.cpp", "StrUtil.cpp", "UtAssert.cpp")
 	ccMulti(&ctx, files...)
 	cc(&ctx, "tools/test_unix/main.cpp")
+
+	zlibArchive := buildZlibArchive(&ctx)
+	unarrAchive := builUnarrArchive(&ctx)
+	wg.Wait()
+
+	dstPath := filepath.Join(ctx.OutDir, "test_unix")
+	linkInputs := dupStrArray(ctx.CcOutputs)
+	linkInputs = append(linkInputs, unarrAchive, zlibArchive)
+	link(&ctx, dstPath, linkInputs)
+	wg.Wait()
+
 	fmt.Printf("completed in %s\n", time.Since(timeStart))
 }

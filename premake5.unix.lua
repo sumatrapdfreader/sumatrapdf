@@ -86,7 +86,7 @@ workspace "SumatraPDF"
     files { "ext/unarr/main.c" }
     links { "unarrlib", "zlib" }
 
-    project "test_unix"
+  project "test_unix"
     kind "ConsoleApp"
     language "C++"
     cppdialect "C++17"

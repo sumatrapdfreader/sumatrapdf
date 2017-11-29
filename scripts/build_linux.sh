@@ -1,3 +1,4 @@
 #!/bin/bash
 
-go run tools/build/build_linux.go
+go run -race tools/build/build_linux.go $@
+
