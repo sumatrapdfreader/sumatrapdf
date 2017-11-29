@@ -91,6 +91,14 @@ func setLinuxCompiler(ctx *BuildContext) {
 }
 
 func setCompiler(ctx *BuildContext) {
+	if flgClang {
+		ctx.OutDir = ctx.OutDir + "clang"
+	}
+	ctx.LinkFlags = []string{"-g"}
+	if false && !flgClang {
+		// only in gcc
+		ctx.LinkFlags = append(ctx.LinkFlags, "-static-libstdc++")
+	}
 	if runtime.GOOS == "darwin" {
 		setMacCompiler(ctx)
 		return
@@ -100,75 +108,60 @@ func setCompiler(ctx *BuildContext) {
 		return
 	}
 	panicIf(true, fmt.Sprintf("unsupported runtime.GOOS: '%s'", runtime.GOOS))
+}
 
+func commonCFlags() []string {
+	return []string{"-g", "-Wall", "-Werror"}
 }
 
 func getDebugBuildContext() *BuildContext {
 	ctx := &BuildContext{
-		CFlags:    []string{"-g", "-O0", "-Wall", "-Werror"},
-		CxxFlags:  []string{"-fno-exceptions", "-fno-rtti", "-std=c++1z"},
-		CDefines:  []string{"DEBUG"},
-		ArFlags:   []string{},
-		LinkFlags: []string{"-g"},
-		IncDirs:   []string{"ext/unarr", "src/utils"},
-		OutDir:    "out/dbg64",
-		Wg:        &gBuildContextWaitGroup,
-		Mu:        &gBuildContextMutex,
+		CFlags:   []string{"-g", "-Wall", "-Wextra", "-Werror", "-O0"},
+		CxxFlags: []string{"-fno-exceptions", "-fno-rtti", "-std=c++1z"},
+		CDefines: []string{"DEBUG"},
+		ArFlags:  []string{},
+		IncDirs:  []string{"ext/unarr", "src/utils"},
+		OutDir:   "out/dbg64",
+		Wg:       &gBuildContextWaitGroup,
+		Mu:       &gBuildContextMutex,
 	}
 	setCompiler(ctx)
-	if !flgClang {
-		// only in gcc
-		ctx.LinkFlags = append(ctx.LinkFlags, "-static-libstdc++")
-	}
 	return ctx
 }
 
 func getReleaseBuildContext() *BuildContext {
 	ctx := &BuildContext{
-		CFlags:    []string{"-g", "-Os", "-Wall", "-Werror"},
-		CxxFlags:  []string{"-fno-exceptions", "-fno-rtti", "-std=c++1z"},
-		CDefines:  []string{"NDEBUG"},
-		ArFlags:   []string{},
-		LinkFlags: []string{"-g"},
-		IncDirs:   []string{"ext/unarr", "src/utils"},
-		OutDir:    "out/rel64",
-		Wg:        &gBuildContextWaitGroup,
-		Mu:        &gBuildContextMutex,
+		CFlags:   []string{"-g", "-Wall", "-Werror", "-Os"},
+		CxxFlags: []string{"-fno-exceptions", "-fno-rtti", "-std=c++1z"},
+		CDefines: []string{"NDEBUG"},
+		ArFlags:  []string{},
+		IncDirs:  []string{"ext/unarr", "src/utils"},
+		OutDir:   "out/rel64",
+		Wg:       &gBuildContextWaitGroup,
+		Mu:       &gBuildContextMutex,
 	}
 	setCompiler(ctx)
-	if !flgClang {
-		// only in gcc
-		ctx.LinkFlags = append(ctx.LinkFlags, "-static-libstdc++")
-	}
 	return ctx
 }
 
 func getReleaseSanitizeAddressBuildContext() *BuildContext {
 	ctx := &BuildContext{
-		CFlags:    []string{"-g", "-Os", "-Wall", "-Werror", "-fsanitize=address", "-fno-omit-frame-pointer"},
-		CxxFlags:  []string{"-fno-exceptions", "-fno-rtti", "-std=c++1z"},
-		CDefines:  []string{"NDEBUG"},
-		ArFlags:   []string{},
-		LinkFlags: []string{"-g", "-fsanitize=address"},
-		IncDirs:   []string{"ext/unarr", "src/utils"},
-		OutDir:    "out/rel64SanitizeAddr",
-		Wg:        &gBuildContextWaitGroup,
-		Mu:        &gBuildContextMutex,
+		CFlags:   []string{"-g", "-Wall", "-Werror", "-Os", "-fsanitize=address", "-fno-omit-frame-pointer"},
+		CxxFlags: []string{"-fno-exceptions", "-fno-rtti", "-std=c++1z"},
+		CDefines: []string{"NDEBUG"},
+		ArFlags:  []string{},
+		IncDirs:  []string{"ext/unarr", "src/utils"},
+		OutDir:   "out/rel64SanitizeAddr",
+		Wg:       &gBuildContextWaitGroup,
+		Mu:       &gBuildContextMutex,
 	}
 	setCompiler(ctx)
-	if flgClang {
-		ctx.OutDir = "out/rel64ClangSanitizeAddr"
-	}
-	if !flgClang {
-		// only in gcc
-		ctx.LinkFlags = append(ctx.LinkFlags, "-static-libstdc++")
-	}
 	return ctx
 }
 
 func getReleaseSanitizeMemoryBuildContext() *BuildContext {
 	ctx := &BuildContext{
-		CFlags:    []string{"-g", "-Os", "-Wall", "-Werror", "-fsanitize=memory", "-fno-omit-frame-pointer"},
+		CFlags:    []string{"-g", "-Wall", "-Werror", "-Os", "-fsanitize=memory", "-fno-omit-frame-pointer"},
 		CxxFlags:  []string{"-fno-exceptions", "-fno-rtti", "-std=c++1z"},
 		CDefines:  []string{"NDEBUG"},
 		ArFlags:   []string{},
@@ -179,14 +172,6 @@ func getReleaseSanitizeMemoryBuildContext() *BuildContext {
 		Mu:        &gBuildContextMutex,
 	}
 	setCompiler(ctx)
-	if flgClang {
-		ctx.OutDir = "out/rel64ClangSanitizeMem"
-		ctx.LinkFlags = append(ctx.LinkFlags, "-lstdc++")
-	}
-	if !flgClang {
-		// only in gcc
-		ctx.LinkFlags = append(ctx.LinkFlags, "-static-libstdc++")
-	}
 	return ctx
 }
 
@@ -300,6 +285,8 @@ func link(ctx *BuildContext, dstPath string, srcPaths []string) {
 	args := dupStrArray(ctx.LinkFlags)
 	args = append(args, "-o", dstPath)
 	args = append(args, srcPaths...)
+	// unfortunately must be at the end, so can't be in ctx.LinkFlags
+	args = append(args, "-lstdc++")
 	cmd := exec.Command(ctx.LinkCmd, args...)
 
 	createDirForFile(dstPath)
@@ -454,9 +441,12 @@ func builUnarrArchive(ctx *BuildContext) string {
 	var localWg sync.WaitGroup
 	localCtx := ctx.GetCopy(&localWg)
 	localCtx.CDefines = append(localCtx.CDefines, "HAVE_ZLIB", "HAVE_BZIP2", "BZ_NO_STDIO")
-	localCtx.CFlags = append(localCtx.CFlags, "-Wno-implicit-function-declaration")
+	localCtx.CFlags = append(localCtx.CFlags, "-Wno-implicit-function-declaration", "-Wno-type-limits", "-Wno-sign-compare", "-Wno-implicit-fallthrough", "-Wno-unused-parameter")
 	if !flgClang {
 		localCtx.CFlags = append(localCtx.CFlags, "-Wno-unused-but-set-variable")
+	}
+	if flgClang {
+		localCtx.CFlags = append(localCtx.CFlags, "-Wno-missing-field-initializers")
 	}
 	localCtx.IncDirs = append(localCtx.IncDirs, "ext/zlib", "ext/bzip2")
 	localCtx.OutDir = filepath.Join(normalizePath(localCtx.OutDir), "unarr")
@@ -477,10 +467,7 @@ func buildZlibArchive(ctx *BuildContext) string {
 
 	var localWg sync.WaitGroup
 	localCtx := ctx.GetCopy(&localWg)
-	localCtx.CFlags = append(localCtx.CFlags, "-Wno-implicit-function-declaration")
-	if flgClang {
-		localCtx.CFlags = append(localCtx.CFlags, "-Wno-shift-negative-value")
-	}
+	localCtx.CFlags = append(localCtx.CFlags, "-Wno-implicit-function-declaration", "-Wno-shift-negative-value", "-Wno-implicit-fallthrough")
 	localCtx.OutDir = filepath.Join(normalizePath(localCtx.OutDir), "zlib")
 
 	ccMulti(localCtx, zlibFiles()...)
@@ -493,6 +480,7 @@ func buildZlibArchive(ctx *BuildContext) string {
 func buildTestUnixFiles(ctx *BuildContext) []string {
 	var localWg sync.WaitGroup
 	localCtx := ctx.GetCopy(&localWg)
+	localCtx.CFlags = append(localCtx.CFlags, "-Wno-implicit-fallthrough")
 	localCtx.OutDir = filepath.Join(normalizePath(localCtx.OutDir), "test_unix_obj")
 	files := filesInDir("src/utils", "Archive.cpp", "BaseUtil.cpp", "FileUtil.cpp", "StrSlice.cpp", "StrUtil.cpp", "StrUtil_unix.cpp", "TxtParser.cpp", "UtAssert.cpp")
 	ccMulti(localCtx, files...)
