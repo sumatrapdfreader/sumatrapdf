@@ -18,7 +18,7 @@ Slice::Slice() {
     // nothing to do
 }
 
-Slice::Slice(char* s, char* e) : begin(s), curr(s), end(e) {
+Slice::Slice(char* s, char* e) : begin(s), end(e), curr(s) {
     CrashIf(begin > end);
 }
 

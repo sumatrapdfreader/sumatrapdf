@@ -63,6 +63,8 @@
             "name": "Win32",
             "includePath": [
                 "C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/include",
+                "C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/include/experimental",
+                "C:/Program Files (x86)/Microsoft SDKs/Windows/v7.1A/Include",
                 "${workspaceRoot}",
                 "${workspaceRoot}/src/mui",
                 "${workspaceRoot}/src/utils",
@@ -78,6 +80,8 @@
             "browse": {
                 "path": [
                     "C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/include/*",
+                    "C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/include/experimental",
+                    "C:/Program Files (x86)/Microsoft SDKs/Windows/v7.1A/Include",
                     "${workspaceRoot}",
                     "${workspaceRoot}/src/mui",
                     "${workspaceRoot}/src/utils",

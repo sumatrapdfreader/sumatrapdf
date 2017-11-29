@@ -3,6 +3,9 @@
 
 // note: include BaseUtil.h instead of including directly
 
+bool isLegalUTF8Sequence(const u8* source, const u8* sourceEnd);
+bool isLegalUTF8String(const u8** source, const u8* sourceEnd);
+
 namespace str {
 
 enum TrimOpt { TrimLeft, TrimRight, TrimBoth };
@@ -179,6 +182,8 @@ size_t WcharToUtf8Buf(const WCHAR* s, char* bufOut, size_t cbBufOutSize);
 
 namespace conv {
 
+MaybeOwnedData UnknownToUtf8(const char* src, size_t len = 0);
+
 #if OS_WIN
 inline WCHAR* FromCodePage(const char* src, UINT cp) {
     return ToWideChar(src, cp);
@@ -205,7 +210,6 @@ inline WCHAR* FromAnsi(const char* src, size_t cbSrcLen = (size_t)-1) {
 inline char* ToAnsi(const WCHAR* src) {
     return ToMultiByte(src, CP_ACP);
 }
-char* UnknownToUtf8(const char* src, size_t len = 0);
 
 size_t ToCodePageBuf(char* buf, int cbBufSize, const WCHAR* s, UINT cp);
 size_t FromCodePageBuf(WCHAR* buf, int cchBufSize, const char* s, UINT cp);

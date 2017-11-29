@@ -505,16 +505,43 @@ class OwnedData {
     char* data = nullptr;
     size_t size = 0;
 
-    OwnedData(){};
+    OwnedData() {};
     OwnedData(char* data, size_t size);
     ~OwnedData();
 
     OwnedData(const OwnedData& other) = delete;
     OwnedData& operator=(const OwnedData& other) = delete;
-    OwnedData& operator=(OwnedData&& other);
 
+    OwnedData& operator=(OwnedData&& other);
     OwnedData(OwnedData&& other);
+
     void Set(char* s, size_t len = 0);
+    char* StealData();
+};
+
+// MaybeOwnedData is for returning data that might be owned by this class.
+// It combines pointer to data and size.
+// It owns the data i.e. frees it in destructor.
+// It cannot be copied, only moved, so that it's clear that ownership of
+// data is being passed.
+class MaybeOwnedData {
+  public:
+    char* data = nullptr;
+    size_t size = 0;
+    bool isOwned = false;
+
+    MaybeOwnedData() {};
+    MaybeOwnedData(char* data, size_t size, bool isOwned);
+    ~MaybeOwnedData();
+
+    MaybeOwnedData(const MaybeOwnedData& other) = delete;
+    MaybeOwnedData& operator=(const MaybeOwnedData& other) = delete;
+
+    MaybeOwnedData& operator=(MaybeOwnedData&& other);
+    MaybeOwnedData(MaybeOwnedData&& other);
+
+    void Set(char* s, size_t len, bool isOwned);
+    void freeIfOwned();
     char* StealData();
 };
 

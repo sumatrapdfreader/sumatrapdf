@@ -356,13 +356,9 @@ char* TxtNode::ValDup() const {
 
 // we will modify s in-place
 void TxtParser::SetToParse(const char* s, size_t sLen) {
-    char* data = str::DupN(s, sLen);
-    char* tmp = str::conv::UnknownToUtf8(data, sLen);
-    if (tmp != data) {
-        ScopedMem<char> toFree(data);
-        data = tmp;
-        sLen = str::Len(data);
-    }
+    MaybeOwnedData tmp = str::conv::UnknownToUtf8(s, sLen);
+    sLen = tmp.size;
+    char *data = tmp.StealData();
     SkipUtf8Bom(data, sLen);
     size_t n = str::NormalizeNewlinesInPlace(data, data + sLen);
     toParse.Set(data, n);

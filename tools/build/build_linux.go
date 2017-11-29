@@ -464,7 +464,7 @@ func buildTestUnixFiles(ctx *BuildContext) []string {
 	var localWg sync.WaitGroup
 	localCtx := ctx.GetCopy(&localWg)
 	localCtx.OutDir = filepath.Join(normalizePath(localCtx.OutDir), "test_unix_obj")
-	files := filesInDir("src/utils", "Archive.cpp", "BaseUtil.cpp", "FileUtil.cpp", "StrUtil.cpp", "UtAssert.cpp")
+	files := filesInDir("src/utils", "Archive.cpp", "BaseUtil.cpp", "FileUtil.cpp", "StrSlice.cpp", "StrUtil.cpp", "StrUtil_unix.cpp", "TxtParser.cpp", "UtAssert.cpp")
 	ccMulti(&localCtx, files...)
 	cc(&localCtx, "tools/test_unix/main.cpp")
 	localCtx.Wg.Wait()
