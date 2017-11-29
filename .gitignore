@@ -35,4 +35,4 @@ analyze-output.txt
 analyze-errors.html
 CoverageReport*
 LastCoverageResults.log
-linux_*/
+out/

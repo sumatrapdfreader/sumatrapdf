@@ -173,13 +173,13 @@ func DefaultReleaseSanitizeMemoryBuildContext() BuildContext {
 		ArFlags:   []string{},
 		LinkFlags: []string{"-g", "-fsanitize=memory"},
 		IncDirs:   []string{"ext/unarr", "src/utils"},
-		OutDir:    "linux_relSanitizeMem64",
+		OutDir:    "out/rel64SanitizeMem",
 		Wg:        &gBuildContextWaitGroup,
 		Mu:        &gBuildContextMutex,
 	}
 	setCompiler(&ctx)
 	if flgClang {
-		ctx.OutDir = "linux_relClangSanitizeMem64"
+		ctx.OutDir = "out/rel64ClangSanitizeMem"
 		ctx.LinkFlags = append(ctx.LinkFlags, "-lstdc++")
 	}
 	if !flgClang {
@@ -498,16 +498,7 @@ func buildTestUnixFiles(ctx *BuildContext) []string {
 }
 
 func clean() {
-	fileInfos, err := ioutil.ReadDir(".")
-	panicIfErr(err)
-	for _, fi := range fileInfos {
-		if !fi.IsDir() {
-			continue
-		}
-		if strings.HasPrefix(fi.Name(), "linux_") {
-			os.RemoveAll(fi.Name())
-		}
-	}
+	os.RemoveAll("out")
 }
 
 func main() {
