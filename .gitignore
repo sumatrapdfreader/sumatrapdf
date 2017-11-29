@@ -35,3 +35,5 @@ analyze-output.txt
 analyze-errors.html
 CoverageReport*
 LastCoverageResults.log
+linux_dbg64/
+linux_rel64/
