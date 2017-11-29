@@ -40,6 +40,7 @@ var (
 	showTimings      = true // TODO: make them part of BuildContext?
 	silentIfSkipping = true
 	flgClean         bool
+	flgRelease       bool
 
 	jobLimiter     chan bool
 	useConcurrency = true
@@ -51,8 +52,8 @@ var (
 func DefaultBuildContext() BuildContext {
 	return BuildContext{
 		CcCmd:     "gcc",
-		CFlags:    []string{"-g", "-O0", "-Wall"},
-		CxxFlags:  []string{"-g", "-O0", "-fno-exceptions", "-fno-rtti", "-std=c++1z", "-Wall"},
+		CFlags:    []string{"-g", "-O0", "-Wall", "-Werror"},
+		CxxFlags:  []string{"-g", "-O0", "-fno-exceptions", "-fno-rtti", "-std=c++1z", "-Wall", "-Werror"},
 		CDefines:  []string{"DEBUG"},
 		ArCmd:     "ar",
 		ArFlags:   []string{},
@@ -60,6 +61,23 @@ func DefaultBuildContext() BuildContext {
 		LinkFlags: []string{"-g", "-static-libstdc++"},
 		IncDirs:   []string{"ext/unarr", "src/utils"},
 		OutDir:    "linux_dbg64",
+		Wg:        &gBuildContextWaitGroup,
+		Mu:        &gBuildContextMutex,
+	}
+}
+
+func DefaultReleaseBuildContext() BuildContext {
+	return BuildContext{
+		CcCmd:     "gcc",
+		CFlags:    []string{"-g", "-Os", "-Wall", "-Werror"},
+		CxxFlags:  []string{"-g", "-Os", "-fno-exceptions", "-fno-rtti", "-std=c++1z", "-Wall", "-Werror"},
+		CDefines:  []string{"NDEBUG"},
+		ArCmd:     "ar",
+		ArFlags:   []string{},
+		LinkCmd:   "g++",
+		LinkFlags: []string{"-g", "-static-libstdc++"},
+		IncDirs:   []string{"ext/unarr", "src/utils"},
+		OutDir:    "linux_rel64",
 		Wg:        &gBuildContextWaitGroup,
 		Mu:        &gBuildContextMutex,
 	}
@@ -284,6 +302,7 @@ func ccMulti(ctx *BuildContext, srcPaths ...string) {
 
 func parseFlags() {
 	flag.BoolVar(&flgClean, "clean", false, "if true, do a clean build")
+	flag.BoolVar(&flgRelease, "release", false, "if true, make release build")
 	flag.Parse()
 }
 
@@ -348,6 +367,18 @@ func buildZlibArchive(ctx *BuildContext) string {
 	return archivePath
 }
 
+func buildTestUnixFiles(ctx *BuildContext) []string {
+	var localWg sync.WaitGroup
+	localCtx := ctx.GetCopy(&localWg)
+	localCtx.OutDir = filepath.Join(normalizePath(localCtx.OutDir), "test_unix_obj")
+
+	files := filesInDir("src/utils", "Archive.cpp", "BaseUtil.cpp", "FileUtil.cpp", "StrUtil.cpp", "UtAssert.cpp")
+	ccMulti(&localCtx, files...)
+	cc(&localCtx, "tools/test_unix/main.cpp")
+	localCtx.Wg.Wait()
+	return localCtx.CcOutputs
+}
+
 func main() {
 	nProcs := runtime.GOMAXPROCS(-1)
 	jobLimiter = make(chan bool, nProcs)
@@ -361,21 +392,20 @@ func main() {
 	}
 
 	ctx := DefaultBuildContext()
+	if flgRelease {
+		ctx = DefaultReleaseBuildContext()
+	}
 	var wg sync.WaitGroup
 	ctx.Wg = &wg
 
 	timeStart := time.Now()
-	files := filesInDir("src/utils", "Archive.cpp", "BaseUtil.cpp", "FileUtil.cpp", "StrUtil.cpp", "UtAssert.cpp")
-	ccMulti(&ctx, files...)
-	cc(&ctx, "tools/test_unix/main.cpp")
-
 	zlibArchive := buildZlibArchive(&ctx)
 	unarrAchive := builUnarrArchive(&ctx)
-	wg.Wait()
+	testUnixFiles := buildTestUnixFiles(&ctx)
 
-	dstPath := filepath.Join(ctx.OutDir, "test_unix")
-	linkInputs := dupStrArray(ctx.CcOutputs)
+	linkInputs := dupStrArray(testUnixFiles)
 	linkInputs = append(linkInputs, unarrAchive, zlibArchive)
+	dstPath := filepath.Join(ctx.OutDir, "test_unix")
 	link(&ctx, dstPath, linkInputs)
 	wg.Wait()
 
