@@ -52,25 +52,69 @@ var (
 	gBuildContextWaitGroup sync.WaitGroup
 )
 
-func DefaultBuildContext() BuildContext {
-	cc := "gcc"
-	if flgClang {
-		cc = "clang-5.0"
+func fileExists(path string) bool {
+	st, err := os.Lstat(path)
+	if err != nil {
+		return false
 	}
+	return !st.IsDir()
+}
+
+func setMacCompiler(ctx *BuildContext) {
+	if flgClang {
+		// when llvm is installed via brew
+		// LDFLAGS="-L/usr/local/opt/llvm/lib -Wl,-rpath,/usr/local/opt/llvm/lib"
+		llvmClangPath := "/usr/local/opt/llvm/bin/clang"
+		if fileExists(llvmClangPath) {
+			ctx.CcCmd = llvmClangPath
+			ctx.LinkCmd = ctx.CcCmd
+			ctx.ArCmd = "/usr/local/opt/llvm/bin/llvm-ar"
+		}
+	} else {
+		// gcc
+	}
+}
+
+func setLinuxCompiler(ctx *BuildContext) {
+	if flgClang {
+		// on ubuntu I have clang-5.0 installed
+		ctx.CcCmd = "clang-5.0"
+		ctx.LinkCmd = ctx.CcCmd
+		ctx.ArCmd = "ar"
+	} else {
+		// gcc
+		ctx.CcCmd = "gcc"
+		ctx.LinkCmd = ctx.CcCmd
+		ctx.ArCmd = "ar"
+	}
+}
+
+func setCompiler(ctx *BuildContext) {
+	if runtime.GOOS == "darwin" {
+		setMacCompiler(ctx)
+		return
+	}
+	if runtime.GOOS == "linux" {
+		setLinuxCompiler(ctx)
+		return
+	}
+	panicIf(true, fmt.Sprintf("unsupported runtime.GOOS: '%s'", runtime.GOOS))
+
+}
+
+func DefaultBuildContext() BuildContext {
 	ctx := BuildContext{
-		CcCmd:     cc,
 		CFlags:    []string{"-g", "-O0", "-Wall", "-Werror"},
 		CxxFlags:  []string{"-fno-exceptions", "-fno-rtti", "-std=c++1z"},
 		CDefines:  []string{"DEBUG"},
-		ArCmd:     "ar",
 		ArFlags:   []string{},
-		LinkCmd:   cc,
 		LinkFlags: []string{"-g"},
 		IncDirs:   []string{"ext/unarr", "src/utils"},
-		OutDir:    "linux_dbg64",
+		OutDir:    "out/dbg64",
 		Wg:        &gBuildContextWaitGroup,
 		Mu:        &gBuildContextMutex,
 	}
+	setCompiler(&ctx)
 	if !flgClang {
 		// only in gcc
 		ctx.LinkFlags = append(ctx.LinkFlags, "-static-libstdc++")
@@ -79,24 +123,18 @@ func DefaultBuildContext() BuildContext {
 }
 
 func DefaultReleaseBuildContext() BuildContext {
-	cc := "gcc"
-	if flgClang {
-		cc = "clang-5.0"
-	}
 	ctx := BuildContext{
-		CcCmd:     cc,
 		CFlags:    []string{"-g", "-Os", "-Wall", "-Werror"},
 		CxxFlags:  []string{"-fno-exceptions", "-fno-rtti", "-std=c++1z"},
 		CDefines:  []string{"NDEBUG"},
-		ArCmd:     "ar",
 		ArFlags:   []string{},
-		LinkCmd:   cc,
 		LinkFlags: []string{"-g"},
 		IncDirs:   []string{"ext/unarr", "src/utils"},
-		OutDir:    "linux_rel64",
+		OutDir:    "out/rel64",
 		Wg:        &gBuildContextWaitGroup,
 		Mu:        &gBuildContextMutex,
 	}
+	setCompiler(&ctx)
 	if !flgClang {
 		// only in gcc
 		ctx.LinkFlags = append(ctx.LinkFlags, "-static-libstdc++")
@@ -105,26 +143,20 @@ func DefaultReleaseBuildContext() BuildContext {
 }
 
 func DefaultReleaseSanitizeAddressBuildContext() BuildContext {
-	cc := "gcc"
-	if flgClang {
-		cc = "clang-5.0"
-	}
 	ctx := BuildContext{
-		CcCmd:     cc,
 		CFlags:    []string{"-g", "-Os", "-Wall", "-Werror", "-fsanitize=address", "-fno-omit-frame-pointer"},
 		CxxFlags:  []string{"-fno-exceptions", "-fno-rtti", "-std=c++1z"},
 		CDefines:  []string{"NDEBUG"},
-		ArCmd:     "ar",
 		ArFlags:   []string{},
-		LinkCmd:   cc,
 		LinkFlags: []string{"-g", "-fsanitize=address"},
 		IncDirs:   []string{"ext/unarr", "src/utils"},
-		OutDir:    "linux_relSanitizeAddr64",
+		OutDir:    "out/rel64SanitizeAddr",
 		Wg:        &gBuildContextWaitGroup,
 		Mu:        &gBuildContextMutex,
 	}
+	setCompiler(&ctx)
 	if flgClang {
-		ctx.OutDir = "linux_relClangSanitizeAddr64"
+		ctx.OutDir = "out/rel64ClangSanitizeAddr"
 	}
 	if !flgClang {
 		// only in gcc
@@ -134,24 +166,18 @@ func DefaultReleaseSanitizeAddressBuildContext() BuildContext {
 }
 
 func DefaultReleaseSanitizeMemoryBuildContext() BuildContext {
-	cc := "gcc"
-	if flgClang {
-		cc = "clang-5.0"
-	}
 	ctx := BuildContext{
-		CcCmd:     cc,
 		CFlags:    []string{"-g", "-Os", "-Wall", "-Werror", "-fsanitize=memory", "-fno-omit-frame-pointer"},
 		CxxFlags:  []string{"-fno-exceptions", "-fno-rtti", "-std=c++1z"},
 		CDefines:  []string{"NDEBUG"},
-		ArCmd:     "ar",
 		ArFlags:   []string{},
-		LinkCmd:   cc,
 		LinkFlags: []string{"-g", "-fsanitize=memory"},
 		IncDirs:   []string{"ext/unarr", "src/utils"},
 		OutDir:    "linux_relSanitizeMem64",
 		Wg:        &gBuildContextWaitGroup,
 		Mu:        &gBuildContextMutex,
 	}
+	setCompiler(&ctx)
 	if flgClang {
 		ctx.OutDir = "linux_relClangSanitizeMem64"
 		ctx.LinkFlags = append(ctx.LinkFlags, "-lstdc++")
