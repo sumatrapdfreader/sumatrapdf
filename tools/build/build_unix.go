@@ -13,6 +13,7 @@ import (
 	"time"
 )
 
+// BuildContext carries info needed for build commands
 type BuildContext struct {
 	OutDir string
 
@@ -102,8 +103,8 @@ func setCompiler(ctx *BuildContext) {
 
 }
 
-func DefaultBuildContext() BuildContext {
-	ctx := BuildContext{
+func getDebugBuildContext() *BuildContext {
+	ctx := &BuildContext{
 		CFlags:    []string{"-g", "-O0", "-Wall", "-Werror"},
 		CxxFlags:  []string{"-fno-exceptions", "-fno-rtti", "-std=c++1z"},
 		CDefines:  []string{"DEBUG"},
@@ -114,7 +115,7 @@ func DefaultBuildContext() BuildContext {
 		Wg:        &gBuildContextWaitGroup,
 		Mu:        &gBuildContextMutex,
 	}
-	setCompiler(&ctx)
+	setCompiler(ctx)
 	if !flgClang {
 		// only in gcc
 		ctx.LinkFlags = append(ctx.LinkFlags, "-static-libstdc++")
@@ -122,8 +123,8 @@ func DefaultBuildContext() BuildContext {
 	return ctx
 }
 
-func DefaultReleaseBuildContext() BuildContext {
-	ctx := BuildContext{
+func getReleaseBuildContext() *BuildContext {
+	ctx := &BuildContext{
 		CFlags:    []string{"-g", "-Os", "-Wall", "-Werror"},
 		CxxFlags:  []string{"-fno-exceptions", "-fno-rtti", "-std=c++1z"},
 		CDefines:  []string{"NDEBUG"},
@@ -134,7 +135,7 @@ func DefaultReleaseBuildContext() BuildContext {
 		Wg:        &gBuildContextWaitGroup,
 		Mu:        &gBuildContextMutex,
 	}
-	setCompiler(&ctx)
+	setCompiler(ctx)
 	if !flgClang {
 		// only in gcc
 		ctx.LinkFlags = append(ctx.LinkFlags, "-static-libstdc++")
@@ -142,8 +143,8 @@ func DefaultReleaseBuildContext() BuildContext {
 	return ctx
 }
 
-func DefaultReleaseSanitizeAddressBuildContext() BuildContext {
-	ctx := BuildContext{
+func getReleaseSanitizeAddressBuildContext() *BuildContext {
+	ctx := &BuildContext{
 		CFlags:    []string{"-g", "-Os", "-Wall", "-Werror", "-fsanitize=address", "-fno-omit-frame-pointer"},
 		CxxFlags:  []string{"-fno-exceptions", "-fno-rtti", "-std=c++1z"},
 		CDefines:  []string{"NDEBUG"},
@@ -154,7 +155,7 @@ func DefaultReleaseSanitizeAddressBuildContext() BuildContext {
 		Wg:        &gBuildContextWaitGroup,
 		Mu:        &gBuildContextMutex,
 	}
-	setCompiler(&ctx)
+	setCompiler(ctx)
 	if flgClang {
 		ctx.OutDir = "out/rel64ClangSanitizeAddr"
 	}
@@ -165,8 +166,8 @@ func DefaultReleaseSanitizeAddressBuildContext() BuildContext {
 	return ctx
 }
 
-func DefaultReleaseSanitizeMemoryBuildContext() BuildContext {
-	ctx := BuildContext{
+func getReleaseSanitizeMemoryBuildContext() *BuildContext {
+	ctx := &BuildContext{
 		CFlags:    []string{"-g", "-Os", "-Wall", "-Werror", "-fsanitize=memory", "-fno-omit-frame-pointer"},
 		CxxFlags:  []string{"-fno-exceptions", "-fno-rtti", "-std=c++1z"},
 		CDefines:  []string{"NDEBUG"},
@@ -177,7 +178,7 @@ func DefaultReleaseSanitizeMemoryBuildContext() BuildContext {
 		Wg:        &gBuildContextWaitGroup,
 		Mu:        &gBuildContextMutex,
 	}
-	setCompiler(&ctx)
+	setCompiler(ctx)
 	if flgClang {
 		ctx.OutDir = "out/rel64ClangSanitizeMem"
 		ctx.LinkFlags = append(ctx.LinkFlags, "-lstdc++")
@@ -195,7 +196,7 @@ func dupStrArray(a []string) []string {
 
 // GetCopy creates a deep copy of BuildContext. We must duplicate arrays
 // manually, to prevent sharing with source
-func (c *BuildContext) GetCopy(wg *sync.WaitGroup) BuildContext {
+func (c *BuildContext) GetCopy(wg *sync.WaitGroup) *BuildContext {
 	res := *c
 	res.CDefines = dupStrArray(res.CDefines)
 	res.CDefines = dupStrArray(res.CDefines)
@@ -206,19 +207,22 @@ func (c *BuildContext) GetCopy(wg *sync.WaitGroup) BuildContext {
 	res.LinkFlags = dupStrArray(res.LinkFlags)
 	res.CcOutputs = []string{}
 	res.Wg = wg
-	return res
+	return &res
 }
 
+// Lock locks build context
 func (c *BuildContext) Lock() {
 	c.Mu.Lock()
 }
 
+// Unlock locks build context
 func (c *BuildContext) Unlock() {
 	c.Mu.Unlock()
 }
 
+// InOutDir returns path of the file in OutDir
 func (c *BuildContext) InOutDir(name string) string {
-	return filepath.Join(c.OutDir, name)
+	return filepath.Join(normalizePath(c.OutDir), name)
 }
 
 func panicIfErr(err error) {
@@ -457,7 +461,7 @@ func builUnarrArchive(ctx *BuildContext) string {
 	localCtx.IncDirs = append(localCtx.IncDirs, "ext/zlib", "ext/bzip2")
 	localCtx.OutDir = filepath.Join(normalizePath(localCtx.OutDir), "unarr")
 
-	ccMulti(&localCtx, unarrMoLzmaFiles()...)
+	ccMulti(localCtx, unarrMoLzmaFiles()...)
 	localCtx.Wg.Wait()
 
 	ar(ctx, archivePath, localCtx.CcOutputs)
@@ -479,7 +483,7 @@ func buildZlibArchive(ctx *BuildContext) string {
 	}
 	localCtx.OutDir = filepath.Join(normalizePath(localCtx.OutDir), "zlib")
 
-	ccMulti(&localCtx, zlibFiles()...)
+	ccMulti(localCtx, zlibFiles()...)
 	localCtx.Wg.Wait()
 
 	ar(ctx, archivePath, localCtx.CcOutputs)
@@ -491,8 +495,8 @@ func buildTestUnixFiles(ctx *BuildContext) []string {
 	localCtx := ctx.GetCopy(&localWg)
 	localCtx.OutDir = filepath.Join(normalizePath(localCtx.OutDir), "test_unix_obj")
 	files := filesInDir("src/utils", "Archive.cpp", "BaseUtil.cpp", "FileUtil.cpp", "StrSlice.cpp", "StrUtil.cpp", "StrUtil_unix.cpp", "TxtParser.cpp", "UtAssert.cpp")
-	ccMulti(&localCtx, files...)
-	cc(&localCtx, "tools/test_unix/main.cpp")
+	ccMulti(localCtx, files...)
+	cc(localCtx, "tools/test_unix/main.cpp")
 	localCtx.Wg.Wait()
 	return localCtx.CcOutputs
 }
@@ -512,26 +516,26 @@ func main() {
 		clean()
 	}
 
-	ctx := DefaultBuildContext()
+	ctx := getDebugBuildContext()
 	if flgRelease {
-		ctx = DefaultReleaseBuildContext()
+		ctx = getReleaseBuildContext()
 	} else if flgReleaseSanitizeMem {
-		ctx = DefaultReleaseSanitizeMemoryBuildContext()
+		ctx = getReleaseSanitizeMemoryBuildContext()
 	} else if flgReleaseSanitizeAddr {
-		ctx = DefaultReleaseSanitizeAddressBuildContext()
+		ctx = getReleaseSanitizeAddressBuildContext()
 	}
 	var wg sync.WaitGroup
 	ctx.Wg = &wg
 
 	timeStart := time.Now()
-	zlibArchive := buildZlibArchive(&ctx)
-	unarrAchive := builUnarrArchive(&ctx)
-	testUnixFiles := buildTestUnixFiles(&ctx)
+	zlibArchive := buildZlibArchive(ctx)
+	unarrAchive := builUnarrArchive(ctx)
+	testUnixFiles := buildTestUnixFiles(ctx)
 
 	linkInputs := dupStrArray(testUnixFiles)
 	linkInputs = append(linkInputs, unarrAchive, zlibArchive)
 	dstPath := filepath.Join(ctx.OutDir, "test_unix")
-	link(&ctx, dstPath, linkInputs)
+	link(ctx, dstPath, linkInputs)
 	wg.Wait()
 
 	fmt.Printf("completed in %s\n", time.Since(timeStart))
