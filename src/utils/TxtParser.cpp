@@ -286,12 +286,15 @@ Failed:
     parser.failed = true;
 }
 
+#if 0
 static void SkipUtf8Bom(char*& s, size_t& sLen) {
     if (sLen >= 3 && str::EqN(s, UTF8_BOM, 3)) {
         s += 3;
         sLen -= 3;
     }
 }
+#endif
+
 size_t TxtNode::KeyLen() const {
     return keyEnd - keyStart;
 }
@@ -358,10 +361,10 @@ char* TxtNode::ValDup() const {
 void TxtParser::SetToParse(const char* s, size_t sLen) {
     MaybeOwnedData tmp = str::conv::UnknownToUtf8(s, sLen);
     sLen = tmp.size;
-    char *data = tmp.StealData();
-    SkipUtf8Bom(data, sLen);
-    size_t n = str::NormalizeNewlinesInPlace(data, data + sLen);
-    toParse.Set(data, n);
+    char *d = tmp.data;
+    data.TakeOwnership(tmp.StealData(), tmp.size);
+    size_t n = str::NormalizeNewlinesInPlace(d, d + sLen);
+    toParse.Set(d, n);
 
     // we create an implicit array node to hold the nodes we'll parse
     CrashIf(0 != nodes.size());

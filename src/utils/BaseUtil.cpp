@@ -179,7 +179,7 @@ OwnedData& OwnedData::operator=(OwnedData&& other) {
     return *this;
 }
 
-void OwnedData::Set(char* s, size_t len) {
+void OwnedData::TakeOwnership(char* s, size_t len) {
     if (len == 0) {
         len = str::Len(s);
     }

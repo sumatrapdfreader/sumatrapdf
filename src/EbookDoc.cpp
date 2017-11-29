@@ -376,7 +376,7 @@ bool EpubDoc::Load() {
         if (!html.data) {
             continue;
         }
-        html.Set(DecodeTextToUtf8(html.data, true));
+        html.TakeOwnership(DecodeTextToUtf8(html.data, true));
         if (!html.data) {
             continue;
         }
@@ -1378,12 +1378,12 @@ static const char* TextFindRfcEnd(str::Str<char>& htmlData, const char* curr) {
 bool TxtDoc::Load() {
     OwnedData text(file::ReadAll(fileName));
     if (str::EndsWithI(fileName, L".tcr") && str::StartsWith(text.data, TCR_HEADER)) {
-        text.Set(DecompressTcrText(text.data, text.size));
+        text.TakeOwnership(DecompressTcrText(text.data, text.size));
     }
     if (!text.data) {
         return false;
     }
-    text.Set(DecodeTextToUtf8(text.data));
+    text.TakeOwnership(DecodeTextToUtf8(text.data));
     if (!text.data) {
         return false;
     }

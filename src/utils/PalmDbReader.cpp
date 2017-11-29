@@ -57,7 +57,7 @@ PdbReader::PdbReader(IStream* stream) {
     if (!tmp) {
         return;
     }
-    data.Set(tmp, size);
+    data.TakeOwnership(tmp, size);
     if (!ParseHeader()) {
         recOffsets.clear();
     }

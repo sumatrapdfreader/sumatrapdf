@@ -629,7 +629,7 @@ MaybeOwnedData UnknownToUtf8(const char* s, size_t len) {
     }
 
     if (str::StartsWith(s, UTF8_BOM)) {
-        return MaybeOwnedData((char*)s, len, false);
+        return MaybeOwnedData(str::Dup(s+3), len-3, false);
     }
 
     // TODO: UTF16BE_BOM

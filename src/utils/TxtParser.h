@@ -58,6 +58,8 @@ struct Token {
 
 struct TxtParser {
     PoolAllocator allocator;
+    OwnedData data;
+
     str::Slice toParse;
     Token tok;
     char escapeChar = SERIALIZE_ESCAPE_CHAR;
