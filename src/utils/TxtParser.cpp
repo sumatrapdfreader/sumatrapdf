@@ -361,7 +361,7 @@ char* TxtNode::ValDup() const {
 void TxtParser::SetToParse(const std::string_view& str) {
     auto tmp = str::conv::UnknownToUtf8(str);
     data = tmp.StealData();
-    char *d = data.data;
+    char* d = data.data;
     size_t sLen = data.size;
     size_t n = str::NormalizeNewlinesInPlace(d, d + sLen);
     toParse.Set(d, n);

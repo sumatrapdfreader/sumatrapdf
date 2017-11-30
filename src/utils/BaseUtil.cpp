@@ -242,7 +242,7 @@ void MaybeOwnedData::freeIfOwned() {
 }
 
 OwnedData MaybeOwnedData::StealData() {
-    char *res = data;
+    char* res = data;
     size_t resSize = size;
     if (!isOwned) {
         res = str::DupN(data, size);

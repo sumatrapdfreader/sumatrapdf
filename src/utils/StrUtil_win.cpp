@@ -621,14 +621,14 @@ namespace conv {
 // caller has to free() it
 MaybeOwnedData UnknownToUtf8(const std::string_view& txt) {
     size_t len = txt.size();
-    const char *s = txt.data();
+    const char* s = txt.data();
 
     if (len < 3) {
         return MaybeOwnedData((char*)s, len, false);
     }
 
     if (str::StartsWith(s, UTF8_BOM)) {
-        return MaybeOwnedData(str::Dup(s+3), len-3, false);
+        return MaybeOwnedData(str::Dup(s + 3), len - 3, false);
     }
 
     // TODO: UTF16BE_BOM
@@ -636,7 +636,7 @@ MaybeOwnedData UnknownToUtf8(const std::string_view& txt) {
     if (str::StartsWith(s, UTF16_BOM)) {
         s += 2;
         int cchLen = (int)((len - 2) / 2);
-        char *str = str::conv::ToUtf8((const WCHAR*)s, cchLen);
+        char* str = str::conv::ToUtf8((const WCHAR*)s, cchLen);
         return MaybeOwnedData(str, 0, true);
     }
 
@@ -647,7 +647,7 @@ MaybeOwnedData UnknownToUtf8(const std::string_view& txt) {
     }
 
     AutoFreeW uni(str::conv::FromAnsi(s, len));
-    char *str = str::conv::ToUtf8(uni.Get());
+    char* str = str::conv::ToUtf8(uni.Get());
     return MaybeOwnedData(str, 0, true);
 }
 

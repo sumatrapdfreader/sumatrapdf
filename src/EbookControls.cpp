@@ -24,7 +24,7 @@
 #define NOLOG 1
 #include "DebugLog.h"
 
-constexpr const char* ebookWinDesc = R"data(
+constexpr const char ebookWinDesc[] = R"data(
 Style [
     name: styleMainWnd
     bg_col: sepia
@@ -307,8 +307,8 @@ EbookControls* CreateEbookControls(HWND hwnd, FrameRateWnd* frameRateWnd) {
     }
 
     ParsedMui* muiDef = new ParsedMui();
-    // TODO: figure out how to calculate str::Len(ebookWinDesc) at compile time
-    std::string_view ebookStr(ebookWinDesc);
+    size_t ebookWinDescLen = static_strlen(ebookWinDesc);
+    std::string_view ebookStr(ebookWinDesc, ebookWinDescLen);
     MuiFromText(*muiDef, ebookStr);
 
     EbookControls* ctrls = new EbookControls;

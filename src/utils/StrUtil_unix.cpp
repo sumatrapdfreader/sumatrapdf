@@ -12,7 +12,7 @@ namespace conv {
 // caller has to free() it
 MaybeOwnedData UnknownToUtf8(const std::string_view& str) {
     size_t n = str.size();
-    const char *s = str.data();
+    const char* s = str.data();
 
     if (n < 3) {
         return MaybeOwnedData((char*)s, n, false);
@@ -22,7 +22,7 @@ MaybeOwnedData UnknownToUtf8(const std::string_view& str) {
         return MaybeOwnedData((char*)s, n, false);
     }
 
-    // TODO: UTF16BE_BOM
+        // TODO: UTF16BE_BOM
 
 #if 0
     if (str::StartsWith(s, UTF16_BOM)) {
@@ -42,5 +42,5 @@ MaybeOwnedData UnknownToUtf8(const std::string_view& str) {
     return MaybeOwnedData((char*)s, 0, false);
 }
 
-}
-}
+} // namespace conv
+} // namespace str

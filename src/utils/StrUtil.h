@@ -216,7 +216,7 @@ size_t FromCodePageBuf(WCHAR* buf, int cchBufSize, const char* s, UINT cp);
 
 #endif
 
-} // namespace str::conv
+} // namespace conv
 
 } // namespace str
 

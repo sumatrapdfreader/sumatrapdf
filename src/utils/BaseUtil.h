@@ -156,6 +156,9 @@ typedef uint8_t u8;
 template <typename T, size_t N>
 char (&DimofSizeHelper(T (&array)[N]))[N];
 
+// like dimof minus 1 to account for terminating 0
+#define static_strlen(array) (sizeof(DimofSizeHelper(array)) - 1)
+
 // UNUSED is for marking unreferenced function arguments/variables
 // UNREFERENCED_PARAMETER is in windows SDK but too long. We use it if available,
 // otherwise we define our own version.
@@ -505,7 +508,7 @@ class OwnedData {
     char* data = nullptr;
     size_t size = 0;
 
-    OwnedData() {};
+    OwnedData(){};
     OwnedData(char* data, size_t size);
     ~OwnedData();
 
@@ -530,7 +533,7 @@ class MaybeOwnedData {
     size_t size = 0;
     bool isOwned = false;
 
-    MaybeOwnedData() {};
+    MaybeOwnedData(){};
     MaybeOwnedData(char* data, size_t size, bool isOwned);
     ~MaybeOwnedData();
 
