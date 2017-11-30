@@ -28,6 +28,80 @@ a given line either as a simple string or key/value pair. It's
 up to the caller to interpret the data.
 */
 
+void TxtNode::AddChild(TxtNode* child) {
+    if (firstChild == nullptr) {
+        firstChild = child;
+        return;
+    }
+    TxtNode** curr = &(firstChild->sibling);
+    while (*curr != nullptr) {
+        curr = &((*curr)->sibling);
+    }
+    *curr = child;
+}
+
+size_t TxtNode::KeyLen() const {
+    return keyEnd - keyStart;
+}
+
+size_t TxtNode::ValLen() const {
+    return valEnd - valStart;
+}
+
+bool TxtNode::IsArray() const {
+    return Type::Array == type;
+}
+
+bool TxtNode::IsStruct() const {
+    return Type::Struct == type;
+}
+
+bool TxtNode::IsStructWithName(const char* name, size_t nameLen) const {
+    if (Type::Struct != type) {
+        return false;
+    }
+    if (nameLen != KeyLen()) {
+        return false;
+    }
+    return str::EqNI(keyStart, name, nameLen);
+}
+
+bool TxtNode::IsStructWithName(const char* name) const {
+    return IsStructWithName(name, str::Len(name));
+}
+
+bool TxtNode::IsText() const {
+    return Type::Text == type;
+}
+
+bool TxtNode::IsTextWithKey(const char* name) const {
+    if (Type::Text != type) {
+        return false;
+    }
+    if (!keyStart) {
+        return false;
+    }
+    size_t nameLen = str::Len(name);
+    if (nameLen != KeyLen()) {
+        return false;
+    }
+    return str::EqNI(keyStart, name, nameLen);
+}
+
+char* TxtNode::KeyDup() const {
+    if (!keyStart) {
+        return nullptr;
+    }
+    return str::DupN(keyStart, KeyLen());
+}
+
+char* TxtNode::ValDup() const {
+    if (!valStart) {
+        return nullptr;
+    }
+    return str::DupN(valStart, ValLen());
+}
+
 TxtNode* TxtParser::AllocTxtNode(TxtNode::Type nodeType) {
     void* p = Allocator::Alloc<TxtNode>(&allocator);
     TxtNode* node = new (p) TxtNode(nodeType);
@@ -44,6 +118,20 @@ TxtNode* TxtParser::AllocTxtNodeFromToken(const Token& tok, TxtNode::Type nodeTy
     node->keyStart = tok.keyStart;
     node->keyEnd = tok.keyEnd;
     return node;
+}
+
+// we will modify s in-place
+void TxtParser::SetToParse(const std::string_view& str) {
+    auto tmp = str::conv::UnknownToUtf8(str);
+    data = tmp.StealData();
+    char* d = data.data;
+    size_t sLen = data.size;
+    size_t n = str::NormalizeNewlinesInPlace(d, d + sLen);
+    toParse.Set(d, n);
+
+    // we create an implicit array node to hold the nodes we'll parse
+    CrashIf(0 != nodes.size());
+    nodes.push_back(AllocTxtNode(TxtNode::Type::Array));
 }
 
 static bool IsCommentStartChar(char c) {
@@ -277,98 +365,13 @@ static void ParseNodes(TxtParser& parser) {
             continue;
         }
         TxtNode* currParent = parser.nodes.at(parser.nodes.size() - 1);
-        currParent->children.push_back(currNode);
+        currParent->AddChild(currNode);
         if (TxtNode::Type::Text != currNode->type) {
             parser.nodes.push_back(currNode);
         }
     }
 Failed:
     parser.failed = true;
-}
-
-#if 0
-static void SkipUtf8Bom(char*& s, size_t& sLen) {
-    if (sLen >= 3 && str::EqN(s, UTF8_BOM, 3)) {
-        s += 3;
-        sLen -= 3;
-    }
-}
-#endif
-
-size_t TxtNode::KeyLen() const {
-    return keyEnd - keyStart;
-}
-
-size_t TxtNode::ValLen() const {
-    return valEnd - valStart;
-}
-
-bool TxtNode::IsArray() const {
-    return Type::Array == type;
-}
-
-bool TxtNode::IsStruct() const {
-    return Type::Struct == type;
-}
-
-bool TxtNode::IsStructWithName(const char* name, size_t nameLen) const {
-    if (Type::Struct != type) {
-        return false;
-    }
-    if (nameLen != KeyLen()) {
-        return false;
-    }
-    return str::EqNI(keyStart, name, nameLen);
-}
-
-bool TxtNode::IsStructWithName(const char* name) const {
-    return IsStructWithName(name, str::Len(name));
-}
-
-bool TxtNode::IsText() const {
-    return Type::Text == type;
-}
-
-bool TxtNode::IsTextWithKey(const char* name) const {
-    if (Type::Text != type) {
-        return false;
-    }
-    if (!keyStart) {
-        return false;
-    }
-    size_t nameLen = str::Len(name);
-    if (nameLen != KeyLen()) {
-        return false;
-    }
-    return str::EqNI(keyStart, name, nameLen);
-}
-
-char* TxtNode::KeyDup() const {
-    if (!keyStart) {
-        return nullptr;
-    }
-    return str::DupN(keyStart, KeyLen());
-}
-
-char* TxtNode::ValDup() const {
-    if (!valStart) {
-        return nullptr;
-    }
-    return str::DupN(valStart, ValLen());
-}
-
-// we will modify s in-place
-void TxtParser::SetToParse(const std::string_view& str) {
-    auto tmp = str::conv::UnknownToUtf8(str);
-    data = tmp.StealData();
-    char* d = data.data;
-    size_t sLen = data.size;
-    size_t n = str::NormalizeNewlinesInPlace(d, d + sLen);
-    toParse.Set(d, n);
-
-    // we create an implicit array node to hold the nodes we'll parse
-    CrashIf(0 != nodes.size());
-    nodes.push_back(AllocTxtNode(TxtNode::Type::Array));
 }
 
 bool ParseTxt(TxtParser& parser) {
@@ -420,7 +423,7 @@ static void PrettyPrintNode(TxtNode* curr, int nest, str::Str<char>& res) {
         res.Append("[\n");
     }
 
-    for (TxtNode* child : curr->children) {
+    for (TxtNode* child = curr->firstChild; child != nullptr; child = child->sibling) {
         PrettyPrintNode(child, nest + 1, res);
     }
 

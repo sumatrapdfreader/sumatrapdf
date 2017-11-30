@@ -11,7 +11,11 @@ struct TxtNode {
     };
 
     Type type;
-    std::vector<TxtNode*> children;
+
+    // for storing children, first goes into firstChild and the
+    // rest are linked as sibling
+    TxtNode* firstChild;
+    TxtNode* sibling;
 
     char* lineStart;
     char* valStart;
@@ -22,6 +26,8 @@ struct TxtNode {
     explicit TxtNode(TxtNode::Type tp) { type = tp; }
     TxtNode(const TxtNode& other) = delete;
     TxtNode& operator=(const TxtNode& other) = delete;
+
+    void AddChild(TxtNode*);
 
     size_t KeyLen() const;
     size_t ValLen() const;

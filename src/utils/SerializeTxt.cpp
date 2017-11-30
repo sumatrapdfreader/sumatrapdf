@@ -293,7 +293,7 @@ static TxtNode* FindNode(TxtNode* curr, const char* name, size_t nameLen) {
     size_t nodeNameLen;
 
     TxtNode* found = nullptr;
-    for (TxtNode* child : curr->children) {
+    for (TxtNode* child = curr->firstChild; child != nullptr; child = child->sibling) {
         if (child->IsText() || child->IsStruct()) {
             nodeName = child->keyStart;
             nodeNameLen = child->keyEnd - nodeName;
@@ -336,7 +336,7 @@ static TxtNode* StructNodeFromTextNode(DecodeState& ds, TxtNode* txtNode, const 
         child->valEnd = slice.curr;
         child->keyStart = fieldName;
         child->keyEnd = fieldName + str::Len(fieldName);
-        node->children.push_back(child);
+        node->AddChild(child);
         ++fieldNo;
         if (fieldNo == structDef->nFields)
             break;
@@ -390,32 +390,53 @@ static bool DecodeField(DecodeState& ds, TxtNode* firstNode, const char* fieldNa
         return true;
     }
     bool ok;
+
     if (TYPE_BOOL == type) {
         bool bVal;
         ok = ParseBool(node->valStart, node->valEnd, &bVal);
-        if (!ok)
-            return false;
-        WriteStructBool(structDataPtr, bVal);
-    } else if (TYPE_COLOR == type) {
+        if (ok) {
+            WriteStructBool(structDataPtr, bVal);
+        }
+        return ok;
+    }
+
+    // TODO: should we return ok instead of true in cases below?
+    if (TYPE_COLOR == type) {
         COLORREF val;
         ok = ParseColor(node->valStart, node->valEnd, &val);
-        if (ok)
+        if (ok) {
             WriteStructUInt(structDataPtr, TYPE_COLOR, val);
-    } else if (IsUnsignedIntType(type)) {
+        }
+        return true;
+    }
+
+    if (IsUnsignedIntType(type)) {
         uint64_t n;
         ok = ParseUInt(node->valStart, node->valEnd, &n);
-        if (ok)
+        if (ok) {
             ok = WriteStructUInt(structDataPtr, type, n);
-    } else if (IsSignedIntType(type)) {
+        }
+        return true;
+    }
+
+    if (IsSignedIntType(type)) {
         int64_t n;
         ok = ParseInt(node->valStart, node->valEnd, &n);
-        if (ok)
+        if (ok) {
             ok = WriteStructInt(structDataPtr, type, n);
-    } else if (TYPE_STRUCT_PTR == type) {
+        }
+        return true;
+    }
+
+    if (TYPE_STRUCT_PTR == type) {
         uint8_t* d = DecodeStruct(ds, fieldDef, node, isCompact);
-        if (d)
+        if (d) {
             WriteStructPtrVal(structDataPtr, d);
-    } else if (TYPE_STR == type) {
+        }
+        return true;
+    }
+
+    if (TYPE_STR == type) {
         char* s = node->valStart;
         size_t sLen = node->valEnd - s;
         if (s && (sLen > 0)) {
@@ -423,7 +444,10 @@ static bool DecodeField(DecodeState& ds, TxtNode* firstNode, const char* fieldNa
             s = str::DupN(s, sLen);
             WriteStructStr(structDataPtr, s);
         }
-    } else if (TYPE_WSTR == type) {
+        return true;
+    }
+
+    if (TYPE_WSTR == type) {
         char* s = node->valStart;
         size_t sLen = node->valEnd - s;
         if (s && (sLen > 0)) {
@@ -431,29 +455,34 @@ static bool DecodeField(DecodeState& ds, TxtNode* firstNode, const char* fieldNa
             WCHAR* ws = str::conv::FromUtf8(s);
             WriteStructWStr(structDataPtr, ws);
         }
-    } else if (TYPE_FLOAT == type) {
+        return true;
+    }
+
+    if (TYPE_FLOAT == type) {
         float f;
         ok = ParseFloat(node->valStart, node->valEnd, &f);
         if (ok)
             WriteStructFloat(structDataPtr, f);
-    } else if (TYPE_ARRAY == type) {
+    }
+
+    if (TYPE_ARRAY == type) {
         if (!node->IsStruct()) {
             return false;
         }
         Vec<uint8_t*>* vec = new Vec<uint8_t*>();
         // we remember it right away, so that it gets freed in case of error
         WriteStructPtrVal(structDataPtr, (void*)vec);
-        for (TxtNode* child : node->children) {
+        for (TxtNode* child = node->firstChild; child != nullptr; child = child->sibling) {
             uint8_t* d = DecodeStruct(ds, fieldDef, child, isCompact);
             if (d) {
                 vec->Append(d);
             }
         }
-    } else {
-        CrashIf(true);
-        return false;
+        return true;
     }
-    return true;
+
+    CrashIf(true);
+    return false;
 }
 
 static uint8_t* DeserializeRec(DecodeState& ds, TxtNode* firstNode, const StructMetadata* def) {
