@@ -20,7 +20,8 @@ struct TxtNode {
     char* keyEnd;
 
     explicit TxtNode(TxtNode::Type tp) { type = tp; }
-    ~TxtNode() {}
+    TxtNode(const TxtNode& other) = delete;
+    TxtNode& operator=(const TxtNode& other) = delete;
 
     size_t KeyLen() const;
     size_t ValLen() const;
@@ -65,6 +66,9 @@ struct TxtParser {
     char escapeChar = SERIALIZE_ESCAPE_CHAR;
     bool failed = false;
     std::vector<TxtNode*> nodes;
+
+    TxtNode* AllocTxtNode(TxtNode::Type);
+    TxtNode* AllocTxtNodeFromToken(const Token&, TxtNode::Type);
 
     void SetToParse(const std::string_view&);
 };

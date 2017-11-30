@@ -28,16 +28,16 @@ a given line either as a simple string or key/value pair. It's
 up to the caller to interpret the data.
 */
 
-static TxtNode* AllocTxtNode(Allocator* allocator, TxtNode::Type nodeType) {
-    void* p = Allocator::Alloc<TxtNode>(allocator);
+TxtNode* TxtParser::AllocTxtNode(TxtNode::Type nodeType) {
+    void* p = Allocator::Alloc<TxtNode>(&allocator);
     TxtNode* node = new (p) TxtNode(nodeType);
     CrashIf(!node);
     return node;
 }
 
-static TxtNode* TxtNodeFromToken(Allocator* allocator, Token& tok, TxtNode::Type nodeType) {
+TxtNode* TxtParser::AllocTxtNodeFromToken(const Token& tok, TxtNode::Type nodeType) {
     AssertCrash((TxtNode::Type::Text == nodeType) || (TxtNode::Type::Struct == nodeType));
-    TxtNode* node = AllocTxtNode(allocator, nodeType);
+    TxtNode* node = AllocTxtNode(nodeType);
     node->lineStart = tok.lineStart;
     node->valStart = tok.valStart;
     node->valEnd = tok.valEnd;
@@ -261,11 +261,11 @@ static void ParseNodes(TxtParser& parser) {
         }
 
         if (Token::Type::String == tok.type || Token::Type::KeyVal == tok.type) {
-            currNode = TxtNodeFromToken(&parser.allocator, tok, TxtNode::Type::Text);
+            currNode = parser.AllocTxtNodeFromToken(tok, TxtNode::Type::Text);
         } else if (Token::Type::ArrayStart == tok.type) {
-            currNode = AllocTxtNode(&parser.allocator, TxtNode::Type::Array);
+            currNode = parser.AllocTxtNode(TxtNode::Type::Array);
         } else if (Token::Type::StructStart == tok.type) {
-            currNode = TxtNodeFromToken(&parser.allocator, tok, TxtNode::Type::Struct);
+            currNode = parser.AllocTxtNodeFromToken(tok, TxtNode::Type::Struct);
         } else {
             CrashIf(Token::Type::Close != tok.type);
             // if the only node left is the implict array node we created,
@@ -368,7 +368,7 @@ void TxtParser::SetToParse(const std::string_view& str) {
 
     // we create an implicit array node to hold the nodes we'll parse
     CrashIf(0 != nodes.size());
-    nodes.push_back(AllocTxtNode(&allocator, TxtNode::Type::Array));
+    nodes.push_back(AllocTxtNode(TxtNode::Type::Array));
 }
 
 bool ParseTxt(TxtParser& parser) {

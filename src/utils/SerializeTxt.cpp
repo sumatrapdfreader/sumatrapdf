@@ -319,19 +319,10 @@ static void WriteDefaultValue(uint8_t* structDataPtr, Type type) {
     }
 }
 
-static void FreeTxtNode(TxtNode* node) {
-    for (TxtNode* child : node->children) {
-        CrashIf(!child->IsText());
-        delete child;
-    }
-    delete node;
-}
-
 static TxtNode* StructNodeFromTextNode(DecodeState& ds, TxtNode* txtNode, const StructMetadata* structDef) {
-    UNUSED(ds);
     CrashIf(!txtNode->IsText());
     str::Slice slice(txtNode->valStart, txtNode->valEnd);
-    TxtNode* node = new TxtNode(TxtNode::Type::Struct);
+    TxtNode* node = ds.parser.AllocTxtNode(TxtNode::Type::Struct);
     uint16_t fieldNo = 0;
     char* fieldName = (char*)structDef->fieldNames;
     TxtNode* child;
@@ -339,7 +330,7 @@ static TxtNode* StructNodeFromTextNode(DecodeState& ds, TxtNode* txtNode, const 
         slice.SkipWsUntilNewline();
         if (slice.Finished())
             goto Error;
-        child = new TxtNode(TxtNode::Type::Text);
+        child = ds.parser.AllocTxtNode(TxtNode::Type::Text);
         child->valStart = slice.curr;
         slice.SkipNonWs();
         child->valEnd = slice.curr;
@@ -353,7 +344,6 @@ static TxtNode* StructNodeFromTextNode(DecodeState& ds, TxtNode* txtNode, const 
     }
     return node;
 Error:
-    FreeTxtNode(node);
     return nullptr;
 }
 
@@ -364,7 +354,6 @@ static uint8_t* DeserializeCompact(DecodeState& ds, TxtNode* node, const StructM
         return nullptr;
     }
     uint8_t* res = DeserializeRec(ds, structNode, structDef);
-    FreeTxtNode(structNode);
     return res;
 }
 
@@ -494,15 +483,17 @@ uint8_t* Deserialize(struct TxtNode* root, const StructMetadata* def) {
 }
 
 uint8_t* Deserialize(char* data, size_t dataSize, const StructMetadata* def) {
-    if (!data)
+    if (!data) {
         return nullptr;
+    }
 
     DecodeState ds;
     std::string_view str(data, dataSize);
     ds.parser.SetToParse(str);
     bool ok = ParseTxt(ds.parser);
-    if (!ok)
+    if (!ok) {
         return nullptr;
+    }
 
     return DeserializeRec(ds, ds.parser.nodes.at(0), def);
 }
