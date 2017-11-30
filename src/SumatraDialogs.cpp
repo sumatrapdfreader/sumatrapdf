@@ -927,7 +927,7 @@ static INT_PTR CALLBACK Dialog_AddFav_Proc(HWND hDlg, UINT msg, WPARAM wParam, L
         WORD cmd = LOWORD(wParam);
         if (IDOK == cmd) {
             AutoFreeW name(win::GetText(GetDlgItem(hDlg, IDC_FAV_NAME_EDIT)));
-            str::TrimWS(name);
+            str::TrimWS(name, str::TrimOpt::Both);
             if (!str::IsEmpty(name.Get()))
                 data->favName = name.StealData();
             else

@@ -384,7 +384,7 @@ bool ParseTxt(TxtParser& parser) {
 
 static void AppendNest(str::Str<char>& s, int nest) {
     while (nest > 0) {
-        s.Append("  ");
+        s.Append("    ");
         --nest;
     }
 }
@@ -399,7 +399,7 @@ static void PrettyPrintKeyVal(TxtNode* curr, int nest, str::Str<char>& res) {
     if (curr->keyStart) {
         AppendWsTrimEnd(res, curr->keyStart, curr->keyEnd);
         if (!curr->IsStruct()) {
-            res.Append(" + ");
+            res.Append(": ");
         }
     }
     AppendWsTrimEnd(res, curr->valStart, curr->valEnd);
@@ -416,7 +416,7 @@ static void PrettyPrintNode(TxtNode* curr, int nest, str::Str<char>& res) {
 
     if (curr->IsStruct()) {
         PrettyPrintKeyVal(curr, nest, res);
-        res.Append(" + [\n");
+        res.Append(" [\n");
     } else if (nest >= 0) {
         CrashIf(!curr->IsArray());
         AppendNest(res, nest);
@@ -430,11 +430,14 @@ static void PrettyPrintNode(TxtNode* curr, int nest, str::Str<char>& res) {
     if (nest >= 0) {
         AppendNest(res, nest);
         res.Append("]\n");
+        if (nest == 0) {
+            res.Append("\n");
+        }
     }
 }
 
-char* PrettyPrintTxt(const TxtParser& parser) {
+OwnedData PrettyPrintTxt(const TxtParser& parser) {
     str::Str<char> res;
     PrettyPrintNode(parser.nodes.at(0), -1, res);
-    return res.StealData();
+    return res.StealAsOwnedData();
 }

@@ -423,6 +423,33 @@ void TrimWsEnd(char* s, char*& e) {
     }
 }
 
+// Trim whitespace characters, in-place, inside s.
+// Returns number of trimmed characters.
+size_t TrimWS(char* s, TrimOpt opt) {
+    size_t sLen = str::Len(s);
+    char* ns = s;
+    char* e = s + sLen;
+    char* ne = e;
+    if ((TrimOpt::Left == opt) || (TrimOpt::Both == opt)) {
+        while (IsWs(*ns)) {
+            ++ns;
+        }
+    }
+
+    if ((TrimOpt::Right == opt) || (TrimOpt::Both == opt)) {
+        while (((ne - 1) >= ns) && IsWs(ne[-1])) {
+            --ne;
+        }
+    }
+    *ne = 0;
+    size_t trimmed = (ns - s) + (e - ne);
+    if (ns != s) {
+        size_t toCopy = sLen - trimmed + 1; // +1 for terminating 0
+        memmove(s, ns, toCopy);
+    }
+    return trimmed;
+}
+
 // the result needs to be free()d
 char* Replace(const char* s, const char* toReplace, const char* replaceWith) {
     if (!s || str::IsEmpty(toReplace) || !replaceWith)

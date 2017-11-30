@@ -254,13 +254,13 @@ size_t TrimWS(WCHAR* s, TrimOpt opt) {
     WCHAR* ns = s;
     WCHAR* e = s + sLen;
     WCHAR* ne = e;
-    if ((TrimLeft == opt) || (TrimBoth == opt)) {
+    if ((TrimOpt::Left == opt) || (TrimOpt::Both == opt)) {
         while (IsWs(*ns)) {
             ++ns;
         }
     }
 
-    if ((TrimRight == opt) || (TrimBoth == opt)) {
+    if ((TrimOpt::Right == opt) || (TrimOpt::Both == opt)) {
         while (((ne - 1) >= ns) && IsWs(ne[-1])) {
             --ne;
         }

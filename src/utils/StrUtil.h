@@ -8,7 +8,7 @@ bool isLegalUTF8String(const u8** source, const u8* sourceEnd);
 
 namespace str {
 
-enum TrimOpt { TrimLeft, TrimRight, TrimBoth };
+enum class TrimOpt { Left, Right, Both };
 
 size_t Len(const char* s);
 char* Dup(const char* s);
@@ -138,9 +138,10 @@ inline bool IsNonCharacter(WCHAR c) {
     return c >= 0xFFFE || (c & ~1) == 0xDFFE || (0xFDD0 <= c && c <= 0xFDEF);
 }
 
-size_t TrimWS(WCHAR* s, TrimOpt opt = TrimBoth);
+size_t TrimWS(WCHAR* s, TrimOpt opt);
 #endif
 
+size_t TrimWS(char* s, TrimOpt opt);
 void TrimWsEnd(char* s, char*& e);
 
 size_t TransChars(char* str, const char* oldChars, const char* newChars);

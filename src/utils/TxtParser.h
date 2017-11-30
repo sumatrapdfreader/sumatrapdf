@@ -80,4 +80,4 @@ struct TxtParser {
 };
 
 bool ParseTxt(TxtParser& parser);
-char* PrettyPrintTxt(const TxtParser& parser);
+OwnedData PrettyPrintTxt(const TxtParser& parser);

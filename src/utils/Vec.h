@@ -348,6 +348,13 @@ class Str : public Vec<T> {
         }
         return at(n - 1);
     }
+
+    // only available for T = char
+    OwnedData StealAsOwnedData() {
+        char* s = this->StealData();
+        size_t size = this->size();
+        return OwnedData(s, size);
+    }
 };
 
 } // namespace str

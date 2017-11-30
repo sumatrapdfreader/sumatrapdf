@@ -123,27 +123,42 @@ void testTxtParser() {
     parser.SetToParse(ebookStr);
     bool ok = ParseTxt(parser);
     utassert(ok);
+
+    {
+        OwnedData res = PrettyPrintTxt(parser);
+        char* s = res.data;
+        str::NormalizeNewlinesInPlace(s);
+        str::TrimWS(s, str::TrimOpt::Both);
+        OwnedData orig(str::Dup(ebookWinDesc), str::Len(ebookWinDesc));
+
+        char* s2 = orig.data;
+        str::NormalizeNewlinesInPlace(s2);
+        str::TrimWS(s2, str::TrimOpt::Both);
+
+        ok = str::Eq(s, s2);
+        utassert(ok);
+    }
 }
 
 void testByteWriter() {
-  char buf[32];
-  ByteWriter w = MakeByteWriterLE(buf, dimof(buf));
-  utassert(w.Left() == 32);
-  w.Write16(3);
-  utassert(w.Left() == 30);
-  utassert(buf[0] == 3);
-  w.Write8(3);
-  utassert(w.Left() == 29);
+    char buf[32];
+    ByteWriter w = MakeByteWriterLE(buf, dimof(buf));
+    utassert(w.Left() == 32);
+    w.Write16(3);
+    utassert(w.Left() == 30);
+    utassert(buf[0] == 3);
+    w.Write8(3);
+    utassert(w.Left() == 29);
 
-  w = MakeByteWriterBE(buf, dimof(buf));
-  utassert(w.Left() == 32);
-  w.Write16(3);
-  utassert(w.Left() == 30);
-  utassert(buf[0] == 0);
+    w = MakeByteWriterBE(buf, dimof(buf));
+    utassert(w.Left() == 32);
+    w.Write16(3);
+    utassert(w.Left() == 30);
+    utassert(buf[0] == 0);
 }
 
-int main(int , char**) {
-  testByteWriter();
-  testTxtParser();
-  utassert_print_results();
+int main(int, char**) {
+    testByteWriter();
+    testTxtParser();
+    utassert_print_results();
 }
