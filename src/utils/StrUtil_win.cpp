@@ -160,7 +160,7 @@ WCHAR* ToLowerInPlace(WCHAR* s) {
 
 /* Caller needs to free() the result */
 char* ToMultiByte(const WCHAR* txt, UINT codePage, int cchTxtLen) {
-    AssertCrash(txt);
+    CrashIf(!txt);
     if (!txt)
         return nullptr;
 
@@ -619,10 +619,9 @@ namespace conv {
 // As an optimization, can return src if the string already is
 // valid utf8. Otherwise returns a copy of the string and the
 // caller has to free() it
-MaybeOwnedData UnknownToUtf8(const char* s, size_t len) {
-    if (0 == len) {
-        len = str::Len(s);
-    }
+MaybeOwnedData UnknownToUtf8(const std::string_view& txt) {
+    size_t len = txt.size();
+    const char *s = txt.data();
 
     if (len < 3) {
         return MaybeOwnedData((char*)s, len, false);
@@ -644,7 +643,7 @@ MaybeOwnedData UnknownToUtf8(const char* s, size_t len) {
     // if s is valid utf8, leave it alone
     const u8* tmp = (const u8*)s;
     if (isLegalUTF8String(&tmp, tmp + len)) {
-        return MaybeOwnedData((char*)s, 0, true);
+        return MaybeOwnedData((char*)s, len, false);
     }
 
     AutoFreeW uni(str::conv::FromAnsi(s, len));

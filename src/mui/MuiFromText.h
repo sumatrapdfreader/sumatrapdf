@@ -10,7 +10,7 @@ class ParsedMui {
     std::vector<ILayout*> layouts;
 };
 
-bool MuiFromText(const char* s, ParsedMui& res);
+bool MuiFromText(ParsedMui& res, const std::string_view& s);
 Button* FindButtonNamed(const ParsedMui& muiInfo, const char* name);
 ButtonVector* FindButtonVectorNamed(const ParsedMui& muiInfo, const char* name);
 ScrollBar* FindScrollBarNamed(const ParsedMui& muiInfo, const char* name);

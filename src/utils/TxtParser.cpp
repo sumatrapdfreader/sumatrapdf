@@ -358,11 +358,11 @@ char* TxtNode::ValDup() const {
 }
 
 // we will modify s in-place
-void TxtParser::SetToParse(const char* s, size_t sLen) {
-    MaybeOwnedData tmp = str::conv::UnknownToUtf8(s, sLen);
-    sLen = tmp.size;
-    char *d = tmp.data;
-    data.TakeOwnership(tmp.StealData(), tmp.size);
+void TxtParser::SetToParse(const std::string_view& str) {
+    auto tmp = str::conv::UnknownToUtf8(str);
+    data = tmp.StealData();
+    char *d = data.data;
+    size_t sLen = data.size;
     size_t n = str::NormalizeNewlinesInPlace(d, d + sLen);
     toParse.Set(d, n);
 

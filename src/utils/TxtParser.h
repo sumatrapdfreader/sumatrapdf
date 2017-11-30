@@ -66,7 +66,7 @@ struct TxtParser {
     bool failed = false;
     std::vector<TxtNode*> nodes;
 
-    void SetToParse(const char* s, size_t sLen);
+    void SetToParse(const std::string_view&);
 };
 
 bool ParseTxt(TxtParser& parser);

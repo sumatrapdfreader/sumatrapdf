@@ -498,7 +498,8 @@ uint8_t* Deserialize(char* data, size_t dataSize, const StructMetadata* def) {
         return nullptr;
 
     DecodeState ds;
-    ds.parser.SetToParse(data, dataSize);
+    std::string_view str(data, dataSize);
+    ds.parser.SetToParse(str);
     bool ok = ParseTxt(ds.parser);
     if (!ok)
         return nullptr;

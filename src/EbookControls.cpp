@@ -307,7 +307,9 @@ EbookControls* CreateEbookControls(HWND hwnd, FrameRateWnd* frameRateWnd) {
     }
 
     ParsedMui* muiDef = new ParsedMui();
-    MuiFromText(ebookWinDesc, *muiDef);
+    // TODO: figure out how to calculate str::Len(ebookWinDesc) at compile time
+    std::string_view ebookStr(ebookWinDesc);
+    MuiFromText(*muiDef, ebookStr);
 
     EbookControls* ctrls = new EbookControls;
     ctrls->muiDef = muiDef;

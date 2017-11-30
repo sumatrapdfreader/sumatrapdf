@@ -542,7 +542,7 @@ class MaybeOwnedData {
 
     void Set(char* s, size_t len, bool isOwned);
     void freeIfOwned();
-    char* StealData();
+    OwnedData StealData();
 };
 
 #include "GeomUtil.h"

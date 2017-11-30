@@ -241,15 +241,16 @@ void MaybeOwnedData::freeIfOwned() {
     }
 }
 
-char* MaybeOwnedData::StealData() {
+OwnedData MaybeOwnedData::StealData() {
     char *res = data;
-    if (isOwned) {
-        res = str::Dup(data);
+    size_t resSize = size;
+    if (!isOwned) {
+        res = str::DupN(data, size);
     }
     data = nullptr;
     size = 0;
     isOwned = false;
-    return res;
+    return OwnedData(res, resSize);
 }
 
 #if !OS_WIN
