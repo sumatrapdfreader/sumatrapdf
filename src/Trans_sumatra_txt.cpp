@@ -298,7 +298,7 @@ const char * gTranslations_sq =
   "&Hap...\tCtrl+O\0"\
   "&Opsionet...\0"\
   "&Fjal\303\253kalimi:\0"\
-  "&Ngul dokumentin\0"\
+  "&Fiksoj dokumentin\0"\
   "&Faqja e m\303\253parshme\tLeft Arrow\0"\
   "&Printoj...\0"\
   "&Printoj...\tCtrl+P\0"\
@@ -312,10 +312,10 @@ const char * gTranslations_sq =
   "&Ngjesh faqet n\303\253 hap\303\253sir\303\253n e printuar (sipas nevoj\303\253s)\0"\
   "&Nj\303\253flet\303\253sh\tCtrl+6\0"\
   "&Shmang k\303\253t\303\253 versionin\0"\
-  "\0"\
+  "&Motivi\0"\
   "&P\303\253rdor p\303\253rmasat origjinale t\303\253 flet\303\253s\0"\
   "&Pamje\0"\
-  "\0"\
+  "&Dritare\0"\
   "&Po\0"\
   "&Shkalla\0"\
   "(nga %d)\0"\
@@ -326,25 +326,25 @@ const char * gTranslations_sq =
   "Mbani sh\303\253nim faqen %s n\303\253n emrin (fakultativ):\0"\
   "Sh\303\253noj te p\303\253lqimet\0"\
   "Avancuar\0"\
-  "T\303\253 gjitha skedat\0"\
+  "T\303\253 gjith\303\253 skedar\303\253t\0"\
   "Dokumente t\303\253 garantuara\0"\
   "Aplikacioni:\0"\
-  "Do e shoq\303\253roni me skedat PDF?\0"\
+  "Do e shoq\303\253roni me skedar\303\253t PDF?\0"\
   "Shtojca: %s\0"\
   "Autori:\0"\
   "Automatik\0"\
   "Verifikoj automatikisht &azhurnimet\0"\
   "Lib\303\253r\0"\
-  "Faqet e &shenjuara\tF12\0"\
+  "Faqet me &shenj\303\253\tF12\0"\
   "Shkurtoret e shenjimit\0"\
   "Shkurtorja e shenjimit p\303\253r faqet %s nga %s\0"\
-  "Faqet e shenjuara\0"\
+  "Faqet me shenj\303\253\0"\
   "bajt\0"\
   "Dokumente CHM\0"\
   "Nuk mund t\303\253 lidhet n\303\253 internet (gabim %#x).\0"\
   "Anuloj\0"\
-  "Nuk mund t\303\253 printoj\303\253 sked\303\253n\0"\
-  "Nuk mund t\303\253 k\303\253rkoj\303\253 mbrapsht. Ju lutemi, verifikoni komand\303\253n te parametrat.\0"\
+  "Nuk printohet skedari\0"\
+  "Nuk mund t\303\253 k\303\253rkoni mbrapsht. Ju lutemi, verifikoni komand\303\253n te parametrat.\0"\
   "Ndryshoj gjuh\303\253n (Change Language)\0"\
   "&Azhurnoj\0"\
   "\0"\
@@ -362,15 +362,15 @@ const char * gTranslations_sq =
   "Nuk mund t\303\253 v\303\253 n\303\253 pun\303\253 printerin\0"\
   "Nuk mund t\303\253 radhit\303\253 faqen\0"\
   "Krijuar m\303\253:\0"\
-  "Skeda aktuale\0"\
-  "\0"\
+  "Skedari aktual\0"\
+  "Pozicioni i kursorit:\0"\
   "&Shkalla e caktuar...\tCtrl+Y\0"\
-  "\0"\
-  "\0"\
+  "I err\303\253t\0"\
+  "M\303\253 i err\303\253t\0"\
   "&Faqosja standarde:\0"\
   "&Shkalla standarde:\0"\
-  "Lexuesi standard i PDF-ve nuk mund t\303\253 ndryshoj\303\253 n\303\253 m\303\253nyr\303\253n portab\303\253l\0"\
-  "Nuk lejohet:\0"\
+  "Lexuesi standard i PDF-ve nuk ndryshohet n\303\253 m\303\253nyr\303\253n portab\303\253l\0"\
+  "Nuk lejohen:\0"\
   "Dokumente DjVu\0"\
   "Vetit\303\253 e dokumentit\0"\
   "Shkarkoj\0"\
@@ -384,14 +384,14 @@ const char * gTranslations_sq =
   "P&\303\253rpara\tAlt+Right Arrow\0"\
   "Ekran i p&lot\303\253\tCtrl+Shift+L\0"\
   "P\303\253rbri\0"\
-  "D\303\253shtoi riem\303\253rtimi i sked\303\253s!\0"\
-  "D\303\253shtoi ruajtja e sked\303\253s\0"\
+  "Problem me riem\303\253rtimin e skedarit!\0"\
+  "Problem me ruajtjen e skedarit\0"\
   "Hapet shpejt n\303\253 internet\0"\
   "P\303\253lqej\0"\
   "Dokumente FictionBook\0"\
-  "Nuk gjen sked\303\253n %s\0"\
-  "Masa e sked\303\253s:\0"\
-  "Skeda:\0"\
+  "Nuk gjendet skedari %s\0"\
+  "Madh\303\253sia e skedarit:\0"\
+  "Skedari:\0"\
   "G&jej...\tCtrl+F\0"\
   "Gjej\0"\
   "Gjej p\303\253rpara\0"\
@@ -416,9 +416,9 @@ const char * gTranslations_sq =
   "K\303\253shill\303\253: P\303\253rdorni tastin F3 p\303\253r gjetjen e radh\303\253s\0"\
   "Figura (*.%s)\0"\
   "\0"\
+  "I \303\247el\303\253t\0"\
   "\0"\
-  "\0"\
-  "SumatraPDF t\303\253 jet\303\253 aplikacioni standard p\303\253r skedat PDF?\0"\
+  "A t\303\253 jet\303\253 SumatraPDF aplikacioni standard p\303\253r skedar\303\253t PDF?\0"\
   "SumatraPDF t\303\253 jet\303\253 lexuesi standard i PDF-ve\0"\
   "M\303\253nyra Man&ga\0"\
   "Krahasoj madh\303\253sin\303\253 e shkrimit\0"\
@@ -427,8 +427,8 @@ const char * gTranslations_sq =
   "Ka dal\303\253 versioni i ri %s. Do e shkarkoni?\0"\
   "Faqja tjet\303\253r\0"\
   "Nuk ka ngjashm\303\253ri\0"\
-  "Pa rezultat n\303\253 radh\303\253n %u te skeda %s\0"\
-  "Nuk gjen sked\303\253n e sinkronizimit\0"\
+  "Pa rezultat n\303\253 radh\303\253n %u te skedari %s\0"\
+  "Nuk gjendet skedari i sinkronizimit\0"\
   "Nuk ka info p\303\253r sinkronizimin n\303\253 k\303\253t\303\253 pozicion\0"\
   "Numri i faqeve:\0"\
   "\0"\
@@ -453,7 +453,7 @@ const char * gTranslations_sq =
   "Nuk ekziston numri i faqes %u\0"\
   "Shkalla e flet\303\253s\0"\
   "Faqja:\0"\
-  "\0"\
+  "Dokumente PalmDoc\0"\
   "Ju lutemi, prisni - radhitet...\0"\
   "Dokumente Postscript\0"\
   "Pr&ezantim\tCtrl+L\0"\
@@ -467,7 +467,7 @@ const char * gTranslations_sq =
   "Printon faqen %d nga %d...\0"\
   "Problem n\303\253 printim.\0"\
   "Rie&m\303\253rtoj...\tF2\0"\
-  "Mbaj mend skedat e &hapura\0"\
+  "Mbaj mend skedar\303\253t e &hapur\0"\
   "Heq nga p\303\253lqimet\0"\
   "Heq faqen %s nga p\303\253lqimet\0"\
   "Riem\303\253rtoj si\0"\
@@ -479,31 +479,31 @@ const char * gTranslations_sq =
   "Seleksionoj t\303\253 &gjith\303\253\0"\
   "Seleksionoj t\303\253 &gjith\303\253\tCtrl+A\0"\
   "Seleksiononi materialin me Ctrl+butonin e majt\303\253 t\303\253 mausit\0"\
-  "\0"\
+  "P\303\253rzgjedhja:\0"\
   "D\303\253rgoj me &e-mail...\0"\
   "Jepni komand\303\253n e k\303\253rkimit mbrapsht\0"\
-  "Tregoj &faqet e shenjuara\0"\
+  "Tregoj &faqet me shenj\303\253\0"\
   "Tregoj &faqet n\303\253 vazhdim\303\253si\0"\
   "Tregoj &brezin e mjeteve\0"\
   "Tregoj p\303\253lqimet\0"\
   "Tregoj leximet e shpeshta\0"\
-  "Tregoj &faqet e shenjuara kur jan\303\253 t\303\253 gatshme\0"\
+  "Tregoj &faqet me shenj\303\253 kur jan\303\253 t\303\253 gatshme\0"\
   "Nj\303\253flet\303\253sh\0"\
-  "Na falni, kjo nuk duhej t\303\253 ndodhte!\n\nJu lutemi, shtypni 'Anuloj' po desh\303\253t t\303\253 na ndihmoni q\303\253 ta ndreqim gabimin.\0"\
-  "Skeda burimore %s nuk ka pik\303\253 sinkronizimi\0"\
+  "Na falni, kjo nuk duhej t\303\253 ndodhte!\n\nJu lutemi, shtypni 'Anuloj' q\303\253 t\303\253 na ndihmoni p\303\253r ta ndrequr gabimin.\0"\
+  "Skedarit burimor %s i mungon pika e sinkronizimit\0"\
   "Tema:\0"\
   "SumatraPDF opsionet\0"\
   "SumatraPDF azhurnimi\0"\
   "SumatraPDF ngeci\0"\
   "SumatraPDF \303\253sht\303\253 lexuesi standard i PDF-ve\0"\
   "SumatraPDF tani do t\303\253 jet\303\253 lexuesi standard i PDF-ve\0"\
-  "Nuk hapet skeda e sinkronizimit\0"\
+  "Nuk hapet skedari i sinkronizimit\0"\
   "PDF me etiketa\0"\
   "Dokumente tekst\0"\
-  "\0"\
+  "Ky dokument p\303\253rdor ve\303\247ori q\303\253 nuk garantohen (%s) dhe mund t\303\253 aplikohen pjes\303\253risht\0"\
   "Titulli:\0"\
-  "Sked\303\253 burimore e panjohur (%s)\0"\
-  "\0"\
+  "Skedar burimor i panjohur (%s)\0"\
+  "P\303\253rdor &skedat\0"\
   "Pamje\0"\
   "SumatraPDF n\303\253 &internet\0"\
   "Kujdes\0"\

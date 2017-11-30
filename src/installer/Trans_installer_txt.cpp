@@ -73,24 +73,24 @@ const char * gTranslations_sq =
   "Nuk mund t\303\253 \303\247instaloj\303\253 parashikuesin e PDF-ve\0"\
   "Nuk mund t\303\253 \303\247instaloj\303\253 k\303\253rkuesin e PDF-ve\0"\
   "Nuk mund t\303\253 \303\247instaloj\303\253 spin\303\253n p\303\253r shfletuesin\0"\
-  "Nuk mund t\303\253 shkruaj\303\253 %s n\303\253 disk\0"\
-  "D\303\253shtoi kopjimi i \303\247instaluesit te direktoria e p\303\253rkohshme\0"\
-  "D\303\253shtoi krijimi i shkurtores\0"\
-  "D\303\253shtoi fshirja e \303\247instaluesit nga regjistri\0"\
-  "\0"\
-  "D\303\253shtoi shkrimi n\303\253 regjist\303\253r i informacionit t\303\253 zgjeruar p\303\253r sked\303\253n.\0"\
-  "D\303\253shtoi shkrimi n\303\253 regjist\303\253r i informacionit p\303\253r \303\247instalimin\0"\
+  "%s nuk shkruhet n\303\253 disk\0"\
+  "Problem me kopjimin e \303\247instaluesit te direktoria e p\303\253rkohshme\0"\
+  "Problem me krijimin e shkurtores\0"\
+  "Problem me fshirjen e \303\247instaluesit nga regjistri\0"\
+  "Problem me regjistrimin si program standard n\303\253 win 10\0"\
+  "Problem me shkrimin n\303\253 regjist\303\253r t\303\253 informacionit t\303\253 zgjeruar p\303\253r skedarin.\0"\
+  "Problem me shkrimin n\303\253 regjist\303\253r t\303\253 informacionit p\303\253r \303\247instalimin\0"\
   "Fsheh &opsionet\0"\
   "Instaloj SumatraPDF\0"\
   "Instaloj SumatraPDF n\303\253 &dosje:\0"\
-  "D\303\253shtoi instalimi!\0"\
+  "Problem me instalimin!\0"\
   "Instalimi vijon...\0"\
-  "\0"\
+  "Mbaj t\303\253 instaluar spin\303\253n PDF p\303\253r &shfletuesit (nuk garantohet)\0"\
   "Lejoj Windows Desktop Search t\303\253 &k\303\253rkoj\303\253 dokumentet PDF\0"\
   "Lejoj Windows Desktop Search t\303\253 &parashikoj\303\253 dokumentet PDF\0"\
   "Ju lutemi, mbyllni %s p\303\253r t\303\253 vazhduar!\0"\
   "Seleksiononi dosjen ku do t\303\253 instalohet SumatraPDF:\0"\
-  "Jan\303\253 d\303\253mtuar ose mungojn\303\253 disa skeda q\303\253 do t\303\253 instalohen.\0"\
+  "Jan\303\253 d\303\253mtuar ose mungojn\303\253 disa skedar\303\253 q\303\253 do t\303\253 instalohen\0"\
   "Nis SumatraPDF\0"\
   "Instaluesi i SumatraPDF %s\0"\
   "\303\207instaluesi i SumatraPDF %s\0"\

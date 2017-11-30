@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-b09c9d4b26750e701b8b802906bb5f716b469d7b
+8bb322aeca64c29bce6847465f125eb8412ab4a2
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -2100,7 +2100,7 @@ ru:&Запомнить документ
 sk:&Pripnúť dokument
 sl:&Pritrdi dokument
 sp-rs:Prikači dokument
-sq:&Ngul dokumentin
+sq:&Fiksoj dokumentin
 sr-rs:Прикачи документ
 sv:&Fäst dokument
 ta:கோப்பை குத்திவை
@@ -2943,6 +2943,7 @@ pl:&Motyw
 pt:&Tema
 ru:&Тема
 sp-rs:Tema
+sq:&Motivi
 sr-rs:Тема
 sv:&Tema
 tr:&Tema
@@ -3121,6 +3122,7 @@ ru:&Окно
 sk:&Okno
 sl:&Okno
 sp-rs:P&rozor
+sq:&Dritare
 sr-rs:П&розор
 sv:Fönster
 ta:விண்டாஸ் 
@@ -3824,7 +3826,7 @@ sk:Všetky súbory
 sl:Vse datoteke
 sn:Magwaro ose
 sp-rs:Sve datoteke
-sq:Të gjitha skedat
+sq:Të gjithë skedarët
 sr-rs:Све датотеке
 sv:Alla filer
 ta:எல்லா கோப்புகள்
@@ -4080,7 +4082,7 @@ sk:Asociovať s PDF súbormi?
 sl:Povežem s PDF datotekami?
 sn:Ita zvifambidzane nemagwaro ePDF
 sp-rs:Pridružiti PDF datotekama?
-sq:Do e shoqëroni me skedat PDF?
+sq:Do e shoqëroni me skedarët PDF?
 sr-rs:Придружити PDF датотекама?
 sv:Koppla ihop med PDF-filer?
 ta:PDF கோப்புகளுடன் இணை
@@ -4476,7 +4478,7 @@ sk:Záložky\tF12
 sl:Zazna&mki\tF12
 sn:Mabhukumaki\tF12
 sp-rs:Obeleživači\tF12
-sq:Faqet e &shenjuara\tF12
+sq:Faqet me &shenjë\tF12
 sr-rs:Обележивачи\tF12
 sv:Bokmärken\tF12
 ta:புத்தகக்குறி
@@ -4659,7 +4661,7 @@ si:පිටු සලකුණු
 sk:Záložky
 sl:Zaznamki
 sp-rs:Obeleživači
-sq:Faqet e shenjuara
+sq:Faqet me shenjë
 sr-rs:Обележивачи
 sv:Bokmärken
 ta:புத்தகக்குறி
@@ -4980,7 +4982,7 @@ si:මෙම ගොනුව මුද්‍රණය කළ නොහැක
 sk:Tlač súboru zlyhala
 sl:Te datoteke ni mogoče natisniti
 sp-rs:Štampanje ove datoteke nije moguće
-sq:Nuk mund të printojë skedën
+sq:Nuk printohet skedari
 sr-rs:Штампање ове датотеке није могуће
 sv:Kan ej skriva ut denna fil
 ta:கோப்பை அச்சிட முடியவில்லை
@@ -5043,7 +5045,7 @@ si:ප්‍රතිලෝම සෙවුමේ විධානය ආරම�
 sk:Príkaz inverzné hľadanie zlyhal. Skontrolujte príkazový riadok v nastaveniach.
 sl:Ukaza za obratno iskanje ni mogoče zagnati. Preverite ukazno vrstico v nastavitvah.
 sp-rs:Nije moguće pokrenuti inverznu pretragu. Proverite komandnu liniju u podešavanjima.
-sq:Nuk mund të kërkojë mbrapsht. Ju lutemi, verifikoni komandën te parametrat.
+sq:Nuk mund të kërkoni mbrapsht. Ju lutemi, verifikoni komandën te parametrat.
 sr-rs:Није могуће покренути инверзну претрагу. Проверите командну линију у подешавањима.
 sv:Kan ej starta omvänd sökning. Kontrollera inställningarna för kommandoraden.
 ta:தலைகீழ் தேடல் கட்டளை தொடங்க முடியாது. அமைப்புகளில் கட்டளை வரி சரிபார்க்கவும்
@@ -6745,7 +6747,7 @@ ru:Не удалось записать %s на диск
 sk:Nie je možné zapísať %s na disk
 sl:Ni bilo mogoče napisati %s na disk
 sp-rs:Nemoguć upis %s na disk
-sq:Nuk mund të shkruajë %s në disk
+sq:%s nuk shkruhet në disk
 sr-rs:Немогућ упис %s на диск
 sv:Kunde inte spara %s på hårddisken
 ta:%s ஐ எழுத  இயலவில்லை
@@ -6872,7 +6874,7 @@ si:‌මෙම ‌ගොනුව
 sk:Aktuálny súbor
 sl:Trenutna datoteka
 sp-rs:Tekuća datoteka
-sq:Skeda aktuale
+sq:Skedari aktual
 sr-rs:Текућа датотека
 sv:Aktuell fil
 ta:நடப்பு கோப்பு
@@ -6929,6 +6931,7 @@ ru:Позиция курсора:
 sk:Pozícia kurzora:
 sl:Položaj kurzorja:
 sp-rs:Pozicija kursora
+sq:Pozicioni i kursorit:
 sr-rs:Позиција курсора
 sv:Muspekarens position:
 tr:İmleç konumu:
@@ -7024,6 +7027,7 @@ pl:Ciemny
 pt:Escuro
 ru:Темная
 sp-rs:Tamno
+sq:I errët
 sr-rs:Тамно
 sv:Mörk
 tr:Karanlık
@@ -7056,6 +7060,7 @@ pl:Ciemniejszy
 pt:Mais escuro
 ru:Более темная
 sp-rs:Tamnije
+sq:Më i errët
 sr-rs:Тамније
 sv:Mörkare
 tr:Daha karanlık
@@ -7243,7 +7248,7 @@ si:portable ආකාරයෙදී ප්‍රධාන PDF කියවන�
 sk:Predvolený prehliadač PDF dokumentov nemôže byť zmenený, pokiaľ nie je nainštalovaný
 sl:Glavnega bralnika PDF ni mogoče spremeniti v prenosnem načinu
 sp-rs:Podrazumevani PDF čitač ne može biti promenjen u prenosivnom režimu
-sq:Lexuesi standard i PDF-ve nuk mund të ndryshojë në mënyrën portabël
+sq:Lexuesi standard i PDF-ve nuk ndryshohet në mënyrën portabël
 sr-rs:Подразумевани PDF читач не може бити промењен у преносивном режиму
 sv:SumatraPDF kan ej göras förvald i portabelt läge
 ta:முதன்மை PDF படிப்பியை மாற்ற முடியவில்லை
@@ -7305,7 +7310,7 @@ si:අවසර නොලැබිනි:
 sk:Odmietnuté povolenia:
 sl:Zavrnjena dovoljenja:
 sp-rs:Nije dopušteno:
-sq:Nuk lejohet:
+sq:Nuk lejohen:
 sr-rs:Није допуштено:
 sv:Saknade Tillstånd:
 ta:அனுமதி மருக்கப்பட்டது
@@ -8189,7 +8194,7 @@ ru:Не удалось скопировать деинсталлятор во в
 sk:Kopírovanie odinštalátora do dočasného adresára bolo neúspešné
 sl:Kopiranje odstranjevalnega programa v začasno mapo ni uspelo
 sp-rs:Neuspelo kopiranje deinstalera u privremeni direktorijum
-sq:Dështoi kopjimi i çinstaluesit te direktoria e përkohshme
+sq:Problem me kopjimin e çinstaluesit te direktoria e përkohshme
 sr-rs:Неуспело копирање деинсталера у привремени директоријум
 sv:Misslyckades med att kopiera avinstalleraren till temp-katalogen
 ta:நிறுவி நீக்கலை தற்காலிக கோப்புறையில் இருந்து நகலெடுத்தல் தோல்வி
@@ -8246,7 +8251,7 @@ ru:Не удалось создать ярлык
 sk:Vytvorenie odkazu bolo neúspešné
 sl:Ustvarjanje bližnjice ni uspelo
 sp-rs:Neuspelo kreiranje skraćenice
-sq:Dështoi krijimi i shkurtores
+sq:Problem me krijimin e shkurtores
 sr-rs:Неуспело креирање скраћенице!
 sv:Misslyckades med att skapa genväg
 ta:சுருக்கு வழி அமைதல் தோல்வி
@@ -8301,7 +8306,7 @@ ru:Не удалось удалить ключи регистра для деи�
 sk:Vymazanie odinštalačných kľúčov v registroch bolo neúspešné
 sl:Brisanje registrskih ključev odstranjevalnega programa ni uspelo
 sp-rs:Neuspelo brisanje registri ključeva deinstalera
-sq:Dështoi fshirja e çinstaluesit nga regjistri
+sq:Problem me fshirjen e çinstaluesit nga regjistri
 sr-rs:Неуспело брисање кључева из регистри базе
 sv:Misslyckades med att ta bort registernycklar
 ta:நிறுவி நீக்கியின் பதிவை அழிக்க முடியவில்லை
@@ -8346,6 +8351,7 @@ ru:Не удалось зарегистрировать как программ�
 sk:Nastavenie predvoleného programu pod Windows 10 zlyhalo.
 sl:Napaka pri registraciji kot win 10 privzeti program
 sp-rs:Neuspelo postavljanje kao podrazumevani program na win 10
+sq:Problem me regjistrimin si program standard në win 10
 sr-rs:Неуспело постављање као подразумевани програм на wин 10
 sv:Misslyckades med registrering som standardprogram på Win 10.
 tr:\nWin 10'da varsayılan program olarak kayıt edilemedi
@@ -8401,7 +8407,7 @@ ru:Ошибка переименования файла!
 sk:Premenovanie súboru bolo neúspešné!
 sl:Preimenovanje datoteke ni uspelo!
 sp-rs:Nemoguće je preimenovati datoteku!
-sq:Dështoi riemërtimi i skedës!
+sq:Problem me riemërtimin e skedarit!
 sr-rs:Немогуће је преименовати датотеку!
 sv:Kunde inte döpa om filen!
 ta:கோப்புக்கு மறுபெயரிட முடியவில்லை!
@@ -8468,7 +8474,7 @@ sk:Uloženie súboru bolo neúspešné
 sl:Shranjevanje datoteke ni uspelo
 sn:Tatadza kuseva faira
 sp-rs:Čuvanje datoteke nije uspelo
-sq:Dështoi ruajtja e skedës
+sq:Problem me ruajtjen e skedarit
 sr-rs:Чување датотеке није успело
 sv:Kan inte spara filen.
 ta:கோப்பு சேமிப்பு தோற்பு
@@ -8525,7 +8531,7 @@ ru:Не удалось записать полную информацию о р�
 sk:Zápis rozšírených informácií o prípone súboru do registrov bolo neúspešné
 sl:Pisanje v register informacij o razširjenem podaljšku datoteke ni uspelo
 sp-rs:Neuspeli upis proširene ekstenzije fajla u registri
-sq:Dështoi shkrimi në regjistër i informacionit të zgjeruar për skedën.
+sq:Problem me shkrimin në regjistër të informacionit të zgjeruar për skedarin.
 sr-rs:Неуспео упис проширене екстензије фајла у регистри базу
 sv:Misslyckades med att spara registernycklar för den utökade filhanteringen
 ta:பதிவு செய்ய விரிவாக்கப்பட்ட கோப்பு நீட்டிப்பு தகவலை எழுத முடியவில்லை
@@ -8580,7 +8586,7 @@ ru:Не удалось записать информацию для деинст
 sk:Uloženie informácií pre odinštalovanie do registrov bolo neúspešné
 sl:Pisanje v register informacij o odstranitvi ni uspelo
 sp-rs:Neuspeli upis instalacionih informacija u registri
-sq:Dështoi shkrimi në regjistër i informacionit për çinstalimin
+sq:Problem me shkrimin në regjistër të informacionit për çinstalimin
 sr-rs:Неуспео упис информација о деинсталацији у регистри базу
 sv:Misslyckades med att spara data för avinstallation i registret
 ta:நிறுவி நீக்கும் தகவலை பதிவில் எழுத முடியவில்லை
@@ -8812,7 +8818,7 @@ ru:Файл %s не найден
 sk:Súbor %s nenájdený
 sl:Datoteka %s ni bila najdena
 sp-rs:Datoteka %s nije pronađena
-sq:Nuk gjen skedën %s
+sq:Nuk gjendet skedari %s
 sr-rs:Датотека %s није пронађена
 sv:Fil %s hittades inte
 ta:%s கோப்பு கிடைக்கவில்லை
@@ -8874,7 +8880,7 @@ si:ගොනුවේ විශාලත්වය:
 sk:Veľkosť súboru:
 sl:Velikost datoteke:
 sp-rs:Veličina:
-sq:Masa e skedës:
+sq:Madhësia e skedarit:
 sr-rs:Величина:
 sv:Filstorlek:
 ta:கோப்பின் அளவு:
@@ -8938,7 +8944,7 @@ sk:Súbor:
 sl:Datoteka:
 sn:Gwaro
 sp-rs:Datoteka:
-sq:Skeda:
+sq:Skedari:
 sr-rs:Датотека:
 sv:Fil:
 ta:கோப்பு
@@ -10628,7 +10634,7 @@ ru:Установка не удалась!
 sk:Inštalácia sa nepodarila!
 sl:Namestitev ni uspela!
 sp-rs:Instalacija neuspešna!
-sq:Dështoi instalimi!
+sq:Problem me instalimin!
 sr-rs:Инсталација неуспела!
 sv:Installationen misslyckades!
 ta:நிறுவல் தோல்வி!
@@ -10806,6 +10812,7 @@ ru:Сохранить установленный PDF плагин для бра�
 sk:Ponechať PDF plugin prehliadača nainštalovaný (už nie je podporovaný)
 sl:Obdržati PDF vtičnik &brskalnika nameščen (ni več podprt)
 sp-rs:Zadrži PDF plugin pretraživača instalisan (nije podržano)
+sq:Mbaj të instaluar spinën PDF për &shfletuesit (nuk garantohet)
 sr-rs:Задржи ПДФ плугин инсталисан (није подржано)
 sv:Behåll webbläsarens insticksprogram för PDF (stöds inte längre)
 tr:PDF ve tarayıcı eklentisini kurulu oalrak bırakınız (artık desteklenmiyor)
@@ -10949,6 +10956,7 @@ pl:Jasny
 pt:Claro
 ru:Светлая
 sp-rs:Svetlo
+sq:I çelët
 sr-rs:Светло
 sv:Ljus
 tr:Aydınlık
@@ -11080,7 +11088,7 @@ si:PDF ගොනු සදහා පෙරනිමි මෘදුකාංග�
 sk:Nastaviť SumatraPDF ako predvolený prehliadač PDF súborov?
 sl:Naj bo SumatraPDF privezti program za datoteke PDF?
 sp-rs:Postaviti SumatraPDF kao podrazumevanu aplikaciju za PDF datoteke?
-sq:SumatraPDF të jetë aplikacioni standard për skedat PDF?
+sq:A të jetë SumatraPDF aplikacioni standard për skedarët PDF?
 sr-rs:Поставити SumatraPDF као подразумевану апликацију за PDF датотеке?
 sv:Ställa in SumatraPDF som standardprogram för PDF-filer?
 ta:சுமத்ராPDFயை கோட நிலை PDF படிப்பியாக மாற்றவா?
@@ -11657,7 +11665,7 @@ ru:Результат, соответствующий строке %u в фай�
 sk:Nenájdené žiadne výsledky na riadku %u v súbore %s
 sl:Okoli vrstice %u v datoteki %s ni zadetkov
 sp-rs:Rezultati oko linije %u u datoteci %s nisu pronađeni
-sq:Pa rezultat në radhën %u te skeda %s
+sq:Pa rezultat në radhën %u te skedari %s
 sr-rs:Резултати око линије %u у датотеци %s нису пронађени
 sv:Inget resultat hittades vid rad %u i filen %s
 ta:%u வரியில் %s கோப்பில் முடிவுகள் கிடைக்கவில்லை
@@ -11718,7 +11726,7 @@ si:සමකාලනයකල ගොනුවක් සොයාගැනීම
 sk:Súbor synchronizácie nenájdený
 sl:Datoteka sinhronizacije ni bila najdena
 sp-rs:Usklađivačka datoteka nije nađena
-sq:Nuk gjen skedën e sinkronizimit
+sq:Nuk gjendet skedari i sinkronizimit
 sr-rs:Усклађивачка датотека није нађена
 sv:Ingen synkroniseringsfil hittad
 ta:ஒத்தியங்கு கோப்பு எதுவும் கண்டுபிடிக்கவில்லை
@@ -13262,6 +13270,7 @@ ru:Документы PalmDoc
 sk:PalmDoc dokumenty
 sl:PalmDoc dokumenti
 sp-rs:PalmDoc dokumenti
+sq:Dokumente PalmDoc
 sr-rs:PalmDoc документи
 sv:PalmDoc dokument
 tr:PalmDoc belgeleri
@@ -14156,7 +14165,7 @@ si:&විවෘතකළ ගොනු මතකතබාගන්න
 sk:Zapamätať si &otvorené súbory
 sl:&Zapomni si odprte datoteke
 sp-rs:Zapamti otvarane datoteke
-sq:Mbaj mend skedat e &hapura
+sq:Mbaj mend skedarët e &hapur
 sr-rs:Запамти отваране датотеке
 sv:Kom ihåg öppnade &filer
 ta:திறந்த &கோப்புகளை நினைவுகொள்
@@ -14948,6 +14957,7 @@ ru:Выделение:
 sk:Výber:
 sl:Izbor:
 sp-rs:Izbor
+sq:Përzgjedhja:
 sr-rs:Избор
 sv:Markering:
 tr:Seçim:
@@ -15130,7 +15140,7 @@ ru:Показать &закладки
 sk:Zobraziť &Záložky
 sl:Prikaži &zaznamke
 sp-rs:Prikaži Obeleživače
-sq:Tregoj &faqet e shenjuara
+sq:Tregoj &faqet me shenjë
 sr-rs:Прикажи обележене
 sv:Visa &Bokmärken
 ta:புத்தகக்குறிகளை காட்டுக
@@ -15436,7 +15446,7 @@ si:තිබෙනවිටදී &පිටුසලකුණු පැති�
 sk:Zobraziť bočný panel &záložiek, pokiaľ je dostupný
 sl:Pokaži podokno z &zaznamki, če so na voljo
 sp-rs:Prikaži bočnu traku sa obeleživačima
-sq:Tregoj &faqet e shenjuara kur janë të gatshme
+sq:Tregoj &faqet me shenjë kur janë të gatshme
 sr-rs:Прикажи бочну траку са обележивачима
 sv:Visa &bokmärken när de finns
 ta:புத்தககுறி பட்டை இருந்தல் காட்டு
@@ -15561,7 +15571,7 @@ ru:Некоторые файлы установки повреждены или 
 sk:Niektoré inštalačné súbory sú poškodené alebo chýbajú
 sl:Nekatere datoteke za namestitev so poškodovane ali manjkajo
 sp-rs:Neki instalacioni fajlovi nedostaju ili su oštećeni
-sq:Janë dëmtuar ose mungojnë disa skeda që do të instalohen.
+sq:Janë dëmtuar ose mungojnë disa skedarë që do të instalohen
 sr-rs:Неки инсталациони фајлови су оштећени или недостају
 sv:Några installationsfiler saknas eller är skadade
 ta:நிறுவப்பட்ட சில கோப்புகள் சேதமடைந்துள்ளன/காணவில்லை
@@ -15619,7 +15629,7 @@ sk:Ospravedlňujeme sa, nemalo sa to stať.\n\nAk nám chcete pomôcť vyrieši�
 sl:Oprostite, to se ne bi smelo zgoditi!\n\nPritisnite 'Prekliči', če želite pomagati pri določitvi vzroka za sesutje.
 sn:Tine
 sp-rs:Oprostite, ovo nije trebalo da se dogodi!\n\nPritisnite dugme 'Otkaži' ako želite da nam pomognete u rešavanju ovog problema.
-sq:Na falni, kjo nuk duhej të ndodhte!\n\nJu lutemi, shtypni 'Anuloj' po deshët të na ndihmoni që ta ndreqim gabimin.
+sq:Na falni, kjo nuk duhej të ndodhte!\n\nJu lutemi, shtypni 'Anuloj' që të na ndihmoni për ta ndrequr gabimin.
 sr-rs:Опростите, ово није требало да се догоди!\n\nПритисните дугме 'Откажи' ако желите да нам помогнете у решавању овог проблема.
 sv:Ledsen, det där borde inte ha hänt!\n\nVar god tryck 'Avbryt', om du vill hjälpa oss att korrigera orsaken till denna krash.
 ta:மன்னிக்கவும், இது நடந்திருக்க கூடாது! \n\n தயவு செய்து 'ரத்துதை' அழுத்தவும், எங்களுக்கு இந்த விபத்தினை சரிசெய்ய உதவும்.
@@ -15680,7 +15690,7 @@ si:%s මූලාශ්‍ර ගොනුව  සතුව සමකාලන�
 sk:Zdrojový súbor %s nemá synchronizačný bod
 sl:Izvorna datoteka %s nima točke sinhronizacije
 sp-rs:Izvorna datoteka %s nema tačku usklađivanja
-sq:Skeda burimore %s nuk ka pikë sinkronizimi
+sq:Skedarit burimor %s i mungon pika e sinkronizimit
 sr-rs:Изворна датотека %s нема тачку усклађивања
 sv:Källfilen %s har ingen synkroniseringspunkt
 ta:%s முல கோப்பிர்க்கு ஒத்தியங்கு மையம் எதுவும் இல்லை
@@ -16385,7 +16395,7 @@ si:සමකාලනය කළ ගොනුව විවෘත කළ නොහ
 sk:Synchronizačný súbor nie je možné otvoriť
 sl:Datoteke sinhronizacije ni mogoče odpreti
 sp-rs:Nije moguće otvoriti usklađivačku datoteku
-sq:Nuk hapet skeda e sinkronizimit
+sq:Nuk hapet skedari i sinkronizimit
 sr-rs:Није могуће отворити усклађивачку датотеку
 sv:Synkroniseringsfil kan ej öppnas
 ta:ஒத்தியங்கு கோப்பை திறக்க முடியவில்லை
@@ -16724,6 +16734,7 @@ ru:Этот документ использует неподдерживаемы
 sk:Tento dokument používa nepodporované funkcie (%s) a týmto sa nemusí vykresliť správne
 sl:Da dokument uporablja nepodprte značilnosti (%s) in se morda ne bo naložil pravilno
 sp-rs:Ovaj dokument koristi nepodržane opcije (%s) i može biti prikazan nekorektno
+sq:Ky dokument përdor veçori që nuk garantohen (%s) dhe mund të aplikohen pjesërisht
 sr-rs:Овај документ користи неподржане опције (%s) и може бити приказан некоректно
 sv:Detta dokument använder funktioner som inte stöds (%s) och kan inte återges korrekt
 tr:Bu belge desteklenmeyen özellikler içeriyor (%s) ve doğru görüntülenemeyebilir
@@ -17018,7 +17029,7 @@ si:නොදත් මූලාශ්‍ර ගොනුව (%s)
 sk:Neznámy zdrojový súbor (%s)
 sl:Neznana izvorna datoteka (%s)
 sp-rs:Nepoznata izvorna datoteka (%s)
-sq:Skedë burimore e panjohur (%s)
+sq:Skedar burimor i panjohur (%s)
 sr-rs:Непозната изворна датотека (%s)
 sv:Okänd källfil (%s)
 ta:(%s) மூல கோப்பு கிடைக்கவில்லை
@@ -17073,6 +17084,7 @@ ru:Использовать &вкладки
 sk:Povoliť &záložky
 sl:Uporabljaj &zavihke
 sp-rs:Koristiti tab
+sq:Përdor &skedat
 sr-rs:Користити таб
 sv:Använd flikar
 tr:&Sekmeler kullan
