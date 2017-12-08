@@ -13,7 +13,8 @@ struct PagesLayoutDef {
 extern const StructMetadata gPagesLayoutDefMetadata;
 
 inline PagesLayoutDef* DeserializePagesLayoutDef(char* data, size_t dataLen) {
-    return (PagesLayoutDef*)Deserialize(data, dataLen, &gPagesLayoutDefMetadata);
+    std::string_view s(data, dataLen);
+    return (PagesLayoutDef*)Deserialize(s, &gPagesLayoutDefMetadata);
 }
 
 inline PagesLayoutDef* DeserializePagesLayoutDef(TxtNode* root) {

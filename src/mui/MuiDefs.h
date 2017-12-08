@@ -43,7 +43,8 @@ struct VerticalLayoutDef {
 extern const StructMetadata gButtonVectorDefMetadata;
 
 inline ButtonVectorDef* DeserializeButtonVectorDef(char* data, size_t dataLen) {
-    return (ButtonVectorDef*)Deserialize(data, dataLen, &gButtonVectorDefMetadata);
+    std::string_view s(data, dataLen);
+    return (ButtonVectorDef*)Deserialize(s, &gButtonVectorDefMetadata);
 }
 
 inline ButtonVectorDef* DeserializeButtonVectorDef(TxtNode* root) {
@@ -60,7 +61,8 @@ inline void FreeButtonVectorDef(ButtonVectorDef* val) {
 extern const StructMetadata gButtonDefMetadata;
 
 inline ButtonDef* DeserializeButtonDef(char* data, size_t dataLen) {
-    return (ButtonDef*)Deserialize(data, dataLen, &gButtonDefMetadata);
+    std::string_view s(data, dataLen);
+    return (ButtonDef*)Deserialize(s, &gButtonDefMetadata);
 }
 
 inline ButtonDef* DeserializeButtonDef(TxtNode* root) {
@@ -77,7 +79,8 @@ inline void FreeButtonDef(ButtonDef* val) {
 extern const StructMetadata gScrollBarDefMetadata;
 
 inline ScrollBarDef* DeserializeScrollBarDef(char* data, size_t dataLen) {
-    return (ScrollBarDef*)Deserialize(data, dataLen, &gScrollBarDefMetadata);
+    std::string_view s(data, dataLen);
+    return (ScrollBarDef*)Deserialize(s, &gScrollBarDefMetadata);
 }
 
 inline ScrollBarDef* DeserializeScrollBarDef(TxtNode* root) {
@@ -94,7 +97,8 @@ inline void FreeScrollBarDef(ScrollBarDef* val) {
 extern const StructMetadata gDirectionalLayoutDataDefMetadata;
 
 inline DirectionalLayoutDataDef* DeserializeDirectionalLayoutDataDef(char* data, size_t dataLen) {
-    return (DirectionalLayoutDataDef*)Deserialize(data, dataLen, &gDirectionalLayoutDataDefMetadata);
+    std::string_view s(data, dataLen);
+    return (DirectionalLayoutDataDef*)Deserialize(s, &gDirectionalLayoutDataDefMetadata);
 }
 
 inline DirectionalLayoutDataDef* DeserializeDirectionalLayoutDataDef(TxtNode* root) {
@@ -111,7 +115,8 @@ inline void FreeDirectionalLayoutDataDef(DirectionalLayoutDataDef* val) {
 extern const StructMetadata gHorizontalLayoutDefMetadata;
 
 inline HorizontalLayoutDef* DeserializeHorizontalLayoutDef(char* data, size_t dataLen) {
-    return (HorizontalLayoutDef*)Deserialize(data, dataLen, &gHorizontalLayoutDefMetadata);
+    std::string_view s(data, dataLen);
+    return (HorizontalLayoutDef*)Deserialize(s, &gHorizontalLayoutDefMetadata);
 }
 
 inline HorizontalLayoutDef* DeserializeHorizontalLayoutDef(TxtNode* root) {
@@ -128,7 +133,8 @@ inline void FreeHorizontalLayoutDef(HorizontalLayoutDef* val) {
 extern const StructMetadata gVerticalLayoutDefMetadata;
 
 inline VerticalLayoutDef* DeserializeVerticalLayoutDef(char* data, size_t dataLen) {
-    return (VerticalLayoutDef*)Deserialize(data, dataLen, &gVerticalLayoutDefMetadata);
+    std::string_view s(data, dataLen);
+    return (VerticalLayoutDef*)Deserialize(s, &gVerticalLayoutDefMetadata);
 }
 
 inline VerticalLayoutDef* DeserializeVerticalLayoutDef(TxtNode* root) {

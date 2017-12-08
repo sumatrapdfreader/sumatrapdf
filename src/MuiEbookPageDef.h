@@ -11,7 +11,8 @@ struct EbookPageDef {
 extern const StructMetadata gEbookPageDefMetadata;
 
 inline EbookPageDef* DeserializeEbookPageDef(char* data, size_t dataLen) {
-    return (EbookPageDef*)Deserialize(data, dataLen, &gEbookPageDefMetadata);
+    std::string_view s(data, dataLen);
+    return (EbookPageDef*)Deserialize(s, &gEbookPageDefMetadata);
 }
 
 inline EbookPageDef* DeserializeEbookPageDef(TxtNode* root) {

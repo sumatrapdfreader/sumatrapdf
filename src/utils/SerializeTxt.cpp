@@ -511,13 +511,12 @@ uint8_t* Deserialize(struct TxtNode* root, const StructMetadata* def) {
     return DeserializeRec(ds, root, def);
 }
 
-uint8_t* Deserialize(char* data, size_t dataSize, const StructMetadata* def) {
-    if (!data) {
+uint8_t* Deserialize(const std::string_view str, const StructMetadata* def) {
+    if (!str.data()) {
         return nullptr;
     }
 
     DecodeState ds;
-    std::string_view str(data, dataSize);
     ds.parser.SetToParse(str);
     bool ok = ParseTxt(ds.parser);
     if (!ok) {
