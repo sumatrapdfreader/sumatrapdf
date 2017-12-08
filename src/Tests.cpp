@@ -32,7 +32,7 @@ void TestRenderPage(const CommandLineInfo& i) {
         zoom = i.startZoom;
     }
     for (auto fileName : files) {
-        AutoFree fileNameUtf(str::conv::ToUtf8(fileName));
+        OwnedData fileNameUtf(str::conv::ToUtf8(fileName));
         printf("rendering page %d for '%s', zoom: %.2f\n", i.pageNumber, fileNameUtf.Get(), zoom);
         auto engine = EngineManager::CreateEngine(fileName);
         if (engine == nullptr) {
@@ -64,7 +64,7 @@ void TestExtractPage(const CommandLineInfo& i) {
         return;
     }
     for (auto fileName : files) {
-        AutoFree fileNameUtf(str::conv::ToUtf8(fileName));
+        OwnedData fileNameUtf(str::conv::ToUtf8(fileName));
         auto engine = EngineManager::CreateEngine(fileName);
         if (engine == nullptr) {
             printf("failed to create engine for file '%s'\n", fileNameUtf.Get());
@@ -72,18 +72,17 @@ void TestExtractPage(const CommandLineInfo& i) {
         }
         RectI* coordsOut; // not using the result, only to trigger the code path
         WCHAR* uni = engine->ExtractPageText(i.pageNumber, L"_", &coordsOut);
-        char* utf = str::conv::ToUtf8(uni);
+        OwnedData utf = str::conv::ToUtf8(uni);
         printf("text on page %d: '", i.pageNumber);
         // print characters as hex because I don't know what kind of locale-specific mangling
         // printf() might do
         int idx = 0;
-        while (utf[idx] != 0) {
-            char c = utf[idx++];
+        while (utf.Get()[idx] != 0) {
+            char c = utf.Get()[idx++];
             printf("%02x ", (unsigned char)c);
         }
         printf("'\n");
         free(uni);
-        free(utf);
         free(coordsOut);
         delete engine;
     }

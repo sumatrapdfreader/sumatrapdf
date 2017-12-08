@@ -241,14 +241,16 @@ bool LaunchBrowser(const WCHAR* url) {
     if (gPluginMode) {
         // pass the URI back to the browser
         CrashIf(gWindows.size() == 0);
-        if (gWindows.size() == 0)
-            return false;
+		if (gWindows.size() == 0) {
+			return false;
+		}
         HWND plugin = gWindows.at(0)->hwndFrame;
         HWND parent = GetAncestor(plugin, GA_PARENT);
-        AutoFree urlUtf8(str::conv::ToUtf8(url));
-        if (!parent || !urlUtf8 || str::Len(urlUtf8) > 4096)
-            return false;
-        COPYDATASTRUCT cds = {0x4C5255 /* URL */, (DWORD)str::Len(urlUtf8) + 1, urlUtf8.Get()};
+        OwnedData urlUtf8(str::conv::ToUtf8(url));
+		if (!parent || !urlUtf8.Get() || (urlUtf8.size > 4096)) {
+			return false;
+		}
+        COPYDATASTRUCT cds = {0x4C5255 /* URL */, (DWORD)urlUtf8.size + 1, urlUtf8.Get()};
         return SendMessage(parent, WM_COPYDATA, (WPARAM)plugin, (LPARAM)&cds);
     }
 
@@ -844,8 +846,8 @@ static Controller* CreateControllerForFile(const WCHAR* filePath, PasswordUI* pw
     if (ctrl && !str::Eq(ctrl->FilePath(), filePath)) {
         // TODO: remove when we figure out why we crash
         auto ctrlFilePath = ctrl->FilePath();
-        auto s1 = ctrlFilePath ? str::conv::ToUtf8(ctrlFilePath) : str::Dup("<null>");
-        auto s2 = filePath ? str::conv::ToUtf8(filePath) : str::Dup("<null>");
+        auto s1 = ctrlFilePath ? str::conv::ToUtf8(ctrlFilePath).StealData() : str::Dup("<null>");
+        auto s2 = filePath ? str::conv::ToUtf8(filePath).StealData() : str::Dup("<null>");
         dbglog::CrashLogF("CreateControllerForFile: ctrl->FilePath: '%s', filePath: '%s'\n", s1, s2);
         CrashIf(ctrl && !str::Eq(ctrl->FilePath(), filePath));
         free(s1);
@@ -2318,7 +2320,7 @@ static void OnMenuSaveAs(WindowInfo& win) {
         realDstFileName = str::Format(L"%s%s", dstFileName, defExt);
     }
 
-    AutoFree pathUtf8(str::conv::ToUtf8(realDstFileName));
+    OwnedData pathUtf8(str::conv::ToUtf8(realDstFileName));
     AutoFreeW errorMsg;
     // Extract all text when saving as a plain text file
     if (convertToTXT) {
@@ -2328,27 +2330,27 @@ static void OnMenuSaveAs(WindowInfo& win) {
             text.AppendAndFree(tmp);
         }
 
-        AutoFree textUTF8(str::conv::ToUtf8(text.LendData()));
-        AutoFree textUTF8BOM(str::Join(UTF8_BOM, textUTF8));
+		OwnedData textUTF8(str::conv::ToUtf8(text.LendData()));
+        AutoFree textUTF8BOM(str::Join(UTF8_BOM, textUTF8.Get()));
         ok = file::WriteAll(realDstFileName, textUTF8BOM, str::Len(textUTF8BOM));
     } else if (convertToPDF) {
         // Convert the file into a PDF one
         PdfCreator::SetProducerName(APP_NAME_STR L" " CURR_VERSION_STR);
-        ok = engine->SaveFileAsPDF(pathUtf8, gGlobalPrefs->annotationDefaults.saveIntoDocument);
+        ok = engine->SaveFileAsPDF(pathUtf8.Get(), gGlobalPrefs->annotationDefaults.saveIntoDocument);
         if (!ok) {
 #ifdef DEBUG
             // rendering includes all page annotations
-            ok = PdfCreator::RenderToFile(pathUtf8, engine);
+            ok = PdfCreator::RenderToFile(pathUtf8.Get(), engine);
 #endif
         } else if (!gGlobalPrefs->annotationDefaults.saveIntoDocument) {
             SaveFileModifictions(realDstFileName, win.AsFixed()->userAnnots);
         }
     } else if (!file::Exists(srcFileName) && engine) {
         // Recreate inexistant files from memory...
-        ok = engine->SaveFileAs(pathUtf8, gGlobalPrefs->annotationDefaults.saveIntoDocument);
+        ok = engine->SaveFileAs(pathUtf8.Get(), gGlobalPrefs->annotationDefaults.saveIntoDocument);
     } else if (gGlobalPrefs->annotationDefaults.saveIntoDocument && engine && engine->SupportsAnnotation(true)) {
         // ... as well as files containing annotations ...
-        ok = engine->SaveFileAs(pathUtf8, true);
+        ok = engine->SaveFileAs(pathUtf8.Get(), true);
     } else if (!path::IsSame(srcFileName, realDstFileName)) {
         // ... else just copy the file
         WCHAR* msgBuf;

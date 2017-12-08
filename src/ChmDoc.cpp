@@ -78,10 +78,10 @@ char* ChmDoc::ToUtf8(const unsigned char* text, UINT overrideCP) {
     if (str::StartsWith(s, UTF8_BOM))
         return str::Dup(s + 3);
     if (overrideCP)
-        return str::ToMultiByte(s, overrideCP, CP_UTF8);
+        return str::ToMultiByte(s, overrideCP, CP_UTF8).StealData();
     if (CP_UTF8 == codepage)
         return str::Dup(s);
-    return str::ToMultiByte(s, codepage, CP_UTF8);
+    return str::ToMultiByte(s, codepage, CP_UTF8).StealData();
 }
 
 WCHAR* ChmDoc::ToStr(const char* text) {
@@ -335,8 +335,8 @@ static bool VisitChmTocItem(EbookTocVisitor* visitor, HtmlElement* el, UINT cp, 
         AutoFreeW attrName(el->GetAttribute("name"));
         AutoFreeW attrVal(el->GetAttribute("value"));
         if (attrName && attrVal && cp != CP_CHM_DEFAULT) {
-            AutoFree bytes(str::conv::ToCodePage(attrVal, CP_CHM_DEFAULT));
-            attrVal.Set(str::conv::FromCodePage(bytes, cp));
+            OwnedData bytes(str::conv::ToCodePage(attrVal, CP_CHM_DEFAULT));
+            attrVal.Set(str::conv::FromCodePage(bytes.Get(), cp));
         }
         if (!attrName || !attrVal)
             /* ignore incomplete/unneeded <param> */;
@@ -381,8 +381,8 @@ static bool VisitChmIndexItem(EbookTocVisitor* visitor, HtmlElement* el, UINT cp
         AutoFreeW attrName(el->GetAttribute("name"));
         AutoFreeW attrVal(el->GetAttribute("value"));
         if (attrName && attrVal && cp != CP_CHM_DEFAULT) {
-            AutoFree bytes(str::conv::ToCodePage(attrVal, CP_CHM_DEFAULT));
-            attrVal.Set(str::conv::FromCodePage(bytes, cp));
+            OwnedData bytes(str::conv::ToCodePage(attrVal, CP_CHM_DEFAULT));
+            attrVal.Set(str::conv::FromCodePage(bytes.Get(), cp));
         }
         if (!attrName || !attrVal)
             /* ignore incomplete/unneeded <param> */;

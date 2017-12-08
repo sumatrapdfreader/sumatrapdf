@@ -179,6 +179,16 @@ OwnedData& OwnedData::operator=(OwnedData&& other) {
     return *this;
 }
 
+void OwnedData::Reset() {
+	free(data);
+	data = nullptr;
+	size = 0;
+}
+
+char* OwnedData::Get() {
+    return data;
+}
+
 void OwnedData::TakeOwnership(char* s, size_t len) {
     if (len == 0) {
         len = str::Len(s);

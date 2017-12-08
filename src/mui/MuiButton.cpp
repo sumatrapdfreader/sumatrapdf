@@ -66,10 +66,10 @@ void Button::RecalculateSize(bool repaintIfSizeDidntChange) {
             fontDy = bbox.Height;
             float diff = fontDy + maxDiff - bbox.Height;
             if (diff < 0) {
-                char* fontName = str::conv::ToUtf8(s->fontName);
-                char* tmp = str::conv::ToUtf8(text);
+                OwnedData fontName = str::conv::ToUtf8(s->fontName);
+                OwnedData tmp = str::conv::ToUtf8(text);
                 dbglog::CrashLogF("fontDy=%.2f, bbox.Height=%.2f, diff=%.2f (should be > 0) font: %s, text='%s'",
-                                  fontDy, bbox.Height, diff, fontName, tmp);
+                                  fontDy, bbox.Height, diff, fontName.Get(), tmp.Get());
                 CrashIf(true);
             }
         }

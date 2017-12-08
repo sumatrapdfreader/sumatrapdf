@@ -554,8 +554,8 @@ PageElement* EbookEngine::GetElementAtPos(int pageNo, PointD pt) {
 }
 
 PageDestination* EbookEngine::GetNamedDest(const WCHAR* name) {
-    AutoFree name_utf8(str::conv::ToUtf8(name));
-    const char* id = name_utf8;
+    OwnedData name_utf8(str::conv::ToUtf8(name));
+    const char* id = name_utf8.Get();
     if (str::FindChar(id, '#'))
         id = str::FindChar(id, '#') + 1;
 
@@ -565,11 +565,11 @@ PageDestination* EbookEngine::GetNamedDest(const WCHAR* name) {
     // for the same ID to be reused on different pages
     DrawInstr* baseAnchor = nullptr;
     int basePageNo = 0;
-    if (id > name_utf8 + 1) {
-        size_t base_len = id - name_utf8 - 1;
+    if (id > name_utf8.Get() + 1) {
+        size_t base_len = id - name_utf8.Get() - 1;
         for (size_t i = 0; i < baseAnchors.size(); i++) {
             DrawInstr* anchor = baseAnchors.at(i);
-            if (anchor && base_len == anchor->str.len && str::EqNI(name_utf8, anchor->str.s, base_len)) {
+            if (anchor && base_len == anchor->str.len && str::EqNI(name_utf8.Get(), anchor->str.s, base_len)) {
                 baseAnchor = anchor;
                 basePageNo = (int)i + 1;
                 break;
@@ -1424,9 +1424,9 @@ class ChmHtmlCollector : public EbookTocVisitor {
         AutoFreeW plainUrl(url::GetFullPath(url));
         if (added.FindI(plainUrl) != -1)
             return;
-        AutoFree urlUtf8(str::conv::ToUtf8(plainUrl));
+        OwnedData urlUtf8(str::conv::ToUtf8(plainUrl));
         size_t pageHtmlLen;
-        ScopedMem<unsigned char> pageHtml(doc->GetData(urlUtf8, &pageHtmlLen));
+        ScopedMem<unsigned char> pageHtml(doc->GetData(urlUtf8.Get(), &pageHtmlLen));
         if (!pageHtml)
             return;
         html.AppendFmt("<pagebreak page_path=\"%s\" page_marker />", urlUtf8.Get());

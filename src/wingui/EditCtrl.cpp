@@ -105,7 +105,7 @@ WCHAR* GetTextW(EditCtrl* w) {
 // caller must free() the result
 char* GetText(EditCtrl* w) {
     AutoFreeW su(GetTextW(w));
-    return str::conv::ToUtf8(su.Get());
+    return str::conv::ToUtf8(su.Get()).StealData();
 }
 
 EditCtrl* AllocEditCtrl(HWND parent, RECT* initialPosition) {

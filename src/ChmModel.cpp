@@ -371,8 +371,8 @@ const unsigned char* ChmModel::GetDataForUrl(const WCHAR* url, size_t* len) {
     ChmCacheEntry* e = FindDataForUrl(plainUrl);
     if (!e) {
         e = new ChmCacheEntry(Allocator::StrDup(&poolAlloc, plainUrl));
-        AutoFree urlUtf8(str::conv::ToUtf8(plainUrl));
-        e->data = doc->GetData(urlUtf8, &e->size);
+        OwnedData urlUtf8(str::conv::ToUtf8(plainUrl));
+        e->data = doc->GetData(urlUtf8.Get(), &e->size);
         if (!e->data) {
             delete e;
             return nullptr;
@@ -397,18 +397,20 @@ void ChmModel::OnLButtonDown() {
 // named destinations are either in-document URLs or Alias topic IDs
 PageDestination* ChmModel::GetNamedDest(const WCHAR* name) {
     AutoFreeW plainUrl(url::GetFullPath(name));
-    AutoFree urlUtf8(str::conv::ToUtf8(plainUrl));
-    if (!doc->HasData(urlUtf8)) {
+    OwnedData urlUtf8(str::conv::ToUtf8(plainUrl));
+    if (!doc->HasData(urlUtf8.Get())) {
         unsigned int topicID;
         if (str::Parse(name, L"%u%$", &topicID)) {
-            urlUtf8.Set(doc->ResolveTopicID(topicID));
-            if (urlUtf8 && doc->HasData(urlUtf8)) {
-                plainUrl.Set(str::conv::FromUtf8(urlUtf8));
+            urlUtf8.TakeOwnership(doc->ResolveTopicID(topicID));
+            if (urlUtf8.Get() && doc->HasData(urlUtf8.Get())) {
+                plainUrl.Set(str::conv::FromUtf8(urlUtf8.Get()));
                 name = plainUrl;
-            } else
-                urlUtf8.Set(nullptr);
-        } else
-            urlUtf8.Set(nullptr);
+			} else {
+				urlUtf8.Reset();
+			}
+		} else {
+			urlUtf8.Reset();
+		}
     }
     int pageNo = pages.Find(plainUrl) + 1;
     if (!pageNo && !str::IsEmpty(urlUtf8.Get())) {
@@ -560,8 +562,8 @@ class ChmThumbnailTask : public HtmlWindowCallback {
         UNUSED(len);
         ScopedCritSec scope(&docAccess);
         AutoFreeW plainUrl(url::GetFullPath(url));
-        AutoFree urlUtf8(str::conv::ToUtf8(plainUrl));
-        data.Append(doc->GetData(urlUtf8, len));
+        OwnedData urlUtf8(str::conv::ToUtf8(plainUrl));
+        data.Append(doc->GetData(urlUtf8.Get(), len));
         return data.Last();
     }
     virtual void DownloadData(const WCHAR* url, const unsigned char* data, size_t len) {

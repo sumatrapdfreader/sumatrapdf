@@ -394,7 +394,7 @@ static void GetProcessorName(str::Str<char>& s) {
     if (!name)
         return;
 
-    AutoFree tmp(str::conv::ToUtf8(name));
+    OwnedData tmp(str::conv::ToUtf8(name));
     s.AppendFmt("Processor: %s\r\n", tmp.Get());
     free(name);
 }
@@ -402,14 +402,20 @@ static void GetProcessorName(str::Str<char>& s) {
 static void GetMachineName(str::Str<char>& s) {
     WCHAR* s1 = ReadRegStr(HKEY_LOCAL_MACHINE, L"HARDWARE\\DESCRIPTION\\System\\BIOS", L"SystemFamily");
     WCHAR* s2 = ReadRegStr(HKEY_LOCAL_MACHINE, L"HARDWARE\\DESCRIPTION\\System\\BIOS", L"SystemVersion");
-    AutoFree s1u(s1 ? str::conv::ToUtf8(s1) : nullptr);
-    AutoFree s2u(s2 ? str::conv::ToUtf8(s2) : nullptr);
+	OwnedData s1u;
+	if (s1) {
+		s1u = std::move(str::conv::ToUtf8(s1));
+	}
+	OwnedData s2u;
+	if (s2) {
+		s2u = std::move(str::conv::ToUtf8(s2));
+	}
 
-    if (!s1u && !s2u)
+    if (!s1u.Get() && !s2u.Get())
         ; // pass
-    else if (!s1u)
+    else if (!s1u.Get())
         s.AppendFmt("Machine: %s\r\n", s2u.Get());
-    else if (!s2u || str::EqI(s1u, s2u))
+    else if (!s2u.Get() || str::EqI(s1u.Get(), s2u.Get()))
         s.AppendFmt("Machine: %s\r\n", s1u.Get());
     else
         s.AppendFmt("Machine: %s %s\r\n", s1u.Get(), s2u.Get());
@@ -435,17 +441,17 @@ static void GetGraphicsDriverInfo(str::Str<char>& s) {
         // I assume that if I can't read the value, there are no more drivers
         if (!v1)
             break;
-        AutoFree v1a(str::conv::ToUtf8(v1));
+        OwnedData v1a(str::conv::ToUtf8(v1));
         s.AppendFmt("Graphics driver %d\r\n", i);
         s.AppendFmt("  DriverDesc:         %s\r\n", v1.Get());
         v1.Set(ReadRegStr(HKEY_LOCAL_MACHINE, key, L"DriverVersion"));
         if (v1) {
-            v1a.Set(str::conv::ToUtf8(v1));
+            v1a.TakeOwnership(str::conv::ToUtf8(v1).StealData());
             s.AppendFmt("  DriverVersion:      %s\r\n", v1a.Get());
         }
         v1.Set(ReadRegStr(HKEY_LOCAL_MACHINE, key, L"UserModeDriverName"));
         if (v1) {
-            v1a.Set(str::conv::ToUtf8(v1));
+            v1a.TakeOwnership(str::conv::ToUtf8(v1).StealData());
             s.AppendFmt("  UserModeDriverName: %s\r\n", v1a.Get());
         }
     }
@@ -494,10 +500,10 @@ static bool GetModules(str::Str<char>& s) {
     mod.dwSize = sizeof(mod);
     BOOL cont = Module32First(snap, &mod);
     while (cont) {
-        AutoFree nameA(str::conv::ToUtf8(mod.szModule));
+        OwnedData nameA(str::conv::ToUtf8(mod.szModule));
         if (str::EqI(nameA.Get(), "winex11.drv"))
             isWine = true;
-        AutoFree pathA(str::conv::ToUtf8(mod.szExePath));
+        OwnedData pathA(str::conv::ToUtf8(mod.szExePath));
         s.AppendFmt("Module: %p %06X %-16s %s\r\n", mod.modBaseAddr, mod.modBaseSize, nameA.Get(), pathA.Get());
         cont = Module32Next(snap, &mod);
     }

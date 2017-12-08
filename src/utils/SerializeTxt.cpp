@@ -649,8 +649,8 @@ static void SerializeField(EncodeState& es, const char* fieldName, const FieldMe
     } else if (TYPE_WSTR == type) {
         WCHAR* s = (WCHAR*)ReadStructPtr(data);
         if (s) {
-            AutoFree val2(str::conv::ToUtf8(s));
-            AppendKeyVal(es, fieldName, val2);
+            OwnedData val2(str::conv::ToUtf8(s));
+            AppendKeyVal(es, fieldName, val2.Get());
         }
     } else if (TYPE_STRUCT_PTR == type) {
         AppendNest(res, es.nest);

@@ -1551,25 +1551,25 @@ bool PdfEngineImpl::LoadFromStream(fz_stream* stm, PasswordUI* pwdUI) {
         }
 
         // MuPDF expects passwords to be UTF-8 encoded
-        AutoFree pwd_utf8(str::conv::ToUtf8(pwd));
-        ok = pwd_utf8 && pdf_authenticate_password(_doc, pwd_utf8);
+        OwnedData pwd_utf8(str::conv::ToUtf8(pwd));
+        ok = pwd_utf8.Get() && pdf_authenticate_password(_doc, pwd_utf8.Get());
         // according to the spec (1.7 ExtensionLevel 3), the password
         // for crypt revisions 5 and above are in SASLprep normalization
         if (!ok) {
             // TODO: this is only part of SASLprep
             pwd.Set(NormalizeString(pwd, 5 /* NormalizationKC */));
             if (pwd) {
-                pwd_utf8.Set(str::conv::ToUtf8(pwd));
-                ok = pwd_utf8 && pdf_authenticate_password(_doc, pwd_utf8);
+                pwd_utf8 = std::move(str::conv::ToUtf8(pwd));
+                ok = pwd_utf8.Get() && pdf_authenticate_password(_doc, pwd_utf8.Get());
             }
         }
         // older Acrobat versions seem to have considered passwords to be in codepage 1252
         // note: such passwords aren't portable when stored as Unicode text
         if (!ok && GetACP() != 1252) {
-            AutoFree pwd_ansi(str::conv::ToAnsi(pwd));
-            AutoFreeW pwd_cp1252(str::conv::FromCodePage(pwd_ansi, 1252));
-            pwd_utf8.Set(str::conv::ToUtf8(pwd_cp1252));
-            ok = pwd_utf8 && pdf_authenticate_password(_doc, pwd_utf8);
+            OwnedData pwd_ansi(str::conv::ToAnsi(pwd));
+            AutoFreeW pwd_cp1252(str::conv::FromCodePage(pwd_ansi.Get(), 1252));
+            pwd_utf8 = std::move(str::conv::ToUtf8(pwd_cp1252));
+            ok = pwd_utf8.Get() && pdf_authenticate_password(_doc, pwd_utf8.Get());
         }
     }
 
@@ -1703,10 +1703,10 @@ PageDestination* PdfEngineImpl::GetNamedDest(const WCHAR* name) {
     ScopedCritSec scope1(&pagesAccess);
     ScopedCritSec scope2(&ctxAccess);
 
-    AutoFree name_utf8(str::conv::ToUtf8(name));
+    OwnedData name_utf8(str::conv::ToUtf8(name));
     pdf_obj* dest = nullptr;
     fz_try(ctx) {
-        pdf_obj* nameobj = pdf_new_string(_doc, name_utf8, (int)str::Len(name_utf8));
+        pdf_obj* nameobj = pdf_new_string(_doc, name_utf8.Get(), (int)name_utf8.size);
         dest = pdf_lookup_dest(_doc, nameobj);
         pdf_drop_obj(nameobj);
     }
@@ -2140,11 +2140,12 @@ void PdfEngineImpl::LinkifyPageText(pdf_page* page) {
         for (fz_link* next = page->links; next && !overlaps; next = next->next)
             overlaps = fz_calc_overlap(list->coords.at(i), next->rect) >= 0.25f;
         if (!overlaps) {
-            AutoFree uri(str::conv::ToUtf8(list->links.at(i)));
-            if (!uri)
-                continue;
+            OwnedData uri(str::conv::ToUtf8(list->links.at(i)));
+			if (!uri.Get()) {
+				continue;
+			}
             fz_link_dest ld = {FZ_LINK_URI, 0};
-            ld.ld.uri.uri = fz_strdup(ctx, uri);
+            ld.ld.uri.uri = fz_strdup(ctx, uri.Get());
             // add links in top-to-bottom order (i.e. last-to-first)
             fz_link* link = fz_new_link(ctx, &list->coords.at(i), ld);
             CrashIf(!link); // TODO: if fz_new_link throws, there are memory leaks
@@ -2440,7 +2441,7 @@ WCHAR* PdfEngineImpl::ExtractFontList() {
 
         str::Str<char> info;
         if (name[0] < 0 && MultiByteToWideChar(936, MB_ERR_INVALID_CHARS, name, -1, nullptr, 0))
-            info.Append(AutoFree(str::ToMultiByte(name, 936, CP_UTF8)));
+            info.Append(str::ToMultiByte(name, 936, CP_UTF8).StealData());
         else
             info.Append(name);
         if (!str::IsEmpty(encoding) || !str::IsEmpty(type) || embedded) {
@@ -3081,7 +3082,10 @@ fz_rect xps_bound_page_quick(xps_document* doc, int number) {
         }
     }
     if (str::StartsWith(data, UTF16_BOM)) {
-        dataUtf8.Set(str::conv::ToUtf8((const WCHAR*)(part->data + 2), (part->size - 2) / 2));
+		const WCHAR *s = (const WCHAR*)(part->data + 2);
+		size_t n = (part->size - 2) / 2;
+		auto tmp = str::conv::ToUtf8(s, n);
+        dataUtf8.Set(tmp.StealData());
         data = dataUtf8;
         data_size = str::Len(dataUtf8);
     } else if (str::StartsWith(data, UTF8_BOM)) {
@@ -4020,11 +4024,11 @@ void XpsEngineImpl::LinkifyPageText(xps_page* page, int pageNo) {
         for (fz_link* next = page->links; next && !overlaps; next = next->next)
             overlaps = fz_calc_overlap(list->coords.at(i), next->rect) >= 0.25f;
         if (!overlaps) {
-            AutoFree uri(str::conv::ToUtf8(list->links.at(i)));
-            if (!uri)
+            OwnedData uri(str::conv::ToUtf8(list->links.at(i)));
+            if (!uri.Get())
                 continue;
             fz_link_dest ld = {FZ_LINK_URI, 0};
-            ld.ld.uri.uri = fz_strdup(ctx, uri);
+            ld.ld.uri.uri = fz_strdup(ctx, uri.Get());
             // add links in top-to-bottom order (i.e. last-to-first)
             fz_link* link = fz_new_link(ctx, &list->coords.at(i), ld);
             CrashIf(!link); // TODO: if fz_new_link throws, there are memory leaks
@@ -4091,13 +4095,16 @@ fz_rect XpsEngineImpl::FindDestRect(const char* target) {
 }
 
 PageDestination* XpsEngineImpl::GetNamedDest(const WCHAR* name) {
-    AutoFree name_utf8(str::conv::ToUtf8(name));
-    if (!str::StartsWith(name_utf8.Get(), "#"))
-        name_utf8.Set(str::Join("#", name_utf8));
+    OwnedData name_utf8(str::conv::ToUtf8(name));
+	if (!str::StartsWith(name_utf8.Get(), "#")) {
+		name_utf8.TakeOwnership(str::Join("#", name_utf8.Get()));
+	}
 
-    for (xps_target* dest = _doc->target; dest; dest = dest->next)
-        if (str::EndsWithI(dest->name, name_utf8))
-            return new SimpleDest(dest->page + 1, fz_rect_to_RectD(dest->rect));
+	for (xps_target* dest = _doc->target; dest; dest = dest->next) {
+		if (str::EndsWithI(dest->name, name_utf8.Get())) {
+			return new SimpleDest(dest->page + 1, fz_rect_to_RectD(dest->rect));
+		}
+	}
 
     return nullptr;
 }

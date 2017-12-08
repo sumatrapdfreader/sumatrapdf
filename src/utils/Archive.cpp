@@ -106,7 +106,7 @@ size_t Archive::GetFileId(const char* fileName) {
 
 #if OS_WIN
 OwnedData Archive::GetFileDataByName(const WCHAR* fileName) {
-    AutoFree fileNameUtf8(str::conv::ToUtf8(fileName));
+    auto fileNameUtf8 = str::conv::ToUtf8(fileName);
     return GetFileDataByName(fileNameUtf8.Get());
 }
 #endif
@@ -192,7 +192,7 @@ static Archive* open(Archive* archive, const char* path) {
 #if OS_WIN
 static Archive* open(Archive* archive, const WCHAR* path) {
     FILE* f = file::OpenFILE(path);
-    AutoFree pathUtf(str::conv::ToUtf8(path));
+    auto pathUtf = str::conv::ToUtf8(path);
     archive->Open(ar_open(f), pathUtf.Get());
     return archive;
 }
@@ -497,7 +497,7 @@ bool Archive::OpenUnrarDllFallback(const char* rarPathUtf) {
         }
 
         str::TransChars(rarHeader.FileNameW, L"\\", L"/");
-        AutoFree name(str::conv::ToUtf8(rarHeader.FileNameW));
+        OwnedData name(str::conv::ToUtf8(rarHeader.FileNameW));
 
         FileInfo* i = allocator_.AllocStruct<FileInfo>();
         i->fileId = fileId;

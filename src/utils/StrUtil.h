@@ -65,8 +65,8 @@ bool EndsWithI(const WCHAR* txt, const WCHAR* end);
 WCHAR* DupN(const WCHAR* s, size_t lenCch);
 WCHAR* ToLowerInPlace(WCHAR* s);
 
-char* ToMultiByte(const WCHAR* txt, UINT CodePage, int cchTxtLen = -1);
-char* ToMultiByte(const char* src, UINT CodePageSrc, UINT CodePageDest);
+OwnedData ToMultiByte(const WCHAR* txt, UINT CodePage, int cchTxtLen = -1);
+OwnedData ToMultiByte(const char* src, UINT CodePageSrc, UINT CodePageDest);
 WCHAR* ToWideChar(const char* src, UINT CodePage, int cbSrcLen = -1);
 void Utf8Encode(char*& dst, int c);
 #endif
@@ -189,26 +189,32 @@ MaybeOwnedData UnknownToUtf8(const std::string_view&);
 inline WCHAR* FromCodePage(const char* src, UINT cp) {
     return ToWideChar(src, cp);
 }
-inline char* ToCodePage(const WCHAR* src, UINT cp) {
+
+inline OwnedData ToCodePage(const WCHAR* src, UINT cp) {
     return ToMultiByte(src, cp);
 }
 
 inline WCHAR* FromUtf8(const char* src, size_t cbSrcLen) {
     return ToWideChar(src, CP_UTF8, (int)cbSrcLen);
 }
+
 inline WCHAR* FromUtf8(const char* src) {
     return ToWideChar(src, CP_UTF8);
 }
-inline char* ToUtf8(const WCHAR* src, size_t cchSrcLen) {
+
+inline OwnedData ToUtf8(const WCHAR* src, size_t cchSrcLen) {
     return ToMultiByte(src, CP_UTF8, (int)cchSrcLen);
 }
-inline char* ToUtf8(const WCHAR* src) {
+
+inline OwnedData ToUtf8(const WCHAR* src) {
     return ToMultiByte(src, CP_UTF8);
 }
+
 inline WCHAR* FromAnsi(const char* src, size_t cbSrcLen = (size_t)-1) {
     return ToWideChar(src, CP_ACP, (int)cbSrcLen);
 }
-inline char* ToAnsi(const WCHAR* src) {
+
+inline OwnedData ToAnsi(const WCHAR* src) {
     return ToMultiByte(src, CP_ACP);
 }
 

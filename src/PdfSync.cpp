@@ -473,11 +473,11 @@ int SyncTex::RebuildIndex() {
     synctex_scanner_free(scanner);
     scanner = nullptr;
 
-    AutoFree syncfname(str::conv::ToAnsi(syncfilepath));
-    if (!syncfname)
+    OwnedData syncfname(str::conv::ToAnsi(syncfilepath));
+    if (!syncfname.Get())
         return PDFSYNCERR_OUTOFMEMORY;
 
-    scanner = synctex_scanner_new_with_output_file(syncfname, nullptr, 1);
+    scanner = synctex_scanner_new_with_output_file(syncfname.Get(), nullptr, 1);
     if (!scanner)
         return PDFSYNCERR_SYNCFILE_NOTFOUND; // cannot rebuild the index
 
@@ -546,7 +546,7 @@ int SyncTex::SourceToDoc(const WCHAR* srcfilename, UINT line, UINT col, UINT* pa
         return PDFSYNCERR_OUTOFMEMORY;
 
     bool isUtf8 = true;
-    char* mb_srcfilepath = str::conv::ToUtf8(srcfilepath);
+    char* mb_srcfilepath = str::conv::ToUtf8(srcfilepath).StealData();
 TryAgainAnsi:
     if (!mb_srcfilepath)
         return PDFSYNCERR_OUTOFMEMORY;
@@ -555,7 +555,7 @@ TryAgainAnsi:
     // recent SyncTeX versions encode in UTF-8 instead of ANSI
     if (isUtf8 && -1 == ret) {
         isUtf8 = false;
-        mb_srcfilepath = str::conv::ToAnsi(srcfilepath);
+        mb_srcfilepath = str::conv::ToAnsi(srcfilepath).StealData();
         goto TryAgainAnsi;
     }
 

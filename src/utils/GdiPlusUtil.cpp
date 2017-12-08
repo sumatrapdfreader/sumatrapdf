@@ -71,10 +71,12 @@ RectF MeasureTextAccurate(Graphics* g, Font* f, const WCHAR* s, int len) {
     Status status = g->MeasureCharacterRanges(s, len, f, layoutRect, &sf, 1, &r);
     if (status != Ok) {
         // TODO: remove whem we figure out why we crash
-        auto s2 = s ? str::conv::ToUtf8(s, (size_t)len) : str::Dup("<null>");
-        dbglog::CrashLogF("MeasureTextAccurate: status: %d, font: %p, len: %d, s: '%s'\n", (int)status, f, len, s2);
+		if (!s) {
+			s = L"<null>";
+		}
+		auto s2 = str::conv::ToUtf8(s, (size_t)len);
+        dbglog::CrashLogF("MeasureTextAccurate: status: %d, font: %p, len: %d, s: '%s'\n", (int)status, f, len, s2.Get());
         CrashIf(status != Ok);
-        free(s2);
     }
     RectF bbox;
     r.GetBounds(&bbox, g);

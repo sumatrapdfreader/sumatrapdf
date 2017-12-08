@@ -518,8 +518,10 @@ class OwnedData {
     OwnedData& operator=(OwnedData&& other);
     OwnedData(OwnedData&& other);
 
+	void Reset();
     void TakeOwnership(char* s, size_t len = 0);
     char* StealData();
+    char* Get();
 };
 
 // MaybeOwnedData is for returning data that might be owned by this class.

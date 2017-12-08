@@ -79,8 +79,10 @@ static char* DecodeTextToUtf8(const char* s, bool isXML = false) {
         }
         s = tmp;
     }
-    if (str::StartsWith(s, UTF16_BOM))
-        return str::conv::ToUtf8((WCHAR*)(s + 2));
+	if (str::StartsWith(s, UTF16_BOM)) {
+		auto tmp2 = str::conv::ToUtf8((WCHAR*)(s + 2));
+		return tmp2.StealData();
+	}
     if (str::StartsWith(s, UTF8_BOM))
         return str::Dup(s + 3);
     UINT codePage = isXML ? GetCodepageFromPI(s) : CP_ACP;
@@ -88,7 +90,8 @@ static char* DecodeTextToUtf8(const char* s, bool isXML = false) {
         return str::Dup(s);
     if (CP_ACP == codePage)
         codePage = GuessTextCodepage(s, str::Len(s), CP_ACP);
-    return str::ToMultiByte(s, codePage, CP_UTF8);
+    auto tmp2 = str::ToMultiByte(s, codePage, CP_UTF8);
+	return tmp2.StealData();
 }
 
 char* NormalizeURL(const char* url, const char* base) {
@@ -327,7 +330,8 @@ bool EpubDoc::Load() {
                 continue;
             // load the image lazily
             ImageData2 data = {0};
-            data.fileName = str::conv::ToUtf8(imgPath);
+			auto tmp = str::conv::ToUtf8(imgPath);
+            data.fileName = tmp.StealData();
             data.fileId = zip->GetFileId(data.fileName);
             images.Append(data);
         } else if (str::Eq(mediatype, L"application/xhtml+xml") || str::Eq(mediatype, L"application/html+xml") ||
@@ -382,9 +386,9 @@ bool EpubDoc::Load() {
         }
         // insert explicit page-breaks between sections including
         // an anchor with the file name at the top (for internal links)
-        AutoFree utf8_path(str::conv::ToUtf8(fullPath));
-        CrashIfDebugOnly(str::FindChar(utf8_path, '"'));
-        str::TransChars(utf8_path, "\"", "'");
+        OwnedData utf8_path(str::conv::ToUtf8(fullPath));
+        CrashIfDebugOnly(str::FindChar(utf8_path.Get(), '"'));
+        str::TransChars(utf8_path.Get(), "\"", "'");
         htmlData.AppendFmt("<pagebreak page_path=\"%s\" page_marker />", utf8_path.Get());
         htmlData.Append(html.data);
     }
@@ -637,10 +641,11 @@ bool EpubDoc::ParseToc(EbookTocVisitor* visitor) {
     if (!tocData)
         return false;
 
-    AutoFree pagePath(str::conv::ToUtf8(tocPath));
-    if (isNcxToc)
-        return ParseNcxToc(tocData, tocDataLen, pagePath, visitor);
-    return ParseNavToc(tocData, tocDataLen, pagePath, visitor);
+    OwnedData pagePath(str::conv::ToUtf8(tocPath));
+	if (isNcxToc) {
+		return ParseNcxToc(tocData, tocDataLen, pagePath.Get(), visitor);
+	}
+    return ParseNavToc(tocData, tocDataLen, pagePath.Get(), visitor);
 }
 
 bool EpubDoc::IsSupportedFile(const WCHAR* fileName, bool sniff) {
@@ -1065,15 +1070,17 @@ bool PalmDoc::Load() {
     size_t textLen;
     const char* text = mobiDoc->GetHtmlData(textLen);
     UINT codePage = GuessTextCodepage(text, textLen, CP_ACP);
-    AutoFree textUtf8(str::ToMultiByte(text, codePage, CP_UTF8));
-    textLen = str::Len(textUtf8);
+    OwnedData textUtf8(str::ToMultiByte(text, codePage, CP_UTF8));
+    textLen = textUtf8.size;
 
-    for (const char* curr = textUtf8; curr < textUtf8 + textLen; curr++) {
+	const char* start = textUtf8.Get();
+	const char* end = start + textLen;
+    for (const char* curr = start; curr < end; curr++) {
         if ('&' == *curr)
             htmlData.Append("&amp;");
         else if ('<' == *curr)
-            curr = HandleTealDocTag(htmlData, tocEntries, curr, textUtf8 + textLen - curr, codePage);
-        else if ('\n' == *curr || '\r' == *curr && curr + 1 < textUtf8 + textLen && '\n' != *(curr + 1))
+            curr = HandleTealDocTag(htmlData, tocEntries, curr, end - curr, codePage);
+        else if ('\n' == *curr || '\r' == *curr && curr + 1 < end && '\n' != *(curr + 1))
             htmlData.Append("\n<br>");
         else
             htmlData.Append(*curr);
@@ -1151,7 +1158,7 @@ bool HtmlDoc::Load() {
     if (!htmlData)
         return false;
 
-    pagePath.Set(str::conv::ToUtf8(fileName));
+    pagePath.Set(str::conv::ToUtf8(fileName).StealData());
     str::TransChars(pagePath, "\\", "/");
 
     HtmlPullParser parser(htmlData, str::Len(htmlData));

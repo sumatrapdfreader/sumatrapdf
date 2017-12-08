@@ -115,7 +115,8 @@ static char* SerializeStringArray(const Vec<WCHAR*>* strArray) {
         }
     }
 
-    return str::conv::ToUtf8(serialized.Get());
+    auto tmp = str::conv::ToUtf8(serialized.Get());
+	return tmp.StealData();
 }
 
 static void DeserializeStringArray(Vec<WCHAR*>* strArray, const char* serialized) {
@@ -207,7 +208,10 @@ static bool SerializeField(str::Str<char>& out, const uint8_t* base, const Field
                 CrashIf(field.value);
                 return false; // skip empty strings
             }
-            value.Set(str::conv::ToUtf8(*(const WCHAR**)fieldPtr));
+			{
+				auto tmp = str::conv::ToUtf8(*(const WCHAR**)fieldPtr);
+				value.Set(tmp.StealData());
+			}
             if (!NeedsEscaping(value))
                 out.Append(value);
             else

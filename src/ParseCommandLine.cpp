@@ -129,7 +129,7 @@ static const char* zoomValues =
 // if a number, it's in percent e.g. 12.5 means 12.5%
 // 100 means 100% i.e. actual size as e.g. given in PDF file
 static void ParseZoomValue(float* zoom, const WCHAR* txtOrig) {
-    AutoFree txtDup(str::conv::ToUtf8(txtOrig));
+    OwnedData txtDup(str::conv::ToUtf8(txtOrig));
     char* txt = str::ToLowerInPlace(txtDup.Get());
     int zoomVal = seqstrings::StrToIdx(zoomValues, txt);
     if (zoomVal != -1) {
@@ -410,7 +410,8 @@ void CommandLineInfo::ParseCommandLine(const WCHAR* cmdLine) {
         }
         // TODO: remove the following deprecated options within a release or two
         else if (is_arg_with_param(Lang)) {
-            lang.Set(str::conv::ToAnsi(param));
+			auto tmp = str::conv::ToAnsi(param);
+            lang.Set(tmp.StealData());
             ++n;
         } else if (EscToExit == arg) {
             globalPrefArgs.Append(str::Dup(argList.at(n)));

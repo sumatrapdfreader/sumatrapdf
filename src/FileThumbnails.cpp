@@ -27,12 +27,12 @@ static WCHAR* GetThumbnailPath(const WCHAR* filePath) {
     // TODO: why is this happening? Seen in crash reports e.g. 35043
     if (!filePath)
         return nullptr;
-    AutoFree pathU(str::conv::ToUtf8(filePath));
-    if (!pathU)
+    OwnedData pathU(str::conv::ToUtf8(filePath));
+    if (!pathU.Get())
         return nullptr;
     if (path::HasVariableDriveLetter(filePath))
-        pathU[0] = '?'; // ignore the drive letter, if it might change
-    CalcMD5Digest((unsigned char*)pathU.Get(), str::Len(pathU), digest);
+        pathU.Get()[0] = '?'; // ignore the drive letter, if it might change
+    CalcMD5Digest((unsigned char*)pathU.Get(), str::Len(pathU.Get()), digest);
     AutoFree fingerPrint(_MemToHex(&digest));
 
     AutoFreeW thumbsPath(AppGenDataFilename(THUMBNAILS_DIR_NAME));

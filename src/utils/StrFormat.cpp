@@ -263,8 +263,8 @@ void Fmt::serializeInst(int n) {
             res.Append(arg.s);
             break;
         case WStr:
-            char* sUtf8 = str::conv::ToUtf8(arg.ws);
-            res.AppendAndFree(sUtf8);
+            OwnedData sUtf8 = str::conv::ToUtf8(arg.ws);
+            res.AppendAndFree(sUtf8.StealData());
             break;
     };
 }
