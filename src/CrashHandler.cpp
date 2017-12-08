@@ -4,9 +4,9 @@
 #include "BaseUtil.h"
 
 #pragma warning(disable : 4668)
-#include <exception>
 #include <tlhelp32.h>
 #include <signal.h>
+#include <eh.h>
 
 #include "WinDynCalls.h"
 #include "DbgHelpDyn.h"
@@ -682,10 +682,8 @@ void InstallCrashHandler(const WCHAR* crashDumpPath, const WCHAR* symDir) {
 
     signal(SIGABRT, onSignalAbort);
 #if COMPILER_MSVC
-    // those are only in msvc? There is std::set_terminate() and
-    // std::set_unexpected() in C++ in <exception>
-    std::set_terminate(onTerminate);
-    std::set_unexpected(onUnexpected);
+    ::set_terminate(onTerminate);
+    ::set_unexpected(onUnexpected);
 #endif
 }
 
