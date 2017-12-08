@@ -180,9 +180,9 @@ OwnedData& OwnedData::operator=(OwnedData&& other) {
 }
 
 void OwnedData::Reset() {
-	free(data);
-	data = nullptr;
-	size = 0;
+    free(data);
+    data = nullptr;
+    size = 0;
 }
 
 char* OwnedData::Get() {

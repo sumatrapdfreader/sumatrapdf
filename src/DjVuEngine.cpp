@@ -987,9 +987,9 @@ char* DjVuEngineImpl::ResolveNamedDest(const char* name) {
 
 PageDestination* DjVuEngineImpl::GetNamedDest(const WCHAR* name) {
     OwnedData nameUtf8(str::conv::ToUtf8(name));
-	if (!str::StartsWith(nameUtf8.Get(), "#")) {
-		nameUtf8.TakeOwnership(str::Join("#", nameUtf8.Get()));
-	}
+    if (!str::StartsWith(nameUtf8.Get(), "#")) {
+        nameUtf8.TakeOwnership(str::Join("#", nameUtf8.Get()));
+    }
 
     AutoFree link(ResolveNamedDest(nameUtf8.Get()));
     if (link)
@@ -1058,9 +1058,9 @@ int DjVuEngineImpl::GetPageByLabel(const WCHAR* label) const {
     OwnedData labelUtf8(str::conv::ToUtf8(label));
     for (size_t i = 0; i < fileInfo.size(); i++) {
         ddjvu_fileinfo_t& info = fileInfo.at(i);
-		if (str::EqI(info.title, labelUtf8.Get()) && !str::Eq(info.title, info.id)) {
-			return info.pageno + 1;
-		}
+        if (str::EqI(info.title, labelUtf8.Get()) && !str::Eq(info.title, info.id)) {
+            return info.pageno + 1;
+        }
     }
     return BaseEngine::GetPageByLabel(label);
 }

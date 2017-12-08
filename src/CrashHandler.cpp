@@ -402,14 +402,14 @@ static void GetProcessorName(str::Str<char>& s) {
 static void GetMachineName(str::Str<char>& s) {
     WCHAR* s1 = ReadRegStr(HKEY_LOCAL_MACHINE, L"HARDWARE\\DESCRIPTION\\System\\BIOS", L"SystemFamily");
     WCHAR* s2 = ReadRegStr(HKEY_LOCAL_MACHINE, L"HARDWARE\\DESCRIPTION\\System\\BIOS", L"SystemVersion");
-	OwnedData s1u;
-	if (s1) {
-		s1u = std::move(str::conv::ToUtf8(s1));
-	}
-	OwnedData s2u;
-	if (s2) {
-		s2u = std::move(str::conv::ToUtf8(s2));
-	}
+    OwnedData s1u;
+    if (s1) {
+        s1u = std::move(str::conv::ToUtf8(s1));
+    }
+    OwnedData s2u;
+    if (s2) {
+        s2u = std::move(str::conv::ToUtf8(s2));
+    }
 
     if (!s1u.Get() && !s2u.Get())
         ; // pass

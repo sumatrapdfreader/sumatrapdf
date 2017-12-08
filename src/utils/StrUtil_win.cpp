@@ -160,38 +160,38 @@ WCHAR* ToLowerInPlace(WCHAR* s) {
 
 OwnedData ToMultiByte(const WCHAR* txt, UINT codePage, int cchTxtLen) {
     CrashIf(!txt);
-	if (!txt) {
-		return {};
-	}
+    if (!txt) {
+        return {};
+    }
 
     int requiredBufSize = WideCharToMultiByte(codePage, 0, txt, cchTxtLen, nullptr, 0, nullptr, nullptr);
-	if (0 == requiredBufSize) {
-		return {};
-	}
+    if (0 == requiredBufSize) {
+        return {};
+    }
     char* res = AllocArray<char>(requiredBufSize + 1);
     if (!res) {
-		return {};
-	}
+        return {};
+    }
     WideCharToMultiByte(codePage, 0, txt, cchTxtLen, res, requiredBufSize, nullptr, nullptr);
     return OwnedData(res, requiredBufSize);
 }
 
 OwnedData ToMultiByte(const char* src, UINT codePageSrc, UINT codePageDest) {
     CrashIf(!src);
-	if (!src) {
-		return {};
-	}
+    if (!src) {
+        return {};
+    }
 
-	if (codePageSrc == codePageDest) {
-		char *s = str::Dup(src);
-		size_t n = str::Len(s);
-		return OwnedData(s, n);
-	}
+    if (codePageSrc == codePageDest) {
+        char* s = str::Dup(src);
+        size_t n = str::Len(s);
+        return OwnedData(s, n);
+    }
 
     AutoFreeW tmp(ToWideChar(src, codePageSrc));
-	if (!tmp) {
-		return {};
-	}
+    if (!tmp) {
+        return {};
+    }
 
     return ToMultiByte(tmp.Get(), codePageDest);
 }
@@ -643,8 +643,8 @@ MaybeOwnedData UnknownToUtf8(const std::string_view& txt) {
         s += 2;
         int cchLen = (int)((len - 2) / 2);
         OwnedData d = str::conv::ToUtf8((const WCHAR*)s, cchLen);
-		size_t n = d.size;
-		auto* str = d.StealData();
+        size_t n = d.size;
+        auto* str = d.StealData();
         return MaybeOwnedData(str, n, true);
     }
 
@@ -655,10 +655,10 @@ MaybeOwnedData UnknownToUtf8(const std::string_view& txt) {
     }
 
     AutoFreeW uni(str::conv::FromAnsi(s, len));
-	OwnedData d = str::conv::ToUtf8(uni.Get());
-	size_t n = d.size;
-	auto* str = d.StealData();
-	return MaybeOwnedData(str, n, true);
+    OwnedData d = str::conv::ToUtf8(uni.Get());
+    size_t n = d.size;
+    auto* str = d.StealData();
+    return MaybeOwnedData(str, n, true);
 }
 
 size_t ToCodePageBuf(char* buf, int cbBufSize, const WCHAR* s, UINT cp) {
@@ -681,9 +681,9 @@ bool IsAbsolute(const WCHAR* url) {
 }
 
 void DecodeInPlace(WCHAR* url) {
-	if (!str::FindChar(url, '%')) {
-		return;
-	}
+    if (!str::FindChar(url, '%')) {
+        return;
+    }
     // URLs are usually UTF-8 encoded
     OwnedData urlUtf8(str::conv::ToUtf8(url));
     DecodeInPlace(urlUtf8.Get());

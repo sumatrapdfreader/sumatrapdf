@@ -26,7 +26,7 @@ char* Escape(WCHAR* string) {
         return nullptr;
 
     if (!str::FindChar(string, '<') && !str::FindChar(string, '&') && !str::FindChar(string, '"'))
-        return str::conv::ToUtf8(string);
+        return str::conv::ToUtf8(string).StealData();
 
     str::Str<WCHAR> escaped(256);
     for (const WCHAR* s = string; *s; s++) {
@@ -51,7 +51,7 @@ char* Escape(WCHAR* string) {
                 break;
         }
     }
-    return str::conv::ToUtf8(escaped.Get());
+    return str::conv::ToUtf8(escaped.Get()).StealData();
 }
 
 void DumpProperties(BaseEngine* engine, bool fullDump) {
@@ -359,9 +359,9 @@ bool RenderDocument(BaseEngine* engine, const WCHAR* renderPath, float zoom = 1.
         if (silent)
             return true;
         AutoFreeW txtFilePath(str::Format(renderPath, 0));
-        AutoFree textUTF8(str::conv::ToUtf8(text.Get()));
-        AutoFree textUTF8BOM(str::Join(UTF8_BOM, textUTF8));
-        return file::WriteAll(txtFilePath, textUTF8BOM, str::Len(textUTF8BOM));
+        OwnedData textUTF8(str::conv::ToUtf8(text.Get()));
+        AutoFree textUTF8BOM(str::Join(UTF8_BOM, textUTF8.Get()));
+        return file::WriteAll(txtFilePath, textUTF8BOM.Get(), str::Len(textUTF8BOM));
     }
 
     if (str::EndsWithI(renderPath, L".pdf")) {
@@ -369,11 +369,11 @@ bool RenderDocument(BaseEngine* engine, const WCHAR* renderPath, float zoom = 1.
             return false;
         }
         AutoFreeW pdfFilePath(str::Format(renderPath, 0));
-        AutoFree pathUtf8(str::conv::ToUtf8(pdfFilePath.Get()));
-        if (engine->SaveFileAsPDF(pathUtf8, true)) {
+        OwnedData pathUtf8(str::conv::ToUtf8(pdfFilePath.Get()));
+        if (engine->SaveFileAsPDF(pathUtf8.Get(), true)) {
             return true;
         }
-        return PdfCreator::RenderToFile(pathUtf8, engine);
+        return PdfCreator::RenderToFile(pathUtf8.Get(), engine);
     }
 
     bool success = true;

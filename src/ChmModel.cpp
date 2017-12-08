@@ -405,12 +405,12 @@ PageDestination* ChmModel::GetNamedDest(const WCHAR* name) {
             if (urlUtf8.Get() && doc->HasData(urlUtf8.Get())) {
                 plainUrl.Set(str::conv::FromUtf8(urlUtf8.Get()));
                 name = plainUrl;
-			} else {
-				urlUtf8.Reset();
-			}
-		} else {
-			urlUtf8.Reset();
-		}
+            } else {
+                urlUtf8.Reset();
+            }
+        } else {
+            urlUtf8.Reset();
+        }
     }
     int pageNo = pages.Find(plainUrl) + 1;
     if (!pageNo && !str::IsEmpty(urlUtf8.Get())) {

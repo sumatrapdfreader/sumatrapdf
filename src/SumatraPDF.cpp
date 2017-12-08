@@ -241,15 +241,15 @@ bool LaunchBrowser(const WCHAR* url) {
     if (gPluginMode) {
         // pass the URI back to the browser
         CrashIf(gWindows.size() == 0);
-		if (gWindows.size() == 0) {
-			return false;
-		}
+        if (gWindows.size() == 0) {
+            return false;
+        }
         HWND plugin = gWindows.at(0)->hwndFrame;
         HWND parent = GetAncestor(plugin, GA_PARENT);
         OwnedData urlUtf8(str::conv::ToUtf8(url));
-		if (!parent || !urlUtf8.Get() || (urlUtf8.size > 4096)) {
-			return false;
-		}
+        if (!parent || !urlUtf8.Get() || (urlUtf8.size > 4096)) {
+            return false;
+        }
         COPYDATASTRUCT cds = {0x4C5255 /* URL */, (DWORD)urlUtf8.size + 1, urlUtf8.Get()};
         return SendMessage(parent, WM_COPYDATA, (WPARAM)plugin, (LPARAM)&cds);
     }
@@ -2330,7 +2330,7 @@ static void OnMenuSaveAs(WindowInfo& win) {
             text.AppendAndFree(tmp);
         }
 
-		OwnedData textUTF8(str::conv::ToUtf8(text.LendData()));
+        OwnedData textUTF8(str::conv::ToUtf8(text.LendData()));
         AutoFree textUTF8BOM(str::Join(UTF8_BOM, textUTF8.Get()));
         ok = file::WriteAll(realDstFileName, textUTF8BOM, str::Len(textUTF8BOM));
     } else if (convertToPDF) {

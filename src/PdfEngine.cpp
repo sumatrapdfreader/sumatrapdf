@@ -2141,9 +2141,9 @@ void PdfEngineImpl::LinkifyPageText(pdf_page* page) {
             overlaps = fz_calc_overlap(list->coords.at(i), next->rect) >= 0.25f;
         if (!overlaps) {
             OwnedData uri(str::conv::ToUtf8(list->links.at(i)));
-			if (!uri.Get()) {
-				continue;
-			}
+            if (!uri.Get()) {
+                continue;
+            }
             fz_link_dest ld = {FZ_LINK_URI, 0};
             ld.ld.uri.uri = fz_strdup(ctx, uri.Get());
             // add links in top-to-bottom order (i.e. last-to-first)
@@ -3082,9 +3082,9 @@ fz_rect xps_bound_page_quick(xps_document* doc, int number) {
         }
     }
     if (str::StartsWith(data, UTF16_BOM)) {
-		const WCHAR *s = (const WCHAR*)(part->data + 2);
-		size_t n = (part->size - 2) / 2;
-		auto tmp = str::conv::ToUtf8(s, n);
+        const WCHAR* s = (const WCHAR*)(part->data + 2);
+        size_t n = (part->size - 2) / 2;
+        auto tmp = str::conv::ToUtf8(s, n);
         dataUtf8.Set(tmp.StealData());
         data = dataUtf8;
         data_size = str::Len(dataUtf8);
@@ -4096,15 +4096,15 @@ fz_rect XpsEngineImpl::FindDestRect(const char* target) {
 
 PageDestination* XpsEngineImpl::GetNamedDest(const WCHAR* name) {
     OwnedData name_utf8(str::conv::ToUtf8(name));
-	if (!str::StartsWith(name_utf8.Get(), "#")) {
-		name_utf8.TakeOwnership(str::Join("#", name_utf8.Get()));
-	}
+    if (!str::StartsWith(name_utf8.Get(), "#")) {
+        name_utf8.TakeOwnership(str::Join("#", name_utf8.Get()));
+    }
 
-	for (xps_target* dest = _doc->target; dest; dest = dest->next) {
-		if (str::EndsWithI(dest->name, name_utf8.Get())) {
-			return new SimpleDest(dest->page + 1, fz_rect_to_RectD(dest->rect));
-		}
-	}
+    for (xps_target* dest = _doc->target; dest; dest = dest->next) {
+        if (str::EndsWithI(dest->name, name_utf8.Get())) {
+            return new SimpleDest(dest->page + 1, fz_rect_to_RectD(dest->rect));
+        }
+    }
 
     return nullptr;
 }

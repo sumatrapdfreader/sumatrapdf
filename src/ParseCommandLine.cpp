@@ -410,7 +410,7 @@ void CommandLineInfo::ParseCommandLine(const WCHAR* cmdLine) {
         }
         // TODO: remove the following deprecated options within a release or two
         else if (is_arg_with_param(Lang)) {
-			auto tmp = str::conv::ToAnsi(param);
+            auto tmp = str::conv::ToAnsi(param);
             lang.Set(tmp.StealData());
             ++n;
         } else if (EscToExit == arg) {

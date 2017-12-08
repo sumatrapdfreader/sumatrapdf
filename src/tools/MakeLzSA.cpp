@@ -148,10 +148,12 @@ bool CreateArchive(const WCHAR* archivePath, WStrVec& files, size_t skipFiles = 
         WCHAR* sep = str::FindCharLast(filePath, ':');
         AutoFree utf8Name;
         if (sep) {
-            utf8Name.Set(str::conv::ToUtf8(sep + 1));
+            auto tmp = str::conv::ToUtf8(sep + 1);
+            utf8Name.Set(tmp.StealData());
             *sep = '\0';
         } else {
-            utf8Name.Set(str::conv::ToUtf8(filePath));
+            auto tmp = str::conv::ToUtf8(filePath);
+            utf8Name.Set(tmp.StealData());
         }
 
         str::TransChars(utf8Name, "/", "\\");

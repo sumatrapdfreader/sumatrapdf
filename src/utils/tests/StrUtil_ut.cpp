@@ -336,10 +336,9 @@ void StrTest() {
         // the test string should only contain ASCII characters,
         // as all others might not be available in all code pages
 #define TEST_STRING "aBc"
-    char* strA = str::conv::ToAnsi(TEXT(TEST_STRING));
-    utassert(str::Eq(strA, TEST_STRING));
-    str = str::conv::FromAnsi(strA);
-    free(strA);
+    OwnedData strA = str::conv::ToAnsi(TEXT(TEST_STRING));
+    utassert(str::Eq(strA.Get(), TEST_STRING));
+    str = str::conv::FromAnsi(strA.Get());
     utassert(str::Eq(str, TEXT(TEST_STRING)));
     free(str);
 #undef TEST_STRING
@@ -478,10 +477,22 @@ void StrTest() {
         free(s);
     }
 
-    utassert(!str::ToMultiByte("abc", 9876, 123456));
-    utassert(!str::ToMultiByte(L"abc", 98765));
-    utassert(!str::conv::FromCodePage("abc", 12345));
-    utassert(!str::conv::ToCodePage(L"abc", 987654));
+    {
+        auto tmp = str::ToMultiByte("abc", 9876, 123456);
+        utassert(!tmp.Get());
+    }
+    {
+        auto tmp = str::ToMultiByte(L"abc", 98765);
+        utassert(!tmp.Get());
+    }
+    {
+        AutoFreeW tmp(str::conv::FromCodePage("abc", 12345));
+        utassert(!tmp.Get());
+    }
+    {
+        auto tmp = str::conv::ToCodePage(L"abc", 987654);
+        utassert(!tmp.Get());
+    }
 
     {
         char buf1[6] = {0};

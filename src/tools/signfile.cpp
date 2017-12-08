@@ -73,9 +73,10 @@ int main() {
             signFilePath = args.at(++i);
         else if (is_arg("-pubkey", pubkeyPath))
             pubkeyPath = args.at(++i);
-        else if (is_arg("-comment", inFileCommentSyntax))
-            inFileCommentSyntax.Set(str::conv::ToUtf8(args.at(++i)));
-        else if (!filePath)
+        else if (is_arg("-comment", inFileCommentSyntax)) {
+            auto tmp = str::conv::ToUtf8(args.at(++i));
+            inFileCommentSyntax.Set(tmp.StealData());
+        } else if (!filePath)
             filePath = args.at(i);
         else
             goto SyntaxError;

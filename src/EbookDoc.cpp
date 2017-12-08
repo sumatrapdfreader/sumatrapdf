@@ -79,10 +79,10 @@ static char* DecodeTextToUtf8(const char* s, bool isXML = false) {
         }
         s = tmp;
     }
-	if (str::StartsWith(s, UTF16_BOM)) {
-		auto tmp2 = str::conv::ToUtf8((WCHAR*)(s + 2));
-		return tmp2.StealData();
-	}
+    if (str::StartsWith(s, UTF16_BOM)) {
+        auto tmp2 = str::conv::ToUtf8((WCHAR*)(s + 2));
+        return tmp2.StealData();
+    }
     if (str::StartsWith(s, UTF8_BOM))
         return str::Dup(s + 3);
     UINT codePage = isXML ? GetCodepageFromPI(s) : CP_ACP;
@@ -91,7 +91,7 @@ static char* DecodeTextToUtf8(const char* s, bool isXML = false) {
     if (CP_ACP == codePage)
         codePage = GuessTextCodepage(s, str::Len(s), CP_ACP);
     auto tmp2 = str::ToMultiByte(s, codePage, CP_UTF8);
-	return tmp2.StealData();
+    return tmp2.StealData();
 }
 
 char* NormalizeURL(const char* url, const char* base) {
@@ -330,7 +330,7 @@ bool EpubDoc::Load() {
                 continue;
             // load the image lazily
             ImageData2 data = {0};
-			auto tmp = str::conv::ToUtf8(imgPath);
+            auto tmp = str::conv::ToUtf8(imgPath);
             data.fileName = tmp.StealData();
             data.fileId = zip->GetFileId(data.fileName);
             images.Append(data);
@@ -642,9 +642,9 @@ bool EpubDoc::ParseToc(EbookTocVisitor* visitor) {
         return false;
 
     OwnedData pagePath(str::conv::ToUtf8(tocPath));
-	if (isNcxToc) {
-		return ParseNcxToc(tocData, tocDataLen, pagePath.Get(), visitor);
-	}
+    if (isNcxToc) {
+        return ParseNcxToc(tocData, tocDataLen, pagePath.Get(), visitor);
+    }
     return ParseNavToc(tocData, tocDataLen, pagePath.Get(), visitor);
 }
 
@@ -1073,8 +1073,8 @@ bool PalmDoc::Load() {
     OwnedData textUtf8(str::ToMultiByte(text, codePage, CP_UTF8));
     textLen = textUtf8.size;
 
-	const char* start = textUtf8.Get();
-	const char* end = start + textLen;
+    const char* start = textUtf8.Get();
+    const char* end = start + textLen;
     for (const char* curr = start; curr < end; curr++) {
         if ('&' == *curr)
             htmlData.Append("&amp;");
