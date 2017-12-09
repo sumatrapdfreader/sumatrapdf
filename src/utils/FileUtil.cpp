@@ -326,6 +326,7 @@ char* ReadFileWithAllocator(const char* filePath, size_t* fileSizeOut, Allocator
     if (res != 0) {
         return nullptr;
     }
+    size_t nRead;
     size_t size = ftell(fp);
     if (addOverflows<size_t>(size, ZERO_PADDING_COUNT)) {
         goto Error;
@@ -336,7 +337,7 @@ char* ReadFileWithAllocator(const char* filePath, size_t* fileSizeOut, Allocator
         return nullptr;
     }
 
-    size_t nRead = fread((void*)d, 1, size, fp);
+    nRead = fread((void*)d, 1, size, fp);
     if (nRead != size) {
         int err = ferror(fp);
         CrashIf(err == 0);
