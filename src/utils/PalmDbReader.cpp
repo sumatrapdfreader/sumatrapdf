@@ -149,12 +149,12 @@ PdbReader* PdbReader::CreateFromData(OwnedData data) {
 #if OS_WIN
 #include "WinUtil.h"
 
-PdbReader* PdbReader::CreateFromFile(const WCHAR *filePath) {
+PdbReader* PdbReader::CreateFromFile(const WCHAR* filePath) {
     OwnedData data = file::ReadAll(filePath);
     return CreateFromData(std::move(data));
 }
 
-PdbReader* PdbReader::CreateFromStream(IStream *stream) {
+PdbReader* PdbReader::CreateFromStream(IStream* stream) {
     size_t size;
     char* tmp = (char*)GetDataFromStream(stream, &size);
     OwnedData data(tmp, size);

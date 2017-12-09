@@ -406,10 +406,10 @@ PageDestination* ChmModel::GetNamedDest(const WCHAR* name) {
                 plainUrl.Set(str::conv::FromUtf8(urlUtf8.Get()));
                 name = plainUrl;
             } else {
-                urlUtf8.Reset();
+                urlUtf8.Clear();
             }
         } else {
-            urlUtf8.Reset();
+            urlUtf8.Clear();
         }
     }
     int pageNo = pages.Find(plainUrl) + 1;

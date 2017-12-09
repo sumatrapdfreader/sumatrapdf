@@ -517,7 +517,8 @@ class OwnedData {
     OwnedData& operator=(OwnedData&& other);
     OwnedData(OwnedData&& other);
 
-    void Reset();
+    bool IsEmpty();
+    void Clear();
     void TakeOwnership(char* s, size_t len = 0);
     char* StealData();
     char* Get();

@@ -64,7 +64,8 @@ enum class Tab {
 };
 
 static std::wstring wstrFromUtf8(const std::string& str) {
-    WCHAR *s = str::conv::FromUtf8(str.c_str());;
+    WCHAR* s = str::conv::FromUtf8(str.c_str());
+    ;
     std::wstring res(s);
     free(s);
     return res;

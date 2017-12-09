@@ -26,8 +26,7 @@ class PdbReader {
 
     static PdbReader* CreateFromData(OwnedData data);
 #if OS_WIN
-    static PdbReader* CreateFromFile(const WCHAR *filePath);
-    static PdbReader* CreateFromStream(IStream *stream);
+    static PdbReader* CreateFromFile(const WCHAR* filePath);
+    static PdbReader* CreateFromStream(IStream* stream);
 #endif
 };
-

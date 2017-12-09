@@ -179,7 +179,11 @@ OwnedData& OwnedData::operator=(OwnedData&& other) {
     return *this;
 }
 
-void OwnedData::Reset() {
+bool OwnedData::IsEmpty() {
+    return (data == nullptr) || (size == 0);
+}
+
+void OwnedData::Clear() {
     free(data);
     data = nullptr;
     size = 0;
