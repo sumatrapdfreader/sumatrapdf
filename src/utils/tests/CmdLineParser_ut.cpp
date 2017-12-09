@@ -16,7 +16,8 @@ void CmdLineParserTest() {
     utassert(str::Eq(args.at(1), L"-arg"));
     utassert(str::Eq(args.at(2), L"foo.pdf"));
     args.Reset();
-    GetHtmlData ParseCmdLine(L"test.exe \"foo \\\" bar \\\\.pdf\" un\\\"quoted.pdf", args);
+
+    ParseCmdLine(L"test.exe \"foo \\\" bar \\\\.pdf\" un\\\"quoted.pdf", args);
     utassert(3 == args.size());
     utassert(str::Eq(args.at(0), L"test.exe"));
     utassert(str::Eq(args.at(1), L"foo \" bar \\\\.pdf"));
