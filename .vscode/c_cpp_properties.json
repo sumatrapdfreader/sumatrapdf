@@ -62,10 +62,12 @@
         {
             "name": "Win32",
             "includePath": [
+                "C:/Program Files (x86)/Windows Kits/10/Include/10.0.15063.0/shared",
+                "C:/Program Files (x86)/Windows Kits/10/Include/10.0.15063.0/ucrt",
+                "C:/Program Files (x86)/Windows Kits/10/Include/10.0.15063.0/um",
                 "C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/include",
-                "C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/include/experimental",
-                "C:/Program Files (x86)/Microsoft SDKs/Windows/v7.1A/Include",
                 "${workspaceRoot}",
+                "${workspaceRoot}/src/",
                 "${workspaceRoot}/src/mui",
                 "${workspaceRoot}/src/utils",
                 "${workspaceRoot}/src/wingui"
@@ -79,14 +81,15 @@
             "intelliSenseMode": "msvc-x64",
             "browse": {
                 "path": [
-                    "C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/include/*",
-                    "C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/include/experimental",
-                    "C:/Program Files (x86)/Microsoft SDKs/Windows/v7.1A/Include",
+                    "C:/Program Files (x86)/Windows Kits/10/Include/10.0.15063.0/shared",
+                    "C:/Program Files (x86)/Windows Kits/10/Include/10.0.15063.0/ucrt",
+                    "C:/Program Files (x86)/Windows Kits/10/Include/10.0.15063.0/um",
+                    "C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/include",
                     "${workspaceRoot}",
+                    "${workspaceRoot}/src/",
                     "${workspaceRoot}/src/mui",
                     "${workspaceRoot}/src/utils",
                     "${workspaceRoot}/src/wingui"
-
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
