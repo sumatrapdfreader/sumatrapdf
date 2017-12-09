@@ -96,6 +96,9 @@ bool PdbReader::ParseHeader() {
 
     for (int i = 0; i < pdbHeader.numRecords; i++) {
         uint32_t off = r.DWordBE(sizeof(pdbHeader) + i * sizeof(PdbRecordHeader));
+        if (off >= data.size) {
+            return false;
+        }
         recOffsets.push_back(off);
     }
     // add sentinel value to simplify use

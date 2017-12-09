@@ -507,8 +507,9 @@ class OwnedData {
     char* data = nullptr;
     size_t size = 0;
 
-    OwnedData(){};
-    OwnedData(char* data, size_t size);
+    OwnedData() {}
+    // takes ownership of data
+    OwnedData(const char* data, size_t size=0);
     ~OwnedData();
 
     OwnedData(const OwnedData& other) = delete;
@@ -519,9 +520,12 @@ class OwnedData {
 
     bool IsEmpty();
     void Clear();
-    void TakeOwnership(char* s, size_t len = 0);
+    void TakeOwnership(const char* s, size_t size = 0);
     char* StealData();
     char* Get();
+
+    // creates a copy of s
+    static OwnedData MakeFromStr(const char* s, size_t size = 0);
 };
 
 // MaybeOwnedData is for returning data that might be owned by this class.

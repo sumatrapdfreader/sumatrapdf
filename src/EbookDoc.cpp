@@ -1075,15 +1075,18 @@ bool PalmDoc::Load() {
 
     const char* start = textUtf8.Get();
     const char* end = start + textLen;
+    // TODO: speedup by not calling htmlData.Append() for every byte
+    // but gather spans and memcpy them wholesale
     for (const char* curr = start; curr < end; curr++) {
-        if ('&' == *curr)
+        char c = *curr;
+        if ('&' == c)
             htmlData.Append("&amp;");
-        else if ('<' == *curr)
+        else if ('<' == c)
             curr = HandleTealDocTag(htmlData, tocEntries, curr, end - curr, codePage);
-        else if ('\n' == *curr || '\r' == *curr && curr + 1 < end && '\n' != *(curr + 1))
+        else if ('\n' == c || '\r' == c && curr + 1 < end && '\n' != *(curr + 1))
             htmlData.Append("\n<br>");
         else
-            htmlData.Append(*curr);
+            htmlData.Append(c);
     }
 
     delete mobiDoc;

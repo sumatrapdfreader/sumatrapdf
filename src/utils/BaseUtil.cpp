@@ -157,7 +157,14 @@ void* PoolAllocator::FindNthPieceOfSize(size_t size, size_t n) const {
     return nullptr;
 }
 
-OwnedData::OwnedData(char* data, size_t size) : data(data), size(size) {}
+OwnedData::OwnedData(const char* data, size_t size) {
+    if (size == 0) {
+        size = str::Len(data);
+    }
+    this->data = (char*)data;
+    this->size = size;
+}
+
 OwnedData::~OwnedData() {
     free(data);
 }
@@ -193,13 +200,22 @@ char* OwnedData::Get() {
     return data;
 }
 
-void OwnedData::TakeOwnership(char* s, size_t len) {
-    if (len == 0) {
-        len = str::Len(s);
+void OwnedData::TakeOwnership(const char* s, size_t size) {
+    if (size == 0) {
+        size = str::Len(s);
     }
     free(data);
-    data = s;
-    size = len;
+    data = (char*)s;
+    this->size = size;
+}
+
+OwnedData OwnedData::MakeFromStr(const char* s, size_t size) {
+    if (size == 0) {
+        return OwnedData(str::Dup(s), str::Len(s));
+    }
+
+    char *tmp = str::DupN(s, size);
+    return OwnedData(tmp, size);
 }
 
 char* OwnedData::StealData() {

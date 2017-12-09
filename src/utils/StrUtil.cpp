@@ -300,7 +300,9 @@ char* Join(const char* s1, const char* s2, const char* s3, Allocator* allocator)
     return res;
 }
 
+// Duplicates N bytes from s, adds one byte for zero-termination
 char* DupN(const char* s, size_t n) {
+    CrashIf(!s && (n > 0));
     if (!s) {
         return nullptr;
     }
