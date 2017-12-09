@@ -47,6 +47,7 @@ class PdbReader {
     std::string_view GetRecord(size_t recNo);
 
     static PdbReader* CreateFromData(OwnedData data);
+    static PdbReader* CreateFromFile(const char* filePath);
 
 #if OS_WIN
     static PdbReader* CreateFromFile(const WCHAR* filePath);

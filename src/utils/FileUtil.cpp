@@ -5,17 +5,13 @@
 #include "FileUtil.h"
 #if OS_WIN
 #include "ScopedWin.h"
+#include "WinUtil.h"
 #endif
 
-#if OS_WIN
-// cf. http://blogs.msdn.com/b/oldnewthing/archive/2004/10/25/247180.aspx
-EXTERN_C IMAGE_DOS_HEADER __ImageBase;
-
-// A convenient way to grab the same value as HINSTANCE passed to WinMain
-HINSTANCE GetInstance() {
-    return (HINSTANCE)&__ImageBase;
-}
-#endif
+// we pad data read with 3 zeros for convenience. That way returned
+// data is a valid null-terminated string or WCHAR*.
+// 3 is for absolute worst case of WCHAR* where last char was partially written
+#define ZERO_PADDING_COUNT 3
 
 namespace path {
 
@@ -70,8 +66,9 @@ bool IsSep(WCHAR c) {
 const WCHAR* GetBaseName(const WCHAR* path) {
     const WCHAR* fileBaseName = path + str::Len(path);
     for (; fileBaseName > path; fileBaseName--) {
-        if (IsSep(fileBaseName[-1]))
+        if (IsSep(fileBaseName[-1])) {
             break;
+        }
     }
     return fileBaseName;
 }
@@ -79,9 +76,11 @@ const WCHAR* GetBaseName(const WCHAR* path) {
 // Note: returns pointer inside <path>, do not free
 const WCHAR* GetExt(const WCHAR* path) {
     const WCHAR* ext = path + str::Len(path);
-    for (; ext > path && !IsSep(*ext); ext--) {
-        if (*ext == '.')
+    while ((ext > path) && !IsSep(*ext)) {
+        if (*ext == '.') {
             return ext;
+        }
+        ext--;
     }
     return path + str::Len(path);
 }
@@ -300,6 +299,7 @@ WCHAR* GetAppPath(const WCHAR* fileName) {
 namespace file {
 
 FILE* OpenFILE(const char* path) {
+    CrashIf(!path);
     if (!path) {
         return nullptr;
     }
@@ -312,17 +312,56 @@ FILE* OpenFILE(const char* path) {
 }
 
 char* ReadFileWithAllocator(const char* filePath, size_t* fileSizeOut, Allocator* allocator) {
-#if OS_WIN
+#if 0 // OS_WIN
     WCHAR buf[512];
     str::Utf8ToWcharBuf(filePath, str::Len(filePath), buf, dimof(buf));
     return ReadFileWithAllocator(buf, fileSizeOut, allocator);
 #else
-    CrashAlwaysIf(true);
-    UNUSED(filePath);
-    UNUSED(fileSizeOut);
-    UNUSED(allocator);
-    return nullptr;
+    FILE* fp = OpenFILE(filePath);
+    if (!fp) {
+        return nullptr;
+    }
+    char* d = nullptr;
+    int res = fseek(fp, 0, SEEK_END);
+    if (res != 0) {
+        return nullptr;
+    }
+    size_t size = ftell(fp);
+    if (addOverflows<size_t>(size, ZERO_PADDING_COUNT)) {
+        goto Error;
+    }
+    d = (char*)Allocator::AllocZero(allocator, size + ZERO_PADDING_COUNT);
+    res = fseek(fp, 0, SEEK_SET);
+    if (res != 0) {
+        return nullptr;
+    }
+
+    size_t nRead = fread((void*)d, 1, size, fp);
+    if (nRead != size) {
+        int err = ferror(fp);
+        CrashIf(err == 0);
+        int isEof = feof(fp);
+        CrashIf(isEof != 0);
+        goto Error;
+    }
+
+Exit:
+    if (fileSizeOut) {
+        *fileSizeOut = size;
+    }
+    fclose(fp);
+    return d;
+Error:
+    Allocator::Free(allocator, (void*)d);
+    d = nullptr;
+    goto Exit;
 #endif
+}
+
+OwnedData ReadFile(const char* path) {
+    size_t size;
+    char* data = ReadFileWithAllocator(path, &size, nullptr);
+    return { data, size };
 }
 
 bool WriteFile(const char* filePath, const void* data, size_t dataLen) {
@@ -384,11 +423,12 @@ int64_t GetSize(const WCHAR* filePath) {
     return size.QuadPart;
 }
 
-// we pad data read with 3 zeros for convenience. That way returned
-// data is a valid null-terminated string or WCHAR*.
-// 3 is for absolute worst case of WCHAR* where last char was partially written
-#define ZERO_PADDING_COUNT 3
+char* ReadFileWithAllocator(const WCHAR* path, size_t* fileSizeOut, Allocator* allocator) {
+    OwnedData s = str::conv::ToUtf8(path);
+    return ReadFileWithAllocator(s.Get(), fileSizeOut, allocator);
+}
 
+#if 0
 char* ReadFileWithAllocator(const WCHAR* path, size_t* fileSizeOut, Allocator* allocator) {
     int64_t size64 = GetSize(path);
     if (size64 < 0) {
@@ -424,6 +464,7 @@ char* ReadFileWithAllocator(const WCHAR* path, size_t* fileSizeOut, Allocator* a
     }
     return data;
 }
+#endif
 
 OwnedData ReadFile(const WCHAR* path) {
     size_t size;
@@ -540,3 +581,13 @@ bool CreateAll(const WCHAR* dir) {
 #endif // OS_WIN
 
 } // namespace dir
+
+#if OS_WIN
+// cf. http://blogs.msdn.com/b/oldnewthing/archive/2004/10/25/247180.aspx
+EXTERN_C IMAGE_DOS_HEADER __ImageBase;
+
+// A convenient way to grab the same value as HINSTANCE passed to WinMain
+HINSTANCE GetInstance() {
+    return (HINSTANCE)&__ImageBase;
+}
+#endif
