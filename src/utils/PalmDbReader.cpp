@@ -39,28 +39,13 @@ struct PdbRecordHeader {
 static_assert(sizeof(PdbHeader) == kPdbHeaderLen, "wrong size of PdbHeader structure");
 static_assert(sizeof(PdbRecordHeader) == 8, "wrong size of PdbRecordHeader structure");
 
-// TODO: don't do so much work in constructor
-PdbReader::PdbReader(const WCHAR* filePath) {
-    data = std::move(file::ReadAll(filePath));
-    if (!data.data) {
-        return;
-    }
+bool PdbReader::Parse(OwnedData data) {
+    this->data = std::move(data);
     if (!ParseHeader()) {
         recOffsets.clear();
+        return false;
     }
-}
-
-// TODO: don't do so much work in constructor
-PdbReader::PdbReader(IStream* stream) {
-    size_t size;
-    char* tmp = (char*)GetDataFromStream(stream, &size);
-    if (!tmp) {
-        return;
-    }
-    data.TakeOwnership(tmp, size);
-    if (!ParseHeader()) {
-        recOffsets.clear();
-    }
+    return true;
 }
 
 bool PdbReader::ParseHeader() {
@@ -122,3 +107,29 @@ std::string_view PdbReader::GetRecord(size_t recNo) {
     size_t size = recOffsets.at(recNo + 1) - offset;
     return {data.data + offset, size};
 }
+
+PdbReader* PdbReader::CreateFromData(OwnedData data) {
+    if (!data.data) {
+        return nullptr;
+    }
+    PdbReader* reader = new PdbReader();
+    if (!reader->Parse(std::move(data))) {
+        delete reader;
+        return nullptr;
+    }
+    return reader;
+}
+
+#if OS_WIN
+PdbReader* PdbReader::CreateFromFile(const WCHAR *filePath) {
+    OwnedData data = file::ReadAll(filePath);
+    return CreateFromData(std::move(data));
+}
+
+PdbReader* PdbReader::CreateFromStream(IStream *stream) {
+    size_t size;
+    char* tmp = (char*)GetDataFromStream(stream, &size);
+    OwnedData data(tmp, size);
+    return CreateFromData(std::move(data));
+}
+#endif

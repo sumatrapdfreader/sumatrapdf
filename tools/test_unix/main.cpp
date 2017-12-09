@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "BaseUtil.h"
 #include "ByteWriter.h"
+#include "PalmDbReader.h"
 #include "StrSlice.h"
 #include "TxtParser.h"
 #include "UtAssert.h"

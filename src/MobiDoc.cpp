@@ -973,7 +973,11 @@ bool MobiDoc::ParseToc(EbookTocVisitor* visitor) {
 
 bool MobiDoc::IsSupportedFile(const WCHAR* fileName, bool sniff) {
     if (sniff) {
-        PdbReader pdbReader(fileName);
+        PdbReader pdbReader;
+        OwnedData data(file::ReadAll(fileName));
+        if (!pdbReader.Parse(std::move(data))) {
+            return false;
+        }
         // in most cases, we're only interested in Mobipocket files
         // (PalmDoc uses MobiDoc for loading other formats based on MOBI,
         // but implements sniffing itself in PalmDoc::IsSupportedFile)
@@ -985,8 +989,8 @@ bool MobiDoc::IsSupportedFile(const WCHAR* fileName, bool sniff) {
 
 MobiDoc* MobiDoc::CreateFromFile(const WCHAR* fileName) {
     MobiDoc* mb = new MobiDoc(fileName);
-    PdbReader* pdbReader = new PdbReader(fileName);
-    if (!mb->LoadDocument(pdbReader)) {
+    PdbReader* pdbReader = PdbReader::CreateFromFile(fileName);
+    if (!pdbReader || !mb->LoadDocument(pdbReader)) {
         delete mb;
         return nullptr;
     }
@@ -995,8 +999,8 @@ MobiDoc* MobiDoc::CreateFromFile(const WCHAR* fileName) {
 
 MobiDoc* MobiDoc::CreateFromStream(IStream* stream) {
     MobiDoc* mb = new MobiDoc(nullptr);
-    PdbReader* pdbReader = new PdbReader(stream);
-    if (!mb->LoadDocument(pdbReader)) {
+    PdbReader* pdbReader = PdbReader::CreateFromStream(stream);
+    if (!pdbReader || !mb->LoadDocument(pdbReader)) {
         delete mb;
         return nullptr;
     }

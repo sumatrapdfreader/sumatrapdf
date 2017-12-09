@@ -1122,7 +1122,12 @@ bool PalmDoc::ParseToc(EbookTocVisitor* visitor) {
 
 bool PalmDoc::IsSupportedFile(const WCHAR* fileName, bool sniff) {
     if (sniff) {
-        PdbReader pdbReader(fileName);
+        PdbReader pdbReader;
+        OwnedData data = file::ReadAll(fileName);
+        if (!pdbReader.Parse(std::move(data))) {
+            return false;
+        }
+
         return str::Eq(pdbReader.GetDbType(), "TEXtREAd") || str::Eq(pdbReader.GetDbType(), "TEXtTlDc");
     }
 
