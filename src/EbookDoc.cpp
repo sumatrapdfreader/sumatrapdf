@@ -716,7 +716,7 @@ Fb2Doc::~Fb2Doc() {
 
 bool Fb2Doc::Load() {
     CrashIf(!stream && !fileName);
-    AutoFree data;
+    OwnedData data;
     if (fileName) {
         Archive* archive = OpenZipArchive(fileName, false);
         auto& fileInfos = archive->GetFileInfos();
@@ -731,44 +731,41 @@ bool Fb2Doc::Load() {
             for (auto fileInfo : fileInfos) {
                 auto fileName = fileInfo->name;
                 const char* ext = path::GetExt(fileName.data());
-                if (str::EqI(ext, ".fb2") && !data) {
-                    OwnedData tmp = archive->GetFileDataById(fileInfo->fileId);
-                    data.Set(tmp.StealData());
+                if (str::EqI(ext, ".fb2") && data.IsEmpty()) {
+                    data = archive->GetFileDataById(fileInfo->fileId);
                 } else if (!str::EqI(ext, ".url")) {
                     delete archive;
                     return false;
                 }
             }
         } else if (isZipped) {
-            OwnedData tmp = archive->GetFileDataById(0);
-            data.Set(tmp.StealData());
+            data = archive->GetFileDataById(0);
         } else {
-            OwnedData tmp = file::ReadFile(fileName);
-            data.Set(tmp.StealData());
+            data = file::ReadFile(fileName);
         }
         delete archive;
     } else if (stream) {
-        data.Set((char*)GetDataFromStream(stream, nullptr));
+        data = GetDataFromStream(stream);
         if (str::StartsWith(data.Get(), "PK\x03\x04")) {
             Archive* archive = OpenZipArchive(stream, false);
             size_t nFiles = archive->GetFileInfos().size();
             if (nFiles == 1) {
                 isZipped = true;
-                OwnedData tmp = archive->GetFileDataById(0);
-                data.Set(tmp.StealData());
+                data = archive->GetFileDataById(0);
             }
             delete archive;
         }
     }
-    if (!data) {
+    if (data.IsEmpty()) {
         return false;
     }
-    data.Set(DecodeTextToUtf8(data, true));
-    if (!data) {
+    char* tmp = DecodeTextToUtf8(data.Get(), true);
+    if (!tmp) {
         return false;
     }
+    data.TakeOwnership(tmp);
 
-    HtmlPullParser parser(data, str::Len(data));
+    HtmlPullParser parser(data.Get(), data.size);
     HtmlToken* tok;
     int inBody = 0, inTitleInfo = 0, inDocInfo = 0;
     const char* bodyStart = nullptr;

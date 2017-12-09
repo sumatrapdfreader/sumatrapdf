@@ -237,20 +237,7 @@ PageElement* ImagesEngine::GetElementAtPos(int pageNo, PointD pt) {
 }
 
 u8* ImagesEngine::GetFileData(size_t* cbCount) {
-    if (fileStream) {
-        void* data = GetDataFromStream(fileStream, cbCount);
-        if (data) {
-            return (u8*)data;
-        }
-    }
-    if (!FileName()) {
-        return nullptr;
-    }
-    OwnedData data(file::ReadFile(FileName()));
-    if (cbCount) {
-        *cbCount = data.size;
-    }
-    return (u8*)data.StealData();
+    return GetStreamOrFileData(fileStream.Get(), FileName(), cbCount);
 }
 
 bool ImagesEngine::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
@@ -397,12 +384,11 @@ bool ImageEngineImpl::LoadFromStream(IStream* stream) {
         return false;
     }
 
-    size_t len;
-    AutoFree data((char*)GetDataFromStream(stream, &len));
-    if (IsGdiPlusNativeFormat(data, len)) {
+    OwnedData data = GetDataFromStream(stream);
+    if (IsGdiPlusNativeFormat(data.Get(), data.size)) {
         image = Bitmap::FromStream(stream);
     } else {
-        image = BitmapFromData(data, len);
+        image = BitmapFromData(data.Get(), data.size);
     }
 
     return FinishLoading();
@@ -534,9 +520,8 @@ bool ImageEngineImpl::SaveFileAsPDF(const char* pdfFileName, bool includeUserAnn
         OwnedData data(file::ReadFile(FileName()));
         ok = data.data && c->AddImagePage(data.data, data.size, GetFileDPI());
     } else {
-        size_t len;
-        AutoFree data((char*)GetDataFromStream(fileStream, &len));
-        ok = data && c->AddImagePage(data, len, GetFileDPI());
+        OwnedData data = GetDataFromStream(fileStream);
+        ok = !data.IsEmpty() && c->AddImagePage(data.Get(), data.size, GetFileDPI());
     }
     for (int i = 2; i <= PageCount() && ok; i++) {
         ImagePage* page = GetPage(i);

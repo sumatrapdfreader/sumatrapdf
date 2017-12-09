@@ -35,6 +35,7 @@ class ScopedComPtr {
         HRESULT hr = CoCreateInstance(clsid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&ptr));
         return SUCCEEDED(hr);
     }
+    T* Get() const { return ptr; }
     operator T*() const { return ptr; }
     T** operator&() { return &ptr; }
     T* operator->() const { return ptr; }

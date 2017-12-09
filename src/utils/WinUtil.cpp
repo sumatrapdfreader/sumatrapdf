@@ -985,17 +985,57 @@ static HRESULT GetDataFromStream(IStream* stream, void** data, ULONG* len) {
     return S_OK;
 }
 
-void* GetDataFromStream(IStream* stream, size_t* len, HRESULT* res_opt) {
-    void* data;
+OwnedData GetDataFromStream(IStream* stream, HRESULT* resOpt) {
+    void* data = nullptr;
     ULONG size;
     HRESULT res = GetDataFromStream(stream, &data, &size);
-    if (len)
-        *len = size;
-    if (res_opt)
-        *res_opt = res;
-    if (FAILED(res))
+    if (resOpt) {
+        *resOpt = res;
+    }
+    if (FAILED(res)) {
+        free(data);
+        return {};
+    }
+    return OwnedData((char*)data, (size_t)size);
+}
+
+void* GetDataFromStream(IStream* stream, size_t* len, HRESULT* resOpt) {
+    void* data = nullptr;
+    ULONG size;
+    HRESULT res = GetDataFromStream(stream, &data, &size);
+    if (FAILED(res)) {
+        free(data);
         return nullptr;
+    }
+    if (len) {
+        *len = size;
+    }
+    if (resOpt) {
+        *resOpt = res;
+    }
     return data;
+}
+
+OwnedData GetStreamOrFileData(IStream* stream, const WCHAR* filePath) {
+    if (stream) {
+        OwnedData data = GetDataFromStream(stream);
+        return data;
+    }
+    if (!filePath) {
+        return {};
+    }
+    return file::ReadFile(filePath);
+}
+
+u8* GetStreamOrFileData(IStream* stream, const WCHAR* filePath, size_t* cbCount) {
+    OwnedData data = GetStreamOrFileData(stream, filePath);
+    if (data.IsEmpty()) {
+        return nullptr;
+    }
+    if (cbCount) {
+        *cbCount = data.size;
+    }
+    return (u8*)data.Get();
 }
 
 bool ReadDataFromStream(IStream* stream, void* buffer, size_t len, size_t offset) {

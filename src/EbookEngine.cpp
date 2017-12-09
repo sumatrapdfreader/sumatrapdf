@@ -787,20 +787,7 @@ bool EpubEngineImpl::FinishLoading() {
 }
 
 u8* EpubEngineImpl::GetFileData(size_t* cbCount) {
-    if (stream) {
-        ScopedMem<void> data(GetDataFromStream(stream, cbCount));
-        if (data) {
-            return (u8*)data.StealData();
-        }
-    }
-    if (!fileName) {
-        return nullptr;
-    }
-    OwnedData data(file::ReadFile(fileName));
-    if (cbCount) {
-        *cbCount = data.size;
-    }
-    return (u8*)data.StealData();
+    return GetStreamOrFileData(stream, fileName, cbCount);
 }
 
 bool EpubEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
@@ -808,9 +795,8 @@ bool EpubEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots
     AutoFreeW dstPath(str::conv::FromUtf8(copyFileName));
 
     if (stream) {
-        size_t len;
-        ScopedMem<void> data(GetDataFromStream(stream, &len));
-        if (data && file::WriteFile(dstPath, data, len)) {
+        OwnedData data = GetDataFromStream(stream);
+        if (!data.IsEmpty() && file::WriteFile(dstPath, data.Get(), data.size)) {
             return true;
         }
     }

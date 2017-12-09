@@ -361,7 +361,7 @@ Error:
 OwnedData ReadFile(const char* path) {
     size_t size;
     char* data = ReadFileWithAllocator(path, &size, nullptr);
-    return { data, size };
+    return {data, size};
 }
 
 bool WriteFile(const char* filePath, const void* data, size_t dataLen) {

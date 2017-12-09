@@ -139,9 +139,7 @@ PdbReader* PdbReader::CreateFromFile(const WCHAR* filePath) {
 }
 
 PdbReader* PdbReader::CreateFromStream(IStream* stream) {
-    size_t size;
-    char* tmp = (char*)GetDataFromStream(stream, &size);
-    OwnedData data(tmp, size);
+    OwnedData data = GetDataFromStream(stream);
     return CreateFromData(std::move(data));
 }
 #endif

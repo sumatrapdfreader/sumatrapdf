@@ -162,11 +162,11 @@ class DjVuContext {
 
     ddjvu_document_t* OpenStream(IStream* stream) {
         ScopedCritSec scope(&lock);
-        size_t datalen;
-        AutoFree data((char*)GetDataFromStream(stream, &datalen));
-        if (!data || datalen > ULONG_MAX)
+        OwnedData data = GetDataFromStream(stream);
+        if (!data.Get() || data.size > ULONG_MAX) {
             return nullptr;
-        return ddjvu_document_create_by_data(ctx, data, (ULONG)datalen);
+        }
+        return ddjvu_document_create_by_data(ctx, data.Get(), (ULONG)data.size);
     }
 };
 
@@ -701,30 +701,16 @@ RectD DjVuEngineImpl::Transform(RectD rect, int pageNo, float zoom, int rotation
     return RectD::FromXY(TL, BR);
 }
 
-unsigned char* DjVuEngineImpl::GetFileData(size_t* cbCount) {
-    if (stream != nullptr) {
-        ScopedMem<void> data(GetDataFromStream(stream, cbCount));
-        if (data != nullptr) {
-            return (unsigned char*)data.StealData();
-        }
-    }
-    if (FileName() == nullptr) {
-        return nullptr;
-    }
-    OwnedData tmp(file::ReadFile(FileName()));
-    if (cbCount) {
-        *cbCount = tmp.size;
-    }
-    return (unsigned char*)tmp.StealData();
+u8* DjVuEngineImpl::GetFileData(size_t* cbCount) {
+    return GetStreamOrFileData(stream, FileName(), cbCount);
 }
 
 bool DjVuEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
     UNUSED(includeUserAnnots);
     AutoFreeW path(str::conv::FromUtf8(copyFileName));
     if (stream) {
-        size_t len;
-        ScopedMem<void> data(GetDataFromStream(stream, &len));
-        if (data && file::WriteFile(path, data, len)) {
+        OwnedData data = GetDataFromStream(stream);
+        if (data.Get() && file::WriteFile(path, data.Get(), data.size)) {
             return true;
         }
     }

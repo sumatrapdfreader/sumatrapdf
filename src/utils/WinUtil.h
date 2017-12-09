@@ -111,7 +111,11 @@ HFONT GetDefaultGuiFont();
 long GetDefaultGuiFontSize();
 
 IStream* CreateStreamFromData(const void* data, size_t len);
-void* GetDataFromStream(IStream* stream, size_t* len, HRESULT* res_opt = nullptr);
+// TODO: remove remaining usage
+void* GetDataFromStream(IStream* stream, size_t* len, HRESULT* resOpt = nullptr);
+OwnedData GetDataFromStream(IStream* stream, HRESULT* resOpt = nullptr);
+OwnedData GetStreamOrFileData(IStream* stream, const WCHAR* filePath);
+u8* GetStreamOrFileData(IStream* stream, const WCHAR* filePath, size_t* cbCount);
 bool ReadDataFromStream(IStream* stream, void* buffer, size_t len, size_t offset = 0);
 UINT GuessTextCodepage(const char* data, size_t len, UINT defVal = CP_ACP);
 WCHAR* NormalizeString(const WCHAR* str, int /* NORM_FORM */ form);
