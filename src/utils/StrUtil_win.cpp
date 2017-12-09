@@ -187,7 +187,7 @@ OwnedData ToMultiByte(const char* src, UINT codePageSrc, UINT codePageDest) {
     }
 
     // 20127 is US-ASCII, which by definition is valid CP_UTF8
-    //https://msdn.microsoft.com/en-us/library/windows/desktop/dd317756(v=vs.85).aspx
+    // https://msdn.microsoft.com/en-us/library/windows/desktop/dd317756(v=vs.85).aspx
     // don't know what is CP_* name for it (if it exists)
     if ((codePageSrc == 20127) && (codePageDest == CP_UTF8)) {
         return OwnedData::MakeFromStr(src);

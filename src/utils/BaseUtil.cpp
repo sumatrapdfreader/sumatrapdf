@@ -214,7 +214,7 @@ OwnedData OwnedData::MakeFromStr(const char* s, size_t size) {
         return OwnedData(str::Dup(s), str::Len(s));
     }
 
-    char *tmp = str::DupN(s, size);
+    char* tmp = str::DupN(s, size);
     return OwnedData(tmp, size);
 }
 

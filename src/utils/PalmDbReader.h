@@ -1,7 +1,6 @@
 /* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-
 // http://en.wikipedia.org/wiki/PDB_(Palm_OS)
 // http://wiki.mobileread.com/wiki/PDB
 struct PdbHeader {

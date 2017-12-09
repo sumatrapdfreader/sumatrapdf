@@ -509,7 +509,7 @@ class OwnedData {
 
     OwnedData() {}
     // takes ownership of data
-    OwnedData(const char* data, size_t size=0);
+    OwnedData(const char* data, size_t size = 0);
     ~OwnedData();
 
     OwnedData(const OwnedData& other) = delete;
