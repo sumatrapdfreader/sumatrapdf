@@ -9,11 +9,6 @@ class ByteOrderDecoder {
     ByteOrderDecoder(const char* d, size_t len, ByteOrder order);
     ByteOrderDecoder(const uint8_t* d, size_t len, ByteOrder order);
 
-    void ChangeOrder(ByteOrder newOrder) {
-        CrashIf(byteOrder == newOrder);
-        byteOrder = newOrder;
-    }
-
     uint8_t UInt8();
     char Char() { return (char)UInt8(); }
     uint16_t UInt16();

@@ -49,9 +49,8 @@ void ByteOrderTests() {
         utassert(21 == d.Offset());
         utassert(vu32 == 0xfeffffff);
 
-        d.ChangeOrder(ByteOrderDecoder::BigEndian);
         vu16 = d.UInt16();
-        utassert(vu16 == 0x200);
+        utassert(vu16 == 0x02);
         utassert(23 == d.Offset());
 
         d.Bytes(b, 3);
@@ -80,9 +79,8 @@ void ByteOrderTests() {
         vu32 = d.UInt32();
         utassert(vu32 == 0xfffffffe);
 
-        d.ChangeOrder(ByteOrderDecoder::LittleEndian);
         vu16 = d.UInt16();
-        utassert(vu16 == 2);
+        utassert(vu16 == 0x200);
         d.Bytes(b, 3);
         utassert(memeq(ABC, b, 3));
         utassert(26 == d.Offset());
@@ -109,9 +107,8 @@ void ByteOrderTests() {
         v32 = d.Int32();
         utassert(v32 == -16777217);
 
-        d.ChangeOrder(ByteOrderDecoder::BigEndian);
         v16 = d.Int16();
-        utassert(v16 == 0x200);
+        utassert(v16 == 0x2);
         d.Bytes(b, 3);
         utassert(memeq(ABC, b, 3));
         utassert(26 == d.Offset());
@@ -138,9 +135,8 @@ void ByteOrderTests() {
         v32 = d.Int32();
         utassert(v32 == -2);
 
-        d.ChangeOrder(ByteOrderDecoder::LittleEndian);
         v16 = d.Int16();
-        utassert(v16 == 2);
+        utassert(v16 == 0x200);
         d.Bytes(b, 3);
         utassert(memeq(ABC, b, 3));
         utassert(26 == d.Offset());

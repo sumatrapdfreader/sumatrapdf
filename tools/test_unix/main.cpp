@@ -158,8 +158,11 @@ void testByteWriter() {
     utassert(buf[0] == 0);
 }
 
+extern void ByteOrderTests(); // ByteOrderDecoder_ut.cpp
+
 int main(int, char**) {
     testByteWriter();
     testTxtParser();
+    ByteOrderTests();
     utassert_print_results();
 }

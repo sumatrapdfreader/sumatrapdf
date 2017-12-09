@@ -21,10 +21,10 @@ uint32_t UInt32LE(const uint8_t* d) {
 }
 
 ByteOrderDecoder::ByteOrderDecoder(const char* d, size_t len, ByteOrder order)
-    : data((const uint8_t*)d), left(len), byteOrder(order), curr(data) {}
+    : byteOrder(order), data((const uint8_t*)d), curr(data), left(len) {}
 
 ByteOrderDecoder::ByteOrderDecoder(const uint8_t* d, size_t len, ByteOrder order)
-    : data(d), left(len), byteOrder(order), curr(data) {}
+    : byteOrder(order), data(d), curr(data), left(len) {}
 
 uint8_t ByteOrderDecoder::UInt8() {
     CrashIf(left < 1);
