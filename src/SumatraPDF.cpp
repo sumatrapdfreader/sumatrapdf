@@ -183,7 +183,7 @@ void InitializePolicies(bool restrict) {
         return;
     }
 
-    OwnedData restrictData(file::ReadAll(restrictPath));
+    OwnedData restrictData(file::ReadFile(restrictPath));
     SquareTree sqt(restrictData.data);
     SquareTreeNode* polsec = sqt.root ? sqt.root->GetChild("Policies") : nullptr;
     // if the restriction file is broken, err on the side of full restriction
@@ -1733,7 +1733,7 @@ bool AutoUpdateInitiate(const char* updateData) {
         updateArgs.Set(str::Format(L"-autoupdate replace:\"%s\"", thisExe));
     }
 
-    bool ok = file::WriteAll(updateExe, rsp.data.Get(), rsp.data.size());
+    bool ok = file::WriteFile(updateExe, rsp.data.Get(), rsp.data.size());
     if (!ok)
         return false;
 
@@ -2332,7 +2332,7 @@ static void OnMenuSaveAs(WindowInfo& win) {
 
         OwnedData textUTF8(str::conv::ToUtf8(text.LendData()));
         AutoFree textUTF8BOM(str::Join(UTF8_BOM, textUTF8.Get()));
-        ok = file::WriteAll(realDstFileName, textUTF8BOM, str::Len(textUTF8BOM));
+        ok = file::WriteFile(realDstFileName, textUTF8BOM, str::Len(textUTF8BOM));
     } else if (convertToPDF) {
         // Convert the file into a PDF one
         PdfCreator::SetProducerName(APP_NAME_STR L" " CURR_VERSION_STR);

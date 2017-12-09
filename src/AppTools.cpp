@@ -459,6 +459,6 @@ void SaveCallstackLogs() {
     if (!s)
         return;
     AutoFreeW filePath(AppGenDataFilename(L"callstacks.txt"));
-    file::WriteAll(filePath.Get(), s, str::Len(s));
+    file::WriteFile(filePath.Get(), s, str::Len(s));
     free(s);
 }

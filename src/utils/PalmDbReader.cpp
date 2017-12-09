@@ -129,7 +129,7 @@ PdbReader* PdbReader::CreateFromData(OwnedData data) {
 #include "WinUtil.h"
 
 PdbReader* PdbReader::CreateFromFile(const WCHAR* filePath) {
-    OwnedData data = file::ReadAll(filePath);
+    OwnedData data = file::ReadFile(filePath);
     return CreateFromData(std::move(data));
 }
 

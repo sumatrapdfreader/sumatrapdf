@@ -156,7 +156,7 @@ static BaseEngine* ps2pdf(const WCHAR* fileName) {
         return nullptr;
     }
 
-    OwnedData pdfData(file::ReadAll(tmpFile));
+    OwnedData pdfData(file::ReadFile(tmpFile));
     if (!pdfData.data) {
         return nullptr;
     }
@@ -247,7 +247,7 @@ class PsEngineImpl : public BaseEngine {
         if (!name) {
             return nullptr;
         }
-        OwnedData data(file::ReadAll(fileName));
+        OwnedData data(file::ReadFile(fileName));
         if (cbCount) {
             *cbCount = data.size;
         }

@@ -311,11 +311,11 @@ FILE* OpenFILE(const char* path) {
 #endif
 }
 
-char* ReadAllWithAllocator(const char* filePath, size_t* fileSizeOut, Allocator* allocator) {
+char* ReadFileWithAllocator(const char* filePath, size_t* fileSizeOut, Allocator* allocator) {
 #if OS_WIN
     WCHAR buf[512];
     str::Utf8ToWcharBuf(filePath, str::Len(filePath), buf, dimof(buf));
-    return ReadAllWithAllocator(buf, fileSizeOut, allocator);
+    return ReadFileWithAllocator(buf, fileSizeOut, allocator);
 #else
     CrashAlwaysIf(true);
     UNUSED(filePath);
@@ -325,11 +325,11 @@ char* ReadAllWithAllocator(const char* filePath, size_t* fileSizeOut, Allocator*
 #endif
 }
 
-bool WriteAll(const char* filePath, const void* data, size_t dataLen) {
+bool WriteFile(const char* filePath, const void* data, size_t dataLen) {
 #if OS_WIN
     WCHAR buf[512];
     str::Utf8ToWcharBuf(filePath, str::Len(filePath), buf, dimof(buf));
-    return WriteAll(buf, data, dataLen);
+    return WriteFile(buf, data, dataLen);
 #else
     CrashAlwaysIf(true);
     UNUSED(filePath);
@@ -389,7 +389,7 @@ int64_t GetSize(const WCHAR* filePath) {
 // 3 is for absolute worst case of WCHAR* where last char was partially written
 #define ZERO_PADDING_COUNT 3
 
-char* ReadAllWithAllocator(const WCHAR* path, size_t* fileSizeOut, Allocator* allocator) {
+char* ReadFileWithAllocator(const WCHAR* path, size_t* fileSizeOut, Allocator* allocator) {
     int64_t size64 = GetSize(path);
     if (size64 < 0) {
         return nullptr;
@@ -425,9 +425,9 @@ char* ReadAllWithAllocator(const WCHAR* path, size_t* fileSizeOut, Allocator* al
     return data;
 }
 
-OwnedData ReadAll(const WCHAR* path) {
+OwnedData ReadFile(const WCHAR* path) {
     size_t size;
-    char* data = ReadAllWithAllocator(path, &size, nullptr);
+    char* data = ReadFileWithAllocator(path, &size, nullptr);
     return {data, size};
 }
 
@@ -442,7 +442,7 @@ bool ReadN(const WCHAR* filePath, char* buf, size_t toRead) {
     return ok && nRead == toRead;
 }
 
-bool WriteAll(const WCHAR* filePath, const void* data, size_t dataLen) {
+bool WriteFile(const WCHAR* filePath, const void* data, size_t dataLen) {
     ScopedHandle h(
         CreateFile(filePath, GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr));
     if (INVALID_HANDLE_VALUE == h)

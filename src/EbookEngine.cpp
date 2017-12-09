@@ -91,7 +91,7 @@ class EbookEngine : public BaseEngine {
         if (!fileName) {
             return nullptr;
         }
-        OwnedData data(file::ReadAll(fileName));
+        OwnedData data(file::ReadFile(fileName));
         if (cbCount) {
             *cbCount = data.size;
         }
@@ -796,7 +796,7 @@ u8* EpubEngineImpl::GetFileData(size_t* cbCount) {
     if (!fileName) {
         return nullptr;
     }
-    OwnedData data(file::ReadAll(fileName));
+    OwnedData data(file::ReadFile(fileName));
     if (cbCount) {
         *cbCount = data.size;
     }
@@ -810,7 +810,7 @@ bool EpubEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots
     if (stream) {
         size_t len;
         ScopedMem<void> data(GetDataFromStream(stream, &len));
-        if (data && file::WriteAll(dstPath, data, len)) {
+        if (data && file::WriteFile(dstPath, data, len)) {
             return true;
         }
     }

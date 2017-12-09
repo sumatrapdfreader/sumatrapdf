@@ -56,7 +56,7 @@ bool Load() {
     CrashIf(gGlobalPrefs);
 
     std::unique_ptr<WCHAR> path(GetSettingsPath());
-    OwnedData prefsData(file::ReadAll(path.get()));
+    OwnedData prefsData(file::ReadFile(path.get()));
     gGlobalPrefs = NewGlobalPrefs(prefsData.data);
     CrashAlwaysIf(!gGlobalPrefs);
 
@@ -144,7 +144,7 @@ bool Save() {
     if (!path) {
         return false;
     }
-    OwnedData prevPrefsData(file::ReadAll(path.get()));
+    OwnedData prevPrefsData(file::ReadFile(path.get()));
     size_t prefsDataSize = 0;
     std::unique_ptr<char> prefsData(SerializeGlobalPrefs(gGlobalPrefs, prevPrefsData.data, &prefsDataSize));
 
@@ -158,7 +158,7 @@ bool Save() {
         return true;
     }
 
-    bool ok = file::WriteAll(path.get(), prefsData.get(), prefsDataSize);
+    bool ok = file::WriteFile(path.get(), prefsData.get(), prefsDataSize);
     if (!ok) {
         return false;
     }

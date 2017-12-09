@@ -246,7 +246,7 @@ u8* ImagesEngine::GetFileData(size_t* cbCount) {
     if (!FileName()) {
         return nullptr;
     }
-    OwnedData data(file::ReadAll(FileName()));
+    OwnedData data(file::ReadFile(FileName()));
     if (cbCount) {
         *cbCount = data.size;
     }
@@ -268,7 +268,7 @@ bool ImagesEngine::SaveFileAs(const char* copyFileName, bool includeUserAnnots) 
     if (!data) {
         return false;
     }
-    return file::WriteAll(dstPath, data.Get(), dataLen);
+    return file::WriteFile(dstPath, data.Get(), dataLen);
 }
 
 ImagePage* ImagesEngine::GetPage(int pageNo, bool tryOnly) {
@@ -375,7 +375,7 @@ bool ImageEngineImpl::LoadSingleFile(const WCHAR* file) {
     }
     SetFileName(file);
 
-    OwnedData data(file::ReadAll(file));
+    OwnedData data(file::ReadFile(file));
     fileExt = GfxFileExtFromData(data.data, data.size);
 
     image = BitmapFromData(data.data, data.size);
@@ -531,7 +531,7 @@ bool ImageEngineImpl::SaveFileAsPDF(const char* pdfFileName, bool includeUserAnn
     bool ok = true;
     PdfCreator* c = new PdfCreator();
     if (FileName()) {
-        OwnedData data(file::ReadAll(FileName()));
+        OwnedData data(file::ReadFile(FileName()));
         ok = data.data && c->AddImagePage(data.data, data.size, GetFileDPI());
     } else {
         size_t len;
@@ -752,7 +752,7 @@ bool ImageDirEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAn
 }
 
 Bitmap* ImageDirEngineImpl::LoadBitmap(int pageNo, bool& deleteAfterUse) {
-    OwnedData bmpData(file::ReadAll(pageFileNames.at(pageNo - 1)));
+    OwnedData bmpData(file::ReadFile(pageFileNames.at(pageNo - 1)));
     if (bmpData.data) {
         deleteAfterUse = true;
         return BitmapFromData(bmpData.data, bmpData.size);
@@ -761,7 +761,7 @@ Bitmap* ImageDirEngineImpl::LoadBitmap(int pageNo, bool& deleteAfterUse) {
 }
 
 RectD ImageDirEngineImpl::LoadMediabox(int pageNo) {
-    OwnedData bmpData(file::ReadAll(pageFileNames.at(pageNo - 1)));
+    OwnedData bmpData(file::ReadFile(pageFileNames.at(pageNo - 1)));
     if (bmpData.data) {
         Size size = BitmapSizeFromData(bmpData.data, bmpData.size);
         return RectD(0, 0, size.Width, size.Height);
@@ -774,7 +774,7 @@ bool ImageDirEngineImpl::SaveFileAsPDF(const char* pdfFileName, bool includeUser
     bool ok = true;
     PdfCreator* c = new PdfCreator();
     for (int i = 1; i <= PageCount() && ok; i++) {
-        OwnedData data(file::ReadAll(pageFileNames.at(i - 1)));
+        OwnedData data(file::ReadFile(pageFileNames.at(i - 1)));
         ok = data.data && c->AddImagePage(data.data, data.size, GetFileDPI());
     }
     ok = ok && c->SaveToFile(pdfFileName);

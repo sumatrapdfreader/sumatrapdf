@@ -711,7 +711,7 @@ unsigned char* DjVuEngineImpl::GetFileData(size_t* cbCount) {
     if (FileName() == nullptr) {
         return nullptr;
     }
-    OwnedData tmp(file::ReadAll(FileName()));
+    OwnedData tmp(file::ReadFile(FileName()));
     if (cbCount) {
         *cbCount = tmp.size;
     }
@@ -724,7 +724,7 @@ bool DjVuEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots
     if (stream) {
         size_t len;
         ScopedMem<void> data(GetDataFromStream(stream, &len));
-        if (data && file::WriteAll(path, data, len)) {
+        if (data && file::WriteFile(path, data, len)) {
             return true;
         }
     }

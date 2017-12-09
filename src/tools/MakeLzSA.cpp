@@ -98,7 +98,7 @@ static bool AppendEntry(str::Str<char>& data, str::Str<char>& content, const WCH
         return content.AppendChecked(fi->compressedData, fi->compressedSize);
     }
 
-    OwnedData fileData(file::ReadAll(filePath));
+    OwnedData fileData(file::ReadFile(filePath));
     if (!fileData.data || fileData.size >= UINT32_MAX) {
         fprintf(stderr, "Failed to read \"%S\" for compression\n", filePath);
         return false;
@@ -130,7 +130,7 @@ static bool AppendEntry(str::Str<char>& data, str::Str<char>& content, const WCH
 // may end in a colon followed by the desired path in the archive
 // (this is required for absolute paths)
 bool CreateArchive(const WCHAR* archivePath, WStrVec& files, size_t skipFiles = 0) {
-    OwnedData prevData(file::ReadAll(archivePath));
+    OwnedData prevData(file::ReadFile(archivePath));
     size_t prevDataLen = prevData.size;
     lzma::SimpleArchive prevArchive;
     if (!lzma::ParseSimpleArchive(prevData.data, prevDataLen, &prevArchive))
@@ -175,7 +175,7 @@ bool CreateArchive(const WCHAR* archivePath, WStrVec& files, size_t skipFiles = 
     if (!data.AppendChecked(content.Get(), content.size()))
         return false;
 
-    return file::WriteAll(archivePath, data.Get(), data.size());
+    return file::WriteFile(archivePath, data.Get(), data.size());
 }
 
 } // namespace lzsa
@@ -189,7 +189,7 @@ bool CreateArchive(const WCHAR* archivePath, WStrVec& files, size_t skipFiles = 
 
 int mainVerify(const WCHAR* archivePath) {
     int errorStep = 1;
-    OwnedData fileData(file::ReadAll(archivePath));
+    OwnedData fileData(file::ReadFile(archivePath));
     FailIf(!fileData.data, "Failed to read \"%S\"", archivePath);
 
     lzma::SimpleArchive lzsa;

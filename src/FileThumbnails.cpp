@@ -82,7 +82,7 @@ void CleanUpThumbnailCache(FileHistory& fileHistory) {
 }
 
 static RenderedBitmap* LoadRenderedBitmap(const WCHAR* filePath) {
-    OwnedData data(file::ReadAll(filePath));
+    OwnedData data(file::ReadFile(filePath));
     if (!data.data) {
         return nullptr;
     }

@@ -75,7 +75,7 @@ bool LinkSaver::SaveEmbedded(const unsigned char* data, size_t len) {
     if (!ok) {
         return false;
     }
-    ok = file::WriteAll(dstFileName, data, len);
+    ok = file::WriteFile(dstFileName, data, len);
     if (ok && tab && IsUntrustedFile(tab->filePath, gPluginURL)) {
         file::SetZoneIdentifier(dstFileName);
     }

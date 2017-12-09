@@ -2592,7 +2592,7 @@ u8* PdfEngineImpl::GetFileData(size_t* cbCount) {
     fz_catch(ctx) {
         res = nullptr;
         if (FileName()) {
-            OwnedData data(file::ReadAll(FileName()));
+            OwnedData data(file::ReadFile(FileName()));
             if (cbCount) {
                 *cbCount = data.size;
             }
@@ -2607,7 +2607,7 @@ bool PdfEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots)
     AutoFreeW dstPath(str::conv::FromUtf8(copyFileName));
     ScopedMem<unsigned char> data(GetFileData(&dataLen));
     if (data) {
-        bool ok = file::WriteAll(dstPath, data.Get(), dataLen);
+        bool ok = file::WriteFile(dstPath, data.Get(), dataLen);
         if (ok) {
             return !includeUserAnnots || SaveUserAnnots(copyFileName);
         }
@@ -3876,7 +3876,7 @@ u8* XpsEngineImpl::GetFileData(size_t* cbCount) {
     fz_catch(ctx) {
         res = nullptr;
         if (FileName()) {
-            OwnedData data(file::ReadAll(FileName()));
+            OwnedData data(file::ReadFile(FileName()));
             if (cbCount) {
                 *cbCount = data.size;
             }
@@ -3892,7 +3892,7 @@ bool XpsEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots)
     AutoFreeW dstPath(str::conv::FromUtf8(copyFileName));
     ScopedMem<unsigned char> data(GetFileData(&dataLen));
     if (data) {
-        bool ok = file::WriteAll(dstPath, data.Get(), dataLen);
+        bool ok = file::WriteFile(dstPath, data.Get(), dataLen);
         if (ok)
             return true;
     }

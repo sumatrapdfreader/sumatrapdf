@@ -743,7 +743,7 @@ bool Fb2Doc::Load() {
             OwnedData tmp = archive->GetFileDataById(0);
             data.Set(tmp.StealData());
         } else {
-            OwnedData tmp = file::ReadAll(fileName);
+            OwnedData tmp = file::ReadFile(fileName);
             data.Set(tmp.StealData());
         }
         delete archive;
@@ -1126,7 +1126,7 @@ bool PalmDoc::ParseToc(EbookTocVisitor* visitor) {
 bool PalmDoc::IsSupportedFile(const WCHAR* fileName, bool sniff) {
     if (sniff) {
         PdbReader pdbReader;
-        OwnedData data = file::ReadAll(fileName);
+        OwnedData data = file::ReadFile(fileName);
         if (!pdbReader.Parse(std::move(data))) {
             return false;
         }
@@ -1158,7 +1158,7 @@ HtmlDoc::~HtmlDoc() {
 }
 
 bool HtmlDoc::Load() {
-    OwnedData data(file::ReadAll(fileName));
+    OwnedData data(file::ReadFile(fileName));
     if (!data.data) {
         return false;
     }
@@ -1233,7 +1233,7 @@ char* HtmlDoc::LoadURL(const char* url, size_t* lenOut) {
     }
     AutoFreeW path(str::conv::FromUtf8(url));
     str::TransChars(path, L"/", L"\\");
-    OwnedData tmp(file::ReadAll(path));
+    OwnedData tmp(file::ReadFile(path));
     if (lenOut) {
         *lenOut = tmp.size;
     }
@@ -1391,7 +1391,7 @@ static const char* TextFindRfcEnd(str::Str<char>& htmlData, const char* curr) {
 }
 
 bool TxtDoc::Load() {
-    OwnedData text(file::ReadAll(fileName));
+    OwnedData text(file::ReadFile(fileName));
     if (str::EndsWithI(fileName, L".tcr") && str::StartsWith(text.data, TCR_HEADER)) {
         text.TakeOwnership(DecompressTcrText(text.data, text.size));
     }

@@ -146,7 +146,7 @@ int main() {
     ok = CryptExportKey(hKey, NULL, PUBLICKEYBLOB, 0, pubkey.Get(), &pubkeyLen);
     QuitIfNot(ok, "Error: Failed to export the public key!");
     if (pubkeyPath) {
-        ok = file::WriteAll(pubkeyPath, pubkey.Get(), pubkeyLen);
+        ok = file::WriteFile(pubkeyPath, pubkey.Get(), pubkeyLen);
         QuitIfNot(ok, "Error: Failed to write the public key to \"%s\"!", pubkeyPath);
         QuitIfNot(filePath, "Wrote the public key to \"%s\", no file to sign.", pubkeyPath);
     }
@@ -154,7 +154,7 @@ int main() {
     // prepare data for signing
     size_t dataLen;
     {
-        OwnedData tmp(file::ReadAll(filePath));
+        OwnedData tmp(file::ReadFile(filePath));
         dataLen = tmp.size;
         data.Set(tmp.StealData());
     }
@@ -219,7 +219,7 @@ int main() {
 
     // save/display signature
     if (signFilePath) {
-        ok = file::WriteAll(signFilePath, hexSignature.Get(), str::Len(hexSignature));
+        ok = file::WriteFile(signFilePath, hexSignature.Get(), str::Len(hexSignature));
         QuitIfNot(ok, "Error: Failed to write signature to \"%s\"!", signFilePath);
     } else {
         fprintf(stdout, "%s", hexSignature.Get());

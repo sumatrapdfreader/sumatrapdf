@@ -359,7 +359,7 @@ bool RenderDocument(BaseEngine* engine, const WCHAR* renderPath, float zoom = 1.
         AutoFreeW txtFilePath(str::Format(renderPath, 0));
         OwnedData textUTF8(str::conv::ToUtf8(text.Get()));
         AutoFree textUTF8BOM(str::Join(UTF8_BOM, textUTF8.Get()));
-        return file::WriteAll(txtFilePath, textUTF8BOM.Get(), str::Len(textUTF8BOM));
+        return file::WriteFile(txtFilePath, textUTF8BOM.Get(), str::Len(textUTF8BOM));
     }
 
     if (str::EndsWithI(renderPath, L".pdf")) {
@@ -393,12 +393,12 @@ bool RenderDocument(BaseEngine* engine, const WCHAR* renderPath, float zoom = 1.
             size_t bmpDataLen;
             AutoFree bmpData((char*)SerializeBitmap(bmp->GetBitmap(), &bmpDataLen));
             if (bmpData)
-                file::WriteAll(pageBmpPath, bmpData, bmpDataLen);
+                file::WriteFile(pageBmpPath, bmpData, bmpDataLen);
         } else { // render as TGA for all other file extensions
             size_t tgaDataLen;
             ScopedMem<unsigned char> tgaData(tga::SerializeBitmap(bmp->GetBitmap(), &tgaDataLen));
             if (tgaData)
-                file::WriteAll(pageBmpPath, tgaData, tgaDataLen);
+                file::WriteFile(pageBmpPath, tgaData, tgaDataLen);
         }
         delete bmp;
     }

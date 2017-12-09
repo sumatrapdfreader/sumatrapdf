@@ -160,7 +160,7 @@ bool ZipCreator::AddFileData(const char* nameUtf8, const void* data, size_t size
 
 // add a given file under (optional) nameInZip
 bool ZipCreator::AddFile(const WCHAR* filePath, const WCHAR* nameInZip) {
-    OwnedData fileData(file::ReadAll(filePath));
+    OwnedData fileData(file::ReadFile(filePath));
     if (!fileData.data) {
         return false;
     }

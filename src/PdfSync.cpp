@@ -184,7 +184,7 @@ static char* Advance0Line(char* line, char* end) {
 
 // see http://itexmac.sourceforge.net/pdfsync.html for the specification
 int Pdfsync::RebuildIndex() {
-    OwnedData data(file::ReadAll(syncfilepath));
+    OwnedData data(file::ReadFile(syncfilepath));
     if (!data.data) {
         return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
     }

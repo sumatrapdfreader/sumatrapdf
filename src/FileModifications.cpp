@@ -107,7 +107,7 @@ static Vec<PageAnnotation>* ParseFileModifications(const char* data) {
 
 Vec<PageAnnotation>* LoadFileModifications(const WCHAR* filePath) {
     AutoFreeW modificationsPath(str::Join(filePath, SMX_FILE_EXT));
-    OwnedData data(file::ReadAll(modificationsPath));
+    OwnedData data(file::ReadFile(modificationsPath));
     return ParseFileModifications(data.data);
 }
 
@@ -120,7 +120,7 @@ bool SaveFileModifictions(const WCHAR* filePath, Vec<PageAnnotation>* list) {
     str::Str<char> data;
     size_t offset = 0;
 
-    OwnedData prevData(file::ReadAll(modificationsPath));
+    OwnedData prevData(file::ReadFile(modificationsPath));
     Vec<PageAnnotation>* prevList = ParseFileModifications(prevData.data);
     bool isUpdate = prevList != nullptr;
     if (isUpdate) {
@@ -180,7 +180,7 @@ bool SaveFileModifictions(const WCHAR* filePath, Vec<PageAnnotation>* list) {
     }
     data.RemoveAt(data.size() - 2, 2);
 
-    return file::WriteAll(modificationsPath, data.LendData(), data.size());
+    return file::WriteFile(modificationsPath, data.LendData(), data.size());
 }
 
 bool IsModificationsFile(const WCHAR* filePath) {

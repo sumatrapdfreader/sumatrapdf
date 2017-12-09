@@ -974,7 +974,7 @@ bool MobiDoc::ParseToc(EbookTocVisitor* visitor) {
 bool MobiDoc::IsSupportedFile(const WCHAR* fileName, bool sniff) {
     if (sniff) {
         PdbReader pdbReader;
-        OwnedData data(file::ReadAll(fileName));
+        OwnedData data(file::ReadFile(fileName));
         if (!pdbReader.Parse(std::move(data))) {
             return false;
         }

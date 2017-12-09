@@ -244,7 +244,7 @@ static bool ExtractFileByIdx(SimpleArchive* archive, int idx, const char* dstDir
     bool ok = false;
     char* filePath = path::JoinUtf(dstDir, fi->name, allocator);
     if (filePath) {
-        ok = file::WriteAll(filePath, uncompressed, fi->uncompressedSize);
+        ok = file::WriteFile(filePath, uncompressed, fi->uncompressedSize);
     }
 
     Allocator::Free(allocator, filePath);
@@ -255,7 +255,7 @@ static bool ExtractFileByIdx(SimpleArchive* archive, int idx, const char* dstDir
 
 bool ExtractFiles(const char* archivePath, const char* dstDir, const char** files, Allocator* allocator) {
     size_t archiveDataSize;
-    char* archiveData = file::ReadAllWithAllocator(archivePath, &archiveDataSize, allocator);
+    char* archiveData = file::ReadFileWithAllocator(archivePath, &archiveDataSize, allocator);
     if (!archiveData) {
         return false;
     }

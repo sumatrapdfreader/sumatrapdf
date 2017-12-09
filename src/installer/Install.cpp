@@ -71,7 +71,7 @@ static bool ExtractFiles(lzma::SimpleArchive* archive) {
         }
         AutoFreeW filePath(str::conv::FromUtf8(fi->name));
         AutoFreeW extPath(path::Join(gGlobalData.installDir, filePath));
-        bool ok = file::WriteAll(extPath, uncompressed, fi->uncompressedSize);
+        bool ok = file::WriteFile(extPath, uncompressed, fi->uncompressedSize);
         free(uncompressed);
         if (!ok) {
             AutoFreeW msg(str::Format(_TR("Couldn't write %s to disk"), filePath));
