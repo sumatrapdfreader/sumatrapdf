@@ -878,9 +878,8 @@ bool MobiDoc::LoadDocument(PdbReader* pdbReader) {
     return true;
 }
 
-char* MobiDoc::GetHtmlData(size_t& lenOut) const {
-    lenOut = doc->size();
-    return doc->Get();
+std::string_view MobiDoc::GetHtmlData() const {
+    return std::string_view(doc->Get(), doc->size());
 }
 
 WCHAR* MobiDoc::GetProperty(DocumentProperty prop) {

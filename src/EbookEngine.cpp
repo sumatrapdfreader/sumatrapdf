@@ -1026,7 +1026,9 @@ bool MobiEngineImpl::FinishLoading() {
     }
 
     HtmlFormatterArgs args;
-    args.htmlStr = doc->GetHtmlData(args.htmlStrLen);
+    const std::string_view htmlData = doc->GetHtmlData();
+    args.htmlStrLen = htmlData.size();
+    args.htmlStr = htmlData.data();
     args.pageDx = (float)pageRect.dx - 2 * pageBorder;
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
     args.SetFontName(GetDefaultFontName());
@@ -1055,8 +1057,9 @@ PageDestination* MobiEngineImpl::GetNamedDest(const WCHAR* name) {
     }
     CrashIf(pageNo < 1 || pageNo > PageCount());
 
-    size_t htmlLen;
-    char* start = doc->GetHtmlData(htmlLen);
+    const std::string_view htmlData = doc->GetHtmlData();
+    size_t htmlLen = htmlData.size();
+    const char* start = htmlData.data();
     if ((size_t)filePos > htmlLen) {
         return nullptr;
     }

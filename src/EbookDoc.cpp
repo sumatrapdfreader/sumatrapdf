@@ -1067,14 +1067,12 @@ bool PalmDoc::Load() {
         return false;
     }
 
-    size_t textLen;
-    const char* text = mobiDoc->GetHtmlData(textLen);
-    UINT codePage = GuessTextCodepage(text, textLen, CP_ACP);
-    OwnedData textUtf8(str::ToMultiByte(text, codePage, CP_UTF8));
-    textLen = textUtf8.size;
+    const std::string_view text = mobiDoc->GetHtmlData();
+    UINT codePage = GuessTextCodepage(text.data(), text.size(), CP_ACP);
+    OwnedData textUtf8(str::ToMultiByte(text.data(), codePage, CP_UTF8));
 
     const char* start = textUtf8.Get();
-    const char* end = start + textLen;
+    const char* end = start + textUtf8.size;
     // TODO: speedup by not calling htmlData.Append() for every byte
     // but gather spans and memcpy them wholesale
     for (const char* curr = start; curr < end; curr++) {

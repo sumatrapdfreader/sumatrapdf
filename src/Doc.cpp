@@ -173,8 +173,11 @@ const char* Doc::GetHtmlData(size_t& len) const {
             return epubDoc->GetHtmlData(&len);
         case DocType::Fb2:
             return fb2Doc->GetXmlData(&len);
-        case DocType::Mobi:
-            return mobiDoc->GetHtmlData(len);
+        case DocType::Mobi: {
+            std::string_view s = mobiDoc->GetHtmlData();
+            len = s.size();
+            return s.data();
+        }
         case DocType::Pdb:
             return palmDoc->GetHtmlData(&len);
         default:

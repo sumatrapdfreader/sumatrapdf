@@ -111,8 +111,9 @@ static void MobiSaveHtml(const WCHAR* filePathBase, MobiDoc* mb) {
 
     AutoFreeW outFile(str::Join(filePathBase, L"_pp.html"));
 
-    size_t htmlLen;
-    const char* html = mb->GetHtmlData(htmlLen);
+    const std::string_view htmlData = mb->GetHtmlData();
+    size_t htmlLen = htmlData.size();
+    const char* html = htmlData.data();
     size_t ppHtmlLen;
     char* ppHtml = PrettyPrintHtml(html, htmlLen, ppHtmlLen);
     file::WriteFile(outFile.Get(), ppHtml, ppHtmlLen);
@@ -141,12 +142,14 @@ static void MobiSaveImages(const WCHAR* filePathBase, MobiDoc* mb) {
 static void MobiLayout(MobiDoc* mobiDoc) {
     PoolAllocator textAllocator;
 
+    const std::string_view htmlData = mobiDoc->GetHtmlData();
     HtmlFormatterArgs args;
     args.pageDx = 640;
     args.pageDy = 480;
     args.SetFontName(L"Tahoma");
     args.fontSize = 12;
-    args.htmlStr = mobiDoc->GetHtmlData(args.htmlStrLen);
+    args.htmlStr = htmlData.data();
+    args.htmlStrLen = htmlData.size();
     args.textAllocator = &textAllocator;
 
     MobiFormatter mf(&args, mobiDoc);
