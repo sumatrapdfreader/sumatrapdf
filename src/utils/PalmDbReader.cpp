@@ -3,138 +3,114 @@
 
 #include "BaseUtil.h"
 #include "PalmDbReader.h"
-
-// https://stackoverflow.com/questions/1537964/visual-c-equivalent-of-gccs-attribute-packed
-
-// A function-like feature checking macro that is a wrapper around
-// `__has_attribute`, which is defined by GCC 5+ and Clang and evaluates to a
-// nonzero constant integer if the attribute is supported or 0 if not.
-//
-// It evaluates to zero if `__has_attribute` is not defined by the compiler.
-//
-// GCC: https://gcc.gnu.org/gcc-5/changes.html
-// Clang: https://clang.llvm.org/docs/LanguageExtensions.html
-#ifdef __has_attribute
-#define HAVE_ATTRIBUTE(x) __has_attribute(x)
-#else
-#define HAVE_ATTRIBUTE(x) 0
-#endif
-
-#if HAVE_ATTRIBUTE(packed) || (defined(__GNUC__) && !defined(__clang__))
-#define ATTRIBUTE_PACKED __attribute__((__packed__))
-#else
-#define ATTRIBUTE_PACKED
-#endif
-
-#include "ByteReader.h"
+#include "ByteOrderDecoder.h"
 #include "FileUtil.h"
 
-#if COMPILER_MSVC
-#include <pshpack1.h>
-#endif
-
-// cf. http://wiki.mobileread.com/wiki/PDB
-struct PdbHeader {
-    /* 31 chars + 1 null terminator */
-    char name[32];
-    uint16_t attributes;
-    uint16_t version;
-    uint32_t createTime;
-    uint32_t modifyTime;
-    uint32_t backupTime;
-    uint32_t modificationNumber;
-    uint32_t appInfoID;
-    uint32_t sortInfoID;
-    char typeCreator[8];
-    uint32_t idSeed;
-    uint32_t nextRecordList;
-    uint16_t numRecords;
-} ATTRIBUTE_PACKED;
-
-struct PdbRecordHeader {
-    uint32_t offset;
-    uint8_t flags; // deleted, dirty, busy, secret, category
-    char uniqueID[3];
-} ATTRIBUTE_PACKED;
-
-#if COMPILER_MSVC
-#include <poppack.h>
-#endif
-
-static_assert(sizeof(PdbHeader) == kPdbHeaderLen, "wrong size of PdbHeader structure");
-static_assert(sizeof(PdbRecordHeader) == 8, "wrong size of PdbRecordHeader structure");
+// size of PdbHeader
+#define kPdbHeaderLen 78
+// size of PdbRecordHeader
+#define kPdbRecordHeaderLen 8
 
 bool PdbReader::Parse(OwnedData data) {
     this->data = std::move(data);
     if (!ParseHeader()) {
-        recOffsets.clear();
         return false;
     }
     return true;
 }
 
-// TODO: redo parsing to not rely on struct packing
-bool PdbReader::ParseHeader() {
-    CrashIf(recOffsets.size() > 0);
-
-    PdbHeader pdbHeader = {0};
-    if (!data.data || data.size < sizeof(pdbHeader)) {
-        return false;
-    }
-    ByteReader r(data.data, data.size);
-
-    bool ok = r.UnpackBE(&pdbHeader, sizeof(pdbHeader), "32b2w6d8b2dw");
-    CrashIf(!ok);
+static bool DecodePdbHeader(ByteOrderDecoder& dec, PdbHeader* hdr) {
+    dec.Bytes(hdr->name, 32);
     // the spec says it should be zero-terminated anyway, but this
     // comes from untrusted source, so we do our own termination
-    pdbHeader.name[dimof(pdbHeader.name) - 1] = '\0';
-    str::BufSet(dbType, dimof(dbType), pdbHeader.typeCreator);
+    hdr->name[31] = 0;
+    hdr->attributes = dec.UInt16();
+    hdr->version = dec.UInt16();
+    hdr->createTime = dec.UInt32();
+    hdr->modifyTime = dec.UInt32();
+    hdr->backupTime = dec.UInt32();
+    hdr->modificationNumber = dec.UInt32();
+    hdr->appInfoID = dec.UInt32();
+    hdr->sortInfoID = dec.UInt32();
+    ZeroMemory(hdr->typeCreator, dimof(hdr->typeCreator));
+    dec.Bytes(hdr->typeCreator, 8);
+    hdr->idSeed = dec.UInt32();
+    hdr->nextRecordList = dec.UInt32();
+    hdr->numRecords = dec.UInt16();
+    return dec.IsOk();
+}
 
-    if (0 == pdbHeader.numRecords) {
+bool PdbReader::ParseHeader() {
+    CrashIf(recInfos.size() > 0);
+
+    ByteOrderDecoder dec(data.data, data.size, ByteOrderDecoder::BigEndian);
+    bool ok = DecodePdbHeader(dec, &hdr);
+    if (!ok) {
         return false;
     }
 
-    for (int i = 0; i < pdbHeader.numRecords; i++) {
-        uint32_t off = r.DWordBE(sizeof(pdbHeader) + i * sizeof(PdbRecordHeader));
-        if (off >= data.size) {
+    if (0 == hdr.numRecords) {
+        return false;
+    }
+
+    size_t nRecs = hdr.numRecords;
+    size_t minOffset = kPdbHeaderLen + (nRecs * kPdbRecordHeaderLen);
+    size_t maxOffset = data.size;
+
+    for (size_t i = 0; i < nRecs; i++) {
+        PdbRecordHeader recHdr;
+        recHdr.offset = dec.UInt32();
+        recHdr.flags = dec.UInt8();
+        dec.Bytes(recHdr.uniqueID, dimof(recHdr.uniqueID));
+        uint32_t off = recHdr.offset;
+        if ((off < minOffset) || (off > maxOffset)) {
             return false;
         }
-        recOffsets.push_back(off);
+        recInfos.push_back(recHdr);
     }
-    // add sentinel value to simplify use
-    recOffsets.push_back(std::min((uint32_t)data.size, (uint32_t)-1));
+    if (!dec.IsOk()) {
+        return false;
+    }
 
     // validate offsets
-    for (int i = 0; i < pdbHeader.numRecords; i++) {
-        if (recOffsets.at(i + 1) < recOffsets.at(i)) {
+    uint32_t prevOff = recInfos[0].offset;
+    for (size_t i = 1; i < nRecs - 1; i++) {
+        uint32_t off = recInfos[i].offset;
+        if (prevOff > off) {
             return false;
         }
-        // technically PDB record size should be less than 64K,
-        // but it's not true for mobi files, so we don't validate that
+        prevOff = off;
     }
+
+    // technically PDB record size should be less than 64K,
+    // but it's not true for mobi files, so we don't validate that
 
     return true;
 }
 
 const char* PdbReader::GetDbType() {
-    if (recOffsets.size() == 0) {
-        return nullptr;
-    }
-    return dbType;
+    return hdr.typeCreator;
 }
 
 size_t PdbReader::GetRecordCount() {
-    return recOffsets.size() - 1;
+    return recInfos.size();
 }
 
 // don't free, memory is owned by us
 std::string_view PdbReader::GetRecord(size_t recNo) {
-    if (recNo + 1 >= recOffsets.size()) {
+    size_t nRecs = recInfos.size();
+    CrashIf(recNo >= nRecs);
+    if (recNo >= nRecs) {
         return {};
     }
-    size_t offset = recOffsets.at(recNo);
-    size_t size = recOffsets.at(recNo + 1) - offset;
-    return {data.data + offset, size};
+    size_t off = recInfos[recNo].offset;
+    size_t nextOff = data.size;
+    if (recNo != nRecs - 1) {
+        nextOff = recInfos[recNo + 1].offset;
+    }
+    CrashIf(off > nextOff);
+    size_t size = nextOff - off;
+    return {data.data + off, size};
 }
 
 PdbReader* PdbReader::CreateFromData(OwnedData data) {
