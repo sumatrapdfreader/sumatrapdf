@@ -4,11 +4,34 @@
 #include "BaseUtil.h"
 #include "PalmDbReader.h"
 
+// https://stackoverflow.com/questions/1537964/visual-c-equivalent-of-gccs-attribute-packed
+
+// A function-like feature checking macro that is a wrapper around
+// `__has_attribute`, which is defined by GCC 5+ and Clang and evaluates to a
+// nonzero constant integer if the attribute is supported or 0 if not.
+//
+// It evaluates to zero if `__has_attribute` is not defined by the compiler.
+//
+// GCC: https://gcc.gnu.org/gcc-5/changes.html
+// Clang: https://clang.llvm.org/docs/LanguageExtensions.html
+#ifdef __has_attribute
+#define HAVE_ATTRIBUTE(x) __has_attribute(x)
+#else
+#define HAVE_ATTRIBUTE(x) 0
+#endif
+
+#if HAVE_ATTRIBUTE(packed) || (defined(__GNUC__) && !defined(__clang__))
+#define ATTRIBUTE_PACKED __attribute__((__packed__))
+#else
+#define ATTRIBUTE_PACKED
+#endif
+
 #include "ByteReader.h"
 #include "FileUtil.h"
-#include "WinUtil.h"
 
+#if COMPILER_MSVC
 #include <pshpack1.h>
+#endif
 
 // cf. http://wiki.mobileread.com/wiki/PDB
 struct PdbHeader {
@@ -26,15 +49,17 @@ struct PdbHeader {
     uint32_t idSeed;
     uint32_t nextRecordList;
     uint16_t numRecords;
-};
+} ATTRIBUTE_PACKED;
 
 struct PdbRecordHeader {
     uint32_t offset;
     uint8_t flags; // deleted, dirty, busy, secret, category
     char uniqueID[3];
-};
+} ATTRIBUTE_PACKED;
 
+#if COMPILER_MSVC
 #include <poppack.h>
+#endif
 
 static_assert(sizeof(PdbHeader) == kPdbHeaderLen, "wrong size of PdbHeader structure");
 static_assert(sizeof(PdbRecordHeader) == 8, "wrong size of PdbRecordHeader structure");
@@ -48,6 +73,7 @@ bool PdbReader::Parse(OwnedData data) {
     return true;
 }
 
+// TODO: redo parsing to not rely on struct packing
 bool PdbReader::ParseHeader() {
     CrashIf(recOffsets.size() > 0);
 
@@ -121,6 +147,8 @@ PdbReader* PdbReader::CreateFromData(OwnedData data) {
 }
 
 #if OS_WIN
+#include "WinUtil.h"
+
 PdbReader* PdbReader::CreateFromFile(const WCHAR *filePath) {
     OwnedData data = file::ReadAll(filePath);
     return CreateFromData(std::move(data));
