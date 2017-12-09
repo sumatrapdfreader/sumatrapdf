@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-8bb322aeca64c29bce6847465f125eb8412ab4a2
+175b68c494f12d7d67f74f67da574ac74e669b47
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -7004,6 +7004,7 @@ vn:Thu phóng &tuỳ ý...\tCtrl+Y
 :Dark
 am:Մուգ
 ar:مظلم
+az:Tünd
 bn:অন্ধকার
 br:Escuro
 ca:Fosc
@@ -7037,6 +7038,7 @@ vn:Tối
 :Darker
 am:Շատ մուգ
 ar:غامق
+az:Daha tünd
 bn:গাঢ় অন্ধকার
 br:Muito escuro
 ca:Molt fosc
@@ -10933,6 +10935,7 @@ vn:Cho phép Windows hiển thị hình ảnh &xem trước của các tài li�
 :Light
 am:Լուսավոր
 ar:خفيف
+az:Açıq
 bn:উজ্জ্বল
 br:Claro
 ca:Clar

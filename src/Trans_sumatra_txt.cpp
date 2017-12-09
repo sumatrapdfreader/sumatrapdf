@@ -1121,8 +1121,8 @@ const char * gTranslations_az =
   "Haz\304\261rk\304\261 fayl\0"\
   "Kursorun m\303\266vqeyi:\0"\
   "Miq&yas\304\261 qeyd et...\tCtrl+Y\0"\
-  "\0"\
-  "\0"\
+  "T\303\274nd\0"\
+  "Daha t\303\274nd\0"\
   "Standart &d\303\274z\303\274m:\0"\
   "Standart miq&yas:\0"\
   "Mobil rejimd\311\231 PDF fayllarla \311\231laq\311\231 yaratmaq m\303\274mk\303\274n deyil\0"\
@@ -1172,7 +1172,7 @@ const char * gTranslations_az =
   "T\311\231krar axtar\304\261\305\237 \303\274\303\247\303\274n F3 d\303\274ym\311\231sin\311\231 bas\304\261n\0"\
   "\305\236\311\231kil fayllar\304\261 (*.%s)\0"\
   "\0"\
-  "\0"\
+  "A\303\247\304\261q\0"\
   "\0"\
   "SumatraPDF PDF fayllar\304\261n g\303\266r\303\274nt\303\274l\311\231nm\311\231si \303\274\303\247\303\274n standart proqram edilsin?\0"\
   "SumatraPDF-i PDF fayllarla \311\231laq\311\231l\311\231ndir\0"\
