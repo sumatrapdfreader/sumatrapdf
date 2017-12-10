@@ -7,9 +7,9 @@
 template <typename T>
 class ScopedMem {
   public:
-    T* ptr;
+    T* ptr = nullptr;
 
-    ScopedMem() : ptr(nullptr) {}
+    ScopedMem() = default;
     explicit ScopedMem(T* ptr) : ptr(ptr) {}
     ~ScopedMem() { free(ptr); }
     void Set(T* newPtr) {
@@ -28,10 +28,10 @@ class ScopedMem {
 // deletes any object at the end of the scope
 template <class T>
 class ScopedPtr {
-    T* obj;
+    T* obj = nullptr;
 
   public:
-    ScopedPtr() : obj(nullptr) {}
+    ScopedPtr() = default;
     explicit ScopedPtr(T* obj) : obj(obj) {}
     ~ScopedPtr() { delete obj; }
     T* Detach() {
@@ -50,7 +50,7 @@ class ScopedPtr {
 template <typename T>
 class AutoFreeStr : public ScopedMem<T> {
   public:
-    AutoFreeStr() { this->ptr = nullptr; }
+    AutoFreeStr() = default;
     explicit AutoFreeStr(T* ptr) { this->ptr = ptr; }
     void SetCopy(const T* newPtr) {
         free(this->ptr);
