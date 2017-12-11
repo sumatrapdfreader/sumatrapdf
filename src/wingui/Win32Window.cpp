@@ -29,15 +29,18 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         free(w);
         return DefWindowProc(hwnd, msg, wp, lp);
     }
+    if (!w) {
+        goto Exit;
+    }
 
-    if (w && w->preFilter) {
+    if (w->preFilter) {
         bool discardMsg = false;
         LRESULT res = w->preFilter(w, msg, wp, lp, discardMsg);
         if (discardMsg)
             return res;
     }
 
-    if (w && (WM_COMMAND == msg) && w->onCommand) {
+    if ((WM_COMMAND == msg) && w->onCommand) {
         bool discardMsg = false;
         LRESULT res = w->onCommand(w, LOWORD(wp), HIWORD(wp), lp, discardMsg);
         if (discardMsg)
@@ -45,13 +48,14 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         return DefWindowProc(hwnd, msg, wp, lp);
     }
 
-    if (w && (WM_SIZE == msg) && w->onSize) {
+    if ((WM_SIZE == msg) && w->onSize) {
         int dx = LOWORD(lp);
         int dy = HIWORD(lp);
         w->onSize(w, dx, dy, wp);
         return 0;
     }
 
+Exit:
     if (WM_PAINT == msg) {
         PAINTSTRUCT ps;
         BeginPaint(hwnd, &ps);
