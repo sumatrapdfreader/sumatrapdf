@@ -14,7 +14,7 @@ struct EditCtrl {
     DWORD dwExStyle;
 
     // this data can be set directly
-    MsgFilter preFilter; // called at start of windows proc to allow intercepting commands
+    MsgFilter preFilter; // called at start of windows proc to allow intercepting messages
     EditCtrlCb onTextChanged;
 
     // set those via SetColors() to keep bgBrush in sync with bgCol

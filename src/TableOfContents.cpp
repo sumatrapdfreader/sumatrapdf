@@ -168,7 +168,7 @@ static void GoToTocLinkForTVItem(WindowInfo* win, HWND hTV, HTREEITEM hItem = nu
     if (!hItem)
         hItem = TreeView_GetSelection(hTV);
 
-    TVITEM item;
+    TVITEM item = {0};
     item.hItem = hItem;
     item.mask = TVIF_PARAM;
     TreeView_GetItem(hTV, &item);
@@ -235,17 +235,56 @@ static HTREEITEM AddTocItemToView(HWND hwnd, DocTocItem* entry, HTREEITEM parent
 }
 
 static void PopulateTocTreeView(HWND hwnd, DocTocItem* entry, Vec<int>& tocState, HTREEITEM parent = nullptr) {
-    for (; entry; entry = entry->next) {
+    while (entry) {
         bool toggle = tocState.Contains(entry->id);
         HTREEITEM node = AddTocItemToView(hwnd, entry, parent, toggle);
         PopulateTocTreeView(hwnd, entry->child, tocState, node);
+        entry = entry->next;
     }
+}
+
+// function called for every item in the tree.
+// returning false stops iteration
+typedef std::function<bool(TVITEM*)> TreeItemVisitor;
+
+// returns false if we should stop iteration
+// TODO: convert to non-recursive version by storing nodes to visit in std::deque
+static bool VisitTreeNodesRec(HWND hwnd, HTREEITEM hItem, const TreeItemVisitor& visitor) {
+    while (hItem) {
+        TVITEMW item = {0};
+        item.hItem = hItem;
+        item.mask = TVIF_PARAM | TVIF_STATE;
+        item.stateMask = TVIS_EXPANDED;
+        BOOL ok = TreeView_GetItem(hwnd, &item);
+        if (!ok) {
+            // we failed to get the node, but we don't want to stop the traversal
+            return true;
+        }
+        bool shouldContinue = visitor(&item);
+        if (!shouldContinue) {
+            // visitor asked to stop
+            return false;
+        }
+
+        if ((item.state & TVIS_EXPANDED)) {
+            HTREEITEM child = TreeView_GetChild(hwnd, hItem);
+            VisitTreeNodesRec(hwnd, child, visitor);
+        }
+
+        hItem = TreeView_GetNextSibling(hwnd, hItem);
+    }
+    return true;
+}
+
+static void VisitTreeNodes(HWND hwnd, const TreeItemVisitor& visitor) {
+    HTREEITEM hRoot = TreeView_GetRoot(hwnd);
+    VisitTreeNodesRec(hwnd, hRoot, visitor);
 }
 
 static void TreeItemForPageNoRec(WindowInfo* win, HTREEITEM hItem, int pageNo, HTREEITEM& bestMatchItem,
                                  int& bestMatchPageNo) {
     while (hItem && bestMatchPageNo < pageNo) {
-        TVITEM item;
+        TVITEMW item = {0};
         item.hItem = hItem;
         item.mask = TVIF_PARAM | TVIF_STATE;
         item.stateMask = TVIS_EXPANDED;
@@ -253,7 +292,8 @@ static void TreeItemForPageNoRec(WindowInfo* win, HTREEITEM hItem, int pageNo, H
 
         // remember this item if it is on the specified page (or on a previous page and closer than all other items)
         if (item.lParam) {
-            int page = ((DocTocItem*)item.lParam)->pageNo;
+            auto* docItem = reinterpret_cast<DocTocItem*>(item.lParam);
+            int page = docItem->pageNo;
             if (page <= pageNo && page >= bestMatchPageNo && page >= 1) {
                 bestMatchItem = hItem;
                 bestMatchPageNo = page;
@@ -261,15 +301,20 @@ static void TreeItemForPageNoRec(WindowInfo* win, HTREEITEM hItem, int pageNo, H
         }
 
         // find any child item closer to the specified page
-        if ((item.state & TVIS_EXPANDED))
+        if ((item.state & TVIS_EXPANDED)) {
             TreeItemForPageNoRec(win, TreeView_GetChild(win->hwndTocTree, hItem), pageNo, bestMatchItem,
                                  bestMatchPageNo);
+        }
 
         hItem = TreeView_GetNextSibling(win->hwndTocTree, hItem);
     }
 }
 
-static HTREEITEM TreeItemForPageNo(WindowInfo* win, HTREEITEM hRoot, int pageNo) {
+static HTREEITEM TreeItemForPageNo(WindowInfo* win, int pageNo) {
+    HTREEITEM hRoot = TreeView_GetRoot(win->hwndTocTree);
+    if (!hRoot)
+        return nullptr;
+
     HTREEITEM bestMatchItem = hRoot;
     int bestMatchPageNo = 0;
 
@@ -278,17 +323,49 @@ static HTREEITEM TreeItemForPageNo(WindowInfo* win, HTREEITEM hRoot, int pageNo)
     return bestMatchItem;
 }
 
-void UpdateTocSelection(WindowInfo* win, int currPageNo) {
-    if (!win->tocLoaded || !win->tocVisible || win->tocKeepSelection)
-        return;
+static HTREEITEM TreeItemForPageNo2(WindowInfo* win, int pageNo) {
+    HTREEITEM bestMatchItem = TreeView_GetRoot(win->hwndTocTree);
+    ;
+    int bestMatchPageNo = 0;
 
-    HTREEITEM hRoot = TreeView_GetRoot(win->hwndTocTree);
-    if (!hRoot)
+    VisitTreeNodes(win->hwndTocTree, [&](TVITEMW* item) {
+        auto* docItem = reinterpret_cast<DocTocItem*>(item->lParam);
+        if (!docItem) {
+            return true;
+        }
+        int page = docItem->pageNo;
+        if ((page <= pageNo) && (page >= bestMatchPageNo) && (page >= 1)) {
+            bestMatchItem = item->hItem;
+            bestMatchPageNo = page;
+            if (pageNo == bestMatchPageNo) {
+                // we can stop earlier if we found the exact match
+                return false;
+            }
+        }
+        return true;
+    });
+    return bestMatchItem;
+}
+
+bool gVerify = false;
+
+void UpdateTocSelection(WindowInfo* win, int currPageNo) {
+    if (!win->tocLoaded || !win->tocVisible || win->tocKeepSelection) {
         return;
+    }
+
+    // TODO: switch fully to TreeItemForPageNo2()
     // select the item closest to but not after the current page
     // (or the root item, if there's no such item)
-    HTREEITEM hItem = TreeItemForPageNo(win, hRoot, currPageNo);
-    TreeView_SelectItem(win->hwndTocTree, hItem);
+    HTREEITEM hItem = TreeItemForPageNo(win, currPageNo);
+    HTREEITEM hItem2 = TreeItemForPageNo2(win, currPageNo);
+    // apparently hItem and hItem2 might differ. Not sure if subtle bug
+    // or simply how things work. TreeItemForPageNo2() seems to work
+    // correctly based on manual testing
+    CrashAlwaysIf(gVerify && (hItem != hItem2));
+    if (hItem2) {
+        TreeView_SelectItem(win->hwndTocTree, hItem2);
+    }
 }
 
 void UpdateTocExpansionState(TabInfo* tab, HWND hwndTocTree, HTREEITEM hItem) {

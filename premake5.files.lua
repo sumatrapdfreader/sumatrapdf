@@ -334,6 +334,7 @@ function utils_files()
     "LabelWithCloseWnd.*",
     "SplitterWnd.*",
     --"TabsCtrl.*",
+    "TreeCtrl.*",
     "Win32Window.*",
   })
 end

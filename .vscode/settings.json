@@ -19,6 +19,8 @@
     "initializer_list": "cpp",
     "list": "cpp",
     "type_traits": "cpp",
-    "vector": "cpp"
+    "vector": "cpp",
+    "xlocale": "cpp",
+    "*.rh": "cpp"
   }
 }
