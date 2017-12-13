@@ -280,7 +280,7 @@ void OnSelectAll(WindowInfo* win, bool textOnly) {
     if (!HasPermission(Perm_CopySelection))
         return;
 
-    if (win->hwndFindBox == GetFocus() || win->hwndPageBox == GetFocus()) {
+    if (IsFocused(win->hwndFindBox) || IsFocused(win->hwndPageBox)) {
         Edit_SelectAll(GetFocus());
         return;
     }

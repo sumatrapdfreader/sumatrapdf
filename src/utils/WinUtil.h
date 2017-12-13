@@ -68,24 +68,16 @@ bool CreateShortcut(const WCHAR* shortcutPath, const WCHAR* exePath, const WCHAR
 IDataObject* GetDataObjectForFile(const WCHAR* filePath, HWND hwnd = nullptr);
 DWORD GetFileVersion(const WCHAR* path);
 
-inline bool IsKeyPressed(int key) {
-    return GetKeyState(key) & 0x8000 ? true : false;
-}
-inline bool IsShiftPressed() {
-    return IsKeyPressed(VK_SHIFT);
-}
-inline bool IsAltPressed() {
-    return IsKeyPressed(VK_MENU);
-}
-inline bool IsCtrlPressed() {
-    return IsKeyPressed(VK_CONTROL);
-}
+bool IsKeyPressed(int key);
+bool IsShiftPressed();
+bool IsAltPressed();
+bool IsCtrlPressed();
 
 HFONT CreateSimpleFont(HDC hdc, const WCHAR* fontName, int fontSize);
 
 RectI ShiftRectToWorkArea(RectI rect, bool bFully = false);
 RectI GetWorkAreaRect(RectI rect);
-RectI GetFullscreenRect(HWND hwnd);
+RectI GetFullscreenRect(HWND);
 RectI GetVirtualScreenRect();
 
 bool LaunchFile(const WCHAR* path, const WCHAR* params = nullptr, const WCHAR* verb = nullptr, bool hidden = false);
@@ -99,6 +91,7 @@ SizeI TextSizeInHwnd(HWND, const WCHAR*, HFONT = nullptr);
 SIZE TextSizeInHwnd2(HWND, const WCHAR*, HFONT);
 SizeI TextSizeInDC(HDC, const WCHAR*);
 
+bool IsFocused(HWND);
 bool IsCursorOverWindow(HWND);
 bool GetCursorPosInHwnd(HWND, PointI&);
 void CenterDialog(HWND hDlg, HWND hParent = nullptr);

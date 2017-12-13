@@ -185,7 +185,7 @@ void ShowOrHideToolbar(WindowInfo* win) {
         ShowWindow(win->hwndReBar, SW_SHOW);
     } else {
         // Move the focus out of the toolbar
-        if (win->hwndFindBox == GetFocus() || win->hwndPageBox == GetFocus())
+        if (IsFocused(win->hwndFindBox) || IsFocused(win->hwndPageBox))
             SetFocus(win->hwndFrame);
         ShowWindow(win->hwndReBar, SW_HIDE);
     }

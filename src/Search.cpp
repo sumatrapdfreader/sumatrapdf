@@ -68,7 +68,7 @@ void OnMenuFind(WindowInfo* win) {
 
     // Don't show a dialog if we don't have to - use the Toolbar instead
     if (gGlobalPrefs->showToolbar && !win->isFullScreen && !win->presentation) {
-        if (GetFocus() == win->hwndFindBox)
+        if (IsFocused(win->hwndFindBox))
             SendMessage(win->hwndFindBox, WM_SETFOCUS, 0, 0);
         else
             SetFocus(win->hwndFindBox);

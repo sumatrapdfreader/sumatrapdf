@@ -2972,7 +2972,7 @@ static void ChangeZoomLevel(WindowInfo* win, float newZoom, bool pagesContinuous
 }
 
 static void FocusPageNoEdit(HWND hwndPageBox) {
-    if (GetFocus() == hwndPageBox)
+    if (IsFocused(hwndPageBox))
         SendMessage(hwndPageBox, WM_SETFOCUS, 0, 0);
     else
         SetFocus(hwndPageBox);
@@ -3592,8 +3592,7 @@ void SetSidebarVisibility(WindowInfo* win, bool tocVisible, bool showFavorites) 
     // TODO: make this a per-window setting as well?
     gGlobalPrefs->showFavorites = showFavorites;
 
-    if ((!tocVisible && (GetFocus() == win->tocTreeCtrl->hwnd)) ||
-        (!showFavorites && (GetFocus() == win->hwndFavTree))) {
+    if ((!tocVisible && IsFocused(win->tocTreeCtrl->hwnd)) || (!showFavorites && IsFocused(win->hwndFavTree))) {
         SetFocus(win->hwndFrame);
     }
 
@@ -3955,7 +3954,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
             break;
 
         case IDM_MOVE_FRAME_FOCUS:
-            if (win->hwndFrame != GetFocus())
+            if (!IsFocused(win->hwndFrame))
                 SetFocus(win->hwndFrame);
             else if (win->tocVisible)
                 SetFocus(win->tocTreeCtrl->hwnd);
@@ -3973,7 +3972,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
 
         case IDM_COPY_SELECTION:
             // Don't break the shortcut for text boxes
-            if (win->hwndFindBox == GetFocus() || win->hwndPageBox == GetFocus())
+            if (IsFocused(win->hwndFindBox) || IsFocused(win->hwndPageBox))
                 SendMessage(GetFocus(), WM_COPY, 0, 0);
             else if (!HasPermission(Perm_CopySelection))
                 break;
@@ -4155,13 +4154,16 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 SetMenu(hwnd, nullptr);
             return DefWindowProc(hwnd, msg, wParam, lParam);
 
-        case WM_CONTEXTMENU:
+        case WM_CONTEXTMENU: {
             // opening the context menu with a keyboard doesn't call the canvas'
             // WM_CONTEXTMENU, as it never has the focus (mouse right-clicks are
             // handled as expected)
-            if (win && GET_X_LPARAM(lParam) == -1 && GET_Y_LPARAM(lParam) == -1 && GetFocus() != win->tocTreeCtrl->hwnd)
+            int x = GET_X_LPARAM(lParam);
+            int y = GET_Y_LPARAM(lParam);
+            if (win && (x == -1) && (y == -1) && !IsFocused(win->tocTreeCtrl->hwnd))
                 return SendMessage(win->hwndCanvas, WM_CONTEXTMENU, wParam, lParam);
             return DefWindowProc(hwnd, msg, wParam, lParam);
+        }
 
         case WM_SETTINGCHANGE:
         InitMouseWheelInfo:
