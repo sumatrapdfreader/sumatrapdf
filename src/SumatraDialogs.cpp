@@ -374,7 +374,7 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM w
         }
         ListBox_SetCurSel(langList, itemToSelect);
         // the language list is meant to be laid out left-to-right
-        ToggleWindowStyle(langList, WS_EX_LAYOUTRTL, false, GWL_EXSTYLE);
+        ToggleWindowExStyle(langList, WS_EX_LAYOUTRTL, false);
         SetDlgItemText(hDlg, IDOK, _TR("OK"));
         SetDlgItemText(hDlg, IDCANCEL, _TR("Cancel"));
 

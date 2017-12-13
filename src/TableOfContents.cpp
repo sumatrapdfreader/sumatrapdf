@@ -220,13 +220,13 @@ static HTREEITEM AddTocItemToView(TreeCtrl* tree, DocTocItem* entry, HTREEITEM p
         AutoFreeW label(win->ctrl->GetPageLabel(entry->pageNo));
         AutoFreeW text(str::Format(L"%s  %s", entry->title, label));
         toInsert.itemex.pszText = text;
-        return TreeView_InsertItem(hwnd, &toInsert);
+        return TreeView_InsertItem(hwnd, &tvinsert);
     }
 #endif
     return TreeCtrlInsertItem(tree, &toInsert);
 }
 
-static void PopulateTocTreeView(TreeCtrl* tree, DocTocItem* entry, Vec<int>& tocState, HTREEITEM parent = nullptr) {
+static void PopulateTocTreeView(TreeCtrl* tree, DocTocItem* entry, Vec<int>& tocState, HTREEITEM parent) {
     while (entry) {
         bool toggle = tocState.Contains(entry->id);
         HTREEITEM node = AddTocItemToView(tree, entry, parent, toggle);
@@ -364,7 +364,7 @@ void UpdateTocColors(WindowInfo* win) {
     SetBgCol(win->tocLabelWithClose, labelBgCol);
     SetTextCol(win->tocLabelWithClose, labelTxtCol);
     SetBgCol(win->sidebarSplitter, splitterCol);
-    ToggleWindowStyle(win->tocTreeCtrl->hwnd, WS_EX_STATICEDGE, !flatTreeWnd, GWL_EXSTYLE);
+    ToggleWindowExStyle(win->tocTreeCtrl->hwnd, WS_EX_STATICEDGE, !flatTreeWnd);
     SetWindowPos(win->tocTreeCtrl->hwnd, nullptr, 0, 0, 0, 0,
                  SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED);
 
@@ -425,8 +425,8 @@ void LoadTocTree(WindowInfo* win) {
 
     // TODO: make into TreeCtrlSuspendRedraw()/TreeCtrlResumeRedraw()
     SendMessage(win->tocTreeCtrl->hwnd, WM_SETREDRAW, FALSE, 0);
-    ToggleWindowStyle(win->tocTreeCtrl->hwnd, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
-    PopulateTocTreeView(win->tocTreeCtrl, tab->tocRoot, tab->tocState);
+    SetRtl(win->tocTreeCtrl->hwnd, isRTL);
+    PopulateTocTreeView(win->tocTreeCtrl, tab->tocRoot, tab->tocState, nullptr);
     UpdateTocColors(win);
     SendMessage(win->tocTreeCtrl->hwnd, WM_SETREDRAW, TRUE, 0);
     UINT fl = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;

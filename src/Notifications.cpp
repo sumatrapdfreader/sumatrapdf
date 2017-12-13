@@ -38,7 +38,7 @@ void NotificationWnd::CreatePopup(HWND parent, const WCHAR* message) {
     self = CreateWindowExW(WS_EX_TOPMOST, NOTIFICATION_WND_CLASS_NAME, message, WS_CHILD | SS_CENTER, TOP_LEFT_MARGIN,
                            TOP_LEFT_MARGIN, 0, 0, parent, (HMENU)0, GetModuleHandle(nullptr), nullptr);
     SetWindowLongPtr(self, GWLP_USERDATA, (LONG_PTR)this);
-    ToggleWindowStyle(self, CS_DROPSHADOW | WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, IsUIRightToLeft(), GWL_EXSTYLE);
+    ToggleWindowExStyle(self, CS_DROPSHADOW | WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, IsUIRightToLeft());
     UpdateWindowPosition(message, true);
     ShowWindow(self, SW_SHOW);
 }
@@ -110,7 +110,7 @@ void NotificationWnd::UpdateMessage(const WCHAR* message, int timeoutInMS, bool 
     if (timeoutInMS != 0) {
         hasCancel = false;
     }
-    ToggleWindowStyle(self, CS_DROPSHADOW | WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, IsUIRightToLeft(), GWL_EXSTYLE);
+    ToggleWindowExStyle(self, CS_DROPSHADOW | WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, IsUIRightToLeft());
     UpdateWindowPosition(message);
     InvalidateRect(self, nullptr, TRUE);
     if (timeoutInMS != 0) {

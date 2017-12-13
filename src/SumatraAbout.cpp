@@ -558,7 +558,7 @@ void OnMenuAbout() {
     if (!gHwndAbout)
         return;
 
-    ToggleWindowStyle(gHwndAbout, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, IsUIRightToLeft(), GWL_EXSTYLE);
+    SetRtl(gHwndAbout, IsUIRightToLeft());
 
     // get the dimensions required for the about box's content
     RectI rc;

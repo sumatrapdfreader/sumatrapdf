@@ -529,32 +529,33 @@ static void UpdateWindowRtlLayout(WindowInfo* win) {
     if (tocVisible || favVisible)
         SetSidebarVisibility(win, false, false);
 
-    // cf. https://www.microsoft.com/middleeast/msdn/mirror.aspx
-    ToggleWindowStyle(win->hwndFrame, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
+    // https://www.microsoft.com/middleeast/msdn/mirror.aspx
+    SetRtl(win->hwndFrame, isRTL);
 
-    ToggleWindowStyle(win->hwndTocBox, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
+    SetRtl(win->hwndTocBox, isRTL);
     HWND tocBoxTitle = GetHwnd(win->tocLabelWithClose);
-    ToggleWindowStyle(tocBoxTitle, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
+    SetRtl(tocBoxTitle, isRTL);
 
-    ToggleWindowStyle(win->hwndFavBox, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
+    SetRtl(win->hwndFavBox, isRTL);
     HWND favBoxTitle = GetHwnd(win->favLabelWithClose);
-    ToggleWindowStyle(favBoxTitle, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
-    ToggleWindowStyle(win->hwndFavTree, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
+    SetRtl(favBoxTitle, isRTL);
+    SetRtl(win->hwndFavTree, isRTL);
 
-    ToggleWindowStyle(win->hwndReBar, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
-    ToggleWindowStyle(win->hwndToolbar, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
-    ToggleWindowStyle(win->hwndFindBox, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
-    ToggleWindowStyle(win->hwndFindText, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
-    ToggleWindowStyle(win->hwndPageText, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
+    SetRtl(win->hwndReBar, isRTL);
+    SetRtl(win->hwndToolbar, isRTL);
+    SetRtl(win->hwndFindBox, isRTL);
+    SetRtl(win->hwndFindText, isRTL);
+    SetRtl(win->hwndPageText, isRTL);
 
-    ToggleWindowStyle(win->hwndCaption, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
-    for (int i = CB_BTN_FIRST; i < CB_BTN_COUNT; i++)
-        ToggleWindowStyle(win->caption->btn[i].hwnd, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
+    SetRtl(win->hwndCaption, isRTL);
+    for (int i = CB_BTN_FIRST; i < CB_BTN_COUNT; i++) {
+        SetRtl(win->caption->btn[i].hwnd, isRTL);
+    }
     // TODO: why isn't SetWindowPos(..., SWP_FRAMECHANGED) enough?
     SendMessage(win->hwndFrame, WM_DWMCOMPOSITIONCHANGED, 0, 0);
     RelayoutCaption(win);
     // TODO: make tab bar RTL aware
-    // ToggleWindowStyle(win->hwndTabBar, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRTL, GWL_EXSTYLE);
+    // SetRtl(win->hwndTabBar, isRTL);
 
     win->notifications->Relayout();
 

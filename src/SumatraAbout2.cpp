@@ -349,7 +349,7 @@ void OnMenuAbout2() {
     if (!gHwndAbout2)
         return;
 
-    ToggleWindowStyle(gHwndAbout2, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, IsUIRightToLeft(), GWL_EXSTYLE);
+    SetRtl(gHwndAbout2, IsUIRightToLeft());
 
     ShowWindow(gHwndAbout2, SW_SHOW);
 }

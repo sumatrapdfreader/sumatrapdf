@@ -377,7 +377,7 @@ static bool CreatePropertiesWindow(HWND hParent, PropertiesLayout* layoutData) {
 
     layoutData->hwnd = hwnd;
     layoutData->hwndParent = hParent;
-    ToggleWindowStyle(hwnd, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, IsUIRightToLeft(), GWL_EXSTYLE);
+    SetRtl(hwnd, IsUIRightToLeft());
 
     // get the dimensions required for the about box's content
     RectI rc;

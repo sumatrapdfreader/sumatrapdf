@@ -787,15 +787,27 @@ bool CopyImageToClipboard(HBITMAP hbmp, bool appendOnly) {
     return ok;
 }
 
-void ToggleWindowStyle(HWND hwnd, DWORD flag, bool enable, int type) {
+static void ToggleWindowStyle(HWND hwnd, DWORD flags, bool enable, int type) {
     DWORD style = GetWindowLong(hwnd, type);
     DWORD newStyle;
     if (enable)
-        newStyle = style | flag;
+        newStyle = style | flags;
     else
-        newStyle = style & ~flag;
+        newStyle = style & ~flags;
     if (newStyle != style)
         SetWindowLong(hwnd, type, newStyle);
+}
+
+void ToggleWindowStyle(HWND hwnd, DWORD flags, bool enable) {
+    ToggleWindowStyle(hwnd, flags, enable, GWL_STYLE);
+}
+
+void ToggleWindowExStyle(HWND hwnd, DWORD flags, bool enable) {
+    ToggleWindowStyle(hwnd, flags, enable, GWL_EXSTYLE);
+}
+
+void SetRtl(HWND hwnd, bool enable) {
+    ToggleWindowExStyle(hwnd, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, enable);
 }
 
 RectI ChildPosWithinParent(HWND hwnd) {
