@@ -8,25 +8,27 @@ typedef std::function<void(EditCtrl*)> EditCtrlCb;
 
 struct EditCtrl {
     // creation parameters. must be set before CreateEditCtrl() call
-    HWND parent;
-    RECT initialPos;
-    DWORD dwStyle;
-    DWORD dwExStyle;
+    HWND parent = 0;
+    RECT initialPos = {0, 0, 0, 0};
+    DWORD dwStyle = 0;
+    DWORD dwExStyle = 0;
 
     // this data can be set directly
     MsgFilter preFilter; // called at start of windows proc to allow intercepting messages
     EditCtrlCb onTextChanged;
 
     // set those via SetColors() to keep bgBrush in sync with bgCol
-    HBRUSH bgBrush;
-    COLORREF bgCol;
-    COLORREF txtCol;
+    HBRUSH bgBrush = nullptr;
+    COLORREF bgCol = 0;
+    COLORREF txtCol = 0;
 
     // private
-    HWND hwnd;
-    int ncDx;
-    int ncDy;
-    bool hasBorder;
+    HWND hwnd = nullptr;
+    int ncDx = 0;
+    int ncDy = 0;
+    bool hasBorder = false;
+    UINT_PTR hwndSubclassId = 0;
+    UINT_PTR hwndParentSubclassId = 0;
 };
 
 /* Creation sequence:

@@ -20,6 +20,7 @@
 #include "ThreadUtil.h"
 #include "UITask.h"
 #include "WinUtil.h"
+#include "TreeCtrl.h"
 #include "BaseEngine.h"
 #include "PsEngine.h"
 #include "EngineManager.h"
@@ -479,9 +480,9 @@ static void UpdateSidebarDisplayState(WindowInfo* win, TabInfo* tab, DisplayStat
     ds->showToc = tab->showToc;
     if (win->tocLoaded && tab == win->currentTab) {
         tab->tocState.Reset();
-        HTREEITEM hRoot = TreeView_GetRoot(win->hwndTocTree);
+        HTREEITEM hRoot = TreeCtrlGetRoot(win->tocTreeCtrl);
         if (hRoot)
-            UpdateTocExpansionState(tab, win->hwndTocTree, hRoot);
+            UpdateTocExpansionState(tab, win->tocTreeCtrl, hRoot);
     }
     *ds->tocState = tab->tocState;
 }
@@ -3144,7 +3145,7 @@ void AdvanceFocus(WindowInfo* win) {
         tabOrder[nWindows++] = win->hwndFindBox;
     }
     if (win->tocLoaded && win->tocVisible) {
-        tabOrder[nWindows++] = win->hwndTocTree;
+        tabOrder[nWindows++] = win->tocTreeCtrl->hwnd;
     }
     if (gGlobalPrefs->showFavorites) {
         tabOrder[nWindows++] = win->hwndFavTree;
@@ -3591,7 +3592,8 @@ void SetSidebarVisibility(WindowInfo* win, bool tocVisible, bool showFavorites) 
     // TODO: make this a per-window setting as well?
     gGlobalPrefs->showFavorites = showFavorites;
 
-    if ((!tocVisible && GetFocus() == win->hwndTocTree) || (!showFavorites && GetFocus() == win->hwndFavTree)) {
+    if ((!tocVisible && (GetFocus() == win->tocTreeCtrl->hwnd)) ||
+        (!showFavorites && (GetFocus() == win->hwndFavTree))) {
         SetFocus(win->hwndFrame);
     }
 
@@ -3956,7 +3958,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
             if (win->hwndFrame != GetFocus())
                 SetFocus(win->hwndFrame);
             else if (win->tocVisible)
-                SetFocus(win->hwndTocTree);
+                SetFocus(win->tocTreeCtrl->hwnd);
             break;
 
         case IDM_GOTO_NAV_BACK:
@@ -4157,7 +4159,7 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             // opening the context menu with a keyboard doesn't call the canvas'
             // WM_CONTEXTMENU, as it never has the focus (mouse right-clicks are
             // handled as expected)
-            if (win && GET_X_LPARAM(lParam) == -1 && GET_Y_LPARAM(lParam) == -1 && GetFocus() != win->hwndTocTree)
+            if (win && GET_X_LPARAM(lParam) == -1 && GET_Y_LPARAM(lParam) == -1 && GetFocus() != win->tocTreeCtrl->hwnd)
                 return SendMessage(win->hwndCanvas, WM_CONTEXTMENU, wParam, lParam);
             return DefWindowProc(hwnd, msg, wParam, lParam);
 

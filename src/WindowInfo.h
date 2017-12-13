@@ -21,6 +21,8 @@ class DisplayModel;
 class EbookController;
 class TabInfo;
 
+struct TreeCtrl;
+
 /* Describes actions which can be performed by mouse */
 enum MouseAction { MA_IDLE = 0, MA_DRAGGING, MA_DRAGGING_RIGHT, MA_SELECTING, MA_SCROLLING, MA_SELECTING_TEXT };
 
@@ -53,13 +55,13 @@ struct TouchState {
 
 /* Describes position, the target (URL or file path) and infotip of a "hyperlink" */
 struct StaticLinkInfo {
-    StaticLinkInfo() : target(nullptr), infotip(nullptr) {}
-    StaticLinkInfo(RectI rect, const WCHAR* target, const WCHAR* infotip = nullptr)
-        : rect(rect), target(target), infotip(infotip) {}
-
     RectI rect;
-    const WCHAR* target;
-    const WCHAR* infotip;
+    const WCHAR* target = nullptr;
+    const WCHAR* infotip = nullptr;
+
+    StaticLinkInfo() = default;
+    explicit StaticLinkInfo(RectI rect, const WCHAR* target, const WCHAR* infotip = nullptr)
+        : rect(rect), target(target), infotip(infotip) {}
 };
 
 /* Describes information related to one window with (optional) a document
@@ -100,7 +102,7 @@ class WindowInfo {
     // state related to table of contents (PDF bookmarks etc.)
     HWND hwndTocBox = nullptr;
     LabelWithCloseWnd* tocLabelWithClose = nullptr;
-    HWND hwndTocTree = nullptr;
+    TreeCtrl* tocTreeCtrl = nullptr;
     // whether the current tab's ToC has been loaded into the tree
     bool tocLoaded = false;
     // whether the ToC sidebar is currently visible

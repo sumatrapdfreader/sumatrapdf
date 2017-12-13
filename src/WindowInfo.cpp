@@ -8,6 +8,8 @@
 #include "FileUtil.h"
 #include "FrameRateWnd.h"
 #include "WinUtil.h"
+#include "TreeCtrl.h"
+
 #include "BaseEngine.h"
 #include "EngineManager.h"
 #include "Doc.h"
@@ -47,8 +49,9 @@ WindowInfo::~WindowInfo() {
     // release our copy of UIA provider
     // the UI automation still might have a copy somewhere
     if (uia_provider) {
-        if (AsFixed())
+        if (AsFixed()) {
             uia_provider->OnDocumentUnload();
+        }
         uia_provider->Release();
     }
 
@@ -63,6 +66,7 @@ WindowInfo::~WindowInfo() {
     delete cbHandler;
 
     DeleteFrameRateWnd(frameRateWnd);
+    DeleteTreeCtrl(tocTreeCtrl);
     free(sidebarSplitter);
     free(favSplitter);
     free(tocLabelWithClose);
@@ -118,10 +122,12 @@ SizeI WindowInfo::GetViewPortSize() {
     SizeI size = canvasRc.Size();
 
     DWORD style = GetWindowLong(hwndCanvas, GWL_STYLE);
-    if ((style & WS_VSCROLL))
+    if ((style & WS_VSCROLL)) {
         size.dx += GetSystemMetrics(SM_CXVSCROLL);
-    if ((style & WS_HSCROLL))
+    }
+    if ((style & WS_HSCROLL)) {
         size.dy += GetSystemMetrics(SM_CYHSCROLL);
+    }
     CrashIf((style & (WS_VSCROLL | WS_HSCROLL)) && !AsFixed());
 
     return size;
@@ -129,10 +135,12 @@ SizeI WindowInfo::GetViewPortSize() {
 
 void WindowInfo::RedrawAll(bool update) {
     InvalidateRect(this->hwndCanvas, nullptr, false);
-    if (this->AsEbook())
+    if (this->AsEbook()) {
         this->AsEbook()->RequestRepaint();
-    if (update)
+    }
+    if (update) {
         UpdateWindow(this->hwndCanvas);
+    }
 }
 
 void WindowInfo::ChangePresentationMode(PresentationMode mode) {
