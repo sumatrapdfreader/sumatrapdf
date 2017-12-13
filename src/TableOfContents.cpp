@@ -324,11 +324,14 @@ static HTREEITEM TreeItemForPageNo(WindowInfo* win, int pageNo) {
 }
 
 static HTREEITEM TreeItemForPageNo2(WindowInfo* win, int pageNo) {
-    HTREEITEM bestMatchItem = TreeView_GetRoot(win->hwndTocTree);
-    ;
+    HTREEITEM bestMatchItem = nullptr;
     int bestMatchPageNo = 0;
 
-    VisitTreeNodes(win->hwndTocTree, [&](TVITEMW* item) {
+    VisitTreeNodes(win->hwndTocTree, [&bestMatchItem, &bestMatchPageNo, pageNo](TVITEMW* item) {
+        if (!bestMatchItem) {
+            // if nothing else matches, match the root node
+            bestMatchItem = item->hItem;
+        }
         auto* docItem = reinterpret_cast<DocTocItem*>(item->lParam);
         if (!docItem) {
             return true;
