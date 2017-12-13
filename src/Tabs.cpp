@@ -9,6 +9,8 @@
 #include "GdiPlusUtil.h"
 #include "UITask.h"
 #include "WinUtil.h"
+#include "TreeCtrl.h"
+
 #include "BaseEngine.h"
 #include "EngineManager.h"
 #include "SettingsStructs.h"
@@ -645,9 +647,9 @@ void SaveCurrentTabInfo(WindowInfo* win) {
     CrashIf(!tdata);
     if (win->tocLoaded) {
         tdata->tocState.Reset();
-        HTREEITEM hRoot = TreeView_GetRoot(win->hwndTocTree);
+        HTREEITEM hRoot = TreeCtrlGetRoot(win->tocTreeCtrl);
         if (hRoot)
-            UpdateTocExpansionState(tdata, win->hwndTocTree, hRoot);
+            UpdateTocExpansionState(tdata, win->tocTreeCtrl, hRoot);
     }
     VerifyTabInfo(win, tdata);
 

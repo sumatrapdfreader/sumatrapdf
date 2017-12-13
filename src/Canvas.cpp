@@ -11,6 +11,7 @@
 #include "WinUtil.h"
 #include "Colors.h"
 #include "ScopedWin.h"
+#include "TreeCtrl.h"
 
 #include "BaseEngine.h"
 #include "EngineManager.h"
@@ -791,12 +792,12 @@ static LRESULT OnSetCursor(WindowInfo* win, HWND hwnd) {
 
 static LRESULT CanvasOnMouseWheel(WindowInfo* win, UINT message, WPARAM wParam, LPARAM lParam) {
     // Scroll the ToC sidebar, if it's visible and the cursor is in it
-    if (win->tocVisible && IsCursorOverWindow(win->hwndTocTree) && !gWheelMsgRedirect) {
+    if (win->tocVisible && IsCursorOverWindow(win->tocTreeCtrl->hwnd) && !gWheelMsgRedirect) {
         // Note: hwndTocTree's window procedure doesn't always handle
         //       WM_MOUSEWHEEL and when it's bubbling up, we'd return
         //       here recursively - prevent that
         gWheelMsgRedirect = true;
-        LRESULT res = SendMessage(win->hwndTocTree, message, wParam, lParam);
+        LRESULT res = SendMessage(win->tocTreeCtrl->hwnd, message, wParam, lParam);
         gWheelMsgRedirect = false;
         return res;
     }
@@ -886,12 +887,12 @@ static LRESULT CanvasOnMouseWheel(WindowInfo* win, UINT message, WPARAM wParam, 
 
 static LRESULT CanvasOnMouseHWheel(WindowInfo* win, UINT message, WPARAM wParam, LPARAM lParam) {
     // Scroll the ToC sidebar, if it's visible and the cursor is in it
-    if (win->tocVisible && IsCursorOverWindow(win->hwndTocTree) && !gWheelMsgRedirect) {
+    if (win->tocVisible && IsCursorOverWindow(win->tocTreeCtrl->hwnd) && !gWheelMsgRedirect) {
         // Note: hwndTocTree's window procedure doesn't always handle
         //       WM_MOUSEHWHEEL and when it's bubbling up, we'd return
         //       here recursively - prevent that
         gWheelMsgRedirect = true;
-        LRESULT res = SendMessage(win->hwndTocTree, message, wParam, lParam);
+        LRESULT res = SendMessage(win->tocTreeCtrl->hwnd, message, wParam, lParam);
         gWheelMsgRedirect = false;
         return res;
     }
@@ -1095,14 +1096,14 @@ static LRESULT WndProcCanvasChmUI(WindowInfo* win, HWND hwnd, UINT msg, WPARAM w
 // NO_INLINE to help in debugging https://github.com/sumatrapdfreader/sumatrapdf/issues/292
 static NO_INLINE LRESULT CanvasOnMouseWheelEbook(WindowInfo* win, UINT message, WPARAM wParam, LPARAM lParam) {
     // Scroll the ToC sidebar, if it's visible and the cursor is in it
-    if (win->tocVisible && IsCursorOverWindow(win->hwndTocTree)) {
+    if (win->tocVisible && IsCursorOverWindow(win->tocTreeCtrl->hwnd)) {
         // Note: hwndTocTree's window procedure doesn't always handle
         //       WM_MOUSEWHEEL and when it's bubbling up, we'd return
         //       here recursively - prevent that
         LRESULT res = 0;
         if (!gWheelMsgRedirect) {
             gWheelMsgRedirect = true;
-            res = SendMessage(win->hwndTocTree, message, wParam, lParam);
+            res = SendMessage(win->tocTreeCtrl->hwnd, message, wParam, lParam);
             gWheelMsgRedirect = false;
         }
         return res;

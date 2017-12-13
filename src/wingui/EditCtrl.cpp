@@ -4,6 +4,10 @@
 #include "BitManip.h"
 #include "WinUtil.h"
 
+constexpr UINT_PTR SUBCLASS_ID = 1;
+
+static void Unsubclass(EditCtrl* w);
+
 // TODO:
 // - expose EN_UPDATE
 // (http://msdn.microsoft.com/en-us/library/windows/desktop/bb761687(v=vs.85).aspx)
@@ -48,8 +52,7 @@ static LRESULT CALLBACK EditProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT
     }
 
     if (WM_NCDESTROY == msg) {
-        RemoveWindowSubclass(GetParent(w->hwnd), EditParentProc, 0);
-        RemoveWindowSubclass(w->hwnd, EditProc, 0);
+        Unsubclass(w);
         return DefSubclassProc(hwnd, msg, wp, lp);
     }
 
@@ -69,6 +72,33 @@ static LRESULT CALLBACK EditProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT
     return DefSubclassProc(hwnd, msg, wp, lp);
 }
 
+static void Subclass(EditCtrl* w) {
+    BOOL ok = SetWindowSubclass(w->hwnd, EditProc, SUBCLASS_ID, (DWORD_PTR)w);
+    CrashIf(!ok);
+    w->hwndSubclassId = SUBCLASS_ID;
+
+    ok = SetWindowSubclass(w->parent, EditParentProc, SUBCLASS_ID, (DWORD_PTR)w);
+    CrashIf(!ok);
+    w->hwndParentSubclassId = SUBCLASS_ID;
+}
+
+static void Unsubclass(EditCtrl* w) {
+    if (!w) {
+        return;
+    }
+
+    if (w->hwndSubclassId != 0) {
+        BOOL ok = RemoveWindowSubclass(w->hwnd, EditProc, SUBCLASS_ID);
+        CrashIf(false && !ok);
+        w->hwndSubclassId = 0;
+    }
+
+    if (w->hwndParentSubclassId != 0) {
+        BOOL ok = RemoveWindowSubclass(w->parent, EditParentProc, SUBCLASS_ID);
+        CrashIf(false && !ok);
+        w->hwndParentSubclassId = 0;
+    }
+}
 void SetFont(EditCtrl* w, HFONT f) {
     SetWindowFont(w->hwnd, f, TRUE);
 }
@@ -141,8 +171,7 @@ bool CreateEditCtrl(EditCtrl* w) {
         return false;
     }
     SetFont(w, GetDefaultGuiFont());
-    SetWindowSubclass(w->hwnd, EditProc, 0, (DWORD_PTR)w);
-    SetWindowSubclass(GetParent(w->hwnd), EditParentProc, 0, (DWORD_PTR)w);
+    Subclass(w);
     return true;
 }
 

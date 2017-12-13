@@ -295,6 +295,11 @@ inline T* AllocStruct() {
 }
 
 template <typename T>
+inline void ZeroStruct(T* s) {
+    ZeroMemory((void*)s, sizeof(T));
+}
+
+template <typename T>
 inline T limitValue(T val, T min, T max) {
     CrashIf(min > max);
     if (val < min)
