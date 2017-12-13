@@ -24,8 +24,6 @@
 #include "TableOfContents.h"
 #include "Tabs.h"
 
-static void SwapTabs(WindowInfo* win, int tab1, int tab2);
-
 #define DEFAULT_CURRENT_BG_COL (COLORREF) - 1
 
 #define T_CLOSING (TCN_LAST + 1)
@@ -297,6 +295,28 @@ class TabPainter {
 
     void DeleteAll() { text.Reset(); }
 };
+
+static void SetTabTitle(WindowInfo* win, TabInfo* tab) {
+    TCITEM tcs;
+    tcs.mask = TCIF_TEXT;
+    tcs.pszText = (WCHAR*)tab->GetTabTitle();
+    TabCtrl_SetItem(win->hwndTabBar, win->tabs.Find(tab), &tcs);
+}
+
+static void SwapTabs(WindowInfo* win, int tab1, int tab2) {
+    if (tab1 == tab2 || tab1 < 0 || tab2 < 0)
+        return;
+
+    std::swap(win->tabs.at(tab1), win->tabs.at(tab2));
+    SetTabTitle(win, win->tabs.at(tab1));
+    SetTabTitle(win, win->tabs.at(tab2));
+
+    int current = TabCtrl_GetCurSel(win->hwndTabBar);
+    if (tab1 == current)
+        TabCtrl_SetCurSel(win->hwndTabBar, tab2);
+    else if (tab2 == current)
+        TabCtrl_SetCurSel(win->hwndTabBar, tab1);
+}
 
 static void TabNotification(WindowInfo* win, UINT code, int idx1, int idx2) {
     if (!WindowInfoStillValid(win)) {
@@ -648,13 +668,6 @@ void UpdateCurrentTabBgColor(WindowInfo* win) {
     RepaintNow(win->hwndTabBar);
 }
 
-static void SetTabTitle(WindowInfo* win, TabInfo* tab) {
-    TCITEM tcs;
-    tcs.mask = TCIF_TEXT;
-    tcs.pszText = (WCHAR*)tab->GetTabTitle();
-    TabCtrl_SetItem(win->hwndTabBar, win->tabs.Find(tab), &tcs);
-}
-
 // On load of a new document we insert a new tab item in the tab bar.
 TabInfo* CreateNewTab(WindowInfo* win, const WCHAR* filePath) {
     CrashIf(!win);
@@ -842,19 +855,4 @@ void TabsOnCtrlTab(WindowInfo* win, bool reverse) {
 
     int next = (TabCtrl_GetCurSel(win->hwndTabBar) + (reverse ? -1 : 1) + count) % count;
     TabsSelect(win, next);
-}
-
-static void SwapTabs(WindowInfo* win, int tab1, int tab2) {
-    if (tab1 == tab2 || tab1 < 0 || tab2 < 0)
-        return;
-
-    std::swap(win->tabs.at(tab1), win->tabs.at(tab2));
-    SetTabTitle(win, win->tabs.at(tab1));
-    SetTabTitle(win, win->tabs.at(tab2));
-
-    int current = TabCtrl_GetCurSel(win->hwndTabBar);
-    if (tab1 == current)
-        TabCtrl_SetCurSel(win->hwndTabBar, tab2);
-    else if (tab2 == current)
-        TabCtrl_SetCurSel(win->hwndTabBar, tab1);
 }
