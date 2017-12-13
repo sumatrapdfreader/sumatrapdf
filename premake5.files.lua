@@ -593,7 +593,7 @@ function efi_files()
     "src/utils/BaseUtil*",
     "src/utils/BitManip.h",
     "src/utils/Dict*",
-    "src/utils/StrUtil*",
+    "src/utils/StrUtil.*",
     "src/utils/StrUtil_win.cpp",
   }
 end
@@ -618,7 +618,7 @@ function test_util_files()
     "SettingsUtil*",
     "SimpleLog*",
     "StrFormat*",
-    "StrUtil*",
+    "StrUtil.*",
     "StrUtil_win.cpp",
     "SquareTreeParser*",
     "TrivialHtmlParser*",

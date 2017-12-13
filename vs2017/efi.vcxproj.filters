@@ -44,9 +44,6 @@
     <ClCompile Include="..\src\utils\StrUtil.cpp">
       <Filter>src\utils</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\utils\StrUtil_unix.cpp">
-      <Filter>src\utils</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\utils\StrUtil_win.cpp">
       <Filter>src\utils</Filter>
     </ClCompile>
