@@ -2,7 +2,7 @@ struct TreeCtrl;
 
 typedef std::function<LRESULT(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& discardMsg)> MsgFilter;
 typedef std::function<void(TreeCtrl*, NMTVGETINFOTIP*)> OnGetInfoTip;
-typedef std::function<bool(TreeCtrl*, NMTREEVIEWW*)> OnTreeNotify;
+typedef std::function<LRESULT(TreeCtrl*, NMTREEVIEWW*, bool&)> OnTreeNotify;
 
 // function called for every item in the tree.
 // returning false stops iteration
@@ -22,6 +22,7 @@ struct TreeCtrl {
     MsgFilter preFilter; // called at start of windows proc to allow intercepting messages
     // when set, allows the caller to set info tip by updating NMTVGETINFOTIP
     OnGetInfoTip onGetInfoTip;
+    OnTreeNotify onTreeNotify;
 
     // private
     HWND hwnd = nullptr;

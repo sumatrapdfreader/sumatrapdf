@@ -28,6 +28,8 @@
 #include "Translations.h"
 #include "Tabs.h"
 
+constexpr UINT_PTR SUBCLASS_ID = 1;
+
 /* Define if you want page numbers to be displayed in the ToC sidebar */
 // #define DISPLAY_TOC_PAGE_NUMBERS
 
@@ -547,15 +549,14 @@ static LRESULT CALLBACK WndProcTocTree(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
     return DefSubclassProc(hwnd, msg, wp, lp);
 }
 
-static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass,
-                                      DWORD_PTR dwRefDat) {
-    UNUSED(uIdSubclass);
-    UNUSED(dwRefDat);
-
+static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR subclassId, DWORD_PTR data) {
+    CrashIf(subclassId != SUBCLASS_ID);
+    WindowInfo* winFromData = reinterpret_cast<WindowInfo*>(data);
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
     if (!win) {
         return DefSubclassProc(hwnd, msg, wp, lp);
     }
+    CrashIf(win != winFromData);
 
     switch (msg) {
         case WM_SIZE:
@@ -567,32 +568,27 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
                 ToggleTocBox(win);
             }
             break;
-
-        case WM_NOTIFY:
-            if (LOWORD(wp) == IDC_TOC_TREE) {
-                LRESULT res = OnTocTreeNotify(win, (NMTREEVIEWW*)lp);
-                if (res != -1) {
-                    return res;
-                }
-            }
-            break;
     }
     return DefSubclassProc(hwnd, msg, wp, lp);
 }
 
-constexpr UINT_PTR SUBCLASS_ID = 1;
+// TODO: for unsubclassing, those need to be part of WindowInfo
 static UINT_PTR tocTreeSubclassId = 0;
 static UINT_PTR tocBoxSubclassId = 0;
 
-static void Subclass(TreeCtrl* tree, HWND hwndTocBox) {
+// TODO: should unsubclass as well?
+static void SubclassToc(WindowInfo* win) {
+    TreeCtrl* tree = win->tocTreeCtrl;
+    HWND hwndTocBox = win->hwndTocBox;
+    HWND hwndTocTree = win->tocTreeCtrl->hwnd;
     if (tocTreeSubclassId == 0) {
-        BOOL wasOk = SetWindowSubclass(tree->hwnd, WndProcTocTree, SUBCLASS_ID, (DWORD_PTR)tree);
+        BOOL wasOk = SetWindowSubclass(hwndTocTree, WndProcTocTree, SUBCLASS_ID, (DWORD_PTR)tree);
         CrashIf(!wasOk);
         tocTreeSubclassId = SUBCLASS_ID;
     }
 
     if (tocBoxSubclassId == 0) {
-        BOOL wasOk = SetWindowSubclass(hwndTocBox, WndProcTocBox, SUBCLASS_ID, (DWORD_PTR)tree);
+        BOOL wasOk = SetWindowSubclass(hwndTocBox, WndProcTocBox, SUBCLASS_ID, (DWORD_PTR)win);
         CrashIf(!wasOk);
         tocBoxSubclassId = SUBCLASS_ID;
     }
@@ -613,9 +609,14 @@ void CreateToc(WindowInfo* win) {
                     TVS_DISABLEDRAGDROP | TVS_NOHSCROLL | TVS_INFOTIP | WS_TABSTOP | WS_VISIBLE | WS_CHILD;
     tree->dwExStyle = WS_EX_STATICEDGE;
     tree->menu = (HMENU)IDC_TOC_TREE;
+    tree->onTreeNotify = [win](TreeCtrl* w, NMTREEVIEWW* nm, bool& handled) {
+        CrashIf(win->tocTreeCtrl != w);
+        LRESULT res = OnTocTreeNotify(win, nm);
+        handled = (res != -1);
+        return res;
+    };
     bool ok = CreateTreeCtrl(tree, L"TOC");
     CrashIf(!ok);
     win->tocTreeCtrl = tree;
-
-    Subclass(tree, win->hwndTocBox);
+    SubclassToc(win);
 }

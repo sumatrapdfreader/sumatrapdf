@@ -18,12 +18,20 @@ void TreeViewExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, bool subt
     }
 }
 
-static LRESULT CALLBACK TreeParentProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass,
-                                       DWORD_PTR dwRefData) {
-    UNUSED(uIdSubclass);
-    UNUSED(dwRefData);
-    TreeCtrl* w = (TreeCtrl*)dwRefData;
+static LRESULT CALLBACK TreeParentProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR subclassId, DWORD_PTR data) {
+    CrashIf(subclassId != SUBCLASS_ID); // this proc is only used in one subclass
+    TreeCtrl* w = (TreeCtrl*)data;
     CrashIf(GetParent(w->hwnd) != (HWND)hwnd);
+    if (msg == WM_NOTIFY) {
+        if (w->onTreeNotify) {
+            NMTREEVIEWW* nm = reinterpret_cast<NMTREEVIEWW*>(lp);
+            bool handled = true;
+            LRESULT res = w->onTreeNotify(w, nm, handled);
+            if (handled) {
+                return res;
+            }
+        }
+    }
     return DefSubclassProc(hwnd, msg, wp, lp);
 }
 
