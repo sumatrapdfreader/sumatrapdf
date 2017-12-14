@@ -864,7 +864,7 @@ static void SetFrameTitleForTab(TabInfo* tab, bool needRefresh) {
         titlePath = path::GetBaseName(titlePath);
     AutoFreeW docTitle(str::Dup(L""));
     if (tab->ctrl) {
-        WCHAR* title = tab->ctrl->GetProperty(Prop_Title);
+        WCHAR* title = tab->ctrl->GetProperty(DocumentProperty::Title);
         if (title != nullptr) {
             str::NormalizeWS(title);
             docTitle.Set(title);
@@ -1089,7 +1089,7 @@ static void LoadDocIntoCurrentTab(LoadArgs& args, Controller* ctrl, DisplayState
     if (!win->IsDocLoaded())
         return;
 
-    AutoFreeW unsupported(win->ctrl->GetProperty(Prop_UnsupportedFeatures));
+    AutoFreeW unsupported(win->ctrl->GetProperty(DocumentProperty::UnsupportedFeatures));
     if (unsupported) {
         unsupported.Set(str::Format(_TR("This document uses unsupported features (%s) and might not render properly"),
                                     unsupported));

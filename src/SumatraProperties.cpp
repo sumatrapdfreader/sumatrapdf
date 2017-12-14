@@ -266,7 +266,7 @@ static WCHAR* FormatPageSize(BaseEngine* engine, int pageNo, int rotation) {
 }
 
 static WCHAR* FormatPdfFileStructure(Controller* ctrl) {
-    AutoFreeW fstruct(ctrl->GetProperty(Prop_PdfFileStructure));
+    AutoFreeW fstruct(ctrl->GetProperty(DocumentProperty::PdfFileStructure));
     if (str::IsEmpty(fstruct.Get()))
         return nullptr;
     WStrVec parts;
@@ -406,39 +406,39 @@ static void GetProps(Controller* ctrl, PropertiesLayout* layoutData, bool extend
     WCHAR* str = str::Dup(gPluginMode ? gPluginURL : ctrl->FilePath());
     layoutData->AddProperty(_TR("File:"), str, true);
 
-    str = ctrl->GetProperty(Prop_Title);
+    str = ctrl->GetProperty(DocumentProperty::Title);
     layoutData->AddProperty(_TR("Title:"), str);
 
-    str = ctrl->GetProperty(Prop_Subject);
+    str = ctrl->GetProperty(DocumentProperty::Subject);
     layoutData->AddProperty(_TR("Subject:"), str);
 
-    str = ctrl->GetProperty(Prop_Author);
+    str = ctrl->GetProperty(DocumentProperty::Author);
     layoutData->AddProperty(_TR("Author:"), str);
 
-    str = ctrl->GetProperty(Prop_Copyright);
+    str = ctrl->GetProperty(DocumentProperty::Copyright);
     layoutData->AddProperty(_TR("Copyright:"), str);
 
-    str = ctrl->GetProperty(Prop_CreationDate);
+    str = ctrl->GetProperty(DocumentProperty::CreationDate);
     if (str && ctrl->AsFixed() && EngineType::PDF == ctrl->AsFixed()->engineType)
         ConvDateToDisplay(&str, PdfDateParse);
     else
         ConvDateToDisplay(&str, IsoDateParse);
     layoutData->AddProperty(_TR("Created:"), str);
 
-    str = ctrl->GetProperty(Prop_ModificationDate);
+    str = ctrl->GetProperty(DocumentProperty::ModificationDate);
     if (str && ctrl->AsFixed() && EngineType::PDF == ctrl->AsFixed()->engineType)
         ConvDateToDisplay(&str, PdfDateParse);
     else
         ConvDateToDisplay(&str, IsoDateParse);
     layoutData->AddProperty(_TR("Modified:"), str);
 
-    str = ctrl->GetProperty(Prop_CreatorApp);
+    str = ctrl->GetProperty(DocumentProperty::CreatorApp);
     layoutData->AddProperty(_TR("Application:"), str);
 
-    str = ctrl->GetProperty(Prop_PdfProducer);
+    str = ctrl->GetProperty(DocumentProperty::PdfProducer);
     layoutData->AddProperty(_TR("PDF Producer:"), str);
 
-    str = ctrl->GetProperty(Prop_PdfVersion);
+    str = ctrl->GetProperty(DocumentProperty::PdfVersion);
     layoutData->AddProperty(_TR("PDF Version:"), str);
 
     str = FormatPdfFileStructure(ctrl);
@@ -479,7 +479,7 @@ static void GetProps(Controller* ctrl, PropertiesLayout* layoutData, bool extend
 #if defined(DEBUG) || defined(ENABLE_EXTENDED_PROPERTIES)
     if (extended) {
         // TODO: FontList extraction can take a while
-        str = ctrl->GetProperty(Prop_FontList);
+        str = ctrl->GetProperty(DocumentProperty::FontList);
         if (str) {
             // add a space between basic and extended file properties
             layoutData->AddProperty(L" ", str::Dup(L" "));

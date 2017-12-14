@@ -211,8 +211,10 @@ static char* DecodeDataURI(const char* url, size_t* lenOut) {
 }
 
 int PropertyMap::Find(DocumentProperty prop) const {
-    if (0 <= prop && prop < dimof(values))
-        return prop;
+    int n = static_cast<int>(prop);
+    if ((n >= 0) && (n < (int)dimof(values))) {
+        return n;
+    }
     return -1;
 }
 
@@ -401,9 +403,9 @@ void EpubDoc::ParseMetadata(const char* content) {
         DocumentProperty prop;
         const char* name;
     } metadataMap[] = {
-        {Prop_Title, "dc:title"},         {Prop_Author, "dc:creator"},
-        {Prop_CreationDate, "dc:date"},   {Prop_ModificationDate, "dcterms:modified"},
-        {Prop_Subject, "dc:description"}, {Prop_Copyright, "dc:rights"},
+        {DocumentProperty::Title, "dc:title"},         {DocumentProperty::Author, "dc:creator"},
+        {DocumentProperty::CreationDate, "dc:date"},   {DocumentProperty::ModificationDate, "dcterms:modified"},
+        {DocumentProperty::Subject, "dc:description"}, {DocumentProperty::Copyright, "dc:rights"},
     };
 
     HtmlPullParser pullParser(content, str::Len(content));
@@ -788,7 +790,7 @@ bool Fb2Doc::Load() {
             if ((tok = parser.Next()) == nullptr || tok->IsError())
                 break;
             if (tok->IsText())
-                props.Set(Prop_Title, ResolveHtmlEntities(tok->s, tok->sLen));
+                props.Set(DocumentProperty::Title, ResolveHtmlEntities(tok->s, tok->sLen));
         } else if ((inTitleInfo || inDocInfo) && tok->IsStartTag() && tok->NameIsNS("author", FB2_MAIN_NS)) {
             AutoFree docAuthor;
             while ((tok = parser.Next()) != nullptr && !tok->IsError() &&
@@ -804,21 +806,21 @@ bool Fb2Doc::Load() {
             if (docAuthor) {
                 str::NormalizeWS(docAuthor);
                 if (!str::IsEmpty(docAuthor.Get()))
-                    props.Set(Prop_Author, docAuthor.StealData(), inTitleInfo != 0);
+                    props.Set(DocumentProperty::Author, docAuthor.StealData(), inTitleInfo != 0);
             }
         } else if (inTitleInfo && tok->IsStartTag() && tok->NameIsNS("date", FB2_MAIN_NS)) {
             AttrInfo* attr = tok->GetAttrByNameNS("value", FB2_MAIN_NS);
             if (attr)
-                props.Set(Prop_CreationDate, ResolveHtmlEntities(attr->val, attr->valLen));
+                props.Set(DocumentProperty::CreationDate, ResolveHtmlEntities(attr->val, attr->valLen));
         } else if (inDocInfo && tok->IsStartTag() && tok->NameIsNS("date", FB2_MAIN_NS)) {
             AttrInfo* attr = tok->GetAttrByNameNS("value", FB2_MAIN_NS);
             if (attr)
-                props.Set(Prop_ModificationDate, ResolveHtmlEntities(attr->val, attr->valLen));
+                props.Set(DocumentProperty::ModificationDate, ResolveHtmlEntities(attr->val, attr->valLen));
         } else if (inDocInfo && tok->IsStartTag() && tok->NameIsNS("program-used", FB2_MAIN_NS)) {
             if ((tok = parser.Next()) == nullptr || tok->IsError())
                 break;
             if (tok->IsText())
-                props.Set(Prop_CreatorApp, ResolveHtmlEntities(tok->s, tok->sLen));
+                props.Set(DocumentProperty::CreatorApp, ResolveHtmlEntities(tok->s, tok->sLen));
         } else if (inTitleInfo && tok->IsStartTag() && tok->NameIsNS("coverpage", FB2_MAIN_NS)) {
             tok = parser.Next();
             if (tok && tok->IsText())
@@ -1165,18 +1167,18 @@ bool HtmlDoc::Load() {
         if (tok->IsStartTag() && Tag_Title == tok->tag) {
             tok = parser.Next();
             if (tok && tok->IsText())
-                props.Set(Prop_Title, ResolveHtmlEntities(tok->s, tok->sLen));
+                props.Set(DocumentProperty::Title, ResolveHtmlEntities(tok->s, tok->sLen));
         } else if ((tok->IsStartTag() || tok->IsEmptyElementEndTag()) && Tag_Meta == tok->tag) {
             AttrInfo* attrName = tok->GetAttrByName("name");
             AttrInfo* attrValue = tok->GetAttrByName("content");
             if (!attrName || !attrValue)
                 /* ignore this tag */;
             else if (attrName->ValIs("author"))
-                props.Set(Prop_Author, ResolveHtmlEntities(attrValue->val, attrValue->valLen));
+                props.Set(DocumentProperty::Author, ResolveHtmlEntities(attrValue->val, attrValue->valLen));
             else if (attrName->ValIs("date"))
-                props.Set(Prop_CreationDate, ResolveHtmlEntities(attrValue->val, attrValue->valLen));
+                props.Set(DocumentProperty::CreationDate, ResolveHtmlEntities(attrValue->val, attrValue->valLen));
             else if (attrName->ValIs("copyright"))
-                props.Set(Prop_Copyright, ResolveHtmlEntities(attrValue->val, attrValue->valLen));
+                props.Set(DocumentProperty::Copyright, ResolveHtmlEntities(attrValue->val, attrValue->valLen));
         }
     }
 

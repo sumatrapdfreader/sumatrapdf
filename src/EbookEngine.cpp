@@ -721,7 +721,7 @@ class EpubEngineImpl : public EbookEngine {
     PageLayoutType PreferredLayout() override;
 
     WCHAR* GetProperty(DocumentProperty prop) override {
-        return prop != Prop_FontList ? doc->GetProperty(prop) : ExtractFontList();
+        return prop != DocumentProperty::FontList ? doc->GetProperty(prop) : ExtractFontList();
     }
     const WCHAR* GetDefaultFileExt() const override { return L".epub"; }
 
@@ -870,7 +870,7 @@ class Fb2EngineImpl : public EbookEngine {
     BaseEngine* Clone() override { return fileName ? CreateFromFile(fileName) : nullptr; }
 
     WCHAR* GetProperty(DocumentProperty prop) override {
-        return prop != Prop_FontList ? doc->GetProperty(prop) : ExtractFontList();
+        return prop != DocumentProperty::FontList ? doc->GetProperty(prop) : ExtractFontList();
     }
     const WCHAR* GetDefaultFileExt() const override { return doc->IsZipped() ? L".fb2z" : L".fb2"; }
 
@@ -976,7 +976,7 @@ class MobiEngineImpl : public EbookEngine {
     BaseEngine* Clone() override { return fileName ? CreateFromFile(fileName) : nullptr; }
 
     WCHAR* GetProperty(DocumentProperty prop) override {
-        return prop != Prop_FontList ? doc->GetProperty(prop) : ExtractFontList();
+        return prop != DocumentProperty::FontList ? doc->GetProperty(prop) : ExtractFontList();
     }
     const WCHAR* GetDefaultFileExt() const override { return L".mobi"; }
 
@@ -1117,7 +1117,7 @@ class PdbEngineImpl : public EbookEngine {
     BaseEngine* Clone() override { return fileName ? CreateFromFile(fileName) : nullptr; }
 
     WCHAR* GetProperty(DocumentProperty prop) override {
-        return prop != Prop_FontList ? doc->GetProperty(prop) : ExtractFontList();
+        return prop != DocumentProperty::FontList ? doc->GetProperty(prop) : ExtractFontList();
     }
     const WCHAR* GetDefaultFileExt() const override { return L".pdb"; }
 
@@ -1313,7 +1313,7 @@ class ChmEngineImpl : public EbookEngine {
     BaseEngine* Clone() override { return fileName ? CreateFromFile(fileName) : nullptr; }
 
     WCHAR* GetProperty(DocumentProperty prop) override {
-        return prop != Prop_FontList ? doc->GetProperty(prop) : ExtractFontList();
+        return prop != DocumentProperty::FontList ? doc->GetProperty(prop) : ExtractFontList();
     }
     const WCHAR* GetDefaultFileExt() const override { return L".chm"; }
 
@@ -1555,7 +1555,7 @@ class HtmlEngineImpl : public EbookEngine {
     BaseEngine* Clone() override { return fileName ? CreateFromFile(fileName) : nullptr; }
 
     WCHAR* GetProperty(DocumentProperty prop) override {
-        return prop != Prop_FontList ? doc->GetProperty(prop) : ExtractFontList();
+        return prop != DocumentProperty::FontList ? doc->GetProperty(prop) : ExtractFontList();
     }
     const WCHAR* GetDefaultFileExt() const override { return L".html"; }
     PageLayoutType PreferredLayout() override { return Layout_Single; }
@@ -1655,7 +1655,7 @@ class TxtEngineImpl : public EbookEngine {
     BaseEngine* Clone() override { return fileName ? CreateFromFile(fileName) : nullptr; }
 
     WCHAR* GetProperty(DocumentProperty prop) override {
-        return prop != Prop_FontList ? doc->GetProperty(prop) : ExtractFontList();
+        return prop != DocumentProperty::FontList ? doc->GetProperty(prop) : ExtractFontList();
     }
     const WCHAR* GetDefaultFileExt() const override { return fileName ? path::GetExt(fileName) : L".txt"; }
     PageLayoutType PreferredLayout() override { return Layout_Single; }

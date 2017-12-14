@@ -118,7 +118,7 @@ HRESULT CEpubFilter::GetNextChunkValue(CChunkValue& chunkValue) {
 
         case STATE_EPUB_AUTHOR:
             m_state = STATE_EPUB_TITLE;
-            str.Set(m_epubDoc->GetProperty(Prop_Author));
+            str.Set(m_epubDoc->GetProperty(DocumentProperty::Author));
             if (!str::IsEmpty(str.Get())) {
                 chunkValue.SetTextValue(PKEY_Author, str);
                 return S_OK;
@@ -127,9 +127,9 @@ HRESULT CEpubFilter::GetNextChunkValue(CChunkValue& chunkValue) {
 
         case STATE_EPUB_TITLE:
             m_state = STATE_EPUB_DATE;
-            str.Set(m_epubDoc->GetProperty(Prop_Title));
+            str.Set(m_epubDoc->GetProperty(DocumentProperty::Title));
             if (!str)
-                str.Set(m_epubDoc->GetProperty(Prop_Subject));
+                str.Set(m_epubDoc->GetProperty(DocumentProperty::Subject));
             if (!str::IsEmpty(str.Get())) {
                 chunkValue.SetTextValue(PKEY_Title, str);
                 return S_OK;
@@ -138,9 +138,9 @@ HRESULT CEpubFilter::GetNextChunkValue(CChunkValue& chunkValue) {
 
         case STATE_EPUB_DATE:
             m_state = STATE_EPUB_CONTENT;
-            str.Set(m_epubDoc->GetProperty(Prop_ModificationDate));
+            str.Set(m_epubDoc->GetProperty(DocumentProperty::ModificationDate));
             if (!str)
-                str.Set(m_epubDoc->GetProperty(Prop_CreationDate));
+                str.Set(m_epubDoc->GetProperty(DocumentProperty::CreationDate));
             if (!str::IsEmpty(str.Get())) {
                 SYSTEMTIME systime;
                 if (IsoDateParse(str, &systime)) {

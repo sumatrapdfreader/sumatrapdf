@@ -283,9 +283,9 @@ bool ChmDoc::Load(const WCHAR* fileName) {
 
 WCHAR* ChmDoc::GetProperty(DocumentProperty prop) {
     AutoFreeW result;
-    if (Prop_Title == prop && title)
+    if (DocumentProperty::Title == prop && title)
         result.Set(ToStr(title));
-    else if (Prop_CreatorApp == prop && creator)
+    else if (DocumentProperty::CreatorApp == prop && creator)
         result.Set(ToStr(creator));
     // TODO: shouldn't it be up to the front-end to normalize whitespace?
     if (result) {

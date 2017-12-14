@@ -248,13 +248,13 @@ bool PdfCreator::SetProperty(DocumentProperty prop, const WCHAR* value) {
         DocumentProperty prop;
         char* name;
     } pdfPropNames[] = {
-        {Prop_Title, "Title"},
-        {Prop_Author, "Author"},
-        {Prop_Subject, "Subject"},
-        {Prop_Copyright, "Copyright"},
-        {Prop_ModificationDate, "ModDate"},
-        {Prop_CreatorApp, "Creator"},
-        {Prop_PdfProducer, "Producer"},
+        {DocumentProperty::Title, "Title"},
+        {DocumentProperty::Author, "Author"},
+        {DocumentProperty::Subject, "Subject"},
+        {DocumentProperty::Copyright, "Copyright"},
+        {DocumentProperty::ModificationDate, "ModDate"},
+        {DocumentProperty::CreatorApp, "Creator"},
+        {DocumentProperty::PdfProducer, "Producer"},
     };
     const char* name = nullptr;
     for (int i = 0; i < dimof(pdfPropNames) && !name; i++) {
@@ -292,8 +292,9 @@ bool PdfCreator::SetProperty(DocumentProperty prop, const WCHAR* value) {
 }
 
 bool PdfCreator::CopyProperties(BaseEngine* engine) {
-    static DocumentProperty props[] = {Prop_Title,     Prop_Author,           Prop_Subject,
-                                       Prop_Copyright, Prop_ModificationDate, Prop_CreatorApp};
+    static DocumentProperty props[] = {
+        DocumentProperty::Title,     DocumentProperty::Author,           DocumentProperty::Subject,
+        DocumentProperty::Copyright, DocumentProperty::ModificationDate, DocumentProperty::CreatorApp};
     bool ok = true;
     for (int i = 0; i < dimof(props); i++) {
         AutoFreeW value(engine->GetProperty(props[i]));
@@ -309,7 +310,7 @@ bool PdfCreator::SaveToFile(const char* filePath) {
         return false;
 
     if (gPdfProducer)
-        SetProperty(Prop_PdfProducer, gPdfProducer);
+        SetProperty(DocumentProperty::PdfProducer, gPdfProducer);
 
     fz_try(ctx) { pdf_write_document(doc, const_cast<char*>(filePath), nullptr); }
     fz_catch(ctx) { return false; }

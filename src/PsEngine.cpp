@@ -279,8 +279,9 @@ class PsEngineImpl : public BaseEngine {
 
     WCHAR* GetProperty(DocumentProperty prop) override {
         // omit properties created by Ghostscript
-        if (!pdfEngine || Prop_CreationDate == prop || Prop_ModificationDate == prop || Prop_PdfVersion == prop ||
-            Prop_PdfProducer == prop || Prop_PdfFileStructure == prop) {
+        if (!pdfEngine || DocumentProperty::CreationDate == prop || DocumentProperty::ModificationDate == prop ||
+            DocumentProperty::PdfVersion == prop || DocumentProperty::PdfProducer == prop ||
+            DocumentProperty::PdfFileStructure == prop) {
             return nullptr;
         }
         return pdfEngine->GetProperty(prop);

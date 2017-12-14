@@ -42,19 +42,19 @@ enum class PageAnnotType {
     Squiggly,
 };
 
-enum DocumentProperty {
-    Prop_Title,
-    Prop_Author,
-    Prop_Copyright,
-    Prop_Subject,
-    Prop_CreationDate,
-    Prop_ModificationDate,
-    Prop_CreatorApp,
-    Prop_UnsupportedFeatures,
-    Prop_FontList,
-    Prop_PdfVersion,
-    Prop_PdfProducer,
-    Prop_PdfFileStructure,
+enum class DocumentProperty {
+    Title,
+    Author,
+    Copyright,
+    Subject,
+    CreationDate,
+    ModificationDate,
+    CreatorApp,
+    UnsupportedFeatures,
+    FontList,
+    PdfVersion,
+    PdfProducer,
+    PdfFileStructure,
 };
 
 class RenderedBitmap {

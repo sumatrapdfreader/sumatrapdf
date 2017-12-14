@@ -2471,7 +2471,7 @@ WCHAR* PdfEngineImpl::GetProperty(DocumentProperty prop) {
     if (!_doc)
         return nullptr;
 
-    if (Prop_PdfVersion == prop) {
+    if (DocumentProperty::PdfVersion == prop) {
         int major = _doc->version / 10, minor = _doc->version % 10;
         if (1 == major && 7 == minor && pdf_crypt_version(_doc) == 5) {
             if (pdf_crypt_revision(_doc) == 5)
@@ -2482,7 +2482,7 @@ WCHAR* PdfEngineImpl::GetProperty(DocumentProperty prop) {
         return str::Format(L"%d.%d", major, minor);
     }
 
-    if (Prop_PdfFileStructure == prop) {
+    if (DocumentProperty::PdfFileStructure == prop) {
         WStrVec fstruct;
         if (pdf_to_bool(pdf_dict_gets(_info, "Linearized")))
             fstruct.Append(str::Dup(L"linearized"));
@@ -2498,27 +2498,27 @@ WCHAR* PdfEngineImpl::GetProperty(DocumentProperty prop) {
         return fstruct.size() > 0 ? fstruct.Join(L",") : nullptr;
     }
 
-    if (Prop_UnsupportedFeatures == prop) {
+    if (DocumentProperty::UnsupportedFeatures == prop) {
         if (pdf_to_bool(pdf_dict_gets(_info, "Unsupported_XFA")))
             return str::Dup(L"XFA");
         return nullptr;
     }
 
-    if (Prop_FontList == prop)
+    if (DocumentProperty::FontList == prop)
         return ExtractFontList();
 
     static struct {
         DocumentProperty prop;
         const char* name;
     } pdfPropNames[] = {
-        {Prop_Title, "Title"},
-        {Prop_Author, "Author"},
-        {Prop_Subject, "Subject"},
-        {Prop_Copyright, "Copyright"},
-        {Prop_CreationDate, "CreationDate"},
-        {Prop_ModificationDate, "ModDate"},
-        {Prop_CreatorApp, "Creator"},
-        {Prop_PdfProducer, "Producer"},
+        {DocumentProperty::Title, "Title"},
+        {DocumentProperty::Author, "Author"},
+        {DocumentProperty::Subject, "Subject"},
+        {DocumentProperty::Copyright, "Copyright"},
+        {DocumentProperty::CreationDate, "CreationDate"},
+        {DocumentProperty::ModificationDate, "ModDate"},
+        {DocumentProperty::CreatorApp, "Creator"},
+        {DocumentProperty::PdfProducer, "Producer"},
     };
     for (int i = 0; i < dimof(pdfPropNames); i++) {
         if (pdfPropNames[i].prop == prop) {
@@ -3924,21 +3924,21 @@ WCHAR* XpsEngineImpl::ExtractFontList() {
 }
 
 WCHAR* XpsEngineImpl::GetProperty(DocumentProperty prop) {
-    if (Prop_FontList == prop)
+    if (DocumentProperty::FontList == prop)
         return ExtractFontList();
     if (!_info)
         return nullptr;
 
     switch (prop) {
-        case Prop_Title:
+        case DocumentProperty::Title:
             return str::Dup(_info->title);
-        case Prop_Author:
+        case DocumentProperty::Author:
             return str::Dup(_info->author);
-        case Prop_Subject:
+        case DocumentProperty::Subject:
             return str::Dup(_info->subject);
-        case Prop_CreationDate:
+        case DocumentProperty::CreationDate:
             return str::Dup(_info->creation_date);
-        case Prop_ModificationDate:
+        case DocumentProperty::ModificationDate:
             return str::Dup(_info->modification_date);
         default:
             return nullptr;

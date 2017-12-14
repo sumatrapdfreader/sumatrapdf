@@ -57,37 +57,37 @@ void DumpProperties(BaseEngine* engine, bool fullDump) {
     Out("\t<Properties\n");
     OwnedData str = Escape(str::Dup(engine->FileName()));
     Out("\t\tFilePath=\"%s\"\n", str.Get());
-    str = Escape(engine->GetProperty(Prop_Title));
+    str = Escape(engine->GetProperty(DocumentProperty::Title));
     if (str.Get())
         Out("\t\tTitle=\"%s\"\n", str.Get());
-    str = Escape(engine->GetProperty(Prop_Subject));
+    str = Escape(engine->GetProperty(DocumentProperty::Subject));
     if (str.Get())
         Out("\t\tSubject=\"%s\"\n", str.Get());
-    str = Escape(engine->GetProperty(Prop_Author));
+    str = Escape(engine->GetProperty(DocumentProperty::Author));
     if (str.Get())
         Out("\t\tAuthor=\"%s\"\n", str.Get());
-    str = Escape(engine->GetProperty(Prop_Copyright));
+    str = Escape(engine->GetProperty(DocumentProperty::Copyright));
     if (str.Get())
         Out("\t\tCopyright=\"%s\"\n", str.Get());
-    str = Escape(engine->GetProperty(Prop_CreationDate));
+    str = Escape(engine->GetProperty(DocumentProperty::CreationDate));
     if (str.Get())
         Out("\t\tCreationDate=\"%s\"\n", str.Get());
-    str = Escape(engine->GetProperty(Prop_ModificationDate));
+    str = Escape(engine->GetProperty(DocumentProperty::ModificationDate));
     if (str.Get())
         Out("\t\tModDate=\"%s\"\n", str.Get());
-    str = Escape(engine->GetProperty(Prop_CreatorApp));
+    str = Escape(engine->GetProperty(DocumentProperty::CreatorApp));
     if (str.Get())
         Out("\t\tCreator=\"%s\"\n", str.Get());
-    str = Escape(engine->GetProperty(Prop_PdfProducer));
+    str = Escape(engine->GetProperty(DocumentProperty::PdfProducer));
     if (str.Get())
         Out("\t\tPdfProducer=\"%s\"\n", str.Get());
-    str = Escape(engine->GetProperty(Prop_PdfVersion));
+    str = Escape(engine->GetProperty(DocumentProperty::PdfVersion));
     if (str.Get())
         Out("\t\tPdfVersion=\"%s\"\n", str.Get());
-    str = Escape(engine->GetProperty(Prop_PdfFileStructure));
+    str = Escape(engine->GetProperty(DocumentProperty::PdfFileStructure));
     if (str.Get())
         Out("\t\tPdfFileStructure=\"%s\"\n", str.Get());
-    str = Escape(engine->GetProperty(Prop_UnsupportedFeatures));
+    str = Escape(engine->GetProperty(DocumentProperty::UnsupportedFeatures));
     if (str.Get())
         Out("\t\tUnsupportedFeatures=\"%s\"\n", str.Get());
     if (!engine->AllowsPrinting())
@@ -101,7 +101,7 @@ void DumpProperties(BaseEngine* engine, bool fullDump) {
     Out("\t/>\n");
 
     if (fullDump) {
-        AutoFreeW fontlist(engine->GetProperty(Prop_FontList));
+        AutoFreeW fontlist(engine->GetProperty(DocumentProperty::FontList));
         if (fontlist) {
             WStrVec fonts;
             fonts.Split(fontlist, L"\n");

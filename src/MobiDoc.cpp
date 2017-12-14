@@ -542,7 +542,7 @@ bool MobiDoc::ParseHeader() {
         // load an empty document and display a warning
         compressionType = COMPRESSION_UNSUPPORTED_DRM;
         Metadata prop;
-        prop.prop = Prop_UnsupportedFeatures;
+        prop.prop = DocumentProperty::UnsupportedFeatures;
         prop.value = str::conv::ToCodePage(L"DRM", mobiHdr.textEncoding).StealData();
         props.Append(prop);
     }
@@ -643,19 +643,19 @@ bool MobiDoc::DecodeExthHeader(const char* data, size_t dataLen) {
         Metadata prop;
         switch (type) {
             case 100:
-                prop.prop = Prop_Author;
+                prop.prop = DocumentProperty::Author;
                 break;
             case 105:
-                prop.prop = Prop_Subject;
+                prop.prop = DocumentProperty::Subject;
                 break;
             case 106:
-                prop.prop = Prop_CreationDate;
+                prop.prop = DocumentProperty::CreationDate;
                 break;
             case 108:
-                prop.prop = Prop_CreatorApp;
+                prop.prop = DocumentProperty::CreatorApp;
                 break;
             case 109:
-                prop.prop = Prop_Copyright;
+                prop.prop = DocumentProperty::Copyright;
                 break;
             case 201:
                 if (length == 12 && imageFirstRec) {
@@ -664,7 +664,7 @@ bool MobiDoc::DecodeExthHeader(const char* data, size_t dataLen) {
                 }
                 continue;
             case 503:
-                prop.prop = Prop_Title;
+                prop.prop = DocumentProperty::Title;
                 break;
             default:
                 continue;

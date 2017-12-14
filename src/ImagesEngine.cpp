@@ -443,17 +443,17 @@ static WCHAR* GetImageProperty(Bitmap* bmp, PROPID id, PROPID altId = 0) {
 
 WCHAR* ImageEngineImpl::GetProperty(DocumentProperty prop) {
     switch (prop) {
-        case Prop_Title:
+        case DocumentProperty::Title:
             return GetImageProperty(image, PropertyTagImageDescription, PropertyTagXPTitle);
-        case Prop_Subject:
+        case DocumentProperty::Subject:
             return GetImageProperty(image, PropertyTagXPSubject);
-        case Prop_Author:
+        case DocumentProperty::Author:
             return GetImageProperty(image, PropertyTagArtist, PropertyTagXPAuthor);
-        case Prop_Copyright:
+        case DocumentProperty::Copyright:
             return GetImageProperty(image, PropertyTagCopyright);
-        case Prop_CreationDate:
+        case DocumentProperty::CreationDate:
             return GetImageProperty(image, PropertyTagDateTime, PropertyTagExifDTDigitized);
-        case Prop_CreatorApp:
+        case DocumentProperty::CreatorApp:
             return GetImageProperty(image, PropertyTagSoftwareUsed);
         default:
             return nullptr;
@@ -1031,18 +1031,18 @@ bool CbxEngineImpl::SaveFileAsPDF(const char* pdfFileName, bool includeUserAnnot
 
 WCHAR* CbxEngineImpl::GetProperty(DocumentProperty prop) {
     switch (prop) {
-        case Prop_Title:
+        case DocumentProperty::Title:
             return str::Dup(propTitle);
-        case Prop_Author:
+        case DocumentProperty::Author:
             return propAuthors.size() ? propAuthors.Join(L", ") : nullptr;
-        case Prop_CreationDate:
+        case DocumentProperty::CreationDate:
             return str::Dup(propDate);
-        case Prop_ModificationDate:
+        case DocumentProperty::ModificationDate:
             return str::Dup(propModDate);
-        case Prop_CreatorApp:
+        case DocumentProperty::CreatorApp:
             return str::Dup(propCreator);
         // TODO: replace with Prop_Summary
-        case Prop_Subject:
+        case DocumentProperty::Subject:
             return str::Dup(propSummary);
         default:
             return nullptr;
