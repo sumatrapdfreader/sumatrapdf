@@ -199,10 +199,10 @@ const char* ElementTypeToStr(PageElement* el) {
 
 const char* PageDestToStr(PageDestType destType) {
 #define HandleType(type)         \
-    if (destType == Dest_##type) \
+    if (destType == PageDestType::##type) \
         return #type;
 #define HandleTypeDialog(type)           \
-    if (destType == Dest_##type##Dialog) \
+    if (destType == PageDestType::##type##Dialog) \
         return #type;
     // common actions
     HandleType(ScrollTo);
