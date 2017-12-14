@@ -128,6 +128,10 @@ inline BOOL toBOOL(bool b) {
     return b ? TRUE : FALSE;
 }
 
+inline bool fromBOOL(BOOL b) {
+    return b ? true : false;
+}
+
 namespace win {
 
 void ToForeground(HWND hwnd);

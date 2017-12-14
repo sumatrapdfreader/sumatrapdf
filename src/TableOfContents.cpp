@@ -37,8 +37,7 @@ constexpr UINT_PTR SUBCLASS_ID = 1;
 #define WM_APP_REPAINT_TOC (WM_APP + 1)
 #endif
 
-static void CustomizeTocInfoTip(TreeCtrl* treeCtrl, NMTVGETINFOTIP* nm) {
-    UNUSED(treeCtrl);
+static void CustomizeTocInfoTip(TreeCtrl* w, NMTVGETINFOTIP* nm) {
     auto* tocItem = reinterpret_cast<DocTocItem*>(nm->lParam);
     PageDestination* link = tocItem->GetLink();
     AutoFreeW path(link ? link->GetDestValue() : nullptr);
@@ -48,17 +47,21 @@ static void CustomizeTocInfoTip(TreeCtrl* treeCtrl, NMTVGETINFOTIP* nm) {
     CrashIf(!link); // /analyze claims that this could happen - it really can't
     auto dstType = link->GetDestType();
     CrashIf(dstType != Dest_LaunchURL && dstType != Dest_LaunchFile && dstType != Dest_LaunchEmbedded);
+    CrashIf(nm->hdr.hwndFrom != w->hwnd);
 
     str::Str<WCHAR> infotip;
 
     RECT rcLine, rcLabel;
-    HWND hTV = nm->hdr.hwndFrom;
-    CrashIf(hTV = treeCtrl->hwnd);
+    HTREEITEM item = nm->hItem;
     // Display the item's full label, if it's overlong
-    TreeView_GetItemRect(hTV, nm->hItem, &rcLine, FALSE);
-    TreeView_GetItemRect(hTV, nm->hItem, &rcLabel, TRUE);
+    bool ok = TreeCtrlGetItemRect(w, item, false, rcLine);
+    ok &= TreeCtrlGetItemRect(w, item, true, rcLabel);
+    if (!ok) {
+        return;
+    }
+
     if (rcLine.right + 2 < rcLabel.right) {
-        std::wstring_view currInfoTip = TreeCtrlGetInfoTip(treeCtrl, nm->hItem);
+        std::wstring_view currInfoTip = TreeCtrlGetInfoTip(w, nm->hItem);
         infotip.Append(currInfoTip.data());
         infotip.Append(L"\r\n");
     }

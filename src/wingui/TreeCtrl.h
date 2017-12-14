@@ -53,6 +53,8 @@ HTREEITEM TreeCtrlInsertItem(TreeCtrl*, TV_INSERTSTRUCT*);
 void DeleteTreeCtrl(TreeCtrl*);
 
 void SetFont(TreeCtrl*, HFONT);
-void TreeCtrlVisitNodes(TreeCtrl* w, const TreeItemVisitor& visitor);
+void TreeCtrlVisitNodes(TreeCtrl*, const TreeItemVisitor& visitor);
+// TODO: create 2 functions for 2 different fItemRect values
+bool TreeCtrlGetItemRect(TreeCtrl*, HTREEITEM, bool fItemRect, RECT& r);
 
-void TreeViewExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, bool subtree = false);
+void TreeViewExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, bool subtree);

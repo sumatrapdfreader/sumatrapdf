@@ -10,10 +10,12 @@ void TreeViewExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, bool subt
     while (hItem) {
         TreeView_Expand(hTree, hItem, flag);
         HTREEITEM child = TreeView_GetChild(hTree, hItem);
-        if (child)
-            TreeViewExpandRecursively(hTree, child, flag);
-        if (subtree)
+        if (child) {
+            TreeViewExpandRecursively(hTree, child, flag, false);
+        }
+        if (subtree) {
             break;
+        }
         hItem = TreeView_GetNextSibling(hTree, hItem);
     }
 }
@@ -46,14 +48,14 @@ static LRESULT CALLBACK TreeParentProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
 static bool HandleKey(HWND hwnd, WPARAM wp) {
     // consistently expand/collapse whole (sub)trees
     if (VK_MULTIPLY == wp && IsShiftPressed()) {
-        TreeViewExpandRecursively(hwnd, TreeView_GetRoot(hwnd), TVE_EXPAND);
+        TreeViewExpandRecursively(hwnd, TreeView_GetRoot(hwnd), TVE_EXPAND, false);
     } else if (VK_MULTIPLY == wp) {
         TreeViewExpandRecursively(hwnd, TreeView_GetSelection(hwnd), TVE_EXPAND, true);
     } else if (VK_DIVIDE == wp && IsShiftPressed()) {
         HTREEITEM root = TreeView_GetRoot(hwnd);
         if (!TreeView_GetNextSibling(hwnd, root))
             root = TreeView_GetChild(hwnd, root);
-        TreeViewExpandRecursively(hwnd, root, TVE_COLLAPSE);
+        TreeViewExpandRecursively(hwnd, root, TVE_COLLAPSE, false);
     } else if (VK_DIVIDE == wp) {
         TreeViewExpandRecursively(hwnd, TreeView_GetSelection(hwnd), TVE_COLLAPSE, true);
     } else {
@@ -169,6 +171,11 @@ TVITEM* TreeCtrlGetItem(TreeCtrl* w, HTREEITEM hItem) {
         return nullptr;
     }
     return item;
+}
+
+bool TreeCtrlGetItemRect(TreeCtrl* w, HTREEITEM item, bool fItemRect, RECT& r) {
+    BOOL ok = TreeView_GetItemRect(w->hwnd, item, &r, (BOOL)fItemRect);
+    return fromBOOL(ok);
 }
 
 HTREEITEM TreeCtrlGetRoot(TreeCtrl* w) {
