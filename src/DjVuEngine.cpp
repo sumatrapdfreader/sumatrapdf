@@ -192,11 +192,11 @@ class DjVuEngineImpl : public BaseEngine {
         AssertCrash(1 <= pageNo && pageNo <= PageCount());
         return mediaboxes[pageNo - 1];
     }
-    RectD PageContentBox(int pageNo, RenderTarget target = Target_View) override;
+    RectD PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
 
     RenderedBitmap* RenderBitmap(int pageNo, float zoom, int rotation,
                                  RectD* pageRect = nullptr, /* if nullptr: defaults to the page's mediabox */
-                                 RenderTarget target = Target_View, AbortCookie** cookie_out = nullptr) override;
+                                 RenderTarget target = RenderTarget::View, AbortCookie** cookie_out = nullptr) override;
 
     PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse = false) override;
     RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
@@ -204,7 +204,7 @@ class DjVuEngineImpl : public BaseEngine {
     unsigned char* GetFileData(size_t* cbCount) override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
     WCHAR* ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** coordsOut = nullptr,
-                           RenderTarget target = Target_View) override;
+                           RenderTarget target = RenderTarget::View) override;
     bool HasClipOptimizations(int pageNo) override {
         UNUSED(pageNo);
         return false;

@@ -146,7 +146,7 @@ class PageRenderer {
 
         PageRenderer* pr = (PageRenderer*)data;
         RenderedBitmap* bmp =
-            pr->engine->RenderBitmap(pr->reqPage, pr->reqZoom, 0, nullptr, Target_View, &pr->abortCookie);
+            pr->engine->RenderBitmap(pr->reqPage, pr->reqZoom, 0, nullptr, RenderTarget::View, &pr->abortCookie);
 
         ScopedCritSec scope(&pr->currAccess);
 

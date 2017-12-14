@@ -2,7 +2,7 @@
    License: GPLv3 */
 
 /* certain OCGs will only be rendered for some of these (e.g. watermarks) */
-enum RenderTarget { Target_View, Target_Print, Target_Export };
+enum class RenderTarget { View, Print, Export };
 
 enum PageLayoutType {
     Layout_Single = 0,
@@ -258,7 +258,7 @@ class BaseEngine {
     virtual RectD PageMediabox(int pageNo) = 0;
     // the box inside PageMediabox that actually contains any relevant content
     // (used for auto-cropping in Fit Content mode, can be PageMediabox)
-    virtual RectD PageContentBox(int pageNo, RenderTarget target = Target_View) {
+    virtual RectD PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) {
         UNUSED(target);
         return PageMediabox(pageNo);
     }
@@ -267,7 +267,8 @@ class BaseEngine {
     // (*cookie_out must be deleted after the call returns)
     virtual RenderedBitmap* RenderBitmap(int pageNo, float zoom, int rotation,
                                          RectD* pageRect = nullptr, /* if nullptr: defaults to the page's mediabox */
-                                         RenderTarget target = Target_View, AbortCookie** cookie_out = nullptr) = 0;
+                                         RenderTarget target = RenderTarget::View,
+                                         AbortCookie** cookie_out = nullptr) = 0;
 
     // applies zoom and rotation to a point in user/page space converting
     // it into device/screen space - or in the inverse direction
@@ -292,7 +293,7 @@ class BaseEngine {
     // coordinates of the individual glyphs)
     // caller needs to free() the result and *coordsOut (if coordsOut is non-nullptr)
     virtual WCHAR* ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** coordsOut = nullptr,
-                                   RenderTarget target = Target_View) = 0;
+                                   RenderTarget target = RenderTarget::View) = 0;
     // pages where clipping doesn't help are rendered in larger tiles
     virtual bool HasClipOptimizations(int pageNo) = 0;
     // the layout type this document's author suggests (if the user doesn't care)

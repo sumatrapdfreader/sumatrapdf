@@ -224,13 +224,14 @@ class PsEngineImpl : public BaseEngine {
 
     RectD PageMediabox(int pageNo) override { return pdfEngine->PageMediabox(pageNo); }
 
-    RectD PageContentBox(int pageNo, RenderTarget target = Target_View) override {
+    RectD PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override {
         return pdfEngine->PageContentBox(pageNo, target);
     }
 
     RenderedBitmap* RenderBitmap(int pageNo, float zoom, int rotation,
                                  RectD* pageRect = nullptr, /* if nullptr: defaults to the page's mediabox */
-                                 RenderTarget target = Target_View, AbortCookie** cookie_out = nullptr) override {
+                                 RenderTarget target = RenderTarget::View,
+                                 AbortCookie** cookie_out = nullptr) override {
         return pdfEngine->RenderBitmap(pageNo, zoom, rotation, pageRect, target, cookie_out);
     }
 
@@ -268,7 +269,7 @@ class PsEngineImpl : public BaseEngine {
     }
 
     WCHAR* ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** coordsOut = nullptr,
-                           RenderTarget target = Target_View) override {
+                           RenderTarget target = RenderTarget::View) override {
         return pdfEngine->ExtractPageText(pageNo, lineSep, coordsOut, target);
     }
 

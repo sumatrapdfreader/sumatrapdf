@@ -1125,11 +1125,11 @@ class PdfEngineImpl : public BaseEngine {
     }
 
     RectD PageMediabox(int pageNo) override;
-    RectD PageContentBox(int pageNo, RenderTarget target = Target_View) override;
+    RectD PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
 
     RenderedBitmap* RenderBitmap(int pageNo, float zoom, int rotation,
                                  RectD* pageRect = nullptr, /* if nullptr: defaults to the page's mediabox */
-                                 RenderTarget target = Target_View, AbortCookie** cookie_out = nullptr) override;
+                                 RenderTarget target = RenderTarget::View, AbortCookie** cookie_out = nullptr) override;
 
     PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse = false) override;
     RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
@@ -1140,7 +1140,7 @@ class PdfEngineImpl : public BaseEngine {
         return SaveFileAs(pdfFileName, includeUserAnnots);
     }
     WCHAR* ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** coordsOut = nullptr,
-                           RenderTarget target = Target_View) override;
+                           RenderTarget target = RenderTarget::View) override;
     bool HasClipOptimizations(int pageNo) override;
     PageLayoutType PreferredLayout() override;
     WCHAR* GetProperty(DocumentProperty prop) override;
@@ -1205,12 +1205,12 @@ class PdfEngineImpl : public BaseEngine {
         return fz_create_view_ctm(pdf_bound_page(_doc, page, &r), zoom, rotation);
     }
     WCHAR* ExtractPageText(pdf_page* page, const WCHAR* lineSep, RectI** coordsOut = nullptr,
-                           RenderTarget target = Target_View, bool cacheRun = false);
+                           RenderTarget target = RenderTarget::View, bool cacheRun = false);
 
     Vec<PdfPageRun*> runCache; // ordered most recently used first
     PdfPageRun* CreatePageRun(pdf_page* page, fz_display_list* list);
     PdfPageRun* GetPageRun(pdf_page* page, bool tryOnly = false);
-    bool RunPage(pdf_page* page, fz_device* dev, const fz_matrix* ctm, RenderTarget target = Target_View,
+    bool RunPage(pdf_page* page, fz_device* dev, const fz_matrix* ctm, RenderTarget target = RenderTarget::View,
                  const fz_rect* cliprect = nullptr, bool cacheRun = true, FitzAbortCookie* cookie = nullptr);
     void DropPageRun(PdfPageRun* run, bool forceRemove = false);
 
@@ -1851,7 +1851,7 @@ bool PdfEngineImpl::RunPage(pdf_page* page, fz_device* dev, const fz_matrix* ctm
     bool ok = true;
 
     PdfPageRun* run;
-    if (Target_View == target && (run = GetPageRun(page, !cacheRun)) != nullptr) {
+    if (RenderTarget::View == target && (run = GetPageRun(page, !cacheRun)) != nullptr) {
         EnterCriticalSection(&ctxAccess);
         Vec<PageAnnotation> pageAnnots = fz_get_user_page_annots(userAnnots, GetPageNo(page));
         fz_try(ctx) {
@@ -1868,7 +1868,7 @@ bool PdfEngineImpl::RunPage(pdf_page* page, fz_device* dev, const fz_matrix* ctm
         DropPageRun(run);
     } else {
         ScopedCritSec scope(&ctxAccess);
-        char* targetName = target == Target_Print ? "Print" : target == Target_Export ? "Export" : "View";
+        char* targetName = target == RenderTarget::Print ? "Print" : target == RenderTarget::Export ? "Export" : "View";
         Vec<PageAnnotation> pageAnnots = fz_get_user_page_annots(userAnnots, GetPageNo(page));
         fz_try(ctx) {
             fz_rect pagerect;
@@ -2130,7 +2130,7 @@ void PdfEngineImpl::LinkifyPageText(pdf_page* page) {
     AssertCrash(!page->links || page->links->refs == 1);
 
     RectI* coords;
-    AutoFreeW pageText(ExtractPageText(page, L"\n", &coords, Target_View, true));
+    AutoFreeW pageText(ExtractPageText(page, L"\n", &coords, RenderTarget::View, true));
     if (!pageText)
         return;
 
@@ -3222,11 +3222,11 @@ class XpsEngineImpl : public BaseEngine {
     int PageCount() const override { return _doc ? xps_count_pages(_doc) : 0; }
 
     RectD PageMediabox(int pageNo) override;
-    RectD PageContentBox(int pageNo, RenderTarget target = Target_View) override;
+    RectD PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
 
     RenderedBitmap* RenderBitmap(int pageNo, float zoom, int rotation,
                                  RectD* pageRect = nullptr, /* if nullptr: defaults to the page's mediabox */
-                                 RenderTarget target = Target_View, AbortCookie** cookie_out = nullptr) override;
+                                 RenderTarget target = RenderTarget::View, AbortCookie** cookie_out = nullptr) override;
 
     PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse = false) override;
     RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
@@ -3234,7 +3234,7 @@ class XpsEngineImpl : public BaseEngine {
     unsigned char* GetFileData(size_t* cbCount) override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
     WCHAR* ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** coordsOut = nullptr,
-                           RenderTarget target = Target_View) override {
+                           RenderTarget target = RenderTarget::View) override {
         UNUSED(target);
         return ExtractPageText(GetXpsPage(pageNo), lineSep, coordsOut);
     }

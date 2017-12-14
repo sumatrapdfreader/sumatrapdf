@@ -193,7 +193,7 @@ class DisplayModel : public Controller {
     void RecalcVisibleParts();
     void RenderVisibleParts();
     void AddNavPoint();
-    RectD GetContentBox(int pageNo, RenderTarget target = Target_View);
+    RectD GetContentBox(int pageNo, RenderTarget target = RenderTarget::View);
     void CalcZoomVirtual(float zoomVirtual);
     void GoToPage(int pageNo, int scrollY, bool addNavPt = false, int scrollX = -1);
     bool GoToPrevPage(int scrollY);

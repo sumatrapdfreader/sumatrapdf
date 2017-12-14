@@ -268,7 +268,7 @@ void CopySelectionToClipboard(WindowInfo* win) {
     /* also copy a screenshot of the current selection to the clipboard */
     SelectionOnPage* selOnPage = &win->currentTab->selectionOnPage->at(0);
     RenderedBitmap* bmp = dm->GetEngine()->RenderBitmap(selOnPage->pageNo, dm->GetZoomReal(), dm->GetRotation(),
-                                                        &selOnPage->rect, Target_Export);
+                                                        &selOnPage->rect, RenderTarget::Export);
     if (bmp)
         CopyImageToClipboard(bmp->GetBitmap(), true);
     delete bmp;

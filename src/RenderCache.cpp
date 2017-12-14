@@ -563,7 +563,7 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data) {
             req.dm->textCache->GetData(req.pageNo);
 
         CrashIf(req.abortCookie != nullptr);
-        bmp = req.dm->GetEngine()->RenderBitmap(req.pageNo, req.zoom, req.rotation, &req.pageRect, Target_View,
+        bmp = req.dm->GetEngine()->RenderBitmap(req.pageNo, req.zoom, req.rotation, &req.pageRect, RenderTarget::View,
                                                 &req.abortCookie);
         if (req.abort) {
             delete bmp;

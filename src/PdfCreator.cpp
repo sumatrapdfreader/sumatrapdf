@@ -322,7 +322,7 @@ bool PdfCreator::RenderToFile(const char* pdfFileName, BaseEngine* engine, int d
     // render all pages to images
     float zoom = dpi / engine->GetFileDPI();
     for (int i = 1; ok && i <= engine->PageCount(); i++) {
-        RenderedBitmap* bmp = engine->RenderBitmap(i, zoom, 0, nullptr, Target_Export);
+        RenderedBitmap* bmp = engine->RenderBitmap(i, zoom, 0, nullptr, RenderTarget::Export);
         if (bmp)
             ok = c->AddImagePage(bmp->GetBitmap(), bmp->Size(), dpi);
         else

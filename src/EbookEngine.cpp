@@ -73,7 +73,7 @@ class EbookEngine : public BaseEngine {
         UNUSED(pageNo);
         return pageRect;
     }
-    RectD PageContentBox(int pageNo, RenderTarget target = Target_View) override {
+    RectD PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override {
         UNUSED(target);
         RectD mbox = PageMediabox(pageNo);
         mbox.Inflate(-pageBorder, -pageBorder);
@@ -82,7 +82,7 @@ class EbookEngine : public BaseEngine {
 
     RenderedBitmap* RenderBitmap(int pageNo, float zoom, int rotation,
                                  RectD* pageRect = nullptr, /* if nullptr: defaults to the page's mediabox */
-                                 RenderTarget target = Target_View, AbortCookie** cookie_out = nullptr) override;
+                                 RenderTarget target = RenderTarget::View, AbortCookie** cookie_out = nullptr) override;
 
     PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse = false) override;
     RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
@@ -106,7 +106,7 @@ class EbookEngine : public BaseEngine {
         return fileName ? CopyFileW(fileName, path, FALSE) : false;
     }
     WCHAR* ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** coordsOut = nullptr,
-                           RenderTarget target = Target_View) override;
+                           RenderTarget target = RenderTarget::View) override;
     // make RenderCache request larger tiles than per default
     bool HasClipOptimizations(int pageNo) override {
         UNUSED(pageNo);

@@ -219,8 +219,8 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
                 short shrink = 1;
                 do {
                     RenderedBitmap* bmp =
-                        engine.RenderBitmap(pd.sel.at(i).pageNo, zoom / shrink, pd.rotation, clipRegion, Target_Print,
-                                            abortCookie ? &abortCookie->cookie : nullptr);
+                        engine.RenderBitmap(pd.sel.at(i).pageNo, zoom / shrink, pd.rotation, clipRegion,
+                                            RenderTarget::Print, abortCookie ? &abortCookie->cookie : nullptr);
                     if (abortCookie) {
                         abortCookie->Clear();
                     }
@@ -288,7 +288,7 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
             if (pd.advData.scale != PrintScaleAdv::None) {
                 // make sure to fit all content into the printable area when scaling
                 // and the whole document page on the physical paper
-                RectD rect = engine.PageContentBox(pageNo, Target_Print);
+                RectD rect = engine.PageContentBox(pageNo, RenderTarget::Print);
                 geomutil::RectT<float> cbox = engine.Transform(rect, pageNo, 1.0, rotation).Convert<float>();
                 zoom = std::min((float)printable.dx / cbox.dx,
                                 std::min((float)printable.dy / cbox.dy,
@@ -318,7 +318,7 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
             bool ok = false;
             short shrink = 1;
             do {
-                RenderedBitmap* bmp = engine.RenderBitmap(pageNo, zoom / shrink, rotation, nullptr, Target_Print,
+                RenderedBitmap* bmp = engine.RenderBitmap(pageNo, zoom / shrink, rotation, nullptr, RenderTarget::Print,
                                                           abortCookie ? &abortCookie->cookie : nullptr);
                 if (abortCookie) {
                     abortCookie->Clear();

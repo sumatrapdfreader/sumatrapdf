@@ -899,7 +899,7 @@ void DisplayModel::SetViewPortSize(SizeI newViewPortSize) {
 RectD DisplayModel::GetContentBox(int pageNo, RenderTarget target) {
     RectD cbox;
     // we cache the contentBox for the View target
-    if (Target_View == target) {
+    if (RenderTarget::View == target) {
         PageInfo* pageInfo = GetPageInfo(pageNo);
         if (pageInfo->contentBox.IsEmpty())
             pageInfo->contentBox = engine->PageContentBox(pageNo);
