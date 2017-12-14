@@ -80,7 +80,9 @@ func setMacCompiler(ctx *BuildContext) {
 		panicIf(!fileExists(gccPath), fmt.Sprintf("gcc not installed in '%s'", gccPath))
 		ctx.CcCmd = gccPath
 		ctx.LinkCmd = ctx.CcCmd
-		ctx.ArCmd = "/usr/local/opt/gcc/bin/gcc-ar-7"
+		// https://stackoverflow.com/questions/30947126/building-a-cross-compile-of-binutils-on-os-x-yosemite
+		ctx.ArCmd = "libtool"
+		//ctx.ArCmd = "/usr/local/opt/gcc/bin/gcc-ar-7"
 	}
 	ctx.RemoveCFlag("-Wextra")
 	// those trigger in system headers
@@ -325,9 +327,17 @@ func link(ctx *BuildContext, dstPath string, srcPaths []string) {
 }
 
 func ar(ctx *BuildContext, dstPath string, srcPaths []string) {
-	args := append([]string{"cr"}, ctx.ArFlags...)
-	args = append(args, dstPath)
-	args = append(args, srcPaths...)
+	var args []string
+	if ctx.ArCmd == "libtool" {
+		// a bit of a hack
+		args = append(args, "-static", "-o", dstPath)
+		args = append(args, srcPaths...)
+	} else {
+		args = append(args, "cr")
+		args = append(args, ctx.ArFlags...)
+		args = append(args, dstPath)
+		args = append(args, srcPaths...)
+	}
 	cmd := exec.Command(ctx.ArCmd, args...)
 
 	createDirForFile(dstPath)

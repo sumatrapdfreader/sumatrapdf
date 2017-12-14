@@ -284,6 +284,10 @@ inline void CrashIfDebugOnlyFunc(bool cond) {
     }                            \
     while_0_nowarn
 
+#if !OS_WIN
+void ZeroMemory(void* p, size_t len);
+#endif
+
 template <typename T>
 inline T* AllocArray(size_t n) {
     return (T*)calloc(n, sizeof(T));
@@ -322,10 +326,6 @@ inline bool addOverflows(T val, T n) {
     T res = val + n;
     return val > res;
 }
-
-#if !OS_WIN
-void ZeroMemory(void* p, size_t len);
-#endif
 
 void* memdup(const void* data, size_t len);
 bool memeq(const void* s1, const void* s2, size_t len);

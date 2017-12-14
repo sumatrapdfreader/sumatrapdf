@@ -304,7 +304,7 @@ class Str : public Vec<T> {
     void Append(T c) { Vec<T>::InsertAt(Vec<T>::len, c); }
 
     // only valid for T = char
-    std::string_view AsView() const { return {Get(), size()}; }
+    std::string_view AsView() const { return {this->Get(), this->size()}; }
 
     void Append(const T* src, size_t size = -1) {
         if ((size_t)-1 == size)
