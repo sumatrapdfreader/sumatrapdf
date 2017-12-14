@@ -153,17 +153,17 @@ static void GoToTocLinkTask(WindowInfo* win, DocTocItem* tocItem, TabInfo* tab, 
     win->tocKeepSelection = false;
 }
 
-static void GoToTocLinkForTVItem(WindowInfo* win, HWND hTV, HTREEITEM hItem = nullptr, bool allowExternal = true) {
-    if (!hItem)
-        hItem = TreeView_GetSelection(hTV);
+static void GoToTocLinkForTVItem(WindowInfo* win, HTREEITEM hItem, bool allowExternal) {
+    TreeCtrl* tree = win->tocTreeCtrl;
+    if (!hItem) {
+        hItem = TreeCtrlGetSelection(tree);
+    }
 
-    TVITEM item = {0};
-    item.hItem = hItem;
-    item.mask = TVIF_PARAM;
-    TreeView_GetItem(hTV, &item);
-    DocTocItem* tocItem = (DocTocItem*)item.lParam;
-    if (!tocItem || !win->IsDocLoaded())
+    auto* item = TreeCtrlGetItem(tree, hItem);
+    auto* tocItem = reinterpret_cast<DocTocItem*>(item->lParam);
+    if (!tocItem || !win->IsDocLoaded()) {
         return;
+    }
     if ((allowExternal || tocItem->GetLink() && Dest_ScrollTo == tocItem->GetLink()->GetDestType()) ||
         tocItem->pageNo) {
         // delay changing the page until the tree messages have been handled
@@ -433,14 +433,20 @@ void LoadTocTree(WindowInfo* win) {
     RedrawWindow(win->tocTreeCtrl->hwnd, nullptr, nullptr, fl);
 }
 
-static LRESULT OnTocTreeNotify(WindowInfo* win, LPNMTREEVIEW pnmtv) {
+static LRESULT OnTocTreeNotify(WindowInfo* win, NMTREEVIEWW* pnmtv) {
+    HWND hwndFrom = pnmtv->hdr.hwndFrom;
+    auto action = pnmtv->action;
+    CrashIf(hwndFrom != win->tocTreeCtrl->hwnd);
+
     switch (pnmtv->hdr.code) {
         case TVN_SELCHANGED:
             // When the focus is set to the toc window the first item in the treeview is automatically
             // selected and a TVN_SELCHANGEDW notification message is sent with the special code pnmtv->action ==
             // 0x00001000. We have to ignore this message to prevent the current page to be changed.
-            if (TVC_BYKEYBOARD == pnmtv->action || TVC_BYMOUSE == pnmtv->action)
-                GoToTocLinkForTVItem(win, pnmtv->hdr.hwndFrom, pnmtv->itemNew.hItem, TVC_BYMOUSE == pnmtv->action);
+            if ((TVC_BYKEYBOARD == action) || (TVC_BYMOUSE == action)) {
+                bool allowExternal = (TVC_BYMOUSE == action);
+                GoToTocLinkForTVItem(win, pnmtv->itemNew.hItem, allowExternal);
+            }
             // The case pnmtv->action==TVC_UNKNOWN is ignored because
             // it corresponds to a notification sent by
             // the function TreeView_DeleteAllItems after deletion of the item.
@@ -463,16 +469,20 @@ static LRESULT OnTocTreeNotify(WindowInfo* win, LPNMTREEVIEW pnmtv) {
             DWORD pos = GetMessagePos();
             ht.pt.x = GET_X_LPARAM(pos);
             ht.pt.y = GET_Y_LPARAM(pos);
-            MapWindowPoints(HWND_DESKTOP, pnmtv->hdr.hwndFrom, &ht.pt, 1);
-            TreeView_HitTest(pnmtv->hdr.hwndFrom, &ht);
+            MapWindowPoints(HWND_DESKTOP, hwndFrom, &ht.pt, 1);
+            TreeView_HitTest(hwndFrom, &ht);
 
             // let TVN_SELCHANGED handle the click, if it isn't on the already selected item
-            if ((ht.flags & TVHT_ONITEM) && TreeView_GetSelection(pnmtv->hdr.hwndFrom) == ht.hItem)
-                GoToTocLinkForTVItem(win, pnmtv->hdr.hwndFrom, ht.hItem);
+            bool isOnItem = (ht.flags & TVHT_ONITEM);
+            HTREEITEM sel = TreeView_GetSelection(hwndFrom);
+            bool isSel = (sel == ht.hItem);
+            if (isOnItem && isSel) {
+                GoToTocLinkForTVItem(win, ht.hItem, true);
+            }
             break;
         }
         case NM_RETURN:
-            GoToTocLinkForTVItem(win, pnmtv->hdr.hwndFrom);
+            GoToTocLinkForTVItem(win, nullptr, true);
             break;
 
         case NM_CUSTOMDRAW:
@@ -571,7 +581,7 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
     return DefSubclassProc(hwnd, msg, wp, lp);
 }
 
-constexpr UINT_PTR SUBCLASS_ID = 55;
+constexpr UINT_PTR SUBCLASS_ID = 1;
 static UINT_PTR tocTreeSubclassId = 0;
 static UINT_PTR tocBoxSubclassId = 0;
 

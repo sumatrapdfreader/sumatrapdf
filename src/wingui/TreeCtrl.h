@@ -37,6 +37,7 @@ TVITEM* TreeCtrlGetItem(TreeCtrl*, HTREEITEM);
 HTREEITEM TreeCtrlGetRoot(TreeCtrl*);
 HTREEITEM TreeCtrlGetChild(TreeCtrl*, HTREEITEM);
 HTREEITEM TreeCtrlGetNextSibling(TreeCtrl*, HTREEITEM);
+HTREEITEM TreeCtrlGetSelection(TreeCtrl*);
 bool TreeCtrlSelectItem(TreeCtrl*, HTREEITEM);
 HTREEITEM TreeCtrlInsertItem(TreeCtrl*, TV_INSERTSTRUCT*);
 

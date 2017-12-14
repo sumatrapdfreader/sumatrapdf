@@ -27,6 +27,26 @@ static LRESULT CALLBACK TreeParentProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
     return DefSubclassProc(hwnd, msg, wp, lp);
 }
 
+static bool HandleKey(HWND hwnd, WPARAM wp) {
+    // consistently expand/collapse whole (sub)trees
+    if (VK_MULTIPLY == wp && IsShiftPressed()) {
+        TreeViewExpandRecursively(hwnd, TreeView_GetRoot(hwnd), TVE_EXPAND);
+    } else if (VK_MULTIPLY == wp) {
+        TreeViewExpandRecursively(hwnd, TreeView_GetSelection(hwnd), TVE_EXPAND, true);
+    } else if (VK_DIVIDE == wp && IsShiftPressed()) {
+        HTREEITEM root = TreeView_GetRoot(hwnd);
+        if (!TreeView_GetNextSibling(hwnd, root))
+            root = TreeView_GetChild(hwnd, root);
+        TreeViewExpandRecursively(hwnd, root, TVE_COLLAPSE);
+    } else if (VK_DIVIDE == wp) {
+        TreeViewExpandRecursively(hwnd, TreeView_GetSelection(hwnd), TVE_COLLAPSE, true);
+    } else {
+        return false;
+    }
+    TreeView_EnsureVisible(hwnd, TreeView_GetSelection(hwnd));
+    return true;
+}
+
 static LRESULT CALLBACK TreeProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
     UNUSED(uIdSubclass);
     TreeCtrl* w = (TreeCtrl*)dwRefData;
@@ -45,21 +65,9 @@ static LRESULT CALLBACK TreeProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT
     }
 
     if (WM_KEYDOWN == msg) {
-        // consistently expand/collapse whole (sub)trees
-        if (VK_MULTIPLY == wp && IsShiftPressed()) {
-            TreeViewExpandRecursively(hwnd, TreeView_GetRoot(hwnd), TVE_EXPAND);
-        } else if (VK_MULTIPLY == wp) {
-            TreeViewExpandRecursively(hwnd, TreeView_GetSelection(hwnd), TVE_EXPAND, true);
-        } else if (VK_DIVIDE == wp && IsShiftPressed()) {
-            HTREEITEM root = TreeView_GetRoot(hwnd);
-            if (!TreeView_GetNextSibling(hwnd, root))
-                root = TreeView_GetChild(hwnd, root);
-            TreeViewExpandRecursively(hwnd, root, TVE_COLLAPSE);
-        } else if (VK_DIVIDE == wp) {
-            TreeViewExpandRecursively(hwnd, TreeView_GetSelection(hwnd), TVE_COLLAPSE, true);
+        if (HandleKey(hwnd, wp)) {
+            return 0;
         }
-        TreeView_EnsureVisible(hwnd, TreeView_GetSelection(hwnd));
-        return 0;
     }
 
     if (WM_NCDESTROY == msg) {
@@ -148,18 +156,23 @@ TVITEM* TreeCtrlGetItem(TreeCtrl* w, HTREEITEM hItem) {
 }
 
 HTREEITEM TreeCtrlGetRoot(TreeCtrl* w) {
-    HTREEITEM root = TreeView_GetRoot(w->hwnd);
-    return root;
+    HTREEITEM res = TreeView_GetRoot(w->hwnd);
+    return res;
 }
 
 HTREEITEM TreeCtrlGetChild(TreeCtrl* w, HTREEITEM item) {
-    HTREEITEM child = TreeView_GetChild(w->hwnd, item);
-    return child;
+    HTREEITEM res = TreeView_GetChild(w->hwnd, item);
+    return res;
 }
 
 HTREEITEM TreeCtrlGetNextSibling(TreeCtrl* w, HTREEITEM item) {
-    HTREEITEM sibling = TreeView_GetNextSibling(w->hwnd, item);
-    return sibling;
+    HTREEITEM res = TreeView_GetNextSibling(w->hwnd, item);
+    return res;
+}
+
+HTREEITEM TreeCtrlGetSelection(TreeCtrl* w) {
+    HTREEITEM res = TreeView_GetSelection(w->hwnd);
+    return res;
 }
 
 bool TreeCtrlSelectItem(TreeCtrl* w, HTREEITEM item) {
