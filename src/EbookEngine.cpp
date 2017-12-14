@@ -771,7 +771,7 @@ bool EpubEngineImpl::FinishLoading() {
         return false;
 
     HtmlFormatterArgs args;
-    args.htmlStr = doc->GetHtmlData(&args.htmlStrLen);
+    args.htmlStr = doc->GetHtmlData();
     args.pageDx = (float)pageRect.dx - 2 * pageBorder;
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
     args.SetFontName(GetDefaultFontName());
@@ -905,7 +905,7 @@ bool Fb2EngineImpl::FinishLoading() {
     }
 
     HtmlFormatterArgs args;
-    args.htmlStr = doc->GetXmlData(&args.htmlStrLen);
+    args.htmlStr = doc->GetXmlData();
     args.pageDx = (float)pageRect.dx - 2 * pageBorder;
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
     args.SetFontName(GetDefaultFontName());
@@ -1012,9 +1012,7 @@ bool MobiEngineImpl::FinishLoading() {
     }
 
     HtmlFormatterArgs args;
-    const std::string_view htmlData = doc->GetHtmlData();
-    args.htmlStrLen = htmlData.size();
-    args.htmlStr = htmlData.data();
+    args.htmlStr = doc->GetHtmlData();
     args.pageDx = (float)pageRect.dx - 2 * pageBorder;
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
     args.SetFontName(GetDefaultFontName());
@@ -1142,7 +1140,7 @@ bool PdbEngineImpl::Load(const WCHAR* fileName) {
         return false;
 
     HtmlFormatterArgs args;
-    args.htmlStr = doc->GetHtmlData(&args.htmlStrLen);
+    args.htmlStr = doc->GetHtmlData();
     args.pageDx = (float)pageRect.dx - 2 * pageBorder;
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
     args.SetFontName(GetDefaultFontName());
@@ -1202,6 +1200,9 @@ class ChmDataCache {
         }
     }
 
+    std::string_view GetHtmlData() { return {html, str::Len(html)}; }
+
+    // TODO: remove
     const char* GetHtmlData(size_t* lenOut) {
         *lenOut = str::Len(html);
         return html;
@@ -1434,7 +1435,7 @@ bool ChmEngineImpl::Load(const WCHAR* fileName) {
     dataCache = new ChmDataCache(doc, html);
 
     HtmlFormatterArgs args;
-    args.htmlStr = dataCache->GetHtmlData(&args.htmlStrLen);
+    args.htmlStr = dataCache->GetHtmlData();
     args.pageDx = (float)pageRect.dx - 2 * pageBorder;
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
     args.SetFontName(GetDefaultFontName());
@@ -1577,7 +1578,7 @@ bool HtmlEngineImpl::Load(const WCHAR* fileName) {
         return false;
 
     HtmlFormatterArgs args;
-    args.htmlStr = doc->GetHtmlData(&args.htmlStrLen);
+    args.htmlStr = doc->GetHtmlData();
     args.pageDx = (float)pageRect.dx - 2 * pageBorder;
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
     args.SetFontName(GetDefaultFontName());
@@ -1683,7 +1684,7 @@ bool TxtEngineImpl::Load(const WCHAR* fileName) {
     }
 
     HtmlFormatterArgs args;
-    args.htmlStr = doc->GetHtmlData(&args.htmlStrLen);
+    args.htmlStr = doc->GetHtmlData();
     args.pageDx = (float)pageRect.dx - 2 * pageBorder;
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
     args.SetFontName(GetDefaultFontName());

@@ -160,16 +160,6 @@ void StyleRule::Merge(StyleRule& source) {
     }
 }
 
-HtmlFormatterArgs::HtmlFormatterArgs()
-    : pageDx(0),
-      pageDy(0),
-      fontSize(0),
-      textAllocator(nullptr),
-      htmlStr(0),
-      htmlStrLen(0),
-      reparseIdx(0),
-      textRenderMethod(mui::TextRenderMethodGdiplus) {}
-
 HtmlFormatter::HtmlFormatter(HtmlFormatterArgs* args)
     : pageDx(args->pageDx),
       pageDy(args->pageDy),
@@ -187,7 +177,7 @@ HtmlFormatter::HtmlFormatter(HtmlFormatterArgs* args)
       pageCount(0),
       keepTagNesting(false) {
     currReparseIdx = args->reparseIdx;
-    htmlParser = new HtmlPullParser(args->htmlStr, args->htmlStrLen);
+    htmlParser = new HtmlPullParser(args->htmlStr.data(), args->htmlStr.size());
     htmlParser->SetCurrPosOff(currReparseIdx);
     CrashIf(!ValidReparseIdx(currReparseIdx, htmlParser));
 

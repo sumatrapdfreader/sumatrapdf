@@ -167,6 +167,23 @@ WCHAR* Doc::GetProperty(DocumentProperty prop) const {
     }
 }
 
+std::string_view Doc::GetHtmlData() const {
+    switch (type) {
+        case DocType::Epub:
+            return epubDoc->GetHtmlData();
+        case DocType::Fb2:
+            return fb2Doc->GetXmlData();
+        case DocType::Mobi: {
+            return mobiDoc->GetHtmlData();
+        }
+        case DocType::Pdb:
+            return palmDoc->GetHtmlData();
+        default:
+            CrashIf(true);
+            return nullptr;
+    }
+}
+
 const char* Doc::GetHtmlData(size_t& len) const {
     switch (type) {
         case DocType::Epub:

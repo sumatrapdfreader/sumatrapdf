@@ -98,30 +98,29 @@ class HtmlPage {
 // just to pack args to HtmlFormatter
 class HtmlFormatterArgs {
   public:
-    HtmlFormatterArgs();
+    HtmlFormatterArgs() = default;
 
-    REAL pageDx;
-    REAL pageDy;
+    REAL pageDx = 0;
+    REAL pageDy = 0;
 
     void SetFontName(const WCHAR* s) { fontName.SetCopy(s); }
 
     const WCHAR* GetFontName() { return fontName; }
 
-    float fontSize;
+    float fontSize = 0;
 
     /* Most of the time string DrawInstr point to original html text
        that is read-only and outlives us. Sometimes (e.g. when resolving
        html entities) we need a modified text. This allocator is
        used to allocate this text. */
-    Allocator* textAllocator;
+    Allocator* textAllocator = nullptr;
 
-    mui::TextRenderMethod textRenderMethod;
+    mui::TextRenderMethod textRenderMethod = mui::TextRenderMethodGdiplus;
 
-    const char* htmlStr;
-    size_t htmlStrLen;
+    std::string_view htmlStr;
 
     // we start parsing from htmlStr + reparseIdx
-    int reparseIdx;
+    int reparseIdx = 0;
 
   private:
     AutoFreeW fontName;

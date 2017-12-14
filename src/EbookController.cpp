@@ -44,7 +44,7 @@ static float GetFontSize() {
 
 HtmlFormatterArgs* CreateFormatterArgsDoc(Doc doc, int dx, int dy, Allocator* textAllocator) {
     HtmlFormatterArgs* args = CreateFormatterDefaultArgs(dx, dy, textAllocator);
-    args->htmlStr = doc.GetHtmlData(args->htmlStrLen);
+    args->htmlStr = doc.GetHtmlData();
     args->SetFontName(GetFontName());
     args->fontSize = GetFontSize();
     return args;

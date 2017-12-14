@@ -806,8 +806,8 @@ void ToggleWindowExStyle(HWND hwnd, DWORD flags, bool enable) {
     ToggleWindowStyle(hwnd, flags, enable, GWL_EXSTYLE);
 }
 
-void SetRtl(HWND hwnd, bool enable) {
-    ToggleWindowExStyle(hwnd, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, enable);
+void SetRtl(HWND hwnd, bool isRtl) {
+    ToggleWindowExStyle(hwnd, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRtl);
 }
 
 RectI ChildPosWithinParent(HWND hwnd) {

@@ -100,7 +100,8 @@ bool CopyTextToClipboard(const WCHAR* text, bool appendOnly = false);
 bool CopyImageToClipboard(HBITMAP hbmp, bool appendOnly);
 void ToggleWindowStyle(HWND hwnd, DWORD flags, bool enable);
 void ToggleWindowExStyle(HWND hwnd, DWORD flags, bool enable);
-void SetRtl(HWND hwnd, bool enable);
+bool IsRtl(HWND hwnd);
+void SetRtl(HWND hwnd, bool isRtl);
 RectI ChildPosWithinParent(HWND);
 HFONT GetDefaultGuiFont();
 long GetDefaultGuiFontSize();
@@ -114,7 +115,6 @@ u8* GetStreamOrFileData(IStream* stream, const WCHAR* filePath, size_t* cbCount)
 bool ReadDataFromStream(IStream* stream, void* buffer, size_t len, size_t offset = 0);
 UINT GuessTextCodepage(const char* data, size_t len, UINT defVal = CP_ACP);
 WCHAR* NormalizeString(const WCHAR* str, int /* NORM_FORM */ form);
-bool IsRtl(HWND hwnd);
 void ResizeHwndToClientArea(HWND hwnd, int dx, int dy, bool hasMenu);
 void ResizeWindow(HWND, int dx, int dy);
 

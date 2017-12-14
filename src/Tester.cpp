@@ -142,14 +142,12 @@ static void MobiSaveImages(const WCHAR* filePathBase, MobiDoc* mb) {
 static void MobiLayout(MobiDoc* mobiDoc) {
     PoolAllocator textAllocator;
 
-    const std::string_view htmlData = mobiDoc->GetHtmlData();
     HtmlFormatterArgs args;
     args.pageDx = 640;
     args.pageDy = 480;
     args.SetFontName(L"Tahoma");
     args.fontSize = 12;
-    args.htmlStr = htmlData.data();
-    args.htmlStrLen = htmlData.size();
+    args.htmlStr = mobiDoc->GetHtmlData();
     args.textAllocator = &textAllocator;
 
     MobiFormatter mf(&args, mobiDoc);

@@ -433,6 +433,11 @@ void EpubDoc::ParseMetadata(const char* content) {
     }
 }
 
+std::string_view EpubDoc::GetHtmlData() const {
+    auto res = std::string_view(htmlData.Get(), htmlData.size());
+    return res;
+}
+
 const char* EpubDoc::GetHtmlData(size_t* lenOut) const {
     *lenOut = htmlData.size();
     return htmlData.Get();
@@ -867,6 +872,10 @@ void Fb2Doc::ExtractImage(HtmlPullParser* parser, HtmlToken* tok) {
     images.Append(data);
 }
 
+std::string_view Fb2Doc::GetXmlData() const {
+    return {xmlData.Get(), xmlData.size()};
+}
+
 const char* Fb2Doc::GetXmlData(size_t* lenOut) const {
     *lenOut = xmlData.size();
     return xmlData.Get();
@@ -1088,6 +1097,10 @@ bool PalmDoc::Load() {
     return true;
 }
 
+std::string_view PalmDoc::GetHtmlData() const {
+    return {htmlData.Get(), htmlData.size()};
+}
+
 const char* PalmDoc::GetHtmlData(size_t* lenOut) const {
     *lenOut = htmlData.size();
     return htmlData.Get();
@@ -1187,6 +1200,10 @@ bool HtmlDoc::Load() {
     }
 
     return true;
+}
+
+std::string_view HtmlDoc::GetHtmlData() const {
+    return {htmlData, str::Len(htmlData)};
 }
 
 const char* HtmlDoc::GetHtmlData(size_t* lenOut) const {
@@ -1458,6 +1475,10 @@ bool TxtDoc::Load() {
     htmlData.Append("</pre>");
 
     return true;
+}
+
+std::string_view TxtDoc::GetHtmlData() const {
+    return {htmlData.Get(), htmlData.size()};
 }
 
 const char* TxtDoc::GetHtmlData(size_t* lenOut) const {
