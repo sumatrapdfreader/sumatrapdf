@@ -59,6 +59,8 @@ class AutoFreeStr : public ScopedMem<T> {
             this->ptr = str::Dup(newPtr);
         }
     }
+    // only valid for T = char
+    std::string_view AsView() const { return {this->ptr, str::Len(this->ptr)}; }
 };
 
 typedef AutoFreeStr<char> AutoFree;

@@ -434,8 +434,7 @@ void EpubDoc::ParseMetadata(const char* content) {
 }
 
 std::string_view EpubDoc::GetHtmlData() const {
-    auto res = std::string_view(htmlData.Get(), htmlData.size());
-    return res;
+    return htmlData.AsView();
 }
 
 ImageData* EpubDoc::GetImageData(const char* fileName, const char* pagePath) {
@@ -1089,7 +1088,7 @@ bool PalmDoc::Load() {
 }
 
 std::string_view PalmDoc::GetHtmlData() const {
-    return {htmlData.Get(), htmlData.size()};
+    return htmlData.AsView();
 }
 
 WCHAR* PalmDoc::GetProperty(DocumentProperty prop) const {
@@ -1185,7 +1184,7 @@ bool HtmlDoc::Load() {
 }
 
 std::string_view HtmlDoc::GetHtmlData() const {
-    return {htmlData, str::Len(htmlData)};
+    return htmlData.AsView();
 }
 
 ImageData* HtmlDoc::GetImageData(const char* fileName) {
@@ -1455,7 +1454,7 @@ bool TxtDoc::Load() {
 }
 
 std::string_view TxtDoc::GetHtmlData() const {
-    return {htmlData.Get(), htmlData.size()};
+    return htmlData.AsView();
 }
 
 WCHAR* TxtDoc::GetProperty(DocumentProperty prop) const {

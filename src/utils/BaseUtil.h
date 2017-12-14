@@ -527,7 +527,8 @@ class OwnedData {
     void Clear();
     void TakeOwnership(const char* s, size_t size = 0);
     char* StealData();
-    char* Get();
+    char* Get() const;
+    std::string_view AsView() const;
 
     // creates a copy of s
     static OwnedData MakeFromStr(const char* s, size_t size = 0);

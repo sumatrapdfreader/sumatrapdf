@@ -196,8 +196,12 @@ void OwnedData::Clear() {
     size = 0;
 }
 
-char* OwnedData::Get() {
+char* OwnedData::Get() const {
     return data;
+}
+
+std::string_view OwnedData::AsView() const {
+    return {data, size};
 }
 
 void OwnedData::TakeOwnership(const char* s, size_t size) {
