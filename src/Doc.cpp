@@ -184,41 +184,6 @@ std::string_view Doc::GetHtmlData() const {
     }
 }
 
-const char* Doc::GetHtmlData(size_t& len) const {
-    switch (type) {
-        case DocType::Epub:
-            return epubDoc->GetHtmlData(&len);
-        case DocType::Fb2:
-            return fb2Doc->GetXmlData(&len);
-        case DocType::Mobi: {
-            std::string_view s = mobiDoc->GetHtmlData();
-            len = s.size();
-            return s.data();
-        }
-        case DocType::Pdb:
-            return palmDoc->GetHtmlData(&len);
-        default:
-            CrashIf(true);
-            return nullptr;
-    }
-}
-
-size_t Doc::GetHtmlDataSize() const {
-    switch (type) {
-        case DocType::Epub:
-            return epubDoc->GetHtmlDataSize();
-        case DocType::Fb2:
-            return fb2Doc->GetXmlDataSize();
-        case DocType::Mobi:
-            return mobiDoc->GetHtmlDataSize();
-        case DocType::Pdb:
-            return palmDoc->GetHtmlDataSize();
-        default:
-            CrashIf(true);
-            return 0;
-    }
-}
-
 ImageData* Doc::GetCoverImage() const {
     switch (type) {
         case DocType::Fb2:

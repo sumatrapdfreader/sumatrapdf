@@ -76,10 +76,6 @@ class Doc {
     WCHAR* GetProperty(DocumentProperty prop) const;
     std::string_view GetHtmlData() const;
 
-    // TODO: remove
-    const char* GetHtmlData(size_t& len) const;
-    size_t GetHtmlDataSize() const;
-
     ImageData* GetCoverImage() const;
     bool HasToc() const;
     bool ParseToc(EbookTocVisitor* visitor) const;

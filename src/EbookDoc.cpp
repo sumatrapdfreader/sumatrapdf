@@ -438,15 +438,6 @@ std::string_view EpubDoc::GetHtmlData() const {
     return res;
 }
 
-const char* EpubDoc::GetHtmlData(size_t* lenOut) const {
-    *lenOut = htmlData.size();
-    return htmlData.Get();
-}
-
-size_t EpubDoc::GetHtmlDataSize() const {
-    return htmlData.size();
-}
-
 ImageData* EpubDoc::GetImageData(const char* fileName, const char* pagePath) {
     ScopedCritSec scope(&zipAccess);
 
@@ -1101,15 +1092,6 @@ std::string_view PalmDoc::GetHtmlData() const {
     return {htmlData.Get(), htmlData.size()};
 }
 
-const char* PalmDoc::GetHtmlData(size_t* lenOut) const {
-    *lenOut = htmlData.size();
-    return htmlData.Get();
-}
-
-size_t PalmDoc::GetHtmlDataSize() const {
-    return htmlData.size();
-}
-
 WCHAR* PalmDoc::GetProperty(DocumentProperty prop) const {
     UNUSED(prop);
     return nullptr;
@@ -1204,11 +1186,6 @@ bool HtmlDoc::Load() {
 
 std::string_view HtmlDoc::GetHtmlData() const {
     return {htmlData, str::Len(htmlData)};
-}
-
-const char* HtmlDoc::GetHtmlData(size_t* lenOut) const {
-    *lenOut = str::Len(htmlData);
-    return htmlData;
 }
 
 ImageData* HtmlDoc::GetImageData(const char* fileName) {
@@ -1479,11 +1456,6 @@ bool TxtDoc::Load() {
 
 std::string_view TxtDoc::GetHtmlData() const {
     return {htmlData.Get(), htmlData.size()};
-}
-
-const char* TxtDoc::GetHtmlData(size_t* lenOut) const {
-    *lenOut = htmlData.size();
-    return htmlData.Get();
 }
 
 WCHAR* TxtDoc::GetProperty(DocumentProperty prop) const {

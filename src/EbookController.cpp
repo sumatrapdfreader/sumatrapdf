@@ -555,7 +555,8 @@ bool EbookController::GoToPrevPage(bool toBottom) {
 }
 
 void EbookController::StartLayouting(int startReparseIdxArg, DisplayMode displayMode) {
-    if ((size_t)startReparseIdxArg >= doc.GetHtmlDataSize()) {
+    auto d = doc.GetHtmlData();
+    if ((size_t)startReparseIdxArg >= d.size()) {
         startReparseIdxArg = 0;
     }
     currPageReparseIdx = startReparseIdxArg;
@@ -689,9 +690,8 @@ void EbookController::ExtractPageAnchors() {
 
     AutoFreeW epubPagePath;
     int fb2TitleCount = 0;
-    size_t len;
-    const char* data = doc.GetHtmlData(len);
-    HtmlPullParser parser(data, len);
+    auto data = doc.GetHtmlData();
+    HtmlPullParser parser(data.data(), data.size());
     HtmlToken* tok;
     while ((tok = parser.Next()) != nullptr && !tok->IsError()) {
         if (!tok->IsStartTag() && !tok->IsEmptyElementEndTag()) {
@@ -723,14 +723,27 @@ void EbookController::ExtractPageAnchors() {
     }
 }
 
+// Mobi uses filepos (reparseIdx) for in-document links
+static bool UseMobiReparseIdx(const Doc& doc, const WCHAR* id, size_t& reparseIdx) {
+    if (doc.Type() != DocType::Mobi) {
+        return false;
+    }
+    int n;
+    bool ok = str::Parse(id, L"%d%$", &n);
+    if (!ok || (n < 0)) {
+        return false;
+    }
+    auto d = doc.GetHtmlData();
+    reparseIdx = static_cast<size_t>(n);
+    return reparseIdx < d.size();
+}
+
 int EbookController::ResolvePageAnchor(const WCHAR* id) {
     ExtractPageAnchors();
 
-    int reparseIdx = -1;
-    if (DocType::Mobi == doc.Type() && str::Parse(id, L"%d%$", &reparseIdx) && 0 <= reparseIdx &&
-        (size_t)reparseIdx <= doc.GetHtmlDataSize()) {
-        // Mobi uses filepos (reparseIdx) for in-document links
-        return reparseIdx;
+    size_t mobiReparseIdx = static_cast<size_t>(-1);
+    if (UseMobiReparseIdx(doc, id, mobiReparseIdx)) {
+        return static_cast<int>(mobiReparseIdx);
     }
 
     int idx = pageAnchorIds->Find(id);
@@ -815,8 +828,9 @@ void EbookController::ScrollToLink(PageDestination* dest) {
 
 PageDestination* EbookController::GetNamedDest(const WCHAR* name) {
     int reparseIdx = -1;
+    auto d = doc.GetHtmlData();
     if (DocType::Mobi == doc.Type() && str::Parse(name, L"%d%$", &reparseIdx) && 0 <= reparseIdx &&
-        (size_t)reparseIdx <= doc.GetHtmlDataSize()) {
+        (size_t)reparseIdx <= d.size()) {
         // Mobi uses filepos (reparseIdx) for in-document links
     } else if (!str::FindChar(name, '#')) {
         AutoFreeW id(str::Format(L"#%s", name));
@@ -824,9 +838,10 @@ PageDestination* EbookController::GetNamedDest(const WCHAR* name) {
     } else {
         reparseIdx = ResolvePageAnchor(name);
     }
-    if (reparseIdx < 0)
+    if (reparseIdx < 0) {
         return nullptr;
-    CrashIf((size_t)reparseIdx > doc.GetHtmlDataSize());
+    }
+    CrashIf((size_t)reparseIdx > d.size());
     return new EbookTocDest(nullptr, reparseIdx + 1);
 }
 
