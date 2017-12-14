@@ -758,10 +758,10 @@ static Vec<PageAnnotation> fz_get_user_page_annots(Vec<PageAnnotation>& userAnno
             continue;
         // include all annotations for pageNo that can be rendered by fz_run_user_annots
         switch (annot.type) {
-            case Annot_Highlight:
-            case Annot_Underline:
-            case Annot_StrikeOut:
-            case Annot_Squiggly:
+            case PageAnnotType::Highlight:
+            case PageAnnotType::Underline:
+            case PageAnnotType::StrikeOut:
+            case PageAnnotType::Squiggly:
                 result.Append(annot);
                 break;
         }
@@ -784,22 +784,22 @@ static void fz_run_user_page_annots(Vec<PageAnnotation>& pageAnnots, fz_device* 
         fz_path* path = fz_new_path(dev->ctx);
         fz_stroke_state* stroke = nullptr;
         switch (annot.type) {
-            case Annot_Highlight:
+            case PageAnnotType::Highlight:
                 fz_moveto(dev->ctx, path, annot.rect.TL().x, annot.rect.TL().y);
                 fz_lineto(dev->ctx, path, annot.rect.BR().x, annot.rect.TL().y);
                 fz_lineto(dev->ctx, path, annot.rect.BR().x, annot.rect.BR().y);
                 fz_lineto(dev->ctx, path, annot.rect.TL().x, annot.rect.BR().y);
                 fz_closepath(dev->ctx, path);
                 break;
-            case Annot_Underline:
+            case PageAnnotType::Underline:
                 fz_moveto(dev->ctx, path, annot.rect.TL().x, annot.rect.BR().y - 0.25f);
                 fz_lineto(dev->ctx, path, annot.rect.BR().x, annot.rect.BR().y - 0.25f);
                 break;
-            case Annot_StrikeOut:
+            case PageAnnotType::StrikeOut:
                 fz_moveto(dev->ctx, path, annot.rect.TL().x, annot.rect.TL().y + annot.rect.dy / 2);
                 fz_lineto(dev->ctx, path, annot.rect.BR().x, annot.rect.TL().y + annot.rect.dy / 2);
                 break;
-            case Annot_Squiggly:
+            case PageAnnotType::Squiggly:
                 fz_moveto(dev->ctx, path, annot.rect.TL().x + 1, annot.rect.BR().y);
                 fz_lineto(dev->ctx, path, annot.rect.BR().x, annot.rect.BR().y);
                 fz_moveto(dev->ctx, path, annot.rect.TL().x, annot.rect.BR().y - 0.5f);
@@ -815,7 +815,7 @@ static void fz_run_user_page_annots(Vec<PageAnnotation>& pageAnnots, fz_device* 
         }
         fz_colorspace* cs = fz_device_rgb(dev->ctx);
         float color[3] = {annot.color.r / 255.f, annot.color.g / 255.f, annot.color.b / 255.f};
-        if (Annot_Highlight == annot.type) {
+        if (PageAnnotType::Highlight == annot.type) {
             // render path with transparency effect
             fz_begin_group(dev, &rect, 0, 0, FZ_BLEND_MULTIPLY, 1.f);
             fz_fill_path(dev, path, 0, ctm, cs, color, annot.color.a / 255.f);
@@ -836,7 +836,7 @@ static void fz_run_page_transparency(Vec<PageAnnotation>& pageAnnots, fz_device*
         return;
     bool needsTransparency = false;
     for (size_t i = 0; i < pageAnnots.size(); i++) {
-        if (Annot_Highlight == pageAnnots.at(i).type) {
+        if (PageAnnotType::Highlight == pageAnnots.at(i).type) {
             needsTransparency = true;
             break;
         }
@@ -1274,7 +1274,7 @@ class PdfComment : public PageElement {
 
   public:
     PdfComment(const WCHAR* content, RectD rect, int pageNo)
-        : annot(Annot_None, pageNo, rect, PageAnnotation::Color()), content(str::Dup(content)) {}
+        : annot(PageAnnotType::None, pageNo, rect, PageAnnotation::Color()), content(str::Dup(content)) {}
 
     virtual PageElementType GetType() const { return PageElementType::Comment; }
     virtual int GetPageNo() const { return annot.pageNo; }
@@ -2653,12 +2653,13 @@ static bool pdf_file_update_add_annotation(pdf_document* doc, pdf_page* page, pd
     fz_var(ap_obj);
     fz_var(ap_buf);
 
-    const char* subtype =
-        Annot_Highlight == annot.type
-            ? "Highlight"
-            : Annot_Underline == annot.type
-                  ? "Underline"
-                  : Annot_StrikeOut == annot.type ? "StrikeOut" : Annot_Squiggly == annot.type ? "Squiggly" : nullptr;
+    const char* subtype = PageAnnotType::Highlight == annot.type
+                              ? "Highlight"
+                              : PageAnnotType::Underline == annot.type
+                                    ? "Underline"
+                                    : PageAnnotType::StrikeOut == annot.type
+                                          ? "StrikeOut"
+                                          : PageAnnotType::Squiggly == annot.type ? "Squiggly" : nullptr;
     CrashIf(!subtype);
     int rotation = (page->rotate + 360) % 360;
     CrashIf((rotation % 90) != 0);
@@ -2707,20 +2708,20 @@ static bool pdf_file_update_add_annotation(pdf_document* doc, pdf_page* page, pd
         // create the appearance stream (unencrypted) and append it to the file
         ap_obj = pdf_new_obj_from_str(doc, annot_ap_dict);
         switch (annot.type) {
-            case Annot_Highlight:
+            case PageAnnotType::Highlight:
                 annot_ap_stream.Set(str::Format(ap_highlight, rgb[0], rgb[1], rgb[2], dx, dy));
                 break;
-            case Annot_Underline:
+            case PageAnnotType::Underline:
                 annot_ap_stream.Set(str::Format(ap_underline, rgb[0], rgb[1], rgb[2], dx));
                 break;
-            case Annot_StrikeOut:
+            case PageAnnotType::StrikeOut:
                 annot_ap_stream.Set(str::Format(ap_strikeout, rgb[0], rgb[1], rgb[2], dy / 2, dx, dy / 2));
                 break;
-            case Annot_Squiggly:
+            case PageAnnotType::Squiggly:
                 annot_ap_stream.Set(str::Format(ap_squiggly, rgb[0], rgb[1], rgb[2], dx, dx));
                 break;
         }
-        if (annot.type != Annot_Highlight)
+        if (annot.type != PageAnnotType::Highlight)
             pdf_dict_dels(pdf_dict_gets(ap_obj, "Resources"), "ExtGState");
         if (rotation) {
             fz_matrix rot;

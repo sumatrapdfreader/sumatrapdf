@@ -34,12 +34,12 @@ enum class PageDestType {
     ZoomToDialog,
 };
 
-enum PageAnnotType {
-    Annot_None,
-    Annot_Highlight,
-    Annot_Underline,
-    Annot_StrikeOut,
-    Annot_Squiggly,
+enum class PageAnnotType {
+    None,
+    Highlight,
+    Underline,
+    StrikeOut,
+    Squiggly,
 };
 
 enum DocumentProperty {
@@ -146,7 +146,7 @@ struct PageAnnotation {
     RectD rect;
     Color color;
 
-    PageAnnotation() : type(Annot_None), pageNo(-1) {}
+    PageAnnotation() : type(PageAnnotType::None), pageNo(-1) {}
     PageAnnotation(PageAnnotType type, int pageNo, RectD rect, Color color)
         : type(type), pageNo(pageNo), rect(rect), color(color) {}
     bool operator==(const PageAnnotation& other) const {

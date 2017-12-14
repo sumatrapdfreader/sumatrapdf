@@ -319,11 +319,11 @@ static void DrawAnnotations(Graphics& g, Vec<PageAnnotation>& userAnnots, int pa
             continue;
         PointF p1, p2;
         switch (annot.type) {
-            case Annot_Highlight: {
+            case PageAnnotType::Highlight: {
                 SolidBrush tmpBrush(Unblend(annot.color, 119));
                 g.FillRectangle(&tmpBrush, annot.rect.ToGdipRectF());
             } break;
-            case Annot_Underline:
+            case PageAnnotType::Underline:
                 p1 = PointF((float)annot.rect.x, (float)annot.rect.BR().y);
                 p2 = PointF((float)annot.rect.BR().x, p1.Y);
                 {
@@ -331,7 +331,7 @@ static void DrawAnnotations(Graphics& g, Vec<PageAnnotation>& userAnnots, int pa
                     g.DrawLine(&tmpPen, p1, p2);
                 }
                 break;
-            case Annot_StrikeOut:
+            case PageAnnotType::StrikeOut:
                 p1 = PointF((float)annot.rect.x, (float)annot.rect.y + (float)annot.rect.dy / 2);
                 p2 = PointF((float)annot.rect.BR().x, p1.Y);
                 {
@@ -339,7 +339,7 @@ static void DrawAnnotations(Graphics& g, Vec<PageAnnotation>& userAnnots, int pa
                     g.DrawLine(&tmpPen, p1, p2);
                 }
                 break;
-            case Annot_Squiggly: {
+            case PageAnnotType::Squiggly: {
                 Pen p(FromColor(annot.color), 0.5f);
                 REAL dash[2] = {2, 2};
                 p.SetDashPattern(dash, dimof(dash));
