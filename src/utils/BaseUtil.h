@@ -300,6 +300,12 @@ inline void ZeroStruct(T* s) {
 }
 
 template <typename T>
+inline void ZeroArray(T& a) {
+    size_t size = sizeof(a);
+    ZeroMemory((void*)&a, size);
+}
+
+template <typename T>
 inline T limitValue(T val, T min, T max) {
     CrashIf(min > max);
     if (val < min)

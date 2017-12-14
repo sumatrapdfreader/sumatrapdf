@@ -35,36 +35,35 @@
 #define WM_APP_REPAINT_TOC (WM_APP + 1)
 #endif
 
-static void CustomizeTocInfoTip(LPNMTVGETINFOTIP nmit) {
-    PageDestination* link = ((DocTocItem*)nmit->lParam)->GetLink();
+static void CustomizeTocInfoTip(TreeCtrl* treeCtrl, NMTVGETINFOTIP* nmit) {
+    UNUSED(treeCtrl);
+    auto* tocItem = reinterpret_cast<DocTocItem*>(nmit->lParam);
+    PageDestination* link = tocItem->GetLink();
     AutoFreeW path(link ? link->GetDestValue() : nullptr);
-    if (!path)
+    if (!path) {
         return;
+    }
     CrashIf(!link); // /analyze claims that this could happen - it really can't
-    CrashIf(link->GetDestType() != Dest_LaunchURL && link->GetDestType() != Dest_LaunchFile &&
-            link->GetDestType() != Dest_LaunchEmbedded);
+    auto dstType = link->GetDestType();
+    CrashIf(dstType != Dest_LaunchURL && dstType != Dest_LaunchFile && dstType != Dest_LaunchEmbedded);
 
     str::Str<WCHAR> infotip;
 
     RECT rcLine, rcLabel;
     HWND hTV = nmit->hdr.hwndFrom;
+    CrashIf(hTV = treeCtrl->hwnd);
     // Display the item's full label, if it's overlong
     TreeView_GetItemRect(hTV, nmit->hItem, &rcLine, FALSE);
     TreeView_GetItemRect(hTV, nmit->hItem, &rcLabel, TRUE);
     if (rcLine.right + 2 < rcLabel.right) {
-        WCHAR buf[INFOTIPSIZE + 1] = {0}; // +1 just in case
-        TVITEM item;
-        item.hItem = nmit->hItem;
-        item.mask = TVIF_TEXT;
-        item.pszText = buf;
-        item.cchTextMax = INFOTIPSIZE;
-        TreeView_GetItem(hTV, &item);
-        infotip.Append(item.pszText);
+        std::wstring_view currInfoTip = TreeCtrlGetInfoTip(treeCtrl, nmit->hItem);
+        infotip.Append(currInfoTip.data());
         infotip.Append(L"\r\n");
     }
 
-    if (Dest_LaunchEmbedded == link->GetDestType())
+    if (Dest_LaunchEmbedded == dstType) {
         path.Set(str::Format(_TR("Attachment: %s"), path.Get()));
+    }
 
     infotip.Append(path);
     str::BufSet(nmit->pszText, nmit->cchTextMax, infotip.Get());
@@ -506,7 +505,7 @@ static LRESULT OnTocTreeNotify(WindowInfo* win, NMTREEVIEWW* pnmtv) {
 #endif
 
         case TVN_GETINFOTIP:
-            CustomizeTocInfoTip((LPNMTVGETINFOTIP)pnmtv);
+            CustomizeTocInfoTip(win->tocTreeCtrl, (LPNMTVGETINFOTIP)pnmtv);
             break;
     }
     return -1;
@@ -571,7 +570,7 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
 
         case WM_NOTIFY:
             if (LOWORD(wp) == IDC_TOC_TREE) {
-                LRESULT res = OnTocTreeNotify(win, (LPNMTREEVIEW)lp);
+                LRESULT res = OnTocTreeNotify(win, (NMTREEVIEWW*)lp);
                 if (res != -1) {
                     return res;
                 }
