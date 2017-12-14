@@ -7116,7 +7116,7 @@ const char * gTranslations_it =
   "Riduci pagine alla zona &stampabile (se necessario)\0"\
   "Pagina &singola\tCtrl+6\0"\
   "&Ignora questa versione\0"\
-  "\0"\
+  "&Tema\0"\
   "&Usa larghezza pagina originale\0"\
   "&Visualizza\0"\
   "&Finestra\0"\
@@ -7169,8 +7169,8 @@ const char * gTranslations_it =
   "File attuale\0"\
   "Posizione cursore\0"\
   "Ingrandimento personali&zzato\tCtrl+Y\0"\
-  "\0"\
-  "\0"\
+  "Scuro\0"\
+  "Pi\303\271 scuro\0"\
   "&Vista predefinita:\0"\
   "&Ingrandimento predefinito:\0"\
   "Il lettore PDF predefinito non \303\250 modificabile in modalit\303\240 portatile\0"\
@@ -7220,7 +7220,7 @@ const char * gTranslations_it =
   "Consiglio: usare <F3> per trovare il successivo\0"\
   "File immagine (*.%s)\0"\
   "\0"\
-  "\0"\
+  "Leggero\0"\
   "\0"\
   "Impostare SumatraPDF come programma predefinito per i file PDF?\0"\
   "Imposta SumatraPDF come lettore PDF predefinito\0"\

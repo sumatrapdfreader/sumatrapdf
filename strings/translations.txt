@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-175b68c494f12d7d67f74f67da574ac74e669b47
+7b14068fd5d6e571af0c1971dbd62faf363633be
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -2932,6 +2932,7 @@ ga:&Téama
 he:ערכת נושא
 hr:&Tema
 id:Tema
+it:&Tema
 ja:配色テーマ(&T)
 kr:테마(&T)
 lv:&Dizains
@@ -7017,6 +7018,7 @@ ga:dorcha
 he:כהה
 hr:Tamna
 id:Gelap
+it:Scuro
 ja:濃色
 kr:어두운
 lv:Tumšs
@@ -7051,6 +7053,7 @@ ga:nios dorcha
 he:כהה מאוד
 hr:Tamnija
 id:Lebih Gelap
+it:Più scuro
 ja:黒
 kr:더 어두운
 lv:Tumšāks
@@ -10948,6 +10951,7 @@ ga:éadroime
 he:בהירה
 hr:Svijetla
 id:Terang
+it:Leggero
 ja:淡色
 kr:밝은
 lv:Gaišs
