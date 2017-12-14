@@ -38,14 +38,14 @@ class DjVuDestination : public PageDestination {
 
     PageDestType GetDestType() const override {
         if (IsPageLink(link))
-            return Dest_ScrollTo;
+            return PageDestType::ScrollTo;
         if (str::Eq(link, "#+1"))
-            return Dest_NextPage;
+            return PageDestType::NextPage;
         if (str::Eq(link, "#-1"))
-            return Dest_PrevPage;
+            return PageDestType::PrevPage;
         if (str::StartsWithI(link, "http:") || str::StartsWithI(link, "https:") || str::StartsWithI(link, "mailto:"))
-            return Dest_LaunchURL;
-        return Dest_None;
+            return PageDestType::LaunchURL;
+        return PageDestType::None;
     }
     int GetDestPageNo() const override {
         if (IsPageLink(link))
@@ -56,7 +56,7 @@ class DjVuDestination : public PageDestination {
         return RectD(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
     }
     WCHAR* GetDestValue() const override {
-        if (Dest_LaunchURL == GetDestType())
+        if (PageDestType::LaunchURL == GetDestType())
             return str::conv::FromUtf8(link);
         return nullptr;
     }
@@ -86,7 +86,7 @@ class DjVuLink : public PageElement {
     WCHAR* GetValue() const override {
         if (value)
             return str::Dup(value);
-        if (Dest_LaunchURL == dest->GetDestType())
+        if (PageDestType::LaunchURL == dest->GetDestType())
             return dest->GetDestValue();
         return nullptr;
     }

@@ -60,7 +60,7 @@ class EbookTocDest : public DocTocItem, public PageDestination {
     virtual PageDestination* GetLink() { return this; }
 
     // PageDestination
-    PageDestType GetDestType() const override { return url ? Dest_LaunchURL : Dest_ScrollTo; }
+    PageDestType GetDestType() const override { return url ? PageDestType::LaunchURL : PageDestType::ScrollTo; }
     int GetDestPageNo() const override { return pageNo; }
     RectD GetDestRect() const override { return RectD(); }
     WCHAR* GetDestValue() const override { return str::Dup(url); }

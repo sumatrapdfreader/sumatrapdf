@@ -331,7 +331,8 @@ static void OnMouseLeftButtonUp(WindowInfo* win, int x, int y, WPARAM key) {
     else if (link && link->GetRect().Contains(ptPage)) {
         PageDestination* dest = link->AsLink();
         // highlight the clicked link (as a reminder of the last action once the user returns)
-        if (dest && (Dest_LaunchURL == dest->GetDestType() || Dest_LaunchFile == dest->GetDestType())) {
+        if (dest &&
+            (PageDestType::LaunchURL == dest->GetDestType() || PageDestType::LaunchFile == dest->GetDestType())) {
             DeleteOldSelectionInfo(win, true);
             win->currentTab->selectionOnPage =
                 SelectionOnPage::FromRectangle(dm, dm->CvtToScreen(link->GetPageNo(), link->GetRect()));

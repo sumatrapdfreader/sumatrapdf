@@ -46,7 +46,8 @@ static void CustomizeTocInfoTip(TreeCtrl* w, NMTVGETINFOTIP* nm) {
     }
     CrashIf(!link); // /analyze claims that this could happen - it really can't
     auto dstType = link->GetDestType();
-    CrashIf(dstType != Dest_LaunchURL && dstType != Dest_LaunchFile && dstType != Dest_LaunchEmbedded);
+    CrashIf(dstType != PageDestType::LaunchURL && dstType != PageDestType::LaunchFile &&
+            dstType != PageDestType::LaunchEmbedded);
     CrashIf(nm->hdr.hwndFrom != w->hwnd);
 
     str::Str<WCHAR> infotip;
@@ -66,7 +67,7 @@ static void CustomizeTocInfoTip(TreeCtrl* w, NMTVGETINFOTIP* nm) {
         infotip.Append(L"\r\n");
     }
 
-    if (Dest_LaunchEmbedded == dstType) {
+    if (PageDestType::LaunchEmbedded == dstType) {
         path.Set(str::Format(_TR("Attachment: %s"), path.Get()));
     }
 
@@ -168,7 +169,7 @@ static void GoToTocLinkForTVItem(WindowInfo* win, HTREEITEM hItem, bool allowExt
     if (!tocItem || !win->IsDocLoaded()) {
         return;
     }
-    if ((allowExternal || tocItem->GetLink() && Dest_ScrollTo == tocItem->GetLink()->GetDestType()) ||
+    if ((allowExternal || tocItem->GetLink() && PageDestType::ScrollTo == tocItem->GetLink()->GetDestType()) ||
         tocItem->pageNo) {
         // delay changing the page until the tree messages have been handled
         TabInfo* tab = win->currentTab;

@@ -597,7 +597,7 @@ class SimpleDest : public PageDestination {
   public:
     SimpleDest(int pageNo, RectD rect) : pageNo(pageNo), rect(rect) {}
 
-    PageDestType GetDestType() const override { return Dest_ScrollTo; }
+    PageDestType GetDestType() const override { return PageDestType::ScrollTo; }
     int GetDestPageNo() const override { return pageNo; }
     RectD GetDestRect() const override { return rect; }
 };
@@ -2902,10 +2902,10 @@ static PageDestType DestTypeFromName(const char* name) {
 // named actions are converted either to Dest_Name or Dest_NameDialog
 #define HandleType(type)      \
     if (str::Eq(name, #type)) \
-    return Dest_##type
+    return PageDestType::##type
 #define HandleTypeDialog(type) \
     if (str::Eq(name, #type))  \
-    return Dest_##type##Dialog
+    return PageDestType::##type##Dialog
     // predefined named actions
     HandleType(NextPage);
     HandleType(PrevPage);
@@ -2924,30 +2924,30 @@ static PageDestType DestTypeFromName(const char* name) {
 #undef HandleType
 #undef HandleTypeDialog
     // named action that we don't support (or invalid action name)
-    return Dest_None;
+    return PageDestType::None;
 }
 
 PageDestType PdfLink::GetDestType() const {
     if (!link)
-        return Dest_None;
+        return PageDestType::None;
 
     switch (link->kind) {
         case FZ_LINK_GOTO:
-            return Dest_ScrollTo;
+            return PageDestType::ScrollTo;
         case FZ_LINK_URI:
-            return Dest_LaunchURL;
+            return PageDestType::LaunchURL;
         case FZ_LINK_NAMED:
             return DestTypeFromName(link->ld.named.named);
         case FZ_LINK_LAUNCH:
             if (link->ld.launch.embedded_num)
-                return Dest_LaunchEmbedded;
+                return PageDestType::LaunchEmbedded;
             if (link->ld.launch.is_uri)
-                return Dest_LaunchURL;
-            return Dest_LaunchFile;
+                return PageDestType::LaunchURL;
+            return PageDestType::LaunchFile;
         case FZ_LINK_GOTOR:
-            return Dest_LaunchFile;
+            return PageDestType::LaunchFile;
         default:
-            return Dest_None; // unsupported action
+            return PageDestType::None; // unsupported action
     }
 }
 
@@ -3333,12 +3333,12 @@ class XpsLink : public PageElement, public PageDestination {
 
     PageDestType GetDestType() const override {
         if (!link)
-            return Dest_None;
+            return PageDestType::None;
         if (FZ_LINK_GOTO == link->kind)
-            return Dest_ScrollTo;
+            return PageDestType::ScrollTo;
         if (FZ_LINK_URI == link->kind)
-            return Dest_LaunchURL;
-        return Dest_None;
+            return PageDestType::LaunchURL;
+        return PageDestType::None;
     }
     int GetDestPageNo() const override {
         if (!link || link->kind != FZ_LINK_GOTO)

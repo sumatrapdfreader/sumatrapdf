@@ -168,7 +168,7 @@ class SimpleDest2 : public PageDestination {
   public:
     SimpleDest2(int pageNo, RectD rect, WCHAR* value = nullptr) : pageNo(pageNo), rect(rect), value(value) {}
 
-    PageDestType GetDestType() const override { return value ? Dest_LaunchURL : Dest_ScrollTo; }
+    PageDestType GetDestType() const override { return value ? PageDestType::LaunchURL : PageDestType::ScrollTo; }
     int GetDestPageNo() const override { return pageNo; }
     RectD GetDestRect() const override { return rect; }
     WCHAR* GetDestValue() const override { return str::Dup(value); }
@@ -197,7 +197,7 @@ class EbookLink : public PageElement, public PageDestination {
     }
     virtual PageDestination* AsLink() { return dest ? dest : this; }
 
-    PageDestType GetDestType() const override { return Dest_LaunchURL; }
+    PageDestType GetDestType() const override { return PageDestType::LaunchURL; }
     int GetDestPageNo() const override { return 0; }
     RectD GetDestRect() const override { return RectD(); }
     WCHAR* GetDestValue() const override { return GetValue(); }
@@ -1489,7 +1489,7 @@ class ChmEmbeddedDest : public PageDestination {
   public:
     ChmEmbeddedDest(ChmEngineImpl* engine, const char* path) : engine(engine), path(str::Dup(path)) {}
 
-    PageDestType GetDestType() const override { return Dest_LaunchEmbedded; }
+    PageDestType GetDestType() const override { return PageDestType::LaunchEmbedded; }
     int GetDestPageNo() const override { return 0; }
     RectD GetDestRect() const override { return RectD(); }
     WCHAR* GetDestValue() const override { return str::conv::FromUtf8(path::GetBaseName(path)); }
@@ -1606,7 +1606,7 @@ class RemoteHtmlDest : public SimpleDest2 {
             value.SetCopy(relativeURL);
     }
 
-    virtual PageDestType GetDestType() const { return Dest_LaunchFile; }
+    virtual PageDestType GetDestType() const { return PageDestType::LaunchFile; }
     virtual WCHAR* GetDestName() const { return str::Dup(name); }
 };
 

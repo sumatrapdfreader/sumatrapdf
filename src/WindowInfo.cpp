@@ -284,10 +284,10 @@ void LinkHandler::GotoLink(PageDestination* link) {
     TabInfo* tab = owner->currentTab;
     AutoFreeW path(link->GetDestValue());
     PageDestType type = link->GetDestType();
-    if (Dest_ScrollTo == type) {
+    if (PageDestType::ScrollTo == type) {
         // TODO: respect link->ld.gotor.new_window for PDF documents ?
         ScrollTo(link);
-    } else if (Dest_LaunchURL == type) {
+    } else if (PageDestType::LaunchURL == type) {
         if (!path)
             /* ignore missing URLs */;
         else {
@@ -307,7 +307,7 @@ void LinkHandler::GotoLink(PageDestination* link) {
                 LaunchBrowser(path);
             }
         }
-    } else if (Dest_LaunchEmbedded == type) {
+    } else if (PageDestType::LaunchEmbedded == type) {
         // open embedded PDF documents in a new window
         if (path && str::StartsWith(path.Get(), tab->filePath.Get())) {
             WindowInfo* newWin = FindWindowInfoByFile(path, true);
@@ -323,7 +323,7 @@ void LinkHandler::GotoLink(PageDestination* link) {
             LinkSaver linkSaverTmp(tab, owner->hwndFrame, path);
             link->SaveEmbedded(linkSaverTmp);
         }
-    } else if (Dest_LaunchFile == type) {
+    } else if (PageDestType::LaunchFile == type) {
         if (path) {
             // LaunchFile only opens files inside SumatraPDF
             // (except for allowed perceived file types)
@@ -331,33 +331,33 @@ void LinkHandler::GotoLink(PageDestination* link) {
         }
     }
     // predefined named actions
-    else if (Dest_NextPage == type)
+    else if (PageDestType::NextPage == type)
         tab->ctrl->GoToNextPage();
-    else if (Dest_PrevPage == type)
+    else if (PageDestType::PrevPage == type)
         tab->ctrl->GoToPrevPage();
-    else if (Dest_FirstPage == type)
+    else if (PageDestType::FirstPage == type)
         tab->ctrl->GoToFirstPage();
-    else if (Dest_LastPage == type)
+    else if (PageDestType::LastPage == type)
         tab->ctrl->GoToLastPage();
     // Adobe Reader extensions to the spec, cf. http://www.tug.org/applications/hyperref/manual.html
-    else if (Dest_FindDialog == type)
+    else if (PageDestType::FindDialog == type)
         PostMessage(owner->hwndFrame, WM_COMMAND, IDM_FIND_FIRST, 0);
-    else if (Dest_FullScreen == type)
+    else if (PageDestType::FullScreen == type)
         PostMessage(owner->hwndFrame, WM_COMMAND, IDM_VIEW_PRESENTATION_MODE, 0);
-    else if (Dest_GoBack == type)
+    else if (PageDestType::GoBack == type)
         tab->ctrl->Navigate(-1);
-    else if (Dest_GoForward == type)
+    else if (PageDestType::GoForward == type)
         tab->ctrl->Navigate(1);
-    else if (Dest_GoToPageDialog == type)
+    else if (PageDestType::GoToPageDialog == type)
         PostMessage(owner->hwndFrame, WM_COMMAND, IDM_GOTO_PAGE, 0);
-    else if (Dest_PrintDialog == type)
+    else if (PageDestType::PrintDialog == type)
         PostMessage(owner->hwndFrame, WM_COMMAND, IDM_PRINT, 0);
-    else if (Dest_SaveAsDialog == type)
+    else if (PageDestType::SaveAsDialog == type)
         PostMessage(owner->hwndFrame, WM_COMMAND, IDM_SAVEAS, 0);
-    else if (Dest_ZoomToDialog == type)
+    else if (PageDestType::ZoomToDialog == type)
         PostMessage(owner->hwndFrame, WM_COMMAND, IDM_ZOOM_CUSTOM, 0);
     else
-        CrashIf(Dest_None != type);
+        CrashIf(PageDestType::None != type);
 }
 
 void LinkHandler::ScrollTo(PageDestination* dest) {

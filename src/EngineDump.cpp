@@ -224,7 +224,7 @@ const char* PageDestToStr(PageDestType destType) {
     HandleTypeDialog(ZoomTo);
 #undef HandleType
 #undef HandleTypeDialog
-    CrashIf(destType != Dest_None);
+    CrashIf(destType != PageDestType::None);
     return nullptr;
 }
 
@@ -261,7 +261,7 @@ void DumpPageContent(BaseEngine* engine, int pageNo, bool fullDump) {
                 rect.x, rect.y, rect.dx, rect.dy);
             PageDestination* dest = els->at(i)->AsLink();
             if (dest) {
-                if (dest->GetDestType() != Dest_None)
+                if (dest->GetDestType() != PageDestType::None)
                     Out("\t\t\t\tLinkType=\"%s\"\n", PageDestToStr(dest->GetDestType()));
                 OwnedData value(Escape(dest->GetDestValue()));
                 if (value.Get())

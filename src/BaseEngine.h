@@ -14,24 +14,24 @@ enum PageLayoutType {
 
 enum PageElementType { Element_Link, Element_Image, Element_Comment };
 
-enum PageDestType {
-    Dest_None,
-    Dest_ScrollTo,
-    Dest_LaunchURL,
-    Dest_LaunchEmbedded,
-    Dest_LaunchFile,
-    Dest_NextPage,
-    Dest_PrevPage,
-    Dest_FirstPage,
-    Dest_LastPage,
-    Dest_FindDialog,
-    Dest_FullScreen,
-    Dest_GoBack,
-    Dest_GoForward,
-    Dest_GoToPageDialog,
-    Dest_PrintDialog,
-    Dest_SaveAsDialog,
-    Dest_ZoomToDialog,
+enum class PageDestType {
+    None,
+    ScrollTo,
+    LaunchURL,
+    LaunchEmbedded,
+    LaunchFile,
+    NextPage,
+    PrevPage,
+    FirstPage,
+    LastPage,
+    FindDialog,
+    FullScreen,
+    GoBack,
+    GoForward,
+    GoToPageDialog,
+    PrintDialog,
+    SaveAsDialog,
+    ZoomToDialog,
 };
 
 enum PageAnnotType {
@@ -105,7 +105,7 @@ class LinkSaverUI {
 class PageDestination {
   public:
     virtual ~PageDestination() {}
-    // type of the destination (most common are Dest_ScrollTo and Dest_LaunchURL)
+    // type of the destination (most common are PageDestType::ScrollTo and PageDestType::LaunchURL)
     virtual PageDestType GetDestType() const = 0;
     // page the destination points to (0 for external destinations such as URLs)
     virtual int GetDestPageNo() const = 0;

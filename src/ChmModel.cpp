@@ -35,7 +35,7 @@ class ChmTocItem : public DocTocItem, public PageDestination {
 
     // PageDestination
     PageDestType GetDestType() const override {
-        return !url ? Dest_None : IsExternalUrl(url) ? Dest_LaunchURL : Dest_ScrollTo;
+        return !url ? PageDestType::None : IsExternalUrl(url) ? PageDestType::LaunchURL : PageDestType::ScrollTo;
     }
     int GetDestPageNo() const override { return pageNo; }
     RectD GetDestRect() const override {
@@ -192,7 +192,7 @@ void ChmModel::DisplayPage(const WCHAR* pageUrl) {
 }
 
 void ChmModel::ScrollToLink(PageDestination* link) {
-    CrashIf(link->GetDestType() != Dest_ScrollTo);
+    CrashIf(link->GetDestType() != PageDestType::ScrollTo);
     AutoFreeW url(link->GetDestName());
     if (url)
         DisplayPage(url);
