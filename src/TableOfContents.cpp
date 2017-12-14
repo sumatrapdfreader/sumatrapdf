@@ -37,9 +37,9 @@ constexpr UINT_PTR SUBCLASS_ID = 1;
 #define WM_APP_REPAINT_TOC (WM_APP + 1)
 #endif
 
-static void CustomizeTocInfoTip(TreeCtrl* treeCtrl, NMTVGETINFOTIP* nmit) {
+static void CustomizeTocInfoTip(TreeCtrl* treeCtrl, NMTVGETINFOTIP* nm) {
     UNUSED(treeCtrl);
-    auto* tocItem = reinterpret_cast<DocTocItem*>(nmit->lParam);
+    auto* tocItem = reinterpret_cast<DocTocItem*>(nm->lParam);
     PageDestination* link = tocItem->GetLink();
     AutoFreeW path(link ? link->GetDestValue() : nullptr);
     if (!path) {
@@ -52,13 +52,13 @@ static void CustomizeTocInfoTip(TreeCtrl* treeCtrl, NMTVGETINFOTIP* nmit) {
     str::Str<WCHAR> infotip;
 
     RECT rcLine, rcLabel;
-    HWND hTV = nmit->hdr.hwndFrom;
+    HWND hTV = nm->hdr.hwndFrom;
     CrashIf(hTV = treeCtrl->hwnd);
     // Display the item's full label, if it's overlong
-    TreeView_GetItemRect(hTV, nmit->hItem, &rcLine, FALSE);
-    TreeView_GetItemRect(hTV, nmit->hItem, &rcLabel, TRUE);
+    TreeView_GetItemRect(hTV, nm->hItem, &rcLine, FALSE);
+    TreeView_GetItemRect(hTV, nm->hItem, &rcLabel, TRUE);
     if (rcLine.right + 2 < rcLabel.right) {
-        std::wstring_view currInfoTip = TreeCtrlGetInfoTip(treeCtrl, nmit->hItem);
+        std::wstring_view currInfoTip = TreeCtrlGetInfoTip(treeCtrl, nm->hItem);
         infotip.Append(currInfoTip.data());
         infotip.Append(L"\r\n");
     }
@@ -68,7 +68,7 @@ static void CustomizeTocInfoTip(TreeCtrl* treeCtrl, NMTVGETINFOTIP* nmit) {
     }
 
     infotip.Append(path);
-    str::BufSet(nmit->pszText, nmit->cchTextMax, infotip.Get());
+    str::BufSet(nm->pszText, nm->cchTextMax, infotip.Get());
 }
 
 #ifdef DISPLAY_TOC_PAGE_NUMBERS
@@ -505,10 +505,6 @@ static LRESULT OnTocTreeNotify(WindowInfo* win, NMTREEVIEWW* pnmtv) {
 #else
             return CDRF_DODEFAULT;
 #endif
-
-        case TVN_GETINFOTIP:
-            CustomizeTocInfoTip(win->tocTreeCtrl, (LPNMTVGETINFOTIP)pnmtv);
-            break;
     }
     return -1;
 }
@@ -615,6 +611,7 @@ void CreateToc(WindowInfo* win) {
         handled = (res != -1);
         return res;
     };
+    tree->onGetInfoTip = [](TreeCtrl* w, NMTVGETINFOTIP* infoTipInfo) { CustomizeTocInfoTip(w, infoTipInfo); };
     bool ok = CreateTreeCtrl(tree, L"TOC");
     CrashIf(!ok);
     win->tocTreeCtrl = tree;

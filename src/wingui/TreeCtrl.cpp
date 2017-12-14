@@ -23,12 +23,20 @@ static LRESULT CALLBACK TreeParentProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
     TreeCtrl* w = (TreeCtrl*)data;
     CrashIf(GetParent(w->hwnd) != (HWND)hwnd);
     if (msg == WM_NOTIFY) {
+        NMTREEVIEWW* nm = reinterpret_cast<NMTREEVIEWW*>(lp);
         if (w->onTreeNotify) {
-            NMTREEVIEWW* nm = reinterpret_cast<NMTREEVIEWW*>(lp);
             bool handled = true;
             LRESULT res = w->onTreeNotify(w, nm, handled);
             if (handled) {
                 return res;
+            }
+        }
+        auto code = nm->hdr.code;
+        if (code == TVN_GETINFOTIP) {
+            if (w->onGetInfoTip) {
+                auto* arg = reinterpret_cast<NMTVGETINFOTIP*>(nm);
+                w->onGetInfoTip(w, arg);
+                return 0;
             }
         }
     }
