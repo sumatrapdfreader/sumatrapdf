@@ -706,14 +706,13 @@ void SerializeRec(EncodeState& es, const uint8_t* structStart, const StructMetad
     }
 }
 
-uint8_t* Serialize(const uint8_t* rootStruct, const StructMetadata* def, size_t* sizeOut) {
+OwnedData Serialize(const uint8_t* rootStruct, const StructMetadata* def) {
     EncodeState es;
     es.res.Append(UTF8_BOM "; see https://www.sumatrapdfreader.org/settings.html for documentation" NL);
     es.nest = 0;
     SerializeRec(es, rootStruct, def);
-    if (sizeOut)
-        *sizeOut = es.res.size();
-    return (uint8_t*)es.res.StealData();
+    size_t size = es.res.size();
+    return {es.res.StealData(), size};
 }
 
 } // namespace sertxt

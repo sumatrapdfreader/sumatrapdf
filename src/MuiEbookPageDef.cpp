@@ -9,8 +9,8 @@ using namespace sertxt;
 
 #define of offsetof
 const FieldMetadata gEbookPageDefFieldMetadata[] = {
-    {of(EbookPageDef, name), TYPE_STR, 0},
-    {of(EbookPageDef, style), TYPE_STR, 0},
+    {of(EbookPageDef, name), TYPE_STR, (uintptr_t) nullptr},
+    {of(EbookPageDef, style), TYPE_STR, (uintptr_t) nullptr},
 };
 
 const StructMetadata gEbookPageDefMetadata = {sizeof(EbookPageDef), 2, "name\0style\0\0",

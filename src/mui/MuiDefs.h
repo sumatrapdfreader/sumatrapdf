@@ -43,7 +43,7 @@ struct VerticalLayoutDef {
 extern const StructMetadata gButtonVectorDefMetadata;
 
 inline ButtonVectorDef* DeserializeButtonVectorDef(char* data, size_t dataLen) {
-    std::string_view s(data, dataLen);
+    auto s = std::string_view(data, dataLen);
     return (ButtonVectorDef*)Deserialize(s, &gButtonVectorDefMetadata);
 }
 
@@ -51,8 +51,8 @@ inline ButtonVectorDef* DeserializeButtonVectorDef(TxtNode* root) {
     return (ButtonVectorDef*)Deserialize(root, &gButtonVectorDefMetadata);
 }
 
-inline uint8_t* SerializeButtonVectorDef(ButtonVectorDef* val, size_t* dataLenOut) {
-    return Serialize((const uint8_t*)val, &gButtonVectorDefMetadata, dataLenOut);
+inline OwnedData SerializeButtonVectorDef(ButtonVectorDef* val) {
+    return Serialize((const uint8_t*)val, &gButtonVectorDefMetadata);
 }
 
 inline void FreeButtonVectorDef(ButtonVectorDef* val) {
@@ -61,7 +61,7 @@ inline void FreeButtonVectorDef(ButtonVectorDef* val) {
 extern const StructMetadata gButtonDefMetadata;
 
 inline ButtonDef* DeserializeButtonDef(char* data, size_t dataLen) {
-    std::string_view s(data, dataLen);
+    auto s = std::string_view(data, dataLen);
     return (ButtonDef*)Deserialize(s, &gButtonDefMetadata);
 }
 
@@ -69,8 +69,8 @@ inline ButtonDef* DeserializeButtonDef(TxtNode* root) {
     return (ButtonDef*)Deserialize(root, &gButtonDefMetadata);
 }
 
-inline uint8_t* SerializeButtonDef(ButtonDef* val, size_t* dataLenOut) {
-    return Serialize((const uint8_t*)val, &gButtonDefMetadata, dataLenOut);
+inline OwnedData SerializeButtonDef(ButtonDef* val) {
+    return Serialize((const uint8_t*)val, &gButtonDefMetadata);
 }
 
 inline void FreeButtonDef(ButtonDef* val) {
@@ -79,7 +79,7 @@ inline void FreeButtonDef(ButtonDef* val) {
 extern const StructMetadata gScrollBarDefMetadata;
 
 inline ScrollBarDef* DeserializeScrollBarDef(char* data, size_t dataLen) {
-    std::string_view s(data, dataLen);
+    auto s = std::string_view(data, dataLen);
     return (ScrollBarDef*)Deserialize(s, &gScrollBarDefMetadata);
 }
 
@@ -87,8 +87,8 @@ inline ScrollBarDef* DeserializeScrollBarDef(TxtNode* root) {
     return (ScrollBarDef*)Deserialize(root, &gScrollBarDefMetadata);
 }
 
-inline uint8_t* SerializeScrollBarDef(ScrollBarDef* val, size_t* dataLenOut) {
-    return Serialize((const uint8_t*)val, &gScrollBarDefMetadata, dataLenOut);
+inline OwnedData SerializeScrollBarDef(ScrollBarDef* val) {
+    return Serialize((const uint8_t*)val, &gScrollBarDefMetadata);
 }
 
 inline void FreeScrollBarDef(ScrollBarDef* val) {
@@ -97,7 +97,7 @@ inline void FreeScrollBarDef(ScrollBarDef* val) {
 extern const StructMetadata gDirectionalLayoutDataDefMetadata;
 
 inline DirectionalLayoutDataDef* DeserializeDirectionalLayoutDataDef(char* data, size_t dataLen) {
-    std::string_view s(data, dataLen);
+    auto s = std::string_view(data, dataLen);
     return (DirectionalLayoutDataDef*)Deserialize(s, &gDirectionalLayoutDataDefMetadata);
 }
 
@@ -105,8 +105,8 @@ inline DirectionalLayoutDataDef* DeserializeDirectionalLayoutDataDef(TxtNode* ro
     return (DirectionalLayoutDataDef*)Deserialize(root, &gDirectionalLayoutDataDefMetadata);
 }
 
-inline uint8_t* SerializeDirectionalLayoutDataDef(DirectionalLayoutDataDef* val, size_t* dataLenOut) {
-    return Serialize((const uint8_t*)val, &gDirectionalLayoutDataDefMetadata, dataLenOut);
+inline OwnedData SerializeDirectionalLayoutDataDef(DirectionalLayoutDataDef* val) {
+    return Serialize((const uint8_t*)val, &gDirectionalLayoutDataDefMetadata);
 }
 
 inline void FreeDirectionalLayoutDataDef(DirectionalLayoutDataDef* val) {
@@ -115,7 +115,7 @@ inline void FreeDirectionalLayoutDataDef(DirectionalLayoutDataDef* val) {
 extern const StructMetadata gHorizontalLayoutDefMetadata;
 
 inline HorizontalLayoutDef* DeserializeHorizontalLayoutDef(char* data, size_t dataLen) {
-    std::string_view s(data, dataLen);
+    auto s = std::string_view(data, dataLen);
     return (HorizontalLayoutDef*)Deserialize(s, &gHorizontalLayoutDefMetadata);
 }
 
@@ -123,8 +123,8 @@ inline HorizontalLayoutDef* DeserializeHorizontalLayoutDef(TxtNode* root) {
     return (HorizontalLayoutDef*)Deserialize(root, &gHorizontalLayoutDefMetadata);
 }
 
-inline uint8_t* SerializeHorizontalLayoutDef(HorizontalLayoutDef* val, size_t* dataLenOut) {
-    return Serialize((const uint8_t*)val, &gHorizontalLayoutDefMetadata, dataLenOut);
+inline OwnedData SerializeHorizontalLayoutDef(HorizontalLayoutDef* val) {
+    return Serialize((const uint8_t*)val, &gHorizontalLayoutDefMetadata);
 }
 
 inline void FreeHorizontalLayoutDef(HorizontalLayoutDef* val) {
@@ -133,7 +133,7 @@ inline void FreeHorizontalLayoutDef(HorizontalLayoutDef* val) {
 extern const StructMetadata gVerticalLayoutDefMetadata;
 
 inline VerticalLayoutDef* DeserializeVerticalLayoutDef(char* data, size_t dataLen) {
-    std::string_view s(data, dataLen);
+    auto s = std::string_view(data, dataLen);
     return (VerticalLayoutDef*)Deserialize(s, &gVerticalLayoutDefMetadata);
 }
 
@@ -141,8 +141,8 @@ inline VerticalLayoutDef* DeserializeVerticalLayoutDef(TxtNode* root) {
     return (VerticalLayoutDef*)Deserialize(root, &gVerticalLayoutDefMetadata);
 }
 
-inline uint8_t* SerializeVerticalLayoutDef(VerticalLayoutDef* val, size_t* dataLenOut) {
-    return Serialize((const uint8_t*)val, &gVerticalLayoutDefMetadata, dataLenOut);
+inline OwnedData SerializeVerticalLayoutDef(VerticalLayoutDef* val) {
+    return Serialize((const uint8_t*)val, &gVerticalLayoutDefMetadata);
 }
 
 inline void FreeVerticalLayoutDef(VerticalLayoutDef* val) {

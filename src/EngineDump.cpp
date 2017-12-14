@@ -198,10 +198,10 @@ const char* ElementTypeToStr(PageElement* el) {
 }
 
 const char* PageDestToStr(PageDestType destType) {
-#define HandleType(type)         \
+#define HandleType(type)                  \
     if (destType == PageDestType::##type) \
         return #type;
-#define HandleTypeDialog(type)           \
+#define HandleTypeDialog(type)                    \
     if (destType == PageDestType::##type##Dialog) \
         return #type;
     // common actions

@@ -198,7 +198,7 @@ class Field(object):
                 assert not field.is_struct()
 
         if typ_val.is_struct():
-            # TODO: support NULL values for the struct, represented by using
+            # TODO: support nullptr values for the struct, represented by using
             # class for typ_val
             self.val = typ_val
         elif typ_val.is_array():

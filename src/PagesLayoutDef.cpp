@@ -9,9 +9,9 @@ using namespace sertxt;
 
 #define of offsetof
 const FieldMetadata gPagesLayoutDefFieldMetadata[] = {
-    {of(PagesLayoutDef, name), TYPE_STR, 0},
-    {of(PagesLayoutDef, page1), TYPE_STR, 0},
-    {of(PagesLayoutDef, page2), TYPE_STR, 0},
+    {of(PagesLayoutDef, name), TYPE_STR, (uintptr_t) nullptr},
+    {of(PagesLayoutDef, page1), TYPE_STR, (uintptr_t) nullptr},
+    {of(PagesLayoutDef, page2), TYPE_STR, (uintptr_t) nullptr},
     {of(PagesLayoutDef, spaceDx), TYPE_I32, (uintptr_t)4},
 };
 

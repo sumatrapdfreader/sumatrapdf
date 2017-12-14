@@ -13,7 +13,7 @@ struct PagesLayoutDef {
 extern const StructMetadata gPagesLayoutDefMetadata;
 
 inline PagesLayoutDef* DeserializePagesLayoutDef(char* data, size_t dataLen) {
-    std::string_view s(data, dataLen);
+    auto s = std::string_view(data, dataLen);
     return (PagesLayoutDef*)Deserialize(s, &gPagesLayoutDefMetadata);
 }
 
@@ -21,8 +21,8 @@ inline PagesLayoutDef* DeserializePagesLayoutDef(TxtNode* root) {
     return (PagesLayoutDef*)Deserialize(root, &gPagesLayoutDefMetadata);
 }
 
-inline uint8_t* SerializePagesLayoutDef(PagesLayoutDef* val, size_t* dataLenOut) {
-    return Serialize((const uint8_t*)val, &gPagesLayoutDefMetadata, dataLenOut);
+inline OwnedData SerializePagesLayoutDef(PagesLayoutDef* val) {
+    return Serialize((const uint8_t*)val, &gPagesLayoutDefMetadata);
 }
 
 inline void FreePagesLayoutDef(PagesLayoutDef* val) {

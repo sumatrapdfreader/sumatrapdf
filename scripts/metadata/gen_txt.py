@@ -26,7 +26,7 @@ g_with_reflection = False
 
 def to_win_newlines(s):
     #s = s.replace("\r\n", "\n")
-    s = s.replace("\n", "\r\n")
+    #s = s.replace("\n", "\r\n")
     return s
 
 def write_to_file(file_path, s): file(file_path, "w").write(to_win_newlines(s))
@@ -93,16 +93,16 @@ def _field_def_val_for_FieldMetada(field):
         assert metadata.is_valid_unsigned(32, field.val)
         return str(field.val)
     # TODO: too lazy to do proper utf8 conversion and escaping, so
-    # just returning NULL. We use non-null only for testing
+    # just returning nullptr. We use non-null only for testing
     if field.is_string():
-        return "NULL"
+        return "nullptr"
     if field.is_float():
         return '"%s"' % str(field.val)
     assert False, "don't know how to serialize %s" % str(field.typ)
 
 def field_def_val_for_FieldMetada(field):
     s = _field_def_val_for_FieldMetada(field)
-    if s != "NULL": s = "(uintptr_t)" + s
+    s = "(uintptr_t)" + s
     return s
 
 def escape_char(c):
@@ -212,7 +212,8 @@ prototypes_tmpl = """extern const StructMetadata g%(name)sMetadata;
 
 inline %(name)s *Deserialize%(name)s(char *data, size_t dataLen)
 {
-    return (%(name)s*)Deserialize(data, dataLen, &g%(name)sMetadata);
+    auto s = std::string_view(data, dataLen);
+    return (%(name)s*)Deserialize(s, &g%(name)sMetadata);
 }
 
 inline %(name)s *Deserialize%(name)s(TxtNode* root)
@@ -220,9 +221,9 @@ inline %(name)s *Deserialize%(name)s(TxtNode* root)
     return (%(name)s*)Deserialize(root, &g%(name)sMetadata);
 }
 
-inline uint8_t *Serialize%(name)s(%(name)s *val, size_t *dataLenOut)
+inline OwnedData Serialize%(name)s(%(name)s *val)
 {
-    return Serialize((const uint8_t*)val, &g%(name)sMetadata, dataLenOut);
+    return Serialize((const uint8_t*)val, &g%(name)sMetadata);
 }
 
 inline void Free%(name)s(%(name)s *val)
