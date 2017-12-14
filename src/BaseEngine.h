@@ -12,7 +12,7 @@ enum PageLayoutType {
     Layout_NonContinuous = 32
 };
 
-enum PageElementType { Element_Link, Element_Image, Element_Comment };
+enum class PageElementType { Link, Image, Comment };
 
 enum class PageDestType {
     None,

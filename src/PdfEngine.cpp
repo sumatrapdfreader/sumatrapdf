@@ -1252,7 +1252,7 @@ class PdfLink : public PageElement, public PageDestination {
     }
 
     // PageElement
-    PageElementType GetType() const override { return Element_Link; }
+    PageElementType GetType() const override { return PageElementType::Link; }
     int GetPageNo() const override { return pageNo; }
     RectD GetRect() const override { return rect; }
     WCHAR* GetValue() const override;
@@ -1276,7 +1276,7 @@ class PdfComment : public PageElement {
     PdfComment(const WCHAR* content, RectD rect, int pageNo)
         : annot(Annot_None, pageNo, rect, PageAnnotation::Color()), content(str::Dup(content)) {}
 
-    virtual PageElementType GetType() const { return Element_Comment; }
+    virtual PageElementType GetType() const { return PageElementType::Comment; }
     virtual int GetPageNo() const { return annot.pageNo; }
     virtual RectD GetRect() const { return annot.rect; }
     virtual WCHAR* GetValue() const { return str::Dup(content); }
@@ -1301,7 +1301,7 @@ class PdfImage : public PageElement {
     PdfImage(PdfEngineImpl* engine, int pageNo, fz_rect rect, size_t imageIx)
         : engine(engine), pageNo(pageNo), rect(fz_rect_to_RectD(rect)), imageIx(imageIx) {}
 
-    virtual PageElementType GetType() const { return Element_Image; }
+    virtual PageElementType GetType() const { return PageElementType::Image; }
     virtual int GetPageNo() const { return pageNo; }
     virtual RectD GetRect() const { return rect; }
     virtual WCHAR* GetValue() const { return nullptr; }
@@ -3321,7 +3321,7 @@ class XpsLink : public PageElement, public PageDestination {
     XpsLink(XpsEngineImpl* engine, fz_link_dest* link, fz_rect rect = fz_empty_rect, int pageNo = -1)
         : engine(engine), link(link), rect(fz_rect_to_RectD(rect)), pageNo(pageNo) {}
 
-    PageElementType GetType() const override { return Element_Link; }
+    PageElementType GetType() const override { return PageElementType::Link; }
     int GetPageNo() const override { return pageNo; }
     RectD GetRect() const override { return rect; }
     WCHAR* GetValue() const override {
@@ -3372,7 +3372,7 @@ class XpsImage : public PageElement {
     XpsImage(XpsEngineImpl* engine, int pageNo, fz_rect rect, size_t imageIx)
         : engine(engine), pageNo(pageNo), rect(fz_rect_to_RectD(rect)), imageIx(imageIx) {}
 
-    virtual PageElementType GetType() const { return Element_Image; }
+    virtual PageElementType GetType() const { return PageElementType::Image; }
     virtual int GetPageNo() const { return pageNo; }
     virtual RectD GetRect() const { return rect; }
     virtual WCHAR* GetValue() const { return nullptr; }

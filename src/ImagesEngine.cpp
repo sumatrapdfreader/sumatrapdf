@@ -204,7 +204,7 @@ class ImageElement : public PageElement {
     explicit ImageElement(ImagesEngine* engine, ImagePage* page) : engine(engine), page(page) {}
     virtual ~ImageElement() { engine->DropPage(page); }
 
-    virtual PageElementType GetType() const { return Element_Image; }
+    virtual PageElementType GetType() const { return PageElementType::Image; }
     virtual int GetPageNo() const { return page->pageNo; }
     virtual RectD GetRect() const { return RectD(0, 0, page->bmp->GetWidth(), page->bmp->GetHeight()); }
     virtual WCHAR* GetValue() const { return nullptr; }

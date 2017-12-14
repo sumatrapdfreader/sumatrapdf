@@ -187,7 +187,7 @@ class EbookLink : public PageElement, public PageDestination {
         : link(link), rect(rect), dest(dest), pageNo(pageNo), showUrl(showUrl) {}
     virtual ~EbookLink() { delete dest; }
 
-    PageElementType GetType() const override { return Element_Link; }
+    PageElementType GetType() const override { return PageElementType::Link; }
     int GetPageNo() const override { return pageNo; }
     RectD GetRect() const override { return rect.Convert<double>(); }
     WCHAR* GetValue() const override {
@@ -211,7 +211,7 @@ class ImageDataElement : public PageElement {
   public:
     ImageDataElement(int pageNo, ImageData* id, RectI bbox) : pageNo(pageNo), id(id), bbox(bbox) {}
 
-    virtual PageElementType GetType() const { return Element_Image; }
+    virtual PageElementType GetType() const { return PageElementType::Image; }
     virtual int GetPageNo() const { return pageNo; }
     virtual RectD GetRect() const { return bbox.Convert<double>(); }
     virtual WCHAR* GetValue() const { return nullptr; }

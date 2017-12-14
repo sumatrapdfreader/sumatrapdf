@@ -274,7 +274,7 @@ static void OnMouseLeftButtonDown(WindowInfo* win, int x, int y, WPARAM key) {
     AssertCrash(!win->linkOnLastButtonDown);
     DisplayModel* dm = win->AsFixed();
     PageElement* pageEl = dm->GetElementAtPos(PointI(x, y));
-    if (pageEl && pageEl->GetType() == Element_Link)
+    if (pageEl && pageEl->GetType() == PageElementType::Link)
         win->linkOnLastButtonDown = pageEl;
     else
         delete pageEl;
@@ -389,10 +389,10 @@ static void OnMouseLeftButtonDblClk(WindowInfo* win, int x, int y, WPARAM key) {
     }
 
     PageElement* pageEl = dm->GetElementAtPos(PointI(x, y));
-    if (pageEl && pageEl->GetType() == Element_Link) {
+    if (pageEl && pageEl->GetType() == PageElementType::Link) {
         // speed up navigation in a file where navigation links are in a fixed position
         OnMouseLeftButtonDown(win, x, y, key);
-    } else if (pageEl && pageEl->GetType() == Element_Image) {
+    } else if (pageEl && pageEl->GetType() == PageElementType::Image) {
         // select an image that could be copied to the clipboard
         RectI rc = dm->CvtToScreen(pageEl->GetPageNo(), pageEl->GetRect());
 
@@ -545,7 +545,7 @@ static void DebugShowLinks(DisplayModel& dm, HDC hdc) {
         Vec<PageElement*>* els = dm.GetEngine()->GetElements(pageNo);
         if (els) {
             for (size_t i = 0; i < els->size(); i++) {
-                if (els->at(i)->GetType() == Element_Image)
+                if (els->at(i)->GetType() == PageElementType::Image)
                     continue;
                 RectI rect = dm.CvtToScreen(pageNo, els->at(i)->GetRect());
                 RectI isect = viewPortRect.Intersect(rect);
@@ -770,7 +770,7 @@ static LRESULT OnSetCursor(WindowInfo* win, HWND hwnd) {
                     RectI rc = dm->CvtToScreen(pageEl->GetPageNo(), pageEl->GetRect());
                     win->CreateInfotip(text, rc, true);
 
-                    bool isLink = pageEl->GetType() == Element_Link;
+                    bool isLink = pageEl->GetType() == PageElementType::Link;
                     delete pageEl;
 
                     if (isLink) {

@@ -80,7 +80,7 @@ class DjVuLink : public PageElement {
         free(value);
     }
 
-    PageElementType GetType() const override { return Element_Link; }
+    PageElementType GetType() const override { return PageElementType::Link; }
     int GetPageNo() const override { return pageNo; }
     RectD GetRect() const override { return rect; }
     WCHAR* GetValue() const override {
