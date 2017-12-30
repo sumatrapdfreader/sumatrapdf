@@ -3382,7 +3382,7 @@ static void FrameOnChar(WindowInfo& win, WPARAM key, LPARAM info = 0) {
 	case 'l':
 	    FrameOnKeydown(&win, VK_RIGHT, 0);
 	    break;
-        case 'o':
+        case 'n':
             win.ctrl->GoToNextPage();
             break;
         case 'p':
@@ -3410,9 +3410,6 @@ static void FrameOnChar(WindowInfo& win, WPARAM key, LPARAM info = 0) {
                 OnMenuFind(&win);
             gIsDivideKeyDown = false;
             break;
-	case 'n':
-	    OnMenuFindNext(&win);
-	    break;
         case 'c':
             OnMenuViewContinuous(win);
             break;
