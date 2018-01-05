@@ -96,7 +96,7 @@ void RegressSearch(const WCHAR *filePath, RegressSearchInfo &info)
     const TextSel *expected = BuildTextSelList(info);
     SearchTestWithDir(filePath, searchTerm, FIND_FORWARD, expected, info.count);
     SearchTestWithDir(filePath, searchTerm, FIND_BACKWARD, expected, info.count);
-    delete expected;
+    delete[] expected;
 }
 
 void Regress03()
