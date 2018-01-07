@@ -133,7 +133,7 @@ static void WriteStructWStr(uint8_t* p, WCHAR* s) {
 }
 
 static void WriteStructFloat(uint8_t* p, float f) {
-    float* fp = static_cast<float*>(p);
+    float* fp = (float*)p;
     *fp = f;
 }
 
@@ -173,7 +173,7 @@ static uint64_t ReadStructUInt(const uint8_t* p, Type type) {
 }
 
 static float ReadStructFloat(const uint8_t* p) {
-    float* fp = static_cast<float*>(p);
+    float* fp = (float*)p;
     return *fp;
 }
 

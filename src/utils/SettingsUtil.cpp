@@ -193,7 +193,7 @@ static bool SerializeField(str::Str<char>& out, const uint8_t* base, const Field
             out.AppendFmt("%d", *(int*)fieldPtr);
             return true;
         case Type_Float:
-            out.AppendFmt("%g", *static_cast<float*>(fieldPtr));
+            out.AppendFmt("%g", *(float*)fieldPtr);
             return true;
         case Type_Color:
             c = *(COLORREF*)fieldPtr;
@@ -280,7 +280,7 @@ static void DeserializeField(const FieldInfo& field, uint8_t* base, const char* 
             *(int*)fieldPtr = value ? ParseInt(value) : (int)field.value;
             break;
         case Type_Float:
-            str::Parse(value ? value : (const char*)field.value, "%f", static_cast<float*>(fieldPtr));
+            str::Parse(value ? value : (const char*)field.value, "%f", (float*)fieldPtr);
             break;
         case Type_Color:
             if (!value)
