@@ -516,7 +516,7 @@ class ChmThumbnailTask : public HtmlWindowCallback {
     CRITICAL_SECTION docAccess;
 
   public:
-    ChmThumbnailTask(ChmDoc* doc, HWND hwnd, SizeI size, const onBitmapRenderedCb saveThumbnail)
+    ChmThumbnailTask(ChmDoc* doc, HWND hwnd, SizeI size, const onBitmapRenderedCb& saveThumbnail)
         : doc(doc), hwnd(hwnd), hw(nullptr), size(size), saveThumbnail(saveThumbnail) {
         InitializeCriticalSection(&docAccess);
     }

@@ -34,9 +34,8 @@ class NotificationWnd : public ProgressUpdateUI {
 
     // Note: in most cases use WindowInfo::ShowNotification()
     NotificationWnd(HWND parent, const WCHAR* message, int timeoutInMS = 0, bool highlight = false,
-                    NotificationWndRemovedCallback cb = nullptr) {
+                    NotificationWndRemovedCallback& cb = nullptr): wndRemovedCb(cb) {
         hasCancel = (0 == timeoutInMS);
-        wndRemovedCb = cb;
         this->highlight = highlight;
         CreatePopup(parent, message);
         if (timeoutInMS)
@@ -44,10 +43,9 @@ class NotificationWnd : public ProgressUpdateUI {
     }
 
     NotificationWnd(HWND parent, const WCHAR* message, const WCHAR* progressMsg,
-                    NotificationWndRemovedCallback cb = nullptr) {
+                    NotificationWndRemovedCallback& cb = nullptr): wndRemovedCb(cb) {
         hasProgress = true;
         hasCancel = true;
-        wndRemovedCb = cb;
         this->progressMsg = str::Dup(progressMsg);
         CreatePopup(parent, message);
     }

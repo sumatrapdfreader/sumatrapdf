@@ -42,7 +42,7 @@ static float GetFontSize() {
     return fontSize;
 }
 
-HtmlFormatterArgs* CreateFormatterArgsDoc(Doc doc, int dx, int dy, Allocator* textAllocator) {
+HtmlFormatterArgs* CreateFormatterArgsDoc(Doc& doc, int dx, int dy, Allocator* textAllocator) {
     HtmlFormatterArgs* args = CreateFormatterDefaultArgs(dx, dy, textAllocator);
     args->htmlStr = doc.GetHtmlData();
     args->SetFontName(GetFontName());
@@ -115,7 +115,7 @@ class EbookFormattingThread : public ThreadBase {
     virtual void Run();
 };
 
-EbookFormattingThread::EbookFormattingThread(Doc doc, HtmlFormatterArgs* args, EbookController* ctrl, int reparseIdx,
+EbookFormattingThread::EbookFormattingThread(Doc& doc, HtmlFormatterArgs* args, EbookController* ctrl, int reparseIdx,
                                              ControllerCallback* cb)
     : doc(doc), formatterArgs(args), cb(cb), controller(ctrl), reparseIdx(reparseIdx) {
     CrashIf(reparseIdx < 0);
@@ -198,9 +198,8 @@ static void DeletePages(Vec<HtmlPage*>** toDeletePtr) {
     *toDeletePtr = nullptr;
 }
 
-EbookController::EbookController(Doc doc, EbookControls* ctrls, ControllerCallback* cb)
-    : Controller(cb), pageSize(0, 0) {
-    this->doc = doc;
+EbookController::EbookController(Doc& doc, EbookControls* ctrls, ControllerCallback* cb)
+    : Controller(cb), pageSize(0, 0), doc(doc) {
     this->ctrls = ctrls;
 
     CrashIf(!doc.IsDocLoaded());
@@ -617,7 +616,7 @@ static RenderedBitmap* RenderFirstDocPageToBitmap(Doc doc, SizeI pageSize, SizeI
     return new RenderedBitmap(hbmp, bmpSize);
 }
 
-static RenderedBitmap* ThumbFromCoverPage(Doc doc, SizeI size) {
+static RenderedBitmap* ThumbFromCoverPage(Doc& doc, SizeI size) {
     ImageData* coverImage = doc.GetCoverImage();
     if (!coverImage) {
         return nullptr;
@@ -952,7 +951,7 @@ void EbookController::CopyNavHistory(EbookController& orig) {
     navHistoryIdx = orig.navHistoryIdx;
 }
 
-EbookController* EbookController::Create(Doc doc, HWND hwnd, ControllerCallback* cb, FrameRateWnd* frameRateWnd) {
+EbookController* EbookController::Create(Doc& doc, HWND hwnd, ControllerCallback* cb, FrameRateWnd* frameRateWnd) {
     EbookControls* ctrls = CreateEbookControls(hwnd, frameRateWnd);
     if (!ctrls) {
         return nullptr;
