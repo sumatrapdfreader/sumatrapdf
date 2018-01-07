@@ -1286,7 +1286,7 @@ class PdfTocItem : public DocTocItem {
     PdfLink link;
 
   public:
-    PdfTocItem(WCHAR* title, PdfLink link) : DocTocItem(title), link(link) {}
+    PdfTocItem(WCHAR* title, PdfLink& link) : DocTocItem(title), link(link) {}
 
     virtual PageDestination* GetLink() { return &link; }
 };
@@ -3358,7 +3358,7 @@ class XpsTocItem : public DocTocItem {
     XpsLink link;
 
   public:
-    XpsTocItem(WCHAR* title, XpsLink link) : DocTocItem(title), link(link) {}
+    XpsTocItem(WCHAR* title, XpsLink& link) : DocTocItem(title), link(link) {}
 
     virtual PageDestination* GetLink() { return &link; }
 };

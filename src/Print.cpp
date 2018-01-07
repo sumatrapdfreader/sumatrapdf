@@ -39,8 +39,7 @@ struct PrintData {
     int rotation = 0;
 
     PrintData(BaseEngine* engine, PRINTER_INFO_2* printerInfo, DEVMODE* devMode, Vec<PRINTPAGERANGE>& ranges,
-              Print_Advanced_Data& advData, int rotation = 0, Vec<SelectionOnPage>* sel = nullptr) {
-        this->advData = advData;
+              Print_Advanced_Data& advData, int rotation = 0, Vec<SelectionOnPage>* sel = nullptr): advData(advData) {
         this->rotation = rotation;
         if (engine) {
             this->engine = engine->Clone();

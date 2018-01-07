@@ -71,10 +71,7 @@ static std::wstring wstrFromUtf8(const std::string& str) {
     return res;
 }
 
-TabItem::TabItem(const std::string& title, const std::string& toolTip) {
-    this->title = title;
-    this->toolTip = toolTip;
-}
+TabItem::TabItem(const std::string& title, const std::string& toolTip): title(title), toolTip(toolTip) {}
 
 class TabItemInfo {
   public:
