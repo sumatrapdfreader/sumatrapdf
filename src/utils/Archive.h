@@ -1,4 +1,4 @@
-/* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
 // if ENABLE_UNRARDLL_FALLBACK is 1, SumatraPDF will look for unrar.dll/unrar64.dll
