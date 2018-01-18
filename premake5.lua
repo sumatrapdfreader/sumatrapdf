@@ -85,7 +85,12 @@ workspace "SumatraPDF"
   filter {}
   objdir "%{cfg.targetdir}/obj"
 
-  symbols "On"
+  -- https://github.com/premake/premake-core/wiki/symbols
+  -- https://blogs.msdn.microsoft.com/vcblog/2016/10/05/faster-c-build-cycle-in-vs-15-with-debugfastlink/
+  symbols "FastLink"
+  filter {"configurations:Release"}
+    symbols "Full"
+  filter {}
 
   -- https://github.com/premake/premake-core/wiki/flags
   flags {
