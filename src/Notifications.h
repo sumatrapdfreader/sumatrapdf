@@ -34,7 +34,7 @@ class NotificationWnd : public ProgressUpdateUI {
 
     // Note: in most cases use WindowInfo::ShowNotification()
     NotificationWnd(HWND parent, const WCHAR* message, int timeoutInMS = 0, bool highlight = false,
-                    NotificationWndRemovedCallback cb = nullptr) {
+                    const NotificationWndRemovedCallback& cb = nullptr) {
         hasCancel = (0 == timeoutInMS);
         wndRemovedCb = cb;
         this->highlight = highlight;
@@ -44,7 +44,7 @@ class NotificationWnd : public ProgressUpdateUI {
     }
 
     NotificationWnd(HWND parent, const WCHAR* message, const WCHAR* progressMsg,
-                    NotificationWndRemovedCallback cb = nullptr) {
+                    const NotificationWndRemovedCallback& cb = nullptr) {
         hasProgress = true;
         hasCancel = true;
         wndRemovedCb = cb;

@@ -350,7 +350,7 @@ static WatchedDir* NewWatchedDir(const WCHAR* dirPath) {
     return wd;
 }
 
-static WatchedFile* NewWatchedFile(const WCHAR* filePath, std::function<void()> onFileChangedCb) {
+static WatchedFile* NewWatchedFile(const WCHAR* filePath, const std::function<void()>& onFileChangedCb) {
     bool isManualCheck = PathIsNetworkPath(filePath);
     AutoFreeW dirPath(path::GetDir(filePath));
     WatchedDir* wd = nullptr;
@@ -397,7 +397,7 @@ We take ownership of observer object.
 Returns a cancellation token that can be used in FileWatcherUnsubscribe(). That
 way we can support multiple callers subscribing to the same file.
 */
-WatchedFile* FileWatcherSubscribe(const WCHAR* path, std::function<void()> onFileChangedCb) {
+WatchedFile* FileWatcherSubscribe(const WCHAR* path, const std::function<void()>& onFileChangedCb) {
     lf(L"FileWatcherSubscribe() path: %s", path);
 
     if (!file::Exists(path)) {
