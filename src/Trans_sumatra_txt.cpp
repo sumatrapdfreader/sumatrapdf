@@ -5352,7 +5352,7 @@ const char * gTranslations_de =
   "Seiten auf Druckbereich &verkleinern (falls n\303\266tig)\0"\
   "&Einzelne Seite\tStrg+6\0"\
   "&Diese Version \303\274berspringen.\0"\
-  "\0"\
+  "Anwendungs &Stil\0"\
   "Seitengr\303\266\303\237e &nicht anpassen\0"\
   "&Ansicht\0"\
   "Fe&nster\0"\
@@ -5405,8 +5405,8 @@ const char * gTranslations_de =
   "Aktuelle Datei\0"\
   "Zeigerposition:\0"\
   "&Zoomfaktor\342\200\246\tStrg+Y\0"\
-  "\0"\
-  "\0"\
+  "Dunkel\0"\
+  "Dunkler\0"\
   "&Standardlayout:\0"\
   "Standard&vergr\303\266\303\237erung:\0"\
   "Standardanwendung im portablen Modus nicht ver\303\244nderbar\0"\
@@ -5456,7 +5456,7 @@ const char * gTranslations_de =
   "Tipp: F3-Taste verwenden, um weiterzusuchen\0"\
   "Bilder (*.%s)\0"\
   "\0"\
-  "\0"\
+  "Hell\0"\
   "\0"\
   "SumatraPDF als Standardanwendung f\303\274r PDF-Dateien registrieren?\0"\
   "Standardm\303\244\303\237ig PDF-Dateien mit SumatraPDF \303\266ffnen\0"\
@@ -6567,17 +6567,17 @@ const char * gTranslations_hu =
   "Nyomtat\303\241s\0";
 
 const char * gTranslations_id = 
-  "&Tentang\0"\
-  "&Ukuran Sebenarnya\tCtrl+1\0"\
-  "&Pengaturan Lanjutan...\0"\
+  "Tent&ang\0"\
+  "Ukur&an Sebenarnya\tCtrl+1\0"\
+  "Peng&aturan Lanjutan...\0"\
   "&Semua halaman yang dipilih\0"\
-  "Kembali\tAlt+<-\0"\
+  "Kem&bali\tAlt+<-\0"\
   "Tampilan &Buku\tCtrl+8\0"\
   "&Tutup\tCtrl+W\0"\
   "&Salin Seleksi\0"\
   "Salin Hasil Seleksi\tCtrl+C\0"\
   "&Jangan ulangi pertanyaan ini\0"\
-  "&Hanya halaman genap\0"\
+  "Hanya halaman g&enap\0"\
   "Meng&hadap\tCtrl+7\0"\
   "&Berkas\0"\
   "&Cari:\0"\
@@ -6587,9 +6587,9 @@ const char * gTranslations_id =
   "&Pergi ke halaman:\0"\
   "Bantua&n\0"\
   "Halaman Terakhir\tEnd\0"\
-  "&Pembesaran\0"\
+  "Pe&mbesaran\0"\
   "\0"\
-  "&Samakan ukuran\0"\
+  "&Cocok besar kecil huruf\0"\
   "Halaman Berikutnya\t->\0"\
   "&Tidak\0"\
   "&Tidak, terima kasih\0"\
@@ -6622,18 +6622,18 @@ const char * gTranslations_id =
   "(halaman %s)\0"\
   "Tentang SumatraPDF\0"\
   "Tambah Favorit\0"\
-  "Tambah Halaman %s Ke Favorit\0"\
-  "Tambah Halaman %s Ke Favorit Dengan Nama:\0"\
-  "Tambah Ke Favorit\0"\
+  "Tambah halaman %s ke favorit\0"\
+  "Tambah halaman %s ke favorit dengan nama:\0"\
+  "Tambah ke favorit\0"\
   "Lanjutan\0"\
-  "Semua Berkas\0"\
+  "Semua berkas\0"\
   "Semua dokumen yang didukung\0"\
   "Aplikasi:\0"\
   "Asosiasikan dengan berkas PDF?\0"\
   "Lampiran: %s\0"\
   "Pencipta:\0"\
   "Otomatis\0"\
-  "Periksa &pembaruan secara otomatis\0"\
+  "Periksa pembar&uan secara otomatis\0"\
   "Tampilan Buku\0"\
   "&Markah\tF12\0"\
   "Jalan Pintas Markah\0"\
@@ -6646,16 +6646,16 @@ const char * gTranslations_id =
   "Tidak dapat mencetak berkas ini\0"\
   "Tidak dapat memulai perintah pencarian terbalik. Harap periksa baris perintah di bagian pengaturan.\0"\
   "Ubah Bahasa (Change Language)\0"\
-  "&Periksa Versi Terbaru\0"\
-  "Buku Komik\0"\
+  "Periksa Versi Terbar&u\0"\
+  "Buku komik\0"\
   "Kompabilitas\0"\
   "Bersambung\0"\
   "Tampilan Buku Bersambung\0"\
   "Halaman Berhadapan Tersambung\0"\
   "Bantu Alihbahasa\0"\
-  "Salin &Gambar\0"\
-  "Salin Alamat &Tautan\0"\
-  "Salin &Komentar\0"\
+  "Sal&in Gambar\0"\
+  "Salin A&lamat Tautan\0"\
+  "Salin Ko&mentar\0"\
   "Menyalin teks ditolak (menyalin sebagai gambar saja)\0"\
   "Hak Cipta\0"\
   "Gagal mendapatkan properti Pencetak\0"\
@@ -6689,7 +6689,7 @@ const char * gTranslations_id =
   "Tampilan Web Cepat\0"\
   "Favorit\0"\
   "Dokumen FictionBook\0"\
-  "File %s tak ditemukan\0"\
+  "Berkas %s tak ditemukan\0"\
   "Ukuran Berkas:\0"\
   "Berkas:\0"\
   "Temukan...\tCtrl+F\0"\
@@ -6712,16 +6712,16 @@ const char * gTranslations_id =
   "Yang Sering Dibaca\0"\
   "\0"\
   "Pergi ke halaman\0"\
-  "Sembunyikan Yang Sering Dibaca\0"\
+  "Sembunyikan yang sering dibaca\0"\
   "Tips : Gunakan tombol F3 untuk mengulangi pencarian\0"\
-  "Berkas Gambar (*.%s)\0"\
+  "Berkas gambar (*.%s)\0"\
   "\0"\
   "Terang\0"\
   "\0"\
   "Jadikan SumatraPDF sebagai aplikasi standar untuk membuka berkas PDF?\0"\
   "Jadikan SumatraPDF sebagai pembaca PDF utama\0"\
-  "Mode komik\0"\
-  "Cocokkan Ukuran Huruf\0"\
+  "Mode Man&ga\0"\
+  "Cocok Besar Kecil Huruf\0"\
   "Dokumen Mobi\0"\
   "Termodifikasi:\0"\
   "Versi baru %s telah tersedia. Unduh versi baru ini?\0"\
@@ -6730,11 +6730,11 @@ const char * gTranslations_id =
   "Tidak ditemukan hasil pada baris %u di dalam berkas %s\0"\
   "Tidak ada berkas sinkronisasi ditemukan\0"\
   "Tidak ada informasi sinkronisasi pada lokasi ini\0"\
-  "Banyak Halaman:\0"\
+  "Cacah Halaman:\0"\
   "\0"\
   "Buka\0"\
   "Buka di PDF-&XChange\0"\
-  "Buka Dokumen...\0"\
+  "Buka suatu dokumen...\0"\
   "Buka di %s\0"\
   "Buka di &Adobe Reader\0"\
   "Buka di &Foxit Reader\0"\
@@ -6751,7 +6751,7 @@ const char * gTranslations_id =
   "Halaman %s\0"\
   "Ukuran Halaman:\0"\
   "Halaman %u tidak tersedia\0"\
-  "Mengukur halaman\0"\
+  "Penskalaan halaman\0"\
   "Halaman:\0"\
   "Dokumen PalmDoc\0"\
   "Harap tunggu - sedang proses rendering...\0"\
@@ -6768,8 +6768,8 @@ const char * gTranslations_id =
   "Masalah pencetakan.\0"\
   "&Ganti Nama...\tF2\0"\
   "Ingat &berkas yang pernah dibuka\0"\
-  "Hapus Dari Favorit\0"\
-  "Hapus Halaman %s Dari Favorit\0"\
+  "Hapus dari favorit\0"\
+  "Hapus halaman %s dari favorit\0"\
   "Ganti Nama Menjadi\0"\
   "Putar Ke Kiri\tCtrl+Shift+-\0"\
   "Putar Ke Kanan\tCtrl+Shift++\0"\
@@ -6786,7 +6786,7 @@ const char * gTranslations_id =
   "Tampilkan Halaman Secara &Kontinu\0"\
   "Tampilkan &Toolbar\0"\
   "Tampilkan Favorit\0"\
-  "Tampilkan Yang Sering Dibaca\0"\
+  "Tampilkan yang sering dibaca\0"\
   "Tampilkan kolom &markah jika tersedia\0"\
   "Halaman Tunggal\0"\
   "Maaf, ini seharusnya tidak terjadi!\n\nHarap tekan 'Batalkan', jika Anda ingin membantu kami membetulkan penyebab kegagalan ini.\0"\
@@ -6799,7 +6799,7 @@ const char * gTranslations_id =
   "SumatraPDF sekarang telah menjadi pembaca berkas PDF utama Anda\0"\
   "Berkas sinkronisasi tidak dapat dibuka\0"\
   "PDF Terlabeli\0"\
-  "Dokumen Teks\0"\
+  "Dokumen teks\0"\
   "Dokumen ini menggunakan fitur yang tidak didukung (%s) dan memungkinkan untuk tidak dimuat secara benar.\0"\
   "Judul:\0"\
   "Berkas asal (%s) tidak diketahui\0"\

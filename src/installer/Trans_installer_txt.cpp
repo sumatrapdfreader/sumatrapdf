@@ -1113,7 +1113,7 @@ const char * gTranslations_id =
   "Gagal membuat shortcut.\0"\
   "Gagal menghapus kunci registry uninstaller\0"\
   "Gagal mengatur sebagai aplikasi Windows 10\0"\
-  "Gagal menulis info ekstensi file lanjutan ke registry\0"\
+  "Gagal menulis info ekstensi berkas yang diperluas ke registry\0"\
   "Gagal menulis info penghapusan program ke registry\0"\
   "Sembunyikan &Opsi\0"\
   "\0"\
