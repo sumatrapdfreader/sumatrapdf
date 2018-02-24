@@ -22,7 +22,7 @@
 	<application xmlns="urn:schemas-microsoft-com:asm.v3">
 		<windowsSettings>
 			<dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">True</dpiAware>
-			<printerDriverIsolation>true</printerDriverIsolation>
+			<printerDriverIsolation xmlns="http://schemas.microsoft.com/SMI/2011/WindowsSettings">true</printerDriverIsolation>
 		</windowsSettings>
 	</application>
 	<compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
