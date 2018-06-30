@@ -36,3 +36,4 @@ analyze-errors.html
 CoverageReport*
 LastCoverageResults.log
 out/
+linux_dbg64/
