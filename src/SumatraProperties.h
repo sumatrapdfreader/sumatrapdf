@@ -5,9 +5,11 @@
 
 enum PaperFormat {
     Paper_Other,
+    Paper_A2,
+	Paper_A3,
     Paper_A4,
-    Paper_A3,
     Paper_A5,
+    Paper_A6,
     Paper_Letter,
     Paper_Legal,
     Paper_Tabloid,
