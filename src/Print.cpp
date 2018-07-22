@@ -653,12 +653,16 @@ static short GetPaperSize(BaseEngine* engine) {
     SizeD size = engine->Transform(mediabox, 1, 1.0f / engine->GetFileDPI(), 0).Size();
 
     switch (GetPaperFormat(size)) {
+		case Paper_A2:
+			return DMPAPER_A2;
+		case Paper_A3:
+			return DMPAPER_A3;
         case Paper_A4:
             return DMPAPER_A4;
-        case Paper_A3:
-            return DMPAPER_A3;
         case Paper_A5:
             return DMPAPER_A5;
+		case Paper_A6:
+			return DMPAPER_A6;
         case Paper_Letter:
             return DMPAPER_LETTER;
         case Paper_Legal:
@@ -685,6 +689,9 @@ static short GetPaperByName(const WCHAR* papername) {
     if (str::EqI(papername, L"statement")) {
         return DMPAPER_STATEMENT;
     }
+	if (str::EqI(papername, L"A2")) {
+		return DMPAPER_A2;
+	}
     if (str::EqI(papername, L"A3")) {
         return DMPAPER_A3;
     }
@@ -694,6 +701,9 @@ static short GetPaperByName(const WCHAR* papername) {
     if (str::EqI(papername, L"A5")) {
         return DMPAPER_A5;
     }
+	if (str::EqI(papername, L"A6")) {
+		return DMPAPER_A6;
+	}
     return 0;
 }
 
