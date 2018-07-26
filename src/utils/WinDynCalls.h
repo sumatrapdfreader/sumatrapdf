@@ -301,9 +301,7 @@ typedef BOOL(WINAPI* Sig_SymGetLineFromAddr64)(HANDLE hProcess, DWORD64 dwAddr, 
     V(SymRefreshModuleList)     \
     V(SymGetLineFromAddr64)
 
-#define API_DECLARATION(name) \
-    \
-extern Sig_##name Dyn##name;
+#define API_DECLARATION(name) extern Sig_##name Dyn##name;
 
 KERNEL32_API_LIST(API_DECLARATION)
 NTDLL_API_LIST(API_DECLARATION)

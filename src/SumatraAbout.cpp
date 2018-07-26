@@ -589,7 +589,7 @@ void DrawAboutPage(WindowInfo* win, HDC hdc) {
     }
 }
 
-    /* alternate static page to display when no document is loaded */
+/* alternate static page to display when no document is loaded */
 
 #define DOCLIST_SEPARATOR_DY 2
 #define DOCLIST_THUMBNAIL_BORDER_W 1

@@ -25,11 +25,7 @@
 #endif
 
 /* OS_UNIX - Any Unix-like system */
-#if OS_DARWIN \
-|| OS_LINUX \
-|| defined(unix) \
-|| defined(__unix) \
-|| defined(__unix__)
+#if OS_DARWIN || OS_LINUX || defined(unix) || defined(__unix) || defined(__unix__)
 #define OS_UNIX 1
 #endif
 

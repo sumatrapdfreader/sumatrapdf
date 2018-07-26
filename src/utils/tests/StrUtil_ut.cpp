@@ -333,8 +333,8 @@ void StrTest() {
         utassert(s && f[0] == 1 && f[1] == 2 && f[2] == 3 && b[0] == 0 && b[1] == 1 && f[4] == 20 && f[5] == -20);
     }
 
-        // the test string should only contain ASCII characters,
-        // as all others might not be available in all code pages
+    // the test string should only contain ASCII characters,
+    // as all others might not be available in all code pages
 #define TEST_STRING "aBc"
     OwnedData strA = str::conv::ToAnsi(TEXT(TEST_STRING));
     utassert(str::Eq(strA.Get(), TEST_STRING));

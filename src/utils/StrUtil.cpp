@@ -842,7 +842,7 @@ const char* Parse(const char* str, size_t len, const char* fmt, ...) {
 namespace url {
 
 void DecodeInPlace(char* url) {
-    for (char *src = url; *src; src++, url++) {
+    for (char* src = url; *src; src++, url++) {
         int val;
         if (*src == '%' && str::Parse(src, "%%%2x", &val)) {
             *url = (char)val;

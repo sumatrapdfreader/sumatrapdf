@@ -37,7 +37,7 @@ void WinUtilTest() {
         utassert(allScreens.Intersect(oneScreen) == oneScreen);
     }
 
-        // TODO: moved AdjustLigthness() to Colors.[h|cpp] which is outside of utils directory
+    // TODO: moved AdjustLigthness() to Colors.[h|cpp] which is outside of utils directory
 #if 0
     {
         COLORREF c = AdjustLightness(RGB(255, 0, 0), 1.0f);

@@ -412,4 +412,4 @@ unsigned char* SerializeBitmap(HBITMAP hbmp, size_t* bmpBytesOut) {
         *bmpBytesOut = tgaData.size();
     return (unsigned char*)tgaData.StealData();
 }
-}
+} // namespace tga

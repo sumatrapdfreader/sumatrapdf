@@ -6,7 +6,7 @@
 enum PaperFormat {
     Paper_Other,
     Paper_A2,
-	Paper_A3,
+    Paper_A3,
     Paper_A4,
     Paper_A5,
     Paper_A6,

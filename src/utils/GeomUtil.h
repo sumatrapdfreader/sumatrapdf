@@ -72,7 +72,7 @@ class RectT {
     RectT<int> ToInt() const {
         return RectT<int>((int)floor(x + 0.5), (int)floor(y + 0.5), (int)floor(dx + 0.5), (int)floor(dy + 0.5));
     }
-        // cf. fz_roundrect in mupdf/fitz/base_geometry.c
+    // cf. fz_roundrect in mupdf/fitz/base_geometry.c
 #ifndef FLT_EPSILON
 #define FLT_EPSILON 1.192092896e-07f
 #endif

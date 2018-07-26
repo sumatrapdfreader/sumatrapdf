@@ -22,7 +22,7 @@ MaybeOwnedData UnknownToUtf8(const std::string_view& str) {
         return MaybeOwnedData((char*)s, n, false);
     }
 
-        // TODO: UTF16BE_BOM
+    // TODO: UTF16BE_BOM
 
 #if 0
     if (str::StartsWith(s, UTF16_BOM)) {

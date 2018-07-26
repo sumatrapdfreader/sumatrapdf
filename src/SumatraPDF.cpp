@@ -3370,18 +3370,18 @@ static void FrameOnChar(WindowInfo& win, WPARAM key, LPARAM info = 0) {
         case 'g':
             OnMenuGoToPage(win);
             break;
-	case 'h':
-	    FrameOnKeydown(&win, VK_LEFT, 0);
-	    break;
+        case 'h':
+            FrameOnKeydown(&win, VK_LEFT, 0);
+            break;
         case 'j':
             FrameOnKeydown(&win, VK_DOWN, 0);
             break;
         case 'k':
             FrameOnKeydown(&win, VK_UP, 0);
             break;
-	case 'l':
-	    FrameOnKeydown(&win, VK_RIGHT, 0);
-	    break;
+        case 'l':
+            FrameOnKeydown(&win, VK_RIGHT, 0);
+            break;
         case 'n':
             win.ctrl->GoToNextPage();
             break;
