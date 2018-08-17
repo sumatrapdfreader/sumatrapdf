@@ -157,7 +157,6 @@
       <SubSystem>Console</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <TreatLinkerWarningAsErrors>true</TreatLinkerWarningAsErrors>
     </Link>
     <PostBuildEvent>
       <Command>IF EXIST ..\dbg\cmapdump.exe\ (xcopy /Q /E /Y /I ..\dbg\cmapdump.exe ..\bin &gt; nul) ELSE (xcopy /Q /Y /I ..\dbg\cmapdump.exe ..\bin &gt; nul)
@@ -183,7 +182,6 @@ cd .. &amp; call scripts\gen_mupdf_generated.bat bin\cmapdump.exe</Command>
       <SubSystem>Console</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
-      <TreatLinkerWarningAsErrors>true</TreatLinkerWarningAsErrors>
     </Link>
     <PostBuildEvent>
       <Command>IF EXIST ..\dbg64\cmapdump.exe\ (xcopy /Q /E /Y /I ..\dbg64\cmapdump.exe ..\bin &gt; nul) ELSE (xcopy /Q /Y /I ..\dbg64\cmapdump.exe ..\bin &gt; nul)
@@ -213,7 +211,6 @@ cd .. &amp; call scripts\gen_mupdf_generated.bat bin\cmapdump.exe</Command>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <TreatLinkerWarningAsErrors>true</TreatLinkerWarningAsErrors>
     </Link>
     <PostBuildEvent>
       <Command>IF EXIST ..\rel\cmapdump.exe\ (xcopy /Q /E /Y /I ..\rel\cmapdump.exe ..\bin &gt; nul) ELSE (xcopy /Q /Y /I ..\rel\cmapdump.exe ..\bin &gt; nul)
@@ -242,7 +239,6 @@ cd .. &amp; call scripts\gen_mupdf_generated.bat bin\cmapdump.exe</Command>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <TreatLinkerWarningAsErrors>true</TreatLinkerWarningAsErrors>
     </Link>
     <PostBuildEvent>
       <Command>IF EXIST ..\rel64\cmapdump.exe\ (xcopy /Q /E /Y /I ..\rel64\cmapdump.exe ..\bin &gt; nul) ELSE (xcopy /Q /Y /I ..\rel64\cmapdump.exe ..\bin &gt; nul)

@@ -33,6 +33,9 @@ Reference for warnings:
  4838 - conversion from X to Y requires a narrowing conversion
  4996 - POSIX name deprecated
 
+ Linker warning
+ 4221 - This object file does not define any previously undefined public symbols, so it will not be used by any link operation that consumes this library
+
 Prefast:
  28125 - function X must be called in try/except (InitializeCriticalSection)
  28252 - Inconsistent annotaion
@@ -100,7 +103,7 @@ workspace "SumatraPDF"
   }
 
   filter {"configurations:not ReleasePrefast"}
-    flags { "FatalWarnings" }
+    flags { "FatalCompileWarnings" }
   filter {}
 
   exceptionhandling "Off"
