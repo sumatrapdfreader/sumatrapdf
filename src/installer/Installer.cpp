@@ -89,9 +89,8 @@ Color COLOR_MSG_FAILED(gCol1);
 
 // list of supported file extensions for which SumatraPDF.exe will
 // be registered as a candidate for the Open With dialog's suggestions
-WCHAR* gSupportedExts[] = {L".pdf",  L".xps", L".oxps", L".cbz",  L".cbr", L".cb7",  L".cbt",
-                           L".djvu", L".chm", L".mobi", L".epub", L".fb2", L".fb2z", L".tif",
-                           L".tiff", nullptr};
+WCHAR* gSupportedExts[] = {L".pdf", L".xps",  L".oxps", L".cbz", L".cbr",  L".cb7", L".cbt",  L".djvu",
+                           L".chm", L".mobi", L".epub", L".fb2", L".fb2z", L".tif", L".tiff", nullptr};
 
 // The following list is used to verify that all the required files have been
 // installed (install flag set) and to know what files are to be removed at

@@ -676,6 +676,30 @@ void HtmlFormatter::EmitElasticSpace() {
     AppendInstr(DrawInstr(InstrElasticSpace));
 }
 
+// return true if we can break a word on a given character during layout
+static bool CanBreakWordOnChar(WCHAR c) {
+    // this is called frequently, so check most common characters first
+    if (c >= 'a' && c <= 'z') {
+        return false;
+    }
+    if (c >= 'A' && c <= 'Z') {
+        return false;
+    }
+    if (c >= '0' && c <= '9') {
+        return false;
+    }
+
+    // don't break on CJK characters
+    // https://github.com/sumatrapdfreader/sumatrapdf/issues/250
+    // https://github.com/sumatrapdfreader/sumatrapdf/pull/1057
+    // There are other CJK ranges, but less common
+    // https://stackoverflow.com/questions/1366068/whats-the-complete-range-for-chinese-characters-in-unicode
+    if (c >= 0x4e00 && c <= 0x9fff) {
+        return false;
+    }
+    return true;
+}
+
 // a text run is a string of consecutive text with uniform style
 void HtmlFormatter::EmitTextRun(const char* s, const char* end) {
     currReparseIdx = s - htmlParser->Start();
@@ -709,9 +733,9 @@ void HtmlFormatter::EmitTextRun(const char* s, const char* end) {
 
         size_t lenThatFits = StringLenForWidth(textMeasure, buf, strLen, pageDx - NewLineX());
         // try to prevent a break in the middle of a word
-        if (iswalnum(buf[lenThatFits])) {
+        if (!CanBreakWordOnChar(buf[lenThatFits])) {
             for (size_t len = lenThatFits; len > 0; len--) {
-                if (!iswalnum(buf[len - 1])) {
+                if (!CanBreakWordOnChar(buf[len - 1])) {
                     lenThatFits = len;
                     break;
                 }
