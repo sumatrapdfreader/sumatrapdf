@@ -400,12 +400,13 @@ class HwndPasswordUI : public PasswordUI {
    Caller needs to free() the result. */
 WCHAR* HwndPasswordUI::GetPassword(const WCHAR* fileName, unsigned char* fileDigest, unsigned char decryptionKeyOut[32],
                                    bool* saveKey) {
-    DisplayState* fileFromHistory = gFileHistory.Find(fileName);
+    DisplayState* fileFromHistory = gFileHistory.Find(fileName, nullptr);
     if (fileFromHistory && fileFromHistory->decryptionKey) {
         AutoFree fingerprint(str::MemToHex(fileDigest, 16));
         *saveKey = str::StartsWith(fileFromHistory->decryptionKey, fingerprint.Get());
-        if (*saveKey && str::HexToMem(fileFromHistory->decryptionKey + 32, decryptionKeyOut, 32))
+        if (*saveKey && str::HexToMem(fileFromHistory->decryptionKey + 32, decryptionKeyOut, 32)) {
             return nullptr;
+        }
     }
 
     *saveKey = false;
@@ -489,11 +490,13 @@ static void UpdateSidebarDisplayState(WindowInfo* win, TabInfo* tab, DisplayStat
 
 void UpdateTabFileDisplayStateForWin(WindowInfo* win, TabInfo* tab) {
     RememberDefaultWindowPosition(*win);
-    if (!tab || !tab->ctrl)
+    if (!tab || !tab->ctrl) {
         return;
-    DisplayState* ds = gFileHistory.Find(tab->filePath);
-    if (!ds)
+    }
+    DisplayState* ds = gFileHistory.Find(tab->filePath, nullptr);
+    if (!ds) {
         return;
+    }
     tab->ctrl->UpdateDisplayState(ds);
     UpdateDisplayStateWindowRect(*win, *ds, false);
     UpdateSidebarDisplayState(win, tab, ds);
@@ -671,8 +674,9 @@ static void CreateThumbnailForFile(WindowInfo& win, DisplayState& ds) {
     WCHAR* filePath = str::Dup(win.ctrl->FilePath());
     win.ctrl->CreateThumbnail(SizeI(THUMBNAIL_DX, THUMBNAIL_DY), [=](RenderedBitmap* bmp) {
         uitask::Post([=] {
-            if (bmp)
-                SetThumbnail(gFileHistory.Find(filePath), bmp);
+            if (bmp) {
+                SetThumbnail(gFileHistory.Find(filePath, nullptr), bmp);
+            }
             free(filePath);
         });
     });
@@ -927,7 +931,7 @@ static void LoadDocIntoCurrentTab(LoadArgs& args, Controller* ctrl, DisplayState
     // Never load settings from a preexisting state if the user doesn't wish to
     // (unless we're just refreshing the document, i.e. only if state && !state->useDefaultState)
     if (!state && gGlobalPrefs->rememberStatePerDocument) {
-        state = gFileHistory.Find(args.fileName);
+        state = gFileHistory.Find(args.fileName, nullptr);
         if (state) {
             if (state->windowPos.IsEmpty())
                 state->windowPos = gGlobalPrefs->windowPos;
@@ -1151,9 +1155,10 @@ void ReloadDocument(WindowInfo* win, bool autorefresh) {
 
     if (gGlobalPrefs->showStartPage) {
         // refresh the thumbnail for this file
-        DisplayState* state = gFileHistory.Find(ds->filePath);
-        if (state)
+        DisplayState* state = gFileHistory.Find(ds->filePath, nullptr);
+        if (state) {
             CreateThumbnailForFile(*win, *state);
+        }
     }
 
     if (tab->AsFixed()) {
@@ -1161,7 +1166,7 @@ void ReloadDocument(WindowInfo* win, bool autorefresh) {
         // we don't ask again at the next refresh
         AutoFree decryptionKey(tab->AsFixed()->GetEngine()->GetDecryptionKey());
         if (decryptionKey) {
-            DisplayState* state = gFileHistory.Find(ds->filePath);
+            DisplayState* state = gFileHistory.Find(ds->filePath, nullptr);
             if (state && !str::Eq(state->decryptionKey, decryptionKey)) {
                 free(state->decryptionKey);
                 state->decryptionKey = decryptionKey.StealData();
@@ -1318,7 +1323,7 @@ void DeleteWindowInfo(WindowInfo* win) {
 }
 
 static void RenameFileInHistory(const WCHAR* oldPath, const WCHAR* newPath) {
-    DisplayState* ds = gFileHistory.Find(newPath);
+    DisplayState* ds = gFileHistory.Find(newPath, nullptr);
     bool oldIsPinned = false;
     int oldOpenCount = 0;
     if (ds) {
@@ -1326,11 +1331,12 @@ static void RenameFileInHistory(const WCHAR* oldPath, const WCHAR* newPath) {
         oldOpenCount = ds->openCount;
         gFileHistory.Remove(ds);
         // TODO: merge favorites as well?
-        if (ds->favorites->size() > 0)
+        if (ds->favorites->size() > 0) {
             UpdateFavoritesTreeForAllWindows();
+        }
         DeleteDisplayState(ds);
     }
-    ds = gFileHistory.Find(oldPath);
+    ds = gFileHistory.Find(oldPath, nullptr);
     if (ds) {
         str::ReplacePtr(&ds->filePath, newPath);
         // merge Frequently Read data, so that a file
@@ -1403,7 +1409,7 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     bool failEarly = win && !args.forceReuse && !DocumentPathExists(fullPath);
     // try to find inexistent files with history data
     // on a different removable drive before failing
-    if (failEarly && gFileHistory.Find(fullPath)) {
+    if (failEarly && gFileHistory.Find(fullPath, nullptr)) {
         AutoFreeW adjPath(str::Dup(fullPath));
         if (AdjustVariableDriveLetter(adjPath)) {
             RenameFileInHistory(fullPath, adjPath);
@@ -2677,7 +2683,7 @@ static void BrowseFolder(WindowInfo& win, bool forward) {
     // remove unsupported files that have never been successfully loaded
     for (size_t i = files.size(); i > 0; i--) {
         if (!EngineManager::IsSupportedFile(files.at(i - 1), false, gGlobalPrefs->ebookUI.useFixedPageUI) &&
-            !Doc::IsSupportedFile(files.at(i - 1)) && !gFileHistory.Find(files.at(i - 1))) {
+            !Doc::IsSupportedFile(files.at(i - 1)) && !gFileHistory.Find(files.at(i - 1), nullptr)) {
             free(files.PopAt(i - 1));
         }
     }

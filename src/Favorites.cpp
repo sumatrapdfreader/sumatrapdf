@@ -377,7 +377,7 @@ static void GoToFavorite(WindowInfo* win, DisplayState* f, Favorite* fn) {
     // A hacky solution because I don't want to add even more parameters to
     // LoadDocument() and LoadDocumentInto()
     int pageNo = fn->pageNo;
-    DisplayState* ds = gFileHistory.Find(f->filePath);
+    DisplayState* ds = gFileHistory.Find(f->filePath, nullptr);
     if (ds && !ds->useDefaultState && gGlobalPrefs->rememberStatePerDocument) {
         ds->pageNo = fn->pageNo;
         ds->scrollPos = PointI(-1, -1); // don't scroll the page

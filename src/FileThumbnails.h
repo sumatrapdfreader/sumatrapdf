@@ -5,7 +5,7 @@
 #define THUMBNAIL_DX 212
 #define THUMBNAIL_DY 150
 
-void CleanUpThumbnailCache(FileHistory& fileHistory);
+void CleanUpThumbnailCache(const FileHistory& fileHistory);
 
 bool LoadThumbnail(DisplayState& ds);
 bool HasThumbnail(DisplayState& ds);

@@ -44,7 +44,7 @@ static WCHAR* GetThumbnailPath(const WCHAR* filePath) {
 }
 
 // removes thumbnails that don't belong to any frequently used item in file history
-void CleanUpThumbnailCache(FileHistory& fileHistory) {
+void CleanUpThumbnailCache(const FileHistory& fileHistory) {
     AutoFreeW thumbsPath(AppGenDataFilename(THUMBNAILS_DIR_NAME));
     if (!thumbsPath)
         return;

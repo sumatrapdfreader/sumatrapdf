@@ -563,7 +563,7 @@ void OnAboutContextMenu(WindowInfo* win, int x, int y) {
         return;
     }
 
-    DisplayState* state = gFileHistory.Find(filePath);
+    DisplayState* state = gFileHistory.Find(filePath, nullptr);
     CrashIf(!state);
     if (!state) {
         return;

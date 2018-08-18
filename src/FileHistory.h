@@ -22,10 +22,10 @@ class FileHistory {
     void Append(DisplayState* state) { states->Append(state); }
     void Remove(DisplayState* state) { states->Remove(state); }
     DisplayState* Get(size_t index) const;
-    DisplayState* Find(const WCHAR* filePath, size_t* idxOut = nullptr) const;
+    DisplayState* Find(const WCHAR* filePath, size_t* idxOut) const;
     DisplayState* MarkFileLoaded(const WCHAR* filePath);
     bool MarkFileInexistent(const WCHAR* filePath, bool hide = false);
-    void GetFrequencyOrder(Vec<DisplayState*>& list);
+    void GetFrequencyOrder(Vec<DisplayState*>& list) const;
     void Purge(bool alwaysUseDefaultState = false);
     void UpdateStatesSource(Vec<DisplayState*>* states) { this->states = states; }
 };

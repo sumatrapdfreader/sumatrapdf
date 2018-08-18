@@ -90,7 +90,7 @@ DisplayState* FileHistory::MarkFileLoaded(const WCHAR* filePath) {
     // if a history entry with the same name already exists,
     // then reuse it. That way we don't have duplicates and
     // the file moves to the front of the list
-    DisplayState* state = Find(filePath);
+    DisplayState* state = Find(filePath, nullptr);
     if (!state) {
         state = NewDisplayState(filePath);
         state->useDefaultState = true;
@@ -105,7 +105,7 @@ DisplayState* FileHistory::MarkFileLoaded(const WCHAR* filePath) {
 
 bool FileHistory::MarkFileInexistent(const WCHAR* filePath, bool hide) {
     CrashIf(!filePath);
-    DisplayState* state = Find(filePath);
+    DisplayState* state = Find(filePath, nullptr);
     if (!state)
         return false;
     // move the file history entry to the end of the list
@@ -135,7 +135,7 @@ bool FileHistory::MarkFileInexistent(const WCHAR* filePath, bool hide) {
 // by open count (which has a pre-multiplied recency factor)
 // and with all missing states filtered out
 // caller needs to delete the result (but not the contained states)
-void FileHistory::GetFrequencyOrder(Vec<DisplayState*>& list) {
+void FileHistory::GetFrequencyOrder(Vec<DisplayState*>& list) const {
     CrashIf(list.size() > 0);
     size_t i = 0;
     for (DisplayState* ds : *states) {
