@@ -10,7 +10,6 @@
 #define _stricmp strcasecmp
 #define _strnicmp strncasecmp
 // TODO: not sure if that's correct
-#define sprintf_s snprintf
 #define sscanf_s sscanf
 #endif
 
@@ -347,11 +346,7 @@ void Utf8Encode(char*& dst, int c) {
 // the hope here is to avoid allocating memory (assuming vsnprintf
 // doesn't allocate)
 bool BufFmtV(char* buf, size_t bufCchSize, const char* fmt, va_list args) {
-#if COMPILER_MSVC
-    int count = _vsnprintf_s(buf, bufCchSize, _TRUNCATE, fmt, args);
-#else
     int count = vsnprintf(buf, bufCchSize, fmt, args);
-#endif
     buf[bufCchSize - 1] = 0;
     if ((count >= 0) && ((size_t)count < bufCchSize))
         return true;
@@ -363,11 +358,7 @@ char* FmtV(const char* fmt, va_list args) {
     size_t bufCchSize = dimof(message);
     char* buf = message;
     for (;;) {
-#if COMPILER_MSVC
-        int count = _vsnprintf_s(buf, bufCchSize, _TRUNCATE, fmt, args);
-#else
         int count = vsnprintf(buf, bufCchSize, fmt, args);
-#endif
         if ((count >= 0) && ((size_t)count < bufCchSize))
             break;
         /* we have to make the buffer bigger. The algorithm used to calculate

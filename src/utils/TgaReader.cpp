@@ -194,24 +194,32 @@ static void CopyMetadata(const char* data, size_t len, Bitmap* bmp) {
     if (!extAreaLE)
         return;
 
-    if (IsFieldSet(extAreaLE->author, sizeof(extAreaLE->author)))
+    if (IsFieldSet(extAreaLE->author, sizeof(extAreaLE->author))) {
         SetImageProperty(bmp, PropertyTagArtist, extAreaLE->author);
-    if (IsFieldSet((const char*)extAreaLE->dateTime, sizeof(extAreaLE->dateTime), true)) {
-        char dateTime[20];
-        int count =
-            _snprintf_s(dateTime, dimof(dateTime), _TRUNCATE, "%04u-%02u-%02u %02u:%02u:%02u",
-                        convLE(extAreaLE->dateTime[2]), convLE(extAreaLE->dateTime[1]), convLE(extAreaLE->dateTime[0]),
-                        convLE(extAreaLE->dateTime[3]), convLE(extAreaLE->dateTime[4]), convLE(extAreaLE->dateTime[5]));
-        if (19 == count)
-            SetImageProperty(bmp, PropertyTagDateTime, dateTime);
     }
-    if (IsFieldSet(extAreaLE->progName, sizeof(extAreaLE->progName))) {
+
+	if (IsFieldSet((const char*)extAreaLE->dateTime, sizeof(extAreaLE->dateTime), true)) {
+        char dateTime[20];
+        auto v1 = convLE(extAreaLE->dateTime[2]);
+        auto v2 = convLE(extAreaLE->dateTime[1]);
+        auto v3 = convLE(extAreaLE->dateTime[0]);
+        auto v4 = convLE(extAreaLE->dateTime[3]);
+        auto v5 = convLE(extAreaLE->dateTime[4]);
+        auto v6 = convLE(extAreaLE->dateTime[5]);
+        int count = snprintf(dateTime, dimof(dateTime), "%04u-%02u-%02u %02u:%02u:%02u", v1, v2, v3, v4, v5, v6);
+        if (19 == count) {
+            SetImageProperty(bmp, PropertyTagDateTime, dateTime);
+        }
+    }
+
+	if (IsFieldSet(extAreaLE->progName, sizeof(extAreaLE->progName))) {
         char software[49];
         str::BufSet(software, 41, extAreaLE->progName);
         if (convLE(extAreaLE->progVersion) != 0) {
-            _snprintf_s(software + str::Len(software), 9, _TRUNCATE, " %d.%d%c", convLE(extAreaLE->progVersion) / 100,
-                        convLE(extAreaLE->progVersion) % 100,
-                        extAreaLE->progVersionC != ' ' ? extAreaLE->progVersionC : '\0');
+            auto v1 = convLE(extAreaLE->progVersion) / 100;
+            auto v2 = convLE(extAreaLE->progVersion) % 100;
+            auto v3 = extAreaLE->progVersionC != ' ' ? extAreaLE->progVersionC : '\0';
+            snprintf(software + str::Len(software), 9, " %d.%d%c", v1, v2, v3);
             software[48] = '\0';
         }
         SetImageProperty(bmp, PropertyTagSoftwareUsed, software);
