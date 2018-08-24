@@ -537,7 +537,7 @@ workspace "SumatraPDF"
       "version", "windowscodecs", "wininet"
     }
     -- this is to prevent dll hijacking
-    linkoptions { "/DELAYLOAD:comctl32.dll /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll"}
+    linkoptions { "/DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll"}
 
 
   project "SumatraPDF-no-MUPDF"
@@ -558,7 +558,7 @@ workspace "SumatraPDF"
       "version", "wininet"
     }
     -- this is to prevent dll hijacking
-    linkoptions { "/DELAYLOAD:comctl32.dll /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll"}
+    linkoptions { "/DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll"}
 
 
   project "Uninstaller"
@@ -595,7 +595,7 @@ workspace "SumatraPDF"
       "comctl32", "delayimp", "gdiplus", "shlwapi", "version", "wininet"
     }
     -- this is to prevent dll hijacking
-    linkoptions { "/DELAYLOAD:comctl32.dll /DELAYLOAD:gdiplus.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll"}
+    linkoptions { "/DELAYLOAD:gdiplus.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll"}
 
 
   project "Installer"
@@ -616,7 +616,7 @@ workspace "SumatraPDF"
       "comctl32", "delayimp", "gdiplus", "shlwapi", "version", "wininet"
     }
     -- this is to prevent dll hijacking
-    linkoptions { "/DELAYLOAD:comctl32.dll /DELAYLOAD:gdiplus.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll"}
+    linkoptions { "/DELAYLOAD:gdiplus.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll"}
 
     dependson { "SumatraPDF-no-MUPDF", "PdfFilter", "PdfPreview", "Uninstaller" }
     prebuildcommands { "cd %{cfg.targetdir} & ..\\bin\\MakeLZSA.exe InstallerData.dat SumatraPDF-no-MUPDF.exe:SumatraPDF.exe libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll Uninstaller.exe:uninstall.exe ..\\mupdf\\resources\\fonts\\droid\\DroidSansFallback.ttf:DroidSansFallback.ttf"  }
