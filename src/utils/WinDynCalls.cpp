@@ -241,7 +241,7 @@ HRESULT GetReservedNotSupportedValue(IUnknown** punkNotSupportedValue) {
 }; // namespace uia
 
 static const WCHAR* dllsToPreload =
-    L"comctl32.dll\0gdiplus.dll\0msimg32.dll\0shlwapi.dll\0urlmon.dll\0version.dll\0windowscodecs.dll\0wininet.dll\0\0";
+    L"gdiplus.dll\0msimg32.dll\0shlwapi.dll\0urlmon.dll\0version.dll\0windowscodecs.dll\0wininet.dll\0\0";
 
 // try to mitigate dll hijacking by pre-loading all the dlls that we delay load or might
 // be loaded indirectly

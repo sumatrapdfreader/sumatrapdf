@@ -171,7 +171,7 @@
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <AdditionalDependencies>comctl32.lib;delayimp.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
-      <AdditionalOptions>/DELAYLOAD:comctl32.dll /DELAYLOAD:gdiplus.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/DELAYLOAD:gdiplus.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -201,7 +201,7 @@
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <AdditionalDependencies>comctl32.lib;delayimp.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
-      <AdditionalOptions>/DELAYLOAD:comctl32.dll /DELAYLOAD:gdiplus.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/DELAYLOAD:gdiplus.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -235,7 +235,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>comctl32.lib;delayimp.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
-      <AdditionalOptions>/DELAYLOAD:comctl32.dll /DELAYLOAD:gdiplus.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/DELAYLOAD:gdiplus.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -268,7 +268,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>comctl32.lib;delayimp.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
-      <AdditionalOptions>/DELAYLOAD:comctl32.dll /DELAYLOAD:gdiplus.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/DELAYLOAD:gdiplus.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|Win32'">
@@ -303,7 +303,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>comctl32.lib;delayimp.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
-      <AdditionalOptions>/DELAYLOAD:comctl32.dll /DELAYLOAD:gdiplus.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/DELAYLOAD:gdiplus.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|x64'">
@@ -338,7 +338,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>comctl32.lib;delayimp.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
-      <AdditionalOptions>/DELAYLOAD:comctl32.dll /DELAYLOAD:gdiplus.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/DELAYLOAD:gdiplus.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
