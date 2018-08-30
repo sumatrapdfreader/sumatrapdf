@@ -52,9 +52,9 @@ class MemoryProtector {
     bool isGood = false;
 };
 
-static IMAGE_THUNK_DATA* FindIatThunkInModule(void* moduleBase, const std::string& dllName,
-                                                     const std::string& apiName) {
-    assert(moduleBase != nullptr);
+static IMAGE_THUNK_DATA* FindIatThunkInModule(void* moduleBase, const std::string_view& dllName,
+                                                     const std::string_view& apiName) {
+    AssertCrash(moduleBase != nullptr);
     if (moduleBase == nullptr)
         return nullptr;
 
@@ -72,7 +72,8 @@ static IMAGE_THUNK_DATA* FindIatThunkInModule(void* moduleBase, const std::strin
 
     // import entry with null fields marks end
     for (uint_fast16_t i = 0; pImports[i].Name != NULL; i++) {
-        if (my_narrow_stricmp(RVA2VA(PCHAR, moduleBase, pImports[i].Name), dllName.c_str()) != 0)
+        const char* s = RVA2VA(PCHAR, moduleBase, pImports[i].Name);
+        if (my_narrow_stricmp(s, dllName.data()) != 0)
             continue;
 
         // Original holds the API Names
@@ -97,7 +98,7 @@ static IMAGE_THUNK_DATA* FindIatThunkInModule(void* moduleBase, const std::strin
             IMAGE_IMPORT_BY_NAME* pImport =
                 (IMAGE_IMPORT_BY_NAME*)RVA2VA(uintptr_t, moduleBase, pOriginalThunk->u1.AddressOfData);
 
-            if (my_narrow_stricmp(pImport->Name, apiName.c_str()) != 0)
+            if (my_narrow_stricmp(pImport->Name, apiName.data()) != 0)
                 continue;
 
             return pThunk;
@@ -108,7 +109,7 @@ static IMAGE_THUNK_DATA* FindIatThunkInModule(void* moduleBase, const std::strin
     return nullptr;
 }
 
-static IMAGE_THUNK_DATA* FindIatThunk(const std::string& dllName, const std::string& apiName,
+static IMAGE_THUNK_DATA* FindIatThunk(const std::string_view& dllName, const std::string_view& apiName,
                                              const std::wstring moduleName = L"") {
 #if defined(_WIN64)
     PEB* peb = (PPEB)__readgsqword(0x60);
@@ -140,11 +141,13 @@ static IMAGE_THUNK_DATA* FindIatThunk(const std::string& dllName, const std::str
     return pThunk;
 }
 
-IatHook::IatHook(const std::string& dllName, const std::string& apiName, const char* fnCallback, uint64_t* userOrigVar, const std::wstring& moduleName)
+IatHook::IatHook(const std::string_view& dllName, const std::string_view& apiName, const char* fnCallback,
+                 uint64_t* userOrigVar, const std::wstring& moduleName)
 	: IatHook(dllName, apiName, (uint64_t)fnCallback, userOrigVar, moduleName)
 {}
 
-IatHook::IatHook(const std::string& dllName, const std::string& apiName, const uint64_t fnCallback, uint64_t* userOrigVar, const std::wstring& moduleName)
+IatHook::IatHook(const std::string_view& dllName, const std::string_view& apiName, const uint64_t fnCallback,
+                 uint64_t* userOrigVar, const std::wstring& moduleName)
 	: m_moduleName(moduleName)
     , m_dllName(dllName)
     , m_apiName(apiName)
@@ -153,7 +156,7 @@ IatHook::IatHook(const std::string& dllName, const std::string& apiName, const u
 {}
 
 bool IatHook::hook() {
-	assert(m_userOrigVar != nullptr);
+	AssertCrash(m_userOrigVar != nullptr);
 	IMAGE_THUNK_DATA* pThunk = FindIatThunk(m_dllName, m_apiName);
 	if (pThunk == nullptr)
 		return false;
@@ -168,8 +171,8 @@ bool IatHook::hook() {
 }
 
 bool IatHook::unHook() {
-	assert(m_userOrigVar != nullptr);
-	assert(m_hooked);
+    AssertCrash(m_userOrigVar != nullptr);
+    AssertCrash(m_hooked);
 	if (!m_hooked)
 		return false;
 
