@@ -42,7 +42,7 @@ class MemoryProtector {
         if (m_origProtection != 0) {
             DWORD tmp;
             VirtualProtect((char*)m_address, (SIZE_T)m_length, m_origProtection, &tmp);
-		}
+        }
     }
 
     DWORD m_origProtection = 0;
@@ -53,7 +53,7 @@ class MemoryProtector {
 };
 
 static IMAGE_THUNK_DATA* FindIatThunkInModule(void* moduleBase, const std::string_view& dllName,
-                                                     const std::string_view& apiName) {
+                                              const std::string_view& apiName) {
     AssertCrash(moduleBase != nullptr);
     if (moduleBase == nullptr)
         return nullptr;
@@ -98,7 +98,8 @@ static IMAGE_THUNK_DATA* FindIatThunkInModule(void* moduleBase, const std::strin
             IMAGE_IMPORT_BY_NAME* pImport =
                 (IMAGE_IMPORT_BY_NAME*)RVA2VA(uintptr_t, moduleBase, pOriginalThunk->u1.AddressOfData);
 
-            if (my_narrow_stricmp(pImport->Name, apiName.data()) != 0)
+            auto name = (const char*)(&pImport->Name[0]);
+            if (my_narrow_stricmp(name, apiName.data()) != 0)
                 continue;
 
             return pThunk;
@@ -110,7 +111,7 @@ static IMAGE_THUNK_DATA* FindIatThunkInModule(void* moduleBase, const std::strin
 }
 
 static IMAGE_THUNK_DATA* FindIatThunk(const std::string_view& dllName, const std::string_view& apiName,
-                                             const std::wstring moduleName = L"") {
+                                      const std::wstring moduleName = L"") {
 #if defined(_WIN64)
     PEB* peb = (PPEB)__readgsqword(0x60);
 #else
@@ -143,47 +144,44 @@ static IMAGE_THUNK_DATA* FindIatThunk(const std::string_view& dllName, const std
 
 IatHook::IatHook(const std::string_view& dllName, const std::string_view& apiName, const char* fnCallback,
                  uint64_t* userOrigVar, const std::wstring& moduleName)
-	: IatHook(dllName, apiName, (uint64_t)fnCallback, userOrigVar, moduleName)
-{}
+    : IatHook(dllName, apiName, (uint64_t)fnCallback, userOrigVar, moduleName) {}
 
 IatHook::IatHook(const std::string_view& dllName, const std::string_view& apiName, const uint64_t fnCallback,
                  uint64_t* userOrigVar, const std::wstring& moduleName)
-	: m_moduleName(moduleName)
-    , m_dllName(dllName)
-    , m_apiName(apiName)
-    , m_userOrigVar(userOrigVar)
-    , m_fnCallback(fnCallback)
-{}
+    : m_moduleName(moduleName),
+      m_dllName(dllName),
+      m_apiName(apiName),
+      m_userOrigVar(userOrigVar),
+      m_fnCallback(fnCallback) {}
 
 bool IatHook::hook() {
-	AssertCrash(m_userOrigVar != nullptr);
-	IMAGE_THUNK_DATA* pThunk = FindIatThunk(m_dllName, m_apiName);
-	if (pThunk == nullptr)
-		return false;
+    AssertCrash(m_userOrigVar != nullptr);
+    IMAGE_THUNK_DATA* pThunk = FindIatThunk(m_dllName, m_apiName);
+    if (pThunk == nullptr)
+        return false;
 
-	// IAT is by default a writeable section
+    // IAT is by default a writeable section
     MemoryProtector prot((uint64_t)&pThunk->u1.Function, sizeof(uintptr_t), PAGE_READWRITE);
-	m_origFunc = (uint64_t)pThunk->u1.Function;
-	pThunk->u1.Function = (uintptr_t)m_fnCallback;
-	m_hooked = true;
-	*m_userOrigVar = m_origFunc;
-	return true;
+    m_origFunc = (uint64_t)pThunk->u1.Function;
+    pThunk->u1.Function = (uintptr_t)m_fnCallback;
+    m_hooked = true;
+    *m_userOrigVar = m_origFunc;
+    return true;
 }
 
 bool IatHook::unHook() {
     AssertCrash(m_userOrigVar != nullptr);
     AssertCrash(m_hooked);
-	if (!m_hooked)
-		return false;
+    if (!m_hooked)
+        return false;
 
-	IMAGE_THUNK_DATA* pThunk = FindIatThunk(m_dllName, m_apiName);
-	if (pThunk == nullptr)
-		return false;
+    IMAGE_THUNK_DATA* pThunk = FindIatThunk(m_dllName, m_apiName);
+    if (pThunk == nullptr)
+        return false;
 
-	MemoryProtector prot((uint64_t)&pThunk->u1.Function, sizeof(uintptr_t), PAGE_READWRITE);
-	pThunk->u1.Function = (uintptr_t)m_origFunc;
-	m_hooked = false;
-	*m_userOrigVar = NULL;
-	return true;
+    MemoryProtector prot((uint64_t)&pThunk->u1.Function, sizeof(uintptr_t), PAGE_READWRITE);
+    pThunk->u1.Function = (uintptr_t)m_origFunc;
+    m_hooked = false;
+    *m_userOrigVar = NULL;
+    return true;
 }
-
