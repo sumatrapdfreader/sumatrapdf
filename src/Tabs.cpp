@@ -90,7 +90,6 @@ class TabPainter {
         GraphicsPath shape;
         // define tab's body
         shape.AddRectangle(Rect(0, 0, width, height));
-        shape.CloseFigure();
         shape.SetMarker();
 
         // define "x"'s circle
