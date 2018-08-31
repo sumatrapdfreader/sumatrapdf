@@ -264,13 +264,12 @@ void TreeCtrlVisitNodes(TreeCtrl* w, const TreeItemVisitor& visitor) {
 
 std::wstring_view TreeCtrlGetInfoTip(TreeCtrl* w, HTREEITEM hItem) {
     ZeroArray(w->infotipBuf);
-    WCHAR buf[INFOTIPSIZE + 1] = {0};
     TVITEMW item = {0};
     item.hItem = hItem;
     item.mask = TVIF_TEXT;
-    item.pszText = buf;
+    item.pszText = w->infotipBuf;
     item.cchTextMax = INFOTIPSIZE;
     TreeView_GetItem(w->hwnd, &item);
-    auto res = std::wstring_view(buf);
+    auto res = std::wstring_view(w->infotipBuf);
     return res;
 }
