@@ -288,6 +288,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\utils\ApiHook.h" />
     <ClInclude Include="..\src\utils\Archive.h" />
     <ClInclude Include="..\src\utils\BaseUtil.h" />
     <ClInclude Include="..\src\utils\BitReader.h" />
@@ -313,6 +314,7 @@
     <ClInclude Include="..\src\utils\HttpUtil.h" />
     <ClInclude Include="..\src\utils\JsonParser.h" />
     <ClInclude Include="..\src\utils\LzmaSimpleArchive.h" />
+    <ClInclude Include="..\src\utils\PEB.h" />
     <ClInclude Include="..\src\utils\SerializeTxt.h" />
     <ClInclude Include="..\src\utils\SettingsUtil.h" />
     <ClInclude Include="..\src\utils\SquareTreeParser.h" />
@@ -337,6 +339,7 @@
     <ClInclude Include="..\src\wingui\Win32Window.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\utils\ApiHook.cpp" />
     <ClCompile Include="..\src\utils\Archive.cpp" />
     <ClCompile Include="..\src\utils\BaseUtil.cpp" />
     <ClCompile Include="..\src\utils\BitReader.cpp" />

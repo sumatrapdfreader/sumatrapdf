@@ -198,7 +198,7 @@ static void CopyMetadata(const char* data, size_t len, Bitmap* bmp) {
         SetImageProperty(bmp, PropertyTagArtist, extAreaLE->author);
     }
 
-	if (IsFieldSet((const char*)extAreaLE->dateTime, sizeof(extAreaLE->dateTime), true)) {
+    if (IsFieldSet((const char*)extAreaLE->dateTime, sizeof(extAreaLE->dateTime), true)) {
         char dateTime[20];
         auto v1 = convLE(extAreaLE->dateTime[2]);
         auto v2 = convLE(extAreaLE->dateTime[1]);
@@ -212,7 +212,7 @@ static void CopyMetadata(const char* data, size_t len, Bitmap* bmp) {
         }
     }
 
-	if (IsFieldSet(extAreaLE->progName, sizeof(extAreaLE->progName))) {
+    if (IsFieldSet(extAreaLE->progName, sizeof(extAreaLE->progName))) {
         char software[49];
         str::BufSet(software, 41, extAreaLE->progName);
         if (convLE(extAreaLE->progVersion) != 0) {

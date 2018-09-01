@@ -284,6 +284,7 @@ end
 
 function utils_files()
   files_in_dir("src/utils", {
+    "ApiHook.*",
     "Archive.*",
     "BaseUtil.*",
     "BitReader.*",
@@ -309,6 +310,7 @@ function utils_files()
     "HttpUtil.*",
     "JsonParser.*",
     "LzmaSimpleArchive.*",
+    "PEB.h",
     "SerializeTxt.*",
     "SettingsUtil.*",
     "StrUtil.*",
