@@ -161,6 +161,8 @@ bool HexToMem(const char* s, unsigned char* buf, size_t bufLen);
 const char* Parse(const char* str, const char* format, ...);
 const char* Parse(const char* str, size_t len, const char* format, ...);
 
+int CmpNatural(const char*, const char*);
+
 #if OS_WIN
 size_t TransChars(WCHAR* str, const WCHAR* oldChars, const WCHAR* newChars);
 WCHAR* Replace(const WCHAR* s, const WCHAR* toReplace, const WCHAR* replaceWith);
@@ -173,7 +175,7 @@ WCHAR* FormatFloatWithThousandSep(double number, LCID locale = LOCALE_USER_DEFAU
 WCHAR* FormatNumWithThousandSep(size_t num, LCID locale = LOCALE_USER_DEFAULT);
 WCHAR* FormatRomanNumeral(int number);
 
-int CmpNatural(const WCHAR* a, const WCHAR* b);
+int CmpNatural(const WCHAR*, const WCHAR*);
 
 const WCHAR* Parse(const WCHAR* str, const WCHAR* format, ...);
 

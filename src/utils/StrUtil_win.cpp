@@ -458,7 +458,7 @@ WCHAR* FormatRomanNumeral(int number) {
    numerically instead of by pure ASCII order; we imitate Windows Explorer
    by sorting special characters before alphanumeric characters
    (e.g. ".hg" < "2.pdf" < "100.pdf" < "zzz")
-   TODO: use StrCmpLogicalW instead once we no longer support Windows 2000 */
+*/
 int CmpNatural(const WCHAR* a, const WCHAR* b) {
     CrashAlwaysIf(!a || !b);
     const WCHAR *aStart = a, *bStart = b;

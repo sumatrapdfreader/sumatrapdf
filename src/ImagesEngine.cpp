@@ -872,6 +872,13 @@ bool CbxEngineImpl::LoadFromStream(IStream* stream) {
     return FinishLoading();
 }
 
+static bool cmpArchFileInfoByName(Archive::FileInfo* f1, Archive::FileInfo* f2) {
+    const char* s1 = f1->name.data();
+    const char* s2 = f2->name.data();
+    int res = str::CmpNatural(s1, s2);
+    return res < 0;
+}
+
 bool CbxEngineImpl::FinishLoading() {
     CrashIf(!cbxFile);
     if (!cbxFile) {
@@ -911,6 +918,8 @@ bool CbxEngineImpl::FinishLoading() {
     if (nFiles == 0) {
         return false;
     }
+
+    std::sort(pageFiles.begin(), pageFiles.end(), cmpArchFileInfoByName);
 
     mediaboxes.AppendBlanks(nFiles);
     files = std::move(pageFiles);

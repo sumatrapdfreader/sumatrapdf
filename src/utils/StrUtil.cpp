@@ -828,6 +828,70 @@ const char* Parse(const char* str, size_t len, const char* fmt, ...) {
     return res;
 }
 
+/* compares two strings "naturally" by sorting numbers within a string
+   numerically instead of by pure ASCII order; we imitate Windows Explorer
+   by sorting special characters before alphanumeric characters
+   (e.g. ".hg" < "2.pdf" < "100.pdf" < "zzz")
+*/
+int CmpNatural(const char* a, const char* b) {
+    CrashAlwaysIf(!a || !b);
+    const char *aStart = a, *bStart = b;
+    int diff = 0;
+
+    for (; 0 == diff; a++, b++) {
+        // ignore leading and trailing spaces, and differences in whitespace only
+        if (a == aStart || !*a || !*b || IsWs(*a) && IsWs(*b)) {
+            for (; IsWs(*a); a++) {
+                // do nothing
+            }
+            for (; IsWs(*b); b++) {
+                // do nothing
+            }
+        }
+        // if two strings are identical when ignoring case, leading zeroes and
+        // whitespace, compare them traditionally for a stable sort order
+        if (!*a && !*b)
+            return strcmp(aStart, bStart);
+        if (str::IsDigit(*a) && str::IsDigit(*b)) {
+            // ignore leading zeroes
+            for (; '0' == *a; a++) {
+                // do nothing
+            }
+            for (; '0' == *b; b++) {
+                // do nothing
+            }
+            // compare the two numbers as (positive) integers
+            for (diff = 0; str::IsDigit(*a) || str::IsDigit(*b); a++, b++) {
+                // if either *a or *b isn't a number, they differ in magnitude
+                if (!str::IsDigit(*a))
+                    return -1;
+                if (!str::IsDigit(*b))
+                    return 1;
+                // remember the difference for when the numbers are of the same magnitude
+                if (0 == diff)
+                    diff = *a - *b;
+            }
+            // neither *a nor *b is a digit, so continue with them (unless diff != 0)
+            a--;
+            b--;
+        }
+        // sort letters case-insensitively
+        else if (isalnum(*a) && isalnum(*b))
+            diff = tolower(*a) - tolower(*b);
+        // sort special characters before text and numbers
+        else if (isalnum(*a))
+            return 1;
+        else if (isalnum(*b))
+            return -1;
+        // sort special characters by ASCII code
+        else
+            diff = *a - *b;
+    }
+
+    return diff;
+}
+
+
 } // namespace str
 
 namespace url {
