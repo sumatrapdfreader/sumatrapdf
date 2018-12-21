@@ -55,14 +55,14 @@ static void CustomizeTocInfoTip(TreeCtrl* w, NMTVGETINFOTIP* nm) {
     RECT rcLine, rcLabel;
     HTREEITEM item = nm->hItem;
     // Display the item's full label, if it's overlong
-    bool ok = TreeCtrlGetItemRect(w, item, false, rcLine);
-    ok &= TreeCtrlGetItemRect(w, item, true, rcLabel);
+    bool ok = w->GetItemRect(item, false, rcLine);
+    ok &= w->GetItemRect(item, true, rcLabel);
     if (!ok) {
         return;
     }
 
     if (rcLine.right + 2 < rcLabel.right) {
-        std::wstring_view currInfoTip = TreeCtrlGetInfoTip(w, nm->hItem);
+        std::wstring_view currInfoTip = w->GetInfoTip(nm->hItem);
         infotip.Append(currInfoTip.data());
         infotip.Append(L"\r\n");
     }
@@ -161,10 +161,10 @@ static void GoToTocLinkTask(WindowInfo* win, DocTocItem* tocItem, TabInfo* tab, 
 static void GoToTocLinkForTVItem(WindowInfo* win, HTREEITEM hItem, bool allowExternal) {
     TreeCtrl* tree = win->tocTreeCtrl;
     if (!hItem) {
-        hItem = TreeCtrlGetSelection(tree);
+        hItem = tree->GetSelection();
     }
 
-    auto* item = TreeCtrlGetItem(tree, hItem);
+    auto* item = tree->GetItem(hItem);
     auto* tocItem = reinterpret_cast<DocTocItem*>(item->lParam);
     if (!tocItem || !win->IsDocLoaded()) {
         return;
@@ -183,7 +183,7 @@ void ClearTocBox(WindowInfo* win) {
         return;
     }
 
-    ClearTreeCtrl(win->tocTreeCtrl);
+    win->tocTreeCtrl->Clear();
 
     win->currPageNo = 0;
     win->tocLoaded = false;
@@ -228,7 +228,7 @@ static HTREEITEM AddTocItemToView(TreeCtrl* tree, DocTocItem* entry, HTREEITEM p
         return TreeView_InsertItem(hwnd, &tvinsert);
     }
 #endif
-    return TreeCtrlInsertItem(tree, &toInsert);
+    return tree->InsertItem(&toInsert);
 }
 
 static void PopulateTocTreeView(TreeCtrl* tree, DocTocItem* entry, Vec<int>& tocState, HTREEITEM parent) {
@@ -288,7 +288,7 @@ static HTREEITEM TreeItemForPageNo(TreeCtrl* tocTreeCtrl, int pageNo) {
     HTREEITEM bestMatchItem = nullptr;
     int bestMatchPageNo = 0;
 
-    TreeCtrlVisitNodes(tocTreeCtrl, [&bestMatchItem, &bestMatchPageNo, pageNo](TVITEMW* item) {
+    tocTreeCtrl->VisitNodes([&bestMatchItem, &bestMatchPageNo, pageNo](TVITEMW* item) {
         if (!bestMatchItem) {
             // if nothing else matches, match the root node
             bestMatchItem = item->hItem;
@@ -318,13 +318,13 @@ void UpdateTocSelection(WindowInfo* win, int currPageNo) {
 
     HTREEITEM hItem = TreeItemForPageNo(win->tocTreeCtrl, currPageNo);
     if (hItem) {
-        TreeCtrlSelectItem(win->tocTreeCtrl, hItem);
+        win->tocTreeCtrl->SelectItem(hItem);
     }
 }
 
 void UpdateTocExpansionState(TabInfo* tab, TreeCtrl* treeCtrl, HTREEITEM hItem) {
     while (hItem) {
-        TVITEM* item = TreeCtrlGetItem(treeCtrl, hItem);
+        TVITEM* item = treeCtrl->GetItem(hItem);
         if (!item) {
             return;
         }
@@ -339,10 +339,10 @@ void UpdateTocExpansionState(TabInfo* tab, TreeCtrl* treeCtrl, HTREEITEM hItem) 
             if (wasToggled) {
                 tab->tocState.Append(tocItem->id);
             }
-            HTREEITEM child = TreeCtrlGetChild(treeCtrl, hItem);
+            HTREEITEM child = treeCtrl->GetChild(hItem);
             UpdateTocExpansionState(tab, treeCtrl, child);
         }
-        hItem = TreeCtrlGetNextSibling(treeCtrl, hItem);
+        hItem = treeCtrl->GetSiblingNext(hItem);
     }
 }
 
@@ -604,7 +604,7 @@ void CreateToc(WindowInfo* win) {
     SetFont(l, GetDefaultGuiFont());
     // label is set in UpdateToolbarSidebarText()
 
-    TreeCtrl* tree = AllocTreeCtrl(win->hwndTocBox, nullptr);
+    auto* tree = new TreeCtrl(win->hwndTocBox, nullptr);
     tree->dwStyle = TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS | TVS_TRACKSELECT |
                     TVS_DISABLEDRAGDROP | TVS_NOHSCROLL | TVS_INFOTIP | WS_TABSTOP | WS_VISIBLE | WS_CHILD;
     tree->dwExStyle = WS_EX_STATICEDGE;
@@ -616,7 +616,7 @@ void CreateToc(WindowInfo* win) {
         return res;
     };
     tree->onGetInfoTip = [](TreeCtrl* w, NMTVGETINFOTIP* infoTipInfo) { CustomizeTocInfoTip(w, infoTipInfo); };
-    bool ok = CreateTreeCtrl(tree, L"TOC");
+    bool ok = tree->Create(L"TOC");
     CrashIf(!ok);
     win->tocTreeCtrl = tree;
     SubclassToc(win);

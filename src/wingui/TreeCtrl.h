@@ -1,4 +1,4 @@
-struct TreeCtrl;
+class TreeCtrl;
 
 typedef std::function<LRESULT(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& discardMsg)> MsgFilter;
 typedef std::function<void(TreeCtrl*, NMTVGETINFOTIP*)> OnGetInfoTip;
@@ -8,11 +8,40 @@ typedef std::function<LRESULT(TreeCtrl*, NMTREEVIEWW*, bool&)> OnTreeNotify;
 // returning false stops iteration
 typedef std::function<bool(TVITEM*)> TreeItemVisitor;
 
-struct TreeCtrl {
+/* Creation sequence:
+- auto ctrl = new TreeCtrl()
+- set creation parameters
+- ctrl->Create()
+*/
+
+class TreeCtrl {
+  public:
+    TreeCtrl(HWND parent, RECT* initialPosition);
+    ~TreeCtrl();
+
+    void Clear();
+    TVITEM* GetItem(HTREEITEM);
+    std::wstring_view GetInfoTip(HTREEITEM);
+    HTREEITEM GetRoot();
+    HTREEITEM GetChild(HTREEITEM);
+    HTREEITEM GetSiblingNext(HTREEITEM); // GetNextSibling is windows macro
+    HTREEITEM GetSelection();
+    bool SelectItem(HTREEITEM);
+    HTREEITEM InsertItem(TV_INSERTSTRUCT*);
+
+    void VisitNodes(const TreeItemVisitor& visitor);
+    // TODO: create 2 functions for 2 different fItemRect values
+    bool GetItemRect(HTREEITEM, bool fItemRect, RECT& r);
+
+
+    bool Create(const WCHAR* title);
+    void SetFont(HFONT);
+
     // creation parameters. must be set before CreateTreeCtrl() call
     HWND parent = nullptr;
     RECT initialPos = {0, 0, 0, 0};
-    DWORD dwStyle = 0;
+    DWORD dwStyle = WS_CHILD | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT |
+                    TVS_SHOWSELALWAYS | TVS_TRACKSELECT | TVS_DISABLEDRAGDROP | TVS_NOHSCROLL | TVS_INFOTIP;
     DWORD dwExStyle = 0;
     HMENU menu = nullptr;
     COLORREF bgCol = 0;
@@ -30,31 +59,5 @@ struct TreeCtrl {
     UINT_PTR hwndSubclassId = 0;
     UINT_PTR hwndParentSubclassId = 0;
 };
-
-/* Creation sequence:
-- AllocTreeCtrl()
-- set creation parameters
-- CreateTreeCtrl()
-*/
-
-TreeCtrl* AllocTreeCtrl(HWND parent, RECT* initialPosition);
-bool CreateTreeCtrl(TreeCtrl*, const WCHAR* title);
-
-void ClearTreeCtrl(TreeCtrl*);
-TVITEM* TreeCtrlGetItem(TreeCtrl*, HTREEITEM);
-std::wstring_view TreeCtrlGetInfoTip(TreeCtrl*, HTREEITEM);
-HTREEITEM TreeCtrlGetRoot(TreeCtrl*);
-HTREEITEM TreeCtrlGetChild(TreeCtrl*, HTREEITEM);
-HTREEITEM TreeCtrlGetNextSibling(TreeCtrl*, HTREEITEM);
-HTREEITEM TreeCtrlGetSelection(TreeCtrl*);
-bool TreeCtrlSelectItem(TreeCtrl*, HTREEITEM);
-HTREEITEM TreeCtrlInsertItem(TreeCtrl*, TV_INSERTSTRUCT*);
-
-void DeleteTreeCtrl(TreeCtrl*);
-
-void SetFont(TreeCtrl*, HFONT);
-void TreeCtrlVisitNodes(TreeCtrl*, const TreeItemVisitor& visitor);
-// TODO: create 2 functions for 2 different fItemRect values
-bool TreeCtrlGetItemRect(TreeCtrl*, HTREEITEM, bool fItemRect, RECT& r);
 
 void TreeViewExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, bool subtree);

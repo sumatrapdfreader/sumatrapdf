@@ -124,108 +124,98 @@ static void Unsubclass(TreeCtrl* w) {
     }
 }
 
-TreeCtrl* AllocTreeCtrl(HWND parent, RECT* initialPosition) {
-    auto w = AllocStruct<TreeCtrl>();
-    w->parent = parent;
+TreeCtrl::TreeCtrl(HWND parent, RECT* initialPosition) {
+    this->parent = parent;
     if (initialPosition) {
-        w->initialPos = *initialPosition;
+        this->initialPos = *initialPosition;
     } else {
-        SetRect(&w->initialPos, 0, 0, 120, 28);
+        SetRect(&this->initialPos, 0, 0, 120, 28);
     }
-
-    w->dwExStyle = 0;
-    w->dwStyle = WS_CHILD | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT |
-                 TVS_SHOWSELALWAYS | TVS_TRACKSELECT | TVS_DISABLEDRAGDROP | TVS_NOHSCROLL | TVS_INFOTIP;
-
-    return w;
 }
 
-bool CreateTreeCtrl(TreeCtrl* w, const WCHAR* title) {
+bool TreeCtrl::Create(const WCHAR* title) {
     if (!title) {
         title = L"";
     }
 
-    RECT rc = w->initialPos;
+    RECT rc = this->initialPos;
     HMODULE hmod = GetModuleHandleW(nullptr);
-    w->hwnd = CreateWindowExW(w->dwExStyle, WC_TREEVIEWW, title, w->dwStyle, rc.left, rc.top, RectDx(rc), RectDy(rc),
-                              w->parent, w->menu, hmod, nullptr);
-
-    if (!w->hwnd) {
+    this->hwnd = CreateWindowExW(this->dwExStyle, WC_TREEVIEWW, title, this->dwStyle, rc.left, rc.top, RectDx(rc),
+                                 RectDy(rc), this->parent, this->menu, hmod, nullptr);
+    if (!this->hwnd) {
         return false;
     }
-    TreeView_SetUnicodeFormat(w->hwnd, true);
-    SetFont(w, GetDefaultGuiFont());
-    Subclass(w);
+    TreeView_SetUnicodeFormat(this->hwnd, true);
+    this->SetFont(GetDefaultGuiFont());
+    Subclass(this);
 
     return true;
 }
 
-TVITEM* TreeCtrlGetItem(TreeCtrl* w, HTREEITEM hItem) {
-    TVITEM* item = &w->item;
+TVITEM* TreeCtrl::GetItem(HTREEITEM hItem) {
+    TVITEM* item = &this->item;
     ZeroStruct(item);
     item->hItem = hItem;
     item->mask = TVIF_PARAM | TVIF_STATE;
     item->stateMask = TVIS_EXPANDED;
-    BOOL ok = TreeView_GetItem(w->hwnd, item);
+    BOOL ok = TreeView_GetItem(this->hwnd, item);
     if (!ok) {
         return nullptr;
     }
     return item;
 }
 
-bool TreeCtrlGetItemRect(TreeCtrl* w, HTREEITEM item, bool fItemRect, RECT& r) {
-    BOOL ok = TreeView_GetItemRect(w->hwnd, item, &r, (BOOL)fItemRect);
+bool TreeCtrl::GetItemRect(HTREEITEM item, bool fItemRect, RECT& r) {
+    BOOL ok = TreeView_GetItemRect(this->hwnd, item, &r, (BOOL)fItemRect);
     return fromBOOL(ok);
 }
 
-HTREEITEM TreeCtrlGetRoot(TreeCtrl* w) {
-    HTREEITEM res = TreeView_GetRoot(w->hwnd);
+HTREEITEM TreeCtrl::GetRoot() {
+    HTREEITEM res = TreeView_GetRoot(this->hwnd);
     return res;
 }
 
-HTREEITEM TreeCtrlGetChild(TreeCtrl* w, HTREEITEM item) {
-    HTREEITEM res = TreeView_GetChild(w->hwnd, item);
+HTREEITEM TreeCtrl::GetChild(HTREEITEM item) {
+    HTREEITEM res = TreeView_GetChild(this->hwnd, item);
     return res;
 }
 
-HTREEITEM TreeCtrlGetNextSibling(TreeCtrl* w, HTREEITEM item) {
-    HTREEITEM res = TreeView_GetNextSibling(w->hwnd, item);
+HTREEITEM TreeCtrl::GetSiblingNext(HTREEITEM item) {
+    HTREEITEM res = TreeView_GetNextSibling(this->hwnd, item);
     return res;
 }
 
-HTREEITEM TreeCtrlGetSelection(TreeCtrl* w) {
-    HTREEITEM res = TreeView_GetSelection(w->hwnd);
+HTREEITEM TreeCtrl::GetSelection() {
+    HTREEITEM res = TreeView_GetSelection(this->hwnd);
     return res;
 }
 
-bool TreeCtrlSelectItem(TreeCtrl* w, HTREEITEM item) {
-    BOOL ok = TreeView_SelectItem(w->hwnd, item);
+bool TreeCtrl::SelectItem(HTREEITEM item) {
+    BOOL ok = TreeView_SelectItem(this->hwnd, item);
     return (ok == TRUE);
 }
 
-HTREEITEM TreeCtrlInsertItem(TreeCtrl* w, TV_INSERTSTRUCT* item) {
-    HTREEITEM res = TreeView_InsertItem(w->hwnd, item);
+HTREEITEM TreeCtrl::InsertItem(TV_INSERTSTRUCT* item) {
+    HTREEITEM res = TreeView_InsertItem(this->hwnd, item);
     return res;
 }
 
-void ClearTreeCtrl(TreeCtrl* w) {
-    HWND hwnd = w->hwnd;
+void TreeCtrl::Clear() {
+    HWND hwnd = this->hwnd;
     SendMessage(hwnd, WM_SETREDRAW, FALSE, 0);
     TreeView_DeleteAllItems(hwnd);
     SendMessage(hwnd, WM_SETREDRAW, TRUE, 0);
-    RedrawWindow(hwnd, nullptr, nullptr, RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
+    UINT flags = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;
+    RedrawWindow(hwnd, nullptr, nullptr, flags);
 }
 
-void DeleteTreeCtrl(TreeCtrl* w) {
-    if (!w)
-        return;
-    Unsubclass(w);
+TreeCtrl::~TreeCtrl() {
+    Unsubclass(this);
     // DeleteObject(w->bgBrush);
-    free(w);
 }
 
-void SetFont(TreeCtrl* w, HFONT f) {
-    SetWindowFont(w->hwnd, f, TRUE);
+void TreeCtrl::SetFont(HFONT f) {
+    SetWindowFont(this->hwnd, f, TRUE);
 }
 
 // returns false if we should stop iteration
@@ -257,19 +247,19 @@ static bool VisitTreeNodesRec(HWND hwnd, HTREEITEM hItem, const TreeItemVisitor&
     return true;
 }
 
-void TreeCtrlVisitNodes(TreeCtrl* w, const TreeItemVisitor& visitor) {
-    HTREEITEM hRoot = TreeView_GetRoot(w->hwnd);
-    VisitTreeNodesRec(w->hwnd, hRoot, visitor);
+void TreeCtrl::VisitNodes(const TreeItemVisitor& visitor) {
+    HTREEITEM hRoot = TreeView_GetRoot(this->hwnd);
+    VisitTreeNodesRec(this->hwnd, hRoot, visitor);
 }
 
-std::wstring_view TreeCtrlGetInfoTip(TreeCtrl* w, HTREEITEM hItem) {
-    ZeroArray(w->infotipBuf);
+std::wstring_view TreeCtrl::GetInfoTip(HTREEITEM hItem) {
+    ZeroArray(this->infotipBuf);
     TVITEMW item = {0};
     item.hItem = hItem;
     item.mask = TVIF_TEXT;
-    item.pszText = w->infotipBuf;
+    item.pszText = this->infotipBuf;
     item.cchTextMax = INFOTIPSIZE;
-    TreeView_GetItem(w->hwnd, &item);
-    auto res = std::wstring_view(w->infotipBuf);
+    TreeView_GetItem(this->hwnd, &item);
+    auto res = std::wstring_view(this->infotipBuf);
     return res;
 }

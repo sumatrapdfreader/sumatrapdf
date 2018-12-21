@@ -21,7 +21,7 @@ class DisplayModel;
 class EbookController;
 class TabInfo;
 
-struct TreeCtrl;
+class TreeCtrl;
 
 /* Describes actions which can be performed by mouse */
 enum MouseAction { MA_IDLE = 0, MA_DRAGGING, MA_DRAGGING_RIGHT, MA_SELECTING, MA_SCROLLING, MA_SELECTING_TEXT };

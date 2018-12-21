@@ -66,7 +66,7 @@ WindowInfo::~WindowInfo() {
     delete cbHandler;
 
     DeleteFrameRateWnd(frameRateWnd);
-    DeleteTreeCtrl(tocTreeCtrl);
+    delete tocTreeCtrl;
     free(sidebarSplitter);
     free(favSplitter);
     free(tocLabelWithClose);
