@@ -21,7 +21,7 @@ class TreeCtrl {
 
     void Clear();
     TVITEM* GetItem(HTREEITEM);
-    std::wstring_view GetInfoTip(HTREEITEM);
+    std::wstring GetInfoTip(HTREEITEM);
     HTREEITEM GetRoot();
     HTREEITEM GetChild(HTREEITEM);
     HTREEITEM GetSiblingNext(HTREEITEM); // GetNextSibling is windows macro
