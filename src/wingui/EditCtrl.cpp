@@ -156,7 +156,7 @@ bool EditCtrl::Create() {
 
     RECT rc = this->initialPos;
     this->hwnd = CreateWindowExW(this->dwExStyle, WC_EDIT, L"", this->dwStyle, rc.left, rc.top, RectDx(rc), RectDy(rc),
-                              this->parent, nullptr, GetModuleHandleW(nullptr), nullptr);
+                                 this->parent, nullptr, GetModuleHandleW(nullptr), nullptr);
 
     if (!this->hwnd) {
         return false;

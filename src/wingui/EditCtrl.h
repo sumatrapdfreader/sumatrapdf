@@ -44,7 +44,7 @@ class EditCtrl {
 
     HWND hwnd = nullptr;
 
-  // private by convention
+    // private by convention
     int ncDx = 0;
     int ncDy = 0;
     bool hasBorder = false;

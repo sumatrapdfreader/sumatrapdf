@@ -1,20 +1,19 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-struct SplitterWnd;
+class SplitterWnd;
 
-enum SplitterType {
-    SplitterHoriz,
-    SplitterVert,
+enum class SplitterType {
+    Horiz,
+    Vert,
 };
 
 // called when user drags the splitter ('done' is false) and when drag is finished ('done' is
 // true). the owner can constrain splitter by using current cursor
 // position and returning false if it's not allowed to go there
-typedef bool (*SplitterCallback)(void* ctx, bool done);
+typedef std::function<bool(bool)> SplitterWndCb;
 
-void RegisterSplitterWndClass();
-SplitterWnd* CreateSplitter(HWND parent, SplitterType type, void* ctx, SplitterCallback cb);
+SplitterWnd* CreateSplitter(HWND parent, SplitterType type, const SplitterWndCb&);
 HWND GetHwnd(SplitterWnd*);
 void SetBgCol(SplitterWnd*, COLORREF);
 

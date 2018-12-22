@@ -366,35 +366,36 @@ void UpdateToolbarState(WindowInfo* win) {
 #define TOOLBAR_MIN_ICON_SIZE 16
 #define FIND_BOX_WIDTH 160
 
-static void CreateFindBox(WindowInfo& win) {
-    int boxWidth = DpiScaleX(win.hwndFrame, FIND_BOX_WIDTH);
-    int minIconSize = DpiScaleX(win.hwndFrame, TOOLBAR_MIN_ICON_SIZE);
+static void CreateFindBox(WindowInfo* win) {
+    int boxWidth = DpiScaleX(win->hwndFrame, FIND_BOX_WIDTH);
+    int minIconSize = DpiScaleX(win->hwndFrame, TOOLBAR_MIN_ICON_SIZE);
     HWND findBg = CreateWindowEx(WS_EX_STATICEDGE, WC_STATIC, L"", WS_VISIBLE | WS_CHILD, 0, 1, boxWidth,
-                                 minIconSize + 4, win.hwndToolbar, (HMENU)0, GetModuleHandle(nullptr), nullptr);
+                                 minIconSize + 4, win->hwndToolbar, (HMENU)0, GetModuleHandle(nullptr), nullptr);
 
     HWND find = CreateWindowEx(0, WC_EDIT, L"", WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL, 0, 1,
-                               boxWidth - 2 * GetSystemMetrics(SM_CXEDGE), minIconSize + 2, win.hwndToolbar, (HMENU)0,
+                               boxWidth - 2 * GetSystemMetrics(SM_CXEDGE), minIconSize + 2, win->hwndToolbar, (HMENU)0,
                                GetModuleHandle(nullptr), nullptr);
 
-    HWND label = CreateWindowEx(0, WC_STATIC, L"", WS_VISIBLE | WS_CHILD, 0, 1, 0, 0, win.hwndToolbar, (HMENU)0,
+    HWND label = CreateWindowEx(0, WC_STATIC, L"", WS_VISIBLE | WS_CHILD, 0, 1, 0, 0, win->hwndToolbar, (HMENU)0,
                                 GetModuleHandle(nullptr), nullptr);
 
     SetWindowFont(label, GetDefaultGuiFont(), FALSE);
     SetWindowFont(find, GetDefaultGuiFont(), FALSE);
 
-    if (!DefWndProcToolbar)
-        DefWndProcToolbar = (WNDPROC)GetWindowLongPtr(win.hwndToolbar, GWLP_WNDPROC);
-    SetWindowLongPtr(win.hwndToolbar, GWLP_WNDPROC, (LONG_PTR)WndProcToolbar);
+    if (!DefWndProcToolbar) {
+        DefWndProcToolbar = (WNDPROC)GetWindowLongPtr(win->hwndToolbar, GWLP_WNDPROC);
+    }
+    SetWindowLongPtr(win->hwndToolbar, GWLP_WNDPROC, (LONG_PTR)WndProcToolbar);
 
     if (!DefWndProcFindBox)
         DefWndProcFindBox = (WNDPROC)GetWindowLongPtr(find, GWLP_WNDPROC);
     SetWindowLongPtr(find, GWLP_WNDPROC, (LONG_PTR)WndProcFindBox);
 
-    win.hwndFindText = label;
-    win.hwndFindBox = find;
-    win.hwndFindBg = findBg;
+    win->hwndFindText = label;
+    win->hwndFindBox = find;
+    win->hwndFindBg = findBg;
 
-    UpdateToolbarFindText(&win);
+    UpdateToolbarFindText(win);
 }
 
 static WNDPROC DefWndProcPageBox = nullptr;
@@ -513,37 +514,39 @@ void UpdateToolbarPageText(WindowInfo* win, int pageCount, bool updateOnly) {
     }
 }
 
-static void CreatePageBox(WindowInfo& win) {
-    int boxWidth = DpiScaleX(win.hwndFrame, PAGE_BOX_WIDTH);
-    int minIconSize = DpiScaleX(win.hwndFrame, TOOLBAR_MIN_ICON_SIZE);
+static void CreatePageBox(WindowInfo* win) {
+    auto hwndFrame = win->hwndFrame;
+    auto hwndToolbar = win->hwndToolbar;
+    int boxWidth = DpiScaleX(hwndFrame, PAGE_BOX_WIDTH);
+    int minIconSize = DpiScaleX(hwndFrame, TOOLBAR_MIN_ICON_SIZE);
     DWORD style = WS_VISIBLE | WS_CHILD;
+    auto h = GetModuleHandle(nullptr);
     HWND pageBg = CreateWindowEx(WS_EX_STATICEDGE, WC_STATIC, L"", style, 0, 1, boxWidth, minIconSize + 4,
-                                 win.hwndToolbar, (HMENU)0, GetModuleHandle(nullptr), nullptr);
-
-    HWND label = CreateWindowEx(0, WC_STATIC, L"", style, 0, 1, 0, 0, win.hwndToolbar, (HMENU)0,
-                                GetModuleHandle(nullptr), nullptr);
-
-    HWND total = CreateWindowEx(0, WC_STATIC, L"", style, 0, 1, 0, 0, win.hwndToolbar, (HMENU)0,
-                                GetModuleHandle(nullptr), nullptr);
+                                 hwndToolbar, (HMENU)0, h, nullptr);
+    HWND label = CreateWindowEx(0, WC_STATIC, L"", style, 0, 1, 0, 0, hwndToolbar, (HMENU)0, h, nullptr);
+    HWND total = CreateWindowEx(0, WC_STATIC, L"", style, 0, 1, 0, 0, hwndToolbar, (HMENU)0, h, nullptr);
 
     style = WS_VISIBLE | WS_CHILD | ES_AUTOHSCROLL | ES_NUMBER | ES_RIGHT;
-    HWND page = CreateWindowExW(0, WC_EDIT, L"0", style, 0, 1, boxWidth - 2 * GetSystemMetrics(SM_CXEDGE),
-                                minIconSize + 2, win.hwndToolbar, (HMENU)0, GetModuleHandle(nullptr), nullptr);
+    int dx = boxWidth - 2 * GetSystemMetrics(SM_CXEDGE);
+    int dy = minIconSize + 2;
+    HWND page = CreateWindowExW(0, WC_EDIT, L"0", style, 0, 1, dx, dy, hwndToolbar, (HMENU)0, h, nullptr);
 
-    SetWindowFont(label, GetDefaultGuiFont(), FALSE);
-    SetWindowFont(page, GetDefaultGuiFont(), FALSE);
-    SetWindowFont(total, GetDefaultGuiFont(), FALSE);
+    auto font = GetDefaultGuiFont();
+    SetWindowFont(label, font, FALSE);
+    SetWindowFont(page, font, FALSE);
+    SetWindowFont(total, font, FALSE);
 
-    if (!DefWndProcPageBox)
+    if (!DefWndProcPageBox) {
         DefWndProcPageBox = (WNDPROC)GetWindowLongPtr(page, GWLP_WNDPROC);
+    }
     SetWindowLongPtr(page, GWLP_WNDPROC, (LONG_PTR)WndProcPageBox);
 
-    win.hwndPageText = label;
-    win.hwndPageBox = page;
-    win.hwndPageBg = pageBg;
-    win.hwndPageTotal = total;
+    win->hwndPageText = label;
+    win->hwndPageBox = page;
+    win->hwndPageBg = pageBg;
+    win->hwndPageTotal = total;
 
-    UpdateToolbarPageText(&win, -1);
+    UpdateToolbarPageText(win, -1);
 }
 
 #define WS_REBAR \
@@ -669,6 +672,6 @@ void CreateToolbar(WindowInfo* win) {
 
     SetWindowPos(win->hwndReBar, nullptr, 0, 0, 0, 0, SWP_NOZORDER);
 
-    CreatePageBox(*win);
-    CreateFindBox(*win);
+    CreatePageBox(win);
+    CreateFindBox(win);
 }

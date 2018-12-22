@@ -175,7 +175,6 @@ static bool RegisterWinClass() {
     CrashIf(!atom);
 
     RegisterNotificationsWndClass();
-    RegisterSplitterWndClass();
     RegisterLabelWithCloseWnd();
     RegisterCaptionWndClass();
     return true;

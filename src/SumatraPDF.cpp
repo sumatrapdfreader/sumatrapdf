@@ -128,10 +128,10 @@ static WStrVec gAllowedLinkProtocols;
 // on an in-document link); examples: "audio", "video", ...
 static WStrVec gAllowedFileTypes;
 
-static void CloseDocumentInTab(WindowInfo* win, bool keepUIEnabled = false, bool deleteModel = false);
-static void UpdatePageInfoHelper(WindowInfo* win, NotificationWnd* wnd = nullptr, int pageNo = -1);
-static bool SidebarSplitterCb(void* ctx, bool done);
-static bool FavSplitterCb(void* ctx, bool done);
+static void CloseDocumentInTab(WindowInfo*, bool keepUIEnabled = false, bool deleteModel = false);
+static void UpdatePageInfoHelper(WindowInfo*, NotificationWnd* wnd = nullptr, int pageNo = -1);
+static bool SidebarSplitterCb(WindowInfo*, bool done);
+static bool FavSplitterCb(WindowInfo*, bool done);
 
 void SetCurrentLang(const char* langCode) {
     if (langCode) {
@@ -1178,11 +1178,13 @@ void ReloadDocument(WindowInfo* win, bool autorefresh) {
 }
 
 static void CreateSidebar(WindowInfo* win) {
-    win->sidebarSplitter = CreateSplitter(win->hwndFrame, SplitterVert, win, SidebarSplitterCb);
+    auto sidebarCb = [=](bool done) { return SidebarSplitterCb(win, done); };
+    win->sidebarSplitter = CreateSplitter(win->hwndFrame, SplitterType::Vert, sidebarCb);
     CrashIf(!win->sidebarSplitter);
     CreateToc(win);
 
-    win->favSplitter = CreateSplitter(win->hwndFrame, SplitterHoriz, win, FavSplitterCb);
+    auto favCb = [=](bool done) { return FavSplitterCb(win, done); };
+    win->favSplitter = CreateSplitter(win->hwndFrame, SplitterType::Horiz, favCb);
     CrashIf(!win->favSplitter);
     CreateFavorites(win);
 
@@ -2567,7 +2569,7 @@ static UINT_PTR CALLBACK FileOpenHook(HWND hDlg, UINT uiMsg, WPARAM wParam, LPAR
 }
 #endif
 
-void OnMenuOpen(WindowInfo& win) {
+static void OnMenuOpen(WindowInfo* win) {
     if (!HasPermission(Perm_DiskAccess))
         return;
     // don't allow opening different files in plugin mode
@@ -2621,7 +2623,7 @@ void OnMenuOpen(WindowInfo& win) {
 
     OPENFILENAME ofn = {0};
     ofn.lStructSize = sizeof(ofn);
-    ofn.hwndOwner = win.hwndFrame;
+    ofn.hwndOwner = win->hwndFrame;
 
     ofn.lpstrFilter = fileFilter.Get();
     ofn.nFilterIndex = 1;
@@ -2650,7 +2652,7 @@ void OnMenuOpen(WindowInfo& win) {
     WCHAR* fileName = ofn.lpstrFile + ofn.nFileOffset;
     if (*(fileName - 1)) {
         // special case: single filename without nullptr separator
-        LoadArgs args(ofn.lpstrFile, &win);
+        LoadArgs args(ofn.lpstrFile, win);
         LoadDocument(args);
         return;
     }
@@ -2658,7 +2660,7 @@ void OnMenuOpen(WindowInfo& win) {
     while (*fileName) {
         AutoFreeW filePath(path::Join(ofn.lpstrFile, fileName));
         if (filePath) {
-            LoadArgs args(filePath, &win);
+            LoadArgs args(filePath, win);
             LoadDocument(args);
         }
         fileName += str::Len(fileName) + 1;
@@ -3522,9 +3524,7 @@ static bool FrameOnSysChar(WindowInfo& win, WPARAM key) {
     return false;
 }
 
-static bool SidebarSplitterCb(void* ctx, bool done) {
-    WindowInfo* win = reinterpret_cast<WindowInfo*>(ctx);
-
+static bool SidebarSplitterCb(WindowInfo* win, bool done) {
     PointI pcur;
     GetCursorPosInHwnd(win->hwndFrame, pcur);
     int sidebarDx = pcur.x; // without splitter
@@ -3544,8 +3544,7 @@ static bool SidebarSplitterCb(void* ctx, bool done) {
     return true;
 }
 
-static bool FavSplitterCb(void* ctx, bool done) {
-    WindowInfo* win = reinterpret_cast<WindowInfo*>(ctx);
+static bool FavSplitterCb(WindowInfo* win, bool done) {
     PointI pcur;
     GetCursorPosInHwnd(win->hwndTocBox, pcur);
     int tocDy = pcur.y; // without splitter
@@ -3725,7 +3724,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
     switch (wmId) {
         case IDM_OPEN:
         case IDT_FILE_OPEN:
-            OnMenuOpen(*win);
+            OnMenuOpen(win);
             break;
 
         case IDM_SAVEAS:
