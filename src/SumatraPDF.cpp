@@ -128,10 +128,10 @@ static WStrVec gAllowedLinkProtocols;
 // on an in-document link); examples: "audio", "video", ...
 static WStrVec gAllowedFileTypes;
 
-static void CloseDocumentInTab(WindowInfo* win, bool keepUIEnabled = false, bool deleteModel = false);
-static void UpdatePageInfoHelper(WindowInfo* win, NotificationWnd* wnd = nullptr, int pageNo = -1);
-static bool SidebarSplitterCb(void* ctx, bool done);
-static bool FavSplitterCb(void* ctx, bool done);
+static void CloseDocumentInTab(WindowInfo*, bool keepUIEnabled = false, bool deleteModel = false);
+static void UpdatePageInfoHelper(WindowInfo*, NotificationWnd* wnd = nullptr, int pageNo = -1);
+static bool SidebarSplitterCb(WindowInfo*, bool done);
+static bool FavSplitterCb(WindowInfo*, bool done);
 
 void SetCurrentLang(const char* langCode) {
     if (langCode) {
@@ -1178,11 +1178,14 @@ void ReloadDocument(WindowInfo* win, bool autorefresh) {
 }
 
 static void CreateSidebar(WindowInfo* win) {
-    win->sidebarSplitter = CreateSplitter(win->hwndFrame, SplitterType::Vert, win, SidebarSplitterCb);
+    auto sidebarCb = [=](bool done) {
+            return SidebarSplitterCb(win, done); };
+    win->sidebarSplitter = CreateSplitter(win->hwndFrame, SplitterType::Vert, sidebarCb);
     CrashIf(!win->sidebarSplitter);
     CreateToc(win);
 
-    win->favSplitter = CreateSplitter(win->hwndFrame, SplitterType::Horiz, win, FavSplitterCb);
+    auto favCb = [=](bool done) { return FavSplitterCb(win, done); };
+    win->favSplitter = CreateSplitter(win->hwndFrame, SplitterType::Horiz, favCb);
     CrashIf(!win->favSplitter);
     CreateFavorites(win);
 
@@ -3522,9 +3525,7 @@ static bool FrameOnSysChar(WindowInfo& win, WPARAM key) {
     return false;
 }
 
-static bool SidebarSplitterCb(void* ctx, bool done) {
-    WindowInfo* win = reinterpret_cast<WindowInfo*>(ctx);
-
+static bool SidebarSplitterCb(WindowInfo* win, bool done) {
     PointI pcur;
     GetCursorPosInHwnd(win->hwndFrame, pcur);
     int sidebarDx = pcur.x; // without splitter
@@ -3544,8 +3545,7 @@ static bool SidebarSplitterCb(void* ctx, bool done) {
     return true;
 }
 
-static bool FavSplitterCb(void* ctx, bool done) {
-    WindowInfo* win = reinterpret_cast<WindowInfo*>(ctx);
+static bool FavSplitterCb(WindowInfo *win, bool done) {
     PointI pcur;
     GetCursorPosInHwnd(win->hwndTocBox, pcur);
     int tocDy = pcur.y; // without splitter

@@ -15,12 +15,15 @@
 static HBITMAP splitterBmp = nullptr;
 static HBRUSH splitterBrush = nullptr;
 
-struct SplitterWnd {
+class SplitterWnd {
+  public:
+    SplitterWnd(const SplitterWndCb& cb) : cb(cb) {}
+    ~SplitterWnd() {}
+
     // none of this data needs to be freed by us
     HWND hwnd;
-    void* ctx;
     SplitterType type;
-    SplitterCallback cb;
+    SplitterWndCb cb;
     COLORREF bgCol;
     bool isLive;
     PointI prevResizeLinePos;
@@ -127,7 +130,7 @@ static LRESULT CALLBACK WndProcSplitter(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
             }
         }
         ReleaseCapture();
-        w->cb(w->ctx, true);
+        w->cb(true);
         ScheduleRepaint(w->hwnd);
         return 0;
     }
@@ -138,7 +141,7 @@ static LRESULT CALLBACK WndProcSplitter(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
             curId = IDC_SIZEWE;
         }
         if (hwnd == GetCapture()) {
-            bool resizingAllowed = w->cb(w->ctx, false);
+            bool resizingAllowed = w->cb(false);
             if (!resizingAllowed) {
                 curId = IDC_NO;
             } else if (!w->isLive) {
@@ -170,17 +173,15 @@ static void RegisterSplitterWndClass() {
     splitterBmp = CreateBitmap(8, 8, 1, 1, dotPatternBmp);
     splitterBrush = CreatePatternBrush(splitterBmp);
 
-    WNDCLASSEX wcex = { 0 };
+    WNDCLASSEX wcex = {0};
     FillWndClassEx(wcex, SPLITTER_CLASS_NAME, WndProcSplitter);
     RegisterClassEx(&wcex);
 }
 
 // caller needs to free() the result
-SplitterWnd* CreateSplitter(HWND parent, SplitterType type, void* ctx, SplitterCallback cb) {
+SplitterWnd* CreateSplitter(HWND parent, SplitterType type, const SplitterWndCb& cb) {
     RegisterSplitterWndClass();
-    SplitterWnd* w = AllocStruct<SplitterWnd>();
-    w->ctx = ctx;
-    w->cb = cb;
+    SplitterWnd* w = new SplitterWnd(cb);
     w->type = type;
     w->bgCol = GetSysColor(COLOR_BTNFACE);
     w->isLive = true;

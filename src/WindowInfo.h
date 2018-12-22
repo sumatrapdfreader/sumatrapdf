@@ -8,7 +8,7 @@ class StressTest;
 class SumatraUIAutomationProvider;
 struct FrameRateWnd;
 struct LabelWithCloseWnd;
-struct SplitterWnd;
+class SplitterWnd;
 class CaptionInfo;
 
 class PageElement;
