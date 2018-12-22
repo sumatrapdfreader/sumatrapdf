@@ -12,9 +12,9 @@ class ScopedHandle {
   public:
     explicit ScopedHandle(HANDLE handle) : handle(handle) {}
     ~ScopedHandle() {
-		if (IsValid())
-			CloseHandle(handle); 
-	}
+        if (IsValid())
+            CloseHandle(handle);
+    }
     operator HANDLE() const { return handle; }
     bool IsValid() const { return handle != NULL && handle != INVALID_HANDLE_VALUE; }
 };

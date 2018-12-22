@@ -891,7 +891,6 @@ int CmpNatural(const char* a, const char* b) {
     return diff;
 }
 
-
 } // namespace str
 
 namespace url {
