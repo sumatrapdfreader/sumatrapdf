@@ -77,7 +77,7 @@ static void DrawResizeLineVH(SplitterWnd* w, bool isVert, PointI pos) {
 static void DrawResizeLine(SplitterWnd* w, bool erasePrev, bool drawCurr) {
     PointI pos;
     GetCursorPosInHwnd(GetParent(w->hwnd), pos);
-    bool isVert = w->type != SplitterHoriz;
+    bool isVert = w->type != SplitterType::Horiz;
 
     if (erasePrev) {
         DrawResizeLineVH(w, isVert, w->prevResizeLinePos);
@@ -134,7 +134,7 @@ static LRESULT CALLBACK WndProcSplitter(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
 
     if (WM_MOUSEMOVE == msg) {
         LPWSTR curId = IDC_SIZENS;
-        if (SplitterVert == w->type) {
+        if (SplitterType::Vert == w->type) {
             curId = IDC_SIZEWE;
         }
         if (hwnd == GetCapture()) {
@@ -159,22 +159,25 @@ Exit:
 }
 
 // call only once at the beginning of program
-void RegisterSplitterWndClass() {
-    if (splitterBmp)
+static void RegisterSplitterWndClass() {
+    if (splitterBmp != nullptr) {
+        // has already been registered
         return;
+    }
 
     static WORD dotPatternBmp[8] = {0x00aa, 0x0055, 0x00aa, 0x0055, 0x00aa, 0x0055, 0x00aa, 0x0055};
 
     splitterBmp = CreateBitmap(8, 8, 1, 1, dotPatternBmp);
     splitterBrush = CreatePatternBrush(splitterBmp);
 
-    WNDCLASSEX wcex;
+    WNDCLASSEX wcex = { 0 };
     FillWndClassEx(wcex, SPLITTER_CLASS_NAME, WndProcSplitter);
     RegisterClassEx(&wcex);
 }
 
 // caller needs to free() the result
 SplitterWnd* CreateSplitter(HWND parent, SplitterType type, void* ctx, SplitterCallback cb) {
+    RegisterSplitterWndClass();
     SplitterWnd* w = AllocStruct<SplitterWnd>();
     w->ctx = ctx;
     w->cb = cb;

@@ -3,9 +3,9 @@
 
 struct SplitterWnd;
 
-enum SplitterType {
-    SplitterHoriz,
-    SplitterVert,
+enum class SplitterType {
+    Horiz,
+    Vert,
 };
 
 // called when user drags the splitter ('done' is false) and when drag is finished ('done' is
@@ -13,7 +13,6 @@ enum SplitterType {
 // position and returning false if it's not allowed to go there
 typedef bool (*SplitterCallback)(void* ctx, bool done);
 
-void RegisterSplitterWndClass();
 SplitterWnd* CreateSplitter(HWND parent, SplitterType type, void* ctx, SplitterCallback cb);
 HWND GetHwnd(SplitterWnd*);
 void SetBgCol(SplitterWnd*, COLORREF);

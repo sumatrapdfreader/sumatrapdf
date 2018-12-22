@@ -1178,11 +1178,11 @@ void ReloadDocument(WindowInfo* win, bool autorefresh) {
 }
 
 static void CreateSidebar(WindowInfo* win) {
-    win->sidebarSplitter = CreateSplitter(win->hwndFrame, SplitterVert, win, SidebarSplitterCb);
+    win->sidebarSplitter = CreateSplitter(win->hwndFrame, SplitterType::Vert, win, SidebarSplitterCb);
     CrashIf(!win->sidebarSplitter);
     CreateToc(win);
 
-    win->favSplitter = CreateSplitter(win->hwndFrame, SplitterHoriz, win, FavSplitterCb);
+    win->favSplitter = CreateSplitter(win->hwndFrame, SplitterType::Horiz, win, FavSplitterCb);
     CrashIf(!win->favSplitter);
     CreateFavorites(win);
 
