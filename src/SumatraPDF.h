@@ -79,7 +79,7 @@ class WindowInfo;
 class NotificationWnd;
 class RenderCache;
 class TabInfo;
-struct LabelWithCloseWnd;
+class LabelWithCloseWnd;
 struct SessionData;
 
 // all defined in SumatraPDF.cpp

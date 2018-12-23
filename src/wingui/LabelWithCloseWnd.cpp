@@ -13,19 +13,6 @@
 
 #define WND_CLASS_NAME L"LabelWithCloseWndClass"
 
-struct LabelWithCloseWnd {
-    HWND hwnd;
-    HFONT font;
-    int cmd;
-
-    RectI closeBtnPos;
-    COLORREF txtCol;
-    COLORREF bgCol;
-
-    // in points
-    int padX, padY;
-};
-
 static bool IsMouseOverClose(LabelWithCloseWnd* w) {
     PointI p;
     GetCursorPosInHwnd(w->hwnd, p);
@@ -153,7 +140,7 @@ static LRESULT CALLBACK WndProcLabelWithClose(HWND hwnd, UINT msg, WPARAM wp, LP
 
     // to match other controls, preferred way is explict SetFont() call
     if (WM_SETFONT == msg) {
-        SetFont(w, (HFONT)wp);
+        w->SetFont((HFONT)wp);
         return 0;
     }
 
@@ -200,70 +187,74 @@ DoDefault:
     return DefWindowProc(hwnd, msg, wp, lp);
 }
 
-void RegisterLabelWithCloseWnd() {
-    WNDCLASSEX wcex;
+static void RegisterLabelWithCloseWnd() {
+    static ATOM atomClass = 0;
+
+    if (atomClass != 0) {
+        return;
+    }
+
+    WNDCLASSEX wcex = {};
     FillWndClassEx(wcex, WND_CLASS_NAME, WndProcLabelWithClose);
-    RegisterClassEx(&wcex);
+    atomClass = RegisterClassExW(&wcex);
 }
 
-void SetLabel(LabelWithCloseWnd* w, const WCHAR* label) {
-    win::SetText(w->hwnd, label);
-    ScheduleRepaint(w->hwnd);
+void LabelWithCloseWnd::SetLabel(const WCHAR* label) {
+    win::SetText(this->hwnd, label);
+    ScheduleRepaint(this->hwnd);
 }
 
-void SetBgCol(LabelWithCloseWnd* w, COLORREF c) {
-    w->bgCol = c;
-    ScheduleRepaint(w->hwnd);
+void LabelWithCloseWnd::SetBgCol(COLORREF c) {
+    this->bgCol = c;
+    ScheduleRepaint(this->hwnd);
 }
 
-void SetTextCol(LabelWithCloseWnd* w, COLORREF c) {
-    w->txtCol = c;
-    ScheduleRepaint(w->hwnd);
+void LabelWithCloseWnd::SetTextCol(COLORREF c) {
+    this->txtCol = c;
+    ScheduleRepaint(this->hwnd);
 }
 
 // cmd is both the id of the window as well as id of WM_COMMAND sent
 // when close button is clicked
 // caller needs to free() the result
-LabelWithCloseWnd* CreateLabelWithCloseWnd(HWND parent, int cmd) {
-    LabelWithCloseWnd* w = AllocStruct<LabelWithCloseWnd>();
-    w->cmd = cmd;
-    w->bgCol = GetSysColor(COLOR_BTNFACE);
-    w->txtCol = GetSysColor(COLOR_BTNTEXT);
+bool LabelWithCloseWnd::Create(HWND parent, int cmd) {
+    RegisterLabelWithCloseWnd();
+
+    this->cmd = cmd;
+    this->bgCol = GetSysColor(COLOR_BTNFACE);
+    this->txtCol = GetSysColor(COLOR_BTNTEXT);
 
     // sets w->hwnd during WM_NCCREATE
     HWND hwnd = CreateWindow(WND_CLASS_NAME, L"", WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, parent, (HMENU)(INT_PTR)cmd,
-                             GetModuleHandle(nullptr), w);
-    CrashIf(w->hwnd != hwnd);
-    CrashIf(!w->hwnd);
-    return w;
+                             GetModuleHandle(nullptr), this);
+    CrashIf(this->hwnd != hwnd);
+    CrashIf(!this->hwnd);
+    return this->hwnd != nullptr;
 }
 
-HWND GetHwnd(LabelWithCloseWnd* w) {
-    return w->hwnd;
-}
-
-SizeI GetIdealSize(LabelWithCloseWnd* w) {
-    WCHAR* s = win::GetText(w->hwnd);
-    SizeI size = TextSizeInHwnd(w->hwnd, s);
+SizeI LabelWithCloseWnd::GetIdealSize() {
+    WCHAR* s = win::GetText(this->hwnd);
+    SizeI size = TextSizeInHwnd(this->hwnd, s);
     free(s);
-    int btnDx = DpiScaleX(w->hwnd, CLOSE_BTN_DX);
-    int btnDy = DpiScaleY(w->hwnd, CLOSE_BTN_DY);
+    int btnDx = DpiScaleX(this->hwnd, CLOSE_BTN_DX);
+    int btnDy = DpiScaleY(this->hwnd, CLOSE_BTN_DY);
     size.dx += btnDx;
-    size.dx += DpiScaleX(w->hwnd, LABEL_BUTTON_SPACE_DX);
-    size.dx += 2 * DpiScaleX(w->hwnd, w->padX);
+    size.dx += DpiScaleX(this->hwnd, LABEL_BUTTON_SPACE_DX);
+    size.dx += 2 * DpiScaleX(this->hwnd, this->padX);
     if (size.dy < btnDy) {
         size.dy = btnDy;
     }
-    size.dy += 2 * DpiScaleY(w->hwnd, w->padY);
+    size.dy += 2 * DpiScaleY(this->hwnd, this->padY);
     return size;
 }
 
-void SetFont(LabelWithCloseWnd* w, HFONT f) {
-    w->font = f;
+void LabelWithCloseWnd::SetFont(HFONT f) {
+    this->font = f;
+    // TODO: if created, set on the label?
 }
 
-void SetPaddingXY(LabelWithCloseWnd* w, int x, int y) {
-    w->padX = x;
-    w->padY = y;
-    ScheduleRepaint(w->hwnd);
+void LabelWithCloseWnd::SetPaddingXY(int x, int y) {
+    this->padX = x;
+    this->padY = y;
+    ScheduleRepaint(this->hwnd);
 }

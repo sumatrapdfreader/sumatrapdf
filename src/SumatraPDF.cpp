@@ -536,11 +536,11 @@ static void UpdateWindowRtlLayout(WindowInfo* win) {
     SetRtl(win->hwndFrame, isRTL);
 
     SetRtl(win->hwndTocBox, isRTL);
-    HWND tocBoxTitle = GetHwnd(win->tocLabelWithClose);
+    HWND tocBoxTitle = win->tocLabelWithClose->hwnd;
     SetRtl(tocBoxTitle, isRTL);
 
     SetRtl(win->hwndFavBox, isRTL);
-    HWND favBoxTitle = GetHwnd(win->favLabelWithClose);
+    HWND favBoxTitle = win->favLabelWithClose->hwnd;
     SetRtl(favBoxTitle, isRTL);
     SetRtl(win->hwndFavTree, isRTL);
 
@@ -1202,8 +1202,8 @@ static void UpdateToolbarSidebarText(WindowInfo* win) {
     UpdateToolbarFindText(win);
     UpdateToolbarButtonsToolTipsForWindow(win);
 
-    SetLabel(win->tocLabelWithClose, _TR("Bookmarks"));
-    SetLabel(win->favLabelWithClose, _TR("Favorites"));
+    win->tocLabelWithClose->SetLabel(_TR("Bookmarks"));
+    win->favLabelWithClose->SetLabel(_TR("Favorites"));
 }
 
 static WindowInfo* CreateWindowInfo() {
@@ -3567,9 +3567,9 @@ static bool FavSplitterCb(WindowInfo* win, bool done) {
 // Used for toc and favorites.
 void LayoutTreeContainer(LabelWithCloseWnd* l, HWND hwndTree) {
     HWND hwndContainer = GetParent(hwndTree);
-    SizeI labelSize = GetIdealSize(l);
+    SizeI labelSize = l->GetIdealSize();
     WindowRect rc(hwndContainer);
-    MoveWindow(GetHwnd(l), 0, 0, rc.dx, labelSize.dy, TRUE);
+    MoveWindow(l->hwnd, 0, 0, rc.dx, labelSize.dy, TRUE);
     MoveWindow(hwndTree, 0, labelSize.dy, rc.dx, rc.dy - labelSize.dy, TRUE);
 }
 

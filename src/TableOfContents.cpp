@@ -366,8 +366,8 @@ void UpdateTocColors(WindowInfo* win) {
 
     // TOOD: move into TreeCtrl
     TreeView_SetBkColor(win->tocTreeCtrl->hwnd, treeBgCol);
-    SetBgCol(win->tocLabelWithClose, labelBgCol);
-    SetTextCol(win->tocLabelWithClose, labelTxtCol);
+    win->tocLabelWithClose->SetBgCol(labelBgCol);
+    win->tocLabelWithClose->SetTextCol(labelTxtCol);
     SetBgCol(win->sidebarSplitter, splitterCol);
     ToggleWindowExStyle(win->tocTreeCtrl->hwnd, WS_EX_STATICEDGE, !flatTreeWnd);
     SetWindowPos(win->tocTreeCtrl->hwnd, nullptr, 0, 0, 0, 0,
@@ -598,10 +598,11 @@ void CreateToc(WindowInfo* win) {
     win->hwndTocBox = CreateWindow(WC_STATIC, L"", WS_CHILD | WS_CLIPCHILDREN, 0, 0, gGlobalPrefs->sidebarDx, 0,
                                    win->hwndFrame, (HMENU)0, GetModuleHandle(nullptr), nullptr);
 
-    LabelWithCloseWnd* l = CreateLabelWithCloseWnd(win->hwndTocBox, IDC_TOC_LABEL_WITH_CLOSE);
+    auto* l = new LabelWithCloseWnd();
+    l->Create(win->hwndTocBox, IDC_TOC_LABEL_WITH_CLOSE);
     win->tocLabelWithClose = l;
-    SetPaddingXY(l, 2, 2);
-    SetFont(l, GetDefaultGuiFont());
+    l->SetPaddingXY(2, 2);
+    l->SetFont(GetDefaultGuiFont());
     // label is set in UpdateToolbarSidebarText()
 
     auto* tree = new TreeCtrl(win->hwndTocBox, nullptr);

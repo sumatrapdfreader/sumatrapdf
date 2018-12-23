@@ -10,4 +10,4 @@ insert_final_newline = true
 
 [*.{cpp,h}]
 indent_style = space
-indent_size = 2
+indent_size = 4

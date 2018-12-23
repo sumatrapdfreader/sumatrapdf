@@ -775,10 +775,11 @@ void CreateFavorites(WindowInfo* win) {
     DWORD dwStyle = WS_CHILD | WS_CLIPCHILDREN;
     win->hwndFavBox = CreateWindowW(WC_STATIC, L"", dwStyle, 0, 0, dx, 0, win->hwndFrame, (HMENU)0, h, nullptr);
 
-    LabelWithCloseWnd* l = CreateLabelWithCloseWnd(win->hwndFavBox, IDC_FAV_LABEL_WITH_CLOSE);
+    auto* l = new LabelWithCloseWnd();
+    l->Create(win->hwndFavBox, IDC_FAV_LABEL_WITH_CLOSE);
     win->favLabelWithClose = l;
-    SetPaddingXY(l, 2, 2);
-    SetFont(l, GetDefaultGuiFont());
+    l->SetPaddingXY(2, 2);
+    l->SetFont(GetDefaultGuiFont());
     // label is set in UpdateToolbarSidebarText()
 
     dwStyle = TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS | TVS_TRACKSELECT |
