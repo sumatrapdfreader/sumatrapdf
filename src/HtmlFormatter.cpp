@@ -717,15 +717,15 @@ void HtmlFormatter::EmitTextRun(const char* s, const char* end) {
         //get len That Fits the remaining space in the line
         size_t lenThatFits = StringLenForWidth(textMeasure, buf, strLen, pageDx -currX);
         // try to prevent a break in the middle of a word
-         if (lenThatFits > 0) {
-              size_t len = lenThatFits;
-              if(!CanBreakWordOnChar(buf[lenThatFits])) {
-                  for (len= lenThatFits; len > 0; len--) {
-                      if (CanBreakWordOnChar(buf[len - 1])) {
+        if (lenThatFits > 0) {
+            size_t lentmp = lenThatFits;
+            if (!CanBreakWordOnChar(buf[lenThatFits])) {
+                for (lentmp = lenThatFits; lentmp > 0; lentmp--) {
+                    if (CanBreakWordOnChar(buf[lentmp - 1])) {
                           break;
                       }
                   }
-                  if (len == 0) {
+                  if (lentmp == 0) {
                     //make a new line if the word need to show in another line
                       if (currX != 0) {
                           FlushCurrLine(false);
@@ -734,7 +734,7 @@ void HtmlFormatter::EmitTextRun(const char* s, const char* end) {
                     //split the word (or CJK sentence) if it is too long to show in one line
                   }else{
                     // renew lenThatFits
-                      lenThatFits = len;
+                      lenThatFits = lentmp;
                   }
               } 
         }else{
