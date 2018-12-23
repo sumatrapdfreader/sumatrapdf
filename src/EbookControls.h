@@ -1,7 +1,7 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-struct FrameRateWnd;
+class FrameRateWnd;
 
 class HtmlFormatter;
 class HtmlFormatterArgs;

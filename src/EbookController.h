@@ -4,7 +4,7 @@
 struct DrawInstr;
 struct EbookControls;
 struct EbookFormattingData;
-struct FrameRateWnd;
+class FrameRateWnd;
 
 class EbookController;
 class EbookFormattingThread;

@@ -1234,8 +1234,8 @@ static WindowInfo* CreateWindowInfo() {
     }
 
     if (gShowFrameRate) {
-        win->frameRateWnd = AllocFrameRateWnd(win->hwndCanvas);
-        CreateFrameRateWnd(win->frameRateWnd);
+        win->frameRateWnd = new FrameRateWnd();
+        win->frameRateWnd->Create(win->hwndCanvas);
     }
 
     // hide scrollbars to avoid showing/hiding on empty window

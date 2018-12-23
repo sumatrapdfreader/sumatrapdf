@@ -65,7 +65,7 @@ WindowInfo::~WindowInfo() {
     // (all controllers should have been deleted prior to WindowInfo, though)
     delete cbHandler;
 
-    DeleteFrameRateWnd(frameRateWnd);
+    delete frameRateWnd;
     delete tocTreeCtrl;
     free(sidebarSplitter);
     free(favSplitter);

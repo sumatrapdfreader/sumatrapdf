@@ -1,21 +1,24 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-struct FrameRateWnd {
-    HWND hwndAssociatedWith;
-    HWND hwndAssociatedWithTopLevel;
+class FrameRateWnd {
+  public:
+    FrameRateWnd() = default;
+    ~FrameRateWnd();
 
-    HWND hwnd;
-    HFONT font;
+    bool Create(HWND);
 
-    SIZE maxSizeSoFar;
-    int frameRate;
+    void ShowFrameRate(int frameRate);
+    void ShowFrameRateDur(double durMs);
+
+    HWND hwndAssociatedWith = nullptr;
+    HWND hwndAssociatedWithTopLevel = nullptr;
+
+    HWND hwnd = nullptr;
+    HFONT font = nullptr;
+
+    SIZE maxSizeSoFar = {0, 0};
+    int frameRate = -1;
 };
-
-FrameRateWnd* AllocFrameRateWnd(HWND hwndAssociatedWith);
-bool CreateFrameRateWnd(FrameRateWnd*);
-void DeleteFrameRateWnd(FrameRateWnd*);
-void ShowFrameRate(FrameRateWnd*, int frameRate);
-void ShowFrameRateDur(FrameRateWnd*, double durMs);
 
 int FrameRateFromDuration(double durMs);

@@ -734,7 +734,7 @@ static void OnPaintDocument(WindowInfo* win) {
 
     EndPaint(win->hwndCanvas, &ps);
     if (gShowFrameRate) {
-        ShowFrameRateDur(win->frameRateWnd, t.GetTimeInMs());
+        win->frameRateWnd->ShowFrameRateDur(t.GetTimeInMs());
     }
 }
 
@@ -1161,7 +1161,7 @@ static void OnPaintAbout(WindowInfo* win) {
 
     EndPaint(win->hwndCanvas, &ps);
     if (gShowFrameRate) {
-        ShowFrameRateDur(win->frameRateWnd, t.GetTimeInMs());
+        win->frameRateWnd->ShowFrameRateDur(t.GetTimeInMs());
     }
 }
 

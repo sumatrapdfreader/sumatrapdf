@@ -70,20 +70,6 @@ static SIZE GetIdealSize(FrameRateWnd* w) {
     return w->maxSizeSoFar;
 }
 
-void ShowFrameRate(FrameRateWnd* w, int frameRate) {
-    if (!w || w->frameRate == frameRate) {
-        return;
-    }
-    w->frameRate = frameRate;
-    SIZE s = GetIdealSize(w);
-    PositionWindow(w, s);
-    ScheduleRepaint(w->hwnd);
-}
-
-void ShowFrameRateDur(FrameRateWnd* w, double durMs) {
-    ShowFrameRate(w, FrameRateFromDuration(durMs));
-}
-
 static void FrameRateOnPaint(FrameRateWnd* w) {
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(w->hwnd, &ps);
@@ -141,31 +127,27 @@ static LRESULT CALLBACK WndProcFrameRate(HWND hwnd, UINT msg, WPARAM wp, LPARAM 
 
 static void RegisterFrameRateWndClass() {
     static ATOM atom = 0;
-    if (!atom) {
-        WNDCLASSEX wcex;
-        FillWndClassEx(wcex, FRAME_RATE_CLASS_NAME, WndProcFrameRate);
-        atom = RegisterClassEx(&wcex);
-        CrashIf(!atom);
+    if (atom == 0) {
+        return;
     }
+    WNDCLASSEX wcex;
+    FillWndClassEx(wcex, FRAME_RATE_CLASS_NAME, WndProcFrameRate);
+    atom = RegisterClassEx(&wcex);
+    CrashIf(!atom);
 }
 
-FrameRateWnd* AllocFrameRateWnd(HWND hwndAssociatedWith) {
+bool FrameRateWnd::Create(HWND hwndAssociatedWith) {
     RegisterFrameRateWndClass();
-    FrameRateWnd* w = AllocStruct<FrameRateWnd>();
-    w->hwndAssociatedWith = hwndAssociatedWith;
-    w->frameRate = -1;
-    return w;
-}
+    this->hwndAssociatedWith = hwndAssociatedWith;
 
-bool CreateFrameRateWnd(FrameRateWnd* w) {
     // if hwndAssociatedWith is a child window, we need to find its top-level parent
     // so that we can intercept moving messages and re-position frame rate window
     // during main window moves
-    HWND topLevel = w->hwndAssociatedWith;
+    HWND topLevel = this->hwndAssociatedWith;
     while (GetParent(topLevel) != nullptr) {
         topLevel = GetParent(topLevel);
     }
-    w->hwndAssociatedWithTopLevel = topLevel;
+    this->hwndAssociatedWithTopLevel = topLevel;
     // WS_POPUP removes all decorations
     DWORD dwStyle = WS_POPUP | WS_VISIBLE | WS_DISABLED;
     // since this is WS_POPUP window, providing w->hwndAssocatedWith doesn't establish
@@ -174,24 +156,35 @@ bool CreateFrameRateWnd(FrameRateWnd* w) {
     // http://msdn.microsoft.com/en-us/library/ms632599%28v=VS.85%29.aspx#owned_windows
     // WS_EX_TRANSPARENT so that the mouse events fall through to the window below
     HWND hwnd = CreateWindowEx(WS_EX_LAYERED | WS_EX_TRANSPARENT, FRAME_RATE_CLASS_NAME, nullptr, dwStyle, 0, 0, 0, 0,
-                               w->hwndAssociatedWith, nullptr, GetModuleHandle(nullptr), w);
-    CrashIf(hwnd != w->hwnd);
+                               this->hwndAssociatedWith, nullptr, GetModuleHandle(nullptr), this);
+    CrashIf(hwnd != this->hwnd);
     if (!hwnd) {
         return false;
     }
-    w->font = GetDefaultGuiFont();
-    SetWindowSubclass(w->hwndAssociatedWithTopLevel, WndProcFrameRateAssociated, 0, (DWORD_PTR)w);
+    this->font = GetDefaultGuiFont();
+    SetWindowSubclass(this->hwndAssociatedWithTopLevel, WndProcFrameRateAssociated, 0, (DWORD_PTR)this);
 
     SetLayeredWindowAttributes(hwnd, 0, 0x7f, LWA_ALPHA);
-    ShowFrameRate(w, 0);
+    this->ShowFrameRate(0);
     return true;
 }
 
-void DeleteFrameRateWnd(FrameRateWnd* w) {
-    if (w) {
-        RemoveWindowSubclass(w->hwndAssociatedWithTopLevel, WndProcFrameRateAssociated, 0);
-        free(w);
+void FrameRateWnd::ShowFrameRate(int frameRate) {
+    if (this->frameRate == frameRate) {
+        return;
     }
+    this->frameRate = frameRate;
+    SIZE s = GetIdealSize(this);
+    PositionWindow(this, s);
+    ScheduleRepaint(this->hwnd);
+}
+
+void FrameRateWnd::ShowFrameRateDur(double durMs) {
+    this->ShowFrameRate(FrameRateFromDuration(durMs));
+}
+
+FrameRateWnd::~FrameRateWnd() {
+    RemoveWindowSubclass(this->hwndAssociatedWithTopLevel, WndProcFrameRateAssociated, 0);
 }
 
 int FrameRateFromDuration(double durMs) {

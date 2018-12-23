@@ -134,7 +134,7 @@ void HwndWrapper::OnPaint(HWND hwnd) {
     Timer t;
     painter->Paint(hwnd, markedForRepaint);
     if (frameRateWnd) {
-        ShowFrameRateDur(frameRateWnd, t.GetTimeInMs());
+        frameRateWnd->ShowFrameRateDur(t.GetTimeInMs());
     }
     markedForRepaint = false;
 }
