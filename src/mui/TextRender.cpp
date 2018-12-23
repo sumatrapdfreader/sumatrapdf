@@ -491,7 +491,7 @@ size_t StringLenForWidth(ITextRender* textMeasure, const WCHAR* s, size_t len, f
     int dir = 1; // increasing length
     if (r.Width > dx)
         dir = -1; // decreasing length
-    for (;;) {
+    while (n > 1) {
         n += dir;
         r = textMeasure->Measure(s, n);
         if (1 == dir) {
@@ -506,6 +506,8 @@ size_t StringLenForWidth(ITextRender* textMeasure, const WCHAR* s, size_t len, f
                 return n;
         }
     }
+    // even a single char is longer than available space
+    return 0;
 }
 
 // TODO: not quite sure why spaceDx1 != spaceDx2, using spaceDx2 because

@@ -141,12 +141,17 @@ RectF MeasureTextQuick(Graphics* g, Font* f, const WCHAR* s, int len) {
 }
 
 RectF MeasureText(Graphics* g, Font* f, const WCHAR* s, size_t len, TextMeasureAlgorithm algo) {
-    if (-1 == len)
+    // TODO: ideally we should not be here with len == 0. This
+    // might indicate a problem with fromatter code. See internals-en.epub
+    // for a repro
+    if (-1 == len || 0 == len) {
         len = str::Len(s);
-    CrashIf(len > INT_MAX);
-    if (algo)
+    }
+    CrashIf((len == 0) || (len > INT_MAX));
+    if (algo) {
         return algo(g, f, s, (int)len);
-    RectF bbox = MeasureTextAccurate(g, f, s, (int)len);
+    }
+    RectF bbox = MeasureTextAccurate(g, f, s, static_cast<int>(len));
     return bbox;
 }
 
@@ -158,16 +163,18 @@ RectF MeasureText(Graphics* g, Font* f, const WCHAR* s, size_t len, TextMeasureA
 // calls, so it's not that bad
 size_t StringLenForWidth(Graphics* g, Font* f, const WCHAR* s, size_t len, float dx, TextMeasureAlgorithm algo) {
     RectF r = MeasureText(g, f, s, len, algo);
-    if (r.Width <= dx)
+    if (r.Width <= dx) {
         return len;
+    }
     // make the best guess of the length that fits
     size_t n = (size_t)((dx / r.Width) * (float)len);
     CrashIf((0 == n) || (n > len));
     r = MeasureText(g, f, s, n, algo);
     // find the length len of s that fits within dx iff width of len+1 exceeds dx
     int dir = 1; // increasing length
-    if (r.Width > dx)
+    if (r.Width > dx) {
         dir = -1; // decreasing length
+    }
     for (;;) {
         n += dir;
         r = MeasureText(g, f, s, n, algo);
