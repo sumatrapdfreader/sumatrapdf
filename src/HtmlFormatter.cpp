@@ -679,22 +679,7 @@ void HtmlFormatter::EmitElasticSpace() {
 // return true if we can break a word on a given character during layout
 static bool CanBreakWordOnChar(WCHAR c) {
     // this is called frequently, so check most common characters first
-    if (c >= 'a' && c <= 'z') {
-        return false;
-    }
-    if (c >= 'A' && c <= 'Z') {
-        return false;
-    }
-    if (c >= '0' && c <= '9') {
-        return false;
-    }
-
-    // don't break on CJK characters
-    // https://github.com/sumatrapdfreader/sumatrapdf/issues/250
-    // https://github.com/sumatrapdfreader/sumatrapdf/pull/1057
-    // There are other CJK ranges, but less common
-    // https://stackoverflow.com/questions/1366068/whats-the-complete-range-for-chinese-characters-in-unicode
-    if (c >= 0x4e00 && c <= 0x9fff) {
+    if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')|| (c >= '0' && c <= '9')){
         return false;
     }
     return true;
@@ -724,23 +709,40 @@ void HtmlFormatter::EmitTextRun(const char* s, const char* end) {
             break;
         textMeasure->SetFont(CurrFont());
         RectF bbox = textMeasure->Measure(buf, strLen);
-        EnsureDx(bbox.Width);
         if (bbox.Width <= pageDx - currX) {
             AppendInstr(DrawInstr::Str(s, end - s, bbox, dirRtl));
             currX += bbox.Width;
             break;
         }
-
-        size_t lenThatFits = StringLenForWidth(textMeasure, buf, strLen, pageDx - NewLineX());
+        //get len That Fits the remaining space in the line
+        size_t lenThatFits = StringLenForWidth(textMeasure, buf, strLen, pageDx -currX);
         // try to prevent a break in the middle of a word
-        if (!CanBreakWordOnChar(buf[lenThatFits])) {
-            for (size_t len = lenThatFits; len > 0; len--) {
-                if (!CanBreakWordOnChar(buf[len - 1])) {
-                    lenThatFits = len;
-                    break;
-                }
-            }
+        if (lenThatFits > 0) {
+            size_t lentmp = lenThatFits;
+            if (!CanBreakWordOnChar(buf[lenThatFits])) {
+                for (lentmp = lenThatFits; lentmp > 0; lentmp--) {
+                    if (CanBreakWordOnChar(buf[lentmp - 1])) {
+                          break;
+                      }
+                  }
+                  if (lentmp == 0) {
+                    //make a new line if the word need to show in another line
+                      if (currX != 0) {
+                          FlushCurrLine(false);
+                          continue;
+                      }
+                    //split the word (or CJK sentence) if it is too long to show in one line
+                  }else{
+                    // renew lenThatFits
+                      lenThatFits = lentmp;
+                  }
+              } 
+        }else{
+           //make a new line when current line is fullfilled
+            FlushCurrLine(false);
+            continue;
         }
+
         textMeasure->SetFont(CurrFont());
         bbox = textMeasure->Measure(buf, lenThatFits);
         CrashIf(bbox.Width > pageDx);
