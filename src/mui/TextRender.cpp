@@ -485,7 +485,7 @@ size_t StringLenForWidth(ITextRender* textMeasure, const WCHAR* s, size_t len, f
         return len;
     // make the best guess of the length that fits
     size_t n = (size_t)((dx / r.Width) * (float)len);
-    CrashIf (n > len);
+    CrashIf(n > len);
     r = textMeasure->Measure(s, n);
     // find the length len of s that fits within dx iff width of len+1 exceeds dx
     int dir = 1; // increasing length

@@ -679,7 +679,7 @@ void HtmlFormatter::EmitElasticSpace() {
 // return true if we can break a word on a given character during layout
 static bool CanBreakWordOnChar(WCHAR c) {
     // this is called frequently, so check most common characters first
-    if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')|| (c >= '0' && c <= '9')){
+    if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')) {
         return false;
     }
     return true;
@@ -714,31 +714,31 @@ void HtmlFormatter::EmitTextRun(const char* s, const char* end) {
             currX += bbox.Width;
             break;
         }
-        //get len That Fits the remaining space in the line
-        size_t lenThatFits = StringLenForWidth(textMeasure, buf, strLen, pageDx -currX);
+        // get len That Fits the remaining space in the line
+        size_t lenThatFits = StringLenForWidth(textMeasure, buf, strLen, pageDx - currX);
         // try to prevent a break in the middle of a word
         if (lenThatFits > 0) {
             size_t lentmp = lenThatFits;
             if (!CanBreakWordOnChar(buf[lenThatFits])) {
                 for (lentmp = lenThatFits; lentmp > 0; lentmp--) {
                     if (CanBreakWordOnChar(buf[lentmp - 1])) {
-                          break;
-                      }
-                  }
-                  if (lentmp == 0) {
-                    //make a new line if the word need to show in another line
-                      if (currX != 0) {
-                          FlushCurrLine(false);
-                          continue;
-                      }
-                    //split the word (or CJK sentence) if it is too long to show in one line
-                  }else{
+                        break;
+                    }
+                }
+                if (lentmp == 0) {
+                    // make a new line if the word need to show in another line
+                    if (currX != 0) {
+                        FlushCurrLine(false);
+                        continue;
+                    }
+                    // split the word (or CJK sentence) if it is too long to show in one line
+                } else {
                     // renew lenThatFits
-                      lenThatFits = lentmp;
-                  }
-              } 
-        }else{
-           //make a new line when current line is fullfilled
+                    lenThatFits = lentmp;
+                }
+            }
+        } else {
+            // make a new line when current line is fullfilled
             FlushCurrLine(false);
             continue;
         }

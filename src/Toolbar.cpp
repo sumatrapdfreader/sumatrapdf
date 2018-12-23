@@ -521,8 +521,8 @@ static void CreatePageBox(WindowInfo* win) {
     int minIconSize = DpiScaleX(hwndFrame, TOOLBAR_MIN_ICON_SIZE);
     DWORD style = WS_VISIBLE | WS_CHILD;
     auto h = GetModuleHandle(nullptr);
-    HWND pageBg = CreateWindowEx(WS_EX_STATICEDGE, WC_STATIC, L"", style, 0, 1, boxWidth, minIconSize + 4,
-                                 hwndToolbar, (HMENU)0, h, nullptr);
+    HWND pageBg = CreateWindowEx(WS_EX_STATICEDGE, WC_STATIC, L"", style, 0, 1, boxWidth, minIconSize + 4, hwndToolbar,
+                                 (HMENU)0, h, nullptr);
     HWND label = CreateWindowEx(0, WC_STATIC, L"", style, 0, 1, 0, 0, hwndToolbar, (HMENU)0, h, nullptr);
     HWND total = CreateWindowEx(0, WC_STATIC, L"", style, 0, 1, 0, 0, hwndToolbar, (HMENU)0, h, nullptr);
 
