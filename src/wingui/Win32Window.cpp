@@ -71,7 +71,7 @@ static ATOM RegisterClass(Win32Window* w) {
         return wndClass;
     }
 
-    WNDCLASSEXW wcex = {0};
+    WNDCLASSEXW wcex = {};
     auto hInst = GetInstance();
     wcex.cbSize = sizeof(WNDCLASSEXW);
 
@@ -91,29 +91,23 @@ static ATOM RegisterClass(Win32Window* w) {
     return wndClass;
 }
 
-void InitWin32Window(Win32Window* w, HWND parent, RECT* initialPosition) {
-    w->parent = parent;
+Win32Window::Win32Window(HWND parent, RECT* initialPosition) {
+    this->parent = parent;
     if (initialPosition) {
-        w->initialPos = *initialPosition;
+        this->initialPos = *initialPosition;
     }
 
-    w->dwExStyle = 0;
-    w->dwStyle = WS_OVERLAPPEDWINDOW;
+    this->dwExStyle = 0;
+    this->dwStyle = WS_OVERLAPPEDWINDOW;
     if (parent != nullptr) {
-        w->dwStyle |= WS_CHILD;
+        this->dwStyle |= WS_CHILD;
     }
 }
 
-Win32Window* AllocWin32Window(HWND parent, RECT* initialPosition) {
-    auto w = AllocStruct<Win32Window>();
-    InitWin32Window(w, parent, initialPosition);
-    return w;
-}
+bool Win32Window::Create(const WCHAR* title) {
+    RegisterClass(this);
 
-bool CreateWin32Window(Win32Window* w, const WCHAR* title) {
-    RegisterClass(w);
-
-    RECT rc = w->initialPos;
+    RECT rc = this->initialPos;
     int x = rc.left;
     int y = rc.top;
     int dx = RectDx(rc);
@@ -124,16 +118,13 @@ bool CreateWin32Window(Win32Window* w, const WCHAR* title) {
         dx = CW_USEDEFAULT;
         dy = CW_USEDEFAULT;
     }
-    w->hwnd = CreateWindowExW(w->dwExStyle, WIN_CLASS, title, w->dwStyle, x, y, dx, dy, w->parent, nullptr,
-                              GetInstance(), (void*)w);
+    this->hwnd = CreateWindowExW(this->dwExStyle, WIN_CLASS, title, this->dwStyle, x, y, dx, dy, this->parent, nullptr,
+                                 GetInstance(), (void*)this);
 
-    return w->hwnd != nullptr;
+    return this->hwnd != nullptr;
 }
 
-void DeleteWin32Window(Win32Window* w) {
-    if (!w)
-        return;
-
+Win32Window::~Win32Window() {
     // we free w in WM_DESTROY
-    DestroyWindow(w->hwnd);
+    DestroyWindow(this->hwnd);
 }

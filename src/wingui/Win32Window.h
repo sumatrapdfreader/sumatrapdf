@@ -1,12 +1,18 @@
 
-struct Win32Window;
+class Win32Window;
 
 typedef std::function<LRESULT(Win32Window* w, UINT msg, WPARAM wp, LPARAM lp, bool& discardMsg)> Win32MsgFilter;
 typedef std::function<LRESULT(Win32Window* w, int id, int event, LPARAM lp, bool& discardMsg)> WmCommandCb;
 typedef std::function<void(Win32Window* w, int dx, int dy, WPARAM resizeType)> OnSizeCb;
 
-struct Win32Window {
-    // creation parameters. must be set before CreateWin32Window() call
+class Win32Window {
+  public:
+    explicit Win32Window(HWND parent, RECT* initialPosition);
+    ~Win32Window();
+
+    bool Create(const WCHAR* title);
+
+    // creation parameters. must be set before Create() call
     HWND parent;
     RECT initialPos;
     DWORD dwStyle;
@@ -24,12 +30,4 @@ struct Win32Window {
 
     // public
     HWND hwnd;
-
-    // arbitrary data associated with this window
-    void* user;
 };
-
-Win32Window* AllocWin32Window(HWND parent, RECT* initialPosition);
-void InitWin32Window(Win32Window*, HWND parent, RECT* initialPosition);
-bool CreateWin32Window(Win32Window*, const WCHAR* title);
-void DeleteWin32Window(Win32Window*);
