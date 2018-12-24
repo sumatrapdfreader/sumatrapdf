@@ -163,8 +163,10 @@ Exit:
 
 // call only once at the beginning of program
 static void RegisterSplitterWndClass() {
-    if (splitterBmp != nullptr) {
-        // has already been registered
+    static ATOM atom = 0;
+
+    if (atom != 0) {
+        // already registered
         return;
     }
 
@@ -173,9 +175,9 @@ static void RegisterSplitterWndClass() {
     splitterBmp = CreateBitmap(8, 8, 1, 1, dotPatternBmp);
     splitterBrush = CreatePatternBrush(splitterBmp);
 
-    WNDCLASSEX wcex = {0};
+    WNDCLASSEX wcex = {};
     FillWndClassEx(wcex, SPLITTER_CLASS_NAME, WndProcSplitter);
-    RegisterClassEx(&wcex);
+    atom = RegisterClassEx(&wcex);
 }
 
 // caller needs to free() the result

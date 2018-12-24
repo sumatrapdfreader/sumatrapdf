@@ -188,15 +188,17 @@ DoDefault:
 }
 
 static void RegisterLabelWithCloseWnd() {
-    static ATOM atomClass = 0;
+    static ATOM atom = 0;
 
-    if (atomClass != 0) {
+    if (atom != 0) {
+        // already registered
         return;
     }
 
     WNDCLASSEX wcex = {};
     FillWndClassEx(wcex, WND_CLASS_NAME, WndProcLabelWithClose);
-    atomClass = RegisterClassExW(&wcex);
+    atom = RegisterClassExW(&wcex);
+    CrashIf(!atom);
 }
 
 void LabelWithCloseWnd::SetLabel(const WCHAR* label) {

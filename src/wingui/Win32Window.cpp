@@ -7,8 +7,6 @@
 
 #define WIN_CLASS L"WC_WIN32_WINDOW"
 
-static ATOM wndClass = 0;
-
 static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     if (WM_CREATE == msg) {
         CREATESTRUCT* cs = (CREATESTRUCT*)lp;
@@ -66,29 +64,18 @@ Exit:
     return DefWindowProc(hwnd, msg, wp, lp);
 }
 
-static ATOM RegisterClass(Win32Window* w) {
-    if (wndClass != 0) {
-        return wndClass;
+static void RegisterClass() {
+    static ATOM atom = 0;
+
+    if (atom != 0) {
+        // already registered
+        return;
     }
 
     WNDCLASSEXW wcex = {};
-    auto hInst = GetInstance();
-    wcex.cbSize = sizeof(WNDCLASSEXW);
-
-    wcex.style = CS_HREDRAW | CS_VREDRAW;
-    wcex.lpfnWndProc = WndProc;
-    wcex.cbClsExtra = 0;
-    wcex.cbWndExtra = 0;
-    wcex.hInstance = hInst;
-    wcex.hIcon = w->hIcon;
-    wcex.hIconSm = w->hIconSm;
-    wcex.lpszMenuName = w->lpszMenuName;
-    wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
-    wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-    wcex.lpszClassName = WIN_CLASS;
-
-    wndClass = RegisterClassExW(&wcex);
-    return wndClass;
+    FillWndClassEx(wcex, WIN_CLASS, WndProc);
+    atom = RegisterClassExW(&wcex);
+    CrashIf(!atom);
 }
 
 Win32Window::Win32Window(HWND parent, RECT* initialPosition) {
@@ -105,7 +92,7 @@ Win32Window::Win32Window(HWND parent, RECT* initialPosition) {
 }
 
 bool Win32Window::Create(const WCHAR* title) {
-    RegisterClass(this);
+    RegisterClass();
 
     RECT rc = this->initialPos;
     int x = rc.left;
