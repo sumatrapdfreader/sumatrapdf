@@ -413,7 +413,7 @@ void EbookController::OnClickedLink(int pageNo, DrawInstr* link) {
             // <pagebreak src="..." page_marker /> is usually the second instruction on a page
             for (size_t k = 0; k < std::min((size_t)2, p->instructions.size()); k++) {
                 DrawInstr& di = p->instructions.at(k);
-                if (InstrAnchor == di.type && str::StartsWith(di.str.s + di.str.len, "\" page_marker />")) {
+                if (DrawInstrType::Anchor == di.type && str::StartsWith(di.str.s + di.str.len, "\" page_marker />")) {
                     AutoFree basePath(str::DupN(di.str.s, di.str.len));
                     AutoFree relPath(ResolveHtmlEntities(link->str.s, link->str.len));
                     AutoFree absPath(NormalizeURL(relPath, basePath));

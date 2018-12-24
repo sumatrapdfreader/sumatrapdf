@@ -5,29 +5,29 @@ using namespace Gdiplus;
 
 // Layout information for a given page is a list of
 // draw instructions that define what to draw and where.
-enum DrawInstrType {
+enum class DrawInstrType {
     // a piece of text
-    InstrString = 0,
+    String = 0,
     // elastic space takes at least spaceDx pixels but can take more
     // if a line is justified
-    InstrElasticSpace,
+    ElasticSpace,
     // a fixed space takes a fixed amount of pixels. It's used e.g.
     // to implement paragraph indentation
-    InstrFixedSpace,
+    FixedSpace,
     // a horizontal line
-    InstrLine,
+    Line,
     // change current font
-    InstrSetFont,
+    SetFont,
     // an image (raw data for e.g. BitmapFromData)
-    InstrImage,
+    Image,
     // marks the beginning of a link (<a> tag)
-    InstrLinkStart,
+    LinkStart,
     // marks end of the link (must have matching InstrLinkStart)
-    InstrLinkEnd,
+    LinkEnd,
     // marks an anchor an internal link might refer to
-    InstrAnchor,
+    Anchor,
     // same as InstrString but for RTL text
-    InstrRtlString,
+    RtlString,
 };
 
 struct DrawInstr {

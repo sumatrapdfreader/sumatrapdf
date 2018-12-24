@@ -156,7 +156,7 @@ DrawInstr* PageControl::GetLinkAt(int x, int y) const {
 
     PointF pt((REAL)(x - cachedStyle->padding.left), (REAL)(y - cachedStyle->padding.top));
     for (DrawInstr& i : page->instructions) {
-        if (InstrLinkStart == i.type && !i.bbox.IsEmptyArea() && i.bbox.Contains(pt)) {
+        if (DrawInstrType::LinkStart == i.type && !i.bbox.IsEmptyArea() && i.bbox.Contains(pt)) {
             return &i;
         }
     }

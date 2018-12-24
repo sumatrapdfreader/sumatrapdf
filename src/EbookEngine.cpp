@@ -269,7 +269,7 @@ bool EbookEngine::ExtractPageAnchors() {
 
         for (size_t k = 0; k < pageInstrs->size(); k++) {
             DrawInstr* i = &pageInstrs->at(k);
-            if (InstrAnchor != i->type)
+            if (DrawInstrType::Anchor != i->type)
                 continue;
             anchors.Append(PageAnchor(i, pageNo));
             if (k < 2 && str::StartsWith(i->str.s + i->str.len, "\" page_marker />"))
@@ -423,7 +423,7 @@ WCHAR* EbookEngine::ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** co
     for (DrawInstr& i : *pageInstrs) {
         RectI bbox = GetInstrBbox(i, pageBorder);
         switch (i.type) {
-            case InstrString:
+            case DrawInstrType::String:
                 if (coords.size() > 0 &&
                     (bbox.x < coords.Last().BR().x || bbox.y > coords.Last().y + coords.Last().dy * 0.8)) {
                     content.Append(lineSep);
@@ -446,7 +446,7 @@ WCHAR* EbookEngine::ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** co
                         coords.Append(RectI((int)(bbox.x + k * cwidth), bbox.y, (int)cwidth, bbox.dy));
                 }
                 break;
-            case InstrRtlString:
+            case DrawInstrType::RtlString:
                 if (coords.size() > 0 &&
                     (bbox.BR().x > coords.Last().x || bbox.y > coords.Last().y + coords.Last().dy * 0.8)) {
                     content.Append(lineSep);
@@ -469,8 +469,8 @@ WCHAR* EbookEngine::ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** co
                         coords.Append(RectI((int)(bbox.x + (len - k - 1) * cwidth), bbox.y, (int)cwidth, bbox.dy));
                 }
                 break;
-            case InstrElasticSpace:
-            case InstrFixedSpace:
+            case DrawInstrType::ElasticSpace:
+            case DrawInstrType::FixedSpace:
                 insertSpace = true;
                 break;
         }
@@ -522,9 +522,9 @@ Vec<PageElement*>* EbookEngine::GetElements(int pageNo) {
 
     Vec<DrawInstr>* pageInstrs = GetHtmlPage(pageNo);
     for (DrawInstr& i : *pageInstrs) {
-        if (InstrImage == i.type) {
+        if (DrawInstrType::Image == i.type) {
             els->Append(new ImageDataElement(pageNo, &i.img, GetInstrBbox(i, pageBorder)));
-        } else if (InstrLinkStart == i.type && !i.bbox.IsEmptyArea()) {
+        } else if (DrawInstrType::LinkStart == i.type && !i.bbox.IsEmptyArea()) {
             PageElement* link = CreatePageLink(&i, GetInstrBbox(i, pageBorder), pageNo);
             if (link) {
                 els->Append(link);
@@ -615,7 +615,7 @@ WCHAR* EbookEngine::ExtractFontList() {
             continue;
 
         for (DrawInstr& i : *pageInstrs) {
-            if (InstrSetFont != i.type || seenFonts.Contains(i.font))
+            if (DrawInstrType::SetFont != i.type || seenFonts.Contains(i.font))
                 continue;
             seenFonts.Append(i.font);
 
@@ -1054,8 +1054,8 @@ PageDestination* MobiEngineImpl::GetNamedDest(const WCHAR* name) {
     // beyond the last visible DrawInstr of a page
     float currY = (float)pageRect.dy;
     for (DrawInstr& i : *pageInstrs) {
-        if ((InstrString == i.type || InstrRtlString == i.type) && i.str.s >= start && i.str.s <= start + htmlLen &&
-            i.str.s - start >= filePos) {
+        if ((DrawInstrType::String == i.type || DrawInstrType::RtlString == i.type) && i.str.s >= start &&
+            i.str.s <= start + htmlLen && i.str.s - start >= filePos) {
             currY = i.bbox.Y;
             break;
         }
