@@ -45,7 +45,7 @@ enum {
     MaxArgs = 32 + 8
 };
 
-enum Type {
+enum class Type {
     FormatStr, // from format string
     Char,
     Int,

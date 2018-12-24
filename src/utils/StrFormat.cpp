@@ -9,16 +9,16 @@ namespace fmt {
 static Type typeFromChar(char c) {
     switch (c) {
         case 'c': // char
-            return Char;
+            return Type::Char;
         case 's': // string or wstring
-            return Str;
+            return Type::Str;
         case 'd': // integer in base 10
-            return Int;
+            return Type::Int;
         case 'f': // float or double
-            return Float;
+            return Type::Float;
     }
     CrashIf(true);
-    return Invalid;
+    return Type::Invalid;
 }
 
 Fmt::Fmt(const char* fmt) {
@@ -31,12 +31,12 @@ void Fmt::addFormatStr(const char* s, size_t len) {
         return;
     }
     CrashIf(nInst >= MaxInstructions);
-    instructions[nInst].t = FormatStr;
+    instructions[nInst].t = Type::FormatStr;
     instructions[nInst].argNo = currArgFromFormatNo;
     ++nInst;
 
     CrashIf(nArgsUsed >= MaxArgs);
-    args[currArgFromFormatNo].t = FormatStr;
+    args[currArgFromFormatNo].t = Type::FormatStr;
     args[currArgFromFormatNo].s = s;
     args[currArgFromFormatNo].len = len;
     nArgsUsed++;
@@ -53,7 +53,7 @@ const char* Fmt::parseArgDefPositional(const char* fmt) {
         n = n * 10 + (*fmt - '0');
         ++fmt;
     }
-    instructions[nInst].t = Any;
+    instructions[nInst].t = Type::Any;
     instructions[nInst].argNo = n;
     ++nInst;
     return fmt + 1;
@@ -143,7 +143,7 @@ Fmt& Fmt::ParseFormat(const char* fmt) {
 
     // check that arg numbers in {$n} makes sense
     for (int i = 0; i < nInst; i++) {
-        if (instructions[i].t == FormatStr) {
+        if (instructions[i].t == Type::FormatStr) {
             continue;
         }
         if (instructions[i].argNo > maxArgNo) {
@@ -174,52 +174,52 @@ Fmt& Fmt::addArgType(Type t) {
 
 Fmt& Fmt::i(int i) {
     args[nArgs].i = i;
-    return addArgType(Int);
+    return addArgType(Type::Int);
 }
 
 Fmt& Fmt::s(const char* s) {
     args[nArgs].s = s;
-    return addArgType(Str);
+    return addArgType(Type::Str);
 }
 
 Fmt& Fmt::s(const WCHAR* s) {
     args[nArgs].ws = s;
-    return addArgType(WStr);
+    return addArgType(Type::WStr);
 }
 
 Fmt& Fmt::c(char c) {
     args[nArgs].c = c;
-    return addArgType(Char);
+    return addArgType(Type::Char);
 }
 
 Fmt& Fmt::f(float f) {
     args[nArgs].f = f;
-    return addArgType(Float);
+    return addArgType(Type::Float);
 }
 
 Fmt& Fmt::f(double d) {
     args[nArgs].d = d;
-    return addArgType(Double);
+    return addArgType(Type::Double);
 }
 
 static bool validArgTypes(Type instType, Type argType) {
-    if (instType == Any) {
+    if (instType == Type::Any) {
         return true;
     }
-    if (instType == FormatStr) {
-        return argType == FormatStr;
+    if (instType == Type::FormatStr) {
+        return argType == Type::FormatStr;
     }
-    if (instType == Char) {
-        return argType == Char;
+    if (instType == Type::Char) {
+        return argType == Type::Char;
     }
-    if (instType == Int) {
-        return argType == Int;
+    if (instType == Type::Int) {
+        return argType == Type::Int;
     }
-    if (instType == Float) {
-        return argType == Float || argType == Double;
+    if (instType == Type::Float) {
+        return argType == Type::Float || argType == Type::Double;
     }
-    if (instType == Str) {
-        return argType == Str || argType == WStr;
+    if (instType == Type::Str) {
+        return argType == Type::Str || argType == Type::WStr;
     }
     return false;
 }
@@ -238,31 +238,31 @@ void Fmt::serializeInst(int n) {
         return;
     }
     switch (tArg) {
-        case Char:
+        case Type::Char:
             res.Append(arg.c);
             break;
-        case Int:
+        case Type::Int:
             // TODO: using AppendFmt is cheating
             res.AppendFmt("%d", arg.i);
             break;
-        case Float:
+        case Type::Float:
             // TODO: using AppendFmt is cheating
             // Note: %G, unlike %f, avoid trailing '0'
             res.AppendFmt("%G", arg.f);
             break;
-        case Double:
+        case Type::Double:
             // TODO: using AppendFmt is cheating
             // Note: %G, unlike %f, avoid trailing '0'
             res.AppendFmt("%G", arg.d);
             break;
-        case FormatStr:
+        case Type::FormatStr:
             CrashIf(arg.len == 0);
             res.Append(arg.s, arg.len);
             break;
-        case Str:
+        case Type::Str:
             res.Append(arg.s);
             break;
-        case WStr:
+        case Type::WStr:
             OwnedData sUtf8 = str::conv::ToUtf8(arg.ws);
             res.AppendAndFree(sUtf8.StealData());
             break;
