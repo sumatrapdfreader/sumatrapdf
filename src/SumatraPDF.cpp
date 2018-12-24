@@ -1602,7 +1602,7 @@ static void UpdatePageInfoHelper(WindowInfo* win, NotificationWnd* wnd, int page
     }
 }
 
-enum MeasurementUnit { Unit_pt, Unit_mm, Unit_in };
+enum class MeasurementUnit { pt, mm, in };
 
 static WCHAR* FormatCursorPosition(BaseEngine* engine, PointD pt, MeasurementUnit unit) {
     if (pt.x < 0)
@@ -1612,11 +1612,24 @@ static WCHAR* FormatCursorPosition(BaseEngine* engine, PointD pt, MeasurementUni
     pt.x /= engine->GetFileDPI();
     pt.y /= engine->GetFileDPI();
 
-    float factor = Unit_pt == unit ? 72 : Unit_mm == unit ? 25.4f : 1;
-    const WCHAR* unitName = Unit_pt == unit ? L"pt" : Unit_mm == unit ? L"mm" : L"in";
+    // for MeasurementUnit::in
+    float factor = 1;
+    const WCHAR* unitName = L"in";
+    switch (unit) {
+        case MeasurementUnit::pt:
+            factor = 72;
+            unitName = L"pt";
+            break;
+
+        case MeasurementUnit::mm:
+            factor = 25.4f;
+            unitName = L"mm";
+            break;
+    }
+
     AutoFreeW xPos(str::FormatFloatWithThousandSep(pt.x * factor));
     AutoFreeW yPos(str::FormatFloatWithThousandSep(pt.y * factor));
-    if (unit != Unit_in) {
+    if (unit != MeasurementUnit::in) {
         // use similar precision for all units
         if (str::IsDigit(xPos[str::Len(xPos) - 2]))
             xPos[str::Len(xPos) - 1] = '\0';
@@ -1627,10 +1640,22 @@ static WCHAR* FormatCursorPosition(BaseEngine* engine, PointD pt, MeasurementUni
 }
 
 void UpdateCursorPositionHelper(WindowInfo* win, PointI pos, NotificationWnd* wnd) {
-    static MeasurementUnit unit = Unit_pt;
+    static auto unit = MeasurementUnit::pt;
     // toggle measurement unit by repeatedly invoking the helper
     if (!wnd && win->notifications->GetForGroup(NG_CURSOR_POS_HELPER)) {
-        unit = Unit_pt == unit ? Unit_mm : Unit_mm == unit ? Unit_in : Unit_pt;
+        switch (unit) {
+            case MeasurementUnit::pt:
+                unit = MeasurementUnit::mm;
+                break;
+            case MeasurementUnit::mm:
+                unit = MeasurementUnit::in;
+                break;
+            case MeasurementUnit::in:
+                unit = MeasurementUnit::pt;
+                break;
+            default:
+                CrashAlwaysIf(true);
+        }
         wnd = win->notifications->GetForGroup(NG_CURSOR_POS_HELPER);
     }
 
