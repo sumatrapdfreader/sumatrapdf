@@ -24,6 +24,7 @@
 #include "Theme.h"
 #include "GlobalPrefs.h"
 #include "RenderCache.h"
+#include "ProgressUpdateUI.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
 

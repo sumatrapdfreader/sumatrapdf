@@ -19,6 +19,7 @@
 #include "DisplayModel.h"
 #include "GlobalPrefs.h"
 #include "PdfSync.h"
+#include "ProgressUpdateUI.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
 #include "SumatraPDF.h"

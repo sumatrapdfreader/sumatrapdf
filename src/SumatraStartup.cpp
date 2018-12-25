@@ -27,6 +27,7 @@
 #include "GlobalPrefs.h"
 #include "PdfSync.h"
 #include "RenderCache.h"
+#include "ProgressUpdateUI.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
 #include "SumatraPDF.h"

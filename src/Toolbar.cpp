@@ -12,6 +12,7 @@
 #include "Controller.h"
 #include "DisplayModel.h"
 #include "GlobalPrefs.h"
+#include "ProgressUpdateUI.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
 #include "Colors.h"

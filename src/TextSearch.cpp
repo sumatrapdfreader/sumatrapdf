@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "ScopedWin.h"
 #include "BaseEngine.h"
+#include "ProgressUpdateUI.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
 

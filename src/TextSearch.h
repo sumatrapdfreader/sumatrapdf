@@ -3,13 +3,6 @@
 
 enum class TextSearchDirection : bool { Backward = false, Forward = true };
 
-class ProgressUpdateUI {
-  public:
-    virtual void UpdateProgress(int current, int total) = 0;
-    virtual bool WasCanceled() = 0;
-    virtual ~ProgressUpdateUI() {}
-};
-
 class TextSearch : public TextSelection {
   public:
     TextSearch(BaseEngine* engine, PageTextCache* textCache);

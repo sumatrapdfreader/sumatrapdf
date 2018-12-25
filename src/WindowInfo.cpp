@@ -19,6 +19,7 @@
 #include "DisplayModel.h"
 #include "EbookController.h"
 #include "GlobalPrefs.h"
+#include "ProgressUpdateUI.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
 #include "SumatraPDF.h"

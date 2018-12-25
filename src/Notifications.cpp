@@ -4,13 +4,7 @@
 #include "BaseUtil.h"
 #include "GdiPlusUtil.h"
 #include "WinUtil.h"
-
-class BaseEngine;
-// TODO: this is just to get ProgressUpdateUI. Move ProgressUpdateUI to
-// its own file
-#include "TextSelection.h"
-#include "TextSearch.h"
-
+#include "ProgressUpdateUI.h"
 #include "Colors.h"
 #include "Notifications.h"
 
