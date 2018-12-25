@@ -17,7 +17,8 @@
 #include "Controller.h"
 #include "FileHistory.h"
 #include "GlobalPrefs.h"
-
+#include "ProgressUpdateUI.h"
+#include "Notifications.h"
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 #include "TabInfo.h"

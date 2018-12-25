@@ -4,8 +4,8 @@
 #include "BaseUtil.h"
 #include "GdiPlusUtil.h"
 #include "WinUtil.h"
-#include "ProgressUpdateUI.h"
 #include "Colors.h"
+#include "ProgressUpdateUI.h"
 #include "Notifications.h"
 
 extern bool IsUIRightToLeft(); // SumatraPDF.h
@@ -18,21 +18,10 @@ constexpr int PADDING = 6;
 constexpr int TOP_LEFT_MARGIN = 8;
 constexpr int TIMEOUT_TIMER_ID = 1;
 
+static void RegisterNotificationsWndClass();
+
 static RectI GetCancelRect(HWND hwnd) {
     return RectI(ClientRect(hwnd).dx - 16 - PADDING, PADDING, 16, 16);
-}
-
-static void RegisterNotificationsWndClass() {
-    static ATOM atom = 0;
-    if (atom != 0) {
-        // already registered
-        return;
-    }
-    WNDCLASSEX wcex = {};
-    FillWndClassEx(wcex, NOTIFICATION_WND_CLASS_NAME, NotificationWnd::WndProc);
-    wcex.hCursor = LoadCursor(nullptr, IDC_APPSTARTING);
-    atom = RegisterClassEx(&wcex);
-    CrashIf(!atom);
 }
 
 NotificationWnd::NotificationWnd(HWND parent, const WCHAR* message, int timeoutInMS, bool highlight,
@@ -126,22 +115,6 @@ void NotificationWnd::UpdateWindowPosition(const WCHAR* message, bool init) {
     }
 }
 
-void NotificationWnd::UpdateProgress(int current, int total) {
-    CrashIf(total <= 0);
-    if (total <= 0) {
-        total = 1;
-    }
-    progress = limitValue(100 * current / total, 0, 100);
-    if (hasProgress && progressMsg) {
-        AutoFreeW message(str::Format(progressMsg, current, total));
-        UpdateMessage(message);
-    }
-}
-
-bool NotificationWnd::WasCanceled() {
-    return isCanceled;
-}
-
 void NotificationWnd::UpdateMessage(const WCHAR* message, int timeoutInMS, bool highlight) {
     win::SetText(this->hwnd, message);
     this->highlight = highlight;
@@ -229,7 +202,7 @@ static void NotificationWndOnPaint(HWND hwnd, NotificationWnd* wnd) {
     EndPaint(hwnd, &ps);
 }
 
-LRESULT CALLBACK NotificationWnd::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+static LRESULT CALLBACK NotificationWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     NotificationWnd* wnd = (NotificationWnd*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
     if (WM_ERASEBKGND == msg) {
         // do nothing, helps to avoid flicker
@@ -270,6 +243,19 @@ LRESULT CALLBACK NotificationWnd::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LP
     return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
+static void RegisterNotificationsWndClass() {
+    static ATOM atom = 0;
+    if (atom != 0) {
+        // already registered
+        return;
+    }
+    WNDCLASSEX wcex = {};
+    FillWndClassEx(wcex, NOTIFICATION_WND_CLASS_NAME, NotificationWndProc);
+    wcex.hCursor = LoadCursor(nullptr, IDC_APPSTARTING);
+    atom = RegisterClassEx(&wcex);
+    CrashIf(!atom);
+}
+
 int Notifications::GetWndX(NotificationWnd* wnd) {
     RectI rect = WindowRect(wnd->hwnd);
     rect = MapRectToWindow(rect, HWND_DESKTOP, GetParent(wnd->hwnd));
@@ -298,8 +284,8 @@ void Notifications::Remove(NotificationWnd* wnd) {
     }
 }
 
-void Notifications::Add(NotificationWnd* wnd, int groupId) {
-    if (groupId != 0) {
+void Notifications::Add(NotificationWnd* wnd, NotificationGroupId groupId) {
+    if (groupId != nullptr) {
         RemoveForGroup(groupId);
     }
     wnd->groupId = groupId;
@@ -310,7 +296,7 @@ void Notifications::Add(NotificationWnd* wnd, int groupId) {
     wnds.Append(wnd);
 }
 
-NotificationWnd* Notifications::GetForGroup(int groupId) {
+NotificationWnd* Notifications::GetForGroup(NotificationGroupId groupId) {
     CrashIf(!groupId);
     for (size_t i = 0; i < wnds.size(); i++) {
         if (wnds.at(i)->groupId == groupId) {
@@ -320,7 +306,7 @@ NotificationWnd* Notifications::GetForGroup(int groupId) {
     return nullptr;
 }
 
-void Notifications::RemoveForGroup(int groupId) {
+void Notifications::RemoveForGroup(NotificationGroupId groupId) {
     CrashIf(!groupId);
     for (size_t i = wnds.size(); i > 0; i--) {
         if (wnds.at(i - 1)->groupId == groupId) {
@@ -353,4 +339,20 @@ void Notifications::Relayout() {
         }
         SetWindowPos(wnd->hwnd, nullptr, rect.x, rect.y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
     }
+}
+
+void NotificationWnd::UpdateProgress(int current, int total) {
+    CrashIf(total <= 0);
+    if (total <= 0) {
+        total = 1;
+    }
+    progress = limitValue(100 * current / total, 0, 100);
+    if (hasProgress && progressMsg) {
+        AutoFreeW message(str::Format(progressMsg, current, total));
+        UpdateMessage(message);
+    }
+}
+
+bool NotificationWnd::WasCanceled() {
+    return isCanceled;
 }

@@ -27,6 +27,7 @@
 #include "ProgressUpdateUI.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
+#include "Notifications.h"
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 #include "TabInfo.h"
@@ -42,6 +43,8 @@ static slog::Logger* gLog;
 
 static bool gIsStressTesting = false;
 static int gCurrStressTimerId = FIRST_STRESS_TIMER_ID;
+static NotificationGroupId NG_STRESS_TEST_BENCHMARK = "stressTestBenchmark";
+static NotificationGroupId NG_STRESS_TEST_SUMMARY = "stressTestSummary";
 
 bool IsStressTesting() {
     return gIsStressTesting;

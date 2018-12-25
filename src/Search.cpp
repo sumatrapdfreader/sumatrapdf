@@ -22,16 +22,18 @@
 #include "ProgressUpdateUI.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
+#include "Notifications.h"
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 #include "TabInfo.h"
 #include "resource.h"
 #include "AppTools.h"
-#include "Notifications.h"
 #include "Search.h"
 #include "Selection.h"
 #include "SumatraDialogs.h"
 #include "Translations.h"
+
+NotificationGroupId NG_FIND_PROGRESS = "findProgress";
 
 // don't show the Search UI for document types that don't
 // support extracting text and/or navigating to a specific

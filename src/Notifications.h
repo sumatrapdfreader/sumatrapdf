@@ -5,6 +5,10 @@ class NotificationWnd;
 
 typedef std::function<void(NotificationWnd*)> NotificationWndRemovedCallback;
 
+// this is a unique id for notification group that allows decoupling it
+// from the rest of the code.
+typedef const char* NotificationGroupId;
+
 class NotificationWnd : public ProgressUpdateUI {
   public:
     HWND hwnd = nullptr;
@@ -24,7 +28,7 @@ class NotificationWnd : public ProgressUpdateUI {
     void CreatePopup(HWND parent, const WCHAR* message);
     void UpdateWindowPosition(const WCHAR* message, bool init = false);
 
-    int groupId = 0; // for use by Notifications
+    NotificationGroupId groupId = nullptr; // for use by Notifications
 
     // to reduce flicker, we might ask the window to shrink the size less often
     // (notifcation windows are only shrunken if by less than factor shrinkLimit)
@@ -36,14 +40,13 @@ class NotificationWnd : public ProgressUpdateUI {
     NotificationWnd(HWND parent, const WCHAR* message, const WCHAR* progressMsg,
                     const NotificationWndRemovedCallback& cb = nullptr);
 
-    ~NotificationWnd();
+    virtual ~NotificationWnd();
 
     void UpdateMessage(const WCHAR* message, int timeoutInMS = 0, bool highlight = false);
-    static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
     // ProgressUpdateUI methods
-    virtual void UpdateProgress(int current, int total);
-    virtual bool WasCanceled();
+    void UpdateProgress(int current, int total) override;
+    bool WasCanceled() override;
 };
 
 class Notifications {
@@ -60,9 +63,9 @@ class Notifications {
 
     // groupId is used to classify notifications and causes a notification
     // to replace any other notification of the same group
-    void Add(NotificationWnd* wnd, int groupId = 0);
-    NotificationWnd* GetForGroup(int groupId);
-    void RemoveForGroup(int groupId);
+    void Add(NotificationWnd*, NotificationGroupId);
+    NotificationWnd* GetForGroup(NotificationGroupId);
+    void RemoveForGroup(NotificationGroupId);
     void Relayout();
 
     // NotificationWndCallback methods

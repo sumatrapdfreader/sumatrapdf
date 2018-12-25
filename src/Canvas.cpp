@@ -27,7 +27,7 @@
 #include "ProgressUpdateUI.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
-
+#include "Notifications.h"
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 #include "TabInfo.h"
@@ -35,7 +35,6 @@
 #include "Canvas.h"
 #include "Caption.h"
 #include "Menu.h"
-#include "Notifications.h"
 #include "uia/Provider.h"
 #include "Search.h"
 #include "Selection.h"

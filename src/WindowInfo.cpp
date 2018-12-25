@@ -22,16 +22,19 @@
 #include "ProgressUpdateUI.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
+#include "Notifications.h"
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 #include "TabInfo.h"
 #include "resource.h"
 #include "Caption.h"
-#include "Notifications.h"
 #include "Selection.h"
 #include "StressTesting.h"
 #include "Translations.h"
 #include "uia/Provider.h"
+
+NotificationGroupId NG_CURSOR_POS_HELPER = "cursorPosHelper";
+NotificationGroupId NG_RESPONSE_TO_ACTION = "responseToAction";
 
 WindowInfo::WindowInfo(HWND hwnd) {
     hwndFrame = hwnd;
@@ -228,7 +231,7 @@ void WindowInfo::DeleteInfotip() {
     infotipVisible = false;
 }
 
-void WindowInfo::ShowNotification(const WCHAR* message, int options, NotificationGroup groupId) {
+void WindowInfo::ShowNotification(const WCHAR* message, int options, NotificationGroupId groupId) {
     int timeoutMS = (options & NOS_PERSIST) ? 0 : 3000;
     bool highlight = (options & NOS_HIGHLIGHT);
 

@@ -18,12 +18,11 @@
 #include "ProgressUpdateUI.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
-
+#include "Notifications.h"
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 #include "TabInfo.h"
 #include "AppUtil.h"
-#include "Notifications.h"
 #include "Print.h"
 #include "Selection.h"
 #include "SumatraDialogs.h"
@@ -362,7 +361,7 @@ class PrintThreadData : public ProgressUpdateUI {
                                   [this](NotificationWnd* wnd) { this->RemoveNotification(wnd); });
         // don't use a groupId for this notification so that
         // multiple printing notifications could coexist between tabs
-        win->notifications->Add(wnd);
+        win->notifications->Add(wnd, 0);
     }
 
     // called when printing has been canceled

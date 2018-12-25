@@ -41,6 +41,7 @@
 #include "TextSearch.h"
 #include "Colors.h"
 #include "SumatraPDF.h"
+#include "Notifications.h"
 #include "WindowInfo.h"
 #include "TabInfo.h"
 #include "resource.h"
@@ -55,7 +56,6 @@
 #include "Favorites.h"
 #include "FileThumbnails.h"
 #include "Menu.h"
-#include "Notifications.h"
 #include "Print.h"
 #include "Search.h"
 #include "Selection.h"
@@ -92,6 +92,9 @@ bool gShowFrameRate = false;
 // fullscreen are disabled, so that SumatraPDF can be displayed
 // embedded (e.g. in a web browser)
 const WCHAR* gPluginURL = nullptr; // owned by CommandLineInfo in WinMain
+
+static NotificationGroupId NG_PERSISTENT_WARNING = "persistentWarning";
+static NotificationGroupId NG_PAGE_INFO_HELPER = "pageInfoHelper";
 
 #define SPLITTER_DX 5
 #define SIDEBAR_MIN_WIDTH 150
