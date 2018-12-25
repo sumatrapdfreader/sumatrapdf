@@ -442,31 +442,31 @@ WCHAR* HwndPasswordUI::GetPassword(const WCHAR* fileName, unsigned char* fileDig
 
 // update global windowState for next default launch when either
 // no pdf is opened or a document without window dimension information
-static void RememberDefaultWindowPosition(WindowInfo& win) {
+static void RememberDefaultWindowPosition(WindowInfo* win) {
     // ignore spurious WM_SIZE and WM_MOVE messages happening during initialization
-    if (!IsWindowVisible(win.hwndFrame))
+    if (!IsWindowVisible(win->hwndFrame))
         return;
 
-    if (win.presentation)
-        gGlobalPrefs->windowState = win.windowStateBeforePresentation;
-    else if (win.isFullScreen)
+    if (win->presentation)
+        gGlobalPrefs->windowState = win->windowStateBeforePresentation;
+    else if (win->isFullScreen)
         gGlobalPrefs->windowState = WIN_STATE_FULLSCREEN;
-    else if (IsZoomed(win.hwndFrame))
+    else if (IsZoomed(win->hwndFrame))
         gGlobalPrefs->windowState = WIN_STATE_MAXIMIZED;
-    else if (!IsIconic(win.hwndFrame))
+    else if (!IsIconic(win->hwndFrame))
         gGlobalPrefs->windowState = WIN_STATE_NORMAL;
 
-    gGlobalPrefs->sidebarDx = WindowRect(win.hwndTocBox).dx;
+    gGlobalPrefs->sidebarDx = WindowRect(win->hwndTocBox).dx;
 
     /* don't update the window's dimensions if it is maximized, mimimized or fullscreened */
-    if (WIN_STATE_NORMAL == gGlobalPrefs->windowState && !IsIconic(win.hwndFrame) && !win.presentation) {
+    if (WIN_STATE_NORMAL == gGlobalPrefs->windowState && !IsIconic(win->hwndFrame) && !win->presentation) {
         // TODO: Use Get/SetWindowPlacement (otherwise we'd have to separately track
         //       the non-maximized dimensions for proper restoration)
-        gGlobalPrefs->windowPos = WindowRect(win.hwndFrame);
+        gGlobalPrefs->windowPos = WindowRect(win->hwndFrame);
     }
 }
 
-static void UpdateDisplayStateWindowRect(WindowInfo& win, DisplayState& ds, bool updateGlobal = true) {
+static void UpdateDisplayStateWindowRect(WindowInfo* win, DisplayState& ds, bool updateGlobal = true) {
     if (updateGlobal)
         RememberDefaultWindowPosition(win);
 
@@ -489,7 +489,7 @@ static void UpdateSidebarDisplayState(WindowInfo* win, TabInfo* tab, DisplayStat
 }
 
 void UpdateTabFileDisplayStateForWin(WindowInfo* win, TabInfo* tab) {
-    RememberDefaultWindowPosition(*win);
+    RememberDefaultWindowPosition(win);
     if (!tab || !tab->ctrl) {
         return;
     }
@@ -498,7 +498,7 @@ void UpdateTabFileDisplayStateForWin(WindowInfo* win, TabInfo* tab) {
         return;
     }
     tab->ctrl->UpdateDisplayState(ds);
-    UpdateDisplayStateWindowRect(*win, *ds, false);
+    UpdateDisplayStateWindowRect(win, *ds, false);
     UpdateSidebarDisplayState(win, tab, ds);
 }
 
@@ -655,24 +655,25 @@ void ControllerCallbackHandler::RenderThumbnail(DisplayModel* dm, SizeI size, co
     gRenderCache.Render(dm, 1, 0, zoom, pageRect, *callback);
 }
 
-static void CreateThumbnailForFile(WindowInfo& win, DisplayState& ds) {
+static void CreateThumbnailForFile(WindowInfo* win, DisplayState& ds) {
     if (!ShouldSaveThumbnail(ds))
         return;
 
-    CrashIf(!win.IsDocLoaded());
-    if (!win.IsDocLoaded())
+    CrashIf(!win->IsDocLoaded());
+    if (!win->IsDocLoaded())
         return;
 
     // don't create thumbnails for password protected documents
     // (unless we're also remembering the decryption key anyway)
-    if (win.AsFixed() && win.AsFixed()->GetEngine()->IsPasswordProtected() &&
-        !AutoFree(win.AsFixed()->GetEngine()->GetDecryptionKey())) {
+    auto* model = win->AsFixed();
+    if ((model != nullptr) && model->GetEngine()->IsPasswordProtected() &&
+        !AutoFree(model->GetEngine()->GetDecryptionKey())) {
         RemoveThumbnail(ds);
         return;
     }
 
-    WCHAR* filePath = str::Dup(win.ctrl->FilePath());
-    win.ctrl->CreateThumbnail(SizeI(THUMBNAIL_DX, THUMBNAIL_DY), [=](RenderedBitmap* bmp) {
+    WCHAR* filePath = str::Dup(win->ctrl->FilePath());
+    win->ctrl->CreateThumbnail(SizeI(THUMBNAIL_DX, THUMBNAIL_DY), [=](RenderedBitmap* bmp) {
         uitask::Post([=] {
             if (bmp) {
                 SetThumbnail(gFileHistory.Find(filePath, nullptr), bmp);
@@ -1132,7 +1133,7 @@ void ReloadDocument(WindowInfo* win, bool autorefresh) {
 
     DisplayState* ds = NewDisplayState(tab->filePath);
     tab->ctrl->UpdateDisplayState(ds);
-    UpdateDisplayStateWindowRect(*win, *ds);
+    UpdateDisplayStateWindowRect(win, *ds);
     UpdateSidebarDisplayState(win, tab, ds);
     // Set the windows state based on the actual window's placement
     ds->windowState = win->isFullScreen ? WIN_STATE_FULLSCREEN
@@ -1157,7 +1158,7 @@ void ReloadDocument(WindowInfo* win, bool autorefresh) {
         // refresh the thumbnail for this file
         DisplayState* state = gFileHistory.Find(ds->filePath, nullptr);
         if (state) {
-            CreateThumbnailForFile(*win, *state);
+            CreateThumbnailForFile(win, *state);
         }
     }
 
@@ -1519,7 +1520,7 @@ WindowInfo* LoadDocument(LoadArgs& args) {
         CrashIf(!str::Eq(fullPath, win->currentTab->filePath));
         DisplayState* ds = gFileHistory.MarkFileLoaded(fullPath);
         if (gGlobalPrefs->showStartPage)
-            CreateThumbnailForFile(*win, *ds);
+            CreateThumbnailForFile(win, *ds);
         prefs::Save();
     }
 
@@ -1716,7 +1717,7 @@ static void RememberSessionState() {
         }
         data->tabIndex = win->tabs.Find(win->currentTab) + 1;
         // TODO: allow recording this state without changing gGlobalPrefs
-        RememberDefaultWindowPosition(*win);
+        RememberDefaultWindowPosition(win);
         data->windowState = gGlobalPrefs->windowState;
         data->windowPos = gGlobalPrefs->windowPos;
         data->sidebarDx = gGlobalPrefs->sidebarDx;
@@ -2136,7 +2137,7 @@ void CloseWindow(WindowInfo* win, bool quitIfLast, bool forceClose) {
 
     bool lastWindow = (1 == gWindows.size());
     // RememberDefaultWindowPosition becomes a no-op once the window is hidden
-    RememberDefaultWindowPosition(*win);
+    RememberDefaultWindowPosition(win);
     // hide the window before saving prefs (closing seems slightly faster that way)
     if (!lastWindow || quitIfLast) {
         ShowWindow(win->hwndFrame, SW_HIDE);
@@ -2246,13 +2247,14 @@ static bool AppendFileFilterForDoc(Controller* ctrl, str::Str<WCHAR>& fileFilter
     return true;
 }
 
-static void OnMenuSaveAs(WindowInfo& win) {
+static void OnMenuSaveAs(WindowInfo* win) {
     if (!HasPermission(Perm_DiskAccess))
         return;
-    if (!win.IsDocLoaded())
+    if (!win->IsDocLoaded())
         return;
 
-    const WCHAR* srcFileName = win.ctrl->FilePath();
+    auto* ctrl = win->ctrl;
+    const WCHAR* srcFileName = ctrl->FilePath();
     AutoFreeW urlName;
     if (gPluginMode) {
         urlName.Set(url::GetFileName(gPluginURL));
@@ -2264,9 +2266,13 @@ static void OnMenuSaveAs(WindowInfo& win) {
     if (!srcFileName)
         return;
 
-    BaseEngine* engine = win.AsFixed() ? win.AsFixed()->GetEngine() : nullptr;
-    bool canConvertToTXT = engine && !engine->IsImageCollection() && win.currentTab->GetEngineType() != EngineType::Txt;
-    bool canConvertToPDF = engine && win.currentTab->GetEngineType() != EngineType::PDF;
+    BaseEngine* engine = nullptr;
+    if (auto* model = win->AsFixed(); model != nullptr) {
+        engine = model->GetEngine();
+    }
+    bool canConvertToTXT =
+        engine && !engine->IsImageCollection() && win->currentTab->GetEngineType() != EngineType::Txt;
+    bool canConvertToPDF = engine && win->currentTab->GetEngineType() != EngineType::PDF;
 #ifndef DEBUG
     // not ready for document types other than PS and image collections
     if (canConvertToPDF && win.currentTab->GetEngineType() != EngineType::PostScript && !engine->IsImageCollection())
@@ -2281,15 +2287,15 @@ static void OnMenuSaveAs(WindowInfo& win) {
         canConvertToPDF = false;
 #endif
     CrashIf(canConvertToTXT &&
-            (!engine || engine->IsImageCollection() || EngineType::Txt == win.currentTab->GetEngineType()));
-    CrashIf(canConvertToPDF && (!engine || EngineType::PDF == win.currentTab->GetEngineType()));
+            (!engine || engine->IsImageCollection() || EngineType::Txt == win->currentTab->GetEngineType()));
+    CrashIf(canConvertToPDF && (!engine || EngineType::PDF == win->currentTab->GetEngineType()));
 
-    const WCHAR* defExt = win.ctrl->DefaultFileExt();
+    const WCHAR* defExt = ctrl->DefaultFileExt();
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
     str::Str<WCHAR> fileFilter(256);
-    if (AppendFileFilterForDoc(win.ctrl, fileFilter))
+    if (AppendFileFilterForDoc(ctrl, fileFilter))
         fileFilter.AppendFmt(L"\1*%s\1", defExt);
     if (canConvertToTXT) {
         fileFilter.Append(_TR("Text documents"));
@@ -2324,7 +2330,7 @@ static void OnMenuSaveAs(WindowInfo& win) {
 
     OPENFILENAME ofn = {0};
     ofn.lStructSize = sizeof(ofn);
-    ofn.hwndOwner = win.hwndFrame;
+    ofn.hwndOwner = win->hwndFrame;
     ofn.lpstrFile = dstFileName;
     ofn.nMaxFile = dimof(dstFileName);
     ofn.lpstrFilter = fileFilter.Get();
@@ -2360,7 +2366,7 @@ static void OnMenuSaveAs(WindowInfo& win) {
     // Extract all text when saving as a plain text file
     if (convertToTXT) {
         str::Str<WCHAR> text(1024);
-        for (int pageNo = 1; pageNo <= win.ctrl->PageCount(); pageNo++) {
+        for (int pageNo = 1; pageNo <= ctrl->PageCount(); pageNo++) {
             WCHAR* tmp = engine->ExtractPageText(pageNo, L"\r\n", nullptr, RenderTarget::Export);
             text.AppendAndFree(tmp);
         }
@@ -2378,7 +2384,7 @@ static void OnMenuSaveAs(WindowInfo& win) {
             ok = PdfCreator::RenderToFile(pathUtf8.Get(), engine);
 #endif
         } else if (!gGlobalPrefs->annotationDefaults.saveIntoDocument) {
-            SaveFileModifictions(realDstFileName, win.AsFixed()->userAnnots);
+            SaveFileModifictions(realDstFileName, win->AsFixed()->userAnnots);
         }
     } else if (!file::Exists(srcFileName) && engine) {
         // Recreate inexistant files from memory...
@@ -2404,19 +2410,19 @@ static void OnMenuSaveAs(WindowInfo& win) {
             LocalFree(msgBuf);
         }
     }
-    if (ok && win.AsFixed() && win.AsFixed()->userAnnots && win.AsFixed()->userAnnotsModified && !convertToTXT &&
+    if (ok && win->AsFixed() && win->AsFixed()->userAnnots && win->AsFixed()->userAnnotsModified && !convertToTXT &&
         !convertToPDF) {
         if (!gGlobalPrefs->annotationDefaults.saveIntoDocument || !engine || !engine->SupportsAnnotation(true)) {
-            ok = SaveFileModifictions(realDstFileName, win.AsFixed()->userAnnots);
+            ok = SaveFileModifictions(realDstFileName, win->AsFixed()->userAnnots);
         }
         if (ok && path::IsSame(srcFileName, realDstFileName))
-            win.AsFixed()->userAnnotsModified = false;
+            win->AsFixed()->userAnnotsModified = false;
     }
     if (!ok) {
-        MessageBoxWarning(win.hwndFrame, errorMsg ? errorMsg : _TR("Failed to save a file"));
+        MessageBoxWarning(win->hwndFrame, errorMsg ? errorMsg : _TR("Failed to save a file"));
     }
 
-    if (ok && IsUntrustedFile(win.ctrl->FilePath(), gPluginURL) && !convertToTXT) {
+    if (ok && IsUntrustedFile(win->ctrl->FilePath(), gPluginURL) && !convertToTXT) {
         file::SetZoneIdentifier(realDstFileName);
     }
 
@@ -2425,15 +2431,16 @@ static void OnMenuSaveAs(WindowInfo& win) {
     }
 }
 
-static void OnMenuRenameFile(WindowInfo& win) {
+static void OnMenuRenameFile(WindowInfo* win) {
     if (!HasPermission(Perm_DiskAccess))
         return;
-    if (!win.IsDocLoaded())
+    if (!win->IsDocLoaded())
         return;
     if (gPluginMode)
         return;
 
-    AutoFreeW srcFileName(str::Dup(win.ctrl->FilePath()));
+    auto* ctrl = win->ctrl;
+    AutoFreeW srcFileName(str::Dup(ctrl->FilePath()));
     // this happens e.g. for embedded documents and directories
     if (!file::Exists(srcFileName)) {
         return;
@@ -2442,9 +2449,9 @@ static void OnMenuRenameFile(WindowInfo& win) {
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
-    const WCHAR* defExt = win.ctrl->DefaultFileExt();
+    const WCHAR* defExt = ctrl->DefaultFileExt();
     str::Str<WCHAR> fileFilter(256);
-    bool ok = AppendFileFilterForDoc(win.ctrl, fileFilter);
+    bool ok = AppendFileFilterForDoc(ctrl, fileFilter);
     CrashIf(!ok);
     fileFilter.AppendFmt(L"\1*%s\1", defExt);
     str::TransChars(fileFilter.Get(), L"\1", L"\0");
@@ -2460,7 +2467,7 @@ static void OnMenuRenameFile(WindowInfo& win) {
 
     OPENFILENAME ofn = {0};
     ofn.lStructSize = sizeof(ofn);
-    ofn.hwndOwner = win.hwndFrame;
+    ofn.hwndOwner = win->hwndFrame;
     ofn.lpstrFile = dstFileName;
     ofn.nMaxFile = dimof(dstFileName);
     ofn.lpstrFilter = fileFilter.Get();
@@ -2476,40 +2483,41 @@ static void OnMenuRenameFile(WindowInfo& win) {
         return;
     }
 
-    UpdateTabFileDisplayStateForWin(&win, win.currentTab);
-    CloseDocumentInTab(&win, true, true);
-    SetFocus(win.hwndFrame);
+    UpdateTabFileDisplayStateForWin(win, win->currentTab);
+    CloseDocumentInTab(win, true, true);
+    SetFocus(win->hwndFrame);
 
     DWORD flags = MOVEFILE_COPY_ALLOWED | MOVEFILE_REPLACE_EXISTING;
     BOOL moveOk = MoveFileEx(srcFileName.Get(), dstFileName, flags);
     if (!moveOk) {
         LogLastError();
-        LoadArgs args(srcFileName, &win);
+        LoadArgs args(srcFileName, win);
         args.forceReuse = true;
         LoadDocument(args);
-        win.ShowNotification(_TR("Failed to rename the file!"), NOS_WARNING);
+        win->ShowNotification(_TR("Failed to rename the file!"), NOS_WARNING);
         return;
     }
 
     AutoFreeW newPath(path::Normalize(dstFileName));
     RenameFileInHistory(srcFileName, newPath);
 
-    LoadArgs args(dstFileName, &win);
+    LoadArgs args(dstFileName, win);
     args.forceReuse = true;
     LoadDocument(args);
 }
 
-static void OnMenuSaveBookmark(WindowInfo& win) {
+static void OnMenuSaveBookmark(WindowInfo* win) {
     if (!HasPermission(Perm_DiskAccess) || gPluginMode)
         return;
-    if (!win.IsDocLoaded())
+    if (!win->IsDocLoaded())
         return;
 
-    const WCHAR* defExt = win.ctrl->DefaultFileExt();
+    auto* ctrl = win->ctrl;
+    const WCHAR* defExt = ctrl->DefaultFileExt();
 
     WCHAR dstFileName[MAX_PATH];
     // Remove the extension so that it can be replaced with .lnk
-    str::BufSet(dstFileName, dimof(dstFileName), path::GetBaseName(win.ctrl->FilePath()));
+    str::BufSet(dstFileName, dimof(dstFileName), path::GetBaseName(ctrl->FilePath()));
     str::TransChars(dstFileName, L":", L"_");
     if (str::EndsWithI(dstFileName, defExt)) {
         dstFileName[str::Len(dstFileName) - str::Len(defExt)] = '\0';
@@ -2523,7 +2531,7 @@ static void OnMenuSaveBookmark(WindowInfo& win) {
 
     OPENFILENAME ofn = {0};
     ofn.lStructSize = sizeof(ofn);
-    ofn.hwndOwner = win.hwndFrame;
+    ofn.hwndOwner = win->hwndFrame;
     ofn.lpstrFile = dstFileName;
     ofn.nMaxFile = dimof(dstFileName);
     ofn.lpstrFilter = fileFilter;
@@ -2540,26 +2548,25 @@ static void OnMenuSaveBookmark(WindowInfo& win) {
         fileName.Set(str::Join(dstFileName, L".lnk"));
     }
 
-    ScrollState ss(win.ctrl->CurrentPageNo());
-    if (win.AsFixed()) {
-        ss = win.AsFixed()->GetScrollState();
+    ScrollState ss(win->ctrl->CurrentPageNo());
+    if (win->AsFixed()) {
+        ss = win->AsFixed()->GetScrollState();
     }
-    const WCHAR* viewMode = prefs::conv::FromDisplayMode(win.ctrl->GetDisplayMode());
-    AutoFreeW ZoomVirtual(str::Format(L"%.2f", win.ctrl->GetZoomVirtual()));
-    if (ZOOM_FIT_PAGE == win.ctrl->GetZoomVirtual()) {
+    const WCHAR* viewMode = prefs::conv::FromDisplayMode(ctrl->GetDisplayMode());
+    AutoFreeW ZoomVirtual(str::Format(L"%.2f", ctrl->GetZoomVirtual()));
+    if (ZOOM_FIT_PAGE == ctrl->GetZoomVirtual()) {
         ZoomVirtual.SetCopy(L"fitpage");
-    } else if (ZOOM_FIT_WIDTH == win.ctrl->GetZoomVirtual()) {
+    } else if (ZOOM_FIT_WIDTH == ctrl->GetZoomVirtual()) {
         ZoomVirtual.SetCopy(L"fitwidth");
-    } else if (ZOOM_FIT_CONTENT == win.ctrl->GetZoomVirtual()) {
+    } else if (ZOOM_FIT_CONTENT == ctrl->GetZoomVirtual()) {
         ZoomVirtual.SetCopy(L"fitcontent");
     }
 
     AutoFreeW exePath(GetExePath());
-    AutoFreeW args(str::Format(L"\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d", win.ctrl->FilePath(), ss.page,
+    AutoFreeW args(str::Format(L"\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d", ctrl->FilePath(), ss.page,
                                viewMode, ZoomVirtual, (int)ss.x, (int)ss.y));
-    AutoFreeW label(win.ctrl->GetPageLabel(ss.page));
-    AutoFreeW desc(
-        str::Format(_TR("Bookmark shortcut to page %s of %s"), label, path::GetBaseName(win.ctrl->FilePath())));
+    AutoFreeW label(ctrl->GetPageLabel(ss.page));
+    AutoFreeW desc(str::Format(_TR("Bookmark shortcut to page %s of %s"), label, path::GetBaseName(ctrl->FilePath())));
 
     CreateShortcut(fileName, exePath, args, desc, 1);
 }
@@ -2692,14 +2699,14 @@ static void OnMenuOpen(WindowInfo* win) {
     }
 }
 
-static void BrowseFolder(WindowInfo& win, bool forward) {
-    AssertCrash(!win.IsAboutWindow());
-    if (win.IsAboutWindow())
+static void BrowseFolder(WindowInfo* win, bool forward) {
+    AssertCrash(!win->IsAboutWindow());
+    if (win->IsAboutWindow())
         return;
     if (!HasPermission(Perm_DiskAccess) || gPluginMode)
         return;
 
-    TabInfo* tab = win.currentTab;
+    TabInfo* tab = win->currentTab;
     WStrVec files;
     AutoFreeW pattern(path::GetDir(tab->filePath));
     // TODO: make pattern configurable (for users who e.g. want to skip single images)?
@@ -2726,8 +2733,8 @@ static void BrowseFolder(WindowInfo& win, bool forward) {
         index = (int)(index + files.size() - 1) % files.size();
 
     // TODO: check for unsaved modifications
-    UpdateTabFileDisplayStateForWin(&win, tab);
-    LoadArgs args(files.at(index), &win);
+    UpdateTabFileDisplayStateForWin(win, tab);
+    LoadArgs args(files.at(index), win);
     args.forceReuse = true;
     LoadDocument(args);
 }
@@ -2932,18 +2939,18 @@ static void OnMenuOptions(HWND hwnd) {
     prefs::Save();
 }
 
-static void OnMenuOptions(WindowInfo& win) {
-    OnMenuOptions(win.hwndFrame);
+static void OnMenuOptions(WindowInfo* win) {
+    OnMenuOptions(win->hwndFrame);
     if (gWindows.size() > 0 && gWindows.at(0)->IsAboutWindow())
         gWindows.at(0)->RedrawAll(true);
 }
 
 // toggles 'show pages continuously' state
-static void OnMenuViewContinuous(WindowInfo& win) {
-    if (!win.IsDocLoaded())
+static void OnMenuViewContinuous(WindowInfo* win) {
+    if (!win->IsDocLoaded())
         return;
 
-    DisplayMode newMode = win.ctrl->GetDisplayMode();
+    DisplayMode newMode = win->ctrl->GetDisplayMode();
     switch (newMode) {
         case DM_SINGLE_PAGE:
         case DM_CONTINUOUS:
@@ -2958,7 +2965,7 @@ static void OnMenuViewContinuous(WindowInfo& win) {
             newMode = IsContinuous(newMode) ? DM_BOOK_VIEW : DM_CONTINUOUS_BOOK_VIEW;
             break;
     }
-    SwitchToDisplayMode(&win, newMode);
+    SwitchToDisplayMode(win, newMode);
 }
 
 static void OnMenuViewMangaMode(WindowInfo* win) {
@@ -3012,24 +3019,25 @@ static void FocusPageNoEdit(HWND hwndPageBox) {
         SetFocus(hwndPageBox);
 }
 
-static void OnMenuGoToPage(WindowInfo& win) {
-    if (!win.IsDocLoaded())
+static void OnMenuGoToPage(WindowInfo* win) {
+    if (!win->IsDocLoaded())
         return;
 
     // Don't show a dialog if we don't have to - use the Toolbar instead
-    if (gGlobalPrefs->showToolbar && !win.isFullScreen && !win.presentation && !win.AsEbook()) {
-        FocusPageNoEdit(win.hwndPageBox);
+    if (gGlobalPrefs->showToolbar && !win->isFullScreen && !win->presentation && !win->AsEbook()) {
+        FocusPageNoEdit(win->hwndPageBox);
         return;
     }
 
-    AutoFreeW label(win.ctrl->GetPageLabel(win.ctrl->CurrentPageNo()));
-    AutoFreeW newPageLabel(Dialog_GoToPage(win.hwndFrame, label, win.ctrl->PageCount(), !win.ctrl->HasPageLabels()));
+    auto* ctrl = win->ctrl;
+    AutoFreeW label(ctrl->GetPageLabel(ctrl->CurrentPageNo()));
+    AutoFreeW newPageLabel(Dialog_GoToPage(win->hwndFrame, label, ctrl->PageCount(), !ctrl->HasPageLabels()));
     if (!newPageLabel)
         return;
 
-    int newPageNo = win.ctrl->GetPageByLabel(newPageLabel);
-    if (win.ctrl->ValidPageNo(newPageNo))
-        win.ctrl->GoToPage(newPageNo, true);
+    int newPageNo = ctrl->GetPageByLabel(newPageLabel);
+    if (ctrl->ValidPageNo(newPageNo))
+        ctrl->GoToPage(newPageNo, true);
 }
 
 void EnterFullScreen(WindowInfo* win, bool presentation) {
@@ -3140,7 +3148,7 @@ void OnMenuViewFullscreen(WindowInfo* win, bool presentation) {
     bool enterFullScreen = presentation ? !win->presentation : !win->isFullScreen;
 
     if (!win->presentation && !win->isFullScreen)
-        RememberDefaultWindowPosition(*win);
+        RememberDefaultWindowPosition(win);
     else
         ExitFullScreen(win);
 
@@ -3148,9 +3156,9 @@ void OnMenuViewFullscreen(WindowInfo* win, bool presentation) {
         EnterFullScreen(win, presentation);
 }
 
-static void OnMenuViewPresentation(WindowInfo& win) {
+static void OnMenuViewPresentation(WindowInfo* win) {
     // only DisplayModel currently supports an actual presentation mode
-    OnMenuViewFullscreen(&win, win.AsFixed() != nullptr);
+    OnMenuViewFullscreen(win, win->AsFixed() != nullptr);
 }
 
 // make sure that idx falls within <0, max-1> inclusive range
@@ -3238,7 +3246,7 @@ bool FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lparam, bool inTextfield
     if ((VK_LEFT == key || VK_RIGHT == key) && isShift && isCtrl && !win->IsAboutWindow() && !inTextfield) {
         // folder browsing should also work when an error page is displayed,
         // so special-case it before the win->IsDocLoaded() check
-        BrowseFolder(*win, VK_RIGHT == key);
+        BrowseFolder(win, VK_RIGHT == key);
         return true;
     }
 
@@ -3342,9 +3350,9 @@ static WCHAR SingleCharLowerW(WCHAR c) {
     return buf[0];
 }
 
-static void FrameOnChar(WindowInfo& win, WPARAM key, LPARAM info = 0) {
-    if (PM_BLACK_SCREEN == win.presentation || PM_WHITE_SCREEN == win.presentation) {
-        win.ChangePresentationMode(PM_ENABLED);
+static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
+    if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
+        win->ChangePresentationMode(PM_ENABLED);
         return;
     }
 
@@ -3360,69 +3368,71 @@ static void FrameOnChar(WindowInfo& win, WPARAM key, LPARAM info = 0) {
 
     switch (key) {
         case VK_ESCAPE:
-            if (win.findThread)
-                AbortFinding(&win, false);
-            else if (win.notifications->GetForGroup(NG_PERSISTENT_WARNING))
-                win.notifications->RemoveForGroup(NG_PERSISTENT_WARNING);
-            else if (win.notifications->GetForGroup(NG_PAGE_INFO_HELPER))
-                win.notifications->RemoveForGroup(NG_PAGE_INFO_HELPER);
-            else if (win.notifications->GetForGroup(NG_CURSOR_POS_HELPER))
-                win.notifications->RemoveForGroup(NG_CURSOR_POS_HELPER);
-            else if (win.showSelection)
-                ClearSearchResult(&win);
-            else if (gGlobalPrefs->escToExit && MayCloseWindow(&win))
-                CloseWindow(&win, true);
-            else if (win.presentation || win.isFullScreen)
-                OnMenuViewFullscreen(&win, win.presentation != PM_DISABLED);
+            if (win->findThread)
+                AbortFinding(win, false);
+            else if (win->notifications->GetForGroup(NG_PERSISTENT_WARNING))
+                win->notifications->RemoveForGroup(NG_PERSISTENT_WARNING);
+            else if (win->notifications->GetForGroup(NG_PAGE_INFO_HELPER))
+                win->notifications->RemoveForGroup(NG_PAGE_INFO_HELPER);
+            else if (win->notifications->GetForGroup(NG_CURSOR_POS_HELPER))
+                win->notifications->RemoveForGroup(NG_CURSOR_POS_HELPER);
+            else if (win->showSelection)
+                ClearSearchResult(win);
+            else if (gGlobalPrefs->escToExit && MayCloseWindow(win))
+                CloseWindow(win, true);
+            else if (win->presentation || win->isFullScreen)
+                OnMenuViewFullscreen(win, win->presentation != PM_DISABLED);
             return;
         case 'q':
             // close the current document (it's too easy to press for discarding multiple tabs)
             // quit if this is the last window
-            CloseTab(&win, true);
+            CloseTab(win, true);
             return;
         case 'r':
-            ReloadDocument(&win);
+            ReloadDocument(win);
             return;
         case VK_TAB:
-            AdvanceFocus(&win);
+            AdvanceFocus(win);
             break;
     }
 
-    if (!win.IsDocLoaded())
+    if (!win->IsDocLoaded())
         return;
+
+    auto* ctrl = win->ctrl;
 
     switch (key) {
         case VK_SPACE:
         case VK_RETURN:
-            FrameOnKeydown(&win, IsShiftPressed() ? VK_PRIOR : VK_NEXT, 0);
+            FrameOnKeydown(win, IsShiftPressed() ? VK_PRIOR : VK_NEXT, 0);
             break;
         case VK_BACK: {
             bool forward = IsShiftPressed();
-            win.ctrl->Navigate(forward ? 1 : -1);
+            ctrl->Navigate(forward ? 1 : -1);
         } break;
         case 'g':
             OnMenuGoToPage(win);
             break;
         case 'h':
-            FrameOnKeydown(&win, VK_LEFT, 0);
+            FrameOnKeydown(win, VK_LEFT, 0);
             break;
         case 'j':
-            FrameOnKeydown(&win, VK_DOWN, 0);
+            FrameOnKeydown(win, VK_DOWN, 0);
             break;
         case 'k':
-            FrameOnKeydown(&win, VK_UP, 0);
+            FrameOnKeydown(win, VK_UP, 0);
             break;
         case 'l':
-            FrameOnKeydown(&win, VK_RIGHT, 0);
+            FrameOnKeydown(win, VK_RIGHT, 0);
             break;
         case 'n':
-            win.ctrl->GoToNextPage();
+            ctrl->GoToNextPage();
             break;
         case 'p':
-            win.ctrl->GoToPrevPage();
+            ctrl->GoToPrevPage();
             break;
         case 'z':
-            win.ToggleZoom();
+            win->ToggleZoom();
             break;
         // per https://en.wikipedia.org/wiki/Keyboard_layout
         // almost all keyboard layouts allow to press either
@@ -3433,67 +3443,67 @@ static void FrameOnChar(WindowInfo& win, WPARAM key, LPARAM info = 0) {
         case '=':
         case 0xE0:
         case 0xE4:
-            ZoomToSelection(&win, win.ctrl->GetNextZoomStep(ZOOM_MAX), false);
+            ZoomToSelection(win, win->ctrl->GetNextZoomStep(ZOOM_MAX), false);
             break;
         case '-':
-            ZoomToSelection(&win, win.ctrl->GetNextZoomStep(ZOOM_MIN), false);
+            ZoomToSelection(win, win->ctrl->GetNextZoomStep(ZOOM_MIN), false);
             break;
         case '/':
             if (!gIsDivideKeyDown)
-                OnMenuFind(&win);
+                OnMenuFind(win);
             gIsDivideKeyDown = false;
             break;
         case 'c':
             OnMenuViewContinuous(win);
             break;
         case 'b':
-            if (win.AsFixed() && !IsSingle(win.ctrl->GetDisplayMode())) {
+            if (win->AsFixed() && !IsSingle(ctrl->GetDisplayMode())) {
                 // "e-book view": flip a single page
                 bool forward = !IsShiftPressed();
-                int currPage = win.ctrl->CurrentPageNo();
-                if (forward ? win.AsFixed()->LastBookPageVisible() : win.AsFixed()->FirstBookPageVisible())
+                int currPage = ctrl->CurrentPageNo();
+                if (forward ? win->AsFixed()->LastBookPageVisible() : win->AsFixed()->FirstBookPageVisible())
                     break;
 
                 DisplayMode newMode = DM_BOOK_VIEW;
-                if (IsBookView(win.ctrl->GetDisplayMode()))
+                if (IsBookView(ctrl->GetDisplayMode()))
                     newMode = DM_FACING;
-                SwitchToDisplayMode(&win, newMode, true);
+                SwitchToDisplayMode(win, newMode, true);
 
-                if (forward && currPage >= win.ctrl->CurrentPageNo() && (currPage > 1 || newMode == DM_BOOK_VIEW))
-                    win.ctrl->GoToNextPage();
-                else if (!forward && currPage <= win.ctrl->CurrentPageNo())
-                    win.ctrl->GoToPrevPage();
-            } else if (win.AsEbook() && !IsSingle(win.ctrl->GetDisplayMode())) {
+                if (forward && currPage >= ctrl->CurrentPageNo() && (currPage > 1 || newMode == DM_BOOK_VIEW))
+                    ctrl->GoToNextPage();
+                else if (!forward && currPage <= ctrl->CurrentPageNo())
+                    win->ctrl->GoToPrevPage();
+            } else if (win->AsEbook() && !IsSingle(ctrl->GetDisplayMode())) {
                 // "e-book view": flip a single page
                 bool forward = !IsShiftPressed();
-                int nextPage = win.ctrl->CurrentPageNo() + (forward ? 1 : -1);
-                if (win.ctrl->ValidPageNo(nextPage))
-                    win.ctrl->GoToPage(nextPage, false);
-            } else if (win.presentation)
-                win.ChangePresentationMode(PM_BLACK_SCREEN);
+                int nextPage = ctrl->CurrentPageNo() + (forward ? 1 : -1);
+                if (ctrl->ValidPageNo(nextPage))
+                    ctrl->GoToPage(nextPage, false);
+            } else if (win->presentation)
+                win->ChangePresentationMode(PM_BLACK_SCREEN);
             break;
         case '.':
             // for Logitech's wireless presenters which target PowerPoint's shortcuts
-            if (win.presentation)
-                win.ChangePresentationMode(PM_BLACK_SCREEN);
+            if (win->presentation)
+                win->ChangePresentationMode(PM_BLACK_SCREEN);
             break;
         case 'w':
-            if (win.presentation)
-                win.ChangePresentationMode(PM_WHITE_SCREEN);
+            if (win->presentation)
+                win->ChangePresentationMode(PM_WHITE_SCREEN);
             break;
         case 'i':
             // experimental "page info" tip: make figuring out current page and
             // total pages count a one-key action (unless they're already visible)
-            if (win.AsFixed() && (!gGlobalPrefs->showToolbar || win.isFullScreen || PM_ENABLED == win.presentation))
-                UpdatePageInfoHelper(&win);
+            if (win->AsFixed() && (!gGlobalPrefs->showToolbar || win->isFullScreen || PM_ENABLED == win->presentation))
+                UpdatePageInfoHelper(win);
             break;
         case 'm':
             // "cursor position" tip: make figuring out the current
             // cursor position in cm/in/pt possible (for exact layouting)
-            if (win.AsFixed()) {
+            if (win->AsFixed()) {
                 PointI pt;
-                if (GetCursorPosInHwnd(win.hwndCanvas, pt)) {
-                    UpdateCursorPositionHelper(&win, pt, nullptr);
+                if (GetCursorPosInHwnd(win->hwndCanvas, pt)) {
+                    UpdateCursorPositionHelper(win, pt, nullptr);
                 }
             }
             break;
@@ -3501,9 +3511,9 @@ static void FrameOnChar(WindowInfo& win, WPARAM key, LPARAM info = 0) {
         case 'a':
             // converts current selection to annotation (or back to regular text
             // if it's already an annotation)
-            DisplayModel* dm = win.AsFixed();
+            DisplayModel* dm = win->AsFixed();
             bool ok =
-                dm && dm->GetEngine()->SupportsAnnotation() && win.showSelection && win.currentTab->selectionOnPage;
+                dm && dm->GetEngine()->SupportsAnnotation() && win->showSelection && win->currentTab->selectionOnPage;
             if (!ok) {
                 return;
             }
@@ -3515,7 +3525,7 @@ static void FrameOnChar(WindowInfo& win, WPARAM key, LPARAM info = 0) {
                 dm->userAnnots = new Vec<PageAnnotation>();
             }
             Vec<PageAnnotation>* annots = dm->userAnnots;
-            for (SelectionOnPage& sel : *win.currentTab->selectionOnPage) {
+            for (SelectionOnPage& sel : *win->currentTab->selectionOnPage) {
                 auto addedAnnotation =
                     PageAnnotation(PageAnnotType::Highlight, sel.pageNo, sel.rect,
                                    PageAnnotation::Color(gGlobalPrefs->annotationDefaults.highlightColor, 0xCC));
@@ -3534,15 +3544,15 @@ static void FrameOnChar(WindowInfo& win, WPARAM key, LPARAM info = 0) {
             }
             dm->userAnnotsModified = true;
             dm->GetEngine()->UpdateUserAnnotations(dm->userAnnots);
-            ClearSearchResult(&win); // causes invalidated tiles to be rerendered
+            ClearSearchResult(win); // causes invalidated tiles to be rerendered
 #endif
     }
 }
 
-static bool FrameOnSysChar(WindowInfo& win, WPARAM key) {
+static bool FrameOnSysChar(WindowInfo* win, WPARAM key) {
     // use Alt+1 to Alt+8 for selecting the first 8 tabs and Alt+9 for the last tab
-    if (win.tabsVisible && ('1' <= key && key <= '9')) {
-        TabsSelect(&win, key < '9' ? (int)(key - '1') : (int)win.tabs.size() - 1);
+    if (win->tabsVisible && ('1' <= key && key <= '9')) {
+        TabsSelect(win, key < '9' ? (int)(key - '1') : (int)win->tabs.size() - 1);
         return true;
     }
 
@@ -3745,6 +3755,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
         return 0;
     }
 
+    auto* ctrl = win->ctrl;
     // most of them require a win, the few exceptions are no-ops
     switch (wmId) {
         case IDM_OPEN:
@@ -3753,11 +3764,11 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
             break;
 
         case IDM_SAVEAS:
-            OnMenuSaveAs(*win);
+            OnMenuSaveAs(win);
             break;
 
         case IDM_RENAME_FILE:
-            OnMenuRenameFile(*win);
+            OnMenuRenameFile(win);
             break;
 
         case IDT_FILE_PRINT:
@@ -3779,7 +3790,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
             break;
 
         case IDM_SAVEAS_BOOKMARK:
-            OnMenuSaveBookmark(*win);
+            OnMenuSaveBookmark(win);
             break;
 
         case IDT_VIEW_FIT_WIDTH:
@@ -3792,12 +3803,12 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
 
         case IDT_VIEW_ZOOMIN:
             if (win->IsDocLoaded())
-                ZoomToSelection(win, win->ctrl->GetNextZoomStep(ZOOM_MAX), false);
+                ZoomToSelection(win, ctrl->GetNextZoomStep(ZOOM_MAX), false);
             break;
 
         case IDT_VIEW_ZOOMOUT:
             if (win->IsDocLoaded())
-                ZoomToSelection(win, win->ctrl->GetNextZoomStep(ZOOM_MIN), false);
+                ZoomToSelection(win, ctrl->GetNextZoomStep(ZOOM_MIN), false);
             break;
 
         case IDM_ZOOM_6400:
@@ -3840,7 +3851,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
             break;
 
         case IDM_VIEW_CONTINUOUS:
-            OnMenuViewContinuous(*win);
+            OnMenuViewContinuous(win);
             break;
 
         case IDM_VIEW_MANGA_MODE:
@@ -3866,30 +3877,30 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
 
         case IDM_GOTO_NEXT_PAGE:
             if (win->IsDocLoaded())
-                win->ctrl->GoToNextPage();
+                ctrl->GoToNextPage();
             break;
 
         case IDM_GOTO_PREV_PAGE:
             if (win->IsDocLoaded())
-                win->ctrl->GoToPrevPage();
+                ctrl->GoToPrevPage();
             break;
 
         case IDM_GOTO_FIRST_PAGE:
             if (win->IsDocLoaded())
-                win->ctrl->GoToFirstPage();
+                ctrl->GoToFirstPage();
             break;
 
         case IDM_GOTO_LAST_PAGE:
             if (win->IsDocLoaded())
-                win->ctrl->GoToLastPage();
+                ctrl->GoToLastPage();
             break;
 
         case IDM_GOTO_PAGE:
-            OnMenuGoToPage(*win);
+            OnMenuGoToPage(win);
             break;
 
         case IDM_VIEW_PRESENTATION_MODE:
-            OnMenuViewPresentation(*win);
+            OnMenuViewPresentation(win);
             break;
 
         case IDM_VIEW_FULLSCREEN:
@@ -3955,7 +3966,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
             break;
 
         case IDM_OPTIONS:
-            OnMenuOptions(*win);
+            OnMenuOptions(win);
             break;
 
         case IDM_ADVANCED_OPTIONS:
@@ -3999,12 +4010,12 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
 
         case IDM_GOTO_NAV_BACK:
             if (win->IsDocLoaded())
-                win->ctrl->Navigate(-1);
+                ctrl->Navigate(-1);
             break;
 
         case IDM_GOTO_NAV_FORWARD:
             if (win->IsDocLoaded())
-                win->ctrl->Navigate(1);
+                ctrl->Navigate(1);
             break;
 
         case IDM_COPY_SELECTION:
@@ -4046,7 +4057,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
             break;
 
         case IDM_DEBUG_ANNOTATION:
-            FrameOnChar(*win, 'h');
+            FrameOnChar(win, 'h');
             break;
 
         case IDM_DEBUG_CRASH_ME:
@@ -4098,7 +4109,7 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         case WM_SIZE:
             if (win && SIZE_MINIMIZED != wParam) {
-                RememberDefaultWindowPosition(*win);
+                RememberDefaultWindowPosition(win);
                 int dx = LOWORD(lParam);
                 int dy = HIWORD(lParam);
                 // dbglog::LogF("dx: %d, dy: %d", dx, dy);
@@ -4111,7 +4122,7 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         case WM_MOVE:
             if (win)
-                RememberDefaultWindowPosition(*win);
+                RememberDefaultWindowPosition(win);
             break;
 
         case WM_INITMENUPOPUP:
@@ -4156,7 +4167,7 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         case WM_CHAR:
             if (win)
-                FrameOnChar(*win, wParam, lParam);
+                FrameOnChar(win, wParam, lParam);
             break;
 
         case WM_KEYDOWN:
@@ -4175,7 +4186,7 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             return DefWindowProc(hwnd, msg, wParam, lParam);
 
         case WM_SYSCHAR:
-            if (win && FrameOnSysChar(*win, wParam))
+            if (win && FrameOnSysChar(win, wParam))
                 return 0;
             return DefWindowProc(hwnd, msg, wParam, lParam);
 
