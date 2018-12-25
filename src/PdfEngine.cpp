@@ -1288,7 +1288,7 @@ class PdfTocItem : public DocTocItem {
   public:
     PdfTocItem(WCHAR* title, PdfLink link) : DocTocItem(title), link(link) {}
 
-    virtual PageDestination* GetLink() { return &link; }
+    PageDestination* GetLink() override { return &link; }
 };
 
 class PdfImage : public PageElement {
@@ -3360,7 +3360,7 @@ class XpsTocItem : public DocTocItem {
   public:
     XpsTocItem(WCHAR* title, XpsLink link) : DocTocItem(title), link(link) {}
 
-    virtual PageDestination* GetLink() { return &link; }
+    PageDestination* GetLink() override { return &link; }
 };
 
 class XpsImage : public PageElement {

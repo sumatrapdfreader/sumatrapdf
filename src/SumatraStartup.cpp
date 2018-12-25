@@ -78,7 +78,7 @@ class FileExistenceChecker : public ThreadBase {
 
   public:
     FileExistenceChecker() { GetFilePathsToCheck(); }
-    virtual void Run() override;
+    void Run() override;
 };
 
 static FileExistenceChecker* gFileExistenceChecker = nullptr;

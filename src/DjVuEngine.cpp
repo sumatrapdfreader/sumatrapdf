@@ -104,7 +104,7 @@ class DjVuTocItem : public DocTocItem {
     }
     virtual ~DjVuTocItem() { delete dest; }
 
-    virtual PageDestination* GetLink() { return dest; }
+    PageDestination* GetLink() override { return dest; }
 };
 
 class DjVuContext {

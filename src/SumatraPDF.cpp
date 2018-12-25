@@ -409,8 +409,8 @@ class HwndPasswordUI : public PasswordUI {
   public:
     explicit HwndPasswordUI(HWND hwnd) : hwnd(hwnd), pwdIdx(0) {}
 
-    virtual WCHAR* GetPassword(const WCHAR* fileName, unsigned char* fileDigest, unsigned char decryptionKeyOut[32],
-                               bool* saveKey);
+    WCHAR* GetPassword(const WCHAR* fileName, unsigned char* fileDigest, unsigned char decryptionKeyOut[32],
+                       bool* saveKey) override;
 };
 
 /* Get password for a given 'fileName', can be nullptr if user cancelled the

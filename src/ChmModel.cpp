@@ -31,7 +31,7 @@ class ChmTocItem : public DocTocItem, public PageDestination {
         title = nullptr;
     }
 
-    virtual PageDestination* GetLink() { return url ? this : nullptr; }
+    PageDestination* GetLink() override { return url ? this : nullptr; }
 
     // PageDestination
     PageDestType GetDestType() const override {

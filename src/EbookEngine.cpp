@@ -237,7 +237,7 @@ class EbookTocItem : public DocTocItem {
         : DocTocItem(title, dest ? dest->GetDestPageNo() : 0), dest(dest) {}
     ~EbookTocItem() { delete dest; }
 
-    virtual PageDestination* GetLink() { return dest; }
+    PageDestination* GetLink() override { return dest; }
 };
 
 EbookEngine::EbookEngine() {

@@ -706,7 +706,7 @@ class ImageDirTocItem : public DocTocItem {
   public:
     ImageDirTocItem(WCHAR* title, int pageNo) : DocTocItem(title, pageNo) {}
 
-    virtual PageDestination* GetLink() { return nullptr; }
+    PageDestination* GetLink() override { return nullptr; }
 };
 
 DocTocItem* ImageDirEngineImpl::GetTocTree() {
