@@ -102,7 +102,7 @@ const WCHAR* gPluginURL = nullptr; // owned by CommandLineInfo in WinMain
 constexpr LONG MIN_WIN_DX = 480;
 constexpr LONG MIN_WIN_DY = 320;
 
-Vec<WindowInfo*> gWindows;
+std::vector<WindowInfo*> gWindows;
 FileHistory gFileHistory;
 Favorites gFavorites;
 
@@ -241,8 +241,8 @@ bool HasPermission(int permission) {
 bool LaunchBrowser(const WCHAR* url) {
     if (gPluginMode) {
         // pass the URI back to the browser
-        CrashIf(gWindows.size() == 0);
-        if (gWindows.size() == 0) {
+        CrashIf(gWindows.empty());
+        if (gWindows.empty()) {
             return false;
         }
         HWND plugin = gWindows.at(0)->hwndFrame;
@@ -329,7 +329,7 @@ WindowInfo* FindWindowInfoByHwnd(HWND hwnd) {
 }
 
 bool WindowInfoStillValid(WindowInfo* win) {
-    return gWindows.Contains(win);
+    return vectorContains(gWindows, win);
 }
 
 // Find the first window showing a given PDF file
@@ -376,12 +376,26 @@ WindowInfo* FindWindowInfoBySyncFile(const WCHAR* file, bool focusTab) {
 }
 
 WindowInfo* FindWindowInfoByTab(TabInfo* tab) {
-    return gWindows.FindEl([&](WindowInfo* win) { return win->tabs.Contains(tab); });
+    auto fn = [&](WindowInfo* win) -> bool { return win->tabs.Contains(tab); };
+    // TODO: make it into a function
+    auto b = std::begin(gWindows);
+    auto e = std::end(gWindows);
+    if (auto res = std::find_if(b, e, fn); res != e) {
+        return *res;
+    }
+    return nullptr;
 }
 
 WindowInfo* FindWindowInfoByController(Controller* ctrl) {
-    return gWindows.FindEl(
-        [&](WindowInfo* win) { return win->tabs.FindEl([&](TabInfo* tab) { return tab->ctrl == ctrl; }) != NULL; });
+    auto fn = [&](WindowInfo* win) {
+        return win->tabs.FindEl([&](TabInfo* tab) { return tab->ctrl == ctrl; }) != NULL;
+    };
+    auto b = std::begin(gWindows);
+    auto e = std::end(gWindows);
+    if (auto res = std::find_if(b, e, fn); res != e) {
+        return *res;
+    }
+    return nullptr;
 }
 
 class HwndPasswordUI : public PasswordUI {
@@ -1263,7 +1277,7 @@ static WindowInfo* CreateWindowInfo() {
     if (HasPermission(Perm_DiskAccess) && !gPluginMode)
         DragAcceptFiles(win->hwndCanvas, TRUE);
 
-    gWindows.Append(win);
+    gWindows.push_back(win);
     // needed for RTL languages
     UpdateWindowRtlLayout(win);
     UpdateToolbarSidebarText(win);
@@ -1309,7 +1323,8 @@ WindowInfo* CreateAndShowWindowInfo(SessionData* data) {
 
 void DeleteWindowInfo(WindowInfo* win) {
     DeletePropertiesWindow(win->hwndFrame);
-    gWindows.Remove(win);
+
+    vectorRemove(gWindows, win);
 
     ImageList_Destroy((HIMAGELIST)SendMessage(win->hwndToolbar, TB_GETIMAGELIST, 0, 0));
     DragAcceptFiles(win->hwndCanvas, FALSE);
@@ -1442,8 +1457,8 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     if (openNewTab && !args.win) {
         // modify the args so that we always reuse the same window
         // TODO: enable the tab bar if tabs haven't been initialized
-        if (gWindows.size() > 0) {
-            win = args.win = gWindows.Last();
+        if (!gWindows.empty()) {
+            win = args.win = gWindows.back();
             args.isNewWindow = false;
         }
     }
@@ -1699,7 +1714,7 @@ static void RememberSessionState() {
         return;
 
     ResetSessionState(gGlobalPrefs->sessionData);
-    for (WindowInfo* win : gWindows) {
+    for (auto* win : gWindows) {
         if (win->tabs.size() == 0)
             continue;
         SessionData* data = NewSessionData();
@@ -1779,7 +1794,7 @@ bool AutoUpdateInitiate(const char* updateData) {
     RememberSessionState();
     gGlobalPrefs->reopenOnce->Append(str::Dup(L"SessionData"));
 #else
-    for (WindowInfo* win : gWindows) {
+    for (auto* win : gWindows) {
         for (TabInfo* tab : win->tabs) {
             gGlobalPrefs->reopenOnce->Append(str::Dup(tab->filePath));
         }
@@ -1957,19 +1972,19 @@ void UpdateCheckAsync(WindowInfo* win, bool autoCheck) {
 }
 
 static void RerenderEverything() {
-    for (size_t i = 0; i < gWindows.size(); i++) {
-        if (!gWindows.at(i)->AsFixed())
+    for (auto* win : gWindows) {
+        if (!win->AsFixed())
             continue;
-        DisplayModel* dm = gWindows.at(i)->AsFixed();
+        DisplayModel* dm = win->AsFixed();
         gRenderCache.CancelRendering(dm);
         gRenderCache.KeepForDisplayModel(dm, dm);
-        gWindows.at(i)->RedrawAll(true);
+        win->RedrawAll(true);
     }
 }
 
 void UpdateDocumentColors() {
     // TODO: only do this if colors have actually changed?
-    for (WindowInfo* win : gWindows) {
+    for (auto* win : gWindows) {
         if (win->AsEbook()) {
             win->AsEbook()->UpdateDocumentColors();
             UpdateTocColors(win);
@@ -2001,7 +2016,7 @@ static void OnMenuExit() {
 
     // CloseWindow removes the WindowInfo from gWindows,
     // so use a stable copy for iteration
-    Vec<WindowInfo*> toClose = gWindows;
+    std::vector<WindowInfo*> toClose = gWindows;
     for (WindowInfo* win : toClose) {
         CloseWindow(win, true);
     }
@@ -2078,7 +2093,7 @@ void CloseTab(WindowInfo* win, bool quitIfLast) {
         if (MayCloseWindow(win))
             CloseWindow(win, quitIfLast);
     } else {
-        CrashIf(gPluginMode && gWindows.Find(win) == 0);
+        CrashIf(gPluginMode && !vectorContains(gWindows, win));
         AbortFinding(win, true);
         TabsOnCloseDoc(win);
     }
@@ -2089,7 +2104,7 @@ bool MayCloseWindow(WindowInfo* win) {
     if (!win)
         return false;
     // a plugin window should only be closed when its parent is destroyed
-    if (gPluginMode && gWindows.Find(win) == 0)
+    if (gPluginMode && !vectorContains(gWindows, win))
         return false;
 
     if (win->printThread && !win->printCanceled && WaitForSingleObject(win->printThread, 0) == WAIT_TIMEOUT) {
@@ -2119,7 +2134,7 @@ void CloseWindow(WindowInfo* win, bool quitIfLast, bool forceClose) {
 
     // when used as an embedded plugin, closing should happen automatically
     // when the parent window is destroyed (cf. WM_DESTROY)
-    if (gPluginMode && gWindows.Find(win) == 0 && !forceClose) {
+    if (gPluginMode && !vectorContains(gWindows, win) && !forceClose) {
         return;
     }
 
@@ -2164,7 +2179,7 @@ void CloseWindow(WindowInfo* win, bool quitIfLast, bool forceClose) {
         /* last window - don't delete it */
         CloseDocumentInTab(win);
         SetFocus(win->hwndFrame);
-        CrashIf(!gWindows.Contains(win));
+        CrashIf(!vectorContains(gWindows, win));
     } else {
         FreeMenuOwnerDrawInfoData(win->menu);
         HWND hwndToDestroy = win->hwndFrame;
@@ -2941,8 +2956,9 @@ static void OnMenuOptions(HWND hwnd) {
 
 static void OnMenuOptions(WindowInfo* win) {
     OnMenuOptions(win->hwndFrame);
-    if (gWindows.size() > 0 && gWindows.at(0)->IsAboutWindow())
+    if (!gWindows.empty() && gWindows.at(0)->IsAboutWindow()) {
         gWindows.at(0)->RedrawAll(true);
+    }
 }
 
 // toggles 'show pages continuously' state
