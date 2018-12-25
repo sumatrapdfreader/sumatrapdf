@@ -175,7 +175,6 @@ static bool RegisterWinClass() {
     atom = RegisterClassEx(&wcex);
     CrashIf(!atom);
 
-    RegisterNotificationsWndClass();
     RegisterCaptionWndClass();
     return true;
 }

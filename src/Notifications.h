@@ -7,9 +7,7 @@ typedef std::function<void(NotificationWnd*)> NotificationWndRemovedCallback;
 
 class NotificationWnd : public ProgressUpdateUI {
   public:
-    static const int TIMEOUT_TIMER_ID = 1;
-
-    HWND self = nullptr;
+    HWND hwnd = nullptr;
     bool hasProgress = false;
     bool hasCancel = false;
 
@@ -34,31 +32,11 @@ class NotificationWnd : public ProgressUpdateUI {
 
     // Note: in most cases use WindowInfo::ShowNotification()
     NotificationWnd(HWND parent, const WCHAR* message, int timeoutInMS = 0, bool highlight = false,
-                    const NotificationWndRemovedCallback& cb = nullptr) {
-        hasCancel = (0 == timeoutInMS);
-        wndRemovedCb = cb;
-        this->highlight = highlight;
-        CreatePopup(parent, message);
-        if (timeoutInMS)
-            SetTimer(self, TIMEOUT_TIMER_ID, timeoutInMS, nullptr);
-    }
-
+                    const NotificationWndRemovedCallback& cb = nullptr);
     NotificationWnd(HWND parent, const WCHAR* message, const WCHAR* progressMsg,
-                    const NotificationWndRemovedCallback& cb = nullptr) {
-        hasProgress = true;
-        hasCancel = true;
-        wndRemovedCb = cb;
-        this->progressMsg = str::Dup(progressMsg);
-        CreatePopup(parent, message);
-    }
+                    const NotificationWndRemovedCallback& cb = nullptr);
 
-    ~NotificationWnd() {
-        DestroyWindow(self);
-        DeleteObject(font);
-        free(progressMsg);
-    }
-
-    HWND hwnd() { return self; }
+    ~NotificationWnd();
 
     void UpdateMessage(const WCHAR* message, int timeoutInMS = 0, bool highlight = false);
     static LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
@@ -90,5 +68,3 @@ class Notifications {
     // NotificationWndCallback methods
     void RemoveNotification(NotificationWnd* wnd);
 };
-
-void RegisterNotificationsWndClass();
