@@ -200,25 +200,25 @@ PaperFormat GetPaperFormat(SizeD size) {
     SizeD sizeP = size.dx < size.dy ? size : SizeD(size.dy, size.dx);
     // common ISO 216 formats (metric)
     if (limitValue(sizeP.dx, 16.53, 16.55) == sizeP.dx && limitValue(sizeP.dy, 23.38, 23.40) == sizeP.dy)
-        return Paper_A2;
+        return PaperFormat::A2;
     if (limitValue(sizeP.dx, 11.68, 11.70) == sizeP.dx && limitValue(sizeP.dy, 16.53, 16.55) == sizeP.dy)
-        return Paper_A3;
+        return PaperFormat::A3;
     if (limitValue(sizeP.dx, 8.26, 8.28) == sizeP.dx && limitValue(sizeP.dy, 11.68, 11.70) == sizeP.dy)
-        return Paper_A4;
+        return PaperFormat::A4;
     if (limitValue(sizeP.dx, 5.82, 5.85) == sizeP.dx && limitValue(sizeP.dy, 8.26, 8.28) == sizeP.dy)
-        return Paper_A5;
+        return PaperFormat::A5;
     if (limitValue(sizeP.dx, 4.08, 4.10) == sizeP.dx && limitValue(sizeP.dy, 5.82, 5.85) == sizeP.dy)
-        return Paper_A6;
+        return PaperFormat::A6;
     // common US/ANSI formats (imperial)
     if (limitValue(sizeP.dx, 8.49, 8.51) == sizeP.dx && limitValue(sizeP.dy, 10.99, 11.01) == sizeP.dy)
-        return Paper_Letter;
+        return PaperFormat::Letter;
     if (limitValue(sizeP.dx, 8.49, 8.51) == sizeP.dx && limitValue(sizeP.dy, 13.99, 14.01) == sizeP.dy)
-        return Paper_Legal;
+        return PaperFormat::Legal;
     if (limitValue(sizeP.dx, 10.99, 11.01) == sizeP.dx && limitValue(sizeP.dy, 16.99, 17.01) == sizeP.dy)
-        return Paper_Tabloid;
+        return PaperFormat::Tabloid;
     if (limitValue(sizeP.dx, 5.49, 5.51) == sizeP.dx && limitValue(sizeP.dy, 8.49, 8.51) == sizeP.dy)
-        return Paper_Statement;
-    return Paper_Other;
+        return PaperFormat::Statement;
+    return PaperFormat::Other;
 }
 
 // format page size according to locale (e.g. "29.7 x 21.0 cm" or "11.69 x 8.27 in")
@@ -229,31 +229,31 @@ static WCHAR* FormatPageSize(BaseEngine* engine, int pageNo, int rotation) {
 
     const WCHAR* formatName = L"";
     switch (GetPaperFormat(size)) {
-        case Paper_A2:
+        case PaperFormat::A2:
             formatName = L" (A2)";
             break;
-        case Paper_A3:
+        case PaperFormat::A3:
             formatName = L" (A3)";
             break;
-        case Paper_A4:
+        case PaperFormat::A4:
             formatName = L" (A4)";
             break;
-        case Paper_A5:
+        case PaperFormat::A5:
             formatName = L" (A5)";
             break;
-        case Paper_A6:
+        case PaperFormat::A6:
             formatName = L" (A6)";
             break;
-        case Paper_Letter:
+        case PaperFormat::Letter:
             formatName = L" (Letter)";
             break;
-        case Paper_Legal:
+        case PaperFormat::Legal:
             formatName = L" (Legal)";
             break;
-        case Paper_Tabloid:
+        case PaperFormat::Tabloid:
             formatName = L" (Tabloid)";
             break;
-        case Paper_Statement:
+        case PaperFormat::Statement:
             formatName = L" (Statement)";
             break;
     }
