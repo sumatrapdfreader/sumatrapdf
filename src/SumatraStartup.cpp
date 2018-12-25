@@ -133,22 +133,23 @@ void FileExistenceChecker::Run() {
     });
 }
 
-static void MakePluginWindow(WindowInfo& win, HWND hwndParent) {
-    AssertCrash(IsWindow(hwndParent));
-    AssertCrash(gPluginMode);
+static void MakePluginWindow(WindowInfo* win, HWND hwndParent) {
+    CrashIf(!IsWindow(hwndParent));
+    CrashIf(!gPluginMode);
 
-    long ws = GetWindowLong(win.hwndFrame, GWL_STYLE);
+    auto hwndFrame = win->hwndFrame;
+    long ws = GetWindowLong(hwndFrame, GWL_STYLE);
     ws &= ~(WS_POPUP | WS_BORDER | WS_CAPTION | WS_THICKFRAME);
     ws |= WS_CHILD;
-    SetWindowLong(win.hwndFrame, GWL_STYLE, ws);
+    SetWindowLong(hwndFrame, GWL_STYLE, ws);
 
-    SetParent(win.hwndFrame, hwndParent);
-    MoveWindow(win.hwndFrame, ClientRect(hwndParent));
-    ShowWindow(win.hwndFrame, SW_SHOW);
-    UpdateWindow(win.hwndFrame);
+    SetParent(hwndFrame, hwndParent);
+    MoveWindow(hwndFrame, ClientRect(hwndParent));
+    ShowWindow(hwndFrame, SW_SHOW);
+    UpdateWindow(hwndFrame);
 
     // from here on, we depend on the plugin's host to resize us
-    SetFocus(win.hwndFrame);
+    SetFocus(hwndFrame);
 }
 
 static bool RegisterWinClass() {
@@ -237,7 +238,7 @@ static WindowInfo* LoadOnStartup(const WCHAR* filePath, CommandLineInfo& i, bool
             win->ctrl->GoToPage(i.pageNumber, false);
     }
     if (i.hwndPluginParent)
-        MakePluginWindow(*win, i.hwndPluginParent);
+        MakePluginWindow(win, i.hwndPluginParent);
     if (!win->IsDocLoaded() || !isFirstWin)
         return win;
 

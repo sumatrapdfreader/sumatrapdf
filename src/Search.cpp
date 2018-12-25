@@ -141,21 +141,21 @@ void OnMenuFindSel(WindowInfo* win, TextSearchDirection direction) {
     FindTextOnThread(win, direction, true);
 }
 
-static void ShowSearchResult(WindowInfo& win, TextSel* result, bool addNavPt) {
+static void ShowSearchResult(WindowInfo* win, TextSel* result, bool addNavPt) {
     CrashIf(0 == result->len || !result->pages || !result->rects);
     if (0 == result->len || !result->pages || !result->rects)
         return;
 
-    DisplayModel* dm = win.AsFixed();
+    DisplayModel* dm = win->AsFixed();
     if (addNavPt || !dm->PageShown(result->pages[0]) ||
         (dm->GetZoomVirtual() == ZOOM_FIT_PAGE || dm->GetZoomVirtual() == ZOOM_FIT_CONTENT)) {
-        win.ctrl->GoToPage(result->pages[0], addNavPt);
+        win->ctrl->GoToPage(result->pages[0], addNavPt);
     }
 
     dm->textSelection->CopySelection(dm->textSearch);
-    UpdateTextSelection(&win, false);
+    UpdateTextSelection(win, false);
     dm->ShowResultRectToScreen(result);
-    win.RepaintAsync();
+    win->RepaintAsync();
 }
 
 void ClearSearchResult(WindowInfo* win) {
@@ -260,7 +260,7 @@ static void FindEndTask(WindowInfo* win, FindThreadData* ftd, TextSel* textSel, 
     if (!win->IsDocLoaded()) {
         // the UI has already been disabled and hidden
     } else if (textSel) {
-        ShowSearchResult(*win, textSel, wasModifiedCanceled);
+        ShowSearchResult(win, textSel, wasModifiedCanceled);
         ftd->HideUI(true, loopedAround);
     } else {
         // nothing found or search canceled
