@@ -245,6 +245,7 @@ function sumatra_files()
     "ParseCommandLine.*",
     "PdfSync.*",
     "Print.*",
+    "ProgressUpdateUI.*",
     "RenderCache.*",
     "Search.*",
     "Selection.*",

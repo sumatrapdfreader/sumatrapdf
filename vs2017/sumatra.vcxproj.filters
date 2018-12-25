@@ -30,6 +30,7 @@
     <ClInclude Include="..\src\ParseCommandLine.h" />
     <ClInclude Include="..\src\PdfSync.h" />
     <ClInclude Include="..\src\Print.h" />
+    <ClInclude Include="..\src\ProgressUpdateUI.h" />
     <ClInclude Include="..\src\RenderCache.h" />
     <ClInclude Include="..\src\Search.h" />
     <ClInclude Include="..\src\Selection.h" />
