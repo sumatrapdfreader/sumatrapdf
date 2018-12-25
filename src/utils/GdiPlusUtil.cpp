@@ -268,63 +268,63 @@ static Bitmap* WICDecodeImageFromStream(IStream* stream) {
     return bmp.Clone(0, 0, w, h, PixelFormat32bppARGB);
 }
 
-enum ImgFormat {
-    Img_Unknown,
-    Img_BMP,
-    Img_GIF,
-    Img_JPEG,
-    Img_JXR,
-    Img_PNG,
-    Img_TGA,
-    Img_TIFF,
-    Img_WebP,
-    Img_JP2,
+enum class ImgFormat {
+    Unknown,
+    BMP,
+    GIF,
+    JPEG,
+    JXR,
+    PNG,
+    TGA,
+    TIFF,
+    WebP,
+    JP2,
 };
 
 static ImgFormat GfxFormatFromData(const char* data, size_t len) {
     if (!data || len < 12)
-        return Img_Unknown;
+        return ImgFormat::Unknown;
     // check the most common formats first
     if (str::StartsWith(data, "\x89PNG\x0D\x0A\x1A\x0A"))
-        return Img_PNG;
+        return ImgFormat::PNG;
     if (str::StartsWith(data, "\xFF\xD8"))
-        return Img_JPEG;
+        return ImgFormat::JPEG;
     if (str::StartsWith(data, "GIF87a") || str::StartsWith(data, "GIF89a"))
-        return Img_GIF;
+        return ImgFormat::GIF;
     if (str::StartsWith(data, "BM"))
-        return Img_BMP;
+        return ImgFormat::BMP;
     if (memeq(data, "MM\x00\x2A", 4) || memeq(data, "II\x2A\x00", 4))
-        return Img_TIFF;
+        return ImgFormat::TIFF;
     if (tga::HasSignature(data, len))
-        return Img_TGA;
+        return ImgFormat::TGA;
     if (memeq(data, "II\xBC\x01", 4) || memeq(data, "II\xBC\x00", 4))
-        return Img_JXR;
+        return ImgFormat::JXR;
     if (webp::HasSignature(data, len))
-        return Img_WebP;
+        return ImgFormat::WebP;
     if (memeq(data, "\0\0\0\x0CjP  \x0D\x0A\x87\x0A", 12))
-        return Img_JP2;
-    return Img_Unknown;
+        return ImgFormat::JP2;
+    return ImgFormat::Unknown;
 }
 
 const WCHAR* GfxFileExtFromData(const char* data, size_t len) {
     switch (GfxFormatFromData(data, len)) {
-        case Img_BMP:
+        case ImgFormat::BMP:
             return L".bmp";
-        case Img_GIF:
+        case ImgFormat::GIF:
             return L".gif";
-        case Img_JPEG:
+        case ImgFormat::JPEG:
             return L".jpg";
-        case Img_JXR:
+        case ImgFormat::JXR:
             return L".jxr";
-        case Img_PNG:
+        case ImgFormat::PNG:
             return L".png";
-        case Img_TGA:
+        case ImgFormat::TGA:
             return L".tga";
-        case Img_TIFF:
+        case ImgFormat::TIFF:
             return L".tif";
-        case Img_WebP:
+        case ImgFormat::WebP:
             return L".webp";
-        case Img_JP2:
+        case ImgFormat::JP2:
             return L".jp2";
         default:
             return nullptr;
@@ -333,7 +333,7 @@ const WCHAR* GfxFileExtFromData(const char* data, size_t len) {
 
 // Windows' JPEG codec doesn't support arithmetic coding
 static bool JpegUsesArithmeticCoding(const char* data, size_t len) {
-    CrashIf(GfxFormatFromData(data, len) != Img_JPEG);
+    CrashIf(GfxFormatFromData(data, len) != ImgFormat::JPEG);
 
     ByteReader r(data, len);
     for (size_t ix = 2; ix + 9 < len && r.Byte(ix) == 0xFF; ix += r.WordBE(ix + 2) + 2) {
@@ -348,7 +348,7 @@ static bool JpegUsesArithmeticCoding(const char* data, size_t len) {
 // Windows' PNG codec fails to handle an edge case, resulting in
 // an infinite loop (cf. http://cxsecurity.com/issue/WLB-2014080021 )
 static bool PngRequiresPresetDict(const char* data, size_t len) {
-    CrashIf(GfxFormatFromData(data, len) != Img_PNG);
+    CrashIf(GfxFormatFromData(data, len) != ImgFormat::PNG);
 
     ByteReader r(data, len);
     for (size_t ix = 8; ix + 12 < len && r.DWordBE(ix) < len - ix - 12; ix += r.DWordBE(ix) + 12) {
@@ -364,29 +364,29 @@ static bool PngRequiresPresetDict(const char* data, size_t len) {
 
 bool IsGdiPlusNativeFormat(const char* data, size_t len) {
     ImgFormat fmt = GfxFormatFromData(data, len);
-    return Img_BMP == fmt || Img_GIF == fmt || Img_TIFF == fmt ||
-           (Img_JPEG == fmt && !JpegUsesArithmeticCoding(data, len)) ||
-           (Img_PNG == fmt && !PngRequiresPresetDict(data, len));
+    return ImgFormat::BMP == fmt || ImgFormat::GIF == fmt || ImgFormat::TIFF == fmt ||
+           (ImgFormat::JPEG == fmt && !JpegUsesArithmeticCoding(data, len)) ||
+           (ImgFormat::PNG == fmt && !PngRequiresPresetDict(data, len));
 }
 
 // cf. http://stackoverflow.com/questions/4598872/creating-hbitmap-from-memory-buffer/4616394#4616394
 Bitmap* BitmapFromData(const char* data, size_t len) {
     ImgFormat format = GfxFormatFromData(data, len);
-    if (Img_TGA == format)
+    if (ImgFormat::TGA == format)
         return tga::ImageFromData(data, len);
-    if (Img_WebP == format)
+    if (ImgFormat::WebP == format)
         return webp::ImageFromData(data, len);
-    if (Img_JP2 == format)
+    if (ImgFormat::JP2 == format)
         return fitz::ImageFromData(data, len);
-    if (Img_JPEG == format && JpegUsesArithmeticCoding(data, len))
+    if (ImgFormat::JPEG == format && JpegUsesArithmeticCoding(data, len))
         return fitz::ImageFromData(data, len);
-    if (Img_PNG == format && PngRequiresPresetDict(data, len))
+    if (ImgFormat::PNG == format && PngRequiresPresetDict(data, len))
         return nullptr;
 
     ScopedComPtr<IStream> stream(CreateStreamFromData(data, len));
     if (!stream)
         return nullptr;
-    if (Img_JXR == format)
+    if (ImgFormat::JXR == format)
         return WICDecodeImageFromStream(stream);
 
     Bitmap* bmp = Bitmap::FromStream(stream);
@@ -395,7 +395,7 @@ Bitmap* BitmapFromData(const char* data, size_t len) {
         bmp = nullptr;
     }
     // GDI+ under Windows XP sometimes fails to extract JPEG image dimensions
-    if (bmp && Img_JPEG == format && (0 == bmp->GetWidth() || 0 == bmp->GetHeight())) {
+    if (bmp && ImgFormat::JPEG == format && (0 == bmp->GetWidth() || 0 == bmp->GetHeight())) {
         delete bmp;
         bmp = fitz::ImageFromData(data, len);
     }
@@ -407,7 +407,7 @@ Size BitmapSizeFromData(const char* data, size_t len) {
     Size result;
     ByteReader r(data, len);
     switch (GfxFormatFromData(data, len)) {
-        case Img_BMP:
+        case ImgFormat::BMP:
             if (len >= sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER)) {
                 BITMAPINFOHEADER bmi;
                 bool ok = r.UnpackLE(&bmi, sizeof(bmi), "3d2w6d", sizeof(BITMAPFILEHEADER));
@@ -416,7 +416,7 @@ Size BitmapSizeFromData(const char* data, size_t len) {
                 result.Height = bmi.biHeight;
             }
             break;
-        case Img_GIF:
+        case ImgFormat::GIF:
             if (len >= 13) {
                 // find the first image's actual size instead of using the
                 // "logical screen" size which is sometimes too large
@@ -445,7 +445,7 @@ Size BitmapSizeFromData(const char* data, size_t len) {
                 }
             }
             break;
-        case Img_JPEG:
+        case ImgFormat::JPEG:
             // find the last start of frame marker for non-differential Huffman/arithmetic coding
             for (size_t ix = 2; ix + 9 < len && r.Byte(ix) == 0xFF;) {
                 if (0xC0 <= r.Byte(ix + 1) && r.Byte(ix + 1) <= 0xC3 ||
@@ -456,8 +456,8 @@ Size BitmapSizeFromData(const char* data, size_t len) {
                 ix += r.WordBE(ix + 2) + 2;
             }
             break;
-        case Img_JXR:
-        case Img_TIFF:
+        case ImgFormat::JXR:
+        case ImgFormat::TIFF:
             if (len >= 10) {
                 bool isBE = r.Byte(0) == 'M', isJXR = r.Byte(2) == 0xBC;
                 CrashIf(!isBE && r.Byte(0) != 'I' || isJXR && isBE);
@@ -483,19 +483,19 @@ Size BitmapSizeFromData(const char* data, size_t len) {
                 }
             }
             break;
-        case Img_PNG:
+        case ImgFormat::PNG:
             if (len >= 24 && str::StartsWith(data + 12, "IHDR")) {
                 result.Width = r.DWordBE(16);
                 result.Height = r.DWordBE(20);
             }
             break;
-        case Img_TGA:
+        case ImgFormat::TGA:
             if (len >= 16) {
                 result.Width = r.WordLE(12);
                 result.Height = r.WordLE(14);
             }
             break;
-        case Img_WebP:
+        case ImgFormat::WebP:
             if (len >= 30 && str::StartsWith(data + 12, "VP8 ")) {
                 result.Width = r.WordLE(26) & 0x3fff;
                 result.Height = r.WordLE(28) & 0x3fff;
@@ -503,7 +503,7 @@ Size BitmapSizeFromData(const char* data, size_t len) {
                 result = webp::SizeFromData(data, len);
             }
             break;
-        case Img_JP2:
+        case ImgFormat::JP2:
             if (len >= 32) {
                 size_t ix = 0;
                 while (ix < len - 32) {
