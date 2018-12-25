@@ -15,7 +15,7 @@ void SearchTestWithDir(const WCHAR *searchFile, const WCHAR *searchTerm, const T
     int findCount = 0;
     int startPage;
     int expIndex, expIncr;
-    if (FIND_FORWARD == direction) {
+    if (TextSearchDirection::Forward == direction) {
         startPage = 1;
         expIndex = 0;
         expIncr = 1;
@@ -55,7 +55,7 @@ void SearchTestWithDir(const WCHAR *searchFile, const WCHAR *searchTerm, const T
             }
         }
     }
-    if (FIND_FORWARD == direction) {
+    if (TextSearchDirection::Forward == direction) {
         if (findCount != expectedLen) {
             wprintf(L"Found only %d matches of '%s', expected %d\n",
                 expIndex, searchTerm, expectedLen);
@@ -94,8 +94,8 @@ void RegressSearch(const WCHAR *filePath, RegressSearchInfo &info)
 {
     const WCHAR *searchTerm = info.searchPhrase;
     const TextSel *expected = BuildTextSelList(info);
-    SearchTestWithDir(filePath, searchTerm, FIND_FORWARD, expected, info.count);
-    SearchTestWithDir(filePath, searchTerm, FIND_BACKWARD, expected, info.count);
+    SearchTestWithDir(filePath, searchTerm, TextSearchDirection::Forward, expected, info.count);
+    SearchTestWithDir(filePath, searchTerm, TextSearchDirection::Backward, expected, info.count);
     delete[] expected;
 }
 

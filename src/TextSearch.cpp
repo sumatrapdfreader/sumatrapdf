@@ -84,7 +84,7 @@ void TextSearch::SetSensitive(bool sensitive) {
 }
 
 void TextSearch::SetDirection(TextSearchDirection direction) {
-    bool forward = FIND_FORWARD == direction;
+    bool forward = TextSearchDirection::Forward == direction;
     if (forward == this->forward)
         return;
     this->forward = forward;

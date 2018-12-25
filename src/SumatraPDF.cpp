@@ -3950,11 +3950,11 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
             break;
 
         case IDM_FIND_NEXT_SEL:
-            OnMenuFindSel(win, FIND_FORWARD);
+            OnMenuFindSel(win, TextSearchDirection::Forward);
             break;
 
         case IDM_FIND_PREV_SEL:
-            OnMenuFindSel(win, FIND_BACKWARD);
+            OnMenuFindSel(win, TextSearchDirection::Backward);
             break;
 
         case IDM_VISIT_WEBSITE:

@@ -96,21 +96,21 @@ void OnMenuFind(WindowInfo* win) {
         dm->textSearch->SetSensitive(matchCase);
     }
 
-    FindTextOnThread(win, FIND_FORWARD, true);
+    FindTextOnThread(win, TextSearchDirection::Forward, true);
 }
 
 void OnMenuFindNext(WindowInfo* win) {
     if (!win->IsDocLoaded() || !NeedsFindUI(win))
         return;
     if (SendMessage(win->hwndToolbar, TB_ISBUTTONENABLED, IDM_FIND_NEXT, 0))
-        FindTextOnThread(win, FIND_FORWARD, true);
+        FindTextOnThread(win, TextSearchDirection::Forward, true);
 }
 
 void OnMenuFindPrev(WindowInfo* win) {
     if (!win->IsDocLoaded() || !NeedsFindUI(win))
         return;
     if (SendMessage(win->hwndToolbar, TB_ISBUTTONENABLED, IDM_FIND_PREV, 0))
-        FindTextOnThread(win, FIND_BACKWARD, true);
+        FindTextOnThread(win, TextSearchDirection::Backward, true);
 }
 
 void OnMenuFindMatchCase(WindowInfo* win) {
@@ -288,7 +288,7 @@ static DWORD WINAPI FindThread(LPVOID data) {
     bool loopedAround = false;
     if (!win->findCanceled && !rect) {
         // With no further findings, start over (unless this was a new search from the beginning)
-        int startPage = (FIND_FORWARD == ftd->direction) ? 1 : win->ctrl->PageCount();
+        int startPage = (TextSearchDirection::Forward == ftd->direction) ? 1 : win->ctrl->PageCount();
         if (!ftd->wasModified || win->ctrl->CurrentPageNo() != startPage) {
             loopedAround = true;
             rect = dm->textSearch->FindFirst(startPage, ftd->text, ftd);

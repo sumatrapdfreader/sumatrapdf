@@ -1,7 +1,7 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-enum TextSearchDirection { FIND_BACKWARD = false, FIND_FORWARD = true };
+enum class TextSearchDirection : bool { Backward = false, Forward = true };
 
 class ProgressUpdateUI {
   public:
