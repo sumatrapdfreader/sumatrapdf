@@ -24,7 +24,7 @@ class TabInfo;
 class TreeCtrl;
 
 /* Describes actions which can be performed by mouse */
-enum MouseAction { MA_IDLE = 0, MA_DRAGGING, MA_DRAGGING_RIGHT, MA_SELECTING, MA_SCROLLING, MA_SELECTING_TEXT };
+enum class MouseAction { Idle = 0, Dragging, DraggingRight, Selecting, Scrolling, SelectingText };
 
 enum NotificationGroup {
     NG_RESPONSE_TO_ACTION = 1,
@@ -141,7 +141,7 @@ class WindowInfo {
 
     DoubleBuffer* buffer = nullptr;
 
-    MouseAction mouseAction = MA_IDLE;
+    MouseAction mouseAction = MouseAction::Idle;
     bool dragStartPending = false;
 
     /* when dragging the document around, this is previous position of the

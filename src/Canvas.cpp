@@ -174,7 +174,7 @@ static void OnHScroll(WindowInfo* win, WPARAM wParam) {
 
 static void OnDraggingStart(WindowInfo* win, int x, int y, bool right = false) {
     SetCapture(win->hwndCanvas);
-    win->mouseAction = right ? MA_DRAGGING_RIGHT : MA_DRAGGING;
+    win->mouseAction = right ? MouseAction::DraggingRight : MouseAction::Dragging;
     win->dragPrevPos = PointI(x, y);
     if (GetCursor())
         SetCursor(gCursorDrag);
@@ -206,7 +206,7 @@ static void OnMouseMove(WindowInfo* win, int x, int y, WPARAM flags) {
         }
         // shortly display the cursor if the mouse has moved and the cursor is hidden
         if (PointI(x, y) != win->dragPrevPos && !GetCursor()) {
-            if (win->mouseAction == MA_IDLE)
+            if (win->mouseAction == MouseAction::Idle)
                 SetCursor(IDC_ARROW);
             else
                 SendMessage(win->hwndCanvas, WM_SETCURSOR, 0, 0);
@@ -226,22 +226,22 @@ static void OnMouseMove(WindowInfo* win, int x, int y, WPARAM flags) {
     }
 
     switch (win->mouseAction) {
-        case MA_SCROLLING:
+        case MouseAction::Scrolling:
             win->yScrollSpeed = (y - win->dragStart.y) / SMOOTHSCROLL_SLOW_DOWN_FACTOR;
             win->xScrollSpeed = (x - win->dragStart.x) / SMOOTHSCROLL_SLOW_DOWN_FACTOR;
             break;
-        case MA_SELECTING_TEXT:
+        case MouseAction::SelectingText:
             if (GetCursor())
                 SetCursor(IDC_IBEAM);
         /* fall through */
-        case MA_SELECTING:
+        case MouseAction::Selecting:
             win->selectionRect.dx = x - win->selectionRect.x;
             win->selectionRect.dy = y - win->selectionRect.y;
             OnSelectionEdgeAutoscroll(win, x, y);
             win->RepaintAsync();
             break;
-        case MA_DRAGGING:
-        case MA_DRAGGING_RIGHT:
+        case MouseAction::Dragging:
+        case MouseAction::DraggingRight:
             win->MoveDocBy(win->dragPrevPos.x - x, win->dragPrevPos.y - y);
             break;
     }
@@ -250,7 +250,7 @@ static void OnMouseMove(WindowInfo* win, int x, int y, WPARAM flags) {
 
     NotificationWnd* wnd = win->notifications->GetForGroup(NG_CURSOR_POS_HELPER);
     if (wnd) {
-        if (MA_SELECTING == win->mouseAction)
+        if (MouseAction::Selecting == win->mouseAction)
             win->selectionMeasure = win->AsFixed()->CvtFromScreen(win->selectionRect).Size();
         UpdateCursorPositionHelper(win, PointI(x, y), wnd);
     }
@@ -258,15 +258,15 @@ static void OnMouseMove(WindowInfo* win, int x, int y, WPARAM flags) {
 
 static void OnMouseLeftButtonDown(WindowInfo* win, int x, int y, WPARAM key) {
     // lf("Left button clicked on %d %d", x, y);
-    if (MA_DRAGGING_RIGHT == win->mouseAction)
+    if (MouseAction::DraggingRight == win->mouseAction)
         return;
 
-    if (MA_SCROLLING == win->mouseAction) {
-        win->mouseAction = MA_IDLE;
+    if (MouseAction::Scrolling == win->mouseAction) {
+        win->mouseAction = MouseAction::Idle;
         return;
     }
 
-    CrashIfDebugOnly(win->mouseAction != MA_IDLE); // happened e.g. in crash 50539
+    CrashIfDebugOnly(win->mouseAction != MouseAction::Idle); // happened e.g. in crash 50539
     CrashIf(!win->AsFixed());
 
     SetFocus(win->hwndFrame);
@@ -300,18 +300,18 @@ static void OnMouseLeftButtonDown(WindowInfo* win, int x, int y, WPARAM key) {
 
 static void OnMouseLeftButtonUp(WindowInfo* win, int x, int y, WPARAM key) {
     AssertCrash(win->AsFixed());
-    if (MA_IDLE == win->mouseAction || MA_DRAGGING_RIGHT == win->mouseAction)
+    if (MouseAction::Idle == win->mouseAction || MouseAction::DraggingRight == win->mouseAction)
         return;
-    AssertCrash(MA_SELECTING == win->mouseAction || MA_SELECTING_TEXT == win->mouseAction ||
-                MA_DRAGGING == win->mouseAction);
+    AssertCrash(MouseAction::Selecting == win->mouseAction || MouseAction::SelectingText == win->mouseAction ||
+                MouseAction::Dragging == win->mouseAction);
 
     bool didDragMouse = !win->dragStartPending || abs(x - win->dragStart.x) > GetSystemMetrics(SM_CXDRAG) ||
                         abs(y - win->dragStart.y) > GetSystemMetrics(SM_CYDRAG);
-    if (MA_DRAGGING == win->mouseAction)
+    if (MouseAction::Dragging == win->mouseAction)
         OnDraggingStop(win, x, y, !didDragMouse);
     else {
         OnSelectionStop(win, x, y, !didDragMouse);
-        if (MA_SELECTING == win->mouseAction && win->showSelection)
+        if (MouseAction::Selecting == win->mouseAction && win->showSelection)
             win->selectionMeasure = win->AsFixed()->CvtFromScreen(win->selectionRect).Size();
     }
 
@@ -320,7 +320,7 @@ static void OnMouseLeftButtonUp(WindowInfo* win, int x, int y, WPARAM key) {
     // TODO: win->linkHandler->GotoLink might spin the event loop
     PageElement* link = win->linkOnLastButtonDown;
     win->linkOnLastButtonDown = nullptr;
-    win->mouseAction = MA_IDLE;
+    win->mouseAction = MouseAction::Idle;
 
     if (didDragMouse)
         /* pass */;
@@ -409,8 +409,8 @@ static void OnMouseMiddleButtonDown(WindowInfo* win, int x, int y, WPARAM key) {
     UNUSED(key);
 
     switch (win->mouseAction) {
-        case MA_IDLE:
-            win->mouseAction = MA_SCROLLING;
+        case MouseAction::Idle:
+            win->mouseAction = MouseAction::Scrolling;
 
             // record current mouse position, the farther the mouse is moved
             // from this position, the faster we scroll the document
@@ -418,8 +418,8 @@ static void OnMouseMiddleButtonDown(WindowInfo* win, int x, int y, WPARAM key) {
             SetCursor(IDC_SIZEALL);
             break;
 
-        case MA_SCROLLING:
-            win->mouseAction = MA_IDLE;
+        case MouseAction::Scrolling:
+            win->mouseAction = MouseAction::Idle;
             break;
     }
 }
@@ -427,9 +427,9 @@ static void OnMouseMiddleButtonDown(WindowInfo* win, int x, int y, WPARAM key) {
 static void OnMouseRightButtonDown(WindowInfo* win, int x, int y, WPARAM key) {
     UNUSED(key);
     // lf("Right button clicked on %d %d", x, y);
-    if (MA_SCROLLING == win->mouseAction)
-        win->mouseAction = MA_IDLE;
-    else if (win->mouseAction != MA_IDLE)
+    if (MouseAction::Scrolling == win->mouseAction)
+        win->mouseAction = MouseAction::Idle;
+    else if (win->mouseAction != MouseAction::Idle)
         return;
     AssertCrash(win->AsFixed());
 
@@ -443,14 +443,14 @@ static void OnMouseRightButtonDown(WindowInfo* win, int x, int y, WPARAM key) {
 
 static void OnMouseRightButtonUp(WindowInfo* win, int x, int y, WPARAM key) {
     AssertCrash(win->AsFixed());
-    if (MA_DRAGGING_RIGHT != win->mouseAction)
+    if (MouseAction::DraggingRight != win->mouseAction)
         return;
 
     bool didDragMouse = !win->dragStartPending || abs(x - win->dragStart.x) > GetSystemMetrics(SM_CXDRAG) ||
                         abs(y - win->dragStart.y) > GetSystemMetrics(SM_CYDRAG);
     OnDraggingStop(win, x, y, !didDragMouse);
 
-    win->mouseAction = MA_IDLE;
+    win->mouseAction = MouseAction::Idle;
 
     if (didDragMouse)
         /* pass */;
@@ -741,23 +741,23 @@ static void OnPaintDocument(WindowInfo* win) {
 static LRESULT OnSetCursor(WindowInfo* win, HWND hwnd) {
     PointI pt;
 
-    if (win->mouseAction != MA_IDLE)
+    if (win->mouseAction != MouseAction::Idle)
         win->DeleteInfotip();
 
     switch (win->mouseAction) {
-        case MA_DRAGGING:
-        case MA_DRAGGING_RIGHT:
+        case MouseAction::Dragging:
+        case MouseAction::DraggingRight:
             SetCursor(gCursorDrag);
             return TRUE;
-        case MA_SCROLLING:
+        case MouseAction::Scrolling:
             SetCursor(IDC_SIZEALL);
             return TRUE;
-        case MA_SELECTING_TEXT:
+        case MouseAction::SelectingText:
             SetCursor(IDC_IBEAM);
             return TRUE;
-        case MA_SELECTING:
+        case MouseAction::Selecting:
             break;
-        case MA_IDLE:
+        case MouseAction::Idle:
             if (GetCursor() && GetCursorPosInHwnd(hwnd, pt) && win->AsFixed()) {
                 if (win->notifications->GetForGroup(NG_CURSOR_POS_HELPER)) {
                     SetCursor(IDC_CROSS);
@@ -1332,9 +1332,9 @@ static void OnTimer(WindowInfo* win, HWND hwnd, WPARAM timerId) {
             break;
 
         case SMOOTHSCROLL_TIMER_ID:
-            if (MA_SCROLLING == win->mouseAction)
+            if (MouseAction::Scrolling == win->mouseAction)
                 win->MoveDocBy(win->xScrollSpeed, win->yScrollSpeed);
-            else if (MA_SELECTING == win->mouseAction || MA_SELECTING_TEXT == win->mouseAction) {
+            else if (MouseAction::Selecting == win->mouseAction || MouseAction::SelectingText == win->mouseAction) {
                 GetCursorPosInHwnd(win->hwndCanvas, pt);
                 if (NeedsSelectionEdgeAutoscroll(win, pt.x, pt.y))
                     OnMouseMove(win, pt.x, pt.y, MK_CONTROL);

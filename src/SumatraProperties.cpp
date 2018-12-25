@@ -23,7 +23,7 @@
 #define PROPERTIES_TXT_DY_PADDING 2
 #define PROPERTIES_WIN_TITLE _TR("Document Properties")
 
-enum Magnitudes { KB = 1024, MB = 1024 * KB, GB = 1024 * MB };
+enum { KB = 1024, MB = 1024 * KB, GB = 1024 * MB };
 
 class PropertyEl {
   public:

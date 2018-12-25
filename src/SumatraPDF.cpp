@@ -2036,7 +2036,7 @@ static void CloseDocumentInTab(WindowInfo* win, bool keepUIEnabled, bool deleteM
     win->notifications->RemoveForGroup(NG_PAGE_INFO_HELPER);
     win->notifications->RemoveForGroup(NG_CURSOR_POS_HELPER);
     // TODO: this can cause a mouse capture to stick around when called from LoadModelIntoTab (cf. OnSelectionStop)
-    win->mouseAction = MA_IDLE;
+    win->mouseAction = MouseAction::Idle;
 
     DeletePropertiesWindow(win->hwndFrame);
     DeleteOldSelectionInfo(win, true);
