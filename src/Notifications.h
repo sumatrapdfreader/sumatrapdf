@@ -50,7 +50,7 @@ class NotificationWnd : public ProgressUpdateUI {
 };
 
 class Notifications {
-    Vec<NotificationWnd*> wnds;
+    std::vector<NotificationWnd*> wnds;
 
     int GetWndX(NotificationWnd* wnd);
     void MoveBelow(NotificationWnd* fix, NotificationWnd* move);
@@ -59,12 +59,12 @@ class Notifications {
   public:
     ~Notifications() { DeleteVecMembers(wnds); }
 
-    bool Contains(NotificationWnd* wnd) { return wnds.Contains(wnd); }
+    bool Contains(NotificationWnd* wnd) const { return vectorContains(this->wnds, wnd); }
 
     // groupId is used to classify notifications and causes a notification
     // to replace any other notification of the same group
     void Add(NotificationWnd*, NotificationGroupId);
-    NotificationWnd* GetForGroup(NotificationGroupId);
+    NotificationWnd* GetForGroup(NotificationGroupId) const;
     void RemoveForGroup(NotificationGroupId);
     void Relayout();
 

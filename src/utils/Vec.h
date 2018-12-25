@@ -294,6 +294,14 @@ inline void DeleteVecMembers(Vec<T>& v) {
     v.Reset();
 }
 
+template <typename T>
+inline void DeleteVecMembers(std::vector<T>& v) {
+    for (T& el : v) {
+        delete el;
+    }
+    v.clear();
+}
+
 namespace str {
 
 template <typename T>
@@ -531,7 +539,7 @@ class WStrList {
 // if I was smarter, this would apply to every type that supports
 // std::begin() and std::end()
 template <typename T>
-bool vectorContains(std::vector<T>& v, const T el) {
+bool vectorContains(const std::vector<T>& v, const T el) {
     auto b = std::begin(v);
     auto e = std::end(v);
     auto pos = std::find(b, e, el);

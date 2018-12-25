@@ -30,15 +30,16 @@ NotificationWnd::NotificationWnd(HWND parent, const WCHAR* message, int timeoutI
     wndRemovedCb = cb;
     this->highlight = highlight;
     CreatePopup(parent, message);
-    if (timeoutInMS)
+    if (timeoutInMS) {
         SetTimer(this->hwnd, TIMEOUT_TIMER_ID, timeoutInMS, nullptr);
+    }
 }
 
 NotificationWnd::NotificationWnd(HWND parent, const WCHAR* message, const WCHAR* progressMsg,
-                                 const NotificationWndRemovedCallback& cb) {
-    hasProgress = true;
-    hasCancel = true;
-    wndRemovedCb = cb;
+                                 const NotificationWndRemovedCallback& cb)
+    : wndRemovedCb(cb) {
+    this->hasProgress = true;
+    this->hasCancel = true;
     this->progressMsg = str::Dup(progressMsg);
     CreatePopup(parent, message);
 }
@@ -52,7 +53,7 @@ NotificationWnd::~NotificationWnd() {
 void NotificationWnd::CreatePopup(HWND parent, const WCHAR* message) {
     RegisterNotificationsWndClass();
 
-    NONCLIENTMETRICS ncm = {0};
+    NONCLIENTMETRICS ncm = {};
     ncm.cbSize = sizeof(ncm);
     SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
     font = CreateFontIndirect(&ncm.lfMessageFont);
@@ -61,11 +62,16 @@ void NotificationWnd::CreatePopup(HWND parent, const WCHAR* message) {
     progressWidth = MulDiv(PROGRESS_WIDTH, GetDeviceCaps(hdc, LOGPIXELSX), USER_DEFAULT_SCREEN_DPI);
     ReleaseDC(parent, hdc);
 
-    this->hwnd =
-        CreateWindowExW(WS_EX_TOPMOST, NOTIFICATION_WND_CLASS_NAME, message, WS_CHILD | SS_CENTER, TOP_LEFT_MARGIN,
-                        TOP_LEFT_MARGIN, 0, 0, parent, (HMENU)0, GetModuleHandle(nullptr), nullptr);
+    auto h = GetModuleHandleW(nullptr);
+    const WCHAR* clsName = NOTIFICATION_WND_CLASS_NAME;
+    DWORD style = WS_CHILD | SS_CENTER;
+    DWORD exStyle = WS_EX_TOPMOST;
+    int x = TOP_LEFT_MARGIN;
+    int y = TOP_LEFT_MARGIN;
+    this->hwnd = CreateWindowExW(exStyle, clsName, message, style, x, y, 0, 0, parent, (HMENU)0, h, nullptr);
     SetWindowLongPtr(this->hwnd, GWLP_USERDATA, (LONG_PTR)this);
-    ToggleWindowExStyle(this->hwnd, CS_DROPSHADOW | WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, IsUIRightToLeft());
+    DWORD flags = CS_DROPSHADOW | WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT;
+    ToggleWindowExStyle(this->hwnd, flags, IsUIRightToLeft());
     UpdateWindowPosition(message, true);
     ShowWindow(this->hwnd, SW_SHOW);
 }
@@ -80,38 +86,41 @@ void NotificationWnd::UpdateWindowPosition(const WCHAR* message, bool init) {
     SelectFont(hdc, oldfnt);
     ReleaseDC(this->hwnd, hdc);
 
-    RectI rectMsg = RectI::FromRECT(rc);
-    if (hasCancel) {
-        rectMsg.dy = std::max(rectMsg.dy, 16);
-        rectMsg.dx += 20;
+    RectI rMsg = RectI::FromRECT(rc);
+    if (this->hasCancel) {
+        rMsg.dy = std::max(rMsg.dy, 16);
+        rMsg.dx += 20;
     }
-    rectMsg.Inflate(PADDING, PADDING);
+    rMsg.Inflate(PADDING, PADDING);
 
-    if (shrinkLimit < 1.0f) {
+    if (this->shrinkLimit < 1.0f) {
         ClientRect rcOrig(this->hwnd);
-        if (rectMsg.dx < rcOrig.dx && rectMsg.dx > rcOrig.dx * shrinkLimit) {
-            rectMsg.dx = rcOrig.dx;
+        if (rMsg.dx < rcOrig.dx && rMsg.dx > rcOrig.dx * shrinkLimit) {
+            rMsg.dx = rcOrig.dx;
         }
     }
 
     // adjust the window to fit the message (only shrink the window when there's no progress bar)
-    if (!hasProgress) {
-        SetWindowPos(this->hwnd, nullptr, 0, 0, rectMsg.dx, rectMsg.dy, SWP_NOMOVE | SWP_NOZORDER);
+    UINT flags = SWP_NOMOVE | SWP_NOZORDER;
+    if (!this->hasProgress) {
+        SetWindowPos(this->hwnd, nullptr, 0, 0, rMsg.dx, rMsg.dy, flags);
     } else if (init) {
-        RectI rect = WindowRect(this->hwnd);
-        rect.dx = std::max(progressWidth + 2 * PADDING, rectMsg.dx);
-        rect.dy = rectMsg.dy + PROGRESS_HEIGHT + PADDING / 2;
-        SetWindowPos(this->hwnd, nullptr, 0, 0, rect.dx, rect.dy, SWP_NOMOVE | SWP_NOZORDER);
-    } else if (rectMsg.dx > progressWidth + 2 * PADDING) {
-        SetWindowPos(this->hwnd, nullptr, 0, 0, rectMsg.dx, WindowRect(this->hwnd).dy, SWP_NOMOVE | SWP_NOZORDER);
+        RectI r = WindowRect(this->hwnd);
+        r.dx = std::max(progressWidth + 2 * PADDING, rMsg.dx);
+        r.dy = rMsg.dy + PROGRESS_HEIGHT + PADDING / 2;
+        SetWindowPos(this->hwnd, nullptr, 0, 0, r.dx, r.dy, flags);
+    } else if (rMsg.dx > progressWidth + 2 * PADDING) {
+        SetWindowPos(this->hwnd, nullptr, 0, 0, rMsg.dx, WindowRect(this->hwnd).dy, flags);
     }
 
     // move the window to the right for a right-to-left layout
     if (IsUIRightToLeft()) {
         HWND parent = GetParent(this->hwnd);
-        RectI rect = MapRectToWindow(WindowRect(this->hwnd), HWND_DESKTOP, parent);
-        rect.x = WindowRect(parent).dx - rect.dx - TOP_LEFT_MARGIN - GetSystemMetrics(SM_CXVSCROLL);
-        SetWindowPos(this->hwnd, nullptr, rect.x, rect.y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+        RectI r = MapRectToWindow(WindowRect(this->hwnd), HWND_DESKTOP, parent);
+        int cxVScroll = GetSystemMetrics(SM_CXVSCROLL);
+        r.x = WindowRect(parent).dx - r.dx - TOP_LEFT_MARGIN - cxVScroll;
+        flags = SWP_NOSIZE | SWP_NOZORDER;
+        SetWindowPos(this->hwnd, nullptr, r.x, r.y, 0, 0, flags);
     }
 }
 
@@ -119,10 +128,11 @@ void NotificationWnd::UpdateMessage(const WCHAR* message, int timeoutInMS, bool 
     win::SetText(this->hwnd, message);
     this->highlight = highlight;
     if (timeoutInMS != 0) {
-        hasCancel = false;
+        this->hasCancel = false;
     }
-    ToggleWindowExStyle(this->hwnd, CS_DROPSHADOW | WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, IsUIRightToLeft());
-    UpdateWindowPosition(message);
+    DWORD flags = CS_DROPSHADOW | WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT;
+    ToggleWindowExStyle(this->hwnd, flags, IsUIRightToLeft());
+    this->UpdateWindowPosition(message);
     InvalidateRect(this->hwnd, nullptr, TRUE);
     if (timeoutInMS != 0) {
         SetTimer(this->hwnd, TIMEOUT_TIMER_ID, timeoutInMS, nullptr);
@@ -265,79 +275,107 @@ int Notifications::GetWndX(NotificationWnd* wnd) {
 void Notifications::MoveBelow(NotificationWnd* fix, NotificationWnd* move) {
     RectI rect = WindowRect(fix->hwnd);
     rect = MapRectToWindow(rect, HWND_DESKTOP, GetParent(fix->hwnd));
-    SetWindowPos(move->hwnd, nullptr, GetWndX(move), rect.y + rect.dy + TOP_LEFT_MARGIN, 0, 0,
-                 SWP_NOSIZE | SWP_NOZORDER);
+    UINT flags = SWP_NOSIZE | SWP_NOZORDER;
+    auto x = GetWndX(move);
+    int y = rect.y + rect.dy + TOP_LEFT_MARGIN;
+    SetWindowPos(move->hwnd, nullptr, x, y, 0, 0, flags);
 }
 
 void Notifications::Remove(NotificationWnd* wnd) {
-    int idx = wnds.Find(wnd);
-    if (idx == -1) {
+    auto b = std::begin(this->wnds);
+    auto e = std::end(this->wnds);
+    auto pos = std::find(b, e, wnd);
+    if (pos == e) {
         return;
     }
-    wnds.Remove(wnd);
-    if (idx == 0 && wnds.size() > 0) {
-        SetWindowPos(wnds.at(0)->hwnd, nullptr, GetWndX(wnds.at(0)), TOP_LEFT_MARGIN, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
-        idx = 1;
+    bool isFirst = (pos == b);
+    this->wnds.erase(pos);
+
+    // erase() invalidates iterators
+    b = std::begin(this->wnds);
+    e = std::end(this->wnds);
+
+    if (this->wnds.empty()) {
+        return;
     }
-    for (size_t i = idx; i < wnds.size(); i++) {
-        MoveBelow(wnds.at(i - 1), wnds.at(i));
+
+    // TODO: this might be busted but I'm not sure what it's supposed
+    // to do and it happens rarely. Would need to add a trigger for
+    // visually testing notifications
+    if (isFirst) {
+        auto* first = this->wnds[0];
+        UINT flags = SWP_NOSIZE | SWP_NOZORDER;
+        auto x = GetWndX(first);
+        SetWindowPos(first->hwnd, nullptr, x, TOP_LEFT_MARGIN, 0, 0, flags);
+    }
+    for (auto i = b + 1; i < e; i++) {
+        auto* prev = *(i - 1);
+        this->MoveBelow(prev, *i);
     }
 }
 
 void Notifications::Add(NotificationWnd* wnd, NotificationGroupId groupId) {
     if (groupId != nullptr) {
-        RemoveForGroup(groupId);
+        this->RemoveForGroup(groupId);
     }
     wnd->groupId = groupId;
 
-    if (wnds.size() > 0) {
-        MoveBelow(wnds.at(wnds.size() - 1), wnd);
+    if (!wnds.empty()) {
+        auto lastIdx = this->wnds.size() - 1;
+        MoveBelow(this->wnds[lastIdx], wnd);
     }
-    wnds.Append(wnd);
+    this->wnds.push_back(wnd);
 }
 
-NotificationWnd* Notifications::GetForGroup(NotificationGroupId groupId) {
+NotificationWnd* Notifications::GetForGroup(NotificationGroupId groupId) const {
     CrashIf(!groupId);
-    for (size_t i = 0; i < wnds.size(); i++) {
-        if (wnds.at(i)->groupId == groupId) {
-            return wnds.at(i);
+    for (auto* wnd : this->wnds) {
+        if (wnd->groupId == groupId) {
+            return wnd;
         }
     }
     return nullptr;
 }
 
 void Notifications::RemoveForGroup(NotificationGroupId groupId) {
-    CrashIf(!groupId);
-    for (size_t i = wnds.size(); i > 0; i--) {
-        if (wnds.at(i - 1)->groupId == groupId) {
-            RemoveNotification(wnds.at(i - 1));
+    CrashIf(groupId == nullptr);
+    std::vector<NotificationWnd*> toRemove;
+    for (auto* wnd : this->wnds) {
+        if (wnd->groupId == groupId) {
+            toRemove.push_back(wnd);
         }
+    }
+    for (auto* wnd : toRemove) {
+        this->RemoveNotification(wnd);
     }
 }
 
 void Notifications::RemoveNotification(NotificationWnd* wnd) {
-    if (Contains(wnd)) {
-        Remove(wnd);
+    if (this->Contains(wnd)) {
+        this->Remove(wnd);
         delete wnd;
     }
 }
 
 void Notifications::Relayout() {
-    if (wnds.size() == 0) {
+    if (this->wnds.empty()) {
         return;
     }
 
-    HWND hwndCanvas = GetParent(wnds.at(0)->hwnd);
+    auto* first = this->wnds[0];
+    HWND hwndCanvas = GetParent(first->hwnd);
     ClientRect frame(hwndCanvas);
-    for (auto* wnd : wnds) {
+    for (auto* wnd : this->wnds) {
         RectI rect = WindowRect(wnd->hwnd);
         rect = MapRectToWindow(rect, HWND_DESKTOP, hwndCanvas);
         if (IsUIRightToLeft()) {
-            rect.x = frame.dx - rect.dx - TOP_LEFT_MARGIN - GetSystemMetrics(SM_CXVSCROLL);
+            int cxVScroll = GetSystemMetrics(SM_CXVSCROLL);
+            rect.x = frame.dx - rect.dx - TOP_LEFT_MARGIN - cxVScroll;
         } else {
             rect.x = TOP_LEFT_MARGIN;
         }
-        SetWindowPos(wnd->hwnd, nullptr, rect.x, rect.y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+        UINT flags = SWP_NOSIZE | SWP_NOZORDER;
+        SetWindowPos(wnd->hwnd, nullptr, rect.x, rect.y, 0, 0, flags);
     }
 }
 
@@ -349,10 +387,10 @@ void NotificationWnd::UpdateProgress(int current, int total) {
     progress = limitValue(100 * current / total, 0, 100);
     if (hasProgress && progressMsg) {
         AutoFreeW message(str::Format(progressMsg, current, total));
-        UpdateMessage(message);
+        this->UpdateMessage(message);
     }
 }
 
 bool NotificationWnd::WasCanceled() {
-    return isCanceled;
+    return this->isCanceled;
 }
