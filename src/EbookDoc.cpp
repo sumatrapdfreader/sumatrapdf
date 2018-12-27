@@ -599,8 +599,8 @@ bool EpubDoc::ParseNcxToc(const char* data, size_t dataLen, const char* pagePath
         if (tok->IsTag() && tok->NameIsNS("navPoint", EPUB_NCX_NS)) {
             if (itemText) {
                 visitor->Visit(itemText, itemSrc, level);
-                itemText.Set(nullptr);
-                itemSrc.Set(nullptr);
+                itemText.Reset();
+                itemSrc.Reset();
             }
             if (tok->IsStartTag())
                 level++;
@@ -932,7 +932,7 @@ bool Fb2Doc::ParseToc(EbookTocVisitor* visitor) {
             if (!str::IsEmpty(itemText.Get())) {
                 AutoFreeW url(str::Format(TEXT(FB2_TOC_ENTRY_MARK) L"%d", titleCount));
                 visitor->Visit(itemText, url, level);
-                itemText.Set(nullptr);
+                itemText.Reset();
             }
             inTitle = false;
         } else if (inTitle && tok->IsText()) {

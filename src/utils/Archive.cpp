@@ -292,6 +292,13 @@ static bool IsValidUnrarDll() {
     return ver >= 6;
 }
 
+// return a path on disk to extracted unrar.dll or nullptr if couldn't extract
+// memory has to be freed by the caller
+static const WCHAR* ExractUnrarDll() {
+    // TODO: extract from resource, see InstallCopyFiles()
+    return nullptr;
+}
+
 static bool TryLoadUnrarDll() {
     if (IsUnrarDllLoaded()) {
         return IsValidUnrarDll();
@@ -304,7 +311,11 @@ static bool TryLoadUnrarDll() {
 #endif
     AutoFreeW dllPath(path::GetAppPath(unrarFileName));
     if (!file::Exists(dllPath)) {
-        return false;
+        const WCHAR *path = ExractUnrarDll();
+        if (path == nullptr) {
+            return false;
+        }
+        dllPath.Set(path);
     }
     HMODULE h = LoadLibrary(dllPath);
     if (!h) {

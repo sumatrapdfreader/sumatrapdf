@@ -98,7 +98,7 @@ void Doc::Clear() {
     type = DocType::None;
     generic = nullptr;
     error = DocError::None;
-    filePath.Set(nullptr);
+    filePath.Reset();
 }
 
 // the caller should make sure there is a document object

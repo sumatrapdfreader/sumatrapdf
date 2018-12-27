@@ -48,10 +48,21 @@ class ScopedPtr {
 };
 
 template <typename T>
-class AutoFreeStr : public ScopedMem<T> {
+class AutoFreeStr {
   public:
+    T* ptr = nullptr;
+
     AutoFreeStr() = default;
-    explicit AutoFreeStr(T* ptr) { this->ptr = ptr; }
+    explicit AutoFreeStr(T* ptr) : ptr(ptr) { }
+    ~AutoFreeStr() { free(this->ptr); }
+    void Set(T* newPtr) {
+        free(this->ptr);
+        this->ptr = newPtr;
+    }
+    void Set(const T* newPtr) {
+        free(this->ptr);
+        this->ptr = const_cast<T*>(newPtr);
+    }
     void SetCopy(const T* newPtr) {
         free(this->ptr);
         this->ptr = nullptr;
@@ -59,7 +70,19 @@ class AutoFreeStr : public ScopedMem<T> {
             this->ptr = str::Dup(newPtr);
         }
     }
-    // only valid for T = char
+    operator T*() const { return this->ptr; }
+    T* Get() const { return this->ptr; }
+    T* StealData() {
+        T* tmp = this->ptr;
+        this->ptr = nullptr;
+        return tmp;
+    }
+    void Reset() {
+        free(this->ptr);
+        this->ptr = nullptr;
+    }
+
+    // TODO: only valid for T = char
     std::string_view AsView() const { return {this->ptr, str::Len(this->ptr)}; }
 };
 

@@ -1455,7 +1455,7 @@ void HtmlWindow::NavigateToDataUrl(const WCHAR* url) {
 void HtmlWindow::NavigateToUrl(const WCHAR* url) {
     VARIANT urlVar;
     VariantInitBstr(urlVar, url);
-    currentURL.Set(nullptr);
+    currentURL.Reset();
     webBrowser->Navigate2(&urlVar, 0, 0, 0, 0);
     VariantClear(&urlVar);
 }
@@ -1619,7 +1619,7 @@ HBITMAP HtmlWindow::TakeScreenshot(RectI area, SizeI finalSize) {
 // called before an url is shown. If returns false, will cancel
 // the navigation.
 bool HtmlWindow::OnBeforeNavigate(const WCHAR* url, bool newWindow) {
-    currentURL.Set(nullptr);
+    currentURL.Reset();
     if (!htmlWinCb)
         return true;
     if (IsBlankUrl(url))

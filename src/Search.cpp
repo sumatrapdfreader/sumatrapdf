@@ -534,7 +534,7 @@ static const WCHAR* HandleSyncCmd(const WCHAR* cmd, DDEACK& ack) {
     // allow to omit the pdffile path, so that editors don't have to know about
     // multi-file projects (requires that the PDF has already been opened)
     if (!next) {
-        pdfFile.Set(nullptr);
+        pdfFile.Reset();
         next = str::Parse(cmd, L"[" DDECOMMAND_SYNC L"(\"%S\",%u,%u)]", &srcFile, &line, &col);
         if (!next)
             next = str::Parse(cmd, L"[" DDECOMMAND_SYNC L"(\"%S\",%u,%u,%u,%u)]", &srcFile, &line, &col, &newWindow,
