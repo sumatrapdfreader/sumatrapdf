@@ -100,29 +100,30 @@ static bool InstallCopyFiles() {
     bool ok;
     HGLOBAL res = 0;
     HRSRC resSrc = FindResource(GetModuleHandle(nullptr), MAKEINTRESOURCE(1), RT_RCDATA);
-    if (!resSrc)
+    if (!resSrc) {
         goto Corrupted;
+    }
     res = LoadResource(nullptr, resSrc);
-    if (!res)
+    if (!res) {
         goto Corrupted;
+    }
+    defer { UnlockResource(res); };
 
     const char* data = (const char*)LockResource(res);
     DWORD dataSize = SizeofResource(nullptr, resSrc);
 
     lzma::SimpleArchive archive;
     ok = lzma::ParseSimpleArchive(data, dataSize, &archive);
-    if (!ok)
+    if (!ok) {
         goto Corrupted;
+    }
 
     // on error, ExtractFiles() shows error message itself
     ok = ExtractFiles(&archive);
-Exit:
-    UnlockResource(res);
     return ok;
 Corrupted:
     NotifyFailed(_TR("The installer has been corrupted. Please download it again.\nSorry for the inconvenience!"));
-    ok = false;
-    goto Exit;
+    return false;
 }
 
 /* Caller needs to free() the result. */

@@ -57,6 +57,8 @@ workspace "SumatraPDF"
 
   filter "platforms:x64"
      architecture "x86_64"
+     -- strangely this is not set by default for rc.exe
+     resdefines { "_WIN64" }
   filter {}
 
   disablewarnings { "4127", "4324", "4458", "4800" }

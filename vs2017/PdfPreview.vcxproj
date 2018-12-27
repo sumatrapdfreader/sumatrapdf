@@ -185,7 +185,7 @@
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;DEBUG;BUILD_XPS_PREVIEW;BUILD_DJVU_PREVIEW;BUILD_EPUB_PREVIEW;BUILD_FB2_PREVIEW;BUILD_MOBI_PREVIEW;BUILD_CBZ_PREVIEW;BUILD_CBR_PREVIEW;BUILD_CB7_PREVIEW;BUILD_CBT_PREVIEW;BUILD_TGA_PREVIEW;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;DEBUG;BUILD_XPS_PREVIEW;BUILD_DJVU_PREVIEW;BUILD_EPUB_PREVIEW;BUILD_FB2_PREVIEW;BUILD_MOBI_PREVIEW;BUILD_CBZ_PREVIEW;BUILD_CBR_PREVIEW;BUILD_CB7_PREVIEW;BUILD_CBT_PREVIEW;BUILD_TGA_PREVIEW;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\src\utils;..\src\wingui;..\src\mui;..\mupdf\include;..\ext\libdjvu;..\ext\CHMLib\src;..\ext\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
@@ -249,7 +249,7 @@
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;NDEBUG;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\src\utils;..\src\wingui;..\src\mui;..\mupdf\include;..\ext\libdjvu;..\ext\CHMLib\src;..\ext\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
@@ -316,7 +316,7 @@
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;NDEBUG;_WIN64;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\src\utils;..\src\wingui;..\src\mui;..\mupdf\include;..\ext\libdjvu;..\ext\CHMLib\src;..\ext\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>

@@ -131,6 +131,12 @@ BEGIN
     VK_RIGHT,       IDM_GOTO_NAV_FORWARD,   VIRTKEY, ALT
 END
 
+// TODO: those should be compressed
+#ifdef _WIN64
+1                   RCDATA               "../ext/UnrarDLL/x64/UnRAR64.dll"
+#else
+1                   RCDATA               "../ext/UnrarDLL/UnRAR.dll"
+#endif
 
 /////////////////////////////////////////////////////////////////////////////
 //
