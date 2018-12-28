@@ -836,7 +836,9 @@ static bool RegisterWinClass() {
     WNDCLASSEX wcex;
 
     FillWndClassEx(wcex, INSTALLER_FRAME_CLASS_NAME, WndProcFrame);
-    wcex.hIcon = LoadIcon(GetModuleHandle(nullptr), MAKEINTRESOURCE(IDI_SUMATRAPDF));
+    auto h = GetModuleHandle(nullptr);
+    auto resName = MAKEINTRESOURCEW(IDI_SUMATRAPDF);
+    wcex.hIcon = LoadIcon(h, resName);
 
     ATOM atom = RegisterClassEx(&wcex);
     CrashIf(!atom);

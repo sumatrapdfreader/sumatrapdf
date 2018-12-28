@@ -27,7 +27,7 @@ WCHAR* GetDir(const WCHAR* path);
 WCHAR* Join(const WCHAR* path, const WCHAR* fileName);
 
 WCHAR* GetTempPath(const WCHAR* filePrefix = nullptr);
-WCHAR* GetAppPath(const WCHAR* fileName = nullptr);
+WCHAR* GetPathOfFileInAppDir(const WCHAR* fileName = nullptr);
 #endif
 } // namespace path
 
@@ -64,6 +64,7 @@ namespace dir {
 bool Exists(const WCHAR* dir);
 bool Create(const WCHAR* dir);
 bool CreateAll(const WCHAR* dir);
+bool RemoveAll(const WCHAR* dir);
 #endif
 } // namespace dir
 

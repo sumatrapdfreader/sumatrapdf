@@ -163,7 +163,7 @@ static void NotifyAboutFile(WatchedDir* d, const WCHAR* fileName) {
 }
 
 static void DeleteWatchedDir(WatchedDir* wd) {
-    free((void*)wd->dirPath);
+    str::Free(wd->dirPath);
     free(wd);
 }
 
@@ -385,7 +385,7 @@ static WatchedFile* NewWatchedFile(const WCHAR* filePath, const std::function<vo
 }
 
 static void DeleteWatchedFile(WatchedFile* wf) {
-    free((void*)wf->filePath);
+    str::Free(wf->filePath);
     free(wf);
 }
 

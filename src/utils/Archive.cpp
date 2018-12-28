@@ -6,6 +6,8 @@
 
 #include "StrSlice.h"
 #include "FileUtil.h"
+#include "WinUtil.h"
+#include "CryptoUtil.h"
 
 extern "C" {
 #include <unarr.h>
@@ -292,40 +294,24 @@ static bool IsValidUnrarDll() {
     return ver >= 6;
 }
 
-// error if data is empty
-OwnedData LoadApp() {
-    const WCHAR* appPath = path::GetPathOfFileInAppDir(L"");
-    if (appPath == nullptr) {
-        return {};
-    }
-    defer { free((void*)appPath); };
-    return file::ReadFile(appPath);
-}
+// in AppTools.cpp
+// TODO: strcture this better
+extern const WCHAR* ExractUnrarDll();
 
-// return a path on disk to extracted unrar.dll or nullptr if couldn't extract
-// memory has to be freed by the caller
-static const WCHAR* ExractUnrarDll() {
-    // TODO: extract from resource, see InstallCopyFiles()
-    OwnedData d = LoadApp();
-    if (d.IsEmpty()) {
-        return nullptr;
-    }
-    return nullptr;
-}
+#ifdef _WIN64
+static const WCHAR* unrarFileName = L"unrar64.dll";
+#else
+static const WCHAR* unrarFileName = L"unrar.dll";
+#endif
 
 static bool TryLoadUnrarDll() {
     if (IsUnrarDllLoaded()) {
         return IsValidUnrarDll();
     }
 
-#ifdef _WIN64
-    const WCHAR *unrarFileName = L"unrar64.dll";
-#else
-    const WCHAR *unrarFileName = L"unrar.dll";
-#endif
     AutoFreeW dllPath(path::GetPathOfFileInAppDir(unrarFileName));
     if (!file::Exists(dllPath)) {
-        const WCHAR *path = ExractUnrarDll();
+        const WCHAR* path = ExractUnrarDll();
         if (path == nullptr) {
             return false;
         }

@@ -30,7 +30,7 @@ class FontListItem {
         cf.hFont = hFont;
     }
     ~FontListItem() {
-        free((void*)cf.name);
+        str::Free(cf.name);
         ::delete cf.font;
         DeleteObject(cf.hFont);
         delete next;

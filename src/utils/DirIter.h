@@ -35,3 +35,4 @@ class DirIter {
 };
 
 bool CollectPathsFromDirectory(const WCHAR* pattern, WStrVec& paths, bool dirsInsteadOfFiles = false);
+std::vector<std::wstring> CollectDirsFromDirectory(const WCHAR*);
