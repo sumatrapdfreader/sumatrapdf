@@ -292,10 +292,24 @@ static bool IsValidUnrarDll() {
     return ver >= 6;
 }
 
+// error if data is empty
+OwnedData LoadApp() {
+    const WCHAR* appPath = path::GetPathOfFileInAppDir(L"");
+    if (appPath == nullptr) {
+        return {};
+    }
+    defer { free((void*)appPath); };
+    return file::ReadFile(appPath);
+}
+
 // return a path on disk to extracted unrar.dll or nullptr if couldn't extract
 // memory has to be freed by the caller
 static const WCHAR* ExractUnrarDll() {
     // TODO: extract from resource, see InstallCopyFiles()
+    OwnedData d = LoadApp();
+    if (d.IsEmpty()) {
+        return nullptr;
+    }
     return nullptr;
 }
 
@@ -309,7 +323,7 @@ static bool TryLoadUnrarDll() {
 #else
     const WCHAR *unrarFileName = L"unrar.dll";
 #endif
-    AutoFreeW dllPath(path::GetAppPath(unrarFileName));
+    AutoFreeW dllPath(path::GetPathOfFileInAppDir(unrarFileName));
     if (!file::Exists(dllPath)) {
         const WCHAR *path = ExractUnrarDll();
         if (path == nullptr) {
