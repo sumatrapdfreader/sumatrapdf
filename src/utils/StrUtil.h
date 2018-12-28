@@ -1,3 +1,4 @@
+
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
@@ -58,11 +59,18 @@ inline bool EqNIx(const char* s, size_t len, const char* s2) {
 char* DupN(const char* s, size_t lenCch);
 char* ToLowerInPlace(char* s);
 
+inline void Free(const char* s) {
+    free((void*)s);
+}
+
 #if OS_WIN
 bool StartsWithI(const WCHAR* str, const WCHAR* txt);
 bool EndsWith(const WCHAR* txt, const WCHAR* end);
 bool EndsWithI(const WCHAR* txt, const WCHAR* end);
 WCHAR* DupN(const WCHAR* s, size_t lenCch);
+inline void Free(const WCHAR* s) {
+    free((void*)s);
+}
 WCHAR* ToLowerInPlace(WCHAR* s);
 
 OwnedData ToMultiByte(const WCHAR* txt, UINT CodePage, int cchTxtLen = -1);

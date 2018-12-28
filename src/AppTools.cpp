@@ -8,8 +8,10 @@
 #include "DbgHelpDyn.h"
 #include "FileUtil.h"
 #include "WinUtil.h"
-// ui
+#include "CryptoUtil.h"
 #include "AppTools.h"
+#include "DirIter.h"
+
 #include "Translations.h"
 #include "Version.h"
 
@@ -76,10 +78,10 @@ bool IsRunningInPortableMode() {
     return true;
 }
 
-static AutoFreeW gAppDataPath;
+static AutoFreeW gAppDataDir;
 
 void SetAppDataPath(const WCHAR* path) {
-    gAppDataPath.Set(path::Normalize(path));
+    gAppDataDir.Set(path::Normalize(path));
 }
 
 /* Generate the full path for a filename used by the app in the userdata path. */
@@ -88,17 +90,35 @@ WCHAR* AppGenDataFilename(const WCHAR* fileName) {
     if (!fileName)
         return nullptr;
 
-    if (gAppDataPath && dir::Exists(gAppDataPath)) {
-        return path::Join(gAppDataPath, fileName);
+    if (gAppDataDir && dir::Exists(gAppDataDir)) {
+        return path::Join(gAppDataDir, fileName);
     }
 
     if (IsRunningInPortableMode()) {
         /* Use the same path as the binary */
-        return path::GetAppPath(fileName);
+        return path::GetPathOfFileInAppDir(fileName);
     }
 
     /* Use %APPDATA% */
     AutoFreeW path(GetSpecialFolder(CSIDL_APPDATA, true));
+    CrashIf(!path);
+    if (!path)
+        return nullptr;
+    path.Set(path::Join(path, APP_NAME_STR));
+    if (!path)
+        return nullptr;
+    bool ok = dir::Create(path);
+    if (!ok)
+        return nullptr;
+    return path::Join(path, fileName);
+}
+
+WCHAR* PathForFileInAppDataDir(const WCHAR* fileName) {
+    if (!fileName)
+        return nullptr;
+
+    /* Use local (non-roaming) app data directory */
+    AutoFreeW path(GetSpecialFolder(CSIDL_LOCAL_APPDATA, true));
     CrashIf(!path);
     if (!path)
         return nullptr;
@@ -461,4 +481,133 @@ void SaveCallstackLogs() {
     AutoFreeW filePath(AppGenDataFilename(L"callstacks.txt"));
     file::WriteFile(filePath.Get(), s, str::Len(s));
     free(s);
+}
+
+// cache because calculating md5 of the whole executable
+// might be relatively expensive
+static AutoFreeW gAppMd5;
+
+// return hex version of md5 of app's executable
+// nullptr if there was an error
+// caller needs to free the result
+static const WCHAR* Md5OfAppExe() {
+    if (gAppMd5.Get()) {
+        return str::Dup(gAppMd5.Get());
+    }
+
+    const WCHAR* appPath = GetExePath();
+    if (appPath == nullptr) {
+        return {};
+    }
+    defer { str::Free(appPath); };
+    auto d = file::ReadFile(appPath);
+    if (d.IsEmpty()) {
+        return nullptr;
+    }
+
+    unsigned char md5[16] = {0};
+    CalcMD5DigestWin(d.data, d.size, md5);
+
+    AutoFree md5HexA(_MemToHex(&md5));
+    AutoFreeW md5Hex(str::conv::FromUtf8(md5HexA));
+
+    return md5Hex.StealData();
+}
+
+#ifdef _WIN64
+static const WCHAR* unrarFileName = L"unrar64.dll";
+#else
+static const WCHAR* unrarFileName = L"unrar.dll";
+#endif
+
+// remove all directories except for ours
+//. need to avoid acuumulating the directories when testing
+// locally or using pre-release builds (both cases where
+// exe and its md5 changes frequently)
+void RemoveMd5AppDataDirectories() {
+    const WCHAR* extractedDir = PathForFileInAppDataDir(L"extracted");
+    if (!extractedDir) {
+        return;
+    }
+    defer { str::Free(extractedDir); };
+
+    auto dirs = CollectDirsFromDirectory(extractedDir);
+    if (dirs.empty()) {
+        return;
+    }
+
+    const WCHAR* md5App = Md5OfAppExe();
+    if (md5App == nullptr) {
+        return;
+    }
+    defer { str::Free(md5App); };
+
+    const WCHAR* md5Dir = path::Join(extractedDir, md5App);
+    defer { str::Free(md5Dir); };
+
+    for (auto& dir : dirs) {
+        const WCHAR* s = dir.data();
+        if (str::Eq(s, md5Dir)) {
+            continue;
+        }
+        dir::RemoveAll(s);
+    }
+}
+
+// return a path on disk to extracted unrar.dll or nullptr if couldn't extract
+// memory has to be freed by the caller
+const WCHAR* ExractUnrarDll() {
+    RemoveMd5AppDataDirectories();
+
+    const WCHAR* extractedDir = PathForFileInAppDataDir(L"extracted");
+    if (!extractedDir) {
+        return nullptr;
+    }
+    defer { str::Free(extractedDir); };
+
+    const WCHAR* md5App = Md5OfAppExe();
+    if (md5App == nullptr) {
+        return nullptr;
+    }
+    defer { str::Free(md5App); };
+
+    const WCHAR* md5Dir = path::Join(extractedDir, md5App);
+    defer { str::Free(md5Dir); };
+
+    const WCHAR* dllPath = path::Join(md5Dir, unrarFileName);
+    defer { str::Free(dllPath); };
+
+    if (file::Exists(dllPath)) {
+        const WCHAR* ret = dllPath;
+        dllPath = nullptr; // don't free
+        return ret;
+    }
+
+    bool ok = dir::CreateAll(md5Dir);
+    if (!ok) {
+        return nullptr;
+    }
+
+    HGLOBAL res = 0;
+    auto h = GetModuleHandle(nullptr);
+    auto resName = MAKEINTRESOURCEW(1);
+    HRSRC resSrc = FindResourceW(h, resName, RT_RCDATA);
+    if (!resSrc) {
+        return nullptr;
+    }
+    res = LoadResource(nullptr, resSrc);
+    if (!res) {
+        return nullptr;
+    }
+    const char* data = (const char*)LockResource(res);
+    defer { UnlockResource(res); };
+    DWORD dataSize = SizeofResource(nullptr, resSrc);
+    ok = file::WriteFile(dllPath, data, dataSize);
+    if (!ok) {
+        return nullptr;
+    }
+
+    const WCHAR* ret = dllPath;
+    dllPath = nullptr; // don't free
+    return ret;
 }

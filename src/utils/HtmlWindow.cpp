@@ -1636,10 +1636,10 @@ bool HtmlWindow::OnBeforeNavigate(const WCHAR* url, bool newWindow) {
 }
 
 void HtmlWindow::FreeHtmlSetInProgressData() {
-    free((void*)htmlSetInProgress);
-    free((void*)htmlSetInProgressUrl);
-    htmlSetInProgress = nullptr;
-    htmlSetInProgressUrl = nullptr;
+    str::Free(this->htmlSetInProgress);
+    str::Free(this->htmlSetInProgressUrl);
+    this->htmlSetInProgress = nullptr;
+    this->htmlSetInProgressUrl = nullptr;
 }
 
 void HtmlWindow::OnDocumentComplete(const WCHAR* url) {

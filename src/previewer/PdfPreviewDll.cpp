@@ -168,7 +168,7 @@ static struct {
 };
 
 STDAPI DllRegisterServer() {
-    AutoFreeW dllPath(path::GetAppPath());
+    AutoFreeW dllPath(path::GetPathOfFileInAppDir());
     if (!dllPath)
         return HRESULT_FROM_WIN32(GetLastError());
 

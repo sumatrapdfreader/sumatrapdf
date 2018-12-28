@@ -3,6 +3,7 @@
 
 #include "BaseUtil.h"
 #include "FileUtil.h"
+
 #if OS_WIN
 #include "ScopedWin.h"
 #include "WinUtil.h"
@@ -283,6 +284,7 @@ WCHAR* GetTempPath(const WCHAR* filePrefix) {
 // returns a path to the application module's directory
 // with either the given fileName or the module's name
 // (module is the EXE or DLL in which path::GetPathOfFileInAppDir resides)
+// TODO: normalize the path
 WCHAR* GetPathOfFileInAppDir(const WCHAR* fileName) {
     WCHAR modulePath[MAX_PATH];
     modulePath[0] = '\0';
@@ -290,9 +292,13 @@ WCHAR* GetPathOfFileInAppDir(const WCHAR* fileName) {
     modulePath[dimof(modulePath) - 1] = '\0';
     if (!fileName)
         return str::Dup(modulePath);
-    AutoFreeW moduleDir(path::GetDir(modulePath));
-    return path::Join(moduleDir, fileName);
+    const WCHAR* moduleDir(path::GetDir(modulePath));
+    defer { str::Free(moduleDir); };
+    const WCHAR* path = path::Join(moduleDir, fileName);
+    defer { str::Free(path); };
+    return path::Normalize(path);
 }
+
 #endif // OS_WIN
 } // namespace path
 
@@ -566,7 +572,7 @@ bool Exists(const WCHAR* dir) {
 
 // Return true if a directory already exists or has been successfully created
 bool Create(const WCHAR* dir) {
-    BOOL ok = CreateDirectory(dir, nullptr);
+    BOOL ok = CreateDirectoryW(dir, nullptr);
     if (ok)
         return true;
     return ERROR_ALREADY_EXISTS == GetLastError();
@@ -579,6 +585,16 @@ bool CreateAll(const WCHAR* dir) {
         CreateAll(parent);
     return Create(dir);
 }
+
+// remove directory and all its children
+bool RemoveAll(const WCHAR* dir) {
+    // TODO: NYI
+    UNUSED(dir);
+    CrashAlwaysIf(true);
+    return false;
+
+}
+
 #endif // OS_WIN
 
 } // namespace dir

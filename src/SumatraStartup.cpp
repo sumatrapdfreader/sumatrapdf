@@ -59,7 +59,7 @@
 
 #ifdef DEBUG
 static bool TryLoadMemTrace() {
-    AutoFreeW dllPath(path::GetAppPath(L"memtrace.dll"));
+    AutoFreeW dllPath(path::GetPathOfFileInAppDir(L"memtrace.dll"));
     if (!LoadLibrary(dllPath))
         return false;
     return true;
