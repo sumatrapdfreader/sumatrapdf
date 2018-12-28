@@ -585,7 +585,7 @@ class ExitScopeHelp {
     }
 };
 
-#define defer const auto& CONCAT(defer__, __LINE__) = ExitScopeHelp() + [&]()
+#define defer const auto& CONCAT(defer__, __LINE__) = ExitScopeHelp() + [&]() \
 
 /* How to use:
 defer { free(tools_filename); };

@@ -14,7 +14,7 @@ Reference for warnings:
  4100 - unreferenced formal parameter
  4127 - conditional expression is constant
  4131 - uses old-style declarator
- 4189 - local variable is initialized but not referenced
+ 4189 - local variable is initialized but not referenced, defer macro triggers this
  4204 - non-standard extension: non-constant aggregate initializer
  4206 - non-standard extension: translation unit is empty
  4244 - 64bit, conversion with possible loss of data
@@ -61,7 +61,7 @@ workspace "SumatraPDF"
      resdefines { "_WIN64" }
   filter {}
 
-  disablewarnings { "4127", "4324", "4458", "4800" }
+  disablewarnings { "4127", "4189", "4324", "4458", "4800" }
   warnings "Extra"
 
   location "this_is_invalid_location"
