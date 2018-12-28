@@ -282,9 +282,8 @@ WCHAR* GetTempPath(const WCHAR* filePrefix) {
 
 // returns a path to the application module's directory
 // with either the given fileName or the module's name
-// (module is the EXE or DLL in which path::GetAppPath resides)
-// TODO: rename to GetPathOfFileInAppDir()
-WCHAR* GetAppPath(const WCHAR* fileName) {
+// (module is the EXE or DLL in which path::GetPathOfFileInAppDir resides)
+WCHAR* GetPathOfFileInAppDir(const WCHAR* fileName) {
     WCHAR modulePath[MAX_PATH];
     modulePath[0] = '\0';
     GetModuleFileName(GetInstance(), modulePath, dimof(modulePath));
