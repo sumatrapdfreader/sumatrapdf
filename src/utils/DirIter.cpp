@@ -70,7 +70,7 @@ const WCHAR* DirIter::Next() {
     // when we enter here, currFindData has info for an entry
     // we haven't processed yet (filled by StartDirIter() or
     // ourselves at the end) unless foundNext is false
-    currPath.Set(nullptr);
+    currPath.Reset();
     while (foundNext && !currPath) {
         WCHAR* f = currFindData.cFileName;
         if ((currFindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {

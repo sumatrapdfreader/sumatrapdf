@@ -954,12 +954,12 @@ bool MobiDoc::ParseToc(EbookTocVisitor* visitor) {
                 itemLink.Set(str::conv::FromHtmlUtf8(attr->val, attr->valLen));
         } else if (itemLink && tok->IsEndTag() && Tag_A == tok->tag) {
             if (!itemText) {
-                itemLink.Set(nullptr);
+                itemLink.Reset();
                 continue;
             }
             visitor->Visit(itemText, itemLink, itemLevel);
-            itemText.Set(nullptr);
-            itemLink.Set(nullptr);
+            itemText.Reset();
+            itemLink.Reset();
         } else if (Tag_Blockquote == tok->tag || Tag_Ul == tok->tag || Tag_Ol == tok->tag) {
             if (tok->IsStartTag())
                 itemLevel++;
