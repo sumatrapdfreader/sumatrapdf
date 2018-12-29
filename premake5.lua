@@ -464,7 +464,7 @@ workspace "SumatraPDF"
     language "C++"
     cppdialect "C++17"
     entrypoint "WinMainCRTStartup"
-    includedirs { "src/utils" }
+    includedirs { "src" }
     files { "src/tools/plugin-test.cpp" }
     links { "utils", "mupdf" }
     links { "shlwapi" }

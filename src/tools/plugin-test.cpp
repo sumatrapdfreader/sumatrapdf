@@ -3,9 +3,9 @@
 
 // this is a minimal example for how to use SumatraPDF in plugin mode
 
-#include "BaseUtil.h"
-#include "CmdLineParser.h"
-#include "FileUtil.h"
+#include "utils/BaseUtil.h"
+#include "utils/CmdLineParser.h"
+#include "utils/FileUtil.h"
 
 #define PLUGIN_TEST_NAME L"SumatraPDF Plugin Test"
 
