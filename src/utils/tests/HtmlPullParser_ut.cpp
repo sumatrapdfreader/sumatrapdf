@@ -69,7 +69,7 @@ static void HtmlEntities() {
         const char* s = changed[i].s;
         const char* res = ResolveHtmlEntities(s, s + str::Len(s), nullptr);
         utassert(str::Eq(res, changed[i].res));
-        free((void*)res);
+        str::Free(res);
     }
 }
 

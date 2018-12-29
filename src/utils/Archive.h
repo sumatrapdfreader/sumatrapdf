@@ -80,4 +80,6 @@ Archive* OpenZipArchive(IStream* stream, bool deflatedOnly);
 Archive* Open7zArchive(IStream* stream);
 Archive* OpenTarArchive(IStream* stream);
 Archive* OpenRarArchive(IStream* stream);
+
+void SetUnrarDllPath(const WCHAR*);
 #endif

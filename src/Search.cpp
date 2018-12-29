@@ -425,9 +425,10 @@ bool OnInverseSearch(WindowInfo* win, int x, int y) {
     }
 
     WCHAR* inverseSearch = gGlobalPrefs->inverseSearchCmdLine;
-    if (!inverseSearch)
+    if (!inverseSearch) {
         // Detect a text editor and use it as the default inverse search handler for now
-        inverseSearch = AutoDetectInverseSearchCommands();
+        inverseSearch = AutoDetectInverseSearchCommands(nullptr);
+    }
 
     AutoFreeW cmdline;
     if (inverseSearch)

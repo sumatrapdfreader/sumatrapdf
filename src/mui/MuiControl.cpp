@@ -99,18 +99,18 @@ void Control::NotifyMouseLeave() {
 }
 
 Control::~Control() {
-    delete layout;
-    DeleteVecMembers(children);
-    free(toolTip);
-    free((void*)namedEventClick);
+    delete this->layout;
+    DeleteVecMembers(this->children);
+    free(this->toolTip);
+    str::Free(this->namedEventClick);
 }
 
 void Control::SetParent(Control* newParent) {
-    parent = newParent;
+    this->parent = newParent;
 }
 
 Control* Control::GetChild(size_t idx) const {
-    return children.at(idx);
+    return this->children.at(idx);
 }
 
 size_t Control::GetChildCount() const {

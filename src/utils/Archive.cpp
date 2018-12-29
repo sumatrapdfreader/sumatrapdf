@@ -294,31 +294,33 @@ static bool IsValidUnrarDll() {
     return ver >= 6;
 }
 
-// in AppTools.cpp
-// TODO: strcture this better
-extern const WCHAR* ExractUnrarDll();
-
 #ifdef _WIN64
 static const WCHAR* unrarFileName = L"unrar64.dll";
 #else
 static const WCHAR* unrarFileName = L"unrar.dll";
 #endif
 
+static AutoFreeW unrarDllPath;
+
+void SetUnrarDllPath(const WCHAR* path) {
+    unrarDllPath.SetCopy(path);
+}
+
 static bool TryLoadUnrarDll() {
     if (IsUnrarDllLoaded()) {
         return IsValidUnrarDll();
     }
 
-    AutoFreeW dllPath(path::GetPathOfFileInAppDir(unrarFileName));
-    if (!file::Exists(dllPath)) {
-        const WCHAR* path = ExractUnrarDll();
-        if (path == nullptr) {
-            return false;
-        }
-        dllPath.Set(path);
+    HMODULE h = nullptr;
+    if (unrarDllPath.Get() != nullptr) {
+        h = LoadLibraryW(unrarDllPath.Get());
     }
-    HMODULE h = LoadLibrary(dllPath);
-    if (!h) {
+    if (h == nullptr) {
+        auto* dllPath = path::GetPathOfFileInAppDir(unrarFileName);
+        h = LoadLibraryW(dllPath);
+        free(dllPath);
+    }
+    if (h == nullptr) {
         return false;
     }
     fnRAROpenArchiveEx = (RAROpenArchiveExProc)GetProcAddress(h, "RAROpenArchiveEx");

@@ -9,7 +9,7 @@ void SetAppDataPath(const WCHAR* path);
 void DoAssociateExeWithPdfExtension(HKEY hkey);
 bool IsExeAssociatedWithPdfExtension();
 
-WCHAR* AutoDetectInverseSearchCommands(HWND hwndCombo = nullptr);
+WCHAR* AutoDetectInverseSearchCommands(HWND);
 
 bool ExtendedEditWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
@@ -17,3 +17,4 @@ void EnsureAreaVisibility(RectI& rect);
 RectI GetDefaultWindowPos();
 void SaveCallstackLogs();
 WCHAR* PathForFileInAppDataDir(const WCHAR* fileName);
+const WCHAR* ExractUnrarDll();

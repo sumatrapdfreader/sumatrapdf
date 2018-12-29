@@ -721,7 +721,9 @@ static INT_PTR CALLBACK Dialog_Settings_Proc(HWND hDlg, UINT msg, WPARAM wParam,
                 const WCHAR* cmdLine = prefs->inverseSearchCmdLine;
                 AutoFreeW inverseSearch;
                 if (!cmdLine) {
-                    inverseSearch.Set(AutoDetectInverseSearchCommands(GetDlgItem(hDlg, IDC_CMDLINE)));
+                    HWND hwnd = GetDlgItem(hDlg, IDC_CMDLINE);
+                    WCHAR* cmd = AutoDetectInverseSearchCommands(hwnd);
+                    inverseSearch.Set(cmd);
                     cmdLine = inverseSearch;
                 }
                 // Find the index of the active command line

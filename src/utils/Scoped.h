@@ -53,7 +53,7 @@ class AutoFreeStr {
     T* ptr = nullptr;
 
     AutoFreeStr() = default;
-    explicit AutoFreeStr(T* ptr) : ptr(ptr) { }
+    explicit AutoFreeStr(T* ptr) : ptr(ptr) {}
     ~AutoFreeStr() { free(this->ptr); }
     void Set(T* newPtr) {
         free(this->ptr);

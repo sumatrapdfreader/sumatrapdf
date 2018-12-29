@@ -21,8 +21,8 @@ EventMgr::~EventMgr() {
     for (EventHandler& h : eventHandlers) {
         delete h.events;
     }
-    for (NamedEventHandler& nh : namedEventHandlers) {
-        free((void*)nh.name);
+    for (const NamedEventHandler& nh : namedEventHandlers) {
+        str::Free(nh.name);
         delete nh.namedEvents;
     }
 }

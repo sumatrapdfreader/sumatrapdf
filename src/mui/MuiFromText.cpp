@@ -56,7 +56,7 @@ void FreeControlCreators() {
     ControlCreatorNode* next;
     while (curr) {
         next = curr->next;
-        free((void*)curr->typeName);
+        str::Free(curr->typeName);
         free(curr);
         curr = next;
     }
@@ -84,7 +84,7 @@ void FreeLayoutCreators() {
     LayoutCreatorNode* next;
     while (curr) {
         next = curr->next;
-        free((void*)curr->typeName);
+        str::Free(curr->typeName);
         free(curr);
         curr = next;
     }

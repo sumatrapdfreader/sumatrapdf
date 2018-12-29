@@ -99,7 +99,10 @@ static bool IsValidInstaller()
 static bool InstallCopyFiles() {
     bool ok;
     HGLOBAL res = 0;
-    defer { if (res != 0) UnlockResource(res); };
+    defer {
+        if (res != 0)
+            UnlockResource(res);
+    };
 
     HRSRC resSrc = FindResource(GetModuleHandle(nullptr), MAKEINTRESOURCE(1), RT_RCDATA);
     if (!resSrc) {

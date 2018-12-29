@@ -54,6 +54,8 @@
 #include "Version.h"
 #include "Tests.h"
 #include "Menu.h"
+#include "Archive.h"
+#include "AppTools.h"
 
 #define CRASH_DUMP_FILE_NAME L"sumatrapdfcrash.dmp"
 
@@ -518,6 +520,16 @@ static void ShutdownCommon() {
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 }
 
+// TODO: this will expand to extract everything
+static void ExtractUnrar() {
+    const WCHAR* path = ExractUnrarDll();
+    if (path == nullptr) {
+        return;
+    }
+    SetUnrarDllPath(path);
+    str::Free(path);
+}
+
 int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR cmdLine,
                      _In_ int nCmdShow) {
     UNUSED(hPrevInstance);
@@ -574,6 +586,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 #endif
 
     SetupCrashHandler();
+    ExtractUnrar();
 
     ScopedOle ole;
     InitAllCommonControls();

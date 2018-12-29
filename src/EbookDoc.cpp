@@ -669,9 +669,9 @@ bool EpubDoc::IsSupportedFile(const WCHAR* fileName, bool sniff) {
     if (!str::Eq(zip.GetFileName(0), L"mimetype"))
         return false; */
     return str::Eq(mimetype.data, "application/epub+zip") ||
-            // also open renamed .ibooks files
-            // cf. http://en.wikipedia.org/wiki/IBooks#Formats
-            str::Eq(mimetype.data, "application/x-ibooks+zip");
+           // also open renamed .ibooks files
+           // cf. http://en.wikipedia.org/wiki/IBooks#Formats
+           str::Eq(mimetype.data, "application/x-ibooks+zip");
 }
 
 EpubDoc* EpubDoc::CreateFromFile(const WCHAR* fileName) {

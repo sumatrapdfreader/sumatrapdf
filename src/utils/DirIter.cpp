@@ -59,7 +59,7 @@ static bool IsDirectory(DWORD fileAttr) {
     return false;
 }
 
-    // "." and ".." are special
+// "." and ".." are special
 static bool IsSpecialDir(const WCHAR* s) {
     if ('.' == *s++) {
         if (*s == 0)

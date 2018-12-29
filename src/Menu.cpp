@@ -754,7 +754,7 @@ void FreeMenuOwnerDrawInfo(MenuOwnerDrawInfo* modi) {
     auto it = std::remove(begin(g_menuDrawInfos), end(g_menuDrawInfos), modi);
     CrashIf(it == end(g_menuDrawInfos));
     g_menuDrawInfos.erase(it, end(g_menuDrawInfos));
-    free((void*)modi->text);
+    str::Free(modi->text);
     free(modi);
 }
 

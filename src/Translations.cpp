@@ -117,7 +117,7 @@ static int gMissingTranslationsCount = 0;
 
 static void FreeMissingTranslations() {
     for (int i = 0; i < gMissingTranslationsCount; i++) {
-        free((void*)gMissingTranslations[i].translation);
+        str::Free(gMissingTranslations[i].translation);
     }
     gMissingTranslationsCount = 0;
 }
