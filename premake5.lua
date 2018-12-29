@@ -453,7 +453,7 @@ workspace "SumatraPDF"
     kind "ConsoleApp"
     language "C++"
     cppdialect "C++17"
-    includedirs { "src/utils", "mupdf/include"}
+    includedirs { "src", "mupdf/include"}
     files { "src/tools/signfile.cpp" }
     links { "utils", "mupdf" }
     links { "crypt32", "shlwapi" }

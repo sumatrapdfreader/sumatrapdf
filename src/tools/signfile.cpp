@@ -13,10 +13,10 @@
 // makecert -n "CN=SumatraPDF" -ic sumatra.cer -iv sumatra.pvk -a sha1 -sky signature -pe -sr currentuser -ss My
 // sumatra-app.cer
 
-#include "BaseUtil.h"
-#include "CmdLineParser.h"
-#include "CryptoUtil.h"
-#include "FileUtil.h"
+#include "utils/BaseUtil.h"
+#include "utils/CmdLineParser.h"
+#include "utils/CryptoUtil.h"
+#include "utils/FileUtil.h"
 
 #define ErrOut(msg, ...) fwprintf(stderr, TEXT(msg) TEXT("\n"), __VA_ARGS__)
 
