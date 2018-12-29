@@ -1013,14 +1013,12 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
     bool handled;
     switch (message) {
         case WM_CREATE:
-#ifdef BUILD_UNINSTALLER
             if (!IsUninstallerNeeded()) {
                 MessageBox(nullptr, _TR("SumatraPDF installation not found."), _TR("Uninstallation failed"),
                            MB_ICONEXCLAMATION | MB_OK);
                 PostQuitMessage(0);
                 return -1;
             }
-#endif
             OnCreateWindow(hwnd);
             break;
 
@@ -1052,13 +1050,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
             break;
 
         case WM_APP_INSTALLATION_FINISHED:
-#ifndef BUILD_UNINSTALLER
-            OnInstallationFinished();
-            if (gHwndButtonRunSumatra)
-                SetFocus(gHwndButtonRunSumatra);
-#else
             OnUninstallationFinished();
-#endif
             if (gHwndButtonExit)
                 SetFocus(gHwndButtonExit);
             break;
@@ -1274,22 +1266,11 @@ int APIENTRY WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPSTR
     if (!gGlobalData.installDir)
         gGlobalData.installDir = GetInstallationDir();
 
-#if defined(BUILD_UNINSTALLER) && !defined(TEST_UNINSTALLER)
     if (ExecuteUninstallerFromTempDir())
         return 0;
-#endif
 
     if (gGlobalData.silent) {
-#ifdef BUILD_UNINSTALLER
         UninstallerThread(nullptr);
-#else
-        // make sure not to uninstall the plugins during silent installation
-        if (!gGlobalData.installPdfFilter)
-            gGlobalData.installPdfFilter = IsPdfFilterInstalled();
-        if (!gGlobalData.installPdfPreviewer)
-            gGlobalData.installPdfPreviewer = IsPdfPreviewerInstalled();
-        InstallerThread(nullptr);
-#endif
         ret = gGlobalData.success ? 0 : 1;
         goto Exit;
     }

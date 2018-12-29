@@ -101,7 +101,6 @@ int KillProcess(const WCHAR* processPath, bool waitUntilTerminated);
 void UninstallBrowserPlugin();
 void UninstallPdfFilter();
 void UninstallPdfPreviewer();
-void KillSumatra();
 WCHAR* GetShortcutPath(bool allUsers);
 void InvalidateFrame();
 bool CheckInstallUninstallPossible(bool silent = false);
@@ -115,13 +114,9 @@ int dpiAdjust(int value);
 void InstallPdfFilter();
 void InstallPdfPreviewer();
 
+void KillSumatra();
+
 #ifdef BUILD_UNINSTALLER
-
-bool ExecuteUninstallerFromTempDir();
-BOOL IsUninstallerNeeded();
-void OnUninstallationFinished();
-DWORD WINAPI UninstallerThread(LPVOID data);
-
 #else
 
 extern HWND gHwndButtonRunSumatra;
