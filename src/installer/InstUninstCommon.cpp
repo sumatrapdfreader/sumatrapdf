@@ -46,12 +46,22 @@ Color COLOR_MSG_OK(gCol5);
 Color COLOR_MSG_INSTALLATION(gCol5);
 Color COLOR_MSG_FAILED(gCol1);
 
+InstUninstGlobals gInstUninstGlobals = {
+    false,   /* bool silent */
+    false,   /* bool showUsageAndQuit */
+    nullptr, /* WCHAR *installDir */
+    nullptr, /* WCHAR *firstError */
+    nullptr, /* HANDLE hThread */
+    false,   /* bool success */
+};
+
+
 WCHAR* GetInstalledExePath() {
-    return path::Join(gGlobalData.installDir, EXENAME);
+    return path::Join(gInstUninstGlobals.installDir, EXENAME);
 }
 
 WCHAR* GetUninstallerPath() {
-    return path::Join(gGlobalData.installDir, L"uninstall.exe");
+    return path::Join(gInstUninstGlobals.installDir, L"uninstall.exe");
 }
 
 WCHAR* GetInstalledBrowserPluginPath() {

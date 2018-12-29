@@ -204,13 +204,13 @@ static BOOL RemoveInstalledFiles() {
 
     for (int i = 0; nullptr != gPayloadData[i].fileName; i++) {
         AutoFreeW relPath(str::conv::FromUtf8(gPayloadData[i].fileName));
-        AutoFreeW path(path::Join(gGlobalData.installDir, relPath));
+        AutoFreeW path(path::Join(gInstUninstGlobals.installDir, relPath));
 
         if (file::Exists(path))
             success &= DeleteFile(path);
     }
 
-    RemoveEmptyDirectory(gGlobalData.installDir);
+    RemoveEmptyDirectory(gInstUninstGlobals.installDir);
     return success;
 }
 
@@ -231,7 +231,7 @@ bool ExecuteUninstallerFromTempDir() {
 
     // not running from the installation directory?
     // (likely a test uninstaller that shouldn't be removed anyway)
-    if (!path::IsSame(ownDir, gGlobalData.installDir))
+    if (!path::IsSame(ownDir, gInstUninstGlobals.installDir))
         return false;
 
     // already running from temp directory?
@@ -243,7 +243,8 @@ bool ExecuteUninstallerFromTempDir() {
         return false;
     }
 
-    AutoFreeW args(str::Format(L"/d \"%s\" %s", gGlobalData.installDir, gGlobalData.silent ? L"/s" : L""));
+    AutoFreeW args(
+        str::Format(L"/d \"%s\" %s", gInstUninstGlobals.installDir, gInstUninstGlobals.silent ? L"/s" : L""));
     bool ok = CreateProcessHelper(tempPath, args);
 
     // mark the uninstaller for removal at shutdown (note: works only for administrators)
@@ -289,9 +290,9 @@ DWORD WINAPI UninstallerThread(LPVOID data) {
         NotifyFailed(_TR("Couldn't remove installation directory"));
 
     // always succeed, even for partial uninstallations
-    gGlobalData.success = true;
+    gInstUninstGlobals.success = true;
 
-    if (!gGlobalData.silent)
+    if (!gInstUninstGlobals.silent)
         PostMessage(gHwndFrame, WM_APP_INSTALLATION_FINISHED, 0, 0);
     return 0;
 }
@@ -307,7 +308,7 @@ static void OnButtonUninstall() {
     SetMsg(_TR("Uninstallation in progress..."), COLOR_MSG_INSTALLATION);
     InvalidateFrame();
 
-    gGlobalData.hThread = CreateThread(nullptr, 0, UninstallerThread, nullptr, 0, 0);
+    gInstUninstGlobals.hThread = CreateThread(nullptr, 0, UninstallerThread, nullptr, 0, 0);
 }
 
 void OnUninstallationFinished() {
@@ -315,10 +316,10 @@ void OnUninstallationFinished() {
     gHwndButtonInstUninst = nullptr;
     CreateButtonExit(gHwndFrame);
     SetMsg(_TR("SumatraPDF has been uninstalled."), gMsgError ? COLOR_MSG_FAILED : COLOR_MSG_OK);
-    gMsgError = gGlobalData.firstError;
+    gMsgError = gInstUninstGlobals.firstError;
     InvalidateFrame();
 
-    CloseHandle(gGlobalData.hThread);
+    CloseHandle(gInstUninstGlobals.hThread);
 }
 
 bool OnWmCommand(WPARAM wParam) {
@@ -399,27 +400,9 @@ PayloadInfo gPayloadData[] = {
     {"PdfPreview.dll", true},        {"uninstall.exe", true},    {nullptr, false},
 };
 
-GlobalData gGlobalData = {
-    false,   /* bool silent */
-    false,   /* bool showUsageAndQuit */
-    nullptr, /* WCHAR *installDir */
-#ifndef BUILD_UNINSTALLER
-    false, /* bool registerAsDefault */
-    false, /* bool installPdfFilter */
-    false, /* bool installPdfPreviewer */
-    true,  /* bool keepBrowserPlugin */
-    false, /* bool extractFiles */
-    false, /* bool autoUpdate */
-#endif
-
-    nullptr, /* WCHAR *firstError */
-    nullptr, /* HANDLE hThread */
-    false,   /* bool success */
-};
-
 void NotifyFailed(const WCHAR* msg) {
-    if (!gGlobalData.firstError)
-        gGlobalData.firstError = str::Dup(msg);
+    if (!gInstUninstGlobals.firstError)
+        gInstUninstGlobals.firstError = str::Dup(msg);
     plogf(L"%s", msg);
 }
 
@@ -462,15 +445,15 @@ static WCHAR* GetInstallationDir() {
 }
 
 static WCHAR* GetBrowserPluginPath() {
-    return path::Join(gGlobalData.installDir, L"npPdfViewer.dll");
+    return path::Join(gInstUninstGlobals.installDir, L"npPdfViewer.dll");
 }
 
 static WCHAR* GetPdfFilterPath() {
-    return path::Join(gGlobalData.installDir, L"PdfFilter.dll");
+    return path::Join(gInstUninstGlobals.installDir, L"PdfFilter.dll");
 }
 
 static WCHAR* GetPdfPreviewerPath() {
-    return path::Join(gGlobalData.installDir, L"PdfPreview.dll");
+    return path::Join(gInstUninstGlobals.installDir, L"PdfPreview.dll");
 }
 
 WCHAR* GetShortcutPath(bool allUsers) {
@@ -560,7 +543,7 @@ static bool IsUsingInstallation(DWORD procId) {
     if (snap == INVALID_HANDLE_VALUE)
         return false;
 
-    AutoFreeW libmupdf(path::Join(gGlobalData.installDir, L"libmupdf.dll"));
+    AutoFreeW libmupdf(path::Join(gInstUninstGlobals.installDir, L"libmupdf.dll"));
     AutoFreeW browserPlugin(GetBrowserPluginPath());
 
     MODULEENTRY32 mod = {0};
@@ -1106,9 +1089,9 @@ static void ParseCommandLine(WCHAR* cmdLine) {
             continue;
 
         if (is_arg("s"))
-            gGlobalData.silent = true;
+            gInstUninstGlobals.silent = true;
         else if (is_arg_with_param("d"))
-            str::ReplacePtr(&gGlobalData.installDir, argList.at(++i));
+            str::ReplacePtr(&gInstUninstGlobals.installDir, argList.at(++i));
 #ifndef BUILD_UNINSTALLER
         else if (is_arg("register"))
             gGlobalData.registerAsDefault = true;
@@ -1137,7 +1120,7 @@ static void ParseCommandLine(WCHAR* cmdLine) {
         }
 #endif
         else if (is_arg("h") || is_arg("help") || is_arg("?"))
-            gGlobalData.showUsageAndQuit = true;
+            gInstUninstGlobals.showUsageAndQuit = true;
 #ifdef ENABLE_CRASH_TESTING
         else if (is_arg("crash")) {
             // will induce crash when 'Install' button is pressed
@@ -1223,20 +1206,20 @@ int APIENTRY WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPSTR
 #endif
 
     ParseCommandLine(GetCommandLine());
-    if (gGlobalData.showUsageAndQuit) {
+    if (gInstUninstGlobals.showUsageAndQuit) {
         ShowUsage();
         ret = 0;
         goto Exit;
     }
-    if (!gGlobalData.installDir)
-        gGlobalData.installDir = GetInstallationDir();
+    if (!gInstUninstGlobals.installDir)
+        gInstUninstGlobals.installDir = GetInstallationDir();
 
     if (ExecuteUninstallerFromTempDir())
         return 0;
 
-    if (gGlobalData.silent) {
+    if (gInstUninstGlobals.silent) {
         UninstallerThread(nullptr);
-        ret = gGlobalData.success ? 0 : 1;
+        ret = gInstUninstGlobals.success ? 0 : 1;
         goto Exit;
     }
 
@@ -1250,8 +1233,8 @@ int APIENTRY WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPSTR
 
 Exit:
     trans::Destroy();
-    free(gGlobalData.installDir);
-    free(gGlobalData.firstError);
+    free(gInstUninstGlobals.installDir);
+    free(gInstUninstGlobals.firstError);
 
     return ret;
 }

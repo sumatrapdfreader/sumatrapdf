@@ -46,19 +46,10 @@ extern int gButtonDy;
 
 #define WM_APP_INSTALLATION_FINISHED (WM_APP + 1)
 
-struct GlobalData {
+struct InstUninstGlobals {
     bool silent;
     bool showUsageAndQuit;
     WCHAR* installDir;
-#ifndef BUILD_UNINSTALLER
-    bool registerAsDefault;
-    bool installPdfFilter;
-    bool installPdfPreviewer;
-    bool keepBrowserPlugin;
-    bool justExtractFiles;
-    bool autoUpdate;
-#endif
-
     WCHAR* firstError;
     HANDLE hThread;
     bool success;
@@ -69,7 +60,7 @@ struct PayloadInfo {
     bool install;
 };
 
-extern GlobalData gGlobalData;
+extern InstUninstGlobals gInstUninstGlobals;
 extern PayloadInfo gPayloadData[];
 extern WCHAR* gSupportedExts[];
 extern HWND gHwndFrame;

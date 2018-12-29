@@ -43,6 +43,15 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "../ifilter/PdfFilter.h"
 #include "../previewer/PdfPreview.h"
 
+struct InstallerGlobals {
+    bool registerAsDefault;
+    bool installPdfFilter;
+    bool installPdfPreviewer;
+    bool keepBrowserPlugin;
+    bool justExtractFiles;
+    bool autoUpdate;
+};
+
 // Note: this is not built by itself but included in Installer.cpp
 #ifdef BUILD_UNINSTALLER
 #error BUILD_UNINSTALLER must not be defined!!!
@@ -55,6 +64,15 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #define ID_BUTTON_BROWSE 18
 #define ID_CHECKBOX_PDF_FILTER 19
 #define ID_CHECKBOX_PDF_PREVIEWER 20
+
+static InstallerGlobals gInstallerGlobals = {
+    false, /* bool registerAsDefault */
+    false, /* bool installPdfFilter */
+    false, /* bool installPdfPreviewer */
+    true,  /* bool keepBrowserPlugin */
+    false, /* bool extractFiles */
+    false, /* bool autoUpdate */
+};
 
 static HWND gHwndButtonOptions = nullptr;
 HWND gHwndButtonRunSumatra = nullptr;
@@ -112,7 +130,7 @@ static bool ExtractFiles(lzma::SimpleArchive* archive) {
             return false;
         }
         AutoFreeW filePath(str::conv::FromUtf8(fi->name));
-        AutoFreeW extPath(path::Join(gGlobalData.installDir, filePath));
+        AutoFreeW extPath(path::Join(gInstUninstGlobals.installDir, filePath));
         bool ok = file::WriteFile(extPath, uncompressed, fi->uncompressedSize);
         free(uncompressed);
         if (!ok) {
@@ -247,7 +265,7 @@ static bool WriteUninstallerRegistryInfo(HKEY hkey) {
     // so include it in the DisplayName
     if (!IsVistaOrGreater())
         ok &= WriteRegStr(hkey, REG_PATH_UNINST, L"DisplayName", APP_NAME_STR L" " CURR_VERSION_STR);
-    DWORD size = GetDirSize(gGlobalData.installDir) / 1024;
+    DWORD size = GetDirSize(gInstUninstGlobals.installDir) / 1024;
     // size of installed directory after copying files
     ok &= WriteRegDWORD(hkey, REG_PATH_UNINST, L"EstimatedSize", size);
     // current date as YYYYMMDD
@@ -333,7 +351,7 @@ static bool WriteExtendedFileExtensionInfo(HKEY hkey) {
 }
 
 static bool CreateInstallationDirectory() {
-    bool ok = dir::CreateAll(gGlobalData.installDir);
+    bool ok = dir::CreateAll(gInstUninstGlobals.installDir);
     if (!ok) {
         LogLastError();
         NotifyFailed(_TR("Couldn't create the installation directory"));
@@ -355,7 +373,7 @@ static bool CreateAppShortcut(bool allUsers) {
 
 DWORD WINAPI InstallerThread(LPVOID data) {
     UNUSED(data);
-    gGlobalData.success = false;
+    gInstUninstGlobals.success = false;
 
     if (!CreateInstallationDirectory())
         goto Error;
@@ -364,27 +382,27 @@ DWORD WINAPI InstallerThread(LPVOID data) {
     if (!InstallCopyFiles())
         goto Error;
     // all files have been extracted at this point
-    if (gGlobalData.justExtractFiles)
+    if (gInstallerGlobals.justExtractFiles)
         return 0;
 
-    if (gGlobalData.registerAsDefault) {
+    if (gInstallerGlobals.registerAsDefault) {
         // need to sublaunch SumatraPDF.exe instead of replicating the code
         // because registration uses translated strings
         AutoFreeW installedExePath(GetInstalledExePath());
         CreateProcessHelper(installedExePath, L"-register-for-pdf");
     }
 
-    if (gGlobalData.installPdfFilter)
+    if (gInstallerGlobals.installPdfFilter)
         InstallPdfFilter();
     else if (IsPdfFilterInstalled())
         UninstallPdfFilter();
 
-    if (gGlobalData.installPdfPreviewer)
+    if (gInstallerGlobals.installPdfPreviewer)
         InstallPdfPreviewer();
     else if (IsPdfPreviewerInstalled())
         UninstallPdfPreviewer();
 
-    if (!gGlobalData.keepBrowserPlugin)
+    if (!gInstallerGlobals.keepBrowserPlugin)
         UninstallBrowserPlugin();
 
     if (!CreateAppShortcut(true) && !CreateAppShortcut(false)) {
@@ -394,7 +412,7 @@ DWORD WINAPI InstallerThread(LPVOID data) {
 
     // consider installation a success from here on
     // (still warn, if we've failed to create the uninstaller, though)
-    gGlobalData.success = true;
+    gInstUninstGlobals.success = true;
 
     if (!WriteUninstallerRegistryInfo(HKEY_LOCAL_MACHINE) && !WriteUninstallerRegistryInfo(HKEY_CURRENT_USER)) {
         NotifyFailed(_TR("Failed to write the uninstallation information to the registry"));
@@ -411,7 +429,7 @@ DWORD WINAPI InstallerThread(LPVOID data) {
 
 Error:
     // TODO: roll back installation on failure (restore previous installation!)
-    if (gHwndFrame && !gGlobalData.silent) {
+    if (gHwndFrame && !gInstUninstGlobals.silent) {
         Sleep(500); // allow a glimpse of the completed progress bar before hiding it
         PostMessage(gHwndFrame, WM_APP_INSTALLATION_FINISHED, 0, 0);
     }
@@ -437,22 +455,22 @@ static void OnButtonInstall() {
 
     WCHAR* userInstallDir = win::GetText(gHwndTextboxInstDir);
     if (!str::IsEmpty(userInstallDir))
-        str::ReplacePtr(&gGlobalData.installDir, userInstallDir);
+        str::ReplacePtr(&gInstUninstGlobals.installDir, userInstallDir);
     free(userInstallDir);
 
     // note: this checkbox isn't created if we're already registered as default
     //       (in which case we're just going to re-register)
-    gGlobalData.registerAsDefault =
+    gInstallerGlobals.registerAsDefault =
         gHwndCheckboxRegisterDefault == nullptr || IsCheckboxChecked(gHwndCheckboxRegisterDefault);
 
     // note: this checkbox isn't created when running inside Wow64
-    gGlobalData.installPdfFilter =
+    gInstallerGlobals.installPdfFilter =
         gHwndCheckboxRegisterPdfFilter != nullptr && IsCheckboxChecked(gHwndCheckboxRegisterPdfFilter);
     // note: this checkbox isn't created on Windows 2000 and XP
-    gGlobalData.installPdfPreviewer =
+    gInstallerGlobals.installPdfPreviewer =
         gHwndCheckboxRegisterPdfPreviewer != nullptr && IsCheckboxChecked(gHwndCheckboxRegisterPdfPreviewer);
     // note: this checkbox isn't created if the browser plugin hasn't been installed before
-    gGlobalData.keepBrowserPlugin =
+    gInstallerGlobals.keepBrowserPlugin =
         gHwndCheckboxKeepBrowserPlugin != nullptr && IsCheckboxChecked(gHwndCheckboxKeepBrowserPlugin);
 
     // create a progress bar in place of the Options button
@@ -478,26 +496,26 @@ static void OnButtonInstall() {
     SetMsg(_TR("Installation in progress..."), COLOR_MSG_INSTALLATION);
     InvalidateFrame();
 
-    gGlobalData.hThread = CreateThread(nullptr, 0, InstallerThread, nullptr, 0, 0);
+    gInstUninstGlobals.hThread = CreateThread(nullptr, 0, InstallerThread, nullptr, 0, 0);
 }
 
 void OnInstallationFinished() {
     SafeDestroyWindow(&gHwndButtonInstUninst);
     SafeDestroyWindow(&gHwndProgressBar);
 
-    if (gGlobalData.success) {
+    if (gInstUninstGlobals.success) {
         CreateButtonRunSumatra(gHwndFrame);
         SetMsg(_TR("Thank you! SumatraPDF has been installed."), COLOR_MSG_OK);
     } else {
         CreateButtonExit(gHwndFrame);
         SetMsg(_TR("Installation failed!"), COLOR_MSG_FAILED);
     }
-    gMsgError = gGlobalData.firstError;
+    gMsgError = gInstUninstGlobals.firstError;
     InvalidateFrame();
 
-    CloseHandle(gGlobalData.hThread);
+    CloseHandle(gInstUninstGlobals.hThread);
 
-    if (gGlobalData.autoUpdate && gGlobalData.success) {
+    if (gInstallerGlobals.autoUpdate && gInstUninstGlobals.success) {
         // click the Start button
         PostMessage(gHwndFrame, WM_COMMAND, IDOK, 0);
     }
@@ -690,7 +708,7 @@ void OnCreateWindow(HWND hwnd) {
                             WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP, x, y, dx, staticDy, hwnd,
                             (HMENU)ID_CHECKBOX_BROWSER_PLUGIN, GetModuleHandle(nullptr), nullptr);
         SetWindowFont(gHwndCheckboxKeepBrowserPlugin, gFontDefault, TRUE);
-        Button_SetCheck(gHwndCheckboxKeepBrowserPlugin, gGlobalData.keepBrowserPlugin);
+        Button_SetCheck(gHwndCheckboxKeepBrowserPlugin, gInstallerGlobals.keepBrowserPlugin);
         y -= staticDy;
     }
 
@@ -703,7 +721,7 @@ void OnCreateWindow(HWND hwnd) {
             x, y, dx, staticDy, hwnd, (HMENU)ID_CHECKBOX_PDF_PREVIEWER, GetModuleHandle(nullptr), nullptr);
         SetWindowFont(gHwndCheckboxRegisterPdfPreviewer, gFontDefault, TRUE);
         Button_SetCheck(gHwndCheckboxRegisterPdfPreviewer,
-                        gGlobalData.installPdfPreviewer || IsPdfPreviewerInstalled());
+                        gInstallerGlobals.installPdfPreviewer || IsPdfPreviewerInstalled());
         y -= staticDy;
 
         gHwndCheckboxRegisterPdfFilter =
@@ -711,7 +729,7 @@ void OnCreateWindow(HWND hwnd) {
                            WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP, x, y, dx, staticDy, hwnd,
                            (HMENU)ID_CHECKBOX_PDF_FILTER, GetModuleHandle(nullptr), nullptr);
         SetWindowFont(gHwndCheckboxRegisterPdfFilter, gFontDefault, TRUE);
-        Button_SetCheck(gHwndCheckboxRegisterPdfFilter, gGlobalData.installPdfFilter || IsPdfFilterInstalled());
+        Button_SetCheck(gHwndCheckboxRegisterPdfFilter, gInstallerGlobals.installPdfFilter || IsPdfFilterInstalled());
         y -= staticDy;
     }
 
@@ -724,7 +742,7 @@ void OnCreateWindow(HWND hwnd) {
         SetWindowFont(gHwndCheckboxRegisterDefault, gFontDefault, TRUE);
         // only check the "Use as default" checkbox when no other PDF viewer
         // is currently selected (not going to intrude)
-        Button_SetCheck(gHwndCheckboxRegisterDefault, !hasOtherViewer || gGlobalData.registerAsDefault);
+        Button_SetCheck(gHwndCheckboxRegisterDefault, !hasOtherViewer || gInstallerGlobals.registerAsDefault);
         y -= staticDy;
     }
     // a bit more space between text box and checkboxes
@@ -740,7 +758,7 @@ void OnCreateWindow(HWND hwnd) {
 
     x = WINDOW_MARGIN;
     dx = r.dx - (2 * WINDOW_MARGIN) - btnSize2.dx - dpiAdjust(4);
-    gHwndTextboxInstDir = CreateWindowExW(0, WC_EDIT, gGlobalData.installDir,
+    gHwndTextboxInstDir = CreateWindowExW(0, WC_EDIT, gInstUninstGlobals.installDir,
                                           WS_CHILD | WS_TABSTOP | WS_BORDER | ES_LEFT | ES_AUTOHSCROLL, x, y, dx,
                                           staticDy, hwnd, nullptr, GetModuleHandle(nullptr), nullptr);
     SetWindowFont(gHwndTextboxInstDir, gFontDefault, TRUE);
@@ -756,7 +774,7 @@ void OnCreateWindow(HWND hwnd) {
 
     SetFocus(gHwndButtonInstUninst);
 
-    if (gGlobalData.autoUpdate) {
+    if (gInstallerGlobals.autoUpdate) {
         // click the Install button
         PostMessage(hwnd, WM_COMMAND, IDOK, 0);
     }
@@ -822,27 +840,9 @@ PayloadInfo gPayloadData[] = {
     {"PdfPreview.dll", true},        {"uninstall.exe", true},    {nullptr, false},
 };
 
-GlobalData gGlobalData = {
-    false,   /* bool silent */
-    false,   /* bool showUsageAndQuit */
-    nullptr, /* WCHAR *installDir */
-#ifndef BUILD_UNINSTALLER
-    false, /* bool registerAsDefault */
-    false, /* bool installPdfFilter */
-    false, /* bool installPdfPreviewer */
-    true,  /* bool keepBrowserPlugin */
-    false, /* bool extractFiles */
-    false, /* bool autoUpdate */
-#endif
-
-    nullptr, /* WCHAR *firstError */
-    nullptr, /* HANDLE hThread */
-    false,   /* bool success */
-};
-
 void NotifyFailed(const WCHAR* msg) {
-    if (!gGlobalData.firstError)
-        gGlobalData.firstError = str::Dup(msg);
+    if (!gInstUninstGlobals.firstError)
+        gInstUninstGlobals.firstError = str::Dup(msg);
     plogf(L"%s", msg);
 }
 
@@ -885,15 +885,15 @@ static WCHAR* GetInstallationDir() {
 }
 
 static WCHAR* GetBrowserPluginPath() {
-    return path::Join(gGlobalData.installDir, L"npPdfViewer.dll");
+    return path::Join(gInstUninstGlobals.installDir, L"npPdfViewer.dll");
 }
 
 static WCHAR* GetPdfFilterPath() {
-    return path::Join(gGlobalData.installDir, L"PdfFilter.dll");
+    return path::Join(gInstUninstGlobals.installDir, L"PdfFilter.dll");
 }
 
 static WCHAR* GetPdfPreviewerPath() {
-    return path::Join(gGlobalData.installDir, L"PdfPreview.dll");
+    return path::Join(gInstUninstGlobals.installDir, L"PdfPreview.dll");
 }
 
 WCHAR* GetShortcutPath(bool allUsers) {
@@ -983,7 +983,7 @@ static bool IsUsingInstallation(DWORD procId) {
     if (snap == INVALID_HANDLE_VALUE)
         return false;
 
-    AutoFreeW libmupdf(path::Join(gGlobalData.installDir, L"libmupdf.dll"));
+    AutoFreeW libmupdf(path::Join(gInstUninstGlobals.installDir, L"libmupdf.dll"));
     AutoFreeW browserPlugin(GetBrowserPluginPath());
 
     MODULEENTRY32 mod = {0};
@@ -1525,12 +1525,12 @@ static void ParseCommandLine(WCHAR* cmdLine) {
             continue;
 
         if (is_arg("s"))
-            gGlobalData.silent = true;
+            gInstUninstGlobals.silent = true;
         else if (is_arg_with_param("d"))
-            str::ReplacePtr(&gGlobalData.installDir, argList.at(++i));
+            str::ReplacePtr(&gInstUninstGlobals.installDir, argList.at(++i));
 #ifndef BUILD_UNINSTALLER
         else if (is_arg("register"))
-            gGlobalData.registerAsDefault = true;
+            gInstallerGlobals.registerAsDefault = true;
         else if (is_arg_with_param("opt")) {
             WCHAR* opts = argList.at(++i);
             str::ToLowerInPlace(opts);
@@ -1538,25 +1538,25 @@ static void ParseCommandLine(WCHAR* cmdLine) {
             WStrVec optlist;
             optlist.Split(opts, L",", true);
             if (optlist.Contains(L"pdffilter"))
-                gGlobalData.installPdfFilter = true;
+                gInstallerGlobals.installPdfFilter = true;
             if (optlist.Contains(L"pdfpreviewer"))
-                gGlobalData.installPdfPreviewer = true;
+                gInstallerGlobals.installPdfPreviewer = true;
             // uninstall the deprecated browser plugin if it's not
             // explicitly listed (only applies if the /opt flag is used)
             if (!optlist.Contains(L"plugin"))
-                gGlobalData.keepBrowserPlugin = false;
+                gInstallerGlobals.keepBrowserPlugin = false;
         } else if (is_arg("x")) {
-            gGlobalData.justExtractFiles = true;
+            gInstallerGlobals.justExtractFiles = true;
             // silently extract files to the current directory (if /d isn't used)
-            gGlobalData.silent = true;
-            if (!gGlobalData.installDir)
-                str::ReplacePtr(&gGlobalData.installDir, L".");
+            gInstUninstGlobals.silent = true;
+            if (!gInstUninstGlobals.installDir)
+                str::ReplacePtr(&gInstUninstGlobals.installDir, L".");
         } else if (is_arg("autoupdate")) {
-            gGlobalData.autoUpdate = true;
+            gInstallerGlobals.autoUpdate = true;
         }
 #endif
         else if (is_arg("h") || is_arg("help") || is_arg("?"))
-            gGlobalData.showUsageAndQuit = true;
+            gInstUninstGlobals.showUsageAndQuit = true;
 #ifdef ENABLE_CRASH_TESTING
         else if (is_arg("crash")) {
             // will induce crash when 'Install' button is pressed
@@ -1642,22 +1642,22 @@ int APIENTRY WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPSTR
 #endif
 
     ParseCommandLine(GetCommandLine());
-    if (gGlobalData.showUsageAndQuit) {
+    if (gInstUninstGlobals.showUsageAndQuit) {
         ShowUsage();
         ret = 0;
         goto Exit;
     }
-    if (!gGlobalData.installDir)
-        gGlobalData.installDir = GetInstallationDir();
+    if (!gInstUninstGlobals.installDir)
+        gInstUninstGlobals.installDir = GetInstallationDir();
 
-    if (gGlobalData.silent) {
+    if (gInstUninstGlobals.silent) {
         // make sure not to uninstall the plugins during silent installation
-        if (!gGlobalData.installPdfFilter)
-            gGlobalData.installPdfFilter = IsPdfFilterInstalled();
-        if (!gGlobalData.installPdfPreviewer)
-            gGlobalData.installPdfPreviewer = IsPdfPreviewerInstalled();
+        if (!gInstallerGlobals.installPdfFilter)
+            gInstallerGlobals.installPdfFilter = IsPdfFilterInstalled();
+        if (!gInstallerGlobals.installPdfPreviewer)
+            gInstallerGlobals.installPdfPreviewer = IsPdfPreviewerInstalled();
         InstallerThread(nullptr);
-        ret = gGlobalData.success ? 0 : 1;
+        ret = gInstUninstGlobals.success ? 0 : 1;
         goto Exit;
     }
 
@@ -1671,8 +1671,8 @@ int APIENTRY WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPSTR
 
 Exit:
     trans::Destroy();
-    free(gGlobalData.installDir);
-    free(gGlobalData.firstError);
+    free(gInstUninstGlobals.installDir);
+    free(gInstUninstGlobals.firstError);
 
     return ret;
 }
