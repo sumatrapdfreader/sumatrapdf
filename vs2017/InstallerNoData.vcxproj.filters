@@ -317,6 +317,9 @@
     <ClCompile Include="..\src\Translations.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\installer\InstUninstCommon.cpp">
+      <Filter>src\installer</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\installer\Installer.cpp">
       <Filter>src\installer</Filter>
     </ClCompile>

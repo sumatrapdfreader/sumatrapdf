@@ -319,8 +319,9 @@
   <ItemGroup>
     <ClCompile Include="..\src\CrashHandler.cpp" />
     <ClCompile Include="..\src\Translations.cpp" />
-    <ClCompile Include="..\src\installer\Installer.cpp" />
+    <ClCompile Include="..\src\installer\InstUninstCommon.cpp" />
     <ClCompile Include="..\src\installer\Trans_installer_txt.cpp" />
+    <ClCompile Include="..\src\installer\Uninstaller.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="utils.vcxproj">
