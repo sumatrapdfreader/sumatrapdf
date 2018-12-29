@@ -118,17 +118,16 @@ WCHAR* PathForFileInAppDataDir(const WCHAR* fileName) {
         return nullptr;
 
     /* Use local (non-roaming) app data directory */
-    AutoFreeW path(GetSpecialFolder(CSIDL_LOCAL_APPDATA, true));
-    CrashIf(!path);
-    if (!path)
-        return nullptr;
-    path.Set(path::Join(path, APP_NAME_STR));
-    if (!path)
-        return nullptr;
-    bool ok = dir::Create(path);
+    WCHAR* dataDir = GetSpecialFolder(CSIDL_LOCAL_APPDATA, true);
+    WCHAR* dir = path::Join(dataDir, APP_NAME_STR);
+    free(dataDir);
+
+    defer { str::Free(dir); };
+    bool ok = dir::Create(dir);
     if (!ok)
         return nullptr;
-    return path::Join(path, fileName);
+
+    return path::Join(dir, fileName);
 }
 
 /*

@@ -360,9 +360,8 @@ size_t BufSet(WCHAR* dst, size_t dstCchSize, const WCHAR* src) {
     size_t srcCchSize = str::Len(src);
     size_t toCopy = std::min(dstCchSize - 1, srcCchSize);
 
-    errno_t err = wcsncpy_s(dst, dstCchSize, src, toCopy);
-    CrashIf(err || dst[toCopy] != '\0');
-
+    memset(dst, 0, dstCchSize * sizeof(WCHAR));
+    memcpy(dst, src, toCopy * sizeof(WCHAR));
     return toCopy;
 }
 
