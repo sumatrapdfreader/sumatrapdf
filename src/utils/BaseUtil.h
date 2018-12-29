@@ -563,6 +563,8 @@ class MaybeOwnedData {
 };
 
 // from https://pastebin.com/3YvWQa5c
+// In my testing, in debug build defer { } creates somewhat bloated code
+// but in release it seems to be optimized to optimally small code
 #define CONCAT_INTERNAL(x, y) x##y
 #define CONCAT(x, y) CONCAT_INTERNAL(x, y)
 
@@ -585,7 +587,7 @@ class ExitScopeHelp {
     }
 };
 
-#define defer const auto& CONCAT(defer__, __LINE__) = ExitScopeHelp() + [&]() \
+#define defer const auto& CONCAT(defer__, __LINE__) = ExitScopeHelp() + [&]()
 
 /* How to use:
 defer { free(tools_filename); };
