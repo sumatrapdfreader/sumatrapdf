@@ -85,18 +85,26 @@ extern Gdiplus::Color COLOR_MSG_WELCOME;
 extern Gdiplus::Color COLOR_MSG_OK;
 extern Gdiplus::Color COLOR_MSG_INSTALLATION;
 extern Gdiplus::Color COLOR_MSG_FAILED;
+extern Gdiplus::Color gCol1;
+extern Gdiplus::Color gCol1Shadow;
+extern Gdiplus::Color gCol2;
+extern Gdiplus::Color gCol2Shadow;
+extern Gdiplus::Color gCol3;
+extern Gdiplus::Color gCol3Shadow;
+extern Gdiplus::Color gCol4;
+extern Gdiplus::Color gCol4Shadow;
+extern Gdiplus::Color gCol5;
+extern Gdiplus::Color gCol5Shadow;
 
+// TODO: move those
 void NotifyFailed(const WCHAR* msg);
 void SetMsg(const WCHAR* msg, Gdiplus::Color color);
-WCHAR* GetInstalledExePath();
-WCHAR* GetInstalledBrowserPluginPath();
 void OnCreateWindow(HWND hwnd);
 void ShowUsage();
 void CreateMainWindow();
 const WCHAR* GetOwnPath();
 bool OnWmCommand(WPARAM wParam);
 bool CreateProcessHelper(const WCHAR* exe, const WCHAR* args = nullptr);
-WCHAR* GetUninstallerPath();
 int KillProcess(const WCHAR* processPath, bool waitUntilTerminated);
 void UninstallBrowserPlugin();
 void UninstallPdfFilter();
@@ -114,17 +122,9 @@ int dpiAdjust(int value);
 void InstallPdfFilter();
 void InstallPdfPreviewer();
 
+// Moved
+WCHAR* GetInstalledExePath();
+WCHAR* GetUninstallerPath();
+WCHAR* GetInstalledBrowserPluginPath();
+
 void KillSumatra();
-
-#ifdef BUILD_UNINSTALLER
-#else
-
-extern HWND gHwndButtonRunSumatra;
-
-bool IsValidInstaller();
-void OnInstallationFinished();
-bool IsPdfFilterInstalled();
-bool IsPdfPreviewerInstalled();
-DWORD WINAPI InstallerThread(LPVOID data);
-
-#endif

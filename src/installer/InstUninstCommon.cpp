@@ -28,6 +28,39 @@
 #include "../ifilter/PdfFilter.h"
 #include "../previewer/PdfPreview.h"
 
+using namespace Gdiplus;
+
+Color gCol1(196, 64, 50);
+Color gCol1Shadow(134, 48, 39);
+Color gCol2(227, 107, 35);
+Color gCol2Shadow(155, 77, 31);
+Color gCol3(93, 160, 40);
+Color gCol3Shadow(51, 87, 39);
+Color gCol4(69, 132, 190);
+Color gCol4Shadow(47, 89, 127);
+Color gCol5(112, 115, 207);
+Color gCol5Shadow(66, 71, 118);
+
+Color COLOR_MSG_WELCOME(gCol5);
+Color COLOR_MSG_OK(gCol5);
+Color COLOR_MSG_INSTALLATION(gCol5);
+Color COLOR_MSG_FAILED(gCol1);
+
+WCHAR* GetInstalledExePath() {
+    return path::Join(gGlobalData.installDir, EXENAME);
+}
+
+WCHAR* GetUninstallerPath() {
+    return path::Join(gGlobalData.installDir, L"uninstall.exe");
+}
+
+WCHAR* GetInstalledBrowserPluginPath() {
+    WCHAR* path = ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_PLUGIN, L"Path");
+    if (!path)
+        path = ReadRegStr(HKEY_CURRENT_USER, REG_PATH_PLUGIN, L"Path");
+    return path;
+}
+
 #define TEN_SECONDS_IN_MS 10 * 1000
 
 static bool IsProcWithName(DWORD processId, const WCHAR* modulePath) {
