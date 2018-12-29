@@ -572,7 +572,7 @@ workspace "SumatraPDF"
     flags { "NoManifest" }
     disablewarnings { "4018", "4244", "4264", "4838", "4702", "4706" }
     uninstaller_files()
-    includedirs { "src", "src/utils", "ext/zlib", "ext/unarr", "ext/lzma/C" }
+    includedirs { "src", "ext/zlib", "ext/unarr", "ext/lzma/C" }
     links { "utils", "zlib", "unarrlib" }
     links {
       "comctl32", "gdiplus", "shlwapi", "version", "wininet"
@@ -592,7 +592,7 @@ workspace "SumatraPDF"
       "4457", "4838", "4702", "4706", "4996"
     }
     installer_files()
-    includedirs { "src", "src/utils", "ext/zlib", "ext/unarr", "ext/lzma/C", "ext/bzip2" }
+    includedirs { "src", "ext/zlib", "ext/unarr", "ext/lzma/C", "ext/bzip2" }
     links {
       "comctl32", "delayimp", "gdiplus", "shlwapi", "version", "wininet"
     }
@@ -613,7 +613,7 @@ workspace "SumatraPDF"
       "4312", "4456", "4457", "4838", "4702", "4706", "4996"
     }
     installer_files()
-    includedirs { "src", "src/utils", "ext/zlib", "ext/unarr", "ext/lzma/C", "ext/bzip2" }
+    includedirs { "src", "ext/zlib", "ext/unarr", "ext/lzma/C", "ext/bzip2" }
     links {
       "comctl32", "delayimp", "gdiplus", "shlwapi", "version", "wininet"
     }

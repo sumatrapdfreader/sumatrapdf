@@ -19,30 +19,30 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #define BUILD_UNINSTALLER
 #endif
 
-#include "BaseUtil.h"
-#include "ScopedWin.h"
-#include "WinDynCalls.h"
+#include "utils/BaseUtil.h"
+#include "utils/ScopedWin.h"
+#include "utils/WinDynCalls.h"
 #include <tlhelp32.h>
 #include <io.h>
-#include "FileUtil.h"
+#include "utils/FileUtil.h"
 #include "Translations.h"
 #include "Resource.h"
-#include "Timer.h"
+#include "utils/Timer.h"
 #include "Version.h"
-#include "WinUtil.h"
+#include "utils/WinUtil.h"
 #include "Installer.h"
-#include "CmdLineParser.h"
+#include "utils/CmdLineParser.h"
 #include "CrashHandler.h"
-#include "Dpi.h"
-#include "FrameTimeoutCalculator.h"
-#include "DebugLog.h"
+#include "utils/Dpi.h"
+#include "utils/FrameTimeoutCalculator.h"
+#include "utils/DebugLog.h"
 
 // TODO: can't build these separately without breaking TEST_UNINSTALLER
 #ifdef BUILD_UNINSTALLER
 #include "Uninstall.cpp"
 #else
-#include "ByteOrderDecoder.h"
-#include "LzmaSimpleArchive.h"
+#include "utils/ByteOrderDecoder.h"
+#include "utils/LzmaSimpleArchive.h"
 
 #include "../ifilter/PdfFilter.h"
 #include "../previewer/PdfPreview.h"

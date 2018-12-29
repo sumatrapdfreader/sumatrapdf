@@ -1,25 +1,25 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD */
 
-#include "BaseUtil.h"
+#include "utils/BaseUtil.h"
 
 #pragma warning(disable : 4668)
 #include <tlhelp32.h>
 #include <signal.h>
 #include <eh.h>
 
-#include "WinDynCalls.h"
-#include "DbgHelpDyn.h"
-#include "FileUtil.h"
-#include "HttpUtil.h"
-#include "LzmaSimpleArchive.h"
-#include "WinUtil.h"
+#include "utils/WinDynCalls.h"
+#include "utils/DbgHelpDyn.h"
+#include "utils/FileUtil.h"
+#include "utils/HttpUtil.h"
+#include "utils/LzmaSimpleArchive.h"
+#include "utils/WinUtil.h"
 #include "SumatraPDF.h"
 #include "AppTools.h"
 #include "CrashHandler.h"
 #include "Version.h"
 #define NOLOG 1 // 0 for more detailed debugging, 1 to disable lf()
-#include "DebugLog.h"
+#include "utils/DebugLog.h"
 
 #if !defined(CRASH_SUBMIT_SERVER) || !defined(CRASH_SUBMIT_URL)
 #define CRASH_SUBMIT_SERVER L"kjktools.org"
