@@ -1,14 +1,14 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "BaseUtil.h"
-#include "Timer.h"
-#include "WinUtil.h"
-#include "HtmlParserLookup.h"
+#include "utils/BaseUtil.h"
+#include "utils/Timer.h"
+#include "utils/WinUtil.h"
+#include "utils/HtmlParserLookup.h"
 #include "Mui.h"
-#include "FrameRateWnd.h"
+#include "wingui/FrameRateWnd.h"
 //#define NOLOG 0
-#include "DebugLog.h"
+#include "utils/DebugLog.h"
 
 namespace mui {
 

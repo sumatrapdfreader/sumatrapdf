@@ -1,9 +1,9 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "BaseUtil.h"
-#include "VecSegmented.h"
-#include "HtmlParserLookup.h"
+#include "utils/BaseUtil.h"
+#include "utils/VecSegmented.h"
+#include "utils/HtmlParserLookup.h"
 #include "Mui.h"
 
 using namespace Gdiplus;

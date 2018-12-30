@@ -1,10 +1,10 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "BaseUtil.h"
-#include "HtmlParserLookup.h"
+#include "utils/BaseUtil.h"
+#include "utils/HtmlParserLookup.h"
 #include "Mui.h"
-#include "DebugLog.h"
+#include "utils/DebugLog.h"
 
 /*
 MUI is a simple UI library for win32.

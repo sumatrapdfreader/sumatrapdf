@@ -24,10 +24,10 @@ write a pre-processing script that will convert them to something that we
 understand.
 */
 
-#include "BaseUtil.h"
-#include "GdiPlusUtil.h"
+#include "utils/BaseUtil.h"
+#include "utils/GdiPlusUtil.h"
 #include "SvgPath.h"
-#include "VecSegmented.h"
+#include "utils/VecSegmented.h"
 
 namespace svg {
 
