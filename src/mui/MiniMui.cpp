@@ -3,9 +3,9 @@
 
 // as little of mui as necessary to make ../EngineDump.cpp compile
 
-#include "BaseUtil.h"
+#include "utils/BaseUtil.h"
 #include "MiniMui.h"
-#include "WinUtil.h"
+#include "utils/WinUtil.h"
 
 using namespace Gdiplus;
 

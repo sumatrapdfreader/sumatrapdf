@@ -421,7 +421,7 @@ workspace "SumatraPDF"
     kind "ConsoleApp"
     language "C++"
     cppdialect "C++17"
-    includedirs { "src", "src/utils", "src/mui", "mupdf/include" }
+    includedirs { "src", "mupdf/include" }
     engine_dump_files()
     links { "engines", "utils", "mupdf", "unarrlib", "libwebp", "libdjvu" }
     links {

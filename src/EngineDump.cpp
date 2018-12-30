@@ -1,14 +1,14 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "BaseUtil.h"
-#include "ScopedWin.h"
-#include "CmdLineParser.h"
-#include "FileUtil.h"
-#include "GdiPlusUtil.h"
-#include "MiniMui.h"
-#include "TgaReader.h"
-#include "WinUtil.h"
+#include "utils/BaseUtil.h"
+#include "utils/ScopedWin.h"
+#include "utils/CmdLineParser.h"
+#include "utils/FileUtil.h"
+#include "utils/GdiPlusUtil.h"
+#include "mui/MiniMui.h"
+#include "utils/TgaReader.h"
+#include "utils/WinUtil.h"
 
 #include "BaseEngine.h"
 #include "DjVuEngine.h"
