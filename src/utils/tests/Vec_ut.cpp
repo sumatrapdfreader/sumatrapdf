@@ -1,12 +1,12 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "BaseUtil.h"
+#include "utils/BaseUtil.h"
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
 // must be last due to assert() over-write
-#include "UtAssert.h"
+#include "utils/UtAssert.h"
 
 static void WStrVecTest() {
     WStrVec v;

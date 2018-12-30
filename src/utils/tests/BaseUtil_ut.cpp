@@ -1,10 +1,10 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "BaseUtil.h"
+#include "utils/BaseUtil.h"
 
 // must be last due to assert() over-write
-#include "UtAssert.h"
+#include "utils/UtAssert.h"
 
 static void GeomTest() {
     PointD ptD(12.4, -13.6);

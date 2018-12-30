@@ -1,11 +1,11 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "BaseUtil.h"
-#include "Dict.h"
+#include "utils/BaseUtil.h"
+#include "utils/Dict.h"
 
 // must be last due to assert() over-write
-#include "UtAssert.h"
+#include "utils/UtAssert.h"
 
 #define LETTERS "abcdefghijklmnopqrtswzABCDEFGHIJLMNOPQRTSWZ0123456789"
 

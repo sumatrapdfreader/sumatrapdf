@@ -1,11 +1,11 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "BaseUtil.h"
-#include "SquareTreeParser.h"
+#include "utils/BaseUtil.h"
+#include "utils/SquareTreeParser.h"
 
 // must be last due to assert() over-write
-#include "UtAssert.h"
+#include "utils/UtAssert.h"
 
 void SquareTreeTest() {
     static const char* keyValueData[] = {

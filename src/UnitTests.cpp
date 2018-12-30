@@ -1,18 +1,18 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "BaseUtil.h"
+#include "utils/BaseUtil.h"
 #include "AppUtil.h"
-#include "FileUtil.h"
-#include "WinUtil.h"
-#include "StrFormat.h"
+#include "utils/FileUtil.h"
+#include "utils/WinUtil.h"
+#include "utils/StrFormat.h"
 
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
 #include "ParseCommandLine.h"
 
 // must be last to over-write assert()
-#include "UtAssert.h"
+#include "utils/UtAssert.h"
 
 static void ParseCommandLineTest() {
     {

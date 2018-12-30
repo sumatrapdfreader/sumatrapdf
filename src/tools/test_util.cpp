@@ -1,8 +1,8 @@
-#include "BaseUtil.h"
-#include "WinDynCalls.h"
+#include "utils/BaseUtil.h"
+#include "utils/WinDynCalls.h"
 
 // must be last due to assert() over-write
-#include "UtAssert.h"
+#include "utils/UtAssert.h"
 
 // in src/util/tests/UtilTests.cpp
 extern void BaseUtils_UnitTests();

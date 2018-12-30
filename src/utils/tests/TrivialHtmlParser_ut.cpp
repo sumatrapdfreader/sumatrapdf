@@ -1,14 +1,14 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "BaseUtil.h"
-#include "FileUtil.h"
-#include "HtmlParserLookup.h"
-#include "TrivialHtmlParser.h"
-#include "WinUtil.h"
+#include "utils/BaseUtil.h"
+#include "utils/FileUtil.h"
+#include "utils/HtmlParserLookup.h"
+#include "utils/TrivialHtmlParser.h"
+#include "utils/WinUtil.h"
 
 // must be last due to assert() over-write
-#include "UtAssert.h"
+#include "utils/UtAssert.h"
 
 static void HtmlParser00() {
     HtmlParser p;

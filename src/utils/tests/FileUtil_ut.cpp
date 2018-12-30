@@ -1,11 +1,11 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "BaseUtil.h"
-#include "FileUtil.h"
+#include "utils/BaseUtil.h"
+#include "utils/FileUtil.h"
 
 // must be last due to assert() over-write
-#include "UtAssert.h"
+#include "utils/UtAssert.h"
 
 void FileUtilTest() {
     WCHAR* path1 = L"C:\\Program Files\\SumatraPDF\\SumatraPDF.exe";

@@ -1,11 +1,11 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "BaseUtil.h"
-#include "StrFormat.h"
+#include "utils/BaseUtil.h"
+#include "utils/StrFormat.h"
 
 // must be last due to assert() over-write
-#include "UtAssert.h"
+#include "utils/UtAssert.h"
 
 #define check(got, expected) utassert(str::Eq(got, expected))
 

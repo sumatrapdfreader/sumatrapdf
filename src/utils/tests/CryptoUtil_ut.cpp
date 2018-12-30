@@ -1,11 +1,11 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "BaseUtil.h"
-#include "CryptoUtil.h"
+#include "utils/BaseUtil.h"
+#include "utils/CryptoUtil.h"
 
 // must be last due to assert() over-write
-#include "UtAssert.h"
+#include "utils/UtAssert.h"
 
 static bool TestDigestMD5(const char* data, size_t size, const char* verify) {
     unsigned char digest[16];

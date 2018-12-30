@@ -1,12 +1,12 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "BaseUtil.h"
-#include "ScopedWin.h"
-#include "SimpleLog.h"
+#include "utils/BaseUtil.h"
+#include "utils/ScopedWin.h"
+#include "utils/SimpleLog.h"
 
 // must be last due to assert() over-write
-#include "UtAssert.h"
+#include "utils/UtAssert.h"
 
 void SimpleLogTest() {
     {

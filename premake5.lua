@@ -444,7 +444,7 @@ workspace "SumatraPDF"
     cppdialect "C++17"
     disablewarnings { "4838" }
     defines { "NO_LIBMUPDF" }
-    includedirs { "src/utils" }
+    includedirs { "src" }
     test_util_files()
     links { "gdiplus", "comctl32", "shlwapi", "Version" }
 

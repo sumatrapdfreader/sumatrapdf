@@ -1,12 +1,12 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "BaseUtil.h"
-#include "HtmlParserLookup.h"
-#include "CssParser.h"
+#include "utils/BaseUtil.h"
+#include "utils/HtmlParserLookup.h"
+#include "utils/CssParser.h"
 
 // must be last due to assert() over-write
-#include "UtAssert.h"
+#include "utils/UtAssert.h"
 
 static inline bool IsPropVal(const CssProperty* prop, const char* val) {
     return str::EqNIx(prop->s, prop->sLen, val);

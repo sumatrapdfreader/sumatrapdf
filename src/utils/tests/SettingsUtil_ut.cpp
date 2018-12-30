@@ -1,11 +1,11 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "BaseUtil.h"
-#include "SettingsUtil.h"
+#include "utils/BaseUtil.h"
+#include "utils/SettingsUtil.h"
 
 // must be last due to assert() over-write
-#include "UtAssert.h"
+#include "utils/UtAssert.h"
 
 static const FieldInfo gSutPointIFields[] = {
     {offsetof(PointI, x), Type_Int, 111},

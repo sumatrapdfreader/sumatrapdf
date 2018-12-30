@@ -1,11 +1,11 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "BaseUtil.h"
-#include "ByteOrderDecoder.h"
+#include "utils/BaseUtil.h"
+#include "utils/ByteOrderDecoder.h"
 
 // must be last due to assert() over-write
-#include "UtAssert.h"
+#include "utils/UtAssert.h"
 
 #define ABC "abc"
 void ByteOrderTests() {

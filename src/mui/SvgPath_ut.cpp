@@ -4,12 +4,12 @@
 // note: only meant to be #included from SvgPath.cpp,
 // not compiled on its own
 
-#include "BaseUtil.h"
+#include "utils/BaseUtil.h"
 #include "SvgPath.h"
-#include "VecSegmented.h"
+#include "utils/VecSegmented.h"
 
 // must be last due to assert() over-write
-#include "UtAssert.h"
+#include "utils/UtAssert.h"
 
 using namespace Gdiplus;
 
