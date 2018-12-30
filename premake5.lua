@@ -567,7 +567,6 @@ workspace "SumatraPDF"
     kind "WindowedApp"
     language "C++"
     cppdialect "C++17"
-    defines { "BUILD_UNINSTALLER" }
     entrypoint "WinMainCRTStartup"
     flags { "NoManifest" }
     disablewarnings { "4018", "4244", "4264", "4838", "4702", "4706" }

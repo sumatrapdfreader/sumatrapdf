@@ -749,8 +749,8 @@ function uninstaller_files()
   files_in_dir("src", {
     "CrashHandler.*",
     "Translations.*",
-    "installer/InstUninstCommon.cpp",
     "installer/Installer.h",
+    "installer/InstUninstCommon.cpp",
     "installer/Uninstaller.cpp",
     "installer/Trans_installer_txt.cpp",
   })
