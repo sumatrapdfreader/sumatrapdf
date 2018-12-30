@@ -1,10 +1,10 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "BaseUtil.h"
-#include "WinDynCalls.h"
-#include "DbgHelpDyn.h"
-#include "WinUtil.h"
+#include "utils/BaseUtil.h"
+#include "utils/WinDynCalls.h"
+#include "utils/DbgHelpDyn.h"
+#include "utils/WinUtil.h"
 #include "uia/Provider.h"
 #include "uia/Constants.h"
 #include "uia/DocumentProvider.h"

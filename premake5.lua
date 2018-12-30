@@ -346,7 +346,7 @@ workspace "SumatraPDF"
     language "C++"
     cppdialect "C++17"
     disablewarnings { "4302", "4311", "4838" }
-    includedirs { "src", "src/utils" }
+    includedirs { "src" }
     uia_files()
 
 

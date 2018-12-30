@@ -1,11 +1,11 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "BaseUtil.h"
+#include "utils/BaseUtil.h"
 #include <UIAutomationCore.h>
 #include <UIAutomationCoreApi.h>
 #include <OleAcc.h>
-#include "ScopedWin.h"
+#include "utils/ScopedWin.h"
 #include "BaseEngine.h"
 #include "SettingsStructs.h"
 #include "Controller.h"
