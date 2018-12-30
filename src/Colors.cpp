@@ -1,6 +1,6 @@
-#include "BaseUtil.h"
+#include "utils/BaseUtil.h"
 
-#include "WinUtil.h"
+#include "utils/WinUtil.h"
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
 #include "Colors.h"

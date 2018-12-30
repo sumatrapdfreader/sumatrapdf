@@ -1,13 +1,13 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "BaseUtil.h"
-#include "ScopedWin.h"
-#include "CmdLineParser.h"
-#include "FileUtil.h"
-#include "HtmlParserLookup.h"
-#include "Mui.h"
-#include "WinUtil.h"
+#include "utils/BaseUtil.h"
+#include "utils/ScopedWin.h"
+#include "utils/CmdLineParser.h"
+#include "utils/FileUtil.h"
+#include "utils/HtmlParserLookup.h"
+#include "mui/Mui.h"
+#include "utils/WinUtil.h"
 
 #include "BaseEngine.h"
 #include "EngineManager.h"
@@ -33,8 +33,8 @@
 #include "SumatraAbout.h"
 #include "SumatraDialogs.h"
 #include "Translations.h"
-#include "BitManip.h"
-#include "Dpi.h"
+#include "utils/BitManip.h"
+#include "utils/Dpi.h"
 
 void MenuUpdateDisplayMode(WindowInfo* win) {
     bool enabled = win->IsDocLoaded();

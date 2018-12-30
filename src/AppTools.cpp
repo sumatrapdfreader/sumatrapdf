@@ -1,15 +1,15 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "BaseUtil.h"
-#include "WinDynCalls.h"
-#include "CmdLineParser.h"
-#include "DbgHelpDyn.h"
-#include "FileUtil.h"
-#include "WinUtil.h"
-#include "CryptoUtil.h"
+#include "utils/BaseUtil.h"
+#include "utils/WinDynCalls.h"
+#include "utils/CmdLineParser.h"
+#include "utils/DbgHelpDyn.h"
+#include "utils/FileUtil.h"
+#include "utils/WinUtil.h"
+#include "utils/CryptoUtil.h"
 #include "AppTools.h"
-#include "DirIter.h"
+#include "utils/DirIter.h"
 
 #include "Translations.h"
 #include "Version.h"

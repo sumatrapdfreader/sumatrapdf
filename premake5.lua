@@ -356,7 +356,7 @@ workspace "SumatraPDF"
     cppdialect "C++17"
     -- TODO: 4838 only in settingsstructs.h(642)
     disablewarnings { "4838" }
-    includedirs { "src", "src/utils", "src/wingui", "src/mui", "ext/synctex" }
+    includedirs { "src", "ext/synctex" }
     sumatra_files()
 
 

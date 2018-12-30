@@ -43,9 +43,9 @@
   those pages to a bitmap and display those bitmaps.
 */
 
-#include "BaseUtil.h"
-#include "WinUtil.h"
-#include "ScopedWin.h"
+#include "utils/BaseUtil.h"
+#include "utils/WinUtil.h"
+#include "utils/ScopedWin.h"
 
 #include "BaseEngine.h"
 #include "EngineManager.h"

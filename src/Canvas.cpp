@@ -1,17 +1,17 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "BaseUtil.h"
-#include "WinDynCalls.h"
-#include "Dpi.h"
-#include "FileUtil.h"
-#include "FrameRateWnd.h"
-#include "Timer.h"
-#include "UITask.h"
-#include "WinUtil.h"
+#include "utils/BaseUtil.h"
+#include "utils/WinDynCalls.h"
+#include "utils/Dpi.h"
+#include "utils/FileUtil.h"
+#include "wingui/FrameRateWnd.h"
+#include "utils/Timer.h"
+#include "utils/UITask.h"
+#include "utils/WinUtil.h"
 #include "Colors.h"
-#include "ScopedWin.h"
-#include "TreeCtrl.h"
+#include "utils/ScopedWin.h"
+#include "wingui/TreeCtrl.h"
 
 #include "BaseEngine.h"
 #include "EngineManager.h"

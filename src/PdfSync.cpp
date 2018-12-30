@@ -1,10 +1,10 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "BaseUtil.h"
+#include "utils/BaseUtil.h"
 #include <synctex_parser.h>
-#include "ScopedWin.h"
-#include "FileUtil.h"
+#include "utils/ScopedWin.h"
+#include "utils/FileUtil.h"
 #include "BaseEngine.h"
 #include "PdfSync.h"
 

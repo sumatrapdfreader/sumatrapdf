@@ -1,11 +1,11 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "BaseUtil.h"
+#include "utils/BaseUtil.h"
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
-#include "DebugLog.h"
-#include "FileUtil.h"
+#include "utils/DebugLog.h"
+#include "utils/FileUtil.h"
 
 namespace prefs {
 namespace conv {

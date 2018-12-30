@@ -1,15 +1,15 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "BaseUtil.h"
-#include "ScopedWin.h"
-#include "Dpi.h"
-#include "GdiPlusUtil.h"
-#include "LabelWithCloseWnd.h"
-#include "SplitterWnd.h"
-#include "UITask.h"
-#include "WinUtil.h"
-#include "TreeCtrl.h"
+#include "utils/BaseUtil.h"
+#include "utils/ScopedWin.h"
+#include "utils/Dpi.h"
+#include "utils/GdiPlusUtil.h"
+#include "wingui/LabelWithCloseWnd.h"
+#include "wingui/SplitterWnd.h"
+#include "utils/UITask.h"
+#include "utils/WinUtil.h"
+#include "wingui/TreeCtrl.h"
 
 #include "BaseEngine.h"
 #include "EngineManager.h"

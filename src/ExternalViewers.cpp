@@ -1,11 +1,11 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "BaseUtil.h"
-#include "CmdLineParser.h"
-#include "FileUtil.h"
-#include "WinUtil.h"
-#include "ScopedWin.h"
+#include "utils/BaseUtil.h"
+#include "utils/CmdLineParser.h"
+#include "utils/FileUtil.h"
+#include "utils/WinUtil.h"
+#include "utils/ScopedWin.h"
 
 #include "BaseEngine.h"
 #include "EngineManager.h"

@@ -1,9 +1,9 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "BaseUtil.h"
-#include "DialogSizer.h"
-#include "WinUtil.h"
+#include "utils/BaseUtil.h"
+#include "wingui/DialogSizer.h"
+#include "utils/WinUtil.h"
 
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"

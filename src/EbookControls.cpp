@@ -1,17 +1,16 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// utils
-#include "BaseUtil.h"
-#include "BitManip.h"
-#include "HtmlParserLookup.h"
-#include "Mui.h"
-#include "SerializeTxt.h"
-#include "StrSlice.h"
-#include "Timer.h"
-#include "TrivialHtmlParser.h"
-#include "TxtParser.h"
-#include "WinUtil.h"
+#include "utils/BaseUtil.h"
+#include "utils/BitManip.h"
+#include "utils/HtmlParserLookup.h"
+#include "mui/Mui.h"
+#include "utils/SerializeTxt.h"
+#include "utils/StrSlice.h"
+#include "utils/Timer.h"
+#include "utils/TrivialHtmlParser.h"
+#include "utils/TxtParser.h"
+#include "utils/WinUtil.h"
 // rendering engines
 #include "EbookBase.h"
 #include "HtmlFormatter.h"
@@ -22,7 +21,7 @@
 #include "MuiEbookPageDef.h"
 #include "PagesLayoutDef.h"
 #define NOLOG 1
-#include "DebugLog.h"
+#include "utils/DebugLog.h"
 
 constexpr const char ebookWinDesc[] = R"data(
 Style [

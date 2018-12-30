@@ -1,10 +1,9 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// utils
-#include "BaseUtil.h"
-#include "CmdLineParser.h"
-#include "WinUtil.h"
+#include "utils/BaseUtil.h"
+#include "utils/CmdLineParser.h"
+#include "utils/WinUtil.h"
 // layout controllers
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"

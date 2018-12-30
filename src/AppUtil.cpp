@@ -2,8 +2,8 @@
    License: GPLv3 */
 
 // utils
-#include "BaseUtil.h"
-#include "FileUtil.h"
+#include "utils/BaseUtil.h"
+#include "utils/FileUtil.h"
 // this file should have no further dependencies on src/* so that adding
 // unit tests for its content doesn't require for half of SumatraPDF
 // to be included (helpers with dependencies belong into AppTools.cpp)

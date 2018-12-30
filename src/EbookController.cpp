@@ -1,16 +1,16 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "BaseUtil.h"
-#include "ScopedWin.h"
-#include "Archive.h"
-#include "GdiPlusUtil.h"
-#include "HtmlParserLookup.h"
-#include "HtmlPullParser.h"
-#include "Mui.h"
-#include "ThreadUtil.h"
-#include "Timer.h"
-#include "TrivialHtmlParser.h"
+#include "utils/BaseUtil.h"
+#include "utils/ScopedWin.h"
+#include "utils/Archive.h"
+#include "utils/GdiPlusUtil.h"
+#include "utils/HtmlParserLookup.h"
+#include "utils/HtmlPullParser.h"
+#include "mui/Mui.h"
+#include "utils/ThreadUtil.h"
+#include "utils/Timer.h"
+#include "utils/TrivialHtmlParser.h"
 
 #include "BaseEngine.h"
 #include "EbookBase.h"
@@ -27,7 +27,7 @@
 #include "EbookControls.h"
 #include "Translations.h"
 //#define NOLOG 0
-#include "DebugLog.h"
+#include "utils/DebugLog.h"
 
 static const WCHAR* GetFontName() {
     // TODO: validate the name?
