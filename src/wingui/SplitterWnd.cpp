@@ -1,11 +1,11 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "BaseUtil.h"
+#include "utils/BaseUtil.h"
 #include "SplitterWnd.h"
 
-#include "BitManip.h"
-#include "WinUtil.h"
+#include "utils/BitManip.h"
+#include "utils/WinUtil.h"
 
 // the technique for drawing the splitter for non-live resize is described
 // at http://www.catch22.net/tuts/splitter-windows

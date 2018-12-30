@@ -7,11 +7,11 @@
 #undef _WIN32_WINNT
 #define _WIN32_WINNT 0x0501
 
-#include "BaseUtil.h"
+#include "utils/BaseUtil.h"
 #include "FrameRateWnd.h"
 
-#include "ScopedWin.h"
-#include "WinUtil.h"
+#include "utils/ScopedWin.h"
+#include "utils/WinUtil.h"
 
 /*
 Frame rate window is a debugging tool that shows the frame rate, most likely

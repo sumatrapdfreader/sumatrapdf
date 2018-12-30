@@ -1,11 +1,11 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "BaseUtil.h"
+#include "utils/BaseUtil.h"
 #include "LabelWithCloseWnd.h"
-#include "Dpi.h"
-#include "GdiPlusUtil.h"
-#include "WinUtil.h"
+#include "utils/Dpi.h"
+#include "utils/GdiPlusUtil.h"
+#include "utils/WinUtil.h"
 
 #define CLOSE_BTN_DX 16
 #define CLOSE_BTN_DY 16

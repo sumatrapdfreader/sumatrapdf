@@ -1,8 +1,8 @@
-#include "BaseUtil.h"
+#include "utils/BaseUtil.h"
 
-#include "WinUtil.h"
+#include "utils/WinUtil.h"
 #include "Win32Window.h"
-#include "FileUtil.h"
+#include "utils/FileUtil.h"
 #include "EditCtrl.h" // TODO: for MsgFilter
 
 #define WIN_CLASS L"WC_WIN32_WINDOW"
