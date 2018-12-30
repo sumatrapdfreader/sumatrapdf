@@ -11,13 +11,15 @@ typedef const char* NotificationGroupId;
 
 class NotificationWnd : public ProgressUpdateUI {
   public:
+    HWND parent = nullptr;
     HWND hwnd = nullptr;
+    int timeoutInMS = 0; // 0 means no timeout
     bool hasProgress = false;
     bool hasCancel = false;
 
     HFONT font = nullptr;
     bool highlight = false;
-    NotificationWndRemovedCallback wndRemovedCb;
+    NotificationWndRemovedCallback wndRemovedCb = nullptr;
 
     // only used for progress notifications
     bool isCanceled = false;
@@ -25,8 +27,8 @@ class NotificationWnd : public ProgressUpdateUI {
     int progressWidth = 0;
     WCHAR* progressMsg = nullptr; // must contain two %d (for current and total)
 
-    void CreatePopup(HWND parent, const WCHAR* message);
-    void UpdateWindowPosition(const WCHAR* message, bool init = false);
+    bool Create(const WCHAR* msg, const WCHAR* progressMsg);
+    void UpdateWindowPosition(const WCHAR* message, bool init);
 
     NotificationGroupId groupId = nullptr; // for use by Notifications
 
@@ -35,10 +37,7 @@ class NotificationWnd : public ProgressUpdateUI {
     float shrinkLimit = 1.0f;
 
     // Note: in most cases use WindowInfo::ShowNotification()
-    NotificationWnd(HWND parent, const WCHAR* message, int timeoutInMS = 0, bool highlight = false,
-                    const NotificationWndRemovedCallback& cb = nullptr);
-    NotificationWnd(HWND parent, const WCHAR* message, const WCHAR* progressMsg,
-                    const NotificationWndRemovedCallback& cb = nullptr);
+    explicit NotificationWnd(HWND parent, int timeoutInMS);
 
     virtual ~NotificationWnd();
 

@@ -231,16 +231,17 @@ void WindowInfo::DeleteInfotip() {
     infotipVisible = false;
 }
 
-void WindowInfo::ShowNotification(const WCHAR* message, int options, NotificationGroupId groupId) {
+void WindowInfo::ShowNotification(const WCHAR* msg, int options, NotificationGroupId groupId) {
     int timeoutMS = (options & NOS_PERSIST) ? 0 : 3000;
     bool highlight = (options & NOS_HIGHLIGHT);
 
-    NotificationWnd* wnd = new NotificationWnd(hwndCanvas, message, timeoutMS, highlight, [this](NotificationWnd* wnd) {
-        this->notifications->RemoveNotification(wnd);
-    });
+    NotificationWnd* wnd = new NotificationWnd(hwndCanvas, timeoutMS);
+    wnd->highlight = highlight;
+    wnd->wndRemovedCb = [this](NotificationWnd* wnd) { this->notifications->RemoveNotification(wnd); };
     if (NG_CURSOR_POS_HELPER == groupId) {
         wnd->shrinkLimit = 0.7f;
     }
+    wnd->Create(msg, nullptr);
     notifications->Add(wnd, groupId);
 }
 

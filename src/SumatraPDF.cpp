@@ -1500,6 +1500,8 @@ WindowInfo* LoadDocument(LoadArgs& args) {
         // new translation. Find a better message e.g. why failed.
         WCHAR* msg = str::Format(_TR("Error loading %s"), fullPath);
         win->ShowNotification(msg, NOS_HIGHLIGHT);
+        str::Free(msg);
+
         // display the notification ASAP (prefs::Save() can introduce a notable delay)
         win->RedrawAll(true);
 
@@ -1510,7 +1512,6 @@ WindowInfo* LoadDocument(LoadArgs& args) {
                 gWindows.at(0)->RedrawAll(true);
             }
         }
-        str::Free(msg);
         return nullptr;
     }
     CrashIf(openNewTab && args.forceReuse);

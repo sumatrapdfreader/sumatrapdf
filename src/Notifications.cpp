@@ -24,39 +24,31 @@ static RectI GetCancelRect(HWND hwnd) {
     return RectI(ClientRect(hwnd).dx - 16 - PADDING, PADDING, 16, 16);
 }
 
-NotificationWnd::NotificationWnd(HWND parent, const WCHAR* message, int timeoutInMS, bool highlight,
-                                 const NotificationWndRemovedCallback& cb) {
-    hasCancel = (0 == timeoutInMS);
-    wndRemovedCb = cb;
-    this->highlight = highlight;
-    CreatePopup(parent, message);
-    if (timeoutInMS) {
-        SetTimer(this->hwnd, TIMEOUT_TIMER_ID, timeoutInMS, nullptr);
-    }
-}
-
-NotificationWnd::NotificationWnd(HWND parent, const WCHAR* message, const WCHAR* progressMsg,
-                                 const NotificationWndRemovedCallback& cb)
-    : wndRemovedCb(cb) {
-    this->hasProgress = true;
-    this->hasCancel = true;
-    this->progressMsg = str::Dup(progressMsg);
-    CreatePopup(parent, message);
+NotificationWnd::NotificationWnd(HWND parent, int timeoutInMS) {
+    this->parent = parent;
+    this->timeoutInMS = timeoutInMS;
+    this->hasCancel = (0 == timeoutInMS);
 }
 
 NotificationWnd::~NotificationWnd() {
     DestroyWindow(this->hwnd);
-    DeleteObject(font);
-    free(progressMsg);
+    DeleteObject(this->font);
+    str::Free(this->progressMsg);
 }
 
-void NotificationWnd::CreatePopup(HWND parent, const WCHAR* message) {
+bool NotificationWnd::Create(const WCHAR* msg, const WCHAR* progressMsg) {
+    if (progressMsg != nullptr) {
+        this->hasCancel = true;
+        this->hasProgress = true;
+        this->progressMsg = str::Dup(progressMsg);
+    }
+
     RegisterNotificationsWndClass();
 
     NONCLIENTMETRICS ncm = {};
     ncm.cbSize = sizeof(ncm);
     SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
-    font = CreateFontIndirect(&ncm.lfMessageFont);
+    this->font = CreateFontIndirect(&ncm.lfMessageFont);
 
     HDC hdc = GetDC(parent);
     progressWidth = MulDiv(PROGRESS_WIDTH, GetDeviceCaps(hdc, LOGPIXELSX), USER_DEFAULT_SCREEN_DPI);
@@ -68,12 +60,22 @@ void NotificationWnd::CreatePopup(HWND parent, const WCHAR* message) {
     DWORD exStyle = WS_EX_TOPMOST;
     int x = TOP_LEFT_MARGIN;
     int y = TOP_LEFT_MARGIN;
-    this->hwnd = CreateWindowExW(exStyle, clsName, message, style, x, y, 0, 0, parent, (HMENU)0, h, nullptr);
+    this->hwnd = CreateWindowExW(exStyle, clsName, msg, style, x, y, 0, 0, parent, (HMENU)0, h, nullptr);
+    if (this->hwnd == nullptr) {
+        return false;
+    }
+
     SetWindowLongPtr(this->hwnd, GWLP_USERDATA, (LONG_PTR)this);
     DWORD flags = CS_DROPSHADOW | WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT;
+    // TODO: this is suspicious. Why CS_DROPSHADOW is mixed with WS_EX_LAYOUTRTL ?
     ToggleWindowExStyle(this->hwnd, flags, IsUIRightToLeft());
-    UpdateWindowPosition(message, true);
+    UpdateWindowPosition(msg, true);
     ShowWindow(this->hwnd, SW_SHOW);
+
+    if (this->timeoutInMS != 0) {
+        SetTimer(this->hwnd, TIMEOUT_TIMER_ID, this->timeoutInMS, nullptr);
+    }
+    return true;
 }
 
 void NotificationWnd::UpdateWindowPosition(const WCHAR* message, bool init) {
@@ -132,7 +134,7 @@ void NotificationWnd::UpdateMessage(const WCHAR* message, int timeoutInMS, bool 
     }
     DWORD flags = CS_DROPSHADOW | WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT;
     ToggleWindowExStyle(this->hwnd, flags, IsUIRightToLeft());
-    this->UpdateWindowPosition(message);
+    this->UpdateWindowPosition(message, false);
     InvalidateRect(this->hwnd, nullptr, TRUE);
     if (timeoutInMS != 0) {
         SetTimer(this->hwnd, TIMEOUT_TIMER_ID, timeoutInMS, nullptr);

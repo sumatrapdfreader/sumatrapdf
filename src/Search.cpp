@@ -202,9 +202,11 @@ struct FindThreadData : public ProgressUpdateUI {
 
         if (showProgress) {
             auto notificationsInCb = this->win->notifications;
-            wnd = new NotificationWnd(
-                win->hwndCanvas, L"", _TR("Searching %d of %d..."),
-                [notificationsInCb](NotificationWnd* wnd) { notificationsInCb->RemoveNotification(wnd); });
+            wnd = new NotificationWnd(win->hwndCanvas, 0);
+            wnd->wndRemovedCb = [notificationsInCb](NotificationWnd* wnd) {
+                notificationsInCb->RemoveNotification(wnd);
+            };
+            wnd->Create(L"", _TR("Searching %d of %d..."));
             win->notifications->Add(wnd, NG_FIND_PROGRESS);
         }
 
