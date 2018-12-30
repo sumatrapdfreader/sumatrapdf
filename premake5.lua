@@ -247,7 +247,7 @@ workspace "SumatraPDF"
     cppdialect "C++17"
     disablewarnings { "4018", "4057", "4189", "4244", "4267", "4295", "4819" }
     disablewarnings { "4701", "4706", "4838"  }
-    includedirs { "src/utils", "src/wingui", "src/mui" }
+    includedirs { "src", "src/wingui", "src/mui" }
     includedirs { "ext/synctex", "ext/libdjvu", "ext/CHMLib/src", "ext/zlib", "mupdf/include" }
     engines_files()
     links { "chm" }

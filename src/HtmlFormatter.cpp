@@ -1,19 +1,18 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-// utils
-#include "BaseUtil.h"
-#include "GdiPlusUtil.h"
-#include "HtmlParserLookup.h"
-#include "CssParser.h"
-#include "HtmlPullParser.h"
+#include "utils/BaseUtil.h"
+#include "utils/GdiPlusUtil.h"
+#include "utils/HtmlParserLookup.h"
+#include "utils/CssParser.h"
+#include "utils/HtmlPullParser.h"
 #include "Mui.h"
-#include "Timer.h"
+#include "utils/Timer.h"
 // rendering engines
 #include "EbookBase.h"
 #include "HtmlFormatter.h"
 #define NOLOG 1
-#include "DebugLog.h"
+#include "utils/DebugLog.h"
 
 /*
 Given size of a page, we format html into a set of pages. We handle only a small

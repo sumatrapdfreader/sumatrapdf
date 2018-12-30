@@ -7,15 +7,15 @@ extern "C" {
 #include <mupdf/fitz.h>
 }
 
-#include "BaseUtil.h"
-#include "Archive.h"
-#include "ScopedWin.h"
-#include "FileUtil.h"
-#include "HtmlParserLookup.h"
-#include "HtmlPullParser.h"
-#include "TrivialHtmlParser.h"
-#include "WinUtil.h"
-#include "ZipUtil.h"
+#include "utils/BaseUtil.h"
+#include "utils/Archive.h"
+#include "utils/ScopedWin.h"
+#include "utils/FileUtil.h"
+#include "utils/HtmlParserLookup.h"
+#include "utils/HtmlPullParser.h"
+#include "utils/TrivialHtmlParser.h"
+#include "utils/WinUtil.h"
+#include "utils/ZipUtil.h"
 #include "BaseEngine.h"
 #include "PdfEngine.h"
 

@@ -1,15 +1,14 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// utils
-#include "BaseUtil.h"
+#include "utils/BaseUtil.h"
 #define PPC_BSTR
 #include <chm_lib.h>
-#include "ByteReader.h"
-#include "FileUtil.h"
-#include "HtmlParserLookup.h"
-#include "TrivialHtmlParser.h"
-#include "ScopedWin.h"
+#include "utils/ByteReader.h"
+#include "utils/FileUtil.h"
+#include "utils/HtmlParserLookup.h"
+#include "utils/TrivialHtmlParser.h"
+#include "utils/ScopedWin.h"
 
 #include "BaseEngine.h"
 #include "EbookBase.h"

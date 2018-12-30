@@ -1,16 +1,16 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "BaseUtil.h"
-#include "Archive.h"
-#include "ScopedWin.h"
+#include "utils/BaseUtil.h"
+#include "utils/Archive.h"
+#include "utils/ScopedWin.h"
 
-#include "FileUtil.h"
-#include "GdiPlusUtil.h"
-#include "HtmlParserLookup.h"
-#include "HtmlPullParser.h"
-#include "JsonParser.h"
-#include "WinUtil.h"
+#include "utils/FileUtil.h"
+#include "utils/GdiPlusUtil.h"
+#include "utils/HtmlParserLookup.h"
+#include "utils/HtmlPullParser.h"
+#include "utils/JsonParser.h"
+#include "utils/WinUtil.h"
 
 #include "BaseEngine.h"
 #include "ImagesEngine.h"

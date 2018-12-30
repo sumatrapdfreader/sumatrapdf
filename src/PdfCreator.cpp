@@ -8,9 +8,9 @@ extern "C" {
 #include <zlib.h>
 }
 
-#include "BaseUtil.h"
-#include "ScopedWin.h"
-#include "GdiplusUtil.h"
+#include "utils/BaseUtil.h"
+#include "utils/ScopedWin.h"
+#include "utils/GdiplusUtil.h"
 #include "BaseEngine.h"
 #include "PdfCreator.h"
 

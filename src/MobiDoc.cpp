@@ -1,22 +1,22 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "BaseUtil.h"
-#include "BitReader.h"
-#include "ByteOrderDecoder.h"
-#include "ScopedWin.h"
+#include "utils/BaseUtil.h"
+#include "utils/BitReader.h"
+#include "utils/ByteOrderDecoder.h"
+#include "utils/ScopedWin.h"
 
-#include "FileUtil.h"
-#include "GdiPlusUtil.h"
-#include "HtmlParserLookup.h"
-#include "HtmlPullParser.h"
-#include "PalmDbReader.h"
-#include "TrivialHtmlParser.h"
+#include "utils/FileUtil.h"
+#include "utils/GdiPlusUtil.h"
+#include "utils/HtmlParserLookup.h"
+#include "utils/HtmlPullParser.h"
+#include "utils/PalmDbReader.h"
+#include "utils/TrivialHtmlParser.h"
 
 #include "BaseEngine.h"
 #include "EbookBase.h"
 #include "MobiDoc.h"
-#include "DebugLog.h"
+#include "utils/DebugLog.h"
 
 constexpr size_t kInvalidSize = (size_t)-1;
 

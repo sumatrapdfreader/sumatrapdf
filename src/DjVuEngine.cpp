@@ -5,13 +5,13 @@
 #define DDJVUAPI    /**/
 #define MINILISPAPI /**/
 
-#include "BaseUtil.h"
+#include "utils/BaseUtil.h"
 #include <ddjvuapi.h>
 #include <miniexp.h>
-#include "ByteReader.h"
-#include "FileUtil.h"
-#include "WinUtil.h"
-#include "ScopedWin.h"
+#include "utils/ByteReader.h"
+#include "utils/FileUtil.h"
+#include "utils/WinUtil.h"
+#include "utils/ScopedWin.h"
 
 #include "BaseEngine.h"
 #include "DjVuEngine.h"

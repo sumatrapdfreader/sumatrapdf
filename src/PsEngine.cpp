@@ -1,12 +1,12 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "BaseUtil.h"
+#include "utils/BaseUtil.h"
 #include <zlib.h>
-#include "ByteReader.h"
-#include "ScopedWin.h"
-#include "FileUtil.h"
-#include "WinUtil.h"
+#include "utils/ByteReader.h"
+#include "utils/ScopedWin.h"
+#include "utils/FileUtil.h"
+#include "utils/WinUtil.h"
 #include "BaseEngine.h"
 #include "PdfEngine.h"
 #include "PsEngine.h"
