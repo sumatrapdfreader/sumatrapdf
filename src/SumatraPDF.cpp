@@ -1453,8 +1453,9 @@ WindowInfo* LoadDocument(LoadArgs& args) {
         if (gFileHistory.MarkFileInexistent(fullPath)) {
             prefs::Save();
             // update the Frequently Read list
-            if (1 == gWindows.size() && gWindows.at(0)->IsAboutWindow())
+            if (1 == gWindows.size() && gWindows.at(0)->IsAboutWindow()) {
                 gWindows.at(0)->RedrawAll(true);
+            }
         }
         return nullptr;
     }
@@ -1494,6 +1495,24 @@ WindowInfo* LoadDocument(LoadArgs& args) {
         ctrl = CreateControllerForFile(fullPath, &pwdUI, win);
     }
 
+    if (!ctrl) {
+        // TODO: same message as in Canvas.cpp to not introduce
+        // new translation. Find a better message e.g. why failed.
+        WCHAR* msg = str::Format(_TR("Error loading %s"), fullPath);
+        win->ShowNotification(msg, NOS_HIGHLIGHT);
+        // display the notification ASAP (prefs::Save() can introduce a notable delay)
+        win->RedrawAll(true);
+
+        if (gFileHistory.MarkFileInexistent(fullPath)) {
+            prefs::Save();
+            // update the Frequently Read list
+            if (1 == gWindows.size() && gWindows.at(0)->IsAboutWindow()) {
+                gWindows.at(0)->RedrawAll(true);
+            }
+        }
+        str::Free(msg);
+        return nullptr;
+    }
     CrashIf(openNewTab && args.forceReuse);
     if (win->IsAboutWindow()) {
         // invalidate the links on the Frequently Read page
