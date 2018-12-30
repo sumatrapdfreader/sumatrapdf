@@ -942,7 +942,7 @@ static void UpdateUiForCurrentTab(WindowInfo* win) {
 // placeWindow : if true then the Window will be moved/sized according
 //   to the 'state' information even if the window was already placed
 //   before (isNewWindow=false)
-static void LoadDocIntoCurrentTab(LoadArgs& args, Controller* ctrl, DisplayState* state = nullptr) {
+static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, DisplayState* state) {
     WindowInfo* win = args.win;
     TabInfo* tab = win->currentTab;
     CrashIf(!tab);
@@ -1006,8 +1006,10 @@ static void LoadDocIntoCurrentTab(LoadArgs& args, Controller* ctrl, DisplayState
     if (win->ctrl) {
         if (win->AsFixed()) {
             DisplayModel* dm = win->AsFixed();
-            int dpi = gGlobalPrefs->customScreenDPI > 0 ? dpi = gGlobalPrefs->customScreenDPI
-                                                        : DpiGetPreciseX(win->hwndFrame);
+            int dpi = gGlobalPrefs->customScreenDPI;
+            if (dpi == 0) {
+                dpi = DpiGetPreciseX(win->hwndFrame);
+            }
             dm->SetInitialViewSettings(displayMode, ss.page, win->GetViewPortSize(), dpi);
             // TODO: also expose Manga Mode for image folders?
             if (tab->GetEngineType() == EngineType::ComicBook || tab->GetEngineType() == EngineType::ImageDir)
@@ -1515,7 +1517,7 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     args.fileName = fullPath;
     // TODO: stop remembering/restoring window positions when using tabs?
     args.placeWindow = !gGlobalPrefs->useTabs;
-    LoadDocIntoCurrentTab(args, ctrl);
+    LoadDocIntoCurrentTab(args, ctrl, nullptr);
 
     if (gPluginMode) {
         // hide the menu for embedded documents opened from the plugin
@@ -1524,8 +1526,9 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     }
 
     if (!ctrl) {
-        if (gFileHistory.MarkFileInexistent(fullPath))
+        if (gFileHistory.MarkFileInexistent(fullPath)) {
             prefs::Save();
+        }
         return win;
     }
 
@@ -2567,7 +2570,7 @@ static void OnMenuSaveBookmark(WindowInfo* win) {
         fileName.Set(str::Join(dstFileName, L".lnk"));
     }
 
-    ScrollState ss(win->ctrl->CurrentPageNo());
+    ScrollState ss(win->ctrl->CurrentPageNo(), 0, 0);
     if (win->AsFixed()) {
         ss = win->AsFixed()->GetScrollState();
     }

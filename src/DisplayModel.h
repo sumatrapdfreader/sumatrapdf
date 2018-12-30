@@ -6,6 +6,9 @@
 
 constexpr int INVALID_PAGE_NO = -1;
 
+// TODO: duplicated in GlobalPrefs.h
+#define INVALID_ZOOM -99.0f
+
 /* Describes many attributes of one page in one, convenient place */
 struct PageInfo {
     /* data that is constant for a given page. page size in document units */
@@ -33,11 +36,13 @@ struct PageInfo {
 /* The current scroll state (needed for saving/restoring the scroll position) */
 /* coordinates are in user space units (per page) */
 struct ScrollState {
-    explicit ScrollState(int page = 0, double x = 0, double y = 0) : page(page), x(x), y(y) {}
+    ScrollState() = default;
+    explicit ScrollState(int page, double x, double y) : page(page), x(x), y(y) {}
     bool operator==(const ScrollState& other) const { return page == other.page && x == other.x && y == other.y; }
 
-    int page;
-    double x, y;
+    int page = 0;
+    double x = 0;
+    double y = 0;
 };
 
 class PageTextCache;
@@ -115,9 +120,9 @@ class DisplayModel : public Controller {
 
     // controller-specific data (easier to save here than on WindowInfo)
     EngineType engineType;
-    Vec<PageAnnotation>* userAnnots;
-    bool userAnnotsModified;
-    Synchronizer* pdfSync;
+    Vec<PageAnnotation>* userAnnots = nullptr;
+    bool userAnnotsModified = false;
+    Synchronizer* pdfSync = nullptr;
 
     PageTextCache* textCache;
     TextSelection* textSelection;
@@ -180,7 +185,7 @@ class DisplayModel : public Controller {
     void RepaintDisplay() { cb->Repaint(); }
 
     /* allow resizing a window without triggering a new rendering (needed for window destruction) */
-    bool dontRenderFlag;
+    bool dontRenderFlag = false;
 
     bool GetPresentationMode() const { return presentationMode; }
 
@@ -202,13 +207,13 @@ class DisplayModel : public Controller {
     BaseEngine* engine;
 
     /* an array of PageInfo, len of array is pageCount */
-    PageInfo* pagesInfo;
+    PageInfo* pagesInfo = nullptr;
 
-    DisplayMode displayMode;
+    DisplayMode displayMode = DM_AUTOMATIC;
     /* In non-continuous mode is the first page from a file that we're
        displaying.
        No meaning in continous mode. */
-    int startPage;
+    int startPage = 1;
 
     /* size of virtual canvas containing all rendered pages. */
     SizeI canvasSize;
@@ -225,25 +230,25 @@ class DisplayModel : public Controller {
     /* real zoom value calculated from zoomVirtual. Same as
        zoomVirtual * 0.01 * dpiFactor
        except for ZOOM_FIT_PAGE, ZOOM_FIT_WIDTH and ZOOM_FIT_CONTENT */
-    float zoomReal;
-    float zoomVirtual;
-    int rotation;
+    float zoomReal = INVALID_ZOOM;
+    float zoomVirtual = INVALID_ZOOM;
+    int rotation = 0;
     /* dpi correction factor by which _zoomVirtual has to be multiplied in
        order to get _zoomReal */
-    float dpiFactor;
+    float dpiFactor = 1.0f;
     /* whether to display pages Left-to-Right or Right-to-Left.
        this value is extracted from the PDF document */
-    bool displayR2L;
+    bool displayR2L = false;
 
     /* when we're in presentation mode, _pres* contains the pre-presentation values */
-    bool presentationMode;
-    float presZoomVirtual;
-    DisplayMode presDisplayMode;
+    bool presentationMode = false;
+    float presZoomVirtual = INVALID_ZOOM;
+    DisplayMode presDisplayMode = DM_AUTOMATIC;
 
     Vec<ScrollState> navHistory;
     /* index of the "current" history entry (to be updated on navigation),
        resp. number of Back history entries */
-    size_t navHistoryIx;
+    size_t navHistoryIx = 0;
 };
 
 int NormalizeRotation(int rotation);

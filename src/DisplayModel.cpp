@@ -142,25 +142,7 @@ static int LastPageInARowNo(int pageNo, int columns, bool showCover, int pageCou
 
 // must call SetInitialViewSettings() after creation
 DisplayModel::DisplayModel(BaseEngine* engine, EngineType type, ControllerCallback* cb)
-    : Controller(cb),
-      engine(engine),
-      userAnnots(nullptr),
-      userAnnotsModified(false),
-      engineType(type),
-      pdfSync(nullptr),
-      pagesInfo(nullptr),
-      displayMode(DM_AUTOMATIC),
-      startPage(1),
-      zoomReal(INVALID_ZOOM),
-      zoomVirtual(INVALID_ZOOM),
-      rotation(0),
-      dpiFactor(1.0f),
-      displayR2L(false),
-      presentationMode(false),
-      presZoomVirtual(INVALID_ZOOM),
-      presDisplayMode(DM_AUTOMATIC),
-      navHistoryIx(0),
-      dontRenderFlag(false) {
+    : Controller(cb), engine(engine), engineType(type) {
     CrashIf(!engine || engine->PageCount() <= 0);
 
     if (!engine->IsImageCollection()) {
