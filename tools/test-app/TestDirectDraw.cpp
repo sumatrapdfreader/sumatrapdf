@@ -1,5 +1,5 @@
-#include "BaseUtil.h"
-#include "WinUtil.h"
+#include "utils/BaseUtil.h"
+#include "utils/WinUtil.h"
 #include <d2d1.h>
 
 #include "test-app.h"

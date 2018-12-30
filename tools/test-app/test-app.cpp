@@ -1,5 +1,5 @@
 #include "test-app.h"
-#include "BaseUtil.h"
+#include "utils/BaseUtil.h"
 
 // in TestDirectDraw.cpp
 extern int TestDirectDraw(HINSTANCE hInstance, int nCmdShow);

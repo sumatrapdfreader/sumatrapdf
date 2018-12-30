@@ -6,14 +6,14 @@
 // best results for installer payloads. See ../makefile.msvc for a use case.
 
 #define __STDC_LIMIT_MACROS
-#include "BaseUtil.h"
+#include "utils/BaseUtil.h"
 #include <LzmaEnc.h>
 #include <Bra.h>
 #include <zlib.h> // for crc32
-#include "ByteWriter.h"
-#include "CmdLineParser.h"
-#include "FileUtil.h"
-#include "LzmaSimpleArchive.h"
+#include "utils/ByteWriter.h"
+#include "utils/CmdLineParser.h"
+#include "utils/FileUtil.h"
+#include "utils/LzmaSimpleArchive.h"
 
 namespace lzsa {
 

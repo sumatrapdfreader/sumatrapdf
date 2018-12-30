@@ -1,10 +1,9 @@
 ﻿/* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// utils
-#include "BaseUtil.h"
-#include "WinUtil.h"
-// ui
+#include "utils/BaseUtil.h"
+#include "utils/WinUtil.h"
+
 #include "FilterBase.h"
 #include "PdfFilter.h"
 #include "CTeXFilter.h"

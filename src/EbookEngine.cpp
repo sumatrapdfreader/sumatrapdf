@@ -12,7 +12,7 @@
 #include "utils/GdiPlusUtil.h"
 #include "utils/HtmlParserLookup.h"
 #include "utils/HtmlPullParser.h"
-#include "Mui.h"
+#include "mui/Mui.h"
 #include "utils/PalmDbReader.h"
 #include "utils/TrivialHtmlParser.h"
 #include "utils/WinUtil.h"

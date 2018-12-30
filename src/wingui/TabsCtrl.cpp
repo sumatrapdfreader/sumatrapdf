@@ -1,7 +1,7 @@
-#include "BaseUtil.h"
-#include "ScopedWin.h"
-#include "Dpi.h"
-#include "WinUtil.h"
+#include "utils/BaseUtil.h"
+#include "utils/ScopedWin.h"
+#include "utils/Dpi.h"
+#include "utils/WinUtil.h"
 
 #include "TabsCtrl.h"
 

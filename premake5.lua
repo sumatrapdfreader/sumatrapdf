@@ -247,7 +247,7 @@ workspace "SumatraPDF"
     cppdialect "C++17"
     disablewarnings { "4018", "4057", "4189", "4244", "4267", "4295", "4819" }
     disablewarnings { "4701", "4706", "4838"  }
-    includedirs { "src", "src/wingui", "src/mui" }
+    includedirs { "src" }
     includedirs { "ext/synctex", "ext/libdjvu", "ext/CHMLib/src", "ext/zlib", "mupdf/include" }
     engines_files()
     links { "chm" }
@@ -475,7 +475,7 @@ workspace "SumatraPDF"
     language "C++"
     cppdialect "C++17"
     makelzsa_files()
-    includedirs { "src/utils", "ext/zlib", "ext/lzma/C", "ext/unarr" }
+    includedirs { "src", "ext/zlib", "ext/lzma/C", "ext/unarr" }
     links { "unarrlib", "zlib" }
     links { "shlwapi" }
 
@@ -488,7 +488,7 @@ workspace "SumatraPDF"
     filter {"configurations:Debug"}
       defines { "BUILD_TEX_IFILTER", "BUILD_EPUB_IFILTER" }
     filter {}
-    includedirs { "src", "src/utils", "src/wingui", "src/mui", "mupdf/include" }
+    includedirs { "src", "mupdf/include" }
     pdf_filter_files()
     links { "utils", "libmupdf" }
     links { "comctl32", "gdiplus", "shlwapi", "version"  }
@@ -500,7 +500,7 @@ workspace "SumatraPDF"
     cppdialect "C++17"
     disablewarnings { "4838" }
     includedirs {
-      "src", "src/utils", "src/wingui", "src/mui", "mupdf/include",
+      "src", "mupdf/include",
       "ext/libdjvu", "ext/CHMLib/src", "ext/zlib"
     }
     pdf_preview_files()
@@ -524,7 +524,7 @@ workspace "SumatraPDF"
     cppdialect "C++17"
     entrypoint "WinMainCRTStartup"
     flags { "NoManifest" }
-    includedirs { "src", "src/utils", "src/wingui", "src/mui" }
+    includedirs { "src" }
     sumatrapdf_files()
     files {
       "docs/releasenotes.txt",
@@ -548,7 +548,7 @@ workspace "SumatraPDF"
     cppdialect "C++17"
     entrypoint "WinMainCRTStartup"
     flags { "NoManifest" }
-    includedirs { "src", "src/utils", "src/wingui", "src/mui", "mupdf/include" }
+    includedirs { "src", "mupdf/include" }
     sumatrapdf_files()
     files { "src/MuPDF_Exports.cpp" }
     links {
@@ -628,7 +628,7 @@ workspace "SumatraPDF"
     cppdialect "C++17"
     entrypoint "WinMainCRTStartup"
     flags { "NoManifest" }
-    includedirs { "src", "src/utils", "src/wingui" }
+    includedirs { "src" }
     test_app_files()
     links {
       "comctl32", "gdiplus", "msimg32", "shlwapi", "urlmon",

@@ -1,13 +1,13 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-#include "BaseUtil.h"
-#include "ScopedWin.h"
-#include "WinUtil.h"
+#include "utils/BaseUtil.h"
+#include "utils/ScopedWin.h"
+#include "utils/WinUtil.h"
 #include "BaseEngine.h"
 #include "PdfEngine.h"
 #if defined(BUILD_EPUB_PREVIEW) || defined(BUILD_FB2_PREVIEW) || defined(BUILD_MOBI_PREVIEW)
-#include "MiniMui.h"
+#include "mui/MiniMui.h"
 #include "EbookEngine.h"
 #endif
 #if defined(BUILD_CBZ_PREVIEW) || defined(BUILD_CBR_PREVIEW) || defined(BUILD_CB7_PREVIEW) || \
