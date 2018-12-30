@@ -366,7 +366,7 @@ workspace "SumatraPDF"
     language "C++"
     cppdialect "C++17"
     disablewarnings { "4091", "4577" }
-    includedirs { "src/utils" }
+    includedirs { "src" }
     efi_files()
 
 
