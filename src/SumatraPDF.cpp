@@ -2666,8 +2666,7 @@ static void OnMenuOpen(WindowInfo* win) {
         {_TR("FictionBook documents"), L"*.fb2;*.fb2z;*.zfb2;*.fb2.zip", true},
         {_TR("PalmDoc documents"), L"*.pdb;*.prc", true},
         {nullptr, /* multi-page images */ L"*.tif;*.tiff", true},
-        {_TR("Text documents"), L"*.txt;*.log;*.nfo;rfc*.txt;file_id.diz;read.me;*.tcr",
-         gGlobalPrefs->ebookUI.useFixedPageUI},
+        {_TR("Text documents"), L"*.txt;*.log;*.nfo;rfc*.txt;file_id.diz;read.me;*.tcr", true},
     };
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
