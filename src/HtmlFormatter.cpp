@@ -679,11 +679,15 @@ void HtmlFormatter::EmitElasticSpace() {
 
 // return true if we can break a word on a given character during layout
 static bool CanBreakWordOnChar(WCHAR c) {
-    // this is called frequently, so check most common characters first
-    if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')) {
-        return false;
+    // don't break on Chinese and Japan characters
+    // https://github.com/sumatrapdfreader/sumatrapdf/issues/250
+    // https://github.com/sumatrapdfreader/sumatrapdf/pull/1057
+    // There are other  ranges, but far less common
+    // https://stackoverflow.com/questions/1366068/whats-the-complete-range-for-chinese-characters-in-unicode
+    if (c >= 0x2E80 && c <= 0xA4CF) {
+        return true;
     }
-    return true;
+    return false;
 }
 
 // a text run is a string of consecutive text with uniform style
@@ -719,8 +723,8 @@ void HtmlFormatter::EmitTextRun(const char* s, const char* end) {
         size_t lenThatFits = StringLenForWidth(textMeasure, buf, strLen, pageDx - currX);
         // try to prevent a break in the middle of a word
         if (lenThatFits > 0) {
-            size_t lentmp = lenThatFits;
             if (!CanBreakWordOnChar(buf[lenThatFits])) {
+                size_t lentmp = lenThatFits;
                 for (lentmp = lenThatFits; lentmp > 0; lentmp--) {
                     if (CanBreakWordOnChar(buf[lentmp - 1])) {
                         break;
@@ -728,7 +732,7 @@ void HtmlFormatter::EmitTextRun(const char* s, const char* end) {
                 }
                 if (lentmp == 0) {
                     // make a new line if the word need to show in another line
-                    if (currX != 0) {
+                    if (currX != NewLineX()) {
                         FlushCurrLine(false);
                         continue;
                     }
