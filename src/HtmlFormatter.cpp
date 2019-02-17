@@ -679,6 +679,10 @@ void HtmlFormatter::EmitElasticSpace() {
 
 // return true if we can break a word on a given character during layout
 static bool CanBreakWordOnChar(WCHAR c) {
+    // this is called frequently, so check most common characters first
+    //if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')) {
+    //    return false;
+    //}
     // don't break on Chinese and Japan characters
     // https://github.com/sumatrapdfreader/sumatrapdf/issues/250
     // https://github.com/sumatrapdfreader/sumatrapdf/pull/1057
