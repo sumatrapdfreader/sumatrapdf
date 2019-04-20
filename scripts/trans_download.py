@@ -132,7 +132,8 @@ def dump_missing_per_language(strings, strings_dict, dump_strings=False):
     print("\nMissing translations:")
     strs = []
     for (lang, untranslated) in items:
-        strs.append("%5s: %3d" % (lang, len(untranslated)))
+        if len(untranslated) > 0:
+            strs.append("%5s: %3d" % (lang, len(untranslated)))
     per_line = 5
     while len(strs) > 0:
         line_strs = strs[:per_line]

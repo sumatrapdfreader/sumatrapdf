@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-a565f153bdc61c6bed4702aa21eab9fffef73377
+3c15473d45ac498c3b58c157301af22d91163e7a
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -13,6 +13,7 @@ by:Аб праграме
 ca-xv:&Quant a...
 ca:&Quant a...
 cn:关于(&A)...
+co:&Apprupositu
 cy:&Ynghylch...
 cz:&O programu
 de:Über &SumatraPDF
@@ -83,6 +84,7 @@ by:Сапраўдны памер\tCtrl+1
 ca-xv:Mida &real\tCtrl+1
 ca:Mida &real\tCtrl+1
 cn:实际大小(&A)\tCtrl+1
+co:&Dimensione attuale\tCtrl+1
 cy:&Gwir Faint\tCtrl+1
 cz:Skutečná &velikost\tCtrl+1
 de:&Tatsächliche Größe\tStrg+1
@@ -152,6 +154,7 @@ by:П&ашыраныя налады
 ca-xv:Opcions &avançades...
 ca:Opcions &avançades...
 cn:高级选项(&A)...
+co:Ozzioni di l’espertu…
 cy:Dewisiadau &Uwch...
 cz:&Pokročilé možnosti...
 de:&Mehr Optionen…
@@ -214,6 +217,7 @@ by:Усе &абраныя старонкі
 ca-xv:&Totes les pàgines seleccionades
 ca:&Totes les pàgines seleccionades
 cn:所有已选定页面(&A)
+co:&Tutte e pagine selezziunate
 cy:&Pob tudalen â ddewiswyd
 cz:Vše&chny vybrané stránky
 de:&Alle angegebenen Seiten
@@ -279,6 +283,7 @@ by:&Назад\tAlt+Стрэлка налева
 ca-xv:Arrere\tAlt+Fletxa esquerra
 ca:Enrere\tAlt+Left Arrow
 cn:向前翻(&B)\tAlt+左箭头
+co:&Nanzu\tAlt+Fleccia manca
 cy:Nôl\tAlt+Saeth Chwith
 cz:Z&pět\tAlt+Šipka vlevo
 de:&Zurück\tAlt+<-
@@ -344,6 +349,7 @@ by:Выгляд як &Кніга\tCtrl+8
 ca-xv:Visualització de &llibre\tCtrl+8
 ca:Visualització de &llibre\tCtrl+8
 cn:书籍视图(&B)\tCtrl+8
+co:Cum’è un &libru\tCtrl+8
 cy:Golwg &Llyfr\tCtrl+8
 cz:K&niha\tCtrl+8
 de:&Buchansicht\tStrg+8
@@ -407,6 +413,7 @@ by:Зачыніць\tCtrl+W
 ca-xv:&Tanca\tCtrl+W
 ca:&Tanca\tCtrl+W
 cn:关闭(&C)\tCtrl+W
+co:&Chjode\tCtrl+W
 cy:&Cau\tCtrl+W
 cz:&Zavřít\tCtrl+W
 de:&Schließen\tStrg+W
@@ -476,6 +483,7 @@ by:&Капіяваць выбранае
 ca-xv:&Copia la selecció
 ca:&Copia la selecció
 cn:复制选定范围(&C)
+co:Cupià a sele&zzione
 cy:Copïo &Dewis
 cz:&Kopírovat výběr
 de:Auswahl &kopieren
@@ -537,6 +545,7 @@ by:&Капіяваць выбранае\tCtrl+C
 ca-xv:&Copia la selecció\tCtrl+C
 ca:&Copia la selecció\tCtrl+C
 cn:复制选定范围(&C)\tCtrl+C
+co:Cupià a sele&zzione\tCtrl+C
 cy:Copïo'r Dewis\tCtrl+C
 cz:&Kopírovat výběr\tCtrl+C
 de:Auswahl &kopieren\tStrg+C
@@ -602,6 +611,7 @@ by:Больш не пытаць
 ca-xv:&No m'ho tornis a preguntar
 ca:&No ho tornis a preguntar
 cn:不要再问我(&D)
+co:Ùn mi dumandà &più
 cy:&Peidio â gofyn eto
 cz:&Příště se již neptat
 de:Nicht &wieder fragen.
@@ -670,6 +680,7 @@ by:Толькі &цотныя старонкі
 ca-xv:Només les pàgines parells
 ca:Només les pàgines parelles
 cn:仅偶数页(&E)
+co:Solu e pagine &pare
 cy:Tudalennau &eilrif yn unig
 cz:Pouz&e sudé stránky
 de:Nur &gerade Seiten
@@ -731,6 +742,7 @@ by:Па &дзве старонцы\tCtrl+7
 ca-xv:Pàgina &doble\tCtrl+7
 ca:Pàgina &doble\tCtrl+7
 cn:双页模式(&F)\tCtrl+7
+co:Pagina &doppia\tCtrl+7
 cy:&Wynebu\tCtrl+7
 cz:&Dvojstránky\tCtrl+7
 de:&Doppelseite\tStrg+7
@@ -793,6 +805,7 @@ by:Файл
 ca-xv:&Fitxer
 ca:&Fitxer
 cn:文件(&F)
+co:&Schedariu
 cy:&Ffeil
 cz:&Soubor
 de:&Datei
@@ -861,6 +874,7 @@ by:&Узор:
 ca-xv:&Cerca el què:
 ca:&Cerca el text:
 cn:查找(&F):
+co:&Cosa circà :
 cy:&Canfod beth:
 cz:&Najít:
 de:&Suchen nach:
@@ -927,6 +941,7 @@ by:Першая старонка\tHome
 ca-xv:&Primera pàgina\tInici
 ca:&Primera pàgina\tInici
 cn:第一页(&F)\tHome
+co:P&rima pagina\tPrincipiu
 cy:Tudalen Gyntaf\tHome
 cz:První &stránka\tHome
 de:&Erste Seite\tPos1
@@ -994,6 +1009,7 @@ by:Па&дагнаць старонкі да вобласці друку
 ca-xv:Ajusta les pàgines a l'àrea imprimible
 ca:Ajusta les pàgines a l'àrea imprimible
 cn:符合页面以可打印区域(&F)
+co:&Adattà e pagine à l’aghja di stampa
 cy:&Ffitio tudalennau i ardal argraffu
 cz:Přizpůsobit &stránky na tisknutelnou plochu
 de:Seiten in Druckbereich &einpassen
@@ -1056,6 +1072,7 @@ by:Перайсці да
 ca-xv:&Vés a
 ca:&Vés a
 cn:前往(&G)
+co:&Viaghjà
 cy:&Mynd i
 cz:&Přejít
 de:&Gehe zu
@@ -1125,6 +1142,7 @@ by:&Перайсці да старонкі
 ca-xv:&Vés a la pàgina:
 ca:&Vés a la pàgina:
 cn:前往指定页(&G):
+co:&Andà à a pagina :
 cy:&Mynd i dudalen:
 cz:&Přejít na stránku:
 de:&Gehe zu Seite:
@@ -1191,6 +1209,7 @@ by:Дапамога
 ca-xv:&Ajuda
 ca:&Ajuda
 cn:帮助(&H)
+co:Ai&utu
 cy:&Cymorth
 cz:Náp&ověda
 de:&Hilfe
@@ -1261,6 +1280,7 @@ by:Апошняя старонка\tEnd
 ca-xv:Ú&ltima pàgina\tFinal
 ca:Ú&ltima pàgina\tFinal
 cn:最后一页(&L)\tEnd
+co:&Ultima pagina\tFine
 cy:Tudalen Olaf\tEnd
 cz:Pos&lední stránka\tEnd
 de:&Letzte Seite\tEnde
@@ -1328,6 +1348,7 @@ by:&Павелічэнне:
 ca-xv:&Nivell d'augment:
 ca:&Nivell d'augment:
 cn:放大率(&M):
+co:&Dimensione :
 cy:&Chwyddiad:
 cz:&Zvětšení:
 de:&Vergrößerung:
@@ -1392,6 +1413,7 @@ by:&Кіраўніцтва
 ca-xv:&Manual
 ca:&Manual
 cn:手册(&M)
+co:&Manuale inlinea (in inglese)
 cy:&Llawlyfr
 cz:&Manuál
 de:&Handbuch
@@ -1457,6 +1479,7 @@ by:&Улічваць рэгістр
 ca-xv:Respecta les &majúscules i minúscules
 ca:Respecta les &majúscules i minuscules
 cn:匹配大小写(&M)
+co:&Rispettà a cassa
 cy:&Cydweddu maint
 cz:&Rozlišovat velikost písmen
 de:&Groß-/Kleinschreibung beachten
@@ -1521,6 +1544,7 @@ by:Наступная старонка\t->
 ca-xv:Pàgina &següent\tFletxa Dreta
 ca:Pàgina &següent\t->
 cn:下一页(&N)\t右箭头
+co:Pagina &seguente\tFleccia diritta
 cy:Tudalen Nesaf\tSaeth Dde
 cz:Další strá&nka\tŠipka vpravo
 de:&Nächste Seite\t->
@@ -1590,6 +1614,7 @@ by:Нет
 ca-xv:&No
 ca:&No
 cn:否(&N)
+co:I&nnò
 cy:&Na
 cz:&Ne
 de:&Nein
@@ -1655,6 +1680,7 @@ by:Дзякуй, не
 ca-xv:&No, gràcies
 ca:&No, gràcies
 cn:不，谢谢(&N)
+co:&Innò, vi ringraziu
 cy:&Dim diolch
 cz:&Ne, děkuji
 de:&Nein danke
@@ -1718,6 +1744,7 @@ by:Толькі &няцотныя старонкі
 ca-xv:Només les pàgines senars
 ca:Només les pàgines senars
 cn:仅奇数页(&O)
+co:Solu e pagine &anesche
 cy:Tudalennau &odrif yn unig
 cz:&Pouze liché stránky
 de:Nur &ungerade Seiten
@@ -1780,6 +1807,7 @@ by:&Адкрыць Дакумент
 ca-xv:&Obri el document
 ca:&Obre el document
 cn:打开文件(&O)
+co:&Apre u ducumentu
 cy:Agor &Dogfen
 cz:&Otevřít dokument
 de:Ö&ffnen
@@ -1842,6 +1870,7 @@ by:Адчыніць...\tCtrl+O
 ca-xv:&Obre...\tCtrl+O
 ca:&Obre...\tCtrl+O
 cn:打开(&O)...\tCtrl+O
+co:&Apre…\tCtrl+O
 cy:&Agor...\tCtrl+O
 cz:&Otevřít...\tCtrl+O
 de:Ö&ffnen…\tStrg+O
@@ -1911,6 +1940,7 @@ by:&Налады
 ca-xv:&Opcions
 ca:&Opcions
 cn:选项(&O)
+co:&Ozzioni
 cy:&Dewisiadau
 cz:&Možnosti
 de:&Optionen
@@ -1969,6 +1999,7 @@ by:&Параметры...
 ca-xv:&Opcions...
 ca:&Opcions...
 cn:选项(&O)...
+co:&Ozzioni…
 cy:&Dewisiadau...
 cz:&Možnosti...
 de:&Optionen…
@@ -2031,6 +2062,7 @@ by:&Пароль:
 ca-xv:&Contrasenya:
 ca:&Contrasenya:
 cn:密码(&P)
+co:&Parolla d’entrata :
 cy:&Cyfrinair:
 cz:&Heslo:
 de:&Passwort:
@@ -2094,6 +2126,7 @@ by:&Замацаваць Дакумент
 ca-xv:&Marca el document
 ca:&Marca el document
 cn:钉选(&P)
+co:&Spirlà u ducumentu
 cy:&Pinio Dogfen
 cz:&Připnout dokument
 de:Auf dieser Seite &behalten
@@ -2155,6 +2188,7 @@ by:Папярэдняя старонка\t<-
 ca-xv:Pàgina &anterior\t<-
 ca:Pàgina &anterior\t<-
 cn:上一页(&P)\t左箭头
+co:Pagina &precedente\tFleccia manca
 cy:Tudalen &Flaenorol\tSaeth Chwith
 cz:&Předchozí stránka\tŠipka vlevo
 de:&Vorherige Seite\t<-
@@ -2223,6 +2257,7 @@ by:Д&рукаваць...
 ca-xv:Im&primeix...
 ca:Im&primeix...
 cn:打印(&P)...
+co:&Stampà…
 cy:&Argraffu...
 cz:&Tisk...
 de:&Drucken…
@@ -2284,6 +2319,7 @@ by:&Друкаваць... (забаронена)
 ca-xv:&Imprimeix... (denegat)
 ca:&Imprimeix... (denegat)
 cn:打印(&P)... (已中断)
+co:&Stampà…(ricusatu)
 cy:&Argraffu... (gwrthodwyd)
 cz:&Tisk... (odepřen)
 de:&Drucken… (verweigert)
@@ -2347,6 +2383,7 @@ by:Друкаваць...\tCtrl+P
 ca-xv:&Imprimeix...\tCtrl+P
 ca:&Imprimeix...\tCtrl+P
 cn:打印(&P)...\tCtrl+P
+co:&Stampà…\tCtrl+P
 cy:&Argraffu...\tCtrl+P
 cz:&Tisk...\tCtrl+P
 de:&Drucken…\tStrg+P
@@ -2415,6 +2452,7 @@ by:&Запомніць пароль для гэтага дакументу
 ca-xv:&Recorda la contrasenya per a aquest document
 ca:&Recorda la contrasenya per a aquest document
 cn:记住本文档的密码(&R)
+co:Arricurdassi di a &parolla d’entrata per stu ducumentu
 cy:&Cofio cyfrinair y ddogfen
 cz:P&amatovat si heslo tohoto dokumentu
 de:Passwort für dieses Dokument &merken
@@ -2475,6 +2513,7 @@ by:Запомніць гэтыя параметры для &кожнага да�
 ca-xv:Conserva estes &preferències per a cada document
 ca:Conserva aquestes &preferències per a cada document
 cn:为每一个文档记住这些设置(&R)
+co:Arricurdassi ste &preferenze per ogni ducumentu
 cy:C&ofio'r gosodiadau hyn ar gyfer pob dogfen
 cz:&Pamatovat si tato nastavení pro každý dokument
 de:Ansicht-&Einstellungen für jedes Dokument einzeln merken
@@ -2537,6 +2576,7 @@ by:Вы&даліць Дакумент
 ca-xv:&Suprimeix el document
 ca:&Suprimeix el document
 cn:删除文件(&R)
+co:&Caccià u ducumentu
 cy:&Tynnu Dogfen
 cz:Odeb&rat dokument
 de:Von dieser Seite &entfernen
@@ -2596,6 +2636,7 @@ by:&Захаваць як...
 ca-xv:Anomena i al&ça...
 ca:Anomena i de&sa...
 cn:另存为(&A)...
+co:Arregistrà cù u &nome…
 cy:&Cadw fel...
 cz:&Uložit jako...
 de:&Speichern unter…
@@ -2659,6 +2700,7 @@ by:Захаваць як...\tCtrl+S
 ca-xv:Anomena i al&ça...\tCtrl+S
 ca:Anomena i de&sa...\tCtrl+S
 cn:另存为(&A)...\tCtrl+A
+co:Arregistrà cù u &nome…\tCtrl+S
 cy:&Cadw fel...\tCtrl+S
 cz:&Uložit jako...\tCtrl+S
 de:Speichern &unter…\tStrg+S
@@ -2728,6 +2770,7 @@ by:Налады
 ca-xv:&Preferències
 ca:&Preferències
 cn:设置(&S)
+co:&Preferenze
 cy:&Gosodiadau
 cz:&Nastavení
 de:&Einstellungen
@@ -2790,6 +2833,7 @@ by:&Сціскаць старонкі да вобласці друку (калі
 ca-xv:&Reduïu les pàgines a l'àrea imprimible (si és necessari)
 ca:&Reduïu les pàgines a l'àrea imprimible (si és necessari)
 cn:缩小页面到可打印区域 (如果需要) (&S)
+co:&Strittisce e pagine à l’aghja di stampa (s’è bisognu)
 cy:C&rebachu tudalennau i'r ardal argraffu (os oes angen)
 cz:&Zmenšit stránky na tisknutelnou plochu (v případě potřeby)
 de:Seiten auf Druckbereich &verkleinern (falls nötig)
@@ -2850,6 +2894,7 @@ by:&Адна старонка\tCtrl+6
 ca-xv:Pàgina ú&nica\tCtrl+6
 ca:Pàgina ú&nica\tCtrl+6
 cn:单页模式(&S)\tCtrl+6
+co:Pagina &sola\tCtrl+6
 cy:Tudalen &Unigol\tCtrl+6
 cz:&Jedna stránka\tCtrl+6
 de:&Einzelne Seite\tStrg+6
@@ -2911,6 +2956,7 @@ by:Прапусціць гэту версію.
 ca-xv:&Omet aquesta versió
 ca:&Omet aquesta versió
 cn:跳过此版本(&S)
+co:&Tralascià sta versione
 cy:&Hepgor y fersiwn yma.
 cz:&Přeskočit tuto verzi
 de:&Diese Version überspringen.
@@ -2976,6 +3022,7 @@ by:&Скура
 ca-xv:&Tema
 ca:&Tema
 cn:主题(&T)
+co:&Temu
 cy:&Thema
 cz:&Téma
 de:Anwendungs &Stil
@@ -3022,6 +3069,7 @@ by:&Выкарыстоўваць звычайны памер старонкі
 ca-xv:&Usa la mida de pàgina original
 ca:&Usa la mida de pàgina original
 cn:使用原始页面大小(&U)
+co:&Impiegà e dimensioni di pagina d’urigine
 cy:&Defnyddio maint gwreiddiol y dudalen
 cz:Po&užít původní velikost stránky
 de:Seitengröße &nicht anpassen
@@ -3084,6 +3132,7 @@ by:Выгляд
 ca-xv:&Visualitza
 ca:&Visualitza
 cn:视图(&V)
+co:&Affissà
 cy:&Gweld
 cz:&Zobrazit
 de:&Ansicht
@@ -3151,6 +3200,7 @@ by:&Вокны
 ca-xv:&Finestra
 ca:&Finestra
 cn:窗口(&W)
+co:Fin&estra
 cy:&Ffenestr
 cz:&Okno
 de:Fe&nster
@@ -3208,6 +3258,7 @@ by:Да
 ca-xv:&Sí
 ca:&Sí
 cn:是(&Y)
+co:&Iè
 cy:&Iawn
 cz:&Ano
 de:&Ja
@@ -3273,6 +3324,7 @@ by:Ма&штаб
 ca-xv:&Escalat
 ca:&Escalat
 cn:缩放(&Z)
+co:&Ingrandamentu
 cy:&Chwyddo
 cz:Z&většení
 de:&Zoom
@@ -3340,6 +3392,7 @@ by:(з %d)
 ca-xv:(de %d)
 ca:(de %d)
 cn:(%d 页中的)
+co:(di %d)
 cy:(o %d)
 cz:(z %d)
 de:(von %d)
@@ -3402,6 +3455,7 @@ by:(старонка %s)
 ca-xv:(pàgina %s)
 ca:(pàgina %s)
 cn:(第 %s 页)
+co:(pagina %s)
 cy:(tudalen %s)
 cz:(stránka %s)
 de:(Seite %s)
@@ -3463,6 +3517,7 @@ by:Аб SumatraPDF
 ca-xv:Quant al SumatraPDF
 ca:Quant al SumatraPDF
 cn:关于 SumatraPDF
+co:Apprupositu di SumatraPDF
 cy:Ynghylch SumatraPDF
 cz:O programu SumatraPDF
 de:Über SumatraPDF
@@ -3532,6 +3587,7 @@ by:Дадаць у Лепшыя Закладкі
 ca-xv:Afegix un preferit
 ca:Afegeix un preferit
 cn:添加到收藏夹(&A)
+co:Aghjunghje à i favuriti
 cy:Ychwanegu Ffefryn
 cz:Přidat oblíbenou položku
 de:Favoriten hinzufügen
@@ -3598,6 +3654,7 @@ by:Дадаць старонку %s у лепшыя закладкі
 ca-xv:Afegix la pàgina %s als preferits
 ca:Afegeix la pàgina %s als preferits
 cn:添加第 %s 页到收藏夹
+co:Aghjunghje a pagina %s à i favuriti
 cy:Ychwanegu tudalen %s i'r Ffefrynnau
 cz:Přidat stránku %s k oblíbeným...
 de:Seite %s hinzufügen…
@@ -3661,6 +3718,7 @@ by:Дадаць старонку %s у лепшыя закладкі з (кал�
 ca-xv:Afegix la pàgina %s als preferits amb el nom (opcional):
 ca:Afegeix la pàgina %s als preferits amb el nom (opcional):
 cn:以 (可选) 名称添加第 %s 页到收藏夹:
+co:Aghjunghje a pagina %s à i favuriti cù u nome (ozzionale) :
 cy:Ychwanegu tudalen %s i'r ffefrynnau gyda'r enw (dewisiol):
 cz:Přidat stránku %s k oblíbeným s (volitelným) názvem:
 de:Bezeichnung des Favoriten für Seite %s (optional):
@@ -3724,6 +3782,7 @@ by:Дадаць у лепшыя закладкі
 ca-xv:Afegix als preferits
 ca:Afegeix als preferits
 cn:添加到收藏夹
+co:Aghjunghje à i favuriti
 cy:Ychwanegu i'r ffefrynnau
 cz:Přidat k oblíbeným
 de:Zu Favoriten hinzufügen…
@@ -3789,6 +3848,7 @@ by:Дадаткова
 ca-xv:Avançats
 ca:Avançats
 cn:高级
+co:Espertu
 cy:Uwch
 cz:Upřesnit
 de:Weiteres
@@ -3855,6 +3915,7 @@ by:Усе файлы
 ca-xv:Tots els fitxers
 ca:Tots els fitxers
 cn:所有文件
+co:Tutti i schedarii
 cy:Pob ffeil
 cz:Všechny soubory
 de:Alle Dateien
@@ -3922,6 +3983,7 @@ by:Усе падтрымліваемыя дакументы
 ca-xv:Tots els documents suportats
 ca:Tots els documents suportats
 cn:所有支持的文件
+co:Tutti i ducumenti accettati
 cy:Pob dogfen sy'n cael ei chynnal
 cz:Všechny podporované dokumenty
 de:Alle unterstützten Dokumente
@@ -3986,6 +4048,7 @@ by:Прыкладанне:
 ca-xv:Programa:
 ca:Programa:
 cn:应用程序:
+co:Appiecazione :
 cy:Rhaglen:
 cz:Aplikace:
 de:Anwendung:
@@ -4052,6 +4115,7 @@ by:Вы сапраўды ўпэўнены, что трэба знішчыць Su
 ca-xv:Esteu segur de voler desinstal·lar el SumatraPDF?
 ca:Segur que voleu desinstal·lar el SumatraPDF?
 cn:你确实要卸载 SumatraPDF 吗？
+co:Site sicuru di vulè disinstallà SumatraPDF ?
 cy:Ydych chi'n siŵr eich bod am ddadosod SumatraPDF
 cz:Opravdu chcete odinstalovat SumatraPDF?
 de:Möchten Sie SumatraPDF wirklich deinstallieren?
@@ -4114,6 +4178,7 @@ by:Асацыяваць з PDF-файламі?
 ca-xv:Voleu associar-lo amb els fitxers PDF?
 ca:Voleu associar-lo amb els fitxers PDF?
 cn:设置 PDF 文件关联吗?
+co:Assucià cù schedarii PDF ?
 cy:Cysylltu gyda ffeiliau PDF?
 cz:Přidružit k PDF souborům?
 de:Mit PDF-Dateien verknüpfen?
@@ -4183,6 +4248,7 @@ by:Далучана: %s
 ca-xv:Adjunt: %s
 ca:Adjunt: %s
 cn:附件: %s
+co:Schedariu liatu : %s
 cy:Atodiad: %s
 cz:Příloha: %s
 de:Anhang: %s
@@ -4249,6 +4315,7 @@ by:Аўтар
 ca-xv:Autor:
 ca:Autor:
 cn:作者:
+co:Autore :
 cy:Awdur:
 cz:Autor:
 de:Autor:
@@ -4317,6 +4384,7 @@ by:Аўтаматычна
 ca-xv:Automàtic
 ca:Automàtic
 cn:自动
+co:Autumaticu
 cy:Awtomatig
 cz:Automaticky
 de:Automatisch
@@ -4383,6 +4451,7 @@ by:&Аўтаматычная праверка абнаўленняў
 ca-xv:&Comprova les actualitzacions automàticament
 ca:&Comprova les actualitzacions automàticament
 cn:自动检查更新(&U)
+co:Cuntrollà autumaticamente i &rinnovi
 cy:Gwirio'n awtomatig am &ddiweddariadau
 cz:&Automaticky kontrolovat aktualizace
 de:&Automatisch nach Updates suchen
@@ -4449,6 +4518,7 @@ by:Выгляд як кніга
 ca-xv:Visualització de llibre
 ca:Visualització de llibre
 cn:书籍视图
+co:Cum’è un libru
 cy:Golwg Llyfr
 cz:Kniha
 de:Buchansicht
@@ -4516,6 +4586,7 @@ by:Закладкі\tF12
 ca-xv:&Marcadors\tF12
 ca:&Marcadors\tF12
 cn:书签(&M)...\tF12
+co:&Indette\tF12
 cy:Nodau Tudalen\tF12
 cz:Zál&ožky\tF12
 de:Lese&zeichen\tF12
@@ -4584,6 +4655,7 @@ by:Спасылкі закладак
 ca-xv:Dreceres de marcadors
 ca:Dreceres de marcadors
 cn:书签快捷方式
+co:Accurtatoghji di l’indette
 cy:Llwybrau Byr Nodau Tudalen
 cz:Zástupce záložky
 de:Lesezeichen-Verknüpfungen
@@ -4646,6 +4718,7 @@ by:Спасылак закладкі да старонкі %s з %s
 ca-xv:Drecera del marcador a la pàgina %s de %s
 ca:Drecera del marcador a la pàgina %s de %s
 cn:书签快捷方式指向第 %s 页 (文件 %s)
+co:Accurtatoghju di l’indetta di a pagina %s di %s
 cy:Llwybr byr nod tudalen i dudalen %s o %s
 cz:Zástupce záložky na straně %s souboru %s
 de:Lesezeichen-Verknüpfung zu Seite %s von %s
@@ -4709,6 +4782,7 @@ by:Закладкі
 ca-xv:Marcadors
 ca:Marcadors
 cn:书签
+co:Indette
 cy:Nodau Tudalen
 cz:Záložky
 de:Lesezeichen
@@ -4773,6 +4847,7 @@ by:Байтаў
 ca-xv:Bytes
 ca:Bytes
 cn:字节
+co:Ottetti
 cy:Beit
 cz:Bajtů
 de:Byte
@@ -4840,6 +4915,7 @@ by:Дакумент CHM
 ca-xv:Documents CHM
 ca:Documents CHM
 cn:CHM 文档
+co:Ducumenti d’aiutu CHM
 cy:Dogfennau CHM
 cz:Dokumenty CHM
 de:CHM Hilfe-Dateien
@@ -4904,6 +4980,7 @@ by:Няма злучэння з інтэрнэтам (памылка %#x).
 ca-xv:No es pot connectar a internet (error %#x).
 ca:No es pot connectar a internet (error %#x).
 cn:无法连接到互联网 (错误：%#x)。
+co:Ùn pò micca cunnettassi à Internet (sbagliu %#x).
 cy:Methu cysylltu â'r Rhyngrwyd (gwall %#x).
 cz:Nelze se připojit k Internetu (chyba %#x).
 de:Keine Verbindung zum Internet möglich (Fehler %#x).
@@ -4968,6 +5045,7 @@ by:Адмена
 ca-xv:Cancel·la
 ca:Cancel·la
 cn:取消(&C)
+co:Abbandunà
 cy:Diddymu
 cz:Zrušit
 de:Abbrechen
@@ -5035,6 +5113,7 @@ by:Не атрымалася раздрукаваць гэты файл
 ca-xv:No es pot imprimir el fitxer
 ca:No es pot imprimir el fitxer
 cn:无法打印此文件
+co:Ùn pò micca stampà stu schedariu
 cy:Methu argraffu'r ffeil
 cz:Tento soubor nelze vytisknout
 de:Datei kann nicht gedruckt werden
@@ -5101,6 +5180,7 @@ by:Немагчыма здзейсніць зваротны пошук. Калі
 ca-xv:No es pot iniciar l'ordre de cerca inversa. Comproveu la línia de comandes a les preferències.
 ca:No es pot iniciar l'ordre de cerca inversa. Comproveu la línia d'ordres a les preferències.
 cn:无法进行逆向搜索。请检查设置数值里的命令栏。
+co:Ùn pò micca lancià a cumanda di ricerca à l’arritrosa. Ci vole à verificà a linea di cumanda in e preferenze.
 cy:Methu cychwyn gorchymyn chwilio gwrthdro. Gwiriwch y linell orchymyn yn y gosodiadau
 cz:Příkaz inverzní hledání nelze spustit. Zkontrolujte nastavení příkazového řádku.
 de:Fehler beim Ausführen des Befehls für die Inverssuche. Bitte überprüfen Sie die Einstellung.
@@ -5166,6 +5246,7 @@ by:Змяніць мову (Change Language)
 ca-xv:Canvia la llengua (Change Language)
 ca:Canvia la llengua (Change Language)
 cn:更改语言 (Change Language)
+co:Cambià di lingua (Change Language)
 cy:Newid Iaith (Change Language)
 cz:Změnit jazyk... (Change Language)
 de:Sprache ändern (Change Language)
@@ -5236,6 +5317,7 @@ by:Праверыць наяўнасць новай версіі
 ca-xv:&Comprova si hi ha una versió nova
 ca:&Comprova si hi ha una versió nova
 cn:检查是否有新版本(&U)
+co:Cuntrollà e nove &versioni
 cy:Gwirio am &Ddiweddariad
 cz:&Zkontrolovat aktualizace
 de:Nach &neuer Version suchen
@@ -5303,6 +5385,7 @@ by:Зачынiць
 ca-xv:Tanca
 ca:Tanca
 cn:关闭
+co:Chjode
 cy:Cau
 cz:Zavřít
 de:Schließen
@@ -5367,6 +5450,7 @@ by:Комікс
 ca-xv:Llibres de còmic
 ca:Llibres de còmic
 cn:漫画书
+co:Libri comichi
 cy:Llyfrau Comig
 cz:Komiksy
 de:Comicbücher
@@ -5429,6 +5513,7 @@ by:Сумяшчальнаць
 ca-xv:Compatibilitat
 ca:Compatibilitat
 cn:兼容性
+co:Cumpatibilità
 cy:Cydnawsedd
 cz:Kompatibilita
 de:Kompatibilität
@@ -5493,6 +5578,7 @@ by:Працягла
 ca-xv:Contínua
 ca:Contínua
 cn:连续页面
+co:Vista in cuntinuu
 cy:Didor
 cz:Jedna stránka průběžně
 de:Fortlaufend
@@ -5562,6 +5648,7 @@ by:Выгляд як бесперапынная кніга
 ca-xv:Visualització contínua de llibre
 ca:Visualització contínua de llibre
 cn:连续书籍视图
+co:Vista in cuntinuu, cum’è un libru
 cy:Golwg Llyfr Didor
 cz:Kniha průběžně
 de:Fortlaufende Buchansicht
@@ -5628,6 +5715,7 @@ by:Працягла дзьве старонкі
 ca-xv:Pàgina doble contínua
 ca:Pàgina doble contínua
 cn:连续对页模式
+co:Vista in cuntinuu, pagina doppia
 cy:Wynebu'n Ddidor
 cz:Dvojstránky průběžně
 de:Fortlaufende Doppelseiten
@@ -5697,6 +5785,7 @@ by:Дапамагчы з перакладам
 ca-xv:Contribuïu en la traducció
 ca:Contribuïu en la traducció
 cn:提供翻译
+co:Cuntribuisce à a traduzzione
 cy:Cyfrannu Cyfieithiad.
 cz:Zaslat překlad
 de:Übersetzung beisteuern
@@ -5765,6 +5854,7 @@ by:Кап&іяваць Малюнак
 ca-xv:Copia la &imatge
 ca:Copia la &imatge
 cn:复制图片(&I)
+co:Cupià a &fiura
 cy:Copïo &Delwedd
 cz:Kopírovat &obrázek
 de:&Bild kopieren
@@ -5828,6 +5918,7 @@ by:Капіяваць адрас &спасылкі
 ca-xv:Copia l'adreça de l'enllaç
 ca:Copia l'adreça de l'enllaç
 cn:复制链接地址(&L)
+co:Cupià l’&indirizzu di a leia
 cy:Copïo &Dolen Cyfeiriad
 cz:Kopírovat &adresu odkazu
 de:Adresse des &Links kopieren
@@ -5889,6 +5980,7 @@ by:Капіяваць Ка&ментар
 ca-xv:Copia el co&mentari
 ca:Copia el co&mentari
 cn:复制注释(&M)
+co:Cupià u cu&mmentu
 cy:Copïo &Sylw
 cz:Kopírovat ko&mentář
 de:K&ommentar kopieren
@@ -5951,6 +6043,7 @@ by:Тэкст забаронена капіяваць (капіяваць тол
 ca-xv:No es pot copiar el text (només es copia com a imatge)
 ca:No es pot copiar el text (només es copia com a imatge)
 cn:复制文本失败 (只能复制为图片)
+co:A copia di testu hè stata ricusata (solu una copia cum’è fiura)
 cy:Copïo testun wedi ei atal (copïo fel delwedd yn unig)
 cz:Kopírování textu bylo odepřeno (zkopírováno jako obraz)
 de:Text kopieren verweigert (nur als Bild kopiert)
@@ -6015,6 +6108,7 @@ by:Аўтарския правы:
 ca-xv:Copyright:
 ca:Copyright:
 cn:版权:
+co:Diritti di copia :
 cy:Hawlfraint
 cz:Autorská práva:
 de:Copyright:
@@ -6078,6 +6172,7 @@ by:Не атрымалася адкрыць Налады друку
 ca-xv:No es poden obtindre les propietats de la impressora
 ca:No es poden obtenir les propietats de la impressora
 cn:无法获取打印机属性
+co:Impussibule d’ottene e pruprietà di a stampetta
 cy:Methu canfod priodweddau Argraffydd
 cz:Nelze získat vlastnosti tiskárny
 de:Konnte Druckereigenschaften nicht bestimmen
@@ -6140,6 +6235,7 @@ by:Немагчыма стварыць часовы каталог
 ca-xv:No es pot crear el directori temporal
 ca:No es pot crear el directori temporal
 cn:无法创建临时目录
+co:Impussibule di creà un cartulare timpurariu
 cy:Methu creu cyfeiriadur dros dro
 cz:Nepodařilo se vytvořit dočasný adresář
 de:Konnte das Temporärverzeichnis nicht erstellen
@@ -6200,6 +6296,7 @@ by:Немагчыма стварыць каталог для ўсталёўкі
 ca-xv:No es pot crear el directori d'instal·lació
 ca:No es pot crear el directori d'instal·lació
 cn:无法创建安装文件夹
+co:Impussibule di creà u cartulare d’installazione
 cy:Methu creu'r cyfeiriadur gosod
 cz:Nepodařilo se vytvořit adresář pro instalaci
 de:Konnte das Installationsverzeichnis nicht erstellen
@@ -6260,6 +6357,7 @@ by:Немагчыма ініцыіраваць друкарку
 ca-xv:No es pot inicialitzar la impressora
 ca:No es pot inicialitzar la impressora
 cn:不能初始化打印机
+co:Impussibule d’inizià a stampetta
 cy:Methu cychwyn yr argraffydd
 cz:Tiskárnu nelze inicializovat
 de:Der Drucker konnte nicht initialisiert werden
@@ -6324,6 +6422,7 @@ by:Немагчыма усталяваць перадпрагляд PDF
 ca-xv:No es pot instal·lar el visor ràpid de PDF
 ca:No es pot instal·lar el visor ràpid de PDF
 cn:无法安装 PDF 预览器
+co:Impussibule d’installà u previsualizatore di PDF
 cy:Mehu gosod rhagolygwr PDF
 cz:Nelze nainstalovat PDF prohlížeč
 de:Konnte die PDF Vorschau nicht installieren
@@ -6383,6 +6482,7 @@ by:Немагчыма ўсталяваць пошукавы фільтр PDF
 ca-xv:No es pot instal·lar el filtre de cerca PDF
 ca:No es pot instal·lar el filtre de cerca PDF
 cn:无法安装 PDF 搜索过滤器
+co:Impussibule d’installà u filtru di ricerca di PDF
 cy:Methu gosod hidl chwilio PDF
 cz:Nelze nainstalovat vyhledávací PDF filtr
 de:Konnte den PDF Suchfilter nicht installieren
@@ -6442,6 +6542,7 @@ by:Немагчыма знайсці часовы каталог
 ca-xv:No es pot obtindre el directori temporal
 ca:No es pot obtenir el directori temporal
 cn:无法获得暂存文件夹
+co:Impussibule d’ottene u cartulare timpurariu
 cy:Methu canfod cyfeiriadur dros dro
 cz:Dočasný adresář není dostupný
 de:Konnte das temporäre Verzeichnis nicht finden
@@ -6501,6 +6602,7 @@ by:Немагчыма знішчыць каталог для ўсталёўкі
 ca-xv:No es pot suprimir el directori d'instal·lació
 ca:No es pot suprimir el directori d'instal·lació
 cn:无法移除安装目录
+co:Impussibule di caccià u cartulare d’installazione
 cy:Methu tynnu'r cyfeiriadur gosod
 cz:Nepodařilo se odstranit adresář pro instalaci
 de:Konnte das Installationsverzeichnis nicht löschen
@@ -6560,6 +6662,7 @@ by:Немагчыма знішчыць спасылак
 ca-xv:No es pot suprimir la drecera
 ca:No es pot suprimir la drecera
 cn:无法移除快捷方式
+co:Impussibule di caccià l’accurtatoghju
 cy:Methu tynnu'r llwybr byr
 cz:Nepodařilo se odstranit zástupce
 de:Konnte die Verknüpfung nicht löschen
@@ -6619,6 +6722,7 @@ by:Не атрымаўся сфармаваць малюнак старонкі
 ca-xv:No es pot representar la pàgina
 ca:No es pot representar la pàgina
 cn:无法渲染该页面
+co:Impussibule di presentà a pagina
 cy:Methu cyflwyno'r dudalen
 cz:Stránku nelze vykreslit
 de:Diese Seite kann leider nicht angezeigt werden
@@ -6682,6 +6786,7 @@ by:Немагчыма знішчыць перадпрагляд PDF
 ca-xv:No es pot desinstal·lar el visor ràpid PDF
 ca:No es pot desinstal·lar el visor ràpid PDF
 cn:无法卸载 PDF 预览器
+co:Impussibule di disinstallà u previsualizatore di PDF
 cy:Methu dadosod rhagolygwr PDF
 cz:Nelze odinstalovat PDF prohlížeč
 de:Konnte die PDF Vorschau nicht deinstallieren
@@ -6740,6 +6845,7 @@ by:Немагчыма знішчыць пошукавы фільтр PDF
 ca-xv:No es pot desinstal·lar el filtre de cerca PDF
 ca:No es pot desinstal·lar el filtre de cerca PDF
 cn:无法卸载 PDF 搜索过滤器
+co:Impussibule di disinstallà u filtru di ricerca di PDF
 cy:Methu dadosod hidl chwilio PDF
 cz:Nelze odinstalovavat vyhledávací PDF filtr
 de:Konnte den PDF Suchfilter nicht deinstallieren
@@ -6799,6 +6905,7 @@ by:Немагчыма знішчыць дадатак браўзера
 ca-xv:No es pot desinstal·lar el connector de navegador
 ca:No es pot desinstal·lar el connector de navegador
 cn:无法卸载浏览器插件
+co:Impussibule di disinstallà l’estensione di u navigatore
 cy:Methu dadosod ategyn porwr
 cz:Nepodařilo se odinstalovat rozšíření z prohlížeče
 de:Konnte das Browser-Plugin nicht deinstallieren
@@ -6858,6 +6965,7 @@ by:Немагчыма запісаць %s на дыск
 ca-xv:No es pot escriure %s al disc
 ca:No es pot escriure %s al disc
 cn:无法写入 %s 到磁盘
+co:Impussibule di scrive %s nant’à u discu
 cy:Methu ysgrifennu %s i ddisg
 cz:Nelze zapsat %s na disk
 de:Konnte %s nicht kopieren
@@ -6918,6 +7026,7 @@ by:Створаны:
 ca-xv:Creat:
 ca:Creat:
 cn:创建时间:
+co:Creatu :
 cy:Crëwyd:
 cz:Vytvořeno:
 de:Erstellt am:
@@ -6985,6 +7094,7 @@ by:Бягучы файл
 ca-xv:Fitxer actual
 ca:Fitxer actual
 cn:当前文件
+co:Schedariu attuale
 cy:Ffeil cyfredol
 cz:Aktuální soubor
 de:Aktuelle Datei
@@ -7049,6 +7159,7 @@ by:Пазіцыя курсора:
 ca-xv:Posició del cursor:
 ca:Posició del cursor
 cn:光标位置:
+co:Pusizione di u cursore :
 cy:Safle'r cyrchwr:
 cz:Pozice kurzoru:
 de:Zeigerposition:
@@ -7108,6 +7219,7 @@ by:Налады &маштабу...\tCtrl+Y
 ca-xv:Zoom &predeterminat..\tCtrl+Y
 ca:Escala &predeterminada…\tCtrl+Y
 cn:自定义缩放(&Z)...\tCtrl+Y
+co:&Ingrandamentu persunalizatu…\tCtrl+Y
 cy:&Addasu Chwyddo...\tCtrl+Y
 cz:Vlastní &měřítko...\tCtrl+Y
 de:&Zoomfaktor…\tStrg+Y
@@ -7171,6 +7283,7 @@ by:Цёмны
 ca-xv:Fosc
 ca:Fosc
 cn:暗(&D)
+co:Oscuru
 cy:Tywyll
 cz:Tmavý
 de:Dunkel
@@ -7219,6 +7332,7 @@ by:Больш цёмны
 ca-xv:Més fosc
 ca:Molt fosc
 cn:更暗(&R)
+co:Più oscuru
 cy:Tywyllach
 cz:Tmavší
 de:Dunkler
@@ -7269,6 +7383,7 @@ by:&Кампаноўка па змаўчанні
 ca-xv:&Visualització predeterminada:
 ca:&Visualització predeterminada:
 cn:默认布局(&L):
+co:&Accunciamentu predefinitu :
 cy:&Cynllun Rhagosodedig:
 cz:Výchozí &uspořádání:
 de:&Standardlayout:
@@ -7333,6 +7448,7 @@ by:&Маштаб па змаўчанні
 ca-xv:&Zoom predeterminat
 ca:&Zoom predeterminat
 cn:默认缩放(&Z):
+co:&Ingrandamentu predefinitu :
 cy:C&hwyddo Rhagosodedig:
 cz:Výchozí &zvětšení:
 de:Standard&vergrößerung:
@@ -7397,6 +7513,7 @@ by:У мабільным рэжыме змяніць PDF-в'юер нельга
 ca-xv:No es pot canviar el lector de PDF predeterminat en mode portable.
 ca:No es pot canviar el lector de PDF predeterminat en mode portable.
 cn:便携模式不能改变默认 PDF 阅读器
+co:U lettore PDF predefinitu ùn pò micca esse cambiatu in modu purtabule
 cy:Nid oes modd newid y prif ddarllenydd yn y modd cludadwy
 cz:V přenosném režimu nelze měnit výchozí PDF prohlížeč
 de:Standardanwendung im portablen Modus nicht veränderbar
@@ -7461,6 +7578,7 @@ by:Адмоўлена ў дазволе:
 ca-xv:Permisos denegats:
 ca:Permisos denegats:
 cn:权限不足:
+co:Permessi ricusati :
 cy:Gwrthodwyd Caniatâd:
 cz:Odepřená oprávnění:
 de:Einschränkungen:
@@ -7524,6 +7642,7 @@ by:Дакумент DjVu
 ca-xv:Documents djvu
 ca:Documents DjVu
 cn:DjVu 文件
+co:Ducumenti DjVu
 cy:Dogfennau DjVu
 cz:Dokumenty DjVu
 de:DjVu-Dokumente
@@ -7587,6 +7706,7 @@ by:Уласцівасці дакумента
 ca-xv:Propietats del document
 ca:Propietats del document
 cn:文档属性
+co:Pruprietà di u ducumentu
 cy:Priodweddau Dogfen
 cz:Vlastnosti dokumentu
 de:Dokumenteigenschaften
@@ -7650,6 +7770,7 @@ by:Загрузка
 ca-xv:Baixa
 ca:Baixa
 cn:下载
+co:Scaricà
 cy:Llwytho i Lawr
 cz:Stáhnout
 de:Herunterladen
@@ -7715,6 +7836,7 @@ by:Выйсце\tCtrl+Q
 ca-xv:I&x\tCtrl+Q
 ca:S&urt\tCtrl+Q
 cn:退出(&X)\tCtrl+Q
+co:&Esce\tCtrl+Q
 cy:&Gadael\tCtrl+Q
 cz:&Konec\tCtrl+Q
 de:&Beenden\tStrg+Q
@@ -7784,6 +7906,7 @@ by:EPUB ebooks
 ca-xv:Documents EPUB
 ca:Documents EPUB
 cn:EPUB 文档
+co:Libri elettronichi EPUB
 cy:eLyfrau EPUB
 cz:Dokumenty EPUB
 de:EPUB E-Bücher
@@ -7849,6 +7972,7 @@ by:Увядзіце пароль
 ca-xv:Introduïu la contrasenya
 ca:Introduïu la contrasenya
 cn:请输入密码
+co:Scrivite a parolla d’entrata
 cy:Rhoi cyfrinair
 cz:Zadejte heslo
 de:Bitte Passwort eingeben
@@ -7919,6 +8043,7 @@ by:Увядзіце пароль для %s
 ca-xv:Introduïu la constrasenya per a %s
 ca:Introduïu la constrasenya per a %s
 cn:请输入 %s 的密码
+co:Scrivite a parolla d’entrata per %s
 cy:Rhoi cyfrinair ar gyfer %s
 cz:Zadejte heslo pro %s
 de:Bitte Passwort für %s eingeben
@@ -7986,6 +8111,7 @@ by:Увядзіце каманду для выкліку пры падвойна
 ca-xv:Introduïu la línia d'ordes que voleu executar en fer doble clic al document PDF:
 ca:Introduïu la línia d'ordres que voleu executar en fer doble clic al document PDF:
 cn:请输入您双击 PDF 文件后调用的命令行(&E):
+co:Scrivite a linea di cumanda à eseguisce quandu ci hè un doppiu-cliccu nant’à u ducumentu PDF :
 cy:Rhowch y llinell orchymyn i'w gychwyn pan yn rhoi clic dwbl i ddogfen PDF:
 cz:Dvojité kliknutí na PDF dokument vykoná zadaný příkazový řádek:
 de:Beim Doppelklicken im PDF Dokument wird der folgende Befehl ausgeführt:
@@ -8047,6 +8173,7 @@ by:Памылка запампоўкі %s
 ca-xv:S'ha produït un error en carregar %s
 ca:S'ha produït un error en carregar %s
 cn:载入错误 %s
+co:Sbagliu di caricamentu di %s
 cy:Gwall llwytho %s
 cz:Chyba při načítání %s
 de:Fehler beim Öffnen von %s
@@ -8107,6 +8234,7 @@ by:З&акладкі
 ca-xv:P&referits
 ca:Pr&eferits
 cn:收藏(&A)
+co:&Favuriti
 cy:&Ffefrynnau
 cz:&Oblíbené položky
 de:&Favoriten
@@ -8166,6 +8294,7 @@ by:У&перад\tAlt+Стрэлка направа
 ca-xv:Endavan&t\tAlt+Fletxa Dreta
 ca:En&davant\tAlt+Right Arrow
 cn:向后翻(&O)\tAlt+右箭头
+co:&Dopu\tAlt+Fleccia diritta
 cy:Ymlaen\tAlt+Saeth Dde
 cz:V&před\tAlt+Šipka vpravo
 de:Vor&wärts\tAlt+->
@@ -8230,6 +8359,7 @@ by:Поўны экран\tCtrl+Shift+L
 ca-xv:Pantalla &complerta\tCtrl+Majus+L
 ca:Pantalla &completa\tCtrl+Shift+L
 cn:全屏显示(&U)\tCtrl+Shift+L
+co:&Screnu sanu\tF11
 cy:Sgrin Lawn\tCtrl+Shift+L
 cz:&Celá obrazovka\tF11
 de:&Vollbild\tF11
@@ -8299,6 +8429,7 @@ by:Дзьве старонкі
 ca-xv:Pàgina doble
 ca:Pàgina doble
 cn:双页模式
+co:Pagina doppia
 cy:Wynebu
 cz:Dvojstránky
 de:Doppelseite
@@ -8367,6 +8498,7 @@ by:Немагчыма запісаць знішчальнік у часовы к
 ca-xv:No es pot copiar el desinstal·lador al directori temporal
 ca:No es pot copiar el desinstal·lador al directori temporal
 cn:无法复制卸载程序到暂存目录
+co:Fiascu per cupià u disinstalladore ver di u cartulare timpurariu
 cy:Methwyd copïo'r dadosodwr i'r cyfeiriadur dros dro
 cz:Nezdařilo se zkopírovat odinstalační program do dočasného adresáře
 de:Konnte das Deinstallationsprogramm nicht kopieren
@@ -8426,6 +8558,7 @@ by:Немагчыма стварыць спасылку
 ca-xv:No es pot crear una drecera
 ca:No es pot crear una drecera
 cn:无法创建快捷方式
+co:Fiascu per creà un accurtatoghju
 cy:Methwyd creu llwybr byr
 cz:Vytvoření zástupce se nezdařilo
 de:Konnte keine Verknüpfung erstellen
@@ -8485,6 +8618,7 @@ by:Немагчыма знішчыць ключы рэестру знішчал�
 ca-xv:No es poden suprimir les claus de registre del desinstal·lador
 ca:No es poden suprimir les claus de registre del desinstal·lador
 cn:删除卸载程序注册项失败。
+co:Fiascu per squassà e chjave di registru di u disinstalladore
 cy:Methwyd dileu allweddi cofrestrfa'r dadosodwr
 cz:Nepodařilo se smazat odinslační záznamy z registru
 de:Konnte nicht alle Registry-Einträge löschen
@@ -8543,6 +8677,7 @@ by:Немагчыма зарэгістраваць як стандартную �
 ca-xv:Ha fallat de registrar-lo com a programa per defecte a win 10
 ca:Ha fallat en registrar com a programa per defecte en Windows 10
 cn:Win 10 下注冊為默认程序失败
+co:Fiascu per inscrive cum’è prugramma predefinitu nant’à Windows 10
 cy:Methwyd cofrestru fel rhaglen rhagosodedig ar Win 10
 cz:Nepodařilo se nastavit jako výchozí program na Windows 10
 de:Fehler beim registrieren als Standardanwendung auf win 10
@@ -8593,6 +8728,7 @@ by:Немагчыма перайменаваць файл!
 ca-xv:S'ha produÏt un error en canviar el nom del fitxer!
 ca:S'ha produït un error en canviar el nom del fitxer!
 cn:无法重命名!
+co:Fiascu per rinumà u schedariu !
 cy:Methwyd ailenwi'r ffeil!
 cz:Přejmenování souboru se nezdařilo!
 de:Die Datei konnte nicht umbenannt werden!
@@ -8655,6 +8791,7 @@ by:Немагчыма захаваць файл
 ca-xv:S'ha produït un error en guardar el fitxer.
 ca:S'ha produït un error en desar el fitxer.
 cn:保存文件失败
+co:Fiascu per arregistrà un schedariu
 cy:Methwyd cadw ffeil
 cz:Soubor se nepodařilo uložit
 de:Die Datei konnte nicht neu gespeichert werden!
@@ -8722,6 +8859,7 @@ by:Немагчыма запісаць у рэестр інфармацыю аб
 ca-xv:No es pot escriure la informació d'extensió de fitxer extesa al registre
 ca:No es pot escriure la informació d'extensió de fitxer extesa al registre
 cn:写入扩展名信息到注册项失败。
+co:Fiascu per scrive l’infurmazioni di l’estensione di schedariu ver di u registru
 cy:Methwyd ysgrifennu gwybodaeth estyniad ffeil estynedig i'r gofrestrfa
 cz:Nepodařilo se zapsat informace o příponě souboru do registru
 de:Konnte die Dateiformats-Verknüpfungen nicht vollständig in die Registry schreiben
@@ -8779,6 +8917,7 @@ by:Немагчыма запісаць у рэестр інфармацыю аб
 ca-xv:No es pot escriure la informació de desinstal·lació al registre
 ca:No es pot escriure la informació de desinstal·lació al registre
 cn:写入卸载信息到注册项失败。
+co:Fiascu per scrive l’infurmazioni di disinstallazione ver di u registru
 cy:Methwyd ysgrifennu gwybodaeth y dadosodwr i'r gofrestrfa
 cz:Nepodařilo se zapsat odinslační záznamy do registru
 de:Konnte keine Deinstallations-Informationen in die Registry schreiben
@@ -8837,6 +8976,7 @@ by:Хуткі Web-выгляд
 ca-xv:Visualització ràpida de web
 ca:Visualització ràpida de web
 cn:快速网页查看
+co:Vista web rapida
 cy:Golwg Gwe Cyflym
 cz:Rychlé zobrazování z webu
 de:Schnelle Webanzeige
@@ -8896,6 +9036,7 @@ by:Лепшыя закладкі
 ca-xv:Preferits
 ca:Preferits
 cn:收藏夹
+co:Favuriti
 cy:Ffefrynnau
 cz:Oblíbené položky
 de:Favoriten
@@ -8957,6 +9098,7 @@ by:Дакумент FictionBook
 ca-xv:Documents FictionBook
 ca:Documents FictionBook
 cn:小说文档
+co:Ducumenti FictionBook
 cy:Dogfennau FictionBook
 cz:Dokumenty FictionBook
 de:FictionBook E-Bücher
@@ -9017,6 +9159,7 @@ by:Файл %s не знойдзены
 ca-xv:No s'ha trobat el fitxer %s
 ca:No es troba el fitxer %s
 cn:无法找到文件 %s
+co:Schedariu %s micca trovu
 cy:Heb ganfod ffeil %s
 cz:Soubor %s nebyl nalezen
 de:Datei %s nicht gefunden
@@ -9078,6 +9221,7 @@ by:Памер файла:
 ca-xv:Mida del fitxer:
 ca:Mida del fitxer:
 cn:文件大小:
+co:Dimensione di schedariu :
 cy:Maint Ffeil:
 cz:Velikost souboru:
 de:Dateigröße:
@@ -9143,6 +9287,7 @@ by:Файл:
 ca-xv:Fitxer:
 ca:Fitxer:
 cn:文件:
+co:Schedariu :
 cy:Ffeil:
 cz:Soubor:
 de:Datei:
@@ -9210,6 +9355,7 @@ by:Знайсці...\tCtrl+F
 ca-xv:&Cerca...\tCtrl+F
 ca:&Cerca...\tCtrl+F
 cn:查找(&D)...\tCtrl+F
+co:&Circà…\tCtrl+F
 cy:Canfo&d...\tCtrl+F
 cz:Nají&t...\tCtrl+F
 de:S&uchen…\tStrg+F
@@ -9277,6 +9423,7 @@ by:Знайсці
 ca-xv:Cerca
 ca:Cerca
 cn:查找
+co:Circà
 cy:Canfod
 cz:Najít
 de:Suchen
@@ -9344,6 +9491,7 @@ by:Найти следующее
 ca-xv:Cerca següent
 ca:Cerca següent
 cn:向下查找
+co:Occurrenza seguente
 cy:Canfod y Nesaf
 cz:Najít další
 de:Weitersuchen
@@ -9413,6 +9561,7 @@ by:Знайсці папярэдняе
 ca-xv:Cerca anterior
 ca:Cerca anterior
 cn:向上查找
+co:Occurrenza precedente
 cy:Canfod y Blaenorol
 cz:Najít předchozí
 de:Rückwärts suchen
@@ -9482,6 +9631,7 @@ by:Знайсці:
 ca-xv:Cerca:
 ca:Cerca:
 cn:查找:
+co:Circà :
 cy:Canfod:
 cz:Najít:
 de:Suchen:
@@ -9549,6 +9699,7 @@ by:Падагнаць &змест\tCtrl+3
 ca-xv:Ajusta el &contingut\tCtrl+3
 ca:Ajusta el &contingut\tCtrl+3
 cn:符合内容(&C)\tCtrl+3
+co:&Adattà à u cuntenutu\tCtrl+3
 cy:Ffitio'r &Cynnwys\tCtrl+3
 cz:Přizpůsobit &obsah\tCtrl+3
 de:An &Inhalt anpassen\tStrg+3
@@ -9611,6 +9762,7 @@ by:Падагнаць старонку\tCtrl+0
 ca-xv:Ajusta a la &pàgina\tCtrl+0
 ca:Ajusta a la &pàgina\tCtrl+0
 cn:符合页面(&P)\tCtrl+0
+co:&Pagina sana\tCtrl+0
 cy:&Ffitio'r Dudalen\tCtrl+0
 cz:Podle &stránky\tCtrl+0
 de:An &Seite anpassen\tStrg+0
@@ -9680,6 +9832,7 @@ by:Падагнаць па шырыне
 ca-xv:Ajusta a l'am&plada\tCtrl+2
 ca:Ajusta a l'am&plada\tCtrl+2
 cn:符合宽度(&W)\tCtrl+2
+co:&Larghezza sana\tCtrl+2
 cy:&Fitio'r Lled\tCtrl+2
 cz:&Podle šířky\tCtrl+2
 de:An &Breite anpassen\tStrg+2
@@ -9747,6 +9900,7 @@ by:Падагнаць змест
 ca-xv:Ajusta el contingut
 ca:Ajusta el contingut
 cn:符合内容(&T)
+co:Adattà à u cuntenutu
 cy:Ffitio'r Cynnwys
 cz:Přizpůsobit obsah
 de:An Inhalt anpassen
@@ -9810,6 +9964,7 @@ by:Падагнаць старонку
 ca-xv:Ajusta a la pàgina
 ca:Ajusta a la pàgina
 cn:符合页面(&P)
+co:Pagina sana
 cy:Ffitio'r Dudalen
 cz:Podle stránky
 de:An Seite anpassen
@@ -9879,6 +10034,7 @@ by:Падагнаць па шырыне
 ca-xv:Ajusta a l'amplada
 ca:Ajusta a l'amplada
 cn:符合宽度(&W)
+co:Larghezza sana
 cy:Fitio'r Lled
 cz:Podle šířky
 de:An Breite anpassen
@@ -9946,6 +10102,7 @@ by:Падагнаць па шырыне і Паказаць бесперапын
 ca-xv:Ajusta l'amplada i mostra les pàgines de forma contínua
 ca:Ajusta l'amplada i mostra les pàgines de forma contínua
 cn:符合宽度连续模式(&W)
+co:Larghezza sana è vista in cuntinuu
 cy:Ffitio'r Lled a Dangos Tudalennau'n Barhaus
 cz:Přizpůsobit šířce okna a zobrazit stránky průběžně
 de:An Breite anpassen und Seiten fortlaufend anzeigen
@@ -10007,6 +10164,7 @@ by:Размясціць на адной старонцы
 ca-xv:Ajusta a una única pàgina
 ca:Ajusta a una única pàgina
 cn:符合单页(&P)
+co:Pagina unica
 cy:Ffitio Tudalen Unigol
 cz:Přizpůsobit pro jednu celou stránku v okně
 de:An eine einzelne Seite anpassen
@@ -10069,6 +10227,7 @@ by:Шрыфт:
 ca-xv:Tipus de lletra:
 ca:Tipus de lletra:
 cn:字体(&F):
+co:Grafie :
 cy:Ffontiau:
 cz:Písma:
 de:Schriftarten:
@@ -10129,6 +10288,7 @@ by:Фарматаваць кнігу... %d старонак
 ca-xv:S'està formatant el llibre... %d pàgines
 ca:S'està formatant el llibre... %d pàgines
 cn:正在为书籍排版格式... %d 页
+co:Messa in forma di u libru… %d pagine
 cy:Fformatio'r llyfr... %d tudalen
 cz:Formátování knihy... %d stránek
 de:Buch wird formatiert… Seite %d
@@ -10187,6 +10347,7 @@ by:Тэкст знойдзены на стар. %s
 ca-xv:S'ha trobat el text a la pagina %s
 ca:S'ha trobat el text a la pagina %s
 cn:于第 %s 页找到目标
+co:Testu trovu à a pagina %s
 cy:Canfod testun ar dudalen %s
 cz:Položka nalezena na stránce %s
 de:Text auf Seite %s gefunden
@@ -10249,6 +10410,7 @@ by:Знайсці тэкст на старонцы %s (зноўку)
 ca-xv:S'ha trobat el text a la pàgina %s (altra vegada)
 ca:S'ha trobat el text a la pàgina %s (altra vegada)
 cn:于第 %s 页找到目标 (已从头查找)
+co:Testu trovu à a pagina %s (torna)
 cy:Canfod testun ar dudalen %s (eto)
 cz:Položka nalezena na stránce %s (znovu)
 de:Text auf Seite %s gefunden (erneut)
@@ -10309,6 +10471,7 @@ by:Якія часта чытаюць
 ca-xv:Llegits més freqüents
 ca:Llegits més freqüents
 cn:经常打开的文件
+co:Ducumenti letti aspessu
 cy:Darllen yn Aml
 cz:Často čtené dokumenty
 de:Oft gelesene Dokumente
@@ -10371,6 +10534,7 @@ by:GB
 ca-xv:GB
 ca:GB
 cn:GB
+co:Go
 cy:GB
 cz:GB
 de:GB
@@ -10441,6 +10605,7 @@ by:Перайсці на старонку
 ca-xv:Vés a la pàgina
 ca:Vés a la pàgina
 cn:前往指定页
+co:Andà à a pagina
 cy:Mynd i dudalen
 cz:Přejít na stránku
 de:Gehe zu Seite
@@ -10509,6 +10674,7 @@ by:Схаваць &Налады
 ca-xv:Amaga les &opcions
 ca:Amaga les &opcions
 cn:隐藏选项(&O)
+co:Piattà l’&ozzioni
 cy:Dewisiadau C&uddio
 cz:Skrýt &možnosti
 de:&Optionen
@@ -10571,6 +10737,7 @@ by:Зхаваць тыя, якія часта чытаюць
 ca-xv:Amaga els més llegits
 ca:Amaga els més llegits
 cn:隐藏经常打开的文件
+co:Piattà i ducumenti letti aspessu
 cy:Cuddio darllen yn aml
 cz:Skrýt často čtené dokumenty
 de:Oft gelesene Dokumente ausblenden
@@ -10631,6 +10798,7 @@ by:Падказка: Націсніце F3 каб працягнуць пошу�
 ca-xv:Suggeriment: feu servir la tecla F3 per tornar a cercar
 ca:Suggeriment: feu servir la tecla F3 per tornar a cercar
 cn:提示: 按 F3 重新查找。
+co:Indiziu : Impiegà u tastu F3 per circà torna
 cy:Cyngor: Defnyddiwch bysell F3 i ganfod eto
 cz:Nápověda: Klávesou F3 vyhledáte další výskyt
 de:Tipp: F3-Taste verwenden, um weiterzusuchen
@@ -10693,6 +10861,7 @@ by:Файлы малюнкаў (*.%s)
 ca-xv:Fitxers d'imatge (*.%s))
 ca:Fitxers d'imatge (*.%s))
 cn:图片文件 (*.%s)
+co:Schedarii di fiura (*.%s)
 cy:Ffeiliau delwedd  (*.%s)
 cz:Soubory obrázků (*.%s)
 de:Bilder (*.%s)
@@ -10754,6 +10923,7 @@ by:Усталяваць SumatraPDF
 ca-xv:Instal·la el SumatraPDF
 ca:Instal·la el SumatraPDF
 cn:安装 SumatraPDF
+co:Installà SumatraPDF
 cy:Gosod SumatraPDF
 cz:Nainstalovat SumatraPDF
 de:Installieren
@@ -10814,6 +10984,7 @@ by:Усталяваць SumatraPDF у &каталог:
 ca-xv:Instal·la el SumatraPDF a la &carpeta:
 ca:Instal·la el SumatraPDF a la &carpeta:
 cn:安装 SumatraPDF 于文件夹(&F):
+co:Installà SumatraPDF in u &cartulare :
 cy:Gosod SumatraPDF yn &ffolder:
 cz:Nainstalovat SumatraPDF do &složky:
 de:&Installationsverzeichnis:
@@ -10874,6 +11045,7 @@ by:Памылка ўсталёўкі!
 ca-xv:La instal·lació ha fallat!
 ca:La instal·lació ha fallat.
 cn:安装失败!
+co:Installazione fiasca !
 cy:Methodd y gosod!
 cz:Instalace se nezdařila!
 de:Die Installation ist fehlgeschlagen!
@@ -10934,6 +11106,7 @@ by:Ідзе ўсталёўка...
 ca-xv:La instal·lació és en progrés...
 ca:La instal·lació és en progrés...
 cn:安装正在进行中...
+co:Installazione in corsu…
 cy:Wrthi'n gosod
 cz:Probíhá instalace...
 de:Die Installation wird ausgeführt…
@@ -10995,6 +11168,7 @@ by:KB
 ca-xv:KB
 ca:KB
 cn:KB
+co:Ko
 cy:KB
 cz:KB
 de:KB
@@ -11063,6 +11237,7 @@ by:Утрымаць убудову PDF для &браўзера устаноўл
 ca-xv:Mantín instal·lat el connector PDF del &navegador (ja no es manté)
 ca:Mantén instal·lat el connector PDF del &navegador (ja no es manté)
 cn:维持 PDF 浏览器插件安装状态(不再支持)(&B)
+co:Cunservà l’estensione PDF di u &navigatore installata (senza assistenza)
 cy:Cadw yr ategyn porwr PDF wedi ei osod (ddim yn cael ei gynnal bellach)
 cz:Ponechat nainstalovaný plugin &prohlížeč PDF (již není podporován)
 de:PDF &Browser-Plugin installiert lassen (nicht mehr unterstützt)
@@ -11118,6 +11293,7 @@ by:Шукаць дакументы PDF ў Windows Desktop Search
 ca-xv:Permet al Windows Desktop Search &cercar als documents PDF
 ca:Permet al Windows Desktop Search &cercar als documents PDF
 cn:让 Windows “桌面搜索”搜索 PDF 文件
+co:Permette à Windows Desktop Search di &ricercà in i ducumenti PDF
 cy:Gadael i Chwilio Bwrdd Gwaith Windows c&hwilio'r dogfennau PDF
 cz:Nechte Windows Desktop Search &prohledávat PDF dokumenty
 de:PDF Dokumente in Windows-&Suchen einbeziehen
@@ -11175,6 +11351,7 @@ by:Паказваць &перадпрагляд дакументаў PDF у Wind
 ca-xv:Permet al Windows mostrar &visualitzacions prèvies dels documents
 ca:Permet al Windows mostrar &visualitzacions prèvies dels documents PDF
 cn:让 Windows 显示 PDF 文件的预览(&P)
+co:Permette à Windows di &previsualizà i ducumenti PDF
 cy:Gadael i Windows ddangos &rhagolwg o ddogfennau PDF
 cz:Nechte Windows zobrazit &náhledy PDF dokumentů
 de:&Vorschau für PDF Dokumente in Explorer aktivieren
@@ -11231,6 +11408,7 @@ by:Светлы
 ca-xv:Lleuger
 ca:Clar
 cn:明亮
+co:Chjaru
 cy:Golau
 cz:Světlý
 de:Hell
@@ -11279,6 +11457,7 @@ by:MB
 ca-xv:MB
 ca:MB
 cn:MB
+co:Mo
 cy:MB
 cz:MB
 de:MB
@@ -11349,6 +11528,7 @@ by:Зрабіць SumatraPDF стандартнай праграмай праг�
 ca-xv:Voleu que el SumatraPDF siga el visor predeterminat dels fitxers PDF?
 ca:Voleu que el SumatraPDF sigui el visor predeterminat dels fitxers PDF?
 cn:把 SumatraPDF 作为默认的 PDF 阅读器?
+co:Fà di SumatraPDF l’appiecazione predefinita per i schedarii PDF ?
 cy:Gosod SumatraPDF fel rhaglen rhagosodedig ar gyfer ffeiliau PDF?
 cz:Nastavit SumatraPDF jako výchozí prohlížeč PDF souborů?
 de:SumatraPDF als Standardanwendung für PDF-Dateien registrieren?
@@ -11416,6 +11596,7 @@ by:Зрабіць SumatraPDF чытальнікам PDF па-змаўчанні
 ca-xv:Fes el SumatraPDF el lector de PDF predeterminat
 ca:Fes el SumatraPDF el lector de PDF predeterminat
 cn:将 SumatraPDF 设置为默认的 PDF 阅读器
+co:Fà di SumatraPDF u mo lettore PDF predefinitu
 cy:Gosod SumatraPDF fel y darllenydd PDF rhagosodedig
 cz:Nastavit SumatraPDF jako výchozí PDF prohlížeč
 de:Standardmäßig PDF-Dateien mit SumatraPDF öffnen
@@ -11479,10 +11660,11 @@ az:Man&qa rejimi
 bg:Режим за ман&га
 br:Modo Man&gá
 bs:Man&ga režim
-by:Рэжым Ман7гі
+by:Рэжым Ман&гі
 ca-xv:Mode man&ga
 ca:Mode man&ga
 cn:漫画模式(&G)
+co:Modu Man&ga
 cy:Modd &Manga
 cz:Man&ga režim
 de:Lese&richtung umkehren
@@ -11543,6 +11725,7 @@ by:Улічваць рэгістр
 ca-xv:Distigeix entre majúscules i minúscules
 ca:Distigeix entre majúscules i minúscules
 cn:大小写匹配
+co:Rispettà a cassa
 cy:Cydweddu Maint
 cz:Rozlišovat velikost písmen
 de:Groß-/Kleinschreibung beachten
@@ -11609,6 +11792,7 @@ by:Дакумент Mobi
 ca-xv:Documents Mobi
 ca:Documents Mobi
 cn:Mobi 文档
+co:Ducumenti Mobi
 cy:Dogfennau Mobi
 cz:Dokumenty Mobi
 de:Kindle E-Bücher
@@ -11672,6 +11856,7 @@ by:Зменена:
 ca-xv:Modificat:
 ca:Modificat:
 cn:修改时间:
+co:Mudificatu :
 cy:Newidwyd:
 cz:Změněno:
 de:Geändert am:
@@ -11738,6 +11923,7 @@ by:Даступная новая версія: %s. Загрузіць яе?
 ca-xv:És disponible la nova versió %s. Voleu baixar-la?
 ca:Es troba disponible una versió nova %s. Voleu baixar-la?
 cn:最新版本 %s。 是否下载新版本?
+co:A nova versione %s hè dispunibule. Scaricalla ?
 cy:Mae fersiwn newydd o %s ar gael. Llwytho'r fersiwn newydd i lawr??
 cz:Nová verze %s je k dispozici. Stáhnout novou verzi?
 de:Es ist die neue Version %s vorhanden. Möchten Sie diese herunterladen?
@@ -11806,6 +11992,7 @@ by:Наступная старонка
 ca-xv:Pàgina següent
 ca:Pàgina següent
 cn:下一页
+co:Pagina seguente
 cy:Tudalen Nesaf
 cz:Další stránka
 de:&Nächste Seite
@@ -11875,6 +12062,7 @@ by:Узор не знойдзены
 ca-xv:No s'han trobat coincidències
 ca:No s'han trobat coincidències
 cn:没有找到匹配项
+co:Alcuna occurrenza trova
 cy:Heb ganfod cyfatebiad
 cz:Žádná položka nebyla nalezena
 de:Suchbegriff nicht gefunden
@@ -11939,6 +12127,7 @@ by:Вынік, які адпавядае радку %u у файле %s, не з
 ca-xv:No s'ha trobat cap resultat de la cerca vàlid a la línia %u al fitxer %s
 ca:No s'ha trobat cap resultat de cerca vàlid a la línia %u al fitxer %s
 cn:在第 %u 行附近 (文件 %s) 未找到目标
+co:Alcunu risultatu trovu circa a linea %u in u schedariu %s
 cy:Dim canlyniad o liell %u yn ffeil %s
 cz:Kolem řádku %u v souboru %s nebyl nalezen žádný výsledek
 de:In der Nähe von Zeile %u in der Datei %s wurde kein Resultat gefunden
@@ -11999,6 +12188,7 @@ by:Файл сінхранізацыі не знойдзены
 ca-xv:No s'ha trobat el fitxer de sincronització
 ca:No s'ha trobat el fitxer de sincronització
 cn:未发现同步文件
+co:Alcunu schedariu di sincrunizazione trovu
 cy:Heb ganfod ffeil cydweddu
 cz:Soubor synchronizace nebyl nalezen
 de:Synchronisationsdatei nicht gefunden
@@ -12061,6 +12251,7 @@ by:У гэтай пазіцыі адсутнічае інфармацыя для
 ca-xv:No hi ha informació de sincronització en esta posició
 ca:No hi ha informació de sincronització en aquesta posició
 cn:此位置没有同步信息
+co:Alcuna infurmazione di sincrunizazione trova à sta pusizione
 cy:Dim gwybodaeth cydweddu yn y fan hon
 cz:Na této pozici není informace o synchronizaci
 de:Keine Synchronisationsinformationen verfügbar
@@ -12124,6 +12315,7 @@ by:Колькасць старонак:
 ca-xv:Nombre de pàgines:
 ca:Nombre de pàgines:
 cn:页数:
+co:Numeru di pagine :
 cy:Nifer o Dudalennau:
 cz:Počet stránek:
 de:Anzahl der Seiten:
@@ -12189,6 +12381,7 @@ by:ДА
 ca-xv:D'acord
 ca:D'acord
 cn:确定(&O)
+co:Vai
 cy:Iawn
 cz:OK
 de:OK
@@ -12256,6 +12449,7 @@ by:Адчыніць
 ca-xv:Obre
 ca:Obre
 cn:打开
+co:Apre
 cy:Agor
 cz:Otevřít...
 de:Öffnen…
@@ -12324,6 +12518,7 @@ by:Адкрыць у PDF-XChange
 ca-xv:Obre amb el PDF-XChange
 ca:Obre amb el PDF-XChange
 cn:在 PDF-XChange 中打开(&I)
+co:Apre cù &PDF-XChange
 cy:Agor yn PDF-XChange
 cz:Otevřít v programu PDF-XChange
 de:Mit PDF-&XChange öffnen
@@ -12387,6 +12582,7 @@ by:Адкрыць дакумент...
 ca-xv:Obri un document...
 ca:Obre un document...
 cn:打开一个文件...
+co:Apre un ducumentu…
 cy:Agor dogfen...
 cz:Otevřít dokument...
 de:Dokument öffnen…
@@ -12448,6 +12644,7 @@ by:Адкрыць у %s
 ca-xv:Obri amb %s
 ca:Obre amb %s
 cn:用 %s 打开
+co:Apre cù %s
 cy:Agor yn %s
 cz:Otevřít v %s
 de:Mit %s öffnen
@@ -12507,6 +12704,7 @@ by:Адкрыць у &Adobe Reader
 ca-xv:Obre amb l'&Adobe Reader
 ca:Obre amb l'&Adobe Reader
 cn:在 &Adobe Reader 中打开
+co:Apre cù Ad&obe Reader
 cy:Agor yn &Adobe Reader
 cz:Otevřít v programu &Adobe Reader
 de:Mit &Adobe Reader öffnen
@@ -12571,6 +12769,7 @@ by:Адкрыць у &Foxit Reader
 ca-xv:Obre amb el &Foxit Reader
 ca:Obre amb el &Foxit Reader
 cn:在 &Foxit Reader 中打开
+co:Apre cù &Foxit Reader
 cy:Agor yn &Foxit Reader
 cz:Otevřít v programu &Foxit Reader
 de:Mit F&oxit Reader öffnen
@@ -12633,6 +12832,7 @@ by:Адкрыць у Microsoft HTML Help
 ca-xv:Obre amb el Microsoft HTML Help
 ca:Obre amb el Microsoft HTML Help
 cn:在 &Microsoft HTML Help 中打开(&M)
+co:Apre cù Microsoft &HTML Help
 cy:Agor yn Microsoft HTML Help
 cz:Otevřít v programu Microsoft HTML Help
 de:Mit &Microsoft HTML Hilfe öffnen
@@ -12695,6 +12895,7 @@ by:Адкрыць у Microsoft XPS-Viewer
 ca-xv:Obre amb el Microsoft XPS-Viewer
 ca:Obre amb el Microsoft XPS-Viewer
 cn:在 &Microsoft XPS-Viewer 中打开
+co:Apre cù Microsoft &XPS-Viewer
 cy:Agor yn Microsoft XPS-Viewer
 cz:Otevřít v programu Microsoft XPS-Viewer
 de:Mit &Microsoft XPS-Viewer öffnen
@@ -12757,6 +12958,7 @@ by:Уласцівасці
 ca-xv:P&ropietats
 ca:P&ropietats
 cn:属性(&R)
+co:&Pruprietà
 cy:&Priodweddau
 cz:&Vlastnosti
 de:Ei&genschaften
@@ -12817,6 +13019,7 @@ by:Уласцівасці\tCtrl+D
 ca-xv:P&ropietats...\tCtrl+D
 ca:P&ropietats...\tCtrl+D
 cn:属性(&R)...\tCtrl+D
+co:&Pruprietà\tCtrl+D
 cy:P&riodweddau...\tCtrl+D
 cz:&Vlastnosti...\tCtrl+D
 de:Ei&genschaften\tStrg+D
@@ -12879,6 +13082,7 @@ by:Дакумент PDF
 ca-xv:Document PDF
 ca:Document PDF
 cn:PDF 文档
+co:Ducumentu PDF
 cy:Dogfen PDF
 cz:Dokument PDF
 de:PDF-Dokument
@@ -12943,6 +13147,7 @@ by:Аптымізацыя PDF:
 ca-xv:Optimitzacions del PDF:
 ca:Optimitzacions del PDF:
 cn:PDF 优化:
+co:Migliuramenti di PDF :
 cy:Gwella'r PDF
 cz:Optimalizace PDF:
 de:PDF Optimierungen:
@@ -13002,6 +13207,7 @@ by:Вытворца PDF:
 ca-xv:Productor PDF:
 ca:Productor PDF:
 cn:PDF 制作程序:
+co:PDF pruduttu da :
 cy:Cynhyrchydd PDF:
 cz:Producent PDF:
 de:PDF Urheber:
@@ -13064,6 +13270,7 @@ by:Версія PDF:
 ca-xv:Versió de PDF:
 ca:Versió de PDF:
 cn:PDF 版本:
+co:Versione di PDF :
 cy:PDF Fersiwn:
 cz:Verze PDF:
 de:PDF Version:
@@ -13126,6 +13333,7 @@ by:PDF-дакументы
 ca-xv:Documents PDF
 ca:Documents PDF
 cn:PDF 文档
+co:Ducumenti PDF
 cy:Dogfennau PDF
 cz:Dokumenty PDF
 de:PDF-Dokumente
@@ -13192,6 +13400,7 @@ by:Старонка...\tCtrl+G
 ca-xv:Pà&gina...\tCtrl+G
 ca:Pà&gina...\tCtrl+G
 cn:前往页(&G)...\tCtrl+G
+co:Pa&gina…\tCtrl+G
 cy:Tudalen...\tCtrl+G
 cz:Strán&ka...\tCtrl+G
 de:&Seite…\tStrg+G
@@ -13259,6 +13468,7 @@ by:Старонка %s
 ca-xv:Pàgina %s
 ca:Pàgina %s
 cn:第 %s 页
+co:Pagina %s
 cy:Tudalen %s
 cz:Stránka %s
 de:Seite %s
@@ -13322,6 +13532,7 @@ by:Памер старонкі:
 ca-xv:Mida de pàgina:
 ca:Mida de pàgina:
 cn:页面大小:
+co:Messa à a scala\r\nDimensioni di a pagina :
 cy:Maint Tudalen:
 cz:Velikost stránky:
 de:Seitengröße:
@@ -13385,6 +13596,7 @@ by:Старонка %u не існуе
 ca-xv:La pàgina %u no existeix
 ca:La pàgina %u no existeix
 cn:找不到页码 %u
+co:A pagina %u ùn esiste micca
 cy:Nid yw tudalen rhif %u yn bodoli
 cz:Stránka číslo %u neexistuje
 de:Seite %u nicht vorhanden
@@ -13447,6 +13659,7 @@ by:Маштаб старонкі
 ca-xv:Escalat de la pàgina
 ca:Escalat de la pàgina
 cn:页面缩放比例
+co:Messa à a scala
 cy:Graddio tudalen
 cz:Měřítko stránky
 de:Anpassen der Seitengröße
@@ -13509,6 +13722,7 @@ by:Старонка:
 ca-xv:Pàgina:
 ca:Pàgina:
 cn:页码:
+co:Pagina :
 cy:Tudalen:
 cz:Stránka:
 de:Seite:
@@ -13576,6 +13790,7 @@ by:Дакумент PalmDoc
 ca-xv:Documents PalmDoc
 ca:Documents PalmDoc
 cn:PalmDoc 文档
+co:Ducumenti PalmDoc
 cy:Dogfennau PalmDoc
 cz:Dokumenty PalmDoc
 de:PalmDoc E-Bücher
@@ -13632,6 +13847,7 @@ by:Каб працягнуць, зачыніце %s!
 ca-xv:Tanqueu %s per continuar!
 ca:Tanqueu %s per continuar!
 cn:请关闭 %s 以继续。
+co:Ci vole à chjode %s per cuntinuà !
 cy:Cau %s i barhau!
 cz:Prosím ukončete %s pro pokračování!
 de:Bitte schliessen Sie %s vor der Installation!
@@ -13692,6 +13908,7 @@ by:Пачакайце - фармуецца малюнак...
 ca-xv:S'està renderitzant...
 ca:S'està renderitzant...
 cn:请稍等——正在渲染...
+co:Aspittate per piacè ; trasfurmazione…
 cy:Arhoswch, wrthi'n cyflwyno...
 cz:Prosím čekejte, probíhá vykreslování...
 de:Bitte einen Moment Geduld…
@@ -13754,6 +13971,7 @@ by:Дакумент Postscript
 ca-xv:Documents Postscript
 ca:Documents Postscript
 cn:Postscript 文件
+co:Ducumenti Postscript
 cy:Dogfennau postscript
 cz:Dokumenty PostScript
 de:Postscript-Dokumente
@@ -13813,6 +14031,7 @@ by:Д&эманстрацыя\tF5
 ca-xv:Pr&esentació\tCtrl+L
 ca:Pr&esentació\tCtrl+L
 cn:幻灯片(&E)\tCtrl+L
+co:&Presentazione\tF5
 cy:Cyflwyniad\tCtrl+L
 cz:Pr&ezentace\tF5
 de:&Präsentation\tF5
@@ -13875,6 +14094,7 @@ by:Папярэдняя старонка
 ca-xv:Pàgina anterior
 ca:Pàgina anterior
 cn:上一页
+co:Pagina precedente
 cy:Tudalen Flaenorol
 cz:Předchozí stránka
 de:&Vorherige Seite
@@ -13943,6 +14163,7 @@ by:Друкаваць
 ca-xv:Impressora
 ca:Imprimeix
 cn:打印
+co:Stampà
 cy:Argraffu
 cz:Tisk...
 de:Drucken…
@@ -14005,6 +14226,7 @@ by:Дыяпазон друку
 ca-xv:Interval d'impressió
 ca:Interval d'impressió
 cn:打印范围
+co:Stesa di stampa
 cy:Ystod argraffu
 cz:Rozsah tisku
 de:Seitenbereich
@@ -14065,6 +14287,7 @@ by:Друкарка з такім імем не існуе
 ca-xv:No existeix cap impressora amb aquest nom
 ca:No existeix cap impressora amb el nom proveït
 cn:该打印机不存在
+co:A stampetta cù stu nome ùn esiste micca
 cy:Nid oes argraffydd gyda'r enw yna'n bod
 cz:Tiskárna se zadaným názvem neexistuje
 de:Drucker mit dem angegebenen Namen nicht gefunden
@@ -14125,6 +14348,7 @@ by:Ідзе друк
 ca-xv:La impresió és en procés.
 ca:La impressio és en procés.
 cn:正在打印
+co:Stampa in corsu.
 cy:Wrthi'n argraffu.
 cz:Probíhá tisk
 de:Drucken - SumatraPDF
@@ -14186,6 +14410,7 @@ by:Ідзе друк. Спыніць і выйсці?
 ca-xv:La impressió encara és en procés. Voleu aturar i sortir?
 ca:La impressió encara està en procés. Voleu aturar i sortir?
 cn:打印仍在持续当中。要中止并放弃吗？
+co:Stampa sempre in corsu. Interrompe è esce ?
 cy:Dal wrthi'n argraffu. Hepgor a gadael?
 cz:Tisk stále probíhá. Přerušit a odejít?
 de:Bestehenden Druckvorgang abbrechen und Fenster schließen?
@@ -14244,6 +14469,7 @@ by:Ідзе друк. Спыніць і пачаць нанова?
 ca-xv:La impressió encara es troba en progrés. Voleu cancel·lar-la i tornar a començar??
 ca:La impressió encara es troba en progrés. Voleu cancel·lar-la i tornar a començar??
 cn:打印仍在持续当中。要中止并重新设置吗？
+co:Stampa sempre in corsu. Interrompe è principià torna ?
 cy:Dal wrthi'n argraffu. Hepgor a chychwyn eto?
 cz:Tisk je stále probíhá. Přerušit a začít znovu?
 de:Bestehenden Druckvorgang abbrechen und neu beginnen?
@@ -14303,6 +14529,7 @@ by:Друкуецца старонка %d з %d...
 ca-xv:S'està imprimient la pàgina %d de %d...
 ca:S'està imprimient la pàgina %d de %d...
 cn:正在打印第 %d 页/共 %d 页
+co:Stampa di a pagina %d di %d…
 cy:Argraffu tudalen %d o %d...
 cz:Tisk stránky %d z %d...
 de:Drucke Seite %d von %d…
@@ -14364,6 +14591,7 @@ by:Памылка з друкаваннем.
 ca-xv:S'ha produït un problema en la impressió.
 ca:S'ha produït un problema en la impressió.
 cn:打印问题。
+co:Penseru di stampa.
 cy:Anhawster argraffu
 cz:Potíže s tiskem
 de:Druckerproblem
@@ -14431,6 +14659,7 @@ by:&Новае імя...\tF2
 ca-xv:Canvia el &nom...\tF2
 ca:Canvia el &nom...\tF2
 cn:重命名(&N)...\tF2
+co:&Rinumà…\tF2
 cy:&Ailenwi...\tF2
 cz:Přejme&novat...\tF2
 de:Umbe&nennen…\tF2
@@ -14490,6 +14719,7 @@ by:&Запомніць адкрытыя файлы
 ca-xv:Recorda els fitxers &oberts
 ca:Recorda els fitxers &oberts
 cn:记住已打开的文件(&O)
+co:Arricurdassi i &schedarii aperti
 cy:Co&fio ffeiliau ar agor
 cz:Pamatovat si &otevřené soubory
 de:Liste der &zuletzt geöffneten Dokumente anlegen
@@ -14554,6 +14784,7 @@ by:Выдаліць з лепшых закладак
 ca-xv:Suprimeix dels preferits
 ca:Suprimeix dels preferits
 cn:自收藏删除
+co:Caccià da i favuriti
 cy:Tynnu o'r ffefrynnau
 cz:Odebrat z oblíbených
 de:Aus Favoriten entfernen
@@ -14613,6 +14844,7 @@ by:Выдаліць старонку %s з лепшых закладак
 ca-xv:Suprimeix la pàgina %s dels preferits
 ca:Suprimeix la pàgina %s dels preferits
 cn:从收藏中删除第 %s 页
+co:Caccià a pagina %s da i favuriti
 cy:Tynnu tudalen %s o'r ffefrynnau
 cz:Odebrat stránku %s z oblíbených
 de:Seite %s aus Favoriten entfernen
@@ -14674,6 +14906,7 @@ by:Перайменаваць у
 ca-xv:Canvia el nom a
 ca:Canvia el nom a
 cn:重命名到
+co:Rinumà ver di
 cy:Ailenwi i
 cz:Přejmenovat na
 de:Umbenennen zu
@@ -14736,6 +14969,7 @@ by:Павярнуць супраць гадзінніка\tCtrl+Shift+-
 ca-xv:Gira a l'esquerra\tCtrl+Maj+-
 ca:Gira a l'esquerra\tCtrl+Shift+-
 cn:向左旋转(&L)\tCtrl+Shift+-
+co:Girà à &manca\tCtrl+Maiusc+-
 cy:Troi &Gwrthglocwedd\tCtrl+Shift+-
 cz:Otočit do&leva\tCtrl+Shift+Num-
 de:&Gegen UZS drehen\tStrg+Umschalt+-
@@ -14806,6 +15040,7 @@ by:Павярнуць па гадзінніку\tCtrl+Shift++
 ca-xv:Gira a la dreta\tCtrl+Maj++
 ca:Gira a la dreta\tCtrl+Shift++
 cn:向右旋转(&R)\tCtrl+Shift++
+co:&Girà à diritta\tCtrl+Maiusc++
 cy:Troi &Clocwedd\tCtrl+Shift++
 cz:Otočit dop&rava\tCtrl+Shift+Num+
 de:Im &UZS drehen\tStrg+Umschalt++
@@ -14876,6 +15111,7 @@ by:Захаваць як
 ca-xv:Anomena i guarda
 ca:Anomena i desa
 cn:另存为
+co:Arregistrà cù u nome
 cy:Cadw fel
 cz:Uložit jako...
 de:Speichern unter…
@@ -14944,6 +15180,7 @@ by:Захаваць спасыла&к\tCtrl+Shift+S
 ca-xv:Guarda una &drecera...\tCtrl+Maj+5
 ca:Desa una &drecera...\tCtrl+Maj+5
 cn:保存快捷方式(&H)...\tCtrl+Shift+S
+co:Arregistrà l’&accurtatoghju…\tCtrl+Maiusc+S
 cy:Cadw'r &Llwybr Byr...\tCtrl+Shift+S
 cz:U&ložit zástupce...\tCtrl+Shift+S
 de:&Verknüpfung speichern…\tStrg+Umschalt+S
@@ -15003,6 +15240,7 @@ by:Апрацоўка старонкі %d з %d...
 ca-xv:S'està cercant %d de %d...
 ca:S'està cercant %d de %d...
 cn:正在搜索第 %d 页/共 %d 页
+co:Ricercà %d di %d…
 cy:Yn chwilio am %d o %d...
 cz:Prohledává se %d z %d...
 de:Durchsuche Seite %d von %d…
@@ -15066,6 +15304,7 @@ by:Выбраць &усё
 ca-xv:Selecciona-ho &tot
 ca:Selecciona-ho &tot
 cn:全选(&A)
+co:&Tuttu selezziunà
 cy:Dewis &Popeth
 cz:Vybrat &vše
 de:Alles &markieren
@@ -15126,6 +15365,7 @@ by:Выбраць &усё\tCtrl+A
 ca-xv:Seleccciona-ho &tot\tCtrl+A
 ca:Seleccciona-ho &tot\tCtrl+A
 cn:全选(&A)\tCtrl+A
+co:&Tuttu selezziunà\tCtrl+A
 cy:Dewis &Popeth\tCtrl+A
 cz:Vybrat &vše\tCtrl+A
 de:Alles &markieren\tStrg+A
@@ -15186,6 +15426,7 @@ by:Выбраць змест з Ctrl+левая кнопка мышы
 ca-xv:Seleccioneu contigut amb la combinació Ctrl+botó secundari del ratolí
 ca:Seleccioneu contigut amb la combinació Ctrl+botó secundari del ratolí
 cn:按 Ctrl+鼠标左键 选定内容
+co:Selezziunà u cuntenutu cù Ctrl+Buttone di manca di u topu
 cy:Dewis cynnwys drwy Ctrl a botwm chwith y llygoden
 cz:Vybrat obsah klávesou Ctrl a levým tlačítkem myši
 de:Inhalte mit Strg+linker Maustaste auswählen
@@ -15248,6 +15489,7 @@ by:Абярыце каталог, куды ўсталяваць SumatraPDF:
 ca-xv:Seleccioneu la carpeta on voleu instal·lar el SumatraPDF:
 ca:Seleccioneu la carpeta on voleu instal·lar el SumatraPDF:
 cn:选择 SumatraPDF 应被安装的文件夹：
+co:Selezziunà u cartulare induve SumatraPDF serà installatu :
 cy:Dewis y ffolder lle ddylai SumatraPDF gael ei gosod:
 cz:Vyberte adresář, do kterého chcete nainstalovat SumatraPDF:
 de:In welches Verzeichnis soll SumatraPDF installiert werden?
@@ -15307,6 +15549,7 @@ by:Выбранае:
 ca-xv:Selecció:
 ca:Selecció:
 cn:选择:
+co:Selezzione :
 cy:Dewis:
 cz:Výběr:
 de:Auswahl:
@@ -15364,6 +15607,7 @@ by:Адаслаць &E-mail...
 ca-xv:Envia per correu-&e...
 ca:Envia per correu-&e...
 cn:通过电子邮件发送(&E)...
+co:&Mandà da eMail…
 cy:Anfon drwy &E-bost...
 cz:Odeslat &e-mailem...
 de:Per &E-Mail versenden…
@@ -15429,6 +15673,7 @@ by:Задаць каманду зваротнага пошуку
 ca-xv:Cerca endarrera
 ca:Cerca cap enrere
 cn:设置反向搜索命令行
+co:Definisce a linea di cumanda di ricerca à l’arritrosa
 cy:Gosod linell-orchymyn chwilio gwrthdro
 cz:Nastavit inverzní vyhledávání z příkazového řádku
 de:Befehlszeile für die Inverssuche setzen
@@ -15494,6 +15739,7 @@ by:Паказаць &Закладкі
 ca-xv:Mostra els &marcadors
 ca:Mostra els &marcadors
 cn:显示书签(&B)
+co:Affissà l’indette
 cy:Dangos &Nodau Tudalen
 cz:Zobrazit &záložky
 de:Lese&zeichen anzeigen
@@ -15553,6 +15799,7 @@ by:Паказваць Бесперапынную &Старонку
 ca-xv:Mostra les &pàgines de forma contínua
 ca:Mostra les &pàgines de forma contínua
 cn:连续显示页面(&P)
+co:Vista in &cuntinuu
 cy:Dangos &tudalennau'n ddidor
 cz:Zobrazit stránky &průběžně
 de:Seiten &fortlaufend anzeigen
@@ -15617,6 +15864,7 @@ by:Паказваць панэлі прылад
 ca-xv:Mostra la &barra d'eines
 ca:Mostra la &barra d'eines
 cn:显示工具栏(&T)
+co:Affissà a &barra d’attrezzi\tF8
 cy:Dangos y &Bar Offer
 cz:Zobrazit panel nás&trojů
 de:&Werkzeugleiste anzeigen
@@ -15685,6 +15933,7 @@ by:Паказаць лепшыя закладкі
 ca-xv:Mostra els preferits
 ca:Mostra els preferits
 cn:显示收藏
+co:Affissà i favuriti
 cy:Dangos Ffefrynnau
 cz:Zobrazit oblíbené položky
 de:Favoriten anzeigen
@@ -15744,6 +15993,7 @@ by:Адлюстраваць тыя, які ячаста чытаюць
 ca-xv:Mostra els més llegits
 ca:Mostra els més llegits
 cn:显示经常阅读
+co:Affissà i ducumenti letti aspessu
 cy:Dangos darllenwyd yn aml
 cz:Zobrazit často čtené dokumenty
 de:Oft gelesene Dokumente einblenden
@@ -15803,6 +16053,7 @@ by:Паказваць панэль &закладак (пры магчымасц�
 ca-xv:Mostra la &barra lateral de marcadors quan estiga disponible
 ca:Mostra la &barra lateral de marcadors quan estigui disponible
 cn:可用时显示书签边栏(&B)
+co:Affissà a &barra laterale di l’unghjette s’ella hè dispunibule
 cy:Dangos bar ochr y &nodau tudalen pan yw ar gael
 cz:Zo&brazit záložky v postranním panelu, jsou-li dostupné
 de:&Lesezeichen standardmässig anzeigen
@@ -15867,6 +16118,7 @@ by:Адна старонка
 ca-xv:Pàgina única
 ca:Pàgina única
 cn:单个页面
+co:Pagina sola
 cy:Tudalen unigol
 cz:Jedna stránka
 de:Einzelne Seite
@@ -15934,6 +16186,7 @@ by:Некаторыя файлы для усталёўкі пашкоджаны 
 ca-xv:Alguns fitxers que s'han d'instal·lar no hi són o són malmesos
 ca:Alguns fitxers que s'han d'instal·lar no hi són o són malmesos
 cn:某些安装所需的文件损坏或丢失
+co:Certi schedarii à installà sò alterati o mancanu
 cy:Mae rhai ffeiliau i'w gosod wedi eu difrodi neu ar goll
 cz:Některé soubory potřebné pro instalaci jsou poškozené nebo nebyly nalezeny
 de:Einige Dateien konnten nicht korrekt installiert werden
@@ -15991,6 +16244,7 @@ by:Даруйqt, гэтага не павінна было здарыцца!\n\n
 ca-xv:Això no hauria d'haver passat!\n\nFeu clic a 'Cancel·la', si voleu ajudar-nos a corregir la causa d'este error
 ca:Això no hauria d'haver passat!\n\nFeu clic a 'Cancel·la', si voleu ajudar-nos a corregir la causa d'aquest error.
 cn:抱歉，本不应该发生的！\n\n如果你希望帮助我们修复这个崩溃问题，请点击'取消'。
+co:Quessu ùn duveria mai accade !\n\nCi vole à sceglie « Abbandunà » s’è voi vulete aiutacci à currege a causa di stu penseru.
 cy:Ymddiheuriadau. Dylai hynny heb fod wedi digwydd!\n\nPwyswch 'Diddymu', os hoffech chi ein cynorthwyo i drwsio achos y gwall.
 cz:To se nemělo stát, omlouváme se.\n\nPokud nám chcete pomoci vyřešit příčinu tohoto pádu, klikněte na tlačítko Storno.
 de:Entschuldigen Sie bitte dieses unerwartete Missgeschick!\n\nBitte drücken Sie 'Abbrechen', wenn Sie uns beim Beheben dieses Fehlers behilflich sein möchten.
@@ -16051,6 +16305,7 @@ by:Адсутнічае кропка сінхранізацыі ў зыходн�
 ca-xv:El fitxer d'origen %s no té un punt de sincronització vàlid
 ca:El fitxer d'origen %s no té un punt de sincronització vàlid
 cn:源文件 %s 没有同步点
+co:U schedariu d’urigine %s ùn hà micca di puntu di sincrunizazione
 cy:Does dim pwynt cydweddu yn ffeil %s
 cz:Zdrojový soubor %s nemá bod synchronizace
 de:%s hat keinen Synchronisations-Punkt
@@ -16113,6 +16368,7 @@ by:Запуск SumatraPDF
 ca-xv:Inicia el SumatraPDF
 ca:Inicia el SumatraPDF
 cn:启动SumatraPDF
+co:Lancià SumatraPDF
 cy:Cychwyn SumatraPDF
 cz:Spustit SumatraPDF
 de:SumatraPDF starten
@@ -16174,6 +16430,7 @@ by:Тэма:
 ca-xv:Assumpte:
 ca:Subjecte:
 cn:主题:
+co:Sughjettu :
 cy:Pwnc:
 cz:Předmět:
 de:Thema:
@@ -16236,6 +16493,7 @@ by:SumatraPDF %s Усталёўшчык
 ca-xv:Instal·lador del SumatraPDF %s
 ca:Instal·lador del SumatraPDF %s
 cn:SumatraPDF %s 安装程序
+co:Stalladore di SumatraPDF %s
 cy:Gosodwr SumatraPDF %s
 cz:SumatraPDF %s instalátor
 de:SumatraPDF %s installieren
@@ -16293,6 +16551,7 @@ by:SumatraPDF %s Знішчальнік
 ca-xv:Desintal·lador del SumatraPDF %s
 ca:Desintal·lador del SumatraPDF %s
 cn:SumatraPDF %s 卸载程序
+co:Disinstalladore di SumatraPDF %s
 cy:Dadosodwr SumatraPDF %s
 cz:SumatraPDF %s odinstalátor
 de:SumatraPDF %s deinstallieren
@@ -16350,6 +16609,7 @@ by:Параметры SumatraPDF
 ca-xv:Opcions del SumatraPDF
 ca:Opcions del SumatraPDF
 cn:SumatraPDF 选项
+co:Ozzioni di SumatraPDF
 cy:Dewisiadau SumatraPDF
 cz:Možnosti programu SumatraPDF
 de:SumatraPDF Optionen
@@ -16413,6 +16673,7 @@ by:Абнаўленне SumatraPDF
 ca-xv:Actualització del SumatraPDF
 ca:Actualització del SumatraPDF
 cn:升级 SumatraPDF
+co:Rinnovu di SumatraPDF
 cy:Diweddaru SumatraPDF
 cz:SumatraPDF - Aktualizace
 de:SumatraPDF Update
@@ -16473,6 +16734,7 @@ by:SumatraPDF зламаўся
 ca-xv:El SumatraPDF ha fallat
 ca:El SumatraPDF ha fallat
 cn:SumatraPDF 发生错误
+co:SumatraPDF s’hè lampatu
 cy:Chwalodd SumatraPDF
 cz:SumatraPDF - Selhání
 de:SumatraPDF ist abgestürzt
@@ -16534,6 +16796,7 @@ by:SumatraPDF быў знішчаны
 ca-xv:S'ha desinstal·lat el SumatraPDF.
 ca:S'ha desinstal·lat el SumatraPDF.
 cn:已卸载 SumatraPDF 。
+co:SumatraPDF hè statu disinstallatu.
 cy:Mae SumatraPDF wedi ei ddadosod.
 cz:SumatraPDF byl odinstalován.
 de:SumatraPDF wurde deinstalliert.
@@ -16591,6 +16854,7 @@ by:Усталёўшчык SumatraPDF не знойдзены.
 ca-xv:No s'ha trobat cap instal·lació del SumatraPDF.
 ca:No s'ha trobat cap instal·lació del SumatraPDF.
 cn:未找到 SumatraPDF 安装。
+co:Installazione di SumatraPDF micca trova.
 cy:Heb ganfod gosodiad SumatraPDF.
 cz:Instalace programu SumatraPDF nebyla nalezena.
 de:Keine SumatraPDF-Installation zum Deinstallieren gefunden.
@@ -16648,6 +16912,7 @@ by:SumatraPDF асацыявана з файламі PDF
 ca-xv:El SumatraPDF és el seu lector PDF predeterminat
 ca:El SumatraPDF és el vostre lector PDF per defecte
 cn:SumatraPDF 是默认 PDF 阅读器
+co:SumatraPDF hè u vostru lettore PDF predefinitu
 cy:SumatraPDF yw eich prif ddarllenydd PDF
 cz:SumatraPDF je výchozím PDF prohlížečem
 de:PDF-Dateien werden standardmäßig mit SumatraPDF geöffnet
@@ -16710,6 +16975,7 @@ by:Зараз SumatraPDF асацыявана з файламі PDF
 ca-xv:El SumatraPDF ha d'esser ara mateix el vostre lector PDF predeterminat
 ca:El SumatraPDF ha d'ésser ara mateix el vostre lector PDF predeterminat
 cn:现在 SumatraPDF 应该是你的默认 PDF 阅读器了
+co:Avà SumatraPDF duveria esse u vostru lettore PDF predefinitu
 cy:SumatraPDF dylai fod eich prif ddarllenydd PDF
 cz:SumatraPDF by měl být výchozím PDF prohlížečem
 de:PDF-Dateien sollten nun mit SumatraPDF geöffnet werden
@@ -16772,6 +17038,7 @@ by:Не атрымалася адкрыць файл з інфармацыяй �
 ca-xv:El fitxer de sincronització no es pot obrir
 ca:El fitxer de sincronització no es pot obrir
 cn:无法打开同步文件
+co:U schedariu di sincrunizazione ùn pò micca esse apertu
 cy:Methu agor ffeil cydweddu
 cz:Soubor synchronizace nelze otevřít
 de:Die Synchronisationsdatei kann nicht geöffnet werden
@@ -16834,6 +17101,7 @@ by:Тэгі PDF
 ca-xv:PDF etiquetat
 ca:PDF etiquetat
 cn:已标记PDF
+co:PDF etichettatu
 cy:PDF wedi ei thagio
 cz:Tagované PDF
 de:PDF mit Tags
@@ -16892,6 +17160,7 @@ by:Тэкставы дакумент
 ca-xv:Documents de text
 ca:Documents de text
 cn:文本文档
+co:Ducumenti di testu
 cy:Dogfennau testun
 cz:Textové dokumenty
 de:Text-Dokumente
@@ -16955,6 +17224,7 @@ by:Дзакуй за тое, што выбралі SumatraPDF!
 ca-xv:Gràcies per triar el SumatraPDF!
 ca:Gràcies per triar el SumatraPDF!
 cn:谢谢您选用 SumatraPDF！
+co:Vi ringraziemu d’avè sceltu SumatraPDF !
 cy:Diolch am ddefnyddio SumatraPDF!
 cz:Děkujeme, že jste si vybrali SumatraPDF!
 de:Vielen Dank dafür, dass Sie SumatraPDF verwenden!
@@ -17014,6 +17284,7 @@ by:Дзякуй! SumatraPDF усталяваны.
 ca-xv:Gràcies! S'ha instal·lat el SumatraPDF.
 ca:Gràcies! S'ha instal·lat el SumatraPDF.
 cn:SumatraPDF 安装完成。
+co:Vi ringraziemu ! SumatraPDF hè statu installatu.
 cy:Diolch yn fawr! Mae SumatraPDF wedi ei gosod
 cz:Děkujeme! Program SumatraPDF byl nainstalován.
 de:Vielen Dank! SumatraPDF wurde erfolgreich installiert.
@@ -17072,6 +17343,7 @@ by:Усталёўшчык пашкоджаны. Калі ласка спампу
 ca-xv:L'instal·lador és malmés. Baixeu-lo una altra vegada.\nLamentem les molèsties!
 ca:L'instal·lador és malmès. Baixeu-lo una altra vegada.\nLamentem les molèsties!
 cn:抱歉安装程序损坏，请重新下载。
+co:U stalladore hè statu alteratu. Ci vole à scaricallu torna.\nScusate per stu penseru !
 cy:Mae'r gosodwr yn llwgr. Llwythwch y ffeil i lawr eto. \n Ymddiheuriadau am yr anghyfleuster!
 cz:Instalační program byl nejspíše poškozen. Stáhněte si jej prosím znovu. \nOmlouváme se za způsobené nepříjemnosti!
 de:Das Installationsprogramm wurde beschädigt. Bitte laden Sie es erneut herunter.\nEntschuldigen Sie bitte die Unannehmlichkeit!
@@ -17129,6 +17401,7 @@ by:Гэты дакумент выкарыстоўвае магчымасці, я
 ca-xv:Aquest document utilitza característiques no suportades (%s) i pot no mostrar-se correctament
 ca:Aquest document utilitza característiques no suportades (%s) i podria no ser mostrat correctament
 cn:该文档使用了不支持的特性 (%s)，可能无法正确渲染。
+co:Stu ducumentu impiegheghja funzioni micca accettate (%s) è u risultatu puderia ùn esse cusì bè
 cy:Mae'r ddogfen hon yn defnyddio nodweddion sydd ddim yn cael eu cynnal (%s) ac efallai na fyddant yn rendro'n gywir
 cz:Tento dokument používá nepodporované funkce (%s) a tímto se nemusí vykreslit správně
 de:Dieses Dokument kann vermutlich nicht korrekt angezeigt werden wegen fehlender Unterstützung für %s
@@ -17185,6 +17458,7 @@ by:Загаловак:
 ca-xv:Títol:
 ca:Títol:
 cn:标题:
+co:Titulu :
 cy:Teitl:
 cz:Název:
 de:Titel:
@@ -17249,6 +17523,7 @@ by:Знішчыць SumatraPDF
 ca-xv:Desinstal·la el SumatraPDF
 ca:Desinstal·la el SumatraPDF
 cn:卸载 SumatraPDF
+co:Disinstallà SumatraPDF
 cy:Dadosod SumatraPDF
 cz:Odinstalovat SumatraPDF
 de:Deinstallieren
@@ -17308,6 +17583,7 @@ by:Памылка знішчэння
 ca-xv:La desinstal·lació ha fallat
 ca:La desinstal·lació ha fallat
 cn:卸载失败
+co:Disinstallazione fiasca
 cy:Methodd y gosod
 cz:Odinstalace programu se nezdařila
 de:Die Deinstallation ist fehlgeschlagen
@@ -17366,6 +17642,7 @@ by:Ідзе знішчэнне...
 ca-xv:Desinstal·lació en progrés...
 ca:Desinstal·lació en progrés...
 cn:卸载正在进行...
+co:Disinstallazione in corsu…
 cy:Wrthi'n dadosod...
 cz:Probíhá odinstalace...
 de:Die Deinstallation wird ausgeführt…
@@ -17424,6 +17701,7 @@ by:Невядомы зыходны файл (%s)
 ca-xv:Fitxer origen desconegut (%s)
 ca:Fitxer origen desconegut (%s)
 cn:未知的源文件 (%s)
+co:Schedariu d’urigine scunnisciutu (%s)
 cy:Ffeil ffynhonnell anhysbys (%s)
 cz:Neznámý zdrojový soubor (%s)
 de:Unbekannte Datei (%s)
@@ -17486,6 +17764,7 @@ by:Выкарыстоўваць &закладкі
 ca-xv:Utilitza &pestanyes
 ca:Utilitza les pes&tanyes
 cn:使用页签(&T)
+co:Impiegà l’&unghjette
 cy:Defnyddio &tabiau
 cz:Použít &karty
 de:Dokumente in &Tabs öffnen
@@ -17543,6 +17822,7 @@ by:Выкарыстаць SumatraPDF як &стандартны Чытальні
 ca-xv:Usa el SumatraPDF com a visor PDF &predeterminat
 ca:Usa el SumatraPDF com a visor PDF &predeterminat
 cn:使用 SumatraPDF 作为默认的 PDF 阅读器(&U)
+co:Impiegà SumatraPDF cum’è u lettore PDF predefinitu
 cy:Defnyddio SumatraPDF fel y darllennydd PDF &rhagosodedig
 cz:Použít SumatraPDF jako &výchozí PDF prohlížeč
 de:SumatraPDF als Standard&programm für PDF Dokumente verwenden
@@ -17603,6 +17883,7 @@ by:Выгляд
 ca-xv:Visualitza
 ca:Visualitza
 cn:视图
+co:Affissera
 cy:Gweld
 cz:Zobrazení
 de:Ansicht
@@ -17673,6 +17954,7 @@ by:Наведаць сайт
 ca-xv:Visiteu el lloc &web
 ca:Visiteu el lloc &web
 cn:访问网站(&W)
+co:Visità u situ &web
 cy:&Ymweld â'r Wefan
 cz:Navštívit &webovou stránku
 de:SumatraPDF im &Internet
@@ -17742,6 +18024,7 @@ by:Папярэджанне
 ca-xv:Avís
 ca:Avís
 cn:警告
+co:Avertimentu
 cy:Rhybudd
 cz:Upozornění
 de:Warnung
@@ -17805,6 +18088,7 @@ by:Дакумент XPS
 ca-xv:Documents XPS
 ca:Documents XPS
 cn:XPS 文件
+co:Ducumenti XPS
 cy:Dogfennau XPS
 cz:Dokumenty XPS
 de:XPS-Dokumente
@@ -17867,6 +18151,7 @@ by:Вы выкарыстоўваеце апошнюю версію.
 ca-xv:Teniu la darrera versió.
 ca:Teniu la darrera versió.
 cn:您的版本为最新版。
+co:Impiegate l’ultima versione.
 cy:Mae'r fersiwn diweddaraf gennych.
 cz:Používáte nejnovější verzi.
 de:Sie haben die neuste Version installiert.
@@ -17935,6 +18220,7 @@ by:Вы выкарыстоўваеце версію %s
 ca-xv:Teniu la versió %s
 ca:Teniu la versió %s
 cn:目前版本为 %s
+co:Avete a versione %s
 cy:Mae fersiwn %s gennych
 cz:Používáte verzi %s
 de:Sie haben Version %s.
@@ -18001,6 +18287,7 @@ by:Маштаб
 ca-xv:Zoom
 ca:Zoom
 cn:缩放
+co:Adattà
 cy:Chwyddo
 cz:Zvětšení
 de:Zoom
@@ -18065,6 +18352,7 @@ by:Павялічыць
 ca-xv:Apropa't
 ca:Acosta't
 cn:放大
+co:Più maiò
 cy:Chwyddo i Mewn
 cz:Zvětšit
 de:Vergrößern
@@ -18135,6 +18423,7 @@ by:Паменьшыць
 ca-xv:Allunya't
 ca:Allunya't
 cn:缩小
+co:Più chjucu
 cy:Chwyddo Allan
 cz:Zmenšit
 de:Verkleinern
@@ -18204,6 +18493,7 @@ by:Маштабны каэфіцыент
 ca-xv:Factor d'escala
 ca:Factor d'escala
 cn:缩放比例
+co:Fattore d’ingrandamentu
 cy:Ffactor Chwyddo
 cz:Měřítko přiblížení
 de:Zoomfaktor
@@ -18267,6 +18557,7 @@ by:[Выяўлены змены; адбываецца абнаўленне] %s
 ca-xv:[S'han detectat canvis; s'està actualitzant] %s
 ca:[S'han detectat canvis; s'està actualitzant] %s
 cn:[已检测更改，正在更新] %s
+co:[Cambiamenti abbentati ; attualizazione] %s
 cy:[Wedi canfod newidiadau: adnewyddu] %s
 cz:[Zjištěna změna; probíhá aktualizace] %s
 de:[Datei wurde geändert; aktualisiere…] %s
@@ -18331,6 +18622,7 @@ by:капіяваць тэкст
 ca-xv:s'està copiant text
 ca:s'està copiant text
 cn:正在复制文本
+co:copia di testu
 cy:copïo testun
 cz:kopírování textu
 de:Text kopieren verweigert
@@ -18394,6 +18686,7 @@ by:дакумент друкуецца
 ca-xv:s'està imprimint el document
 ca:s'està imprimint el document
 cn:正在打印文档
+co:stampa di ducumentu
 cy:argraffu dogfen
 cz:tisk dokumentu
 de:Dokument drucken verweigert

@@ -26,6 +26,7 @@ vs2015/.vs/
 vs2017/.vs/
 .vscode/.BROWSE.VC.DB-shm
 .vscode/.BROWSE.VC.DB-wal
+.vscode/ipch/
 bin/cmapdump.exe
 bin/pigz.exe
 drmemlogs/

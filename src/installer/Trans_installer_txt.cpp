@@ -7,7 +7,7 @@
 
 namespace trans {
 
-#define LANGS_COUNT   57
+#define LANGS_COUNT   58
 #define STRINGS_COUNT 43
 
 const char *gOriginalStrings[STRINGS_COUNT] = {
@@ -598,6 +598,51 @@ const char * gTranslations_tw =
   "\350\247\243\351\231\244\345\256\211\350\243\235\345\244\261\346\225\227\0"\
   "\350\247\243\351\231\244\345\256\211\350\243\235\346\255\243\345\234\250\351\200\262\350\241\214...\0"\
   "\344\275\277\347\224\250 SumatraPDF \344\275\234\347\202\272\351\240\220\350\250\255\347\232\204 PDF \351\226\261\350\256\200\345\231\250(&U)\0";
+
+const char * gTranslations_co = 
+  "&Ozzioni\0"\
+  "Site sicuru di vul\303\250 disinstall\303\240 SumatraPDF ?\0"\
+  "Chjode\0"\
+  "Impussibule di cre\303\240 un cartulare timpurariu\0"\
+  "Impussibule di cre\303\240 u cartulare d\342\200\231installazione\0"\
+  "Impussibule d\342\200\231install\303\240 u previsualizatore di PDF\0"\
+  "Impussibule d\342\200\231install\303\240 u filtru di ricerca di PDF\0"\
+  "Impussibule d\342\200\231ottene u cartulare timpurariu\0"\
+  "Impussibule di cacci\303\240 u cartulare d\342\200\231installazione\0"\
+  "Impussibule di cacci\303\240 l\342\200\231accurtatoghju\0"\
+  "Impussibule di disinstall\303\240 u previsualizatore di PDF\0"\
+  "Impussibule di disinstall\303\240 u filtru di ricerca di PDF\0"\
+  "Impussibule di disinstall\303\240 l\342\200\231estensione di u navigatore\0"\
+  "Impussibule di scrive %s nant\342\200\231\303\240 u discu\0"\
+  "Fiascu per cupi\303\240 u disinstalladore ver di u cartulare timpurariu\0"\
+  "Fiascu per cre\303\240 un accurtatoghju\0"\
+  "Fiascu per squass\303\240 e chjave di registru di u disinstalladore\0"\
+  "Fiascu per inscrive cum\342\200\231\303\250 prugramma predefinitu nant\342\200\231\303\240 Windows 10\0"\
+  "Fiascu per scrive l\342\200\231infurmazioni di l\342\200\231estensione di schedariu ver di u registru\0"\
+  "Fiascu per scrive l\342\200\231infurmazioni di disinstallazione ver di u registru\0"\
+  "Piatt\303\240 l\342\200\231&ozzioni\0"\
+  "Install\303\240 SumatraPDF\0"\
+  "Install\303\240 SumatraPDF in u &cartulare :\0"\
+  "Installazione fiasca !\0"\
+  "Installazione in corsu\342\200\246\0"\
+  "Cunserv\303\240 l\342\200\231estensione PDF di u &navigatore installata (senza assistenza)\0"\
+  "Permette \303\240 Windows Desktop Search di &ricerc\303\240 in i ducumenti PDF\0"\
+  "Permette \303\240 Windows di &previsualiz\303\240 i ducumenti PDF\0"\
+  "Ci vole \303\240 chjode %s per cuntinu\303\240 !\0"\
+  "Selezziun\303\240 u cartulare induve SumatraPDF ser\303\240 installatu :\0"\
+  "Certi schedarii \303\240 install\303\240 s\303\262 alterati o mancanu\0"\
+  "Lanci\303\240 SumatraPDF\0"\
+  "Stalladore di SumatraPDF %s\0"\
+  "Disinstalladore di SumatraPDF %s\0"\
+  "SumatraPDF h\303\250 statu disinstallatu.\0"\
+  "Installazione di SumatraPDF micca trova.\0"\
+  "Vi ringraziemu d\342\200\231av\303\250 sceltu SumatraPDF !\0"\
+  "Vi ringraziemu ! SumatraPDF h\303\250 statu installatu.\0"\
+  "U stalladore h\303\250 statu alteratu. Ci vole \303\240 scaricallu torna.\nScusate per stu penseru !\0"\
+  "Disinstall\303\240 SumatraPDF\0"\
+  "Disinstallazione fiasca\0"\
+  "Disinstallazione in corsu\342\200\246\0"\
+  "Impieg\303\240 SumatraPDF cum\342\200\231\303\250 u lettore PDF predefinitu\0";
 
 const char * gTranslations_hr = 
   "P&ostavke\0"\
@@ -2594,6 +2639,7 @@ static const char *gTranslations[LANGS_COUNT] = {
   gTranslations_ca_xv, 
   gTranslations_cn, 
   gTranslations_tw, 
+  gTranslations_co, 
   gTranslations_hr, 
   gTranslations_cz, 
   gTranslations_dk, 
@@ -2656,6 +2702,7 @@ const char *gLangCodes =   "en\0" \
   "ca-xv\0" \
   "cn\0" \
   "tw\0" \
+  "co\0" \
   "hr\0" \
   "cz\0" \
   "dk\0" \
@@ -2714,6 +2761,7 @@ const char *gLangNames =   "English\0" \
   "Catalan-Valencian (Catal\303\240-Valenci\303\240)\0" \
   "Chinese Simplified (\347\256\200\344\275\223\344\270\255\346\226\207)\0" \
   "Chinese Traditional (\347\271\201\351\253\224\344\270\255\346\226\207)\0" \
+  "Corsican\0" \
   "Croatian (Hrvatski)\0" \
   "Czech (\304\214e\305\241tina)\0" \
   "Danish (Dansk)\0" \
@@ -2784,6 +2832,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
   (LANGID)-1,
   MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED),
   MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL),
+  _LANGID(LANG_CORSICAN),
   _LANGID(LANG_CROATIAN),
   _LANGID(LANG_CZECH),
   _LANGID(LANG_DANISH),
@@ -2833,7 +2882,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
 
 bool IsLangRtl(int idx)
 {
-  return (2 == idx) || (23 == idx) || (30 == idx) || (38 == idx);
+  return (2 == idx) || (24 == idx) || (31 == idx) || (39 == idx);
 }
 
 int gLangsCount = LANGS_COUNT;

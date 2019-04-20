@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+# TODO: octal escaping fails when escaped character is followed by 0-7,
+# as it looks like a bigger octal number.
+# One fix would be to also octal-escape all 0-7 numbers
+
 import os
 import re
 import util
@@ -70,11 +74,10 @@ def extract_strings_from_c_files(with_paths=False):
 # use octal escapes because hexadecimal ones can consist of
 # up to four characters, e.g. \xABc isn't the same as \253c
 
-
 def c_oct(c):
+    global had_invalid_c
     o = "00" + oct(ord(c))
     return "\\" + o[-3:]
-
 
 def c_escape(txt):
     if txt is None:

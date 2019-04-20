@@ -7,7 +7,7 @@
 
 namespace trans {
 
-#define LANGS_COUNT   59
+#define LANGS_COUNT   60
 #define STRINGS_COUNT 250
 
 const char *gOriginalStrings[STRINGS_COUNT] = {
@@ -1680,7 +1680,7 @@ const char * gTranslations_by =
   "\0"\
   "\320\227\321\200\320\260\320\261\321\226\321\206\321\214 SumatraPDF \321\201\321\202\320\260\320\275\320\264\320\260\321\200\321\202\320\275\320\260\320\271 \320\277\321\200\320\260\320\263\321\200\320\260\320\274\320\260\320\271 \320\277\321\200\320\260\320\263\320\273\321\217\320\264\321\203 PDF-\321\204\320\260\320\271\320\273\320\260\321\236?\0"\
   "\320\227\321\200\320\260\320\261\321\226\321\206\321\214 SumatraPDF \321\207\321\213\321\202\320\260\320\273\321\214\320\275\321\226\320\272\320\260\320\274 PDF \320\277\320\260-\320\267\320\274\320\260\321\236\321\207\320\260\320\275\320\275\321\226\0"\
-  "\320\240\321\215\320\266\321\213\320\274 \320\234\320\260\320\275\320\263\321\226\0"\
+  "\320\240\321\215\320\266\321\213\320\274 \320\234\320\260\320\275&\320\263\321\226\0"\
   "\320\243\320\273\321\226\321\207\320\262\320\260\321\206\321\214 \321\200\321\215\320\263\321\226\321\201\321\202\321\200\0"\
   "\320\224\320\260\320\272\321\203\320\274\320\265\320\275\321\202 Mobi\0"\
   "\320\227\320\274\320\265\320\275\320\265\320\275\320\260:\0"\
@@ -3289,6 +3289,258 @@ const char * gTranslations_tw =
   "[\345\267\262\345\201\265\346\270\254\350\256\212\346\233\264\357\274\214\346\255\243\345\234\250\346\233\264\346\226\260] %s\0"\
   "\346\255\243\345\234\250\350\244\207\350\243\275\346\226\207\345\255\227\0"\
   "\346\255\243\345\234\250\345\210\227\345\215\260\346\226\207\344\273\266\0";
+
+const char * gTranslations_co = 
+  "&Apprupositu\0"\
+  "&Dimensione attuale\tCtrl+1\0"\
+  "Ozzioni di l\342\200\231espertu\342\200\246\0"\
+  "&Tutte e pagine selezziunate\0"\
+  "&Nanzu\tAlt+Fleccia manca\0"\
+  "Cum\342\200\231\303\250 un &libru\tCtrl+8\0"\
+  "&Chjode\tCtrl+W\0"\
+  "Cupi\303\240 a sele&zzione\0"\
+  "Cupi\303\240 a sele&zzione\tCtrl+C\0"\
+  "\303\231n mi dumand\303\240 &pi\303\271\0"\
+  "Solu e pagine &pare\0"\
+  "Pagina &doppia\tCtrl+7\0"\
+  "&Schedariu\0"\
+  "&Cosa circ\303\240 :\0"\
+  "P&rima pagina\tPrincipiu\0"\
+  "&Adatt\303\240 e pagine \303\240 l\342\200\231aghja di stampa\0"\
+  "&Viaghj\303\240\0"\
+  "&And\303\240 \303\240 a pagina :\0"\
+  "Ai&utu\0"\
+  "&Ultima pagina\tFine\0"\
+  "&Dimensione :\0"\
+  "&Manuale inlinea (in inglese)\0"\
+  "&Rispett\303\240 a cassa\0"\
+  "Pagina &seguente\tFleccia diritta\0"\
+  "I&nn\303\262\0"\
+  "&Inn\303\262, vi ringraziu\0"\
+  "Solu e pagine &anesche\0"\
+  "&Apre u ducumentu\0"\
+  "&Apre\342\200\246\tCtrl+O\0"\
+  "&Ozzioni\342\200\246\0"\
+  "&Parolla d\342\200\231entrata :\0"\
+  "&Spirl\303\240 u ducumentu\0"\
+  "Pagina &precedente\tFleccia manca\0"\
+  "&Stamp\303\240\342\200\246\0"\
+  "&Stamp\303\240\342\200\246\tCtrl+P\0"\
+  "&Stamp\303\240\342\200\246(ricusatu)\0"\
+  "Arricurdassi di a &parolla d\342\200\231entrata per stu ducumentu\0"\
+  "Arricurdassi ste &preferenze per ogni ducumentu\0"\
+  "&Cacci\303\240 u ducumentu\0"\
+  "Arregistr\303\240 c\303\271 u &nome\342\200\246\0"\
+  "Arregistr\303\240 c\303\271 u &nome\342\200\246\tCtrl+S\0"\
+  "&Preferenze\0"\
+  "&Strittisce e pagine \303\240 l\342\200\231aghja di stampa (s\342\200\231\303\250 bisognu)\0"\
+  "Pagina &sola\tCtrl+6\0"\
+  "&Tralasci\303\240 sta versione\0"\
+  "&Temu\0"\
+  "&Impieg\303\240 e dimensioni di pagina d\342\200\231urigine\0"\
+  "&Affiss\303\240\0"\
+  "Fin&estra\0"\
+  "&I\303\250\0"\
+  "&Ingrandamentu\0"\
+  "(di %d)\0"\
+  "(pagina %s)\0"\
+  "Apprupositu di SumatraPDF\0"\
+  "Aghjunghje \303\240 i favuriti\0"\
+  "Aghjunghje a pagina %s \303\240 i favuriti\0"\
+  "Aghjunghje a pagina %s \303\240 i favuriti c\303\271 u nome (ozzionale) :\0"\
+  "Aghjunghje \303\240 i favuriti\0"\
+  "Espertu\0"\
+  "Tutti i schedarii\0"\
+  "Tutti i ducumenti accettati\0"\
+  "Appiecazione :\0"\
+  "Assuci\303\240 c\303\271 schedarii PDF ?\0"\
+  "Schedariu liatu : %s\0"\
+  "Autore :\0"\
+  "Autumaticu\0"\
+  "Cuntroll\303\240 autumaticamente i &rinnovi\0"\
+  "Cum\342\200\231\303\250 un libru\0"\
+  "&Indette\tF12\0"\
+  "Accurtatoghji di l\342\200\231indette\0"\
+  "Accurtatoghju di l\342\200\231indetta di a pagina %s di %s\0"\
+  "Indette\0"\
+  "Ottetti\0"\
+  "Ducumenti d\342\200\231aiutu CHM\0"\
+  "\303\231n p\303\262 micca cunnettassi \303\240 Internet (sbagliu %#x).\0"\
+  "Abbandun\303\240\0"\
+  "\303\231n p\303\262 micca stamp\303\240 stu schedariu\0"\
+  "\303\231n p\303\262 micca lanci\303\240 a cumanda di ricerca \303\240 l\342\200\231arritrosa. Ci vole \303\240 verific\303\240 a linea di cumanda in e preferenze.\0"\
+  "Cambi\303\240 di lingua (Change Language)\0"\
+  "Cuntroll\303\240 e nove &versioni\0"\
+  "Libri comichi\0"\
+  "Cumpatibilit\303\240\0"\
+  "Vista in cuntinuu\0"\
+  "Vista in cuntinuu, cum\342\200\231\303\250 un libru\0"\
+  "Vista in cuntinuu, pagina doppia\0"\
+  "Cuntribuisce \303\240 a traduzzione\0"\
+  "Cupi\303\240 a &fiura\0"\
+  "Cupi\303\240 l\342\200\231&indirizzu di a leia\0"\
+  "Cupi\303\240 u cu&mmentu\0"\
+  "A copia di testu h\303\250 stata ricusata (solu una copia cum\342\200\231\303\250 fiura)\0"\
+  "Diritti di copia :\0"\
+  "Impussibule d\342\200\231ottene e prupriet\303\240 di a stampetta\0"\
+  "Impussibule d\342\200\231inizi\303\240 a stampetta\0"\
+  "Impussibule di present\303\240 a pagina\0"\
+  "Creatu :\0"\
+  "Schedariu attuale\0"\
+  "Pusizione di u cursore :\0"\
+  "&Ingrandamentu persunalizatu\342\200\246\tCtrl+Y\0"\
+  "Oscuru\0"\
+  "Pi\303\271 oscuru\0"\
+  "&Accunciamentu predefinitu :\0"\
+  "&Ingrandamentu predefinitu :\0"\
+  "U lettore PDF predefinitu \303\271n p\303\262 micca esse cambiatu in modu purtabule\0"\
+  "Permessi ricusati :\0"\
+  "Ducumenti DjVu\0"\
+  "Prupriet\303\240 di u ducumentu\0"\
+  "Scaric\303\240\0"\
+  "&Esce\tCtrl+Q\0"\
+  "Libri elettronichi EPUB\0"\
+  "Scrivite a parolla d\342\200\231entrata\0"\
+  "Scrivite a parolla d\342\200\231entrata per %s\0"\
+  "Scrivite a linea di cumanda \303\240 eseguisce quandu ci h\303\250 un doppiu-cliccu nant\342\200\231\303\240 u ducumentu PDF :\0"\
+  "Sbagliu di caricamentu di %s\0"\
+  "&Favuriti\0"\
+  "&Dopu\tAlt+Fleccia diritta\0"\
+  "&Screnu sanu\tF11\0"\
+  "Pagina doppia\0"\
+  "Fiascu per rinum\303\240 u schedariu !\0"\
+  "Fiascu per arregistr\303\240 un schedariu\0"\
+  "Vista web rapida\0"\
+  "Favuriti\0"\
+  "Ducumenti FictionBook\0"\
+  "Schedariu %s micca trovu\0"\
+  "Dimensione di schedariu :\0"\
+  "Schedariu :\0"\
+  "&Circ\303\240\342\200\246\tCtrl+F\0"\
+  "Circ\303\240\0"\
+  "Occurrenza seguente\0"\
+  "Occurrenza precedente\0"\
+  "Circ\303\240 :\0"\
+  "&Adatt\303\240 \303\240 u cuntenutu\tCtrl+3\0"\
+  "&Pagina sana\tCtrl+0\0"\
+  "&Larghezza sana\tCtrl+2\0"\
+  "Adatt\303\240 \303\240 u cuntenutu\0"\
+  "Pagina sana\0"\
+  "Larghezza sana\0"\
+  "Larghezza sana \303\250 vista in cuntinuu\0"\
+  "Pagina unica\0"\
+  "Grafie :\0"\
+  "Messa in forma di u libru\342\200\246 %d pagine\0"\
+  "Testu trovu \303\240 a pagina %s\0"\
+  "Testu trovu \303\240 a pagina %s (torna)\0"\
+  "Ducumenti letti aspessu\0"\
+  "Go\0"\
+  "And\303\240 \303\240 a pagina\0"\
+  "Piatt\303\240 i ducumenti letti aspessu\0"\
+  "Indiziu : Impieg\303\240 u tastu F3 per circ\303\240 torna\0"\
+  "Schedarii di fiura (*.%s)\0"\
+  "Ko\0"\
+  "Chjaru\0"\
+  "Mo\0"\
+  "F\303\240 di SumatraPDF l\342\200\231appiecazione predefinita per i schedarii PDF ?\0"\
+  "F\303\240 di SumatraPDF u mo lettore PDF predefinitu\0"\
+  "Modu Man&ga\0"\
+  "Rispett\303\240 a cassa\0"\
+  "Ducumenti Mobi\0"\
+  "Mudificatu :\0"\
+  "A nova versione %s h\303\250 dispunibule. Scaricalla ?\0"\
+  "Pagina seguente\0"\
+  "Alcuna occurrenza trova\0"\
+  "Alcunu risultatu trovu circa a linea %u in u schedariu %s\0"\
+  "Alcunu schedariu di sincrunizazione trovu\0"\
+  "Alcuna infurmazione di sincrunizazione trova \303\240 sta pusizione\0"\
+  "Numeru di pagine :\0"\
+  "Vai\0"\
+  "Apre\0"\
+  "Apre c\303\271 &PDF-XChange\0"\
+  "Apre un ducumentu\342\200\246\0"\
+  "Apre c\303\271 %s\0"\
+  "Apre c\303\271 Ad&obe Reader\0"\
+  "Apre c\303\271 &Foxit Reader\0"\
+  "Apre c\303\271 Microsoft &HTML Help\0"\
+  "Apre c\303\271 Microsoft &XPS-Viewer\0"\
+  "&Prupriet\303\240\0"\
+  "&Prupriet\303\240\tCtrl+D\0"\
+  "Ducumentu PDF\0"\
+  "Migliuramenti di PDF :\0"\
+  "PDF pruduttu da :\0"\
+  "Versione di PDF :\0"\
+  "Ducumenti PDF\0"\
+  "Pa&gina\342\200\246\tCtrl+G\0"\
+  "Pagina %s\0"\
+  "Messa \303\240 a scala\r\nDimensioni di a pagina :\0"\
+  "A pagina %u \303\271n esiste micca\0"\
+  "Messa \303\240 a scala\0"\
+  "Pagina :\0"\
+  "Ducumenti PalmDoc\0"\
+  "Aspittate per piac\303\250 ; trasfurmazione\342\200\246\0"\
+  "Ducumenti Postscript\0"\
+  "&Presentazione\tF5\0"\
+  "Pagina precedente\0"\
+  "Stamp\303\240\0"\
+  "Stesa di stampa\0"\
+  "A stampetta c\303\271 stu nome \303\271n esiste micca\0"\
+  "Stampa in corsu.\0"\
+  "Stampa sempre in corsu. Interrompe \303\250 esce ?\0"\
+  "Stampa sempre in corsu. Interrompe \303\250 principi\303\240 torna ?\0"\
+  "Stampa di a pagina %d di %d\342\200\246\0"\
+  "Penseru di stampa.\0"\
+  "&Rinum\303\240\342\200\246\tF2\0"\
+  "Arricurdassi i &schedarii aperti\0"\
+  "Cacci\303\240 da i favuriti\0"\
+  "Cacci\303\240 a pagina %s da i favuriti\0"\
+  "Rinum\303\240 ver di\0"\
+  "Gir\303\240 \303\240 &manca\tCtrl+Maiusc+-\0"\
+  "&Gir\303\240 \303\240 diritta\tCtrl+Maiusc++\0"\
+  "Arregistr\303\240 c\303\271 u nome\0"\
+  "Arregistr\303\240 l\342\200\231&accurtatoghju\342\200\246\tCtrl+Maiusc+S\0"\
+  "Ricerc\303\240 %d di %d\342\200\246\0"\
+  "&Tuttu selezziun\303\240\0"\
+  "&Tuttu selezziun\303\240\tCtrl+A\0"\
+  "Selezziun\303\240 u cuntenutu c\303\271 Ctrl+Buttone di manca di u topu\0"\
+  "Selezzione :\0"\
+  "&Mand\303\240 da eMail\342\200\246\0"\
+  "Definisce a linea di cumanda di ricerca \303\240 l\342\200\231arritrosa\0"\
+  "Affiss\303\240 l\342\200\231indette\0"\
+  "Vista in &cuntinuu\0"\
+  "Affiss\303\240 a &barra d\342\200\231attrezzi\tF8\0"\
+  "Affiss\303\240 i favuriti\0"\
+  "Affiss\303\240 i ducumenti letti aspessu\0"\
+  "Affiss\303\240 a &barra laterale di l\342\200\231unghjette s\342\200\231ella h\303\250 dispunibule\0"\
+  "Pagina sola\0"\
+  "Quessu \303\271n duveria mai accade !\n\nCi vole \303\240 sceglie \302\253 Abbandun\303\240 \302\273 s\342\200\231\303\250 voi vulete aiutacci \303\240 currege a causa di stu penseru.\0"\
+  "U schedariu d\342\200\231urigine %s \303\271n h\303\240 micca di puntu di sincrunizazione\0"\
+  "Sughjettu :\0"\
+  "Ozzioni di SumatraPDF\0"\
+  "Rinnovu di SumatraPDF\0"\
+  "SumatraPDF s\342\200\231h\303\250 lampatu\0"\
+  "SumatraPDF h\303\250 u vostru lettore PDF predefinitu\0"\
+  "Av\303\240 SumatraPDF duveria esse u vostru lettore PDF predefinitu\0"\
+  "U schedariu di sincrunizazione \303\271n p\303\262 micca esse apertu\0"\
+  "PDF etichettatu\0"\
+  "Ducumenti di testu\0"\
+  "Stu ducumentu impiegheghja funzioni micca accettate (%s) \303\250 u risultatu puderia \303\271n esse cus\303\254 b\303\250\0"\
+  "Titulu :\0"\
+  "Schedariu d\342\200\231urigine scunnisciutu (%s)\0"\
+  "Impieg\303\240 l\342\200\231&unghjette\0"\
+  "Affissera\0"\
+  "Visit\303\240 u situ &web\0"\
+  "Avertimentu\0"\
+  "Ducumenti XPS\0"\
+  "Impiegate l\342\200\231ultima versione.\0"\
+  "Avete a versione %s\0"\
+  "Adatt\303\240\0"\
+  "Pi\303\271 mai\303\262\0"\
+  "Pi\303\271 chjucu\0"\
+  "Fattore d\342\200\231ingrandamentu\0"\
+  "[Cambiamenti abbentati ; attualizazione] %s\0"\
+  "copia di testu\0"\
+  "stampa di ducumentu\0";
 
 const char * gTranslations_hr = 
   "&O programu...\0"\
@@ -14897,6 +15149,7 @@ static const char *gTranslations[LANGS_COUNT] = {
   gTranslations_ca_xv, 
   gTranslations_cn, 
   gTranslations_tw, 
+  gTranslations_co, 
   gTranslations_hr, 
   gTranslations_cz, 
   gTranslations_dk, 
@@ -14961,6 +15214,7 @@ const char *gLangCodes =   "en\0" \
   "ca-xv\0" \
   "cn\0" \
   "tw\0" \
+  "co\0" \
   "hr\0" \
   "cz\0" \
   "dk\0" \
@@ -15021,6 +15275,7 @@ const char *gLangNames =   "English\0" \
   "Catalan-Valencian (Catal\303\240-Valenci\303\240)\0" \
   "Chinese Simplified (\347\256\200\344\275\223\344\270\255\346\226\207)\0" \
   "Chinese Traditional (\347\271\201\351\253\224\344\270\255\346\226\207)\0" \
+  "Corsican\0" \
   "Croatian (Hrvatski)\0" \
   "Czech (\304\214e\305\241tina)\0" \
   "Danish (Dansk)\0" \
@@ -15093,6 +15348,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
   (LANGID)-1,
   MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED),
   MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL),
+  _LANGID(LANG_CORSICAN),
   _LANGID(LANG_CROATIAN),
   _LANGID(LANG_CZECH),
   _LANGID(LANG_DANISH),
@@ -15144,7 +15400,7 @@ const LANGID gLangIds[LANGS_COUNT] = {
 
 bool IsLangRtl(int idx)
 {
-  return (2 == idx) || (24 == idx) || (32 == idx) || (40 == idx);
+  return (2 == idx) || (25 == idx) || (33 == idx) || (41 == idx);
 }
 
 int gLangsCount = LANGS_COUNT;
