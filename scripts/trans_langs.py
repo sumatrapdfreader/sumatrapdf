@@ -8,7 +8,7 @@ g_langs = [
     ('az', 'Azerbaijani (Azərbaycanca)', '_LANGID(LANG_AZERI)'),
     ('bg', 'Bulgarian (Български)', '_LANGID(LANG_BULGARIAN)'),
     ('bn', 'Bengali (বাংলা)', '_LANGID(LANG_BENGALI)'),
-    ('co', 'Corsican', '_LANGID(LANG_CORSICAN)'),
+    ('co', 'Corsican (Corsu)', '_LANGID(LANG_CORSICAN)'),
     ('br', 'Portuguese - Brazil (Português)', 'MAKELANGID(LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN)'),
     ('bs', 'Bosnian (Bosanski)', 'MAKELANGID(LANG_BOSNIAN, SUBLANG_BOSNIAN_BOSNIA_HERZEGOVINA_LATIN)'),
     ('by', 'Belarusian (Беларуская)', '_LANGID(LANG_BELARUSIAN)'),

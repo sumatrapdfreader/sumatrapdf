@@ -3299,7 +3299,7 @@ const char * gTranslations_co =
   "Cum\342\200\231\303\250 un &libru\tCtrl+8\0"\
   "&Chjode\tCtrl+W\0"\
   "Cupi\303\240 a sele&zzione\0"\
-  "Cupi\303\240 a sele&zzione\tCtrl+C\0"\
+  "&Cupi\303\240 a selezzione\tCtrl+C\0"\
   "\303\231n mi dumand\303\240 &pi\303\271\0"\
   "Solu e pagine &pare\0"\
   "Pagina &doppia\tCtrl+7\0"\
@@ -3333,11 +3333,11 @@ const char * gTranslations_co =
   "Arregistr\303\240 c\303\271 u &nome\342\200\246\0"\
   "Arregistr\303\240 c\303\271 u &nome\342\200\246\tCtrl+S\0"\
   "&Preferenze\0"\
-  "&Strittisce e pagine \303\240 l\342\200\231aghja di stampa (s\342\200\231\303\250 bisognu)\0"\
-  "Pagina &sola\tCtrl+6\0"\
+  "&Strittisce e pagine \303\240 l\342\200\231aghja di stampa (s\342\200\231ellu h\303\250 bisognu)\0"\
+  "&Una pagina sola\tCtrl+6\0"\
   "&Tralasci\303\240 sta versione\0"\
   "&Temu\0"\
-  "&Impieg\303\240 e dimensioni di pagina d\342\200\231urigine\0"\
+  "&Impieg\303\240 e dimensioni di a pagina d\342\200\231urigine\0"\
   "&Affiss\303\240\0"\
   "Fin&estra\0"\
   "&I\303\250\0"\
@@ -3370,7 +3370,7 @@ const char * gTranslations_co =
   "\303\231n p\303\262 micca stamp\303\240 stu schedariu\0"\
   "\303\231n p\303\262 micca lanci\303\240 a cumanda di ricerca \303\240 l\342\200\231arritrosa. Ci vole \303\240 verific\303\240 a linea di cumanda in e preferenze.\0"\
   "Cambi\303\240 di lingua (Change Language)\0"\
-  "Cuntroll\303\240 e nove &versioni\0"\
+  "&Cuntroll\303\240 e nove versioni\0"\
   "Libri comichi\0"\
   "Cumpatibilit\303\240\0"\
   "Vista in cuntinuu\0"\
@@ -3507,7 +3507,7 @@ const char * gTranslations_co =
   "&Mand\303\240 da eMail\342\200\246\0"\
   "Definisce a linea di cumanda di ricerca \303\240 l\342\200\231arritrosa\0"\
   "Affiss\303\240 l\342\200\231indette\0"\
-  "Vista in &cuntinuu\0"\
+  "&Vista in cuntinuu\0"\
   "Affiss\303\240 a &barra d\342\200\231attrezzi\tF8\0"\
   "Affiss\303\240 i favuriti\0"\
   "Affiss\303\240 i ducumenti letti aspessu\0"\
@@ -3529,7 +3529,7 @@ const char * gTranslations_co =
   "Schedariu d\342\200\231urigine scunnisciutu (%s)\0"\
   "Impieg\303\240 l\342\200\231&unghjette\0"\
   "Affissera\0"\
-  "Visit\303\240 u situ &web\0"\
+  "&Visit\303\240 u situ web\0"\
   "Avertimentu\0"\
   "Ducumenti XPS\0"\
   "Impiegate l\342\200\231ultima versione.\0"\
@@ -15275,7 +15275,7 @@ const char *gLangNames =   "English\0" \
   "Catalan-Valencian (Catal\303\240-Valenci\303\240)\0" \
   "Chinese Simplified (\347\256\200\344\275\223\344\270\255\346\226\207)\0" \
   "Chinese Traditional (\347\271\201\351\253\224\344\270\255\346\226\207)\0" \
-  "Corsican\0" \
+  "Corsican (Corsu)\0" \
   "Croatian (Hrvatski)\0" \
   "Czech (\304\214e\305\241tina)\0" \
   "Danish (Dansk)\0" \

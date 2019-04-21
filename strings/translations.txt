@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-3c15473d45ac498c3b58c157301af22d91163e7a
+353a52e8d97e1ddb32794de25ba2efd6bc81556a
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -545,7 +545,7 @@ by:&Капіяваць выбранае\tCtrl+C
 ca-xv:&Copia la selecció\tCtrl+C
 ca:&Copia la selecció\tCtrl+C
 cn:复制选定范围(&C)\tCtrl+C
-co:Cupià a sele&zzione\tCtrl+C
+co:&Cupià a selezzione\tCtrl+C
 cy:Copïo'r Dewis\tCtrl+C
 cz:&Kopírovat výběr\tCtrl+C
 de:Auswahl &kopieren\tStrg+C
@@ -2833,7 +2833,7 @@ by:&Сціскаць старонкі да вобласці друку (калі
 ca-xv:&Reduïu les pàgines a l'àrea imprimible (si és necessari)
 ca:&Reduïu les pàgines a l'àrea imprimible (si és necessari)
 cn:缩小页面到可打印区域 (如果需要) (&S)
-co:&Strittisce e pagine à l’aghja di stampa (s’è bisognu)
+co:&Strittisce e pagine à l’aghja di stampa (s’ellu hè bisognu)
 cy:C&rebachu tudalennau i'r ardal argraffu (os oes angen)
 cz:&Zmenšit stránky na tisknutelnou plochu (v případě potřeby)
 de:Seiten auf Druckbereich &verkleinern (falls nötig)
@@ -2894,7 +2894,7 @@ by:&Адна старонка\tCtrl+6
 ca-xv:Pàgina ú&nica\tCtrl+6
 ca:Pàgina ú&nica\tCtrl+6
 cn:单页模式(&S)\tCtrl+6
-co:Pagina &sola\tCtrl+6
+co:&Una pagina sola\tCtrl+6
 cy:Tudalen &Unigol\tCtrl+6
 cz:&Jedna stránka\tCtrl+6
 de:&Einzelne Seite\tStrg+6
@@ -3069,7 +3069,7 @@ by:&Выкарыстоўваць звычайны памер старонкі
 ca-xv:&Usa la mida de pàgina original
 ca:&Usa la mida de pàgina original
 cn:使用原始页面大小(&U)
-co:&Impiegà e dimensioni di pagina d’urigine
+co:&Impiegà e dimensioni di a pagina d’urigine
 cy:&Defnyddio maint gwreiddiol y dudalen
 cz:Po&užít původní velikost stránky
 de:Seitengröße &nicht anpassen
@@ -5317,7 +5317,7 @@ by:Праверыць наяўнасць новай версіі
 ca-xv:&Comprova si hi ha una versió nova
 ca:&Comprova si hi ha una versió nova
 cn:检查是否有新版本(&U)
-co:Cuntrollà e nove &versioni
+co:&Cuntrollà e nove versioni
 cy:Gwirio am &Ddiweddariad
 cz:&Zkontrolovat aktualizace
 de:Nach &neuer Version suchen
@@ -15799,7 +15799,7 @@ by:Паказваць Бесперапынную &Старонку
 ca-xv:Mostra les &pàgines de forma contínua
 ca:Mostra les &pàgines de forma contínua
 cn:连续显示页面(&P)
-co:Vista in &cuntinuu
+co:&Vista in cuntinuu
 cy:Dangos &tudalennau'n ddidor
 cz:Zobrazit stránky &průběžně
 de:Seiten &fortlaufend anzeigen
@@ -17954,7 +17954,7 @@ by:Наведаць сайт
 ca-xv:Visiteu el lloc &web
 ca:Visiteu el lloc &web
 cn:访问网站(&W)
-co:Visità u situ &web
+co:&Visità u situ web
 cy:&Ymweld â'r Wefan
 cz:Navštívit &webovou stránku
 de:SumatraPDF im &Internet

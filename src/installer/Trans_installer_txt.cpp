@@ -2761,7 +2761,7 @@ const char *gLangNames =   "English\0" \
   "Catalan-Valencian (Catal\303\240-Valenci\303\240)\0" \
   "Chinese Simplified (\347\256\200\344\275\223\344\270\255\346\226\207)\0" \
   "Chinese Traditional (\347\271\201\351\253\224\344\270\255\346\226\207)\0" \
-  "Corsican\0" \
+  "Corsican (Corsu)\0" \
   "Croatian (Hrvatski)\0" \
   "Czech (\304\214e\305\241tina)\0" \
   "Danish (Dansk)\0" \
