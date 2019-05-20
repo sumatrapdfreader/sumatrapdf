@@ -32,11 +32,19 @@ The intent is to standardize how we do it.
 #define PROCESS_DEP_DISABLE_ATL_THUNK_EMULATION 0x2
 #endif
 
+// TODO: bump WINVER version to get definition for SetProcessDEPPolicy etc.
+// typedef decltype(SetProcessDEPPolicy)* Sig_SetProcessDEPPolicy;
+typedef decltype(IsWow64Process)* Sig_IsWow64Process;
+//typedef decltype(SetDllDirectoryW)* Sig_SetDllDirectoryW;
+typedef decltype(RtlCaptureContext)* Sig_RtlCaptureContext;
+typedef decltype(SetDefaultDllDirectories)* Sig_SetDefaultDllDirectories;
+//typedef decltype(SetProcessMitigationPolicy)* Sig_SetProcessMitigationPolicy;
+
 typedef BOOL(WINAPI* Sig_SetProcessDEPPolicy)(DWORD dwFlags);
-typedef BOOL(WINAPI* Sig_IsWow64Process)(HANDLE, PBOOL);
+// typedef BOOL(WINAPI* Sig_IsWow64Process)(HANDLE, PBOOL);
 typedef BOOL(WINAPI* Sig_SetDllDirectoryW)(LPCWSTR);
-typedef void(WINAPI* Sig_RtlCaptureContext)(PCONTEXT);
-typedef BOOL(WINAPI* Sig_SetDefaultDllDirectories)(DWORD);
+// typedef void(WINAPI* Sig_RtlCaptureContext)(PCONTEXT);
+// typedef BOOL(WINAPI* Sig_SetDefaultDllDirectories)(DWORD);
 typedef BOOL(WINAPI* Sig_SetProcessMitigationPolicy)(int, PVOID, SIZE_T);
 
 #define KERNEL32_API_LIST(V)    \
