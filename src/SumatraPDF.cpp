@@ -3769,7 +3769,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
     }
 
     // 10 submenus max with 10 items each max (=100) plus generous buffer => 200
-    static_assert(IDM_FAV_LAST - IDM_FAV_FIRST == 200, "wrong numer of favorite menu ids");
+    static_assert(IDM_FAV_LAST - IDM_FAV_FIRST == 200, "wrong number of favorite menu ids");
     if ((wmId >= IDM_FAV_FIRST) && (wmId <= IDM_FAV_LAST)) {
         GoToFavoriteByMenuId(win, wmId);
     }
@@ -4129,7 +4129,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
 }
 
 static LRESULT OnFrameGetMinMaxInfo(MINMAXINFO* info) {
-	//limit windows min width to prevent render loop when siderbar is too big 
+	//limit windows min width to prevent render loop when siderbar is too big
     info->ptMinTrackSize.x = MIN_WIN_DX - SIDEBAR_MIN_WIDTH + gGlobalPrefs->sidebarDx;
     info->ptMinTrackSize.y = MIN_WIN_DY;
     return 0;

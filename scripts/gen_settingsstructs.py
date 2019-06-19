@@ -222,7 +222,7 @@ ChmUI = [
 ExternalViewer = [
 	Field("CommandLine", String, None,
 		"command line with which to call the external viewer, may contain " +
-		"%p for page numer and \"%1\" for the file name (add quotation " +
+		"%p for page number and \"%1\" for the file name (add quotation " +
 		"marks around paths containing spaces)"),
 	Field("Name", String, None,
 		"name of the external viewer to be shown in the menu (implied by CommandLine if missing)"),
