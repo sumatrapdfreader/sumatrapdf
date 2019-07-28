@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-353a52e8d97e1ddb32794de25ba2efd6bc81556a
+e4e521a4c52787ea5ad5bb795be39d723c9797a6
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -3026,6 +3026,7 @@ co:&Temu
 cy:&Thema
 cz:&Téma
 de:Anwendungs &Stil
+dk:Tema
 es:&Tema
 et:&Kujundus
 eu:&Azalgaia
@@ -4151,7 +4152,7 @@ pl:Czy na pewno chcesz usunąć SumatraPDF?
 pt:Tem a certeza que quer desinstalar o SumatraPDF?
 ro:Sunteti sigur ca doriti sa dezinstalati Sumatra PDF?
 ru:Вы уверены, что хотите удалить SumatraPDF?
-si:ඔබට SumatraPDF අස්ථාපනය කිරීමට අවශය්‍ය බවට විශ්වාසද?
+si:ඔබට SumatraPDF අස්ථාපනය කිරීමට අවශ්‍ය බවට විශ්වාසද?
 sk:Naozaj chcete odinštalovat SumatraPDF?
 sl:Ali ste prepričani, da želite odstraniti SumatraPDF?
 sn:Une chokwadi chekuti urikuda kubvisa SumatraPDF?
@@ -5017,7 +5018,7 @@ pl:Nie można połączyć z Internetem (błąd %#x).
 pt:Não foi possível ligar à Internet (erro %#x)
 ro:Conectare la Internet eșuată (eroare %#x).
 ru:Отсутствует соединение с Интернетом (ошибка %#x).
-si:අන්තර්ජාලයට සම්භන්ධවිය නොහැක (error %#x).
+si:අන්තර්ජාලයට සම්බන්ද විය නොහැක (error %#x).
 sk:Pripojenie k internetu zlyhalo (chyba %#x).
 sl:Ne morem se povezati na internet (napaka %#x).
 sp-rs:Povezivanje na internet nije moguće (greška %#x).
@@ -7287,6 +7288,7 @@ co:Oscuru
 cy:Tywyll
 cz:Tmavý
 de:Dunkel
+dk:Mørk
 es:Oscuro
 et:Tume
 eu:Iluna
@@ -7336,6 +7338,7 @@ co:Più oscuru
 cy:Tywyllach
 cz:Tmavší
 de:Dunkler
+dk:Mørkere
 es:Más oscuro
 et:Tumedam
 eu:Ilunagoa
@@ -8681,6 +8684,7 @@ co:Fiascu per inscrive cum’è prugramma predefinitu nant’à Windows 10
 cy:Methwyd cofrestru fel rhaglen rhagosodedig ar Win 10
 cz:Nepodařilo se nastavit jako výchozí program na Windows 10
 de:Fehler beim registrieren als Standardanwendung auf win 10
+dk:Kunne ikke registreres som standardprogram på win 10
 el:Απέτυχε να γίνει το προκαθορισμένο πρόγραμμα ανάγνωσης στα Win 10
 es:Fallo al registrar como programa por defecto en Windows 10.
 et:Vaikeprogrammina registreerumine Windows 10 all ebaõnnestus
@@ -11412,6 +11416,7 @@ co:Chjaru
 cy:Golau
 cz:Světlý
 de:Hell
+dk:Lys
 es:Claro
 et:Hele
 eu:Argia
@@ -13532,7 +13537,7 @@ by:Памер старонкі:
 ca-xv:Mida de pàgina:
 ca:Mida de pàgina:
 cn:页面大小:
-co:Messa à a scala\r\nDimensioni di a pagina :
+co:Messa à a scala\nDimensioni di a pagina :
 cy:Maint Tudalen:
 cz:Velikost stránky:
 de:Seitengröße:
