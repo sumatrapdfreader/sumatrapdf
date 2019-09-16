@@ -13373,10 +13373,10 @@ const char * gTranslations_es =
 const char * gTranslations_sv = 
   "&Om\0"\
   "&Verklig storlek\tCtrl+1\0"\
-  "&Avancerade inst\303\244llningar\0"\
+  "&Avancerade inst\303\244llningar...\0"\
   "&Alla valda sidor\0"\
   "Tillbaka\tAlt+Pil v\303\244nster\0"\
-  "&Bokvy\tCtrl+8\0"\
+  "&Bokuppslag\tCtrl+8\0"\
   "&St\303\244ng\tCtrl+W\0"\
   "&Kopiera markering\0"\
   "Kopiera markering\tCtrl+C\0"\
@@ -13392,9 +13392,9 @@ const char * gTranslations_sv =
   "&Hj\303\244lp\0"\
   "Sista sidan\tEnd\0"\
   "&F\303\266rstoring:\0"\
-  "\0"\
+  "&Manuell\0"\
   "Matcha &versaler/gemener\0"\
-  "N\303\244sta sida\t->\0"\
+  "N\303\244sta sida\tPil höger\0"\
   "&Nej\0"\
   "&Nej, tack\0"\
   "Endast &udda sidor\0"\
@@ -13403,25 +13403,25 @@ const char * gTranslations_sv =
   "Alternativ...\0"\
   "&L\303\266senord:\0"\
   "&F\303\244st dokument\0"\
-  "F\303\266reg\303\245ende sida\t<-\0"\
+  "F\303\266reg\303\245ende sida\tPil vänster\0"\
   "&Skriv ut...\0"\
   "Skriv &ut...\tCtrl+P\0"\
   "&Utskrift... (nekad)\0"\
-  "&Minns l\303\266senordet f\303\266r detta dokument\0"\
+  "&Kom ih\303\245g l\303\266senordet f\303\266r detta dokument\0"\
   "Kom ih\303\245g dessa inst\303\244llningar f\303\266r &varje dokument\0"\
   "&Ta bort dokument\0"\
   "&Spara som...\0"\
   "Spara so&m...\tCtrl+S\0"\
   "Alternati&v\0"\
-  "&Krymp sidor (om n\303\266dv\303\244ndigt) s\303\245 de ryms\0"\
+  "&Krymp sidor till utskrivbart omr\303\245de (om n\303\266dv\303\244ndigt)\0"\
   "&Enkel sida\tCtrl+6\0"\
   "Hoppa \303\266ver denna version\0"\
   "&Tema\0"\
-  "Anv\303\244nd u&rsprunglig sidstorlek\0"\
+  "Anv\303\244nd u&rsprungliga sidstorlekar\0"\
   "Vi&sa\0"\
   "F\303\266nster\0"\
   "&Ja\0"\
-  "\0"\
+  "&Zooma\0"\
   "(av %d)\0"\
   "(sida %s)\0"\
   "Om SumatraPDF\0"\
@@ -13434,7 +13434,7 @@ const char * gTranslations_sv =
   "Alla dokument som st\303\266ds\0"\
   "Programvara:\0"\
   "Koppla ihop med PDF-filer?\0"\
-  "Bilagor: %s\0"\
+  "Bilaga: %s\0"\
   "F\303\266rfattare:\0"\
   "Automatiskt\0"\
   "S\303\266k &automatiskt efter uppdateringar\0"\
@@ -13450,7 +13450,7 @@ const char * gTranslations_sv =
   "Kan ej skriva ut denna fil\0"\
   "Kan ej starta omv\303\244nd s\303\266kning. Kontrollera inst\303\244llningarna f\303\266r kommandoraden.\0"\
   "Byt spr\303\245k (Change Language)\0"\
-  "&S\303\266k efter ny version\0"\
+  "&S\303\266k efter uppdateringar\0"\
   "Serier\0"\
   "Kompatibilitet\0"\
   "Fortl\303\266pande\0"\
@@ -13461,7 +13461,7 @@ const char * gTranslations_sv =
   "Kopiera l\303\244nkadress\0"\
   "Kopiera kommentar\0"\
   "Textkopiering till\303\244ts ej (kopierar som bild)\0"\
-  "\0"\
+  "Upphovsrätt:\0"\
   "Kunde inte h\303\244mta egenskaper f\303\266r skrivare\0"\
   "Kunde ej anv\303\244nda skrivare\0"\
   "Kunde ej visa sidan\0"\
@@ -13471,10 +13471,10 @@ const char * gTranslations_sv =
   "&Anpassad zoom...\tCtrl+Y\0"\
   "M\303\266rk\0"\
   "M\303\266rkare\0"\
-  "F\303\266rvalt &utseende\0"\
-  "F\303\266rvalt &zooml\303\244ge\0"\
-  "SumatraPDF kan ej g\303\266ras f\303\266rvald i portabelt l\303\244ge\0"\
-  "Saknade Tillst\303\245nd:\0"\
+  "Standard &utseende\0"\
+  "Standard &zooml\303\244ge\0"\
+  "Standard PDF-läsare kan ej \303\244ndras i portabelt l\303\244ge\0"\
+  "Nekade tillst\303\245nd:\0"\
   "DjVu-dokument\0"\
   "Dokumentegenskaper\0"\
   "Ladda &ned\0"\
@@ -13482,17 +13482,17 @@ const char * gTranslations_sv =
   "EPUB-dokument\0"\
   "Ange l\303\266senord\0"\
   "Ange l\303\266senord f\303\266r %s\0"\
-  "Ange kommandorad att aktivera n\303\244r du dubbelklickar p\303\245 PDF-dokumentet:\0"\
+  "Ange kommandorad att som körs n\303\244r du dubbelklickar p\303\245 PDF-dokumentet:\0"\
   "Fel vid \303\266ppning av %s\0"\
   "&Favoriter\0"\
   "Fram\303\245t\tAlt+Pil h\303\266ger\0"\
-  "Fullsk\303\244rm\tCtrl+Shift+L\0"\
+  "Fullsk\303\244rm\tF11\0"\
   "Uppslag\0"\
   "Kunde inte d\303\266pa om filen!\0"\
-  "Kan inte spara filen.\0"\
-  "Snabb Webb-Visning\0"\
+  "Kunde inte spara filen.\0"\
+  "Snabb webb-vy\0"\
   "Favoriter\0"\
-  "FictionBook dokument\0"\
+  "FictionBook-dokument\0"\
   "Fil %s hittades inte\0"\
   "Filstorlek:\0"\
   "Fil:\0"\
@@ -13501,41 +13501,41 @@ const char * gTranslations_sv =
   "S\303\266k n\303\244sta\0"\
   "S\303\266k f\303\266reg\303\245ende\0"\
   "S\303\266k:\0"\
-  "Passa &inneh\303\245ll\tCtrl+3\0"\
+  "Anpassa efter &inneh\303\245ll\tCtrl+3\0"\
   "Anpassa efter &helsida\tCtrl+0\0"\
   "Anpassa efter &bredd\tCtrl+2\0"\
-  "Passa inneh\303\245ll\0"\
+  "Anpassa efter inneh\303\245ll\0"\
   "Anpassa efter helsida\0"\
   "Anpassa efter bredd\0"\
-  "Anpassa bredd och visa sidor fortl\303\266pande\0"\
+  "Anpassa efter bredd och visa sidor fortl\303\266pande\0"\
   "Anpassa till helsida\0"\
   "Typsnitt:\0"\
   "Formatterar bok... %d sidor\0"\
   "Hittade text p\303\245 sidan %s\0"\
   "Hittade text p\303\245 sida %s (igen)\0"\
   "Mest l\303\244sta\0"\
-  "\0"\
+  "GB\0"\
   "G\303\245 till sida\0"\
   "D\303\266lj mest l\303\244sta\0"\
   "Tips: Tryck F3 f\303\266r att s\303\266ka vidare\0"\
   "Bildfiler (*.%s)\0"\
-  "\0"\
+  "KB\0"\
   "Ljus\0"\
-  "\0"\
+  "MB\0"\
   "St\303\244lla in SumatraPDF som standardprogram f\303\266r PDF-filer?\0"\
   "Anv\303\244nd SumatraPDF som standardl\303\244sare f\303\266r PDF\0"\
-  "Man&ga L\303\244ge\0"\
+  "Man&ga-l\303\244ge\0"\
   "Matcha versaler/gemener\0"\
   "Mobi-dokument\0"\
   "\303\204ndrad:\0"\
-  "Nyare version %s tillg\303\244nglig. Ladda ner den?\0"\
+  "Nyare version %s tillg\303\244nglig. Hämta den?\0"\
   "N\303\244sta sida\0"\
   "Inga tr\303\244ffar hittades\0"\
-  "Inget resultat hittades vid rad %u i filen %s\0"\
+  "Inget resultat hittades vid rad %u i fil %s\0"\
   "Ingen synkroniseringsfil hittad\0"\
   "Synkroniseringsinformation saknas h\303\244r\0"\
   "Antal sidor:\0"\
-  "\0"\
+  "OK\0"\
   "\303\226ppna\0"\
   "\303\226ppna i PDF-XChange\0"\
   "\303\226ppna ett dokument...\0"\
@@ -13547,8 +13547,8 @@ const char * gTranslations_sv =
   "E&genskaper\0"\
   "&Egenskaper...\tCtrl+D\0"\
   "PDF-dokument\0"\
-  "PDF Optimeringar:\0"\
-  "PDF-programvara:\0"\
+  "PDF-optimeringar:\0"\
+  "PDF-producent:\0"\
   "PDF-version:\0"\
   "PDF-dokument\0"\
   "Sida...\tCtrl+G\0"\
@@ -13557,20 +13557,20 @@ const char * gTranslations_sv =
   "Sidnummer %u finns ej\0"\
   "Skala om vid utskrift\0"\
   "Sida:\0"\
-  "PalmDoc dokument\0"\
+  "PalmDoc-dokument\0"\
   "Ett \303\266gonblick - f\303\266rbereder...\0"\
   "Postscript-dokument\0"\
-  "Pr&esentation\tCtrl+L\0"\
+  "Pr&esentation\tF5\0"\
   "F\303\266reg\303\245ende sida\0"\
   "Skriv ut\0"\
-  "Skriv ut urval\0"\
+  "Skriv ut intervall\0"\
   "Det finns ingen skrivade med angivet namn\0"\
   "Utskrift p\303\245g\303\245r.\0"\
   "Utskrift p\303\245g\303\245r fortfarande. Avbryt och avsluta?\0"\
   "Utskriften p\303\245g\303\245r fortfarande. Avbryt och b\303\266rja om?\0"\
   "Skriver ut sida %d av %d...\0"\
   "Utskriftsproblem.\0"\
-  "D\303\266p om\0"\
+  "D\303\266p om\tF2\0"\
   "Kom ih\303\245g \303\266ppnade &filer\0"\
   "Ta bort fr\303\245n favoriter\0"\
   "Ta bort sida %s fr\303\245n favoriter\0"\
@@ -13580,18 +13580,18 @@ const char * gTranslations_sv =
   "Spara som\0"\
   "Spara g&env\303\244g...\tCtrl+Shift+S\0"\
   "S\303\266ker %d av %d...\0"\
-  "Markera &alla\0"\
-  "V\303\244lj &Allt\tCtrl+A\0"\
-  "Markera med Ctrl + v\303\244nster musknapp\0"\
+  "Markera &allt\0"\
+  "Markera &allt\tCtrl+A\0"\
+  "Markera innehåll med Ctrl + v\303\244nster musknapp\0"\
   "Markering:\0"\
   "S&kicka som epost...\0"\
-  "S\303\244tt motsatt s\303\266k-kommandorad\0"\
+  "S\303\244tt omvänd s\303\266k-kommandorad\0"\
   "Visa &Bokm\303\244rken\0"\
   "Visa sidor fortl\303\266pande\0"\
-  "Visa verktygsf\303\244lt\0"\
+  "Visa verktygsf\303\244lt\tF8\0"\
   "Visa favoriter\0"\
   "Visa mest l\303\244sta\0"\
-  "Visa &bokm\303\244rken n\303\244r de finns\0"\
+  "Visa sidopanel för &bokm\303\244rken n\303\244r de finns\0"\
   "Enkel sida\0"\
   "Ledsen, det d\303\244r borde inte ha h\303\244nt!\n\nVar god tryck 'Avbryt', om du vill hj\303\244lpa oss att korrigera orsaken till denna krash.\0"\
   "K\303\244llfilen %s har ingen synkroniseringspunkt\0"\
@@ -13599,8 +13599,8 @@ const char * gTranslations_sv =
   "SumatraPDF Inst\303\244llningar\0"\
   "SumatraPDF Uppdatering\0"\
   "SumatraPDF avslutades ov\303\244ntat\0"\
-  "SumatraPDF \303\244r din valda PDF-l\303\244sare\0"\
-  "SumatraPDF ska nu vara din valda PDF-l\303\244sare\0"\
+  "SumatraPDF \303\244r din standard-PDF-l\303\244sare\0"\
+  "SumatraPDF ska nu vara din standard-PDF-l\303\244sare\0"\
   "Synkroniseringsfil kan ej \303\266ppnas\0"\
   "Taggad PDF\0"\
   "Text-dokument\0"\
@@ -13614,7 +13614,7 @@ const char * gTranslations_sv =
   "XPS-dokument\0"\
   "Du har den senaste versionen.\0"\
   "Du har version %s\0"\
-  "\0"\
+  "Zooma\0"\
   "Zooma in\0"\
   "Zooma ut\0"\
   "Zoomfaktor\0"\
