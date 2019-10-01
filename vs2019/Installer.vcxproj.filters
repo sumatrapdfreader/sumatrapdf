@@ -1,0 +1,410 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="ext">
+      <UniqueIdentifier>{7670880B-E279-887C-6BF5-9E7CD7FD937C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\bzip2">
+      <UniqueIdentifier>{6CFB48FC-D865-FD72-21A4-AE188D4DDBC7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\lzma">
+      <UniqueIdentifier>{39F81ED9-25C5-79E4-4EDE-678C3A0AAF72}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\lzma\C">
+      <UniqueIdentifier>{CBF0BD9C-B7A8-FFE9-20B0-D8450C879ADA}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\unarr">
+      <UniqueIdentifier>{ED169AFD-5981-4E74-A2BF-FF190E692CC9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\unarr\_7z">
+      <UniqueIdentifier>{EC2691D9-58E7-0C10-2122-568D8DA151EC}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\unarr\common">
+      <UniqueIdentifier>{A58B8DDE-9184-AC30-BAB6-91B5A60E8C3C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\unarr\lzmasdk">
+      <UniqueIdentifier>{925DAD7E-FE73-AB14-47EB-3636B3407C9C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\unarr\rar">
+      <UniqueIdentifier>{217D91D9-8D3D-0D10-5678-568DC2F751EC}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\unarr\tar">
+      <UniqueIdentifier>{A38591D9-0F46-0D10-D880-568D440052EC}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\unarr\zip">
+      <UniqueIdentifier>{2FA091D9-9B60-0D10-649B-568DD01A52EC}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\zlib">
+      <UniqueIdentifier>{766926D9-6236-81E4-8B4F-6F8C777BB672}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{2DAB880B-99B4-887C-2230-9F7C8E38947C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\installer">
+      <UniqueIdentifier>{EACC4227-568D-BE5D-1FC8-07DB8B47033A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\utils">
+      <UniqueIdentifier>{6DAA42B6-D914-F72C-2253-A8D28EFCD481}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\ext\unarr\_7z\_7z.h">
+      <Filter>ext\unarr\_7z</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\unarr\common\allocator.h">
+      <Filter>ext\unarr\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\unarr\common\unarr-imp.h">
+      <Filter>ext\unarr\common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\unarr\rar\lzss.h">
+      <Filter>ext\unarr\rar</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\unarr\rar\rar.h">
+      <Filter>ext\unarr\rar</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\unarr\rar\rarvm.h">
+      <Filter>ext\unarr\rar</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\unarr\tar\tar.h">
+      <Filter>ext\unarr\tar</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\unarr\zip\inflate.h">
+      <Filter>ext\unarr\zip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\unarr\zip\zip.h">
+      <Filter>ext\unarr\zip</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\CrashHandler.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Translations.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\installer\Installer.h">
+      <Filter>src\installer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\installer\Resource.h">
+      <Filter>src\installer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\Archive.h">
+      <Filter>src\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\BaseUtil.h">
+      <Filter>src\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\BitReader.h">
+      <Filter>src\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\ByteOrderDecoder.h">
+      <Filter>src\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\CmdLineParser.h">
+      <Filter>src\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\DbgHelpDyn.h">
+      <Filter>src\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\DebugLog.h">
+      <Filter>src\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\Dict.h">
+      <Filter>src\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\DirIter.h">
+      <Filter>src\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\Dpi.h">
+      <Filter>src\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\FileUtil.h">
+      <Filter>src\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\FzImgReader.h">
+      <Filter>src\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\GdiPlusUtil.h">
+      <Filter>src\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\HttpUtil.h">
+      <Filter>src\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\LzmaSimpleArchive.h">
+      <Filter>src\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\StrFormat.h">
+      <Filter>src\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\StrSlice.h">
+      <Filter>src\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\StrUtil.h">
+      <Filter>src\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\TgaReader.h">
+      <Filter>src\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\ThreadUtil.h">
+      <Filter>src\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\UITask.h">
+      <Filter>src\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\WebpReader.h">
+      <Filter>src\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\WinDynCalls.h">
+      <Filter>src\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\WinUtil.h">
+      <Filter>src\utils</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\ext\bzip2\bzip_all.c">
+      <Filter>ext\bzip2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lzma\C\7zBuf.c">
+      <Filter>ext\lzma\C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lzma\C\7zDec.c">
+      <Filter>ext\lzma\C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lzma\C\7zIn.c">
+      <Filter>ext\lzma\C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lzma\C\7zStream.c">
+      <Filter>ext\lzma\C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lzma\C\Bcj2.c">
+      <Filter>ext\lzma\C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lzma\C\Bra.c">
+      <Filter>ext\lzma\C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lzma\C\Bra86.c">
+      <Filter>ext\lzma\C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lzma\C\LzFind.c">
+      <Filter>ext\lzma\C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lzma\C\LzFindMt.c">
+      <Filter>ext\lzma\C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lzma\C\Lzma2Dec.c">
+      <Filter>ext\lzma\C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lzma\C\LzmaDec.c">
+      <Filter>ext\lzma\C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lzma\C\LzmaEnc.c">
+      <Filter>ext\lzma\C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\lzma\C\Threads.c">
+      <Filter>ext\lzma\C</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\_7z\_7z.c">
+      <Filter>ext\unarr\_7z</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\common\conv.c">
+      <Filter>ext\unarr\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\common\crc32.c">
+      <Filter>ext\unarr\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\common\custalloc.c">
+      <Filter>ext\unarr\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\common\stream.c">
+      <Filter>ext\unarr\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\common\unarr.c">
+      <Filter>ext\unarr\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\lzmasdk\CpuArch.c">
+      <Filter>ext\unarr\lzmasdk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\lzmasdk\Ppmd7.c">
+      <Filter>ext\unarr\lzmasdk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\lzmasdk\Ppmd7Dec.c">
+      <Filter>ext\unarr\lzmasdk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\lzmasdk\Ppmd8.c">
+      <Filter>ext\unarr\lzmasdk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\lzmasdk\Ppmd8Dec.c">
+      <Filter>ext\unarr\lzmasdk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\rar\filter-rar.c">
+      <Filter>ext\unarr\rar</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\rar\huffman-rar.c">
+      <Filter>ext\unarr\rar</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\rar\parse-rar.c">
+      <Filter>ext\unarr\rar</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\rar\rar.c">
+      <Filter>ext\unarr\rar</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\rar\rarvm.c">
+      <Filter>ext\unarr\rar</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\rar\uncompress-rar.c">
+      <Filter>ext\unarr\rar</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\tar\parse-tar.c">
+      <Filter>ext\unarr\tar</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\tar\tar.c">
+      <Filter>ext\unarr\tar</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\zip\inflate.c">
+      <Filter>ext\unarr\zip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\zip\parse-zip.c">
+      <Filter>ext\unarr\zip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\zip\uncompress-zip.c">
+      <Filter>ext\unarr\zip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\unarr\zip\zip.c">
+      <Filter>ext\unarr\zip</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zlib\adler32.c">
+      <Filter>ext\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zlib\compress.c">
+      <Filter>ext\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zlib\crc32.c">
+      <Filter>ext\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zlib\deflate.c">
+      <Filter>ext\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zlib\gzclose.c">
+      <Filter>ext\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zlib\gzlib.c">
+      <Filter>ext\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zlib\gzread.c">
+      <Filter>ext\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zlib\gzwrite.c">
+      <Filter>ext\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zlib\inffast.c">
+      <Filter>ext\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zlib\inflate.c">
+      <Filter>ext\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zlib\inftrees.c">
+      <Filter>ext\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zlib\trees.c">
+      <Filter>ext\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\zlib\zutil.c">
+      <Filter>ext\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\CrashHandler.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Translations.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\installer\InstUninstCommon.cpp">
+      <Filter>src\installer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\installer\Installer.cpp">
+      <Filter>src\installer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\installer\Trans_installer_txt.cpp">
+      <Filter>src\installer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\Archive.cpp">
+      <Filter>src\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\BaseUtil.cpp">
+      <Filter>src\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\BitReader.cpp">
+      <Filter>src\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\ByteOrderDecoder.cpp">
+      <Filter>src\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\CmdLineParser.cpp">
+      <Filter>src\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\DbgHelpDyn.cpp">
+      <Filter>src\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\DebugLog.cpp">
+      <Filter>src\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\Dict.cpp">
+      <Filter>src\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\DirIter.cpp">
+      <Filter>src\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\Dpi.cpp">
+      <Filter>src\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\FileUtil.cpp">
+      <Filter>src\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\FzImgReader.cpp">
+      <Filter>src\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\GdiPlusUtil.cpp">
+      <Filter>src\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\HttpUtil.cpp">
+      <Filter>src\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\LzmaSimpleArchive.cpp">
+      <Filter>src\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\StrFormat.cpp">
+      <Filter>src\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\StrSlice.cpp">
+      <Filter>src\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\StrUtil.cpp">
+      <Filter>src\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\StrUtil_win.cpp">
+      <Filter>src\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\TgaReader.cpp">
+      <Filter>src\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\ThreadUtil.cpp">
+      <Filter>src\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\UITask.cpp">
+      <Filter>src\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\WebpReader.cpp">
+      <Filter>src\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\WinDynCalls.cpp">
+      <Filter>src\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\WinUtil.cpp">
+      <Filter>src\utils</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\src\installer\Installer.rc">
+      <Filter>src\installer</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

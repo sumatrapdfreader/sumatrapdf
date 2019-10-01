@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="installer">
+      <UniqueIdentifier>{136B88E7-7FD5-3C5E-C813-EE0334BD1AB3}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\CrashHandler.h" />
+    <ClInclude Include="..\src\Translations.h" />
+    <ClInclude Include="..\src\installer\Installer.h">
+      <Filter>installer</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\CrashHandler.cpp" />
+    <ClCompile Include="..\src\Translations.cpp" />
+    <ClCompile Include="..\src\installer\InstUninstCommon.cpp">
+      <Filter>installer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\installer\Trans_installer_txt.cpp">
+      <Filter>installer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\installer\Uninstaller.cpp">
+      <Filter>installer</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
