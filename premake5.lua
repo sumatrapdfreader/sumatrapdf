@@ -70,6 +70,10 @@ workspace "SumatraPDF"
     location "vs2017"
   filter {}
 
+  filter "action:vs2019"
+    location "vs2019"
+  filter {}
+
   filter "action:gmake"
     location "gmake"
   filter {}
