@@ -101,10 +101,10 @@ workspace "SumatraPDF"
     symbols "Full"
   filter {}
 
+  staticruntime  "On"
   -- https://github.com/premake/premake-core/wiki/flags
   flags {
     "MultiProcessorCompile",
-    "StaticRuntime",
     -- "Unicode", TODO: breaks libdjuv?
   }
 
