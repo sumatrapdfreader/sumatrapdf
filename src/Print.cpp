@@ -826,7 +826,7 @@ bool PrintFile(BaseEngine* engine, WCHAR* printerName, bool displayErrors, const
     }
 
     HANDLE printer;
-    BOOL res = OpenPrinter(printerName, &printer, nullptr);
+    BOOL res = OpenPrinterW(printerName, &printer, nullptr);
     if (!res) {
         if (displayErrors) {
             MessageBoxWarning(nullptr, _TR("Printer with given name doesn't exist"), _TR("Printing problem."));
@@ -834,38 +834,32 @@ bool PrintFile(BaseEngine* engine, WCHAR* printerName, bool displayErrors, const
         return false;
     }
 
-    LONG returnCode = 0;
     LONG structSize = 0;
     LPDEVMODE devMode = nullptr;
-    // get printer driver information
+
     DWORD needed = 0;
-    GetPrinter(printer, 2, nullptr, 0, &needed);
+    GetPrinterW(printer, 2, nullptr, 0, &needed);
     ScopedMem<PRINTER_INFO_2> infoData((PRINTER_INFO_2*)AllocArray<BYTE>(needed));
     if (infoData) {
-        res = GetPrinter(printer, 2, (LPBYTE)infoData.Get(), needed, &needed);
+        res = GetPrinterW(printer, 2, (LPBYTE)infoData.Get(), needed, &needed);
     }
     if (!res || !infoData || needed <= sizeof(PRINTER_INFO_2)) {
         goto Exit;
     }
 
-    structSize = DocumentProperties(nullptr, printer, printerName, nullptr, /* Asking for size, so */
-                                    nullptr,                                /* not used. */
-                                    0);                                     /* Zero returns buffer size. */
-    if (structSize < sizeof(DEVMODE)) {
-        // If failure, inform the user, cleanup and return failure.
+    /* ask for the size of DEVMODE struct */
+    structSize = DocumentPropertiesW(nullptr, printer, printerName, nullptr, nullptr, 0);
+    if (structSize < sizeof(DEVMODEW)) {
         if (displayErrors) {
             MessageBoxWarning(nullptr, _TR("Could not obtain Printer properties"), _TR("Printing problem."));
         }
         goto Exit;
     }
-    devMode = AllocStruct<DEVMODE>();
+    devMode = (DEVMODEW*)Allocator::AllocZero(nullptr, structSize);
 
     // Get the default DevMode for the printer and modify it for your needs.
-    returnCode = DocumentProperties(nullptr, printer, printerName, devMode, /* The address of the buffer to fill. */
-                                    nullptr,                                /* Not using the input buffer. */
-                                    DM_OUT_BUFFER);                         /* Have the output buffer filled. */
-    if (IDOK != returnCode) {
-        // If failure, inform the user, cleanup and return failure.
+    LONG ret = DocumentPropertiesW(nullptr, printer, printerName, devMode, nullptr, DM_OUT_BUFFER);
+    if (IDOK != ret) {
         if (displayErrors) {
             MessageBoxWarning(nullptr, _TR("Could not obtain Printer properties"), _TR("Printing problem."));
         }
