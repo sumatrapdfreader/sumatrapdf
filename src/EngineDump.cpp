@@ -425,7 +425,7 @@ int main(int argc, char** argv) {
     UNUSED(argc);
     UNUSED(argv);
     setlocale(LC_ALL, "C");
-    DisableDataExecution();
+    EnableDataExecution();
 
     WStrVec argList;
     ParseCmdLine(GetCommandLine(), argList);

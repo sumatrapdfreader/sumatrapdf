@@ -283,7 +283,7 @@ WCHAR* GetSpecialFolder(int csidl, bool createIfMissing) {
     return str::Dup(path);
 }
 
-void DisableDataExecution() {
+void EnableDataExecution() {
     // first try the documented SetProcessDEPPolicy
     if (DynSetProcessDEPPolicy) {
         DynSetProcessDEPPolicy(PROCESS_DEP_ENABLE);

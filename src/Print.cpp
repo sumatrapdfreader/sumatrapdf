@@ -858,7 +858,7 @@ bool PrintFile(BaseEngine* engine, WCHAR* printerName, bool displayErrors, const
         }
         goto Exit;
     }
-    devMode = AllocStruct<DEVMODE>();
+    devMode = (LPDEVMODE)Allocator::Alloc(nullptr,structSize);
 
     // Get the default DevMode for the printer and modify it for your needs.
     returnCode = DocumentProperties(nullptr, printer, printerName, devMode, /* The address of the buffer to fill. */
