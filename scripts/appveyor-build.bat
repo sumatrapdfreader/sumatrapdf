@@ -4,6 +4,12 @@ SETLOCAL
 REM assumes we're being run from top-level directory as:
 REM scripts\appveyor-build.bat
 
+@rem this is local for testing
+@rem call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" x64
+
+@rem this is on GitHub Actions
+call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64
+
 msbuild.exe "vs2019\SumatraPDF.sln" "/t:all;Installer" "/p:Configuration=Release;Platform=Win32" /m
 IF ERRORLEVEL 1 EXIT /B 1
 
