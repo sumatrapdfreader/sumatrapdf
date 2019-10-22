@@ -266,20 +266,23 @@ static void ResetRegKeyAcl(HKEY keySub, const WCHAR* keyName) {
 #pragma warning(pop)
 
 bool DeleteRegKey(HKEY keySub, const WCHAR* keyName, bool resetACLFirst) {
-    if (resetACLFirst)
+    if (resetACLFirst) {
         ResetRegKeyAcl(keySub, keyName);
+    }
 
     LSTATUS res = SHDeleteKeyW(keySub, keyName);
     return ERROR_SUCCESS == res || ERROR_FILE_NOT_FOUND == res;
 }
 
 WCHAR* GetSpecialFolder(int csidl, bool createIfMissing) {
-    if (createIfMissing)
+    if (createIfMissing) {
         csidl = csidl | CSIDL_FLAG_CREATE;
+    }
     WCHAR path[MAX_PATH] = {0};
     HRESULT res = SHGetFolderPath(nullptr, csidl, nullptr, 0, path);
-    if (S_OK != res)
+    if (S_OK != res) {
         return nullptr;
+    }
     return str::Dup(path);
 }
 
@@ -293,7 +296,8 @@ void DisableDataExecution() {
     // now try undocumented NtSetInformationProcess
     if (DynNtSetInformationProcess) {
         DWORD depMode = MEM_EXECUTE_OPTION_DISABLE | MEM_EXECUTE_OPTION_DISABLE_ATL;
-        DynNtSetInformationProcess(GetCurrentProcess(), PROCESS_EXECUTE_FLAGS, &depMode, sizeof(depMode));
+        HANDLE p = GetCurrentProcess();
+        DynNtSetInformationProcess(p, PROCESS_EXECUTE_FLAGS, &depMode, sizeof(depMode));
     }
 }
 
@@ -406,29 +410,35 @@ int FileTimeDiffInSecs(const FILETIME& ft1, const FILETIME& ft2) {
 
 WCHAR* ResolveLnk(const WCHAR* path) {
     ScopedMem<OLECHAR> olePath(str::Dup(path));
-    if (!olePath)
+    if (!olePath) {
         return nullptr;
+    }
 
     ScopedComPtr<IShellLink> lnk;
-    if (!lnk.Create(CLSID_ShellLink))
+    if (!lnk.Create(CLSID_ShellLink)) {
         return nullptr;
+    }
 
     ScopedComQIPtr<IPersistFile> file(lnk);
-    if (!file)
+    if (!file) {
         return nullptr;
+    }
 
     HRESULT hRes = file->Load(olePath, STGM_READ);
-    if (FAILED(hRes))
+    if (FAILED(hRes)) {
         return nullptr;
+    }
 
     hRes = lnk->Resolve(nullptr, SLR_UPDATE);
-    if (FAILED(hRes))
+    if (FAILED(hRes)) {
         return nullptr;
+    }
 
     WCHAR newPath[MAX_PATH] = {0};
     hRes = lnk->GetPath(newPath, MAX_PATH, nullptr, 0);
-    if (FAILED(hRes))
+    if (FAILED(hRes)) {
         return nullptr;
+    }
 
     return str::Dup(newPath);
 }
@@ -438,25 +448,30 @@ bool CreateShortcut(const WCHAR* shortcutPath, const WCHAR* exePath, const WCHAR
     ScopedCom com;
 
     ScopedComPtr<IShellLink> lnk;
-    if (!lnk.Create(CLSID_ShellLink))
+    if (!lnk.Create(CLSID_ShellLink)) {
         return false;
+    }
 
     ScopedComQIPtr<IPersistFile> file(lnk);
-    if (!file)
+    if (!file) {
         return false;
+    }
 
     HRESULT hr = lnk->SetPath(exePath);
-    if (FAILED(hr))
+    if (FAILED(hr)) {
         return false;
+    }
 
     lnk->SetWorkingDirectory(AutoFreeW(path::GetDir(exePath)));
     // lnk->SetShowCmd(SW_SHOWNORMAL);
     // lnk->SetHotkey(0);
     lnk->SetIconLocation(exePath, iconIndex);
-    if (args)
+    if (args) {
         lnk->SetArguments(args);
-    if (description)
+    }
+    if (description) {
         lnk->SetDescription(description);
+    }
 
     hr = file->Save(shortcutPath, TRUE);
     return SUCCEEDED(hr);
@@ -466,8 +481,9 @@ bool CreateShortcut(const WCHAR* shortcutPath, const WCHAR* exePath, const WCHAR
 IDataObject* GetDataObjectForFile(const WCHAR* filePath, HWND hwnd) {
     ScopedComPtr<IShellFolder> pDesktopFolder;
     HRESULT hr = SHGetDesktopFolder(&pDesktopFolder);
-    if (FAILED(hr))
+    if (FAILED(hr)) {
         return nullptr;
+    }
 
     IDataObject* pDataObject = nullptr;
     AutoFreeW lpWPath(str::Dup(filePath));
@@ -479,8 +495,9 @@ IDataObject* GetDataObjectForFile(const WCHAR* filePath, HWND hwnd) {
         hr = SHBindToParent(pidl, IID_IShellFolder, (void**)&pShellFolder, &pidlChild);
         if (SUCCEEDED(hr)) {
             hr = pShellFolder->GetUIObjectOf(hwnd, 1, &pidlChild, IID_IDataObject, nullptr, (void**)&pDataObject);
-            if (FAILED(hr))
+            if (FAILED(hr)) {
                 pDataObject = nullptr;
+            }
         }
         CoTaskMemFree(pidl);
     }
@@ -513,18 +530,20 @@ DWORD GetFileVersion(const WCHAR* path) {
     if (versionInfo && GetFileVersionInfo(path, 0, size, versionInfo)) {
         VS_FIXEDFILEINFO* fileInfo;
         UINT len;
-        if (VerQueryValue(versionInfo, L"\\", (LPVOID*)&fileInfo, &len))
+        if (VerQueryValue(versionInfo, L"\\", (LPVOID*)&fileInfo, &len)) {
             fileVersion = fileInfo->dwFileVersionMS;
+        }
     }
 
     return fileVersion;
 }
 
 bool LaunchFile(const WCHAR* path, const WCHAR* params, const WCHAR* verb, bool hidden) {
-    if (!path)
+    if (!path) {
         return false;
+    }
 
-    SHELLEXECUTEINFO sei = {0};
+    SHELLEXECUTEINFOW sei = {0};
     sei.cbSize = sizeof(sei);
     sei.fMask = SEE_MASK_FLAG_NO_UI;
     sei.lpVerb = verb;
@@ -536,14 +555,15 @@ bool LaunchFile(const WCHAR* path, const WCHAR* params, const WCHAR* verb, bool 
 
 HANDLE LaunchProcess(const WCHAR* cmdLine, const WCHAR* currDir, DWORD flags) {
     PROCESS_INFORMATION pi = {0};
-    STARTUPINFO si = {0};
+    STARTUPINFOW si = {0};
     si.cb = sizeof(si);
 
     // CreateProcess() might modify cmd line argument, so make a copy
     // in case caller provides a read-only string
     AutoFreeW cmdLineCopy(str::Dup(cmdLine));
-    if (!CreateProcessW(nullptr, cmdLineCopy, nullptr, nullptr, FALSE, flags, nullptr, currDir, &si, &pi))
+    if (!CreateProcessW(nullptr, cmdLineCopy, nullptr, nullptr, FALSE, flags, nullptr, currDir, &si, &pi)) {
         return nullptr;
+    }
 
     CloseHandle(pi.hThread);
     return pi.hProcess;
@@ -554,19 +574,21 @@ HANDLE LaunchProcess(const WCHAR* cmdLine, const WCHAR* currDir, DWORD flags) {
 RectI ShiftRectToWorkArea(RectI rect, bool bFully) {
     RectI monitor = GetWorkAreaRect(rect);
 
-    if (rect.y + rect.dy <= monitor.y || bFully && rect.y < monitor.y)
+    if (rect.y + rect.dy <= monitor.y || bFully && rect.y < monitor.y) {
         /* Rectangle is too far above work area */
         rect.Offset(0, monitor.y - rect.y);
-    else if (rect.y >= monitor.y + monitor.dy || bFully && rect.y + rect.dy > monitor.y + monitor.dy)
+    } else if (rect.y >= monitor.y + monitor.dy || bFully && rect.y + rect.dy > monitor.y + monitor.dy) {
         /* Rectangle is too far below */
         rect.Offset(0, monitor.y - rect.y + monitor.dy - rect.dy);
+    }
 
-    if (rect.x + rect.dx <= monitor.x || bFully && rect.x < monitor.x)
+    if (rect.x + rect.dx <= monitor.x || bFully && rect.x < monitor.x) {
         /* Too far left */
         rect.Offset(monitor.x - rect.x, 0);
-    else if (rect.x >= monitor.x + monitor.dx || bFully && rect.x + rect.dx > monitor.x + monitor.dx)
+    } else if (rect.x >= monitor.x + monitor.dx || bFully && rect.x + rect.dx > monitor.x + monitor.dx) {
         /* Too far right */
         rect.Offset(monitor.x - rect.x + monitor.dx - rect.dx, 0);
+    }
 
     return rect;
 }
@@ -577,8 +599,9 @@ RectI GetWorkAreaRect(RectI rect) {
     RECT tmpRect = rect.ToRECT();
     HMONITOR monitor = MonitorFromRect(&tmpRect, MONITOR_DEFAULTTONEAREST);
     BOOL ok = GetMonitorInfo(monitor, &mi);
-    if (!ok)
+    if (!ok) {
         SystemParametersInfo(SPI_GETWORKAREA, 0, &mi.rcWork, 0);
+    }
     return RectI::FromRECT(mi.rcWork);
 }
 
@@ -586,8 +609,9 @@ RectI GetWorkAreaRect(RectI rect) {
 RectI GetFullscreenRect(HWND hwnd) {
     MONITORINFO mi = {0};
     mi.cbSize = sizeof(mi);
-    if (GetMonitorInfo(MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST), &mi))
+    if (GetMonitorInfo(MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST), &mi)) {
         return RectI::FromRECT(mi.rcMonitor);
+    }
     // fall back to the primary monitor
     return RectI(0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
 }
