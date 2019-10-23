@@ -14,4 +14,4 @@ jobs:
         uses: actions/checkout@v1
 
       - name: Build
-        run: .\scripts\appveyor-build.bat
+        run: .\doit.bat -ci

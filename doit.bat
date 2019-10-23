@@ -1,0 +1,2 @@
+@cd do
+go run . %*

@@ -46,13 +46,17 @@ include("premake5.files.lua")
 
 workspace "SumatraPDF"
   configurations { "Debug", "Release", "ReleasePrefast" }
-  platforms { "x32", "x64" }
+  platforms { "x32", "x32_xp", "x64" }
   startproject "SumatraPDF-no-MUPDF"
+
+  filter "platforms:x32_xp"
+    architecture "x86"
+    toolset "v141_xp"
+    buildoptions { "/arch:IA32" } -- disable the default /arch:SSE2 for 32-bit builds
+  filter {}
 
   filter "platforms:x32"
      architecture "x86"
-     toolset "v141_xp"
-     buildoptions { "/arch:IA32" } -- disable the default /arch:SSE2 for 32-bit builds
   filter {}
 
   filter "platforms:x64"
@@ -79,16 +83,23 @@ workspace "SumatraPDF"
   filter {}
 
   filter {"platforms:x32", "configurations:Release"}
-    targetdir "rel"
+    targetdir "rel32"
   filter {"platforms:x32", "configurations:ReleasePrefast"}
-    targetdir "relPrefast"
+    targetdir "rel32_prefast"
   filter {"platforms:x32", "configurations:Debug"}
-    targetdir "dbg"
+    targetdir "dbg32"
+
+  filter {"platforms:x32_xp", "configurations:Release"}
+    targetdir "rel32_xp"
+  filter {"platforms:x32_xp", "configurations:ReleasePrefast"}
+    targetdir "rel32_prefast_xp"
+  filter {"platforms:x32_xp", "configurations:Debug"}
+    targetdir "dbg32_xp"
 
   filter {"platforms:x64", "configurations:Release"}
     targetdir "rel64"
   filter {"platforms:x64", "configurations:ReleasePrefast"}
-    targetdir "relPrefast64"
+    targetdir "rel64_prefast"
   filter {"platforms:x64", "configurations:Debug"}
     targetdir "dbg64"
   filter {}
@@ -128,7 +139,6 @@ workspace "SumatraPDF"
     optimize "On"
 
     filter "configurations:ReleasePrefast"
-      toolset "v141" -- xp toolset doesn't have prefast
       -- TODO: somehow /analyze- is default which creates warning about
       -- over-ride from cl.exe. Don't know how to disable the warning
       buildoptions { "/analyze" }
@@ -209,7 +219,7 @@ workspace "SumatraPDF"
     -- -I .\ext\libjpeg-turbo\win\ -f win32
     -- -o .\obj-rel\jpegturbo\jsimdcpu.obj
     -- .\ext\libjpeg-turbo\simd\jsimdcpu.asm
-    filter {'files:**.asm', 'platforms:x32'}
+    filter {'files:**.asm', 'platforms:x32 or x32_xp'}
        buildmessage '%{file.relpath}'
        buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
        buildcommands {
@@ -278,14 +288,14 @@ workspace "SumatraPDF"
     }
     -- .\ext\..\bin\nasm.exe -I .\mupdf\ -f win32 -o .\obj-rel\mupdf\font_base14.obj
     -- .\mupdf\font_base14.asm
-    filter {'files:**.asm', 'platforms:x32'}
+    filter {'files:**.asm', 'platforms:x32 or x32_xp'}
        buildmessage 'Compiling %{file.relpath}'
        buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
        buildcommands {
           '..\\bin\\nasm.exe -f win32 -I ../mupdf/ -o "%{cfg.objdir}/%{file.basename}.obj" "%{file.relpath}"'
        }
     filter {}
-
+    
     filter {'files:**.asm', 'platforms:x64'}
       buildmessage 'Compiling %{file.relpath}'
       buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }

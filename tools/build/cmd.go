@@ -163,6 +163,7 @@ func lookExeInEnvPath(env []string, exeName string) string {
 	}
 	return exePath
 }
+
 func detectVisualStudio() {
 	fatalIf(envForVS != nil, "called detectVisualStudio() second time")
 	envForVS = getEnvForVS2017()

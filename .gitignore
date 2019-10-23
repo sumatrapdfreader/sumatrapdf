@@ -11,6 +11,8 @@
 scripts/config.py
 scripts/secrets.json
 rel/
+rel32/
+out.txt
 rel64/
 rel64_unix/
 relPrefast/
