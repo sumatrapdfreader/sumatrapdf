@@ -14,4 +14,6 @@ jobs:
         uses: actions/checkout@v1
 
       - name: Build
+        env:
+          CERT_PWD: ${{ secrets.CERT_PWD }}
         run: .\doit.bat -ci

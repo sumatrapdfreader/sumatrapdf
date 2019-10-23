@@ -1,6 +1,9 @@
 package main
 
 import (
+	"fmt"
+	"io/ioutil"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -16,6 +19,28 @@ func must(err error) {
 
 func logf(format string, args ...interface{}) {
 	u.Logf(format, args...)
+}
+
+func fatalf(format string, args ...interface{}) {
+	s := fmt.Sprintf(format, args...)
+	panic(s)
+}
+
+func pj(elem ...string) string {
+	return filepath.Join(elem...)
+}
+func fatalIf(cond bool, format string, args ...interface{}) {
+	if !cond {
+		return
+	}
+	s := fmt.Sprintf(format, args...)
+	panic(s)
+}
+
+func fatalIfErr(err error) {
+	if err != nil {
+		panic(err)
+	}
 }
 
 func makePrintDuration(name string) func() {
@@ -108,4 +133,33 @@ func findSigntool() {
 		return s == "signtool.exe"
 	}
 	findFile(`C:\Program Files (x86)`, isSigntool)
+}
+
+func toTrimmedLines(d []byte) []string {
+	lines := strings.Split(string(d), "\n")
+	i := 0
+	for _, l := range lines {
+		l = strings.TrimSpace(l)
+		// remove empty lines
+		if len(l) > 0 {
+			lines[i] = l
+			i++
+		}
+	}
+	return lines[:i]
+}
+
+func httpDlMust(uri string) []byte {
+	res, err := http.Get(uri)
+	fatalIfErr(err)
+	d, err := ioutil.ReadAll(res.Body)
+	res.Body.Close()
+	fatalIfErr(err)
+	return d
+}
+
+func absPathMust(path string) string {
+	res, err := filepath.Abs(path)
+	must(err)
+	return res
 }
