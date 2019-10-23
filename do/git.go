@@ -1,16 +1,14 @@
 package main
 
 import (
-	"os/exec"
 	"strings"
 
 	"github.com/kjk/u"
 )
 
 func getGitLinearVersionMust() int {
-	cmd := exec.Command("git", "log", "--oneline")
-	out := u.RunCmdMust(cmd)
-	lines := toTrimmedLines([]byte(out))
+	out := runExeMust("git", "log", "--oneline")
+	lines := toTrimmedLines(out)
 	// we add 1000 to create a version that is larger than the svn version
 	// from the time we used svn
 	n := len(lines) + 1000
@@ -19,16 +17,14 @@ func getGitLinearVersionMust() int {
 }
 
 func getGitSha1Must() string {
-	cmd := exec.Command("git", "rev-parse", "HEAD")
-	out := u.RunCmdMust(cmd)
+	out := runExeMust("git", "rev-parse", "HEAD")
 	s := strings.TrimSpace(string(out))
 	u.PanicIf(len(s) != 40, "getGitSha1Must(): %s doesn't look like sha1\n", s)
 	return s
 }
 
 func isGitClean() bool {
-	cmd := exec.Command("git", "status", "--porcelain")
-	out := u.RunCmdMust(cmd)
+	out := runExeMust("git", "status", "--porcelain")
 	s := strings.TrimSpace(string(out))
 	return len(s) == 0
 }
@@ -38,12 +34,6 @@ func verifyGitCleanMust() {
 		return
 	}
 	u.PanicIf(!isGitClean(), "git has unsaved changes\n")
-}
-
-func runExeMust(c string, args ...string) []byte {
-	cmd := exec.Command(c, args...)
-	out := u.RunCmdMust(cmd)
-	return []byte(out)
 }
 
 /*
@@ -72,13 +62,13 @@ func verifyOnReleaseBranchMust() {
 	// 'git branch' return branch name in format: '* master'
 	out := runExeMust("git", "branch")
 	currBranch := getCurrentBranch(out)
-	pref := "rel"
-	suff := "working"
-	u.PanicIf(!strings.HasPrefix(currBranch, pref), "running on branch '%s' which is not 'rel${ver}working' branch\n", currBranch)
-	u.PanicIf(!strings.HasSuffix(currBranch, suff), "running on branch '%s' which is not 'rel${ver}working' branch\n", currBranch)
+	prefix := "rel"
+	suffix := "working"
+	u.PanicIf(!strings.HasPrefix(currBranch, prefix), "running on branch '%s' which is not 'rel${ver}working' branch\n", currBranch)
+	u.PanicIf(!strings.HasSuffix(currBranch, suffix), "running on branch '%s' which is not 'rel${ver}working' branch\n", currBranch)
 
-	ver := currBranch[len(pref):]
-	ver = ver[:len(ver)-len(suff)]
+	ver := currBranch[len(prefix):]
+	ver = ver[:len(ver)-len(suffix)]
 
 	u.PanicIf(!strings.HasPrefix(sumatraVersion, ver), "version mismatch, sumatra: '%s', branch: '%s'\n", sumatraVersion, ver)
 }

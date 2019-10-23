@@ -10,6 +10,7 @@ import (
 
 var (
 	flgNoCleanCheck bool
+	flgUpload       bool
 )
 
 func regenPremake() {
@@ -55,6 +56,7 @@ func main() {
 		flag.BoolVar(&flgBuildPreRelease, "build-pre-release", false, "build pre-release")
 		flag.BoolVar(&flgBuildLzsa, "build-lzsa", false, "build MakeLZSA.exe")
 		flag.BoolVar(&flgNoCleanCheck, "no-clean-check", false, "allow running if repo has changes (for testing build script)")
+		flag.BoolVar(&flgUpload, "upload", false, "upload the build to s3")
 		flag.Parse()
 	}
 

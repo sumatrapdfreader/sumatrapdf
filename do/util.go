@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/sha1"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -43,6 +44,26 @@ func fatalIfErr(err error) {
 	}
 }
 
+func absPathMust(path string) string {
+	res, err := filepath.Abs(path)
+	must(err)
+	return res
+}
+
+func runExeMust(c string, args ...string) []byte {
+	cmd := exec.Command(c, args...)
+	fmt.Printf("> %s\n", cmd)
+	out, err := cmd.CombinedOutput()
+	must(err)
+	return []byte(out)
+}
+
+func runExeLoggedMust(c string, args ...string) []byte {
+	cmd := exec.Command(c, args...)
+	out := u.RunCmdLoggedMust(cmd)
+	return []byte(out)
+}
+
 func makePrintDuration(name string) func() {
 	logf("%s\n", name)
 	timeStart := time.Now()
@@ -72,6 +93,25 @@ func getEnvAfterScript(path string) []string {
 		parts[idx] = strings.TrimSpace(env)
 	}
 	return parts
+}
+
+func fileSizeMust(path string) int64 {
+	size, err := u.GetFileSize(path)
+	must(err)
+	return size
+}
+
+func removeDirMust(dir string) {
+	err := os.RemoveAll(dir)
+	fatalIfErr(err)
+}
+
+func removeFileMust(path string) {
+	if !u.FileExists(path) {
+		return
+	}
+	err := os.Remove(path)
+	fatalIfErr(err)
 }
 
 func listExeFiles(dir string) {
@@ -149,6 +189,20 @@ func toTrimmedLines(d []byte) []string {
 	return lines[:i]
 }
 
+func dataSha1Hex(d []byte) string {
+	sha1 := sha1.Sum(d)
+	return fmt.Sprintf("%x", sha1[:])
+}
+
+func fileSha1Hex(path string) (string, error) {
+	d, err := ioutil.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+	sha1 := sha1.Sum(d)
+	return fmt.Sprintf("%x", sha1[:]), nil
+}
+
 func httpDlMust(uri string) []byte {
 	res, err := http.Get(uri)
 	fatalIfErr(err)
@@ -158,8 +212,17 @@ func httpDlMust(uri string) []byte {
 	return d
 }
 
-func absPathMust(path string) string {
-	res, err := filepath.Abs(path)
-	must(err)
-	return res
+func httpDlToFileMust(uri string, path string, sha1Hex string) {
+	if u.FileExists(path) {
+		sha1File, err := fileSha1Hex(path)
+		fatalIfErr(err)
+		fatalIf(sha1File != sha1Hex, "file '%s' exists but has sha1 of %s and we expected %s", path, sha1File, sha1Hex)
+		return
+	}
+	fmt.Printf("Downloading '%s'\n", uri)
+	d := httpDlMust(uri)
+	sha1File := dataSha1Hex(d)
+	fatalIf(sha1File != sha1Hex, "downloaded '%s' but it has sha1 of %s and we expected %s", uri, sha1File, sha1Hex)
+	err := ioutil.WriteFile(path, d, 0755)
+	fatalIfErr(err)
 }
