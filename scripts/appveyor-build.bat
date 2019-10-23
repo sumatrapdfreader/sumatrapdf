@@ -27,7 +27,7 @@ IF ERRORLEVEL 1 EXIT /B 1
 @rem ..\bin\MakeLZSA.exe SumatraPDF.pdb.lzsa libmupdf.pdb:libmupdf.pdb Installer.pdb:Installer.pdb SumatraPDF-no-MuPDF.pdb:SumatraPDF-no-MuPDF.pdb SumatraPDF.pdb:SumatraPDF.pdb
 @rem IF ERRORLEVEL 1 EXIT /B 1
 
-cd ..\rel64
+cd rel64
 ..\bin\MakeLZSA.exe SumatraPDF.pdb.lzsa libmupdf.pdb:libmupdf.pdb Installer.pdb:Installer.pdb SumatraPDF-no-MuPDF.pdb:SumatraPDF-no-MuPDF.pdb SumatraPDF.pdb:SumatraPDF.pdb
 IF ERRORLEVEL 1 EXIT /B 1
 
