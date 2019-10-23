@@ -17,15 +17,15 @@ call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliar
 msbuild.exe "vs2019\SumatraPDF.sln" "/t:SumatraPDF;Installer;test_util" "/p:Configuration=Release;Platform=x64" /m
 IF ERRORLEVEL 1 EXIT /B 1
 
-rel\test_util.exe
-IF ERRORLEVEL 1 EXIT /B 1
+@rem rel\test_util.exe
+@rem IF ERRORLEVEL 1 EXIT /B 1
 
 rel64\test_util.exe
 IF ERRORLEVEL 1 EXIT /B 1
 
-cd rel
-..\bin\MakeLZSA.exe SumatraPDF.pdb.lzsa libmupdf.pdb:libmupdf.pdb Installer.pdb:Installer.pdb SumatraPDF-no-MuPDF.pdb:SumatraPDF-no-MuPDF.pdb SumatraPDF.pdb:SumatraPDF.pdb
-IF ERRORLEVEL 1 EXIT /B 1
+@rem cd rel
+@rem ..\bin\MakeLZSA.exe SumatraPDF.pdb.lzsa libmupdf.pdb:libmupdf.pdb Installer.pdb:Installer.pdb SumatraPDF-no-MuPDF.pdb:SumatraPDF-no-MuPDF.pdb SumatraPDF.pdb:SumatraPDF.pdb
+@rem IF ERRORLEVEL 1 EXIT /B 1
 
 cd ..\rel64
 ..\bin\MakeLZSA.exe SumatraPDF.pdb.lzsa libmupdf.pdb:libmupdf.pdb Installer.pdb:Installer.pdb SumatraPDF-no-MuPDF.pdb:SumatraPDF-no-MuPDF.pdb SumatraPDF.pdb:SumatraPDF.pdb
