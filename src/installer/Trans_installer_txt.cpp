@@ -977,7 +977,7 @@ const char * gTranslations_gl =
   "Fallou a copia do desinstalador no cartafol temporal\0"\
   "Fallou a creaci\303\263n do atallo\0"\
   "Fallou o borrado das claves de rexistro\0"\
-  "\0"\
+  "Non se puido rexistrar como programa por defecto en Windows 10\0"\
   "Non se puido escribir a informaci\303\263n de extensi\303\263n do ficheiro no rexistro\0"\
   "Fallouse ao escribir a informaci\303\263n de desintalaci\303\263n no rexistro\0"\
   "Agochar as &opci\303\263ns\0"\
@@ -1215,18 +1215,18 @@ const char * gTranslations_id =
   "Izinkan Windows menampilkan dokumen PDF\0"\
   "Silakan tutup %s untuk melanjutkan.\0"\
   "Pilih folder instalasi SumatraPDF:\0"\
-  "Beberapa berkas yang akan diinstal rusak atau terhapus.\0"\
+  "Beberapa berkas yang akan diinstal rusak atau hilang.\0"\
   "Jalankan SumatraPDF\0"\
-  "Pasang SumatraPDF %s\0"\
-  "Penghapus SumatraPDF %s\0"\
+  "Pemasang instalasi SumatraPDF %s\0"\
+  "Penghapus instalasi SumatraPDF %s\0"\
   "SumatraPDF telah dihapus\0"\
   "Instalasi SumatraPDF tidak ditemukan.\0"\
-  "Terima kasih telah memakai SumatraPDF!\0"\
+  "Terima kasih telah memilih SumatraPDF!\0"\
   "Terima kasih. SumatraPDF telah berhasil terinstal.\0"\
   "Installer rusak. Harap unduh lagi.\nMaaf atas ketidaknyamanan ini!\0"\
   "\0"\
   "Proses uninstall gagal.\0"\
-  "Proses uninstall sedang berjalan...\0"\
+  "Proses uninstall sedang berlangsung...\0"\
   "Gunakan SumatraPDF sebagai pembaca PDF standar.\0";
 
 const char * gTranslations_ga = 
@@ -1787,7 +1787,7 @@ const char * gTranslations_fa =
   "\332\251\331\276\333\214 \332\251\330\261\330\257\331\206 \330\250\330\261\331\206\330\247\331\205\331\207\342\200\214\333\214 \330\255\330\260\331\201 \330\250\331\207 \331\276\331\210\330\264\331\207\342\200\214\333\214 \331\205\331\210\331\202\330\252 \331\206\330\247\331\205\331\210\331\201\331\202 \330\250\331\210\330\257\0"\
   "\330\256\330\267\330\247 \330\257\330\261 \330\247\333\214\330\254\330\247\330\257 \331\205\333\214\330\247\331\206\330\250\330\261\0"\
   "\332\251\331\204\333\214\330\257\331\207\330\247\333\214 \330\261\330\254\333\214\330\263\330\252\330\261\333\214 \330\250\330\261\331\206\330\247\331\205\331\207\342\200\214\333\214 \330\255\330\260\331\201 \331\276\330\247\332\251 \331\206\330\264\330\257\0"\
-  "\0"\
+  "\330\257\330\261 \331\276\333\214\330\264\331\201\330\261\330\266 \331\202\330\261\330\247\330\261\330\257\330\247\330\257 \330\247\331\276\331\204\333\214\332\251\333\214\330\264\331\206 \330\257\330\261 \331\210\333\214\331\206\330\257\331\210\330\262 10 \330\256\330\267\330\247\333\214\333\214 \330\261\330\256 \330\257\330\247\330\257\331\207 \330\247\330\263\330\252\0"\
   "\330\253\330\250\330\252 \330\247\330\267\331\204\330\247\330\271\330\247\330\252 \330\247\330\261\330\263\330\247\331\204 \330\264\330\257\331\207 \330\250\330\247 \331\276\330\263\331\210\331\206\330\257 \330\267\331\210\331\204\330\247\331\206\333\214 \331\206\330\247\331\205\331\210\331\201\331\202\0"\
   "\330\253\330\250\330\252 \330\247\330\267\331\204\330\247\330\271\330\247\330\252 \331\201\330\261\330\242\333\214\331\206\330\257 \330\255\330\260\331\201 \330\257\330\261 \330\261\330\254\333\214\330\263\330\252\330\261\333\214 \331\206\330\247\331\205\331\210\331\201\331\202 \330\250\331\210\330\257\0"\
   "\331\205\330\256\331\201\333\214 \332\251\330\261\330\257\331\206 &\332\257\330\262\333\214\331\206\331\207\342\200\214\331\207\330\247\0"\
@@ -2348,11 +2348,11 @@ const char * gTranslations_sv =
   "Kunde inte hitta SumatraPDF-installation.\0"\
   "Tack f\303\266r att du v\303\244ljer SumatraPDF!\0"\
   "Tack! SumatraPDF \303\244r nu installerat.\0"\
-  "Installationsprogrammet \303\244r skadat. V\303\244nligen ladda ner det igen.\nVi ber om urs\303\244kt f\303\266r problemen.\0"\
+  "Installationsprogrammet \303\244r skadat. V\303\244nligen h\303\244mta det igen.\nVi ber om urs\303\244kt f\303\266r problemen.\0"\
   "Avinstallera SumatraPDF\0"\
   "Avinstallationen misslyckades\0"\
   "Avinstallerar...\0"\
-  "Anv\303\244nd SumatraPDF som standardl\303\244sare f\303\266r PDF-filer\0";
+  "Anv\303\244nd SumatraPDF som standardl\303\244sare f\303\266r PDF\0";
 
 const char * gTranslations_ta = 
   "&\340\256\265\340\256\277\340\256\260\340\257\201\340\256\252\340\257\215\340\256\252\340\256\256\340\257\215\0"\

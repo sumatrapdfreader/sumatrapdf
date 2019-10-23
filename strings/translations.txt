@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-e4e521a4c52787ea5ad5bb795be39d723c9797a6
+32353a77766f0fc0025d92ff86dd5a1cd74d2f04
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -50,7 +50,7 @@ ne:&बारेमा
 nl:&Over
 nn:&Om
 no:&Om
-pa:Sumatra ਬਾਰੇ(&A)
+pa:&ਇਸ ਬਾਰੇ
 pl:&O SumatraPDF
 pt:&Sobre
 ro:&Despre
@@ -121,7 +121,7 @@ ne:&सही आकार\tCtrl+1
 nl:&Ware grootte\tCtrl+1
 nn:F&aktisk storleik\tCtrl+1
 no:Fak&tisk størrelse\tCtrl+1
-pa:ਸਹੀ ਅਕਾਰ(&u)\tCtrl+1
+pa:&ਅਸਲ ਅਕਾਰ\tCtrl+1
 pl:&Rozmiar rzeczywisty\tCtrl+1
 pt:&Tamanho real\tCtrl+1
 ro:Mărime &efectivă\tCtrl+1
@@ -187,6 +187,7 @@ ne:&उन्नत विकल्प
 nl:&Geavanceerde Opties...
 nn:&Avanserte innstillingar
 no:&Avanserte innstillinger
+pa:&ਉੱਨਤ ਵਿਕਲਪ
 pl:Opcje zaawansowane...
 pt:Opções &avançadas...
 ro:Opțiuni &avansate...
@@ -197,7 +198,7 @@ sl:N&apredne možnosti …
 sp-rs:Napredna podešavanja...
 sq:Opsionet e &avancuara...
 sr-rs:Напредне опције
-sv:&Avancerade inställningar
+sv:&Avancerade inställningar...
 ta:மேம்பட்ட விருப்பத்தேர்வுகள் (A)
 th:yyyy
 tr:Gelişmiş Ayarlar
@@ -235,7 +236,7 @@ he:כל העמודים הנבחרים
 hi:&सभी चयनित पृष्ठों
 hr:Sve obilježene str&anice
 hu:Az összes kiválasztott oldal
-id:&Semua halaman yang dipilih
+id:&Semua halaman terpilih
 it:&Tutte le pagine selezionate
 ja:すべての選択されたページ(&A)
 jv:&Kabeh kaca sing kapilih
@@ -252,6 +253,7 @@ ne:चयन गरिएका &सबै पृष्ठहरु
 nl:&Alle geselecteerde pagina's
 nn:&Alle valde sider
 no:&Alle valgte sider
+pa:&ਸਾਰੇ ਚੁਣੇ ਹੋਏ ਪੰਨੇ
 pl:&Zaznaczone strony
 pt:&Todas as páginas selecionadas
 ro:Toate paginile selectate
@@ -318,6 +320,7 @@ ne:&पछाडि\tAlt+बायाँ बाण
 nl:Terug\tAlt+<-
 nn:&Tilbake\tAlt+Venstretast
 no:Tilbake\tAlt+←
+pa:&Back\tAlt+Left Arrow
 pl:&Wstecz\tAlt+W lewo
 pt:V&oltar\tAlt + <-
 ro:Înapoi\tAlt+<-
@@ -515,6 +518,7 @@ ne:चयनको प्रति&लिपि बनाउनुहोस्
 nl:Selectie kopiëren
 nn:&Kopier utval
 no:&Kopier valgt område
+pa:&ਚੋਣ ਦੀ ਕਾਪੀ ਕਰੋ
 pl:Kopiuj &zaznaczenie
 pt:&Copiar seleção
 ro:&Copiază selecția
@@ -579,6 +583,7 @@ ne:चयनको प्रति&लिपि बनाउनुहोस्\t
 nl:Kopieer selectie\tCtrl+C
 nn:&Kopier utval\tCtrl+C
 no:Kopier merket tekst\tCtrl+C
+pa:&ਚੋਣ ਦੀ ਕਾਪੀ ਕਰੋ\tCtrl+C
 pl:Kopiuj &zaznaczenie\tCtrl+C
 pt:&Copiar seleção\tCtrl+C
 ro:&Copiere selecție\tCtrl+C
@@ -1178,6 +1183,7 @@ ne:&पृष्ठमा जानुहोस्:
 nl:&Ga naar pagina:
 nn:&Hopp til side:
 no:&Gå til side:
+pa:&ਇਸ ਪੰਨੇ 'ਤੇ ਜਾਓ:
 pl:Idź &do strony:
 pt:Ir pa&ra a página:
 ro:Salt la pagina:
@@ -1592,7 +1598,7 @@ sn:Peji yemberi\t->
 sp-rs:Sledeća stranica\t->
 sq:&Faqja tjetër\tRight Arrow
 sr-rs:Следећа страница\t->
-sv:Nästa sida\t->
+sv:Nästa sida\tPil höger
 ta:அடுத்த பக்கம்\t->
 th:หน้าถัดไป\t->
 tl:Sunod na Pahina\t->
@@ -1649,6 +1655,7 @@ ne:&नाइँ/हैन
 nl:&Nee
 nn:&Nei
 no:&Nei
+pa:&ਨਹੀਂ
 pl:&Nie
 pt:&Não
 ro:&Nu
@@ -2236,7 +2243,7 @@ sn:Peji yesure\t<-
 sp-rs:Prethodna stranica\t<-
 sq:&Faqja e mëparshme\tLeft Arrow
 sr-rs:Претходна страница\t<-
-sv:Föregående sida\t<-
+sv:Föregående sida\tPil vänster
 ta:முந்தைய பக்கம்\tLeft Arrow
 th:หน้าก่อนหน้า\t<-
 tl:Naunang Pahina\t<-
@@ -2494,7 +2501,7 @@ sl:&Zapomni si geslo za ta dokument
 sp-rs:Zapamti lozinku za ovaj dokument
 sq:&Mbaj mend fjalëkalimin për këtë dokument
 sr-rs:Запамти лозинку за овај документ
-sv:&Minns lösenordet för detta dokument
+sv:&Kom ihåg lösenordet för detta dokument
 ta:கடவுச்சொல்லை நினைவில் வை
 tl:Tandaan ang password para sa dokumentong ito
 tr:Bu belge için şifreyi &hatırla
@@ -2532,7 +2539,7 @@ he:קבע הגדרות אלו לכל הקבצים
 hi:प्रत्येक दस्तावेज़ के लिए इन सेटिंग्स को &याद रखें
 hr:&Upamti ove postavke za svaki pojedini dokument
 hu:Eltérő nézetbeállítások megjegyzése dokumentumonként
-id:&Ingat pengaturan ini untuk setiap dokumen
+id:&Ingat setelan ini untuk setiap dokumen
 it:&Ricorda queste impostazioni per ogni documento
 ja:ドキュメントごとにこれらの設定を記憶する(&R)
 ka:ამ პარამეტრების ყველა დოკუმენტზე &მორგება
@@ -2875,7 +2882,7 @@ sl:&Skrči strani na področje tiskanja (če potrebno)
 sp-rs:Skupi stranice na oblast štampanja (ukoliko je neophodno)
 sq:&Ngjesh faqet në hapësirën e printuar (sipas nevojës)
 sr-rs:Скупи странице на област штампања (уколико је неопходно)
-sv:&Krymp sidor (om nödvändigt) så de ryms
+sv:&Krymp sidor till utskrivbart område (om nödvändigt)
 ta:கோப்பை அச்சிடும் அளவிற்கு சுருக்கு (தேவைபட்டால்)
 tl:Paliitin ang pahina sa printable na area (kung kinakailangan)
 tr:Sayfaları baskı alanına &indirgele (gerekirse)
@@ -3017,6 +3024,7 @@ vn:Bỏ qua phiên bản này.
 am:&Ոճը
 ar:&قالب
 az:&Tema
+bg:&Тема
 br:&Tema
 by:&Скура
 ca-xv:&Tema
@@ -3030,8 +3038,10 @@ dk:Tema
 es:&Tema
 et:&Kujundus
 eu:&Azalgaia
+fa:&قالب
 fr:Thème
 ga:&Téama
+gl:&Tema
 he:ערכת נושא
 hr:&Tema
 hu:Kinézet
@@ -3088,7 +3098,7 @@ he:השתמש במידות עמוד מקוריות
 hi:वास्तविक पृष्ठ आकार का उपयोग(&U) करें
 hr:Koristi &originalne veličine stranica
 hu:Eredeti oldalméret használata
-id:&Gunakan ukuran halaman sebenarnya
+id:&Gunakan ukuran halaman asli
 it:&Usa larghezza pagina originale
 ja:元のページ サイズを使用する(&U)
 ka:&გვერდების ორიგინალი ზომის გამოყენება
@@ -3112,7 +3122,7 @@ sl:&Uporabi izvirno velikost strani
 sp-rs:Upotrebi originalne veličine stranica
 sq:&Përdor përmasat origjinale të fletës
 sr-rs:Употреби оригиналне величине страница
-sv:Använd u&rsprunglig sidstorlek
+sv:Använd u&rsprungliga sidstorlekar
 ta:மூல பக்க அளவுகளை உபயோகி
 tl:Gamitin ang orihinal na laki ng mga pahina
 tr:Orijinal sayfa boyutlarını &kullan
@@ -3169,7 +3179,7 @@ ne:&हेर्नुहोस्
 nl:&Beeld
 nn:&Vis
 no:&Visning
-pa:ਵੇਖੋ(&V)
+pa:&ਦਿੱਖ
 pl:&Widok
 pt:&Ver
 ro:&Vizualizare
@@ -3555,7 +3565,7 @@ ne:SumatraPDF बारेमा
 nl:Over SumatraPDF
 nn:Om SumatraPDF
 no:Om SumatraPDF
-pa:Sumatra ਬਾਰੇ
+pa:SumatraPDF ਬਾਰੇ
 pl:O SumatraPDF
 pt:Sobre o SumatraPDF
 ro:Despre SumatraPDF
@@ -3624,6 +3634,7 @@ ne:मनपर्नेमा थप्नुहोस्
 nl:Voeg Favoriet toe
 nn:Legg til ein favoritt
 no:Legg til i Favoritter
+pa:ਪਸੰਦੀਦਾ ਜੋੜੋ
 pl:Dodaj do ulubionych
 pt:Adicionar favorito
 ro:Adaugă ca favorit
@@ -3689,6 +3700,7 @@ ne:पृष्ठ %s लाई मनपर्नेमा थप्नुह�
 nl:Voeg pagina %s toe aan favorieten
 nn:Legg til side %s i favorittane
 no:Legg til side %s i favoritter
+pa:%s ਪੰਨੇ ਨੂੰ ਪਸੰਦੀਦਾ ਵਿੱਚ ਜੋੜੋ
 pl:Dodaj stronę %s do ulubionych
 pt:Adicionar página %s aos favoritos
 ro:Adaugă pagina %s la favorite
@@ -3737,7 +3749,7 @@ he:הוסף את עמוד מס' %s למועדפים בשם:
 hi:पृष्ठ %s को पसंदीदा सूचि में नाम (वैकल्पिक) के साथ: जोड़ें:
 hr:Dodaj stranicu %s u favorite sa (opcijnalno) imenom:
 hu:%s. oldal hozzáadása a kedvencekhez, megnevezéssel (nem kötelező):
-id:Tambah halaman %s ke favorit dengan nama:
+id:Tambah halaman %s ke favorit dengan nama (opsional):
 it:Aggiungi la pagina %s ai Preferiti con nome (opzionale):
 ja:ページ %s に名前を付けて追加
 jv:Nambah kaca %s ning favorit nganggo jeneng (opsional):
@@ -3818,6 +3830,7 @@ ne:मनपर्नेमा थप्नुहोस्
 nl:Voeg toe aan favorieten
 nn:Legg til i favorittar
 no:Legg til i favoritter
+pa:ਪਸੰਦੀਦਾ ਵਿੱਚ ਜੋੜੋ
 pl:Dodaj do ulubionych
 pt:Adicionar aos favoritos
 ro:Adaugă la favorite
@@ -3885,6 +3898,7 @@ ne:उन्नत
 nl:Geavanceerd
 nn:Avansert
 no:Avansert
+pa:ਉੱਨਤ
 pl:Zaawansowane
 pt:Avançadas
 ro:Avansat
@@ -3952,6 +3966,7 @@ ne:सबै फाइलहरु
 nl:Alle bestanden
 nn:Alle filar
 no:Alle filer (*.*)
+pa:ਸਾਰੀਆਂ ਫ਼ਾਇਲਾਂ
 pl:Wszystkie pliki
 pt:Todos os ficheiros
 ro:Toate fișierele
@@ -4017,6 +4032,7 @@ ne:सबै समर्थनयोग्य कागजातहरू
 nl:Alle ondersteunde documenten
 nn:Alle støttede dokumentar
 no:Alle støttede dokumenter
+pa:ਸਾਰੇ ਸਮਰਥਿਤ ਕਾਗਜ਼ਾਤ
 pl:Wszystkie obsługiwane pliki
 pt:Todos os documentos
 ro:Toate formatele suportate
@@ -4084,6 +4100,7 @@ ne:अनुप्रयोग:
 nl:Programma:
 nn:Applikasjon:
 no:Program:
+pa:ਐਪਲੀਕੇਸ਼ਨ:
 pl:Program:
 pt:Aplicação:
 ro:Program:
@@ -4148,6 +4165,7 @@ ne:SumatraPDF हटाउन चाहानुहुन्छ?
 nl:Weet u zeker dat u SumatraPDF wilt verwijderen?
 nn:Er du sikker på at du vil avinstallere SumatraPDF?
 no:Vil du virkelig avinstallere SumatraPDF?
+pa:ਕੀ ਤੁਸੀਂ SumatraPDF ਨੂੰ ਅਣ-ਸਥਾਪਿਤ ਕਰਨਾ ਚਾਹੁੰਦੇ ਹੋ?
 pl:Czy na pewno chcesz usunąć SumatraPDF?
 pt:Tem a certeza que quer desinstalar o SumatraPDF?
 ro:Sunteti sigur ca doriti sa dezinstalati Sumatra PDF?
@@ -4283,6 +4301,7 @@ ne:संलग्नहरू: %s
 nl:Bijlage: %s
 nn:Vedlegg: %s
 no:Vedlegg: %s
+pa:ਅਟੈਚਮੈਂਟ: %s
 pl:Załącznik: %s
 pt:Anexo: %s
 ro:Fișier atașat: %s
@@ -4294,7 +4313,7 @@ sn:Mubatanidzwa: %s
 sp-rs:Prilog : %s
 sq:Shtojca: %s
 sr-rs:Прилог : %s
-sv:Bilagor: %s
+sv:Bilaga: %s
 ta:இணைப்பு %s
 th:เอกสารแนบ: %s
 tl:Nakasama: %s
@@ -4335,7 +4354,7 @@ he:מחבר:
 hi:लेखक:
 hr:Autor:
 hu:Készítő:
-id:Pencipta:
+id:Pengarang:
 it:Autore:
 ja:作者:
 jv:Pengarang:
@@ -4352,6 +4371,7 @@ ne:लेखक:
 nl:Auteur:
 nn:Skapar:
 no:Forfatter:
+pa:ਲੇਖਕ:
 pl:Autor:
 pt:Autor:
 ro:Autor:
@@ -4421,6 +4441,7 @@ ne:स्वत:
 nl:Automatisch
 nn:Automatisk
 no:Automatisk
+pa:ਆਪਣੇ-ਆਪ
 pl:Automatycznie
 pt:Automático
 ro:Automat
@@ -4488,6 +4509,7 @@ ne:&अद्यावधिकहरु स्वतः जाँच्नु�
 nl:Automatisch controleren op &updates
 nn:Søk automatisk etter &oppdateringar
 no:Automatisk sjekk for &oppdateringer
+pa:ਆਪਣੇ-ਆਪ &ਅਪਡੇਟਾਂ ਦੀ ਜਾਂਚ ਕਰੋ
 pl:&Szukaj aktualizacji automatycznie
 pt:&Procurar atualizações automaticamente
 ro:Urmărește automat versiuni noi
@@ -4554,6 +4576,7 @@ ne:पुस्तिका दृश्य
 nl:Boekweergave
 nn:Bokvising
 no:Bokvisning
+pa:ਕਿਤਾਬੀ ਦਿੱਖ
 pl:Widok odczytu
 pt:Vista de Livro
 ro:Vizualizare în format carte
@@ -4737,7 +4760,7 @@ he:קיצור דרך לסימניית עמוד %s מתוך %s
 hi:पृष्ठ %s पर बुकमार्क शॉर्टकट %s का करें
 hr:Prečac oznake do stranice %s of %s
 hu:Könyvjelző parancsikon a(z) %s/%s oldalhoz
-id:Jalan pintas markah ke halaman %s dari %s
+id:Pintasan markah ke halaman %s dari %s
 it:Segnalibro alla pagina %s di %s
 ja:ページ %s、ファイル %s に対するショートカットをブックマーク
 ka:%s-იდან %s გვერდის მალსახმობის ჩანიშვნა
@@ -4884,6 +4907,7 @@ ne:बाईट
 nl:Bytes
 nn:Bytes
 no:bytes
+pa:ਬਾਈਟਾਂ
 pl:bajtów
 pt:Bytes
 ro:Octeți
@@ -4938,7 +4962,7 @@ hu:CHM fájlok
 id:Dokumen CHM
 it:Documenti CHM
 ja:CHM ドキュメント
-jv:CHM Dokumen
+jv:Dokumen CHM
 ka:CHM დოკუმენტები
 kr:CHM 문서
 ku:CHM بەڵگەنامەکانی جۆری
@@ -5014,6 +5038,7 @@ ne:इन्टरनेट जडान गर्न सकिएन (त्र
 nl:Kan geen verbinding maken met internet (fout %#x).
 nn:Kan ikkje kople til internettet (Feilkode %#x).
 no:Kan ikke koble til Internett (feilmelding %#x).
+pa:ਇੰਟਰਨੈੱਟ ਨਾਲ ਜੁੜ ਨਹੀਂ ਸਕਦਾ (ਗਲਤੀ %#x)।
 pl:Nie można połączyć z Internetem (błąd %#x).
 pt:Não foi possível ligar à Internet (erro %#x)
 ro:Conectare la Internet eșuată (eroare %#x).
@@ -5082,6 +5107,7 @@ ne:रद्द गर्नुहोस्
 nl:Annuleren
 nn:Lukk
 no:Avbryt
+pa:ਰੱਦ ਕਰੋ
 pl:Anuluj
 pt:Cancelar
 ro:Anulare
@@ -5150,6 +5176,7 @@ ne:यो फाइल छाप्न सकिंदैन
 nl:Kan dit bestand niet afdrukken
 nn:Kan ikkje skrive ut denne fila
 no:Kan ikke skrive ut filen
+pa:ਇਸ ਫ਼ਾਇਲ ਨੂੰ ਪ੍ਰਿੰਟ ਨਹੀਂ ਕਰ ਸਕਦੇ
 pl:Nie można drukować tego pliku
 pt:Não foi possível imprimir este ficheiro
 ro:Nu pot imprima acest fișier
@@ -5284,7 +5311,7 @@ ne:भाषा परिवर्तन गर्नुहोस् (Change Lan
 nl:Taal wijzigen (Change Language)
 nn:Byt språk (Change Language)
 no:Endre språk (Change Language)
-pa:ਭਾਸ਼ਾ ਬਦਲੋ (Change Language)
+pa:ਭਾਸ਼ਾ ਬਦਲੋ
 pl:Zmień język (Change Language)
 pt:Mudar idioma (Change Language)
 ro:Schimbare limbă (Change Language)
@@ -5421,6 +5448,7 @@ ne:बन्द गर्नुहोस्
 nl:Sluiten
 nn:Lukk
 no:Lukk
+pa:ਬੰਦ ਕਰੋ
 pl:Zamknij
 pt:Fechar
 ro:Inchidere
@@ -5484,6 +5512,7 @@ ne:कमिक पुस्तिका
 nl:Stripboeken
 nn:Teikneseriebøkjer
 no:Tegneserier
+pa:ਕੌਮਿਕ ਕਿਤਾਬਾਂ
 pl:Komiksy
 pt:Banda desenhada
 ro:Benzi desenate
@@ -5684,6 +5713,7 @@ ne:निरन्तर पुस्तिका दृश्य
 nl:Doorlopende boekweergave
 nn:Kontinuerleg bokvising
 no:Kontinuerlig bokvisning
+pa:ਨਿਰੰਤਰ ਕਿਤਾਬੀ ਦਿੱਖ
 pl:Widok odczytu - układ ciągły
 pt:Como livro contínuo
 ro:Vedere în format carte, continuu
@@ -5694,7 +5724,7 @@ sl:Nepretrgan knjižni pogled
 sp-rs:Neprekidno, izgled knjige
 sq:Libër në vazhdimësi
 sr-rs:Непрекидно, изглед књиге
-sv:Fortlöpande bokuppslag
+sv:Fortlöpande bokvy
 ta:தொடர் ஏடு வடிவ நோக்கு
 th:แสดงแบบหนังสือต่อเนื่อง
 tl:Tuluy-tuloy na tinging pang-aklat
@@ -5888,6 +5918,7 @@ ne:&छवि प्रतिलिपि बनाउनुहोस्
 nl:Afbeelding kopiëren
 nn:Kopier &bilete
 no:Kopier &Bilde
+pa:&ਤਸਵੀਰ ਕਾਪੀ ਕਰੋ
 pl:Kopiuj obraz
 pt:Copiar &imagem
 ro:Copiere &Imagine
@@ -5951,6 +5982,7 @@ ne:&लिङ्क ठेगानाको प्रतिलिपि बन�
 nl:&Verwijzing kopiëren
 nn:Kopier &lenkeadresse
 no:Kopier &lenkeadresse
+pa:&ਲਿੰਕ ਦਾ ਪਤਾ ਕਾਪੀ ਕਰੋ
 pl:Kopiuj adres z &odnośnika
 pt:Copiar endereço da &ligação
 ro:Copiază adresa &legăturii
@@ -5975,6 +6007,7 @@ am:Պատճենել մեկ&նաբանությունը
 ar:نسخ ال&تعليق  
 az:&Şərhi kopyala
 bg:Копиране на &коментара
+bn:মতামত কপি হোক
 br:Copiar Co&mentário
 bs:Kopiraj ko&mentar
 by:Капіяваць Ка&ментар
@@ -6013,6 +6046,7 @@ ne:&टिप्पणीको प्रतिलिपि बनाउनु�
 nl:Notitie kopiëren
 nn:Kopier ko&mmentar
 no:Kopier ko&mmentar
+pa:&ਟਿੱਪਣੀ ਕਾਪੀ ਕਰੋ
 pl:Kopiuj ko&mentarz
 pt:Copiar co&mentário
 ro:Copiază co&mentariul
@@ -6143,6 +6177,7 @@ ne:प्रतिलिपिअधिकार:
 nl:Auteursrecht
 nn:Opphavsret:
 no:Opphavsrett:
+pa:ਕਾਪੀਰਾਈਟ:
 pl:Prawo autorskie:
 pt:Direitos de autor:
 ro:Drept de autor
@@ -6153,7 +6188,7 @@ sl:Avtorske pravice:
 sp-rs:Autorska prava:
 sq:Kopirajti:
 sr-rs:Ауторска права:
-sv:Copyright:
+sv:Upphovsrätt:
 ta:காப்புரிமை:
 th:ลิขสิทธิ์:
 tr:Telif hakkı:
@@ -7130,6 +7165,7 @@ ne:हालको फाइल
 nl:Huidig bestand
 nn:Nåverande fil
 no:Gjeldende fil
+pa:ਮੌਜੂਦਾ ਫ਼ਾਇਲ
 pl:Bieżący plik
 pt:Ficheiro atual
 ro:Fișier curent
@@ -7277,6 +7313,7 @@ vn:Thu phóng &tuỳ ý...\tCtrl+Y
 am:Մուգ
 ar:مظلم
 az:Tünd
+bg:Тъмен
 bn:অন্ধকার
 br:Escuro
 bs:Hi
@@ -7292,8 +7329,10 @@ dk:Mørk
 es:Oscuro
 et:Tume
 eu:Iluna
+fa:تیره
 fr:Sombre
 ga:dorcha
+gl:Escuro
 he:כהה
 hi:अंधेरापन
 hr:Tamna
@@ -7328,6 +7367,7 @@ vn:Tối
 am:Շատ մուգ
 ar:غامق
 az:Daha tünd
+bg:По-тъмен
 bn:গাঢ় অন্ধকার
 br:Muito escuro
 by:Больш цёмны
@@ -7342,8 +7382,10 @@ dk:Mørkere
 es:Más oscuro
 et:Tumedam
 eu:Ilunagoa
+fa:تیره‌تر
 fr:Plus sombre
 ga:nios dorcha
+gl:Máis escuro
 he:כהה מאוד
 hi:अधिक कालापन 
 hr:Tamnija
@@ -7405,7 +7447,7 @@ he:פריסת ברירת מחדל:
 hi:मूलभूत लेआउट :(&L)
 hr:Pretpostavljeni &izgled:
 hu:Oldalmegjelenítési mód:
-id:Tampilan &Standar
+id:Tata letak &Standar
 it:&Vista predefinita:
 ja:既定のレイアウト(&L):
 ka:&ნაგულისხმევი განლაგება:
@@ -7430,7 +7472,7 @@ sl:&Privzeta postavitev:
 sp-rs:Podrazumevani prikaz
 sq:&Faqosja standarde:
 sr-rs:Подразумевани приказ
-sv:Förvalt &utseende
+sv:Standard&utseende
 ta:கோட நிலை வடிவமைப்பு
 th:รูปแบบเริ่มต้น:
 tl:Default na Ayos:
@@ -7495,7 +7537,7 @@ sl:Pri&vzeta povečava:
 sp-rs:Podrazumevano uvećanje
 sq:&Shkalla standarde:
 sr-rs:Подразумевано увећање
-sv:Förvalt &zoomläge
+sv:Standard&zoomläge
 ta:கோட நிலை உரு அளவு
 th:ซูมเริ่มต้น:
 tl:Default na Laki:
@@ -7535,7 +7577,7 @@ he:הגדרת תוכנת ברירת מחדל ל- PDF אינה אפשרית במ�
 hi:डिफ़ॉल्ट पीडीएफ रीडर पोर्टेबल मोड में बदला नहीं जा सकता
 hr:Glavni preglednik PDF datoteka se ne može mijenjati u prenosivom načinu
 hu:Nem tehető alapértelmezett PDF-olvasóvá hordozható módban
-id:Pembaca PDF utama tidak dapat diubah dalam mode portabel
+id:Pembaca PDF standar tidak dapat diubah dalam mode portabel
 it:Il lettore PDF predefinito non è modificabile in modalità portatile
 ja:ポータブル モードでは変更できません
 ka:პორტატულ რეჟიმში, PDF-ის წამკითხველად დაყენება შეუძლებელია
@@ -7560,7 +7602,7 @@ sl:Glavnega bralnika PDF ni mogoče spremeniti v prenosnem načinu
 sp-rs:Podrazumevani PDF čitač ne može biti promenjen u prenosivnom režimu
 sq:Lexuesi standard i PDF-ve nuk ndryshohet në mënyrën portabël
 sr-rs:Подразумевани PDF читач не може бити промењен у преносивном режиму
-sv:SumatraPDF kan ej göras förvald i portabelt läge
+sv:Standardläsare för PDF kan inte ändras i portabelt läge
 ta:முதன்மை PDF படிப்பியை மாற்ற முடியவில்லை
 th:ค่า PDF reader เริ่มต้นไม่สามารถเปลี่ยนได้ในโหมดพกพา
 tl:Hindi maaaring palitan ang default na PDF reader sa portable na mode
@@ -7624,7 +7666,7 @@ sl:Zavrnjena dovoljenja:
 sp-rs:Nije dopušteno:
 sq:Nuk lejohen:
 sr-rs:Није допуштено:
-sv:Saknade Tillstånd:
+sv:Nekade tillstånd:
 ta:அனுமதி மருக்கப்பட்டது
 th:ปฏิเสธการอนุญาต:
 tl:Mga hindi maaaring gawin:
@@ -7808,6 +7850,7 @@ ne:डाउनलोड
 nl:Downloaden
 nn:Last ned
 no:Nedlasting
+pa:ਡਾਊਨਲੋਡ ਕਰੋ
 pl:Pobierz
 pt:Transferir
 ro:Descarcă
@@ -7818,7 +7861,7 @@ sl:Prenesi
 sp-rs:Preuzmi
 sq:Shkarkoj
 sr-rs:Преузми
-sv:Ladda &ned
+sv:&Hämta
 ta:பதிவிற்க்கம்
 tl:I-download
 tr:İndir
@@ -8156,7 +8199,7 @@ sl:Vnesite ukazno vrstico, ki se bo izvedla, ko boste dvokliknili na PDF dokumen
 sp-rs:Unesite parametre komandne linije koji će se izvršiti prilikom dvoklika na PDF dokument:
 sq:Komanda që jepet kur klikoni dy herë dokumentin PDF:
 sr-rs:Унесите параметре командне линије који ће се извршити приликом двоклика на PDF документ:
-sv:Ange kommandorad att aktivera när du dubbelklickar på PDF-dokumentet:
+sv:Ange kommandorad som körs när du dubbelklickar på PDF-dokumentet:
 ta:நீங்கள் PDF ஆவணத்தின் மீது இரட்டை சொடுக்கும் போது செயலாக்க கட்டளை வரி உள்ளிடவும்:
 tl:Pakisulat ang command na gagawin kapag dalawang beses na kli-nik ang dokumentong PDF:
 tr:PDF belgesine çift tıklanınca yürütülecek komutu giriniz:
@@ -8269,6 +8312,7 @@ ne:&मनपर्ने
 nl:F&avorieten
 nn:F&avorittar
 no:F&avoritter
+pa:&ਪਸੰਦੀਦਾ
 pl:&Ulubione
 pt:Fav&oritos
 ro:F&avorite
@@ -8410,7 +8454,7 @@ sn:Zadza Screen\tCtrl+Shift+L
 sp-rs:Ceo ekran\tCtrl+Shift+L
 sq:Ekran i p&lotë\tCtrl+Shift+L
 sr-rs:Цео екран\tCtrl+Shift+L
-sv:Fullskärm\tCtrl+Shift+L
+sv:Fullskärm\tF11
 ta:முழுத்திரை
 th:เต็มจอภาพ\tCtrl+Shift+L
 tl:Pagkasyahin sa buong screen\tCtrl+Shift+L
@@ -8689,8 +8733,10 @@ el:Απέτυχε να γίνει το προκαθορισμένο πρόγρα
 es:Fallo al registrar como programa por defecto en Windows 10.
 et:Vaikeprogrammina registreerumine Windows 10 all ebaõnnestus
 eu:Hutsegitea win 10-ean berezko programa bezala erregistratzerakoan
+fa:در پیشفرض قرارداد اپلیکیشن در ویندوز 10 خطایی رخ داده است
 fr:Échec de l'enregistrement comme programme par défaut sous Windows 10.
 ga:Theip ar chlárú mar chlár  réamhshocraithe ar Win 10
+gl:Non se puido rexistrar como programa por defecto en Windows 10
 he:רישום SumatraPDF כתוכנת ברירת מחדל לקובצי PDF ב- Windows 10 נכשל.
 hi:इस प्रोग्राम को विंडोज १० पर डिफ़ॉल्ट प्रोग्राम के तौर पर दर्ज नहीं जा सका
 hr:Neuspješno registriranje kao zadani program na Windows 10
@@ -8843,7 +8889,7 @@ sn:Tatadza kuseva faira
 sp-rs:Čuvanje datoteke nije uspelo
 sq:Problem me ruajtjen e skedarit
 sr-rs:Чување датотеке није успело
-sv:Kan inte spara filen.
+sv:Kunde inte spara filen.
 ta:கோப்பு சேமிப்பு தோற்பு
 th:การบันทึกไฟล์ล้มเหลว
 tl:Hindi ma-i-save ang file
@@ -9021,7 +9067,7 @@ sl:Hiter spletni prikaz
 sp-rs:Brzi pregled na mreži
 sq:Hapet shpejt në internet
 sr-rs:Брзи преглед на мрежи
-sv:Snabb Webb-Visning
+sv:Snabb webbvy
 ta:வேகமான வலை பார்வை
 tr:Hızlı Web Görünümü
 tw:快速網頁模式
@@ -9074,6 +9120,7 @@ ne:मनपर्नेहरु
 nl:Favorieten
 nn:Favorittar
 no:Favoritter
+pa:ਪਸੰਦੀਦਾ
 pl:Ulubione
 pt:Favoritos
 ro:Favorite
@@ -9144,7 +9191,7 @@ sl:FictionBook dokumenti
 sp-rs:FictionBook dokumenti
 sq:Dokumente FictionBook
 sr-rs:FictionBook докуменат
-sv:FictionBook dokument
+sv:FictionBook-dokument
 ta:புனைவு புத்தக ஆவணம்
 tr:FictionBook belgeleri
 tw:FictionBook(fb2) 文件
@@ -9327,6 +9374,7 @@ ne:फाइल:
 nl:Bestand:
 nn:Fil:
 no:Fil:
+pa:ਫ਼ਾਇਲ:
 pl:Plik:
 pt:Ficheiro:
 ro:Fișier:
@@ -9745,7 +9793,7 @@ sl:&Prilagodi vsebino\tCtrl+3
 sp-rs:Podesi prema sadržaju\tCtrl+3
 sq:Përshtat &materialin\tCtrl+3
 sr-rs:Подеси према садржају\tCtrl+3
-sv:Passa &innehåll\tCtrl+3
+sv:Anpassa efter &innehåll\tCtrl+3
 ta:பொருத்தம் & உள்ளடக்கம்\tCtrl+3
 tl:Pagkasyahin ang laman\tCtrl+3
 tr:&İçeriğe ölçekle\tCtrl+3
@@ -9947,7 +9995,7 @@ sl:Prilagodi vsebino
 sp-rs:Podesi prema sadržaju
 sq:Përshtat materialin
 sr-rs:Подеси према садржају
-sv:Passa innehåll
+sv:Anpassa efter innehåll
 ta:உள்ளடக்கம் பொருந்துக
 tl:Pagkasyahin ang laman
 tr:İçeriğe ölçekle
@@ -10148,7 +10196,7 @@ sl:Prilagodi po širini in prikaži strani nepretrgano
 sp-rs:Podesi prema širini i prikaži stranice bez prekida
 sq:Përshtat gjerësinë dhe tregoj faqet në vazhdimësi
 sr-rs:Подеси према ширини и прикажи странице без прекида
-sv:Anpassa bredd och visa sidor fortlöpande
+sv:Anpassa efter bredd och visa sidor fortlöpande
 ta:அகலம் பொருத்தி பக்கங்கள் காட்டுக
 tl:Pagkasyahin ang lapad at ipakita nang tuluy-tuloy ang mga pahina
 tr:Genişliğe ölçekle ve sayfaları devamlı göster
@@ -10264,6 +10312,7 @@ ne:फन्टहरू:
 nl:Lettertypen:
 nn:Fontar:
 no:Skrifter:
+pa:ਫ਼ੌਂਟ:
 pl:Czcionki:
 pt:Tipo de letra:
 ro:Fonturi:
@@ -11406,6 +11455,7 @@ vn:Cho phép Windows hiển thị hình ảnh &xem trước của các tài li�
 am:Լուսավոր
 ar:خفيف
 az:Açıq
+bg:Светъл
 bn:উজ্জ্বল
 br:Claro
 by:Светлы
@@ -11420,8 +11470,10 @@ dk:Lys
 es:Claro
 et:Hele
 eu:Argia
+fa:روشن
 fr:Clair
 ga:éadroime
+gl:Claro
 he:בהירה
 hr:Svijetla
 hu:Világos
@@ -11620,7 +11672,7 @@ he:הגדר את SumatraPDF כתוכנת ברירת מחדל לקובצי PDF
 hi:सभी PDF फाईलें SumatraPDF में खोलें
 hr:Neka SumatraPDF bude pretpostavljeni preglednik PDF datoteka
 hu:SumatraPDF mint alapértelmezett PDF olvasó
-id:Jadikan SumatraPDF sebagai pembaca PDF utama
+id:Jadikan SumatraPDF sebagai pembaca PDF standar saya
 it:Imposta SumatraPDF come lettore PDF predefinito
 ja:SumatraPDF を規定の PDF リーダーにする
 ka:მოხდეს SumatraPDF-ის ასოცირება PDF ფაილებთან
@@ -11710,7 +11762,7 @@ sl:Način Man&ga
 sp-rs:Manga mod
 sq:Mënyra Man&ga
 sr-rs:Ман&га мод
-sv:Man&ga Läge
+sv:Man&ga-läge
 ta:மேங்கா முறை
 tr:Man&ga modu
 tw:漫畫模式(&G)
@@ -11975,7 +12027,7 @@ sn:Version %s ririkuwanika. Unoda here version idzva?
 sp-rs:Dostupna je verzija %s. Želite li da preuzmete novu verziju?
 sq:Ka dalë versioni i ri %s. Do e shkarkoni?
 sr-rs:Доступна је верзија %s. Желите ли да преузмете нову верзију?
-sv:Nyare version %s tillgänglig. Ladda ner den?
+sv:Ny version %s finns tillgänglig. Hämta ny version?
 ta:புதிய பதிப்பு %s பதிவிறக்க இருக்கிறது. பதிவிரக்கம் செய்யவா?
 th:เวอร์ชั่นใหม่ %s ออกแล้ว ต้องการดาวน์โหลดหรือไม่
 tl:May bagong bersyon: %s. I-download?
@@ -12174,7 +12226,7 @@ sl:Okoli vrstice %u v datoteki %s ni zadetkov
 sp-rs:Rezultati oko linije %u u datoteci %s nisu pronađeni
 sq:Pa rezultat në radhën %u te skedari %s
 sr-rs:Резултати око линије %u у датотеци %s нису пронађени
-sv:Inget resultat hittades vid rad %u i filen %s
+sv:Inget resultat hittades vid rad %u i fil %s
 ta:%u வரியில் %s கோப்பில் முடிவுகள் கிடைக்கவில்லை
 tl:Walang nakitang resulta sa line %u ng file %s
 tr:%u satırı etrafında %s dosyasındaki sonuç bulunamadı
@@ -12355,6 +12407,7 @@ ne:पृष्ठ संख्या:
 nl:Aantal pagina's:
 nn:Antal sider:
 no:Antall sider:
+pa:ਪੰਨਿਆਂ ਦੀ ਗਿਣਤੀ:
 pl:Liczba stron:
 pt:Número de páginas:
 ro:Număr de pagini:
@@ -13081,6 +13134,7 @@ am:PDF ֆայլ
 ar:وثيقة المستندات المحمولة
 az:PDF sənədi
 bg:PDF документ
+bn:PDF ডকুমেন্ট
 br:Documento PDF
 bs:PDF dokument
 by:Дакумент PDF
@@ -13194,7 +13248,7 @@ sl:Optimizacije PDF:
 sp-rs:PDF optimizacija:
 sq:PDF optimizimet:
 sr-rs:PDF оптимизација
-sv:PDF Optimeringar:
+sv:PDF-optimeringar:
 ta:PDF மேம்படுத்தல்கள்
 tr:PDF Optimizasyonları:
 tw:PDF 最佳化:
@@ -13834,7 +13888,7 @@ sl:PalmDoc dokumenti
 sp-rs:PalmDoc dokumenti
 sq:Dokumente PalmDoc
 sr-rs:PalmDoc документи
-sv:PalmDoc dokument
+sv:PalmDoc-dokument
 ta:PalmDOC-யின் ஆவணக்காப்பகம்
 tr:PalmDoc belgeleri
 tw:PalmDoc 文件
@@ -14078,7 +14132,7 @@ sl:Pr&edstavitev\tCtrl+L
 sp-rs:Prezentacija\tCtrl+L
 sq:Pr&ezantim\tCtrl+L
 sr-rs:Презентација\tCtrl+L
-sv:Pr&esentation\tCtrl+L
+sv:Pr&esentation\tF5
 ta:விளக்கக்காட்சி \tCtrl+L
 tl:Pr&esentasyon\tCtrl+L
 tr:Tan&ıtım\tCtrl+L
@@ -14706,7 +14760,7 @@ sl:Preime&nuj …\tF2
 sp-rs:Preimenuj...\tF2
 sq:Rie&mërtoj...\tF2
 sr-rs:Преименуј...\tF2
-sv:Döp om
+sv:Döp om...\tF2
 ta:மறுபெயரிடுதல்... \tF2
 tr:İsim Değiştir
 tw:重新命名(&N)...\tF2
@@ -15351,7 +15405,7 @@ sl:Izberi vse
 sp-rs:Izaberi sve
 sq:Seleksionoj të &gjithë
 sr-rs:Изабери све
-sv:Markera &alla
+sv:Markera &allt
 ta:அனைத்தையும் தேர்வு செய்
 tl:Piliin lahat
 tr:&Hepsini Seç
@@ -15412,7 +15466,7 @@ sl:Izberi vse\tCtrl+A
 sp-rs:Izaberi sve\tCtrl+A
 sq:Seleksionoj të &gjithë\tCtrl+A
 sr-rs:Изабери све\tCtrl+A
-sv:Välj &Allt\tCtrl+A
+sv:Markera &allt\tCtrl+A
 ta:அனைத்தையும் தேர்வு செய் \tCtrl+A
 tl:Piliin L&ahat\tCtrl+A
 tr:T&ümünü Seç\tCtrl+A
@@ -15475,7 +15529,7 @@ sl:Izberite vsebino s pritisnjeno tipko Ctrl in levim gumbom miške
 sp-rs:Izaberite sadržaj koristeći Ctrl + levo dugme miša
 sq:Seleksiononi materialin me Ctrl+butonin e majtë të mausit
 sr-rs:Изаберите садржај користећи Ctrl + лево дугме миша
-sv:Markera med Ctrl + vänster musknapp
+sv:Markera innehåll med Ctrl + vänster musknapp
 ta:உள்ளடகத்தை தேர்வு செய்ய Ctrl+இடது சுட்டெலி பொத்தானை அழுத்து
 tl:Mamili ng content gamit ang Ctrl+left mouse button
 tr:İçeriği Ctrl+sol fare butonu ile seç
@@ -15697,7 +15751,7 @@ he:הגדר פקודת שורה לחיפוש הפוך
 hi:उलटी command-line खोज सैट करें
 hr:Omogući unazadnu pretragu
 hu:Fordított keresés parancsának beállítása
-id:Tetapkan baris perintah pencarian terbalik
+id:Setel perintah pencarian terbalik
 it:Imposta la ricerca inversa via riga di comando
 ja:逆順検索コマンドラインの設定
 ka:შებრუნებული ძებნის ბრძანების სტრიქონის დაყენება
@@ -15724,7 +15778,7 @@ sl:Nastavi obratno iskanje ukazne vrstice
 sp-rs:Omogući inverznu pretragu
 sq:Jepni komandën e kërkimit mbrapsht
 sr-rs:Омогући инверзну претрагу
-sv:Sätt motsatt sök-kommandorad
+sv:Sätt kommandorad för omvänd sökning
 ta:தலைகீழ் தேடல் கட்டளை வரி அமைக்க
 th:ตั้งค่าตรงกันข้ามในการค้นหาในโหมด command-line
 tl:Iayos ang Utos-Linya ng Tiwarik na Paghahanap
@@ -15917,7 +15971,7 @@ sn:Ratidza Toolbar
 sp-rs:Traka sa alatkama
 sq:Tregoj &brezin e mjeteve
 sr-rs:Трака са алаткама
-sv:Visa verktygsfält
+sv:Visa verktygsfält\tF8
 ta:கருவிப்பட்டை காண்பி
 th:แสดงแถบเครื่องมือ
 tl:Ipakita ang toolbar
@@ -16102,7 +16156,7 @@ sl:Pokaži podokno z &zaznamki, če so na voljo
 sp-rs:Prikaži bočnu traku sa obeleživačima
 sq:Tregoj &faqet me shenjë kur janë të gatshme
 sr-rs:Прикажи бочну траку са обележивачима
-sv:Visa &bokmärken när de finns
+sv:Visa sidopanel för &bokmärken när de finns
 ta:புத்தககுறி பட்டை இருந்தல் காட்டு
 tl:Ipakita ang &bookmarks sidebar kung naangkop
 tr:Yer &imleri yan çubuğunu bulunduğunda göster
@@ -16208,7 +16262,7 @@ gl:Algúns ficheiros a instalar están danados ou faltan
 he:קובצי התקנה מסוימים פגומים או חסרים.
 hr:Neke datoteke za instalaciju su oštećene ili nedostaju
 hu:Néhány, a telepítéshez szükséges fájl sérült vagy hiányzik
-id:Beberapa berkas yang akan diinstal rusak atau terhapus.
+id:Beberapa berkas yang akan diinstal rusak atau hilang.
 it:Alcuni file che dovevano essere installati erano corrotti o mancanti
 ja:インストールすべきいくつかのファイルが破損しているか存在しません。
 kr:설치해야 할 일부 파일이 손상 또는 누락됐습니다.
@@ -16329,7 +16383,7 @@ he:נקודת סנכרון לקובץ המקור %s לא נמצאה.
 hi:स्रोत फ़ाइल %s का तुल्यकालन बिंदु नहीं है
 hr:Izvorna datoteka %s nema točke usklađivanja
 hu:A '%s' forrásfájlban nincs szinkronizációs hely
-id:Berkas asal %s tidak mempunyai titik sinkronisasi
+id:Tidak ada titik sinkronisasi pada berkas asal %s
 it:Il file sorgente %s non ha nessun punto di sincronizzazione
 ja:ソース ファイル %s には同期ポイントがありません
 ka:წყაროს ფაილს %s არ აქვს სინქრონიზაციის წერტილები
@@ -16515,7 +16569,7 @@ gl:Instalador %s SumatraPDF
 he:התקנת SumatraPDF %s
 hr:SumatraPDF %s instaler
 hu:SumatraPDF %s telepítő
-id:Pasang SumatraPDF %s
+id:Pemasang instalasi SumatraPDF %s
 it:Installazione SumatraPDF %s
 ja:SumatraPDF %s インストーラ
 kr:SumatraPDF %s 설치 관리자
@@ -16573,7 +16627,7 @@ gl:Desinstalador %s SumatraPDF
 he:הסרת SumatraPDF %s
 hr:SumatraPDF %s deinstaler
 hu:SumatraPDF %s eltávolító
-id:Penghapus SumatraPDF %s
+id:Penghapus instalasi SumatraPDF %s
 it:Disinstallazione SumatraPDF %s
 ja:SumatraPDF %s アンインストーラ
 kr:SumatraPDF %s 제거 관리자
@@ -16633,7 +16687,7 @@ he:הגדרות SumatraPDF
 hi:Sumatra पीडीएफ विकल्प
 hr:Mogućnosti programa
 hu:A SumatraPDF beállításai
-id:Pengaturan SumatraPDF
+id:Pilihan SumatraPDF
 it:Opzioni di SumatraPDF
 ja:SumatraPDF のオプション
 ka:SumatraPDF-ის პარამეტრები
@@ -16936,7 +16990,7 @@ he:SumatraPDF מוגדרת כתוכנת ברירת מחדל ל- PDF
 hi:Sumatra पीडीएफ आपका डिफ़ॉल्ट पीडीएफ रीडर है
 hr:SumatraPDF je vaš glavni glavni preglednik PDF datoteka
 hu:A SumatraPDF az alapértelmezett PDF-olvasó
-id:SumatraPDF adalah pembaca berkas PDF utama Anda
+id:SumatraPDF adalah pembaca berkas PDF standar Anda
 it:SumatraPDF è il lettore PDF predefinito
 ja:SumatraPDF は規定の PDF リーダーです
 ka:SumatraPDF თქვენი ძირითადი PDF წამკითხველია
@@ -16961,7 +17015,7 @@ sl:SumatraPDF je vaš privzeti bralnik PDF
 sp-rs:SumatraPDF je vaš podrazumevani PDF čitač
 sq:SumatraPDF është lexuesi standard i PDF-ve
 sr-rs:SumatraPDF је ваш подразумевани PDF читач
-sv:SumatraPDF är din valda PDF-läsare
+sv:SumatraPDF är din standardläsare för PDF
 ta:சுமத்ராPDF உங்களின் முதன்மை PDF படிப்பி
 tl:SumatraPDF ang iyong default na pambasa ng mga PDF file
 tr:SumatraPDF varsayılan PDF okuyucunuz.
@@ -16999,7 +17053,7 @@ he:SumatraPDF אמורה להיות עכשיו תוכנת ברירת מחדל ל
 hi:SumatraPDF अब आपका डिफ़ॉल्ट पीडीएफ रीडर होना चाहिए
 hr:SumatraPDF bi sad trebao biti vaš glavni preglednik PDF datoteka
 hu:Mostantól a SumatraPDF az alapértelmezett PDF-olvasója
-id:SumatraPDF sekarang telah menjadi pembaca berkas PDF utama Anda
+id:SumatraPDF sekarang telah menjadi pembaca berkas PDF standar Anda
 it:Ora SumatraPDF dovrebbe essere il lettore PDF predefinito
 ja:SumatraPDF は規定の PDF リーダーになりました
 ka:ამიერიდან SumatraPDF თქვენი ძირითადი PDF წამკითხველია
@@ -17024,7 +17078,7 @@ sl:SumatraPDF bi zdaj moral biti vaš privzeti bralnik PDF
 sp-rs:SumatraPDF je postavljen kao podrazumevani PDF čitač
 sq:SumatraPDF tani do të jetë lexuesi standard i PDF-ve
 sr-rs:SumatraPDF је постављен као подразумевани PDF читач
-sv:SumatraPDF ska nu vara din valda PDF-läsare
+sv:SumatraPDF bör nu vara din standardläsare för PDF
 ta:சுமத்ராPDF இப்பொழுது உங்களின் முதன்மை PDF படிப்பி
 tl:SumatraPDF na dapat ang iyong default na pambasa ng mga PDF file
 tr:SumatraPDF artık varsayılan PDF okuyucunuzdur
@@ -17100,6 +17154,7 @@ am:Կցված PDF
 ar:المستندات المحمولة موسومة
 az:Teqlənmiş PDF
 bg:Етикетирен .PDF файл (Tagged PDF)
+bn:ট্যাগ করা PDF
 br:PDF com marcações (tags)
 bs:Označeni PDF
 by:Тэгі PDF
@@ -17247,7 +17302,7 @@ he:תודה על בחירתך ב- SumatraPDF.
 hi:sumatraPDF चुनने के लिए धन्यवाद !
 hr:Hvala Vam na odabiru SumatraPDF!
 hu:Köszönjük, hogy a SumatraPDF-et választotta!
-id:Terima kasih telah memakai SumatraPDF!
+id:Terima kasih telah memilih SumatraPDF!
 it:Grazie per aver scelto SumatraPDF!
 ja:SumatraPDF を選んで頂きありがとうございます！
 ka:გმადლობთ, რომ აირჩიეთ SumatraPDF!
@@ -17388,7 +17443,7 @@ sl:Namestitveni program je poškodovan. Prosimo, da ga ponovno prenesete.\nOprav
 sp-rs:Instalacija je oštećena. Molimo preuzmite je ponovo. \n Žao nam je zbog neugodnosti!
 sq:Instaluesi ka të meta. Ju lutemi, shkarkojeni edhe një herë.\nNa falni për bezdinë!
 sr-rs:Инсталација је оштећена. Скинути је поново. \n Извињавамо се.
-sv:Installationsprogrammet är skadat. Vänligen ladda ner det igen.\nVi ber om ursäkt för problemen.
+sv:Installationsprogrammet är skadat. Vänligen hämta det igen.\nVi ber om ursäkt för problemen.
 ta:நிறுவி கெட்டுள்ளது. மீண்டும் பதிவிறக்கம் செய்யவும். \n சௌகரியமின்மைக்கு வருந்துகிறோம்!
 tr:Yükleyici hasar görmüş.Lütfen tekrar indirin.\nGeçici rahatsızlık için özür dileriz!
 tw:安裝程式已損壞。請重新下載。\n抱歉帶來不便！
@@ -17423,7 +17478,7 @@ gl:Este documento usa características non compatibles (%s) e pode non presentar
 he:קובץ זה כולל מאפיינים שאינם נתמכים (%s), וייתכן שלא יוצג כראוי.
 hr:Ovaj dokument koristi nepodržane značajke (%s) i možda se neće ispravno prikazati
 hu:Ez a fájl nem támogatott funkciókat (%s) tartalmaz és lehet, hogy nem pontosan kerül megjelenítésre
-id:Dokumen ini menggunakan fitur yang tidak didukung (%s) dan memungkinkan untuk tidak dimuat secara benar.
+id:Dokumen ini menggunakan fitur yang tidak didukung (%s) dan kemungkinan tidak layak dijalankan
 it:Questo documento usa funzioni non supportate (%s) e potrebbe non essere visualizzato bene
 ja:このドキュメントはサポートしていない機能(%s)を使用しているため、正しく描画できない可能性があります
 kr:이 문서는 지원되지 않는 기능 (%s)을 사용했고, 제대로 렌더링되지 않을 수 있습니다.
@@ -17664,7 +17719,7 @@ gl:Desinstalación en procreso...
 he:מסיר את SumatraPDF...
 hr:Deinstaliranje...
 hu:Eltávolítás folyamatban...
-id:Proses uninstall sedang berjalan...
+id:Proses uninstall sedang berlangsung...
 it:Disinstallazione in corso...
 ja:アンインストール中…
 ka:მიმდინარეობს დეინსტალაცია...
@@ -17725,7 +17780,7 @@ he:קובץ מקור לא ידוע (%s)
 hi:अज्ञात स्रोत फ़ाइल (%s)
 hr:Nepoznata izvorna datoteka (%s)
 hu:Ismeretlen forrásfájl (%s)
-id:Berkas asal (%s) tidak diketahui
+id:Berkas asal (%s) tidak dikenal
 it:File sorgente sconosciuto (%s)
 ja:不明なソース ファイル (%s)
 ka:წყაროს ფაილი უცნობია (%s)
@@ -17868,7 +17923,7 @@ sl:Uporabi SumatraPDF kot privzeti P&DF prikazovalnik
 sp-rs:Koristi SumatraPDF kao glavni PDF čitač
 sq:Përdor SumatraPDF si lexuesin &standard të PDF-ve
 sr-rs:СуматраПДФ је &подразумевани прегледач
-sv:Använd SumatraPDF som standardläsare för PDF-filer
+sv:Använd SumatraPDF som standardläsare för PDF
 ta:சுமத்ரா PDFஐ முன்னிருப்பக பயன்படுத்து
 tr:SumatraPDF varsayılan PDF okuyucum olsun
 tw:使用 SumatraPDF 作為預設的 PDF 閱讀器(&U)
@@ -17925,7 +17980,7 @@ ne:हेर्नुहोस्
 nl:Beeld
 nn:Vis
 no:Vis
-pa:ਵੇਖੋ
+pa:ਦਿੱਖ
 pl:Widok
 pt:Ver
 ro:Vizualizare
@@ -18596,6 +18651,7 @@ ne:[परिवर्तन पत्ता लाग्यो; ताजा �
 nl:[Bestand gewijzigd; verversen] %s
 nn:[Endringar oppdaga; lastar inn på nytt] %s
 no:[Endringer oppdaget; oppdaterer] %s
+pa:[ਤਬਦੀਲੀਆਂ ਦਾ ਪਤਾ ਚੱਲਿਆ; ਤਾਜ਼ਾ ਕੀਤਾ ਜਾ ਰਿਹੈ] %s
 pl:[wykryto zmiany; odświeżanie] %s
 pt:[Mudanças detetadas; a atualizar] %s
 ro:[Schimbări detectate; actualizare] %s

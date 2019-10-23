@@ -2076,7 +2076,7 @@ const char * gTranslations_bg =
   "&\320\235\320\260\320\274\320\260\320\273\320\270 \321\201\321\202\321\200\320\260\320\275\320\270\321\206\320\270\321\202\320\265 \320\262 \320\274\321\217\321\201\321\202\320\276\321\202\320\276 \320\267\320\260 \320\276\321\202\320\277\320\265\321\207\320\260\321\202\320\262\320\260\320\275\320\265 (\320\277\321\200\320\270 \320\275\320\265\320\276\320\261\321\205\320\276\320\264\320\270\320\274\320\276\321\201\321\202)\0"\
   "&\320\225\320\264\320\275\320\260 \321\201\321\202\321\200\320\260\320\275\320\270\321\206\320\260\tCtrl+6\0"\
   "&\320\237\321\200\320\276\320\277\321\203\321\201\320\275\320\270 \321\202\320\260\320\267\320\270 \320\262\320\265\321\200\321\201\320\270\321\217\0"\
-  "\0"\
+  "&\320\242\320\265\320\274\320\260\0"\
   "\320\230\320\267\320\277\320\276\320\273\320\267\320\262\320\260\320\275\320\265 \320\275\320\260 &\320\276\321\200\320\270\320\263\320\270\320\275\320\260\320\273\320\275\320\270\321\202\320\265 \321\200\320\260\320\267\320\274\320\265\321\200\320\270 \320\275\320\260 \321\201\321\202\321\200\320\260\320\275\320\270\321\206\320\270\321\202\320\265\0"\
   "&\320\230\320\267\320\263\320\273\320\265\320\264\0"\
   "&\320\237\321\200\320\276\320\267\320\276\321\200\320\265\321\206\0"\
@@ -2129,8 +2129,8 @@ const char * gTranslations_bg =
   "\320\241\320\265\320\263\320\260\321\210\320\265\320\275 \321\204\320\260\320\271\320\273\0"\
   "\320\237\320\276\320\267\320\270\321\206\320\270\321\217 \320\275\320\260 \320\272\321\203\321\200\321\201\320\276\321\200\320\260\0"\
   "\320\243\320\262\320\265\320\273\320\270\321\207\320\265\320\275\320\270\320\265 \320\277\320\276 &\320\270\320\267\320\261\320\276\321\200...\tCtrl+Y\0"\
-  "\0"\
-  "\0"\
+  "\320\242\321\212\320\274\320\265\320\275\0"\
+  "\320\237\320\276-\321\202\321\212\320\274\320\265\320\275\0"\
   "&\320\240\320\260\320\267\320\277\320\276\320\273\320\276\320\266\320\265\320\275\320\270\320\265 \320\277\320\276 \320\277\320\276\320\264\321\200\320\260\320\267\320\261\320\270\321\200\320\260\320\275\320\265:\0"\
   "&\320\243\320\262\320\265\320\273\320\270\321\207\320\265\320\275\320\270\320\265 \320\277\320\276 \320\277\320\276\320\264\321\200\320\260\320\267\320\261\320\270\321\200\320\260\320\275\320\265:\0"\
   "PDF \321\207\320\265\321\202\320\265\321\206\320\260 \320\275\320\265 \320\274\320\276\320\266\320\265 \320\264\320\260 \320\261\321\212\320\264\320\265 \321\201\320\274\320\265\320\275\320\265\320\275 \320\262 \320\277\321\200\320\265\320\275\320\276\321\201\320\270\320\274 \321\200\320\265\320\266\320\270\320\274\0"\
@@ -2180,7 +2180,7 @@ const char * gTranslations_bg =
   "\320\241\321\212\320\262\320\265\321\202: \320\230\320\267\320\277\320\276\320\273\320\267\320\262\320\260\320\271\321\202\320\265 F3 \320\267\320\260 \320\277\320\276\320\262\321\202\320\276\321\200\320\275\320\276 \321\202\321\212\321\200\321\201\320\265\320\275\320\265\0"\
   "\320\230\320\267\320\276\320\261\321\200\320\260\320\266\320\265\320\275\320\270\321\217 (*.%s)\0"\
   "\0"\
-  "\0"\
+  "\320\241\320\262\320\265\321\202\321\212\320\273\0"\
   "\0"\
   "\320\230\321\201\320\272\320\260\321\202\320\265 \320\273\320\270 \320\264\320\260 \320\267\320\260\320\264\320\260\320\264\320\265\321\202\320\265 SumatraPDF \320\272\320\260\321\202\320\276 \320\276\321\201\320\275\320\276\320\262\320\275\320\276\321\202\320\276 \321\201\320\270 \320\277\321\200\320\270\320\273\320\276\320\266\320\265\320\275\320\270\320\265 \320\267\320\260 \320\276\321\202\320\262\320\260\321\200\321\217\320\275\320\265 \320\275\320\260 PDF \321\204\320\260\320\271\320\273\320\276\320\262\320\265?\0"\
   "\320\235\320\260\320\277\321\200\320\260\320\262\320\270 SumatraPDF \321\207\320\265\321\202\320\265\321\206 \320\275\320\260 PDF \320\277\320\276 \320\277\320\276\320\264\321\200\320\260\320\267\320\261\320\270\321\200\320\260\320\275\320\265\0"\
@@ -5352,7 +5352,7 @@ const char * gTranslations_gl =
   "&Reducir p\303\241xinas \303\241 \303\241rea imprimible (se for necesario)\0"\
   "Unha &soa p\303\241xina\tCtrl+6\0"\
   "Ignorar esta versi\303\263n\0"\
-  "\0"\
+  "&Tema\0"\
   "&Usar tama\303\261os de p\303\241xina orixinais\0"\
   "&Ver\0"\
   "&Xanela\0"\
@@ -5405,8 +5405,8 @@ const char * gTranslations_gl =
   "Ficheiro actual\0"\
   "Posici\303\263n do punteiro\0"\
   "&Aumento a medida...\tCtrl+Y\0"\
-  "\0"\
-  "\0"\
+  "Escuro\0"\
+  "M\303\241is escuro\0"\
   "Disposici\303\263n por defecto:\0"\
   "&Aumento por defecto:\0"\
   "O lector de PDF por defecto non pode trocarse en modo portable\0"\
@@ -5456,7 +5456,7 @@ const char * gTranslations_gl =
   "Usar \"F3\" para amosar seguinte resultado\0"\
   "Ficheiros de imaxe (*.%s)\0"\
   "\0"\
-  "\0"\
+  "Claro\0"\
   "\0"\
   "Facer o SumatraPDF a aplicaci\303\263n por defecto para arquivos PDF?\0"\
   "Facer do SumatraPDF o lector PDF predefinido\0"\
@@ -7074,7 +7074,7 @@ const char * gTranslations_id =
   "Tent&ang\0"\
   "Ukur&an Sebenarnya\tCtrl+1\0"\
   "Peng&aturan Lanjutan...\0"\
-  "&Semua halaman yang dipilih\0"\
+  "&Semua halaman terpilih\0"\
   "Kem&bali\tAlt+<-\0"\
   "Tampilan &Buku\tCtrl+8\0"\
   "&Tutup\tCtrl+W\0"\
@@ -7108,7 +7108,7 @@ const char * gTranslations_id =
   "&Cetak...\tCtrl+P\0"\
   "&Cetak... (ditolak)\0"\
   "&Ingat kata sandi untuk dokumen ini\0"\
-  "&Ingat pengaturan ini untuk setiap dokumen\0"\
+  "&Ingat setelan ini untuk setiap dokumen\0"\
   "&Hapus Dokumen\0"\
   "Si&mpan Sebagai...\0"\
   "&Simpan Sebagai...\tCtrl+S\0"\
@@ -7117,7 +7117,7 @@ const char * gTranslations_id =
   "Halaman &Tunggal\tCtrl+6\0"\
   "&Lewatkan versi ini\0"\
   "Tema\0"\
-  "&Gunakan ukuran halaman sebenarnya\0"\
+  "&Gunakan ukuran halaman asli\0"\
   "&Tampilan\0"\
   "&Jendela\0"\
   "&Ya\0"\
@@ -7127,7 +7127,7 @@ const char * gTranslations_id =
   "Tentang SumatraPDF\0"\
   "Tambah Favorit\0"\
   "Tambah halaman %s ke favorit\0"\
-  "Tambah halaman %s ke favorit dengan nama:\0"\
+  "Tambah halaman %s ke favorit dengan nama (opsional):\0"\
   "Tambah ke favorit\0"\
   "Lanjutan\0"\
   "Semua berkas\0"\
@@ -7135,13 +7135,13 @@ const char * gTranslations_id =
   "Aplikasi:\0"\
   "Asosiasikan dengan berkas PDF?\0"\
   "Lampiran: %s\0"\
-  "Pencipta:\0"\
+  "Pengarang:\0"\
   "Otomatis\0"\
   "Periksa pembar&uan secara otomatis\0"\
   "Tampilan Buku\0"\
   "&Markah\tF12\0"\
   "Jalan Pintas Markah\0"\
-  "Jalan pintas markah ke halaman %s dari %s\0"\
+  "Pintasan markah ke halaman %s dari %s\0"\
   "Markah\0"\
   "Byte\0"\
   "Dokumen CHM\0"\
@@ -7171,9 +7171,9 @@ const char * gTranslations_id =
   "&Pembesaran Buatan\tCtrl+Y\0"\
   "Gelap\0"\
   "Lebih Gelap\0"\
-  "Tampilan &Standar\0"\
+  "Tata letak &Standar\0"\
   "Pembesaran &Standar\0"\
-  "Pembaca PDF utama tidak dapat diubah dalam mode portabel\0"\
+  "Pembaca PDF standar tidak dapat diubah dalam mode portabel\0"\
   "Izin Ditolak:\0"\
   "Dokumen DjVu\0"\
   "Properti Dokumen\0"\
@@ -7223,7 +7223,7 @@ const char * gTranslations_id =
   "Terang\0"\
   "\0"\
   "Jadikan SumatraPDF sebagai aplikasi standar untuk membuka berkas PDF?\0"\
-  "Jadikan SumatraPDF sebagai pembaca PDF utama\0"\
+  "Jadikan SumatraPDF sebagai pembaca PDF standar saya\0"\
   "Mode Man&ga\0"\
   "Cocok Besar Kecil Huruf\0"\
   "Dokumen Mobi\0"\
@@ -7285,7 +7285,7 @@ const char * gTranslations_id =
   "Pilih konten dengan tombol Ctrl+tombol kiri mouse\0"\
   "Seleksi:\0"\
   "Kirim Via &Email...\0"\
-  "Tetapkan baris perintah pencarian terbalik\0"\
+  "Setel perintah pencarian terbalik\0"\
   "Tampilkan &Markah\0"\
   "Tampilkan Halaman Secara &Kontinu\0"\
   "Tampilkan &Toolbar\0"\
@@ -7294,19 +7294,19 @@ const char * gTranslations_id =
   "Tampilkan kolom &markah jika tersedia\0"\
   "Halaman Tunggal\0"\
   "Maaf, ini seharusnya tidak terjadi!\n\nHarap tekan 'Batalkan', jika Anda ingin membantu kami membetulkan penyebab kegagalan ini.\0"\
-  "Berkas asal %s tidak mempunyai titik sinkronisasi\0"\
+  "Tidak ada titik sinkronisasi pada berkas asal %s\0"\
   "Perihal:\0"\
-  "Pengaturan SumatraPDF\0"\
+  "Pilihan SumatraPDF\0"\
   "Pembaruan SumatraPDF\0"\
   "SumatraPDF berhenti berfungsi\0"\
-  "SumatraPDF adalah pembaca berkas PDF utama Anda\0"\
-  "SumatraPDF sekarang telah menjadi pembaca berkas PDF utama Anda\0"\
+  "SumatraPDF adalah pembaca berkas PDF standar Anda\0"\
+  "SumatraPDF sekarang telah menjadi pembaca berkas PDF standar Anda\0"\
   "Berkas sinkronisasi tidak dapat dibuka\0"\
   "PDF Terlabeli\0"\
   "Dokumen teks\0"\
-  "Dokumen ini menggunakan fitur yang tidak didukung (%s) dan memungkinkan untuk tidak dimuat secara benar.\0"\
+  "Dokumen ini menggunakan fitur yang tidak didukung (%s) dan kemungkinan tidak layak dijalankan\0"\
   "Judul:\0"\
-  "Berkas asal (%s) tidak diketahui\0"\
+  "Berkas asal (%s) tidak dikenal\0"\
   "Gunakan &tab\0"\
   "Tampilan\0"\
   "&Kunjungi Situs\0"\
@@ -10392,7 +10392,7 @@ const char * gTranslations_fa =
   "\330\265\331\201\330\255\330\247\330\252 \330\261\330\247 \331\205\330\252\331\206\330\247\330\263\330\250 \330\250\330\247 \331\206\330\247\330\255\333\214\331\207\342\200\214\333\214 \331\202\330\247\330\250\331\204 \332\206\330\247\331\276 \330\261\331\210\333\214 \332\251\330\247\330\272\330\260 &\330\254\331\205\330\271 \331\210 \330\254\331\210\330\261 \332\251\331\206 (\330\247\332\257\330\261 \331\204\330\247\330\262\331\205 \330\247\330\263\330\252)\0"\
   "&\330\252\332\251 \330\265\331\201\330\255\331\207\342\200\214\330\247\333\214\tCtrl+6\0"\
   "\330\247\330\262 \330\247\333\214\331\206 \331\206\330\263\330\256\331\207 &\332\206\330\264\331\205\342\200\214\331\276\331\210\330\264\333\214 \332\251\331\206\0"\
-  "\0"\
+  "&\331\202\330\247\331\204\330\250\0"\
   "\330\247\331\206\330\257\330\247\330\262\331\207\342\200\214\333\214 &\331\210\330\247\331\202\330\271\333\214 \330\265\331\201\330\255\330\247\330\252 \330\261\330\247 \330\250\331\207 \332\251\330\247\330\261 \330\250\332\257\333\214\330\261\0"\
   "&\331\206\331\205\330\247\333\214\330\264\0"\
   "&\331\276\331\206\330\254\330\261\331\207\0"\
@@ -10445,8 +10445,8 @@ const char * gTranslations_fa =
   "\331\207\331\205\333\214\331\206 \331\276\330\261\331\210\331\206\330\257\331\207\0"\
   "\331\205\331\210\331\202\330\271\333\214\330\252 \331\205\332\251\330\247\331\206\342\200\214\331\206\331\205\330\247\0"\
   "\330\250\330\262\330\261\332\257\331\206\331\205\330\247\333\214\333\214 &\330\263\331\201\330\247\330\261\330\264\333\214...\tCtrl+Y\0"\
-  "\0"\
-  "\0"\
+  "\330\252\333\214\330\261\331\207\0"\
+  "\330\252\333\214\330\261\331\207\342\200\214\330\252\330\261\0"\
   "&\330\265\331\201\330\255\331\207\342\200\214\330\250\331\206\330\257\333\214 \331\276\333\214\330\264\342\200\214\331\201\330\261\330\266:\0"\
   "&\330\250\330\262\330\261\332\257\331\206\331\205\330\247\333\214\333\214 \331\276\333\214\330\264\342\200\214\331\201\330\261\330\266:\0"\
   "\331\206\331\205\333\214\342\200\214\330\252\331\210\330\247\331\206 \330\256\331\210\330\247\331\206\331\206\330\257\331\207\342\200\214\333\214 \331\276\333\214\330\264\342\200\214\331\201\330\261\330\266 \331\276\330\261\331\210\331\206\330\257\331\207\342\200\214\331\207\330\247\333\214 PDF \330\261\330\247 \330\257\330\261 \331\206\330\263\330\256\331\207\342\200\214\333\214 \331\202\330\247\330\250\331\204 \330\255\331\205\331\204 \330\252\330\272\333\214\333\214\330\261 \330\257\330\247\330\257.\0"\
@@ -10496,7 +10496,7 @@ const char * gTranslations_fa =
   "\331\206\332\251\330\252\331\207: \330\250\330\261\330\247\333\214 \330\254\330\263\330\252\330\254\331\210\333\214 \331\205\330\254\330\257\330\257 \330\247\330\262 \332\251\331\204\333\214\330\257 F3 \330\247\330\263\330\252\331\201\330\247\330\257\331\207 \332\251\331\206\333\214\330\257\0"\
   "\331\276\330\261\331\210\331\206\330\257\331\207\342\200\214\331\207\330\247\333\214 \330\252\330\265\331\210\333\214\330\261\333\214 (*.%s)\0"\
   "\332\251\333\214\331\204\331\210\330\250\330\247\333\214\330\252\0"\
-  "\0"\
+  "\330\261\331\210\330\264\331\206\0"\
   "\331\205\332\257\330\247\330\250\330\247\333\214\330\252\0"\
   "\331\276\330\261\331\210\331\206\330\257\331\207\342\200\214\331\207\330\247\333\214 PDF \331\207\331\205\333\214\330\264\331\207 \330\250\330\247 \330\247\333\214\331\206 \330\250\330\261\331\206\330\247\331\205\331\207 \330\256\331\210\330\247\331\206\330\257\331\207 \330\264\331\210\331\206\330\257\330\237\0"\
   "\330\247\331\206\330\252\330\256\330\247\330\250 SumatraPDF \330\250\331\207 \330\271\331\206\331\210\330\247\331\206 \330\250\330\261\331\206\330\247\331\205\331\207\342\200\214\333\214 \331\276\333\214\330\264\342\200\214\331\201\330\261\330\266 \331\205\331\206 \330\250\330\261\330\247\333\214 \330\256\331\210\330\247\331\206\330\257\331\206 \330\247\330\263\331\206\330\247\330\257 PDF\0"\
@@ -13373,7 +13373,7 @@ const char * gTranslations_es =
 const char * gTranslations_sv = 
   "&Om\0"\
   "&Verklig storlek\tCtrl+1\0"\
-  "&Avancerade inst\303\244llningar\0"\
+  "&Avancerade inst\303\244llningar...\0"\
   "&Alla valda sidor\0"\
   "Tillbaka\tAlt+Pil v\303\244nster\0"\
   "&Bokvy\tCtrl+8\0"\
@@ -13394,7 +13394,7 @@ const char * gTranslations_sv =
   "&F\303\266rstoring:\0"\
   "\0"\
   "Matcha &versaler/gemener\0"\
-  "N\303\244sta sida\t->\0"\
+  "N\303\244sta sida\tPil h\303\266ger\0"\
   "&Nej\0"\
   "&Nej, tack\0"\
   "Endast &udda sidor\0"\
@@ -13403,21 +13403,21 @@ const char * gTranslations_sv =
   "Alternativ...\0"\
   "&L\303\266senord:\0"\
   "&F\303\244st dokument\0"\
-  "F\303\266reg\303\245ende sida\t<-\0"\
+  "F\303\266reg\303\245ende sida\tPil v\303\244nster\0"\
   "&Skriv ut...\0"\
   "Skriv &ut...\tCtrl+P\0"\
   "&Utskrift... (nekad)\0"\
-  "&Minns l\303\266senordet f\303\266r detta dokument\0"\
+  "&Kom ih\303\245g l\303\266senordet f\303\266r detta dokument\0"\
   "Kom ih\303\245g dessa inst\303\244llningar f\303\266r &varje dokument\0"\
   "&Ta bort dokument\0"\
   "&Spara som...\0"\
   "Spara so&m...\tCtrl+S\0"\
   "Alternati&v\0"\
-  "&Krymp sidor (om n\303\266dv\303\244ndigt) s\303\245 de ryms\0"\
+  "&Krymp sidor till utskrivbart omr\303\245de (om n\303\266dv\303\244ndigt)\0"\
   "&Enkel sida\tCtrl+6\0"\
   "Hoppa \303\266ver denna version\0"\
   "&Tema\0"\
-  "Anv\303\244nd u&rsprunglig sidstorlek\0"\
+  "Anv\303\244nd u&rsprungliga sidstorlekar\0"\
   "Vi&sa\0"\
   "F\303\266nster\0"\
   "&Ja\0"\
@@ -13434,7 +13434,7 @@ const char * gTranslations_sv =
   "Alla dokument som st\303\266ds\0"\
   "Programvara:\0"\
   "Koppla ihop med PDF-filer?\0"\
-  "Bilagor: %s\0"\
+  "Bilaga: %s\0"\
   "F\303\266rfattare:\0"\
   "Automatiskt\0"\
   "S\303\266k &automatiskt efter uppdateringar\0"\
@@ -13454,14 +13454,14 @@ const char * gTranslations_sv =
   "Serier\0"\
   "Kompatibilitet\0"\
   "Fortl\303\266pande\0"\
-  "Fortl\303\266pande bokuppslag\0"\
+  "Fortl\303\266pande bokvy\0"\
   "Fortl\303\266pande uppslag\0"\
   "Bidra med \303\266vers\303\244ttning\0"\
   "Kop&iera bild\0"\
   "Kopiera l\303\244nkadress\0"\
   "Kopiera kommentar\0"\
   "Textkopiering till\303\244ts ej (kopierar som bild)\0"\
-  "\0"\
+  "Upphovsr\303\244tt:\0"\
   "Kunde inte h\303\244mta egenskaper f\303\266r skrivare\0"\
   "Kunde ej anv\303\244nda skrivare\0"\
   "Kunde ej visa sidan\0"\
@@ -13471,28 +13471,28 @@ const char * gTranslations_sv =
   "&Anpassad zoom...\tCtrl+Y\0"\
   "M\303\266rk\0"\
   "M\303\266rkare\0"\
-  "F\303\266rvalt &utseende\0"\
-  "F\303\266rvalt &zooml\303\244ge\0"\
-  "SumatraPDF kan ej g\303\266ras f\303\266rvald i portabelt l\303\244ge\0"\
-  "Saknade Tillst\303\245nd:\0"\
+  "Standard&utseende\0"\
+  "Standard&zooml\303\244ge\0"\
+  "Standardl\303\244sare f\303\266r PDF kan inte \303\244ndras i portabelt l\303\244ge\0"\
+  "Nekade tillst\303\245nd:\0"\
   "DjVu-dokument\0"\
   "Dokumentegenskaper\0"\
-  "Ladda &ned\0"\
+  "&H\303\244mta\0"\
   "&Avsluta\tCtrl+Q\0"\
   "EPUB-dokument\0"\
   "Ange l\303\266senord\0"\
   "Ange l\303\266senord f\303\266r %s\0"\
-  "Ange kommandorad att aktivera n\303\244r du dubbelklickar p\303\245 PDF-dokumentet:\0"\
+  "Ange kommandorad som k\303\266rs n\303\244r du dubbelklickar p\303\245 PDF-dokumentet:\0"\
   "Fel vid \303\266ppning av %s\0"\
   "&Favoriter\0"\
   "Fram\303\245t\tAlt+Pil h\303\266ger\0"\
-  "Fullsk\303\244rm\tCtrl+Shift+L\0"\
+  "Fullsk\303\244rm\tF11\0"\
   "Uppslag\0"\
   "Kunde inte d\303\266pa om filen!\0"\
-  "Kan inte spara filen.\0"\
-  "Snabb Webb-Visning\0"\
+  "Kunde inte spara filen.\0"\
+  "Snabb webbvy\0"\
   "Favoriter\0"\
-  "FictionBook dokument\0"\
+  "FictionBook-dokument\0"\
   "Fil %s hittades inte\0"\
   "Filstorlek:\0"\
   "Fil:\0"\
@@ -13501,13 +13501,13 @@ const char * gTranslations_sv =
   "S\303\266k n\303\244sta\0"\
   "S\303\266k f\303\266reg\303\245ende\0"\
   "S\303\266k:\0"\
-  "Passa &inneh\303\245ll\tCtrl+3\0"\
+  "Anpassa efter &inneh\303\245ll\tCtrl+3\0"\
   "Anpassa efter &helsida\tCtrl+0\0"\
   "Anpassa efter &bredd\tCtrl+2\0"\
-  "Passa inneh\303\245ll\0"\
+  "Anpassa efter inneh\303\245ll\0"\
   "Anpassa efter helsida\0"\
   "Anpassa efter bredd\0"\
-  "Anpassa bredd och visa sidor fortl\303\266pande\0"\
+  "Anpassa efter bredd och visa sidor fortl\303\266pande\0"\
   "Anpassa till helsida\0"\
   "Typsnitt:\0"\
   "Formatterar bok... %d sidor\0"\
@@ -13524,14 +13524,14 @@ const char * gTranslations_sv =
   "\0"\
   "St\303\244lla in SumatraPDF som standardprogram f\303\266r PDF-filer?\0"\
   "Anv\303\244nd SumatraPDF som standardl\303\244sare f\303\266r PDF\0"\
-  "Man&ga L\303\244ge\0"\
+  "Man&ga-l\303\244ge\0"\
   "Matcha versaler/gemener\0"\
   "Mobi-dokument\0"\
   "\303\204ndrad:\0"\
-  "Nyare version %s tillg\303\244nglig. Ladda ner den?\0"\
+  "Ny version %s finns tillg\303\244nglig. H\303\244mta ny version?\0"\
   "N\303\244sta sida\0"\
   "Inga tr\303\244ffar hittades\0"\
-  "Inget resultat hittades vid rad %u i filen %s\0"\
+  "Inget resultat hittades vid rad %u i fil %s\0"\
   "Ingen synkroniseringsfil hittad\0"\
   "Synkroniseringsinformation saknas h\303\244r\0"\
   "Antal sidor:\0"\
@@ -13547,7 +13547,7 @@ const char * gTranslations_sv =
   "E&genskaper\0"\
   "&Egenskaper...\tCtrl+D\0"\
   "PDF-dokument\0"\
-  "PDF Optimeringar:\0"\
+  "PDF-optimeringar:\0"\
   "PDF-programvara:\0"\
   "PDF-version:\0"\
   "PDF-dokument\0"\
@@ -13557,10 +13557,10 @@ const char * gTranslations_sv =
   "Sidnummer %u finns ej\0"\
   "Skala om vid utskrift\0"\
   "Sida:\0"\
-  "PalmDoc dokument\0"\
+  "PalmDoc-dokument\0"\
   "Ett \303\266gonblick - f\303\266rbereder...\0"\
   "Postscript-dokument\0"\
-  "Pr&esentation\tCtrl+L\0"\
+  "\0"\
   "F\303\266reg\303\245ende sida\0"\
   "Skriv ut\0"\
   "Skriv ut urval\0"\
@@ -13570,7 +13570,7 @@ const char * gTranslations_sv =
   "Utskriften p\303\245g\303\245r fortfarande. Avbryt och b\303\266rja om?\0"\
   "Skriver ut sida %d av %d...\0"\
   "Utskriftsproblem.\0"\
-  "D\303\266p om\0"\
+  "D\303\266p om...\tF2\0"\
   "Kom ih\303\245g \303\266ppnade &filer\0"\
   "Ta bort fr\303\245n favoriter\0"\
   "Ta bort sida %s fr\303\245n favoriter\0"\
@@ -13580,18 +13580,18 @@ const char * gTranslations_sv =
   "Spara som\0"\
   "Spara g&env\303\244g...\tCtrl+Shift+S\0"\
   "S\303\266ker %d av %d...\0"\
-  "Markera &alla\0"\
-  "V\303\244lj &Allt\tCtrl+A\0"\
-  "Markera med Ctrl + v\303\244nster musknapp\0"\
+  "Markera &allt\0"\
+  "Markera &allt\tCtrl+A\0"\
+  "Markera inneh\303\245ll med Ctrl + v\303\244nster musknapp\0"\
   "Markering:\0"\
   "S&kicka som epost...\0"\
-  "S\303\244tt motsatt s\303\266k-kommandorad\0"\
+  "S\303\244tt kommandorad f\303\266r omv\303\244nd s\303\266kning\0"\
   "Visa &Bokm\303\244rken\0"\
   "Visa sidor fortl\303\266pande\0"\
-  "Visa verktygsf\303\244lt\0"\
+  "Visa verktygsf\303\244lt\tF8\0"\
   "Visa favoriter\0"\
   "Visa mest l\303\244sta\0"\
-  "Visa &bokm\303\244rken n\303\244r de finns\0"\
+  "Visa sidopanel f\303\266r &bokm\303\244rken n\303\244r de finns\0"\
   "Enkel sida\0"\
   "Ledsen, det d\303\244r borde inte ha h\303\244nt!\n\nVar god tryck 'Avbryt', om du vill hj\303\244lpa oss att korrigera orsaken till denna krash.\0"\
   "K\303\244llfilen %s har ingen synkroniseringspunkt\0"\
@@ -13599,8 +13599,8 @@ const char * gTranslations_sv =
   "SumatraPDF Inst\303\244llningar\0"\
   "SumatraPDF Uppdatering\0"\
   "SumatraPDF avslutades ov\303\244ntat\0"\
-  "SumatraPDF \303\244r din valda PDF-l\303\244sare\0"\
-  "SumatraPDF ska nu vara din valda PDF-l\303\244sare\0"\
+  "SumatraPDF \303\244r din standardl\303\244sare f\303\266r PDF\0"\
+  "SumatraPDF b\303\266r nu vara din standardl\303\244sare f\303\266r PDF\0"\
   "Synkroniseringsfil kan ej \303\266ppnas\0"\
   "Taggad PDF\0"\
   "Text-dokument\0"\
