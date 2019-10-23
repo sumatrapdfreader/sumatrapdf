@@ -10,8 +10,9 @@ REM scripts\appveyor-build.bat
 @rem this is on GitHub Actions
 call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64
 
-msbuild.exe "vs2019\SumatraPDF.sln" "/t:all;Installer" "/p:Configuration=Release;Platform=Win32" /m
-IF ERRORLEVEL 1 EXIT /B 1
+@rem don't build 32-bit version for now as it uses 141_xp toolset
+@rem msbuild.exe "vs2019\SumatraPDF.sln" "/t:all;Installer" "/p:Configuration=Release;Platform=Win32" /m
+@rem IF ERRORLEVEL 1 EXIT /B 1
 
 msbuild.exe "vs2019\SumatraPDF.sln" "/t:SumatraPDF;Installer;test_util" "/p:Configuration=Release;Platform=x64" /m
 IF ERRORLEVEL 1 EXIT /B 1
