@@ -85,8 +85,7 @@ func buildLzsa() {
 	clean()
 
 	msbuildPath := detectMsbuildPath()
-	cmd := exec.Command(msbuildPath, `vs2019\SumatraPDF.sln`, `/t:MakeLZSA`, `/p:Configuration=Release;Platform=Win32`, `/m`)
-	u.RunCmdLoggedMust(cmd)
+	runExeLoggedMust(msbuildPath, `vs2019\SumatraPDF.sln`, `/t:MakeLZSA`, `/p:Configuration=Release;Platform=Win32`, `/m`)
 
 	path := filepath.Join("rel32", "MakeLZSA.exe")
 	signMust(path)
@@ -105,18 +104,10 @@ func ciBuild() {
 	u.PanicIf(!u.FileExists(lzsa), "file '%s' doesn't exist", lzsa)
 
 	msbuildPath := detectMsbuildPath()
-	{
-		cmd := exec.Command(msbuildPath, `vs2019\SumatraPDF.sln`, `/t:all;Installer`, `/p:Configuration=Release;Platform=Win32`, `/m`)
-		u.RunCmdLoggedMust(cmd)
-	}
+	runExeLoggedMust(msbuildPath, `vs2019\SumatraPDF.sln`, `/t:all;Installer`, `/p:Configuration=Release;Platform=Win32`, `/m`)
 
 	runTestUtilMust("rel32")
-
-	{
-		cmd := exec.Command(msbuildPath, `vs2019\SumatraPDF.sln`, `/t:SumatraPDF;Installer;test_util`, `/p:Configuration=Release;Platform=x64`, `/m`)
-		u.RunCmdLoggedMust(cmd)
-	}
-
+	runExeLoggedMust(msbuildPath, `vs2019\SumatraPDF.sln`, `/t:SumatraPDF;Installer;test_util`, `/p:Configuration=Release;Platform=x64`, `/m`)
 	runTestUtilMust("rel64")
 
 	{
@@ -134,7 +125,8 @@ func ciBuild() {
 
 // TOOD: alternatively, just puts pigz.exe in the repo
 func downloadPigzMust() {
-	uri := "https://kjkpub.s3.amazonaws.com/software/pigz/2.3.1-149/pigz.exe"
+	// TODO: for some reason doesn't work with https
+	uri := "http://kjkpub.s3.amazonaws.com/software/pigz/2.3.1-149/pigz.exe"
 	path := pj("bin", "pigz.exe")
 	sha1 := "10a2d3e3cafbad083972d6498fee4dc7df603c04"
 	httpDlToFileMust(uri, path, sha1)
@@ -153,6 +145,10 @@ func setBuildConfig(sha1, preRelVer string) {
 	}
 	err := ioutil.WriteFile(buildConfigPath(), []byte(s), 644)
 	fatalIfErr(err)
+}
+
+func revertBuildConfig() {
+	runExeMust("git", "checkout", buildConfigPath())
 }
 
 func addZipFileMust(w *zip.Writer, path string) {
@@ -268,10 +264,12 @@ func createManifestMust() {
 	err := ioutil.WriteFile(manifestPath(), []byte(s), 0644)
 	fatalIfErr(err)
 }
+
 func buildPreRelease() {
 	// early exit if missing
 	detectSigntoolPath()
 	getCertPwd()
+	ensureAwsSecrets()
 
 	s := fmt.Sprintf("buidling pre-release version %s", svnPreReleaseVer)
 	defer makePrintDuration(s)()
@@ -279,21 +277,19 @@ func buildPreRelease() {
 
 	verifyGitCleanMust()
 	verifyOnMasterBranchMust()
-	//verifyPreReleaseNotInS3Must(svnPreReleaseVer)
+	verifyPreReleaseNotInS3Must(svnPreReleaseVer)
 
 	verifyTranslationsMust()
 
 	downloadPigzMust()
 
 	setBuildConfig(gitSha1, svnPreReleaseVer)
+	defer revertBuildConfig()
 
 	msbuildPath := detectMsbuildPath()
 	slnPath := filepath.Join("vs2019", "SumatraPDF.sln")
 
-	{
-		cmd := exec.Command(msbuildPath, slnPath, `/t:SumatraPDF;SumatraPDF-no-MUPDF;PdfFilter;PdfPreview;Uninstaller;test_util`, `/p:Configuration=Release;Platform=Win32`, `/m`)
-		u.RunCmdLoggedMust(cmd)
-	}
+	runExeLoggedMust(msbuildPath, slnPath, `/t:SumatraPDF;SumatraPDF-no-MUPDF;PdfFilter;PdfPreview;Uninstaller;test_util`, `/p:Configuration=Release;Platform=Win32`, `/m`)
 
 	dir := "rel32"
 	runTestUtilMust(dir)
@@ -306,16 +302,11 @@ func buildPreRelease() {
 		signMust(pj(dir, "Uninstaller.exe"))
 	}
 
-	{
-		cmd := exec.Command(msbuildPath, slnPath, "/t:Installer", "/p:Configuration=Release;Platform=Win32", "/m")
-		u.RunCmdLoggedMust(cmd)
-	}
+	runExeLoggedMust(msbuildPath, slnPath, "/t:Installer", "/p:Configuration=Release;Platform=Win32", "/m")
+
 	signMust(pj(dir, "Installer.exe"))
 
-	{
-		cmd := exec.Command(msbuildPath, slnPath, "/t:SumatraPDF;SumatraPDF-no-MUPDF;PdfFilter;PdfPreview;Uninstaller;test_util", "/p:Configuration=Release;Platform=x64", "/m")
-		u.RunCmdLoggedMust(cmd)
-	}
+	runExeLoggedMust(msbuildPath, slnPath, "/t:SumatraPDF;SumatraPDF-no-MUPDF;PdfFilter;PdfPreview;Uninstaller;test_util", "/p:Configuration=Release;Platform=x64", "/m")
 
 	dir = "rel64"
 	runTestUtilMust(dir)
@@ -323,13 +314,11 @@ func buildPreRelease() {
 	signMust(pj(dir, "libmupdf.dll"))
 	signMust(pj(dir, "SumatraPDF-no-MUPDF.exe"))
 	signMust(pj(dir, "Uninstaller.exe"))
+	// TODO: why am I building 32-bit dlls?
 	signMust(pj("rel32", "PdfFilter.dll"))
 	signMust(pj("rel32", "PdfPreview.dll"))
 
-	{
-		cmd := exec.Command(msbuildPath, slnPath, "/t:Installer", "/p:Configuration=Release;Platform=x64", "/m")
-		u.RunCmdLoggedMust(cmd)
-	}
+	runExeLoggedMust(msbuildPath, slnPath, "/t:Installer", "/p:Configuration=Release;Platform=x64", "/m")
 	signMust(pj("rel64", "Installer.exe"))
 
 	createPdbZipMust("rel32")
@@ -340,7 +329,9 @@ func buildPreRelease() {
 
 	createManifestMust()
 
-	/*
-		s3UploadPreReleaseMust(svnPreReleaseVer)
-	*/
+	s3UploadPreReleaseMust(svnPreReleaseVer)
+}
+
+func buildRelease() {
+	// TODO: implement me
 }
