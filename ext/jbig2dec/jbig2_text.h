@@ -1,4 +1,4 @@
-/* Copyright (C) 2001-2012 Artifex Software, Inc.
+/* Copyright (C) 2001-2019 Artifex Software, Inc.
    All Rights Reserved.
 
    This software is provided AS-IS with no warranty, either express or
@@ -9,13 +9,16 @@
    of the license contained in the file LICENSE in this distribution.
 
    Refer to licensing information at http://www.artifex.com or contact
-   Artifex Software, Inc.,  7 Mt. Lassen Drive - Suite A-134, San Rafael,
-   CA  94903, U.S.A., +1(415)492-9861, for further information.
+   Artifex Software, Inc.,  1305 Grant Avenue - Suite 200, Novato,
+   CA 94945, U.S.A., +1(415)492-9861, for further information.
 */
 
 /*
     jbig2dec
 */
+
+#ifndef _JBIG2_TEXT_H
+#define _JBIG2_TEXT_H
 
 /**
  * Headers for Text region handling
@@ -69,9 +72,10 @@ typedef struct {
 
 int
 jbig2_decode_text_region(Jbig2Ctx *ctx, Jbig2Segment *segment,
-                             const Jbig2TextRegionParams *params,
-                             const Jbig2SymbolDict * const *dicts, const int n_dicts,
-                             Jbig2Image *image,
-                             const byte *data, const size_t size,
-			     Jbig2ArithCx *GR_stats,
-			     Jbig2ArithState *as, Jbig2WordStream *ws);
+                         const Jbig2TextRegionParams *params,
+                         const Jbig2SymbolDict *const *dicts, const uint32_t n_dicts,
+                         Jbig2Image *image, const byte *data, const size_t size, Jbig2ArithCx *GR_stats, Jbig2ArithState *as, Jbig2WordStream *ws);
+
+int jbig2_text_region(Jbig2Ctx *ctx, Jbig2Segment *segment, const uint8_t *segment_data);
+
+#endif /* _JBIG2_TEXT_H */

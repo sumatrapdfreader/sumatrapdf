@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-# this is the testtest script for jbig2dec
+# this is the test script for jbig2dec
 
 import os, re
 import sys, time
@@ -45,21 +45,23 @@ class SelfTestSuite:
       self.stream.write("%s\n" % test.result)
     stoptime = time.time()
     self.stream.write('-'*72 + '\n')
-    self.stream.write('ran %d tests in %.3f seconds\n\n' % 
-	(len(self.tests), stoptime - starttime))
+    self.stream.write('ran %d tests in %.3f seconds\n\n' %
+        (len(self.tests), stoptime - starttime))
     if len(self.fails):
-      self.stream.write('FAILED %d of %d tests\n' % 
-	(len(self.fails),len(self.tests)))
+      self.stream.write('FAILED %d of %d tests\n' %
+        (len(self.fails),len(self.tests)))
+      return False
     else:
       self.stream.write('PASSED all %d tests\n' % len(self.tests))
+      return True
 
 class KnownFileHash(SelfTest):
   'self test to check for correct decode of known test files'
 
   # hashes of known test inputs
+  known_NOTHING_DECODED = "da39a3ee5e6b4b0d3255bfef95601890afd80709"
   known_042_DECODED = "ebfdf6e2fc5ff3ee2271c2fa19de0e52712046e8"
-  # we do not have correct hashes for these
-  known_amb_DECODED = "ff32ffff0776ff66ff254129ff28ffffffff6bff"
+  known_amb_DECODED = "3d4b7992d506894662b53415bd3d0d2a2f8b7953"
 
   # these are known test files in the form
   # (filename, sha-1(file), sha-1(decoded document)
@@ -101,10 +103,10 @@ class KnownFileHash(SelfTest):
 			known_042_DECODED),
                    ('../ubc/042_13.jb2',
 			"7d428bd542f58591b254d9827f554b0552c950a7",
-			known_042_DECODED),
+			known_NOTHING_DECODED),
                    ('../ubc/042_14.jb2',
 			"c40fe3a02acb6359baf9b40fc9c49bc0800be589",
-			known_042_DECODED),
+			known_NOTHING_DECODED),
                    ('../ubc/042_15.jb2',
 			"a9e39fc1ecb178aec9f05039514d75ea3246246c",
 			known_042_DECODED),
@@ -143,10 +145,8 @@ class KnownFileHash(SelfTest):
                         known_amb_DECODED),
                    ('../ubc/amb_2.jb2',
 			"9af6616a89eb03f8934de72626e301a716366c3c",
-                        known_amb_DECODED),
-                   ('../str-p39',
-			"1a303e33d3ea57eb7e19a676a1b2f28baa29b045",
-                        "ff373f070f5f405b732c53ffffff087eff22ff5b") )
+                        known_amb_DECODED)
+                 )
 
   def __init__(self, file, file_hash, decode_hash):
     SelfTest.__init__(self)

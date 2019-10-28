@@ -17,15 +17,21 @@
     jbig2dec
 */
 
-#ifndef _JBIG2_ARITH_INT_H
-#define _JBIG2_ARITH_INT_H
+#ifndef _JBIG2_IMAGE_RW_H
+#define _JBIG2_IMAGE_RW_H
 
-typedef struct _Jbig2ArithIntCtx Jbig2ArithIntCtx;
+/* routines for dumping the image data in various formats */
 
-Jbig2ArithIntCtx *jbig2_arith_int_ctx_new(Jbig2Ctx *ctx);
+#include <stdio.h>
 
-int jbig2_arith_int_decode(Jbig2Ctx *ctx, Jbig2ArithIntCtx *actx, Jbig2ArithState *as, int32_t *p_result);
+int jbig2_image_write_pbm_file(Jbig2Image *image, char *filename);
+int jbig2_image_write_pbm(Jbig2Image *image, FILE *out);
+Jbig2Image *jbig2_image_read_pbm_file(Jbig2Ctx *ctx, char *filename);
+Jbig2Image *jbig2_image_read_pbm(Jbig2Ctx *ctx, FILE *in);
 
-void jbig2_arith_int_ctx_free(Jbig2Ctx *ctx, Jbig2ArithIntCtx *iax);
+#ifdef HAVE_LIBPNG
+int jbig2_image_write_png_file(Jbig2Image *image, char *filename);
+int jbig2_image_write_png(Jbig2Image *image, FILE *out);
+#endif
 
-#endif /* _JBIG2_ARITH_INT_H */
+#endif /* _JBIG2_IMAGE_RW_H */

@@ -1,0 +1,40 @@
+# ignore editor backup files
+*~
+*.swp
+
+# ignore generated files
+.deps
+.libs
+m4
+configure.ac
+Makefile
+Makefile.in
+aclocal.m4
+ar-lib
+compile
+config.guess
+config.h
+config.h.in
+config.sub
+config_types.h
+config_types.h.in
+depcomp
+install-sh
+libtool
+ltmain.sh
+missing
+stamp-h1
+test-driver
+test_arith
+test_huffman
+test_sha1
+
+# ignore object files
+*.o
+*.lo
+
+# ignore normal build products
+jbig2dec
+jbig2dec.pc
+libjbig2dec.a
+libjbig2dec.la

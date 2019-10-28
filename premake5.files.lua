@@ -117,7 +117,6 @@ function jbig2dec_files()
     "jbig2_huffman.c",
     "jbig2_halftone.c",
     "jbig2_image.c",
-    "jbig2_metadata.c",
     "jbig2_mmr.c",
     "jbig2_page.c",
     "jbig2_refinement.c",

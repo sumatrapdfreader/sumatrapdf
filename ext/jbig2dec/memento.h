@@ -1,22 +1,19 @@
-/* Copyright (C) 2001-2012 Artifex Software, Inc.
+/* Copyright (C) 2009-2018 Artifex Software, Inc.
    All Rights Reserved.
 
    This software is provided AS-IS with no warranty, either express or
    implied.
 
-   This software is distributed under license and may not be copied,
-   modified or distributed except as expressly authorized under the terms
-   of the license contained in the file LICENSE in this distribution.
-
-   Refer to licensing information at http://www.artifex.com or contact
-   Artifex Software, Inc.,  7 Mt. Lassen Drive - Suite A-134, San Rafael,
-   CA  94903, U.S.A., +1(415)492-9861, for further information.
+   This software is distributed under license and may not be copied, modified
+   or distributed except as expressly authorized under the terms of that
+   license. Refer to licensing information at http://www.artifex.com
+   or contact Artifex Software, Inc.,  1305 Grant Avenue - Suite 200,
+   Novato, CA 94945, U.S.A., +1(415)492-9861, for further information.
 */
-
 
 /* Memento: A library to aid debugging of memory leaks/heap corruption.
  *
- * Usage:
+ * Usage (with C):
  *    First, build your project with MEMENTO defined, and include this
  *    header file wherever you use malloc, realloc or free.
  *    This header file will use macros to point malloc, realloc and free to
@@ -32,10 +29,14 @@
  *    On each event Memento increments a counter. Every block is tagged with
  *    the current counter on allocation. Every so often during program
  *    execution, the heap is checked for consistency. By default this happens
- *    every 1024 events. This can be changed at runtime by using
- *    Memento_setParanoia(int level). 0 turns off such checking, 1 sets
- *    checking to happen on every event, any other number n sets checking to
- *    happen once every n events.
+ *    after 1024 events, then after 2048 events, then after 4096 events, etc.
+ *    This can be changed at runtime by using Memento_setParanoia(int level).
+ *    0 turns off such checking, 1 sets checking to happen on every event,
+ *    any positive number n sets checking to happen once every n events,
+ *    and any negative number n sets checking to happen after -n events, then
+ *    after -2n events etc.
+ *
+ *    The default paranoia level is therefore -1024.
  *
  *    Memento keeps blocks around for a while after they have been freed, and
  *    checks them as part of these heap checks to see if they have been
@@ -58,7 +59,7 @@
  *    it last passed a check for correctness.
  *
  *    If you rerun, and call Memento_paranoidAt(int event); with this number
- *    the the code will wait until it reaches that event and then start
+ *    the code will wait until it reaches that event and then start
  *    checking the heap after every allocation event. Assuming it is a
  *    deterministic failure, you should then find out where in your program
  *    the error is occurring (between event x-1 and event x).
@@ -133,11 +134,34 @@
  *      then more useful features can be used; firstly memory squeezing will
  *      work, and secondly, Memento will have a "finer grained" paranoia
  *      available to it.
+ *
+ * Usage with C++:
+ *
+ *    Memento has some experimental code in it to trap new/delete (and
+ *    new[]/delete[] if required) calls.
+ *
+ *    In order for this to work, either:
+ *
+ *    1) Build memento.c with the c++ compiler.
+ *
+ *    or
+ *
+ *    2) Build memento.c as normal with the C compiler, then from any
+ *       one of your .cpp files, do:
+ *
+ *       #define MEMENTO_CPP_EXTRAS_ONLY
+ *       #include "memento.c"
+ *
+ *       In the case where MEMENTO is not defined, this will not do anything.
+ *
+ *    Both Windows and GCC provide separate new[] and delete[] operators
+ *    for arrays. Apparently some systems do not. If this is the case for
+ *    your system, define MEMENTO_CPP_NO_ARRAY_CONSTRUCTORS.
  */
 
 #ifndef MEMENTO_H
 
-#include <memory.h>
+#include <stdlib.h>
 
 #define MEMENTO_H
 
@@ -184,11 +208,39 @@ void Memento_listNewBlocks(void);
 size_t Memento_setMax(size_t);
 void Memento_stats(void);
 void *Memento_label(void *, const char *);
+void Memento_tick(void);
 
 void *Memento_malloc(size_t s);
 void *Memento_realloc(void *, size_t s);
 void  Memento_free(void *);
 void *Memento_calloc(size_t, size_t);
+
+void Memento_info(void *addr);
+void Memento_listBlockInfo(void);
+void *Memento_takeByteRef(void *blk);
+void *Memento_dropByteRef(void *blk);
+void *Memento_takeShortRef(void *blk);
+void *Memento_dropShortRef(void *blk);
+void *Memento_takeIntRef(void *blk);
+void *Memento_dropIntRef(void *blk);
+void *Memento_takeRef(void *blk);
+void *Memento_dropRef(void *blk);
+void *Memento_adjustRef(void *blk, int adjust);
+void *Memento_reference(void *blk);
+
+int Memento_checkPointerOrNull(void *blk);
+int Memento_checkBytePointerOrNull(void *blk);
+int Memento_checkShortPointerOrNull(void *blk);
+int Memento_checkIntPointerOrNull(void *blk);
+
+void Memento_startLeaking(void);
+void Memento_stopLeaking(void);
+
+int Memento_sequence(void);
+
+void Memento_fin(void);
+
+void Memento_bt(void);
 
 #ifdef MEMENTO
 
@@ -206,24 +258,47 @@ void *Memento_calloc(size_t, size_t);
 #define Memento_realloc MEMENTO_UNDERLYING_REALLOC
 #define Memento_calloc  MEMENTO_UNDERLYING_CALLOC
 
-#define Memento_checkBlock(A)     0
-#define Memento_checkAllMemory()  0
-#define Memento_check()           0
-#define Memento_setParanoia(A)    0
-#define Memento_paranoidAt(A)     0
-#define Memento_breakAt(A)        0
-#define Memento_breakOnFree(A)    0
-#define Memento_breakOnRealloc(A) 0
-#define Memento_getBlockNum(A)    0
-#define Memento_find(A)           0
-#define Memento_breakpoint()      do {} while (0)
-#define Memento_failAt(A)         0
-#define Memento_failThisEvent()   0
-#define Memento_listBlocks()      do {} while (0)
-#define Memento_listNewBlocks()   do {} while (0)
-#define Memento_setMax(A)         0
-#define Memento_stats()           do {} while (0)
-#define Memento_label(A,B)        (A)
+#define Memento_checkBlock(A)              0
+#define Memento_checkAllMemory()           0
+#define Memento_check()                    0
+#define Memento_setParanoia(A)             0
+#define Memento_paranoidAt(A)              0
+#define Memento_breakAt(A)                 0
+#define Memento_breakOnFree(A)             0
+#define Memento_breakOnRealloc(A)          0
+#define Memento_getBlockNum(A)             0
+#define Memento_find(A)                    0
+#define Memento_breakpoint()               do {} while (0)
+#define Memento_failAt(A)                  0
+#define Memento_failThisEvent()            0
+#define Memento_listBlocks()               do {} while (0)
+#define Memento_listNewBlocks()            do {} while (0)
+#define Memento_setMax(A)                  0
+#define Memento_stats()                    do {} while (0)
+#define Memento_label(A,B)                 (A)
+#define Memento_info(A)                    do {} while (0)
+#define Memento_listBlockInfo()            do {} while (0)
+#define Memento_takeByteRef(A)             (A)
+#define Memento_dropByteRef(A)             (A)
+#define Memento_takeShortRef(A)            (A)
+#define Memento_dropShortRef(A)            (A)
+#define Memento_takeIntRef(A)              (A)
+#define Memento_dropIntRef(A)              (A)
+#define Memento_takeRef(A)                 (A)
+#define Memento_dropRef(A)                 (A)
+#define Memento_adjustRef(A,V)             (A)
+#define Memento_reference(A)               (A)
+#define Memento_checkPointerOrNull(A)      0
+#define Memento_checkBytePointerOrNull(A)  0
+#define Memento_checkShortPointerOrNull(A) 0
+#define Memento_checkIntPointerOrNull(A)   0
+
+#define Memento_tick()                     do {} while (0)
+#define Memento_startLeaking()             do {} while (0)
+#define Memento_stopLeaking()              do {} while (0)
+#define Memento_fin()                      do {} while (0)
+#define Memento_bt()                       do {} while (0)
+#define Memento_sequence()                 (0)
 
 #endif /* MEMENTO */
 

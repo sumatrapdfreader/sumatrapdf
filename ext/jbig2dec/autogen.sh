@@ -22,6 +22,11 @@ VERSIONGREP="sed -e s/.*[^0-9\.]\([0-9][0-9]*\.[0-9][0-9]*\).*/\1/"
 VERSIONMKMAJ="sed -e s/\([0-9][0-9]*\)[^0-9].*/\\1/"
 VERSIONMKMIN="sed -e s/.*[0-9][0-9]*\.//"
 
+JBIG2VERSIONGREP="sed -e s/^.*(\([0-9]\+\)).*/\\1/"
+JBIG2MAJOR=$(grep 'define JBIG2_VERSION_MAJOR' jbig2.h | $JBIG2VERSIONGREP)
+JBIG2MINOR=$(grep 'define JBIG2_VERSION_MINOR' jbig2.h | $JBIG2VERSIONGREP)
+sed -e "s/^\(AC_INIT[^,]*,\)[^,]*\(,.*\)$/\1 [$JBIG2MAJOR.$JBIG2MINOR]\2/" configure.ac.in > configure.ac
+
 # do we need automake?
 if test "x$USE_OLD" = "xyes" ; then
   if test -r Makefile.am; then
@@ -143,7 +148,9 @@ cat >config_types.h.in <<EOF
    ifdef
 */
 
-#ifndef HAVE_STDINT_H
+#ifdef HAVE_STDINT_H
+#  include <stdint.h>
+#else
 #  ifdef JBIG2_REPLACE_STDINT_H
 #   include <@JBIG2_STDINT_H@>
 #  else

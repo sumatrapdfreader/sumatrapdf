@@ -1,4 +1,4 @@
-/* Copyright (C) 2001-2012 Artifex Software, Inc.
+/* Copyright (C) 2001-2019 Artifex Software, Inc.
    All Rights Reserved.
 
    This software is provided AS-IS with no warranty, either express or
@@ -9,17 +9,16 @@
    of the license contained in the file LICENSE in this distribution.
 
    Refer to licensing information at http://www.artifex.com or contact
-   Artifex Software, Inc.,  7 Mt. Lassen Drive - Suite A-134, San Rafael,
-   CA  94903, U.S.A., +1(415)492-9861, for further information.
+   Artifex Software, Inc.,  1305 Grant Avenue - Suite 200, Novato,
+   CA 94945, U.S.A., +1(415)492-9861, for further information.
 */
 
 /*
     jbig2dec
 */
 
-
-#ifndef JBIG2_HUFFMAN_H
-#define JBIG2_HUFFMAN_H
+#ifndef _JBIG2_HUFFMAN_H
+#define _JBIG2_HUFFMAN_H
 
 /* Huffman coder interface */
 
@@ -29,65 +28,56 @@ typedef struct _Jbig2HuffmanTable Jbig2HuffmanTable;
 typedef struct _Jbig2HuffmanParams Jbig2HuffmanParams;
 
 struct _Jbig2HuffmanEntry {
-  union {
-    int32_t RANGELOW;
-    Jbig2HuffmanTable *ext_table;
-  } u;
-  byte PREFLEN;
-  byte RANGELEN;
-  byte flags;
+    union {
+        int32_t RANGELOW;
+        Jbig2HuffmanTable *ext_table;
+    } u;
+    byte PREFLEN;
+    byte RANGELEN;
+    byte flags;
 };
 
 struct _Jbig2HuffmanTable {
-  int log_table_size;
-  Jbig2HuffmanEntry *entries;
+    int log_table_size;
+    Jbig2HuffmanEntry *entries;
 };
 
 typedef struct _Jbig2HuffmanLine Jbig2HuffmanLine;
 
 struct _Jbig2HuffmanLine {
-  int PREFLEN;
-  int RANGELEN;
-  int RANGELOW;
+    int PREFLEN;
+    int RANGELEN;
+    int RANGELOW;
 };
 
 struct _Jbig2HuffmanParams {
-  bool HTOOB;
-  int n_lines;
-  const Jbig2HuffmanLine *lines;
+    bool HTOOB;
+    int n_lines;
+    const Jbig2HuffmanLine *lines;
 };
 
-Jbig2HuffmanState *
-jbig2_huffman_new (Jbig2Ctx *ctx, Jbig2WordStream *ws);
+Jbig2HuffmanState *jbig2_huffman_new(Jbig2Ctx *ctx, Jbig2WordStream *ws);
 
-void
-jbig2_huffman_free (Jbig2Ctx *ctx, Jbig2HuffmanState *hs);
+void jbig2_huffman_free(Jbig2Ctx *ctx, Jbig2HuffmanState *hs);
 
-void
-jbig2_huffman_skip(Jbig2HuffmanState *hs);
+int jbig2_huffman_skip(Jbig2HuffmanState *hs);
 
-void jbig2_huffman_advance(Jbig2HuffmanState *hs, int offset);
+int jbig2_huffman_advance(Jbig2HuffmanState *hs, size_t advance);
 
-int
-jbig2_huffman_offset(Jbig2HuffmanState *hs);
+uint32_t jbig2_huffman_offset(Jbig2HuffmanState *hs);
 
-int32_t
-jbig2_huffman_get (Jbig2HuffmanState *hs,
-		   const Jbig2HuffmanTable *table, bool *oob);
+int32_t jbig2_huffman_get(Jbig2HuffmanState *hs, const Jbig2HuffmanTable *table, bool *oob);
 
-int32_t
-jbig2_huffman_get_bits (Jbig2HuffmanState *hs, const int bits, int *err);
+int32_t jbig2_huffman_get_bits(Jbig2HuffmanState *hs, const int bits, int *err);
 
 #ifdef JBIG2_DEBUG
 void jbig2_dump_huffman_state(Jbig2HuffmanState *hs);
 void jbig2_dump_huffman_binary(Jbig2HuffmanState *hs);
 #endif
 
-Jbig2HuffmanTable *
-jbig2_build_huffman_table (Jbig2Ctx *ctx, const Jbig2HuffmanParams *params);
+Jbig2HuffmanTable *jbig2_build_huffman_table(Jbig2Ctx *ctx, const Jbig2HuffmanParams *params);
 
-void
-jbig2_release_huffman_table (Jbig2Ctx *ctx, Jbig2HuffmanTable *table);
+void jbig2_release_huffman_table(Jbig2Ctx *ctx, Jbig2HuffmanTable *table);
 
 /* standard Huffman templates defined by the specification */
 extern const Jbig2HuffmanParams jbig2_huffman_params_A; /* Table B.1  */
@@ -109,15 +99,12 @@ extern const Jbig2HuffmanParams jbig2_huffman_params_O; /* Table B.15 */
 /* Routines to handle "code table segment (53)" */
 
 /* Parse a code table segment, store Jbig2HuffmanParams in segment->result */
-int
-jbig2_table(Jbig2Ctx *ctx, Jbig2Segment *segment, const byte *segment_data);
+int jbig2_table(Jbig2Ctx *ctx, Jbig2Segment *segment, const byte *segment_data);
 
 /* free Jbig2HuffmanParams allocated by jbig2_huffman_table() */
-void
-jbig2_table_free(Jbig2Ctx *ctx, Jbig2HuffmanParams *params);
+void jbig2_table_free(Jbig2Ctx *ctx, Jbig2HuffmanParams *params);
 
 /* find a user supplied table used by 'segment' and by 'index' */
-const Jbig2HuffmanParams *
-jbig2_find_table(Jbig2Ctx *ctx, Jbig2Segment *segment, int index);
+const Jbig2HuffmanParams *jbig2_find_table(Jbig2Ctx *ctx, Jbig2Segment *segment, int index);
 
-#endif /* JBIG2_HUFFMAN_H */
+#endif /* _JBIG2_HUFFMAN_H */

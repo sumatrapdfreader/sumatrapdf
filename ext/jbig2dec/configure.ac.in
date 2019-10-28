@@ -1,6 +1,6 @@
 # Process this file with autoconf to produce a configure script.
 
-AC_INIT([jbig2dec], [0.12], [jbig2-dev@ghostscript.com])
+AC_INIT([jbig2dec], [unknown-version], [jbig2-dev@ghostscript.com])
 AC_PREREQ(2.53)
 AC_CONFIG_SRCDIR([jbig2dec.c])
 
@@ -21,6 +21,7 @@ AC_SUBST([JBIG2DEC_LT_AGE], [0])
 # Checks for programs.
 AC_PROG_CC
 AM_PROG_CC_C_O
+AM_PROG_AR
 AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
 
@@ -145,5 +146,5 @@ AC_CHECK_FUNC(getopt_long,
 ])
 
 # generate output
-AC_CONFIG_FILES([Makefile config_types.h])
+AC_CONFIG_FILES([Makefile config_types.h jbig2dec.pc])
 AC_OUTPUT

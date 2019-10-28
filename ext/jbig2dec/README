@@ -19,7 +19,12 @@ A set of example files is available from
 http://www.ece.ubc.ca/spmg/jbig2/bitstreams/main.html
 
 More information about this project and updated versions are available
-from http://jbig2dec.sf.net/ Development source code is kept in a 
-subversion repository at svn.ghostscript.com.
+from:
+
+https://artifex.com/developers-ghostscript-jbig2dec/
+
+Development source code is kept in a git repository at:
+
+http://git.ghostscript.com/?p=jbig2dec.git
 
 The contact address for the project is <jbig2-dev@ghostscript.com>.
