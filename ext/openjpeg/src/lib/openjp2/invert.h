@@ -1,6 +1,6 @@
 /*
- * The copyright in this software is being made available under the 2-clauses 
- * BSD License, included below. This software may be subject to other third 
+ * The copyright in this software is being made available under the 2-clauses
+ * BSD License, included below. This software may be subject to other third
  * party and contributor rights, including patent rights, and no such rights
  * are granted under this license.
  *
@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __INVERT_H
-#define __INVERT_H
+#ifndef OPJ_INVERT_H
+#define OPJ_INVERT_H
 /**
 @file invert.h
 @brief Implementation of the matrix inversion
@@ -48,17 +48,17 @@ The function in INVERT.H compute a matrix inversion with a LUP method
  * Calculates a n x n double matrix inversion with a LUP method. Data is aligned, rows after rows (or columns after columns).
  * The function does not take ownership of any memory block, data must be fred by the user.
  *
- * @param pSrcMatrix	the matrix to invert.
- * @param pDestMatrix	data to store the inverted matrix. 
- * @param n size of the matrix
+ * @param pSrcMatrix    the matrix to invert.
+ * @param pDestMatrix   data to store the inverted matrix.
+ * @param nb_compo      size of the matrix
  * @return OPJ_TRUE if the inversion is successful, OPJ_FALSE if the matrix is singular.
  */
 OPJ_BOOL opj_matrix_inversion_f(OPJ_FLOAT32 * pSrcMatrix,
-                                OPJ_FLOAT32 * pDestMatrix, 
+                                OPJ_FLOAT32 * pDestMatrix,
                                 OPJ_UINT32 nb_compo);
 /* ----------------------------------------------------------------------- */
 /*@}*/
 
 /*@}*/
 
-#endif /* __INVERT_H */ 
+#endif /* OPJ_INVERT_H */

@@ -1,0 +1,41 @@
+version: 2.3.0.{build}
+branches:
+  except:
+  - coverity_scan
+skip_tags: false
+clone_depth: 50
+environment:
+  matrix:
+  - OPJ_CI_ARCH: x64
+    OPJ_CI_VSCOMNTOOLS: $(VS140COMNTOOLS)
+    OPJ_CI_INSTRUCTION_SETS: "/arch:AVX2"
+  - OPJ_CI_ARCH: x86
+    OPJ_CI_VSCOMNTOOLS: $(VS140COMNTOOLS)
+    OPJ_CI_INCLUDE_IF_DEPLOY: 1
+  - OPJ_CI_ARCH: x64
+    OPJ_CI_VSCOMNTOOLS: $(VS140COMNTOOLS)
+    OPJ_CI_INCLUDE_IF_DEPLOY: 1
+  - OPJ_CI_ARCH: x86
+    OPJ_CI_VSCOMNTOOLS: $(VS100COMNTOOLS)
+install:
+- cmd: c:\cygwin\bin\bash ./tools/travis-ci/install.sh
+build_script:
+- cmd: >-
+    "%OPJ_CI_VSCOMNTOOLS%..\..\VC\vcvarsall.bat" %OPJ_CI_ARCH%
+
+    bash ./tools/travis-ci/run.sh
+test: off
+#before_deploy:
+#- cmd: c:\cygwin\bin\bash ./tools/travis-ci/before_deploy.sh
+deploy:
+  #release: openjpeg-$(appveyor_repo_tag_name)
+  description: 'OpenJPEG $(appveyor_repo_tag_name) has been released. More info [here](https://github.com/uclouvain/openjpeg/blob/$(appveyor_repo_tag_name)/NEWS) and a detailed view [here](https://github.com/uclouvain/openjpeg/blob/$(appveyor_repo_tag_name)/CHANGES).'
+  provider: GitHub
+  auth_token:
+    secure: Huk03f1heCD/HMyA+4ZeVmICdmKn9rPxK5p8/KxzgL+FtJDHlqcllcCrtN9bDxRH # your encrypted token from GitHub
+  artifact: /.*\.zip/            # upload all zip packages to release assets
+  draft: false
+  prerelease: false
+  on:
+    appveyor_repo_tag: true        # deploy on tag push only
+    OPJ_CI_INCLUDE_IF_DEPLOY: 1

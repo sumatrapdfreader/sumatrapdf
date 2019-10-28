@@ -1,6 +1,6 @@
 /*
- * The copyright in this software is being made available under the 2-clauses 
- * BSD License, included below. This software may be subject to other third 
+ * The copyright in this software is being made available under the 2-clauses
+ * BSD License, included below. This software may be subject to other third
  * party and contributor rights, including patent rights, and no such rights
  * are granted under this license.
  *
@@ -29,8 +29,8 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef __OPJ_MALLOC_H
-#define __OPJ_MALLOC_H
+#ifndef OPJ_MALLOC_H
+#define OPJ_MALLOC_H
 
 #include <stddef.h>
 /**
@@ -56,8 +56,8 @@ void * opj_malloc(size_t size);
 
 /**
 Allocate a memory block with elements initialized to 0
-@param num Blocks to allocate
-@param size Bytes per block to allocate
+@param numOfElements  Blocks to allocate
+@param sizeOfElements Bytes per block to allocate
 @return Returns a void pointer to the allocated space, or NULL if there is insufficient memory available
 */
 void * opj_calloc(size_t numOfElements, size_t sizeOfElements);
@@ -70,6 +70,14 @@ Allocate memory aligned to a 16 byte boundary
 void * opj_aligned_malloc(size_t size);
 void * opj_aligned_realloc(void *ptr, size_t size);
 void opj_aligned_free(void* ptr);
+
+/**
+Allocate memory aligned to a 32 byte boundary
+@param size Bytes to allocate
+@return Returns a void pointer to the allocated space, or NULL if there is insufficient memory available
+*/
+void * opj_aligned_32_malloc(size_t size);
+void * opj_aligned_32_realloc(void *ptr, size_t size);
 
 /**
 Reallocate memory blocks.
@@ -94,5 +102,5 @@ void opj_free(void * m);
 
 /*@}*/
 
-#endif /* __OPJ_MALLOC_H */
+#endif /* OPJ_MALLOC_H */
 

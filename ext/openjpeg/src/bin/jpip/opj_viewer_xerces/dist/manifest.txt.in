@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+Ant-Version: Apache Ant 1.7.0
+Created-By: Kaori Hagihara
+Main-Class: ImageWindow
+Class-Path: @APACHE_XERCES_JAR@

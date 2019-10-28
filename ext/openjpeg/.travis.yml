@@ -1,0 +1,153 @@
+language: cpp
+
+matrix:
+  include:
+# OSX
+    - os: osx
+      compiler: clang
+      env: OPJ_CI_ARCH=x86_64 OPJ_CI_BUILD_CONFIGURATION=Release OPJ_CI_INCLUDE_IF_DEPLOY=1
+
+# Test code style
+    - os: linux
+      compiler: clang-3.8
+      env: OPJ_CI_CC=clang-3.8 OPJ_CI_CXX=clang-3.8 OPJ_CI_CHECK_STYLE=1 OPJ_CI_SKIP_TESTS=1
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-precise-3.8
+            - ubuntu-toolchain-r-test
+          packages:
+            - clang-3.8
+            - flip
+
+# Performance test with GCC
+    - os: linux
+      compiler: g++
+      dist: precise
+      env: OPJ_CI_ARCH=x86_64 OPJ_CI_BUILD_CONFIGURATION=Release OPJ_CI_INCLUDE_IF_DEPLOY=1 OPJ_CI_PERF_TESTS=1
+
+# Test compilation with AVX2
+    - os: linux
+      # "sudo: yes" and "dist: trusty" give us a worker with the AVX2 instruction set
+      sudo: yes
+      dist: trusty
+      compiler: clang-3.8
+      env: OPJ_CI_CC=clang-3.8 OPJ_CI_CXX=clang-3.8 OPJ_CI_INSTRUCTION_SETS="-mavx2" OPJ_CI_BUILD_CONFIGURATION=Release
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-precise-3.8
+            - ubuntu-toolchain-r-test
+          packages:
+            - clang-3.8
+
+# Test multi-threading
+    - os: linux
+      compiler: g++
+      dist: precise
+      env: OPJ_CI_ARCH=x86_64 OPJ_CI_BUILD_CONFIGURATION=Release OPJ_NUM_THREADS=2
+
+# Test 32-bit compilation
+    - os: linux
+      compiler: g++
+      env: OPJ_CI_ARCH=i386 OPJ_CI_BUILD_CONFIGURATION=Release
+      addons:
+        apt:
+          packages:
+            - gcc-multilib
+            - g++-multilib
+
+# Profile code (gcc -pg)
+    - os: linux
+      compiler: g++
+      env: OPJ_CI_ARCH=x86_64 OPJ_CI_BUILD_CONFIGURATION=Debug OPJ_CI_PROFILE=1
+      addons:
+        apt:
+          packages:
+            - valgrind
+
+# Test under ASAN
+    - os: linux
+      compiler: clang
+      env: OPJ_CI_ARCH=x86_64 OPJ_CI_BUILD_CONFIGURATION=Debug OPJ_CI_ASAN=1
+
+# Test with CLang 3.8
+    - os: linux
+      compiler: clang-3.8
+      env: OPJ_CI_CC=clang-3.8 OPJ_CI_CXX=clang-3.8 OPJ_CI_ARCH=x86_64 OPJ_CI_BUILD_CONFIGURATION=Release OPJ_CI_PERF_TESTS=1 OPJ_CI_BUILD_FUZZERS=1
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-precise-3.8
+            - ubuntu-toolchain-r-test
+          packages:
+            - clang-3.8
+
+# Test with mingw 32 bit
+    - os: linux
+      compiler: x86_64-w64-mingw32-g++
+      env: OPJ_CI_CC=x86_64-w64-mingw32-gcc OPJ_CI_CXX=x86_64-w64-mingw32-g++ OPJ_CI_ARCH=i386 OPJ_CI_BUILD_CONFIGURATION=Release
+      addons:
+        apt:
+          packages:
+            - gcc-mingw-w64-base
+            - binutils-mingw-w64-i686
+            - gcc-mingw-w64-i686
+            - gcc-mingw-w64      
+            - g++-mingw-w64-i686
+            - gcc-multilib
+            - g++-multilib
+
+# Test with mingw 64 bit
+    - os: linux
+      compiler: x86_64-w64-mingw32-g++
+      env: OPJ_CI_CC=x86_64-w64-mingw32-gcc OPJ_CI_CXX=x86_64-w64-mingw32-g++ OPJ_CI_ARCH=x86_64 OPJ_CI_BUILD_CONFIGURATION=Release
+      addons:
+        apt:
+          packages:
+            - gcc-mingw-w64-base
+            - binutils-mingw-w64-x86-64
+            - gcc-mingw-w64-x86-64
+            - gcc-mingw-w64
+            - g++-mingw-w64-x86-64
+
+# Test with gcc 4.8
+    - os: linux
+      compiler: g++-4.8
+      env: OPJ_CI_CC=gcc-4.8 OPJ_CI_CXX=g++-4.8 OPJ_CI_ABI_CHECK=1
+      dist: precise
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - gcc-4.8
+            - g++-4.8
+            - libelf-dev
+            - elfutils
+            - texinfo
+            - exuberant-ctags
+
+install:
+  - ./tools/travis-ci/install.sh
+
+script:
+  - ./tools/travis-ci/run.sh
+  - ./tools/travis-ci/abi-check.sh
+
+before_deploy:
+  - export OPJ_RELEASE_PKG_FILE=$(ls build/openjpeg-${TRAVIS_TAG}*)
+  - echo "deploying $OPJ_RELEASE_PKG_FILE to GitHub releases"
+
+deploy:
+  provider: releases
+  api_key:
+    secure: Npi13uOffALCVNwea4p4q8v85Lo/WsRqaeZQcWrAkt8MxRnfvWQtmnuwmHnVB6Cig+T1lVUHrklOaJIApIb6nkGq3CS/9bD8+SCS2NEdAAP/QYWnBi0ubWXVMRyDLypmwRpzLNSZ0xLYGFUl2PjieZYKRcz1dd/J7S+FnXhPtdjXweq0FS63zTcMe7ggjfmzSOWUCEFmMjZPaM0Be+3PweieCO1dxlHuy7ugCkx2S7d+5hNsicIhQmTADjqtJAkHoMhYqu6/yLFxhjO/+f938PATFULdODTvjCsUwdN/ySWi1Oj4uPAntfytZP7H6YrzLh8dS73QCsdkhhDJIgJskHIBSbRyyEVUnOvQgD9VaBVGHtc1KtZQTwc41OUO3BGPHl97s3oX6bqWqo/L53dB3TPHGx+1+2HL/F0zaDZuHhAKMkPwe8LFPMPB/ur65zXMHjnWb2ZTVVdoIvkbQ7nu8ApI60ejxocYBsEyAuC2CPXU2ki4jdEhm0E1hIziWNE9/LTuM17ziQuJ6WpXOSMrfP4o5aVDmLp5ZGBSocrspOksgyI9XogHaO/r+Y6N3exy+giObFfMHkZVUpsKrKmtOJ7TC1Vg5HsYGlWW8RN8dkJV47bUXm9K4sMos9eYMUt/czykPAs+132cogpII3QxXpFZQqZg6SEPVfOiyqQzTUI=
+  file_glob: true
+  file: "${OPJ_RELEASE_PKG_FILE}"
+  skip_cleanup: true
+  on:
+    repo: uclouvain/openjpeg
+    tags: true
+    condition: "$OPJ_CI_INCLUDE_IF_DEPLOY = 1"
+

@@ -1,0 +1,149 @@
+========================================================================
+                    OpenJPIP software 2.1 ReadMe
+
+OpenJPEG:
+http://www.openjpeg.org
+
+Written by:
+Kaori Hagihara
+UCL/SST/ICTM/ELEN
+February 18 2011
+========================================================================
+
+Contents:
+1. Introduction
+2. License
+3. System requirements
+4. Implementing instructions
+5. JP2 encoding instructions
+
+
+----------
+1. Introduction
+----------
+
+OpenJPIP software is an implementation of JPEG 2000 Part9: Interactivity tools, APIs and protocols (JPIP).
+( For more info about JPIP, check the website: http://www.jpeg.org/jpeg2000/j2kpart9.html)
+The current implementation uses some results from the 2KAN project (http://www.2kan.org).
+
+Version 2.1 covers:
+ - JPT-stream (Tile) and JPP-stream (Precinct) media types
+ - Session, channels, cache model managements
+ - JPIP over HTTP, HTTP requests and TCP return
+ - Indexing JPEG 2000 files
+ - Embedding XML formatted metadata
+ - Region Of Interest (ROI) requests
+ - Access to JP2 files with their URL
+
+----------
+2. License
+----------
+
+This software is released under the BSD license, anybody can use or modify the library, even for commercial applications.
+The only restriction is to retain the copyright in the sources or the binaries documentation.
+Neither the author, nor the university accept any responsibility for any kind of error or data loss which may occur during usage.
+
+----------
+3. System requirements
+----------
+
+ - FastCGI development kit (C libraries) at server (http://www.fastcgi.com)
+ - libcURL library
+ - Java application launcher at client
+<Optional>
+ - Xerces2 java XML parser on the client for accessing embedded image metadata (http://xerces.apache.org/xerces2-j)
+
+We tested this software with a virtual server running on the same Linux machine as the clients.
+
+----------
+4. Building instructions
+----------
+
+A Makefile is available in the same directory as this README file. Simply type 'make' and it will build all the required C-executables.
+Concerning the java-based opj_viewer, simply type 'ant' in the corresponding directory (requires 'ant' utility of course)
+
+The documentation can be build this way (requires doxygen utility):
+  cd doc
+  doxygen Doxyfile
+
+----------
+5. Usage
+----------
+
+Preliminary notes : 
+  * HTML documentation is available at http://www.openjpeg.org/jpip/doc/html
+  * Example image is available at http://www.openjpeg.org/jpip/data/copenhague1.zip (20 Mb !)
+
+Webserver: 
+  You need a webserver running with the fastcgi module enabled and correctly configured. 
+  For Apache, add the following line to your /etc/apache2/mods-available/fastcgi.conf configuration file:
+  
+      FastCGIExternalServer /var/www/myFCGI -host localhost:3000
+  
+  where /var/www is your DocumentRoot. 
+  Please refer to 'http://www.openjpeg.org/jpip/doc/ApacheFastCGITutorial.pdf' for more details.
+
+Server:
+ 1. Store JP2 files in the same directory as opj_server
+
+ 2. Launch opj_server from the server terminal:
+    % spawn-fcgi -f ./opj_server -p 3000 -n
+ 
+ For shutting down JPIP server:
+     %GET http://hostname/myFCGI?quitJPIP
+     Notice, http://hostname/myFCGI is the HTTP server URI (myFCGI refers to opj_server by the server setting)
+     Requst message "quitJPIP" can be changed in Makfile, modify -DQUIT_SIGNAL=\"quitJPIP\"
+
+Client:
+ 1. Launch image decoding server, and keep it alive as long as image viewers are open
+    % ./opj_dec_server [portnumber (50000 by default)]
+
+    You might prefer to implement this program from another directory since cache files are saved in the working directory.
+    % mkdir cache
+    % cd cache
+    % ../opj_dec_server
+
+ 2. Open image viewers (as many as needed)
+    % java -jar opj_viewer.jar http://hostname/myFCGI path/filename.jp2 [hostname] [portnumber] [stateless/session] [jptstream/jppstream] [tcp/udp]
+    ( The arguments 
+      - http://hostname/myFCGI is the HTTP server URI (myFCGI refers to opj_server by the server setting)
+      - path/filename.jp2 is the server local path or URL of a JP2 file
+      - host name of opj_dec_server, localhost by default
+      - portnumber of opj_dec_server, 50000 by default
+      - request type stateless for no caching, session (default) for caching
+      - return media type, JPT-stream tile based stream, or JPP-stream (default) precinct based stream
+      - auxiliary return protocol, tcp or udp (udp is not implemented yet), if not given, return data is filled in http chunk
+    Image viewer GUI instructions:
+      Scale up request: Enlarge the window
+      ROI request:      Select a region by mouse click and drag, then click inside the red frame of the selected region
+    <If Xerces2 is installed>
+    % java -jar opj_viewer_xerces.jar http://hostname/myFCGI JP2_filename.jp2
+      Annotate image with ROI information in XML metadata: Click button "Region Of Interest"
+      Open a new window presenting an aligned image with a locally stored image: Click button "Image Registration" (Under Construction)
+
+ 3. Quit the image decoding server through the telnet, be sure all image viewers are closed
+    % telnet localhost 50000
+      quit
+
+----------
+5. JP2 encoding instructions
+----------
+
+An example to encode a TIF image "copenhague1.tif" at resolution 4780x4050, 8bit/pixel, grayscale.
+   % ./image_to_j2k -i copenhague1.tif -o copenhague1.jp2 -p RPCL -c [64,64] -t 640,480 -jpip -TP R
+
+ options
+  -jpip : embed index table 'cidx' box into the output JP2 file (obligation for JPIP)
+  -TP R : partition a tile into tile parts of different resolution levels (obligation for JPT-stream)
+
+<Option>
+ 3. Embed metadata into JP2 file
+    % ./addXMLinJP2 copenhague1.jp2 copenhague1.xml
+    Input metadata file "copenhague1.xml" looks like:
+    <xmlbox>
+      <roi name="island" x="1890" y="1950" w="770" h="310"/>
+      <roi name="ship" x="750" y="330" w="100" h="60"/>
+      <roi name="airport" x="650" y="1800" w="650" h="800"/>
+      <roi name="harbor" x="4200" y="1650" w="130" h="130"/>
+      <irt refimg="name1.jp2" m1="0.50" m2="-0.50" m3="0" m4="0.80" m5="-0.80" m6="0" m7="500" m8="1000" m9="0"/>
+    </xmlbox>

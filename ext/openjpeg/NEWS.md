@@ -2,13 +2,51 @@
 
 More details in the [Changelog](https://github.com/uclouvain/openjpeg/blob/master/CHANGELOG.md)
 
-## OpenJPEG 2.1.1
+## OpenJPEG 2.3.0 (October 2017)
+
+No API/ABI break compared to v2.2.0 but additional symbols for subset of components decoding (hence the MINOR version bump).
+
+* Sub-tile decoding: when setting a window of interest through the API function opj_set_decode_area(), only codeblocks that intersect this window are now decoded (i.e. MCT, IDWT, and entropy decoding are only done on the window of interest). Moreover, memory allocation now depends on the size of the window of interest (instead of the full tile size). 
+[\#990](https://github.com/uclouvain/openjpeg/pull/990) [\#1001](https://github.com/uclouvain/openjpeg/pull/1001) [\#1010](https://github.com/uclouvain/openjpeg/pull/1010)
+* Ability to decode only a subset of components. This adds the following function `opj_set_decoded_components(opj_codec_t p_codec, OPJ_UINT32 numcomps, const OPJ_UINT32 comps_indices, OPJ_BOOL apply_color_transforms)` and equivalent `opj_decompress -c compno[,compno]*` 
+option. 
+[\#1022](https://github.com/uclouvain/openjpeg/pull/1022)
+* Many bug fixes (including security fixes)
+
+## OpenJPEG 2.2.0 (August 2017)
+
+No API/ABI break compared to v2.1.2 but additional symbols for multithreading support (hence the MINOR version bump).
+
+### Codebase improvements
+
+* Memory consumption reduction at decoding side [\#968](https://github.com/uclouvain/openjpeg/pull/968)
+* Multi-threading support at decoding side [\#786](https://github.com/uclouvain/openjpeg/pull/786)
+* Tier-1 speed optimizations (encoder and decoder) [\#945](https://github.com/uclouvain/openjpeg/pull/945)
+* Tier-1 decoder further optimization [\#783](https://github.com/uclouvain/openjpeg/pull/783)
+* Inverse 5x3 DWT speed optimization: single-pass lifting and SSE2/AVX2 implementation [\#957](https://github.com/uclouvain/openjpeg/pull/957)
+* Fixed a bug that prevented OpenJPEG to compress losslessly in some situations [\#949](https://github.com/uclouvain/openjpeg/pull/949)
+* Fixed BYPASS/LAZY, RESTART/TERMALL and PTERM mode switches
+* Many other bug fixes (including security fixes)
+
+### Maintenance improvements
+
+* Benchmarking scripts to automatically compare the speed of latest OpenJPEG build with latest release and/or Kakadu binaries [\#917](https://github.com/uclouvain/openjpeg/pull/917)
+* CPU and RAM usage profiling scripts [\#918](https://github.com/uclouvain/openjpeg/pull/918)
+* Codebase reformatting (with astyle) and scripts to automatically check that new commits comply with formatting guidelines [\#919](https://github.com/uclouvain/openjpeg/pull/919)
+* Register OpenJPEG at Google OSS Fuzz initiative, so as to automatically have OpenJPEG tested against Google fuzzer [\#965](https://github.com/uclouvain/openjpeg/issues/965)
+
+## OpenJPEG 2.1.2 (September 2016)
+
+* Bug fixes (including security fixes)
+* No API/ABI break compared to v2.1.1
+
+## OpenJPEG 2.1.1 (July 2016)
 
 * Huge amount of critical bugfixes
 * Speed improvements
 * No API/ABI break compared to v2.1
 
-## OpenJPEG 2.1.0
+## OpenJPEG 2.1.0 (April 2014)
 
 ### New Features
 

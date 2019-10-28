@@ -1,6 +1,6 @@
 /*
- * The copyright in this software is being made available under the 2-clauses 
- * BSD License, included below. This software may be subject to other third 
+ * The copyright in this software is being made available under the 2-clauses
+ * BSD License, included below. This software may be subject to other third
  * party and contributor rights, including patent rights, and no such rights
  * are granted under this license.
  *
@@ -151,13 +151,13 @@ typedef void (*opj_thread_fn)(void* user_data);
  * @return a thread handle or NULL in case of failure (can for example happen if the library
  * is built without thread support)
  */
-opj_thread_t* opj_thread_create( opj_thread_fn thread_fn, void* user_data );
+opj_thread_t* opj_thread_create(opj_thread_fn thread_fn, void* user_data);
 
 /** Wait for a thread to be finished and release associated resources to the
  * thread handle.
  * @param thread the thread to wait for being finished.
  */
-void opj_thread_join( opj_thread_t* thread );
+void opj_thread_join(opj_thread_t* thread);
 
 /*@}*/
 
@@ -180,10 +180,11 @@ typedef void (*opj_tls_free_func)(void* value);
  * @param tls thread local storage handle
  * @param key key whose value to set.
  * @param value value to set (may be NULL).
- * @param free_func function to call currently installed value. 
+ * @param free_func function to call currently installed value.
  * @return OPJ_TRUE if successful.
  */
-OPJ_BOOL opj_tls_set(opj_tls_t* tls, int key, void* value, opj_tls_free_func free_func);
+OPJ_BOOL opj_tls_set(opj_tls_t* tls, int key, void* value,
+                     opj_tls_free_func free_func);
 
 /*@}*/
 
@@ -221,7 +222,8 @@ typedef void (*opj_job_fn)(void* user_data, opj_tls_t* tls);
  * @param user_data User data provided to thread_fn.
  * @return OPJ_TRUE if the job was successfully submitted.
  */
-OPJ_BOOL opj_thread_pool_submit_job(opj_thread_pool_t* tp, opj_job_fn job_fn, void* user_data);
+OPJ_BOOL opj_thread_pool_submit_job(opj_thread_pool_t* tp, opj_job_fn job_fn,
+                                    void* user_data);
 
 /** Wait that no more than max_remaining_jobs jobs are remaining in the queue of
  * the thread pool. The aim of this function is to avoid submitting too many
@@ -232,7 +234,8 @@ OPJ_BOOL opj_thread_pool_submit_job(opj_thread_pool_t* tp, opj_job_fn job_fn, vo
  * @param tp the thread pool handle
  * @param max_remaining_jobs maximum number of jobs allowed to be queued without waiting.
  */
-void opj_thread_pool_wait_completion(opj_thread_pool_t* tp, int max_remaining_jobs);
+void opj_thread_pool_wait_completion(opj_thread_pool_t* tp,
+                                     int max_remaining_jobs);
 
 /** Return the number of threads associated with the thread pool.
  *

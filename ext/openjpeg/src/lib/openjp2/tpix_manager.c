@@ -37,16 +37,16 @@
 
 #define MAX(a,b) ((a)>(b)?(a):(b))
 
-/* 
+/*
  * Get number of maximum tile parts per tile
  *
  * @param[in] cstr_info codestream information
  * @return              number of maximum tile parts per tile
  */
-int get_num_max_tile_parts( opj_codestream_info_t cstr_info);
+int get_num_max_tile_parts(opj_codestream_info_t cstr_info);
 
 
-/* 
+/*
  * Write faix box of tpix
  *
  * @param[in] coff offset of j2k codestream
@@ -57,129 +57,134 @@ int get_num_max_tile_parts( opj_codestream_info_t cstr_info);
  * @return              length of faix box
  */
 
-int opj_write_tpix( int coff, 
-                    opj_codestream_info_t cstr_info, 
-                    int j2klen, opj_stream_private_t *cio,
-                    opj_event_mgr_t * p_manager )
+int opj_write_tpix(int coff,
+                   opj_codestream_info_t cstr_info,
+                   int j2klen, opj_stream_private_t *cio,
+                   opj_event_mgr_t * p_manager)
 {
-  OPJ_BYTE l_data_header [4];
-  OPJ_UINT32 len;
-  OPJ_OFF_T lenp;
+    OPJ_BYTE l_data_header [4];
+    OPJ_UINT32 len;
+    OPJ_OFF_T lenp;
 
-  lenp = opj_stream_tell(cio);
-  opj_stream_skip(cio, 4, p_manager);
-  opj_write_bytes(l_data_header,JPIP_TPIX,4); /* TPIX */
-  opj_stream_write_data(cio,l_data_header,4,p_manager);
-  
-  opj_write_tpixfaix( coff, 0, cstr_info, j2klen, cio,p_manager);
+    lenp = opj_stream_tell(cio);
+    opj_stream_skip(cio, 4, p_manager);
+    opj_write_bytes(l_data_header, JPIP_TPIX, 4); /* TPIX */
+    opj_stream_write_data(cio, l_data_header, 4, p_manager);
 
-  len = (OPJ_UINT32)(opj_stream_tell(cio)-lenp);
- 
-  opj_stream_skip(cio, lenp, p_manager);
-  opj_write_bytes(l_data_header,len,4);/* L              */
-  opj_stream_write_data(cio,l_data_header,4,p_manager);
-  opj_stream_seek(cio, lenp+len,p_manager);
+    opj_write_tpixfaix(coff, 0, cstr_info, j2klen, cio, p_manager);
 
-  return (int)len;
+    len = (OPJ_UINT32)(opj_stream_tell(cio) - lenp);
+
+    opj_stream_skip(cio, lenp, p_manager);
+    opj_write_bytes(l_data_header, len, 4); /* L              */
+    opj_stream_write_data(cio, l_data_header, 4, p_manager);
+    opj_stream_seek(cio, lenp + len, p_manager);
+
+    return (int)len;
 }
 
-int opj_write_tpixfaix( int coff,
-                        int compno, 
-                        opj_codestream_info_t cstr_info, 
-                        int j2klen, 
-                        opj_stream_private_t *cio,
-                        opj_event_mgr_t * p_manager )
+int opj_write_tpixfaix(int coff,
+                       int compno,
+                       opj_codestream_info_t cstr_info,
+                       int j2klen,
+                       opj_stream_private_t *cio,
+                       opj_event_mgr_t * p_manager)
 {
-  OPJ_UINT32 len;
-  OPJ_OFF_T lenp;
-  OPJ_UINT32 i, j;
-  OPJ_UINT32 Aux;
-  OPJ_UINT32 num_max_tile_parts;
-  OPJ_UINT32 size_of_coding; /* 4 or 8 */
-  opj_tp_info_t tp;
-  OPJ_BYTE l_data_header [8];
-  OPJ_UINT32 version;
+    OPJ_UINT32 len;
+    OPJ_OFF_T lenp;
+    OPJ_UINT32 i, j;
+    OPJ_UINT32 Aux;
+    OPJ_UINT32 num_max_tile_parts;
+    OPJ_UINT32 size_of_coding; /* 4 or 8 */
+    opj_tp_info_t tp;
+    OPJ_BYTE l_data_header [8];
+    OPJ_UINT32 version;
 
-  num_max_tile_parts = (OPJ_UINT32)get_num_max_tile_parts( cstr_info);
+    num_max_tile_parts = (OPJ_UINT32)get_num_max_tile_parts(cstr_info);
 
-  if( j2klen > pow( 2, 32)){
-    size_of_coding =  8;
-    version = num_max_tile_parts == 1 ? 1:3;
-  }
-  else{
-    size_of_coding = 4;
-    version = num_max_tile_parts == 1 ? 0:2;
-  }
-
-  lenp = opj_stream_tell(cio);
-  opj_stream_skip(cio, 4, p_manager);         /* L [at the end]      */
-  opj_write_bytes(l_data_header,JPIP_FAIX,4); /* FAIX */
-  opj_stream_write_data(cio,l_data_header,4,p_manager);
-  opj_write_bytes(l_data_header,version,1);   /* Version 0 = 4 bytes */
-  opj_stream_write_data(cio,l_data_header,1,p_manager);
-
-  opj_write_bytes(l_data_header,num_max_tile_parts,size_of_coding);         /* NMAX           */
-  opj_stream_write_data(cio,l_data_header,size_of_coding,p_manager);
-  opj_write_bytes(l_data_header,(OPJ_UINT32)(cstr_info.tw*cstr_info.th),size_of_coding);  /* M              */
-  opj_stream_write_data(cio,l_data_header,size_of_coding,p_manager);
-
-  for (i = 0; i < (OPJ_UINT32)(cstr_info.tw*cstr_info.th); i++)
-    {
-    for (j = 0; j < (OPJ_UINT32)cstr_info.tile[i].num_tps; j++)
-      {
-      tp = cstr_info.tile[i].tp[j];
-
-      opj_write_bytes(l_data_header,(OPJ_UINT32)(tp.tp_start_pos-coff),size_of_coding);            /* start position */
-      opj_stream_write_data(cio,l_data_header,size_of_coding,p_manager);
-      opj_write_bytes(l_data_header,(OPJ_UINT32)(tp.tp_end_pos-tp.tp_start_pos+1),size_of_coding); /* length         */
-      opj_stream_write_data(cio,l_data_header,size_of_coding,p_manager);
-
-      if (version & 0x02)
-        {
-        if( cstr_info.tile[i].num_tps == 1 && cstr_info.numdecompos[compno] > 1)
-          Aux = (OPJ_UINT32)(cstr_info.numdecompos[compno] + 1);
-        else
-          Aux = j + 1;
-
-        opj_write_bytes(l_data_header,Aux,4);
-        opj_stream_write_data(cio,l_data_header,4,p_manager);
-
-        /*cio_write(img.tile[i].tile_parts[j].num_reso_AUX,4);*/ /* Aux_i,j : Auxiliary value */
-        /* fprintf(stderr,"AUX value %d\n",Aux);*/
-        }
-      /*cio_write(0,4);*/
-      }
-    /* PADDING */
-    while (j < num_max_tile_parts)
-      {
-
-          opj_write_bytes(l_data_header,0,size_of_coding);/* start position            */
-      opj_stream_write_data(cio,l_data_header,size_of_coding,p_manager);
-      opj_write_bytes(l_data_header,0,size_of_coding);/* length                    */
-      opj_stream_write_data(cio,l_data_header,size_of_coding,p_manager);
-
-      if (version & 0x02)
-      opj_write_bytes(l_data_header,0,4);      /* Aux_i,j : Auxiliary value */
-      opj_stream_write_data(cio,l_data_header,4,p_manager);
-      j++;
-      }
+    if (j2klen > pow(2, 32)) {
+        size_of_coding =  8;
+        version = num_max_tile_parts == 1 ? 1 : 3;
+    } else {
+        size_of_coding = 4;
+        version = num_max_tile_parts == 1 ? 0 : 2;
     }
-  
-  len = (OPJ_UINT32)(opj_stream_tell(cio)-lenp);
-  opj_stream_seek(cio, lenp,p_manager);
-  opj_write_bytes(l_data_header,len,4);/* L  */
-  opj_stream_write_data(cio,l_data_header,4,p_manager);
-  opj_stream_seek(cio, lenp+len,p_manager);
 
-  return (int)len;
+    lenp = opj_stream_tell(cio);
+    opj_stream_skip(cio, 4, p_manager);         /* L [at the end]      */
+    opj_write_bytes(l_data_header, JPIP_FAIX, 4); /* FAIX */
+    opj_stream_write_data(cio, l_data_header, 4, p_manager);
+    opj_write_bytes(l_data_header, version, 1); /* Version 0 = 4 bytes */
+    opj_stream_write_data(cio, l_data_header, 1, p_manager);
+
+    opj_write_bytes(l_data_header, num_max_tile_parts,
+                    size_of_coding);       /* NMAX           */
+    opj_stream_write_data(cio, l_data_header, size_of_coding, p_manager);
+    opj_write_bytes(l_data_header, (OPJ_UINT32)(cstr_info.tw * cstr_info.th),
+                    size_of_coding);  /* M              */
+    opj_stream_write_data(cio, l_data_header, size_of_coding, p_manager);
+
+    for (i = 0; i < (OPJ_UINT32)(cstr_info.tw * cstr_info.th); i++) {
+        for (j = 0; j < (OPJ_UINT32)cstr_info.tile[i].num_tps; j++) {
+            tp = cstr_info.tile[i].tp[j];
+
+            opj_write_bytes(l_data_header, (OPJ_UINT32)(tp.tp_start_pos - coff),
+                            size_of_coding);            /* start position */
+            opj_stream_write_data(cio, l_data_header, size_of_coding, p_manager);
+            opj_write_bytes(l_data_header,
+                            (OPJ_UINT32)(tp.tp_end_pos - tp.tp_start_pos + 1),
+                            size_of_coding); /* length         */
+            opj_stream_write_data(cio, l_data_header, size_of_coding, p_manager);
+
+            if (version & 0x02) {
+                if (cstr_info.tile[i].num_tps == 1 && cstr_info.numdecompos[compno] > 1) {
+                    Aux = (OPJ_UINT32)(cstr_info.numdecompos[compno] + 1);
+                } else {
+                    Aux = j + 1;
+                }
+
+                opj_write_bytes(l_data_header, Aux, 4);
+                opj_stream_write_data(cio, l_data_header, 4, p_manager);
+
+                /*cio_write(img.tile[i].tile_parts[j].num_reso_AUX,4);*/ /* Aux_i,j : Auxiliary value */
+                /* fprintf(stderr,"AUX value %d\n",Aux);*/
+            }
+            /*cio_write(0,4);*/
+        }
+        /* PADDING */
+        while (j < num_max_tile_parts) {
+
+            opj_write_bytes(l_data_header, 0,
+                            size_of_coding); /* start position            */
+            opj_stream_write_data(cio, l_data_header, size_of_coding, p_manager);
+            opj_write_bytes(l_data_header, 0,
+                            size_of_coding); /* length                    */
+            opj_stream_write_data(cio, l_data_header, size_of_coding, p_manager);
+
+            if (version & 0x02) {
+                opj_write_bytes(l_data_header, 0, 4);    /* Aux_i,j : Auxiliary value */
+            }
+            opj_stream_write_data(cio, l_data_header, 4, p_manager);
+            j++;
+        }
+    }
+
+    len = (OPJ_UINT32)(opj_stream_tell(cio) - lenp);
+    opj_stream_seek(cio, lenp, p_manager);
+    opj_write_bytes(l_data_header, len, 4); /* L  */
+    opj_stream_write_data(cio, l_data_header, 4, p_manager);
+    opj_stream_seek(cio, lenp + len, p_manager);
+
+    return (int)len;
 }
 
-int get_num_max_tile_parts( opj_codestream_info_t cstr_info)
+int get_num_max_tile_parts(opj_codestream_info_t cstr_info)
 {
-  int num_max_tp = 0, i;
+    int num_max_tp = 0, i;
 
-  for( i=0; i<cstr_info.tw*cstr_info.th; i++)
-    num_max_tp = MAX( cstr_info.tile[i].num_tps, num_max_tp);
-  
-  return num_max_tp;
+    for (i = 0; i < cstr_info.tw * cstr_info.th; i++) {
+        num_max_tp = MAX(cstr_info.tile[i].num_tps, num_max_tp);
+    }
+
+    return num_max_tp;
 }

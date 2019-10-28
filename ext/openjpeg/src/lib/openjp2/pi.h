@@ -1,6 +1,6 @@
 /*
- * The copyright in this software is being made available under the 2-clauses 
- * BSD License, included below. This software may be subject to other third 
+ * The copyright in this software is being made available under the 2-clauses
+ * BSD License, included below. This software may be subject to other third
  * party and contributor rights, including patent rights, and no such rights
  * are granted under this license.
  *
@@ -8,7 +8,7 @@
  * Copyright (c) 2002-2014, Professor Benoit Macq
  * Copyright (c) 2001-2003, David Janssens
  * Copyright (c) 2002-2003, Yannick Verschueren
- * Copyright (c) 2003-2007, Francois-Olivier Devaux 
+ * Copyright (c) 2003-2007, Francois-Olivier Devaux
  * Copyright (c) 2003-2014, Antonin Descampe
  * Copyright (c) 2005, Herve Drolon, FreeImage Team
  * All rights reserved.
@@ -35,8 +35,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __PI_H
-#define __PI_H
+#ifndef OPJ_PI_H
+#define OPJ_PI_H
 /**
 @file pi.h
 @brief Implementation of a packet iterator (PI)
@@ -53,58 +53,60 @@ by some function in T2.C.
 FIXME DOC
 */
 typedef struct opj_pi_resolution {
-  OPJ_UINT32 pdx, pdy;
-  OPJ_UINT32 pw, ph;
+    OPJ_UINT32 pdx, pdy;
+    OPJ_UINT32 pw, ph;
 } opj_pi_resolution_t;
 
 /**
 FIXME DOC
 */
 typedef struct opj_pi_comp {
-  OPJ_UINT32 dx, dy;
-  /** number of resolution levels */
-  OPJ_UINT32 numresolutions;
-  opj_pi_resolution_t *resolutions;
+    OPJ_UINT32 dx, dy;
+    /** number of resolution levels */
+    OPJ_UINT32 numresolutions;
+    opj_pi_resolution_t *resolutions;
 } opj_pi_comp_t;
 
 /**
 Packet iterator
 */
 typedef struct opj_pi_iterator {
-  /** Enabling Tile part generation*/
-  OPJ_BYTE tp_on;
-  /** precise if the packet has been already used (useful for progression order change) */
-  OPJ_INT16 *include;
-  /** layer step used to localize the packet in the include vector */
-  OPJ_UINT32 step_l;
-  /** resolution step used to localize the packet in the include vector */
-  OPJ_UINT32 step_r;
-  /** component step used to localize the packet in the include vector */
-  OPJ_UINT32 step_c;
-  /** precinct step used to localize the packet in the include vector */
-  OPJ_UINT32 step_p;
-  /** component that identify the packet */
-  OPJ_UINT32 compno;
-  /** resolution that identify the packet */
-  OPJ_UINT32 resno;
-  /** precinct that identify the packet */
-  OPJ_UINT32 precno;
-  /** layer that identify the packet */
-  OPJ_UINT32 layno;
-  /** 0 if the first packet */
-  OPJ_BOOL first;
-  /** progression order change information */
-  opj_poc_t poc;
-  /** number of components in the image */
-  OPJ_UINT32 numcomps;
-  /** Components*/
-  opj_pi_comp_t *comps;
-  /** FIXME DOC*/
-  OPJ_INT32 tx0, ty0, tx1, ty1;
-  /** FIXME DOC*/
-  OPJ_INT32 x, y;
-  /** FIXME DOC*/
-  OPJ_UINT32 dx, dy;
+    /** Enabling Tile part generation*/
+    OPJ_BYTE tp_on;
+    /** precise if the packet has been already used (useful for progression order change) */
+    OPJ_INT16 *include;
+    /** Number of elements in include array */
+    OPJ_UINT32 include_size;
+    /** layer step used to localize the packet in the include vector */
+    OPJ_UINT32 step_l;
+    /** resolution step used to localize the packet in the include vector */
+    OPJ_UINT32 step_r;
+    /** component step used to localize the packet in the include vector */
+    OPJ_UINT32 step_c;
+    /** precinct step used to localize the packet in the include vector */
+    OPJ_UINT32 step_p;
+    /** component that identify the packet */
+    OPJ_UINT32 compno;
+    /** resolution that identify the packet */
+    OPJ_UINT32 resno;
+    /** precinct that identify the packet */
+    OPJ_UINT32 precno;
+    /** layer that identify the packet */
+    OPJ_UINT32 layno;
+    /** 0 if the first packet */
+    OPJ_BOOL first;
+    /** progression order change information */
+    opj_poc_t poc;
+    /** number of components in the image */
+    OPJ_UINT32 numcomps;
+    /** Components*/
+    opj_pi_comp_t *comps;
+    /** FIXME DOC*/
+    OPJ_INT32 tx0, ty0, tx1, ty1;
+    /** FIXME DOC*/
+    OPJ_INT32 x, y;
+    /** FIXME DOC*/
+    OPJ_UINT32 dx, dy;
 } opj_pi_iterator_t;
 
 /** @name Exported functions */
@@ -113,28 +115,28 @@ typedef struct opj_pi_iterator {
 /**
  * Creates a packet iterator for encoding.
  *
- * @param	image		the image being encoded.
- * @param	cp		the coding parameters.
- * @param	tileno	index of the tile being encoded.
- * @param	t2_mode	the type of pass for generating the packet iterator
+ * @param   image       the image being encoded.
+ * @param   cp      the coding parameters.
+ * @param   tileno  index of the tile being encoded.
+ * @param   t2_mode the type of pass for generating the packet iterator
  *
- * @return	a list of packet iterator that points to the first packet of the tile (not true).
+ * @return  a list of packet iterator that points to the first packet of the tile (not true).
 */
 opj_pi_iterator_t *opj_pi_initialise_encode(const opj_image_t *image,
-                                            opj_cp_t *cp,
-                                            OPJ_UINT32 tileno,
-                                            J2K_T2_MODE t2_mode);
+        opj_cp_t *cp,
+        OPJ_UINT32 tileno,
+        J2K_T2_MODE t2_mode);
 
 /**
  * Updates the encoding parameters of the codec.
  *
- * @param	p_image		the image being encoded.
- * @param	p_cp		the coding parameters.
- * @param	p_tile_no	index of the tile being encoded.
+ * @param   p_image     the image being encoded.
+ * @param   p_cp        the coding parameters.
+ * @param   p_tile_no   index of the tile being encoded.
 */
-void opj_pi_update_encoding_parameters(	const opj_image_t *p_image,
-                                        opj_cp_t *p_cp,
-                                        OPJ_UINT32 p_tile_no );
+void opj_pi_update_encoding_parameters(const opj_image_t *p_image,
+                                       opj_cp_t *p_cp,
+                                       OPJ_UINT32 p_tile_no);
 
 /**
 Modify the packet iterator for enabling tile part generation
@@ -146,13 +148,13 @@ Modify the packet iterator for enabling tile part generation
 @param tppos The position of the tile part flag in the progression order
 @param t2_mode FIXME DOC
 */
-void opj_pi_create_encode(  opj_pi_iterator_t *pi, 
-                            opj_cp_t *cp,
-                            OPJ_UINT32 tileno, 
-                            OPJ_UINT32 pino,
-                            OPJ_UINT32 tpnum, 
-                            OPJ_INT32 tppos, 
-                            J2K_T2_MODE t2_mode);
+void opj_pi_create_encode(opj_pi_iterator_t *pi,
+                          opj_cp_t *cp,
+                          OPJ_UINT32 tileno,
+                          OPJ_UINT32 pino,
+                          OPJ_UINT32 tpnum,
+                          OPJ_INT32 tppos,
+                          J2K_T2_MODE t2_mode);
 
 /**
 Create a packet iterator for Decoder
@@ -162,14 +164,14 @@ Create a packet iterator for Decoder
 @return Returns a packet iterator that points to the first packet of the tile
 @see opj_pi_destroy
 */
-opj_pi_iterator_t *opj_pi_create_decode(opj_image_t * image, 
+opj_pi_iterator_t *opj_pi_create_decode(opj_image_t * image,
                                         opj_cp_t * cp,
                                         OPJ_UINT32 tileno);
 /**
  * Destroys a packet iterator array.
  *
- * @param	p_pi			the packet iterator array to destroy.
- * @param	p_nb_elements	the number of elements in the array.
+ * @param   p_pi            the packet iterator array to destroy.
+ * @param   p_nb_elements   the number of elements in the array.
  */
 void opj_pi_destroy(opj_pi_iterator_t *p_pi,
                     OPJ_UINT32 p_nb_elements);
@@ -185,4 +187,4 @@ OPJ_BOOL opj_pi_next(opj_pi_iterator_t * pi);
 
 /*@}*/
 
-#endif /* __PI_H */
+#endif /* OPJ_PI_H */

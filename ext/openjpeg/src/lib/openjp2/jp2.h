@@ -1,6 +1,6 @@
 /*
- * The copyright in this software is being made available under the 2-clauses 
- * BSD License, included below. This software may be subject to other third 
+ * The copyright in this software is being made available under the 2-clauses
+ * BSD License, included below. This software may be subject to other third
  * party and contributor rights, including patent rights, and no such rights
  * are granted under this license.
  *
@@ -8,7 +8,7 @@
  * Copyright (c) 2002-2014, Professor Benoit Macq
  * Copyright (c) 2002-2003, Yannick Verschueren
  * Copyright (c) 2005, Herve Drolon, FreeImage Team
- * Copyright (c) 2008, 2011-2012, Centre National d'Etudes Spatiales (CNES), FR 
+ * Copyright (c) 2008, 2011-2012, Centre National d'Etudes Spatiales (CNES), FR
  * Copyright (c) 2012, CS Systemes d'Information, France
  * All rights reserved.
  *
@@ -33,8 +33,8 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef __JP2_H
-#define __JP2_H
+#ifndef OPJ_JP2_H
+#define OPJ_JP2_H
 /**
 @file jp2.h
 @brief The JPEG-2000 file format Reader/Writer (JP2)
@@ -70,56 +70,50 @@
 
 /* ----------------------------------------------------------------------- */
 
-typedef enum
-{
-  JP2_STATE_NONE            = 0x0,
-  JP2_STATE_SIGNATURE       = 0x1,
-  JP2_STATE_FILE_TYPE       = 0x2,
-  JP2_STATE_HEADER          = 0x4,
-  JP2_STATE_CODESTREAM      = 0x8,
-  JP2_STATE_END_CODESTREAM  = 0x10,
-  JP2_STATE_UNKNOWN         = 0x7fffffff /* ISO C restricts enumerator values to range of 'int' */
+typedef enum {
+    JP2_STATE_NONE            = 0x0,
+    JP2_STATE_SIGNATURE       = 0x1,
+    JP2_STATE_FILE_TYPE       = 0x2,
+    JP2_STATE_HEADER          = 0x4,
+    JP2_STATE_CODESTREAM      = 0x8,
+    JP2_STATE_END_CODESTREAM  = 0x10,
+    JP2_STATE_UNKNOWN         = 0x7fffffff /* ISO C restricts enumerator values to range of 'int' */
 }
 JP2_STATE;
 
-typedef enum
-{
-  JP2_IMG_STATE_NONE        = 0x0,
-  JP2_IMG_STATE_UNKNOWN     = 0x7fffffff
+typedef enum {
+    JP2_IMG_STATE_NONE        = 0x0,
+    JP2_IMG_STATE_UNKNOWN     = 0x7fffffff
 }
 JP2_IMG_STATE;
 
-/** 
+/**
 Channel description: channel index, type, association
 */
-typedef struct opj_jp2_cdef_info
-{
+typedef struct opj_jp2_cdef_info {
     OPJ_UINT16 cn, typ, asoc;
 } opj_jp2_cdef_info_t;
 
-/** 
+/**
 Channel descriptions and number of descriptions
 */
-typedef struct opj_jp2_cdef
-{
+typedef struct opj_jp2_cdef {
     opj_jp2_cdef_info_t *info;
     OPJ_UINT16 n;
 } opj_jp2_cdef_t;
 
-/** 
+/**
 Component mappings: channel index, mapping type, palette index
 */
-typedef struct opj_jp2_cmap_comp
-{
+typedef struct opj_jp2_cmap_comp {
     OPJ_UINT16 cmp;
     OPJ_BYTE mtyp, pcol;
 } opj_jp2_cmap_comp_t;
 
-/** 
+/**
 Palette data: table entries, palette columns
 */
-typedef struct opj_jp2_pclr
-{
+typedef struct opj_jp2_pclr {
     OPJ_UINT32 *entries;
     OPJ_BYTE *channel_sign;
     OPJ_BYTE *channel_size;
@@ -128,11 +122,10 @@ typedef struct opj_jp2_pclr
     OPJ_BYTE nr_channels;
 } opj_jp2_pclr_t;
 
-/** 
-Collector for ICC profile, palette, component mapping, channel description 
+/**
+Collector for ICC profile, palette, component mapping, channel description
 */
-typedef struct opj_jp2_color
-{
+typedef struct opj_jp2_color {
     OPJ_BYTE *icc_profile_buf;
     OPJ_UINT32 icc_profile_len;
 
@@ -141,60 +134,61 @@ typedef struct opj_jp2_color
     OPJ_BYTE jp2_has_colr;
 } opj_jp2_color_t;
 
-/** 
+/**
 JP2 component
 */
 typedef struct opj_jp2_comps {
-  OPJ_UINT32 depth;      
-  OPJ_UINT32 sgnd;       
-  OPJ_UINT32 bpcc;
+    OPJ_UINT32 depth;
+    OPJ_UINT32 sgnd;
+    OPJ_UINT32 bpcc;
 } opj_jp2_comps_t;
 
 /**
 JPEG-2000 file format reader/writer
 */
-typedef struct opj_jp2
-{
-  /** handle to the J2K codec  */
-  opj_j2k_t *j2k;
-  /** list of validation procedures */
-  struct opj_procedure_list * m_validation_list;
-  /** list of execution procedures */
-  struct opj_procedure_list * m_procedure_list;
+typedef struct opj_jp2 {
+    /** handle to the J2K codec  */
+    opj_j2k_t *j2k;
+    /** list of validation procedures */
+    struct opj_procedure_list * m_validation_list;
+    /** list of execution procedures */
+    struct opj_procedure_list * m_procedure_list;
 
-  /* width of image */
-  OPJ_UINT32 w;
-  /* height of image */
-  OPJ_UINT32 h;
-  /* number of components in the image */
-  OPJ_UINT32 numcomps;
-  OPJ_UINT32 bpc;
-  OPJ_UINT32 C;
-  OPJ_UINT32 UnkC;
-  OPJ_UINT32 IPR;
-  OPJ_UINT32 meth;
-  OPJ_UINT32 approx;
-  OPJ_UINT32 enumcs;
-  OPJ_UINT32 precedence;
-  OPJ_UINT32 brand;
-  OPJ_UINT32 minversion;
-  OPJ_UINT32 numcl;
-  OPJ_UINT32 *cl;
-  opj_jp2_comps_t *comps;
-  /* FIXME: The following two variables are used to save offset
-    as we write out a JP2 file to disk. This mecanism is not flexible
-    as codec writers will need to extand those fields as new part
-    of the standard are implemented.
-  */
+    /* width of image */
+    OPJ_UINT32 w;
+    /* height of image */
+    OPJ_UINT32 h;
+    /* number of components in the image */
+    OPJ_UINT32 numcomps;
+    OPJ_UINT32 bpc;
+    OPJ_UINT32 C;
+    OPJ_UINT32 UnkC;
+    OPJ_UINT32 IPR;
+    OPJ_UINT32 meth;
+    OPJ_UINT32 approx;
+    OPJ_UINT32 enumcs;
+    OPJ_UINT32 precedence;
+    OPJ_UINT32 brand;
+    OPJ_UINT32 minversion;
+    OPJ_UINT32 numcl;
+    OPJ_UINT32 *cl;
+    opj_jp2_comps_t *comps;
+    /* FIXME: The following two variables are used to save offset
+      as we write out a JP2 file to disk. This mechanism is not flexible
+      as codec writers will need to extand those fields as new part
+      of the standard are implemented.
+    */
     OPJ_OFF_T j2k_codestream_offset;
     OPJ_OFF_T jpip_iptr_offset;
-	OPJ_BOOL jpip_on;
-  OPJ_UINT32 jp2_state;
-  OPJ_UINT32 jp2_img_state;
+    OPJ_BOOL jpip_on;
+    OPJ_UINT32 jp2_state;
+    OPJ_UINT32 jp2_img_state;
 
-  opj_jp2_color_t color;
-    
+    opj_jp2_color_t color;
+
     OPJ_BOOL ignore_pclr_cmap_cdef;
+    OPJ_BYTE has_jp2h;
+    OPJ_BYTE has_ihdr;
 }
 opj_jp2_t;
 
@@ -207,28 +201,26 @@ typedef struct opj_jp2_box {
     OPJ_INT32 init_pos;
 } opj_jp2_box_t;
 
-typedef struct opj_jp2_header_handler
-{
-  /* marker value */
-  OPJ_UINT32 id;
-  /* action linked to the marker */
-  OPJ_BOOL (*handler) (     opj_jp2_t *jp2, 
-                            OPJ_BYTE *p_header_data, 
-                            OPJ_UINT32 p_header_size, 
-                            opj_event_mgr_t * p_manager);
+typedef struct opj_jp2_header_handler {
+    /* marker value */
+    OPJ_UINT32 id;
+    /* action linked to the marker */
+    OPJ_BOOL(*handler)(opj_jp2_t *jp2,
+                       OPJ_BYTE *p_header_data,
+                       OPJ_UINT32 p_header_size,
+                       opj_event_mgr_t * p_manager);
 }
 opj_jp2_header_handler_t;
 
 
-typedef struct opj_jp2_img_header_writer_handler 
-{
-  /* action to perform */
-  OPJ_BYTE*   (*handler) (opj_jp2_t *jp2, OPJ_UINT32 * p_data_size);
-  /* result of the action : data */
-  OPJ_BYTE*   m_data;
-  /* size of data */
-  OPJ_UINT32  m_size;
-} 
+typedef struct opj_jp2_img_header_writer_handler {
+    /* action to perform */
+    OPJ_BYTE*   (*handler)(opj_jp2_t *jp2, OPJ_UINT32 * p_data_size);
+    /* result of the action : data */
+    OPJ_BYTE*   m_data;
+    /* size of data */
+    OPJ_UINT32  m_size;
+}
 opj_jp2_img_header_writer_handler_t;
 
 /** @name Exported functions */
@@ -243,6 +235,12 @@ Decoding parameters are returned in jp2->j2k->cp.
 */
 void opj_jp2_setup_decoder(opj_jp2_t *jp2, opj_dparameters_t *parameters);
 
+/** Allocates worker threads for the compressor/decompressor.
+ *
+ * @param jp2 JP2 decompressor handle
+ * @param num_threads Number of threads.
+ * @return OPJ_TRUE in case of success.
+ */
 OPJ_BOOL opj_jp2_set_threads(opj_jp2_t *jp2, OPJ_UINT32 num_threads);
 
 /**
@@ -256,12 +254,12 @@ OPJ_BOOL opj_jp2_set_threads(opj_jp2_t *jp2, OPJ_UINT32 num_threads);
 */
 OPJ_BOOL opj_jp2_decode(opj_jp2_t *jp2,
                         opj_stream_private_t *p_stream,
-            opj_image_t* p_image,
-            opj_event_mgr_t * p_manager);
+                        opj_image_t* p_image,
+                        opj_event_mgr_t * p_manager);
 
 /**
- * Setup the encoder parameters using the current image and using user parameters. 
- * Coding parameters are returned in jp2->j2k->cp. 
+ * Setup the encoder parameters using the current image and using user parameters.
+ * Coding parameters are returned in jp2->j2k->cp.
  *
  * @param jp2 JP2 compressor handle
  * @param parameters compression parameters
@@ -269,10 +267,10 @@ OPJ_BOOL opj_jp2_decode(opj_jp2_t *jp2,
  * @param p_manager  FIXME DOC
  * @return OPJ_TRUE if successful, OPJ_FALSE otherwise
 */
-OPJ_BOOL opj_jp2_setup_encoder(  opj_jp2_t *jp2, 
-                            opj_cparameters_t *parameters, 
-                            opj_image_t *image, 
-                            opj_event_mgr_t * p_manager);
+OPJ_BOOL opj_jp2_setup_encoder(opj_jp2_t *jp2,
+                               opj_cparameters_t *parameters,
+                               opj_image_t *image,
+                               opj_event_mgr_t * p_manager);
 
 /**
 Encode an image into a JPEG-2000 file stream
@@ -281,9 +279,9 @@ Encode an image into a JPEG-2000 file stream
 @param p_manager  event manager
 @return Returns true if successful, returns false otherwise
 */
-OPJ_BOOL opj_jp2_encode(  opj_jp2_t *jp2, 
-              opj_stream_private_t *stream, 
-              opj_event_mgr_t * p_manager);
+OPJ_BOOL opj_jp2_encode(opj_jp2_t *jp2,
+                        opj_stream_private_t *stream,
+                        opj_event_mgr_t * p_manager);
 
 
 /**
@@ -306,9 +304,9 @@ OPJ_BOOL opj_jp2_start_compress(opj_jp2_t *jp2,
  * Ends the compression procedures and possibiliy add data to be read after the
  * codestream.
  */
-OPJ_BOOL opj_jp2_end_compress(  opj_jp2_t *jp2,
-                  opj_stream_private_t *cio,
-                  opj_event_mgr_t * p_manager);
+OPJ_BOOL opj_jp2_end_compress(opj_jp2_t *jp2,
+                              opj_stream_private_t *cio,
+                              opj_event_mgr_t * p_manager);
 
 /* ----------------------------------------------------------------------- */
 
@@ -316,7 +314,7 @@ OPJ_BOOL opj_jp2_end_compress(  opj_jp2_t *jp2,
  * Ends the decompression procedures and possibiliy add data to be read after the
  * codestream.
  */
-OPJ_BOOL opj_jp2_end_decompress(opj_jp2_t *jp2, 
+OPJ_BOOL opj_jp2_end_decompress(opj_jp2_t *jp2,
                                 opj_stream_private_t *cio,
                                 opj_event_mgr_t * p_manager);
 
@@ -330,10 +328,25 @@ OPJ_BOOL opj_jp2_end_decompress(opj_jp2_t *jp2,
  *
  * @return true if the box is valid.
  */
-OPJ_BOOL opj_jp2_read_header(  opj_stream_private_t *p_stream,
-                                opj_jp2_t *jp2,
-                                opj_image_t ** p_image,
-                                opj_event_mgr_t * p_manager );
+OPJ_BOOL opj_jp2_read_header(opj_stream_private_t *p_stream,
+                             opj_jp2_t *jp2,
+                             opj_image_t ** p_image,
+                             opj_event_mgr_t * p_manager);
+
+/** Sets the indices of the components to decode.
+ *
+ * @param jp2 JP2 decompressor handle
+ * @param numcomps Number of components to decode.
+ * @param comps_indices Array of num_compts indices (numbering starting at 0)
+ *                     corresponding to the components to decode.
+ * @param p_manager Event manager;
+ *
+ * @return OPJ_TRUE in case of success.
+ */
+OPJ_BOOL opj_jp2_set_decoded_components(opj_jp2_t *jp2,
+                                        OPJ_UINT32 numcomps,
+                                        const OPJ_UINT32* comps_indices,
+                                        opj_event_mgr_t * p_manager);
 
 /**
  * Reads a tile header.
@@ -349,17 +362,17 @@ OPJ_BOOL opj_jp2_read_header(  opj_stream_private_t *p_stream,
  * @param  p_stream      the stream to write data to.
  * @param  p_manager     the user event manager.
  */
-OPJ_BOOL opj_jp2_read_tile_header ( opj_jp2_t * p_jp2,
-                                    OPJ_UINT32 * p_tile_index,
-                                    OPJ_UINT32 * p_data_size,
-                                    OPJ_INT32 * p_tile_x0,
-                                    OPJ_INT32 * p_tile_y0,
-                                    OPJ_INT32 * p_tile_x1,
-                                    OPJ_INT32 * p_tile_y1,
-                                    OPJ_UINT32 * p_nb_comps,
-                                    OPJ_BOOL * p_go_on,
-                                    opj_stream_private_t *p_stream,
-                                    opj_event_mgr_t * p_manager );
+OPJ_BOOL opj_jp2_read_tile_header(opj_jp2_t * p_jp2,
+                                  OPJ_UINT32 * p_tile_index,
+                                  OPJ_UINT32 * p_data_size,
+                                  OPJ_INT32 * p_tile_x0,
+                                  OPJ_INT32 * p_tile_y0,
+                                  OPJ_INT32 * p_tile_x1,
+                                  OPJ_INT32 * p_tile_y1,
+                                  OPJ_UINT32 * p_nb_comps,
+                                  OPJ_BOOL * p_go_on,
+                                  opj_stream_private_t *p_stream,
+                                  opj_event_mgr_t * p_manager);
 
 /**
  * Writes a tile.
@@ -371,12 +384,12 @@ OPJ_BOOL opj_jp2_read_tile_header ( opj_jp2_t * p_jp2,
  * @param  p_stream      the stream to write data to.
  * @param  p_manager  the user event manager.
  */
-OPJ_BOOL opj_jp2_write_tile (  opj_jp2_t *p_jp2,
-                    OPJ_UINT32 p_tile_index,
-                    OPJ_BYTE * p_data,
-                    OPJ_UINT32 p_data_size,
-                    opj_stream_private_t *p_stream,
-                    opj_event_mgr_t * p_manager );
+OPJ_BOOL opj_jp2_write_tile(opj_jp2_t *p_jp2,
+                            OPJ_UINT32 p_tile_index,
+                            OPJ_BYTE * p_data,
+                            OPJ_UINT32 p_data_size,
+                            opj_stream_private_t *p_stream,
+                            opj_event_mgr_t * p_manager);
 
 /**
  * Decode tile data.
@@ -389,19 +402,19 @@ OPJ_BOOL opj_jp2_write_tile (  opj_jp2_t *p_jp2,
  *
  * @return FIXME DOC
  */
-OPJ_BOOL opj_jp2_decode_tile (  opj_jp2_t * p_jp2,
-                                OPJ_UINT32 p_tile_index,
-                                OPJ_BYTE * p_data,
-                                OPJ_UINT32 p_data_size,
-                                opj_stream_private_t *p_stream,
-                                opj_event_mgr_t * p_manager );
+OPJ_BOOL opj_jp2_decode_tile(opj_jp2_t * p_jp2,
+                             OPJ_UINT32 p_tile_index,
+                             OPJ_BYTE * p_data,
+                             OPJ_UINT32 p_data_size,
+                             opj_stream_private_t *p_stream,
+                             opj_event_mgr_t * p_manager);
 
 /**
  * Creates a jpeg2000 file decompressor.
  *
  * @return  an empty jpeg2000 file codec.
  */
-opj_jp2_t* opj_jp2_create (OPJ_BOOL p_is_decoder);
+opj_jp2_t* opj_jp2_create(OPJ_BOOL p_is_decoder);
 
 /**
 Destroy a JP2 decompressor handle
@@ -423,28 +436,28 @@ void opj_jp2_destroy(opj_jp2_t *jp2);
  *
  * @return  true      if the area could be set.
  */
-OPJ_BOOL opj_jp2_set_decode_area(  opj_jp2_t *p_jp2,
-                    opj_image_t* p_image,
-                    OPJ_INT32 p_start_x, OPJ_INT32 p_start_y,
-                    OPJ_INT32 p_end_x, OPJ_INT32 p_end_y,
-                    opj_event_mgr_t * p_manager );
+OPJ_BOOL opj_jp2_set_decode_area(opj_jp2_t *p_jp2,
+                                 opj_image_t* p_image,
+                                 OPJ_INT32 p_start_x, OPJ_INT32 p_start_y,
+                                 OPJ_INT32 p_end_x, OPJ_INT32 p_end_y,
+                                 opj_event_mgr_t * p_manager);
 
- /**
- * 
- */
-OPJ_BOOL opj_jp2_get_tile(  opj_jp2_t *p_jp2,
-                            opj_stream_private_t *p_stream,
-                            opj_image_t* p_image,
-                            opj_event_mgr_t * p_manager,
-                            OPJ_UINT32 tile_index );
+/**
+*
+*/
+OPJ_BOOL opj_jp2_get_tile(opj_jp2_t *p_jp2,
+                          opj_stream_private_t *p_stream,
+                          opj_image_t* p_image,
+                          opj_event_mgr_t * p_manager,
+                          OPJ_UINT32 tile_index);
 
 
 /**
- * 
+ *
  */
-OPJ_BOOL opj_jp2_set_decoded_resolution_factor(opj_jp2_t *p_jp2, 
-                                               OPJ_UINT32 res_factor, 
-                                               opj_event_mgr_t * p_manager);
+OPJ_BOOL opj_jp2_set_decoded_resolution_factor(opj_jp2_t *p_jp2,
+        OPJ_UINT32 res_factor,
+        opj_event_mgr_t * p_manager);
 
 
 /* TODO MSD: clean these 3 functions */
@@ -452,11 +465,11 @@ OPJ_BOOL opj_jp2_set_decoded_resolution_factor(opj_jp2_t *p_jp2,
  * Dump some elements from the JP2 decompression structure .
  *
  *@param p_jp2        the jp2 codec.
- *@param flag        flag to describe what elments are dump.
+ *@param flag        flag to describe what elements are dump.
  *@param out_stream      output stream where dump the elements.
  *
 */
-void jp2_dump (opj_jp2_t* p_jp2, OPJ_INT32 flag, FILE* out_stream);
+void jp2_dump(opj_jp2_t* p_jp2, OPJ_INT32 flag, FILE* out_stream);
 
 /**
  * Get the codestream info from a JPEG2000 codec.
@@ -481,5 +494,5 @@ opj_codestream_index_t* jp2_get_cstr_index(opj_jp2_t* p_jp2);
 
 /*@}*/
 
-#endif /* __JP2_H */
+#endif /* OPJ_JP2_H */
 

@@ -29,6 +29,7 @@ it complete and exempt of errors.
 * Julien Malik
 * Arnaud Maye
 * Vincent Nicolas
+* Aleksander Nikolic (Cisco Talos)
 * Glenn Pearson
 * Even Rouault
 * Dzonatas Sol

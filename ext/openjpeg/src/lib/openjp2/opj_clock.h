@@ -1,6 +1,6 @@
 /*
- * The copyright in this software is being made available under the 2-clauses 
- * BSD License, included below. This software may be subject to other third 
+ * The copyright in this software is being made available under the 2-clauses
+ * BSD License, included below. This software may be subject to other third
  * party and contributor rights, including patent rights, and no such rights
  * are granted under this license.
  *
@@ -28,8 +28,8 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef __OPJ_CLOCK_H
-#define __OPJ_CLOCK_H
+#ifndef OPJ_CLOCK_H
+#define OPJ_CLOCK_H
 /**
 @file opj_clock.h
 @brief Internal function for timing
@@ -55,5 +55,5 @@ OPJ_FLOAT64 opj_clock(void);
 
 /*@}*/
 
-#endif /* __OPJ_CLOCK_H */
+#endif /* OPJ_CLOCK_H */
 

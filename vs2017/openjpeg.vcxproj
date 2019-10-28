@@ -438,6 +438,7 @@
     <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\openjpeg.h" />
     <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\opj_clock.h" />
     <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\opj_codec.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\opj_common.h" />
     <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\opj_config.h" />
     <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\opj_config_private.h" />
     <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\opj_includes.h" />
@@ -446,7 +447,7 @@
     <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\opj_malloc.h" />
     <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\opj_stdint.h" />
     <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\pi.h" />
-    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\raw.h" />
+    <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\sparse_array.h" />
     <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\t1.h" />
     <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\t1_luts.h" />
     <ClInclude Include="..\ext\openjpeg\src\lib\openjp2\t2.h" />
@@ -474,9 +475,8 @@
     <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\phix_manager.c" />
     <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\pi.c" />
     <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\ppix_manager.c" />
-    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\raw.c" />
+    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\sparse_array.c" />
     <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\t1.c" />
-    <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\t1_generate_luts.c" />
     <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\t2.c" />
     <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\tcd.c" />
     <ClCompile Include="..\ext\openjpeg\src\lib\openjp2\tgt.c" />

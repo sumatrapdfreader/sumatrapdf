@@ -1,0 +1,18 @@
+# Ignore files and directories made by `cmake .`.
+CMakeFiles/
+Makefile
+cmake_install.cmake
+/CMakeCache.txt
+/CPackConfig.cmake
+/CPackSourceConfig.cmake
+/CTestCustom.cmake
+/LICENSE.txt
+/OpenJPEGConfig.cmake
+/libopenjp2.pc
+/src/bin/common/opj_apps_config.h
+/src/lib/openjp2/opj_config.h
+/src/lib/openjp2/opj_config_private.h
+scripts/opjstyle*
+
+# Ignore directories made by `make`.
+/bin/

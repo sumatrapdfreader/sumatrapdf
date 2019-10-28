@@ -1,6 +1,6 @@
 /*
- * The copyright in this software is being made available under the 2-clauses 
- * BSD License, included below. This software may be subject to other third 
+ * The copyright in this software is being made available under the 2-clauses
+ * BSD License, included below. This software may be subject to other third
  * party and contributor rights, including patent rights, and no such rights
  * are granted under this license.
  *
@@ -29,9 +29,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef TLS_KEYS_H
-#define TLS_KEYS_H
+#ifndef OPJ_TLS_KEYS_H
+#define OPJ_TLS_KEYS_H
 
 #define OPJ_TLS_KEY_T1  0
 
-#endif
+#endif /* OPJ_TLS_KEY_H */
