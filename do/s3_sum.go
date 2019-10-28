@@ -255,10 +255,10 @@ func s3UploadPreReleaseMust(ver string) {
 		"SumatraPDF.pdb.zip", fmt.Sprintf("%s.pdb.zip", prefix),
 		"SumatraPDF.pdb.lzsa", fmt.Sprintf("%s.pdb.lzsa", prefix),
 	}
-	err = s3UploadFiles(s3PreRelDir, "rel64", files)
+	err = s3UploadFiles(s3PreRelDir, pj("out", "rel64"), files)
 	fatalIfErr(err)
 
-	manifestLocalPath := pj("rel", "manifest.txt")
+	manifestLocalPath := pj("out", "rel32", "manifest.txt")
 	err = s3UploadFileReader(manifestRemotePath, manifestLocalPath, true)
 	fatalIfErr(err)
 

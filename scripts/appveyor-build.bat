@@ -17,18 +17,18 @@ IF ERRORLEVEL 1 EXIT /B 1
 msbuild.exe "vs2019\SumatraPDF.sln" "/t:SumatraPDF;Installer;test_util" "/p:Configuration=Release;Platform=x64" /m
 IF ERRORLEVEL 1 EXIT /B 1
 
-rel32\test_util.exe
+out\rel32\test_util.exe
 IF ERRORLEVEL 1 EXIT /B 1
 
-rel64\test_util.exe
+out\rel64\test_util.exe
 IF ERRORLEVEL 1 EXIT /B 1
 
-cd rel32
-..\bin\MakeLZSA.exe SumatraPDF.pdb.lzsa libmupdf.pdb:libmupdf.pdb Installer.pdb:Installer.pdb SumatraPDF-no-MuPDF.pdb:SumatraPDF-no-MuPDF.pdb SumatraPDF.pdb:SumatraPDF.pdb
+cd out\rel32
+..\bin\MakeLZSA.exe SumatraPDF.pdb.lzsa libmupdf.pdb:libmupdf.pdb Installer.pdb:Installer.pdb SumatraPDF-mupdf-dll.pdb:SumatraPDF-mupdf-dll.pdb SumatraPDF.pdb:SumatraPDF.pdb
 IF ERRORLEVEL 1 EXIT /B 1
 
-cd rel64
-..\bin\MakeLZSA.exe SumatraPDF.pdb.lzsa libmupdf.pdb:libmupdf.pdb Installer.pdb:Installer.pdb SumatraPDF-no-MuPDF.pdb:SumatraPDF-no-MuPDF.pdb SumatraPDF.pdb:SumatraPDF.pdb
+cd ..\rel64
+..\bin\MakeLZSA.exe SumatraPDF.pdb.lzsa libmupdf.pdb:libmupdf.pdb Installer.pdb:Installer.pdb SumatraPDF-mupdf-dll.pdb:SumatraPDF-mupdf-dll.pdb SumatraPDF.pdb:SumatraPDF.pdb
 IF ERRORLEVEL 1 EXIT /B 1
 
 cd ..

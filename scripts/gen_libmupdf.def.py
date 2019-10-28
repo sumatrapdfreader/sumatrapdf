@@ -4,7 +4,7 @@
 Generates a list of all exports from libmupdf.dll from the function lists
 contained in the mupdf/include/* headers (only MuPDF and MuXPS are included)
 and adds exports for the other libraries contained within libmupdf.dll but
-used by SumatraPDF-no-MuPDF.exe (unarr, libdjvu, zlib, lzma, libwebp).
+used by SumatraPDF-mupdf-dll.exe (unarr, libdjvu, zlib, lzma, libwebp).
 """
 
 import os, re, util

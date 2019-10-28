@@ -256,7 +256,7 @@ def build_release(stats, ver):
 
     stats.rel_sumatrapdf_exe_size = file_size_in_obj("SumatraPDF.exe")
     stats.rel_sumatrapdf_no_mupdf_exe_size = file_size_in_obj(
-        "SumatraPDF-no-MuPDF.exe")
+        "SumatraPDF-mupdf-dll.exe")
     stats.rel_libmupdf_dll_size = file_size_in_obj("libmupdf.dll")
     stats.rel_nppdfviewer_dll_size = file_size_in_obj("npPdfViewer.dll", 0)
     stats.rel_pdffilter_dll_size = file_size_in_obj("PdfFilter.dll")

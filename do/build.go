@@ -15,7 +15,7 @@ import (
 
 var (
 	pdbFiles = []string{"libmupdf.pdb", "Installer.pdb",
-		"SumatraPDF-no-MuPDF.pdb", "SumatraPDF.pdb"}
+		"SumatraPDF-mupdf-dll.pdb", "SumatraPDF.pdb"}
 )
 
 var (
@@ -64,10 +64,7 @@ func detectVersions() {
 }
 
 func clean() {
-	os.RemoveAll("rel32")
-	os.RemoveAll("rel64")
-	os.RemoveAll("dbg32")
-	os.RemoveAll("dbg64")
+	os.RemoveAll("out")
 }
 
 func runTestUtilMust(dir string) {
@@ -87,7 +84,7 @@ func buildLzsa() {
 	msbuildPath := detectMsbuildPath()
 	runExeLoggedMust(msbuildPath, `vs2019\SumatraPDF.sln`, `/t:MakeLZSA`, `/p:Configuration=Release;Platform=Win32`, `/m`)
 
-	path := filepath.Join("rel32", "MakeLZSA.exe")
+	path := filepath.Join("out", "rel32", "MakeLZSA.exe")
 	signMust(path)
 }
 
@@ -106,19 +103,19 @@ func ciBuild() {
 	msbuildPath := detectMsbuildPath()
 	runExeLoggedMust(msbuildPath, `vs2019\SumatraPDF.sln`, `/t:all;Installer`, `/p:Configuration=Release;Platform=Win32`, `/m`)
 
-	runTestUtilMust("rel32")
+	runTestUtilMust(pj("out", "rel32"))
 	runExeLoggedMust(msbuildPath, `vs2019\SumatraPDF.sln`, `/t:SumatraPDF;Installer;test_util`, `/p:Configuration=Release;Platform=x64`, `/m`)
-	runTestUtilMust("rel64")
+	runTestUtilMust(pj("out", "rel64"))
 
 	{
-		cmd := exec.Command(lzsa, "SumatraPDF.pdb.lzsa", "libmupdf.pdb:libmupdf.pdb", "Installer.pdb:Installer.pdb", "SumatraPDF-no-MuPDF.pdb:SumatraPDF-no-MuPDF.pdb", "SumatraPDF.pdb:SumatraPDF.pdb")
-		cmd.Dir = "rel32"
+		cmd := exec.Command(lzsa, "SumatraPDF.pdb.lzsa", "libmupdf.pdb:libmupdf.pdb", "Installer.pdb:Installer.pdb", "SumatraPDF-mupdf-dll.pdb:SumatraPDF-mupdf-dll.pdb", "SumatraPDF.pdb:SumatraPDF.pdb")
+		cmd.Dir = pj("out", "rel32")
 		u.RunCmdLoggedMust(cmd)
 	}
 
 	{
-		cmd := exec.Command(lzsa, "SumatraPDF.pdb.lzsa", "libmupdf.pdb:libmupdf.pdb", "Installer.pdb:Installer.pdb", "SumatraPDF-no-MuPDF.pdb:SumatraPDF-no-MuPDF.pdb", "SumatraPDF.pdb:SumatraPDF.pdb")
-		cmd.Dir = "rel64"
+		cmd := exec.Command(lzsa, "SumatraPDF.pdb.lzsa", "libmupdf.pdb:libmupdf.pdb", "Installer.pdb:Installer.pdb", "SumatraPDF-mupdf-dll.pdb:SumatraPDF-mupdf-dll.pdb", "SumatraPDF.pdb:SumatraPDF.pdb")
+		cmd.Dir = pj("out", "rel64")
 		u.RunCmdLoggedMust(cmd)
 	}
 }
@@ -234,7 +231,7 @@ func createPdbLzsaMust(dir string) {
 }
 
 func manifestPath() string {
-	return filepath.Join("rel32", "manifest.txt")
+	return filepath.Join("out", "rel32", "manifest.txt")
 }
 
 // manifest is build for pre-release builds and contains build stats
@@ -242,7 +239,7 @@ func createManifestMust() {
 	var lines []string
 	files := []string{
 		"SumatraPDF.exe",
-		"SumatraPDF-no-MUPDF.exe",
+		"SumatraPDF-mupdf-dll.exe",
 		"Installer.exe",
 		"libmupdf.dll",
 		"PdfFilter.dll",
@@ -251,7 +248,7 @@ func createManifestMust() {
 		"SumatraPDF.pdb.zip",
 		"SumatraPDF.pdb.lzsa",
 	}
-	dirs := []string{"rel32", "rel64"}
+	dirs := []string{pj("out", "rel32"), pj("out", "rel64")}
 	for _, dir := range dirs {
 		for _, file := range files {
 			path := filepath.Join(dir, file)
@@ -289,16 +286,16 @@ func buildPreRelease() {
 	msbuildPath := detectMsbuildPath()
 	slnPath := filepath.Join("vs2019", "SumatraPDF.sln")
 
-	runExeLoggedMust(msbuildPath, slnPath, `/t:SumatraPDF;SumatraPDF-no-MUPDF;PdfFilter;PdfPreview;Uninstaller;test_util`, `/p:Configuration=Release;Platform=Win32`, `/m`)
+	runExeLoggedMust(msbuildPath, slnPath, `/t:SumatraPDF;SumatraPDF-mupdf-dll;PdfFilter;PdfPreview;Uninstaller;test_util`, `/p:Configuration=Release;Platform=Win32`, `/m`)
 
-	dir := "rel32"
+	dir := pj("out", "rel32")
 	runTestUtilMust(dir)
 	{
 		signMust(pj(dir, "SumatraPDF.exe"))
 		signMust(pj(dir, "libmupdf.dll"))
 		signMust(pj(dir, "PdfFilter.dll"))
 		signMust(pj(dir, "PdfPreview.dll"))
-		signMust(pj(dir, "SumatraPDF-no-MUPDF.exe"))
+		signMust(pj(dir, "SumatraPDF-mupdf-dll.exe"))
 		signMust(pj(dir, "Uninstaller.exe"))
 	}
 
@@ -306,26 +303,26 @@ func buildPreRelease() {
 
 	signMust(pj(dir, "Installer.exe"))
 
-	runExeLoggedMust(msbuildPath, slnPath, "/t:SumatraPDF;SumatraPDF-no-MUPDF;PdfFilter;PdfPreview;Uninstaller;test_util", "/p:Configuration=Release;Platform=x64", "/m")
+	runExeLoggedMust(msbuildPath, slnPath, "/t:SumatraPDF;SumatraPDF-mupdf-dll;PdfFilter;PdfPreview;Uninstaller;test_util", "/p:Configuration=Release;Platform=x64", "/m")
 
-	dir = "rel64"
+	dir = pj("out", "rel64")
 	runTestUtilMust(dir)
 	signMust(pj(dir, "SumatraPDF.exe"))
 	signMust(pj(dir, "libmupdf.dll"))
-	signMust(pj(dir, "SumatraPDF-no-MUPDF.exe"))
+	signMust(pj(dir, "SumatraPDF-mupdf-dll.exe"))
 	signMust(pj(dir, "Uninstaller.exe"))
 	// TODO: why am I building 32-bit dlls?
-	signMust(pj("rel32", "PdfFilter.dll"))
-	signMust(pj("rel32", "PdfPreview.dll"))
+	signMust(pj("out", "rel32", "PdfFilter.dll"))
+	signMust(pj("out", "rel32", "PdfPreview.dll"))
 
 	runExeLoggedMust(msbuildPath, slnPath, "/t:Installer", "/p:Configuration=Release;Platform=x64", "/m")
-	signMust(pj("rel64", "Installer.exe"))
+	signMust(pj("out", "rel64", "Installer.exe"))
 
-	createPdbZipMust("rel32")
-	createPdbZipMust("rel64")
+	createPdbZipMust(pj("out", "rel32"))
+	createPdbZipMust(pj("out", "rel64"))
 
-	createPdbLzsaMust("rel32")
-	createPdbLzsaMust("rel64")
+	createPdbLzsaMust(pj("out", "rel32"))
+	createPdbLzsaMust(pj("out", "rel64"))
 
 	createManifestMust()
 

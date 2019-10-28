@@ -164,10 +164,10 @@ static bool UnpackStaticSymbols(const char* pdbZipPath, const char* symDir) {
 // lib (.exe + libmupdf.dll) release and pre-release builds
 static bool UnpackLibSymbols(const char* pdbZipPath, const char* symDir) {
     lf("UnpackLibSymbols(): unpacking %s to dir %s", pdbZipPath, symDir);
-    const char* files[3] = {"libmupdf.pdb", "SumatraPDF-no-MuPDF.pdb", nullptr};
+    const char* files[3] = {"libmupdf.pdb", "SumatraPDF-mupdf-dll.pdb", nullptr};
     bool ok = lzma::ExtractFiles(pdbZipPath, symDir, &files[0], gCrashHandlerAllocator);
     if (!ok) {
-        plog("Failed to unpack libmupdf.pdb or SumatraPDF-no-MuPDF.pdb");
+        plog("Failed to unpack libmupdf.pdb or SumatraPDF-mupdf-dll.pdb");
         return false;
     }
     return true;

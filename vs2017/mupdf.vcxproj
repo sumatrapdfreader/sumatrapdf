@@ -149,56 +149,56 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>..\dbg32\</OutDir>
-    <IntDir>..\dbg32\obj\x32\Debug\mupdf\</IntDir>
+    <OutDir>..\out\dbg32\</OutDir>
+    <IntDir>..\out\dbg32\obj\x32\Debug\mupdf\</IntDir>
     <TargetName>mupdf</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug x32_xp|Win32'">
-    <OutDir>..\dbg32_xp\</OutDir>
-    <IntDir>..\dbg32_xp\obj\x32_xp\Debug\mupdf\</IntDir>
+    <OutDir>..\out\dbg32_xp\</OutDir>
+    <IntDir>..\out\dbg32_xp\obj\x32_xp\Debug\mupdf\</IntDir>
     <TargetName>mupdf</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>..\dbg64\</OutDir>
-    <IntDir>..\dbg64\obj\x64\Debug\mupdf\</IntDir>
+    <OutDir>..\out\dbg64\</OutDir>
+    <IntDir>..\out\dbg64\obj\x64\Debug\mupdf\</IntDir>
     <TargetName>mupdf</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>..\rel32\</OutDir>
-    <IntDir>..\rel32\obj\x32\Release\mupdf\</IntDir>
+    <OutDir>..\out\rel32\</OutDir>
+    <IntDir>..\out\rel32\obj\x32\Release\mupdf\</IntDir>
     <TargetName>mupdf</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release x32_xp|Win32'">
-    <OutDir>..\rel32_xp\</OutDir>
-    <IntDir>..\rel32_xp\obj\x32_xp\Release\mupdf\</IntDir>
+    <OutDir>..\out\rel32_xp\</OutDir>
+    <IntDir>..\out\rel32_xp\obj\x32_xp\Release\mupdf\</IntDir>
     <TargetName>mupdf</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>..\rel64\</OutDir>
-    <IntDir>..\rel64\obj\x64\Release\mupdf\</IntDir>
+    <OutDir>..\out\rel64\</OutDir>
+    <IntDir>..\out\rel64\obj\x64\Release\mupdf\</IntDir>
     <TargetName>mupdf</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|Win32'">
-    <OutDir>..\rel32_prefast\</OutDir>
-    <IntDir>..\rel32_prefast\obj\x32\ReleasePrefast\mupdf\</IntDir>
+    <OutDir>..\out\rel32_prefast\</OutDir>
+    <IntDir>..\out\rel32_prefast\obj\x32\ReleasePrefast\mupdf\</IntDir>
     <TargetName>mupdf</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast x32_xp|Win32'">
-    <OutDir>..\rel32_prefast_xp\</OutDir>
-    <IntDir>..\rel32_prefast_xp\obj\x32_xp\ReleasePrefast\mupdf\</IntDir>
+    <OutDir>..\out\rel32_prefast_xp\</OutDir>
+    <IntDir>..\out\rel32_prefast_xp\obj\x32_xp\ReleasePrefast\mupdf\</IntDir>
     <TargetName>mupdf</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|x64'">
-    <OutDir>..\rel64_prefast\</OutDir>
-    <IntDir>..\rel64_prefast\obj\x64\ReleasePrefast\mupdf\</IntDir>
+    <OutDir>..\out\rel64_prefast\</OutDir>
+    <IntDir>..\out\rel64_prefast\obj\x64\ReleasePrefast\mupdf\</IntDir>
     <TargetName>mupdf</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
@@ -570,15 +570,15 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\nasm.exe -f win64 -DWIN64 -I ../mupdf/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\nasm.exe -f win64 -DWIN64 -I ../mupdf/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|x64'">..\bin\nasm.exe -f win64 -DWIN64 -I ../mupdf/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../dbg32/obj/x32/Debug/mupdf/font_base14.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x32_xp|Win32'">../dbg32_xp/obj/x32_xp/Debug/mupdf/font_base14.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../dbg64/obj/x64/Debug/mupdf/font_base14.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../rel32/obj/x32/Release/mupdf/font_base14.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x32_xp|Win32'">../rel32_xp/obj/x32_xp/Release/mupdf/font_base14.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../rel64/obj/x64/Release/mupdf/font_base14.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|Win32'">../rel32_prefast/obj/x32/ReleasePrefast/mupdf/font_base14.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast x32_xp|Win32'">../rel32_prefast_xp/obj/x32_xp/ReleasePrefast/mupdf/font_base14.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|x64'">../rel64_prefast/obj/x64/ReleasePrefast/mupdf/font_base14.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf/font_base14.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x32_xp|Win32'">../out/dbg32_xp/obj/x32_xp/Debug/mupdf/font_base14.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/font_base14.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf/font_base14.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x32_xp|Win32'">../out/rel32_xp/obj/x32_xp/Release/mupdf/font_base14.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/font_base14.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|Win32'">../out/rel32_prefast/obj/x32/ReleasePrefast/mupdf/font_base14.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast x32_xp|Win32'">../out/rel32_prefast_xp/obj/x32_xp/ReleasePrefast/mupdf/font_base14.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|x64'">../out/rel64_prefast/obj/x64/ReleasePrefast/mupdf/font_base14.obj</Outputs>
       <Message>Compiling %(Identity)</Message>
     </CustomBuild>
   </ItemGroup>

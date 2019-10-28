@@ -83,7 +83,7 @@ def create_pdb_lzsa_archive(dir, archive_name):
     archive_path = os.path.join(dir, archive_name)
     MakeLzsa = os.path.join(dir, "MakeLZSA.exe")
     files = ["libmupdf.pdb", "Installer.pdb",
-             "SumatraPDF-no-MuPDF.pdb", "SumatraPDF.pdb"]
+             "SumatraPDF-mupdf-dll.pdb", "SumatraPDF.pdb"]
     files = [os.path.join(dir, file) + ":" + file for file in files]
     run_cmd_throw(MakeLzsa, archive_path, *files)
     return archive_path
@@ -92,7 +92,7 @@ def create_pdb_lzsa_archive(dir, archive_name):
 def create_pdb_zip_archive(dir, archive_name):
     archive_path = os.path.join(dir, archive_name)
     files = ["libmupdf.pdb", "Installer.pdb",
-             "SumatraPDF-no-MuPDF.pdb", "SumatraPDF.pdb"]
+             "SumatraPDF-mupdf-dll.pdb", "SumatraPDF.pdb"]
     for file_name in files:
         file_path = os.path.join(dir, file_name)
         zip_file(archive_path, file_path, file_name, compress=True, append=True)
@@ -369,7 +369,7 @@ def build(upload, upload_tmp, testing, build_test_installer, build_rel_installer
 
     exe = os.path.join(obj_dir, "SumatraPDF.exe")
     sign_retry(exe, cert_pwd)
-    sign_retry(os.path.join(obj_dir, "SumatraPDF-no-MuPDF.exe"), cert_pwd)
+    sign_retry(os.path.join(obj_dir, "SumatraPDF-mupdf-dll.exe"), cert_pwd)
     sign_retry(os.path.join(obj_dir, "uninstall.exe"), cert_pwd)
 
     (out, err) = run_cmd_throw("nmake", "-f", "makefile.msvc",

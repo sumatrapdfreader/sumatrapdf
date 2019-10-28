@@ -1,12 +1,7 @@
 // Place your settings in this file to overwrite default and user settings.
 {
   "files.exclude": {
-    "dbg/*" : true,
-    "dbg64/*" : true,
-    "rel/*" : true,
-    "rel64/*" : true,
-    "relPrefast/*" : true,
-    "relPrefast64/*" : true,
+    "out/*" : true,
     "build-log.txt" : true
   },
   "python.linting.pylintEnabled": false,

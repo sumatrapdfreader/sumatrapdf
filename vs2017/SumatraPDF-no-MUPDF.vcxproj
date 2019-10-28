@@ -54,7 +54,7 @@
     <ProjectGuid>{8F5D3594-FBBE-12A2-842C-5954F08C4961}</ProjectGuid>
     <IgnoreWarnCompileDuplicatedFilename>true</IgnoreWarnCompileDuplicatedFilename>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>SumatraPDF-no-MUPDF</RootNamespace>
+    <RootNamespace>SumatraPDF-mupdf-dll</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -150,73 +150,73 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>..\dbg32\</OutDir>
-    <IntDir>..\dbg32\obj\x32\Debug\SumatraPDF-no-MUPDF\</IntDir>
-    <TargetName>SumatraPDF-no-MUPDF</TargetName>
+    <OutDir>..\out\dbg32\</OutDir>
+    <IntDir>..\out\dbg32\obj\x32\Debug\SumatraPDF-mupdf-dll\</IntDir>
+    <TargetName>SumatraPDF-mupdf-dll</TargetName>
     <TargetExt>.exe</TargetExt>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug x32_xp|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>..\dbg32_xp\</OutDir>
-    <IntDir>..\dbg32_xp\obj\x32_xp\Debug\SumatraPDF-no-MUPDF\</IntDir>
-    <TargetName>SumatraPDF-no-MUPDF</TargetName>
+    <OutDir>..\out\dbg32_xp\</OutDir>
+    <IntDir>..\out\dbg32_xp\obj\x32_xp\Debug\SumatraPDF-mupdf-dll\</IntDir>
+    <TargetName>SumatraPDF-mupdf-dll</TargetName>
     <TargetExt>.exe</TargetExt>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>..\dbg64\</OutDir>
-    <IntDir>..\dbg64\obj\x64\Debug\SumatraPDF-no-MUPDF\</IntDir>
-    <TargetName>SumatraPDF-no-MUPDF</TargetName>
+    <OutDir>..\out\dbg64\</OutDir>
+    <IntDir>..\out\dbg64\obj\x64\Debug\SumatraPDF-mupdf-dll\</IntDir>
+    <TargetName>SumatraPDF-mupdf-dll</TargetName>
     <TargetExt>.exe</TargetExt>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\rel32\</OutDir>
-    <IntDir>..\rel32\obj\x32\Release\SumatraPDF-no-MUPDF\</IntDir>
-    <TargetName>SumatraPDF-no-MUPDF</TargetName>
+    <OutDir>..\out\rel32\</OutDir>
+    <IntDir>..\out\rel32\obj\x32\Release\SumatraPDF-mupdf-dll\</IntDir>
+    <TargetName>SumatraPDF-mupdf-dll</TargetName>
     <TargetExt>.exe</TargetExt>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release x32_xp|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\rel32_xp\</OutDir>
-    <IntDir>..\rel32_xp\obj\x32_xp\Release\SumatraPDF-no-MUPDF\</IntDir>
-    <TargetName>SumatraPDF-no-MUPDF</TargetName>
+    <OutDir>..\out\rel32_xp\</OutDir>
+    <IntDir>..\out\rel32_xp\obj\x32_xp\Release\SumatraPDF-mupdf-dll\</IntDir>
+    <TargetName>SumatraPDF-mupdf-dll</TargetName>
     <TargetExt>.exe</TargetExt>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\rel64\</OutDir>
-    <IntDir>..\rel64\obj\x64\Release\SumatraPDF-no-MUPDF\</IntDir>
-    <TargetName>SumatraPDF-no-MUPDF</TargetName>
+    <OutDir>..\out\rel64\</OutDir>
+    <IntDir>..\out\rel64\obj\x64\Release\SumatraPDF-mupdf-dll\</IntDir>
+    <TargetName>SumatraPDF-mupdf-dll</TargetName>
     <TargetExt>.exe</TargetExt>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\rel32_prefast\</OutDir>
-    <IntDir>..\rel32_prefast\obj\x32\ReleasePrefast\SumatraPDF-no-MUPDF\</IntDir>
-    <TargetName>SumatraPDF-no-MUPDF</TargetName>
+    <OutDir>..\out\rel32_prefast\</OutDir>
+    <IntDir>..\out\rel32_prefast\obj\x32\ReleasePrefast\SumatraPDF-mupdf-dll\</IntDir>
+    <TargetName>SumatraPDF-mupdf-dll</TargetName>
     <TargetExt>.exe</TargetExt>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast x32_xp|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\rel32_prefast_xp\</OutDir>
-    <IntDir>..\rel32_prefast_xp\obj\x32_xp\ReleasePrefast\SumatraPDF-no-MUPDF\</IntDir>
-    <TargetName>SumatraPDF-no-MUPDF</TargetName>
+    <OutDir>..\out\rel32_prefast_xp\</OutDir>
+    <IntDir>..\out\rel32_prefast_xp\obj\x32_xp\ReleasePrefast\SumatraPDF-mupdf-dll\</IntDir>
+    <TargetName>SumatraPDF-mupdf-dll</TargetName>
     <TargetExt>.exe</TargetExt>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\rel64_prefast\</OutDir>
-    <IntDir>..\rel64_prefast\obj\x64\ReleasePrefast\SumatraPDF-no-MUPDF\</IntDir>
-    <TargetName>SumatraPDF-no-MUPDF</TargetName>
+    <OutDir>..\out\rel64_prefast\</OutDir>
+    <IntDir>..\out\rel64_prefast\obj\x64\ReleasePrefast\SumatraPDF-mupdf-dll\</IntDir>
+    <TargetName>SumatraPDF-mupdf-dll</TargetName>
     <TargetExt>.exe</TargetExt>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>

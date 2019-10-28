@@ -21,9 +21,9 @@ workspace "SumatraPDF"
   location "."
 
   filter {"platforms:x64", "configurations:Release"}
-    targetdir "rel64_unix"
+    targetdir "out/rel64_unix"
   filter {"platforms:x64", "configurations:Debug"}
-    targetdir "dbg64_unix"
+    targetdir "out/dbg64_unix"
   filter {}
   objdir "%{cfg.targetdir}/obj"
 

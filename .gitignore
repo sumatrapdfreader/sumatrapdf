@@ -10,18 +10,8 @@
 *.opendb
 scripts/config.py
 scripts/secrets.json
-rel/
-rel32/
 out.txt
-rel64/
-rel64_unix/
-relPrefast/
-relPrefast64/
-dbg/
-dbg64/
-dbg64_unix/
-rel-mac/
-dbg-mac/
+out/
 builds/
 mupdf/generated/
 vs2017/.vs/
@@ -38,5 +28,3 @@ analyze-output.txt
 analyze-errors.html
 CoverageReport*
 LastCoverageResults.log
-out/
-linux_dbg64/

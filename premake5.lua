@@ -48,7 +48,7 @@ include("premake5.files.lua")
 workspace "SumatraPDF"
   configurations { "Debug", "Release", "ReleasePrefast" }
   platforms { "x32", "x32_xp", "x64" }
-  startproject "SumatraPDF-no-MUPDF"
+  startproject "SumatraPDF-mupdf-dll"
 
   filter "platforms:x32_xp"
     architecture "x86"
@@ -84,25 +84,25 @@ workspace "SumatraPDF"
   filter {}
 
   filter {"platforms:x32", "configurations:Release"}
-    targetdir "rel32"
+    targetdir "out/rel32"
   filter {"platforms:x32", "configurations:ReleasePrefast"}
-    targetdir "rel32_prefast"
+    targetdir "out/rel32_prefast"
   filter {"platforms:x32", "configurations:Debug"}
-    targetdir "dbg32"
+    targetdir "out/dbg32"
 
   filter {"platforms:x32_xp", "configurations:Release"}
-    targetdir "rel32_xp"
+    targetdir "out/rel32_xp"
   filter {"platforms:x32_xp", "configurations:ReleasePrefast"}
-    targetdir "rel32_prefast_xp"
+    targetdir "out/rel32_prefast_xp"
   filter {"platforms:x32_xp", "configurations:Debug"}
-    targetdir "dbg32_xp"
+    targetdir "out/dbg32_xp"
 
   filter {"platforms:x64", "configurations:Release"}
-    targetdir "rel64"
+    targetdir "out/rel64"
   filter {"platforms:x64", "configurations:ReleasePrefast"}
-    targetdir "rel64_prefast"
+    targetdir "out/rel64_prefast"
   filter {"platforms:x64", "configurations:Debug"}
-    targetdir "dbg64"
+    targetdir "out/dbg64"
   filter {}
   objdir "%{cfg.targetdir}/obj"
 
@@ -556,7 +556,7 @@ workspace "SumatraPDF"
     linkoptions { "/DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll"}
 
 
-  project "SumatraPDF-no-MUPDF"
+  project "SumatraPDF-mupdf-dll"
     kind "WindowedApp"
     language "C++"
     cppdialect "C++17"
@@ -633,8 +633,8 @@ workspace "SumatraPDF"
     -- this is to prevent dll hijacking
     linkoptions { "/DELAYLOAD:gdiplus.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll"}
 
-    dependson { "SumatraPDF-no-MUPDF", "PdfFilter", "PdfPreview", "Uninstaller" }
-    prebuildcommands { "cd %{cfg.targetdir} & ..\\bin\\MakeLZSA.exe InstallerData.dat SumatraPDF-no-MUPDF.exe:SumatraPDF.exe libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll Uninstaller.exe:uninstall.exe ..\\mupdf\\resources\\fonts\\droid\\DroidSansFallback.ttf:DroidSansFallback.ttf"  }
+    dependson { "SumatraPDF-mupdf-dll", "PdfFilter", "PdfPreview", "Uninstaller" }
+    prebuildcommands { "cd %{cfg.targetdir} & ..\\..\\bin\\MakeLZSA.exe InstallerData.dat SumatraPDF-mupdf-dll.exe:SumatraPDF.exe libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll Uninstaller.exe:uninstall.exe ..\\..\\mupdf\\resources\\fonts\\droid\\DroidSansFallback.ttf:DroidSansFallback.ttf"  }
 
   project "TestApp"
     kind "WindowedApp"
@@ -657,7 +657,7 @@ workspace "SumatraPDF"
     -- if there is a c/c++ file, so we add a no-op cpp file to force This logic
     files { "tools/premake/no_op_console.c" }
     dependson {
-      "PdfPreview", "PdfFilter", "SumatraPDF", "SumatraPDF-no-MUPDF",
+      "PdfPreview", "PdfFilter", "SumatraPDF", "SumatraPDF-mupdf-dll",
       "test_util", "cmapdump", "signfile", "plugin-test", "MakeLZSA",
       "mutool", "mudraw", "Uninstaller", "enginedump", "efi", "unarr"
     }

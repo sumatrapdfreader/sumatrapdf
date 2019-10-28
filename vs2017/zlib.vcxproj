@@ -149,56 +149,56 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>..\dbg32\</OutDir>
-    <IntDir>..\dbg32\obj\x32\Debug\zlib\</IntDir>
+    <OutDir>..\out\dbg32\</OutDir>
+    <IntDir>..\out\dbg32\obj\x32\Debug\zlib\</IntDir>
     <TargetName>zlib</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug x32_xp|Win32'">
-    <OutDir>..\dbg32_xp\</OutDir>
-    <IntDir>..\dbg32_xp\obj\x32_xp\Debug\zlib\</IntDir>
+    <OutDir>..\out\dbg32_xp\</OutDir>
+    <IntDir>..\out\dbg32_xp\obj\x32_xp\Debug\zlib\</IntDir>
     <TargetName>zlib</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>..\dbg64\</OutDir>
-    <IntDir>..\dbg64\obj\x64\Debug\zlib\</IntDir>
+    <OutDir>..\out\dbg64\</OutDir>
+    <IntDir>..\out\dbg64\obj\x64\Debug\zlib\</IntDir>
     <TargetName>zlib</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>..\rel32\</OutDir>
-    <IntDir>..\rel32\obj\x32\Release\zlib\</IntDir>
+    <OutDir>..\out\rel32\</OutDir>
+    <IntDir>..\out\rel32\obj\x32\Release\zlib\</IntDir>
     <TargetName>zlib</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release x32_xp|Win32'">
-    <OutDir>..\rel32_xp\</OutDir>
-    <IntDir>..\rel32_xp\obj\x32_xp\Release\zlib\</IntDir>
+    <OutDir>..\out\rel32_xp\</OutDir>
+    <IntDir>..\out\rel32_xp\obj\x32_xp\Release\zlib\</IntDir>
     <TargetName>zlib</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>..\rel64\</OutDir>
-    <IntDir>..\rel64\obj\x64\Release\zlib\</IntDir>
+    <OutDir>..\out\rel64\</OutDir>
+    <IntDir>..\out\rel64\obj\x64\Release\zlib\</IntDir>
     <TargetName>zlib</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|Win32'">
-    <OutDir>..\rel32_prefast\</OutDir>
-    <IntDir>..\rel32_prefast\obj\x32\ReleasePrefast\zlib\</IntDir>
+    <OutDir>..\out\rel32_prefast\</OutDir>
+    <IntDir>..\out\rel32_prefast\obj\x32\ReleasePrefast\zlib\</IntDir>
     <TargetName>zlib</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast x32_xp|Win32'">
-    <OutDir>..\rel32_prefast_xp\</OutDir>
-    <IntDir>..\rel32_prefast_xp\obj\x32_xp\ReleasePrefast\zlib\</IntDir>
+    <OutDir>..\out\rel32_prefast_xp\</OutDir>
+    <IntDir>..\out\rel32_prefast_xp\obj\x32_xp\ReleasePrefast\zlib\</IntDir>
     <TargetName>zlib</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|x64'">
-    <OutDir>..\rel64_prefast\</OutDir>
-    <IntDir>..\rel64_prefast\obj\x64\ReleasePrefast\zlib\</IntDir>
+    <OutDir>..\out\rel64_prefast\</OutDir>
+    <IntDir>..\out\rel64_prefast\obj\x64\ReleasePrefast\zlib\</IntDir>
     <TargetName>zlib</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
