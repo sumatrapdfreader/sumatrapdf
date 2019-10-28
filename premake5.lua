@@ -18,6 +18,7 @@ Reference for warnings:
  4204 - non-standard extension: non-constant aggregate initializer
  4206 - non-standard extension: translation unit is empty
  4244 - 64bit, conversion with possible loss of data
+ 4245 - sign/unsigned mismatch
  4267 - 64bit, conversion with possible loss of data
  4302 - 64bit, type cast truncation
  4310 - 64bit, cast truncates constant value
@@ -149,9 +150,8 @@ workspace "SumatraPDF"
   project "zlib"
     kind "StaticLib"
     language "C"
-    disablewarnings { "4131", "4244", "4996" }
+    disablewarnings { "4131", "4244", "4245", "4267", "4996" }
     zlib_files()
-
 
   project "libdjvu"
     kind "StaticLib"
