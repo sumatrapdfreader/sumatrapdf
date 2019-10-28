@@ -601,7 +601,7 @@ workspace "SumatraPDF"
     flags { "NoManifest" }
     defines { "NO_LIBWEBP", "NO_LIBMUPDF", "HAVE_ZLIB", "HAVE_BZIP2", "HAVE_7Z" }
     disablewarnings {
-      "4018", "4100", "4131", "4244", "4267", "4302", "4311", "4312", "4456",
+      "4018", "4100", "4131", "4244", "4245", "4267", "4302", "4311", "4312", "4456",
       "4457", "4838", "4702", "4706", "4996"
     }
     installer_files()
@@ -622,7 +622,7 @@ workspace "SumatraPDF"
     defines { "NO_LIBWEBP", "NO_LIBMUPDF", "HAVE_ZLIB", "HAVE_BZIP2", "HAVE_7Z" }
     resdefines { "INSTALL_PAYLOAD_ZIP=.\\%{cfg.targetdir}\\InstallerData.dat" }
     disablewarnings {
-      "4018", "4100", "4131", "4244", "4267", "4302", "4311",
+      "4018", "4100", "4131", "4244", "4245", "4267", "4302", "4311",
       "4312", "4456", "4457", "4838", "4702", "4706", "4996"
     }
     installer_files()
