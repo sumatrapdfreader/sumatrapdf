@@ -3476,6 +3476,18 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
         case 'z':
             win->ToggleZoom();
             break;
+        case '[':
+            win->AsFixed()->RotateBy(-90);
+            break;
+        case ']':
+            win->AsFixed()->RotateBy(90);
+            break;
+        case 'f':
+            if (win->isFullScreen == false)
+                EnterFullScreen(win);
+            else
+                ExitFullScreen(win);
+            break;
         // per https://en.wikipedia.org/wiki/Keyboard_layout
         // almost all keyboard layouts allow to press either
         // '+' or '=' unshifted (and one of them is also often
