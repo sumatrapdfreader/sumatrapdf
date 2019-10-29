@@ -48,7 +48,7 @@ string if no current branch.
 func getCurrentBranch(d []byte) string {
 	// "(HEAD detached at b5adf8738)" is what we get on GitHub CI
 	s := string(d)
-	if strings.HasPrefix(s, "(HEAD detached") {
+	if strings.Contains(s, "(HEAD detached") {
 		return "master"
 	}
 	lines := toTrimmedLines(d)
