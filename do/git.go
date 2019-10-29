@@ -46,6 +46,11 @@ Return active branch marked with "*" ('rel3.1working' in this case) or empty
 string if no current branch.
 */
 func getCurrentBranch(d []byte) string {
+	// "(HEAD detached at b5adf8738)" is what we get on GitHub CI
+	s := string(d)
+	if strings.HasPrefix(s, "(HEAD detached") {
+		return "master"
+	}
 	lines := toTrimmedLines(d)
 	for _, l := range lines {
 		if strings.HasPrefix(l, "* ") {
@@ -77,5 +82,5 @@ func verifyOnMasterBranchMust() {
 	// 'git branch' return branch name in format: '* master'
 	out := runExeMust("git", "branch")
 	currBranch := getCurrentBranch(out)
-	u.PanicIf(currBranch != "master", "no on master branch (branch: '%s')\n", currBranch)
+	u.PanicIf(currBranch != "master", "not on master branch (branch: '%s')\n", currBranch)
 }
