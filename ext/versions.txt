@@ -1,6 +1,6 @@
 Project         Version    Date      
 ----------------------------------
-bzip2           1.0.6      2010-09-06
+bzip2           1.0.8      2019-07-21
   http://bzip.org/downloads.html
 
 CHMLib          0.40a      2009-07-02
