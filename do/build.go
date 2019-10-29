@@ -111,15 +111,6 @@ func smokeBuild() {
 	}
 }
 
-// TOOD: alternatively, just puts pigz.exe in the repo
-func downloadPigzMust() {
-	// TODO: for some reason doesn't work with https
-	uri := "http://kjkpub.s3.amazonaws.com/software/pigz/2.3.1-149/pigz.exe"
-	path := pj("bin", "pigz.exe")
-	sha1 := "10a2d3e3cafbad083972d6498fee4dc7df603c04"
-	httpDlToFileMust(uri, path, sha1)
-}
-
 func buildConfigPath() string {
 	return pj("src", "utils", "BuildConfig.h")
 }
@@ -264,8 +255,6 @@ func buildPreRelease() {
 	verifyPreReleaseNotInS3Must(svnPreReleaseVer)
 
 	verifyTranslationsMust()
-
-	downloadPigzMust()
 
 	setBuildConfig(gitSha1, svnPreReleaseVer)
 	defer revertBuildConfig()

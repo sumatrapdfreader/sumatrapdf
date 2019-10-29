@@ -20,7 +20,6 @@ vs2019/.vs/
 .vscode/.BROWSE.VC.DB-wal
 .vscode/ipch/
 bin/cmapdump.exe
-bin/pigz.exe
 drmemlogs/
 src/utils/BuildConfig.h
 build-log.txt
