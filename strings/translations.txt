@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-32353a77766f0fc0025d92ff86dd5a1cd74d2f04
+516019e37dd961ba87937697cc49e309a965798d
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -32,7 +32,7 @@ he:אודות...
 hi:बारे में(&A)
 hr:&O programu...
 hu:Név&jegy
-id:Tent&ang
+id:&Tentang
 it:&Informazioni su...
 ja:バージョン情報(&A)
 jv:&Babagan
@@ -103,7 +103,7 @@ he:גודל מקורי\tCtrl+1
 hi:वास्तविक आकार(&A)\tCtrl+1
 hr:Stvarna veličina\tCtrl+1
 hu:&Tényleges méret\tCtrl+1
-id:Ukur&an Sebenarnya\tCtrl+1
+id:&Ukuran Sebenarnya\tCtrl+1
 it:&Dimensioni reali\tCtrl+1
 ja:実際のサイズ(&A)\tCtrl+1
 jv:&Ukuran Nyata\tCtrl+1
@@ -172,7 +172,7 @@ he:הגדרות מתקדמות...
 hi:उच्च श्रेणी के सेटिंग्स
 hr:N&apredne mogućnosti
 hu:Speciális beállítások...
-id:Peng&aturan Lanjutan...
+id:&Pilihan Lanjutan...
 it:Opzioni &avanzate...
 ja:詳細設定(&A)
 jv:&Pilihan Terusan...
@@ -304,7 +304,7 @@ he:מקטע קודם\tחץ שמאלי + Alt
 hi:&वापस\t Alt+बायाँ तीर
 hr:Natrag\tAlt+<-
 hu:Ugrás vissza\tAlt+<-
-id:Kem&bali\tAlt+<-
+id:&Kembali\tAlt+<-
 it:&Indietro\tAlt+Freccia Sinistra
 ja:前に戻る(&B)\tAlt+←
 jv:&Mbalik\tAlt+Arah Kiri
@@ -4492,7 +4492,7 @@ he:בדוק עדכונים אוטומטית
 hi:स्वचालित रूप से &नवीनतम के लिए जाँच
 hr:Provjeravaj &nadogradnje automatski
 hu:&Frissítések automatikus keresése
-id:Periksa pembar&uan secara otomatis
+id:Periksa &pembaruan secara otomatis
 it:Controlla a&utomaticamente aggiornamenti
 ja:自動的に更新をチェックする(&U)
 jv:Otomatis nge-cek &updatetan
