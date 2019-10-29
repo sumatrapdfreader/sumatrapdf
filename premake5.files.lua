@@ -164,12 +164,15 @@ function libwebp_files()
   files_in_dir("ext/libwebp/src/dsp", {
     "alpha_processing.c", 
     "alpha_processing_sse2.c",
+    "alpha_processing_sse41.c",
     "cost.c", 
     "cpu.c", 
     "dec.c", 
     "dec_clip_tables.c",
     "dec_sse2.c",
+    "dec_sse41.c",
     "filters.c",
+    "filters_sse2.c",
     "lossless.c",
     "lossless_sse2.c",
     "rescaler.c",
@@ -178,8 +181,10 @@ function libwebp_files()
     "ssim_sse2.c",
     "upsampling.c",
     "upsampling_sse2.c",
+    "upsampling_sse41.c",
     "yuv.c",
     "yuv_sse2.c",
+    "yuv_sse41.c",
   })
 
   files("ext/libwebp/src/utils/*.c")

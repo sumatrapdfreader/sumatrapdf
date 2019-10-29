@@ -442,12 +442,15 @@
     <ClCompile Include="..\ext\libwebp\src\dec\webp_dec.c" />
     <ClCompile Include="..\ext\libwebp\src\dsp\alpha_processing.c" />
     <ClCompile Include="..\ext\libwebp\src\dsp\alpha_processing_sse2.c" />
+    <ClCompile Include="..\ext\libwebp\src\dsp\alpha_processing_sse41.c" />
     <ClCompile Include="..\ext\libwebp\src\dsp\cost.c" />
     <ClCompile Include="..\ext\libwebp\src\dsp\cpu.c" />
     <ClCompile Include="..\ext\libwebp\src\dsp\dec.c" />
     <ClCompile Include="..\ext\libwebp\src\dsp\dec_clip_tables.c" />
     <ClCompile Include="..\ext\libwebp\src\dsp\dec_sse2.c" />
+    <ClCompile Include="..\ext\libwebp\src\dsp\dec_sse41.c" />
     <ClCompile Include="..\ext\libwebp\src\dsp\filters.c" />
+    <ClCompile Include="..\ext\libwebp\src\dsp\filters_sse2.c" />
     <ClCompile Include="..\ext\libwebp\src\dsp\lossless.c" />
     <ClCompile Include="..\ext\libwebp\src\dsp\lossless_sse2.c" />
     <ClCompile Include="..\ext\libwebp\src\dsp\rescaler.c" />
@@ -456,8 +459,10 @@
     <ClCompile Include="..\ext\libwebp\src\dsp\ssim_sse2.c" />
     <ClCompile Include="..\ext\libwebp\src\dsp\upsampling.c" />
     <ClCompile Include="..\ext\libwebp\src\dsp\upsampling_sse2.c" />
+    <ClCompile Include="..\ext\libwebp\src\dsp\upsampling_sse41.c" />
     <ClCompile Include="..\ext\libwebp\src\dsp\yuv.c" />
     <ClCompile Include="..\ext\libwebp\src\dsp\yuv_sse2.c" />
+    <ClCompile Include="..\ext\libwebp\src\dsp\yuv_sse41.c" />
     <ClCompile Include="..\ext\libwebp\src\utils\bit_reader_utils.c" />
     <ClCompile Include="..\ext\libwebp\src\utils\bit_writer_utils.c" />
     <ClCompile Include="..\ext\libwebp\src\utils\color_cache_utils.c" />

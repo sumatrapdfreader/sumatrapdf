@@ -48,6 +48,9 @@
     <ClCompile Include="..\ext\libwebp\src\dsp\alpha_processing_sse2.c">
       <Filter>dsp</Filter>
     </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dsp\alpha_processing_sse41.c">
+      <Filter>dsp</Filter>
+    </ClCompile>
     <ClCompile Include="..\ext\libwebp\src\dsp\cost.c">
       <Filter>dsp</Filter>
     </ClCompile>
@@ -63,7 +66,13 @@
     <ClCompile Include="..\ext\libwebp\src\dsp\dec_sse2.c">
       <Filter>dsp</Filter>
     </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dsp\dec_sse41.c">
+      <Filter>dsp</Filter>
+    </ClCompile>
     <ClCompile Include="..\ext\libwebp\src\dsp\filters.c">
+      <Filter>dsp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dsp\filters_sse2.c">
       <Filter>dsp</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\libwebp\src\dsp\lossless.c">
@@ -90,10 +99,16 @@
     <ClCompile Include="..\ext\libwebp\src\dsp\upsampling_sse2.c">
       <Filter>dsp</Filter>
     </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dsp\upsampling_sse41.c">
+      <Filter>dsp</Filter>
+    </ClCompile>
     <ClCompile Include="..\ext\libwebp\src\dsp\yuv.c">
       <Filter>dsp</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\libwebp\src\dsp\yuv_sse2.c">
+      <Filter>dsp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dsp\yuv_sse41.c">
       <Filter>dsp</Filter>
     </ClCompile>
     <ClCompile Include="..\ext\libwebp\src\utils\bit_reader_utils.c">
