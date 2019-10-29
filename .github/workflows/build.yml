@@ -17,3 +17,9 @@ jobs:
         env:
           CERT_PWD: ${{ secrets.CERT_PWD }}
         run: .\doit.bat -ci
+
+      - name: Upload artifacts
+      - uses: actions/upload-artifact@master
+        with:
+          name: SumatraPDF
+          path: artifacts

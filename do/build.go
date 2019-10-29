@@ -88,38 +88,6 @@ func buildLzsa() {
 	signMust(path)
 }
 
-// the things we do on GitHub Actions CI
-func ciBuild() {
-	// early exit if missing
-	detectSigntoolPath()
-	getCertPwd()
-
-	defer makePrintDuration("ciBuild")()
-	clean()
-
-	lzsa := absPathMust(filepath.Join("bin", "MakeLZSA.exe"))
-	u.PanicIf(!u.FileExists(lzsa), "file '%s' doesn't exist", lzsa)
-
-	msbuildPath := detectMsbuildPath()
-	runExeLoggedMust(msbuildPath, `vs2019\SumatraPDF.sln`, `/t:all;Installer`, `/p:Configuration=Release;Platform=Win32`, `/m`)
-
-	runTestUtilMust(pj("out", "rel32"))
-	runExeLoggedMust(msbuildPath, `vs2019\SumatraPDF.sln`, `/t:SumatraPDF;Installer;test_util`, `/p:Configuration=Release;Platform=x64`, `/m`)
-	runTestUtilMust(pj("out", "rel64"))
-
-	{
-		cmd := exec.Command(lzsa, "SumatraPDF.pdb.lzsa", "libmupdf.pdb:libmupdf.pdb", "Installer.pdb:Installer.pdb", "SumatraPDF-mupdf-dll.pdb:SumatraPDF-mupdf-dll.pdb", "SumatraPDF.pdb:SumatraPDF.pdb")
-		cmd.Dir = pj("out", "rel32")
-		u.RunCmdLoggedMust(cmd)
-	}
-
-	{
-		cmd := exec.Command(lzsa, "SumatraPDF.pdb.lzsa", "libmupdf.pdb:libmupdf.pdb", "Installer.pdb:Installer.pdb", "SumatraPDF-mupdf-dll.pdb:SumatraPDF-mupdf-dll.pdb", "SumatraPDF.pdb:SumatraPDF.pdb")
-		cmd.Dir = pj("out", "rel64")
-		u.RunCmdLoggedMust(cmd)
-	}
-}
-
 // smoke build is meant to be run locally to check that we can build everything
 // it does full installer build of 64-bit release build
 // We don't build other variants for speed. It takes about 5 mins locally
@@ -253,11 +221,7 @@ func createPdbLzsaMust(dir string) {
 	u.RunCmdLoggedMust(cmd)
 }
 
-func manifestPath() string {
-	return filepath.Join("out", "rel32", "manifest.txt")
-}
-
-// manifest is build for pre-release builds and contains build stats
+// manifest is build for pre-release builds and contains information about file sizes
 func createManifestMust() {
 	var lines []string
 	files := []string{
@@ -281,8 +245,8 @@ func createManifestMust() {
 		}
 	}
 	s := strings.Join(lines, "\n")
-	err := ioutil.WriteFile(manifestPath(), []byte(s), 0644)
-	fatalIfErr(err)
+	path := filepath.Join(artifactsDir, "manifest.txt")
+	u.WriteFileMust(path, []byte(s))
 }
 
 func buildPreRelease() {
@@ -309,18 +273,12 @@ func buildPreRelease() {
 	msbuildPath := detectMsbuildPath()
 	slnPath := filepath.Join("vs2019", "SumatraPDF.sln")
 
+	// we want to sign files inside the installer, so we have to
 	runExeLoggedMust(msbuildPath, slnPath, `/t:SumatraPDF;SumatraPDF-mupdf-dll;PdfFilter;PdfPreview;Uninstaller;test_util`, `/p:Configuration=Release;Platform=Win32`, `/m`)
 
 	dir := pj("out", "rel32")
 	runTestUtilMust(dir)
-	{
-		signMust(pj(dir, "SumatraPDF.exe"))
-		signMust(pj(dir, "libmupdf.dll"))
-		signMust(pj(dir, "PdfFilter.dll"))
-		signMust(pj(dir, "PdfPreview.dll"))
-		signMust(pj(dir, "SumatraPDF-mupdf-dll.exe"))
-		signMust(pj(dir, "Uninstaller.exe"))
-	}
+	signFilesMust(dir)
 
 	runExeLoggedMust(msbuildPath, slnPath, "/t:Installer", "/p:Configuration=Release;Platform=Win32", "/m")
 
@@ -330,13 +288,7 @@ func buildPreRelease() {
 
 	dir = pj("out", "rel64")
 	runTestUtilMust(dir)
-	signMust(pj(dir, "SumatraPDF.exe"))
-	signMust(pj(dir, "libmupdf.dll"))
-	signMust(pj(dir, "SumatraPDF-mupdf-dll.exe"))
-	signMust(pj(dir, "Uninstaller.exe"))
-	// TODO: why am I building 32-bit dlls?
-	signMust(pj("out", "rel32", "PdfFilter.dll"))
-	signMust(pj("out", "rel32", "PdfPreview.dll"))
+	signFilesMust(dir)
 
 	runExeLoggedMust(msbuildPath, slnPath, "/t:Installer", "/p:Configuration=Release;Platform=x64", "/m")
 	signMust(pj("out", "rel64", "Installer.exe"))
@@ -347,9 +299,49 @@ func buildPreRelease() {
 	createPdbLzsaMust(pj("out", "rel32"))
 	createPdbLzsaMust(pj("out", "rel64"))
 
+	copyArtifacts()
 	createManifestMust()
 
 	s3UploadPreReleaseMust(svnPreReleaseVer)
+}
+
+const (
+	artifactsDir = "artifacts"
+)
+
+var (
+	artifactFiles = []string{
+		"Installer.exe",
+		"SumatraPDF.exe",
+		"SumatraPDF.pdb.lzsa",
+		"SumatraPDF.pdb.zip",
+	}
+)
+
+// TODO: add version number to file names (like "Installer-3.2.0-pre3333")
+// TODO: make "SumatraPDF.exe.zip" from "SumatraPDF.exe", for smaller downloads
+func copyArtifactsFiles(dstDir, srcDir string) {
+	u.CreateDirIfNotExistsMust(dstDir)
+	for _, f := range artifactFiles {
+		src := filepath.Join(srcDir, f)
+		dst := filepath.Join(dstDir, f)
+		u.CopyFileMust(dst, src)
+	}
+}
+
+// This is for the benefit of GitHub Actions: copy files to artifacts directory
+func copyArtifacts() {
+	copyArtifactsFiles(pj(artifactsDir, "32"), pj("out", "rel32"))
+	copyArtifactsFiles(pj(artifactsDir, "64"), pj("out", "rel64"))
+}
+
+func signFilesMust(dir string) {
+	signMust(pj(dir, "SumatraPDF.exe"))
+	signMust(pj(dir, "libmupdf.dll"))
+	signMust(pj(dir, "PdfFilter.dll"))
+	signMust(pj(dir, "PdfPreview.dll"))
+	signMust(pj(dir, "SumatraPDF-mupdf-dll.exe"))
+	signMust(pj(dir, "Uninstaller.exe"))
 }
 
 func buildRelease() {

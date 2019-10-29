@@ -7071,11 +7071,11 @@ const char * gTranslations_hu =
   "Nyomtat\303\241s\0";
 
 const char * gTranslations_id = 
-  "Tent&ang\0"\
-  "Ukur&an Sebenarnya\tCtrl+1\0"\
-  "Peng&aturan Lanjutan...\0"\
+  "&Tentang\0"\
+  "&Ukuran Sebenarnya\tCtrl+1\0"\
+  "&Pilihan Lanjutan...\0"\
   "&Semua halaman terpilih\0"\
-  "Kem&bali\tAlt+<-\0"\
+  "&Kembali\tAlt+<-\0"\
   "Tampilan &Buku\tCtrl+8\0"\
   "&Tutup\tCtrl+W\0"\
   "&Salin Seleksi\0"\
@@ -7137,7 +7137,7 @@ const char * gTranslations_id =
   "Lampiran: %s\0"\
   "Pengarang:\0"\
   "Otomatis\0"\
-  "Periksa pembar&uan secara otomatis\0"\
+  "Periksa &pembaruan secara otomatis\0"\
   "Tampilan Buku\0"\
   "&Markah\tF12\0"\
   "Jalan Pintas Markah\0"\

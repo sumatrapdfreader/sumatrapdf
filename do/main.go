@@ -77,12 +77,13 @@ func main() {
 		return
 	}
 
+	detectVersions()
+
 	if flgCIBuild {
-		ciBuild()
+		// ci build does the same thing as pre-release
+		buildPreRelease()
 		return
 	}
-
-	detectVersions()
 
 	if flgBuildPreRelease {
 		buildPreRelease()
