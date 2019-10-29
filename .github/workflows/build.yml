@@ -19,7 +19,7 @@ jobs:
         run: .\doit.bat -ci
 
       - name: Upload artifacts
-      - uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@master
         with:
           name: SumatraPDF
           path: artifacts
