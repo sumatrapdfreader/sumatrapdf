@@ -48,11 +48,13 @@ func main() {
 		flgCIBuild         bool
 		flgBuildLzsa       bool
 		flgBuildPreRelease bool
+		flgSmoke           bool
 	)
 
 	{
 		flag.BoolVar(&flgRegenPremake, "regen-premake", false, "regenerage premake*.lua files")
 		flag.BoolVar(&flgCIBuild, "ci", false, "run CI steps")
+		flag.BoolVar(&flgSmoke, "smoke", false, "run smoke build (installer for 64bit release)")
 		flag.BoolVar(&flgBuildPreRelease, "build-pre-release", false, "build pre-release")
 		flag.BoolVar(&flgBuildLzsa, "build-lzsa", false, "build MakeLZSA.exe")
 		flag.BoolVar(&flgNoCleanCheck, "no-clean-check", false, "allow running if repo has changes (for testing build script)")
@@ -67,6 +69,11 @@ func main() {
 
 	if flgBuildLzsa {
 		buildLzsa()
+		return
+	}
+
+	if flgSmoke {
+		smokeBuild()
 		return
 	}
 

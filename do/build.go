@@ -120,6 +120,29 @@ func ciBuild() {
 	}
 }
 
+// smoke build is meant to be run locally to check that we can build everything
+// it does full installer build of 64-bit release build
+// We don't build other variants for speed. It takes about 5 mins locally
+func smokeBuild() {
+	detectSigntoolPath()
+	getCertPwd()
+	defer makePrintDuration("smoke build")()
+	clean()
+
+	lzsa := absPathMust(filepath.Join("bin", "MakeLZSA.exe"))
+	u.PanicIf(!u.FileExists(lzsa), "file '%s' doesn't exist", lzsa)
+
+	msbuildPath := detectMsbuildPath()
+	runExeLoggedMust(msbuildPath, `vs2019\SumatraPDF.sln`, `/t:Installer;Uninstaller;test_util`, `/p:Configuration=Release;Platform=x64`, `/m`)
+	runTestUtilMust(pj("out", "rel64"))
+
+	{
+		cmd := exec.Command(lzsa, "SumatraPDF.pdb.lzsa", "libmupdf.pdb:libmupdf.pdb", "Installer.pdb:Installer.pdb", "SumatraPDF-mupdf-dll.pdb:SumatraPDF-mupdf-dll.pdb")
+		cmd.Dir = pj("out", "rel64")
+		u.RunCmdLoggedMust(cmd)
+	}
+}
+
 // TOOD: alternatively, just puts pigz.exe in the repo
 func downloadPigzMust() {
 	// TODO: for some reason doesn't work with https
