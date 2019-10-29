@@ -1,0 +1,29 @@
+
+Generate libwebp Container Spec Docs from Text Source
+=====================================================
+
+HTML generation requires kramdown [1], easily installed as a
+rubygem [2].  Rubygems installation should satisfy dependencies
+automatically.
+
+[1]: http://kramdown.rubyforge.org/
+[2]: http://rubygems.org/
+
+HTML generation can then be done from the project root:
+
+$ kramdown doc/webp-container-spec.txt --template doc/template.html > \
+  doc/output/webp-container-spec.html
+
+kramdown can optionally syntax highlight code blocks, using CodeRay [3],
+a dependency of kramdown that rubygems will install automatically.  The
+following will apply inline CSS styling; an external stylesheet is not
+needed.
+
+$ kramdown doc/webp-lossless-bitstream-spec.txt --template \
+  doc/template.html --coderay-css style --coderay-line-numbers ' ' \
+  --coderay-default-lang c > \
+  doc/output/webp-lossless-bitstream-spec.html
+
+Optimally, use kramdown 0.13.7 or newer if syntax highlighting desired.
+
+[3]: http://coderay.rubychan.de/

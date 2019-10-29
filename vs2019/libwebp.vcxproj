@@ -207,7 +207,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4800;4204;4244;4057;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4800;4204;4244;4057;4245;4310;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;DEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\libwebp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
@@ -229,7 +229,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4800;4204;4244;4057;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4800;4204;4244;4057;4245;4310;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;DEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\libwebp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
@@ -252,7 +252,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4800;4204;4244;4057;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4800;4204;4244;4057;4245;4310;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;DEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\libwebp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
@@ -274,7 +274,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4800;4204;4244;4057;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4800;4204;4244;4057;4245;4310;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\libwebp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -300,7 +300,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4800;4204;4244;4057;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4800;4204;4244;4057;4245;4310;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\libwebp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -327,7 +327,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4800;4204;4244;4057;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4800;4204;4244;4057;4245;4310;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\libwebp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -352,7 +352,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4800;28125;28252;28253;4204;4244;4057;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4800;28125;28252;28253;4204;4244;4057;4245;4310;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\libwebp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -379,7 +379,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4800;28125;28252;28253;4204;4244;4057;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4800;28125;28252;28253;4204;4244;4057;4245;4310;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\libwebp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -406,7 +406,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4800;28125;28252;28253;4204;4244;4057;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4800;28125;28252;28253;4204;4244;4057;4245;4310;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\libwebp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -430,37 +430,46 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\ext\libwebp\dec\alpha.c" />
-    <ClCompile Include="..\ext\libwebp\dec\buffer.c" />
-    <ClCompile Include="..\ext\libwebp\dec\frame.c" />
-    <ClCompile Include="..\ext\libwebp\dec\idec.c" />
-    <ClCompile Include="..\ext\libwebp\dec\io.c" />
-    <ClCompile Include="..\ext\libwebp\dec\quant.c" />
-    <ClCompile Include="..\ext\libwebp\dec\tree.c" />
-    <ClCompile Include="..\ext\libwebp\dec\vp8.c" />
-    <ClCompile Include="..\ext\libwebp\dec\vp8l.c" />
-    <ClCompile Include="..\ext\libwebp\dec\webp.c" />
-    <ClCompile Include="..\ext\libwebp\dsp\alpha_processing.c" />
-    <ClCompile Include="..\ext\libwebp\dsp\alpha_processing_sse2.c" />
-    <ClCompile Include="..\ext\libwebp\dsp\cpu.c" />
-    <ClCompile Include="..\ext\libwebp\dsp\dec.c" />
-    <ClCompile Include="..\ext\libwebp\dsp\dec_clip_tables.c" />
-    <ClCompile Include="..\ext\libwebp\dsp\dec_sse2.c" />
-    <ClCompile Include="..\ext\libwebp\dsp\lossless.c" />
-    <ClCompile Include="..\ext\libwebp\dsp\lossless_sse2.c" />
-    <ClCompile Include="..\ext\libwebp\dsp\upsampling.c" />
-    <ClCompile Include="..\ext\libwebp\dsp\upsampling_sse2.c" />
-    <ClCompile Include="..\ext\libwebp\dsp\yuv.c" />
-    <ClCompile Include="..\ext\libwebp\dsp\yuv_sse2.c" />
-    <ClCompile Include="..\ext\libwebp\utils\bit_reader.c" />
-    <ClCompile Include="..\ext\libwebp\utils\color_cache.c" />
-    <ClCompile Include="..\ext\libwebp\utils\filters.c" />
-    <ClCompile Include="..\ext\libwebp\utils\huffman.c" />
-    <ClCompile Include="..\ext\libwebp\utils\quant_levels_dec.c" />
-    <ClCompile Include="..\ext\libwebp\utils\random.c" />
-    <ClCompile Include="..\ext\libwebp\utils\rescaler.c" />
-    <ClCompile Include="..\ext\libwebp\utils\thread.c" />
-    <ClCompile Include="..\ext\libwebp\utils\utils.c" />
+    <ClCompile Include="..\ext\libwebp\src\dec\alpha_dec.c" />
+    <ClCompile Include="..\ext\libwebp\src\dec\buffer_dec.c" />
+    <ClCompile Include="..\ext\libwebp\src\dec\frame_dec.c" />
+    <ClCompile Include="..\ext\libwebp\src\dec\idec_dec.c" />
+    <ClCompile Include="..\ext\libwebp\src\dec\io_dec.c" />
+    <ClCompile Include="..\ext\libwebp\src\dec\quant_dec.c" />
+    <ClCompile Include="..\ext\libwebp\src\dec\tree_dec.c" />
+    <ClCompile Include="..\ext\libwebp\src\dec\vp8_dec.c" />
+    <ClCompile Include="..\ext\libwebp\src\dec\vp8l_dec.c" />
+    <ClCompile Include="..\ext\libwebp\src\dec\webp_dec.c" />
+    <ClCompile Include="..\ext\libwebp\src\dsp\alpha_processing.c" />
+    <ClCompile Include="..\ext\libwebp\src\dsp\alpha_processing_sse2.c" />
+    <ClCompile Include="..\ext\libwebp\src\dsp\cost.c" />
+    <ClCompile Include="..\ext\libwebp\src\dsp\cpu.c" />
+    <ClCompile Include="..\ext\libwebp\src\dsp\dec.c" />
+    <ClCompile Include="..\ext\libwebp\src\dsp\dec_clip_tables.c" />
+    <ClCompile Include="..\ext\libwebp\src\dsp\dec_sse2.c" />
+    <ClCompile Include="..\ext\libwebp\src\dsp\filters.c" />
+    <ClCompile Include="..\ext\libwebp\src\dsp\lossless.c" />
+    <ClCompile Include="..\ext\libwebp\src\dsp\lossless_sse2.c" />
+    <ClCompile Include="..\ext\libwebp\src\dsp\rescaler.c" />
+    <ClCompile Include="..\ext\libwebp\src\dsp\rescaler_sse2.c" />
+    <ClCompile Include="..\ext\libwebp\src\dsp\ssim.c" />
+    <ClCompile Include="..\ext\libwebp\src\dsp\ssim_sse2.c" />
+    <ClCompile Include="..\ext\libwebp\src\dsp\upsampling.c" />
+    <ClCompile Include="..\ext\libwebp\src\dsp\upsampling_sse2.c" />
+    <ClCompile Include="..\ext\libwebp\src\dsp\yuv.c" />
+    <ClCompile Include="..\ext\libwebp\src\dsp\yuv_sse2.c" />
+    <ClCompile Include="..\ext\libwebp\src\utils\bit_reader_utils.c" />
+    <ClCompile Include="..\ext\libwebp\src\utils\bit_writer_utils.c" />
+    <ClCompile Include="..\ext\libwebp\src\utils\color_cache_utils.c" />
+    <ClCompile Include="..\ext\libwebp\src\utils\filters_utils.c" />
+    <ClCompile Include="..\ext\libwebp\src\utils\huffman_encode_utils.c" />
+    <ClCompile Include="..\ext\libwebp\src\utils\huffman_utils.c" />
+    <ClCompile Include="..\ext\libwebp\src\utils\quant_levels_dec_utils.c" />
+    <ClCompile Include="..\ext\libwebp\src\utils\quant_levels_utils.c" />
+    <ClCompile Include="..\ext\libwebp\src\utils\random_utils.c" />
+    <ClCompile Include="..\ext\libwebp\src\utils\rescaler_utils.c" />
+    <ClCompile Include="..\ext\libwebp\src\utils\thread_utils.c" />
+    <ClCompile Include="..\ext\libwebp\src\utils\utils.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,0 +1,5 @@
+.gitattributes export-ignore
+.gitignore export-ignore
+.mailmap export-ignore
+*.pdf -text -diff
+*.ppm -text -diff

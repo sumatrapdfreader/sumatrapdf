@@ -159,21 +159,30 @@ function openjpeg_files()
 end
 
 function libwebp_files()
-  files_in_dir("ext/libwebp/dec", {
-    "alpha.c", "buffer.c", "frame.c", "idec.c", "io.c", "quant.c",
-    "tree.c", "vp8.c", "vp8l.c", "webp.c",
+  files("ext/libwebp/src/dec/*.c")
+
+  files_in_dir("ext/libwebp/src/dsp", {
+    "alpha_processing.c", 
+    "alpha_processing_sse2.c",
+    "cost.c", 
+    "cpu.c", 
+    "dec.c", 
+    "dec_clip_tables.c",
+    "dec_sse2.c",
+    "filters.c",
+    "lossless.c",
+    "lossless_sse2.c",
+    "rescaler.c",
+    "rescaler_sse2.c",
+    "ssim.c",
+    "ssim_sse2.c",
+    "upsampling.c",
+    "upsampling_sse2.c",
+    "yuv.c",
+    "yuv_sse2.c",
   })
 
-  files_in_dir("ext/libwebp/dsp", {
-    "alpha_processing.c", "cpu.c", "dec.c", "dec_sse2.c", "lossless.c",
-    "lossless_sse2.c", "upsampling.c", "upsampling_sse2.c", "yuv.c",
-    "yuv_sse2.c", "dec_clip_tables.c", "alpha_processing_sse2.c",
-  })
-
-  files_in_dir("ext/libwebp/utils", {
-    "bit_reader.c", "color_cache.c", "filters.c", "huffman.c",
-    "quant_levels_dec.c", "rescaler.c", "thread.c", "utils.c", "random.c",
-  })
+  files("ext/libwebp/src/utils/*.c")
 end
 
 function libjpeg_turbo_files()

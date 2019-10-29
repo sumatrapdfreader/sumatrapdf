@@ -1,0 +1,80 @@
+     __   __ ____ ____ ____     __  ____
+    /  \\/  \  _ \  _ \  _ \   (__)/  __\
+    \       /  __/ _  \  __/   _)  \_   \
+     \__\__/_____/____/_/     /____/____/
+
+Description:
+============
+
+This file describes the compilation of libwebp into a JavaScript decoder
+using Emscripten and CMake.
+
+ - install the Emscripten SDK following the procedure described at:
+   https://kripken.github.io/emscripten-site/docs/getting_started/downloads.html
+   After installation, you should have some global variable positioned to the
+   location of the SDK. In particular, $EMSCRIPTEN should point to the
+   top-level directory containing Emscripten tools.
+
+ - make sure the file $EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake is
+   accessible. This is the toolchain file used by CMake to invoke Emscripten.
+   If $EMSCRIPTEN is unset search for Emscripten.cmake under $EMSDK and set
+   $EMSCRIPTEN accordingly, for example:
+   unix-like environments: export EMSCRIPTEN=$EMSDK/fastcomp/emscripten
+   windows: set EMSCRIPTEN=%EMSDK%\fastcomp\emscripten
+
+ - configure the project 'WEBP_JS' with CMake using:
+
+ cd webp_js && \
+ cmake -DWEBP_BUILD_WEBP_JS=ON \
+       -DEMSCRIPTEN_GENERATE_BITCODE_STATIC_LIBRARIES=1 \
+       -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake \
+       ../
+
+ - compile webp.js using 'make'.
+
+ - that's it! Upon completion, you should have the webp.js and
+   webp.js.mem files generated.
+
+The callable JavaScript function is WebPToSDL(), which decodes a raw WebP
+bitstream into a canvas. See webp_js/index.html for a simple usage sample
+(see below for instructions).
+
+Demo HTML page:
+===============
+
+   The HTML page webp_js/index.html requires an HTTP server to serve the WebP
+   image example. It's easy to just use Python for that.
+
+cd webp_js && python -m SimpleHTTPServer 8080
+
+and then navigate to http://localhost:8080 in your favorite browser.
+
+
+Web-Assembly (WASM) version:
+============================
+
+  CMakeLists.txt is configured to build the WASM version when using
+  the option WEBP_BUILD_WEBP_JS=ON. The compilation step will assemble
+  the files 'webp_wasm.js', 'webp_wasm.wasm' in the webp_js/ directory.
+  See webp_js/index_wasm.html for a simple demo page using the WASM version
+  of the library.
+
+  You will need a fairly recent version of Emscripten (at least 1.37.8) and of
+  your WASM-enabled browser to run this version. Consider it very experimental!
+
+Caveat:
+=======
+
+  - First decoding using the library is usually slower, due to just-in-time
+    compilation.
+
+  - Some versions of llvm produce the following compile error when SSE2 is
+    enabled.
+
+"Unsupported:   %516 = bitcast <8 x i16> %481 to i128
+ LLVM ERROR: BitCast Instruction not yet supported for integer types larger than 64 bits"
+
+    The corresponding Emscripten bug is at:
+    https://github.com/kripken/emscripten/issues/3788
+
+    Therefore, SSE2 optimization is currently disabled in CMakeLists.txt.
