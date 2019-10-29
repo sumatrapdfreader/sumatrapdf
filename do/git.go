@@ -82,5 +82,5 @@ func verifyOnMasterBranchMust() {
 	// 'git branch' return branch name in format: '* master'
 	out := runExeMust("git", "branch")
 	currBranch := getCurrentBranch(out)
-	u.PanicIf(currBranch != "master", "not on master branch (branch: '%s')\n", currBranch)
+	u.PanicIf(currBranch != "master", "not on master branch. out: '%s', currBranch: '%s'\n", string(out), currBranch)
 }
