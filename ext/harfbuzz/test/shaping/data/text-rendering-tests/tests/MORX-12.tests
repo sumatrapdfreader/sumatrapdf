@@ -1,0 +1,3 @@
+../fonts/TestMORXTwelve.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft:U+0058,U+0041,U+0042,U+0043,U+0058,U+0031:[X|C@598,0|A@1230,0|B@1868,0|X@2518,0|one@3116,0]
+../fonts/TestMORXTwelve.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft:U+0058,U+0041,U+0042,U+0043,U+0058,U+0032:[X|C@598,0|A@1230,0|B@1868,0|X@2518,0|two@3116,0]
+../fonts/TestMORXTwelve.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft:U+0058,U+0041,U+0042,U+0043,U+0058,U+0033:[X|B@598,0|C@1248,0|A@1880,0|X@2518,0|three@3116,0]

@@ -1,0 +1,115 @@
+<chapter id="what-is-harfbuzz">
+  <title>What is HarfBuzz?</title>
+  <para>
+    HarfBuzz is a <emphasis>text shaping engine</emphasis>. It solves
+    the problem of selecting and positioning glyphs from a font given a
+    Unicode string.
+  </para>
+  <section id="why-do-i-need-it">
+    <title>Why do I need it?</title>
+    <para>
+      Text shaping is an integral part of preparing text for display. It
+      is a fairly low level operation; HarfBuzz is used directly by
+      graphic rendering libraries such as Pango, and the layout engines
+      in Firefox, LibreOffice and Chromium. Unless you are
+      <emphasis>writing</emphasis> one of these layout engines yourself,
+      you will probably not need to use HarfBuzz - normally higher level
+      libraries will turn text into glyphs for you.
+    </para>
+    <para>
+      However, if you <emphasis>are</emphasis> writing a layout engine
+      or graphics library yourself, you will need to perform text
+      shaping, and this is where HarfBuzz can help you. Here are some
+      reasons why you need it:
+    </para>
+    <itemizedlist>
+      <listitem>
+        <para>
+          OpenType fonts contain a set of glyphs, indexed by glyph ID.
+          The glyph ID within the font does not necessarily relate to a
+          Unicode codepoint. For instance, some fonts have the letter
+          &quot;a&quot; as glyph ID 1. To pull the right glyph out of
+          the font in order to display it, you need to consult a table
+          within the font (the &quot;cmap&quot; table) which maps
+          Unicode codepoints to glyph IDs. Text shaping turns codepoints
+          into glyph IDs.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Many OpenType fonts contain ligatures: combinations of
+          characters which are rendered together. For instance, it's
+          common for the <literal>fi</literal> combination to appear in
+          print as the single ligature &quot;ﬁ&quot;. Whether you should
+          render text as <literal>fi</literal> or &quot;ﬁ&quot; does not
+          depend on the input text, but on the capabilities of the font
+          and the level of ligature application you wish to perform.
+          Text shaping involves querying the font's ligature tables and
+          determining what substitutions should be made.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          While ligatures like &quot;ﬁ&quot; are typographic
+          refinements, some languages <emphasis>require</emphasis> such
+          substitutions to be made in order to display text correctly.
+          In Tamil, when the letter &quot;TTA&quot; (ட) letter is
+          followed by &quot;U&quot; (உ), the combination should appear
+          as the single glyph &quot;டு&quot;. The sequence of Unicode
+          characters &quot;டஉ&quot; needs to be rendered as a single
+          glyph from the font - text shaping chooses the correct glyph
+          from the sequence of characters provided.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Similarly, each Arabic character has four different variants:
+          within a font, there will be glyphs for the initial, medial,
+          final, and isolated forms of each letter. Unicode only encodes
+          one codepoint per character, and so a Unicode string will not
+          tell you which glyph to use. Text shaping chooses the correct
+          form of the letter and returns the correct glyph from the font
+          that you need to render.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Other languages have marks and accents which need to be
+          rendered in certain positions around a base character. For
+          instance, the Moldovan language has the Cyrillic letter
+          &quot;zhe&quot; (ж) with a breve accent, like so: ӂ. Some
+          fonts will contain this character as an individual glyph,
+          whereas other fonts will not contain a zhe-with-breve glyph
+          but expect the rendering engine to form the character by
+          overlaying the two glyphs ж and ˘. Where you should draw the
+          combining breve depends on the height of the preceding glyph.
+          Again, for Arabic, the correct positioning of vowel marks
+          depends on the height of the character on which you are
+          placing the mark. Text shaping tells you whether you have a
+          precomposed glyph within your font or if you need to compose a
+          glyph yourself out of combining marks, and if so, where to
+          position those marks.
+        </para>
+      </listitem>
+    </itemizedlist>
+    <para>
+      If this is something that you need to do, then you need a text
+      shaping engine: you could use Uniscribe if you are using Windows;
+      you could use CoreText on OS X; or you could use HarfBuzz. In the
+      rest of this manual, we are going to assume that you are the
+      implementor of a text layout engine.
+    </para>
+  </section>
+  <section id="why-is-it-called-harfbuzz">
+    <title>Why is it called HarfBuzz?</title>
+    <para>
+      HarfBuzz began its life as text shaping code within the FreeType
+      project, (and you will see references to the FreeType authors
+      within the source code copyright declarations) but was then
+      abstracted out to its own project. This project is maintained by
+      Behdad Esfahbod, and named HarfBuzz. Originally, it was a shaping
+      engine for OpenType fonts - &quot;HarfBuzz&quot; is the Persian
+      for &quot;open type&quot;.
+    </para>
+  </section>
+</chapter>

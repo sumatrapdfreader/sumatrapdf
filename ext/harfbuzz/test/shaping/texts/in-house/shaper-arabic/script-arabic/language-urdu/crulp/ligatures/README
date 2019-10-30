@@ -1,0 +1,16 @@
+ORIGINAL README:
+
+Valid Ligatures of Urdu.
+
+In 1980 Mr. Ahmad Mirza Jamil has invented a ligature based Nastaleeq writing
+system. He has written about 18,000 valid ligatures of Urdu and developed a
+Noori Nastaliq font. Center for Research in Urdu Language Processing (CRULP) is
+releasing a soft copy of these ligatures in Unicode format. CRULP has
+extensively used these ligatures for testing the fonts developed at the center
+and realised that it will be a valuable resource for other font developers.
+These ligatures are grouped in 2 to 8 characters and are sorted in the end
+character order.
+
+These ligatures have been copied from a "Noori Nastaliq computerised Urdu
+calligraphy (list of ligatures)" calligraphically designed and compiled by
+Ahmad Mirza Jamil, Elite Publishers Limited, Karachi.

@@ -1,0 +1,2 @@
+../fonts/TestMORXTwentysix.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft:U+0041,U+0042:[A|B@639,0]
+../fonts/TestMORXTwentysix.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft:U+0042:[B.alt]

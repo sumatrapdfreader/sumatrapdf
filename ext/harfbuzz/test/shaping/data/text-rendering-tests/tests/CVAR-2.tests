@@ -1,0 +1,3 @@
+../fonts/TestCVARGVAROne.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft --variations=wght=28,wdth=100,opsz=72:U+0068,U+006F,U+006E:[uni0068|uni006F@595,0|uni006E@1126,0]
+../fonts/TestCVARGVAROne.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft --variations=wght=94,wdth=100,opsz=72:U+0068,U+006F,U+006E:[uni0068|uni006F@635,0|uni006E@1212,0]
+../fonts/TestCVARGVAROne.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft --variations=wght=194,wdth=100,opsz=72:U+0068,U+006F,U+006E:[uni0068|uni006F@691,0|uni006E@1331,0]

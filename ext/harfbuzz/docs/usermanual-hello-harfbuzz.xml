@@ -1,0 +1,183 @@
+<chapter id="hello-harfbuzz">
+  <title>Hello, HarfBuzz</title>
+  <para>
+    Here's the simplest HarfBuzz that can possibly work. We will improve
+    it later.
+  </para>
+  <orderedlist numeration="arabic">
+    <listitem>
+      <para>
+        Create a buffer and put your text in it.
+      </para>
+    </listitem>
+  </orderedlist>
+  <programlisting language="C">
+  #include &lt;hb.h&gt;
+  hb_buffer_t *buf;
+  buf = hb_buffer_create();
+  hb_buffer_add_utf8(buf, text, strlen(text), 0, strlen(text));
+</programlisting>
+  <orderedlist numeration="arabic">
+    <listitem override="2">
+      <para>
+        Guess the script, language and direction of the buffer.
+      </para>
+    </listitem>
+  </orderedlist>
+  <programlisting language="C">
+  hb_buffer_guess_segment_properties(buf);
+</programlisting>
+  <orderedlist numeration="arabic">
+    <listitem override="3">
+      <para>
+        Create a face and a font, using FreeType for now.
+      </para>
+    </listitem>
+  </orderedlist>
+  <programlisting language="C">
+  #include &lt;hb-ft.h&gt;
+  FT_New_Face(ft_library, font_path, index, &amp;face)
+  hb_font_t *font = hb_ft_font_create(face);
+</programlisting>
+  <orderedlist numeration="arabic">
+    <listitem override="4">
+      <para>
+        Shape!
+      </para>
+    </listitem>
+  </orderedlist>
+  <programlisting>
+  hb_shape(font, buf, NULL, 0);
+</programlisting>
+  <orderedlist numeration="arabic">
+    <listitem override="5">
+      <para>
+        Get the glyph and position information.
+      </para>
+    </listitem>
+  </orderedlist>
+  <programlisting language="C">
+  hb_glyph_info_t *glyph_info    = hb_buffer_get_glyph_infos(buf, &amp;glyph_count);
+  hb_glyph_position_t *glyph_pos = hb_buffer_get_glyph_positions(buf, &amp;glyph_count);
+</programlisting>
+  <orderedlist numeration="arabic">
+    <listitem override="6">
+      <para>
+        Iterate over each glyph.
+      </para>
+    </listitem>
+  </orderedlist>
+  <programlisting language="C">
+  for (i = 0; i &lt; glyph_count; ++i) {
+    glyphid = glyph_info[i].codepoint;
+    x_offset = glyph_pos[i].x_offset / 64.0;
+    y_offset = glyph_pos[i].y_offset / 64.0;
+    x_advance = glyph_pos[i].x_advance / 64.0;
+    y_advance = glyph_pos[i].y_advance / 64.0;
+    draw_glyph(glyphid, cursor_x + x_offset, cursor_y + y_offset);
+    cursor_x += x_advance;
+    cursor_y += y_advance;
+  }
+</programlisting>
+  <orderedlist numeration="arabic">
+    <listitem override="7">
+      <para>
+        Tidy up.
+      </para>
+    </listitem>
+  </orderedlist>
+  <programlisting language="C">
+  hb_buffer_destroy(buf);
+  hb_font_destroy(hb_ft_font);
+</programlisting>
+  <section id="what-harfbuzz-doesnt-do">
+    <title>What HarfBuzz doesn't do</title>
+    <para>
+      The code above will take a UTF8 string, shape it, and give you the
+      information required to lay it out correctly on a single
+      horizontal (or vertical) line using the font provided. That is the
+      extent of HarfBuzz's responsibility.
+    </para>
+    <para>
+      If you are implementing a text layout engine you may have other
+      responsibilities, that HarfBuzz will not help you with:
+    </para>
+    <itemizedlist>
+      <listitem>
+        <para>
+          HarfBuzz won't help you with bidirectionality. If you want to
+          lay out text with mixed Hebrew and English, you will need to
+          ensure that the buffer provided to HarfBuzz has those
+          characters in the correct layout order. This will be different
+          from the logical order in which the Unicode text is stored. In
+          other words, the user will hit the keys in the following
+          sequence:
+        </para>
+        <programlisting>
+A B C [space] ג ב א [space] D E F
+        </programlisting>
+        <para>
+          but will expect to see in the output:
+        </para>
+        <programlisting>
+ABC אבג DEF
+        </programlisting>
+        <para>
+          This reordering is called <emphasis>bidi processing</emphasis>
+          (&quot;bidi&quot; is short for bidirectional), and there's an
+          algorithm as an annex to the Unicode Standard which tells you how
+          to reorder a string from logical order into presentation order.
+          Before sending your string to HarfBuzz, you may need to apply the
+          bidi algorithm to it. Libraries such as ICU and fribidi can do
+          this for you.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          HarfBuzz won't help you with text that contains different font
+          properties. For instance, if you have the string &quot;a
+          <emphasis>huge</emphasis> breakfast&quot;, and you expect
+          &quot;huge&quot; to be italic, you will need to send three
+          strings to HarfBuzz: <literal>a</literal>, in your Roman font;
+          <literal>huge</literal> using your italic font; and
+          <literal>breakfast</literal> using your Roman font again.
+          Similarly if you change font, font size, script, language or
+          direction within your string, you will need to shape each run
+          independently and then output them independently. HarfBuzz
+          expects to shape a run of characters sharing the same
+          properties.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          HarfBuzz won't help you with line breaking, hyphenation or
+          justification. As mentioned above, it lays out the string
+          along a <emphasis>single line</emphasis> of, notionally,
+          infinite length. If you want to find out where the potential
+          word, sentence and line break points are in your text, you
+          could use the ICU library's break iterator functions.
+        </para>
+        <para>
+          HarfBuzz can tell you how wide a shaped piece of text is, which is
+          useful input to a justification algorithm, but it knows nothing
+          about paragraphs, lines or line lengths. Nor will it adjust the
+          space between words to fit them proportionally into a line. If you
+          want to layout text in paragraphs, you will probably want to send
+          each word of your text to HarfBuzz to determine its shaped width
+          after glyph substitutions, then work out how many words will fit
+          on a line, and then finally output each word of the line separated
+          by a space of the correct size to fully justify the paragraph.
+        </para>
+      </listitem>
+    </itemizedlist>
+    <para>
+      As a layout engine implementor, HarfBuzz will help you with the
+      interface between your text and your font, and that's something
+      that you'll need - what you then do with the glyphs that your font
+      returns is up to you. The example we saw above enough to get us
+      started using HarfBuzz. Now we are going to use the remainder of
+      HarfBuzz's API to refine that example and improve our text shaping
+      capabilities.
+    </para>
+  </section>
+</chapter>

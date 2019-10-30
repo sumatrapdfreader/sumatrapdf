@@ -1,0 +1,21 @@
+root = true
+
+[*]
+charset = utf-8
+trim_trailing_whitespace = true
+end_of_line = lf
+insert_final_newline = true
+
+[*.{c,cc,h,hh}]
+indent_size = 2
+indent_style = space
+tab_width = 8
+
+[*.{py,sh}]
+indent_style = tab
+
+[{Makefile.am,Makefile.sources,configure.ac}]
+tab_width = 8
+
+[{CMakeLists.txt,*.cmake}]
+indent_size = 2

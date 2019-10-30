@@ -1,0 +1,37 @@
+# Non-Unicode cmap
+tests/CMAP-3.tests
+
+# Not hooked up
+tests/MORX-1.tests
+tests/MORX-2.tests
+tests/MORX-3.tests
+tests/MORX-4.tests
+tests/MORX-5.tests
+tests/MORX-6.tests
+tests/MORX-7.tests
+tests/MORX-8.tests
+tests/MORX-9.tests
+tests/MORX-10.tests
+tests/MORX-11.tests
+tests/MORX-12.tests
+tests/MORX-13.tests
+tests/MORX-14.tests
+tests/MORX-16.tests
+tests/MORX-17.tests
+tests/MORX-18.tests
+tests/MORX-19.tests
+tests/MORX-20.tests
+tests/MORX-21.tests
+tests/MORX-22.tests
+tests/MORX-23.tests
+tests/MORX-25.tests
+tests/MORX-26.tests
+tests/MORX-27.tests
+tests/MORX-28.tests
+
+# Rounding differences
+tests/SHARAN-1.tests
+tests/SHBALI-1.tests
+tests/SHBALI-2.tests
+tests/SHKNDA-2.tests
+tests/SHKNDA-3.tests

@@ -1,0 +1,21 @@
+In order to build the fuzzer one needs to build HarfBuzz and
+harfbuzz/test/fuzzing/hb-fuzzer.cc with:
+  - Using the most recent Clang
+  - With -fsanitize=address (or =undefined, or a combination)
+  - With -fsanitize-coverage=edge[,8bit-counters,trace-cmp]
+  - With various defines that limit worst case exponential behavior.
+    See FUZZING_CPPFLAGS in harfbuzz/src/Makefile.am for the list.
+  - link against libFuzzer
+
+To run the fuzzer one needs to first obtain a test corpus as a directory
+containing interesting fonts.  A good starting point is inside
+harfbuzz/test/shaping/fonts/fonts/.
+Then, run the fuzzer like this:
+   ./hb-fuzzer -max_len=2048 CORPUS_DIR
+Where max_len specifies the maximal length of font files to handle.
+The smaller the faster.
+
+For more details consult the following locations:
+  - http://llvm.org/docs/LibFuzzer.html or
+  - https://github.com/google/libfuzzer-bot/tree/master/harfbuzz
+  - https://github.com/harfbuzz/harfbuzz/issues/139

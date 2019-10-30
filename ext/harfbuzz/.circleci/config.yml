@@ -1,0 +1,221 @@
+version: 2
+
+jobs:
+
+  macos-llvm-gcc-4.2:
+    macos:
+      xcode: "8.3.3"
+    steps:
+      - checkout
+      - run: brew update-reset
+      - run: brew install wget pkg-config libtool ragel freetype glib cairo
+      - run: wget https://packages.macports.org/llvm-gcc42/llvm-gcc42-2336.11_3+universal.darwin_15.i386-x86_64.tbz2 && tar zxvf llvm-gcc42-2336.11_3+universal.darwin_15.i386-x86_64.tbz2
+      - run: CC=$PWD/opt/local/bin/llvm-gcc-4.2 CXX=$PWD/opt/local/bin/llvm-g++-4.2 ./autogen.sh --with-freetype --with-glib --with-gobject --with-cairo
+      # Ignoring assembler complains, https://stackoverflow.com/a/39867021
+      - run: make 2>&1 | grep -v -e '^/var/folders/*' -e '^[[:space:]]*\.section' -e '^[[:space:]]*\^[[:space:]]*~*'
+      - run: make check || .ci/fail.sh
+
+  macos-notest-apple-gcc-i686-4.2:
+    macos:
+      xcode: "8.3.3"
+    steps:
+      - checkout
+      - run: brew update-reset
+      - run: brew install wget pkg-config libtool ragel
+      - run: wget https://packages.macports.org/apple-gcc42/apple-gcc42-5666.3_15+universal.darwin_15.i386-x86_64.tbz2 && tar zxvf apple-gcc42-5666.3_15+universal.darwin_15.i386-x86_64.tbz2
+      - run: CPP=$PWD/opt/local/bin/i686-apple-darwin15-cpp-apple-4.2.1 CC=$PWD/opt/local/bin/i686-apple-darwin15-gcc-apple-4.2.1 CXX=$PWD/opt/local/bin/i686-apple-darwin15-g++-apple-4.2.1 ./autogen.sh
+      # Ignoring assembler complains, https://stackoverflow.com/a/39867021
+      - run: make 2>&1 | grep -v -e '^/var/folders/*' -e '^[[:space:]]*\.section' -e '^[[:space:]]*\^[[:space:]]*~*'
+
+  distcheck:
+    docker:
+      - image: ubuntu:17.10
+    steps:
+      - checkout
+      - run: apt update && apt install -y ninja-build binutils libtool autoconf automake make cmake gcc g++ pkg-config ragel gtk-doc-tools libfreetype6-dev libglib2.0-dev libcairo2-dev libicu-dev libgraphite2-dev python python-pip
+      - run: pip install fonttools
+      - run: ./autogen.sh
+      - run: make
+      - run: make distcheck || .ci/fail.sh
+      - run: rm -rf harfbuzz-*
+      - run: make distdir && cd harfbuzz-* && cmake -DHB_CHECK=ON -Bbuild -H. -GNinja && ninja -Cbuild && CTEST_OUTPUT_ON_FAILURE=1 ninja -Cbuild test && ninja -Cbuild install
+
+  alpine-O3-NOMMAP:
+    docker:
+      - image: alpine
+    steps:
+      - checkout
+      - run: apk update && apk add ragel make pkgconfig libtool autoconf automake gettext gcc g++ glib-dev freetype-dev cairo-dev
+      # C??FLAGS are not needed for a regular build
+      - run: CFLAGS="-O3" CXXFLAGS="-O3 -DHB_NO_MMAP" ./autogen.sh
+      - run: make
+      - run: make check || .ci/fail.sh
+
+  archlinux-debug-O0-py3:
+    docker:
+      - image: base/devel
+    steps:
+      - checkout
+      - run: pacman --noconfirm -Syu freetype2 cairo icu gettext gobject-introspection gcc gcc-libs glib2 graphite pkg-config ragel python python-pip
+      - run: pip install fonttools
+      # C??FLAGS are not needed for a regular build
+      - run: CFLAGS="-O0" CXXFLAGS="-O0" CPPFLAGS="-DHB_DEBUG" ./autogen.sh --with-freetype --with-glib --with-gobject --with-cairo --with-icu --with-graphite2
+      - run: make
+      - run: make check || .ci/fail.sh
+
+  clang-O3-O0:
+    docker:
+      - image: multiarch/crossbuild
+    steps:
+      - checkout
+      - run: apt update || true
+      - run: apt install -y ragel libfreetype6-dev libglib2.0-dev libcairo2-dev libicu-dev libgraphite2-dev python python-pip
+      - run: pip install fonttools
+      - run: wget http://download.savannah.gnu.org/releases/freetype/freetype-2.9.tar.bz2 && tar xf freetype-2.9.tar.bz2 && cd freetype-2.9 && ./autogen.sh && ./configure && make -j4 && cd ..
+      - run: CFLAGS="-O3" CXXFLAGS="-O3" CC=clang CXX=clang++ ./autogen.sh --with-freetype --with-glib --with-cairo --with-icu --with-graphite2
+      - run: make
+      - run: LD_LIBRARY_PATH="$PWD/freetype-2.9/objs/.libs" make check || .ci/fail.sh
+      - run: CFLAGS="-O0" CXXFLAGS="-O0" CC=clang CXX=clang++ ./autogen.sh --with-freetype --with-glib --with-cairo --with-icu --with-graphite2
+      - run: make
+      - run: LD_LIBRARY_PATH="$PWD/freetype-2.9/objs/.libs" make check || .ci/fail.sh
+
+  fedora-outoftreebuild:
+    docker:
+      - image: fedora
+    steps:
+      - checkout
+      - run: dnf install -y pkg-config ragel gcc gcc-c++ automake autoconf libtool make which glib2-devel freetype-devel cairo-devel libicu-devel gobject-introspection-devel graphite2-devel redhat-rpm-config python || true
+      - run: NOCONFIGURE=1 ./autogen.sh --with-freetype --with-glib --with-gobject --with-cairo --with-icu --with-graphite2
+      - run: mkdir build && cd build && ../configure && make && (make check || ../.ci/fail.sh)
+
+  cmake-gcc:
+    docker:
+      - image: ubuntu:17.10
+    steps:
+      - checkout
+      - run: apt update && apt install -y ninja-build binutils cmake gcc g++ pkg-config ragel gtk-doc-tools libfreetype6-dev libglib2.0-dev libcairo2-dev libicu-dev libgraphite2-dev python python-pip
+      - run: pip install fonttools
+      - run: cmake -DHB_CHECK=ON -Bbuild -H. -GNinja
+      - run: ninja -Cbuild
+      - run: CTEST_OUTPUT_ON_FAILURE=1 ninja -Cbuild test
+      - run: ninja -Cbuild install
+
+  cmake-oracledeveloperstudio:
+    docker:
+      - image: fedora
+    steps:
+      - checkout
+      - run: dnf install -y gcc ragel cmake make which glib2-devel freetype-devel cairo-devel libicu-devel graphite2-devel wget tar bzip2 python libnsl || true
+      - run: wget http://$ODSUSER:$ODSPASS@behdad.org/harfbuzz-private/OracleDeveloperStudio12.6-linux-x86-bin.tar.bz2 && tar xf OracleDeveloperStudio12.6-linux-x86-bin.tar.bz2 --owner root --group root --no-same-owner
+      - run: CC=/root/project/OracleDeveloperStudio12.6-linux-x86-bin/developerstudio12.6/bin/suncc CXX=/root/project/OracleDeveloperStudio12.6-linux-x86-bin/developerstudio12.6/bin/sunCC cmake -DHB_HAVE_GRAPHITE2=ON -DHB_BUILTIN_UCDN=ON -DHB_HAVE_GLIB=ON -DHB_HAVE_FREETYPE=ON -Bbuild -H.
+      - run: make -Cbuild
+      - run: CTEST_OUTPUT_ON_FAILURE=1 make -Cbuild test
+      - run: make -Cbuild install
+
+  crosscompile-notest-djgpp:
+    docker:
+      - image: quay.io/ebraminio/djgpp
+    steps:
+      - checkout
+      - run: apt update && apt install -y ragel pkg-config libtool autoconf
+      - run: CFLAGS="-Wno-attributes" CXXFLAGS="-Wno-attributes" ./autogen.sh --prefix=/usr/local/djgpp --host=i586-pc-msdosdjgpp
+      - run: make
+
+  crosscompile-notest-freebsd9:
+    docker:
+      - image: donbowman/freebsd-cross-build
+    steps:
+      - checkout
+      - run: apt update && apt install -y pkg-config ragel
+      - run: ./autogen.sh --prefix=/freebsd --host=x86_64-pc-freebsd9
+      - run: make
+
+  crosscompile-notest-psvita:
+    docker:
+      - image: dockcross/base
+    steps:
+      - checkout
+      - run: apt update && apt install ragel
+      - run: git clone https://github.com/vitasdk/vdpm && cd vdpm && ./bootstrap-vitasdk.sh
+      - run: ./autogen.sh --prefix=/usr/local/vitasdk/arm-vita-eabi --host=arm-vita-eabi
+      - run: make
+
+  crosscompile-cmake-notest-android-arm:
+    docker:
+      - image: dockcross/android-arm
+    steps:
+      - checkout
+      - run: apt update && apt install ragel
+      - run: cmake -Bbuild -H. -GNinja
+      - run: ninja -Cbuild
+
+  crosscompile-cmake-notest-browser-asmjs:
+    docker:
+      - image: dockcross/browser-asmjs
+    steps:
+      - checkout
+      - run: apt update && apt install ragel
+      - run: cmake -Bbuild -H. -GNinja
+      - run: ninja -Cbuild
+
+  crosscompile-cmake-notest-linux-arm64:
+    docker:
+      - image: dockcross/linux-arm64
+    steps:
+      - checkout
+      - run: apt update && apt install ragel
+      - run: cmake -Bbuild -H. -GNinja
+      - run: ninja -Cbuild
+
+  crosscompile-cmake-notest-linux-mips:
+    docker:
+      - image: dockcross/linux-mips
+    steps:
+      - checkout
+      - run: apt update && apt install ragel
+      - run: cmake -Bbuild -H. -GNinja
+      - run: ninja -Cbuild
+
+  crosscompile-cmake-notest-windows-x64:
+    docker:
+      - image: dockcross/windows-x64
+    steps:
+      - checkout
+      - run: apt update && apt install ragel
+      - run: cmake -Bbuild -H. -GNinja
+      - run: ninja -Cbuild
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      # macOS
+      - macos-llvm-gcc-4.2
+      - macos-notest-apple-gcc-i686-4.2
+
+      # both autotools and cmake
+      - distcheck
+
+      # autotools based builds
+      - alpine-O3-NOMMAP
+      - archlinux-debug-O0-py3
+      - clang-O3-O0
+      - fedora-outoftreebuild
+
+      # cmake based builds
+      - cmake-gcc
+      - cmake-oracledeveloperstudio
+
+      # crosscompiles
+      # they can't be test thus are without tests
+      ## autotools
+      - crosscompile-notest-djgpp
+      - crosscompile-notest-freebsd9
+      - crosscompile-notest-psvita
+
+      ## cmake
+      - crosscompile-cmake-notest-android-arm
+      - crosscompile-cmake-notest-browser-asmjs
+      - crosscompile-cmake-notest-linux-arm64
+      - crosscompile-cmake-notest-linux-mips
+      - crosscompile-cmake-notest-windows-x64

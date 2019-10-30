@@ -1,0 +1,6 @@
+../fonts/f443753e8ffe8e8aae606cfba158e00334b6efb1.ttf::U+179A,U+1784,U+17D2,U+179F,U+200C,U+17CA,U+17B8,U+0020:[uni179a=0+775|uni1784=1+1550|uni179f.sub=1+775|space=1+0|uni17ca=1+0|uni17b8=1@0,300+0|space=7+600]
+../fonts/f443753e8ffe8e8aae606cfba158e00334b6efb1.ttf::U+179A,U+1784,U+17D2,U+179F,U+17CA,U+17B8:[uni179a=0+775|uni1784=1+1550|uni179f.sub=1+775|uni17bb=1@-75,-700+0|uni17b8=1+0]
+../fonts/8116e5d8fedfbec74e45dc350d2416d810bed8c4.ttf:--font-funcs=ft:U+091F,U+094D,U+200C,U+092F,U+093F:[uni091F=0+876|uni094D=0@4,0+0|space=0+0|uni093F.750=3+397|uni092F=3+924]
+../fonts/8116e5d8fedfbec74e45dc350d2416d810bed8c4.ttf:--font-funcs=ft:U+091F,U+094D,U+200D,U+092F,U+093F:[uni093F=0+398|uni091F=0+876|uni094D=0@4,0+0|space=0+0|uni092F=0+924]
+../fonts/8116e5d8fedfbec74e45dc350d2416d810bed8c4.ttf:--font-funcs=ft:U+091F,U+094D,U+200D,U+091F,U+094D,U+200C,U+091F,U+094D,U+200D,U+092F,U+093F:[uni091F=0+876|uni094D=0@4,0+0|space=0+0|uni091F=3+876|uni094D=3@4,0+0|space=3+0|uni093F=6+398|uni091F=6+876|uni094D=6@4,0+0|space=6+0|uni092F=6+924]
+../fonts/8116e5d8fedfbec74e45dc350d2416d810bed8c4.ttf:--font-funcs=ft:U+091F,U+094D,U+200D,U+091F,U+094D,U+200D,U+091F,U+094D,U+200D,U+092F,U+093F:[uni093F=0+398|uni091F=0+876|uni094D=0@4,0+0|space=0+0|uni091F=0+876|uni094D=0@4,0+0|space=0+0|uni091F=0+876|uni094D=0@4,0+0|space=0+0|uni092F=0+924]

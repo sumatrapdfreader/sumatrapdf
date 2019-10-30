@@ -1,0 +1,3 @@
+../fonts/TestGPOSTwo.otf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft:U+25EF:[uni25EF]
+../fonts/TestGPOSTwo.otf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft:U+263C:[sun]
+../fonts/TestGPOSTwo.otf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft:U+25EF,U+263C:[uni25EF|sun]

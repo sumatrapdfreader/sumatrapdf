@@ -1,0 +1,37 @@
+HB_VIEW_sources = \
+	hb-view.cc \
+	options.cc \
+	options.hh \
+	main-font-text.hh \
+	shape-consumer.hh \
+	ansi-print.cc \
+	ansi-print.hh \
+	helper-cairo.cc \
+	helper-cairo.hh \
+	helper-cairo-ansi.cc \
+	helper-cairo-ansi.hh \
+	view-cairo.cc \
+	view-cairo.hh \
+	$(NULL)
+
+HB_SHAPE_sources = \
+	hb-shape.cc \
+	options.cc \
+	options.hh \
+	main-font-text.hh \
+	shape-consumer.hh \
+	$(NULL)
+
+HB_OT_SHAPE_CLOSURE_sources = \
+	hb-ot-shape-closure.cc \
+	options.cc \
+	options.hh \
+	main-font-text.hh \
+	$(NULL)
+
+HB_SUBSET_CLI_sources = \
+	hb-subset.cc \
+	options.cc \
+	options.hh \
+	main-font-text.hh \
+	$(NULL)

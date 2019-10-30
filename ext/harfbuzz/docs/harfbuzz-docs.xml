@@ -1,0 +1,210 @@
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+               "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd" [
+  <!ENTITY % local.common.attrib "xmlns:xi  CDATA  #FIXED 'http://www.w3.org/2003/XInclude'">
+  <!ENTITY version SYSTEM "version.xml">
+]>
+<book id="index">
+  <bookinfo>
+    <title>HarfBuzz Manual</title>
+    <abstract>
+      <title>HarfBuzz</title>
+      <graphic fileref="HarfBuzz.png" format="PNG" align="center"/>
+      <para>
+        HarfBuzz is an <ulink url="http://www.microsoft.com/typography/otspec/">OpenType</ulink>
+        text shaping engine.
+      </para>
+      <para>
+        The current HarfBuzz codebase, formerly known as harfbuzz-ng, is
+        versioned 1.x.x and is stable and under active maintenance. This is
+        what is used in latest versions of Firefox, GNOME, ChromeOS, Chrome,
+        LibreOffice, XeTeX, Android, and KDE, among other places. The canonical
+        source tree is available
+        <ulink url="http://cgit.freedesktop.org/harfbuzz/">here</ulink>.
+        Also available on
+        <ulink url="https://github.com/harfbuzz/harfbuzz">github</ulink>.
+        See <xref linkend="download" endterm="download.title"/> for release tarballs.
+      </para>
+      <para>
+        The old HarfBuzz codebase, these days known as harfbuzz-old, was
+        derived from <ulink url="http://freetype.org/">FreeType</ulink>,
+        <ulink url="http://pango.org/">Pango</ulink>, and
+        <ulink url="http://qt-project.org/">Qt</ulink> and is available
+        <ulink url="http://cgit.freedesktop.org/harfbuzz.old/">here</ulink>.
+        It is not actively developed or maintained, and is extremely buggy. All
+        users are encouraged to switch over to the new HarfBuzz as soon as
+        possible.  There are no release tarballs of old HarfBuzz whatsoever.
+      </para>
+    </abstract>
+  </bookinfo>
+
+  <part>
+    <title>User's manual</title>
+      <xi:include href="usermanual-what-is-harfbuzz.xml"/>
+      <xi:include href="usermanual-install-harfbuzz.xml"/>
+      <xi:include href="usermanual-hello-harfbuzz.xml"/>
+      <xi:include href="usermanual-buffers-language-script-and-direction.xml"/>
+      <xi:include href="usermanual-fonts-and-faces.xml"/>
+      <xi:include href="usermanual-clusters.xml"/>
+      <xi:include href="usermanual-opentype-features.xml"/>
+      <xi:include href="usermanual-glyph-information.xml"/>
+  </part>
+
+  <part>
+    <partinfo>
+      <releaseinfo>
+        This document is for HarfBuzz &version;.
+        <!--The latest version of this documentation can be found on-line at
+        <ulink role="online-location" url="http://[SERVER]/libharfbuzz/index.html">http://[SERVER]/libharfbuzz/</ulink>.-->
+      </releaseinfo>
+    </partinfo>
+    <title>Reference manual</title>
+      <chapter>
+        <title>HarfBuzz API</title>
+        <xi:include href="xml/hb.xml"/>
+        <xi:include href="xml/hb-common.xml"/>
+        <xi:include href="xml/hb-unicode.xml"/>
+        <xi:include href="xml/hb-buffer.xml"/>
+        <xi:include href="xml/hb-blob.xml"/>
+        <xi:include href="xml/hb-face.xml"/>
+        <xi:include href="xml/hb-font.xml"/>
+        <xi:include href="xml/hb-shape.xml"/>
+
+        <xi:include href="xml/hb-version.xml"/>
+        <xi:include href="xml/hb-deprecated.xml"/>
+
+        <xi:include href="xml/hb-set.xml"/>
+
+        <xi:include href="xml/hb-ot.xml"/>
+        <xi:include href="xml/hb-ot-layout.xml"/>
+        <xi:include href="xml/hb-ot-tag.xml"/>
+        <xi:include href="xml/hb-ot-font.xml"/>
+        <xi:include href="xml/hb-ot-shape.xml"/>
+        <xi:include href="xml/hb-ot-math.xml"/>
+
+        <xi:include href="xml/hb-shape-plan.xml"/>
+
+        <xi:include href="xml/hb-glib.xml"/>
+        <xi:include href="xml/hb-icu.xml"/>
+
+        <xi:include href="xml/hb-ft.xml"/>
+
+        <xi:include href="xml/hb-graphite2.xml"/>
+        <xi:include href="xml/hb-uniscribe.xml"/>
+        <xi:include href="xml/hb-coretext.xml"/>
+
+        <xi:include href="xml/hb-gobject.xml"/>
+
+      </chapter>
+      <chapter id="object-tree">
+        <title>Object Hierarchy</title>
+         <xi:include href="xml/tree_index.sgml"/>
+      </chapter>
+      <index id="api-index-full">
+        <title>API Index</title>
+        <xi:include href="xml/api-index-full.xml"><xi:fallback /></xi:include>
+      </index>
+      <index id="api-index-0-9-2" role="0.9.2">
+        <title>Index of new symbols in 0.9.2</title>
+        <xi:include href="xml/api-index-0.9.2.xml"><xi:fallback /></xi:include>
+      </index>
+      <index id="api-index-0-9-5" role="0.9.5">
+        <title>Index of new symbols in 0.9.5</title>
+        <xi:include href="xml/api-index-0.9.5.xml"><xi:fallback /></xi:include>
+      </index>
+      <index id="api-index-0-9-7" role="0.9.7">
+        <title>Index of new symbols in 0.9.7</title>
+        <xi:include href="xml/api-index-0.9.7.xml"><xi:fallback /></xi:include>
+      </index>
+      <index id="api-index-0-9-8" role="0.9.8">
+        <title>Index of new symbols in 0.9.8</title>
+        <xi:include href="xml/api-index-0.9.8.xml"><xi:fallback /></xi:include>
+      </index>
+      <index id="api-index-0-9-10" role="0.9.10">
+        <title>Index of new symbols in 0.9.10</title>
+        <xi:include href="xml/api-index-0.9.10.xml"><xi:fallback /></xi:include>
+      </index>
+      <index id="api-index-0-9-11" role="0.9.11">
+        <title>Index of new symbols in 0.9.11</title>
+        <xi:include href="xml/api-index-0.9.11.xml"><xi:fallback /></xi:include>
+      </index>
+      <index id="api-index-0-9-20" role="0.9.20">
+        <title>Index of new symbols in 0.9.20</title>
+        <xi:include href="xml/api-index-0.9.20.xml"><xi:fallback /></xi:include>
+      </index>
+      <index id="api-index-0-9-22" role="0.9.22">
+        <title>Index of new symbols in 0.9.22</title>
+        <xi:include href="xml/api-index-0.9.22.xml"><xi:fallback /></xi:include>
+      </index>
+      <index id="api-index-0-9-28" role="0.9.28">
+        <title>Index of new symbols in 0.9.28</title>
+        <xi:include href="xml/api-index-0.9.28.xml"><xi:fallback /></xi:include>
+      </index>
+      <index id="api-index-0-9-30" role="0.9.30">
+        <title>Index of new symbols in 0.9.30</title>
+        <xi:include href="xml/api-index-0.9.30.xml"><xi:fallback /></xi:include>
+      </index>
+      <index id="api-index-0-9-31" role="0.9.31">
+        <title>Index of new symbols in 0.9.31</title>
+        <xi:include href="xml/api-index-0.9.31.xml"><xi:fallback /></xi:include>
+      </index>
+      <index id="api-index-0-9-38" role="0.9.38">
+        <title>Index of new symbols in 0.9.38</title>
+        <xi:include href="xml/api-index-0.9.38.xml"><xi:fallback /></xi:include>
+      </index>
+      <index id="api-index-0-9-39" role="0.9.39">
+        <title>Index of new symbols in 0.9.39</title>
+        <xi:include href="xml/api-index-0.9.39.xml"><xi:fallback /></xi:include>
+      </index>
+      <index id="api-index-0-9-41" role="0.9.41">
+        <title>Index of new symbols in 0.9.41</title>
+        <xi:include href="xml/api-index-0.9.41.xml"><xi:fallback /></xi:include>
+      </index>
+      <index id="api-index-0-9-42" role="0.9.42">
+        <title>Index of new symbols in 0.9.42</title>
+        <xi:include href="xml/api-index-0.9.42.xml"><xi:fallback /></xi:include>
+      </index>
+      <index id="api-index-1-0-5" role="1.0.5">
+        <title>Index of new symbols in 1.0.5</title>
+        <xi:include href="xml/api-index-1.0.5.xml"><xi:fallback /></xi:include>
+      </index>
+      <index id="api-index-1-1-2" role="1.1.2">
+        <title>Index of new symbols in 1.1.2</title>
+        <xi:include href="xml/api-index-1.1.2.xml"><xi:fallback /></xi:include>
+      </index>
+      <index id="api-index-1-1-3" role="1.1.3">
+        <title>Index of new symbols in 1.1.3</title>
+        <xi:include href="xml/api-index-1.1.3.xml"><xi:fallback /></xi:include>
+      </index>
+      <index id="api-index-1-2-3" role="1.2.3">
+        <title>Index of new symbols in 1.2.3</title>
+        <xi:include href="xml/api-index-1.2.3.xml"><xi:fallback /></xi:include>
+      </index>
+      <index id="api-index-1-3-3" role="1.3.3">
+        <title>Index of new symbols in 1.3.3</title>
+        <xi:include href="xml/api-index-1.3.3.xml"><xi:fallback /></xi:include>
+      </index>
+      <index id="api-index-1-4-2" role="1.4.2">
+        <title>Index of new symbols in 1.4.2</title>
+        <xi:include href="xml/api-index-1.4.2.xml"><xi:fallback /></xi:include>
+      </index>
+      <index id="api-index-1-4-3" role="1.4.3">
+        <title>Index of new symbols in 1.4.3</title>
+        <xi:include href="xml/api-index-1.4.3.xml"><xi:fallback /></xi:include>
+      </index>
+      <index id="api-index-1-5-0" role="1.5.0">
+        <title>Index of new symbols in 1.5.0</title>
+        <xi:include href="xml/api-index-1.5.0.xml"><xi:fallback /></xi:include>
+      </index>
+      <index id="api-index-1-6-0" role="1.6.0">
+        <title>Index of new symbols in 1.6.0</title>
+        <xi:include href="xml/api-index-1.6.0.xml"><xi:fallback /></xi:include>
+      </index>
+      <index id="deprecated-api-index" role="deprecated">
+        <title>Index of deprecated API</title>
+        <xi:include href="xml/api-index-deprecated.xml"><xi:fallback /></xi:include>
+      </index>
+
+      <xi:include href="xml/annotation-glossary.xml"><xi:fallback /></xi:include>
+  </part>
+</book>

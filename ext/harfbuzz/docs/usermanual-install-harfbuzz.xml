@@ -1,0 +1,70 @@
+<chapter id="install-harfbuzz">
+  <title>Install HarfBuzz</title>
+  <section id="download">
+    <title id="download.title">Download</title>
+    <para>
+      For tarball releases of HarfBuzz, look
+      <ulink url="http://www.freedesktop.org/software/harfbuzz/release/">here</ulink>.
+      At the same place you will
+      also find Win32 binary bundles that include libharfbuzz DLL, hb-view.exe,
+      hb-shape.exe, and all dependencies.
+    </para>
+    <para>
+      The canonical source tree is available
+      <ulink url="http://cgit.freedesktop.org/harfbuzz/">here</ulink>.
+      Also available on <ulink url="https://github.com/harfbuzz/harfbuzz">github</ulink>.
+    </para>
+    <para>
+      The API that comes with <filename class='headerfile'>hb.h</filename> will
+      not change incompatibly. Other, peripheral, headers are more likely to go
+      through minor modifications, but again, will do our best to never change
+      API in an incompatible way. We will never break the ABI.
+    </para>
+    <para>
+      If you are not sure whether Pango or HarfBuzz is right for you, read
+      <ulink url="http://mces.blogspot.in/2009/11/pango-vs-harfbuzz.html">this</ulink>.
+    </para>
+  </section>
+  <section id="building">
+    <title>Building</title>
+    <para>
+      On Linux, install the development packages for FreeType, Cairo, and GLib.
+      For example, on Ubuntu / Debian, you would do:
+      <programlisting>
+<command>sudo apt-get install</command> <package>gcc g++ libfreetype6-dev libglib2.0-dev libcairo2-dev</package>
+      </programlisting>
+      whereas on Fedora, RHEL, CentOS, and other Red Hat based systems you would do:
+      <programlisting>
+<command>sudo yum install</command> <package>gcc gcc-c++ freetype-devel glib2-devel cairo-devel</package>
+      </programlisting>
+      or using MacPorts:
+      <programlisting>
+<command>sudo port install</command> <package>freetype glib2 cairo</package>
+      </programlisting>
+    </para>
+    <para>
+      If you are using a tarball, you can now proceed to running
+      <command>configure</command> and <command>make</command> as with any
+      other standard package. That should leave you with a shared library in
+      <filename>src/</filename>, and a few utility programs including hb-view
+      and hb-shape under <filename>util/</filename>.
+    </para>
+    <para>
+      If you are bootstrapping from git, you need a few more tools before you
+      can run <filename>autogen.sh</filename> for the first time. Namely,
+      pkg-config and <ulink url="http://www.complang.org/ragel/">ragel</ulink>.
+      Again, on Ubuntu / Debian:
+      <programlisting>
+<command>sudo apt-get install</command> <package>autoconf automake libtool pkg-config ragel gtk-doc-tools</package>
+      </programlisting>
+      and on Fedora, RHEL, CentOS:
+      <programlisting>
+<command>sudo yum install</command> <package>autoconf automake libtool pkgconfig ragel gtk-doc</package>
+      </programlisting>
+      or using MacPorts:
+      <programlisting>
+<command>sudo port install</command> <package>autoconf automake libtool pkgconfig ragel gtk-doc</package>
+      </programlisting>
+    </para>
+  </section>
+</chapter>

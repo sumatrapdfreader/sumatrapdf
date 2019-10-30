@@ -1,0 +1,77 @@
+<chapter id="buffers-language-script-and-direction">
+  <title>Buffers, language, script and direction</title>
+  <para>
+    The input to HarfBuzz is a series of Unicode characters, stored in a
+    buffer. In this chapter, we'll look at how to set up a buffer with
+    the text that we want and then customize the properties of the
+    buffer.
+  </para>
+  <section id="creating-and-destroying-buffers">
+    <title>Creating and destroying buffers</title>
+    <para>
+      As we saw in our initial example, a buffer is created and
+      initialized with <literal>hb_buffer_create()</literal>. This
+      produces a new, empty buffer object, instantiated with some
+      default values and ready to accept your Unicode strings.
+    </para>
+    <para>
+      HarfBuzz manages the memory of objects that it creates (such as
+      buffers), so you don't have to. When you have finished working on
+      a buffer, you can call <literal>hb_buffer_destroy()</literal>:
+    </para>
+    <programlisting language="C">
+  hb_buffer_t *buffer = hb_buffer_create();
+  ...
+  hb_buffer_destroy(buffer);
+</programlisting>
+    <para>
+      This will destroy the object and free its associated memory -
+      unless some other part of the program holds a reference to this
+      buffer. If you acquire a HarfBuzz buffer from another subsystem
+      and want to ensure that it is not garbage collected by someone
+      else destroying it, you should increase its reference count:
+    </para>
+    <programlisting language="C">
+void somefunc(hb_buffer_t *buffer) {
+  buffer = hb_buffer_reference(buffer);
+  ...
+</programlisting>
+    <para>
+      And then decrease it once you're done with it:
+    </para>
+    <programlisting language="C">
+  hb_buffer_destroy(buffer);
+}
+</programlisting>
+    <para>
+      To throw away all the data in your buffer and start from scratch,
+      call <literal>hb_buffer_reset(buffer)</literal>. If you want to
+      throw away the string in the buffer but keep the options, you can
+      instead call <literal>hb_buffer_clear_contents(buffer)</literal>.
+    </para>
+  </section>
+  <section id="adding-text-to-the-buffer">
+    <title>Adding text to the buffer</title>
+    <para>
+      Now we have a brand new HarfBuzz buffer. Let's start filling it
+      with text! From HarfBuzz's perspective, a buffer is just a stream
+      of Unicode codepoints, but your input string is probably in one of
+      the standard Unicode character encodings (UTF-8, UTF-16, UTF-32)
+    </para>
+  </section>
+  <section id="setting-buffer-properties">
+    <title>Setting buffer properties</title>
+    <para>
+    </para>
+  </section>
+  <section id="what-about-the-other-scripts">
+    <title>What about the other scripts?</title>
+    <para>
+    </para>
+  </section>
+  <section id="customizing-unicode-functions">
+    <title>Customizing Unicode functions</title>
+    <para>
+    </para>
+  </section>
+</chapter>

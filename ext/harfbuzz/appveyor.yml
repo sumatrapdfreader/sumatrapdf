@@ -1,0 +1,64 @@
+platform: x64
+
+environment:
+  matrix:
+    - compiler: msvc
+      generator: Visual Studio 14
+      platform: Win32
+      configuration: Debug
+      triplet: x86-windows
+    - compiler: msvc
+      generator: Visual Studio 14 Win64
+      platform: x64
+      configuration: Debug
+      triplet: x64-windows
+
+    - compiler: msvc
+      generator: Visual Studio 14 ARM
+      platform: ARM
+      configuration: Debug
+
+
+    - compiler: msys2
+      MINGW_PREFIX: /mingw64
+      MINGW_CHOST: x86_64-w64-mingw32
+      MSYS2_ARCH: x86_64
+    - compiler: msys2
+      MINGW_PREFIX: /mingw32
+      MINGW_CHOST: i686-w64-mingw32
+      MSYS2_ARCH: i686
+
+install:
+  - 'if "%compiler%"=="msys2" C:\msys64\usr\bin\bash -lc "pacman -Syu --noconfirm"'
+  - C:\msys64\usr\bin\bash -lc "pacman --noconfirm -S mingw-w64-x86_64-ragel"
+
+build_script:
+  - 'if "%compiler%"=="msvc" if not "%platform%"=="ARM" vcpkg install glib:%triplet% freetype:%triplet% cairo:%triplet%'
+  - 'if "%compiler%"=="msvc" md build'
+  - 'if "%compiler%"=="msvc" cd build'
+  - 'if "%compiler%"=="msvc" set PATH=%PATH%;C:\Program Files (x86)\MSBuild\14.0\Bin;c:\msys64\mingw64\bin' # msys2 is added just for having "ragel" on PATH
+
+  - 'if "%compiler%"=="msvc" if "%platform%"=="ARM" cmake -DHB_HAVE_UNISCRIBE=ON -DHB_HAVE_DIRECTWRITE=ON -G "%generator%" ../'
+  - 'if "%compiler%"=="msvc" if not "%platform%"=="ARM" cmake -DHB_HAVE_UNISCRIBE=ON -DHB_HAVE_DIRECTWRITE=ON -DHB_HAVE_GLIB=ON -DHB_HAVE_FREETYPE=ON -DHB_BUILD_UTILS=ON -G "%generator%" -DCMAKE_TOOLCHAIN_FILE=c:/tools/vcpkg/scripts/buildsystems/vcpkg.cmake ../'
+
+  - 'if "%compiler%"=="msvc" msbuild harfbuzz.sln /p:Configuration=%configuration% /p:Platform=%platform%'
+  - 'if "%compiler%"=="msvc" if not "%platform%"=="ARM" ctest --output-on-failure -C %configuration%'
+
+  - 'if "%compiler%"=="msys2" C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Syyu mingw-w64-$MSYS2_ARCH-gcc"'
+  - 'if "%compiler%"=="msys2" C:\msys64\usr\bin\bash -lc "pacman --noconfirm -S --needed mingw-w64-$MSYS2_ARCH-{freetype,cairo,icu,gettext,gobject-introspection,gcc,gcc-libs,glib2,graphite2,pkg-config,python2}"'
+  - 'if "%compiler%"=="msys2" C:\msys64\usr\bin\bash -lc "curl https://raw.githubusercontent.com/mirror/mingw-w64/023eb04c396d4e8d8fcf604cfababc53dae13398/mingw-w64-headers/include/dwrite_1.h > %MINGW_PREFIX%/%MINGW_CHOST%/include/dwrite_1.h"'
+  - 'if "%compiler%"=="msys2" C:\msys64\usr\bin\bash -lc "cd $APPVEYOR_BUILD_FOLDER; PATH=$PATH:/mingw64/bin:/mingw32/bin; ./autogen.sh --with-uniscribe --with-freetype --with-glib --with-gobject --with-cairo --with-icu --with-graphite2 --with-directwrite --build=%MINGW_CHOST% --host=%MINGW_CHOST% --prefix=%MINGW_PREFIX%; make; make check || .ci/fail.sh"'
+
+cache:
+  - c:\tools\vcpkg\installed\
+
+notifications:
+  - provider: Email
+    to:
+      - harfbuzz-bots-chatter@googlegroups.com
+    on_build_success: false
+    on_build_failure: true
+    on_build_status_changed: true
+
+# disable automatic tests
+test: off

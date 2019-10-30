@@ -1,0 +1,7 @@
+Tests in this directory are automatically imported from the
+text-rendering-tests repository owned by Unicode Consortium:
+
+  https://github.com/unicode-org/text-rendering-tests
+
+To import the latest version of that test suite just run
+"make update" from a build in a git checkout.

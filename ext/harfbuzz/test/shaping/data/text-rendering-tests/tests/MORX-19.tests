@@ -1,0 +1,2 @@
+../fonts/TestMORXEighteen.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft:U+0041,U+0043,U+0044,U+0045:[A.alt|C@1000,0|D.alt1@1596,0|E@2596,0]
+../fonts/TestMORXEighteen.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft:U+0044:[D.alt]

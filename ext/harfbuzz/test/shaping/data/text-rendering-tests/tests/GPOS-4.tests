@@ -1,0 +1,4 @@
+../fonts/TestGPOSThree.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft:U+0075,U+0308,U+0301:[u|uni0308@529,-31|acutecomb@537,138]
+../fonts/TestGPOSThree.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft:U+0075,U+0308,U+0304:[u|uni0308@529,-31|uni0304@526,138]
+../fonts/TestGPOSThree.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft:U+0075,U+0308,U+0308:[u|uni0308@529,-31|uni0308@529,138]
+../fonts/TestGPOSThree.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft:U+0075,U+0308,U+0308,U+0308:[u|uni0308@529,-31|uni0308@529,138|uni0308@529,307]

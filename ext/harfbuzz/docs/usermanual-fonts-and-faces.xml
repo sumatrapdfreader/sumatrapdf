@@ -1,0 +1,18 @@
+<chapter id="fonts-and-faces">
+  <title>Fonts and faces</title>
+  <section id="using-freetype">
+    <title>Using FreeType</title>
+    <para>
+    </para>
+  </section>
+  <section id="using-harfbuzzs-native-opentype-implementation">
+    <title>Using HarfBuzz's native OpenType implementation</title>
+    <para>
+    </para>
+  </section>
+  <section id="using-your-own-font-functions">
+    <title>Using your own font functions</title>
+    <para>
+    </para>
+  </section>
+</chapter>

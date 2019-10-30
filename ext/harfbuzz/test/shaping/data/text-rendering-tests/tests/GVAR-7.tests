@@ -1,0 +1,7 @@
+../fonts/TestGVARFour.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft --variations=wght=150:U+004F,U+0049,U+004F:[uni004F|uni0049@706,0|uni004F@1072,0]
+../fonts/TestGVARFour.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft --variations=wght=200:U+004F,U+0049,U+004F:[uni004F|uni0049@707,0|uni004F@1074,0]
+../fonts/TestGVARFour.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft --variations=wght=250:U+004F,U+0049,U+004F:[uni004F|uni0049@707,0|uni004F@1075,0]
+../fonts/TestGVARFour.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft --variations=wght=300:U+004F,U+0049,U+004F:[uni004F|uni0049@707,0|uni004F@1076,0]
+../fonts/TestGVARFour.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft --variations=wght=350:U+004F,U+0049,U+004F:[uni004F|uni0049@707,0|uni004F@1077,0]
+../fonts/TestGVARFour.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft --variations=wght=400:U+004F,U+0049,U+004F:[uni004F|uni0049@707,0|uni004F@1078,0]
+../fonts/TestGVARFour.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft --variations=wght=450:U+004F,U+0049,U+004F:[uni004F|uni0049@706,0|uni004F@1079,0]

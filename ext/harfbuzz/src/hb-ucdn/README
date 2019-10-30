@@ -1,0 +1,40 @@
+Contents of this directory are derived from UCDN:
+
+  https://github.com/grigorig/ucdn
+
+The original README follows:
+
+
+UCDN - Unicode Database and Normalization
+
+UCDN is a Unicode support library. Currently, it provides access
+to basic character properties contained in the Unicode Character
+Database and low-level normalization functions (pairwise canonical
+composition/decomposition and compatibility decomposition). More
+functionality might be provided in the future, such as additional
+properties, string normalization and encoding conversion.
+
+UCDN uses standard C89 with no particular dependencies or requirements
+except for stdint.h, and can be easily integrated into existing
+projects. However, it can also be used as a standalone library,
+and a CMake build script is provided for this. The first motivation
+behind UCDN development was to provide a standalone set of Unicode
+functions for the HarfBuzz OpenType shaping library. For this purpose,
+a HarfBuzz-specific wrapper is shipped along with it (hb-ucdn.h).
+
+UCDN is published under the ISC license, please see the license header
+in the C source code for more information. The makeunicodata.py script
+required for parsing Unicode database files is licensed under the
+PSF license, please see PYTHON-LICENSE for more information.
+
+UCDN was written by Grigori Goronzy <greg@kinoho.net>.
+
+How to Use
+
+Include ucdn.c, ucdn.h and ucdn_db.h in your project. Now, just use the
+functions as documented in ucdn.h.
+
+In some cases, it might be necessary to regenerate the Unicode
+database file. The script makeunicodedata.py (Python 3.x required)
+fetches the appropriate files and dumps the compressed database into
+ucdn_db.h.

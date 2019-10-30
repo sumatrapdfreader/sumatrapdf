@@ -1,0 +1,7 @@
+../fonts/TestMORXTwenty.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft:U+0041,U+0042,U+0043,U+0044,U+0045:[A|B@639,0|C.alt@1265,0|D@2265,0|E.alt1@2939,0]
+../fonts/TestMORXTwenty.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft:U+0041,U+0042,U+0043:[A|B@639,0|C.alt@1265,0]
+../fonts/TestMORXTwenty.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft:U+0041,U+0042,U+0045:[A|B.alt@639,0|E.alt1@1639,0]
+../fonts/TestMORXTwenty.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft:U+0041,U+0045:[A.alt|E.alt1@1000,0]
+../fonts/TestMORXTwenty.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft:U+0045,U+0045:[E|E@556,0]
+../fonts/TestMORXTwenty.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft:U+0041:[A.alt]
+../fonts/TestMORXTwenty.ttf:--font-size=1000 --ned --remove-default-ignorables --font-funcs=ft:U+0045:[E]
