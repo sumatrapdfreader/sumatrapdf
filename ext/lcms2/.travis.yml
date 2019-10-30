@@ -1,0 +1,195 @@
+language: c
+
+matrix:
+  include:
+# OSX standard test build
+# this is really a GCC frontend with an LLVM back-end
+    - os: osx
+      env:
+        - MATRIX_EVAL="CC=gcc && CXX=g++"
+
+# OSX and pure GCCs
+# https://docs.travis-ci.com/user/languages/c/#GCC-on-OS-X
+    - os: osx
+      env:
+        - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+
+    - os: osx
+      env:
+        - MATRIX_EVAL="brew install gcc5 && CC=gcc-5 && CXX=g++-5"
+
+    - os: osx
+      env:
+        - MATRIX_EVAL="brew install gcc6 && CC=gcc-6 && CXX=g++-6"
+
+    - os: osx
+      env:
+        - MATRIX_EVAL="brew install gcc && CC=gcc-7 && CXX=g++-7"
+
+# OSX and pure LLVMs - the version is controlled by the osx_image variable
+# images as per https://blog.travis-ci.com/2017-10-16-a-new-default-os-x-image-is-coming
+    - os: osx
+      osx_image: xcode6.4
+      env:
+        - MATRIX_EVAL="CC=clang && CXX=clang"
+
+    - os: osx
+      osx_image: xcode7.3
+      env:
+        - MATRIX_EVAL="CC=clang && CXX=clang"
+
+    - os: osx
+      osx_image: xcode8.3
+      env:
+        - MATRIX_EVAL="CC=clang && CXX=clang"
+
+    - os: osx
+      osx_image: xcode9
+      env:
+        - MATRIX_EVAL="CC=clang && CXX=clang"
+
+    - os: osx
+      osx_image: xcode9.1
+      env:
+        - MATRIX_EVAL="CC=clang && CXX=clang"
+
+# Linux and GCCs
+    # gcc 4.8 at the time of writing
+    - os: linux
+      dist: trusty
+      env:
+        - MATRIX_EVAL="CC=gcc && CXX=g++"
+
+# for newer GCCs, add ubuntu-toolchain-r-test
+# https://docs.travis-ci.com/user/languages/c/
+    - os: linux
+      dist: trusty
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-4.9
+      env:
+         - MATRIX_EVAL="CC=gcc-4.9 && CXX=g++-4.9"
+
+    - os: linux
+      dist: trusty
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-5
+      env:
+         - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
+
+    - os: linux
+      dist: trusty
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-6
+      env:
+        - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
+
+
+    - os: linux
+      dist: trusty
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-7
+      env:
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+
+# Linux and LLVMs
+# https://docs.travis-ci.com/user/languages/c/#Clang
+    - os: linux
+      dist: trusty
+      env:
+        - MATRIX_EVAL="CC=clang && CXX=clang"
+
+    - os: linux
+      dist: trusty
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.6
+          packages:
+            - clang-3.6
+      env:
+        - MATRIX_EVAL="CC=clang-3.6 && CXX=clang++-3.6"
+
+    - os: linux
+      dist: trusty
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.7
+          packages:
+            - clang-3.7
+      env:
+        - MATRIX_EVAL="CC=clang-3.7 && CXX=clang++-3.7"
+
+    - os: linux
+      dist: trusty
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.8
+          packages:
+            - clang-3.8
+      env:
+        - MATRIX_EVAL="CC=clang-3.8 && CXX=clang++-3.8"
+
+    - os: linux
+      dist: trusty
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-trusty-3.9
+          packages:
+            - clang-3.9
+      env:
+        - MATRIX_EVAL="CC=clang-3.9 && CXX=clang++-3.9"
+
+    - os: linux
+      dist: trusty
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-trusty-4.0
+          packages:
+            - clang-4.0
+      env:
+        - MATRIX_EVAL="CC=clang-4.0 && CXX=clang++-4.0"
+
+    - os: linux
+      dist: trusty
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-trusty-5.0
+          packages:
+            - clang-5.0
+      env:
+        - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
+
+
+before_install:
+# avoid issues with outdated Homebrew installation on Mac OSX by updating it
+# before anything else
+# TODO: remove "brew update" line after 2017-11-15, see https://blog.travis-ci.com/2017-10-16-a-new-default-os-x-image-is-coming and
+# https://github.com/travis-ci/travis-ci/issues/8552
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; fi
+    - eval "${MATRIX_EVAL}"
+
+script: autoreconf -V && autoreconf --force && ./configure && cat config.log && make && make check

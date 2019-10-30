@@ -1,0 +1,123 @@
+.\"Shiju P. Nair September 30, 2004
+.\"Thomas Weber <tweber@debian.org> April 23, 2014
+.TH LINKICC 1 "September 30, 2004"
+.SH NAME
+linkicc - little cms device link generator.
+.SH SYNOPSIS
+.B linkicc
+.RI [ options ] " profiles"
+.SH DESCRIPTION
+lcms is a standalone CMM engine, which deals with the color management.
+It implements a fast transformation between ICC profiles.
+.B linkicc
+is a little cms device link generator.
+.P
+Links two or more profiles into a single devicelink profile.
+Colorspaces must be paired except Lab/XYZ, that can be interchanged.
+.SH OPTIONS
+.TP
+.BR \-a\  NUM
+Observer adaptation state (abs.col. only), (0..1.0, float value) [defaults to 1.0].
+.TP
+.B \-b
+Black point compensation.
+.TP
+.BI \-c\  precision
+Precision (0=LowRes, 1=Normal, 2=Hi-res) [defaults to 1].
+.TP
+.BI \-d\  description
+Description text (quotes can be used).
+.TP
+.BI \-h\  NUM
+Show summary of options and examples (0=help, 1=Built-in profiles, 2=Examples, 3=Contact information)
+.TP
+.BI \-k\  inklimit
+Ink-limiting in % (CMYK only), (0..400.0, float value) [default 400.0].
+.TP
+.B \-l
+Use linearization curves (may affect accuracy).
+.TP
+.BI \-n\  gridpoints
+Alternate way to set precision, number of CLUT points.
+.TP
+.BI \-o\  profile
+Output devicelink profile [defaults to 'devicelink.icm'].
+.TP
+.BI \-r\  profileversion
+Profile version. (CAUTION: may change the profile implementation), (2.0..4.3, float value) [defaults to 4.3].
+.TP
+.BI \-t\  NUM
+Rendering intent
+.nf
+.RS
+0=Perceptual [default]
+1=Relative colorimetric
+2=Saturation
+3=Absolute colorimetric
+10=Perceptual preserving black ink
+11=Relative colorimetric preserving black ink
+12=Saturation preserving black ink
+13=Perceptual preserving black plane
+14=Relative colorimetric preserving black plane
+15=Saturation preserving black plane
+.RE
+.fi
+.TP
+.BI \-v\  verbosity
+Verbosity level, (0=None, 1=Normal, 2=High, 3=Very High) [defaults to 0].
+.TP
+.B \-x
+Creatively, guess deviceclass of resulting profile.
+.TP
+.BI \-y\  copyright
+Copyright notice (quotes can be used) ["No copyright, use freely"].
+.TP
+.B \-8
+Creates 8-bit devicelink.
+.SH BUILT-IN PROFILES
+.nf
+	*Lab2  -- D50-based v2 CIEL*a*b
+	*Lab4  -- D50-based v4 CIEL*a*b
+	*Lab   -- D50-based v4 CIEL*a*b
+	*XYZ   -- CIE XYZ (PCS)
+	*sRGB  -- sRGB color space
+	*Gray22 - Monochrome of Gamma 2.2
+	*Gray30 - Monochrome of Gamma 3.0
+	*null   - Monochrome black for all input
+	*Lin2222- CMYK linearization of gamma 2.2 on each channel
+.fi
+.SH EXAMPLES
+.nf
+To create 'devicelink.icm' from a.icc to b.icc:
+	linkicc a.icc b.icc
+
+To create 'out.icc' from sRGB to cmyk.icc:
+	linkicc -o out.icc *sRGB cmyk.icc
+
+To create a sRGB input profile working in Lab:
+	linkicc -x -o sRGBLab.icc *sRGB *Lab
+
+To create a XYZ -> sRGB output profile:
+	linkicc -x -o sRGBLab.icc *XYZ *sRGB
+
+To create a abstract profile doing softproof for cmyk.icc:
+	linkicc -t1 -x -o softproof.icc *Lab cmyk.icc cmyk.icc *Lab
+
+To create a 'grayer' sRGB input profile:
+	linkicc -x -o grayer.icc *sRGB gray.icc gray.icc *Lab
+
+To embed ink limiting into a cmyk output profile:
+	linkicc -x -o cmyklimited.icc -k 250 cmyk.icc *Lab
+
+.fi
+.SH NOTES
+For suggestions, comments, bug reports etc. send mail to
+info@littlecms.com.
+.SH SEE ALSO
+.BR jpgicc (1),
+.BR psicc (1),
+.BR tificc (1),
+.BR transicc (1)
+.SH AUTHOR
+This manual page was written by Shiju p. Nair <shiju.p@gmail.com>,
+for the Debian project.

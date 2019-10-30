@@ -1,0 +1,572 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		546B294910AC5E4A0054D33A /* cmscam02.c in Sources */ = {isa = PBXBuildFile; fileRef = 546B293110AC5E4A0054D33A /* cmscam02.c */; };
+		546B294A10AC5E4A0054D33A /* cmscgats.c in Sources */ = {isa = PBXBuildFile; fileRef = 546B293210AC5E4A0054D33A /* cmscgats.c */; };
+		546B294B10AC5E4A0054D33A /* cmscnvrt.c in Sources */ = {isa = PBXBuildFile; fileRef = 546B293310AC5E4A0054D33A /* cmscnvrt.c */; };
+		546B294C10AC5E4A0054D33A /* cmserr.c in Sources */ = {isa = PBXBuildFile; fileRef = 546B293410AC5E4A0054D33A /* cmserr.c */; };
+		546B294D10AC5E4A0054D33A /* cmsgamma.c in Sources */ = {isa = PBXBuildFile; fileRef = 546B293510AC5E4A0054D33A /* cmsgamma.c */; };
+		546B294E10AC5E4A0054D33A /* cmsgmt.c in Sources */ = {isa = PBXBuildFile; fileRef = 546B293610AC5E4A0054D33A /* cmsgmt.c */; };
+		546B294F10AC5E4A0054D33A /* cmsintrp.c in Sources */ = {isa = PBXBuildFile; fileRef = 546B293710AC5E4A0054D33A /* cmsintrp.c */; };
+		546B295010AC5E4A0054D33A /* cmsio0.c in Sources */ = {isa = PBXBuildFile; fileRef = 546B293810AC5E4A0054D33A /* cmsio0.c */; };
+		546B295110AC5E4A0054D33A /* cmsio1.c in Sources */ = {isa = PBXBuildFile; fileRef = 546B293910AC5E4A0054D33A /* cmsio1.c */; };
+		546B295210AC5E4A0054D33A /* cmslut.c in Sources */ = {isa = PBXBuildFile; fileRef = 546B293A10AC5E4A0054D33A /* cmslut.c */; };
+		546B295310AC5E4A0054D33A /* cmsmd5.c in Sources */ = {isa = PBXBuildFile; fileRef = 546B293B10AC5E4A0054D33A /* cmsmd5.c */; };
+		546B295410AC5E4A0054D33A /* cmsmtrx.c in Sources */ = {isa = PBXBuildFile; fileRef = 546B293C10AC5E4A0054D33A /* cmsmtrx.c */; };
+		546B295510AC5E4A0054D33A /* cmsnamed.c in Sources */ = {isa = PBXBuildFile; fileRef = 546B293D10AC5E4A0054D33A /* cmsnamed.c */; };
+		546B295610AC5E4A0054D33A /* cmsopt.c in Sources */ = {isa = PBXBuildFile; fileRef = 546B293E10AC5E4A0054D33A /* cmsopt.c */; };
+		546B295710AC5E4A0054D33A /* cmspack.c in Sources */ = {isa = PBXBuildFile; fileRef = 546B293F10AC5E4A0054D33A /* cmspack.c */; };
+		546B295810AC5E4A0054D33A /* cmspcs.c in Sources */ = {isa = PBXBuildFile; fileRef = 546B294010AC5E4A0054D33A /* cmspcs.c */; };
+		546B295910AC5E4A0054D33A /* cmsplugin.c in Sources */ = {isa = PBXBuildFile; fileRef = 546B294110AC5E4A0054D33A /* cmsplugin.c */; };
+		546B295A10AC5E4A0054D33A /* cmsps2.c in Sources */ = {isa = PBXBuildFile; fileRef = 546B294210AC5E4A0054D33A /* cmsps2.c */; };
+		546B295B10AC5E4A0054D33A /* cmssamp.c in Sources */ = {isa = PBXBuildFile; fileRef = 546B294310AC5E4A0054D33A /* cmssamp.c */; };
+		546B295C10AC5E4A0054D33A /* cmssm.c in Sources */ = {isa = PBXBuildFile; fileRef = 546B294410AC5E4A0054D33A /* cmssm.c */; };
+		546B295D10AC5E4A0054D33A /* cmstypes.c in Sources */ = {isa = PBXBuildFile; fileRef = 546B294510AC5E4A0054D33A /* cmstypes.c */; };
+		546B295E10AC5E4A0054D33A /* cmsvirt.c in Sources */ = {isa = PBXBuildFile; fileRef = 546B294610AC5E4A0054D33A /* cmsvirt.c */; };
+		546B295F10AC5E4A0054D33A /* cmswtpnt.c in Sources */ = {isa = PBXBuildFile; fileRef = 546B294710AC5E4A0054D33A /* cmswtpnt.c */; };
+		546B296010AC5E4A0054D33A /* cmsxform.c in Sources */ = {isa = PBXBuildFile; fileRef = 546B294810AC5E4A0054D33A /* cmsxform.c */; };
+		546B296310AC5E600054D33A /* lcms2mt.h in Headers */ = {isa = PBXBuildFile; fileRef = 546B296110AC5E600054D33A /* lcms2mt.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		546B296410AC5E600054D33A /* lcms2mt_plugin.h in Headers */ = {isa = PBXBuildFile; fileRef = 546B296210AC5E600054D33A /* lcms2mt_plugin.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		546B29AE10AC68410054D33A /* testcms2.c in Sources */ = {isa = PBXBuildFile; fileRef = 546B29AD10AC68410054D33A /* testcms2.c */; };
+		54DBD06215A202BB00180017 /* cmshalf.c in Sources */ = {isa = PBXBuildFile; fileRef = 54DBD06015A202B200180017 /* cmshalf.c */; };
+		54E6DC7E18AE052800445185 /* testplugin.c in Sources */ = {isa = PBXBuildFile; fileRef = 54E6DC7D18AE052800445185 /* testplugin.c */; };
+		54E6DC8018AE054800445185 /* zoo_icc.c in Sources */ = {isa = PBXBuildFile; fileRef = 54E6DC7F18AE054800445185 /* zoo_icc.c */; };
+		8D07F2BE0486CC7A007CD1D0 /* LittleCMS_Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = 32BAE0B70371A74B00C91783 /* LittleCMS_Prefix.pch */; settings = {ATTRIBUTES = (Private, ); }; };
+		8D07F2C00486CC7A007CD1D0 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C1666FE841158C02AAC07 /* InfoPlist.strings */; };
+		8D07F2C40486CC7A007CD1D0 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 08FB77AAFE841565C02AAC07 /* Carbon.framework */; };
+		CE509F071A31DF4100A1D3F6 /* new.icc in CopyFiles */ = {isa = PBXBuildFile; fileRef = CE509F011A31DF4100A1D3F6 /* new.icc */; };
+		CE509F081A31DF4100A1D3F6 /* test1.icc in CopyFiles */ = {isa = PBXBuildFile; fileRef = CE509F021A31DF4100A1D3F6 /* test1.icc */; };
+		CE509F091A31DF4100A1D3F6 /* test2.icc in CopyFiles */ = {isa = PBXBuildFile; fileRef = CE509F031A31DF4100A1D3F6 /* test2.icc */; };
+		CE509F0A1A31DF4100A1D3F6 /* test3.icc in CopyFiles */ = {isa = PBXBuildFile; fileRef = CE509F041A31DF4100A1D3F6 /* test3.icc */; };
+		CE509F0B1A31DF4100A1D3F6 /* test4.icc in CopyFiles */ = {isa = PBXBuildFile; fileRef = CE509F051A31DF4100A1D3F6 /* test4.icc */; };
+		CE509F0C1A31DF4100A1D3F6 /* test5.icc in CopyFiles */ = {isa = PBXBuildFile; fileRef = CE509F061A31DF4100A1D3F6 /* test5.icc */; };
+		CE509F0E1A31DFB200A1D3F6 /* ibm-t61.icc in CopyFiles */ = {isa = PBXBuildFile; fileRef = CE509F0D1A31DFB200A1D3F6 /* ibm-t61.icc */; };
+		CE790F6B1A31C2400083D722 /* lcms2_internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 546B29AC10AC682F0054D33A /* lcms2_internal.h */; };
+		CEBB92E41BF8EF2700B79324 /* cmsalpha.c in Sources */ = {isa = PBXBuildFile; fileRef = CEBB92E31BF8EF2700B79324 /* cmsalpha.c */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXBuildRule section */
+		CE509EFF1A31D4C500A1D3F6 /* PBXBuildRule */ = {
+			isa = PBXBuildRule;
+			compilerSpec = com.apple.compilers.proxy.script;
+			fileType = pattern.proxy;
+			isEditable = 1;
+			outputFiles = (
+			);
+		};
+/* End PBXBuildRule section */
+
+/* Begin PBXContainerItemProxy section */
+		546B29A710AC67870054D33A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0867D690FE84028FC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8D07F2BC0486CC7A007CD1D0;
+			remoteInfo = LittleCMS;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		CE509F001A31DEDD00A1D3F6 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 6;
+			files = (
+				CE509F071A31DF4100A1D3F6 /* new.icc in CopyFiles */,
+				CE509F0E1A31DFB200A1D3F6 /* ibm-t61.icc in CopyFiles */,
+				CE509F081A31DF4100A1D3F6 /* test1.icc in CopyFiles */,
+				CE509F091A31DF4100A1D3F6 /* test2.icc in CopyFiles */,
+				CE509F0A1A31DF4100A1D3F6 /* test3.icc in CopyFiles */,
+				CE509F0B1A31DF4100A1D3F6 /* test4.icc in CopyFiles */,
+				CE509F0C1A31DF4100A1D3F6 /* test5.icc in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		089C1667FE841158C02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		08FB77AAFE841565C02AAC07 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
+		32BAE0B70371A74B00C91783 /* LittleCMS_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LittleCMS_Prefix.pch; sourceTree = SOURCE_ROOT; };
+		546B293110AC5E4A0054D33A /* cmscam02.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cmscam02.c; path = ../../../src/cmscam02.c; sourceTree = SOURCE_ROOT; };
+		546B293210AC5E4A0054D33A /* cmscgats.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cmscgats.c; path = ../../../src/cmscgats.c; sourceTree = SOURCE_ROOT; };
+		546B293310AC5E4A0054D33A /* cmscnvrt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cmscnvrt.c; path = ../../../src/cmscnvrt.c; sourceTree = SOURCE_ROOT; };
+		546B293410AC5E4A0054D33A /* cmserr.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cmserr.c; path = ../../../src/cmserr.c; sourceTree = SOURCE_ROOT; };
+		546B293510AC5E4A0054D33A /* cmsgamma.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cmsgamma.c; path = ../../../src/cmsgamma.c; sourceTree = SOURCE_ROOT; };
+		546B293610AC5E4A0054D33A /* cmsgmt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cmsgmt.c; path = ../../../src/cmsgmt.c; sourceTree = SOURCE_ROOT; };
+		546B293710AC5E4A0054D33A /* cmsintrp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cmsintrp.c; path = ../../../src/cmsintrp.c; sourceTree = SOURCE_ROOT; };
+		546B293810AC5E4A0054D33A /* cmsio0.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cmsio0.c; path = ../../../src/cmsio0.c; sourceTree = SOURCE_ROOT; };
+		546B293910AC5E4A0054D33A /* cmsio1.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cmsio1.c; path = ../../../src/cmsio1.c; sourceTree = SOURCE_ROOT; };
+		546B293A10AC5E4A0054D33A /* cmslut.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cmslut.c; path = ../../../src/cmslut.c; sourceTree = SOURCE_ROOT; };
+		546B293B10AC5E4A0054D33A /* cmsmd5.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cmsmd5.c; path = ../../../src/cmsmd5.c; sourceTree = SOURCE_ROOT; };
+		546B293C10AC5E4A0054D33A /* cmsmtrx.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cmsmtrx.c; path = ../../../src/cmsmtrx.c; sourceTree = SOURCE_ROOT; };
+		546B293D10AC5E4A0054D33A /* cmsnamed.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cmsnamed.c; path = ../../../src/cmsnamed.c; sourceTree = SOURCE_ROOT; };
+		546B293E10AC5E4A0054D33A /* cmsopt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cmsopt.c; path = ../../../src/cmsopt.c; sourceTree = SOURCE_ROOT; };
+		546B293F10AC5E4A0054D33A /* cmspack.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cmspack.c; path = ../../../src/cmspack.c; sourceTree = SOURCE_ROOT; };
+		546B294010AC5E4A0054D33A /* cmspcs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cmspcs.c; path = ../../../src/cmspcs.c; sourceTree = SOURCE_ROOT; };
+		546B294110AC5E4A0054D33A /* cmsplugin.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cmsplugin.c; path = ../../../src/cmsplugin.c; sourceTree = SOURCE_ROOT; };
+		546B294210AC5E4A0054D33A /* cmsps2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cmsps2.c; path = ../../../src/cmsps2.c; sourceTree = SOURCE_ROOT; };
+		546B294310AC5E4A0054D33A /* cmssamp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cmssamp.c; path = ../../../src/cmssamp.c; sourceTree = SOURCE_ROOT; };
+		546B294410AC5E4A0054D33A /* cmssm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cmssm.c; path = ../../../src/cmssm.c; sourceTree = SOURCE_ROOT; };
+		546B294510AC5E4A0054D33A /* cmstypes.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cmstypes.c; path = ../../../src/cmstypes.c; sourceTree = SOURCE_ROOT; };
+		546B294610AC5E4A0054D33A /* cmsvirt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cmsvirt.c; path = ../../../src/cmsvirt.c; sourceTree = SOURCE_ROOT; };
+		546B294710AC5E4A0054D33A /* cmswtpnt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cmswtpnt.c; path = ../../../src/cmswtpnt.c; sourceTree = SOURCE_ROOT; };
+		546B294810AC5E4A0054D33A /* cmsxform.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cmsxform.c; path = ../../../src/cmsxform.c; sourceTree = SOURCE_ROOT; };
+		546B296110AC5E600054D33A /* lcms2mt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lcms2mt.h; path = ../../../include/lcms2mt.h; sourceTree = SOURCE_ROOT; };
+		546B296210AC5E600054D33A /* lcms2mt_plugin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lcms2mt_plugin.h; path = ../../../include/lcms2mt_plugin.h; sourceTree = SOURCE_ROOT; };
+		546B29A310AC677E0054D33A /* testbed */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = testbed; sourceTree = BUILT_PRODUCTS_DIR; };
+		546B29AC10AC682F0054D33A /* lcms2_internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lcms2_internal.h; path = ../../../src/lcms2_internal.h; sourceTree = SOURCE_ROOT; };
+		546B29AD10AC68410054D33A /* testcms2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = testcms2.c; path = ../../../testbed/testcms2.c; sourceTree = SOURCE_ROOT; };
+		54DBD06015A202B200180017 /* cmshalf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cmshalf.c; path = ../../../src/cmshalf.c; sourceTree = SOURCE_ROOT; };
+		54E6DC7D18AE052800445185 /* testplugin.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = testplugin.c; path = ../../../testbed/testplugin.c; sourceTree = SOURCE_ROOT; };
+		54E6DC7F18AE054800445185 /* zoo_icc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = zoo_icc.c; path = ../../../testbed/zoo_icc.c; sourceTree = SOURCE_ROOT; };
+		8D07F2C70486CC7A007CD1D0 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = SOURCE_ROOT; };
+		8D07F2C80486CC7A007CD1D0 /* LittleCMS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = LittleCMS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		CE509F011A31DF4100A1D3F6 /* new.icc */ = {isa = PBXFileReference; lastKnownFileType = file; name = new.icc; path = ../../../testbed/new.icc; sourceTree = "<group>"; };
+		CE509F021A31DF4100A1D3F6 /* test1.icc */ = {isa = PBXFileReference; lastKnownFileType = file; name = test1.icc; path = ../../../testbed/test1.icc; sourceTree = "<group>"; };
+		CE509F031A31DF4100A1D3F6 /* test2.icc */ = {isa = PBXFileReference; lastKnownFileType = file; name = test2.icc; path = ../../../testbed/test2.icc; sourceTree = "<group>"; };
+		CE509F041A31DF4100A1D3F6 /* test3.icc */ = {isa = PBXFileReference; lastKnownFileType = file; name = test3.icc; path = ../../../testbed/test3.icc; sourceTree = "<group>"; };
+		CE509F051A31DF4100A1D3F6 /* test4.icc */ = {isa = PBXFileReference; lastKnownFileType = file; name = test4.icc; path = ../../../testbed/test4.icc; sourceTree = "<group>"; };
+		CE509F061A31DF4100A1D3F6 /* test5.icc */ = {isa = PBXFileReference; lastKnownFileType = file; name = test5.icc; path = ../../../testbed/test5.icc; sourceTree = "<group>"; };
+		CE509F0D1A31DFB200A1D3F6 /* ibm-t61.icc */ = {isa = PBXFileReference; lastKnownFileType = file; name = "ibm-t61.icc"; path = "../../../testbed/ibm-t61.icc"; sourceTree = "<group>"; };
+		CE790F6F1A31C3110083D722 /* testcms2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = testcms2.h; path = ../../../testbed/testcms2.h; sourceTree = SOURCE_ROOT; };
+		CEBB92E31BF8EF2700B79324 /* cmsalpha.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = cmsalpha.c; path = ../../../src/cmsalpha.c; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		546B29A110AC677E0054D33A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8D07F2C30486CC7A007CD1D0 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8D07F2C40486CC7A007CD1D0 /* Carbon.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		034768DDFF38A45A11DB9C8B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				8D07F2C80486CC7A007CD1D0 /* LittleCMS.framework */,
+				546B29A310AC677E0054D33A /* testbed */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		0867D691FE84028FC02AAC07 /* LittleCMS */ = {
+			isa = PBXGroup;
+			children = (
+				CE509F0D1A31DFB200A1D3F6 /* ibm-t61.icc */,
+				CE509F011A31DF4100A1D3F6 /* new.icc */,
+				CE509F021A31DF4100A1D3F6 /* test1.icc */,
+				CE509F031A31DF4100A1D3F6 /* test2.icc */,
+				CE509F041A31DF4100A1D3F6 /* test3.icc */,
+				CE509F051A31DF4100A1D3F6 /* test4.icc */,
+				CE509F061A31DF4100A1D3F6 /* test5.icc */,
+				CE790F6F1A31C3110083D722 /* testcms2.h */,
+				54E6DC7F18AE054800445185 /* zoo_icc.c */,
+				546B29AD10AC68410054D33A /* testcms2.c */,
+				54E6DC7D18AE052800445185 /* testplugin.c */,
+				08FB77ACFE841707C02AAC07 /* Source */,
+				089C1665FE841158C02AAC07 /* Resources */,
+				0867D69AFE84028FC02AAC07 /* External Frameworks and Libraries */,
+				034768DDFF38A45A11DB9C8B /* Products */,
+			);
+			name = LittleCMS;
+			sourceTree = "<group>";
+		};
+		0867D69AFE84028FC02AAC07 /* External Frameworks and Libraries */ = {
+			isa = PBXGroup;
+			children = (
+				08FB77AAFE841565C02AAC07 /* Carbon.framework */,
+			);
+			name = "External Frameworks and Libraries";
+			sourceTree = "<group>";
+		};
+		089C1665FE841158C02AAC07 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				8D07F2C70486CC7A007CD1D0 /* Info.plist */,
+				089C1666FE841158C02AAC07 /* InfoPlist.strings */,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
+		08FB77ACFE841707C02AAC07 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				CEBB92E31BF8EF2700B79324 /* cmsalpha.c */,
+				54DBD06015A202B200180017 /* cmshalf.c */,
+				546B29AC10AC682F0054D33A /* lcms2_internal.h */,
+				546B296110AC5E600054D33A /* lcms2mt.h */,
+				546B296210AC5E600054D33A /* lcms2mt_plugin.h */,
+				546B293110AC5E4A0054D33A /* cmscam02.c */,
+				546B293210AC5E4A0054D33A /* cmscgats.c */,
+				546B293310AC5E4A0054D33A /* cmscnvrt.c */,
+				546B293410AC5E4A0054D33A /* cmserr.c */,
+				546B293510AC5E4A0054D33A /* cmsgamma.c */,
+				546B293610AC5E4A0054D33A /* cmsgmt.c */,
+				546B293710AC5E4A0054D33A /* cmsintrp.c */,
+				546B293810AC5E4A0054D33A /* cmsio0.c */,
+				546B293910AC5E4A0054D33A /* cmsio1.c */,
+				546B293A10AC5E4A0054D33A /* cmslut.c */,
+				546B293B10AC5E4A0054D33A /* cmsmd5.c */,
+				546B293C10AC5E4A0054D33A /* cmsmtrx.c */,
+				546B293D10AC5E4A0054D33A /* cmsnamed.c */,
+				546B293E10AC5E4A0054D33A /* cmsopt.c */,
+				546B293F10AC5E4A0054D33A /* cmspack.c */,
+				546B294010AC5E4A0054D33A /* cmspcs.c */,
+				546B294110AC5E4A0054D33A /* cmsplugin.c */,
+				546B294210AC5E4A0054D33A /* cmsps2.c */,
+				546B294310AC5E4A0054D33A /* cmssamp.c */,
+				546B294410AC5E4A0054D33A /* cmssm.c */,
+				546B294510AC5E4A0054D33A /* cmstypes.c */,
+				546B294610AC5E4A0054D33A /* cmsvirt.c */,
+				546B294710AC5E4A0054D33A /* cmswtpnt.c */,
+				546B294810AC5E4A0054D33A /* cmsxform.c */,
+				32BAE0B70371A74B00C91783 /* LittleCMS_Prefix.pch */,
+			);
+			name = Source;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		8D07F2BD0486CC7A007CD1D0 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8D07F2BE0486CC7A007CD1D0 /* LittleCMS_Prefix.pch in Headers */,
+				546B296310AC5E600054D33A /* lcms2mt.h in Headers */,
+				546B296410AC5E600054D33A /* lcms2mt_plugin.h in Headers */,
+				CE790F6B1A31C2400083D722 /* lcms2_internal.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		546B29A210AC677E0054D33A /* testbed */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 546B29AB10AC67C30054D33A /* Build configuration list for PBXNativeTarget "testbed" */;
+			buildPhases = (
+				546B29A010AC677E0054D33A /* Sources */,
+				546B29A110AC677E0054D33A /* Frameworks */,
+				CE509F001A31DEDD00A1D3F6 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				546B29A810AC67870054D33A /* PBXTargetDependency */,
+			);
+			name = testbed;
+			productName = testbed;
+			productReference = 546B29A310AC677E0054D33A /* testbed */;
+			productType = "com.apple.product-type.tool";
+		};
+		8D07F2BC0486CC7A007CD1D0 /* LittleCMS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4FADC24208B4156D00ABE55E /* Build configuration list for PBXNativeTarget "LittleCMS" */;
+			buildPhases = (
+				8D07F2BD0486CC7A007CD1D0 /* Headers */,
+				8D07F2BF0486CC7A007CD1D0 /* Resources */,
+				8D07F2C10486CC7A007CD1D0 /* Sources */,
+				8D07F2C30486CC7A007CD1D0 /* Frameworks */,
+				8D07F2C50486CC7A007CD1D0 /* Rez */,
+			);
+			buildRules = (
+				CE509EFF1A31D4C500A1D3F6 /* PBXBuildRule */,
+			);
+			dependencies = (
+			);
+			name = LittleCMS;
+			productInstallPath = "$(HOME)/Library/Frameworks";
+			productName = LittleCMS;
+			productReference = 8D07F2C80486CC7A007CD1D0 /* LittleCMS.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		0867D690FE84028FC02AAC07 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0460;
+				ORGANIZATIONNAME = LittleCMS;
+			};
+			buildConfigurationList = 4FADC24608B4156D00ABE55E /* Build configuration list for PBXProject "LittleCMS" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 1;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 0867D691FE84028FC02AAC07 /* LittleCMS */;
+			productRefGroup = 034768DDFF38A45A11DB9C8B /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				8D07F2BC0486CC7A007CD1D0 /* LittleCMS */,
+				546B29A210AC677E0054D33A /* testbed */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		8D07F2BF0486CC7A007CD1D0 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8D07F2C00486CC7A007CD1D0 /* InfoPlist.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXRezBuildPhase section */
+		8D07F2C50486CC7A007CD1D0 /* Rez */ = {
+			isa = PBXRezBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXRezBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		546B29A010AC677E0054D33A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				546B29AE10AC68410054D33A /* testcms2.c in Sources */,
+				54E6DC7E18AE052800445185 /* testplugin.c in Sources */,
+				54E6DC8018AE054800445185 /* zoo_icc.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8D07F2C10486CC7A007CD1D0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				546B294910AC5E4A0054D33A /* cmscam02.c in Sources */,
+				546B294A10AC5E4A0054D33A /* cmscgats.c in Sources */,
+				546B294B10AC5E4A0054D33A /* cmscnvrt.c in Sources */,
+				546B294C10AC5E4A0054D33A /* cmserr.c in Sources */,
+				546B294D10AC5E4A0054D33A /* cmsgamma.c in Sources */,
+				546B294E10AC5E4A0054D33A /* cmsgmt.c in Sources */,
+				546B294F10AC5E4A0054D33A /* cmsintrp.c in Sources */,
+				546B295010AC5E4A0054D33A /* cmsio0.c in Sources */,
+				546B295110AC5E4A0054D33A /* cmsio1.c in Sources */,
+				546B295210AC5E4A0054D33A /* cmslut.c in Sources */,
+				546B295310AC5E4A0054D33A /* cmsmd5.c in Sources */,
+				546B295410AC5E4A0054D33A /* cmsmtrx.c in Sources */,
+				546B295510AC5E4A0054D33A /* cmsnamed.c in Sources */,
+				546B295610AC5E4A0054D33A /* cmsopt.c in Sources */,
+				546B295710AC5E4A0054D33A /* cmspack.c in Sources */,
+				546B295810AC5E4A0054D33A /* cmspcs.c in Sources */,
+				546B295910AC5E4A0054D33A /* cmsplugin.c in Sources */,
+				546B295A10AC5E4A0054D33A /* cmsps2.c in Sources */,
+				546B295B10AC5E4A0054D33A /* cmssamp.c in Sources */,
+				546B295C10AC5E4A0054D33A /* cmssm.c in Sources */,
+				546B295D10AC5E4A0054D33A /* cmstypes.c in Sources */,
+				546B295E10AC5E4A0054D33A /* cmsvirt.c in Sources */,
+				546B295F10AC5E4A0054D33A /* cmswtpnt.c in Sources */,
+				546B296010AC5E4A0054D33A /* cmsxform.c in Sources */,
+				54DBD06215A202BB00180017 /* cmshalf.c in Sources */,
+				CEBB92E41BF8EF2700B79324 /* cmsalpha.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		546B29A810AC67870054D33A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8D07F2BC0486CC7A007CD1D0 /* LittleCMS */;
+			targetProxy = 546B29A710AC67870054D33A /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		089C1666FE841158C02AAC07 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				089C1667FE841158C02AAC07 /* English */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = SOURCE_ROOT;
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		4FADC24308B4156D00ABE55E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				"ARCHS[sdk=*]" = "$(ARCHS_STANDARD_32_64_BIT)";
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				FRAMEWORK_VERSION = A;
+				GCC_CHAR_IS_UNSIGNED_CHAR = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = LittleCMS_Prefix.pch;
+				INFOPLIST_FILE = Info.plist;
+				INSTALL_PATH = "$(HOME)/Library/Frameworks";
+				LIBRARY_STYLE = DYNAMIC;
+				MACH_O_TYPE = mh_dylib;
+				PRODUCT_NAME = LittleCMS;
+				SDKROOT = "";
+				WRAPPER_EXTENSION = framework;
+				ZERO_LINK = YES;
+			};
+			name = Debug;
+		};
+		4FADC24408B4156D00ABE55E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				COMBINE_HIDPI_IMAGES = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				FRAMEWORK_VERSION = A;
+				GCC_CHAR_IS_UNSIGNED_CHAR = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = LittleCMS_Prefix.pch;
+				INFOPLIST_FILE = Info.plist;
+				INSTALL_PATH = "$(HOME)/Library/Frameworks";
+				LIBRARY_STYLE = DYNAMIC;
+				MACH_O_TYPE = mh_dylib;
+				PRODUCT_NAME = LittleCMS;
+				SDKROOT = "";
+				WRAPPER_EXTENSION = framework;
+			};
+			name = Release;
+		};
+		4FADC24708B4156D00ABE55E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = ../../include;
+				LINK_WITH_STANDARD_LIBRARIES = YES;
+				MACH_O_TYPE = mh_execute;
+				MACOSX_DEPLOYMENT_TARGET = "";
+				OTHER_LDFLAGS = "";
+				SDKROOT = "";
+				STANDARD_C_PLUS_PLUS_LIBRARY_TYPE = static;
+			};
+			name = Debug;
+		};
+		4FADC24808B4156D00ABE55E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = ../../include;
+				LINK_WITH_STANDARD_LIBRARIES = YES;
+				MACH_O_TYPE = mh_execute;
+				MACOSX_DEPLOYMENT_TARGET = "";
+				OTHER_LDFLAGS = "";
+				SDKROOT = "";
+				STANDARD_C_PLUS_PLUS_LIBRARY_TYPE = static;
+			};
+			name = Release;
+		};
+		546B29A510AC677F0054D33A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/Carbon.framework/Headers/Carbon.h";
+				INSTALL_PATH = ../../testbed;
+				OTHER_LDFLAGS = (
+					"-framework",
+					Carbon,
+					"-framework",
+					LittleCMS,
+				);
+				PRODUCT_NAME = testbed;
+				ZERO_LINK = YES;
+			};
+			name = Debug;
+		};
+		546B29A610AC677F0054D33A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_MODEL_TUNING = G5;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/Carbon.framework/Headers/Carbon.h";
+				INSTALL_PATH = ../../testbed;
+				OTHER_LDFLAGS = (
+					"-framework",
+					Carbon,
+					"-framework",
+					LittleCMS,
+				);
+				PRODUCT_NAME = testbed;
+				ZERO_LINK = NO;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		4FADC24208B4156D00ABE55E /* Build configuration list for PBXNativeTarget "LittleCMS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4FADC24308B4156D00ABE55E /* Debug */,
+				4FADC24408B4156D00ABE55E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4FADC24608B4156D00ABE55E /* Build configuration list for PBXProject "LittleCMS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4FADC24708B4156D00ABE55E /* Debug */,
+				4FADC24808B4156D00ABE55E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		546B29AB10AC67C30054D33A /* Build configuration list for PBXNativeTarget "testbed" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				546B29A510AC677F0054D33A /* Debug */,
+				546B29A610AC677F0054D33A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 0867D690FE84028FC02AAC07 /* Project object */;
+}

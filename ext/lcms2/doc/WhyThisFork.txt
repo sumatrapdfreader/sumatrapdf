@@ -1,0 +1,151 @@
+                         LCMS 2.9.MT
+                         ===========
+
+Why does this fork exist?
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+We, Artifex Software, use LCMS 2 in both our  Ghostscript and MuPDF
+projects. It's a great library that performs well, and does almost
+exactly what we want.
+
+Almost.
+
+In the course of pulling LCMS 2 into MuPDF, we hit some problems
+with the library (described in more detail below). We've changed
+the code to fix these problems, and therefore released this
+version of the library.
+
+
+Why don't you just pass the changes back to mainline LCMS?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Sadly, the changes we've made require changes to some of the API
+to LCMS. We consider these changes to be pretty minor, and to
+improve the overall API, but they are unavoidable.
+
+You can't just drop this version of the library into an existing
+project that uses vanilla LCMS and expect it to work. You will
+need to make some changes in your code. Small ones, but changes
+nonetheless.
+
+We have offered these changes upstream, with a view to getting
+them adopted into mainstream LCMS - perhaps as LCMS 3. Marti
+Maria, the original author of LCMS is considering them at the
+moment, but no decision has been made.
+
+Marti has plans of his own for LCMS, so until such time as we
+figure out a mutually satisfactory way of working, we're doing
+this separate release.
+
+
+So what problem was this intended to solve?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Put simply, we ran into problems with using LCMS in a multi-threaded
+environment.
+
+A few years ago, Marti kindly made some changes within LittleCMS
+to enable us to safely use LCMS with Ghostscript when run with
+multiple threads.
+
+Specifically, Ghostscript needed to use different allocators from
+each thread. In order to account for this, Marti added the idea
+of the 'cmsContext'. These would carry a 'void *UserData' value
+that could be retrieved in the allocators. By using a different
+cmsContext in each thread, we could therefore pass thread specific
+information through LCMS and safely have it reach the allocators.
+
+In order to make this change without breaking the existing API
+Marti added new functions, suffixed with THR, that took these
+cmsContext's.
+
+So where in old lcms we had:
+
+ CMSAPI cmsBool CMSEXPORT cmsPlugin(void* Plugin);
+
+we now also had:
+
+ CMSAPI cmsBool CMSEXPORT cmsPluginTHR(cmsContext ContextID, void* Plugin);
+
+Internally within LCMS, the cmsContext values were often stored
+within things like profiles and links. For Ghostscript this was
+absolutely fine, because we didn't share profiles or links between
+different threads.
+
+For MuPDF, however, this was a significant restriction. MuPDF is
+designed as a C level library from which people can build applications.
+Data objects are reference counted, and are designed to be able to
+be passed around the system as required. It would be almost impossible
+to enforce the idea that profiles and links can only be used within
+the original thread (cmsContext) within which they were created.
+Also new versions of Ghostscript will also share profiles and links
+among threads to enhance performance with multi-threaded rendering.
+
+Lastly, Ghostscript made use of cmsChangeBuffersFormat to switch the
+input or output data format (planar, bytes per component, etc.) to
+allow a link profile to be re-used without the computation needed to
+create a new link profile. Since the input and output format are
+stored within the link profile, one thread changing the format while
+another thread was using it for color transform would cause problems.
+
+So what changes have been made?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The changes are very simple and systematic.
+
+1) Every API function (or at least those that might allocate) now takes
+a cmsContext pointer.
+
+2) cmsContexts are now passed explicitly throughout the system. They
+are never stored in any structures.
+
+3) Accordingly, we have removed the 'THR' API functions (as they no
+longer serve any purpose).
+
+4) We have removed the cmsChangeBuffersFormat function (use of which
+could lead to a link profile being changed by one thread while it
+was in use by another) and replaced it with a thread safe alternative,
+cmsCloneTransformChangingFormats. This creates a new transform that
+shares the underlying tables of the original transform, but with
+new buffer format handlers. Since the underlying tables for the link
+are shared, the cost of cloning the profile is very low.
+
+In addition, we've made 1 other change that breaks the ABI, but not
+the API:
+
+5) The organisation of the flags word used to describe the format of
+input/output pixels has been altered to accommodate more 'extra'
+channels (now a maximum of 63 rather than 7).
+
+Finally:
+
+6) We have renamed lcms2.h to be lcms2mt.h.
+
+7) We have tweaked the LCMS_VERSION value (and some of the code
+that reads it), to ensure that people don't link binary plugins
+expecting other versions against us without an error being given.
+
+
+So what's the plan from here?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Well, at the very least we hope to keep pulling fixes from mainline
+LCMS into this version. We (Artifex Software) need to keep it up to
+date and secure for our use of the library.
+
+In the fullness of time we'd love to see these fixes folded back
+into a new LCMS release, but this will have to wait for this to be
+a convenient time for Marti.
+
+
+So where should we report bugs?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Report bugs to us, by all means, but please also report them to Marti.
+He's likely to be in a far better position to evaluate potential
+problems and fixes than we are - this is his library after all.
+Ideally every problem that gets fixed in mainline LCMS should get
+pulled into our version.
+
+Indeed, to keep this simple, we don't really want to diverge our
+version from mainline more than we have to.

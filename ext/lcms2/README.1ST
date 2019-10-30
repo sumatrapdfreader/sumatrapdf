@@ -1,0 +1,5 @@
+This is lcms2mt, version 2.9. This is a forked, binary incompatible
+version of lcms2.9. For details of the differences from vanilla
+lcms2.9 see doc/WhyThisFork.txt
+
+Please see the documentation in doc folder

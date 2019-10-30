@@ -1,0 +1,30 @@
+
+
+1 VERSIONINFO
+FILEVERSION 2, 8, 0, 0
+PRODUCTVERSION 2, 8, 0, 0
+FILEOS VOS_NT_WINDOWS32
+FILETYPE VFT_DLL
+{
+ BLOCK "StringFileInfo"
+ {
+  BLOCK "040904E4"
+  {
+   VALUE "CompanyName", "Marti Maria\000\000"
+   VALUE "FileDescription", "lcms color engine\000"
+   VALUE "FileVersion", "2.08\000\000"
+   VALUE "InternalName", "lcms2\000"
+   VALUE "LegalCopyright", "Copyright © Marti Maria 2015\000\000"
+   VALUE "OriginalFilename", "lcms2.dll\000"
+  }
+
+ }
+
+ BLOCK "VarFileInfo"
+ {
+  VALUE "Translation", 0x409, 1252
+ }
+
+}
+
+

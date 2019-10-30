@@ -1,0 +1,47 @@
+.\"Shiju P. Nair September 30, 2004
+.\"Thomas Weber <tweber@debian.org> April 23, 2014
+.TH PSICC 1 "September 30, 2004"
+.SH NAME
+psicc - little cms PostScript converter.
+.SH SYNOPSIS
+.B psicc
+.RI [ options ]
+.SH DESCRIPTION
+lcms is a standalone CMM engine, which deals with the color management.
+It implements a fast transformation between ICC profiles.
+.B psicc
+is a little cms PostScript converter.
+.SH OPTIONS
+.TP
+.B \-b
+Black point compensation (CRD only).
+.TP
+.BI \-c\  precision
+Precision (0=LowRes, 1=Normal, 2=Hi-res) (CRD only) [defaults to 1].
+.TP
+.BI \-i\  profile
+Input profile: Generates Color Space Array (CSA).
+.TP
+.BI \-n\  gridpoints
+Alternate way to set precision, number of CLUT points (CRD only).
+.TP
+.BI \-o\  profile
+.p
+Output profile: Generates Color Rendering Dictionary(CRD).
+.TP
+.BI \-t\  intent
+Intent (0=Perceptual, 1=Colorimetric, 2=Saturation, 3=Absolute) [defaults to 0].
+.TP
+.B \-u
+Do NOT generate resource name on CRD.
+.SH NOTES
+For suggestions, comments, bug reports etc. send mail to
+info@littlecms.com.
+.SH SEE ALSO
+.BR jpgicc (1),
+.BR linkicc (1),
+.BR tificc (1),
+.BR transicc (1)
+.SH AUTHOR
+This manual page was written by Shiju p. Nair <shiju.p@gmail.com>,
+for the Debian project.

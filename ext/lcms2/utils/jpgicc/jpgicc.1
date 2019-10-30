@@ -1,0 +1,122 @@
+.\"Shiju P. Nair September 30, 2004
+.\"Thomas Weber <tweber@debian.org> April 23, 2014
+.TH JPGICC 1 "September 30, 2004"
+.SH NAME
+jpgicc - little cms ICC profile applier for JPEG.
+.SH SYNOPSIS
+.B jpgicc
+.RI [ options ] " input.jpg output.jpg"
+.SH DESCRIPTION
+lcms is a standalone CMM engine, which deals with the color management.
+It implements a fast transformation between ICC profiles.
+.B jpgicc
+is a little cms ICC profile applier for JPEG.
+.SH OPTIONS
+.TP
+.B \-b
+Black point compensation.
+.TP
+.BI \-c\  NUM
+Precalculates transform (0=Off, 1=Normal, 2=Hi-res, 3=LoRes) [defaults to 1].
+.TP
+.BI \-d\  NUM
+Observer adaptation state (abs.col. only), (0..1.0, float value) [defaults to 0.0].
+.TP
+.B \-e
+Embed destination profile.
+.TP
+.B \-g
+Marks out-of-gamut colors on softproof.
+.TP
+.BI \-h\  NUM
+Show summary of options and examples (0=help, 1=Examples, 2=Built-in profiles, 3=Contact information)
+.TP
+.BI \-i\  profile
+Input profile (defaults to sRGB).
+.TP
+.BI \-l\  link
+TODO: explain this option.
+.TP
+.BI \-m\  NUM
+SoftProof intent (0,1,2,3) [defaults to 0].
+.TP
+.B \-n
+Ignore embedded profile.
+.TP
+.BI \-o\  profile
+Output profile (defaults to sRGB).
+.TP
+.BI \-p\  profile
+Soft proof profile.
+.TP
+.BI \-q\  NUM
+Output JPEG quality, (0..100) [defaults to 75].
+.TP
+.BI \-s\  newprofile
+Save embedded profile as \fInewprofile\fR.
+.TP
+.BI \-t\ NUM
+Rendering intent
+.nf
+.RS
+0=Perceptual [default]
+1=Relative colorimetric
+2=Saturation
+3=Absolute colorimetric
+10=Perceptual preserving black ink
+11=Relative colorimetric preserving black ink
+12=Saturation preserving black ink
+13=Perceptual preserving black plane
+14=Relative colorimetric preserving black plane
+15=Saturation preserving black plane
+.RE
+.fi
+.TP
+.B \-v
+Verbose.
+.TP
+.BI \-!\  NUM,NUM,NUM
+Out-of-gamut marker channel values (r,g,b) [defaults: 128,128,128].
+.SH BUILT-IN PROFILES
+.nf
+	*Lab2  -- D50-based v2 CIEL*a*b
+	*Lab4  -- D50-based v4 CIEL*a*b
+	*Lab   -- D50-based v4 CIEL*a*b
+	*XYZ   -- CIE XYZ (PCS)
+	*sRGB  -- sRGB color space
+	*Gray22 - Monochrome of Gamma 2.2
+	*Gray30 - Monochrome of Gamma 3.0
+	*null   - Monochrome black for all input
+	*Lin2222- CMYK linearization of gamma 2.2 on each channel
+.fi
+.SH EXAMPLES
+.nf
+To color correct from scanner to sRGB:
+	jpgicc -iscanner.icm in.jpg out.jpg
+
+To convert from monitor1 to monitor2:
+	jpgicc -imon1.icm -omon2.icm in.jpg out.jpg
+
+To make a CMYK separation:
+	jpgicc -oprinter.icm inrgb.jpg outcmyk.jpg
+
+To recover sRGB from a CMYK separation:
+	jpgicc -iprinter.icm incmyk.jpg outrgb.jpg
+
+To convert from CIELab ITU/Fax JPEG to sRGB
+	jpgicc -iitufax.icm in.jpg out.jpg
+
+To convert from CIELab ITU/Fax JPEG to sRGB
+	jpgicc in.jpg out.jpg
+.fi
+.SH NOTES
+For suggestions, comments, bug reports etc. send mail to
+info@littlecms.com.
+.SH SEE ALSO
+.BR linkicc (1),
+.BR psicc (1),
+.BR tificc (1),
+.BR transicc (1)
+.SH AUTHOR
+This manual page was written by Shiju p. Nair <shiju.p@gmail.com>,
+for the Debian project.
