@@ -230,6 +230,13 @@ function libjpeg_turbo_files()
 
 end
 
+function lcms2_files()
+  files_in_dir("ext/lcms2/src", {
+    "*.c", "*.h"
+  })
+  files{ "ext/lcms/include.*.h" }
+end
+
 function freetype_files()
   files_in_dir("ext/freetype2/src/base", {
     "ftbase.c", "ftbbox.c", "ftbitmap.c", "ftgasp.c", "ftglyph.c", "ftinit.c",

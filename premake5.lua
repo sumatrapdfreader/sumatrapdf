@@ -242,10 +242,15 @@ workspace "SumatraPDF"
     language "C"
     defines { "FT2_BUILD_LIBRARY", "FT_OPTION_AUTOFIT2"}
     disablewarnings { "4018", "4996" }
-    includedirs { "ext/freetype2/config" }
-    includedirs { "ext/freetype2/include" }
+    includedirs { "ext/freetype2/config", "ext/freetype2/include" }
     freetype_files()
 
+  project "lcms2"
+    kind "StaticLib"
+    language "C"
+    defines { }
+    includedirs { "ext/lcms2/include" }
+    lcms2_files()
 
   project "chm"
     kind "StaticLib"
@@ -319,7 +324,7 @@ workspace "SumatraPDF"
     -- TODO: is thre a better way to do it?
     -- TODO: only for windows
     linkoptions { "/DEF:..\\src\\libmupdf.def" }
-    links { "mupdf", "libdjvu", "unarrlib", "libwebp" }
+    links { "mupdf", "libdjvu", "unarrlib", "libwebp", "lcms2" }
     links {
       "advapi32", "kernel32", "user32", "gdi32", "comdlg32",
       "shell32", "windowscodecs", "comctl32", "msimg32",
