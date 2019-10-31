@@ -4,6 +4,7 @@
 #pragma warning(disable : 4611) // interaction between '_setjmp' and C++ object destruction is non-portable
 
 extern "C" {
+#include <mupdf/fitz.h>
 #include <mupdf/pdf.h>
 #include <zlib.h>
 }
@@ -22,6 +23,11 @@ void PdfCreator::SetProducerName(const WCHAR* name) {
 }
 
 static fz_image* render_to_pixmap(fz_context* ctx, HBITMAP hbmp, SizeI size) {
+#if 1
+    CrashMe();
+    // TODO(port): fix me
+    return nullptr;
+#else
     int w = size.dx, h = size.dy;
     int stride = ((w * 3 + 3) / 4) * 4;
 
@@ -95,12 +101,13 @@ static fz_image* render_to_pixmap(fz_context* ctx, HBITMAP hbmp, SizeI size) {
     }
     fz_always(ctx) { fz_free(ctx, data); }
     fz_catch(ctx) {
-        fz_free_compressed_buffer(ctx, buf);
+        fz_drop_compressed_buffer(ctx, buf);
         fz_rethrow(ctx);
     }
 
     fz_colorspace* cs = is_grayscale ? fz_device_gray(ctx) : fz_device_rgb(ctx);
     return fz_new_image(ctx, w, h, 8, cs, 96, 96, 0, 0, nullptr, nullptr, buf, nullptr);
+#endif
 }
 
 static fz_image* pack_jpeg(fz_context* ctx, const char* data, size_t len, SizeI size) {
@@ -109,17 +116,17 @@ static fz_image* pack_jpeg(fz_context* ctx, const char* data, size_t len, SizeI 
 
     fz_try(ctx) {
         buf = fz_malloc_struct(ctx, fz_compressed_buffer);
-        buf->buffer = fz_new_buffer(ctx, (int)len);
-        memcpy(buf->buffer->data, data, (buf->buffer->len = (int)len));
+        buf->buffer = fz_new_buffer_from_data(ctx, (u8*)data, len);
         buf->params.type = FZ_IMAGE_JPEG;
         buf->params.u.jpeg.color_transform = -1;
     }
     fz_catch(ctx) {
-        fz_free_compressed_buffer(ctx, buf);
+        fz_drop_compressed_buffer(ctx, buf);
         fz_rethrow(ctx);
     }
 
-    return fz_new_image(ctx, size.dx, size.dy, 8, fz_device_rgb(ctx), 96, 96, 0, 0, nullptr, nullptr, buf, nullptr);
+    return fz_new_image_from_compressed_buffer(ctx, size.dx, size.dy, 8, fz_device_rgb(ctx), 96, 96, 0, 0, nullptr,
+                                               nullptr, buf, nullptr);
 }
 
 static fz_image* pack_jp2(fz_context* ctx, const char* data, size_t len, SizeI size) {
@@ -128,16 +135,17 @@ static fz_image* pack_jp2(fz_context* ctx, const char* data, size_t len, SizeI s
 
     fz_try(ctx) {
         buf = fz_malloc_struct(ctx, fz_compressed_buffer);
-        buf->buffer = fz_new_buffer(ctx, (int)len);
-        memcpy(buf->buffer->data, data, (buf->buffer->len = (int)len));
+        buf->buffer = fz_new_buffer_from_data(ctx, (u8*)data, len);
         buf->params.type = FZ_IMAGE_JPX;
     }
     fz_catch(ctx) {
-        fz_free_compressed_buffer(ctx, buf);
+        fz_drop_compressed_buffer(ctx, buf);
         fz_rethrow(ctx);
     }
 
-    return fz_new_image(ctx, size.dx, size.dy, 8, fz_device_rgb(ctx), 96, 96, 0, 0, nullptr, nullptr, buf, nullptr);
+    return fz_new_image_from_compressed_buffer(ctx, size.dx, size.dy, 8, fz_device_rgb(ctx), 96, 96, 0, 0, nullptr,
+                                               nullptr, buf,
+                                nullptr);
 }
 
 PdfCreator::PdfCreator() {
@@ -149,11 +157,17 @@ PdfCreator::PdfCreator() {
 }
 
 PdfCreator::~PdfCreator() {
-    pdf_close_document(doc);
+    pdf_drop_document(ctx, doc);
     fz_drop_context(ctx);
 }
 
 bool PdfCreator::AddImagePage(fz_image* image, float imgDpi) {
+#if 1
+    // TODO(port)
+    CrashMe();
+    return false;
+#else
+    // see document.h in mupdf, possibly pdf_add_page()
     CrashIf(!ctx || !doc);
     if (!ctx || !doc)
         return false;
@@ -168,19 +182,20 @@ bool PdfCreator::AddImagePage(fz_image* image, float imgDpi) {
         fz_matrix ctm = {image->w * zoom, 0, 0, image->h * zoom, 0, 0};
         fz_rect bounds = fz_unit_rect;
         fz_transform_rect(&bounds, &ctm);
-        page = pdf_create_page(doc, bounds, 72, 0);
+        page = pdf_new_page(doc, bounds, 72, 0);
         dev = pdf_page_write(doc, page);
         fz_fill_image(dev, image, &ctm, 1.0);
-        fz_free_device(dev);
+        fz_drop_device(dev);
         dev = nullptr;
         pdf_insert_page(doc, page, INT_MAX);
     }
     fz_always(ctx) {
-        fz_free_device(dev);
-        pdf_free_page(doc, page);
+        fz_drop_device(dev);
+        pdf_drop_page_tree(doc, page);
     }
     fz_catch(ctx) { return false; }
     return true;
+#endif
 }
 
 bool PdfCreator::AddImagePage(HBITMAP hbmp, SizeI size, float imgDpi) {
@@ -240,6 +255,11 @@ static bool Is7BitAscii(const WCHAR* str) {
 }
 
 bool PdfCreator::SetProperty(DocumentProperty prop, const WCHAR* value) {
+#if 1
+    // TODO(port)
+    CrashMe();
+    return false;
+#else
     if (!ctx || !doc)
         return false;
 
@@ -289,6 +309,7 @@ bool PdfCreator::SetProperty(DocumentProperty prop, const WCHAR* value) {
         return false;
     }
     return true;
+#endif
 }
 
 bool PdfCreator::CopyProperties(BaseEngine* engine) {
@@ -312,8 +333,11 @@ bool PdfCreator::SaveToFile(const char* filePath) {
     if (gPdfProducer)
         SetProperty(DocumentProperty::PdfProducer, gPdfProducer);
 
-    fz_try(ctx) { pdf_write_document(doc, const_cast<char*>(filePath), nullptr); }
-    fz_catch(ctx) { return false; }
+    fz_try(ctx) {
+        pdf_save_document(ctx, doc, const_cast<char*>(filePath), nullptr);
+    } fz_catch(ctx) {
+        return false;
+    }
     return true;
 }
 

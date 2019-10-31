@@ -48,10 +48,9 @@ inline bool fz_is_pt_in_rect(fz_rect rect, fz_point pt) {
 }
 
 inline float fz_calc_overlap(fz_rect r1, fz_rect r2) {
-    if (fz_is_empty_rect(&r1))
+    if (fz_is_empty_rect(r1))
         return 0.0f;
-    fz_rect isect = r1;
-    fz_intersect_rect(&isect, &r2);
+    fz_rect isect = fz_intersect_rect(r1, r2);
     return (isect.x1 - isect.x0) * (isect.y1 - isect.y0) / ((r1.x1 - r1.x0) * (r1.y1 - r1.y0));
 }
 
@@ -115,10 +114,11 @@ static RenderedBitmap* new_rendered_fz_pixmap(fz_context* ctx, fz_pixmap* pixmap
         free(bmpData);
         /* BGRA is a GDI compatible format */
         fz_try(ctx) {
-            fz_irect bbox;
-            fz_colorspace* colorspace = fz_device_bgr(ctx);
-            bgrPixmap = fz_new_pixmap_with_bbox(ctx, colorspace, fz_pixmap_bbox(ctx, pixmap, &bbox));
-            fz_convert_pixmap(ctx, bgrPixmap, pixmap);
+            fz_irect bbox = fz_pixmap_bbox(ctx, pixmap);
+            fz_colorspace* cs = fz_device_bgr(ctx);
+            fz_color_params cp = fz_default_color_params;
+            bgrPixmap = fz_new_pixmap_with_bbox(ctx, cs, bbox, nullptr, 1);
+            pixmap = fz_convert_pixmap(ctx, bgrPixmap, cs, nullptr, nullptr, cp, 1);
         }
         fz_catch(ctx) { return nullptr; }
     }
@@ -685,7 +685,7 @@ extern "C" static void fz_inspection_fill_image(fz_device* dev, fz_image* image,
         return;
     fz_rect rect = fz_unit_rect;
     fz_transform_rect(&rect, ctm);
-    if (!fz_is_empty_rect(&rect))
+    if (!fz_is_empty_rect(rect))
         ((ListInspectionData*)dev->user)->images->Append(FitzImagePos(image, rect));
 }
 
@@ -826,7 +826,7 @@ static void fz_run_user_page_annots(Vec<PageAnnotation>& pageAnnots, fz_device* 
             fz_stroke_path(dev, path, stroke, ctm, cs, color, 1.0f);
             fz_drop_stroke_state(dev->ctx, stroke);
         }
-        fz_free_path(dev->ctx, path);
+        fz_drop_path(dev->ctx, path);
     }
 }
 
@@ -1351,8 +1351,8 @@ PdfEngineImpl::~PdfEngineImpl() {
         free(_pageObjs);
     }
 
-    fz_free_outline(ctx, outline);
-    fz_free_outline(ctx, attachments);
+    fz_drop_outline(ctx, outline);
+    fz_drop_outline(ctx, attachments);
     pdf_drop_obj(_info);
 
     if (pageAnnots) {
@@ -1373,7 +1373,7 @@ PdfEngineImpl::~PdfEngineImpl() {
         DropPageRun(runCache.Last(), true);
     }
 
-    pdf_close_document(_doc);
+    pdf_drop_document(ctx, _doc);
     _doc = nullptr;
     fz_drop_context(ctx);
     ctx = nullptr;
@@ -1492,7 +1492,7 @@ OpenEmbeddedFile:
     fz_always(ctx) { fz_drop_buffer(ctx, buffer); }
     fz_catch(ctx) { return false; }
 
-    pdf_close_document(_doc);
+    pdf_drop_document(ctx, _doc);
     _doc = nullptr;
 
     goto OpenEmbeddedFile;
@@ -1723,7 +1723,7 @@ PageDestination* PdfEngineImpl::GetNamedDest(const WCHAR* name) {
         PdfLink tmp(this, &ld);
         pageDest = new SimpleDest(tmp.GetDestPageNo(), tmp.GetDestRect());
     }
-    fz_free_link_dest(ctx, &ld);
+    fz_drop_link_dest(ctx, &ld);
 
     return pageDest;
 }
@@ -1770,7 +1770,7 @@ PdfPageRun* PdfEngineImpl::CreatePageRun(pdf_page* page, fz_display_list* list) 
         fz_run_display_list(list, dev, &fz_identity, nullptr, nullptr);
     }
     fz_catch(ctx) {}
-    fz_free_device(dev);
+    fz_drop_device(dev);
 
     // save the image rectangles for this page
     int pageNo = GetPageNo(page);
@@ -1829,7 +1829,7 @@ PdfPageRun* PdfEngineImpl::GetPageRun(pdf_page* page, bool tryOnly) {
             fz_drop_display_list(ctx, list);
             list = nullptr;
         }
-        fz_free_device(dev);
+        fz_drop_device(dev);
 
         if (list) {
             result = CreatePageRun(page, list);
@@ -1883,7 +1883,7 @@ bool PdfEngineImpl::RunPage(pdf_page* page, fz_device* dev, const fz_matrix* ctm
     }
 
     EnterCriticalSection(&ctxAccess);
-    fz_free_device(dev);
+    fz_drop_device(dev);
     LeaveCriticalSection(&ctxAccess);
 
     return ok && !(cookie && cookie->cookie.abort);
@@ -1927,16 +1927,16 @@ RectD PdfEngineImpl::PageMediabox(int pageNo) {
             userunit = pdf_to_real(obj);
     }
     fz_catch(ctx) {}
-    if (fz_is_empty_rect(&mbox)) {
+    if (fz_is_empty_rect(mbox)) {
         fz_warn(ctx, "cannot find page size for page %d", pageNo);
         mbox.x0 = 0;
         mbox.y0 = 0;
         mbox.x1 = 612;
         mbox.y1 = 792;
     }
-    if (!fz_is_empty_rect(&cbox)) {
+    if (!fz_is_empty_rect(cbox)) {
         fz_intersect_rect(&mbox, &cbox);
-        if (fz_is_empty_rect(&mbox))
+        if (fz_is_empty_rect(mbox))
             return RectD();
     }
     if ((rotate % 90) != 0)
@@ -2077,7 +2077,7 @@ PageElement* PdfEngineImpl::GetElementAtPos(int pageNo, PointD pt) {
     }
 
     if (imageRects[pageNo - 1]) {
-        for (size_t i = 0; !fz_is_empty_rect(&imageRects[pageNo - 1][i]); i++)
+        for (size_t i = 0; !fz_is_empty_rect(imageRects[pageNo - 1][i]); i++)
             if (fz_is_pt_in_rect(imageRects[pageNo - 1][i], p))
                 return new PdfImage(this, pageNo, imageRects[pageNo - 1][i], i);
     }
@@ -2096,9 +2096,11 @@ Vec<PageElement*>* PdfEngineImpl::GetElements(int pageNo) {
     if (!els)
         return nullptr;
 
-    if (imageRects[pageNo - 1]) {
-        for (size_t i = 0; !fz_is_empty_rect(&imageRects[pageNo - 1][i]); i++)
-            els->Append(new PdfImage(this, pageNo, imageRects[pageNo - 1][i], i));
+    fz_rect* ir = imageRects[pageNo - 1];
+    if (ir != nullptr) {
+        for (size_t i = 0; !fz_is_empty_rect(ir[i]); i++) {
+            els->Append(new PdfImage(this, pageNo, ir[i], i));
+        }
     }
 
     if (pageAnnots[pageNo - 1]) {
@@ -2167,7 +2169,7 @@ pdf_annot** PdfEngineImpl::ProcessPageAnnotations(pdf_page* page) {
             pdf_obj* embedded = pdf_dict_getsa(pdf_dict_gets(file, "EF"), "DOS", "F");
             fz_rect rect;
             pdf_to_rect(ctx, pdf_dict_gets(annot->obj, "Rect"), &rect);
-            if (file && embedded && !fz_is_empty_rect(&rect)) {
+            if (file && embedded && !fz_is_empty_rect(rect)) {
                 fz_link_dest ld;
                 ld.kind = FZ_LINK_LAUNCH;
                 ld.ld.launch.file_spec = pdf_file_spec_to_str(_doc, file);
@@ -2260,8 +2262,8 @@ WCHAR* PdfEngineImpl::ExtractPageText(pdf_page* page, const WCHAR* lineSep, Rect
         dev = fz_new_text_device(ctx, sheet, text);
     }
     fz_catch(ctx) {
-        fz_free_text_page(ctx, text);
-        fz_free_text_sheet(ctx, sheet);
+        fz_drop_text_page(ctx, text);
+        fz_drop_text_sheet(ctx, sheet);
         LeaveCriticalSection(&ctxAccess);
         return nullptr;
     }
@@ -2280,8 +2282,8 @@ WCHAR* PdfEngineImpl::ExtractPageText(pdf_page* page, const WCHAR* lineSep, Rect
     WCHAR* content = nullptr;
     if (ok)
         content = fz_text_page_to_str(text, lineSep, coordsOut);
-    fz_free_text_page(ctx, text);
-    fz_free_text_sheet(ctx, sheet);
+    fz_drop_text_page(ctx, text);
+    fz_drop_text_sheet(ctx, sheet);
 
     return content;
 }
@@ -2785,7 +2787,7 @@ bool PdfEngineImpl::SaveUserAnnots(const char* pathUtf8) {
         if (ok) {
             fz_write_options opts = {0};
             opts.do_incremental = 1;
-            pdf_write_document(_doc, const_cast<char*>(pathUtf8), &opts);
+            pdf_save_document(ctx, _doc, const_cast<char*>(pathUtf8), &opts);
         }
     }
     fz_catch(ctx) { ok = false; }
@@ -2812,7 +2814,7 @@ bool PdfEngineImpl::HasClipOptimizations(int pageNo) {
 
     fz_rect mbox = fz_RectD_to_rect(PageMediabox(pageNo));
     // check if any image covers at least 90% of the page
-    for (int i = 0; !fz_is_empty_rect(&imageRects[pageNo - 1][i]); i++)
+    for (int i = 0; !fz_is_empty_rect(imageRects[pageNo - 1][i]); i++)
         if (fz_calc_overlap(mbox, imageRects[pageNo - 1][i]) >= 0.9f)
             return false;
     return true;
@@ -3058,7 +3060,7 @@ BaseEngine* CreateFromStream(IStream* stream, PasswordUI* pwdUI) {
 ///// XPS-specific extensions to Fitz/MuXPS /////
 
 extern "C" {
-#include <mupdf/xps.h>
+#include <../mupdf/source/xps/xps-imp.h>
 }
 
 // TODO: use http://schemas.openxps.org/oxps/v1.0 as well once NS actually matters
@@ -3156,7 +3158,7 @@ xps_doc_props* xps_extract_doc_props(xps_document* doc) {
     fz_xml* root = xps_open_and_parse(doc, "/_rels/.rels");
 
     if (!fz_xml_is_tag(root, "Relationships")) {
-        fz_free_xml(doc->ctx, root);
+        fz_drop_xml(doc->ctx, root);
         fz_throw(doc->ctx, FZ_ERROR_GENERIC, "couldn't parse part '/_rels/.rels'");
     }
 
@@ -3166,7 +3168,7 @@ xps_doc_props* xps_extract_doc_props(xps_document* doc) {
             fz_xml_att(item, "Target")) {
             char path[1024];
             xps_resolve_url(path, "", fz_xml_att(item, "Target"), nelem(path));
-            fz_free_xml(doc->ctx, root);
+            fz_drop_xml(doc->ctx, root);
             root = xps_open_and_parse(doc, path);
             has_correct_root = true;
             break;
@@ -3174,7 +3176,7 @@ xps_doc_props* xps_extract_doc_props(xps_document* doc) {
     }
 
     if (!has_correct_root) {
-        fz_free_xml(doc->ctx, root);
+        fz_drop_xml(doc->ctx, root);
         return nullptr;
     }
 
@@ -3192,7 +3194,7 @@ xps_doc_props* xps_extract_doc_props(xps_document* doc) {
         else if (fz_xml_is_tag(item, /*"dcterms:"*/ "modified") && !props->modification_date)
             props->modification_date.Set(xps_get_core_prop(doc->ctx, item));
     }
-    fz_free_xml(doc->ctx, root);
+    fz_drop_xml(doc->ctx, root);
 
     return props;
 }
@@ -3408,7 +3410,7 @@ XpsEngineImpl::~XpsEngineImpl() {
         free(_pages);
     }
 
-    fz_free_outline(ctx, _outline);
+    fz_drop_outline(ctx, _outline);
     delete _info;
 
     if (imageRects) {
@@ -3570,7 +3572,7 @@ XpsPageRun* XpsEngineImpl::CreatePageRun(xps_page* page, fz_display_list* list) 
         fz_run_display_list(list, dev, &fz_identity, nullptr, nullptr);
     }
     fz_catch(ctx) {}
-    fz_free_device(dev);
+    fz_drop_device(dev);
 
     // save the image rectangles for this page
     int pageNo = GetPageNo(page);
@@ -3629,7 +3631,7 @@ XpsPageRun* XpsEngineImpl::GetPageRun(xps_page* page, bool tryOnly) {
             fz_drop_display_list(ctx, list);
             list = nullptr;
         }
-        fz_free_device(dev);
+        fz_drop_device(dev);
 
         if (list) {
             result = CreatePageRun(page, list);
@@ -3682,7 +3684,7 @@ bool XpsEngineImpl::RunPage(xps_page* page, fz_device* dev, const fz_matrix* ctm
     }
 
     EnterCriticalSection(&ctxAccess);
-    fz_free_device(dev);
+    fz_drop_device(dev);
     LeaveCriticalSection(&ctxAccess);
 
     return ok && !(cookie && cookie->cookie.abort);
@@ -3846,8 +3848,8 @@ WCHAR* XpsEngineImpl::ExtractPageText(xps_page* page, const WCHAR* lineSep, Rect
         dev = fz_new_text_device(ctx, sheet, text);
     }
     fz_catch(ctx) {
-        fz_free_text_page(ctx, text);
-        fz_free_text_sheet(ctx, sheet);
+        fz_drop_text_page(ctx, text);
+        fz_drop_text_sheet(ctx, sheet);
         LeaveCriticalSection(&ctxAccess);
         return nullptr;
     }
@@ -3864,8 +3866,8 @@ WCHAR* XpsEngineImpl::ExtractPageText(xps_page* page, const WCHAR* lineSep, Rect
     ScopedCritSec scope(&ctxAccess);
 
     WCHAR* content = fz_text_page_to_str(text, lineSep, coordsOut);
-    fz_free_text_page(ctx, text);
-    fz_free_text_sheet(ctx, sheet);
+    fz_drop_text_page(ctx, text);
+    fz_drop_text_sheet(ctx, sheet);
 
     return content;
 }
@@ -3969,7 +3971,7 @@ PageElement* XpsEngineImpl::GetElementAtPos(int pageNo, PointD pt) {
             return new XpsLink(this, &link->dest, link->rect, pageNo);
 
     if (imageRects[pageNo - 1]) {
-        for (int i = 0; !fz_is_empty_rect(&imageRects[pageNo - 1][i]); i++)
+        for (int i = 0; !fz_is_empty_rect(imageRects[pageNo - 1][i]); i++)
             if (fz_is_pt_in_rect(imageRects[pageNo - 1][i], p))
                 return new XpsImage(this, pageNo, imageRects[pageNo - 1][i], i);
     }
@@ -3989,7 +3991,7 @@ Vec<PageElement*>* XpsEngineImpl::GetElements(int pageNo) {
         return nullptr;
 
     if (imageRects[pageNo - 1]) {
-        for (int i = 0; !fz_is_empty_rect(&imageRects[pageNo - 1][i]); i++) {
+        for (int i = 0; !fz_is_empty_rect(imageRects[pageNo - 1][i]); i++) {
             els->Append(new XpsImage(this, pageNo, imageRects[pageNo - 1][i], i));
         }
     }
@@ -4087,7 +4089,7 @@ fz_rect XpsEngineImpl::FindDestRect(const char* target) {
     xps_target* found = xps_lookup_link_target_obj(_doc, (char*)target);
     if (!found)
         return fz_empty_rect;
-    if (fz_is_empty_rect(&found->rect)) {
+    if (fz_is_empty_rect(found->rect)) {
         // ensure that the target rectangle could have been
         // updated through LinkifyPageText -> xps_extract_anchor_info
         GetXpsPage(found->page + 1);
@@ -4149,7 +4151,7 @@ bool XpsEngineImpl::HasClipOptimizations(int pageNo) {
 
     fz_rect mbox = fz_RectD_to_rect(PageMediabox(pageNo));
     // check if any image covers at least 90% of the page
-    for (int i = 0; !fz_is_empty_rect(&imageRects[pageNo - 1][i]); i++)
+    for (int i = 0; !fz_is_empty_rect(imageRects[pageNo - 1][i]); i++)
         if (fz_calc_overlap(mbox, imageRects[pageNo - 1][i]) >= 0.9f)
             return false;
     return true;

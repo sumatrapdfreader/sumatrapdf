@@ -54,7 +54,7 @@ EXPORTS
 	fz_open_compressed_buffer
 	fz_open_image_decomp_stream_from_buffer
 	fz_open_image_decomp_stream
-	;fz_free_compressed_buffer
+	fz_drop_compressed_buffer
 	fz_var_imp
 	fz_push_try
 	;fz_throw_imp
@@ -67,7 +67,7 @@ EXPORTS
 	fz_flush_warnings
 	fz_new_context_imp
 	fz_clone_context
-	;fz_free_context
+	fz_drop_context
 	fz_aa_level
 	fz_set_aa_level
 	fz_malloc
@@ -129,7 +129,7 @@ EXPORTS
 	fz_begin_tile_id
 	fz_end_tile
 	;fz_new_device
-	;fz_free_device
+	fz_drop_device
 	fz_enable_device_hints
 	fz_disable_device_hints
 	fz_new_trace_device
@@ -233,7 +233,7 @@ EXPORTS
 	;fz_new_image_from_data
 	fz_new_image_from_buffer
 	;fz_image_get_pixmap
-	;fz_free_image
+	;fz_drop_image
 	fz_decomp_image_from_stream
 	;fz_expand_indexed_pixmap
 	fz_load_jpx
@@ -281,9 +281,7 @@ EXPORTS
 	fz_gridfit_matrix
 	fz_matrix_max_expansion
 
-	;fz_print_outline_xml
-	;fz_print_outline
-	;fz_free_outline
+	fz_drop_outline
 
 	;fz_write_png
 	;fz_output_png
@@ -320,7 +318,7 @@ EXPORTS
 	fz_curvetov
 	fz_curvetoy
 	fz_closepath
-	;fz_free_path
+	fz_drop_path
 	fz_transform_path
 	fz_clone_path
 	fz_bound_path
@@ -544,7 +542,7 @@ EXPORTS
 	pdf_open_document_with_stream
 	;pdf_open_document_no_run
 	;pdf_open_document_no_run_with_stream
-	;pdf_close_document
+	pdf_drop_document
 	pdf_specifics
 	pdf_needs_password
 	pdf_authenticate_password
@@ -699,7 +697,7 @@ EXPORTS
 	;pdf_load_page_by_obj
 	pdf_load_links
 	pdf_bound_page
-	;pdf_free_page
+	;pdf_drop_page
 	pdf_run_page
 	pdf_run_page_with_usage
 	pdf_run_page_contents
