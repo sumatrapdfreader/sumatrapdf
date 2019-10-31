@@ -240,9 +240,13 @@ workspace "SumatraPDF"
   project "freetype"
     kind "StaticLib"
     language "C"
-    defines { "FT2_BUILD_LIBRARY", "FT_OPTION_AUTOFIT2"}
-    disablewarnings { "4018", "4996" }
-    includedirs { "ext/freetype2/config", "ext/freetype2/include" }
+    defines {
+      "FT2_BUILD_LIBRARY",
+      "FT_CONFIG_MODULES_H=\"slimftmodules.h\"",
+      "FT_CONFIG_OPTIONS_H=\"slimftoptions.h\"",
+    }
+    disablewarnings { "4018", "4244", "4267", "4312", "4996" }
+    includedirs { "ext/freetype/include", "ext/freetype-config" }
     freetype_files()
 
   project "lcms2"
@@ -254,7 +258,7 @@ workspace "SumatraPDF"
   project "harfbuzz"
     kind "StaticLib"
     language "C"
-    includedirs { "ext/harfbuzz/src/hb-ucdn", "ext/freetype2/config", "ext/freetype2/include" }
+    includedirs { "ext/harfbuzz/src/hb-ucdn", "ext/freetype-config", "ext/freetype/include" }
     defines {
       "HAVE_FALLBACK=1",
       "HAVE_OT",
@@ -303,9 +307,12 @@ workspace "SumatraPDF"
     includedirs { "mupdf/scripts/openjpeg" }
 
     includedirs {
-      "mupdf/include", "mupdf/generated", "ext/zlib",
-      "ext/freetype2/config", "ext/freetype2/include",
-      "ext/jbig2dec", "ext/libjpeg-turbo", "ext/openjpeg/src/lib/openjp2"
+      "mupdf/include", "mupdf/generated", 
+      "ext/zlib",
+      "ext/freetype-config", "ext/freetype/include",
+      "ext/jbig2dec", 
+      "ext/libjpeg-turbo", 
+      "ext/openjpeg/src/lib/openjp2"
     }
     -- .\ext\..\bin\nasm.exe -I .\mupdf\ -f win32 -o .\obj-rel\mupdf\font_base14.obj
     -- .\mupdf\font_base14.asm
