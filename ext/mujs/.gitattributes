@@ -1,0 +1,7 @@
+# Define macro for whitespace settings:
+[attr]tabs	whitespace=trailing-space,space-before-tab,indent-with-non-tab
+
+*		text=auto
+Makefile	tabs
+*.[ch]		tabs
+*.js		tabs
