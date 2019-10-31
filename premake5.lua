@@ -315,7 +315,7 @@ workspace "SumatraPDF"
     includedirs { "mupdf/scripts/openjpeg" }
 
     includedirs {
-      "mupdf/include", 
+      "mupdf/include",
       "mupdf/generated",
       "ext/mujs",
       "ext/zlib",
@@ -413,6 +413,7 @@ workspace "SumatraPDF"
 
 
   ---- executables
+--[[
   project "efi"
     kind "ConsoleApp"
     language "C++"
@@ -468,6 +469,22 @@ workspace "SumatraPDF"
     postbuildcommands { "{COPY} %{cfg.targetdir}\\cmapdump.exe ..\\bin" }
     postbuildcommands { "cd .. & call scripts\\gen_mupdf_generated.bat bin\\cmapdump.exe"}
 
+  project "unarr"
+    kind "ConsoleApp"
+    language "C"
+    disablewarnings { "4100" }
+    files { "ext/unarr/main.c" }
+    links { "unarrlib", "zlib" }
+
+  project "signfile"
+    kind "ConsoleApp"
+    language "C++"
+    cppdialect "C++17"
+    includedirs { "src", "mupdf/include"}
+    files { "src/tools/signfile.cpp" }
+    links { "utils", "mupdf" }
+    links { "crypt32", "shlwapi" }
+--]]
 
   project "enginedump"
     kind "ConsoleApp"
@@ -481,15 +498,6 @@ workspace "SumatraPDF"
       "version", "windowscodecs"
     }
 
-
-  project "unarr"
-    kind "ConsoleApp"
-    language "C"
-    disablewarnings { "4100" }
-    files { "ext/unarr/main.c" }
-    links { "unarrlib", "zlib" }
-
-
   project "test_util"
     kind "ConsoleApp"
     language "C++"
@@ -499,16 +507,6 @@ workspace "SumatraPDF"
     includedirs { "src" }
     test_util_files()
     links { "gdiplus", "comctl32", "shlwapi", "Version" }
-
-
-  project "signfile"
-    kind "ConsoleApp"
-    language "C++"
-    cppdialect "C++17"
-    includedirs { "src", "mupdf/include"}
-    files { "src/tools/signfile.cpp" }
-    links { "utils", "mupdf" }
-    links { "crypt32", "shlwapi" }
 
 
   project "plugin-test"

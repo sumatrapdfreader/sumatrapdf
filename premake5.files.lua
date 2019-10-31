@@ -288,6 +288,7 @@ function freetype_files()
     "ftbase.c",
     "ftbbox.c",
     "ftbitmap.c",
+    "ftdebug.c",
     "ftgasp.c",
     "ftglyph.c",
     "ftinit.c",
@@ -312,11 +313,6 @@ function freetype_files()
     "type1/type1.c",
     "cid/type1cid.c",
   })
-
-  filter "configurations:Debug*"
-    files { "ext/freetype/src/base/ftdebug.c" }
-  filter {}
-
 end
 
 function sumatra_files()
