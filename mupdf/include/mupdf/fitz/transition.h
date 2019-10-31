@@ -38,17 +38,6 @@ struct fz_transition_s
 	int state1;
 };
 
-/*
-	fz_generate_transition: Generate a frame of a transition.
-
-	tpix: Target pixmap
-	opix: Old pixmap
-	npix: New pixmap
-	time: Position within the transition (0 to 256)
-	trans: Transition details
-
-	Returns 1 if successfully generated a frame.
-*/
-int fz_generate_transition(fz_pixmap *tpix, fz_pixmap *opix, fz_pixmap *npix, int time, fz_transition *trans);
+int fz_generate_transition(fz_context *ctx, fz_pixmap *tpix, fz_pixmap *opix, fz_pixmap *npix, int time, fz_transition *trans);
 
 #endif

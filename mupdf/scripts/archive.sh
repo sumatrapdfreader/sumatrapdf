@@ -16,4 +16,6 @@ do
 done
 
 echo gzip $O.tar
-gzip -f $O.tar
+gzip -f -k $O.tar
+echo xz $O.tar
+xz -f -k $O.tar

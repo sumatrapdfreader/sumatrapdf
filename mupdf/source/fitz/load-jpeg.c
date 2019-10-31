@@ -1,12 +1,20 @@
 #include "mupdf/fitz.h"
 
+#include <stdio.h>
+#include <string.h>
+#include <limits.h>
+
 #include <jpeglib.h>
 
 #ifdef SHARE_JPEG
 
-#define JZ_CTX_FROM_CINFO(c) (fz_context *)(c->client_data)
+#define JZ_CTX_FROM_CINFO(c) (fz_context *)((c)->client_data)
 
-#define fz_jpg_mem_init(ctx, cinfo)
+static void fz_jpg_mem_init(j_common_ptr cinfo, fz_context *ctx)
+{
+	cinfo->client_data = ctx;
+}
+
 #define fz_jpg_mem_term(cinfo)
 
 #else /* SHARE_JPEG */
@@ -20,24 +28,21 @@ static void *
 fz_jpg_mem_alloc(j_common_ptr cinfo, size_t size)
 {
 	fz_context *ctx = JZ_CTX_FROM_CINFO(cinfo);
-	return fz_malloc(ctx, size);
+	return fz_malloc_no_throw(ctx, size);
 }
 
 static void
 fz_jpg_mem_free(j_common_ptr cinfo, void *object, size_t size)
 {
 	fz_context *ctx = JZ_CTX_FROM_CINFO(cinfo);
-	UNUSED(size);
 	fz_free(ctx, object);
 }
 
 static void
-fz_jpg_mem_init(fz_context *ctx, struct jpeg_decompress_struct *cinfo)
+fz_jpg_mem_init(j_common_ptr cinfo, fz_context *ctx)
 {
 	jpeg_cust_mem_data *custmptr;
-
 	custmptr = fz_malloc_struct(ctx, jpeg_cust_mem_data);
-
 	if (!jpeg_cust_mem_init(custmptr, (void *) ctx, NULL, NULL, NULL,
 				fz_jpg_mem_alloc, fz_jpg_mem_free,
 				fz_jpg_mem_alloc, fz_jpg_mem_free, NULL))
@@ -45,14 +50,13 @@ fz_jpg_mem_init(fz_context *ctx, struct jpeg_decompress_struct *cinfo)
 		fz_free(ctx, custmptr);
 		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot initialize custom JPEG memory handler");
 	}
-
 	cinfo->client_data = custmptr;
 }
 
 static void
-fz_jpg_mem_term(struct jpeg_decompress_struct *cinfo)
+fz_jpg_mem_term(j_common_ptr cinfo)
 {
-	if(cinfo->client_data)
+	if (cinfo->client_data)
 	{
 		fz_context *ctx = JZ_CTX_FROM_CINFO(cinfo);
 		fz_free(ctx, cinfo->client_data);
@@ -65,7 +69,7 @@ fz_jpg_mem_term(struct jpeg_decompress_struct *cinfo)
 static void error_exit(j_common_ptr cinfo)
 {
 	char msg[JMSG_LENGTH_MAX];
-	fz_context *ctx = (fz_context *)cinfo->client_data;
+	fz_context *ctx = JZ_CTX_FROM_CINFO(cinfo);
 
 	cinfo->err->format_message(cinfo, msg);
 	fz_throw(ctx, FZ_ERROR_GENERIC, "jpeg error: %s", msg);
@@ -111,6 +115,83 @@ static inline int read_value(const unsigned char *data, int bytes, int is_big_en
 	for (; bytes > 0; bytes--)
 		value = (value << 8) | (is_big_endian ? *data++ : *--data);
 	return value;
+}
+
+enum {
+	MAX_ICC_PARTS = 256
+};
+
+static fz_colorspace *extract_icc_profile(fz_context *ctx, jpeg_saved_marker_ptr init_marker, int output_components, fz_colorspace *colorspace)
+{
+#if FZ_ENABLE_ICC
+	const char idseq[] = { 'I', 'C', 'C', '_', 'P', 'R', 'O', 'F', 'I', 'L', 'E', '\0'};
+	jpeg_saved_marker_ptr marker = init_marker;
+	fz_buffer *buf = NULL;
+	fz_colorspace *icc;
+	int part = 1;
+	int parts = MAX_ICC_PARTS;
+	const unsigned char *data;
+	size_t size;
+
+	fz_var(buf);
+
+	if (init_marker == NULL)
+		return colorspace;
+
+	fz_try(ctx)
+	{
+		while (part < parts && marker != NULL)
+		{
+			for (marker = init_marker; marker != NULL; marker = marker->next)
+			{
+				if (marker->marker != JPEG_APP0 + 2)
+					continue;
+				if (marker->data_length < nelem(idseq) + 2)
+					continue;
+				if (memcmp(marker->data, idseq, nelem(idseq)))
+					continue;
+				if (marker->data[nelem(idseq)] != part)
+					continue;
+
+				if (parts == MAX_ICC_PARTS)
+					parts = marker->data[nelem(idseq) + 1];
+				else if (marker->data[nelem(idseq) + 1] != parts)
+					fz_warn(ctx, "inconsistent number of icc profile chunks in jpeg");
+				if (part > parts)
+				{
+					fz_warn(ctx, "skipping out of range icc profile chunk in jpeg");
+					continue;
+				}
+
+				data = marker->data + 14;
+				size = marker->data_length - 14;
+
+				if (!buf)
+					buf = fz_new_buffer_from_copied_data(ctx, data, size);
+				else
+					fz_append_data(ctx, buf, data, size);
+
+				part++;
+				break;
+			}
+		}
+
+		if (buf)
+		{
+			icc = fz_new_icc_colorspace(ctx, fz_colorspace_type(ctx, colorspace), 0, NULL, buf);
+			fz_drop_colorspace(ctx, colorspace);
+			colorspace = icc;
+		}
+	}
+	fz_always(ctx)
+		fz_drop_buffer(ctx, buf);
+	fz_catch(ctx)
+		fz_warn(ctx, "ignoring embedded ICC profile in JPEG");
+
+	return colorspace;
+#else
+	return colorspace;
+#endif
 }
 
 static int extract_exif_resolution(jpeg_saved_marker_ptr marker, int *xres, int *yres)
@@ -215,21 +296,34 @@ static int extract_app13_resolution(jpeg_saved_marker_ptr marker, int *xres, int
 	return 0;
 }
 
-void
-fz_load_jpeg_info(fz_context *ctx, unsigned char *rbuf, int rlen, int *xp, int *yp, int *xresp, int *yresp, fz_colorspace **cspacep)
+fz_pixmap *
+fz_load_jpeg(fz_context *ctx, const unsigned char *rbuf, size_t rlen)
 {
 	struct jpeg_decompress_struct cinfo;
 	struct jpeg_error_mgr err;
 	struct jpeg_source_mgr src;
+	unsigned char *row[1], *sp, *dp;
+	fz_colorspace *colorspace = NULL;
+	unsigned int x;
+	int k, stride;
+	fz_pixmap *image = NULL;
+
+	fz_var(colorspace);
+	fz_var(image);
+	fz_var(row);
+
+	row[0] = NULL;
+
+	cinfo.mem = NULL;
+	cinfo.global_state = 0;
+	cinfo.err = jpeg_std_error(&err);
+	err.error_exit = error_exit;
+
+	cinfo.client_data = NULL;
+	fz_jpg_mem_init((j_common_ptr)&cinfo, ctx);
 
 	fz_try(ctx)
 	{
-		cinfo.client_data = ctx;
-		cinfo.err = jpeg_std_error(&err);
-		err.error_exit = error_exit;
-
-		fz_jpg_mem_init(ctx, &cinfo);
-
 		jpeg_create_decompress(&cinfo);
 
 		cinfo.src = &src;
@@ -246,17 +340,134 @@ fz_load_jpeg_info(fz_context *ctx, unsigned char *rbuf, int rlen, int *xp, int *
 
 		jpeg_read_header(&cinfo, 1);
 
-		if (cinfo.num_components == 1)
-			*cspacep = fz_device_gray(ctx);
-		else if (cinfo.num_components == 3)
-			*cspacep = fz_device_rgb(ctx);
-		else if (cinfo.num_components == 4)
-			*cspacep = fz_device_cmyk(ctx);
-		else
-			fz_throw(ctx, FZ_ERROR_GENERIC, "bad number of components in jpeg: %d", cinfo.num_components);
+		jpeg_start_decompress(&cinfo);
+
+		if (cinfo.output_components == 1)
+			colorspace = fz_keep_colorspace(ctx, fz_device_gray(ctx));
+		else if (cinfo.output_components == 3)
+			colorspace = fz_keep_colorspace(ctx, fz_device_rgb(ctx));
+		else if (cinfo.output_components == 4)
+			colorspace = fz_keep_colorspace(ctx, fz_device_cmyk(ctx));
+		colorspace = extract_icc_profile(ctx, cinfo.marker_list, cinfo.output_components, colorspace);
+		if (!colorspace)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "cannot determine colorspace");
+
+		image = fz_new_pixmap(ctx, colorspace, cinfo.output_width, cinfo.output_height, NULL, 0);
+
+		if (extract_exif_resolution(cinfo.marker_list, &image->xres, &image->yres))
+			/* XPS prefers EXIF resolution to JFIF density */;
+		else if (extract_app13_resolution(cinfo.marker_list, &image->xres, &image->yres))
+			/* XPS prefers APP13 resolution to JFIF density */;
+		else if (cinfo.density_unit == 1)
+		{
+			image->xres = cinfo.X_density;
+			image->yres = cinfo.Y_density;
+		}
+		else if (cinfo.density_unit == 2)
+		{
+			image->xres = cinfo.X_density * 254 / 100;
+			image->yres = cinfo.Y_density * 254 / 100;
+		}
+
+		if (image->xres <= 0) image->xres = 96;
+		if (image->yres <= 0) image->yres = 96;
+
+		fz_clear_pixmap(ctx, image);
+
+		row[0] = fz_malloc(ctx, cinfo.output_components * cinfo.output_width);
+		dp = image->samples;
+		stride = image->stride - image->w * image->n;
+		while (cinfo.output_scanline < cinfo.output_height)
+		{
+			jpeg_read_scanlines(&cinfo, row, 1);
+			sp = row[0];
+			for (x = 0; x < cinfo.output_width; x++)
+			{
+				for (k = 0; k < cinfo.output_components; k++)
+					*dp++ = *sp++;
+			}
+			dp += stride;
+		}
+	}
+	fz_always(ctx)
+	{
+		fz_drop_colorspace(ctx, colorspace);
+		fz_free(ctx, row[0]);
+		row[0] = NULL;
+
+		/* We call jpeg_abort rather than the more usual
+		 * jpeg_finish_decompress here. This has the same effect,
+		 * but doesn't spew warnings if we didn't read enough data etc.
+		 * Annoyingly jpeg_abort can throw
+		 */
+		fz_try(ctx)
+			jpeg_abort((j_common_ptr)&cinfo);
+		fz_catch(ctx)
+		{
+			/* Ignore any errors here */
+		}
+
+		jpeg_destroy_decompress(&cinfo);
+		fz_jpg_mem_term((j_common_ptr)&cinfo);
+	}
+	fz_catch(ctx)
+	{
+		fz_drop_pixmap(ctx, image);
+		fz_rethrow(ctx);
+	}
+
+	return image;
+}
+
+void
+fz_load_jpeg_info(fz_context *ctx, const unsigned char *rbuf, size_t rlen, int *xp, int *yp, int *xresp, int *yresp, fz_colorspace **cspacep)
+{
+	struct jpeg_decompress_struct cinfo;
+	struct jpeg_error_mgr err;
+	struct jpeg_source_mgr src;
+	fz_colorspace *icc = NULL;
+
+	*cspacep = NULL;
+
+	cinfo.mem = NULL;
+	cinfo.global_state = 0;
+	cinfo.err = jpeg_std_error(&err);
+	err.error_exit = error_exit;
+
+	cinfo.client_data = NULL;
+	fz_jpg_mem_init((j_common_ptr)&cinfo, ctx);
+
+	fz_try(ctx)
+	{
+		jpeg_create_decompress(&cinfo);
+
+		cinfo.src = &src;
+		src.init_source = init_source;
+		src.fill_input_buffer = fill_input_buffer;
+		src.skip_input_data = skip_input_data;
+		src.resync_to_restart = jpeg_resync_to_restart;
+		src.term_source = term_source;
+		src.next_input_byte = rbuf;
+		src.bytes_in_buffer = rlen;
+
+		jpeg_save_markers(&cinfo, JPEG_APP0+1, 0xffff);
+		jpeg_save_markers(&cinfo, JPEG_APP0+13, 0xffff);
+		jpeg_save_markers(&cinfo, JPEG_APP0+2, 0xffff);
+
+		jpeg_read_header(&cinfo, 1);
 
 		*xp = cinfo.image_width;
 		*yp = cinfo.image_height;
+
+		if (cinfo.num_components == 1)
+			*cspacep = fz_keep_colorspace(ctx, fz_device_gray(ctx));
+		else if (cinfo.num_components == 3)
+			*cspacep = fz_keep_colorspace(ctx, fz_device_rgb(ctx));
+		else if (cinfo.num_components == 4)
+			*cspacep = fz_keep_colorspace(ctx, fz_device_cmyk(ctx));
+		*cspacep = extract_icc_profile(ctx, cinfo.marker_list, cinfo.num_components, *cspacep);
+		if (!*cspacep)
+			fz_throw(ctx, FZ_ERROR_GENERIC, "cannot determine colorspace");
 
 		if (extract_exif_resolution(cinfo.marker_list, xresp, yresp))
 			/* XPS prefers EXIF resolution to JFIF density */;
@@ -284,10 +495,11 @@ fz_load_jpeg_info(fz_context *ctx, unsigned char *rbuf, int rlen, int *xp, int *
 	fz_always(ctx)
 	{
 		jpeg_destroy_decompress(&cinfo);
-		fz_jpg_mem_term(&cinfo);
+		fz_jpg_mem_term((j_common_ptr)&cinfo);
 	}
 	fz_catch(ctx)
 	{
+		fz_drop_colorspace(ctx, icc);
 		fz_rethrow(ctx);
 	}
 }

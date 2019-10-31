@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>mutool clean</title>
+<link rel="stylesheet" href="style.css" type="text/css">
+</head>
+<body>
+
+<header>
+<h1>mutool clean</h1>
+</header>
+
+<article>
+
+<p>
+The clean command pretty prints and rewrites the syntax of a PDF file.
+It can be used to repair broken files, expand compressed streams,
+filter out a range of pages, etc.
+
+<pre>
+mutool clean [options] input.pdf [output.pdf] [pages]
+</pre>
+
+<p>
+If no output file is specified, it will write the cleaned PDF to
+"out.pdf" in the current directory.
+
+<dl>
+<dt> -p password
+<dd> Use the specified password if the file is encrypted.
+
+<dt> -g
+<dd> Garbage collect objects that have no references from other
+objects.  Give the option twice to renumber all objects and
+compact the cross reference table.  Give it three times to merge
+and reuse duplicate objects.
+
+<dt> -s
+<dd> Rewrite content streams.
+
+<dt> -d
+<dd> Decompress streams. This will make the output file larger, but
+provides easy access for reading and editing the contents with a
+text editor.
+
+<dt> -l
+<dd> Linearize output. Create a "Web Optimized" output file.
+
+<dt> -i
+<dd> Toggle decompression of image streams. Use in conjunction with
+-d to leave images compressed.
+
+<dt> -f
+<dd> Toggle decompression of font streams. Use in conjunction with -d
+to leave fonts compressed.
+
+<dt> -a
+<dd> ASCII Hex encode binary streams. Use in conjunction with -d and
+-i or -f to ensure that although the images and/or fonts are
+compressed, the resulting file can still be viewed and edited
+with a text editor.
+
+<dt> -z
+<dd> Deflate uncompressed streams.  If combined with -d, any
+decompressed streams will be recompressed.  If combined with -a,
+the streams will also be hex encoded after compression.
+
+<dt> pages
+<dd> Comma separated list of page numbers and ranges to include.
+
+</dl>
+
+</article>
+
+<footer>
+<a href="http://www.artifex.com/"><img src="artifex-logo.png" align="right"></a>
+Copyright &copy; 2006-2018 Artifex Software Inc.
+</footer>
+
+</body>
+</html>

@@ -25,6 +25,8 @@ documentation and/or software.
 
 #include "mupdf/fitz.h"
 
+#include <string.h>
+
 /* Constants for MD5Transform routine */
 enum
 {
@@ -38,7 +40,7 @@ static void encode(unsigned char *, const unsigned int *, const unsigned);
 static void decode(unsigned int *, const unsigned char *, const unsigned);
 static void transform(unsigned int state[4], const unsigned char block[64]);
 
-static unsigned char padding[64] =
+static const unsigned char padding[64] =
 {
 	0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -210,12 +212,12 @@ void fz_md5_init(fz_md5 *context)
 /* MD5 block update operation. Continues an MD5 message-digest operation,
  * processing another message block, and updating the context.
  */
-void fz_md5_update(fz_md5 *context, const unsigned char *input, unsigned inlen)
+void fz_md5_update(fz_md5 *context, const unsigned char *input, size_t inlen)
 {
-	unsigned i, index, partlen;
+	size_t i, index, partlen;
 
 	/* Compute number of bytes mod 64 */
-	index = (unsigned)((context->count[0] >> 3) & 0x3F);
+	index = (size_t)((context->count[0] >> 3) & 0x3F);
 
 	/* Update number of bits */
 	context->count[0] += (unsigned int) inlen << 3;

@@ -1,152 +1,199 @@
 # Configuration for the Makefile
 
-OS ?= $(shell uname)
+OS := $(shell uname)
 OS := $(OS:MINGW%=MINGW)
+OS := $(OS:MSYS%=MINGW)
 OS := $(OS:Windows_NT=MINGW)
 OS := $(OS:Darwin=MACOS)
 
-CFLAGS += -Wall
+ifeq ($(findstring -fembed-bitcode,$(XCFLAGS)),)
+  # clang does not support these in combination with -fembed-bitcode
+  CFLAGS += -ffunction-sections -fdata-sections
+endif
 
-ifeq "$(build)" "debug"
-CFLAGS += -pipe -g -DDEBUG
-else ifeq "$(build)" "profile"
-CFLAGS += -pipe -O2 -DNDEBUG -pg
-LDFLAGS += -pg
-else ifeq "$(build)" "release"
-CFLAGS += -pipe -O2 -DNDEBUG -fomit-frame-pointer
-else ifeq "$(build)" "coverage"
-CFLAGS += -pipe -g -DDEBUG -pg -fprofile-arcs -ftest-coverage
-LIBS += -lgcov
-else ifeq "$(build)" "native"
-CFLAGS += -pipe -O2 -DNDEBUG -fomit-frame-pointer -march=native -mfpmath=sse
-else ifeq "$(build)" "memento"
-CFLAGS += -pipe -g -DMEMENTO -DDEBUG
+ifeq ($(OS),MACOS)
+  LDREMOVEUNREACH := -Wl,-dead_strip
 else
-$(error unknown build setting: '$(build)')
+  LDREMOVEUNREACH := -Wl,--gc-sections
 endif
 
-# Windows (MINGW) build doesn't use system libraries.
-ifeq "$(OS)" "MINGW"
+CFLAGS += -Wsign-compare
 
-# Mac OS X doesn't have pkg-config so we hard code paths.
-else ifeq "$(OS)" "MACOS"
+SANITIZE_FLAGS += -fsanitize=address
+SANITIZE_FLAGS += -fsanitize=leak
 
-HAVE_X11 ?= yes
-
-SYS_OPENSSL_CFLAGS = -DHAVE_OPENSSL
-SYS_OPENSSL_LIBS = -lcrypto
-
-SYS_CURL_DEPS = -lpthread
-
-SYS_X11_CFLAGS = -I/usr/X11R6/include
-SYS_X11_LIBS = -L/usr/X11R6/lib -lX11 -lXext
-
-SYS_FREETYPE_CFLAGS = -I/usr/X11R6/include/freetype2
-SYS_FREETYPE_LIBS = -lfreetype
-SYS_OPENJPEG_LIBS = -lopenjpeg
-SYS_JBIG2DEC_LIBS = -ljbig2dec
-SYS_JPEG_LIBS = -ljpeg
-SYS_ZLIB_LIBS = -lz
-
-CC = xcrun cc
-AR = xcrun ar
-LD = xcrun ld
-RANLIB_CMD = xcrun ranlib $@
-
-# Linux uses pkg-config for system libraries.
-else ifeq "$(OS)" "Linux"
-
-HAVE_X11 ?= yes
-
-ifeq "$(shell pkg-config --exists libcrypto && echo yes)" "yes"
-SYS_OPENSSL_CFLAGS = -DHAVE_OPENSSL $(shell pkg-config --cflags libcrypto)
-SYS_OPENSSL_LIBS = $(shell pkg-config --libs libcrypto)
+ifeq ($(build),debug)
+  CFLAGS += -pipe -g
+  LDFLAGS += -g
+else ifeq ($(build),release)
+  CFLAGS += -pipe -O2 -DNDEBUG -fomit-frame-pointer
+  LDFLAGS += $(LDREMOVEUNREACH) -Wl,-s
+else ifeq ($(build),small)
+  CFLAGS += -pipe -Os -DNDEBUG -fomit-frame-pointer
+  LDFLAGS += $(LDREMOVEUNREACH) -Wl,-s
+else ifeq ($(build),valgrind)
+  CFLAGS += -pipe -O2 -DNDEBUG -DPACIFY_VALGRIND -fno-omit-frame-pointer
+  LDFLAGS += $(LDREMOVEUNREACH) -Wl,-s
+else ifeq ($(build),sanitize)
+  CFLAGS += -pipe -g -fno-omit-frame-pointer $(SANITIZE_FLAGS)
+  LDFLAGS += -g $(SANITIZE_FLAGS)
+else ifeq ($(build),sanitize-release)
+  CFLAGS += -pipe -O2 -DNDEBUG -fno-omit-frame-pointer $(SANITIZE_FLAGS)
+  LDFLAGS += $(LDREMOVEUNREACH) -Wl,-s $(SANITIZE_FLAGS)
+else ifeq ($(build),profile)
+  CFLAGS += -pipe -O2 -DNDEBUG -pg
+  LDFLAGS += -pg
+else ifeq ($(build),coverage)
+  CFLAGS += -pipe -g -pg -fprofile-arcs -ftest-coverage
+  LIBS += -lgcov
+else ifeq ($(build),native)
+  CFLAGS += -pipe -O2 -DNDEBUG -fomit-frame-pointer -march=native
+  LDFLAGS += $(LDREMOVEUNREACH) -Wl,-s
+else ifeq ($(build),memento)
+  CFLAGS += -pipe -g -DMEMENTO
+  LDFLAGS += -g -rdynamic
+  ifneq ($(HAVE_LIBDL),no)
+    CFLAGS += -DHAVE_LIBDL
+    LIBS += -ldl
+  endif
+else ifeq ($(build),gperf)
+  CFLAGS += -pipe -O2 -DNDEBUG -fomit-frame-pointer -DGPERF
+  LIBS += -lprofiler
+else
+  $(error unknown build setting: '$(build)')
 endif
 
-ifeq "$(shell pkg-config --exists libcurl && echo yes)" "yes"
-HAVE_CURL = yes
-SYS_CURL_CFLAGS = $(shell pkg-config --cflags libcurl)
-SYS_CURL_LIBS = $(shell pkg-config --libs libcurl)
+# Default system libraries
+SYS_FREETYPE_LIBS := -lfreetype2
+SYS_HARFBUZZ_LIBS := -lharfbuzz
+SYS_JBIG2DEC_LIBS := -ljbig2dec
+SYS_JPEGXR_LIBS := -ljpegxr
+SYS_LCMS2_LIBS := -llcms2-art
+SYS_LIBJPEG_LIBS := -ljpeg
+SYS_MUJS_LIBS := -lmujs
+SYS_OPENJPEG_LIBS := -lopenjp2
+SYS_ZLIB_LIBS := -lz
+
+ifeq ($(OS),MINGW)
+  WINDRES := windres
+  HAVE_WIN32 := yes
+
+else ifeq ($(OS),MACOS)
+  HAVE_GLUT := yes
+  SYS_GLUT_CFLAGS := -Wno-deprecated-declarations
+  SYS_GLUT_LIBS := -framework GLUT -framework OpenGL
+  CC = xcrun cc
+  AR = xcrun ar
+  LD = xcrun ld
+  RANLIB = xcrun ranlib
+
+else ifeq ($(OS),Linux)
+  HAVE_OBJCOPY := yes
+
+  ifeq ($(shell pkg-config --exists freetype2 && echo yes),yes)
+	SYS_FREETYPE_CFLAGS := $(shell pkg-config --cflags freetype2)
+	SYS_FREETYPE_LIBS := $(shell pkg-config --libs freetype2)
+  endif
+  ifeq ($(shell pkg-config --exists harfbuzz && echo yes),yes)
+	SYS_HARFBUZZ_CFLAGS := $(shell pkg-config --cflags harfbuzz)
+	SYS_HARFBUZZ_LIBS := $(shell pkg-config --libs harfbuzz)
+  endif
+  ifeq ($(shell pkg-config --exists lcms2 && echo yes),yes)
+	SYS_LCMS2_CFLAGS := $(shell pkg-config --cflags lcms2)
+	SYS_LCMS2_LIBS := $(shell pkg-config --libs lcms2)
+  endif
+  ifeq ($(shell pkg-config --exists libjpeg && echo yes),yes)
+	SYS_LIBJPEG_CFLAGS := $(shell pkg-config --cflags libjpeg)
+	SYS_LIBJPEG_LIBS := $(shell pkg-config --libs libjpeg)
+  endif
+  ifeq ($(shell pkg-config --exists libopenjp2 && echo yes),yes)
+	SYS_OPENJPEG_CFLAGS := $(shell pkg-config --cflags libopenjp2)
+	SYS_OPENJPEG_LIBS := $(shell pkg-config --libs libopenjp2)
+  endif
+  ifeq ($(shell pkg-config --exists zlib && echo yes),yes)
+	SYS_ZLIB_CFLAGS := $(shell pkg-config --cflags zlib)
+	SYS_ZLIB_LIBS := $(shell pkg-config --libs zlib)
+  endif
+
+  HAVE_SYS_CURL := $(shell pkg-config --exists libcurl && echo yes)
+  ifeq ($(HAVE_SYS_CURL),yes)
+	SYS_CURL_CFLAGS := $(shell pkg-config --cflags libcurl)
+	SYS_CURL_LIBS := $(shell pkg-config --libs libcurl)
+  endif
+
+  HAVE_GLUT := yes
+  ifeq ($(HAVE_GLUT),yes)
+	SYS_GLUT_CFLAGS :=
+	SYS_GLUT_LIBS := -lglut -lGL
+  endif
+
+  HAVE_X11 := $(shell pkg-config --exists x11 xext && echo yes)
+  ifeq ($(HAVE_X11),yes)
+	X11_CFLAGS := $(shell pkg-config --cflags x11 xext)
+	X11_LIBS := $(shell pkg-config --libs x11 xext)
+  endif
+
+  HAVE_LIBCRYPTO := $(shell pkg-config --exists 'libcrypto >= 1.1.0' && echo yes)
+  ifeq ($(HAVE_LIBCRYPTO),yes)
+	LIBCRYPTO_CFLAGS := $(shell pkg-config --cflags libcrypto) -DHAVE_LIBCRYPTO
+	LIBCRYPTO_LIBS := $(shell pkg-config --libs libcrypto)
+  endif
+
+  HAVE_PTHREAD := yes
+  ifeq ($(HAVE_PTHREAD),yes)
+	PTHREAD_CFLAGS :=
+	PTHREAD_LIBS := -lpthread
+  endif
+
 endif
-SYS_CURL_DEPS = -lpthread -lrt
 
-SYS_X11_CFLAGS = $(shell pkg-config --cflags x11 xext)
-SYS_X11_LIBS = $(shell pkg-config --libs x11 xext)
+# The following section has various cross compilation configurations.
+#
+# Invoke these as:
+#      make OS=mingw32-cross
+#
+# This does rely on the generated directory being populated with the font files.
+# On a unix-like system, run 'make generate' before doing the cross compile.
+# On Windows, run 'nmake -f scripts\fontdump.nmake' in a Visual Studio command prompt.
 
-SYS_FREETYPE_CFLAGS = $(shell pkg-config --cflags freetype2)
-SYS_FREETYPE_LIBS = $(shell pkg-config --libs freetype2)
-SYS_OPENJPEG_CFLAGS = $(shell pkg-config --cflags libopenjp2)
-SYS_OPENJPEG_LIBS = $(shell pkg-config --libs libopenjp2)
-SYS_JBIG2DEC_LIBS = -ljbig2dec
-SYS_JPEG_LIBS = -ljpeg
-SYS_ZLIB_LIBS = -lz
-
+ifeq "$(OS)" "wasm"
+  OUT := build/wasm/$(build)
+  CC = emcc
+  CXX = em++
+  AR = emar
+  HAVE_GLUT=no
+  HAVE_X11=no
+  HAVE_OBJCOPY=no
+  HAVE_LIBCRYPTO=no
 endif
 
-# The following section is an example of how to simply do cross-compilation
-# using these Makefiles. It builds for a beagleboard running ARM linux,
-# compiling on windows with the CodeSourcery G++ compilers.
-# Invoke this as:
-#      make OS=beagle-cross build=release
-# This does rely on the generated directory being populated with the cmap
-# files etc first. Either:
-#   1) do 'make generate' first (this relies on you having an appropriate host
-#   base C compiler set up - such as you would have on unix or in windows
-#   cygwin)
-#   2) do a non cross compile build (e.g. windows in MSVC) first.
-#   3) download the generated files from mupdf.com.
-
-ifeq "$(OS)" "beagle-cross"
-CC = arm-none-linux-gnueabi-gcc
-LD = arm-none-linux-gnueabi-gcc
-AR = arm-none-linux-gnueabi-ar
-CFLAGS += -O3 -mfpu=neon -mcpu=cortex-a8 -mfloat-abi=softfp -ftree-vectorize -ffast-math -fsingle-precision-constant
-CROSSCOMPILE=yes
+ifeq "$(OS)" "mingw32-cross"
+  OUT := build/$(OS)/$(build)
+  CC = i686-w64-mingw32-gcc
+  CXX = i686-w64-mingw32-g++
+  LD = i686-w64-mingw32-gcc
+  AR = i686-w64-mingw32-ar
+  WINDRES = i686-w64-mingw32-windres
+  HAVE_WIN32=yes
 endif
 
-ifeq "$(OS)" "webos-pre-cross"
-CC = arm-none-linux-gnueabi-gcc
-LD = arm-none-linux-gnueabi-gcc
-AR = arm-none-linux-gnueabi-ar
-CFLAGS += -O3 -mcpu=cortex-a8 -mfpu=neon -mfloat-abi=softfp -ftree-vectorize -ffast-math -fsingle-precision-constant
-CROSSCOMPILE=yes
-endif
-
-ifeq "$(OS)" "webos-pixi-cross"
-CC = arm-none-linux-gnueabi-gcc
-LD = arm-none-linux-gnueabi-gcc
-AR = arm-none-linux-gnueabi-ar
-CFLAGS += -O3 -mcpu=arm1136jf-s -mfpu=vfp -mfloat-abi=softfp -ffast-math -fsingle-precision-constant
-CROSSCOMPILE=yes
-endif
-
-ifeq "$(OS)" "w64_x86-cross-mingw32"
-CC = i686-w64-mingw32-gcc
-LD = i686-w64-mingw32-gcc
-AR = i686-w64-mingw32-ar
-CROSSCOMPILE=yes
-endif
-
-ifeq "$(OS)" "w64_amd64-cross-mingw32"
-CC = x86_64-w64-mingw32-gcc
-LD = x86_64-w64-mingw32-gcc
-AR = x86_64-w64-mingw32-ar
-CROSSCOMPILE=yes
+ifeq "$(OS)" "mingw64-cross"
+  OUT := build/$(OS)/$(build)
+  CC = x86_64-w64-mingw32-gcc
+  CXX = x86_64-w64-mingw32-g++
+  LD = x86_64-w64-mingw32-gcc
+  AR = x86_64-w64-mingw32-ar
+  WINDRES = x86_64-w64-mingw32-windres
+  HAVE_WIN32=yes
 endif
 
 # Most variables when building for iOS are set up in ios/build_libs.sh,
 # which is called from the Xcode project as a "Run Script" build step.
 # The following section works for both device and simulator builds.
-
 ifeq "$(OS)" "ios"
-CC = xcrun cc
-AR = xcrun ar
-LD = xcrun ld
-RANLIB_CMD = xcrun ranlib $@
-CROSSCOMPILE=yes
-endif
-
-# TODO: If crosscompiling, why not just call "make libs" instead of this exception?
-ifeq "$(CROSSCOMPILE)" "yes"
-HAVE_X11 ?= no
+  CC = xcrun cc
+  CXX = xcrun c++
+  AR = xcrun ar
+  LD = xcrun ld
+  RANLIB = xcrun ranlib
 endif

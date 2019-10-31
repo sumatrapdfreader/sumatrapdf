@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>MuPDF Core API</title>
+<link rel="stylesheet" href="../style.css" type="text/css">
+<style>
+dl dt { font-family: monospace; margin-top: 0.5em; white-space: pre}
+</style>
+</head>
+<body>
+
+<header>
+<h1>MuPDF Core API</h1>
+</header>
+
+<article>
+
+<p>
+Almost all functions in the MuPDF library take a fz_context structure as their
+first argument. The context is used for many things; primarily it holds the
+exception stack for our setjmp based exception handling. It also holds various
+caches and auxiliary contexts for font rendering and color management.
+
+<h2>The Fitz Context</h2>
+
+<p>
+<i>If you wonder where the prefix "fz" and name Fitz come from, MuPDF originally
+started out as a prototype of a new rendering library architecture for Ghostscript.
+It was to be the "bastard son" of libart and Ghostscript. History turned out
+differently, and the project mutated into a standalone PDF renderer now called MuPDF.
+The "fz" prefix for the graphics library and core modules remains to this day.
+</i>
+
+
+<p>
+Here is the code to create a Fitz context. The first two arguments are used if
+you need to use a custom memory allocator, and the third argument is a hint to
+much memory the various caches should be allowed to grow. The limit is only a
+soft limit. We may exceed it, but will start clearing out stale data to try to
+stay below the limit when possible. Setting it to a lower value will prevent
+the caches from growing out of hand if you are tight on memory.
+
+<pre>
+#include &lt;mupdf/fitz.h&gt;
+
+main()
+{
+	fz_context *ctx;
+
+	ctx = fz_new_context(NULL, NULL, FZ_STORE_UNLIMITED);
+	if (!ctx)
+		die("Failed to create a new Fitz context!");
+
+	<i>... do stuff ...</i>
+
+	fz_drop_context(ctx);
+}
+</pre>
+
+<h2>Error Handling</h2>
+
+<p>
+MuPDF uses a setjmp based exception handling system. This is encapsulated
+by the use of three macros: fz_try, fz_always, and fz_catch.
+When an error is raised by fz_throw, or re-raised fz_rethrow, execution
+will jump to the enclosing always/catch block.
+
+<p>
+All functions you call should be guarded by a fz_try block to catch the
+errors, or the program will call abort() on errors. You don't want that.
+
+<p>
+The fz_always block is optional. It is typically used to free memory
+or release resources unconditionally, in both the case when the execution
+of the try block succeeds, and when an error occurs.
+
+<pre>
+fz_try(ctx) {
+	// Do stuff that may throw an exception.
+}
+fz_always(ctx) {
+	// This (optional) block is always executed.
+}
+fz_catch(ctx) {
+	// This block is only executed when recovering from an exception.
+}
+</pre>
+
+<p>
+Since the fz_try macro is based on setjmp, the same conditions that apply
+to local variables in the presence of setjmp apply. Any locals written
+to inside the try block may be restored to their pre-try state when an
+error occurs. We provide a fz_var() macro to guard against this.
+
+<p>
+In the following example, if we don't guard 'buf' with fz_var, then
+when an error occurs the 'buf' local variable might have be reset to
+its pre-try value (NULL) and we would leak the memory.
+
+<pre>
+char *buf = NULL;
+fz_var(buf);
+fz_try(ctx) {
+	buf = fz_malloc(ctx, 100);
+	// Do stuff with buf that may throw an exception.
+}
+fz_always(ctx) {
+	fz_free(ctx, buf);
+}
+fz_catch(ctx) {
+	fz_rethrow(ctx);
+}
+</pre>
+
+<p>
+Carefully note that you should <i><b>NEVER</b></i> return from within a fz_try or fz_always block!
+Doing so will unbalance the exception stack, and things will go catastrophically wrong.
+Instead, it is possible to break out of the fz_try and fz_always block by using a break
+statement if you want to exit the block early without throwing an exception.
+
+<p>
+Throwing a new exception can be done with fz_throw. Passing an exception along after having
+cleaned up in the fz_catch block can be done with fz_rethrow. fz_throw takes a printf-like
+formatting string.
+
+<pre>
+enum {
+	FZ_ERROR_MEMORY, // when malloc fails
+	FZ_ERROR_SYNTAX, // recoverable syntax errors
+	FZ_ERROR_GENERIC, // all other errors
+};
+void fz_throw(fz_context *ctx, int error_code, const char *fmt, ...);
+void fz_rethrow(fz_context *ctx);
+</pre>
+
+<h2>Memory Allocation</h2>
+
+<p>
+You should not need to do raw memory allocation using the Fitz context, but if you do,
+here are the functions you need. These work just like the regular C functions, but take
+a Fitz context and throw an exception if the allocation fails. They will NOT return NULL;
+either they will succeed or they will throw an exception.
+
+<pre>
+void *fz_malloc(fz_context *ctx, size_t size);
+void *fz_realloc(fz_context *ctx, void *old, size_t size);
+void *fz_calloc(fz_context *ctx, size_t count, size_t size);
+void fz_free(fz_context *ctx, void *ptr);
+</pre>
+
+<p>
+There are also some macros that allocate structures and arrays, together with a type cast
+to catch typing errors.
+
+<pre>
+T *fz_malloc_struct(fz_context *ctx, T); // Allocate and zero the memory.
+T *fz_malloc_array(fz_context *ctx, size_t count, T); // Allocate <i>uninitialized</i> memory!
+T *fz_realloc_array(fz_context *ctx, T *old, size_t count, T);
+</pre>
+
+<p>
+In the rare case that you need an allocation that returns NULL on failure,
+there are variants for that too: fz_malloc_no_throw, etc.
+
+<h2>Pool Allocator</h2>
+
+<p>
+The pool allocator is used for allocating many small objects that live and die together.
+All objects allocated from the pool will be freed when the pool is freed.
+
+<pre>
+typedef struct { <i>opaque</i> } fz_pool;
+
+fz_pool *fz_new_pool(fz_context *ctx);
+void *fz_pool_alloc(fz_context *ctx, fz_pool *pool, size_t size);
+char *fz_pool_strdup(fz_context *ctx, fz_pool *pool, const char *s);
+void fz_drop_pool(fz_context *ctx, fz_pool *pool);
+</pre>
+
+<h2>Reference Counting</h2>
+
+<p>
+Most objects in MuPDF use reference counting to keep track of when they are no longer
+used and can be freed. We use the verbs "keep" and "drop" to increment and decrement
+the reference count. For simplicity, we also use the word "drop" for non-reference
+counted objects (so that in case we change our minds and decide to add reference counting
+to an object, the code that uses it need not change).
+
+<h2>Hash Table</h2>
+
+<p>
+We have a generic hash table structure with fixed length keys.
+
+<p>
+The keys and values are <i>not</i> reference counted by the hash table.
+Callers are responsible for manually taking care of reference counting
+when inserting and removing values from the table, should that be
+desired.
+
+<pre>
+typedef struct { <i>opaque</i> } fz_hash_table;
+</pre>
+
+<dl>
+<dt>fz_hash_table *fz_new_hash_table(fz_context *ctx,
+	int initial_size,
+	int key_length,
+	int lock,
+	void (*drop_value)(fz_context *ctx, void *value));
+<dd>
+The lock parameter should be zero, any other value will result in unpredictable behavior.
+The drop_value callback function to the constructor is only used to
+release values when the hash table is destroyed.
+
+<dt>void fz_drop_hash_table(fz_context *ctx, fz_hash_table *table);
+<dd>
+Free the hash table and call the drop_value function on all the values in the table.
+
+<dt>void *fz_hash_find(fz_context *ctx, fz_hash_table *table, const void *key);
+<dd>
+Find the value associated with the key. Returns NULL if not found.
+
+<dt>void *fz_hash_insert(fz_context *ctx, fz_hash_table *table, const void *key, void *value);
+<dd>Insert the value into the hash table.
+Inserting a duplicate entry will NOT overwrite the old value, it will return the old value instead.
+Return NULL if the value was inserted for the first time.
+Does <i>not</i> reference count the value!
+
+<dt>void fz_hash_remove(fz_context *ctx, fz_hash_table *table, const void *key);
+<dd>
+Remove the associated value from the hash table. This will <i>not</i> reference count the value!
+
+<dt>void fz_hash_for_each(fz_context *ctx,
+	fz_hash_table *table,
+	void *state,
+	void (*callback)(fz_context *ctx, void *state, void *key, int key_length, void *value);
+<dd>
+Iterate and call a function for each key-value pair in the table.
+</dl>
+
+<h2>Binary Tree</h2>
+
+<p>
+The fz_tree structure is a self-balancing binary tree that maps text strings to values.
+
+<dl>
+<dt>typedef struct { <i>opaque</i> } fz_tree;
+<dt>void *fz_tree_lookup(fz_context *ctx, fz_tree *node, const char *key);
+<dd>Look up an entry in the tree. Returns NULL if not found.
+<dt>fz_tree *fz_tree_insert(fz_context *ctx, fz_tree *root, const char *key, void *value);
+<dd>Insert a new entry into the tree. Do not insert duplicate entries. Returns the new root object.
+<dt>void fz_drop_tree(fz_context *ctx, fz_tree *node, void (*dropfunc)(fz_context *ctx, void *value));
+<dd>Free the tree and all the values in it.
+</dl>
+
+<p>
+There is no constructor for this structure, since there is no containing root structure.
+Instead, the insert function returns the new root node.
+Use NULL for the initial empty tree.
+
+<pre>
+fz_tree *tree = NULL;
+tree = fz_tree_insert(ctx, tree, "A", my_a_obj);
+tree = fz_tree_insert(ctx, tree, "B", my_b_obj);
+tree = fz_tree_insert(ctx, tree, "C", my_c_obj);
+assert(fz_tree_lookup(ctx, tree, "B") == my_b_obj);
+</pre>
+
+<h2>XML Parser</h2>
+
+<p>
+We have a rudimentary XML parser that handles well formed XML. It does not do any namespace processing,
+and it does not validate the XML syntax.
+
+<p>
+The parser supports UTF-8, UTF-16, iso-8859-1, iso-8859-7, koi8, windows-1250, windows-1251,
+and windows-1252 encoded input.
+
+<p>
+If preserve_white is false, we will discard all whitespace-only text elements.
+This is useful for parsing non-text documents such as XPS and SVG.
+Preserving whitespace is useful for parsing XHTML.
+
+<pre>
+typedef struct { <i>opaque</i> } fz_xml_doc;
+typedef struct { <i>opaque</i> } fz_xml;
+
+fz_xml_doc *fz_parse_xml(fz_context *ctx, fz_buffer *buf, int preserve_white);
+void fz_drop_xml(fz_context *ctx, fz_xml_doc *xml);
+fz_xml *fz_xml_root(fz_xml_doc *xml);
+
+fz_xml *fz_xml_prev(fz_xml *item);
+fz_xml *fz_xml_next(fz_xml *item);
+fz_xml *fz_xml_up(fz_xml *item);
+fz_xml *fz_xml_down(fz_xml *item);
+</pre>
+
+<dl>
+<dt>int fz_xml_is_tag(fz_xml *item, const char *name);
+<dd>Returns true if the element is a tag with the given name.
+<dt>char *fz_xml_tag(fz_xml *item);
+<dd>Returns the tag name if the element is a tag, otherwise NULL.
+<dt>char *fz_xml_att(fz_xml *item, const char *att);
+<dd>Returns the value of the tag element's attribute, or NULL if not a tag or missing.
+<dt>char *fz_xml_text(fz_xml *item);
+<dd>Returns the UTF-8 text of the text element, or NULL if not a text element.
+<dt>fz_xml *fz_xml_find(fz_xml *item, const char *tag);
+<dd>Find the next element with the given tag name. Returns the element itself if it matches, or the first sibling if it doesn't. Returns NULL if there is no sibling with that tag name.
+<dt>fz_xml *fz_xml_find_next(fz_xml *item, const char *tag);
+<dd>Find the next sibling element with the given tag name, or NULL if none.
+<dt>fz_xml *fz_xml_find_down(fz_xml *item, const char *tag);
+<dd>Find the first child element with the given tag name, or NULL if none.
+</dl>
+
+<h2>String Functions</h2>
+
+<p>
+All text strings in MuPDF use the UTF-8 encoding. The following functions encode and decode UTF-8 characters,
+and return the number of bytes used by the UTF-8 character (at most FZ_UTFMAX).
+
+<pre>
+enum { FZ_UTFMAX=4 };
+int fz_chartorune(int *rune, const char *str);
+int fz_runetochar(char *str, int rune);
+</pre>
+
+<p>
+Since many of the C string functions are locale dependent, we also provide
+our own locale independent versions of these functions. We also have a couple
+of semi-standard functions like strsep and strlcpy that we can't rely on
+the system providing. These should be pretty self explanatory:
+
+<pre>
+char *fz_strdup(fz_context *ctx, const char *s);
+float fz_strtof(const char *s, char **es);
+char *fz_strsep(char **stringp, const char *delim);
+size_t fz_strlcpy(char *dst, const char *src, size_t n);
+size_t fz_strlcat(char *dst, const char *src, size_t n);
+void *fz_memmem(const void *haystack, size_t haystacklen, const void *needle, size_t needlelen);
+int fz_strcasecmp(const char *a, const char *b);
+</pre>
+
+<p>
+There are also a couple of functions to process filenames and URLs:
+
+<dl>
+<dt>char *fz_cleanname(char *path);
+<dd>
+Rewrite path in-place to the shortest string that names the same path.
+Eliminates multiple and trailing slashes, and interprets "." and "..".
+
+<dt>void fz_dirname(char *dir, const char *path, size_t dir_size);
+<dd>Extract the directory component from a path.
+
+<dt>char *fz_urldecode(char *url);
+<dd>Decode URL escapes in-place.
+</dl>
+
+<h2>String formatting</h2>
+
+<p>
+Our printf family handles the common printf formatting characters, with a few minor differences.
+We also support several non-standard formatting characters.
+The same printf syntax is used in the printf functions in the I/O module as well.
+
+<pre>
+size_t fz_vsnprintf(char *buffer, size_t space, const char *fmt, va_list args);
+size_t fz_snprintf(char *buffer, size_t space, const char *fmt, ...);
+char *fz_asprintf(fz_context *ctx, const char *fmt, ...);
+</pre>
+
+<dl>
+<dt>%%, %c, %e, %f, %p, %x, %d, %u, %s
+<dd>These behave as usual, but only take padding (+,0,space), width, and precision arguments.
+<dt>%g float
+<dd>Prints the float in the shortest possible format that won't lose precision,
+except NaN to 0, +Inf to FLT_MAX, -Inf to -FLT_MAX.
+<dt>%M fz_matrix*
+<dd>Prints all 6 coefficients in the matrix as %g separated by spaces.
+<dt>%R fz_rect*
+<dd>Prints all x0, y0, x1, y1 in the rectangle as %g separated by spaces.
+<dt>%P fz_point*
+<dd>Prints x, y in the point as %g separated by spaces.
+<dt>%C int
+<dd>Formats character as UTF-8. Useful to print unicode text.
+<dt>%q char*
+<dd>Formats string using double quotes and C escapes.
+<dt>%( char*
+<dd>Formats string using parenthesis quotes and postscript escapes.
+<dt>%n char*
+<dd>Formats string using prefix / and PDF name hex-escapes.
+</dl>
+
+<h2>Math Functions</h2>
+
+<p>
+We obviously need to deal with lots of points, rectangles, and transformations in MuPDF.
+
+<p>
+Points are fairly self evident. The fz_make_point utility function is for use with
+Visual Studio that doesn't yet support the C99 struct initializer syntax.
+
+<pre>
+typedef struct {
+	float x, y;
+} fz_point;
+
+fz_point fz_make_point(float x, float y);
+</pre>
+
+<p>
+Rectangles are represented by two pairs of coordinates.
+The x0, y0 pair have the smallest values, and in the normal
+coordinate space used by MuPDF that is the upper left corner.
+The x1, y1 pair have the largest values, typically the lower right corner.
+
+<p>
+In order to represent an infinite unbounded area, we use an x0 that
+is larger than the x1.
+
+<pre>
+typedef struct {
+	float x0, y0;
+	float x1, y1;
+} fz_rect;
+
+const fz_rect fz_infinite_rect = { 1, 1, -1, -1 };
+const fz_rect fz_empty_rect = { 0, 0, 0, 0 };
+const fz_rect fz_unit_rect = { 0, 0, 1, 1 };
+
+fz_rect fz_make_rect(float x0, float y0, float x1, float y1);
+</pre>
+
+<p>
+Our matrix structure is a row-major 3x3 matrix with the last column always [ 0 0 1 ].
+This is represented as a struct with six fields, in the same order as in PDF and Postscript.
+The identity matrix is a global constant, for easy access.
+
+<pre>
+/ a b 0 \
+| c d 0 |
+\ e f 1 /
+
+typedef struct {
+	float a, b, c, d, e, f;
+} fz_matrix;
+
+const fz_matrix fz_identity = { 1, 0, 0, 1, 0, 0 };
+
+fz_matrix fz_make_matrix(float a, float b, float c, float d, float e, float f);
+</pre>
+
+<p>
+Sometimes we need to represent a non-axis aligned rectangular-ish area, such
+as the area covered by some rotated text. For this we use a quad representation,
+using a points for each of the upper/lower/left/right corners as seen from
+the reading direction of the text represented.
+
+<pre>
+typedef struct {
+	fz_point ul, ur, ll, lr;
+} fz_quad;
+</pre>
+
+<p>
+List of math functions. These are simple mathematical operations that can not
+throw errors, so do not need a context argument.
+
+<pre>
+float fz_abs(float f);
+float fz_min(float a, float b);
+float fz_max(float a, float b);
+float fz_clamp(float f, float min, float max);
+
+int fz_absi(int i);
+int fz_mini(int a, int b);
+int fz_maxi(int a, int b);
+int fz_clampi(int i, int min, int max);
+</pre>
+
+<pre>
+int fz_is_empty_rect(fz_rect r);
+int fz_is_infinite_rect(fz_rect r);
+</pre>
+
+<pre>
+fz_matrix fz_concat(fz_matrix left, fz_matrix right);
+fz_matrix fz_scale(float sx, float sy);
+fz_matrix fz_shear(float sx, float sy);
+fz_matrix fz_rotate(float degrees);
+fz_matrix fz_translate(float tx, float ty);
+fz_matrix fz_invert_matrix(fz_matrix matrix);
+</pre>
+
+<pre>
+fz_point fz_transform_point(fz_point point, fz_matrix m);
+fz_point fz_transform_vector(fz_point vector, fz_matrix m); // ignores translation
+fz_rect fz_transform_rect(fz_rect rect, fz_matrix m);
+fz_quad fz_transform_quad(fz_quad q, fz_matrix m);
+
+int fz_is_point_inside_rect(fz_point p, fz_rect r);
+int fz_is_point_inside_quad(fz_point p, fz_quad q);
+</pre>
+
+<dl>
+<dt>fz_matrix fz_transform_page(fz_rect mediabox, float resolution, float rotate);
+<dd>
+Create a transform matrix to draw a page at a given resolution and rotation.
+The scaling factors are adjusted so that the page covers a whole number of pixels.
+Resolution is given in dots per inch.
+Rotation is expressed in degrees (0, 90, 180, and 270 are valid values).
+</dl>
+
+</article>
+
+<footer>
+<a href="https://www.artifex.com/"><img src="../artifex-logo.png" align="right"></a>
+Copyright &copy; 2019 Artifex Software Inc.
+</footer>
+
+</body>
+</html>

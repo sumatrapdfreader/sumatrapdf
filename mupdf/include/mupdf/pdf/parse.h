@@ -1,10 +1,6 @@
 #ifndef MUPDF_PDF_PARSE_H
 #define MUPDF_PDF_PARSE_H
 
-/*
- * tokenizer and low-level object parser
- */
-
 typedef enum
 {
 	PDF_TOK_ERROR, PDF_TOK_EOF,
@@ -20,20 +16,17 @@ typedef enum
 } pdf_token;
 
 void pdf_lexbuf_init(fz_context *ctx, pdf_lexbuf *lexbuf, int size);
-void pdf_lexbuf_fin(pdf_lexbuf *lexbuf);
-ptrdiff_t pdf_lexbuf_grow(pdf_lexbuf *lexbuf);
+void pdf_lexbuf_fin(fz_context *ctx, pdf_lexbuf *lexbuf);
+ptrdiff_t pdf_lexbuf_grow(fz_context *ctx, pdf_lexbuf *lexbuf);
 
-pdf_token pdf_lex(fz_stream *f, pdf_lexbuf *lexbuf);
-pdf_token pdf_lex_no_string(fz_stream *f, pdf_lexbuf *lexbuf);
+pdf_token pdf_lex(fz_context *ctx, fz_stream *f, pdf_lexbuf *lexbuf);
+pdf_token pdf_lex_no_string(fz_context *ctx, fz_stream *f, pdf_lexbuf *lexbuf);
 
-pdf_obj *pdf_parse_array(pdf_document *doc, fz_stream *f, pdf_lexbuf *buf);
-pdf_obj *pdf_parse_dict(pdf_document *doc, fz_stream *f, pdf_lexbuf *buf);
-pdf_obj *pdf_parse_stm_obj(pdf_document *doc, fz_stream *f, pdf_lexbuf *buf);
-pdf_obj *pdf_parse_ind_obj(pdf_document *doc, fz_stream *f, pdf_lexbuf *buf, int *num, int *gen, int *stm_ofs, int *try_repair);
+pdf_obj *pdf_parse_array(fz_context *ctx, pdf_document *doc, fz_stream *f, pdf_lexbuf *buf);
+pdf_obj *pdf_parse_dict(fz_context *ctx, pdf_document *doc, fz_stream *f, pdf_lexbuf *buf);
+pdf_obj *pdf_parse_stm_obj(fz_context *ctx, pdf_document *doc, fz_stream *f, pdf_lexbuf *buf);
+pdf_obj *pdf_parse_ind_obj(fz_context *ctx, pdf_document *doc, fz_stream *f, pdf_lexbuf *buf, int *num, int *gen, int64_t *stm_ofs, int *try_repair);
 
-/*
-	pdf_print_token: print a lexed token to a buffer, growing if necessary
-*/
-void pdf_print_token(fz_context *ctx, fz_buffer *buf, int tok, pdf_lexbuf *lex);
+void pdf_append_token(fz_context *ctx, fz_buffer *buf, int tok, pdf_lexbuf *lex);
 
 #endif

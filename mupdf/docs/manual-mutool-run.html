@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>mutool run</title>
+<link rel="stylesheet" href="style.css" type="text/css">
+</head>
+<body>
+
+<header>
+<h1>mutool run</h1>
+</header>
+
+<article>
+
+<p>
+The 'mutool run' command executes a JavaScript program, which has access to most of the features of the MuPDF library.
+The command supports ECMAScript 5 syntax in strict mode.
+All of the MuPDF constructors and functions live in the global object, and the
+command line arguments are accessible from the global 'scriptArgs' object.
+The name of the script is in the global 'scriptPath' variable.
+
+<pre>
+mutool run script.js [ arguments ... ]
+</pre>
+
+<p>
+If invoked without any arguments, it will drop you into an interactive REPL (read-eval-print-loop).
+
+<h2>
+Example scripts
+</h2>
+
+<p>
+Create and edit PDF documents:
+
+<ul>
+<li><a href="examples/pdf-create-lowlevel.js">pdf-create-lowlevel.js</a>: Create PDF document from scratch using only low level functions.
+<li><a href="examples/pdf-create.js">pdf-create.js</a>: Create PDF document from scratch, using helper functions.
+<li><a href="examples/pdf-merge.js">pdf-merge.js</a>: Merge pages from multiple PDF documents into one PDF file.
+</ul>
+
+<p>
+Graphics and the device interface:
+
+<ul>
+<li><a href="examples/draw-document.js">draw-document.js</a>: Draw all pages in a document to PNG files.
+<li><a href="examples/draw-device.js">draw-device.js</a>: Use device API to draw graphics and save as a PNG file.
+<li><a href="examples/trace-device.js">trace-device.js</a>: Implement a device in JavaScript.
+</ul>
+
+<p>
+Advanced examples:
+
+<ul>
+<li><a href="examples/create-thumbnail.js">create-thumbnail.js</a>: Create a PDF from rendered page thumbnails.
+</ul>
+
+<h2>
+JavaScript Shell
+</h2>
+
+<p>
+Several global functions that are common for command line shells are available:
+
+<dl>
+<dt>gc(report)
+<dd>Run the garbage collector to free up memory. Optionally report statistics on the garbage collection.
+<dt>load(fileName)
+<dd>Load and execute script in 'fileName'.
+<dt>print(...)
+<dd>Print arguments to stdout, separated by spaces and followed by a newline.
+<dt>quit()
+<dd>Exit the shell.
+<dt>read(fileName)
+<dd>Read the contents of a file and return them as a UTF-8 decoded string.
+<dt>readline()
+<dd>Read one line of input from stdin and return it as a string.
+<dt>require(module)
+<dd>Load a JavaScript module.
+<dt>write(...)
+<dd>Print arguments to stdout, separated by spaces.
+</dl>
+
+<h2>
+Buffer
+</h2>
+
+<p>
+The Buffer objects are used for working with binary data.
+They can be used much like arrays, but are much more efficient since they
+only store bytes.
+
+<dl>
+<dt>new Buffer()
+<dd>Create a new empty buffer.
+<dt>readFile(fileName)
+<dd>Create a new buffer with the contents of a file.
+<dt>Buffer#length
+<dd>The number of bytes in the buffer.
+<dt>Buffer#[n]
+<dd>Read/write the byte at index 'n'. Will throw exceptions on out of bounds accesses.
+<dt>Buffer#writeByte(b)
+<dd>Append a single byte to the end of the buffer.
+<dt>Buffer#writeRune(c)
+<dd>Encode a unicode character as UTF-8 and append to the end of the buffer.
+<dt>Buffer#writeLine(...)
+<dd>Append arguments to the end of the buffer, separated by spaces, ending with a newline.
+<dt>Buffer#write(...)
+<dd>Append arguments to the end of the buffer, separated by spaces.
+<dt>Buffer#writeBuffer(data)
+<dd>Append the contents of the 'data' buffer to the end of the buffer.
+<dt>Buffer#save(fileName)
+<dd>Write the contents of the buffer to a file.
+</dl>
+
+<h2>
+Matrices and Rectangles
+</h2>
+
+<p>
+All dimensions are in points unless otherwise specified.
+
+<p>
+Matrices are simply 6-element arrays representing a 3-by-3 transformation matrix as
+
+<pre>
+/ a b 0 \
+| c d 0 |
+\ e f 1 /
+</pre>
+
+<p>
+This matrix is represented in JavaScript as <code>[a,b,c,d,e,f]</code>.
+
+<dl>
+<dt>Identity
+<dd>The identity matrix, short hand for <code>[1,0,0,1,0,0]</code>.
+<dt>Scale(sx, sy)
+<dd>Return a scaling matrix, short hand for <code>[sx,0,0,sy,0,0]</code>.
+<dt>Translate(tx, ty)
+<dd>Return a translation matrix, short hand for <code>[1,0,0,1,tx,ty]</code>.
+<dt>Concat(a, b)
+<dd>Concatenate matrices a and b. Bear in mind that matrix multiplication is not commutative.
+</dl>
+
+<p>
+Rectangles are 4-element arrays, specifying the minimum and maximum corners (typically
+upper left and lower right, in a coordinate space with the origin at the top left with
+descending y): <code>[ulx,uly,lrx,lry]</code>.
+
+<p>
+If the minimum x coordinate is bigger than the maximum x coordinate, MuPDF treats the rectangle
+as infinite in size.
+
+<h2>
+Document and Page
+</h2>
+
+<p>
+MuPDF can open many document types (PDF, XPS, CBZ, EPUB, FB2 and a handful of image formats).
+
+<dl>
+<dt>new Document(fileName)
+<dd>Open the named document.
+<dt>Document#needsPassword()
+<dd>Returns true if a password is required to open this password protected PDF.
+<dt>Document#authenticatePassword(password)
+<dd>Returns true if the password matches.
+<dt>Document#getMetaData(key)
+<dd>Return various meta data information. The common keys are: "format", "encryption", "info:Author", and "info:Title".
+<dt>Document#layout(pageWidth, pageHeight, fontSize)
+<dd>Layout a reflowable document (EPUB, FB2, or XHTML) to fit the specified page and font size.
+<dt>Document#countPages()
+<dd>Count the number of pages in the document. This may change if you call the layout function with different parameters.
+<dt>Document#loadPage(number)
+<dd>Returns a Page object for the given page number. Page number zero (0) is the first page in the document.
+<dt>Document#loadOutline()
+<dd>Returns an array with the outline (table of contents).
+In the array is an object for each heading with the property 'title', and a property 'page' containing the page number.
+If the object has a 'down' property, it contains an array with all the sub-headings for that entry.
+<dt>Document#isPDF()
+<dd>Returns true if the document is a PDF document.
+</dl>
+
+<dl>
+<dt>setUserCSS(userStylesheet, usePublisherStyles)
+<dd>Set user styles and whether to use publisher styles when laying out reflowable documents.
+</dl>
+
+<dl>
+<dt>Page#bound()
+<dd>Returns a rectangle containing the page dimensions.
+<dt>Page#run(device, transform, skipAnnotations)
+<dd>Calls device functions for all the contents on the page, using the specified transform matrix.
+The device can be one of the built-in devices or a JavaScript object with methods for the device calls.
+The transform maps from user space points to device space pixels.
+If skipAnnotations is true, ignore annotations.
+<dt>Page#toPixmap(transform, colorspace, alpha, skipAnnotations)
+<dd>Render the page into a Pixmap, using the transform and colorspace.
+If alpha is true, the page will be drawn on a transparent background, otherwise white.
+<dt>Page#toDisplayList(skipAnnotations)
+<dd>Record the contents on the page into a DisplayList.
+<dt>Page#toStructuredText(options)
+<dd>Extract the text on the page into a StructuredText object.
+The options argument is a comma separated list of flags: preserve-ligatures, preserve-whitespace, and preserve-images.
+<dt>Page#search(needle)
+<dd>Search for 'needle' text on the page, and return an array with rectangles of all matches found.
+<dt>Page#getAnnotations()
+<dd>Return array of all annotations on the page.
+<dt>Page#getLinks()
+<dd>Return an array of all the links on the page.
+Each link is an object with a 'bounds' property, and either a 'page' or 'uri' property,
+depending on whether it's an internal or external link.
+<dt>Page#isPDF()
+<dd>Returns true if the page is from a PDF document.
+</dl>
+
+<dl>
+<dt>Annotation#bound()
+<dd>Returns a rectangle containing the location and dimension of the annotation.
+<dt>Annotation#run(device, transform)
+<dd>Calls device functions to draw the annotation.
+<dt>Annotation#toPixmap(transform, colorspace, alpha)
+<dd>Render the annotation into a Pixmap, using the transform and colorspace.
+<dt>Annotation#toDisplayList()
+<dd>Record the contents of the annotation into a DisplayList.
+<dt>Annotation#isPDF()
+<dd>Returns true if the annotation is from a PDF document.
+</dl>
+
+<h2>
+StructuredText
+</h2>
+
+<p>
+StructuredText objects hold text from a page that has been analyzed and grouped into blocks, lines and spans.
+</p>
+
+<dl>
+<dt>StructuredText#search(needle)
+<dd>Search the text for all instances of 'needle', and return an array with rectangles of all matches found.
+<dt>StructuredText#highlight(p, q)
+<dd>Return an array with rectangles needed to highlight a selection defined by the start and end points.
+<dt>StructuredText#copy(p, q)
+<dd>Return the text from the selection defined by the start and end points.
+</dl>
+
+<h2>
+ColorSpace
+</h2>
+
+<dl>
+<dt>DeviceGray
+<dd>The default grayscale colorspace.
+<dt>DeviceRGB
+<dd>The default RGB colorspace.
+<dt>DeviceBGR
+<dd>The default RGB colorspace, but with components in reverse order.
+<dt>DeviceCMYK
+<dd>The default CMYK colorspace.
+<dt>ColorSpace#getNumberOfComponents()
+<dd>A grayscale colorspace has one component, RGB has 3, CMYK has 4, and DeviceN may have any number of components.
+</dl>
+
+<h2>
+Pixmap
+</h2>
+
+<p>
+A Pixmap object contains a color raster image (short for pixel map).
+The components in a pixel in the pixmap are all byte values, with the transparency as the last component.
+A pixmap also has a location (x, y) in addition to its size; so that they can easily be used to represent
+tiles of a page.
+
+<dl>
+<dt>new Pixmap(colorspace, bounds, alpha)
+<dd>Create a new pixmap. The pixel data is <b>not</b> initialized; and will contain garbage.
+<dt>Pixmap#clear(value)
+<dd>Clear the pixels to the specified value. Pass 255 for white, or undefined for transparent.
+<dt>Pixmap#bound()
+<dd>Return the pixmap bounds.
+<dt>Pixmap#getWidth()
+<dt>Pixmap#getHeight()
+<dt>Pixmap#getNumberOfComponents()
+<dd>Number of colors; plus one if an alpha channel is present.
+<dt>Pixmap#getAlpha()
+<dd>True if alpha channel is present.
+<dt>Pixmap#getStride()
+<dd>Number of bytes per row.
+<dt>Pixmap#getColorSpace()
+<dt>Pixmap#getXResolution()
+<dt>Pixmap#getYResolution()
+<dd>Image resolution in dots per inch.
+<dt>Pixmap#getSample(x, y, k)
+<dd>Get the value of component k at position x, y (relative to the image origin: 0, 0 is the top left pixel).
+<dt>Pixmap#saveAsPNG(fileName, saveAlpha)
+<dd>Save the pixmap as a PNG. Only works for Gray and RGB images.
+</dl>
+
+<h2>
+DrawDevice
+</h2>
+
+<p>
+The DrawDevice can be used to render to a Pixmap; either by running a Page with it or by calling its methods directly.
+
+<dl>
+<dt>new DrawDevice(transform, pixmap)
+<dd>Create a device for drawing into a pixmap. The pixmap bounds used should match the transformed page bounds,
+or you can adjust them to only draw a part of the page.
+</dl>
+
+<h2>
+DisplayList and DisplayListDevice
+</h2>
+
+<p>
+A display list records all the device calls for playback later.
+If you want to run a page through several devices, or run it multiple times for any other reason,
+recording the page to a display list and replaying the display list may be a performance gain
+since then you can avoid reinterpreting the page each time. Be aware though, that a display list
+will keep all the graphics required in memory, so will increase the amount of memory required.
+
+<dl>
+<dt>new DisplayList(mediabox)
+<dd>Create an empty display list. The mediabox rect has the bounds of the page in points.
+<dt>DisplayList#run(device, transform)
+<dd>Play back the recorded device calls onto the device.
+<dt>DisplayList#toPixmap(transform, colorspace, alpha)
+<dd>Render display list to a pixmap. If alpha is true, it will render to a transparent background, otherwise white.
+<dt>DisplayList#toStructuredText(options)
+<dd>Extract the text in the display list into a StructuredText object.
+The options argument is a comma separated list of flags: preserve-ligatures, preserve-whitespace, and preserve-images.
+<dt>DisplayList#search(needle)
+<dd>Search the display list text for all instances of 'needle', and return an array with rectangles of all matches found.
+<dd>
+</dl>
+
+<dl>
+<dt>new DisplayListDevice(displayList)
+<dd>Create a device for recording onto a display list.
+</dl>
+
+<h2>
+Device
+</h2>
+
+<p>
+All built-in devices have the methods listed below. Any function that accepts a device will also
+accept a JavaScript object with the same methods. Any missing methods are simply ignored, so you
+only need to create methods for the device calls you care about.
+
+<p>
+Many of the methods take graphics objects as arguments: Path, Text, Image and Shade.
+
+<p>
+The stroking state is a dictionary with keys for:
+<dl>
+<dt>startCap, dashCap, endCap:
+<dd>"Butt", "Round", "Square", or "Triangle".
+<dt>lineCap:
+<dd>Set startCap, dashCap, and endCap all at once.
+<dt>lineJoin:
+<dd>"Miter", "Round", "Bevel", or "MiterXPS".
+<dt>lineWidth:
+<dd>Thickness of the line.
+<dt>miterLimit:
+<dd>Maximum ratio of the miter length to line width, before beveling the join instead.
+<dt>dashPhase:
+<dd>Starting offset for dash pattern.
+<dt>dashes:
+<dd>Array of on/off dash lengths.
+</dl>
+
+<p>
+Colors are specified as arrays with the appropriate number of components for the color space.
+
+<p>
+The methods that clip graphics must be balanced with a corresponding popClip.
+
+<dl>
+<dt>Device#fillPath(path, evenOdd, transform, colorspace, color, alpha)
+<dt>Device#strokePath(path, stroke, transform)
+<dt>Device#clipPath(path, evenOdd, transform, colorspace, color, alpha)
+<dt>Device#clipStrokePath(path, stroke, transform)
+<dd>Fill/stroke/clip a path.
+</dl>
+
+<dl>
+<dt>Device#fillText(text, transform, colorspace, color, alpha)
+<dt>Device#strokeText(text, stroke, transform, colorspace, color, alpha)
+<dt>Device#clipText(text, transform)
+<dt>Device#clipStrokeText(text, stroke, transform)
+<dd>Fill/stroke/clip a text object.
+<dt>Device#ignoreText(text, transform)
+<dd>Invisible text that can be searched but should not be visible, such as for overlaying a scanned OCR image.
+</dl>
+
+<dl>
+<dt>Device#fillShade(shade, transform, alpha)
+<dd>Fill a shade (a.k.a. gradient). TODO: this details of gradient fills are not exposed to JavaScript yet.
+<dt>Device#fillImage(shade, transform, alpha)
+<dd>Draw an image. An image always fills a unit rectangle [0,0,1,1], so must be transformed to be placed and drawn at the appropriate size.
+<dt>Device#fillImageMask(shade, transform, colorspace, color, alpha)
+<dd>An image mask is an image without color. Fill with the color where the image is opaque.
+<dt>Device#clipImageMask(shade, transform)
+<dd>Clip graphics using the image to mask the areas to be drawn.
+</dl>
+
+<dl>
+<dt>Device#beginMask(area, luminosity, backdropColorspace, backdropColor)
+<dt>Device#endMask()
+<dd>Create a soft mask. Any drawing commands between beginMask and endMask are grouped and used as a clip mask.
+If luminosity is true, the mask is derived from the luminosity (grayscale value) of the graphics drawn;
+otherwise the color is ignored completely and the mask is derived from the alpha of the group.
+</dl>
+
+<dl>
+<dt>Device#popClip()
+<dd>Pop the clip mask installed by the last clipping operation.
+</dl>
+
+<dl>
+<dt>Device#beginGroup(area, isolated, knockout, blendmode, alpha)
+<dt>Device#endGroup()
+<dd>Push/pop a transparency blending group. Blendmode is one of the standard PDF blend modes: "Normal", "Multiply", "Screen", etc. See the PDF reference for details on isolated and knockout.
+</dl>
+
+<dl>
+<dt>Device#beginTile(areaRect, viewRect, xStep, yStep, transform)
+<dt>Device#endTile()
+<dd>Draw a tiling pattern. Any drawing commands between beginTile and endTile are grouped and then repeated across the whole page.
+Apply a clip mask to restrict the pattern to the desired shape.
+</dl>
+
+<dl>
+<dt>Device#close()
+<dd>Tell the device that we are done, and flush any pending output.
+</dl>
+
+<h2>
+Path
+</h2>
+
+<p>
+A Path object represents vector graphics as drawn by a pen. A path can be either stroked or filled, or used as a clip mask.
+
+<dl>
+<dt>new Path()
+<dd>Create a new empty path.
+<dt>Path#moveTo(x, y)
+<dd>Lift and move the pen to the coordinate.
+<dt>Path#lineTo(x, y)
+<dd>Draw a line to the coordinate.
+<dt>Path#curveTo(x1, y1, x2, y2, x3, y3)
+<dd>Draw a cubic bezier curve to (x3,y3) using (x1,y1) and (x2,y2) as control points.
+<dt>Path#closePath()
+<dd>Close the path by drawing a line to the last moveTo.
+<dt>Path#rect(x1, y1, x2, y2)
+<dd>Shorthand for moveTo, lineTo, lineTo, lineTo, closePath to draw a rectangle.
+<dt>Path#walk(pathWalker)
+<dd>Call moveTo, lineTo, curveTo and closePath methods on the pathWalker object to replay the path.
+</dl>
+
+<h2>
+Text
+</h2>
+
+<p>
+A Text object contains text.
+
+<dl>
+<dt>new Text()
+<dd>Create a new empty text object.
+<dt>Text#showGlyph(font, transform, glyph, unicode, wmode)
+<dd>Add a glyph to the text object. Transform is the text matrix, specifying font size and glyph location. For example: <code>[size,0,0,-size,x,y]</code>.
+Glyph and unicode may be -1 for n-to-m cluster mappings.
+For example, the "fi" ligature would be added in two steps: first the glyph for the 'fi' ligature and the unicode value for 'f';
+then glyph -1 and the unicode value for 'i'.
+WMode is 0 for horizontal writing, and 1 for vertical writing.
+<dt>Text#showString(font, transform, string)
+<dd>Add a simple string to the text object. Will do font substitution if the font does not have all the unicode characters required.
+<dt>Text#walk(textWalker)
+<dd>Call the showGlyph method on the textWalker object for each glyph in the text object.
+</dl>
+
+<h2>
+Font
+</h2>
+
+<p>
+Font objects can be created from TrueType, OpenType, Type1 or CFF fonts.
+In PDF there are also special Type3 fonts.
+
+<dl>
+<dt>new Font(fontName or fileName)
+<dd>Create a new font, either using a built-in font name or a filename.
+<br>The built-in standard PDF fonts are:
+Times-Roman, Times-Italic, Times-Bold, Times-BoldItalic,
+Helvetica, Helvetica-Oblique, Helvetica-Bold, Helvetica-BoldOblique,
+Courier, Courier-Oblique, Courier-Bold, Courier-BoldOblique,
+Symbol, and ZapfDingbats.
+<br>The built-in CJK fonts are referenced by language code: zh-Hant, zh-Hans, ja, ko.
+<dt>Font#getName()
+<dd>Get the font name.
+<dt>Font#encodeCharacter(unicode)
+<dd>Get the glyph index for a unicode character. Glyph zero (.notdef) is returned if the font does not have a glyph for the character.
+<dt>Font#advanceGlyph(glyph, wmode)
+<dd>Return advance width for a glyph in either horizontal or vertical writing mode.
+</dl>
+
+<h2>
+Image
+</h2>
+
+<p>
+Image objects are similar to Pixmaps, but can contain compressed data.
+
+<dl>
+<dt>new Image(pixmap or fileName)
+<dd>Create a new image from a pixmap data, or load an image from a file.
+<dt>Image#getWidth()
+<dt>Image#getHeight()
+<dd>Image size in pixels.
+<dt>Image#getXResolution()
+<dt>Image#getYResolution()
+<dd>Image resolution in dots per inch.
+<dt>Image#getColorSpace()
+<dt>Image#toPixmap(scaledWidth, scaledHeight)
+<dd>Create a pixmap from the image. The scaledWidth and scaledHeight arguments are optional,
+but may be used to decode a down-scaled pixmap.
+</dl>
+
+<h2>
+Document Writer
+</h2>
+
+<p>
+Document writer objects are used to create new documents in several formats.
+
+<dl>
+<dt>new DocumentWriter(filename, format, options)
+<dd>Create a new document writer to create a document with the specified format and output options.
+If format is null it is inferred from the filename extension. The options argument is a comma separated list
+of flags and key-value pairs. See below for more details.
+<dt>DocumentWriter#beginPage(mediabox)
+<dd>Begin rendering a new page. Returns a Device that can be used to render the page graphics.
+<dt>DocumentWriter#endPage(device)
+<dd>Finish the page rendering.
+The argument must be the same device object that was returned by the beginPage method.
+<dt>DocumentWriter#close()
+<dd>Finish the document and flush any pending output.
+</dl>
+
+<p>
+The output formats and options supported are the same as in the
+<a href="manual-mutool-convert.html">mutool convert</a> command.
+
+<h2>
+PDFDocument and PDFObject
+</h2>
+
+<p>
+With MuPDF it is also possible to create, edit and manipulate PDF documents
+using low level access to the objects and streams contained in a PDF file.
+A PDFDocument object is also a Document object. You can test a Document object
+to see if it is safe to use as a PDFDocument by calling document.isPDF().
+
+<dl>
+<dt>new PDFDocument()
+<dd>Create a new empty PDF document.
+<dt>new PDFDocument(fileName)
+<dd>Load a PDF document from file.
+<dt>PDFDocument#save(fileName, options)
+<dd>Write the PDF document to file.
+The write options are a string of comma separated options (see the document writer <a href="#pdf-write-options">options</a>).
+</dl>
+
+<h3>
+PDF Object Access
+</h3>
+
+<p>
+A PDF document contains objects, similar to those in JavaScript: arrays, dictionaries, strings, booleans, and numbers.
+At the root of the PDF document is the trailer object; which contains pointers to the meta data dictionary and the
+catalog object which contains the pages and other information.
+
+<p>
+Pointers in PDF are also called indirect references,
+and are of the form "32 0 R" (where 32 is the object number, 0 is the generation, and R is magic syntax).
+All functions in MuPDF dereference indirect references automatically.
+
+<p>
+PDF has two types of strings: /Names and (Strings). All dictionary keys are names.
+
+<p>
+Some dictionaries in PDF also have attached binary data. These are called streams, and may be compressed.
+
+<dl>
+<dt>PDFDocument#getTrailer()
+<dd>The trailer dictionary. This contains indirect references to the Root and Info dictionaries.
+<dt>PDFDocument#countObjects()
+<dd>Return the number of objects in the PDF. Object number 0 is reserved, and may not be used for anything.
+<dt>PDFDocument#createObject()
+<dd>Allocate a new numbered object in the PDF, and return an indirect reference to it.
+The object itself is uninitialized.
+<dt>PDFDocument#deleteObject(obj)
+<dd>Delete the object referred to by the indirect reference.
+</dl>
+
+<p>
+PDFObjects are always bound to the document that created them.
+Do NOT mix and match objects from one document with another document!
+
+<dl>
+<dt>PDFDocument#addObject(obj)
+<dd>Add 'obj' to the PDF as a numbered object, and return an indirect reference to it.
+<dt>PDFDocument#addStream(buffer, object)
+<dd>Create a stream object with the contents of 'buffer', add it to the PDF, and return an indirect reference to it. If object is defined, it will be used as the stream object dictionary.
+<dt>PDFDocument#addRawStream(buffer, object)
+<dd>Create a stream object with the contents of 'buffer', add it to the PDF, and return an indirect reference to it.
+If object is defined, it will be used as the stream object dictionary.
+The buffer must contain already compressed data that matches the Filter and DecodeParms.
+<dt>PDFDocument#newNull()
+<dt>PDFDocument#newBoolean(boolean)
+<dt>PDFDocument#newInteger(number)
+<dt>PDFDocument#newReal(number)
+<dt>PDFDocument#newString(string)
+<dt>PDFDocument#newName(string)
+<dt>PDFDocument#newIndirect(objectNumber, generation)
+<dt>PDFDocument#newArray()
+<dt>PDFDocument#newDictionary()
+</dl>
+
+<p>
+The following functions can be used to copy objects from one document to another:
+
+<dl>
+<dt>PDFDocument#graftObject(object)
+<dd>Deep copy an object into the destination document. This function will not remember previously
+copied objects.
+If you are copying several objects from the same source document using multiple calls, you should
+use a graft map instead.
+<dt>PDFDocument#newGraftMap()
+<dd>Create a graft map for the source document, so that objects that have already been copied can be found again.
+<dt>PDFGraftMap#graftObject(object)
+<dd>Use the graft map to copy objects, with the ability to remember previously copied objects.
+</dl>
+
+<p>
+All functions that take PDF objects, do automatic translation between JavaScript objects
+and PDF objects using a few basic rules. Null, booleans, and numbers are translated directly.
+JavaScript strings are translated to PDF names, unless they are surrounded by parentheses:
+"Foo" becomes the PDF name /Foo and "(Foo)" becomes the PDF string (Foo).
+
+<p>
+Arrays and dictionaries are recursively translated to PDF arrays and dictionaries.
+Be aware of cycles though! The translation does NOT cope with cyclic references!
+
+<p>
+The translation goes both ways: PDF dictionaries and arrays can be accessed similarly
+to JavaScript objects and arrays by getting and setting their properties.
+
+<dl>
+<dt>PDFObject#get(key or index)
+<dt>PDFObject#put(key or index, value)
+<dt>PDFObject#delete(key or index)
+<dd>Access dictionaries and arrays. Dictionaries and arrays can also be accessed using normal property syntax: obj.Foo = 42; delete obj.Foo; x = obj[5].
+<dt>PDFObject#resolve()
+<dd>If the object is an indirect reference, return the object it points to; otherwise return the object itself.
+<dt>PDFObject#isArray()
+<dt>PDFObject#isDictionary()
+<dt>PDFObject#forEach(function(key,value){...})
+<dd>Iterate over all the entries in a dictionary or array and call fun for each key-value pair.
+<dt>PDFObject#length
+<dd>Length of the array.
+<dt>PDFObject#push(item)
+<dd>Append item to the end of the array.
+</dl>
+
+<p>
+The only way to access a stream is via an indirect object, since all streams
+are numbered objects.
+
+<dl>
+<dt>PDFObject#isIndirect()
+<dd>Is the object an indirect reference.
+<dt>PDFObject#asIndirect()
+<dd>Return the object number the indirect reference points to.
+<dt>PDFObject#isStream()
+<dd>True if the object is an indirect reference pointing to a stream.
+<dt>PDFObject#readStream()
+<dd>Read the contents of the stream object into a Buffer.
+<dt>PDFObject#readRawStream()
+<dd>Read the raw, uncompressed, contents of the stream object into a Buffer.
+<dt>PDFObject#writeObject(obj)
+<dd>Update the object the indirect reference points to.
+<dt>PDFObject#writeStream(buffer)
+<dd>Update the contents of the stream the indirect reference points to.
+This will update the Length, Filter and DecodeParms automatically.
+<dt>PDFObject#writeRawStream(buffer)
+<dd>Update the contents of the stream the indirect reference points to.
+The buffer must contain already compressed data that matches the Filter and DecodeParms.
+This will update the Length automatically, but leave the Filter and DecodeParms untouched.
+</dl>
+
+<p>
+Primitive PDF objects such as booleans, names, and numbers can usually be treated like JavaScript values.
+When that is not sufficient use these functions:
+
+<dl>
+<dt>PDFObject#isNull()
+<dd>Is the object the 'null' object?
+<dt>PDFObject#isBoolean()
+<dd>Is the object a boolean?
+<dt>PDFObject#asBoolean()
+<dd>Get the boolean primitive value.
+<dt>PDFObject#isNumber()
+<dd>Is the object a number?
+<dt>PDFObject#asNumber()
+<dd>Get the number primitive value.
+<dt>PDFObject#isName()
+<dd>Is the object a name?
+<dt>PDFObject#asName()
+<dd>Get the name as a string.
+<dt>PDFObject#isString()
+<dd>Is the object a string?
+<dt>PDFObject#asString()
+<dd>Convert a "text string" to a javascript unicode string.
+<dt>PDFObject#asByteString()
+<dd>Convert a string to an array of byte values.
+</dl>
+
+<h3>
+PDF Page Access
+</h3>
+
+<p>
+All page objects are structured into a page tree, which defines the order the pages appear in.
+
+<dl>
+<dt>PDFDocument#countPages()
+<dd>Number of pages in the document.
+<dt>PDFDocument#findPage(number)
+<dd>Return the page object for a page number. The first page is number zero.
+<dt>PDFDocument#deletePage(number)
+<dd>Delete the numbered page.
+<dt>PDFDocument#insertPage(at, page)
+<dd>Insert the page object in the page tree at the location. If 'at' is -1, at the end of the document.
+</dl>
+
+<p>
+Pages consist of a content stream, and a resource dictionary containing all of the fonts and images used.
+
+<dl>
+<dt>PDFDocument#addPage(mediabox, rotate, resources, contents)
+<dd>Create a new page object. Note: this function does NOT add it to the page tree.
+<dt>PDFDocument#addSimpleFont(font, encoding)
+<dd>Create a PDF object from the Font object as a simple font.
+Encoding is either "Latin" (CP-1252), "Greek" (ISO-8859-7), or "Cyrillic" (KOI-8U).
+The default is "Latin".
+<dt>PDFDocument#addCJKFont(font, language, wmode, style)
+<dd>Create a PDF object from the Font object as a UTF-16 encoded CID font for the given
+language ("zh-Hant", "zh-Hans", "ko", or "ja"),
+writing mode ("H" or "V"),
+and style ("serif" or "sans-serif").
+<dt>PDFDocument#addFont(font)
+<dd>Create a PDF object from the Font object as an Identity-H encoded CID font.
+<dt>PDFDocument#addImage(image)
+<dd>Create a PDF object from the Image object.
+<dt>PDFDocument#loadImage(obj)
+<dd>Load an Image from a PDF object (typically an indirect reference to an image resource).
+</dl>
+
+<h3>
+PDF Annotations (WORK IN PROGRESS!)
+</h3>
+
+<dl>
+<dt>PDFPage#createAnnotation(type)
+<dd>Create a new blank annotation of a given type.
+The type must be one of the annotation subtypes listed in the PDF reference.
+<dt>PDFPage#deleteAnnotation(annot)
+<dd>Delete the annotation from the page.
+</dl>
+
+<dl>
+<dt>PDFAnnotation#getType()
+<dd>Return the annotation subtype.
+<dt>PDFAnnotation#getFlags(), #setFlags(flags)
+<dd>Get/set the annotation flags.
+<dt>PDFAnnotation#getContents(), #setContents(text)
+<dt>PDFAnnotation#getRect(), #setRect(rect)
+<dt>PDFAnnotation#getBorder(), #setBorder(width)
+<dt>PDFAnnotation#getColor(), #setColor(color)
+<dt>PDFAnnotation#getQuadPoints(), #setQuadPoints(quadPoints)
+<dt>PDFAnnotation#getInkList(), #setInkList(inkList)
+<dt>PDFAnnotation#updateAppearance()
+<dd>Update the appearance stream to account for changes in the annotation.
+</dl>
+
+<h2>
+TODO
+</h2>
+
+<p>
+There are several areas in MuPDF that still need bindings to access from JavaScript:
+
+<ul>
+<li>Shadings
+<li>PDFDocument#graftObject()
+<li>PDFWriteDevice
+<li>DocumentWriter
+</ul>
+
+</article>
+
+<footer>
+<a href="http://www.artifex.com/"><img src="artifex-logo.png" align="right"></a>
+Copyright &copy; 2006-2018 Artifex Software Inc.
+</footer>
+
+</body>
+</html>

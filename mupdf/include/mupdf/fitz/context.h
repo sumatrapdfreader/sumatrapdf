@@ -3,79 +3,86 @@
 
 #include "mupdf/fitz/version.h"
 #include "mupdf/fitz/system.h"
+#include "mupdf/fitz/geometry.h"
 
-/*
-	Contexts
-*/
-
-typedef struct fz_alloc_context_s fz_alloc_context;
-typedef struct fz_error_context_s fz_error_context;
-typedef struct fz_id_context_s fz_id_context;
-typedef struct fz_warn_context_s fz_warn_context;
 typedef struct fz_font_context_s fz_font_context;
 typedef struct fz_colorspace_context_s fz_colorspace_context;
-typedef struct fz_aa_context_s fz_aa_context;
-typedef struct fz_locks_context_s fz_locks_context;
+typedef struct fz_style_context_s fz_style_context;
+typedef struct fz_tuning_context_s fz_tuning_context;
 typedef struct fz_store_s fz_store;
 typedef struct fz_glyph_cache_s fz_glyph_cache;
 typedef struct fz_document_handler_context_s fz_document_handler_context;
 typedef struct fz_context_s fz_context;
 
+typedef struct fz_alloc_context_s fz_alloc_context;
 struct fz_alloc_context_s
 {
 	void *user;
-	void *(*malloc)(void *, unsigned int);
-	void *(*realloc)(void *, void *, unsigned int);
+	void *(*malloc)(void *, size_t);
+	void *(*realloc)(void *, void *, size_t);
 	void (*free)(void *, void *);
 };
 
+typedef struct fz_error_stack_slot_s fz_error_stack_slot;
+struct fz_error_stack_slot_s
+{
+	int state, code;
+	fz_jmp_buf buffer;
+};
+
+typedef struct fz_error_context_s fz_error_context;
 struct fz_error_context_s
 {
-	int top;
-	struct {
-		int code;
-		fz_jmp_buf buffer;
-	} stack[256];
+	fz_error_stack_slot *top;
+	fz_error_stack_slot stack[256];
 	int errcode;
+	void *print_user;
+	void (*print)(void *user, const char *message);
 	char message[256];
 };
 
-void fz_var_imp(void *);
-#define fz_var(var) fz_var_imp((void *)&(var))
+typedef struct fz_warn_context_s fz_warn_context;
+struct fz_warn_context_s
+{
+	void *print_user;
+	void (*print)(void *user, const char *message);
+	int count;
+	char message[256];
+};
+
+typedef struct fz_aa_context_s fz_aa_context;
+struct fz_aa_context_s
+{
+	int hscale;
+	int vscale;
+	int scale;
+	int bits;
+	int text_bits;
+	float min_line_width;
+};
 
 /*
 	Exception macro definitions. Just treat these as a black box - pay no
 	attention to the man behind the curtain.
 */
 
-#define fz_try(ctx) \
-	if (fz_push_try(ctx->error) && \
-		((ctx->error->stack[ctx->error->top].code = fz_setjmp(ctx->error->stack[ctx->error->top].buffer)) == 0))\
-	{ do {
+void fz_var_imp(void *);
+#define fz_var(var) fz_var_imp((void *)&(var))
 
-#define fz_always(ctx) \
-		} while (0); \
-	} \
-	if (ctx->error->stack[ctx->error->top].code < 3) \
-	{ \
-		ctx->error->stack[ctx->error->top].code++; \
-		do { \
+fz_jmp_buf *fz_push_try(fz_context *ctx);
+int fz_do_try(fz_context *ctx);
+int fz_do_always(fz_context *ctx);
+int fz_do_catch(fz_context *ctx);
 
-#define fz_catch(ctx) \
-		} while(0); \
-	} \
-	if (ctx->error->stack[ctx->error->top--].code > 1)
+#define fz_try(ctx) if (!fz_setjmp(*fz_push_try(ctx))) if (fz_do_try(ctx)) do
+#define fz_always(ctx) while (0); if (fz_do_always(ctx)) do
+#define fz_catch(ctx) while (0); if (fz_do_catch(ctx))
 
-int fz_push_try(fz_error_context *ex);
-/* SumatraPDF: add filename and line number to errors and warnings */
-#define fz_throw(CTX, ERRCODE, MSG, ...) fz_throw_imp(CTX, __FILE__, __LINE__, ERRCODE, MSG, __VA_ARGS__)
-FZ_NORETURN void fz_throw_imp(fz_context *ctx, char *file, int line, int errcode, const char *fmt, ...) __printflike(5, 6);
-FZ_NORETURN void fz_rethrow(fz_context *);
-/* SumatraPDF: add filename and line number to errors and warnings */
-#define fz_rethrow_message(CTX, MSG, ...) fz_rethrow_message_imp(CTX, __FILE__, __LINE__, MSG, __VA_ARGS__)
-FZ_NORETURN void fz_rethrow_message_imp(fz_context *, char *file, int line, const char *, ...)  __printflike(4, 5);
-#define fz_warn(CTX, MSG, ...) fz_warn_imp(CTX, __FILE__, __LINE__, MSG, __VA_ARGS__)
-void fz_warn_imp(fz_context *ctx, char *file, int line, const char *fmt, ...) __printflike(4, 5);
+FZ_NORETURN void fz_vthrow(fz_context *ctx, int errcode, const char *, va_list ap);
+FZ_NORETURN void fz_throw(fz_context *ctx, int errcode, const char *, ...) FZ_PRINTFLIKE(3,4);
+FZ_NORETURN void fz_rethrow(fz_context *ctx);
+void fz_vwarn(fz_context *ctx, const char *fmt, va_list ap);
+void fz_warn(fz_context *ctx, const char *fmt, ...) FZ_PRINTFLIKE(2,3);
 const char *fz_caught_message(fz_context *ctx);
 int fz_caught(fz_context *ctx);
 void fz_rethrow_if(fz_context *ctx, int errcode);
@@ -83,127 +90,16 @@ void fz_rethrow_if(fz_context *ctx, int errcode);
 enum
 {
 	FZ_ERROR_NONE = 0,
-	FZ_ERROR_GENERIC = 1,
-	FZ_ERROR_TRYLATER = 2,
-	FZ_ERROR_ABORT = 3,
+	FZ_ERROR_MEMORY = 1,
+	FZ_ERROR_GENERIC = 2,
+	FZ_ERROR_SYNTAX = 3,
+	FZ_ERROR_MINOR = 4,
+	FZ_ERROR_TRYLATER = 5,
+	FZ_ERROR_ABORT = 6,
 	FZ_ERROR_COUNT
 };
 
-/*
-	fz_flush_warnings: Flush any repeated warnings.
-
-	Repeated warnings are buffered, counted and eventually printed
-	along with the number of repetitions. Call fz_flush_warnings
-	to force printing of the latest buffered warning and the
-	number of repetitions, for example to make sure that all
-	warnings are printed before exiting an application.
-
-	Does not throw exceptions.
-*/
 void fz_flush_warnings(fz_context *ctx);
-
-struct fz_context_s
-{
-	fz_alloc_context *alloc;
-	fz_locks_context *locks;
-	fz_id_context *id;
-	fz_error_context *error;
-	fz_warn_context *warn;
-	fz_font_context *font;
-	fz_colorspace_context *colorspace;
-	fz_aa_context *aa;
-	fz_store *store;
-	fz_glyph_cache *glyph_cache;
-	fz_document_handler_context *handler;
-};
-
-/*
-	Specifies the maximum size in bytes of the resource store in
-	fz_context. Given as argument to fz_new_context.
-
-	FZ_STORE_UNLIMITED: Let resource store grow unbounded.
-
-	FZ_STORE_DEFAULT: A reasonable upper bound on the size, for
-	devices that are not memory constrained.
-*/
-enum {
-	FZ_STORE_UNLIMITED = 0,
-	FZ_STORE_DEFAULT = 256 << 20,
-};
-
-/*
-	fz_new_context: Allocate context containing global state.
-
-	The global state contains an exception stack, resource store,
-	etc. Most functions in MuPDF take a context argument to be
-	able to reference the global state. See fz_free_context for
-	freeing an allocated context.
-
-	alloc: Supply a custom memory allocator through a set of
-	function pointers. Set to NULL for the standard library
-	allocator. The context will keep the allocator pointer, so the
-	data it points to must not be modified or freed during the
-	lifetime of the context.
-
-	locks: Supply a set of locks and functions to lock/unlock
-	them, intended for multi-threaded applications. Set to NULL
-	when using MuPDF in a single-threaded applications. The
-	context will keep the locks pointer, so the data it points to
-	must not be modified or freed during the lifetime of the
-	context.
-
-	max_store: Maximum size in bytes of the resource store, before
-	it will start evicting cached resources such as fonts and
-	images. FZ_STORE_UNLIMITED can be used if a hard limit is not
-	desired. Use FZ_STORE_DEFAULT to get a reasonable size.
-
-	Does not throw exceptions, but may return NULL.
-*/
-fz_context *fz_new_context_imp(fz_alloc_context *alloc, fz_locks_context *locks, unsigned int max_store, const char *version);
-
-#define fz_new_context(alloc, locks, max_store) fz_new_context_imp(alloc, locks, max_store, FZ_VERSION)
-
-/*
-	fz_clone_context: Make a clone of an existing context.
-
-	This function is meant to be used in multi-threaded
-	applications where each thread requires its own context, yet
-	parts of the global state, for example caching, is shared.
-
-	ctx: Context obtained from fz_new_context to make a copy of.
-	ctx must have had locks and lock/functions setup when created.
-	The two contexts will share the memory allocator, resource
-	store, locks and lock/unlock functions. They will each have
-	their own exception stacks though.
-
-	Does not throw exception, but may return NULL.
-*/
-fz_context *fz_clone_context(fz_context *ctx);
-
-/*
-	fz_free_context: Free a context and its global state.
-
-	The context and all of its global state is freed, and any
-	buffered warnings are flushed (see fz_flush_warnings). If NULL
-	is passed in nothing will happen.
-
-	Does not throw exceptions.
-*/
-void fz_free_context(fz_context *ctx);
-
-/*
-	fz_aa_level: Get the number of bits of antialiasing we are
-	using. Between 0 and 8.
-*/
-int fz_aa_level(fz_context *ctx);
-
-/*
-	fz_set_aa_level: Set the number of bits of antialiasing we should use.
-
-	bits: The number of bits of antialiasing to use (values are clamped
-	to within the 0 to 8 range).
-*/
-void fz_set_aa_level(fz_context *ctx, int bits);
 
 /*
 	Locking functions
@@ -226,6 +122,7 @@ void fz_set_aa_level(fz_context *ctx, int bits);
 	enabled by defining FITZ_DEBUG_LOCKING.
 */
 
+typedef struct fz_locks_context_s fz_locks_context;
 struct fz_locks_context_s
 {
 	void *user;
@@ -235,16 +132,144 @@ struct fz_locks_context_s
 
 enum {
 	FZ_LOCK_ALLOC = 0,
-	FZ_LOCK_FILE, /* Unused now */
 	FZ_LOCK_FREETYPE,
 	FZ_LOCK_GLYPHCACHE,
 	FZ_LOCK_MAX
 };
 
+struct fz_context_s
+{
+	void *user;
+	fz_alloc_context alloc;
+	fz_locks_context locks;
+	fz_error_context error;
+	fz_warn_context warn;
+
+	/* unshared contexts */
+	fz_aa_context aa;
+	uint16_t seed48[7];
+#if FZ_ENABLE_ICC
+	int icc_enabled;
+#endif
+
+	/* TODO: should these be unshared? */
+	fz_document_handler_context *handler;
+	fz_style_context *style;
+	fz_tuning_context *tuning;
+
+	/* shared contexts */
+	fz_font_context *font;
+	fz_colorspace_context *colorspace;
+	fz_store *store;
+	fz_glyph_cache *glyph_cache;
+};
+
+/*
+	Specifies the maximum size in bytes of the resource store in
+	fz_context. Given as argument to fz_new_context.
+
+	FZ_STORE_UNLIMITED: Let resource store grow unbounded.
+
+	FZ_STORE_DEFAULT: A reasonable upper bound on the size, for
+	devices that are not memory constrained.
+*/
+enum {
+	FZ_STORE_UNLIMITED = 0,
+	FZ_STORE_DEFAULT = 256 << 20,
+};
+
+fz_context *fz_new_context_imp(const fz_alloc_context *alloc, const fz_locks_context *locks, size_t max_store, const char *version);
+
+#define fz_new_context(alloc, locks, max_store) fz_new_context_imp(alloc, locks, max_store, FZ_VERSION)
+
+fz_context *fz_clone_context(fz_context *ctx);
+
+void fz_drop_context(fz_context *ctx);
+
+void fz_set_user_context(fz_context *ctx, void *user);
+
+void *fz_user_context(fz_context *ctx);
+
+void fz_default_error_callback(void *user, const char *message);
+void fz_default_warning_callback(void *user, const char *message);
+
+void fz_set_error_callback(fz_context *ctx, void (*print)(void *user, const char *message), void *user);
+void fz_set_warning_callback(fz_context *ctx, void (*print)(void *user, const char *message), void *user);
+
+/*
+	In order to tune MuPDF's behaviour, certain functions can
+	(optionally) be provided by callers.
+*/
+
+/*
+	Given the width and height of an image,
+	the subsample factor, and the subarea of the image actually
+	required, the caller can decide whether to decode the whole image
+	or just a subarea.
+
+	arg: The caller supplied opaque argument.
+
+	w, h: The width/height of the complete image.
+
+	l2factor: The log2 factor for subsampling (i.e. image will be
+	decoded to (w>>l2factor, h>>l2factor)).
+
+	subarea: The actual subarea required for the current operation.
+	The tuning function is allowed to increase this in size if required.
+*/
+typedef void (fz_tune_image_decode_fn)(void *arg, int w, int h, int l2factor, fz_irect *subarea);
+
+/*
+	Given the source width and height of
+	image, together with the actual required width and height,
+	decide whether we should use mitchell scaling.
+
+	arg: The caller supplied opaque argument.
+
+	dst_w, dst_h: The actual width/height required on the target device.
+
+	src_w, src_h: The source width/height of the image.
+
+	Return 0 not to use the Mitchell scaler, 1 to use the Mitchell scaler. All
+	other values reserved.
+*/
+typedef int (fz_tune_image_scale_fn)(void *arg, int dst_w, int dst_h, int src_w, int src_h);
+
+void fz_tune_image_decode(fz_context *ctx, fz_tune_image_decode_fn *image_decode, void *arg);
+
+void fz_tune_image_scale(fz_context *ctx, fz_tune_image_scale_fn *image_scale, void *arg);
+
+int fz_aa_level(fz_context *ctx);
+
+void fz_set_aa_level(fz_context *ctx, int bits);
+
+int fz_text_aa_level(fz_context *ctx);
+
+void fz_set_text_aa_level(fz_context *ctx, int bits);
+
+int fz_graphics_aa_level(fz_context *ctx);
+
+void fz_set_graphics_aa_level(fz_context *ctx, int bits);
+
+float fz_graphics_min_line_width(fz_context *ctx);
+
+void fz_set_graphics_min_line_width(fz_context *ctx, float min_line_width);
+
+const char *fz_user_css(fz_context *ctx);
+
+void fz_set_user_css(fz_context *ctx, const char *text);
+
+int fz_use_document_css(fz_context *ctx);
+
+void fz_set_use_document_css(fz_context *ctx, int use);
+
+void fz_enable_icc(fz_context *ctx);
+void fz_disable_icc(fz_context *ctx);
+
 /*
 	Memory Allocation and Scavenging:
 
-	All calls to MuPDFs allocator functions pass through to the
+	All calls to MuPDF's allocator functions pass through to the
 	underlying allocators passed in when the initial context is
 	created, after locks are taken (using the supplied locking function)
 	to ensure that only one thread at a time calls through.
@@ -258,208 +283,47 @@ enum {
 */
 
 /*
-	fz_malloc: Allocate a block of memory (with scavenging)
-
-	size: The number of bytes to allocate.
-
-	Returns a pointer to the allocated block. May return NULL if size is
-	0. Throws exception on failure to allocate.
-*/
-void *fz_malloc(fz_context *ctx, unsigned int size);
+ * Allocate memory for a structure, clear it, and tag the pointer for Memento.
+ */
+#define fz_malloc_struct(CTX, TYPE) \
+	((TYPE*)Memento_label(fz_calloc(CTX, 1, sizeof(TYPE)), #TYPE))
 
 /*
-	fz_calloc: Allocate a zeroed block of memory (with scavenging)
+ * Allocate uninitialized memory for an array of structures, and tag the
+ * pointer for Memento. Does NOT clear the memory!
+ */
+#define fz_malloc_array(CTX, COUNT, TYPE) \
+	((TYPE*)Memento_label(fz_malloc(CTX, (COUNT) * sizeof(TYPE)), #TYPE "[]"))
+#define fz_realloc_array(CTX, OLD, COUNT, TYPE) \
+	((TYPE*)Memento_label(fz_realloc(CTX, OLD, (COUNT) * sizeof(TYPE)), #TYPE "[]"))
 
-	count: The number of objects to allocate space for.
-
-	size: The size (in bytes) of each object.
-
-	Returns a pointer to the allocated block. May return NULL if size
-	and/or count are 0. Throws exception on failure to allocate.
-*/
-void *fz_calloc(fz_context *ctx, unsigned int count, unsigned int size);
-
-/*
-	fz_malloc_struct: Allocate storage for a structure (with scavenging),
-	clear it, and (in Memento builds) tag the pointer as belonging to a
-	struct of this type.
-
-	CTX: The context.
-
-	STRUCT: The structure type.
-
-	Returns a pointer to allocated (and cleared) structure. Throws
-	exception on failure to allocate.
-*/
-#define fz_malloc_struct(CTX, STRUCT) \
-	((STRUCT *)Memento_label(fz_calloc(CTX,1,sizeof(STRUCT)), #STRUCT))
-
-/*
-	fz_malloc_array: Allocate a block of (non zeroed) memory (with
-	scavenging). Equivalent to fz_calloc without the memory clearing.
-
-	count: The number of objects to allocate space for.
-
-	size: The size (in bytes) of each object.
-
-	Returns a pointer to the allocated block. May return NULL if size
-	and/or count are 0. Throws exception on failure to allocate.
-*/
-void *fz_malloc_array(fz_context *ctx, unsigned int count, unsigned int size);
-
-/*
-	fz_resize_array: Resize a block of memory (with scavenging).
-
-	p: The existing block to resize
-
-	count: The number of objects to resize to.
-
-	size: The size (in bytes) of each object.
-
-	Returns a pointer to the resized block. May return NULL if size
-	and/or count are 0. Throws exception on failure to resize (original
-	block is left unchanged).
-*/
-void *fz_resize_array(fz_context *ctx, void *p, unsigned int count, unsigned int size);
-
-/*
-	fz_strdup: Duplicate a C string (with scavenging)
-
-	s: The string to duplicate.
-
-	Returns a pointer to a duplicated string. Throws exception on failure
-	to allocate.
-*/
-char *fz_strdup(fz_context *ctx, const char *s);
-
-/*
-	fz_free: Frees an allocation.
-
-	Does not throw exceptions.
-*/
+void *fz_malloc(fz_context *ctx, size_t size);
+void *fz_calloc(fz_context *ctx, size_t count, size_t size);
+void *fz_realloc(fz_context *ctx, void *p, size_t size);
 void fz_free(fz_context *ctx, void *p);
 
-/*
-	fz_malloc_no_throw: Allocate a block of memory (with scavenging)
+void *fz_malloc_no_throw(fz_context *ctx, size_t size);
+void *fz_calloc_no_throw(fz_context *ctx, size_t count, size_t size);
+void *fz_realloc_no_throw(fz_context *ctx, void *p, size_t size);
 
-	size: The number of bytes to allocate.
+char *fz_strdup(fz_context *ctx, const char *s);
 
-	Returns a pointer to the allocated block. May return NULL if size is
-	0. Returns NULL on failure to allocate.
-*/
-void *fz_malloc_no_throw(fz_context *ctx, unsigned int size);
+void *fz_zlib_alloc(void *ctx, unsigned int items, unsigned int size);
+void fz_zlib_free(void *ctx, void *ptr);
 
-/*
-	fz_calloc_no_throw: Allocate a zeroed block of memory (with scavenging)
-
-	count: The number of objects to allocate space for.
-
-	size: The size (in bytes) of each object.
-
-	Returns a pointer to the allocated block. May return NULL if size
-	and/or count are 0. Returns NULL on failure to allocate.
-*/
-void *fz_calloc_no_throw(fz_context *ctx, unsigned int count, unsigned int size);
-
-/*
-	fz_malloc_array_no_throw: Allocate a block of (non zeroed) memory
-	(with scavenging). Equivalent to fz_calloc_no_throw without the
-	memory clearing.
-
-	count: The number of objects to allocate space for.
-
-	size: The size (in bytes) of each object.
-
-	Returns a pointer to the allocated block. May return NULL if size
-	and/or count are 0. Returns NULL on failure to allocate.
-*/
-void *fz_malloc_array_no_throw(fz_context *ctx, unsigned int count, unsigned int size);
-
-/*
-	fz_resize_array_no_throw: Resize a block of memory (with scavenging).
-
-	p: The existing block to resize
-
-	count: The number of objects to resize to.
-
-	size: The size (in bytes) of each object.
-
-	Returns a pointer to the resized block. May return NULL if size
-	and/or count are 0. Returns NULL on failure to resize (original
-	block is left unchanged).
-*/
-void *fz_resize_array_no_throw(fz_context *ctx, void *p, unsigned int count, unsigned int size);
-
-/*
-	fz_strdup_no_throw: Duplicate a C string (with scavenging)
-
-	s: The string to duplicate.
-
-	Returns a pointer to a duplicated string. Returns NULL on failure
-	to allocate.
-*/
-char *fz_strdup_no_throw(fz_context *ctx, const char *s);
-
-/*
-	fz_gen_id: Generate an id (guaranteed unique within this family of
-	contexts).
-*/
-int fz_gen_id(fz_context *ctx);
-
-struct fz_warn_context_s
-{
-	char message[256];
-	int count;
-};
-
-fz_context *fz_clone_context_internal(fz_context *ctx);
-
-void fz_new_aa_context(fz_context *ctx);
-void fz_free_aa_context(fz_context *ctx);
-void fz_copy_aa_context(fz_context *dst, fz_context *src);
-
-void fz_new_document_handler_context(fz_context *ctx);
-void fz_drop_document_handler_context(fz_context *ctx);
-fz_document_handler_context *fz_keep_document_handler_context(fz_context *ctx);
-
-/* Default allocator */
 extern fz_alloc_context fz_alloc_default;
-
-/* Default locks */
 extern fz_locks_context fz_locks_default;
 
-#if defined(MEMENTO) || defined(DEBUG)
-#define FITZ_DEBUG_LOCKING
-#endif
+double fz_drand48(fz_context *ctx);
+int32_t fz_lrand48(fz_context *ctx);
+int32_t fz_mrand48(fz_context *ctx);
+double fz_erand48(fz_context *ctx, uint16_t xsubi[3]);
+int32_t fz_jrand48(fz_context *ctx, uint16_t xsubi[3]);
+int32_t fz_nrand48(fz_context *ctx, uint16_t xsubi[3]);
+void fz_lcong48(fz_context *ctx, uint16_t param[7]);
+uint16_t *fz_seed48(fz_context *ctx, uint16_t seed16v[3]);
+void fz_srand48(fz_context *ctx, int32_t seedval);
 
-#ifdef FITZ_DEBUG_LOCKING
-
-void fz_assert_lock_held(fz_context *ctx, int lock);
-void fz_assert_lock_not_held(fz_context *ctx, int lock);
-void fz_lock_debug_lock(fz_context *ctx, int lock);
-void fz_lock_debug_unlock(fz_context *ctx, int lock);
-
-#else
-
-#define fz_assert_lock_held(A,B) do { } while (0)
-#define fz_assert_lock_not_held(A,B) do { } while (0)
-#define fz_lock_debug_lock(A,B) do { } while (0)
-#define fz_lock_debug_unlock(A,B) do { } while (0)
-
-#endif /* !FITZ_DEBUG_LOCKING */
-
-static inline void
-fz_lock(fz_context *ctx, int lock)
-{
-	fz_lock_debug_lock(ctx, lock);
-	ctx->locks->lock(ctx->locks->user, lock);
-}
-
-static inline void
-fz_unlock(fz_context *ctx, int lock)
-{
-	fz_lock_debug_unlock(ctx, lock);
-	ctx->locks->unlock(ctx->locks->user, lock);
-}
+void fz_memrnd(fz_context *ctx, uint8_t *block, int len);
 
 #endif

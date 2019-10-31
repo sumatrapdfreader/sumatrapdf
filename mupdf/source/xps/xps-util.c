@@ -1,4 +1,5 @@
-#include "mupdf/xps.h"
+#include "mupdf/fitz.h"
+#include "xps-imp.h"
 
 static inline int xps_tolower(int c)
 {
@@ -81,7 +82,7 @@ skip_authority(char *path)
 #define SEP(x) ((x)=='/' || (x) == 0)
 
 static char *
-xps_clean_path(char *name)
+clean_path(char *name)
 {
 	char *p, *q, *dotdot, *start;
 	int rooted;
@@ -138,7 +139,7 @@ xps_clean_path(char *name)
 }
 
 void
-xps_resolve_url(char *output, char *base_uri, char *path, int output_size)
+xps_resolve_url(fz_context *ctx, xps_document *doc, char *output, char *base_uri, char *path, int output_size)
 {
 	char *p = skip_authority(skip_scheme(path));
 
@@ -148,18 +149,10 @@ xps_resolve_url(char *output, char *base_uri, char *path, int output_size)
 	}
 	else
 	{
-		int len = fz_strlcpy(output, base_uri, output_size);
+		size_t len = fz_strlcpy(output, base_uri, output_size);
 		if (len == 0 || output[len-1] != '/')
 			fz_strlcat(output, "/", output_size);
 		fz_strlcat(output, path, output_size);
 	}
-	xps_clean_path(output);
-}
-
-int
-xps_url_is_remote(char *path)
-{
-	char *p = skip_authority(skip_scheme(path));
-
-	return p != path;
+	clean_path(output);
 }

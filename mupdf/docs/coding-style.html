@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>MuPDF Coding Style</title>
+<link rel="stylesheet" href="style.css" type="text/css">
+</head>
+<body>
+
+<header>
+<h1>MuPDF Coding Style</h1>
+</header>
+
+<article>
+
+<h2>Names</h2>
+
+<p>
+Functions should be named according to one of the following schemes:
+
+<ul>
+<li> verb_noun
+<li> verb_noun_with_noun
+<li> noun_attribute
+<li> set_noun_attribute
+<li> noun_from_noun -- convert from one type to another (avoid noun_to_noun)
+</ul>
+
+<p>
+Prefixes are mandatory for exported functions, macros, enums, globals and types.
+
+<ul>
+<li> fz for common code
+<li> pdf, xps, etc., for interpreter specific code
+</ul>
+
+<p>
+Prefixes are optional (but encouraged) for private functions and types.
+
+<p>
+Avoid using 'get' as this is a meaningless and redundant filler word.
+
+<p>
+These words are reserved for reference counting schemes:
+
+<ul>
+<li> new, find, load, open, keep -- return objects that you are responsible for freeing.
+
+<li> drop -- relinquish ownership of the object passed in.
+</ul>
+
+<p>
+When searching for an object or value, the name used depends on whether
+returning the value is passing ownership:
+
+<ul>
+<li> lookup -- return a value or borrowed pointer
+<li> find -- return an object that the caller is responsible for freeing
+</ul>
+
+<h2>Types</h2>
+
+<p>
+Various different integer types are used throughout MuPDF.
+
+<p>
+In general:
+
+<ul>
+<li> int is assumed to be 32bit at least.
+<li> short is assumed to be exactly 16 bits.
+<li> char is assumed to be exactly 8 bits.
+<li> array sizes, string lengths, and allocations are measured using size_t.
+	size_t is 32bit in 32bit builds, and 64bit on all 64bit builds.
+<li> buffers of data use unsigned chars (or uint8_t).
+<li> Offsets within files/streams are represented using int64_t.
+</ul>
+
+<p>
+In addition, we use floats (and avoid doubles when possible), assumed to be IEEE compliant.
+
+<h2>Reference counting</h2>
+
+<p>
+Reference counting uses special words in functions to make it easy to remember
+and follow the rules.
+
+<p>
+Words that take ownership: new, find, load, open, keep.
+
+<p>
+Words that release ownership: drop.
+
+<p>
+If an object is returned by a function with one of the special words that take
+ownership, you are responsible for freeing it by calling "drop" or "free", or
+"close" before you return. You may pass ownership of an owned object by return
+it only if you name the function using one of the special words.
+
+<p>
+Any objects returned by functions that do not have any of these special words,
+are borrowed and have a limited life time. Do not hold on to them past the
+duration of the current function, or stow them away inside structs. If you need
+to keep the object for longer than that, you have to either "keep" it or make
+your own copy.
+
+</article>
+
+<footer>
+<a href="http://www.artifex.com/"><img src="artifex-logo.png" align="right"></a>
+Copyright &copy; 2006-2018 Artifex Software Inc.
+</footer>
+
+</body>
+</html>

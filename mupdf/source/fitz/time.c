@@ -1,10 +1,13 @@
-#ifdef _MSC_VER
+#ifdef _WIN32
 
 #include "mupdf/fitz.h"
 
+#include <stdio.h>
+#include <errno.h>
 #include <time.h>
 #include <windows.h>
 
+#ifdef _MSC_VER
 #ifndef _WINRT
 
 #define DELTA_EPOCH_IN_MICROSECS 11644473600000000Ui64
@@ -33,6 +36,7 @@ int gettimeofday(struct timeval *tv, struct timezone *tz)
 }
 
 #endif /* !_WINRT */
+#endif /* _MSC_VER */
 
 char *
 fz_utf8_from_wchar(const wchar_t *s)
@@ -47,7 +51,7 @@ fz_utf8_from_wchar(const wchar_t *s)
 		len += fz_runelen(*src++);
 	}
 
-	d = malloc(len);
+	d = Memento_label(malloc(len), "utf8_from_wchar");
 	if (d != NULL)
 	{
 		dst = d;
@@ -77,16 +81,11 @@ fz_wchar_from_utf8(const char *s)
 	return r;
 }
 
-FILE *
+void *
 fz_fopen_utf8(const char *name, const char *mode)
 {
 	wchar_t *wname, *wmode;
 	FILE *file;
-
-	/* SumatraPDF: prefer ANSI to UTF-8 for reading for consistency with remaining API */
-#undef fopen
-	if (strchr(mode, 'r') && (file = fopen(name, mode)) != NULL)
-		return file;
 
 	wname = fz_wchar_from_utf8(name);
 	if (wname == NULL)
@@ -108,13 +107,32 @@ fz_fopen_utf8(const char *name, const char *mode)
 	return file;
 }
 
+int
+fz_remove_utf8(const char *name)
+{
+	wchar_t *wname;
+	int n;
+
+	wname = fz_wchar_from_utf8(name);
+	if (wname == NULL)
+	{
+		errno = ENOMEM;
+		return -1;
+	}
+
+	n = _wremove(wname);
+
+	free(wname);
+	return n;
+}
+
 char **
 fz_argv_from_wargv(int argc, wchar_t **wargv)
 {
 	char **argv;
 	int i;
 
-	argv = calloc(argc, sizeof(char *));
+	argv = Memento_label(calloc(argc, sizeof(char *)), "fz_argv");
 	if (argv == NULL)
 	{
 		fprintf(stderr, "Out of memory while processing command line args!\n");
@@ -123,7 +141,7 @@ fz_argv_from_wargv(int argc, wchar_t **wargv)
 
 	for (i = 0; i < argc; i++)
 	{
-		argv[i] = fz_utf8_from_wchar(wargv[i]);
+		argv[i] = Memento_label(fz_utf8_from_wchar(wargv[i]), "fz_arg");
 		if (argv[i] == NULL)
 		{
 			fprintf(stderr, "Out of memory while processing command line args!\n");
@@ -143,45 +161,8 @@ fz_free_argv(int argc, char **argv)
 	free(argv);
 }
 
-#endif /* _MSC_VER */
-
-/* SumatraPDF: better support for libmupdf.dll */
-#ifdef _WIN32
-#ifndef _MSC_VER
-#include "mupdf/fitz.h"
-#include <windows.h>
-#endif
-
-void
-fz_redirect_io_to_console()
-{
-	// redirect unbuffered STDOUT to the console
-#if _MSC_VER < 1900
-	int hConHandle = _open_osfhandle((intptr_t)GetStdHandle(STD_OUTPUT_HANDLE), _O_TEXT);
-	*stdout = *_fdopen(hConHandle, "w");
 #else
-	FILE *con;
-	freopen_s(&con, "CONOUT$", "w", stdout);
-#endif
-	setvbuf(stdout, NULL, _IONBF, 0);
-	// redirect unbuffered STDERR to the console
-#if _MSC_VER < 1900
-	hConHandle = _open_osfhandle((intptr_t)GetStdHandle(STD_ERROR_HANDLE), _O_TEXT);
-	*stderr = *_fdopen(hConHandle, "w");
-#else
-	freopen_s(&con, "CONOUT$", "w", stderr);
-#endif
-	setvbuf(stderr, NULL, _IONBF, 0);
-	// redirect unbuffered STDIN to the console
-#if _MSC_VER < 1900
-	hConHandle = _open_osfhandle((intptr_t)GetStdHandle(STD_INPUT_HANDLE), _O_TEXT);
-	*stdin = *_fdopen(hConHandle, "r");
-#else
-	freopen_s(&con, "CONIN$", "r", stdin);
-#endif
-	setvbuf(stdin, NULL, _IONBF, 0);
-}
 
-/* replace this function with one calling fz_redirect_io_to_console when building libmupdf.dll */
-void fz_redirect_dll_io_to_console() { }
-#endif
+int fz_time_dummy;
+
+#endif /* _WIN32 */

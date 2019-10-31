@@ -1,5 +1,9 @@
 #include "mupdf/fitz.h"
 #include "draw-imp.h"
+#include "fitz-imp.h"
+
+#include <string.h>
+#include <math.h>
 
 #define MAX_GLYPH_SIZE 256
 #define MAX_CACHE_SIZE (1024*1024)
@@ -33,10 +37,10 @@ struct fz_glyph_cache_entry_s
 struct fz_glyph_cache_s
 {
 	int refs;
-	int total;
+	size_t total;
 #ifndef NDEBUG
 	int num_evictions;
-	int evicted;
+	ptrdiff_t evicted;
 #endif
 	fz_glyph_cache_entry *entry[GLYPH_HASH_LEN];
 	fz_glyph_cache_entry *lru_head;
@@ -107,7 +111,7 @@ fz_purge_glyph_cache(fz_context *ctx)
 void
 fz_drop_glyph_cache_context(fz_context *ctx)
 {
-	if (!ctx->glyph_cache)
+	if (!ctx || !ctx->glyph_cache)
 		return;
 
 	fz_lock(ctx, FZ_LOCK_GLYPHCACHE);
@@ -131,9 +135,9 @@ fz_keep_glyph_cache(fz_context *ctx)
 }
 
 float
-fz_subpixel_adjust(fz_matrix *ctm, fz_matrix *subpix_ctm, unsigned char *qe, unsigned char *qf)
+fz_subpixel_adjust(fz_context *ctx, fz_matrix *ctm, fz_matrix *subpix_ctm, unsigned char *qe, unsigned char *qf)
 {
-	float size = fz_matrix_expansion(ctm);
+	float size = fz_matrix_expansion(*ctm);
 	int q;
 	float pix_e, pix_f, r;
 
@@ -173,35 +177,35 @@ fz_subpixel_adjust(fz_matrix *ctm, fz_matrix *subpix_ctm, unsigned char *qe, uns
 }
 
 fz_glyph *
-fz_render_stroked_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix *trm, const fz_matrix *ctm, fz_stroke_state *stroke, const fz_irect *scissor)
+fz_render_stroked_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix *trm, fz_matrix ctm, const fz_stroke_state *stroke, const fz_irect *scissor, int aa)
 {
-	if (font->ft_face)
+	if (fz_font_ft_face(ctx, font))
 	{
 		fz_matrix subpix_trm;
 		unsigned char qe, qf;
 
 		if (stroke->dash_len > 0)
 			return NULL;
-		(void)fz_subpixel_adjust(trm, &subpix_trm, &qe, &qf);
-		return fz_render_ft_stroked_glyph(ctx, font, gid, &subpix_trm, ctm, stroke);
+		(void)fz_subpixel_adjust(ctx, trm, &subpix_trm, &qe, &qf);
+		return fz_render_ft_stroked_glyph(ctx, font, gid, subpix_trm, ctm, stroke, aa);
 	}
-	return fz_render_glyph(ctx, font, gid, trm, NULL, scissor);
+	return fz_render_glyph(ctx, font, gid, trm, NULL, scissor, 1, aa);
 }
 
 fz_pixmap *
-fz_render_stroked_glyph_pixmap(fz_context *ctx, fz_font *font, int gid, fz_matrix *trm, const fz_matrix *ctm, fz_stroke_state *stroke, const fz_irect *scissor)
+fz_render_stroked_glyph_pixmap(fz_context *ctx, fz_font *font, int gid, fz_matrix *trm, fz_matrix ctm, const fz_stroke_state *stroke, const fz_irect *scissor, int aa)
 {
-	if (font->ft_face)
+	if (fz_font_ft_face(ctx, font))
 	{
 		fz_matrix subpix_trm;
 		unsigned char qe, qf;
 
 		if (stroke->dash_len > 0)
 			return NULL;
-		(void)fz_subpixel_adjust(trm, &subpix_trm, &qe, &qf);
-		return fz_render_ft_stroked_glyph_pixmap(ctx, font, gid, &subpix_trm, ctm, stroke);
+		(void)fz_subpixel_adjust(ctx, trm, &subpix_trm, &qe, &qf);
+		return fz_render_ft_stroked_glyph_pixmap(ctx, font, gid, subpix_trm, ctm, stroke, aa);
 	}
-	return fz_render_glyph_pixmap(ctx, font, gid, trm, NULL, scissor);
+	return fz_render_glyph_pixmap(ctx, font, gid, trm, scissor, aa);
 }
 
 static unsigned do_hash(unsigned char *s, int len)
@@ -241,7 +245,7 @@ move_to_front(fz_glyph_cache *cache, fz_glyph_cache_entry *entry)
 }
 
 fz_glyph *
-fz_render_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix *ctm, fz_colorspace *model, const fz_irect *scissor)
+fz_render_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix *ctm, fz_colorspace *model, const fz_irect *scissor, int alpha, int aa)
 {
 	fz_glyph_cache *cache;
 	fz_glyph_key key;
@@ -252,13 +256,14 @@ fz_render_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix *ctm, fz_colo
 	int do_cache, locked, caching;
 	fz_glyph_cache_entry *entry;
 	unsigned hash;
+	int is_ft_font = !!fz_font_ft_face(ctx, font);
 
 	fz_var(locked);
 	fz_var(caching);
 	fz_var(val);
 
 	memset(&key, 0, sizeof key);
-	size = fz_subpixel_adjust(ctm, &subpix_ctm, &key.e, &key.f);
+	size = fz_subpixel_adjust(ctx, ctm, &subpix_ctm, &key.e, &key.f);
 	if (size <= MAX_GLYPH_SIZE)
 	{
 		scissor = &fz_infinite_irect;
@@ -266,8 +271,7 @@ fz_render_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix *ctm, fz_colo
 	}
 	else
 	{
-		/* SumatraPDF: don't break clipping by larger glyphs */
-		if (font->ft_face && size > 3000)
+		if (is_ft_font)
 			return NULL;
 		subpix_scissor.x0 = scissor->x0 - floorf(ctm->e);
 		subpix_scissor.y0 = scissor->y0 - floorf(ctm->f);
@@ -285,10 +289,10 @@ fz_render_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix *ctm, fz_colo
 	key.b = subpix_ctm.b * 65536;
 	key.c = subpix_ctm.c * 65536;
 	key.d = subpix_ctm.d * 65536;
-	key.aa = fz_aa_level(ctx);
+	key.aa = aa;
 
-	fz_lock(ctx, FZ_LOCK_GLYPHCACHE);
 	hash = do_hash((unsigned char *)&key, sizeof(key)) % GLYPH_HASH_LEN;
+	fz_lock(ctx, FZ_LOCK_GLYPHCACHE);
 	entry = cache->entry[hash];
 	while (entry)
 	{
@@ -308,11 +312,11 @@ fz_render_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix *ctm, fz_colo
 
 	fz_try(ctx)
 	{
-		if (font->ft_face)
+		if (is_ft_font)
 		{
-			val = fz_render_ft_glyph(ctx, font, gid, &subpix_ctm, key.aa);
+			val = fz_render_ft_glyph(ctx, font, gid, subpix_ctm, aa);
 		}
-		else if (font->t3procs)
+		else if (fz_font_t3_procs(ctx, font))
 		{
 			/* We drop the glyphcache here, and execute the t3
 			 * glyph code. The danger here is that some other
@@ -325,7 +329,7 @@ fz_render_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix *ctm, fz_colo
 			 */
 			fz_unlock(ctx, FZ_LOCK_GLYPHCACHE);
 			locked = 0;
-			val = fz_render_t3_glyph(ctx, font, gid, &subpix_ctm, model, scissor);
+			val = fz_render_t3_glyph(ctx, font, gid, subpix_ctm, model, scissor, aa);
 			fz_lock(ctx, FZ_LOCK_GLYPHCACHE);
 			locked = 1;
 		}
@@ -340,7 +344,7 @@ fz_render_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix *ctm, fz_colo
 				/* If we throw an exception whilst caching,
 				 * just ignore the exception and carry on. */
 				caching = 1;
-				if (!font->ft_face)
+				if (!is_ft_font)
 				{
 					/* We had to unlock. Someone else might
 					 * have rendered in the meantime */
@@ -384,7 +388,6 @@ fz_render_glyph(fz_context *ctx, fz_font *font, int gid, fz_matrix *ctm, fz_colo
 #endif
 					drop_glyph_cache_entry(ctx, cache->lru_tail);
 				}
-
 			}
 		}
 unlock_and_return_val:
@@ -408,12 +411,13 @@ unlock_and_return_val:
 }
 
 fz_pixmap *
-fz_render_glyph_pixmap(fz_context *ctx, fz_font *font, int gid, fz_matrix *ctm, fz_colorspace *model, const fz_irect *scissor)
+fz_render_glyph_pixmap(fz_context *ctx, fz_font *font, int gid, fz_matrix *ctm, const fz_irect *scissor, int aa)
 {
-	fz_pixmap *val;
+	fz_pixmap *val = NULL;
 	unsigned char qe, qf;
 	fz_matrix subpix_ctm;
-	float size = fz_subpixel_adjust(ctm, &subpix_ctm, &qe, &qf);
+	float size = fz_subpixel_adjust(ctx, ctm, &subpix_ctm, &qe, &qf);
+	int is_ft_font = !!fz_font_ft_face(ctx, font);
 
 	if (size <= MAX_GLYPH_SIZE)
 	{
@@ -421,29 +425,22 @@ fz_render_glyph_pixmap(fz_context *ctx, fz_font *font, int gid, fz_matrix *ctm, 
 	}
 	else
 	{
-		if (font->ft_face)
+		if (is_ft_font)
 			return NULL;
 	}
 
-	fz_try(ctx)
+	if (is_ft_font)
 	{
-		if (font->ft_face)
-		{
-			val = fz_render_ft_glyph_pixmap(ctx, font, gid, &subpix_ctm, fz_aa_level(ctx));
-		}
-		else if (font->t3procs)
-		{
-			val = fz_render_t3_glyph_pixmap(ctx, font, gid, &subpix_ctm, model, scissor);
-		}
-		else
-		{
-			fz_warn(ctx, "assert: uninitialized font structure");
-			val = NULL;
-		}
+		val = fz_render_ft_glyph_pixmap(ctx, font, gid, subpix_ctm, aa);
 	}
-	fz_catch(ctx)
+	else if (fz_font_t3_procs(ctx, font))
 	{
-		fz_rethrow(ctx);
+		val = fz_render_t3_glyph_pixmap(ctx, font, gid, subpix_ctm, NULL, scissor, aa);
+	}
+	else
+	{
+		fz_warn(ctx, "assert: uninitialized font structure");
+		val = NULL;
 	}
 
 	return val;
@@ -453,9 +450,8 @@ void
 fz_dump_glyph_cache_stats(fz_context *ctx)
 {
 	fz_glyph_cache *cache = ctx->glyph_cache;
-
-	printf("Glyph Cache Size: %d\n", cache->total);
+	fz_write_printf(ctx, fz_stderr(ctx), "Glyph Cache Size: %zu\n", cache->total);
 #ifndef NDEBUG
-	printf("Glyph Cache Evictions: %d (%d bytes)\n", cache->num_evictions, cache->evicted);
+	fz_write_printf(ctx, fz_stderr(ctx), "Glyph Cache Evictions: %d (%zu bytes)\n", cache->num_evictions, cache->evicted);
 #endif
 }

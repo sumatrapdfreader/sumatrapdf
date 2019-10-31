@@ -207,9 +207,9 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4800;4244;4267;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;DEBUG;USE_JPIP;OPJ_EXPORTS;NOCJKFONT;SHARE_JPEG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\mupdf\scripts\openjpeg;..\mupdf\include;..\mupdf\generated;..\ext\mujs;..\ext\zlib;..\ext\freetype-config;..\ext\freetype\include;..\ext\jbig2dec;..\ext\libjpeg-turbo;..\ext\openjpeg\src\lib\openjp2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4800;4005;4028;4100;4115;4130;4204;4206;4244;4245;4267;4295;4389;4456;4457;4459;4702;4703;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;DEBUG;USE_JPIP;OPJ_EXPORTS;HAVE_LCMS2MT=1;OPJ_STATIC;TOFU;SHARE_JPEG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\freetype-config;..\mupdf\include;..\mupdf\generated;..\ext\jbig2dec;..\ext\libjpeg-turbo;..\ext\openjpeg\src\lib\openjp2;..\ext\zlib;..\ext\freetype\include;..\ext\mujs;..\ext\harfbuzz\src;..\ext\lcms2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -229,9 +229,9 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4800;4244;4267;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;DEBUG;USE_JPIP;OPJ_EXPORTS;NOCJKFONT;SHARE_JPEG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\mupdf\scripts\openjpeg;..\mupdf\include;..\mupdf\generated;..\ext\mujs;..\ext\zlib;..\ext\freetype-config;..\ext\freetype\include;..\ext\jbig2dec;..\ext\libjpeg-turbo;..\ext\openjpeg\src\lib\openjp2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4800;4005;4028;4100;4115;4130;4204;4206;4244;4245;4267;4295;4389;4456;4457;4459;4702;4703;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;DEBUG;USE_JPIP;OPJ_EXPORTS;HAVE_LCMS2MT=1;OPJ_STATIC;TOFU;SHARE_JPEG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\freetype-config;..\mupdf\include;..\mupdf\generated;..\ext\jbig2dec;..\ext\libjpeg-turbo;..\ext\openjpeg\src\lib\openjp2;..\ext\zlib;..\ext\freetype\include;..\ext\mujs;..\ext\harfbuzz\src;..\ext\lcms2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -252,9 +252,9 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4800;4244;4267;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;DEBUG;USE_JPIP;OPJ_EXPORTS;NOCJKFONT;SHARE_JPEG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\mupdf\scripts\openjpeg;..\mupdf\include;..\mupdf\generated;..\ext\mujs;..\ext\zlib;..\ext\freetype-config;..\ext\freetype\include;..\ext\jbig2dec;..\ext\libjpeg-turbo;..\ext\openjpeg\src\lib\openjp2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4800;4005;4028;4100;4115;4130;4204;4206;4244;4245;4267;4295;4389;4456;4457;4459;4702;4703;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;DEBUG;USE_JPIP;OPJ_EXPORTS;HAVE_LCMS2MT=1;OPJ_STATIC;TOFU;SHARE_JPEG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\freetype-config;..\mupdf\include;..\mupdf\generated;..\ext\jbig2dec;..\ext\libjpeg-turbo;..\ext\openjpeg\src\lib\openjp2;..\ext\zlib;..\ext\freetype\include;..\ext\mujs;..\ext\harfbuzz\src;..\ext\lcms2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -274,9 +274,9 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4800;4244;4267;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;NDEBUG;USE_JPIP;OPJ_EXPORTS;NOCJKFONT;SHARE_JPEG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\mupdf\scripts\openjpeg;..\mupdf\include;..\mupdf\generated;..\ext\mujs;..\ext\zlib;..\ext\freetype-config;..\ext\freetype\include;..\ext\jbig2dec;..\ext\libjpeg-turbo;..\ext\openjpeg\src\lib\openjp2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4800;4005;4028;4100;4115;4130;4204;4206;4244;4245;4267;4295;4389;4456;4457;4459;4702;4703;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;NDEBUG;USE_JPIP;OPJ_EXPORTS;HAVE_LCMS2MT=1;OPJ_STATIC;TOFU;SHARE_JPEG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\freetype-config;..\mupdf\include;..\mupdf\generated;..\ext\jbig2dec;..\ext\libjpeg-turbo;..\ext\openjpeg\src\lib\openjp2;..\ext\zlib;..\ext\freetype\include;..\ext\mujs;..\ext\harfbuzz\src;..\ext\lcms2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -300,9 +300,9 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4800;4244;4267;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;NDEBUG;USE_JPIP;OPJ_EXPORTS;NOCJKFONT;SHARE_JPEG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\mupdf\scripts\openjpeg;..\mupdf\include;..\mupdf\generated;..\ext\mujs;..\ext\zlib;..\ext\freetype-config;..\ext\freetype\include;..\ext\jbig2dec;..\ext\libjpeg-turbo;..\ext\openjpeg\src\lib\openjp2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4800;4005;4028;4100;4115;4130;4204;4206;4244;4245;4267;4295;4389;4456;4457;4459;4702;4703;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;NDEBUG;USE_JPIP;OPJ_EXPORTS;HAVE_LCMS2MT=1;OPJ_STATIC;TOFU;SHARE_JPEG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\freetype-config;..\mupdf\include;..\mupdf\generated;..\ext\jbig2dec;..\ext\libjpeg-turbo;..\ext\openjpeg\src\lib\openjp2;..\ext\zlib;..\ext\freetype\include;..\ext\mujs;..\ext\harfbuzz\src;..\ext\lcms2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -327,9 +327,9 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4800;4244;4267;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;NDEBUG;USE_JPIP;OPJ_EXPORTS;NOCJKFONT;SHARE_JPEG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\mupdf\scripts\openjpeg;..\mupdf\include;..\mupdf\generated;..\ext\mujs;..\ext\zlib;..\ext\freetype-config;..\ext\freetype\include;..\ext\jbig2dec;..\ext\libjpeg-turbo;..\ext\openjpeg\src\lib\openjp2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4800;4005;4028;4100;4115;4130;4204;4206;4244;4245;4267;4295;4389;4456;4457;4459;4702;4703;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;NDEBUG;USE_JPIP;OPJ_EXPORTS;HAVE_LCMS2MT=1;OPJ_STATIC;TOFU;SHARE_JPEG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\freetype-config;..\mupdf\include;..\mupdf\generated;..\ext\jbig2dec;..\ext\libjpeg-turbo;..\ext\openjpeg\src\lib\openjp2;..\ext\zlib;..\ext\freetype\include;..\ext\mujs;..\ext\harfbuzz\src;..\ext\lcms2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -352,9 +352,9 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4800;28125;28252;28253;4244;4267;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;NDEBUG;USE_JPIP;OPJ_EXPORTS;NOCJKFONT;SHARE_JPEG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\mupdf\scripts\openjpeg;..\mupdf\include;..\mupdf\generated;..\ext\mujs;..\ext\zlib;..\ext\freetype-config;..\ext\freetype\include;..\ext\jbig2dec;..\ext\libjpeg-turbo;..\ext\openjpeg\src\lib\openjp2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4800;28125;28252;28253;4005;4028;4100;4115;4130;4204;4206;4244;4245;4267;4295;4389;4456;4457;4459;4702;4703;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;NDEBUG;USE_JPIP;OPJ_EXPORTS;HAVE_LCMS2MT=1;OPJ_STATIC;TOFU;SHARE_JPEG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\freetype-config;..\mupdf\include;..\mupdf\generated;..\ext\jbig2dec;..\ext\libjpeg-turbo;..\ext\openjpeg\src\lib\openjp2;..\ext\zlib;..\ext\freetype\include;..\ext\mujs;..\ext\harfbuzz\src;..\ext\lcms2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -379,9 +379,9 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4800;28125;28252;28253;4244;4267;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;NDEBUG;USE_JPIP;OPJ_EXPORTS;NOCJKFONT;SHARE_JPEG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\mupdf\scripts\openjpeg;..\mupdf\include;..\mupdf\generated;..\ext\mujs;..\ext\zlib;..\ext\freetype-config;..\ext\freetype\include;..\ext\jbig2dec;..\ext\libjpeg-turbo;..\ext\openjpeg\src\lib\openjp2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4800;28125;28252;28253;4005;4028;4100;4115;4130;4204;4206;4244;4245;4267;4295;4389;4456;4457;4459;4702;4703;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;NDEBUG;USE_JPIP;OPJ_EXPORTS;HAVE_LCMS2MT=1;OPJ_STATIC;TOFU;SHARE_JPEG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\freetype-config;..\mupdf\include;..\mupdf\generated;..\ext\jbig2dec;..\ext\libjpeg-turbo;..\ext\openjpeg\src\lib\openjp2;..\ext\zlib;..\ext\freetype\include;..\ext\mujs;..\ext\harfbuzz\src;..\ext\lcms2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -406,9 +406,9 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <DisableSpecificWarnings>4127;4189;4324;4458;4800;28125;28252;28253;4244;4267;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;NDEBUG;USE_JPIP;OPJ_EXPORTS;NOCJKFONT;SHARE_JPEG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\mupdf\scripts\openjpeg;..\mupdf\include;..\mupdf\generated;..\ext\mujs;..\ext\zlib;..\ext\freetype-config;..\ext\freetype\include;..\ext\jbig2dec;..\ext\libjpeg-turbo;..\ext\openjpeg\src\lib\openjp2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>4127;4189;4324;4458;4800;28125;28252;28253;4005;4028;4100;4115;4130;4204;4206;4244;4245;4267;4295;4389;4456;4457;4459;4702;4703;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;NDEBUG;USE_JPIP;OPJ_EXPORTS;HAVE_LCMS2MT=1;OPJ_STATIC;TOFU;SHARE_JPEG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\freetype-config;..\mupdf\include;..\mupdf\generated;..\ext\jbig2dec;..\ext\libjpeg-turbo;..\ext\openjpeg\src\lib\openjp2;..\ext\zlib;..\ext\freetype\include;..\ext\mujs;..\ext\harfbuzz\src;..\ext\lcms2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -430,10 +430,32 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\mupdf\source\fitz\bidi-imp.h" />
+    <ClInclude Include="..\mupdf\source\fitz\draw-imp.h" />
+    <ClInclude Include="..\mupdf\source\fitz\encodings.h" />
+    <ClInclude Include="..\mupdf\source\fitz\fitz-imp.h" />
+    <ClInclude Include="..\mupdf\source\fitz\glyphlist.h" />
+    <ClInclude Include="..\mupdf\source\fitz\html-tags.h" />
+    <ClInclude Include="..\mupdf\source\fitz\icc34.h" />
+    <ClInclude Include="..\mupdf\source\fitz\jmemcust.h" />
+    <ClInclude Include="..\mupdf\source\fitz\paint-glyph.h" />
+    <ClInclude Include="..\mupdf\source\fitz\smallcaps.h" />
+    <ClInclude Include="..\mupdf\source\fitz\ucdn_db.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\mupdf\source\cbz\mucbz.c" />
+    <ClCompile Include="..\mupdf\source\cbz\muimg.c" />
+    <ClCompile Include="..\mupdf\source\fitz\archive.c" />
     <ClCompile Include="..\mupdf\source\fitz\bbox-device.c" />
+    <ClCompile Include="..\mupdf\source\fitz\bidi-std.c" />
+    <ClCompile Include="..\mupdf\source\fitz\bidi.c" />
     <ClCompile Include="..\mupdf\source\fitz\bitmap.c" />
     <ClCompile Include="..\mupdf\source\fitz\buffer.c" />
+    <ClCompile Include="..\mupdf\source\fitz\color-fast.c" />
+    <ClCompile Include="..\mupdf\source\fitz\color-icc-create.c" />
+    <ClCompile Include="..\mupdf\source\fitz\color-lcms.c" />
     <ClCompile Include="..\mupdf\source\fitz\colorspace.c" />
+    <ClCompile Include="..\mupdf\source\fitz\compress.c" />
     <ClCompile Include="..\mupdf\source\fitz\compressed-buffer.c" />
     <ClCompile Include="..\mupdf\source\fitz\context.c" />
     <ClCompile Include="..\mupdf\source\fitz\crypt-aes.c" />
@@ -441,17 +463,23 @@
     <ClCompile Include="..\mupdf\source\fitz\crypt-md5.c" />
     <ClCompile Include="..\mupdf\source\fitz\crypt-sha2.c" />
     <ClCompile Include="..\mupdf\source\fitz\device.c" />
+    <ClCompile Include="..\mupdf\source\fitz\directory.c" />
+    <ClCompile Include="..\mupdf\source\fitz\document-all.c" />
     <ClCompile Include="..\mupdf\source\fitz\document.c" />
     <ClCompile Include="..\mupdf\source\fitz\draw-affine.c" />
     <ClCompile Include="..\mupdf\source\fitz\draw-blend.c" />
     <ClCompile Include="..\mupdf\source\fitz\draw-device.c" />
     <ClCompile Include="..\mupdf\source\fitz\draw-edge.c" />
+    <ClCompile Include="..\mupdf\source\fitz\draw-edgebuffer.c" />
     <ClCompile Include="..\mupdf\source\fitz\draw-glyph.c" />
     <ClCompile Include="..\mupdf\source\fitz\draw-mesh.c" />
     <ClCompile Include="..\mupdf\source\fitz\draw-paint.c" />
     <ClCompile Include="..\mupdf\source\fitz\draw-path.c" />
+    <ClCompile Include="..\mupdf\source\fitz\draw-rasterize.c" />
     <ClCompile Include="..\mupdf\source\fitz\draw-scale-simple.c" />
     <ClCompile Include="..\mupdf\source\fitz\draw-unpack.c" />
+    <ClCompile Include="..\mupdf\source\fitz\encode-basic.c" />
+    <ClCompile Include="..\mupdf\source\fitz\encodings.c" />
     <ClCompile Include="..\mupdf\source\fitz\error.c" />
     <ClCompile Include="..\mupdf\source\fitz\filter-basic.c" />
     <ClCompile Include="..\mupdf\source\fitz\filter-dct.c" />
@@ -461,69 +489,103 @@
     <ClCompile Include="..\mupdf\source\fitz\filter-leech.c" />
     <ClCompile Include="..\mupdf\source\fitz\filter-lzw.c" />
     <ClCompile Include="..\mupdf\source\fitz\filter-predict.c" />
+    <ClCompile Include="..\mupdf\source\fitz\filter-sgi.c" />
+    <ClCompile Include="..\mupdf\source\fitz\filter-thunder.c" />
     <ClCompile Include="..\mupdf\source\fitz\font.c" />
     <ClCompile Include="..\mupdf\source\fitz\ftoa.c" />
-    <ClCompile Include="..\mupdf\source\fitz\function.c" />
     <ClCompile Include="..\mupdf\source\fitz\geometry.c" />
     <ClCompile Include="..\mupdf\source\fitz\getopt.c" />
     <ClCompile Include="..\mupdf\source\fitz\glyph.c" />
     <ClCompile Include="..\mupdf\source\fitz\halftone.c" />
+    <ClCompile Include="..\mupdf\source\fitz\harfbuzz.c" />
     <ClCompile Include="..\mupdf\source\fitz\hash.c" />
     <ClCompile Include="..\mupdf\source\fitz\image.c" />
+    <ClCompile Include="..\mupdf\source\fitz\jmemcust.c" />
     <ClCompile Include="..\mupdf\source\fitz\link.c" />
     <ClCompile Include="..\mupdf\source\fitz\list-device.c" />
+    <ClCompile Include="..\mupdf\source\fitz\load-bmp.c" />
+    <ClCompile Include="..\mupdf\source\fitz\load-gif.c" />
+    <ClCompile Include="..\mupdf\source\fitz\load-jbig2.c" />
     <ClCompile Include="..\mupdf\source\fitz\load-jpeg.c" />
     <ClCompile Include="..\mupdf\source\fitz\load-jpx.c" />
     <ClCompile Include="..\mupdf\source\fitz\load-jxr.c" />
     <ClCompile Include="..\mupdf\source\fitz\load-png.c" />
+    <ClCompile Include="..\mupdf\source\fitz\load-pnm.c" />
     <ClCompile Include="..\mupdf\source\fitz\load-tiff.c" />
+    <ClCompile Include="..\mupdf\source\fitz\memento.c" />
     <ClCompile Include="..\mupdf\source\fitz\memory.c" />
+    <ClCompile Include="..\mupdf\source\fitz\noto.c" />
     <ClCompile Include="..\mupdf\source\fitz\outline.c" />
+    <ClCompile Include="..\mupdf\source\fitz\output-cbz.c" />
+    <ClCompile Include="..\mupdf\source\fitz\output-pcl.c" />
+    <ClCompile Include="..\mupdf\source\fitz\output-pclm.c" />
+    <ClCompile Include="..\mupdf\source\fitz\output-png.c" />
+    <ClCompile Include="..\mupdf\source\fitz\output-pnm.c" />
+    <ClCompile Include="..\mupdf\source\fitz\output-ps.c" />
+    <ClCompile Include="..\mupdf\source\fitz\output-psd.c" />
+    <ClCompile Include="..\mupdf\source\fitz\output-pwg.c" />
+    <ClCompile Include="..\mupdf\source\fitz\output-svg.c" />
     <ClCompile Include="..\mupdf\source\fitz\output.c" />
     <ClCompile Include="..\mupdf\source\fitz\path.c" />
     <ClCompile Include="..\mupdf\source\fitz\pixmap.c" />
+    <ClCompile Include="..\mupdf\source\fitz\pool.c" />
     <ClCompile Include="..\mupdf\source\fitz\printf.c" />
+    <ClCompile Include="..\mupdf\source\fitz\random.c" />
+    <ClCompile Include="..\mupdf\source\fitz\separation.c" />
     <ClCompile Include="..\mupdf\source\fitz\shade.c" />
     <ClCompile Include="..\mupdf\source\fitz\stext-device.c" />
     <ClCompile Include="..\mupdf\source\fitz\stext-output.c" />
-    <ClCompile Include="..\mupdf\source\fitz\stext-paragraph.c" />
     <ClCompile Include="..\mupdf\source\fitz\stext-search.c" />
     <ClCompile Include="..\mupdf\source\fitz\store.c" />
     <ClCompile Include="..\mupdf\source\fitz\stream-open.c" />
     <ClCompile Include="..\mupdf\source\fitz\stream-read.c" />
     <ClCompile Include="..\mupdf\source\fitz\string.c" />
-    <ClCompile Include="..\mupdf\source\fitz\strtod.c" />
+    <ClCompile Include="..\mupdf\source\fitz\strtof.c" />
+    <ClCompile Include="..\mupdf\source\fitz\svg-device.c" />
+    <ClCompile Include="..\mupdf\source\fitz\test-device.c" />
     <ClCompile Include="..\mupdf\source\fitz\text.c" />
     <ClCompile Include="..\mupdf\source\fitz\time.c" />
     <ClCompile Include="..\mupdf\source\fitz\trace-device.c" />
+    <ClCompile Include="..\mupdf\source\fitz\track-usage.c" />
     <ClCompile Include="..\mupdf\source\fitz\transition.c" />
     <ClCompile Include="..\mupdf\source\fitz\tree.c" />
     <ClCompile Include="..\mupdf\source\fitz\ucdn.c" />
+    <ClCompile Include="..\mupdf\source\fitz\untar.c" />
     <ClCompile Include="..\mupdf\source\fitz\unzip.c" />
+    <ClCompile Include="..\mupdf\source\fitz\util.c" />
+    <ClCompile Include="..\mupdf\source\fitz\writer.c" />
     <ClCompile Include="..\mupdf\source\fitz\xml.c" />
-    <ClCompile Include="..\mupdf\source\pdf\js\pdf-js-none.c" />
-    <ClCompile Include="..\mupdf\source\pdf\pdf-annot-edit.c" />
+    <ClCompile Include="..\mupdf\source\fitz\zip.c" />
+    <ClCompile Include="..\mupdf\source\html\css-apply.c" />
+    <ClCompile Include="..\mupdf\source\html\css-parse.c" />
+    <ClCompile Include="..\mupdf\source\html\epub-doc.c" />
+    <ClCompile Include="..\mupdf\source\html\html-doc.c" />
+    <ClCompile Include="..\mupdf\source\html\html-font.c" />
+    <ClCompile Include="..\mupdf\source\html\html-layout.c" />
+    <ClCompile Include="..\mupdf\source\html\html-outline.c" />
+    <ClCompile Include="..\mupdf\source\html\html-parse.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-annot.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-appearance.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-clean-file.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-clean.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-cmap-load.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-cmap-parse.c" />
-    <ClCompile Include="..\mupdf\source\pdf\pdf-cmap-table.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-cmap.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-colorspace.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-crypt.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-device.c" />
-    <ClCompile Include="..\mupdf\source\pdf\pdf-encoding.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-event.c" />
-    <ClCompile Include="..\mupdf\source\pdf\pdf-field.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-font-add.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-font.c" />
-    <ClCompile Include="..\mupdf\source\pdf\pdf-fontfile.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-form.c" />
-    <ClCompile Include="..\mupdf\source\pdf\pdf-ft-tools.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-function.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-graft.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-image.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-interpret.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-js.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-layer.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-lex.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-link.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-metrics.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-nametree.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-object.c" />
@@ -534,23 +596,29 @@
     <ClCompile Include="..\mupdf\source\pdf\pdf-page.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-parse.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-pattern.c" />
-    <ClCompile Include="..\mupdf\source\pdf\pdf-pkcs7.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-repair.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-resources.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-run.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-shade.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-signature.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-store.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-stream.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-type3.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-unicode.c" />
+    <ClCompile Include="..\mupdf\source\pdf\pdf-util.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-write.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-xobject.c" />
-    <ClCompile Include="..\mupdf\source\pdf\pdf-xref-aux.c" />
     <ClCompile Include="..\mupdf\source\pdf\pdf-xref.c" />
+    <ClCompile Include="..\mupdf\source\svg\svg-color.c" />
+    <ClCompile Include="..\mupdf\source\svg\svg-doc.c" />
+    <ClCompile Include="..\mupdf\source\svg\svg-parse.c" />
+    <ClCompile Include="..\mupdf\source\svg\svg-run.c" />
     <ClCompile Include="..\mupdf\source\xps\xps-common.c" />
     <ClCompile Include="..\mupdf\source\xps\xps-doc.c" />
     <ClCompile Include="..\mupdf\source\xps\xps-glyphs.c" />
     <ClCompile Include="..\mupdf\source\xps\xps-gradient.c" />
     <ClCompile Include="..\mupdf\source\xps\xps-image.c" />
+    <ClCompile Include="..\mupdf\source\xps\xps-link.c" />
     <ClCompile Include="..\mupdf\source\xps\xps-outline.c" />
     <ClCompile Include="..\mupdf\source\xps\xps-path.c" />
     <ClCompile Include="..\mupdf\source\xps\xps-resource.c" />
@@ -559,7 +627,7 @@
     <ClCompile Include="..\mupdf\source\xps\xps-zip.c" />
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="..\mupdf\font_base14.asm">
+    <CustomBuild Include="..\mupdf\fonts_64.asm">
       <FileType>Document</FileType>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\bin\nasm.exe -f win32 -I ../mupdf/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug x32_xp|Win32'">..\bin\nasm.exe -f win32 -I ../mupdf/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
@@ -570,15 +638,15 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\nasm.exe -f win64 -DWIN64 -I ../mupdf/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\nasm.exe -f win64 -DWIN64 -I ../mupdf/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|x64'">..\bin\nasm.exe -f win64 -DWIN64 -I ../mupdf/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf/font_base14.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x32_xp|Win32'">../out/dbg32_xp/obj/x32_xp/Debug/mupdf/font_base14.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/font_base14.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf/font_base14.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x32_xp|Win32'">../out/rel32_xp/obj/x32_xp/Release/mupdf/font_base14.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/font_base14.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|Win32'">../out/rel32_prefast/obj/x32/ReleasePrefast/mupdf/font_base14.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast x32_xp|Win32'">../out/rel32_prefast_xp/obj/x32_xp/ReleasePrefast/mupdf/font_base14.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|x64'">../out/rel64_prefast/obj/x64/ReleasePrefast/mupdf/font_base14.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf/fonts_64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x32_xp|Win32'">../out/dbg32_xp/obj/x32_xp/Debug/mupdf/fonts_64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/fonts_64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf/fonts_64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x32_xp|Win32'">../out/rel32_xp/obj/x32_xp/Release/mupdf/fonts_64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/fonts_64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|Win32'">../out/rel32_prefast/obj/x32/ReleasePrefast/mupdf/fonts_64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast x32_xp|Win32'">../out/rel32_prefast_xp/obj/x32_xp/ReleasePrefast/mupdf/fonts_64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|x64'">../out/rel64_prefast/obj/x64/ReleasePrefast/mupdf/fonts_64.obj</Outputs>
       <Message>Compiling %(Identity)</Message>
     </CustomBuild>
   </ItemGroup>
@@ -603,6 +671,9 @@
     </ProjectReference>
     <ProjectReference Include="harfbuzz.vcxproj">
       <Project>{B1649CB2-9D31-F7BD-C64A-E565B2762C4C}</Project>
+    </ProjectReference>
+    <ProjectReference Include="mujs.vcxproj">
+      <Project>{A4D49A7C-900B-9C0D-39F8-8110250E180F}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

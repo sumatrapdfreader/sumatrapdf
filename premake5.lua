@@ -306,23 +306,29 @@ workspace "SumatraPDF"
 
     -- for openjpeg, OPJ_STATIC is alrady defined in load-jpx.c
     -- so we can't double-define it
-    defines { "USE_JPIP", "OPJ_EXPORTS" }
-
-    defines { "NOCJKFONT", "SHARE_JPEG" }
-    disablewarnings {  "4244", "4267", }
+    defines { "USE_JPIP", "OPJ_EXPORTS", "HAVE_LCMS2MT=1" }
+    defines { "OPJ_STATIC" }
+    defines { "TOFU", "SHARE_JPEG" }
+    disablewarnings { 
+      "4005", "4028", "4100", "4115", "4130", "4204", "4206", "4244",
+      "4245", "4267", "4295", "4389", "4456", "4457", "4459", "4702",
+      "4703", "4706",
+    }
     -- force including mupdf/scripts/openjpeg/opj_config_private.h
     -- with our build over-rides
-    includedirs { "mupdf/scripts/openjpeg" }
 
     includedirs {
+      "ext/freetype-config",  -- TODO: mupdf/scripts/freetype
       "mupdf/include",
       "mupdf/generated",
-      "ext/mujs",
-      "ext/zlib",
-      "ext/freetype-config", "ext/freetype/include",
       "ext/jbig2dec", 
       "ext/libjpeg-turbo", 
-      "ext/openjpeg/src/lib/openjp2"
+      "ext/openjpeg/src/lib/openjp2",
+      "ext/zlib",
+      "ext/freetype/include",
+      "ext/mujs",
+      "ext/harfbuzz/src",
+      "ext/lcms2/include",
     }
     -- .\ext\..\bin\nasm.exe -I .\mupdf\ -f win32 -o .\obj-rel\mupdf\font_base14.obj
     -- .\mupdf\font_base14.asm
@@ -342,7 +348,7 @@ workspace "SumatraPDF"
       }
     filter {}
     mupdf_files()
-    links { "zlib", "freetype", "libjpeg-turbo", "jbig2dec", "openjpeg", "lcms2", "harfbuzz" }
+    links { "zlib", "freetype", "libjpeg-turbo", "jbig2dec", "openjpeg", "lcms2", "harfbuzz", "mujs" }
     dependson "buildcmap"
 
 

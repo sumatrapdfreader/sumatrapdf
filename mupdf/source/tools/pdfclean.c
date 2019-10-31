@@ -9,13 +9,12 @@
  * TODO: linearize document for fast web view
  */
 
+#include "mupdf/fitz.h"
 #include "mupdf/pdf.h"
 
-typedef struct globals_s
-{
-	pdf_document *doc;
-	fz_context *ctx;
-} globals;
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 static void usage(void)
 {
@@ -25,228 +24,34 @@ static void usage(void)
 		"\t-g\tgarbage collect unused objects\n"
 		"\t-gg\tin addition to -g compact xref table\n"
 		"\t-ggg\tin addition to -gg merge duplicate objects\n"
-		"\t-s\tclean content streams\n"
-		"\t-d\tdecompress all streams\n"
+		"\t-gggg\tin addition to -ggg check streams for duplication\n"
 		"\t-l\tlinearize PDF\n"
-		"\t-i\ttoggle decompression of image streams\n"
-		"\t-f\ttoggle decompression of font streams\n"
+		"\t-D\tsave file without encryption\n"
+		"\t-E -\tsave file with new encryption (rc4-40, rc4-128, aes-128, or aes-256)\n"
+		"\t-O -\towner password (only if encrypting)\n"
+		"\t-U -\tuser password (only if encrypting)\n"
+		"\t-P -\tpermission flags (only if encrypting)\n"
 		"\t-a\tascii hex encode binary streams\n"
-		"\tpages\tcomma separated list of ranges\n");
+		"\t-d\tdecompress streams\n"
+		"\t-z\tdeflate uncompressed streams\n"
+		"\t-f\tcompress font streams\n"
+		"\t-i\tcompress image streams\n"
+		"\t-c\tclean content streams\n"
+		"\t-s\tsanitize content streams\n"
+		"\t-A\tcreate appearance streams for annotations\n"
+		"\t-AA\trecreate appearance streams for annotations\n"
+		"\tpages\tcomma separated list of page numbers and ranges\n"
+		);
 	exit(1);
 }
 
-static int
-string_in_names_list(pdf_obj *p, pdf_obj *names_list)
+static int encrypt_method_from_string(const char *name)
 {
-	int n = pdf_array_len(names_list);
-	int i;
-	char *str = pdf_to_str_buf(p);
-
-	for (i = 0; i < n ; i += 2)
-	{
-		if (!strcmp(pdf_to_str_buf(pdf_array_get(names_list, i)), str))
-			return 1;
-	}
-	return 0;
-}
-
-/*
- * Recreate page tree to only retain specified pages.
- */
-
-static void retainpage(pdf_document *doc, pdf_obj *parent, pdf_obj *kids, int page)
-{
-	pdf_obj *pageref = pdf_lookup_page_obj(doc, page-1);
-	pdf_obj *pageobj = pdf_resolve_indirect(pageref);
-
-	pdf_dict_puts(pageobj, "Parent", parent);
-
-	/* Store page object in new kids array */
-	pdf_array_push(kids, pageref);
-}
-
-static void retainpages(globals *glo, int argc, char **argv)
-{
-	pdf_obj *oldroot, *root, *pages, *kids, *countobj, *parent, *olddests;
-	pdf_document *doc = glo->doc;
-	int argidx = 0;
-	pdf_obj *names_list = NULL;
-	int pagecount;
-	int i;
-
-	/* Keep only pages/type and (reduced) dest entries to avoid
-	 * references to unretained pages */
-	oldroot = pdf_dict_gets(pdf_trailer(doc), "Root");
-	pages = pdf_dict_gets(oldroot, "Pages");
-	olddests = pdf_load_name_tree(doc, "Dests");
-
-	root = pdf_new_dict(doc, 2);
-	pdf_dict_puts(root, "Type", pdf_dict_gets(oldroot, "Type"));
-	pdf_dict_puts(root, "Pages", pdf_dict_gets(oldroot, "Pages"));
-
-	pdf_update_object(doc, pdf_to_num(oldroot), root);
-
-	pdf_drop_obj(root);
-
-	/* Create a new kids array with only the pages we want to keep */
-	parent = pdf_new_indirect(doc, pdf_to_num(pages), pdf_to_gen(pages));
-	kids = pdf_new_array(doc, 1);
-
-	/* Retain pages specified */
-	while (argc - argidx)
-	{
-		int page, spage, epage;
-		char *spec, *dash;
-		char *pagelist = argv[argidx];
-
-		pagecount = pdf_count_pages(doc);
-		spec = fz_strsep(&pagelist, ",");
-		while (spec)
-		{
-			dash = strchr(spec, '-');
-
-			if (dash == spec)
-				spage = epage = pagecount;
-			else
-				spage = epage = atoi(spec);
-
-			if (dash)
-			{
-				if (strlen(dash) > 1)
-					epage = atoi(dash + 1);
-				else
-					epage = pagecount;
-			}
-
-			spage = fz_clampi(spage, 1, pagecount);
-			epage = fz_clampi(epage, 1, pagecount);
-
-			if (spage < epage)
-				for (page = spage; page <= epage; ++page)
-					retainpage(doc, parent, kids, page);
-			else
-				for (page = spage; page >= epage; --page)
-					retainpage(doc, parent, kids, page);
-
-			spec = fz_strsep(&pagelist, ",");
-		}
-
-		argidx++;
-	}
-
-	pdf_drop_obj(parent);
-
-	/* Update page count and kids array */
-	countobj = pdf_new_int(doc, pdf_array_len(kids));
-	pdf_dict_puts(pages, "Count", countobj);
-	pdf_drop_obj(countobj);
-	pdf_dict_puts(pages, "Kids", kids);
-	pdf_drop_obj(kids);
-
-	/* Also preserve the (partial) Dests name tree */
-	if (olddests)
-	{
-		pdf_obj *names = pdf_new_dict(doc, 1);
-		pdf_obj *dests = pdf_new_dict(doc, 1);
-		int len = pdf_dict_len(olddests);
-
-		names_list = pdf_new_array(doc, 32);
-
-		for (i = 0; i < len; i++)
-		{
-			pdf_obj *key = pdf_dict_get_key(olddests, i);
-			pdf_obj *val = pdf_dict_get_val(olddests, i);
-			pdf_obj *dest = pdf_dict_gets(val, "D");
-
-			dest = pdf_array_get(dest ? dest : val, 0);
-			if (pdf_array_contains(pdf_dict_gets(pages, "Kids"), dest))
-			{
-				pdf_obj *key_str = pdf_new_string(doc, pdf_to_name(key), strlen(pdf_to_name(key)));
-				pdf_array_push(names_list, key_str);
-				pdf_array_push(names_list, val);
-				pdf_drop_obj(key_str);
-			}
-		}
-
-		root = pdf_dict_gets(pdf_trailer(doc), "Root");
-		pdf_dict_puts(dests, "Names", names_list);
-		pdf_dict_puts(names, "Dests", dests);
-		pdf_dict_puts(root, "Names", names);
-
-		pdf_drop_obj(names);
-		pdf_drop_obj(dests);
-		pdf_drop_obj(names_list);
-		pdf_drop_obj(olddests);
-	}
-
-	/* Force the next call to pdf_count_pages to recount */
-	glo->doc->page_count = 0;
-
-	/* Edit each pages /Annot list to remove any links that point to
-	 * nowhere. */
-	pagecount = pdf_count_pages(doc);
-	for (i = 0; i < pagecount; i++)
-	{
-		pdf_obj *pageref = pdf_lookup_page_obj(doc, i);
-		pdf_obj *pageobj = pdf_resolve_indirect(pageref);
-
-		pdf_obj *annots = pdf_dict_gets(pageobj, "Annots");
-
-		int len = pdf_array_len(annots);
-		int j;
-
-		for (j = 0; j < len; j++)
-		{
-			pdf_obj *o = pdf_array_get(annots, j);
-			pdf_obj *p;
-
-			if (strcmp(pdf_to_name(pdf_dict_gets(o, "Subtype")), "Link"))
-				continue;
-
-			p = pdf_dict_gets(o, "A");
-			if (strcmp(pdf_to_name(pdf_dict_gets(p, "S")), "GoTo"))
-				continue;
-
-			if (string_in_names_list(pdf_dict_gets(p, "D"), names_list))
-				continue;
-
-			/* FIXME: Should probably look at Next too */
-
-			/* Remove this annotation */
-			pdf_array_delete(annots, j);
-			j--;
-		}
-	}
-}
-
-void pdfclean_clean(fz_context *ctx, char *infile, char *outfile, char *password, fz_write_options *opts, char *argv[], int argc)
-{
-	globals glo = { 0 };
-
-	glo.ctx = ctx;
-
-	fz_try(ctx)
-	{
-		glo.doc = pdf_open_document_no_run(ctx, infile);
-		if (pdf_needs_password(glo.doc))
-			if (!pdf_authenticate_password(glo.doc, password))
-				fz_throw(glo.ctx, FZ_ERROR_GENERIC, "cannot authenticate password: %s", infile);
-
-		/* Only retain the specified subset of the pages */
-		if (argc)
-			retainpages(&glo, argc, argv);
-
-		pdf_write_document(glo.doc, outfile, opts);
-	}
-	fz_always(ctx)
-	{
-		pdf_close_document(glo.doc);
-	}
-	fz_catch(ctx)
-	{
-		if (opts && opts->errors)
-			*opts->errors = *opts->errors+1;
-	}
+	if (!strcmp(name, "rc4-40")) return PDF_ENCRYPT_RC4_40;
+	if (!strcmp(name, "rc4-128")) return PDF_ENCRYPT_RC4_128;
+	if (!strcmp(name, "aes-128")) return PDF_ENCRYPT_AES_128;
+	if (!strcmp(name, "aes-256")) return PDF_ENCRYPT_AES_256;
+	return PDF_ENCRYPT_UNKNOWN;
 }
 
 int pdfclean_main(int argc, char **argv)
@@ -255,34 +60,39 @@ int pdfclean_main(int argc, char **argv)
 	char *outfile = "out.pdf";
 	char *password = "";
 	int c;
-	fz_write_options opts;
+	pdf_write_options opts = pdf_default_write_options;
 	int errors = 0;
 	fz_context *ctx;
 
-	opts.do_incremental = 0;
-	opts.do_garbage = 0;
-	opts.do_expand = 0;
-	opts.do_ascii = 0;
-	opts.do_linear = 0;
-	opts.continue_on_error = 1;
-	opts.errors = &errors;
-	opts.do_clean = 0;
-
-	while ((c = fz_getopt(argc, argv, "adfgilp:s")) != -1)
+	while ((c = fz_getopt(argc, argv, "adfgilp:sczDAE:O:U:P:")) != -1)
 	{
 		switch (c)
 		{
 		case 'p': password = fz_optarg; break;
-		case 'g': opts.do_garbage ++; break;
-		case 'd': opts.do_expand ^= fz_expand_all; break;
-		case 'f': opts.do_expand ^= fz_expand_fonts; break;
-		case 'i': opts.do_expand ^= fz_expand_images; break;
-		case 'l': opts.do_linear ++; break;
-		case 'a': opts.do_ascii ++; break;
-		case 's': opts.do_clean ++; break;
+
+		case 'd': opts.do_decompress += 1; break;
+		case 'z': opts.do_compress += 1; break;
+		case 'f': opts.do_compress_fonts += 1; break;
+		case 'i': opts.do_compress_images += 1; break;
+		case 'a': opts.do_ascii += 1; break;
+		case 'g': opts.do_garbage += 1; break;
+		case 'l': opts.do_linear += 1; break;
+		case 'c': opts.do_clean += 1; break;
+		case 's': opts.do_sanitize += 1; break;
+		case 'A': opts.do_appearance += 1; break;
+
+		case 'D': opts.do_encrypt = PDF_ENCRYPT_NONE; break;
+		case 'E': opts.do_encrypt = encrypt_method_from_string(fz_optarg); break;
+		case 'P': opts.permissions = fz_atoi(fz_optarg); break;
+		case 'O': fz_strlcpy(opts.opwd_utf8, fz_optarg, sizeof opts.opwd_utf8); break;
+		case 'U': fz_strlcpy(opts.upwd_utf8, fz_optarg, sizeof opts.upwd_utf8); break;
+
 		default: usage(); break;
 		}
 	}
+
+	if ((opts.do_ascii || opts.do_decompress) && !opts.do_compress)
+		opts.do_pretty = 1;
 
 	if (argc - fz_optind < 1)
 		usage();
@@ -304,13 +114,13 @@ int pdfclean_main(int argc, char **argv)
 
 	fz_try(ctx)
 	{
-		pdfclean_clean(ctx, infile, outfile, password, &opts, &argv[fz_optind], argc - fz_optind);
+		pdf_clean_file(ctx, infile, outfile, password, &opts, &argv[fz_optind], argc - fz_optind);
 	}
 	fz_catch(ctx)
 	{
 		errors++;
 	}
-	fz_free_context(ctx);
+	fz_drop_context(ctx);
 
-	return errors == 0;
+	return errors != 0;
 }

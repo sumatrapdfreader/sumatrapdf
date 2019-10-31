@@ -10,7 +10,7 @@
 
 section .data:
 
-global EXPORT(pdf_font_Dingbats)
+global EXPORT(binary_resources_fonts_)
 EXPORT(pdf_font_Dingbats):
     incbin "resources/fonts/urw/Dingbats.cff"
 
@@ -65,3 +65,5 @@ EXPORT(pdf_font_NimbusSanL_RegIta):
 global EXPORT(pdf_font_StandardSymL)
 EXPORT(pdf_font_StandardSymL):
     incbin "resources/fonts/urw/StandardSymL.cff"
+
+

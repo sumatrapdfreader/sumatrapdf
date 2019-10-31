@@ -38,6 +38,8 @@
 
 #include "mupdf/fitz.h"
 
+#include <string.h>
+
 #define aes_context fz_aes
 
 /* AES block cipher implementation from XYSSL */
@@ -176,7 +178,7 @@ static void aes_gen_tables( void )
 /*
  * AES key schedule (encryption)
  */
-int aes_setkey_enc( aes_context *ctx, const unsigned char *key, int keysize )
+int fz_aes_setkey_enc( aes_context *ctx, const unsigned char *key, int keysize )
 {
 	int i;
 	unsigned long *RK;
@@ -280,7 +282,7 @@ int aes_setkey_enc( aes_context *ctx, const unsigned char *key, int keysize )
 /*
  * AES key schedule (decryption)
  */
-int aes_setkey_dec(aes_context *ctx, const unsigned char *key, int keysize)
+int fz_aes_setkey_dec(aes_context *ctx, const unsigned char *key, int keysize)
 {
 	int i, j;
 	aes_context cty;
@@ -301,7 +303,7 @@ int aes_setkey_dec(aes_context *ctx, const unsigned char *key, int keysize)
 	ctx->rk = RK = ctx->buf;
 #endif
 
-	i = aes_setkey_enc( &cty, key, keysize );
+	i = fz_aes_setkey_enc( &cty, key, keysize );
 	if (i)
 		return i;
 	SK = cty.rk + cty.nr * 4;
@@ -380,7 +382,7 @@ int aes_setkey_dec(aes_context *ctx, const unsigned char *key, int keysize)
 /*
  * AES-ECB block encryption/decryption
  */
-void aes_crypt_ecb( aes_context *ctx,
+void fz_aes_crypt_ecb( aes_context *ctx,
 	int mode,
 	const unsigned char input[16],
 	unsigned char output[16] )
@@ -403,7 +405,7 @@ void aes_crypt_ecb( aes_context *ctx,
 	GET_ULONG_LE( X2, input, 8 ); X2 ^= *RK++;
 	GET_ULONG_LE( X3, input, 12 ); X3 ^= *RK++;
 
-	if( mode == AES_DECRYPT )
+	if( mode == FZ_AES_DECRYPT )
 	{
 		for( i = (ctx->nr >> 1) - 1; i > 0; i-- )
 		{
@@ -433,7 +435,7 @@ void aes_crypt_ecb( aes_context *ctx,
 			( RSb[ ( Y1 >> 16 ) & 0xFF ] << 16 ) ^
 			( RSb[ ( Y0 >> 24 ) & 0xFF ] << 24 );
 	}
-	else /* AES_ENCRYPT */
+	else /* FZ_AES_ENCRYPT */
 	{
 		for( i = (ctx->nr >> 1) - 1; i > 0; i-- )
 		{
@@ -473,9 +475,9 @@ void aes_crypt_ecb( aes_context *ctx,
 /*
  * AES-CBC buffer encryption/decryption
  */
-void aes_crypt_cbc( aes_context *ctx,
+void fz_aes_crypt_cbc( aes_context *ctx,
 	int mode,
-	int length,
+	size_t length,
 	unsigned char iv[16],
 	const unsigned char *input,
 	unsigned char *output )
@@ -491,12 +493,12 @@ void aes_crypt_cbc( aes_context *ctx,
 	}
 #endif
 
-	if( mode == AES_DECRYPT )
+	if( mode == FZ_AES_DECRYPT )
 	{
 		while( length > 0 )
 		{
 			memcpy( temp, input, 16 );
-			aes_crypt_ecb( ctx, mode, input, output );
+			fz_aes_crypt_ecb( ctx, mode, input, output );
 
 			for( i = 0; i < 16; i++ )
 				output[i] = (unsigned char)( output[i] ^ iv[i] );
@@ -515,7 +517,7 @@ void aes_crypt_cbc( aes_context *ctx,
 			for( i = 0; i < 16; i++ )
 				output[i] = (unsigned char)( input[i] ^ iv[i] );
 
-			aes_crypt_ecb( ctx, mode, output, output );
+			fz_aes_crypt_ecb( ctx, mode, output, output );
 			memcpy( iv, output, 16 );
 
 			input += 16;
@@ -528,7 +530,7 @@ void aes_crypt_cbc( aes_context *ctx,
 /*
  * AES-CFB buffer encryption/decryption
  */
-void aes_crypt_cfb( aes_context *ctx,
+void fz_aes_crypt_cfb( aes_context *ctx,
 	int mode,
 	int length,
 	int *iv_off,
@@ -538,12 +540,12 @@ void aes_crypt_cfb( aes_context *ctx,
 {
 	int c, n = *iv_off;
 
-	if( mode == AES_DECRYPT )
+	if( mode == FZ_AES_DECRYPT )
 	{
 		while( length-- )
 		{
 			if( n == 0 )
-				aes_crypt_ecb( ctx, AES_ENCRYPT, iv, iv );
+				fz_aes_crypt_ecb( ctx, FZ_AES_ENCRYPT, iv, iv );
 
 			c = *input++;
 			*output++ = (unsigned char)( c ^ iv[n] );
@@ -557,7 +559,7 @@ void aes_crypt_cfb( aes_context *ctx,
 		while( length-- )
 		{
 			if( n == 0 )
-				aes_crypt_ecb( ctx, AES_ENCRYPT, iv, iv );
+				fz_aes_crypt_ecb( ctx, FZ_AES_ENCRYPT, iv, iv );
 
 			iv[n] = *output++ = (unsigned char)( iv[n] ^ *input++ );
 

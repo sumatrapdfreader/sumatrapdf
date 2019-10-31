@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>MuPDF OpenGL Viewer</title>
+<link rel="stylesheet" href="style.css" type="text/css">
+</head>
+<body>
+
+<header>
+<h1>MuPDF OpenGL Viewer</h1>
+</header>
+
+<article>
+
+<p>
+The OpenGL based viewer can read PDF, XPS, CBZ, EPUB, and FB2 documents.
+It compiles on any platform that has a <a href="http://freeglut.sourceforge.net/">GLUT</a> library.
+The latest release builds on Linux, Windows, and MacOS.
+
+<h2>Command Line Options</h2>
+
+<pre>
+mupdf-gl [options] document [page]
+</pre>
+
+<dl>
+<dt>-p password
+<dd>The password needed to open a password protected PDF file.
+<dt>-r resolution
+<dd>Set the initial zoom level, specified as DPI. The default value is 72.
+<dt>-W width
+<dd>Set the page width in points for EPUB layout.
+<dt>-H height
+<dd>Set the page height in points for EPUB layout.
+<dt>-S size
+<dd>Set the default font size in points for EPUB layout.
+<dt>-U stylesheet
+<dd>Specify a CSS file containing user styles to load for EPUB layout.
+<dt>-X
+<dd>Ignore publisher styles for EPUB layout.
+</dl>
+
+<h2>Mouse Bindings</h2>
+
+<p>
+The middle mouse button (scroll wheel button) pans the document view.
+
+<p>
+The right mouse button selects a region and copies the marked text to the clipboard.
+
+<h2>Key Bindings</h2>
+
+<p>
+Several commands can take a number argument entered before the key, to modify the command.
+For example, to zoom to 150 dpi, type "150z".
+
+<table>
+<tr><td>F1<td>Display help.
+<tr><td>i<td>Show document information.
+<tr><td>o<td>Show document outline.
+<tr><td>L<td>Highlight links.
+<tr><td>F<td>Highlight form fields.
+<tr><td>a<td>Show annotation editor.
+<tr><td>r<td>Reload document.
+<tr><td>S<td>Save document (only for PDF).
+<tr><td>q<td>Quit viewer.
+
+<tr><td>&nbsp;
+<tr><td>&lt;<td>Decrease E-book font size.
+<tr><td>&gt;<td>Increase E-book font size.
+<tr><td>I<td>Toggle inverted color mode.
+<tr><td>C<td>Toggle tinted color mode.
+<tr><td>E<td>Toggle ICC color management.
+<tr><td>e<td>Toggle spot color emulation.
+<tr><td>A<td>Toggle anti-aliasing.
+
+<tr><td>&nbsp;
+<tr><td>f<td>Toggle fullscreen.
+<tr><td>w<td>Shrinkwrap window to fit page.
+<tr><td>W<td>Fit page width to window.
+<tr><td>H<td>Fit page height to window.
+<tr><td>Z<td>Fit page size to window.
+<tr><td>[number] z<td>Set zoom resolution in DPI.
+<tr><td>+<td>Zoom in.
+<tr><td>-<td>Zoom out.
+<tr><td>[<td>Rotate counter-clockwise.
+<tr><td>]<td>Rotate clockwise.
+<tr><td>[arrows] or h, j, k, l<td>Pan page in small increments.
+
+<tr><td>&nbsp;
+<tr><td>b<td>Smart move one screenful backward.
+<tr><td>[space]<td>Smart move one screenful forward.
+<tr><td>[comma] or [page up]<td>Go one page backward.
+<tr><td>[period] or [page down]<td>Go one page forward.
+<tr><td>[number] g<td>Go to page number.
+<tr><td>G<td>Go to last page.
+
+<tr><td>&nbsp;
+<tr><td>m<td>Save current page to navigation history.
+<tr><td>t<td>Go back in navigation history.
+<tr><td>T<td>Go forward in navigation history.
+<tr><td>[number] m<td>Save current page in numbered bookmark.
+<tr><td>[number] t<td>Go to numbered bookmark.
+
+<tr><td>&nbsp;
+<tr><td>/<td>Start searching forward.
+<tr><td>?<td>Start searching backward.
+<tr><td>n<td>Continue searching forward.
+<tr><td>N<td>Continue searching backward.
+</table>
+
+</article>
+
+<footer>
+<a href="http://www.artifex.com/"><img src="artifex-logo.png" align="right"></a>
+Copyright &copy; 2006-2018 Artifex Software Inc.
+</footer>
+
+</body>
+</html>

@@ -1,32 +1,15 @@
 ABOUT
 
-MuPDF is a lightweight PDF, XPS and CBZ viewer and parser/rendering library.
+MuPDF is a lightweight open source software framework for viewing and converting
+PDF, XPS, and E-book documents.
 
-The renderer in MuPDF is tailored for high quality anti-aliased graphics. It
-renders text with metrics and spacing accurate to within fractions of a pixel
-for the highest fidelity in reproducing the look of a printed page on screen.
+See the documentation in docs/index.html for an overview.
 
-MuPDF is also small, fast, and yet complete. We support PDF 1.7 with
-transparency, encryption, hyperlinks, annotations, search and many other bells
-and whistles. MuPDF can also read XPS documents (OpenXPS / ECMA-388),
-and CBZ (Comic Book archive) files.
-
-MuPDF is written to be both modular and portable; the example applications
-are merely thin layers on top of the functionality offered by the library,
-so custom viewers can be easily built for a wide range of platforms. Example
-viewer applications are supplied for Windows, Linux, MacOS, iOS and Android.
-
-MuPDF is deliberately designed to be threading library agnostic, while still
-supporting multi-threaded operation. In the absence of a thread library
-it will run single-threaded, but by adding one significant benefits in
-rendering speed on multi-core platforms can be obtained.
-
-Interactive features such as form filling, javascript and transitions
-are in development and partially supported by the Android application.
+Build instructions can be found in docs/building.html.
 
 LICENSE
 
-MuPDF is Copyright 2006-2014 Artifex Software, Inc.
+MuPDF is Copyright (c) 2006-2017 Artifex Software, Inc.
 
 This program is free software: you can redistribute it and/or modify it under
 the terms of the GNU Affero General Public License as published by the Free
@@ -40,42 +23,16 @@ PARTICULAR PURPOSE. See the GNU General Public License for more details.
 You should have received a copy of the GNU Affero General Public License along
 with this program. If not, see <http://www.gnu.org/licenses/>.
 
-For commercial licensing please contact sales@artifex.com.
-
-COMPILING
-
-If you are compiling from source you will need several third party libraries:
-freetype2, jbig2dec, libjpeg, openjpeg, and zlib. These libraries are contained
-in the source archive. If you are using git, they are included as git
-submodules.
-
-You will also need the X11 headers and libraries if you're building on Linux.
-These can typically be found in the xorg-dev package. Alternatively, if you
-only want the command line tools, you can build with HAVE_X11=no.
-
-DOWNLOAD
-
-The latest development source is available directly from the git repository:
-
-	git clone http://mupdf.com/repos/mupdf.git
-
-In the mupdf directory, update the third party libraries:
-
-	git submodule update --init
-
-INSTALLING (UNIX)
-
-Typing "make prefix=/usr/local install" will install the binaries, man-pages,
-static libraries and header files on your system.
+For commercial licensing, including our "Indie Dev" friendly options,
+please contact sales@artifex.com.
 
 REPORTING BUGS AND PROBLEMS
 
-The MuPDF developers hang out on IRC in the #ghostscript channel on
-irc.freenode.net.
+The MuPDF developers hang out on IRC in the #mupdf channel on irc.freenode.net.
 
 Report bugs on the ghostscript bugzilla, with MuPDF as the selected component.
 
 	http://bugs.ghostscript.com/
 
-If you are reporting a problem with PDF parsing, please include the problematic
-file as an attachment.
+If you are reporting a problem with a specific file, please include the file as
+an attachment.

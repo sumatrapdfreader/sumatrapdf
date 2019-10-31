@@ -1,9 +1,13 @@
 #include "mupdf/fitz.h"
+#include "fitz-imp.h"
+
+#include <string.h>
+#include <assert.h>
 
 /*
 Simple hashtable with open addressing linear probe.
 Unlike text book examples, removing entries works
-correctly in this implementation, so it wont start
+correctly in this implementation, so it won't start
 exhibiting bad behaviour if entries are inserted
 and removed frequently.
 */
@@ -23,6 +27,7 @@ struct fz_hash_table_s
 	int size;
 	int load;
 	int lock; /* -1 or the lock used to protect this hash table */
+	fz_hash_table_drop_fn *drop_val;
 	fz_hash_entry *ents;
 };
 
@@ -43,7 +48,7 @@ static unsigned hash(const unsigned char *s, int len)
 }
 
 fz_hash_table *
-fz_new_hash_table(fz_context *ctx, int initialsize, int keylen, int lock)
+fz_new_hash_table(fz_context *ctx, int initialsize, int keylen, int lock, fz_hash_table_drop_fn *drop_val)
 {
 	fz_hash_table *table;
 
@@ -54,9 +59,10 @@ fz_new_hash_table(fz_context *ctx, int initialsize, int keylen, int lock)
 	table->size = initialsize;
 	table->load = 0;
 	table->lock = lock;
+	table->drop_val = drop_val;
 	fz_try(ctx)
 	{
-		table->ents = fz_malloc_array(ctx, table->size, sizeof(fz_hash_entry));
+		table->ents = fz_malloc_array(ctx, table->size, fz_hash_entry);
 		memset(table->ents, 0, sizeof(fz_hash_entry) * table->size);
 	}
 	fz_catch(ctx)
@@ -69,39 +75,28 @@ fz_new_hash_table(fz_context *ctx, int initialsize, int keylen, int lock)
 }
 
 void
-fz_empty_hash(fz_context *ctx, fz_hash_table *table)
+fz_drop_hash_table(fz_context *ctx, fz_hash_table *table)
 {
-	table->load = 0;
-	memset(table->ents, 0, sizeof(fz_hash_entry) * table->size);
-}
+	if (!table)
+		return;
 
-int
-fz_hash_len(fz_context *ctx, fz_hash_table *table)
-{
-	return table->size;
-}
+	if (table->drop_val)
+	{
+		int i, n = table->size;
+		for (i = 0; i < n; ++i)
+		{
+			void *v = table->ents[i].val;
+			if (v)
+				table->drop_val(ctx, v);
+		}
+	}
 
-void *
-fz_hash_get_key(fz_context *ctx, fz_hash_table *table, int idx)
-{
-	return table->ents[idx].key;
-}
-
-void *
-fz_hash_get_val(fz_context *ctx, fz_hash_table *table, int idx)
-{
-	return table->ents[idx].val;
-}
-
-void
-fz_free_hash(fz_context *ctx, fz_hash_table *table)
-{
 	fz_free(ctx, table->ents);
 	fz_free(ctx, table);
 }
 
 static void *
-do_hash_insert(fz_context *ctx, fz_hash_table *table, const void *key, void *val, unsigned *pos_ptr)
+do_hash_insert(fz_context *ctx, fz_hash_table *table, const void *key, void *val)
 {
 	fz_hash_entry *ents;
 	unsigned size;
@@ -121,19 +116,16 @@ do_hash_insert(fz_context *ctx, fz_hash_table *table, const void *key, void *val
 			memcpy(ents[pos].key, key, table->keylen);
 			ents[pos].val = val;
 			table->load ++;
-			if (pos_ptr)
-				*pos_ptr = pos;
 			return NULL;
 		}
 
 		if (memcmp(key, ents[pos].key, table->keylen) == 0)
 		{
-			/* This is legal, but should happen rarely in the non
-			 * pos_ptr case. */
-			if (pos_ptr)
-				*pos_ptr = pos;
+			/* This is legal, but should rarely happen. */
+			if (val != ents[pos].val)
+				fz_warn(ctx, "assert: overwrite hash slot with different value!");
 			else
-				fz_warn(ctx, "assert: overwrite hash slot");
+				fz_warn(ctx, "assert: overwrite hash slot with same value");
 			return ents[pos].val;
 		}
 
@@ -159,10 +151,10 @@ fz_resize_hash(fz_context *ctx, fz_hash_table *table, int newsize)
 	}
 
 	if (table->lock == FZ_LOCK_ALLOC)
-		fz_unlock(ctx, FZ_LOCK_ALLOC);
-	newents = fz_malloc_array_no_throw(ctx, newsize, sizeof(fz_hash_entry));
+		fz_unlock(ctx, table->lock);
+	newents = fz_malloc_no_throw(ctx, newsize * sizeof (fz_hash_entry));
 	if (table->lock == FZ_LOCK_ALLOC)
-		fz_lock(ctx, FZ_LOCK_ALLOC);
+		fz_lock(ctx, table->lock);
 	if (table->lock >= 0)
 	{
 		if (table->size >= newsize)
@@ -187,15 +179,15 @@ fz_resize_hash(fz_context *ctx, fz_hash_table *table, int newsize)
 	{
 		if (oldents[i].val)
 		{
-			do_hash_insert(ctx, table, oldents[i].key, oldents[i].val, NULL);
+			do_hash_insert(ctx, table, oldents[i].key, oldents[i].val);
 		}
 	}
 
 	if (table->lock == FZ_LOCK_ALLOC)
-		fz_unlock(ctx, FZ_LOCK_ALLOC);
+		fz_unlock(ctx, table->lock);
 	fz_free(ctx, oldents);
 	if (table->lock == FZ_LOCK_ALLOC)
-		fz_lock(ctx, FZ_LOCK_ALLOC);
+		fz_lock(ctx, table->lock);
 }
 
 void *
@@ -224,22 +216,8 @@ void *
 fz_hash_insert(fz_context *ctx, fz_hash_table *table, const void *key, void *val)
 {
 	if (table->load > table->size * 8 / 10)
-	{
 		fz_resize_hash(ctx, table, table->size * 2);
-	}
-
-	return do_hash_insert(ctx, table, key, val, NULL);
-}
-
-void *
-fz_hash_insert_with_pos(fz_context *ctx, fz_hash_table *table, const void *key, void *val, unsigned *pos)
-{
-	if (table->load > table->size * 8 / 10)
-	{
-		fz_resize_hash(ctx, table, table->size * 2);
-	}
-
-	return do_hash_insert(ctx, table, key, val, pos);
+	return do_hash_insert(ctx, table, key, val);
 }
 
 static void
@@ -309,49 +287,10 @@ fz_hash_remove(fz_context *ctx, fz_hash_table *table, const void *key)
 }
 
 void
-fz_hash_remove_fast(fz_context *ctx, fz_hash_table *table, const void *key, unsigned pos)
+fz_hash_for_each(fz_context *ctx, fz_hash_table *table, void *state, fz_hash_table_for_each_fn *callback)
 {
-	fz_hash_entry *ents = table->ents;
-
-	if (ents[pos].val == NULL || memcmp(key, ents[pos].key, table->keylen) != 0)
-	{
-		/* The value isn't there, or the key didn't match! The table
-		 * must have been rebuilt (or the contents moved) in the
-		 * meantime. Do the removal the slow way. */
-		fz_hash_remove(ctx, table, key);
-	}
-	else
-		do_removal(ctx, table, key, pos);
+	int i;
+	for (i = 0; i < table->size; ++i)
+		if (table->ents[i].val)
+			callback(ctx, state, table->ents[i].key, table->keylen, table->ents[i].val);
 }
-
-#ifndef NDEBUG
-void
-fz_print_hash(fz_context *ctx, FILE *out, fz_hash_table *table)
-{
-	fz_print_hash_details(ctx, out, table, NULL);
-}
-
-void
-fz_print_hash_details(fz_context *ctx, FILE *out, fz_hash_table *table, void (*details)(FILE *,void*))
-{
-	int i, k;
-
-	fprintf(out, "cache load %d / %d\n", table->load, table->size);
-
-	for (i = 0; i < table->size; i++)
-	{
-		if (!table->ents[i].val)
-			fprintf(out, "table % 4d: empty\n", i);
-		else
-		{
-			fprintf(out, "table % 4d: key=", i);
-			for (k = 0; k < MAX_KEY_LEN; k++)
-				fprintf(out, "%02x", ((char*)table->ents[i].key)[k]);
-			if (details)
-				details(out, table->ents[i].val);
-			else
-				fprintf(out, " val=$%p\n", table->ents[i].val);
-		}
-	}
-}
-#endif

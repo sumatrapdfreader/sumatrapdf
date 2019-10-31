@@ -1,0 +1,30 @@
+[submodule "thirdparty/jbig2dec"]
+	path = thirdparty/jbig2dec
+	url = ../jbig2dec.git
+[submodule "thirdparty/mujs"]
+	path = thirdparty/mujs
+	url = ../mujs.git
+[submodule "thirdparty/freetype"]
+	path = thirdparty/freetype
+	url = ../thirdparty-freetype2.git
+[submodule "thirdparty/harfbuzz"]
+	path = thirdparty/harfbuzz
+	url = ../thirdparty-harfbuzz.git
+[submodule "thirdparty/jpeg"]
+	path = thirdparty/libjpeg
+	url = ../thirdparty-libjpeg.git
+[submodule "thirdparty/lcms2"]
+	path = thirdparty/lcms2
+	url = ../thirdparty-lcms2.git
+[submodule "thirdparty/openjpeg"]
+	path = thirdparty/openjpeg
+	url = ../thirdparty-openjpeg.git
+[submodule "thirdparty/zlib"]
+	path = thirdparty/zlib
+	url = ../thirdparty-zlib.git
+[submodule "thirdparty/curl"]
+	path = thirdparty/curl
+	url = ../thirdparty-curl.git
+[submodule "thirdparty/freeglut"]
+	path = thirdparty/freeglut
+	url = ../thirdparty-freeglut.git

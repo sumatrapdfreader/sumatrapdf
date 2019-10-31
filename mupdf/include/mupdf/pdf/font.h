@@ -1,9 +1,7 @@
 #ifndef MUPDF_PDF_FONT_H
 #define MUPDF_PDF_FONT_H
 
-/*
- * Font
- */
+#include "mupdf/pdf/cmap.h"
 
 enum
 {
@@ -18,15 +16,7 @@ enum
 	PDF_FD_FORCE_BOLD = 1 << 18
 };
 
-void pdf_load_encoding(char **estrings, char *encoding);
-int pdf_lookup_agl(char *name);
-const char **pdf_lookup_agl_duplicates(int ucs);
-
-extern const unsigned short pdf_doc_encoding[256];
-extern const char * const pdf_mac_roman[256];
-extern const char * const pdf_mac_expert[256];
-extern const char * const pdf_win_ansi[256];
-extern const char * const pdf_standard[256];
+void pdf_load_encoding(const char **estrings, const char *encoding);
 
 typedef struct pdf_font_desc_s pdf_font_desc;
 typedef struct pdf_hmtx_s pdf_hmtx;
@@ -51,7 +41,7 @@ struct pdf_vmtx_s
 struct pdf_font_desc_s
 {
 	fz_storable storable;
-	unsigned int size;
+	size_t size;
 
 	fz_font *font;
 
@@ -67,12 +57,12 @@ struct pdf_font_desc_s
 	/* Encoding (CMap) */
 	pdf_cmap *encoding;
 	pdf_cmap *to_ttf_cmap;
-	int cid_to_gid_len;
+	size_t cid_to_gid_len;
 	unsigned short *cid_to_gid;
 
 	/* ToUnicode */
 	pdf_cmap *to_unicode;
-	int cid_to_ucs_len;
+	size_t cid_to_ucs_len;
 	unsigned short *cid_to_ucs;
 
 	/* Metrics (given in the PDF file) */
@@ -87,8 +77,6 @@ struct pdf_font_desc_s
 	pdf_vmtx *vmtx;
 
 	int is_embedded;
-
-	void *_vsubst; /* SumatraPDF: store vertical glyph substitution data for the font's lifetime */
 };
 
 void pdf_set_font_wmode(fz_context *ctx, pdf_font_desc *font, int wmode);
@@ -101,38 +89,30 @@ void pdf_end_vmtx(fz_context *ctx, pdf_font_desc *font);
 pdf_hmtx pdf_lookup_hmtx(fz_context *ctx, pdf_font_desc *font, int cid);
 pdf_vmtx pdf_lookup_vmtx(fz_context *ctx, pdf_font_desc *font, int cid);
 
-/* SumatraPDF: support vertical glyph substitution data */
-int pdf_ft_lookup_vgid(fz_context *ctx, pdf_font_desc *fontdesc, int gid);
-void pdf_ft_free_vsubst(pdf_font_desc *fontdesc);
-
-void pdf_load_to_unicode(pdf_document *doc, pdf_font_desc *font, char **strings, char *collection, pdf_obj *cmapstm);
+void pdf_load_to_unicode(fz_context *ctx, pdf_document *doc, pdf_font_desc *font, const char **strings, char *collection, pdf_obj *cmapstm);
 
 int pdf_font_cid_to_gid(fz_context *ctx, pdf_font_desc *fontdesc, int cid);
+const char *pdf_clean_font_name(const char *fontname);
 
-unsigned char *pdf_lookup_builtin_font(const char *name, unsigned int *len);
-unsigned char *pdf_lookup_substitute_font(int mono, int serif, int bold, int italic, unsigned int *len);
-unsigned char *pdf_lookup_substitute_cjk_font(int ros, int serif, int wmode, unsigned int *len, int *index);
+const unsigned char *pdf_lookup_substitute_font(fz_context *ctx, int mono, int serif, int bold, int italic, int *len);
 
-pdf_font_desc *pdf_load_type3_font(pdf_document *doc, pdf_obj *rdb, pdf_obj *obj);
-void pdf_load_type3_glyphs(pdf_document *doc, pdf_font_desc *fontdesc, int nestedDepth);
-pdf_font_desc *pdf_load_font(pdf_document *doc, pdf_obj *rdb, pdf_obj *obj, int nestedDepth);
-pdf_font_desc *pdf_load_hail_mary_font(pdf_document *doc);
-
-/* SumatraPDF: use locally installed fonts */
-const char *pdf_clean_base14_name(const char *fontname);
-void pdf_install_load_system_font_funcs(fz_context *ctx);
+pdf_font_desc *pdf_load_type3_font(fz_context *ctx, pdf_document *doc, pdf_obj *rdb, pdf_obj *obj);
+void pdf_load_type3_glyphs(fz_context *ctx, pdf_document *doc, pdf_font_desc *fontdesc);
+pdf_font_desc *pdf_load_font(fz_context *ctx, pdf_document *doc, pdf_obj *rdb, pdf_obj *obj);
+pdf_font_desc *pdf_load_hail_mary_font(fz_context *ctx, pdf_document *doc);
 
 pdf_font_desc *pdf_new_font_desc(fz_context *ctx);
 pdf_font_desc *pdf_keep_font(fz_context *ctx, pdf_font_desc *fontdesc);
 void pdf_drop_font(fz_context *ctx, pdf_font_desc *font);
 
-#ifndef NDEBUG
-void pdf_print_font(fz_context *ctx, pdf_font_desc *fontdesc);
-#endif
+void pdf_print_font(fz_context *ctx, fz_output *out, pdf_font_desc *fontdesc);
 
-fz_rect *pdf_measure_text(fz_context *ctx, pdf_font_desc *fontdesc, unsigned char *buf, int len, fz_rect *rect);
-float pdf_text_stride(fz_context *ctx, pdf_font_desc *fontdesc, float fontsize, unsigned char *buf, int len, float room, int *count);
+void pdf_run_glyph(fz_context *ctx, pdf_document *doc, pdf_obj *resources, fz_buffer *contents, fz_device *dev, fz_matrix ctm, void *gstate, fz_default_colorspaces *default_cs);
 
-void pdf_run_glyph(pdf_document *doc, pdf_obj *resources, fz_buffer *contents, fz_device *dev, const fz_matrix *ctm, void *gstate, int nestedDepth);
+pdf_obj *pdf_add_simple_font(fz_context *ctx, pdf_document *doc, fz_font *font, int encoding);
+pdf_obj *pdf_add_cid_font(fz_context *ctx, pdf_document *doc, fz_font *font);
+pdf_obj *pdf_add_cjk_font(fz_context *ctx, pdf_document *doc, fz_font *font, int script, int wmode, int serif);
+
+int pdf_font_writing_supported(fz_font *font);
 
 #endif

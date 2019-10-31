@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>mutool show</title>
+<link rel="stylesheet" href="style.css" type="text/css">
+</head>
+<body>
+
+<header>
+<h1>mutool show</h1>
+</header>
+
+<article>
+
+<p>
+The show command will print the specified objects and streams to
+stdout. Streams are decoded and non-printable characters are
+represented with a period by default.
+
+<pre>
+mutool show [options] file.pdf ( xref | outline | grep | <i>&lt;path&gt;</i> ) *
+</pre>
+
+<p>
+Options:
+
+<dl>
+<dt> -p password
+<dd> Use the specified password if the file is encrypted.
+<dt> -o file
+<dd> Write output to file instead of stdout.
+<dt> -e
+<dd> Print streams in their original encoded (or compressed) form.
+<dt> -b
+<dd> Print streams as binary data, and omit the object.
+<dt> -g
+<dd> Print objects in a one-line form suitable for grep, and omit stream data.
+</dl>
+
+<p>
+Specify what to show by using one of the following keywords, or specify a path
+to an object:
+
+<dl>
+<dt> xref
+<dd> Print the cross reference table.
+<dt> outline
+<dd> Print the outline (table of contents).
+<dt> pages
+<dd> List the object numbers for every page.
+<dt> grep
+<dd> Print all the objects in the file in a compact one-line format
+suitable for piping to grep.
+</dl>
+
+<p>
+A path starts with either an object number, a property in the trailer
+dictionary, or the keyword "trailer" or "pages". Separate elements with
+a period '.' or slash '/'.
+Select a page object by using pages/<i>N</i> where N is the page number.
+The first page is number 1.
+You can also use '*' as an element to iterate over all array indices
+or dictionary properties in an object.
+
+<dl>
+<dt> Find the number of pages in a document:
+<dd> <tt>mutool show $FILE trailer/Pages/Count</tt>
+<dt> Print the raw content stream of the first page:
+<dd> <tt>mutool show -b $FILE pages/1/Contents</tt>
+<dt> Show all JPEG compressed stream objects:
+<dd> <tt>mutool show $FILE grep | grep '/Filter/DCTDecode'</tt>
+</dl>
+
+</article>
+
+<footer>
+<a href="http://www.artifex.com/"><img src="artifex-logo.png" align="right"></a>
+Copyright &copy; 2006-2018 Artifex Software Inc.
+</footer>
+
+</body>
+</html>

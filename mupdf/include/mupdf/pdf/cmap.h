@@ -1,10 +1,6 @@
 #ifndef MUPDF_PDF_CMAP_H
 #define MUPDF_PDF_CMAP_H
 
-/*
- * CMap
- */
-
 typedef struct pdf_cmap_s pdf_cmap;
 typedef struct pdf_range_s pdf_range;
 typedef struct pdf_xrange_s pdf_xrange;
@@ -24,8 +20,10 @@ struct pdf_xrange_s
 
 struct pdf_mrange_s
 {
-	unsigned int low, len, out[PDF_MRANGE_CAP];
+	unsigned int low, out;
 };
+
+typedef struct cmap_splay_s cmap_splay;
 
 struct pdf_cmap_s
 {
@@ -53,20 +51,25 @@ struct pdf_cmap_s
 
 	int mlen, mcap;
 	pdf_mrange *mranges;
+
+	int dlen, dcap;
+	int *dict;
+
+	int tlen, tcap, ttop;
+	cmap_splay *tree;
 };
 
 pdf_cmap *pdf_new_cmap(fz_context *ctx);
 pdf_cmap *pdf_keep_cmap(fz_context *ctx, pdf_cmap *cmap);
 void pdf_drop_cmap(fz_context *ctx, pdf_cmap *cmap);
-void pdf_free_cmap_imp(fz_context *ctx, fz_storable *cmap);
-unsigned int pdf_cmap_size(fz_context *ctx, pdf_cmap *cmap);
+void pdf_drop_cmap_imp(fz_context *ctx, fz_storable *cmap);
+size_t pdf_cmap_size(fz_context *ctx, pdf_cmap *cmap);
 
 int pdf_cmap_wmode(fz_context *ctx, pdf_cmap *cmap);
 void pdf_set_cmap_wmode(fz_context *ctx, pdf_cmap *cmap, int wmode);
 void pdf_set_usecmap(fz_context *ctx, pdf_cmap *cmap, pdf_cmap *usecmap);
 
 void pdf_add_codespace(fz_context *ctx, pdf_cmap *cmap, unsigned int low, unsigned int high, int n);
-void pdf_map_range_to_table(fz_context *ctx, pdf_cmap *cmap, unsigned int low, int *map, int len);
 void pdf_map_range_to_range(fz_context *ctx, pdf_cmap *cmap, unsigned int srclo, unsigned int srchi, int dstlo);
 void pdf_map_one_to_many(fz_context *ctx, pdf_cmap *cmap, unsigned int one, int *many, int len);
 void pdf_sort_cmap(fz_context *ctx, pdf_cmap *cmap);
@@ -77,12 +80,8 @@ int pdf_decode_cmap(pdf_cmap *cmap, unsigned char *s, unsigned char *e, unsigned
 
 pdf_cmap *pdf_new_identity_cmap(fz_context *ctx, int wmode, int bytes);
 pdf_cmap *pdf_load_cmap(fz_context *ctx, fz_stream *file);
-pdf_cmap *pdf_load_system_cmap(fz_context *ctx, char *name);
-pdf_cmap *pdf_load_builtin_cmap(fz_context *ctx, char *name);
-pdf_cmap *pdf_load_embedded_cmap(pdf_document *doc, pdf_obj *ref);
-
-#ifndef NDEBUG
-void pdf_print_cmap(fz_context *ctx, pdf_cmap *cmap);
-#endif
+pdf_cmap *pdf_load_system_cmap(fz_context *ctx, const char *name);
+pdf_cmap *pdf_load_builtin_cmap(fz_context *ctx, const char *name);
+pdf_cmap *pdf_load_embedded_cmap(fz_context *ctx, pdf_document *doc, pdf_obj *ref);
 
 #endif

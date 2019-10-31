@@ -1,22 +1,49 @@
-#include "mupdf/fitz.h"
+#define _LARGEFILE_SOURCE
+#ifndef _FILE_OFFSET_BITS
+#define _FILE_OFFSET_BITS 64
+#endif
 
-void fz_rebind_stream(fz_stream *stm, fz_context *ctx)
+#include "mupdf/fitz.h"
+#include "fitz-imp.h"
+
+#include <string.h>
+#include <errno.h>
+#include <stdio.h>
+
+/*
+	Return true if the named file exists and is readable.
+*/
+int
+fz_file_exists(fz_context *ctx, const char *path)
 {
-	if (stm == NULL || stm->ctx == ctx)
-		return;
-	do {
-		stm->ctx = ctx;
-		stm = (stm->rebind == NULL ? NULL : stm->rebind(stm));
-	} while (stm != NULL);
+	FILE *file;
+#ifdef _WIN32
+	file = fz_fopen_utf8(path, "rb");
+#else
+	file = fopen(path, "rb");
+#endif
+	if (file)
+		fclose(file);
+	return !!file;
 }
 
+/*
+	Create a new stream object with the given
+	internal state and function pointers.
+
+	state: Internal state (opaque to everything but implementation).
+
+	next: Should provide the next set of bytes (up to max) of stream
+	data. Return the number of bytes read, or EOF when there is no
+	more data.
+
+	drop: Should clean up and free the internal state. May not
+	throw exceptions.
+*/
 fz_stream *
-fz_new_stream(fz_context *ctx, void *state,
-	fz_stream_next_fn *next,
-	fz_stream_close_fn *close,
-	fz_stream_rebind_fn *rebind)
+fz_new_stream(fz_context *ctx, void *state, fz_stream_next_fn *next, fz_stream_drop_fn *drop)
 {
-	fz_stream *stm;
+	fz_stream *stm = NULL;
 
 	fz_try(ctx)
 	{
@@ -24,7 +51,8 @@ fz_new_stream(fz_context *ctx, void *state,
 	}
 	fz_catch(ctx)
 	{
-		close(ctx, state);
+		if (drop)
+			drop(ctx, state);
 		fz_rethrow(ctx);
 	}
 
@@ -41,167 +69,159 @@ fz_new_stream(fz_context *ctx, void *state,
 
 	stm->state = state;
 	stm->next = next;
-	stm->close = close;
+	stm->drop = drop;
 	stm->seek = NULL;
-	stm->rebind = rebind;
-	stm->reopen = NULL;
-	stm->ctx = ctx;
 
 	return stm;
 }
 
 fz_stream *
-fz_keep_stream(fz_stream *stm)
+fz_keep_stream(fz_context *ctx, fz_stream *stm)
 {
-	if (stm)
-		stm->refs ++;
-	return stm;
+	return fz_keep_imp(ctx, stm, &stm->refs);
 }
 
 void
-fz_close(fz_stream *stm)
+fz_drop_stream(fz_context *ctx, fz_stream *stm)
 {
-	if (!stm)
-		return;
-	stm->refs --;
-	if (stm->refs == 0)
+	if (fz_drop_imp(ctx, stm, &stm->refs))
 	{
-		if (stm->close)
-			stm->close(stm->ctx, stm->state);
-		fz_free(stm->ctx, stm);
+		if (stm->drop)
+			stm->drop(ctx, stm->state);
+		fz_free(ctx, stm);
 	}
-}
-
-/* SumatraPDF: allow to clone a stream */
-fz_stream *
-fz_clone_stream(fz_context *ctx, fz_stream *stm)
-{
-	fz_stream *clone;
-	if (!stm->reopen)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "can't clone stream without reopening");
-	clone = stm->reopen(ctx, stm);
-	fz_seek(clone, fz_tell(stm), 0);
-	return clone;
 }
 
 /* File stream */
 
+// TODO: WIN32: HANDLE CreateFileW(), etc.
+// TODO: POSIX: int creat(), read(), write(), lseeko, etc.
+
 typedef struct fz_file_stream_s
 {
-	int file;
+	FILE *file;
 	unsigned char buffer[4096];
 } fz_file_stream;
 
-static int next_file(fz_stream *stm, int n)
+static int next_file(fz_context *ctx, fz_stream *stm, size_t n)
 {
 	fz_file_stream *state = stm->state;
 
 	/* n is only a hint, that we can safely ignore */
-	n = read(state->file, state->buffer, sizeof(state->buffer));
-	if (n < 0)
-		fz_throw(stm->ctx, FZ_ERROR_GENERIC, "read error: %s", strerror(errno));
+	n = fread(state->buffer, 1, sizeof(state->buffer), state->file);
+	if (n < sizeof(state->buffer) && ferror(state->file))
+		fz_throw(ctx, FZ_ERROR_GENERIC, "read error: %s", strerror(errno));
 	stm->rp = state->buffer;
 	stm->wp = state->buffer + n;
-	stm->pos += n;
+	stm->pos += (int64_t)n;
 
 	if (n == 0)
 		return EOF;
 	return *stm->rp++;
 }
 
-static void seek_file(fz_stream *stm, int offset, int whence)
+static void seek_file(fz_context *ctx, fz_stream *stm, int64_t offset, int whence)
 {
 	fz_file_stream *state = stm->state;
-	int n = lseek(state->file, offset, whence);
+#ifdef _WIN32
+	int64_t n = _fseeki64(state->file, offset, whence);
+#else
+	int64_t n = fseeko(state->file, offset, whence);
+#endif
 	if (n < 0)
-		fz_throw(stm->ctx, FZ_ERROR_GENERIC, "cannot lseek: %s", strerror(errno));
-	stm->pos = n;
+		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot seek: %s", strerror(errno));
+#ifdef _WIN32
+	stm->pos = _ftelli64(state->file);
+#else
+	stm->pos = ftello(state->file);
+#endif
 	stm->rp = state->buffer;
 	stm->wp = state->buffer;
 }
 
-static void close_file(fz_context *ctx, void *state_)
+static void drop_file(fz_context *ctx, void *state_)
 {
 	fz_file_stream *state = state_;
-	int n = close(state->file);
+	int n = fclose(state->file);
 	if (n < 0)
 		fz_warn(ctx, "close error: %s", strerror(errno));
 	fz_free(ctx, state);
 }
 
-fz_stream *
-fz_open_fd(fz_context *ctx, int fd)
+static fz_stream *
+fz_open_file_ptr(fz_context *ctx, FILE *file)
 {
 	fz_stream *stm;
 	fz_file_stream *state = fz_malloc_struct(ctx, fz_file_stream);
-	state->file = fd;
+	state->file = file;
 
-	fz_try(ctx)
-	{
-		stm = fz_new_stream(ctx, state, next_file, close_file, NULL);
-	}
-	fz_catch(ctx)
-	{
-		fz_free(ctx, state);
-		fz_rethrow(ctx);
-	}
+	stm = fz_new_stream(ctx, state, next_file, drop_file);
 	stm->seek = seek_file;
-	/* SumatraPDF: TODO: can't reliably clone a file descriptor */
 
 	return stm;
 }
 
+fz_stream *fz_open_file_ptr_no_close(fz_context *ctx, FILE *file)
+{
+	fz_stream *stm = fz_open_file_ptr(ctx, file);
+	/* We don't own the file ptr. Ensure we don't close it */
+	stm->drop = fz_free;
+	return stm;
+}
+
+/*
+	Open the named file and wrap it in a stream.
+
+	filename: Path to a file. On non-Windows machines the filename should
+	be exactly as it would be passed to fopen(2). On Windows machines, the
+	path should be UTF-8 encoded so that non-ASCII characters can be
+	represented. Other platforms do the encoding as standard anyway (and
+	in most cases, particularly for MacOS and Linux, the encoding they
+	use is UTF-8 anyway).
+*/
 fz_stream *
 fz_open_file(fz_context *ctx, const char *name)
 {
+	FILE *file;
 #ifdef _WIN32
-	char *s = (char*)name;
-	wchar_t *wname, *d;
-	int c, fd;
-	/* SumatraPDF: prefer ANSI to UTF-8 for consistency with remaining API */
-	fd = open(name, O_BINARY | O_RDONLY, 0);
-	if (fd == -1)
-	{
-
-	d = wname = fz_malloc(ctx, (strlen(name)+1) * sizeof(wchar_t));
-	while (*s) {
-		s += fz_chartorune(&c, s);
-		*d++ = c;
-	}
-	*d = 0;
-	fd = _wopen(wname, O_BINARY | O_RDONLY, 0);
-	fz_free(ctx, wname);
-
-	}
+	file = fz_fopen_utf8(name, "rb");
 #else
-	int fd = open(name, O_BINARY | O_RDONLY, 0);
+	file = fopen(name, "rb");
 #endif
-	if (fd == -1)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot open %s", name);
-	return fz_open_fd(ctx, fd);
+	if (file == NULL)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot open %s: %s", name, strerror(errno));
+	return fz_open_file_ptr(ctx, file);
 }
 
 #ifdef _WIN32
+/*
+	Open the named file and wrap it in a stream.
+
+	This function is only available when compiling for Win32.
+
+	filename: Wide character path to the file as it would be given
+	to _wfopen().
+*/
 fz_stream *
 fz_open_file_w(fz_context *ctx, const wchar_t *name)
 {
-	int fd = _wopen(name, O_BINARY | O_RDONLY, 0);
-	if (fd == -1)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot open file %ls", name);
-	return fz_open_fd(ctx, fd);
+	FILE *file = _wfopen(name, L"rb");
+	if (file == NULL)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot open file %ls: %s", name, strerror(errno));
+	return fz_open_file_ptr(ctx, file);
 }
 #endif
 
 /* Memory stream */
 
-static int next_buffer(fz_stream *stm, int max)
+static int next_buffer(fz_context *ctx, fz_stream *stm, size_t max)
 {
 	return EOF;
 }
 
-static void seek_buffer(fz_stream *stm, int offset, int whence)
+static void seek_buffer(fz_context *ctx, fz_stream *stm, int64_t offset, int whence)
 {
-	int pos = stm->pos - (stm->wp - stm->rp);
+	int64_t pos = stm->pos - (stm->wp - stm->rp);
 	/* Convert to absolute pos */
 	if (whence == 1)
 	{
@@ -216,60 +236,64 @@ static void seek_buffer(fz_stream *stm, int offset, int whence)
 		offset = 0;
 	if (offset > stm->pos)
 		offset = stm->pos;
-	stm->rp += offset - pos;
+	stm->rp += (int)(offset - pos);
 }
 
-static void close_buffer(fz_context *ctx, void *state_)
+static void drop_buffer(fz_context *ctx, void *state_)
 {
 	fz_buffer *state = (fz_buffer *)state_;
-	if (state)
-		fz_drop_buffer(ctx, state);
+	fz_drop_buffer(ctx, state);
 }
 
-/* SumatraPDF: allow to clone a stream */
-static fz_stream *reopen_buffer(fz_context *ctx, fz_stream *stm)
-{
-	fz_stream *clone;
+/*
+	Open a buffer as a stream.
 
-	fz_buffer *orig = stm->state;
-	fz_buffer *buf = fz_new_buffer_from_data(ctx, orig->data, orig->len);
-	clone = fz_open_buffer(ctx, buf);
-	fz_drop_buffer(ctx, buf);
+	buf: The buffer to open. Ownership of the buffer is NOT passed in
+	(this function takes its own reference).
 
-	return clone;
-}
-
+	Returns pointer to newly created stream. May throw exceptions on
+	failure to allocate.
+*/
 fz_stream *
 fz_open_buffer(fz_context *ctx, fz_buffer *buf)
 {
 	fz_stream *stm;
 
 	fz_keep_buffer(ctx, buf);
-	stm = fz_new_stream(ctx, buf, next_buffer, close_buffer, NULL);
+	stm = fz_new_stream(ctx, buf, next_buffer, drop_buffer);
 	stm->seek = seek_buffer;
-	stm->reopen = reopen_buffer;
 
 	stm->rp = buf->data;
 	stm->wp = buf->data + buf->len;
 
-	stm->pos = buf->len;
+	stm->pos = (int64_t)buf->len;
 
 	return stm;
 }
 
+/*
+	Open a block of memory as a stream.
+
+	data: Pointer to start of data block. Ownership of the data block is
+	NOT passed in.
+
+	len: Number of bytes in data block.
+
+	Returns pointer to newly created stream. May throw exceptions on
+	failure to allocate.
+*/
 fz_stream *
-fz_open_memory(fz_context *ctx, unsigned char *data, int len)
+fz_open_memory(fz_context *ctx, const unsigned char *data, size_t len)
 {
 	fz_stream *stm;
 
-	stm = fz_new_stream(ctx, NULL, next_buffer, close_buffer, NULL);
+	stm = fz_new_stream(ctx, NULL, next_buffer, NULL);
 	stm->seek = seek_buffer;
-	stm->reopen = reopen_buffer;
 
-	stm->rp = data;
-	stm->wp = data + len;
+	stm->rp = (unsigned char *)data;
+	stm->wp = (unsigned char *)data + len;
 
-	stm->pos = len;
+	stm->pos = (int64_t)len;
 
 	return stm;
 }

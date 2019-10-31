@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Loading...</title>
+<meta charset="utf-8">
+<script src="libmupdf.js"></script>
+<script>
+var filename = new URL(window.location.href).searchParams.get("file");
+if (!filename)
+	filename = "pdfref13.pdf";
+Module.preRun = function () {
+	FS.createPreloadedFile(".", filename, filename, true, false);
+};
+Module.postRun = function () {
+	loadDocument(filename);
+};
+
+var currentDocument = null;
+var currentPage = 1;
+var currentZoom = 72;
+var pageCount = 0;
+function loadDocument(filename) {
+	currentDocument = mupdf.openDocument(filename);
+	document.title = mupdf.documentTitle(currentDocument);
+	pageCount = mupdf.countPages(currentDocument);
+	updatePage();
+}
+function updatePage() {
+	document.getElementById("page").src = mupdf.drawPageAsPNG(currentDocument, currentPage, currentZoom);
+	document.getElementById("pageNumber").value = currentPage;
+}
+function nextPage() {
+	if (currentPage <= pageCount) {
+		++currentPage;
+		updatePage();
+	}
+}
+function prevPage() {
+	if (currentPage > 1) {
+		--currentPage;
+		updatePage();
+	}
+}
+function gotoPage() {
+	var page = parseInt(document.getElementById("pageNumber").value)
+	if (page >= 1 && page <= pageCount) {
+		currentPage = page;
+		updatePage();
+	}
+}
+function zoomIn() {
+	currentZoom *= 1.2;
+	updatePage();
+}
+function zoomOut() {
+	currentZoom /= 1.2;
+	updatePage();
+}
+</script>
+<style>
+body{margin:2em;background-color:#aaa}
+</style>
+</head>
+<body>
+<p>
+<button onClick="prevPage()">&lt;</button>
+<input id="pageNumber" onChange="gotoPage()" type="text" size="5">
+<button onClick="nextPage()">&gt;</button>
+<button onClick="zoomIn()">+</button>
+<button onClick="zoomOut()">-</button>
+<p>
+<img id="page">
+</body>
+</html>

@@ -1,18 +1,31 @@
-.TH MUPDF 1 "July 25, 2013"
+.TH MUPDF 1 "Jul 30, 2019"
 .\" Please adjust this date whenever revising the manpage.
+.\" no hyphenation
+.nh
+.\" adjust left
+.ad l
 
 .SH NAME
 mupdf \- MuPDF is a lightweight PDF viewer written in portable C
 
 .SH SYNOPSIS
 .B mupdf
-.RI [ options ] " PDFfile"
+.RI [ options ] " file"
 
 .SH DESCRIPTION
-This manual page briefly describes the
-.B mupdf
-command.
-.PP
+.B MuPDF
+is a document viewer that can show
+.B PDF,
+.B XPS,
+.B EPUB,
+.B XHTML,
+.B CBZ,
+and various image formats such as
+.B PNG,
+.B JPEG,
+.B GIF,
+and
+.B TIFF.
 
 .SH OPTIONS
 A description of each of the supported options is included below.
@@ -26,34 +39,55 @@ The password is tried both as user and owner password.
 Changes the initial zoom level, specified as the resolution in dpi.
 The default value is 72.
 .TP
-.B \-b bits
+.B \-A bits
 Changes the anti-aliasing quality, specified as a number of bits between 0
-(off) and 8 (best). The default value is 8.
+(off) and 8 (best).
+The default value is 8.
 .TP
 .B \-C RRGGBB
-Sets the full-page tint using hexadecimal color syntax. The default value
-is FFFAF0.
+Sets the full-page tint using hexadecimal color syntax.
+The default value is FFFAF0.
+.TP
+.B \-W width
+Page width in points for EPUB layout.
+.TP
+.B \-H height
+Page height in points for EPUB layout.
+.TP
+.B \-S size
+Font size in points for EPUB layout.
+.TP
+.B \-U CSS-file
+User style sheet for EPUB layout.
 
 .SH MOUSE BEHAVIOR
 
 .TP
 .B Left mouse button click
 A left click on a hyper link follows the link.
+In presentation mode advances to the next page.
+.TP
+.B Right mouse button click
+In presentation mode goes back to the previous page.
 .TP
 .B Left mouse button drag
-Pan the page. Panning beyond the bottom or top
+Pan the page.
+Panning beyond the bottom or top
 edge will go to the next or previous page.
 .TP
 .B Right mouse button drag
-Select text in an area. On X11, the selected text
+Select text in an area.
+On X11, the selected text
 can be pasted in another application with a middle click.
-Press Ctl+C to copy the selected text to the clipboard.
-On windows, the selected text will automatically be copied
+Press
+.B Ctrl+C
+to copy the selected text to the clipboard.
+On Windows, the selected text will automatically be copied
 to the clipboard.
 .TP
 .B Scroll wheel
-Pan page up or down. Does not change page
-when reaching the bottom or top edge.
+Pan page up or down.
+Does not change page when reaching the bottom or top edge.
 .TP
 .B Shift + Scroll wheel
 Pan page left or right.
@@ -63,45 +97,14 @@ Zoom in or out.
 
 .SH KEY BINDINGS
 
+.PP
+Page navigation:
 .TP
-.B L, R
-Rotate page left (counter-clockwise) or right (clockwise).
+.B . pgdn space
+Go to the next page.
 .TP
-.B h, j, k, l
-Pan page left, down, up, or right.
-.TP
-.B \+, \-
-Zoom in or out.
-.TP
-.B W, H
-Zoom page to exactly fit width or height of window.
-.TP
-.B w
-Shrinkwrap window to fit the page.
-.TP
-.B r
-Reload file.
-.TP
-.B . pgdn right space
-Go to the next page
-.TP
-.B , pgup left b backspace
-Go to the previous page
-.TP
-.B <, >
-Skip back/forth 10 pages at a time.
-.TP
-.B m
-Mark current page for snap back. Up to 256 pages can be marked.
-.TP
-.B t
-Pop back to the latest mark.
-.TP
-.B [0-9]m
-Save the current page number in the numbered register.
-.TP
-.B [0-9]t
-Go to the page saved in the numbered register.
+.B , pgup b backspace
+Go to the previous page.
 .TP
 .B 123g
 Go to page 123.
@@ -109,14 +112,66 @@ Go to page 123.
 .B g, G
 Go to the first or last page.
 .TP
+.B m
+Mark current page for snap back.
+Up to 256 pages can be marked.
+.TP
+.B t
+Pop back to the latest mark.
+.TP
+.B [0\(en9]m
+Save the current page number in the numbered register.
+.TP
+.B [0\(en9]t
+Go to the page saved in the numbered register.
+
+.PP
+Zooming and rotating:
+.TP
+.B +, \-
+Zoom in or out.
+.TP
+.B W, H
+Zoom page to exactly fit width/height of window.
+.TP
+.B Z
+Zoom page to fit either to width or height of window.
+.TP
+.B z
+Reset zoom level.
+.TP
+.B [, ]
+Rotate page left (counter-clockwise) or right (clockwise).
+.TP
+.B w
+Shrinkwrap window to fit the page.
+.TP
+.B f
+Toggles fullscreen mode.
+
+.PP
+Panning:
+.TP
+.B h, left, j, k, l, right
+Pan page left, down, up, or right.
+
+.PP
+Searching:
+.TP
 .B /, ?
 Search for text forwards or backwards.
 .TP
 .B n, N
 Find the next/previous search result.
+
+.PP
+Miscellaneous:
 .TP
-.B f
-Toggles fullscreen mode.
+.B <, >
+Increase/decrease EPUB/XHTML font size.
+.TP
+.B r
+Reload file.
 .TP
 .B p
 Toggle presentation mode.
@@ -126,8 +181,18 @@ Toggle between color and grayscale rendering.
 .TP
 .B C
 Toggle full-page color tinting.
-.B i
+.TP
+.B I
 Toggle between normal and inverted color rendering.
+.TP
+.B E
+Toggle ICC color mode.
+.TP
+.B e
+Toggle spot color mode.
+.TP
+.B S
+Save updated document file.
 .TP
 .B q
 Quit.
@@ -137,11 +202,10 @@ Quit.
 .TP
 .B SIGHUP
 Sending a \fBSIGHUP\fR signal to the mupdf process will also cause the viewed
-file to be reloaded automatically, for use in e.g. build scripts.
+file to be reloaded automatically, for use in e.g.\& build scripts.
 
 .SH SEE ALSO
-.BR mudraw (1),
 .BR mutool (1).
 
 .SH AUTHOR
-MuPDF is Copyright 2006-2014 Artifex Software, Inc.
+MuPDF is Copyright 2006\(en2019 Artifex Software, Inc.
