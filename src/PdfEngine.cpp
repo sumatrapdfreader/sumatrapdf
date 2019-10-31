@@ -152,73 +152,78 @@ static RenderedBitmap* new_rendered_fz_pixmap(fz_context* ctx, fz_pixmap* pixmap
 }
 
 fz_stream* fz_open_file2(fz_context* ctx, const WCHAR* filePath) {
-    fz_stream* file = nullptr;
+    fz_stream* stm = nullptr;
     int64_t fileSize = file::GetSize(filePath);
     // load small files entirely into memory so that they can be
     // overwritten even by programs that don't open files with FILE_SHARE_READ
     if (fileSize > 0 && fileSize < MAX_MEMORY_FILE_SIZE) {
-        fz_buffer* data = nullptr;
-        fz_var(data);
-        fz_try(ctx) {
-            data = fz_new_buffer(ctx, (int)fileSize);
-            data->len = (int)fileSize;
-            if (file::ReadN(filePath, (char*)data->data, data->len))
-                file = fz_open_buffer(ctx, data);
+        size_t size;
+        char* data = file::ReadFileWithAllocator(filePath, &size, nullptr);
+        if (data == nullptr) {
+            // failed to read
+            return nullptr;
         }
-        fz_catch(ctx) { file = nullptr; }
-        fz_drop_buffer(ctx, data);
-        if (file)
-            return file;
+        fz_buffer* buf = fz_new_buffer_from_data(ctx, (u8*)data, size);
+        fz_var(buf);
+        fz_try(ctx) { stm = fz_open_buffer(ctx, buf); }
+        fz_catch(ctx) {
+            stm = nullptr;
+            fz_drop_buffer(ctx, buf);
+        }
+        return stm;
     }
 
-    fz_try(ctx) { file = fz_open_file_w(ctx, filePath); }
-    fz_catch(ctx) { file = nullptr; }
-    return file;
+    fz_try(ctx) { stm = fz_open_file_w(ctx, filePath); }
+    fz_catch(ctx) { stm = nullptr; }
+    return stm;
 }
 
-unsigned char* fz_extract_stream_data(fz_stream* stream, size_t* cbCount) {
-    fz_seek(stream, 0, 2);
-    int fileLen = fz_tell(stream);
-    fz_seek(stream, 0, 0);
+unsigned char* fz_extract_stream_data(fz_context *ctx, fz_stream* stream, size_t* cbCount) {
+    fz_seek(ctx, stream, 0, 2);
+    i64 fileLen = fz_tell(ctx, stream);
+    fz_seek(ctx, stream, 0, 0);
 
-    fz_buffer* buffer = fz_read_all(stream, fileLen);
-    AssertCrash(fileLen == buffer->len);
+    fz_buffer* buf = fz_read_all(ctx, stream, fileLen);
 
-    unsigned char* data = (unsigned char*)memdup(buffer->data, buffer->len);
+    u8* data;
+    size_t size = fz_buffer_extract(ctx, buf, &data);
+    CrashIf((size_t)fileLen != size);
     if (cbCount)
-        *cbCount = buffer->len;
+        *cbCount = size;
 
-    fz_drop_buffer(stream->ctx, buffer);
+    fz_drop_buffer(ctx, buf);
 
     if (!data)
-        fz_throw(stream->ctx, FZ_ERROR_GENERIC, "OOM in fz_extract_stream_data");
+        fz_throw(ctx, FZ_ERROR_GENERIC, "OOM in fz_extract_stream_data");
     return data;
 }
 
-void fz_stream_fingerprint(fz_stream* file, unsigned char digest[16]) {
-    int fileLen = -1;
-    fz_buffer* buffer = nullptr;
+void fz_stream_fingerprint(fz_context *ctx, fz_stream* stm, unsigned char digest[16]) {
+    i64 fileLen = -1;
+    fz_buffer* buf = nullptr;
 
-    fz_try(file->ctx) {
-        fz_seek(file, 0, 2);
-        fileLen = fz_tell(file);
-        fz_seek(file, 0, 0);
-        buffer = fz_read_all(file, fileLen);
+    fz_try(ctx) {
+        fz_seek(ctx, stm, 0, 2);
+        fileLen = fz_tell(ctx, stm);
+        fz_seek(ctx, stm, 0, 0);
+        buf = fz_read_all(ctx, stm, fileLen);
     }
-    fz_catch(file->ctx) {
-        fz_warn(file->ctx, "couldn't read stream data, using a nullptr fingerprint instead");
+    fz_catch(ctx) {
+        fz_warn(ctx, "couldn't read stream data, using a nullptr fingerprint instead");
         ZeroMemory(digest, 16);
         return;
     }
-    CrashIf(nullptr == buffer);
-    CrashIf(fileLen != buffer->len);
+    CrashIf(nullptr == buf);
+    u8* data;
+    size_t size = fz_buffer_extract(ctx, buf, &data);
+    CrashIf((size_t)fileLen != size);
+    fz_drop_buffer(ctx, buf);
 
     fz_md5 md5;
     fz_md5_init(&md5);
-    fz_md5_update(&md5, buffer->data, buffer->len);
+    fz_md5_update(&md5, data, size);
     fz_md5_final(&md5, digest);
 
-    fz_drop_buffer(file->ctx, buffer);
 }
 
 static inline int wchars_per_rune(int rune) {
@@ -227,9 +232,9 @@ static inline int wchars_per_rune(int rune) {
     return 1;
 }
 
-static void AddChar(fz_text_span* span, fz_text_char* c, str::Str<WCHAR>& s, Vec<RectI>& rects) {
+static void AddChar(fz_text_span* span, fz_text_item* c, str::Str<WCHAR>& s, Vec<RectI>& rects) {
     fz_rect bbox;
-    fz_text_char_bbox(&bbox, span, c - span->text);
+    fz_text_char_bbox(&bbox, span, c - span->items);
     RectI r = fz_rect_to_RectD(bbox).Round();
 
     int n = wchars_per_rune(c->c);
@@ -1121,7 +1126,7 @@ class PdfEngineImpl : public BaseEngine {
     int PageCount() const override {
         // make sure that _doc->page_count is initialized as soon as
         // _doc is defined, so that pdf_count_pages can't throw
-        return _doc ? pdf_count_pages(_doc) : 0;
+        return _doc ? pdf_count_pages(ctx, _doc) : 0;
     }
 
     RectD PageMediabox(int pageNo) override;
@@ -1190,7 +1195,8 @@ class PdfEngineImpl : public BaseEngine {
 
     bool Load(const WCHAR* fileName, PasswordUI* pwdUI = nullptr);
     bool Load(IStream* stream, PasswordUI* pwdUI = nullptr);
-    bool Load(fz_stream* stm, PasswordUI* pwdUI = nullptr);
+    //TODO(port): fz_stream can no-longer be re-opened (fz_clone_stream)
+    //bool Load(fz_stream* stm, PasswordUI* pwdUI = nullptr);
     bool LoadFromStream(fz_stream* stm, PasswordUI* pwdUI = nullptr);
     bool FinishLoading();
 
@@ -1511,17 +1517,22 @@ bool PdfEngineImpl::Load(IStream* stream, PasswordUI* pwdUI) {
     return FinishLoading();
 }
 
-bool PdfEngineImpl::Load(fz_stream* stm, PasswordUI* pwdUI) {
-    AssertCrash(!FileName() && !_doc && ctx);
+// TODO(port): fz_stream can't be re-opened anymore
+#if 0
+bool PdfEngineImpl::Load(fz_strem *stm, PasswordUI* pwdUI) {
+    auto fn = FileName();
+    AssertCrash(!fn && !_doc && ctx);
     if (!ctx)
         return false;
 
-    fz_try(ctx) { stm = fz_clone_stream(ctx, stm); }
+    fz_stream* stm = nullptr;
+    fz_try(ctx) { stm = fz_open_file_w(ctx, File); }
     fz_catch(ctx) { return false; }
     if (!LoadFromStream(stm, pwdUI))
         return false;
     return FinishLoading();
 }
+#endif
 
 bool PdfEngineImpl::LoadFromStream(fz_stream* stm, PasswordUI* pwdUI) {
     if (!stm)
@@ -1539,7 +1550,7 @@ bool PdfEngineImpl::LoadFromStream(fz_stream* stm, PasswordUI* pwdUI) {
         return false;
 
     unsigned char digest[16 + 32] = {0};
-    fz_stream_fingerprint(_doc->file, digest);
+    fz_stream_fingerprint(ctx, _doc->file, digest);
 
     bool ok = false, saveKey = false;
     while (!ok) {
@@ -2590,7 +2601,7 @@ PageLayoutType PdfEngineImpl::PreferredLayout() {
 u8* PdfEngineImpl::GetFileData(size_t* cbCount) {
     u8* res = nullptr;
     ScopedCritSec scope(&ctxAccess);
-    fz_try(ctx) { res = fz_extract_stream_data(_doc->file, cbCount); }
+    fz_try(ctx) { res = fz_extract_stream_data(ctx, _doc->file, cbCount); }
     fz_catch(ctx) {
         res = nullptr;
         if (FileName()) {
@@ -2639,7 +2650,8 @@ static bool pdf_file_update_add_annotation(pdf_document* doc, pdf_page* page, pd
 >>";
     static const char* obj_quad_tpl = "[%f %f %f %f %f %f %f %f]";
     static const char* ap_dict =
-        "<< /Type /XObject /Subtype /Form /BBox [0 0 %f %f] /Resources << /ExtGState << /GS << /Type /ExtGState /ca "
+        "<< /Type /XObject /Subtype /Form /BBox [0 0 %f %f] /Resources << /ExtGState << /GS << /Type /ExtGState "
+        "/ca "
         "%.f /AIS false /BM /Multiply >> >> /ProcSet [/PDF] >> >>";
     static const char* ap_highlight = "q /DeviceRGB cs /GS gs %f %f %f rg 0 0 %f %f re f Q\n";
     static const char* ap_underline = "q /DeviceRGB CS %f %f %f RG 1 w [] 0 d 0 0.5 m %f 0.5 l S Q\n";
@@ -2683,8 +2695,9 @@ static bool pdf_file_update_add_annotation(pdf_document* doc, pdf_page* page, pd
         quad_tpl.Set(str::Format(obj_quad_tpl, r.x1, r.y0, r.x0, r.y0, r.x1, r.y1, r.x0, r.y1));
     else // if (270 == rotation)
         quad_tpl.Set(str::Format(obj_quad_tpl, r.x1, r.y1, r.x1, r.y0, r.x0, r.y1, r.x0, r.y0));
-    AutoFree annot_tpl(str::Format(obj_dict, subtype, r.x0, r.y0, r.x1, r.y1, rgb[0], rgb[1], rgb[2], // Rect and Color
-                                   F_Print, pdf_to_num(page_obj), pdf_to_gen(page_obj),               // F and P
+    AutoFree annot_tpl(str::Format(obj_dict, subtype, r.x0, r.y0, r.x1, r.y1, rgb[0], rgb[1],
+                                   rgb[2],                                              // Rect and Color
+                                   F_Print, pdf_to_num(page_obj), pdf_to_gen(page_obj), // F and P
                                    quad_tpl.Get()));
     AutoFree annot_ap_dict(str::Format(ap_dict, dx, dy, annot.color.a / 255.f));
     AutoFree annot_ap_stream;
@@ -3278,7 +3291,8 @@ class XpsEngineImpl : public BaseEngine {
 
     bool Load(const WCHAR* fileName);
     bool Load(IStream* stream);
-    bool Load(fz_stream* stm);
+    // TODO(port): fz_stream can't be re-opened anymore
+    //bool Load(fz_stream* stm);
     bool LoadFromStream(fz_stream* stm);
 
     xps_page* GetXpsPage(int pageNo, bool failIfBusy = false);
@@ -3490,6 +3504,8 @@ bool XpsEngineImpl::Load(IStream* stream) {
     return LoadFromStream(stm);
 }
 
+// TODO(port): fz_stream can't be re-opened anymore
+#if 0
 bool XpsEngineImpl::Load(fz_stream* stm) {
     AssertCrash(!FileName() && !_doc && !_docStream && ctx);
     if (!ctx)
@@ -3499,6 +3515,7 @@ bool XpsEngineImpl::Load(fz_stream* stm) {
     fz_catch(ctx) { return false; }
     return LoadFromStream(stm);
 }
+#endif
 
 bool XpsEngineImpl::LoadFromStream(fz_stream* stm) {
     if (!stm)
@@ -3875,7 +3892,7 @@ WCHAR* XpsEngineImpl::ExtractPageText(xps_page* page, const WCHAR* lineSep, Rect
 u8* XpsEngineImpl::GetFileData(size_t* cbCount) {
     u8* res = nullptr;
     ScopedCritSec scope(&ctxAccess);
-    fz_try(ctx) { res = fz_extract_stream_data(_docStream, cbCount); }
+    fz_try(ctx) { res = fz_extract_stream_data(ctx, _docStream, cbCount); }
     fz_catch(ctx) {
         res = nullptr;
         if (FileName()) {

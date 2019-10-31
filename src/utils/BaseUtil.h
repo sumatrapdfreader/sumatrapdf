@@ -129,6 +129,7 @@
 //#include <locale>
 
 typedef uint8_t u8;
+typedef int64_t i64;
 
 // TODO: don't use INT_MAX and UINT_MAX
 #ifndef INT_MAX
