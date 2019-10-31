@@ -385,7 +385,7 @@ workspace "SumatraPDF"
     language "C++"
     cppdialect "C++17"
     -- QITABENT in shlwapi.h has incorrect definition and causes 4838
-    disablewarnings { "4838" }
+    disablewarnings { "4100", "4838" }
     includedirs { "src", "ext/zlib", "ext/lzma/C" }
     includedirs { "ext/libwebp/src", "ext/unarr", "mupdf/include" }
     utils_files()
