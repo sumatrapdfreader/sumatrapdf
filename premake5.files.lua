@@ -162,12 +162,12 @@ function libwebp_files()
   files("ext/libwebp/src/dec/*.c")
 
   files_in_dir("ext/libwebp/src/dsp", {
-    "alpha_processing.c", 
+    "alpha_processing.c",
     "alpha_processing_sse2.c",
     "alpha_processing_sse41.c",
-    "cost.c", 
-    "cpu.c", 
-    "dec.c", 
+    "cost.c",
+    "cpu.c",
+    "dec.c",
     "dec_clip_tables.c",
     "dec_sse2.c",
     "dec_sse41.c",
@@ -235,6 +235,52 @@ function lcms2_files()
     "*.c", "*.h"
   })
   files{ "ext/lcms/include.*.h" }
+end
+
+function harfbuzz_files()
+  files_in_dir("ext/harfbuzz/src", {
+    "hb-aat-layout.cc",
+    "hb-blob.cc",
+    "hb-buffer.cc",
+    "hb-buffer-serialize.cc",
+    "hb-common.cc",
+    "hb-face.cc",
+    "hb-fallback-shape.cc",
+    "hb-font.cc",
+    "hb-ft.cc",
+    "hb-ot-color.cc",
+    "hb-ot-face.cc",
+    "hb-ot-font.cc",
+    "hb-ot-layout.cc",
+    "hb-ot-map.cc",
+    "hb-ot-math.cc",
+    "hb-ot-shape.cc",
+    "hb-ot-shape-complex-arabic.cc",
+    "hb-ot-shape-complex-default.cc",
+    "hb-ot-shape-complex-hangul.cc",
+    "hb-ot-shape-complex-hebrew.cc",
+    "hb-ot-shape-complex-indic-table.cc",
+    "hb-ot-shape-complex-indic.cc",
+    "hb-ot-shape-complex-khmer.cc",
+    "hb-ot-shape-complex-myanmar.cc",
+    "hb-ot-shape-complex-thai.cc",
+    "hb-ot-shape-complex-tibetan.cc",
+    "hb-ot-shape-complex-use-table.cc",
+    "hb-ot-shape-complex-use.cc",
+    "hb-ot-shape-fallback.cc",
+    "hb-ot-shape-normalize.cc",
+    "hb-ot-tag.cc",
+    "hb-ot-var.cc",
+    "hb-set.cc",
+    "hb-shape.cc",
+    "hb-shape-plan.cc",
+    "hb-shaper.cc",
+    "hb-static.cc",
+    "hb-unicode.cc",
+    "hb-warning.cc"
+  })
+
+  files { "ext/harfbuzz/src/hb-ucdn.cc" }
 end
 
 function freetype_files()

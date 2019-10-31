@@ -248,9 +248,25 @@ workspace "SumatraPDF"
   project "lcms2"
     kind "StaticLib"
     language "C"
-    defines { }
     includedirs { "ext/lcms2/include" }
     lcms2_files()
+
+  project "harfbuzz"
+    kind "StaticLib"
+    language "C"
+    includedirs { "ext/harfbuzz/src/hb-ucdn", "ext/freetype2/config", "ext/freetype2/include" }
+    defines {
+      "HAVE_FALLBACK=1",
+      "HAVE_OT",
+      "HAVE_UCDN",
+      "HB_NO_MT",
+      "hb_malloc_impl=fz_hb_malloc",
+      "hb_calloc_impl=fz_hb_calloc",
+      "hb_realloc_impl=fz_hb_realloc",
+      "hb_free_impl=fz_hb_free"
+    }
+    disablewarnings { "4100", "4244", "4245", "4267", "4456", "4701", "4702", "4706" }
+    harfbuzz_files()
 
   project "chm"
     kind "StaticLib"
@@ -309,7 +325,7 @@ workspace "SumatraPDF"
       }
     filter {}
     mupdf_files()
-    links { "zlib", "freetype", "libjpeg-turbo", "jbig2dec", "openjpeg" }
+    links { "zlib", "freetype", "libjpeg-turbo", "jbig2dec", "openjpeg", "lcms2", "harfbuzz" }
     dependson "buildcmap"
 
 
@@ -324,7 +340,7 @@ workspace "SumatraPDF"
     -- TODO: is thre a better way to do it?
     -- TODO: only for windows
     linkoptions { "/DEF:..\\src\\libmupdf.def" }
-    links { "mupdf", "libdjvu", "unarrlib", "libwebp", "lcms2" }
+    links { "mupdf", "libdjvu", "unarrlib", "libwebp" }
     links {
       "advapi32", "kernel32", "user32", "gdi32", "comdlg32",
       "shell32", "windowscodecs", "comctl32", "msimg32",

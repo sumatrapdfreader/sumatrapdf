@@ -598,6 +598,12 @@
     <ProjectReference Include="openjpeg.vcxproj">
       <Project>{FDC4548D-E991-AF98-12AB-9D40FED6E426}</Project>
     </ProjectReference>
+    <ProjectReference Include="lcms2.vcxproj">
+      <Project>{C67ED90F-3293-01C1-FB14-A52067E8FDF1}</Project>
+    </ProjectReference>
+    <ProjectReference Include="harfbuzz.vcxproj">
+      <Project>{B1649CB2-9D31-F7BD-C64A-E565B2762C4C}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
