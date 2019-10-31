@@ -284,28 +284,37 @@ function harfbuzz_files()
 end
 
 function freetype_files()
-  files_in_dir("ext/freetype2/src/base", {
-    "ftbase.c", "ftbbox.c", "ftbitmap.c", "ftgasp.c", "ftglyph.c", "ftinit.c",
-    "ftstroke.c", "ftsynth.c", "ftsystem.c", "fttype1.c", "ftxf86.c", "ftotval.c",
+  files_in_dir("ext/freetype/src/base", {
+    "ftbase.c",
+    "ftbbox.c",
+    "ftbitmap.c",
+    "ftgasp.c",
+    "ftglyph.c",
+    "ftinit.c",
+    "ftstroke.c",
+    "ftsynth.c",
+    "ftsystem.c",
+    "fttype1.c",
+
+    -- TODO: temporary
+    "ftotval.c"
   })
 
-  files_in_dir("ext/freetype2/src", {
+  files_in_dir("ext/freetype/src", {
     "cff/cff.c",
-    "cid/type1cid.c",
     "psaux/psaux.c",
+    "pshinter/pshinter.c",
     "psnames/psnames.c",
-    "smooth/smooth.c",
+    "raster/raster.c",
     "sfnt/sfnt.c",
+    "smooth/smooth.c",
     "truetype/truetype.c",
     "type1/type1.c",
-    "raster/raster.c",
-    "otvalid/otvalid.c",
-    "pshinter/pshinter.c",
-    "gzip/ftgzip.c",
+    "cid/type1cid.c",
   })
 
   filter "configurations:Debug*"
-    files { "ext/freetype2/src/base/ftdebug.c" }
+    files { "ext/freetype/src/base/ftdebug.c" }
   filter {}
 
 end
