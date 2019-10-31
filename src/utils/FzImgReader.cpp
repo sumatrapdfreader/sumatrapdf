@@ -29,7 +29,7 @@ static Bitmap* ImageFromJpegData(fz_context* ctx, const char* data, int len) {
     fz_try(ctx) {
         fz_load_jpeg_info(ctx, (unsigned char*)data, len, &w, &h, &xres, &yres, &cs);
         stm = fz_open_memory(ctx, (unsigned char*)data, len);
-        stm = fz_open_dctd(stm, -1, 0, nullptr);
+        stm = fz_open_dctd(ctx, stm, -1, 0, nullptr);
     }
     fz_catch(ctx) {
         fz_drop_colorspace(ctx, cs);
@@ -42,7 +42,7 @@ static Bitmap* ImageFromJpegData(fz_context* ctx, const char* data, int len) {
                                 ? PixelFormat24bppRGB
                                 : fz_device_cmyk(ctx) == cs ? PixelFormat32bppCMYK : PixelFormatUndefined;
     if (PixelFormatUndefined == fmt || w <= 0 || h <= 0 || !cs) {
-        fz_close(stm);
+        fz_drop_stream(ctx, stm);
         fz_drop_colorspace(ctx, cs);
         return nullptr;
     }
@@ -54,7 +54,7 @@ static Bitmap* ImageFromJpegData(fz_context* ctx, const char* data, int len) {
     BitmapData bmpData;
     Status ok = bmp.LockBits(&bmpRect, ImageLockModeWrite, fmt, &bmpData);
     if (ok != Ok) {
-        fz_close(stm);
+        fz_drop_stream(ctx, stm);
         fz_drop_colorspace(ctx, cs);
         return nullptr;
     }
@@ -66,7 +66,7 @@ static Bitmap* ImageFromJpegData(fz_context* ctx, const char* data, int len) {
         for (int y = 0; y < h; y++) {
             unsigned char* line = (unsigned char*)bmpData.Scan0 + y * bmpData.Stride;
             for (int x = 0; x < w; x++) {
-                int read = fz_read(stm, line, cs->n);
+                int read = fz_read(ctx, stm, line, cs->n);
                 if (read != cs->n)
                     fz_throw(ctx, FZ_ERROR_GENERIC, "insufficient data for image");
                 if (3 == cs->n) { // RGB -> BGR
@@ -85,7 +85,7 @@ static Bitmap* ImageFromJpegData(fz_context* ctx, const char* data, int len) {
     }
     fz_always(ctx) {
         bmp.UnlockBits(&bmpData);
-        fz_close(stm);
+        fz_drop_stream(ctx, stm);
         fz_drop_colorspace(ctx, cs);
     }
     fz_catch(ctx) { return nullptr; }
@@ -101,7 +101,7 @@ static Bitmap* ImageFromJp2Data(fz_context* ctx, const char* data, int len) {
     fz_var(pix);
     fz_var(pix_argb);
 
-    fz_try(ctx) { pix = fz_load_jpx(ctx, (unsigned char*)data, len, nullptr, 0); }
+    fz_try(ctx) { pix = fz_load_jpx(ctx, (unsigned char*)data, len, nullptr); }
     fz_catch(ctx) { return nullptr; }
 
     int w = pix->w, h = pix->h;
@@ -120,8 +120,20 @@ static Bitmap* ImageFromJp2Data(fz_context* ctx, const char* data, int len) {
     fz_var(bmpRect);
 
     fz_try(ctx) {
-        pix_argb = fz_new_pixmap_with_data(ctx, fz_device_bgr(ctx), w, h, (unsigned char*)bmpData.Scan0);
-        fz_convert_pixmap(ctx, pix_argb, pix);
+        unsigned char* data = (unsigned char*)bmpData.Scan0;
+        // TODO(port): figure out seps, alpha and stride
+        CrashMe();
+        fz_separations* seps = nullptr;
+        int alpha = 0;
+        int stride = w;
+        fz_colorspace* cs = fz_device_bgr(ctx);
+        fz_colorspace* cs_des = fz_device_bgr(ctx);
+        fz_colorspace* prf = nullptr;
+        fz_default_colorspaces* default_cs = nullptr;
+        fz_color_params colparms = fz_default_color_params;
+        pix_argb = fz_new_pixmap_with_data(ctx, cs, w, h, seps, alpha, stride, data);
+        // TODO(port): should this be fz_convert_pixmap_samples
+        fz_convert_pixmap(ctx, pix_argb, cs, nullptr, nullptr, colparms, 1);
     }
     fz_always(ctx) {
         bmp.UnlockBits(&bmpData);
@@ -148,7 +160,7 @@ Bitmap* ImageFromData(const char* data, size_t len) {
     else if (memeq(data, "\0\0\0\x0CjP  \x0D\x0A\x87\x0A", 12))
         result = ImageFromJp2Data(ctx, data, (int)len);
 
-    fz_free_context(ctx);
+    fz_drop_context(ctx);
 
     return result;
 }

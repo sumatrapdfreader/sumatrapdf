@@ -292,8 +292,10 @@ workspace "SumatraPDF"
     kind "StaticLib"
     language "C++"
     cppdialect "C++17"
-    disablewarnings { "4018", "4057", "4189", "4244", "4267", "4295", "4819" }
-    disablewarnings { "4701", "4706", "4838"  }
+    disablewarnings { 
+      "4018", "4057", "4100", "4189", "4244", "4267", "4295", "4457", 
+      "4819", "4701", "4706", "4838" 
+    }
     includedirs { "src" }
     includedirs { "ext/synctex", "ext/libdjvu", "ext/CHMLib/src", "ext/zlib", "mupdf/include" }
     engines_files()
@@ -385,7 +387,7 @@ workspace "SumatraPDF"
     language "C++"
     cppdialect "C++17"
     -- QITABENT in shlwapi.h has incorrect definition and causes 4838
-    disablewarnings { "4100", "4838" }
+    disablewarnings { "4100", "4267", "4457", "4838" }
     includedirs { "src", "ext/zlib", "ext/lzma/C" }
     includedirs { "ext/libwebp/src", "ext/unarr", "mupdf/include" }
     utils_files()
@@ -497,6 +499,7 @@ workspace "SumatraPDF"
     language "C++"
     cppdialect "C++17"
     includedirs { "src", "mupdf/include" }
+    disablewarnings { "4100", "4267", "4457" }
     engine_dump_files()
     links { "engines", "utils", "mupdf", "unarrlib", "libwebp", "libdjvu" }
     links {
