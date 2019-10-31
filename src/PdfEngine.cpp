@@ -1375,7 +1375,7 @@ PdfEngineImpl::~PdfEngineImpl() {
 
     pdf_close_document(_doc);
     _doc = nullptr;
-    fz_free_context(ctx);
+    fz_drop_context(ctx);
     ctx = nullptr;
 
     free(_mediaboxes);
@@ -1528,7 +1528,7 @@ bool PdfEngineImpl::LoadFromStream(fz_stream* stm, PasswordUI* pwdUI) {
         return false;
 
     fz_try(ctx) { _doc = pdf_open_document_with_stream(ctx, stm); }
-    fz_always(ctx) { fz_close(stm); }
+    fz_always(ctx) { fz_drop_stream(ctx, stm); }
     fz_catch(ctx) { return false; }
 
     isProtected = pdf_needs_password(_doc);
@@ -3424,9 +3424,9 @@ XpsEngineImpl::~XpsEngineImpl() {
 
     xps_close_document(_doc);
     _doc = nullptr;
-    fz_close(_docStream);
+    fz_drop_stream(ctx, _docStream);
     _docStream = nullptr;
-    fz_free_context(ctx);
+    fz_drop_context(ctx);
     ctx = nullptr;
 
     free(_mediaboxes);

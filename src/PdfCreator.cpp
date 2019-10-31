@@ -150,7 +150,7 @@ PdfCreator::PdfCreator() {
 
 PdfCreator::~PdfCreator() {
     pdf_close_document(doc);
-    fz_free_context(ctx);
+    fz_drop_context(ctx);
 }
 
 bool PdfCreator::AddImagePage(fz_image* image, float imgDpi) {
