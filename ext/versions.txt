@@ -43,7 +43,12 @@ lcms2           git        2019-01-02
   http://git.ghostscript.com/?p=thirdparty-lcms2.git;a=commit;h=05db680de2d7178be21450bc0cc909460c7d4aeb
 
 harfbuzz        1.9.0      2018-09-10
+  https://harfbuzz.org
   http://git.ghostscript.com/?p=thirdparty-harfbuzz.git;a=tag;h=adfa51d2797c1500de54fa2651bb64a2e1b1593c
+
+mujs            1.0.5      2019-06-12
+  http://mujs.com/
+  http://git.ghostscript.com/?p=mujs.git;a=commit;h=14dc9355bd71818cf01c1c690c1c91a0978ea9b8
 
 ../mupdf        trunk
   http://git.ghostscript.com/?p=mupdf.git

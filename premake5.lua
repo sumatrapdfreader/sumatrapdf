@@ -11,6 +11,7 @@ Note about nasm: when providing "-I foo/bar/" flag to nasm.exe, it must be
 Reference for warnings:
  4018 - signed/unsigned mismatch
  4057 - function X differs in indirection to slightly different base types
+ 4090 - different 'const' qualifiers
  4100 - unreferenced formal parameter
  4127 - conditional expression is constant
  4131 - uses old-style declarator
@@ -272,6 +273,13 @@ workspace "SumatraPDF"
     disablewarnings { "4100", "4244", "4245", "4267", "4456", "4701", "4702", "4706" }
     harfbuzz_files()
 
+  project "mujs"
+    kind "StaticLib"
+    language "C"
+    includedirs { "ext/mujs" }
+    disablewarnings { "4090", "4100", "4706" }
+    files { "ext/mujs/one.c", "ext/mujs/mujs.h" }
+
   project "chm"
     kind "StaticLib"
     language "C"
@@ -307,7 +315,9 @@ workspace "SumatraPDF"
     includedirs { "mupdf/scripts/openjpeg" }
 
     includedirs {
-      "mupdf/include", "mupdf/generated", 
+      "mupdf/include", 
+      "mupdf/generated",
+      "ext/mujs",
       "ext/zlib",
       "ext/freetype-config", "ext/freetype/include",
       "ext/jbig2dec", 
