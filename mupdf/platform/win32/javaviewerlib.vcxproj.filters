@@ -1,0 +1,133 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="com/artifex/mupdf/fitz">
+      <UniqueIdentifier>{f3ef400d-894d-4151-8a04-9363651bd56d}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Annotation.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Buffer.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\BufferInputStream.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\BufferOutputStream.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\ColorParams.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\ColorSpace.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Context.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Cookie.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Device.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\DisplayList.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\DisplayListDevice.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Document.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\DocumentWriter.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\DrawDevice.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Font.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Image.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Link.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Matrix.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\NativeDevice.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Outline.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Page.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Path.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\PathWalker.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\PDFDocument.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\PDFGraftMap.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\PDFObject.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Pixmap.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Point.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Rect.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\RectI.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Separation.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Separations.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Shade.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\StrokeState.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\StructuredText.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\StructuredTextWalker.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\Text.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\TextWalker.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+    <None Include="..\java\src\com\artifex\mupdf\fitz\TryLaterException.java">
+      <Filter>com/artifex/mupdf/fitz</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\java\mupdf_native.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\java\mupdf_native.h" />
+  </ItemGroup>
+</Project>

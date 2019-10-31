@@ -1,12 +1,22 @@
 #include "mupdf/fitz.h"
+#include "fitz-imp.h"
 
-fz_halftone *
+#include <assert.h>
+
+struct fz_halftone_s
+{
+	int refs;
+	int n;
+	fz_pixmap *comp[1];
+};
+
+static fz_halftone *
 fz_new_halftone(fz_context *ctx, int comps)
 {
 	fz_halftone *ht;
 	int i;
 
-	ht = fz_malloc(ctx, sizeof(fz_halftone) + (comps-1)*sizeof(fz_pixmap *));
+	ht = Memento_label(fz_malloc(ctx, sizeof(fz_halftone) + (comps-1)*sizeof(fz_pixmap *)), "fz_halftone");
 	ht->refs = 1;
 	ht->n = comps;
 	for (i = 0; i < comps; i++)
@@ -18,27 +28,25 @@ fz_new_halftone(fz_context *ctx, int comps)
 fz_halftone *
 fz_keep_halftone(fz_context *ctx, fz_halftone *ht)
 {
-	if (ht)
-		ht->refs++;
-	return ht;
+	return fz_keep_imp(ctx, ht, &ht->refs);
 }
 
 void
 fz_drop_halftone(fz_context *ctx, fz_halftone *ht)
 {
 	int i;
-
-	if (!ht || --ht->refs != 0)
-		return;
-	for (i = 0; i < ht->n; i++)
-		fz_drop_pixmap(ctx, ht->comp[i]);
-	fz_free(ctx, ht);
+	if (fz_drop_imp(ctx, ht, &ht->refs))
+	{
+		for (i = 0; i < ht->n; i++)
+			fz_drop_pixmap(ctx, ht->comp[i]);
+		fz_free(ctx, ht);
+	}
 }
 
 /* Default mono halftone, lifted from Ghostscript. */
 /* The 0x00 entry has been changed to 0x01 to avoid problems with white
  * pixels appearing in the output; as we use < 0 should not appear in the
- * array. I think that gs scales this slighly and hence never actually uses
+ * array. I think that gs scales this slightly and hence never actually uses
  * the raw values here. */
 static unsigned char mono_ht[] =
 {
@@ -60,21 +68,38 @@ static unsigned char mono_ht[] =
 	0xF2, 0x72, 0xD2, 0x52, 0xFA, 0x7A, 0xDA, 0x5A, 0xF0, 0x70, 0xD0, 0x50, 0xF8, 0x78, 0xD8, 0x58
 };
 
+/*
+	Create a 'default' halftone structure
+	for the given number of components.
+
+	num_comps: The number of components to use.
+
+	Returns a simple default halftone. The default halftone uses
+	the same halftone tile for each plane, which may not be ideal
+	for all purposes.
+*/
 fz_halftone *fz_default_halftone(fz_context *ctx, int num_comps)
 {
 	fz_halftone *ht = fz_new_halftone(ctx, num_comps);
-	assert(num_comps == 1); /* Only support 1 component for now */
-	ht->comp[0] = fz_new_pixmap_with_data(ctx, NULL, 16, 16, mono_ht);
+
+	fz_try(ctx)
+	{
+		int i;
+		for (i = 0; i < num_comps; i++)
+			ht->comp[i] = fz_new_pixmap_with_data(ctx, NULL, 16, 16, NULL, 1, 16, mono_ht);
+	}
+	fz_catch(ctx)
+	{
+		fz_drop_halftone(ctx, ht);
+		fz_rethrow(ctx);
+	}
+
 	return ht;
 }
 
 /* Finally, code to actually perform halftoning. */
 static void make_ht_line(unsigned char *buf, fz_halftone *ht, int x, int y, int w)
 {
-	/* FIXME: There is a potential optimisation here; in the case where
-	 * the LCM of the halftone tile widths is smaller than w, we could
-	 * form just one 'LCM' run, then copy it repeatedly.
-	 */
 	int k, n;
 	n = ht->n;
 	for (k = 0; k < n; k++)
@@ -137,66 +162,477 @@ static void make_ht_line(unsigned char *buf, fz_halftone *ht, int x, int y, int 
 }
 
 /* Inner mono thresholding code */
-static void do_threshold_1(unsigned char *ht_line, unsigned char *pixmap, unsigned char *out, int w)
+typedef void (threshold_fn)(const unsigned char *ht_line, const unsigned char *pixmap, unsigned char *out, int w, int ht_len);
+
+#ifdef ARCH_ARM
+static void
+do_threshold_1(const unsigned char * FZ_RESTRICT ht_line, const unsigned char * FZ_RESTRICT pixmap, unsigned char * FZ_RESTRICT out, int w, int ht_len)
+__attribute__((naked));
+
+static void
+do_threshold_1(const unsigned char * FZ_RESTRICT ht_line, const unsigned char * FZ_RESTRICT pixmap, unsigned char * FZ_RESTRICT out, int w, int ht_len)
 {
-	int bit = 0x80;
-	int h = 0;
+	asm volatile(
+	ENTER_ARM
+	// Store one more reg that required to keep double stack alignment
+	".syntax unified\n"
+	"stmfd	r13!,{r4-r7,r9,r14}				\n"
+	"@ r0 = ht_line						\n"
+	"@ r1 = pixmap						\n"
+	"@ r2 = out						\n"
+	"@ r3 = w						\n"
+	"@ <> = ht_len						\n"
+	"ldr	r9, [r13,#6*4]		@ r9 = ht_len		\n"
+	"subs	r3, r3, #7		@ r3 = w -= 7		\n"
+	"ble	2f			@ while (w > 0) {	\n"
+	"mov	r12,r9			@ r12= l = ht_len	\n"
+	"b	1f						\n"
+	"9:							\n"
+	"strb	r14,[r2], #1		@ *out++ = 0		\n"
+	"subs	r12,r12,#8		@ r12 = l -= 8		\n"
+	"moveq	r12,r9			@ if(l==0) l = ht_len	\n"
+	"subeq	r0, r0, r9		@          ht_line -= l	\n"
+	"subs	r3, r3, #8		@ w -= 8		\n"
+	"ble	2f			@ }			\n"
+	"1:							\n"
+	"ldr	r14,[r1], #4		@ r14= pixmap[0..3]	\n"
+	"ldr	r5, [r1], #4		@ r5 = pixmap[4..7]	\n"
+	"ldrb	r4, [r0], #8		@ r0 = ht_line += 8	\n"
+	"adds   r14,r14,#1		@ set eq iff r14=-1	\n"
+	"addseq	r5, r5, #1		@ set eq iff r14=r5=-1	\n"
+	"beq	9b			@	white		\n"
+	"ldrb	r5, [r1, #-8]		@ r5 = pixmap[0]	\n"
+	"ldrb	r6, [r0, #-7]		@ r6 = ht_line[1]	\n"
+	"ldrb	r7, [r1, #-7]		@ r7 = pixmap[1]	\n"
+	"mov	r14,#0			@ r14= h = 0		\n"
+	"cmp	r5, r4			@ if (r5 < r4)		\n"
+	"orrlt	r14,r14,#0x80		@	h |= 0x80	\n"
+	"ldrb	r4, [r0, #-6]		@ r4 = ht_line[2]	\n"
+	"ldrb	r5, [r1, #-6]		@ r5 = pixmap[2]	\n"
+	"cmp	r7, r6			@ if (r7 < r6)		\n"
+	"orrlt	r14,r14,#0x40		@	h |= 0x40	\n"
+	"ldrb	r6, [r0, #-5]		@ r6 = ht_line[3]	\n"
+	"ldrb	r7, [r1, #-5]		@ r7 = pixmap[3]	\n"
+	"cmp	r5, r4			@ if (r5 < r4)		\n"
+	"orrlt	r14,r14,#0x20		@	h |= 0x20	\n"
+	"ldrb	r4, [r0, #-4]		@ r4 = ht_line[4]	\n"
+	"ldrb	r5, [r1, #-4]		@ r5 = pixmap[4]	\n"
+	"cmp	r7, r6			@ if (r7 < r6)		\n"
+	"orrlt	r14,r14,#0x10		@	h |= 0x10	\n"
+	"ldrb	r6, [r0, #-3]		@ r6 = ht_line[5]	\n"
+	"ldrb	r7, [r1, #-3]		@ r7 = pixmap[5]	\n"
+	"cmp	r5, r4			@ if (r5 < r4)		\n"
+	"orrlt	r14,r14,#0x08		@	h |= 0x08	\n"
+	"ldrb	r4, [r0, #-2]		@ r4 = ht_line[6]	\n"
+	"ldrb	r5, [r1, #-2]		@ r5 = pixmap[6]	\n"
+	"cmp	r7, r6			@ if (r7 < r6)		\n"
+	"orrlt	r14,r14,#0x04		@	h |= 0x04	\n"
+	"ldrb	r6, [r0, #-1]		@ r6 = ht_line[7]	\n"
+	"ldrb	r7, [r1, #-1]		@ r7 = pixmap[7]	\n"
+	"cmp	r5, r4			@ if (r5 < r4)		\n"
+	"orrlt	r14,r14,#0x02		@	h |= 0x02	\n"
+	"cmp	r7, r6			@ if (r7 < r6)		\n"
+	"orrlt	r14,r14,#0x01		@	h |= 0x01	\n"
+	"subs	r12,r12,#8		@ r12 = l -= 8		\n"
+	"strb	r14,[r2], #1		@ *out++ = h		\n"
+	"moveq	r12,r9			@ if(l==0) l = ht_len	\n"
+	"subeq	r0, r0, r9		@          ht_line -= l	\n"
+	"subs	r3, r3, #8		@ w -= 8		\n"
+	"bgt	1b			@ }			\n"
+	"2:							\n"
+	"adds	r3, r3, #7		@ w += 7		\n"
+	"ble	4f			@ if (w >= 0) {		\n"
+	"ldrb	r4, [r0], #1		@ r4 = ht_line[0]	\n"
+	"ldrb	r5, [r1], #1		@ r5 = pixmap[0]	\n"
+	"mov	r14, #0			@ r14= h = 0		\n"
+	"cmp	r5, r4			@ if (r5 < r4)		\n"
+	"orrlt	r14,r14,#0x80		@	h |= 0x80	\n"
+	"cmp	r3, #1			@			\n"
+	"ldrbgt	r4, [r0], #1		@ r6 = ht_line[1]	\n"
+	"ldrbgt	r5, [r1], #1		@ r7 = pixmap[1]	\n"
+	"ble	3f			@			\n"
+	"cmp	r5, r4			@ if (r5 < r4)		\n"
+	"orrlt	r14,r14,#0x40		@	h |= 0x40	\n"
+	"cmp	r3, #2			@			\n"
+	"ldrbgt	r4, [r0], #1		@ r6 = ht_line[2]	\n"
+	"ldrbgt	r5, [r1], #1		@ r7 = pixmap[2]	\n"
+	"ble	3f			@			\n"
+	"cmp	r5, r4			@ if (r5 < r4)		\n"
+	"orrlt	r14,r14,#0x20		@	h |= 0x20	\n"
+	"cmp	r3, #3			@			\n"
+	"ldrbgt	r4, [r0], #1		@ r6 = ht_line[3]	\n"
+	"ldrbgt	r5, [r1], #1		@ r7 = pixmap[3]	\n"
+	"ble	3f			@			\n"
+	"cmp	r5, r4			@ if (r5 < r4)		\n"
+	"orrlt	r14,r14,#0x10		@	h |= 0x10	\n"
+	"cmp	r3, #4			@			\n"
+	"ldrbgt	r4, [r0], #1		@ r6 = ht_line[4]	\n"
+	"ldrbgt	r5, [r1], #1		@ r7 = pixmap[4]	\n"
+	"ble	3f			@			\n"
+	"cmp	r5, r4			@ if (r5 < r4)		\n"
+	"orrlt	r14,r14,#0x08		@	h |= 0x08	\n"
+	"cmp	r3, #5			@			\n"
+	"ldrbgt	r4, [r0], #1		@ r6 = ht_line[5]	\n"
+	"ldrbgt	r5, [r1], #1		@ r7 = pixmap[5]	\n"
+	"ble	3f			@			\n"
+	"cmp	r5, r4			@ if (r5 < r4)		\n"
+	"orrlt	r14,r14,#0x04		@	h |= 0x04	\n"
+	"cmp	r3, #6			@			\n"
+	"ldrbgt	r4, [r0], #1		@ r6 = ht_line[6]	\n"
+	"ldrbgt	r5, [r1], #1		@ r7 = pixmap[6]	\n"
+	"ble	3f			@			\n"
+	"cmp	r5, r4			@ if (r5 < r4)		\n"
+	"orrlt	r14,r14,#0x02		@	h |= 0x02	\n"
+	"3:							\n"
+	"strb	r14,[r2]		@ *out = h		\n"
+	"4:							\n"
+	"ldmfd	r13!,{r4-r7,r9,PC}	@ pop, return to thumb	\n"
+	ENTER_THUMB
+	);
+}
+#else
+static void do_threshold_1(const unsigned char * FZ_RESTRICT ht_line, const unsigned char * FZ_RESTRICT pixmap, unsigned char * FZ_RESTRICT out, int w, int ht_len)
+{
+	int h;
+	int l = ht_len;
+
+	w -= 7;
+	while (w > 0)
+	{
+		h = 0;
+		if (pixmap[0] < ht_line[0])
+			h |= 0x80;
+		if (pixmap[1] < ht_line[1])
+			h |= 0x40;
+		if (pixmap[2] < ht_line[2])
+			h |= 0x20;
+		if (pixmap[3] < ht_line[3])
+			h |= 0x10;
+		if (pixmap[4] < ht_line[4])
+			h |= 0x08;
+		if (pixmap[5] < ht_line[5])
+			h |= 0x04;
+		if (pixmap[6] < ht_line[6])
+			h |= 0x02;
+		if (pixmap[7] < ht_line[7])
+			h |= 0x01;
+		pixmap += 8;
+		ht_line += 8;
+		l -= 8;
+		if (l == 0)
+		{
+			l = ht_len;
+			ht_line -= ht_len;
+		}
+		*out++ = h;
+		w -= 8;
+	}
+	if (w > -7)
+	{
+		h = 0;
+		if (pixmap[0] < ht_line[0])
+			h |= 0x80;
+		if (w > -6 && pixmap[1] < ht_line[1])
+			h |= 0x40;
+		if (w > -5 && pixmap[2] < ht_line[2])
+			h |= 0x20;
+		if (w >	-4 && pixmap[3] < ht_line[3])
+			h |= 0x10;
+		if (w > -3 && pixmap[4] < ht_line[4])
+			h |= 0x08;
+		if (w > -2 && pixmap[5] < ht_line[5])
+			h |= 0x04;
+		if (w > -1 && pixmap[6] < ht_line[6])
+			h |= 0x02;
+		*out++ = h;
+	}
+}
+#endif
+
+/*
+	Note that the tests in do_threshold_4 are inverted compared to those
+	in do_threshold_1. This is to allow for the fact that the CMYK
+	contone renderings have white = 0, whereas rgb, and greyscale have
+	white = 0xFF. Reversing these tests enables us to maintain that
+	BlackIs1 in bitmaps.
+*/
+#ifdef ARCH_ARM
+static void
+do_threshold_4(const unsigned char * FZ_RESTRICT ht_line, const unsigned char * FZ_RESTRICT pixmap, unsigned char * FZ_RESTRICT out, int w, int ht_len)
+__attribute__((naked));
+
+static void
+do_threshold_4(const unsigned char * FZ_RESTRICT ht_line, const unsigned char * FZ_RESTRICT pixmap, unsigned char * FZ_RESTRICT out, int w, int ht_len)
+{
+	asm volatile(
+	ENTER_ARM
+	// Store one more reg that required to keep double stack alignment
+	"stmfd	r13!,{r4-r7,r9,r14}				\n"
+	"@ r0 = ht_line						\n"
+	"@ r1 = pixmap						\n"
+	"@ r2 = out						\n"
+	"@ r3 = w						\n"
+	"@ <> = ht_len						\n"
+	"ldr	r9, [r13,#6*4]		@ r9 = ht_len		\n"
+	"subs	r3, r3, #1		@ r3 = w -= 1		\n"
+	"ble	2f			@ while (w > 0) {	\n"
+	"mov	r12,r9			@ r12= l = ht_len	\n"
+	"b	1f			@			\n"
+	"9:				@			\n"
+	"strb	r14,[r2], #1		@ *out++ = h		\n"
+	"subs	r12,r12,#2		@ r12 = l -= 2		\n"
+	"moveq	r12,r9			@ if(l==0) l = ht_len	\n"
+	"subeq	r0, r0, r9, LSL #2	@          ht_line -= l	\n"
+	"subs	r3, r3, #2		@ w -= 2		\n"
+	"beq	2f			@ }			\n"
+	"blt	3f			@			\n"
+	"1:							\n"
+	"ldr	r5, [r1], #4		@ r5 = pixmap[0..3]	\n"
+	"ldr	r7, [r1], #4		@ r7 = pixmap[4..7]	\n"
+	"add	r0, r0, #8		@ r0 = ht_line += 8	\n"
+	"mov	r14,#0			@ r14= h = 0		\n"
+	"orrs	r5, r5, r7		@ if (r5 | r7 == 0)	\n"
+	"beq	9b			@	white		\n"
+	"ldrb	r4, [r0, #-8]		@ r4 = ht_line[0]	\n"
+	"ldrb	r5, [r1, #-8]		@ r5 = pixmap[0]	\n"
+	"ldrb	r6, [r0, #-7]		@ r6 = ht_line[1]	\n"
+	"ldrb	r7, [r1, #-7]		@ r7 = pixmap[1]	\n"
+	"cmp	r4, r5			@ if (r4 < r5)		\n"
+	"orrle	r14,r14,#0x80		@	h |= 0x80	\n"
+	"ldrb	r4, [r0, #-6]		@ r4 = ht_line[2]	\n"
+	"ldrb	r5, [r1, #-6]		@ r5 = pixmap[2]	\n"
+	"cmp	r6, r7			@ if (r6 < r7)		\n"
+	"orrle	r14,r14,#0x40		@	h |= 0x40	\n"
+	"ldrb	r6, [r0, #-5]		@ r6 = ht_line[3]	\n"
+	"ldrb	r7, [r1, #-5]		@ r7 = pixmap[3]	\n"
+	"cmp	r4, r5			@ if (r4 < r5)		\n"
+	"orrle	r14,r14,#0x20		@	h |= 0x20	\n"
+	"ldrb	r4, [r0, #-4]		@ r4 = ht_line[4]	\n"
+	"ldrb	r5, [r1, #-4]		@ r5 = pixmap[4]	\n"
+	"cmp	r6, r7			@ if (r6 < r7)		\n"
+	"orrle	r14,r14,#0x10		@	h |= 0x10	\n"
+	"ldrb	r6, [r0, #-3]		@ r6 = ht_line[5]	\n"
+	"ldrb	r7, [r1, #-3]		@ r7 = pixmap[5]	\n"
+	"cmp	r4, r5			@ if (r4 < r5)		\n"
+	"orrle	r14,r14,#0x08		@	h |= 0x08	\n"
+	"ldrb	r4, [r0, #-2]		@ r4 = ht_line[6]	\n"
+	"ldrb	r5, [r1, #-2]		@ r5 = pixmap[6]	\n"
+	"cmp	r6, r7			@ if (r6 < r7)		\n"
+	"orrle	r14,r14,#0x04		@	h |= 0x04	\n"
+	"ldrb	r6, [r0, #-1]		@ r6 = ht_line[7]	\n"
+	"ldrb	r7, [r1, #-1]		@ r7 = pixmap[7]	\n"
+	"cmp	r4, r5			@ if (r4 < r5)		\n"
+	"orrle	r14,r14,#0x02		@	h |= 0x02	\n"
+	"cmp	r6, r7			@ if (r7 < r6)		\n"
+	"orrle	r14,r14,#0x01		@	h |= 0x01	\n"
+	"subs	r12,r12,#2		@ r12 = l -= 2		\n"
+	"strb	r14,[r2], #1		@ *out++ = h		\n"
+	"moveq	r12,r9			@ if(l==0) l = ht_len	\n"
+	"subeq	r0, r0, r9, LSL #2	@          ht_line -= l	\n"
+	"subs	r3, r3, #2		@ w -= 2		\n"
+	"bgt	1b			@ }			\n"
+	"blt	3f			@			\n"
+	"2:							\n"
+	"ldrb	r4, [r0], #1		@ r4 = ht_line[0]	\n"
+	"ldrb	r5, [r1], #1		@ r5 = pixmap[0]	\n"
+	"mov	r14, #0			@ r14= h = 0		\n"
+	"ldrb	r6, [r0], #1		@ r6 = ht_line[1]	\n"
+	"ldrb	r7, [r1], #1		@ r7 = pixmap[1]	\n"
+	"cmp	r4, r5			@ if (r4 < r5)		\n"
+	"orrle	r14,r14,#0x80		@	h |= 0x80	\n"
+	"ldrb	r4, [r0], #1		@ r6 = ht_line[2]	\n"
+	"ldrb	r5, [r1], #1		@ r7 = pixmap[2]	\n"
+	"cmp	r6, r7			@ if (r6 < r7)		\n"
+	"orrle	r14,r14,#0x40		@	h |= 0x40	\n"
+	"ldrb	r6, [r0], #1		@ r6 = ht_line[1]	\n"
+	"ldrb	r7, [r1], #1		@ r7 = pixmap[3]	\n"
+	"cmp	r4, r5			@ if (r4 < r5)		\n"
+	"orrle	r14,r14,#0x20		@	h |= 0x20	\n"
+	"cmp	r6, r7			@ if (r6 < r7)		\n"
+	"orrle	r14,r14,#0x10		@	h |= 0x10	\n"
+	"strb	r14,[r2]		@ *out = h		\n"
+	"3:							\n"
+	"ldmfd	r13!,{r4-r7,r9,PC}	@ pop, return to thumb	\n"
+	ENTER_THUMB
+	);
+}
+#else
+static void do_threshold_4(const unsigned char * FZ_RESTRICT ht_line, const unsigned char * FZ_RESTRICT pixmap, unsigned char * FZ_RESTRICT out, int w, int ht_len)
+{
+	int l = ht_len;
+
+	w--;
+	while (w > 0)
+	{
+		int h = 0;
+		if (pixmap[0] >= ht_line[0])
+			h |= 0x80;
+		if (pixmap[1] >= ht_line[1])
+			h |= 0x40;
+		if (pixmap[2] >= ht_line[2])
+			h |= 0x20;
+		if (pixmap[3] >= ht_line[3])
+			h |= 0x10;
+		if (pixmap[4] >= ht_line[4])
+			h |= 0x08;
+		if (pixmap[5] >= ht_line[5])
+			h |= 0x04;
+		if (pixmap[6] >= ht_line[6])
+			h |= 0x02;
+		if (pixmap[7] >= ht_line[7])
+			h |= 0x01;
+		*out++ = h;
+		l -= 2;
+		if (l == 0)
+		{
+			l = ht_len;
+			ht_line -= ht_len<<2;
+		}
+		pixmap += 8;
+		ht_line += 8;
+		w -= 2;
+	}
+	if (w == 0)
+	{
+		int h = 0;
+		if (pixmap[0] >= ht_line[0])
+			h |= 0x80;
+		if (pixmap[1] >= ht_line[1])
+			h |= 0x40;
+		if (pixmap[2] >= ht_line[2])
+			h |= 0x20;
+		if (pixmap[3] >= ht_line[3])
+			h |= 0x10;
+		*out = h;
+	}
+}
+#endif
+
+/*
+	Make a bitmap from a pixmap and a halftone.
+
+	pix: The pixmap to generate from. Currently must be a single color
+	component with no alpha.
+
+	ht: The halftone to use. NULL implies the default halftone.
+
+	Returns the resultant bitmap. Throws exceptions in the case of
+	failure to allocate.
+*/
+fz_bitmap *fz_new_bitmap_from_pixmap(fz_context *ctx, fz_pixmap *pix, fz_halftone *ht)
+{
+	return fz_new_bitmap_from_pixmap_band(ctx, pix, ht, 0);
+}
+
+/* TAOCP, vol 2, p337 */
+static int gcd(int u, int v)
+{
+	int r;
 
 	do
 	{
-		if (*pixmap < *ht_line++)
-			h |= bit;
-		pixmap += 2; /* Skip the alpha */
-		bit >>= 1;
-		if (bit == 0)
-		{
-			*out++ = h;
-			h = 0;
-			bit = 0x80;
-		}
-
+		if (v == 0)
+			return u;
+		r = u % v;
+		u = v;
+		v = r;
 	}
-	while (--w);
-	if (bit != 0x80)
-		*out = h;
+	while (1);
 }
 
-fz_bitmap *fz_halftone_pixmap(fz_context *ctx, fz_pixmap *pix, fz_halftone *ht)
+/*
+	Make a bitmap from a pixmap and a
+	halftone, allowing for the position of the pixmap within an
+	overall banded rendering.
+
+	pix: The pixmap to generate from. Currently must be a single color
+	component with no alpha.
+
+	ht: The halftone to use. NULL implies the default halftone.
+
+	band_start: Vertical offset within the overall banded rendering
+	(in pixels)
+
+	Returns the resultant bitmap. Throws exceptions in the case of
+	failure to allocate.
+*/
+fz_bitmap *fz_new_bitmap_from_pixmap_band(fz_context *ctx, fz_pixmap *pix, fz_halftone *ht, int band_start)
 {
-	fz_bitmap *out;
-	unsigned char *ht_line, *o, *p;
-	int w, h, x, y, n, pstride, ostride;
-	fz_halftone *ht_orig = ht;
+	fz_bitmap *out = NULL;
+	unsigned char *ht_line = NULL;
+	unsigned char *o, *p;
+	int w, h, x, y, n, pstride, ostride, lcm, i;
+	fz_halftone *ht_ = NULL;
+	threshold_fn *thresh;
+
+	fz_var(ht_line);
 
 	if (!pix)
 		return NULL;
 
-	assert(pix->n == 2); /* Mono + Alpha */
+	if (pix->alpha != 0)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "pixmap may not have alpha channel to convert to bitmap");
 
-	n = pix->n-1; /* Remove alpha */
+	n = pix->n;
+
+	switch(n)
+	{
+	case 1:
+		thresh = do_threshold_1;
+		break;
+	case 4:
+		thresh = do_threshold_4;
+		break;
+	default:
+		fz_throw(ctx, FZ_ERROR_GENERIC, "pixmap must be grayscale or CMYK to convert to bitmap");
+		return NULL;
+	}
+
 	if (ht == NULL)
-	{
-		ht = fz_default_halftone(ctx, n);
-	}
-	ht_line = fz_malloc(ctx, pix->w * n);
-	out = fz_new_bitmap(ctx, pix->w, pix->h, n, pix->xres, pix->yres);
-	o = out->samples;
-	p = pix->samples;
+		ht_ = ht = fz_default_halftone(ctx, n);
 
-	h = pix->h;
-	x = pix->x;
-	y = pix->y;
-	w = pix->w;
-	ostride = out->stride;
-	pstride = pix->w * pix->n;
-	while (h--)
+	/* Find the minimum length for the halftone line. This
+	 * is the LCM of the halftone lengths and 8. (We need a
+	 * multiple of 8 for the unrolled threshold routines - if
+	 * we ever use SSE, we may need longer.) We use the fact
+	 * that LCM(a,b) = a * b / GCD(a,b) and use euclids
+	 * algorithm.
+	 */
+	lcm = 8;
+	for (i = 0; i < ht->n; i++)
 	{
-		make_ht_line(ht_line, ht, x, y++, w);
-		do_threshold_1(ht_line, p, o, w);
-		o += ostride;
-		p += pstride;
+		w = ht->comp[i]->w;
+		lcm = lcm / gcd(lcm, w) * w;
 	}
-	if (!ht_orig)
-		fz_drop_halftone(ctx, ht);
+
+	fz_try(ctx)
+	{
+		ht_line = fz_malloc(ctx, lcm * n);
+		out = fz_new_bitmap(ctx, pix->w, pix->h, n, pix->xres, pix->yres);
+		o = out->samples;
+		p = pix->samples;
+
+		h = pix->h;
+		x = pix->x;
+		y = pix->y + band_start;
+		w = pix->w;
+		ostride = out->stride;
+		pstride = pix->stride;
+		while (h--)
+		{
+			make_ht_line(ht_line, ht, x, y++, lcm);
+			thresh(ht_line, p, o, w, lcm);
+			o += ostride;
+			p += pstride;
+		}
+	}
+	fz_always(ctx)
+	{
+		fz_drop_halftone(ctx, ht_);
+		fz_free(ctx, ht_line);
+	}
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+
 	return out;
 }

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Loading...</title>
+<meta charset="utf-8">
+<style>
+html,body,table,tr,td,div{background-color:gray;margin:0;padding:0;}
+ul{margin:0;padding-left:1em;}
+#outline{background-color:silver;padding:1em;padding-left:2em;}
+#pages{margin:0em;width:100%;}
+.page>div{margin:1em auto;}
+</style>
+<script src="libmupdf.js"></script>
+<script>
+var filename = new URL(window.location.href).searchParams.get("file");
+if (!filename)
+	filename = "pdfref13.pdf";
+Module.preRun = function () {
+	FS.createPreloadedFile(".", filename, filename, true, false);
+};
+Module.postRun = function () {
+	var currentDocument = null;
+	var pageCount = 0;
+	var currentPage = 1;
+	function loadNextPage() {
+		var element = document.createElement('div');
+		element.id = 'page' + currentPage;
+		element.className = 'page';
+		element.innerHTML = mupdf.drawPageAsHTML(currentDocument, currentPage);
+		element.getElementsByTagName("div")[0].style.backgroundImage = 'url(' + mupdf.drawPage(currentDocument, currentPage, 96) + ')'
+		document.getElementById("pages").appendChild(element);
+		if (++currentPage <= pageCount)
+			setTimeout(loadNextPage, 0);
+	}
+	currentDocument = mupdf.openDocument(filename);
+	document.title = mupdf.documentTitle(currentDocument);
+	pageCount = mupdf.countPages(currentDocument);
+	loadNextPage();
+}
+</script>
+</head>
+<body>
+<div id="pages"></div>
+</body>
+</html>

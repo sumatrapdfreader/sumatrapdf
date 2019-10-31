@@ -11,6 +11,8 @@ SHA-384 and SHA-512 were also taken from Crypto++ and adapted for fitz.
 
 #include "mupdf/fitz.h"
 
+#include <string.h>
+
 static inline int isbigendian(void)
 {
 	static const int one = 1;
@@ -142,7 +144,7 @@ void fz_sha256_init(fz_sha256 *context)
 	context->state[7] = 0x5BE0CD19;
 }
 
-void fz_sha256_update(fz_sha256 *context, const unsigned char *input, unsigned int inlen)
+void fz_sha256_update(fz_sha256 *context, const unsigned char *input, size_t inlen)
 {
 	/* Copy the input data into a properly aligned temporary buffer.
 	 * This way we can be called with arbitrarily sized buffers
@@ -153,7 +155,7 @@ void fz_sha256_update(fz_sha256 *context, const unsigned char *input, unsigned i
 		const unsigned int copy_start = context->count[0] & 0x3F;
 		unsigned int copy_size = 64 - copy_start;
 		if (copy_size > inlen)
-			copy_size = inlen;
+			copy_size = (unsigned int)inlen;
 
 		memcpy(context->buffer.u8 + copy_start, input, copy_size);
 
@@ -314,7 +316,7 @@ void fz_sha512_init(fz_sha512 *context)
 	context->state[7] = 0x5BE0CD19137E2179ull;
 }
 
-void fz_sha512_update(fz_sha512 *context, const unsigned char *input, unsigned int inlen)
+void fz_sha512_update(fz_sha512 *context, const unsigned char *input, size_t inlen)
 {
 	/* Copy the input data into a properly aligned temporary buffer.
 	 * This way we can be called with arbitrarily sized buffers
@@ -325,7 +327,7 @@ void fz_sha512_update(fz_sha512 *context, const unsigned char *input, unsigned i
 		const unsigned int copy_start = context->count[0] & 0x7F;
 		unsigned int copy_size = 128 - copy_start;
 		if (copy_size > inlen)
-			copy_size = inlen;
+			copy_size = (unsigned int)inlen;
 
 		memcpy(context->buffer.u8 + copy_start, input, copy_size);
 
@@ -396,7 +398,7 @@ void fz_sha384_init(fz_sha384 *context)
 	context->state[7] = 0x47B5481DBEFA4FA4ull;
 }
 
-void fz_sha384_update(fz_sha384 *context, const unsigned char *input, unsigned int inlen)
+void fz_sha384_update(fz_sha384 *context, const unsigned char *input, size_t inlen)
 {
 	fz_sha512_update(context, input, inlen);
 }

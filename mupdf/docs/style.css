@@ -1,0 +1,33 @@
+h1, footer { font-family: sans-serif; }
+
+h2 { font-size: 1.25rem; }
+h3 { font-size: 1.25rem; }
+ul li { list-style-type: circle; }
+pre, table, ol, dl { margin-left: 2rem; }
+li { margin: 0; }
+th, td { text-align: left; vertical-align: top; }
+
+body { margin: 0; }
+h1 {
+	font-weight: normal;
+	margin: 0;
+	padding: 1rem 2rem;
+}
+header {
+	color: white;
+	background: no-repeat;
+	background-color: #506b80;
+	background-image: url("logo/mupdf-icon.png");
+	background-position: bottom right;
+	padding-right: 72px;
+	min-height: 72px;
+}
+article {
+	max-width: 50rem;
+	margin: 2rem;
+}
+footer {
+	background-color: #ddd;
+	color: #303030;
+	padding: 1rem 2rem;
+}

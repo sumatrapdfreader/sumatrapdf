@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<VisualStudioProject
+	ProjectType="Visual C++"
+	Version="8.00"
+	Name="javaviewer"
+	ProjectGUID="{FB8DC595-90A5-44D6-9FFF-2BDFA912FD8C}"
+	RootNamespace="javaviewer"
+	Keyword="MakeFileProj"
+	>
+	<Platforms>
+		<Platform
+			Name="Win32"
+		/>
+		<Platform
+			Name="x64"
+		/>
+	</Platforms>
+	<ToolFiles>
+	</ToolFiles>
+	<Configurations>
+		<Configuration
+			Name="DebugJava|Win32"
+			OutputDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)\$(ProjectName)"
+			ConfigurationType="0"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="cd ..\java &amp;&amp; winmake.bat $(PlatformName)\$(ConfigurationName)"
+				ReBuildCommandLine="cd ..\java &amp;&amp; winmake.bat $(PlatformName)\$(ConfigurationName)"
+				CleanCommandLine=""
+				Output="javaviewer.jar"
+				PreprocessorDefinitions="WIN32;_DEBUG"
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+		<Configuration
+			Name="DebugJava|x64"
+			OutputDirectory="$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)\$(ProjectName)"
+			ConfigurationType="0"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="cd ..\java &amp;&amp; winmake.bat $(PlatformName)\$(ConfigurationName)"
+				ReBuildCommandLine="cd ..\java &amp;&amp; winmake.bat $(PlatformName)\$(ConfigurationName)"
+				CleanCommandLine=""
+				Output="javaviewer.jar"
+				PreprocessorDefinitions="WIN64;_DEBUG"
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+		<Configuration
+			Name="ReleaseJava|Win32"
+			OutputDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)\$(ProjectName)"
+			ConfigurationType="0"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="cd ..\java &amp;&amp; winmake.bat $(PlatformName)\$(ConfigurationName)"
+				ReBuildCommandLine="cd ..\java &amp;&amp; winmake.bat $(PlatformName)\$(ConfigurationName)"
+				CleanCommandLine=""
+				Output="javaviewer.exe"
+				PreprocessorDefinitions="WIN32;NDEBUG"
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+		<Configuration
+			Name="ReleaseJava|x64"
+			OutputDirectory="$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)\$(ProjectName)"
+			ConfigurationType="0"
+			>
+			<Tool
+				Name="VCNMakeTool"
+				BuildCommandLine="cd ..\java &amp;&amp; winmake.bat $(PlatformName)\$(ConfigurationName)"
+				ReBuildCommandLine="cd ..\java &amp;&amp; winmake.bat $(PlatformName)\$(ConfigurationName)"
+				CleanCommandLine=""
+				Output="javaviewer.exe"
+				PreprocessorDefinitions="WIN64;NDEBUG"
+				IncludeSearchPath=""
+				ForcedIncludes=""
+				AssemblySearchPath=""
+				ForcedUsingAssemblies=""
+				CompileAsManaged=""
+			/>
+		</Configuration>
+	</Configurations>
+	<References>
+	</References>
+	<Files>
+		<File
+			RelativePath="..\java\example\PageCanvas.java"
+			>
+		</File>
+		<File
+			RelativePath="..\java\example\Viewer.java"
+			>
+		</File>
+	</Files>
+	<Globals>
+	</Globals>
+</VisualStudioProject>

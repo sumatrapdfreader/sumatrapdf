@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Loading...</title>
+<meta charset="utf-8">
+<style>
+body { background-color:gray; margin:0; padding:0; }
+#outline { position:fixed; top:0; left:0; width:20em; max-width:20em; height:100%; overflow-y:scroll; background-color:white; }
+#outline ul { margin:0; padding-left:1em; font-size:small; }
+#outline a { text-decoration:none; }
+#outline a:hover { text-decoration:underline; }
+#outline + #pages { margin-left:20em; }
+#pages img { display:block; margin:1em auto; background-color:white; }
+</style>
+<script src="libmupdf.js"></script>
+<script>
+
+var currentDocument = null
+var blankPages = [];
+var DPI = 96;
+
+var filename = new URL(window.location.href).searchParams.get("file");
+if (!filename)
+	filename = "pdfref13.pdf";
+
+Module.preRun = function () {
+	FS.createPreloadedFile(".", filename, filename, true, false);
+};
+
+Module.postRun = function () {
+	var pagesDiv = document.getElementById("pages");
+
+	console.log("mupdf: opening", filename);
+	currentDocument = mupdf.openDocument(filename);
+	document.title = mupdf.documentTitle(currentDocument);
+
+	var outline = mupdf.documentOutline(currentDocument);
+	if (outline) {
+		var outlineDiv = document.createElement("div");
+		outlineDiv.id = "outline";
+		outlineDiv.appendChild(outline);
+		document.body.insertBefore(outlineDiv, pagesDiv);
+	}
+
+	var i, n = mupdf.countPages(currentDocument);
+	for (i = 1; i <= n; ++i) {
+		var img = new Image();
+		img.id = "page" + i;
+		img.pageNumber = i;
+		img.width = mupdf.pageWidth(currentDocument, i, DPI);
+		img.height = mupdf.pageHeight(currentDocument, i, DPI);
+		img.useMap = "#map" + i;
+		var map = document.createElement("map");
+		map.name = "map" + i;
+		map.innerHTML = mupdf.pageLinks(currentDocument, i, DPI);
+		pagesDiv.appendChild(img);
+		pagesDiv.appendChild(map);
+		blankPages[i] = img;
+	}
+
+	console.log("mupdf: loaded", n, "pages");
+
+	document.onscroll();
+}
+
+document.onscroll = function () {
+	function isVisible(element) {
+		return ((window.pageYOffset + window.innerHeight) > element.offsetTop) &&
+			(window.pageYOffset < (element.offsetTop + element.scrollHeight));
+	}
+	var i, n = blankPages.length;
+	for (i = 1; i <= n; ++i) {
+		if (blankPages[i] && isVisible(blankPages[i])) {
+			console.log("mupdf: drawing page", i);
+			blankPages[i].src = mupdf.drawPageAsPNG(currentDocument, i, DPI);
+			blankPages[i] = undefined;
+		}
+	};
+}
+
+</script>
+</head>
+<body><div id="pages"></div></body>
+</html>

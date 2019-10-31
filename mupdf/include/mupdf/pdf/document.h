@@ -4,13 +4,11 @@
 typedef struct pdf_lexbuf_s pdf_lexbuf;
 typedef struct pdf_lexbuf_large_s pdf_lexbuf_large;
 typedef struct pdf_xref_s pdf_xref;
-typedef struct pdf_crypt_s pdf_crypt;
 typedef struct pdf_ocg_descriptor_s pdf_ocg_descriptor;
 
 typedef struct pdf_page_s pdf_page;
 typedef struct pdf_annot_s pdf_annot;
-typedef struct pdf_widget_s pdf_widget;
-typedef struct pdf_hotspot_s pdf_hotspot;
+typedef struct pdf_annot_s pdf_widget;
 typedef struct pdf_js_s pdf_js;
 
 enum
@@ -21,11 +19,10 @@ enum
 
 struct pdf_lexbuf_s
 {
-	fz_context *ctx;
-	int size;
-	int base_size;
-	int len;
-	int i;
+	size_t size;
+	size_t base_size;
+	size_t len;
+	int64_t i;
 	float f;
 	char *scratch;
 	char buffer[PDF_LEXBUF_SMALL];
@@ -37,13 +34,6 @@ struct pdf_lexbuf_large_s
 	char buffer[PDF_LEXBUF_LARGE - PDF_LEXBUF_SMALL];
 };
 
-struct pdf_hotspot_s
-{
-	int num;
-	int gen;
-	int state;
-};
-
 /*
 	Document event structures are mostly opaque to the app. Only the type
 	is visible to the app.
@@ -51,124 +41,127 @@ struct pdf_hotspot_s
 typedef struct pdf_doc_event_s pdf_doc_event;
 
 /*
-	pdf_doc_event_cb: the type of function via which the app receives
+	the type of function via which the app receives
 	document events.
 */
-typedef void (pdf_doc_event_cb)(pdf_doc_event *event, void *data);
+typedef void (pdf_doc_event_cb)(fz_context *ctx, pdf_document *doc, pdf_doc_event *event, void *data);
 
-/*
-	pdf_open_document: Open a PDF document.
-
-	Open a PDF document by reading its cross reference table, so
-	MuPDF can locate PDF objects inside the file. Upon an broken
-	cross reference table or other parse errors MuPDF will restart
-	parsing the file from the beginning to try to rebuild a
-	(hopefully correct) cross reference table to allow further
-	processing of the file.
-
-	The returned pdf_document should be used when calling most
-	other PDF functions. Note that it wraps the context, so those
-	functions implicitly get access to the global state in
-	context.
-
-	filename: a path to a file as it would be given to open(2).
-*/
 pdf_document *pdf_open_document(fz_context *ctx, const char *filename);
 
-/*
-	pdf_open_document_with_stream: Opens a PDF document.
-
-	Same as pdf_open_document, but takes a stream instead of a
-	filename to locate the PDF document to open. Increments the
-	reference count of the stream. See fz_open_file,
-	fz_open_file_w or fz_open_fd for opening a stream, and
-	fz_close for closing an open stream.
-*/
 pdf_document *pdf_open_document_with_stream(fz_context *ctx, fz_stream *file);
 
-pdf_document *pdf_open_document_no_run(fz_context *ctx, const char *filename);
-pdf_document *pdf_open_document_no_run_with_stream(fz_context *ctx, fz_stream *file);
+void pdf_drop_document(fz_context *ctx, pdf_document *doc);
 
-/*
-	pdf_close_document: Closes and frees an opened PDF document.
+pdf_document *pdf_keep_document(fz_context *ctx, pdf_document *doc);
 
-	The resource store in the context associated with pdf_document
-	is emptied.
+pdf_document *pdf_specifics(fz_context *ctx, fz_document *doc);
 
-	Does not throw exceptions.
-*/
-void pdf_close_document(pdf_document *doc);
+pdf_document *pdf_document_from_fz_document(fz_context *ctx, fz_document *ptr);
+pdf_page *pdf_page_from_fz_page(fz_context *ctx, fz_page *ptr);
 
-/*
-	pdf_specific: down-cast an fz_document to a pdf_document.
-	Returns NULL if underlying document is not PDF
-*/
-pdf_document *pdf_specifics(fz_document *doc);
+int pdf_needs_password(fz_context *ctx, pdf_document *doc);
 
-int pdf_needs_password(pdf_document *doc);
-int pdf_authenticate_password(pdf_document *doc, const char *pw);
+int pdf_authenticate_password(fz_context *ctx, pdf_document *doc, const char *pw);
 
-enum
+int pdf_has_permission(fz_context *ctx, pdf_document *doc, fz_permission p);
+int pdf_lookup_metadata(fz_context *ctx, pdf_document *doc, const char *key, char *ptr, int size);
+
+fz_outline *pdf_load_outline(fz_context *ctx, pdf_document *doc);
+
+int pdf_count_layer_configs(fz_context *ctx, pdf_document *doc);
+
+typedef struct
 {
-	PDF_PERM_PRINT = 1 << 2,
-	PDF_PERM_CHANGE = 1 << 3,
-	PDF_PERM_COPY = 1 << 4,
-	PDF_PERM_NOTES = 1 << 5,
-	PDF_PERM_FILL_FORM = 1 << 8,
-	PDF_PERM_ACCESSIBILITY = 1 << 9,
-	PDF_PERM_ASSEMBLE = 1 << 10,
-	PDF_PERM_HIGH_RES_PRINT = 1 << 11,
-	PDF_DEFAULT_PERM_FLAGS = 0xfffc
+	const char *name;
+	const char *creator;
+} pdf_layer_config;
+
+void pdf_layer_config_info(fz_context *ctx, pdf_document *doc, int config_num, pdf_layer_config *info);
+
+void pdf_select_layer_config(fz_context *ctx, pdf_document *doc, int config_num);
+
+int pdf_count_layer_config_ui(fz_context *ctx, pdf_document *doc);
+
+void pdf_select_layer_config_ui(fz_context *ctx, pdf_document *doc, int ui);
+
+void pdf_deselect_layer_config_ui(fz_context *ctx, pdf_document *doc, int ui);
+
+void pdf_toggle_layer_config_ui(fz_context *ctx, pdf_document *doc, int ui);
+
+typedef enum
+{
+	PDF_LAYER_UI_LABEL = 0,
+	PDF_LAYER_UI_CHECKBOX = 1,
+	PDF_LAYER_UI_RADIOBOX = 2
+} pdf_layer_config_ui_type;
+
+typedef struct
+{
+	const char *text;
+	int depth;
+	pdf_layer_config_ui_type type;
+	int selected;
+	int locked;
+} pdf_layer_config_ui;
+
+void pdf_layer_config_ui_info(fz_context *ctx, pdf_document *doc, int ui, pdf_layer_config_ui *info);
+
+void pdf_set_layer_config_as_default(fz_context *ctx, pdf_document *doc);
+
+int pdf_has_unsaved_changes(fz_context *ctx, pdf_document *doc);
+
+enum pdf_signature_error
+{
+	PDF_SIGNATURE_ERROR_OKAY,
+	PDF_SIGNATURE_ERROR_NO_SIGNATURES,
+	PDF_SIGNATURE_ERROR_NO_CERTIFICATE,
+	PDF_SIGNATURE_ERROR_DIGEST_FAILURE,
+	PDF_SIGNATURE_ERROR_SELF_SIGNED,
+	PDF_SIGNATURE_ERROR_SELF_SIGNED_IN_CHAIN,
+	PDF_SIGNATURE_ERROR_NOT_TRUSTED,
+	PDF_SIGNATURE_ERROR_UNKNOWN
 };
 
-int pdf_has_permission(pdf_document *doc, int p);
-
-/*
-	Metadata interface.
-*/
-int pdf_meta(pdf_document *doc, int key, void *ptr, int size);
-
-fz_outline *pdf_load_outline(pdf_document *doc);
-
-typedef struct pdf_ocg_entry_s pdf_ocg_entry;
-
-struct pdf_ocg_entry_s
+typedef struct pdf_pkcs7_designated_name_s
 {
-	int num;
-	int gen;
-	int state;
-};
+	char *cn;
+	char *o;
+	char *ou;
+	char *email;
+	char *c;
+}
+pdf_pkcs7_designated_name;
 
-struct pdf_ocg_descriptor_s
+/* Object that can perform the cryptographic operation necessary for document signing */
+typedef struct pdf_pkcs7_signer_s pdf_pkcs7_signer;
+
+/* Increment the reference count for a signer object */
+typedef pdf_pkcs7_signer *(pdf_pkcs7_keep_fn)(pdf_pkcs7_signer *signer);
+
+/* Drop a reference for a signer object */
+typedef void (pdf_pkcs7_drop_fn)(pdf_pkcs7_signer *signer);
+
+/* Obtain the designated name information from a signer object */
+typedef pdf_pkcs7_designated_name *(pdf_pkcs7_designated_name_fn)(pdf_pkcs7_signer *signer);
+
+/* Free the resources associated with previously obtained designated name information */
+typedef void (pdf_pkcs7_drop_designated_name_fn)(pdf_pkcs7_signer *signer, pdf_pkcs7_designated_name *name);
+
+/* Predict the size of the digest. The actual digest returned by create_digest will be no greater in size */
+typedef int (pdf_pkcs7_max_digest_size_fn)(pdf_pkcs7_signer *signer);
+
+/* Create a signature based on ranges of bytes drawn from a stream */
+typedef int (pdf_pkcs7_create_digest_fn)(pdf_pkcs7_signer *signer, fz_stream *in, unsigned char *digest, int *digest_len);
+
+struct pdf_pkcs7_signer_s
 {
-	int len;
-	pdf_ocg_entry *ocgs;
-	pdf_obj *intent;
+	pdf_pkcs7_keep_fn *keep;
+	pdf_pkcs7_drop_fn *drop;
+	pdf_pkcs7_designated_name_fn *designated_name;
+	pdf_pkcs7_drop_designated_name_fn *drop_designated_name;
+	pdf_pkcs7_max_digest_size_fn *max_digest_size;
+	pdf_pkcs7_create_digest_fn *create_digest;
 };
-
-/*
-	pdf_update_page: update a page for the sake of changes caused by a call
-	to pdf_pass_event. pdf_update_page regenerates any appearance streams that
-	are out of date, checks for cases where different appearance streams
-	should be selected because of state changes, and records internally
-	each annotation that has changed appearance. The list of changed annotations
-	is then available via pdf_poll_changed_annot. Note that a call to
-	pdf_pass_event for one page may lead to changes on any other, so an app
-	should call pdf_update_page for every page it currently displays. Also
-	it is important that the pdf_page object is the one used to last render
-	the page. If instead the app were to drop the page and reload it then
-	a call to pdf_update_page would not reliably be able to report all changed
-	areas.
-*/
-void pdf_update_page(pdf_document *doc, pdf_page *page);
-
-/*
-	Determine whether changes have been made since the
-	document was opened or last saved.
-*/
-int pdf_has_unsaved_changes(pdf_document *doc);
-
-typedef struct pdf_signer_s pdf_signer;
 
 /* Unsaved signature fields */
 typedef struct pdf_unsaved_sig_s pdf_unsaved_sig;
@@ -180,47 +173,72 @@ struct pdf_unsaved_sig_s
 	int byte_range_end;
 	int contents_start;
 	int contents_end;
-	pdf_signer *signer;
+	pdf_pkcs7_signer *signer;
 	pdf_unsaved_sig *next;
 };
 
+typedef struct pdf_rev_page_map_s pdf_rev_page_map;
+struct pdf_rev_page_map_s
+{
+	int page;
+	int object;
+};
+
+typedef struct
+{
+	int number; /* Page object number */
+	int64_t offset; /* Offset of page object */
+	int64_t index; /* Index into shared hint_shared_ref */
+} pdf_hint_page;
+
+typedef struct
+{
+	int number; /* Object number of first object */
+	int64_t offset; /* Offset of first object */
+} pdf_hint_shared;
 
 struct pdf_document_s
 {
 	fz_document super;
 
-	fz_context *ctx;
 	fz_stream *file;
 
 	int version;
-	int startxref;
-	int file_size;
+	int64_t startxref;
+	int64_t file_size;
 	pdf_crypt *crypt;
 	pdf_ocg_descriptor *ocg;
-	pdf_hotspot hotspot;
+	fz_colorspace *oi;
 
 	int max_xref_len;
 	int num_xref_sections;
+	int saved_num_xref_sections;
+	int num_incremental_sections;
+	int xref_base;
+	int disallow_new_increments;
 	pdf_xref *xref_sections;
+	pdf_xref *saved_xref_sections;
 	int *xref_index;
-	int xref_altered;
-	int freeze_updates;
+	int save_in_progress;
 	int has_xref_streams;
+	int has_old_style_xrefs;
 
-	int page_count;
+	int rev_page_count;
+	pdf_rev_page_map *rev_page_map;
 
 	int repair_attempted;
 
 	/* State indicating which file parsing method we are using */
 	int file_reading_linearly;
-	int file_length;
+	int64_t file_length;
 
+	int linear_page_count;
 	pdf_obj *linear_obj; /* Linearized object (if used) */
 	pdf_obj **linear_page_refs; /* Page objects for linear loading */
 	int linear_page1_obj_num;
 
 	/* The state for the pdf_progressive_advance parser */
-	int linear_pos;
+	int64_t linear_pos;
 	int linear_page_num;
 
 	int hint_object_offset;
@@ -241,35 +259,21 @@ struct pdf_document_s
 	 * These are guaranteed to lie within the region starting at
 	 * hint_shared[r]->offset of length hint_shared[r]->length
 	 */
-	struct
-	{
-		int number; /* Page object number */
-		int offset; /* Offset of page object */
-		int index; /* Index into shared hint_shared_ref */
-	} *hint_page;
+	pdf_hint_page *hint_page;
 	int *hint_shared_ref;
-	struct
-	{
-		int number; /* Object number of first object */
-		int offset; /* Offset of first object */
-	} *hint_shared;
+	pdf_hint_shared *hint_shared;
 	int hint_obj_offsets_max;
-	int *hint_obj_offsets;
+	int64_t *hint_obj_offsets;
 
 	int resources_localised;
 
 	pdf_lexbuf_large lexbuf;
 
-	pdf_annot *focus;
-	pdf_obj *focus_obj;
-
 	pdf_js *js;
-	void (*drop_js)(pdf_js *js);
-	int recalculating;
-	int dirty;
-	pdf_unsaved_sig *unsaved_sigs;
 
-	void (*update_appearance)(pdf_document *doc, pdf_annot *annot);
+	int recalculate;
+	int dirty;
+	int redacted;
 
 	pdf_doc_event_cb *event_cb;
 	void *event_cb_data;
@@ -278,31 +282,80 @@ struct pdf_document_s
 	int max_type3_fonts;
 	fz_font **type3_fonts;
 
-	/* cf. http://bugs.ghostscript.com/show_bug.cgi?id=695761 */
-	pdf_obj **page_objs;
+	struct {
+		fz_hash_table *images;
+		fz_hash_table *fonts;
+	} resources;
+
+	int orphans_max;
+	int orphans_count;
+	pdf_obj **orphans;
 };
 
-/*
-	PDF creation
-*/
-
-/*
-	pdf_create_document: Create a blank PDF document
-*/
 pdf_document *pdf_create_document(fz_context *ctx);
 
-pdf_page *pdf_create_page(pdf_document *doc, fz_rect rect, int res, int rotate);
+typedef struct pdf_graft_map_s pdf_graft_map;
 
-void pdf_insert_page(pdf_document *doc, pdf_page *page, int at);
+pdf_obj *pdf_graft_object(fz_context *ctx, pdf_document *dst, pdf_obj *obj);
 
-void pdf_delete_page(pdf_document *doc, int number);
+pdf_graft_map *pdf_new_graft_map(fz_context *ctx, pdf_document *dst);
 
-void pdf_delete_page_range(pdf_document *doc, int start, int end);
+pdf_graft_map *pdf_keep_graft_map(fz_context *ctx, pdf_graft_map *map);
+void pdf_drop_graft_map(fz_context *ctx, pdf_graft_map *map);
 
-fz_device *pdf_page_write(pdf_document *doc, pdf_page *page);
+pdf_obj *pdf_graft_mapped_object(fz_context *ctx, pdf_graft_map *map, pdf_obj *obj);
 
-void pdf_finish_edit(pdf_document *doc);
+fz_device *pdf_page_write(fz_context *ctx, pdf_document *doc, fz_rect mediabox, pdf_obj **presources, fz_buffer **pcontents);
+
+pdf_obj *pdf_add_page(fz_context *ctx, pdf_document *doc, fz_rect mediabox, int rotate, pdf_obj *resources, fz_buffer *contents);
+
+void pdf_insert_page(fz_context *ctx, pdf_document *doc, int at, pdf_obj *page);
+
+void pdf_delete_page(fz_context *ctx, pdf_document *doc, int number);
+
+void pdf_delete_page_range(fz_context *ctx, pdf_document *doc, int start, int end);
+
+void pdf_finish_edit(fz_context *ctx, pdf_document *doc);
 
 int pdf_recognize(fz_context *doc, const char *magic);
+
+typedef struct pdf_write_options_s pdf_write_options;
+
+/*
+	In calls to fz_save_document, the following options structure can be used
+	to control aspects of the writing process. This structure may grow
+	in the future, and should be zero-filled to allow forwards compatibility.
+*/
+struct pdf_write_options_s
+{
+	int do_incremental; /* Write just the changed objects. */
+	int do_pretty; /* Pretty-print dictionaries and arrays. */
+	int do_ascii; /* ASCII hex encode binary streams. */
+	int do_compress; /* Compress streams. */
+	int do_compress_images; /* Compress (or leave compressed) image streams. */
+	int do_compress_fonts; /* Compress (or leave compressed) font streams. */
+	int do_decompress; /* Decompress streams (except when compressing images/fonts). */
+	int do_garbage; /* Garbage collect objects before saving; 1=gc, 2=re-number, 3=de-duplicate. */
+	int do_linear; /* Write linearised. */
+	int do_clean; /* Clean content streams. */
+	int do_sanitize; /* Sanitize content streams. */
+	int do_appearance; /* (Re)create appearance streams. */
+	int do_encrypt; /* Encryption method to use: keep, none, rc4-40, etc. */
+	int permissions; /* Document encryption permissions. */
+	char opwd_utf8[128]; /* Owner password. */
+	char upwd_utf8[128]; /* User password. */
+};
+
+extern const pdf_write_options pdf_default_write_options;
+
+pdf_write_options *pdf_parse_write_options(fz_context *ctx, pdf_write_options *opts, const char *args);
+
+int pdf_has_unsaved_sigs(fz_context *ctx, pdf_document *doc);
+
+void pdf_write_document(fz_context *ctx, pdf_document *doc, fz_output *out, pdf_write_options *opts);
+
+void pdf_save_document(fz_context *ctx, pdf_document *doc, const char *filename, pdf_write_options *opts);
+
+int pdf_can_be_saved_incrementally(fz_context *ctx, pdf_document *doc);
 
 #endif

@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<VisualStudioToolFile
+	Name="bin2coff"
+	Version="8.00"
+	>
+	<Rules>
+		<CustomBuildRule
+			Name="bin2coff (ttf)"
+			DisplayName="bin2coff (ttf)"
+			CommandLine="Release\bin2coff.exe &quot;$(InputPath)&quot; &quot;$(IntDir)\$(InputName)_ttf.obj&quot; _binary_$(InputName)_ttf $(PlatformName)"
+			Outputs="$(IntDir)\$(InputName)_ttf.obj"
+			FileExtensions="*.ttf"
+			ExecutionDescription="Embedding TTF"
+			>
+			<Properties>
+			</Properties>
+		</CustomBuildRule>
+		<CustomBuildRule
+			Name="bin2coff (otf)"
+			DisplayName="bin2coff (otf)"
+			CommandLine="Release\bin2coff.exe &quot;$(InputPath)&quot; &quot;$(IntDir)\$(InputName)_otf.obj&quot; _binary_$(InputName)_otf $(PlatformName)"
+			Outputs="$(IntDir)\$(InputName)_otf.obj"
+			FileExtensions="*.otf"
+			ExecutionDescription="Embedding OTF"
+			>
+			<Properties>
+			</Properties>
+		</CustomBuildRule>
+		<CustomBuildRule
+			Name="bin2coff (cff)"
+			DisplayName="bin2coff (cff)"
+			CommandLine="Release\bin2coff.exe &quot;$(InputPath)&quot; &quot;$(IntDir)\$(InputName)_cff.obj&quot; _binary_$(InputName)_cff $(PlatformName)"
+			Outputs="$(IntDir)\$(InputName)_cff.obj"
+			FileExtensions="*.cff"
+			ExecutionDescription="Embedding CFF"
+			>
+			<Properties>
+			</Properties>
+		</CustomBuildRule>
+		<CustomBuildRule
+			Name="bin2coff (ttc)"
+			DisplayName="bin2coff (ttc)"
+			CommandLine="Release\bin2coff.exe &quot;$(InputPath)&quot; &quot;$(IntDir)\$(InputName)_ttc.obj&quot; _binary_$(InputName)_ttc $(PlatformName)"
+			Outputs="$(IntDir)\$(InputName)_ttc.obj"
+			FileExtensions="*.ttc"
+			ExecutionDescription="Embedding TTC"
+			>
+			<Properties>
+			</Properties>
+		</CustomBuildRule>
+	</Rules>
+</VisualStudioToolFile>

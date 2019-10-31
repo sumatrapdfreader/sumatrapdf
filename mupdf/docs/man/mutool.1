@@ -1,4 +1,4 @@
-.TH "MUTOOL" "1" "July 25, 2013"
+.TH "MUTOOL" "1" "January 12, 2016"
 .\" Please adjust this date whenever revising the manpage.
 .\" no hyphenation
 .nh
@@ -12,8 +12,114 @@ mutool \- all purpose tool for dealing with PDF files
 mutool <sub-command> [options]
 
 .SH DESCRIPTION
-mutool is a tool based on MuPDF for dealing with PDF files in various manners.
+mutool is a tool based on MuPDF for dealing with document files in various manners.
 There are several sub commands available, as described below.
+
+.SH DRAW
+mutool draw [options] file [pages]
+.PP
+The draw command will render a document to image files,
+convert to another vector format, or extract the text content.
+.PP
+The supported input document formats are: pdf, xps, cbz, and epub.
+.PP
+The supported output image formats are: pbm, pgm, ppm, pam, png, pwg, pcl and ps.
+The supported output vector formats are: svg, pdf, and debug trace (as xml).
+The supported output text formats are: plain text, html, and structured text (as xml).
+.TP
+.B \-p password
+Use the specified password if the file is encrypted.
+.TP
+.B \-o output
+The output format is inferred from the output filename.
+Embed %d in the name to indicate the page number (for example: "page%d.png").
+Printf modifiers are supported, for example "%03d".
+If no output is specified, the output will go to stdout.
+.TP
+.B \-F format
+Enforce a specific output format. Only necessary when outputting to stdout
+since normally the output filename is used to infer the output format.
+.TP
+.B \-R angle
+Rotate clockwise by given number of degrees.
+.TP
+.B \-r resolution
+Render the page at the specified resolution.
+The default resolution is 72 dpi.
+.TP
+.B \-w width
+Render the page at the specified width (or, if the -r flag is used,
+render with a maximum width).
+.TP
+.B \-h height
+Render the page at the specified height (or, if the -r flag is used,
+render with a maximum height).
+.TP
+.B \-f
+Fit exactly; ignore the aspect ratio when matching specified width/heights.
+.TP
+.B \-B bandheight
+Render in banded mode with each band no taller than the given height. This uses
+less memory during rendering. Only compatible with pam, pgm, ppm, pnm and png
+output formats. Banded rendering and md5 checksumming may not be used at the
+same time.
+.TP
+.B \-W width
+Page width in points for EPUB layout.
+.TP
+.B \-H height
+Page height in points for EPUB layout.
+.TP
+.B \-S size
+Font size in points for EPUB layout.
+.TP
+.B \-U filename
+User CSS stylesheet for EPUB layout.
+.TP
+.B \-c colorspace
+Render in the specified colorspace.
+Supported colorspaces are: mono, gray, grayalpha, rgb, rgbalpha, cmyk, cmykalpha.
+Some abbreviations are allowed: m, g, ga, rgba, cmyka.
+The default is chosen based on the output format.
+.TP
+.B -G gamma
+Apply gamma correction.
+Some typical values are 0.7 or 1.4 to thin or darken text rendering.
+.TP
+.B -I
+Invert colors.
+.TP
+.B \-s [mft5]
+Show various bits of information:
+.B m
+for glyph cache and total memory usage,
+.B f
+for page features such as whether the page is grayscale or color,
+.B t
+for per page rendering times as well statistics, and
+.B 5
+for md5 checksums of rendered images that can be used to check if rendering has
+changed.
+.TP
+.B \-A bits
+Specify how many bits of anti-aliasing to use. The default is 8.
+.TP
+.B \-D
+Disable use of display lists. May cause slowdowns, but should reduce
+the amount of memory used.
+.TP
+.B \-i
+Ignore errors.
+.TP
+.B \-L
+Low memory mode (avoid caching objects by clearing cache after each page).
+.TP
+.B \-P
+Run interpretation and rendering at the same time.
+.TP
+.B pages
+Comma separated list of page numbers and ranges (for example: 1,5,10-15).
+If no pages are specified, then all pages will be rendered.
 
 .SH CLEAN
 mutool clean [options] input.pdf [output.pdf] [pages]
@@ -30,8 +136,12 @@ Use the specified password if the file is encrypted.
 .TP
 .B \-g
 Garbage collect objects that have no references from other objects.
-Give the option twice to renumber all objects and compact the cross reference table.
-Give it three times to merge and reuse duplicate objects.
+Give the option twice to also renumber all objects and compact the cross reference table.
+Give it three times to also merge and reuse duplicate objects.
+Give it four times to also merge and reuse duplicate streams.
+.TP
+.B \-s
+Rewrite content streams.
 .TP
 .B \-d
 Decompress streams. This will make the output file larger, but provides
@@ -42,19 +152,24 @@ Linearize output. Create a "Web Optimized" output file.
 .TP
 .B \-i
 Toggle decompression of image streams. Use in conjunction with -d to leave
-image- compressed.
+images compressed.
 .TP
 .B \-f
 Toggle decompression of font streams. Use in conjunction with -d to leave
 fonts compressed.
 .TP
 .B \-a
-ASCII Hex encode binary streams. Use in conjuction with -d and -i or -f to
+ASCII Hex encode binary streams. Use in conjunction with -d and -i or -f to
 ensure that although the images and/or fonts are compressed, the resulting
 file can still be viewed and edited with a text editor.
 .TP
+.B \-z
+Deflate uncompressed streams.
+If combined with -d, any decompressed streams will be recompressed.
+If combined with -a, the streams will also be hex encoded after compression.
+.TP
 .B pages
-Comma separated list of page ranges to include.
+Comma separated list of page numbers and ranges to include.
 
 .SH EXTRACT
 mutool extract [options] file.pdf [object numbers]
@@ -70,7 +185,115 @@ Use the specified password if the file is encrypted.
 Convert images to RGB when extracting them.
 
 .SH INFO
-TODO
+mutool info [options] file.pdf [pages]
+.PP
+The info command lists the resources used on each page in a PDF file.
+The default is to list all resource types, but if one
+or more flags are given, only the flagged types will be shown.
+.TP
+.B \-p password
+Use the specified password if the file is encrypted.
+.TP
+.B -F
+List fonts.
+.TP
+.B -I
+List images.
+.TP
+.B -M
+List page dimensions.
+.TP
+.B -S
+List shadings.
+.TP
+.B -P
+List patterns.
+.TP
+.B -X
+List form and postscript XObjects.
+.TP
+.B pages
+Comma separated list of page numbers and ranges to include.
+
+.SH CREATE
+mutool create [-o output.pdf] [options] page1.txt [page2.txt ...]
+.PP
+The create command creates a new PDF file with the contents created
+from one or more input files containing graphics commands.
+.TP
+.B \-o output
+If no output file is specified, it will write the created PDF to "out.pdf"
+in the current directory.
+.TP
+.B page.txt
+A page is created for each input file, with the contents of the file copied
+into the content stream. Special comments in the input files are parsed to
+define the page dimensions and font and image resources:
+.PP
+%%MediaBox 0 0 500 800
+.br
+%%Rotate 90
+.br
+%%Font Tm Times-Roman
+.br
+%%Font Fn0 path/to/font/file.ttf
+.br
+%%Image Im0 path/to/image.png
+.TP
+.B \-O
+Comma separated list of format specific output options:
+.IP
+.B decompress
+.br
+Decompress all object streams.
+.IP
+.B compress
+.br
+Compress all object streams.
+.IP
+.B compress-fonts
+.br
+Compress object streams for embedded fonts.
+.IP
+.B compress-images
+.br
+Compress object streams for images.
+.IP
+.B ascii
+.br
+Encode object streams using ASCII hex encoding.
+.IP
+.B pretty
+.br
+Pretty-print objects with indentation.
+.IP
+.B linearize
+.br
+Optimize document for progressive loading in viewers.
+.IP
+.B sanitize
+.br
+Clean up graphics command in content streams.
+.IP
+.B garbage[=compact|deduplicate]
+.br
+Garbage collect unused objects. With
+.B compact
+the cross-reference table will also be compacted. With
+.B deduplicate
+duplicate objects will also be recombined.
+
+.SH PAGES
+mutool pages [options] input.pdf [pages ...]
+.PP
+The pages command dumps information about the size and orientation
+of pages within the document.
+.TP
+.B \-p password
+Use the specified password if the file is encrypted.
+.TP
+.B pages
+Comma separated list of page numbers and ranges to include.
 
 .SH POSTER
 mutool poster [options] input.pdf [output.pdf]
@@ -89,6 +312,7 @@ Split the page into this many horizontal pieces.
 Split the page into this many vertical pieces.
 .PP
 The output will have x times y number of pages for each input page.
+
 .SH SHOW
 mutool show [options] file.pdf [object numbers ...]
 .PP
@@ -96,14 +320,17 @@ The show command will print the specified objects and streams to stdout.
 Streams are decoded and non-printable characters are represented
 with a period by default.
 .TP
+.B \-p password
+Use the specified password if the file is encrypted.
+.TP
+.B \-o file
+Write output to file instead of stdout.
+.TP
 .B \-b
 Print streams as binary data and omit the object header.
 .TP
 .B \-e
 Print streams in their original encoded (or compressed) form.
-.TP
-.B \-p password
-Use the specified password if the file is encrypted.
 .PP
 Specify objects by number, or use one of the following special names:
 .TP
@@ -113,15 +340,82 @@ Print the cross reference table.
 .B 'trailer' or 't'
 Print the trailer dictionary.
 .TP
-.B 'pages' or 'p'
+.B 'encrypt' or 'e'
+Print the encryption dictionary.
+.TP
+.B 'pagetree' or 'p'
 List the object numbers for every page.
 .TP
 .B 'grep' or 'g'
 Print all the objects in the file in a compact one-line format suitable for piping to grep.
+.TP
+.B 'outline' or 'o'
+Print the outline (table of contents).
+
+.SH RUN
+mutool run script.js [arguments]
+.PP
+Executes a Javascript program which has access to most of the features of the
+MuPDF library. The command supports ECMAScript 5 syntax in strict mode. All of
+the MuPDF constructors and function live in the global object, and the command
+line arguments are accessible from the global argv object.
+.PP
+If invoke without any arguments, it will drop you into an interactive REPL
+(read-eval-print-loop). On the interactive prompt, if you prefix a line with an
+equal character it will automatically print the results of the line.
+.PP
+See the MuPDF documentation for details about the Javascript interfaces.
+
+.SH CONVERT
+mutool convert [options] file [pages]
+.PP
+The convert command is used to convert a file from one format to another.
+.TP
+.B \-p password
+Use the specified password if the file is encrypted.
+.TP
+.B \-A bits
+Specify how many bits of anti-aliasing to use. The default is 8.
+.TP
+.B \-W width
+Page width in points for EPUB layout.
+.TP
+.B \-H height
+Page height in points for EPUB layout.
+.TP
+.B \-S size
+Font size in points for EPUB layout.
+.TP
+.B \-U filename
+User CSS stylesheet for EPUB layout.
+.TP
+.B \-o output
+The output format is inferred from the output filename.
+Embed %d in the name to indicate the page number (for example: "page%d.png").
+Printf modifiers are supported, for example "%03d".
+If no output is specified, the output will go to stdout.
+.TP
+.B \-F format
+Enforce a specific output format. Only necessary when outputting to stdout
+since normally the output filename is used to infer the output format.
+.TP
+.B \-O
+Comma separated list of format specific output options:
+
+.SH MERGE
+mutool merge [options] file1 [pages] file2 [pages] ...
+.PP
+The merge command is used to pick out pages from two or more files and merge
+them in order into a new output file.
+.TP
+.B \-o output
+The output filename.
+.TP
+.B \-O
+See mutool create for details on this option.
 
 .SH SEE ALSO
-.BR mudraw (1).
 .BR mupdf (1),
 
 .SH AUTHOR
-MuPDF is Copyright 2006-2014 Artifex Software, Inc.
+MuPDF is Copyright 2006-2017 Artifex Software, Inc.

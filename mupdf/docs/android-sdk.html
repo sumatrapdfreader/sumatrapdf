@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>MuPDF Android SDK</title>
+<link rel="stylesheet" href="style.css" type="text/css">
+</head>
+<body>
+
+<header>
+<h1>MuPDF Android SDK</h1>
+</header>
+
+<article>
+
+<style>
+body {counter-reset: h2}
+h2 {counter-reset: h3}
+h3 {counter-reset: h4}
+h4 {counter-reset: h5}
+h5 {counter-reset: h6}
+h2:before {counter-increment: h2; content: counter(h2) ". "}
+h3:before {counter-increment: h3; content: counter(h2) "." counter(h3) ". "}
+h4:before {counter-increment: h4; content: counter(h2) "." counter(h3) "." counter(h4) ". "}
+h5:before {counter-increment: h5; content: counter(h2) "." counter(h3) "." counter(h4) "." counter(h5) ". "}
+h6:before {counter-increment: h6; content: counter(h2) "." counter(h3) "." counter(h4) "." counter(h5) "." counter(h6) ". "}
+</style>
+
+<p>
+This document outlines the steps necessary to use the MuPDF Android SDK in various ways.
+
+<p>
+First, we show you how to embed the SDK in your app. Then, we explain how to
+customize the viewer if you need to change how it looks or behaves. Finally, we
+tell you where to go if you need to do work on the SDK itself.
+
+<p>
+Embedding the viewer in your app provides an activity that you can start to
+view PDF documents from within your app. This should be enough for most use
+cases.
+
+<h2 id="acquire-license">
+Acquire a valid license
+</h2>
+
+<p>
+Before using MuPDF, please make sure that you have a valid license to do so.
+There are two available licenses; make sure you pick the one whose terms you can comply with.
+
+<h3>
+Open Source license
+</h3>
+
+<p>
+If your software is open source, you may use MuPDF under the terms of the
+<a href="https://www.gnu.org/licenses/agpl-3.0.html">GNU Affero General Public License</a>.
+
+<p>
+This means that <i>all of the source code</i> for your <i>complete</i> app must be
+released under a compatible open source license!
+
+<p>
+It also means that you may <i>not</i> use any proprietary closed source libraries or
+components in your app. This includes (but is not limited to)
+	Google Play Services,
+	Google Mobile Services,
+	AdMob by Google,
+	Crashlytics,
+	Answers,
+	etc.
+
+<p>
+Just because a library ships with Android or is made by Google does <i>not</i> make it AGPL compatible!
+
+<p>
+If you cannot or do not want to comply with these restrictions,
+you <i><b>must</b></i> acquire a commercial license instead.
+
+<h3>
+Commercial license
+</h3>
+
+<p>
+If your software is not open source, Artifex Software can sell you a license to use MuPDF in closed source software.
+Go and fill out the <a href="https://www.artifex.com/contact-us/">product inquiry form</a>
+for commercial licensing terms and pricing.
+
+<h2 id="setup-build">
+Add the MuPDF SDK to your project
+</h2>
+
+<p>
+The MuPDF library uses the Gradle build system.
+In order to include MuPDF in your app, you also need to use Gradle.
+The Eclipse and Ant build systems are not supported.
+
+<p>
+The MuPDF library needs Android version 4.1 or newer.
+Make sure that the minSdkVersion in your app's build.gradle is at least 16.
+
+<pre>
+android {
+	defaultConfig {
+		<b>minSdkVersion 16</b>
+		...
+	}
+	...
+}
+</pre>
+
+<p>
+The MuPDF library can be retrieved as a pre-built artifact from our Maven repository.
+Add the maven repository to your project. In your project's top build.gradle, add the bolded line to
+to the repositories section:
+
+<pre>
+allprojects {
+	repositories {
+		jcenter()
+		<b>maven { url 'http://maven.ghostscript.com' }</b>
+		...
+	}
+}
+</pre>
+
+<p>
+Then add the MuPDF viewer library to your app's dependencies.
+In your app's build.gradle, add the bolded line to the dependencies section:
+
+<pre>
+dependencies {
+	<b>api 'com.artifex.mupdf:viewer:1.15.+'</b>
+	...
+}
+</pre>
+
+<h2 id="use-activity">
+Invoke the document viewer activity
+</h2>
+
+<p>
+Once this has been done, you have access to the MuPDF viewer activity.
+You can now open a document viewing activity by launching an intent,
+passing the URI of the document you wish to view.
+
+<pre>
+import com.artifex.mupdf.viewer.DocumentActivity;
+
+public void startMuPDFActivity(Uri documentUri) {
+	Intent intent = new Intent(this, DocumentActivity.class);
+	intent.setAction(Intent.ACTION_VIEW);
+	intent.setData(documentUri);
+	startActivity(intent);
+}
+</pre>
+
+<p>
+The activity supports viewing both file and content scheme URIs.
+
+<p>
+For example, to open the PDF file in ~/Download/example.pdf:
+
+<pre>
+public void startMuPDFActivityWithExampleFile() {
+	File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+	File file = new File(dir, "example.pdf");
+	Uri uri = Uri.fromFile(file);
+	startMuPDFActivity(uri);
+}
+</pre>
+
+<h2>
+How to customize the viewer
+</h2>
+
+<p>
+If you've already tried embedding the viewer in your app, but are unhappy with some
+aspect of the look or behavior and want to modify it in some way, this document should
+point you in the right direction.
+
+<h3>
+Decide which viewer to base your customizations on
+</h3>
+
+<p>
+In order to customize the viewer UI, you will need to modify the existing android viewer activity.
+There are two separate code bases you can start with:
+
+<dl>
+<dt>mupdf-android-viewer:
+<dd>The main viewer app. This code is difficult to work with, but has the most
+features and pre-renders neighboring pages into a page cache for faster page
+turning performance.
+<dt>mupdf-android-viewer-mini:
+<dd>This is a minimalist viewer which has fewer features but is designed to be
+easy to understand and modify. It does not (currently) have high-resolution
+zooming, and it does not use the swipe gesture to flip pages (it requires the
+user to tap on the side of the screen to flip pages).
+</dl>
+
+<p>
+If all you want to do is brand the UI with your own colors and icons, you are
+welcome to use whichever code base you prefer. However, if you want to do
+extensive modifications, we suggest you base your code on the mini viewer.
+
+<h3>
+Check out the chosen project
+</h3>
+
+<p>
+When you have decided which project to base your modifications on, you should check out
+the corresponding git repository:
+
+<pre>
+$ git clone git://git.ghostscript.com/mupdf-android-viewer.git
+$ git clone git://git.ghostscript.com/mupdf-android-viewer-mini.git
+</pre>
+
+<p>
+Inside the checked out project you will find two modules: app and lib.
+The app module is a file chooser activity that lets the user open files from the external storage.
+The lib module is the viewer activity, which provides the "com.artifex.mupdf:viewer"
+package that you're already using.
+
+<p>
+The lib module is the one you want; ignore everything else in this project.
+
+<h3>
+Copy the viewer library module into your project
+</h3>
+
+<p>
+Copy the 'lib' directory to your project, renaming it to something appropriate.
+The following instructions assume you called the directory 'mupdf-lib'.
+Don't forget to include the module in the settings.gradle file:
+
+<pre>
+include ':app'
+<b>include ':mupdf-lib'</b>
+...
+</pre>
+
+<p>
+You'll also want to change your app's dependencies to now depend on your local
+copy rather than the official mupdf viewer package. In your app build.gradle:
+
+<pre>
+dependencies {
+	<strike>api 'com.artifex.mupdf:viewer:1.15.+'</strike>
+	<b>api project(':mupdf-lib')</b>
+	...
+}
+</pre>
+
+<p>
+The lib module depends on the JNI library "com.artifex.mupdf:fitz", so do
+<i>not</i> remove the maven repository from your top build.gradle.
+
+<h3>
+Edit the viewer activity
+</h3>
+
+<p>
+If all has gone well, you can now build your project with the local viewer library,
+and access the mupdf viewer activity just as you used to.
+
+<p>
+You're now free to customize the resources in mupdf-lib/src/main/res and behavior in
+mupdf-lib/src/main/java as you desire.
+
+<h2>
+Working on the MuPDF SDK
+</h2>
+
+<p>
+If you want to work on the SDK itself, rather than just use it, you will need
+to check out the following git repositories.
+
+<dl>
+<dt>mupdf.git
+<dd>This repository contains the low-level "fitz" C library and the JNI bindings.
+<dt>mupdf-android-fitz.git
+<dd>This repository contains an Android project to build the C library and JNI bindings.
+It uses mupdf.git as a git submodule.
+<dt>mupdf-android-viewer.git
+<dd>This repository contains the Android viewer library and app.
+It uses mupdf-android-fitz.git as either a Maven artifact or git submodule.
+<dt>mupdf-android-viewer-mini.git
+<dd>This repository contains the minimalist Android viewer library and app.
+It uses mupdf-android-fitz.git as either a Maven artifact or git submodule.
+<dt>mupdf-android-viewer-old.git
+<dd>This repository contains the old Android viewer. It has its own JNI
+bindings and uses mupdf.git as a submodule directly. It is only listed here for
+completeness sake, and is not part of the SDK.
+</dl>
+
+<p>
+Since these repositories are set up as git submodules, if you're a Git expert,
+you can clone one of the viewer repositories recursively and get all of them at
+once. However, working with git submodules can be fraught with danger, so it
+may be easier to check them out individually.
+
+<p>
+If you only want to work with one of the viewer repositories, you can use the
+Maven artifact for the JNI bindings library and not worry about the mupdf.git
+and mupdf-android-fitz.git repositories.
+
+<p>
+Good luck!
+
+</article>
+
+<footer>
+<a href="http://www.artifex.com/"><img src="artifex-logo.png" align="right"></a>
+Copyright &copy; 2006-2019 Artifex Software Inc.
+</footer>
+
+</body>
+</html>

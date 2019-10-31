@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>How to build MuPDF</title>
+<link rel="stylesheet" href="style.css" type="text/css">
+</head>
+<body>
+
+<header>
+<h1>How to build MuPDF</h1>
+</header>
+
+<article>
+
+<h2>License</h2>
+
+<p>
+MuPDF is Copyright (c) 2006-2019 Artifex Software, Inc.
+
+<p>
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU Affero General Public License as published by the Free
+Software Foundation, either version 3 of the License, or (at your option) any
+later version.
+
+<p>
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+<p>
+You should have received a copy of the GNU Affero General Public License along
+with this program. If not, see
+<a href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>
+
+<p>
+For commercial licensing, including our "Indie Dev" friendly options, please
+contact <a href="https://artifex.com/contact-us/">Artifex Software</a>.
+
+<h2>Download</h2>
+
+<p>
+The latest development source is available directly from the git repository:
+
+<pre>
+git clone --recursive git://git.ghostscript.com/mupdf.git
+</pre>
+
+<p>
+In the mupdf directory, update the third party libraries:
+
+<pre>
+git submodule update --init
+</pre>
+
+<h2>Compiling on Windows</h2>
+
+<p>
+On Windows there is a Visual Studio project file in <tt>platform/win32/mupdf.vcproj</tt>.
+
+<h2>Compiling on Linux</h2>
+
+<p>
+If you are compiling from source you will need several third party libraries:
+freetype2, jbig2dec, libjpeg, openjpeg, and zlib. These libraries are contained
+in the source archive. If you are using git, they are included as git
+submodules.
+
+<p>
+You will also need the X11 headers and libraries if you're building on Linux.
+These can typically be found in the xorg-dev package. Alternatively, if you
+only want the command line tools, you can build with HAVE_X11=no.
+
+<p>
+The new OpenGL-based viewer also needs OpenGL headers and libraries. If you're
+building on Linux, install the mesa-common-dev, libgl1-mesa-dev packages, and
+libglu1-mesa-dev packages. You'll also need several X11 development packages:
+xorg-dev, libxcursor-dev, libxrandr-dev, and libxinerama-dev. To skip building
+the OpenGL viewer, build with HAVE_GLUT=no.
+
+<p>
+To install the viewer, command line tools, libraries, and header files on your system:
+
+<pre>
+make prefix=/usr/local install
+</pre>
+
+<p>
+To install only the command line tools, libraries, and headers invoke make like this:
+
+<pre>
+make HAVE_X11=no HAVE_GLUT=no prefix=/usr/local install
+</pre>
+
+</article>
+
+<footer>
+<a href="http://www.artifex.com/"><img src="artifex-logo.png" align="right"></a>
+Copyright &copy; 2006-2018 Artifex Software Inc.
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,63 @@
+# Optional thirdparty libraryes
+thirdparty/luratech
+thirdparty/jpegxr
+thirdparty/mapping-resources-pdf
+thirdparty/cmap-resources
+
+# Generated files:
+build
+generated
+tags
+cscope.*
+
+# Editor and file browser turds:
+*~
+.*.swp
+.DS_Store
+\#*\#
+
+# Editor settings:
+.vimrc
+.gradle
+*.xcworkspace
+*.xcuserdatad
+user.make
+
+# Test files:
+*.pdf
+*.xps
+*.epub
+*.fb2
+*.svg
+*.pam
+*.pbm
+*.pgm
+*.ppm
+*.jpg
+*.jpeg
+*.pcl
+*.ps
+
+# Temporary and build files:
+*.class
+*.jar
+*.o
+*.so
+*.zip
+*.dll
+DerivedData
+
+platform/java/obj
+platform/java/libs
+platform/java/local.properties
+
+platform/win32/*.user
+platform/win32/*.ncb
+platform/win32/*.suo
+platform/win32/Debug
+platform/win32/DebugOpenssl
+platform/win32/Profile
+platform/win32/Release
+platform/win32/ReleaseOpenssl
+platform/win32/Memento
+platform/win32/x64

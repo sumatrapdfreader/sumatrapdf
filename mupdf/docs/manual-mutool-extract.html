@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>mutool extract</title>
+<link rel="stylesheet" href="style.css" type="text/css">
+</head>
+<body>
+
+<header>
+<h1>mutool extract</h1>
+</header>
+
+<article>
+
+<p>
+The extract command can be used to extract images and font files from a PDF file.
+
+<pre>
+mutool extract [options] file.pdf [object numbers]
+</pre>
+
+<p>
+Options:
+
+<dl>
+<dt> -p password
+<dd> Use the specified password if the file is encrypted.
+<dt> -r
+<dd> Convert images to RGB when extracting them.
+</dl>
+
+<p>
+If no object numbers are given on the command line, all images
+and fonts will be extracted.
+
+</article>
+
+<footer>
+<a href="http://www.artifex.com/"><img src="artifex-logo.png" align="right"></a>
+Copyright &copy; 2006-2018 Artifex Software Inc.
+</footer>
+
+</body>
+</html>

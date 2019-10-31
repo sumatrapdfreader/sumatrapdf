@@ -1,0 +1,13 @@
+# editorconfig.org settings for mupdf project
+
+root = true
+
+[*]
+indent_style = tab
+insert_final_newline = true
+trim_trailing_whitespace = true
+end_of_line = lf
+
+[memento.*]
+indent_style = space
+indent_size = 4

@@ -1,468 +1,391 @@
 # GNU Makefile for third party libraries used by MuPDF
-#
-# If thirdparty libraries are supplied, they will be built as
-# static libraries.
-#
-# Use 'git submodule init' and 'git submodule update' to check
-# out the thirdparty libraries from git.
 
-FREETYPE_DIR := thirdparty/freetype
-JBIG2DEC_DIR := thirdparty/jbig2dec
-JPEG_DIR := thirdparty/jpeg
-MUJS_DIR := thirdparty/mujs
-OPENJPEG_DIR := thirdparty/openjpeg/libopenjpeg
-OPENSSL_DIR := thirdparty/openssl
-ZLIB_DIR := thirdparty/zlib
-CURL_DIR := thirdparty/curl
-
-# --- V8 ---
-#
-# V8 is too big to be used as a submodule.
-#
-
-V8_DIR := $(wildcard thirdparty/v8*)
-
-ifneq "$(V8_DIR)" ""
-
-ifeq "$(build)" "release"
-V8_LIB_CHOICE := release
-else ifeq "$(build)" "profile"
-V8_LIB_CHOICE := release
-else
-V8_LIB_CHOICE := debug
+ifeq ($(USE_SYSTEM_LIBS),yes)
+  USE_SYSTEM_FREETYPE := yes
+  USE_SYSTEM_HARFBUZZ := yes
+  USE_SYSTEM_JBIG2DEC := yes
+  USE_SYSTEM_JPEGXR := no # not available
+  USE_SYSTEM_LCMS2 := no # lcms2mt is strongly preferred
+  USE_SYSTEM_LIBJPEG := yes
+  USE_SYSTEM_MUJS := no # not available
+  USE_SYSTEM_OPENJPEG := yes
+  USE_SYSTEM_ZLIB := yes
+  USE_SYSTEM_GLUT := yes
+  USE_SYSTEM_CURL := yes
 endif
 
-V8_ARCH ?= x64
-
-# If you are building for 32bit linux use V8_ARCH=ia32
-ifeq "$(OS)" "Darwin"
-V8_LIBS := -L$(V8_DIR)/out-mac/$(V8_ARCH).$(V8_LIB_CHOICE)/ -lv8_base -lv8_snapshot -lstdc++
-else
-V8_LIBS := -L$(V8_DIR)/out/$(V8_ARCH).$(V8_LIB_CHOICE)/obj.target/tools/gyp -lv8_base -lv8_snapshot -lpthread -ldl -lstdc++
+ifeq ($(OS),MACOS)
+  USE_SYSTEM_GLUT := yes
 endif
 
-V8_CFLAGS := -I$(V8_DIR)/include
+ifeq ($(OS),Linux)
+  USE_SYSTEM_CURL := yes
+endif
 
-HAVE_V8 := yes
+# --- FREETYPE 2 ---
+
+ifeq ($(USE_SYSTEM_FREETYPE),yes)
+  FREETYPE_CFLAGS += $(SYS_FREETYPE_CFLAGS)
+  THIRD_CFLAGS += $(FREETYPE_CFLAGS)
+  THIRD_LIBS += $(SYS_FREETYPE_LIBS)
+else
+
+FREETYPE_CFLAGS += -Iscripts/freetype -Ithirdparty/freetype/include
+
+THIRD_SRC += thirdparty/freetype/src/base/ftbase.c
+THIRD_SRC += thirdparty/freetype/src/base/ftbbox.c
+THIRD_SRC += thirdparty/freetype/src/base/ftbitmap.c
+THIRD_SRC += thirdparty/freetype/src/base/ftdebug.c
+THIRD_SRC += thirdparty/freetype/src/base/ftgasp.c
+THIRD_SRC += thirdparty/freetype/src/base/ftglyph.c
+THIRD_SRC += thirdparty/freetype/src/base/ftinit.c
+THIRD_SRC += thirdparty/freetype/src/base/ftstroke.c
+THIRD_SRC += thirdparty/freetype/src/base/ftsynth.c
+THIRD_SRC += thirdparty/freetype/src/base/ftsystem.c
+THIRD_SRC += thirdparty/freetype/src/base/fttype1.c
+THIRD_SRC += thirdparty/freetype/src/cff/cff.c
+THIRD_SRC += thirdparty/freetype/src/cid/type1cid.c
+THIRD_SRC += thirdparty/freetype/src/psaux/psaux.c
+THIRD_SRC += thirdparty/freetype/src/pshinter/pshinter.c
+THIRD_SRC += thirdparty/freetype/src/psnames/psnames.c
+THIRD_SRC += thirdparty/freetype/src/raster/raster.c
+THIRD_SRC += thirdparty/freetype/src/sfnt/sfnt.c
+THIRD_SRC += thirdparty/freetype/src/smooth/smooth.c
+THIRD_SRC += thirdparty/freetype/src/truetype/truetype.c
+THIRD_SRC += thirdparty/freetype/src/type1/type1.c
+
+THIRD_CFLAGS += $(FREETYPE_CFLAGS)
+
+$(OUT)/thirdparty/freetype/%.o: thirdparty/freetype/%.c
+	$(CC_CMD) $(FREETYPE_CFLAGS) \
+		-DFT_CONFIG_MODULES_H=\"slimftmodules.h\" \
+		-DFT_CONFIG_OPTIONS_H=\"slimftoptions.h\" \
+		-DFT2_BUILD_LIBRARY
+
+endif
+
+# --- HARFBUZZ ---
+
+ifeq ($(USE_SYSTEM_HARFBUZZ),yes)
+  THIRD_CFLAGS += $(SYS_HARFBUZZ_CFLAGS)
+  THIRD_LIBS += $(SYS_HARFBUZZ_LIBS)
+else
+
+THIRD_SRC += thirdparty/harfbuzz/src/hb-aat-layout.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-blob.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-buffer-serialize.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-buffer.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-common.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-face.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-fallback-shape.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-font.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-ft.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-color.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-face.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-font.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-layout.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-map.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-math.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-shape-complex-arabic.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-shape-complex-default.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-shape-complex-hangul.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-shape-complex-hebrew.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-shape-complex-indic-table.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-shape-complex-indic.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-shape-complex-khmer.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-shape-complex-myanmar.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-shape-complex-thai.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-shape-complex-tibetan.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-shape-complex-use-table.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-shape-complex-use.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-shape-fallback.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-shape-normalize.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-shape.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-tag.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-ot-var.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-set.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-shape-plan.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-shape.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-shaper.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-static.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-ucdn.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-unicode.cc
+THIRD_SRC += thirdparty/harfbuzz/src/hb-warning.cc
+
+THIRD_CFLAGS += -Ithirdparty/harfbuzz/src
+
+$(OUT)/thirdparty/harfbuzz/%.o: thirdparty/harfbuzz/%.cc
+	$(CXX_CMD) $(FREETYPE_CFLAGS) -Iinclude/mupdf \
+		-DHAVE_FALLBACK=1 \
+		-DHAVE_OT \
+		-DHAVE_ROUND \
+		-DHAVE_UCDN \
+		-DHB_NO_MT \
+		-Dhb_malloc_impl=fz_hb_malloc \
+		-Dhb_calloc_impl=fz_hb_calloc \
+		-Dhb_free_impl=fz_hb_free \
+		-Dhb_realloc_impl=fz_hb_realloc \
+		-fno-exceptions \
+		-fno-rtti \
+		-fvisibility-inlines-hidden
+
+endif
+
+# --- JPEG-XR ---
+
+ifeq ($(HAVE_JPEGXR),yes)
+ifeq ($(USE_SYSTEM_JPEGXR),yes)
+  THIRD_CFLAGS += $(SYS_JPEGXR_CFLAGS) -DHAVE_JPEGXR
+  THIRD_LIBS += $(SYS_JPEGXR_LIBS)
+else
+
+THIRD_SRC += thirdparty/jpegxr/Software/algo.c
+THIRD_SRC += thirdparty/jpegxr/Software/api.c
+THIRD_SRC += thirdparty/jpegxr/Software/cr_parse.c
+THIRD_SRC += thirdparty/jpegxr/Software/flags.c
+THIRD_SRC += thirdparty/jpegxr/Software/init.c
+THIRD_SRC += thirdparty/jpegxr/Software/io.c
+THIRD_SRC += thirdparty/jpegxr/Software/jpegxr_pixelformat.c
+THIRD_SRC += thirdparty/jpegxr/Software/r_parse.c
+THIRD_SRC += thirdparty/jpegxr/Software/r_strip.c
+THIRD_SRC += thirdparty/jpegxr/Software/r_tile_frequency.c
+THIRD_SRC += thirdparty/jpegxr/Software/r_tile_spatial.c
+THIRD_SRC += thirdparty/jpegxr/Software/x_strip.c
+
+THIRD_CFLAGS += -Ithirdparty/jpegxr
+THIRD_CFLAGS += -Ithirdparty/jpegxr/Software
+THIRD_CFLAGS += -DHAVE_JPEGXR
+
+$(OUT)/thirdparty/jpegxr/%.o: thirdparty/jpegxr/%.c
+	$(CC_CMD) -Ithirdparty/jpegxr -Ithirdparty/jpegxr/Software -Wno-tautological-compare
+
+endif
+endif
+
+# --- LIBJPEG ---
+
+ifeq ($(USE_SYSTEM_LIBJPEG),yes)
+  THIRD_CFLAGS += $(SYS_LIBJPEG_CFLAGS) -DSHARE_JPEG
+  THIRD_LIBS += $(SYS_LIBJPEG_LIBS)
+else
+
+THIRD_SRC += thirdparty/libjpeg/jaricom.c
+THIRD_SRC += thirdparty/libjpeg/jcomapi.c
+THIRD_SRC += thirdparty/libjpeg/jdapimin.c
+THIRD_SRC += thirdparty/libjpeg/jdapistd.c
+THIRD_SRC += thirdparty/libjpeg/jdarith.c
+THIRD_SRC += thirdparty/libjpeg/jdatadst.c
+THIRD_SRC += thirdparty/libjpeg/jdatasrc.c
+THIRD_SRC += thirdparty/libjpeg/jdcoefct.c
+THIRD_SRC += thirdparty/libjpeg/jdcolor.c
+THIRD_SRC += thirdparty/libjpeg/jddctmgr.c
+THIRD_SRC += thirdparty/libjpeg/jdhuff.c
+THIRD_SRC += thirdparty/libjpeg/jdinput.c
+THIRD_SRC += thirdparty/libjpeg/jdmainct.c
+THIRD_SRC += thirdparty/libjpeg/jdmarker.c
+THIRD_SRC += thirdparty/libjpeg/jdmaster.c
+THIRD_SRC += thirdparty/libjpeg/jdmerge.c
+THIRD_SRC += thirdparty/libjpeg/jdpostct.c
+THIRD_SRC += thirdparty/libjpeg/jdsample.c
+THIRD_SRC += thirdparty/libjpeg/jdtrans.c
+THIRD_SRC += thirdparty/libjpeg/jerror.c
+THIRD_SRC += thirdparty/libjpeg/jfdctflt.c
+THIRD_SRC += thirdparty/libjpeg/jfdctfst.c
+THIRD_SRC += thirdparty/libjpeg/jfdctint.c
+THIRD_SRC += thirdparty/libjpeg/jidctflt.c
+THIRD_SRC += thirdparty/libjpeg/jidctfst.c
+THIRD_SRC += thirdparty/libjpeg/jidctint.c
+THIRD_SRC += thirdparty/libjpeg/jmemmgr.c
+THIRD_SRC += thirdparty/libjpeg/jquant1.c
+THIRD_SRC += thirdparty/libjpeg/jquant2.c
+THIRD_SRC += thirdparty/libjpeg/jutils.c
+
+THIRD_CFLAGS += -Iscripts/libjpeg -Ithirdparty/libjpeg
+
+$(OUT)/thirdparty/libjpeg/%.o: thirdparty/libjpeg/%.c
+	$(CC_CMD) -Iscripts/libjpeg
+
+endif
+
+# --- LCMS2 ---
+
+ifeq ($(USE_SYSTEM_LCMS2),yes)
+  THIRD_CFLAGS += $(SYS_LCMS2_CFLAGS)
+  THIRD_LIBS += $(SYS_LCMS2_LIBS)
+else
+
+THIRD_SRC += $(sort $(wildcard thirdparty/lcms2/src/cms*.c))
+
+THIRD_CFLAGS += -Ithirdparty/lcms2/include -DHAVE_LCMS2MT
+
+$(OUT)/thirdparty/lcms2/%.o: thirdparty/lcms2/%.c
+	$(CC_CMD) -Ithirdparty/lcms2/include
+
 endif
 
 # --- MuJS ---
 
-ifneq "$(wildcard $(MUJS_DIR)/README)" ""
+ifeq ($(USE_SYSTEM_MUJS),yes)
+  THIRD_CFLAGS += $(SYS_MUJS_CFLAGS)
+  THIRD_LIBS += $(SYS_MUJS_LIBS)
+else
 
-MUJS_LIB := $(OUT)/libmujs.a
-MUJS_OUT := $(OUT)/mujs
-MUJS_SRC := one.c
+THIRD_SRC += thirdparty/mujs/one.c
+THIRD_CFLAGS += -Ithirdparty/mujs
 
-$(MUJS_LIB): $(addprefix $(MUJS_OUT)/, $(MUJS_SRC:%.c=%.o))
-$(MUJS_OUT):
-	$(MKDIR_CMD)
-$(MUJS_OUT)/%.o: $(MUJS_DIR)/%.c | $(MUJS_OUT)
+$(OUT)/thirdparty/mujs/%.o: thirdparty/mujs/%.c
 	$(CC_CMD)
 
-MUJS_CFLAGS := -I$(MUJS_DIR)
-
-HAVE_MUJS := yes
-endif
-
-# --- FreeType 2 ---
-
-ifneq "$(wildcard $(FREETYPE_DIR)/README)" ""
-
-FREETYPE_LIB := $(OUT)/libfreetype.a
-FREETYPE_OUT := $(OUT)/freetype
-FREETYPE_SRC := \
-	ftbase.c \
-	ftbbox.c \
-	ftbitmap.c \
-	ftdebug.c \
-	ftgasp.c \
-	ftglyph.c \
-	ftinit.c \
-	ftstroke.c \
-	ftsynth.c \
-	ftsystem.c \
-	fttype1.c \
-	ftxf86.c \
-	cff.c \
-	psaux.c \
-	pshinter.c \
-	psnames.c \
-	raster.c \
-	sfnt.c \
-	smooth.c \
-	truetype.c \
-	type1.c \
-	type1cid.c \
-
-
-$(FREETYPE_LIB): $(addprefix $(FREETYPE_OUT)/, $(FREETYPE_SRC:%.c=%.o))
-
-$(FREETYPE_OUT):
-	$(MKDIR_CMD)
-
-FT_CFLAGS := -DFT2_BUILD_LIBRARY -DDARWIN_NO_CARBON \
-	'-DFT_CONFIG_MODULES_H="slimftmodules.h"' \
-	'-DFT_CONFIG_OPTIONS_H="slimftoptions.h"'
-
-$(FREETYPE_OUT)/%.o: $(FREETYPE_DIR)/src/base/%.c	| $(FREETYPE_OUT)
-	$(CC_CMD) $(FT_CFLAGS)
-$(FREETYPE_OUT)/%.o: $(FREETYPE_DIR)/src/cff/%.c	| $(FREETYPE_OUT)
-	$(CC_CMD) $(FT_CFLAGS)
-$(FREETYPE_OUT)/%.o: $(FREETYPE_DIR)/src/cid/%.c	| $(FREETYPE_OUT)
-	$(CC_CMD) $(FT_CFLAGS)
-$(FREETYPE_OUT)/%.o: $(FREETYPE_DIR)/src/psaux/%.c	| $(FREETYPE_OUT)
-	$(CC_CMD) $(FT_CFLAGS)
-$(FREETYPE_OUT)/%.o: $(FREETYPE_DIR)/src/pshinter/%.c	| $(FREETYPE_OUT)
-	$(CC_CMD) $(FT_CFLAGS)
-$(FREETYPE_OUT)/%.o: $(FREETYPE_DIR)/src/psnames/%.c	| $(FREETYPE_OUT)
-	$(CC_CMD) $(FT_CFLAGS)
-$(FREETYPE_OUT)/%.o: $(FREETYPE_DIR)/src/raster/%.c	| $(FREETYPE_OUT)
-	$(CC_CMD) $(FT_CFLAGS)
-$(FREETYPE_OUT)/%.o: $(FREETYPE_DIR)/src/smooth/%.c	| $(FREETYPE_OUT)
-	$(CC_CMD) $(FT_CFLAGS)
-$(FREETYPE_OUT)/%.o: $(FREETYPE_DIR)/src/sfnt/%.c	| $(FREETYPE_OUT)
-	$(CC_CMD) $(FT_CFLAGS)
-$(FREETYPE_OUT)/%.o: $(FREETYPE_DIR)/src/truetype/%.c	| $(FREETYPE_OUT)
-	$(CC_CMD) $(FT_CFLAGS)
-$(FREETYPE_OUT)/%.o: $(FREETYPE_DIR)/src/type1/%.c	| $(FREETYPE_OUT)
-	$(CC_CMD) $(FT_CFLAGS)
-
-FREETYPE_CFLAGS := -Iscripts/freetype -I$(FREETYPE_DIR)/include
-else
-FREETYPE_CFLAGS := $(SYS_FREETYPE_CFLAGS)
-FREETYPE_LIBS := $(SYS_FREETYPE_LIBS)
-endif
-
-# --- JBIG2DEC ---
-
-ifneq "$(wildcard $(JBIG2DEC_DIR)/README)" ""
-
-JBIG2DEC_LIB := $(OUT)/libjbig2dec.a
-JBIG2DEC_OUT := $(OUT)/jbig2dec
-JBIG2DEC_SRC := \
-	jbig2.c \
-	jbig2_arith.c \
-	jbig2_arith_iaid.c \
-	jbig2_arith_int.c \
-	jbig2_generic.c \
-	jbig2_halftone.c \
-	jbig2_huffman.c \
-	jbig2_image.c \
-	jbig2_metadata.c \
-	jbig2_mmr.c \
-	jbig2_page.c \
-	jbig2_refinement.c \
-	jbig2_segment.c \
-	jbig2_symbol_dict.c \
-	jbig2_text.c \
-
-$(JBIG2DEC_LIB): $(addprefix $(JBIG2DEC_OUT)/, $(JBIG2DEC_SRC:%.c=%.o))
-$(JBIG2DEC_OUT):
-	$(MKDIR_CMD)
-$(JBIG2DEC_OUT)/%.o: $(JBIG2DEC_DIR)/%.c | $(JBIG2DEC_OUT)
-	$(CC_CMD) -DHAVE_STDINT_H
-
-JBIG2DEC_CFLAGS := -I$(JBIG2DEC_DIR)
-else
-JBIG2DEC_CFLAGS := $(SYS_JBIG2DEC_CFLAGS)
-JBIG2DEC_LIBS := $(SYS_JBIG2DEC_LIBS)
-endif
-
-# --- JPEG library from IJG ---
-
-ifneq "$(wildcard $(JPEG_DIR)/README)" ""
-
-JPEG_LIB := $(OUT)/libjpeg.a
-JPEG_OUT := $(OUT)/jpeg
-JPEG_SRC := \
-	jaricom.c \
-	jcomapi.c \
-	jdapimin.c \
-	jdapistd.c \
-	jdarith.c \
-	jdatadst.c \
-	jdatasrc.c \
-	jdcoefct.c \
-	jdcolor.c \
-	jddctmgr.c \
-	jdhuff.c \
-	jdinput.c \
-	jdmainct.c \
-	jdmarker.c \
-	jdmaster.c \
-	jdmerge.c \
-	jdpostct.c \
-	jdsample.c \
-	jdtrans.c \
-	jerror.c \
-	jfdctflt.c \
-	jfdctfst.c \
-	jfdctint.c \
-	jidctflt.c \
-	jidctfst.c \
-	jidctint.c \
-	jmemmgr.c \
-	jquant1.c \
-	jquant2.c \
-	jutils.c \
-
-$(JPEG_LIB): $(addprefix $(JPEG_OUT)/, $(JPEG_SRC:%.c=%.o))
-$(JPEG_OUT):
-	$(MKDIR_CMD)
-$(JPEG_OUT)/%.o: $(JPEG_DIR)/%.c | $(JPEG_OUT)
-	$(CC_CMD) -Dmain=xxxmain
-
-JPEG_CFLAGS := -Iscripts/jpeg -I$(JPEG_DIR)
-else
-JPEG_CFLAGS := $(SYS_JPEG_CFLAGS) -DSHARE_JPEG
-JPEG_LIBS := $(SYS_JPEG_LIBS)
-endif
-
-# --- OpenJPEG ---
-
-ifneq "$(wildcard $(OPENJPEG_DIR)/CMakeLists.txt)" ""
-
-OPENJPEG_LIB := $(OUT)/libopenjpeg.a
-OPENJPEG_OUT := $(OUT)/openjpeg
-OPENJPEG_SRC := \
-	bio.c \
-	cidx_manager.c \
-	cio.c \
-	dwt.c \
-	event.c \
-	function_list.c \
-	image.c \
-	invert.c \
-	j2k.c \
-	jp2.c \
-	mct.c \
-	mqc.c \
-	openjpeg.c \
-	opj_clock.c \
-	phix_manager.c \
-	pi.c \
-	ppix_manager.c \
-	raw.c \
-	t1.c \
-	t2.c \
-	tcd.c \
-	tgt.c \
-	thix_manager.c \
-	tpix_manager.c \
-
-$(OPENJPEG_LIB): $(addprefix $(OPENJPEG_OUT)/, $(OPENJPEG_SRC:%.c=%.o))
-$(OPENJPEG_OUT):
-	$(MKDIR_CMD)
-$(OPENJPEG_OUT)/%.o: $(OPENJPEG_DIR)/%.c | $(OPENJPEG_OUT)
-	$(CC_CMD) -DOPJ_STATIC -DOPJ_HAVE_STDINT_H
-
-OPENJPEG_CFLAGS += -Iscripts/openjpeg -I$(OPENJPEG_DIR)
-else
-OPENJPEG_CFLAGS := $(SYS_OPENJPEG_CFLAGS)
-OPENJPEG_LIBS := $(SYS_OPENJPEG_LIBS)
 endif
 
 # --- ZLIB ---
 
-ifneq "$(wildcard $(ZLIB_DIR)/README)" ""
-
-ZLIB_LIB := $(OUT)/libz.a
-ZLIB_OUT := $(OUT)/zlib
-ZLIB_SRC := \
-	adler32.c \
-	compress.c \
-	crc32.c \
-	deflate.c \
-	inffast.c \
-	inflate.c \
-	inftrees.c \
-	trees.c \
-	uncompr.c \
-	zutil.c \
-
-$(ZLIB_LIB): $(addprefix $(ZLIB_OUT)/, $(ZLIB_SRC:%.c=%.o))
-$(ZLIB_OUT):
-	$(MKDIR_CMD)
-$(ZLIB_OUT)/%.o: $(ZLIB_DIR)/%.c | $(ZLIB_OUT)
-	$(CC_CMD) -Dverbose=-1
-
-ZLIB_CFLAGS := -I$(ZLIB_DIR)
+ifeq ($(USE_SYSTEM_ZLIB),yes)
+  THIRD_CFLAGS += $(SYS_ZLIB_CFLAGS)
+  THIRD_LIBS += $(SYS_ZLIB_LIBS)
 else
-ZLIB_CFLAGS := $(SYS_ZLIB_CFLAGS)
-ZLIB_LIBS := $(SYS_ZLIB_LIBS)
+
+THIRD_SRC += thirdparty/zlib/adler32.c
+THIRD_SRC += thirdparty/zlib/compress.c
+THIRD_SRC += thirdparty/zlib/crc32.c
+THIRD_SRC += thirdparty/zlib/deflate.c
+THIRD_SRC += thirdparty/zlib/inffast.c
+THIRD_SRC += thirdparty/zlib/inflate.c
+THIRD_SRC += thirdparty/zlib/inftrees.c
+THIRD_SRC += thirdparty/zlib/trees.c
+THIRD_SRC += thirdparty/zlib/uncompr.c
+THIRD_SRC += thirdparty/zlib/zutil.c
+
+THIRD_CFLAGS += -Ithirdparty/zlib
+
+$(OUT)/thirdparty/zlib/%.o: thirdparty/zlib/%.c
+	$(CC_CMD) -DHAVE_UNISTD_H -DHAVE_STDARG_H
+
 endif
 
-# --- OpenSSL ---
+# --- LURATECH ---
 
-ifneq "$(wildcard $(OPENSSL_DIR)/README)" ""
+ifeq ($(HAVE_LURATECH),yes)
 
-OPENSSL_LIB := $(OUT)/libcrypto.a
+THIRD_SRC += $(sort $(wildcard thirdparty/luratech/ldf_jb2/source/common/*.c))
+THIRD_SRC += $(sort $(wildcard thirdparty/luratech/ldf_jb2/source/compress/*.c))
+THIRD_SRC += $(sort $(wildcard thirdparty/luratech/lwf_jp2/library/source/*.c))
 
-OPENSSL_DIR_MAK := $(OPENSSL_DIR)/Makefile
-OPENSSL_DIR_LIB := $(OPENSSL_DIR)/libcrypto.a
+LURATECH_CFLAGS += -Ithirdparty/luratech/ldf_jb2/source/libraries
+LURATECH_CFLAGS += -Ithirdparty/luratech/ldf_jb2/source/compress
+LURATECH_CFLAGS += -Ithirdparty/luratech/ldf_jb2/source/common
+LURATECH_CFLAGS += -Ithirdparty/luratech/lwf_jp2/library/source
 
-$(OPENSSL_DIR_MAK):
-	cd $(OPENSSL_DIR) && ./config no-threads no-zlib no-shared no-asm no-dso
+THIRD_CFLAGS += $(LURATECH_CFLAGS) -DHAVE_LURATECH
 
-$(OPENSSL_DIR_LIB): $(OPENSSL_DIR_MAK)
-	$(MAKE) -C $(OPENSSL_DIR) build_crypto
+$(OUT)/thirdparty/luratech/%.o: thirdparty/luratech/%.c
+	$(CC_CMD) -DLINUX $(LURATECH_CFLAGS) -Wno-tautological-compare -Wno-absolute-value -Wno-sign-compare
 
-$(OPENSSL_LIB): $(OPENSSL_DIR_LIB) | $(OUT)
-	cp $(OPENSSL_DIR_LIB) $(OPENSSL_LIB)
+else # HAVE_LURATECH
 
-openssl-clean:
-	$(MAKE) -C $(OPENSSL_DIR) clean
-	rm -f thirdparty/openssl/Makefile thirdparty/openssl/libcrypto.a
+# --- JBIG2DEC ---
 
-OPENSSL_CFLAGS := -DHAVE_OPENSSL -I$(OPENSSL_DIR)/include
+ifeq ($(USE_SYSTEM_JBIG2DEC),yes)
+  THIRD_CFLAGS += $(SYS_JBIG2DEC_CFLAGS)
+  THIRD_LIBS += $(SYS_JBIG2DEC_LIBS)
 else
-OPENSSL_CFLAGS := $(SYS_OPENSSL_CFLAGS)
-OPENSSL_LIBS := $(SYS_OPENSSL_LIBS)
+
+THIRD_SRC += thirdparty/jbig2dec/jbig2.c
+THIRD_SRC += thirdparty/jbig2dec/jbig2_arith.c
+THIRD_SRC += thirdparty/jbig2dec/jbig2_arith_iaid.c
+THIRD_SRC += thirdparty/jbig2dec/jbig2_arith_int.c
+THIRD_SRC += thirdparty/jbig2dec/jbig2_generic.c
+THIRD_SRC += thirdparty/jbig2dec/jbig2_halftone.c
+THIRD_SRC += thirdparty/jbig2dec/jbig2_huffman.c
+THIRD_SRC += thirdparty/jbig2dec/jbig2_image.c
+THIRD_SRC += thirdparty/jbig2dec/jbig2_mmr.c
+THIRD_SRC += thirdparty/jbig2dec/jbig2_page.c
+THIRD_SRC += thirdparty/jbig2dec/jbig2_refinement.c
+THIRD_SRC += thirdparty/jbig2dec/jbig2_segment.c
+THIRD_SRC += thirdparty/jbig2dec/jbig2_symbol_dict.c
+THIRD_SRC += thirdparty/jbig2dec/jbig2_text.c
+
+THIRD_CFLAGS += -Ithirdparty/jbig2dec
+
+$(OUT)/thirdparty/jbig2dec/%.o: thirdparty/jbig2dec/%.c
+	$(CC_CMD) -DHAVE_STDINT_H -DJBIG_EXTERNAL_MEMENTO_H=\"mupdf/memento.h\" -Wno-sign-compare
+
+endif
+
+# --- OPENJPEG ---
+
+ifeq ($(USE_SYSTEM_OPENJPEG),yes)
+  THIRD_CFLAGS += $(SYS_OPENJPEG_CFLAGS)
+  THIRD_LIBS += $(SYS_OPENJPEG_LIBS)
+else
+
+OPENJPEG_CFLAGS += -Ithirdparty/openjpeg/src/lib/openjp2
+OPENJPEG_CFLAGS += -DOPJ_STATIC
+OPENJPEG_CFLAGS += -DOPJ_HAVE_STDINT_H -DOPJ_HAVE_INTTYPES_H
+OPENJPEG_CFLAGS += -DMUTEX_pthread=0
+
+THIRD_SRC += thirdparty/openjpeg/src/lib/openjp2/bio.c
+THIRD_SRC += thirdparty/openjpeg/src/lib/openjp2/cio.c
+THIRD_SRC += thirdparty/openjpeg/src/lib/openjp2/dwt.c
+THIRD_SRC += thirdparty/openjpeg/src/lib/openjp2/event.c
+THIRD_SRC += thirdparty/openjpeg/src/lib/openjp2/function_list.c
+THIRD_SRC += thirdparty/openjpeg/src/lib/openjp2/image.c
+THIRD_SRC += thirdparty/openjpeg/src/lib/openjp2/invert.c
+THIRD_SRC += thirdparty/openjpeg/src/lib/openjp2/j2k.c
+THIRD_SRC += thirdparty/openjpeg/src/lib/openjp2/jp2.c
+THIRD_SRC += thirdparty/openjpeg/src/lib/openjp2/mct.c
+THIRD_SRC += thirdparty/openjpeg/src/lib/openjp2/mqc.c
+THIRD_SRC += thirdparty/openjpeg/src/lib/openjp2/openjpeg.c
+THIRD_SRC += thirdparty/openjpeg/src/lib/openjp2/pi.c
+THIRD_SRC += thirdparty/openjpeg/src/lib/openjp2/sparse_array.c
+THIRD_SRC += thirdparty/openjpeg/src/lib/openjp2/t1.c
+THIRD_SRC += thirdparty/openjpeg/src/lib/openjp2/t2.c
+THIRD_SRC += thirdparty/openjpeg/src/lib/openjp2/tcd.c
+THIRD_SRC += thirdparty/openjpeg/src/lib/openjp2/tgt.c
+THIRD_SRC += thirdparty/openjpeg/src/lib/openjp2/thread.c
+
+THIRD_CFLAGS += $(OPENJPEG_CFLAGS)
+
+$(OUT)/thirdparty/openjpeg/%.o: thirdparty/openjpeg/%.c
+	$(CC_CMD) $(OPENJPEG_CFLAGS)
+
+endif
+
+endif # HAVE_LURATECH
+
+# --- FreeGLUT ---
+
+ifeq ($(USE_SYSTEM_GLUT),yes)
+  GLUT_CFLAGS := $(SYS_GLUT_CFLAGS)
+  GLUT_LIBS := $(SYS_GLUT_LIBS)
+else
+
+GLUT_SRC += $(sort $(wildcard thirdparty/freeglut/src/fg_*.c))
+GLUT_SRC += $(sort $(wildcard thirdparty/freeglut/src/x11/*.c))
+
+GLUT_OBJ := $(GLUT_SRC:%.c=$(OUT)/%.o)
+
+LOCAL_GLUT_CFLAGS += -Ithirdparty/freeglut/include
+LOCAL_GLUT_CFLAGS += -Ithirdparty/freeglut/src
+LOCAL_GLUT_CFLAGS += -DHAVE_UNISTD_H -DHAVE_STDINT_H -DHAVE_X11_EXTENSIONS_XRANDR_H
+LOCAL_GLUT_CFLAGS += -Wno-sign-compare
+
+GLUT_LIB := $(OUT)/libfreeglut.a
+
+$(GLUT_LIB): $(GLUT_OBJ)
+
+$(OUT)/thirdparty/freeglut/%.o: thirdparty/freeglut/%.c
+	$(CC_CMD) $(LOCAL_GLUT_CFLAGS)
+
+GLUT_CFLAGS := -Ithirdparty/freeglut/include
+GLUT_LIBS := -lGL -lX11 -lXrandr
+
 endif
 
 # --- cURL ---
 
-ifneq "$(wildcard $(CURL_DIR)/README)" ""
-
-CURL_LIB := $(OUT)/libcurl.a
-CURL_OUT := $(OUT)/curl
-CURL_SRC := \
-	amigaos.c \
-	asyn-ares.c \
-	asyn-thread.c \
-	axtls.c \
-	base64.c \
-	bundles.c \
-	conncache.c \
-	connect.c \
-	content_encoding.c \
-	cookie.c \
-	curl_addrinfo.c \
-	curl_darwinssl.c \
-	curl_fnmatch.c \
-	curl_gethostname.c \
-	curl_gssapi.c \
-	curl_memrchr.c \
-	curl_multibyte.c \
-	curl_ntlm.c \
-	curl_ntlm_core.c \
-	curl_ntlm_msgs.c \
-	curl_ntlm_wb.c \
-	curl_rand.c \
-	curl_rtmp.c \
-	curl_sasl.c \
-	curl_schannel.c \
-	curl_sspi.c \
-	curl_threads.c \
-	cyassl.c \
-	dict.c \
-	easy.c \
-	escape.c \
-	file.c \
-	fileinfo.c \
-	formdata.c \
-	ftp.c \
-	ftplistparser.c \
-	getenv.c \
-	getinfo.c \
-	gopher.c \
-	gtls.c \
-	hash.c \
-	hmac.c \
-	hostasyn.c \
-	hostcheck.c \
-	hostip.c \
-	hostip4.c \
-	hostip6.c \
-	hostsyn.c \
-	http.c \
-	http_chunks.c \
-	http_digest.c \
-	http_negotiate.c \
-	http_negotiate_sspi.c \
-	http_proxy.c \
-	idn_win32.c \
-	if2ip.c \
-	imap.c \
-	inet_ntop.c \
-	inet_pton.c \
-	krb4.c \
-	krb5.c \
-	ldap.c \
-	llist.c \
-	md4.c \
-	md5.c \
-	memdebug.c \
-	mprintf.c \
-	multi.c \
-	netrc.c \
-	non-ascii.c \
-	nonblock.c \
-	nss.c \
-	openldap.c \
-	parsedate.c \
-	pingpong.c \
-	pipeline.c \
-	polarssl.c \
-	polarssl_threadlock.c \
-	pop3.c \
-	progress.c \
-	qssl.c \
-	rawstr.c \
-	rtsp.c \
-	security.c \
-	select.c \
-	sendf.c \
-	share.c \
-	slist.c \
-	smtp.c \
-	socks.c \
-	socks_gssapi.c \
-	speedcheck.c \
-	splay.c \
-	ssh.c \
-	sslgen.c \
-	ssluse.c \
-	strdup.c \
-	strequal.c \
-	strerror.c \
-	strtok.c \
-	strtoofft.c \
-	telnet.c \
-	tftp.c \
-	timeval.c \
-	transfer.c \
-	url.c \
-	version.c \
-	warnless.c \
-	wildcard.c \
-
-
-$(CURL_LIB): $(addprefix $(CURL_OUT)/, $(CURL_SRC:%.c=%.o))
-
-$(CURL_OUT):
-	$(MKDIR_CMD)
-
-CRL_CFLAGS := -DHAVE_CONFIG_H -DBUILDING_LIBCURL -DCURL_STATICLIB \
-	-DCURL_DISABLE_LDAP -I$(CURL_DIR)/include
-
-$(CURL_OUT)/%.o: $(CURL_DIR)/lib/%.c	| $(CURL_OUT)
-	$(CC_CMD) $(CRL_CFLAGS)
-
-CURL_CFLAGS := -I$(CURL_DIR)/include
-CURL_LIBS := $(SYS_CURL_DEPS)
-
-HAVE_CURL := yes
-
-else ifeq "$(HAVE_CURL)" "yes"
-CURL_CFLAGS := $(SYS_CURL_CFLAGS)
-CURL_LIBS := $(SYS_CURL_LIBS)
-endif
-
-# --- X11 ---
-
-ifeq "$(HAVE_X11)" "yes"
-X11_CFLAGS := $(SYS_X11_CFLAGS)
-X11_LIBS := $(SYS_X11_LIBS)
+ifeq ($(USE_SYSTEM_CURL),yes)
+  HAVE_CURL := $(HAVE_SYS_CURL)
+  CURL_CFLAGS := $(SYS_CURL_CFLAGS)
+  CURL_LIBS := $(SYS_CURL_LIBS)
 endif

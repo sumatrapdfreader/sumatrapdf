@@ -2,29 +2,31 @@
 
 #include <zlib.h>
 
-typedef struct fz_flate_s fz_flate;
+#include <string.h>
 
-struct fz_flate_s
+typedef struct fz_inflate_state_s fz_inflate_state;
+
+struct fz_inflate_state_s
 {
 	fz_stream *chain;
 	z_stream z;
 	unsigned char buffer[4096];
 };
 
-static void *zalloc(void *opaque, unsigned int items, unsigned int size)
+void *fz_zlib_alloc(void *ctx, unsigned int items, unsigned int size)
 {
-	return fz_malloc_array_no_throw(opaque, items, size);
+	return fz_malloc_no_throw(ctx, items * size);
 }
 
-static void zfree(void *opaque, void *ptr)
+void fz_zlib_free(void *ctx, void *ptr)
 {
-	fz_free(opaque, ptr);
+	fz_free(ctx, ptr);
 }
 
 static int
-next_flated(fz_stream *stm, int required)
+next_flated(fz_context *ctx, fz_stream *stm, size_t required)
 {
-	fz_flate *state = stm->state;
+	fz_inflate_state *state = stm->state;
 	fz_stream *chain = state->chain;
 	z_streamp zp = &state->z;
 	int code;
@@ -39,7 +41,7 @@ next_flated(fz_stream *stm, int required)
 
 	while (zp->avail_out > 0)
 	{
-		zp->avail_in = fz_available(chain, 1);
+		zp->avail_in = (uInt)fz_available(ctx, chain, 1);
 		zp->next_in = chain->rp;
 
 		code = inflate(zp, Z_SYNC_FLUSH);
@@ -52,23 +54,23 @@ next_flated(fz_stream *stm, int required)
 		}
 		else if (code == Z_BUF_ERROR)
 		{
-			fz_warn(stm->ctx, "premature end of data in flate filter");
+			fz_warn(ctx, "premature end of data in flate filter");
 			break;
 		}
 		else if (code == Z_DATA_ERROR && zp->avail_in == 0)
 		{
-			fz_warn(stm->ctx, "ignoring zlib error: %s", zp->msg);
+			fz_warn(ctx, "ignoring zlib error: %s", zp->msg);
 			break;
 		}
 		else if (code == Z_DATA_ERROR && !strcmp(zp->msg, "incorrect data check"))
 		{
-			fz_warn(stm->ctx, "ignoring zlib error: %s", zp->msg);
+			fz_warn(ctx, "ignoring zlib error: %s", zp->msg);
 			chain->rp = chain->wp;
 			break;
 		}
 		else if (code != Z_OK)
 		{
-			fz_throw(stm->ctx, FZ_ERROR_GENERIC, "zlib error: %s", zp->msg);
+			fz_throw(ctx, FZ_ERROR_GENERIC, "zlib error: %s", zp->msg);
 		}
 	}
 
@@ -86,56 +88,38 @@ next_flated(fz_stream *stm, int required)
 static void
 close_flated(fz_context *ctx, void *state_)
 {
-	fz_flate *state = (fz_flate *)state_;
+	fz_inflate_state *state = (fz_inflate_state *)state_;
 	int code;
 
 	code = inflateEnd(&state->z);
 	if (code != Z_OK)
 		fz_warn(ctx, "zlib error: inflateEnd: %s", state->z.msg);
 
-	fz_close(state->chain);
+	fz_drop_stream(ctx, state->chain);
 	fz_free(ctx, state);
 }
 
-static fz_stream *
-rebind_flated(fz_stream *s)
-{
-	fz_flate *state = s->state;
-	return state->chain;
-}
-
 fz_stream *
-fz_open_flated(fz_stream *chain, int window_bits)
+fz_open_flated(fz_context *ctx, fz_stream *chain, int window_bits)
 {
-	fz_flate *state = NULL;
-	int code = Z_OK;
-	fz_context *ctx = chain->ctx;
+	fz_inflate_state *state;
+	int code;
 
-	fz_var(code);
-	fz_var(state);
+	state = fz_malloc_struct(ctx, fz_inflate_state);
+	state->z.zalloc = fz_zlib_alloc;
+	state->z.zfree = fz_zlib_free;
+	state->z.opaque = ctx;
+	state->z.next_in = NULL;
+	state->z.avail_in = 0;
 
-	fz_try(ctx)
+	code = inflateInit2(&state->z, window_bits);
+	if (code != Z_OK)
 	{
-		state = fz_malloc_struct(ctx, fz_flate);
-		state->chain = chain;
-
-		state->z.zalloc = zalloc;
-		state->z.zfree = zfree;
-		state->z.opaque = ctx;
-		state->z.next_in = NULL;
-		state->z.avail_in = 0;
-
-		code = inflateInit2(&state->z, window_bits);
-		if (code != Z_OK)
-			fz_throw(ctx, FZ_ERROR_GENERIC, "zlib error: inflateInit: %s", state->z.msg);
-	}
-	fz_catch(ctx)
-	{
-		if (state && code == Z_OK)
-			inflateEnd(&state->z);
 		fz_free(ctx, state);
-		fz_close(chain);
-		fz_rethrow(ctx);
+		fz_throw(ctx, FZ_ERROR_GENERIC, "zlib error: inflateInit2 failed");
 	}
-	return fz_new_stream(ctx, state, next_flated, close_flated, rebind_flated);
+
+	state->chain = fz_keep_stream(ctx, chain);
+
+	return fz_new_stream(ctx, state, next_flated, close_flated);
 }

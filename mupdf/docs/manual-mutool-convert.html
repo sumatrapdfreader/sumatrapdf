@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>mutool convert</title>
+<link rel="stylesheet" href="style.css" type="text/css">
+</head>
+<body>
+
+<header>
+<h1>mutool convert</h1>
+</header>
+
+<article>
+
+<p>
+The 'mutool convert' command converts an input file into another format.
+
+<pre>
+mutool convert [options] -o <i>output input</i> [pages]
+</pre>
+
+<p>
+The command line options are:
+
+<dl>
+<dt><i>input</i>
+	<dd>Input file name.
+	The input can be any of the document formats supported by MuPDF: PDF, XPS, CBZ, unprotected EPUB, FB2, etc.
+<dt>[pages]
+	<dd>Comma separated list of page ranges. The first page is "1", and the last page is "N". The default is "1-N".
+<dt>-p <i>password</i>
+	<dd>Password to use for password protected PDF documents.
+</dl>
+
+<dl>
+<dt>-o <i>filename</i>
+	<dd>The output file name.
+	The output file name may have a "%d" in the path, which will be replaced with the page number.
+	If there is no %d, the page number will be appended at the end of the file name for single page formats.
+<dt>-F <i>format</i>
+	<dd>The output format. If missing, it is inferred from the output file name extension.
+	See below for which formats are supported.
+<dt>-O <i>options</i>
+	<dd>Comma separated list of output options.
+	The set of available options varies depending on the output format.
+	See below for details.
+</dl>
+
+<dl>
+<dt>-A <i>bits</i>
+	<dd>Number of bits of anti-aliasing to use (0 to 8) when rendering to image based formats. The default is 8.
+<dt>-W <i>width</i>
+	<dd>Page width in points for EPUB layout.
+<dt>-H <i>height</i>
+	<dd>Page height in points for EPUB layout.
+<dt>-S <i>font-size</i>
+	<dd>Font size in points for EPUB layout.
+<dt>-U <i>stylesheet.css</i>
+	<dd>File name of user style sheet for EPUB layout.
+<dt>-X
+	<dd>Disable document styles for EPUB layout.
+</dl>
+
+<h2>
+Image output
+</h2>
+
+<p>
+CBZ (comic book zip) is a multi-page image format.
+
+<p>
+The following single page image formats are also supported: PNG, PNM, PAM, PBM, PKM.
+Each page is written to a separate file.
+
+<p>
+The output options (-O flag) for image formats are:
+
+<dl>
+<dt>rotate=<i>N</i>		<dd>Rotate rendered pages <i>N</i> degrees counter-clockwise.
+<dt>resolution=<i>N</i>		<dd>Set both X and Y resolution in pixels per inch.
+<dt>x-resolution=<i>N</i>	<dd>Set X resolution in pixels per inch.
+<dt>y-resolution=<i>N</i>	<dd>Set Y resolution in pixels per inch.
+<dt>width=<i>N</i>		<dd>Render pages to fit <i>N</i> pixels wide (ignore resolution options).
+<dt>height=<i>N</i>		<dd>Render pages to fit <i>N</i> pixels tall (ignore resolution options).
+<dt>colorspace=gray/rgb/cmyk	<dd>Render using specified colorspace (if output format supports it).
+<dt>alpha			<dd>Render pages with an alpha channel and transparent background (if output format supports it).
+</dl>
+
+<h2>
+PDF output
+</h2>
+
+<p>
+With PDF output, we will create a new PDF file that matches the visual appearance.
+The PDF output is still a work in progress, so some features may not work.
+
+<p>
+If the input is PDF, the output will have nothing in common except the visual appearance.
+All bookmarks, annotations, forms, etc, will be thrown away. If you want to do a PDF to PDF
+conversion, 'mutool clean' is a better tool to use.
+
+<p>
+The PDF output options are:
+
+<dl>
+<dt>decompress			<dd> Decompress all streams (except compress-fonts/images).
+<dt>compress			<dd> Compress all streams.
+<dt>compress-fonts		<dd> Compress embedded fonts.
+<dt>compress-images		<dd> Compress images.
+<dt>ascii			<dd> ASCII hex encode binary streams.
+<dt>pretty			<dd> Pretty-print objects with indentation.
+<dt>linearize			<dd> Optimize for web browsers.
+<dt>sanitize			<dd> Clean up graphics commands in content streams.
+<dt>garbage			<dd> Garbage collect unused objects.
+<dt>garbage=compact		<dd> ... and compact cross reference table.
+<dt>garbage=deduplicate		<dd> ... and remove duplicate objects.
+</dl>
+
+<h2>
+SVG output
+</h2>
+
+<p>
+SVG output is a single page format, so we will write one SVG file for each input page.
+
+<p>
+The SVG output options are:
+
+<dl>
+<dt>text=text		<dd> Emit text as <text> elements (inaccurate fonts).
+<dt>text=path		<dd> Emit text as <path> elements (accurate fonts).
+<dt>no-reuse-images	<dd> Do not reuse images using &lt;symbol&gt; definitions.
+</dl>
+
+</article>
+
+<footer>
+<a href="http://www.artifex.com/"><img src="artifex-logo.png" align="right"></a>
+Copyright &copy; 2006-2018 Artifex Software Inc.
+</footer>
+
+</body>
+</html>

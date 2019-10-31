@@ -1,0 +1,936 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="libjpeg">
+      <UniqueIdentifier>{cc97b723-9e2e-4eb6-b1d4-ebcfca434a31}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libjbig2dec">
+      <UniqueIdentifier>{d88bbf3d-a26a-429b-96d9-fdd6d56849e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libz">
+      <UniqueIdentifier>{33ecab85-2886-4bd1-b242-2e2f9a488cc6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libopenjpeg">
+      <UniqueIdentifier>{9791bf70-0c79-4be5-93b2-211ab0483d02}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libfreetype">
+      <UniqueIdentifier>{abda74ba-ebd8-48b0-9cda-2a48a253bc58}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libfreetype\base">
+      <UniqueIdentifier>{388b2de6-00fa-4970-9ded-1c76325b7a57}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libfreetype\include">
+      <UniqueIdentifier>{bfb9e33d-9d69-4288-8a24-c81ae6632951}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libfreetype\include\freetype">
+      <UniqueIdentifier>{67d55901-1b6c-41c4-a279-581f74a3206a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libfreetype\include\freetype\config">
+      <UniqueIdentifier>{818e849d-c162-4160-97ce-1116d45abaad}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libfreetype\include\freetype\internal">
+      <UniqueIdentifier>{1012df36-a672-4036-94d2-35fa00c8230e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libfreetype\include\freetype\internal\services">
+      <UniqueIdentifier>{c67baac6-e7ba-4633-b896-d2ef507392a5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libmujs">
+      <UniqueIdentifier>{660d11da-4712-4e7b-8c2a-9c0adf7787cb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="harfbuzz">
+      <UniqueIdentifier>{af99b5cb-f06d-4b44-99dd-b2af611cf3d3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="harfbuzz\include">
+      <UniqueIdentifier>{63fe953c-5983-4234-8792-8f5a84c6f1fa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lcms2">
+      <UniqueIdentifier>{163092ba-9204-4077-a23c-406aac7d9b5c}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\thirdparty\libjpeg\jaricom.c">
+      <Filter>libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\libjpeg\jcomapi.c">
+      <Filter>libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\libjpeg\jdapimin.c">
+      <Filter>libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\libjpeg\jdapistd.c">
+      <Filter>libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\libjpeg\jdarith.c">
+      <Filter>libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\libjpeg\jdatadst.c">
+      <Filter>libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\libjpeg\jdatasrc.c">
+      <Filter>libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\libjpeg\jdcoefct.c">
+      <Filter>libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\libjpeg\jdcolor.c">
+      <Filter>libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\libjpeg\jddctmgr.c">
+      <Filter>libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\libjpeg\jdhuff.c">
+      <Filter>libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\libjpeg\jdinput.c">
+      <Filter>libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\libjpeg\jdmainct.c">
+      <Filter>libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\libjpeg\jdmarker.c">
+      <Filter>libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\libjpeg\jdmaster.c">
+      <Filter>libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\libjpeg\jdmerge.c">
+      <Filter>libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\libjpeg\jdpostct.c">
+      <Filter>libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\libjpeg\jdsample.c">
+      <Filter>libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\libjpeg\jdtrans.c">
+      <Filter>libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\libjpeg\jerror.c">
+      <Filter>libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\libjpeg\jfdctflt.c">
+      <Filter>libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\libjpeg\jfdctfst.c">
+      <Filter>libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\libjpeg\jfdctint.c">
+      <Filter>libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\libjpeg\jidctflt.c">
+      <Filter>libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\libjpeg\jidctfst.c">
+      <Filter>libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\libjpeg\jidctint.c">
+      <Filter>libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\libjpeg\jmemmgr.c">
+      <Filter>libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\libjpeg\jquant1.c">
+      <Filter>libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\libjpeg\jquant2.c">
+      <Filter>libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\libjpeg\jutils.c">
+      <Filter>libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\jbig2dec\jbig2.c">
+      <Filter>libjbig2dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\jbig2dec\jbig2_arith.c">
+      <Filter>libjbig2dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\jbig2dec\jbig2_arith_iaid.c">
+      <Filter>libjbig2dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\jbig2dec\jbig2_arith_int.c">
+      <Filter>libjbig2dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\jbig2dec\jbig2_generic.c">
+      <Filter>libjbig2dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\jbig2dec\jbig2_halftone.c">
+      <Filter>libjbig2dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\jbig2dec\jbig2_huffman.c">
+      <Filter>libjbig2dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\jbig2dec\jbig2_image.c">
+      <Filter>libjbig2dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\jbig2dec\jbig2_mmr.c">
+      <Filter>libjbig2dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\jbig2dec\jbig2_page.c">
+      <Filter>libjbig2dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\jbig2dec\jbig2_refinement.c">
+      <Filter>libjbig2dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\jbig2dec\jbig2_segment.c">
+      <Filter>libjbig2dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\jbig2dec\jbig2_symbol_dict.c">
+      <Filter>libjbig2dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\jbig2dec\jbig2_text.c">
+      <Filter>libjbig2dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zlib\adler32.c">
+      <Filter>libz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zlib\compress.c">
+      <Filter>libz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zlib\crc32.c">
+      <Filter>libz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zlib\deflate.c">
+      <Filter>libz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zlib\inffast.c">
+      <Filter>libz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zlib\inflate.c">
+      <Filter>libz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zlib\inftrees.c">
+      <Filter>libz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zlib\trees.c">
+      <Filter>libz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zlib\uncompr.c">
+      <Filter>libz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\zlib\zutil.c">
+      <Filter>libz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\openjpeg\src\lib\openjp2\bio.c">
+      <Filter>libopenjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\openjpeg\src\lib\openjp2\cio.c">
+      <Filter>libopenjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\openjpeg\src\lib\openjp2\dwt.c">
+      <Filter>libopenjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\openjpeg\src\lib\openjp2\event.c">
+      <Filter>libopenjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\openjpeg\src\lib\openjp2\function_list.c">
+      <Filter>libopenjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\openjpeg\src\lib\openjp2\image.c">
+      <Filter>libopenjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\openjpeg\src\lib\openjp2\invert.c">
+      <Filter>libopenjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\openjpeg\src\lib\openjp2\j2k.c">
+      <Filter>libopenjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\openjpeg\src\lib\openjp2\jp2.c">
+      <Filter>libopenjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\openjpeg\src\lib\openjp2\mct.c">
+      <Filter>libopenjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\openjpeg\src\lib\openjp2\mqc.c">
+      <Filter>libopenjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\openjpeg\src\lib\openjp2\openjpeg.c">
+      <Filter>libopenjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\openjpeg\src\lib\openjp2\pi.c">
+      <Filter>libopenjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\openjpeg\src\lib\openjp2\sparse_array.c">
+      <Filter>libopenjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\openjpeg\src\lib\openjp2\t1.c">
+      <Filter>libopenjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\openjpeg\src\lib\openjp2\t2.c">
+      <Filter>libopenjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\openjpeg\src\lib\openjp2\tcd.c">
+      <Filter>libopenjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\openjpeg\src\lib\openjp2\tgt.c">
+      <Filter>libopenjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\openjpeg\src\lib\openjp2\thread.c">
+      <Filter>libopenjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\freetype\src\cff\cff.c">
+      <Filter>libfreetype</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\freetype\src\psaux\psaux.c">
+      <Filter>libfreetype</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\freetype\src\pshinter\pshinter.c">
+      <Filter>libfreetype</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\freetype\src\psnames\psnames.c">
+      <Filter>libfreetype</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\freetype\src\raster\raster.c">
+      <Filter>libfreetype</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\freetype\src\sfnt\sfnt.c">
+      <Filter>libfreetype</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\freetype\src\smooth\smooth.c">
+      <Filter>libfreetype</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\freetype\src\truetype\truetype.c">
+      <Filter>libfreetype</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\freetype\src\type1\type1.c">
+      <Filter>libfreetype</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\freetype\src\cid\type1cid.c">
+      <Filter>libfreetype</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\freetype\src\base\ftbase.c">
+      <Filter>libfreetype\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\freetype\src\base\ftbbox.c">
+      <Filter>libfreetype\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\freetype\src\base\ftbitmap.c">
+      <Filter>libfreetype\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\freetype\src\base\ftdebug.c">
+      <Filter>libfreetype\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\freetype\src\base\ftgasp.c">
+      <Filter>libfreetype\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\freetype\src\base\ftglyph.c">
+      <Filter>libfreetype\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\freetype\src\base\ftinit.c">
+      <Filter>libfreetype\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\freetype\src\base\ftstroke.c">
+      <Filter>libfreetype\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\freetype\src\base\ftsynth.c">
+      <Filter>libfreetype\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\freetype\src\base\ftsystem.c">
+      <Filter>libfreetype\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\freetype\src\base\fttype1.c">
+      <Filter>libfreetype\base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\mujs\one.c">
+      <Filter>libmujs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-aat-layout.cc">
+      <Filter>harfbuzz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-blob.cc">
+      <Filter>harfbuzz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-buffer-serialize.cc">
+      <Filter>harfbuzz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-buffer.cc">
+      <Filter>harfbuzz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-common.cc">
+      <Filter>harfbuzz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-face.cc">
+      <Filter>harfbuzz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-fallback-shape.cc">
+      <Filter>harfbuzz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-font.cc">
+      <Filter>harfbuzz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ft.cc">
+      <Filter>harfbuzz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-color.cc">
+      <Filter>harfbuzz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-face.cc">
+      <Filter>harfbuzz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-font.cc">
+      <Filter>harfbuzz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-layout.cc">
+      <Filter>harfbuzz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-map.cc">
+      <Filter>harfbuzz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-math.cc">
+      <Filter>harfbuzz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape-complex-arabic.cc">
+      <Filter>harfbuzz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape-complex-default.cc">
+      <Filter>harfbuzz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape-complex-hangul.cc">
+      <Filter>harfbuzz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape-complex-hebrew.cc">
+      <Filter>harfbuzz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape-complex-indic-table.cc">
+      <Filter>harfbuzz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape-complex-indic.cc">
+      <Filter>harfbuzz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape-complex-khmer.cc">
+      <Filter>harfbuzz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape-complex-myanmar.cc">
+      <Filter>harfbuzz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape-complex-thai.cc">
+      <Filter>harfbuzz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape-complex-tibetan.cc">
+      <Filter>harfbuzz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape-complex-use-table.cc">
+      <Filter>harfbuzz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape-complex-use.cc">
+      <Filter>harfbuzz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape-fallback.cc">
+      <Filter>harfbuzz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape-normalize.cc">
+      <Filter>harfbuzz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-shape.cc">
+      <Filter>harfbuzz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-tag.cc">
+      <Filter>harfbuzz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ot-var.cc">
+      <Filter>harfbuzz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-set.cc">
+      <Filter>harfbuzz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-shape-plan.cc">
+      <Filter>harfbuzz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-shape.cc">
+      <Filter>harfbuzz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-shaper.cc">
+      <Filter>harfbuzz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-static.cc">
+      <Filter>harfbuzz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-ucdn.cc">
+      <Filter>harfbuzz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-unicode.cc">
+      <Filter>harfbuzz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\harfbuzz\src\hb-warning.cc">
+      <Filter>harfbuzz</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\lcms2\src\cmsalpha.c">
+      <Filter>lcms2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\lcms2\src\cmscam02.c">
+      <Filter>lcms2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\lcms2\src\cmscgats.c">
+      <Filter>lcms2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\lcms2\src\cmscnvrt.c">
+      <Filter>lcms2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\lcms2\src\cmserr.c">
+      <Filter>lcms2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\lcms2\src\cmsgamma.c">
+      <Filter>lcms2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\lcms2\src\cmsgmt.c">
+      <Filter>lcms2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\lcms2\src\cmshalf.c">
+      <Filter>lcms2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\lcms2\src\cmsintrp.c">
+      <Filter>lcms2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\lcms2\src\cmsio0.c">
+      <Filter>lcms2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\lcms2\src\cmsio1.c">
+      <Filter>lcms2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\lcms2\src\cmslut.c">
+      <Filter>lcms2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\lcms2\src\cmsmd5.c">
+      <Filter>lcms2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\lcms2\src\cmsmtrx.c">
+      <Filter>lcms2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\lcms2\src\cmsnamed.c">
+      <Filter>lcms2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\lcms2\src\cmsopt.c">
+      <Filter>lcms2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\lcms2\src\cmspack.c">
+      <Filter>lcms2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\lcms2\src\cmspcs.c">
+      <Filter>lcms2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\lcms2\src\cmsplugin.c">
+      <Filter>lcms2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\lcms2\src\cmsps2.c">
+      <Filter>lcms2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\lcms2\src\cmssamp.c">
+      <Filter>lcms2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\lcms2\src\cmssm.c">
+      <Filter>lcms2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\lcms2\src\cmstypes.c">
+      <Filter>lcms2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\lcms2\src\cmsvirt.c">
+      <Filter>lcms2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\lcms2\src\cmswtpnt.c">
+      <Filter>lcms2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\thirdparty\lcms2\src\cmsxform.c">
+      <Filter>lcms2</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\thirdparty\openjpeg\src\lib\openjp2\bio.h">
+      <Filter>libopenjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\openjpeg\src\lib\openjp2\cio.h">
+      <Filter>libopenjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\openjpeg\src\lib\openjp2\dwt.h">
+      <Filter>libopenjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\openjpeg\src\lib\openjp2\event.h">
+      <Filter>libopenjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\openjpeg\src\lib\openjp2\fix.h">
+      <Filter>libopenjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\openjpeg\src\lib\openjp2\function_list.h">
+      <Filter>libopenjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\openjpeg\src\lib\openjp2\image.h">
+      <Filter>libopenjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\openjpeg\src\lib\openjp2\indexbox_manager.h">
+      <Filter>libopenjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\openjpeg\src\lib\openjp2\int.h">
+      <Filter>libopenjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\openjpeg\src\lib\openjp2\invert.h">
+      <Filter>libopenjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\openjpeg\src\lib\openjp2\j2k.h">
+      <Filter>libopenjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\openjpeg\src\lib\openjp2\jp2.h">
+      <Filter>libopenjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\openjpeg\src\lib\openjp2\mct.h">
+      <Filter>libopenjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\openjpeg\src\lib\openjp2\mqc.h">
+      <Filter>libopenjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\openjpeg\src\lib\openjp2\openjpeg.h">
+      <Filter>libopenjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\openjpeg\src\lib\openjp2\opj_config.h">
+      <Filter>libopenjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\openjpeg\src\lib\openjp2\opj_config_private.h">
+      <Filter>libopenjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\openjpeg\src\lib\openjp2\opj_includes.h">
+      <Filter>libopenjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\openjpeg\src\lib\openjp2\opj_intmath.h">
+      <Filter>libopenjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\openjpeg\src\lib\openjp2\opj_inttypes.h">
+      <Filter>libopenjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\openjpeg\src\lib\openjp2\opj_malloc.h">
+      <Filter>libopenjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\openjpeg\src\lib\openjp2\opj_stdint.h">
+      <Filter>libopenjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\openjpeg\src\lib\openjp2\pi.h">
+      <Filter>libopenjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\openjpeg\src\lib\openjp2\sparse_array.h">
+      <Filter>libopenjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\openjpeg\src\lib\openjp2\t1.h">
+      <Filter>libopenjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\openjpeg\src\lib\openjp2\t1_luts.h">
+      <Filter>libopenjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\openjpeg\src\lib\openjp2\t2.h">
+      <Filter>libopenjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\openjpeg\src\lib\openjp2\tcd.h">
+      <Filter>libopenjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\openjpeg\src\lib\openjp2\tgt.h">
+      <Filter>libopenjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\openjpeg\src\lib\openjp2\thread.h">
+      <Filter>libopenjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\openjpeg\src\lib\openjp2\tls_keys.h">
+      <Filter>libopenjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\ft2build.h">
+      <Filter>libfreetype\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\freetype.h">
+      <Filter>libfreetype\include\freetype</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\ftadvanc.h">
+      <Filter>libfreetype\include\freetype</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\ftbbox.h">
+      <Filter>libfreetype\include\freetype</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\ftbdf.h">
+      <Filter>libfreetype\include\freetype</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\ftbitmap.h">
+      <Filter>libfreetype\include\freetype</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\ftbzip2.h">
+      <Filter>libfreetype\include\freetype</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\ftcache.h">
+      <Filter>libfreetype\include\freetype</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\ftchapters.h">
+      <Filter>libfreetype\include\freetype</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\ftcid.h">
+      <Filter>libfreetype\include\freetype</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\fterrdef.h">
+      <Filter>libfreetype\include\freetype</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\fterrors.h">
+      <Filter>libfreetype\include\freetype</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\ftgasp.h">
+      <Filter>libfreetype\include\freetype</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\ftglyph.h">
+      <Filter>libfreetype\include\freetype</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\ftgxval.h">
+      <Filter>libfreetype\include\freetype</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\ftgzip.h">
+      <Filter>libfreetype\include\freetype</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\ftimage.h">
+      <Filter>libfreetype\include\freetype</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\ftincrem.h">
+      <Filter>libfreetype\include\freetype</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\ftlcdfil.h">
+      <Filter>libfreetype\include\freetype</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\ftlist.h">
+      <Filter>libfreetype\include\freetype</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\ftlzw.h">
+      <Filter>libfreetype\include\freetype</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\ftmac.h">
+      <Filter>libfreetype\include\freetype</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\ftmm.h">
+      <Filter>libfreetype\include\freetype</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\ftmodapi.h">
+      <Filter>libfreetype\include\freetype</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\ftmoderr.h">
+      <Filter>libfreetype\include\freetype</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\ftotval.h">
+      <Filter>libfreetype\include\freetype</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\ftoutln.h">
+      <Filter>libfreetype\include\freetype</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\ftpfr.h">
+      <Filter>libfreetype\include\freetype</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\ftrender.h">
+      <Filter>libfreetype\include\freetype</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\ftsizes.h">
+      <Filter>libfreetype\include\freetype</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\ftsnames.h">
+      <Filter>libfreetype\include\freetype</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\ftstroke.h">
+      <Filter>libfreetype\include\freetype</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\ftsynth.h">
+      <Filter>libfreetype\include\freetype</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\ftsystem.h">
+      <Filter>libfreetype\include\freetype</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\fttrigon.h">
+      <Filter>libfreetype\include\freetype</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\fttypes.h">
+      <Filter>libfreetype\include\freetype</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\ftwinfnt.h">
+      <Filter>libfreetype\include\freetype</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\ftxf86.h">
+      <Filter>libfreetype\include\freetype</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\t1tables.h">
+      <Filter>libfreetype\include\freetype</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\ttnameid.h">
+      <Filter>libfreetype\include\freetype</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\tttables.h">
+      <Filter>libfreetype\include\freetype</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\tttags.h">
+      <Filter>libfreetype\include\freetype</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\ttunpat.h">
+      <Filter>libfreetype\include\freetype</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\config\ftconfig.h">
+      <Filter>libfreetype\include\freetype\config</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\config\ftheader.h">
+      <Filter>libfreetype\include\freetype\config</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\config\ftmodule.h">
+      <Filter>libfreetype\include\freetype\config</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\config\ftoption.h">
+      <Filter>libfreetype\include\freetype\config</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\config\ftstdlib.h">
+      <Filter>libfreetype\include\freetype\config</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\internal\autohint.h">
+      <Filter>libfreetype\include\freetype\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\internal\ftcalc.h">
+      <Filter>libfreetype\include\freetype\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\internal\ftdebug.h">
+      <Filter>libfreetype\include\freetype\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\internal\ftdriver.h">
+      <Filter>libfreetype\include\freetype\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\internal\ftgloadr.h">
+      <Filter>libfreetype\include\freetype\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\internal\ftmemory.h">
+      <Filter>libfreetype\include\freetype\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\internal\ftobjs.h">
+      <Filter>libfreetype\include\freetype\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\internal\ftpic.h">
+      <Filter>libfreetype\include\freetype\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\internal\ftrfork.h">
+      <Filter>libfreetype\include\freetype\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\internal\ftserv.h">
+      <Filter>libfreetype\include\freetype\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\internal\ftstream.h">
+      <Filter>libfreetype\include\freetype\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\internal\fttrace.h">
+      <Filter>libfreetype\include\freetype\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\internal\ftvalid.h">
+      <Filter>libfreetype\include\freetype\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\internal\internal.h">
+      <Filter>libfreetype\include\freetype\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\internal\psaux.h">
+      <Filter>libfreetype\include\freetype\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\internal\pshints.h">
+      <Filter>libfreetype\include\freetype\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\internal\sfnt.h">
+      <Filter>libfreetype\include\freetype\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\internal\t1types.h">
+      <Filter>libfreetype\include\freetype\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\internal\tttypes.h">
+      <Filter>libfreetype\include\freetype\internal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\internal\services\svbdf.h">
+      <Filter>libfreetype\include\freetype\internal\services</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\internal\services\svcid.h">
+      <Filter>libfreetype\include\freetype\internal\services</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\internal\services\svgldict.h">
+      <Filter>libfreetype\include\freetype\internal\services</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\internal\services\svgxval.h">
+      <Filter>libfreetype\include\freetype\internal\services</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\internal\services\svkern.h">
+      <Filter>libfreetype\include\freetype\internal\services</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\internal\services\svmm.h">
+      <Filter>libfreetype\include\freetype\internal\services</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\internal\services\svotval.h">
+      <Filter>libfreetype\include\freetype\internal\services</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\internal\services\svpfr.h">
+      <Filter>libfreetype\include\freetype\internal\services</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\internal\services\svpostnm.h">
+      <Filter>libfreetype\include\freetype\internal\services</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\internal\services\svpscmap.h">
+      <Filter>libfreetype\include\freetype\internal\services</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\internal\services\svpsinfo.h">
+      <Filter>libfreetype\include\freetype\internal\services</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\internal\services\svsfnt.h">
+      <Filter>libfreetype\include\freetype\internal\services</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\internal\services\svttcmap.h">
+      <Filter>libfreetype\include\freetype\internal\services</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\internal\services\svtteng.h">
+      <Filter>libfreetype\include\freetype\internal\services</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\internal\services\svttglyf.h">
+      <Filter>libfreetype\include\freetype\internal\services</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\internal\services\svwinfnt.h">
+      <Filter>libfreetype\include\freetype\internal\services</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\freetype\include\freetype\internal\services\svxf86nm.h">
+      <Filter>libfreetype\include\freetype\internal\services</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\mujs\mujs.h">
+      <Filter>libmujs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-blob.h">
+      <Filter>harfbuzz\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-buffer.h">
+      <Filter>harfbuzz\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-common.h">
+      <Filter>harfbuzz\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-deprecated.h">
+      <Filter>harfbuzz\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-face.h">
+      <Filter>harfbuzz\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-font.h">
+      <Filter>harfbuzz\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-ft.h">
+      <Filter>harfbuzz\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-set.h">
+      <Filter>harfbuzz\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-shape-plan.h">
+      <Filter>harfbuzz\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-shape.h">
+      <Filter>harfbuzz\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-unicode.h">
+      <Filter>harfbuzz\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb-version.h">
+      <Filter>harfbuzz\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\harfbuzz\src\hb.h">
+      <Filter>harfbuzz\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\lcms2\src\extra_xform.h">
+      <Filter>lcms2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\lcms2\src\lcms2_internal.h">
+      <Filter>lcms2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\lcms2\include\lcms2mt.h">
+      <Filter>lcms2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\thirdparty\lcms2\include\lcms2mt_plugin.h">
+      <Filter>lcms2</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

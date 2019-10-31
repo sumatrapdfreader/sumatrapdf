@@ -1,0 +1,3 @@
+default:
+	javac -source 1.7 -target 1.7 src/com/artifex/mupdf/fitz/*.java
+	jar cf libmupdf.jar src/com/artifex/mupdf/fitz/*.class

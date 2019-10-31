@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>MuPDF / WebAssembly</title>
+<meta charset="utf-8">
+<style>
+pre,dl{margin-left:2em;}
+dt{margin-top:0.5em;font-family:monospace}
+</style>
+</head>
+<body>
+
+<h1>MuPDF WebAssembly</h1>
+
+<h2>Building</h2>
+
+<p>
+The WebAssembly build has only been tested on Linux at the moment.
+If you use any other platform, you are on your own.
+
+<p>
+In order to build this you will need to install the
+<a href="https://kripken.github.io/emscripten-site/docs/getting_started/downloads.html">Emscripten SDK</a>
+in <tt>/opt/emsdk</tt>.
+If you install it elsewhere, you will need to edit the platform/wasm/build.sh
+script to point to the appropriate location.
+
+<p>
+From the MuPDF project, you can run <tt>make wasm</tt> to build the WebAssembly
+library. The results of the build are a libmupdf.wasm binary and
+libmupdf.js script, placed in platform/wasm/.
+
+<p>
+In order to build a web application based on MuPDF, you will need to copy
+these two files and make them available to your page.
+
+<p>
+The libmupdf.wasm binary is quite large, because it contains not only the MuPDF
+library code, but also the 14 core PDF fonts, various CJK mapping resources,
+and ICC profiles. In order to keep it as small as possible, it is built with a
+minimal features set that does not include CJK fonts, EPUB support, etc.
+
+<h2>Using</h2>
+
+<p>
+The example script in platform/wasm/view.html shows how to use the
+MuPDF WebAssembly library.
+
+<p>
+The first part is including the libmupdf.js script, which pulls in
+and instantiates the WebAssembly module:
+
+<pre>
+&lt;script src="libmupdf.js"&gt;&lt;/script&gt;
+</pre>
+
+<p>
+MuPDF uses the Emscripten virtual file system to load a document, so you will
+need to seed it with the file you want to view in a Module.preRun
+callback function:
+
+<pre>
+&lt;script&gt;
+Module.preRun = function () {
+	FS.createPreloadedFile(".", "input.pdf", "input.pdf", true, false);
+}
+&lt;/script&gt;
+</pre>
+
+<p>
+When the filesystem has finished preloading the file data and initialized the
+code, it will call the Module.postRun callback. From here, you can
+use the 'mupdf' object to call various functions to open the document and
+render pages into various formats.
+
+<dl>
+<dt>mupdf.openDocument(filename)
+<dd>Open a document and return a handle.
+<dt>mupdf.freeDocument(doc)
+<dd>Free a document and its associated resources.
+<dt>mupdf.documentTitle(doc)
+<dd>Return the document title as a string.
+<dt>mupdf.documentOutline(doc)
+<dd>Return a DOM element containing the table of contents formatted as
+an unordered HTML list with links to pages using anchor fragments "#page%d".
+<dt>mupdf.countPages(doc)
+<dd>Return the number of pages in the document.
+<dt>mupdf.pageWidth(doc, page, dpi) and mupdf.pageHeight(doc, page, dpi)
+<dd>Return the dimensions of a page. Page numbering starts at 1.
+<dt>mupdf.drawPageAsPNG(doc, page, dpi)
+<dd>Render the page and return a PNG image formatted as a data URI,
+suitable for using as an image source attribute.
+<dt>mupdf.pageLinks(doc, page, dpi)
+<dd>Retrieve an HTML string describing the links on a page,
+suitable for including as the innerHTML of an image map.
+<dt>mupdf.drawPageAsSVG(doc, page)
+<dd>Return a string with the contents of the page in SVG format.
+<dt>mupdf.drawPageAsHTML(doc, page)
+<dd>Return a string with the contents of the page in HTML format,
+using absolute positioned elements.
+</dl>
+
+<h2>Example</h2>
+
+<p>
+Here is a very simple example of loading a document and drawing its first page:
+
+<pre>
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;script src="libmupdf.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+Module.preRun = function () {
+	FS.createPreloadedFile(".", "input.pdf", "input.pdf", true, false);
+}
+Module.postRun = function () {
+	var DPI = 96;
+	var doc = mupdf.openDocument("input.pdf");
+	var img = document.getElementById("page1");
+	img.src = mupdf.drawPageAsPNG(doc, 1, DPI);
+	var map = document.getElementById("page1map");
+	map.innerHTML = mupdf.pageLinks(doc, 1, DPI);
+}
+&lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;img id="page1" usemap="#page1map"&gt;
+&lt;map id="page1map" name="page1map"&gt;&lt;/map&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+
+</body>
+</html>

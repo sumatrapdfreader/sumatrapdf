@@ -5,14 +5,13 @@ EXPORTS
 
 ; Fitz exports
 
-
 	fz_keep_bitmap
 	fz_drop_bitmap
-	fz_halftone_pixmap
+	;fz_halftone_pixmap
 	fz_new_bitmap
 	fz_bitmap_details
 	fz_clear_bitmap
-	fz_new_halftone
+	;fz_new_halftone
 	fz_default_halftone
 	fz_drop_halftone
 	fz_keep_halftone
@@ -24,74 +23,68 @@ EXPORTS
 	fz_resize_buffer
 	fz_grow_buffer
 	fz_trim_buffer
-	fz_buffer_cat
-	fz_write_buffer
-	fz_write_buffer_byte
-	fz_write_buffer_rune
-	fz_write_buffer_bits
-	fz_write_buffer_pad
-	fz_buffer_printf
-	fz_buffer_vprintf
-	fz_lookup_device_colorspace
+	;fz_write_buffer
+	;fz_write_buffer_byte
+	;fz_write_buffer_rune
+	;fz_write_buffer_bits
+	;fz_write_buffer_pad
+	;fz_lookup_device_colorspace
 	fz_colorspace_is_indexed
 	fz_device_gray
 	fz_device_rgb
 	fz_device_bgr
 	fz_device_cmyk
-	fz_set_device_gray
-	fz_set_device_rgb
-	fz_set_device_bgr
-	fz_set_device_cmyk
+	;fz_set_device_gray
+	;fz_set_device_rgb
+	;fz_set_device_bgr
+	;fz_set_device_cmyk
 	fz_new_colorspace
 	fz_new_indexed_colorspace
 	fz_keep_colorspace
 	fz_drop_colorspace
-	fz_free_colorspace_imp
+	;fz_free_colorspace_imp
 	fz_convert_color
 	fz_new_colorspace_context
 	fz_keep_colorspace_context
 	fz_drop_colorspace_context
-	fz_lookup_color_converter
+	;fz_lookup_color_converter
 	fz_init_cached_color_converter
 	fz_fin_cached_color_converter
-	fz_keep_transfer_function
-	fz_drop_transfer_function
 	fz_compressed_buffer_size
 	fz_open_compressed_buffer
 	fz_open_image_decomp_stream_from_buffer
 	fz_open_image_decomp_stream
-	fz_free_compressed_buffer
+	;fz_free_compressed_buffer
 	fz_var_imp
 	fz_push_try
-	fz_throw_imp
+	;fz_throw_imp
 	fz_rethrow
-	fz_rethrow_message_imp
-	fz_warn_imp
+	;fz_rethrow_message_imp
+	;fz_warn_imp
 	fz_caught_message
 	fz_caught
 	fz_rethrow_if
 	fz_flush_warnings
 	fz_new_context_imp
 	fz_clone_context
-	fz_free_context
+	;fz_free_context
 	fz_aa_level
 	fz_set_aa_level
 	fz_malloc
 	fz_calloc
-	fz_malloc_array
-	fz_resize_array
+	;fz_malloc_array
+	;fz_resize_array
 	fz_strdup
 	fz_free
 	fz_malloc_no_throw
 	fz_calloc_no_throw
-	fz_malloc_array_no_throw
-	fz_resize_array_no_throw
-	fz_strdup_no_throw
-	fz_gen_id
-	fz_clone_context_internal
-	fz_new_aa_context
-	fz_free_aa_context
-	fz_copy_aa_context
+	;fz_malloc_array_no_throw
+	;fz_resize_array_no_throw
+	;fz_strdup_no_throw
+	;fz_gen_id
+	;fz_new_aa_context
+	;fz_free_aa_context
+	;fz_copy_aa_context
 	fz_md5_init
 	fz_md5_update
 	fz_md5_final
@@ -106,12 +99,12 @@ EXPORTS
 	fz_sha384_final
 	fz_arc4_init
 	fz_arc4_encrypt
-	aes_setkey_enc
-	aes_setkey_dec
-	aes_crypt_cbc
+	fz_aes_setkey_enc
+	fz_aes_setkey_dec
+	fz_aes_crypt_cbc
 	fz_lookup_blendmode
 	fz_blendmode_name
-	fz_rebind_device
+	;fz_rebind_device
 	fz_begin_page
 	fz_end_page
 	fz_fill_path
@@ -135,9 +128,8 @@ EXPORTS
 	fz_begin_tile
 	fz_begin_tile_id
 	fz_end_tile
-	fz_apply_transfer_function
-	fz_new_device
-	fz_free_device
+	;fz_new_device
+	;fz_free_device
 	fz_enable_device_hints
 	fz_disable_device_hints
 	fz_new_trace_device
@@ -151,10 +143,11 @@ EXPORTS
 	fz_keep_display_list
 	fz_drop_display_list
 
-	fz_open_copy
-	fz_open_null
+	;fz_open_copy
+	;fz_open_null
 	fz_open_concat
-	fz_concat_push
+	;fz_concat_push
+	fz_concat_push_drop
 	fz_open_arc4
 	fz_open_aesd
 	fz_open_a85d
@@ -167,7 +160,7 @@ EXPORTS
 	fz_open_predict
 	fz_open_jbig2d
 	fz_load_jbig2_globals
-	fz_free_jbig2_globals_imp
+	;fz_free_jbig2_globals_imp
 	ft_error_string
 	fz_new_font_context
 	fz_keep_font_context
@@ -188,10 +181,10 @@ EXPORTS
 	fz_decouple_type3_font
 	fz_advance_glyph
 	fz_encode_character
-	fz_eval_function
-	fz_keep_function
-	fz_drop_function
-	fz_function_size
+	;fz_eval_function
+	;fz_keep_function
+	;fz_drop_function
+	;fz_function_size
 	fz_getopt
 	fz_new_glyph_cache_context
 	fz_keep_glyph_cache
@@ -222,27 +215,27 @@ EXPORTS
 	fz_drop_glyph
 	fz_glyph_bbox_no_ctx
 	fz_new_hash_table
-	fz_empty_hash
-	fz_free_hash
+	;fz_empty_hash
+	;fz_free_hash
 	fz_hash_find
 	fz_hash_insert
-	fz_hash_insert_with_pos
+	;fz_hash_insert_with_pos
 	fz_hash_remove
-	fz_hash_remove_fast
-	fz_hash_len
-	fz_hash_get_key
-	fz_hash_get_val
-	fz_new_pixmap_from_image
+	;fz_hash_remove_fast
+	;fz_hash_len
+	;fz_hash_get_key
+	;fz_hash_get_val
+	;fz_new_pixmap_from_image
 	fz_drop_image
 	fz_keep_image
-	fz_new_image
+	;fz_new_image
 	fz_new_image_from_pixmap
-	fz_new_image_from_data
+	;fz_new_image_from_data
 	fz_new_image_from_buffer
-	fz_image_get_pixmap
-	fz_free_image
+	;fz_image_get_pixmap
+	;fz_free_image
 	fz_decomp_image_from_stream
-	fz_expand_indexed_pixmap
+	;fz_expand_indexed_pixmap
 	fz_load_jpx
 	fz_load_png
 	fz_load_tiff
@@ -256,7 +249,7 @@ EXPORTS
 	fz_new_link
 	fz_keep_link
 	fz_drop_link
-	fz_free_link_dest
+	;fz_free_link_dest
 	fz_atof
 	fz_atoi
 	fz_concat
@@ -288,38 +281,36 @@ EXPORTS
 	fz_gridfit_matrix
 	fz_matrix_max_expansion
 
-	fz_print_outline_xml
-	fz_print_outline
-	fz_free_outline
+	;fz_print_outline_xml
+	;fz_print_outline
+	;fz_free_outline
 
-	fz_write_png
-	fz_output_png
-	fz_new_png_from_image
-	fz_new_png_from_pixmap
-	fz_output_png_header
-	fz_output_png_band
-	fz_output_png_trailer
-	fz_write_pnm
-	fz_output_pnm_header
-	fz_output_pnm_band
-	fz_write_pam
-	fz_output_pam_header
-	fz_output_pam_band
-	fz_write_pbm
-
-
-	fz_write_tga
-	fz_new_output_with_file
-	fz_new_output_to_filename
+	;fz_write_png
+	;fz_output_png
+	;fz_new_png_from_image
+	;fz_new_png_from_pixmap
+	;fz_output_png_header
+	;fz_output_png_band
+	;fz_output_png_trailer
+	;fz_write_pnm
+	;fz_output_pnm_header
+	;fz_output_pnm_band
+	;fz_write_pam
+	;fz_output_pam_header
+	;fz_output_pam_band
+	;fz_write_pbm
+	;fz_write_tga
+	;fz_new_output_with_file
+	;fz_new_output_to_filename
 	fz_new_output_with_buffer
-	fz_printf
-	fz_puts
-	fz_write
-	fz_putc
+	;fz_printf
+	;fz_puts
+	;fz_write
+	;fz_putc
 	fz_close_output
-	fz_rebind_output
+	;fz_rebind_output
 	fz_vsnprintf
-	fz_vfprintf
+	;fz_vfprintf
 	fz_snprintf
 	fz_new_path
 	fz_currentpoint
@@ -329,7 +320,7 @@ EXPORTS
 	fz_curvetov
 	fz_curvetoy
 	fz_closepath
-	fz_free_path
+	;fz_free_path
 	fz_transform_path
 	fz_clone_path
 	fz_bound_path
@@ -353,7 +344,7 @@ EXPORTS
 	fz_pixmap_colorspace
 	fz_pixmap_components
 	fz_pixmap_samples
-	fz_pixmap_set_resolution
+	;fz_pixmap_set_resolution
 	fz_clear_pixmap_with_value
 	fz_clear_pixmap_rect_with_value
 	fz_clear_pixmap
@@ -361,16 +352,16 @@ EXPORTS
 	fz_tint_pixmap
 	fz_invert_pixmap_rect
 	fz_gamma_pixmap
-	fz_unmultiply_pixmap
+	;fz_unmultiply_pixmap
 	fz_convert_pixmap
-	fz_free_pixmap_imp
+	;fz_free_pixmap_imp
 	fz_copy_pixmap_rect
 	fz_premultiply_pixmap
 	fz_alpha_from_gray
 	fz_pixmap_size
 	fz_scale_pixmap
 	fz_new_scale_cache
-	fz_free_scale_cache
+	;fz_free_scale_cache
 	fz_scale_pixmap_cached
 	fz_subsample_pixmap
 	fz_pixmap_bbox_no_ctx
@@ -382,10 +373,10 @@ EXPORTS
 	fz_new_pixmap_from_1bpp_data
 	fz_keep_shade
 	fz_drop_shade
-	fz_free_shade_imp
+	;fz_free_shade_imp
 	fz_bound_shade
 	fz_paint_shade
-	fz_process_mesh
+	;fz_process_mesh
 	fz_keep_storable
 	fz_drop_storable
 	fz_new_store_context
@@ -399,19 +390,19 @@ EXPORTS
 	fz_shrink_store
 	fz_open_file
 	fz_open_file_w
-	fz_open_fd
+	;fz_open_fd
 	fz_open_memory
 	fz_open_buffer
-	fz_clone_stream
 	fz_open_leecher
-	fz_close
+	;fz_close
+	fz_drop_stream
 	fz_tell
 	fz_seek
 	fz_read
 	fz_read_all
 	fz_read_file
-	fz_stream_meta
-	fz_rebind_stream
+	;fz_stream_meta
+	;fz_rebind_stream
 	fz_new_stream
 	fz_keep_stream
 	fz_read_best
@@ -424,49 +415,48 @@ EXPORTS
 	fz_chartorune
 	fz_runetochar
 	fz_runelen
-	fz_strtod
-	fz_ftoa
-	fz_text_char_at
-	fz_text_char_bbox
-	fz_new_text_sheet
-	fz_free_text_sheet
-	fz_new_text_page
-	fz_free_text_page
-	fz_analyze_text
-	fz_print_text_sheet
-	fz_print_text_page_html
-	fz_print_text_page_xml
-	fz_print_text_page
-	fz_search_text_page
+	;fz_strtod
+	;fz_ftoa
+	;fz_text_char_at
+	;fz_text_char_bbox
+	;fz_new_text_sheet
+	;fz_free_text_sheet
+	;fz_new_text_page
+	;fz_free_text_page
+	;fz_print_text_sheet
+	;fz_print_text_page_html
+	;fz_print_text_page_xml
+	;fz_print_text_page
+	;fz_search_text_page
 	fz_highlight_selection
 	fz_copy_selection
-	fz_new_text_device
+	;fz_new_text_device
 	gettimeofday
 	fz_fopen_utf8
 	fz_utf8_from_wchar
 	fz_wchar_from_utf8
 	fz_fopen_utf8
 	fz_free_argv
-	fz_redirect_io_to_console
+	;fz_redirect_io_to_console
 	fz_new_text
-	fz_add_text
-	fz_free_text
+	;fz_add_text_span
+	;fz_free_text
 	fz_bound_text
-	fz_clone_text
-	fz_print_text
+	;fz_print_text
 	fz_generate_transition
 	fz_tree_lookup
 	fz_tree_insert
-	fz_free_tree
-	fz_debug_tree
+	;fz_free_tree
+	;fz_debug_tree
 	fz_open_directory
 	fz_open_archive
 	fz_open_archive_with_stream
 	fz_has_archive_entry
 	fz_open_archive_entry
 	fz_read_archive_entry
-	fz_close_archive
-	fz_rebind_archive
+	;fz_close_archive
+	fz_drop_archive
+	;fz_rebind_archive
 	fz_count_archive_entries
 	fz_list_archive_entry
 
@@ -480,7 +470,7 @@ EXPORTS
 	fz_xml_tag
 	fz_xml_att
 	fz_xml_text
-	fz_free_xml
+	;fz_free_xml
 	fz_detach_xml
 	fz_debug_xml
 	fz_xml_find
@@ -495,36 +485,36 @@ EXPORTS
 	pdf_annot_type
 	pdf_run_annot
 	pdf_parse_link_dest
-	pdf_parse_action
+	;pdf_parse_action
 	pdf_lookup_dest
 	pdf_lookup_name
 	pdf_load_name_tree
-	pdf_file_spec_to_str
+	;pdf_file_spec_to_str
 	pdf_load_link_annots
-	pdf_transform_annot
+	;pdf_transform_annot
 	pdf_load_annots
 	pdf_update_annot
-	pdf_free_annot
+	;pdf_free_annot
 	pdf_create_annot
 	pdf_delete_annot
-	pdf_set_markup_annot_quadpoints
-	pdf_set_ink_annot_list
-	pdf_set_text_annot_position
+	;pdf_set_markup_annot_quadpoints
+	;pdf_set_ink_annot_list
+	;pdf_set_text_annot_position
 	pdf_set_annot_contents
 	pdf_annot_contents
-	pdf_set_free_text_details
-	pdf_annot_obj_type
+	;pdf_set_free_text_details
+	;pdf_annot_obj_type
 
 	pdf_new_cmap
 	pdf_keep_cmap
 	pdf_drop_cmap
-	pdf_free_cmap_imp
+	;pdf_free_cmap_imp
 	pdf_cmap_size
 	pdf_cmap_wmode
 	pdf_set_cmap_wmode
 	pdf_set_usecmap
 	pdf_add_codespace
-	pdf_map_range_to_table
+	;pdf_map_range_to_table
 	pdf_map_range_to_range
 	pdf_map_one_to_many
 	pdf_sort_cmap
@@ -537,7 +527,7 @@ EXPORTS
 	pdf_load_builtin_cmap
 	pdf_load_embedded_cmap
 	pdf_new_crypt
-	pdf_free_crypt
+	;pdf_free_crypt
 	pdf_crypt_obj
 	pdf_open_crypt
 	pdf_open_crypt_with_filter
@@ -546,38 +536,38 @@ EXPORTS
 	pdf_crypt_method
 	pdf_crypt_length
 	pdf_crypt_key
-	pdf_keep_signer
-	pdf_drop_signer
+	;pdf_keep_signer
+	;pdf_drop_signer
 	pdf_write_digest
-	pdf_check_signature
+	;pdf_check_signature
 	pdf_open_document
 	pdf_open_document_with_stream
-	pdf_open_document_no_run
-	pdf_open_document_no_run_with_stream
-	pdf_close_document
+	;pdf_open_document_no_run
+	;pdf_open_document_no_run_with_stream
+	;pdf_close_document
 	pdf_specifics
 	pdf_needs_password
 	pdf_authenticate_password
 	pdf_has_permission
-	pdf_meta
+	;pdf_meta
 	pdf_load_outline
 	pdf_create_document
-	pdf_create_page
+	;pdf_create_page
 	pdf_insert_page
 	pdf_delete_page
 	pdf_delete_page_range
 	pdf_page_write
-	pdf_finish_edit
-	pdf_recognize
+	;pdf_finish_edit
+	;pdf_recognize
 
-	pdf_get_string_or_stream
-	pdf_get_inheritable
-	pdf_get_field_flags
+	;pdf_get_string_or_stream
+	;pdf_get_inheritable
+	;pdf_get_field_flags
 	pdf_field_type
-	pdf_set_field_type
+	;pdf_set_field_type
 	pdf_field_value
 	pdf_load_encoding
-	pdf_lookup_agl
+	;pdf_lookup_agl
 	pdf_set_font_wmode
 	pdf_set_default_hmtx
 	pdf_set_default_vmtx
@@ -587,34 +577,34 @@ EXPORTS
 	pdf_end_vmtx
 	pdf_lookup_hmtx
 	pdf_lookup_vmtx
-	pdf_ft_lookup_vgid
-	pdf_ft_free_vsubst
+	;pdf_ft_lookup_vgid
+	;pdf_ft_free_vsubst
 	pdf_load_to_unicode
 	pdf_font_cid_to_gid
-	pdf_lookup_builtin_font
+	;pdf_lookup_builtin_font
 	pdf_lookup_substitute_font
-	pdf_lookup_substitute_cjk_font
+	;pdf_lookup_substitute_cjk_font
 	pdf_load_type3_font
 	pdf_load_type3_glyphs
 	pdf_load_font
 	pdf_load_hail_mary_font
-	pdf_clean_base14_name
-	pdf_install_load_system_font_funcs
+	;pdf_clean_base14_name
+	;pdf_install_load_system_font_funcs
 	pdf_new_font_desc
 	pdf_keep_font
 	pdf_drop_font
-	pdf_measure_text
-	pdf_text_stride
+	;pdf_measure_text
+	;pdf_text_stride
 	pdf_run_glyph
 	pdf_enable_js
 	pdf_disable_js
 	pdf_js_supported
-	pdf_js_setup_event
-	pdf_js_get_event
+	;pdf_js_setup_event
+	;pdf_js_get_event
 	pdf_js_execute
-	pdf_js_execute_count
-	pdf_new_null
-	pdf_new_bool
+	;pdf_js_execute_count
+	;pdf_new_null
+	;pdf_new_bool
 	pdf_new_int
 	pdf_new_real
 	pdf_new_name
@@ -626,7 +616,7 @@ EXPORTS
 	pdf_new_matrix
 	pdf_copy_array
 	pdf_copy_dict
-	pdf_new_obj_from_str
+	;pdf_new_obj_from_str
 	pdf_keep_obj
 	pdf_drop_obj
 	pdf_is_null
@@ -654,7 +644,7 @@ EXPORTS
 	pdf_to_real
 	pdf_to_name
 	pdf_to_str_buf
-	pdf_to_dict
+	;pdf_to_dict
 	pdf_to_str_len
 	pdf_to_num
 	pdf_to_gen
@@ -686,13 +676,13 @@ EXPORTS
 	pdf_obj_refs
 	pdf_obj_parent_num
 	pdf_sprint_obj
-	pdf_fprint_obj
-	pdf_output_obj
-	pdf_to_utf8
-	pdf_to_ucs2
-	pdf_to_utf8_name
-	pdf_from_ucs2
-	pdf_to_ucs2_buf
+	;pdf_fprint_obj
+	;pdf_output_obj
+	;pdf_to_utf8
+	;pdf_to_ucs2
+	;pdf_to_utf8_name
+	;pdf_from_ucs2
+	;pdf_to_ucs2_buf
 	pdf_to_rect
 	pdf_to_matrix
 	pdf_get_indirect_document
@@ -704,12 +694,12 @@ EXPORTS
 	pdf_lookup_page_number
 	pdf_count_pages
 	pdf_lookup_page_obj
-	pdf_lookup_inherited_page_item
+	;pdf_lookup_inherited_page_item
 	pdf_load_page
-	pdf_load_page_by_obj
+	;pdf_load_page_by_obj
 	pdf_load_links
 	pdf_bound_page
-	pdf_free_page
+	;pdf_free_page
 	pdf_run_page
 	pdf_run_page_with_usage
 	pdf_run_page_contents
@@ -724,7 +714,7 @@ EXPORTS
 	pdf_parse_dict
 	pdf_parse_stm_obj
 	pdf_parse_ind_obj
-	pdf_print_token
+	;pdf_print_token
 	pdf_store_item
 	pdf_find_item
 	pdf_remove_item
@@ -738,12 +728,12 @@ EXPORTS
 	pdf_load_pattern
 	pdf_keep_pattern
 	pdf_drop_pattern
-	pdf_load_xobject
+	;pdf_load_xobject
 	pdf_new_xobject
-	pdf_keep_xobject
-	pdf_drop_xobject
-	pdf_update_xobject_contents
-	pdf_create_xobject
+	;pdf_keep_xobject
+	;pdf_drop_xobject
+	;pdf_update_xobject_contents
+	;pdf_create_xobject
 
 	pdf_create_object
 	pdf_delete_object
@@ -762,9 +752,9 @@ EXPORTS
 	pdf_load_compressed_inline_image
 	pdf_open_stream_with_offset
 	pdf_open_contents_stream
-	pdf_load_raw_renumbered_stream
-	pdf_load_renumbered_stream
-	pdf_open_raw_renumbered_stream
+	;pdf_load_raw_renumbered_stream
+	;pdf_load_renumbered_stream
+	;pdf_open_raw_renumbered_stream
 	pdf_trailer
 	pdf_set_populating_xref_trailer
 	pdf_xref_len
@@ -775,40 +765,40 @@ EXPORTS
 	pdf_xref_is_incremental
 	pdf_repair_xref
 	pdf_repair_obj_stms
-	pdf_new_ref
+	;pdf_new_ref
 	pdf_ensure_solid_xref
 	pdf_mark_xref
 	pdf_clear_xref
 	pdf_clear_xref_to_mark
 	pdf_repair_obj
 	pdf_progressive_advance
-	pdf_print_xref
+	;pdf_print_xref
 
 ; MuXPS exports
 
 	xps_open_document
 	xps_open_document_with_stream
-	xps_close_document
+	;xps_close_document
 	xps_count_pages
 	xps_load_page
-	xps_bound_page
+	;xps_bound_page
 	xps_run_page
 	xps_load_links
-	xps_free_page
+	;xps_free_page
 	xps_load_outline
 	xps_strcasecmp
 	xps_resolve_url
-	xps_url_is_remote
+	;xps_url_is_remote
 	xps_parse_point
 	xps_has_part
 	xps_read_part
-	xps_free_part
+	;xps_free_part
 	xps_read_page_list
-	xps_print_page_list
-	xps_free_page_list
+	;xps_print_page_list
+	;xps_free_page_list
 	xps_lookup_link_target
-	xps_add_link
-	xps_lookup_link_target_obj
+	;xps_add_link
+	;xps_lookup_link_target_obj
 	xps_count_font_encodings
 	xps_identify_font_encoding
 	xps_select_font_encoding
@@ -816,9 +806,9 @@ EXPORTS
 	xps_measure_font_glyph
 	xps_parse_color
 	xps_set_color
-	xps_free_resource_dictionary
+	;xps_free_resource_dictionary
 	xps_resolve_resource_reference
-	xps_print_resource_dictionary
+	;xps_print_resource_dictionary
 	xps_parse_fixed_page
 	xps_parse_canvas
 	xps_parse_path
@@ -828,8 +818,8 @@ EXPORTS
 	xps_parse_linear_gradient_brush
 	xps_parse_radial_gradient_brush
 	xps_parse_tiling_brush
-	xps_parse_matrix_transform
-	xps_parse_render_transform
+	;xps_parse_matrix_transform
+	;xps_parse_render_transform
 	xps_parse_rectangle
 	xps_begin_opacity
 	xps_end_opacity
@@ -837,7 +827,7 @@ EXPORTS
 	xps_parse_element
 	xps_clip
 	xps_lookup_alternate_content
-	xps_extract_anchor_info
+	;xps_extract_anchor_info
 
 ; unarr exports (required for ArchUtil, ZipUtil)
 

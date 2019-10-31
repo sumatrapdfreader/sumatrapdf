@@ -3,7 +3,7 @@
 
 #include "mupdf/fitz/system.h"
 #include "mupdf/fitz/context.h"
-#include "mupdf/fitz/math.h"
+#include "mupdf/fitz/geometry.h"
 
 /*
  * Vector path buffer.
@@ -16,14 +16,6 @@
 
 typedef struct fz_path_s fz_path;
 typedef struct fz_stroke_state_s fz_stroke_state;
-
-typedef enum fz_path_command_e
-{
-	FZ_MOVETO = 'M',
-	FZ_LINETO = 'L',
-	FZ_CURVETO = 'C',
-	FZ_CLOSE_PATH = 'Z',
-} fz_path_item_kind;
 
 typedef enum fz_linecap_e
 {
@@ -41,17 +33,6 @@ typedef enum fz_linejoin_e
 	FZ_LINEJOIN_MITER_XPS = 3
 } fz_linejoin;
 
-struct fz_path_s
-{
-	int cmd_len, cmd_cap;
-	unsigned char *cmds;
-	int coord_len, coord_cap;
-	float *coords;
-	fz_point current;
-	fz_point begin;
-	int last_cmd;
-};
-
 struct fz_stroke_state_s
 {
 	int refs;
@@ -64,35 +45,72 @@ struct fz_stroke_state_s
 	float dash_list[32];
 };
 
+typedef struct
+{
+	/* Compulsory ones */
+	void (*moveto)(fz_context *ctx, void *arg, float x, float y);
+	void (*lineto)(fz_context *ctx, void *arg, float x, float y);
+	void (*curveto)(fz_context *ctx, void *arg, float x1, float y1, float x2, float y2, float x3, float y3);
+	void (*closepath)(fz_context *ctx, void *arg);
+	/* Optional ones */
+	void (*quadto)(fz_context *ctx, void *arg, float x1, float y1, float x2, float y2);
+	void (*curvetov)(fz_context *ctx, void *arg, float x2, float y2, float x3, float y3);
+	void (*curvetoy)(fz_context *ctx, void *arg, float x1, float y1, float x3, float y3);
+	void (*rectto)(fz_context *ctx, void *arg, float x1, float y1, float x2, float y2);
+} fz_path_walker;
+
+void fz_walk_path(fz_context *ctx, const fz_path *path, const fz_path_walker *walker, void *arg);
+
 fz_path *fz_new_path(fz_context *ctx);
+
+fz_path *fz_keep_path(fz_context *ctx, const fz_path *path);
+void fz_drop_path(fz_context *ctx, const fz_path *path);
+
+void fz_trim_path(fz_context *ctx, fz_path *path);
+
+int fz_packed_path_size(const fz_path *path);
+
+int fz_pack_path(fz_context *ctx, uint8_t *pack, size_t max, const fz_path *path);
+
+fz_path *fz_clone_path(fz_context *ctx, fz_path *path);
+
 fz_point fz_currentpoint(fz_context *ctx, fz_path *path);
-void fz_moveto(fz_context*, fz_path*, float x, float y);
-void fz_lineto(fz_context*, fz_path*, float x, float y);
-void fz_curveto(fz_context*,fz_path*, float, float, float, float, float, float);
-void fz_curvetov(fz_context*,fz_path*, float, float, float, float);
-void fz_curvetoy(fz_context*,fz_path*, float, float, float, float);
-void fz_closepath(fz_context*,fz_path*);
-void fz_free_path(fz_context *ctx, fz_path *path);
 
-void fz_transform_path(fz_context *ctx, fz_path *path, const fz_matrix *transform);
+void fz_moveto(fz_context *ctx, fz_path *path, float x, float y);
 
-fz_path *fz_clone_path(fz_context *ctx, fz_path *old);
+void fz_lineto(fz_context *ctx, fz_path *path, float x, float y);
 
-fz_rect *fz_bound_path(fz_context *ctx, fz_path *path, const fz_stroke_state *stroke, const fz_matrix *ctm, fz_rect *r);
-fz_rect *fz_adjust_rect_for_stroke(fz_rect *r, const fz_stroke_state *stroke, const fz_matrix *ctm);
+void fz_rectto(fz_context *ctx, fz_path *path, float x0, float y0, float x1, float y1);
+
+void fz_quadto(fz_context *ctx, fz_path *path, float x0, float y0, float x1, float y1);
+
+void fz_curveto(fz_context *ctx, fz_path *path, float x0, float y0, float x1, float y1, float x2, float y2);
+
+void fz_curvetov(fz_context *ctx, fz_path *path, float x1, float y1, float x2, float y2);
+
+void fz_curvetoy(fz_context *ctx, fz_path *path, float x0, float y0, float x2, float y2);
+
+void fz_closepath(fz_context *ctx, fz_path *path);
+
+void fz_transform_path(fz_context *ctx, fz_path *path, fz_matrix transform);
+
+fz_rect fz_bound_path(fz_context *ctx, const fz_path *path, const fz_stroke_state *stroke, fz_matrix ctm);
+fz_rect fz_adjust_rect_for_stroke(fz_context *ctx, fz_rect rect, const fz_stroke_state *stroke, fz_matrix ctm);
 
 extern const fz_stroke_state fz_default_stroke_state;
 
 fz_stroke_state *fz_new_stroke_state(fz_context *ctx);
-fz_stroke_state *fz_new_stroke_state_with_dash_len(fz_context *ctx, int len);
-fz_stroke_state *fz_keep_stroke_state(fz_context *ctx, fz_stroke_state *stroke);
-void fz_drop_stroke_state(fz_context *ctx, fz_stroke_state *stroke);
-fz_stroke_state *fz_unshare_stroke_state(fz_context *ctx, fz_stroke_state *shared);
-fz_stroke_state *fz_unshare_stroke_state_with_dash_len(fz_context *ctx, fz_stroke_state *shared, int len);
-fz_stroke_state *fz_clone_stroke_state(fz_context *ctx, fz_stroke_state *stroke);
 
-#ifndef NDEBUG
-void fz_print_path(fz_context *ctx, FILE *out, fz_path *, int indent);
-#endif
+fz_stroke_state *fz_new_stroke_state_with_dash_len(fz_context *ctx, int len);
+
+fz_stroke_state *fz_keep_stroke_state(fz_context *ctx, const fz_stroke_state *stroke);
+
+void fz_drop_stroke_state(fz_context *ctx, const fz_stroke_state *stroke);
+
+fz_stroke_state *fz_unshare_stroke_state(fz_context *ctx, fz_stroke_state *shared);
+
+fz_stroke_state *fz_unshare_stroke_state_with_dash_len(fz_context *ctx, fz_stroke_state *shared, int len);
+
+fz_stroke_state *fz_clone_stroke_state(fz_context *ctx, fz_stroke_state *stroke);
 
 #endif

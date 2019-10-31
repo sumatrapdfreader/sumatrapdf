@@ -1,20 +1,62 @@
 #include "mupdf/fitz.h"
 #include "draw-imp.h"
 
+#include <math.h>
+#include <float.h>
+#include <assert.h>
+
 #define MAX_DEPTH 8
 
+/*
+	When stroking/filling, we now label the edges as we emit them.
+
+	For filling, we walk the outline of the shape in order, so everything
+	is labelled as '0'.
+
+	For stroking, we walk up both sides of the stroke at once; the forward
+	side (0), and the reverse side (1). When we get to the top, either
+	both sides join back to where they started, or we cap them.
+
+	The start cap is labelled 2, the end cap is labelled 0.
+
+	These labels are ignored for edge based rasterization, but are required
+	for edgebuffer based rasterization.
+
+	Consider the following simplified ascii art diagram of a stroke from
+	left to right with 3 sections.
+
+	|            0           0           0
+	|      +----->-----+----->-----+----->-----+
+	|      |                                   |
+	|      ^ 2   A           B           C     v 0
+	|      |                                   |
+	|      +-----<-----+-----<-----+-----<-----+
+	|            1           1           1
+
+	Edge 0 is sent in order (the top edge of A then B then C, left to right
+	in the above diagram). Edge 1 is sent in reverse order (the bottom edge
+	of A then B then C, still left to right in the above diagram, even though
+	the sense of the line is right to left).
+
+	Finally any caps required are sent, 0 and 2.
+
+	It would be nicer if we could roll edge 2 into edge 1, but to do that
+	we'd need to know in advance if a stroke was closed or not, so we have
+	special case code in the edgebuffer based rasterizer to cope with this.
+*/
+
 static void
-line(fz_gel *gel, const fz_matrix *ctm, float x0, float y0, float x1, float y1)
+line(fz_context *ctx, fz_rasterizer *rast, fz_matrix ctm, float x0, float y0, float x1, float y1)
 {
-	float tx0 = ctm->a * x0 + ctm->c * y0 + ctm->e;
-	float ty0 = ctm->b * x0 + ctm->d * y0 + ctm->f;
-	float tx1 = ctm->a * x1 + ctm->c * y1 + ctm->e;
-	float ty1 = ctm->b * x1 + ctm->d * y1 + ctm->f;
-	fz_insert_gel(gel, tx0, ty0, tx1, ty1);
+	float tx0 = ctm.a * x0 + ctm.c * y0 + ctm.e;
+	float ty0 = ctm.b * x0 + ctm.d * y0 + ctm.f;
+	float tx1 = ctm.a * x1 + ctm.c * y1 + ctm.e;
+	float ty1 = ctm.b * x1 + ctm.d * y1 + ctm.f;
+	fz_insert_rasterizer(ctx, rast, tx0, ty0, tx1, ty1, 0);
 }
 
 static void
-bezier(fz_gel *gel, const fz_matrix *ctm, float flatness,
+bezier(fz_context *ctx, fz_rasterizer *rast, fz_matrix ctm, float flatness,
 	float xa, float ya,
 	float xb, float yb,
 	float xc, float yc,
@@ -35,7 +77,7 @@ bezier(fz_gel *gel, const fz_matrix *ctm, float flatness,
 	dmax = fz_max(dmax, fz_abs(yd - yc));
 	if (dmax < flatness || depth >= MAX_DEPTH)
 	{
-		line(gel, ctm, xa, ya, xd, yd);
+		line(ctx, rast, ctm, xa, ya, xd, yd);
 		return;
 	}
 
@@ -63,71 +105,214 @@ bezier(fz_gel *gel, const fz_matrix *ctm, float flatness,
 
 	xabcd *= 0.125f; yabcd *= 0.125f;
 
-	bezier(gel, ctm, flatness, xa, ya, xab, yab, xabc, yabc, xabcd, yabcd, depth + 1);
-	bezier(gel, ctm, flatness, xabcd, yabcd, xbcd, ybcd, xcd, ycd, xd, yd, depth + 1);
+	bezier(ctx, rast, ctm, flatness, xa, ya, xab, yab, xabc, yabc, xabcd, yabcd, depth + 1);
+	bezier(ctx, rast, ctm, flatness, xabcd, yabcd, xbcd, ybcd, xcd, ycd, xd, yd, depth + 1);
 }
 
-void
-fz_flatten_fill_path(fz_gel *gel, fz_path *path, const fz_matrix *ctm, float flatness)
+static void
+quad(fz_context *ctx, fz_rasterizer *rast, fz_matrix ctm, float flatness,
+	float xa, float ya,
+	float xb, float yb,
+	float xc, float yc, int depth)
 {
-	float x1, y1, x2, y2, x3, y3;
-	float cx = 0;
-	float cy = 0;
-	float bx = 0;
-	float by = 0;
-	int i = 0, k = 0;
+	float dmax;
+	float xab, yab;
+	float xbc, ybc;
+	float xabc, yabc;
 
-	while (i < path->cmd_len)
+	/* termination check */
+	dmax = fz_abs(xa - xb);
+	dmax = fz_max(dmax, fz_abs(ya - yb));
+	dmax = fz_max(dmax, fz_abs(xc - xb));
+	dmax = fz_max(dmax, fz_abs(yc - yb));
+	if (dmax < flatness || depth >= MAX_DEPTH)
 	{
-		switch (path->cmds[i++])
+		line(ctx, rast, ctm, xa, ya, xc, yc);
+		return;
+	}
+
+	xab = xa + xb;
+	yab = ya + yb;
+	xbc = xb + xc;
+	ybc = yb + yc;
+
+	xabc = xab + xbc;
+	yabc = yab + ybc;
+
+	xab *= 0.5f; yab *= 0.5f;
+	xbc *= 0.5f; ybc *= 0.5f;
+
+	xabc *= 0.25f; yabc *= 0.25f;
+
+	quad(ctx, rast, ctm, flatness, xa, ya, xab, yab, xabc, yabc, depth + 1);
+	quad(ctx, rast, ctm, flatness, xabc, yabc, xbc, ybc, xc, yc, depth + 1);
+}
+
+typedef struct
+{
+	fz_rasterizer *rast;
+	fz_matrix ctm;
+	float flatness;
+	fz_point b;
+	fz_point c;
+}
+flatten_arg;
+
+static void
+flatten_moveto(fz_context *ctx, void *arg_, float x, float y)
+{
+	flatten_arg *arg = (flatten_arg *)arg_;
+
+	/* implicit closepath before moveto */
+	if (arg->c.x != arg->b.x || arg->c.y != arg->b.y)
+		line(ctx, arg->rast, arg->ctm, arg->c.x, arg->c.y, arg->b.x, arg->b.y);
+	arg->c.x = arg->b.x = x;
+	arg->c.y = arg->b.y = y;
+
+	fz_gap_rasterizer(ctx, arg->rast);
+}
+
+static void
+flatten_lineto(fz_context *ctx, void *arg_, float x, float y)
+{
+	flatten_arg *arg = (flatten_arg *)arg_;
+
+	line(ctx, arg->rast, arg->ctm, arg->c.x, arg->c.y, x, y);
+	arg->c.x = x;
+	arg->c.y = y;
+}
+
+static void
+flatten_curveto(fz_context *ctx, void *arg_, float x1, float y1, float x2, float y2, float x3, float y3)
+{
+	flatten_arg *arg = (flatten_arg *)arg_;
+
+	bezier(ctx, arg->rast, arg->ctm, arg->flatness, arg->c.x, arg->c.y, x1, y1, x2, y2, x3, y3, 0);
+	arg->c.x = x3;
+	arg->c.y = y3;
+}
+
+static void
+flatten_quadto(fz_context *ctx, void *arg_, float x1, float y1, float x2, float y2)
+{
+	flatten_arg *arg = (flatten_arg *)arg_;
+
+	quad(ctx, arg->rast, arg->ctm, arg->flatness, arg->c.x, arg->c.y, x1, y1, x2, y2, 0);
+	arg->c.x = x2;
+	arg->c.y = y2;
+}
+
+static void
+flatten_close(fz_context *ctx, void *arg_)
+{
+	flatten_arg *arg = (flatten_arg *)arg_;
+
+	line(ctx, arg->rast, arg->ctm, arg->c.x, arg->c.y, arg->b.x, arg->b.y);
+	arg->c.x = arg->b.x;
+	arg->c.y = arg->b.y;
+}
+
+static void
+flatten_rectto(fz_context *ctx, void *arg_, float x0, float y0, float x1, float y1)
+{
+	flatten_arg *arg = (flatten_arg *)arg_;
+	fz_matrix ctm = arg->ctm;
+
+	flatten_moveto(ctx, arg_, x0, y0);
+
+	if (fz_antidropout_rasterizer(ctx, arg->rast))
+	{
+		/* In the case where we have an axis aligned rectangle, do some
+		 * horrid antidropout stuff. */
+		if (ctm.b == 0 && ctm.c == 0)
 		{
-		case FZ_MOVETO:
-			/* implicit closepath before moveto */
-			if (cx != bx || cy != by)
-				line(gel, ctm, cx, cy, bx, by);
-			x1 = path->coords[k++];
-			y1 = path->coords[k++];
-			cx = bx = x1;
-			cy = by = y1;
-			break;
-
-		case FZ_LINETO:
-			x1 = path->coords[k++];
-			y1 = path->coords[k++];
-			line(gel, ctm, cx, cy, x1, y1);
-			cx = x1;
-			cy = y1;
-			break;
-
-		case FZ_CURVETO:
-			x1 = path->coords[k++];
-			y1 = path->coords[k++];
-			x2 = path->coords[k++];
-			y2 = path->coords[k++];
-			x3 = path->coords[k++];
-			y3 = path->coords[k++];
-			bezier(gel, ctm, flatness, cx, cy, x1, y1, x2, y2, x3, y3, 0);
-			cx = x3;
-			cy = y3;
-			break;
-
-		case FZ_CLOSE_PATH:
-			line(gel, ctm, cx, cy, bx, by);
-			cx = bx;
-			cy = by;
-			break;
+			float tx0 = ctm.a * x0 + ctm.e;
+			float ty0 = ctm.d * y0 + ctm.f;
+			float tx1 = ctm.a * x1 + ctm.e;
+			float ty1 = ctm.d * y1 + ctm.f;
+			fz_insert_rasterizer_rect(ctx, arg->rast, tx0, ty0, tx1, ty1);
+			return;
+		}
+		else if (ctm.a == 0 && ctm.d == 0)
+		{
+			float tx0 = ctm.c * y0 + ctm.e;
+			float ty0 = ctm.b * x0 + ctm.f;
+			float tx1 = ctm.c * y1 + ctm.e;
+			float ty1 = ctm.b * x1 + ctm.f;
+			fz_insert_rasterizer_rect(ctx, arg->rast, tx0, ty1, tx1, ty0);
+			return;
 		}
 	}
 
-	if (cx != bx || cy != by)
-		line(gel, ctm, cx, cy, bx, by);
+	flatten_lineto(ctx, arg_, x1, y0);
+	flatten_lineto(ctx, arg_, x1, y1);
+	flatten_lineto(ctx, arg_, x0, y1);
+	flatten_close(ctx, arg_);
 }
 
-struct sctx
+static const fz_path_walker flatten_proc =
 {
-	fz_gel *gel;
-	const fz_matrix *ctm;
+	flatten_moveto,
+	flatten_lineto,
+	flatten_curveto,
+	flatten_close,
+	flatten_quadto,
+	NULL,
+	NULL,
+	flatten_rectto
+};
+
+int
+fz_flatten_fill_path(fz_context *ctx, fz_rasterizer *rast, const fz_path *path, fz_matrix ctm, float flatness, const fz_irect *scissor, fz_irect *bbox)
+{
+	flatten_arg arg;
+
+	if (fz_reset_rasterizer(ctx, rast, *scissor))
+	{
+		arg.rast = rast;
+		arg.ctm = ctm;
+		arg.flatness = flatness;
+		arg.b.x = arg.b.y = arg.c.x = arg.c.y = 0;
+
+		fz_walk_path(ctx, path, &flatten_proc, &arg);
+		if (arg.c.x != arg.b.x || arg.c.y != arg.b.y)
+			line(ctx, rast, ctm, arg.c.x, arg.c.y, arg.b.x, arg.b.y);
+
+		fz_gap_rasterizer(ctx, rast);
+
+		fz_postindex_rasterizer(ctx, rast);
+	}
+
+	arg.rast = rast;
+	arg.ctm = ctm;
+	arg.flatness = flatness;
+	arg.b.x = arg.b.y = arg.c.x = arg.c.y = 0;
+
+	fz_walk_path(ctx, path, &flatten_proc, &arg);
+	if (arg.c.x != arg.b.x || arg.c.y != arg.b.y)
+		line(ctx, rast, ctm, arg.c.x, arg.c.y, arg.b.x, arg.b.y);
+
+	fz_gap_rasterizer(ctx, rast);
+
+	if (!bbox)
+		return 0;
+
+	*bbox = fz_bound_rasterizer(ctx, rast);
+	return fz_is_empty_irect(fz_intersect_irect(*bbox, *scissor));
+}
+
+enum {
+	ONLY_MOVES = 0,
+	NON_NULL_LINE = 1,
+	NULL_LINE
+};
+
+typedef struct sctx
+{
+	fz_rasterizer *rast;
+	fz_matrix ctm;
 	float flatness;
+	const fz_stroke_state *stroke;
 
 	int linejoin;
 	float linewidth;
@@ -137,6 +322,7 @@ struct sctx
 	int sn;
 	int dot;
 	int from_bezier;
+	fz_point cur;
 
 	fz_rect rect;
 	const float *dash_list;
@@ -146,24 +332,84 @@ struct sctx
 	int toggle, cap;
 	int offset;
 	float phase;
-	fz_point cur;
-};
+	fz_point dash_cur;
+	fz_point dash_beg;
+} sctx;
 
 static void
-fz_add_line(struct sctx *s, float x0, float y0, float x1, float y1)
+fz_add_line(fz_context *ctx, sctx *s, float x0, float y0, float x1, float y1, int rev)
 {
-	float tx0 = s->ctm->a * x0 + s->ctm->c * y0 + s->ctm->e;
-	float ty0 = s->ctm->b * x0 + s->ctm->d * y0 + s->ctm->f;
-	float tx1 = s->ctm->a * x1 + s->ctm->c * y1 + s->ctm->e;
-	float ty1 = s->ctm->b * x1 + s->ctm->d * y1 + s->ctm->f;
-	fz_insert_gel(s->gel, tx0, ty0, tx1, ty1);
+	float tx0 = s->ctm.a * x0 + s->ctm.c * y0 + s->ctm.e;
+	float ty0 = s->ctm.b * x0 + s->ctm.d * y0 + s->ctm.f;
+	float tx1 = s->ctm.a * x1 + s->ctm.c * y1 + s->ctm.e;
+	float ty1 = s->ctm.b * x1 + s->ctm.d * y1 + s->ctm.f;
+
+	fz_insert_rasterizer(ctx, s->rast, tx0, ty0, tx1, ty1, rev);
 }
 
 static void
-fz_add_arc(struct sctx *s,
+fz_add_horiz_rect(fz_context *ctx, sctx *s, float x0, float y0, float x1, float y1)
+{
+	if (fz_antidropout_rasterizer(ctx, s->rast)) {
+		if (s->ctm.b == 0 && s->ctm.c == 0)
+		{
+			float tx0 = s->ctm.a * x0 + s->ctm.e;
+			float ty0 = s->ctm.d * y0 + s->ctm.f;
+			float tx1 = s->ctm.a * x1 + s->ctm.e;
+			float ty1 = s->ctm.d * y1 + s->ctm.f;
+			fz_insert_rasterizer_rect(ctx, s->rast, tx1, ty1, tx0, ty0);
+			return;
+		}
+		else if (s->ctm.a == 0 && s->ctm.d == 0)
+		{
+			float tx0 = s->ctm.c * y0 + s->ctm.e;
+			float ty0 = s->ctm.b * x0 + s->ctm.f;
+			float tx1 = s->ctm.c * y1 + s->ctm.e;
+			float ty1 = s->ctm.b * x1 + s->ctm.f;
+			fz_insert_rasterizer_rect(ctx, s->rast, tx1, ty0, tx0, ty1);
+			return;
+		}
+	}
+
+	fz_add_line(ctx, s, x0, y0, x1, y0, 0);
+	fz_add_line(ctx, s, x1, y1, x0, y1, 1);
+}
+
+static void
+fz_add_vert_rect(fz_context *ctx, sctx *s, float x0, float y0, float x1, float y1)
+{
+	if (fz_antidropout_rasterizer(ctx, s->rast))
+	{
+		if (s->ctm.b == 0 && s->ctm.c == 0)
+		{
+			float tx0 = s->ctm.a * x0 + s->ctm.e;
+			float ty0 = s->ctm.d * y0 + s->ctm.f;
+			float tx1 = s->ctm.a * x1 + s->ctm.e;
+			float ty1 = s->ctm.d * y1 + s->ctm.f;
+			fz_insert_rasterizer_rect(ctx, s->rast, tx0, ty1, tx1, ty0);
+			return;
+		}
+		else if (s->ctm.a == 0 && s->ctm.d == 0)
+		{
+			float tx0 = s->ctm.c * y0 + s->ctm.e;
+			float ty0 = s->ctm.b * x0 + s->ctm.f;
+			float tx1 = s->ctm.c * y1 + s->ctm.e;
+			float ty1 = s->ctm.b * x1 + s->ctm.f;
+			fz_insert_rasterizer_rect(ctx, s->rast, tx0, ty0, tx1, ty1);
+			return;
+		}
+	}
+
+	fz_add_line(ctx, s, x1, y0, x0, y0, 0);
+	fz_add_line(ctx, s, x0, y1, x1, y1, 1);
+}
+
+static void
+fz_add_arc(fz_context *ctx, sctx *s,
 	float xc, float yc,
 	float x0, float y0,
-	float x1, float y1)
+	float x1, float y1,
+	int rev)
 {
 	float th0, th1, r;
 	float theta;
@@ -171,52 +417,101 @@ fz_add_arc(struct sctx *s,
 	int n, i;
 
 	r = fabsf(s->linewidth);
-	theta = 2 * (float)M_SQRT2 * sqrtf(s->flatness / r);
+	theta = 2 * FZ_SQRT2 * sqrtf(s->flatness / r);
 	th0 = atan2f(y0, x0);
 	th1 = atan2f(y1, x1);
 
 	if (r > 0)
 	{
 		if (th0 < th1)
-			th0 += (float)M_PI * 2;
+			th0 += FZ_PI * 2;
 		n = ceilf((th0 - th1) / theta);
 	}
 	else
 	{
 		if (th1 < th0)
-			th1 += (float)M_PI * 2;
+			th1 += FZ_PI * 2;
 		n = ceilf((th1 - th0) / theta);
 	}
 
-	ox = x0;
-	oy = y0;
-	for (i = 1; i < n; i++)
+	if (rev)
 	{
-		theta = th0 + (th1 - th0) * i / n;
-		nx = cosf(theta) * r;
-		ny = sinf(theta) * r;
-		fz_add_line(s, xc + ox, yc + oy, xc + nx, yc + ny);
-		ox = nx;
-		oy = ny;
+		ox = x1;
+		oy = y1;
+		for (i = n-1; i > 0; i--)
+		{
+			theta = th0 + (th1 - th0) * i / n;
+			nx = cosf(theta) * r;
+			ny = sinf(theta) * r;
+			fz_add_line(ctx, s, xc + nx, yc + ny, xc + ox, yc + oy, rev);
+			ox = nx;
+			oy = ny;
+		}
+
+		fz_add_line(ctx, s, xc + x0, yc + y0, xc + ox, yc + oy, rev);
 	}
+	else
+	{
+		ox = x0;
+		oy = y0;
+		for (i = 1; i < n; i++)
+		{
+			theta = th0 + (th1 - th0) * i / n;
+			nx = cosf(theta) * r;
+			ny = sinf(theta) * r;
+			fz_add_line(ctx, s, xc + ox, yc + oy, xc + nx, yc + ny, rev);
+			ox = nx;
+			oy = ny;
+		}
 
-	fz_add_line(s, xc + ox, yc + oy, xc + x1, yc + y1);
+		fz_add_line(ctx, s, xc + ox, yc + oy, xc + x1, yc + y1, rev);
+	}
 }
 
-static void
-fz_add_line_stroke(struct sctx *s, fz_point a, fz_point b)
+/* FLT_TINY * FLT_TINY is approximately FLT_EPSILON */
+#define FLT_TINY 3.4e-4F
+static int find_normal_vectors(float dx, float dy, float linewidth, float *dlx, float *dly)
 {
-	float dx = b.x - a.x;
-	float dy = b.y - a.y;
-	float scale = s->linewidth / sqrtf(dx * dx + dy * dy);
-	float dlx = dy * scale;
-	float dly = -dx * scale;
-	fz_add_line(s, a.x - dlx, a.y - dly, b.x - dlx, b.y - dly);
-	fz_add_line(s, b.x + dlx, b.y + dly, a.x + dlx, a.y + dly);
+	if (dx == 0)
+	{
+		if (dy < FLT_TINY && dy > - FLT_TINY)
+			goto tiny;
+		else if (dy > 0)
+			*dlx = linewidth;
+		else
+			*dlx = -linewidth;
+		*dly = 0;
+	}
+	else if (dy == 0)
+	{
+		if (dx < FLT_TINY && dx > - FLT_TINY)
+			goto tiny;
+		else if (dx > 0)
+			*dly = -linewidth;
+		else
+			*dly = linewidth;
+		*dlx = 0;
+	}
+	else
+	{
+		float sq = dx * dx + dy * dy;
+		float scale;
+
+		if (sq < FLT_EPSILON)
+			goto tiny;
+		scale = linewidth / sqrtf(sq);
+		*dlx = dy * scale;
+		*dly = -dx * scale;
+	}
+	return 0;
+tiny:
+	*dlx = 0;
+	*dly = 0;
+	return 1;
 }
 
 static void
-fz_add_line_join(struct sctx *s, fz_point a, fz_point b, fz_point c, int join_under)
+fz_add_line_join(fz_context *ctx, sctx *s, float ax, float ay, float bx, float by, float cx, float cy, int join_under)
 {
 	float miterlimit = s->miterlimit;
 	float linewidth = s->linewidth;
@@ -229,13 +524,13 @@ fz_add_line_join(struct sctx *s, fz_point a, fz_point b, fz_point c, int join_un
 	float dmr2;
 	float scale;
 	float cross;
-	float len0, len1;
+	int rev = 0;
 
-	dx0 = b.x - a.x;
-	dy0 = b.y - a.y;
+	dx0 = bx - ax;
+	dy0 = by - ay;
 
-	dx1 = c.x - b.x;
-	dy1 = c.y - b.y;
+	dx1 = cx - bx;
+	dy1 = cy - by;
 
 	cross = dx1 * dy0 - dx0 * dy1;
 	/* Ensure that cross >= 0 */
@@ -245,35 +540,14 @@ fz_add_line_join(struct sctx *s, fz_point a, fz_point b, fz_point c, int join_un
 		tmp = dx1; dx1 = -dx0; dx0 = -tmp;
 		tmp = dy1; dy1 = -dy0; dy0 = -tmp;
 		cross = -cross;
+		rev = !rev;
 	}
 
-	len0 = dx0 * dx0 + dy0 * dy0;
-	if (len0 < FLT_EPSILON)
-	{
+	if (find_normal_vectors(dx0, dy0, linewidth, &dlx0, &dly0))
 		linejoin = FZ_LINEJOIN_BEVEL;
-		dlx0 = 0;
-		dly0 = 0;
-	}
-	else
-	{
-		scale = linewidth / sqrtf(len0);
-		dlx0 = dy0 * scale;
-		dly0 = -dx0 * scale;
-	}
 
-	len1 = dx1 * dx1 + dy1 * dy1;
-	if (len1 < FLT_EPSILON)
-	{
+	if (find_normal_vectors(dx1, dy1, linewidth, &dlx1, &dly1))
 		linejoin = FZ_LINEJOIN_BEVEL;
-		dlx1 = 0;
-		dly1 = 0;
-	}
-	else
-	{
-		scale = linewidth / sqrtf(len1);
-		dlx1 = dy1 * scale;
-		dly1 = -dx1 * scale;
-	}
 
 	dmx = (dlx0 + dlx1) * 0.5f;
 	dmy = (dly0 + dly1) * 0.5f;
@@ -281,16 +555,6 @@ fz_add_line_join(struct sctx *s, fz_point a, fz_point b, fz_point c, int join_un
 
 	if (cross * cross < FLT_EPSILON && dx0 * dx1 + dy0 * dy1 >= 0)
 		linejoin = FZ_LINEJOIN_BEVEL;
-
-	if (join_under)
-	{
-		fz_add_line(s, b.x + dlx1, b.y + dly1, b.x + dlx0, b.y + dly0);
-	}
-	else
-	{
-		fz_add_line(s, b.x + dlx1, b.y + dly1, b.x, b.y);
-		fz_add_line(s, b.x, b.y, b.x + dlx0, b.y + dly0);
-	}
 
 	/* XPS miter joins are clipped at miterlength, rather than simply
 	 * being converted to bevelled joins. */
@@ -300,206 +564,281 @@ fz_add_line_join(struct sctx *s, fz_point a, fz_point b, fz_point c, int join_un
 			linejoin = FZ_LINEJOIN_BEVEL;
 		else if (dmr2 * miterlimit * miterlimit >= linewidth * linewidth)
 			linejoin = FZ_LINEJOIN_MITER;
-		else
-		{
-			float k, t0x, t0y, t1x, t1y;
-			scale = linewidth * linewidth / dmr2;
-			dmx *= scale;
-			dmy *= scale;
-			k = (scale - linewidth * miterlimit / sqrtf(dmr2)) / (scale - 1);
-			t0x = b.x - dmx + k * (dmx - dlx0);
-			t0y = b.y - dmy + k * (dmy - dly0);
-			t1x = b.x - dmx + k * (dmx - dlx1);
-			t1y = b.y - dmy + k * (dmy - dly1);
-
-			fz_add_line(s, b.x - dlx0, b.y - dly0, t0x, t0y);
-			fz_add_line(s, t0x, t0y, t1x, t1y);
-			fz_add_line(s, t1x, t1y, b.x - dlx1, b.y - dly1);
-		}
 	}
 	else if (linejoin == FZ_LINEJOIN_MITER)
 		if (dmr2 * miterlimit * miterlimit < linewidth * linewidth)
 			linejoin = FZ_LINEJOIN_BEVEL;
 
-	if (linejoin == FZ_LINEJOIN_MITER)
+	if (join_under)
 	{
+		fz_add_line(ctx, s, bx + dlx1, by + dly1, bx + dlx0, by + dly0, !rev);
+	}
+	else if (rev)
+	{
+		fz_add_line(ctx, s, bx + dlx1, by + dly1, bx, by, 0);
+		fz_add_line(ctx, s, bx, by, bx + dlx0, by + dly0, 0);
+	}
+	else
+	{
+		fz_add_line(ctx, s, bx, by, bx + dlx0, by + dly0, 1);
+		fz_add_line(ctx, s, bx + dlx1, by + dly1, bx, by, 1);
+	}
+
+	switch (linejoin)
+	{
+	case FZ_LINEJOIN_MITER_XPS:
+	{
+		float k, t0x, t0y, t1x, t1y;
+
+		scale = linewidth * linewidth / dmr2;
+		dmx *= scale;
+		dmy *= scale;
+		k = (scale - linewidth * miterlimit / sqrtf(dmr2)) / (scale - 1);
+		t0x = bx - dmx + k * (dmx - dlx0);
+		t0y = by - dmy + k * (dmy - dly0);
+		t1x = bx - dmx + k * (dmx - dlx1);
+		t1y = by - dmy + k * (dmy - dly1);
+
+		if (rev)
+		{
+			fz_add_line(ctx, s, t1x, t1y, bx - dlx1, by - dly1, 1);
+			fz_add_line(ctx, s, t0x, t0y, t1x, t1y, 1);
+			fz_add_line(ctx, s, bx - dlx0, by - dly0, t0x, t0y, 1);
+		}
+		else
+		{
+			fz_add_line(ctx, s, bx - dlx0, by - dly0, t0x, t0y, 0);
+			fz_add_line(ctx, s, t0x, t0y, t1x, t1y, 0);
+			fz_add_line(ctx, s, t1x, t1y, bx - dlx1, by - dly1, 0);
+		}
+		break;
+	}
+	case FZ_LINEJOIN_MITER:
 		scale = linewidth * linewidth / dmr2;
 		dmx *= scale;
 		dmy *= scale;
 
-		fz_add_line(s, b.x - dlx0, b.y - dly0, b.x - dmx, b.y - dmy);
-		fz_add_line(s, b.x - dmx, b.y - dmy, b.x - dlx1, b.y - dly1);
-	}
+		if (rev)
+		{
+			fz_add_line(ctx, s, bx - dmx, by - dmy, bx - dlx1, by - dly1, 1);
+			fz_add_line(ctx, s, bx - dlx0, by - dly0, bx - dmx, by - dmy, 1);
+		}
+		else
+		{
+			fz_add_line(ctx, s, bx - dlx0, by - dly0, bx - dmx, by - dmy, 0);
+			fz_add_line(ctx, s, bx - dmx, by - dmy, bx - dlx1, by - dly1, 0);
+		}
+		break;
 
-	if (linejoin == FZ_LINEJOIN_BEVEL)
-	{
-		fz_add_line(s, b.x - dlx0, b.y - dly0, b.x - dlx1, b.y - dly1);
-	}
+	case FZ_LINEJOIN_BEVEL:
+		fz_add_line(ctx, s, bx - dlx0, by - dly0, bx - dlx1, by - dly1, rev);
+		break;
 
-	if (linejoin == FZ_LINEJOIN_ROUND)
-	{
-		fz_add_arc(s, b.x, b.y, -dlx0, -dly0, -dlx1, -dly1);
+	case FZ_LINEJOIN_ROUND:
+		fz_add_arc(ctx, s, bx, by, -dlx0, -dly0, -dlx1, -dly1, rev);
+		break;
+
+	default:
+		assert("Invalid line join" == NULL);
 	}
 }
 
 static void
-fz_add_line_cap(struct sctx *s, fz_point a, fz_point b, fz_linecap linecap)
+fz_add_line_cap(fz_context *ctx, sctx *s, float ax, float ay, float bx, float by, fz_linecap linecap, int rev)
 {
 	float flatness = s->flatness;
 	float linewidth = s->linewidth;
 
-	float dx = b.x - a.x;
-	float dy = b.y - a.y;
+	float dx = bx - ax;
+	float dy = by - ay;
 
 	float scale = linewidth / sqrtf(dx * dx + dy * dy);
 	float dlx = dy * scale;
 	float dly = -dx * scale;
 
-	if (linecap == FZ_LINECAP_BUTT)
-		fz_add_line(s, b.x - dlx, b.y - dly, b.x + dlx, b.y + dly);
+	switch (linecap)
+	{
+	case FZ_LINECAP_BUTT:
+		fz_add_line(ctx, s, bx - dlx, by - dly, bx + dlx, by + dly, rev);
+		break;
 
-	if (linecap == FZ_LINECAP_ROUND)
+	case FZ_LINECAP_ROUND:
 	{
 		int i;
-		int n = ceilf((float)M_PI / (2.0f * (float)M_SQRT2 * sqrtf(flatness / linewidth)));
-		float ox = b.x - dlx;
-		float oy = b.y - dly;
+		int n = ceilf(FZ_PI / (2.0f * FZ_SQRT2 * sqrtf(flatness / linewidth)));
+		float ox = bx - dlx;
+		float oy = by - dly;
 		for (i = 1; i < n; i++)
 		{
-			float theta = (float)M_PI * i / n;
+			float theta = FZ_PI * i / n;
 			float cth = cosf(theta);
 			float sth = sinf(theta);
-			float nx = b.x - dlx * cth - dly * sth;
-			float ny = b.y - dly * cth + dlx * sth;
-			fz_add_line(s, ox, oy, nx, ny);
+			float nx = bx - dlx * cth - dly * sth;
+			float ny = by - dly * cth + dlx * sth;
+			fz_add_line(ctx, s, ox, oy, nx, ny, rev);
 			ox = nx;
 			oy = ny;
 		}
-		fz_add_line(s, ox, oy, b.x + dlx, b.y + dly);
+		fz_add_line(ctx, s, ox, oy, bx + dlx, by + dly, rev);
+		break;
 	}
 
-	if (linecap == FZ_LINECAP_SQUARE)
-	{
-		fz_add_line(s, b.x - dlx, b.y - dly,
-			b.x - dlx - dly, b.y - dly + dlx);
-		fz_add_line(s, b.x - dlx - dly, b.y - dly + dlx,
-			b.x + dlx - dly, b.y + dly + dlx);
-		fz_add_line(s, b.x + dlx - dly, b.y + dly + dlx,
-			b.x + dlx, b.y + dly);
-	}
+	case FZ_LINECAP_SQUARE:
+		fz_add_line(ctx, s, bx - dlx, by - dly,
+			bx - dlx - dly, by - dly + dlx, rev);
+		fz_add_line(ctx, s, bx - dlx - dly, by - dly + dlx,
+			bx + dlx - dly, by + dly + dlx, rev);
+		fz_add_line(ctx, s, bx + dlx - dly, by + dly + dlx,
+			bx + dlx, by + dly, rev);
+		break;
 
-	if (linecap == FZ_LINECAP_TRIANGLE)
+	case FZ_LINECAP_TRIANGLE:
 	{
 		float mx = -dly;
 		float my = dlx;
-		fz_add_line(s, b.x - dlx, b.y - dly, b.x + mx, b.y + my);
-		fz_add_line(s, b.x + mx, b.y + my, b.x + dlx, b.y + dly);
+		fz_add_line(ctx, s, bx - dlx, by - dly, bx + mx, by + my, rev);
+		fz_add_line(ctx, s, bx + mx, by + my, bx + dlx, by + dly, rev);
+		break;
+	}
+
+	default:
+		assert("Invalid line cap" == NULL);
 	}
 }
 
 static void
-fz_add_line_dot(struct sctx *s, fz_point a)
+fz_add_line_dot(fz_context *ctx, sctx *s, float ax, float ay)
 {
 	float flatness = s->flatness;
 	float linewidth = s->linewidth;
-	int n = ceilf((float)M_PI / ((float)M_SQRT2 * sqrtf(flatness / linewidth)));
-	float ox = a.x - linewidth;
-	float oy = a.y;
+	int n = ceilf(FZ_PI / (FZ_SQRT2 * sqrtf(flatness / linewidth)));
+	float ox = ax - linewidth;
+	float oy = ay;
 	int i;
 
+	if (n < 3)
+		n = 3;
 	for (i = 1; i < n; i++)
 	{
-		float theta = (float)M_PI * 2 * i / n;
+		float theta = FZ_PI * 2 * i / n;
 		float cth = cosf(theta);
 		float sth = sinf(theta);
-		float nx = a.x - cth * linewidth;
-		float ny = a.y + sth * linewidth;
-		fz_add_line(s, ox, oy, nx, ny);
+		float nx = ax - cth * linewidth;
+		float ny = ay + sth * linewidth;
+		fz_add_line(ctx, s, ox, oy, nx, ny, 0);
 		ox = nx;
 		oy = ny;
 	}
 
-	fz_add_line(s, ox, oy, a.x - linewidth, a.y);
+	fz_add_line(ctx, s, ox, oy, ax - linewidth, ay, 0);
 }
 
 static void
-fz_stroke_flush(struct sctx *s, fz_linecap start_cap, fz_linecap end_cap)
+fz_stroke_flush(fz_context *ctx, sctx *s, fz_linecap start_cap, fz_linecap end_cap)
 {
 	if (s->sn == 2)
 	{
-		fz_add_line_cap(s, s->beg[1], s->beg[0], start_cap);
-		fz_add_line_cap(s, s->seg[0], s->seg[1], end_cap);
+		fz_add_line_cap(ctx, s, s->beg[1].x, s->beg[1].y, s->beg[0].x, s->beg[0].y, start_cap, 2);
+		fz_add_line_cap(ctx, s, s->seg[0].x, s->seg[0].y, s->seg[1].x, s->seg[1].y, end_cap, 0);
 	}
-	else if (s->dot)
-	{
-		fz_add_line_dot(s, s->beg[0]);
-	}
+	else if (s->dot == NULL_LINE)
+		fz_add_line_dot(ctx, s, s->beg[0].x, s->beg[0].y);
+	fz_gap_rasterizer(ctx, s->rast);
 }
 
 static void
-fz_stroke_moveto(struct sctx *s, fz_point cur)
+fz_stroke_moveto(fz_context *ctx, void *s_, float x, float y)
 {
-	s->seg[0] = cur;
-	s->beg[0] = cur;
+	struct sctx *s = (struct sctx *)s_;
+
+	s->seg[0].x = s->beg[0].x = x;
+	s->seg[0].y = s->beg[0].y = y;
 	s->sn = 1;
-	s->dot = 0;
+	s->dot = ONLY_MOVES;
 	s->from_bezier = 0;
 }
 
 static void
-fz_stroke_lineto(struct sctx *s, fz_point cur, int from_bezier)
+fz_stroke_lineto(fz_context *ctx, sctx *s, float x, float y, int from_bezier)
 {
-	float dx = cur.x - s->seg[s->sn-1].x;
-	float dy = cur.y - s->seg[s->sn-1].y;
+	float ox = s->seg[s->sn-1].x;
+	float oy = s->seg[s->sn-1].y;
+	float dx = x - ox;
+	float dy = y - oy;
+	float dlx, dly;
 
-	if (dx * dx + dy * dy < FLT_EPSILON)
+	if (find_normal_vectors(dx, dy, s->linewidth, &dlx, &dly))
 	{
-		if (s->cap == FZ_LINECAP_ROUND || s->dash_list)
-			s->dot = 1;
+		if (s->dot == ONLY_MOVES && (s->cap == FZ_LINECAP_ROUND || s->dash_list))
+			s->dot = NULL_LINE;
 		return;
 	}
+	s->dot = NON_NULL_LINE;
 
-	fz_add_line_stroke(s, s->seg[s->sn-1], cur);
+	if (s->sn == 2)
+		fz_add_line_join(ctx, s, s->seg[0].x, s->seg[0].y, ox, oy, x, y, s->from_bezier & from_bezier);
+
+#if 1
+	if (0 && dx == 0)
+	{
+		fz_add_vert_rect(ctx, s, ox - dlx, oy, x + dlx, y);
+	}
+	else if (dy == 0)
+	{
+		fz_add_horiz_rect(ctx, s, ox, oy - dly, x, y + dly);
+	}
+	else
+#endif
+	{
+
+		fz_add_line(ctx, s, ox - dlx, oy - dly, x - dlx, y - dly, 0);
+		fz_add_line(ctx, s, x + dlx, y + dly, ox + dlx, oy + dly, 1);
+	}
 
 	if (s->sn == 2)
 	{
-		fz_add_line_join(s, s->seg[0], s->seg[1], cur, s->from_bezier & from_bezier);
 		s->seg[0] = s->seg[1];
-		s->seg[1] = cur;
+		s->seg[1].x = x;
+		s->seg[1].y = y;
 	}
 	else
 	{
-		s->seg[1] = cur;
-		s->beg[1] = cur;
+		s->seg[1].x = s->beg[1].x = x;
+		s->seg[1].y = s->beg[1].y = y;
 		s->sn = 2;
 	}
 	s->from_bezier = from_bezier;
 }
 
 static void
-fz_stroke_closepath(struct sctx *s)
+fz_stroke_closepath(fz_context *ctx, sctx *s)
 {
 	if (s->sn == 2)
 	{
-		fz_stroke_lineto(s, s->beg[0], 0);
-		if (s->seg[1].x == s->beg[0].x && s->seg[1].y == s->beg[0].y)
-			fz_add_line_join(s, s->seg[0], s->beg[0], s->beg[1], 0);
-		else
-			fz_add_line_join(s, s->seg[1], s->beg[0], s->beg[1], 0);
+		fz_stroke_lineto(ctx, s, s->beg[0].x, s->beg[0].y, 0);
+		/* fz_stroke_lineto will *normally* end up with s->seg[1] being the x,y coords passed in.
+		 * As such, the following line should draw a linejoin between the closing segment of this
+		 * subpath (seg[0]->seg[1]) == (seg[0]->beg[0]) and the first segment of this subpath
+		 * (beg[0]->beg[1]).
+		 * In cases where the line was already at an x,y infinitesimally close to s->beg[0],
+		 * fz_stroke_lineto may exit without doing any processing. This leaves seg[0]->seg[1]
+		 * pointing at the penultimate line segment. Thus this draws a linejoin between that
+		 * penultimate segment and the end segment. This is what we want. */
+		fz_add_line_join(ctx, s, s->seg[0].x, s->seg[0].y, s->beg[0].x, s->beg[0].y, s->beg[1].x, s->beg[1].y, 0);
 	}
-	else if (s->dot)
-	{
-		fz_add_line_dot(s, s->beg[0]);
-	}
+	else if (s->dot == NULL_LINE)
+		fz_add_line_dot(ctx, s, s->beg[0].x, s->beg[0].y);
 
 	s->seg[0] = s->beg[0];
 	s->sn = 1;
-	s->dot = 0;
+	s->dot = ONLY_MOVES;
 	s->from_bezier = 0;
+
+	fz_gap_rasterizer(ctx, s->rast);
 }
 
 static void
-fz_stroke_bezier(struct sctx *s,
+fz_stroke_bezier(fz_context *ctx, struct sctx *s,
 	float xa, float ya,
 	float xb, float yb,
 	float xc, float yc,
@@ -520,10 +859,7 @@ fz_stroke_bezier(struct sctx *s,
 	dmax = fz_max(dmax, fz_abs(yd - yc));
 	if (dmax < s->flatness || depth >= MAX_DEPTH)
 	{
-		fz_point p;
-		p.x = xd;
-		p.y = yd;
-		fz_stroke_lineto(s, p, 1);
+		fz_stroke_lineto(ctx, s, xd, yd, 1);
 		return;
 	}
 
@@ -551,89 +887,115 @@ fz_stroke_bezier(struct sctx *s,
 
 	xabcd *= 0.125f; yabcd *= 0.125f;
 
-	fz_stroke_bezier(s, xa, ya, xab, yab, xabc, yabc, xabcd, yabcd, depth + 1);
-	fz_stroke_bezier(s, xabcd, yabcd, xbcd, ybcd, xcd, ycd, xd, yd, depth + 1);
-}
-
-void
-fz_flatten_stroke_path(fz_gel *gel, fz_path *path, const fz_stroke_state *stroke, const fz_matrix *ctm, float flatness, float linewidth)
-{
-	struct sctx s;
-	fz_point p0, p1, p2, p3;
-	int i, k;
-
-	s.gel = gel;
-	s.ctm = ctm;
-	s.flatness = flatness;
-
-	s.linejoin = stroke->linejoin;
-	s.linewidth = linewidth * 0.5f; /* hairlines use a different value from the path value */
-	s.miterlimit = stroke->miterlimit;
-	s.sn = 0;
-	s.dot = 0;
-
-	s.dash_list = NULL;
-	s.dash_phase = 0;
-	s.dash_len = 0;
-	s.toggle = 0;
-	s.offset = 0;
-	s.phase = 0;
-
-	s.cap = stroke->start_cap;
-
-	if (path->cmd_len > 0 && path->cmds[0] != FZ_MOVETO)
-		return;
-
-	p0.x = p0.y = 0;
-
-	i = k = 0;
-	while (i < path->cmd_len)
-	{
-		switch (path->cmds[i++])
-		{
-		case FZ_MOVETO:
-			p1.x = path->coords[k++];
-			p1.y = path->coords[k++];
-			fz_stroke_flush(&s, stroke->start_cap, stroke->end_cap);
-			fz_stroke_moveto(&s, p1);
-			p0 = p1;
-			break;
-
-		case FZ_LINETO:
-			p1.x = path->coords[k++];
-			p1.y = path->coords[k++];
-			fz_stroke_lineto(&s, p1, 0);
-			p0 = p1;
-			break;
-
-		case FZ_CURVETO:
-			p1.x = path->coords[k++];
-			p1.y = path->coords[k++];
-			p2.x = path->coords[k++];
-			p2.y = path->coords[k++];
-			p3.x = path->coords[k++];
-			p3.y = path->coords[k++];
-			fz_stroke_bezier(&s, p0.x, p0.y, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, 0);
-			p0 = p3;
-			break;
-
-		case FZ_CLOSE_PATH:
-			fz_stroke_closepath(&s);
-			break;
-		}
-	}
-
-	fz_stroke_flush(&s, stroke->start_cap, stroke->end_cap);
+	fz_stroke_bezier(ctx, s, xa, ya, xab, yab, xabc, yabc, xabcd, yabcd, depth + 1);
+	fz_stroke_bezier(ctx, s, xabcd, yabcd, xbcd, ybcd, xcd, ycd, xd, yd, depth + 1);
 }
 
 static void
-fz_dash_moveto(struct sctx *s, fz_point a, fz_linecap start_cap, fz_linecap end_cap)
+fz_stroke_quad(fz_context *ctx, struct sctx *s,
+	float xa, float ya,
+	float xb, float yb,
+	float xc, float yc, int depth)
+{
+	float dmax;
+	float xab, yab;
+	float xbc, ybc;
+	float xabc, yabc;
+
+	/* termination check */
+	dmax = fz_abs(xa - xb);
+	dmax = fz_max(dmax, fz_abs(ya - yb));
+	dmax = fz_max(dmax, fz_abs(xc - xb));
+	dmax = fz_max(dmax, fz_abs(yc - yb));
+	if (dmax < s->flatness || depth >= MAX_DEPTH)
+	{
+		fz_stroke_lineto(ctx, s, xc, yc, 1);
+		return;
+	}
+
+	xab = xa + xb;
+	yab = ya + yb;
+	xbc = xb + xc;
+	ybc = yb + yc;
+
+	xabc = xab + xbc;
+	yabc = yab + ybc;
+
+	xab *= 0.5f; yab *= 0.5f;
+	xbc *= 0.5f; ybc *= 0.5f;
+
+	xabc *= 0.25f; yabc *= 0.25f;
+
+	fz_stroke_quad(ctx, s, xa, ya, xab, yab, xabc, yabc, depth + 1);
+	fz_stroke_quad(ctx, s, xabc, yabc, xbc, ybc, xc, yc, depth + 1);
+}
+
+static void
+stroke_moveto(fz_context *ctx, void *s_, float x, float y)
+{
+	sctx *s = (sctx *)s_;
+
+	fz_stroke_flush(ctx, s, s->stroke->start_cap, s->stroke->end_cap);
+	fz_stroke_moveto(ctx, s, x, y);
+	s->cur.x = x;
+	s->cur.y = y;
+}
+
+static void
+stroke_lineto(fz_context *ctx, void *s_, float x, float y)
+{
+	sctx *s = (sctx *)s_;
+
+	fz_stroke_lineto(ctx, s, x, y, 0);
+	s->cur.x = x;
+	s->cur.y = y;
+}
+
+static void
+stroke_curveto(fz_context *ctx, void *s_, float x1, float y1, float x2, float y2, float x3, float y3)
+{
+	sctx *s = (sctx *)s_;
+
+	fz_stroke_bezier(ctx, s, s->cur.x, s->cur.y, x1, y1, x2, y2, x3, y3, 0);
+	s->cur.x = x3;
+	s->cur.y = y3;
+}
+
+static void
+stroke_quadto(fz_context *ctx, void *s_, float x1, float y1, float x2, float y2)
+{
+	sctx *s = (sctx *)s_;
+
+	fz_stroke_quad(ctx, s, s->cur.x, s->cur.y, x1, y1, x2, y2, 0);
+	s->cur.x = x2;
+	s->cur.y = y2;
+}
+
+static void
+stroke_close(fz_context *ctx, void *s_)
+{
+	sctx *s = (sctx *)s_;
+
+	fz_stroke_closepath(ctx, s);
+}
+
+static const fz_path_walker stroke_proc =
+{
+	stroke_moveto,
+	stroke_lineto,
+	stroke_curveto,
+	stroke_close,
+	stroke_quadto
+};
+
+static void
+fz_dash_moveto(fz_context *ctx, struct sctx *s, float x, float y)
 {
 	s->toggle = 1;
 	s->offset = 0;
 	s->phase = s->dash_phase;
 
-	while (s->phase >= s->dash_list[s->offset])
+	while (s->phase > 0 && s->phase >= s->dash_list[s->offset])
 	{
 		s->toggle = !s->toggle;
 		s->phase -= s->dash_list[s->offset];
@@ -642,107 +1004,114 @@ fz_dash_moveto(struct sctx *s, fz_point a, fz_linecap start_cap, fz_linecap end_
 			s->offset = 0;
 	}
 
-	s->cur = a;
+	s->dash_cur.x = x;
+	s->dash_cur.y = y;
 
 	if (s->toggle)
 	{
-		fz_stroke_flush(s, s->cap, end_cap);
-		s->cap = start_cap;
-		fz_stroke_moveto(s, a);
+		fz_stroke_flush(ctx, s, s->cap, s->stroke->end_cap);
+		s->cap = s->stroke->start_cap;
+		fz_stroke_moveto(ctx, s, x, y);
 	}
 }
 
 static void
-fz_dash_lineto(struct sctx *s, fz_point b, int dash_cap, int from_bezier)
+fz_dash_lineto(fz_context *ctx, struct sctx *s, float bx, float by, int from_bezier)
 {
 	float dx, dy, d;
 	float total, used, ratio, tail;
-	fz_point a;
-	fz_point m;
-	fz_point old_b;
+	float ax, ay;
+	float mx, my;
+	float old_bx, old_by;
 	int n;
+	int dash_cap = s->stroke->dash_cap;
 
-	a = s->cur;
-	dx = b.x - a.x;
-	dy = b.y - a.y;
+	ax = s->dash_cur.x;
+	ay = s->dash_cur.y;
+	dx = bx - ax;
+	dy = by - ay;
 	used = 0;
 	tail = 0;
 	total = sqrtf(dx * dx + dy * dy);
 
 	/* If a is off screen, bring it onto the screen. First
 	 * horizontally... */
-	if ((d = s->rect.x0 - a.x) > 0)
+	if ((d = s->rect.x0 - ax) > 0)
 	{
-		if (b.x < s->rect.x0)
+		if (bx < s->rect.x0)
 		{
 			/* Entirely off screen */
 			tail = total;
-			old_b = b;
+			old_bx = bx;
+			old_by = by;
 			goto adjust_for_tail;
 		}
-		a.x = s->rect.x0;	/* d > 0, dx > 0 */
+		ax = s->rect.x0;	/* d > 0, dx > 0 */
 		goto a_moved_horizontally;
 	}
-	else if (d < 0 && (d = (s->rect.x1 - a.x)) < 0)
+	else if (d < 0 && (d = (s->rect.x1 - ax)) < 0)
 	{
-		if (b.x > s->rect.x1)
+		if (bx > s->rect.x1)
 		{
 			/* Entirely off screen */
 			tail = total;
-			old_b = b;
+			old_bx = bx;
+			old_by = by;
 			goto adjust_for_tail;
 		}
-		a.x = s->rect.x1;	/* d < 0, dx < 0 */
+		ax = s->rect.x1;	/* d < 0, dx < 0 */
 a_moved_horizontally:	/* d and dx have the same sign */
-		a.y += dy * d/dx;
+		ay += dy * d/dx;
 		used = total * d/dx;
 		total -= used;
-		dx = b.x - a.x;
-		dy = b.y - a.y;
+		dx = bx - ax;
+		dy = by - ay;
 	}
 	/* Then vertically... */
-	if ((d = s->rect.y0 - a.y) > 0)
+	if ((d = s->rect.y0 - ay) > 0)
 	{
-		if (b.y < s->rect.y0)
+		if (by < s->rect.y0)
 		{
 			/* Entirely off screen */
 			tail = total;
-			old_b = b;
+			old_bx = bx;
+			old_by = by;
 			goto adjust_for_tail;
 		}
-		a.y = s->rect.y0;	/* d > 0, dy > 0 */
+		ay = s->rect.y0;	/* d > 0, dy > 0 */
 		goto a_moved_vertically;
 	}
-	else if (d < 0 && (d = (s->rect.y1 - a.y)) < 0)
+	else if (d < 0 && (d = (s->rect.y1 - ay)) < 0)
 	{
-		if (b.y > s->rect.y1)
+		if (by > s->rect.y1)
 		{
 			/* Entirely off screen */
 			tail = total;
-			old_b = b;
+			old_bx = bx;
+			old_by = by;
 			goto adjust_for_tail;
 		}
-		a.y = s->rect.y1;	/* d < 0, dy < 0 */
+		ay = s->rect.y1;	/* d < 0, dy < 0 */
 a_moved_vertically:	/* d and dy have the same sign */
-		a.x += dx * d/dy;
+		ax += dx * d/dy;
 		d = total * d/dy;
 		total -= d;
 		used += d;
-		dx = b.x - a.x;
-		dy = b.y - a.y;
+		dx = bx - ax;
+		dy = by - ay;
 	}
 	if (used != 0.0f)
 	{
 		/* Update the position in the dash array */
 		if (s->toggle)
 		{
-			fz_stroke_lineto(s, a, from_bezier);
+			fz_stroke_lineto(ctx, s, ax, ay, from_bezier);
 		}
 		else
 		{
-			fz_stroke_flush(s, s->cap, dash_cap);
-			s->cap = dash_cap;
-			fz_stroke_moveto(s, a);
+			fz_stroke_flush(ctx, s, s->cap, s->stroke->dash_cap);
+			s->cap = s->stroke->dash_cap;
+			fz_stroke_moveto(ctx, s, ax, ay);
 		}
 		used += s->phase;
 		n = used/s->dash_total;
@@ -759,73 +1128,77 @@ a_moved_vertically:	/* d and dy have the same sign */
 		}
 		if (s->toggle)
 		{
-			fz_stroke_lineto(s, a, from_bezier);
+			fz_stroke_lineto(ctx, s, ax, ay, from_bezier);
 		}
 		else
 		{
-			fz_stroke_flush(s, s->cap, dash_cap);
-			s->cap = dash_cap;
-			fz_stroke_moveto(s, a);
+			fz_stroke_flush(ctx, s, s->cap, s->stroke->dash_cap);
+			s->cap = s->stroke->dash_cap;
+			fz_stroke_moveto(ctx, s, ax, ay);
 		}
 		s->phase = used;
 		used = 0;
 	}
 
-	/* Now if b.x is off screen, bring it back */
-	if ((d = b.x - s->rect.x0) < 0)
+	/* Now if bx is off screen, bring it back */
+	if ((d = bx - s->rect.x0) < 0)
 	{
-		old_b = b;
-		b.x = s->rect.x0;	/* d < 0, dx < 0 */
+		old_bx = bx;
+		old_by = by;
+		bx = s->rect.x0;	/* d < 0, dx < 0 */
 		goto b_moved_horizontally;
 	}
-	else if (d > 0 && (d = (b.x - s->rect.x1)) > 0)
+	else if (d > 0 && (d = (bx - s->rect.x1)) > 0)
 	{
-		old_b = b;
-		b.x = s->rect.x1;	/* d > 0, dx > 0 */
+		old_bx = bx;
+		old_by = by;
+		bx = s->rect.x1;	/* d > 0, dx > 0 */
 b_moved_horizontally:	/* d and dx have the same sign */
-		b.y -= dy * d/dx;
+		by -= dy * d/dx;
 		tail = total * d/dx;
 		total -= tail;
-		dx = b.x - a.x;
-		dy = b.y - a.y;
+		dx = bx - ax;
+		dy = by - ay;
 	}
 	/* Then vertically... */
-	if ((d = b.y - s->rect.y0) < 0)
+	if ((d = by - s->rect.y0) < 0)
 	{
-		old_b = b;
-		b.y = s->rect.y0;	/* d < 0, dy < 0 */
+		old_bx = bx;
+		old_by = by;
+		by = s->rect.y0;	/* d < 0, dy < 0 */
 		goto b_moved_vertically;
 	}
-	else if (d > 0 && (d = (b.y - s->rect.y1)) > 0)
+	else if (d > 0 && (d = (by - s->rect.y1)) > 0)
 	{
 		float t;
-		old_b = b;
-		b.y = s->rect.y1;	/* d > 0, dy > 0 */
+		old_bx = bx;
+		old_by = by;
+		by = s->rect.y1;	/* d > 0, dy > 0 */
 b_moved_vertically:	/* d and dy have the same sign */
-		b.x -= dx * d/dy;
+		bx -= dx * d/dy;
 		t = total * d/dy;
 		tail += t;
 		total -= t;
-		dx = b.x - a.x;
-		dy = b.y - a.y;
+		dx = bx - ax;
+		dy = by - ay;
 	}
 
 	while (total - used > s->dash_list[s->offset] - s->phase)
 	{
 		used += s->dash_list[s->offset] - s->phase;
 		ratio = used / total;
-		m.x = a.x + ratio * dx;
-		m.y = a.y + ratio * dy;
+		mx = ax + ratio * dx;
+		my = ay + ratio * dy;
 
 		if (s->toggle)
 		{
-			fz_stroke_lineto(s, m, from_bezier);
+			fz_stroke_lineto(ctx, s, mx, my, from_bezier);
 		}
 		else
 		{
-			fz_stroke_flush(s, s->cap, dash_cap);
+			fz_stroke_flush(ctx, s, s->cap, dash_cap);
 			s->cap = dash_cap;
-			fz_stroke_moveto(s, m);
+			fz_stroke_moveto(ctx, s, mx, my);
 		}
 
 		s->toggle = !s->toggle;
@@ -839,27 +1212,29 @@ b_moved_vertically:	/* d and dy have the same sign */
 
 	if (tail == 0.0f)
 	{
-		s->cur = b;
+		s->dash_cur.x = bx;
+		s->dash_cur.y = by;
 
 		if (s->toggle)
 		{
-			fz_stroke_lineto(s, b, from_bezier);
+			fz_stroke_lineto(ctx, s, bx, by, from_bezier);
 		}
 	}
 	else
 	{
 adjust_for_tail:
-		s->cur = old_b;
+		s->dash_cur.x = old_bx;
+		s->dash_cur.y = old_by;
 		/* Update the position in the dash array */
 		if (s->toggle)
 		{
-			fz_stroke_lineto(s, old_b, from_bezier);
+			fz_stroke_lineto(ctx, s, old_bx, old_by, from_bezier);
 		}
 		else
 		{
-			fz_stroke_flush(s, s->cap, dash_cap);
+			fz_stroke_flush(ctx, s, s->cap, dash_cap);
 			s->cap = dash_cap;
-			fz_stroke_moveto(s, old_b);
+			fz_stroke_moveto(ctx, s, old_bx, old_by);
 		}
 		tail += s->phase;
 		n = tail/s->dash_total;
@@ -876,25 +1251,24 @@ adjust_for_tail:
 		}
 		if (s->toggle)
 		{
-			fz_stroke_lineto(s, old_b, from_bezier);
+			fz_stroke_lineto(ctx, s, old_bx, old_by, from_bezier);
 		}
 		else
 		{
-			fz_stroke_flush(s, s->cap, dash_cap);
+			fz_stroke_flush(ctx, s, s->cap, dash_cap);
 			s->cap = dash_cap;
-			fz_stroke_moveto(s, old_b);
+			fz_stroke_moveto(ctx, s, old_bx, old_by);
 		}
 		s->phase = tail;
 	}
 }
 
 static void
-fz_dash_bezier(struct sctx *s,
+fz_dash_bezier(fz_context *ctx, struct sctx *s,
 	float xa, float ya,
 	float xb, float yb,
 	float xc, float yc,
-	float xd, float yd, int depth,
-	int dash_cap)
+	float xd, float yd, int depth)
 {
 	float dmax;
 	float xab, yab;
@@ -911,10 +1285,7 @@ fz_dash_bezier(struct sctx *s,
 	dmax = fz_max(dmax, fz_abs(yd - yc));
 	if (dmax < s->flatness || depth >= MAX_DEPTH)
 	{
-		fz_point p;
-		p.x = xd;
-		p.y = yd;
-		fz_dash_lineto(s, p, dash_cap, 1);
+		fz_dash_lineto(ctx, s, xd, yd, 1);
 		return;
 	}
 
@@ -942,104 +1313,183 @@ fz_dash_bezier(struct sctx *s,
 
 	xabcd *= 0.125f; yabcd *= 0.125f;
 
-	fz_dash_bezier(s, xa, ya, xab, yab, xabc, yabc, xabcd, yabcd, depth + 1, dash_cap);
-	fz_dash_bezier(s, xabcd, yabcd, xbcd, ybcd, xcd, ycd, xd, yd, depth + 1, dash_cap);
+	fz_dash_bezier(ctx, s, xa, ya, xab, yab, xabc, yabc, xabcd, yabcd, depth + 1);
+	fz_dash_bezier(ctx, s, xabcd, yabcd, xbcd, ybcd, xcd, ycd, xd, yd, depth + 1);
 }
 
-void
-fz_flatten_dash_path(fz_gel *gel, fz_path *path, const fz_stroke_state *stroke, const fz_matrix *ctm, float flatness, float linewidth)
+static void
+fz_dash_quad(fz_context *ctx, struct sctx *s,
+	float xa, float ya,
+	float xb, float yb,
+	float xc, float yc, int depth)
+{
+	float dmax;
+	float xab, yab;
+	float xbc, ybc;
+	float xabc, yabc;
+
+	/* termination check */
+	dmax = fz_abs(xa - xb);
+	dmax = fz_max(dmax, fz_abs(ya - yb));
+	dmax = fz_max(dmax, fz_abs(xc - xb));
+	dmax = fz_max(dmax, fz_abs(yc - yb));
+	if (dmax < s->flatness || depth >= MAX_DEPTH)
+	{
+		fz_dash_lineto(ctx, s, xc, yc, 1);
+		return;
+	}
+
+	xab = xa + xb;
+	yab = ya + yb;
+	xbc = xb + xc;
+	ybc = yb + yc;
+
+	xabc = xab + xbc;
+	yabc = yab + ybc;
+
+	xab *= 0.5f; yab *= 0.5f;
+	xbc *= 0.5f; ybc *= 0.5f;
+
+	xabc *= 0.25f; yabc *= 0.25f;
+
+	fz_dash_quad(ctx, s, xa, ya, xab, yab, xabc, yabc, depth + 1);
+	fz_dash_quad(ctx, s, xabc, yabc, xbc, ybc, xc, yc, depth + 1);
+}
+
+static void
+dash_moveto(fz_context *ctx, void *s_, float x, float y)
+{
+	sctx *s = (sctx *)s_;
+
+	fz_dash_moveto(ctx, s, x, y);
+	s->dash_beg.x = s->cur.x = x;
+	s->dash_beg.y = s->cur.y = y;
+}
+
+static void
+dash_lineto(fz_context *ctx, void *s_, float x, float y)
+{
+	sctx *s = (sctx *)s_;
+
+	fz_dash_lineto(ctx, s, x, y, 0);
+	s->cur.x = x;
+	s->cur.y = y;
+}
+
+static void
+dash_curveto(fz_context *ctx, void *s_, float x1, float y1, float x2, float y2, float x3, float y3)
+{
+	sctx *s = (sctx *)s_;
+
+	fz_dash_bezier(ctx, s, s->cur.x, s->cur.y, x1, y1, x2, y2, x3, y3, 0);
+	s->cur.x = x3;
+	s->cur.y = y3;
+}
+
+static void
+dash_quadto(fz_context *ctx, void *s_, float x1, float y1, float x2, float y2)
+{
+	sctx *s = (sctx *)s_;
+
+	fz_dash_quad(ctx, s, s->cur.x, s->cur.y, x1, y1, x2, y2, 0);
+	s->cur.x = x2;
+	s->cur.y = y2;
+}
+
+static void
+dash_close(fz_context *ctx, void *s_)
+{
+	sctx *s = (sctx *)s_;
+
+	fz_dash_lineto(ctx, s, s->dash_beg.x, s->dash_beg.y, 0);
+	s->cur.x = s->dash_beg.x;
+	s->cur.y = s->dash_beg.y;
+}
+
+static const fz_path_walker dash_proc =
+{
+	dash_moveto,
+	dash_lineto,
+	dash_curveto,
+	dash_close,
+	dash_quadto
+};
+
+static int
+do_flatten_stroke(fz_context *ctx, fz_rasterizer *rast, const fz_path *path, const fz_stroke_state *stroke, fz_matrix ctm, float flatness, float linewidth, const fz_irect *scissor, fz_irect *bbox)
 {
 	struct sctx s;
-	fz_point p0, p1, p2, p3, beg;
-	float phase_len, max_expand;
-	int i, k;
-	fz_matrix inv;
+	const fz_path_walker *proc = &stroke_proc;
 
-	s.gel = gel;
+	s.stroke = stroke;
+	s.rast = rast;
 	s.ctm = ctm;
 	s.flatness = flatness;
-
 	s.linejoin = stroke->linejoin;
-	s.linewidth = linewidth * 0.5f;
+	s.linewidth = linewidth * 0.5f; /* hairlines use a different value from the path value */
 	s.miterlimit = stroke->miterlimit;
 	s.sn = 0;
-	s.dot = 0;
-
-	s.dash_list = stroke->dash_list;
-	s.dash_phase = stroke->dash_phase;
-	s.dash_len = stroke->dash_len;
+	s.dot = ONLY_MOVES;
 	s.toggle = 0;
 	s.offset = 0;
 	s.phase = 0;
 
 	s.cap = stroke->start_cap;
 
-	if (path->cmd_len > 0 && path->cmds[0] != FZ_MOVETO)
-		return;
-
-	phase_len = 0;
-	for (i = 0; i < stroke->dash_len; i++)
-		phase_len += stroke->dash_list[i];
-	if (stroke->dash_len > 0 && phase_len == 0)
-		return;
-	fz_gel_scissor(gel, &s.rect);
-	if (fz_try_invert_matrix(&inv, ctm))
-		return;
-	fz_transform_rect(&s.rect, &inv);
-	s.rect.x0 -= linewidth;
-	s.rect.x1 += linewidth;
-	s.rect.y0 -= linewidth;
-	s.rect.y1 += linewidth;
-
-	max_expand = fz_matrix_max_expansion(ctm);
-	if (phase_len < 1.0f && phase_len * max_expand < 0.5f)
+	s.dash_list = NULL;
+	s.dash_len = stroke->dash_len;
+	if (s.dash_len > 0)
 	{
-		fz_flatten_stroke_path(gel, path, stroke, ctm, flatness, linewidth);
-		return;
-	}
-	s.dash_total = phase_len;
+		int i;
+		fz_matrix inv;
+		float max_expand;
+		const float *list = stroke->dash_list;
 
-	/* cf. http://git.ghostscript.com/?p=mupdf.git;a=commitdiff;h=fd54bf89f2adfd5545202a6df87076fb7269f62c */
-	s.dash_phase = fmodf(s.dash_phase, s.dash_total);
+		s.dash_total = 0;
+		for (i = 0; i < s.dash_len; i++)
+			s.dash_total += list[i];
+		if (s.dash_total == 0)
+			return 1;
 
-	p0.x = p0.y = 0;
-	i = k = 0;
+		s.rect = fz_scissor_rasterizer(ctx, rast);
+		if (fz_try_invert_matrix(&inv, ctm))
+			return 1;
+		s.rect = fz_transform_rect(s.rect, inv);
+		s.rect.x0 -= linewidth;
+		s.rect.x1 += linewidth;
+		s.rect.y0 -= linewidth;
+		s.rect.y1 += linewidth;
 
-	while (i < path->cmd_len)
-	{
-		switch (path->cmds[i++])
+		max_expand = fz_matrix_max_expansion(ctm);
+		if (s.dash_total >= 0.01f && s.dash_total * max_expand >= 0.5f)
 		{
-		case FZ_MOVETO:
-			p1.x = path->coords[k++];
-			p1.y = path->coords[k++];
-			fz_dash_moveto(&s, p1, stroke->start_cap, stroke->end_cap);
-			beg = p0 = p1;
-			break;
-
-		case FZ_LINETO:
-			p1.x = path->coords[k++];
-			p1.y = path->coords[k++];
-			fz_dash_lineto(&s, p1, stroke->dash_cap, 0);
-			p0 = p1;
-			break;
-
-		case FZ_CURVETO:
-			p1.x = path->coords[k++];
-			p1.y = path->coords[k++];
-			p2.x = path->coords[k++];
-			p2.y = path->coords[k++];
-			p3.x = path->coords[k++];
-			p3.y = path->coords[k++];
-			fz_dash_bezier(&s, p0.x, p0.y, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, 0, stroke->dash_cap);
-			p0 = p3;
-			break;
-
-		case FZ_CLOSE_PATH:
-			fz_dash_lineto(&s, beg, stroke->dash_cap, 0);
-			p0 = p1 = beg;
-			break;
+			proc = &dash_proc;
+			s.dash_phase = fmodf(stroke->dash_phase, s.dash_total);
+			s.dash_list = list;
 		}
 	}
 
-	fz_stroke_flush(&s, s.cap, stroke->end_cap);
+	s.cur.x = s.cur.y = 0;
+	fz_walk_path(ctx, path, proc, &s);
+	fz_stroke_flush(ctx, &s, s.cap, stroke->end_cap);
+
+	if (!bbox)
+		return 0;
+
+	*bbox = fz_bound_rasterizer(ctx, rast);
+	return fz_is_empty_irect(*bbox);
+}
+
+int
+fz_flatten_stroke_path(fz_context *ctx, fz_rasterizer *rast, const fz_path *path, const fz_stroke_state *stroke, fz_matrix ctm, float flatness, float linewidth, const fz_irect *scissor, fz_irect *bbox)
+{
+	if (fz_reset_rasterizer(ctx, rast, *scissor))
+	{
+		if (do_flatten_stroke(ctx, rast, path, stroke, ctm, flatness, linewidth, scissor, bbox))
+			return 1;
+		fz_postindex_rasterizer(ctx, rast);
+		bbox = NULL;
+	}
+
+	return do_flatten_stroke(ctx, rast, path, stroke, ctm, flatness, linewidth, scissor, bbox);
 }

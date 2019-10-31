@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>mutool trace</title>
+<link rel="stylesheet" href="style.css" type="text/css">
+</head>
+<body>
+
+<header>
+<h1>mutool trace</h1>
+</header>
+
+<article>
+
+<p>
+The 'mutool trace' command prints a trace of device calls needed to render a page.
+
+<pre>
+mutool trace [options] input [pages]
+</pre>
+
+<p>
+The command line options are:
+
+<dl>
+<dt><i>input</i>
+	<dd>Input file name.
+	The input can be any of the document formats supported by MuPDF: PDF, XPS, CBZ, unprotected EPUB, FB2, etc.
+<dt>[pages]
+	<dd>Comma separated list of page ranges. The first page is "1", and the last page is "N". The default is "1-N".
+<dt>-p <i>password</i>
+	<dd>Password to use for password protected PDF documents.
+</dl>
+
+<dl>
+<dt>-W <i>width</i>
+	<dd>Page width in points for EPUB layout.
+<dt>-H <i>height</i>
+	<dd>Page height in points for EPUB layout.
+<dt>-S <i>font-size</i>
+	<dd>Font size in points for EPUB layout.
+<dt>-U <i>stylesheet.css</i>
+	<dd>File name of user style sheet for EPUB layout.
+<dt>-X
+	<dd>Disable document styles for EPUB layout.
+</dl>
+
+<dl>
+<dt>-d
+	<dd>Use display list. Run the page to a display list first, then trace running the display list.
+</dl>
+
+<p>
+The trace takes the form of an XML document, with the root element being the document,
+its children each page, and one page child element for each device call on that page.
+
+<p>
+An example trace:
+
+<pre>
+&lt;document filename="hello.pdf"&gt;
+&lt;page number="1" mediabox="0 0 595 842"&gt;
+&lt;fill_path winding="nonzero" colorspace="DeviceRGB" color="1 0 0" matrix="1 0 0 -1 0 842"&gt;
+&lt;moveto x="50" y="50"/&gt;
+&lt;lineto x="100" y="200"/&gt;
+&lt;lineto x="200" y="50"/&gt;
+&lt;/fill_path&gt;
+&lt;fill_text colorspace="DeviceRGB" color="0" matrix="1 0 0 -1 0 842"&gt;
+&lt;span font="Times-Roman" wmode="0" trm="100 0 0 100"&gt;
+&lt;g unicode="H" glyph="H" x="50" y="500" /&gt;
+&lt;g unicode="e" glyph="e" x="122.2" y="500" /&gt;
+&lt;g unicode="l" glyph="l" x="166.6" y="500" /&gt;
+&lt;g unicode="l" glyph="l" x="194.4" y="500" /&gt;
+&lt;g unicode="o" glyph="o" x="222.2" y="500" /&gt;
+&lt;g unicode="!" glyph="exclam" x="272.2" y="500" /&gt;
+&lt;/span&gt;
+&lt;/fill_text&gt;
+&lt;/page&gt;
+&lt;/document&gt;
+
+</pre>
+
+</article>
+
+<footer>
+<a href="http://www.artifex.com/"><img src="artifex-logo.png" align="right"></a>
+Copyright &copy; 2006-2018 Artifex Software Inc.
+</footer>
+
+</body>
+</html>

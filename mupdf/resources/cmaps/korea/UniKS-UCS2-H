@@ -1,9 +1,0 @@
-begincmap
-/CMapName /UniKS-UCS2-H def
-/WMode 0 def
-/UniKS-X usecmap
-begincodespacerange
-<0000><d7ff>
-<e000><ffff>
-endcodespacerange
-endcmap

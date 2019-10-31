@@ -2,135 +2,188 @@
  * pdfextract -- the ultimate way to extract images and fonts from pdfs
  */
 
+#include "mupdf/fitz.h"
 #include "mupdf/pdf.h"
+
+#include <stdlib.h>
+#include <stdio.h>
 
 static pdf_document *doc = NULL;
 static fz_context *ctx = NULL;
 static int dorgb = 0;
+static int doicc = 1;
 
 static void usage(void)
 {
 	fprintf(stderr, "usage: mutool extract [options] file.pdf [object numbers]\n");
 	fprintf(stderr, "\t-p\tpassword\n");
 	fprintf(stderr, "\t-r\tconvert images to rgb\n");
+	fprintf(stderr, "\t-N\tdo not use ICC color conversions\n");
 	exit(1);
 }
 
 static int isimage(pdf_obj *obj)
 {
-	pdf_obj *type = pdf_dict_gets(obj, "Subtype");
-	return pdf_is_name(type) && !strcmp(pdf_to_name(type), "Image");
+	pdf_obj *type = pdf_dict_get(ctx, obj, PDF_NAME(Subtype));
+	return pdf_name_eq(ctx, type, PDF_NAME(Image));
 }
 
 static int isfontdesc(pdf_obj *obj)
 {
-	pdf_obj *type = pdf_dict_gets(obj, "Type");
-	return pdf_is_name(type) && !strcmp(pdf_to_name(type), "FontDescriptor");
+	pdf_obj *type = pdf_dict_get(ctx, obj, PDF_NAME(Type));
+	return pdf_name_eq(ctx, type, PDF_NAME(FontDescriptor));
 }
 
-static void writepixmap(fz_context *ctx, fz_pixmap *pix, char *file, int rgb)
+static void writepixmap(fz_context *ctx, fz_pixmap *pix, char *file, int dorgb)
 {
 	char buf[1024];
-	fz_pixmap *converted = NULL;
+	fz_pixmap *rgb = NULL;
 
 	if (!pix)
 		return;
 
-	if (rgb && pix->colorspace && pix->colorspace != fz_device_rgb(ctx))
+	if (dorgb && pix->colorspace && pix->colorspace != fz_device_rgb(ctx))
 	{
-		fz_irect bbox;
-		converted = fz_new_pixmap_with_bbox(ctx, fz_device_rgb(ctx), fz_pixmap_bbox(ctx, pix, &bbox));
-		fz_convert_pixmap(ctx, converted, pix);
-		pix = converted;
+		rgb = fz_convert_pixmap(ctx, pix, fz_device_rgb(ctx), NULL, NULL, fz_default_color_params /* FIXME */, 1);
+		pix = rgb;
 	}
 
-	if (pix->n <= 4)
+	if (!pix->colorspace || pix->colorspace->type == FZ_COLORSPACE_GRAY || pix->colorspace->type == FZ_COLORSPACE_RGB)
 	{
-		snprintf(buf, sizeof(buf), "%s.png", file);
+		fz_snprintf(buf, sizeof(buf), "%s.png", file);
 		printf("extracting image %s\n", buf);
-		fz_write_png(ctx, pix, buf, 0);
+		fz_save_pixmap_as_png(ctx, pix, buf);
 	}
 	else
 	{
-		snprintf(buf, sizeof(buf), "%s.pam", file);
+		fz_snprintf(buf, sizeof(buf), "%s.pam", file);
 		printf("extracting image %s\n", buf);
-		fz_write_pam(ctx, pix, buf, 0);
+		fz_save_pixmap_as_pam(ctx, pix, buf);
 	}
 
-	fz_drop_pixmap(ctx, converted);
+	fz_drop_pixmap(ctx, rgb);
 }
 
-static void saveimage(int num)
+static void
+writejpeg(fz_context *ctx, const unsigned char *data, size_t len, const char *file)
 {
-	fz_image *image;
-	fz_pixmap *pix;
-	pdf_obj *ref;
-	char buf[32];
+	char buf[1024];
+	fz_output *out;
 
-	ref = pdf_new_indirect(doc, num, 0);
+	fz_snprintf(buf, sizeof(buf), "%s.jpg", file);
 
-	/* TODO: detect DCTD and save as jpeg */
-
-	image = pdf_load_image(doc, ref);
-	pix = fz_new_pixmap_from_image(ctx, image, 0, 0);
-	fz_drop_image(ctx, image);
-
-	snprintf(buf, sizeof(buf), "img-%04d", num);
-	writepixmap(ctx, pix, buf, dorgb);
-
-	fz_drop_pixmap(ctx, pix);
-	pdf_drop_obj(ref);
+	out = fz_new_output_with_path(ctx, buf, 0);
+	fz_try(ctx)
+	{
+		printf("extracting image %s\n", buf);
+		fz_write_data(ctx, out, data, len);
+		fz_close_output(ctx, out);
+	}
+	fz_always(ctx)
+		fz_drop_output(ctx, out);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
 }
 
-static void savefont(pdf_obj *dict, int num)
+static void saveimage(pdf_obj *ref)
+{
+	fz_image *image = NULL;
+	fz_pixmap *pix = NULL;
+	char buf[32];
+	fz_compressed_buffer *cbuf;
+	int type;
+
+	fz_var(image);
+	fz_var(pix);
+
+	fz_try(ctx)
+	{
+		image = pdf_load_image(ctx, doc, ref);
+		cbuf = fz_compressed_image_buffer(ctx, image);
+		fz_snprintf(buf, sizeof(buf), "img-%04d", pdf_to_num(ctx, ref));
+		type = cbuf == NULL ? FZ_IMAGE_UNKNOWN : cbuf->params.type;
+
+		if (image->use_colorkey)
+			type = FZ_IMAGE_UNKNOWN;
+		if (image->use_decode)
+			type = FZ_IMAGE_UNKNOWN;
+		if (image->mask)
+			type = FZ_IMAGE_UNKNOWN;
+		if (dorgb)
+		{
+			enum fz_colorspace_type ctype = fz_colorspace_type(ctx, image->colorspace);
+			if (ctype != FZ_COLORSPACE_RGB && ctype != FZ_COLORSPACE_GRAY)
+				type = FZ_IMAGE_UNKNOWN;
+		}
+
+		if (type == FZ_IMAGE_JPEG)
+		{
+			unsigned char *data;
+			size_t len = fz_buffer_storage(ctx, cbuf->buffer, &data);
+			writejpeg(ctx, data, len, buf);
+		}
+		else
+		{
+			pix = fz_get_pixmap_from_image(ctx, image, NULL, NULL, 0, 0);
+			writepixmap(ctx, pix, buf, dorgb);
+		}
+	}
+	fz_always(ctx)
+	{
+		fz_drop_image(ctx, image);
+		fz_drop_pixmap(ctx, pix);
+	}
+	fz_catch(ctx)
+		fz_rethrow(ctx);
+}
+
+static void savefont(pdf_obj *dict)
 {
 	char namebuf[1024];
-	char *subtype;
 	fz_buffer *buf;
 	pdf_obj *stream = NULL;
 	pdf_obj *obj;
 	char *ext = "";
-	FILE *f;
-	char *fontname = "font";
-	int n, len;
+	fz_output *out;
+	const char *fontname = "font";
+	size_t len;
 	unsigned char *data;
 
-	obj = pdf_dict_gets(dict, "FontName");
+	obj = pdf_dict_get(ctx, dict, PDF_NAME(FontName));
 	if (obj)
-		fontname = pdf_to_name(obj);
+		fontname = pdf_to_name(ctx, obj);
 
-	obj = pdf_dict_gets(dict, "FontFile");
+	obj = pdf_dict_get(ctx, dict, PDF_NAME(FontFile));
 	if (obj)
 	{
 		stream = obj;
 		ext = "pfa";
 	}
 
-	obj = pdf_dict_gets(dict, "FontFile2");
+	obj = pdf_dict_get(ctx, dict, PDF_NAME(FontFile2));
 	if (obj)
 	{
 		stream = obj;
 		ext = "ttf";
 	}
 
-	obj = pdf_dict_gets(dict, "FontFile3");
+	obj = pdf_dict_get(ctx, dict, PDF_NAME(FontFile3));
 	if (obj)
 	{
 		stream = obj;
 
-		obj = pdf_dict_gets(obj, "Subtype");
-		if (obj && !pdf_is_name(obj))
+		obj = pdf_dict_get(ctx, obj, PDF_NAME(Subtype));
+		if (obj && !pdf_is_name(ctx, obj))
 			fz_throw(ctx, FZ_ERROR_GENERIC, "invalid font descriptor subtype");
 
-		subtype = pdf_to_name(obj);
-		if (!strcmp(subtype, "Type1C"))
+		if (pdf_name_eq(ctx, obj, PDF_NAME(Type1C)))
 			ext = "cff";
-		else if (!strcmp(subtype, "CIDFontType0C"))
+		else if (pdf_name_eq(ctx, obj, PDF_NAME(CIDFontType0C)))
 			ext = "cid";
-		else if (!strcmp(subtype, "OpenType"))
+		else if (pdf_name_eq(ctx, obj, PDF_NAME(OpenType)))
 			ext = "otf";
 		else
-			fz_throw(ctx, FZ_ERROR_GENERIC, "unhandled font type '%s'", subtype);
+			fz_throw(ctx, FZ_ERROR_GENERIC, "unhandled font type '%s'", pdf_to_name(ctx, obj));
 	}
 
 	if (!stream)
@@ -139,48 +192,48 @@ static void savefont(pdf_obj *dict, int num)
 		return;
 	}
 
-	buf = pdf_load_stream(doc, pdf_to_num(stream), pdf_to_gen(stream));
-
-	snprintf(namebuf, sizeof(namebuf), "%s-%04d.%s", fontname, num, ext);
-	printf("extracting font %s\n", namebuf);
-
-	f = fopen(namebuf, "wb");
-	if (!f)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot create font file");
-
+	buf = pdf_load_stream(ctx, stream);
 	len = fz_buffer_storage(ctx, buf, &data);
-	n = fwrite(data, 1, len, f);
-	if (n < len)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot write font file");
-
-	if (fclose(f) < 0)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot close font file");
-
-	fz_drop_buffer(ctx, buf);
+	fz_try(ctx)
+	{
+		fz_snprintf(namebuf, sizeof(namebuf), "%s-%04d.%s", fontname, pdf_to_num(ctx, dict), ext);
+		printf("extracting font %s\n", namebuf);
+		out = fz_new_output_with_path(ctx, namebuf, 0);
+		fz_try(ctx)
+		{
+			fz_write_data(ctx, out, data, len);
+			fz_close_output(ctx, out);
+		}
+		fz_always(ctx)
+			fz_drop_output(ctx, out);
+		fz_catch(ctx)
+			fz_rethrow(ctx);
+	}
+	fz_always(ctx)
+		fz_drop_buffer(ctx, buf);
+	fz_catch(ctx)
+		fz_rethrow(ctx);
 }
 
-static void showobject(int num)
+static void extractobject(int num)
 {
-	pdf_obj *obj;
+	pdf_obj *ref;
 
 	if (!doc)
 		fz_throw(ctx, FZ_ERROR_GENERIC, "no file specified");
 
 	fz_try(ctx)
 	{
-		obj = pdf_load_object(doc, num, 0);
-
-		if (isimage(obj))
-			saveimage(num);
-		else if (isfontdesc(obj))
-			savefont(obj, num);
-
-		pdf_drop_obj(obj);
+		ref = pdf_new_indirect(ctx, doc, num, 0);
+		if (isimage(ref))
+			saveimage(ref);
+		if (isfontdesc(ref))
+			savefont(ref);
 	}
+	fz_always(ctx)
+		pdf_drop_obj(ctx, ref);
 	fz_catch(ctx)
-	{
 		fz_warn(ctx, "ignoring object %d", num);
-	}
 }
 
 int pdfextract_main(int argc, char **argv)
@@ -189,12 +242,13 @@ int pdfextract_main(int argc, char **argv)
 	char *password = "";
 	int c, o;
 
-	while ((c = fz_getopt(argc, argv, "p:r")) != -1)
+	while ((c = fz_getopt(argc, argv, "p:rN")) != -1)
 	{
 		switch (c)
 		{
 		case 'p': password = fz_optarg; break;
 		case 'r': dorgb++; break;
+		case 'N': doicc^=1; break;
 		default: usage(); break;
 		}
 	}
@@ -211,28 +265,33 @@ int pdfextract_main(int argc, char **argv)
 		exit(1);
 	}
 
-	doc = pdf_open_document_no_run(ctx, infile);
-	if (pdf_needs_password(doc))
-		if (!pdf_authenticate_password(doc, password))
+	if (doicc)
+		fz_enable_icc(ctx);
+	else
+		fz_disable_icc(ctx);
+
+	doc = pdf_open_document(ctx, infile);
+	if (pdf_needs_password(ctx, doc))
+		if (!pdf_authenticate_password(ctx, doc, password))
 			fz_throw(ctx, FZ_ERROR_GENERIC, "cannot authenticate password: %s", infile);
 
 	if (fz_optind == argc)
 	{
-		int len = pdf_count_objects(doc);
+		int len = pdf_count_objects(ctx, doc);
 		for (o = 1; o < len; o++)
-			showobject(o);
+			extractobject(o);
 	}
 	else
 	{
 		while (fz_optind < argc)
 		{
-			showobject(atoi(argv[fz_optind]));
+			extractobject(atoi(argv[fz_optind]));
 			fz_optind++;
 		}
 	}
 
-	pdf_close_document(doc);
+	pdf_drop_document(ctx, doc);
 	fz_flush_warnings(ctx);
-	fz_free_context(ctx);
+	fz_drop_context(ctx);
 	return 0;
 }

@@ -1,0 +1,35 @@
+%!PS-Adobe-3.0 Resource-CMap
+%%DocumentNeededResources: procset (CIDInit)
+%%IncludeResource: procset (CIDInit)
+%%BeginResource: CMap (UniGB-UCS2-H)
+%%Version: 12.005
+%%EndComments
+/CIDInit /ProcSet findresource begin
+12 dict begin
+begincmap
+/UniGB-X usecmap
+/CIDSystemInfo 3 dict dup begin
+  /Registry (Adobe) def
+  /Ordering (GB1) def
+  /Supplement 4 def
+end def
+/CMapName /UniGB-UCS2-H def
+/CMapVersion 12.005 def
+/CMapType 1 def
+/WMode 0 def
+2 begincodespacerange
+<0000> <d7ff>
+<e000> <ffff>
+endcodespacerange
+1 begincidchar
+<3127> 734
+endcidchar
+1 begincidrange
+<30f8> <30f9> 22391
+endcidrange
+endcmap
+CMapName currentdict /CMap defineresource pop
+end
+end
+%%EndResource
+%%EOF

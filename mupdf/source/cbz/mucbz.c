@@ -1,25 +1,46 @@
-#include "mupdf/cbz.h"
+#include "mupdf/fitz.h"
+
+#include <string.h>
+#include <stdlib.h>
 
 #define DPI 72.0f
 
-static void cbz_init_document(cbz_document *doc);
+typedef struct cbz_document_s cbz_document;
+typedef struct cbz_page_s cbz_page;
 
 static const char *cbz_ext_list[] = {
-	".jpg", ".jpeg", ".png",
-	".JPG", ".JPEG", ".PNG",
+	".bmp",
+	".gif",
+	".hdp",
+	".j2k",
+	".jp2",
+	".jpeg",
+	".jpg",
+	".jpx",
+	".jxr",
+	".pam",
+	".pbm",
+	".pgm",
+	".pkm",
+	".png",
+	".pnm",
+	".ppm",
+	".tif",
+	".tiff",
+	".wdp",
 	NULL
 };
 
 struct cbz_page_s
 {
+	fz_page super;
 	fz_image *image;
 };
 
 struct cbz_document_s
 {
 	fz_document super;
-	fz_context *ctx;
-	fz_archive *zip;
+	fz_archive *arch;
 	int page_count;
 	const char **page;
 };
@@ -73,218 +94,184 @@ cbz_compare_page_names(const void *a, const void *b)
 }
 
 static void
-cbz_create_page_list(cbz_document *doc)
+cbz_create_page_list(fz_context *ctx, cbz_document *doc)
 {
-	fz_context *ctx = doc->ctx;
-	fz_archive *zip = doc->zip;
+	fz_archive *arch = doc->arch;
 	int i, k, count;
 
-	count = fz_count_archive_entries(ctx, zip);
+	count = fz_count_archive_entries(ctx, arch);
 
 	doc->page_count = 0;
-	doc->page = fz_malloc_array(ctx, count, sizeof *doc->page);
+	doc->page = fz_malloc_array(ctx, count, const char *);
 
 	for (i = 0; i < count; i++)
 	{
+		const char *name = fz_list_archive_entry(ctx, arch, i);
+		const char *ext = name ? strrchr(name, '.') : NULL;
 		for (k = 0; cbz_ext_list[k]; k++)
 		{
-			const char *name = fz_list_archive_entry(ctx, zip, i);
-			if (strstr(name, cbz_ext_list[k]))
+			if (ext && !fz_strcasecmp(ext, cbz_ext_list[k]))
 			{
 				doc->page[doc->page_count++] = name;
-printf("found page %d = '%s'\n", i, name);
 				break;
 			}
 		}
 	}
 
 	qsort((char **)doc->page, doc->page_count, sizeof *doc->page, cbz_compare_page_names);
-
-	for (i = 0; i < doc->page_count; ++i)
-		printf("  %d = %s\n", i, doc->page[i]);
 }
 
-cbz_document *
-cbz_open_document_with_stream(fz_context *ctx, fz_stream *file)
+static void
+cbz_drop_document(fz_context *ctx, fz_document *doc_)
 {
-	cbz_document *doc;
-
-	doc = fz_malloc_struct(ctx, cbz_document);
-	cbz_init_document(doc);
-	doc->ctx = ctx;
-	doc->page_count = 0;
-	doc->page = NULL;
-
-	fz_try(ctx)
-	{
-		doc->zip = fz_open_archive_with_stream(ctx, file);
-		cbz_create_page_list(doc);
-	}
-	fz_catch(ctx)
-	{
-		cbz_close_document(doc);
-		fz_rethrow(ctx);
-	}
-
-	return doc;
+	cbz_document *doc = (cbz_document*)doc_;
+	fz_drop_archive(ctx, doc->arch);
+	fz_free(ctx, (char **)doc->page);
 }
 
-cbz_document *
-cbz_open_document(fz_context *ctx, const char *filename)
+static int
+cbz_count_pages(fz_context *ctx, fz_document *doc_, int chapter)
 {
-	fz_stream *file;
-	cbz_document *doc;
-
-	file = fz_open_file(ctx, filename);
-	if (!file)
-		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot open file '%s': %s", filename, strerror(errno));
-
-	fz_try(ctx)
-	{
-		doc = cbz_open_document_with_stream(ctx, file);
-	}
-	fz_always(ctx)
-	{
-		fz_close(file);
-	}
-	fz_catch(ctx)
-	{
-		fz_rethrow(ctx);
-	}
-
-	return doc;
-}
-
-void
-cbz_close_document(cbz_document *doc)
-{
-	fz_close_archive(doc->ctx, doc->zip);
-	fz_free(doc->ctx, (char **)doc->page);
-	fz_free(doc->ctx, doc);
-}
-
-int
-cbz_count_pages(cbz_document *doc)
-{
+	cbz_document *doc = (cbz_document*)doc_;
 	return doc->page_count;
 }
 
-cbz_page *
-cbz_load_page(cbz_document *doc, int number)
+static fz_rect
+cbz_bound_page(fz_context *ctx, fz_page *page_)
 {
-	fz_context *ctx = doc->ctx;
-	unsigned char *data = NULL;
+	cbz_page *page = (cbz_page*)page_;
+	fz_image *image = page->image;
+	int xres, yres;
+	fz_rect bbox;
+
+	fz_image_resolution(image, &xres, &yres);
+	bbox.x0 = bbox.y0 = 0;
+	bbox.x1 = image->w * DPI / xres;
+	bbox.y1 = image->h * DPI / yres;
+	return bbox;
+}
+
+static void
+cbz_run_page(fz_context *ctx, fz_page *page_, fz_device *dev, fz_matrix ctm, fz_cookie *cookie)
+{
+	cbz_page *page = (cbz_page*)page_;
+	fz_matrix local_ctm;
+	fz_image *image = page->image;
+	int xres, yres;
+	float w, h;
+
+	fz_image_resolution(image, &xres, &yres);
+	w = image->w * DPI / xres;
+	h = image->h * DPI / yres;
+	local_ctm = fz_pre_scale(ctm, w, h);
+	fz_fill_image(ctx, dev, image, local_ctm, 1, fz_default_color_params);
+}
+
+static void
+cbz_drop_page(fz_context *ctx, fz_page *page_)
+{
+	cbz_page *page = (cbz_page*)page_;
+	fz_drop_image(ctx, page->image);
+}
+
+static fz_page *
+cbz_load_page(fz_context *ctx, fz_document *doc_, int chapter, int number)
+{
+	cbz_document *doc = (cbz_document*)doc_;
 	cbz_page *page = NULL;
-	fz_buffer *buf;
+	fz_buffer *buf = NULL;
 
 	if (number < 0 || number >= doc->page_count)
-		return NULL;
+		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot load page %d", number);
 
-	fz_var(data);
 	fz_var(page);
 
-	buf = fz_read_archive_entry(doc->ctx, doc->zip, doc->page[number]);
+	if (doc->arch)
+		buf = fz_read_archive_entry(ctx, doc->arch, doc->page[number]);
+	if (!buf)
+		fz_throw(ctx, FZ_ERROR_GENERIC, "cannot load cbz page");
+
 	fz_try(ctx)
 	{
-		page = fz_malloc_struct(ctx, cbz_page);
+		page = fz_new_derived_page(ctx, cbz_page);
+		page->super.bound_page = cbz_bound_page;
+		page->super.run_page_contents = cbz_run_page;
+		page->super.drop_page = cbz_drop_page;
 		page->image = fz_new_image_from_buffer(ctx, buf);
 	}
 	fz_always(ctx)
 	{
-		fz_drop_buffer(doc->ctx, buf);
+		fz_drop_buffer(ctx, buf);
 	}
 	fz_catch(ctx)
 	{
-		fz_free(ctx, data);
-		cbz_free_page(doc, page);
+		fz_drop_page(ctx, (fz_page*)page);
 		fz_rethrow(ctx);
 	}
 
-	return page;
-}
-
-void
-cbz_free_page(cbz_document *doc, cbz_page *page)
-{
-	if (!page)
-		return;
-	fz_drop_image(doc->ctx, page->image);
-	fz_free(doc->ctx, page);
-}
-
-fz_rect *
-cbz_bound_page(cbz_document *doc, cbz_page *page, fz_rect *bbox)
-{
-	fz_image *image = page->image;
-	bbox->x0 = bbox->y0 = 0;
-	bbox->x1 = image->w * DPI / image->xres;
-	bbox->y1 = image->h * DPI / image->yres;
-	return bbox;
-}
-
-void
-cbz_run_page(cbz_document *doc, cbz_page *page, fz_device *dev, const fz_matrix *ctm, fz_cookie *cookie)
-{
-	fz_matrix local_ctm = *ctm;
-	fz_image *image = page->image;
-	float w = image->w * DPI / image->xres;
-	float h = image->h * DPI / image->yres;
-	fz_pre_scale(&local_ctm, w, h);
-	fz_fill_image(dev, image, &local_ctm, 1);
+	return (fz_page*)page;
 }
 
 static int
-cbz_meta(cbz_document *doc, int key, void *ptr, int size)
+cbz_lookup_metadata(fz_context *ctx, fz_document *doc_, const char *key, char *buf, int size)
 {
-	switch (key)
+	cbz_document *doc = (cbz_document*)doc_;
+	if (!strcmp(key, "format"))
+		return (int) fz_strlcpy(buf, fz_archive_format(ctx, doc->arch), size);
+	return -1;
+}
+
+static fz_document *
+cbz_open_document_with_stream(fz_context *ctx, fz_stream *file)
+{
+	cbz_document *doc;
+
+	doc = fz_new_derived_document(ctx, cbz_document);
+
+	doc->super.drop_document = cbz_drop_document;
+	doc->super.count_pages = cbz_count_pages;
+	doc->super.load_page = cbz_load_page;
+	doc->super.lookup_metadata = cbz_lookup_metadata;
+
+	fz_try(ctx)
 	{
-	case FZ_META_FORMAT_INFO:
-		sprintf((char *)ptr, "CBZ");
-		return FZ_META_OK;
-	default:
-		return FZ_META_UNKNOWN_KEY;
+		doc->arch = fz_open_archive_with_stream(ctx, file);
+		cbz_create_page_list(ctx, doc);
 	}
-}
-
-static void
-cbz_rebind(cbz_document *doc, fz_context *ctx)
-{
-	doc->ctx = ctx;
-	fz_rebind_archive(doc->zip, ctx);
-}
-
-static void
-cbz_init_document(cbz_document *doc)
-{
-	doc->super.close = (fz_document_close_fn *)cbz_close_document;
-	doc->super.count_pages = (fz_document_count_pages_fn *)cbz_count_pages;
-	doc->super.load_page = (fz_document_load_page_fn *)cbz_load_page;
-	doc->super.bound_page = (fz_document_bound_page_fn *)cbz_bound_page;
-	doc->super.run_page_contents = (fz_document_run_page_contents_fn *)cbz_run_page;
-	doc->super.free_page = (fz_document_free_page_fn *)cbz_free_page;
-	doc->super.meta = (fz_document_meta_fn *)cbz_meta;
-	doc->super.rebind = (fz_document_rebind_fn *)cbz_rebind;
-}
-
-static int
-cbz_recognize(fz_context *doc, const char *magic)
-{
-	char *ext = strrchr(magic, '.');
-
-	if (ext)
+	fz_catch(ctx)
 	{
-		if (!fz_strcasecmp(ext, ".cbz") || !fz_strcasecmp(ext, ".zip"))
-			return 100;
+		fz_drop_document(ctx, (fz_document*)doc);
+		fz_rethrow(ctx);
 	}
-	if (!strcmp(magic, "cbz") || !strcmp(magic, "application/x-cbz"))
-		return 100;
-
-	return 0;
+	return (fz_document*)doc;
 }
+
+static const char *cbz_extensions[] =
+{
+	"cbt",
+	"cbz",
+	"tar",
+	"zip",
+	NULL
+};
+
+static const char *cbz_mimetypes[] =
+{
+	"application/vnd.comicbook+zip",
+	"application/x-cbt",
+	"application/x-cbz",
+	"application/x-tar",
+	"application/zip",
+	NULL
+};
 
 fz_document_handler cbz_document_handler =
 {
-	(fz_document_recognize_fn *)&cbz_recognize,
-	(fz_document_open_fn *)&cbz_open_document,
-	(fz_document_open_with_stream_fn *)&cbz_open_document_with_stream
+	NULL,
+	NULL,
+	cbz_open_document_with_stream,
+	cbz_extensions,
+	cbz_mimetypes,
+	NULL,
+	NULL
 };

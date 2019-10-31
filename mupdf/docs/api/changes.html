@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>API Changes</title>
+<link rel="stylesheet" href="../style.css" type="text/css">
+</head>
+<body>
+
+<header>
+<h1>Changes in the public API</h1>
+</header>
+
+<article>
+
+<h2>Why does the API change?</h2>
+
+<p>
+From time to time, during development, it becomes clear that the
+public API needs to change; either because the existing API has
+flaws in it, or to accommodate new functionality. Such changes
+are not undertaken lightly, and they are kept as minimal as
+possible.
+
+<p>
+The alternative would be to freeze the API and to introduce more
+and more compatibility veneers, ultimately leading to a bloated
+API and additional complexity. We have done this in the past, and
+will do it again in future if circumstances demand it, but we
+consider small changes in the API to be a price worth paying for
+clarity and simplicity.
+
+<p>
+To minimise the impact of such changes, we undertake to list the
+API changes between different versions of the library here, to
+make it as simple as possible for integrators to make the small
+changes that may be require to update between versions.
+
+<p>
+Note, that we only list changes in existing APIs here, not additions
+to the API.
+
+<h2>Changes from v1.16</h2>
+
+<p>
+The accessors for reading and creating QuadPoints, InkList and Vertices data
+for Highlight, Underline, StrikeOut, Squiggle, Ink, Polygon, and PolyLine
+annotation types have been simplified. They now take and return fz_quad and
+fz_point structs instead of float arrays. We have also added functions to
+construct the datastructures one piece at a time, removing the need to allocate
+a temporary array to pass.
+
+<h2>Changes from v1.15</h2>
+
+<p>
+There has been a major overhaul of the color management architecture. Unless
+you're implementing custom devices or interpreters, this should only have a
+minor impact.
+
+<ul>
+<li>Argument order when passing color and colorspace to functions regularized:
+	sourceColorspace, sourceColorArray,
+	destinationColorspace, destinationColorArray,
+	proofColorspace,
+	colorParams.
+<li>Pass fz_color_params argument by value.
+<li>Changed fz_default_parameters from a function to a global constant.
+<li>Replaced fz_set_icc_engine with fz_enable_icc and fz_disable_icc to toggle color management at runtime.
+<li>Replaced pixmap color converter struct with a single fz_convert_pixmap function call.
+<li>Replaced fz_cal_colorspace struct with constructor to create an ICC-backed calibrated colorspace directly.
+<li><b>Passing NULL is not a shortcut for DeviceGray any more!</b>
+<li>Added public definitions for Indexed and Separation colorspaces.
+<li>Changed colorspace constructors.
+</ul>
+
+<p>
+The fz_set_stdout and fz_set_stderr functions have been removed.
+If you were using these to capture warning and error messages,
+use the new user callbacks for warning and error logging instead:
+fz_set_warning_callback and fz_set_error_callback.
+
+<p>
+The structured text html and xhtml output formats take an additional argument:
+the page number. This number is used to create an id attribute for each page to
+use as a hyperlink target.
+
+<h2>Changes from v1.14 to v1.15</h2>
+
+<dl>
+
+<dt>PDF Portfolios
+<dd>This functionality has been removed. We do
+not believe anyone was using this. If you were, please contact
+us for assistance. This functionality can be achieved using
+"mutool run" and docs/examples/pdf-portfolio.js.
+
+<dt>FZ_ERROR_TRYLATER
+<dd>This functionality has been removed. We do
+not believe anyone was using this. If you were, please contact
+us for assistance.
+
+<dt>Annotations/Forms
+<dd>We are undertaking a significant rework of this functionality
+at the moment. We do not believe anyone is using this at the moment,
+and would therefore encourage anyone who is to contact us for help
+in upgrading.
+
+<dt>Various functions involving fz_colorspace have lost consts.
+<dd>fz_colorspaces are immutable once created, other than changes
+due to reference counting. Passing a const fz_colorspace to a function
+that might keep a reference to it either has to take a non const
+fz_colorspace pointer, or take a const one, and 'break' the const.
+Having some functions take const fz_colorspace and some not is
+confusing, so therefore, for simplicity, all fz_colorspaces are now
+passed as non const.
+This should not affect any user code.
+
+<dt>fz_process_shade()
+<dd>This now takes an extra 'scissor' argument.
+To upgrade old code, if you don't have an appropriate scissor rect available,
+it is safe (but unwise) to pass fz_infinite_rect.
+
+<dt>fz_tint_pixmap()
+<dd>Rather than taking r, g and b, values to tint with, the
+function now takes 8 bit hex rgb values for black and white,
+enabling greater control, allowing "low contrast" and "night
+view" effects.
+
+<dt>pdf_add_image()
+<dd>This no longer requires a mask flag. The image already knows if it is a mask.
+
+<dt>pdf_processor.op_BI()
+<dd>The op_BI callback is now passed an additional colorspace resource name.
+
+</dl>
+
+</article>
+
+<footer>
+<a href="http://www.artifex.com/"><img src="../artifex-logo.png" align="right"></a>
+Copyright &copy; 2006-2018 Artifex Software Inc.
+</footer>
+
+</body>
+</html>

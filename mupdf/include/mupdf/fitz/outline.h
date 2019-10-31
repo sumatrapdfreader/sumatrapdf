@@ -15,9 +15,12 @@
 	title: Title of outline item using UTF-8 encoding. May be NULL
 	if the outline item has no text string.
 
-	dest: Destination in the document to be displayed when this
-	outline item is activated. May be FZ_LINK_NONE if the outline
-	item does not have a destination.
+	uri: Destination in the document to be displayed when this
+	outline item is activated. May be an internal or external
+	link, or NULL if the outline item does not have a destination.
+
+	page: The page number of an internal link, or -1 for external
+	links or links with no destination.
 
 	next: The next outline item at the same level as this outline
 	item. May be NULL if no more outline items exist at this level.
@@ -25,43 +28,22 @@
 	down: The outline items immediate children in the hierarchy.
 	May be NULL if no children exist.
 */
-
 typedef struct fz_outline_s fz_outline;
 
 struct fz_outline_s
 {
+	int refs;
 	char *title;
-	fz_link_dest dest;
+	char *uri;
+	int page;
+	float x, y;
 	fz_outline *next;
 	fz_outline *down;
-	int is_open; /* SumatraPDF: support expansion states */
+	int is_open;
 };
 
-/*
-	fz_print_outline_xml: Dump the given outlines as (pseudo) XML.
-
-	out: The file handle to output to.
-
-	outline: The outlines to output.
-*/
-void fz_print_outline_xml(fz_context *ctx, fz_output *out, fz_outline *outline);
-
-/*
-	fz_print_outline: Dump the given outlines to as text.
-
-	out: The file handle to output to.
-
-	outline: The outlines to output.
-*/
-void fz_print_outline(fz_context *ctx, fz_output *out, fz_outline *outline);
-
-/*
-	fz_free_outline: Free hierarchical outline.
-
-	Free an outline obtained from fz_load_outline.
-
-	Does not throw exceptions.
-*/
-void fz_free_outline(fz_context *ctx, fz_outline *outline);
+fz_outline *fz_new_outline(fz_context *ctx);
+fz_outline *fz_keep_outline(fz_context *ctx, fz_outline *outline);
+void fz_drop_outline(fz_context *ctx, fz_outline *outline);
 
 #endif

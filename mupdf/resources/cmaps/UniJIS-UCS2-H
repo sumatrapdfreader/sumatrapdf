@@ -1,0 +1,88 @@
+%!PS-Adobe-3.0 Resource-CMap
+%%DocumentNeededResources: procset (CIDInit)
+%%IncludeResource: procset (CIDInit)
+%%BeginResource: CMap (UniJIS-UCS2-H)
+%%Version: 12.005
+%%EndComments
+/CIDInit /ProcSet findresource begin
+12 dict begin
+begincmap
+/UniJIS-X usecmap
+/CIDSystemInfo 3 dict dup begin
+  /Registry (Adobe) def
+  /Ordering (Japan1) def
+  /Supplement 4 def
+end def
+/CMapName /UniJIS-UCS2-H def
+/CMapVersion 12.005 def
+/CMapType 1 def
+/WMode 0 def
+2 begincodespacerange
+<0000> <d7ff>
+<e000> <ffff>
+endcodespacerange
+53 begincidchar
+<007c> 93
+<007e> 95
+<00a6> 99
+<0127> 12092
+<01c0> 99
+<0361> 758
+<045b> 12092
+<203e> 325
+<20dd> 779
+<2195> 12215
+<2225> 666
+<223c> 665
+<229d> 12186
+<229e> 12190
+<22ee> 7897
+<22ef> 668
+<2300> 12184
+<244a> 12116
+<2612> 12185
+<2eac> 2260
+<5002> 13383
+<51de> 14352
+<5307> 8404
+<5561> 14393
+<5bec> 8436
+<5db2> 15269
+<5ecb> 14510
+<661e> 8476
+<6677> 14609
+<6801> 8494
+<69ea> 13679
+<6c3a> 14690
+<6ff9> 14741
+<704a> 14744
+<71b3> 14766
+<7462> 8561
+<7626> 7725
+<7934> 14904
+<7a60> 14926
+<7d5c> 8592
+<8803> 15107
+<8fc6> 15185
+<9365> 15238
+<95ab> 15258
+<9755> 8696
+<9b2d> 13372
+<9c6a> 15346
+<f929> 8489
+<f9dc> 8686
+<fa10> 8422
+<fa11> 8443
+<fa15> 8542
+<fa24> 8632
+endcidchar
+2 begincidrange
+<2018> <2019> 670
+<201c> <201d> 672
+endcidrange
+endcmap
+CMapName currentdict /CMap defineresource pop
+end
+end
+%%EndResource
+%%EOF
