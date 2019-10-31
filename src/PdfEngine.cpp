@@ -178,7 +178,7 @@ fz_stream* fz_open_file2(fz_context* ctx, const WCHAR* filePath) {
     return stm;
 }
 
-unsigned char* fz_extract_stream_data(fz_context *ctx, fz_stream* stream, size_t* cbCount) {
+unsigned char* fz_extract_stream_data(fz_context* ctx, fz_stream* stream, size_t* cbCount) {
     fz_seek(ctx, stream, 0, 2);
     i64 fileLen = fz_tell(ctx, stream);
     fz_seek(ctx, stream, 0, 0);
@@ -198,7 +198,7 @@ unsigned char* fz_extract_stream_data(fz_context *ctx, fz_stream* stream, size_t
     return data;
 }
 
-void fz_stream_fingerprint(fz_context *ctx, fz_stream* stm, unsigned char digest[16]) {
+void fz_stream_fingerprint(fz_context* ctx, fz_stream* stm, unsigned char digest[16]) {
     i64 fileLen = -1;
     fz_buffer* buf = nullptr;
 
@@ -223,7 +223,6 @@ void fz_stream_fingerprint(fz_context *ctx, fz_stream* stm, unsigned char digest
     fz_md5_init(&md5);
     fz_md5_update(&md5, data, size);
     fz_md5_final(&md5, digest);
-
 }
 
 static inline int wchars_per_rune(int rune) {
@@ -232,9 +231,11 @@ static inline int wchars_per_rune(int rune) {
     return 1;
 }
 
-static void AddChar(fz_text_span* span, fz_text_item* c, str::Str<WCHAR>& s, Vec<RectI>& rects) {
+// TODO(port):
+static void AddChar(fz_stext_line* span, fz_stext_char* c, str::Str<WCHAR>& s, Vec<RectI>& rects) {
+#if 0
     fz_rect bbox;
-    fz_text_char_bbox(&bbox, span, c - span->items);
+    fz_text_char_bbox(&bbox, span, c - span->first_char);
     RectI r = fz_rect_to_RectD(bbox).Round();
 
     int n = wchars_per_rune(c->c);
@@ -268,11 +269,12 @@ static void AddChar(fz_text_span* span, fz_text_item* c, str::Str<WCHAR>& s, Vec
         s.Append(L' ');
         rects.Append(r);
     }
+#endif
 }
 
 // if there's a span following this one, add space to separate them
-static void AddSpaceAtSpanEnd(fz_text_span* span, str::Str<WCHAR>& s, Vec<RectI>& rects) {
-    if (span->len == 0 || span->next == NULL) {
+static void AddSpaceAtSpanEnd(fz_stext_line* span, str::Str<WCHAR>& s, Vec<RectI>& rects) {
+    if (span->first_char == span->last_char || span->next == NULL) {
         return;
     }
     CrashIf(s.size() == 0);
@@ -304,25 +306,29 @@ static void AddLineSep(str::Str<WCHAR>& s, Vec<RectI>& rects, const WCHAR* lineS
     }
 }
 
-static WCHAR* fz_text_page_to_str(fz_text_page* text, const WCHAR* lineSep, RectI** coordsOut) {
+static WCHAR* fz_text_page_to_str(fz_stext_page* text, const WCHAR* lineSep, RectI** coordsOut) {
     size_t lineSepLen = str::Len(lineSep);
     str::Str<WCHAR> content;
     // coordsOut is optional but we ask for it by default so we simplify the code
     // by always calculating it
     Vec<RectI> rects;
 
-    for (fz_page_block* block = text->blocks; block < text->blocks + text->len; block++) {
-        if (block->type != FZ_PAGE_BLOCK_TEXT)
+    fz_stext_block* block = text->first_block;
+    while (block) {
+        if (block->type != FZ_STEXT_BLOCK_TEXT) {
+            block = block->next;
             continue;
-        for (fz_text_line* line = block->u.text->lines; line < block->u.text->lines + block->u.text->len; line++) {
-            for (fz_text_span* span = line->first_span; span; span = span->next) {
-                for (fz_text_char* c = span->text; c < span->text + span->len; c++) {
-                    AddChar(span, c, content, rects);
-                }
-                AddSpaceAtSpanEnd(span, content, rects);
-            }
-            AddLineSep(content, rects, lineSep, lineSepLen);
         }
+        fz_stext_line* line = block->u.t.first_line;
+        while (line) {
+            fz_stext_char* c = line->first_char;
+            AddChar(line, c, content, rects);
+            c = c->next;
+            line = line->next;
+        }
+        AddLineSep(content, rects, lineSep, lineSepLen);
+
+        block = block->next;
     }
 
     CrashIf(content.size() != rects.size());
@@ -339,13 +345,13 @@ struct istream_filter {
     unsigned char buf[4096];
 };
 
-extern "C" static int next_istream(fz_stream* stm, int max) {
+extern "C" static int next_istream(fz_context* ctx, fz_stream* stm, size_t max) {
     UNUSED(max);
     istream_filter* state = (istream_filter*)stm->state;
     ULONG cbRead = sizeof(state->buf);
     HRESULT res = state->stream->Read(state->buf, sizeof(state->buf), &cbRead);
     if (FAILED(res))
-        fz_throw(stm->ctx, FZ_ERROR_GENERIC, "IStream read error: %x", res);
+        fz_throw(ctx, FZ_ERROR_GENERIC, "IStream read error: %x", res);
     stm->rp = state->buf;
     stm->wp = stm->rp + cbRead;
     stm->pos += cbRead;
@@ -353,21 +359,21 @@ extern "C" static int next_istream(fz_stream* stm, int max) {
     return cbRead > 0 ? *stm->rp++ : EOF;
 }
 
-extern "C" static void seek_istream(fz_stream* stm, int offset, int whence) {
+extern "C" static void seek_istream(fz_context* ctx, fz_stream* stm, i64 offset, int whence) {
     istream_filter* state = (istream_filter*)stm->state;
     LARGE_INTEGER off;
     ULARGE_INTEGER n;
     off.QuadPart = offset;
     HRESULT res = state->stream->Seek(off, whence, &n);
     if (FAILED(res))
-        fz_throw(stm->ctx, FZ_ERROR_GENERIC, "IStream seek error: %x", res);
+        fz_throw(ctx, FZ_ERROR_GENERIC, "IStream seek error: %x", res);
     if (n.HighPart != 0 || n.LowPart > INT_MAX)
-        fz_throw(stm->ctx, FZ_ERROR_GENERIC, "documents beyond 2GB aren't supported");
+        fz_throw(ctx, FZ_ERROR_GENERIC, "documents beyond 2GB aren't supported");
     stm->pos = n.LowPart;
     stm->rp = stm->wp = state->buf;
 }
 
-extern "C" static void close_istream(fz_context* ctx, void* state_) {
+extern "C" static void drop_istream(fz_context* ctx, void* state_) {
     istream_filter* state = (istream_filter*)state_;
     state->stream->Release();
     fz_free(ctx, state);
@@ -375,6 +381,8 @@ extern "C" static void close_istream(fz_context* ctx, void* state_) {
 
 fz_stream* fz_open_istream(fz_context* ctx, IStream* stream);
 
+// TODO:(port)
+#if 0
 extern "C" static fz_stream* reopen_istream(fz_context* ctx, fz_stream* stm) {
     istream_filter* state = (istream_filter*)stm->state;
     ScopedComPtr<IStream> stream2;
@@ -385,6 +393,7 @@ extern "C" static fz_stream* reopen_istream(fz_context* ctx, fz_stream* stm) {
         fz_throw(ctx, FZ_ERROR_GENERIC, "IStream clone error: %x", res);
     return fz_open_istream(ctx, stream2);
 }
+#endif
 
 fz_stream* fz_open_istream(fz_context* ctx, IStream* stream) {
     if (!stream)
@@ -399,27 +408,25 @@ fz_stream* fz_open_istream(fz_context* ctx, IStream* stream) {
     state->stream = stream;
     stream->AddRef();
 
-    fz_stream* stm = fz_new_stream(ctx, state, next_istream, close_istream, nullptr);
+    fz_stream* stm = fz_new_stream(ctx, state, next_istream, drop_istream);
     stm->seek = seek_istream;
-    stm->reopen = reopen_istream;
     return stm;
 }
 
 fz_matrix fz_create_view_ctm(const fz_rect* mediabox, float zoom, int rotation) {
-    fz_matrix ctm;
-    fz_pre_scale(fz_rotate(&ctm, (float)rotation), zoom, zoom);
+    fz_matrix ctm = fz_pre_scale(fz_rotate((float)rotation), zoom, zoom);
 
     AssertCrash(0 == mediabox->x0 && 0 == mediabox->y0);
     rotation = (rotation + 360) % 360;
     if (90 == rotation)
-        fz_pre_translate(&ctm, 0, -mediabox->y1);
+        ctm = fz_pre_translate(ctm, 0, -mediabox->y1);
     else if (180 == rotation)
-        fz_pre_translate(&ctm, -mediabox->x1, -mediabox->y1);
+        ctm = fz_pre_translate(ctm, -mediabox->x1, -mediabox->y1);
     else if (270 == rotation)
-        fz_pre_translate(&ctm, -mediabox->x1, 0);
+        ctm = fz_pre_translate(ctm, -mediabox->x1, 0);
 
-    AssertCrash(fz_matrix_expansion(&ctm) > 0);
-    if (fz_matrix_expansion(&ctm) == 0)
+    AssertCrash(fz_matrix_expansion(ctm) > 0);
+    if (fz_matrix_expansion(ctm) == 0)
         return fz_identity;
 
     return ctm;
@@ -621,110 +628,152 @@ struct ListInspectionData {
     explicit ListInspectionData(Vec<FitzImagePos>& images) : images(&images), mem_estimate(0) {}
 };
 
-extern "C" static void fz_inspection_free(fz_device* dev) {
+typedef struct {
+    fz_device super;
+    ListInspectionData* user;
+} inspection_device;
+
+extern "C" static void fz_inspection_drop(fz_context* ctx, fz_device* dev) {
+    auto idev = (inspection_device*)dev;
     // images are extracted in bottom-to-top order, but for GetElements
     // we want to access them in top-to-bottom order (since images at
     // the bottom might not be visible at all)
-    ((ListInspectionData*)dev->user)->images->Reverse();
+    idev->user->images->Reverse();
 }
 
-static void fz_inspection_handle_path(fz_device* dev, fz_path* path) {
-    ((ListInspectionData*)dev->user)->mem_estimate += sizeof(fz_path) + path->cmd_cap + path->coord_cap * sizeof(float);
+static void fz_inspection_handle_path(inspection_device* dev, const fz_path* path) {
+    // TODO(port)
+    // dev->user->mem_estimate += sizeof(fz_path) + path->cmd_cap + path->coord_cap * sizeof(float);
 }
 
-static void fz_inspection_handle_image(fz_device* dev, fz_image* image) {
+static void fz_inspection_handle_image(inspection_device* dev, fz_image* image) {
     int n = image->colorspace ? image->colorspace->n + 1 : 1;
-    ((ListInspectionData*)dev->user)->mem_estimate += sizeof(fz_image) + image->w * image->h * n;
+    dev->user->mem_estimate += sizeof(fz_image) + image->w * image->h * n;
 }
 
-extern "C" static void fz_inspection_fill_path(fz_device* dev, fz_path* path, int even_odd, const fz_matrix* ctm,
-                                               fz_colorspace* colorspace, float* color, float alpha) {
+extern "C" static void fz_inspection_fill_path(fz_context* ctx, fz_device* dev, const fz_path* path, int even_odd,
+                                               fz_matrix ctm, fz_colorspace* colorspace, const float* color,
+                                               float alpha, fz_color_params p) {
+    UNUSED(ctx);
     UNUSED(even_odd);
     UNUSED(ctm);
     UNUSED(colorspace);
     UNUSED(color);
     UNUSED(alpha);
-    fz_inspection_handle_path(dev, path);
+    UNUSED(p);
+    auto idev = (inspection_device*)dev;
+    fz_inspection_handle_path(idev, path);
 }
 
-extern "C" static void fz_inspection_stroke_path(fz_device* dev, fz_path* path, fz_stroke_state* stroke,
-                                                 const fz_matrix* ctm, fz_colorspace* colorspace, float* color,
-                                                 float alpha) {
+extern "C" static void fz_inspection_stroke_path(fz_context* ctx, fz_device* dev, const fz_path* path,
+                                                 const fz_stroke_state* stroke, fz_matrix ctm,
+                                                 fz_colorspace* colorspace, const float* color, float alpha,
+                                                 fz_color_params cp) {
+    UNUSED(ctx);
     UNUSED(stroke);
     UNUSED(ctm);
     UNUSED(colorspace);
     UNUSED(color);
     UNUSED(alpha);
-    fz_inspection_handle_path(dev, path);
+    UNUSED(cp);
+    auto idev = (inspection_device*)dev;
+    fz_inspection_handle_path(idev, path);
 }
 
-extern "C" static void fz_inspection_clip_path(fz_device* dev, fz_path* path, const fz_rect* rect, int even_odd,
-                                               const fz_matrix* ctm) {
-    UNUSED(rect);
+extern "C" static void fz_inspection_clip_path(fz_context* ctx, fz_device* dev, const fz_path* path, int even_odd,
+                                               fz_matrix ctm, fz_rect scissor) {
+    UNUSED(ctx);
     UNUSED(even_odd);
     UNUSED(ctm);
-    fz_inspection_handle_path(dev, path);
+    UNUSED(scissor);
+    auto idev = (inspection_device*)dev;
+    fz_inspection_handle_path(idev, path);
 }
 
-extern "C" static void fz_inspection_clip_stroke_path(fz_device* dev, fz_path* path, const fz_rect* rect,
-                                                      fz_stroke_state* stroke, const fz_matrix* ctm) {
+extern "C" static void fz_inspection_clip_stroke_path(fz_context* ctx, fz_device* dev, const fz_path* path,
+                                                      const fz_stroke_state* stroke, fz_matrix ctm, fz_rect rect) {
+    UNUSED(ctx);
     UNUSED(rect);
     UNUSED(stroke);
     UNUSED(ctm);
-    fz_inspection_handle_path(dev, path);
+    auto idev = (inspection_device*)dev;
+    fz_inspection_handle_path(idev, path);
 }
 
-extern "C" static void fz_inspection_fill_shade(fz_device* dev, fz_shade* shade, const fz_matrix* ctm, float alpha) {
+extern "C" static void fz_inspection_fill_shade(fz_context* ctx, fz_device* dev, fz_shade* shade, fz_matrix ctm,
+                                                float alpha, fz_color_params cp) {
+    UNUSED(ctx);
     UNUSED(shade);
     UNUSED(ctm);
     UNUSED(alpha);
-    ((ListInspectionData*)dev->user)->mem_estimate += sizeof(fz_shade);
+    UNUSED(cp);
+    auto idev = (inspection_device*)dev;
+    idev->user->mem_estimate += sizeof(fz_shade);
 }
 
-extern "C" static void fz_inspection_fill_image(fz_device* dev, fz_image* image, const fz_matrix* ctm, float alpha) {
+extern "C" static void fz_inspection_fill_image(fz_context* ctx, fz_device* dev, fz_image* image, fz_matrix ctm,
+                                                float alpha, fz_color_params cp) {
+    UNUSED(ctx);
     UNUSED(alpha);
-    fz_inspection_handle_image(dev, image);
+    UNUSED(cp);
+    auto idev = (inspection_device*)dev;
+    fz_inspection_handle_image(idev, image);
     // extract rectangles for images a user might want to extract
     // TODO: try to better distinguish images a user might actually want to extract
-    if (image->w < 16 || image->h < 16)
+    if (image->w < 16 || image->h < 16) {
         return;
-    fz_rect rect = fz_unit_rect;
-    fz_transform_rect(&rect, ctm);
-    if (!fz_is_empty_rect(rect))
-        ((ListInspectionData*)dev->user)->images->Append(FitzImagePos(image, rect));
+    }
+    fz_rect rect = fz_transform_rect(fz_unit_rect, ctm);
+    auto idev = (inspection_device*)dev;
+    if (!fz_is_empty_rect(rect)) {
+        idev->user->images->Append(FitzImagePos(image, rect));
+    }
 }
 
-extern "C" static void fz_inspection_fill_image_mask(fz_device* dev, fz_image* image, const fz_matrix* ctm,
-                                                     fz_colorspace* colorspace, float* color, float alpha) {
+extern "C" static void fz_inspection_fill_image_mask(fz_context* ctx, fz_device* dev, fz_image* image, fz_matrix ctm,
+                                                     fz_colorspace* colorspace, const float* color, float alpha,
+                                                     fz_color_params cp) {
+    UNUSED(ctx);
     UNUSED(ctm);
     UNUSED(colorspace);
     UNUSED(color);
     UNUSED(alpha);
-    fz_inspection_handle_image(dev, image);
+    UNUSED(cp);
+    auto idev = (inspection_device*)dev;
+    fz_inspection_handle_image(idev, image);
 }
 
-extern "C" static void fz_inspection_clip_image_mask(fz_device* dev, fz_image* image, const fz_rect* rect,
-                                                     const fz_matrix* ctm) {
+extern "C" static void fz_inspection_clip_image_mask(fz_context* ctx, fz_device* dev, fz_image* image, fz_matrix ctm,
+                                                     fz_rect rect) {
+    UNUSED(ctx);
     UNUSED(rect);
     UNUSED(ctm);
-    fz_inspection_handle_image(dev, image);
+    auto idev = (inspection_device*)dev;
+    fz_inspection_handle_image(idev, image);
 }
 
 static fz_device* fz_new_inspection_device(fz_context* ctx, ListInspectionData* data) {
-    fz_device* dev = fz_new_device(ctx, data);
-    dev->free_user = fz_inspection_free;
+    inspection_device* dev = nullptr;
+    fz_try(ctx) { dev = fz_new_derived_device(ctx, inspection_device); }
+    fz_catch(ctx) {
+        fz_drop_device(ctx, &dev->super);
+        return nullptr;
+    }
 
-    dev->fill_path = fz_inspection_fill_path;
-    dev->stroke_path = fz_inspection_stroke_path;
-    dev->clip_path = fz_inspection_clip_path;
-    dev->clip_stroke_path = fz_inspection_clip_stroke_path;
+    dev->super.drop_device = fz_inspection_drop;
 
-    dev->fill_shade = fz_inspection_fill_shade;
-    dev->fill_image = fz_inspection_fill_image;
-    dev->fill_image_mask = fz_inspection_fill_image_mask;
-    dev->clip_image_mask = fz_inspection_clip_image_mask;
+    dev->super.fill_path = fz_inspection_fill_path;
+    dev->super.stroke_path = fz_inspection_stroke_path;
+    dev->super.clip_path = fz_inspection_clip_path;
+    dev->super.clip_stroke_path = fz_inspection_clip_stroke_path;
 
-    return dev;
+    dev->super.fill_shade = fz_inspection_fill_shade;
+    dev->super.fill_image = fz_inspection_fill_image;
+    dev->super.fill_image_mask = fz_inspection_fill_image_mask;
+    dev->super.clip_image_mask = fz_inspection_clip_image_mask;
+
+    dev->user = data;
+    return (fz_device*)dev;
 }
 
 class FitzAbortCookie : public AbortCookie {
@@ -774,42 +823,42 @@ static Vec<PageAnnotation> fz_get_user_page_annots(Vec<PageAnnotation>& userAnno
     return result;
 }
 
-static void fz_run_user_page_annots(Vec<PageAnnotation>& pageAnnots, fz_device* dev, const fz_matrix* ctm,
-                                    const fz_rect* cliprect, fz_cookie* cookie) {
+static void fz_run_user_page_annots(fz_context* ctx, Vec<PageAnnotation>& pageAnnots, fz_device* dev, fz_matrix ctm,
+                                    fz_rect* cliprect, fz_cookie* cookie) {
     for (size_t i = 0; i < pageAnnots.size() && (!cookie || !cookie->abort); i++) {
         PageAnnotation& annot = pageAnnots.at(i);
         // skip annotation if it isn't visible
         fz_rect rect = fz_RectD_to_rect(annot.rect);
-        fz_transform_rect(&rect, ctm);
-        fz_rect isect = rect;
-        if (cliprect && fz_is_empty_rect(fz_intersect_rect(&isect, cliprect)))
+        rect = fz_transform_rect(rect, ctm);
+        if (cliprect && fz_is_empty_rect(fz_intersect_rect(rect, *cliprect))) {
             continue;
+        }
         // prepare text highlighting path (cf. pdf_create_highlight_annot
         // and pdf_create_markup_annot in pdf_annot.c)
-        fz_path* path = fz_new_path(dev->ctx);
+        fz_path* path = fz_new_path(ctx);
         fz_stroke_state* stroke = nullptr;
         switch (annot.type) {
             case PageAnnotType::Highlight:
-                fz_moveto(dev->ctx, path, annot.rect.TL().x, annot.rect.TL().y);
-                fz_lineto(dev->ctx, path, annot.rect.BR().x, annot.rect.TL().y);
-                fz_lineto(dev->ctx, path, annot.rect.BR().x, annot.rect.BR().y);
-                fz_lineto(dev->ctx, path, annot.rect.TL().x, annot.rect.BR().y);
-                fz_closepath(dev->ctx, path);
+                fz_moveto(ctx, path, annot.rect.TL().x, annot.rect.TL().y);
+                fz_lineto(ctx, path, annot.rect.BR().x, annot.rect.TL().y);
+                fz_lineto(ctx, path, annot.rect.BR().x, annot.rect.BR().y);
+                fz_lineto(ctx, path, annot.rect.TL().x, annot.rect.BR().y);
+                fz_closepath(ctx, path);
                 break;
             case PageAnnotType::Underline:
-                fz_moveto(dev->ctx, path, annot.rect.TL().x, annot.rect.BR().y - 0.25f);
-                fz_lineto(dev->ctx, path, annot.rect.BR().x, annot.rect.BR().y - 0.25f);
+                fz_moveto(ctx, path, annot.rect.TL().x, annot.rect.BR().y - 0.25f);
+                fz_lineto(ctx, path, annot.rect.BR().x, annot.rect.BR().y - 0.25f);
                 break;
             case PageAnnotType::StrikeOut:
-                fz_moveto(dev->ctx, path, annot.rect.TL().x, annot.rect.TL().y + annot.rect.dy / 2);
-                fz_lineto(dev->ctx, path, annot.rect.BR().x, annot.rect.TL().y + annot.rect.dy / 2);
+                fz_moveto(ctx, path, annot.rect.TL().x, annot.rect.TL().y + annot.rect.dy / 2);
+                fz_lineto(ctx, path, annot.rect.BR().x, annot.rect.TL().y + annot.rect.dy / 2);
                 break;
             case PageAnnotType::Squiggly:
-                fz_moveto(dev->ctx, path, annot.rect.TL().x + 1, annot.rect.BR().y);
-                fz_lineto(dev->ctx, path, annot.rect.BR().x, annot.rect.BR().y);
-                fz_moveto(dev->ctx, path, annot.rect.TL().x, annot.rect.BR().y - 0.5f);
-                fz_lineto(dev->ctx, path, annot.rect.BR().x, annot.rect.BR().y - 0.5f);
-                stroke = fz_new_stroke_state_with_dash_len(dev->ctx, 2);
+                fz_moveto(ctx, path, annot.rect.TL().x + 1, annot.rect.BR().y);
+                fz_lineto(ctx, path, annot.rect.BR().x, annot.rect.BR().y);
+                fz_moveto(ctx, path, annot.rect.TL().x, annot.rect.BR().y - 0.5f);
+                fz_lineto(ctx, path, annot.rect.BR().x, annot.rect.BR().y - 0.5f);
+                stroke = fz_new_stroke_state_with_dash_len(ctx, 2);
                 CrashIf(!stroke);
                 stroke->linewidth = 0.5f;
                 stroke->dash_list[stroke->dash_len++] = 1;
@@ -818,25 +867,25 @@ static void fz_run_user_page_annots(Vec<PageAnnotation>& pageAnnots, fz_device* 
             default:
                 CrashIf(true);
         }
-        fz_colorspace* cs = fz_device_rgb(dev->ctx);
+        fz_colorspace* cs = fz_device_rgb(ctx);
         float color[3] = {annot.color.r / 255.f, annot.color.g / 255.f, annot.color.b / 255.f};
         if (PageAnnotType::Highlight == annot.type) {
             // render path with transparency effect
-            fz_begin_group(dev, &rect, 0, 0, FZ_BLEND_MULTIPLY, 1.f);
-            fz_fill_path(dev, path, 0, ctm, cs, color, annot.color.a / 255.f);
-            fz_end_group(dev);
+            fz_begin_group(ctx, dev, rect, nullptr, 0, 0, FZ_BLEND_MULTIPLY, 1.f);
+            fz_fill_path(ctx, dev, path, 0, ctm, cs, color, annot.color.a / 255.f, fz_default_color_params);
+            fz_end_group(ctx, dev);
         } else {
             if (!stroke)
-                stroke = fz_new_stroke_state(dev->ctx);
-            fz_stroke_path(dev, path, stroke, ctm, cs, color, 1.0f);
-            fz_drop_stroke_state(dev->ctx, stroke);
+                stroke = fz_new_stroke_state(ctx);
+            fz_stroke_path(ctx, dev, path, stroke, ctm, cs, color, 1.0f, fz_default_color_params);
+            fz_drop_stroke_state(ctx, stroke);
         }
-        fz_drop_path(dev->ctx, path);
+        fz_drop_path(ctx, path);
     }
 }
 
-static void fz_run_page_transparency(Vec<PageAnnotation>& pageAnnots, fz_device* dev, const fz_rect* cliprect,
-                                     bool endGroup, bool hasTransparency = false) {
+static void fz_run_page_transparency(fz_context* ctx, Vec<PageAnnotation>& pageAnnots, fz_device* dev,
+                                     const fz_rect* cliprect, bool endGroup, bool hasTransparency = false) {
     if (hasTransparency || pageAnnots.size() == 0)
         return;
     bool needsTransparency = false;
@@ -848,10 +897,11 @@ static void fz_run_page_transparency(Vec<PageAnnotation>& pageAnnots, fz_device*
     }
     if (!needsTransparency)
         return;
-    if (!endGroup)
-        fz_begin_group(dev, cliprect ? cliprect : &fz_infinite_rect, 1, 0, 0, 1);
-    else
-        fz_end_group(dev);
+    if (!endGroup) {
+        fz_rect r = cliprect ? *cliprect : fz_infinite_rect;
+        fz_begin_group(ctx, dev, r, nullptr, 1, 0, 0, 1);
+    }
+    else fz_end_group(ctx, dev);
 }
 
 ///// PDF-specific extensions to Fitz/MuPDF /////
@@ -1195,8 +1245,8 @@ class PdfEngineImpl : public BaseEngine {
 
     bool Load(const WCHAR* fileName, PasswordUI* pwdUI = nullptr);
     bool Load(IStream* stream, PasswordUI* pwdUI = nullptr);
-    //TODO(port): fz_stream can no-longer be re-opened (fz_clone_stream)
-    //bool Load(fz_stream* stm, PasswordUI* pwdUI = nullptr);
+    // TODO(port): fz_stream can no-longer be re-opened (fz_clone_stream)
+    // bool Load(fz_stream* stm, PasswordUI* pwdUI = nullptr);
     bool LoadFromStream(fz_stream* stm, PasswordUI* pwdUI = nullptr);
     bool FinishLoading();
 
@@ -1946,7 +1996,7 @@ RectD PdfEngineImpl::PageMediabox(int pageNo) {
         mbox.y1 = 792;
     }
     if (!fz_is_empty_rect(cbox)) {
-        fz_intersect_rect(&mbox, &cbox);
+        mbox = fz_intersect_rect(mbox, cbox);
         if (fz_is_empty_rect(mbox))
             return RectD();
     }
@@ -1954,8 +2004,7 @@ RectD PdfEngineImpl::PageMediabox(int pageNo) {
         rotate = 0;
 
     // cf. pdf-page.c's pdf_bound_page
-    fz_matrix ctm;
-    fz_transform_rect(&mbox, fz_rotate(&ctm, (float)rotate));
+    mbox = fz_transform_rect(mbox, fz_rotate((float)rotate));
 
     _mediaboxes[pageNo - 1] = RectD(0, 0, (mbox.x1 - mbox.x0) * userunit, (mbox.y1 - mbox.y0) * userunit);
     return _mediaboxes[pageNo - 1];
@@ -2739,8 +2788,7 @@ static bool pdf_file_update_add_annotation(pdf_document* doc, pdf_page* page, pd
         if (annot.type != PageAnnotType::Highlight)
             pdf_dict_dels(pdf_dict_gets(ap_obj, "Resources"), "ExtGState");
         if (rotation) {
-            fz_matrix rot;
-            pdf_dict_puts_drop(ap_obj, "Matrix", pdf_new_matrix(doc, fz_rotate(&rot, rotation)));
+            pdf_dict_puts_drop(ap_obj, "Matrix", pdf_new_matrix(doc, fz_rotate(rotation)));
         }
         ap_buf = fz_new_buffer(ctx, (int)str::Len(annot_ap_stream));
         memcpy(ap_buf->data, annot_ap_stream, (ap_buf->len = (int)str::Len(annot_ap_stream)));
@@ -3292,7 +3340,7 @@ class XpsEngineImpl : public BaseEngine {
     bool Load(const WCHAR* fileName);
     bool Load(IStream* stream);
     // TODO(port): fz_stream can't be re-opened anymore
-    //bool Load(fz_stream* stm);
+    // bool Load(fz_stream* stm);
     bool LoadFromStream(fz_stream* stm);
 
     xps_page* GetXpsPage(int pageNo, bool failIfBusy = false);
