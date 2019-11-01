@@ -194,6 +194,10 @@ inline void CrashMe() {
     char* p = nullptr;
     *p = 0;
 }
+inline void CrashMePort() {
+    char* p = nullptr;
+    *p = 0;
+}
 #if COMPILER_MSVC
 #pragma warning(pop)
 #endif
