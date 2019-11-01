@@ -413,17 +413,17 @@ fz_stream* fz_open_istream(fz_context* ctx, IStream* stream) {
     return stm;
 }
 
-fz_matrix fz_create_view_ctm(const fz_rect* mediabox, float zoom, int rotation) {
+fz_matrix fz_create_view_ctm(fz_rect mediabox, float zoom, int rotation) {
     fz_matrix ctm = fz_pre_scale(fz_rotate((float)rotation), zoom, zoom);
 
-    AssertCrash(0 == mediabox->x0 && 0 == mediabox->y0);
+    AssertCrash(0 == mediabox.x0 && 0 == mediabox.y0);
     rotation = (rotation + 360) % 360;
     if (90 == rotation)
-        ctm = fz_pre_translate(ctm, 0, -mediabox->y1);
+        ctm = fz_pre_translate(ctm, 0, -mediabox.y1);
     else if (180 == rotation)
-        ctm = fz_pre_translate(ctm, -mediabox->x1, -mediabox->y1);
+        ctm = fz_pre_translate(ctm, -mediabox.x1, -mediabox.y1);
     else if (270 == rotation)
-        ctm = fz_pre_translate(ctm, -mediabox->x1, 0);
+        ctm = fz_pre_translate(ctm, -mediabox.x1, 0);
 
     AssertCrash(fz_matrix_expansion(ctm) > 0);
     if (fz_matrix_expansion(ctm) == 0)
@@ -724,7 +724,6 @@ extern "C" static void fz_inspection_fill_image(fz_context* ctx, fz_device* dev,
         return;
     }
     fz_rect rect = fz_transform_rect(fz_unit_rect, ctm);
-    auto idev = (inspection_device*)dev;
     if (!fz_is_empty_rect(rect)) {
         idev->user->images->Append(FitzImagePos(image, rect));
     }
@@ -913,10 +912,11 @@ extern "C" {
 namespace str {
 namespace conv {
 
-inline WCHAR* FromPdf(pdf_obj* obj) {
-    AutoFreeW str(AllocArray<WCHAR>(pdf_to_str_len(obj) + 1));
-    pdf_to_ucs2_buf((unsigned short*)str.Get(), obj);
-    return str.StealData();
+inline WCHAR* FromPdf(fz_context* ctx, pdf_obj* obj) {
+    char* s = pdf_new_utf8_from_pdf_string_obj(ctx, obj);
+    WCHAR *res = str::conv::FromUtf8(s);
+    fz_free(ctx, s);
+    return res;
 }
 
 } // namespace conv
@@ -931,44 +931,51 @@ WCHAR* pdf_clean_string(WCHAR* string) {
     return string;
 }
 
-pdf_obj* pdf_copy_str_dict(pdf_document* doc, pdf_obj* dict) {
-    pdf_obj* copy = pdf_copy_dict(dict);
-    for (int i = 0; i < pdf_dict_len(copy); i++) {
-        pdf_obj* val = pdf_dict_get_val(copy, i);
+pdf_obj* pdf_copy_str_dict(fz_context *ctx, pdf_document* doc, pdf_obj* dict) {
+    pdf_obj* copy = pdf_copy_dict(ctx, dict);
+    for (int i = 0; i < pdf_dict_len(ctx, copy); i++) {
+        pdf_obj* val = pdf_dict_get_val(ctx, copy, i);
         // resolve all indirect references
-        if (pdf_is_indirect(val)) {
-            pdf_obj* val2 = pdf_new_string(doc, pdf_to_str_buf(val), pdf_to_str_len(val));
-            pdf_dict_put(copy, pdf_dict_get_key(copy, i), val2);
-            pdf_drop_obj(val2);
+        if (pdf_is_indirect(ctx, val)) {
+            auto s = pdf_to_str_buf(ctx, val);
+            auto slen = pdf_to_str_len(ctx, val);
+            pdf_obj* val2 = pdf_new_string(ctx, s, slen);
+            pdf_dict_put(ctx, copy, pdf_dict_get_key(ctx, copy, i), val2);
+            pdf_drop_obj(ctx, val2);
         }
     }
     return copy;
 }
 
 // Note: make sure to only call with ctxAccess
-fz_outline* pdf_loadattachments(pdf_document* doc) {
-    pdf_obj* dict = pdf_load_name_tree(doc, "EmbeddedFiles");
+fz_outline* pdf_loadattachments(fz_context *ctx, pdf_document* doc) {
+    pdf_obj* dict = pdf_load_name_tree(ctx, doc, PDF_NAME(EmbeddedFiles));
     if (!dict)
         return nullptr;
 
     fz_outline root = {0}, *node = &root;
-    for (int i = 0; i < pdf_dict_len(dict); i++) {
-        pdf_obj* name = pdf_dict_get_key(dict, i);
-        pdf_obj* dest = pdf_dict_get_val(dict, i);
-        pdf_obj* embedded = pdf_dict_getsa(pdf_dict_gets(dest, "EF"), "DOS", "F");
+    for (int i = 0; i < pdf_dict_len(ctx, dict); i++) {
+        pdf_obj* name = pdf_dict_get_key(ctx, dict, i);
+        pdf_obj* dest = pdf_dict_get_val(ctx, dict, i);
+        auto ef = pdf_dict_gets(ctx, dest, "EF");
+        pdf_obj* embedded = pdf_dict_getsa(ctx, ef, "DOS", "F");
         if (!embedded)
             continue;
 
-        node = node->next = (fz_outline*)fz_malloc_struct(doc->ctx, fz_outline);
-        node->title = fz_strdup(doc->ctx, pdf_to_name(name));
+        // TODO(port)
+        CrashMe();
+#if 0
+        node = node->next = fz_new_outline(ctx);
+        node->title = fz_strdup(ctx, pdf_to_name(ctx, name));
         node->dest.kind = FZ_LINK_LAUNCH;
-        node->dest.ld.launch.file_spec = pdf_file_spec_to_str(doc, dest);
+        node->dest.ld.launch.file_spec = pdf_parse_file_spec(ctx, doc, dest);
         node->dest.ld.launch.new_window = 1;
-        node->dest.ld.launch.embedded_num = pdf_to_num(embedded);
-        node->dest.ld.launch.embedded_gen = pdf_to_gen(embedded);
+        node->dest.ld.launch.embedded_num = pdf_to_num(ctx, embedded);
+        node->dest.ld.launch.embedded_gen = pdf_to_gen(ctx, embedded);
         node->dest.ld.launch.is_uri = 0;
+#endif
     }
-    pdf_drop_obj(dict);
+    pdf_drop_obj(ctx, dict);
 
     return root.next;
 }
@@ -1006,23 +1013,25 @@ WCHAR* FormatPageLabel(const char* type, int pageNo, const WCHAR* prefix) {
     return str::Dup(prefix);
 }
 
-void BuildPageLabelRec(pdf_obj* node, int pageCount, Vec<PageLabelInfo>& data) {
+void BuildPageLabelRec(fz_context *ctx, pdf_obj* node, int pageCount, Vec<PageLabelInfo>& data) {
     pdf_obj* obj;
-    if ((obj = pdf_dict_gets(node, "Kids")) != nullptr && !pdf_mark_obj(node)) {
-        for (int i = 0; i < pdf_array_len(obj); i++)
-            BuildPageLabelRec(pdf_array_get(obj, i), pageCount, data);
-        pdf_unmark_obj(node);
-    } else if ((obj = pdf_dict_gets(node, "Nums")) != nullptr) {
-        for (int i = 0; i < pdf_array_len(obj); i += 2) {
-            pdf_obj* info = pdf_array_get(obj, i + 1);
+    if ((obj = pdf_dict_gets(ctx, node, "Kids")) != nullptr && !pdf_mark_obj(ctx, node)) {
+        for (int i = 0; i < pdf_array_len(ctx, obj); i++) {
+            auto arr = pdf_array_get(ctx, obj, i);
+            BuildPageLabelRec(ctx, arr, pageCount, data);
+        }
+        pdf_unmark_obj(ctx, node);
+    } else if ((obj = pdf_dict_gets(ctx, node, "Nums")) != nullptr) {
+        for (int i = 0; i < pdf_array_len(ctx, obj); i += 2) {
+            pdf_obj* info = pdf_array_get(ctx, obj, i + 1);
             PageLabelInfo pli;
-            pli.startAt = pdf_to_int(pdf_array_get(obj, i)) + 1;
+            pli.startAt = pdf_to_int(ctx, pdf_array_get(ctx, obj, i)) + 1;
             if (pli.startAt < 1)
                 continue;
 
-            pli.type = pdf_to_name(pdf_dict_gets(info, "S"));
-            pli.prefix = pdf_dict_gets(info, "P");
-            pli.countFrom = pdf_to_int(pdf_dict_gets(info, "St"));
+            pli.type = pdf_to_name(ctx, pdf_dict_gets(ctx, info, "S"));
+            pli.prefix = pdf_dict_gets(ctx, info, "P");
+            pli.countFrom = pdf_to_int(ctx, pdf_dict_gets(ctx, info, "St"));
             if (pli.countFrom < 1)
                 pli.countFrom = 1;
             data.Append(pli);
@@ -1030,9 +1039,9 @@ void BuildPageLabelRec(pdf_obj* node, int pageCount, Vec<PageLabelInfo>& data) {
     }
 }
 
-WStrVec* BuildPageLabelVec(pdf_obj* root, int pageCount) {
+WStrVec* BuildPageLabelVec(fz_context *ctx, pdf_obj* root, int pageCount) {
     Vec<PageLabelInfo> data;
-    BuildPageLabelRec(root, pageCount, data);
+    BuildPageLabelRec(ctx, root, pageCount, data);
     data.Sort(CmpPageLabelInfo);
 
     if (data.size() == 0)
@@ -1051,7 +1060,7 @@ WStrVec* BuildPageLabelVec(pdf_obj* root, int pageCount) {
         int secLen = pageCount + 1 - data.at(i).startAt;
         if (i < data.size() - 1 && data.at(i + 1).startAt <= pageCount)
             secLen = data.at(i + 1).startAt - data.at(i).startAt;
-        AutoFreeW prefix(str::conv::FromPdf(data.at(i).prefix));
+        AutoFreeW prefix(str::conv::FromPdf(ctx, data.at(i).prefix));
         for (int j = 0; j < secLen; j++) {
             free(labels->at(data.at(i).startAt + j - 1));
             labels->at(data.at(i).startAt + j - 1) = FormatPageLabel(data.at(i).type, data.at(i).countFrom + j, prefix);
@@ -1083,30 +1092,29 @@ WStrVec* BuildPageLabelVec(pdf_obj* root, int pageCount) {
 }
 
 struct PageTreeStackItem {
-    pdf_obj* kids;
-    int i, len;
-    int next_page_no;
+    pdf_obj* kids = nullptr;
+    int i = -1;
+    int len = 0;
+    int next_page_no = 0;
 
-    PageTreeStackItem() : kids(nullptr), i(-1), len(0), next_page_no(0) {}
-    explicit PageTreeStackItem(pdf_obj* kids, int next_page_no = 0)
-        : kids(kids), i(-1), len(pdf_array_len(kids)), next_page_no(next_page_no) {}
+    explicit PageTreeStackItem(fz_context *ctx, pdf_obj* kids, int next_page_no = 0)
+        : kids(kids), i(-1), len(pdf_array_len(ctx, kids)), next_page_no(next_page_no) {}
 };
 
-static void pdf_load_page_objs(pdf_document* doc, pdf_obj** page_objs) {
-    fz_context* ctx = doc->ctx;
+static void pdf_load_page_objs(fz_context* ctx, pdf_document* doc, pdf_obj** page_objs) {
     int page_no = 0;
 
     Vec<PageTreeStackItem> stack;
-    PageTreeStackItem top(pdf_dict_getp(pdf_trailer(doc), "Root/Pages/Kids"));
+    PageTreeStackItem top(ctx, pdf_dict_getp(ctx, pdf_trailer(ctx, doc), "Root/Pages/Kids"));
 
-    if (pdf_mark_obj(top.kids))
+    if (pdf_mark_obj(ctx, top.kids))
         fz_throw(ctx, FZ_ERROR_GENERIC, "cycle in page tree");
 
     fz_try(ctx) {
         for (;;) {
             top.i++;
             if (top.i == top.len) {
-                pdf_unmark_obj(top.kids);
+                pdf_unmark_obj(ctx, top.kids);
                 if (page_no < top.next_page_no)
                     page_no = top.next_page_no;
                 if (stack.size() == 0)
@@ -1115,37 +1123,39 @@ static void pdf_load_page_objs(pdf_document* doc, pdf_obj** page_objs) {
                 continue;
             }
 
-            pdf_obj* kid = pdf_array_get(top.kids, top.i);
-            char* type = pdf_to_name(pdf_dict_gets(kid, "Type"));
-            if (*type ? str::Eq(type, "Pages") : pdf_dict_gets(kid, "Kids") && !pdf_dict_gets(kid, "MediaBox")) {
-                int count = pdf_to_int(pdf_dict_gets(kid, "Count"));
+            pdf_obj* kid = pdf_array_get(ctx, top.kids, top.i);
+            const char* type = pdf_to_name(ctx, pdf_dict_gets(ctx, kid, "Type"));
+            if (*type ? str::Eq(type, "Pages") : pdf_dict_gets(ctx, kid, "Kids") && !pdf_dict_gets(ctx, kid, "MediaBox")) {
+                int count = pdf_to_int(ctx, pdf_dict_gets(ctx, kid, "Count"));
                 if (count > 0) {
                     stack.Push(top);
-                    top = PageTreeStackItem(pdf_dict_gets(kid, "Kids"), page_no + count);
+                    top = PageTreeStackItem(ctx, pdf_dict_gets(ctx, kid, "Kids"), page_no + count);
 
-                    if (pdf_mark_obj(top.kids))
+                    if (pdf_mark_obj(ctx, top.kids))
                         fz_throw(ctx, FZ_ERROR_GENERIC, "cycle in page tree");
                 }
             } else {
-                if (*type ? !str::Eq(type, "Page") : !pdf_dict_gets(kid, "MediaBox"))
+                if (*type ? !str::Eq(type, "Page") : !pdf_dict_gets(ctx, kid, "MediaBox"))
                     fz_warn(ctx, "non-page object in page tree (%s)", type);
-                if (page_no >= pdf_count_pages(doc))
+                if (page_no >= pdf_count_pages(ctx, doc))
                     fz_throw(ctx, FZ_ERROR_GENERIC, "found more /Page objects than anticipated");
 
-                page_objs[page_no] = pdf_keep_obj(kid);
+                page_objs[page_no] = pdf_keep_obj(ctx, kid);
                 page_no++;
             }
         }
     }
     fz_catch(ctx) {
         for (size_t i = 0; i < stack.size(); i++) {
-            pdf_unmark_obj(stack.at(i).kids);
+            pdf_unmark_obj(ctx, stack.at(i).kids);
         }
-        pdf_unmark_obj(top.kids);
+        pdf_unmark_obj(ctx, top.kids);
         fz_rethrow(ctx);
     }
 
-    doc->page_objs = page_objs;
+    // TODO(port)
+    CrashMe();
+    //doc->page_objs = page_objs;
 }
 
 ///// Above are extensions to Fitz and MuPDF, now follows PdfEngine /////
@@ -1203,8 +1213,8 @@ class PdfEngineImpl : public BaseEngine {
     bool SupportsAnnotation(bool forSaving = false) const override;
     void UpdateUserAnnotations(Vec<PageAnnotation>* list) override;
 
-    bool AllowsPrinting() const override { return pdf_has_permission(_doc, PDF_PERM_PRINT); }
-    bool AllowsCopyingText() const override { return pdf_has_permission(_doc, PDF_PERM_COPY); }
+    bool AllowsPrinting() const override { return pdf_has_permission(ctx, _doc, FZ_PERMISSION_PRINT); }
+    bool AllowsCopyingText() const override { return pdf_has_permission(ctx, _doc, FZ_PERMISSION_COPY); }
 
     float GetFileDPI() const override { return 72.0f; }
     const WCHAR* GetDefaultFileExt() const override { return L".pdf"; }
@@ -1254,11 +1264,10 @@ class PdfEngineImpl : public BaseEngine {
     int GetPageNo(pdf_page* page);
     fz_matrix viewctm(int pageNo, float zoom, int rotation) {
         const fz_rect tmpRc = fz_RectD_to_rect(PageMediabox(pageNo));
-        return fz_create_view_ctm(&tmpRc, zoom, rotation);
+        return fz_create_view_ctm(tmpRc, zoom, rotation);
     }
     fz_matrix viewctm(pdf_page* page, float zoom, int rotation) {
-        fz_rect r;
-        return fz_create_view_ctm(pdf_bound_page(_doc, page, &r), zoom, rotation);
+        return fz_create_view_ctm(pdf_bound_page(ctx, page), zoom, rotation);
     }
     WCHAR* ExtractPageText(pdf_page* page, const WCHAR* lineSep, RectI** coordsOut = nullptr,
                            RenderTarget target = RenderTarget::View, bool cacheRun = false);
@@ -3347,11 +3356,15 @@ class XpsEngineImpl : public BaseEngine {
     int GetPageNo(xps_page* page);
     fz_matrix viewctm(int pageNo, float zoom, int rotation) {
         const fz_rect tmpRect = fz_RectD_to_rect(PageMediabox(pageNo));
-        return fz_create_view_ctm(&tmpRect, zoom, rotation);
+        return fz_create_view_ctm(tmpRect, zoom, rotation);
     }
     fz_matrix viewctm(xps_page* page, float zoom, int rotation) {
+        //fz_rect r = xps_bound_page(_doc, page);
+        CrashMe();
+        // TODO(port)
+        // xps_bound_page is not exported anymore
         fz_rect r;
-        return fz_create_view_ctm(xps_bound_page(_doc, page, &r), zoom, rotation);
+        return fz_create_view_ctm(r, zoom, rotation);
     }
     WCHAR* ExtractPageText(xps_page* page, const WCHAR* lineSep, RectI** coordsOut = nullptr, bool cacheRun = false);
 
