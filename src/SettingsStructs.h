@@ -397,6 +397,8 @@ struct GlobalPrefs {
     DisplayMode defaultDisplayModeEnum;
     // value of DefaultZoom for internal usage
     float defaultZoomFloat;
+    // query string used to search for selections
+    WCHAR* searchEngineURL;
 };
 
 #ifdef INCLUDE_SETTINGSSTRUCTS_METADATA
@@ -653,17 +655,18 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, reopenOnce), Type_StringArray, 0},
     {offsetof(GlobalPrefs, timeOfLastUpdateCheck), Type_Compact, (intptr_t)&gFILETIMEInfo},
     {offsetof(GlobalPrefs, openCountWeek), Type_Int, 0},
+    {offsetof(GlobalPrefs, searchEngineURL), Type_String, (intptr_t)L"https://www.google.com/search?q="},
     {(size_t)-1, Type_Comment, 0},
     {(size_t)-1, Type_Comment, (intptr_t) "Settings after this line have not been recognized by the current version"},
 };
 static const StructInfo gGlobalPrefsInfo = {
-    sizeof(GlobalPrefs), 54, gGlobalPrefsFields,
+    sizeof(GlobalPrefs), 55, gGlobalPrefsFields,
     "\0\0MainWindowBackground\0EscToExit\0ReuseInstance\0UseSysColors\0RestoreSession\0\0FixedPageUI\0EbookUI\0ComicBoo"
     "kUI\0ChmUI\0ExternalViewers\0PrereleaseSettings\0ShowMenubar\0ReloadModifiedDocuments\0FullPathInTitle\0ZoomLevels"
     "\0ZoomIncrement\0\0PrinterDefaults\0ForwardSearch\0AnnotationDefaults\0DefaultPasswords\0CustomScreenDPI\0\0Rememb"
     "erStatePerDocument\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0CheckForUpdat"
     "es\0VersionToSkip\0RememberOpenedFiles\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZo"
     "om\0WindowState\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0ShowStartPage\0UseTabs\0\0FileStates\0SessionData\0ReopenOn"
-    "ce\0TimeOfLastUpdateCheck\0OpenCountWeek\0\0"};
+    "ce\0TimeOfLastUpdateCheck\0OpenCountWeek\0SearchEngineURL\0\0"};
 
 #endif

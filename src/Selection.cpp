@@ -241,7 +241,7 @@ void CopySelectionToClipboard(WindowInfo* win) {
         win->ShowNotification(_TR("Copying text was denied (copying as image only)"));
     else
 #endif
-        if (!dm->GetEngine()->IsImageCollection()) {
+    if (!dm->GetEngine()->IsImageCollection()) {
         AutoFreeW selText;
         bool isTextSelection = dm->textSelection->result.len > 0;
         if (isTextSelection) {
@@ -276,6 +276,45 @@ void CopySelectionToClipboard(WindowInfo* win) {
     delete bmp;
 
     CloseClipboard();
+}
+
+void SearchSelection(WindowInfo* win) {
+    if (!win->currentTab || !win->currentTab->selectionOnPage)
+        return;
+    CrashIf(win->currentTab->selectionOnPage->size() == 0 && win->mouseAction != MouseAction::SelectingText);
+    if (win->currentTab->selectionOnPage->size() == 0)
+        return; 
+    CrashIf(!win->AsFixed());
+    if (!win->AsFixed())
+        return;
+
+    DisplayModel* dm = win->AsFixed();
+#ifndef DISABLE_DOCUMENT_RESTRICTIONS
+    if (!dm->GetEngine()->AllowsCopyingText())
+        win->ShowNotification(_TR("Copying text was denied and a search could not be performed."));
+    else
+#endif
+    if (!dm->GetEngine()->IsImageCollection()) {
+        std::wstring selText;
+        bool isTextSelection = dm->textSelection->result.len > 0;
+        if (isTextSelection) {
+            selText = dm->textSelection->ExtractText(L"\r\n");
+        } else {
+            WStrVec selections;
+            for (SelectionOnPage& sel : *win->currentTab->selectionOnPage) {
+                WCHAR* text = dm->GetTextInRegion(sel.pageNo, sel.rect);
+                if (text)
+                    selections.Push(text);
+            }
+            selText = selections.Join();
+        }
+
+        std::wstring searchURL = gGlobalPrefs->searchEngineURL;
+        searchURL.append(selText);
+        if (!searchURL.empty()) {
+            ShellExecute(0, L"open", searchURL.c_str(), 0, 0, SW_SHOW);
+        }
+    }
 }
 
 void OnSelectAll(WindowInfo* win, bool textOnly) {

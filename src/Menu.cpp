@@ -121,6 +121,7 @@ static MenuDef menuDefView[] = {
     { SEP_ITEM,                             0,                          MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
     { _TRN("Select &All\tCtrl+A"),          IDM_SELECT_ALL,             MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
     { _TRN("&Copy Selection\tCtrl+C"),      IDM_COPY_SELECTION,         MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI },
+    { _TRN("Search Selection\tCtrl+Z"),     IDM_SEARCH_SELECTION,       MF_REQ_ALLOW_COPY | MF_NOT_FOR_EBOOK_UI | MF_REQ_INET_ACCESS },
 };
 //] ACCESSKEY_GROUP View Menu
 
@@ -212,6 +213,7 @@ static MenuDef menuDefDebug[] = {
 // the entire menu is MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI
 static MenuDef menuDefContext[] = {
     { _TRN("&Copy Selection"),              IDM_COPY_SELECTION,         MF_REQ_ALLOW_COPY },
+    { _TRN("S&earch Selection"),              IDM_SEARCH_SELECTION,       MF_REQ_ALLOW_COPY | MF_REQ_INET_ACCESS },
     { _TRN("Copy &Link Address"),           IDM_COPY_LINK_TARGET,       MF_REQ_ALLOW_COPY },
     { _TRN("Copy Co&mment"),                IDM_COPY_COMMENT,           MF_REQ_ALLOW_COPY },
     { _TRN("Copy &Image"),                  IDM_COPY_IMAGE,             MF_REQ_ALLOW_COPY },
@@ -470,6 +472,7 @@ void MenuUpdateStateForWindow(WindowInfo* win) {
         IDM_SEND_BY_EMAIL,
         IDM_SELECT_ALL,
         IDM_COPY_SELECTION,
+        IDM_SEARCH_SELECTION,
         IDM_PROPERTIES,
         IDM_VIEW_PRESENTATION_MODE,
         IDM_VIEW_WITH_ACROBAT,
@@ -632,6 +635,7 @@ void OnContextMenu(WindowInfo* win, int x, int y) {
 
     if (!win->currentTab->selectionOnPage) {
         win::menu::SetEnabled(popup, IDM_COPY_SELECTION, false);
+        win::menu::SetEnabled(popup, IDM_SEARCH_SELECTION, false);
     }
     MenuUpdatePrintItem(win, popup, true);
     win::menu::SetEnabled(popup, IDM_VIEW_BOOKMARKS, win->ctrl->HasTocTree());
@@ -646,6 +650,7 @@ void OnContextMenu(WindowInfo* win, int x, int y) {
 
     switch (cmd) {
         case IDM_COPY_SELECTION:
+        case IDM_SEARCH_SELECTION:
         case IDM_SELECT_ALL:
         case IDM_SAVEAS:
         case IDM_PRINT:

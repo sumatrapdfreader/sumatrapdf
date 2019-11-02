@@ -91,6 +91,7 @@ BEGIN
     "Q",            IDM_EXIT,               VIRTKEY, CONTROL
     "W",            IDM_CLOSE,              VIRTKEY, CONTROL
     "Y",            IDM_ZOOM_CUSTOM,        VIRTKEY, CONTROL
+    "Z",			IDM_SEARCH_SELECTION,	VIRTKEY, CONTROL
     "0",            IDM_ZOOM_FIT_PAGE,      VIRTKEY, CONTROL
     VK_NUMPAD0,     IDM_ZOOM_FIT_PAGE,      VIRTKEY, CONTROL
     "1",            IDM_ZOOM_ACTUAL_SIZE,   VIRTKEY, CONTROL

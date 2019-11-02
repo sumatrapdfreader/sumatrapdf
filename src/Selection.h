@@ -26,6 +26,7 @@ void PaintSelection(WindowInfo* win, HDC hdc);
 void UpdateTextSelection(WindowInfo* win, bool select = true);
 void ZoomToSelection(WindowInfo* win, float factor, bool scrollToFit = true, bool relative = false);
 void CopySelectionToClipboard(WindowInfo* win);
+void SearchSelection(WindowInfo* win);
 void OnSelectAll(WindowInfo* win, bool textOnly = false);
 bool NeedsSelectionEdgeAutoscroll(WindowInfo* win, int x, int y);
 void OnSelectionEdgeAutoscroll(WindowInfo* win, int x, int y);

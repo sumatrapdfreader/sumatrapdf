@@ -4086,8 +4086,16 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
                 win->ShowNotification(_TR("Select content with Ctrl+left mouse button"));
             break;
 
-        case IDM_SELECT_ALL:
-            OnSelectAll(win);
+        case IDM_SEARCH_SELECTION:
+            if (!HasPermission(Perm_CopySelection) || !HasPermission(Perm_InternetAccess))
+                break;
+            else if (win->currentTab && win->currentTab->selectionOnPage)
+                SearchSelection(win);
+            else if (win->AsFixed())
+                win->ShowNotification(_TR("Select content with Ctrl+left mouse button"));
+            break;
+
+        case IDM_SELECT_ALL : OnSelectAll(win);
             break;
 
 #ifdef SHOW_DEBUG_MENU_ITEMS
@@ -4141,7 +4149,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
 }
 
 static LRESULT OnFrameGetMinMaxInfo(MINMAXINFO* info) {
-	//limit windows min width to prevent render loop when siderbar is too big
+    // limit windows min width to prevent render loop when siderbar is too big
     info->ptMinTrackSize.x = MIN_WIN_DX - SIDEBAR_MIN_WIDTH + gGlobalPrefs->sidebarDx;
     info->ptMinTrackSize.y = MIN_WIN_DY;
     return 0;
