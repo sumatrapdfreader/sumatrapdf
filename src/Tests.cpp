@@ -10,12 +10,13 @@
 #include "BaseEngine.h"
 #include "EngineManager.h"
 
-extern "C" void fz_redirect_dll_io_to_console();
+// TODO(port)
+//extern "C" void fz_redirect_dll_io_to_console();
 
 void TestRenderPage(const CommandLineInfo& i) {
     if (i.showConsole) {
         RedirectIOToConsole();
-        fz_redirect_dll_io_to_console();
+        //fz_redirect_dll_io_to_console();
     }
 
     if (i.pageNumber == -1) {
@@ -51,7 +52,7 @@ void TestRenderPage(const CommandLineInfo& i) {
 void TestExtractPage(const CommandLineInfo& i) {
     if (i.showConsole) {
         RedirectIOToConsole();
-        fz_redirect_dll_io_to_console();
+        //fz_redirect_dll_io_to_console();
     }
 
     if (i.pageNumber == -1) {

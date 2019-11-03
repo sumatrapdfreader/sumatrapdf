@@ -420,7 +420,8 @@ Error:
     goto Retry;
 }
 
-extern "C" void fz_redirect_dll_io_to_console();
+// TODO(port)
+// extern "C" void fz_redirect_dll_io_to_console();
 
 // Registering happens either through the Installer or the Options dialog;
 // here we just make sure that we're still registered
@@ -628,7 +629,8 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 
     if (i.showConsole) {
         RedirectIOToConsole();
-        fz_redirect_dll_io_to_console();
+        //TODO(port)
+        //fz_redirect_dll_io_to_console();
     }
     if (i.makeDefault)
         AssociateExeWithPdfExtension();

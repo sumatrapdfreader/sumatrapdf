@@ -607,6 +607,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <CustomBuild Include="..\mupdf\fonts_32.asm" />
     <CustomBuild Include="..\mupdf\fonts_64.asm" />
   </ItemGroup>
 </Project>
