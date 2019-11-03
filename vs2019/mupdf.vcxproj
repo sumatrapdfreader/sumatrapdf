@@ -443,6 +443,7 @@
     <ClInclude Include="..\mupdf\source\fitz\ucdn_db.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\ext\mupdf_load_system_font.c" />
     <ClCompile Include="..\mupdf\source\cbz\mucbz.c" />
     <ClCompile Include="..\mupdf\source\cbz\muimg.c" />
     <ClCompile Include="..\mupdf\source\fitz\archive.c" />
