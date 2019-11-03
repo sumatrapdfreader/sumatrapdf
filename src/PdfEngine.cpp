@@ -1397,7 +1397,10 @@ class PdfImage : public PageElement {
     virtual RenderedBitmap* GetImage() { return engine->GetPageImage(pageNo, rect, imageIx); }
 };
 
-PdfEngineImpl::PdfEngineImpl()
+// in mupdf_load_system_font.c
+extern "C" void pdf_install_load_system_font_funcs(fz_context* ctx);
+
+    PdfEngineImpl::PdfEngineImpl()
     : _doc(nullptr),
       _pages(nullptr),
       _pageObjs(nullptr),
@@ -1418,12 +1421,7 @@ PdfEngineImpl::PdfEngineImpl()
     fz_locks_ctx.unlock = fz_unlock_context_cs;
     ctx = fz_new_context(nullptr, &fz_locks_ctx, MAX_CONTEXT_MEMORY);
 
-    // TODO(port)
-    if (ctx) {
-        CrashMe();
-        // TODO: use fz_install_load_system_font_funcs instead
-        // pdf_install_load_system_font_funcs(ctx);
-    }
+    pdf_install_load_system_font_funcs(ctx);
 }
 
 PdfEngineImpl::~PdfEngineImpl() {

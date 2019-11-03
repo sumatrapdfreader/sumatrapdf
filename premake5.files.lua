@@ -484,6 +484,7 @@ function mupdf_files()
   }
   --]]
 
+  files { "ext/mupdf_load_system_font.c" }
 
   filter {"platforms:x64"}
     files {

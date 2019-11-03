@@ -30,6 +30,7 @@ EXPORTS
 	pdf_xobject_resources
 	pdf_page_resources
 	xps_drop_part
+	pdf_install_load_system_font_funcs
 
 	fz_keep_bitmap
 	fz_drop_bitmap
@@ -403,36 +404,25 @@ EXPORTS
 	pdf_annot_type
 	pdf_run_annot
 	pdf_parse_link_dest
-	;pdf_parse_action
 	pdf_lookup_dest
 	pdf_lookup_name
 	pdf_load_name_tree
-	;pdf_file_spec_to_str
 	pdf_load_link_annots
-	;pdf_transform_annot
 	pdf_load_annots
 	pdf_update_annot
-	;pdf_free_annot
 	pdf_create_annot
 	pdf_delete_annot
-	;pdf_set_markup_annot_quadpoints
-	;pdf_set_ink_annot_list
-	;pdf_set_text_annot_position
 	pdf_set_annot_contents
 	pdf_annot_contents
-	;pdf_set_free_text_details
-	;pdf_annot_obj_type
 
 	pdf_new_cmap
 	pdf_keep_cmap
 	pdf_drop_cmap
-	;pdf_free_cmap_imp
 	pdf_cmap_size
 	pdf_cmap_wmode
 	pdf_set_cmap_wmode
 	pdf_set_usecmap
 	pdf_add_codespace
-	;pdf_map_range_to_table
 	pdf_map_range_to_range
 	pdf_map_one_to_many
 	pdf_sort_cmap
@@ -445,7 +435,6 @@ EXPORTS
 	pdf_load_builtin_cmap
 	pdf_load_embedded_cmap
 	pdf_new_crypt
-	;pdf_free_crypt
 	pdf_crypt_obj
 	pdf_open_crypt
 	pdf_open_crypt_with_filter
@@ -454,38 +443,24 @@ EXPORTS
 	pdf_crypt_method
 	pdf_crypt_length
 	pdf_crypt_key
-	;pdf_keep_signer
-	;pdf_drop_signer
 	pdf_write_digest
-	;pdf_check_signature
 	pdf_open_document
 	pdf_open_document_with_stream
-	;pdf_open_document_no_run
-	;pdf_open_document_no_run_with_stream
 	pdf_drop_document
 	pdf_specifics
 	pdf_needs_password
 	pdf_authenticate_password
 	pdf_has_permission
-	;pdf_meta
 	pdf_load_outline
 	pdf_create_document
-	;pdf_create_page
 	pdf_insert_page
 	pdf_delete_page
 	pdf_delete_page_range
 	pdf_page_write
-	;pdf_finish_edit
-	;pdf_recognize
 
-	;pdf_get_string_or_stream
-	;pdf_get_inheritable
-	;pdf_get_field_flags
 	pdf_field_type
-	;pdf_set_field_type
 	pdf_field_value
 	pdf_load_encoding
-	;pdf_lookup_agl
 	pdf_set_font_wmode
 	pdf_set_default_hmtx
 	pdf_set_default_vmtx
@@ -495,34 +470,21 @@ EXPORTS
 	pdf_end_vmtx
 	pdf_lookup_hmtx
 	pdf_lookup_vmtx
-	;pdf_ft_lookup_vgid
-	;pdf_ft_free_vsubst
 	pdf_load_to_unicode
 	pdf_font_cid_to_gid
-	;pdf_lookup_builtin_font
 	pdf_lookup_substitute_font
-	;pdf_lookup_substitute_cjk_font
 	pdf_load_type3_font
 	pdf_load_type3_glyphs
 	pdf_load_font
 	pdf_load_hail_mary_font
-	;pdf_clean_base14_name
-	;pdf_install_load_system_font_funcs
 	pdf_new_font_desc
 	pdf_keep_font
 	pdf_drop_font
-	;pdf_measure_text
-	;pdf_text_stride
 	pdf_run_glyph
 	pdf_enable_js
 	pdf_disable_js
 	pdf_js_supported
-	;pdf_js_setup_event
-	;pdf_js_get_event
 	pdf_js_execute
-	;pdf_js_execute_count
-	;pdf_new_null
-	;pdf_new_bool
 	pdf_new_int
 	pdf_new_real
 	pdf_new_name
@@ -534,7 +496,6 @@ EXPORTS
 	pdf_new_matrix
 	pdf_copy_array
 	pdf_copy_dict
-	;pdf_new_obj_from_str
 	pdf_keep_obj
 	pdf_drop_obj
 	pdf_is_null
@@ -562,7 +523,6 @@ EXPORTS
 	pdf_to_real
 	pdf_to_name
 	pdf_to_str_buf
-	;pdf_to_dict
 	pdf_to_str_len
 	pdf_to_num
 	pdf_to_gen
@@ -594,13 +554,6 @@ EXPORTS
 	pdf_obj_refs
 	pdf_obj_parent_num
 	pdf_sprint_obj
-	;pdf_fprint_obj
-	;pdf_output_obj
-	;pdf_to_utf8
-	;pdf_to_ucs2
-	;pdf_to_utf8_name
-	;pdf_from_ucs2
-	;pdf_to_ucs2_buf
 	pdf_to_rect
 	pdf_to_matrix
 	pdf_get_indirect_document
@@ -612,12 +565,9 @@ EXPORTS
 	pdf_lookup_page_number
 	pdf_count_pages
 	pdf_lookup_page_obj
-	;pdf_lookup_inherited_page_item
 	pdf_load_page
-	;pdf_load_page_by_obj
 	pdf_load_links
 	pdf_bound_page
-	;pdf_drop_page
 	pdf_run_page
 	pdf_run_page_with_usage
 	pdf_run_page_contents
@@ -632,7 +582,6 @@ EXPORTS
 	pdf_parse_dict
 	pdf_parse_stm_obj
 	pdf_parse_ind_obj
-	;pdf_print_token
 	pdf_store_item
 	pdf_find_item
 	pdf_remove_item
@@ -646,12 +595,7 @@ EXPORTS
 	pdf_load_pattern
 	pdf_keep_pattern
 	pdf_drop_pattern
-	;pdf_load_xobject
 	pdf_new_xobject
-	;pdf_keep_xobject
-	;pdf_drop_xobject
-	;pdf_update_xobject_contents
-	;pdf_create_xobject
 
 	pdf_create_object
 	pdf_delete_object
@@ -670,9 +614,6 @@ EXPORTS
 	pdf_load_compressed_inline_image
 	pdf_open_stream_with_offset
 	pdf_open_contents_stream
-	;pdf_load_raw_renumbered_stream
-	;pdf_load_renumbered_stream
-	;pdf_open_raw_renumbered_stream
 	pdf_trailer
 	pdf_set_populating_xref_trailer
 	pdf_xref_len
@@ -683,14 +624,12 @@ EXPORTS
 	pdf_xref_is_incremental
 	pdf_repair_xref
 	pdf_repair_obj_stms
-	;pdf_new_ref
 	pdf_ensure_solid_xref
 	pdf_mark_xref
 	pdf_clear_xref
 	pdf_clear_xref_to_mark
 	pdf_repair_obj
 	pdf_progressive_advance
-	;pdf_print_xref
 	pdf_drop_document
 
 ; MuXPS exports
@@ -702,21 +641,13 @@ EXPORTS
 	;xps_bound_page
 	xps_run_page
 	xps_load_links
-	;xps_free_page
-	;xps_load_outline
 	xps_strcasecmp
 	xps_resolve_url
-	;xps_url_is_remote
 	xps_parse_point
 	xps_has_part
 	xps_read_part
-	;xps_free_part
 	xps_read_page_list
-	;xps_print_page_list
-	;xps_free_page_list
 	xps_lookup_link_target
-	;xps_add_link
-	;xps_lookup_link_target_obj
 	xps_count_font_encodings
 	xps_identify_font_encoding
 	xps_select_font_encoding
@@ -724,9 +655,7 @@ EXPORTS
 	xps_measure_font_glyph
 	xps_parse_color
 	xps_set_color
-	;xps_free_resource_dictionary
 	xps_resolve_resource_reference
-	;xps_print_resource_dictionary
 	xps_parse_fixed_page
 	xps_parse_canvas
 	xps_parse_path
@@ -736,8 +665,6 @@ EXPORTS
 	xps_parse_linear_gradient_brush
 	xps_parse_radial_gradient_brush
 	xps_parse_tiling_brush
-	;xps_parse_matrix_transform
-	;xps_parse_render_transform
 	xps_parse_rectangle
 	xps_begin_opacity
 	xps_end_opacity
@@ -745,7 +672,6 @@ EXPORTS
 	xps_parse_element
 	xps_clip
 	xps_lookup_alternate_content
-	;xps_extract_anchor_info
 
 ; unarr exports (required for ArchUtil, ZipUtil)
 
