@@ -277,7 +277,7 @@ workspace "SumatraPDF"
     kind "StaticLib"
     language "C"
     includedirs { "ext/mujs" }
-    disablewarnings { "4090", "4100", "7402", "4706" }
+    disablewarnings { "4090", "4100", "4702", "4706" }
     files { "ext/mujs/one.c", "ext/mujs/mujs.h" }
 
   project "chm"
@@ -543,7 +543,7 @@ workspace "SumatraPDF"
     kind "SharedLib"
     language "C++"
     cppdialect "C++17"
-    disablewarnings { "4838" }
+    disablewarnings { "4100", "4838" }
     filter {"configurations:Debug"}
       defines { "BUILD_TEX_IFILTER", "BUILD_EPUB_IFILTER" }
     filter {}
@@ -557,7 +557,7 @@ workspace "SumatraPDF"
     kind "SharedLib"
     language "C++"
     cppdialect "C++17"
-    disablewarnings { "4838" }
+    disablewarnings { "4100", "4838" }
     includedirs {
       "src", "mupdf/include",
       "ext/libdjvu", "ext/CHMLib/src", "ext/zlib"
