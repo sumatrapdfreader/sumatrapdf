@@ -1900,12 +1900,15 @@ PdfPageRun* PdfEngineImpl::GetPageRun(pdf_page* page, bool tryOnly) {
 
         ScopedCritSec scope2(&ctxAccess);
 
+        // TODO(port): chagne GetPageRun to use fz_page?
+        fz_page* fzpage = (fz_page*)page;
+        fz_rect bbox = fz_bound_page(ctx, fzpage);
         fz_display_list* list = nullptr;
         fz_device* dev = nullptr;
         fz_var(list);
         fz_var(dev);
         fz_try(ctx) {
-            list = fz_new_display_list(ctx);
+            list = fz_new_display_list(ctx, bbox);
             dev = fz_new_list_device(ctx, list);
             pdf_run_page(ctx, page, dev, fz_identity, nullptr);
         }
@@ -2013,12 +2016,15 @@ RectD PdfEngineImpl::PageMediabox(int pageNo) {
     int rotate = 0;
     float userunit = 1.0;
     fz_try(ctx) {
-        pdf_to_rect(ctx, pdf_lookup_inherited_page_item(_doc, page, "MediaBox"), &mbox);
-        pdf_to_rect(ctx, pdf_lookup_inherited_page_item(_doc, page, "CropBox"), &cbox);
-        rotate = pdf_to_int(pdf_lookup_inherited_page_item(_doc, page, "Rotate"));
-        pdf_obj* obj = pdf_dict_gets(page, "UserUnit");
-        if (pdf_is_real(obj))
-            userunit = pdf_to_real(obj);
+        auto o = pdf_dict_get_inheritable(ctx, page, PDF_NAME(MediaBox));
+        mbox = pdf_to_rect(ctx, o);
+        pdf_dict_get_inheritable(ctx, page, PDF_NAME(CropBox));
+        cbox = pdf_to_rect(ctx, o);
+        o = pdf_dict_get_inheritable(ctx, page, PDF_NAME(Rotate));
+        rotate = pdf_to_int(ctx, o);
+        o = pdf_dict_get(ctx, page, PDF_NAME(UserUnit));
+        if (pdf_is_real(ctx, o))
+            userunit = pdf_to_real(ctx, o);
     }
     fz_catch(ctx) {}
     if (fz_is_empty_rect(mbox)) {
@@ -2122,7 +2128,7 @@ RenderedBitmap* PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
     FitzAbortCookie* cookie = nullptr;
     if (cookie_out)
         *cookie_out = cookie = new FitzAbortCookie();
-    fz_rect cliprect = fz_rect_from_irect(bbox)
+    fz_rect cliprect = fz_rect_from_irect(bbox);
     bool ok = RunPage(page, ctm, target, &cliprect, true, cookie);
 
     ScopedCritSec scope(&ctxAccess);
@@ -2163,13 +2169,13 @@ PageElement* PdfEngineImpl::GetElementAtPos(int pageNo, PointD pt) {
             }
         }
     }
-#endif
 
     if (imageRects[pageNo - 1]) {
         for (size_t i = 0; !fz_is_empty_rect(imageRects[pageNo - 1][i]); i++)
             if (fz_is_pt_in_rect(imageRects[pageNo - 1][i], p))
                 return new PdfImage(this, pageNo, imageRects[pageNo - 1][i], i);
     }
+#endif
 
     return nullptr;
 }
@@ -2192,6 +2198,8 @@ Vec<PageElement*>* PdfEngineImpl::GetElements(int pageNo) {
         }
     }
 
+    CrashMePort();
+#if 0
     if (pageAnnots[pageNo - 1]) {
         ScopedCritSec scope(&ctxAccess);
 
@@ -2211,7 +2219,7 @@ Vec<PageElement*>* PdfEngineImpl::GetElements(int pageNo) {
             els->Append(new PdfLink(this, &link->dest, link->rect, pageNo));
         }
     }
-
+#endif
     els->Reverse();
     return els;
 }
@@ -2225,6 +2233,8 @@ void PdfEngineImpl::LinkifyPageText(pdf_page* page) {
     if (!pageText)
         return;
 
+    CrashMePort();
+#if 0
     LinkRectList* list = LinkifyText(pageText, coords);
     for (size_t i = 0; i < list->links.size(); i++) {
         bool overlaps = false;
@@ -2244,14 +2254,16 @@ void PdfEngineImpl::LinkifyPageText(pdf_page* page) {
             page->links = link;
         }
     }
-
     delete list;
+#endif
     free(coords);
 }
 
 pdf_annot** PdfEngineImpl::ProcessPageAnnotations(pdf_page* page) {
     Vec<pdf_annot*> annots;
 
+    CrashMePort();
+#if 0
     for (pdf_annot* annot = page->annots; annot; annot = annot->next) {
         if (FZ_ANNOT_FILEATTACHMENT == annot->annot_type) {
             pdf_obj* file = pdf_dict_gets(annot->obj, "FS");
@@ -2284,7 +2296,7 @@ pdf_annot** PdfEngineImpl::ProcessPageAnnotations(pdf_page* page) {
                 annots.Append(annot);
         }
     }
-
+#endif
     if (annots.size() == 0)
         return nullptr;
 
@@ -2312,7 +2324,7 @@ RenderedBitmap* PdfEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
     }
     LeaveCriticalSection(&ctxAccess);
 
-    RunPage(page, dev, &fz_identity);
+    RunPage(page, fz_identity);
 
     if (imageIx >= positions.size() || fz_rect_to_RectD(positions.at(imageIx).rect) != rect) {
         AssertCrash(0);
@@ -2324,7 +2336,9 @@ RenderedBitmap* PdfEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
     fz_pixmap* pixmap = nullptr;
     fz_try(ctx) {
         fz_image* image = positions.at(imageIx).image;
-        pixmap = fz_new_pixmap_from_image(ctx, image, image->w, image->h);
+        CrashMePort();
+        // TODO(port): not sure if should provide subarea, w and h
+        pixmap = fz_get_pixmap_from_image(ctx, image, nullptr, nullptr, nullptr, nullptr);
     }
     fz_catch(ctx) { return nullptr; }
     RenderedBitmap* bmp = new_rendered_fz_pixmap(ctx, pixmap);
@@ -2338,6 +2352,9 @@ WCHAR* PdfEngineImpl::ExtractPageText(pdf_page* page, const WCHAR* lineSep, Rect
     if (!page)
         return nullptr;
 
+    CrashMePort();
+    WCHAR* content = nullptr;
+#if 0
     fz_text_sheet* sheet = nullptr;
     fz_text_page* text = nullptr;
     fz_device* dev = nullptr;
@@ -2368,12 +2385,12 @@ WCHAR* PdfEngineImpl::ExtractPageText(pdf_page* page, const WCHAR* lineSep, Rect
 
     ScopedCritSec scope(&ctxAccess);
 
-    WCHAR* content = nullptr;
     if (ok)
         content = fz_text_page_to_str(text, lineSep, coordsOut);
     fz_drop_text_page(ctx, text);
     fz_drop_text_sheet(ctx, sheet);
 
+#endif
     return content;
 }
 
@@ -2382,6 +2399,8 @@ WCHAR* PdfEngineImpl::ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** 
     if (page)
         return ExtractPageText(page, lineSep, coordsOut, target);
 
+    CrashMePort();
+#if 0
     EnterCriticalSection(&ctxAccess);
     fz_try(ctx) { page = pdf_load_page_by_obj(_doc, pageNo - 1, _pageObjs[pageNo - 1]); }
     fz_catch(ctx) {
@@ -2397,9 +2416,14 @@ WCHAR* PdfEngineImpl::ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** 
     LeaveCriticalSection(&ctxAccess);
 
     return result;
+#endif
+    return nullptr;
 }
 
 bool PdfEngineImpl::IsLinearizedFile() {
+    CrashMePort();
+    return false;
+#if 0
     ScopedCritSec scope(&ctxAccess);
     // determine the object number of the very first object in the file
     fz_seek(_doc->file, 0, 0);
@@ -2430,25 +2454,26 @@ bool PdfEngineImpl::IsLinearizedFile() {
     // /H must be an array and /E and /T must be integers
     return pdf_is_array(pdf_dict_gets(obj, "H")) && pdf_is_int(pdf_dict_gets(obj, "E")) &&
            pdf_is_int(pdf_dict_gets(obj, "T"));
+#endif
 }
 
-static void pdf_extract_fonts(pdf_obj* res, Vec<pdf_obj*>& fontList, Vec<pdf_obj*>& resList) {
-    if (!res || pdf_mark_obj(res))
+static void pdf_extract_fonts(fz_context* ctx, pdf_obj* res, Vec<pdf_obj*>& fontList, Vec<pdf_obj*>& resList) {
+    if (!res || pdf_mark_obj(ctx, res))
         return;
     resList.Append(res);
 
-    pdf_obj* fonts = pdf_dict_gets(res, "Font");
-    for (int k = 0; k < pdf_dict_len(fonts); k++) {
-        pdf_obj* font = pdf_resolve_indirect(pdf_dict_get_val(fonts, k));
+    pdf_obj* fonts = pdf_dict_gets(ctx, res, "Font");
+    for (int k = 0; k < pdf_dict_len(ctx, fonts); k++) {
+        pdf_obj* font = pdf_resolve_indirect(ctx, pdf_dict_get_val(ctx, fonts, k));
         if (font && !fontList.Contains(font))
             fontList.Append(font);
     }
     // also extract fonts for all XObjects (recursively)
-    pdf_obj* xobjs = pdf_dict_gets(res, "XObject");
-    for (int k = 0; k < pdf_dict_len(xobjs); k++) {
-        pdf_obj* xobj = pdf_dict_get_val(xobjs, k);
-        pdf_obj* xres = pdf_dict_gets(xobj, "Resources");
-        pdf_extract_fonts(xres, fontList, resList);
+    pdf_obj* xobjs = pdf_dict_gets(ctx, res, "XObject");
+    for (int k = 0; k < pdf_dict_len(ctx, xobjs); k++) {
+        pdf_obj* xobj = pdf_dict_get_val(ctx, xobjs, k);
+        pdf_obj* xres = pdf_dict_gets(ctx, xobj, "Resources");
+        pdf_extract_fonts(ctx, xres, fontList, resList);
     }
 }
 
@@ -2462,10 +2487,16 @@ WCHAR* PdfEngineImpl::ExtractFontList() {
         if (page) {
             ScopedCritSec scope(&ctxAccess);
             fz_try(ctx) {
-                pdf_extract_fonts(page->resources, fontList, resList);
+                pdf_obj* resources = pdf_page_resources(ctx, page);
+                pdf_extract_fonts(ctx, resources, fontList, resList);
                 for (pdf_annot* annot = page->annots; annot; annot = annot->next) {
-                    if (annot->ap)
-                        pdf_extract_fonts(annot->ap->resources, fontList, resList);
+                    if (annot->ap) {
+                        pdf_obj* o = annot->ap;
+                        CrashMePort();
+                        // TODO(port): not sure this is the right thing
+                        resources = pdf_xobject_resources(ctx, o);
+                        pdf_extract_fonts(ctx, resources, fontList, resList);
+                    }
                 }
             }
             fz_catch(ctx) {}
@@ -2477,7 +2508,7 @@ WCHAR* PdfEngineImpl::ExtractFontList() {
     ScopedCritSec scope(&ctxAccess);
 
     for (pdf_obj* res : resList) {
-        pdf_unmark_obj(res);
+        pdf_unmark_obj(ctx, res);
     }
 
     WStrVec fonts;
@@ -2487,39 +2518,39 @@ WCHAR* PdfEngineImpl::ExtractFontList() {
         bool embedded = false;
         fz_try(ctx) {
             pdf_obj* font = fontList.at(i);
-            pdf_obj* font2 = pdf_array_get(pdf_dict_gets(font, "DescendantFonts"), 0);
+            pdf_obj* font2 = pdf_array_get(ctx, pdf_dict_gets(ctx, font, "DescendantFonts"), 0);
             if (!font2)
                 font2 = font;
 
-            name = pdf_to_name(pdf_dict_getsa(font2, "BaseFont", "Name"));
+            name = pdf_to_name(ctx, pdf_dict_getsa(ctx, font2, "BaseFont", "Name"));
             bool needAnonName = str::IsEmpty(name);
             if (needAnonName && font2 != font) {
-                name = pdf_to_name(pdf_dict_getsa(font, "BaseFont", "Name"));
+                name = pdf_to_name(ctx, pdf_dict_getsa(ctx, font, "BaseFont", "Name"));
                 needAnonName = str::IsEmpty(name);
             }
             if (needAnonName) {
-                anonFontName.Set(str::Format("<#%d>", pdf_obj_parent_num(font2)));
+                anonFontName.Set(str::Format("<#%d>", pdf_obj_parent_num(ctx, font2)));
                 name = anonFontName;
             }
             embedded = false;
-            pdf_obj* desc = pdf_dict_gets(font2, "FontDescriptor");
-            if (desc && (pdf_dict_gets(desc, "FontFile") || pdf_dict_getsa(desc, "FontFile2", "FontFile3")))
+            pdf_obj* desc = pdf_dict_gets(ctx, font2, "FontDescriptor");
+            if (desc && (pdf_dict_gets(ctx, desc, "FontFile") || pdf_dict_getsa(ctx, desc, "FontFile2", "FontFile3")))
                 embedded = true;
             if (embedded && str::Len(name) > 7 && name[6] == '+')
                 name += 7;
 
-            type = pdf_to_name(pdf_dict_gets(font, "Subtype"));
+            type = pdf_to_name(ctx, pdf_dict_gets(ctx, font, "Subtype"));
             if (font2 != font) {
-                const char* type2 = pdf_to_name(pdf_dict_gets(font2, "Subtype"));
+                const char* type2 = pdf_to_name(ctx, pdf_dict_gets(ctx, font2, "Subtype"));
                 if (str::Eq(type2, "CIDFontType0"))
                     type = "Type1 (CID)";
                 else if (str::Eq(type2, "CIDFontType2"))
                     type = "TrueType (CID)";
             }
             if (str::Eq(type, "Type3"))
-                embedded = pdf_dict_gets(font2, "CharProcs") != nullptr;
+                embedded = pdf_dict_gets(ctx, font2, "CharProcs") != nullptr;
 
-            encoding = pdf_to_name(pdf_dict_gets(font, "Encoding"));
+            encoding = pdf_to_name(ctx, pdf_dict_gets(ctx, font, "Encoding"));
             if (str::Eq(encoding, "WinAnsiEncoding"))
                 encoding = "Ansi";
             else if (str::Eq(encoding, "MacRomanEncoding"))
@@ -2564,10 +2595,11 @@ WCHAR* PdfEngineImpl::GetProperty(DocumentProperty prop) {
 
     if (DocumentProperty::PdfVersion == prop) {
         int major = _doc->version / 10, minor = _doc->version % 10;
-        if (1 == major && 7 == minor && pdf_crypt_version(_doc) == 5) {
-            if (pdf_crypt_revision(_doc) == 5)
+        pdf_crypt *crypt = _doc->crypt;
+        if (1 == major && 7 == minor && pdf_crypt_version(ctx, crypt) == 5) {
+            if (pdf_crypt_revision(ctx, crypt) == 5)
                 return str::Format(L"%d.%d Adobe Extension Level %d", major, minor, 3);
-            if (pdf_crypt_revision(_doc) == 6)
+            if (pdf_crypt_revision(ctx, crypt) == 6)
                 return str::Format(L"%d.%d Adobe Extension Level %d", major, minor, 8);
         }
         return str::Format(L"%d.%d", major, minor);
@@ -2575,22 +2607,22 @@ WCHAR* PdfEngineImpl::GetProperty(DocumentProperty prop) {
 
     if (DocumentProperty::PdfFileStructure == prop) {
         WStrVec fstruct;
-        if (pdf_to_bool(pdf_dict_gets(_info, "Linearized")))
+        if (pdf_to_bool(ctx, pdf_dict_gets(ctx, _info, "Linearized")))
             fstruct.Append(str::Dup(L"linearized"));
-        if (pdf_to_bool(pdf_dict_gets(_info, "Marked")))
+        if (pdf_to_bool(ctx, pdf_dict_gets(ctx, _info, "Marked")))
             fstruct.Append(str::Dup(L"tagged"));
-        if (pdf_dict_gets(_info, "OutputIntents")) {
-            for (int i = 0; i < pdf_array_len(pdf_dict_gets(_info, "OutputIntents")); i++) {
-                pdf_obj* intent = pdf_array_get(pdf_dict_gets(_info, "OutputIntents"), i);
-                CrashIf(!str::StartsWith(pdf_to_name(intent), "GTS_"));
-                fstruct.Append(str::conv::FromUtf8(pdf_to_name(intent) + 4));
+        if (pdf_dict_gets(ctx, _info, "OutputIntents")) {
+            for (int i = 0; i < pdf_array_len(ctx, pdf_dict_gets(ctx, _info, "OutputIntents")); i++) {
+                pdf_obj* intent = pdf_array_get(ctx, pdf_dict_gets(ctx, _info, "OutputIntents"), i);
+                CrashIf(!str::StartsWith(pdf_to_name(ctx, intent), "GTS_"));
+                fstruct.Append(str::conv::FromUtf8(pdf_to_name(ctx, intent) + 4));
             }
         }
         return fstruct.size() > 0 ? fstruct.Join(L",") : nullptr;
     }
 
     if (DocumentProperty::UnsupportedFeatures == prop) {
-        if (pdf_to_bool(pdf_dict_gets(_info, "Unsupported_XFA")))
+        if (pdf_to_bool(ctx, pdf_dict_gets(ctx, _info, "Unsupported_XFA")))
             return str::Dup(L"XFA");
         return nullptr;
     }
@@ -2615,8 +2647,8 @@ WCHAR* PdfEngineImpl::GetProperty(DocumentProperty prop) {
         if (pdfPropNames[i].prop == prop) {
             // _info is guaranteed not to contain any indirect references,
             // so no need for ctxAccess
-            pdf_obj* obj = pdf_dict_gets(_info, pdfPropNames[i].name);
-            return obj ? pdf_clean_string(str::conv::FromPdf(obj)) : nullptr;
+            pdf_obj* obj = pdf_dict_gets(ctx, _info, pdfPropNames[i].name);
+            return obj ? pdf_clean_string(str::conv::FromPdf(ctx, obj)) : nullptr;
         }
     }
     return nullptr;
@@ -2626,7 +2658,7 @@ bool PdfEngineImpl::SupportsAnnotation(bool forSaving) const {
     if (forSaving) {
         // TODO: support updating of documents where pages aren't all numbered objects?
         for (int i = 0; i < PageCount(); i++) {
-            if (pdf_to_num(_pageObjs[i]) == 0)
+            if (pdf_to_num(ctx, _pageObjs[i]) == 0)
                 return false;
         }
     }
@@ -2653,11 +2685,11 @@ PageLayoutType PdfEngineImpl::PreferredLayout() {
 
     ScopedCritSec scope(&ctxAccess);
     pdf_obj* root = nullptr;
-    fz_try(ctx) { root = pdf_dict_gets(pdf_trailer(_doc), "Root"); }
+    fz_try(ctx) { root = pdf_dict_gets(ctx, pdf_trailer(ctx, _doc), "Root"); }
     fz_catch(ctx) { return layout; }
 
     fz_try(ctx) {
-        char* name = pdf_to_name(pdf_dict_gets(root, "PageLayout"));
+        const char* name = pdf_to_name(ctx, pdf_dict_gets(ctx, root, "PageLayout"));
         if (str::EndsWith(name, "Right"))
             layout = Layout_Book;
         else if (str::StartsWith(name, "Two"))
@@ -2666,8 +2698,8 @@ PageLayoutType PdfEngineImpl::PreferredLayout() {
     fz_catch(ctx) {}
 
     fz_try(ctx) {
-        pdf_obj* prefs = pdf_dict_gets(root, "ViewerPreferences");
-        char* direction = pdf_to_name(pdf_dict_gets(prefs, "Direction"));
+        pdf_obj* prefs = pdf_dict_gets(ctx, root, "ViewerPreferences");
+        const char* direction = pdf_to_name(ctx, pdf_dict_gets(ctx, prefs, "Direction"));
         if (str::Eq(direction, "R2L"))
             layout = (PageLayoutType)(layout | Layout_R2L);
     }
@@ -2714,8 +2746,10 @@ bool PdfEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots)
     return !includeUserAnnots || SaveUserAnnots(copyFileName);
 }
 
-static bool pdf_file_update_add_annotation(pdf_document* doc, pdf_page* page, pdf_obj* page_obj, PageAnnotation& annot,
+static bool pdf_file_update_add_annotation(fz_context *ctx, pdf_document* doc, pdf_page* page, pdf_obj* page_obj, PageAnnotation& annot,
                                            pdf_obj* annots) {
+    CrashMePort();
+#if 0
     static const char* obj_dict =
         "<<\
     /Type /Annot /Subtype /%s\
@@ -2737,7 +2771,6 @@ static bool pdf_file_update_add_annotation(pdf_document* doc, pdf_page* page, pd
     static const char* ap_squiggly =
         "q /DeviceRGB CS %f %f %f RG 0.5 w [1] 1.5 d 0 0.25 m %f 0.25 l S [1] 0.5 d 0 0.75 m %f 0.75 l S Q\n";
 
-    fz_context* ctx = doc->ctx;
     pdf_obj *annot_obj = nullptr, *ap_obj = nullptr;
     fz_buffer* ap_buf = nullptr;
 
@@ -2757,8 +2790,8 @@ static bool pdf_file_update_add_annotation(pdf_document* doc, pdf_page* page, pd
     CrashIf((rotation % 90) != 0);
     // convert the annotation's rectangle back to raw user space
     fz_rect r = fz_RectD_to_rect(annot.rect);
-    fz_matrix invctm;
-    fz_transform_rect(&r, fz_invert_matrix(&invctm, &page->ctm));
+    fz_matrix invctm = fz_invert_matrix(page->ctm)
+    fz_transform_rect(&r, invctm);
     double dx = r.x1 - r.x0, dy = r.y1 - r.y0;
     if ((rotation % 180) == 90)
         std::swap(dx, dy);
@@ -2775,31 +2808,31 @@ static bool pdf_file_update_add_annotation(pdf_document* doc, pdf_page* page, pd
         quad_tpl.Set(str::Format(obj_quad_tpl, r.x1, r.y1, r.x1, r.y0, r.x0, r.y1, r.x0, r.y0));
     AutoFree annot_tpl(str::Format(obj_dict, subtype, r.x0, r.y0, r.x1, r.y1, rgb[0], rgb[1],
                                    rgb[2],                                              // Rect and Color
-                                   F_Print, pdf_to_num(page_obj), pdf_to_gen(page_obj), // F and P
+                                   F_Print, pdf_to_num(ctx, page_obj), pdf_to_gen(ctx, page_obj), // F and P
                                    quad_tpl.Get()));
     AutoFree annot_ap_dict(str::Format(ap_dict, dx, dy, annot.color.a / 255.f));
     AutoFree annot_ap_stream;
 
     fz_try(ctx) {
-        annot_obj = pdf_new_obj_from_str(doc, annot_tpl);
+        annot_obj = pdf_new_obj_from_str(ctx, doc, annot_tpl);
         // append the annotation to the file
-        pdf_array_push_drop(annots, pdf_new_ref(doc, annot_obj));
+        pdf_array_push_drop(ctx, annots, pdf_new_ref(doc, annot_obj));
     }
     fz_catch(ctx) {
-        pdf_drop_obj(annot_obj);
+        pdf_drop_obj(ctx, annot_obj);
         return false;
     }
 
     if (doc->crypt) {
         // since we don't encrypt the appearance stream, for encrypted documents
         // the readers will have to synthesize an appearance stream themselves
-        pdf_drop_obj(annot_obj);
+        pdf_drop_obj(ctx, annot_obj);
         return true;
     }
 
     fz_try(ctx) {
         // create the appearance stream (unencrypted) and append it to the file
-        ap_obj = pdf_new_obj_from_str(doc, annot_ap_dict);
+        ap_obj = pdf_new_obj_from_str(ctx, doc, annot_ap_dict);
         switch (annot.type) {
             case PageAnnotType::Highlight:
                 annot_ap_stream.Set(str::Format(ap_highlight, rgb[0], rgb[1], rgb[2], dx, dy));
@@ -2815,26 +2848,26 @@ static bool pdf_file_update_add_annotation(pdf_document* doc, pdf_page* page, pd
                 break;
         }
         if (annot.type != PageAnnotType::Highlight)
-            pdf_dict_dels(pdf_dict_gets(ap_obj, "Resources"), "ExtGState");
+            pdf_dict_dels(ctx, pdf_dict_gets(ctx, ap_obj, "Resources"), "ExtGState");
         if (rotation) {
-            pdf_dict_puts_drop(ap_obj, "Matrix", pdf_new_matrix(doc, fz_rotate(rotation)));
+            pdf_dict_puts_drop(ctx, ap_obj, "Matrix", pdf_new_matrix(ctx, doc, fz_rotate(rotation)));
         }
         ap_buf = fz_new_buffer(ctx, (int)str::Len(annot_ap_stream));
         memcpy(ap_buf->data, annot_ap_stream, (ap_buf->len = (int)str::Len(annot_ap_stream)));
-        pdf_dict_puts_drop(ap_obj, "Length", pdf_new_int(doc, ap_buf->len));
+        pdf_dict_puts_drop(ctx, ap_obj, "Length", pdf_new_int(ctx, doc, ap_buf->len));
         // append the appearance stream to the file
-        int num = pdf_create_object(doc);
-        pdf_update_object(doc, num, ap_obj);
-        pdf_update_stream(doc, num, ap_buf);
-        pdf_dict_puts_drop(pdf_dict_gets(annot_obj, "AP"), "N", pdf_new_indirect(doc, num, 0));
+        int num = pdf_create_object(ctx, doc);
+        pdf_update_object(ctx, doc, num, ap_obj);
+        pdf_update_stream(ctx, doc, num, ap_buf);
+        pdf_dict_puts_drop(ctx, pdf_dict_gets(ctx, annot_obj, "AP"), "N", pdf_new_indirect(ctx, doc, num, 0));
     }
     fz_always(ctx) {
-        pdf_drop_obj(ap_obj);
+        pdf_drop_obj(ctx, ap_obj);
         fz_drop_buffer(ctx, ap_buf);
-        pdf_drop_obj(annot_obj);
+        pdf_drop_obj(ctx, annot_obj);
     }
     fz_catch(ctx) { return false; }
-
+#endif
     return true;
 }
 
@@ -2852,7 +2885,7 @@ bool PdfEngineImpl::SaveUserAnnots(const char* pathUtf8) {
         for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
             pdf_page* page = GetPdfPage(pageNo);
             // TODO: this will skip annotations for broken documents
-            if (!page || !pdf_to_num(_pageObjs[pageNo - 1])) {
+            if (!page || !pdf_to_num(ctx, _pageObjs[pageNo - 1])) {
                 ok = false;
                 break;
             }
@@ -2860,18 +2893,21 @@ bool PdfEngineImpl::SaveUserAnnots(const char* pathUtf8) {
             if (pageAnnots.size() == 0)
                 continue;
             // get the page's /Annots array for appending
-            pdf_obj* annots = pdf_dict_gets(_pageObjs[pageNo - 1], "Annots");
-            if (!pdf_is_array(annots)) {
-                pdf_dict_puts_drop(_pageObjs[pageNo - 1], "Annots", pdf_new_array(_doc, (int)pageAnnots.size()));
-                annots = pdf_dict_gets(_pageObjs[pageNo - 1], "Annots");
+            pdf_obj* annots = pdf_dict_gets(ctx, _pageObjs[pageNo - 1], "Annots");
+            if (!pdf_is_array(ctx, annots)) {
+                pdf_dict_puts_drop(ctx, _pageObjs[pageNo - 1], "Annots",
+                                   pdf_new_array(ctx, _doc, (int)pageAnnots.size()));
+                annots = pdf_dict_gets(ctx, _pageObjs[pageNo - 1], "Annots");
             }
-            if (!pdf_is_indirect(annots)) {
+            if (!pdf_is_indirect(ctx, annots)) {
                 // make /Annots indirect for the current /Page
-                pdf_dict_puts_drop(_pageObjs[pageNo - 1], "Annots", pdf_new_ref(_doc, annots));
+                CrashMePort();
+                // TODO(port): no pdf_new_ref
+                //pdf_dict_puts_drop(ctx, _pageObjs[pageNo - 1], "Annots", pdf_new_ref(ctx, _doc, annots));
             }
             // append all annotations for the current page
             for (size_t i = 0; i < pageAnnots.size(); i++) {
-                ok &= pdf_file_update_add_annotation(_doc, page, _pageObjs[pageNo - 1], pageAnnots.at(i), annots);
+                ok &= pdf_file_update_add_annotation(ctx, _doc, page, _pageObjs[pageNo - 1], pageAnnots.at(i), annots);
             }
         }
         if (ok) {
