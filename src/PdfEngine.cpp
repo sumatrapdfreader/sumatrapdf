@@ -3220,7 +3220,7 @@ fz_rect xps_bound_page_quick(xps_document* doc, int number) {
     fz_rect bounds = fz_empty_rect;
     CrashMePort();
 #if 0
-    xps_page* page = doc->first_page;
+    fz_page* page = doc->first_page;
     for (int n = 0; n < number && page; n++)
         page = page->next;
 
@@ -3359,12 +3359,12 @@ xps_doc_props* xps_extract_doc_props(fz_context* ctx, xps_document* xpsdoc) {
 ///// XpsEngine is also based on Fitz and shares quite some code with PdfEngine /////
 
 struct XpsPageRun {
-    xps_page* page;
+    fz_page* page;
     fz_display_list* list;
     size_t size_est;
     int refs;
 
-    XpsPageRun(xps_page* page, fz_display_list* list, ListInspectionData& data)
+    XpsPageRun(fz_page* page, fz_display_list* list, ListInspectionData& data)
         : page(page), list(list), size_est(data.mem_estimate), refs(1) {}
 };
 
@@ -3433,11 +3433,12 @@ class XpsEngineImpl : public BaseEngine {
     CRITICAL_SECTION ctxAccess;
     fz_context* ctx;
     fz_locks_context fz_locks_ctx;
-    xps_document* _doc;
+    // xps_document* _doc;
+    fz_document* _doc;
     fz_stream* _docStream;
 
     CRITICAL_SECTION _pagesAccess;
-    xps_page** _pages;
+    fz_page** _pages;
 
     bool Load(const WCHAR* fileName);
     bool Load(IStream* stream);
@@ -3445,13 +3446,13 @@ class XpsEngineImpl : public BaseEngine {
     // bool Load(fz_stream* stm);
     bool LoadFromStream(fz_stream* stm);
 
-    xps_page* GetXpsPage(int pageNo, bool failIfBusy = false);
-    int GetPageNo(xps_page* page);
+    fz_page* GetXpsPage(int pageNo, bool failIfBusy = false);
+    int GetPageNo(fz_page* page);
     fz_matrix viewctm(int pageNo, float zoom, int rotation) {
         const fz_rect tmpRect = fz_RectD_to_rect(PageMediabox(pageNo));
         return fz_create_view_ctm(tmpRect, zoom, rotation);
     }
-    fz_matrix viewctm(xps_page* page, float zoom, int rotation) {
+    fz_matrix viewctm(fz_page* page, float zoom, int rotation) {
         // fz_rect r = xps_bound_page(_doc, page);
         CrashMe();
         // TODO(port)
@@ -3459,17 +3460,17 @@ class XpsEngineImpl : public BaseEngine {
         fz_rect r;
         return fz_create_view_ctm(r, zoom, rotation);
     }
-    WCHAR* ExtractPageText(xps_page* page, const WCHAR* lineSep, RectI** coordsOut = nullptr, bool cacheRun = false);
+    WCHAR* ExtractPageText(fz_page* page, const WCHAR* lineSep, RectI** coordsOut = nullptr, bool cacheRun = false);
 
     Vec<XpsPageRun*> runCache; // ordered most recently used first
-    XpsPageRun* CreatePageRun(xps_page* page, fz_display_list* list);
-    XpsPageRun* GetPageRun(xps_page* page, bool tryOnly = false);
-    bool RunPage(xps_page* page, fz_device* dev, const fz_matrix* ctm, const fz_rect* cliprect = nullptr,
+    XpsPageRun* CreatePageRun(fz_page* page, fz_display_list* list);
+    XpsPageRun* GetPageRun(fz_page* page, bool tryOnly = false);
+    bool RunPage(fz_page* page, fz_device* dev, const fz_matrix* ctm, const fz_rect* cliprect = nullptr,
                  bool cacheRun = true, FitzAbortCookie* cookie = nullptr);
     void DropPageRun(XpsPageRun* run, bool forceRemove = false);
 
     XpsTocItem* BuildTocTree(fz_outline* entry, int& idCounter);
-    void LinkifyPageText(xps_page* page, int pageNo);
+    void LinkifyPageText(fz_page* page, int pageNo);
     RenderedBitmap* GetPageImage(int pageNo, RectD rect, size_t imageIx);
     WCHAR* ExtractFontList();
 
@@ -3508,21 +3509,32 @@ class XpsLink : public PageElement, public PageDestination {
     PageDestType GetDestType() const override {
         if (!link)
             return PageDestType::None;
+        CrashMePort();
+#if 0
         if (FZ_LINK_GOTO == link->kind)
             return PageDestType::ScrollTo;
         if (FZ_LINK_URI == link->kind)
             return PageDestType::LaunchURL;
+#endif
         return PageDestType::None;
     }
     int GetDestPageNo() const override {
+        CrashMePort();
+#if 0
         if (!link || link->kind != FZ_LINK_GOTO)
             return 0;
         return link->ld.gotor.page + 1;
+#endif
+        return 0;
     }
     RectD GetDestRect() const override {
+        CrashMePort();
+#if 0
         if (!engine || !link || link->kind != FZ_LINK_GOTO || !link->ld.gotor.dest)
             return RectD(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
         return fz_rect_to_RectD(engine->FindDestRect(link->ld.gotor.dest));
+#endif
+        return RectD(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
     }
     WCHAR* GetDestValue() const override { return GetValue(); }
 };
@@ -3595,7 +3607,9 @@ XpsEngineImpl::~XpsEngineImpl() {
         DropPageRun(runCache.Last(), true);
     }
 
-    xps_close_document(_doc);
+    CrashMePort();
+    pdf_drop_document(ctx, (pdf_document*)_doc);
+    // xps_close_document(_doc);
     _doc = nullptr;
     fz_drop_stream(ctx, _docStream);
     _docStream = nullptr;
@@ -3618,7 +3632,8 @@ BaseEngine* XpsEngineImpl::Clone() {
     if (FileName()) {
         ok = clone->Load(FileName());
     } else {
-        ok = clone->Load(_docStream);
+        CrashMePort();
+        // ok = clone->Load(_docStream);
     }
     if (!ok) {
         delete clone;
@@ -3687,22 +3702,22 @@ bool XpsEngineImpl::LoadFromStream(fz_stream* stm) {
         return false;
     }
 
-    _pages = AllocArray<xps_page*>(PageCount());
+    _pages = AllocArray<fz_page*>(PageCount());
     _mediaboxes = AllocArray<RectD>(PageCount());
     imageRects = AllocArray<fz_rect*>(PageCount());
 
     if (!_pages || !_mediaboxes || !imageRects)
         return false;
 
-    fz_try(ctx) { _outline = xps_load_outline(_doc); }
+    fz_try(ctx) { _outline = fz_load_outline(ctx, _doc); }
     fz_catch(ctx) { fz_warn(ctx, "Couldn't load outline"); }
-    fz_try(ctx) { _info = xps_extract_doc_props(_doc); }
+    fz_try(ctx) { _info = xps_extract_doc_props(ctx, (xps_document*)_doc); }
     fz_catch(ctx) { fz_warn(ctx, "Couldn't load document properties"); }
 
     return true;
 }
 
-xps_page* XpsEngineImpl::GetXpsPage(int pageNo, bool failIfBusy) {
+fz_page* XpsEngineImpl::GetXpsPage(int pageNo, bool failIfBusy) {
     if (!_pages)
         return nullptr;
     if (failIfBusy)
@@ -3710,17 +3725,19 @@ xps_page* XpsEngineImpl::GetXpsPage(int pageNo, bool failIfBusy) {
 
     ScopedCritSec scope(&_pagesAccess);
 
-    xps_page* page = _pages[pageNo - 1];
+    fz_page* page = _pages[pageNo - 1];
     if (!page) {
         ScopedCritSec ctxScope(&ctxAccess);
         fz_var(page);
         fz_try(ctx) {
             // caution: two calls to xps_load_page return the
             // same xps_page object (without reference counting)
-            page = xps_load_page(_doc, pageNo - 1);
+            // TODO(port): now has concept of chapters
+            page = fz_load_page(ctx, _doc, pageNo - 1);
             _pages[pageNo - 1] = page;
             LinkifyPageText(page, pageNo);
-            AssertCrash(page->links_resolved);
+            // TODO(port)
+            // AssertCrash(page->links_resolved);
         }
         fz_catch(ctx) {}
     }
@@ -3728,14 +3745,14 @@ xps_page* XpsEngineImpl::GetXpsPage(int pageNo, bool failIfBusy) {
     return page;
 }
 
-int XpsEngineImpl::GetPageNo(xps_page* page) {
+int XpsEngineImpl::GetPageNo(fz_page* page) {
     for (int i = 0; i < PageCount(); i++)
         if (page == _pages[i])
             return i + 1;
     return 0;
 }
 
-XpsPageRun* XpsEngineImpl::CreatePageRun(xps_page* page, fz_display_list* list) {
+XpsPageRun* XpsEngineImpl::CreatePageRun(fz_page* page, fz_display_list* list) {
     Vec<FitzImagePos> positions;
     ListInspectionData data(positions);
     fz_device* dev = nullptr;
@@ -3743,10 +3760,11 @@ XpsPageRun* XpsEngineImpl::CreatePageRun(xps_page* page, fz_display_list* list) 
     fz_var(dev);
     fz_try(ctx) {
         dev = fz_new_inspection_device(ctx, &data);
-        fz_run_display_list(list, dev, &fz_identity, nullptr, nullptr);
+
+        fz_run_display_list(ctx, list, dev, fz_identity, fz_infinite_rect, nullptr);
     }
     fz_catch(ctx) {}
-    fz_drop_device(dev);
+    fz_drop_device(ctx, dev);
 
     // save the image rectangles for this page
     int pageNo = GetPageNo(page);
@@ -3764,7 +3782,7 @@ XpsPageRun* XpsEngineImpl::CreatePageRun(xps_page* page, fz_display_list* list) 
     return new XpsPageRun(page, list, data);
 }
 
-XpsPageRun* XpsEngineImpl::GetPageRun(xps_page* page, bool tryOnly) {
+XpsPageRun* XpsEngineImpl::GetPageRun(fz_page* page, bool tryOnly) {
     ScopedCritSec scope(&_pagesAccess);
 
     XpsPageRun* result = nullptr;
@@ -3797,15 +3815,16 @@ XpsPageRun* XpsEngineImpl::GetPageRun(xps_page* page, bool tryOnly) {
         fz_var(list);
         fz_var(dev);
         fz_try(ctx) {
-            list = fz_new_display_list(ctx);
+            // TODO(port): calc mediabox
+            list = fz_new_display_list(ctx, fz_infinite_rect);
             dev = fz_new_list_device(ctx, list);
-            xps_run_page(_doc, page, dev, &fz_identity, nullptr);
+            fz_run_page(ctx, page, dev, fz_identity, nullptr);
         }
         fz_catch(ctx) {
             fz_drop_display_list(ctx, list);
             list = nullptr;
         }
-        fz_drop_device(dev);
+        fz_drop_device(ctx, dev);
 
         if (list) {
             result = CreatePageRun(page, list);
@@ -3822,22 +3841,23 @@ XpsPageRun* XpsEngineImpl::GetPageRun(xps_page* page, bool tryOnly) {
     return result;
 }
 
-bool XpsEngineImpl::RunPage(xps_page* page, fz_device* dev, const fz_matrix* ctm, const fz_rect* cliprect,
-                            bool cacheRun, FitzAbortCookie* cookie) {
+bool XpsEngineImpl::RunPage(fz_page* page, fz_device* dev, const fz_matrix* ctm, const fz_rect* cliprect, bool cacheRun,
+                            FitzAbortCookie* cookie) {
     bool ok = true;
-
+    CrashMePort();
+#if 0
     XpsPageRun* run = GetPageRun(page, !cacheRun);
     if (run) {
         EnterCriticalSection(&ctxAccess);
         Vec<PageAnnotation> pageAnnots = fz_get_user_page_annots(userAnnots, GetPageNo(page));
         fz_try(ctx) {
             fz_rect pagerect;
-            fz_begin_page(dev, xps_bound_page(_doc, page, &pagerect), ctm);
-            fz_run_page_transparency(pageAnnots, dev, cliprect, false);
-            fz_run_display_list(run->list, dev, ctm, cliprect, cookie ? &cookie->cookie : nullptr);
-            fz_run_page_transparency(pageAnnots, dev, cliprect, true);
-            fz_run_user_page_annots(pageAnnots, dev, ctm, cliprect, cookie ? &cookie->cookie : nullptr);
-            fz_end_page(dev);
+            fz_begin_page(ctx, dev, xps_bound_page(_doc, page, &pagerect), ctm);
+            fz_run_page_transparency(ctx, pageAnnots, dev, cliprect, false);
+            fz_run_display_list(ctx, run->list, dev, ctm, cliprect, cookie ? &cookie->cookie : nullptr);
+            fz_run_page_transparency(ctx, pageAnnots, dev, cliprect, true);
+            fz_run_user_page_annots(ctx, pageAnnots, dev, ctm, cliprect, cookie ? &cookie->cookie : nullptr);
+            fz_end_page(ctx, dev);
         }
         fz_catch(ctx) { ok = false; }
         LeaveCriticalSection(&ctxAccess);
@@ -3847,20 +3867,20 @@ bool XpsEngineImpl::RunPage(xps_page* page, fz_device* dev, const fz_matrix* ctm
         Vec<PageAnnotation> pageAnnots = fz_get_user_page_annots(userAnnots, GetPageNo(page));
         fz_try(ctx) {
             fz_rect pagerect;
-            fz_begin_page(dev, xps_bound_page(_doc, page, &pagerect), ctm);
-            fz_run_page_transparency(pageAnnots, dev, cliprect, false);
-            xps_run_page(_doc, page, dev, ctm, cookie ? &cookie->cookie : nullptr);
-            fz_run_page_transparency(pageAnnots, dev, cliprect, true);
-            fz_run_user_page_annots(pageAnnots, dev, ctm, cliprect, cookie ? &cookie->cookie : nullptr);
-            fz_end_page(dev);
+            fz_begin_page(ctx, dev, xps_bound_page(_doc, page, &pagerect), ctm);
+            fz_run_page_transparency(ctx, pageAnnots, dev, cliprect, false);
+            fz_run_page(ctx, _doc, page, dev, ctm, cookie ? &cookie->cookie : nullptr);
+            fz_run_page_transparency(ctx, pageAnnots, dev, cliprect, true);
+            fz_run_user_page_annots(ctx, pageAnnots, dev, ctm, cliprect, cookie ? &cookie->cookie : nullptr);
+            fz_end_page(ctx, dev);
         }
         fz_catch(ctx) { ok = false; }
     }
 
     EnterCriticalSection(&ctxAccess);
-    fz_drop_device(dev);
+    fz_drop_device(ctx, dev);
     LeaveCriticalSection(&ctxAccess);
-
+#endif
     return ok && !(cookie && cookie->cookie.abort);
 }
 
@@ -3887,10 +3907,10 @@ RectD XpsEngineImpl::PageMediabox(int pageNo) {
     if (!mbox.IsEmpty())
         return mbox;
 
-    xps_page* page = GetXpsPage(pageNo, true);
+    fz_page* page = GetXpsPage(pageNo, true);
     if (!page) {
         ScopedCritSec scope(&ctxAccess);
-        fz_try(ctx) { mbox = fz_rect_to_RectD(xps_bound_page_quick(_doc, pageNo - 1)); }
+        fz_try(ctx) { mbox = fz_rect_to_RectD(fz_bound_page(ctx, page)); }
         fz_catch(ctx) {}
         if (!mbox.IsEmpty()) {
             _mediaboxes[pageNo - 1] = mbox;
@@ -3900,15 +3920,14 @@ RectD XpsEngineImpl::PageMediabox(int pageNo) {
     if (!page && (page = GetXpsPage(pageNo)) == nullptr)
         return RectD();
 
-    fz_rect pagerect;
-    _mediaboxes[pageNo - 1] = fz_rect_to_RectD(*xps_bound_page(_doc, page, &pagerect));
+    _mediaboxes[pageNo - 1] = fz_rect_to_RectD(fz_bound_page(ctx, page));
     return _mediaboxes[pageNo - 1];
 }
 
 RectD XpsEngineImpl::PageContentBox(int pageNo, RenderTarget target) {
     UNUSED(target);
     AssertCrash(1 <= pageNo && pageNo <= PageCount());
-    xps_page* page = GetXpsPage(pageNo);
+    fz_page* page = GetXpsPage(pageNo);
     if (!page)
         return RectD();
 
@@ -3922,12 +3941,11 @@ RectD XpsEngineImpl::PageContentBox(int pageNo, RenderTarget target) {
     }
     LeaveCriticalSection(&ctxAccess);
 
-    fz_rect pagerect;
-    xps_bound_page(_doc, page, &pagerect);
+    fz_rect pagerect = fz_bound_page(ctx, page);
     bool ok = RunPage(page, dev, &fz_identity, &pagerect, false);
     if (!ok)
         return PageMediabox(pageNo);
-    if (fz_is_infinite_rect(&rect))
+    if (fz_is_infinite_rect(rect))
         return PageMediabox(pageNo);
 
     RectD rect2 = fz_rect_to_RectD(rect);
@@ -3937,25 +3955,26 @@ RectD XpsEngineImpl::PageContentBox(int pageNo, RenderTarget target) {
 PointD XpsEngineImpl::Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse) {
     fz_matrix ctm = viewctm(pageNo, zoom, rotation);
     if (inverse)
-        fz_invert_matrix(&ctm, &ctm);
+        ctm = fz_invert_matrix(ctm);
     fz_point pt2 = {(float)pt.x, (float)pt.y};
-    fz_transform_point(&pt2, &ctm);
+    pt2 = fz_transform_point(pt2, ctm);
     return PointD(pt2.x, pt2.y);
 }
 
 RectD XpsEngineImpl::Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse) {
     fz_matrix ctm = viewctm(pageNo, zoom, rotation);
-    if (inverse)
-        fz_invert_matrix(&ctm, &ctm);
+    if (inverse) {
+        ctm = fz_invert_matrix(ctm);
+    }
     fz_rect rect2 = fz_RectD_to_rect(rect);
-    fz_transform_rect(&rect2, &ctm);
+    rect2 = fz_transform_rect(rect2, ctm);
     return fz_rect_to_RectD(rect2);
 }
 
 RenderedBitmap* XpsEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation, RectD* pageRect, RenderTarget target,
                                             AbortCookie** cookie_out) {
     UNUSED(target);
-    xps_page* page = GetXpsPage(pageNo);
+    fz_page* page = GetXpsPage(pageNo);
     if (!page)
         return nullptr;
 
@@ -3963,17 +3982,16 @@ RenderedBitmap* XpsEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
     if (pageRect)
         pRect = fz_RectD_to_rect(*pageRect);
     else
-        xps_bound_page(_doc, page, &pRect);
+        pRect = fz_bound_page(ctx, page);
     fz_matrix ctm = viewctm(page, zoom, rotation);
     fz_rect r = pRect;
-    fz_irect bbox;
-    fz_round_rect(&bbox, fz_transform_rect(&r, &ctm));
+    fz_irect bbox = fz_round_rect(fz_transform_rect(r, ctm));
 
     fz_pixmap* image = nullptr;
     EnterCriticalSection(&ctxAccess);
     fz_try(ctx) {
         fz_colorspace* colorspace = fz_device_rgb(ctx);
-        image = fz_new_pixmap_with_bbox(ctx, colorspace, &bbox);
+        image = fz_new_pixmap_with_bbox(ctx, colorspace, bbox, nullptr, 1);
         fz_clear_pixmap_with_value(ctx, image, 0xFF); // initialize white background
     }
     fz_catch(ctx) {
@@ -3982,7 +4000,7 @@ RenderedBitmap* XpsEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
     }
 
     fz_device* dev = nullptr;
-    fz_try(ctx) { dev = fz_new_draw_device(ctx, image); }
+    fz_try(ctx) { dev = fz_new_draw_device(ctx, fz_identity, image); }
     fz_catch(ctx) {
         fz_drop_pixmap(ctx, image);
         LeaveCriticalSection(&ctxAccess);
@@ -3993,8 +4011,8 @@ RenderedBitmap* XpsEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
     FitzAbortCookie* cookie = nullptr;
     if (cookie_out)
         *cookie_out = cookie = new FitzAbortCookie();
-    fz_rect cliprect;
-    bool ok = RunPage(page, dev, &ctm, fz_rect_from_irect(&cliprect, &bbox), true, cookie);
+    fz_rect cliprect = fz_rect_from_irect(bbox);
+    bool ok = RunPage(page, dev, &ctm, &cliprect, true, cookie);
 
     ScopedCritSec scope(&ctxAccess);
 
@@ -4005,10 +4023,11 @@ RenderedBitmap* XpsEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
     return bitmap;
 }
 
-WCHAR* XpsEngineImpl::ExtractPageText(xps_page* page, const WCHAR* lineSep, RectI** coordsOut, bool cacheRun) {
+WCHAR* XpsEngineImpl::ExtractPageText(fz_page* page, const WCHAR* lineSep, RectI** coordsOut, bool cacheRun) {
     if (!page)
         return nullptr;
-
+    CrashMePort();
+#if 0
     fz_text_sheet* sheet = nullptr;
     fz_text_page* text = nullptr;
     fz_device* dev = nullptr;
@@ -4042,8 +4061,9 @@ WCHAR* XpsEngineImpl::ExtractPageText(xps_page* page, const WCHAR* lineSep, Rect
     WCHAR* content = fz_text_page_to_str(text, lineSep, coordsOut);
     fz_drop_text_page(ctx, text);
     fz_drop_text_sheet(ctx, sheet);
-
     return content;
+#endif
+    return nullptr;
 }
 
 u8* XpsEngineImpl::GetFileData(size_t* cbCount) {
@@ -4080,18 +4100,22 @@ bool XpsEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots)
 
 WCHAR* XpsEngineImpl::ExtractFontList() {
     // load and parse all pages
-    for (int i = 1; i <= PageCount(); i++)
+    for (int i = 1; i <= PageCount(); i++) {
         GetXpsPage(i);
+    }
 
     ScopedCritSec scope(&ctxAccess);
 
     // collect a list of all included fonts
     WStrVec fonts;
+    CrashMePort();
+#if 0
     for (xps_font_cache* font = _doc->font_table; font; font = font->next) {
         AutoFreeW path(str::conv::FromUtf8(font->name));
         AutoFreeW name(str::conv::FromUtf8(font->font->name));
         fonts.Append(str::Format(L"%s (%s)", name.Get(), path::GetBaseName(path)));
     }
+#endif
     if (fonts.size() == 0)
         return nullptr;
 
@@ -4135,10 +4159,11 @@ void XpsEngineImpl::UpdateUserAnnotations(Vec<PageAnnotation>* list) {
 }
 
 PageElement* XpsEngineImpl::GetElementAtPos(int pageNo, PointD pt) {
-    xps_page* page = GetXpsPage(pageNo, true);
+    fz_page* page = GetXpsPage(pageNo, true);
     if (!page)
         return nullptr;
-
+    CrashMePort();
+#if 0
     fz_point p = {(float)pt.x, (float)pt.y};
     for (fz_link* link = page->links; link; link = link->next)
         if (fz_is_pt_in_rect(link->rect, p))
@@ -4149,12 +4174,12 @@ PageElement* XpsEngineImpl::GetElementAtPos(int pageNo, PointD pt) {
             if (fz_is_pt_in_rect(imageRects[pageNo - 1][i], p))
                 return new XpsImage(this, pageNo, imageRects[pageNo - 1][i], i);
     }
-
+#endif
     return nullptr;
 }
 
 Vec<PageElement*>* XpsEngineImpl::GetElements(int pageNo) {
-    xps_page* page = GetXpsPage(pageNo, true);
+    fz_page* page = GetXpsPage(pageNo, true);
     if (!page)
         return nullptr;
 
@@ -4178,7 +4203,7 @@ Vec<PageElement*>* XpsEngineImpl::GetElements(int pageNo) {
     return els;
 }
 
-void XpsEngineImpl::LinkifyPageText(xps_page* page, int pageNo) {
+void XpsEngineImpl::LinkifyPageText(fz_page* page, int pageNo) {
     UNUSED(pageNo);
     // make MuXPS extract all links and named destinations from the page
     AssertCrash(!GetPageRun(page, true));
@@ -4219,7 +4244,7 @@ void XpsEngineImpl::LinkifyPageText(xps_page* page, int pageNo) {
 }
 
 RenderedBitmap* XpsEngineImpl::GetPageImage(int pageNo, RectD rect, size_t imageIx) {
-    xps_page* page = GetXpsPage(pageNo);
+    fz_page* page = GetXpsPage(pageNo);
     if (!page)
         return nullptr;
 
@@ -4318,7 +4343,7 @@ DocTocItem* XpsEngineImpl::GetTocTree() {
 }
 
 bool XpsEngineImpl::HasClipOptimizations(int pageNo) {
-    xps_page* page = GetXpsPage(pageNo, true);
+    fz_page* page = GetXpsPage(pageNo, true);
     // GetXpsPage extracts imageRects for us
     if (!page || !imageRects[pageNo - 1])
         return true;
