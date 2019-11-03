@@ -1287,7 +1287,7 @@ class PdfEngineImpl : public BaseEngine {
     WCHAR* ExtractFontList();
     bool IsLinearizedFile();
 
-    bool SaveEmbedded(LinkSaverUI& saveUI, int num, int gen);
+    bool SaveEmbedded(LinkSaverUI& saveUI, int num);
     bool SaveUserAnnots(const char* fileName);
 
     RectD* _mediaboxes;
@@ -2595,7 +2595,7 @@ WCHAR* PdfEngineImpl::GetProperty(DocumentProperty prop) {
 
     if (DocumentProperty::PdfVersion == prop) {
         int major = _doc->version / 10, minor = _doc->version % 10;
-        pdf_crypt *crypt = _doc->crypt;
+        pdf_crypt* crypt = _doc->crypt;
         if (1 == major && 7 == minor && pdf_crypt_version(ctx, crypt) == 5) {
             if (pdf_crypt_revision(ctx, crypt) == 5)
                 return str::Format(L"%d.%d Adobe Extension Level %d", major, minor, 3);
@@ -2746,8 +2746,8 @@ bool PdfEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots)
     return !includeUserAnnots || SaveUserAnnots(copyFileName);
 }
 
-static bool pdf_file_update_add_annotation(fz_context *ctx, pdf_document* doc, pdf_page* page, pdf_obj* page_obj, PageAnnotation& annot,
-                                           pdf_obj* annots) {
+static bool pdf_file_update_add_annotation(fz_context* ctx, pdf_document* doc, pdf_page* page, pdf_obj* page_obj,
+                                           PageAnnotation& annot, pdf_obj* annots) {
     CrashMePort();
 #if 0
     static const char* obj_dict =
@@ -2903,7 +2903,7 @@ bool PdfEngineImpl::SaveUserAnnots(const char* pathUtf8) {
                 // make /Annots indirect for the current /Page
                 CrashMePort();
                 // TODO(port): no pdf_new_ref
-                //pdf_dict_puts_drop(ctx, _pageObjs[pageNo - 1], "Annots", pdf_new_ref(ctx, _doc, annots));
+                // pdf_dict_puts_drop(ctx, _pageObjs[pageNo - 1], "Annots", pdf_new_ref(ctx, _doc, annots));
             }
             // append all annotations for the current page
             for (size_t i = 0; i < pageAnnots.size(); i++) {
@@ -2911,7 +2911,7 @@ bool PdfEngineImpl::SaveUserAnnots(const char* pathUtf8) {
             }
         }
         if (ok) {
-            fz_write_options opts = {0};
+            pdf_write_options opts = {0};
             opts.do_incremental = 1;
             pdf_save_document(ctx, _doc, const_cast<char*>(pathUtf8), &opts);
         }
@@ -2920,15 +2920,17 @@ bool PdfEngineImpl::SaveUserAnnots(const char* pathUtf8) {
     return ok;
 }
 
-bool PdfEngineImpl::SaveEmbedded(LinkSaverUI& saveUI, int num, int gen) {
+bool PdfEngineImpl::SaveEmbedded(LinkSaverUI& saveUI, int num) {
     ScopedCritSec scope(&ctxAccess);
 
-    fz_buffer* data = nullptr;
-    fz_try(ctx) { data = pdf_load_stream(_doc, num, gen); }
+    fz_buffer* buf = nullptr;
+    fz_try(ctx) { buf = pdf_load_stream_number(ctx, _doc, num); }
     fz_catch(ctx) { return false; }
-    CrashIf(nullptr == data);
-    bool result = saveUI.SaveEmbedded(data->data, data->len);
-    fz_drop_buffer(ctx, data);
+    CrashIf(nullptr == buf);
+    u8* data = nullptr;
+    size_t dataLen = fz_buffer_extract(ctx, buf, &data);
+    bool result = saveUI.SaveEmbedded(data, dataLen);
+    fz_drop_buffer(ctx, buf);
     return result;
 }
 
@@ -2970,6 +2972,9 @@ static bool IsRelativeURI(const WCHAR* uri) {
 }
 
 WCHAR* PdfLink::GetValue() const {
+    CrashMePort();
+    return nullptr;
+#if 0
     if (!link || !engine)
         return nullptr;
     if (link->kind != FZ_LINK_URI && link->kind != FZ_LINK_LAUNCH && link->kind != FZ_LINK_GOTOR)
@@ -3025,6 +3030,7 @@ WCHAR* PdfLink::GetValue() const {
     }
 
     return path;
+#endif
 }
 
 static PageDestType DestTypeFromName(const char* name) {
@@ -3060,6 +3066,9 @@ PageDestType PdfLink::GetDestType() const {
     if (!link)
         return PageDestType::None;
 
+    CrashMePort();
+    return PageDestType::None;
+#if 0
     switch (link->kind) {
         case FZ_LINK_GOTO:
             return PageDestType::ScrollTo;
@@ -3078,18 +3087,24 @@ PageDestType PdfLink::GetDestType() const {
         default:
             return PageDestType::None; // unsupported action
     }
+#endif
 }
 
 int PdfLink::GetDestPageNo() const {
+    CrashMePort();
+#if 0
     if (link && FZ_LINK_GOTO == link->kind)
         return link->ld.gotor.page + 1;
     if (link && FZ_LINK_GOTOR == link->kind && !link->ld.gotor.dest)
         return link->ld.gotor.page + 1;
+#endif
     return 0;
 }
 
 RectD PdfLink::GetDestRect() const {
     RectD result(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
+    CrashMePort();
+#if 0;
     if (!link || FZ_LINK_GOTO != link->kind && FZ_LINK_GOTOR != link->kind)
         return result;
     if (link->ld.gotor.page < 0 || link->ld.gotor.page >= engine->PageCount())
@@ -3123,19 +3138,28 @@ RectD PdfLink::GetDestRect() const {
         // /FitH or /FitBH link
         result.y = lt.y;
     }
+#endif
     // all other link types only affect the zoom level, which we intentionally leave alone
     return result;
 }
 
 WCHAR* PdfLink::GetDestName() const {
+    CrashMePort();
+    return nullptr;
+#if 0
     if (!link || FZ_LINK_GOTOR != link->kind || !link->ld.gotor.dest)
         return nullptr;
     return str::conv::FromUtf8(link->ld.gotor.dest);
+#endif
 }
 
 bool PdfLink::SaveEmbedded(LinkSaverUI& saveUI) {
+    CrashMePort();
+#if 0
     ScopedCritSec scope(&engine->ctxAccess);
     return engine->SaveEmbedded(saveUI, link->ld.launch.embedded_num, link->ld.launch.embedded_gen);
+#endif
+    return true;
 }
 
 BaseEngine* PdfEngineImpl::CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {
@@ -3193,6 +3217,9 @@ extern "C" {
 #define NS_XPS_MICROSOFT "http://schemas.microsoft.com/xps/2005/06"
 
 fz_rect xps_bound_page_quick(xps_document* doc, int number) {
+    fz_rect bounds = fz_empty_rect;
+    CrashMePort();
+#if 0
     xps_page* page = doc->first_page;
     for (int n = 0; n < number && page; n++)
         page = page->next;
@@ -3224,7 +3251,6 @@ fz_rect xps_bound_page_quick(xps_document* doc, int number) {
 
     HtmlPullParser p(data, data_size);
     HtmlToken* tok = p.Next();
-    fz_rect bounds = fz_empty_rect;
     if (tok && tok->IsStartTag() && tok->NameIsNS("FixedPage", NS_XPS_MICROSOFT)) {
         AttrInfo* attr = tok->GetAttrByNameNS("Width", NS_XPS_MICROSOFT);
         if (attr)
@@ -3234,8 +3260,8 @@ fz_rect xps_bound_page_quick(xps_document* doc, int number) {
             bounds.y1 = fz_atof(attr->val) * 72.0f / 96.0f;
     }
 
-    xps_free_part(doc, part);
-
+    xps_drop_part(ctx, doc, part);
+#endif
     return bounds;
 }
 
@@ -3248,13 +3274,15 @@ class xps_doc_props {
     AutoFreeW modification_date;
 };
 
-static fz_xml* xps_open_and_parse(xps_document* doc, char* path) {
-    fz_xml* root = nullptr;
-    xps_part* part = xps_read_part(doc, path);
+static fz_xml_doc* xps_open_and_parse(fz_context* ctx, xps_document* doc, char* path) {
+    fz_xml_doc* root = nullptr;
+    xps_part* part = xps_read_part(ctx, doc, path);
 
-    fz_try(doc->ctx) { root = fz_parse_xml(doc->ctx, part->data, part->size, 0); }
-    fz_always(doc->ctx) { xps_free_part(doc, part); }
-    fz_catch(doc->ctx) { fz_rethrow(doc->ctx); }
+    int preserve_white = 0;
+    int for_html = 0;
+    fz_try(ctx) { root = fz_parse_xml(ctx, part->data, preserve_white, for_html); }
+    fz_always(ctx) { xps_drop_part(ctx, doc, part); }
+    fz_catch(ctx) { fz_rethrow(ctx); }
 
     return root;
 }
@@ -3280,12 +3308,14 @@ static WCHAR* xps_get_core_prop(fz_context* ctx, fz_xml* item) {
 
 #define REL_CORE_PROPERTIES "http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties"
 
-xps_doc_props* xps_extract_doc_props(xps_document* doc) {
-    fz_xml* root = xps_open_and_parse(doc, "/_rels/.rels");
+xps_doc_props* xps_extract_doc_props(fz_context* ctx, xps_document* xpsdoc) {
+    fz_xml_doc* xmldoc = xps_open_and_parse(ctx, xpsdoc, "/_rels/.rels");
+
+    fz_xml* root = fz_xml_root(xmldoc);
 
     if (!fz_xml_is_tag(root, "Relationships")) {
-        fz_drop_xml(doc->ctx, root);
-        fz_throw(doc->ctx, FZ_ERROR_GENERIC, "couldn't parse part '/_rels/.rels'");
+        fz_drop_xml(ctx, xmldoc);
+        fz_throw(ctx, FZ_ERROR_GENERIC, "couldn't parse part '/_rels/.rels'");
     }
 
     bool has_correct_root = false;
@@ -3293,16 +3323,17 @@ xps_doc_props* xps_extract_doc_props(xps_document* doc) {
         if (fz_xml_is_tag(item, "Relationship") && str::Eq(fz_xml_att(item, "Type"), REL_CORE_PROPERTIES) &&
             fz_xml_att(item, "Target")) {
             char path[1024];
-            xps_resolve_url(path, "", fz_xml_att(item, "Target"), nelem(path));
-            fz_drop_xml(doc->ctx, root);
-            root = xps_open_and_parse(doc, path);
+            xps_resolve_url(ctx, xpsdoc, path, "", fz_xml_att(item, "Target"), nelem(path));
+            fz_drop_xml(ctx, xmldoc);
+            xmldoc = xps_open_and_parse(ctx, xpsdoc, path);
+            root = fz_xml_root(xmldoc);
             has_correct_root = true;
             break;
         }
     }
 
     if (!has_correct_root) {
-        fz_drop_xml(doc->ctx, root);
+        fz_drop_xml(ctx, xmldoc);
         return nullptr;
     }
 
@@ -3310,17 +3341,17 @@ xps_doc_props* xps_extract_doc_props(xps_document* doc) {
 
     for (fz_xml* item = fz_xml_down(root); item; item = fz_xml_next(item)) {
         if (fz_xml_is_tag(item, /*"dc:"*/ "title") && !props->title)
-            props->title.Set(xps_get_core_prop(doc->ctx, item));
+            props->title.Set(xps_get_core_prop(ctx, item));
         else if (fz_xml_is_tag(item, /*"dc:"*/ "creator") && !props->author)
-            props->author.Set(xps_get_core_prop(doc->ctx, item));
+            props->author.Set(xps_get_core_prop(ctx, item));
         else if (fz_xml_is_tag(item, /*"dc:"*/ "subject") && !props->subject)
-            props->subject.Set(xps_get_core_prop(doc->ctx, item));
+            props->subject.Set(xps_get_core_prop(ctx, item));
         else if (fz_xml_is_tag(item, /*"dcterms:"*/ "created") && !props->creation_date)
-            props->creation_date.Set(xps_get_core_prop(doc->ctx, item));
+            props->creation_date.Set(xps_get_core_prop(ctx, item));
         else if (fz_xml_is_tag(item, /*"dcterms:"*/ "modified") && !props->modification_date)
-            props->modification_date.Set(xps_get_core_prop(doc->ctx, item));
+            props->modification_date.Set(xps_get_core_prop(ctx, item));
     }
-    fz_drop_xml(doc->ctx, root);
+    fz_drop_xml(ctx, xmldoc);
 
     return props;
 }
@@ -3348,7 +3379,13 @@ class XpsEngineImpl : public BaseEngine {
     virtual ~XpsEngineImpl();
     BaseEngine* Clone() override;
 
-    int PageCount() const override { return _doc ? xps_count_pages(_doc) : 0; }
+    int PageCount() const override {
+        CrashMePort();
+        return 0;
+#if 0
+        return _doc ? xps_count_pages(ctx, _doc, 0) : 0;
+#endif
+    }
 
     RectD PageMediabox(int pageNo) override;
     RectD PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
@@ -3446,21 +3483,24 @@ class XpsEngineImpl : public BaseEngine {
 
 class XpsLink : public PageElement, public PageDestination {
     XpsEngineImpl* engine;
-    fz_link_dest* link; // owned by a fz_link or fz_outline
+    u8* link; // owned by a fz_link or fz_outline
     RectD rect;
     int pageNo;
 
   public:
     XpsLink() : engine(nullptr), link(nullptr), pageNo(-1) {}
-    XpsLink(XpsEngineImpl* engine, fz_link_dest* link, fz_rect rect = fz_empty_rect, int pageNo = -1)
+    XpsLink(XpsEngineImpl* engine, u8* link, fz_rect rect = fz_empty_rect, int pageNo = -1)
         : engine(engine), link(link), rect(fz_rect_to_RectD(rect)), pageNo(pageNo) {}
 
     PageElementType GetType() const override { return PageElementType::Link; }
     int GetPageNo() const override { return pageNo; }
     RectD GetRect() const override { return rect; }
     WCHAR* GetValue() const override {
+        CrashMePort();
+#if 0
         if (link && FZ_LINK_URI == link->kind)
             return str::conv::FromUtf8(link->ld.uri.uri);
+#endif
         return nullptr;
     }
     virtual PageDestination* AsLink() { return this; }
