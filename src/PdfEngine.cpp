@@ -1124,63 +1124,6 @@ struct PageTreeStackItem {
         : kids(kids), i(-1), len(pdf_array_len(ctx, kids)), next_page_no(next_page_no) {}
 };
 
-static void pdf_load_page_objs(fz_context* ctx, pdf_document* doc, pdf_obj** page_objs) {
-    int page_no = 0;
-
-    Vec<PageTreeStackItem> stack;
-    PageTreeStackItem top(ctx, pdf_dict_getp(ctx, pdf_trailer(ctx, doc), "Root/Pages/Kids"));
-
-    if (pdf_mark_obj(ctx, top.kids))
-        fz_throw(ctx, FZ_ERROR_GENERIC, "cycle in page tree");
-
-    fz_try(ctx) {
-        for (;;) {
-            top.i++;
-            if (top.i == top.len) {
-                pdf_unmark_obj(ctx, top.kids);
-                if (page_no < top.next_page_no)
-                    page_no = top.next_page_no;
-                if (stack.size() == 0)
-                    break;
-                top = stack.Pop();
-                continue;
-            }
-
-            pdf_obj* kid = pdf_array_get(ctx, top.kids, top.i);
-            const char* type = pdf_to_name(ctx, pdf_dict_gets(ctx, kid, "Type"));
-            if (*type ? str::Eq(type, "Pages")
-                      : pdf_dict_gets(ctx, kid, "Kids") && !pdf_dict_gets(ctx, kid, "MediaBox")) {
-                int count = pdf_to_int(ctx, pdf_dict_gets(ctx, kid, "Count"));
-                if (count > 0) {
-                    stack.Push(top);
-                    top = PageTreeStackItem(ctx, pdf_dict_gets(ctx, kid, "Kids"), page_no + count);
-
-                    if (pdf_mark_obj(ctx, top.kids))
-                        fz_throw(ctx, FZ_ERROR_GENERIC, "cycle in page tree");
-                }
-            } else {
-                if (*type ? !str::Eq(type, "Page") : !pdf_dict_gets(ctx, kid, "MediaBox"))
-                    fz_warn(ctx, "non-page object in page tree (%s)", type);
-                if (page_no >= pdf_count_pages(ctx, doc))
-                    fz_throw(ctx, FZ_ERROR_GENERIC, "found more /Page objects than anticipated");
-
-                page_objs[page_no] = pdf_keep_obj(ctx, kid);
-                page_no++;
-            }
-        }
-    }
-    fz_catch(ctx) {
-        for (size_t i = 0; i < stack.size(); i++) {
-            pdf_unmark_obj(ctx, stack.at(i).kids);
-        }
-        pdf_unmark_obj(ctx, top.kids);
-        fz_rethrow(ctx);
-    }
-
-    // TODO(port)
-    CrashMe();
-    // doc->page_objs = page_objs;
-}
 
 ///// Above are extensions to Fitz and MuPDF, now follows PdfEngine /////
 
@@ -1698,8 +1641,6 @@ bool PdfEngineImpl::FinishLoading() {
 
     ScopedCritSec scope(&ctxAccess);
 
-    fz_try(ctx) { pdf_load_page_objs(ctx, _doc, _pageObjs); }
-    fz_catch(ctx) { fz_warn(ctx, "Couldn't load all page objects"); }
     fz_try(ctx) { outline = pdf_load_outline(ctx, _doc); }
     fz_catch(ctx) {
         // ignore errors from pdf_load_outline()
