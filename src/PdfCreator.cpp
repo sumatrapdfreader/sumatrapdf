@@ -246,7 +246,8 @@ bool PdfCreator::AddImagePage(const char* data, size_t len, float imgDpi) {
     return ok;
 }
 
-static bool Is7BitAscii(const WCHAR* str) {
+// TODO(port) static
+bool Is7BitAscii(const WCHAR* str) {
     for (const WCHAR* c = str; *c; c++) {
         if (*c < 32 || *c > 127)
             return false;
@@ -257,7 +258,7 @@ static bool Is7BitAscii(const WCHAR* str) {
 bool PdfCreator::SetProperty(DocumentProperty prop, const WCHAR* value) {
 #if 1
     // TODO(port)
-    CrashMe();
+    CrashMePort();
     return false;
 #else
     if (!ctx || !doc)
