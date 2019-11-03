@@ -484,9 +484,18 @@ function mupdf_files()
   }
   --]]
 
-  files {
-    "mupdf/fonts_64.asm",
-  }
+
+  filter {"platforms:x64"}
+    files {
+      "mupdf/fonts_64.asm",
+    }
+  filter {}
+
+  filter {"platforms:x32"}
+    files {
+      "mupdf/fonts_32.asm",
+    }
+  filter {}
 
   files_in_dir("mupdf/source/cbz", {
     "mucbz.c",

@@ -5,13 +5,37 @@ EXPORTS
 
 ; Fitz exports
 
+	; new stuff
+	fz_do_try
+	fz_do_always
+	fz_do_catch
+	fz_throw
+	fz_new_image_from_compressed_buffer
+	pdf_save_document
+	fz_warn
+	fz_buffer_extract
+	fz_xml_root
+	fz_drop_xml
+	fz_get_pixmap_from_image
+	fz_new_device_of_size
+	fz_load_outline
+	fz_load_page
+	fz_bound_page
+	fz_run_page
+	fz_new_pdf_writer_with_output
+	pdf_obj_num_is_stream
+	pdf_dict_get_inheritable
+	pdf_new_utf8_from_pdf_string_obj
+	pdf_load_stream_number
+	pdf_xobject_resources
+	pdf_page_resources
+	xps_drop_part
+
 	fz_keep_bitmap
 	fz_drop_bitmap
-	;fz_halftone_pixmap
 	fz_new_bitmap
 	fz_bitmap_details
 	fz_clear_bitmap
-	;fz_new_halftone
 	fz_default_halftone
 	fz_drop_halftone
 	fz_keep_halftone
@@ -23,31 +47,19 @@ EXPORTS
 	fz_resize_buffer
 	fz_grow_buffer
 	fz_trim_buffer
-	;fz_write_buffer
-	;fz_write_buffer_byte
-	;fz_write_buffer_rune
-	;fz_write_buffer_bits
-	;fz_write_buffer_pad
-	;fz_lookup_device_colorspace
 	fz_colorspace_is_indexed
 	fz_device_gray
 	fz_device_rgb
 	fz_device_bgr
 	fz_device_cmyk
-	;fz_set_device_gray
-	;fz_set_device_rgb
-	;fz_set_device_bgr
-	;fz_set_device_cmyk
 	fz_new_colorspace
 	fz_new_indexed_colorspace
 	fz_keep_colorspace
 	fz_drop_colorspace
-	;fz_free_colorspace_imp
 	fz_convert_color
 	fz_new_colorspace_context
 	fz_keep_colorspace_context
 	fz_drop_colorspace_context
-	;fz_lookup_color_converter
 	fz_init_cached_color_converter
 	fz_fin_cached_color_converter
 	fz_compressed_buffer_size
@@ -57,10 +69,7 @@ EXPORTS
 	fz_drop_compressed_buffer
 	fz_var_imp
 	fz_push_try
-	;fz_throw_imp
 	fz_rethrow
-	;fz_rethrow_message_imp
-	;fz_warn_imp
 	fz_caught_message
 	fz_caught
 	fz_rethrow_if
@@ -72,19 +81,10 @@ EXPORTS
 	fz_set_aa_level
 	fz_malloc
 	fz_calloc
-	;fz_malloc_array
-	;fz_resize_array
 	fz_strdup
 	fz_free
 	fz_malloc_no_throw
 	fz_calloc_no_throw
-	;fz_malloc_array_no_throw
-	;fz_resize_array_no_throw
-	;fz_strdup_no_throw
-	;fz_gen_id
-	;fz_new_aa_context
-	;fz_free_aa_context
-	;fz_copy_aa_context
 	fz_md5_init
 	fz_md5_update
 	fz_md5_final
@@ -104,7 +104,6 @@ EXPORTS
 	fz_aes_crypt_cbc
 	fz_lookup_blendmode
 	fz_blendmode_name
-	;fz_rebind_device
 	fz_begin_page
 	fz_end_page
 	fz_fill_path
@@ -128,7 +127,6 @@ EXPORTS
 	fz_begin_tile
 	fz_begin_tile_id
 	fz_end_tile
-	;fz_new_device
 	fz_drop_device
 	fz_enable_device_hints
 	fz_disable_device_hints
@@ -143,10 +141,7 @@ EXPORTS
 	fz_keep_display_list
 	fz_drop_display_list
 
-	;fz_open_copy
-	;fz_open_null
 	fz_open_concat
-	;fz_concat_push
 	fz_concat_push_drop
 	fz_open_arc4
 	fz_open_aesd
@@ -160,7 +155,6 @@ EXPORTS
 	fz_open_predict
 	fz_open_jbig2d
 	fz_load_jbig2_globals
-	;fz_free_jbig2_globals_imp
 	ft_error_string
 	fz_new_font_context
 	fz_keep_font_context
@@ -181,10 +175,6 @@ EXPORTS
 	fz_decouple_type3_font
 	fz_advance_glyph
 	fz_encode_character
-	;fz_eval_function
-	;fz_keep_function
-	;fz_drop_function
-	;fz_function_size
 	fz_getopt
 	fz_new_glyph_cache_context
 	fz_keep_glyph_cache
@@ -215,27 +205,14 @@ EXPORTS
 	fz_drop_glyph
 	fz_glyph_bbox_no_ctx
 	fz_new_hash_table
-	;fz_empty_hash
-	;fz_free_hash
 	fz_hash_find
 	fz_hash_insert
-	;fz_hash_insert_with_pos
 	fz_hash_remove
-	;fz_hash_remove_fast
-	;fz_hash_len
-	;fz_hash_get_key
-	;fz_hash_get_val
-	;fz_new_pixmap_from_image
 	fz_drop_image
 	fz_keep_image
-	;fz_new_image
 	fz_new_image_from_pixmap
-	;fz_new_image_from_data
 	fz_new_image_from_buffer
-	;fz_image_get_pixmap
-	;fz_drop_image
 	fz_decomp_image_from_stream
-	;fz_expand_indexed_pixmap
 	fz_load_jpx
 	fz_load_png
 	fz_load_tiff
@@ -283,32 +260,9 @@ EXPORTS
 
 	fz_drop_outline
 
-	;fz_write_png
-	;fz_output_png
-	;fz_new_png_from_image
-	;fz_new_png_from_pixmap
-	;fz_output_png_header
-	;fz_output_png_band
-	;fz_output_png_trailer
-	;fz_write_pnm
-	;fz_output_pnm_header
-	;fz_output_pnm_band
-	;fz_write_pam
-	;fz_output_pam_header
-	;fz_output_pam_band
-	;fz_write_pbm
-	;fz_write_tga
-	;fz_new_output_with_file
-	;fz_new_output_to_filename
 	fz_new_output_with_buffer
-	;fz_printf
-	;fz_puts
-	;fz_write
-	;fz_putc
 	fz_close_output
-	;fz_rebind_output
 	fz_vsnprintf
-	;fz_vfprintf
 	fz_snprintf
 	fz_new_path
 	fz_currentpoint
@@ -342,7 +296,6 @@ EXPORTS
 	fz_pixmap_colorspace
 	fz_pixmap_components
 	fz_pixmap_samples
-	;fz_pixmap_set_resolution
 	fz_clear_pixmap_with_value
 	fz_clear_pixmap_rect_with_value
 	fz_clear_pixmap
@@ -350,16 +303,13 @@ EXPORTS
 	fz_tint_pixmap
 	fz_invert_pixmap_rect
 	fz_gamma_pixmap
-	;fz_unmultiply_pixmap
 	fz_convert_pixmap
-	;fz_free_pixmap_imp
 	fz_copy_pixmap_rect
 	fz_premultiply_pixmap
 	fz_alpha_from_gray
 	fz_pixmap_size
 	fz_scale_pixmap
 	fz_new_scale_cache
-	;fz_free_scale_cache
 	fz_scale_pixmap_cached
 	fz_subsample_pixmap
 	fz_pixmap_bbox_no_ctx
@@ -371,10 +321,8 @@ EXPORTS
 	fz_new_pixmap_from_1bpp_data
 	fz_keep_shade
 	fz_drop_shade
-	;fz_free_shade_imp
 	fz_bound_shade
 	fz_paint_shade
-	;fz_process_mesh
 	fz_keep_storable
 	fz_drop_storable
 	fz_new_store_context
@@ -388,19 +336,15 @@ EXPORTS
 	fz_shrink_store
 	fz_open_file
 	fz_open_file_w
-	;fz_open_fd
 	fz_open_memory
 	fz_open_buffer
 	fz_open_leecher
-	;fz_close
 	fz_drop_stream
 	fz_tell
 	fz_seek
 	fz_read
 	fz_read_all
 	fz_read_file
-	;fz_stream_meta
-	;fz_rebind_stream
 	fz_new_stream
 	fz_keep_stream
 	fz_read_best
@@ -413,51 +357,28 @@ EXPORTS
 	fz_chartorune
 	fz_runetochar
 	fz_runelen
-	;fz_strtod
-	;fz_ftoa
-	;fz_text_char_at
-	;fz_text_char_bbox
-	;fz_new_text_sheet
-	;fz_free_text_sheet
-	;fz_new_text_page
-	;fz_free_text_page
-	;fz_print_text_sheet
-	;fz_print_text_page_html
-	;fz_print_text_page_xml
-	;fz_print_text_page
-	;fz_search_text_page
 	fz_highlight_selection
 	fz_copy_selection
-	;fz_new_text_device
 	gettimeofday
 	fz_fopen_utf8
 	fz_utf8_from_wchar
 	fz_wchar_from_utf8
 	fz_fopen_utf8
 	fz_free_argv
-	;fz_redirect_io_to_console
 	fz_new_text
-	;fz_add_text_span
-	;fz_free_text
 	fz_bound_text
-	;fz_print_text
 	fz_generate_transition
 	fz_tree_lookup
 	fz_tree_insert
-	;fz_free_tree
-	;fz_debug_tree
 	fz_open_directory
 	fz_open_archive
 	fz_open_archive_with_stream
 	fz_has_archive_entry
 	fz_open_archive_entry
 	fz_read_archive_entry
-	;fz_close_archive
 	fz_drop_archive
-	;fz_rebind_archive
 	fz_count_archive_entries
 	fz_list_archive_entry
-
 
 	fz_parse_xml
 	fz_xml_prev
@@ -468,7 +389,6 @@ EXPORTS
 	fz_xml_tag
 	fz_xml_att
 	fz_xml_text
-	;fz_free_xml
 	fz_detach_xml
 	fz_debug_xml
 	fz_xml_find

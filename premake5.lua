@@ -67,7 +67,7 @@ workspace "SumatraPDF"
      resdefines { "_WIN64" }
   filter {}
 
-  disablewarnings { "4127", "4189", "4324", "4458", "4800" }
+  disablewarnings { "4127", "4189", "4324", "4458", "4702", "4800" }
   warnings "Extra"
 
   location "this_is_invalid_location"
@@ -277,7 +277,7 @@ workspace "SumatraPDF"
     kind "StaticLib"
     language "C"
     includedirs { "ext/mujs" }
-    disablewarnings { "4090", "4100", "4706" }
+    disablewarnings { "4090", "4100", "7402", "4706" }
     files { "ext/mujs/one.c", "ext/mujs/mujs.h" }
 
   project "chm"
@@ -357,14 +357,14 @@ workspace "SumatraPDF"
   project "libmupdf"
     kind "SharedLib"
     language "C"
-    disablewarnings { "4206" }
+    disablewarnings { "4206", "4702" }
     -- premake has logic in vs2010_vcxproj.lua that only sets PlatformToolset
     -- if there is a c/c++ file, so we add a no-op cpp file to force This logic
     files { "src/libmupdf.rc", "tools/premake/no_op_for_premake.cpp" }
     implibname "libmupdf"
     -- TODO: is thre a better way to do it?
     -- TODO: only for windows
-    linkoptions { "/DEF:..\\src\\libmupdf.def" }
+    linkoptions { "/DEF:..\\src\\libmupdf.def", "-IGNORE:4702" }
     links { "mupdf", "libdjvu", "unarrlib", "libwebp" }
     links {
       "advapi32", "kernel32", "user32", "gdi32", "comdlg32",
