@@ -232,8 +232,8 @@ static inline int wchars_per_rune(int rune) {
 }
 
 // TODO(port):
-static void AddChar(fz_stext_line* span, fz_stext_char* c, str::Str<WCHAR>& s, Vec<RectI>& rects) {
 #if 0
+static void AddChar(fz_stext_line* span, fz_stext_char* c, str::Str<WCHAR>& s, Vec<RectI>& rects) {
     fz_rect bbox;
     fz_text_char_bbox(&bbox, span, c - span->first_char);
     RectI r = fz_rect_to_RectD(bbox).Round();
@@ -269,10 +269,12 @@ static void AddChar(fz_stext_line* span, fz_stext_char* c, str::Str<WCHAR>& s, V
         s.Append(L' ');
         rects.Append(r);
     }
-#endif
 }
+#endif
 
 // if there's a span following this one, add space to separate them
+// TODO(port)
+#if 0
 static void AddSpaceAtSpanEnd(fz_stext_line* span, str::Str<WCHAR>& s, Vec<RectI>& rects) {
     if (span->first_char == span->last_char || span->next == NULL) {
         return;
@@ -289,7 +291,10 @@ static void AddSpaceAtSpanEnd(fz_stext_line* span, str::Str<WCHAR>& s, Vec<RectI
     prev.dx /= 2;
     rects.Append(prev);
 }
+#endif
 
+// TODO(port)
+#if 0
 static void AddLineSep(str::Str<WCHAR>& s, Vec<RectI>& rects, const WCHAR* lineSep, size_t lineSepLen) {
     if (lineSepLen == 0) {
         return;
@@ -305,7 +310,10 @@ static void AddLineSep(str::Str<WCHAR>& s, Vec<RectI>& rects, const WCHAR* lineS
         rects.Append(RectI());
     }
 }
+#endif
 
+// TODO(port)
+#if 0
 static WCHAR* fz_text_page_to_str(fz_stext_page* text, const WCHAR* lineSep, RectI** coordsOut) {
     size_t lineSepLen = str::Len(lineSep);
     str::Str<WCHAR> content;
@@ -339,6 +347,7 @@ static WCHAR* fz_text_page_to_str(fz_stext_page* text, const WCHAR* lineSep, Rec
 
     return content.StealData();
 }
+#endif
 
 struct istream_filter {
     IStream* stream;
@@ -437,7 +446,8 @@ struct LinkRectList {
     Vec<fz_rect> coords;
 };
 
-static bool LinkifyCheckMultiline(const WCHAR* pageText, const WCHAR* pos, RectI* coords) {
+// TODO(port) static
+bool LinkifyCheckMultiline(const WCHAR* pageText, const WCHAR* pos, RectI* coords) {
     // multiline links end in a non-alphanumeric character and continue on a line
     // that starts left and only slightly below where the current line ended
     // (and that doesn't start with http or a footnote numeral)
@@ -449,7 +459,8 @@ static bool LinkifyCheckMultiline(const WCHAR* pageText, const WCHAR* pos, RectI
            coords[pos - pageText + 1].dy <= coords[pos - pageText - 1].dy * 1.2 && !str::StartsWith(pos + 1, L"http");
 }
 
-static const WCHAR* LinkifyFindEnd(const WCHAR* start, WCHAR prevChar) {
+// TODO(port) static
+const WCHAR* LinkifyFindEnd(const WCHAR* start, WCHAR prevChar) {
     const WCHAR *end, *quote;
 
     // look for the end of the URL (ends in a space preceded maybe by interpunctuation)
@@ -467,6 +478,8 @@ static const WCHAR* LinkifyFindEnd(const WCHAR* start, WCHAR prevChar) {
     return end;
 }
 
+// TODO(port)
+#if 0
 static const WCHAR* LinkifyMultilineText(LinkRectList* list, const WCHAR* pageText, const WCHAR* start,
                                          const WCHAR* next, RectI* coords) {
     size_t lastIx = list->coords.size() - 1;
@@ -493,6 +506,7 @@ static const WCHAR* LinkifyMultilineText(LinkRectList* list, const WCHAR* pageTe
 
     return end;
 }
+#endif
 
 // cf. http://weblogs.mozillazine.org/gerv/archives/2011/05/html5_email_address_regexp.html
 inline bool IsEmailUsernameChar(WCHAR c) {
@@ -504,13 +518,17 @@ inline bool IsEmailDomainChar(WCHAR c) {
     return iswalnum(c) || '-' == c;
 }
 
+#if 0
 static const WCHAR* LinkifyFindEmail(const WCHAR* pageText, const WCHAR* at) {
     const WCHAR* start;
-    for (start = at; start > pageText && IsEmailUsernameChar(*(start - 1)); start--)
-        ;
+    for (start = at; start > pageText&& IsEmailUsernameChar(*(start - 1)); start--) {
+        // do nothing
+    }
     return start != at ? start : nullptr;
 }
+#endif
 
+#if 0
 static const WCHAR* LinkifyEmailAddress(const WCHAR* start) {
     const WCHAR* end;
     for (end = start; IsEmailUsernameChar(*end); end++)
@@ -527,8 +545,11 @@ static const WCHAR* LinkifyEmailAddress(const WCHAR* start) {
     } while ('.' == *end && IsEmailDomainChar(*(end + 1)));
     return end;
 }
+#endif
 
 // caller needs to delete the result
+// TODO(port)
+#if 0
 static LinkRectList* LinkifyText(const WCHAR* pageText, RectI* coords) {
     LinkRectList* list = new LinkRectList;
 
@@ -576,6 +597,7 @@ static LinkRectList* LinkifyText(const WCHAR* pageText, RectI* coords) {
 
     return list;
 }
+#endif
 
 static fz_link* FixupPageLinks(fz_link* root) {
     // Links in PDF documents are added from bottom-most to top-most,
@@ -1097,6 +1119,7 @@ struct PageTreeStackItem {
     int len = 0;
     int next_page_no = 0;
 
+    PageTreeStackItem(){};
     explicit PageTreeStackItem(fz_context* ctx, pdf_obj* kids, int next_page_no = 0)
         : kids(kids), i(-1), len(pdf_array_len(ctx, kids)), next_page_no(next_page_no) {}
 };
@@ -2963,6 +2986,7 @@ int PdfEngineImpl::GetPageByLabel(const WCHAR* label) const {
     return pageNo;
 }
 
+#if 0
 static bool IsRelativeURI(const WCHAR* uri) {
     const WCHAR* c = uri;
     while (*c && *c != ':' && *c != '/' && *c != '?' && *c != '#') {
@@ -2970,6 +2994,7 @@ static bool IsRelativeURI(const WCHAR* uri) {
     }
     return *c != ':';
 }
+#endif
 
 WCHAR* PdfLink::GetValue() const {
     CrashMePort();
@@ -3033,6 +3058,7 @@ WCHAR* PdfLink::GetValue() const {
 #endif
 }
 
+#if 0
 static PageDestType DestTypeFromName(const char* name) {
 // named actions are converted either to Dest_Name or Dest_NameDialog
 #define HandleType(type)      \
@@ -3061,6 +3087,7 @@ static PageDestType DestTypeFromName(const char* name) {
     // named action that we don't support (or invalid action name)
     return PageDestType::None;
 }
+#endif
 
 PageDestType PdfLink::GetDestType() const {
     if (!link)
@@ -3104,7 +3131,7 @@ int PdfLink::GetDestPageNo() const {
 RectD PdfLink::GetDestRect() const {
     RectD result(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
     CrashMePort();
-#if 0;
+#if 0
     if (!link || FZ_LINK_GOTO != link->kind && FZ_LINK_GOTOR != link->kind)
         return result;
     if (link->ld.gotor.page < 0 || link->ld.gotor.page >= engine->PageCount())
@@ -3453,11 +3480,7 @@ class XpsEngineImpl : public BaseEngine {
         return fz_create_view_ctm(tmpRect, zoom, rotation);
     }
     fz_matrix viewctm(fz_page* page, float zoom, int rotation) {
-        // fz_rect r = xps_bound_page(_doc, page);
-        CrashMe();
-        // TODO(port)
-        // xps_bound_page is not exported anymore
-        fz_rect r;
+        fz_rect r = fz_bound_page(ctx, page);
         return fz_create_view_ctm(r, zoom, rotation);
     }
     WCHAR* ExtractPageText(fz_page* page, const WCHAR* lineSep, RectI** coordsOut = nullptr, bool cacheRun = false);
@@ -4182,13 +4205,14 @@ Vec<PageElement*>* XpsEngineImpl::GetElements(int pageNo) {
     fz_page* page = GetXpsPage(pageNo, true);
     if (!page)
         return nullptr;
-
     // since all elements lists are in last-to-first order, append
     // item types in inverse order and reverse the whole list at the end
     Vec<PageElement*>* els = new Vec<PageElement*>();
     if (!els)
         return nullptr;
 
+    CrashMePort();
+#if 0
     if (imageRects[pageNo - 1]) {
         for (int i = 0; !fz_is_empty_rect(imageRects[pageNo - 1][i]); i++) {
             els->Append(new XpsImage(this, pageNo, imageRects[pageNo - 1][i], i));
@@ -4198,7 +4222,7 @@ Vec<PageElement*>* XpsEngineImpl::GetElements(int pageNo) {
     for (fz_link* link = page->links; link; link = link->next) {
         els->Append(new XpsLink(this, &link->dest, link->rect, pageNo));
     }
-
+#endif
     els->Reverse();
     return els;
 }
@@ -4207,6 +4231,8 @@ void XpsEngineImpl::LinkifyPageText(fz_page* page, int pageNo) {
     UNUSED(pageNo);
     // make MuXPS extract all links and named destinations from the page
     AssertCrash(!GetPageRun(page, true));
+    CrashMePort();
+#if 0
     XpsPageRun* run = GetPageRun(page);
     AssertCrash(!run == !page->links_resolved);
     if (run)
@@ -4241,6 +4267,7 @@ void XpsEngineImpl::LinkifyPageText(fz_page* page, int pageNo) {
 
     delete list;
     free(coords);
+#endif
 }
 
 RenderedBitmap* XpsEngineImpl::GetPageImage(int pageNo, RectD rect, size_t imageIx) {
@@ -4272,7 +4299,9 @@ RenderedBitmap* XpsEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
     fz_pixmap* pixmap = nullptr;
     fz_try(ctx) {
         fz_image* image = positions.at(imageIx).image;
-        pixmap = fz_new_pixmap_from_image(ctx, image, image->w, image->h);
+        // TODO(port): pass dimensions?
+        CrashMePort();
+        pixmap = fz_get_pixmap_from_image(ctx, image, nullptr, nullptr, nullptr, nullptr);
     }
     fz_catch(ctx) { return nullptr; }
     RenderedBitmap* bmp = new_rendered_fz_pixmap(ctx, pixmap);
@@ -4285,6 +4314,8 @@ fz_rect XpsEngineImpl::FindDestRect(const char* target) {
     if (str::IsEmpty(target))
         return fz_empty_rect;
 
+    CrashMePort();
+#if 0
     xps_target* found = xps_lookup_link_target_obj(_doc, (char*)target);
     if (!found)
         return fz_empty_rect;
@@ -4294,9 +4325,13 @@ fz_rect XpsEngineImpl::FindDestRect(const char* target) {
         GetXpsPage(found->page + 1);
     }
     return found->rect;
+#endif
+    return fz_empty_rect;
 }
 
 PageDestination* XpsEngineImpl::GetNamedDest(const WCHAR* name) {
+    CrashMePort();
+#if 0
     OwnedData name_utf8(str::conv::ToUtf8(name));
     if (!str::StartsWith(name_utf8.Get(), "#")) {
         name_utf8.TakeOwnership(str::Join("#", name_utf8.Get()));
@@ -4307,13 +4342,14 @@ PageDestination* XpsEngineImpl::GetNamedDest(const WCHAR* name) {
             return new SimpleDest(dest->page + 1, fz_rect_to_RectD(dest->rect));
         }
     }
-
+#endif
     return nullptr;
 }
 
 XpsTocItem* XpsEngineImpl::BuildTocTree(fz_outline* entry, int& idCounter) {
     XpsTocItem* node = nullptr;
-
+    CrashMePort();
+#if 0
     for (; entry; entry = entry->next) {
         WCHAR* name = entry->title ? str::conv::FromUtf8(entry->title) : str::Dup(L"");
         XpsTocItem* item = new XpsTocItem(name, XpsLink(this, &entry->dest));
@@ -4330,6 +4366,7 @@ XpsTocItem* XpsEngineImpl::BuildTocTree(fz_outline* entry, int& idCounter) {
         else
             node->AddSibling(item);
     }
+#endif
 
     return node;
 }
