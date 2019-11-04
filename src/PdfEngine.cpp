@@ -2228,9 +2228,8 @@ Vec<PageElement*>* PdfEngineImpl::GetElements(int pageNo) {
         }
     }
 
-    // TODO(port)
-    // CrashMePort();
 #if 0
+    // TODO(annots)
     if (pageAnnots[pageNo - 1]) {
         ScopedCritSec scope(&ctxAccess);
 
@@ -2245,12 +2244,14 @@ Vec<PageElement*>* PdfEngineImpl::GetElements(int pageNo) {
         }
     }
 
-    for (fz_link* link = page->links; link; link = link->next) {
-        if (link->dest.kind != FZ_LINK_NONE) {
-            els->Append(new PdfLink(this, &link->dest, link->rect, pageNo));
-        }
-    }
 #endif
+    fz_link* link = page->links;
+    while (link) {
+        auto* el = new PdfLink(this, pageNo, link, nullptr);
+        els->Append(el);
+        link = link->next;
+    }
+
     els->Reverse();
     return els;
 }
@@ -2293,8 +2294,7 @@ void PdfEngineImpl::LinkifyPageText(pdf_page* page) {
 pdf_annot** PdfEngineImpl::ProcessPageAnnotations(pdf_page* page) {
     Vec<pdf_annot*> annots;
 
-    // TODO(port)
-    // CrashMePort();
+    // TODO(annots)
 #if 0
     for (pdf_annot* annot = page->annots; annot; annot = annot->next) {
         if (FZ_ANNOT_FILEATTACHMENT == annot->annot_type) {
