@@ -1124,7 +1124,6 @@ struct PageTreeStackItem {
         : kids(kids), i(-1), len(pdf_array_len(ctx, kids)), next_page_no(next_page_no) {}
 };
 
-
 ///// Above are extensions to Fitz and MuPDF, now follows PdfEngine /////
 
 struct PdfPageRun {
@@ -1150,11 +1149,7 @@ class PdfEngineImpl : public BaseEngine {
     virtual ~PdfEngineImpl();
     BaseEngine* Clone() override;
 
-    int PageCount() const override {
-        // make sure that _doc->page_count is initialized as soon as
-        // _doc is defined, so that pdf_count_pages can't throw
-        return _doc ? pdf_count_pages(ctx, _doc) : 0;
-    }
+    int PageCount() const override;
 
     RectD PageMediabox(int pageNo) override;
     RectD PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
@@ -1206,19 +1201,19 @@ class PdfEngineImpl : public BaseEngine {
     static BaseEngine* CreateFromStream(IStream* stream, PasswordUI* pwdUI);
 
   protected:
-    char* _decryptionKey;
-    bool isProtected;
+    char* _decryptionKey = nullptr;
+    bool isProtected = false;
+    int pageCount = -1;
 
     // make sure to never ask for pagesAccess in an ctxAccess
     // protected critical section in order to avoid deadlocks
     CRITICAL_SECTION ctxAccess;
-    fz_context* ctx;
+    fz_context* ctx = nullptr;
     fz_locks_context fz_locks_ctx;
-    pdf_document* _doc;
+    pdf_document* _doc = nullptr;
 
     CRITICAL_SECTION pagesAccess;
-    pdf_page** _pages;
-    pdf_obj** _pageObjs;
+    pdf_page** _pages = nullptr;
 
     bool Load(const WCHAR* fileName, PasswordUI* pwdUI = nullptr);
     bool Load(IStream* stream, PasswordUI* pwdUI = nullptr);
@@ -1256,13 +1251,13 @@ class PdfEngineImpl : public BaseEngine {
     bool SaveEmbedded(LinkSaverUI& saveUI, int num);
     bool SaveUserAnnots(const char* fileName);
 
-    RectD* _mediaboxes;
-    fz_outline* outline;
-    fz_outline* attachments;
-    pdf_obj* _info;
-    WStrVec* _pagelabels;
-    pdf_annot*** pageAnnots;
-    fz_rect** imageRects;
+    RectD* _mediaboxes = nullptr;
+    fz_outline* outline = nullptr;
+    fz_outline* attachments = nullptr;
+    pdf_obj* _info = nullptr;
+    WStrVec* _pagelabels = nullptr;
+    pdf_annot*** pageAnnots = nullptr;
+    fz_rect** imageRects = nullptr;
 
     Vec<PageAnnotation> userAnnots;
 };
@@ -1343,19 +1338,7 @@ class PdfImage : public PageElement {
 // in mupdf_load_system_font.c
 extern "C" void pdf_install_load_system_font_funcs(fz_context* ctx);
 
-    PdfEngineImpl::PdfEngineImpl()
-    : _doc(nullptr),
-      _pages(nullptr),
-      _pageObjs(nullptr),
-      _mediaboxes(nullptr),
-      _info(nullptr),
-      outline(nullptr),
-      attachments(nullptr),
-      _pagelabels(nullptr),
-      _decryptionKey(nullptr),
-      isProtected(false),
-      pageAnnots(nullptr),
-      imageRects(nullptr) {
+PdfEngineImpl::PdfEngineImpl() {
     InitializeCriticalSection(&pagesAccess);
     InitializeCriticalSection(&ctxAccess);
 
@@ -1371,14 +1354,8 @@ PdfEngineImpl::~PdfEngineImpl() {
     EnterCriticalSection(&pagesAccess);
     EnterCriticalSection(&ctxAccess);
 
+    // TODO(port): should drop pages?
     free(_pages);
-    if (_pageObjs) {
-        for (int i = 0; i < PageCount(); i++) {
-            pdf_drop_obj(ctx, _pageObjs[i]);
-        }
-        free(_pageObjs);
-    }
-
     fz_drop_outline(ctx, outline);
     fz_drop_outline(ctx, attachments);
     pdf_drop_obj(ctx, _info);
@@ -1414,6 +1391,11 @@ PdfEngineImpl::~PdfEngineImpl() {
     DeleteCriticalSection(&ctxAccess);
     LeaveCriticalSection(&pagesAccess);
     DeleteCriticalSection(&pagesAccess);
+}
+
+int PdfEngineImpl::PageCount() const {
+    CrashIf(pageCount < 0);
+    return pageCount;
 }
 
 class PasswordCloner : public PasswordUI {
@@ -1620,23 +1602,29 @@ bool PdfEngineImpl::LoadFromStream(fz_stream* stm, PasswordUI* pwdUI) {
 }
 
 bool PdfEngineImpl::FinishLoading() {
+    int nPages = -1;
     fz_try(ctx) {
         // this call might throw the first time
-        pdf_count_pages(ctx, _doc);
+        nPages = pdf_count_pages(ctx, _doc);
     }
-    fz_catch(ctx) { return false; }
-    if (PageCount() == 0) {
+    fz_catch(ctx) {
+        // TODO: figure out if it can really throw
+        CrashMe();
+        return false;
+    }
+    if (nPages == 0) {
         fz_warn(ctx, "document has no pages");
         return false;
     }
+    pageCount = nPages;
 
-    _pages = AllocArray<pdf_page*>(PageCount());
-    _pageObjs = AllocArray<pdf_obj*>(PageCount());
-    _mediaboxes = AllocArray<RectD>(PageCount());
-    pageAnnots = AllocArray<pdf_annot**>(PageCount());
-    imageRects = AllocArray<fz_rect*>(PageCount());
+    // TODO: could replace with array of a struct describing a page
+    _pages = AllocArray<pdf_page*>(pageCount);
+    _mediaboxes = AllocArray<RectD>(pageCount);
+    pageAnnots = AllocArray<pdf_annot**>(pageCount);
+    imageRects = AllocArray<fz_rect*>(pageCount);
 
-    if (!_pages || !_pageObjs || !_mediaboxes || !pageAnnots || !imageRects)
+    if (!_pages || !_mediaboxes || !pageAnnots || !imageRects)
         return false;
 
     ScopedCritSec scope(&ctxAccess);
@@ -1784,9 +1772,6 @@ pdf_page* PdfEngineImpl::GetPdfPage(int pageNo, bool failIfBusy) {
         ScopedCritSec ctxScope(&ctxAccess);
         fz_var(page);
         fz_try(ctx) {
-            CrashMe();
-            // TODO(port): pdf_load_page_by_obj is no longer here
-            // page = pdf_load_page_by_obj(ctx, _doc, pageNo - 1, _pageObjs[pageNo - 1]);
             page = pdf_load_page(ctx, _doc, pageNo - 1);
             _pages[pageNo - 1] = page;
             LinkifyPageText(page);
@@ -1899,6 +1884,7 @@ bool PdfEngineImpl::RunPage(pdf_page* page, fz_matrix ctm, RenderTarget target, 
                             FitzAbortCookie* cookie) {
     bool ok = true;
 
+    fz_cookie* fzcookie = cookie ? &cookie->cookie : nullptr;
     fz_device* dev = nullptr;
 
     PdfPageRun* run;
@@ -1913,9 +1899,9 @@ bool PdfEngineImpl::RunPage(pdf_page* page, fz_matrix ctm, RenderTarget target, 
             auto pageBounds = pdf_bound_page(ctx, page);
             dev = fz_begin_page(ctx, wri, pageBounds);
             fz_run_page_transparency(ctx, pageAnnots, dev, cliprect, false, page->transparency);
-            fz_run_display_list(ctx, run->list, dev, ctm, *cliprect, cookie ? &cookie->cookie : nullptr);
+            fz_run_display_list(ctx, run->list, dev, ctm, *cliprect, fzcookie);
             fz_run_page_transparency(ctx, pageAnnots, dev, cliprect, true, page->transparency);
-            fz_run_user_page_annots(ctx, pageAnnots, dev, ctm, cliprect, cookie ? &cookie->cookie : nullptr);
+            fz_run_user_page_annots(ctx, pageAnnots, dev, ctm, cliprect, fzcookie);
             fz_end_page(ctx, wri);
         }
         fz_catch(ctx) { ok = false; }
@@ -1963,30 +1949,18 @@ void PdfEngineImpl::DropPageRun(PdfPageRun* run, bool forceRemove) {
 }
 
 RectD PdfEngineImpl::PageMediabox(int pageNo) {
-    AssertCrash(1 <= pageNo && pageNo <= PageCount());
+    int pageIdx = pageNo - 1;
+    CrashIf((pageIdx < 0) || (pageIdx >= PageCount()));
     if (!_mediaboxes[pageNo - 1].IsEmpty())
         return _mediaboxes[pageNo - 1];
 
-    pdf_obj* page = _pageObjs[pageNo - 1];
-    if (!page)
-        return RectD();
-
     ScopedCritSec scope(&ctxAccess);
 
-    // cf. pdf-page.c's pdf_load_page
-    fz_rect mbox = fz_empty_rect, cbox = fz_empty_rect;
-    int rotate = 0;
-    float userunit = 1.0;
+    fz_rect mbox;
+    fz_matrix matrix;
     fz_try(ctx) {
-        auto o = pdf_dict_get_inheritable(ctx, page, PDF_NAME(MediaBox));
-        mbox = pdf_to_rect(ctx, o);
-        pdf_dict_get_inheritable(ctx, page, PDF_NAME(CropBox));
-        cbox = pdf_to_rect(ctx, o);
-        o = pdf_dict_get_inheritable(ctx, page, PDF_NAME(Rotate));
-        rotate = pdf_to_int(ctx, o);
-        o = pdf_dict_get(ctx, page, PDF_NAME(UserUnit));
-        if (pdf_is_real(ctx, o))
-            userunit = pdf_to_real(ctx, o);
+        pdf_obj* pageref = pdf_lookup_page_obj(ctx, _doc, pageNo);
+        pdf_page_obj_transform(ctx, pageref, &mbox, &matrix);
     }
     fz_catch(ctx) {}
     if (fz_is_empty_rect(mbox)) {
@@ -1996,19 +1970,10 @@ RectD PdfEngineImpl::PageMediabox(int pageNo) {
         mbox.x1 = 612;
         mbox.y1 = 792;
     }
-    if (!fz_is_empty_rect(cbox)) {
-        mbox = fz_intersect_rect(mbox, cbox);
-        if (fz_is_empty_rect(mbox))
-            return RectD();
-    }
-    if ((rotate % 90) != 0)
-        rotate = 0;
 
-    // cf. pdf-page.c's pdf_bound_page
-    mbox = fz_transform_rect(mbox, fz_rotate((float)rotate));
-
-    _mediaboxes[pageNo - 1] = RectD(0, 0, (mbox.x1 - mbox.x0) * userunit, (mbox.y1 - mbox.y0) * userunit);
-    return _mediaboxes[pageNo - 1];
+    auto res = RectD(0, 0, (mbox.x1 - mbox.x0), (mbox.y1 - mbox.y0));
+    _mediaboxes[pageIdx] = res;
+    return res;
 }
 
 RectD PdfEngineImpl::PageContentBox(int pageNo, RenderTarget target) {
@@ -2052,11 +2017,9 @@ RenderedBitmap* PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
                                             AbortCookie** cookie_out) {
     pdf_page* page = GetPdfPage(pageNo);
 
-    CrashMePort();
-#if 0
-    if (!page || !pdf_is_dict(ctx, page->me))
+    if (!page) {
         return nullptr;
-#endif
+    }
 
     fz_rect pRect;
     if (pageRect)
@@ -2067,6 +2030,7 @@ RenderedBitmap* PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
     fz_irect bbox = fz_round_rect(fz_transform_rect(pRect, ctm));
 
     fz_pixmap* image = nullptr;
+    // TODO(port): I don't see why this lock is needed
     EnterCriticalSection(&ctxAccess);
     fz_try(ctx) {
         fz_colorspace* colorspace = fz_device_rgb(ctx);
@@ -2107,7 +2071,8 @@ PageElement* PdfEngineImpl::GetElementAtPos(int pageNo, PointD pt) {
     if (!page)
         return nullptr;
 
-    CrashMePort();
+    // TODO(port):
+    //CrashMePort();
 #if 0
     fz_point p = {(float)pt.x, (float)pt.y};
     for (fz_link* link = page->links; link; link = link->next) {
@@ -2160,7 +2125,8 @@ Vec<PageElement*>* PdfEngineImpl::GetElements(int pageNo) {
         }
     }
 
-    CrashMePort();
+    // TODO(port)
+    //CrashMePort();
 #if 0
     if (pageAnnots[pageNo - 1]) {
         ScopedCritSec scope(&ctxAccess);
@@ -2224,7 +2190,8 @@ void PdfEngineImpl::LinkifyPageText(pdf_page* page) {
 pdf_annot** PdfEngineImpl::ProcessPageAnnotations(pdf_page* page) {
     Vec<pdf_annot*> annots;
 
-    CrashMePort();
+    // TODO(port)
+    // CrashMePort();
 #if 0
     for (pdf_annot* annot = page->annots; annot; annot = annot->next) {
         if (FZ_ANNOT_FILEATTACHMENT == annot->annot_type) {
@@ -2314,7 +2281,8 @@ WCHAR* PdfEngineImpl::ExtractPageText(pdf_page* page, const WCHAR* lineSep, Rect
     if (!page)
         return nullptr;
 
-    CrashMePort();
+    // TODO(port)
+    // CrashMePort();
     WCHAR* content = nullptr;
 #if 0
     fz_text_sheet* sheet = nullptr;
@@ -2361,7 +2329,8 @@ WCHAR* PdfEngineImpl::ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** 
     if (page)
         return ExtractPageText(page, lineSep, coordsOut, target);
 
-    CrashMePort();
+        // TODO(port): not sure if GetPdfPage() can fail anymore
+        // CrashMePort();
 #if 0
     EnterCriticalSection(&ctxAccess);
     fz_try(ctx) { page = pdf_load_page_by_obj(_doc, pageNo - 1, _pageObjs[pageNo - 1]); }
@@ -2404,12 +2373,18 @@ bool PdfEngineImpl::IsLinearizedFile() {
     // /L must be the exact file size
     if (pdf_to_int(ctx, pdf_dict_gets(ctx, obj, "L")) != _doc->file_size)
         return false;
+
     // /O must be the object number of the first page
-    if (pdf_to_int(ctx, pdf_dict_gets(ctx, obj, "O")) != pdf_to_num(ctx, _pageObjs[0]))
+    // TODO(port): at this point we don't have _pages loaded yet. for now always return false here
+    auto page = _pages[0];
+    if (!page) {
         return false;
+    }
+    if (pdf_to_int(ctx, pdf_dict_gets(ctx, obj, "O")) != pdf_to_num(ctx, page->obj))
+        return false;
+
     // /N must be the total number of pages
-    if (pdf_to_int(ctx, pdf_dict_gets(ctx, obj, "N")) != PageCount())
-        return false;
+    if (pdf_to_int(ctx, pdf_dict_gets(ctx, obj, "N")) != PageCount()) return false;
     // /H must be an array and /E and /T must be integers
     return pdf_is_array(ctx, pdf_dict_gets(ctx, obj, "H")) && pdf_is_int(ctx, pdf_dict_gets(ctx, obj, "E")) &&
            pdf_is_int(ctx, pdf_dict_gets(ctx, obj, "T"));
@@ -2616,7 +2591,7 @@ bool PdfEngineImpl::SupportsAnnotation(bool forSaving) const {
     if (forSaving) {
         // TODO: support updating of documents where pages aren't all numbered objects?
         for (int i = 0; i < PageCount(); i++) {
-            if (pdf_to_num(ctx, _pageObjs[i]) == 0)
+            if (pdf_to_num(ctx, _pages[i]->obj) == 0)
                 return false;
         }
     }
@@ -2842,8 +2817,9 @@ bool PdfEngineImpl::SaveUserAnnots(const char* pathUtf8) {
     fz_try(ctx) {
         for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
             pdf_page* page = GetPdfPage(pageNo);
+            pdf_obj* page_obj = page->obj;
             // TODO: this will skip annotations for broken documents
-            if (!page || !pdf_to_num(ctx, _pageObjs[pageNo - 1])) {
+            if (!page || !pdf_to_num(ctx, page_obj)) {
                 ok = false;
                 break;
             }
@@ -2851,21 +2827,21 @@ bool PdfEngineImpl::SaveUserAnnots(const char* pathUtf8) {
             if (pageAnnots.size() == 0)
                 continue;
             // get the page's /Annots array for appending
-            pdf_obj* annots = pdf_dict_gets(ctx, _pageObjs[pageNo - 1], "Annots");
+            pdf_obj* annots = pdf_dict_gets(ctx, page_obj, "Annots");
             if (!pdf_is_array(ctx, annots)) {
-                pdf_dict_puts_drop(ctx, _pageObjs[pageNo - 1], "Annots",
+                pdf_dict_puts_drop(ctx, page_obj, "Annots",
                                    pdf_new_array(ctx, _doc, (int)pageAnnots.size()));
-                annots = pdf_dict_gets(ctx, _pageObjs[pageNo - 1], "Annots");
+                annots = pdf_dict_gets(ctx, page_obj, "Annots");
             }
             if (!pdf_is_indirect(ctx, annots)) {
                 // make /Annots indirect for the current /Page
                 CrashMePort();
                 // TODO(port): no pdf_new_ref
-                // pdf_dict_puts_drop(ctx, _pageObjs[pageNo - 1], "Annots", pdf_new_ref(ctx, _doc, annots));
+                // pdf_dict_puts_drop(ctx, page_obj, "Annots", pdf_new_ref(ctx, _doc, annots));
             }
             // append all annotations for the current page
             for (size_t i = 0; i < pageAnnots.size(); i++) {
-                ok &= pdf_file_update_add_annotation(ctx, _doc, page, _pageObjs[pageNo - 1], pageAnnots.at(i), annots);
+                ok &= pdf_file_update_add_annotation(ctx, _doc, page, page_obj, pageAnnots.at(i), annots);
             }
         }
         if (ok) {
