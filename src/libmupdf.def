@@ -35,6 +35,7 @@ EXPORTS
 	pdf_page_obj_transform
 	fz_close_device
 	fz_drop_page
+	fz_colorspace_is_rgb
 
 	fz_keep_bitmap
 	fz_drop_bitmap
