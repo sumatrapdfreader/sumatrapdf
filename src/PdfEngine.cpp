@@ -1354,24 +1354,19 @@ class PdfEngineImpl : public BaseEngine {
 };
 
 class PdfLink : public PageElement, public PageDestination {
-    PdfEngineImpl* engine;
-    char* link; // owned by an fz_link or fz_outline
-    RectD rect;
-    int pageNo;
-    PointD pt;
-
   public:
-    PdfLink(PdfEngineImpl* engine, char* link, fz_rect rect = fz_empty_rect, int pageNo = -1, fz_point* pt = nullptr)
-        : engine(engine), link(link), rect(fz_rect_to_RectD(rect)), pageNo(pageNo) {
-        // cursor coordinates for IsMap URI links
-        if (pt)
-            this->pt = PointD(pt->x, pt->y);
-    }
+    PdfEngineImpl* engine = nullptr;
+    // must be one or the other
+    fz_link* link = nullptr;
+    fz_outline* outline = nullptr;
+    int pageNo;
+
+    PdfLink(PdfEngineImpl* engine, int pageNo, fz_link* link, fz_outline* outline);
 
     // PageElement
     PageElementType GetType() const override { return PageElementType::Link; }
     int GetPageNo() const override { return pageNo; }
-    RectD GetRect() const override { return rect; }
+    RectD GetRect() const override;
     WCHAR* GetValue() const override;
     virtual PageDestination* AsLink() { return this; }
 
@@ -1412,18 +1407,18 @@ class PdfImage : public PageElement {
     PdfEngineImpl* engine;
     int pageNo;
     RectD rect;
-    size_t imageIx;
+    size_t imageIdx;
 
   public:
-    PdfImage(PdfEngineImpl* engine, int pageNo, fz_rect rect, size_t imageIx)
-        : engine(engine), pageNo(pageNo), rect(fz_rect_to_RectD(rect)), imageIx(imageIx) {}
+    PdfImage(PdfEngineImpl* engine, int pageNo, fz_rect rect, size_t imageIdx)
+        : engine(engine), pageNo(pageNo), rect(fz_rect_to_RectD(rect)), imageIdx(imageIdx) {}
 
     virtual PageElementType GetType() const { return PageElementType::Image; }
     virtual int GetPageNo() const { return pageNo; }
     virtual RectD GetRect() const { return rect; }
     virtual WCHAR* GetValue() const { return nullptr; }
 
-    virtual RenderedBitmap* GetImage() { return engine->GetPageImage(pageNo, rect, imageIx); }
+    virtual RenderedBitmap* GetImage() { return engine->GetPageImage(pageNo, rect, imageIdx); }
 };
 
 // in mupdf_load_system_font.c
@@ -1764,25 +1759,32 @@ bool PdfEngineImpl::FinishLoading() {
     return true;
 }
 
-PdfTocItem* PdfEngineImpl::BuildTocTree(fz_outline* entry, int& idCounter) {
+PdfTocItem* PdfEngineImpl::BuildTocTree(fz_outline* outline, int& idCounter) {
     PdfTocItem* node = nullptr;
 
-    for (; entry; entry = entry->next) {
-        WCHAR* name = entry->title ? pdf_clean_string(str::conv::FromUtf8(entry->title)) : str::Dup(L"");
-        PdfTocItem* item = new PdfTocItem(name, PdfLink(this, entry->uri));
-        item->open = entry->is_open;
+    while (outline) {
+        WCHAR* name = nullptr;
+        if (outline->title) {
+            name = str::conv::FromUtf8(outline->title);
+            name = pdf_clean_string(name);
+        }
+        if (!name) {
+            name = str::Dup(L"");
+        }
+        int pageNo = outline->page = 1;
+        PdfTocItem* item = new PdfTocItem(name, PdfLink(this, pageNo, nullptr, outline));
+        item->open = outline->is_open;
         item->id = ++idCounter;
 
-        // TODO(port): fz_link and fz_outline changed
-        // if (entry->dest.kind == FZ_LINK_GOTO)
-        //    item->pageNo = entry->dest.ld.gotor.page + 1;
-        if (entry->down)
-            item->child = BuildTocTree(entry->down, idCounter);
+        if (outline->down)
+            item->child = BuildTocTree(outline->down, idCounter);
 
         if (!node)
             node = item;
         else
             node->AddSibling(item);
+
+        outline = outline->next;
     }
 
     return node;
@@ -2165,18 +2167,28 @@ RenderedBitmap* PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
 
 PageElement* PdfEngineImpl::GetElementAtPos(int pageNo, PointD pt) {
     pdf_page* page = GetPdfPage(pageNo, true);
-    if (!page)
+    if (!page) {
         return nullptr;
-
-        // TODO(port):
-        // CrashMePort();
-#if 0
-    fz_point p = {(float)pt.x, (float)pt.y};
-    for (fz_link* link = page->links; link; link = link->next) {
-        if (link->dest.kind != FZ_LINK_NONE && fz_is_pt_in_rect(link->rect, p))
-            return new PdfLink(this, &link->dest, link->rect, pageNo, &p);
     }
 
+    fz_link* link = page->links;
+    fz_point p = {(float)pt.x, (float)pt.y};
+    while (link) {
+        if (fz_is_pt_in_rect(link->rect, p)) {
+            return new PdfLink(this, pageNo, link, nullptr);
+        }
+        link = link->next;
+    }
+
+    PageInfo* pi = &_pages[pageNo - 1];
+    fz_rect* ir = pi->imageRects;
+    for (size_t i = 0; ir && !fz_is_empty_rect(ir[i]); i++) {
+        if (fz_is_pt_in_rect(pi->imageRects[i], p)) {
+            return new PdfImage(this, pageNo, ir[i], i);
+        }
+    }
+
+#if 0
     if (pageAnnots[pageNo - 1]) {
         for (size_t i = 0; pageAnnots[pageNo - 1][i]; i++) {
             pdf_annot* annot = pageAnnots[pageNo - 1][i];
@@ -2194,11 +2206,6 @@ PageElement* PdfEngineImpl::GetElementAtPos(int pageNo, PointD pt) {
         }
     }
 
-    if (imageRects[pageNo - 1]) {
-        for (size_t i = 0; !fz_is_empty_rect(imageRects[pageNo - 1][i]); i++)
-            if (fz_is_pt_in_rect(imageRects[pageNo - 1][i], p))
-                return new PdfImage(this, pageNo, imageRects[pageNo - 1][i], i);
-    }
 #endif
 
     return nullptr;
@@ -3047,19 +3054,48 @@ static bool IsRelativeURI(const WCHAR* uri) {
 }
 #endif
 
+PdfLink::PdfLink(PdfEngineImpl* engine, int pageNo, fz_link* link, fz_outline* outline) {
+    this->engine = engine;
+    this->pageNo = pageNo;
+    CrashIf(!link && !outline);
+    this->link = link;
+    this->outline = outline;
+}
+
+RectD PdfLink::GetRect() const {
+    if (link) {
+        RectD r(fz_rect_to_RectD(link->rect));
+        return r;
+    }
+    CrashMePort();
+    return RectD();
+}
+
+static char* PdfLinkGetURI(const PdfLink* link) {
+    if (link->link) {
+        return link->link->uri;
+    }
+    if (link->outline) {
+        return link->outline->uri;
+    }
+    CrashMePort();
+    return nullptr;
+}
+
 WCHAR* PdfLink::GetValue() const {
-    if (!is_external_link(link)) {
+    char* uri = PdfLinkGetURI(this);
+    if (!is_external_link(uri)) {
         OutputDebugStringA("unknown link:");
-        OutputDebugStringA(link);
+        OutputDebugStringA(uri);
         OutputDebugStringA("\n");
         // CrashMePort();
         return nullptr;
     }
     OutputDebugStringA("PdfLink:");
-    OutputDebugStringA(link);
+    OutputDebugStringA(uri);
     OutputDebugStringA("\n");
     // CrashMePort();
-    WCHAR* path = str::conv::FromUtf8(link);
+    WCHAR* path = str::conv::FromUtf8(uri);
     return path;
 #if 0
     if (!link || !engine)
@@ -3152,13 +3188,14 @@ static PageDestType DestTypeFromName(const char* name) {
 #endif
 
 PageDestType PdfLink::GetDestType() const {
-    CrashIf(!link);
-    if (!link) {
+    char* uri = PdfLinkGetURI(this);
+    CrashIf(!uri);
+    if (!uri) {
         return PageDestType::None;
     }
-    if (!is_external_link(link)) {
+    if (!is_external_link(uri)) {
         float x, y;
-        int pageNo = resolve_link(link, &x, &y);
+        int pageNo = resolve_link(uri, &x, &y);
         if (pageNo == -1) {
             // TODO: figure out what it could be
             CrashMePort();
@@ -3166,7 +3203,7 @@ PageDestType PdfLink::GetDestType() const {
         }
         return PageDestType::ScrollTo;
     }
-    if (str::StartsWith(link, "file://")) {
+    if (str::StartsWith(uri, "file://")) {
         return PageDestType::LaunchFile;
     }
     // TODO: PageDestType::LaunchEmbedded, PageDestType::LaunchURL, named destination
@@ -3196,11 +3233,16 @@ PageDestType PdfLink::GetDestType() const {
 }
 
 int PdfLink::GetDestPageNo() const {
-    if (is_external_link(link)) {
+    char* uri = PdfLinkGetURI(this);
+    CrashIf(!uri);
+    if (!uri) {
+        return 0;
+    }
+    if (is_external_link(uri)) {
         return 0;
     }
     float x, y;
-    int pageNo = resolve_link(link, &x, &y);
+    int pageNo = resolve_link(uri, &x, &y);
     if (pageNo == -1) {
         return 0;
     }
@@ -3216,12 +3258,19 @@ int PdfLink::GetDestPageNo() const {
 
 RectD PdfLink::GetDestRect() const {
     RectD result(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
-    if (is_external_link(link)) {
+    char* uri = PdfLinkGetURI(this);
+    CrashIf(!uri);
+    if (!uri) {
+        CrashMePort();
+        return result;
+    }
+
+    if (is_external_link(uri)) {
         CrashMePort();
         return result;
     }
     float x, y;
-    int pageNo = resolve_link(link, &x, &y);
+    int pageNo = resolve_link(uri, &x, &y);
     if (pageNo == -1) {
         CrashMePort();
         return result;
