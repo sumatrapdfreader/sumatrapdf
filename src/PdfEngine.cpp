@@ -301,11 +301,8 @@ static inline int wchars_per_rune(int rune) {
     return 1;
 }
 
-// TODO(port):
-#if 0
 static void AddChar(fz_stext_line* span, fz_stext_char* c, str::Str<WCHAR>& s, Vec<RectI>& rects) {
-    fz_rect bbox;
-    fz_text_char_bbox(&bbox, span, c - span->first_char);
+    fz_rect bbox = span->bbox;
     RectI r = fz_rect_to_RectD(bbox).Round();
 
     int n = wchars_per_rune(c->c);
@@ -340,11 +337,8 @@ static void AddChar(fz_stext_line* span, fz_stext_char* c, str::Str<WCHAR>& s, V
         rects.Append(r);
     }
 }
-#endif
 
 // if there's a span following this one, add space to separate them
-// TODO(port)
-#if 0
 static void AddSpaceAtSpanEnd(fz_stext_line* span, str::Str<WCHAR>& s, Vec<RectI>& rects) {
     if (span->first_char == span->last_char || span->next == NULL) {
         return;
@@ -361,10 +355,7 @@ static void AddSpaceAtSpanEnd(fz_stext_line* span, str::Str<WCHAR>& s, Vec<RectI
     prev.dx /= 2;
     rects.Append(prev);
 }
-#endif
 
-// TODO(port)
-#if 0
 static void AddLineSep(str::Str<WCHAR>& s, Vec<RectI>& rects, const WCHAR* lineSep, size_t lineSepLen) {
     if (lineSepLen == 0) {
         return;
@@ -380,10 +371,7 @@ static void AddLineSep(str::Str<WCHAR>& s, Vec<RectI>& rects, const WCHAR* lineS
         rects.Append(RectI());
     }
 }
-#endif
 
-// TODO(port)
-#if 0
 static WCHAR* fz_text_page_to_str(fz_stext_page* text, const WCHAR* lineSep, RectI** coordsOut) {
     size_t lineSepLen = str::Len(lineSep);
     str::Str<WCHAR> content;
@@ -400,8 +388,11 @@ static WCHAR* fz_text_page_to_str(fz_stext_page* text, const WCHAR* lineSep, Rec
         fz_stext_line* line = block->u.t.first_line;
         while (line) {
             fz_stext_char* c = line->first_char;
-            AddChar(line, c, content, rects);
-            c = c->next;
+            while (c) {
+                AddChar(line, c, content, rects);
+                c = c->next;
+            }
+            AddSpaceAtSpanEnd(line, content, rects);
             line = line->next;
         }
         AddLineSep(content, rects, lineSep, lineSepLen);
@@ -417,7 +408,6 @@ static WCHAR* fz_text_page_to_str(fz_stext_page* text, const WCHAR* lineSep, Rec
 
     return content.StealData();
 }
-#endif
 
 struct istream_filter {
     IStream* stream;
@@ -1839,6 +1829,7 @@ PageDestination* PdfEngineImpl::GetNamedDest(const WCHAR* name) {
 }
 
 pdf_page* PdfEngineImpl::GetPdfPage(int pageNo, bool failIfBusy) {
+    CrashIf(pageNo < 1 || pageNo > pageCount);
     int pageIdx = pageNo - 1;
     PageInfo* pageInfo = &_pages[pageNo - 1];
     pdf_page* page = pageInfo->page;
@@ -2265,8 +2256,9 @@ void PdfEngineImpl::LinkifyPageText(pdf_page* page) {
     if (!pageText)
         return;
 
-    CrashMePort();
+    // TODO(port)
 #if 0
+    CrashMePort();
     LinkRectList* list = LinkifyText(pageText, coords);
     for (size_t i = 0; i < list->links.size(); i++) {
         bool overlaps = false;
@@ -2381,77 +2373,54 @@ RenderedBitmap* PdfEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
 
 WCHAR* PdfEngineImpl::ExtractPageText(pdf_page* page, const WCHAR* lineSep, RectI** coordsOut, RenderTarget target,
                                       bool cacheRun) {
-    if (!page)
-        return nullptr;
-
-    // TODO(port)
-    // CrashMePort();
+    // TODO(port): audit for the right drop
     WCHAR* content = nullptr;
-#if 0
-    fz_text_sheet* sheet = nullptr;
-    fz_text_page* text = nullptr;
-    fz_device* dev = nullptr;
-    fz_var(sheet);
-    fz_var(text);
 
+    fz_rect mediabox;
+    fz_try(ctx) { mediabox = pdf_bound_page(ctx, page); }
+    fz_catch(ctx) {
+        if (fz_caught(ctx) != FZ_ERROR_TRYLATER) {
+            return nullptr;
+        }
+        mediabox = fz_make_rect(0, 0, 100, 100);
+    }
+    fz_stext_page* page_text = fz_new_stext_page(ctx, mediabox);
+    fz_device* tdev = fz_new_stext_device(ctx, page_text, NULL);
+    if (!cacheRun) {
+        fz_enable_device_hints(ctx, tdev, FZ_NO_CACHE);
+    }
+
+    bool ok = false;
+    tdev = fz_new_stext_device(ctx, page_text, NULL);
     EnterCriticalSection(&ctxAccess);
     fz_try(ctx) {
-        sheet = fz_new_text_sheet(ctx);
-        text = fz_new_text_page(ctx);
-        dev = fz_new_text_device(ctx, sheet, text);
+        // use an infinite rectangle as bounds (instead of pdf_bound_page) to ensure that
+        // the extracted text is consistent between cached runs using a list device and
+        // fresh runs (otherwise the list device omits text outside the mediabox bounds)
+        ok = RunPage(page, tdev, fz_identity, target, mediabox, cacheRun);
+        fz_close_device(ctx, tdev);
     }
-    fz_catch(ctx) {
-        fz_drop_text_page(ctx, text);
-        fz_drop_text_sheet(ctx, sheet);
+    fz_always(ctx) {
+        fz_drop_device(ctx, tdev);
         LeaveCriticalSection(&ctxAccess);
+    }
+    fz_catch(ctx) { }
+    if (!ok) {
         return nullptr;
     }
-    LeaveCriticalSection(&ctxAccess);
-
-    if (!cacheRun)
-        fz_enable_device_hints(dev, FZ_NO_CACHE);
-
-    // use an infinite rectangle as bounds (instead of pdf_bound_page) to ensure that
-    // the extracted text is consistent between cached runs using a list device and
-    // fresh runs (otherwise the list device omits text outside the mediabox bounds)
-    bool ok = RunPage(page, dev, &fz_identity, target, nullptr, cacheRun);
-
+    // TODO(port): is this necesary?
     ScopedCritSec scope(&ctxAccess);
-
-    if (ok)
-        content = fz_text_page_to_str(text, lineSep, coordsOut);
-    fz_drop_text_page(ctx, text);
-    fz_drop_text_sheet(ctx, sheet);
-
-#endif
+    content = fz_text_page_to_str(page_text, lineSep, coordsOut);
+    fz_drop_stext_page(ctx, page_text);
     return content;
 }
 
 WCHAR* PdfEngineImpl::ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** coordsOut, RenderTarget target) {
-    pdf_page* page = GetPdfPage(pageNo, true);
-    if (page)
-        return ExtractPageText(page, lineSep, coordsOut, target);
-
-        // TODO(port): not sure if GetPdfPage() can fail anymore
-        // CrashMePort();
-#if 0
-    EnterCriticalSection(&ctxAccess);
-    fz_try(ctx) { page = pdf_load_page_by_obj(_doc, pageNo - 1, _pageObjs[pageNo - 1]); }
-    fz_catch(ctx) {
-        LeaveCriticalSection(&ctxAccess);
+    pdf_page* page = GetPdfPage(pageNo, false);
+    if (!page) {
         return nullptr;
     }
-    LeaveCriticalSection(&ctxAccess);
-
-    WCHAR* result = ExtractPageText(page, lineSep, coordsOut, target);
-
-    EnterCriticalSection(&ctxAccess);
-    pdf_free_page(_doc, page);
-    LeaveCriticalSection(&ctxAccess);
-
-    return result;
-#endif
-    return nullptr;
+    return ExtractPageText(page, lineSep, coordsOut, target);
 }
 
 bool PdfEngineImpl::IsLinearizedFile() {
