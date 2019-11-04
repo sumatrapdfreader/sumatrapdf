@@ -1501,6 +1501,7 @@ WindowInfo* LoadDocument(LoadArgs& args) {
         WCHAR* msg = str::Format(_TR("Error loading %s"), fullPath);
         win->ShowNotification(msg, NOS_HIGHLIGHT);
         str::Free(msg);
+        ShowWindow(win->hwndFrame, SW_SHOW);
 
         // display the notification ASAP (prefs::Save() can introduce a notable delay)
         win->RedrawAll(true);
@@ -1512,7 +1513,7 @@ WindowInfo* LoadDocument(LoadArgs& args) {
                 gWindows.at(0)->RedrawAll(true);
             }
         }
-        return nullptr;
+        return win;
     }
     CrashIf(openNewTab && args.forceReuse);
     if (win->IsAboutWindow()) {
@@ -4141,7 +4142,7 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
 }
 
 static LRESULT OnFrameGetMinMaxInfo(MINMAXINFO* info) {
-	//limit windows min width to prevent render loop when siderbar is too big
+    // limit windows min width to prevent render loop when siderbar is too big
     info->ptMinTrackSize.x = MIN_WIN_DX - SIDEBAR_MIN_WIDTH + gGlobalPrefs->sidebarDx;
     info->ptMinTrackSize.y = MIN_WIN_DY;
     return 0;
