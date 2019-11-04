@@ -54,6 +54,49 @@ inline float fz_calc_overlap(fz_rect r1, fz_rect r2) {
     return (isect.x1 - isect.x0) * (isect.y1 - isect.y0) / ((r1.x1 - r1.x0) * (r1.y1 - r1.y0));
 }
 
+#if 0
+static RenderedBitmap* bitmap_from_pixmap(fz_context* ctx, fz_pixmap* image) {
+    BITMAPINFO *dibinf = (BITMAPINFO*)malloc(sizeof(BITMAPINFO) + 12);
+    dibinf->bmiHeader.biSize = sizeof(dibinf->bmiHeader);
+    dibinf->bmiHeader.biPlanes = 1;
+    dibinf->bmiHeader.biBitCount = 32;
+    dibinf->bmiHeader.biCompression = BI_RGB;
+    dibinf->bmiHeader.biXPelsPerMeter = 2834;
+    dibinf->bmiHeader.biYPelsPerMeter = 2834;
+    dibinf->bmiHeader.biClrUsed = 0;
+    dibinf->bmiHeader.biClrImportant = 0;
+    dibinf->bmiHeader.biClrUsed = 0;
+
+	int image_w = fz_pixmap_width(ctx, image);
+    int image_h = fz_pixmap_height(ctx, image);
+    int image_n = fz_pixmap_components(ctx, image);
+    unsigned char* samples = fz_pixmap_samples(ctx, image);
+
+	dibinf->bmiHeader.biWidth = image_w;
+    dibinf->bmiHeader.biHeight = -image_h;
+    dibinf->bmiHeader.biSizeImage = image_h * 4;
+
+	if (image_n == 2) {
+        int i = image_w * image_h;
+        unsigned char* color = (unsigned char*)malloc(i * 4);
+        unsigned char* s = samples;
+        unsigned char* d = color;
+        for (; i > 0; i--) {
+            d[2] = d[1] = d[0] = *s++;
+            d[3] = *s++;
+            d += 4;
+        }
+        free(color);
+    }
+    if (image_n == 4) {
+        SetDIBitsToDevice(hdc, gapp.panx, gapp.pany, image_w, image_h, 0, 0, 0, image_h, samples, dibinf,
+                            DIB_RGB_COLORS);
+    }
+
+    return nullptr;
+}
+#endif
+
 static RenderedBitmap* new_rendered_fz_pixmap(fz_context* ctx, fz_pixmap* pixmap) {
     int paletteSize = 0;
     bool hasPalette = false;
@@ -69,7 +112,8 @@ static RenderedBitmap* new_rendered_fz_pixmap(fz_context* ctx, fz_pixmap* pixmap
     if (!bmpData)
         return nullptr;
     fz_pixmap* bgrPixmap = nullptr;
-    if (pixmap->n == 4 && pixmap->colorspace == fz_device_rgb(ctx)) {
+
+    if (false && pixmap->n == 4 && pixmap->colorspace == fz_device_rgb(ctx)) {
         unsigned char* dest = bmpData;
         unsigned char* source = pixmap->samples;
         uint32_t* palette = (uint32_t*)bmi.Get()->bmiColors;
@@ -115,10 +159,9 @@ static RenderedBitmap* new_rendered_fz_pixmap(fz_context* ctx, fz_pixmap* pixmap
         /* BGRA is a GDI compatible format */
         fz_try(ctx) {
             fz_irect bbox = fz_pixmap_bbox(ctx, pixmap);
-            fz_colorspace* cs = fz_device_bgr(ctx);
+            fz_colorspace* csdest = fz_device_bgr(ctx);
             fz_color_params cp = fz_default_color_params;
-            bgrPixmap = fz_new_pixmap_with_bbox(ctx, cs, bbox, nullptr, 1);
-            pixmap = fz_convert_pixmap(ctx, bgrPixmap, cs, nullptr, nullptr, cp, 1);
+            bgrPixmap = fz_convert_pixmap(ctx, pixmap, csdest, nullptr, nullptr, cp, 1);
         }
         fz_catch(ctx) { return nullptr; }
     }
@@ -1868,7 +1911,8 @@ PdfPageRun* PdfEngineImpl::GetPageRun(pdf_page* ppage, bool tryOnly) {
         fz_var(dev);
 
         fz_try(ctx) {
-            list = fz_new_display_list(ctx, fz_bound_page(ctx, page));
+            auto bounds = fz_bound_page(ctx, page);
+            list = fz_new_display_list(ctx, bounds);
             dev = fz_new_list_device(ctx, list);
             // TODO(port): should this be just fz_run_page_contents?
             fz_run_page(ctx, page, dev, fz_identity, &cookie);
@@ -2062,7 +2106,8 @@ RenderedBitmap* PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
 
     fz_try(ctx) {
         image = fz_new_pixmap_with_bbox(ctx, colorspace, ibounds, nullptr, 1);
-        fz_clear_pixmap_with_value(ctx, image, 0xFF); // initialize white background TODO(port): not sure if needed
+        // initialize white background
+        fz_clear_pixmap_with_value(ctx, image, 0xff);
         idev = fz_new_draw_device(ctx, fz_identity, image);
     }
     fz_always(ctx) { LeaveCriticalSection(&ctxAccess); }
