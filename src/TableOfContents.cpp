@@ -41,7 +41,10 @@ constexpr UINT_PTR SUBCLASS_ID = 1;
 static void CustomizeTocInfoTip(TreeCtrl* w, NMTVGETINFOTIP* nm) {
     auto* tocItem = reinterpret_cast<DocTocItem*>(nm->lParam);
     PageDestination* link = tocItem->GetLink();
-    AutoFreeW path(link ? link->GetDestValue() : nullptr);
+    if (!link) {
+        return;
+    }
+    AutoFreeW path(link->GetDestValue());
     if (!path) {
         return;
     }
