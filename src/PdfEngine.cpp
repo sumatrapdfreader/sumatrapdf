@@ -2383,40 +2383,36 @@ WCHAR* PdfEngineImpl::ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** 
 }
 
 bool PdfEngineImpl::IsLinearizedFile() {
-    CrashMePort();
-    return false;
-#if 0
     ScopedCritSec scope(&ctxAccess);
     // determine the object number of the very first object in the file
-    fz_seek(_doc->file, 0, 0);
-    int tok = pdf_lex(_doc->file, &_doc->lexbuf.base);
+    fz_seek(ctx, _doc->file, 0, 0);
+    int tok = pdf_lex(ctx, _doc->file, &_doc->lexbuf.base);
     if (tok != PDF_TOK_INT)
         return false;
     int num = _doc->lexbuf.base.i;
-    if (num < 0 || num >= pdf_xref_len(_doc))
+    if (num < 0 || num >= pdf_xref_len(ctx, _doc))
         return false;
     // check whether it's a linearization dictionary
-    fz_try(_doc->ctx) { pdf_cache_object(_doc, num, 0); }
-    fz_catch(_doc->ctx) { return false; }
-    pdf_obj* obj = pdf_get_xref_entry(_doc, num)->obj;
-    if (!pdf_is_dict(obj))
+    fz_try(ctx) { pdf_cache_object(ctx, _doc, num); }
+    fz_catch(ctx) { return false; }
+    pdf_obj* obj = pdf_get_xref_entry(ctx, _doc, num)->obj;
+    if (!pdf_is_dict(ctx, obj))
         return false;
     // /Linearized format must be version 1.0
-    if (pdf_to_real(pdf_dict_gets(obj, "Linearized")) != 1.0f)
+    if (pdf_to_real(ctx, pdf_dict_gets(ctx, obj, "Linearized")) != 1.0f)
         return false;
     // /L must be the exact file size
-    if (pdf_to_int(pdf_dict_gets(obj, "L")) != _doc->file_size)
+    if (pdf_to_int(ctx, pdf_dict_gets(ctx, obj, "L")) != _doc->file_size)
         return false;
     // /O must be the object number of the first page
-    if (pdf_to_int(pdf_dict_gets(obj, "O")) != pdf_to_num(_pageObjs[0]))
+    if (pdf_to_int(ctx, pdf_dict_gets(ctx, obj, "O")) != pdf_to_num(ctx, _pageObjs[0]))
         return false;
     // /N must be the total number of pages
-    if (pdf_to_int(pdf_dict_gets(obj, "N")) != PageCount())
+    if (pdf_to_int(ctx, pdf_dict_gets(ctx, obj, "N")) != PageCount())
         return false;
     // /H must be an array and /E and /T must be integers
-    return pdf_is_array(pdf_dict_gets(obj, "H")) && pdf_is_int(pdf_dict_gets(obj, "E")) &&
-           pdf_is_int(pdf_dict_gets(obj, "T"));
-#endif
+    return pdf_is_array(ctx, pdf_dict_gets(ctx, obj, "H")) && pdf_is_int(ctx, pdf_dict_gets(ctx, obj, "E")) &&
+           pdf_is_int(ctx, pdf_dict_gets(ctx, obj, "T"));
 }
 
 static void pdf_extract_fonts(fz_context* ctx, pdf_obj* res, Vec<pdf_obj*>& fontList, Vec<pdf_obj*>& resList) {
