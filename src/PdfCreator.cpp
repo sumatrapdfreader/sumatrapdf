@@ -24,7 +24,7 @@ void PdfCreator::SetProducerName(const WCHAR* name) {
 
 static fz_image* render_to_pixmap(fz_context* ctx, HBITMAP hbmp, SizeI size) {
 #if 1
-    CrashMe();
+    CrashMePort();
     // TODO(port): fix me
     return nullptr;
 #else
@@ -164,7 +164,7 @@ PdfCreator::~PdfCreator() {
 bool PdfCreator::AddImagePage(fz_image* image, float imgDpi) {
 #if 1
     // TODO(port)
-    CrashMe();
+    CrashMePort();
     return false;
 #else
     // see document.h in mupdf, possibly pdf_add_page()
@@ -246,14 +246,16 @@ bool PdfCreator::AddImagePage(const char* data, size_t len, float imgDpi) {
     return ok;
 }
 
-// TODO(port) static
-bool Is7BitAscii(const WCHAR* str) {
+// TODO(port)
+#if 0
+static bool Is7BitAscii(const WCHAR* str) {
     for (const WCHAR* c = str; *c; c++) {
         if (*c < 32 || *c > 127)
             return false;
     }
     return true;
 }
+#endif
 
 bool PdfCreator::SetProperty(DocumentProperty prop, const WCHAR* value) {
 #if 1
