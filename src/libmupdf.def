@@ -31,6 +31,8 @@ EXPORTS
 	pdf_page_resources
 	xps_drop_part
 	pdf_install_load_system_font_funcs
+	pdf_page_transform
+	pdf_page_obj_transform
 
 	fz_keep_bitmap
 	fz_drop_bitmap
