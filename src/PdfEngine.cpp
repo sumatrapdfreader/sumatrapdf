@@ -69,7 +69,7 @@ static RenderedBitmap* new_rendered_fz_pixmap(fz_context* ctx, fz_pixmap* pixmap
     if (!bmpData)
         return nullptr;
     fz_pixmap* bgrPixmap = nullptr;
-    if (bmpData && pixmap->n == 4 && pixmap->colorspace == fz_device_rgb(ctx)) {
+    if (pixmap->n == 4 && pixmap->colorspace == fz_device_rgb(ctx)) {
         unsigned char* dest = bmpData;
         unsigned char* source = pixmap->samples;
         uint32_t* palette = (uint32_t*)bmi.Get()->bmiColors;
@@ -844,6 +844,8 @@ static Vec<PageAnnotation> fz_get_user_page_annots(Vec<PageAnnotation>& userAnno
     return result;
 }
 
+// TODO(port)
+#if 0
 static void fz_run_user_page_annots(fz_context* ctx, Vec<PageAnnotation>& pageAnnots, fz_device* dev, fz_matrix ctm,
                                     const fz_rect* cliprect, fz_cookie* cookie) {
     for (size_t i = 0; i < pageAnnots.size() && (!cookie || !cookie->abort); i++) {
@@ -904,7 +906,10 @@ static void fz_run_user_page_annots(fz_context* ctx, Vec<PageAnnotation>& pageAn
         fz_drop_path(ctx, path);
     }
 }
+#endif
 
+// TODO(port): not sure why it was here and if it's still needed
+#if 0
 static void fz_run_page_transparency(fz_context* ctx, Vec<PageAnnotation>& pageAnnots, fz_device* dev,
                                      const fz_rect* cliprect, bool endGroup, bool hasTransparency = false) {
     if (hasTransparency || pageAnnots.size() == 0)
@@ -924,6 +929,7 @@ static void fz_run_page_transparency(fz_context* ctx, Vec<PageAnnotation>& pageA
     } else
         fz_end_group(ctx, dev);
 }
+#endif
 
 ///// PDF-specific extensions to Fitz/MuPDF /////
 
@@ -1127,14 +1133,18 @@ struct PageTreeStackItem {
 ///// Above are extensions to Fitz and MuPDF, now follows PdfEngine /////
 
 struct PdfPageRun {
-    pdf_page* page;
-    fz_display_list* list;
-    size_t size_est;
-    int refs;
+    pdf_page* page = nullptr;
+    fz_display_list* list = nullptr;
+    size_t size_est = 0;
+    int refs = 1;
 
-    PdfPageRun(pdf_page* page, fz_display_list* list, ListInspectionData& data)
-        : page(page), list(list), size_est(data.mem_estimate), refs(1) {}
+    PdfPageRun(pdf_page* page, fz_display_list* list);
 };
+
+PdfPageRun::PdfPageRun(pdf_page* page, fz_display_list* list) {
+    this->page = page;
+    this->list = list;
+}
 
 class PdfTocItem;
 class PdfLink;
@@ -1237,8 +1247,8 @@ class PdfEngineImpl : public BaseEngine {
     Vec<PdfPageRun*> runCache; // ordered most recently used first
     PdfPageRun* CreatePageRun(pdf_page* page, fz_display_list* list);
     PdfPageRun* GetPageRun(pdf_page* page, bool tryOnly = false);
-    bool RunPage(pdf_page* page, fz_matrix ctm, RenderTarget target = RenderTarget::View,
-                 const fz_rect* cliprect = nullptr, bool cacheRun = true, FitzAbortCookie* cookie = nullptr);
+    bool RunPage(pdf_page* page, fz_device* dev, fz_matrix ctm, RenderTarget target = RenderTarget::View,
+                 fz_rect cliprect = {}, bool cacheRun = true, FitzAbortCookie* cookie = nullptr);
     void DropPageRun(PdfPageRun* run, bool forceRemove = false);
 
     PdfTocItem* BuildTocTree(fz_outline* entry, int& idCounter);
@@ -1816,16 +1826,19 @@ PdfPageRun* PdfEngineImpl::CreatePageRun(pdf_page* page, fz_display_list* list) 
         }
     }
 
-    return new PdfPageRun(page, list, data);
+    auto pageRun = new PdfPageRun(page, list);
+    pageRun->size_est = data.mem_estimate;
+    return pageRun;
 }
 
-PdfPageRun* PdfEngineImpl::GetPageRun(pdf_page* page, bool tryOnly) {
+PdfPageRun* PdfEngineImpl::GetPageRun(pdf_page* ppage, bool tryOnly) {
     PdfPageRun* result = nullptr;
+    fz_cookie cookie = {0};
 
     ScopedCritSec scope(&pagesAccess);
 
     for (size_t i = 0; i < runCache.size(); i++) {
-        if (runCache.at(i)->page == page) {
+        if (runCache.at(i)->page == ppage) {
             result = runCache.at(i);
             break;
         }
@@ -1847,26 +1860,33 @@ PdfPageRun* PdfEngineImpl::GetPageRun(pdf_page* page, bool tryOnly) {
 
         ScopedCritSec scope2(&ctxAccess);
 
-        // TODO(port): chagne GetPageRun to use fz_page?
-        fz_page* fzpage = (fz_page*)page;
-        fz_rect bbox = fz_bound_page(ctx, fzpage);
-        fz_display_list* list = nullptr;
-        fz_device* dev = nullptr;
+        fz_page* page = (fz_page*)ppage;
+
+        fz_display_list* list = NULL;
+        fz_device* dev = NULL;
         fz_var(list);
         fz_var(dev);
+
         fz_try(ctx) {
-            list = fz_new_display_list(ctx, bbox);
+            list = fz_new_display_list(ctx, fz_bound_page(ctx, page));
             dev = fz_new_list_device(ctx, list);
-            pdf_run_page(ctx, page, dev, fz_identity, nullptr);
+            // TODO(port): should this be just fz_run_page_contents?
+            fz_run_page(ctx, page, dev, fz_identity, &cookie);
+        }
+        fz_always(ctx) {
+            fz_close_device(ctx, dev);
+            fz_drop_device(ctx, dev);
+            dev = NULL;
         }
         fz_catch(ctx) {
             fz_drop_display_list(ctx, list);
-            list = nullptr;
+            // fz_drop_separations(ctx, seps);
+            fz_drop_page(ctx, page);
+            fz_rethrow(ctx);
         }
-        fz_drop_device(ctx, dev);
 
         if (list) {
-            result = CreatePageRun(page, list);
+            result = CreatePageRun(ppage, list);
             runCache.InsertAt(0, result);
         }
     } else if (result && result != runCache.at(0)) {
@@ -1880,29 +1900,25 @@ PdfPageRun* PdfEngineImpl::GetPageRun(pdf_page* page, bool tryOnly) {
     return result;
 }
 
-bool PdfEngineImpl::RunPage(pdf_page* page, fz_matrix ctm, RenderTarget target, const fz_rect* cliprect, bool cacheRun,
-                            FitzAbortCookie* cookie) {
+bool PdfEngineImpl::RunPage(pdf_page* page, fz_device* dev, fz_matrix ctm, RenderTarget target, fz_rect cliprect,
+                            bool cacheRun, FitzAbortCookie* cookie) {
     bool ok = true;
 
     fz_cookie* fzcookie = cookie ? &cookie->cookie : nullptr;
-    fz_device* dev = nullptr;
 
-    PdfPageRun* run;
-    if (RenderTarget::View == target && (run = GetPageRun(page, !cacheRun)) != nullptr) {
+    if (RenderTarget::View == target) {
+        PdfPageRun* run = GetPageRun(page, !cacheRun);
+        CrashIf(!run);
+        if (!run) {
+            return false;
+        }
         EnterCriticalSection(&ctxAccess);
         Vec<PageAnnotation> pageAnnots = fz_get_user_page_annots(userAnnots, GetPageNo(page));
         fz_try(ctx) {
-            // TODO(port): not sure if this is the right port
-            fz_buffer* buf = fz_new_buffer(ctx, 1024);
-            fz_output* out = fz_new_output_with_buffer(ctx, buf);
-            auto wri = fz_new_pdf_writer_with_output(ctx, out, nullptr);
-            auto pageBounds = pdf_bound_page(ctx, page);
-            dev = fz_begin_page(ctx, wri, pageBounds);
-            fz_run_page_transparency(ctx, pageAnnots, dev, cliprect, false, page->transparency);
-            fz_run_display_list(ctx, run->list, dev, ctm, *cliprect, fzcookie);
-            fz_run_page_transparency(ctx, pageAnnots, dev, cliprect, true, page->transparency);
-            fz_run_user_page_annots(ctx, pageAnnots, dev, ctm, cliprect, fzcookie);
-            fz_end_page(ctx, wri);
+            // fz_run_page_transparency(ctx, pageAnnots, dev, cliprect, false, page->transparency);
+            fz_run_display_list(ctx, run->list, dev, ctm, cliprect, fzcookie);
+            // fz_run_page_transparency(ctx, pageAnnots, dev, cliprect, true, page->transparency);
+            // fz_run_user_page_annots(ctx, pageAnnots, dev, ctm, cliprect, fzcookie);
         }
         fz_catch(ctx) { ok = false; }
         LeaveCriticalSection(&ctxAccess);
@@ -1918,18 +1934,14 @@ bool PdfEngineImpl::RunPage(pdf_page* page, fz_matrix ctm, RenderTarget target, 
             auto wri = fz_new_pdf_writer_with_output(ctx, out, nullptr);
             auto pageBounds = pdf_bound_page(ctx, page);
             fz_begin_page(ctx, wri, pageBounds);
-            fz_run_page_transparency(ctx, pageAnnots, dev, cliprect, false, page->transparency);
-            pdf_run_page_with_usage(ctx, _doc, page, dev, ctm, targetName, cookie ? &cookie->cookie : nullptr);
-            fz_run_page_transparency(ctx, pageAnnots, dev, cliprect, true, page->transparency);
-            fz_run_user_page_annots(ctx, pageAnnots, dev, ctm, cliprect, cookie ? &cookie->cookie : nullptr);
+            // fz_run_page_transparency(ctx, pageAnnots, dev, cliprect, false, page->transparency);
+            pdf_run_page_with_usage(ctx, _doc, page, dev, ctm, targetName, fzcookie);
+            // fz_run_page_transparency(ctx, pageAnnots, dev, cliprect, true, page->transparency);
+            // fz_run_user_page_annots(ctx, pageAnnots, dev, ctm, cliprect, fzcookie);
             fz_end_page(ctx, wri);
         }
         fz_catch(ctx) { ok = false; }
     }
-
-    EnterCriticalSection(&ctxAccess);
-    fz_drop_device(ctx, dev);
-    LeaveCriticalSection(&ctxAccess);
 
     return ok && !(cookie && cookie->cookie.abort);
 }
@@ -1957,10 +1969,11 @@ RectD PdfEngineImpl::PageMediabox(int pageNo) {
     ScopedCritSec scope(&ctxAccess);
 
     fz_rect mbox;
-    fz_matrix matrix;
+    fz_matrix page_ctm;
     fz_try(ctx) {
         pdf_obj* pageref = pdf_lookup_page_obj(ctx, _doc, pageNo);
-        pdf_page_obj_transform(ctx, pageref, &mbox, &matrix);
+        pdf_page_obj_transform(ctx, pageref, &mbox, &page_ctm);
+        mbox = fz_transform_rect(mbox, page_ctm);
     }
     fz_catch(ctx) {}
     if (fz_is_empty_rect(mbox)) {
@@ -1983,9 +1996,11 @@ RectD PdfEngineImpl::PageContentBox(int pageNo, RenderTarget target) {
         return RectD();
 
     fz_rect rect = fz_empty_rect;
-
+    fz_device* dev = nullptr;
+    dev = fz_new_bbox_device(ctx, &rect);
     fz_rect pagerect = pdf_bound_page(ctx, page);
-    bool ok = RunPage(page, fz_identity, target, &pagerect, false);
+    bool ok = RunPage(page, dev, fz_identity, target, pagerect, false);
+    fz_drop_device(ctx, dev);
     if (!ok)
         return PageMediabox(pageNo);
     if (fz_is_infinite_rect(rect))
@@ -2021,6 +2036,12 @@ RenderedBitmap* PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
         return nullptr;
     }
 
+    FitzAbortCookie* cookie = nullptr;
+    if (cookie_out) {
+        cookie = new FitzAbortCookie();
+        *cookie_out = cookie;
+    }
+
     fz_rect pRect;
     if (pageRect)
         pRect = fz_RectD_to_rect(*pageRect);
@@ -2028,40 +2049,43 @@ RenderedBitmap* PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
         pRect = pdf_bound_page(ctx, page);
     fz_matrix ctm = viewctm(page, zoom, rotation);
     fz_irect bbox = fz_round_rect(fz_transform_rect(pRect, ctm));
-
     fz_pixmap* image = nullptr;
+
     // TODO(port): I don't see why this lock is needed
     EnterCriticalSection(&ctxAccess);
-    fz_try(ctx) {
-        fz_colorspace* colorspace = fz_device_rgb(ctx);
-        image = fz_new_pixmap_with_bbox(ctx, colorspace, bbox, nullptr, 1);
-        fz_clear_pixmap_with_value(ctx, image, 0xFF); // initialize white background
-    }
-    fz_catch(ctx) {
-        LeaveCriticalSection(&ctxAccess);
-        return nullptr;
-    }
 
-    fz_device* dev = nullptr;
-    fz_try(ctx) { dev = fz_new_draw_device(ctx, fz_identity, image); }
+    fz_colorspace* colorspace = fz_device_rgb(ctx);
+    fz_irect ibounds = bbox;
+    fz_device* idev = NULL;
+    fz_var(image);
+    fz_var(idev);
+
+    fz_try(ctx) {
+        image = fz_new_pixmap_with_bbox(ctx, colorspace, ibounds, nullptr, 1);
+        fz_clear_pixmap_with_value(ctx, image, 0xFF); // initialize white background TODO(port): not sure if needed
+        idev = fz_new_draw_device(ctx, fz_identity, image);
+    }
+    fz_always(ctx) { LeaveCriticalSection(&ctxAccess); }
     fz_catch(ctx) {
         fz_drop_pixmap(ctx, image);
+        fz_drop_device(ctx, idev);
         LeaveCriticalSection(&ctxAccess);
         return nullptr;
     }
-    LeaveCriticalSection(&ctxAccess);
 
-    FitzAbortCookie* cookie = nullptr;
-    if (cookie_out)
-        *cookie_out = cookie = new FitzAbortCookie();
     fz_rect cliprect = fz_rect_from_irect(bbox);
-    bool ok = RunPage(page, ctm, target, &cliprect, true, cookie);
+    bool ok = RunPage(page, idev, ctm, target, cliprect, true, cookie);
+    // TODO: inside fz_try?
+    fz_close_device(ctx, idev);
 
-    ScopedCritSec scope(&ctxAccess);
+    if (!ok) {
+        fz_drop_pixmap(ctx, image);
+        return nullptr;
+    }
 
     RenderedBitmap* bitmap = nullptr;
-    if (ok)
-        bitmap = new_rendered_fz_pixmap(ctx, image);
+    ScopedCritSec scope(&ctxAccess);
+    bitmap = new_rendered_fz_pixmap(ctx, image);
     fz_drop_pixmap(ctx, image);
     return bitmap;
 }
@@ -2071,8 +2095,8 @@ PageElement* PdfEngineImpl::GetElementAtPos(int pageNo, PointD pt) {
     if (!page)
         return nullptr;
 
-    // TODO(port):
-    //CrashMePort();
+        // TODO(port):
+        // CrashMePort();
 #if 0
     fz_point p = {(float)pt.x, (float)pt.y};
     for (fz_link* link = page->links; link; link = link->next) {
@@ -2126,7 +2150,7 @@ Vec<PageElement*>* PdfEngineImpl::GetElements(int pageNo) {
     }
 
     // TODO(port)
-    //CrashMePort();
+    // CrashMePort();
 #if 0
     if (pageAnnots[pageNo - 1]) {
         ScopedCritSec scope(&ctxAccess);
@@ -2253,7 +2277,7 @@ RenderedBitmap* PdfEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
     }
     LeaveCriticalSection(&ctxAccess);
 
-    RunPage(page, fz_identity);
+    RunPage(page, dev, fz_identity);
 
     if (imageIx >= positions.size() || fz_rect_to_RectD(positions.at(imageIx).rect) != rect) {
         AssertCrash(0);
@@ -2384,7 +2408,8 @@ bool PdfEngineImpl::IsLinearizedFile() {
         return false;
 
     // /N must be the total number of pages
-    if (pdf_to_int(ctx, pdf_dict_gets(ctx, obj, "N")) != PageCount()) return false;
+    if (pdf_to_int(ctx, pdf_dict_gets(ctx, obj, "N")) != PageCount())
+        return false;
     // /H must be an array and /E and /T must be integers
     return pdf_is_array(ctx, pdf_dict_gets(ctx, obj, "H")) && pdf_is_int(ctx, pdf_dict_gets(ctx, obj, "E")) &&
            pdf_is_int(ctx, pdf_dict_gets(ctx, obj, "T"));
@@ -2829,8 +2854,7 @@ bool PdfEngineImpl::SaveUserAnnots(const char* pathUtf8) {
             // get the page's /Annots array for appending
             pdf_obj* annots = pdf_dict_gets(ctx, page_obj, "Annots");
             if (!pdf_is_array(ctx, annots)) {
-                pdf_dict_puts_drop(ctx, page_obj, "Annots",
-                                   pdf_new_array(ctx, _doc, (int)pageAnnots.size()));
+                pdf_dict_puts_drop(ctx, page_obj, "Annots", pdf_new_array(ctx, _doc, (int)pageAnnots.size()));
                 annots = pdf_dict_gets(ctx, page_obj, "Annots");
             }
             if (!pdf_is_indirect(ctx, annots)) {
@@ -3399,8 +3423,8 @@ class XpsEngineImpl : public BaseEngine {
     Vec<XpsPageRun*> runCache; // ordered most recently used first
     XpsPageRun* CreatePageRun(fz_page* page, fz_display_list* list);
     XpsPageRun* GetPageRun(fz_page* page, bool tryOnly = false);
-    bool RunPage(fz_page* page, fz_device* dev, const fz_matrix* ctm, const fz_rect* cliprect = nullptr,
-                 bool cacheRun = true, FitzAbortCookie* cookie = nullptr);
+    bool RunPage(fz_page* page, fz_device* dev, const fz_matrix* ctm, const fz_rect cliprect = {}, bool cacheRun = true,
+                 FitzAbortCookie* cookie = nullptr);
     void DropPageRun(XpsPageRun* run, bool forceRemove = false);
 
     XpsTocItem* BuildTocTree(fz_outline* entry, int& idCounter);
@@ -3775,7 +3799,7 @@ XpsPageRun* XpsEngineImpl::GetPageRun(fz_page* page, bool tryOnly) {
     return result;
 }
 
-bool XpsEngineImpl::RunPage(fz_page* page, fz_device* dev, const fz_matrix* ctm, const fz_rect* cliprect, bool cacheRun,
+bool XpsEngineImpl::RunPage(fz_page* page, fz_device* dev, const fz_matrix* ctm, fz_rect cliprect, bool cacheRun,
                             FitzAbortCookie* cookie) {
     bool ok = true;
     CrashMePort();
@@ -3876,7 +3900,7 @@ RectD XpsEngineImpl::PageContentBox(int pageNo, RenderTarget target) {
     LeaveCriticalSection(&ctxAccess);
 
     fz_rect pagerect = fz_bound_page(ctx, page);
-    bool ok = RunPage(page, dev, &fz_identity, &pagerect, false);
+    bool ok = RunPage(page, dev, &fz_identity, pagerect, false);
     if (!ok)
         return PageMediabox(pageNo);
     if (fz_is_infinite_rect(rect))
@@ -3946,7 +3970,7 @@ RenderedBitmap* XpsEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
     if (cookie_out)
         *cookie_out = cookie = new FitzAbortCookie();
     fz_rect cliprect = fz_rect_from_irect(bbox);
-    bool ok = RunPage(page, dev, &ctm, &cliprect, true, cookie);
+    bool ok = RunPage(page, dev, &ctm, cliprect, true, cookie);
 
     ScopedCritSec scope(&ctxAccess);
 
