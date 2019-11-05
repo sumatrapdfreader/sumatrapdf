@@ -24,7 +24,8 @@ class Grid : public Control {
               col(0),
               colSpan(1),
               vertAlign(GetElAlignTop()),
-              horizAlign(GetElAlignLeft()) {}
+              horizAlign(GetElAlignLeft()) {
+        }
 
         CellData(const CellData& other)
             : el(other.el),
@@ -33,7 +34,8 @@ class Grid : public Control {
               col(other.col),
               colSpan(other.colSpan),
               vertAlign(other.vertAlign),
-              horizAlign(other.horizAlign) {}
+              horizAlign(other.horizAlign) {
+        }
 
         void Set(Control* el, int row, int col, ElAlign horizAlign = ElAlign::Left,
                  ElAlign vertAlign = ElAlign::Bottom) {
@@ -92,6 +94,8 @@ class Grid : public Control {
 
     // ILayout
     virtual Size Measure(const Size availableSize);
-    virtual Size DesiredSize() { return desiredSize; }
+    virtual Size DesiredSize() {
+        return desiredSize;
+    }
     virtual void Arrange(const Rect finalRect);
 };

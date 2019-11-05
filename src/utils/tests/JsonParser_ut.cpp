@@ -12,9 +12,11 @@ struct JsonValue {
     json::DataType type;
     const char* value;
 
-    JsonValue() : path(nullptr), value(nullptr) {}
+    JsonValue() : path(nullptr), value(nullptr) {
+    }
     JsonValue(const char* path, const char* value, json::DataType type = json::Type_String)
-        : path(path), type(type), value(value) {}
+        : path(path), type(type), value(value) {
+    }
 };
 
 class JsonVerifier : public json::ValueVisitor {
@@ -23,8 +25,11 @@ class JsonVerifier : public json::ValueVisitor {
     size_t idx;
 
   public:
-    JsonVerifier(const JsonValue* data, size_t dataLen) : data(data), dataLen(dataLen), idx(0) {}
-    ~JsonVerifier() { utassert(dataLen == idx); }
+    JsonVerifier(const JsonValue* data, size_t dataLen) : data(data), dataLen(dataLen), idx(0) {
+    }
+    ~JsonVerifier() {
+        utassert(dataLen == idx);
+    }
 
     virtual bool Visit(const char* path, const char* value, json::DataType type) {
         utassert(idx < dataLen);

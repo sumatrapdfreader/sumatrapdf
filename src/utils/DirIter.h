@@ -28,7 +28,9 @@ class DirIter {
         : foundNext(false), currFindHandle(nullptr), recursive(recursive) {
         startDir.SetCopy(dir);
     }
-    ~DirIter() { FindClose(currFindHandle); }
+    ~DirIter() {
+        FindClose(currFindHandle);
+    }
 
     const WCHAR* First();
     const WCHAR* Next();

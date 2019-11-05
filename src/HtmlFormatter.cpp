@@ -110,7 +110,8 @@ DrawInstr DrawInstr::Anchor(const char* s, size_t len, RectF bbox) {
     return di;
 }
 
-StyleRule::StyleRule() : tag(Tag_NotFound), textIndentUnit(inherit), textAlign(Align_NotFound) {}
+StyleRule::StyleRule() : tag(Tag_NotFound), textIndentUnit(inherit), textAlign(Align_NotFound) {
+}
 
 // parses size in the form "1em", "3pt" or "15px"
 static void ParseSizeWithUnit(const char* s, size_t len, float* size, StyleRule::Unit* unit) {

@@ -5,7 +5,8 @@ namespace slog {
 
 class Logger {
   public:
-    virtual ~Logger() {}
+    virtual ~Logger() {
+    }
     virtual void Log(const WCHAR* s) = 0;
 
     void LogFmt(const WCHAR* fmt, ...) {
@@ -35,7 +36,9 @@ class MemoryLogger : public Logger {
 
     // caller MUST NOT free the result
     // (str::Dup data, if the logger is in use)
-    WCHAR* GetData() { return log.LendData(); }
+    WCHAR* GetData() {
+        return log.LendData();
+    }
 };
 
 class DebugLogger : public Logger {
@@ -50,7 +53,9 @@ class DebugLogger : public Logger {
 
 class StderrLogger : public Logger {
   public:
-    virtual ~StderrLogger() { fflush(stderr); }
+    virtual ~StderrLogger() {
+        fflush(stderr);
+    }
 
     virtual void Log(const WCHAR* s) {
         if (s)

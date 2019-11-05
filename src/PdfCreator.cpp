@@ -99,7 +99,9 @@ static fz_image* render_to_pixmap(fz_context* ctx, HBITMAP hbmp, SizeI size) {
         if (res != Z_OK)
             fz_throw(ctx, FZ_ERROR_GENERIC, "deflate failure %d", res);
     }
-    fz_always(ctx) { fz_free(ctx, data); }
+    fz_always(ctx) {
+        fz_free(ctx, data);
+    }
     fz_catch(ctx) {
         fz_drop_compressed_buffer(ctx, buf);
         fz_rethrow(ctx);
@@ -144,16 +146,19 @@ static fz_image* pack_jp2(fz_context* ctx, const char* data, size_t len, SizeI s
     }
 
     return fz_new_image_from_compressed_buffer(ctx, size.dx, size.dy, 8, fz_device_rgb(ctx), 96, 96, 0, 0, nullptr,
-                                               nullptr, buf,
-                                nullptr);
+                                               nullptr, buf, nullptr);
 }
 
 PdfCreator::PdfCreator() {
     ctx = fz_new_context(nullptr, nullptr, FZ_STORE_DEFAULT);
     if (!ctx)
         return;
-    fz_try(ctx) { doc = pdf_create_document(ctx); }
-    fz_catch(ctx) { doc = nullptr; }
+    fz_try(ctx) {
+        doc = pdf_create_document(ctx);
+    }
+    fz_catch(ctx) {
+        doc = nullptr;
+    }
 }
 
 PdfCreator::~PdfCreator() {
@@ -193,7 +198,9 @@ bool PdfCreator::AddImagePage(fz_image* image, float imgDpi) {
         fz_drop_device(dev);
         pdf_drop_page_tree(doc, page);
     }
-    fz_catch(ctx) { return false; }
+    fz_catch(ctx) {
+        return false;
+    }
     return true;
 #endif
 }
@@ -203,8 +210,12 @@ bool PdfCreator::AddImagePage(HBITMAP hbmp, SizeI size, float imgDpi) {
         return false;
 
     fz_image* image = nullptr;
-    fz_try(ctx) { image = render_to_pixmap(ctx, hbmp, size); }
-    fz_catch(ctx) { return false; }
+    fz_try(ctx) {
+        image = render_to_pixmap(ctx, hbmp, size);
+    }
+    fz_catch(ctx) {
+        return false;
+    }
     bool ok = AddImagePage(image, imgDpi);
     fz_drop_image(ctx, image);
     return ok;
@@ -233,7 +244,9 @@ bool PdfCreator::AddImagePage(const char* data, size_t len, float imgDpi) {
         fz_try(ctx) {
             image = (str::Eq(ext, L".jpg") ? pack_jpeg : pack_jp2)(ctx, data, len, SizeI(size.Width, size.Height));
         }
-        fz_catch(ctx) { return false; }
+        fz_catch(ctx) {
+            return false;
+        }
         bool ok = AddImagePage(image, imgDpi);
         fz_drop_image(ctx, image);
         return ok;
@@ -338,7 +351,8 @@ bool PdfCreator::SaveToFile(const char* filePath) {
 
     fz_try(ctx) {
         pdf_save_document(ctx, doc, const_cast<char*>(filePath), nullptr);
-    } fz_catch(ctx) {
+    }
+    fz_catch(ctx) {
         return false;
     }
     return true;

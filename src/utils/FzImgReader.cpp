@@ -88,7 +88,9 @@ static Bitmap* ImageFromJpegData(fz_context* ctx, const char* data, int len) {
         fz_drop_stream(ctx, stm);
         fz_drop_colorspace(ctx, cs);
     }
-    fz_catch(ctx) { return nullptr; }
+    fz_catch(ctx) {
+        return nullptr;
+    }
 
     // hack to avoid the use of ::new (because there won't be a corresponding ::delete)
     return bmp.Clone(0, 0, w, h, fmt);
@@ -101,8 +103,12 @@ static Bitmap* ImageFromJp2Data(fz_context* ctx, const char* data, int len) {
     fz_var(pix);
     fz_var(pix_argb);
 
-    fz_try(ctx) { pix = fz_load_jpx(ctx, (unsigned char*)data, len, nullptr); }
-    fz_catch(ctx) { return nullptr; }
+    fz_try(ctx) {
+        pix = fz_load_jpx(ctx, (unsigned char*)data, len, nullptr);
+    }
+    fz_catch(ctx) {
+        return nullptr;
+    }
 
     int w = pix->w, h = pix->h;
     Bitmap bmp(w, h, PixelFormat32bppARGB);
@@ -140,7 +146,9 @@ static Bitmap* ImageFromJp2Data(fz_context* ctx, const char* data, int len) {
         fz_drop_pixmap(ctx, pix);
         fz_drop_pixmap(ctx, pix_argb);
     }
-    fz_catch(ctx) { return nullptr; }
+    fz_catch(ctx) {
+        return nullptr;
+    }
 
     // hack to avoid the use of ::new (because there won't be a corresponding ::delete)
     return bmp.Clone(0, 0, w, h, PixelFormat32bppARGB);

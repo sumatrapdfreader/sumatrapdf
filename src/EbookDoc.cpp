@@ -650,7 +650,9 @@ bool EpubDoc::IsSupportedFile(const WCHAR* fileName, bool sniff) {
         return str::EndsWithI(fileName, L".epub");
     }
     Archive* archive = OpenZipArchive(fileName, true);
-    defer { delete archive; };
+    defer {
+        delete archive;
+    };
     OwnedData mimetype(archive->GetFileDataByName("mimetype"));
     if (!mimetype.data) {
         return false;
@@ -697,7 +699,8 @@ EpubDoc* EpubDoc::CreateFromStream(IStream* stream) {
 const char* FB2_MAIN_NS = "http://www.gribuser.ru/xml/fictionbook/2.0";
 const char* FB2_XLINK_NS = "http://www.w3.org/1999/xlink";
 
-Fb2Doc::Fb2Doc(const WCHAR* fileName) : fileName(str::Dup(fileName)), stream(nullptr), isZipped(false), hasToc(false) {}
+Fb2Doc::Fb2Doc(const WCHAR* fileName) : fileName(str::Dup(fileName)), stream(nullptr), isZipped(false), hasToc(false) {
+}
 
 Fb2Doc::Fb2Doc(IStream* stream) : fileName(nullptr), stream(stream), isZipped(false), hasToc(false) {
     stream->AddRef();
@@ -974,9 +977,11 @@ Fb2Doc* Fb2Doc::CreateFromStream(IStream* stream) {
 
 /* ********** PalmDOC (and TealDoc) ********** */
 
-PalmDoc::PalmDoc(const WCHAR* fileName) : fileName(str::Dup(fileName)) {}
+PalmDoc::PalmDoc(const WCHAR* fileName) : fileName(str::Dup(fileName)) {
+}
 
-PalmDoc::~PalmDoc() {}
+PalmDoc::~PalmDoc() {
+}
 
 #define PDB_TOC_ENTRY_MARK "ToC!Entry!"
 
@@ -1140,7 +1145,8 @@ PalmDoc* PalmDoc::CreateFromFile(const WCHAR* fileName) {
 
 /* ********** Plain HTML ********** */
 
-HtmlDoc::HtmlDoc(const WCHAR* fileName) : fileName(str::Dup(fileName)) {}
+HtmlDoc::HtmlDoc(const WCHAR* fileName) : fileName(str::Dup(fileName)) {
+}
 
 HtmlDoc::~HtmlDoc() {
     for (size_t i = 0; i < images.size(); i++) {
@@ -1256,7 +1262,8 @@ HtmlDoc* HtmlDoc::CreateFromFile(const WCHAR* fileName) {
 
 /* ********** Plain Text (and RFCs and TCR) ********** */
 
-TxtDoc::TxtDoc(const WCHAR* fileName) : fileName(str::Dup(fileName)), isRFC(false) {}
+TxtDoc::TxtDoc(const WCHAR* fileName) : fileName(str::Dup(fileName)), isRFC(false) {
+}
 
 // cf. http://www.cix.co.uk/~gidds/Software/TCR.html
 #define TCR_HEADER "!!8-Bit!!"

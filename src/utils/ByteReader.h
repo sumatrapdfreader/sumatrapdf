@@ -51,8 +51,10 @@ class ByteReader {
     }
 
   public:
-    ByteReader(const char* data, size_t len) : d((const uint8_t*)data), len(len) {}
-    ByteReader(const unsigned char* data, size_t len) : d((const uint8_t*)data), len(len) {}
+    ByteReader(const char* data, size_t len) : d((const uint8_t*)data), len(len) {
+    }
+    ByteReader(const unsigned char* data, size_t len) : d((const uint8_t*)data), len(len) {
+    }
 
     uint8_t Byte(size_t off) const {
         if (off < len)
@@ -70,7 +72,9 @@ class ByteReader {
             return (d[off] << 8) | d[off + 1];
         return 0;
     }
-    uint16_t Word(size_t off, bool isBE) const { return isBE ? WordBE(off) : WordLE(off); }
+    uint16_t Word(size_t off, bool isBE) const {
+        return isBE ? WordBE(off) : WordLE(off);
+    }
 
     uint32_t DWordLE(size_t off) const {
         if (off + 4 <= len)
@@ -82,7 +86,9 @@ class ByteReader {
             return (d[off] << 24) | (d[off + 1] << 16) | (d[off + 2] << 8) | d[off + 3];
         return 0;
     }
-    uint32_t DWord(size_t off, bool isBE) const { return isBE ? DWordBE(off) : DWordLE(off); }
+    uint32_t DWord(size_t off, bool isBE) const {
+        return isBE ? DWordBE(off) : DWordLE(off);
+    }
 
     uint64_t QWordLE(size_t off) const {
         if (off + 8 <= len)
@@ -94,7 +100,9 @@ class ByteReader {
             return ((uint64_t)DWordBE(off) << 32) | DWordBE(off + 4);
         return 0;
     }
-    uint64_t QWord(size_t off, bool isBE) const { return isBE ? QWordBE(off) : QWordLE(off); }
+    uint64_t QWord(size_t off, bool isBE) const {
+        return isBE ? QWordBE(off) : QWordLE(off);
+    }
 
     const char* Find(size_t off, uint8_t byte) const {
         if (off >= len)

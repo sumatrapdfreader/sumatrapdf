@@ -35,9 +35,15 @@ class TabInfo {
     TabInfo(const WCHAR* filePath = nullptr);
     ~TabInfo();
 
-    DisplayModel* AsFixed() const { return ctrl ? ctrl->AsFixed() : nullptr; }
-    ChmModel* AsChm() const { return ctrl ? ctrl->AsChm() : nullptr; }
-    EbookController* AsEbook() const { return ctrl ? ctrl->AsEbook() : nullptr; }
+    DisplayModel* AsFixed() const {
+        return ctrl ? ctrl->AsFixed() : nullptr;
+    }
+    ChmModel* AsChm() const {
+        return ctrl ? ctrl->AsChm() : nullptr;
+    }
+    EbookController* AsEbook() const {
+        return ctrl ? ctrl->AsEbook() : nullptr;
+    }
     // returns EngineType::None if !AsFixed()
     EngineType GetEngineType() const;
 
@@ -51,7 +57,8 @@ class LinkSaver : public LinkSaverUI {
 
   public:
     LinkSaver(TabInfo* tab, HWND parentHwnd, const WCHAR* fileName)
-        : tab(tab), parentHwnd(parentHwnd), fileName(fileName) {}
+        : tab(tab), parentHwnd(parentHwnd), fileName(fileName) {
+    }
 
     virtual bool SaveEmbedded(const unsigned char* data, size_t cbCount);
 };

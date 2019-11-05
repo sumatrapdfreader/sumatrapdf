@@ -194,8 +194,11 @@ struct FindThreadData : public ProgressUpdateUI {
           text(win::GetText(findBox)),
           wasModified(Edit_GetModify(findBox)),
           wnd(nullptr),
-          thread(nullptr) {}
-    ~FindThreadData() { CloseHandle(thread); }
+          thread(nullptr) {
+    }
+    ~FindThreadData() {
+        CloseHandle(thread);
+    }
 
     void ShowUI(bool showProgress) {
         const LPARAM disable = (LPARAM)MAKELONG(0, 0);
@@ -246,7 +249,9 @@ struct FindThreadData : public ProgressUpdateUI {
         uitask::Post([=] { UpdateFindStatusTask(win, wnd, current, total); });
     }
 
-    virtual bool WasCanceled() { return !WindowInfoStillValid(win) || win->findCanceled; }
+    virtual bool WasCanceled() {
+        return !WindowInfoStillValid(win) || win->findCanceled;
+    }
 };
 
 static void FindEndTask(WindowInfo* win, FindThreadData* ftd, TextSel* textSel, bool wasModifiedCanceled,

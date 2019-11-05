@@ -36,7 +36,8 @@ class EpubFormatter : public HtmlFormatter {
     size_t hiddenDepth;
 
   public:
-    EpubFormatter(HtmlFormatterArgs* args, EpubDoc* doc) : HtmlFormatter(args), epubDoc(doc), hiddenDepth(0) {}
+    EpubFormatter(HtmlFormatterArgs* args, EpubDoc* doc) : HtmlFormatter(args), epubDoc(doc), hiddenDepth(0) {
+    }
 };
 
 /* formatting extensions for FictionBook */
@@ -51,7 +52,9 @@ class Fb2Formatter : public HtmlFormatter {
     void HandleTagAsHtml(HtmlToken* t, const char* name);
     virtual void HandleHtmlTag(HtmlToken* t);
 
-    virtual bool IgnoreText() { return false; }
+    virtual bool IgnoreText() {
+        return false;
+    }
 
     Fb2Doc* fb2Doc;
 
@@ -71,7 +74,8 @@ class HtmlFileFormatter : public HtmlFormatter {
     HtmlDoc* htmlDoc;
 
   public:
-    HtmlFileFormatter(HtmlFormatterArgs* args, HtmlDoc* doc) : HtmlFormatter(args), htmlDoc(doc) {}
+    HtmlFileFormatter(HtmlFormatterArgs* args, HtmlDoc* doc) : HtmlFormatter(args), htmlDoc(doc) {
+    }
 };
 
 /* formatting extensions for TXT */
@@ -84,5 +88,6 @@ class TxtFormatter : public HtmlFormatter {
     }
 
   public:
-    explicit TxtFormatter(HtmlFormatterArgs* args) : HtmlFormatter(args) {}
+    explicit TxtFormatter(HtmlFormatterArgs* args) : HtmlFormatter(args) {
+    }
 };

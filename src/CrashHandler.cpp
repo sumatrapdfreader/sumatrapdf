@@ -54,11 +54,21 @@ class CrashHandlerAllocator : public Allocator {
     HANDLE allocHeap;
 
   public:
-    CrashHandlerAllocator() { allocHeap = HeapCreate(0, 128 * 1024, 0); }
-    virtual ~CrashHandlerAllocator() { HeapDestroy(allocHeap); }
-    virtual void* Alloc(size_t size) { return HeapAlloc(allocHeap, 0, size); }
-    virtual void* Realloc(void* mem, size_t size) { return HeapReAlloc(allocHeap, 0, mem, size); }
-    virtual void Free(void* mem) { HeapFree(allocHeap, 0, mem); }
+    CrashHandlerAllocator() {
+        allocHeap = HeapCreate(0, 128 * 1024, 0);
+    }
+    virtual ~CrashHandlerAllocator() {
+        HeapDestroy(allocHeap);
+    }
+    virtual void* Alloc(size_t size) {
+        return HeapAlloc(allocHeap, 0, size);
+    }
+    virtual void* Realloc(void* mem, size_t size) {
+        return HeapReAlloc(allocHeap, 0, mem, size);
+    }
+    virtual void Free(void* mem) {
+        HeapFree(allocHeap, 0, mem);
+    }
 };
 
 enum ExeType {

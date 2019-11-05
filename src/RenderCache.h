@@ -13,7 +13,8 @@
 class RenderingCallback {
   public:
     virtual void Callback(RenderedBitmap* bmp = nullptr) = 0;
-    virtual ~RenderingCallback() {}
+    virtual ~RenderingCallback() {
+    }
 };
 
 /* A page is split into tiles of at most TILE_MAX_W x TILE_MAX_H pixels.
@@ -22,7 +23,8 @@ struct TilePosition {
     USHORT res, row, col;
 
     explicit TilePosition(USHORT res = INVALID_TILE_RES, USHORT row = -1, USHORT col = -1)
-        : res(res), row(row), col(col) {}
+        : res(res), row(row), col(col) {
+    }
     bool operator==(const TilePosition& other) const {
         return res == other.res && row == other.row && col == other.col;
     }
@@ -51,8 +53,11 @@ struct BitmapCacheEntry {
           tile(tile),
           bitmap(bitmap),
           outOfDate(false),
-          refs(1) {}
-    ~BitmapCacheEntry() { delete bitmap; }
+          refs(1) {
+    }
+    ~BitmapCacheEntry() {
+        delete bitmap;
+    }
 };
 
 /* Even though this looks a lot like a BitmapCacheEntry, we keep it
@@ -102,7 +107,9 @@ class RenderCache {
     void Render(DisplayModel* dm, int pageNo, int rotation, float zoom, RectD pageRect, RenderingCallback& callback);
     void CancelRendering(DisplayModel* dm);
     bool Exists(DisplayModel* dm, int pageNo, int rotation, float zoom = INVALID_ZOOM, TilePosition* tile = nullptr);
-    void FreeForDisplayModel(DisplayModel* dm) { FreePage(dm); }
+    void FreeForDisplayModel(DisplayModel* dm) {
+        FreePage(dm);
+    }
     void KeepForDisplayModel(DisplayModel* oldDm, DisplayModel* newDm);
     void Invalidate(DisplayModel* dm, int pageNo, RectD rect);
     // returns how much time in ms has past since the most recent rendering
@@ -123,7 +130,9 @@ class RenderCache {
     USHORT GetMaxTileRes(DisplayModel* dm, int pageNo, int rotation);
     bool ReduceTileSize();
 
-    bool IsRenderQueueFull() const { return requestCount == MAX_PAGE_REQUESTS; }
+    bool IsRenderQueueFull() const {
+        return requestCount == MAX_PAGE_REQUESTS;
+    }
     UINT GetRenderDelay(DisplayModel* dm, int pageNo, TilePosition tile);
     void RequestRendering(DisplayModel* dm, int pageNo, TilePosition tile, bool clearQueueForPage = true);
     bool Render(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition* tile = nullptr,
@@ -137,7 +146,9 @@ class RenderCache {
                            TilePosition* tile = nullptr);
     void DropCacheEntry(BitmapCacheEntry* entry);
     void FreePage(DisplayModel* dm = nullptr, int pageNo = -1, TilePosition* tile = nullptr);
-    void FreeNotVisible() { FreePage(); }
+    void FreeNotVisible() {
+        FreePage();
+    }
 
     UINT PaintTile(HDC hdc, RectI bounds, DisplayModel* dm, int pageNo, TilePosition tile, RectI tileOnScreen,
                    bool renderMissing, bool* renderOutOfDateCue, bool* renderedReplacement);

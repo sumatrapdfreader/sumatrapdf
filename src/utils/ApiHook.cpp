@@ -144,7 +144,8 @@ static IMAGE_THUNK_DATA* FindIatThunk(const std::string_view& dllName, const std
 
 IatHook::IatHook(const std::string_view& dllName, const std::string_view& apiName, const char* fnCallback,
                  uint64_t* userOrigVar, const std::wstring& moduleName)
-    : IatHook(dllName, apiName, (uint64_t)fnCallback, userOrigVar, moduleName) {}
+    : IatHook(dllName, apiName, (uint64_t)fnCallback, userOrigVar, moduleName) {
+}
 
 IatHook::IatHook(const std::string_view& dllName, const std::string_view& apiName, const uint64_t fnCallback,
                  uint64_t* userOrigVar, const std::wstring& moduleName)
@@ -152,7 +153,8 @@ IatHook::IatHook(const std::string_view& dllName, const std::string_view& apiNam
       m_dllName(dllName),
       m_apiName(apiName),
       m_userOrigVar(userOrigVar),
-      m_fnCallback(fnCallback) {}
+      m_fnCallback(fnCallback) {
+}
 
 bool IatHook::hook() {
     AssertCrash(m_userOrigVar != nullptr);

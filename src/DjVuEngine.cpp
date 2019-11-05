@@ -34,7 +34,8 @@ class DjVuDestination : public PageDestination {
     }
 
   public:
-    explicit DjVuDestination(const char* link) : link(str::Dup(link)) {}
+    explicit DjVuDestination(const char* link) : link(str::Dup(link)) {
+    }
 
     PageDestType GetDestType() const override {
         if (IsPageLink(link))
@@ -80,9 +81,15 @@ class DjVuLink : public PageElement {
         free(value);
     }
 
-    PageElementType GetType() const override { return PageElementType::Link; }
-    int GetPageNo() const override { return pageNo; }
-    RectD GetRect() const override { return rect; }
+    PageElementType GetType() const override {
+        return PageElementType::Link;
+    }
+    int GetPageNo() const override {
+        return pageNo;
+    }
+    RectD GetRect() const override {
+        return rect;
+    }
     WCHAR* GetValue() const override {
         if (value)
             return str::Dup(value);
@@ -91,7 +98,9 @@ class DjVuLink : public PageElement {
         return nullptr;
     }
 
-    virtual PageDestination* AsLink() { return dest; }
+    virtual PageDestination* AsLink() {
+        return dest;
+    }
 };
 
 class DjVuTocItem : public DocTocItem {
@@ -102,9 +111,13 @@ class DjVuTocItem : public DocTocItem {
         dest = new DjVuDestination(link);
         pageNo = dest->GetDestPageNo();
     }
-    virtual ~DjVuTocItem() { delete dest; }
+    virtual ~DjVuTocItem() {
+        delete dest;
+    }
 
-    PageDestination* GetLink() override { return dest; }
+    PageDestination* GetLink() override {
+        return dest;
+    }
 };
 
 class DjVuContext {
@@ -114,7 +127,8 @@ class DjVuContext {
   public:
     CRITICAL_SECTION lock;
 
-    DjVuContext() : ctx(nullptr), initialized(false) {}
+    DjVuContext() : ctx(nullptr), initialized(false) {
+    }
     ~DjVuContext() {
         if (initialized) {
             EnterCriticalSection(&lock);
@@ -186,7 +200,9 @@ class DjVuEngineImpl : public BaseEngine {
         return nullptr;
     }
 
-    int PageCount() const override { return pageCount; }
+    int PageCount() const override {
+        return pageCount;
+    }
 
     RectD PageMediabox(int pageNo) override {
         AssertCrash(1 <= pageNo && pageNo <= PageCount());
@@ -209,19 +225,27 @@ class DjVuEngineImpl : public BaseEngine {
         UNUSED(pageNo);
         return false;
     }
-    PageLayoutType PreferredLayout() override { return Layout_Single; }
+    PageLayoutType PreferredLayout() override {
+        return Layout_Single;
+    }
 
     WCHAR* GetProperty(DocumentProperty prop) override {
         UNUSED(prop);
         return nullptr;
     }
 
-    bool SupportsAnnotation(bool forSaving = false) const override { return !forSaving; }
+    bool SupportsAnnotation(bool forSaving = false) const override {
+        return !forSaving;
+    }
     void UpdateUserAnnotations(Vec<PageAnnotation>* list) override;
 
     // DPI isn't constant for all pages and thus premultiplied
-    float GetFileDPI() const override { return 300.0f; }
-    const WCHAR* GetDefaultFileExt() const override { return L".djvu"; }
+    float GetFileDPI() const override {
+        return 300.0f;
+    }
+    const WCHAR* GetDefaultFileExt() const override {
+        return L".djvu";
+    }
 
     // we currently don't load pages lazily, so there's nothing to do here
     bool BenchLoadPage(int pageNo) override {
@@ -233,10 +257,14 @@ class DjVuEngineImpl : public BaseEngine {
     PageElement* GetElementAtPos(int pageNo, PointD pt) override;
 
     PageDestination* GetNamedDest(const WCHAR* name) override;
-    bool HasTocTree() const override { return outline != miniexp_nil; }
+    bool HasTocTree() const override {
+        return outline != miniexp_nil;
+    }
     DocTocItem* GetTocTree() override;
 
-    bool HasPageLabels() const override { return hasPageLabels; }
+    bool HasPageLabels() const override {
+        return hasPageLabels;
+    }
     WCHAR* GetPageLabel(int pageNo) const override;
     int GetPageByLabel(const WCHAR* label) const override;
 

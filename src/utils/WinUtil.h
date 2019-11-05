@@ -166,7 +166,9 @@ class DoubleBuffer {
     DoubleBuffer(HWND hwnd, RectI rect);
     ~DoubleBuffer();
 
-    HDC GetDC() const { return hdcBuffer ? hdcBuffer : hdcCanvas; }
+    HDC GetDC() const {
+        return hdcBuffer ? hdcBuffer : hdcCanvas;
+    }
     void Flush(HDC hdc);
 };
 

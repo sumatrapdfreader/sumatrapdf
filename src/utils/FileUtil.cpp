@@ -293,9 +293,13 @@ WCHAR* GetPathOfFileInAppDir(const WCHAR* fileName) {
     if (!fileName)
         return str::Dup(modulePath);
     const WCHAR* moduleDir(path::GetDir(modulePath));
-    defer { str::Free(moduleDir); };
+    defer {
+        str::Free(moduleDir);
+    };
     const WCHAR* path = path::Join(moduleDir, fileName);
-    defer { str::Free(path); };
+    defer {
+        str::Free(path);
+    };
     return path::Normalize(path);
 }
 

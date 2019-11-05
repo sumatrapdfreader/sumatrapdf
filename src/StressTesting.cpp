@@ -361,7 +361,8 @@ static void MakeRandomSelection(WindowInfo* win, int pageNo) {
 // that we can implement different strategies
 class TestFileProvider {
   public:
-    virtual ~TestFileProvider() {}
+    virtual ~TestFileProvider() {
+    }
     // returns path of the next file to test or nullptr if done (caller needs to free() the result)
     virtual WCHAR* NextFile() = 0;
     // start the iteration from the beginning
@@ -386,7 +387,8 @@ class FilesProvider : public TestFileProvider {
         provided = 0;
     }
 
-    virtual ~FilesProvider() {}
+    virtual ~FilesProvider() {
+    }
 
     virtual WCHAR* NextFile() {
         if (provided >= files.size())
@@ -394,7 +396,9 @@ class FilesProvider : public TestFileProvider {
         return str::Dup(files.at(provided++));
     }
 
-    virtual void Restart() { provided = 0; }
+    virtual void Restart() {
+        provided = 0;
+    }
 };
 
 class DirFileProvider : public TestFileProvider {
@@ -421,7 +425,8 @@ DirFileProvider::DirFileProvider(const WCHAR* path, const WCHAR* filter) {
     OpenDir(path);
 }
 
-DirFileProvider::~DirFileProvider() {}
+DirFileProvider::~DirFileProvider() {
+}
 
 bool DirFileProvider::OpenDir(const WCHAR* dirPath) {
     AssertCrash(filesToOpen.size() == 0);
@@ -515,7 +520,9 @@ class StressTest {
           exitWhenDone(exitWhenDone) {
         timerId = gCurrStressTimerId++;
     }
-    ~StressTest() { delete fileProvider; }
+    ~StressTest() {
+        delete fileProvider;
+    }
 
     void Start(const WCHAR* path, const WCHAR* filter, const WCHAR* ranges, int cycles);
     void Start(TestFileProvider* fileProvider, int cycles);

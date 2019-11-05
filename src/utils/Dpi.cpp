@@ -49,8 +49,12 @@ class ScopedGetDC {
         this->hwnd = hwnd;
         this->hdc = GetDC(hwnd);
     }
-    ~ScopedGetDC() { ReleaseDC(hwnd, hdc); }
-    operator HDC() const { return hdc; }
+    ~ScopedGetDC() {
+        ReleaseDC(hwnd, hdc);
+    }
+    operator HDC() const {
+        return hdc;
+    }
 };
 
 static void GetDpiXY(HWND hwnd, int& scaleX, int& scaleY) {

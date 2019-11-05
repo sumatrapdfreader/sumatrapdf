@@ -193,7 +193,9 @@ static RenderedBitmap* new_rendered_fz_pixmap(fz_context* ctx, fz_pixmap* pixmap
         fz_color_params cp = fz_default_color_params;
         bgrPixmap = fz_convert_pixmap(ctx, pixmap, csdest, nullptr, nullptr, cp, 1);
     }
-    fz_catch(ctx) { return nullptr; }
+    fz_catch(ctx) {
+        return nullptr;
+    }
 
     BITMAPINFOHEADER* bmih = &bmi.Get()->bmiHeader;
     bmih->biSize = sizeof(*bmih);
@@ -235,14 +237,24 @@ fz_stream* fz_open_file2(fz_context* ctx, const WCHAR* filePath) {
         }
         fz_buffer* buf = fz_new_buffer_from_data(ctx, (u8*)data, size);
         fz_var(buf);
-        fz_try(ctx) { stm = fz_open_buffer(ctx, buf); }
-        fz_always(ctx) { fz_drop_buffer(ctx, buf); }
-        fz_catch(ctx) { stm = nullptr; }
+        fz_try(ctx) {
+            stm = fz_open_buffer(ctx, buf);
+        }
+        fz_always(ctx) {
+            fz_drop_buffer(ctx, buf);
+        }
+        fz_catch(ctx) {
+            stm = nullptr;
+        }
         return stm;
     }
 
-    fz_try(ctx) { stm = fz_open_file_w(ctx, filePath); }
-    fz_catch(ctx) { stm = nullptr; }
+    fz_try(ctx) {
+        stm = fz_open_file_w(ctx, filePath);
+    }
+    fz_catch(ctx) {
+        stm = nullptr;
+    }
     return stm;
 }
 
@@ -691,25 +703,34 @@ class SimpleDest : public PageDestination {
     RectD rect;
 
   public:
-    SimpleDest(int pageNo, RectD rect) : pageNo(pageNo), rect(rect) {}
+    SimpleDest(int pageNo, RectD rect) : pageNo(pageNo), rect(rect) {
+    }
 
-    PageDestType GetDestType() const override { return PageDestType::ScrollTo; }
-    int GetDestPageNo() const override { return pageNo; }
-    RectD GetDestRect() const override { return rect; }
+    PageDestType GetDestType() const override {
+        return PageDestType::ScrollTo;
+    }
+    int GetDestPageNo() const override {
+        return pageNo;
+    }
+    RectD GetDestRect() const override {
+        return rect;
+    }
 };
 
 struct FitzImagePos {
     fz_image* image;
     fz_rect rect;
 
-    explicit FitzImagePos(fz_image* image = nullptr, fz_rect rect = fz_unit_rect) : image(image), rect(rect) {}
+    explicit FitzImagePos(fz_image* image = nullptr, fz_rect rect = fz_unit_rect) : image(image), rect(rect) {
+    }
 };
 
 struct ListInspectionData {
     Vec<FitzImagePos>* images;
     size_t mem_estimate;
 
-    explicit ListInspectionData(Vec<FitzImagePos>& images) : images(&images), mem_estimate(0) {}
+    explicit ListInspectionData(Vec<FitzImagePos>& images) : images(&images), mem_estimate(0) {
+    }
 };
 
 typedef struct {
@@ -837,7 +858,9 @@ extern "C" static void fz_inspection_clip_image_mask(fz_context* ctx, fz_device*
 
 static fz_device* fz_new_inspection_device(fz_context* ctx, ListInspectionData* data) {
     inspection_device* dev = nullptr;
-    fz_try(ctx) { dev = fz_new_derived_device(ctx, inspection_device); }
+    fz_try(ctx) {
+        dev = fz_new_derived_device(ctx, inspection_device);
+    }
     fz_catch(ctx) {
         fz_drop_device(ctx, &dev->super);
         return nullptr;
@@ -862,8 +885,12 @@ static fz_device* fz_new_inspection_device(fz_context* ctx, ListInspectionData* 
 class FitzAbortCookie : public AbortCookie {
   public:
     fz_cookie cookie;
-    FitzAbortCookie() { memset(&cookie, 0, sizeof(cookie)); }
-    void Abort() override { cookie.abort = 1; }
+    FitzAbortCookie() {
+        memset(&cookie, 0, sizeof(cookie));
+    }
+    void Abort() override {
+        cookie.abort = 1;
+    }
 };
 
 // TODO(port): proper way of locking
@@ -1190,7 +1217,8 @@ struct PageTreeStackItem {
 
     PageTreeStackItem(){};
     explicit PageTreeStackItem(fz_context* ctx, pdf_obj* kids, int next_page_no = 0)
-        : kids(kids), i(-1), len(pdf_array_len(ctx, kids)), next_page_no(next_page_no) {}
+        : kids(kids), i(-1), len(pdf_array_len(ctx, kids)), next_page_no(next_page_no) {
+    }
 };
 
 ///// Above are extensions to Fitz and MuPDF, now follows PdfEngine /////
@@ -1259,26 +1287,42 @@ class PdfEngineImpl : public BaseEngine {
     bool SupportsAnnotation(bool forSaving = false) const override;
     void UpdateUserAnnotations(Vec<PageAnnotation>* list) override;
 
-    bool AllowsPrinting() const override { return pdf_has_permission(ctx, _doc, FZ_PERMISSION_PRINT); }
-    bool AllowsCopyingText() const override { return pdf_has_permission(ctx, _doc, FZ_PERMISSION_COPY); }
+    bool AllowsPrinting() const override {
+        return pdf_has_permission(ctx, _doc, FZ_PERMISSION_PRINT);
+    }
+    bool AllowsCopyingText() const override {
+        return pdf_has_permission(ctx, _doc, FZ_PERMISSION_COPY);
+    }
 
-    float GetFileDPI() const override { return 72.0f; }
-    const WCHAR* GetDefaultFileExt() const override { return L".pdf"; }
+    float GetFileDPI() const override {
+        return 72.0f;
+    }
+    const WCHAR* GetDefaultFileExt() const override {
+        return L".pdf";
+    }
 
-    bool BenchLoadPage(int pageNo) override { return GetPdfPage(pageNo) != nullptr; }
+    bool BenchLoadPage(int pageNo) override {
+        return GetPdfPage(pageNo) != nullptr;
+    }
 
     Vec<PageElement*>* GetElements(int pageNo) override;
     PageElement* GetElementAtPos(int pageNo, PointD pt) override;
 
     PageDestination* GetNamedDest(const WCHAR* name) override;
-    bool HasTocTree() const override { return outline != nullptr || attachments != nullptr; }
+    bool HasTocTree() const override {
+        return outline != nullptr || attachments != nullptr;
+    }
     DocTocItem* GetTocTree() override;
 
-    bool HasPageLabels() const override { return _pagelabels != nullptr; }
+    bool HasPageLabels() const override {
+        return _pagelabels != nullptr;
+    }
     WCHAR* GetPageLabel(int pageNo) const override;
     int GetPageByLabel(const WCHAR* label) const override;
 
-    bool IsPasswordProtected() const override { return isProtected; }
+    bool IsPasswordProtected() const override {
+        return isProtected;
+    }
     char* GetDecryptionKey() const override;
 
     static BaseEngine* CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI);
@@ -1352,17 +1396,25 @@ class PdfLink : public PageElement, public PageDestination {
     PdfLink(PdfEngineImpl* engine, int pageNo, fz_link* link, fz_outline* outline);
 
     // PageElement
-    PageElementType GetType() const override { return PageElementType::Link; }
-    int GetPageNo() const override { return pageNo; }
+    PageElementType GetType() const override {
+        return PageElementType::Link;
+    }
+    int GetPageNo() const override {
+        return pageNo;
+    }
     RectD GetRect() const override;
     WCHAR* GetValue() const override;
-    virtual PageDestination* AsLink() { return this; }
+    virtual PageDestination* AsLink() {
+        return this;
+    }
 
     // PageDestination
     PageDestType GetDestType() const override;
     int GetDestPageNo() const override;
     RectD GetDestRect() const override;
-    WCHAR* GetDestValue() const override { return GetValue(); }
+    WCHAR* GetDestValue() const override {
+        return GetValue();
+    }
     WCHAR* GetDestName() const override;
 
     virtual bool SaveEmbedded(LinkSaverUI& saveUI);
@@ -1374,21 +1426,33 @@ class PdfComment : public PageElement {
 
   public:
     PdfComment(const WCHAR* content, RectD rect, int pageNo)
-        : annot(PageAnnotType::None, pageNo, rect, PageAnnotation::Color()), content(str::Dup(content)) {}
+        : annot(PageAnnotType::None, pageNo, rect, PageAnnotation::Color()), content(str::Dup(content)) {
+    }
 
-    virtual PageElementType GetType() const { return PageElementType::Comment; }
-    virtual int GetPageNo() const { return annot.pageNo; }
-    virtual RectD GetRect() const { return annot.rect; }
-    virtual WCHAR* GetValue() const { return str::Dup(content); }
+    virtual PageElementType GetType() const {
+        return PageElementType::Comment;
+    }
+    virtual int GetPageNo() const {
+        return annot.pageNo;
+    }
+    virtual RectD GetRect() const {
+        return annot.rect;
+    }
+    virtual WCHAR* GetValue() const {
+        return str::Dup(content);
+    }
 };
 
 class PdfTocItem : public DocTocItem {
     PdfLink link;
 
   public:
-    PdfTocItem(WCHAR* title, PdfLink link) : DocTocItem(title), link(link) {}
+    PdfTocItem(WCHAR* title, PdfLink link) : DocTocItem(title), link(link) {
+    }
 
-    PageDestination* GetLink() override { return &link; }
+    PageDestination* GetLink() override {
+        return &link;
+    }
 };
 
 class PdfImage : public PageElement {
@@ -1399,14 +1463,25 @@ class PdfImage : public PageElement {
 
   public:
     PdfImage(PdfEngineImpl* engine, int pageNo, fz_rect rect, size_t imageIdx)
-        : engine(engine), pageNo(pageNo), rect(fz_rect_to_RectD(rect)), imageIdx(imageIdx) {}
+        : engine(engine), pageNo(pageNo), rect(fz_rect_to_RectD(rect)), imageIdx(imageIdx) {
+    }
 
-    virtual PageElementType GetType() const { return PageElementType::Image; }
-    virtual int GetPageNo() const { return pageNo; }
-    virtual RectD GetRect() const { return rect; }
-    virtual WCHAR* GetValue() const { return nullptr; }
+    virtual PageElementType GetType() const {
+        return PageElementType::Image;
+    }
+    virtual int GetPageNo() const {
+        return pageNo;
+    }
+    virtual RectD GetRect() const {
+        return rect;
+    }
+    virtual WCHAR* GetValue() const {
+        return nullptr;
+    }
 
-    virtual RenderedBitmap* GetImage() { return engine->GetPageImage(pageNo, rect, imageIdx); }
+    virtual RenderedBitmap* GetImage() {
+        return engine->GetPageImage(pageNo, rect, imageIdx);
+    }
 };
 
 // in mupdf_load_system_font.c
@@ -1477,7 +1552,8 @@ class PasswordCloner : public PasswordUI {
     unsigned char* cryptKey;
 
   public:
-    explicit PasswordCloner(unsigned char* cryptKey) : cryptKey(cryptKey) {}
+    explicit PasswordCloner(unsigned char* cryptKey) : cryptKey(cryptKey) {
+    }
 
     virtual WCHAR* GetPassword(const WCHAR* fileName, unsigned char* fileDigest, unsigned char decryptionKeyOut[32],
                                bool* saveKey) {
@@ -1552,8 +1628,12 @@ bool PdfEngineImpl::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
     WCHAR* embedMarks = (WCHAR*)findEmbedMarks(fileName);
     if (embedMarks)
         *embedMarks = '\0';
-    fz_try(ctx) { file = fz_open_file2(ctx, fileName); }
-    fz_catch(ctx) { file = nullptr; }
+    fz_try(ctx) {
+        file = fz_open_file2(ctx, fileName);
+    }
+    fz_catch(ctx) {
+        file = nullptr;
+    }
     if (embedMarks)
         *embedMarks = ':';
 
@@ -1579,8 +1659,12 @@ OpenEmbeddedFile:
         buffer = pdf_load_stream_number(ctx, _doc, num);
         file = fz_open_buffer(ctx, buffer);
     }
-    fz_always(ctx) { fz_drop_buffer(ctx, buffer); }
-    fz_catch(ctx) { return false; }
+    fz_always(ctx) {
+        fz_drop_buffer(ctx, buffer);
+    }
+    fz_catch(ctx) {
+        return false;
+    }
 
     pdf_drop_document(ctx, _doc);
     _doc = nullptr;
@@ -1594,8 +1678,12 @@ bool PdfEngineImpl::Load(IStream* stream, PasswordUI* pwdUI) {
         return false;
 
     fz_stream* stm = nullptr;
-    fz_try(ctx) { stm = fz_open_istream(ctx, stream); }
-    fz_catch(ctx) { return false; }
+    fz_try(ctx) {
+        stm = fz_open_istream(ctx, stream);
+    }
+    fz_catch(ctx) {
+        return false;
+    }
     if (!LoadFromStream(stm, pwdUI))
         return false;
     return FinishLoading();
@@ -1622,9 +1710,15 @@ bool PdfEngineImpl::LoadFromStream(fz_stream* stm, PasswordUI* pwdUI) {
     if (!stm)
         return false;
 
-    fz_try(ctx) { _doc = pdf_open_document_with_stream(ctx, stm); }
-    fz_always(ctx) { fz_drop_stream(ctx, stm); }
-    fz_catch(ctx) { return false; }
+    fz_try(ctx) {
+        _doc = pdf_open_document_with_stream(ctx, stm);
+    }
+    fz_always(ctx) {
+        fz_drop_stream(ctx, stm);
+    }
+    fz_catch(ctx) {
+        return false;
+    }
 
     _docStream = stm;
 
@@ -1700,7 +1794,9 @@ bool PdfEngineImpl::FinishLoading() {
 
     ScopedCritSec scope(&ctxAccess);
 
-    fz_try(ctx) { outline = pdf_load_outline(ctx, _doc); }
+    fz_try(ctx) {
+        outline = pdf_load_outline(ctx, _doc);
+    }
     fz_catch(ctx) {
         // ignore errors from pdf_load_outline()
         // this information is not critical and checking the
@@ -1708,8 +1804,12 @@ bool PdfEngineImpl::FinishLoading() {
         // otherwise get displayed
         fz_warn(ctx, "Couldn't load outline");
     }
-    fz_try(ctx) { attachments = pdf_loadattachments(ctx, _doc); }
-    fz_catch(ctx) { fz_warn(ctx, "Couldn't load attachments"); }
+    fz_try(ctx) {
+        attachments = pdf_loadattachments(ctx, _doc);
+    }
+    fz_catch(ctx) {
+        fz_warn(ctx, "Couldn't load attachments");
+    }
     fz_try(ctx) {
         // keep a copy of the Info dictionary, as accessing the original
         // isn't thread safe and we don't want to block for this when
@@ -1751,7 +1851,9 @@ bool PdfEngineImpl::FinishLoading() {
         if (pagelabels)
             _pagelabels = BuildPageLabelVec(ctx, pagelabels, PageCount());
     }
-    fz_catch(ctx) { fz_warn(ctx, "Couldn't load page labels"); }
+    fz_catch(ctx) {
+        fz_warn(ctx, "Couldn't load page labels");
+    }
 
     AssertCrash(!pdf_js_supported(ctx, _doc));
 
@@ -1814,15 +1916,21 @@ PageDestination* PdfEngineImpl::GetNamedDest(const WCHAR* name) {
         dest = pdf_lookup_dest(ctx, _doc, nameobj);
         pdf_drop_obj(ctx, nameobj);
     }
-    fz_catch(ctx) { return nullptr; }
+    fz_catch(ctx) {
+        return nullptr;
+    }
 
     PageDestination* pageDest = nullptr;
     // TODO(port)
     CrashMe();
     // fz_link_dest ld = {FZ_LINK_NONE, 0};
     char* ld;
-    fz_try(ctx) { ld = pdf_parse_link_dest(ctx, _doc, dest); }
-    fz_catch(ctx) { return nullptr; }
+    fz_try(ctx) {
+        ld = pdf_parse_link_dest(ctx, _doc, dest);
+    }
+    fz_catch(ctx) {
+        return nullptr;
+    }
 
     /*
     if (FZ_LINK_GOTO == ld.kind && ld.ld.gotor.page != -1) {
@@ -1860,7 +1968,8 @@ pdf_page* PdfEngineImpl::GetPdfPage(int pageNo, bool failIfBusy) {
         ppage = pdf_load_page(ctx, _doc, pageNo - 1);
         pageInfo->page = ppage;
     }
-    fz_catch(ctx) {}
+    fz_catch(ctx) {
+    }
 
     fz_rect bounds;
     fz_page* page = (fz_page*)ppage;
@@ -1912,7 +2021,8 @@ pdf_page* PdfEngineImpl::GetPdfPage(int pageNo, bool failIfBusy) {
         fz_drop_device(ctx, tdev);
         LeaveCriticalSection(&ctxAccess);
     }
-    fz_catch(ctx) {}
+    fz_catch(ctx) {
+    }
     pageInfo->stext = page_text;
 
     // create fz_display_list and get fz_stext_page
@@ -1954,7 +2064,8 @@ PdfPageRun* PdfEngineImpl::CreatePageRun(PageInfo* pageInfo, fz_display_list* li
         dev = fz_new_inspection_device(ctx, &data);
         fz_run_display_list(ctx, list, dev, fz_identity, fz_empty_rect, nullptr);
     }
-    fz_catch(ctx) {}
+    fz_catch(ctx) {
+    }
     fz_drop_device(ctx, dev);
 
     // save the image rectangles for this page
@@ -2046,7 +2157,9 @@ bool PdfEngineImpl::RunPage(PageInfo* pageInfo, fz_device* dev, fz_matrix ctm, R
             // fz_run_page_transparency(ctx, pageAnnots, dev, cliprect, true, page->transparency);
             // fz_run_user_page_annots(ctx, pageAnnots, dev, ctm, cliprect, fzcookie);
         }
-        fz_catch(ctx) { ok = false; }
+        fz_catch(ctx) {
+            ok = false;
+        }
         LeaveCriticalSection(&ctxAccess);
         DropPageRun(run);
     } else {
@@ -2066,7 +2179,9 @@ bool PdfEngineImpl::RunPage(PageInfo* pageInfo, fz_device* dev, fz_matrix ctm, R
             // fz_run_user_page_annots(ctx, pageAnnots, dev, ctm, cliprect, fzcookie);
             fz_end_page(ctx, wri);
         }
-        fz_catch(ctx) { ok = false; }
+        fz_catch(ctx) {
+            ok = false;
+        }
     }
 
     return ok && !(cookie && cookie->cookie.abort);
@@ -2104,7 +2219,8 @@ RectD PdfEngineImpl::PageMediabox(int pageNo) {
         pdf_page_obj_transform(ctx, pageref, &mbox, &page_ctm);
         mbox = fz_transform_rect(mbox, page_ctm);
     }
-    fz_catch(ctx) {}
+    fz_catch(ctx) {
+    }
     if (fz_is_empty_rect(mbox)) {
         fz_warn(ctx, "cannot find page size for page %d", pageNo);
         mbox.x0 = 0;
@@ -2194,7 +2310,9 @@ RenderedBitmap* PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
         fz_clear_pixmap_with_value(ctx, image, 0xff);
         idev = fz_new_draw_device(ctx, fz_identity, image);
     }
-    fz_always(ctx) { LeaveCriticalSection(&ctxAccess); }
+    fz_always(ctx) {
+        LeaveCriticalSection(&ctxAccess);
+    }
     fz_catch(ctx) {
         fz_drop_pixmap(ctx, image);
         fz_drop_device(ctx, idev);
@@ -2402,7 +2520,9 @@ RenderedBitmap* PdfEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
     fz_device* dev = nullptr;
 
     EnterCriticalSection(&ctxAccess);
-    fz_try(ctx) { dev = fz_new_inspection_device(ctx, &data); }
+    fz_try(ctx) {
+        dev = fz_new_inspection_device(ctx, &data);
+    }
     fz_catch(ctx) {
         LeaveCriticalSection(&ctxAccess);
         return nullptr;
@@ -2425,7 +2545,9 @@ RenderedBitmap* PdfEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
         // TODO(port): not sure if should provide subarea, w and h
         pixmap = fz_get_pixmap_from_image(ctx, image, nullptr, nullptr, nullptr, nullptr);
     }
-    fz_catch(ctx) { return nullptr; }
+    fz_catch(ctx) {
+        return nullptr;
+    }
     RenderedBitmap* bmp = new_rendered_fz_pixmap(ctx, pixmap);
     fz_drop_pixmap(ctx, pixmap);
 
@@ -2458,8 +2580,12 @@ bool PdfEngineImpl::IsLinearizedFile() {
     if (num < 0 || num >= pdf_xref_len(ctx, _doc))
         return false;
     // check whether it's a linearization dictionary
-    fz_try(ctx) { pdf_cache_object(ctx, _doc, num); }
-    fz_catch(ctx) { return false; }
+    fz_try(ctx) {
+        pdf_cache_object(ctx, _doc, num);
+    }
+    fz_catch(ctx) {
+        return false;
+    }
     pdf_obj* obj = pdf_get_xref_entry(ctx, _doc, num)->obj;
     if (!pdf_is_dict(ctx, obj))
         return false;
@@ -2529,7 +2655,8 @@ WCHAR* PdfEngineImpl::ExtractFontList() {
                     }
                 }
             }
-            fz_catch(ctx) {}
+            fz_catch(ctx) {
+            }
         }
     }
 
@@ -2588,7 +2715,9 @@ WCHAR* PdfEngineImpl::ExtractFontList() {
             else if (str::Eq(encoding, "MacExpertEncoding"))
                 encoding = "Expert";
         }
-        fz_catch(ctx) { continue; }
+        fz_catch(ctx) {
+            continue;
+        }
         CrashIf(!name || !type || !encoding);
 
         str::Str<char> info;
@@ -2717,8 +2846,12 @@ PageLayoutType PdfEngineImpl::PreferredLayout() {
 
     ScopedCritSec scope(&ctxAccess);
     pdf_obj* root = nullptr;
-    fz_try(ctx) { root = pdf_dict_gets(ctx, pdf_trailer(ctx, _doc), "Root"); }
-    fz_catch(ctx) { return layout; }
+    fz_try(ctx) {
+        root = pdf_dict_gets(ctx, pdf_trailer(ctx, _doc), "Root");
+    }
+    fz_catch(ctx) {
+        return layout;
+    }
 
     fz_try(ctx) {
         const char* name = pdf_to_name(ctx, pdf_dict_gets(ctx, root, "PageLayout"));
@@ -2727,7 +2860,8 @@ PageLayoutType PdfEngineImpl::PreferredLayout() {
         else if (str::StartsWith(name, "Two"))
             layout = Layout_Facing;
     }
-    fz_catch(ctx) {}
+    fz_catch(ctx) {
+    }
 
     fz_try(ctx) {
         pdf_obj* prefs = pdf_dict_gets(ctx, root, "ViewerPreferences");
@@ -2735,7 +2869,8 @@ PageLayoutType PdfEngineImpl::PreferredLayout() {
         if (str::Eq(direction, "R2L"))
             layout = (PageLayoutType)(layout | Layout_R2L);
     }
-    fz_catch(ctx) {}
+    fz_catch(ctx) {
+    }
 
     return layout;
 }
@@ -2743,7 +2878,9 @@ PageLayoutType PdfEngineImpl::PreferredLayout() {
 u8* PdfEngineImpl::GetFileData(size_t* cbCount) {
     u8* res = nullptr;
     ScopedCritSec scope(&ctxAccess);
-    fz_try(ctx) { res = fz_extract_stream_data(ctx, _doc->file, cbCount); }
+    fz_try(ctx) {
+        res = fz_extract_stream_data(ctx, _doc->file, cbCount);
+    }
     fz_catch(ctx) {
         res = nullptr;
         if (FileName()) {
@@ -2948,7 +3085,9 @@ bool PdfEngineImpl::SaveUserAnnots(const char* pathUtf8) {
             pdf_save_document(ctx, _doc, const_cast<char*>(pathUtf8), &opts);
         }
     }
-    fz_catch(ctx) { ok = false; }
+    fz_catch(ctx) {
+        ok = false;
+    }
     return ok;
 }
 
@@ -2956,8 +3095,12 @@ bool PdfEngineImpl::SaveEmbedded(LinkSaverUI& saveUI, int num) {
     ScopedCritSec scope(&ctxAccess);
 
     fz_buffer* buf = nullptr;
-    fz_try(ctx) { buf = pdf_load_stream_number(ctx, _doc, num); }
-    fz_catch(ctx) { return false; }
+    fz_try(ctx) {
+        buf = pdf_load_stream_number(ctx, _doc, num);
+    }
+    fz_catch(ctx) {
+        return false;
+    }
     CrashIf(nullptr == buf);
     u8* data = nullptr;
     size_t dataLen = fz_buffer_extract(ctx, buf, &data);
@@ -3458,9 +3601,15 @@ static fz_xml_doc* xps_open_and_parse(fz_context* ctx, xps_document* doc, char* 
 
     int preserve_white = 0;
     int for_html = 0;
-    fz_try(ctx) { root = fz_parse_xml(ctx, part->data, preserve_white, for_html); }
-    fz_always(ctx) { xps_drop_part(ctx, doc, part); }
-    fz_catch(ctx) { fz_rethrow(ctx); }
+    fz_try(ctx) {
+        root = fz_parse_xml(ctx, part->data, preserve_white, for_html);
+    }
+    fz_always(ctx) {
+        xps_drop_part(ctx, doc, part);
+    }
+    fz_catch(ctx) {
+        fz_rethrow(ctx);
+    }
 
     return root;
 }
@@ -3543,7 +3692,8 @@ struct XpsPageRun {
     int refs;
 
     XpsPageRun(fz_page* page, fz_display_list* list, ListInspectionData& data)
-        : page(page), list(list), size_est(data.mem_estimate), refs(1) {}
+        : page(page), list(list), size_est(data.mem_estimate), refs(1) {
+    }
 };
 
 class XpsTocItem;
@@ -3588,16 +3738,24 @@ class XpsEngineImpl : public BaseEngine {
     bool SupportsAnnotation(bool forSaving = false) const override;
     void UpdateUserAnnotations(Vec<PageAnnotation>* list) override;
 
-    float GetFileDPI() const override { return 72.0f; }
-    const WCHAR* GetDefaultFileExt() const override { return L".xps"; }
+    float GetFileDPI() const override {
+        return 72.0f;
+    }
+    const WCHAR* GetDefaultFileExt() const override {
+        return L".xps";
+    }
 
-    bool BenchLoadPage(int pageNo) override { return GetXpsPage(pageNo) != nullptr; }
+    bool BenchLoadPage(int pageNo) override {
+        return GetXpsPage(pageNo) != nullptr;
+    }
 
     Vec<PageElement*>* GetElements(int pageNo) override;
     PageElement* GetElementAtPos(int pageNo, PointD pt) override;
 
     PageDestination* GetNamedDest(const WCHAR* name) override;
-    bool HasTocTree() const override { return _outline != nullptr; }
+    bool HasTocTree() const override {
+        return _outline != nullptr;
+    }
     DocTocItem* GetTocTree() override;
 
     fz_rect FindDestRect(const char* target);
@@ -3663,13 +3821,21 @@ class XpsLink : public PageElement, public PageDestination {
     int pageNo;
 
   public:
-    XpsLink() : engine(nullptr), link(nullptr), pageNo(-1) {}
+    XpsLink() : engine(nullptr), link(nullptr), pageNo(-1) {
+    }
     XpsLink(XpsEngineImpl* engine, u8* link, fz_rect rect = fz_empty_rect, int pageNo = -1)
-        : engine(engine), link(link), rect(fz_rect_to_RectD(rect)), pageNo(pageNo) {}
+        : engine(engine), link(link), rect(fz_rect_to_RectD(rect)), pageNo(pageNo) {
+    }
 
-    PageElementType GetType() const override { return PageElementType::Link; }
-    int GetPageNo() const override { return pageNo; }
-    RectD GetRect() const override { return rect; }
+    PageElementType GetType() const override {
+        return PageElementType::Link;
+    }
+    int GetPageNo() const override {
+        return pageNo;
+    }
+    RectD GetRect() const override {
+        return rect;
+    }
     WCHAR* GetValue() const override {
         CrashMePort();
 #if 0
@@ -3678,7 +3844,9 @@ class XpsLink : public PageElement, public PageDestination {
 #endif
         return nullptr;
     }
-    virtual PageDestination* AsLink() { return this; }
+    virtual PageDestination* AsLink() {
+        return this;
+    }
 
     PageDestType GetDestType() const override {
         if (!link)
@@ -3710,16 +3878,21 @@ class XpsLink : public PageElement, public PageDestination {
 #endif
         return RectD(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
     }
-    WCHAR* GetDestValue() const override { return GetValue(); }
+    WCHAR* GetDestValue() const override {
+        return GetValue();
+    }
 };
 
 class XpsTocItem : public DocTocItem {
     XpsLink link;
 
   public:
-    XpsTocItem(WCHAR* title, XpsLink link) : DocTocItem(title), link(link) {}
+    XpsTocItem(WCHAR* title, XpsLink link) : DocTocItem(title), link(link) {
+    }
 
-    PageDestination* GetLink() override { return &link; }
+    PageDestination* GetLink() override {
+        return &link;
+    }
 };
 
 class XpsImage : public PageElement {
@@ -3730,14 +3903,25 @@ class XpsImage : public PageElement {
 
   public:
     XpsImage(XpsEngineImpl* engine, int pageNo, fz_rect rect, size_t imageIx)
-        : engine(engine), pageNo(pageNo), rect(fz_rect_to_RectD(rect)), imageIx(imageIx) {}
+        : engine(engine), pageNo(pageNo), rect(fz_rect_to_RectD(rect)), imageIx(imageIx) {
+    }
 
-    virtual PageElementType GetType() const { return PageElementType::Image; }
-    virtual int GetPageNo() const { return pageNo; }
-    virtual RectD GetRect() const { return rect; }
-    virtual WCHAR* GetValue() const { return nullptr; }
+    virtual PageElementType GetType() const {
+        return PageElementType::Image;
+    }
+    virtual int GetPageNo() const {
+        return pageNo;
+    }
+    virtual RectD GetRect() const {
+        return rect;
+    }
+    virtual WCHAR* GetValue() const {
+        return nullptr;
+    }
 
-    virtual RenderedBitmap* GetImage() { return engine->GetPageImage(pageNo, rect, imageIx); }
+    virtual RenderedBitmap* GetImage() {
+        return engine->GetPageImage(pageNo, rect, imageIx);
+    }
 };
 
 XpsEngineImpl::XpsEngineImpl()
@@ -3834,8 +4018,12 @@ bool XpsEngineImpl::Load(const WCHAR* fileName) {
     }
 
     fz_stream* stm = nullptr;
-    fz_try(ctx) { stm = fz_open_file2(ctx, fileName); }
-    fz_catch(ctx) { return false; }
+    fz_try(ctx) {
+        stm = fz_open_file2(ctx, fileName);
+    }
+    fz_catch(ctx) {
+        return false;
+    }
     return LoadFromStream(stm);
 }
 
@@ -3845,8 +4033,12 @@ bool XpsEngineImpl::Load(IStream* stream) {
         return false;
 
     fz_stream* stm = nullptr;
-    fz_try(ctx) { stm = fz_open_istream(ctx, stream); }
-    fz_catch(ctx) { return false; }
+    fz_try(ctx) {
+        stm = fz_open_istream(ctx, stream);
+    }
+    fz_catch(ctx) {
+        return false;
+    }
     return LoadFromStream(stm);
 }
 
@@ -3868,8 +4060,12 @@ bool XpsEngineImpl::LoadFromStream(fz_stream* stm) {
         return false;
 
     _docStream = stm;
-    fz_try(ctx) { _doc = xps_open_document_with_stream(ctx, stm); }
-    fz_catch(ctx) { return false; }
+    fz_try(ctx) {
+        _doc = xps_open_document_with_stream(ctx, stm);
+    }
+    fz_catch(ctx) {
+        return false;
+    }
 
     if (PageCount() == 0) {
         fz_warn(ctx, "document has no pages");
@@ -3883,10 +4079,18 @@ bool XpsEngineImpl::LoadFromStream(fz_stream* stm) {
     if (!_pages || !_mediaboxes || !imageRects)
         return false;
 
-    fz_try(ctx) { _outline = fz_load_outline(ctx, _doc); }
-    fz_catch(ctx) { fz_warn(ctx, "Couldn't load outline"); }
-    fz_try(ctx) { _info = xps_extract_doc_props(ctx, (xps_document*)_doc); }
-    fz_catch(ctx) { fz_warn(ctx, "Couldn't load document properties"); }
+    fz_try(ctx) {
+        _outline = fz_load_outline(ctx, _doc);
+    }
+    fz_catch(ctx) {
+        fz_warn(ctx, "Couldn't load outline");
+    }
+    fz_try(ctx) {
+        _info = xps_extract_doc_props(ctx, (xps_document*)_doc);
+    }
+    fz_catch(ctx) {
+        fz_warn(ctx, "Couldn't load document properties");
+    }
 
     return true;
 }
@@ -3913,7 +4117,8 @@ fz_page* XpsEngineImpl::GetXpsPage(int pageNo, bool failIfBusy) {
             // TODO(port)
             // AssertCrash(page->links_resolved);
         }
-        fz_catch(ctx) {}
+        fz_catch(ctx) {
+        }
     }
 
     return page;
@@ -3937,7 +4142,8 @@ XpsPageRun* XpsEngineImpl::CreatePageRun(fz_page* page, fz_display_list* list) {
 
         fz_run_display_list(ctx, list, dev, fz_identity, fz_infinite_rect, nullptr);
     }
-    fz_catch(ctx) {}
+    fz_catch(ctx) {
+    }
     fz_drop_device(ctx, dev);
 
     // save the image rectangles for this page
@@ -4084,8 +4290,11 @@ RectD XpsEngineImpl::PageMediabox(int pageNo) {
     fz_page* page = GetXpsPage(pageNo, true);
     if (!page) {
         ScopedCritSec scope(&ctxAccess);
-        fz_try(ctx) { mbox = fz_rect_to_RectD(fz_bound_page(ctx, page)); }
-        fz_catch(ctx) {}
+        fz_try(ctx) {
+            mbox = fz_rect_to_RectD(fz_bound_page(ctx, page));
+        }
+        fz_catch(ctx) {
+        }
         if (!mbox.IsEmpty()) {
             _mediaboxes[pageNo - 1] = mbox;
             return _mediaboxes[pageNo - 1];
@@ -4108,7 +4317,9 @@ RectD XpsEngineImpl::PageContentBox(int pageNo, RenderTarget target) {
     fz_rect rect = fz_empty_rect;
     fz_device* dev = nullptr;
     EnterCriticalSection(&ctxAccess);
-    fz_try(ctx) { dev = fz_new_bbox_device(ctx, &rect); }
+    fz_try(ctx) {
+        dev = fz_new_bbox_device(ctx, &rect);
+    }
     fz_catch(ctx) {
         LeaveCriticalSection(&ctxAccess);
         return RectD();
@@ -4174,7 +4385,9 @@ RenderedBitmap* XpsEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
     }
 
     fz_device* dev = nullptr;
-    fz_try(ctx) { dev = fz_new_draw_device(ctx, fz_identity, image); }
+    fz_try(ctx) {
+        dev = fz_new_draw_device(ctx, fz_identity, image);
+    }
     fz_catch(ctx) {
         fz_drop_pixmap(ctx, image);
         LeaveCriticalSection(&ctxAccess);
@@ -4243,7 +4456,9 @@ WCHAR* XpsEngineImpl::ExtractPageText(fz_page* page, const WCHAR* lineSep, RectI
 u8* XpsEngineImpl::GetFileData(size_t* cbCount) {
     u8* res = nullptr;
     ScopedCritSec scope(&ctxAccess);
-    fz_try(ctx) { res = fz_extract_stream_data(ctx, _docStream, cbCount); }
+    fz_try(ctx) {
+        res = fz_extract_stream_data(ctx, _docStream, cbCount);
+    }
     fz_catch(ctx) {
         res = nullptr;
         if (FileName()) {
@@ -4431,7 +4646,9 @@ RenderedBitmap* XpsEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
     fz_device* dev = nullptr;
 
     EnterCriticalSection(&ctxAccess);
-    fz_try(ctx) { dev = fz_new_inspection_device(ctx, &data); }
+    fz_try(ctx) {
+        dev = fz_new_inspection_device(ctx, &data);
+    }
     fz_catch(ctx) {
         LeaveCriticalSection(&ctxAccess);
         return nullptr;
@@ -4454,7 +4671,9 @@ RenderedBitmap* XpsEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
         CrashMePort();
         pixmap = fz_get_pixmap_from_image(ctx, image, nullptr, nullptr, nullptr, nullptr);
     }
-    fz_catch(ctx) { return nullptr; }
+    fz_catch(ctx) {
+        return nullptr;
+    }
     RenderedBitmap* bmp = new_rendered_fz_pixmap(ctx, pixmap);
     fz_drop_pixmap(ctx, pixmap);
 

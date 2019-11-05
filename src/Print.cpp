@@ -60,7 +60,9 @@ struct PrintData {
         }
     }
 
-    ~PrintData() { delete engine; }
+    ~PrintData() {
+        delete engine;
+    }
 };
 
 class AbortCookieManager {
@@ -69,7 +71,9 @@ class AbortCookieManager {
   public:
     AbortCookie* cookie = nullptr;
 
-    AbortCookieManager() { InitializeCriticalSection(&cookieAccess); }
+    AbortCookieManager() {
+        InitializeCriticalSection(&cookieAccess);
+    }
     ~AbortCookieManager() {
         Clear();
         DeleteCriticalSection(&cookieAccess);
@@ -390,7 +394,9 @@ class PrintThreadData : public ProgressUpdateUI {
         });
     }
 
-    virtual bool WasCanceled() { return isCanceled || !WindowInfoStillValid(win) || win->printCanceled; }
+    virtual bool WasCanceled() {
+        return isCanceled || !WindowInfoStillValid(win) || win->printCanceled;
+    }
 
     static DWORD WINAPI PrintThread(LPVOID data) {
         PrintThreadData* threadData = (PrintThreadData*)data;

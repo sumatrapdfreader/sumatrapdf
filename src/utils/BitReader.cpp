@@ -11,7 +11,8 @@ BitReader::BitReader(uint8_t* data, size_t len) : data(data), dataLen(len), curr
     bitsCount = len * 8;
 }
 
-BitReader::~BitReader() {}
+BitReader::~BitReader() {
+}
 
 uint8_t BitReader::GetByte(size_t pos) {
     if (pos >= dataLen) {

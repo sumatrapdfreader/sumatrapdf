@@ -212,7 +212,8 @@ class HuffDicDecompressor {
     bool DecodeOne(uint32_t code, str::Str<char>& dst);
 };
 
-HuffDicDecompressor::HuffDicDecompressor() : codeLength(0), dictsCount(0) {}
+HuffDicDecompressor::HuffDicDecompressor() : codeLength(0), dictsCount(0) {
+}
 
 bool HuffDicDecompressor::DecodeOne(uint32_t code, str::Str<char>& dst) {
     uint16_t dict = (uint16_t)(code >> codeLength);
@@ -464,7 +465,8 @@ MobiDoc::MobiDoc(const WCHAR* filePath)
       images(nullptr),
       huffDic(nullptr),
       textEncoding(CP_UTF8),
-      docTocIndex(kInvalidSize) {}
+      docTocIndex(kInvalidSize) {
+}
 
 MobiDoc::~MobiDoc() {
     free(fileName);

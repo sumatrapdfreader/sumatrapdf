@@ -121,7 +121,9 @@ WCHAR* PathForFileInAppDataDir(const WCHAR* fileName) {
     WCHAR* dir = path::Join(dataDir, APP_NAME_STR);
     free(dataDir);
 
-    defer { str::Free(dir); };
+    defer {
+        str::Free(dir);
+    };
     bool ok = dir::Create(dir);
     if (!ok)
         return nullptr;
@@ -497,7 +499,9 @@ static const WCHAR* Md5OfAppExe() {
     if (appPath == nullptr) {
         return {};
     }
-    defer { str::Free(appPath); };
+    defer {
+        str::Free(appPath);
+    };
     auto d = file::ReadFile(appPath);
     if (d.IsEmpty()) {
         return nullptr;
@@ -527,7 +531,9 @@ void RemoveMd5AppDataDirectories() {
     if (!extractedDir) {
         return;
     }
-    defer { str::Free(extractedDir); };
+    defer {
+        str::Free(extractedDir);
+    };
 
     auto dirs = CollectDirsFromDirectory(extractedDir);
     if (dirs.empty()) {
@@ -538,10 +544,14 @@ void RemoveMd5AppDataDirectories() {
     if (md5App == nullptr) {
         return;
     }
-    defer { str::Free(md5App); };
+    defer {
+        str::Free(md5App);
+    };
 
     const WCHAR* md5Dir = path::Join(extractedDir, md5App);
-    defer { str::Free(md5Dir); };
+    defer {
+        str::Free(md5Dir);
+    };
 
     for (auto& dir : dirs) {
         const WCHAR* s = dir.data();
@@ -561,19 +571,27 @@ const WCHAR* ExractUnrarDll() {
     if (!extractedDir) {
         return nullptr;
     }
-    defer { str::Free(extractedDir); };
+    defer {
+        str::Free(extractedDir);
+    };
 
     const WCHAR* md5App = Md5OfAppExe();
     if (md5App == nullptr) {
         return nullptr;
     }
-    defer { str::Free(md5App); };
+    defer {
+        str::Free(md5App);
+    };
 
     const WCHAR* md5Dir = path::Join(extractedDir, md5App);
-    defer { str::Free(md5Dir); };
+    defer {
+        str::Free(md5Dir);
+    };
 
     const WCHAR* dllPath = path::Join(md5Dir, unrarFileName);
-    defer { str::Free(dllPath); };
+    defer {
+        str::Free(dllPath);
+    };
 
     if (file::Exists(dllPath)) {
         const WCHAR* ret = dllPath;
@@ -598,7 +616,9 @@ const WCHAR* ExractUnrarDll() {
         return nullptr;
     }
     const char* data = (const char*)LockResource(res);
-    defer { UnlockResource(res); };
+    defer {
+        UnlockResource(res);
+    };
     DWORD dataSize = SizeofResource(nullptr, resSrc);
     ok = file::WriteFile(dllPath, data, dataSize);
     if (!ok) {

@@ -9,9 +9,13 @@ void LeaveMuiCriticalSection();
 
 class ScopedMuiCritSec {
   public:
-    ScopedMuiCritSec() { EnterMuiCriticalSection(); }
+    ScopedMuiCritSec() {
+        EnterMuiCriticalSection();
+    }
 
-    ~ScopedMuiCritSec() { LeaveMuiCriticalSection(); }
+    ~ScopedMuiCritSec() {
+        LeaveMuiCriticalSection();
+    }
 };
 
 struct CachedFont {
@@ -24,9 +28,15 @@ struct CachedFont {
     HFONT hFont;
 
     HFONT GetHFont();
-    Gdiplus::FontStyle GetStyle() const { return style; }
-    float GetSize() const { return sizePt; }
-    const WCHAR* GetName() const { return name; }
+    Gdiplus::FontStyle GetStyle() const {
+        return style;
+    }
+    float GetSize() const {
+        return sizePt;
+    }
+    const WCHAR* GetName() const {
+        return name;
+    }
     bool SameAs(const WCHAR* name, float sizePt, FontStyle style) const;
 };
 

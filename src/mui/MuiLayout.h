@@ -17,7 +17,9 @@ class ILayout {
         if (n)
             name.SetCopy(n);
     }
-    bool IsNamed(const char* s) const { return str::EqI(name.Get(), s); }
+    bool IsNamed(const char* s) const {
+        return str::EqI(name.Get(), s);
+    }
     virtual ~ILayout(){};
     virtual Size Measure(const Size availableSize) = 0;
     virtual Size DesiredSize() = 0;
@@ -57,14 +59,16 @@ struct DirectionalLayoutData {
     // desiredSize of the element after Measure() step
     Size desiredSize;
 
-    DirectionalLayoutData() : alignNonLayoutAxis(GetElAlignCenter()) {}
+    DirectionalLayoutData() : alignNonLayoutAxis(GetElAlignCenter()) {
+    }
 
     DirectionalLayoutData(const DirectionalLayoutData& other)
         : element(other.element),
           sizeLayoutAxis(other.sizeLayoutAxis),
           sizeNonLayoutAxis(other.sizeNonLayoutAxis),
           alignNonLayoutAxis(other.alignNonLayoutAxis),
-          desiredSize(other.desiredSize) {}
+          desiredSize(other.desiredSize) {
+    }
 
     void Set(ILayout* el, float sla, float snla, const ElAlignData& a) {
         element = el;
@@ -81,7 +85,9 @@ class DirectionalLayout : public ILayout {
 
   public:
     ~DirectionalLayout() override;
-    Size DesiredSize() override { return desiredSize; }
+    Size DesiredSize() override {
+        return desiredSize;
+    }
 
     DirectionalLayout& Add(const DirectionalLayoutData& ld);
 
@@ -94,14 +100,16 @@ class DirectionalLayout : public ILayout {
 
 class HorizontalLayout : public DirectionalLayout {
   public:
-    HorizontalLayout() {}
+    HorizontalLayout() {
+    }
 
     void Arrange(const Rect finalRect) override;
 };
 
 class VerticalLayout : public DirectionalLayout {
   public:
-    VerticalLayout() {}
+    VerticalLayout() {
+    }
 
     void Arrange(const Rect finalRect) override;
 };

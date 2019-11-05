@@ -43,9 +43,11 @@ struct DrawInstr {
     };
     RectF bbox; // common to most instructions
 
-    DrawInstr() {}
+    DrawInstr() {
+    }
 
-    explicit DrawInstr(DrawInstrType t, RectF bbox = RectF()) : type(t), bbox(bbox) {}
+    explicit DrawInstr(DrawInstrType t, RectF bbox = RectF()) : type(t), bbox(bbox) {
+    }
 
     // helper constructors for instructions that need additional arguments
     static DrawInstr Str(const char* s, size_t len, RectF bbox, bool rtl = false);
@@ -84,7 +86,8 @@ struct DrawStyle {
 
 class HtmlPage {
   public:
-    explicit HtmlPage(int reparseIdx = 0) : reparseIdx(reparseIdx) {}
+    explicit HtmlPage(int reparseIdx = 0) : reparseIdx(reparseIdx) {
+    }
 
     Vec<DrawInstr> instructions;
     // if we start parsing html again from reparseIdx, we should
@@ -103,9 +106,13 @@ class HtmlFormatterArgs {
     REAL pageDx = 0;
     REAL pageDy = 0;
 
-    void SetFontName(const WCHAR* s) { fontName.SetCopy(s); }
+    void SetFontName(const WCHAR* s) {
+        fontName.SetCopy(s);
+    }
 
-    const WCHAR* GetFontName() { return fontName; }
+    const WCHAR* GetFontName() {
+        return fontName;
+    }
 
     float fontSize = 0;
 
@@ -150,9 +157,15 @@ class HtmlFormatter {
     void HandleText(HtmlToken* t);
     void HandleText(const char* s, size_t sLen);
     // blank convenience methods to override
-    virtual void HandleTagImg(HtmlToken* t) { UNUSED(t); }
-    virtual void HandleTagPagebreak(HtmlToken* t) { UNUSED(t); }
-    virtual void HandleTagLink(HtmlToken* t) { UNUSED(t); }
+    virtual void HandleTagImg(HtmlToken* t) {
+        UNUSED(t);
+    }
+    virtual void HandleTagPagebreak(HtmlToken* t) {
+        UNUSED(t);
+    }
+    virtual void HandleTagLink(HtmlToken* t) {
+        UNUSED(t);
+    }
 
     float CurrLineDx();
     float CurrLineDy();
@@ -173,8 +186,12 @@ class HtmlFormatter {
     void ForceNewPage();
     bool EnsureDx(float dx);
 
-    DrawStyle* CurrStyle() { return &styleStack.Last(); }
-    mui::CachedFont* CurrFont() { return CurrStyle()->font; }
+    DrawStyle* CurrStyle() {
+        return &styleStack.Last();
+    }
+    mui::CachedFont* CurrFont() {
+        return CurrStyle()->font;
+    }
     void SetFont(const WCHAR* fontName, FontStyle fs, float fontSize = -1);
     void SetFontBasedOn(mui::CachedFont* origFont, FontStyle fs, float fontSize = -1);
     void ChangeFontStyle(FontStyle fs, bool isStart);

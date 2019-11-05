@@ -11,12 +11,12 @@
 #include "EngineManager.h"
 
 // TODO(port)
-//extern "C" void fz_redirect_dll_io_to_console();
+// extern "C" void fz_redirect_dll_io_to_console();
 
 void TestRenderPage(const CommandLineInfo& i) {
     if (i.showConsole) {
         RedirectIOToConsole();
-        //fz_redirect_dll_io_to_console();
+        // fz_redirect_dll_io_to_console();
     }
 
     if (i.pageNumber == -1) {
@@ -69,7 +69,7 @@ static void extractPageText(BaseEngine* engine, int pageNo) {
 void TestExtractPage(const CommandLineInfo& ci) {
     if (ci.showConsole) {
         RedirectIOToConsole();
-        //fz_redirect_dll_io_to_console();
+        // fz_redirect_dll_io_to_console();
     }
 
     int pageNo = ci.pageNumber;
@@ -94,7 +94,7 @@ void TestExtractPage(const CommandLineInfo& ci) {
         } else {
             extractPageText(engine, pageNo);
         }
- 
+
         delete engine;
     }
 }

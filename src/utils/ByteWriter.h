@@ -7,7 +7,9 @@ class ByteWriter {
     bool isLE;
 
   public:
-    ByteWriter(uint8_t* dst, size_t bytesLeft, bool isLE) : dst(dst), isLE(isLE) { end = dst + bytesLeft; }
+    ByteWriter(uint8_t* dst, size_t bytesLeft, bool isLE) : dst(dst), isLE(isLE) {
+        end = dst + bytesLeft;
+    }
 
     ByteWriter(const ByteWriter& o) {
         this->dst = o.dst;

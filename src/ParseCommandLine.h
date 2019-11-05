@@ -2,8 +2,10 @@
    License: GPLv3 */
 
 struct PageRange {
-    PageRange() : start(1), end(INT_MAX) {}
-    PageRange(int start, int end) : start(start), end(end) {}
+    PageRange() : start(1), end(INT_MAX) {
+    }
+    PageRange(int start, int end) : start(start), end(end) {
+    }
 
     int start, end; // end == INT_MAX means to the last page
 };
@@ -95,9 +97,11 @@ class CommandLineInfo {
           appdataDir(nullptr),
           inverseSearchCmdLine(nullptr),
           invertColors(false),
-          crashOnOpen(false) {}
+          crashOnOpen(false) {
+    }
 
-    ~CommandLineInfo() {}
+    ~CommandLineInfo() {
+    }
 
     void ParseCommandLine(const WCHAR* cmdLine);
 };

@@ -51,7 +51,9 @@ class Doc {
     ~Doc();
 
     void Clear();
-    Doc() { Clear(); }
+    Doc() {
+        Clear();
+    }
     explicit Doc(EpubDoc* doc);
     explicit Doc(Fb2Doc* doc);
     explicit Doc(MobiDoc* doc);
@@ -60,9 +62,15 @@ class Doc {
     void Delete();
 
     // note: find a better name, if possible
-    bool IsNone() const { return DocType::None == type; }
-    bool IsDocLoaded() const { return !IsNone(); }
-    DocType Type() const { return type; }
+    bool IsNone() const {
+        return DocType::None == type;
+    }
+    bool IsDocLoaded() const {
+        return !IsNone();
+    }
+    DocType Type() const {
+        return type;
+    }
 
     bool LoadingFailed() const {
         CrashIf((error != DocError::None) && !IsNone());

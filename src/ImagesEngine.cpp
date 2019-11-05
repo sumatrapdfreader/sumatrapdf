@@ -27,7 +27,8 @@ struct ImagePage {
     bool ownBmp;
     int refs;
 
-    ImagePage(int pageNo, Bitmap* bmp) : pageNo(pageNo), bmp(bmp), ownBmp(true), refs(1) {}
+    ImagePage(int pageNo, Bitmap* bmp) : pageNo(pageNo), bmp(bmp), ownBmp(true), refs(1) {
+    }
 };
 
 class ImageElement;
@@ -39,7 +40,9 @@ class ImagesEngine : public BaseEngine {
     ImagesEngine();
     virtual ~ImagesEngine();
 
-    int PageCount() const override { return (int)mediaboxes.size(); }
+    int PageCount() const override {
+        return (int)mediaboxes.size();
+    }
 
     RectD PageMediabox(int pageNo) override;
 
@@ -64,14 +67,20 @@ class ImagesEngine : public BaseEngine {
         UNUSED(pageNo);
         return false;
     }
-    PageLayoutType PreferredLayout() override { return Layout_NonContinuous; }
-    bool IsImageCollection() const override { return true; }
+    PageLayoutType PreferredLayout() override {
+        return Layout_NonContinuous;
+    }
+    bool IsImageCollection() const override {
+        return true;
+    }
 
     bool SupportsAnnotation(bool forSaving = false) const override {
         UNUSED(forSaving);
         return false;
     }
-    void UpdateUserAnnotations(Vec<PageAnnotation>* list) override { UNUSED(list); }
+    void UpdateUserAnnotations(Vec<PageAnnotation>* list) override {
+        UNUSED(list);
+    }
 
     Vec<PageElement*>* GetElements(int pageNo) override;
     PageElement* GetElementAtPos(int pageNo, PointD pt) override;
@@ -201,13 +210,24 @@ class ImageElement : public PageElement {
     ImagePage* page;
 
   public:
-    explicit ImageElement(ImagesEngine* engine, ImagePage* page) : engine(engine), page(page) {}
-    virtual ~ImageElement() { engine->DropPage(page); }
+    explicit ImageElement(ImagesEngine* engine, ImagePage* page) : engine(engine), page(page) {
+    }
+    virtual ~ImageElement() {
+        engine->DropPage(page);
+    }
 
-    virtual PageElementType GetType() const { return PageElementType::Image; }
-    virtual int GetPageNo() const { return page->pageNo; }
-    virtual RectD GetRect() const { return RectD(0, 0, page->bmp->GetWidth(), page->bmp->GetHeight()); }
-    virtual WCHAR* GetValue() const { return nullptr; }
+    virtual PageElementType GetType() const {
+        return PageElementType::Image;
+    }
+    virtual int GetPageNo() const {
+        return page->pageNo;
+    }
+    virtual RectD GetRect() const {
+        return RectD(0, 0, page->bmp->GetWidth(), page->bmp->GetHeight());
+    }
+    virtual WCHAR* GetValue() const {
+        return nullptr;
+    }
 
     virtual RenderedBitmap* GetImage() {
         HBITMAP hbmp;
@@ -313,15 +333,22 @@ void ImagesEngine::DropPage(ImagePage* page, bool forceRemove) {
 
 class ImageEngineImpl : public ImagesEngine {
   public:
-    ImageEngineImpl() : fileExt(nullptr), image(nullptr) {}
-    virtual ~ImageEngineImpl() { delete image; }
+    ImageEngineImpl() : fileExt(nullptr), image(nullptr) {
+    }
+    virtual ~ImageEngineImpl() {
+        delete image;
+    }
 
     BaseEngine* Clone() override;
 
     WCHAR* GetProperty(DocumentProperty prop) override;
 
-    float GetFileDPI() const override { return image->GetHorizontalResolution(); }
-    const WCHAR* GetDefaultFileExt() const override { return fileExt; }
+    float GetFileDPI() const override {
+        return image->GetHorizontalResolution();
+    }
+    const WCHAR* GetDefaultFileExt() const override {
+        return fileExt;
+    }
 
     bool SaveFileAsPDF(const char* pdfFileName, bool includeUserAnnots = false) override;
 
@@ -603,7 +630,8 @@ BaseEngine* CreateFromStream(IStream* stream) {
 
 class ImageDirEngineImpl : public ImagesEngine {
   public:
-    ImageDirEngineImpl() : fileDPI(96.0f) {}
+    ImageDirEngineImpl() : fileDPI(96.0f) {
+    }
 
     BaseEngine* Clone() override {
         if (FileName()) {
@@ -624,16 +652,24 @@ class ImageDirEngineImpl : public ImagesEngine {
     }
 
     // TODO: is there a better place to expose pageFileNames than through page labels?
-    bool HasPageLabels() const override { return true; }
+    bool HasPageLabels() const override {
+        return true;
+    }
     WCHAR* GetPageLabel(int pageNo) const override;
     int GetPageByLabel(const WCHAR* label) const override;
 
-    bool HasTocTree() const override { return true; }
+    bool HasTocTree() const override {
+        return true;
+    }
     DocTocItem* GetTocTree() override;
 
     // TODO: better handle the case where images have different resolutions
-    float GetFileDPI() const override { return fileDPI; }
-    const WCHAR* GetDefaultFileExt() const override { return L""; }
+    float GetFileDPI() const override {
+        return fileDPI;
+    }
+    const WCHAR* GetDefaultFileExt() const override {
+        return L"";
+    }
 
     bool SaveFileAsPDF(const char* pdfFileName, bool includeUserAnnots = false) override;
 
@@ -704,9 +740,12 @@ int ImageDirEngineImpl::GetPageByLabel(const WCHAR* label) const {
 
 class ImageDirTocItem : public DocTocItem {
   public:
-    ImageDirTocItem(WCHAR* title, int pageNo) : DocTocItem(title, pageNo) {}
+    ImageDirTocItem(WCHAR* title, int pageNo) : DocTocItem(title, pageNo) {
+    }
 
-    PageDestination* GetLink() override { return nullptr; }
+    PageDestination* GetLink() override {
+        return nullptr;
+    }
 };
 
 DocTocItem* ImageDirEngineImpl::GetTocTree() {
@@ -795,8 +834,11 @@ BaseEngine* CreateFromFile(const WCHAR* fileName) {
 
 class CbxEngineImpl : public ImagesEngine, public json::ValueVisitor {
   public:
-    CbxEngineImpl(Archive* arch) : cbxFile(arch) {}
-    virtual ~CbxEngineImpl() { delete cbxFile; }
+    CbxEngineImpl(Archive* arch) : cbxFile(arch) {
+    }
+    virtual ~CbxEngineImpl() {
+        delete cbxFile;
+    }
 
     virtual BaseEngine* Clone() override {
         if (fileStream) {
@@ -819,7 +861,9 @@ class CbxEngineImpl : public ImagesEngine, public json::ValueVisitor {
     // not using the resolution of the contained images seems to be
     // expected, cf. http://forums.fofou.org/sumatrapdf/topic?id=3183827
     // TODO: return win::GetHwndDpi(HWND_DESKTOP) instead?
-    float GetFileDPI() const override { return 96.0f; }
+    float GetFileDPI() const override {
+        return 96.0f;
+    }
     const WCHAR* GetDefaultFileExt() const override;
 
     // json::ValueVisitor

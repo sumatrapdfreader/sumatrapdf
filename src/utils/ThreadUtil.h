@@ -18,7 +18,9 @@ class ThreadBase {
 
     // note: no need for Interlocked* since this value is
     //       only ever changed from false to true
-    bool WasCancelRequested() { return cancelRequested; }
+    bool WasCancelRequested() {
+        return cancelRequested;
+    }
 
   public:
     // name is for debugging purposes, can be nullptr.
@@ -29,7 +31,9 @@ class ThreadBase {
 
     // request the thread to stop. It's up to Run() function
     // to call WasCancelRequested() and stop processing if it returns true.
-    void RequestCancel() { cancelRequested = true; }
+    void RequestCancel() {
+        cancelRequested = true;
+    }
 
     // synchronously waits for the thread to end
     // returns true if thread stopped by itself and false if waiting timed out
@@ -37,7 +41,9 @@ class ThreadBase {
 
     // get a unique number that identifies a thread and unlike an
     // address of the object, will not be reused
-    LONG GetNo() const { return threadNo; }
+    LONG GetNo() const {
+        return threadNo;
+    }
 
     // over-write this to implement the actual thread functionality
     // note: for longer running threads, make sure to occasionally poll WasCancelRequested

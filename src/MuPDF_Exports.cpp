@@ -7,7 +7,6 @@
 // link this file along libmupdf.lib and omit it when
 // building a static SumatraPDF.exe.
 
-
 #if defined(_MSC_VER)
 #pragma warning(push)
 #pragma warning(disable : 4100)

@@ -364,7 +364,8 @@ bool ListRemove(T** root, T* el) {
 // we want to use Vec but not use standard malloc()/free() functions
 class Allocator {
   public:
-    Allocator() {}
+    Allocator() {
+    }
     virtual ~Allocator(){};
     virtual void* Alloc(size_t size) = 0;
     virtual void* Realloc(void* mem, size_t size) = 0;
@@ -411,8 +412,12 @@ class PoolAllocator : public Allocator {
         size_t size;
         size_t free;
 
-        size_t Used() { return size - free; }
-        char* DataStart() { return (char*)this + sizeof(MemBlockNode); }
+        size_t Used() {
+            return size - free;
+        }
+        char* DataStart() {
+            return (char*)this + sizeof(MemBlockNode);
+        }
         // data follows here
     };
 
@@ -420,7 +425,8 @@ class PoolAllocator : public Allocator {
     MemBlockNode* firstBlock = nullptr;
 
   public:
-    explicit PoolAllocator() {}
+    explicit PoolAllocator() {
+    }
 
     void SetMinBlockSize(size_t newMinBlockSize);
     void SetAllocRounding(size_t newRounding);
@@ -461,8 +467,12 @@ class PoolAllocator : public Allocator {
             CrashIf(block && block->Used() == 0);
         }
 
-        bool operator!=(const Iter& other) const { return block != other.block || blockPos != other.blockPos; }
-        T& operator*() const { return *(T*)(block->DataStart() + blockPos); }
+        bool operator!=(const Iter& other) const {
+            return block != other.block || blockPos != other.blockPos;
+        }
+        T& operator*() const {
+            return *(T*)(block->DataStart() + blockPos);
+        }
         Iter& operator++() {
             blockPos += sizeof(T);
             if (block->Used() == blockPos) {
@@ -501,7 +511,9 @@ class FixedArray {
             memBuf = (T*)malloc(elCount * sizeof(T));
     }
 
-    ~FixedArray() { free(memBuf); }
+    ~FixedArray() {
+        free(memBuf);
+    }
 
     T* Get() {
         if (memBuf)
@@ -519,7 +531,8 @@ class OwnedData {
     char* data = nullptr;
     size_t size = 0;
 
-    OwnedData() {}
+    OwnedData() {
+    }
     // takes ownership of data
     OwnedData(const char* data, size_t size = 0);
     ~OwnedData();
@@ -576,8 +589,11 @@ class MaybeOwnedData {
 template <typename T>
 struct ExitScope {
     T lambda;
-    ExitScope(T lambda) : lambda(lambda) {}
-    ~ExitScope() { lambda(); }
+    ExitScope(T lambda) : lambda(lambda) {
+    }
+    ~ExitScope() {
+        lambda();
+    }
     ExitScope(const ExitScope&);
 
   private:

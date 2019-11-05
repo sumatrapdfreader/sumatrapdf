@@ -276,9 +276,13 @@ class TabPainter {
         }
     }
 
-    int Count() { return (int)text.size(); }
+    int Count() {
+        return (int)text.size();
+    }
 
-    void Insert(int index, const WCHAR* t) { text.InsertAt(index, str::Dup(t)); }
+    void Insert(int index, const WCHAR* t) {
+        text.InsertAt(index, str::Dup(t));
+    }
 
     bool Set(int index, const WCHAR* t) {
         if (index < Count()) {
@@ -296,7 +300,9 @@ class TabPainter {
         return false;
     }
 
-    void DeleteAll() { text.Reset(); }
+    void DeleteAll() {
+        text.Reset();
+    }
 };
 
 static void SetTabTitle(WindowInfo* win, TabInfo* tab) {

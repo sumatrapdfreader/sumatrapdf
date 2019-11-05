@@ -3,7 +3,8 @@
 
 class SquareTreeNode {
   public:
-    SquareTreeNode() {}
+    SquareTreeNode() {
+    }
     ~SquareTreeNode();
 
     struct DataItem {
@@ -14,9 +15,14 @@ class SquareTreeNode {
         } value;
         bool isChild;
 
-        DataItem() : key(nullptr) {}
-        DataItem(const char* key, const char* string) : key(key), isChild(false) { value.str = string; }
-        DataItem(const char* key, SquareTreeNode* node) : key(key), isChild(true) { value.child = node; }
+        DataItem() : key(nullptr) {
+        }
+        DataItem(const char* key, const char* string) : key(key), isChild(false) {
+            value.str = string;
+        }
+        DataItem(const char* key, SquareTreeNode* node) : key(key), isChild(true) {
+            value.child = node;
+        }
     };
     Vec<DataItem> data;
 
@@ -29,7 +35,9 @@ class SquareTree {
 
   public:
     explicit SquareTree(const char* data);
-    ~SquareTree() { delete root; }
+    ~SquareTree() {
+        delete root;
+    }
 
     SquareTreeNode* root;
 };

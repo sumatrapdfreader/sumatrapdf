@@ -143,8 +143,10 @@ static COLORREF gSumatraLogoCols[] = {COL1, COL2, COL3, COL4, COL5, COL5, COL4, 
 
 class SumatraLogo : public Control {
   public:
-    SumatraLogo() {}
-    virtual ~SumatraLogo() {}
+    SumatraLogo() {
+    }
+    virtual ~SumatraLogo() {
+    }
     virtual Size Measure(const Size availableSize);
     virtual void Paint(Graphics* gfx, int offX, int offY);
 };

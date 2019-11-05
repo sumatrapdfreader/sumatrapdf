@@ -22,19 +22,33 @@ class EbookController : public Controller {
     EbookController(Doc doc, EbookControls* ctrls, ControllerCallback* cb);
     ~EbookController() override;
 
-    const WCHAR* FilePath() const override { return doc.GetFilePath(); }
-    const WCHAR* DefaultFileExt() const override { return doc.GetDefaultFileExt(); }
-    int PageCount() const override { return GetMaxPageCount(); }
-    WCHAR* GetProperty(DocumentProperty prop) override { return doc.GetProperty(prop); }
+    const WCHAR* FilePath() const override {
+        return doc.GetFilePath();
+    }
+    const WCHAR* DefaultFileExt() const override {
+        return doc.GetDefaultFileExt();
+    }
+    int PageCount() const override {
+        return GetMaxPageCount();
+    }
+    WCHAR* GetProperty(DocumentProperty prop) override {
+        return doc.GetProperty(prop);
+    }
 
-    int CurrentPageNo() const override { return currPageNo; }
+    int CurrentPageNo() const override {
+        return currPageNo;
+    }
     void GoToPage(int pageNo, bool addNavPoint) override;
     bool CanNavigate(int dir) const override;
     void Navigate(int dir) override;
 
     void SetDisplayMode(DisplayMode mode, bool keepContinuous = false) override;
-    DisplayMode GetDisplayMode() const override { return IsDoublePage() ? DM_FACING : DM_SINGLE_PAGE; }
-    void SetPresentationMode(bool enable) override { UNUSED(enable); /* not supported */ }
+    DisplayMode GetDisplayMode() const override {
+        return IsDoublePage() ? DM_FACING : DM_SINGLE_PAGE;
+    }
+    void SetPresentationMode(bool enable) override {
+        UNUSED(enable); /* not supported */
+    }
     void SetZoomVirtual(float zoom, PointI* fixPt) override {
         UNUSED(zoom);
         UNUSED(fixPt); /* not supported */
@@ -49,7 +63,9 @@ class EbookController : public Controller {
     }
     void SetViewPortSize(SizeI size) override;
 
-    bool HasTocTree() const override { return doc.HasToc(); }
+    bool HasTocTree() const override {
+        return doc.HasToc();
+    }
     DocTocItem* GetTocTree() override;
     void ScrollToLink(PageDestination* dest) override;
     PageDestination* GetNamedDest(const WCHAR* name) override;
@@ -60,14 +76,20 @@ class EbookController : public Controller {
     bool GoToNextPage() override;
     bool GoToPrevPage(bool toBottom = false) override;
 
-    EbookController* AsEbook() override { return this; }
+    EbookController* AsEbook() override {
+        return this;
+    }
 
   public:
     // the following is specific to EbookController
 
-    DocType GetDocType() const { return doc.Type(); }
+    DocType GetDocType() const {
+        return doc.Type();
+    }
     LRESULT HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam, bool& wasHandled);
-    void EnableMessageHandling(bool enable) { handleMsgs = enable; }
+    void EnableMessageHandling(bool enable) {
+        handleMsgs = enable;
+    }
     void UpdateDocumentColors();
     void RequestRepaint();
     void HandlePagesFromEbookLayout(EbookFormattingData* ebookLayout);
@@ -119,7 +141,9 @@ class EbookController : public Controller {
 
     Vec<HtmlPage*>* GetPages();
     void UpdateStatus();
-    bool FormattingInProgress() const { return formattingThread != nullptr; }
+    bool FormattingInProgress() const {
+        return formattingThread != nullptr;
+    }
     void StopFormattingThread();
     void CloseCurrentDocument();
     int GetMaxPageCount() const;
