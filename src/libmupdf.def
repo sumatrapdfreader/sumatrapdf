@@ -39,6 +39,7 @@ EXPORTS
 	fz_new_stext_page
 	fz_drop_stext_page
 	fz_new_stext_device
+	fz_rect_from_quad
 
 	fz_keep_bitmap
 	fz_drop_bitmap
