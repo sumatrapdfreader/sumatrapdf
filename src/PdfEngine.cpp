@@ -1036,7 +1036,6 @@ struct PageInfo {
 
 struct PdfPageRun {
     PageInfo* pageInfo = nullptr;
-    size_t size_est = 0;
     int refs = 1;
 
     PdfPageRun(PageInfo*);
@@ -1897,10 +1896,12 @@ PdfPageRun* PdfEngineImpl::GetPageRun(PageInfo* pageInfo, bool tryOnly) {
         for (size_t i = 0; i < runCache.size(); i++) {
             // drop page runs that take up too much memory due to huge images
             // (except for the very recently used ones)
+#if 0
             if (i >= 2 && mem + runCache.at(i)->size_est >= MAX_PAGE_RUN_MEMORY)
                 DropPageRun(runCache.at(i--), true);
             else
                 mem += runCache.at(i)->size_est;
+#endif
         }
         if (runCache.size() >= MAX_PAGE_RUN_CACHE) {
             AssertCrash(runCache.size() == MAX_PAGE_RUN_CACHE);
