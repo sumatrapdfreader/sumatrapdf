@@ -18,13 +18,26 @@ const (
 	maxS3Results = 1000
 )
 
+func isMyRepo() bool {
+	// https://help.github.com/en/github/automating-your-workflow-with-github-actions/virtual-environments-for-github-actions#default-environment-variables
+	repo := os.Getenv("GITHUB_REPOSITORY")
+	return repo == "sumatrapdfreader/sumatrapdf"
+}
+
 func ensureAwsSecrets() {
 	if !flgUpload {
 		return
 	}
+
+	if !isMyRepo() {
+		logf("skipping upload beacuse not my repo\n")
+		flgUpload = false
+		return
+	}
+
 	s3AwsAccess = os.Getenv("AWS_ACCESS")
-	u.PanicIf(s3AwsAccess == "", "AWS_ACCESS env variable must be set for upload")
 	s3AwsSecret = os.Getenv("AWS_SECRET")
+	u.PanicIf(s3AwsAccess == "", "AWS_ACCESS env variable must be set for upload")
 	u.PanicIf(s3AwsSecret == "", "AWS_SECRET env variable must be set for upload")
 }
 

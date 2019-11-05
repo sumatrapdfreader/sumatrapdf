@@ -8,12 +8,6 @@ import (
 	"github.com/kjk/u"
 )
 
-func getCertPwd() string {
-	certPwd := os.Getenv("CERT_PWD")
-	u.PanicIf(certPwd == "", "CERT_PWD env variable must be set")
-	return certPwd
-}
-
 // http://zabkat.com/blog/code-signing-sha1-armageddon.htm
 // signtool sign /n "subject name" /t http://timestamp.comodoca.com/authenticode myInstaller.exe
 // signtool sign /n "subject name" /fd sha256 /tr http://timestamp.comodoca.com/rfc3161 /td sha256 /as myInstaller.exe
@@ -28,7 +22,16 @@ func signMust(path string) {
 	// the sign tool is finicky, so copy the cert to the same dir as
 	// the exe we're signing
 
-	certPwd := getCertPwd()
+	certPwd := os.Getenv("CERT_PWD")
+	if certPwd == "" {
+		// to make it easy on others, skip signing if
+		if !isMyRepo() {
+			logf("skipped signing of '%s' because CERT_PWD not set\n", path)
+			return
+		}
+		panic("my repo but no CERT_PWD")
+	}
+
 	signtoolPath := detectSigntoolPath()
 	fileDir := filepath.Dir(path)
 	fileName := filepath.Base(path)
