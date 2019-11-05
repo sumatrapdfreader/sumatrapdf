@@ -311,8 +311,8 @@ static inline int wchars_per_rune(int rune) {
     return 1;
 }
 
-static void AddChar(fz_stext_line* span, fz_stext_char* c, str::Str<WCHAR>& s, Vec<RectI>& rects) {
-    fz_rect bbox = span->bbox;
+static void AddChar(fz_stext_line* line, fz_stext_char* c, str::Str<WCHAR>& s, Vec<RectI>& rects) {
+    fz_rect bbox = fz_rect_from_quad(c->quad);
     RectI r = fz_rect_to_RectD(bbox).Round();
 
     int n = wchars_per_rune(c->c);
@@ -349,8 +349,8 @@ static void AddChar(fz_stext_line* span, fz_stext_char* c, str::Str<WCHAR>& s, V
 }
 
 // if there's a span following this one, add space to separate them
-static void AddSpaceAtSpanEnd(fz_stext_line* span, str::Str<WCHAR>& s, Vec<RectI>& rects) {
-    if (span->first_char == span->last_char || span->next == NULL) {
+static void AddSpaceAtLineEnd(fz_stext_line* line, str::Str<WCHAR>& s, Vec<RectI>& rects) {
+    if (line->first_char == line->last_char || line->next == NULL) {
         return;
     }
     CrashIf(s.size() == 0);
@@ -402,7 +402,7 @@ static WCHAR* fz_text_page_to_str(fz_stext_page* text, const WCHAR* lineSep, Rec
                 AddChar(line, c, content, rects);
                 c = c->next;
             }
-            AddSpaceAtSpanEnd(line, content, rects);
+            AddSpaceAtLineEnd(line, content, rects);
             line = line->next;
         }
         AddLineSep(content, rects, lineSep, lineSepLen);
