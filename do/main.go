@@ -53,7 +53,7 @@ func main() {
 	)
 
 	{
-		flag.BoolVar(&flgRegenPremake, "regen-premake", false, "regenerage premake*.lua files")
+		flag.BoolVar(&flgRegenPremake, "premake", false, "regenerate premake*.lua files")
 		flag.BoolVar(&flgCIBuild, "ci", false, "run CI steps")
 		flag.BoolVar(&flgSmoke, "smoke", false, "run smoke build (installer for 64bit release)")
 		flag.BoolVar(&flgBuildPreRelease, "build-pre-release", false, "build pre-release")
