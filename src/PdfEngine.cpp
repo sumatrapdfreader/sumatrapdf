@@ -693,28 +693,6 @@ class FitzAbortCookie : public AbortCookie {
     }
 };
 
-// TODO(port): proper way of locking
-extern "C" static void fz_lock_context_cs(void* user, int lock) {
-    UNUSED(lock);
-    // we use a single critical section for all locks,
-    // since that critical section (ctxAccess) should
-    // be guarding all fz_context access anyway and
-    // thus already be in place (in debug builds we
-    // crash if that assertion doesn't hold)
-    CRITICAL_SECTION* cs = (CRITICAL_SECTION*)user;
-    BOOL ok = TryEnterCriticalSection(cs);
-    if (!ok) {
-        CrashIf(true);
-        EnterCriticalSection(cs);
-    }
-}
-
-extern "C" static void fz_unlock_context_cs(void* user, int lock) {
-    UNUSED(lock);
-    CRITICAL_SECTION* cs = (CRITICAL_SECTION*)user;
-    LeaveCriticalSection(cs);
-}
-
 static Vec<PageAnnotation> fz_get_user_page_annots(Vec<PageAnnotation>& userAnnots, int pageNo) {
     Vec<PageAnnotation> result;
     for (size_t i = 0; i < userAnnots.size(); i++) {
@@ -1127,19 +1105,20 @@ class PdfEngineImpl : public BaseEngine {
     static BaseEngine* CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI);
     static BaseEngine* CreateFromStream(IStream* stream, PasswordUI* pwdUI);
 
+    // make sure to never ask for pagesAccess in an ctxAccess
+    // protected critical section in order to avoid deadlocks
+    CRITICAL_SECTION ctxAccess;
+    CRITICAL_SECTION pagesAccess;
+
   protected:
     char* _decryptionKey = nullptr;
     bool isProtected = false;
     int pageCount = -1;
 
-    // make sure to never ask for pagesAccess in an ctxAccess
-    // protected critical section in order to avoid deadlocks
-    CRITICAL_SECTION ctxAccess;
     fz_context* ctx = nullptr;
     fz_locks_context fz_locks_ctx;
     pdf_document* _doc = nullptr;
     fz_stream* _docStream = nullptr;
-    CRITICAL_SECTION pagesAccess;
     PageInfo* _pages = nullptr;
     fz_outline* outline = nullptr;
     fz_outline* attachments = nullptr;
@@ -1286,14 +1265,36 @@ class PdfImage : public PageElement {
 // in mupdf_load_system_font.c
 extern "C" void pdf_install_load_system_font_funcs(fz_context* ctx);
 
+// TODO(port): improve locking to use lock
+extern "C" static void fz_lock_context_cs(void* user, int lock) {
+    UNUSED(lock);
+    PdfEngineImpl *e = (PdfEngineImpl*)user;
+    // we use a single critical section for all locks,
+    // since that critical section (ctxAccess) should
+    // be guarding all fz_context access anyway and
+    // thus already be in place (in debug builds we
+    // crash if that assertion doesn't hold)
+    BOOL ok = TryEnterCriticalSection(&e->ctxAccess);
+    if (!ok) {
+        CrashIf(true);
+        EnterCriticalSection(&e->ctxAccess);
+    }
+}
+
+extern "C" static void fz_unlock_context_cs(void* user, int lock) {
+    UNUSED(lock);
+    PdfEngineImpl* e = (PdfEngineImpl*)user;
+    LeaveCriticalSection(&e->ctxAccess);
+}
+
 PdfEngineImpl::PdfEngineImpl() {
     InitializeCriticalSection(&pagesAccess);
     InitializeCriticalSection(&ctxAccess);
 
-    fz_locks_ctx.user = &ctxAccess;
+    fz_locks_ctx.user = this;
     fz_locks_ctx.lock = fz_lock_context_cs;
     fz_locks_ctx.unlock = fz_unlock_context_cs;
-    ctx = fz_new_context(nullptr, &fz_locks_ctx, MAX_CONTEXT_MEMORY);
+    ctx = fz_new_context(nullptr, &fz_locks_ctx, FZ_STORE_UNLIMITED);
 
     pdf_install_load_system_font_funcs(ctx);
 }
