@@ -76,7 +76,6 @@ func runTestUtilMust(dir string) {
 func buildLzsa() {
 	// early exit if missing
 	detectSigntoolPath()
-	getCertPwd()
 
 	defer makePrintDuration("buildLzsa")()
 	clean()
@@ -93,7 +92,6 @@ func buildLzsa() {
 // We don't build other variants for speed. It takes about 5 mins locally
 func smokeBuild() {
 	detectSigntoolPath()
-	getCertPwd()
 	defer makePrintDuration("smoke build")()
 	clean()
 
@@ -243,7 +241,6 @@ func createManifestMust() {
 func buildPreRelease() {
 	// early exit if missing
 	detectSigntoolPath()
-	getCertPwd()
 	ensureAwsSecrets()
 
 	s := fmt.Sprintf("buidling pre-release version %s", svnPreReleaseVer)
