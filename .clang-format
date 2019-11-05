@@ -1,13 +1,15 @@
 # http://clang.llvm.org/docs/ClangFormatStyleOptions.html
 # Easy way to check some of the flags: https://clangformat.com/
 BasedOnStyle: Chromium
+AllowShortFunctionsOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+AllowShortBlocksOnASingleLine: Never
 IndentWidth: 4
 ColumnLimit: 120
 AccessModifierOffset: -2
 PointerAlignment: Left
 SpacesBeforeTrailingComments: 1
 BinPackParameters: true
-AllowShortIfStatementsOnASingleLine: false
-AllowShortLoopsOnASingleLine: false
 Cpp11BracedListStyle: true
 SortIncludes: false

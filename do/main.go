@@ -49,6 +49,7 @@ func main() {
 		flgBuildLzsa       bool
 		flgBuildPreRelease bool
 		flgSmoke           bool
+		flgClangFormat     bool
 	)
 
 	{
@@ -59,7 +60,13 @@ func main() {
 		flag.BoolVar(&flgBuildLzsa, "build-lzsa", false, "build MakeLZSA.exe")
 		flag.BoolVar(&flgNoCleanCheck, "no-clean-check", false, "allow running if repo has changes (for testing build script)")
 		flag.BoolVar(&flgUpload, "upload", false, "upload the build to s3")
+		flag.BoolVar(&flgClangFormat, "clang-format", false, "format source files with clang-format")
 		flag.Parse()
+	}
+
+	if flgClangFormat {
+		clangFormatFiles()
+		return
 	}
 
 	if flgRegenPremake {
