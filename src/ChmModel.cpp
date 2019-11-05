@@ -24,24 +24,33 @@ class ChmTocItem : public DocTocItem, public PageDestination {
   public:
     const WCHAR* url; // owned by ChmModel::poolAllocator or ChmNamedDest::myUrl
 
-    ChmTocItem(const WCHAR* title, int pageNo, const WCHAR* url) : DocTocItem((WCHAR*)title, pageNo), url(url) {}
+    ChmTocItem(const WCHAR* title, int pageNo, const WCHAR* url) : DocTocItem((WCHAR*)title, pageNo), url(url) {
+    }
     virtual ~ChmTocItem() {
         // prevent title from being freed
         title = nullptr;
     }
 
-    PageDestination* GetLink() override { return url ? this : nullptr; }
+    PageDestination* GetLink() override {
+        return url ? this : nullptr;
+    }
 
     // PageDestination
     PageDestType GetDestType() const override {
         return !url ? PageDestType::None : IsExternalUrl(url) ? PageDestType::LaunchURL : PageDestType::ScrollTo;
     }
-    int GetDestPageNo() const override { return pageNo; }
+    int GetDestPageNo() const override {
+        return pageNo;
+    }
     RectD GetDestRect() const override {
         return RectD(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
     }
-    WCHAR* GetDestValue() const override { return url && IsExternalUrl(url) ? str::Dup(url) : nullptr; }
-    WCHAR* GetDestName() const override { return url && !IsExternalUrl(url) ? str::Dup(url) : nullptr; }
+    WCHAR* GetDestValue() const override {
+        return url && IsExternalUrl(url) ? str::Dup(url) : nullptr;
+    }
+    WCHAR* GetDestName() const override {
+        return url && !IsExternalUrl(url) ? str::Dup(url) : nullptr;
+    }
 };
 
 class ChmNamedDest : public ChmTocItem {
@@ -51,20 +60,31 @@ class ChmNamedDest : public ChmTocItem {
     ChmNamedDest(const WCHAR* url, int pageNo) : ChmTocItem(nullptr, pageNo, nullptr), myUrl(str::Dup(url)) {
         this->url = this->title = myUrl;
     }
-    virtual ~ChmNamedDest() {}
+    virtual ~ChmNamedDest() {
+    }
 };
 
 class HtmlWindowHandler : public HtmlWindowCallback {
     ChmModel* cm;
 
   public:
-    HtmlWindowHandler(ChmModel* cm) : cm(cm) {}
-    virtual ~HtmlWindowHandler() {}
+    HtmlWindowHandler(ChmModel* cm) : cm(cm) {
+    }
+    virtual ~HtmlWindowHandler() {
+    }
 
-    virtual bool OnBeforeNavigate(const WCHAR* url, bool newWindow) { return cm->OnBeforeNavigate(url, newWindow); }
-    virtual void OnDocumentComplete(const WCHAR* url) { cm->OnDocumentComplete(url); }
-    virtual void OnLButtonDown() { cm->OnLButtonDown(); }
-    virtual const unsigned char* GetDataForUrl(const WCHAR* url, size_t* len) { return cm->GetDataForUrl(url, len); }
+    virtual bool OnBeforeNavigate(const WCHAR* url, bool newWindow) {
+        return cm->OnBeforeNavigate(url, newWindow);
+    }
+    virtual void OnDocumentComplete(const WCHAR* url) {
+        cm->OnDocumentComplete(url);
+    }
+    virtual void OnLButtonDown() {
+        cm->OnLButtonDown();
+    }
+    virtual const unsigned char* GetDataForUrl(const WCHAR* url, size_t* len) {
+        return cm->GetDataForUrl(url, len);
+    }
     virtual void DownloadData(const WCHAR* url, const unsigned char* data, size_t len) {
         cm->DownloadData(url, data, len);
     }
@@ -77,7 +97,8 @@ struct ChmTocTraceItem {
     int pageNo;
 
     explicit ChmTocTraceItem(const WCHAR* title = nullptr, const WCHAR* url = nullptr, int level = 0, int pageNo = 0)
-        : title(title), url(url), level(level), pageNo(pageNo) {}
+        : title(title), url(url), level(level), pageNo(pageNo) {
+    }
 };
 
 ChmModel::ChmModel(ControllerCallback* cb)
@@ -308,8 +329,11 @@ class ChmCacheEntry {
     unsigned char* data;
     size_t size;
 
-    explicit ChmCacheEntry(const WCHAR* url) : url(url), data(nullptr), size(0) {}
-    ~ChmCacheEntry() { free(data); }
+    explicit ChmCacheEntry(const WCHAR* url) : url(url), data(nullptr), size(0) {
+    }
+    ~ChmCacheEntry() {
+        free(data);
+    }
 };
 
 ChmCacheEntry* ChmModel::FindDataForUrl(const WCHAR* url) {
@@ -556,7 +580,8 @@ class ChmThumbnailTask : public HtmlWindowCallback {
             uitask::Post([=] { delete this; });
         }
     }
-    virtual void OnLButtonDown() {}
+    virtual void OnLButtonDown() {
+    }
     virtual const unsigned char* GetDataForUrl(const WCHAR* url, size_t* len) {
         UNUSED(len);
         ScopedCritSec scope(&docAccess);

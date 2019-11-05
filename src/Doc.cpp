@@ -34,7 +34,8 @@ Doc& Doc::operator=(const Doc& other) {
     return *this;
 }
 
-Doc::~Doc() {}
+Doc::~Doc() {
+}
 
 // delete underlying object
 void Doc::Delete() {

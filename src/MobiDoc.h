@@ -50,12 +50,18 @@ class MobiDoc {
     ~MobiDoc();
 
     std::string_view GetHtmlData() const;
-    size_t GetHtmlDataSize() const { return doc->size(); }
+    size_t GetHtmlDataSize() const {
+        return doc->size();
+    }
     ImageData* GetCoverImage();
     ImageData* GetImage(size_t imgRecIndex) const;
-    const WCHAR* GetFileName() const { return fileName; }
+    const WCHAR* GetFileName() const {
+        return fileName;
+    }
     WCHAR* GetProperty(DocumentProperty prop);
-    PdbDocType GetDocType() const { return docType; }
+    PdbDocType GetDocType() const {
+        return docType;
+    }
 
     bool HasToc();
     bool ParseToc(EbookTocVisitor* visitor);

@@ -38,7 +38,9 @@ class PageControl : public Control {
     virtual ~PageControl();
 
     void SetPage(HtmlPage* newPage);
-    HtmlPage* GetPage() const { return page; }
+    HtmlPage* GetPage() const {
+        return page;
+    }
 
     Size GetDrawableSize() const;
     DrawInstr* GetLinkAt(int x, int y) const;
@@ -67,17 +69,26 @@ class PagesLayout : public ILayout {
         CrashIf(dx < 0);
         spaceDx = dx;
     }
-    virtual ~PagesLayout() {}
-    virtual Size DesiredSize() { return desiredSize; }
+    virtual ~PagesLayout() {
+    }
+    virtual Size DesiredSize() {
+        return desiredSize;
+    }
 
     virtual Size Measure(const Size availableSize);
     virtual void Arrange(const Rect finalRect);
 
-    PageControl* GetPage1() const { return page1; }
-    PageControl* GetPage2() const { return page2; }
+    PageControl* GetPage1() const {
+        return page1;
+    }
+    PageControl* GetPage2() const {
+        return page2;
+    }
     void SetSpaceDx(int dx) {
         spaceDx = dx;
         // TODO: trigger re-layout ?
     }
-    int GetSpaceDx() const { return spaceDx; }
+    int GetSpaceDx() const {
+        return spaceDx;
+    }
 };

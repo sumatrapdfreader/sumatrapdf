@@ -25,7 +25,8 @@ struct Print_Advanced_Data {
 
     explicit Print_Advanced_Data(PrintRangeAdv range = PrintRangeAdv::All, PrintScaleAdv scale = PrintScaleAdv::Shrink,
                                  PrintRotationAdv rotation = PrintRotationAdv::Auto)
-        : range(range), scale(scale), rotation(rotation) {}
+        : range(range), scale(scale), rotation(rotation) {
+    }
 };
 
 HPROPSHEETPAGE CreatePrintAdvancedPropSheet(Print_Advanced_Data* data, ScopedMem<DLGTEMPLATE>& dlgTemplate);

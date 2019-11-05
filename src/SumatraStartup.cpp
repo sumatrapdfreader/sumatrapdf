@@ -79,7 +79,9 @@ class FileExistenceChecker : public ThreadBase {
     void Terminate();
 
   public:
-    FileExistenceChecker() { GetFilePathsToCheck(); }
+    FileExistenceChecker() {
+        GetFilePathsToCheck();
+    }
     void Run() override;
 };
 
@@ -629,8 +631,8 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 
     if (i.showConsole) {
         RedirectIOToConsole();
-        //TODO(port)
-        //fz_redirect_dll_io_to_console();
+        // TODO(port)
+        // fz_redirect_dll_io_to_console();
     }
     if (i.makeDefault)
         AssociateExeWithPdfExtension();

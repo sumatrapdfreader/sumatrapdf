@@ -84,7 +84,9 @@ class GlobalGraphicsHack {
   public:
     Graphics gfx;
 
-    GlobalGraphicsHack() : bmp(1, 1, PixelFormat32bppARGB), gfx(&bmp) { InitGraphicsMode(&gfx); }
+    GlobalGraphicsHack() : bmp(1, 1, PixelFormat32bppARGB), gfx(&bmp) {
+        InitGraphicsMode(&gfx);
+    }
 };
 
 static GlobalGraphicsHack* gGraphicsHack = nullptr;

@@ -17,8 +17,10 @@ static HBRUSH splitterBrush = nullptr;
 
 class SplitterWnd {
   public:
-    SplitterWnd(const SplitterWndCb& cb) : cb(cb) {}
-    ~SplitterWnd() {}
+    SplitterWnd(const SplitterWndCb& cb) : cb(cb) {
+    }
+    ~SplitterWnd() {
+    }
 
     // none of this data needs to be freed by us
     HWND hwnd;

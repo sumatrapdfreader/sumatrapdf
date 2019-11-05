@@ -407,7 +407,8 @@ class HwndPasswordUI : public PasswordUI {
     size_t pwdIdx;
 
   public:
-    explicit HwndPasswordUI(HWND hwnd) : hwnd(hwnd), pwdIdx(0) {}
+    explicit HwndPasswordUI(HWND hwnd) : hwnd(hwnd), pwdIdx(0) {
+    }
 
     WCHAR* GetPassword(const WCHAR* fileName, unsigned char* fileDigest, unsigned char decryptionKeyOut[32],
                        bool* saveKey) override;
@@ -626,8 +627,10 @@ class ThumbnailRenderingTask : public RenderingCallback {
 
   public:
     explicit ThumbnailRenderingTask(const std::function<void(RenderedBitmap*)>& saveThumbnail)
-        : saveThumbnail(saveThumbnail) {}
-    ~ThumbnailRenderingTask() {}
+        : saveThumbnail(saveThumbnail) {
+    }
+    ~ThumbnailRenderingTask() {
+    }
 
     virtual void Callback(RenderedBitmap* bmp) {
         saveThumbnail(bmp);
@@ -639,16 +642,22 @@ class ControllerCallbackHandler : public ControllerCallback {
     WindowInfo* win;
 
   public:
-    ControllerCallbackHandler(WindowInfo* win) : win(win) {}
-    ~ControllerCallbackHandler() override {}
+    ControllerCallbackHandler(WindowInfo* win) : win(win) {
+    }
+    ~ControllerCallbackHandler() override {
+    }
 
-    void Repaint() override { win->RepaintAsync(); }
+    void Repaint() override {
+        win->RepaintAsync();
+    }
     void PageNoChanged(Controller* ctrl, int pageNo) override;
     void UpdateScrollbars(SizeI canvas) override;
     void RequestRendering(int pageNo) override;
     void CleanUp(DisplayModel* dm) override;
     void RenderThumbnail(DisplayModel* dm, SizeI size, const onBitmapRenderedCb&) override;
-    void GotoLink(PageDestination* dest) override { win->linkHandler->GotoLink(dest); }
+    void GotoLink(PageDestination* dest) override {
+        win->linkHandler->GotoLink(dest);
+    }
     void FocusFrame(bool always) override;
     void SaveDownload(const WCHAR* url, const unsigned char* data, size_t len) override;
     void HandleLayoutedPages(EbookController* ctrl, EbookFormattingData* data) override;

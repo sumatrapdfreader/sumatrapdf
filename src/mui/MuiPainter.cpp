@@ -18,7 +18,8 @@ static bool BitmapNotBigEnough(Bitmap* bmp, int dx, int dy) {
     return false;
 }
 
-Painter::Painter(HwndWrapper* wnd) : wnd(wnd), cacheBmp(nullptr) {}
+Painter::Painter(HwndWrapper* wnd) : wnd(wnd), cacheBmp(nullptr) {
+}
 
 Painter::~Painter() {
     ::delete cacheBmp;

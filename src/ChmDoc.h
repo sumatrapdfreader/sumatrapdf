@@ -20,7 +20,8 @@ class ChmDoc {
     bool Load(const WCHAR* fileName);
 
   public:
-    ChmDoc() : chmHandle(nullptr), codepage(0) {}
+    ChmDoc() : chmHandle(nullptr), codepage(0) {
+    }
     ~ChmDoc();
 
     bool HasData(const char* fileName);

@@ -90,7 +90,9 @@ class Vec {
         Reset();
     }
 
-    ~Vec() { FreeEls(); }
+    ~Vec() {
+        FreeEls();
+    }
 
     // ensure that a Vec never shares its els buffer with another after a clone/copy
     // note: we don't inherit allocator as it's not needed for our use cases
@@ -140,11 +142,17 @@ class Vec {
         return els[idx];
     }
 
-    size_t size() const { return len; }
+    size_t size() const {
+        return len;
+    }
 
-    void InsertAt(size_t idx, const T& el) { MakeSpaceAt(idx, 1)[0] = el; }
+    void InsertAt(size_t idx, const T& el) {
+        MakeSpaceAt(idx, 1)[0] = el;
+    }
 
-    void Append(const T& el) { InsertAt(len, el); }
+    void Append(const T& el) {
+        InsertAt(len, el);
+    }
 
     void Append(const T* src, size_t count) {
         if (0 == count)
@@ -164,7 +172,9 @@ class Vec {
     }
 
     // appends count blank (i.e. zeroed-out) elements at the end
-    T* AppendBlanks(size_t count) { return MakeSpaceAt(len, count); }
+    T* AppendBlanks(size_t count) {
+        return MakeSpaceAt(len, count);
+    }
 
     void RemoveAt(size_t idx, size_t count = 1) {
         if (len > idx + count) {
@@ -193,7 +203,9 @@ class Vec {
         --len;
     }
 
-    void Push(T el) { Append(el); }
+    void Push(T el) {
+        Append(el);
+    }
 
     T Pop() {
         CrashIf(0 == len);
@@ -228,7 +240,9 @@ class Vec {
         return res;
     }
 
-    T* LendData() const { return els; }
+    T* LendData() const {
+        return els;
+    }
 
     int Find(T el, size_t startAt = 0) const {
         for (size_t i = startAt; i < len; i++) {
@@ -238,7 +252,9 @@ class Vec {
         return -1;
     }
 
-    bool Contains(T el) const { return -1 != Find(el); }
+    bool Contains(T el) const {
+        return -1 != Find(el);
+    }
 
     // returns true if removed
     bool Remove(T el) {
@@ -249,7 +265,9 @@ class Vec {
         return true;
     }
 
-    void Sort(int (*cmpFunc)(const void* a, const void* b)) { qsort(els, len, sizeof(T), cmpFunc); }
+    void Sort(int (*cmpFunc)(const void* a, const void* b)) {
+        qsort(els, len, sizeof(T), cmpFunc);
+    }
 
     void Reverse() {
         for (size_t i = 0; i < len / 2; i++) {
@@ -271,18 +289,27 @@ class Vec {
         size_t pos;
 
       public:
-        Iter(Vec<T>* vec, size_t pos) : vec(vec), pos(pos) {}
+        Iter(Vec<T>* vec, size_t pos) : vec(vec), pos(pos) {
+        }
 
-        bool operator!=(const Iter& other) const { return pos != other.pos; }
-        T& operator*() const { return vec->at(pos); }
+        bool operator!=(const Iter& other) const {
+            return pos != other.pos;
+        }
+        T& operator*() const {
+            return vec->at(pos);
+        }
         Iter& operator++() {
             pos++;
             return *this;
         }
     };
 
-    Iter begin() { return Iter(this, 0); }
-    Iter end() { return Iter(this, len); }
+    Iter begin() {
+        return Iter(this, 0);
+    }
+    Iter end() {
+        return Iter(this, len);
+    }
 };
 
 // only suitable for T that are pointers to C++ objects
@@ -307,12 +334,17 @@ namespace str {
 template <typename T>
 class Str : public Vec<T> {
   public:
-    explicit Str(size_t capHint = 0, Allocator* allocator = nullptr) : Vec<T>(capHint, allocator) {}
+    explicit Str(size_t capHint = 0, Allocator* allocator = nullptr) : Vec<T>(capHint, allocator) {
+    }
 
-    void Append(T c) { Vec<T>::InsertAt(Vec<T>::len, c); }
+    void Append(T c) {
+        Vec<T>::InsertAt(Vec<T>::len, c);
+    }
 
     // only valid for T = char
-    std::string_view AsView() const { return {this->Get(), this->size()}; }
+    std::string_view AsView() const {
+        return {this->Get(), this->size()};
+    }
 
     void Append(const T* src, size_t size = -1) {
         if ((size_t)-1 == size)
@@ -350,7 +382,9 @@ class Str : public Vec<T> {
         Append(s);
     }
 
-    T* Get() const { return Vec<T>::els; }
+    T* Get() const {
+        return Vec<T>::els;
+    }
 
     T LastChar() const {
         auto n = this->len;
@@ -374,7 +408,8 @@ class Str : public Vec<T> {
 // WStrVec owns the strings in the list
 class WStrVec : public Vec<WCHAR*> {
   public:
-    WStrVec() : Vec() {}
+    WStrVec() : Vec() {
+    }
     WStrVec(const WStrVec& orig) : Vec(orig) {
         // make sure not to share string pointers between StrVecs
         for (size_t i = 0; i < len; i++) {
@@ -382,7 +417,9 @@ class WStrVec : public Vec<WCHAR*> {
                 at(i) = str::Dup(at(i));
         }
     }
-    ~WStrVec() { FreeMembers(); }
+    ~WStrVec() {
+        FreeMembers();
+    }
 
     WStrVec& operator=(const WStrVec& that) {
         if (this != &that) {
@@ -396,7 +433,9 @@ class WStrVec : public Vec<WCHAR*> {
         return *this;
     }
 
-    void Reset() { FreeMembers(); }
+    void Reset() {
+        FreeMembers();
+    }
 
     WCHAR* Join(const WCHAR* joint = nullptr) {
         str::Str<WCHAR> tmp(256);
@@ -419,7 +458,9 @@ class WStrVec : public Vec<WCHAR*> {
         return -1;
     }
 
-    bool Contains(const WCHAR* s) const { return -1 != Find(s); }
+    bool Contains(const WCHAR* s) const {
+        return -1 != Find(s);
+    }
 
     int FindI(const WCHAR* s, size_t startAt = 0) const {
         for (size_t i = startAt; i < len; i++) {
@@ -449,15 +490,21 @@ class WStrVec : public Vec<WCHAR*> {
         return len - start;
     }
 
-    void Sort() { Vec::Sort(cmpAscii); }
-    void SortNatural() { Vec::Sort(cmpNatural); }
+    void Sort() {
+        Vec::Sort(cmpAscii);
+    }
+    void SortNatural() {
+        Vec::Sort(cmpNatural);
+    }
 
   private:
     static int cmpNatural(const void* a, const void* b) {
         return str::CmpNatural(*(const WCHAR**)a, *(const WCHAR**)b);
     }
 
-    static int cmpAscii(const void* a, const void* b) { return wcscmp(*(const WCHAR**)a, *(const WCHAR**)b); }
+    static int cmpAscii(const void* a, const void* b) {
+        return wcscmp(*(const WCHAR**)a, *(const WCHAR**)b);
+    }
 };
 #endif
 
@@ -469,7 +516,8 @@ class WStrList {
         WCHAR* string;
         uint32_t hash;
 
-        explicit Item(WCHAR* string = nullptr, uint32_t hash = 0) : string(string), hash(hash) {}
+        explicit Item(WCHAR* string = nullptr, uint32_t hash = 0) : string(string), hash(hash) {
+        }
     };
 
     Vec<Item> items;
@@ -492,7 +540,8 @@ class WStrList {
 
   public:
     explicit WStrList(size_t capHint = 0, Allocator* allocator = nullptr)
-        : items(capHint, allocator), count(0), allocator(allocator) {}
+        : items(capHint, allocator), count(0), allocator(allocator) {
+    }
 
     ~WStrList() {
         for (Item& item : items) {
@@ -500,11 +549,17 @@ class WStrList {
         }
     }
 
-    const WCHAR* at(size_t idx) const { return items.at(idx).string; }
+    const WCHAR* at(size_t idx) const {
+        return items.at(idx).string;
+    }
 
-    const WCHAR* Last() const { return items.Last().string; }
+    const WCHAR* Last() const {
+        return items.Last().string;
+    }
 
-    size_t size() const { return count; }
+    size_t size() const {
+        return count;
+    }
 
     // str must have been allocated by allocator and is owned by StrList
     void Append(WCHAR* str) {
@@ -532,7 +587,9 @@ class WStrList {
         return -1;
     }
 
-    bool Contains(const WCHAR* str) const { return -1 != Find(str); }
+    bool Contains(const WCHAR* str) const {
+        return -1 != Find(str);
+    }
 };
 
 // return true if vector contains el. Can't believe it's not in STL.

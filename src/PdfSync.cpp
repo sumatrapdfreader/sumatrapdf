@@ -66,7 +66,9 @@ class SyncTex : public Synchronizer {
         : Synchronizer(syncfilename), engine(engine), scanner(nullptr) {
         AssertCrash(str::EndsWithI(syncfilename, SYNCTEX_EXTENSION));
     }
-    virtual ~SyncTex() { synctex_scanner_free(scanner); }
+    virtual ~SyncTex() {
+        synctex_scanner_free(scanner);
+    }
 
     virtual int DocToSource(UINT pageNo, PointI pt, AutoFreeW& filename, UINT* line, UINT* col);
     virtual int SourceToDoc(const WCHAR* srcfilename, UINT line, UINT col, UINT* page, Vec<RectI>& rects);

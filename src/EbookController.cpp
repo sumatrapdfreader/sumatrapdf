@@ -54,16 +54,28 @@ class EbookTocDest : public DocTocItem, public PageDestination {
     AutoFreeW url;
 
   public:
-    EbookTocDest(const WCHAR* title, int reparseIdx) : DocTocItem(str::Dup(title), reparseIdx), url(nullptr) {}
-    EbookTocDest(const WCHAR* title, const WCHAR* url) : DocTocItem(str::Dup(title)), url(str::Dup(url)) {}
+    EbookTocDest(const WCHAR* title, int reparseIdx) : DocTocItem(str::Dup(title), reparseIdx), url(nullptr) {
+    }
+    EbookTocDest(const WCHAR* title, const WCHAR* url) : DocTocItem(str::Dup(title)), url(str::Dup(url)) {
+    }
 
-    PageDestination* GetLink() override { return this; }
+    PageDestination* GetLink() override {
+        return this;
+    }
 
     // PageDestination
-    PageDestType GetDestType() const override { return url ? PageDestType::LaunchURL : PageDestType::ScrollTo; }
-    int GetDestPageNo() const override { return pageNo; }
-    RectD GetDestRect() const override { return RectD(); }
-    WCHAR* GetDestValue() const override { return str::Dup(url); }
+    PageDestType GetDestType() const override {
+        return url ? PageDestType::LaunchURL : PageDestType::ScrollTo;
+    }
+    int GetDestPageNo() const override {
+        return pageNo;
+    }
+    RectD GetDestRect() const override {
+        return RectD();
+    }
+    WCHAR* GetDestValue() const override {
+        return str::Dup(url);
+    }
 };
 
 struct EbookFormattingData {
@@ -768,7 +780,8 @@ class EbookTocCollector : public EbookTocVisitor {
     int idCounter;
 
   public:
-    explicit EbookTocCollector(EbookController* ctrl) : ctrl(ctrl), root(nullptr), idCounter(0) {}
+    explicit EbookTocCollector(EbookController* ctrl) : ctrl(ctrl), root(nullptr), idCounter(0) {
+    }
 
     virtual void Visit(const WCHAR* name, const WCHAR* url, int level) {
         EbookTocDest* item = nullptr;
@@ -805,7 +818,9 @@ class EbookTocCollector : public EbookTocVisitor {
         }
     }
 
-    EbookTocDest* GetRoot() { return root; }
+    EbookTocDest* GetRoot() {
+        return root;
+    }
 };
 
 DocTocItem* EbookController::GetTocTree() {

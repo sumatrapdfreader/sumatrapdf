@@ -54,7 +54,8 @@ struct StaticLinkInfo {
 
     StaticLinkInfo() = default;
     explicit StaticLinkInfo(RectI rect, const WCHAR* target, const WCHAR* infotip = nullptr)
-        : rect(rect), target(target), infotip(infotip) {}
+        : rect(rect), target(target), infotip(infotip) {
+    }
 };
 
 /* Describes information related to one window with (optional) a document
@@ -233,7 +234,8 @@ class LinkHandler {
     PageDestination* FindTocItem(DocTocItem* item, const WCHAR* name, bool partially = false);
 
   public:
-    explicit LinkHandler(WindowInfo* win) : owner(win) {}
+    explicit LinkHandler(WindowInfo* win) : owner(win) {
+    }
 
     void GotoLink(PageDestination* link);
     void GotoNamedDest(const WCHAR* name);

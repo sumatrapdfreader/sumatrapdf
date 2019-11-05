@@ -47,8 +47,11 @@ class PropertyEl {
 
 class PropertiesLayout : public Vec<PropertyEl*> {
   public:
-    PropertiesLayout() : hwnd(nullptr), hwndParent(nullptr) {}
-    ~PropertiesLayout() { DeleteVecMembers(*this); }
+    PropertiesLayout() : hwnd(nullptr), hwndParent(nullptr) {
+    }
+    ~PropertiesLayout() {
+        DeleteVecMembers(*this);
+    }
 
     void AddProperty(const WCHAR* key, WCHAR* value, bool isPath = false) {
         // don't display value-less properties

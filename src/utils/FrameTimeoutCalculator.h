@@ -39,5 +39,7 @@ class FrameTimeoutCalculator {
         }
     }
 
-    void Step() { timeLast.QuadPart += ticksPerFrame; }
+    void Step() {
+        timeLast.QuadPart += ticksPerFrame;
+    }
 };

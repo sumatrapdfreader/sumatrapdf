@@ -10,19 +10,26 @@ class ScopedMem {
     T* ptr = nullptr;
 
     ScopedMem() = default;
-    explicit ScopedMem(T* ptr) : ptr(ptr) {}
-    ~ScopedMem() { free(ptr); }
+    explicit ScopedMem(T* ptr) : ptr(ptr) {
+    }
+    ~ScopedMem() {
+        free(ptr);
+    }
     void Set(T* newPtr) {
         free(ptr);
         ptr = newPtr;
     }
-    T* Get() const { return ptr; }
+    T* Get() const {
+        return ptr;
+    }
     T* StealData() {
         T* tmp = ptr;
         ptr = nullptr;
         return tmp;
     }
-    operator T*() const { return ptr; }
+    operator T*() const {
+        return ptr;
+    }
 };
 
 // deletes any object at the end of the scope
@@ -32,15 +39,22 @@ class ScopedPtr {
 
   public:
     ScopedPtr() = default;
-    explicit ScopedPtr(T* obj) : obj(obj) {}
-    ~ScopedPtr() { delete obj; }
+    explicit ScopedPtr(T* obj) : obj(obj) {
+    }
+    ~ScopedPtr() {
+        delete obj;
+    }
     T* Detach() {
         T* tmp = obj;
         obj = nullptr;
         return tmp;
     }
-    operator T*() const { return obj; }
-    T* operator->() const { return obj; }
+    operator T*() const {
+        return obj;
+    }
+    T* operator->() const {
+        return obj;
+    }
     T* operator=(T* newObj) {
         delete obj;
         return (obj = newObj);
@@ -53,8 +67,11 @@ class AutoFreeStr {
     T* ptr = nullptr;
 
     AutoFreeStr() = default;
-    explicit AutoFreeStr(T* ptr) : ptr(ptr) {}
-    ~AutoFreeStr() { free(this->ptr); }
+    explicit AutoFreeStr(T* ptr) : ptr(ptr) {
+    }
+    ~AutoFreeStr() {
+        free(this->ptr);
+    }
     void Set(T* newPtr) {
         free(this->ptr);
         this->ptr = newPtr;
@@ -70,8 +87,12 @@ class AutoFreeStr {
             this->ptr = str::Dup(newPtr);
         }
     }
-    operator T*() const { return this->ptr; }
-    T* Get() const { return this->ptr; }
+    operator T*() const {
+        return this->ptr;
+    }
+    T* Get() const {
+        return this->ptr;
+    }
     T* StealData() {
         T* tmp = this->ptr;
         this->ptr = nullptr;
@@ -83,7 +104,9 @@ class AutoFreeStr {
     }
 
     // TODO: only valid for T = char
-    std::string_view AsView() const { return {this->ptr, str::Len(this->ptr)}; }
+    std::string_view AsView() const {
+        return {this->ptr, str::Len(this->ptr)};
+    }
 };
 
 typedef AutoFreeStr<char> AutoFree;

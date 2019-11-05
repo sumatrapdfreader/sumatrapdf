@@ -134,7 +134,9 @@ struct ColorData {
     };
 
     bool operator==(const ColorData& other) const;
-    bool IsTransparent() const { return type == ColorSolid && solid.color == 0; }
+    bool IsTransparent() const {
+        return type == ColorSolid && solid.color == 0;
+    }
 };
 
 struct Padding {
@@ -145,7 +147,8 @@ struct Padding {
 };
 
 struct Prop {
-    Prop(PropType type) : type(type) {}
+    Prop(PropType type) : type(type) {
+    }
 
     void Free();
 
@@ -211,7 +214,9 @@ class Style {
     void SetPadding(int top, int right, int bottom, int left);
 
     Style* GetInheritsFrom() const;
-    void SetInheritsFrom(Style* parent) { inheritsFrom = parent; }
+    void SetInheritsFrom(Style* parent) {
+        inheritsFrom = parent;
+    }
     size_t GetIdentity() const;
 };
 

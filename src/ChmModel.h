@@ -13,13 +13,19 @@ class ChmModel : public Controller {
     ~ChmModel() override;
 
     // meta data
-    const WCHAR* FilePath() const override { return fileName; }
-    const WCHAR* DefaultFileExt() const override { return L".chm"; }
+    const WCHAR* FilePath() const override {
+        return fileName;
+    }
+    const WCHAR* DefaultFileExt() const override {
+        return L".chm";
+    }
     int PageCount() const override;
     WCHAR* GetProperty(DocumentProperty prop) override;
 
     // page navigation (stateful)
-    int CurrentPageNo() const override { return currentPageNo; }
+    int CurrentPageNo() const override {
+        return currentPageNo;
+    }
     void GoToPage(int pageNo, bool addNavPoint) override {
         UNUSED(addNavPoint);
         CrashIf(!ValidPageNo(pageNo));
@@ -34,12 +40,18 @@ class ChmModel : public Controller {
         UNUSED(mode);
         UNUSED(keepContinuous); /* not supported */
     }
-    DisplayMode GetDisplayMode() const override { return DM_SINGLE_PAGE; }
-    void SetPresentationMode(bool enable) override { UNUSED(enable); /* not supported */ }
+    DisplayMode GetDisplayMode() const override {
+        return DM_SINGLE_PAGE;
+    }
+    void SetPresentationMode(bool enable) override {
+        UNUSED(enable); /* not supported */
+    }
     void SetZoomVirtual(float zoom, PointI* fixPt) override;
     float GetZoomVirtual(bool absolute = false) const override;
     float GetNextZoomStep(float towards) const override;
-    void SetViewPortSize(SizeI size) override { UNUSED(size); /* not needed(?) */ }
+    void SetViewPortSize(SizeI size) override {
+        UNUSED(size); /* not needed(?) */
+    }
 
     // table of contents
     bool HasTocTree() const override;
@@ -53,7 +65,9 @@ class ChmModel : public Controller {
     void CreateThumbnail(SizeI size, const onBitmapRenderedCb& saveThumbnail) override;
 
     // for quick type determination and type-safe casting
-    ChmModel* AsChm() override { return this; }
+    ChmModel* AsChm() override {
+        return this;
+    }
 
     static bool IsSupportedFile(const WCHAR* fileName, bool sniff = false);
     static ChmModel* Create(const WCHAR* fileName, ControllerCallback* cb = nullptr);

@@ -112,7 +112,8 @@ HtmlParser::HtmlParser()
       attributesCount(0),
       codepage(CP_ACP),
       error(ErrParsingNoError),
-      errorContext(nullptr) {}
+      errorContext(nullptr) {
+}
 
 HtmlParser::~HtmlParser() {
     if (freeHtml)

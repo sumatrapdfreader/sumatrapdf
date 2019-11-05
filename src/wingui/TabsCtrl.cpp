@@ -33,8 +33,12 @@ class ScopedGetDC {
         this->hwnd = hwnd;
         this->hdc = GetDC(hwnd);
     }
-    ~ScopedGetDC() { ReleaseDC(hwnd, hdc); }
-    operator HDC() const { return hdc; }
+    ~ScopedGetDC() {
+        ReleaseDC(hwnd, hdc);
+    }
+    operator HDC() const {
+        return hdc;
+    }
 };
 
 class ScopedSelectHFONT {
@@ -42,9 +46,13 @@ class ScopedSelectHFONT {
     HFONT prevFont;
 
   public:
-    explicit ScopedSelectHFONT(HDC hdc, HFONT font) { prevFont = (HFONT)SelectObject(hdc, font); }
+    explicit ScopedSelectHFONT(HDC hdc, HFONT font) {
+        prevFont = (HFONT)SelectObject(hdc, font);
+    }
 
-    ~ScopedSelectHFONT() { SelectObject(hdc, prevFont); }
+    ~ScopedSelectHFONT() {
+        SelectObject(hdc, prevFont);
+    }
 };
 
 class ScopedSelectHHPEN {
@@ -52,9 +60,13 @@ class ScopedSelectHHPEN {
     HPEN prevPen;
 
   public:
-    explicit ScopedSelectHHPEN(HDC hdc, HPEN pen) { prevPen = (HPEN)SelectObject(hdc, pen); }
+    explicit ScopedSelectHHPEN(HDC hdc, HPEN pen) {
+        prevPen = (HPEN)SelectObject(hdc, pen);
+    }
 
-    ~ScopedSelectHHPEN() { SelectObject(hdc, prevPen); }
+    ~ScopedSelectHHPEN() {
+        SelectObject(hdc, prevPen);
+    }
 };
 
 enum class Tab {
@@ -91,8 +103,12 @@ class TabItemInfo {
 
 class TabsCtrlPrivate {
   public:
-    TabsCtrlPrivate(HWND hwnd) { this->hwnd = hwnd; }
-    ~TabsCtrlPrivate() { DeleteObject(font); }
+    TabsCtrlPrivate(HWND hwnd) {
+        this->hwnd = hwnd;
+    }
+    ~TabsCtrlPrivate() {
+        DeleteObject(font);
+    }
 
     HWND hwnd = nullptr;
     HFONT font = nullptr;

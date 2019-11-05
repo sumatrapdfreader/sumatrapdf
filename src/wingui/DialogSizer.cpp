@@ -75,7 +75,9 @@ class DialogData {
         }
     }
 
-    bool InsideGripper(PointI pt) { return bShowSizingGrip && rcGrip.Contains(pt); }
+    bool InsideGripper(PointI pt) {
+        return bShowSizingGrip && rcGrip.Contains(pt);
+    }
 
     // The previous window procedure
     WNDPROC wndProc;

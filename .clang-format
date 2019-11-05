@@ -4,7 +4,7 @@ BasedOnStyle: Chromium
 AllowShortFunctionsOnASingleLine: false
 AllowShortIfStatementsOnASingleLine: false
 AllowShortLoopsOnASingleLine: false
-AllowShortBlocksOnASingleLine: Never
+# AllowShortBlocksOnASingleLine: Never
 IndentWidth: 4
 ColumnLimit: 120
 AccessModifierOffset: -2

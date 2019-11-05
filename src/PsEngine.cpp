@@ -85,7 +85,8 @@ class ScopedFile {
     AutoFreeW path;
 
   public:
-    explicit ScopedFile(const WCHAR* path) : path(str::Dup(path)) {}
+    explicit ScopedFile(const WCHAR* path) : path(str::Dup(path)) {
+    }
     ~ScopedFile() {
         if (path)
             file::Delete(path);
@@ -205,9 +206,12 @@ static BaseEngine* psgz2pdf(const WCHAR* fileName) {
 // the ps2pdf conversion from Ghostscript returns
 class PsEngineImpl : public BaseEngine {
   public:
-    PsEngineImpl() : pdfEngine(nullptr) {}
+    PsEngineImpl() : pdfEngine(nullptr) {
+    }
 
-    virtual ~PsEngineImpl() { delete pdfEngine; }
+    virtual ~PsEngineImpl() {
+        delete pdfEngine;
+    }
 
     BaseEngine* Clone() override {
         BaseEngine* newEngine = pdfEngine->Clone();
@@ -220,9 +224,13 @@ class PsEngineImpl : public BaseEngine {
         return clone;
     }
 
-    int PageCount() const override { return pdfEngine->PageCount(); }
+    int PageCount() const override {
+        return pdfEngine->PageCount();
+    }
 
-    RectD PageMediabox(int pageNo) override { return pdfEngine->PageMediabox(pageNo); }
+    RectD PageMediabox(int pageNo) override {
+        return pdfEngine->PageMediabox(pageNo);
+    }
 
     RectD PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override {
         return pdfEngine->PageContentBox(pageNo, target);
@@ -273,9 +281,13 @@ class PsEngineImpl : public BaseEngine {
         return pdfEngine->ExtractPageText(pageNo, lineSep, coordsOut, target);
     }
 
-    bool HasClipOptimizations(int pageNo) override { return pdfEngine->HasClipOptimizations(pageNo); }
+    bool HasClipOptimizations(int pageNo) override {
+        return pdfEngine->HasClipOptimizations(pageNo);
+    }
 
-    PageLayoutType PreferredLayout() override { return pdfEngine->PreferredLayout(); }
+    PageLayoutType PreferredLayout() override {
+        return pdfEngine->PreferredLayout();
+    }
 
     WCHAR* GetProperty(DocumentProperty prop) override {
         // omit properties created by Ghostscript
@@ -291,29 +303,53 @@ class PsEngineImpl : public BaseEngine {
         return !forSaving && pdfEngine->SupportsAnnotation();
     }
 
-    void UpdateUserAnnotations(Vec<PageAnnotation>* list) override { pdfEngine->UpdateUserAnnotations(list); }
+    void UpdateUserAnnotations(Vec<PageAnnotation>* list) override {
+        pdfEngine->UpdateUserAnnotations(list);
+    }
 
-    bool AllowsPrinting() const override { return pdfEngine->AllowsPrinting(); }
+    bool AllowsPrinting() const override {
+        return pdfEngine->AllowsPrinting();
+    }
 
-    bool AllowsCopyingText() const override { return pdfEngine->AllowsCopyingText(); }
+    bool AllowsCopyingText() const override {
+        return pdfEngine->AllowsCopyingText();
+    }
 
-    float GetFileDPI() const override { return pdfEngine->GetFileDPI(); }
+    float GetFileDPI() const override {
+        return pdfEngine->GetFileDPI();
+    }
 
-    const WCHAR* GetDefaultFileExt() const override { return !str::EndsWithI(FileName(), L".eps") ? L".ps" : L".eps"; }
+    const WCHAR* GetDefaultFileExt() const override {
+        return !str::EndsWithI(FileName(), L".eps") ? L".ps" : L".eps";
+    }
 
-    bool BenchLoadPage(int pageNo) override { return pdfEngine->BenchLoadPage(pageNo); }
+    bool BenchLoadPage(int pageNo) override {
+        return pdfEngine->BenchLoadPage(pageNo);
+    }
 
-    Vec<PageElement*>* GetElements(int pageNo) override { return pdfEngine->GetElements(pageNo); }
+    Vec<PageElement*>* GetElements(int pageNo) override {
+        return pdfEngine->GetElements(pageNo);
+    }
 
-    PageElement* GetElementAtPos(int pageNo, PointD pt) override { return pdfEngine->GetElementAtPos(pageNo, pt); }
+    PageElement* GetElementAtPos(int pageNo, PointD pt) override {
+        return pdfEngine->GetElementAtPos(pageNo, pt);
+    }
 
-    PageDestination* GetNamedDest(const WCHAR* name) override { return pdfEngine->GetNamedDest(name); }
+    PageDestination* GetNamedDest(const WCHAR* name) override {
+        return pdfEngine->GetNamedDest(name);
+    }
 
-    bool HasTocTree() const override { return pdfEngine->HasTocTree(); }
+    bool HasTocTree() const override {
+        return pdfEngine->HasTocTree();
+    }
 
-    DocTocItem* GetTocTree() override { return pdfEngine->GetTocTree(); }
+    DocTocItem* GetTocTree() override {
+        return pdfEngine->GetTocTree();
+    }
 
-    char* GetDecryptionKey() const override { return pdfEngine->GetDecryptionKey(); }
+    char* GetDecryptionKey() const override {
+        return pdfEngine->GetDecryptionKey();
+    }
 
     static BaseEngine* CreateFromFile(const WCHAR* fileName);
 

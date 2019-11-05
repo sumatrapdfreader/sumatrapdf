@@ -15,7 +15,9 @@ class Timer {
     }
 
   public:
-    explicit Timer() { Start(); }
+    explicit Timer() {
+        Start();
+    }
 
     void Start() {
         end.QuadPart = 0;

@@ -2,21 +2,30 @@ class ScopedCritSec {
     CRITICAL_SECTION* cs;
 
   public:
-    explicit ScopedCritSec(CRITICAL_SECTION* cs) : cs(cs) { EnterCriticalSection(cs); }
-    ~ScopedCritSec() { LeaveCriticalSection(cs); }
+    explicit ScopedCritSec(CRITICAL_SECTION* cs) : cs(cs) {
+        EnterCriticalSection(cs);
+    }
+    ~ScopedCritSec() {
+        LeaveCriticalSection(cs);
+    }
 };
 
 class ScopedHandle {
     HANDLE handle;
 
   public:
-    explicit ScopedHandle(HANDLE handle) : handle(handle) {}
+    explicit ScopedHandle(HANDLE handle) : handle(handle) {
+    }
     ~ScopedHandle() {
         if (IsValid())
             CloseHandle(handle);
     }
-    operator HANDLE() const { return handle; }
-    bool IsValid() const { return handle != NULL && handle != INVALID_HANDLE_VALUE; }
+    operator HANDLE() const {
+        return handle;
+    }
+    bool IsValid() const {
+        return handle != NULL && handle != INVALID_HANDLE_VALUE;
+    }
 };
 
 template <class T>
@@ -25,8 +34,10 @@ class ScopedComPtr {
     T* ptr;
 
   public:
-    ScopedComPtr() : ptr(nullptr) {}
-    explicit ScopedComPtr(T* ptr) : ptr(ptr) {}
+    ScopedComPtr() : ptr(nullptr) {
+    }
+    explicit ScopedComPtr(T* ptr) : ptr(ptr) {
+    }
     ~ScopedComPtr() {
         if (ptr)
             ptr->Release();
@@ -38,10 +49,18 @@ class ScopedComPtr {
         HRESULT hr = CoCreateInstance(clsid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&ptr));
         return SUCCEEDED(hr);
     }
-    T* Get() const { return ptr; }
-    operator T*() const { return ptr; }
-    T** operator&() { return &ptr; }
-    T* operator->() const { return ptr; }
+    T* Get() const {
+        return ptr;
+    }
+    operator T*() const {
+        return ptr;
+    }
+    T** operator&() {
+        return &ptr;
+    }
+    T* operator->() const {
+        return ptr;
+    }
     T* operator=(T* newPtr) {
         if (ptr)
             ptr->Release();
@@ -55,7 +74,8 @@ class ScopedComQIPtr {
     T* ptr;
 
   public:
-    ScopedComQIPtr() : ptr(nullptr) {}
+    ScopedComQIPtr() : ptr(nullptr) {
+    }
     explicit ScopedComQIPtr(IUnknown* unk) {
         HRESULT hr = unk->QueryInterface(&ptr);
         if (FAILED(hr))
@@ -80,9 +100,15 @@ class ScopedComQIPtr {
             ptr = nullptr;
         return ptr;
     }
-    operator T*() const { return ptr; }
-    T** operator&() { return &ptr; }
-    T* operator->() const { return ptr; }
+    operator T*() const {
+        return ptr;
+    }
+    T** operator&() {
+        return &ptr;
+    }
+    T* operator->() const {
+        return ptr;
+    }
     T* operator=(T* newPtr) {
         if (ptr)
             ptr->Release();
@@ -95,9 +121,14 @@ class ScopedGdiObj {
     T obj;
 
   public:
-    explicit ScopedGdiObj(T obj) : obj(obj) {}
-    ~ScopedGdiObj() { DeleteObject(obj); }
-    operator T() const { return obj; }
+    explicit ScopedGdiObj(T obj) : obj(obj) {
+    }
+    ~ScopedGdiObj() {
+        DeleteObject(obj);
+    }
+    operator T() const {
+        return obj;
+    }
 };
 typedef ScopedGdiObj<HFONT> ScopedFont;
 typedef ScopedGdiObj<HPEN> ScopedPen;
@@ -107,9 +138,14 @@ class ScopedHDC {
     HDC hdc;
 
   public:
-    explicit ScopedHDC(HDC hdc) : hdc(hdc) {}
-    ~ScopedHDC() { DeleteDC(hdc); }
-    operator HDC() const { return hdc; }
+    explicit ScopedHDC(HDC hdc) : hdc(hdc) {
+    }
+    ~ScopedHDC() {
+        DeleteDC(hdc);
+    }
+    operator HDC() const {
+        return hdc;
+    }
 };
 
 class ScopedHdcSelect {
@@ -117,20 +153,32 @@ class ScopedHdcSelect {
     HGDIOBJ prev;
 
   public:
-    ScopedHdcSelect(HDC hdc, HGDIOBJ obj) : hdc(hdc) { prev = SelectObject(hdc, obj); }
-    ~ScopedHdcSelect() { SelectObject(hdc, prev); }
+    ScopedHdcSelect(HDC hdc, HGDIOBJ obj) : hdc(hdc) {
+        prev = SelectObject(hdc, obj);
+    }
+    ~ScopedHdcSelect() {
+        SelectObject(hdc, prev);
+    }
 };
 
 class ScopedCom {
   public:
-    ScopedCom() { (void)CoInitialize(nullptr); }
-    ~ScopedCom() { CoUninitialize(); }
+    ScopedCom() {
+        (void)CoInitialize(nullptr);
+    }
+    ~ScopedCom() {
+        CoUninitialize();
+    }
 };
 
 class ScopedOle {
   public:
-    ScopedOle() { (void)OleInitialize(nullptr); }
-    ~ScopedOle() { OleUninitialize(); }
+    ScopedOle() {
+        (void)OleInitialize(nullptr);
+    }
+    ~ScopedOle() {
+        OleUninitialize();
+    }
 };
 
 class ScopedGdiPlus {

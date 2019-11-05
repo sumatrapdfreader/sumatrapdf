@@ -35,11 +35,11 @@ The intent is to standardize how we do it.
 // TODO: bump WINVER version to get definition for SetProcessDEPPolicy etc.
 // typedef decltype(SetProcessDEPPolicy)* Sig_SetProcessDEPPolicy;
 typedef decltype(IsWow64Process)* Sig_IsWow64Process;
-//typedef decltype(SetDllDirectoryW)* Sig_SetDllDirectoryW;
+// typedef decltype(SetDllDirectoryW)* Sig_SetDllDirectoryW;
 typedef decltype(RtlCaptureContext)* Sig_RtlCaptureContext;
 // TODO: not available in 32bit SDK (XP)
-//typedef decltype(SetDefaultDllDirectories)* Sig_SetDefaultDllDirectories;
-//typedef decltype(SetProcessMitigationPolicy)* Sig_SetProcessMitigationPolicy;
+// typedef decltype(SetDefaultDllDirectories)* Sig_SetDefaultDllDirectories;
+// typedef decltype(SetProcessMitigationPolicy)* Sig_SetProcessMitigationPolicy;
 
 typedef BOOL(WINAPI* Sig_SetProcessDEPPolicy)(DWORD dwFlags);
 // typedef BOOL(WINAPI* Sig_IsWow64Process)(HANDLE, PBOOL);

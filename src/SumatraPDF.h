@@ -134,7 +134,8 @@ WindowInfo* FindWindowInfoByController(Controller* ctrl);
 // one place
 struct LoadArgs {
     explicit LoadArgs(const WCHAR* fileName, WindowInfo* win = nullptr)
-        : fileName(fileName), win(win), showWin(true), forceReuse(false), isNewWindow(false), placeWindow(true) {}
+        : fileName(fileName), win(win), showWin(true), forceReuse(false), isNewWindow(false), placeWindow(true) {
+    }
 
     const WCHAR* fileName;
     WindowInfo* win;

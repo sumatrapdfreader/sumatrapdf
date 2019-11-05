@@ -56,9 +56,13 @@ class Notifications {
     void Remove(NotificationWnd* wnd);
 
   public:
-    ~Notifications() { DeleteVecMembers(wnds); }
+    ~Notifications() {
+        DeleteVecMembers(wnds);
+    }
 
-    bool Contains(NotificationWnd* wnd) const { return vectorContains(this->wnds, wnd); }
+    bool Contains(NotificationWnd* wnd) const {
+        return vectorContains(this->wnds, wnd);
+    }
 
     // groupId is used to classify notifications and causes a notification
     // to replace any other notification of the same group

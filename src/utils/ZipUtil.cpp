@@ -26,13 +26,17 @@ class FileWriteStream : public ISequentialStream {
         hFile = CreateFile(filePath, GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,
                            nullptr);
     }
-    virtual ~FileWriteStream() { CloseHandle(hFile); }
+    virtual ~FileWriteStream() {
+        CloseHandle(hFile);
+    }
     // IUnknown
     IFACEMETHODIMP QueryInterface(REFIID riid, void** ppv) {
         static const QITAB qit[] = {QITABENT(FileWriteStream, ISequentialStream), {0}};
         return QISearch(this, qit, riid, ppv);
     }
-    IFACEMETHODIMP_(ULONG) AddRef() { return InterlockedIncrement(&refCount); }
+    IFACEMETHODIMP_(ULONG) AddRef() {
+        return InterlockedIncrement(&refCount);
+    }
     IFACEMETHODIMP_(ULONG) Release() {
         LONG newCount = InterlockedDecrement(&refCount);
         if (newCount == 0)

@@ -120,7 +120,9 @@ bool CollectPathsFromDirectory(const WCHAR* pattern, WStrVec& paths, bool dirsIn
 // TODO: add recursive flag
 std::vector<std::wstring> CollectDirsFromDirectory(const WCHAR* dir) {
     const WCHAR* pattern = path::Join(dir, L"*");
-    defer { str::Free(pattern); };
+    defer {
+        str::Free(pattern);
+    };
 
     WIN32_FIND_DATA fdata;
     HANDLE hfind = FindFirstFileW(pattern, &fdata);

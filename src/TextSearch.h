@@ -15,10 +15,14 @@ class TextSearch : public TextSelection {
     TextSel* FindNext(ProgressUpdateUI* tracker = nullptr);
 
     // note: the result might not be a valid page number!
-    int GetCurrentPageNo() const { return findPage; }
+    int GetCurrentPageNo() const {
+        return findPage;
+    }
 
     // note: the result might not be a valid page number!
-    int GetSearchHitStartPageNo() const { return searchHitStartAt; }
+    int GetSearchHitStartPageNo() const {
+        return searchHitStartAt;
+    }
 
   protected:
     // Lightweight container for page and offset within the page to use as return value of MatchEnd

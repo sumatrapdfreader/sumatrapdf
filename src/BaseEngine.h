@@ -64,8 +64,11 @@ class RenderedBitmap {
     ScopedHandle hMap;
 
   public:
-    RenderedBitmap(HBITMAP hbmp, SizeI size, HANDLE hMap = nullptr) : hbmp(hbmp), size(size), hMap(hMap) {}
-    ~RenderedBitmap() { DeleteObject(hbmp); }
+    RenderedBitmap(HBITMAP hbmp, SizeI size, HANDLE hMap = nullptr) : hbmp(hbmp), size(size), hMap(hMap) {
+    }
+    ~RenderedBitmap() {
+        DeleteObject(hbmp);
+    }
 
     RenderedBitmap* Clone() const {
         HBITMAP hbmp2 = (HBITMAP)CopyImage(hbmp, IMAGE_BITMAP, size.dx, size.dy, 0);
@@ -73,8 +76,12 @@ class RenderedBitmap {
     }
 
     // callers must not delete this (use Clone if you have to modify it)
-    HBITMAP GetBitmap() const { return hbmp; }
-    SizeI Size() const { return size; }
+    HBITMAP GetBitmap() const {
+        return hbmp;
+    }
+    SizeI Size() const {
+        return size;
+    }
 
     // render the bitmap into the target rectangle (streching and skewing as requird)
     bool StretchDIBits(HDC hdc, RectI target) const {
@@ -98,13 +105,15 @@ class RenderedBitmap {
 class LinkSaverUI {
   public:
     virtual bool SaveEmbedded(const unsigned char* data, size_t cbCount) = 0;
-    virtual ~LinkSaverUI() {}
+    virtual ~LinkSaverUI() {
+    }
 };
 
 // a link destination
 class PageDestination {
   public:
-    virtual ~PageDestination() {}
+    virtual ~PageDestination() {
+    }
     // type of the destination (most common are PageDestType::ScrollTo and PageDestType::LaunchURL)
     virtual PageDestType GetDestType() const = 0;
     // page the destination points to (0 for external destinations such as URLs)
@@ -113,11 +122,15 @@ class PageDestination {
     virtual RectD GetDestRect() const = 0;
     // string value associated with the destination (e.g. a path or a URL)
     // caller must free() the result
-    virtual WCHAR* GetDestValue() const { return nullptr; }
+    virtual WCHAR* GetDestValue() const {
+        return nullptr;
+    }
     // the name of this destination (reverses BaseEngine::GetNamedDest) or nullptr
     // (mainly applicable for links of type "LaunchFile" to PDF documents)
     // caller must free() the result
-    virtual WCHAR* GetDestName() const { return nullptr; }
+    virtual WCHAR* GetDestName() const {
+        return nullptr;
+    }
 
     // if this destination's target is an embedded file, this allows to
     // save that file efficiently (the LinkSaverUI might get passed a link
@@ -132,10 +145,13 @@ class PageDestination {
 struct PageAnnotation {
     struct Color {
         uint8_t r, g, b, a;
-        Color() : r(0), g(0), b(0), a(0) {}
-        Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255) : r(r), g(g), b(b), a(a) {}
+        Color() : r(0), g(0), b(0), a(0) {
+        }
+        Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255) : r(r), g(g), b(b), a(a) {
+        }
         explicit Color(COLORREF c, uint8_t a = 255)
-            : r(GetRValueSafe(c)), g(GetGValueSafe(c)), b(GetBValueSafe(c)), a(a) {}
+            : r(GetRValueSafe(c)), g(GetGValueSafe(c)), b(GetBValueSafe(c)), a(a) {
+        }
         bool operator==(const Color& other) const {
             return other.r == r && other.g == g && other.b == b && other.a == a;
         }
@@ -146,9 +162,11 @@ struct PageAnnotation {
     RectD rect;
     Color color;
 
-    PageAnnotation() : type(PageAnnotType::None), pageNo(-1) {}
+    PageAnnotation() : type(PageAnnotType::None), pageNo(-1) {
+    }
     PageAnnotation(PageAnnotType type, int pageNo, RectD rect, Color color)
-        : type(type), pageNo(pageNo), rect(rect), color(color) {}
+        : type(type), pageNo(pageNo), rect(rect), color(color) {
+    }
     bool operator==(const PageAnnotation& other) const {
         return other.type == type && other.pageNo == pageNo && other.rect == rect && other.color == color;
     }
@@ -160,7 +178,8 @@ struct PageAnnotation {
 // hoverable (and maybe interactable) element on a single page
 class PageElement {
   public:
-    virtual ~PageElement() {}
+    virtual ~PageElement() {
+    }
     // the type of this page element
     virtual PageElementType GetType() const = 0;
     // page this element lives on (0 for elements in a ToC)
@@ -173,10 +192,14 @@ class PageElement {
 
     // if this element is a link, this returns information about the link's destination
     // (the result is owned by the PageElement and MUST NOT be deleted)
-    virtual PageDestination* AsLink() { return nullptr; }
+    virtual PageDestination* AsLink() {
+        return nullptr;
+    }
     // if this element is an image, this returns it
     // caller must delete the result
-    virtual RenderedBitmap* GetImage() { return nullptr; }
+    virtual RenderedBitmap* GetImage() {
+        return nullptr;
+    }
 };
 
 // an item in a document's Table of Content
@@ -202,7 +225,8 @@ class DocTocItem {
     DocTocItem* next;
 
     explicit DocTocItem(WCHAR* title, int pageNo = 0)
-        : title(title), open(false), pageNo(pageNo), id(0), child(nullptr), next(nullptr), last(nullptr) {}
+        : title(title), open(false), pageNo(pageNo), id(0), child(nullptr), next(nullptr), last(nullptr) {
+    }
 
     virtual ~DocTocItem() {
         delete child;
@@ -239,7 +263,8 @@ class DocTocItem {
 // a helper that allows for rendering interruptions in an engine-agnostic way
 class AbortCookie {
   public:
-    virtual ~AbortCookie() {}
+    virtual ~AbortCookie() {
+    }
     // aborts a rendering request (as far as possible)
     // note: must be thread-safe
     virtual void Abort() = 0;
@@ -247,7 +272,8 @@ class AbortCookie {
 
 class BaseEngine {
   public:
-    virtual ~BaseEngine() {}
+    virtual ~BaseEngine() {
+    }
     // creates a clone of this engine (e.g. for printing on a different thread)
     virtual BaseEngine* Clone() = 0;
 
@@ -297,10 +323,14 @@ class BaseEngine {
     // pages where clipping doesn't help are rendered in larger tiles
     virtual bool HasClipOptimizations(int pageNo) = 0;
     // the layout type this document's author suggests (if the user doesn't care)
-    virtual PageLayoutType PreferredLayout() { return Layout_Single; }
+    virtual PageLayoutType PreferredLayout() {
+        return Layout_Single;
+    }
     // whether the content should be displayed as images instead of as document pages
     // (e.g. with a black background and less padding in between and without search UI)
-    virtual bool IsImageCollection() const { return false; }
+    virtual bool IsImageCollection() const {
+        return false;
+    }
 
     // access to various document properties (such as Author, Title, etc.)
     virtual WCHAR* GetProperty(DocumentProperty prop) = 0;
@@ -315,13 +345,19 @@ class BaseEngine {
 
     // TODO: needs a more general interface
     // whether it is allowed to print the current document
-    virtual bool AllowsPrinting() const { return true; }
+    virtual bool AllowsPrinting() const {
+        return true;
+    }
     // whether it is allowed to extract text from the current document
     // (except for searching an accessibility reasons)
-    virtual bool AllowsCopyingText() const { return true; }
+    virtual bool AllowsCopyingText() const {
+        return true;
+    }
 
     // the DPI for a file is needed when converting internal measures to physical ones
-    virtual float GetFileDPI() const { return 96.0f; }
+    virtual float GetFileDPI() const {
+        return 96.0f;
+    }
     // the default file extension for a document like the currently loaded one (e.g. L".pdf")
     virtual const WCHAR* GetDefaultFileExt() const = 0;
 
@@ -339,36 +375,54 @@ class BaseEngine {
         return nullptr;
     }
     // checks whether this document has an associated Table of Contents
-    virtual bool HasTocTree() const { return false; }
+    virtual bool HasTocTree() const {
+        return false;
+    }
     // returns the root element for the loaded document's Table of Contents
     // caller must delete the result (when no longer needed)
-    virtual DocTocItem* GetTocTree() { return nullptr; }
+    virtual DocTocItem* GetTocTree() {
+        return nullptr;
+    }
 
     // checks whether this document has explicit labels for pages (such as
     // roman numerals) instead of the default plain arabic numbering
-    virtual bool HasPageLabels() const { return false; }
+    virtual bool HasPageLabels() const {
+        return false;
+    }
     // returns a label to be displayed instead of the page number
     // caller must free() the result
-    virtual WCHAR* GetPageLabel(int pageNo) const { return str::Format(L"%d", pageNo); }
+    virtual WCHAR* GetPageLabel(int pageNo) const {
+        return str::Format(L"%d", pageNo);
+    }
     // reverts GetPageLabel by returning the first page number having the given label
-    virtual int GetPageByLabel(const WCHAR* label) const { return _wtoi(label); }
+    virtual int GetPageByLabel(const WCHAR* label) const {
+        return _wtoi(label);
+    }
 
     // whether this document required a password in order to be loaded
-    virtual bool IsPasswordProtected() const { return false; }
+    virtual bool IsPasswordProtected() const {
+        return false;
+    }
     // returns a string to remember when the user wants to save a document's password
     // (don't implement for document types that don't support password protection)
     // caller must free() the result
-    virtual char* GetDecryptionKey() const { return nullptr; }
+    virtual char* GetDecryptionKey() const {
+        return nullptr;
+    }
 
     // loads the given page so that the time required can be measured
     // without also measuring rendering times
     virtual bool BenchLoadPage(int pageNo) = 0;
 
     // the name of the file this engine handles
-    const WCHAR* FileName() const { return fileName.Get(); }
+    const WCHAR* FileName() const {
+        return fileName.Get();
+    }
 
   protected:
-    void SetFileName(const WCHAR* s) { fileName.SetCopy(s); }
+    void SetFileName(const WCHAR* s) {
+        fileName.SetCopy(s);
+    }
 
     AutoFreeW fileName;
 };
@@ -377,5 +431,6 @@ class PasswordUI {
   public:
     virtual WCHAR* GetPassword(const WCHAR* fileName, unsigned char* fileDigest, unsigned char decryptionKeyOut[32],
                                bool* saveKey) = 0;
-    virtual ~PasswordUI() {}
+    virtual ~PasswordUI() {
+    }
 };

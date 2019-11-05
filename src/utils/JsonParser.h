@@ -20,7 +20,8 @@ class ValueVisitor {
   public:
     // return false to stop parsing
     virtual bool Visit(const char* path, const char* value, DataType type) = 0;
-    virtual ~ValueVisitor() {}
+    virtual ~ValueVisitor() {
+    }
 };
 
 // data must be UTF-8 encoded and nullptr-terminated

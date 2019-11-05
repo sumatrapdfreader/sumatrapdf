@@ -11,7 +11,8 @@ typedef std::function<void(RenderedBitmap*)> onBitmapRenderedCb;
 
 class ControllerCallback {
   public:
-    virtual ~ControllerCallback() {}
+    virtual ~ControllerCallback() {
+    }
     // tell the UI to show the pageNo as current page (which also syncs
     // the toc with the curent page). Needed for when a page change happens
     // indirectly or is initiated from within the model
@@ -41,8 +42,11 @@ class Controller {
     ControllerCallback* cb;
 
   public:
-    explicit Controller(ControllerCallback* cb) : cb(cb) { CrashIf(!cb); }
-    virtual ~Controller() {}
+    explicit Controller(ControllerCallback* cb) : cb(cb) {
+        CrashIf(!cb);
+    }
+    virtual ~Controller() {
+    }
 
     // meta data
     virtual const WCHAR* FilePath() const = 0;
@@ -77,12 +81,20 @@ class Controller {
     virtual void CreateThumbnail(SizeI size, const std::function<void(RenderedBitmap*)>& saveThumbnail) = 0;
 
     // page labels (optional)
-    virtual bool HasPageLabels() const { return false; }
-    virtual WCHAR* GetPageLabel(int pageNo) const { return str::Format(L"%d", pageNo); }
-    virtual int GetPageByLabel(const WCHAR* label) const { return _wtoi(label); }
+    virtual bool HasPageLabels() const {
+        return false;
+    }
+    virtual WCHAR* GetPageLabel(int pageNo) const {
+        return str::Format(L"%d", pageNo);
+    }
+    virtual int GetPageByLabel(const WCHAR* label) const {
+        return _wtoi(label);
+    }
 
     // common shortcuts
-    virtual bool ValidPageNo(int pageNo) const { return 1 <= pageNo && pageNo <= PageCount(); }
+    virtual bool ValidPageNo(int pageNo) const {
+        return 1 <= pageNo && pageNo <= PageCount();
+    }
     virtual bool GoToNextPage() {
         if (CurrentPageNo() == PageCount())
             return false;
@@ -110,7 +122,13 @@ class Controller {
     }
 
     // for quick type determination and type-safe casting
-    virtual DisplayModel* AsFixed() { return nullptr; }
-    virtual ChmModel* AsChm() { return nullptr; }
-    virtual EbookController* AsEbook() { return nullptr; }
+    virtual DisplayModel* AsFixed() {
+        return nullptr;
+    }
+    virtual ChmModel* AsChm() {
+        return nullptr;
+    }
+    virtual EbookController* AsEbook() {
+        return nullptr;
+    }
 };

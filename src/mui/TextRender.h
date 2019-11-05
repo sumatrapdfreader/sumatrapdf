@@ -71,7 +71,8 @@ class TextRenderGdi : public ITextRender {
           memHdcPrevBitmap(nullptr),
           memBmpData(nullptr),
           memBmpDx(0),
-          memBmpDy(0) {}
+          memBmpDy(0) {
+    }
 
     void FreeMemBmp();
     void CreateClearBmpOfSize(int dx, int dy);
@@ -116,7 +117,8 @@ class TextRenderGdiplus : public ITextRender {
     Gdiplus::Brush* textColorBrush;
     WCHAR txtConvBuf[512];
 
-    TextRenderGdiplus() : gfx(nullptr), currFont(nullptr), textColorBrush(nullptr), textColor(0, 0, 0, 0) {}
+    TextRenderGdiplus() : gfx(nullptr), currFont(nullptr), textColorBrush(nullptr), textColor(0, 0, 0, 0) {
+    }
 
   public:
     static TextRenderGdiplus* Create(Gdiplus::Graphics* gfx,
@@ -125,15 +127,19 @@ class TextRenderGdiplus : public ITextRender {
 
     void SetFont(CachedFont* font) override;
     void SetTextColor(Gdiplus::Color col) override;
-    void SetTextBgColor(Gdiplus::Color col) override { UNUSED(col); }
+    void SetTextBgColor(Gdiplus::Color col) override {
+        UNUSED(col);
+    }
 
     float GetCurrFontLineSpacing() override;
 
     Gdiplus::RectF Measure(const char* s, size_t sLen) override;
     Gdiplus::RectF Measure(const WCHAR* s, size_t sLen) override;
 
-    void Lock() override {}
-    void Unlock() override {}
+    void Lock() override {
+    }
+    void Unlock() override {
+    }
 
     void Draw(const char* s, size_t sLen, RectF& bb, bool isRtl) override;
     void Draw(const WCHAR* s, size_t sLen, RectF& bb, bool isRtl) override;

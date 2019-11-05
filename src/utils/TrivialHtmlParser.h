@@ -76,9 +76,13 @@ class HtmlParser {
     HtmlElement* Parse(const char* s, UINT codepage = CP_ACP);
     HtmlElement* ParseInPlace(char* s, UINT codepage = CP_ACP);
 
-    size_t ElementsCount() const { return elementsCount; }
+    size_t ElementsCount() const {
+        return elementsCount;
+    }
 
-    size_t TotalAttrCount() const { return attributesCount; }
+    size_t TotalAttrCount() const {
+        return attributesCount;
+    }
 
     HtmlElement* FindElementByName(const char* name, HtmlElement* from = nullptr);
     HtmlElement* FindElementByNameNS(const char* name, const char* ns, HtmlElement* from = nullptr);
