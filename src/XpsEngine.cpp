@@ -160,8 +160,8 @@ struct XpsPageRun {
     size_t size_est;
     int refs;
 
-    XpsPageRun(fz_page* page, fz_display_list* list, ListInspectionData& data)
-        : page(page), list(list), size_est(data.mem_estimate), refs(1) {
+    XpsPageRun(fz_page* page, fz_display_list* list)
+        : page(page), list(list), size_est(0), refs(1) {
     }
 };
 
@@ -602,18 +602,6 @@ int XpsEngineImpl::GetPageNo(fz_page* page) {
 
 XpsPageRun* XpsEngineImpl::CreatePageRun(fz_page* page, fz_display_list* list) {
     Vec<FitzImagePos> positions;
-    ListInspectionData data(positions);
-    fz_device* dev = nullptr;
-
-    fz_var(dev);
-    fz_try(ctx) {
-        dev = fz_new_inspection_device(ctx, &data);
-
-        fz_run_display_list(ctx, list, dev, fz_identity, fz_infinite_rect, nullptr);
-    }
-    fz_catch(ctx) {
-    }
-    fz_drop_device(ctx, dev);
 
     // save the image rectangles for this page
     int pageNo = GetPageNo(page);
@@ -628,7 +616,7 @@ XpsPageRun* XpsEngineImpl::CreatePageRun(fz_page* page, fz_display_list* list) {
         }
     }
 
-    return new XpsPageRun(page, list, data);
+    return new XpsPageRun(page, list);
 }
 
 XpsPageRun* XpsEngineImpl::GetPageRun(fz_page* page, bool tryOnly) {
@@ -1105,28 +1093,14 @@ void XpsEngineImpl::LinkifyPageText(fz_page* page, int pageNo) {
 #endif
 }
 
-RenderedBitmap* XpsEngineImpl::GetPageImage(int pageNo, RectD rect, size_t imageIx) {
+RenderedBitmap* XpsEngineImpl::GetPageImage(int pageNo, RectD rect, size_t imageIdx) {
     fz_page* page = GetXpsPage(pageNo);
     if (!page)
         return nullptr;
 
     Vec<FitzImagePos> positions;
-    ListInspectionData data(positions);
-    fz_device* dev = nullptr;
 
-    EnterCriticalSection(&ctxAccess);
-    fz_try(ctx) {
-        dev = fz_new_inspection_device(ctx, &data);
-    }
-    fz_catch(ctx) {
-        LeaveCriticalSection(&ctxAccess);
-        return nullptr;
-    }
-    LeaveCriticalSection(&ctxAccess);
-
-    RunPage(page, dev, &fz_identity);
-
-    if (imageIx >= positions.size() || fz_rect_to_RectD(positions.at(imageIx).rect) != rect) {
+    if (imageIdx >= positions.size() || fz_rect_to_RectD(positions.at(imageIdx).rect) != rect) {
         AssertCrash(0);
         return nullptr;
     }
@@ -1135,7 +1109,7 @@ RenderedBitmap* XpsEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
 
     fz_pixmap* pixmap = nullptr;
     fz_try(ctx) {
-        fz_image* image = positions.at(imageIx).image;
+        fz_image* image = positions.at(imageIdx).image;
         // TODO(port): pass dimensions?
         CrashMePort();
         pixmap = fz_get_pixmap_from_image(ctx, image, nullptr, nullptr, nullptr, nullptr);

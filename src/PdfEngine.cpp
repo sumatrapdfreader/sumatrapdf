@@ -682,163 +682,6 @@ struct FitzImagePos {
     }
 };
 
-struct ListInspectionData {
-    Vec<FitzImagePos>* images;
-    size_t mem_estimate;
-
-    explicit ListInspectionData(Vec<FitzImagePos>& images) : images(&images), mem_estimate(0) {
-    }
-};
-
-typedef struct {
-    fz_device super;
-    ListInspectionData* user;
-} inspection_device;
-
-extern "C" static void fz_inspection_drop(fz_context* ctx, fz_device* dev) {
-    auto idev = (inspection_device*)dev;
-    // images are extracted in bottom-to-top order, but for GetElements
-    // we want to access them in top-to-bottom order (since images at
-    // the bottom might not be visible at all)
-    idev->user->images->Reverse();
-}
-
-static void fz_inspection_handle_path(inspection_device* dev, const fz_path* path) {
-    // TODO(port)
-    // dev->user->mem_estimate += sizeof(fz_path) + path->cmd_cap + path->coord_cap * sizeof(float);
-}
-
-static void fz_inspection_handle_image(inspection_device* dev, fz_image* image) {
-    int n = image->colorspace ? image->colorspace->n + 1 : 1;
-    dev->user->mem_estimate += sizeof(fz_image) + image->w * image->h * n;
-}
-
-extern "C" static void fz_inspection_fill_path(fz_context* ctx, fz_device* dev, const fz_path* path, int even_odd,
-                                               fz_matrix ctm, fz_colorspace* colorspace, const float* color,
-                                               float alpha, fz_color_params p) {
-    UNUSED(ctx);
-    UNUSED(even_odd);
-    UNUSED(ctm);
-    UNUSED(colorspace);
-    UNUSED(color);
-    UNUSED(alpha);
-    UNUSED(p);
-    auto idev = (inspection_device*)dev;
-    fz_inspection_handle_path(idev, path);
-}
-
-extern "C" static void fz_inspection_stroke_path(fz_context* ctx, fz_device* dev, const fz_path* path,
-                                                 const fz_stroke_state* stroke, fz_matrix ctm,
-                                                 fz_colorspace* colorspace, const float* color, float alpha,
-                                                 fz_color_params cp) {
-    UNUSED(ctx);
-    UNUSED(stroke);
-    UNUSED(ctm);
-    UNUSED(colorspace);
-    UNUSED(color);
-    UNUSED(alpha);
-    UNUSED(cp);
-    auto idev = (inspection_device*)dev;
-    fz_inspection_handle_path(idev, path);
-}
-
-extern "C" static void fz_inspection_clip_path(fz_context* ctx, fz_device* dev, const fz_path* path, int even_odd,
-                                               fz_matrix ctm, fz_rect scissor) {
-    UNUSED(ctx);
-    UNUSED(even_odd);
-    UNUSED(ctm);
-    UNUSED(scissor);
-    auto idev = (inspection_device*)dev;
-    fz_inspection_handle_path(idev, path);
-}
-
-extern "C" static void fz_inspection_clip_stroke_path(fz_context* ctx, fz_device* dev, const fz_path* path,
-                                                      const fz_stroke_state* stroke, fz_matrix ctm, fz_rect rect) {
-    UNUSED(ctx);
-    UNUSED(rect);
-    UNUSED(stroke);
-    UNUSED(ctm);
-    auto idev = (inspection_device*)dev;
-    fz_inspection_handle_path(idev, path);
-}
-
-extern "C" static void fz_inspection_fill_shade(fz_context* ctx, fz_device* dev, fz_shade* shade, fz_matrix ctm,
-                                                float alpha, fz_color_params cp) {
-    UNUSED(ctx);
-    UNUSED(shade);
-    UNUSED(ctm);
-    UNUSED(alpha);
-    UNUSED(cp);
-    auto idev = (inspection_device*)dev;
-    idev->user->mem_estimate += sizeof(fz_shade);
-}
-
-extern "C" static void fz_inspection_fill_image(fz_context* ctx, fz_device* dev, fz_image* image, fz_matrix ctm,
-                                                float alpha, fz_color_params cp) {
-    UNUSED(ctx);
-    UNUSED(alpha);
-    UNUSED(cp);
-    auto idev = (inspection_device*)dev;
-    fz_inspection_handle_image(idev, image);
-    // extract rectangles for images a user might want to extract
-    // TODO: try to better distinguish images a user might actually want to extract
-    if (image->w < 16 || image->h < 16) {
-        return;
-    }
-    fz_rect rect = fz_transform_rect(fz_unit_rect, ctm);
-    if (!fz_is_empty_rect(rect)) {
-        idev->user->images->Append(FitzImagePos(image, rect));
-    }
-}
-
-extern "C" static void fz_inspection_fill_image_mask(fz_context* ctx, fz_device* dev, fz_image* image, fz_matrix ctm,
-                                                     fz_colorspace* colorspace, const float* color, float alpha,
-                                                     fz_color_params cp) {
-    UNUSED(ctx);
-    UNUSED(ctm);
-    UNUSED(colorspace);
-    UNUSED(color);
-    UNUSED(alpha);
-    UNUSED(cp);
-    auto idev = (inspection_device*)dev;
-    fz_inspection_handle_image(idev, image);
-}
-
-extern "C" static void fz_inspection_clip_image_mask(fz_context* ctx, fz_device* dev, fz_image* image, fz_matrix ctm,
-                                                     fz_rect rect) {
-    UNUSED(ctx);
-    UNUSED(rect);
-    UNUSED(ctm);
-    auto idev = (inspection_device*)dev;
-    fz_inspection_handle_image(idev, image);
-}
-
-static fz_device* fz_new_inspection_device(fz_context* ctx, ListInspectionData* data) {
-    inspection_device* dev = nullptr;
-    fz_try(ctx) {
-        dev = fz_new_derived_device(ctx, inspection_device);
-    }
-    fz_catch(ctx) {
-        fz_drop_device(ctx, &dev->super);
-        return nullptr;
-    }
-
-    dev->super.drop_device = fz_inspection_drop;
-
-    dev->super.fill_path = fz_inspection_fill_path;
-    dev->super.stroke_path = fz_inspection_stroke_path;
-    dev->super.clip_path = fz_inspection_clip_path;
-    dev->super.clip_stroke_path = fz_inspection_clip_stroke_path;
-
-    dev->super.fill_shade = fz_inspection_fill_shade;
-    dev->super.fill_image = fz_inspection_fill_image;
-    dev->super.fill_image_mask = fz_inspection_fill_image_mask;
-    dev->super.clip_image_mask = fz_inspection_clip_image_mask;
-
-    dev->user = data;
-    return (fz_device*)dev;
-}
-
 class FitzAbortCookie : public AbortCookie {
   public:
     fz_cookie cookie;
@@ -2013,17 +1856,6 @@ int PdfEngineImpl::GetPageNo(pdf_page* page) {
 
 PdfPageRun* PdfEngineImpl::CreatePageRun(PageInfo* pageInfo, fz_display_list* list) {
     Vec<FitzImagePos> positions;
-    ListInspectionData data(positions);
-    fz_device* dev = nullptr;
-
-    fz_var(dev);
-    fz_try(ctx) {
-        dev = fz_new_inspection_device(ctx, &data);
-        fz_run_display_list(ctx, list, dev, fz_identity, fz_empty_rect, nullptr);
-    }
-    fz_catch(ctx) {
-    }
-    fz_drop_device(ctx, dev);
 
     // save the image rectangles for this page
     int pageNo = GetPageNo(pageInfo->page);
@@ -2040,7 +1872,6 @@ PdfPageRun* PdfEngineImpl::CreatePageRun(PageInfo* pageInfo, fz_display_list* li
     }
 
     auto pageRun = new PdfPageRun(pageInfo);
-    pageRun->size_est = data.mem_estimate;
     return pageRun;
 }
 
@@ -2466,29 +2297,15 @@ pdf_annot** PdfEngineImpl::ProcessPageAnnotations(PageInfo* pageInfo) {
     return annots.StealData();
 }
 
-RenderedBitmap* PdfEngineImpl::GetPageImage(int pageNo, RectD rect, size_t imageIx) {
+RenderedBitmap* PdfEngineImpl::GetPageImage(int pageNo, RectD rect, size_t imageIdx) {
     PageInfo* pageInfo = GetPageInfo(pageNo);
     if (!pageInfo->page) {
         return nullptr;
     }
 
     Vec<FitzImagePos> positions;
-    ListInspectionData data(positions);
-    fz_device* dev = nullptr;
 
-    EnterCriticalSection(&ctxAccess);
-    fz_try(ctx) {
-        dev = fz_new_inspection_device(ctx, &data);
-    }
-    fz_catch(ctx) {
-        LeaveCriticalSection(&ctxAccess);
-        return nullptr;
-    }
-    LeaveCriticalSection(&ctxAccess);
-
-    RunPage(pageInfo, dev, fz_identity);
-
-    if (imageIx >= positions.size() || fz_rect_to_RectD(positions.at(imageIx).rect) != rect) {
+    if (imageIdx >= positions.size() || fz_rect_to_RectD(positions.at(imageIdx).rect) != rect) {
         AssertCrash(0);
         return nullptr;
     }
@@ -2497,7 +2314,7 @@ RenderedBitmap* PdfEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
 
     fz_pixmap* pixmap = nullptr;
     fz_try(ctx) {
-        fz_image* image = positions.at(imageIx).image;
+        fz_image* image = positions.at(imageIdx).image;
         CrashMePort();
         // TODO(port): not sure if should provide subarea, w and h
         pixmap = fz_get_pixmap_from_image(ctx, image, nullptr, nullptr, nullptr, nullptr);
