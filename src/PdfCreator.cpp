@@ -150,7 +150,7 @@ static fz_image* pack_jp2(fz_context* ctx, const char* data, size_t len, SizeI s
 }
 
 PdfCreator::PdfCreator() {
-    ctx = fz_new_context(nullptr, nullptr, FZ_STORE_DEFAULT);
+    ctx = fz_new_context(nullptr, nullptr, FZ_STORE_UNLIMITED);
     if (!ctx)
         return;
     fz_try(ctx) {
