@@ -702,7 +702,7 @@ pdf_load_windows_font(fz_context *ctx, const char *fontname, int bold, int itali
 		/* TODO: the metrics for Times-Roman and Courier don't match
 		   those of Windows' Times New Roman and Courier New; for
 		   some reason, Poppler doesn't seem to have this problem */
-		unsigned int len;
+		int len;
         if (fz_lookup_builtin_font(ctx, fontname, bold, italic, &len))
 			return NULL;
 
