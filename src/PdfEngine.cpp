@@ -858,18 +858,15 @@ fz_outline* pdf_loadattachments(fz_context* ctx, pdf_document* doc) {
         if (!embedded)
             continue;
 
-        // TODO(port)
-        CrashMePort();
-#if 0
-        node = node->next = fz_new_outline(ctx);
-        node->title = fz_strdup(ctx, pdf_to_name(ctx, name));
-        node->dest.kind = FZ_LINK_LAUNCH;
-        node->dest.ld.launch.file_spec = pdf_parse_file_spec(ctx, doc, dest);
-        node->dest.ld.launch.new_window = 1;
-        node->dest.ld.launch.embedded_num = pdf_to_num(ctx, embedded);
-        node->dest.ld.launch.embedded_gen = pdf_to_gen(ctx, embedded);
-        node->dest.ld.launch.is_uri = 0;
-#endif
+        // TODO: in fz_try ?
+        char* uri = pdf_parse_file_spec(ctx, doc, dest, nullptr);
+        char* title = fz_strdup(ctx, pdf_to_name(ctx, name));
+        fz_outline* link = fz_new_outline(ctx);
+
+        link->uri = uri;
+        link->title = title;
+
+        node = node->next = link;
     }
     pdf_drop_obj(ctx, dict);
 
@@ -1328,7 +1325,7 @@ PdfEngineImpl::~PdfEngineImpl() {
         DropPageRun(runCache.Last(), true);
     }
 
-    //fz_drop_stream(ctx, _docStream);
+    // fz_drop_stream(ctx, _docStream);
     pdf_drop_document(ctx, _doc);
     _doc = nullptr;
     fz_drop_context(ctx);
@@ -3196,7 +3193,6 @@ RectD PdfLink::GetDestRect() const {
     }
 
     if (is_external_link(uri)) {
-        CrashMePort();
         return result;
     }
     float x, y;
@@ -3249,7 +3245,12 @@ RectD PdfLink::GetDestRect() const {
 }
 
 WCHAR* PdfLink::GetDestName() const {
-    CrashMePort();
+    char* uri = PdfLinkGetURI(this);
+    if (is_external_link(uri)) {
+        return nullptr;
+    }
+    // TODO(port): test with more stuff
+    // figure out what PDF_NAME(GoToR) ends up being
     return nullptr;
 #if 0
     if (!link || FZ_LINK_GOTOR != link->kind || !link->ld.gotor.dest)
