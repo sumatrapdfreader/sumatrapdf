@@ -14,7 +14,7 @@ __binary_Dingbats_cff:
 __binary_Dingbats_cff_size:
     dq $ - __binary_Dingbats_cff
 
-; --------- 
+; ---------
 
 global __binary_NimbusMonoPS_Regular_cff
 global __binary_NimbusMonoPS_Regular_cff_size
