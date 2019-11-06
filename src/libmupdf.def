@@ -40,6 +40,8 @@ EXPORTS
 	fz_drop_stext_page
 	fz_new_stext_device
 	fz_rect_from_quad
+	fz_new_outline
+	pdf_parse_file_spec
 
 	fz_keep_bitmap
 	fz_drop_bitmap
