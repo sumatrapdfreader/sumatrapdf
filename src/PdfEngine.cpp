@@ -1268,7 +1268,7 @@ extern "C" void pdf_install_load_system_font_funcs(fz_context* ctx);
 // TODO(port): improve locking to use lock
 extern "C" static void fz_lock_context_cs(void* user, int lock) {
     UNUSED(lock);
-    PdfEngineImpl *e = (PdfEngineImpl*)user;
+    PdfEngineImpl* e = (PdfEngineImpl*)user;
     // we use a single critical section for all locks,
     // since that critical section (ctxAccess) should
     // be guarding all fz_context access anyway and
@@ -1751,6 +1751,8 @@ PageInfo* PdfEngineImpl::GetPageInfo(int pageNo, bool failIfBusy) {
 }
 
 pdf_page* PdfEngineImpl::GetPdfPage(int pageNo, bool failIfBusy) {
+    ScopedCritSec scope(&pagesAccess);
+
     CrashIf(pageNo < 1 || pageNo > pageCount);
     int pageIdx = pageNo - 1;
     PageInfo* pageInfo = &_pages[pageNo - 1];
@@ -1759,8 +1761,6 @@ pdf_page* PdfEngineImpl::GetPdfPage(int pageNo, bool failIfBusy) {
     if (ppage || failIfBusy) {
         return ppage;
     }
-
-    ScopedCritSec scope(&pagesAccess);
 
     ScopedCritSec ctxScope(&ctxAccess);
     fz_var(ppage);
@@ -1805,7 +1805,6 @@ pdf_page* PdfEngineImpl::GetPdfPage(int pageNo, bool failIfBusy) {
     }
     pageInfo->list = list;
 
-    EnterCriticalSection(&ctxAccess);
     fz_stext_page* page_text = fz_new_stext_page(ctx, bounds);
     fz_device* tdev = fz_new_stext_device(ctx, page_text, NULL);
 
@@ -1819,7 +1818,6 @@ pdf_page* PdfEngineImpl::GetPdfPage(int pageNo, bool failIfBusy) {
     }
     fz_always(ctx) {
         fz_drop_device(ctx, tdev);
-        LeaveCriticalSection(&ctxAccess);
     }
     fz_catch(ctx) {
     }
@@ -1835,6 +1833,8 @@ pdf_page* PdfEngineImpl::GetPdfPage(int pageNo, bool failIfBusy) {
 }
 
 int PdfEngineImpl::GetPageNo(PageInfo* pageInfo) {
+    ScopedCritSec scope(&pagesAccess);
+
     for (int i = 0; i < PageCount(); i++) {
         PageInfo* pi = &_pages[i];
         if (pageInfo == pi) {
@@ -1845,6 +1845,8 @@ int PdfEngineImpl::GetPageNo(PageInfo* pageInfo) {
 }
 
 int PdfEngineImpl::GetPageNo(pdf_page* page) {
+    ScopedCritSec scope(&pagesAccess);
+
     for (int i = 0; i < PageCount(); i++) {
         PageInfo* pi = &_pages[i];
         if (page == pi->page) {
@@ -1993,9 +1995,9 @@ void PdfEngineImpl::DropPageRun(PdfPageRun* run, bool forceRemove) {
 }
 
 RectD PdfEngineImpl::PageMediabox(int pageNo) {
-    int pageIdx = pageNo - 1;
-    CrashIf((pageIdx < 0) || (pageIdx >= PageCount()));
-    PageInfo* pi = &_pages[pageIdx];
+    PageInfo* pi = GetPageInfo(pageNo);
+
+    ScopedCritSec scope2(&pagesAccess);
     if (!pi->mediabox.IsEmpty()) {
         return pi->mediabox;
     }
@@ -2025,14 +2027,16 @@ RectD PdfEngineImpl::PageMediabox(int pageNo) {
 }
 
 RectD PdfEngineImpl::PageContentBox(int pageNo, RenderTarget target) {
-    AssertCrash(1 <= pageNo && pageNo <= PageCount());
-    PageInfo* pageInfo = &_pages[pageNo - 1];
+    PageInfo* pi = GetPageInfo(pageNo);
+
+    ScopedCritSec scope(&ctxAccess);
 
     fz_rect rect = fz_empty_rect;
     fz_device* dev = nullptr;
+
     dev = fz_new_bbox_device(ctx, &rect);
-    fz_rect pagerect = pdf_bound_page(ctx, pageInfo->page);
-    bool ok = RunPage(pageInfo, dev, fz_identity, target, pagerect, false);
+    fz_rect pagerect = pdf_bound_page(ctx, pi->page);
+    bool ok = RunPage(pi, dev, fz_identity, target, pagerect, false);
     fz_drop_device(ctx, dev);
     if (!ok)
         return PageMediabox(pageNo);
@@ -2076,17 +2080,19 @@ RenderedBitmap* PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
         *cookie_out = cookie;
     }
 
+    // TODO(port): I don't see why this lock is needed
+    EnterCriticalSection(&ctxAccess);
+
     fz_rect pRect;
-    if (pageRect)
+    if (pageRect) {
         pRect = fz_RectD_to_rect(*pageRect);
-    else
+    } else {
+        // TODO(port): use pageInfo->mediabox?
         pRect = pdf_bound_page(ctx, page);
+    }
     fz_matrix ctm = viewctm(page, zoom, rotation);
     fz_irect bbox = fz_round_rect(fz_transform_rect(pRect, ctm));
     fz_pixmap* image = nullptr;
-
-    // TODO(port): I don't see why this lock is needed
-    EnterCriticalSection(&ctxAccess);
 
     fz_colorspace* colorspace = fz_device_rgb(ctx);
     fz_irect ibounds = bbox;
@@ -2106,12 +2112,13 @@ RenderedBitmap* PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
     fz_catch(ctx) {
         fz_drop_pixmap(ctx, image);
         fz_drop_device(ctx, idev);
-        LeaveCriticalSection(&ctxAccess);
         return nullptr;
     }
 
     fz_rect cliprect = fz_rect_from_irect(bbox);
     bool ok = RunPage(pageInfo, idev, ctm, target, cliprect, true, cookie);
+
+    ScopedCritSec scope(&ctxAccess);
     // TODO: inside fz_try?
     fz_close_device(ctx, idev);
 
@@ -2121,7 +2128,6 @@ RenderedBitmap* PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
     }
 
     RenderedBitmap* bitmap = nullptr;
-    ScopedCritSec scope(&ctxAccess);
     bitmap = new_rendered_fz_pixmap(ctx, image);
     fz_drop_pixmap(ctx, image);
     return bitmap;
@@ -2341,7 +2347,11 @@ WCHAR* PdfEngineImpl::ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** 
 WCHAR* PdfEngineImpl::ExtractPageTextFromPageInfo(PageInfo* pageInfo, const WCHAR* lineSep, RectI** coordsOut,
                                                   RenderTarget target, bool cacheRun) {
     WCHAR* content = nullptr;
-    content = fz_text_page_to_str(pageInfo->stext, lineSep, coordsOut);
+    if (false) {
+        // TODO(port): test if needed and remove if not
+        ScopedCritSec scope(&ctxAccess);
+        content = fz_text_page_to_str(pageInfo->stext, lineSep, coordsOut);
+    }
     return content;
 }
 
@@ -2886,14 +2896,12 @@ bool PdfEngineImpl::SaveEmbedded(LinkSaverUI& saveUI, int num) {
 }
 
 bool PdfEngineImpl::HasClipOptimizations(int pageNo) {
-    pdf_page* page = GetPdfPage(pageNo, true);
-    if (!page) {
+    PageInfo* pi = GetPageInfo(pageNo, true);
+    if (!pi) {
         return false;
     }
 
-    PageInfo* pi = &_pages[pageNo - 1];
-
-    // GetPdfPage extracts imageRects for us
+    // GetPageInfo extracts imageRects for us
     if (!pi->imageRects) {
         return true;
     }
@@ -3306,4 +3314,3 @@ BaseEngine* CreateFromStream(IStream* stream, PasswordUI* pwdUI) {
 
 // TODO: nasty but I want them in separate files
 #include "XpsEngine.cpp"
-

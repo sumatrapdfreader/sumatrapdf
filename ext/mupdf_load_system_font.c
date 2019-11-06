@@ -690,19 +690,6 @@ pdf_load_windows_font_by_name(fz_context *ctx, const char *orig_name)
 	return font;
 }
 
-#pragma warning(push)
-#pragma warning(disable : 6011) // silence /analyze: de-referencing a nullptr pointer
-// Note: it's inlined to make it easier on crash reports analyzer (if wasn't inlined
-// CrashMe() would show up as the cause of several different crash sites)
-//
-// Note: I tried doing this via RaiseException(0x40000015, EXCEPTION_NONCONTINUABLE, 0, 0);
-// but it seemed to confuse callstack walking
-inline void CrashMePort() {
-    char* p = 0;
-    *p = 0;
-}
-#pragma warning(pop)
-
 static fz_font *
 pdf_load_windows_font(fz_context *ctx, const char *fontname, int bold, int italic, int needs_exact_metrics)
 {
@@ -715,13 +702,9 @@ pdf_load_windows_font(fz_context *ctx, const char *fontname, int bold, int itali
 		/* TODO: the metrics for Times-Roman and Courier don't match
 		   those of Windows' Times New Roman and Courier New; for
 		   some reason, Poppler doesn't seem to have this problem */
-		// TODO(port)
-		CrashMePort();
-#if 0
 		unsigned int len;
-		if (pdf_lookup_builtin_font(fontname, &len))
+        if (fz_lookup_builtin_font(ctx, fontname, bold, italic, &len))
 			return NULL;
-#endif
 
 		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2173 */
 		if (clean_name != fontname && !strncmp(clean_name, "Times-", 6))
