@@ -547,6 +547,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     // regular termination so that leaks aren't checked on exceptions,
     // aborts, etc. where some clean-up might not take place)
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF);
+    //_CrtSetDbgFlag(_CRTDBG_CHECK_ALWAYS_DF);    
     //_CrtSetBreakAlloc(421);
     TryLoadMemTrace();
 #endif

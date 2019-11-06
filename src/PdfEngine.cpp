@@ -1001,7 +1001,7 @@ struct PageTreeStackItem {
 
 ///// Above are extensions to Fitz and MuPDF, now follows PdfEngine /////
 
-struct PageInfo {
+struct PdfPageInfo {
     pdf_page* page = nullptr;
     fz_display_list* list = nullptr;
     fz_stext_page* stext = nullptr;
@@ -1013,13 +1013,13 @@ struct PageInfo {
 };
 
 struct PdfPageRun {
-    PageInfo* pageInfo = nullptr;
+    PdfPageInfo* pageInfo = nullptr;
     int refs = 1;
 
-    PdfPageRun(PageInfo*);
+    PdfPageRun(PdfPageInfo*);
 };
 
-PdfPageRun::PdfPageRun(PageInfo* pageInfo) {
+PdfPageRun::PdfPageRun(PdfPageInfo* pageInfo) {
     this->pageInfo = pageInfo;
 }
 
@@ -1055,7 +1055,7 @@ class PdfEngineImpl : public BaseEngine {
     }
     WCHAR* ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** coordsOut = nullptr,
                            RenderTarget target = RenderTarget::View) override;
-    WCHAR* ExtractPageTextFromPageInfo(PageInfo* pageInfo, const WCHAR* lineSep, RectI** coordsOut = nullptr,
+    WCHAR* ExtractPageTextFromPageInfo(PdfPageInfo* pageInfo, const WCHAR* lineSep, RectI** coordsOut = nullptr,
                                        RenderTarget target = RenderTarget::View, bool cacheRun = false);
     bool HasClipOptimizations(int pageNo) override;
     PageLayoutType PreferredLayout() override;
@@ -1119,7 +1119,7 @@ class PdfEngineImpl : public BaseEngine {
     fz_locks_context fz_locks_ctx;
     pdf_document* _doc = nullptr;
     fz_stream* _docStream = nullptr;
-    PageInfo* _pages = nullptr;
+    PdfPageInfo* _pages = nullptr;
     fz_outline* outline = nullptr;
     fz_outline* attachments = nullptr;
     pdf_obj* _info = nullptr;       // TODO(port): what is it?
@@ -1136,9 +1136,9 @@ class PdfEngineImpl : public BaseEngine {
     bool FinishLoading();
 
     pdf_page* GetPdfPage(int pageNo, bool failIfBusy = false);
-    PageInfo* GetPageInfo(int pageNo, bool failIfBusy = false);
+    PdfPageInfo* GetPdfPageInfo(int pageNo, bool failIfBusy = false);
     int GetPageNo(pdf_page* page);
-    int GetPageNo(PageInfo* pageInfo);
+    int GetPageNo(PdfPageInfo* pageInfo);
     fz_matrix viewctm(int pageNo, float zoom, int rotation) {
         const fz_rect tmpRc = fz_RectD_to_rect(PageMediabox(pageNo));
         return fz_create_view_ctm(tmpRc, zoom, rotation);
@@ -1146,15 +1146,15 @@ class PdfEngineImpl : public BaseEngine {
     fz_matrix viewctm(pdf_page* page, float zoom, int rotation) {
         return fz_create_view_ctm(pdf_bound_page(ctx, page), zoom, rotation);
     }
-    PdfPageRun* CreatePageRun(PageInfo* pageInfo, fz_display_list* list);
-    PdfPageRun* GetPageRun(PageInfo* pageInfo, bool tryOnly = false);
-    bool RunPage(PageInfo* pageInfo, fz_device* dev, fz_matrix ctm, RenderTarget target = RenderTarget::View,
+    PdfPageRun* CreatePageRun(PdfPageInfo* pageInfo, fz_display_list* list);
+    PdfPageRun* GetPageRun(PdfPageInfo* pageInfo, bool tryOnly = false);
+    bool RunPage(PdfPageInfo* pageInfo, fz_device* dev, fz_matrix ctm, RenderTarget target = RenderTarget::View,
                  fz_rect cliprect = {}, bool cacheRun = true, FitzAbortCookie* cookie = nullptr);
     void DropPageRun(PdfPageRun* run, bool forceRemove = false);
 
     PdfTocItem* BuildTocTree(fz_outline* entry, int& idCounter);
-    void LinkifyPageText(PageInfo* pageInfo);
-    pdf_annot** ProcessPageAnnotations(PageInfo* pageInfo);
+    void LinkifyPageText(PdfPageInfo* pageInfo);
+    pdf_annot** ProcessPageAnnotations(PdfPageInfo* pageInfo);
     RenderedBitmap* GetPageImage(int pageNo, RectD rect, size_t imageIx);
     WCHAR* ExtractFontList();
     bool IsLinearizedFile();
@@ -1304,7 +1304,7 @@ PdfEngineImpl::~PdfEngineImpl() {
     EnterCriticalSection(&ctxAccess);
 
     for (int i = 0; _pages && i < pageCount; i++) {
-        PageInfo* pi = &_pages[i];
+        PdfPageInfo* pi = &_pages[i];
         free(pi->pageAnnots);
         free(pi->imageRects);
         if (pi->stext) {
@@ -1328,8 +1328,8 @@ PdfEngineImpl::~PdfEngineImpl() {
         DropPageRun(runCache.Last(), true);
     }
 
+    //fz_drop_stream(ctx, _docStream);
     pdf_drop_document(ctx, _doc);
-    fz_drop_stream(ctx, _docStream);
     _doc = nullptr;
     fz_drop_context(ctx);
     ctx = nullptr;
@@ -1589,7 +1589,7 @@ bool PdfEngineImpl::FinishLoading() {
     }
     pageCount = nPages;
 
-    _pages = AllocArray<PageInfo>(pageCount);
+    _pages = AllocArray<PdfPageInfo>(pageCount);
     CrashAlwaysIf(!_pages);
 
     ScopedCritSec scope(&ctxAccess);
@@ -1745,7 +1745,7 @@ PageDestination* PdfEngineImpl::GetNamedDest(const WCHAR* name) {
     return pageDest;
 }
 
-PageInfo* PdfEngineImpl::GetPageInfo(int pageNo, bool failIfBusy) {
+PdfPageInfo* PdfEngineImpl::GetPdfPageInfo(int pageNo, bool failIfBusy) {
     GetPdfPage(pageNo, failIfBusy);
     return &_pages[pageNo - 1];
 }
@@ -1755,7 +1755,7 @@ pdf_page* PdfEngineImpl::GetPdfPage(int pageNo, bool failIfBusy) {
 
     CrashIf(pageNo < 1 || pageNo > pageCount);
     int pageIdx = pageNo - 1;
-    PageInfo* pageInfo = &_pages[pageNo - 1];
+    PdfPageInfo* pageInfo = &_pages[pageNo - 1];
     pdf_page* ppage = pageInfo->page;
     // TODO: not sure what failIfBusy is supposed to do
     if (ppage || failIfBusy) {
@@ -1832,11 +1832,11 @@ pdf_page* PdfEngineImpl::GetPdfPage(int pageNo, bool failIfBusy) {
     return ppage;
 }
 
-int PdfEngineImpl::GetPageNo(PageInfo* pageInfo) {
+int PdfEngineImpl::GetPageNo(PdfPageInfo* pageInfo) {
     ScopedCritSec scope(&pagesAccess);
 
     for (int i = 0; i < PageCount(); i++) {
-        PageInfo* pi = &_pages[i];
+        PdfPageInfo* pi = &_pages[i];
         if (pageInfo == pi) {
             return i + 1;
         }
@@ -1848,7 +1848,7 @@ int PdfEngineImpl::GetPageNo(pdf_page* page) {
     ScopedCritSec scope(&pagesAccess);
 
     for (int i = 0; i < PageCount(); i++) {
-        PageInfo* pi = &_pages[i];
+        PdfPageInfo* pi = &_pages[i];
         if (page == pi->page) {
             return i + 1;
         }
@@ -1856,12 +1856,12 @@ int PdfEngineImpl::GetPageNo(pdf_page* page) {
     return 0;
 }
 
-PdfPageRun* PdfEngineImpl::CreatePageRun(PageInfo* pageInfo, fz_display_list* list) {
+PdfPageRun* PdfEngineImpl::CreatePageRun(PdfPageInfo* pageInfo, fz_display_list* list) {
     Vec<FitzImagePos> positions;
 
     // save the image rectangles for this page
     int pageNo = GetPageNo(pageInfo->page);
-    PageInfo* pi = &_pages[pageNo - 1];
+    PdfPageInfo* pi = &_pages[pageNo - 1];
     if (!pi->imageRects && positions.size() > 0) {
         // the list of page image rectangles is terminated with a null-rectangle
         fz_rect* rects = AllocArray<fz_rect>(positions.size() + 1);
@@ -1877,7 +1877,7 @@ PdfPageRun* PdfEngineImpl::CreatePageRun(PageInfo* pageInfo, fz_display_list* li
     return pageRun;
 }
 
-PdfPageRun* PdfEngineImpl::GetPageRun(PageInfo* pageInfo, bool tryOnly) {
+PdfPageRun* PdfEngineImpl::GetPageRun(PdfPageInfo* pageInfo, bool tryOnly) {
     // we failed get display list when loading the page for the first time
     if (!pageInfo->list) {
         return nullptr;
@@ -1928,7 +1928,7 @@ PdfPageRun* PdfEngineImpl::GetPageRun(PageInfo* pageInfo, bool tryOnly) {
     return result;
 }
 
-bool PdfEngineImpl::RunPage(PageInfo* pageInfo, fz_device* dev, fz_matrix ctm, RenderTarget target, fz_rect cliprect,
+bool PdfEngineImpl::RunPage(PdfPageInfo* pageInfo, fz_device* dev, fz_matrix ctm, RenderTarget target, fz_rect cliprect,
                             bool cacheRun, FitzAbortCookie* cookie) {
     bool ok = true;
 
@@ -1995,7 +1995,7 @@ void PdfEngineImpl::DropPageRun(PdfPageRun* run, bool forceRemove) {
 }
 
 RectD PdfEngineImpl::PageMediabox(int pageNo) {
-    PageInfo* pi = GetPageInfo(pageNo);
+    PdfPageInfo* pi = GetPdfPageInfo(pageNo);
 
     ScopedCritSec scope2(&pagesAccess);
     if (!pi->mediabox.IsEmpty()) {
@@ -2027,7 +2027,7 @@ RectD PdfEngineImpl::PageMediabox(int pageNo) {
 }
 
 RectD PdfEngineImpl::PageContentBox(int pageNo, RenderTarget target) {
-    PageInfo* pi = GetPageInfo(pageNo);
+    PdfPageInfo* pi = GetPdfPageInfo(pageNo);
 
     ScopedCritSec scope(&ctxAccess);
 
@@ -2067,7 +2067,7 @@ RectD PdfEngineImpl::Transform(RectD rect, int pageNo, float zoom, int rotation,
 
 RenderedBitmap* PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation, RectD* pageRect, RenderTarget target,
                                             AbortCookie** cookie_out) {
-    PageInfo* pageInfo = GetPageInfo(pageNo);
+    PdfPageInfo* pageInfo = GetPdfPageInfo(pageNo);
     pdf_page* page = pageInfo->page;
 
     if (!page) {
@@ -2148,7 +2148,7 @@ PageElement* PdfEngineImpl::GetElementAtPos(int pageNo, PointD pt) {
         link = link->next;
     }
 
-    PageInfo* pi = &_pages[pageNo - 1];
+    PdfPageInfo* pi = &_pages[pageNo - 1];
     fz_rect* ir = pi->imageRects;
     for (size_t i = 0; ir && !fz_is_empty_rect(ir[i]); i++) {
         if (fz_is_pt_in_rect(pi->imageRects[i], p)) {
@@ -2183,7 +2183,7 @@ Vec<PageElement*>* PdfEngineImpl::GetElements(int pageNo) {
     pdf_page* page = GetPdfPage(pageNo, true);
     if (!page)
         return nullptr;
-    PageInfo* pi = &_pages[pageNo - 1];
+    PdfPageInfo* pi = &_pages[pageNo - 1];
 
     // since all elements lists are in last-to-first order, append
     // item types in inverse order and reverse the whole list at the end
@@ -2224,7 +2224,7 @@ Vec<PageElement*>* PdfEngineImpl::GetElements(int pageNo) {
     return els;
 }
 
-void PdfEngineImpl::LinkifyPageText(PageInfo* pageInfo) {
+void PdfEngineImpl::LinkifyPageText(PdfPageInfo* pageInfo) {
     RectI* coords;
     AutoFreeW pageText(ExtractPageTextFromPageInfo(pageInfo, L"\n", &coords, RenderTarget::View, true));
     if (!pageText)
@@ -2257,7 +2257,7 @@ void PdfEngineImpl::LinkifyPageText(PageInfo* pageInfo) {
     free(coords);
 }
 
-pdf_annot** PdfEngineImpl::ProcessPageAnnotations(PageInfo* pageInfo) {
+pdf_annot** PdfEngineImpl::ProcessPageAnnotations(PdfPageInfo* pageInfo) {
     Vec<pdf_annot*> annots;
 
     // TODO(annots)
@@ -2306,7 +2306,7 @@ pdf_annot** PdfEngineImpl::ProcessPageAnnotations(PageInfo* pageInfo) {
 }
 
 RenderedBitmap* PdfEngineImpl::GetPageImage(int pageNo, RectD rect, size_t imageIdx) {
-    PageInfo* pageInfo = GetPageInfo(pageNo);
+    PdfPageInfo* pageInfo = GetPdfPageInfo(pageNo);
     if (!pageInfo->page) {
         return nullptr;
     }
@@ -2337,14 +2337,14 @@ RenderedBitmap* PdfEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
 }
 
 WCHAR* PdfEngineImpl::ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** coordsOut, RenderTarget target) {
-    PageInfo* pageInfo = GetPageInfo(pageNo);
+    PdfPageInfo* pageInfo = GetPdfPageInfo(pageNo);
     if (!pageInfo->page) {
         return nullptr;
     }
     return ExtractPageTextFromPageInfo(pageInfo, lineSep, coordsOut, target, false);
 }
 
-WCHAR* PdfEngineImpl::ExtractPageTextFromPageInfo(PageInfo* pageInfo, const WCHAR* lineSep, RectI** coordsOut,
+WCHAR* PdfEngineImpl::ExtractPageTextFromPageInfo(PdfPageInfo* pageInfo, const WCHAR* lineSep, RectI** coordsOut,
                                                   RenderTarget target, bool cacheRun) {
     WCHAR* content = nullptr;
     if (false) {
@@ -2603,7 +2603,7 @@ bool PdfEngineImpl::SupportsAnnotation(bool forSaving) const {
     if (forSaving) {
         // TODO: support updating of documents where pages aren't all numbered objects?
         for (int i = 0; i < PageCount(); i++) {
-            PageInfo* pi = &_pages[i];
+            PdfPageInfo* pi = &_pages[i];
             pdf_page* page = pi->page;
             if (pdf_to_num(ctx, page->obj) == 0)
                 return false;
@@ -2896,12 +2896,12 @@ bool PdfEngineImpl::SaveEmbedded(LinkSaverUI& saveUI, int num) {
 }
 
 bool PdfEngineImpl::HasClipOptimizations(int pageNo) {
-    PageInfo* pi = GetPageInfo(pageNo, true);
+    PdfPageInfo* pi = GetPdfPageInfo(pageNo, true);
     if (!pi) {
         return false;
     }
 
-    // GetPageInfo extracts imageRects for us
+    // GetPdfPageInfo extracts imageRects for us
     if (!pi->imageRects) {
         return true;
     }
