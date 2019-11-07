@@ -1747,6 +1747,7 @@ PdfPageInfo* PdfEngineImpl::GetPdfPageInfo(int pageNo, bool failIfBusy) {
     return &_pages[pageNo - 1];
 }
 
+
 pdf_page* PdfEngineImpl::GetPdfPage(int pageNo, bool failIfBusy) {
     ScopedCritSec scope(&pagesAccess);
 
@@ -1992,9 +1993,12 @@ void PdfEngineImpl::DropPageRun(PdfPageRun* run, bool forceRemove) {
 }
 
 RectD PdfEngineImpl::PageMediabox(int pageNo) {
-    PdfPageInfo* pi = GetPdfPageInfo(pageNo);
 
+    // TODO: those are accessed at startup for every page
+    // so create this once in FinishLoading()
     ScopedCritSec scope2(&pagesAccess);
+    PdfPageInfo* pi = &_pages[pageNo - 1];
+
     if (!pi->mediabox.IsEmpty()) {
         return pi->mediabox;
     }
