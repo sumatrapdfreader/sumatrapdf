@@ -159,13 +159,6 @@ func isNum(s string) bool {
 	return err == nil
 }
 
-func isGitClean() bool {
-	out, err := runExe("git", "status", "--porcelain")
-	fatalIfErr(err)
-	s := strings.TrimSpace(string(out))
-	return len(s) == 0
-}
-
 func removeDirMust(dir string) {
 	err := os.RemoveAll(dir)
 	fatalIfErr(err)
