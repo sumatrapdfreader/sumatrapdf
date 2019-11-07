@@ -146,13 +146,6 @@ func getGitLinearVersionMust() int {
 	return n
 }
 
-func verifyGitCleanMust() {
-	if flgNoCleanCheck {
-		return
-	}
-	fatalIf(!isGitClean(), "git has unsaved changes\n")
-}
-
 func verifyStartedInRightDirectoryMust() {
 	path := buildConfigPath()
 	fatalIf(!fileExists(path), "started in wrong directory (%s doesn't exist)\n", path)
