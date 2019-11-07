@@ -1933,6 +1933,7 @@ bool PdfEngineImpl::RunPage(PdfPageInfo* pageInfo, fz_device* dev, fz_matrix ctm
     fz_cookie* fzcookie = cookie ? &cookie->cookie : nullptr;
 
     pdf_page* page = pageInfo->page;
+    int pageNo = GetPageNo(page); // TODO: make page number a part of PdfPageInfo
     if (RenderTarget::View == target) {
         PdfPageRun* run = GetPageRun(pageInfo, !cacheRun);
         CrashIf(!run);
@@ -1940,7 +1941,7 @@ bool PdfEngineImpl::RunPage(PdfPageInfo* pageInfo, fz_device* dev, fz_matrix ctm
             return false;
         }
         EnterCriticalSection(&ctxAccess);
-        Vec<PageAnnotation> pageAnnots = fz_get_user_page_annots(userAnnots, GetPageNo(page));
+        Vec<PageAnnotation> pageAnnots = fz_get_user_page_annots(userAnnots, pageNo);
         fz_try(ctx) {
             // fz_run_page_transparency(ctx, pageAnnots, dev, cliprect, false, page->transparency);
             fz_run_display_list(ctx, run->pageInfo->list, dev, ctm, cliprect, fzcookie);
@@ -1955,7 +1956,7 @@ bool PdfEngineImpl::RunPage(PdfPageInfo* pageInfo, fz_device* dev, fz_matrix ctm
     } else {
         ScopedCritSec scope(&ctxAccess);
         char* targetName = target == RenderTarget::Print ? "Print" : target == RenderTarget::Export ? "Export" : "View";
-        Vec<PageAnnotation> pageAnnots = fz_get_user_page_annots(userAnnots, GetPageNo(page));
+        Vec<PageAnnotation> pageAnnots = fz_get_user_page_annots(userAnnots, pageNo);
         fz_try(ctx) {
             // TODO(port): not sure if this is the right port
             fz_buffer* buf = fz_new_buffer(ctx, 1024);
