@@ -51,14 +51,12 @@ class TabInfo {
 };
 
 class LinkSaver : public LinkSaverUI {
-    TabInfo* tab;
-    HWND parentHwnd;
-    const WCHAR* fileName;
+    TabInfo* tab = nullptr;
+    HWND parentHwnd = 0;
+    const WCHAR* fileName = nullptr;
 
   public:
-    LinkSaver(TabInfo* tab, HWND parentHwnd, const WCHAR* fileName)
-        : tab(tab), parentHwnd(parentHwnd), fileName(fileName) {
-    }
+    LinkSaver(TabInfo* tab, HWND parentHwnd, const WCHAR* fileName);
 
     virtual bool SaveEmbedded(const unsigned char* data, size_t cbCount);
 };

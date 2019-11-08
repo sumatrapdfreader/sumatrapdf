@@ -50,12 +50,20 @@ const WCHAR* TabInfo::GetTabTitle() const {
     return path::GetBaseName(filePath);
 }
 
+LinkSaver::LinkSaver(TabInfo* tab, HWND parentHwnd, const WCHAR* fileName) {
+    this->tab = tab;
+    this->parentHwnd = parentHwnd;
+    this->fileName = fileName;
+}
+
 bool LinkSaver::SaveEmbedded(const unsigned char* data, size_t len) {
     if (!HasPermission(Perm_DiskAccess))
         return false;
 
-    WCHAR dstFileName[MAX_PATH];
-    str::BufSet(dstFileName, dimof(dstFileName), fileName ? fileName : L"");
+    WCHAR dstFileName[MAX_PATH] = {0};
+    if (fileName) {
+        str::BufSet(dstFileName, dimof(dstFileName), fileName);
+    }
     CrashIf(fileName && str::FindChar(fileName, '/'));
 
     // Prepare the file filters (use \1 instead of \0 so that the
@@ -83,3 +91,4 @@ bool LinkSaver::SaveEmbedded(const unsigned char* data, size_t len) {
     }
     return ok;
 }
+

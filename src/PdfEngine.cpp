@@ -844,7 +844,7 @@ pdf_obj* pdf_copy_str_dict(fz_context* ctx, pdf_document* doc, pdf_obj* dict) {
 }
 
 // Note: make sure to only call with ctxAccess
-fz_outline* pdf_loadattachments(fz_context* ctx, pdf_document* doc) {
+static fz_outline* pdf_load_attachments(fz_context* ctx, pdf_document* doc) {
     pdf_obj* dict = pdf_load_name_tree(ctx, doc, PDF_NAME(EmbeddedFiles));
     if (!dict)
         return nullptr;
@@ -860,6 +860,13 @@ fz_outline* pdf_loadattachments(fz_context* ctx, pdf_document* doc) {
 
         // TODO: in fz_try ?
         char* uri = pdf_parse_file_spec(ctx, doc, dest, nullptr);
+        // undo the mangling done in pdf_parse_file_spec
+        if (str::StartsWith(uri, "file://")) {
+            char* prev = uri;
+            uri = fz_strdup(ctx, uri + 7);
+            fz_free(ctx, prev);
+        }
+
         char* title = fz_strdup(ctx, pdf_to_name(ctx, name));
         int streamNo = pdf_to_num(ctx, embedded);
         fz_outline* link = fz_new_outline(ctx);
@@ -1110,6 +1117,7 @@ class PdfEngineImpl : public BaseEngine {
     CRITICAL_SECTION pagesAccess;
 
     RenderedBitmap* GetPageImage(int pageNo, RectD rect, size_t imageIx);
+    bool SaveEmbedded(LinkSaverUI& saveUI, int num);
 
   protected:
     char* _decryptionKey = nullptr;
@@ -1151,13 +1159,12 @@ class PdfEngineImpl : public BaseEngine {
                  fz_rect cliprect = {}, bool cacheRun = true, FitzAbortCookie* cookie = nullptr);
     void DropPageRun(PdfPageRun* run, bool forceRemove = false);
 
-    PdfTocItem* BuildTocTree(fz_outline* entry, int& idCounter);
+    PdfTocItem* BuildTocTree(fz_outline* entry, int& idCounter, bool isAttachment);
     void LinkifyPageText(PdfPageInfo* pageInfo);
     pdf_annot** ProcessPageAnnotations(PdfPageInfo* pageInfo);
     WCHAR* ExtractFontList();
     bool IsLinearizedFile();
 
-    bool SaveEmbedded(LinkSaverUI& saveUI, int num);
     bool SaveUserAnnots(const char* fileName);
 };
 
@@ -1625,7 +1632,7 @@ bool PdfEngineImpl::FinishLoading() {
     }
 
     fz_try(ctx) {
-        attachments = pdf_loadattachments(ctx, _doc);
+        attachments = pdf_load_attachments(ctx, _doc);
     }
     fz_catch(ctx) {
         fz_warn(ctx, "Couldn't load attachments");
@@ -1683,8 +1690,7 @@ bool PdfEngineImpl::FinishLoading() {
     return true;
 }
 
-
-PdfTocItem* PdfEngineImpl::BuildTocTree(fz_outline* outline, int& idCounter) {
+PdfTocItem* PdfEngineImpl::BuildTocTree(fz_outline* outline, int& idCounter, bool isAttachment) {
     PdfTocItem* node = nullptr;
 
     while (outline) {
@@ -1697,12 +1703,14 @@ PdfTocItem* PdfEngineImpl::BuildTocTree(fz_outline* outline, int& idCounter) {
             name = str::Dup(L"");
         }
         int pageNo = outline->page + 1;
-        PdfTocItem* item = new PdfTocItem(name, PdfLink(this, pageNo, nullptr, outline));
+        PdfLink link(this, pageNo, nullptr, outline);
+        link.isAttachment = isAttachment;
+        PdfTocItem* item = new PdfTocItem(name, link);
         item->open = outline->is_open;
         item->id = ++idCounter;
 
         if (outline->down) {
-            item->child = BuildTocTree(outline->down, idCounter);
+            item->child = BuildTocTree(outline->down, idCounter, isAttachment);
         }
 
         if (!node)
@@ -1717,19 +1725,17 @@ PdfTocItem* PdfEngineImpl::BuildTocTree(fz_outline* outline, int& idCounter) {
 }
 
 DocTocItem* PdfEngineImpl::GetTocTree() {
-    PdfTocItem* node = nullptr;
     int idCounter = 0;
 
+    PdfTocItem* node = nullptr;
     if (outline) {
-        node = BuildTocTree(outline, idCounter);
-        if (attachments) {
-            PdfTocItem* sibling = BuildTocTree(attachments, idCounter);
-            node->AddSibling(sibling);
-        }
-    } else if (attachments) {
-        node = BuildTocTree(attachments, idCounter);
+        node = BuildTocTree(outline, idCounter, false);
     }
-
+    if (!attachments) {
+        return node;
+    }
+    PdfTocItem* att = BuildTocTree(attachments, idCounter, true);
+    node->AddSibling(att);
     return node;
 }
 
@@ -1777,7 +1783,6 @@ PdfPageInfo* PdfEngineImpl::GetPdfPageInfo(int pageNo, bool failIfBusy) {
     GetPdfPage(pageNo, failIfBusy);
     return &_pages[pageNo - 1];
 }
-
 
 pdf_page* PdfEngineImpl::GetPdfPage(int pageNo, bool failIfBusy) {
     ScopedCritSec scope(&pagesAccess);
@@ -2001,7 +2006,6 @@ void PdfEngineImpl::DropPageRun(PdfPageRun* run, bool forceRemove) {
 }
 
 RectD PdfEngineImpl::PageMediabox(int pageNo) {
-
     PdfPageInfo* pi = &_pages[pageNo - 1];
     return pi->mediabox;
 }
@@ -2979,6 +2983,11 @@ static char* PdfLinkGetURI(const PdfLink* link) {
 }
 
 WCHAR* PdfLink::GetValue() const {
+    if (outline && isAttachment) {
+        WCHAR* path = str::conv::FromUtf8(outline->uri);
+        return path;
+    }
+
     char* uri = PdfLinkGetURI(this);
     if (!is_external_link(uri)) {
         // other values: #1,115,208
@@ -3085,6 +3094,10 @@ static PageDestType DestTypeFromName(const char* name) {
 #endif
 
 PageDestType PdfLink::GetDestType() const {
+    if (outline && isAttachment) {
+        return PageDestType::LaunchEmbedded;
+    }
+
     char* uri = PdfLinkGetURI(this);
     CrashIf(!uri);
     if (!uri) {
@@ -3239,12 +3252,11 @@ WCHAR* PdfLink::GetDestName() const {
 }
 
 bool PdfLink::SaveEmbedded(LinkSaverUI& saveUI) {
-    CrashMePort();
-#if 0
+    CrashIf(!outline || !isAttachment);
+
     ScopedCritSec scope(&engine->ctxAccess);
-    return engine->SaveEmbedded(saveUI, link->ld.launch.embedded_num, link->ld.launch.embedded_gen);
-#endif
-    return true;
+    // TODO: hack, we stored stream number in outline->page
+    return engine->SaveEmbedded(saveUI, outline->page);
 }
 
 BaseEngine* PdfEngineImpl::CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {
