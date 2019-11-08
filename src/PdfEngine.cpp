@@ -1026,9 +1026,6 @@ class PdfLink;
 class PdfImage;
 
 class PdfEngineImpl : public BaseEngine {
-    friend PdfLink;
-    friend PdfImage;
-
   public:
     PdfEngineImpl();
     virtual ~PdfEngineImpl();
@@ -1108,6 +1105,8 @@ class PdfEngineImpl : public BaseEngine {
     CRITICAL_SECTION ctxAccess;
     CRITICAL_SECTION pagesAccess;
 
+    RenderedBitmap* GetPageImage(int pageNo, RectD rect, size_t imageIx);
+
   protected:
     char* _decryptionKey = nullptr;
     bool isProtected = false;
@@ -1151,7 +1150,6 @@ class PdfEngineImpl : public BaseEngine {
     PdfTocItem* BuildTocTree(fz_outline* entry, int& idCounter);
     void LinkifyPageText(PdfPageInfo* pageInfo);
     pdf_annot** ProcessPageAnnotations(PdfPageInfo* pageInfo);
-    RenderedBitmap* GetPageImage(int pageNo, RectD rect, size_t imageIx);
     WCHAR* ExtractFontList();
     bool IsLinearizedFile();
 
@@ -1195,10 +1193,10 @@ class PdfLink : public PageElement, public PageDestination {
 };
 
 class PdfComment : public PageElement {
+  public:
     PageAnnotation annot;
     AutoFreeW content;
 
-  public:
     PdfComment(const WCHAR* content, RectD rect, int pageNo)
         : annot(PageAnnotType::None, pageNo, rect, PageAnnotation::Color()), content(str::Dup(content)) {
     }
@@ -1230,12 +1228,12 @@ class PdfTocItem : public DocTocItem {
 };
 
 class PdfImage : public PageElement {
+  public:
     PdfEngineImpl* engine;
     int pageNo;
     RectD rect;
     size_t imageIdx;
 
-  public:
     PdfImage(PdfEngineImpl* engine, int pageNo, fz_rect rect, size_t imageIdx)
         : engine(engine), pageNo(pageNo), rect(fz_rect_to_RectD(rect)), imageIdx(imageIdx) {
     }
