@@ -861,10 +861,13 @@ fz_outline* pdf_loadattachments(fz_context* ctx, pdf_document* doc) {
         // TODO: in fz_try ?
         char* uri = pdf_parse_file_spec(ctx, doc, dest, nullptr);
         char* title = fz_strdup(ctx, pdf_to_name(ctx, name));
+        int streamNo = pdf_to_num(ctx, embedded);
         fz_outline* link = fz_new_outline(ctx);
 
         link->uri = uri;
         link->title = title;
+        // TODO: a hack: re-using page as stream number
+        link->page = streamNo;
 
         node = node->next = link;
     }
@@ -874,9 +877,10 @@ fz_outline* pdf_loadattachments(fz_context* ctx, pdf_document* doc) {
 }
 
 struct PageLabelInfo {
-    int startAt, countFrom;
-    const char* type;
-    pdf_obj* prefix;
+    int startAt = 0;
+    int countFrom = 0;
+    const char* type = nullptr;
+    pdf_obj* prefix = nullptr;
 };
 
 int CmpPageLabelInfo(const void* a, const void* b) {
@@ -1163,7 +1167,8 @@ class PdfLink : public PageElement, public PageDestination {
     // must be one or the other
     fz_link* link = nullptr;
     fz_outline* outline = nullptr;
-    int pageNo;
+    int pageNo = 0;
+    bool isAttachment = false;
 
     PdfLink(PdfEngineImpl* engine, int pageNo, fz_link* link, fz_outline* outline);
 
@@ -1216,9 +1221,9 @@ class PdfComment : public PageElement {
 };
 
 class PdfTocItem : public DocTocItem {
+  public:
     PdfLink link;
 
-  public:
     PdfTocItem(WCHAR* title, PdfLink link) : DocTocItem(title), link(link) {
     }
 
@@ -1691,13 +1696,14 @@ PdfTocItem* PdfEngineImpl::BuildTocTree(fz_outline* outline, int& idCounter) {
         if (!name) {
             name = str::Dup(L"");
         }
-        int pageNo = outline->page = 1;
+        int pageNo = outline->page + 1;
         PdfTocItem* item = new PdfTocItem(name, PdfLink(this, pageNo, nullptr, outline));
         item->open = outline->is_open;
         item->id = ++idCounter;
 
-        if (outline->down)
+        if (outline->down) {
             item->child = BuildTocTree(outline->down, idCounter);
+        }
 
         if (!node)
             node = item;
@@ -1716,10 +1722,13 @@ DocTocItem* PdfEngineImpl::GetTocTree() {
 
     if (outline) {
         node = BuildTocTree(outline, idCounter);
-        if (attachments)
-            node->AddSibling(BuildTocTree(attachments, idCounter));
-    } else if (attachments)
+        if (attachments) {
+            PdfTocItem* sibling = BuildTocTree(attachments, idCounter);
+            node->AddSibling(sibling);
+        }
+    } else if (attachments) {
         node = BuildTocTree(attachments, idCounter);
+    }
 
     return node;
 }
