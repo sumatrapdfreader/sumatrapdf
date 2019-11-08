@@ -999,6 +999,7 @@ struct PageTreeStackItem {
 ///// Above are extensions to Fitz and MuPDF, now follows PdfEngine /////
 
 struct PdfPageInfo {
+    int pageNo = 0; // 1-based
     pdf_page* page = nullptr;
     fz_display_list* list = nullptr;
     fz_stext_page* stext = nullptr;
@@ -1134,8 +1135,6 @@ class PdfEngineImpl : public BaseEngine {
 
     pdf_page* GetPdfPage(int pageNo, bool failIfBusy = false);
     PdfPageInfo* GetPdfPageInfo(int pageNo, bool failIfBusy = false);
-    int GetPageNo(pdf_page* page);
-    int GetPageNo(PdfPageInfo* pageInfo);
     fz_matrix viewctm(int pageNo, float zoom, int rotation) {
         const fz_rect tmpRc = fz_RectD_to_rect(PageMediabox(pageNo));
         return fz_create_view_ctm(tmpRc, zoom, rotation);
@@ -1576,8 +1575,6 @@ bool PdfEngineImpl::FinishLoading() {
         pageCount = pdf_count_pages(ctx, _doc);
     }
     fz_catch(ctx) {
-        // TODO: figure out if it can really throw
-        CrashMe();
         return false;
     }
     if (pageCount == 0) {
@@ -1589,6 +1586,30 @@ bool PdfEngineImpl::FinishLoading() {
 
     ScopedCritSec scope(&ctxAccess);
 
+    // TODO: time how long this takes
+    for (int i = 0; i < pageCount; i++) {
+        fz_rect mbox;
+        fz_matrix page_ctm;
+
+        fz_try(ctx) {
+            pdf_obj* pageref = pdf_lookup_page_obj(ctx, _doc, i);
+            pdf_page_obj_transform(ctx, pageref, &mbox, &page_ctm);
+            mbox = fz_transform_rect(mbox, page_ctm);
+        }
+        fz_catch(ctx) {
+        }
+        if (fz_is_empty_rect(mbox)) {
+            fz_warn(ctx, "cannot find page size for page %d", i);
+            mbox.x0 = 0;
+            mbox.y0 = 0;
+            mbox.x1 = 612;
+            mbox.y1 = 792;
+        }
+
+        _pages[i].mediabox = fz_rect_to_RectD(mbox);
+        _pages[i].pageNo = i + 1;
+    }
+
     fz_try(ctx) {
         outline = pdf_load_outline(ctx, _doc);
     }
@@ -1599,12 +1620,14 @@ bool PdfEngineImpl::FinishLoading() {
         // otherwise get displayed
         fz_warn(ctx, "Couldn't load outline");
     }
+
     fz_try(ctx) {
         attachments = pdf_loadattachments(ctx, _doc);
     }
     fz_catch(ctx) {
         fz_warn(ctx, "Couldn't load attachments");
     }
+
     fz_try(ctx) {
         // keep a copy of the Info dictionary, as accessing the original
         // isn't thread safe and we don't want to block for this when
@@ -1641,6 +1664,7 @@ bool PdfEngineImpl::FinishLoading() {
         pdf_drop_obj(ctx, _info);
         _info = nullptr;
     }
+
     fz_try(ctx) {
         pdf_obj* pagelabels = pdf_dict_getp(ctx, pdf_trailer(ctx, _doc), "Root/PageLabels");
         if (pagelabels)
@@ -1648,28 +1672,6 @@ bool PdfEngineImpl::FinishLoading() {
     }
     fz_catch(ctx) {
         fz_warn(ctx, "Couldn't load page labels");
-    }
-
-
-    // TODO: time how long this takes
-    for (int i = 0; i < pageCount; i++) {
-        fz_rect mbox;
-        fz_matrix page_ctm;
-        fz_try(ctx) {
-            pdf_obj* pageref = pdf_lookup_page_obj(ctx, _doc, i);
-            pdf_page_obj_transform(ctx, pageref, &mbox, &page_ctm);
-            mbox = fz_transform_rect(mbox, page_ctm);
-        }
-        fz_catch(ctx) {
-        }
-        if (fz_is_empty_rect(mbox)) {
-            fz_warn(ctx, "cannot find page size for page %d", i);
-            mbox.x0 = 0;
-            mbox.y0 = 0;
-            mbox.x1 = 612;
-            mbox.y1 = 792;
-        }
-        _pages[i].mediabox = fz_rect_to_RectD(mbox);
     }
 
     // TODO: support javascript
@@ -1852,35 +1854,11 @@ pdf_page* PdfEngineImpl::GetPdfPage(int pageNo, bool failIfBusy) {
     return ppage;
 }
 
-int PdfEngineImpl::GetPageNo(PdfPageInfo* pageInfo) {
-    ScopedCritSec scope(&pagesAccess);
-
-    for (int i = 0; i < PageCount(); i++) {
-        PdfPageInfo* pi = &_pages[i];
-        if (pageInfo == pi) {
-            return i + 1;
-        }
-    }
-    return 0;
-}
-
-int PdfEngineImpl::GetPageNo(pdf_page* page) {
-    ScopedCritSec scope(&pagesAccess);
-
-    for (int i = 0; i < PageCount(); i++) {
-        PdfPageInfo* pi = &_pages[i];
-        if (page == pi->page) {
-            return i + 1;
-        }
-    }
-    return 0;
-}
-
 PdfPageRun* PdfEngineImpl::CreatePageRun(PdfPageInfo* pageInfo, fz_display_list* list) {
     Vec<FitzImagePos> positions;
 
     // save the image rectangles for this page
-    int pageNo = GetPageNo(pageInfo->page);
+    int pageNo = pageInfo->pageNo;
     PdfPageInfo* pi = &_pages[pageNo - 1];
     if (!pi->imageRects && positions.size() > 0) {
         // the list of page image rectangles is terminated with a null-rectangle
@@ -1955,7 +1933,7 @@ bool PdfEngineImpl::RunPage(PdfPageInfo* pageInfo, fz_device* dev, fz_matrix ctm
     fz_cookie* fzcookie = cookie ? &cookie->cookie : nullptr;
 
     pdf_page* page = pageInfo->page;
-    int pageNo = GetPageNo(page); // TODO: make page number a part of PdfPageInfo
+    int pageNo = pageInfo->pageNo;
     if (RenderTarget::View == target) {
         PdfPageRun* run = GetPageRun(pageInfo, !cacheRun);
         CrashIf(!run);
