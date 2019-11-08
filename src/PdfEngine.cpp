@@ -2076,6 +2076,12 @@ RenderedBitmap* PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
         return nullptr;
     }
 
+    // TODO: use explicitly different paths for different targets
+    CrashIf(target != RenderTarget::View);
+    if (target != RenderTarget::View) {
+        return nullptr;
+    }
+
     FitzAbortCookie* cookie = nullptr;
     if (cookie_out) {
         cookie = new FitzAbortCookie();
@@ -2094,44 +2100,34 @@ RenderedBitmap* PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
     }
     fz_matrix ctm = viewctm(page, zoom, rotation);
     fz_irect bbox = fz_round_rect(fz_transform_rect(pRect, ctm));
-    fz_pixmap* image = nullptr;
 
     fz_colorspace* colorspace = fz_device_rgb(ctx);
     fz_irect ibounds = bbox;
-    fz_device* idev = NULL;
-    fz_var(image);
-    fz_var(idev);
+    fz_rect cliprect = fz_rect_from_irect(bbox);
 
+    fz_pixmap* pix = fz_new_pixmap_with_bbox(ctx, colorspace, ibounds, nullptr, 1);
+    // initialize white background
+    fz_clear_pixmap_with_value(ctx, pix, 0xff);
+
+    fz_device* dev = NULL;
+    fz_var(dev);
     fz_try(ctx) {
-        image = fz_new_pixmap_with_bbox(ctx, colorspace, ibounds, nullptr, 1);
-        // initialize white background
-        fz_clear_pixmap_with_value(ctx, image, 0xff);
-        idev = fz_new_draw_device(ctx, fz_identity, image);
+        dev = fz_new_draw_device(ctx, fz_identity, pix);
+        // TODO: use fz_infinite_rect instead of cliprect?
+        fz_run_display_list(ctx, pageInfo->list, dev, ctm, cliprect, &cookie->cookie);
+        fz_close_device(ctx, dev);
     }
     fz_always(ctx) {
+        fz_drop_device(ctx, dev);
         LeaveCriticalSection(&ctxAccess);
     }
     fz_catch(ctx) {
-        fz_drop_pixmap(ctx, image);
-        fz_drop_device(ctx, idev);
+        fz_drop_pixmap(ctx, pix);
         return nullptr;
     }
 
-    fz_rect cliprect = fz_rect_from_irect(bbox);
-    bool ok = RunPage(pageInfo, idev, ctm, target, cliprect, true, cookie);
-
-    ScopedCritSec scope(&ctxAccess);
-    // TODO: inside fz_try?
-    fz_close_device(ctx, idev);
-
-    if (!ok) {
-        fz_drop_pixmap(ctx, image);
-        return nullptr;
-    }
-
-    RenderedBitmap* bitmap = nullptr;
-    bitmap = new_rendered_fz_pixmap(ctx, image);
-    fz_drop_pixmap(ctx, image);
+    RenderedBitmap* bitmap = new_rendered_fz_pixmap(ctx, pix);
+    fz_drop_pixmap(ctx, pix);
     return bitmap;
 }
 
