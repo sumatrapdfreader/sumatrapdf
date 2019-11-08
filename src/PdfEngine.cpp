@@ -1570,22 +1570,20 @@ bool PdfEngineImpl::LoadFromStream(fz_stream* stm, PasswordUI* pwdUI) {
 }
 
 bool PdfEngineImpl::FinishLoading() {
-    int nPages = -1;
+    pageCount = 0;
     fz_try(ctx) {
         // this call might throw the first time
-        nPages = pdf_count_pages(ctx, _doc);
+        pageCount = pdf_count_pages(ctx, _doc);
     }
     fz_catch(ctx) {
         // TODO: figure out if it can really throw
         CrashMe();
         return false;
     }
-    if (nPages == 0) {
+    if (pageCount == 0) {
         fz_warn(ctx, "document has no pages");
         return false;
     }
-    pageCount = nPages;
-
     _pages = AllocArray<PdfPageInfo>(pageCount);
     CrashAlwaysIf(!_pages);
 
@@ -1652,10 +1650,34 @@ bool PdfEngineImpl::FinishLoading() {
         fz_warn(ctx, "Couldn't load page labels");
     }
 
+
+    // TODO: time how long this takes
+    for (int i = 0; i < pageCount; i++) {
+        fz_rect mbox;
+        fz_matrix page_ctm;
+        fz_try(ctx) {
+            pdf_obj* pageref = pdf_lookup_page_obj(ctx, _doc, i);
+            pdf_page_obj_transform(ctx, pageref, &mbox, &page_ctm);
+            mbox = fz_transform_rect(mbox, page_ctm);
+        }
+        fz_catch(ctx) {
+        }
+        if (fz_is_empty_rect(mbox)) {
+            fz_warn(ctx, "cannot find page size for page %d", i);
+            mbox.x0 = 0;
+            mbox.y0 = 0;
+            mbox.x1 = 612;
+            mbox.y1 = 792;
+        }
+        _pages[i].mediabox = fz_rect_to_RectD(mbox);
+    }
+
+    // TODO: support javascript
     AssertCrash(!pdf_js_supported(ctx, _doc));
 
     return true;
 }
+
 
 PdfTocItem* PdfEngineImpl::BuildTocTree(fz_outline* outline, int& idCounter) {
     PdfTocItem* node = nullptr;
@@ -1995,37 +2017,8 @@ void PdfEngineImpl::DropPageRun(PdfPageRun* run, bool forceRemove) {
 
 RectD PdfEngineImpl::PageMediabox(int pageNo) {
 
-    // TODO: those are accessed at startup for every page
-    // so create this once in FinishLoading()
-    ScopedCritSec scope2(&pagesAccess);
     PdfPageInfo* pi = &_pages[pageNo - 1];
-
-    if (!pi->mediabox.IsEmpty()) {
-        return pi->mediabox;
-    }
-
-    ScopedCritSec scope(&ctxAccess);
-
-    fz_rect mbox;
-    fz_matrix page_ctm;
-    fz_try(ctx) {
-        pdf_obj* pageref = pdf_lookup_page_obj(ctx, _doc, pageNo);
-        pdf_page_obj_transform(ctx, pageref, &mbox, &page_ctm);
-        mbox = fz_transform_rect(mbox, page_ctm);
-    }
-    fz_catch(ctx) {
-    }
-    if (fz_is_empty_rect(mbox)) {
-        fz_warn(ctx, "cannot find page size for page %d", pageNo);
-        mbox.x0 = 0;
-        mbox.y0 = 0;
-        mbox.x1 = 612;
-        mbox.y1 = 792;
-    }
-
-    auto res = RectD(0, 0, (mbox.x1 - mbox.x0), (mbox.y1 - mbox.y0));
-    pi->mediabox = res;
-    return res;
+    return pi->mediabox;
 }
 
 RectD PdfEngineImpl::PageContentBox(int pageNo, RenderTarget target) {
