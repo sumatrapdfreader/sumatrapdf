@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
+	"strings"
 
 	"github.com/kjk/u"
 )
@@ -56,15 +57,18 @@ func lastDownloadFilePath() string {
 	return filepath.Join("strings", "translations.txt")
 }
 
+func dummySha1() string {
+	s := ""
+	for i := 0; i < 10; i++ {
+		s += "0000"
+	}
+	return s
+}
+
 func lastDownloadHash() string {
 	path := lastDownloadFilePath()
 	if !u.FileExists(path) {
-		// return dummy sha1
-		s := ""
-		for i := 0; i < 10; i++ {
-			s += "00000"
-		}
-		return s
+		return dummySha1()
 	}
 	d := u.ReadFileMust(path)
 	lines := toTrimmedLines(d)
@@ -73,9 +77,9 @@ func lastDownloadHash() string {
 	return sha1
 }
 
-func saveLastDownload(s []byte) {
+func saveLastDownload(d []byte) {
 	path := lastDownloadFilePath()
-	u.WriteFileMust(path, s)
+	u.WriteFileMust(path, d)
 }
 
 func downloadTranslations() []byte {
@@ -83,43 +87,33 @@ func downloadTranslations() []byte {
 
 	app := "SumatraPDF"
 	sha1 := lastDownloadHash()
+	sha1 = dummySha1()
 	uri := fmt.Sprintf("http://www.apptranslator.org/dltrans?app=%s&sha1=%s", app, sha1)
 	d := httpDlMust(uri)
 	return d
 }
 
+func generate_code(s string) {
+	fmt.Print("generate_code\n")
+}
+
 func downloadAndUpdateTranslationsIfChanged() bool {
 	d := downloadTranslations()
 	s := string(d)
-	fmt.Printf("Downloaded translations:\n%s\n", s)
-	return false
-	/*
-	   try:
-	   except:
-	       # might fail due to intermitten network problems, ignore that
-	       print("skipping because downloadTranslations() failed")
-	       return
-	   lines = s.split("\n")
-	   if len(lines) < 2:
-	       print("Bad response, less than 2 lines: '%s'" % s)
-	       return False
-	   if lines[0] != "AppTranslator: SumatraPDF":
-	       print("Bad response, invalid first line: '%s'" % lines[0])
-	       print(s)
-	       return False
-	   sha1 = lines[1]
-	   if sha1.startswith("No change"):
-	       print("skipping because translations haven't changed")
-	       return False
-	   if not validSha1(sha1):
-	       print("Bad reponse, invalid sha1 on second line: '%s'", sha1)
-	       return False
-	   print("Translation data size: %d" % len(s))
-	   # print(s)
-	   generate_code(s)
-	   saveLastDownload(s)
-	   return True
-	*/
+	//fmt.Printf("Downloaded translations:\n%s\n", s)
+	lines := strings.Split(s, "\n")
+	panicIf(len(lines) < 2, "Bad response, less than 2 lines: '%s'", s)
+	panicIf(lines[0] != "AppTranslator: SumatraPDF", "Bad response, invalid first line: '%s'", lines[0])
+	sha1 := lines[1]
+	if strings.HasPrefix(sha1, "No change") {
+		fmt.Printf("skipping because translations haven't changed\n")
+		return false
+	}
+	panicIf(!validSha1(sha1), "Bad reponse, invalid sha1 on second line: '%s'", sha1)
+	fmt.Printf("Translation data size: %d\n", len(s))
+	generate_code(s)
+	saveLastDownload(d)
+	return true
 }
 
 func downloadTranslationsMain() {

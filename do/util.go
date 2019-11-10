@@ -30,12 +30,13 @@ func fatalf(format string, args ...interface{}) {
 func pj(elem ...string) string {
 	return filepath.Join(elem...)
 }
-func fatalIf(cond bool, format string, args ...interface{}) {
-	if !cond {
-		return
-	}
-	s := fmt.Sprintf(format, args...)
-	panic(s)
+
+func fatalIf(cond bool, args ...interface{}) {
+	u.PanicIf(cond, args...)
+}
+
+func panicIf(cond bool, args ...interface{}) {
+	u.PanicIf(cond, args...)
 }
 
 func fatalIfErr(err error) {
