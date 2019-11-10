@@ -50,6 +50,7 @@ func main() {
 		flgBuildPreRelease bool
 		flgSmoke           bool
 		flgClangFormat     bool
+		flgWc              bool
 	)
 
 	{
@@ -61,7 +62,13 @@ func main() {
 		flag.BoolVar(&flgNoCleanCheck, "no-clean-check", false, "allow running if repo has changes (for testing build script)")
 		flag.BoolVar(&flgUpload, "upload", false, "upload the build to s3")
 		flag.BoolVar(&flgClangFormat, "clang-format", false, "format source files with clang-format")
+		flag.BoolVar(&flgWc, "wc", false, "show loc stats (like wc -l)")
 		flag.Parse()
+	}
+
+	if flgWc {
+		doLineCount()
+		return
 	}
 
 	if flgClangFormat {
