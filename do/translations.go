@@ -9,16 +9,6 @@ import (
 	"github.com/kjk/u"
 )
 
-var (
-	SERVER = "www.apptranslator.org"
-	PORT   = 80
-
-	// when testing locally
-	// SERVER = "172.21.12.12"  // mac book
-	// SERVER = "10.37.129.2"    // mac pro
-	// PORT = 5000
-)
-
 func translationsPath() string {
 	return pj("strings", "translations.txt")
 }
@@ -88,13 +78,81 @@ func downloadTranslations() []byte {
 	app := "SumatraPDF"
 	sha1 := lastDownloadHash()
 	sha1 = dummySha1()
+	// when testing locally
+	// SERVER = "172.21.12.12"  // mac book
+	// SERVER = "10.37.129.2"    // mac pro
+	// PORT = 5000
 	uri := fmt.Sprintf("http://www.apptranslator.org/dltrans?app=%s&sha1=%s", app, sha1)
 	d := httpDlMust(uri)
 	return d
 }
 
+// Translation describes a single translated text
+type Translation struct {
+	Text        string
+	Lang        string
+	Translation string
+}
+
+func trimEmptyLinesFromEnd(a []string) []string {
+	for len(a) > 0 {
+		lastIdx := len(a) - 1
+		s := strings.TrimSpace(a[lastIdx])
+		if len(s) > 0 {
+			return a
+		}
+		a = a[:lastIdx]
+	}
+	return a
+}
+
+func parseTranslations(s string) map[string][]*Translation {
+	res := map[string][]*Translation{}
+	lines := strings.Split(s, "\n")[2:]
+	// strip empty lines from the end
+	lines = trimEmptyLinesFromEnd(lines)
+	currStr := ""
+	var currTranslations []*Translation
+	for _, l := range lines {
+		if len(l) == 0 {
+			continue
+		}
+		// TODO: looks like apptranslator doesn't deal well with strings that
+		// have newlines in them. Newline at the end ends up as an empty line
+		// apptranslator should escape newlines and tabs etc. but for now
+		// skip those lines as harmless
+		if l[0] == ':' {
+			if currStr != "" {
+				panicIf(len(currTranslations) == 0)
+				res[currStr] = currTranslations
+			}
+			currStr = l[1:]
+			currTranslations = nil
+		} else {
+			parts := strings.SplitN(l, ":", 2)
+			panicIf(len(parts) != 2)
+			lang, trans := parts[0], parts[1]
+			tr := &Translation{
+				Text:        currStr,
+				Lang:        lang,
+				Translation: trans,
+			}
+			currTranslations = append(currTranslations, tr)
+		}
+	}
+
+	if currStr != "" {
+		panicIf(len(currTranslations) == 0)
+		res[currStr] = currTranslations
+	}
+
+	return res
+}
+
 func generate_code(s string) {
 	fmt.Print("generate_code\n")
+	strings_dict := parseTranslations(s)
+	fmt.Printf("%d strings\n", len(strings_dict))
 }
 
 func downloadAndUpdateTranslationsIfChanged() bool {
