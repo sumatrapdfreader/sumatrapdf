@@ -44,13 +44,14 @@ func main() {
 	}
 
 	var (
-		flgRegenPremake    bool
-		flgCIBuild         bool
-		flgBuildLzsa       bool
-		flgBuildPreRelease bool
-		flgSmoke           bool
-		flgClangFormat     bool
-		flgWc              bool
+		flgRegenPremake         bool
+		flgCIBuild              bool
+		flgBuildLzsa            bool
+		flgBuildPreRelease      bool
+		flgSmoke                bool
+		flgClangFormat          bool
+		flgWc                   bool
+		flgDownloadTranslations bool
 	)
 
 	{
@@ -63,6 +64,7 @@ func main() {
 		flag.BoolVar(&flgUpload, "upload", false, "upload the build to s3")
 		flag.BoolVar(&flgClangFormat, "clang-format", false, "format source files with clang-format")
 		flag.BoolVar(&flgWc, "wc", false, "show loc stats (like wc -l)")
+		flag.BoolVar(&flgDownloadTranslations, "trans-dl", false, "download translations and re-generate C code")
 		flag.Parse()
 	}
 
@@ -78,6 +80,11 @@ func main() {
 
 	if flgRegenPremake {
 		regenPremake()
+		return
+	}
+
+	if flgDownloadTranslations {
+		downloadTranslationsMain()
 		return
 	}
 
