@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"os"
 	"os/exec"
 	"path/filepath"
 
@@ -30,25 +29,6 @@ func main() {
 	u.CdUpDir("sumatrapdf")
 	logf("Current directory: %s\n", u.CurrDirAbsMust())
 
-	if false {
-		testEscape()
-		os.Exit(0)
-	}
-
-	if false {
-		findSigntool()
-		//listExeFiles(vsPathLocal)
-		//listExeFiles(vsPathGitHub)
-		return
-	}
-
-	if false {
-		cmd := exec.Command(".\\test_util.exe")
-		cmd.Dir = "rel32"
-		u.RunCmdLoggedMust(cmd)
-		return
-	}
-
 	var (
 		flgRegenPremake            bool
 		flgCIBuild                 bool
@@ -59,6 +39,7 @@ func main() {
 		flgWc                      bool
 		flgDownloadTranslations    bool
 		flgRegenerateTranslattions bool
+		flgUploadTranslations      bool
 	)
 
 	{
@@ -73,6 +54,7 @@ func main() {
 		flag.BoolVar(&flgWc, "wc", false, "show loc stats (like wc -l)")
 		flag.BoolVar(&flgDownloadTranslations, "trans-dl", false, "download translations and re-generate C code")
 		flag.BoolVar(&flgRegenerateTranslattions, "trans-regen", false, "regenerate .cpp translations files from strings/translations.txt")
+		flag.BoolVar(&flgUploadTranslations, "trans-ul", false, "upload translatins to apptranslators.org if changed")
 		flag.Parse()
 	}
 
@@ -101,6 +83,11 @@ func main() {
 		return
 	}
 
+	if flgUploadTranslations {
+		uploadStringsIfChanged()
+		return
+	}
+
 	if flgBuildLzsa {
 		buildLzsa()
 		return
@@ -111,15 +98,15 @@ func main() {
 		return
 	}
 
-	detectVersions()
-
 	if flgCIBuild {
 		// ci build does the same thing as pre-release
+		detectVersions()
 		buildPreRelease()
 		return
 	}
 
 	if flgBuildPreRelease {
+		detectVersions()
 		buildPreRelease()
 		return
 	}
