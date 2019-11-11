@@ -100,6 +100,7 @@ func main() {
 
 	if flgCIBuild {
 		// ci build does the same thing as pre-release
+		flgUpload = true
 		detectVersions()
 		buildPreRelease()
 		return
