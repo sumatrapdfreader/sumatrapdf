@@ -145,11 +145,9 @@ const char **GetOriginalStrings() { return &gOriginalStrings[0]; }
 
 {{.Translations}}
 
-const char *gLangCodes = \
-{{.Langcodes}} "\\0";
+const char *gLangCodes = {{.Langcodes}} "\0";
 
-const char *gLangNames = \
-{{.Langnames}} "\\0";
+const char *gLangNames = {{.Langnames}} "\0";
 
 // from http://msdn.microsoft.com/en-us/library/windows/desktop/dd318693(v=vs.85).aspx
 // those definition are not present in 7.0A SDK my VS 2010 uses
@@ -402,21 +400,22 @@ func gen_c_code_for_dir(strings_dict map[string][]*Translation, keys []string, d
 
 func gen_c_code(strings_dict map[string][]*Translation, strings2 []*StringWithPath) {
 	for _, dir := range dirsToProcess {
+		dirToCheck := filepath.Base(dir)
 		var keys []string
 		for _, el := range strings2 {
-			if strings.HasPrefix(el.Path, dir) {
+			if el.Dir == dirToCheck {
 				s := el.Text
 				if _, ok := strings_dict[s]; ok {
 					keys = append(keys, s)
 				}
 			}
-			keys = uniquifyStrings(keys)
-			sort.Slice(keys, func(i, j int) bool {
-				a := strings.Replace(keys[i], `\t`, "\t", -1)
-				b := strings.Replace(keys[j], `\t`, "\t", -1)
-				return a < b
-			})
 		}
+		keys = uniquifyStrings(keys)
+		sort.Slice(keys, func(i, j int) bool {
+			a := strings.Replace(keys[i], `\t`, "\t", -1)
+			b := strings.Replace(keys[j], `\t`, "\t", -1)
+			return a < b
+		})
 		gen_c_code_for_dir(strings_dict, keys, dir)
 	}
 }
