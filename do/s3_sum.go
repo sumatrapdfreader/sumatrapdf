@@ -259,7 +259,7 @@ func s3UploadPreReleaseMust(ver string) {
 		"SumatraPDF.pdb.zip", fmt.Sprintf("%s.pdb.zip", prefix),
 		"SumatraPDF.pdb.lzsa", fmt.Sprintf("%s.pdb.lzsa", prefix),
 	}
-	err := s3UploadFiles(s3PreRelDir, "rel", files)
+	err := s3UploadFiles(s3PreRelDir, pj("out", "rel32"), files)
 	fatalIfErr(err)
 
 	prefix = fmt.Sprintf("SumatraPDF-prerelease-%s-64", ver)
