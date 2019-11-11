@@ -16,6 +16,8 @@ jobs:
       - name: Build
         env:
           CERT_PWD: ${{ secrets.CERT_PWD }}
+          AWS_SECRET: ${{ secrets.AWS_SECRET }}
+          AWS_ACCESS: ${{ secrets.AWS_ACCESS }}
         run: .\doit.bat -ci
 
       - name: Upload artifacts
