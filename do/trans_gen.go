@@ -230,6 +230,9 @@ func c_escape_for_compact(txt string) string {
 }
 
 func file_name_from_dir_name(dir_name string) string {
+	// strip "src/"" from dir_name
+	s := strings.TrimPrefix(dir_name, "src")
+	s = s[1:]
 	if dir_name == "" {
 		return "Trans_sumatra_txt.cpp"
 	}
@@ -387,7 +390,7 @@ func gen_c_code_for_dir(strings_dict map[string][]*Translation, keys []string, d
 		Islangrtl:          islangrtl,
 	}
 	file_content := evalTmpl(compact_c_tmpl, v2)
-	fmt.Printf("file_content:\n%s\n", file_content)
+	fmt.Sprintf("file_content:\n%s\n", file_content)
 	path := filepath.Join(dir_name, file_name_from_dir_name(dir_name))
 	u.WriteFileMust(path, []byte(file_content))
 	print_incomplete_langs(dir_name)
