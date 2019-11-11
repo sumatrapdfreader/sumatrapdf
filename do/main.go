@@ -32,6 +32,7 @@ func main() {
 	var (
 		flgRegenPremake            bool
 		flgCIBuild                 bool
+		flgUploadCiBuild           bool
 		flgBuildLzsa               bool
 		flgBuildPreRelease         bool
 		flgSmoke                   bool
@@ -45,6 +46,7 @@ func main() {
 	{
 		flag.BoolVar(&flgRegenPremake, "premake", false, "regenerate premake*.lua files")
 		flag.BoolVar(&flgCIBuild, "ci", false, "run CI steps")
+		flag.BoolVar(&flgUploadCiBuild, "ci-upload", false, "upload the result of ci build to s3")
 		flag.BoolVar(&flgSmoke, "smoke", false, "run smoke build (installer for 64bit release)")
 		flag.BoolVar(&flgBuildPreRelease, "build-pre-release", false, "build pre-release")
 		flag.BoolVar(&flgBuildLzsa, "build-lzsa", false, "build MakeLZSA.exe")
@@ -100,10 +102,15 @@ func main() {
 
 	if flgCIBuild {
 		// ci build does the same thing as pre-release
-		flgUpload = true
 		detectVersions()
 		buildPreRelease()
 		return
+	}
+
+	if flgUploadCiBuild {
+		flgUpload = true
+		detectVersions()
+		s3UploadPreReleaseMust(svnPreReleaseVer)
 	}
 
 	if flgBuildPreRelease {

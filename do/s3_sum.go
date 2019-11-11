@@ -277,8 +277,15 @@ func s3UploadPreReleaseMust(ver string) {
 	err = s3UploadFileReader(manifestRemotePath, manifestLocalPath, true)
 	fatalIfErr(err)
 
+	uploadDailyInfo(ver)
+
+	fmt.Printf("Uploaded the build in %s\n", time.Since(timeStart))
+	//setAsPreRelease(ver)
+}
+
+func uploadDailyInfo(ver string) {
 	s := createSumatraLatestJs()
-	err = s3UploadString("sumatrapdf/sumadaily.js", s, true)
+	err := s3UploadString("sumatrapdf/sumadaily.js", s, true)
 	fatalIfErr(err)
 
 	//sumatrapdf/sumpdf-prerelease-latest.txt
@@ -290,9 +297,6 @@ func s3UploadPreReleaseMust(ver string) {
 	s = fmt.Sprintf("[SumatraPDF]\nLatest %s\n", ver)
 	err = s3UploadString("sumatrapdf/sumpdf-daily-update.txt", s, true)
 	fatalIfErr(err)
-
-	fmt.Printf("Uploaded daily in %s\n", time.Since(timeStart))
-	//setAsPreRelease(ver)
 }
 
 func setAsPreRelease(ver string) {

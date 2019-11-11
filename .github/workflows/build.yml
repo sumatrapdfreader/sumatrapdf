@@ -5,10 +5,10 @@ jobs:
     name: Build
     runs-on: windows-latest
     steps:
-      - name: Set up Go 1.13
+      - name: Set up Go
         uses: actions/setup-go@v1
         with:
-          go-version: 1.13
+          go-version: 1.13.4
 
       - name: Check out source code
         uses: actions/checkout@v1
@@ -16,9 +16,14 @@ jobs:
       - name: Build
         env:
           CERT_PWD: ${{ secrets.CERT_PWD }}
+        run: .\doit.bat -ci
+
+      # a separate step from -ci to make logs easier to read
+      - name: Upload to s3 etc.
+        env:
           AWS_SECRET: ${{ secrets.AWS_SECRET }}
           AWS_ACCESS: ${{ secrets.AWS_ACCESS }}
-        run: .\doit.bat -ci
+        run: .\doit.bat -ci-upload
 
       - name: Upload artifacts
         uses: actions/upload-artifact@master
