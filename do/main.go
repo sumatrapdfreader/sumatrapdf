@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"os"
 	"os/exec"
 	"path/filepath"
 
@@ -28,6 +29,11 @@ func regenPremake() {
 func main() {
 	u.CdUpDir("sumatrapdf")
 	logf("Current directory: %s\n", u.CurrDirAbsMust())
+
+	if false {
+		testEscape()
+		os.Exit(0)
+	}
 
 	if false {
 		findSigntool()

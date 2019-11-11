@@ -28,3 +28,5 @@ analyze-errors.html
 CoverageReport*
 LastCoverageResults.log
 artifacts/
+.idea/
+.vscode/
