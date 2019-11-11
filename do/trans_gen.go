@@ -198,7 +198,8 @@ func c_escape(txt string) string {
 	txt = strings.Replace(txt, `"`, `\"`, -1)
 	// and all non-7-bit characters of the UTF-8 encoded string
 	res := ""
-	for i := range txt {
+	n := len(txt)
+	for i := 0; i < n; i++ {
 		c := txt[i]
 		if c < 0x80 {
 			res += string(c)
@@ -206,7 +207,7 @@ func c_escape(txt string) string {
 		}
 		res += c_oct(c)
 	}
-	return fmt.Sprintf(`"%s"`, res)
+	return `"` + res + `"`
 }
 
 func c_escape_for_compact(txt string) string {
@@ -217,7 +218,8 @@ func c_escape_for_compact(txt string) string {
 	txt = strings.Replace(txt, `"`, `\"`, -1)
 	// and all non-7-bit characters of the UTF-8 encoded string
 	var res string
-	for i := range txt {
+	n := len(txt)
+	for i := 0; i < n; i++ {
 		c := txt[i]
 		if c < 0x80 {
 			res += string(c)
@@ -420,7 +422,9 @@ func gen_c_code(strings_dict map[string][]*Translation, strings2 []*StringWithPa
 }
 
 func testEscape() {
-	s := "të çinstal"
-	s2 := c_escape(s)
+	d := u.ReadFileMust("t.txt")
+	s := string(d)
+	fmt.Printf("len(d): %d, len(s): %d, d: '%s'\n", len(d), len(s), string(d))
+	s2 := c_escape(string(d))
 	fmt.Printf("s2: '%s'\n", s2)
 }
