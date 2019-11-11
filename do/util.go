@@ -29,10 +29,6 @@ func fatalf(format string, args ...interface{}) {
 	panic(s)
 }
 
-func pj(elem ...string) string {
-	return filepath.Join(elem...)
-}
-
 func fatalIf(cond bool, args ...interface{}) {
 	u.PanicIf(cond, args...)
 }

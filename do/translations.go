@@ -11,7 +11,7 @@ import (
 )
 
 func translationsPath() string {
-	return pj("strings", "translations.txt")
+	return filepath.Join("strings", "translations.txt")
 }
 
 func translationsSha1HexMust(d []byte) string {

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"sort"
 	"strconv"
@@ -259,7 +260,7 @@ func s3UploadPreReleaseMust(ver string) {
 		"SumatraPDF.pdb.zip", fmt.Sprintf("%s.pdb.zip", prefix),
 		"SumatraPDF.pdb.lzsa", fmt.Sprintf("%s.pdb.lzsa", prefix),
 	}
-	err := s3UploadFiles(s3PreRelDir, pj("out", "rel32"), files)
+	err := s3UploadFiles(s3PreRelDir, filepath.Join("out", "rel32"), files)
 	fatalIfErr(err)
 
 	prefix = fmt.Sprintf("SumatraPDF-prerelease-%s-64", ver)
@@ -269,10 +270,10 @@ func s3UploadPreReleaseMust(ver string) {
 		"SumatraPDF.pdb.zip", fmt.Sprintf("%s.pdb.zip", prefix),
 		"SumatraPDF.pdb.lzsa", fmt.Sprintf("%s.pdb.lzsa", prefix),
 	}
-	err = s3UploadFiles(s3PreRelDir, pj("out", "rel64"), files)
+	err = s3UploadFiles(s3PreRelDir, filepath.Join("out", "rel64"), files)
 	fatalIfErr(err)
 
-	manifestLocalPath := pj("out", "rel32", "manifest.txt")
+	manifestLocalPath := filepath.Join(artifactsDir, "manifest.txt")
 	err = s3UploadFileReader(manifestRemotePath, manifestLocalPath, true)
 	fatalIfErr(err)
 
