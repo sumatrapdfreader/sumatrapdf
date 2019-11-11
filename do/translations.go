@@ -155,9 +155,12 @@ func should_translate(path string) bool {
 	return ext == ".cpp"
 }
 
+var (
+	dirsToProcess = []string{"src", filepath.Join("src", "installer")}
+)
+
 func getFilesToProcess() []string {
 	var res []string
-	dirsToProcess := []string{"src", "src/installer"}
 	for _, dir := range dirsToProcess {
 		files, err := ioutil.ReadDir(dir)
 		must(err)
@@ -189,11 +192,6 @@ func extract_strings_from_c_file(path string) []string {
 	return extractTranslations(string(d))
 }
 
-type TranslationsInFile struct {
-	Path    string
-	Strings []string
-}
-
 func uniquifyStrings(a []string) []string {
 	m := map[string]bool{}
 	for _, s := range a {
@@ -206,7 +204,7 @@ func uniquifyStrings(a []string) []string {
 	return res
 }
 
-func extract_strings_from_c_files() []string {
+func extract_strings_from_c_files_no_paths() []string {
 	filesToProcess := getFilesToProcess()
 	fmt.Printf("Files to process: %d\n", len(filesToProcess))
 	var res []string
@@ -219,11 +217,79 @@ func extract_strings_from_c_files() []string {
 	return res
 }
 
+type StringWithPath struct {
+	Text string
+	Path string
+	Dir  string
+}
+
+func extract_strings_from_c_files() []*StringWithPath {
+	filesToProcess := getFilesToProcess()
+	fmt.Printf("Files to process: %d\n", len(filesToProcess))
+	var res []*StringWithPath
+	for _, path := range filesToProcess {
+		a := extract_strings_from_c_file(path)
+		for _, s := range a {
+			swp := &StringWithPath{
+				Text: s,
+				Path: path,
+				Dir:  filepath.Base(filepath.Dir(path)),
+			}
+			res = append(res, swp)
+		}
+	}
+	fmt.Printf("%d strings to translate\n", len(res))
+	return res
+}
+
+func extractJustStrings(a []*StringWithPath) []string {
+	var res []string
+	for _, el := range a {
+		res = append(res, el.Text)
+	}
+	res = uniquifyStrings(res)
+	return res
+}
+
+func dump_missing_per_language(strings []string, strings_dict map[string][]*Translation, dump_strings bool) map[string]bool {
+	/*
+	   untranslated_dict = {}
+	   for lang in get_lang_list(strings_dict):
+	       untranslated_dict[lang] = get_missing_for_language(
+	           strings, strings_dict, lang)
+	   items = untranslated_dict.items()
+	   items.sort(langs_sort_func)
+
+	   print("\nMissing translations:")
+	   strs = []
+	   for (lang, untranslated) in items:
+	       if len(untranslated) > 0:
+	           strs.append("%5s: %3d" % (lang, len(untranslated)))
+	   per_line = 5
+	   while len(strs) > 0:
+	       line_strs = strs[:per_line]
+	       strs = strs[per_line:]
+	       print("  ".join(line_strs))
+	   return untranslated_dict
+	*/
+	return nil
+}
+
+func get_untranslated_as_list(untranslated_dict map[string]bool) []string {
+	var a []string
+	for s := range untranslated_dict {
+		a = append(a, s)
+	}
+	return uniquifyStrings(a)
+}
+
 func generate_code(s string) {
 	fmt.Print("generate_code\n")
 	strings_dict := parseTranslations(s)
 	fmt.Printf("%d strings\n", len(strings_dict))
-	strings_list := extract_strings_from_c_files()
+
+	strings := extract_strings_from_c_files()
+	strings_list := extractJustStrings(strings)
 
 	// remove obsolete strings from the server
 	var obsolete []string
@@ -237,9 +303,18 @@ func generate_code(s string) {
 		fmt.Printf("Removed %d obsolete strings\n", len(obsolete))
 	}
 
-	// untranslated_dict = dump_missing_per_language(strings_list, strings_dict)
-	// untranslated = get_untranslated_as_list(untranslated_dict)
-
+	untranslated_dict := dump_missing_per_language(strings_list, strings_dict, false)
+	untranslated := get_untranslated_as_list(untranslated_dict)
+	if len(untranslated) > 0 {
+		fmt.Printf("%d untranslated\n", len(untranslated))
+		// add untranslated
+		for _, s := range untranslated {
+			if _, ok := strings_dict[s]; !ok {
+				strings_dict[s] = []*Translation{}
+			}
+		}
+	}
+	gen_c_code(strings_dict, strings)
 }
 
 func downloadAndUpdateTranslationsIfChanged() bool {
