@@ -75,7 +75,6 @@ def extract_strings_from_c_files(with_paths=False):
 # up to four characters, e.g. \xABc isn't the same as \253c
 
 def c_oct(c):
-    global had_invalid_c
     o = "00" + oct(ord(c))
     return "\\" + o[-3:]
 
