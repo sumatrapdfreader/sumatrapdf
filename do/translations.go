@@ -78,7 +78,6 @@ func downloadTranslations() []byte {
 
 	app := "SumatraPDF"
 	sha1 := lastDownloadHash()
-	sha1 = dummySha1()
 	// when testing locally
 	// SERVER = "172.21.12.12"  // mac book
 	// SERVER = "10.37.129.2"    // mac pro
@@ -341,4 +340,9 @@ func downloadTranslationsMain() {
 	if changed {
 		fmt.Printf("\nNew translations downloaded from the server! Check them in!")
 	}
+}
+
+func regenerateLangs() {
+	d := u.ReadFileMust(lastDownloadFilePath())
+	generate_code(string(d))
 }

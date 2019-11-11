@@ -50,14 +50,15 @@ func main() {
 	}
 
 	var (
-		flgRegenPremake         bool
-		flgCIBuild              bool
-		flgBuildLzsa            bool
-		flgBuildPreRelease      bool
-		flgSmoke                bool
-		flgClangFormat          bool
-		flgWc                   bool
-		flgDownloadTranslations bool
+		flgRegenPremake            bool
+		flgCIBuild                 bool
+		flgBuildLzsa               bool
+		flgBuildPreRelease         bool
+		flgSmoke                   bool
+		flgClangFormat             bool
+		flgWc                      bool
+		flgDownloadTranslations    bool
+		flgRegenerateTranslattions bool
 	)
 
 	{
@@ -71,6 +72,7 @@ func main() {
 		flag.BoolVar(&flgClangFormat, "clang-format", false, "format source files with clang-format")
 		flag.BoolVar(&flgWc, "wc", false, "show loc stats (like wc -l)")
 		flag.BoolVar(&flgDownloadTranslations, "trans-dl", false, "download translations and re-generate C code")
+		flag.BoolVar(&flgRegenerateTranslattions, "trans-regen", false, "regenerate .cpp translations files from strings/translations.txt")
 		flag.Parse()
 	}
 
@@ -91,6 +93,11 @@ func main() {
 
 	if flgDownloadTranslations {
 		downloadTranslationsMain()
+		return
+	}
+
+	if flgRegenerateTranslattions {
+		regenerateLangs()
 		return
 	}
 
