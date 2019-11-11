@@ -234,7 +234,7 @@ func file_name_from_dir_name(dir_name string) string {
 	if len(s) > 0 {
 		s = s[1:]
 	}
-	if dir_name == "" {
+	if s == "" {
 		return "Trans_sumatra_txt.cpp"
 	}
 	return fmt.Sprintf("Trans_%s_txt.cpp", s)
