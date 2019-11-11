@@ -249,6 +249,8 @@ func s3UploadPreReleaseMust(ver string) {
 		return
 	}
 
+	ensureAwsSecrets()
+
 	timeStart := time.Now()
 	//s3DeleteOldestPreRel()
 

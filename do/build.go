@@ -241,7 +241,6 @@ func createManifestMust() {
 func buildPreRelease() {
 	// early exit if missing
 	detectSigntoolPath()
-	ensureAwsSecrets()
 
 	s := fmt.Sprintf("buidling pre-release version %s", svnPreReleaseVer)
 	defer makePrintDuration(s)()
