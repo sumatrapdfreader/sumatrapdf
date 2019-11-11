@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/kjk/u"
@@ -149,10 +150,96 @@ func parseTranslations(s string) map[string][]*Translation {
 	return res
 }
 
+func should_translate(path string) bool {
+	ext := strings.ToLower(filepath.Ext(path))
+	return ext == ".cpp"
+}
+
+func getFilesToProcess() []string {
+	var res []string
+	dirsToProcess := []string{"src", "src/installer"}
+	for _, dir := range dirsToProcess {
+		files, err := ioutil.ReadDir(dir)
+		must(err)
+		for _, f := range files {
+			path := filepath.Join(dir, f.Name())
+			if should_translate(path) {
+				res = append(res, path)
+			}
+		}
+	}
+	return res
+}
+
+var (
+	TRANSLATION_PATTERN = regexp.MustCompile(`\b_TRN?\("(.*?)"\)`)
+)
+
+func extractTranslations(s string) []string {
+	var res []string
+	a := TRANSLATION_PATTERN.FindAllStringSubmatch(s, -1)
+	for _, el := range a {
+		res = append(res, el[1])
+	}
+	return res
+}
+
+func extract_strings_from_c_file(path string) []string {
+	d := u.ReadFileMust(path)
+	return extractTranslations(string(d))
+}
+
+type TranslationsInFile struct {
+	Path    string
+	Strings []string
+}
+
+func uniquifyStrings(a []string) []string {
+	m := map[string]bool{}
+	for _, s := range a {
+		m[s] = true
+	}
+	var res []string
+	for k := range m {
+		res = append(res, k)
+	}
+	return res
+}
+
+func extract_strings_from_c_files() []string {
+	filesToProcess := getFilesToProcess()
+	fmt.Printf("Files to process: %d\n", len(filesToProcess))
+	var res []string
+	for _, path := range filesToProcess {
+		a := extract_strings_from_c_file(path)
+		res = append(res, a...)
+	}
+	res = uniquifyStrings(res)
+	fmt.Printf("%d strings to translate\n", len(res))
+	return res
+}
+
 func generate_code(s string) {
 	fmt.Print("generate_code\n")
 	strings_dict := parseTranslations(s)
 	fmt.Printf("%d strings\n", len(strings_dict))
+	strings_list := extract_strings_from_c_files()
+
+	// remove obsolete strings from the server
+	var obsolete []string
+	for s := range strings_dict {
+		if !u.StringInSlice(strings_list, s) {
+			obsolete = append(obsolete, s)
+			delete(strings_dict, s)
+		}
+	}
+	if len(obsolete) > 0 {
+		fmt.Printf("Removed %d obsolete strings\n", len(obsolete))
+	}
+
+	// untranslated_dict = dump_missing_per_language(strings_list, strings_dict)
+	// untranslated = get_untranslated_as_list(untranslated_dict)
+
 }
 
 func downloadAndUpdateTranslationsIfChanged() bool {
