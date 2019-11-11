@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"crypto/sha1"
 	"fmt"
 	"io/ioutil"
@@ -9,6 +10,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/kjk/u"
@@ -226,4 +228,13 @@ func httpDlToFileMust(uri string, path string, sha1Hex string) {
 	fatalIf(sha1File != sha1Hex, "downloaded '%s' but it has sha1 of %s and we expected %s", uri, sha1File, sha1Hex)
 	err := ioutil.WriteFile(path, d, 0755)
 	fatalIfErr(err)
+}
+
+func evalTmpl(s string, v interface{}) string {
+	tmpl, err := template.New("tmpl").Parse(s)
+	must(err)
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, v)
+	must(err)
+	return buf.String()
 }
