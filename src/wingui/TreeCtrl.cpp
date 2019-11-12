@@ -152,8 +152,8 @@ bool TreeCtrl::Create(const WCHAR* title) {
     return true;
 }
 
-TVITEM* TreeCtrl::GetItem(HTREEITEM hItem) {
-    TVITEM* item = &this->item;
+TVITEMW* TreeCtrl::GetItem(HTREEITEM hItem) {
+    TVITEMW* item = &this->item;
     ZeroStruct(item);
     item->hItem = hItem;
     item->mask = TVIF_PARAM | TVIF_STATE;
@@ -195,18 +195,18 @@ bool TreeCtrl::SelectItem(HTREEITEM item) {
     return (ok == TRUE);
 }
 
-HTREEITEM TreeCtrl::InsertItem(TV_INSERTSTRUCT* item) {
+HTREEITEM TreeCtrl::InsertItem(TVINSERTSTRUCTW* item) {
     HTREEITEM res = TreeView_InsertItem(this->hwnd, item);
     return res;
 }
 
 void TreeCtrl::Clear() {
     HWND hwnd = this->hwnd;
-    SendMessage(hwnd, WM_SETREDRAW, FALSE, 0);
+    ::SendMessage(hwnd, WM_SETREDRAW, FALSE, 0);
     TreeView_DeleteAllItems(hwnd);
     SendMessage(hwnd, WM_SETREDRAW, TRUE, 0);
     UINT flags = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;
-    RedrawWindow(hwnd, nullptr, nullptr, flags);
+    ::RedrawWindow(hwnd, nullptr, nullptr, flags);
 }
 
 TreeCtrl::~TreeCtrl() {

@@ -1,7 +1,7 @@
 class TreeCtrl;
 
 typedef std::function<LRESULT(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& discardMsg)> MsgFilter;
-typedef std::function<void(TreeCtrl*, NMTVGETINFOTIP*)> OnGetInfoTip;
+typedef std::function<void(TreeCtrl*, NMTVGETINFOTIPW*)> OnGetInfoTip;
 typedef std::function<LRESULT(TreeCtrl*, NMTREEVIEWW*, bool&)> OnTreeNotify;
 
 // function called for every item in the tree.
@@ -20,7 +20,7 @@ class TreeCtrl {
     ~TreeCtrl();
 
     void Clear();
-    TVITEM* GetItem(HTREEITEM);
+    TVITEMW* GetItem(HTREEITEM);
     std::wstring GetInfoTip(HTREEITEM);
     HTREEITEM GetRoot();
     HTREEITEM GetChild(HTREEITEM);
@@ -54,7 +54,7 @@ class TreeCtrl {
 
     // private
     HWND hwnd = nullptr;
-    TVITEM item = {0};
+    TVITEMW item = {0};
     UINT_PTR hwndSubclassId = 0;
     UINT_PTR hwndParentSubclassId = 0;
 };

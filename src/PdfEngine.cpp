@@ -1735,6 +1735,9 @@ DocTocItem* PdfEngineImpl::GetTocTree() {
         return node;
     }
     PdfTocItem* att = BuildTocTree(attachments, idCounter, true);
+    if (!node) {
+        return att;
+    }
     node->AddSibling(att);
     return node;
 }

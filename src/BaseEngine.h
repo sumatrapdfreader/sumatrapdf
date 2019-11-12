@@ -204,28 +204,29 @@ class PageElement {
 
 // an item in a document's Table of Content
 class DocTocItem {
-    DocTocItem* last; // only updated by AddSibling
+    DocTocItem* last = nullptr; // only updated by AddSibling
 
   public:
-    // the item's visible label
-    WCHAR* title;
+    // the item's visible label, owned
+    WCHAR* title = nullptr;
     // whether any child elements are to be displayed
-    bool open;
+    bool open = false;
     // page this item points to (0 for non-page destinations)
     // if GetLink() returns a destination to a page, the two should match
-    int pageNo;
+    int pageNo = 0;
     // arbitrary number allowing to distinguish this DocTocItem
     // from any other of the same ToC tree (must be constant
     // between runs so that it can be persisted in FileState::tocState)
-    int id;
+    int id = 0;
 
     // first child item
-    DocTocItem* child;
+    DocTocItem* child = nullptr;
     // next sibling
-    DocTocItem* next;
+    DocTocItem* next = nullptr;
 
-    explicit DocTocItem(WCHAR* title, int pageNo = 0)
-        : title(title), open(false), pageNo(pageNo), id(0), child(nullptr), next(nullptr), last(nullptr) {
+    explicit DocTocItem(WCHAR* title, int pageNo = 0) {
+        this->title = title;
+        this->pageNo = pageNo;
     }
 
     virtual ~DocTocItem() {
