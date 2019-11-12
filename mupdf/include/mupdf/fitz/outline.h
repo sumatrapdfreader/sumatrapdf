@@ -40,6 +40,11 @@ struct fz_outline_s
 	fz_outline *next;
 	fz_outline *down;
 	int is_open;
+
+	/* sumatrapdf: support color and flags */
+	int flags;
+	int has_color;
+	float color[4];
 };
 
 fz_outline *fz_new_outline(fz_context *ctx);

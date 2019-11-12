@@ -1,6 +1,28 @@
 #include "mupdf/fitz.h"
 #include "mupdf/pdf.h"
 
+/* sumatrapdf: parse "C" color entry */
+static int
+pdf_parse_color(fz_context *ctx, pdf_obj *arr, float *color)
+{
+	int i;
+	int n;
+	pdf_obj *obj;
+
+	if (!pdf_is_array(ctx, arr))
+		return 0;
+	n = pdf_array_len(ctx, arr);
+	if (n < 3 || n > 4) {
+		return 0;
+	}
+	for (i = 0; i < n; i++)
+	{
+		obj = pdf_array_get(ctx, arr, i);
+		color[i] = pdf_to_real(ctx, obj);
+	}
+	return 1;
+}
+
 static fz_outline *
 pdf_load_outline_imp(fz_context *ctx, pdf_document *doc, pdf_obj *dict)
 {
@@ -37,6 +59,13 @@ pdf_load_outline_imp(fz_context *ctx, pdf_document *doc, pdf_obj *dict)
 				node->page = pdf_resolve_link(ctx, doc, node->uri, &node->x, &node->y);
 			else
 				node->page = -1;
+
+			/* sumatrapdf: support color and flags */
+			node->flags = pdf_dict_get_int(ctx, dict, PDF_NAME(F));
+			if ((obj = pdf_dict_get(ctx, dict, PDF_NAME(C))) != NULL) 
+			{
+				node->has_color = pdf_parse_color(ctx, obj, &(node->color[0]));
+			}
 
 			obj = pdf_dict_get(ctx, dict, PDF_NAME(First));
 			if (obj)
