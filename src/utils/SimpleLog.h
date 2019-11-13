@@ -1,6 +1,12 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+void log(const char* s);
+void logf(const char* fmt, ...);
+void logf(const WCHAR* fmt, ...);
+std::string_view getLogView();
+void resetLog();
+
 namespace slog {
 
 class Logger {

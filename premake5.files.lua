@@ -410,6 +410,7 @@ function utils_files()
     "PEB.h",
     "SerializeTxt.*",
     "SettingsUtil.*",
+    "SimpleLog.*",
     "StrUtil.*",
     "StrUtil_win.cpp",
     "StrFormat.*",

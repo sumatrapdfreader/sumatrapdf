@@ -150,6 +150,9 @@
     <ClCompile Include="..\src\utils\SettingsUtil.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\utils\SimpleLog.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\utils\SquareTreeParser.cpp">
       <Filter>utils</Filter>
     </ClCompile>
