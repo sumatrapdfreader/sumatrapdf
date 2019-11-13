@@ -487,6 +487,7 @@
     <ClInclude Include="..\src\wingui\LabelWithCloseWnd.h" />
     <ClInclude Include="..\src\wingui\SplitterWnd.h" />
     <ClInclude Include="..\src\wingui\TreeCtrl.h" />
+    <ClInclude Include="..\src\wingui\TreeCtrl2.h" />
     <ClInclude Include="..\src\wingui\Win32Window.h" />
   </ItemGroup>
   <ItemGroup>
@@ -536,6 +537,7 @@
     <ClCompile Include="..\src\wingui\LabelWithCloseWnd.cpp" />
     <ClCompile Include="..\src\wingui\SplitterWnd.cpp" />
     <ClCompile Include="..\src\wingui\TreeCtrl.cpp" />
+    <ClCompile Include="..\src\wingui\TreeCtrl2.cpp" />
     <ClCompile Include="..\src\wingui\Win32Window.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

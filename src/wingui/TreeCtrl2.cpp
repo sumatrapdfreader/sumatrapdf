@@ -2,30 +2,26 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "utils/BaseUtil.h"
-#include "TreeCtrl.h"
+#include "TreeCtrl.h" // for TreeViewExpandRecursively
+#include "TreeCtrl2.h"
 #include "utils/WinUtil.h"
 
 constexpr UINT_PTR SUBCLASS_ID = 1;
 
-static void Unsubclass(TreeCtrl* w);
+static void Unsubclass(TreeCtrl2* w);
 
-void TreeViewExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, bool subtree) {
-    while (hItem) {
-        TreeView_Expand(hTree, hItem, flag);
-        HTREEITEM child = TreeView_GetChild(hTree, hItem);
-        if (child) {
-            TreeViewExpandRecursively(hTree, child, flag, false);
-        }
-        if (subtree) {
-            break;
-        }
-        hItem = TreeView_GetNextSibling(hTree, hItem);
+TreeCtrl2::TreeCtrl2(HWND parent, RECT* initialPosition) {
+    this->parent = parent;
+    if (initialPosition) {
+        this->initialPos = *initialPosition;
+    } else {
+        SetRect(&this->initialPos, 0, 0, 120, 28);
     }
 }
 
 static LRESULT CALLBACK TreeParentProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR subclassId, DWORD_PTR data) {
     CrashIf(subclassId != SUBCLASS_ID); // this proc is only used in one subclass
-    auto* w = (TreeCtrl*)data;
+    auto* w = (TreeCtrl2*)data;
     CrashIf(GetParent(w->hwnd) != (HWND)hwnd);
     if (msg == WM_NOTIFY) {
         NMTREEVIEWW* nm = reinterpret_cast<NMTREEVIEWW*>(lp);
@@ -70,7 +66,7 @@ static bool HandleKey(HWND hwnd, WPARAM wp) {
 
 static LRESULT CALLBACK TreeProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
     UNUSED(uIdSubclass);
-    auto* w = (TreeCtrl*)dwRefData;
+    auto* w = (TreeCtrl2*)dwRefData;
     CrashIf(w->hwnd != (HWND)hwnd);
 
     if (w->preFilter) {
@@ -99,7 +95,7 @@ static LRESULT CALLBACK TreeProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT
     return DefSubclassProc(hwnd, msg, wp, lp);
 }
 
-static void Subclass(TreeCtrl* w) {
+static void Subclass(TreeCtrl2* w) {
     BOOL ok = SetWindowSubclass(w->hwnd, TreeProc, SUBCLASS_ID, (DWORD_PTR)w);
     CrashIf(!ok);
     w->hwndSubclassId = SUBCLASS_ID;
@@ -109,7 +105,7 @@ static void Subclass(TreeCtrl* w) {
     w->hwndParentSubclassId = SUBCLASS_ID;
 }
 
-static void Unsubclass(TreeCtrl* w) {
+static void Unsubclass(TreeCtrl2* w) {
     if (!w) {
         return;
     }
@@ -127,16 +123,7 @@ static void Unsubclass(TreeCtrl* w) {
     }
 }
 
-TreeCtrl::TreeCtrl(HWND parent, RECT* initialPosition) {
-    this->parent = parent;
-    if (initialPosition) {
-        this->initialPos = *initialPosition;
-    } else {
-        SetRect(&this->initialPos, 0, 0, 120, 28);
-    }
-}
-
-bool TreeCtrl::Create(const WCHAR* title) {
+bool TreeCtrl2::Create(const WCHAR* title) {
     if (!title) {
         title = L"";
     }
@@ -155,55 +142,7 @@ bool TreeCtrl::Create(const WCHAR* title) {
     return true;
 }
 
-TVITEMW* TreeCtrl::GetItem(HTREEITEM hItem) {
-    TVITEMW* item = &this->item;
-    ZeroStruct(item);
-    item->hItem = hItem;
-    item->mask = TVIF_PARAM | TVIF_STATE;
-    item->stateMask = TVIS_EXPANDED;
-    BOOL ok = TreeView_GetItem(this->hwnd, item);
-    if (!ok) {
-        return nullptr;
-    }
-    return item;
-}
-
-bool TreeCtrl::GetItemRect(HTREEITEM item, bool fItemRect, RECT& r) {
-    BOOL ok = TreeView_GetItemRect(this->hwnd, item, &r, (BOOL)fItemRect);
-    return fromBOOL(ok);
-}
-
-HTREEITEM TreeCtrl::GetRoot() {
-    HTREEITEM res = TreeView_GetRoot(this->hwnd);
-    return res;
-}
-
-HTREEITEM TreeCtrl::GetChild(HTREEITEM item) {
-    HTREEITEM res = TreeView_GetChild(this->hwnd, item);
-    return res;
-}
-
-HTREEITEM TreeCtrl::GetSiblingNext(HTREEITEM item) {
-    HTREEITEM res = TreeView_GetNextSibling(this->hwnd, item);
-    return res;
-}
-
-HTREEITEM TreeCtrl::GetSelection() {
-    HTREEITEM res = TreeView_GetSelection(this->hwnd);
-    return res;
-}
-
-bool TreeCtrl::SelectItem(HTREEITEM item) {
-    BOOL ok = TreeView_SelectItem(this->hwnd, item);
-    return (ok == TRUE);
-}
-
-HTREEITEM TreeCtrl::InsertItem(TVINSERTSTRUCTW* item) {
-    HTREEITEM res = TreeView_InsertItem(this->hwnd, item);
-    return res;
-}
-
-void TreeCtrl::Clear() {
+void TreeCtrl2::Clear() {
     HWND hwnd = this->hwnd;
     ::SendMessage(hwnd, WM_SETREDRAW, FALSE, 0);
     TreeView_DeleteAllItems(hwnd);
@@ -212,56 +151,11 @@ void TreeCtrl::Clear() {
     ::RedrawWindow(hwnd, nullptr, nullptr, flags);
 }
 
-TreeCtrl::~TreeCtrl() {
+TreeCtrl2::~TreeCtrl2() {
     Unsubclass(this);
     // DeleteObject(w->bgBrush);
 }
 
-void TreeCtrl::SetFont(HFONT f) {
+void TreeCtrl2::SetFont(HFONT f) {
     SetWindowFont(this->hwnd, f, TRUE);
-}
-
-// returns false if we should stop iteration
-// TODO: convert to non-recursive version by storing nodes to visit in std::deque
-static bool VisitTreeNodesRec(HWND hwnd, HTREEITEM hItem, const TreeItemVisitor& visitor) {
-    while (hItem) {
-        TVITEMW item = {0};
-        item.hItem = hItem;
-        item.mask = TVIF_PARAM | TVIF_STATE;
-        item.stateMask = TVIS_EXPANDED;
-        BOOL ok = TreeView_GetItem(hwnd, &item);
-        if (!ok) {
-            // we failed to get the node, but we don't want to stop the traversal
-            return true;
-        }
-        bool shouldContinue = visitor(&item);
-        if (!shouldContinue) {
-            // visitor asked to stop
-            return false;
-        }
-
-        if ((item.state & TVIS_EXPANDED)) {
-            HTREEITEM child = TreeView_GetChild(hwnd, hItem);
-            VisitTreeNodesRec(hwnd, child, visitor);
-        }
-
-        hItem = TreeView_GetNextSibling(hwnd, hItem);
-    }
-    return true;
-}
-
-void TreeCtrl::VisitNodes(const TreeItemVisitor& visitor) {
-    HTREEITEM hRoot = TreeView_GetRoot(this->hwnd);
-    VisitTreeNodesRec(this->hwnd, hRoot, visitor);
-}
-
-std::wstring TreeCtrl::GetInfoTip(HTREEITEM hItem) {
-    ZeroArray(this->infotipBuf);
-    TVITEMW item = {0};
-    item.hItem = hItem;
-    item.mask = TVIF_TEXT;
-    item.pszText = this->infotipBuf;
-    item.cchTextMax = dimof(this->infotipBuf);
-    TreeView_GetItem(this->hwnd, &item);
-    return std::wstring(this->infotipBuf);
 }

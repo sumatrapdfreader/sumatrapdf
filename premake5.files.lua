@@ -434,6 +434,7 @@ function utils_files()
     "SplitterWnd.*",
     --"TabsCtrl.*",
     "TreeCtrl.*",
+    "TreeCtrl2.*",
     "Win32Window.*",
   })
 end
