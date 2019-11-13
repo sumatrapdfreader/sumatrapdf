@@ -10,6 +10,42 @@ constexpr UINT_PTR SUBCLASS_ID = 1;
 
 static void Unsubclass(TreeCtrl2* w);
 
+int Event::Attach(const EventHandler& handler) {
+    this->handlers.push_back(handler);
+    return (int)this->handlers.size() -1;
+}
+
+void Event::Detach(int handle) {
+    this->handlers[handle] = nullptr;
+}
+
+
+void EventPublisher::Publish() {
+    for (auto& h : this->event.handlers) {
+        if (h != nullptr) {
+            h();
+        }
+    }
+}
+
+int TreeItemEvent::Attach(const TreeItemEventHandler& h) {
+    this->handlers.push_back(h);
+    return (int)this->handlers.size() - 1;
+}
+
+void TreeItemEvent::Detach(int idx) {
+    this->handlers[idx] = nullptr;
+}
+
+void TreeItemEventPublisher::Publish(TreeItem* item) {
+    for (const auto& h : this->event.handlers) {
+        if (h != nullptr) {
+            h(item);
+        }
+    }
+}
+
+
 TreeCtrl2::TreeCtrl2(HWND parent, RECT* initialPosition) {
     this->parent = parent;
     if (initialPosition) {

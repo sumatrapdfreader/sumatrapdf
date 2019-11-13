@@ -11,6 +11,7 @@ typedef std::function<LRESULT(TreeCtrl*, NMTREEVIEWW*, bool&)> OnTreeNotify;
 // returning false stops iteration
 typedef std::function<bool(TVITEM*)> TreeItemVisitor;
 
+
 /* Creation sequence:
 - auto ctrl = new TreeCtrl()
 - set creation parameters
