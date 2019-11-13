@@ -241,10 +241,15 @@ class DocTocItem {
     }
 
     void AddSibling(DocTocItem* sibling) {
-        DocTocItem* item;
-        for (item = last ? last : this; item->next; item = item->next)
-            ;
-        last = item->next = sibling;
+        DocTocItem* item = last;
+        if (item == nullptr) {
+            item = this;
+        }
+        while (item->next) {
+            item = item->next;
+        }
+        item->next = sibling;
+        last = sibling;
     }
 
     void OpenSingleNode() {
