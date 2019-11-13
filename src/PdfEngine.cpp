@@ -2330,11 +2330,8 @@ WCHAR* PdfEngineImpl::ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** 
 WCHAR* PdfEngineImpl::ExtractPageTextFromPageInfo(PdfPageInfo* pageInfo, const WCHAR* lineSep, RectI** coordsOut,
                                                   RenderTarget target, bool cacheRun) {
     WCHAR* content = nullptr;
-    if (false) {
-        // TODO(port): test if needed and remove if not
-        ScopedCritSec scope(&ctxAccess);
-        content = fz_text_page_to_str(pageInfo->stext, lineSep, coordsOut);
-    }
+    ScopedCritSec scope(&ctxAccess);
+    content = fz_text_page_to_str(pageInfo->stext, lineSep, coordsOut);
     return content;
 }
 
