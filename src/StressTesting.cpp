@@ -38,9 +38,6 @@
 
 #define FIRST_STRESS_TIMER_ID 101
 
-static slog::Logger* gLog;
-#define logbench(msg, ...) gLog->LogFmt(msg, __VA_ARGS__)
-
 static bool gIsStressTesting = false;
 static int gCurrStressTimerId = FIRST_STRESS_TIMER_ID;
 static NotificationGroupId NG_STRESS_TEST_BENCHMARK = "stressTestBenchmark";
@@ -64,23 +61,23 @@ static void BenchLoadRender(BaseEngine* engine, int pagenum) {
     t.Stop();
 
     if (!ok) {
-        logbench(L"Error: failed to load page %d", pagenum);
+        logf(L"Error: failed to load page %d", pagenum);
         return;
     }
     double timeMs = t.GetTimeInMs();
-    logbench(L"pageload   %3d: %.2f ms", pagenum, timeMs);
+    logf(L"pageload   %3d: %.2f ms", pagenum, timeMs);
 
     t.Start();
     RenderedBitmap* rendered = engine->RenderBitmap(pagenum, 1.0, 0);
     t.Stop();
 
     if (!rendered) {
-        logbench(L"Error: failed to render page %d", pagenum);
+        logf(L"Error: failed to render page %d", pagenum);
         return;
     }
     delete rendered;
     timeMs = t.GetTimeInMs();
-    logbench(L"pagerender %3d: %.2f ms", pagenum, timeMs);
+    logf(L"pagerender %3d: %.2f ms", pagenum, timeMs);
 }
 
 static int FormatWholeDoc(Doc& doc) {
@@ -106,7 +103,7 @@ static int TimeOneMethod(Doc& doc, TextRenderMethod method, const WCHAR* methodN
     Timer t;
     int nPages = FormatWholeDoc(doc);
     double timesms = t.Stop();
-    logbench(L"%s: %.2f ms", methodName, timesms);
+    logf(L"%s: %.2f ms", methodName, timesms);
     return nPages;
 }
 
@@ -114,29 +111,25 @@ static int TimeOneMethod(Doc& doc, TextRenderMethod method, const WCHAR* methodN
 // using different text measurement method (since the time is mostly
 // dominated by text measure)
 void BenchEbookLayout(const WCHAR* filePath) {
-    bool deleteLog = false;
-    if (!gLog) {
-        gLog = new slog::StderrLogger();
-        deleteLog = true;
-    }
-    logbench(L"Starting: %s", filePath);
+    logBuf.Reset();
+    logf(L"Starting: %s", filePath);
     if (!file::Exists(filePath)) {
-        logbench(L"Error: file doesn't exist");
+        logf(L"Error: file doesn't exist");
         return;
     }
     if (!Doc::IsSupportedFile(filePath)) {
-        logbench(L"Error: not an ebook file");
+        logf(L"Error: not an ebook file");
         return;
     }
     Timer t;
     Doc doc = Doc::CreateFromFile(filePath);
     if (doc.LoadingFailed()) {
-        logbench(L"Error: failed to load the file as doc");
+        logf(L"Error: failed to load the file as doc");
         doc.Delete();
         return;
     }
     double timeMs = t.Stop();
-    logbench(L"load: %.2f ms", timeMs);
+    logf(L"load: %.2f ms", timeMs);
 
     int nPages = TimeOneMethod(doc, TextRenderMethodGdi, L"gdi       ");
     TimeOneMethod(doc, TextRenderMethodGdiplus, L"gdi+      ");
@@ -150,30 +143,27 @@ void BenchEbookLayout(const WCHAR* filePath) {
 
     doc.Delete();
 
-    logbench(L"pages: %d", nPages);
-    if (deleteLog) {
-        delete gLog;
-    }
+    logf(L"pages: %d", nPages);
 }
 
 static void BenchChmLoadOnly(const WCHAR* filePath) {
     Timer total;
-    logbench(L"Starting: %s", filePath);
+    logf(L"Starting: %s", filePath);
 
     Timer t;
     ChmModel* chmModel = ChmModel::Create(filePath, nullptr);
     if (!chmModel) {
-        logbench(L"Error: failed to load %s", filePath);
+        logf(L"Error: failed to load %s", filePath);
         return;
     }
 
     double timeMs = t.Stop();
-    logbench(L"load: %.2f ms", timeMs);
+    logf(L"load: %.2f ms", timeMs);
 
     delete chmModel;
     total.Stop();
 
-    logbench(L"Finished (in %.2f ms): %s", total.GetTimeInMs(), filePath);
+    logf(L"Finished (in %.2f ms): %s", total.GetTimeInMs(), filePath);
 }
 
 static void BenchFile(const WCHAR* filePath, const WCHAR* pagesSpec) {
@@ -196,19 +186,19 @@ static void BenchFile(const WCHAR* filePath, const WCHAR* pagesSpec) {
     }
 
     Timer total;
-    logbench(L"Starting: %s", filePath);
+    logf(L"Starting: %s", filePath);
 
     Timer t;
     BaseEngine* engine = EngineManager::CreateEngine(filePath);
     if (!engine) {
-        logbench(L"Error: failed to load %s", filePath);
+        logf(L"Error: failed to load %s", filePath);
         return;
     }
 
     double timeMs = t.Stop();
-    logbench(L"load: %.2f ms", timeMs);
+    logf(L"load: %.2f ms", timeMs);
     int pages = engine->PageCount();
-    logbench(L"page count: %d", pages);
+    logf(L"page count: %d", pages);
 
     if (nullptr == pagesSpec) {
         for (int i = 1; i <= pages; i++) {
@@ -230,7 +220,7 @@ static void BenchFile(const WCHAR* filePath, const WCHAR* pagesSpec) {
     delete engine;
     total.Stop();
 
-    logbench(L"Finished (in %.2f ms): %s", total.GetTimeInMs(), filePath);
+    logf(L"Finished (in %.2f ms): %s", total.GetTimeInMs(), filePath);
 }
 
 static bool IsFileToBench(const WCHAR* fileName) {
@@ -259,7 +249,7 @@ static void BenchDir(WCHAR* dir) {
 }
 
 void BenchFileOrDir(WStrVec& pathsToBench) {
-    gLog = new slog::StderrLogger();
+    logToStderr = true;
 
     size_t n = pathsToBench.size() / 2;
     for (size_t i = 0; i < n; i++) {
@@ -269,10 +259,8 @@ void BenchFileOrDir(WStrVec& pathsToBench) {
         else if (dir::Exists(path))
             BenchDir(path);
         else
-            logbench(L"Error: file or dir %s doesn't exist", path);
+            logf(L"Error: file or dir %s doesn't exist", path);
     }
-
-    delete gLog;
 }
 
 inline bool IsSpecialDir(const WCHAR* s) {

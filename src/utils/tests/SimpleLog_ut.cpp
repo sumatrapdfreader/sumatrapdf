@@ -10,11 +10,12 @@
 
 void SimpleLogTest() {
     {
-        slog::MemoryLogger log;
-        log.Log(L"Test1");
-        log.Log(L"ML");
-        log.LogFmt(L"%s : %d", L"filen\xE4me.pdf", 25);
+        log(L"Test1\n");
+        log(L"ML\n");
+        logf(L"%s : %d\n", L"filename.pdf", 25);
 
-        utassert(str::Eq(log.GetData(), L"Test1\r\nML\r\nfilen\xE4me.pdf : 25\r\n"));
+        char* got = logBuf.Get();
+        char* exp = "Test1\nML\nfilename.pdf : 25\n";
+        utassert(str::Eq(got, exp));
     }
 }
