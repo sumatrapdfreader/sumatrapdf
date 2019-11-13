@@ -135,6 +135,9 @@
     <ClInclude Include="..\src\utils\ZipUtil.h">
       <Filter>utils</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\wingui\ButtonCtrl.h">
+      <Filter>wingui</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\wingui\DialogSizer.h">
       <Filter>wingui</Filter>
     </ClInclude>
@@ -280,6 +283,9 @@
     </ClCompile>
     <ClCompile Include="..\src\utils\ZipUtil.cpp">
       <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\ButtonCtrl.cpp">
+      <Filter>wingui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\wingui\DialogSizer.cpp">
       <Filter>wingui</Filter>

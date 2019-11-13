@@ -427,6 +427,7 @@ function utils_files()
   })
 
   files_in_dir("src/wingui", {
+    "ButtonCtrl.*",
     "DialogSizer.*",
     "EditCtrl.*",
     "FrameRateWnd.*",
