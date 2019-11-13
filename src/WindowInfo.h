@@ -7,7 +7,7 @@ class Notifications;
 class StressTest;
 class SumatraUIAutomationProvider;
 class FrameRateWnd;
-class LabelWithCloseWnd;
+struct LabelWithCloseWnd;
 class SplitterWnd;
 class CaptionInfo;
 
