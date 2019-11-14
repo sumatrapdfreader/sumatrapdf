@@ -250,11 +250,22 @@ func dumpEnv() {
 	logf("\n")
 }
 
+func isMaster() bool {
+	ref := os.Getenv("GITHUB_REF")
+	return ref == "refs/heads/master"
+}
+
 // upload as:
 // https://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-1027-install.exe etc.
 func s3UploadPreReleaseMust(ver string) {
 	if !flgUpload {
 		logf("Skipping pre-release upload to s3 because -upload flag not given\n")
+		return
+	}
+
+	if !isMaster() {
+		logf("Skipping pre-release upload to s3 because not on master branch\n")
+		logf("GITHUB_REF: '%s'\n", os.Getenv("GITHUB_REF"))
 		return
 	}
 
