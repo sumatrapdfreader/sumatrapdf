@@ -7,6 +7,8 @@
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
 #include "ParseCommandLine.h"
+
+#include "TreeModel.h"
 #include "BaseEngine.h"
 #include "EngineManager.h"
 

@@ -159,7 +159,7 @@
     <ClInclude Include="..\src\wingui\TreeCtrl.h">
       <Filter>wingui</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\wingui\TreeCtrl2.h">
+    <ClInclude Include="..\src\wingui\TreeModel.h">
       <Filter>wingui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\wingui\Win32Window.h">
@@ -309,9 +309,6 @@
       <Filter>wingui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\wingui\TreeCtrl.cpp">
-      <Filter>wingui</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\wingui\TreeCtrl2.cpp">
       <Filter>wingui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\wingui\Win32Window.cpp">

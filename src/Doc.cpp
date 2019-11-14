@@ -8,6 +8,7 @@
 #include "utils/HtmlPullParser.h"
 #include "mui/Mui.h"
 
+#include "TreeModel.h"
 #include "BaseEngine.h"
 #include "EbookBase.h"
 #include "EbookDoc.h"

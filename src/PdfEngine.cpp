@@ -16,6 +16,8 @@ extern "C" {
 #include "utils/TrivialHtmlParser.h"
 #include "utils/WinUtil.h"
 #include "utils/ZipUtil.h"
+
+#include "TreeModel.h"
 #include "BaseEngine.h"
 #include "PdfEngine.h"
 

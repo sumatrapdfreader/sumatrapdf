@@ -4,6 +4,8 @@
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/WinDynCalls.h"
+
+#include "TreeModel.h"
 #include "BaseEngine.h"
 #include "uia/TextRange.h"
 #include "SettingsStructs.h"

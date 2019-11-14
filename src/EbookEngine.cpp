@@ -18,6 +18,7 @@
 #include "utils/WinUtil.h"
 #include "utils/ZipUtil.h"
 
+#include "TreeModel.h"
 #include "BaseEngine.h"
 #include "EbookEngine.h"
 #include "EbookBase.h"

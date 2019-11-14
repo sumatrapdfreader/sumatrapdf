@@ -8,6 +8,7 @@
 #include "utils/HtmlPullParser.h"
 #include "utils/WinUtil.h"
 
+#include "TreeModel.h"
 #include "BaseEngine.h"
 #include "EbookBase.h"
 #include "EbookDoc.h"

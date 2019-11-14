@@ -10,6 +10,7 @@
 #include "utils/TgaReader.h"
 #include "utils/WinUtil.h"
 
+#include "TreeModel.h"
 #include "BaseEngine.h"
 #include "DjVuEngine.h"
 #include "EngineManager.h"
