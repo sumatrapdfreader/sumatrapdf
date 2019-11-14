@@ -162,7 +162,7 @@ void DumpTocItem(BaseEngine* engine, DocTocItem* item, int level, int& idCounter
         if (!item->child)
             Out(" />\n");
         else {
-            if (item->open)
+            if (item->isOpenDefault)
                 Out(" Expanded=\"yes\"");
             Out(">\n");
             DumpTocItem(engine, item->child, level + 1, idCounter);
@@ -174,7 +174,7 @@ void DumpTocItem(BaseEngine* engine, DocTocItem* item, int level, int& idCounter
 }
 
 void DumpToc(BaseEngine* engine) {
-    DocTocItem* root = engine->GetTocTree();
+    DocTocItem* root = engine->GetTocTree()->root;
     if (root) {
         Out("\t<TocTree%s>\n", engine->HasTocTree() ? "" : " Expected=\"no\"");
         int idCounter = 0;

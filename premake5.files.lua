@@ -825,7 +825,7 @@ function engine_dump_files()
   files_in_dir("src", {
     "EngineDump.cpp",
     "mui/MiniMui.*",
-    "mui/TextRender.*",
+    "mui/TextRender.*"
   })
 end
 

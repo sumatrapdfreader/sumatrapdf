@@ -282,22 +282,3 @@ void GetEbookUiColors(COLORREF& text, COLORREF& bg) {
     }
     // TODO: respect gGlobalPrefs->fixedPageUI.invertColors?
 }
-
-COLORREF MkRgb(byte r, byte g, byte b) {
-    return RGB(r, g, b);
-}
-
-COLORREF MkRgb(float r, float g, float b) {
-    byte rb = (byte)(r * 255.0);
-    byte gb = (byte)(g * 255.0);
-    byte bb = (byte)(b * 255.0);
-    return MkRgb(rb, gb, bb);
-}
-
-COLORREF MkRgba(byte r, byte g, byte b, byte a) {
-    COLORREF col = RGB(r, g, b);
-    COLORREF alpha = (COLORREF)a;
-    alpha = alpha << 24;
-    col = col | alpha;
-    return col;
-}

@@ -621,6 +621,27 @@ defer { instance->Release(); };
 #include "Scoped.h"
 #include "Vec.h"
 
+
+// TODO: move those into e.g. ColorUtil.h
+inline COLORREF MkRgb(byte r, byte g, byte b) {
+    return RGB(r, g, b);
+}
+
+inline COLORREF MkRgb(float r, float g, float b) {
+    byte rb = (byte)(r * 255.0);
+    byte gb = (byte)(g * 255.0);
+    byte bb = (byte)(b * 255.0);
+    return MkRgb(rb, gb, bb);
+}
+
+inline COLORREF MkRgba(byte r, byte g, byte b, byte a) {
+    COLORREF col = RGB(r, g, b);
+    COLORREF alpha = (COLORREF)a;
+    alpha = alpha << 24;
+    col = col | alpha;
+    return col;
+}
+
 #if OS_WIN
 /* In debug mode, VS 2010 instrumentations complains about GetRValue() etc.
 This adds equivalent functions that don't have this problem and ugly
