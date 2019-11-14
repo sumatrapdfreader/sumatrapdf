@@ -40,7 +40,7 @@ static LRESULT CALLBACK TreeParentProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
         auto code = nm->hdr.code;
         if (code == TVN_GETINFOTIP) {
             if (w->onGetInfoTip) {
-                auto* arg = reinterpret_cast<NMTVGETINFOTIP*>(nm);
+                auto* arg = reinterpret_cast<NMTVGETINFOTIPW*>(nm);
                 w->onGetInfoTip(w, arg);
                 return 0;
             }
@@ -337,9 +337,8 @@ static void PopulateTree(TreeCtrl* tree, TreeModel *tm) {
 
 void TreeCtrl::SetTreeModel(TreeModel* tm) {
     CrashIf(!tm);
-    // for now only allow this to be called once
-    CrashIf(this->treeModel);
 
+    Clear();
     this->treeModel = tm;
     SuspendRedraw();
     PopulateTree(this, tm);

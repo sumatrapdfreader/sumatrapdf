@@ -63,8 +63,11 @@ class TreeCtrl {
 
     // this data can be set directly
     MsgFilter preFilter; // called at start of windows proc to allow intercepting messages
+
     // when set, allows the caller to set info tip by updating NMTVGETINFOTIP
     OnGetInfoTip onGetInfoTip;
+
+    // if set, called to process all WM_NOTIFY messages
     OnTreeNotify onTreeNotify;
 
     // private

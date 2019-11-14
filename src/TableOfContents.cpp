@@ -40,6 +40,7 @@ constexpr UINT_PTR SUBCLASS_ID = 1;
 #endif
 
 static void CustomizeTocInfoTip(TreeCtrl* w, NMTVGETINFOTIPW* nm) {
+    // can't cast directly to DocTocItem*
     TreeItem* treeItem = reinterpret_cast<TreeItem*>(nm->lParam);
     DocTocItem* tocItem = static_cast<DocTocItem*>(treeItem);
     PageDestination* link = tocItem->GetLink();
@@ -529,26 +530,29 @@ static LRESULT OnTocTreeNotify(WindowInfo* win, NMTREEVIEWW* pnmtv) {
     return -1;
 }
 
-static LRESULT CALLBACK WndProcTocTree(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass,
-                                       DWORD_PTR dwRefData) {
-    UNUSED(dwRefData);
-    UNUSED(uIdSubclass);
+// LRESULT(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& discardMsg)
+static LRESULT WndProcTocTree(TreeCtrl *tree, UINT msg, WPARAM wp, LPARAM lp, bool& handled) {
+    HWND hwnd = tree->hwnd;
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
     if (!win) {
-        return DefSubclassProc(hwnd, msg, wp, lp);
+        return 0;
     }
 
     switch (msg) {
         case WM_CHAR:
-            if (VK_ESCAPE == wp && gGlobalPrefs->escToExit && MayCloseWindow(win))
+            if (VK_ESCAPE == wp && gGlobalPrefs->escToExit && MayCloseWindow(win)) {
                 CloseWindow(win, true);
+                handled = true;
+            }
             break;
 
         case WM_MOUSEWHEEL:
         case WM_MOUSEHWHEEL:
             // scroll the canvas if the cursor isn't over the ToC tree
-            if (!IsCursorOverWindow(win->tocTreeCtrl->hwnd))
+            if (!IsCursorOverWindow(win->tocTreeCtrl->hwnd)) {
                 return SendMessage(win->hwndCanvas, msg, wp, lp);
+                handled = true;
+            }
             break;
 #ifdef DISPLAY_TOC_PAGE_NUMBERS
         case WM_SIZE:
@@ -562,7 +566,7 @@ static LRESULT CALLBACK WndProcTocTree(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
             break;
 #endif
     }
-    return DefSubclassProc(hwnd, msg, wp, lp);
+    return 0;
 }
 
 static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR subclassId, DWORD_PTR data) {
@@ -589,7 +593,6 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
 }
 
 // TODO: for unsubclassing, those need to be part of WindowInfo
-static UINT_PTR tocTreeSubclassId = 0;
 static UINT_PTR tocBoxSubclassId = 0;
 
 // TODO: should unsubclass as well?
@@ -597,12 +600,7 @@ static void SubclassToc(WindowInfo* win) {
     TreeCtrl* tree = win->tocTreeCtrl;
     HWND hwndTocBox = win->hwndTocBox;
     HWND hwndTocTree = win->tocTreeCtrl->hwnd;
-    if (tocTreeSubclassId == 0) {
-        BOOL wasOk = SetWindowSubclass(hwndTocTree, WndProcTocTree, SUBCLASS_ID, (DWORD_PTR)tree);
-        CrashIf(!wasOk);
-        tocTreeSubclassId = SUBCLASS_ID;
-    }
-
+\
     if (tocBoxSubclassId == 0) {
         BOOL wasOk = SetWindowSubclass(hwndTocBox, WndProcTocBox, SUBCLASS_ID, (DWORD_PTR)win);
         CrashIf(!wasOk);
@@ -626,6 +624,10 @@ void CreateToc(WindowInfo* win) {
                     TVS_DISABLEDRAGDROP | TVS_NOHSCROLL | TVS_INFOTIP | WS_TABSTOP | WS_VISIBLE | WS_CHILD;
     tree->dwExStyle = WS_EX_STATICEDGE;
     tree->menu = (HMENU)IDC_TOC_TREE;
+    tree->preFilter = [tree](HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& handled) -> LRESULT {
+        UNUSED(hwnd);
+        return WndProcTocTree(tree, msg, wp, lp, handled);
+    };
     tree->onTreeNotify = [win](TreeCtrl* w, NMTREEVIEWW* nm, bool& handled) {
         CrashIf(win->tocTreeCtrl != w);
         LRESULT res = OnTocTreeNotify(win, nm);
