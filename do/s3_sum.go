@@ -241,6 +241,15 @@ func s3DeleteOldestPreRel() {
 	}
 }
 
+func dumpEnv() {
+	env := os.Environ()
+	logf("\nEnv:\n")
+	for _, s := range env {
+		logf("env: %s\n", s)
+	}
+	logf("\n")
+}
+
 // upload as:
 // https://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-1027-install.exe etc.
 func s3UploadPreReleaseMust(ver string) {
@@ -249,6 +258,7 @@ func s3UploadPreReleaseMust(ver string) {
 		return
 	}
 
+	dumpEnv()
 	ensureAwsSecrets()
 
 	timeStart := time.Now()
