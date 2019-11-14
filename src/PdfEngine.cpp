@@ -1695,8 +1695,20 @@ bool PdfEngineImpl::FinishLoading() {
 }
 
 static TocItemFlags pdfFlagsToTocItemFlags(int flags) {
-    // TODO: implement me
-    return TocItemFlags::None;
+    TocItemFlags res = TocItemFlags::None;
+
+    // TODO: not sure about the mappings yet
+    if (flags & 0x1) {
+        res = res | TocItemFlags::Italic;
+    }
+    if (flags & 0x2) {
+        res = res | TocItemFlags::Bold;
+    }
+    if ((flags & ~0x3) != 0) {
+        // TODO: is there more?
+        CrashMe();
+    }
+    return res;
 }
 
 static COLORREF pdfColorToCOLORREF(float color[4]) {

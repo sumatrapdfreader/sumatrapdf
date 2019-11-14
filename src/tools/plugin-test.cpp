@@ -55,10 +55,10 @@ LRESULT CALLBACK PluginParentWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
         RECT rcClient = ClientRect(hwnd).ToRECT();
         HBRUSH brushBg = CreateSolidBrush(0xCCCCCC);
         FillRect(hDC, &rcClient, brushBg);
-        LOGFONT lf = {0};
+        LOGFONTW lf = {0};
         lf.lfHeight = -14;
         str::BufSet(lf.lfFaceName, dimof(lf.lfFaceName), L"MS Shell Dlg");
-        HFONT hFont = CreateFontIndirect(&lf);
+        HFONT hFont = CreateFontIndirectW(&lf);
         hFont = (HFONT)SelectObject(hDC, hFont);
         SetTextColor(hDC, 0x000000);
         SetBkMode(hDC, TRANSPARENT);

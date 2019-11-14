@@ -13,6 +13,9 @@
 #include "DebugLog.h"
 
 static HFONT gDefaultGuiFont = nullptr;
+static HFONT gDefaultGuiFontBold = nullptr;
+static HFONT gDefaultGuiFontItalic = nullptr;
+static HFONT gDefaultGuiFontBoldItalic = nullptr;
 
 int RectDx(const RECT& r) {
     return r.right - r.left;
@@ -843,13 +846,42 @@ RectI ChildPosWithinParent(HWND hwnd) {
 }
 
 HFONT GetDefaultGuiFont() {
-    if (!gDefaultGuiFont) {
-        NONCLIENTMETRICS ncm = {0};
-        ncm.cbSize = sizeof(ncm);
-        SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
-        gDefaultGuiFont = CreateFontIndirect(&ncm.lfMessageFont);
+    if (gDefaultGuiFont) {
+        return gDefaultGuiFont;
     }
+    NONCLIENTMETRICS ncm = {0};
+    ncm.cbSize = sizeof(ncm);
+    SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
+    gDefaultGuiFont = CreateFontIndirect(&ncm.lfMessageFont);
     return gDefaultGuiFont;
+}
+
+// TODO: lfUnderline? lfStrikeOut?
+HFONT GetDefaultGuiFont(bool bold, bool italic) {
+    HFONT* dest = &gDefaultGuiFont;
+    if (bold) {
+        if (italic) {
+            dest = &gDefaultGuiFontBoldItalic;
+        } else {
+            dest = &gDefaultGuiFontBold;
+        }
+    } else if (italic) {
+        dest = &gDefaultGuiFontItalic;
+    }
+    if (*dest != nullptr) {
+        return *dest;
+    }
+    NONCLIENTMETRICS ncm = {0};
+    ncm.cbSize = sizeof(ncm);
+    SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
+    if (bold) {
+        ncm.lfMessageFont.lfWeight = FW_BOLD;
+    }
+    if (italic) {
+        ncm.lfMessageFont.lfItalic = true;
+    }
+    *dest = CreateFontIndirect(&ncm.lfMessageFont);
+    return *dest;
 }
 
 long GetDefaultGuiFontSize() {
@@ -970,7 +1002,7 @@ const WCHAR* ToSafeString(AutoFreeW& s) {
 } // namespace win
 
 HFONT CreateSimpleFont(HDC hdc, const WCHAR* fontName, int fontSize) {
-    LOGFONT lf = {0};
+    LOGFONTW lf = {0};
 
     lf.lfWidth = 0;
     lf.lfHeight = -MulDiv(fontSize, GetDeviceCaps(hdc, LOGPIXELSY), USER_DEFAULT_SCREEN_DPI);
@@ -987,7 +1019,7 @@ HFONT CreateSimpleFont(HDC hdc, const WCHAR* fontName, int fontSize) {
     lf.lfEscapement = 0;
     lf.lfOrientation = 0;
 
-    return CreateFontIndirect(&lf);
+    return CreateFontIndirectW(&lf);
 }
 
 IStream* CreateStreamFromData(const void* data, size_t len) {

@@ -202,11 +202,22 @@ class PageElement {
     }
 };
 
-enum class TocItemFlags {
+enum class TocItemFlags : unsigned {
     None = 0x0,
     Bold = 0x1,
     Italic = 0x2,
 };
+
+// http://blog.bitwigglers.org/using-enum-classes-as-type-safe-bitmasks/
+inline TocItemFlags operator|(TocItemFlags lhs, TocItemFlags rhs) {
+    return static_cast<TocItemFlags>(static_cast<std::underlying_type<TocItemFlags>::type>(lhs) |
+                                     static_cast<std::underlying_type<TocItemFlags>::type>(rhs));
+}
+
+inline TocItemFlags operator&(TocItemFlags lhs, TocItemFlags rhs) {
+    return static_cast<TocItemFlags>(static_cast<std::underlying_type<TocItemFlags>::type>(lhs) &
+                                     static_cast<std::underlying_type<TocItemFlags>::type>(rhs));
+}
 
 // a "unset" state for COLORREF value. technically all colors are valid
 // this one is hopefully 

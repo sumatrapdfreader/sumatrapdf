@@ -42,6 +42,7 @@ class TreeCtrl {
 
     bool Create(const WCHAR* title);
     void SetFont(HFONT);
+    HFONT GetFont();
     void SetTreeModel(TreeModel*);
 
     void SuspendRedraw();
@@ -49,7 +50,6 @@ class TreeCtrl {
 
     HTREEITEM GetHandleByTreeItem(TreeItem*);
     TreeItem* GetTreeItemByHandle(HTREEITEM);
-
 
     // creation parameters. must be set before CreateTreeCtrl() call
     HWND parent = nullptr;
