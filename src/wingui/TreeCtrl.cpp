@@ -275,11 +275,21 @@ std::wstring TreeCtrl::GetInfoTip(HTREEITEM hItem) {
     return std::wstring(this->infotipBuf);
 }
 
-HTREEITEM TreeCtrl::FindTreeItem(TreeItem* item) {
+HTREEITEM TreeCtrl::GetHandleByTreeItem(TreeItem* item) {
     for (auto t : this->insertedItems) {
         auto* i = std::get<0>(t);
         if (i == item) {
             return std::get<1>(t);
+        }
+    }
+    return nullptr;
+}
+
+TreeItem* TreeCtrl::GetTreeItemByHandle(HTREEITEM item) {
+    for (auto t : this->insertedItems) {
+        auto* i = std::get<1>(t);
+        if (i == item) {
+            return std::get<0>(t);
         }
     }
     return nullptr;
