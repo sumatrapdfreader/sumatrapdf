@@ -5,6 +5,8 @@
 #include <synctex_parser.h>
 #include "utils/ScopedWin.h"
 #include "utils/FileUtil.h"
+
+#include "TreeModel.h"
 #include "BaseEngine.h"
 #include "PdfSync.h"
 

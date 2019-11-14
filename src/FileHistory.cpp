@@ -5,6 +5,7 @@ License: GPLv3 */
 #include "utils/FileUtil.h"
 #include "utils/ScopedWin.h"
 
+#include "TreeModel.h"
 #include "BaseEngine.h"
 #include "SettingsStructs.h"
 #include "FileHistory.h"

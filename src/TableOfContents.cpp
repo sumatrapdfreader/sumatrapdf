@@ -11,6 +11,7 @@
 #include "utils/WinUtil.h"
 #include "wingui/TreeCtrl.h"
 
+#include "TreeModel.h"
 #include "BaseEngine.h"
 #include "EngineManager.h"
 
@@ -432,14 +433,15 @@ void LoadTocTree(WindowInfo* win) {
     GetLeftRightCounts(tab->tocRoot, l2r, r2l);
     bool isRTL = r2l > l2r;
 
-    // TODO: make into TreeCtrlSuspendRedraw()/TreeCtrlResumeRedraw()
-    SendMessage(win->tocTreeCtrl->hwnd, WM_SETREDRAW, FALSE, 0);
-    SetRtl(win->tocTreeCtrl->hwnd, isRTL);
-    PopulateTocTreeView(win->tocTreeCtrl, tab->tocRoot, tab->tocState, nullptr);
+    TreeCtrl* treeCtrl = win->tocTreeCtrl;
+    treeCtrl->SuspendRedraw();
+    HWND hwnd = treeCtrl->hwnd;
+    SetRtl(hwnd, isRTL);
+    PopulateTocTreeView(treeCtrl, tab->tocRoot, tab->tocState, nullptr);
     UpdateTocColors(win);
-    SendMessage(win->tocTreeCtrl->hwnd, WM_SETREDRAW, TRUE, 0);
+    treeCtrl->ResumeRedraw();
     UINT fl = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;
-    RedrawWindow(win->tocTreeCtrl->hwnd, nullptr, nullptr, fl);
+    RedrawWindow(hwnd, nullptr, nullptr, fl);
 }
 
 static LRESULT OnTocTreeNotify(WindowInfo* win, NMTREEVIEWW* pnmtv) {
@@ -620,7 +622,9 @@ void CreateToc(WindowInfo* win) {
         handled = (res != -1);
         return res;
     };
-    tree->onGetInfoTip = [](TreeCtrl* w, NMTVGETINFOTIP* infoTipInfo) { CustomizeTocInfoTip(w, infoTipInfo); };
+    tree->onGetInfoTip = [](TreeCtrl* w, NMTVGETINFOTIP* infoTipInfo) {
+        CustomizeTocInfoTip(w, infoTipInfo);
+    };
     bool ok = tree->Create(L"TOC");
     CrashIf(!ok);
     win->tocTreeCtrl = tree;

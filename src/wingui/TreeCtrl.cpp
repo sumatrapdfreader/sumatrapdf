@@ -2,6 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "utils/BaseUtil.h"
+#include "TreeModel.h"
 #include "TreeCtrl.h"
 #include "utils/WinUtil.h"
 
@@ -221,6 +222,14 @@ void TreeCtrl::SetFont(HFONT f) {
     SetWindowFont(this->hwnd, f, TRUE);
 }
 
+void TreeCtrl::SuspendRedraw() {
+    SendMessage(hwnd, WM_SETREDRAW, FALSE, 0);
+}
+
+void TreeCtrl::ResumeRedraw() {
+    SendMessage(hwnd, WM_SETREDRAW, TRUE, 0);
+}
+
 // returns false if we should stop iteration
 // TODO: convert to non-recursive version by storing nodes to visit in std::deque
 static bool VisitTreeNodesRec(HWND hwnd, HTREEITEM hItem, const TreeItemVisitor& visitor) {
@@ -264,4 +273,63 @@ std::wstring TreeCtrl::GetInfoTip(HTREEITEM hItem) {
     item.cchTextMax = dimof(this->infotipBuf);
     TreeView_GetItem(this->hwnd, &item);
     return std::wstring(this->infotipBuf);
+}
+
+HTREEITEM TreeCtrl::FindTreeItem(TreeItem* item) {
+    for (auto t : this->insertedItems) {
+        auto* i = std::get<0>(t);
+        if (i == item) {
+            return std::get<1>(t);
+        }
+    }
+    return nullptr;
+}
+
+static HTREEITEM InsertItem(TreeCtrl* tree, HTREEITEM parent, TreeItem* item) {
+    TV_INSERTSTRUCT toInsert {};
+    toInsert.hParent = parent;
+    toInsert.hInsertAfter = TVI_LAST;
+    toInsert.itemex.mask = TVIF_TEXT | TVIF_PARAM | TVIF_STATE;
+    UINT state = 0;
+    if (item->IsOpened()) {
+        state = TVIS_EXPANDED;
+    }
+    toInsert.itemex.state = state;
+    toInsert.itemex.stateMask = TVIS_EXPANDED;
+    toInsert.itemex.lParam = reinterpret_cast<LPARAM>(item);
+    auto title = item->Text();
+    toInsert.itemex.pszText = title;
+    return tree->InsertItem(&toInsert);
+}
+
+static void PopulateTreeItem(TreeCtrl* tree, TreeItem* item, HTREEITEM parent) {
+    int n = item->ChildCount();
+    for (int i = 0; i < n; i++) {
+        auto* ti = item->ChildAt(i);
+        HTREEITEM h = InsertItem(tree, parent, ti);
+        auto v = std::make_tuple(ti, h);
+        tree->insertedItems.push_back(v);
+    }
+}
+
+static void PopulateTree(TreeCtrl* tree, TreeModel *tm) {
+    HTREEITEM parent = nullptr;
+    int n = tm->RootCount();
+    for (int i = 0; i < n; i++) {
+        auto* ti = tm->RootAt(i);
+        HTREEITEM h = InsertItem(tree, parent, ti);
+        auto v = std::make_tuple(ti, h);
+        tree->insertedItems.push_back(v);
+        PopulateTreeItem(tree, ti, h);
+    }
+}
+
+void TreeCtrl::SetTreeModel(TreeModel* tm) {
+    CrashIf(!tm);
+    // for now only allow this to be called once
+    CrashIf(this->treeModel);
+
+    this->treeModel = tm;
+    PopulateTree(this, tm);
+
 }

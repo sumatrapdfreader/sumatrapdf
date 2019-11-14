@@ -6,6 +6,8 @@
 #include <UIAutomationCoreApi.h>
 #include <OleAcc.h>
 #include "utils/ScopedWin.h"
+
+#include "TreeModel.h"
 #include "BaseEngine.h"
 #include "SettingsStructs.h"
 #include "Controller.h"

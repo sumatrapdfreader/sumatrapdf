@@ -12,6 +12,8 @@ extern "C" {
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/GdiplusUtil.h"
+
+#include "TreeModel.h"
 #include "BaseEngine.h"
 #include "PdfCreator.h"
 

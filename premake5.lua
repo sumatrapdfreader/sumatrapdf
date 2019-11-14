@@ -296,7 +296,7 @@ workspace "SumatraPDF"
       "4018", "4057", "4100", "4189", "4244", "4267", "4295", "4457", 
       "4819", "4701", "4706", "4838" 
     }
-    includedirs { "src" }
+    includedirs { "src", "src/wingui" }
     includedirs { "ext/synctex", "ext/libdjvu", "ext/CHMLib/src", "ext/zlib", "mupdf/include" }
     engines_files()
     links { "chm" }
@@ -406,7 +406,7 @@ workspace "SumatraPDF"
     language "C++"
     cppdialect "C++17"
     disablewarnings { "4302", "4311", "4838" }
-    includedirs { "src" }
+    includedirs { "src", "src/wingui" }
     uia_files()
 
 
@@ -416,7 +416,7 @@ workspace "SumatraPDF"
     cppdialect "C++17"
     -- TODO: 4838 only in settingsstructs.h(642)
     disablewarnings { "4838" }
-    includedirs { "src", "ext/synctex" }
+    includedirs { "src", "src/wingui", "ext/synctex" }
     sumatra_files()
 
 
@@ -583,7 +583,7 @@ workspace "SumatraPDF"
     cppdialect "C++17"
     entrypoint "WinMainCRTStartup"
     flags { "NoManifest" }
-    includedirs { "src" }
+    includedirs { "src", "src/wingui" }
     sumatrapdf_files()
     files {
       "docs/releasenotes.txt",

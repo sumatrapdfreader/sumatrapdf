@@ -203,9 +203,7 @@ class PageElement {
 };
 
 // an item in a document's Table of Content
-class DocTocItem {
-    DocTocItem* last = nullptr; // only updated by AddSibling
-
+class DocTocItem : public TreeModel {
   public:
     // the item's visible label, owned
     WCHAR* title = nullptr;
@@ -240,6 +238,7 @@ class DocTocItem {
         free(title);
     }
 
+    DocTocItem* last = nullptr; // only updated by AddSibling
     void AddSibling(DocTocItem* sibling) {
         DocTocItem* item = last;
         if (item == nullptr) {
@@ -264,6 +263,26 @@ class DocTocItem {
     // returns the destination this ToC item points to or nullptr
     // (the result is owned by the DocTocItem and MUST NOT be deleted)
     virtual PageDestination* GetLink() = 0;
+
+    // TreeModel
+    int RootCount() override {
+        int n = 0;
+        auto node = child;
+        while (node) {
+            n++;
+            node = node->next;
+        }
+        return n;
+    }
+
+    TreeItem* RootAt(int n) {
+        auto node = child;
+        while (n > 0) {
+            node = node->next;
+            n--;
+        }
+        return reinterpret_cast<TreeItem*>(node);
+    }
 };
 
 // a helper that allows for rendering interruptions in an engine-agnostic way

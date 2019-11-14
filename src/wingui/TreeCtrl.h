@@ -1,6 +1,8 @@
 /* Copyright 2019 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+struct TreeModel;
+struct TreeItem;
 class TreeCtrl;
 
 typedef std::function<LRESULT(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& discardMsg)> MsgFilter;
@@ -39,6 +41,12 @@ class TreeCtrl {
 
     bool Create(const WCHAR* title);
     void SetFont(HFONT);
+    void SetTreeModel(TreeModel*);
+
+    void SuspendRedraw();
+    void ResumeRedraw();
+
+    HTREEITEM FindTreeItem(TreeItem*);
 
     // creation parameters. must be set before CreateTreeCtrl() call
     HWND parent = nullptr;
@@ -48,6 +56,7 @@ class TreeCtrl {
     DWORD dwExStyle = 0;
     HMENU menu = nullptr;
     COLORREF bgCol = 0;
+    TreeModel *treeModel = nullptr; // not owned by us
     WCHAR infotipBuf[INFOTIPSIZE + 1]; // +1 just in case
 
     // this data can be set directly
@@ -61,6 +70,10 @@ class TreeCtrl {
     TVITEMW item = {0};
     UINT_PTR hwndSubclassId = 0;
     UINT_PTR hwndParentSubclassId = 0;
+
+    // TreeItem* -> HTREEITEM mapping so that we can
+    // find HTREEITEM from TreeItem*
+    std::vector<std::tuple<TreeItem*,HTREEITEM>> insertedItems;
 };
 
 void TreeViewExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, bool subtree);

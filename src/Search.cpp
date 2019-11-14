@@ -11,6 +11,8 @@
 #include "utils/FileUtil.h"
 #include "utils/UITask.h"
 #include "utils/WinUtil.h"
+
+#include "TreeModel.h"
 #include "BaseEngine.h"
 #include "EngineManager.h"
 #include "SettingsStructs.h"

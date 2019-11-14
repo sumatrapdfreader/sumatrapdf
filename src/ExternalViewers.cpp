@@ -7,6 +7,7 @@
 #include "utils/WinUtil.h"
 #include "utils/ScopedWin.h"
 
+#include "TreeModel.h"
 #include "BaseEngine.h"
 #include "EngineManager.h"
 

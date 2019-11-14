@@ -3,6 +3,8 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
+
+#include "TreeModel.h"
 #include "BaseEngine.h"
 #include "ProgressUpdateUI.h"
 #include "TextSelection.h"

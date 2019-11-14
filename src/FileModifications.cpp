@@ -7,6 +7,7 @@
 #include "utils/FileUtil.h"
 #include "utils/SquareTreeParser.h"
 
+#include "TreeModel.h"
 #include "BaseEngine.h"
 #include "FileModifications.h"
 #include "Version.h"

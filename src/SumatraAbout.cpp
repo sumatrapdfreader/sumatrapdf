@@ -7,6 +7,7 @@
 #include "utils/FileUtil.h"
 #include "utils/WinUtil.h"
 
+#include "TreeModel.h"
 #include "BaseEngine.h"
 #include "SettingsStructs.h"
 #include "FileHistory.h"

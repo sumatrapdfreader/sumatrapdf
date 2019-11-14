@@ -10,6 +10,7 @@
 #include "utils/WinUtil.h"
 #include "wingui/TreeCtrl.h"
 
+#include "TreeModel.h"
 #include "BaseEngine.h"
 #include "EngineManager.h"
 #include "Doc.h"

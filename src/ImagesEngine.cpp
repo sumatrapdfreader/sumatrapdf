@@ -12,6 +12,7 @@
 #include "utils/JsonParser.h"
 #include "utils/WinUtil.h"
 
+#include "TreeModel.h"
 #include "BaseEngine.h"
 #include "ImagesEngine.h"
 #include "PdfCreator.h"
