@@ -332,6 +332,7 @@ static void PopulateTreeItem(TreeCtrl* tree, TreeItem* item, HTREEITEM parent) {
         HTREEITEM h = InsertItem(tree, parent, ti);
         auto v = std::make_tuple(ti, h);
         tree->insertedItems.push_back(v);
+        PopulateTreeItem(tree, ti, h);
     }
 }
 

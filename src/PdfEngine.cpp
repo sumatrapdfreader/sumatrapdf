@@ -1716,7 +1716,8 @@ static COLORREF pdfColorToCOLORREF(float color[4]) {
 }
 
 PdfTocItem* PdfEngineImpl::BuildTocTree(fz_outline* outline, int& idCounter, bool isAttachment) {
-    PdfTocItem* node = nullptr;
+    PdfTocItem* root = nullptr;
+    PdfTocItem* curr = nullptr;
 
     while (outline) {
         WCHAR* name = nullptr;
@@ -1744,15 +1745,18 @@ PdfTocItem* PdfEngineImpl::BuildTocTree(fz_outline* outline, int& idCounter, boo
             item->child = BuildTocTree(outline->down, idCounter, isAttachment);
         }
 
-        if (!node)
-            node = item;
-        else
-            node->AddSibling(item);
+        if (!root) {
+            root = item;
+            curr = item;
+        } else {
+            curr->next = item;
+            curr = item;
+        }
 
         outline = outline->next;
     }
 
-    return node;
+    return root;
 }
 
 DocTocTree* PdfEngineImpl::GetTocTree() {
