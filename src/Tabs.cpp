@@ -654,10 +654,8 @@ void SaveCurrentTabInfo(WindowInfo* win) {
     TabInfo* tdata = win->currentTab;
     CrashIf(!tdata);
     if (win->tocLoaded) {
-        tdata->tocState.Reset();
         HTREEITEM hRoot = win->tocTreeCtrl->GetRoot();
-        if (hRoot)
-            UpdateTocExpansionState(tdata, win->tocTreeCtrl, hRoot);
+        UpdateTocExpansionState(tdata->tocState, win->tocTreeCtrl, hRoot);
     }
     VerifyTabInfo(win, tdata);
 

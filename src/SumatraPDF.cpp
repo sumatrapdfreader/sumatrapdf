@@ -501,10 +501,8 @@ static void UpdateSidebarDisplayState(WindowInfo* win, TabInfo* tab, DisplayStat
 
     ds->showToc = tab->showToc;
     if (win->tocLoaded && tab == win->currentTab) {
-        tab->tocState.Reset();
         HTREEITEM hRoot = win->tocTreeCtrl->GetRoot();
-        if (hRoot)
-            UpdateTocExpansionState(tab, win->tocTreeCtrl, hRoot);
+        UpdateTocExpansionState(tab->tocState, win->tocTreeCtrl, hRoot);
     }
     *ds->tocState = tab->tocState;
 }

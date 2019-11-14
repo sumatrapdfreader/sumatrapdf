@@ -790,7 +790,7 @@ class EpubEngineImpl : public EbookEngine {
     bool HasTocTree() const override {
         return doc->HasToc();
     }
-    DocTocItem* GetTocTree() override;
+    DocTocTree* GetTocTree() override;
 
     static BaseEngine* CreateFromFile(const WCHAR* fileName);
     static BaseEngine* CreateFromStream(IStream* stream);
@@ -877,14 +877,14 @@ PageLayoutType EpubEngineImpl::PreferredLayout() {
     return Layout_Book;
 }
 
-DocTocItem* EpubEngineImpl::GetTocTree() {
+DocTocTree* EpubEngineImpl::GetTocTree() {
     EbookTocBuilder builder(this);
     doc->ParseToc(&builder);
     EbookTocItem* root = builder.GetRoot();
     if (root) {
         root->OpenSingleNode();
     }
-    return root;
+    return new DocTocTree(root);
 }
 
 BaseEngine* EpubEngineImpl::CreateFromFile(const WCHAR* fileName) {
@@ -948,7 +948,7 @@ class Fb2EngineImpl : public EbookEngine {
     bool HasTocTree() const override {
         return doc->HasToc();
     }
-    DocTocItem* GetTocTree() override;
+    DocTocTree* GetTocTree() override;
 
     static BaseEngine* CreateFromFile(const WCHAR* fileName);
     static BaseEngine* CreateFromStream(IStream* stream);
@@ -994,14 +994,14 @@ bool Fb2EngineImpl::FinishLoading() {
     return pages->size() > 0;
 }
 
-DocTocItem* Fb2EngineImpl::GetTocTree() {
+DocTocTree* Fb2EngineImpl::GetTocTree() {
     EbookTocBuilder builder(this);
     doc->ParseToc(&builder);
     EbookTocItem* root = builder.GetRoot();
     if (root) {
         root->OpenSingleNode();
     }
-    return root;
+    return new DocTocTree(root);
 }
 
 BaseEngine* Fb2EngineImpl::CreateFromFile(const WCHAR* fileName) {
@@ -1064,7 +1064,7 @@ class MobiEngineImpl : public EbookEngine {
     bool HasTocTree() const override {
         return doc->HasToc();
     }
-    DocTocItem* GetTocTree() override;
+    DocTocTree* GetTocTree() override;
 
     static BaseEngine* CreateFromFile(const WCHAR* fileName);
     static BaseEngine* CreateFromStream(IStream* stream);
@@ -1147,13 +1147,13 @@ PageDestination* MobiEngineImpl::GetNamedDest(const WCHAR* name) {
     return new SimpleDest2(pageNo, rect);
 }
 
-DocTocItem* MobiEngineImpl::GetTocTree() {
+DocTocTree* MobiEngineImpl::GetTocTree() {
     EbookTocBuilder builder(this);
     doc->ParseToc(&builder);
     EbookTocItem* root = builder.GetRoot();
     if (root)
         root->OpenSingleNode();
-    return root;
+    return new DocTocTree(root);
 }
 
 BaseEngine* MobiEngineImpl::CreateFromFile(const WCHAR* fileName) {
@@ -1213,7 +1213,7 @@ class PdbEngineImpl : public EbookEngine {
     bool HasTocTree() const override {
         return doc->HasToc();
     }
-    DocTocItem* GetTocTree() override;
+    DocTocTree* GetTocTree() override;
 
     static BaseEngine* CreateFromFile(const WCHAR* fileName);
 
@@ -1246,10 +1246,11 @@ bool PdbEngineImpl::Load(const WCHAR* fileName) {
     return pages->size() > 0;
 }
 
-DocTocItem* PdbEngineImpl::GetTocTree() {
+DocTocTree* PdbEngineImpl::GetTocTree() {
     EbookTocBuilder builder(this);
     doc->ParseToc(&builder);
-    return builder.GetRoot();
+    auto* root = builder.GetRoot();
+    return new DocTocTree(root);
 }
 
 BaseEngine* PdbEngineImpl::CreateFromFile(const WCHAR* fileName) {
@@ -1424,7 +1425,7 @@ class ChmEngineImpl : public EbookEngine {
     bool HasTocTree() const override {
         return doc->HasToc() || doc->HasIndex();
     }
-    DocTocItem* GetTocTree() override;
+    DocTocTree* GetTocTree() override;
 
     static BaseEngine* CreateFromFile(const WCHAR* fileName);
 
@@ -1569,7 +1570,7 @@ PageDestination* ChmEngineImpl::GetNamedDest(const WCHAR* name) {
     return dest;
 }
 
-DocTocItem* ChmEngineImpl::GetTocTree() {
+DocTocTree* ChmEngineImpl::GetTocTree() {
     EbookTocBuilder builder(this);
     doc->ParseToc(&builder);
     if (doc->HasIndex()) {
@@ -1583,7 +1584,7 @@ DocTocItem* ChmEngineImpl::GetTocTree() {
     EbookTocItem* root = builder.GetRoot();
     if (root)
         root->OpenSingleNode();
-    return root;
+    return new DocTocTree(root);
 }
 
 class ChmEmbeddedDest : public PageDestination {
@@ -1798,7 +1799,7 @@ class TxtEngineImpl : public EbookEngine {
     bool HasTocTree() const override {
         return doc->HasToc();
     }
-    DocTocItem* GetTocTree() override;
+    DocTocTree* GetTocTree() override;
 
     static BaseEngine* CreateFromFile(const WCHAR* fileName);
 
@@ -1836,10 +1837,11 @@ bool TxtEngineImpl::Load(const WCHAR* fileName) {
     return pages->size() > 0;
 }
 
-DocTocItem* TxtEngineImpl::GetTocTree() {
+DocTocTree* TxtEngineImpl::GetTocTree() {
     EbookTocBuilder builder(this);
     doc->ParseToc(&builder);
-    return builder.GetRoot();
+    auto* root = builder.GetRoot();
+    return new DocTocTree(root);
 }
 
 BaseEngine* TxtEngineImpl::CreateFromFile(const WCHAR* fileName) {

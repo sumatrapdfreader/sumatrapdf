@@ -161,12 +161,21 @@ TVITEMW* TreeCtrl::GetItem(HTREEITEM hItem) {
     ZeroStruct(item);
     item->hItem = hItem;
     item->mask = TVIF_PARAM | TVIF_STATE;
-    item->stateMask = TVIS_EXPANDED;
+    UINT sm = TVIS_SELECTED | TVIS_CUT | TVIS_DROPHILITED | TVIS_BOLD | TVIS_EXPANDED;
+    item->stateMask = sm;
     BOOL ok = TreeView_GetItem(this->hwnd, item);
     if (!ok) {
         return nullptr;
     }
     return item;
+}
+
+bool TreeCtrl::IsExpanded(HTREEITEM hItem) {
+    auto* item = GetItem(hItem);
+    if (item) {
+        return (item->state & TVIS_EXPANDED) != 0;
+    }
+    return false;
 }
 
 bool TreeCtrl::GetItemRect(HTREEITEM item, bool fItemRect, RECT& r) {
@@ -301,7 +310,7 @@ static HTREEITEM InsertItem(TreeCtrl* tree, HTREEITEM parent, TreeItem* item) {
     toInsert.hInsertAfter = TVI_LAST;
     toInsert.itemex.mask = TVIF_TEXT | TVIF_PARAM | TVIF_STATE;
     UINT state = 0;
-    if (item->IsOpened()) {
+    if (item->IsExpanded()) {
         state = TVIS_EXPANDED;
     }
     toInsert.itemex.state = state;

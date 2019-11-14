@@ -48,6 +48,10 @@ enum class AppColor {
 
 };
 
+COLORREF MkRgb(byte r, byte g, byte b);
+COLORREF MkRgb(float r, float g, float b); // in 0..1 range
+COLORREF MkRgba(byte r, byte g, byte b, byte a);
+
 COLORREF AdjustLightness(COLORREF c, float factor);
 COLORREF AdjustLightness2(COLORREF c, float units);
 float GetLightness(COLORREF c);
@@ -55,3 +59,4 @@ float GetLightness(COLORREF c);
 COLORREF GetAppColor(AppColor);
 void GetFixedPageUiColors(COLORREF& text, COLORREF& bg);
 void GetEbookUiColors(COLORREF& text, COLORREF& bg);
+

@@ -453,7 +453,7 @@ bool ChmModel::HasTocTree() const {
 
 // Callers delete the ToC tree, so we re-create it from prerecorded
 // values (which is faster than re-creating it from html every time)
-DocTocItem* ChmModel::GetTocTree() {
+DocTocTree* ChmModel::GetTocTree() {
     DocTocItem *root = nullptr, **nextChild = &root;
     Vec<DocTocItem*> levels;
     int idCounter = 0;
@@ -475,7 +475,7 @@ DocTocItem* ChmModel::GetTocTree() {
 
     if (root)
         root->OpenSingleNode();
-    return root;
+    return new DocTocTree(root);
 }
 
 // adapted from DisplayModel::NextZoomStep

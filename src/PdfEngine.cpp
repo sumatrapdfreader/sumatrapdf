@@ -17,6 +17,7 @@ extern "C" {
 #include "utils/WinUtil.h"
 #include "utils/ZipUtil.h"
 
+#include "Colors.h"
 #include "TreeModel.h"
 #include "BaseEngine.h"
 #include "PdfEngine.h"
@@ -1098,7 +1099,7 @@ class PdfEngineImpl : public BaseEngine {
     bool HasTocTree() const override {
         return outline != nullptr || attachments != nullptr;
     }
-    DocTocItem* GetTocTree() override;
+    DocTocTree* GetTocTree() override;
 
     bool HasPageLabels() const override {
         return _pagelabels != nullptr;
@@ -1693,6 +1694,15 @@ bool PdfEngineImpl::FinishLoading() {
     return true;
 }
 
+static TocItemFlags pdfFlagsToTocItemFlags(int flags) {
+    // TODO: implement me
+    return TocItemFlags::None;
+}
+
+static COLORREF pdfColorToCOLORREF(float color[4]) {
+    return MkRgb(color[0], color[1], color[2]);
+}
+
 PdfTocItem* PdfEngineImpl::BuildTocTree(fz_outline* outline, int& idCounter, bool isAttachment) {
     PdfTocItem* node = nullptr;
 
@@ -1709,8 +1719,14 @@ PdfTocItem* PdfEngineImpl::BuildTocTree(fz_outline* outline, int& idCounter, boo
         PdfLink link(this, pageNo, nullptr, outline);
         link.isAttachment = isAttachment;
         PdfTocItem* item = new PdfTocItem(name, link);
-        item->open = outline->is_open;
+        item->isOpenDefault = outline->is_open;
         item->id = ++idCounter;
+        if (outline->flags != 0) {
+            item->flags = pdfFlagsToTocItemFlags(outline->flags);
+        }
+        if (outline->has_color) {
+            item->color = pdfColorToCOLORREF(outline->color);
+        }
 
         if (outline->down) {
             item->child = BuildTocTree(outline->down, idCounter, isAttachment);
@@ -1727,22 +1743,22 @@ PdfTocItem* PdfEngineImpl::BuildTocTree(fz_outline* outline, int& idCounter, boo
     return node;
 }
 
-DocTocItem* PdfEngineImpl::GetTocTree() {
+DocTocTree* PdfEngineImpl::GetTocTree() {
     int idCounter = 0;
 
-    PdfTocItem* node = nullptr;
+    PdfTocItem* root = nullptr;
     if (outline) {
-        node = BuildTocTree(outline, idCounter, false);
+        root = BuildTocTree(outline, idCounter, false);
     }
     if (!attachments) {
-        return node;
+        return new DocTocTree(root);
     }
     PdfTocItem* att = BuildTocTree(attachments, idCounter, true);
-    if (!node) {
-        return att;
+    if (!root) {
+        return new DocTocTree(att);
     }
-    node->AddSibling(att);
-    return node;
+    root->AddSibling(att);
+    return new DocTocTree(root);
 }
 
 PageDestination* PdfEngineImpl::GetNamedDest(const WCHAR* name) {
@@ -2214,7 +2230,7 @@ void PdfEngineImpl::LinkifyPageText(PdfPageInfo* pageInfo) {
     if (!pageText)
         return;
 
-            // TODO(port)
+        // TODO(port)
 #if 0
     CrashMePort();
     LinkRectList* list = LinkifyText(pageText, coords);
@@ -2244,7 +2260,7 @@ void PdfEngineImpl::LinkifyPageText(PdfPageInfo* pageInfo) {
 pdf_annot** PdfEngineImpl::ProcessPageAnnotations(PdfPageInfo* pageInfo) {
     Vec<pdf_annot*> annots;
 
-            // TODO(annots)
+    // TODO(annots)
 #if 0
     for (pdf_annot* annot = page->annots; annot; annot = annot->next) {
         if (FZ_ANNOT_FILEATTACHMENT == annot->annot_type) {
@@ -2432,260 +2448,259 @@ WCHAR* PdfEngineImpl::ExtractFontList() {
     ScopedCritSec scope(&ctxAccess);
 
     for (pdf_obj* res : resList) {
-                pdf_unmark_obj(ctx, res);
-            }
-
-            WStrVec fonts;
-            for (size_t i = 0; i < fontList.size(); i++) {
-                const char *name = nullptr, *type = nullptr, *encoding = nullptr;
-                AutoFree anonFontName;
-                bool embedded = false;
-                fz_try(ctx) {
-                    pdf_obj* font = fontList.at(i);
-                    pdf_obj* font2 = pdf_array_get(ctx, pdf_dict_gets(ctx, font, "DescendantFonts"), 0);
-                    if (!font2)
-                        font2 = font;
-
-                    name = pdf_to_name(ctx, pdf_dict_getsa(ctx, font2, "BaseFont", "Name"));
-                    bool needAnonName = str::IsEmpty(name);
-                    if (needAnonName && font2 != font) {
-                        name = pdf_to_name(ctx, pdf_dict_getsa(ctx, font, "BaseFont", "Name"));
-                        needAnonName = str::IsEmpty(name);
-                    }
-                    if (needAnonName) {
-                        anonFontName.Set(str::Format("<#%d>", pdf_obj_parent_num(ctx, font2)));
-                        name = anonFontName;
-                    }
-                    embedded = false;
-                    pdf_obj* desc = pdf_dict_gets(ctx, font2, "FontDescriptor");
-                    if (desc &&
-                        (pdf_dict_gets(ctx, desc, "FontFile") || pdf_dict_getsa(ctx, desc, "FontFile2", "FontFile3")))
-                        embedded = true;
-                    if (embedded && str::Len(name) > 7 && name[6] == '+')
-                        name += 7;
-
-                    type = pdf_to_name(ctx, pdf_dict_gets(ctx, font, "Subtype"));
-                    if (font2 != font) {
-                        const char* type2 = pdf_to_name(ctx, pdf_dict_gets(ctx, font2, "Subtype"));
-                        if (str::Eq(type2, "CIDFontType0"))
-                            type = "Type1 (CID)";
-                        else if (str::Eq(type2, "CIDFontType2"))
-                            type = "TrueType (CID)";
-                    }
-                    if (str::Eq(type, "Type3"))
-                        embedded = pdf_dict_gets(ctx, font2, "CharProcs") != nullptr;
-
-                    encoding = pdf_to_name(ctx, pdf_dict_gets(ctx, font, "Encoding"));
-                    if (str::Eq(encoding, "WinAnsiEncoding"))
-                        encoding = "Ansi";
-                    else if (str::Eq(encoding, "MacRomanEncoding"))
-                        encoding = "Roman";
-                    else if (str::Eq(encoding, "MacExpertEncoding"))
-                        encoding = "Expert";
-                }
-                fz_catch(ctx) {
-                    continue;
-                }
-                CrashIf(!name || !type || !encoding);
-
-                str::Str<char> info;
-                if (name[0] < 0 && MultiByteToWideChar(936, MB_ERR_INVALID_CHARS, name, -1, nullptr, 0))
-                    info.Append(str::ToMultiByte(name, 936, CP_UTF8).StealData());
-                else
-                    info.Append(name);
-                if (!str::IsEmpty(encoding) || !str::IsEmpty(type) || embedded) {
-                    info.Append(" (");
-                    if (!str::IsEmpty(type))
-                        info.AppendFmt("%s; ", type);
-                    if (!str::IsEmpty(encoding))
-                        info.AppendFmt("%s; ", encoding);
-                    if (embedded)
-                        info.Append("embedded; ");
-                    info.RemoveAt(info.size() - 2, 2);
-                    info.Append(")");
-                }
-
-                AutoFreeW fontInfo(str::conv::FromUtf8(info.LendData()));
-                if (fontInfo && !fonts.Contains(fontInfo))
-                    fonts.Append(fontInfo.StealData());
-            }
-            if (fonts.size() == 0)
-                return nullptr;
-
-            fonts.SortNatural();
-            return fonts.Join(L"\n");
+        pdf_unmark_obj(ctx, res);
     }
 
-    WCHAR* PdfEngineImpl::GetProperty(DocumentProperty prop) {
-        if (!_doc)
-            return nullptr;
+    WStrVec fonts;
+    for (size_t i = 0; i < fontList.size(); i++) {
+        const char *name = nullptr, *type = nullptr, *encoding = nullptr;
+        AutoFree anonFontName;
+        bool embedded = false;
+        fz_try(ctx) {
+            pdf_obj* font = fontList.at(i);
+            pdf_obj* font2 = pdf_array_get(ctx, pdf_dict_gets(ctx, font, "DescendantFonts"), 0);
+            if (!font2)
+                font2 = font;
 
-        if (DocumentProperty::PdfVersion == prop) {
-            int major = _doc->version / 10, minor = _doc->version % 10;
-            pdf_crypt* crypt = _doc->crypt;
-            if (1 == major && 7 == minor && pdf_crypt_version(ctx, crypt) == 5) {
-                if (pdf_crypt_revision(ctx, crypt) == 5)
-                    return str::Format(L"%d.%d Adobe Extension Level %d", major, minor, 3);
-                if (pdf_crypt_revision(ctx, crypt) == 6)
-                    return str::Format(L"%d.%d Adobe Extension Level %d", major, minor, 8);
+            name = pdf_to_name(ctx, pdf_dict_getsa(ctx, font2, "BaseFont", "Name"));
+            bool needAnonName = str::IsEmpty(name);
+            if (needAnonName && font2 != font) {
+                name = pdf_to_name(ctx, pdf_dict_getsa(ctx, font, "BaseFont", "Name"));
+                needAnonName = str::IsEmpty(name);
             }
-            return str::Format(L"%d.%d", major, minor);
-        }
-
-        if (DocumentProperty::PdfFileStructure == prop) {
-            WStrVec fstruct;
-            if (pdf_to_bool(ctx, pdf_dict_gets(ctx, _info, "Linearized")))
-                fstruct.Append(str::Dup(L"linearized"));
-            if (pdf_to_bool(ctx, pdf_dict_gets(ctx, _info, "Marked")))
-                fstruct.Append(str::Dup(L"tagged"));
-            if (pdf_dict_gets(ctx, _info, "OutputIntents")) {
-                for (int i = 0; i < pdf_array_len(ctx, pdf_dict_gets(ctx, _info, "OutputIntents")); i++) {
-                    pdf_obj* intent = pdf_array_get(ctx, pdf_dict_gets(ctx, _info, "OutputIntents"), i);
-                    CrashIf(!str::StartsWith(pdf_to_name(ctx, intent), "GTS_"));
-                    fstruct.Append(str::conv::FromUtf8(pdf_to_name(ctx, intent) + 4));
-                }
+            if (needAnonName) {
+                anonFontName.Set(str::Format("<#%d>", pdf_obj_parent_num(ctx, font2)));
+                name = anonFontName;
             }
-            return fstruct.size() > 0 ? fstruct.Join(L",") : nullptr;
-        }
+            embedded = false;
+            pdf_obj* desc = pdf_dict_gets(ctx, font2, "FontDescriptor");
+            if (desc && (pdf_dict_gets(ctx, desc, "FontFile") || pdf_dict_getsa(ctx, desc, "FontFile2", "FontFile3")))
+                embedded = true;
+            if (embedded && str::Len(name) > 7 && name[6] == '+')
+                name += 7;
 
-        if (DocumentProperty::UnsupportedFeatures == prop) {
-            if (pdf_to_bool(ctx, pdf_dict_gets(ctx, _info, "Unsupported_XFA")))
-                return str::Dup(L"XFA");
-            return nullptr;
-        }
-
-        if (DocumentProperty::FontList == prop)
-            return ExtractFontList();
-
-        static struct {
-            DocumentProperty prop;
-            const char* name;
-        } pdfPropNames[] = {
-            {DocumentProperty::Title, "Title"},
-            {DocumentProperty::Author, "Author"},
-            {DocumentProperty::Subject, "Subject"},
-            {DocumentProperty::Copyright, "Copyright"},
-            {DocumentProperty::CreationDate, "CreationDate"},
-            {DocumentProperty::ModificationDate, "ModDate"},
-            {DocumentProperty::CreatorApp, "Creator"},
-            {DocumentProperty::PdfProducer, "Producer"},
-        };
-        for (int i = 0; i < dimof(pdfPropNames); i++) {
-            if (pdfPropNames[i].prop == prop) {
-                // _info is guaranteed not to contain any indirect references,
-                // so no need for ctxAccess
-                pdf_obj* obj = pdf_dict_gets(ctx, _info, pdfPropNames[i].name);
-                return obj ? pdf_clean_string(str::conv::FromPdf(ctx, obj)) : nullptr;
+            type = pdf_to_name(ctx, pdf_dict_gets(ctx, font, "Subtype"));
+            if (font2 != font) {
+                const char* type2 = pdf_to_name(ctx, pdf_dict_gets(ctx, font2, "Subtype"));
+                if (str::Eq(type2, "CIDFontType0"))
+                    type = "Type1 (CID)";
+                else if (str::Eq(type2, "CIDFontType2"))
+                    type = "TrueType (CID)";
             }
-        }
-        return nullptr;
-    };
+            if (str::Eq(type, "Type3"))
+                embedded = pdf_dict_gets(ctx, font2, "CharProcs") != nullptr;
 
-    bool PdfEngineImpl::SupportsAnnotation(bool forSaving) const {
-        if (forSaving) {
-            // TODO: support updating of documents where pages aren't all numbered objects?
-            for (int i = 0; i < PageCount(); i++) {
-                PdfPageInfo* pi = &_pages[i];
-                pdf_page* page = pi->page;
-                if (pdf_to_num(ctx, page->obj) == 0)
-                    return false;
-            }
+            encoding = pdf_to_name(ctx, pdf_dict_gets(ctx, font, "Encoding"));
+            if (str::Eq(encoding, "WinAnsiEncoding"))
+                encoding = "Ansi";
+            else if (str::Eq(encoding, "MacRomanEncoding"))
+                encoding = "Roman";
+            else if (str::Eq(encoding, "MacExpertEncoding"))
+                encoding = "Expert";
         }
-        return true;
-    }
+        fz_catch(ctx) {
+            continue;
+        }
+        CrashIf(!name || !type || !encoding);
 
-    void PdfEngineImpl::UpdateUserAnnotations(Vec<PageAnnotation> * list) {
-        // TODO: use a new critical section to avoid blocking the UI thread
-        ScopedCritSec scope(&ctxAccess);
-        if (list)
-            userAnnots = *list;
+        str::Str<char> info;
+        if (name[0] < 0 && MultiByteToWideChar(936, MB_ERR_INVALID_CHARS, name, -1, nullptr, 0))
+            info.Append(str::ToMultiByte(name, 936, CP_UTF8).StealData());
         else
-            userAnnots.Reset();
+            info.Append(name);
+        if (!str::IsEmpty(encoding) || !str::IsEmpty(type) || embedded) {
+            info.Append(" (");
+            if (!str::IsEmpty(type))
+                info.AppendFmt("%s; ", type);
+            if (!str::IsEmpty(encoding))
+                info.AppendFmt("%s; ", encoding);
+            if (embedded)
+                info.Append("embedded; ");
+            info.RemoveAt(info.size() - 2, 2);
+            info.Append(")");
+        }
+
+        AutoFreeW fontInfo(str::conv::FromUtf8(info.LendData()));
+        if (fontInfo && !fonts.Contains(fontInfo))
+            fonts.Append(fontInfo.StealData());
+    }
+    if (fonts.size() == 0)
+        return nullptr;
+
+    fonts.SortNatural();
+    return fonts.Join(L"\n");
+}
+
+WCHAR* PdfEngineImpl::GetProperty(DocumentProperty prop) {
+    if (!_doc)
+        return nullptr;
+
+    if (DocumentProperty::PdfVersion == prop) {
+        int major = _doc->version / 10, minor = _doc->version % 10;
+        pdf_crypt* crypt = _doc->crypt;
+        if (1 == major && 7 == minor && pdf_crypt_version(ctx, crypt) == 5) {
+            if (pdf_crypt_revision(ctx, crypt) == 5)
+                return str::Format(L"%d.%d Adobe Extension Level %d", major, minor, 3);
+            if (pdf_crypt_revision(ctx, crypt) == 6)
+                return str::Format(L"%d.%d Adobe Extension Level %d", major, minor, 8);
+        }
+        return str::Format(L"%d.%d", major, minor);
     }
 
-    char* PdfEngineImpl::GetDecryptionKey() const {
-        if (!_decryptionKey)
-            return nullptr;
-        return str::Dup(_decryptionKey);
+    if (DocumentProperty::PdfFileStructure == prop) {
+        WStrVec fstruct;
+        if (pdf_to_bool(ctx, pdf_dict_gets(ctx, _info, "Linearized")))
+            fstruct.Append(str::Dup(L"linearized"));
+        if (pdf_to_bool(ctx, pdf_dict_gets(ctx, _info, "Marked")))
+            fstruct.Append(str::Dup(L"tagged"));
+        if (pdf_dict_gets(ctx, _info, "OutputIntents")) {
+            for (int i = 0; i < pdf_array_len(ctx, pdf_dict_gets(ctx, _info, "OutputIntents")); i++) {
+                pdf_obj* intent = pdf_array_get(ctx, pdf_dict_gets(ctx, _info, "OutputIntents"), i);
+                CrashIf(!str::StartsWith(pdf_to_name(ctx, intent), "GTS_"));
+                fstruct.Append(str::conv::FromUtf8(pdf_to_name(ctx, intent) + 4));
+            }
+        }
+        return fstruct.size() > 0 ? fstruct.Join(L",") : nullptr;
     }
 
-    PageLayoutType PdfEngineImpl::PreferredLayout() {
-        PageLayoutType layout = Layout_Single;
+    if (DocumentProperty::UnsupportedFeatures == prop) {
+        if (pdf_to_bool(ctx, pdf_dict_gets(ctx, _info, "Unsupported_XFA")))
+            return str::Dup(L"XFA");
+        return nullptr;
+    }
 
-        ScopedCritSec scope(&ctxAccess);
-        pdf_obj* root = nullptr;
-        fz_try(ctx) {
-            root = pdf_dict_gets(ctx, pdf_trailer(ctx, _doc), "Root");
-        }
-        fz_catch(ctx) {
-            return layout;
-        }
+    if (DocumentProperty::FontList == prop)
+        return ExtractFontList();
 
-        fz_try(ctx) {
-            const char* name = pdf_to_name(ctx, pdf_dict_gets(ctx, root, "PageLayout"));
-            if (str::EndsWith(name, "Right"))
-                layout = Layout_Book;
-            else if (str::StartsWith(name, "Two"))
-                layout = Layout_Facing;
+    static struct {
+        DocumentProperty prop;
+        const char* name;
+    } pdfPropNames[] = {
+        {DocumentProperty::Title, "Title"},
+        {DocumentProperty::Author, "Author"},
+        {DocumentProperty::Subject, "Subject"},
+        {DocumentProperty::Copyright, "Copyright"},
+        {DocumentProperty::CreationDate, "CreationDate"},
+        {DocumentProperty::ModificationDate, "ModDate"},
+        {DocumentProperty::CreatorApp, "Creator"},
+        {DocumentProperty::PdfProducer, "Producer"},
+    };
+    for (int i = 0; i < dimof(pdfPropNames); i++) {
+        if (pdfPropNames[i].prop == prop) {
+            // _info is guaranteed not to contain any indirect references,
+            // so no need for ctxAccess
+            pdf_obj* obj = pdf_dict_gets(ctx, _info, pdfPropNames[i].name);
+            return obj ? pdf_clean_string(str::conv::FromPdf(ctx, obj)) : nullptr;
         }
-        fz_catch(ctx) {
-        }
+    }
+    return nullptr;
+};
 
-        fz_try(ctx) {
-            pdf_obj* prefs = pdf_dict_gets(ctx, root, "ViewerPreferences");
-            const char* direction = pdf_to_name(ctx, pdf_dict_gets(ctx, prefs, "Direction"));
-            if (str::Eq(direction, "R2L"))
-                layout = (PageLayoutType)(layout | Layout_R2L);
+bool PdfEngineImpl::SupportsAnnotation(bool forSaving) const {
+    if (forSaving) {
+        // TODO: support updating of documents where pages aren't all numbered objects?
+        for (int i = 0; i < PageCount(); i++) {
+            PdfPageInfo* pi = &_pages[i];
+            pdf_page* page = pi->page;
+            if (pdf_to_num(ctx, page->obj) == 0)
+                return false;
         }
-        fz_catch(ctx) {
-        }
+    }
+    return true;
+}
 
+void PdfEngineImpl::UpdateUserAnnotations(Vec<PageAnnotation>* list) {
+    // TODO: use a new critical section to avoid blocking the UI thread
+    ScopedCritSec scope(&ctxAccess);
+    if (list)
+        userAnnots = *list;
+    else
+        userAnnots.Reset();
+}
+
+char* PdfEngineImpl::GetDecryptionKey() const {
+    if (!_decryptionKey)
+        return nullptr;
+    return str::Dup(_decryptionKey);
+}
+
+PageLayoutType PdfEngineImpl::PreferredLayout() {
+    PageLayoutType layout = Layout_Single;
+
+    ScopedCritSec scope(&ctxAccess);
+    pdf_obj* root = nullptr;
+    fz_try(ctx) {
+        root = pdf_dict_gets(ctx, pdf_trailer(ctx, _doc), "Root");
+    }
+    fz_catch(ctx) {
         return layout;
     }
 
-    u8* PdfEngineImpl::GetFileData(size_t * cbCount) {
-        u8* res = nullptr;
-        ScopedCritSec scope(&ctxAccess);
-        fz_try(ctx) {
-            res = fz_extract_stream_data(ctx, _doc->file, cbCount);
-        }
-        fz_catch(ctx) {
-            res = nullptr;
-            if (FileName()) {
-                OwnedData data(file::ReadFile(FileName()));
-                if (cbCount) {
-                    *cbCount = data.size;
-                }
-                res = (u8*)data.StealData();
-            }
-        }
-        return res;
+    fz_try(ctx) {
+        const char* name = pdf_to_name(ctx, pdf_dict_gets(ctx, root, "PageLayout"));
+        if (str::EndsWith(name, "Right"))
+            layout = Layout_Book;
+        else if (str::StartsWith(name, "Two"))
+            layout = Layout_Facing;
+    }
+    fz_catch(ctx) {
     }
 
-    bool PdfEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
-        size_t dataLen;
-        AutoFreeW dstPath(str::conv::FromUtf8(copyFileName));
-        ScopedMem<unsigned char> data(GetFileData(&dataLen));
-        if (data) {
-            bool ok = file::WriteFile(dstPath, data.Get(), dataLen);
-            if (ok) {
-                return !includeUserAnnots || SaveUserAnnots(copyFileName);
-            }
-        }
-        if (!FileName()) {
-            return false;
-        }
-        bool ok = CopyFileW(FileName(), dstPath, FALSE);
-        if (!ok) {
-            return false;
-        }
-        // TODO: try to recover when SaveUserAnnots fails?
-        return !includeUserAnnots || SaveUserAnnots(copyFileName);
+    fz_try(ctx) {
+        pdf_obj* prefs = pdf_dict_gets(ctx, root, "ViewerPreferences");
+        const char* direction = pdf_to_name(ctx, pdf_dict_gets(ctx, prefs, "Direction"));
+        if (str::Eq(direction, "R2L"))
+            layout = (PageLayoutType)(layout | Layout_R2L);
+    }
+    fz_catch(ctx) {
     }
 
-    static bool pdf_file_update_add_annotation(fz_context * ctx, pdf_document * doc, pdf_page * page,
-                                               pdf_obj * page_obj, PageAnnotation & annot, pdf_obj * annots) {
-        CrashMePort();
+    return layout;
+}
+
+u8* PdfEngineImpl::GetFileData(size_t* cbCount) {
+    u8* res = nullptr;
+    ScopedCritSec scope(&ctxAccess);
+    fz_try(ctx) {
+        res = fz_extract_stream_data(ctx, _doc->file, cbCount);
+    }
+    fz_catch(ctx) {
+        res = nullptr;
+        if (FileName()) {
+            OwnedData data(file::ReadFile(FileName()));
+            if (cbCount) {
+                *cbCount = data.size;
+            }
+            res = (u8*)data.StealData();
+        }
+    }
+    return res;
+}
+
+bool PdfEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
+    size_t dataLen;
+    AutoFreeW dstPath(str::conv::FromUtf8(copyFileName));
+    ScopedMem<unsigned char> data(GetFileData(&dataLen));
+    if (data) {
+        bool ok = file::WriteFile(dstPath, data.Get(), dataLen);
+        if (ok) {
+            return !includeUserAnnots || SaveUserAnnots(copyFileName);
+        }
+    }
+    if (!FileName()) {
+        return false;
+    }
+    bool ok = CopyFileW(FileName(), dstPath, FALSE);
+    if (!ok) {
+        return false;
+    }
+    // TODO: try to recover when SaveUserAnnots fails?
+    return !includeUserAnnots || SaveUserAnnots(copyFileName);
+}
+
+static bool pdf_file_update_add_annotation(fz_context* ctx, pdf_document* doc, pdf_page* page, pdf_obj* page_obj,
+                                           PageAnnotation& annot, pdf_obj* annots) {
+    CrashMePort();
 #if 0
     static const char* obj_dict =
         "<<\
@@ -2805,146 +2820,146 @@ WCHAR* PdfEngineImpl::ExtractFontList() {
     }
     fz_catch(ctx) { return false; }
 #endif
+    return true;
+}
+
+bool PdfEngineImpl::SaveUserAnnots(const char* pathUtf8) {
+    if (!userAnnots.size())
+        return true;
+
+    ScopedCritSec scope1(&pagesAccess);
+    ScopedCritSec scope2(&ctxAccess);
+
+    bool ok = true;
+    Vec<PageAnnotation> pageAnnots;
+
+    fz_try(ctx) {
+        for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
+            pdf_page* page = GetPdfPage(pageNo);
+            pdf_obj* page_obj = page->obj;
+            // TODO: this will skip annotations for broken documents
+            if (!page || !pdf_to_num(ctx, page_obj)) {
+                ok = false;
+                break;
+            }
+            pageAnnots = fz_get_user_page_annots(userAnnots, pageNo);
+            if (pageAnnots.size() == 0)
+                continue;
+            // get the page's /Annots array for appending
+            pdf_obj* annots = pdf_dict_gets(ctx, page_obj, "Annots");
+            if (!pdf_is_array(ctx, annots)) {
+                pdf_dict_puts_drop(ctx, page_obj, "Annots", pdf_new_array(ctx, _doc, (int)pageAnnots.size()));
+                annots = pdf_dict_gets(ctx, page_obj, "Annots");
+            }
+            if (!pdf_is_indirect(ctx, annots)) {
+                // make /Annots indirect for the current /Page
+                CrashMePort();
+                // TODO(port): no pdf_new_ref
+                // pdf_dict_puts_drop(ctx, page_obj, "Annots", pdf_new_ref(ctx, _doc, annots));
+            }
+            // append all annotations for the current page
+            for (size_t i = 0; i < pageAnnots.size(); i++) {
+                ok &= pdf_file_update_add_annotation(ctx, _doc, page, page_obj, pageAnnots.at(i), annots);
+            }
+        }
+        if (ok) {
+            pdf_write_options opts = {0};
+            opts.do_incremental = 1;
+            pdf_save_document(ctx, _doc, const_cast<char*>(pathUtf8), &opts);
+        }
+    }
+    fz_catch(ctx) {
+        ok = false;
+    }
+    return ok;
+}
+
+bool PdfEngineImpl::SaveEmbedded(LinkSaverUI& saveUI, int num) {
+    ScopedCritSec scope(&ctxAccess);
+
+    fz_buffer* buf = nullptr;
+    fz_try(ctx) {
+        buf = pdf_load_stream_number(ctx, _doc, num);
+    }
+    fz_catch(ctx) {
+        return false;
+    }
+    CrashIf(nullptr == buf);
+    u8* data = nullptr;
+    size_t dataLen = fz_buffer_extract(ctx, buf, &data);
+    bool result = saveUI.SaveEmbedded(data, dataLen);
+    fz_drop_buffer(ctx, buf);
+    return result;
+}
+
+bool PdfEngineImpl::HasClipOptimizations(int pageNo) {
+    PdfPageInfo* pi = GetPdfPageInfo(pageNo, true);
+    if (!pi) {
+        return false;
+    }
+
+    // GetPdfPageInfo extracts imageRects for us
+    if (!pi->imageRects) {
         return true;
     }
 
-    bool PdfEngineImpl::SaveUserAnnots(const char* pathUtf8) {
-        if (!userAnnots.size())
-            return true;
-
-        ScopedCritSec scope1(&pagesAccess);
-        ScopedCritSec scope2(&ctxAccess);
-
-        bool ok = true;
-        Vec<PageAnnotation> pageAnnots;
-
-        fz_try(ctx) {
-            for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
-                pdf_page* page = GetPdfPage(pageNo);
-                pdf_obj* page_obj = page->obj;
-                // TODO: this will skip annotations for broken documents
-                if (!page || !pdf_to_num(ctx, page_obj)) {
-                    ok = false;
-                    break;
-                }
-                pageAnnots = fz_get_user_page_annots(userAnnots, pageNo);
-                if (pageAnnots.size() == 0)
-                    continue;
-                // get the page's /Annots array for appending
-                pdf_obj* annots = pdf_dict_gets(ctx, page_obj, "Annots");
-                if (!pdf_is_array(ctx, annots)) {
-                    pdf_dict_puts_drop(ctx, page_obj, "Annots", pdf_new_array(ctx, _doc, (int)pageAnnots.size()));
-                    annots = pdf_dict_gets(ctx, page_obj, "Annots");
-                }
-                if (!pdf_is_indirect(ctx, annots)) {
-                    // make /Annots indirect for the current /Page
-                    CrashMePort();
-                    // TODO(port): no pdf_new_ref
-                    // pdf_dict_puts_drop(ctx, page_obj, "Annots", pdf_new_ref(ctx, _doc, annots));
-                }
-                // append all annotations for the current page
-                for (size_t i = 0; i < pageAnnots.size(); i++) {
-                    ok &= pdf_file_update_add_annotation(ctx, _doc, page, page_obj, pageAnnots.at(i), annots);
-                }
-            }
-            if (ok) {
-                pdf_write_options opts = {0};
-                opts.do_incremental = 1;
-                pdf_save_document(ctx, _doc, const_cast<char*>(pathUtf8), &opts);
-            }
-        }
-        fz_catch(ctx) {
-            ok = false;
-        }
-        return ok;
-    }
-
-    bool PdfEngineImpl::SaveEmbedded(LinkSaverUI & saveUI, int num) {
-        ScopedCritSec scope(&ctxAccess);
-
-        fz_buffer* buf = nullptr;
-        fz_try(ctx) {
-            buf = pdf_load_stream_number(ctx, _doc, num);
-        }
-        fz_catch(ctx) {
+    fz_rect mbox = fz_RectD_to_rect(PageMediabox(pageNo));
+    // check if any image covers at least 90% of the page
+    for (int i = 0; !fz_is_empty_rect(pi->imageRects[i]); i++) {
+        if (fz_calc_overlap(mbox, pi->imageRects[i]) >= 0.9f) {
             return false;
         }
-        CrashIf(nullptr == buf);
-        u8* data = nullptr;
-        size_t dataLen = fz_buffer_extract(ctx, buf, &data);
-        bool result = saveUI.SaveEmbedded(data, dataLen);
-        fz_drop_buffer(ctx, buf);
-        return result;
+    }
+    return true;
+}
+
+WCHAR* PdfEngineImpl::GetPageLabel(int pageNo) const {
+    if (!_pagelabels || pageNo < 1 || PageCount() < pageNo) {
+        return BaseEngine::GetPageLabel(pageNo);
     }
 
-    bool PdfEngineImpl::HasClipOptimizations(int pageNo) {
-        PdfPageInfo* pi = GetPdfPageInfo(pageNo, true);
-        if (!pi) {
-            return false;
-        }
+    return str::Dup(_pagelabels->at(pageNo - 1));
+}
 
-        // GetPdfPageInfo extracts imageRects for us
-        if (!pi->imageRects) {
-            return true;
-        }
+int PdfEngineImpl::GetPageByLabel(const WCHAR* label) const {
+    int pageNo = 0;
+    if (_pagelabels) {
+        pageNo = _pagelabels->Find(label) + 1;
+    }
 
-        fz_rect mbox = fz_RectD_to_rect(PageMediabox(pageNo));
-        // check if any image covers at least 90% of the page
-        for (int i = 0; !fz_is_empty_rect(pi->imageRects[i]); i++) {
-            if (fz_calc_overlap(mbox, pi->imageRects[i]) >= 0.9f) {
-                return false;
+    if (!pageNo) {
+        return BaseEngine::GetPageByLabel(label);
+    }
+
+    return pageNo;
+}
+
+// copy of fz_is_external_link without ctx
+static int is_external_link(const char* uri) {
+    while (*uri >= 'a' && *uri <= 'z')
+        ++uri;
+    return uri[0] == ':';
+}
+
+// copy of pdf_resolve_link in pdf-link.c without ctx and doc
+// returns page number and location on the page
+int resolve_link(const char* uri, float* xp, float* yp) {
+    if (uri && uri[0] == '#') {
+        int page = fz_atoi(uri + 1) - 1;
+        if (xp || yp) {
+            const char* x = strchr(uri, ',');
+            const char* y = strrchr(uri, ',');
+            if (x && y) {
+                if (xp)
+                    *xp = fz_atoi(x + 1);
+                if (yp)
+                    *yp = fz_atoi(y + 1);
             }
         }
-        return true;
+        return page;
     }
-
-    WCHAR* PdfEngineImpl::GetPageLabel(int pageNo) const {
-        if (!_pagelabels || pageNo < 1 || PageCount() < pageNo) {
-            return BaseEngine::GetPageLabel(pageNo);
-        }
-
-        return str::Dup(_pagelabels->at(pageNo - 1));
-    }
-
-    int PdfEngineImpl::GetPageByLabel(const WCHAR* label) const {
-        int pageNo = 0;
-        if (_pagelabels) {
-            pageNo = _pagelabels->Find(label) + 1;
-        }
-
-        if (!pageNo) {
-            return BaseEngine::GetPageByLabel(label);
-        }
-
-        return pageNo;
-    }
-
-    // copy of fz_is_external_link without ctx
-    static int is_external_link(const char* uri) {
-        while (*uri >= 'a' && *uri <= 'z')
-            ++uri;
-        return uri[0] == ':';
-    }
-
-    // copy of pdf_resolve_link in pdf-link.c without ctx and doc
-    // returns page number and location on the page
-    int resolve_link(const char* uri, float* xp, float* yp) {
-        if (uri && uri[0] == '#') {
-            int page = fz_atoi(uri + 1) - 1;
-            if (xp || yp) {
-                const char* x = strchr(uri, ',');
-                const char* y = strrchr(uri, ',');
-                if (x && y) {
-                    if (xp)
-                        *xp = fz_atoi(x + 1);
-                    if (yp)
-                        *yp = fz_atoi(y + 1);
-                }
-            }
-            return page;
-        }
-        return -1;
-    }
+    return -1;
+}
 
 #if 0
 static bool IsRelativeURI(const WCHAR* uri) {
@@ -2956,55 +2971,55 @@ static bool IsRelativeURI(const WCHAR* uri) {
 }
 #endif
 
-    PdfLink::PdfLink(PdfEngineImpl * engine, int pageNo, fz_link* link, fz_outline* outline) {
-        this->engine = engine;
-        this->pageNo = pageNo;
-        CrashIf(!link && !outline);
-        this->link = link;
-        this->outline = outline;
+PdfLink::PdfLink(PdfEngineImpl* engine, int pageNo, fz_link* link, fz_outline* outline) {
+    this->engine = engine;
+    this->pageNo = pageNo;
+    CrashIf(!link && !outline);
+    this->link = link;
+    this->outline = outline;
+}
+
+RectD PdfLink::GetRect() const {
+    if (link) {
+        RectD r(fz_rect_to_RectD(link->rect));
+        return r;
+    }
+    CrashMePort();
+    return RectD();
+}
+
+static char* PdfLinkGetURI(const PdfLink* link) {
+    if (link->link) {
+        return link->link->uri;
+    }
+    if (link->outline) {
+        return link->outline->uri;
+    }
+    CrashMePort();
+    return nullptr;
+}
+
+WCHAR* PdfLink::GetValue() const {
+    if (outline && isAttachment) {
+        WCHAR* path = str::conv::FromUtf8(outline->uri);
+        return path;
     }
 
-    RectD PdfLink::GetRect() const {
-        if (link) {
-            RectD r(fz_rect_to_RectD(link->rect));
-            return r;
-        }
-        CrashMePort();
-        return RectD();
-    }
-
-    static char* PdfLinkGetURI(const PdfLink* link) {
-        if (link->link) {
-            return link->link->uri;
-        }
-        if (link->outline) {
-            return link->outline->uri;
-        }
-        CrashMePort();
-        return nullptr;
-    }
-
-    WCHAR* PdfLink::GetValue() const {
-        if (outline && isAttachment) {
-            WCHAR* path = str::conv::FromUtf8(outline->uri);
-            return path;
-        }
-
-        char* uri = PdfLinkGetURI(this);
-        if (!is_external_link(uri)) {
-            // other values: #1,115,208
-            OutputDebugStringA("unknown link:");
-            OutputDebugStringA(uri);
-            OutputDebugStringA("\n");
-            // CrashMePort();
-            return nullptr;
-        }
-        OutputDebugStringA("PdfLink:");
+    char* uri = PdfLinkGetURI(this);
+    if (!is_external_link(uri)) {
+        // other values: #1,115,208
+        OutputDebugStringA("unknown link:");
         OutputDebugStringA(uri);
         OutputDebugStringA("\n");
         // CrashMePort();
-        WCHAR* path = str::conv::FromUtf8(uri);
-        return path;
+        return nullptr;
+    }
+    OutputDebugStringA("PdfLink:");
+    OutputDebugStringA(uri);
+    OutputDebugStringA("\n");
+    // CrashMePort();
+    WCHAR* path = str::conv::FromUtf8(uri);
+    return path;
 #if 0
     if (!link || !engine)
         return nullptr;
@@ -3062,7 +3077,7 @@ static bool IsRelativeURI(const WCHAR* uri) {
 
     return path;
 #endif
-    }
+}
 
 #if 0
 static PageDestType DestTypeFromName(const char* name) {
@@ -3095,42 +3110,42 @@ static PageDestType DestTypeFromName(const char* name) {
 }
 #endif
 
-    PageDestType PdfLink::GetDestType() const {
-        if (outline && isAttachment) {
-            return PageDestType::LaunchEmbedded;
-        }
+PageDestType PdfLink::GetDestType() const {
+    if (outline && isAttachment) {
+        return PageDestType::LaunchEmbedded;
+    }
 
-        char* uri = PdfLinkGetURI(this);
-        CrashIf(!uri);
-        if (!uri) {
+    char* uri = PdfLinkGetURI(this);
+    CrashIf(!uri);
+    if (!uri) {
+        return PageDestType::None;
+    }
+    if (!is_external_link(uri)) {
+        float x, y;
+        int pageNo = resolve_link(uri, &x, &y);
+        if (pageNo == -1) {
+            // TODO: figure out what it could be
+            CrashMePort();
             return PageDestType::None;
         }
-        if (!is_external_link(uri)) {
-            float x, y;
-            int pageNo = resolve_link(uri, &x, &y);
-            if (pageNo == -1) {
-                // TODO: figure out what it could be
-                CrashMePort();
-                return PageDestType::None;
-            }
-            return PageDestType::ScrollTo;
-        }
-        if (str::StartsWith(uri, "file://")) {
-            return PageDestType::LaunchFile;
-        }
-        if (str::StartsWithI(uri, "http://")) {
-            return PageDestType::LaunchURL;
-        }
-        if (str::StartsWithI(uri, "https://")) {
-            return PageDestType::LaunchURL;
-        }
-        if (str::StartsWithI(uri, "ftp://")) {
-            return PageDestType::LaunchURL;
-        }
-        // TODO: PageDestType::LaunchEmbedded, PageDestType::LaunchURL, named destination
+        return PageDestType::ScrollTo;
+    }
+    if (str::StartsWith(uri, "file://")) {
+        return PageDestType::LaunchFile;
+    }
+    if (str::StartsWithI(uri, "http://")) {
+        return PageDestType::LaunchURL;
+    }
+    if (str::StartsWithI(uri, "https://")) {
+        return PageDestType::LaunchURL;
+    }
+    if (str::StartsWithI(uri, "ftp://")) {
+        return PageDestType::LaunchURL;
+    }
+    // TODO: PageDestType::LaunchEmbedded, PageDestType::LaunchURL, named destination
 
-        CrashMePort();
-        return PageDestType::None;
+    CrashMePort();
+    return PageDestType::None;
 #if 0
     switch (link->kind) {
         case FZ_LINK_GOTO:
@@ -3151,55 +3166,55 @@ static PageDestType DestTypeFromName(const char* name) {
             return PageDestType::None; // unsupported action
     }
 #endif
-    }
+}
 
-    int PdfLink::GetDestPageNo() const {
-        char* uri = PdfLinkGetURI(this);
-        CrashIf(!uri);
-        if (!uri) {
-            return 0;
-        }
-        if (is_external_link(uri)) {
-            return 0;
-        }
-        float x, y;
-        int pageNo = resolve_link(uri, &x, &y);
-        if (pageNo == -1) {
-            return 0;
-        }
-        return pageNo + 1; // TODO(port): or is it just pageNo?
+int PdfLink::GetDestPageNo() const {
+    char* uri = PdfLinkGetURI(this);
+    CrashIf(!uri);
+    if (!uri) {
+        return 0;
+    }
+    if (is_external_link(uri)) {
+        return 0;
+    }
+    float x, y;
+    int pageNo = resolve_link(uri, &x, &y);
+    if (pageNo == -1) {
+        return 0;
+    }
+    return pageNo + 1; // TODO(port): or is it just pageNo?
 #if 0
     if (link && FZ_LINK_GOTO == link->kind)
         return link->ld.gotor.page + 1;
     if (link && FZ_LINK_GOTOR == link->kind && !link->ld.gotor.dest)
         return link->ld.gotor.page + 1;
 #endif
-        return 0;
+    return 0;
+}
+
+RectD PdfLink::GetDestRect() const {
+    RectD result(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
+    char* uri = PdfLinkGetURI(this);
+    CrashIf(!uri);
+    if (!uri) {
+        CrashMePort();
+        return result;
     }
 
-    RectD PdfLink::GetDestRect() const {
-        RectD result(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
-        char* uri = PdfLinkGetURI(this);
-        CrashIf(!uri);
-        if (!uri) {
-            CrashMePort();
-            return result;
-        }
-
-        if (is_external_link(uri)) {
-            return result;
-        }
-        float x, y;
-        int pageNo = resolve_link(uri, &x, &y);
-        if (pageNo == -1) {
-            CrashMePort();
-            return result;
-        }
-
-        // TODO(port): should those be trasformed by page's ctm?
-        result.x = (double)x;
-        result.y = (double)y;
+    if (is_external_link(uri)) {
         return result;
+    }
+    float x, y;
+    int pageNo = resolve_link(uri, &x, &y);
+    if (pageNo == -1) {
+        CrashMePort();
+        return result;
+    }
+
+    // TODO(port): should those be trasformed by page's ctm?
+    result.x = (double)x;
+    result.y = (double)y;
+    return result;
 #if 0
     if (!link || FZ_LINK_GOTO != link->kind && FZ_LINK_GOTOR != link->kind)
         return result;
@@ -3236,75 +3251,75 @@ static PageDestType DestTypeFromName(const char* name) {
     }
     // all other link types only affect the zoom level, which we intentionally leave alone
 #endif
-    }
+}
 
-    WCHAR* PdfLink::GetDestName() const {
-        char* uri = PdfLinkGetURI(this);
-        if (is_external_link(uri)) {
-            return nullptr;
-        }
-        // TODO(port): test with more stuff
-        // figure out what PDF_NAME(GoToR) ends up being
+WCHAR* PdfLink::GetDestName() const {
+    char* uri = PdfLinkGetURI(this);
+    if (is_external_link(uri)) {
         return nullptr;
+    }
+    // TODO(port): test with more stuff
+    // figure out what PDF_NAME(GoToR) ends up being
+    return nullptr;
 #if 0
     if (!link || FZ_LINK_GOTOR != link->kind || !link->ld.gotor.dest)
         return nullptr;
     return str::conv::FromUtf8(link->ld.gotor.dest);
 #endif
+}
+
+bool PdfLink::SaveEmbedded(LinkSaverUI& saveUI) {
+    CrashIf(!outline || !isAttachment);
+
+    ScopedCritSec scope(&engine->ctxAccess);
+    // TODO: hack, we stored stream number in outline->page
+    return engine->SaveEmbedded(saveUI, outline->page);
+}
+
+BaseEngine* PdfEngineImpl::CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {
+    PdfEngineImpl* engine = new PdfEngineImpl();
+    if (!engine || !fileName || !engine->Load(fileName, pwdUI)) {
+        delete engine;
+        return nullptr;
     }
+    return engine;
+}
 
-    bool PdfLink::SaveEmbedded(LinkSaverUI & saveUI) {
-        CrashIf(!outline || !isAttachment);
-
-        ScopedCritSec scope(&engine->ctxAccess);
-        // TODO: hack, we stored stream number in outline->page
-        return engine->SaveEmbedded(saveUI, outline->page);
+BaseEngine* PdfEngineImpl::CreateFromStream(IStream* stream, PasswordUI* pwdUI) {
+    PdfEngineImpl* engine = new PdfEngineImpl();
+    if (!engine->Load(stream, pwdUI)) {
+        delete engine;
+        return nullptr;
     }
+    return engine;
+}
 
-    BaseEngine* PdfEngineImpl::CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {
-        PdfEngineImpl* engine = new PdfEngineImpl();
-        if (!engine || !fileName || !engine->Load(fileName, pwdUI)) {
-            delete engine;
-            return nullptr;
+namespace PdfEngine {
+
+bool IsSupportedFile(const WCHAR* fileName, bool sniff) {
+    if (sniff) {
+        char header[1024] = {0};
+        file::ReadN(fileName, header, sizeof(header));
+
+        for (int i = 0; i < sizeof(header) - 4; i++) {
+            if (str::EqN(header + i, "%PDF", 4))
+                return true;
         }
-        return engine;
+        return false;
     }
 
-    BaseEngine* PdfEngineImpl::CreateFromStream(IStream * stream, PasswordUI * pwdUI) {
-        PdfEngineImpl* engine = new PdfEngineImpl();
-        if (!engine->Load(stream, pwdUI)) {
-            delete engine;
-            return nullptr;
-        }
-        return engine;
-    }
+    return str::EndsWithI(fileName, L".pdf") || findEmbedMarks(fileName);
+}
 
-    namespace PdfEngine {
+BaseEngine* CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {
+    return PdfEngineImpl::CreateFromFile(fileName, pwdUI);
+}
 
-    bool IsSupportedFile(const WCHAR* fileName, bool sniff) {
-        if (sniff) {
-            char header[1024] = {0};
-            file::ReadN(fileName, header, sizeof(header));
+BaseEngine* CreateFromStream(IStream* stream, PasswordUI* pwdUI) {
+    return PdfEngineImpl::CreateFromStream(stream, pwdUI);
+}
 
-            for (int i = 0; i < sizeof(header) - 4; i++) {
-                if (str::EqN(header + i, "%PDF", 4))
-                    return true;
-            }
-            return false;
-        }
-
-        return str::EndsWithI(fileName, L".pdf") || findEmbedMarks(fileName);
-    }
-
-    BaseEngine* CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {
-        return PdfEngineImpl::CreateFromFile(fileName, pwdUI);
-    }
-
-    BaseEngine* CreateFromStream(IStream* stream, PasswordUI* pwdUI) {
-        return PdfEngineImpl::CreateFromStream(stream, pwdUI);
-    }
-
-    } // namespace PdfEngine
+} // namespace PdfEngine
 
 // TODO: nasty but I want them in separate files
 #include "XpsEngine.cpp"

@@ -104,7 +104,7 @@ class DisplayModel : public Controller {
     bool HasTocTree() const override {
         return engine->HasTocTree();
     }
-    DocTocItem* GetTocTree() override {
+    DocTocTree* GetTocTree() override {
         return engine->GetTocTree();
     }
     void ScrollToLink(PageDestination* dest) override;

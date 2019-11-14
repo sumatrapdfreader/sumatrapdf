@@ -824,13 +824,13 @@ class EbookTocCollector : public EbookTocVisitor {
     }
 };
 
-DocTocItem* EbookController::GetTocTree() {
+DocTocTree* EbookController::GetTocTree() {
     EbookTocCollector visitor(this);
     doc.ParseToc(&visitor);
     EbookTocDest* root = visitor.GetRoot();
     if (root)
         root->OpenSingleNode();
-    return root;
+    return new DocTocTree(root);
 }
 
 void EbookController::ScrollToLink(PageDestination* dest) {

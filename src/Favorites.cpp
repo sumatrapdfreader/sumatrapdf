@@ -538,16 +538,18 @@ void AddFavorite(WindowInfo* win) {
     CrashIf(!tab);
     int pageNo = win->currPageNo;
     AutoFreeW name;
-    if (tab->ctrl->HasTocTree()) {
+    auto* ctrl = tab->ctrl;
+    if (ctrl->HasTocTree()) {
         // use the current ToC heading as default name
-        DocTocItem* root = tab->ctrl->GetTocTree();
+        auto* docTree = ctrl->GetTocTree();
+        DocTocItem* root = docTree->root;
         DocTocItem* item = TocItemForPageNo(root, pageNo);
         if (item) {
             name.SetCopy(item->title);
         }
         delete root;
     }
-    AutoFreeW pageLabel(tab->ctrl->GetPageLabel(pageNo));
+    AutoFreeW pageLabel(ctrl->GetPageLabel(pageNo));
 
     bool shouldAdd = Dialog_AddFavorite(win->hwndFrame, pageLabel, name);
     if (!shouldAdd) {

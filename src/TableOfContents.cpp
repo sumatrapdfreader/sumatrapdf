@@ -39,10 +39,30 @@ constexpr UINT_PTR SUBCLASS_ID = 1;
 #define WM_APP_REPAINT_TOC (WM_APP + 1)
 #endif
 
-static void CustomizeTocInfoTip(TreeCtrl* w, NMTVGETINFOTIPW* nm) {
-    // can't cast directly to DocTocItem*
-    TreeItem* treeItem = reinterpret_cast<TreeItem*>(nm->lParam);
+static DocTocItem* GetDocTocItem(TreeCtrl* treeCtrl, HTREEITEM hItem) {
+    // must do the cast in two stages because of multiple inheritance
+    TreeItem* treeItem = treeCtrl->GetTreeItemByHandle(hItem);
+    if (!treeItem) {
+        return nullptr;
+    }
     DocTocItem* tocItem = static_cast<DocTocItem*>(treeItem);
+    return tocItem;
+}
+
+static DocTocItem* GetDocTocItemFromLPARAM(LPARAM lp) {
+    if (!lp) {
+        CrashMe(); // TODO: not sure if should ever happen
+        return nullptr;
+    }
+    // must do the cast in two stages because of multiple inheritance
+    TreeItem* treeItem = reinterpret_cast<TreeItem*>(lp);
+    DocTocItem* tocItem = static_cast<DocTocItem*>(treeItem);
+    return tocItem;
+}
+
+// set tooltip for this item but only if the text isn't fully shown
+static void CustomizeTocInfoTip(TreeCtrl* w, NMTVGETINFOTIPW* nm) {
+    DocTocItem* tocItem = GetDocTocItemFromLPARAM(nm->lParam);
     PageDestination* link = tocItem->GetLink();
     if (!link) {
         return;
@@ -168,19 +188,29 @@ static void GoToTocLinkTask(WindowInfo* win, DocTocItem* tocItem, TabInfo* tab, 
     win->tocKeepSelection = false;
 }
 
-static void GoToTocLinkForTVItem(WindowInfo* win, HTREEITEM hItem, bool allowExternal) {
-    TreeCtrl* tree = win->tocTreeCtrl;
-    if (!hItem) {
-        hItem = tree->GetSelection();
+static bool IsScrollToLink(PageDestination *link) {
+    if (!link) {
+        return false;
     }
+    auto tp = link->GetDestType();
+    return tp == PageDestType::ScrollTo;
+}
 
-    TreeItem* treeItem = tree->GetTreeItemByHandle(hItem);
-    DocTocItem* tocItem = static_cast<DocTocItem*>(treeItem);
-    if (!tocItem || !win->IsDocLoaded()) {
+static void GoToTocLinkForTVItem(WindowInfo* win, HTREEITEM hItem, bool allowExternal) {
+    if (!win->IsDocLoaded()) {
         return;
     }
-    if ((allowExternal || tocItem->GetLink() && PageDestType::ScrollTo == tocItem->GetLink()->GetDestType()) ||
-        tocItem->pageNo) {
+    TreeCtrl* treeCtrl = win->tocTreeCtrl;
+    if (!hItem) {
+        hItem = treeCtrl->GetSelection();
+    }
+    DocTocItem* tocItem = GetDocTocItem(treeCtrl, hItem);
+    if (!tocItem) {
+        return;
+    }
+    bool validPage = (tocItem->pageNo > 0);
+    bool isScroll = IsScrollToLink(tocItem->GetLink());
+    if (validPage || (allowExternal || isScroll)) {
         // delay changing the page until the tree messages have been handled
         TabInfo* tab = win->currentTab;
         Controller* ctrl = win->ctrl;
@@ -213,13 +243,14 @@ void ToggleTocBox(WindowInfo* win) {
     }
 }
 
+#if 0
 static HTREEITEM AddTocItemToView(TreeCtrl* tree, DocTocItem* entry, HTREEITEM parent, bool toggleItem) {
     TV_INSERTSTRUCT toInsert;
     toInsert.hParent = parent;
     toInsert.hInsertAfter = TVI_LAST;
     toInsert.itemex.mask = TVIF_TEXT | TVIF_PARAM | TVIF_STATE;
     UINT state = 0;
-    if (entry->child && (entry->open != toggleItem)) {
+    if (entry->child && (entry->isOpen != toggleItem)) {
         state = TVIS_EXPANDED;
     }
     toInsert.itemex.state = state;
@@ -240,7 +271,9 @@ static HTREEITEM AddTocItemToView(TreeCtrl* tree, DocTocItem* entry, HTREEITEM p
 #endif
     return tree->InsertItem(&toInsert);
 }
+#endif
 
+#if 0
 static void PopulateTocTreeView(TreeCtrl* tree, DocTocItem* entry, Vec<int>& tocState, HTREEITEM parent) {
     while (entry) {
         bool toggle = tocState.Contains(entry->id);
@@ -249,6 +282,7 @@ static void PopulateTocTreeView(TreeCtrl* tree, DocTocItem* entry, Vec<int>& toc
         entry = entry->next;
     }
 }
+#endif
 
 #if 0
 static void TreeItemForPageNoRec(TreeCtrl* tocTreeCtrl, HTREEITEM hItem, int pageNo, HTREEITEM& bestMatchItem,
@@ -294,6 +328,7 @@ static HTREEITEM TreeItemForPageNo(TreeCtrl* tocTreeCtrl, int pageNo) {
 }
 #endif
 
+// find the closest item in tree view to a given page number
 static HTREEITEM TreeItemForPageNo(TreeCtrl* tocTreeCtrl, int pageNo) {
     HTREEITEM bestMatchItem = nullptr;
     int bestMatchPageNo = 0;
@@ -303,7 +338,7 @@ static HTREEITEM TreeItemForPageNo(TreeCtrl* tocTreeCtrl, int pageNo) {
             // if nothing else matches, match the root node
             bestMatchItem = item->hItem;
         }
-        auto* docItem = reinterpret_cast<DocTocItem*>(item->lParam);
+        auto* docItem = GetDocTocItemFromLPARAM(item->lParam);
         if (!docItem) {
             return true;
         }
@@ -326,34 +361,33 @@ void UpdateTocSelection(WindowInfo* win, int currPageNo) {
         return;
     }
 
+    // TODO: change to use TreeItem instead of hItem
     HTREEITEM hItem = TreeItemForPageNo(win->tocTreeCtrl, currPageNo);
     if (hItem) {
         win->tocTreeCtrl->SelectItem(hItem);
     }
 }
 
-void UpdateTocExpansionState(TabInfo* tab, TreeCtrl* treeCtrl, HTREEITEM hItem) {
-    while (hItem) {
-        TVITEM* item = treeCtrl->GetItem(hItem);
-        if (!item) {
-            return;
-        }
-
-        DocTocItem* tocItem = nullptr;
-        if (item->lParam) {
-            tocItem = reinterpret_cast<DocTocItem*>(item->lParam);
-        }
-        if (tocItem && tocItem->child) {
-            // add the ids of toggled items to tocState
-            bool wasToggled = !(item->state & TVIS_EXPANDED) == tocItem->open;
-            if (wasToggled) {
-                tab->tocState.Append(tocItem->id);
+static void UpdateDocTocExpansionState(Vec<int>&tocState, DocTocItem* tocItem) {
+    while (tocItem) {
+        // items without children cannot be toggled
+        if (tocItem->child) {
+            // the state was changed from it's original state by the user
+            if (tocItem->isOpenToggled) {
+                tocState.Append(tocItem->id);
             }
-            HTREEITEM child = treeCtrl->GetChild(hItem);
-            UpdateTocExpansionState(tab, treeCtrl, child);
+
+            UpdateDocTocExpansionState(tocState, tocItem->child);
         }
-        hItem = treeCtrl->GetSiblingNext(hItem);
+        tocItem = tocItem->next;
     }
+}
+
+// TODO: update to use TreeItem instead of hItem
+void UpdateTocExpansionState(Vec<int>& tocState, TreeCtrl* treeCtrl, HTREEITEM hItem) {
+    tocState.Reset();
+    DocTocItem* tocItem = GetDocTocItem(treeCtrl, hItem);
+    UpdateDocTocExpansionState(tocState, tocItem);
 }
 
 void UpdateTocColors(WindowInfo* win) {
@@ -435,21 +469,21 @@ void LoadTocTree(WindowInfo* win) {
     // consider a ToC tree right-to-left if a more than half of the
     // alphabetic characters are in a right-to-left script
     int l2r = 0, r2l = 0;
-    GetLeftRightCounts(tab->tocRoot, l2r, r2l);
+    GetLeftRightCounts(tab->tocRoot->root, l2r, r2l);
     bool isRTL = r2l > l2r;
 
     TreeCtrl* treeCtrl = win->tocTreeCtrl;
     HWND hwnd = treeCtrl->hwnd;
     SetRtl(hwnd, isRTL);
 
-    if (true) {
+#if 1
         treeCtrl->SetTreeModel(tab->tocRoot);
-    } else {
-        treeCtrl->SuspendRedraw();
-        PopulateTocTreeView(treeCtrl, tab->tocRoot, tab->tocState, nullptr);
-        UpdateTocColors(win);
-        treeCtrl->ResumeRedraw();
-    }
+#else
+    treeCtrl->SuspendRedraw();
+    PopulateTocTreeView(treeCtrl, tab->tocRoot, tab->tocState, nullptr);
+    UpdateTocColors(win);
+    treeCtrl->ResumeRedraw();
+#endif
 
     UINT fl = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;
     RedrawWindow(hwnd, nullptr, nullptr, fl);
@@ -561,7 +595,7 @@ static LRESULT OnTocTreeNotify(WindowInfo* win, NMTREEVIEWW* pnmtv) {
 }
 
 // LRESULT(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& discardMsg)
-static LRESULT WndProcTocTree(TreeCtrl* tree, UINT msg, WPARAM wp, LPARAM lp, bool& handled) {
+static LRESULT TocTreePreFilter(TreeCtrl* tree, UINT msg, WPARAM wp, LPARAM lp, bool& handled) {
     HWND hwnd = tree->hwnd;
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
     if (!win) {
@@ -655,7 +689,7 @@ void CreateToc(WindowInfo* win) {
     tree->menu = (HMENU)IDC_TOC_TREE;
     tree->preFilter = [tree](HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& handled) -> LRESULT {
         UNUSED(hwnd);
-        return WndProcTocTree(tree, msg, wp, lp, handled);
+        return TocTreePreFilter(tree, msg, wp, lp, handled);
     };
     tree->onTreeNotify = [win](TreeCtrl* w, NMTREEVIEWW* nm, bool& handled) {
         CrashIf(win->tocTreeCtrl != w);

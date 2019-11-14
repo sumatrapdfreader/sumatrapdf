@@ -38,6 +38,7 @@ class TreeCtrl {
     void VisitNodes(const TreeItemVisitor& visitor);
     // TODO: create 2 functions for 2 different fItemRect values
     bool GetItemRect(HTREEITEM, bool fItemRect, RECT& r);
+    bool IsExpanded(HTREEITEM);
 
     bool Create(const WCHAR* title);
     void SetFont(HFONT);
