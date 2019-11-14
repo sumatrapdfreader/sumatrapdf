@@ -476,6 +476,7 @@ void LoadTocTree(WindowInfo* win) {
     HWND hwnd = treeCtrl->hwnd;
     SetRtl(hwnd, isRTL);
 
+    // TODO: set the expanded state based on tab->tocState
 #if 1
         treeCtrl->SetTreeModel(tab->tocRoot);
 #else
@@ -487,6 +488,23 @@ void LoadTocTree(WindowInfo* win) {
 
     UINT fl = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;
     RedrawWindow(hwnd, nullptr, nullptr, fl);
+}
+
+// TODO: use https://docs.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-getobject?redirectedfrom=MSDN
+// to get LOGFONT from existing font and then create a derived font
+static void UpdateFont(HDC hdc, TocItemFlags flags) {
+    // TODO: this is a bit hacky, in that we use default font
+    // and not the font from TreeCtrl. But in this case they are the same
+    bool italic = false;
+    bool bold = false;
+    if ((flags & TocItemFlags::Bold) != TocItemFlags::None) {
+        bold = true;
+    }
+    if ((flags & TocItemFlags::Italic) != TocItemFlags::None) {
+        italic = true;
+    }
+    HFONT hfont = GetDefaultGuiFont(bold, italic);
+    SelectObject(hdc, hfont);
 }
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/about-custom-draw
@@ -507,12 +525,16 @@ static LRESULT OnCustomDraw(WindowInfo* win, NMTVCUSTOMDRAW* tvcd) {
 
     if (cd->dwDrawStage == CDDS_ITEMPREPAINT) {
         // called before drawing each item
-        //tvcd->clrText = 0x00ff0000;
-        // can't cast directly to DocTocItem*
-        TreeItem* treeItem = reinterpret_cast<TreeItem*>(cd->lItemlParam);
-        DocTocItem* tocItem = static_cast<DocTocItem*>(treeItem);
-        if (tocItem) {
+        DocTocItem* tocItem = GetDocTocItemFromLPARAM(cd->lItemlParam);
+        if (!tocItem) {
             return CDRF_DODEFAULT;
+        }
+        if (tocItem->color != ColorRefUnset) {
+            tvcd->clrText = tocItem->color;
+        }
+        if (tocItem->flags != TocItemFlags::None) {
+            UpdateFont(cd->hdc, tocItem->flags);
+            return CDRF_NEWFONT;
         }
         return CDRF_DODEFAULT;
     }

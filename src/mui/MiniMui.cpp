@@ -13,7 +13,7 @@ namespace mui {
 
 HFONT CachedFont::GetHFont() {
     if (!hFont) {
-        LOGFONTW lf;
+        LOGFONTW lf{};
         // TODO: Graphics is probably only used for metrics,
         // so this might not be 100% correct (e.g. 2 monitors with different DPIs?)
         // but previous code wasn't much better

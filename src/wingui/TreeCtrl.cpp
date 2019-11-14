@@ -231,6 +231,10 @@ void TreeCtrl::SetFont(HFONT f) {
     SetWindowFont(this->hwnd, f, TRUE);
 }
 
+HFONT TreeCtrl::GetFont() {
+    return GetWindowFont(this->hwnd);
+}
+
 void TreeCtrl::SuspendRedraw() {
     SendMessage(hwnd, WM_SETREDRAW, FALSE, 0);
 }
