@@ -46,7 +46,9 @@ class TreeCtrl {
     void SuspendRedraw();
     void ResumeRedraw();
 
-    HTREEITEM FindTreeItem(TreeItem*);
+    HTREEITEM GetHandleByTreeItem(TreeItem*);
+    TreeItem* GetTreeItemByHandle(HTREEITEM);
+
 
     // creation parameters. must be set before CreateTreeCtrl() call
     HWND parent = nullptr;

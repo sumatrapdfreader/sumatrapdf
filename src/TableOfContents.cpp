@@ -39,8 +39,9 @@ constexpr UINT_PTR SUBCLASS_ID = 1;
 #define WM_APP_REPAINT_TOC (WM_APP + 1)
 #endif
 
-static void CustomizeTocInfoTip(TreeCtrl* w, NMTVGETINFOTIP* nm) {
-    auto* tocItem = reinterpret_cast<DocTocItem*>(nm->lParam);
+static void CustomizeTocInfoTip(TreeCtrl* w, NMTVGETINFOTIPW* nm) {
+    TreeItem* treeItem = reinterpret_cast<TreeItem*>(nm->lParam);
+    DocTocItem* tocItem = static_cast<DocTocItem*>(treeItem);
     PageDestination* link = tocItem->GetLink();
     if (!link) {
         return;
@@ -172,8 +173,8 @@ static void GoToTocLinkForTVItem(WindowInfo* win, HTREEITEM hItem, bool allowExt
         hItem = tree->GetSelection();
     }
 
-    auto* item = tree->GetItem(hItem);
-    auto* tocItem = reinterpret_cast<DocTocItem*>(item->lParam);
+    TreeItem* treeItem = tree->GetTreeItemByHandle(hItem);
+    DocTocItem* tocItem = static_cast<DocTocItem*>(treeItem);
     if (!tocItem || !win->IsDocLoaded()) {
         return;
     }
@@ -440,7 +441,7 @@ void LoadTocTree(WindowInfo* win) {
     HWND hwnd = treeCtrl->hwnd;
     SetRtl(hwnd, isRTL);
 
-    if (false) {
+    if (true) {
         treeCtrl->SetTreeModel(tab->tocRoot);
     } else {
         treeCtrl->SuspendRedraw();
