@@ -455,6 +455,36 @@ void LoadTocTree(WindowInfo* win) {
     RedrawWindow(hwnd, nullptr, nullptr, fl);
 }
 
+// https://docs.microsoft.com/en-us/windows/win32/controls/about-custom-draw
+// https://docs.microsoft.com/en-us/windows/win32/api/commctrl/ns-commctrl-nmtvcustomdraw
+static LRESULT OnCustomDraw(WindowInfo* win, NMTVCUSTOMDRAW* tvcd) {
+    // TODO: only for PDF
+    if (!win->AsFixed()) {
+        return CDRF_DODEFAULT;
+    }
+
+    // TODO: only for PdfEngine
+
+    NMCUSTOMDRAW* cd = &(tvcd->nmcd);
+    if (cd->dwDrawStage == CDDS_PREPAINT) {
+        // ask to be notified about each item
+        return CDRF_NOTIFYITEMDRAW;
+    }
+
+    if (cd->dwDrawStage == CDDS_ITEMPREPAINT) {
+        // called before drawing each item
+        //tvcd->clrText = 0x00ff0000;
+        // can't cast directly to DocTocItem*
+        TreeItem* treeItem = reinterpret_cast<TreeItem*>(cd->lItemlParam);
+        DocTocItem* tocItem = static_cast<DocTocItem*>(treeItem);
+        if (tocItem) {
+            return CDRF_DODEFAULT;
+        }
+        return CDRF_DODEFAULT;
+    }
+    return CDRF_DODEFAULT;
+}
+
 static LRESULT OnTocTreeNotify(WindowInfo* win, NMTREEVIEWW* pnmtv) {
     HWND hwndFrom = pnmtv->hdr.hwndFrom;
     auto action = pnmtv->action;
@@ -524,14 +554,14 @@ static LRESULT OnTocTreeNotify(WindowInfo* win, NMTREEVIEWW* pnmtv) {
             }
             break;
 #else
-            return CDRF_DODEFAULT;
+            return OnCustomDraw(win, (NMTVCUSTOMDRAW*)pnmtv);
 #endif
     }
     return -1;
 }
 
 // LRESULT(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& discardMsg)
-static LRESULT WndProcTocTree(TreeCtrl *tree, UINT msg, WPARAM wp, LPARAM lp, bool& handled) {
+static LRESULT WndProcTocTree(TreeCtrl* tree, UINT msg, WPARAM wp, LPARAM lp, bool& handled) {
     HWND hwnd = tree->hwnd;
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
     if (!win) {
@@ -599,8 +629,7 @@ static UINT_PTR tocBoxSubclassId = 0;
 static void SubclassToc(WindowInfo* win) {
     TreeCtrl* tree = win->tocTreeCtrl;
     HWND hwndTocBox = win->hwndTocBox;
-    HWND hwndTocTree = win->tocTreeCtrl->hwnd;
-\
+
     if (tocBoxSubclassId == 0) {
         BOOL wasOk = SetWindowSubclass(hwndTocBox, WndProcTocBox, SUBCLASS_ID, (DWORD_PTR)win);
         CrashIf(!wasOk);
