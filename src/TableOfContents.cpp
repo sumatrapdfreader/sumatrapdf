@@ -156,10 +156,13 @@ static void GoToTocLinkTask(WindowInfo* win, DocTocItem* tocItem, TabInfo* tab, 
     // make sure that the tree item that the user selected
     // isn't unselected in UpdateTocSelection right again
     win->tocKeepSelection = true;
-    if (tocItem->GetLink())
-        win->linkHandler->GotoLink(tocItem->GetLink());
-    else if (tocItem->pageNo)
-        ctrl->GoToPage(tocItem->pageNo, true);
+    int pageNo = tocItem->pageNo;
+    PageDestination* dest = tocItem->GetLink();
+    if (dest) {
+        win->linkHandler->GotoLink(dest);
+    } else if (pageNo) {
+        ctrl->GoToPage(pageNo, true);
+    }
     win->tocKeepSelection = false;
 }
 
@@ -434,12 +437,18 @@ void LoadTocTree(WindowInfo* win) {
     bool isRTL = r2l > l2r;
 
     TreeCtrl* treeCtrl = win->tocTreeCtrl;
-    treeCtrl->SuspendRedraw();
     HWND hwnd = treeCtrl->hwnd;
     SetRtl(hwnd, isRTL);
-    PopulateTocTreeView(treeCtrl, tab->tocRoot, tab->tocState, nullptr);
-    UpdateTocColors(win);
-    treeCtrl->ResumeRedraw();
+
+    if (false) {
+        treeCtrl->SetTreeModel(tab->tocRoot);
+    } else {
+        treeCtrl->SuspendRedraw();
+        PopulateTocTreeView(treeCtrl, tab->tocRoot, tab->tocState, nullptr);
+        UpdateTocColors(win);
+        treeCtrl->ResumeRedraw();
+    }
+
     UINT fl = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;
     RedrawWindow(hwnd, nullptr, nullptr, fl);
 }
@@ -622,9 +631,7 @@ void CreateToc(WindowInfo* win) {
         handled = (res != -1);
         return res;
     };
-    tree->onGetInfoTip = [](TreeCtrl* w, NMTVGETINFOTIP* infoTipInfo) {
-        CustomizeTocInfoTip(w, infoTipInfo);
-    };
+    tree->onGetInfoTip = [](TreeCtrl* w, NMTVGETINFOTIP* infoTipInfo) { CustomizeTocInfoTip(w, infoTipInfo); };
     bool ok = tree->Create(L"TOC");
     CrashIf(!ok);
     win->tocTreeCtrl = tree;

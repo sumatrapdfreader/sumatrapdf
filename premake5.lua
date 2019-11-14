@@ -547,7 +547,7 @@ workspace "SumatraPDF"
     filter {"configurations:Debug"}
       defines { "BUILD_TEX_IFILTER", "BUILD_EPUB_IFILTER" }
     filter {}
-    includedirs { "src", "mupdf/include" }
+    includedirs { "src", "src/wingui", "mupdf/include" }
     pdf_filter_files()
     links { "utils", "libmupdf" }
     links { "comctl32", "gdiplus", "shlwapi", "version"  }
@@ -607,7 +607,7 @@ workspace "SumatraPDF"
     cppdialect "C++17"
     entrypoint "WinMainCRTStartup"
     flags { "NoManifest" }
-    includedirs { "src", "mupdf/include" }
+    includedirs { "src", "src/wingui", "mupdf/include" }
     sumatrapdf_files()
     files { "src/MuPDF_Exports.cpp" }
     links {

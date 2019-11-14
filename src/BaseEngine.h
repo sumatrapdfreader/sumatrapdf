@@ -203,7 +203,7 @@ class PageElement {
 };
 
 // an item in a document's Table of Content
-class DocTocItem : public TreeModel {
+class DocTocItem : public TreeModel, public TreeItem {
   public:
     // the item's visible label, owned
     WCHAR* title = nullptr;
@@ -275,13 +275,35 @@ class DocTocItem : public TreeModel {
         return n;
     }
 
-    TreeItem* RootAt(int n) {
+    TreeItem* RootAt(int n) override {
         auto node = child;
         while (n > 0) {
             node = node->next;
             n--;
         }
-        return reinterpret_cast<TreeItem*>(node);
+        return node;
+    }
+
+    WCHAR* Text()  override {
+        return title;
+    }
+
+    TreeItem* Parent() override {
+        // don't use it
+        CrashMe();
+        return nullptr;
+    }
+
+    int ChildCount()  override {
+        return RootCount();
+    }
+
+    TreeItem* ChildAt(int index)  override {
+        return RootAt(index);
+    }
+
+    bool IsOpened()  override {
+        return open;
     }
 };
 

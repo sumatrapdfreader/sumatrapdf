@@ -313,6 +313,7 @@ static void PopulateTreeItem(TreeCtrl* tree, TreeItem* item, HTREEITEM parent) {
 }
 
 static void PopulateTree(TreeCtrl* tree, TreeModel *tm) {
+  
     HTREEITEM parent = nullptr;
     int n = tm->RootCount();
     for (int i = 0; i < n; i++) {
@@ -330,6 +331,7 @@ void TreeCtrl::SetTreeModel(TreeModel* tm) {
     CrashIf(this->treeModel);
 
     this->treeModel = tm;
+    SuspendRedraw();
     PopulateTree(this, tm);
-
+    ResumeRedraw();
 }
