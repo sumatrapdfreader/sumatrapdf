@@ -559,7 +559,7 @@ workspace "SumatraPDF"
     cppdialect "C++17"
     disablewarnings { "4100", "4838" }
     includedirs {
-      "src", "mupdf/include",
+      "src", "src/wingui", "mupdf/include",
       "ext/libdjvu", "ext/CHMLib/src", "ext/zlib"
     }
     pdf_preview_files()
