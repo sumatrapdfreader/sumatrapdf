@@ -91,14 +91,10 @@ class HtmlWindowHandler : public HtmlWindowCallback {
 };
 
 struct ChmTocTraceItem {
-    const WCHAR* title; // owned by ChmModel::poolAllocator
-    const WCHAR* url;   // owned by ChmModel::poolAllocator
-    int level;
-    int pageNo;
-
-    explicit ChmTocTraceItem(const WCHAR* title = nullptr, const WCHAR* url = nullptr, int level = 0, int pageNo = 0)
-        : title(title), url(url), level(level), pageNo(pageNo) {
-    }
+    const WCHAR* title = nullptr; // owned by ChmModel::poolAllocator
+    const WCHAR* url = nullptr;   // owned by ChmModel::poolAllocator
+    int level = 0;
+    int pageNo = 0;
 };
 
 ChmModel::ChmModel(ControllerCallback* cb)
@@ -230,11 +226,13 @@ void ChmModel::Navigate(int dir) {
     if (!htmlWindow)
         return;
     if (dir < 0) {
-        for (; dir < 0 && CanNavigate(dir); dir++)
+        for (; dir < 0 && CanNavigate(dir); dir++) {
             htmlWindow->GoBack();
+        }
     } else {
-        for (; dir > 0 && CanNavigate(dir); dir--)
+        for (; dir > 0 && CanNavigate(dir); dir--) {
             htmlWindow->GoForward();
+        }
     }
 }
 
@@ -261,11 +259,11 @@ float ChmModel::GetZoomVirtual(bool absolute) const {
 }
 
 class ChmTocBuilder : public EbookTocVisitor {
-    ChmDoc* doc;
+    ChmDoc* doc = nullptr;
 
-    WStrList* pages;
-    Vec<ChmTocTraceItem>* tocTrace;
-    Allocator* allocator;
+    WStrList* pages = nullptr;
+    Vec<ChmTocTraceItem>* tocTrace = nullptr;
+    Allocator* allocator = nullptr;
     // TODO: could use dict::MapWStrToInt instead of StrList in the caller as well
     dict::MapWStrToInt urlsSet;
 
@@ -302,7 +300,8 @@ class ChmTocBuilder : public EbookTocVisitor {
         int pageNo = CreatePageNoForURL(url);
         name = Allocator::StrDup(allocator, name);
         url = Allocator::StrDup(allocator, url);
-        tocTrace->Append(ChmTocTraceItem(name, url, level, pageNo));
+        auto item = ChmTocTraceItem{name, url, level, pageNo};
+        tocTrace->Append(item);
     }
 };
 
