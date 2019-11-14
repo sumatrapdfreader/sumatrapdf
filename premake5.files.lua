@@ -463,6 +463,7 @@ end
 
 function engines_files()
   files_in_dir("src", {
+    "BaseEngine.h",
     "ChmDoc.*",
     "DjVuEngine.*",
     "EbookDoc.*",

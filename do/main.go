@@ -41,6 +41,7 @@ func main() {
 		flgDownloadTranslations    bool
 		flgRegenerateTranslattions bool
 		flgUploadTranslations      bool
+		flgClean                   bool
 	)
 
 	{
@@ -57,11 +58,17 @@ func main() {
 		flag.BoolVar(&flgDownloadTranslations, "trans-dl", false, "download translations and re-generate C code")
 		flag.BoolVar(&flgRegenerateTranslattions, "trans-regen", false, "regenerate .cpp translations files from strings/translations.txt")
 		flag.BoolVar(&flgUploadTranslations, "trans-ul", false, "upload translatins to apptranslators.org if changed")
+		flag.BoolVar(&flgClean, "clean", false, "clean the build")
 		flag.Parse()
 	}
 
 	if flgWc {
 		doLineCount()
+		return
+	}
+
+	if flgClean {
+		clean()
 		return
 	}
 
