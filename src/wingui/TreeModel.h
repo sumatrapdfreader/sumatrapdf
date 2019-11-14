@@ -8,7 +8,8 @@ struct TreeItem {
     virtual TreeItem* Parent() = 0;
     virtual int ChildCount() = 0;
     virtual TreeItem* ChildAt(int index) = 0;
-    virtual bool IsOpened() = 0;
+    // true if this tree item should be expanded i.e. showing children
+    virtual bool IsExpanded() = 0;
 };
 
 // TreeModel provides data to TreeCtrl

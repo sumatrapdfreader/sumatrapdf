@@ -225,7 +225,7 @@ class XpsEngineImpl : public BaseEngine {
     bool HasTocTree() const override {
         return _outline != nullptr;
     }
-    DocTocItem* GetTocTree() override;
+    DocTocTree* GetTocTree() override;
 
     fz_rect FindDestRect(const char* target);
 
@@ -270,7 +270,7 @@ class XpsEngineImpl : public BaseEngine {
                  FitzAbortCookie* cookie = nullptr);
     void DropPageRun(XpsPageRun* run, bool forceRemove = false);
 
-    XpsTocItem* BuildTocTree(fz_outline* entry, int& idCounter);
+    DocTocTree* BuildTocTree(fz_outline* entry, int& idCounter);
     void LinkifyPageText(fz_page* page, int pageNo);
     RenderedBitmap* GetPageImage(int pageNo, RectD rect, size_t imageIx);
     WCHAR* ExtractFontList();
@@ -1159,7 +1159,7 @@ PageDestination* XpsEngineImpl::GetNamedDest(const WCHAR* name) {
     return nullptr;
 }
 
-XpsTocItem* XpsEngineImpl::BuildTocTree(fz_outline* entry, int& idCounter) {
+DocTocTree* XpsEngineImpl::BuildTocTree(fz_outline* entry, int& idCounter) {
     XpsTocItem* node = nullptr;
     CrashMePort();
 #if 0
@@ -1181,10 +1181,10 @@ XpsTocItem* XpsEngineImpl::BuildTocTree(fz_outline* entry, int& idCounter) {
     }
 #endif
 
-    return node;
+    return new DocTocTree(node);
 }
 
-DocTocItem* XpsEngineImpl::GetTocTree() {
+DocTocTree* XpsEngineImpl::GetTocTree() {
     if (!HasTocTree())
         return nullptr;
 

@@ -202,13 +202,28 @@ class PageElement {
     }
 };
 
+enum class TocItemFlags {
+    None = 0x0,
+    Bold = 0x1,
+    Italic = 0x2,
+};
+
+// a "unset" state for COLORREF value. technically all colors are valid
+// this one is hopefully 
+constexpr COLORREF ColorRefUnset = (COLORREF)(-2);
+
 // an item in a document's Table of Content
-class DocTocItem : public TreeModel, public TreeItem {
+class DocTocItem : public TreeItem {
   public:
-    // the item's visible label, owned
+    // the item's visible label
     WCHAR* title = nullptr;
-    // whether any child elements are to be displayed
-    bool open = false;
+
+    // in some formats, the document can specify the tree item
+    // is expanded by default. We keep track if user toggled
+    // expansion state of the tree item
+    bool isOpenDefault = false;
+    bool isOpenToggled = false;
+
     // page this item points to (0 for non-page destinations)
     // if GetLink() returns a destination to a page, the two should match
     int pageNo = 0;
@@ -216,6 +231,9 @@ class DocTocItem : public TreeModel, public TreeItem {
     // from any other of the same ToC tree (must be constant
     // between runs so that it can be persisted in FileState::tocState)
     int id = 0;
+
+    TocItemFlags flags = TocItemFlags::None;
+    COLORREF color = ColorRefUnset;
 
     // first child item
     DocTocItem* child = nullptr;
@@ -253,36 +271,24 @@ class DocTocItem : public TreeModel, public TreeItem {
 
     void OpenSingleNode() {
         // only open (root level) ToC nodes if there's at most two
-        if (!next || !next->next) {
-            open = true;
-            if (next)
-                next->open = true;
+        if (next && next->next) {
+            return;
+        }
+
+        if (!IsExpanded()) {
+            isOpenToggled = !isOpenToggled;
+        }
+        if (!next) {
+            return;
+        }
+        if (!next->IsExpanded()) {
+            next->isOpenToggled = !next->isOpenToggled;
         }
     }
 
     // returns the destination this ToC item points to or nullptr
     // (the result is owned by the DocTocItem and MUST NOT be deleted)
     virtual PageDestination* GetLink() = 0;
-
-    // TreeModel
-    int RootCount() override {
-        int n = 0;
-        auto node = child;
-        while (node) {
-            n++;
-            node = node->next;
-        }
-        return n;
-    }
-
-    TreeItem* RootAt(int n) override {
-        auto node = child;
-        while (n > 0) {
-            node = node->next;
-            n--;
-        }
-        return node;
-    }
 
     WCHAR* Text()  override {
         return title;
@@ -295,15 +301,66 @@ class DocTocItem : public TreeModel, public TreeItem {
     }
 
     int ChildCount()  override {
-        return RootCount();
+        int n = 0;
+        auto node = child;
+        while (node) {
+            n++;
+            node = node->next;
+        }
+        return n;
     }
 
-    TreeItem* ChildAt(int index)  override {
-        return RootAt(index);
+    TreeItem* ChildAt(int n)  override {
+        auto node = child;
+        while (n > 0) {
+            node = node->next;
+            n--;
+        }
+        return node;
     }
 
-    bool IsOpened()  override {
-        return open;
+    bool IsExpanded() override {
+        // leaf items cannot be expanded
+        if (child == nullptr) {
+            return false;
+        }
+        // item is expanded when:
+        // - expanded by default, not toggled (true, false)
+        // - not expanded by default, toggled (false, true)
+        // which boils down to:
+        return isOpenDefault != isOpenToggled;
+    }
+};
+
+struct DocTocTree : public TreeModel {
+    DocTocItem* root = nullptr;
+
+    DocTocTree(DocTocItem* root) {
+        this->root = root;
+    }
+
+    virtual ~DocTocTree() {
+        delete root;
+    }
+
+    // TreeModel
+    int RootCount() override {
+        int n = 0;
+        auto node = root;
+        while (node) {
+            n++;
+            node = node->next;
+        }
+        return n;
+    }
+
+    TreeItem* RootAt(int n) override {
+        auto node = root;
+        while (n > 0) {
+            node = node->next;
+            n--;
+        }
+        return node;
     }
 };
 
@@ -427,7 +484,7 @@ class BaseEngine {
     }
     // returns the root element for the loaded document's Table of Contents
     // caller must delete the result (when no longer needed)
-    virtual DocTocItem* GetTocTree() {
+    virtual DocTocTree* GetTocTree() {
         return nullptr;
     }
 

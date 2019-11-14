@@ -662,7 +662,7 @@ class ImageDirEngineImpl : public ImagesEngine {
     bool HasTocTree() const override {
         return true;
     }
-    DocTocItem* GetTocTree() override;
+    DocTocTree* GetTocTree() override;
 
     // TODO: better handle the case where images have different resolutions
     float GetFileDPI() const override {
@@ -749,7 +749,7 @@ class ImageDirTocItem : public DocTocItem {
     }
 };
 
-DocTocItem* ImageDirEngineImpl::GetTocTree() {
+DocTocTree* ImageDirEngineImpl::GetTocTree() {
     DocTocItem* root = new ImageDirTocItem(GetPageLabel(1), 1);
     root->id = 1;
     for (int i = 2; i <= PageCount(); i++) {
@@ -757,7 +757,7 @@ DocTocItem* ImageDirEngineImpl::GetTocTree() {
         item->id = i;
         root->AddSibling(item);
     }
-    return root;
+    return new DocTocTree(root);
 }
 
 bool ImageDirEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {

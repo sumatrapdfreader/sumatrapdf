@@ -345,7 +345,7 @@ class PsEngineImpl : public BaseEngine {
         return pdfEngine->HasTocTree();
     }
 
-    DocTocItem* GetTocTree() override {
+    DocTocTree* GetTocTree() override {
         return pdfEngine->GetTocTree();
     }
 

@@ -16,7 +16,7 @@ class TabInfo {
     // state of the table of contents
     bool showToc = false;
     bool showTocPresentation = false;
-    DocTocItem* tocRoot = nullptr;
+    DocTocTree* tocRoot = nullptr;
     // an array of ids for ToC items that have been expanded/collapsed by user
     Vec<int> tocState;
     // canvas dimensions when the document was last visible

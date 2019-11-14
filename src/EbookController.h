@@ -66,7 +66,7 @@ class EbookController : public Controller {
     bool HasTocTree() const override {
         return doc.HasToc();
     }
-    DocTocItem* GetTocTree() override;
+    DocTocTree* GetTocTree() override;
     void ScrollToLink(PageDestination* dest) override;
     PageDestination* GetNamedDest(const WCHAR* name) override;
 

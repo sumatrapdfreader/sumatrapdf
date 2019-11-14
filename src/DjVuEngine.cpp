@@ -261,7 +261,7 @@ class DjVuEngineImpl : public BaseEngine {
     bool HasTocTree() const override {
         return outline != miniexp_nil;
     }
-    DocTocItem* GetTocTree() override;
+    DocTocTree* GetTocTree() override;
 
     bool HasPageLabels() const override {
         return hasPageLabels;
@@ -1048,7 +1048,7 @@ DjVuTocItem* DjVuEngineImpl::BuildTocTree(miniexp_t entry, int& idCounter) {
     return node;
 }
 
-DocTocItem* DjVuEngineImpl::GetTocTree() {
+DocTocTree* DjVuEngineImpl::GetTocTree() {
     if (!HasTocTree())
         return nullptr;
 
@@ -1057,7 +1057,7 @@ DocTocItem* DjVuEngineImpl::GetTocTree() {
     DjVuTocItem* root = BuildTocTree(outline, idCounter);
     if (root)
         root->OpenSingleNode();
-    return root;
+    return new DocTocTree(root);
 }
 
 WCHAR* DjVuEngineImpl::GetPageLabel(int pageNo) const {

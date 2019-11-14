@@ -71,7 +71,7 @@ class Controller {
 
     // table of contents
     virtual bool HasTocTree() const = 0;
-    virtual DocTocItem* GetTocTree() = 0;
+    virtual DocTocTree* GetTocTree() = 0;
     virtual void ScrollToLink(PageDestination* dest) = 0;
     virtual PageDestination* GetNamedDest(const WCHAR* name) = 0;
 
