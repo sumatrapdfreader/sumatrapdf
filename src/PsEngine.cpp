@@ -356,7 +356,7 @@ class PsEngineImpl : public BaseEngine {
     static BaseEngine* CreateFromFile(const WCHAR* fileName);
 
   protected:
-    BaseEngine* pdfEngine;
+    BaseEngine* pdfEngine = nullptr;
 
     bool Load(const WCHAR* fileName) {
         AssertCrash(!FileName() && !pdfEngine);

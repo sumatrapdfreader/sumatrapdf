@@ -513,7 +513,6 @@ void LinkHandler::GotoNamedDest(const WCHAR* name) {
             ScrollTo(dest);
             hasDest = true;
         }
-        delete root;
     }
     if (!hasDest && ctrl->HasPageLabels()) {
         int pageNo = ctrl->GetPageByLabel(name);
