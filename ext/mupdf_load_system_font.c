@@ -88,19 +88,19 @@ static struct {
 	char *name;
 	char *pattern;
 } baseSubstitutes[] = {
-	{ "Courier", "CourierNewPSMT" },
-	{ "Courier-Bold", "CourierNewPS-BoldMT" },
-	{ "Courier-Oblique", "CourierNewPS-ItalicMT" },
-	{ "Courier-BoldOblique", "CourierNewPS-BoldItalicMT" },
-	{ "Helvetica", "ArialMT" },
-	{ "Helvetica-Bold", "Arial-BoldMT" },
-	{ "Helvetica-Oblique", "Arial-ItalicMT" },
-	{ "Helvetica-BoldOblique", "Arial-BoldItalicMT" },
-	{ "Times-Roman", "TimesNewRomanPSMT" },
-	{ "Times-Bold", "TimesNewRomanPS-BoldMT" },
-	{ "Times-Italic", "TimesNewRomanPS-ItalicMT" },
-	{ "Times-BoldItalic", "TimesNewRomanPS-BoldItalicMT" },
-	{ "Symbol", "SymbolMT" },
+    {"Courier", "CourierNewPSMT"},
+    {"Courier-Bold", "CourierNewPS-BoldMT"},
+    {"Courier-Oblique", "CourierNewPS-ItalicMT"},
+    {"Courier-BoldOblique", "CourierNewPS-BoldItalicMT"},
+    {"Helvetica", "ArialMT"},
+    {"Helvetica-Bold", "Arial-BoldMT"},
+    {"Helvetica-Oblique", "Arial-ItalicMT"},
+    {"Helvetica-BoldOblique", "Arial-BoldItalicMT"},
+    {"Times-Roman", "TimesNewRomanPSMT"},
+    {"Times-Bold", "TimesNewRomanPS-BoldMT"},
+    {"Times-Italic", "TimesNewRomanPS-ItalicMT"},
+    {"Times-BoldItalic", "TimesNewRomanPS-BoldItalicMT"},
+    {"Symbol", "SymbolMT"},
 };
 
 static pdf_fontlistMS fontlistMS =
@@ -703,7 +703,7 @@ pdf_load_windows_font(fz_context *ctx, const char *fontname, int bold, int itali
 		   those of Windows' Times New Roman and Courier New; for
 		   some reason, Poppler doesn't seem to have this problem */
 		int len;
-        if (fz_lookup_builtin_font(ctx, fontname, bold, italic, &len))
+        if (fz_lookup_base14_font(ctx, fontname, &len))
 			return NULL;
 
 		/* cf. http://code.google.com/p/sumatrapdf/issues/detail?id=2173 */

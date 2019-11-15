@@ -20,7 +20,7 @@ global __binary_NimbusMonoPS_Regular_cff
 global __binary_NimbusMonoPS_Regular_cff_size
 
 __binary_NimbusMonoPS_Regular_cff:
-    incbin "resources/fonts/urw/NimbusMonoPS-Bold.cff"
+    incbin "resources/fonts/urw/NimbusMonoPS-Regular.cff"
 
 __binary_NimbusMonoPS_Regular_cff_size:
     dq $ - __binary_NimbusMonoPS_Regular_cff
@@ -64,7 +64,7 @@ global __binary_NimbusRoman_Regular_cff
 global __binary_NimbusRoman_Regular_cff_size
 
 __binary_NimbusRoman_Regular_cff:
-    incbin "resources/fonts/urw/NimbusRoman-Bold.cff"
+    incbin "resources/fonts/urw/NimbusRoman-Regular.cff"
 
 __binary_NimbusRoman_Regular_cff_size:
     dq $ - __binary_NimbusRoman_Regular_cff
@@ -108,7 +108,7 @@ global __binary_NimbusSans_Regular_cff
 global __binary_NimbusSans_Regular_cff_size
 
 __binary_NimbusSans_Regular_cff:
-    incbin "resources/fonts/urw/NimbusSans-Bold.cff"
+    incbin "resources/fonts/urw/NimbusSans-Regular.cff"
 
 __binary_NimbusSans_Regular_cff_size:
     dq $ - __binary_NimbusSans_Regular_cff
