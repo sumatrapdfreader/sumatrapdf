@@ -368,26 +368,40 @@ void UpdateTocSelection(WindowInfo* win, int currPageNo) {
     }
 }
 
-static void UpdateDocTocExpansionState(Vec<int>&tocState, DocTocItem* tocItem) {
+static void UpdateDocTocExpansionState(TreeCtrl* treeCtrl, Vec<int>&tocState, DocTocItem* tocItem) {
     while (tocItem) {
         // items without children cannot be toggled
         if (tocItem->child) {
-            // the state was changed from it's original state by the user
-            if (tocItem->isOpenToggled) {
+            // we have to query the state of the tree view item because
+            // isOpenToggled is not kept in sync
+            // TODO: keep toggle state on DocTocItem in sync
+            // by subscribing to the right notifications
+            HTREEITEM hItem = treeCtrl->GetHandleByTreeItem(tocItem);
+            CrashIf(!hItem);
+            TVITEM* item = treeCtrl->GetItem(hItem);
+            if (!item) {
+                // TODO: why this happens when open / close / re-open ?
+                return;
+            }
+            bool isExpanded = (item->state & TVIS_EXPANDED) != 0;
+            bool wasToggled = isExpanded != tocItem->isOpenDefault;
+            if (wasToggled) {
                 tocState.Append(tocItem->id);
             }
-
-            UpdateDocTocExpansionState(tocState, tocItem->child);
+            UpdateDocTocExpansionState(treeCtrl, tocState, tocItem->child);
         }
         tocItem = tocItem->next;
     }
 }
 
-// TODO: update to use TreeItem instead of hItem
-void UpdateTocExpansionState(Vec<int>& tocState, TreeCtrl* treeCtrl, HTREEITEM hItem) {
+void UpdateTocExpansionState(Vec<int>& tocState, TreeCtrl* treeCtrl, DocTocTree* docTree) {
+    if (treeCtrl->treeModel != docTree) {
+        //CrashMe();
+        return;
+    }
     tocState.Reset();
-    DocTocItem* tocItem = GetDocTocItem(treeCtrl, hItem);
-    UpdateDocTocExpansionState(tocState, tocItem);
+    DocTocItem* tocItem = docTree->root;
+    UpdateDocTocExpansionState(treeCtrl, tocState, tocItem);
 }
 
 void UpdateTocColors(WindowInfo* win) {
@@ -452,6 +466,16 @@ static void GetLeftRightCounts(DocTocItem* node, int& l2r, int& r2l) {
     GetLeftRightCounts(node->next, l2r, r2l);
 }
 
+static void SetInitialExpandState(DocTocItem* item, Vec<int>& tocState) {
+    while (item) {
+        if (tocState.Contains(item->id)) {
+            item->isOpenToggled = true;
+        }
+        SetInitialExpandState(item->child, tocState);
+        item = item->next;
+    }
+}
+
 void LoadTocTree(WindowInfo* win) {
     TabInfo* tab = win->currentTab;
     CrashIf(!tab);
@@ -476,9 +500,10 @@ void LoadTocTree(WindowInfo* win) {
     HWND hwnd = treeCtrl->hwnd;
     SetRtl(hwnd, isRTL);
 
-    // TODO: set the expanded state based on tab->tocState
 #if 1
-        treeCtrl->SetTreeModel(tab->tocRoot);
+    SetInitialExpandState(tab->tocRoot->root, tab->tocState);
+    tab->tocRoot->root->OpenSingleNode();
+    treeCtrl->SetTreeModel(tab->tocRoot);
 #else
     treeCtrl->SuspendRedraw();
     PopulateTocTreeView(treeCtrl, tab->tocRoot, tab->tocState, nullptr);

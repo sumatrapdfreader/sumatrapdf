@@ -16,6 +16,8 @@ class TabInfo {
     // state of the table of contents
     bool showToc = false;
     bool showTocPresentation = false;
+    // TODO: don't take ownership of DocTocTree, it should
+    // belong in the engine and be deleted there
     DocTocTree* tocRoot = nullptr;
     // an array of ids for ToC items that have been expanded/collapsed by user
     Vec<int> tocState;

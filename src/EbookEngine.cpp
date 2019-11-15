@@ -881,8 +881,8 @@ DocTocTree* EpubEngineImpl::GetTocTree() {
     EbookTocBuilder builder(this);
     doc->ParseToc(&builder);
     EbookTocItem* root = builder.GetRoot();
-    if (root) {
-        root->OpenSingleNode();
+    if (!root) {
+        return nullptr;
     }
     return new DocTocTree(root);
 }
@@ -998,8 +998,8 @@ DocTocTree* Fb2EngineImpl::GetTocTree() {
     EbookTocBuilder builder(this);
     doc->ParseToc(&builder);
     EbookTocItem* root = builder.GetRoot();
-    if (root) {
-        root->OpenSingleNode();
+    if (!root) {
+        return nullptr;
     }
     return new DocTocTree(root);
 }
@@ -1151,8 +1151,9 @@ DocTocTree* MobiEngineImpl::GetTocTree() {
     EbookTocBuilder builder(this);
     doc->ParseToc(&builder);
     EbookTocItem* root = builder.GetRoot();
-    if (root)
-        root->OpenSingleNode();
+    if (!root) {
+        return nullptr;
+    }
     return new DocTocTree(root);
 }
 
@@ -1582,8 +1583,9 @@ DocTocTree* ChmEngineImpl::GetTocTree() {
         doc->ParseIndex(&builder);
     }
     EbookTocItem* root = builder.GetRoot();
-    if (root)
-        root->OpenSingleNode();
+    if (!root) {
+        return nullptr;
+    }
     return new DocTocTree(root);
 }
 

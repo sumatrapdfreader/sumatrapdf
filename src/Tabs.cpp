@@ -651,17 +651,17 @@ void SaveCurrentTabInfo(WindowInfo* win) {
         return;
     CrashIf(win->currentTab != win->tabs.at(current));
 
-    TabInfo* tdata = win->currentTab;
-    CrashIf(!tdata);
+    TabInfo* tab = win->currentTab;
+    CrashIf(!tab);
     if (win->tocLoaded) {
-        HTREEITEM hRoot = win->tocTreeCtrl->GetRoot();
-        UpdateTocExpansionState(tdata->tocState, win->tocTreeCtrl, hRoot);
+        DocTocTree* tocTree = tab->ctrl->GetTocTree();
+        UpdateTocExpansionState(tab->tocState, win->tocTreeCtrl, tocTree);
     }
-    VerifyTabInfo(win, tdata);
+    VerifyTabInfo(win, tab);
 
     // update the selection history
-    win->tabSelectionHistory->Remove(tdata);
-    win->tabSelectionHistory->Push(tdata);
+    win->tabSelectionHistory->Remove(tab);
+    win->tabSelectionHistory->Push(tab);
 }
 
 void UpdateCurrentTabBgColor(WindowInfo* win) {
