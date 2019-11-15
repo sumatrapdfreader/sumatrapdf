@@ -1286,11 +1286,7 @@ extern "C" static void fz_lock_context_cs(void* user, int lock) {
     // be guarding all fz_context access anyway and
     // thus already be in place (in debug builds we
     // crash if that assertion doesn't hold)
-    BOOL ok = TryEnterCriticalSection(&e->ctxAccess);
-    if (!ok) {
-        CrashIf(true);
-        EnterCriticalSection(&e->ctxAccess);
-    }
+    EnterCriticalSection(&e->ctxAccess);
 }
 
 extern "C" static void fz_unlock_context_cs(void* user, int lock) {
