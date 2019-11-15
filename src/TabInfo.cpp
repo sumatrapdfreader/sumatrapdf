@@ -33,7 +33,6 @@ TabInfo::~TabInfo() {
     if (AsChm()) {
         AsChm()->RemoveParentHwnd();
     }
-    delete tocRoot;
     delete selectionOnPage;
     delete ctrl;
 }

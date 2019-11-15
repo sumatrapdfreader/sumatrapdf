@@ -547,7 +547,6 @@ void AddFavorite(WindowInfo* win) {
         if (item) {
             name.SetCopy(item->title);
         }
-        delete root;
     }
     AutoFreeW pageLabel(ctrl->GetPageLabel(pageNo));
 

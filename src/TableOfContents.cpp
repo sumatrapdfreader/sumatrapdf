@@ -484,16 +484,15 @@ void LoadTocTree(WindowInfo* win) {
         return;
     win->tocLoaded = true;
 
-    if (!tab->tocRoot) {
-        tab->tocRoot = tab->ctrl->GetTocTree();
-        if (!tab->tocRoot)
-            return;
+    auto* tocTree = tab->ctrl->GetTocTree();
+    if (!tocTree) {
+        return;
     }
 
     // consider a ToC tree right-to-left if a more than half of the
     // alphabetic characters are in a right-to-left script
     int l2r = 0, r2l = 0;
-    GetLeftRightCounts(tab->tocRoot->root, l2r, r2l);
+    GetLeftRightCounts(tocTree->root, l2r, r2l);
     bool isRTL = r2l > l2r;
 
     TreeCtrl* treeCtrl = win->tocTreeCtrl;
@@ -501,12 +500,12 @@ void LoadTocTree(WindowInfo* win) {
     SetRtl(hwnd, isRTL);
 
 #if 1
-    SetInitialExpandState(tab->tocRoot->root, tab->tocState);
-    tab->tocRoot->root->OpenSingleNode();
-    treeCtrl->SetTreeModel(tab->tocRoot);
+    SetInitialExpandState(tocTree->root, tab->tocState);
+    tocTree->root->OpenSingleNode();
+    treeCtrl->SetTreeModel(tocTree);
 #else
     treeCtrl->SuspendRedraw();
-    PopulateTocTreeView(treeCtrl, tab->tocRoot, tab->tocState, nullptr);
+    PopulateTocTreeView(treeCtrl, tocTree, tab->tocState, nullptr);
     UpdateTocColors(win);
     treeCtrl->ResumeRedraw();
 #endif

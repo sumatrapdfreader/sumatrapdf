@@ -1005,8 +1005,6 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, Displa
     // delete them before destroying the whole DisplayModel
     // (same for linkOnLastButtonDown)
     ClearTocBox(win);
-    delete tab->tocRoot;
-    tab->tocRoot = nullptr;
     delete win->linkOnLastButtonDown;
     win->linkOnLastButtonDown = nullptr;
 
@@ -2077,11 +2075,10 @@ static void CloseDocumentInTab(WindowInfo* win, bool keepUIEnabled, bool deleteM
     if (win->uia_provider)
         win->uia_provider->OnDocumentUnload();
     win->ctrl = nullptr;
+    auto currentTab = win->currentTab;
     if (deleteModel) {
-        delete win->currentTab->tocRoot;
-        win->currentTab->tocRoot = nullptr;
-        delete win->currentTab->ctrl;
-        win->currentTab->ctrl = nullptr;
+        delete currentTab->ctrl;
+        currentTab->ctrl = nullptr;
         FileWatcherUnsubscribe(win->currentTab->watcher);
         win->currentTab->watcher = nullptr;
     } else {

@@ -174,15 +174,19 @@ void DumpTocItem(BaseEngine* engine, DocTocItem* item, int level, int& idCounter
 }
 
 void DumpToc(BaseEngine* engine) {
-    DocTocItem* root = engine->GetTocTree()->root;
+    DocTocTree* tree = engine->GetTocTree();
+    if (!tree) {
+        return;
+    }
+    auto* root = tree->root;
     if (root) {
         Out("\t<TocTree%s>\n", engine->HasTocTree() ? "" : " Expected=\"no\"");
         int idCounter = 0;
         DumpTocItem(engine, root, 2, idCounter);
         Out("\t</TocTree>\n");
-    } else if (engine->HasTocTree())
+    } else if (engine->HasTocTree()) {
         Out("\t<TocTree />\n");
-    delete root;
+    }
 }
 
 const char* ElementTypeToStr(PageElement* el) {
