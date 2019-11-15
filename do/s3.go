@@ -15,12 +15,20 @@ import (
 	"github.com/goamz/goamz/s3"
 )
 
+/*
 var (
 	s3AwsAccess string
 	s3AwsSecret string
 	// client can change bucket
 	s3BucketName = "kjkpub"
 )
+*/
+
+type Uploader struct {
+	Access string
+	Secret string
+	Bucket string
+}
 
 func md5B64OfBytes(d []byte) string {
 	md5Sum := md5.Sum(d)
@@ -33,45 +41,39 @@ func md5B64OfFile(path string) string {
 	return md5B64OfBytes(d)
 }
 
-func s3VerifyHasSecrets() {
-	fatalIf(s3AwsAccess == "", "invalid s3AwsAccess\n")
-	fatalIf(s3AwsSecret == "", "invalid s3AwsSsecret\n")
-	fatalIf(s3AwsSecret == s3AwsAccess, "s3AwsSecret == s3AwsAccess")
-}
-
 // must be called before any other call
-func s3SetSecrets(access, secret string) {
-	s3AwsAccess = access
-	s3AwsSecret = secret
-	s3VerifyHasSecrets()
+func (u *Uploader) VerifyHasSecrets() {
+	fatalIf(u.Access == "", "invalid s3AwsAccess\n")
+	fatalIf(u.Secret == "", "invalid s3AwsSsecret\n")
+	fatalIf(u.Secret == u.Access, "s3AwsSecret == s3AwsAccess")
 }
 
-//Note: http.DefaultClient is more robust than aws.RetryingClient
-//(which fails for me with a timeout for large files e.g. ~6MB)
-func getS3Client() *http.Client {
+// Note: http.DefaultClient is more robust than aws.RetryingClient
+// (which fails for me with a timeout for large files e.g. ~6MB)
+func (u *Uploader) GetClient() *http.Client {
 	// return aws.RetryingClient
 	return http.DefaultClient
 }
 
-func s3GetBucket() *s3.Bucket {
-	s3VerifyHasSecrets()
+func (u *Uploader) GetBucket() *s3.Bucket {
+	u.VerifyHasSecrets()
 	auth := aws.Auth{
-		AccessKey: s3AwsAccess,
-		SecretKey: s3AwsSecret,
+		AccessKey: u.Access,
+		SecretKey: u.Secret,
 	}
 	// Note: it's important that region is aws.USEast. This is where my bucket
 	// is and giving a different region will fail
 	// TODO: make aws.USEast a variable s3BucketRegion, to allow over-ride
-	s3Obj := s3.New(auth, aws.USEast, getS3Client())
-	return s3Obj.Bucket(s3BucketName)
+	s3Obj := s3.New(auth, aws.USEast, u.GetClient())
+	return s3Obj.Bucket(u.Bucket)
 }
 
-func s3UploadFileReader(pathRemote, pathLocal string, public bool) error {
+func (u *Uploader) UploadFileReader(pathRemote, pathLocal string, public bool) error {
 	fmt.Printf("Uploading '%s' as '%s'. ", pathLocal, pathRemote)
 	start := time.Now()
 	opts := s3.Options{}
 	opts.ContentMD5 = md5B64OfFile(pathLocal)
-	bucket := s3GetBucket()
+	bucket := u.GetBucket()
 	mimeType := mime.TypeByExtension(filepath.Ext(pathLocal))
 	fileSize := fileSizeMust(pathLocal)
 	perm := s3.Private
@@ -93,9 +95,9 @@ func s3UploadFileReader(pathRemote, pathLocal string, public bool) error {
 	return err
 }
 
-func s3UploadFile(pathRemote, pathLocal string, public bool) error {
+func (u *Uploader) UploadFile(pathRemote, pathLocal string, public bool) error {
 	fmt.Printf("Uploading '%s' as '%s'\n", pathLocal, pathRemote)
-	bucket := s3GetBucket()
+	bucket := u.GetBucket()
 	d, err := ioutil.ReadFile(pathLocal)
 	if err != nil {
 		return err
@@ -110,9 +112,9 @@ func s3UploadFile(pathRemote, pathLocal string, public bool) error {
 	return bucket.Put(pathRemote, d, mimeType, perm, opts)
 }
 
-func s3UploadString(pathRemote string, s string, public bool) error {
+func (u *Uploader) UploadString(pathRemote string, s string, public bool) error {
 	fmt.Printf("Uploading string of length %d  as '%s'\n", len(s), pathRemote)
-	bucket := s3GetBucket()
+	bucket := u.GetBucket()
 	d := []byte(s)
 	mimeType := mime.TypeByExtension(filepath.Ext(pathRemote))
 	opts := s3.Options{}
@@ -124,12 +126,12 @@ func s3UploadString(pathRemote string, s string, public bool) error {
 	return bucket.Put(pathRemote, d, mimeType, perm, opts)
 }
 
-func s3UploadFiles(s3Dir string, dir string, files []string) error {
+func (u *Uploader) UploadFiles(s3Dir string, dir string, files []string) error {
 	n := len(files) / 2
 	for i := 0; i < n; i++ {
 		pathLocal := filepath.Join(dir, files[2*i])
 		pathRemote := files[2*i+1]
-		err := s3UploadFileReader(s3Dir+pathRemote, pathLocal, true)
+		err := u.UploadFileReader(s3Dir+pathRemote, pathLocal, true)
 		if err != nil {
 			return fmt.Errorf("failed to upload '%s' as '%s', err: %s", pathLocal, pathRemote, err)
 		}
@@ -137,13 +139,13 @@ func s3UploadFiles(s3Dir string, dir string, files []string) error {
 	return nil
 }
 
-func s3Delete(path string) error {
-	bucket := s3GetBucket()
+func (u *Uploader) Delete(path string) error {
+	bucket := u.GetBucket()
 	return bucket.Del(path)
 }
 
-func s3Exists(s3Path string) bool {
-	bucket := s3GetBucket()
+func (u *Uploader) Exists(s3Path string) bool {
+	bucket := u.GetBucket()
 	exists, err := bucket.Exists(s3Path)
 	if err != nil {
 		fmt.Printf("bucket.Exists('%s') failed with %s\n", s3Path, err)

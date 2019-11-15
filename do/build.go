@@ -248,7 +248,6 @@ func buildPreRelease() {
 
 	verifyGitCleanMust()
 	verifyOnMasterBranchMust()
-	verifyPreReleaseNotInS3Must(svnPreReleaseVer)
 
 	verifyTranslationsMust()
 
