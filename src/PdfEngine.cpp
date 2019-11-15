@@ -1141,6 +1141,8 @@ class PdfEngineImpl : public BaseEngine {
     Vec<PageAnnotation> userAnnots; // TODO(port): put in PageInfo
     Vec<PdfPageRun*> runCache;      // ordered most recently used first
 
+    DocTocTree* tocTree = nullptr;
+
     bool Load(const WCHAR* fileName, PasswordUI* pwdUI = nullptr);
     bool Load(IStream* stream, PasswordUI* pwdUI = nullptr);
     // TODO(port): fz_stream can no-longer be re-opened (fz_clone_stream)
@@ -1760,6 +1762,10 @@ PdfTocItem* PdfEngineImpl::BuildTocTree(fz_outline* outline, int& idCounter, boo
 }
 
 DocTocTree* PdfEngineImpl::GetTocTree() {
+    if (tocTree) {
+        return tocTree;
+    }
+
     int idCounter = 0;
 
     PdfTocItem* root = nullptr;
@@ -1767,14 +1773,17 @@ DocTocTree* PdfEngineImpl::GetTocTree() {
         root = BuildTocTree(outline, idCounter, false);
     }
     if (!attachments) {
-        return new DocTocTree(root);
+        tocTree = new DocTocTree(root);
+        return tocTree;
     }
     PdfTocItem* att = BuildTocTree(attachments, idCounter, true);
     if (!root) {
-        return new DocTocTree(att);
+        tocTree = new DocTocTree(root);
+        return tocTree;
     }
     root->AddSibling(att);
-    return new DocTocTree(root);
+    tocTree = new DocTocTree(root);
+    return tocTree;
 }
 
 PageDestination* PdfEngineImpl::GetNamedDest(const WCHAR* name) {

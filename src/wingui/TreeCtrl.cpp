@@ -214,6 +214,9 @@ HTREEITEM TreeCtrl::InsertItem(TVINSERTSTRUCTW* item) {
 }
 
 void TreeCtrl::Clear() {
+    treeModel = nullptr;
+    insertedItems.clear();
+
     HWND hwnd = this->hwnd;
     ::SendMessage(hwnd, WM_SETREDRAW, FALSE, 0);
     TreeView_DeleteAllItems(hwnd);

@@ -501,8 +501,8 @@ static void UpdateSidebarDisplayState(WindowInfo* win, TabInfo* tab, DisplayStat
 
     ds->showToc = tab->showToc;
     if (win->tocLoaded && tab == win->currentTab) {
-        HTREEITEM hRoot = win->tocTreeCtrl->GetRoot();
-        UpdateTocExpansionState(tab->tocState, win->tocTreeCtrl, hRoot);
+        DocTocTree* tocTree = tab->ctrl->GetTocTree();
+        UpdateTocExpansionState(tab->tocState, win->tocTreeCtrl, tocTree);
     }
     *ds->tocState = tab->tocState;
 }
@@ -1573,6 +1573,8 @@ WindowInfo* LoadDocument(LoadArgs& args) {
         DisplayState* ds = gFileHistory.MarkFileLoaded(fullPath);
         if (gGlobalPrefs->showStartPage)
             CreateThumbnailForFile(win, *ds);
+        // TODO: this seems to save the state of file that we just opened
+        // add a way to skip saving currTab?
         prefs::Save();
     }
 

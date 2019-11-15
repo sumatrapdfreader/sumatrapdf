@@ -1055,8 +1055,9 @@ DocTocTree* DjVuEngineImpl::GetTocTree() {
     ScopedCritSec scope(&gDjVuContext.lock);
     int idCounter = 0;
     DjVuTocItem* root = BuildTocTree(outline, idCounter);
-    if (root)
-        root->OpenSingleNode();
+    if (!root) {
+        return nullptr;
+    }
     return new DocTocTree(root);
 }
 

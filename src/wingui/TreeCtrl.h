@@ -60,16 +60,16 @@ class TreeCtrl {
     HMENU menu = nullptr;
     COLORREF bgCol = 0;
     TreeModel *treeModel = nullptr; // not owned by us
-    WCHAR infotipBuf[INFOTIPSIZE + 1]; // +1 just in case
+    WCHAR infotipBuf[INFOTIPSIZE + 1] = {}; // +1 just in case
 
     // this data can be set directly
-    MsgFilter preFilter; // called at start of windows proc to allow intercepting messages
+    MsgFilter preFilter = nullptr; // called at start of windows proc to allow intercepting messages
 
     // when set, allows the caller to set info tip by updating NMTVGETINFOTIP
-    OnGetInfoTip onGetInfoTip;
+    OnGetInfoTip onGetInfoTip = nullptr;
 
     // if set, called to process all WM_NOTIFY messages
-    OnTreeNotify onTreeNotify;
+    OnTreeNotify onTreeNotify = nullptr;
 
     // private
     HWND hwnd = nullptr;

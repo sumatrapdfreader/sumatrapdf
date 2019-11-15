@@ -472,9 +472,9 @@ DocTocTree* ChmModel::GetTocTree() {
         }
         nextChild = &item->child;
     }
-
-    if (root)
-        root->OpenSingleNode();
+    if (!root) {
+        return nullptr;
+    }
     return new DocTocTree(root);
 }
 

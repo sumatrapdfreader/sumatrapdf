@@ -828,8 +828,9 @@ DocTocTree* EbookController::GetTocTree() {
     EbookTocCollector visitor(this);
     doc.ParseToc(&visitor);
     EbookTocDest* root = visitor.GetRoot();
-    if (root)
-        root->OpenSingleNode();
+    if (!root) {
+        return nullptr;
+    }
     return new DocTocTree(root);
 }
 
