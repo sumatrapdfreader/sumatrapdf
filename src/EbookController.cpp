@@ -241,6 +241,7 @@ EbookController::~EbookController() {
     DestroyEbookControls(ctrls);
     delete pageAnchorIds;
     delete pageAnchorIdxs;
+    delete tocTree;
 }
 
 // stop layout thread (if we're closing a document we'll delete
@@ -825,13 +826,17 @@ class EbookTocCollector : public EbookTocVisitor {
 };
 
 DocTocTree* EbookController::GetTocTree() {
+    if (tocTree) {
+        return tocTree;
+    }
     EbookTocCollector visitor(this);
     doc.ParseToc(&visitor);
     EbookTocDest* root = visitor.GetRoot();
     if (!root) {
         return nullptr;
     }
-    return new DocTocTree(root);
+    tocTree = new DocTocTree(root);
+    return tocTree;
 }
 
 void EbookController::ScrollToLink(PageDestination* dest) {

@@ -281,6 +281,7 @@ class DjVuEngineImpl : public BaseEngine {
     ddjvu_document_t* doc = nullptr;
     miniexp_t outline = miniexp_nil;
     miniexp_t* annos = nullptr;
+    DocTocTree* tocTree = nullptr;
     Vec<PageAnnotation> userAnnots;
     bool hasPageLabels = false;
 
@@ -300,6 +301,7 @@ class DjVuEngineImpl : public BaseEngine {
 DjVuEngineImpl::~DjVuEngineImpl() {
     ScopedCritSec scope(&gDjVuContext.lock);
 
+    delete tocTree;
     free(mediaboxes);
 
     if (annos) {
@@ -1052,13 +1054,17 @@ DocTocTree* DjVuEngineImpl::GetTocTree() {
     if (!HasTocTree())
         return nullptr;
 
+    if (tocTree) {
+        return tocTree;
+    }
     ScopedCritSec scope(&gDjVuContext.lock);
     int idCounter = 0;
     DjVuTocItem* root = BuildTocTree(outline, idCounter);
     if (!root) {
         return nullptr;
     }
-    return new DocTocTree(root);
+    tocTree = new DocTocTree(root);
+    return tocTree;
 }
 
 WCHAR* DjVuEngineImpl::GetPageLabel(int pageNo) const {

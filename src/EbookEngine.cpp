@@ -798,6 +798,7 @@ class EpubEngineImpl : public EbookEngine {
   protected:
     EpubDoc* doc = nullptr;
     IStream* stream = nullptr;
+    DocTocTree* tocTree = nullptr;
 
     bool Load(const WCHAR* fileName);
     bool Load(IStream* stream);
@@ -806,6 +807,7 @@ class EpubEngineImpl : public EbookEngine {
 
 EpubEngineImpl::~EpubEngineImpl() {
     delete doc;
+    delete tocTree;
     if (stream)
         stream->Release();
 }
@@ -878,13 +880,17 @@ PageLayoutType EpubEngineImpl::PreferredLayout() {
 }
 
 DocTocTree* EpubEngineImpl::GetTocTree() {
+    if (tocTree) {
+        return tocTree;
+    }
     EbookTocBuilder builder(this);
     doc->ParseToc(&builder);
     EbookTocItem* root = builder.GetRoot();
     if (!root) {
         return nullptr;
     }
-    return new DocTocTree(root);
+    tocTree = new DocTocTree(root);
+    return tocTree;
 }
 
 BaseEngine* EpubEngineImpl::CreateFromFile(const WCHAR* fileName) {
@@ -932,6 +938,7 @@ class Fb2EngineImpl : public EbookEngine {
     Fb2EngineImpl() : EbookEngine(), doc(nullptr) {
     }
     virtual ~Fb2EngineImpl() {
+        delete tocTree;
         delete doc;
     }
     BaseEngine* Clone() override {
@@ -954,7 +961,8 @@ class Fb2EngineImpl : public EbookEngine {
     static BaseEngine* CreateFromStream(IStream* stream);
 
   protected:
-    Fb2Doc* doc;
+    Fb2Doc* doc = nullptr;
+    DocTocTree* tocTree = nullptr;
 
     bool Load(const WCHAR* fileName);
     bool Load(IStream* stream);
@@ -995,13 +1003,17 @@ bool Fb2EngineImpl::FinishLoading() {
 }
 
 DocTocTree* Fb2EngineImpl::GetTocTree() {
+    if (tocTree) {
+        return tocTree;
+    }
     EbookTocBuilder builder(this);
     doc->ParseToc(&builder);
     EbookTocItem* root = builder.GetRoot();
     if (!root) {
         return nullptr;
     }
-    return new DocTocTree(root);
+    tocTree = new DocTocTree(root);
+    return tocTree;
 }
 
 BaseEngine* Fb2EngineImpl::CreateFromFile(const WCHAR* fileName) {
@@ -1047,6 +1059,7 @@ class MobiEngineImpl : public EbookEngine {
     MobiEngineImpl() : EbookEngine(), doc(nullptr) {
     }
     ~MobiEngineImpl() override {
+        delete tocTree;
         delete doc;
     }
     BaseEngine* Clone() override {
@@ -1070,7 +1083,8 @@ class MobiEngineImpl : public EbookEngine {
     static BaseEngine* CreateFromStream(IStream* stream);
 
   protected:
-    MobiDoc* doc;
+    MobiDoc* doc = nullptr;
+    DocTocTree* tocTree = nullptr;
 
     bool Load(const WCHAR* fileName);
     bool Load(IStream* stream);
@@ -1148,13 +1162,17 @@ PageDestination* MobiEngineImpl::GetNamedDest(const WCHAR* name) {
 }
 
 DocTocTree* MobiEngineImpl::GetTocTree() {
+    if (tocTree) {
+        return tocTree;
+    }
     EbookTocBuilder builder(this);
     doc->ParseToc(&builder);
     EbookTocItem* root = builder.GetRoot();
     if (!root) {
         return nullptr;
     }
-    return new DocTocTree(root);
+    tocTree = new DocTocTree(root);
+    return tocTree;
 }
 
 BaseEngine* MobiEngineImpl::CreateFromFile(const WCHAR* fileName) {
@@ -1198,6 +1216,7 @@ class PdbEngineImpl : public EbookEngine {
     PdbEngineImpl() : EbookEngine(), doc(nullptr) {
     }
     virtual ~PdbEngineImpl() {
+        delete tocTree;
         delete doc;
     }
     BaseEngine* Clone() override {
@@ -1219,7 +1238,8 @@ class PdbEngineImpl : public EbookEngine {
     static BaseEngine* CreateFromFile(const WCHAR* fileName);
 
   protected:
-    PalmDoc* doc;
+    PalmDoc* doc = nullptr;
+    DocTocTree* tocTree = nullptr;
 
     bool Load(const WCHAR* fileName);
 };
@@ -1248,10 +1268,14 @@ bool PdbEngineImpl::Load(const WCHAR* fileName) {
 }
 
 DocTocTree* PdbEngineImpl::GetTocTree() {
+    if (tocTree) {
+        return tocTree;
+    }
     EbookTocBuilder builder(this);
     doc->ParseToc(&builder);
     auto* root = builder.GetRoot();
-    return new DocTocTree(root);
+    tocTree = new DocTocTree(root);
+    return tocTree;
 }
 
 BaseEngine* PdbEngineImpl::CreateFromFile(const WCHAR* fileName) {
@@ -1406,6 +1430,7 @@ class ChmEngineImpl : public EbookEngine {
     virtual ~ChmEngineImpl() {
         delete dataCache;
         delete doc;
+        delete tocTree;
     }
     BaseEngine* Clone() override {
         return fileName ? CreateFromFile(fileName) : nullptr;
@@ -1431,8 +1456,9 @@ class ChmEngineImpl : public EbookEngine {
     static BaseEngine* CreateFromFile(const WCHAR* fileName);
 
   protected:
-    ChmDoc* doc;
-    ChmDataCache* dataCache;
+    ChmDoc* doc = nullptr;
+    ChmDataCache* dataCache = nullptr;
+    DocTocTree* tocTree = nullptr;
 
     bool Load(const WCHAR* fileName);
 
@@ -1572,6 +1598,9 @@ PageDestination* ChmEngineImpl::GetNamedDest(const WCHAR* name) {
 }
 
 DocTocTree* ChmEngineImpl::GetTocTree() {
+    if (tocTree) {
+        return tocTree;
+    }
     EbookTocBuilder builder(this);
     doc->ParseToc(&builder);
     if (doc->HasIndex()) {
@@ -1586,7 +1615,8 @@ DocTocTree* ChmEngineImpl::GetTocTree() {
     if (!root) {
         return nullptr;
     }
-    return new DocTocTree(root);
+    tocTree = new DocTocTree(root);
+    return tocTree;
 }
 
 class ChmEmbeddedDest : public PageDestination {
@@ -1782,6 +1812,7 @@ class TxtEngineImpl : public EbookEngine {
         pageRect = RectD(0, 0, 8.27 * GetFileDPI(), 11.693 * GetFileDPI());
     }
     virtual ~TxtEngineImpl() {
+        delete tocTree;
         delete doc;
     }
     BaseEngine* Clone() override {
@@ -1806,7 +1837,8 @@ class TxtEngineImpl : public EbookEngine {
     static BaseEngine* CreateFromFile(const WCHAR* fileName);
 
   protected:
-    TxtDoc* doc;
+    TxtDoc* doc = nullptr;
+    DocTocTree* tocTree = nullptr;
 
     bool Load(const WCHAR* fileName);
 };
@@ -1840,10 +1872,15 @@ bool TxtEngineImpl::Load(const WCHAR* fileName) {
 }
 
 DocTocTree* TxtEngineImpl::GetTocTree() {
+    if (tocTree) {
+        return tocTree;
+    }
     EbookTocBuilder builder(this);
     doc->ParseToc(&builder);
     auto* root = builder.GetRoot();
-    return new DocTocTree(root);
+
+    tocTree = new DocTocTree(root);
+    return tocTree;
 }
 
 BaseEngine* TxtEngineImpl::CreateFromFile(const WCHAR* fileName) {

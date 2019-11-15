@@ -634,6 +634,10 @@ class ImageDirEngineImpl : public ImagesEngine {
     ImageDirEngineImpl() : fileDPI(96.0f) {
     }
 
+    virtual ~ImageDirEngineImpl() {
+        delete tocTree;
+    }
+
     BaseEngine* Clone() override {
         if (FileName()) {
             return CreateFromFile(FileName());
@@ -684,6 +688,7 @@ class ImageDirEngineImpl : public ImagesEngine {
 
     WStrVec pageFileNames;
     float fileDPI;
+    DocTocTree* tocTree = nullptr;
 };
 
 bool ImageDirEngineImpl::LoadImageDir(const WCHAR* dirName) {
@@ -750,6 +755,9 @@ class ImageDirTocItem : public DocTocItem {
 };
 
 DocTocTree* ImageDirEngineImpl::GetTocTree() {
+    if (tocTree) {
+        return tocTree;
+    }
     DocTocItem* root = new ImageDirTocItem(GetPageLabel(1), 1);
     root->id = 1;
     for (int i = 2; i <= PageCount(); i++) {
@@ -757,7 +765,8 @@ DocTocTree* ImageDirEngineImpl::GetTocTree() {
         item->id = i;
         root->AddSibling(item);
     }
-    return new DocTocTree(root);
+    tocTree = new DocTocTree(root);
+    return tocTree;
 }
 
 bool ImageDirEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {

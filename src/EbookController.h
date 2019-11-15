@@ -107,6 +107,7 @@ class EbookController : public Controller {
   protected:
     EbookControls* ctrls = nullptr;
 
+    DocTocTree* tocTree = nullptr;
     Doc doc;
 
     // TODO: this should be recycled along with pages so that its

@@ -1349,6 +1349,7 @@ PdfEngineImpl::~PdfEngineImpl() {
     delete _pagelabels;
     free(_decryptionKey);
 
+    delete tocTree;
     LeaveCriticalSection(&ctxAccess);
     DeleteCriticalSection(&ctxAccess);
     LeaveCriticalSection(&pagesAccess);
