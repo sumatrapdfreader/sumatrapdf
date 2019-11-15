@@ -93,15 +93,16 @@ class ChmModel : public Controller {
 
   protected:
     AutoFreeW fileName;
-    ChmDoc* doc;
+    ChmDoc* doc = nullptr;
+    DocTocTree* tocTree = nullptr;
     CRITICAL_SECTION docAccess;
-    Vec<ChmTocTraceItem>* tocTrace;
+    Vec<ChmTocTraceItem>* tocTrace = nullptr;
 
     WStrList pages;
-    int currentPageNo;
-    HtmlWindow* htmlWindow;
-    HtmlWindowCallback* htmlWindowCb;
-    float initZoom;
+    int currentPageNo = 1;
+    HtmlWindow* htmlWindow = nullptr;
+    HtmlWindowCallback* htmlWindowCb = nullptr;
+    float initZoom = INVALID_ZOOM;
 
     Vec<ChmCacheEntry*> urlDataCache;
     // use a pool allocator for strings that aren't freed until this ChmModel

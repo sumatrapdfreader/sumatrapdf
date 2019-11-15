@@ -14,8 +14,8 @@
 
 #include "SettingsStructs.h"
 #include "Controller.h"
-#include "ChmModel.h"
 #include "GlobalPrefs.h"
+#include "ChmModel.h"
 
 static bool IsExternalUrl(const WCHAR* url) {
     return str::StartsWithI(url, L"http://") || str::StartsWithI(url, L"https://") || str::StartsWithI(url, L"mailto:");
@@ -99,13 +99,7 @@ struct ChmTocTraceItem {
 };
 
 ChmModel::ChmModel(ControllerCallback* cb)
-    : Controller(cb),
-      doc(nullptr),
-      htmlWindow(nullptr),
-      htmlWindowCb(nullptr),
-      tocTrace(nullptr),
-      currentPageNo(1),
-      initZoom(INVALID_ZOOM) {
+    : Controller(cb) {
     InitializeCriticalSection(&docAccess);
 }
 
@@ -118,6 +112,7 @@ ChmModel::~ChmModel() {
     delete htmlWindowCb;
     delete doc;
     delete tocTrace;
+    delete tocTree;
     DeleteVecMembers(urlDataCache);
     LeaveCriticalSection(&docAccess);
     DeleteCriticalSection(&docAccess);
@@ -451,10 +446,13 @@ bool ChmModel::HasTocTree() const {
     return tocTrace->size() > 0;
 }
 
-// Callers delete the ToC tree, so we re-create it from prerecorded
-// values (which is faster than re-creating it from html every time)
 DocTocTree* ChmModel::GetTocTree() {
-    DocTocItem *root = nullptr, **nextChild = &root;
+    if (tocTree) {
+        return tocTree;
+    }
+
+    DocTocItem* root = nullptr;
+    DocTocItem **nextChild = &root;
     Vec<DocTocItem*> levels;
     int idCounter = 0;
 
@@ -475,7 +473,8 @@ DocTocTree* ChmModel::GetTocTree() {
     if (!root) {
         return nullptr;
     }
-    return new DocTocTree(root);
+    tocTree = new DocTocTree(root);
+    return tocTree;
 }
 
 // adapted from DisplayModel::NextZoomStep
