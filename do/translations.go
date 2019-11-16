@@ -205,14 +205,14 @@ func uniquifyStrings(a []string) []string {
 
 func extract_strings_from_c_files_no_paths() []string {
 	filesToProcess := getFilesToProcess()
-	fmt.Printf("Files to process: %d\n", len(filesToProcess))
+	logf("Files to process: %d\n", len(filesToProcess))
 	var res []string
 	for _, path := range filesToProcess {
 		a := extract_strings_from_c_file(path)
 		res = append(res, a...)
 	}
 	res = uniquifyStrings(res)
-	fmt.Printf("%d strings to translate\n", len(res))
+	logf("%d strings to translate\n", len(res))
 	return res
 }
 
@@ -224,7 +224,7 @@ type StringWithPath struct {
 
 func extract_strings_from_c_files() []*StringWithPath {
 	filesToProcess := getFilesToProcess()
-	fmt.Printf("Files to process: %d\n", len(filesToProcess))
+	logf("Files to process: %d\n", len(filesToProcess))
 	var res []*StringWithPath
 	for _, path := range filesToProcess {
 		a := extract_strings_from_c_file(path)
@@ -237,7 +237,7 @@ func extract_strings_from_c_files() []*StringWithPath {
 			res = append(res, swp)
 		}
 	}
-	fmt.Printf("%d strings to translate\n", len(res))
+	logf("%d strings to translate\n", len(res))
 	return res
 }
 
@@ -285,7 +285,7 @@ func get_untranslated_as_list(untranslated_dict map[string]bool) []string {
 func generate_code(s string) {
 	fmt.Print("generate_code\n")
 	strings_dict := parseTranslations(s)
-	fmt.Printf("%d strings\n", len(strings_dict))
+	logf("%d strings\n", len(strings_dict))
 
 	strings := extract_strings_from_c_files()
 	strings_list := extractJustStrings(strings)
@@ -299,13 +299,13 @@ func generate_code(s string) {
 		}
 	}
 	if len(obsolete) > 0 {
-		fmt.Printf("Removed %d obsolete strings\n", len(obsolete))
+		logf("Removed %d obsolete strings\n", len(obsolete))
 	}
 
 	untranslated_dict := dump_missing_per_language(strings_list, strings_dict, false)
 	untranslated := get_untranslated_as_list(untranslated_dict)
 	if len(untranslated) > 0 {
-		fmt.Printf("%d untranslated\n", len(untranslated))
+		logf("%d untranslated\n", len(untranslated))
 		// add untranslated
 		for _, s := range untranslated {
 			if _, ok := strings_dict[s]; !ok {
@@ -319,17 +319,17 @@ func generate_code(s string) {
 func downloadAndUpdateTranslationsIfChanged() bool {
 	d := downloadTranslations()
 	s := string(d)
-	//fmt.Printf("Downloaded translations:\n%s\n", s)
+	//logf("Downloaded translations:\n%s\n", s)
 	lines := strings.Split(s, "\n")
 	panicIf(len(lines) < 2, "Bad response, less than 2 lines: '%s'", s)
 	panicIf(lines[0] != "AppTranslator: SumatraPDF", "Bad response, invalid first line: '%s'", lines[0])
 	sha1 := lines[1]
 	if strings.HasPrefix(sha1, "No change") {
-		fmt.Printf("skipping because translations haven't changed\n")
+		logf("skipping because translations haven't changed\n")
 		return false
 	}
 	panicIf(!validSha1(sha1), "Bad reponse, invalid sha1 on second line: '%s'", sha1)
-	fmt.Printf("Translation data size: %d\n", len(s))
+	logf("Translation data size: %d\n", len(s))
 	generate_code(s)
 	saveLastDownload(d)
 	return true
@@ -338,7 +338,7 @@ func downloadAndUpdateTranslationsIfChanged() bool {
 func downloadTranslationsMain() {
 	changed := downloadAndUpdateTranslationsIfChanged()
 	if changed {
-		fmt.Printf("\nNew translations downloaded from the server! Check them in!")
+		logf("\nNew translations downloaded from the server! Check them in!")
 	}
 }
 

@@ -106,7 +106,7 @@ func build_trans_for_langs(langs []*Lang, strings_dict map[string][]*Translation
 			g_incomplete_langs = append(g_incomplete_langs, lang)
 		}
 	}
-	fmt.Printf("g_incomplete_langs: %d\n", len(g_incomplete_langs))
+	logf("g_incomplete_langs: %d\n", len(g_incomplete_langs))
 	for _, il := range g_incomplete_langs {
 		nBefore := len(langs)
 		langs = removeLang(langs, il)
@@ -272,11 +272,11 @@ func print_incomplete_langs(dir_name string) {
 	}
 	langs := strings.Join(a, ", ")
 	count := fmt.Sprintf("%d out of %d", len(g_incomplete_langs), len(g_langs))
-	fmt.Printf("\nIncomplete langs in %s: %s %s", file_name_from_dir_name(dir_name), count, langs)
+	logf("\nIncomplete langs in %s: %s %s", file_name_from_dir_name(dir_name), count, langs)
 }
 
 func gen_c_code_for_dir(strings_dict map[string][]*Translation, keys []string, dir_name string) {
-	fmt.Printf("gen_c_code_for_dir: '%s', %d strings, len(strings_dict): %d\n", dir_name, len(keys), len(strings_dict))
+	logf("gen_c_code_for_dir: '%s', %d strings, len(strings_dict): %d\n", dir_name, len(keys), len(strings_dict))
 
 	sort.Slice(g_langs, func(i, j int) bool {
 		x := g_langs[i]
@@ -336,7 +336,7 @@ func gen_c_code_for_dir(strings_dict map[string][]*Translation, keys []string, d
 		islangrtl = "false"
 	}
 	islangrtl = "return " + islangrtl + ";"
-	//fmt.Printf("islangrtl:\n%s\n", islangrtl)
+	//logf("islangrtl:\n%s\n", islangrtl)
 	build_translations(langs)
 
 	a = nil
@@ -423,7 +423,7 @@ func gen_c_code(strings_dict map[string][]*Translation, strings2 []*StringWithPa
 func testEscape() {
 	d := u.ReadFileMust("t.txt")
 	s := string(d)
-	fmt.Printf("len(d): %d, len(s): %d, d: '%s'\n", len(d), len(s), string(d))
+	logf("len(d): %d, len(s): %d, d: '%s'\n", len(d), len(s), string(d))
 	s2 := c_escape(string(d))
-	fmt.Printf("s2: '%s'\n", s2)
+	logf("s2: '%s'\n", s2)
 }

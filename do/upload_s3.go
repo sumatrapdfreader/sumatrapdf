@@ -140,15 +140,15 @@ func (s ByVerFilesForVer) Less(i, j int) bool {
 }
 
 // list is sorted by Version, biggest first, to make it easy to delete oldest
-func s3ListPreReleaseFilesMust(u *Uploader, dbg bool) []*FilesForVer {
+func s3ListPreReleaseFilesMust(c *S3Client, dbg bool) []*FilesForVer {
 	fatalIf(preRelNameRegexps == nil, "preRelNameRegexps == nil")
 	var res []*FilesForVer
-	bucket := u.GetBucket()
+	bucket := c.GetBucket()
 	resp, err := bucket.List(s3PreRelDir, "", "", maxS3Results)
 	fatalIfErr(err)
 	fatalIf(resp.IsTruncated, "truncated response! implement reading all the files\n")
 	if dbg {
-		fmt.Printf("%d files\n", len(resp.Contents))
+		logf("%d files\n", len(resp.Contents))
 	}
 	var unrecognizedFiles []string
 	for _, key := range resp.Contents {
@@ -156,7 +156,7 @@ func s3ListPreReleaseFilesMust(u *Uploader, dbg bool) []*FilesForVer {
 		name := path[len(s3PreRelDir):]
 		verStr := preRelFileVer(name)
 		if dbg {
-			fmt.Printf("path: '%s', name: '%s', ver: '%s', \n", path, name, verStr)
+			logf("path: '%s', name: '%s', ver: '%s', \n", path, name, verStr)
 		}
 		if verStr == "" {
 			unrecognizedFiles = append(unrecognizedFiles, path)
@@ -166,14 +166,14 @@ func s3ListPreReleaseFilesMust(u *Uploader, dbg bool) []*FilesForVer {
 	}
 	sort.Sort(ByVerFilesForVer(res))
 	for _, s := range unrecognizedFiles {
-		fmt.Printf("Unrecognized pre-relase file in s3: '%s'\n", s)
+		logf("Unrecognized pre-relase file in s3: '%s'\n", s)
 	}
 
 	if true || dbg {
 		for _, fi := range res {
-			fmt.Printf("Ver: %s (%d)\n", fi.VersionStr, fi.Version)
-			fmt.Printf("  names: %s\n", fi.Names)
-			fmt.Printf("  paths: %s\n", fi.Paths)
+			logf("Ver: %s (%d)\n", fi.VersionStr, fi.Version)
+			logf("  names: %s\n", fi.Names)
+			logf("  paths: %s\n", fi.Paths)
 		}
 	}
 	return res
@@ -181,28 +181,28 @@ func s3ListPreReleaseFilesMust(u *Uploader, dbg bool) []*FilesForVer {
 
 // we shouldn't re-upload files. We upload manifest-${ver}.txt last, so we
 // consider a pre-release build already present in s3 if manifest file exists
-func verifyPreReleaseNotInS3Must(s3 *Uploader, ver string) {
+func verifyPreReleaseNotInS3Must(c *S3Client, ver string) {
 	if !flgUpload {
 		return
 	}
 	s3Path := s3PreRelDir + fmt.Sprintf("SumatraPDF-prerelease-%s-manifest.txt", ver)
-	fatalIf(s3.Exists(s3Path), "build %s already exists in s3 because '%s' exists\n", ver, s3Path)
+	fatalIf(c.Exists(s3Path), "build %s already exists in s3 because '%s' exists\n", ver, s3Path)
 }
 
-func verifyReleaseNotInS3Must(s3 *Uploader, ver string) {
+func verifyReleaseNotInS3Must(c *S3Client, ver string) {
 	if !flgUpload {
 		return
 	}
 	s3Path := s3RelDir + fmt.Sprintf("SumatraPDF-%s-manifest.txt", ver)
-	fatalIf(s3.Exists(s3Path), "build '%s' already exists in s3 because '%s' existst\n", ver, s3Path)
+	fatalIf(c.Exists(s3Path), "build '%s' already exists in s3 because '%s' existst\n", ver, s3Path)
 }
 
-func s3DeleteOldestPreRel(s3 *Uploader) {
+func s3DeleteOldestPreRel(c *S3Client) {
 	if !flgUpload {
 		return
 	}
 	maxToRetain := 10
-	files := s3ListPreReleaseFilesMust(s3, false)
+	files := s3ListPreReleaseFilesMust(c, false)
 	if len(files) < maxToRetain {
 		return
 	}
@@ -213,10 +213,10 @@ func s3DeleteOldestPreRel(s3 *Uploader) {
 			if strings.Contains(s3Path, "manifest-") {
 				continue
 			}
-			err := s3.Delete(s3Path)
+			err := c.Delete(s3Path)
 			if err != nil {
 				// it's ok if fails, we'll try again next time
-				fmt.Printf("Failed to delete '%s' in s3\n", s3Path)
+				logf("Failed to delete '%s' in s3\n", s3Path)
 			}
 		}
 	}
@@ -264,7 +264,7 @@ func s3UploadPreReleaseMust(ver string) {
 		return
 	}
 
-	c := &Uploader{
+	c := &S3Client{
 		Access: os.Getenv("AWS_ACCESS"),
 		Secret: os.Getenv("AWS_SECRET"),
 		Bucket: "kjkpub",
@@ -304,11 +304,11 @@ func s3UploadPreReleaseMust(ver string) {
 
 	s3UploadDailyInfo(c, ver)
 
-	fmt.Printf("Uploaded the build to s3 in %s\n", time.Since(timeStart))
+	logf("Uploaded the build to s3 in %s\n", time.Since(timeStart))
 	//s3SetAsPreRelease(ver)
 }
 
-func s3UploadDailyInfo(c *Uploader, ver string) {
+func s3UploadDailyInfo(c *S3Client, ver string) {
 	s := createSumatraLatestJs()
 	err := c.UploadString("sumatrapdf/sumadaily.js", s, true)
 	fatalIfErr(err)
@@ -324,7 +324,7 @@ func s3UploadDailyInfo(c *Uploader, ver string) {
 	fatalIfErr(err)
 }
 
-func s3SetAsPreRelease(c *Uploader, ver string) {
+func s3SetAsPreRelease(c *S3Client, ver string) {
 	s := createSumatraLatestJs()
 	err := c.UploadString("sumatrapdf/sumatralatest.js", s, true)
 	fatalIfErr(err)

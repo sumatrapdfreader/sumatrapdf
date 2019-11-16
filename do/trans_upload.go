@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -54,11 +53,11 @@ func uploadStringsIfChanged() {
 	sort.Strings(a)
 	s := "AppTranslator strings\n" + strings.Join(a, "\n")
 	if s == readFile(path) {
-		fmt.Printf("Skipping upload because strings haven't changed since last upload\n")
+		logf("Skipping upload because strings haven't changed since last upload\n")
 		return
 	}
 	uploadsecret := getTransSecret()
 	uploadStringsToServer(s, uploadsecret)
 	u.WriteFileMust(path, []byte(s))
-	fmt.Printf("Don't forget to checkin strings/last_uploaded.txt")
+	logf("Don't forget to checkin strings/last_uploaded.txt")
 }

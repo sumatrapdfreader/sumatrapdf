@@ -85,7 +85,7 @@ func spacesUploadPreReleaseMust(ver string) {
 
 	minioUploadDailyInfo(c, ver)
 
-	fmt.Printf("Uploaded the build to spaces in %s\n", time.Since(timeStart))
+	logf("Uploaded the build to spaces in %s\n", time.Since(timeStart))
 }
 
 func minioUploadDailyInfo(c *u.MinioClient, ver string) {

@@ -58,9 +58,9 @@ func detectVersions() {
 	svnPreReleaseVer = strconv.Itoa(ver)
 	gitSha1 = getGitSha1Must()
 	sumatraVersion = extractSumatraVersionMust()
-	fmt.Printf("svnPreReleaseVer: '%s'\n", svnPreReleaseVer)
-	fmt.Printf("gitSha1: '%s'\n", gitSha1)
-	fmt.Printf("sumatraVersion: '%s'\n", sumatraVersion)
+	logf("svnPreReleaseVer: '%s'\n", svnPreReleaseVer)
+	logf("gitSha1: '%s'\n", gitSha1)
+	logf("sumatraVersion: '%s'\n", sumatraVersion)
 }
 
 func clean() {

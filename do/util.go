@@ -51,7 +51,7 @@ func absPathMust(path string) string {
 
 func runExeMust(c string, args ...string) []byte {
 	cmd := exec.Command(c, args...)
-	fmt.Printf("> %s\n", cmd)
+	logf("> %s\n", cmd)
 	out, err := cmd.CombinedOutput()
 	must(err)
 	return []byte(out)
@@ -218,7 +218,7 @@ func httpDlToFileMust(uri string, path string, sha1Hex string) {
 		fatalIf(sha1File != sha1Hex, "file '%s' exists but has sha1 of %s and we expected %s", path, sha1File, sha1Hex)
 		return
 	}
-	fmt.Printf("Downloading '%s'\n", uri)
+	logf("Downloading '%s'\n", uri)
 	d := httpDlMust(uri)
 	sha1File := dataSha1Hex(d)
 	fatalIf(sha1File != sha1Hex, "downloaded '%s' but it has sha1 of %s and we expected %s", uri, sha1File, sha1Hex)
