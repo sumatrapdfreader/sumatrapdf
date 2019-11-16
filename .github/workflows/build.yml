@@ -23,6 +23,8 @@ jobs:
         env:
           AWS_SECRET: ${{ secrets.AWS_SECRET }}
           AWS_ACCESS: ${{ secrets.AWS_ACCESS }}
+          SPACES_KEY: ${{ secrets.SPACES_KEY }}
+          SPACES_SECRET: ${{ secrets.SPACES_SECRET }}
         run: .\doit.bat -ci-upload
 
       - name: Upload artifacts

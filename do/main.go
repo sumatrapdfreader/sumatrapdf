@@ -118,6 +118,7 @@ func main() {
 		flgUpload = true
 		detectVersions()
 		s3UploadPreReleaseMust(svnPreReleaseVer)
+		spacesUploadPreReleaseMust(svnPreReleaseVer)
 		return
 	}
 

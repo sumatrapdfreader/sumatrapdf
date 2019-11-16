@@ -236,39 +236,46 @@ func isMaster() bool {
 	return ref == "refs/heads/master"
 }
 
-var s3Uploader *Uploader
-
-// upload as:
-// https://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-1027-install.exe etc.
-func s3UploadPreReleaseMust(ver string) {
+func shouldSkipUpload() bool {
 	if !flgUpload {
 		logf("Skipping pre-release upload to s3 because -upload flag not given\n")
-		return
+		return true
 	}
 
 	if !isMaster() {
 		logf("Skipping pre-release upload to s3 because not on master branch\n")
 		logf("GITHUB_REF: '%s'\n", os.Getenv("GITHUB_REF"))
-		return
+		flgUpload = false
+		return true
 	}
+
 	if !isMyRepo() {
 		logf("skipping upload beacuse not my repo\n")
 		flgUpload = false
+		return true
+	}
+	return false
+}
+
+// upload as:
+// https://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-1027-install.exe etc.
+func s3UploadPreReleaseMust(ver string) {
+	if shouldSkipUpload() {
 		return
 	}
 
-	s3Uploader = &Uploader{
+	c := &Uploader{
 		Access: os.Getenv("AWS_ACCESS"),
 		Secret: os.Getenv("AWS_SECRET"),
 		Bucket: "kjkpub",
 	}
 	//dumpEnv()
-	s3Uploader.VerifyHasSecrets()
+	c.VerifyHasSecrets()
 
 	timeStart := time.Now()
 	//s3DeleteOldestPreRel()
 
-	verifyPreReleaseNotInS3Must(s3Uploader, svnPreReleaseVer)
+	verifyPreReleaseNotInS3Must(c, svnPreReleaseVer)
 
 	prefix := fmt.Sprintf("SumatraPDF-prerelease-%s", ver)
 	manifestRemotePath := s3PreRelDir + prefix + "-manifest.txt"
@@ -278,7 +285,7 @@ func s3UploadPreReleaseMust(ver string) {
 		"SumatraPDF.pdb.zip", fmt.Sprintf("%s.pdb.zip", prefix),
 		"SumatraPDF.pdb.lzsa", fmt.Sprintf("%s.pdb.lzsa", prefix),
 	}
-	err := s3Uploader.UploadFiles(s3PreRelDir, filepath.Join("out", "rel32"), files)
+	err := c.UploadFiles(s3PreRelDir, filepath.Join("out", "rel32"), files)
 	fatalIfErr(err)
 
 	prefix = fmt.Sprintf("SumatraPDF-prerelease-%s-64", ver)
@@ -288,47 +295,47 @@ func s3UploadPreReleaseMust(ver string) {
 		"SumatraPDF.pdb.zip", fmt.Sprintf("%s.pdb.zip", prefix),
 		"SumatraPDF.pdb.lzsa", fmt.Sprintf("%s.pdb.lzsa", prefix),
 	}
-	err = s3Uploader.UploadFiles(s3PreRelDir, filepath.Join("out", "rel64"), files)
+	err = c.UploadFiles(s3PreRelDir, filepath.Join("out", "rel64"), files)
 	fatalIfErr(err)
 
 	manifestLocalPath := filepath.Join(artifactsDir, "manifest.txt")
-	err = s3Uploader.UploadFileReader(manifestRemotePath, manifestLocalPath, true)
+	err = c.UploadFileReader(manifestRemotePath, manifestLocalPath, true)
 	fatalIfErr(err)
 
-	uploadDailyInfo(ver)
+	s3UploadDailyInfo(c, ver)
 
-	fmt.Printf("Uploaded the build in %s\n", time.Since(timeStart))
-	//setAsPreRelease(ver)
+	fmt.Printf("Uploaded the build to s3 in %s\n", time.Since(timeStart))
+	//s3SetAsPreRelease(ver)
 }
 
-func uploadDailyInfo(ver string) {
+func s3UploadDailyInfo(c *Uploader, ver string) {
 	s := createSumatraLatestJs()
-	err := s3Uploader.UploadString("sumatrapdf/sumadaily.js", s, true)
+	err := c.UploadString("sumatrapdf/sumadaily.js", s, true)
 	fatalIfErr(err)
 
 	//sumatrapdf/sumpdf-prerelease-latest.txt
-	err = s3Uploader.UploadString("sumatrapdf/sumpdf-daily-latest.txt", ver, true)
+	err = c.UploadString("sumatrapdf/sumpdf-daily-latest.txt", ver, true)
 	fatalIfErr(err)
 
 	//sumatrapdf/sumpdf-prerelease-update.txt
 	//don't set a Stable version for pre-release builds
 	s = fmt.Sprintf("[SumatraPDF]\nLatest %s\n", ver)
-	err = s3Uploader.UploadString("sumatrapdf/sumpdf-daily-update.txt", s, true)
+	err = c.UploadString("sumatrapdf/sumpdf-daily-update.txt", s, true)
 	fatalIfErr(err)
 }
 
-func setAsPreRelease(ver string) {
+func s3SetAsPreRelease(c *Uploader, ver string) {
 	s := createSumatraLatestJs()
-	err := s3Uploader.UploadString("sumatrapdf/sumatralatest.js", s, true)
+	err := c.UploadString("sumatrapdf/sumatralatest.js", s, true)
 	fatalIfErr(err)
 
 	//sumatrapdf/sumpdf-prerelease-latest.txt
-	err = s3Uploader.UploadString("sumatrapdf/sumpdf-prerelease-latest.txt", ver, true)
+	err = c.UploadString("sumatrapdf/sumpdf-prerelease-latest.txt", ver, true)
 	fatalIfErr(err)
 
 	//sumatrapdf/sumpdf-prerelease-update.txt
 	//don't set a Stable version for pre-release builds
 	s = fmt.Sprintf("[SumatraPDF]\nLatest %s\n", ver)
-	err = s3Uploader.UploadString("sumatrapdf/sumpdf-prerelease-update.txt", s, true)
+	err = c.UploadString("sumatrapdf/sumpdf-prerelease-update.txt", s, true)
 	fatalIfErr(err)
 }
