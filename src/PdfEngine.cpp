@@ -2055,24 +2055,37 @@ RectD PdfEngineImpl::PageMediabox(int pageNo) {
 }
 
 RectD PdfEngineImpl::PageContentBox(int pageNo, RenderTarget target) {
-    PdfPageInfo* pi = GetPdfPageInfo(pageNo);
+    PdfPageInfo* pageInfo = GetPdfPageInfo(pageNo);
 
     ScopedCritSec scope(&ctxAccess);
 
+    fz_cookie fzcookie = {};
     fz_rect rect = fz_empty_rect;
     fz_device* dev = nullptr;
 
-    dev = fz_new_bbox_device(ctx, &rect);
-    fz_rect pagerect = pdf_bound_page(ctx, pi->page);
-    bool ok = RunPage(pi, dev, fz_identity, target, pagerect, false);
-    fz_drop_device(ctx, dev);
-    if (!ok)
-        return PageMediabox(pageNo);
+    fz_rect pagerect = pdf_bound_page(ctx, pageInfo->page);
+
+    fz_var(dev);
+
+    RectD mediabox = pageInfo->mediabox;
+
+    fz_try(ctx) {
+        dev = fz_new_bbox_device(ctx, &rect);
+        fz_run_display_list(ctx, pageInfo->list, dev, fz_identity, pagerect, &fzcookie);
+        fz_close_device(ctx, dev);
+    }
+    fz_always(ctx) {
+        fz_drop_device(ctx, dev);
+    }
+    fz_catch(ctx) {
+        return mediabox;
+    }
+
     if (fz_is_infinite_rect(rect))
-        return PageMediabox(pageNo);
+        return mediabox;
 
     RectD rect2 = fz_rect_to_RectD(rect);
-    return rect2.Intersect(PageMediabox(pageNo));
+    return rect2.Intersect(mediabox);
 }
 
 PointD PdfEngineImpl::Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse) {
