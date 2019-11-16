@@ -36,11 +36,12 @@ func minioUploadFiles(c *u.MinioClient, prefix string, dir string, files []strin
 	n := len(files) / 2
 	for i := 0; i < n; i++ {
 		pathLocal := filepath.Join(dir, files[2*i])
-		pathRemote := files[2*i+1]
-		err := c.UploadFilePublic(prefix+pathRemote, pathLocal)
+		pathRemote := prefix + files[2*i+1]
+		err := c.UploadFilePublic(pathRemote, pathLocal)
 		if err != nil {
 			return fmt.Errorf("failed to upload '%s' as '%s', err: %s", pathLocal, pathRemote, err)
 		}
+		logf("Uploaded to spaces: '%s' as '%s'\n", pathLocal, pathRemote)
 	}
 	return nil
 }
@@ -82,6 +83,7 @@ func spacesUploadPreReleaseMust(ver string) {
 	manifestLocalPath := filepath.Join(artifactsDir, "manifest.txt")
 	err = c.UploadFilePublic(manifestRemotePath, manifestLocalPath)
 	fatalIfErr(err)
+	logf("Uploaded to spaces: '%s' as '%s'\n", manifestLocalPath, manifestRemotePath)
 
 	minioUploadDailyInfo(c, ver)
 
@@ -90,18 +92,24 @@ func spacesUploadPreReleaseMust(ver string) {
 
 func minioUploadDailyInfo(c *u.MinioClient, ver string) {
 	s := createSumatraLatestJs()
-	err := c.UploadDataPublic("software/sumatrapdf/sumadaily.js", []byte(s))
+	remotePath := "software/sumatrapdf/sumadaily.js"
+	err := c.UploadDataPublic(remotePath, []byte(s))
 	fatalIfErr(err)
+	logf("Uploaded to spaces: '%s'\n", remotePath)
 
 	//sumatrapdf/sumpdf-prerelease-latest.txt
-	err = c.UploadDataPublic("software/sumatrapdf/sumpdf-daily-latest.txt", []byte(ver))
+	remotePath = "software/sumatrapdf/sumpdf-daily-latest.txt"
+	err = c.UploadDataPublic(remotePath, []byte(ver))
 	fatalIfErr(err)
+	logf("Uploaded to spaces: '%s'\n", remotePath)
 
 	//sumatrapdf/sumpdf-prerelease-update.txt
 	//don't set a Stable version for pre-release builds
 	s = fmt.Sprintf("[SumatraPDF]\nLatest %s\n", ver)
-	err = c.UploadDataPublic("software/sumatrapdf/sumpdf-daily-update.txt", []byte(s))
+	remotePath = "software/sumatrapdf/sumpdf-daily-update.txt"
+	err = c.UploadDataPublic(remotePath, []byte(s))
 	fatalIfErr(err)
+	logf("Uploaded to spaces: '%s'\n", remotePath)
 }
 
 func minioSetAsPreRelease(c *u.MinioClient, ver string) {
