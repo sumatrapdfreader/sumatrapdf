@@ -2,6 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "utils/BaseUtil.h"
+#include "utils/SimpleLog.h"
 #include "TreeModel.h"
 #include "TreeCtrl.h"
 #include "utils/WinUtil.h"
@@ -44,6 +45,12 @@ static LRESULT CALLBACK TreeParentProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
                 w->onGetInfoTip(arg);
                 return 0;
             }
+        }
+    }
+    if (msg == WM_CONTEXTMENU) {
+        if (w->onContextMenu) {
+            w->onContextMenu();
+            return 0;
         }
     }
     return DefSubclassProc(hwnd, msg, wp, lp);
@@ -312,7 +319,7 @@ TreeItem* TreeCtrl::GetTreeItemByHandle(HTREEITEM item) {
 }
 
 static HTREEITEM InsertItem(TreeCtrl* tree, HTREEITEM parent, TreeItem* item) {
-    TV_INSERTSTRUCT toInsert {};
+    TV_INSERTSTRUCT toInsert{};
     toInsert.hParent = parent;
     toInsert.hInsertAfter = TVI_LAST;
     toInsert.itemex.mask = TVIF_TEXT | TVIF_PARAM | TVIF_STATE;
@@ -339,8 +346,7 @@ static void PopulateTreeItem(TreeCtrl* tree, TreeItem* item, HTREEITEM parent) {
     }
 }
 
-static void PopulateTree(TreeCtrl* tree, TreeModel *tm) {
-  
+static void PopulateTree(TreeCtrl* tree, TreeModel* tm) {
     HTREEITEM parent = nullptr;
     int n = tm->RootCount();
     for (int i = 0; i < n; i++) {
