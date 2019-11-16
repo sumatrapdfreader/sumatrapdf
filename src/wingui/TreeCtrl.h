@@ -6,8 +6,8 @@ struct TreeItem;
 class TreeCtrl;
 
 typedef std::function<LRESULT(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& discardMsg)> MsgFilter;
-typedef std::function<void(TreeCtrl*, NMTVGETINFOTIPW*)> OnGetInfoTip;
-typedef std::function<LRESULT(TreeCtrl*, NMTREEVIEWW*, bool&)> OnTreeNotify;
+typedef std::function<void(NMTVGETINFOTIPW*)> OnGetInfoTip;
+typedef std::function<LRESULT(NMTREEVIEWW*, bool&)> OnTreeNotify;
 
 // function called for every item in the tree.
 // returning false stops iteration

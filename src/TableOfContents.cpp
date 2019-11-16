@@ -437,7 +437,7 @@ void UpdateTocColors(WindowInfo* win) {
     // SetBgCol(win->favSplitter, labelTxtCol);
 
     // TODO: more work needed to to ensure consistent look of the ebook window:
-    // - tab bar should match the color
+    // - tab bar should match the colort
     // - change the tree item text color
     // - change the tree item background color when selected (for both focused and non-focused cases)
     // - ultimately implement owner-drawn scrollbars in a simpler style (like Chrome or VS 2013)
@@ -728,24 +728,25 @@ void CreateToc(WindowInfo* win) {
     l->SetFont(GetDefaultGuiFont());
     // label is set in UpdateToolbarSidebarText()
 
-    auto* tree = new TreeCtrl(win->hwndTocBox, nullptr);
-    tree->dwStyle = TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS | TVS_TRACKSELECT |
+    auto* treeCtrl = new TreeCtrl(win->hwndTocBox, nullptr);
+    treeCtrl->dwStyle = TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS | TVS_TRACKSELECT |
                     TVS_DISABLEDRAGDROP | TVS_NOHSCROLL | TVS_INFOTIP | WS_TABSTOP | WS_VISIBLE | WS_CHILD;
-    tree->dwExStyle = WS_EX_STATICEDGE;
-    tree->menu = (HMENU)IDC_TOC_TREE;
-    tree->preFilter = [tree](HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& handled) -> LRESULT {
+    treeCtrl->dwExStyle = WS_EX_STATICEDGE;
+    treeCtrl->menu = (HMENU)IDC_TOC_TREE;
+    treeCtrl->preFilter = [treeCtrl](HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& handled) -> LRESULT {
         UNUSED(hwnd);
-        return TocTreePreFilter(tree, msg, wp, lp, handled);
+        return TocTreePreFilter(treeCtrl, msg, wp, lp, handled);
     };
-    tree->onTreeNotify = [win](TreeCtrl* w, NMTREEVIEWW* nm, bool& handled) {
-        CrashIf(win->tocTreeCtrl != w);
+    treeCtrl->onTreeNotify = [win, treeCtrl](NMTREEVIEWW* nm, bool& handled) {
+        CrashIf(win->tocTreeCtrl != treeCtrl);
         LRESULT res = OnTocTreeNotify(win, nm);
         handled = (res != -1);
         return res;
     };
-    tree->onGetInfoTip = [](TreeCtrl* w, NMTVGETINFOTIP* infoTipInfo) { CustomizeTocInfoTip(w, infoTipInfo); };
-    bool ok = tree->Create(L"TOC");
+    treeCtrl->onGetInfoTip = [treeCtrl](NMTVGETINFOTIP* infoTipInfo) { CustomizeTocInfoTip(treeCtrl, infoTipInfo);
+    };
+    bool ok = treeCtrl->Create(L"TOC");
     CrashIf(!ok);
-    win->tocTreeCtrl = tree;
+    win->tocTreeCtrl = treeCtrl;
     SubclassToc(win);
 }

@@ -32,7 +32,7 @@ static LRESULT CALLBACK TreeParentProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
         NMTREEVIEWW* nm = reinterpret_cast<NMTREEVIEWW*>(lp);
         if (w->onTreeNotify) {
             bool handled = true;
-            LRESULT res = w->onTreeNotify(w, nm, handled);
+            LRESULT res = w->onTreeNotify(nm, handled);
             if (handled) {
                 return res;
             }
@@ -41,7 +41,7 @@ static LRESULT CALLBACK TreeParentProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
         if (code == TVN_GETINFOTIP) {
             if (w->onGetInfoTip) {
                 auto* arg = reinterpret_cast<NMTVGETINFOTIPW*>(nm);
-                w->onGetInfoTip(w, arg);
+                w->onGetInfoTip(arg);
                 return 0;
             }
         }
