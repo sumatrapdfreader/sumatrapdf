@@ -1775,7 +1775,7 @@ DocTocTree* PdfEngineImpl::GetTocTree() {
     }
     PdfTocItem* att = BuildTocTree(attachments, idCounter, true);
     if (!root) {
-        tocTree = new DocTocTree(root);
+        tocTree = new DocTocTree(att);
         return tocTree;
     }
     root->AddSibling(att);
