@@ -98,8 +98,7 @@ struct ChmTocTraceItem {
     int pageNo = 0;
 };
 
-ChmModel::ChmModel(ControllerCallback* cb)
-    : Controller(cb) {
+ChmModel::ChmModel(ControllerCallback* cb) : Controller(cb) {
     InitializeCriticalSection(&docAccess);
 }
 
@@ -452,7 +451,7 @@ DocTocTree* ChmModel::GetTocTree() {
     }
 
     DocTocItem* root = nullptr;
-    DocTocItem **nextChild = &root;
+    DocTocItem** nextChild = &root;
     Vec<DocTocItem*> levels;
     int idCounter = 0;
 

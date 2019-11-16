@@ -92,4 +92,3 @@ bool LinkSaver::SaveEmbedded(const unsigned char* data, size_t len) {
     }
     return ok;
 }
-

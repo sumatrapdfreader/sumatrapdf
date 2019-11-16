@@ -188,7 +188,7 @@ static void GoToTocLinkTask(WindowInfo* win, DocTocItem* tocItem, TabInfo* tab, 
     win->tocKeepSelection = false;
 }
 
-static bool IsScrollToLink(PageDestination *link) {
+static bool IsScrollToLink(PageDestination* link) {
     if (!link) {
         return false;
     }
@@ -368,7 +368,7 @@ void UpdateTocSelection(WindowInfo* win, int currPageNo) {
     }
 }
 
-static void UpdateDocTocExpansionState(TreeCtrl* treeCtrl, Vec<int>&tocState, DocTocItem* tocItem) {
+static void UpdateDocTocExpansionState(TreeCtrl* treeCtrl, Vec<int>& tocState, DocTocItem* tocItem) {
     while (tocItem) {
         // items without children cannot be toggled
         if (tocItem->child) {
@@ -396,7 +396,7 @@ static void UpdateDocTocExpansionState(TreeCtrl* treeCtrl, Vec<int>&tocState, Do
 
 void UpdateTocExpansionState(Vec<int>& tocState, TreeCtrl* treeCtrl, DocTocTree* docTree) {
     if (treeCtrl->treeModel != docTree) {
-        //CrashMe();
+        // CrashMe();
         return;
     }
     tocState.Reset();
@@ -730,7 +730,7 @@ void CreateToc(WindowInfo* win) {
 
     auto* treeCtrl = new TreeCtrl(win->hwndTocBox, nullptr);
     treeCtrl->dwStyle = TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS | TVS_TRACKSELECT |
-                    TVS_DISABLEDRAGDROP | TVS_NOHSCROLL | TVS_INFOTIP | WS_TABSTOP | WS_VISIBLE | WS_CHILD;
+                        TVS_DISABLEDRAGDROP | TVS_NOHSCROLL | TVS_INFOTIP | WS_TABSTOP | WS_VISIBLE | WS_CHILD;
     treeCtrl->dwExStyle = WS_EX_STATICEDGE;
     treeCtrl->menu = (HMENU)IDC_TOC_TREE;
     treeCtrl->preFilter = [treeCtrl](HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& handled) -> LRESULT {
@@ -743,8 +743,7 @@ void CreateToc(WindowInfo* win) {
         handled = (res != -1);
         return res;
     };
-    treeCtrl->onGetInfoTip = [treeCtrl](NMTVGETINFOTIP* infoTipInfo) { CustomizeTocInfoTip(treeCtrl, infoTipInfo);
-    };
+    treeCtrl->onGetInfoTip = [treeCtrl](NMTVGETINFOTIP* infoTipInfo) { CustomizeTocInfoTip(treeCtrl, infoTipInfo); };
     bool ok = treeCtrl->Create(L"TOC");
     CrashIf(!ok);
     win->tocTreeCtrl = treeCtrl;

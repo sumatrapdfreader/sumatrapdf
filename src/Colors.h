@@ -59,4 +59,3 @@ float GetLightness(COLORREF c);
 COLORREF GetAppColor(AppColor);
 void GetFixedPageUiColors(COLORREF& text, COLORREF& bg);
 void GetEbookUiColors(COLORREF& text, COLORREF& bg);
-

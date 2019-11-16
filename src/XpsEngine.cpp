@@ -160,8 +160,7 @@ struct XpsPageRun {
     size_t size_est;
     int refs;
 
-    XpsPageRun(fz_page* page, fz_display_list* list)
-        : page(page), list(list), size_est(0), refs(1) {
+    XpsPageRun(fz_page* page, fz_display_list* list) : page(page), list(list), size_est(0), refs(1) {
     }
 };
 

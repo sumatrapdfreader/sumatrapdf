@@ -621,7 +621,6 @@ defer { instance->Release(); };
 #include "Scoped.h"
 #include "Vec.h"
 
-
 // TODO: move those into e.g. ColorUtil.h
 inline COLORREF MkRgb(byte r, byte g, byte b) {
     return RGB(r, g, b);

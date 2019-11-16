@@ -14,7 +14,6 @@ typedef std::function<void()> ContextMenuCb;
 // returning false stops iteration
 typedef std::function<bool(TVITEM*)> TreeItemVisitor;
 
-
 /* Creation sequence:
 - auto ctrl = new TreeCtrl()
 - set creation parameters
@@ -60,7 +59,7 @@ class TreeCtrl {
     DWORD dwExStyle = 0;
     HMENU menu = nullptr;
     COLORREF bgCol = 0;
-    TreeModel *treeModel = nullptr; // not owned by us
+    TreeModel* treeModel = nullptr;         // not owned by us
     WCHAR infotipBuf[INFOTIPSIZE + 1] = {}; // +1 just in case
 
     // this data can be set directly
@@ -83,7 +82,7 @@ class TreeCtrl {
 
     // TreeItem* -> HTREEITEM mapping so that we can
     // find HTREEITEM from TreeItem*
-    std::vector<std::tuple<TreeItem*,HTREEITEM>> insertedItems;
+    std::vector<std::tuple<TreeItem*, HTREEITEM>> insertedItems;
 };
 
 void TreeViewExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, bool subtree);

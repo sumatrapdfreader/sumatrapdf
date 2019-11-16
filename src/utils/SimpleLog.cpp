@@ -11,7 +11,6 @@ void log(std::string_view s) {
     }
 }
 
-
 void log(const char* s) {
     auto sv = std::string_view(s);
     log(sv);
@@ -28,7 +27,7 @@ void log(const WCHAR* s) {
 
 void logf(const char* fmt, ...) {
     va_list args;
-    va_start(args, fmt); 
+    va_start(args, fmt);
     AutoFreeStr s(str::FmtV(fmt, args));
     log(s.AsView());
     va_end(args);
@@ -36,7 +35,7 @@ void logf(const char* fmt, ...) {
 
 void dbglogf(const char* fmt, ...) {
     va_list args;
-    va_start(args, fmt); 
+    va_start(args, fmt);
     AutoFreeStr s(str::FmtV(fmt, args));
     OutputDebugStringA(s.Get());
     va_end(args);

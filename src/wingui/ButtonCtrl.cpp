@@ -55,7 +55,8 @@ bool ButtonCtrl::Create(const WCHAR* s) {
     return true;
 }
 
-ButtonCtrl::~ButtonCtrl() {}
+ButtonCtrl::~ButtonCtrl() {
+}
 
 void ButtonCtrl::SetPos(RECT* r) {
     MoveWindow(this->hwnd, r);
@@ -120,7 +121,8 @@ bool CheckboxCtrl::Create(const WCHAR* s) {
     return true;
 }
 
-CheckboxCtrl::~CheckboxCtrl() {}
+CheckboxCtrl::~CheckboxCtrl() {
+}
 
 void CheckboxCtrl::SetPos(RECT* r) {
     MoveWindow(this->hwnd, r);

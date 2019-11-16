@@ -220,7 +220,7 @@ inline TocItemFlags operator&(TocItemFlags lhs, TocItemFlags rhs) {
 }
 
 // a "unset" state for COLORREF value. technically all colors are valid
-// this one is hopefully 
+// this one is hopefully
 constexpr COLORREF ColorRefUnset = (COLORREF)(-2);
 
 // an item in a document's Table of Content
@@ -301,7 +301,7 @@ class DocTocItem : public TreeItem {
     // (the result is owned by the DocTocItem and MUST NOT be deleted)
     virtual PageDestination* GetLink() = 0;
 
-    WCHAR* Text()  override {
+    WCHAR* Text() override {
         return title;
     }
 
@@ -311,7 +311,7 @@ class DocTocItem : public TreeItem {
         return nullptr;
     }
 
-    int ChildCount()  override {
+    int ChildCount() override {
         int n = 0;
         auto node = child;
         while (node) {
@@ -321,7 +321,7 @@ class DocTocItem : public TreeItem {
         return n;
     }
 
-    TreeItem* ChildAt(int n)  override {
+    TreeItem* ChildAt(int n) override {
         auto node = child;
         while (n > 0) {
             node = node->next;

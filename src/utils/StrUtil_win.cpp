@@ -174,7 +174,7 @@ OwnedData ToMultiByte(const WCHAR* txt, UINT codePage, int cchTxtLen) {
         return {};
     }
     WideCharToMultiByte(codePage, 0, txt, cchTxtLen, res, requiredBufSize, nullptr, nullptr);
-    return OwnedData(res, requiredBufSize-1);
+    return OwnedData(res, requiredBufSize - 1);
 }
 
 OwnedData ToMultiByte(const char* src, UINT codePageSrc, UINT codePageDest) {
