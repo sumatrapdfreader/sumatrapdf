@@ -3041,17 +3041,14 @@ WCHAR* PdfLink::GetValue() const {
     }
 
     char* uri = PdfLinkGetURI(this);
+    if (!uri) {
+        return nullptr;
+    }
     if (!is_external_link(uri)) {
         // other values: #1,115,208
-        OutputDebugStringA("unknown link:");
-        OutputDebugStringA(uri);
-        OutputDebugStringA("\n");
         // CrashMePort();
         return nullptr;
     }
-    OutputDebugStringA("PdfLink:");
-    OutputDebugStringA(uri);
-    OutputDebugStringA("\n");
     // CrashMePort();
     WCHAR* path = str::conv::FromUtf8(uri);
     return path;
