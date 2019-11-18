@@ -59,9 +59,9 @@ enum class DocumentProperty {
 
 class RenderedBitmap {
   protected:
-    HBITMAP hbmp;
-    SizeI size;
-    ScopedHandle hMap;
+    HBITMAP hbmp = nullptr;
+    SizeI size = {};
+    ScopedHandle hMap = {};
 
   public:
     RenderedBitmap(HBITMAP hbmp, SizeI size, HANDLE hMap = nullptr) : hbmp(hbmp), size(size), hMap(hMap) {
@@ -144,9 +144,8 @@ class PageDestination {
 // an user annotation on page
 struct PageAnnotation {
     struct Color {
-        uint8_t r, g, b, a;
-        Color() : r(0), g(0), b(0), a(0) {
-        }
+        uint8_t r = 0, g = 0, b = 0, a = 0;
+        Color() = default;
         Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255) : r(r), g(g), b(b), a(a) {
         }
         explicit Color(COLORREF c, uint8_t a = 255)
@@ -157,13 +156,13 @@ struct PageAnnotation {
         }
     };
 
-    PageAnnotType type;
-    int pageNo;
-    RectD rect;
-    Color color;
+    PageAnnotType type = PageAnnotType::None;
+    int pageNo = -1;
+    RectD rect = {};
+    Color color = {};
 
-    PageAnnotation() : type(PageAnnotType::None), pageNo(-1) {
-    }
+    PageAnnotation() = default;
+
     PageAnnotation(PageAnnotType type, int pageNo, RectD rect, Color color)
         : type(type), pageNo(pageNo), rect(rect), color(color) {
     }

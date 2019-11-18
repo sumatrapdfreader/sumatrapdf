@@ -1,5 +1,5 @@
 class ScopedCritSec {
-    CRITICAL_SECTION* cs;
+    CRITICAL_SECTION* cs = nullptr;
 
   public:
     explicit ScopedCritSec(CRITICAL_SECTION* cs) : cs(cs) {
@@ -11,18 +11,23 @@ class ScopedCritSec {
 };
 
 class ScopedHandle {
-    HANDLE handle;
+    HANDLE handle = nullptr;
 
   public:
+    ScopedHandle() = default;
+
     explicit ScopedHandle(HANDLE handle) : handle(handle) {
     }
+
     ~ScopedHandle() {
         if (IsValid())
             CloseHandle(handle);
     }
+
     operator HANDLE() const {
         return handle;
     }
+
     bool IsValid() const {
         return handle != NULL && handle != INVALID_HANDLE_VALUE;
     }
@@ -31,11 +36,11 @@ class ScopedHandle {
 template <class T>
 class ScopedComPtr {
   protected:
-    T* ptr;
+    T* ptr = nullptr;
 
   public:
-    ScopedComPtr() : ptr(nullptr) {
-    }
+    ScopedComPtr() = default;
+
     explicit ScopedComPtr(T* ptr) : ptr(ptr) {
     }
     ~ScopedComPtr() {
@@ -71,11 +76,11 @@ class ScopedComPtr {
 template <class T>
 class ScopedComQIPtr {
   protected:
-    T* ptr;
+    T* ptr = nullptr;
 
   public:
-    ScopedComQIPtr() : ptr(nullptr) {
-    }
+    ScopedComQIPtr() = default;
+
     explicit ScopedComQIPtr(IUnknown* unk) {
         HRESULT hr = unk->QueryInterface(&ptr);
         if (FAILED(hr))
