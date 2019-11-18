@@ -930,6 +930,8 @@ function uninstaller_files()
     "installer/InstUninstCommon.cpp",
     "installer/Uninstaller.cpp",
     "installer/Trans_installer_txt.cpp",
+    "installer/Resource.h",
+    "installer/Installer.rc",
   })
 end
 

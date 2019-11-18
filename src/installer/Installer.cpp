@@ -668,10 +668,11 @@ static void OnCreateWindow(HWND hwnd) {
     gHwndButtonInstUninst = CreateDefaultButton(hwnd, _TR("Install SumatraPDF"), IDOK);
 
     SIZE btnSize;
-    gHwndButtonOptions = CreateButton(hwnd, _TR("&Options"), ID_BUTTON_OPTIONS, BS_PUSHBUTTON, btnSize);
+    gHwndButtonOptions = CreateButton(hwnd, _TR("&Options"), ID_BUTTON_OPTIONS, BS_PUSHBUTTON, &btnSize);
     int x = WINDOW_MARGIN;
     int y = r.dy - btnSize.cy - WINDOW_MARGIN;
-    SetWindowPos(gHwndButtonOptions, nullptr, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+    UINT flags = SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW;
+    SetWindowPos(gHwndButtonOptions, nullptr, x, y, 0, 0, flags);
 
     gButtonDy = btnSize.cy;
     gBottomPartDy = gButtonDy + (WINDOW_MARGIN * 2);
@@ -741,7 +742,7 @@ static void OnCreateWindow(HWND hwnd) {
     const WCHAR* s = L"&...";
     SizeI btnSize2 = TextSizeInHwnd(hwnd, s);
     btnSize.cx += dpiAdjust(4);
-    gHwndButtonBrowseDir = CreateButton(hwnd, s, ID_BUTTON_BROWSE, BS_PUSHBUTTON, btnSize);
+    gHwndButtonBrowseDir = CreateButton(hwnd, s, ID_BUTTON_BROWSE, BS_PUSHBUTTON, &btnSize);
     x = r.dx - WINDOW_MARGIN - btnSize2.dx;
     SetWindowPos(gHwndButtonBrowseDir, nullptr, x, y, btnSize2.dx, staticDy,
                  SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW | SWP_FRAMECHANGED);
@@ -774,10 +775,16 @@ static void OnCreateWindow(HWND hwnd) {
 static void CreateMainWindow() {
     AutoFreeW title(str::Format(_TR("SumatraPDF %s Installer"), CURR_VERSION_STR));
 
-    gHwndFrame = CreateWindowEx(trans::IsCurrLangRtl() ? WS_EX_LAYOUTRTL : 0, INSTALLER_FRAME_CLASS_NAME, title.Get(),
-                                WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU, CW_USEDEFAULT, CW_USEDEFAULT,
-                                dpiAdjust(INSTALLER_WIN_DX), dpiAdjust(INSTALLER_WIN_DY), nullptr, nullptr,
-                                GetModuleHandle(nullptr), nullptr);
+    DWORD exStyle = 0;
+    if (trans::IsCurrLangRtl()) {
+        exStyle = WS_EX_LAYOUTRTL;
+    }
+    int dx = dpiAdjust(INSTALLER_WIN_DX);
+    int dy = dpiAdjust(INSTALLER_WIN_DY);
+    DWORD dwStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
+    HMODULE h = GetModuleHandleW(nullptr);
+    gHwndFrame = CreateWindowExW(exStyle, INSTALLER_FRAME_CLASS_NAME, title.Get(), dwStyle, CW_USEDEFAULT,
+                                 CW_USEDEFAULT, dx, dy, nullptr, nullptr, h, nullptr);
 }
 
 static void ShowUsage() {

@@ -345,9 +345,12 @@ static void OnCreateWindow(HWND hwnd) {
 
 static void CreateMainWindow() {
     AutoFreeW title(str::Format(_TR("SumatraPDF %s Uninstaller"), CURR_VERSION_STR));
-    gHwndFrame = CreateWindow(INSTALLER_FRAME_CLASS_NAME, title.Get(), WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
-                              CW_USEDEFAULT, CW_USEDEFAULT, dpiAdjust(INSTALLER_WIN_DX), dpiAdjust(INSTALLER_WIN_DY),
-                              nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
+    int dx = dpiAdjust(INSTALLER_WIN_DX);
+    int dy = dpiAdjust(INSTALLER_WIN_DY);
+    HMODULE h = GetModuleHandleW(nullptr);
+    DWORD dwStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
+    gHwndFrame = CreateWindowW(INSTALLER_FRAME_CLASS_NAME, title.Get(), dwStyle, CW_USEDEFAULT, CW_USEDEFAULT, dx, dy,
+                               nullptr, nullptr, h, nullptr);
 }
 
 static void ShowUsage() {
@@ -591,7 +594,8 @@ int APIENTRY WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPSTR
     if (!gInstUninstGlobals.installDir)
         gInstUninstGlobals.installDir = GetInstallationDir();
 
-    if (ExecuteUninstallerFromTempDir())
+    void* p = &ExecuteUninstallerFromTempDir;
+    if (p == nullptr && ExecuteUninstallerFromTempDir())
         return 0;
 
     if (gInstUninstGlobals.silent) {

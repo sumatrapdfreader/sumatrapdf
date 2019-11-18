@@ -93,7 +93,7 @@ void OnPaintFrame(HWND hwnd);
 void OnButtonExit();
 void AnimStep();
 void CreateButtonExit(HWND hwndParent);
-HWND CreateButton(HWND hwndParent, const WCHAR* s, int id, DWORD style, SIZE& sizeOut);
+HWND CreateButton(HWND hwndParent, const WCHAR* s, int id, DWORD style, SIZE* sizeOut);
 HWND CreateDefaultButton(HWND hwndParent, const WCHAR* s, int id);
 SIZE SetButtonTextAndResize(HWND hwnd, const WCHAR* s);
 SIZE GetIdealButtonSize(HWND hwnd);

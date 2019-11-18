@@ -3,11 +3,22 @@
 str::Str<char> logBuf;
 bool logToStderr;
 
+static char* logFilePath;
+
 void log(std::string_view s) {
     logBuf.Append(s.data(), s.size());
     if (logToStderr) {
         fwrite(s.data(), 1, s.size(), stderr);
         fflush(stderr);
+    }
+
+    if (logFilePath) {
+        auto f = fopen(logFilePath, "a");
+        if (f != nullptr) {
+            fwrite(s.data(), 1, s.size(), f);
+            fflush(f);
+            fclose(f);
+        }
     }
 }
 
@@ -47,4 +58,9 @@ void logf(const WCHAR* fmt, ...) {
     AutoFreeW s(str::FmtV(fmt, args));
     log(s);
     va_end(args);
+}
+
+void logToFile(const char* path) {
+    logFilePath = str::Dup(path);
+    remove(path);
 }

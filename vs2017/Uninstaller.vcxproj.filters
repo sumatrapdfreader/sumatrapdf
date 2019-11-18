@@ -11,6 +11,9 @@
     <ClInclude Include="..\src\installer\Installer.h">
       <Filter>installer</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\installer\Resource.h">
+      <Filter>installer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\CrashHandler.cpp" />
@@ -24,5 +27,10 @@
     <ClCompile Include="..\src\installer\Uninstaller.cpp">
       <Filter>installer</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\src\installer\Installer.rc">
+      <Filter>installer</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

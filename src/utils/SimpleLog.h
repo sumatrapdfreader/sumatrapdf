@@ -9,3 +9,4 @@ void log(const WCHAR* s);
 void logf(const char* fmt, ...);
 void logf(const WCHAR* fmt, ...);
 void dbglogf(const char* fmt, ...);
+void logToFile(const char* path);
