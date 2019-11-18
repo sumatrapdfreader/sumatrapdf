@@ -3148,7 +3148,7 @@ PageDestType PdfLink::GetDestType() const {
     }
 
     char* uri = PdfLinkGetURI(this);
-    CrashIf(!uri);
+    // some outline entries are bad (issue 1245)
     if (!uri) {
         return PageDestType::None;
     }
