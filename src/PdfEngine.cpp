@@ -3019,7 +3019,6 @@ RectD PdfLink::GetRect() const {
         RectD r(fz_rect_to_RectD(link->rect));
         return r;
     }
-    CrashMePort();
     return RectD();
 }
 
@@ -3030,7 +3029,6 @@ static char* PdfLinkGetURI(const PdfLink* link) {
     if (link->outline) {
         return link->outline->uri;
     }
-    CrashMePort();
     return nullptr;
 }
 
@@ -3046,10 +3044,8 @@ WCHAR* PdfLink::GetValue() const {
     }
     if (!is_external_link(uri)) {
         // other values: #1,115,208
-        // CrashMePort();
         return nullptr;
     }
-    // CrashMePort();
     WCHAR* path = str::conv::FromUtf8(uri);
     return path;
 #if 0
