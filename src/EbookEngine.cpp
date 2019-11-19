@@ -223,7 +223,7 @@ class EbookLink : public PageElement, public PageDestination {
         return nullptr;
     }
 
-    virtual PageDestination* AsLink() {
+    PageDestination* AsLink() override {
         return dest ? dest : this;
     }
 
