@@ -16,3 +16,5 @@ and Visual Studio constantly adds latest capabilities. If things don't compile,
 first make sure you're using the latest version of Visual Studio.
 
 Open `vs2019/SumatraPDF.sln` when using Visual Studio 2019
+
+![](https://github.com/sumatrapdfreader/sumatrapdf/workflows/Build/badge.svg)
