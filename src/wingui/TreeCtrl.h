@@ -45,6 +45,7 @@ class TreeCtrl {
     HFONT GetFont();
     void SetTreeModel(TreeModel*);
     void SetBackgroundColor(COLORREF);
+    void SetTextColor(COLORREF);
 
     void SuspendRedraw();
     void ResumeRedraw();
@@ -59,7 +60,8 @@ class TreeCtrl {
                     TVS_SHOWSELALWAYS | TVS_TRACKSELECT | TVS_DISABLEDRAGDROP | TVS_NOHSCROLL | TVS_INFOTIP;
     DWORD dwExStyle = 0;
     HMENU menu = nullptr;
-    COLORREF bgCol = 0;
+    COLORREF backgroundColor = 0;
+    COLORREF textColor = 0;
     TreeModel* treeModel = nullptr;         // not owned by us
     WCHAR infotipBuf[INFOTIPSIZE + 1] = {}; // +1 just in case
 

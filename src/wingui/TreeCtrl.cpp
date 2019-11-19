@@ -223,8 +223,13 @@ HTREEITEM TreeCtrl::InsertItem(TVINSERTSTRUCTW* item) {
 }
 
 void TreeCtrl::SetBackgroundColor(COLORREF bgCol) {
-    this->bgCol = bgCol;
+    this->backgroundColor = bgCol;
     TreeView_SetBkColor(this->hwnd, bgCol);
+}
+
+void TreeCtrl::SetTextColor(COLORREF col) {
+    this->textColor = col;
+    TreeView_SetTextColor(this->hwnd, col);
 }
 
 void TreeCtrl::Clear() {

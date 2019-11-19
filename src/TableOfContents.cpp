@@ -399,13 +399,14 @@ void UpdateTocColors(WindowInfo* win) {
     COLORREF labelBgCol = GetSysColor(COLOR_BTNFACE);
     COLORREF labelTxtCol = GetSysColor(COLOR_BTNTEXT);
     COLORREF treeBgCol = GetAppColor(AppColor::DocumentBg);
+    COLORREF treeTxtCol = GetAppColor(AppColor::DocumentText);
     COLORREF splitterCol = GetSysColor(COLOR_BTNFACE);
     bool flatTreeWnd = false;
 
     if (win->AsEbook()) {
         labelBgCol = GetAppColor(AppColor::DocumentBg, true);
         labelTxtCol = GetAppColor(AppColor::DocumentText, true);
-
+        treeTxtCol = labelTxtCol;
         treeBgCol = labelBgCol;
         float factor = 14.f;
         int sign = GetLightness(labelBgCol) + factor > 255 ? 1 : -1;
@@ -415,6 +416,8 @@ void UpdateTocColors(WindowInfo* win) {
 
     auto treeCtrl = win->tocTreeCtrl;
     treeCtrl->SetBackgroundColor(treeBgCol);
+    treeCtrl->SetTextColor(treeTxtCol);
+
     win->tocLabelWithClose->SetBgCol(labelBgCol);
     win->tocLabelWithClose->SetTextCol(labelTxtCol);
     SetBgCol(win->sidebarSplitter, splitterCol);
