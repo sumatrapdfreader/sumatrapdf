@@ -407,13 +407,13 @@ void UpdateTocExpansionState(Vec<int>& tocState, TreeCtrl* treeCtrl, DocTocTree*
 void UpdateTocColors(WindowInfo* win) {
     COLORREF labelBgCol = GetSysColor(COLOR_BTNFACE);
     COLORREF labelTxtCol = GetSysColor(COLOR_BTNTEXT);
-    COLORREF treeBgCol = (DWORD)-1;
+    COLORREF treeBgCol = GetAppColor(AppColor::DocumentBg);
     COLORREF splitterCol = GetSysColor(COLOR_BTNFACE);
     bool flatTreeWnd = false;
 
     if (win->AsEbook()) {
-        labelBgCol = GetAppColor(AppColor::DocumentBg);
-        labelTxtCol = GetAppColor(AppColor::DocumentText);
+        labelBgCol = GetAppColor(AppColor::DocumentBg, true);
+        labelTxtCol = GetAppColor(AppColor::DocumentText, true);
 
         treeBgCol = labelBgCol;
         float factor = 14.f;
@@ -422,14 +422,14 @@ void UpdateTocColors(WindowInfo* win) {
         flatTreeWnd = true;
     }
 
-    // TOOD: move into TreeCtrl
-    TreeView_SetBkColor(win->tocTreeCtrl->hwnd, treeBgCol);
+    auto treeCtrl = win->tocTreeCtrl;
+    treeCtrl->SetBackgroundColor(treeBgCol);
     win->tocLabelWithClose->SetBgCol(labelBgCol);
     win->tocLabelWithClose->SetTextCol(labelTxtCol);
     SetBgCol(win->sidebarSplitter, splitterCol);
-    ToggleWindowExStyle(win->tocTreeCtrl->hwnd, WS_EX_STATICEDGE, !flatTreeWnd);
-    SetWindowPos(win->tocTreeCtrl->hwnd, nullptr, 0, 0, 0, 0,
-                 SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED);
+    ToggleWindowExStyle(treeCtrl->hwnd, WS_EX_STATICEDGE, !flatTreeWnd);
+    UINT flags = SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED;
+    SetWindowPos(treeCtrl->hwnd, nullptr, 0, 0, 0, 0, flags);
 
     // TODO: if we have favorites in ebook view, we'll need this
     // SetBgCol(win->favLabelWithClose, labelBgCol);
@@ -500,13 +500,13 @@ void LoadTocTree(WindowInfo* win) {
     SetRtl(hwnd, isRTL);
 
 #if 1
+    UpdateTocColors(win);
     SetInitialExpandState(tocTree->root, tab->tocState);
     tocTree->root->OpenSingleNode();
     treeCtrl->SetTreeModel(tocTree);
 #else
     treeCtrl->SuspendRedraw();
     PopulateTocTreeView(treeCtrl, tocTree, tab->tocState, nullptr);
-    UpdateTocColors(win);
     treeCtrl->ResumeRedraw();
 #endif
 

@@ -44,6 +44,7 @@ class TreeCtrl {
     void SetFont(HFONT);
     HFONT GetFont();
     void SetTreeModel(TreeModel*);
+    void SetBackgroundColor(COLORREF);
 
     void SuspendRedraw();
     void ResumeRedraw();

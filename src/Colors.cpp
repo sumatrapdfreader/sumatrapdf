@@ -123,7 +123,7 @@ static COLORREF GetNoDocBgColor() {
     return COL_WINDOW_BG;
 }
 
-COLORREF GetAppColor(AppColor col) {
+COLORREF GetAppColor(AppColor col, bool ebook) {
     if (col == AppColor::NoDocBg) {
         // GetCurrentTheme()->document.canvasColor
         return GetNoDocBgColor();
@@ -149,14 +149,20 @@ COLORREF GetAppColor(AppColor col) {
         return COL_BLUE_LINK;
     }
 
-    // TODO: different for fixed vs. ebook page
     if (col == AppColor::DocumentBg) {
-        return gGlobalPrefs->fixedPageUI.backgroundColor;
+        if (ebook) {
+            return gGlobalPrefs->ebookUI.backgroundColor;
+        } else {
+            return gGlobalPrefs->fixedPageUI.backgroundColor;
+        }
     }
 
-    // TODO: different for fixed vs. ebook page
     if (col == AppColor::DocumentText) {
-        return gGlobalPrefs->fixedPageUI.textColor;
+        if (ebook) {
+            return gGlobalPrefs->ebookUI.textColor;
+        } else {
+            return gGlobalPrefs->fixedPageUI.textColor;
+        }
     }
 
     if (col == AppColor::NotificationsBg) {

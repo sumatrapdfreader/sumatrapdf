@@ -220,6 +220,11 @@ HTREEITEM TreeCtrl::InsertItem(TVINSERTSTRUCTW* item) {
     return res;
 }
 
+void TreeCtrl::SetBackgroundColor(COLORREF bgCol) {
+    this->bgCol = bgCol;
+    TreeView_SetBkColor(this->hwnd, bgCol);
+}
+
 void TreeCtrl::Clear() {
     treeModel = nullptr;
     insertedItems.clear();
