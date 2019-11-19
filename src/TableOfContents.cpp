@@ -274,7 +274,6 @@ static HTREEITEM AddTocItemToView(TreeCtrl* tree, DocTocItem* entry, HTREEITEM p
 }
 #endif
 
-
 #if 0
 static void TreeItemForPageNoRec(TreeCtrl* tocTreeCtrl, HTREEITEM hItem, int pageNo, HTREEITEM& bestMatchItem,
                                  int& bestMatchPageNo) {
@@ -465,6 +464,36 @@ static void SetInitialExpandState(DocTocItem* item, Vec<int>& tocState) {
         SetInitialExpandState(item->child, tocState);
         item = item->next;
     }
+}
+
+static void ExportBookmarkTree(DocTocItem* node, int level) {
+    while (node) {
+        str::Str<char> line;
+        for (int i = 0; i < level; i++) {
+            line.Append("  ");
+        }
+        WCHAR* title = node->Text();
+        auto titleA = str::conv::ToUtf8(title);
+        line.AppendView(titleA.AsView());
+        //WCHAR* uri = node->GetLink();
+
+        dbglogf("%s\n", line.Get());
+        ExportBookmarkTree(node->child, level + 1);
+        node = node->next;
+    }
+}
+
+static void ExportBookmarks(TabInfo* tab) {
+    auto* tocTree = tab->ctrl->GetTocTree();
+    CrashIf(!tocTree);
+    auto* node = tocTree->root;
+    ExportBookmarkTree(tocTree->root, 0);
+}
+
+static void TreeCtrlContextMenu(WindowInfo* win, int xScreen, int yScreen) {
+    UNUSED(xScreen);
+    UNUSED(yScreen);
+    ExportBookmarks(win->currentTab);
 }
 
 void LoadTocTree(WindowInfo* win) {
@@ -702,14 +731,12 @@ static void SubclassToc(WindowInfo* win) {
     }
 }
 
-static void TreeCtrlContextMenu(WindowInfo* win, int xScreen, int yScreen) {
-    UNUSED(win);
-    dbglogf("context menu: (%d, %d)\n", xScreen, yScreen);
-}
-
 void CreateToc(WindowInfo* win) {
-    win->hwndTocBox = CreateWindow(WC_STATIC, L"", WS_CHILD | WS_CLIPCHILDREN, 0, 0, gGlobalPrefs->sidebarDx, 0,
-                                   win->hwndFrame, (HMENU)0, GetModuleHandle(nullptr), nullptr);
+    HMODULE hmod = GetModuleHandle(nullptr);
+    int dx = gGlobalPrefs->sidebarDx;
+    DWORD style = WS_CHILD | WS_CLIPCHILDREN;
+    HWND parent = win->hwndFrame;
+    win->hwndTocBox = CreateWindowExW(0, WC_STATIC, L"", style, 0, 0, dx, 0, parent, 0, hmod, nullptr);
 
     auto* l = new LabelWithCloseWnd();
     l->Create(win->hwndTocBox, IDC_TOC_LABEL_WITH_CLOSE);
@@ -734,9 +761,7 @@ void CreateToc(WindowInfo* win) {
         return res;
     };
     treeCtrl->onGetInfoTip = [treeCtrl](NMTVGETINFOTIP* infoTipInfo) { CustomizeTocInfoTip(treeCtrl, infoTipInfo); };
-    treeCtrl->onContextMenu = [win](int x, int y) {
-        TreeCtrlContextMenu(win, x, y);
-    };
+    treeCtrl->onContextMenu = [win](int x, int y) { TreeCtrlContextMenu(win, x, y); };
     bool ok = treeCtrl->Create(L"TOC");
     CrashIf(!ok);
     win->tocTreeCtrl = treeCtrl;

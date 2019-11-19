@@ -352,6 +352,11 @@ class Str : public Vec<T> {
         Vec<T>::Append(src, size);
     }
 
+    // only valid for T = char
+    void AppendView(const std::string_view sv) {
+        this->Append(sv.data(), sv.size());
+    }
+
     void AppendFmt(const T* fmt, ...) {
         va_list args;
         va_start(args, fmt);
