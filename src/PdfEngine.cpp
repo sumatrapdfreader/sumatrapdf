@@ -1216,13 +1216,13 @@ class PdfComment : public PageElement {
         this->pageNo = pageNo;
     }
 
-     PageElementType GetType() const override {
+    PageElementType GetType() const override {
         return PageElementType::Comment;
     }
-     RectD GetRect() const override {
+    RectD GetRect() const override {
         return annot.rect;
     }
-     WCHAR* GetValue() const override {
+    WCHAR* GetValue() const override {
         return str::Dup(content);
     }
 };
@@ -3163,8 +3163,11 @@ PageDestType PdfLink::GetDestType() const {
     if (str::StartsWithI(uri, "ftp://")) {
         return PageDestType::LaunchURL;
     }
-    // TODO: PageDestType::LaunchEmbedded, PageDestType::LaunchURL, named destination
+    if (str::StartsWith(uri, "mailto:")) {
+        return PageDestType::LaunchURL;
+    }
 
+    // TODO: PageDestType::LaunchEmbedded, PageDestType::LaunchURL, named destination
     CrashMePort();
     return PageDestType::None;
 #if 0
