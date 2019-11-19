@@ -103,6 +103,7 @@
 #define IDM_DEBUG_MUI                   595
 #define IDM_DEBUG_ANNOTATION            596
 #define IDM_ADVANCED_OPTIONS            597
+#define IDM_EXPORT_BOOKMARKS            598
 #define IDM_FAV_FIRST                   600
 #define IDM_FAV_LAST                    800
 #define IDM_CHANGE_THEME_FIRST          900

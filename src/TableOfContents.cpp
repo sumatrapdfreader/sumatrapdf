@@ -30,6 +30,7 @@
 #include "TableOfContents.h"
 #include "Translations.h"
 #include "Tabs.h"
+#include "Menu.h"
 
 constexpr UINT_PTR SUBCLASS_ID = 1;
 
@@ -490,10 +491,30 @@ static void ExportBookmarks(TabInfo* tab) {
     ExportBookmarkTree(tocTree->root, 0);
 }
 
+static MenuDef contextMenuDef[] = {
+    {"Export Bookmarks", IDM_EXPORT_BOOKMARKS, MF_NO_TRANSLATE},
+};
+
+static void BuildAndShowContextMenu(WindowInfo* win, int x, int y) {
+    HMENU popup = BuildMenuFromMenuDef(contextMenuDef, dimof(contextMenuDef), CreatePopupMenu());
+    POINT pt = {x, y};
+    //MapWindowPoints(win->hwndCanvas, HWND_DESKTOP, &pt, 1);
+    //MarkMenuOwnerDraw(popup);
+    UINT flags = TPM_RETURNCMD | TPM_RIGHTBUTTON;
+    INT cmd = TrackPopupMenu(popup, flags, pt.x, pt.y, 0, win->hwndFrame, nullptr);
+    //FreeMenuOwnerDrawInfoData(popup);
+    DestroyMenu(popup);
+    switch (cmd) {
+        case IDM_EXPORT_BOOKMARKS:
+            ExportBookmarks(win->currentTab);
+            break;
+    }
+}
+
 static void TreeCtrlContextMenu(WindowInfo* win, int xScreen, int yScreen) {
     UNUSED(xScreen);
     UNUSED(yScreen);
-    ExportBookmarks(win->currentTab);
+    BuildAndShowContextMenu(win, xScreen, yScreen);
 }
 
 void LoadTocTree(WindowInfo* win) {
