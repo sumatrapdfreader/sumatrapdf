@@ -65,18 +65,19 @@ class DjVuDestination : public PageDestination {
 };
 
 class DjVuLink : public PageElement {
-    DjVuDestination* dest;
-    RectD rect;
-    WCHAR* value;
+    DjVuDestination* dest = nullptr;
+    RectD rect = {};
+    WCHAR* value = nullptr;
 
   public:
-    DjVuLink(int pageNo, RectI rect, const char* link, const char* comment)
-        : rect(rect.Convert<double>()), value(nullptr) {
+    DjVuLink(int pageNo, RectI rect, const char* link, const char* comment) {
+        this->rect = rect.Convert<double>();
         this->pageNo = pageNo;
         dest = new DjVuDestination(link);
         if (!str::IsEmpty(comment))
             value = str::conv::FromUtf8(comment);
     }
+
     ~DjVuLink() override {
         delete dest;
         free(value);
@@ -89,6 +90,7 @@ class DjVuLink : public PageElement {
     RectD GetRect() const override {
         return rect;
     }
+
     WCHAR* GetValue() const override {
         if (value)
             return str::Dup(value);

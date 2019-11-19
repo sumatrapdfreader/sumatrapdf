@@ -23,7 +23,7 @@ static bool IsExternalUrl(const WCHAR* url) {
 
 class ChmTocItem : public DocTocItem, public PageDestination {
   public:
-    const WCHAR* url; // owned by ChmModel::poolAllocator or ChmNamedDest::myUrl
+    const WCHAR* url = nullptr; // owned by ChmModel::poolAllocator or ChmNamedDest::myUrl
 
     ChmTocItem(const WCHAR* title, int pageNo, const WCHAR* url) : DocTocItem((WCHAR*)title, pageNo), url(url) {
     }
