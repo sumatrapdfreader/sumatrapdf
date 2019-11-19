@@ -477,8 +477,6 @@ struct LinkRectList {
     Vec<fz_rect> coords;
 };
 
-// TODO(port)
-#if 0
 static bool LinkifyCheckMultiline(const WCHAR* pageText, const WCHAR* pos, RectI* coords) {
     // multiline links end in a non-alphanumeric character and continue on a line
     // that starts left and only slightly below where the current line ended
@@ -490,10 +488,7 @@ static bool LinkifyCheckMultiline(const WCHAR* pageText, const WCHAR* pos, RectI
            coords[pos - pageText + 1].dy >= coords[pos - pageText - 1].dy * 0.85 &&
            coords[pos - pageText + 1].dy <= coords[pos - pageText - 1].dy * 1.2 && !str::StartsWith(pos + 1, L"http");
 }
-#endif
 
-// TODO(port)
-#if 0
 static const WCHAR* LinkifyFindEnd(const WCHAR* start, WCHAR prevChar) {
     const WCHAR *end, *quote;
 
@@ -511,10 +506,7 @@ static const WCHAR* LinkifyFindEnd(const WCHAR* start, WCHAR prevChar) {
 
     return end;
 }
-#endif
 
-// TODO(port)
-#if 0
 static const WCHAR* LinkifyMultilineText(LinkRectList* list, const WCHAR* pageText, const WCHAR* start,
                                          const WCHAR* next, RectI* coords) {
     size_t lastIx = list->coords.size() - 1;
@@ -541,7 +533,6 @@ static const WCHAR* LinkifyMultilineText(LinkRectList* list, const WCHAR* pageTe
 
     return end;
 }
-#endif
 
 // cf. http://weblogs.mozillazine.org/gerv/archives/2011/05/html5_email_address_regexp.html
 inline bool IsEmailUsernameChar(WCHAR c) {
@@ -553,7 +544,6 @@ inline bool IsEmailDomainChar(WCHAR c) {
     return iswalnum(c) || '-' == c;
 }
 
-#if 0
 static const WCHAR* LinkifyFindEmail(const WCHAR* pageText, const WCHAR* at) {
     const WCHAR* start;
     for (start = at; start > pageText&& IsEmailUsernameChar(*(start - 1)); start--) {
@@ -561,9 +551,7 @@ static const WCHAR* LinkifyFindEmail(const WCHAR* pageText, const WCHAR* at) {
     }
     return start != at ? start : nullptr;
 }
-#endif
 
-#if 0
 static const WCHAR* LinkifyEmailAddress(const WCHAR* start) {
     const WCHAR* end;
     for (end = start; IsEmailUsernameChar(*end); end++)
@@ -580,11 +568,8 @@ static const WCHAR* LinkifyEmailAddress(const WCHAR* start) {
     } while ('.' == *end && IsEmailDomainChar(*(end + 1)));
     return end;
 }
-#endif
 
 // caller needs to delete the result
-// TODO(port)
-#if 0
 static LinkRectList* LinkifyText(const WCHAR* pageText, RectI* coords) {
     LinkRectList* list = new LinkRectList;
 
@@ -632,7 +617,6 @@ static LinkRectList* LinkifyText(const WCHAR* pageText, RectI* coords) {
 
     return list;
 }
-#endif
 
 static fz_link* FixupPageLinks(fz_link* root) {
     // Links in PDF documents are added from bottom-most to top-most,
@@ -2258,9 +2242,7 @@ void PdfEngineImpl::LinkifyPageText(PdfPageInfo* pageInfo) {
     if (!pageText)
         return;
 
-        // TODO(port)
-#if 0
-    CrashMePort();
+    auto page = pageInfo->page;
     LinkRectList* list = LinkifyText(pageText, coords);
     for (size_t i = 0; i < list->links.size(); i++) {
         bool overlaps = false;
@@ -2271,17 +2253,15 @@ void PdfEngineImpl::LinkifyPageText(PdfPageInfo* pageInfo) {
             if (!uri.Get()) {
                 continue;
             }
-            fz_link_dest ld = {FZ_LINK_URI, 0};
-            ld.ld.uri.uri = fz_strdup(ctx, uri.Get());
+
+            char* uri2 = fz_strdup(ctx, uri.Get());
             // add links in top-to-bottom order (i.e. last-to-first)
-            fz_link* link = fz_new_link(ctx, &list->coords.at(i), ld);
-            CrashIf(!link); // TODO: if fz_new_link throws, there are memory leaks
+            fz_link* link = fz_new_link(ctx, list->coords.at(i), _doc, uri2);
             link->next = page->links;
             page->links = link;
         }
     }
     delete list;
-#endif
     free(coords);
 }
 
