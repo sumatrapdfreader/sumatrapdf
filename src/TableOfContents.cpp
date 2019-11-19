@@ -9,6 +9,7 @@
 #include "wingui/SplitterWnd.h"
 #include "utils/UITask.h"
 #include "utils/WinUtil.h"
+#include "utils/SimpleLog.h"
 #include "wingui/TreeCtrl.h"
 
 #include "TreeModel.h"
@@ -273,16 +274,6 @@ static HTREEITEM AddTocItemToView(TreeCtrl* tree, DocTocItem* entry, HTREEITEM p
 }
 #endif
 
-#if 0
-static void PopulateTocTreeView(TreeCtrl* tree, DocTocItem* entry, Vec<int>& tocState, HTREEITEM parent) {
-    while (entry) {
-        bool toggle = tocState.Contains(entry->id);
-        HTREEITEM node = AddTocItemToView(tree, entry, parent, toggle);
-        PopulateTocTreeView(tree, entry->child, tocState, node);
-        entry = entry->next;
-    }
-}
-#endif
 
 #if 0
 static void TreeItemForPageNoRec(TreeCtrl* tocTreeCtrl, HTREEITEM hItem, int pageNo, HTREEITEM& bestMatchItem,
@@ -499,16 +490,10 @@ void LoadTocTree(WindowInfo* win) {
     HWND hwnd = treeCtrl->hwnd;
     SetRtl(hwnd, isRTL);
 
-#if 1
     UpdateTocColors(win);
     SetInitialExpandState(tocTree->root, tab->tocState);
     tocTree->root->OpenSingleNode();
     treeCtrl->SetTreeModel(tocTree);
-#else
-    treeCtrl->SuspendRedraw();
-    PopulateTocTreeView(treeCtrl, tocTree, tab->tocState, nullptr);
-    treeCtrl->ResumeRedraw();
-#endif
 
     UINT fl = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;
     RedrawWindow(hwnd, nullptr, nullptr, fl);
@@ -717,6 +702,11 @@ static void SubclassToc(WindowInfo* win) {
     }
 }
 
+static void TreeCtrlContextMenu(WindowInfo* win, int xScreen, int yScreen) {
+    UNUSED(win);
+    dbglogf("context menu: (%d, %d)\n", xScreen, yScreen);
+}
+
 void CreateToc(WindowInfo* win) {
     win->hwndTocBox = CreateWindow(WC_STATIC, L"", WS_CHILD | WS_CLIPCHILDREN, 0, 0, gGlobalPrefs->sidebarDx, 0,
                                    win->hwndFrame, (HMENU)0, GetModuleHandle(nullptr), nullptr);
@@ -744,6 +734,9 @@ void CreateToc(WindowInfo* win) {
         return res;
     };
     treeCtrl->onGetInfoTip = [treeCtrl](NMTVGETINFOTIP* infoTipInfo) { CustomizeTocInfoTip(treeCtrl, infoTipInfo); };
+    treeCtrl->onContextMenu = [win](int x, int y) {
+        TreeCtrlContextMenu(win, x, y);
+    };
     bool ok = treeCtrl->Create(L"TOC");
     CrashIf(!ok);
     win->tocTreeCtrl = treeCtrl;

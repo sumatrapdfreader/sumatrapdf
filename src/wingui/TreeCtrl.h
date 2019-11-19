@@ -8,7 +8,7 @@ class TreeCtrl;
 typedef std::function<LRESULT(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& discardMsg)> MsgFilter;
 typedef std::function<void(NMTVGETINFOTIPW*)> GetInfoTipCb;
 typedef std::function<LRESULT(NMTREEVIEWW*, bool&)> TreeNotifyCb;
-typedef std::function<void()> ContextMenuCb;
+typedef std::function<void(int xMouseScreen, int yMouseScreen)> ContextMenuCb;
 
 // function called for every item in the tree.
 // returning false stops iteration

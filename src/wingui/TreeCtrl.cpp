@@ -49,7 +49,9 @@ static LRESULT CALLBACK TreeParentProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
     }
     if (msg == WM_CONTEXTMENU) {
         if (w->onContextMenu) {
-            w->onContextMenu();
+            int x = GET_X_LPARAM(lp);
+            int y = GET_Y_LPARAM(lp);
+            w->onContextMenu(x, y);
             return 0;
         }
     }
