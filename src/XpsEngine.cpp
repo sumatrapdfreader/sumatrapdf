@@ -283,24 +283,24 @@ class XpsEngineImpl : public BaseEngine {
 };
 
 class XpsLink : public PageElement, public PageDestination {
-    XpsEngineImpl* engine;
-    u8* link; // owned by a fz_link or fz_outline
-    RectD rect;
-    int pageNo;
+    XpsEngineImpl* engine = nullptr;
+    u8* link = nullptr; // owned by a fz_link or fz_outline
+    RectD rect = {};
 
   public:
-    XpsLink() : engine(nullptr), link(nullptr), pageNo(-1) {
-    }
-    XpsLink(XpsEngineImpl* engine, u8* link, fz_rect rect = fz_empty_rect, int pageNo = -1)
-        : engine(engine), link(link), rect(fz_rect_to_RectD(rect)), pageNo(pageNo) {
+    XpsLink() = default;
+
+    XpsLink(XpsEngineImpl* engine, u8* link, fz_rect rect = fz_empty_rect, int pageNo = -1) {
+        this->pageNo = pageNo;
+        this->engine = engine;
+        this->link = link;
+        this->rect = fz_rect_to_RectD(rect);
     }
 
     PageElementType GetType() const override {
         return PageElementType::Link;
     }
-    int GetPageNo() const override {
-        return pageNo;
-    }
+
     RectD GetRect() const override {
         return rect;
     }

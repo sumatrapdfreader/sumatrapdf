@@ -177,12 +177,18 @@ struct PageAnnotation {
 // hoverable (and maybe interactable) element on a single page
 class PageElement {
   public:
+    int pageNo = -1;
+
     virtual ~PageElement() {
     }
     // the type of this page element
     virtual PageElementType GetType() const = 0;
+
     // page this element lives on (0 for elements in a ToC)
-    virtual int GetPageNo() const = 0;
+    int GetPageNo() const {
+        return pageNo;
+    }
+
     // rectangle that can be interacted with
     virtual RectD GetRect() const = 0;
     // string value associated with this element (e.g. displayed in an infotip)
