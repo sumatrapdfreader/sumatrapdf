@@ -1180,7 +1180,6 @@ class PdfLink : public PageElement, public PageDestination {
     // must be one or the other
     fz_link* link = nullptr;
     fz_outline* outline = nullptr;
-    int pageNo = 0;
     bool isAttachment = false;
 
     PdfLink(PdfEngineImpl* engine, int pageNo, fz_link* link, fz_outline* outline);
@@ -1188,9 +1187,6 @@ class PdfLink : public PageElement, public PageDestination {
     // PageElement
     PageElementType GetType() const override {
         return PageElementType::Link;
-    }
-    int GetPageNo() const override {
-        return pageNo;
     }
     RectD GetRect() const override;
     WCHAR* GetValue() const override;
@@ -1217,18 +1213,16 @@ class PdfComment : public PageElement {
 
     PdfComment(const WCHAR* content, RectD rect, int pageNo)
         : annot(PageAnnotType::None, pageNo, rect, PageAnnotation::Color()), content(str::Dup(content)) {
+        this->pageNo = pageNo;
     }
 
-    virtual PageElementType GetType() const {
+     PageElementType GetType() const override {
         return PageElementType::Comment;
     }
-    virtual int GetPageNo() const {
-        return annot.pageNo;
-    }
-    virtual RectD GetRect() const {
+     RectD GetRect() const override {
         return annot.rect;
     }
-    virtual WCHAR* GetValue() const {
+     WCHAR* GetValue() const override {
         return str::Dup(content);
     }
 };
@@ -1248,28 +1242,27 @@ class PdfTocItem : public DocTocItem {
 class PdfImage : public PageElement {
   public:
     PdfEngineImpl* engine;
-    int pageNo;
     RectD rect;
     size_t imageIdx;
 
     PdfImage(PdfEngineImpl* engine, int pageNo, fz_rect rect, size_t imageIdx)
-        : engine(engine), pageNo(pageNo), rect(fz_rect_to_RectD(rect)), imageIdx(imageIdx) {
+        : engine(engine), rect(fz_rect_to_RectD(rect)), imageIdx(imageIdx) {
+        this->pageNo = pageNo;
     }
 
-    virtual PageElementType GetType() const {
+    PageElementType GetType() const override {
         return PageElementType::Image;
     }
-    virtual int GetPageNo() const {
-        return pageNo;
-    }
-    virtual RectD GetRect() const {
+
+    RectD GetRect() const override {
         return rect;
     }
-    virtual WCHAR* GetValue() const {
+
+    WCHAR* GetValue() const override {
         return nullptr;
     }
 
-    virtual RenderedBitmap* GetImage() {
+    RenderedBitmap* GetImage() override {
         return engine->GetPageImage(pageNo, rect, imageIdx);
     }
 };

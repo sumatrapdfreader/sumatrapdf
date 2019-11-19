@@ -212,25 +212,24 @@ class ImageElement : public PageElement {
 
   public:
     explicit ImageElement(ImagesEngine* engine, ImagePage* page) : engine(engine), page(page) {
+        this->pageNo = page->pageNo;
     }
     virtual ~ImageElement() {
         engine->DropPage(page);
     }
 
-    virtual PageElementType GetType() const {
+    PageElementType GetType() const override  {
         return PageElementType::Image;
     }
-    virtual int GetPageNo() const {
-        return page->pageNo;
-    }
-    virtual RectD GetRect() const {
+
+    RectD GetRect() const override {
         return RectD(0, 0, page->bmp->GetWidth(), page->bmp->GetHeight());
     }
-    virtual WCHAR* GetValue() const {
+    WCHAR* GetValue() const override {
         return nullptr;
     }
 
-    virtual RenderedBitmap* GetImage() {
+    RenderedBitmap* GetImage() override {
         HBITMAP hbmp;
         if (page->bmp->GetHBITMAP((ARGB)Color::White, &hbmp) != Ok)
             return nullptr;

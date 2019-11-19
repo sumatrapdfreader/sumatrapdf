@@ -195,17 +195,17 @@ class SimpleDest2 : public PageDestination {
 };
 
 class EbookLink : public PageElement, public PageDestination {
-    PageDestination* dest; // required for internal links, nullptr for external ones
-    DrawInstr* link;       // owned by *EngineImpl::pages
-    RectI rect;
-    int pageNo;
-    bool showUrl;
+    PageDestination* dest = nullptr; // required for internal links, nullptr for external ones
+    DrawInstr* link = nullptr;       // owned by *EngineImpl::pages
+    RectI rect = {};
+    bool showUrl = false;
 
   public:
-    EbookLink() : dest(nullptr), link(nullptr), pageNo(-1), showUrl(false) {
-    }
+    EbookLink() = default;
+
     EbookLink(DrawInstr* link, RectI rect, PageDestination* dest, int pageNo = -1, bool showUrl = false)
-        : link(link), rect(rect), dest(dest), pageNo(pageNo), showUrl(showUrl) {
+        : link(link), rect(rect), dest(dest), showUrl(showUrl) {
+        this->pageNo = pageNo;
     }
     virtual ~EbookLink() {
         delete dest;
@@ -213,9 +213,6 @@ class EbookLink : public PageElement, public PageDestination {
 
     PageElementType GetType() const override {
         return PageElementType::Link;
-    }
-    int GetPageNo() const override {
-        return pageNo;
     }
     RectD GetRect() const override {
         return rect.Convert<double>();
@@ -225,6 +222,7 @@ class EbookLink : public PageElement, public PageDestination {
             return str::conv::FromHtmlUtf8(link->str.s, link->str.len);
         return nullptr;
     }
+
     virtual PageDestination* AsLink() {
         return dest ? dest : this;
     }
@@ -232,40 +230,40 @@ class EbookLink : public PageElement, public PageDestination {
     PageDestType GetDestType() const override {
         return PageDestType::LaunchURL;
     }
+
     int GetDestPageNo() const override {
         return 0;
     }
+
     RectD GetDestRect() const override {
         return RectD();
     }
+
     WCHAR* GetDestValue() const override {
         return GetValue();
     }
 };
 
 class ImageDataElement : public PageElement {
-    int pageNo;
-    ImageData* id; // owned by *EngineImpl::pages
-    RectI bbox;
+    ImageData* id = nullptr; // owned by *EngineImpl::pages
+    RectI bbox = {};
 
   public:
-    ImageDataElement(int pageNo, ImageData* id, RectI bbox) : pageNo(pageNo), id(id), bbox(bbox) {
+    ImageDataElement(int pageNo, ImageData* id, RectI bbox) : id(id), bbox(bbox) {
+        this->pageNo = pageNo;
     }
 
-    virtual PageElementType GetType() const {
+    PageElementType GetType() const override {
         return PageElementType::Image;
     }
-    virtual int GetPageNo() const {
-        return pageNo;
-    }
-    virtual RectD GetRect() const {
+    RectD GetRect() const override  {
         return bbox.Convert<double>();
     }
-    virtual WCHAR* GetValue() const {
+    WCHAR* GetValue() const override {
         return nullptr;
     }
 
-    virtual RenderedBitmap* GetImage() {
+    RenderedBitmap* GetImage() override {
         HBITMAP hbmp;
         Bitmap* bmp = BitmapFromData(id->data, id->len);
         if (!bmp || bmp->GetHBITMAP((ARGB)Color::White, &hbmp) != Ok) {

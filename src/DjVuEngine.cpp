@@ -66,13 +66,13 @@ class DjVuDestination : public PageDestination {
 
 class DjVuLink : public PageElement {
     DjVuDestination* dest;
-    int pageNo;
     RectD rect;
     WCHAR* value;
 
   public:
     DjVuLink(int pageNo, RectI rect, const char* link, const char* comment)
-        : pageNo(pageNo), rect(rect.Convert<double>()), value(nullptr) {
+        : rect(rect.Convert<double>()), value(nullptr) {
+        this->pageNo = pageNo;
         dest = new DjVuDestination(link);
         if (!str::IsEmpty(comment))
             value = str::conv::FromUtf8(comment);
@@ -85,9 +85,7 @@ class DjVuLink : public PageElement {
     PageElementType GetType() const override {
         return PageElementType::Link;
     }
-    int GetPageNo() const override {
-        return pageNo;
-    }
+
     RectD GetRect() const override {
         return rect;
     }
