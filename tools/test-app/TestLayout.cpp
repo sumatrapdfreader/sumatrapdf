@@ -8,6 +8,11 @@
 #include "wingui/Win32Window.h"
 #include "wingui/ButtonCtrl.h"
 
+// TODO: is in ButtonCtrl.cpp
+bool IsButton(Kind) {
+    return false;
+}
+
 static HINSTANCE hInst;
 static const WCHAR *gWindowTitle = L"Test layout";
 static const WCHAR *WIN_CLASS = L"TabLayutWndCls";

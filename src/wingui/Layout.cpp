@@ -352,7 +352,8 @@ VBox::~VBox() {
 }
 
 Size VBox::Layout(const Constraints bc) {
-    if (this->children.size() == 0) {
+    auto n = this->children.size();
+    if (n == 0) {
         this->totalHeight = 0;
         return bc.Constrain(Size{});
     }
@@ -381,7 +382,6 @@ Size VBox::Layout(const Constraints bc) {
     auto width = Length(0);
     ILayout* previous = nullptr;
 
-    auto n = this->children.size();
     for (size_t i = 0; i < n; i++) {
         auto v = this->children.at(i);
         // Determine what gap needs to be inserted between the elements.
@@ -412,7 +412,7 @@ Size VBox::Layout(const Constraints bc) {
         }
 
         if (extraHeight > 0) {
-            size_t n = this->childrenInfo.size();
+            // size_t n = this->childrenInfo.size();
             for (size_t i = 0; i < n; i++) {
                 auto& v = this->childrenInfo.at(i);
                 if (v.flex > 0) {
@@ -516,7 +516,7 @@ void VBox::SetBounds(Rect bounds) {
             auto v = children[i];
             auto y1 = bounds.Min.Y + scale(dy, i, count);
             auto y2 = bounds.Min.Y + scale(dy, i + 1, count) - gap;
-            setBoundsForChild(i, v, bounds.Min.X, y1, bounds.Max.X, y2);
+            setBoundsForChild((int)i, v, bounds.Min.X, y1, bounds.Max.X, y2);
         }
         return;
     }
@@ -537,11 +537,13 @@ void VBox::SetBounds(Rect bounds) {
                 bounds.Min.Y = bounds.Max.Y - totalHeight;
                 break;
             case MainAxisAlign::SpaceAround:
+            {
                 Length l = (bounds.Dy() - totalHeight);
                 extraGap = scale(l, 1, i64(n) + 1);
                 bounds.Min.Y += extraGap;
                 extraGap += calculateVGap(nullptr, nullptr);
                 break;
+            }
             case MainAxisAlign::SpaceBetween:
                 if (n > 1) {
                     Length l = (bounds.Dy() - totalHeight);
@@ -569,7 +571,7 @@ void VBox::SetBounds(Rect bounds) {
         }
 
         auto dy = childrenInfo[i].size.Height;
-        setBoundsForChild(i, v, bounds.Min.X, posY, bounds.Max.X, posY + dy);
+        setBoundsForChild((int)i, v, bounds.Min.X, posY, bounds.Max.X, posY + dy);
         posY += dy + extraGap;
     }
 }

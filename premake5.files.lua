@@ -965,5 +965,6 @@ function test_app_files()
   files_in_dir("src/wingui", {
     "TabsCtrl.*",
     "Win32Window.*",
+    "Layout.*",
   })
 end
