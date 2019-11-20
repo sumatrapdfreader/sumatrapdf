@@ -42,6 +42,9 @@ EXPORTS
 	fz_rect_from_quad
 	fz_new_outline
 	pdf_parse_file_spec
+	pdf_annot_rect
+	pdf_field_flags
+	pdf_field_label
 
 	fz_keep_bitmap
 	fz_drop_bitmap
