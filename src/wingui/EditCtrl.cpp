@@ -1,9 +1,10 @@
 #include "utils/BaseUtil.h"
-
 #include "utils/WinUtil.h"
-#include "EditCtrl.h"
-
 #include "utils/BitManip.h"
+
+#include "wingui/WinGui.h"
+#include "wingui/EditCtrl.h"
+
 
 constexpr UINT_PTR SUBCLASS_ID = 1;
 

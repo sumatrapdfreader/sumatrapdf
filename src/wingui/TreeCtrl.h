@@ -1,14 +1,8 @@
 /* Copyright 2019 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-struct TreeModel;
-struct TreeItem;
-class TreeCtrl;
-
-typedef std::function<LRESULT(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& discardMsg)> MsgFilter;
 typedef std::function<void(NMTVGETINFOTIPW*)> GetInfoTipCb;
-typedef std::function<LRESULT(NMTREEVIEWW*, bool&)> TreeNotifyCb;
-typedef std::function<void(int xMouseScreen, int yMouseScreen)> ContextMenuCb;
+typedef std::function<LRESULT(NMTREEVIEWW*, bool& didHandle)> TreeNotifyCb;
 
 // function called for every item in the tree.
 // returning false stops iteration

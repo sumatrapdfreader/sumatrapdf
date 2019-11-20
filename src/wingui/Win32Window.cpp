@@ -1,9 +1,11 @@
 #include "utils/BaseUtil.h"
-
 #include "utils/WinUtil.h"
-#include "Win32Window.h"
+
+#include "wingui/WinGui.h"
+#include "wingui/TreeModel.h"
+#include "wingui/TreeCtrl.h"
+#include "wingui/Win32Window.h"
 #include "utils/FileUtil.h"
-#include "EditCtrl.h" // TODO: for MsgFilter
 
 #define WIN_CLASS L"WC_WIN32_WINDOW"
 
@@ -33,14 +35,14 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 
     if (w->preFilter) {
         bool discardMsg = false;
-        LRESULT res = w->preFilter(w, msg, wp, lp, discardMsg);
+        LRESULT res = w->preFilter(hwnd, msg, wp, lp, discardMsg);
         if (discardMsg)
             return res;
     }
 
     if ((WM_COMMAND == msg) && w->onCommand) {
         bool discardMsg = false;
-        LRESULT res = w->onCommand(w, LOWORD(wp), HIWORD(wp), lp, discardMsg);
+        LRESULT res = w->onCommand(hwnd, LOWORD(wp), HIWORD(wp), lp, discardMsg);
         if (discardMsg)
             return res;
         return DefWindowProc(hwnd, msg, wp, lp);
@@ -49,7 +51,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     if ((WM_SIZE == msg) && w->onSize) {
         int dx = LOWORD(lp);
         int dy = HIWORD(lp);
-        w->onSize(w, dx, dy, wp);
+        w->onSize(hwnd, dx, dy, wp);
         return 0;
     }
 

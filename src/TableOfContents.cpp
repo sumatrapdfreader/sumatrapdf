@@ -10,9 +10,11 @@
 #include "utils/UITask.h"
 #include "utils/WinUtil.h"
 #include "utils/SimpleLog.h"
+
+#include "wingui/WinGui.h"
+#include "wingui/TreeModel.h"
 #include "wingui/TreeCtrl.h"
 
-#include "TreeModel.h"
 #include "BaseEngine.h"
 #include "EngineManager.h"
 
@@ -785,7 +787,7 @@ void CreateToc(WindowInfo* win) {
         return res;
     };
     treeCtrl->onGetInfoTip = [treeCtrl](NMTVGETINFOTIP* infoTipInfo) { CustomizeTocInfoTip(treeCtrl, infoTipInfo); };
-    treeCtrl->onContextMenu = [win](int x, int y) { TreeCtrlContextMenu(win, x, y); };
+    treeCtrl->onContextMenu = [win](HWND, int x, int y) { TreeCtrlContextMenu(win, x, y); };
     bool ok = treeCtrl->Create(L"TOC");
     CrashIf(!ok);
     win->tocTreeCtrl = treeCtrl;

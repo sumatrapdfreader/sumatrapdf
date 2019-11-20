@@ -6,11 +6,13 @@
 #include <UIAutomationCoreApi.h>
 #include "utils/ScopedWin.h"
 #include "utils/FileUtil.h"
-#include "wingui/FrameRateWnd.h"
 #include "utils/WinUtil.h"
-#include "wingui/TreeCtrl.h"
 
-#include "TreeModel.h"
+#include "wingui/WinGui.h"
+#include "wingui/TreeModel.h"
+#include "wingui/TreeCtrl.h"
+#include "wingui/FrameRateWnd.h"
+
 #include "BaseEngine.h"
 #include "EngineManager.h"
 #include "Doc.h"
