@@ -33,6 +33,9 @@
     <ClInclude Include="..\src\utils\Scoped.h">
       <Filter>src\utils</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\utils\SimpleLog.h">
+      <Filter>src\utils</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\utils\StrUtil.h">
       <Filter>src\utils</Filter>
     </ClInclude>
@@ -41,6 +44,9 @@
     </ClInclude>
     <ClInclude Include="..\src\utils\WinUtil.h">
       <Filter>src\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\ButtonCtrl.h">
+      <Filter>src\wingui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\wingui\Layout.h">
       <Filter>src\wingui</Filter>
@@ -74,6 +80,9 @@
     <ClCompile Include="..\src\utils\FileUtil.cpp">
       <Filter>src\utils</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\utils\SimpleLog.cpp">
+      <Filter>src\utils</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\utils\StrUtil.cpp">
       <Filter>src\utils</Filter>
     </ClCompile>
@@ -85,6 +94,9 @@
     </ClCompile>
     <ClCompile Include="..\src\utils\WinUtil.cpp">
       <Filter>src\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\ButtonCtrl.cpp">
+      <Filter>src\wingui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\wingui\Layout.cpp">
       <Filter>src\wingui</Filter>

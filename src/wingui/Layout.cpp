@@ -606,6 +606,12 @@ void VBox::setBoundsForChild(int i, ILayout* v, Length posX, Length posY, Length
     }
 }
 
+void VBox::addChild(ILayout* child) {
+    children.Append(child);
+    boxElementInfo el;
+    childrenInfo.Append(el);
+}
+
 // align.go
 
 Kind alignKind = "align";

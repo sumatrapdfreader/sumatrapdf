@@ -956,6 +956,7 @@ function test_app_files()
     "Dpi.*",
     "FileUtil.*",
     "Scoped.h",
+    "SimpleLog.*",
     "StrUtil.*",
     "StrUtil_win.cpp",
     "WinDynCalls.*",
@@ -966,5 +967,6 @@ function test_app_files()
     "TabsCtrl.*",
     "Win32Window.*",
     "Layout.*",
+    "ButtonCtrl.*",
   })
 end

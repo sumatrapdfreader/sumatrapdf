@@ -6,9 +6,9 @@
 #include "wingui/TabsCtrl.h"
 
 static HINSTANCE hInst;
-static const WCHAR *gWindowTitle = L"Test application";
-static const WCHAR *WIN_CLASS = L"TabTestWndCls";
-static TabsCtrl *g_tabsCtrl = nullptr;
+static const WCHAR* gWindowTitle = L"Test application";
+static const WCHAR* WIN_CLASS = L"TabTestWndCls";
+static TabsCtrl* g_tabsCtrl = nullptr;
 static HWND g_hwnd = nullptr;
 
 #define COL_GRAY RGB(0xdd, 0xdd, 0xdd)
@@ -38,7 +38,7 @@ static void OnTabSelected(TabsCtrl* tabsCtrl, std::shared_ptr<TabsCtrlState> cur
 static void OnTabClosed(TabsCtrl* tabsCtrl, std::shared_ptr<TabsCtrlState> currState, int tabIdx) {
     CrashIf(g_tabsCtrl != tabsCtrl);
     auto pos = currState->tabs.begin() + tabIdx;
-    currState->tabs.erase(pos, pos+1);
+    currState->tabs.erase(pos, pos + 1);
     if (currState->selectedItem == tabIdx) {
         if (currState->selectedItem > 0) {
             currState->selectedItem--;
@@ -48,50 +48,40 @@ static void OnTabClosed(TabsCtrl* tabsCtrl, std::shared_ptr<TabsCtrlState> currS
     UpdateTabsSize();
 }
 
-static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
-{
-    switch (msg)
-    {
-    case WM_CREATE:
-    {
-    }
-    break;
+static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    switch (msg) {
+        case WM_CREATE:
+        break;
 
-    case WM_COMMAND:
-    {
-        int wmId = LOWORD(wp);
-        switch (wmId)
-        {
-        case IDM_EXIT:
-            DestroyWindow(hwnd);
+        case WM_COMMAND: {
+            int wmId = LOWORD(wp);
+            switch (wmId) {
+                case IDM_EXIT:
+                    DestroyWindow(hwnd);
+                    break;
+                default:
+                    return DefWindowProc(hwnd, msg, wp, lp);
+            }
+        } break;
+
+        case WM_PAINT: {
+            PAINTSTRUCT ps;
+            HDC hdc = BeginPaint(hwnd, &ps);
+            Draw(hwnd, hdc);
+            EndPaint(hwnd, &ps);
+
+            // ValidateRect(hwnd, NULL);
+        } break;
+        case WM_DESTROY:
+            PostQuitMessage(0);
             break;
         default:
             return DefWindowProc(hwnd, msg, wp, lp);
-        }
-    }
-    break;
-
-    case WM_PAINT:
-    {
-        PAINTSTRUCT ps;
-        HDC hdc = BeginPaint(hwnd, &ps);
-        Draw(hwnd, hdc);
-        EndPaint(hwnd, &ps);
-
-        //ValidateRect(hwnd, NULL);
-    }
-    break;
-    case WM_DESTROY:
-        PostQuitMessage(0);
-        break;
-    default:
-        return DefWindowProc(hwnd, msg, wp, lp);
     }
     return 0;
 }
 
-static ATOM RegisterWinClass(HINSTANCE hInstance)
-{
+static ATOM RegisterWinClass(HINSTANCE hInstance) {
     WNDCLASSEXW wcex;
 
     wcex.cbSize = sizeof(WNDCLASSEX);
@@ -110,17 +100,16 @@ static ATOM RegisterWinClass(HINSTANCE hInstance)
     return RegisterClassExW(&wcex);
 }
 
-static BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
-{
+static BOOL InitInstance(HINSTANCE hInstance, int nCmdShow) {
     hInst = hInstance;
-    const WCHAR *cls = WIN_CLASS;
+    const WCHAR* cls = WIN_CLASS;
 
     DWORD dwExStyle = 0;
     DWORD dwStyle = WS_OVERLAPPEDWINDOW;
     int dx = 640;
     int dy = 480;
-    HWND hwnd = CreateWindowExW(dwExStyle, cls, gWindowTitle, dwStyle,
-        CW_USEDEFAULT, CW_USEDEFAULT, dx, dy, nullptr, nullptr, hInstance, nullptr);
+    HWND hwnd = CreateWindowExW(dwExStyle, cls, gWindowTitle, dwStyle, CW_USEDEFAULT, CW_USEDEFAULT, dx, dy, nullptr,
+                                nullptr, hInstance, nullptr);
 
     if (!hwnd)
         return FALSE;
@@ -140,14 +129,11 @@ static BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     return TRUE;
 }
 
-static int RunMessageLoop()
-{
+static int RunMessageLoop() {
     MSG msg;
     HACCEL accelTable = LoadAccelerators(hInst, MAKEINTRESOURCE(IDC_TESTWIN));
-    while (GetMessage(&msg, nullptr, 0, 0))
-    {
-        if (!TranslateAccelerator(msg.hwnd, accelTable, &msg))
-        {
+    while (GetMessage(&msg, nullptr, 0, 0)) {
+        if (!TranslateAccelerator(msg.hwnd, accelTable, &msg)) {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }

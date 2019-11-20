@@ -4,7 +4,7 @@ class ButtonCtrl : public ILayout {
     HWND parent = 0;
     RECT initialPos = {0, 0, 0, 0};
     int menuId = 0;
-    DWORD dwStyle = WS_CHILD | WS_TABSTOP | BS_DEFPUSHBUTTON;
+    DWORD dwStyle = WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_DEFPUSHBUTTON;
     DWORD dwExStyle = 0;
 
     HWND hwnd = nullptr;

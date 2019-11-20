@@ -1,9 +1,9 @@
 #include "utils/BaseUtil.h"
-
 #include "utils/WinUtil.h"
 #include "utils/Dpi.h"
-#include "Layout.h"
-#include "ButtonCtrl.h"
+
+#include "wingui/Layout.h"
+#include "wingui/ButtonCtrl.h"
 
 // TODO: move to utilities or move to Win32Window, cache DPI info
 // on creation and handle WM_DPICHANGED
@@ -75,7 +75,7 @@ void ButtonCtrl::SetPos(RECT* r) {
 // TODO: cache
 SIZE ButtonCtrl::GetIdealSize() {
     // adjust to real size and position to the right
-    SIZE s;
+    SIZE s{};
     Button_GetIdealSize(this->hwnd, &s);
     // add padding
     float xPadding = 8 * 2;

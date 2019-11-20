@@ -172,6 +172,8 @@ struct VBox : public ILayout {
     void SetBounds(Rect) override;
 
     void setBoundsForChild(int i, ILayout* v, Length posX, Length posY, Length posX2, Length posY2);
+
+    void addChild(ILayout*);
 };
 
 // hbox.go

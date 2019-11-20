@@ -516,9 +516,11 @@
     <ClInclude Include="..\src\utils\Dpi.h" />
     <ClInclude Include="..\src\utils\FileUtil.h" />
     <ClInclude Include="..\src\utils\Scoped.h" />
+    <ClInclude Include="..\src\utils\SimpleLog.h" />
     <ClInclude Include="..\src\utils\StrUtil.h" />
     <ClInclude Include="..\src\utils\WinDynCalls.h" />
     <ClInclude Include="..\src\utils\WinUtil.h" />
+    <ClInclude Include="..\src\wingui\ButtonCtrl.h" />
     <ClInclude Include="..\src\wingui\Layout.h" />
     <ClInclude Include="..\src\wingui\TabsCtrl.h" />
     <ClInclude Include="..\src\wingui\Win32Window.h" />
@@ -531,10 +533,12 @@
     <ClCompile Include="..\src\utils\DebugLog.cpp" />
     <ClCompile Include="..\src\utils\Dpi.cpp" />
     <ClCompile Include="..\src\utils\FileUtil.cpp" />
+    <ClCompile Include="..\src\utils\SimpleLog.cpp" />
     <ClCompile Include="..\src\utils\StrUtil.cpp" />
     <ClCompile Include="..\src\utils\StrUtil_win.cpp" />
     <ClCompile Include="..\src\utils\WinDynCalls.cpp" />
     <ClCompile Include="..\src\utils\WinUtil.cpp" />
+    <ClCompile Include="..\src\wingui\ButtonCtrl.cpp" />
     <ClCompile Include="..\src\wingui\Layout.cpp" />
     <ClCompile Include="..\src\wingui\TabsCtrl.cpp" />
     <ClCompile Include="..\src\wingui\Win32Window.cpp" />
