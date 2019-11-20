@@ -203,8 +203,8 @@ bool IsHBox(Kind);
 bool IsHBox(ILayout*);
 
 struct HBox : public ILayout {
-	MainAxisAlign alignMain;
-	CrossAxisAlign alignCross;
+    MainAxisAlign alignMain;
+    CrossAxisAlign alignCross;
     Vec<ILayout*> children;
     Vec<boxElementInfo> childrenInfo;
     Length totalWidth;
