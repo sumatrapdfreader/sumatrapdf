@@ -67,10 +67,10 @@ Constraints Loose(const Size size);
 Constraints Tight(const Size size);
 Constraints TightHeight(Length height);
 
+// identity of an object is an address of a unique, global string
+// string is good for debugging
 // yes, C++ is really that lame and we have to implement
 // dynamic typing manually
-// identity of an object is an address
-// that it's a string is good for debugging
 typedef const char* Kind;
 
 struct ILayout {
@@ -82,6 +82,8 @@ struct ILayout {
     virtual Length MinIntrinsicWidth(Length height) = 0;
     virtual void SetBounds(Rect) = 0;
 };
+
+bool IsLayoutOfKind(ILayout*, Kind);
 
 Length calculateVGap(ILayout* previous, ILayout* current);
 Length calculateHGap(ILayout* previous, ILayout* current);
@@ -118,6 +120,23 @@ struct Padding : public ILayout {
 
 bool IsPadding(Kind);
 bool IsPadding(ILayout*);
+
+// expand.go
+
+struct Expand : public ILayout {
+    ILayout* child;
+    int factor;
+
+    // ILayout
+    ~Expand() override;
+    Size Layout(const Constraints bc) override;
+    Length MinIntrinsicHeight(Length width) override;
+    Length MinIntrinsicWidth(Length height) override;
+    void SetBounds(Rect) override;
+};
+
+bool IsExpand(Kind);
+bool IsExpand(ILayout*);
 
 // vbox.go
 
@@ -179,6 +198,8 @@ struct VBox : public ILayout {
 // hbox.go
 struct HBox {};
 
+// align.go
+
 // defined as i64 but values are i32
 typedef i64 Alignment;
 
@@ -206,11 +227,18 @@ struct Align : public ILayout {
 bool IsAlign(Kind);
 bool IsAlign(ILayout*);
 
+// declaring here because used in Layout.cpp
+// lives in ButtonCtrl.cpp
+bool IsButton(Kind);
+bool IsButton(ILayout*);
+
+// declaring here because used in Layout.cpp
+// lives in ButtonCtrl.cpp
+bool IsCheckbox(Kind);
+bool IsCheckbox(ILayout*);
+
 bool IsExpand(Kind);
 bool IsExpand(ILayout*);
 
 bool IsLabeL(Kind);
 bool IsLabel(ILayout*);
-
-bool IsCheckbox(Kind);
-bool IsCheckbox(ILayout*);

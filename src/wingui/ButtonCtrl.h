@@ -23,15 +23,30 @@ class ButtonCtrl : public ILayout {
 
     // ILayout
     Size Layout(const Constraints bc) override;
-    i32 MinIntrinsicHeight(i32) override;
-    i32 MinIntrinsicWidth(i32) override;
+    Length MinIntrinsicHeight(Length) override;
+    Length MinIntrinsicWidth(Length) override;
     void SetBounds(const Rect bounds) override;
 };
 
-bool IsButtonCtrl(Kind);
+bool IsButton(Kind);
+bool IsButton(ILayout*);
 
-class CheckboxCtrl {
+typedef std::function<void(bool)> CheckboxChangeCb;
+
+class CheckboxCtrl : public ILayout {
   public:
+    // creation parameters. must be set before Create() call
+    HWND parent = 0;
+    RECT initialPos = {0, 0, 0, 0};
+    int menuId = 0;
+    DWORD dwStyle = WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX;
+    DWORD dwExStyle = 0;
+
+    // called when it's checked / unchecked
+    // TODO: implement me
+    CheckboxChangeCb OnChange = nullptr;
+    HWND hwnd = nullptr;
+
     CheckboxCtrl(HWND parent, int menuId, RECT* initialPos);
     ~CheckboxCtrl();
 
@@ -47,12 +62,12 @@ class CheckboxCtrl {
     void SetIsChecked(bool isChecked);
     bool IsChecked() const;
 
-    // creation parameters. must be set before Create() call
-    HWND parent = 0;
-    RECT initialPos = {0, 0, 0, 0};
-    int menuId = 0;
-    DWORD dwStyle = WS_CHILD | WS_TABSTOP | BS_AUTOCHECKBOX;
-    DWORD dwExStyle = 0;
-
-    HWND hwnd = nullptr;
+    // ILayout
+    Size Layout(const Constraints bc) override;
+    Length MinIntrinsicHeight(Length) override;
+    Length MinIntrinsicWidth(Length) override;
+    void SetBounds(const Rect bounds) override;
 };
+
+bool IsCheckbox(Kind);
+bool IsCheckbox(ILayout*);

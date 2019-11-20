@@ -230,14 +230,14 @@ Constraints Constraints::TightenWidth(Length width) const {
     };
 }
 
-// padding.go
-
 bool IsLayoutOfKind(ILayout* l, Kind kind) {
     if (l == nullptr) {
         return false;
     }
     return l->kind == kind;
 }
+
+// padding.go
 
 Kind paddingKind = "padding";
 bool IsPadding(Kind kind) {
@@ -283,8 +283,6 @@ void Padding::SetBounds(Rect bounds) {
 Length DIP = 1;
 
 // layout.go
-extern bool IsButton(Kind);
-
 Length calculateHGap(ILayout* previous, ILayout* current) {
     // The vertical gap between most controls is 11 relative pixels.  However,
     // there are different rules for between a label and its associated control,
@@ -536,8 +534,7 @@ void VBox::SetBounds(Rect bounds) {
             case MainAxisAlign::MainEnd:
                 bounds.Min.Y = bounds.Max.Y - totalHeight;
                 break;
-            case MainAxisAlign::SpaceAround:
-            {
+            case MainAxisAlign::SpaceAround: {
                 Length l = (bounds.Dy() - totalHeight);
                 extraGap = scale(l, 1, i64(n) + 1);
                 bounds.Min.Y += extraGap;
@@ -674,24 +671,42 @@ void Align::SetBounds(Rect bounds) {
     this->Child->SetBounds(b);
 }
 
-// TODO: implement me
-bool IsExpand(Kind) {
-    return false;
+// expand.go
+
+Kind expandKind = "expand";
+
+bool IsExpand(Kind kind) {
+    return kind == expandKind;
 }
-bool IsExpand(ILayout*) {
-    return false;
+bool IsExpand(ILayout* l) {
+    return IsLayoutOfKind(l, expandKind);
 }
 
-bool IsLabeL(Kind) {
-    return false;
-}
-bool IsLabel(ILayout*) {
-    return false;
+Expand::~Expand() {
 }
 
-bool IsCheckbox(Kind) {
-    return false;
+Size Expand::Layout(const Constraints bc) {
+    return child->Layout(bc);
 }
-bool IsCheckbox(ILayout*) {
-    return false;
+
+Length Expand::MinIntrinsicHeight(Length width) {
+    return child->MinIntrinsicHeight(width);
+}
+
+Length Expand::MinIntrinsicWidth(Length height) {
+    return child->MinIntrinsicWidth(height);
+}
+
+void Expand::SetBounds(Rect bounds) {
+    return child->SetBounds(bounds);
+}
+
+Kind labelKind = "label";
+
+bool IsLabeL(Kind kind) {
+    return kind == labelKind;
+}
+
+bool IsLabel(ILayout* l) {
+    return IsLayoutOfKind(l, labelKind);
 }

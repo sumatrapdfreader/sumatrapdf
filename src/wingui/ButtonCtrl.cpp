@@ -22,12 +22,14 @@ static void hwndDpiAdjust(HWND hwnd, float* x, float* y) {
     }
 }
 
-// a single global instance. we use address as identity
 Kind buttonKind = "button";
 
 bool IsButton(Kind kind) {
-    // comparing an address
     return kind == buttonKind;
+}
+
+bool IsButton(ILayout* l) {
+    return IsLayoutOfKind(l, buttonKind);
 }
 
 ButtonCtrl::ButtonCtrl(HWND parent, int menuId, RECT* initialPosition) {
@@ -117,6 +119,16 @@ i32 ButtonCtrl::MinIntrinsicWidth(i32) {
 void ButtonCtrl::SetBounds(const Rect bounds) {
     auto r = RectToRECT(bounds);
     ::MoveWindow(this->hwnd, &r);
+}
+
+Kind checkboxKind = "checkbox";
+
+bool IsCheckbox(Kind kind) {
+    return kind == checkboxKind;
+}
+
+bool IsCheckbox(ILayout* l) {
+    return IsLayoutOfKind(l, checkboxKind);
 }
 
 CheckboxCtrl::CheckboxCtrl(HWND parent, int menuId, RECT* initialPosition) {
