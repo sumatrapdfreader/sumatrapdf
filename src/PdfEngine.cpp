@@ -2185,7 +2185,6 @@ PageElement* PdfEngineImpl::GetElementAtPos(int pageNo, PointD pt) {
     ScopedCritSec scope(&ctxAccess); // TODO: probably not needed
     for (auto* annot : pageInfo->pageAnnots) {
         fz_rect rect = pdf_annot_rect(ctx, annot);
-        // rect = fz_transform_rect(rect, page->ctm); // TODO: hopefully this is not necessary
         if (!fz_is_pt_in_rect(rect, p)) {
             continue;
         }
@@ -2258,38 +2257,6 @@ void PdfEngineImpl::LinkifyPageText(PdfPageInfo* pageInfo) {
     free(coords);
 }
 
-/*
-enum pdf_annot_type
-{
-        PDF_ANNOT_TEXT,
-        PDF_ANNOT_LINK,
-        PDF_ANNOT_FREE_TEXT,
-        PDF_ANNOT_LINE,
-        PDF_ANNOT_SQUARE,
-        PDF_ANNOT_CIRCLE,
-        PDF_ANNOT_POLYGON,
-        PDF_ANNOT_POLY_LINE,
-        PDF_ANNOT_HIGHLIGHT,
-        PDF_ANNOT_UNDERLINE,
-        PDF_ANNOT_SQUIGGLY,
-        PDF_ANNOT_STRIKE_OUT,
-        PDF_ANNOT_REDACT,
-        PDF_ANNOT_STAMP,
-        PDF_ANNOT_CARET,
-        PDF_ANNOT_INK,
-        PDF_ANNOT_POPUP,
-        PDF_ANNOT_FILE_ATTACHMENT,
-        PDF_ANNOT_SOUND,
-        PDF_ANNOT_MOVIE,
-        PDF_ANNOT_WIDGET,
-        PDF_ANNOT_SCREEN,
-        PDF_ANNOT_PRINTER_MARK,
-        PDF_ANNOT_TRAP_NET,
-        PDF_ANNOT_WATERMARK,
-        PDF_ANNOT_3D,
-        PDF_ANNOT_UNKNOWN = -1
-};
-*/
 void PdfEngineImpl::ProcessPageAnnotations(PdfPageInfo* pageInfo) {
     Vec<pdf_annot*>& annots = pageInfo->pageAnnots;
 
@@ -2304,6 +2271,8 @@ void PdfEngineImpl::ProcessPageAnnotations(PdfPageInfo* pageInfo) {
 
         if (PDF_ANNOT_FILE_ATTACHMENT == tp) {
             dbglogf("found file attachment annotation\n");
+            // TODO: write a program for mass processing of files to find pdfs
+            // with wanted features for testing
 #if 0
             pdf_obj* file = pdf_dict_gets(annot->obj, "FS");
             pdf_obj* embedded = pdf_dict_getsa(pdf_dict_gets(file, "EF"), "DOS", "F");
