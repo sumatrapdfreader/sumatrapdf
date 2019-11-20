@@ -9,9 +9,11 @@
 #include "utils/GdiPlusUtil.h"
 #include "utils/UITask.h"
 #include "utils/WinUtil.h"
+
+#include "wingui/WinGui.h"
+#include "wingui/TreeModel.h"
 #include "wingui/TreeCtrl.h"
 
-#include "TreeModel.h"
 #include "BaseEngine.h"
 #include "EngineManager.h"
 #include "SettingsStructs.h"

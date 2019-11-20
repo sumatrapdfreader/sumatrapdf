@@ -3,9 +3,11 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/SimpleLog.h"
-#include "TreeModel.h"
-#include "TreeCtrl.h"
 #include "utils/WinUtil.h"
+
+#include "wingui/WinGui.h"
+#include "wingui/TreeModel.h"
+#include "wingui/TreeCtrl.h"
 
 constexpr UINT_PTR SUBCLASS_ID = 1;
 
@@ -51,7 +53,7 @@ static LRESULT CALLBACK TreeParentProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
         if (w->onContextMenu) {
             int x = GET_X_LPARAM(lp);
             int y = GET_Y_LPARAM(lp);
-            w->onContextMenu(x, y);
+            w->onContextMenu(hwnd, x, y);
             return 0;
         }
     }
