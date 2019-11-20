@@ -487,6 +487,7 @@
     <ClInclude Include="..\src\wingui\EditCtrl.h" />
     <ClInclude Include="..\src\wingui\FrameRateWnd.h" />
     <ClInclude Include="..\src\wingui\LabelWithCloseWnd.h" />
+    <ClInclude Include="..\src\wingui\Layout.h" />
     <ClInclude Include="..\src\wingui\SplitterWnd.h" />
     <ClInclude Include="..\src\wingui\TreeCtrl.h" />
     <ClInclude Include="..\src\wingui\TreeModel.h" />
@@ -539,6 +540,7 @@
     <ClCompile Include="..\src\wingui\EditCtrl.cpp" />
     <ClCompile Include="..\src\wingui\FrameRateWnd.cpp" />
     <ClCompile Include="..\src\wingui\LabelWithCloseWnd.cpp" />
+    <ClCompile Include="..\src\wingui\Layout.cpp" />
     <ClCompile Include="..\src\wingui\SplitterWnd.cpp" />
     <ClCompile Include="..\src\wingui\TreeCtrl.cpp" />
     <ClCompile Include="..\src\wingui\Win32Window.cpp" />

@@ -2,6 +2,7 @@
 
 #include "utils/WinUtil.h"
 #include "utils/Dpi.h"
+#include "Layout.h"
 #include "ButtonCtrl.h"
 
 // TODO: move to utilities or move to Win32Window, cache DPI info
@@ -21,12 +22,17 @@ static void hwndDpiAdjust(HWND hwnd, float* x, float* y) {
     }
 }
 
-// caller must free() the result
-WCHAR* ButtonCtrl::GetTextW() {
-    return win::GetText(this->hwnd);
+// a single global instance. we use address as identity
+Kind buttonKind = "button";
+
+bool IsButton(Kind kind)
+{
+  // comparing an address
+  return kind == buttonKind;
 }
 
 ButtonCtrl::ButtonCtrl(HWND parent, int menuId, RECT* initialPosition) {
+    this->kind = buttonKind;
     this->parent = parent;
     this->menuId = menuId;
     if (initialPosition) {
@@ -58,10 +64,16 @@ bool ButtonCtrl::Create(const WCHAR* s) {
 ButtonCtrl::~ButtonCtrl() {
 }
 
+// caller must free() the result
+WCHAR* ButtonCtrl::GetTextW() {
+    return win::GetText(this->hwnd);
+}
+
 void ButtonCtrl::SetPos(RECT* r) {
     MoveWindow(this->hwnd, r);
 }
 
+// TODO: cache
 SIZE ButtonCtrl::GetIdealSize() {
     // adjust to real size and position to the right
     SIZE s;
@@ -87,9 +99,29 @@ void ButtonCtrl::SetFont(HFONT f) {
     SetWindowFont(this->hwnd, f, TRUE);
 }
 
-// caller must free() the result
-WCHAR* CheckboxCtrl::GetTextW() {
-    return win::GetText(this->hwnd);
+Size ButtonCtrl::Layout(const Constraints bc)
+{
+    i32 width = this->MinIntrinsicWidth(0);
+    i32 height = this->MinIntrinsicHeight(0);
+    return bc.Constrain(Size{width, height});
+}
+
+i32 ButtonCtrl::MinIntrinsicHeight(i32)
+{
+    SIZE s = this->GetIdealSize();
+    return (i32)s.cy;
+}
+
+i32 ButtonCtrl::MinIntrinsicWidth(i32)
+{
+    SIZE s = this->GetIdealSize();
+    return (i32)s.cx;
+}
+
+void ButtonCtrl::SetBounds(const Rect bounds)
+{
+    auto r = RectToRECT(bounds);
+    ::MoveWindow(this->hwnd, &r);
 }
 
 CheckboxCtrl::CheckboxCtrl(HWND parent, int menuId, RECT* initialPosition) {
@@ -122,6 +154,11 @@ bool CheckboxCtrl::Create(const WCHAR* s) {
 }
 
 CheckboxCtrl::~CheckboxCtrl() {
+}
+
+// caller must free() the result
+WCHAR* CheckboxCtrl::GetTextW() {
+    return win::GetText(this->hwnd);
 }
 
 void CheckboxCtrl::SetPos(RECT* r) {

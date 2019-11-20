@@ -15,11 +15,17 @@ struct Point
   i32 y;
 };
 
-struct Rectangle
+// can't call it Rectangle because conflicts with GDI+ Rectangle function
+struct Rect
 {
   Point min;
   Point max;
+
+  i32 Width() const;
+  i32 Height() const;
 };
+
+RECT RectToRECT(const Rect);
 
 i32 clamp(i32 v, i32 vmin, i32 vmax);
 i32 scale(i32 v, i64 num, i64 den);
@@ -63,28 +69,18 @@ Constraints TightHeight(i32 height);
 // dynamic typing manually
 // identity of an object is an address
 // that it's a string is good for debugging
-typedef const char *Kind;
+typedef const char* Kind;
 
 struct ILayout
 {
   Kind kind;
+
   virtual ~ILayout(){};
   virtual Size Layout(const Constraints bc) = 0;
   virtual i32 MinIntrinsicHeight(i32) = 0;
   virtual i32 MinIntrinsicWidth(i32) = 0;
-  virtual void SetBounds(const Rectangle) = 0;
+  virtual void SetBounds(const Rect) = 0;
 };
-
-struct Button : public ILayout
-{
-  Button();
-  ~Button() override;
-  Size Layout(const Constraints bc) override;
-  i32 MinIntrinsicHeight(i32) override;
-  i32 MinIntrinsicWidth(i32) override;
-  void SetBounds(const Rectangle bounds) override;
-};
-bool IsButton(Kind);
 
 // defined as i64 but values are i32
 typedef i64 Alignment;
@@ -108,7 +104,7 @@ struct Align : public ILayout
   Size Layout(const Constraints bc) override;
   int MinIntrinsicHeight(int) override;
   int MinIntrinsicWidth(int) override;
-  void SetBounds(const Rectangle bounds) override;
+  void SetBounds(const Rect) override;
 };
 
 bool IsAlign(Kind);

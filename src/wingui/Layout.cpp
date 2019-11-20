@@ -1,3 +1,5 @@
+#include "utils/BaseUtil.h"
+
 #include <cstdio>     // std::printf
 #include <limits>     // std::limits
 #include <cmath>      // std::is_nan
@@ -6,6 +8,22 @@
 #include <functional> // std::function
 
 #include "Layout.h"
+
+i32 Rect::Width() const {
+  return max.x - min.x;
+}
+i32 Rect::Height() const {
+  return max.y - min.y;
+}
+
+RECT RectToRECT(const Rect r) {
+  LONG left = r.min.x;
+  LONG top = r.min.y;
+  LONG right = r.max.x;
+  LONG bottom = r.max.y;
+  RECT res{left, top, right, bottom};
+  return res;
+}
 
 i32 clamp(i32 v, i32 vmin, i32 vmax)
 {
@@ -223,7 +241,7 @@ Constraints Constraints::Tighten(Size size) const
       Size{maxw, maxh},
   };
 }
-
+ 
 // TODO: goey modifies in-place
 Constraints Constraints::TightenHeight(i32 height) const
 {
@@ -244,48 +262,6 @@ Constraints Constraints::TightenWidth(i32 width) const
       Size{minw, this->min.height},
       Size{maxw, this->max.height},
   };
-}
-
-// a single global instance. we use address as identity
-const char *buttonKind = "button";
-
-bool IsButton(Kind kind)
-{
-  // comparing an address
-  return kind == buttonKind;
-}
-
-Button::Button()
-{
-  kind = buttonKind;
-}
-
-Button::~Button()
-{
-}
-
-Size Button::Layout(const Constraints bc)
-{
-  i32 width = this->MinIntrinsicWidth(0);
-  i32 height = this->MinIntrinsicHeight(0);
-  return bc.Constrain(Size{width, height});
-}
-
-i32 Button::MinIntrinsicHeight(i32)
-{
-  // TODO: measure
-  return 23;
-}
-
-i32 Button::MinIntrinsicWidth(i32)
-{
-  // TODO: measure
-  return 50;
-}
-
-void Button::SetBounds(const Rectangle)
-{
-  // TODO: set bounds
 }
 
 const char *alignKind = "align";
@@ -341,8 +317,7 @@ i32 Align::MinIntrinsicWidth(i32 height)
   return width;
 }
 
-void Align::SetBounds(const Rectangle bounds)
-{
+void Align::SetBounds(const Rect bounds) {
   i32 bminx = bounds.min.x;
   i32 bmaxx = bounds.max.x;
   i32 cw = this->childSize.width;
@@ -355,7 +330,7 @@ void Align::SetBounds(const Rectangle bounds)
   i32 bmaxy = bounds.max.y;
   i32 y = scale(bminy, this->VAlign - AlignEnd, twm) +
           scale(bmaxy - ch, this->VAlign - AlignStart, tw);
-  Rectangle b{
+  Rect b{
       Point{x, y},
       Point{x + cw, y + ch}};
   this->Child->SetBounds(b);
