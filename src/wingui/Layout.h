@@ -188,15 +188,37 @@ struct VBox : public ILayout {
     Size Layout(const Constraints bc) override;
     Length MinIntrinsicHeight(Length width) override;
     Length MinIntrinsicWidth(Length height) override;
-    void SetBounds(Rect) override;
+    void SetBounds(Rect bounds) override;
 
     void setBoundsForChild(int i, ILayout* v, Length posX, Length posY, Length posX2, Length posY2);
 
-    void addChild(ILayout*);
+    // TODO: alternatively, ensure childrenInfo has the same
+    // size as children in Layout()
+    void addChild(ILayout* child);
 };
 
 // hbox.go
-struct HBox {};
+
+bool IsHBox(Kind);
+bool IsHBox(ILayout*);
+
+struct HBox : public ILayout {
+	MainAxisAlign alignMain;
+	CrossAxisAlign alignCross;
+    Vec<ILayout*> children;
+    Vec<boxElementInfo> childrenInfo;
+    Length totalWidth;
+    int totalFlex;
+
+    ~HBox() override;
+    Size Layout(const Constraints bc) override;
+    Length MinIntrinsicHeight(Length width) override;
+    Length MinIntrinsicWidth(Length height) override;
+    void SetBounds(Rect bounds) override;
+
+    void setBoundsForChild(int i, ILayout* v, Length posX, Length posY, Length posX2, Length posY2);
+    void addChild(ILayout* child);
+};
 
 // align.go
 

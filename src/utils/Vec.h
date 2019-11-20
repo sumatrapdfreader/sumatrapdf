@@ -137,6 +137,11 @@ class Vec {
         memset(buf, 0, sizeof(buf));
     }
 
+    void SetSize(size_t newSize) {
+        Reset();
+        MakeSpaceAt(0, newSize);
+    }
+
     T& at(size_t idx) const {
         CrashIf(idx >= len);
         return els[idx];

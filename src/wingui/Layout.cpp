@@ -350,11 +350,13 @@ VBox::~VBox() {
 }
 
 Size VBox::Layout(const Constraints bc) {
-    auto n = this->children.size();
+    auto n = children.size();
     if (n == 0) {
-        this->totalHeight = 0;
+        totalHeight = 0;
         return bc.Constrain(Size{});
     }
+    childrenInfo.SetSize(n);
+
     // Determine the constraints for layout of child elements.
     auto cbc = bc;
 
@@ -603,11 +605,290 @@ void VBox::setBoundsForChild(int i, ILayout* v, Length posX, Length posY, Length
     }
 }
 
+// TODO: remove
 void VBox::addChild(ILayout* child) {
     children.Append(child);
-    boxElementInfo el;
-    childrenInfo.Append(el);
 }
+
+// hbox.go
+Kind hboxKind = "hbox";
+
+bool IsHBox(Kind kind) {
+    return kind == hboxKind;
+}
+
+bool IsHBox(ILayout* l) {
+    return IsLayoutOfKind(l, hboxKind);
+}
+
+HBox::~HBox() {
+}
+
+Size HBox::Layout(const Constraints bc) {
+    auto n = children.size();
+    if (n == 0) {
+        totalWidth = 0;
+        return bc.Constrain(Size{});
+    }
+
+    childrenInfo.SetSize(n);
+
+	// Determine the constraints for layout of child elements.
+	auto cbc = bc;
+	if (alignMain == MainAxisAlign::Homogeneous) {
+		auto count = i64(n);
+		auto gap = calculateHGap(nullptr, nullptr);
+        auto maxw = cbc.Max.Width;
+		cbc.TightenWidth(scale(maxw, 1, count) - scale(gap, count-1, count));
+	} else {
+		cbc.Min.Width = 0;
+		cbc.Max.Width = Inf;
+	}
+
+	if (alignCross == CrossAxisAlign::Stretch) {
+		if (cbc.HasBoundedHeight()) {
+			cbc = cbc.TightenHeight(cbc.Max.Height);
+		} else {
+			cbc = cbc.TightenHeight(MinIntrinsicHeight(Inf));
+		}
+	} else {
+		cbc = cbc.LoosenHeight();
+	}
+	auto width = Length(0);
+	auto height = Length(0);
+	ILayout* previous = nullptr;
+
+    for (size_t i = 0; i < n; i++) {
+        ILayout* v = children.at(i);
+		// Determine what gap needs to be inserted between the elements.
+		if (i > 0) {
+			if (IsPacked(alignMain)) {
+				width += calculateHGap(previous, v);
+			} else {
+				width += calculateHGap(nullptr, nullptr);
+			}
+		}
+		previous = v;
+
+		// Perform layout of the element.  Track impact on width and height.
+		auto size = v->Layout(cbc);
+		childrenInfo[i].size = size;
+		width += size.Width;
+		height = std::max(height, size.Height);
+    }
+	totalWidth = width;
+
+	// Need to adjust height to any widgets that have flex
+	if (totalFlex > 0) {
+		auto extraWidth = Length(0);
+		if (bc.HasBoundedWidth() && bc.Max.Width > totalWidth) {
+			extraWidth = bc.Max.Width - totalWidth;
+		} else if (bc.Min.Width > totalWidth) {
+			extraWidth = bc.Min.Width - totalWidth;
+		}
+
+		if (extraWidth > 0) {
+            for (size_t i = 0; i < n; i++) {
+                auto& v = childrenInfo[i];
+				if (v.flex > 0) {
+					auto oldWidth = v.size.Width;
+                    auto nw = v.size.Width + extraWidth;
+					auto fbc = cbc.TightenWidth(scale(nw, v.flex, totalFlex));
+					auto size = children[i]->Layout(fbc);
+					childrenInfo[i].size = size;
+					totalWidth += size.Width - oldWidth;
+				}
+            }
+		}
+	}
+	if (alignCross == CrossAxisAlign::Stretch) {
+		return bc.Constrain(Size{width, cbc.Min.Height});
+	}
+	return bc.Constrain(Size{width, height});
+}
+
+Length HBox::MinIntrinsicHeight(Length width) {
+    auto n = children.size();
+    if (n == 0) {
+		return 0;
+	}
+
+	if (alignMain == MainAxisAlign::Homogeneous) {
+		width = guardInf(width, scale(width, 1, i64(n)));
+		auto size = children[0]->MinIntrinsicHeight(width);
+		for (size_t i = 1; i < n; i++) {
+            auto v = children[i];
+			size = std::max(size, v->MinIntrinsicHeight(width));
+		}
+                return size;
+	}
+
+	auto size = children[0]->MinIntrinsicHeight(Inf);
+    for (size_t i = 1; i < n; i++) {
+        auto v = children[i];
+		size = std::max(size, v->MinIntrinsicHeight(Inf));
+	}
+	return size;
+}
+
+Length HBox::MinIntrinsicWidth(Length height) {
+    auto n = children.size();
+    if (n == 0) {
+		return 0;
+	}
+
+	auto size = children[0]->MinIntrinsicWidth(height);
+	if (IsPacked(alignMain)) {
+		auto previous = children[0];
+        for (size_t i = 1; i < n; i++) {
+            auto v = children[i];
+			// Add the preferred gap between this pair of widgets
+			size += calculateHGap(previous, v);
+			previous = v;
+			// Find minimum size for this widget, and update
+			size += v->MinIntrinsicWidth(height);
+		}
+        return size;
+	}
+
+	if (alignMain == MainAxisAlign::Homogeneous) {
+        for (size_t i = 1; i < n; i++) {
+            auto v = children[i];
+			size = std::max(size, v->MinIntrinsicWidth(height));
+		}
+
+		// Add a minimum gap between the controls.
+        auto hgap = calculateHGap(nullptr, nullptr);
+		size = scale(size, i64(n), 1) + scale(hgap, i64(n)-1, 1);
+		return size;
+	}
+
+    for (size_t i = 1; i < n; i++) {
+        auto v = children[i];
+        size += v->MinIntrinsicWidth(height);
+	}
+
+	// Add a minimum gap between the controls.
+    auto hgap = calculateHGap(nullptr, nullptr);
+	if (alignMain == MainAxisAlign::SpaceBetween) {
+		size += scale(hgap, i64(n)-1, 1);
+	} else {
+		size += scale(hgap, i64(n)+1, 1);
+	}
+
+	return size;
+}
+
+void HBox::SetBounds(Rect bounds) {
+    auto n = children.size();
+    if (n == 0) {
+		return;
+	}
+
+	if (alignMain == MainAxisAlign::Homogeneous) {
+		auto gap = calculateHGap(nullptr, nullptr);
+		auto dx = bounds.Dx() + gap;
+		auto count = i64(n);
+
+        for (size_t i = 0; i < n; i++) {
+            auto v = children[i];
+			auto x1 = bounds.Min.X + scale(dx, i, count);
+			auto x2 = bounds.Min.X + scale(dx, i+1, count) - gap;
+			setBoundsForChild(i, v, x1, bounds.Min.Y, x2, bounds.Max.Y);
+		}
+		return;
+	}
+
+	// Adjust the bounds so that the minimum Y handles vertical alignment
+	// of the controls.  We also calculate 'extraGap' which will adjust
+	// spacing of the controls for non-packed alignments.
+	auto extraGap = Length(0);
+	if (totalFlex == 0) {
+		switch (alignMain) {
+		case MainAxisAlign::MainStart:
+			// Do nothing
+            break;
+		case MainAxisAlign::MainCenter:
+			bounds.Min.X += (bounds.Dx() - totalWidth) / 2;
+            break;
+		case MainAxisAlign::MainEnd:
+			bounds.Min.X = bounds.Max.X - totalWidth;
+            break;
+		case MainAxisAlign::SpaceAround:
+        {
+            auto eg = (bounds.Dx() - totalWidth);
+			extraGap = scale(eg, 1, i64(n)+1);
+			bounds.Min.X += extraGap;
+			extraGap += calculateHGap(nullptr, nullptr);
+        }
+            break;
+		case MainAxisAlign::SpaceBetween:
+			if (n > 1) {
+                auto eg = (bounds.Dx() - totalWidth);
+				extraGap = scale(eg, 1, i64(n)-1);
+				extraGap += calculateHGap(nullptr, nullptr);
+			} else {
+				// There are no controls between which to put the extra space.
+				// The following essentially convert SpaceBetween to SpaceAround
+				bounds.Min.X += (bounds.Dx() - totalWidth) / 2;
+			}
+            break;
+		}
+	}
+
+	// Position all of the child controls.
+	auto posX = bounds.Min.X;
+	ILayout* previous = nullptr;
+    for (size_t i = 0; i < n; i++) {
+        auto v = children[i];
+		if (IsPacked(alignMain)) {
+			if (i > 0) {
+				posX += calculateHGap(previous, v);
+			}
+			previous = v;
+		}
+
+		auto dx = childrenInfo[i].size.Width;
+		setBoundsForChild(i, v, posX, bounds.Min.Y, posX+dx, bounds.Max.Y);
+		posX += dx + extraGap;
+	}
+}
+
+void HBox::setBoundsForChild(int i, ILayout* v, Length posX, Length posY, Length posX2, Length posY2) {
+	auto dy = childrenInfo[i].size.Height;
+	switch (alignCross) {
+	case CrossAxisAlign::CrossStart:
+		v->SetBounds(Rect{
+			Point{posX, posY},
+			Point{posX2, posY + dy},
+		});
+        break;
+	case CrossAxisAlign::CrossCenter:
+		v->SetBounds(Rect{
+			Point{posX, posY + (posY2-posY-dy)/2},
+			Point{posX2, posY + (posY2-posY+dy)/2},
+		});
+        break;
+	case CrossAxisAlign::CrossEnd:
+		v->SetBounds(Rect{
+			Point{posX, posY2 - dy},
+			Point{posX2, posY2},
+		});
+        break;
+	case CrossAxisAlign::Stretch:
+		v->SetBounds(Rect{
+			Point{posX, posY},
+			Point{posX2, posY2},
+		});
+        break;
+	}
+}
+
+// TODO: remove
+void HBox::addChild(ILayout* child) {
+    children.Append(child);
+}
+
 
 // align.go
 
@@ -615,6 +896,10 @@ Kind alignKind = "align";
 
 bool IsAlign(Kind kind) {
     return kind == alignKind;
+}
+
+bool IsAlign(ILayout* l) {
+    return IsLayoutOfKind(l, alignKind);
 }
 
 Align::Align() {
