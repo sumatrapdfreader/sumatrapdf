@@ -1,9 +1,16 @@
-class ButtonCtrl;
-
-class ButtonCtrl {
+class ButtonCtrl : public ILayout {
   public:
+    // creation parameters. must be set before Create() call
+    HWND parent = 0;
+    RECT initialPos = {0, 0, 0, 0};
+    int menuId = 0;
+    DWORD dwStyle = WS_CHILD | WS_TABSTOP | BS_DEFPUSHBUTTON;
+    DWORD dwExStyle = 0;
+
+    HWND hwnd = nullptr;
+
     ButtonCtrl(HWND parent, int menuId, RECT* initialPos);
-    ~ButtonCtrl();
+    ~ButtonCtrl() override;
 
     bool Create(const WCHAR*);
 
@@ -14,15 +21,15 @@ class ButtonCtrl {
 
     WCHAR* GetTextW();
 
-    // creation parameters. must be set before Create() call
-    HWND parent = 0;
-    RECT initialPos = {0, 0, 0, 0};
-    int menuId = 0;
-    DWORD dwStyle = WS_CHILD | WS_TABSTOP | BS_DEFPUSHBUTTON;
-    DWORD dwExStyle = 0;
+    // ILayout
+    Size Layout(const Constraints bc) override;
+    i32 MinIntrinsicHeight(i32) override;
+    i32 MinIntrinsicWidth(i32) override;
+    void SetBounds(const Rect bounds) override;
 
-    HWND hwnd = nullptr;
 };
+
+bool IsButtonCtrl(Kind);
 
 class CheckboxCtrl {
   public:

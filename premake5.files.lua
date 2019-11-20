@@ -433,6 +433,7 @@ function utils_files()
     "EditCtrl.*",
     "FrameRateWnd.*",
     "LabelWithCloseWnd.*",
+    "Layout.*",
     "SplitterWnd.*",
     --"TabsCtrl.*",
     "TreeCtrl.*",
