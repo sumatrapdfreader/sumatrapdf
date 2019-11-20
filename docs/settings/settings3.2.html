@@ -1,92 +1,86 @@
 <!doctype html>
 
 <html>
-
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <title>Customizing SumatraPDF 3.2</title>
-  <style type="text/css">
-    body {
-      font-size: 90%;
-      background-color: #f5f5f5;
-    }
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Customizing SumatraPDF 3.2</title>
+<style type="text/css">
+body {
+    font-size: 90%;
+    background-color: #f5f5f5;
+}
 
-    .desc {
-      padding: 0px 10px 0px 10px;
-    }
+.desc {
+    padding: 0px 10px 0px 10px;
+}
 
-    .txt1 {
-      /* bold doesn't look good in the fonts above */
-      font-family: Monaco, 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', 'Lucida Console', monospace;
-      font-size: 88%;
-      color: #800;
-      /* this is brown */
-    }
+.txt1 {
+    /* bold doesn't look good in the fonts above */
+    font-family: Monaco, 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', 'Lucida Console', monospace;
+    font-size: 88%;
+    color: #800; /* this is brown */
+}
 
-    .txt2 {
-      font-family: Verdana, Arial, sans-serif;
-      font-family: serif;
-      font-size: 90%;
-      font-weight: bold;
-      color: #800;
-      /* this is brown */
-    }
+.txt2 {
+    font-family: Verdana, Arial, sans-serif;
+    font-family: serif;
+    font-size: 90%;
+    font-weight: bold;
+    color: #800; /* this is brown */
+}
 
-    .txt {
-      font-family: serif;
-      font-size: 95%;
-      font-weight: bold;
-      color: #800;
-      /* this is brown */
-      color: #000;
-      background-color: #ececec;
-      border: 1px solid #fff;
-      border-radius: 10px;
-      -webkit-border-radius: 10px;
-      box-shadow: rgba(0, 0, 0, .15) 3px 3px 4px;
-      -webkit-box-shadow: rgba(0, 0, 0, .15) 3px 3px 4px;
-      padding: 10px 10px 10px 20px;
-    }
+.txt {
+    font-family: serif;
+    font-size: 95%;
+    font-weight: bold;
+    color: #800; /* this is brown */
+    color: #000;
+    background-color: #ececec;
+    border: 1px solid #fff;
+    border-radius: 10px;
+    -webkit-border-radius: 10px;
+    box-shadow: rgba(0, 0, 0, .15) 3px 3px 4px;
+    -webkit-box-shadow: rgba(0, 0, 0, .15) 3px 3px 4px;
+    padding: 10px 10px 10px 20px;
+}
 
-    .cm {
-      color: #800;
-      /* this is brown, a bit aggressive */
-      color: #8c8c8c;
-      /* this is gray */
-      color: #555;
-      /* this is darker gray */
-      font-weight: normal;
-    }
-  </style>
+.cm {
+    color: #800;   /* this is brown, a bit aggressive */
+    color: #8c8c8c; /* this is gray */
+    color: #555; /* this is darker gray */
+    font-weight: normal;
+}
+
+</style>
 </head>
 
 <body>
 
-  <div class="desc">
+<div class="desc">
 
-    <h2>Customizing SumatraPDF 3.2</h2>
+<h2>Customizing SumatraPDF 3.2</h2>
 
-    <p>You can change the look and behavior of
-      <a href="http://www.sumatrapdfreader.org/">SumatraPDF</a>
-      by editing the file <code>SumatraPDF-settings.txt</code>. The file is stored in
-      <code>%APPDATA%\SumatraPDF</code> directory for the installed version or in the
-      same directory as <code>SumatraPDF.exe</code> executable for the portable version.</p>
+<p>You can change the look and behavior of
+<a href="http://www.sumatrapdfreader.org/">SumatraPDF</a>
+by editing the file <code>SumatraPDF-settings.txt</code>. The file is stored in
+<code>%APPDATA%\SumatraPDF</code> directory for the installed version or in the
+same directory as <code>SumatraPDF.exe</code> executable for the portable version.</p>
 
-    <p>Use the menu item <code>Settings -> Advanced Settings...</code> to open the settings file
-      with your default text editor.</p>
+<p>Use the menu item <code>Settings -> Advanced Settings...</code> to open the settings file
+with your default text editor.</p>
 
-    <p>The file is in a simple text format. Below is an explanation of
-      what the different settings mean and what their default values are.</p>
+<p>The file is in a simple text format. Below is an explanation of
+what the different settings mean and what their default values are.</p>
 
-    <p>Highlighted settings can't be changed from the UI. Modifying other settings
-      directly in this file is not recommended.</p>
+<p>Highlighted settings can't be changed from the UI. Modifying other settings
+directly in this file is not recommended.</p>
 
-    <p>If you add or remove lines with square brackets, <b>make sure to always add/remove
-        square brackets in pairs</b>! Else you risk losing all the data following them.</p>
+<p>If you add or remove lines with square brackets, <b>make sure to always add/remove
+square brackets in pairs</b>! Else you risk losing all the data following them.</p>
 
-  </div>
+</div>
 
-  <pre class="txt">
+<pre class="txt">
 <div><span class="cm" id="MainWindowBackground">background <a href="#color">color</a> of the non-document windows, traditionally yellow</span>
 MainWindowBackground = #fff200
 
@@ -101,7 +95,10 @@ UseSysColors = false
 
 <span class="cm" id="RestoreSession">if true and SessionData isn't empty, that session will be restored at startup</span>
 RestoreSession = true
-
+</div>
+<span class="cm" id="TabWidth">maximum width of a single tab</span>
+TabWidth = 300
+<div>
 <span class="cm" id="FixedPageUI">customization options for PDF, XPS, DjVu and PostScript UI</span>
 FixedPageUI [
     <span class="cm" id="FixedPageUI_TextColor"><a href="#color">color</a> value with which black (text) will be substituted</span>
@@ -429,23 +426,22 @@ TimeOfLastUpdateCheck = 0 0
 OpenCountWeek = 0
 </pre>
 
-  <div class="desc">
-    <h3 id="color">Syntax for color values</h3>
+<div class="desc">
+<h3 id="color">Syntax for color values</h3>
 
-    <p>
-      The syntax for colors is: <code>#rrggbb</code>.</p>
-    <p>The components are hex values (ranging from 00 to FF) and stand for:
-      <ul>
-        <li><code>rr</code> : red component</li>
-        <li><code>gg</code> : green component</li>
-        <li><code>bb</code> : blue component</li>
-      </ul>
-      For example #ff0000 means red color. You can use <a href="http://www.colorpicker.com/">
-        Color Picker</a> or <a href="http://mudcu.be/sphere/">Sphere</a> or
-      <a href="http://colorschemedesigner.com/">ColorScheme Designer</a> to pick a color.
-    </p>
-  </div>
+<p>
+The syntax for colors is: <code>#rrggbb</code>.</p>
+<p>The components are hex values (ranging from 00 to FF) and stand for:
+<ul>
+  <li><code>rr</code> : red component</li>
+  <li><code>gg</code> : green component</li>
+  <li><code>bb</code> : blue component</li>
+</ul>
+For example #ff0000 means red color. You can use <a href="http://www.colorpicker.com/">
+Color Picker</a> or <a href="http://mudcu.be/sphere/">Sphere</a> or
+<a href="http://colorschemedesigner.com/">ColorScheme Designer</a> to pick a color.
+</p>
+</div>
 
 </body>
-
 </html>

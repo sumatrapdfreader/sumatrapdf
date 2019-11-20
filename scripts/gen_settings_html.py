@@ -237,7 +237,7 @@ def gen_comment(comment, field_id, start, first=False):
             continue
 
         if left < len(word):
-            s += "\n" + start
+            s = s.rstrip() + "\n" + start
             left = line_len - len(start)
         word += " "
         left -= len(word)
@@ -303,7 +303,7 @@ def settings_dir():
 def blog_dir():
     script_dir = os.path.realpath(os.path.dirname(__file__))
     d = os.path.realpath(
-        os.path.join(script_dir, "..", "..", "go", "src", "github.com", "kjk", "sumatra-website", "www"))
+        os.path.join(script_dir, "..", "..", "sumatra-website", "www"))
     if os.path.exists(d):
         return d
     print("blog dir '%s' doesn't exist" % d)
