@@ -5,7 +5,6 @@
 #include "wingui/WinGui.h"
 #include "wingui/EditCtrl.h"
 
-
 constexpr UINT_PTR SUBCLASS_ID = 1;
 
 static void Unsubclass(EditCtrl* w);

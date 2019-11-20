@@ -546,7 +546,7 @@ inline bool IsEmailDomainChar(WCHAR c) {
 
 static const WCHAR* LinkifyFindEmail(const WCHAR* pageText, const WCHAR* at) {
     const WCHAR* start;
-    for (start = at; start > pageText&& IsEmailUsernameChar(*(start - 1)); start--) {
+    for (start = at; start > pageText && IsEmailUsernameChar(*(start - 1)); start--) {
         // do nothing
     }
     return start != at ? start : nullptr;

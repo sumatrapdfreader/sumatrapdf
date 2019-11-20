@@ -481,7 +481,7 @@ static void ExportBookmarkTree(DocTocItem* node, int level) {
         WCHAR* title = node->Text();
         auto titleA = str::conv::ToUtf8(title);
         line.AppendView(titleA.AsView());
-        //WCHAR* uri = node->GetLink();
+        // WCHAR* uri = node->GetLink();
 
         dbglogf("%s\n", line.Get());
         ExportBookmarkTree(node->child, level + 1);
@@ -503,11 +503,11 @@ static MenuDef contextMenuDef[] = {
 static void BuildAndShowContextMenu(WindowInfo* win, int x, int y) {
     HMENU popup = BuildMenuFromMenuDef(contextMenuDef, dimof(contextMenuDef), CreatePopupMenu());
     POINT pt = {x, y};
-    //MapWindowPoints(win->hwndCanvas, HWND_DESKTOP, &pt, 1);
-    //MarkMenuOwnerDraw(popup);
+    // MapWindowPoints(win->hwndCanvas, HWND_DESKTOP, &pt, 1);
+    // MarkMenuOwnerDraw(popup);
     UINT flags = TPM_RETURNCMD | TPM_RIGHTBUTTON;
     INT cmd = TrackPopupMenu(popup, flags, pt.x, pt.y, 0, win->hwndFrame, nullptr);
-    //FreeMenuOwnerDrawInfoData(popup);
+    // FreeMenuOwnerDrawInfoData(popup);
     DestroyMenu(popup);
     switch (cmd) {
         case IDM_EXPORT_BOOKMARKS:

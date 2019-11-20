@@ -26,7 +26,6 @@ class ButtonCtrl : public ILayout {
     i32 MinIntrinsicHeight(i32) override;
     i32 MinIntrinsicWidth(i32) override;
     void SetBounds(const Rect bounds) override;
-
 };
 
 bool IsButtonCtrl(Kind);

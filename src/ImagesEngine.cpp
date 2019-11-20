@@ -218,7 +218,7 @@ class ImageElement : public PageElement {
         engine->DropPage(page);
     }
 
-    PageElementType GetType() const override  {
+    PageElementType GetType() const override {
         return PageElementType::Image;
     }
 

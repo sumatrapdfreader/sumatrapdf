@@ -256,7 +256,7 @@ class ImageDataElement : public PageElement {
     PageElementType GetType() const override {
         return PageElementType::Image;
     }
-    RectD GetRect() const override  {
+    RectD GetRect() const override {
         return bbox.Convert<double>();
     }
     WCHAR* GetValue() const override {

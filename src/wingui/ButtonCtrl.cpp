@@ -25,10 +25,9 @@ static void hwndDpiAdjust(HWND hwnd, float* x, float* y) {
 // a single global instance. we use address as identity
 Kind buttonKind = "button";
 
-bool IsButton(Kind kind)
-{
-  // comparing an address
-  return kind == buttonKind;
+bool IsButton(Kind kind) {
+    // comparing an address
+    return kind == buttonKind;
 }
 
 ButtonCtrl::ButtonCtrl(HWND parent, int menuId, RECT* initialPosition) {
@@ -99,27 +98,23 @@ void ButtonCtrl::SetFont(HFONT f) {
     SetWindowFont(this->hwnd, f, TRUE);
 }
 
-Size ButtonCtrl::Layout(const Constraints bc)
-{
+Size ButtonCtrl::Layout(const Constraints bc) {
     i32 width = this->MinIntrinsicWidth(0);
     i32 height = this->MinIntrinsicHeight(0);
     return bc.Constrain(Size{width, height});
 }
 
-i32 ButtonCtrl::MinIntrinsicHeight(i32)
-{
+i32 ButtonCtrl::MinIntrinsicHeight(i32) {
     SIZE s = this->GetIdealSize();
     return (i32)s.cy;
 }
 
-i32 ButtonCtrl::MinIntrinsicWidth(i32)
-{
+i32 ButtonCtrl::MinIntrinsicWidth(i32) {
     SIZE s = this->GetIdealSize();
     return (i32)s.cx;
 }
 
-void ButtonCtrl::SetBounds(const Rect bounds)
-{
+void ButtonCtrl::SetBounds(const Rect bounds) {
     auto r = RectToRECT(bounds);
     ::MoveWindow(this->hwnd, &r);
 }

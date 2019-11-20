@@ -436,8 +436,7 @@ HWND CreateButton(HWND hwndParent, const WCHAR* s, int id, DWORD style, SIZE* si
     HMENU idMenu = (HMENU)(UINT_PTR)id;
     style |= WS_CHILD | WS_TABSTOP;
     auto h = GetModuleHandleW(nullptr);
-    HWND hwnd =
-        CreateWindowExW(0, WC_BUTTON, L"", style, 0, 0, 100, 20, hwndParent, idMenu, h, nullptr);
+    HWND hwnd = CreateWindowExW(0, WC_BUTTON, L"", style, 0, 0, 100, 20, hwndParent, idMenu, h, nullptr);
     SetWindowFont(hwnd, gFontDefault, TRUE);
     *sizeOut = SetButtonTextAndResize(hwnd, s);
     return hwnd;
