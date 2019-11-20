@@ -537,6 +537,7 @@
     <ClCompile Include="..\src\wingui\TabsCtrl.cpp" />
     <ClCompile Include="..\src\wingui\Win32Window.cpp" />
     <ClCompile Include="..\tools\test-app\TestDirectDraw.cpp" />
+    <ClCompile Include="..\tools\test-app\TestLayout.cpp" />
     <ClCompile Include="..\tools\test-app\TestTab.cpp" />
     <ClCompile Include="..\tools\test-app\test-app.cpp" />
   </ItemGroup>

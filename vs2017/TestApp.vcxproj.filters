@@ -92,6 +92,9 @@
     <ClCompile Include="..\tools\test-app\TestDirectDraw.cpp">
       <Filter>tools\test-app</Filter>
     </ClCompile>
+    <ClCompile Include="..\tools\test-app\TestLayout.cpp">
+      <Filter>tools\test-app</Filter>
+    </ClCompile>
     <ClCompile Include="..\tools\test-app\TestTab.cpp">
       <Filter>tools\test-app</Filter>
     </ClCompile>

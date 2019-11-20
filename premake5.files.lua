@@ -947,6 +947,7 @@ function test_app_files()
     "test-app.rc",
     "TestDirectDraw.cpp",
     "TestTab.cpp",
+    "TestLayout.cpp",
   })
 
   files_in_dir("src/utils", {

@@ -5,6 +5,8 @@
 extern int TestDirectDraw(HINSTANCE hInstance, int nCmdShow);
 // in TestTab.cpp
 extern int TestTab(HINSTANCE hInstance, int nCmdShow);
+// in TestLayout.cpp
+extern int TestLayout(HINSTANCE hInstance, int nCmdShow);
 
 int APIENTRY WinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -22,5 +24,6 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance,
     InitCommonControlsEx(&cc);
 
     //return TestDirectDraw(hInstance, nCmdShow);
-    return TestTab(hInstance, nCmdShow);
+    //return TestTab(hInstance, nCmdShow);
+    return TestLayout(hInstance, nCmdShow);
 }
