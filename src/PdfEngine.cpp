@@ -664,11 +664,8 @@ class SimpleDest : public PageDestination {
 };
 
 struct FitzImagePos {
-    fz_image* image;
-    fz_rect rect;
-
-    explicit FitzImagePos(fz_image* image = nullptr, fz_rect rect = fz_unit_rect) : image(image), rect(rect) {
-    }
+    fz_image* image = nullptr;
+    fz_rect rect = fz_unit_rect;
 };
 
 class FitzAbortCookie : public AbortCookie {
@@ -1005,20 +1002,8 @@ struct PdfPageInfo {
     fz_stext_page* stext = nullptr;
     RectD mediabox = {};
     Vec<pdf_annot*> pageAnnots;
-    // array of image rects
-    fz_rect* imageRects = nullptr;
+    Vec<fz_rect> imageRects;
 };
-
-struct PdfPageRun {
-    PdfPageInfo* pageInfo = nullptr;
-    int refs = 1;
-
-    PdfPageRun(PdfPageInfo*);
-};
-
-PdfPageRun::PdfPageRun(PdfPageInfo* pageInfo) {
-    this->pageInfo = pageInfo;
-}
 
 class PdfTocItem;
 class PdfLink;
@@ -1123,7 +1108,6 @@ class PdfEngineImpl : public BaseEngine {
     WStrVec* _pagelabels = nullptr; // TODO(port): put in PageInfo
 
     Vec<PageAnnotation> userAnnots; // TODO(port): put in PageInfo
-    Vec<PdfPageRun*> runCache;      // ordered most recently used first
 
     DocTocTree* tocTree = nullptr;
 
@@ -1143,11 +1127,8 @@ class PdfEngineImpl : public BaseEngine {
     fz_matrix viewctm(pdf_page* page, float zoom, int rotation) {
         return fz_create_view_ctm(pdf_bound_page(ctx, page), zoom, rotation);
     }
-    PdfPageRun* CreatePageRun(PdfPageInfo* pageInfo, fz_display_list* list);
-    PdfPageRun* GetPageRun(PdfPageInfo* pageInfo, bool tryOnly = false);
     bool RunPage(PdfPageInfo* pageInfo, fz_device* dev, fz_matrix ctm, RenderTarget target = RenderTarget::View,
                  fz_rect cliprect = {}, bool cacheRun = true, FitzAbortCookie* cookie = nullptr);
-    void DropPageRun(PdfPageRun* run, bool forceRemove = false);
 
     PdfTocItem* BuildTocTree(fz_outline* entry, int& idCounter, bool isAttachment);
     void LinkifyPageText(PdfPageInfo* pageInfo);
@@ -1290,7 +1271,6 @@ PdfEngineImpl::~PdfEngineImpl() {
 
     for (int i = 0; _pages && i < pageCount; i++) {
         PdfPageInfo* pi = &_pages[i];
-        free(pi->imageRects);
         if (pi->stext) {
             fz_drop_stext_page(ctx, pi->stext);
         }
@@ -1307,12 +1287,7 @@ PdfEngineImpl::~PdfEngineImpl() {
     fz_drop_outline(ctx, attachments);
     pdf_drop_obj(ctx, _info);
 
-    while (runCache.size() > 0) {
-        AssertCrash(runCache.Last()->refs == 1);
-        DropPageRun(runCache.Last(), true);
-    }
-
-    // fz_drop_stream(ctx, _docStream);
+    fz_drop_stream(ctx, _docStream);
     pdf_drop_document(ctx, _doc);
     _doc = nullptr;
     fz_drop_context(ctx);
@@ -1883,15 +1858,11 @@ pdf_page* PdfEngineImpl::GetPdfPage(int pageNo, bool failIfBusy) {
     LinkifyPageText(pageInfo);
 
     ProcessPageAnnotations(pageInfo);
-    return ppage;
-}
 
-PdfPageRun* PdfEngineImpl::CreatePageRun(PdfPageInfo* pageInfo, fz_display_list* list) {
+    // TODO: need to run inspection device to extract positions of images
+#if 0
     Vec<FitzImagePos> positions;
 
-    // save the image rectangles for this page
-    int pageNo = pageInfo->pageNo;
-    PdfPageInfo* pi = &_pages[pageNo - 1];
     if (!pi->imageRects && positions.size() > 0) {
         // the list of page image rectangles is terminated with a null-rectangle
         fz_rect* rects = AllocArray<fz_rect>(positions.size() + 1);
@@ -1902,60 +1873,9 @@ PdfPageRun* PdfEngineImpl::CreatePageRun(PdfPageInfo* pageInfo, fz_display_list*
             pi->imageRects = rects;
         }
     }
-
-    auto pageRun = new PdfPageRun(pageInfo);
-    return pageRun;
-}
-
-PdfPageRun* PdfEngineImpl::GetPageRun(PdfPageInfo* pageInfo, bool tryOnly) {
-    // we failed get display list when loading the page for the first time
-    if (!pageInfo->list) {
-        return nullptr;
-    }
-
-    PdfPageRun* result = nullptr;
-    fz_cookie cookie = {0};
-
-    ScopedCritSec scope(&pagesAccess);
-
-    for (size_t i = 0; i < runCache.size(); i++) {
-        if (runCache.at(i)->pageInfo == pageInfo) {
-            result = runCache.at(i);
-            break;
-        }
-    }
-    if (!result && !tryOnly) {
-        size_t mem = 0;
-        for (size_t i = 0; i < runCache.size(); i++) {
-            // drop page runs that take up too much memory due to huge images
-            // (except for the very recently used ones)
-#if 0
-            if (i >= 2 && mem + runCache.at(i)->size_est >= MAX_PAGE_RUN_MEMORY)
-                DropPageRun(runCache.at(i--), true);
-            else
-                mem += runCache.at(i)->size_est;
 #endif
-        }
-        if (runCache.size() >= MAX_PAGE_RUN_CACHE) {
-            AssertCrash(runCache.size() == MAX_PAGE_RUN_CACHE);
-            DropPageRun(runCache.Last(), true);
-        }
 
-        ScopedCritSec scope2(&ctxAccess);
-
-        fz_page* page = (fz_page*)pageInfo->page;
-
-        result = CreatePageRun(pageInfo, pageInfo->list);
-        runCache.InsertAt(0, result);
-    } else if (result && result != runCache.at(0)) {
-        // keep the list Most Recently Used first
-        runCache.Remove(result);
-        runCache.InsertAt(0, result);
-    }
-
-    if (result)
-        result->refs++;
-    return result;
+    return ppage;
 }
 
 bool PdfEngineImpl::RunPage(PdfPageInfo* pageInfo, fz_device* dev, fz_matrix ctm, RenderTarget target, fz_rect cliprect,
@@ -1967,24 +1887,20 @@ bool PdfEngineImpl::RunPage(PdfPageInfo* pageInfo, fz_device* dev, fz_matrix ctm
     pdf_page* page = pageInfo->page;
     int pageNo = pageInfo->pageNo;
     if (RenderTarget::View == target) {
-        PdfPageRun* run = GetPageRun(pageInfo, !cacheRun);
-        CrashIf(!run);
-        if (!run) {
-            return false;
-        }
-        EnterCriticalSection(&ctxAccess);
+        EnterCriticalSection(&ctxAccess); // TODO: probably not needed
         Vec<PageAnnotation> pageAnnots = fz_get_user_page_annots(userAnnots, pageNo);
         fz_try(ctx) {
             // fz_run_page_transparency(ctx, pageAnnots, dev, cliprect, false, page->transparency);
-            fz_run_display_list(ctx, run->pageInfo->list, dev, ctm, cliprect, fzcookie);
+            fz_run_display_list(ctx, pageInfo->list, dev, ctm, cliprect, fzcookie);
             // fz_run_page_transparency(ctx, pageAnnots, dev, cliprect, true, page->transparency);
             // fz_run_user_page_annots(ctx, pageAnnots, dev, ctm, cliprect, fzcookie);
+        }
+        fz_always(ctx) {
+            LeaveCriticalSection(&ctxAccess);
         }
         fz_catch(ctx) {
             ok = false;
         }
-        LeaveCriticalSection(&ctxAccess);
-        DropPageRun(run);
     } else {
         ScopedCritSec scope(&ctxAccess);
         char* targetName = target == RenderTarget::Print ? "Print" : target == RenderTarget::Export ? "Export" : "View";
@@ -2008,21 +1924,6 @@ bool PdfEngineImpl::RunPage(PdfPageInfo* pageInfo, fz_device* dev, fz_matrix ctm
     }
 
     return ok && !(cookie && cookie->cookie.abort);
-}
-
-void PdfEngineImpl::DropPageRun(PdfPageRun* run, bool forceRemove) {
-    ScopedCritSec scope(&pagesAccess);
-    run->refs--;
-
-    if (0 == run->refs || forceRemove)
-        runCache.Remove(run);
-
-    if (0 == run->refs) {
-        ScopedCritSec ctxScope(&ctxAccess);
-        // TODO(port): probably remove as we no longer create a list per page run
-        // fz_drop_display_list(ctx, run->pageInfo->list);
-        delete run;
-    }
 }
 
 RectD PdfEngineImpl::PageMediabox(int pageNo) {
@@ -2175,11 +2076,12 @@ PageElement* PdfEngineImpl::GetElementAtPos(int pageNo, PointD pt) {
     }
 
     PdfPageInfo* pageInfo = &_pages[pageNo - 1];
-    fz_rect* ir = pageInfo->imageRects;
-    for (size_t i = 0; ir && !fz_is_empty_rect(ir[i]); i++) {
-        if (fz_is_pt_in_rect(pageInfo->imageRects[i], p)) {
-            return new PdfImage(this, pageNo, ir[i], i);
+    size_t imageIdx = 0;
+    for (auto ir : pageInfo->imageRects) {
+        if (fz_is_pt_in_rect(ir, p)) {
+            return new PdfImage(this, pageNo, ir, imageIdx);
         }
+        imageIdx++;
     }
 
     ScopedCritSec scope(&ctxAccess); // TODO: probably not needed
@@ -2204,11 +2106,11 @@ Vec<PageElement*>* PdfEngineImpl::GetElements(int pageNo) {
     // item types in inverse order and reverse the whole list at the end
     Vec<PageElement*>* els = new Vec<PageElement*>();
 
-    fz_rect* ir = pageInfo->imageRects;
-    if (ir != nullptr) {
-        for (size_t i = 0; !fz_is_empty_rect(ir[i]); i++) {
-            els->Append(new PdfImage(this, pageNo, ir[i], i));
-        }
+    size_t imageIdx = 0;
+    for (auto ir : pageInfo->imageRects) {
+        auto image = new PdfImage(this, pageNo, ir, imageIdx);
+        els->Append(image);
+        imageIdx++;
     }
 
     ScopedCritSec scope(&ctxAccess); // TODO: possibly not needed
@@ -2903,20 +2805,15 @@ bool PdfEngineImpl::SaveEmbedded(LinkSaverUI& saveUI, int num) {
 }
 
 bool PdfEngineImpl::HasClipOptimizations(int pageNo) {
-    PdfPageInfo* pi = GetPdfPageInfo(pageNo, true);
-    if (!pi) {
+    PdfPageInfo* pageInfo = GetPdfPageInfo(pageNo, true);
+    if (!pageInfo) {
         return false;
-    }
-
-    // GetPdfPageInfo extracts imageRects for us
-    if (!pi->imageRects) {
-        return true;
     }
 
     fz_rect mbox = fz_RectD_to_rect(PageMediabox(pageNo));
     // check if any image covers at least 90% of the page
-    for (int i = 0; !fz_is_empty_rect(pi->imageRects[i]); i++) {
-        if (fz_calc_overlap(mbox, pi->imageRects[i]) >= 0.9f) {
+    for (auto ir : pageInfo->imageRects) {
+        if (fz_calc_overlap(mbox, ir) >= 0.9f) {
             return false;
         }
     }
