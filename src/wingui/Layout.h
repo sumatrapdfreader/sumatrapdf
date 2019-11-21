@@ -190,7 +190,7 @@ struct VBox : public ILayout {
     Length MinIntrinsicWidth(Length height) override;
     void SetBounds(Rect bounds) override;
 
-    void setBoundsForChild(int i, ILayout* v, Length posX, Length posY, Length posX2, Length posY2);
+    void setBoundsForChild(size_t i, ILayout* v, Length posX, Length posY, Length posX2, Length posY2);
 
     // TODO: alternatively, ensure childrenInfo has the same
     // size as children in Layout()
@@ -216,7 +216,7 @@ struct HBox : public ILayout {
     Length MinIntrinsicWidth(Length height) override;
     void SetBounds(Rect bounds) override;
 
-    void setBoundsForChild(int i, ILayout* v, Length posX, Length posY, Length posX2, Length posY2);
+    void setBoundsForChild(size_t i, ILayout* v, Length posX, Length posY, Length posX2, Length posY2);
     void addChild(ILayout* child);
 };
 

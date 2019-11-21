@@ -205,3 +205,24 @@ bool CheckboxCtrl::IsChecked() const {
     int isChecked = Button_GetCheck(this->hwnd);
     return !!isChecked;
 }
+
+Size CheckboxCtrl::Layout(const Constraints bc) {
+    i32 width = this->MinIntrinsicWidth(0);
+    i32 height = this->MinIntrinsicHeight(0);
+    return bc.Constrain(Size{width, height});
+}
+
+i32 CheckboxCtrl::MinIntrinsicHeight(i32) {
+    SIZE s = this->GetIdealSize();
+    return (i32)s.cy;
+}
+
+i32 CheckboxCtrl::MinIntrinsicWidth(i32) {
+    SIZE s = this->GetIdealSize();
+    return (i32)s.cx;
+}
+
+void CheckboxCtrl::SetBounds(const Rect bounds) {
+    auto r = RectToRECT(bounds);
+    ::MoveWindow(this->hwnd, &r);
+}

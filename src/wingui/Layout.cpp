@@ -516,7 +516,7 @@ void VBox::SetBounds(Rect bounds) {
             auto v = children[i];
             auto y1 = bounds.Min.Y + scale(dy, i, count);
             auto y2 = bounds.Min.Y + scale(dy, i + 1, count) - gap;
-            setBoundsForChild((int)i, v, bounds.Min.X, y1, bounds.Max.X, y2);
+            setBoundsForChild(i, v, bounds.Min.X, y1, bounds.Max.X, y2);
         }
         return;
     }
@@ -570,12 +570,12 @@ void VBox::SetBounds(Rect bounds) {
         }
 
         auto dy = childrenInfo[i].size.Height;
-        setBoundsForChild((int)i, v, bounds.Min.X, posY, bounds.Max.X, posY + dy);
+        setBoundsForChild(i, v, bounds.Min.X, posY, bounds.Max.X, posY + dy);
         posY += dy + extraGap;
     }
 }
 
-void VBox::setBoundsForChild(int i, ILayout* v, Length posX, Length posY, Length posX2, Length posY2) {
+void VBox::setBoundsForChild(size_t i, ILayout* v, Length posX, Length posY, Length posX2, Length posY2) {
     auto dx = childrenInfo[i].size.Width;
     switch (alignCross) {
         case CrossAxisAlign::CrossStart:
@@ -852,7 +852,7 @@ void HBox::SetBounds(Rect bounds) {
     }
 }
 
-void HBox::setBoundsForChild(int i, ILayout* v, Length posX, Length posY, Length posX2, Length posY2) {
+void HBox::setBoundsForChild(size_t i, ILayout* v, Length posX, Length posY, Length posX2, Length posY2) {
     auto dy = childrenInfo[i].size.Height;
     switch (alignCross) {
         case CrossAxisAlign::CrossStart:
