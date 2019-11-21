@@ -303,7 +303,7 @@ def settings_dir():
 def blog_dir():
     script_dir = os.path.realpath(os.path.dirname(__file__))
     d = os.path.realpath(
-        os.path.join(script_dir, "..", "..", "sumatra-website", "www"))
+        os.path.join(script_dir, "..", "website", "www"))
     if os.path.exists(d):
         return d
     print("blog dir '%s' doesn't exist" % d)
