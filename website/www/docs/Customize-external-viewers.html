@@ -1,0 +1,85 @@
+<!doctype html>
+<html>
+
+<head>
+	<meta http-equiv="Content-Language" content="en-us">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="keywords" content="pdf, epub, mobi, chm, cbr, cbz, xps, djvu, reader, viewer" />
+	<meta name="description" content="Sumatra PDF reader and viewer for Windows" />
+	<title>Sumatra PDF Documentation</title>
+	<link rel="stylesheet" href="/sumatra.css" type="text/css" />
+</head>
+
+<body>
+	<script type="text/javascript" src="/sumatra.js"></script>
+
+	<div id="container">
+		<div id="banner">
+			<h1 style="display:inline;">Sumatra PDF
+				<font size="-1">is a PDF, ePub, MOBI, CHM, XPS, DjVu, CBZ, CBR reader for Windows</font>
+			</h1>
+			<script type="text/javascript">
+				document.write(navHtml());
+			</script>
+		</div>
+
+		<br/>
+
+		<div id="center">
+			<div class="content">
+				<h1><a href="/docs/">Documentation</a> : Customize external viewers</h1>
+
+<p>You might have other viewers installed alongside Sumatra and you might wish to open current file in alternative viewer.</p>
+
+<p>We make it easy for you. By default we auto-detect several other PDF readers (Adobe Acrobat, Foxit, PDF XChange etc.). If they are present, we add <code>Open with Adobe Reader</code> (etc.) items to <code>File</code> menu (available when you have .pdf document opened in Sumatra).</p>
+
+<p>You can also add custom readers by using <a href="http://sumatrapdfreader.org/settings.html">advanced settings</a> .</p>
+
+<p>To configure a new external reader:</p>
+
+<ul>
+<li>use <code>Settings / Advanced Settings...</code> menu to open configuration file</li>
+<li>find <code>ExternalViewers</code> section and fill it out</li>
+</ul>
+
+<p>Here are the relevant settings:</p>
+
+<pre><code>ExternalViewers [
+ [
+ CommandLine =
+ Name =
+ Filter =
+ ]
+]
+</code></pre>
+
+<p><code>CommandLine</code> is a full path to program&rsquo;s executable. You need to add <code>&quot;%1&quot;</code> at the end (will be substituted for a full path of the document. You can also use <code>%p</code> which will be substituted for a page number (assuming that the viewer has a command-line option to open a file at a given page).</p>
+
+<p><code>Name</code> is the name of the program that will be displayed in <code>File</code> menu.</p>
+
+<p><code>Filter</code> dictates what kind of files can be opened by the reader. For example:</p>
+
+<ul>
+<li>to only activate it for PDF files, use <code>*.pdf</code></li>
+<li>to activate for PNG and JPEG files, use <code>*.png;*.jpg;*.jpeg</code></li>
+</ul>
+
+<p>You can configure multiple external viewers.</p>
+
+			</div>
+		</div>
+	</div>
+
+	<hr>
+	<center><a href="https://blog.kowalczyk.info">Krzysztof Kowalczyk</a></center>
+	<script>
+		window.ga = window.ga || function() {
+			(ga.q = ga.q || []).push(arguments)
+		};
+		ga.l = +new Date;
+		ga('create', 'UA-194516-5', 'auto');
+		ga('send', 'pageview');
+	</script>
+	<script async src="//www.google-analytics.com/analytics.js"></script>
+</body>
+</html>

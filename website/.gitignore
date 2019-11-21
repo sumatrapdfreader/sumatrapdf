@@ -1,0 +1,6 @@
+sumatra_website
+sumatra_website_linux
+*.zip
+*.exe
+vendor/
+netlifyctl-debug.log

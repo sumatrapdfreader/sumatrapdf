@@ -1,0 +1,161 @@
+<!doctype html>
+<html>
+
+<head>
+	<meta http-equiv="Content-Language" content="en-us">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="keywords" content="pdf, epub, mobi, chm, cbr, cbz, xps, djvu, reader, viewer" />
+	<meta name="description" content="Sumatra PDF reader and viewer for Windows" />
+	<title>Sumatra PDF Documentation</title>
+	<link rel="stylesheet" href="/sumatra.css" type="text/css" />
+</head>
+
+<body>
+	<script type="text/javascript" src="/sumatra.js"></script>
+
+	<div id="container">
+		<div id="banner">
+			<h1 style="display:inline;">Sumatra PDF
+				<font size="-1">is a PDF, ePub, MOBI, CHM, XPS, DjVu, CBZ, CBR reader for Windows</font>
+			</h1>
+			<script type="text/javascript">
+				document.write(navHtml());
+			</script>
+		</div>
+
+		<br/>
+
+		<div id="center">
+			<div class="content">
+				<h1><a href="/docs/">Documentation</a> : Command-line arguments</h1>
+
+<p>You can launch Sumatra with additional command-line options: <code>SumatraPDF.exe [argument ...] [filepath ...]</code> .</p>
+
+<p>All arguments start with dash (-). Some arguments are followed by additional parameter.</p>
+
+<p>Anything that is not recognized as a known option is interpreted as a file path so it&rsquo;s possible to mix file paths and command-line arguments.</p>
+
+<h2>List of command line options</h2>
+
+<ul>
+<li><code>-register-for-pdf</code> : registers SumatraPDF as the default PDF reader for the current user. If the user is administrator, it registers it for all users</li>
+<li><code>-restrict</code> : runs in restricted mode where you can disable features that require access to file system, registry and the internet. Useful for kiosk-like usage. Read more detailed documentation.</li>
+<li><code>-presentation</code> : display in presentation view</li>
+<li><code>-fullscreen</code> : display in fullscreen view</li>
+<li><code>-invert-colors</code> : TODO: remove this option?</li>
+</ul>
+
+<h2>Navigation options</h2>
+
+<ul>
+<li><code>-named-dest &lt;destination-name&gt;</code> : Searches the first indicated file for a destination or a table-of-contents entry (or starting with version 3.1 also a page label) matching destination-name and scrolls the document to it. Combine with -reuse-instance if the document is already open.</li>
+<li><code>-page &lt;pageNo&gt;</code> : Scrolls the first indicated file to the indicated page. Combine with -reuse-instance if the document is already open.</li>
+
+<li><p><code>-view &lt;view-mode&gt;</code> : Sets the view mode for the first indicated file. Available view modes:</p>
+
+<ul>
+<li>&ldquo;single page&rdquo;</li>
+<li>&ldquo;continuous single page&rdquo;</li>
+<li>facing</li>
+<li>&ldquo;continuous facing&rdquo;</li>
+<li>&ldquo;book view&rdquo;</li>
+<li>&ldquo;continuous book view&rdquo;</li>
+</ul>
+
+<p>Notice that options with space have to be surrounded by &ldquo;&rdquo; quotes.</p>
+
+<p>Combine with <code>-reuse-instance</code> if the document is already open.</p></li>
+
+<li><p><code>-zoom &lt;zoom-level&gt;</code> : Sets the zoom level for the first indicated file. Alternatives are &ldquo;fit page&rdquo;, &ldquo;fit width&rdquo;, &ldquo;fit content&rdquo; or any percentage value. Combine with -reuse-instance if the document is already open.</p></li>
+
+<li><p><code>-scroll &lt;x,y&gt;</code> : Scrolls to the given coordinates for the first indicated file. Combine with -reuse-instance if the document is already open.</p></li>
+</ul>
+
+<h2>Printing options</h2>
+
+<ul>
+<li><code>-print-to-default</code> : Prints all files indicated on this command line to the system default printer. After printing, SumatraPDF exits immediately (check the error code for failure).</li>
+<li><code>-print-to &lt;printer-name&gt;</code> : Prints all files indicated on this command line to the named printer. After printing, SumatraPDF exits immediately (check the error code for failure). E.g. <code>-print-to &quot;Microsoft XPS Document Writer&quot;</code> prints all indicated files to the XPS virtual printer.</li>
+<li><code>-print-settings &lt;settings-list&gt;</code>
+
+<ul>
+<li>Used in combination with <code>-print-to</code> and <code>-print-to-default</code> . Allows to tweak some of the printing related settings without using the Print dialog. The settings-list is a comma separated list of page ranges and advanced options such as
+
+<ul>
+<li><code>even</code> or <code>odd</code></li>
+<li><code>noscale</code> , <code>shrink</code> and <code>fit</code></li>
+<li><code>color</code> or <code>monochrome</code></li>
+<li><code>duplex</code> , <code>duplexshort</code> , <code>duplexlong</code> and <code>simplex</code></li>
+<li><code>bin=&lt;num or name&gt;</code> : select tray to print to</li>
+</ul></li>
+<li>E.g. <code>-print-settings &quot;1-3,5,10-8,odd,fit,bin=2&quot;</code> prints pages 1, 3, 5, 9 (i.e. the odd pages from the ranges 1-3, 5-5 and 10-8) and scales them so that they fit into the printable area of the paper.</li>
+<li><code>-print-settings &quot;3x&quot;</code> : prints the document 3 times</li>
+</ul></li>
+<li><code>-silent</code> : Used in combination with <code>-print-to</code> and <code>-print-to-default</code> . Silences any error messages related to command line printing.</li>
+<li><code>-print-dialog</code> : Displays the Print dialog for all the files indicated on this command line.</li>
+<li><code>-exit-when-done</code> : Used in combination with <code>-print-dialog</code> (and <code>-stress-test</code> ). Exits SumatraPDF after the Print dialog has been dismissed and the document printed.</li>
+</ul>
+
+<h2>Options related to forward/inverse search (for LaTeX editors)</h2>
+
+<ul>
+<li><code>-forward-search &lt;sourcepath&gt; &lt;line&gt;</code> : Performs a forward search from a LaTeX source file to a loaded PDF document (using PdfSync or SyncTeX). This is an alternative to the ForwardSearch DDE command. E.g. -forward-search main.tex 123 highlights all text related to line 123 in main.tex.</li>
+<li><code>-reuse-instance</code> : Tells an already open SumatraPDF to load the indicated files. If there are several running instances, behavior is undefined. Only needed when communicating with SumatraPDF through DDE (use the ReuseInstance setting instead otherwise).</li>
+<li><code>-inverse-search &lt;command-line&gt;</code> : Sets the command line to be used for performing an inverse search from a PDF document (usually back to a LaTeX source file). The inverse search command line can also be set from the Setting dialog. Use the variable %f for the current filename and %l for the current line.
+[Deprecated]: This setting is exposed in the Options dialog after the first PDF document with corresponding .synctex or .pdfsync file has been loaded. Alternatively, use the corresponding advanced setting instead.</li>
+<li><code>-fwdsearch-offset &lt;offset&gt; -fwdsearch-width &lt;width&gt; -fwdsearch-color &lt;hexcolor&gt; -fwdsearch-permanent &lt;flag&gt;</code> : Allows to customize the forward search highlight. Set the offset to a positive number to change the highlight style to a rectangle at the left of the page (instead of rectangles over the whole text). The flag for -fwdsearch-permanent can be 0 (make the highlight fade away, default) or 1.
+[Deprecated]: Use the corresponding advanced settings instead.</li>
+</ul>
+
+<h2>Developer options</h2>
+
+<ul>
+<li><code>-console</code> : Opens a console window alongside SumatraPDF for accessing (MuPDF) debug output.</li>
+
+<li><p><code>-stress-test &lt;path&gt; [file-filter] [range] [cycle-count]</code></p>
+
+<ul>
+<li><p>Renders all pages of the indicated file/directory for stability and performance testing. E.g.:</p>
+
+<p>-stress-test file1.pdf 25x
+-stress-test file2.pdf 1-3
+-stress-test dir <em>.pdf;</em>.xps 15- 3x</p></li>
+</ul>
+
+<p>renders file1.pdf 25 times, renders pages 1 to 3 of file2.pdf and renders all but the first 14 PDF and XPS files from dir 3 times.</p></li>
+
+<li><p><code>-bench &lt;filepath&gt; [page-range]</code> : Renders all pages (or just the indicated ones) for the given file and then outputs the required rendering times for performance testing and comparisons. Often used together with <code>-console</code> .</p></li>
+</ul>
+
+<h2>Deprecated options</h2>
+
+<p>The following options just set values in the settings file and may be removed in any future version:</p>
+
+<ul>
+<li><code>-bg-color &lt;hexcolor&gt;</code> : Changes the yellow background color to a different color. See e.g. <a href="http://html-color-codes.info/">html-color-codes.info</a> for a way to generate the hexcode for a color. E.g. <code>-bg-color #999999</code> changes the color to gray.
+[Deprecated]: Use <a href="https://www.sumatrapdfreader.org/settings.html#MainWindowBackground">MainWindowBackground</a> setting instead.</li>
+<li><code>-esc-to-exit</code> : Enables the Escape key to quit SumatraPDF. Deprecated: Use the <a href="https://www.sumatrapdfreader.org/settings.html#EscToExit">EscToExit</a> setting instead.</li>
+<li><code>-set-color-range &lt;text-hexcolor&gt; &lt;background-hexcolor&gt;</code> : Uses the given two colors for foreground and background and maps all other colors used in a document in between these two. E.g. <code>-set-color-range #dddddd #333333</code> displays soft white text on a dark gray background. [Deprecated]: Use the TextColor and BackgroundColor settings for FixedPageUI instead.</li>
+<li><code>-lang &lt;language-code&gt;</code> : Sets the UI language. See <a href="https://github.com/sumatrapdfreader/sumatrapdf/blob/master/scripts/trans_langs.py">/scripts/trans_langs.py</a> for the list of available language codes. E.g. -lang de. [Deprecated]: Use the UiLanguage setting instead.</li>
+<li><code>-manga-mode &lt;mode&gt;</code> : Enables or disables &ldquo;Manga mode&rdquo; for reading (mainly Japanese) comic books from right to left. Mode must be &ldquo;true&rdquo; or 1 for enabling and &ldquo;false&rdquo; or 0 for disabling this feature.</li>
+</ul>
+
+<p>Deprecated: Use the <a href="https://www.sumatrapdfreader.org/settings.html#ComicBookUI_CbxMangaMode">CbxMangaMode</a> setting for ComicBookUI instead.</p>
+
+			</div>
+		</div>
+	</div>
+
+	<hr>
+	<center><a href="https://blog.kowalczyk.info">Krzysztof Kowalczyk</a></center>
+	<script>
+		window.ga = window.ga || function() {
+			(ga.q = ga.q || []).push(arguments)
+		};
+		ga.l = +new Date;
+		ga('create', 'UA-194516-5', 'auto');
+		ga('send', 'pageview');
+	</script>
+	<script async src="//www.google-analytics.com/analytics.js"></script>
+</body>
+</html>

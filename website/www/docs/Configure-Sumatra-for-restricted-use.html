@@ -1,0 +1,73 @@
+<!doctype html>
+<html>
+
+<head>
+	<meta http-equiv="Content-Language" content="en-us">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="keywords" content="pdf, epub, mobi, chm, cbr, cbz, xps, djvu, reader, viewer" />
+	<meta name="description" content="Sumatra PDF reader and viewer for Windows" />
+	<title>Sumatra PDF Documentation</title>
+	<link rel="stylesheet" href="/sumatra.css" type="text/css" />
+</head>
+
+<body>
+	<script type="text/javascript" src="/sumatra.js"></script>
+
+	<div id="container">
+		<div id="banner">
+			<h1 style="display:inline;">Sumatra PDF
+				<font size="-1">is a PDF, ePub, MOBI, CHM, XPS, DjVu, CBZ, CBR reader for Windows</font>
+			</h1>
+			<script type="text/javascript">
+				document.write(navHtml());
+			</script>
+		</div>
+
+		<br/>
+
+		<div id="center">
+			<div class="content">
+				<h1><a href="/docs/">Documentation</a> : Configure Sumatra for restricted use</h1>
+
+<p>Sumatra can be configured for restricted use.</p>
+
+<p>A restricted mode is useful if you want to use SumatraPDF as a bundled viewer for your program&rsquo;s documentation or in kiosk mode</p>
+
+<p>In restricted mode some actions that are not appropriate in such context are disabled:</p>
+
+<ul>
+<li>opening new files</li>
+<li>launching URLs from with PDF document</li>
+<li>text and image selection</li>
+<li>printing</li>
+<li>changing default settings</li>
+<li>saving to disk</li>
+<li>automatic and manual update checks</li>
+<li>a history of recently opened files</li>
+<li>TeX preview support</li>
+<li>registering as a default PDF viewer</li>
+<li>opening with Adobe Acrobat</li>
+<li>e-mailing PDF</li>
+</ul>
+
+<p>To restrict Sumata put file <code>sumatrapdfrestrict.ini</code> in the same directory where <code>SumatraPDF.exe</code> is.</p>
+
+<p>Here&rsquo;s a <a href="https://github.com/sumatrapdfreader/sumatrapdf/blob/master/docs/sumatrapdfrestrict.ini">full documentation of available options</a> .</p>
+
+			</div>
+		</div>
+	</div>
+
+	<hr>
+	<center><a href="https://blog.kowalczyk.info">Krzysztof Kowalczyk</a></center>
+	<script>
+		window.ga = window.ga || function() {
+			(ga.q = ga.q || []).push(arguments)
+		};
+		ga.l = +new Date;
+		ga('create', 'UA-194516-5', 'auto');
+		ga('send', 'pageview');
+	</script>
+	<script async src="//www.google-analytics.com/analytics.js"></script>
+</body>
+</html>

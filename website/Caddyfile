@@ -1,0 +1,104 @@
+localhost:9000
+root www
+index free-pdf-reader.html
+errors stdout
+log stdout
+rewrite "/docs/Command-line-arguments-" {
+    regexp (.*)
+    to /docs/Command-line-arguments.html
+}
+rewrite "/docs/Configure-Sumatra-for-restricted-use-" {
+    regexp (.*)
+    to /docs/Configure-Sumatra-for-restricted-use.html
+}
+rewrite "/docs/Customize-external-viewers-" {
+    regexp (.*)
+    to /docs/Customize-external-viewers.html
+}
+rewrite "/docs/Customizing-eBook-UI-" {
+    regexp (.*)
+    to /docs/Customizing-eBook-UI.html
+}
+rewrite "/docs/DDE-Commands-" {
+    regexp (.*)
+    to /docs/DDE-Commands.html
+}
+rewrite "/docs/How-to-contribute-translation-" {
+    regexp (.*)
+    to /docs/How-to-contribute-translation.html
+}
+rewrite "/docs/How-to-submit-bug-reports-" {
+    regexp (.*)
+    to /docs/How-to-submit-bug-reports.html
+}
+rewrite "/docs/How-we-store-settings-" {
+    regexp (.*)
+    to /docs/How-we-store-settings.html
+}
+rewrite "/docs/Join-the-project-as-a-developer-" {
+    regexp (.*)
+    to /docs/Join-the-project-as-a-developer.html
+}
+rewrite "/docs/Our-build-system-" {
+    regexp (.*)
+    to /docs/Our-build-system.html
+}
+rewrite "/docs/Reporting-printing-bugs-" {
+    regexp (.*)
+    to /docs/Reporting-printing-bugs.html
+}
+rewrite "/docs/Setting-Sumatra-as-default-PDF-reader-" {
+    regexp (.*)
+    to /docs/Setting-Sumatra-as-default-PDF-reader.html
+}
+rewrite "/docs/Stress-testing-" {
+    regexp (.*)
+    to /docs/Stress-testing.html
+}
+rewrite "/docs/SumatraPDF-documentation-" {
+    regexp (.*)
+    to /docs/SumatraPDF-documentation.html
+}
+rewrite "/docs/Supported-document-formats-" {
+    regexp (.*)
+    to /docs/Supported-document-formats.html
+}
+rewrite "/docs/Uninstalling-SumatraPDF-" {
+    regexp (.*)
+    to /docs/Uninstalling-SumatraPDF.html
+}
+rewrite "/docs/Use-Sumatra-as-a-pre-viewer-for-LaTeX-editors-" {
+    regexp (.*)
+    to /docs/Use-Sumatra-as-a-pre-viewer-for-LaTeX-editors.html
+}
+rewrite "/docs/Using-DrMemory-" {
+    regexp (.*)
+    to /docs/Using-DrMemory.html
+}
+rewrite "/docs/Using-OpenCppCoverage-" {
+    regexp (.*)
+    to /docs/Using-OpenCppCoverage.html
+}
+rewrite "/docs/Why-only-Windows-" {
+    regexp (.*)
+    to /docs/Why-only-Windows.html
+}
+redir "/docs/" "/docs/SumatraPDF-documentation-fed36a5624d443fe9f7be0e410ecd715.html" 302
+redir "/index.html" "/free-pdf-reader.html" 302
+redir "/index.php" "/free-pdf-reader.html" 302
+redir "/index.htm" "/free-pdf-reader.html" 302
+redir "/home.php" "/free-pdf-reader.html" 302
+redir "/free-pdf-reader.html:" "/free-pdf-reader.html" 302
+redir "/free-pdf-reader-ja.htmlPDF" "/free-pdf-reader.html" 302
+redir "/free-pdf-reader-ru.html/" "/free-pdf-reader.html" 302
+redir "/sumatrapdf" "/free-pdf-reader.html" 302
+redir "/download.html" "/download-free-pdf-viewer.html" 302
+redir "/download-free-pdf-viewer-es.html," "/download-free-pdf-viewer.html" 302
+redir "/translators.html" "https://github.com/sumatrapdfreader/sumatrapdf/blob/master/TRANSLATORS" 302
+redir "/develop.html/" "/docs/Join-the-project-as-a-developer-be6ef085e89f49038c2b671c0743b690.html" 302
+redir "/develop.html" "/docs/Join-the-project-as-a-developer-be6ef085e89f49038c2b671c0743b690.html" 302
+redir "/forum.html" "https://forum.sumatrapdfreader.org" 302
+rewrite "/dl/" {
+    regexp (.*)
+    to https://kjkpub.nyc3.digitaloceanspaces.com/software/sumatrapdf/rel/{1}
+}

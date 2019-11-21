@@ -1,0 +1,140 @@
+body {
+	margin: 0px 0px 20px 0px;
+	background-color: #ffffff;
+	font-family: Verdana, Arial, sans-serif;
+}
+a {    text-decoration: underline;  font-weight: bold;}
+a:link {    color: #000066;}
+a:visited {    color: #666666;}
+a:active {    color: #000066;}
+a:hover {    color: #CC6600;}
+h1, h2, h3 {    margin: 0px;    padding: 0px;    font-weight: bold;}
+center { font-size: small; }
+
+#container { line-height: 140%; }
+
+#banner {
+  color: #FF4000;
+  background-color: #fff100;
+  text-align: left;
+  padding-top: 15px;
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
+#banner h1 { font-size: x-large; font-weight: bold;}
+#banner h2 { font-size: small;}
+
+#center { margin-right: 0px;    overflow: hidden;}
+.content { padding: 15px 15px 5px 15px; background-color: #FFFFFF; color: #333; font-size: small;}
+.content p { color: #333; font-size: small;    font-weight: normal;    line-height: 150%;    text-align: left;    margin-bottom: 10px;}
+.content blockquote {    line-height: 150%;}
+.content li { line-height: 150%;}
+.content h2 { color: #ff4000; font-family: 'Trebuchet MS', Verdana, sans-serif;
+              font-size: medium; text-align: left; font-weight: bold; margin-bottom: 10px; }
+
+col, colgroup, table, tbody, td, tfoot, th, thead, tr
+  { margin-left: auto; margin-right: auto; padding-left: 0px; padding-right: 0px;
+    border-left: 0px none; border-right: 0px none; float: none; clear: none;}
+
+/* Tabs:  Source: Dynamic Drive CSS Library   URL: http://www.dynamicdrive.com/style/ */
+#ddcolortabs{
+margin-left: 4px;
+padding: 0;
+padding-top: 8px;
+width: 100%;
+background: transparent;
+voice-family: "\"}\"";
+voice-family: inherit;
+padding-left: 5px;
+}
+
+#ddcolortabs ul {
+/*font: bold 11px Arial, Verdana, sans-serif; */
+font-size: small;
+margin:0;
+padding:0;
+list-style:none;
+}
+
+#ddcolortabs li {
+display:inline;
+margin:0 2px 0 0;
+padding:0;
+/* text-transform:uppercase; */
+}
+
+#ddcolortabs a{
+float:left;
+color: #FF4000;
+/* background: #678b3f no-repeat left top; */
+background: #fff100;
+
+margin:0 2px 0 0;
+padding:0 0 1px 3px;
+text-decoration:none;
+letter-spacing: 1px;
+}
+
+#ddcolortabs a span{
+float:left;
+display:block;
+background: transparent;
+padding:4px 9px 2px 6px;
+}
+
+#ddcolortabs a span{
+float:none;
+}
+
+#ddcolortabs a:hover{
+/* background-color: #8cb85c; */
+background-color: #fff;
+}
+
+#ddcolortabs a:hover span{
+/* background-color: #8cb85c; */
+background-color: #fff;
+}
+
+#ddcolortabs #current a, #ddcolortabs #current span{ /*currently selected tab*/
+background-color: #fff;
+/* background-color: #8cb85c; */
+}
+
+#ddcolortabsline{
+  clear: both;
+}
+
+.trans {
+    position: relative;
+    top: 2px;
+    left: -8px;
+    font-size:80%;
+    font-weight: normal;
+}
+
+.gooad {
+  margin-top: 4px;
+  margin-bottom: 6px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 748px; /* seems to be 728 really, adding margin for safety */
+}
+
+.goodadtxt {
+  color:gray;
+  font-size:70%;
+  margin:0px;
+}
+
+.ad {
+  font-family: geneva,helvetica,arial,sans-serif;
+  font-size: 12pt;
+  background-color: #FBF0FA;
+  padding: 4px 8px;
+}
+
+.adl {
+  color: green;
+}

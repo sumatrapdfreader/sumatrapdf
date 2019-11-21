@@ -1,0 +1,62 @@
+<!doctype html>
+<html>
+
+<head>
+	<meta http-equiv="Content-Language" content="en-us">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="keywords" content="pdf, epub, mobi, chm, cbr, cbz, xps, djvu, reader, viewer" />
+	<meta name="description" content="Sumatra PDF reader and viewer for Windows" />
+	<title>Sumatra PDF Documentation</title>
+	<link rel="stylesheet" href="/sumatra.css" type="text/css" />
+</head>
+
+<body>
+	<script type="text/javascript" src="/sumatra.js"></script>
+
+	<div id="container">
+		<div id="banner">
+			<h1 style="display:inline;">Sumatra PDF
+				<font size="-1">is a PDF, ePub, MOBI, CHM, XPS, DjVu, CBZ, CBR reader for Windows</font>
+			</h1>
+			<script type="text/javascript">
+				document.write(navHtml());
+			</script>
+		</div>
+
+		<br/>
+
+		<div id="center">
+			<div class="content">
+				<h1><a href="/docs/">Documentation</a> : Using OpenCppCoverage</h1>
+
+<p>I tried <a href="https://opencppcoverage.codeplex.com/">OpenCppCoverage</a> (<a href="https://github.com/Unity-Technologies/OpenCppCoverage">https://github.com/Unity-Technologies/OpenCppCoverage</a>) 0.9.3 on SumatraPDF.</p>
+
+<p>I installed 64-bit version from the installer on Win 10. I ran <code>OpenCppCoverage.exe --sources sumatra -- .\dbg64\SumatraPDF.exe</code> , opened a file, closed the program.</p>
+
+<p><code>--sources</code> limits reporting to only files whose paths match a given pattern. Using sumatra for pattern matches all our source files, assuming the sources were checked out to <code>sumatrapdf</code> directory (because <code>sumatra</code> matches <code>sumatrapdf</code> in file path) and skips the sources for C/C++ libraries.</p>
+
+<p>It generated <code>CoverageReport-${date}</code> directory with HTML report. There&rsquo;s top-level index.html with links to html file for each module (SumatraPDF.exe in our case).</p>
+
+<p>They recommend running on debug code.</p>
+
+<p>At the end it reports generating reports for system dlls, but also says can&rsquo;t get symbols, so it doesn&rsquo;t actually generate anything.</p>
+
+<p>The html report isn&rsquo;t great. Another option would be to use <code>--export_type=binary</code> option which generates <code>SumatraPDF.cov</code> file and write html generator myself. I assume the format of <code>.cov</code> file is simple.</p>
+
+			</div>
+		</div>
+	</div>
+
+	<hr>
+	<center><a href="https://blog.kowalczyk.info">Krzysztof Kowalczyk</a></center>
+	<script>
+		window.ga = window.ga || function() {
+			(ga.q = ga.q || []).push(arguments)
+		};
+		ga.l = +new Date;
+		ga('create', 'UA-194516-5', 'auto');
+		ga('send', 'pageview');
+	</script>
+	<script async src="//www.google-analytics.com/analytics.js"></script>
+</body>
+</html>

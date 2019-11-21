@@ -1,0 +1,54 @@
+<!doctype html>
+<html>
+
+<head>
+	<meta http-equiv="Content-Language" content="en-us">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="keywords" content="pdf, epub, mobi, chm, cbr, cbz, xps, djvu, reader, viewer" />
+	<meta name="description" content="Sumatra PDF reader and viewer for Windows" />
+	<title>Sumatra PDF Documentation</title>
+	<link rel="stylesheet" href="/sumatra.css" type="text/css" />
+</head>
+
+<body>
+	<script type="text/javascript" src="/sumatra.js"></script>
+
+	<div id="container">
+		<div id="banner">
+			<h1 style="display:inline;">Sumatra PDF
+				<font size="-1">is a PDF, ePub, MOBI, CHM, XPS, DjVu, CBZ, CBR reader for Windows</font>
+			</h1>
+			<script type="text/javascript">
+				document.write(navHtml());
+			</script>
+		</div>
+
+		<br/>
+
+		<div id="center">
+			<div class="content">
+				<h1><a href="/docs/">Documentation</a> : How we store settings</h1>
+
+<p>Persisted data is stored in SumatraPDF-settings.txt file. In portable version the file is stored in the same directory as SumatraPDF executable. In non-portable version, it&rsquo;s in <code>%APPDATA%\SumatraPDF</code> directory.</p>
+
+<p>Starting with version 1.6 we also persist thumbnails for &ldquo;Frequently read&rdquo; list. They are stored in subdirectory <code>sumatrapdfcache</code> as .png files.</p>
+
+<p>See <a href="http://www.sumatrapdfreader.org/settings.html">www.sumatrapdfreader.org/settings.html</a> for more information about all the settings which are currently stored and <a href="https://github.com/sumatrapdfreader/sumatrapdf/blob/master/scripts/gen_settingsstructs.py">scripts/gen_settingsstructs.py</a> for what to change in order to add new settings.</p>
+
+			</div>
+		</div>
+	</div>
+
+	<hr>
+	<center><a href="https://blog.kowalczyk.info">Krzysztof Kowalczyk</a></center>
+	<script>
+		window.ga = window.ga || function() {
+			(ga.q = ga.q || []).push(arguments)
+		};
+		ga.l = +new Date;
+		ga('create', 'UA-194516-5', 'auto');
+		ga('send', 'pageview');
+	</script>
+	<script async src="//www.google-analytics.com/analytics.js"></script>
+</body>
+</html>

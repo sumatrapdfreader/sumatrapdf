@@ -1,0 +1,130 @@
+<!doctype html>
+<html>
+
+<head>
+	<meta http-equiv="Content-Language" content="en-us">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="keywords" content="pdf, epub, mobi, chm, cbr, cbz, xps, djvu, reader, viewer" />
+	<meta name="description" content="Sumatra PDF reader and viewer for Windows" />
+	<title>Sumatra PDF Documentation</title>
+	<link rel="stylesheet" href="/sumatra.css" type="text/css" />
+</head>
+
+<body>
+	<script type="text/javascript" src="/sumatra.js"></script>
+
+	<div id="container">
+		<div id="banner">
+			<h1 style="display:inline;">Sumatra PDF
+				<font size="-1">is a PDF, ePub, MOBI, CHM, XPS, DjVu, CBZ, CBR reader for Windows</font>
+			</h1>
+			<script type="text/javascript">
+				document.write(navHtml());
+			</script>
+		</div>
+
+		<br/>
+
+		<div id="center">
+			<div class="content">
+				<h1><a href="/docs/">Documentation</a> : DDE Commands</h1>
+
+<p>Sumatra can be controlled in a limited way from other software by sending DDE commands. They are mostly used to use SumatraPDF as a <a href="/docs/Use-Sumatra-as-a-pre-viewer-for-LaTeX-editors-06174d1d7be24e10966656261c70ed7f">preview tool from e.g. LaTeX editors</a> that generate PDF files.</p>
+
+<h2>Format of DDE comands</h2>
+
+<p>Single DDE command: <code>[Command(parameter1, parameter2, ..., )]</code></p>
+
+<p>Multiple DDE commands: <code>[Command1(parameter1, parameter2, ..., )][Command2(...)][...]</code></p>
+
+<h2>List of DDE commands:</h2>
+
+<ul>
+<li>Open file
+
+<ul>
+<li>format: <code>[Open(&quot;&lt;pdffilepath&gt;&quot;[,&lt;newwindow&gt;,&lt;focus&gt;,&lt;forcerefresh&gt;])]</code></li>
+<li>arguments:
+
+<ul>
+<li>if <code>newwindow</code> is 1 then a new window is created even if the file is already open</li>
+<li>if <code>focus</code> is 1 then the focus is set to the window</li>
+<li>if <code>forcerefresh</code> is 1 the command forces the refresh of the file window if already open (useful for files opened over network that don&rsquo;t get file-change notifications)&ldquo;.</li>
+</ul></li>
+<li>example: <code>[Open(&quot;c:\file.pdf&quot;, 1, 1, 0)]</code></li>
+</ul></li>
+<li>Forward-search
+
+<ul>
+<li>format: <code>[ForwardSearch([&quot;&lt;pdffilepath&gt;&quot;,]&quot;&lt;sourcefilepath&gt;&quot;,&lt;line&gt;,&lt;column&gt;[,&lt;newwindow&gt;,&lt;setfocus&gt;])]</code></li>
+<li>arguments:
+
+<ul>
+<li><code>pdffilepath</code> : path to the PDF document (if this path is omitted and the document isn&rsquo;t already open, SumatraPDF won&rsquo;t open it for you)</li>
+<li><code>column</code> : this parameter is for future use (just always pass 0)</li>
+<li><code>newwindow</code> : 1 to open the document in a new window (even if the file is already opened)</li>
+<li><code>focus</code> : 1 to set focus to SumatraPDF&rsquo;s window.</li>
+</ul></li>
+<li>examples
+
+<ul>
+<li><code>[ForwardSearch(&quot;c:\file.pdf&quot;,&quot;c:\folder\source.tex&quot;,298,0)]</code></li>
+<li><code>[ForwardSearch(&quot;c:\folder\source.tex&quot;,298,0,0,1)]</code></li>
+</ul></li>
+</ul></li>
+<li>Jump to named destination command
+
+<ul>
+<li>format: <code>[GotoNamedDest(&quot;&lt;pdffilepath&gt;&quot;,&quot;&lt;destination name&gt;&quot;)]</code></li>
+<li>example: <code>[GotoNamedDest(&quot;c:\file.pdf&quot;, &quot;chapter.1&quot;)]</code></li>
+<li>note: the pdf file must be already opened</li>
+</ul></li>
+<li>Go to page
+
+<ul>
+<li>format: <code>[GotoPage(&quot;&lt;pdffilepath&gt;&quot;,&lt;page number&gt;)]</code></li>
+<li>example: <code>[GotoPage(&quot;c:\file.pdf&quot;, 37)]</code></li>
+<li>note: the pdf file must be already opened.</li>
+</ul></li>
+<li>Set view settings
+
+<ul>
+<li>format: <code>[SetView(&quot;&lt;pdffilepath&gt;&quot;,&quot;&lt;view mode&gt;&quot;,&lt;zoom level&gt;[,&lt;scrollX&gt;,&lt;scrollY&gt;])]</code></li>
+<li>arguments:
+
+<ul>
+<li><code>view mode</code> :
+
+<ul>
+<li>&ldquo;single page&rdquo;</li>
+<li>&ldquo;facing&rdquo;</li>
+<li>&ldquo;book view&rdquo;</li>
+<li>&ldquo;continuous&rdquo;</li>
+<li>&ldquo;continuous facing&rdquo;</li>
+<li>&ldquo;continuous book view&rdquo;</li>
+</ul></li>
+<li><code>zoom level</code> : either a zoom factor between 8 and 6400 (in percent) or one of -1 (Fit Page), -2 (Fit Width) or -3 (Fit Content)</li>
+<li><code>scrollX, scrollY</code> : PDF document (user) coordinates of the point to be visible in the top-left of the window</li>
+</ul></li>
+<li>example: <code>[SetView(&quot;c:\file.pdf&quot;,&quot;continuous&quot;,-3)]</code></li>
+<li>note: the pdf file must already be opened</li>
+</ul></li>
+</ul>
+
+			</div>
+		</div>
+	</div>
+
+	<hr>
+	<center><a href="https://blog.kowalczyk.info">Krzysztof Kowalczyk</a></center>
+	<script>
+		window.ga = window.ga || function() {
+			(ga.q = ga.q || []).push(arguments)
+		};
+		ga.l = +new Date;
+		ga('create', 'UA-194516-5', 'auto');
+		ga('send', 'pageview');
+	</script>
+	<script async src="//www.google-analytics.com/analytics.js"></script>
+</body>
+</html>

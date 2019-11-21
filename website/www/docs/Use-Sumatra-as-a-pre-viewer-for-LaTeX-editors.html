@@ -1,0 +1,89 @@
+<!doctype html>
+<html>
+
+<head>
+	<meta http-equiv="Content-Language" content="en-us">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="keywords" content="pdf, epub, mobi, chm, cbr, cbz, xps, djvu, reader, viewer" />
+	<meta name="description" content="Sumatra PDF reader and viewer for Windows" />
+	<title>Sumatra PDF Documentation</title>
+	<link rel="stylesheet" href="/sumatra.css" type="text/css" />
+</head>
+
+<body>
+	<script type="text/javascript" src="/sumatra.js"></script>
+
+	<div id="container">
+		<div id="banner">
+			<h1 style="display:inline;">Sumatra PDF
+				<font size="-1">is a PDF, ePub, MOBI, CHM, XPS, DjVu, CBZ, CBR reader for Windows</font>
+			</h1>
+			<script type="text/javascript">
+				document.write(navHtml());
+			</script>
+		</div>
+
+		<br/>
+
+		<div id="center">
+			<div class="content">
+				<h1><a href="/docs/">Documentation</a> : Use Sumatra as a pre-viewer for LaTeX editors</h1>
+
+<p>You can use <a href="/docs/DDE-Commands-43ae651b446b4f09a725f2449150a43d">DDE commands</a> from TeX and LaTeX editors to use Sumatra as a pre-viewer.</p>
+
+<h2>TeXnicCenter</h2>
+
+<p><strong>Detailed instructions</strong> : <a href="https://tex.stackexchange.com/questions/116981/how-to-configure-texniccenter-2-0-with-sumatra-2013-2016-version">https://tex.stackexchange.com/questions/116981/how-to-configure-texniccenter-2-0-with-sumatra-2013-2016-version</a></p>
+
+<p><strong>Short instructions:</strong></p>
+
+<p>Configure viewer in <a href="http://texniccenter.sourceforge.net/configuration.html#viewer-tab">output profiles</a> .</p>
+
+<ul>
+<li>Path of executable: <code>C:\Program Files\SumatraPDF\SumatraPDF.exe</code> on (or wherever you&rsquo;ve installed SumatraPDF)</li>
+<li>View project&rsquo;s output
+
+<ul>
+<li>DDE command: <code>[Open(&quot;%bm.pdf&quot;,0,1,1)]</code></li>
+<li>Server: <code>SUMATRA</code></li>
+<li>Topic: <code>control</code></li>
+</ul></li>
+<li>Forward Search
+
+<ul>
+<li>DDE command: <code>[ForwardSearch(&quot;%bm.pdf&quot;,&quot;%Wc&quot;,%l,0,0,1)]</code></li>
+<li>Server: <code>SUMATRA</code></li>
+<li>Topic: <code>control</code></li>
+</ul></li>
+</ul>
+
+<p>Some people reported better results when using <code>%sbm</code> instead of <code>%bm</code> in the above command.</p>
+
+<ul>
+<li>Close document before running LaTeX: Do not close</li>
+<li>To enable the inverse search, you also have to append to the LaTeX compiler arguments: <code>-synctex=1</code></li>
+</ul>
+
+<h2>WinEdt, Emacs and Vim</h2>
+
+<p>See instructions at <a href="http://william.famille-blum.org/blog/static.php?page=static081010-000413">http://william.famille-blum.org/blog/static.php?page=static081010-000413</a></p>
+
+<p>Emacs: <a href="https://www.emacswiki.org/emacs/AUCTeX#toc25">https://www.emacswiki.org/emacs/AUCTeX#toc25</a></p>
+
+			</div>
+		</div>
+	</div>
+
+	<hr>
+	<center><a href="https://blog.kowalczyk.info">Krzysztof Kowalczyk</a></center>
+	<script>
+		window.ga = window.ga || function() {
+			(ga.q = ga.q || []).push(arguments)
+		};
+		ga.l = +new Date;
+		ga('create', 'UA-194516-5', 'auto');
+		ga('send', 'pageview');
+	</script>
+	<script async src="//www.google-analytics.com/analytics.js"></script>
+</body>
+</html>

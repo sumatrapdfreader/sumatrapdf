@@ -1,0 +1,410 @@
+<!doctype html>
+
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Customizing SumatraPDF</title>
+<style type=text/css>
+body {
+    font-size: 90%;
+    background-color: #f5f5f5;
+}
+
+.desc {
+    padding: 0px 10px 0px 10px;
+}
+
+.txt1 {
+    /* bold doesn't look good in the fonts above */
+    font-family: Monaco, 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', 'Lucida Console', monospace;
+    font-size: 88%;
+    color: #800; /* this is brown */
+}
+
+.txt2 {
+    font-family: Verdana, Arial, sans-serif;
+    font-family: serif;
+    font-size: 90%;
+    font-weight: bold;
+    color: #800; /* this is brown */
+}
+
+.txt {
+    font-family: serif;
+    font-size: 95%;
+    font-weight: bold;
+    color: #800; /* this is brown */
+    color: #000;
+    background-color: #ececec;
+    border: 1px solid #fff;
+    border-radius: 10px;
+    -webkit-border-radius: 10px;
+    box-shadow: rgba(0, 0, 0, .15) 3px 3px 4px;
+    -webkit-box-shadow: rgba(0, 0, 0, .15) 3px 3px 4px;
+    padding: 10px 10px 10px 20px;
+}
+
+.cm {
+    color: #800;   /* this is brown, a bit aggressive */
+    color: #8c8c8c; /* this is gray */
+    color: #555; /* this is darker gray */
+    font-weight: normal;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class=desc>
+
+<h2>Customizing SumatraPDF</h2>
+
+<p>You can change the look and behavior of
+<a href="http://blog.kowalczyk.info/software/sumatrapdf/">SumatraPDF</a>
+by editing the file <code>SumatraPDF-settings.txt</code>. The file is stored in
+<code>%APPDATA%\SumatraPDF</code> directory for the installed version or in the
+same directory as <code>SumatraPDF.exe</code> executable for the portable version.</p>
+
+<p>Use the menu item <code>Settings -> Advanced Settings...</code> to open the settings file
+with your default text editor.</p>
+
+<p>The file is in a simple text format. Below is an explanation of
+what the different settings mean and what their default values are.</p>
+
+<p>Highlighted settings can't be changed from the UI. Modifying other settings
+directly in this file is not recommended.</p>
+
+<p>If you add or remove lines with square brackets, <b>make sure to always add/remove
+square brackets in pairs</b>! Else you risk losing all the data following them.</p>
+
+</div>
+
+<pre class=txt>
+<div><span class=cm id="MainWindowBackground">background <a href="#color">color</a> of the non-document windows, traditionally yellow</span>
+MainWindowBackground = #fff200
+
+<span class=cm id="EscToExit">if true, Esc key closes SumatraPDF</span>
+EscToExit = false
+
+<span class=cm id="ReuseInstance">if true, we'll always open files using existing SumatraPDF process</span>
+ReuseInstance = false
+
+<span class=cm id="UseSysColors">if true, we use Windows system <a href="#color">colors</a> for background/text color. Over-rides other settings</span>
+UseSysColors = false
+
+<span class=cm id="FixedPageUI">customization options for PDF, XPS, DjVu and PostScript UI</span>
+FixedPageUI [
+    <span class=cm id="FixedPageUI_TextColor"><a href="#color">color</a> value with which black (text) will be substituted</span>
+    TextColor = #000000
+
+    <span class=cm id="FixedPageUI_BackgroundColor"><a href="#color">color</a> value with which white (background) will be substituted</span>
+    BackgroundColor = #ffffff
+
+    <span class=cm id="FixedPageUI_SelectionColor"><a href="#color">color</a> value for the text selection rectangle (also used to highlight found text) (introduced in 
+    version 2.4)</span>
+    SelectionColor = #f5fc0c
+
+    <span class=cm id="FixedPageUI_WindowMargin">top, right, bottom and left margin (in that order) between window and document</span>
+    WindowMargin = 2 4 2 4
+
+    <span class=cm id="FixedPageUI_PageSpacing">horizontal and vertical distance between two pages in facing and book view modes</span>
+    PageSpacing = 4 4
+
+    <span class=cm id="FixedPageUI_GradientColors"><a href="#color">colors</a> to use for the gradient from top to bottom (stops will be inserted at regular intervals 
+    throughout the document); currently only up to three <a href="#color">colors</a> are supported; the idea behind this 
+    experimental feature is that the background might allow to subconsciously determine reading 
+    progress; suggested values: #2828aa #28aa28 #aa2828</span>
+    GradientColors =
+]
+
+<span class=cm id="EbookUI">customization options for eBooks (EPUB, Mobi, FictionBook) UI. If UseFixedPageUI is true, 
+FixedPageUI settings apply instead</span>
+EbookUI [
+    <span class=cm id="EbookUI_FontName">name of the font. takes effect after re-opening the document</span>
+    FontName = Georgia
+
+    <span class=cm id="EbookUI_FontSize">size of the font. takes effect after re-opening the document</span>
+    FontSize = 12.5
+
+    <span class=cm id="EbookUI_TextColor"><a href="#color">color</a> for text</span>
+    TextColor = #5f4b32
+
+    <span class=cm id="EbookUI_BackgroundColor"><a href="#color">color</a> of the background (page)</span>
+    BackgroundColor = #fbf0d9
+
+    <span class=cm id="EbookUI_UseFixedPageUI">if true, the UI used for PDF documents will be used for ebooks as well (enables printing and 
+    searching, disables automatic reflow)</span>
+    UseFixedPageUI = false
+]
+
+<span class=cm id="ComicBookUI">customization options for Comic Book and images UI</span>
+ComicBookUI [
+    <span class=cm id="ComicBookUI_WindowMargin">top, right, bottom and left margin (in that order) between window and document</span>
+    WindowMargin = 0 0 0 0
+
+    <span class=cm id="ComicBookUI_PageSpacing">horizontal and vertical distance between two pages in facing and book view modes</span>
+    PageSpacing = 4 4
+
+    <span class=cm id="ComicBookUI_CbxMangaMode">if true, default to displaying Comic Book files in manga mode (from right to left if showing 2 
+    pages at a time)</span>
+    CbxMangaMode = false
+]
+
+<span class=cm id="ChmUI">customization options for CHM UI. If UseFixedPageUI is true, FixedPageUI settings apply instead</span>
+ChmUI [
+    <span class=cm id="ChmUI_UseFixedPageUI">if true, the UI used for PDF documents will be used for CHM documents as well</span>
+    UseFixedPageUI = false
+]
+
+<span class=cm id="ExternalViewers">list of additional external viewers for various file types (can have multiple entries for the same 
+format)</span>
+ExternalViewers [
+  [
+    <span class=cm id="ExternalViewers_CommandLine">command line with which to call the external viewer, may contain %p for page numer and "%1" for 
+    the file name (add quotation marks around paths containing spaces)</span>
+    CommandLine =
+
+    <span class=cm id="ExternalViewers_Name">name of the external viewer to be shown in the menu (implied by CommandLine if missing)</span>
+    Name =
+
+    <span class=cm id="ExternalViewers_Filter">optional filter for which file types the menu item is to be shown; separate multiple entries 
+    using ';' and don't include any spaces (e.g. *.pdf;*.xps for all PDF and XPS documents)</span>
+    Filter =
+  ]
+]
+
+<span class=cm id="ShowMenubar">if false, the menu bar will be hidden for all newly opened windows (use F9 to show it until the 
+window closes or Alt to show it just briefly), only applies if UseTabs is false (introduced in 
+version 2.5)</span>
+ShowMenubar = true
+
+<span class=cm id="ReloadModifiedDocuments">if true, a document will be reloaded automatically whenever it's changed (currently doesn't work for 
+documents shown in the ebook UI) (introduced in version 2.5)</span>
+ReloadModifiedDocuments = true
+
+<span class=cm id="FullPathInTitle">if true, we show the full path to a file in the title bar (introduced in version 2.6)</span>
+FullPathInTitle = false
+
+<span class=cm id="ZoomLevels">sequence of zoom levels when zooming in/out; all values must lie between 8.33 and 6400</span>
+ZoomLevels = 8.33 12.5 18 25 33.33 50 66.67 75 100 125 150 200 300 400 600 800 1000 1200 1600 2000 2400 3200 4800 6400
+
+<span class=cm id="ZoomIncrement">zoom step size in percents relative to the current zoom level. if zero or negative, the values from 
+ZoomLevels are used instead</span>
+ZoomIncrement = 0
+
+<span class=cm id="PrinterDefaults">these override the default settings in the Print dialog</span>
+PrinterDefaults [
+    <span class=cm id="PrinterDefaults_PrintScale">default value for scaling (shrink, fit, none)</span>
+    PrintScale = shrink
+
+    <span class=cm id="PrinterDefaults_PrintAsImage">default value for the compatibility option</span>
+    PrintAsImage = false
+]
+
+<span class=cm id="ForwardSearch">customization options for how we show forward search results (used from LaTeX editors)</span>
+ForwardSearch [
+    <span class=cm id="ForwardSearch_HighlightOffset">when set to a positive value, the forward search highlight style will be changed to a rectangle 
+    at the left of the page (with the indicated amount of margin from the page margin)</span>
+    HighlightOffset = 0
+
+    <span class=cm id="ForwardSearch_HighlightWidth">width of the highlight rectangle (if HighlightOffset is > 0)</span>
+    HighlightWidth = 15
+
+    <span class=cm id="ForwardSearch_HighlightColor"><a href="#color">color</a> used for the forward search highlight</span>
+    HighlightColor = #6581ff
+
+    <span class=cm id="ForwardSearch_HighlightPermanent">if true, highlight remains visible until the next mouse click (instead of fading away 
+    immediately)</span>
+    HighlightPermanent = false
+]
+
+<span class=cm id="AnnotationDefaults">default values for user added annotations in FixedPageUI documents (preliminary and still subject to 
+change)</span>
+AnnotationDefaults [
+    <span class=cm id="AnnotationDefaults_HighlightColor"><a href="#color">color</a> used for the highlight tool (in prerelease builds, the current selection can be converted 
+    into a highlight annotation by pressing the 'h' key)</span>
+    HighlightColor = #ffff60
+
+    <span class=cm id="AnnotationDefaults_SaveIntoDocument">if true, annotations are appended to PDF documents, else they're always saved to an external 
+    .smx file</span>
+    SaveIntoDocument = true
+]
+
+<span class=cm id="DefaultPasswords">a whitespace separated list of passwords to try for opening a password protected document (passwords 
+containing spaces must be quoted same as command line arguments) (introduced in version 2.4)</span>
+DefaultPasswords =
+
+<span class=cm id="CustomScreenDPI">actual resolution of the main screen in DPI (if this value isn't positive, the system's UI setting 
+is used) (introduced in version 2.5)</span>
+CustomScreenDPI = 0
+</div>
+<span class=cm id="RememberStatePerDocument">if true, we store display settings for each document separately (i.e. everything after 
+UseDefaultState in FileStates)</span>
+RememberStatePerDocument = true
+
+<span class=cm id="UiLanguage"><a href="langs.html">ISO code</a> of the current UI language</span>
+UiLanguage =
+
+<span class=cm id="ShowToolbar">if true, we show the toolbar at the top of the window</span>
+ShowToolbar = true
+
+<span class=cm id="ShowFavorites">if true, we show the Favorites sidebar</span>
+ShowFavorites = false
+
+<span class=cm id="AssociatedExtensions">a list of extensions that SumatraPDF has associated itself with and will reassociate if a different 
+application takes over (e.g. ".pdf .xps .epub")</span>
+AssociatedExtensions =
+
+<span class=cm id="AssociateSilently">whether file associations should be fixed silently or only after user feedback</span>
+AssociateSilently = false
+
+<span class=cm id="CheckForUpdates">if true, we check once a day if an update is available</span>
+CheckForUpdates = true
+
+<span class=cm id="VersionToSkip">we won't ask again to update to this version</span>
+VersionToSkip =
+
+<span class=cm id="RememberOpenedFiles">if true, we remember which files we opened and their display settings</span>
+RememberOpenedFiles = true
+
+<span class=cm id="InverseSearchCmdLine">pattern used to launch the LaTeX editor when doing inverse search</span>
+InverseSearchCmdLine =
+
+<span class=cm id="EnableTeXEnhancements">if true, we expose the SyncTeX inverse search command line in Settings -> Options</span>
+EnableTeXEnhancements = false
+
+<span class=cm id="DefaultDisplayMode">default layout of pages. valid values: automatic, single page, facing, book view, continuous, 
+continuous facing, continuous book view</span>
+DefaultDisplayMode = automatic
+
+<span class=cm id="DefaultZoom">default zoom (in %) or one of those values: fit page, fit width, fit content</span>
+DefaultZoom = fit page
+
+<span class=cm id="WindowState">default state of the window. 1 is normal, 2 is maximized, 3 is fullscreen, 4 is minimized</span>
+WindowState = 1
+
+<span class=cm id="WindowPos">default position (x, y) and size (width, height) of the window</span>
+WindowPos = 0 0 0 0
+
+<span class=cm id="ShowToc">if true, we show table of contents (Bookmarks) sidebar if it's present in the document</span>
+ShowToc = true
+
+<span class=cm id="SidebarDx">width of favorites/bookmarks sidebar (if shown)</span>
+SidebarDx = 0
+
+<span class=cm id="TocDy">if both favorites and bookmarks parts of sidebar are visible, this is the height of bookmarks (table 
+of contents) part</span>
+TocDy = 0
+
+<span class=cm id="ShowStartPage">if true, we show a list of frequently read documents when no document is loaded</span>
+ShowStartPage = true
+
+<span class=cm id="UseTabs">if true, documents are opened in tabs instead of new windows (introduced in version 2.6)</span>
+UseTabs = true
+
+<span class=cm id="FileStates">information about opened files (in most recently used order)</span>
+FileStates [
+  [
+    <span class=cm id="FileStates_FilePath">path of the document</span>
+    FilePath =
+
+    <span class=cm id="FileStates_Favorites">Values which are persisted for bookmarks/favorites</span>
+    Favorites [
+      [
+        <span class=cm id="Favorites_Name">name of this favorite as shown in the menu</span>
+        Name =
+
+        <span class=cm id="Favorites_PageNo">number of the bookmarked page</span>
+        PageNo = 0
+
+        <span class=cm id="Favorites_PageLabel">label for this page (only present if logical and physical page numbers are not the same)</span>
+        PageLabel =
+      ]
+    ]
+
+    <span class=cm id="FileStates_IsPinned">a document can be "pinned" to the Frequently Read list so that it isn't displaced by recently 
+    opened documents</span>
+    IsPinned = false
+
+    <span class=cm id="FileStates_IsMissing">if true, the file is considered missing and won't be shown in any list</span>
+    IsMissing = false
+
+    <span class=cm id="FileStates_OpenCount">number of times this document has been opened recently</span>
+    OpenCount = 0
+
+    <span class=cm id="FileStates_DecryptionKey">data required to open a password protected document without having to ask for the password again</span>
+    DecryptionKey =
+
+    <span class=cm id="FileStates_UseDefaultState">if true, we use global defaults when opening this file (instead of the values below)</span>
+    UseDefaultState = false
+
+    <span class=cm id="FileStates_DisplayMode">layout of pages. valid values: automatic, single page, facing, book view, continuous, continuous 
+    facing, continuous book view</span>
+    DisplayMode = automatic
+
+    <span class=cm id="FileStates_ScrollPos">how far this document has been scrolled (in x and y direction)</span>
+    ScrollPos = 0 0
+
+    <span class=cm id="FileStates_PageNo">number of the last read page</span>
+    PageNo = 1
+
+    <span class=cm id="FileStates_Zoom">zoom (in %) or one of those values: fit page, fit width, fit content</span>
+    Zoom = fit page
+
+    <span class=cm id="FileStates_Rotation">how far pages have been rotated as a multiple of 90 degrees</span>
+    Rotation = 0
+
+    <span class=cm id="FileStates_WindowState">state of the window. 1 is normal, 2 is maximized, 3 is fullscreen, 4 is minimized</span>
+    WindowState = 0
+
+    <span class=cm id="FileStates_WindowPos">default position (can be on any monitor)</span>
+    WindowPos = 0 0 0 0
+
+    <span class=cm id="FileStates_ShowToc">if true, we show table of contents (Bookmarks) sidebar if it's present in the document</span>
+    ShowToc = true
+
+    <span class=cm id="FileStates_SidebarDx">width of the left sidebar panel containing the table of contents</span>
+    SidebarDx = 0
+
+    <span class=cm id="FileStates_DisplayR2L">if true, the document is displayed right-to-left in facing and book view modes (only used for 
+    comic book documents)</span>
+    DisplayR2L = false
+
+    <span class=cm id="FileStates_ReparseIdx">data required to restore the last read page in the ebook UI</span>
+    ReparseIdx = 0
+
+    <span class=cm id="FileStates_TocState">data required to determine which parts of the table of contents have been expanded</span>
+    TocState =
+  ]
+]
+
+<span class=cm id="ReopenOnce">data required for reloading documents after an auto-update (introduced in version 2.6)</span>
+ReopenOnce =
+
+<span class=cm id="TimeOfLastUpdateCheck">data required to determine when SumatraPDF last checked for updates</span>
+TimeOfLastUpdateCheck = 0 0
+
+<span class=cm id="OpenCountWeek">value required to determine recency for the OpenCount value in FileStates</span>
+OpenCountWeek = 0
+</pre>
+
+<div class=desc>
+<h3 id="color">Syntax for color values</h3>
+
+<p>
+The syntax for colors is: <code>#rrggbb</code>.</p>
+<p>The components are hex values (ranging from 00 to FF) and stand for:
+<ul>
+  <li><code>rr</code> : red component</li>
+  <li><code>gg</code> : green component</li>
+  <li><code>bb</code> : blue component</li>
+</ul>
+For example #ff0000 means red color. You can use <a href="http://www.colorpicker.com/">
+Color Picker</a> or <a href="http://mudcu.be/sphere/">Sphere</a> or
+<a href="http://colorschemedesigner.com/">ColorScheme Designer</a> to pick a color.
+</p>
+</div>
+
+</body>
+</html>

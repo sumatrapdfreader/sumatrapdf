@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+
+<head>
+	<meta http-equiv="Content-Language" content="en-us">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="keywords" content="pdf, epub, mobi, chm, cbr, cbz, xps, djvu, reader, viewer" />
+	<meta name="description" content="Sumatra PDF reader and viewer for Windows" />
+	<title>Sumatra PDF Documentation</title>
+	<link rel="stylesheet" href="/sumatra.css" type="text/css" />
+</head>
+
+<body>
+	<script type="text/javascript" src="/sumatra.js"></script>
+
+	<div id="container">
+		<div id="banner">
+			<h1 style="display:inline;">Sumatra PDF
+				<font size="-1">is a PDF, ePub, MOBI, CHM, XPS, DjVu, CBZ, CBR reader for Windows</font>
+			</h1>
+			<script type="text/javascript">
+				document.write(navHtml());
+			</script>
+		</div>
+
+		<br/>
+
+		<div id="center">
+			<div class="content">
+				<h1><a href="/docs/">Documentation</a> : Using DrMemory</h1>
+
+<p><a href="http://drmemory.org/">DrMemory</a> is a tool for detecting memory errors and misuse of Windows APIs.</p>
+
+<p>I&rsquo;ve tried portable version <a href="https://github.com/DynamoRIO/drmemory/wiki/Downloads">1.8.1RC1</a> on Windows 7 32bit (it doesn&rsquo;t support Windows 10 and 64bit).</p>
+
+<p>I ran it as:</p>
+
+<ul>
+<li><code>mkdir ..\drmemlogs</code></li>
+<li><code>..\drmemory\bin\drmemory.exe -logdir ..\drmemlogs -suppress=drmem-sup.txt — .\rel\SumatraPDF.exe ..\f1.pdf</code></li>
+</ul>
+
+<p>There are what appear to be false positives. I add suppressions to drmem-sup.txt as I find them.</p>
+
+<p>DrMemory visibly slows down the program and also crashes sometimes (e.g. it crashed for me with XPS files).</p>
+
+			</div>
+		</div>
+	</div>
+
+	<hr>
+	<center><a href="https://blog.kowalczyk.info">Krzysztof Kowalczyk</a></center>
+	<script>
+		window.ga = window.ga || function() {
+			(ga.q = ga.q || []).push(arguments)
+		};
+		ga.l = +new Date;
+		ga('create', 'UA-194516-5', 'auto');
+		ga('send', 'pageview');
+	</script>
+	<script async src="//www.google-analytics.com/analytics.js"></script>
+</body>
+</html>

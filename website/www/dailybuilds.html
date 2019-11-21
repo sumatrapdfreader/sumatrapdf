@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<script src="https://kjkpub.s3.amazonaws.com/sumatrapdf/sumadaily.js" type="text/javascript"></script>
+	<script>
+		function $(id) {
+			return document.getElementById(id);
+		}
+		function setDlURL(id, html) {
+			$(id).innerHTML = html;
+
+			html = html.replace("kjkpub.s3.amazonaws.com/", "kjkpubsf.sfo2.digitaloceanspaces.com/software/")
+			$("s-" + id).innerHTML = html;
+		}
+
+		function myInit() {
+			var html, name;
+			$("buildtime").innerHTML = sumBuiltOn;
+
+			name = sumLatestExe.split("/")[5];
+			html = "<a href='" + sumLatestExe + "'>" + name + "</a>";
+			setDlURL("urlexe", html);
+
+			name = sumLatestInstaller.split("/")[5];
+			html = "<a href='" + sumLatestInstaller + "'>" + name + "</a>";
+			setDlURL("urlinstaller", html);
+
+			name = sumLatestExe64.split("/")[5];
+			html = "<a href='" + sumLatestExe64 + "'>" + name + "</a>";
+			setDlURL("urlexe64", html);
+
+			name = sumLatestInstaller64.split("/")[5];
+			html = "<a href='" + sumLatestInstaller64 + "'>" + name + "</a>";
+			setDlURL("urlinstaller64", html);
+		}
+		window.onload = myInit;
+	</script>
+</head>
+
+<body>
+	<script type="text/javascript" src="sumatra.js"></script>
+	<noscript>
+		<p>
+			<center>
+				<font color="red">Your browser does not support JavaScript or you've disabled JavaScript! Javascript is required
+					to view this page.</font>
+			</center>
+		</p>
+	</noscript>
+
+	<p>
+		<a href="//www.sumatrapdfreader.org/">SumatraPDF</a> :
+		<b>
+			<font color="red">Daily builds, please do not redistribute.</font>
+		</b>
+	</p>
+	<p>
+		SumatraPDF <b>daily builds</b> are for testing.
+	</p>
+	<p>They might have bugs not present in official releases.</p>
+
+	<p><b>Latest SumatraPDF daily build, built on <span id="buildtime"></span>:</b></p>
+
+	<p>64-bit version:</p>
+	<table style="margin-left:8px">
+		<tr>
+			<td>full installer 64-bit:&nbsp;</td>
+			<td><span id="s-urlinstaller64"></span></td>
+		</tr>
+		<tr>
+			<td>portable version 64-bit:&nbsp;</td>
+			<td><span id="s-urlexe64"></span></td>
+		</tr>
+	</table>
+
+	<p>32-bit version:</p>
+	<table style="margin-left:8px">
+		<tr>
+			<td>full installer:&nbsp;</td>
+			<td><span id="s-urlinstaller"></span></td>
+		</tr>
+		<tr>
+			<td>portable version:&nbsp;</td>
+			<td><span id="s-urlexe"></span></td>
+		</tr>
+	</table>
+
+	<p><b>Alternative download locations:</b></p>
+
+	<p>64-bit version:</p>
+	<table style="margin-left:8px">
+		<tr>
+			<td>full installer 64-bit:&nbsp;</td>
+			<td><span id="urlinstaller64"></span></td>
+		</tr>
+		<tr>
+			<td>portable version 64-bit:&nbsp;</td>
+			<td><span id="urlexe64"></span></td>
+		</tr>
+	</table>
+
+	<p>32-bit version:</p>
+	<table style="margin-left:8px">
+		<tr>
+			<td>full installer:&nbsp;</td>
+			<td><span id="urlinstaller"></span></td>
+		</tr>
+		<tr>
+			<td>portable version:&nbsp;</td>
+			<td><span id="urlexe"></span></td>
+		</tr>
+	</table>
+
+	<hr>
+	<center><a href="https://www.sumatrapdfreader.org/">SumatraPDF Reader</a></center>
+
+	<script>
+		window.ga = window.ga || function () { (ga.q = ga.q || []).push(arguments) }; ga.l = +new Date;
+		ga('create', 'UA-194516-5', 'auto');
+		ga('send', 'pageview');
+	</script>
+	<script async src="https://www.google-analytics.com/analytics.js"></script>
+
+</body>
+
+</html>

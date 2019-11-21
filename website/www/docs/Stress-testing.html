@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+
+<head>
+	<meta http-equiv="Content-Language" content="en-us">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="keywords" content="pdf, epub, mobi, chm, cbr, cbz, xps, djvu, reader, viewer" />
+	<meta name="description" content="Sumatra PDF reader and viewer for Windows" />
+	<title>Sumatra PDF Documentation</title>
+	<link rel="stylesheet" href="/sumatra.css" type="text/css" />
+</head>
+
+<body>
+	<script type="text/javascript" src="/sumatra.js"></script>
+
+	<div id="container">
+		<div id="banner">
+			<h1 style="display:inline;">Sumatra PDF
+				<font size="-1">is a PDF, ePub, MOBI, CHM, XPS, DjVu, CBZ, CBR reader for Windows</font>
+			</h1>
+			<script type="text/javascript">
+				document.write(navHtml());
+			</script>
+		</div>
+
+		<br/>
+
+		<div id="center">
+			<div class="content">
+				<h1><a href="/docs/">Documentation</a> : Stress testing</h1>
+
+<p>We stress test Sumatra to ensure it doesn&rsquo;t crash. Stress testing on my collection of documents is part of release process.</p>
+
+<p>A simple stress test: run <code>SumatraPDF.exe -console -n 2 -rand -stress-test ${dir}</code> It&rsquo;ll scan a given directory, randomize order of files and render every known document type.</p>
+
+<p>Stress test can be customized with the following cmd-line options:</p>
+
+<ul>
+<li><code>-stress-test foo.pdf 8x</code> : render only foo.pdf, do it 8 times</li>
+<li><code>-stress-test z:\</code> : render all documents in z:\ directory</li>
+<li><code>-stress-test y:\testdocs *.pdf;*.xps 2x</code> : render only .pdf and .xps document in y:\testdocs directory, render each document twice</li>
+<li><code>-n ${parallelCount}</code> : number of documents to test in parallel</li>
+<li><code>-rand</code> : randomize order of files. Also distributes equally among different file types (helps to test different formats equally as opposed to reading sequentially, which can spend a lot of time testing *pdf files, then a lot of time testing .cbz files etc.)</li>
+<li><code>-console</code> : show console so that we can see progress</li>
+</ul>
+
+			</div>
+		</div>
+	</div>
+
+	<hr>
+	<center><a href="https://blog.kowalczyk.info">Krzysztof Kowalczyk</a></center>
+	<script>
+		window.ga = window.ga || function() {
+			(ga.q = ga.q || []).push(arguments)
+		};
+		ga.l = +new Date;
+		ga('create', 'UA-194516-5', 'auto');
+		ga('send', 'pageview');
+	</script>
+	<script async src="//www.google-analytics.com/analytics.js"></script>
+</body>
+</html>

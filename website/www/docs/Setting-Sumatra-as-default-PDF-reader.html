@@ -1,0 +1,78 @@
+<!doctype html>
+<html>
+
+<head>
+	<meta http-equiv="Content-Language" content="en-us">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="keywords" content="pdf, epub, mobi, chm, cbr, cbz, xps, djvu, reader, viewer" />
+	<meta name="description" content="Sumatra PDF reader and viewer for Windows" />
+	<title>Sumatra PDF Documentation</title>
+	<link rel="stylesheet" href="/sumatra.css" type="text/css" />
+</head>
+
+<body>
+	<script type="text/javascript" src="/sumatra.js"></script>
+
+	<div id="container">
+		<div id="banner">
+			<h1 style="display:inline;">Sumatra PDF
+				<font size="-1">is a PDF, ePub, MOBI, CHM, XPS, DjVu, CBZ, CBR reader for Windows</font>
+			</h1>
+			<script type="text/javascript">
+				document.write(navHtml());
+			</script>
+		</div>
+
+		<br/>
+
+		<div id="center">
+			<div class="content">
+				<h1><a href="/docs/">Documentation</a> : Setting Sumatra as default PDF reader</h1>
+
+<p>Before Win 10 you can just use Settings/Options menu at any time.</p>
+
+<p>In Win 10 it&rsquo;s more complicated. You can try the following methods.</p>
+
+<ol>
+<li>Right-click <strong>SumatraPDF.exe</strong> in <code>c:\Program Files\SumatraPDF</code> (or <code>c:\Program Files (x86)\SumatraPDF</code> ) and select Run as Administrator.</li>
+<li>Go to <code>Settings &gt; Options</code> and click the button to set Sumatra as the default PDF viewer.</li>
+<li>Close the program.</li>
+</ol>
+
+<p>If issue is still not solved:</p>
+
+<ol>
+<li>In file explorer, right-click any <code>PDF &gt; Open with &gt; Choose another app</code> .</li>
+<li>Check the _Always use this app to open .pdf files _ checkbox.</li>
+<li>Scroll down and click on the <em>More apps ↓</em> link, then select SumatraPDF from the list and click on the OK button.</li>
+<li>If SumatraPDF is not in the list, scroll down and click on the Look for another app on this PC link.</li>
+<li>In the <em>Open with…</em> dialog navigate to <code>c:\Program Files\SumatraPDF</code> (or <code>c:\Program Files (x86)\SumatraPDF</code> ), select **SumatraPDF.exe ** and click on the Open button.</li>
+<li>The PDF should open with Sumatra, and all PDFs when subsequently double-clicked should open with Sumatra too.</li>
+</ol>
+
+<p>If issue is still not solved:</p>
+
+<ol>
+<li>Open Settings app.</li>
+<li>Go to <code>System &gt; Default</code> apps.</li>
+<li>Scroll down and click on the _Choose default apps _ by file type link.</li>
+<li>Set SumatraPDF a the default app for the .pdf file type.</li>
+</ol>
+
+			</div>
+		</div>
+	</div>
+
+	<hr>
+	<center><a href="https://blog.kowalczyk.info">Krzysztof Kowalczyk</a></center>
+	<script>
+		window.ga = window.ga || function() {
+			(ga.q = ga.q || []).push(arguments)
+		};
+		ga.l = +new Date;
+		ga('create', 'UA-194516-5', 'auto');
+		ga('send', 'pageview');
+	</script>
+	<script async src="//www.google-analytics.com/analytics.js"></script>
+</body>
+</html>

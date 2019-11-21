@@ -1,0 +1,68 @@
+<!doctype html>
+<html>
+
+<head>
+	<meta http-equiv="Content-Language" content="en-us">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="keywords" content="pdf, epub, mobi, chm, cbr, cbz, xps, djvu, reader, viewer" />
+	<meta name="description" content="Sumatra PDF reader and viewer for Windows" />
+	<title>Sumatra PDF Documentation</title>
+	<link rel="stylesheet" href="/sumatra.css" type="text/css" />
+</head>
+
+<body>
+	<script type="text/javascript" src="/sumatra.js"></script>
+
+	<div id="container">
+		<div id="banner">
+			<h1 style="display:inline;">Sumatra PDF
+				<font size="-1">is a PDF, ePub, MOBI, CHM, XPS, DjVu, CBZ, CBR reader for Windows</font>
+			</h1>
+			<script type="text/javascript">
+				document.write(navHtml());
+			</script>
+		</div>
+
+		<br/>
+
+		<div id="center">
+			<div class="content">
+				<h1><a href="/docs/">Documentation</a> : Our build system</h1>
+
+<p>Our build system uses <a href="http://premake.github.io/download.html#v5">Premake5</a> . I&rsquo;ve used alpha11 build.</p>
+
+<p>Premake generates Visual Studio solution in directory vs2017 and vs2015 from premake5.lua file. We checkin generated solution files for convenience.</p>
+
+<h2>Running</h2>
+
+<p>You only have to worry about premake if you add new source files, since that requires re-generating Visual Studio solution. To make changes, modify <code>premake5.lua</code> and/or <code>premake5.files.lua</code> .</p>
+
+<p>Download premake 5 from <a href="http://premake.github.io/download.html#v5">http://premake.github.io/download.html#v5</a>. I put it in bin directory. Run <code>bin\premake5 vs2017</code> and <code>bin\premake5 vs2015</code> to re-generate Visual Studio project files.</p>
+
+<h2>Customizing build</h2>
+
+<p>Sometimes we want to customize the build with <code>#ifdef</code> . We could do it by adding additional configurations, but that can spiral out of control quickly.</p>
+
+<p>Instead we have <code>src\utils\BuildConfig.h</code> file. It&rsquo;s empty by default but you can changed it to add your <code>#define</code> customizations.</p>
+
+<h2>How official builds are made</h2>
+
+<p>I use <a href="https://golang.org/">Go</a> program <code>tools\build\main.go.</code> You can read it for details of operation.</p>
+
+			</div>
+		</div>
+	</div>
+
+	<hr>
+	<center><a href="https://blog.kowalczyk.info">Krzysztof Kowalczyk</a></center>
+	<script>
+		window.ga = window.ga || function() {
+			(ga.q = ga.q || []).push(arguments)
+		};
+		ga.l = +new Date;
+		ga('create', 'UA-194516-5', 'auto');
+		ga('send', 'pageview');
+	</script>
+	<script async src="//www.google-analytics.com/analytics.js"></script>
+</body>
+</html>
