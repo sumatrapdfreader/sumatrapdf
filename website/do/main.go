@@ -64,7 +64,7 @@ func importNotion() {
 }
 
 func main() {
-	u.CdUpDir("sumatra-website")
+	u.CdUpDir("website")
 	logf("dir: '%s'\n", u.CurrDirAbsMust())
 
 	var (
