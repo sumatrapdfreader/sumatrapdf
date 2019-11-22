@@ -102,6 +102,9 @@
     <ClInclude Include="..\src\utils\CmdLineParser.h">
       <Filter>src\utils</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\utils\ColorUtil.h">
+      <Filter>src\utils</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\utils\DbgHelpDyn.h">
       <Filter>src\utils</Filter>
     </ClInclude>
@@ -339,6 +342,9 @@
       <Filter>src\utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\CmdLineParser.cpp">
+      <Filter>src\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\ColorUtil.cpp">
       <Filter>src\utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\DbgHelpDyn.cpp">

@@ -885,6 +885,7 @@ function installer_utils_files()
     "BaseUtil.*",
     "BitReader.*",
     "ByteOrderDecoder.*",
+    "ColorUtil.*",
     "CmdLineParser.*",
     "DbgHelpDyn.*",
     "DebugLog.*",
