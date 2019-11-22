@@ -459,7 +459,7 @@ void PaintParentBackground(HWND hwnd, HDC hdc) {
 static void PaintCaptionBackground(HDC hdc, WindowInfo* win, bool useDoubleBuffer) {
     RECT rClip;
     GetClipBox(hdc, &rClip);
-    RectI r = RectI::FromRECT(rClip);
+    RectI rect = RectI::FromRECT(rClip);
 
     COLORREF c = win->caption->bgColor;
 
@@ -467,15 +467,18 @@ static void PaintCaptionBackground(HDC hdc, WindowInfo* win, bool useDoubleBuffe
         PaintParentBackground(win->hwndCaption, hdc);
     } else if (win->caption->bgAlpha == 255) {
         Graphics gfx(hdc);
-        SolidBrush br(Color(GetRValueSafe(c), GetGValueSafe(c), GetBValueSafe(c)));
-        gfx.FillRectangle(&br, r.x, r.y, r.dx, r.dy);
+        Color col = GdiRgbFromCOLORREF(c);
+        SolidBrush br(col);
+        gfx.FillRectangle(&br, rect.x, rect.y, rect.dx, rect.dy);
     } else {
-        DoubleBuffer buffer(win->hwndCaption, r);
+        DoubleBuffer buffer(win->hwndCaption, rect);
         HDC memDC = useDoubleBuffer ? buffer.GetDC() : hdc;
         PaintParentBackground(win->hwndCaption, memDC);
         Graphics gfx(memDC);
-        SolidBrush br(Color(win->caption->bgAlpha, GetRValueSafe(c), GetGValueSafe(c), GetBValueSafe(c)));
-        gfx.FillRectangle(&br, r.x, r.y, r.dx, r.dy);
+        u8 r, g, b;
+        UnpackRgb(c, r, g, b);
+        SolidBrush br(Color(win->caption->bgAlpha, r, g, b));
+        gfx.FillRectangle(&br, rect.x, rect.y, rect.dx, rect.dy);
         if (useDoubleBuffer)
             buffer.Flush(hdc);
     }

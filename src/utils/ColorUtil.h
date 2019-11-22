@@ -29,6 +29,8 @@ float GetLightness(COLORREF c);
 // TODO: use AdjustLightness instead to compensate for the alpha?
 Gdiplus::Color Unblend(COLORREF c, BYTE alpha);
 Gdiplus::Color FromColor(COLORREF c);
+Gdiplus::Color GdiRgbFromCOLORREF(COLORREF c);
+Gdiplus::Color GdiRgbaFromCOLORREF(COLORREF c);
 
 #if OS_WIN
 /* In debug mode, VS 2010 instrumentations complains about GetRValue() etc.

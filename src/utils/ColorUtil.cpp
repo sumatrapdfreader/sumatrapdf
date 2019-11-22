@@ -49,10 +49,19 @@ Gdiplus::Color Unblend(COLORREF c, BYTE alpha) {
     return Gdiplus::Color(alpha, R, G, B);
 }
 
+Gdiplus::Color GdiRgbFromCOLORREF(COLORREF c) {
+    u8 r, g, b;
+    UnpackRgb(c, r, g, b);
+    return Gdiplus::Color(r, g, b);
+}
+
+Gdiplus::Color GdiRgbaFromCOLORREF(COLORREF c) {
+    return Gdiplus::Color(c);
+}
+
+// TODO: replace usage with GdiRgbFromCOLORREF
 Gdiplus::Color FromColor(COLORREF c) {
-    u8 r, g, b, a;
-    UnpackRgba(c, r, g, b, a);
-    return Gdiplus::Color(a, r, g, b);
+    return Gdiplus::Color(c);
 }
 
 static COLORREF colorSetHelper(COLORREF c, u8 col, int n) {
