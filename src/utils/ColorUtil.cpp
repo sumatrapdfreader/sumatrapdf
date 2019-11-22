@@ -39,13 +39,26 @@ void UnpackRgb(COLORREF c, u8& r, u8& g, u8& b) {
     UnpackRgba(c, r, g, b, a);
 }
 
-Gdiplus::Color Unblend(COLORREF c, BYTE alpha) {
+#if 0
+static Gdiplus::Color Unblend(PageAnnotation::Color c, BYTE alpha) {
+    alpha = (BYTE)(alpha * c.a / 255.f);
+    BYTE R = (BYTE)floorf(std::max(c.r - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
+    BYTE G = (BYTE)floorf(std::max(c.g - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
+    BYTE B = (BYTE)floorf(std::max(c.b - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
+    return Gdiplus::Color(alpha, R, G, B);
+}
+#endif
+
+// TODO: not sure if that's the exact translation of the original (above)
+Gdiplus::Color Unblend(COLORREF c, u8 alpha) {
     u8 r, g, b, a;
     UnpackRgba(c, r, g, b, a);
-    alpha = (BYTE)(alpha * a / 255.f);
-    BYTE R = (BYTE)floorf(std::max(r - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
-    BYTE G = (BYTE)floorf(std::max(g - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
-    BYTE B = (BYTE)floorf(std::max(b - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
+    u8 ralpha = (BYTE)(alpha * a / 255.f);
+    float falpha = ((float)alpha * (float)a / 255.f);
+    float tmp = 255.0f / (falpha + 0.5f);
+    BYTE R = (BYTE)floorf(std::max(r - (255 - ralpha), 0) * tmp);
+    BYTE G = (BYTE)floorf(std::max(g - (255 - ralpha), 0) * tmp);
+    BYTE B = (BYTE)floorf(std::max(b - (255 - ralpha), 0) * tmp);
     return Gdiplus::Color(alpha, R, G, B);
 }
 
