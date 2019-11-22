@@ -184,6 +184,7 @@ static bool SerializeField(str::Str<char>& out, const uint8_t* base, const Field
     const uint8_t* fieldPtr = base + field.offset;
     AutoFree value;
     COLORREF c;
+    u8 r, g, b, a;
 
     switch (field.type) {
         case Type_Bool:
@@ -197,11 +198,12 @@ static bool SerializeField(str::Str<char>& out, const uint8_t* base, const Field
             return true;
         case Type_Color:
             c = *(COLORREF*)fieldPtr;
-            if (((c >> 24) & 0xff))
-                out.AppendFmt("#%02x%02x%02x%02x", (c >> 24) & 0xff, GetRValueSafe(c), GetGValueSafe(c),
-                              GetBValueSafe(c));
-            else
-                out.AppendFmt("#%02x%02x%02x", GetRValueSafe(c), GetGValueSafe(c), GetBValueSafe(c));
+            UnpackRgba(c, r, g, b, a);
+            if (a > 0) {
+                out.AppendFmt("#%02x%02x%02x%02x", a, r, g, b);
+            } else {
+                out.AppendFmt("#%02x%02x%02x", r, g, b);
+            }
             return true;
         case Type_String:
             if (!*(const WCHAR**)fieldPtr) {

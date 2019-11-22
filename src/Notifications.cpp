@@ -141,10 +141,6 @@ void NotificationWnd::UpdateMessage(const WCHAR* message, int timeoutInMS, bool 
     }
 }
 
-static inline Color ToColor(COLORREF c) {
-    return Color(GetRValueSafe(c), GetGValueSafe(c), GetBValueSafe(c));
-}
-
 static void NotificationWndOnPaint(HWND hwnd, NotificationWnd* wnd) {
     PAINTSTRUCT ps = {0};
     HDC hdcWnd = BeginPaint(hwnd, &ps);
@@ -158,7 +154,7 @@ static void NotificationWndOnPaint(HWND hwnd, NotificationWnd* wnd) {
 
     Graphics graphics(hdc);
     auto col = GetAppColor(AppColor::NotificationsBg);
-    SolidBrush br(ToColor(col));
+    SolidBrush br(GdiRgbFromCOLORREF(col));
     graphics.FillRectangle(&br, Rect(0, 0, rTmp.right - rTmp.left, rTmp.bottom - rTmp.top));
 
     if (wnd->highlight) {
@@ -196,7 +192,7 @@ static void NotificationWndOnPaint(HWND hwnd, NotificationWnd* wnd) {
         rect.dy = PROGRESS_HEIGHT;
 
         col = GetAppColor(AppColor::NotifcationsProgress);
-        Pen pen(ToColor(col));
+        Pen pen(GdiRgbFromCOLORREF(col));
         graphics.DrawRectangle(&pen, Rect(rect.x, rect.y, rect.dx, rect.dy));
 
         rect.x += 2;
@@ -204,7 +200,7 @@ static void NotificationWndOnPaint(HWND hwnd, NotificationWnd* wnd) {
         rect.y += 2;
         rect.dy -= 3;
 
-        br.SetColor(ToColor(col));
+        br.SetColor(GdiRgbFromCOLORREF(col));
         graphics.FillRectangle(&br, Rect(rect.x, rect.y, rect.dx, rect.dy));
     }
 

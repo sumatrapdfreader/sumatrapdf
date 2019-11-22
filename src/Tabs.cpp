@@ -51,10 +51,6 @@ static inline SizeI GetTabSize(HWND hwnd) {
     return SizeI(dx, dy);
 }
 
-static inline Color ToColor(COLORREF c) {
-    return Color(GetRValueSafe(c), GetGValueSafe(c), GetBValueSafe(c));
-}
-
 class TabPainter {
     WStrVec text;
     PathData* data = nullptr;
@@ -248,7 +244,7 @@ class TabPainter {
             // paint tab's body
             gfx.SetCompositingMode(CompositingModeSourceCopy);
             iterator.NextMarker(&shape);
-            br.SetColor(ToColor(bgCol));
+            br.SetColor(GdiRgbFromCOLORREF(bgCol));
             Point points[4];
             shape.GetPathPoints(points, 4);
             Rect body(points[0].X, points[0].Y, points[2].X - points[0].X, points[2].Y - points[0].Y);
@@ -260,20 +256,20 @@ class TabPainter {
 
             // draw tab's text
             gfx.SetCompositingMode(CompositingModeSourceOver);
-            br.SetColor(ToColor(textCol));
+            br.SetColor(GdiRgbFromCOLORREF(textCol));
             gfx.DrawString(text.at(i), -1, &f, layout, &sf, &br);
 
             // paint "x"'s circle
             iterator.NextMarker(&shape);
             bool closeCircleEnabled = true;
             if ((xClicked == i || xHighlighted == i) && closeCircleEnabled) {
-                br.SetColor(ToColor(circleColor));
+                br.SetColor(GdiRgbFromCOLORREF(circleColor));
                 gfx.FillPath(&br, &shape);
             }
 
             // paint "x"
             iterator.NextMarker(&shape);
-            pen.SetColor(ToColor(xColor));
+            pen.SetColor(GdiRgbFromCOLORREF(xColor));
             gfx.DrawPath(&pen, &shape);
             iterator.Rewind();
         }

@@ -195,3 +195,20 @@ float GetLightness(COLORREF c) {
     BYTE M = std::max(std::max(R, G), B), m = std::min(std::min(R, G), B);
     return (M + m) / 2.0f;
 }
+
+#if OS_WIN
+BYTE GetRValueSafe(COLORREF rgb) {
+    rgb = rgb & 0xff;
+    return (u8)rgb;
+}
+
+BYTE GetGValueSafe(COLORREF rgb) {
+    rgb = (rgb >> 8) & 0xff;
+    return (u8)rgb;
+}
+
+BYTE GetBValueSafe(COLORREF rgb) {
+    rgb = (rgb >> 16) & 0xff;
+    return (u8)rgb;
+}
+#endif

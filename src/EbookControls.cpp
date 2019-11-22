@@ -280,13 +280,13 @@ void SetMainWndBgCol(EbookControls* ctrls) {
 
     Style* styleMainWnd = StyleByName("styleMainWnd");
     CrashIf(!styleMainWnd);
-    styleMainWnd->Set(
-        Prop::AllocColorSolid(PropBgColor, GetRValueSafe(bgColor), GetGValueSafe(bgColor), GetBValueSafe(bgColor)));
+    u8 r, g, b;
+    UnpackRgb(bgColor, r, g, b);
+    styleMainWnd->Set(Prop::AllocColorSolid(PropBgColor, r, g, b));
     ctrls->mainWnd->SetStyle(styleMainWnd);
 
     Style* styleStatus = StyleByName("styleStatus");
-    styleStatus->Set(
-        Prop::AllocColorSolid(PropBgColor, GetRValueSafe(bgColor), GetGValueSafe(bgColor), GetBValueSafe(bgColor)));
+    styleStatus->Set(Prop::AllocColorSolid(PropBgColor, r, g, b));
     ctrls->status->SetStyle(styleStatus);
 
     // TODO: should also allow to change text color
