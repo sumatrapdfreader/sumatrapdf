@@ -585,6 +585,31 @@ class MaybeOwnedData {
     OwnedData StealData();
 };
 
+/* 
+Poor-man's manual dynamic typing. 
+Identity of an object is an address of a unique, global string.
+String is good for debugging
+
+For classes / structs that we want to query for type at runtime, we add:
+
+// in foo.h
+struct Foo {
+    Kind kind;
+};
+
+extern Kind kindFoo;
+
+// in foo.cpp
+Kind kindFoo = "foo";
+*/
+
+typedef const char* Kind;
+inline bool isOfKindHelper(Kind k1, Kind k2) {
+    return k1 == k2;
+}
+
+#define IsOfKind(o, kind) isOfKindHelper(o->kind, kind)
+
 // from https://pastebin.com/3YvWQa5c
 // In my testing, in debug build defer { } creates somewhat bloated code
 // but in release it seems to be optimized to optimally small code

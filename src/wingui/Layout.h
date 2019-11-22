@@ -67,12 +67,6 @@ Constraints Loose(const Size size);
 Constraints Tight(const Size size);
 Constraints TightHeight(Length height);
 
-// identity of an object is an address of a unique, global string
-// string is good for debugging
-// yes, C++ is really that lame and we have to implement
-// dynamic typing manually
-typedef const char* Kind;
-
 struct ILayout {
     Kind kind = nullptr;
 
