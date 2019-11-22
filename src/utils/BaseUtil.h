@@ -129,7 +129,12 @@
 //#include <locale>
 
 typedef uint8_t u8;
+typedef int16_t i16;
+typedef uint16_t u16;
+typedef int32_t i32;
+typedef uint32_t u32;
 typedef int64_t i64;
+typedef uint64_t u64;
 
 // TODO: don't use INT_MAX and UINT_MAX
 #ifndef INT_MAX
@@ -620,43 +625,9 @@ defer { instance->Release(); };
 #include "StrUtil.h"
 #include "Scoped.h"
 #include "Vec.h"
+#include "ColorUtil.h"
 
-// TODO: move those into e.g. ColorUtil.h
-inline COLORREF MkRgb(byte r, byte g, byte b) {
-    return RGB(r, g, b);
-}
-
-inline COLORREF MkRgb(float r, float g, float b) {
-    byte rb = (byte)(r * 255.0);
-    byte gb = (byte)(g * 255.0);
-    byte bb = (byte)(b * 255.0);
-    return MkRgb(rb, gb, bb);
-}
-
-inline COLORREF MkRgba(byte r, byte g, byte b, byte a) {
-    COLORREF col = RGB(r, g, b);
-    COLORREF alpha = (COLORREF)a;
-    alpha = alpha << 24;
-    col = col | alpha;
-    return col;
-}
-
-#if OS_WIN
-/* In debug mode, VS 2010 instrumentations complains about GetRValue() etc.
-This adds equivalent functions that don't have this problem and ugly
-substitutions to make sure we don't use Get*Value() in the future */
-BYTE GetRValueSafe(COLORREF rgb);
-BYTE GetGValueSafe(COLORREF rgb);
-BYTE GetBValueSafe(COLORREF rgb);
-
-#undef GetRValue
-#define GetRValue UseGetRValueSafeInstead
-#undef GetGValue
-#define GetGValue UseGetGValueSafeInstead
-#undef GetBValue
-#define GetBValue UseGetBValueSafeInstead
-#endif
-
+// lstrcpy is dangerous so forbid using it
 #ifdef lstrcpy
 #undef lstrcpy
 #define lstrcpy dont_use_lstrcpy

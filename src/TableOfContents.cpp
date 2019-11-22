@@ -10,6 +10,7 @@
 #include "utils/UITask.h"
 #include "utils/WinUtil.h"
 #include "utils/SimpleLog.h"
+#include "utils/BitManip.h"
 
 #include "wingui/WinGui.h"
 #include "wingui/TreeModel.h"
@@ -21,7 +22,7 @@
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "GlobalPrefs.h"
-#include "Colors.h"
+#include "AppColors.h"
 #include "ProgressUpdateUI.h"
 #include "Notifications.h"
 #include "SumatraPDF.h"
@@ -472,19 +473,43 @@ static void SetInitialExpandState(DocTocItem* item, Vec<int>& tocState) {
     }
 }
 
-static void ExportBookmarkTree(DocTocItem* node, int level) {
+static void SerializeBookmarksRec(DocTocItem* node, int level, str::Str<char>& s) {
+    if (level == 0) {
+        s.Append(":default bookmarks view\n");
+    }
+
     while (node) {
-        str::Str<char> line;
         for (int i = 0; i < level; i++) {
-            line.Append("  ");
+            s.Append("  ");
         }
         WCHAR* title = node->Text();
         auto titleA = str::conv::ToUtf8(title);
-        line.AppendView(titleA.AsView());
-        // WCHAR* uri = node->GetLink();
+        s.AppendView(titleA.AsView());
+        auto flags = node->fontFlags;
+        if (bit::IsSet(flags, fontBitItalic)) {
+            s.Append(" font:italic");
+        }
+        if (bit::IsSet(flags, fontBitBold)) {
+            s.Append(" font:bold");
+        }
+        if (node->color != ColorUnset) {
+            s.Append(" ");
+            SerializeColor(node->color, s);
+        }
+        PageDestination* dest = node->GetLink();
+        if (dest) {
+            int pageNo = dest->GetDestPageNo();
+            s.AppendFmt(" page:%d", pageNo);
+            auto ws = dest->GetDestValue();
+            if (ws != nullptr) {
+                auto str = str::conv::ToUtf8(ws);
+                s.Append(",dest:");
+                s.AppendView(str.AsView());
+            }
+        }
+        s.Append("\n");
 
-        dbglogf("%s\n", line.Get());
-        ExportBookmarkTree(node->child, level + 1);
+        SerializeBookmarksRec(node->child, level + 1, s);
         node = node->next;
     }
 }
@@ -492,8 +517,9 @@ static void ExportBookmarkTree(DocTocItem* node, int level) {
 static void ExportBookmarks(TabInfo* tab) {
     auto* tocTree = tab->ctrl->GetTocTree();
     CrashIf(!tocTree);
-    auto* node = tocTree->root;
-    ExportBookmarkTree(tocTree->root, 0);
+    str::Str<char> s;
+    SerializeBookmarksRec(tocTree->root, 0, s);
+    dbglogf("%s\n", s.Get());
 }
 
 static MenuDef contextMenuDef[] = {
@@ -556,17 +582,11 @@ void LoadTocTree(WindowInfo* win) {
 
 // TODO: use https://docs.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-getobject?redirectedfrom=MSDN
 // to get LOGFONT from existing font and then create a derived font
-static void UpdateFont(HDC hdc, TocItemFlags flags) {
+static void UpdateFont(HDC hdc, int fontFlags) {
     // TODO: this is a bit hacky, in that we use default font
     // and not the font from TreeCtrl. But in this case they are the same
-    bool italic = false;
-    bool bold = false;
-    if ((flags & TocItemFlags::Bold) != TocItemFlags::None) {
-        bold = true;
-    }
-    if ((flags & TocItemFlags::Italic) != TocItemFlags::None) {
-        italic = true;
-    }
+    bool italic = bit::IsSet(fontFlags, fontBitItalic);
+    bool bold = bit::IsSet(fontFlags, fontBitBold);
     HFONT hfont = GetDefaultGuiFont(bold, italic);
     SelectObject(hdc, hfont);
 }
@@ -593,11 +613,11 @@ static LRESULT OnCustomDraw(WindowInfo* win, NMTVCUSTOMDRAW* tvcd) {
         if (!tocItem) {
             return CDRF_DODEFAULT;
         }
-        if (tocItem->color != ColorRefUnset) {
+        if (tocItem->color != ColorUnset) {
             tvcd->clrText = tocItem->color;
         }
-        if (tocItem->flags != TocItemFlags::None) {
-            UpdateFont(cd->hdc, tocItem->flags);
+        if (tocItem->fontFlags != 0) {
+            UpdateFont(cd->hdc, tocItem->fontFlags);
             return CDRF_NEWFONT;
         }
         return CDRF_DODEFAULT;

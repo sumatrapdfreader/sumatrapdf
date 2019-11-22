@@ -18,7 +18,7 @@
 #include "EngineManager.h"
 #include "SettingsStructs.h"
 #include "Controller.h"
-#include "Colors.h"
+#include "AppColors.h"
 #include "GlobalPrefs.h"
 #include "ProgressUpdateUI.h"
 #include "Notifications.h"

@@ -33,6 +33,9 @@
     <ClInclude Include="..\src\utils\CmdLineParser.h">
       <Filter>utils</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\utils\ColorUtil.h">
+      <Filter>utils</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\utils\CryptoUtil.h">
       <Filter>utils</Filter>
     </ClInclude>
@@ -186,6 +189,9 @@
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\CmdLineParser.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\ColorUtil.cpp">
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\CryptoUtil.cpp">

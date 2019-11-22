@@ -43,7 +43,7 @@
 #include "ProgressUpdateUI.h"
 #include "TextSelection.h"
 #include "TextSearch.h"
-#include "Colors.h"
+#include "AppColors.h"
 #include "SumatraPDF.h"
 #include "Notifications.h"
 #include "WindowInfo.h"

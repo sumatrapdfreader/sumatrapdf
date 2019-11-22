@@ -8,7 +8,7 @@
 #include "utils/Timer.h"
 #include "utils/UITask.h"
 #include "utils/WinUtil.h"
-#include "Colors.h"
+#include "AppColors.h"
 #include "utils/ScopedWin.h"
 
 #include "wingui/WinGui.h"

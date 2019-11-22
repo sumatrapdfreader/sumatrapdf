@@ -19,7 +19,7 @@
 #include "FileHistory.h"
 #include "Theme.h"
 #include "GlobalPrefs.h"
-#include "Colors.h"
+#include "AppColors.h"
 #include "ProgressUpdateUI.h"
 #include "Notifications.h"
 #include "SumatraPDF.h"

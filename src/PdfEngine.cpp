@@ -18,7 +18,7 @@ extern "C" {
 #include "utils/ZipUtil.h"
 #include "utils/SimpleLog.h"
 
-#include "Colors.h"
+#include "AppColors.h"
 #include "TreeModel.h"
 #include "BaseEngine.h"
 #include "PdfEngine.h"
@@ -1644,23 +1644,6 @@ bool PdfEngineImpl::FinishLoading() {
     return true;
 }
 
-static TocItemFlags pdfFlagsToTocItemFlags(int flags) {
-    TocItemFlags res = TocItemFlags::None;
-
-    // TODO: not sure about the mappings yet
-    if (flags & 0x1) {
-        res = res | TocItemFlags::Italic;
-    }
-    if (flags & 0x2) {
-        res = res | TocItemFlags::Bold;
-    }
-    if ((flags & ~0x3) != 0) {
-        // TODO: is there more?
-        CrashMe();
-    }
-    return res;
-}
-
 static COLORREF pdfColorToCOLORREF(float color[4]) {
     return MkRgb(color[0], color[1], color[2]);
 }
@@ -1684,9 +1667,7 @@ PdfTocItem* PdfEngineImpl::BuildTocTree(fz_outline* outline, int& idCounter, boo
         PdfTocItem* item = new PdfTocItem(name, link);
         item->isOpenDefault = outline->is_open;
         item->id = ++idCounter;
-        if (outline->flags != 0) {
-            item->flags = pdfFlagsToTocItemFlags(outline->flags);
-        }
+        item->fontFlags = outline->flags;
         if (outline->has_color) {
             item->color = pdfColorToCOLORREF(outline->color);
         }

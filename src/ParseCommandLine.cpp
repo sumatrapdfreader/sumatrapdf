@@ -60,20 +60,6 @@ static void EnumeratePrinters() {
 }
 #endif
 
-/* Parse 'txt' as hex color and return the result in 'destColor' */
-void ParseColor(COLORREF* destColor, const WCHAR* txt) {
-    if (!destColor)
-        return;
-    if (str::StartsWith(txt, L"0x"))
-        txt += 2;
-    else if (str::StartsWith(txt, L"#"))
-        txt += 1;
-
-    unsigned int r, g, b;
-    if (str::Parse(txt, L"%2x%2x%2x%$", &r, &g, &b))
-        *destColor = RGB(r, g, b);
-}
-
 // parses a list of page ranges such as 1,3-5,7- (i..e all but pages 2 and 6)
 // into an interable list (returns nullptr on parsing errors)
 // caller must delete the result

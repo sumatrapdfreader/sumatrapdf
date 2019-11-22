@@ -11,7 +11,7 @@
 #include "BaseEngine.h"
 #include "SettingsStructs.h"
 #include "FileHistory.h"
-#include "Colors.h"
+#include "AppColors.h"
 #include "GlobalPrefs.h"
 #include "ProgressUpdateUI.h"
 #include "Notifications.h"

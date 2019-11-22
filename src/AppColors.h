@@ -1,3 +1,6 @@
+/* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
+   License: Simplified BSD (see COPYING.BSD) */
+
 // application-wide colors
 
 enum class AppColor {
@@ -47,14 +50,6 @@ enum class AppColor {
     TabClickedCloseCircle,
 
 };
-
-COLORREF MkRgb(byte r, byte g, byte b);
-COLORREF MkRgb(float r, float g, float b); // in 0..1 range
-COLORREF MkRgba(byte r, byte g, byte b, byte a);
-
-COLORREF AdjustLightness(COLORREF c, float factor);
-COLORREF AdjustLightness2(COLORREF c, float units);
-float GetLightness(COLORREF c);
 
 COLORREF GetAppColor(AppColor, bool ebook = false);
 void GetFixedPageUiColors(COLORREF& text, COLORREF& bg);

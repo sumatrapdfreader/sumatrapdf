@@ -4,7 +4,7 @@
 #include "utils/BaseUtil.h"
 #include "utils/GdiPlusUtil.h"
 #include "utils/WinUtil.h"
-#include "Colors.h"
+#include "AppColors.h"
 #include "ProgressUpdateUI.h"
 #include "Notifications.h"
 

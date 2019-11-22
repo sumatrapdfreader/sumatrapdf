@@ -1,9 +1,12 @@
+/* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
+   License: Simplified BSD (see COPYING.BSD) */
 #include "utils/BaseUtil.h"
-
+#include "utils/ColorUtil.h"
 #include "utils/WinUtil.h"
+
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
-#include "Colors.h"
+#include "AppColors.h"
 
 // For reference of what used to be:
 // https://github.com/sumatrapdfreader/sumatrapdf/commit/74aca9e1b78f833b0886db5b050c96045c0071a0
@@ -48,49 +51,6 @@
 
 static COLORREF rgb_to_bgr(COLORREF rgb) {
     return ((rgb & 0x0000FF) << 16) | (rgb & 0x00FF00) | ((rgb & 0xFF0000) >> 16);
-}
-
-COLORREF AdjustLightness(COLORREF c, float factor) {
-    BYTE R = GetRValueSafe(c), G = GetGValueSafe(c), B = GetBValueSafe(c);
-    // cf. http://en.wikipedia.org/wiki/HSV_color_space#Hue_and_chroma
-    BYTE M = std::max(std::max(R, G), B), m = std::min(std::min(R, G), B);
-    if (M == m) {
-        // for grayscale values, lightness is proportional to the color value
-        BYTE X = (BYTE)limitValue((int)floorf(M * factor + 0.5f), 0, 255);
-        return RGB(X, X, X);
-    }
-    BYTE C = M - m;
-    BYTE Ha = (BYTE)abs(M == R ? G - B : M == G ? B - R : R - G);
-    // cf. http://en.wikipedia.org/wiki/HSV_color_space#Lightness
-    float L2 = (float)(M + m);
-    // cf. http://en.wikipedia.org/wiki/HSV_color_space#Saturation
-    float S = C / (L2 > 255.0f ? 510.0f - L2 : L2);
-
-    L2 = limitValue(L2 * factor, 0.0f, 510.0f);
-    // cf. http://en.wikipedia.org/wiki/HSV_color_space#From_HSL
-    float C1 = (L2 > 255.0f ? 510.0f - L2 : L2) * S;
-    float X1 = C1 * Ha / C;
-    float m1 = (L2 - C1) / 2;
-    R = (BYTE)floorf((M == R ? C1 : m != R ? X1 : 0) + m1 + 0.5f);
-    G = (BYTE)floorf((M == G ? C1 : m != G ? X1 : 0) + m1 + 0.5f);
-    B = (BYTE)floorf((M == B ? C1 : m != B ? X1 : 0) + m1 + 0.5f);
-    return RGB(R, G, B);
-}
-
-// Adjusts lightness by 1/255 units.
-COLORREF AdjustLightness2(COLORREF c, float units) {
-    float lightness = GetLightness(c);
-    units = limitValue(units, -lightness, 255.0f - lightness);
-    if (0.0f == lightness)
-        return RGB(BYTE(units + 0.5f), BYTE(units + 0.5f), BYTE(units + 0.5f));
-    return AdjustLightness(c, 1.0f + units / lightness);
-}
-
-// cf. http://en.wikipedia.org/wiki/HSV_color_space#Lightness
-float GetLightness(COLORREF c) {
-    BYTE R = GetRValueSafe(c), G = GetGValueSafe(c), B = GetBValueSafe(c);
-    BYTE M = std::max(std::max(R, G), B), m = std::min(std::min(R, G), B);
-    return (M + m) / 2.0f;
 }
 
 // returns the background color for start page, About window and Properties dialog
