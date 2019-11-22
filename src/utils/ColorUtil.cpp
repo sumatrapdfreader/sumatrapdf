@@ -26,11 +26,11 @@ COLORREF MkRgba(byte r, byte g, byte b, byte a) {
 
 void UnpackRgba(COLORREF c, u8& r, u8& g, u8& b, u8& a) {
     r = (u8)(c & 0xff);
-    c = c << 8;
+    c = c >> 8;
     g = (u8)(c & 0xff);
-    c = c << 8;
+    c = c >> 8;
     b = (u8)(c & 0xff);
-    c = c << 8;
+    c = c >> 8;
     a = (u8)(c & 0xff);
 }
 
@@ -90,7 +90,6 @@ static COLORREF colorSetHelper(COLORREF c, u8 col, int n) {
     return c;
 }
 
-// TODO: add tests for those
 COLORREF ColorSetRed(COLORREF c, u8 red) {
     return colorSetHelper(c, red, 0);
 }
@@ -107,6 +106,7 @@ COLORREF ColorSetAlpha(COLORREF c, u8 alpha) {
     return colorSetHelper(c, alpha, 3);
 }
 
+// TODO: remove use of SerializeColorRgb() and replace with SerializeColor
 void SerializeColorRgb(COLORREF c, str::Str<char>& out) {
     u8 r, g, b;
     UnpackRgb(c, r, g, b);
@@ -115,10 +115,15 @@ void SerializeColorRgb(COLORREF c, str::Str<char>& out) {
     free(s);
 }
 
-void SerializeColorRgba(COLORREF c, str::Str<char>& out) {
+void SerializeColor(COLORREF c, str::Str<char>& out) {
     u8 r, g, b, a;
     UnpackRgba(c, r, g, b, a);
-    char* s = str::Format("#%02x%02x%02x%02x", a, r, g, b);
+    char* s = nullptr;
+    if (a > 0) {
+        s = str::Format("#%02x%02x%02x%02x", a, r, g, b);
+    } else {
+        s = str::Format("#%02x%02x%02x", r, g, b);
+    }
     out.Append(s);
     free(s);
 }
@@ -147,9 +152,14 @@ bool ParseColor(COLORREF* destColor, const char* txt) {
         txt += 1;
     }
 
-    unsigned int r, g, b;
-    bool ok = str::Parse(txt, "%2x%2x%2x%$", &r, &g, &b);
-    *destColor = RGB(r, g, b);
+    unsigned int r, g, b, a;
+    bool ok = str::Parse(txt, "%2x%2x%2x%2x%$", &a, & r, &g, &b);
+    if (ok) {
+        *destColor = MkRgba((u8)r, (u8)g, (u8)b, (u8)a);
+        return true;
+    }
+    ok = str::Parse(txt, "%2x%2x%2x%$", &r, &g, &b);
+    *destColor = MkRgb((u8)r, (u8)g, (u8)b);
     return ok;
 }
 
