@@ -434,7 +434,10 @@ static void DrawCaptionButton(DRAWITEMSTRUCT* item, WindowInfo* win) {
         }
         // draw the three lines
         COLORREF c = win->caption->textColor;
-        Pen p(Color(GetRValueSafe(c), GetGValueSafe(c), GetBValueSafe(c)), floor((float)rc.dy / 8.0f));
+        u8 r, g, b;
+        UnpackRgb(c, r, g, b);
+        float width = floor((float)rc.dy / 8.0f);
+        Pen p(Color(r, g, b), width);
         rc.Inflate(-int(rc.dx * 0.2f + 0.5f), -int(rc.dy * 0.3f + 0.5f));
         for (int i = 0; i < 3; i++) {
             gfx.DrawLine(&p, rc.x, rc.y + i * rc.dy / 2, rc.x + rc.dx, rc.y + i * rc.dy / 2);
