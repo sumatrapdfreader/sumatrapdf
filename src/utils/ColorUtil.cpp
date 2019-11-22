@@ -39,11 +39,64 @@ void UnpackRgb(COLORREF c, u8& r, u8& g, u8& b) {
     UnpackRgba(c, r, g, b, a);
 }
 
-void SerializeColor(COLORREF c, str::Str<char>& out) {
-    u8 r = GetRValueSafe(c);
-    u8 g = GetGValueSafe(c);
-    u8 b = GetBValueSafe(c);
+Gdiplus::Color Unblend(COLORREF c, BYTE alpha) {
+    u8 r, g, b, a;
+    UnpackRgba(c, r, g, b, a);
+    alpha = (BYTE)(alpha * a / 255.f);
+    BYTE R = (BYTE)floorf(std::max(r - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
+    BYTE G = (BYTE)floorf(std::max(g - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
+    BYTE B = (BYTE)floorf(std::max(b - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
+    return Gdiplus::Color(alpha, R, G, B);
+}
+
+Gdiplus::Color FromColor(COLORREF c) {
+    u8 r, g, b, a;
+    UnpackRgba(c, r, g, b, a);
+    return Gdiplus::Color(a, r, g, b);
+}
+
+static COLORREF colorSetHelper(COLORREF c, u8 col, int n) {
+    CrashIf(n > 3);
+    DWORD mask = 0xff;
+    DWORD cmask = (DWORD)col;
+    for (int i = 0; i < n; i++) {
+        mask = mask << 8;
+        cmask = cmask << 8;
+    }
+    c = c & ~mask;
+    c = c | cmask;
+    return c;
+}
+
+// TODO: add tests for those
+COLORREF ColorSetRed(COLORREF c, u8 red) {
+    return colorSetHelper(c, red, 0);
+}
+
+COLORREF ColorSetGreen(COLORREF c, u8 green) {
+    return colorSetHelper(c, green, 1);
+}
+
+COLORREF ColorSetBlue(COLORREF c, u8 blue) {
+    return colorSetHelper(c, blue, 2);
+}
+
+COLORREF ColorSetAlpha(COLORREF c, u8 alpha) {
+    return colorSetHelper(c, alpha, 3);
+}
+
+void SerializeColorRgb(COLORREF c, str::Str<char>& out) {
+    u8 r, g, b;
+    UnpackRgb(c, r, g, b);
     char* s = str::Format("#%02x%02x%02x", r, g, b);
+    out.Append(s);
+    free(s);
+}
+
+void SerializeColorRgba(COLORREF c, str::Str<char>& out) {
+    u8 r, g, b, a;
+    UnpackRgba(c, r, g, b, a);
+    char* s = str::Format("#%02x%02x%02x%02x", a, r, g, b);
     out.Append(s);
     free(s);
 }

@@ -1177,7 +1177,7 @@ class PdfComment : public PageElement {
     AutoFreeW content;
 
     PdfComment(const WCHAR* content, RectD rect, int pageNo)
-        : annot(PageAnnotType::None, pageNo, rect, PageAnnotation::Color()), content(str::Dup(content)) {
+        : annot(PageAnnotType::None, pageNo, rect, 0), content(str::Dup(content)) {
         this->pageNo = pageNo;
     }
 

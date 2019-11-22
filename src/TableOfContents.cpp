@@ -494,7 +494,7 @@ static void SerializeBookmarksRec(DocTocItem* node, int level, str::Str<char>& s
         }
         if (node->color != ColorUnset) {
             s.Append(" ");
-            SerializeColor(node->color, s);
+            SerializeColorRgb(node->color, s);
         }
         PageDestination* dest = node->GetLink();
         if (dest) {

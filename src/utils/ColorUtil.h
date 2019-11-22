@@ -12,13 +12,23 @@ COLORREF MkRgba(u8 r, u8 g, u8 b, u8 a);
 void UnpackRgb(COLORREF, u8& r, u8& g, u8& b);
 void UnpackRgba(COLORREF, u8& r, u8& g, u8& b, u8& a);
 
+COLORREF ColorSetRed(COLORREF c, u8 red);
+COLORREF ColorSetGreen(COLORREF c, u8 green);
+COLORREF ColorSetBlue(COLORREF c, u8 blue);
+COLORREF ColorSetAlpha(COLORREF c, u8 alpha);
+
 bool ParseColor(COLORREF* destColor, const WCHAR* txt);
 bool ParseColor(COLORREF* destColor, const char* txt);
-void SerializeColor(COLORREF, str::Str<char>&);
+void SerializeColorRgb(COLORREF, str::Str<char>&);
+void SerializeColorRgba(COLORREF, str::Str<char>&);
 
 COLORREF AdjustLightness(COLORREF c, float factor);
 COLORREF AdjustLightness2(COLORREF c, float units);
 float GetLightness(COLORREF c);
+
+// TODO: use AdjustLightness instead to compensate for the alpha?
+Gdiplus::Color Unblend(COLORREF c, BYTE alpha);
+Gdiplus::Color FromColor(COLORREF c);
 
 #if OS_WIN
 /* In debug mode, VS 2010 instrumentations complains about GetRValue() etc.

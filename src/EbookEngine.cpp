@@ -351,19 +351,6 @@ RectD EbookEngine::Transform(RectD rect, int pageNo, float zoom, int rotation, b
     return RectD::FromXY(pts[0].X, pts[0].Y, pts[1].X, pts[1].Y);
 }
 
-// TODO: use AdjustLightness instead to compensate for the alpha?
-static Gdiplus::Color Unblend(PageAnnotation::Color c, BYTE alpha) {
-    alpha = (BYTE)(alpha * c.a / 255.f);
-    BYTE R = (BYTE)floorf(std::max(c.r - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
-    BYTE G = (BYTE)floorf(std::max(c.g - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
-    BYTE B = (BYTE)floorf(std::max(c.b - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
-    return Gdiplus::Color(alpha, R, G, B);
-}
-
-static inline Gdiplus::Color FromColor(PageAnnotation::Color c) {
-    return Gdiplus::Color(c.a, c.r, c.g, c.b);
-}
-
 static void DrawAnnotations(Graphics& g, Vec<PageAnnotation>& userAnnots, int pageNo) {
     for (size_t i = 0; i < userAnnots.size(); i++) {
         PageAnnotation& annot = userAnnots.at(i);

@@ -3591,9 +3591,11 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
             }
             Vec<PageAnnotation>* annots = dm->userAnnots;
             for (SelectionOnPage& sel : *win->currentTab->selectionOnPage) {
+                COLORREF c = gGlobalPrefs->annotationDefaults.highlightColor;
+                c = ColorSetAlpha(c, 0xcc);
                 auto addedAnnotation =
                     PageAnnotation(PageAnnotType::Highlight, sel.pageNo, sel.rect,
-                                   PageAnnotation::Color(gGlobalPrefs->annotationDefaults.highlightColor, 0xCC));
+                                   c);
                 size_t oldLen = annots->size();
                 for (size_t i = 0; i < oldLen && i < annots->size(); ++i) {
                     if (annots->at(i) == addedAnnotation) {
@@ -3603,7 +3605,7 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
                 if (oldLen == annots->size()) {
                     annots->Append(
                         PageAnnotation(PageAnnotType::Highlight, sel.pageNo, sel.rect,
-                                       PageAnnotation::Color(gGlobalPrefs->annotationDefaults.highlightColor, 0xCC)));
+                                       c));
                 }
                 gRenderCache.Invalidate(dm, sel.pageNo, sel.rect);
             }

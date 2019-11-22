@@ -143,27 +143,14 @@ class PageDestination {
 
 // an user annotation on page
 struct PageAnnotation {
-    struct Color {
-        uint8_t r = 0, g = 0, b = 0, a = 0;
-        Color() = default;
-        Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255) : r(r), g(g), b(b), a(a) {
-        }
-        explicit Color(COLORREF c, uint8_t a = 255)
-            : r(GetRValueSafe(c)), g(GetGValueSafe(c)), b(GetBValueSafe(c)), a(a) {
-        }
-        bool operator==(const Color& other) const {
-            return other.r == r && other.g == g && other.b == b && other.a == a;
-        }
-    };
-
     PageAnnotType type = PageAnnotType::None;
     int pageNo = -1;
     RectD rect = {};
-    Color color = {};
+    COLORREF color = 0;
 
     PageAnnotation() = default;
 
-    PageAnnotation(PageAnnotType type, int pageNo, RectD rect, Color color)
+    PageAnnotation(PageAnnotType type, int pageNo, RectD rect, COLORREF color)
         : type(type), pageNo(pageNo), rect(rect), color(color) {
     }
     bool operator==(const PageAnnotation& other) const {

@@ -466,19 +466,6 @@ bool DjVuEngineImpl::FinishLoading() {
     return true;
 }
 
-// TODO: use AdjustLightness instead to compensate for the alpha?
-static Gdiplus::Color Unblend(PageAnnotation::Color c, BYTE alpha) {
-    alpha = (BYTE)(alpha * c.a / 255.f);
-    BYTE R = (BYTE)floorf(std::max(c.r - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
-    BYTE G = (BYTE)floorf(std::max(c.g - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
-    BYTE B = (BYTE)floorf(std::max(c.b - (255 - alpha), 0) * 255.0f / alpha + 0.5f);
-    return Gdiplus::Color(alpha, R, G, B);
-}
-
-static inline Gdiplus::Color FromColor(PageAnnotation::Color c) {
-    return Gdiplus::Color(c.a, c.r, c.g, c.b);
-}
-
 void DjVuEngineImpl::AddUserAnnots(RenderedBitmap* bmp, int pageNo, float zoom, int rotation, RectI screen) {
     using namespace Gdiplus;
 

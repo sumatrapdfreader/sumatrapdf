@@ -83,7 +83,7 @@ static Vec<PageAnnotation>* ParseFileModifications(const char* data) {
 
         int pageNo;
         geomutil::RectT<float> rect;
-        PageAnnotation::Color color;
+        COLORREF color;
         float opacity;
         int r, g, b;
 
@@ -100,7 +100,7 @@ static Vec<PageAnnotation>* ParseFileModifications(const char* data) {
         value = node->GetValue("opacity");
         if (!value || !str::Parse(value, "%f%$", &opacity))
             opacity = 1.0f;
-        color = PageAnnotation::Color((uint8_t)r, (uint8_t)g, (uint8_t)b, (uint8_t)(255 * opacity));
+        color = MkRgba((u8)r, (u8)g, (u8)b, (u8)(255 * opacity));
         list->Append(PageAnnotation(type, pageNo, rect.Convert<double>(), color));
     }
 
@@ -176,8 +176,13 @@ bool SaveFileModifictions(const WCHAR* filePath, Vec<PageAnnotation>* list) {
         }
         data.AppendFmt("page = %d\r\n", annot.pageNo);
         data.AppendFmt("rect = %g %g %g %g\r\n", annot.rect.x, annot.rect.y, annot.rect.dx, annot.rect.dy);
-        data.AppendFmt("color = #%02x%02x%02x\r\n", annot.color.r, annot.color.g, annot.color.b);
-        data.AppendFmt("opacity = %g\r\n", annot.color.a / 255.f);
+        data.AppendFmt("color = ");
+        SerializeColorRgb(annot.color, data);
+        data.Append("\r\n");
+        u8 r, g, b, a;
+        UnpackRgba(annot.color, r, g, b, a);
+        // TODO: should serialize as rgba in hex
+        data.AppendFmt("opacity = %g\r\n", (float)a / 255.f);
         data.Append("\r\n");
     }
     data.RemoveAt(data.size() - 2, 2);
