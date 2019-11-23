@@ -934,11 +934,12 @@ WStrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) {
     BuildPageLabelRec(ctx, root, pageCount, data);
     data.Sort(CmpPageLabelInfo);
 
-    if (data.size() == 0)
+    size_t n = data.size();
+    if (n == 0)
         return nullptr;
 
-    if (data.size() == 1 && data.at(0).startAt == 1 && data.at(0).countFrom == 1 && !data.at(0).prefix &&
-        str::Eq(data.at(0).type, "D")) {
+    PageLabelInfo& pli = data.at(0);
+    if (n == 1 && pli.startAt == 1 && pli.countFrom == 1 && !pli.prefix && str::Eq(pli.type, "D")) {
         // this is the default case, no need for special treatment
         return nullptr;
     }
@@ -946,19 +947,26 @@ WStrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) {
     WStrVec* labels = new WStrVec();
     labels->AppendBlanks(pageCount);
 
-    for (size_t i = 0; i < data.size() && data.at(i).startAt <= pageCount; i++) {
-        int secLen = pageCount + 1 - data.at(i).startAt;
-        if (i < data.size() - 1 && data.at(i + 1).startAt <= pageCount)
-            secLen = data.at(i + 1).startAt - data.at(i).startAt;
+    for (size_t i = 0; i < n; i++) {
+        pli = data.at(i);
+        if (pli.startAt > pageCount) {
+            break;
+        }
+        int secLen = pageCount + 1 - pli.startAt;
+        if (i < n - 1 && data.at(i + 1).startAt <= pageCount) {
+            secLen = data.at(i + 1).startAt - pli.startAt;
+        }
         AutoFreeW prefix(str::conv::FromPdf(ctx, data.at(i).prefix));
         for (int j = 0; j < secLen; j++) {
-            free(labels->at(data.at(i).startAt + j - 1));
-            labels->at(data.at(i).startAt + j - 1) = FormatPageLabel(data.at(i).type, data.at(i).countFrom + j, prefix);
+            size_t idx = pli.startAt + j - 1;
+            free(labels->at(idx));
+            labels->at(idx) = FormatPageLabel(pli.type, pli.countFrom + j, prefix);
         }
     }
 
-    for (int ix = 0; (ix = labels->Find(nullptr, ix)) != -1; ix++)
-        labels->at(ix) = str::Dup(L"");
+    for (int idx = 0; (idx = labels->Find(nullptr, idx)) != -1; idx++) {
+        labels->at(idx) = str::Dup(L"");
+    }
 
     // ensure that all page labels are unique (by appending a number to duplicates)
     WStrVec dups(*labels);
@@ -966,13 +974,13 @@ WStrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) {
     for (size_t i = 1; i < dups.size(); i++) {
         if (!str::Eq(dups.at(i), dups.at(i - 1)))
             continue;
-        int ix = labels->Find(dups.at(i)), counter = 0;
-        while ((ix = labels->Find(dups.at(i), ix + 1)) != -1) {
+        int idx = labels->Find(dups.at(i)), counter = 0;
+        while ((idx = labels->Find(dups.at(i), idx + 1)) != -1) {
             AutoFreeW unique;
             do {
                 unique.Set(str::Format(L"%s.%d", dups.at(i), ++counter));
             } while (labels->Contains(unique));
-            str::ReplacePtr(&labels->at(ix), unique);
+            str::ReplacePtr(&labels->at(idx), unique);
         }
         for (; i + 1 < dups.size() && str::Eq(dups.at(i), dups.at(i + 1)); i++)
             ;
