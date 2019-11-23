@@ -164,7 +164,8 @@ bool ParseColor(COLORREF* destColor, const char* txt) {
 }
 
 COLORREF AdjustLightness(COLORREF c, float factor) {
-    BYTE R = GetRValueSafe(c), G = GetGValueSafe(c), B = GetBValueSafe(c);
+    u8 R, G, B;
+    UnpackRgb(c, R, G, B);
     // cf. http://en.wikipedia.org/wiki/HSV_color_space#Hue_and_chroma
     BYTE M = std::max(std::max(R, G), B), m = std::min(std::min(R, G), B);
     if (M == m) {
@@ -201,7 +202,8 @@ COLORREF AdjustLightness2(COLORREF c, float units) {
 
 // cf. http://en.wikipedia.org/wiki/HSV_color_space#Lightness
 float GetLightness(COLORREF c) {
-    BYTE R = GetRValueSafe(c), G = GetGValueSafe(c), B = GetBValueSafe(c);
+    u8 R, G, B;
+    UnpackRgb(c, R, G, B);
     BYTE M = std::max(std::max(R, G), B), m = std::min(std::min(R, G), B);
     return (M + m) / 2.0f;
 }
