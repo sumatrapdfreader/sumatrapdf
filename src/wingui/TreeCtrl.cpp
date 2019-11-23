@@ -234,6 +234,16 @@ void TreeCtrl::SetTextColor(COLORREF col) {
     TreeView_SetTextColor(this->hwnd, col);
 }
 
+void TreeCtrl::ExpandAll() {
+    auto root = TreeView_GetRoot(this->hwnd);
+    TreeViewExpandRecursively(this->hwnd, root, TVE_EXPAND, false);
+}
+
+void TreeCtrl::CollapseAll() {
+    auto root = TreeView_GetRoot(this->hwnd);
+    TreeViewExpandRecursively(this->hwnd, root, TVE_COLLAPSE, false);
+}
+
 void TreeCtrl::Clear() {
     treeModel = nullptr;
     insertedItems.clear();

@@ -44,6 +44,9 @@ class TreeCtrl {
     void SuspendRedraw();
     void ResumeRedraw();
 
+    void ExpandAll();
+    void CollapseAll();
+
     HTREEITEM GetHandleByTreeItem(TreeItem*);
     TreeItem* GetTreeItemByHandle(HTREEITEM);
 

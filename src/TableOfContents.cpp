@@ -516,13 +516,14 @@ static void SerializeBookmarksRec(DocTocItem* node, int level, str::Str<char>& s
 
 static void ExportBookmarks(TabInfo* tab) {
     auto* tocTree = tab->ctrl->GetTocTree();
-    CrashIf(!tocTree);
     str::Str<char> s;
     SerializeBookmarksRec(tocTree->root, 0, s);
     dbglogf("%s\n", s.Get());
 }
 
 static MenuDef contextMenuDef[] = {
+    {"Expand All", IDM_EXPAND_ALL, MF_NO_TRANSLATE},
+    {"Colapse All", IDM_COLLAPSE_ALL, MF_NO_TRANSLATE},
     {"Export Bookmarks", IDM_EXPORT_BOOKMARKS, MF_NO_TRANSLATE},
 };
 
@@ -538,6 +539,15 @@ static void BuildAndShowContextMenu(WindowInfo* win, int x, int y) {
     switch (cmd) {
         case IDM_EXPORT_BOOKMARKS:
             ExportBookmarks(win->currentTab);
+            break;
+        case IDM_EXPAND_ALL:
+            win->tocTreeCtrl->ExpandAll();
+            break;
+        case IDM_COLLAPSE_ALL:
+            win->tocTreeCtrl->CollapseAll();
+            break;
+        default:
+            CrashMe();
             break;
     }
 }
