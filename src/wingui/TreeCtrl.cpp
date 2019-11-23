@@ -27,6 +27,41 @@ void TreeViewExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, bool subt
     }
 }
 
+
+static bool GetItem(HWND hwnd, HTREEITEM hItem, TVITEMW* item) {
+    ZeroStruct(item);
+    item->hItem = hItem;
+    item->mask = TVIF_PARAM | TVIF_STATE;
+    UINT sm = TVIS_SELECTED | TVIS_CUT | TVIS_DROPHILITED | TVIS_BOLD | TVIS_EXPANDED;
+    item->stateMask = sm;
+    BOOL ok = TreeView_GetItem(hwnd, item);
+    return !!ok;
+}
+
+#include "utils/BitManip.h"
+
+// expand if collapse, collapse if expanded
+static void TreeViewToggle(HWND hTree, HTREEITEM hItem, bool recursive) {
+    HTREEITEM child = TreeView_GetChild(hTree, hItem);
+    if (!child) {
+        // only applies to nodes with children
+        return;
+    }
+
+    TVITEMW item;
+    ::GetItem(hTree, hItem, &item);
+    UINT flag = TVE_EXPAND;
+    bool isExpanded = bitmask::IsSet(item.state, TVIS_EXPANDED);
+    if (isExpanded) {
+        flag = TVE_COLLAPSE;
+    }
+    if (recursive) {
+        TreeViewExpandRecursively(hTree, hItem, flag, false);
+    } else {
+        TreeView_Expand(hTree, hItem, flag);
+    }
+}
+
 static LRESULT CALLBACK TreeParentProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR subclassId, DWORD_PTR data) {
     CrashIf(subclassId != SUBCLASS_ID); // this proc is only used in one subclass
     auto* w = (TreeCtrl*)data;
@@ -60,20 +95,31 @@ static LRESULT CALLBACK TreeParentProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
     return DefSubclassProc(hwnd, msg, wp, lp);
 }
 
+//#include "utils/SimpleLog.h"
+
 static bool HandleKey(HWND hwnd, WPARAM wp) {
     // consistently expand/collapse whole (sub)trees
-    if (VK_MULTIPLY == wp && IsShiftPressed()) {
-        TreeViewExpandRecursively(hwnd, TreeView_GetRoot(hwnd), TVE_EXPAND, false);
-    } else if (VK_MULTIPLY == wp) {
-        TreeViewExpandRecursively(hwnd, TreeView_GetSelection(hwnd), TVE_EXPAND, true);
-    } else if (VK_DIVIDE == wp && IsShiftPressed()) {
-        HTREEITEM root = TreeView_GetRoot(hwnd);
-        if (!TreeView_GetNextSibling(hwnd, root))
-            root = TreeView_GetChild(hwnd, root);
-        TreeViewExpandRecursively(hwnd, root, TVE_COLLAPSE, false);
+    if (VK_MULTIPLY == wp) {
+        if (IsShiftPressed()) {
+            TreeViewExpandRecursively(hwnd, TreeView_GetRoot(hwnd), TVE_EXPAND, false);
+        } else {
+            TreeViewExpandRecursively(hwnd, TreeView_GetSelection(hwnd), TVE_EXPAND, true);
+        }
     } else if (VK_DIVIDE == wp) {
-        TreeViewExpandRecursively(hwnd, TreeView_GetSelection(hwnd), TVE_COLLAPSE, true);
+        if (IsShiftPressed()) {
+            HTREEITEM root = TreeView_GetRoot(hwnd);
+            if (!TreeView_GetNextSibling(hwnd, root))
+                root = TreeView_GetChild(hwnd, root);
+            TreeViewExpandRecursively(hwnd, root, TVE_COLLAPSE, false);
+        } else {
+            TreeViewExpandRecursively(hwnd, TreeView_GetSelection(hwnd), TVE_COLLAPSE, true);
+        }
+    } else if (wp == 13) {
+        // this is Enter key
+        bool recursive = IsShiftPressed();
+        TreeViewToggle(hwnd, TreeView_GetSelection(hwnd), recursive);
     } else {
+        dbglogf("wp: %d\n", wp);
         return false;
     }
     TreeView_EnsureVisible(hwnd, TreeView_GetSelection(hwnd));
@@ -168,17 +214,12 @@ bool TreeCtrl::Create(const WCHAR* title) {
 }
 
 TVITEMW* TreeCtrl::GetItem(HTREEITEM hItem) {
-    TVITEMW* item = &this->item;
-    ZeroStruct(item);
-    item->hItem = hItem;
-    item->mask = TVIF_PARAM | TVIF_STATE;
-    UINT sm = TVIS_SELECTED | TVIS_CUT | TVIS_DROPHILITED | TVIS_BOLD | TVIS_EXPANDED;
-    item->stateMask = sm;
-    BOOL ok = TreeView_GetItem(this->hwnd, item);
+    bool ok = ::GetItem(this->hwnd, hItem, &this->item);
     if (!ok) {
         return nullptr;
     }
-    return item;
+    return &this->item;
+    return &this->item;
 }
 
 bool TreeCtrl::IsExpanded(HTREEITEM hItem) {

@@ -43,3 +43,17 @@ bool IsMaskSet(T v, T mask) {
 }
 
 } // namespace bit
+
+namespace bitmask {
+
+template <typename T>
+bool IsSet(T v, decltype(v) mask) {
+    return (v & mask) != 0;
+}
+
+template <typename T>
+bool IsClear(T v, decltype(v) mask) {
+    return (v & ~mask) == 0;
+}
+
+}
