@@ -12,6 +12,11 @@
 
 #include "BaseEngine.h"
 
+/*
+Creating and parsing of .bkm files that contain alternative bookmarks view
+for PDF files.
+*/
+
 static void appendQuotedString(std::string_view sv, str::Str<char>& out) {
     out.Append('"');
     const char* s = sv.data();
@@ -93,17 +98,34 @@ static size_t skipUntil(std::string_view& sv, const char* end) {
     return toSkip;
 }
 
-static size_t skipSpace(std::string_view& sv) {
+// returns a substring of sv until c. updates sv to reflect the rest of the string
+static std::string_view parseUntil(std::string_view& sv, char c) {
     const char* s = sv.data();
+    const char* start = s;
     const char* e = s + sv.size();
     while (s < e) {
-        if (*s != ' ') {
+        if (*s == c) {
             break;
         }
         s++;
     }
-    size_t n = e - s;
-    return skipN(sv, n);
+    size_t n = skipUntil(sv, e);
+    return {start, n};
+}
+
+// skips all c chars in the beginning of sv
+// returns number of chars skipped
+// TODO: rename trimLeft?
+static size_t skipChars(std::string_view& sv, char c) {
+    const char* s = sv.data();
+    const char* e = s + sv.size();
+    while (s < e) {
+        if (*s != c) {
+            break;
+        }
+        s++;
+    }
+    return skipUntil(sv, e);
 }
 
 // first line should look like:
@@ -148,23 +170,79 @@ static str::Str<char> parseLineTitle(std::string_view& sv) {
     return res;
 }
 
+static std::tuple<COLORREF, bool> parseColor(std::string_view sv) {
+    COLORREF c = 0;
+    bool ok = ParseColor(&c, sv);
+    return {c, ok};
+}
+
+struct ParsedDest {
+    int pageNo;
+};
+
+std::tuple<ParsedDest*, bool> parseDestination(std::string_view& sv) {
+    if (str::StartsWith(sv, "page:")) {
+        return {nullptr, false};
+    }
+    // TODO: actually parse the info
+    auto* res = new ParsedDest{1};
+    return {res, true};
+}
+
 // a single line in .bmk file is:
 // indentation "quoted title" additional-metadata* destination
 static DocTocItem* parseBookmarksLine(std::string_view line, size_t* indentOut) {
     // lines might start with an indentation, 2 spaces for one level
     // TODO: maybe also count tabs as one level?
-    size_t indent = skipSpace(line);
+    size_t indent = skipChars(line, ' ');
     // must be multiple of 2
     if (indent % 2 != 0) {
         return nullptr;
     }
     *indentOut = indent / 2;
-    skipSpace(line);
+    skipChars(line, ' ');
     // TODO: no way to indicate an error
     str::Str<char> title = parseLineTitle(line);
-    skipSpace(line);
     DocTocItem* res = new DocTocItem();
     res->title = str::conv::Utf8ToWchar(title.AsView());
+
+    // parse meta-data and page destination
+    std::string_view part;
+    while (line.size() > 0) {
+        skipChars(line, ' ');
+        part = parseUntil(line, ' ');
+
+        if (str::Eq(part, "font:bold")) {
+            bit::Set(res->fontFlags, fontBitBold);
+            continue;
+        }
+
+        if (str::Eq(part, "font:italic")) {
+            bit::Set(res->fontFlags, fontBitItalic);
+            continue;
+        }
+
+        auto maybeColor = parseColor(part);
+        if (std::get<1>(maybeColor) == true) {
+            res->color = std::get<0>(maybeColor);
+            continue;
+        }
+
+        auto maybeDest = parseDestination(part);
+        if (std::get<1>(maybeDest) == true) {
+            auto* dest = std::get<0>(maybeDest);
+            res->pageNo = dest->pageNo;
+            delete dest;
+            // TODO: parse destination and set values
+            continue;
+        }
+    }
+
+    // page: must have been missing
+    if (res->pageNo == 0) {
+        delete res;
+        return nullptr;
+    }
 
     return res;
 }

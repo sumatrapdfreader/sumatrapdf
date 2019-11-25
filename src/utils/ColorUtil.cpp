@@ -144,23 +144,33 @@ bool ParseColor(COLORREF* destColor, const WCHAR* txt) {
 }
 
 /* Parse 'txt' as hex color and return the result in 'destColor' */
-bool ParseColor(COLORREF* destColor, const char* txt) {
+bool ParseColor(COLORREF* destColor, std::string_view sv) {
     CrashIf(!destColor);
+    const char* txt = sv.data();
+    size_t n = sv.size();
     if (str::StartsWith(txt, "0x")) {
         txt += 2;
+        n -= 2;
     } else if (str::StartsWith(txt, "#")) {
         txt += 1;
+        n -= 2;
     }
 
     unsigned int r, g, b, a;
-    bool ok = str::Parse(txt, "%2x%2x%2x%2x%$", &a, &r, &g, &b);
+    bool ok = str::Parse(txt, n, "%2x%2x%2x%2x%$", &a, &r, &g, &b);
     if (ok) {
         *destColor = MkRgba((u8)r, (u8)g, (u8)b, (u8)a);
         return true;
     }
-    ok = str::Parse(txt, "%2x%2x%2x%$", &r, &g, &b);
+    ok = str::Parse(txt, n, "%2x%2x%2x%$", &r, &g, &b);
     *destColor = MkRgb((u8)r, (u8)g, (u8)b);
     return ok;
+}
+
+/* Parse 'txt' as hex color and return the result in 'destColor' */
+bool ParseColor(COLORREF* destColor, const char* txt) {
+    std::string_view sv(txt);
+    return ParseColor(destColor, sv);
 }
 
 COLORREF AdjustLightness(COLORREF c, float factor) {

@@ -21,12 +21,15 @@ char* Join(const char* s1, const char* s2, const char* s3 = nullptr);
 char* Join(const char* s1, const char* s2, const char* s3, Allocator* allocator);
 
 bool Eq(const char* s1, const char* s2);
+bool Eq(std::string_view s1, const char* s2);
 bool EqI(const char* s1, const char* s2);
+bool EqI(std::string_view s1, const char* s2);
 bool EqIS(const char* s1, const char* s2);
 bool EqN(const char* s1, const char* s2, size_t len);
 bool EqNI(const char* s1, const char* s2, size_t len);
 bool IsEmpty(const char* s);
 bool StartsWith(const char* str, const char* txt);
+bool StartsWith(std::string_view s, const char* txt);
 
 #if OS_WIN
 size_t Len(const WCHAR*);

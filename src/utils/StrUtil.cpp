@@ -164,6 +164,14 @@ bool Eq(const char* s1, const char* s2) {
     return 0 == strcmp(s1, s2);
 }
 
+bool Eq(std::string_view s1, const char* s2) {
+    return EqN(s1.data(), s2, s1.size());
+}
+
+bool EqI(std::string_view s1, const char* s2) {
+    return EqNI(s1.data(), s2, s1.size());
+}
+
 // return true if s1 == s2, case insensitive
 bool EqI(const char* s1, const char* s2) {
     if (s1 == s2)
@@ -220,17 +228,27 @@ bool IsEmpty(const char* s) {
     return !s || (0 == *s);
 }
 
-bool StartsWith(const char* str, const char* txt) {
-    return EqN(str, txt, Len(txt));
+bool StartsWith(const char* s, const char* txt) {
+    return EqN(s, txt, Len(txt));
+}
+
+bool StartsWith(std::string_view s, const char* txt) {
+    size_t n = Len(txt);
+    if (n > s.size()) {
+        return false;
+    }
+    return EqN(s.data(), txt, n);
 }
 
 /* return true if 'str' starts with 'txt', NOT case-sensitive */
-bool StartsWithI(const char* str, const char* txt) {
-    if (str == txt)
+bool StartsWithI(const char* s, const char* txt) {
+    if (s == txt) {
         return true;
-    if (!str || !txt)
+    }
+    if (!s || !txt) {
         return false;
-    return 0 == _strnicmp(str, txt, str::Len(txt));
+    }
+    return 0 == _strnicmp(s, txt, str::Len(txt));
 }
 
 bool EndsWith(const char* txt, const char* end) {
