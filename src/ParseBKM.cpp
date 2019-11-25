@@ -12,10 +12,31 @@
 
 #include "BaseEngine.h"
 
+static void appendQuotedString(std::string_view sv, str::Str<char>& out) {
+    out.Append('"');
+    const char* s = sv.data();
+    const char* end = s + sv.size();
+    while (s < end) {
+        auto c = *s;
+        switch (c) {
+            case '"':
+            case '\\':
+                out.Append('\\');
+                out.Append(c);
+                out.Append('\\');
+                break;
+            default:
+                out.Append(c);
+        }
+        s++;
+    }
+    out.Append('"');
+}
+
 // TODO: serialize open state
 void SerializeBookmarksRec(DocTocItem* node, int level, str::Str<char>& s) {
     if (level == 0) {
-        s.Append(":default bookmarks view\n");
+        s.Append(":default view\n");
     }
 
     while (node) {
@@ -24,7 +45,7 @@ void SerializeBookmarksRec(DocTocItem* node, int level, str::Str<char>& s) {
         }
         WCHAR* title = node->Text();
         auto titleA = str::conv::ToUtf8(title);
-        s.AppendView(titleA.AsView());
+        appendQuotedString(titleA.AsView(), s);
         auto flags = node->fontFlags;
         if (bit::IsSet(flags, fontBitItalic)) {
             s.Append(" font:italic");

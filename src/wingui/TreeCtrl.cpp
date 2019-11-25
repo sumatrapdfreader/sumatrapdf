@@ -95,8 +95,6 @@ static LRESULT CALLBACK TreeParentProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
     return DefSubclassProc(hwnd, msg, wp, lp);
 }
 
-//#include "utils/SimpleLog.h"
-
 static bool HandleKey(HWND hwnd, WPARAM wp) {
     // consistently expand/collapse whole (sub)trees
     if (VK_MULTIPLY == wp) {
