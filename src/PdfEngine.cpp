@@ -1073,9 +1073,6 @@ class PdfEngineImpl : public BaseEngine {
     PageElement* GetElementAtPos(int pageNo, PointD pt) override;
 
     PageDestination* GetNamedDest(const WCHAR* name) override;
-    bool HasTocTree() const override {
-        return outline != nullptr || attachments != nullptr;
-    }
     DocTocTree* GetTocTree() override;
 
     bool HasPageLabels() const override {

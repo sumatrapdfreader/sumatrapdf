@@ -63,9 +63,6 @@ class EbookController : public Controller {
     }
     void SetViewPortSize(SizeI size) override;
 
-    bool HasTocTree() const override {
-        return doc.HasToc();
-    }
     DocTocTree* GetTocTree() override;
     void ScrollToLink(PageDestination* dest) override;
     PageDestination* GetNamedDest(const WCHAR* name) override;

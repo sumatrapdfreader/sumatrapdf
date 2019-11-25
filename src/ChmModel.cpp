@@ -441,13 +441,12 @@ PageDestination* ChmModel::GetNamedDest(const WCHAR* name) {
     return nullptr;
 }
 
-bool ChmModel::HasTocTree() const {
-    return tocTrace->size() > 0;
-}
-
 DocTocTree* ChmModel::GetTocTree() {
     if (tocTree) {
         return tocTree;
+    }
+    if (tocTrace->size() == 0) {
+        return nullptr;
     }
 
     DocTocItem* root = nullptr;

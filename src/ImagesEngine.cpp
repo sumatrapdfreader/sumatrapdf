@@ -662,9 +662,6 @@ class ImageDirEngineImpl : public ImagesEngine {
     WCHAR* GetPageLabel(int pageNo) const override;
     int GetPageByLabel(const WCHAR* label) const override;
 
-    bool HasTocTree() const override {
-        return true;
-    }
     DocTocTree* GetTocTree() override;
 
     // TODO: better handle the case where images have different resolutions

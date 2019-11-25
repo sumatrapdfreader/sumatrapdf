@@ -772,9 +772,6 @@ class EpubEngineImpl : public EbookEngine {
         return L".epub";
     }
 
-    bool HasTocTree() const override {
-        return doc->HasToc();
-    }
     DocTocTree* GetTocTree() override;
 
     static BaseEngine* CreateFromFile(const WCHAR* fileName);
@@ -937,9 +934,6 @@ class Fb2EngineImpl : public EbookEngine {
         return doc->IsZipped() ? L".fb2z" : L".fb2";
     }
 
-    bool HasTocTree() const override {
-        return doc->HasToc();
-    }
     DocTocTree* GetTocTree() override;
 
     static BaseEngine* CreateFromFile(const WCHAR* fileName);
@@ -1059,9 +1053,6 @@ class MobiEngineImpl : public EbookEngine {
     }
 
     PageDestination* GetNamedDest(const WCHAR* name) override;
-    bool HasTocTree() const override {
-        return doc->HasToc();
-    }
     DocTocTree* GetTocTree() override;
 
     static BaseEngine* CreateFromFile(const WCHAR* fileName);
@@ -1215,9 +1206,6 @@ class PdbEngineImpl : public EbookEngine {
         return L".pdb";
     }
 
-    bool HasTocTree() const override {
-        return doc->HasToc();
-    }
     DocTocTree* GetTocTree() override;
 
     static BaseEngine* CreateFromFile(const WCHAR* fileName);
@@ -1433,9 +1421,6 @@ class ChmEngineImpl : public EbookEngine {
     }
 
     PageDestination* GetNamedDest(const WCHAR* name) override;
-    bool HasTocTree() const override {
-        return doc->HasToc() || doc->HasIndex();
-    }
     DocTocTree* GetTocTree() override;
 
     static BaseEngine* CreateFromFile(const WCHAR* fileName);
@@ -1814,9 +1799,6 @@ class TxtEngineImpl : public EbookEngine {
         return Layout_Single;
     }
 
-    bool HasTocTree() const override {
-        return doc->HasToc();
-    }
     DocTocTree* GetTocTree() override;
 
     static BaseEngine* CreateFromFile(const WCHAR* fileName);

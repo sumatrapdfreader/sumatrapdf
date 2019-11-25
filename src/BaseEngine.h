@@ -480,8 +480,9 @@ class BaseEngine {
         return nullptr;
     }
     // checks whether this document has an associated Table of Contents
-    virtual bool HasTocTree() const {
-        return false;
+    bool HasTocTree() {
+        DocTocTree* tree = GetTocTree();
+        return tree != nullptr;
     }
     // returns the root element for the loaded document's Table of Contents
     // caller must delete the result (when no longer needed)

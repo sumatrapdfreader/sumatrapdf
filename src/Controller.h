@@ -70,7 +70,10 @@ class Controller {
     virtual void SetViewPortSize(SizeI size) = 0;
 
     // table of contents
-    virtual bool HasTocTree() const = 0;
+    bool HasTocTree() {
+        auto* tree = GetTocTree();
+        return tree != nullptr;
+    }
     virtual DocTocTree* GetTocTree() = 0;
     virtual void ScrollToLink(PageDestination* dest) = 0;
     virtual PageDestination* GetNamedDest(const WCHAR* name) = 0;

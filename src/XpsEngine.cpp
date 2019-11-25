@@ -221,9 +221,6 @@ class XpsEngineImpl : public BaseEngine {
     PageElement* GetElementAtPos(int pageNo, PointD pt) override;
 
     PageDestination* GetNamedDest(const WCHAR* name) override;
-    bool HasTocTree() const override {
-        return _outline != nullptr;
-    }
     DocTocTree* GetTocTree() override;
 
     fz_rect FindDestRect(const char* target);

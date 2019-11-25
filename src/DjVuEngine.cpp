@@ -258,9 +258,6 @@ class DjVuEngineImpl : public BaseEngine {
     PageElement* GetElementAtPos(int pageNo, PointD pt) override;
 
     PageDestination* GetNamedDest(const WCHAR* name) override;
-    bool HasTocTree() const override {
-        return outline != miniexp_nil;
-    }
     DocTocTree* GetTocTree() override;
 
     bool HasPageLabels() const override {
@@ -1038,8 +1035,9 @@ DjVuTocItem* DjVuEngineImpl::BuildTocTree(miniexp_t entry, int& idCounter) {
 }
 
 DocTocTree* DjVuEngineImpl::GetTocTree() {
-    if (!HasTocTree())
+    if (outline == miniexp_nil) {
         return nullptr;
+    }
 
     if (tocTree) {
         return tocTree;

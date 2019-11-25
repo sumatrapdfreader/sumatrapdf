@@ -341,10 +341,6 @@ class PsEngineImpl : public BaseEngine {
         return pdfEngine->GetNamedDest(name);
     }
 
-    bool HasTocTree() const override {
-        return pdfEngine->HasTocTree();
-    }
-
     DocTocTree* GetTocTree() override {
         return pdfEngine->GetTocTree();
     }

@@ -54,7 +54,6 @@ class ChmModel : public Controller {
     }
 
     // table of contents
-    bool HasTocTree() const override;
     DocTocTree* GetTocTree() override;
     void ScrollToLink(PageDestination* dest) override;
     PageDestination* GetNamedDest(const WCHAR* name) override;
