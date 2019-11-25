@@ -4,15 +4,16 @@
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/Dpi.h"
-#include "utils/GdiPlusUtil.h"
-#include "wingui/LabelWithCloseWnd.h"
-#include "wingui/SplitterWnd.h"
-#include "utils/UITask.h"
-#include "utils/WinUtil.h"
 #include "utils/SimpleLog.h"
 #include "utils/BitManip.h"
+#include "utils/FileUtil.h"
+#include "utils/GdiPlusUtil.h"
+#include "utils/UITask.h"
+#include "utils/WinUtil.h"
 
 #include "wingui/WinGui.h"
+#include "wingui/LabelWithCloseWnd.h"
+#include "wingui/SplitterWnd.h"
 #include "wingui/TreeModel.h"
 #include "wingui/TreeCtrl.h"
 
@@ -519,6 +520,16 @@ static void ExportBookmarks(TabInfo* tab) {
     str::Str<char> s;
     SerializeBookmarksRec(tocTree->root, 0, s);
     dbglogf("%s\n", s.Get());
+    str::Str<WCHAR> fileName;
+    fileName.Append(tab->filePath.Get());
+    fileName.Append(L".bkm");
+    bool ok = file::WriteFile(fileName.Get(), (void*)s.Get(), s.size());
+    str::Str<WCHAR> msg;
+    msg.AppendFmt(L"Exported bookmarks to file %s", fileName.Get());
+    str::Str<WCHAR> caption;
+    caption.Append(L"Exported bookmarks");
+    UINT type = MB_OK | MB_ICONINFORMATION | MbRtlReadingMaybe();
+    MessageBoxW(nullptr, msg.Get(), caption.Get(), type);
 }
 
 static MenuDef contextMenuDef[] = {
