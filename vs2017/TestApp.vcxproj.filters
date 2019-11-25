@@ -45,16 +45,43 @@
     <ClInclude Include="..\src\utils\WinUtil.h">
       <Filter>src\utils</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\utils\error.h">
+      <Filter>src\utils</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\wingui\ButtonCtrl.h">
+      <Filter>src\wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\DialogSizer.h">
+      <Filter>src\wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\EditCtrl.h">
+      <Filter>src\wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\FrameRateWnd.h">
+      <Filter>src\wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\LabelWithCloseWnd.h">
       <Filter>src\wingui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\wingui\Layout.h">
       <Filter>src\wingui</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\wingui\SplitterWnd.h">
+      <Filter>src\wingui</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\wingui\TabsCtrl.h">
       <Filter>src\wingui</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\wingui\TreeCtrl.h">
+      <Filter>src\wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\TreeModel.h">
+      <Filter>src\wingui</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\wingui\Win32Window.h">
+      <Filter>src\wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\WinGui.h">
       <Filter>src\wingui</Filter>
     </ClInclude>
     <ClInclude Include="..\tools\test-app\resource.h">
@@ -95,13 +122,34 @@
     <ClCompile Include="..\src\utils\WinUtil.cpp">
       <Filter>src\utils</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\utils\error.cpp">
+      <Filter>src\utils</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\wingui\ButtonCtrl.cpp">
+      <Filter>src\wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\DialogSizer.cpp">
+      <Filter>src\wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\EditCtrl.cpp">
+      <Filter>src\wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\FrameRateWnd.cpp">
+      <Filter>src\wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\LabelWithCloseWnd.cpp">
       <Filter>src\wingui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\wingui\Layout.cpp">
       <Filter>src\wingui</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\wingui\SplitterWnd.cpp">
+      <Filter>src\wingui</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\wingui\TabsCtrl.cpp">
+      <Filter>src\wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\TreeCtrl.cpp">
       <Filter>src\wingui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\wingui\Win32Window.cpp">

@@ -793,6 +793,7 @@ function test_util_files()
     "CssParser.*",
     "Dict.*",
     "DebugLog.*",
+    "error.*",
     "FileUtil.*",
     "GeomUtil.*",
     "HtmlParserLookup.*",
@@ -894,6 +895,7 @@ function installer_utils_files()
     "Dict.*",
     "DirIter.*",
     "Dpi.*",
+    "error.*",
     "FileUtil.*",
     "FzImgReader.*",
     "GdiPlusUtil.*",
@@ -959,6 +961,7 @@ function test_app_files()
     "BaseUtil.*",
     "DebugLog.*",
     "Dpi.*",
+    "error.*",
     "FileUtil.*",
     "Scoped.h",
     "SimpleLog.*",
@@ -969,9 +972,7 @@ function test_app_files()
   })
 
   files_in_dir("src/wingui", {
-    "TabsCtrl.*",
-    "Win32Window.*",
-    "Layout.*",
-    "ButtonCtrl.*",
+    "*.h",
+    "*.cpp",
   })
 end
