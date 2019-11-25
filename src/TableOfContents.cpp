@@ -19,6 +19,7 @@
 
 #include "BaseEngine.h"
 #include "EngineManager.h"
+#include "ParseBKM.h"
 
 #include "SettingsStructs.h"
 #include "Controller.h"
@@ -474,46 +475,6 @@ static void SetInitialExpandState(DocTocItem* item, Vec<int>& tocState) {
     }
 }
 
-static void SerializeBookmarksRec(DocTocItem* node, int level, str::Str<char>& s) {
-    if (level == 0) {
-        s.Append(":default bookmarks view\n");
-    }
-
-    while (node) {
-        for (int i = 0; i < level; i++) {
-            s.Append("  ");
-        }
-        WCHAR* title = node->Text();
-        auto titleA = str::conv::ToUtf8(title);
-        s.AppendView(titleA.AsView());
-        auto flags = node->fontFlags;
-        if (bit::IsSet(flags, fontBitItalic)) {
-            s.Append(" font:italic");
-        }
-        if (bit::IsSet(flags, fontBitBold)) {
-            s.Append(" font:bold");
-        }
-        if (node->color != ColorUnset) {
-            s.Append(" ");
-            SerializeColor(node->color, s);
-        }
-        PageDestination* dest = node->GetLink();
-        if (dest) {
-            int pageNo = dest->GetDestPageNo();
-            s.AppendFmt(" page:%d", pageNo);
-            auto ws = dest->GetDestValue();
-            if (ws != nullptr) {
-                auto str = str::conv::ToUtf8(ws);
-                s.Append(",dest:");
-                s.AppendView(str.AsView());
-            }
-        }
-        s.Append("\n");
-
-        SerializeBookmarksRec(node->child, level + 1, s);
-        node = node->next;
-    }
-}
 
 static void ExportBookmarks(TabInfo* tab) {
     auto* tocTree = tab->ctrl->GetTocTree();

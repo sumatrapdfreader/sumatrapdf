@@ -338,6 +338,7 @@ function sumatra_files()
     "MuiEbookPageDef.*",
     "Notifications.*",
     "PagesLayoutDef.*",
+    "ParseBKM.*",
     "ParseCommandLine.*",
     "PdfSync.*",
     "Print.*",

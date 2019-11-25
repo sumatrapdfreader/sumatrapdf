@@ -27,6 +27,7 @@
     <ClInclude Include="..\src\MuiEbookPageDef.h" />
     <ClInclude Include="..\src\Notifications.h" />
     <ClInclude Include="..\src\PagesLayoutDef.h" />
+    <ClInclude Include="..\src\ParseBKM.h" />
     <ClInclude Include="..\src\ParseCommandLine.h" />
     <ClInclude Include="..\src\PdfSync.h" />
     <ClInclude Include="..\src\Print.h" />
@@ -73,6 +74,7 @@
     <ClCompile Include="..\src\MuiEbookPageDef.cpp" />
     <ClCompile Include="..\src\Notifications.cpp" />
     <ClCompile Include="..\src\PagesLayoutDef.cpp" />
+    <ClCompile Include="..\src\ParseBKM.cpp" />
     <ClCompile Include="..\src\ParseCommandLine.cpp" />
     <ClCompile Include="..\src\PdfSync.cpp" />
     <ClCompile Include="..\src\Print.cpp" />
