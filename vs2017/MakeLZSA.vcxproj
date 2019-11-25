@@ -457,6 +457,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\utils\error.h" />
+  </ItemGroup>
+  <ItemGroup>
     <ClCompile Include="..\src\tools\MakeLzSA.cpp" />
     <ClCompile Include="..\src\utils\BaseUtil.cpp" />
     <ClCompile Include="..\src\utils\ByteOrderDecoder.cpp" />
@@ -465,6 +468,7 @@
     <ClCompile Include="..\src\utils\LzmaSimpleArchive.cpp" />
     <ClCompile Include="..\src\utils\StrUtil.cpp" />
     <ClCompile Include="..\src\utils\StrUtil_win.cpp" />
+    <ClCompile Include="..\src\utils\error.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="unarrlib.vcxproj">

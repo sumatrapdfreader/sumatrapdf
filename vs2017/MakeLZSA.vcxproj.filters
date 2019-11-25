@@ -9,6 +9,11 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\utils\error.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
     <ClCompile Include="..\src\tools\MakeLzSA.cpp">
       <Filter>tools</Filter>
     </ClCompile>
@@ -31,6 +36,9 @@
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\StrUtil_win.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\error.cpp">
       <Filter>utils</Filter>
     </ClCompile>
   </ItemGroup>

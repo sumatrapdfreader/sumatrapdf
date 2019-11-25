@@ -12,11 +12,12 @@ function makelzsa_files()
   files_in_dir("src/utils", {
     "BaseUtil.cpp",
     "ByteOrderDecoder.cpp",
+    "CmdLineParser.cpp",
+    "error.*",
+    "FileUtil.cpp",
+    "LzmaSimpleArchive.cpp",
     "StrUtil.cpp",
     "StrUtil_win.cpp",
-    "FileUtil.cpp",
-    "CmdLineParser.cpp",
-    "LzmaSimpleArchive.cpp",
   })
 
   files {
@@ -959,6 +960,7 @@ function test_app_files()
 
   files_in_dir("src/utils", {
     "BaseUtil.*",
+    "ColorUtil.*",
     "DebugLog.*",
     "Dpi.*",
     "error.*",

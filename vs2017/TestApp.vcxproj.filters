@@ -21,6 +21,9 @@
     <ClInclude Include="..\src\utils\BaseUtil.h">
       <Filter>src\utils</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\utils\ColorUtil.h">
+      <Filter>src\utils</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\utils\DebugLog.h">
       <Filter>src\utils</Filter>
     </ClInclude>
@@ -96,6 +99,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\utils\BaseUtil.cpp">
+      <Filter>src\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\ColorUtil.cpp">
       <Filter>src\utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\DebugLog.cpp">
