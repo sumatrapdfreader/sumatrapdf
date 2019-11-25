@@ -280,7 +280,7 @@ class DocTocItem : public TreeItem {
     // TODO: change this to char* uri that encodes all the information
     // about PageDestination, get rid of PageDestination and all
     // classes that inherit from DocTocItem
-    //virtual PageDestination* GetLink() = 0;
+    // virtual PageDestination* GetLink() = 0;
     virtual PageDestination* GetLink() {
         return nullptr;
     }

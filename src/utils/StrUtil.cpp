@@ -216,6 +216,14 @@ bool EqNI(const char* s1, const char* s2, size_t len) {
     return 0 == _strnicmp(s1, s2, len);
 }
 
+bool IsEmpty(const char* s) {
+    return !s || (0 == *s);
+}
+
+bool StartsWith(const char* str, const char* txt) {
+    return EqN(str, txt, Len(txt));
+}
+
 /* return true if 'str' starts with 'txt', NOT case-sensitive */
 bool StartsWithI(const char* str, const char* txt) {
     if (str == txt)
@@ -310,6 +318,10 @@ char* DupN(const char* s, size_t n) {
         res[n] = 0;
     }
     return res;
+}
+
+char* Dup(const std::string_view sv) {
+    return DupN(sv.data(), sv.size());
 }
 
 char* ToLowerInPlace(char* s) {
@@ -477,13 +489,13 @@ std::string_view IterString(std::string_view& sv, char delim) {
         s++;
     }
     size_t size = (size_t)(s - start);
-    std::string_view el = { start, size };
-    sv = {s+1, sv.size() - size - 1};
+    std::string_view el = {start, size};
+    sv = {s + 1, sv.size() - size - 1};
     return el;
 }
 
 std::string_view IterStringBack(std::string_view& sv, char delim) {
-    const char *start = sv.data();
+    const char* start = sv.data();
     const char* end = start + sv.size();
     if (start == end) {
         return {nullptr, 0};
@@ -496,13 +508,13 @@ std::string_view IterStringBack(std::string_view& sv, char delim) {
         s--;
     }
     size_t size = (size_t)(end - s - 1);
-    std::string_view el = { s + 1, size };
+    std::string_view el = {s + 1, size};
     size_t newSize = sv.size() - size;
     if (newSize > 0) {
         // eat delim
         newSize--;
     }
-    sv = {start, newSize };
+    sv = {start, newSize};
     return el;
 }
 

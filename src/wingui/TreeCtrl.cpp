@@ -27,7 +27,6 @@ void TreeViewExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, bool subt
     }
 }
 
-
 static bool GetItem(HWND hwnd, HTREEITEM hItem, TVITEMW* item) {
     ZeroStruct(item);
     item->hItem = hItem;

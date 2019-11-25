@@ -25,28 +25,22 @@ bool EqI(const char* s1, const char* s2);
 bool EqIS(const char* s1, const char* s2);
 bool EqN(const char* s1, const char* s2, size_t len);
 bool EqNI(const char* s1, const char* s2, size_t len);
-
-template <typename T>
-inline bool IsEmpty(T* s) {
-    return !s || (0 == *s);
-}
+bool IsEmpty(const char* s);
+bool StartsWith(const char* str, const char* txt);
 
 #if OS_WIN
-size_t Len(const WCHAR* s);
-WCHAR* Dup(const WCHAR* s);
+size_t Len(const WCHAR*);
+WCHAR* Dup(const WCHAR*);
 void ReplacePtr(WCHAR** s, const WCHAR* snew);
-WCHAR* Join(const WCHAR* s1, const WCHAR* s2, const WCHAR* s3 = nullptr);
-bool Eq(const WCHAR* s1, const WCHAR* s2);
-bool EqI(const WCHAR* s1, const WCHAR* s2);
-bool EqIS(const WCHAR* s1, const WCHAR* s2);
-bool EqN(const WCHAR* s1, const WCHAR* s2, size_t len);
-bool EqNI(const WCHAR* s1, const WCHAR* s2, size_t len);
+WCHAR* Join(const WCHAR*, const WCHAR*, const WCHAR* s3 = nullptr);
+bool Eq(const WCHAR*, const WCHAR*);
+bool EqI(const WCHAR*, const WCHAR*);
+bool EqIS(const WCHAR*, const WCHAR*);
+bool EqN(const WCHAR*, const WCHAR*, size_t);
+bool EqNI(const WCHAR*, const WCHAR*, size_t);
+bool IsEmpty(const WCHAR*);
+bool StartsWith(const WCHAR* str, const WCHAR* txt);
 #endif
-
-template <typename T>
-inline bool StartsWith(const T* str, const T* txt) {
-    return EqN(str, txt, Len(txt));
-}
 
 bool StartsWithI(const char* str, const char* txt);
 bool EndsWith(const char* txt, const char* end);
@@ -57,6 +51,7 @@ inline bool EqNIx(const char* s, size_t len, const char* s2) {
 }
 
 char* DupN(const char* s, size_t lenCch);
+char* Dup(const std::string_view sv);
 char* ToLowerInPlace(char* s);
 
 inline void Free(const char* s) {
@@ -198,38 +193,21 @@ namespace conv {
 MaybeOwnedData UnknownToUtf8(const std::string_view&);
 
 #if OS_WIN
-inline WCHAR* FromCodePage(const char* src, UINT cp) {
-    return ToWideChar(src, cp);
-}
+WCHAR* FromCodePage(const char* src, UINT cp);
+OwnedData ToCodePage(const WCHAR* src, UINT cp);
 
-inline OwnedData ToCodePage(const WCHAR* src, UINT cp) {
-    return ToMultiByte(src, cp);
-}
+// TODO: replace with Utf8ToWchar
+WCHAR* FromUtf8(const char* src);
+WCHAR* FromUtf8(const char* src, size_t cbSrcLen);
 
-inline WCHAR* FromUtf8(const char* src, size_t cbSrcLen) {
-    return ToWideChar(src, CP_UTF8, (int)cbSrcLen);
-}
+WCHAR* Utf8ToWchar(const char* src);
+WCHAR* Utf8ToWchar(const char* src, size_t cbSrcLen);
+WCHAR* Utf8ToWchar(std::string_view sv);
 
-inline WCHAR* FromUtf8(const char* src) {
-    return ToWideChar(src, CP_UTF8);
-}
-
-inline OwnedData ToUtf8(const WCHAR* src, size_t cchSrcLen) {
-    return ToMultiByte(src, CP_UTF8, (int)cchSrcLen);
-}
-
-inline OwnedData ToUtf8(const WCHAR* src) {
-    return ToMultiByte(src, CP_UTF8);
-}
-
-inline WCHAR* FromAnsi(const char* src, size_t cbSrcLen = (size_t)-1) {
-    return ToWideChar(src, CP_ACP, (int)cbSrcLen);
-}
-
-inline OwnedData ToAnsi(const WCHAR* src) {
-    return ToMultiByte(src, CP_ACP);
-}
-
+OwnedData ToUtf8(const WCHAR* src, size_t cchSrcLen);
+OwnedData ToUtf8(const WCHAR* src);
+WCHAR* FromAnsi(const char* src, size_t cbSrcLen = (size_t)-1);
+OwnedData ToAnsi(const WCHAR* src);
 size_t ToCodePageBuf(char* buf, int cbBufSize, const WCHAR* s, UINT cp);
 size_t FromCodePageBuf(WCHAR* buf, int cchBufSize, const char* s, UINT cp);
 

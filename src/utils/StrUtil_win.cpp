@@ -74,6 +74,14 @@ bool EqNI(const WCHAR* s1, const WCHAR* s2, size_t len) {
     return 0 == _wcsnicmp(s1, s2, len);
 }
 
+bool IsEmpty(const WCHAR* s) {
+    return !s || (0 == *s);
+}
+
+bool StartsWith(const WCHAR* str, const WCHAR* txt) {
+    return EqN(str, txt, Len(txt));
+}
+
 /* return true if 'str' starts with 'txt', NOT case-sensitive */
 bool StartsWithI(const WCHAR* str, const WCHAR* txt) {
     if (str == txt)
@@ -671,6 +679,50 @@ size_t ToCodePageBuf(char* buf, int cbBufSize, const WCHAR* s, UINT cp) {
 }
 size_t FromCodePageBuf(WCHAR* buf, int cchBufSize, const char* s, UINT cp) {
     return MultiByteToWideChar(cp, 0, s, -1, buf, cchBufSize);
+}
+
+WCHAR* FromCodePage(const char* src, UINT cp) {
+    return ToWideChar(src, cp);
+}
+
+OwnedData ToCodePage(const WCHAR* src, UINT cp) {
+    return ToMultiByte(src, cp);
+}
+
+WCHAR* FromUtf8(const char* src) {
+    return ToWideChar(src, CP_UTF8);
+}
+
+WCHAR* FromUtf8(const char* src, size_t cbSrcLen) {
+    return ToWideChar(src, CP_UTF8, (int)cbSrcLen);
+}
+
+WCHAR* Utf8ToWchar(const char* src) {
+    return ToWideChar(src, CP_UTF8);
+}
+
+WCHAR* Utf8ToWchar(const char* src, size_t cbSrcLen) {
+    return ToWideChar(src, CP_UTF8, (int)cbSrcLen);
+}
+
+WCHAR* Utf8ToWchar(std::string_view sv) {
+    return ToWideChar(sv.data(), CP_UTF8, (int)sv.size());
+}
+
+OwnedData ToUtf8(const WCHAR* src, size_t cchSrcLen) {
+    return ToMultiByte(src, CP_UTF8, (int)cchSrcLen);
+}
+
+OwnedData ToUtf8(const WCHAR* src) {
+    return ToMultiByte(src, CP_UTF8);
+}
+
+WCHAR* FromAnsi(const char* src, size_t cbSrcLen) {
+    return ToWideChar(src, CP_ACP, (int)cbSrcLen);
+}
+
+OwnedData ToAnsi(const WCHAR* src) {
+    return ToMultiByte(src, CP_ACP);
 }
 
 } // namespace conv

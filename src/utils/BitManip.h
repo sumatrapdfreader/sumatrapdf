@@ -56,4 +56,4 @@ bool IsClear(T v, decltype(v) mask) {
     return (v & ~mask) == 0;
 }
 
-}
+} // namespace bitmask

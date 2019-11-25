@@ -583,8 +583,8 @@ class MaybeOwnedData {
     OwnedData StealData();
 };
 
-/* 
-Poor-man's manual dynamic typing. 
+/*
+Poor-man's manual dynamic typing.
 Identity of an object is an address of a unique, global string.
 String is good for debugging
 

@@ -375,7 +375,6 @@ std::tuple<OwnedData, error*> ReadFile2(const char* path) {
     if (!data) {
         auto err = NewError("Couldn't open file");
         return std::make_tuple(OwnedData(), err);
-
     }
     return std::make_tuple(OwnedData(data, size), nullptr);
 }

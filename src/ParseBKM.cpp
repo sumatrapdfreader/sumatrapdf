@@ -75,59 +75,129 @@ void SerializeBookmarksRec(DocTocItem* node, int level, str::Str<char>& s) {
     }
 }
 
-#if 0
-static DocTocItem* parseBookmarksLine(std::string_view line, int* indentOut) {
-    const char* s = line.data();
-    const char* e = s + line.size();
-    if (s == nullptr) {
-        return nullptr;
-    }
-    int indent = 0;
+// update sv to skip first n characters
+static size_t skipN(std::string_view& sv, size_t n) {
+    CrashIf(n > sv.size());
+    const char* s = sv.data() + n;
+    size_t newSize = sv.size() - n;
+    sv = {s, newSize};
+    return n;
+}
+
+static size_t skipUntil(std::string_view& sv, const char* end) {
+    const char* s = sv.data();
+    CrashIf(end < s);
+    size_t toSkip = end - s;
+    CrashIf(toSkip > sv.size());
+    skipN(sv, toSkip);
+    return toSkip;
+}
+
+static size_t skipSpace(std::string_view& sv) {
+    const char* s = sv.data();
+    const char* e = s + sv.size();
     while (s < e) {
         if (*s != ' ') {
             break;
         }
-        indent++;
+        s++;
     }
-    
+    size_t n = e - s;
+    return skipN(sv, n);
+}
+
+// first line should look like:
+// :title of the bookmarks view
+// returns { nullptr, 0 } on error
+static std::string_view parseBookmarksTitle(const std::string_view sv) {
+    size_t n = sv.size();
+    // must have at least ":" at the beginning
+    if (n < 1) {
+        return {nullptr, 0};
+    }
+    const char* s = sv.data();
+    if (s[0] != ':') {
+        return {nullptr, 0};
+    }
+    return {s + 1, n - 1};
+}
+
+// parses "quoted string"
+static str::Str<char> parseLineTitle(std::string_view& sv) {
+    str::Str<char> res;
+    size_t n = sv.size();
+    // must be at least ""
+    if (n < 2) {
+        return res;
+    }
+    const char* s = sv.data();
+    const char* e = s + n;
+    if (s[0] != '"') {
+        return res;
+    }
+    s++;
+    while (s < e) {
+        if (*s == '"') {
+            // the end
+            skipUntil(sv, s + 1);
+            return res;
+        }
+    }
+
+    res.Reset();
+    return res;
+}
+
+// a single line in .bmk file is:
+// indentation "quoted title" additional-metadata* destination
+static DocTocItem* parseBookmarksLine(std::string_view line, size_t* indentOut) {
+    // lines might start with an indentation, 2 spaces for one level
+    // TODO: maybe also count tabs as one level?
+    size_t indent = skipSpace(line);
     // must be multiple of 2
-    if (indent % 2 == 1) {
+    if (indent % 2 != 0) {
         return nullptr;
     }
     *indentOut = indent / 2;
-    return false;
+    skipSpace(line);
+    // TODO: no way to indicate an error
+    str::Str<char> title = parseLineTitle(line);
+    skipSpace(line);
+    DocTocItem* res = new DocTocItem();
+    res->title = str::conv::Utf8ToWchar(title.AsView());
+
+    return res;
 }
-#endif
 
 static DocTocTree* parseBookmarks(std::string_view sv) {
+    constexpr size_t MAX_INDENT = 64;
+    // parent node for a given indent level
+    DocTocItem* items[MAX_INDENT] = {};
+    int currIndent = 0; // index into items
+
     // extract first line with title like ":foo"
     auto line = str::IterString(sv, '\n');
-    const char* s = line.data();
-    size_t n = line.size();
-    if (s == nullptr) {
+    auto title = parseBookmarksTitle(line);
+    if (title.data() == nullptr) {
         return nullptr;
     }
-    if (n < 2) {
-        return nullptr;
-    }
-    if (s[0] != ':') {
-        return nullptr;
-    }
-    s++;
-    n -= 1;
     auto tree = new DocTocTree();
-    tree->name = str::DupN(s, n);
+    tree->name = str::Dup(sv);
     DocTocItem* curr = nullptr;
-    size_t currIdent = 0;
+    size_t indent = 0;
     while (true) {
         line = str::IterString(sv, '\n');
-        s = line.data();
-        if (s == nullptr) {
+        if (line.data() == nullptr) {
             break;
         }
+        auto* item = parseBookmarksLine(line, &indent);
+        if (item == nullptr) {
+            delete tree;
+            return nullptr;
+        }
+
         if (curr == nullptr) {
             tree->root = new DocTocItem();
-            //parseBookmarksLine
         }
     }
 

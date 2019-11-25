@@ -587,9 +587,9 @@ static void GetGradientColor(COLORREF a, COLORREF b, float perc, TRIVERTEX* tv) 
     UnpackRgb(a, ar, ag, ab);
     UnpackRgb(b, br, bg, bb);
 
-    tv->Red   = (COLOR16)((ar + perc * (br - ar)) * 256);
+    tv->Red = (COLOR16)((ar + perc * (br - ar)) * 256);
     tv->Green = (COLOR16)((ag + perc * (bg - ag)) * 256);
-    tv->Blue  = (COLOR16)((ab + perc * (bb - ab)) * 256);
+    tv->Blue = (COLOR16)((ab + perc * (bb - ab)) * 256);
 }
 
 static void DrawDocument(WindowInfo* win, HDC hdc, RECT* rcArea) {
@@ -601,9 +601,7 @@ static void DrawDocument(WindowInfo* win, HDC hdc, RECT* rcArea) {
     bool isImage = dm->GetEngine()->IsImageCollection();
     // draw comic books and single images on a black background
     // (without frame and shadow)
-    bool paintOnBlackWithoutShadow =
-        win->presentation ||
-        isImage;
+    bool paintOnBlackWithoutShadow = win->presentation || isImage;
 
     auto gcols = gGlobalPrefs->fixedPageUI.gradientColors;
     auto nGCols = gcols->size();

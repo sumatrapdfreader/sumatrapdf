@@ -153,7 +153,7 @@ bool ParseColor(COLORREF* destColor, const char* txt) {
     }
 
     unsigned int r, g, b, a;
-    bool ok = str::Parse(txt, "%2x%2x%2x%2x%$", &a, & r, &g, &b);
+    bool ok = str::Parse(txt, "%2x%2x%2x%2x%$", &a, &r, &g, &b);
     if (ok) {
         *destColor = MkRgba((u8)r, (u8)g, (u8)b, (u8)a);
         return true;

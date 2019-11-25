@@ -475,7 +475,6 @@ static void SetInitialExpandState(DocTocItem* item, Vec<int>& tocState) {
     }
 }
 
-
 static void ExportBookmarks(TabInfo* tab) {
     auto* tocTree = tab->ctrl->GetTocTree();
     str::Str<char> s;

@@ -164,7 +164,7 @@ static void IterStringTest() {
         }
     }
     {
-        std::string_view sv(txt, str::Len(txt)-1);
+        std::string_view sv(txt, str::Len(txt) - 1);
         size_t i = 0;
         while (true) {
             auto el = str::IterStringBack(sv, '\n');
