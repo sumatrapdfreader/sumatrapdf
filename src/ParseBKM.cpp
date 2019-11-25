@@ -4,6 +4,7 @@
 #include "utils/BaseUtil.h"
 #include "utils/BitManip.h"
 #include "utils/ScopedWin.h"
+#include "utils/FileUtil.h"
 
 #include "wingui/WinGui.h"
 #include "wingui/TreeModel.h"
@@ -53,7 +54,10 @@ void SerializeBookmarksRec(DocTocItem* node, int level, str::Str<char>& s) {
     }
 }
 
-#include "utils/FileUtil.h"
+DocTocTree* parseBookmars(std::string_view sv) {
+    UNUSED(sv);
+    return nullptr;
+}
 
 std::tuple<DocTocTree*, error*> ParseBookmarksFile(const char* path) {
     UNUSED(path);
@@ -62,6 +66,14 @@ std::tuple<DocTocTree*, error*> ParseBookmarksFile(const char* path) {
     if (err != nullptr) {
         return std::make_tuple(nullptr, err);
     }
+#if 0
     OwnedData d = file::ReadFile(path);
-    return std::make_tuple(nullptr, nullptr);
+    if (d.IsEmpty()) {
+        return std::make_tuple(nullptr, NewError("empty file"));
+    }
+#endif
+    const OwnedData& d = std::get<0>(res);
+    auto* docTree = parseBookmars(d.AsView());
+
+    return std::make_tuple(docTree, nullptr);
 }

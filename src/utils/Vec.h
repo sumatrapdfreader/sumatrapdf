@@ -412,6 +412,8 @@ class Str : public Vec<T> {
     }
 };
 
+Vec<std::string_view> Split(std::string_view sv, char delim);
+
 } // namespace str
 
 #if OS_WIN

@@ -136,6 +136,31 @@ static void StrUrlExtractTest() {
     utassert(str::Eq((char*)fileName.Get(), "\xAC\x20"));
 }
 
+static void StrGetNextLineTest() {
+    const char* s = "foo\nbar\n\nla\n";
+    const char* a[] = {
+        "foo", "bar", "", "la",
+    };
+    size_t nEls = dimof(a);
+    std::string_view sv(s);
+    std::string_view el;
+    size_t i = 0;
+    while (true) {
+        el = str::GetNextLine(sv, '\n');
+        const char* got = el.data();
+        if (got == nullptr) {
+            utassert(i == dimof(a));
+            return;
+        }
+        s = a[i];
+        size_t len = str::Len(s);
+        utassert(len == el.size());
+        utassert(str::EqN(s, got, len));
+        i++;
+        utassert(i <= nEls);
+    }
+}
+
 void StrTest() {
     WCHAR buf[32];
     WCHAR* str = L"a string";
@@ -558,4 +583,5 @@ void StrTest() {
     StrSeqTest();
     StrConvTest();
     StrUrlExtractTest();
+    StrGetNextLineTest();
 }

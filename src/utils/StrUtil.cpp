@@ -460,6 +460,27 @@ char* Replace(const char* s, const char* toReplace, const char* replaceWith) {
     return result.StealData();
 }
 
+// iterates strings in sv.
+std::string_view GetNextLine(std::string_view& sv, char delim) {
+    const char* s = sv.data();
+    size_t n = sv.size();
+    if (n == 0) {
+        return {nullptr, 0};
+    }
+    const char* start = s;
+    const char* end = s + n;
+    while (start < end) {
+        if (*s == delim) {
+            break;
+        }
+        s++;
+    }
+    size_t size = (size_t)(s - start);
+    std::string_view el = { start, size };
+    sv = {s+1, n - size - 1};
+    return el;
+}
+
 // replaces all whitespace characters with spaces, collapses several
 // consecutive spaces into one and strips heading/trailing ones
 // returns the number of removed characters

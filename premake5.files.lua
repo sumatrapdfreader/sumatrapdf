@@ -424,10 +424,10 @@ function utils_files()
     "TrivialHtmlParser.*",
     "TxtParser.*",
     "UITask.*",
-    "ZipUtil.*",
     "WebpReader.*",
     "WinDynCalls.*",
     "WinUtil.*",
+    "ZipUtil.*",
   })
 
   files_in_dir("src/wingui", {
