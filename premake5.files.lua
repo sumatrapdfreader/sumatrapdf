@@ -398,6 +398,7 @@ function utils_files()
     "Dict.*",
     "DirIter.*",
     "Dpi.*",
+    "error.*",
     "FileUtil.*",
     "FileWatcher.*",
     "FzImgReader.*",

@@ -37,6 +37,7 @@ FILE* OpenFILE(const char* path);
 char* ReadFileWithAllocator(const char* path, size_t* fileSizeOut, Allocator* allocator);
 bool WriteFile(const char* path, const void* data, size_t dataLen);
 OwnedData ReadFile(const char* path);
+std::tuple<OwnedData, error*> ReadFile2(const char* path);
 
 #if OS_WIN
 FILE* OpenFILE(const WCHAR* path);

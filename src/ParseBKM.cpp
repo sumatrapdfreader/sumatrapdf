@@ -11,6 +11,7 @@
 
 #include "BaseEngine.h"
 
+// TODO: serialize open state
 void SerializeBookmarksRec(DocTocItem* node, int level, str::Str<char>& s) {
     if (level == 0) {
         s.Append(":default bookmarks view\n");
@@ -50,4 +51,17 @@ void SerializeBookmarksRec(DocTocItem* node, int level, str::Str<char>& s) {
         SerializeBookmarksRec(node->child, level + 1, s);
         node = node->next;
     }
+}
+
+#include "utils/FileUtil.h"
+
+std::tuple<DocTocTree*, error*> ParseBookmarksFile(const char* path) {
+    UNUSED(path);
+    auto res = file::ReadFile2(path);
+    error* err = std::get<1>(res);
+    if (err != nullptr) {
+        return std::make_tuple(nullptr, err);
+    }
+    OwnedData d = file::ReadFile(path);
+    return std::make_tuple(nullptr, nullptr);
 }

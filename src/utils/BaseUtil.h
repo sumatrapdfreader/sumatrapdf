@@ -531,13 +531,11 @@ class FixedArray {
 // It owns the data i.e. frees it in destructor.
 // It cannot be copied, only moved, so that it's clear that ownership of
 // data is being passed.
-class OwnedData {
-  public:
+struct OwnedData {
     char* data = nullptr;
     size_t size = 0;
 
-    OwnedData() {
-    }
+    OwnedData() = default;
     // takes ownership of data
     OwnedData(const char* data, size_t size = 0);
     ~OwnedData();
@@ -650,6 +648,7 @@ defer { instance->Release(); };
 #include "StrUtil.h"
 #include "Scoped.h"
 #include "Vec.h"
+#include "error.h"
 #include "ColorUtil.h"
 
 // lstrcpy is dangerous so forbid using it

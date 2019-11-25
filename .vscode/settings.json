@@ -50,6 +50,11 @@
     "xmemory": "cpp",
     "xmemory0": "cpp",
     "xstddef": "cpp",
-    "xtr1common": "cpp"
+    "xtr1common": "cpp",
+    "atomic": "cpp",
+    "cctype": "cpp",
+    "concepts": "cpp",
+    "fstream": "cpp",
+    "iostream": "cpp"
   }
 }

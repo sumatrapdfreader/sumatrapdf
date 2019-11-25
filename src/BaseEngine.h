@@ -324,6 +324,9 @@ class DocTocItem : public TreeItem {
 };
 
 struct DocTocTree : public TreeModel {
+    // name of the bookmark view
+    char* name = nullptr;
+
     DocTocItem* root = nullptr;
 
     DocTocTree(DocTocItem* root) {
@@ -331,6 +334,7 @@ struct DocTocTree : public TreeModel {
     }
 
     virtual ~DocTocTree() {
+        free(name);
         delete root;
     }
 
