@@ -598,30 +598,35 @@ static void DrawDocument(WindowInfo* win, HDC hdc, RECT* rcArea) {
         return;
     DisplayModel* dm = win->AsFixed();
 
+    bool isImage = dm->GetEngine()->IsImageCollection();
+    // draw comic books and single images on a black background
+    // (without frame and shadow)
     bool paintOnBlackWithoutShadow =
         win->presentation ||
-        // draw comic books and single images on a black background (without frame and shadow)
-        dm->GetEngine()->IsImageCollection();
+        isImage;
+
+    auto gcols = gGlobalPrefs->fixedPageUI.gradientColors;
+    auto nGCols = gcols->size();
     if (paintOnBlackWithoutShadow) {
         ScopedGdiObj<HBRUSH> brush(CreateSolidBrush(WIN_COL_BLACK));
         FillRect(hdc, rcArea, brush);
-    } else if (0 == gGlobalPrefs->fixedPageUI.gradientColors->size()) {
+    } else if (0 == nGCols) {
         auto col = GetAppColor(AppColor::NoDocBg);
         ScopedGdiObj<HBRUSH> brush(CreateSolidBrush(col));
         FillRect(hdc, rcArea, brush);
     } else {
         COLORREF colors[3];
-        colors[0] = gGlobalPrefs->fixedPageUI.gradientColors->at(0);
-        if (gGlobalPrefs->fixedPageUI.gradientColors->size() == 1) {
+        colors[0] = gcols->at(0);
+        if (nGCols == 1) {
             colors[1] = colors[2] = colors[0];
-        } else if (gGlobalPrefs->fixedPageUI.gradientColors->size() == 2) {
-            colors[2] = gGlobalPrefs->fixedPageUI.gradientColors->at(1);
+        } else if (nGCols == 2) {
+            colors[2] = gcols->at(1);
             colors[1] = RGB((GetRValueSafe(colors[0]) + GetRValueSafe(colors[2])) / 2,
                             (GetGValueSafe(colors[0]) + GetGValueSafe(colors[2])) / 2,
                             (GetBValueSafe(colors[0]) + GetBValueSafe(colors[2])) / 2);
         } else {
-            colors[1] = gGlobalPrefs->fixedPageUI.gradientColors->at(1);
-            colors[2] = gGlobalPrefs->fixedPageUI.gradientColors->at(2);
+            colors[1] = gcols->at(1);
+            colors[2] = gcols->at(2);
         }
         SizeI size = dm->GetCanvasSize();
         float percTop = 1.0f * dm->GetViewPort().y / size.dy;
@@ -654,7 +659,11 @@ static void DrawDocument(WindowInfo* win, HDC hdc, RECT* rcArea) {
             gr[0].LowerRight = 3;
         }
         // TODO: disable for less than about two screen heights?
-        GradientFill(hdc, tv, dimof(tv), gr, needCenter ? 2 : 1, GRADIENT_FILL_RECT_V);
+        ULONG nMesh = 1;
+        if (needCenter) {
+            nMesh = 2;
+        }
+        GradientFill(hdc, tv, dimof(tv), gr, nMesh, GRADIENT_FILL_RECT_V);
     }
 
     bool rendering = false;
