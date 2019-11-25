@@ -153,7 +153,7 @@ bool ParseColor(COLORREF* destColor, std::string_view sv) {
         n -= 2;
     } else if (str::StartsWith(txt, "#")) {
         txt += 1;
-        n -= 2;
+        n -= 1;
     }
 
     unsigned int r, g, b, a;
