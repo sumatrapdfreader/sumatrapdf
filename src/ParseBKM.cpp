@@ -54,9 +54,63 @@ void SerializeBookmarksRec(DocTocItem* node, int level, str::Str<char>& s) {
     }
 }
 
-DocTocTree* parseBookmars(std::string_view sv) {
-    UNUSED(sv);
-    return nullptr;
+#if 0
+static DocTocItem* parseBookmarksLine(std::string_view line, int* indentOut) {
+    const char* s = line.data();
+    const char* e = s + line.size();
+    if (s == nullptr) {
+        return nullptr;
+    }
+    int indent = 0;
+    while (s < e) {
+        if (*s != ' ') {
+            break;
+        }
+        indent++;
+    }
+    
+    // must be multiple of 2
+    if (indent % 2 == 1) {
+        return nullptr;
+    }
+    *indentOut = indent / 2;
+    return false;
+}
+#endif
+
+static DocTocTree* parseBookmarks(std::string_view sv) {
+    // extract first line with title like ":foo"
+    auto line = str::IterString(sv, '\n');
+    const char* s = line.data();
+    size_t n = line.size();
+    if (s == nullptr) {
+        return nullptr;
+    }
+    if (n < 2) {
+        return nullptr;
+    }
+    if (s[0] != ':') {
+        return nullptr;
+    }
+    s++;
+    n -= 1;
+    auto tree = new DocTocTree();
+    tree->name = str::DupN(s, n);
+    DocTocItem* curr = nullptr;
+    size_t currIdent = 0;
+    while (true) {
+        line = str::IterString(sv, '\n');
+        s = line.data();
+        if (s == nullptr) {
+            break;
+        }
+        if (curr == nullptr) {
+            tree->root = new DocTocItem();
+            //parseBookmarksLine
+        }
+    }
+
+    return tree;
 }
 
 std::tuple<DocTocTree*, error*> ParseBookmarksFile(const char* path) {
@@ -73,7 +127,7 @@ std::tuple<DocTocTree*, error*> ParseBookmarksFile(const char* path) {
     }
 #endif
     const OwnedData& d = std::get<0>(res);
-    auto* docTree = parseBookmars(d.AsView());
+    auto* docTree = parseBookmarks(d.AsView());
 
     return std::make_tuple(docTree, nullptr);
 }

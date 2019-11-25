@@ -227,6 +227,8 @@ class DocTocItem : public TreeItem {
     // next sibling
     DocTocItem* next = nullptr;
 
+    DocTocItem() = default;
+
     explicit DocTocItem(WCHAR* title, int pageNo = 0) {
         this->title = title;
         this->pageNo = pageNo;
@@ -278,7 +280,10 @@ class DocTocItem : public TreeItem {
     // TODO: change this to char* uri that encodes all the information
     // about PageDestination, get rid of PageDestination and all
     // classes that inherit from DocTocItem
-    virtual PageDestination* GetLink() = 0;
+    //virtual PageDestination* GetLink() = 0;
+    virtual PageDestination* GetLink() {
+        return nullptr;
+    }
 
     WCHAR* Text() override {
         return title;
@@ -329,6 +334,7 @@ struct DocTocTree : public TreeModel {
 
     DocTocItem* root = nullptr;
 
+    DocTocTree() = default;
     DocTocTree(DocTocItem* root) {
         this->root = root;
     }

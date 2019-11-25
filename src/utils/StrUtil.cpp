@@ -460,16 +460,17 @@ char* Replace(const char* s, const char* toReplace, const char* replaceWith) {
     return result.StealData();
 }
 
-// iterates strings in sv.
-std::string_view GetNextLine(std::string_view& sv, char delim) {
-    const char* s = sv.data();
-    size_t n = sv.size();
-    if (n == 0) {
+// get substring of 'sv' until delim or end of string.
+// meant of iterative calls so updates 'sv' in place
+// return { nullptr, 0 } to indicate finished iteration
+std::string_view IterString(std::string_view& sv, char delim) {
+    const char* start = sv.data();
+    const char* end = start + sv.size();
+    if (start == end) {
         return {nullptr, 0};
     }
-    const char* start = s;
-    const char* end = s + n;
-    while (start < end) {
+    const char* s = start;
+    while (s < end) {
         if (*s == delim) {
             break;
         }
@@ -477,7 +478,31 @@ std::string_view GetNextLine(std::string_view& sv, char delim) {
     }
     size_t size = (size_t)(s - start);
     std::string_view el = { start, size };
-    sv = {s+1, n - size - 1};
+    sv = {s+1, sv.size() - size - 1};
+    return el;
+}
+
+std::string_view IterStringBack(std::string_view& sv, char delim) {
+    const char *start = sv.data();
+    const char* end = start + sv.size();
+    if (start == end) {
+        return {nullptr, 0};
+    }
+    const char* s = end - 1;
+    while (s >= start) {
+        if (*s == delim) {
+            break;
+        }
+        s--;
+    }
+    size_t size = (size_t)(end - s - 1);
+    std::string_view el = { s + 1, size };
+    size_t newSize = sv.size() - size;
+    if (newSize > 0) {
+        // eat delim
+        newSize--;
+    }
+    sv = {start, newSize };
     return el;
 }
 
