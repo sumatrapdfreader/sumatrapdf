@@ -15,7 +15,7 @@ void ParseCmdLine(const WCHAR* cmdLine, WStrVec& out, int maxParts) {
     if (!cmdLine)
         return;
 
-    str::Str<WCHAR> arg(MAX_PATH / 2);
+    str::WStr arg(MAX_PATH / 2);
     const WCHAR* s;
 
     while (--maxParts != 0) {

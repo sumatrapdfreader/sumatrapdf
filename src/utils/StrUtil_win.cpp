@@ -313,7 +313,7 @@ WCHAR* Replace(const WCHAR* s, const WCHAR* toReplace, const WCHAR* replaceWith)
     if (!s || str::IsEmpty(toReplace) || !replaceWith)
         return nullptr;
 
-    str::Str<WCHAR> result(str::Len(s));
+    str::WStr result(str::Len(s));
     size_t findLen = str::Len(toReplace), replLen = str::Len(replaceWith);
     const WCHAR *start = s, *end;
     while ((end = str::Find(start, toReplace)) != nullptr) {

@@ -84,7 +84,7 @@ static void CustomizeTocInfoTip(TreeCtrl* w, NMTVGETINFOTIPW* nm) {
             dstType != PageDestType::LaunchEmbedded);
     CrashIf(nm->hdr.hwndFrom != w->hwnd);
 
-    str::Str<WCHAR> infotip;
+    str::WStr infotip;
 
     RECT rcLine, rcLabel;
     HTREEITEM item = nm->hItem;
@@ -480,13 +480,13 @@ static void ExportBookmarks(TabInfo* tab) {
     str::Str<char> s;
     SerializeBookmarksRec(tocTree->root, 0, s);
     dbglogf("%s\n", s.Get());
-    str::Str<WCHAR> fileName;
+    str::WStr fileName;
     fileName.Append(tab->filePath.Get());
     fileName.Append(L".bkm");
     bool ok = file::WriteFile(fileName.Get(), (void*)s.Get(), s.size());
-    str::Str<WCHAR> msg;
+    str::WStr msg;
     msg.AppendFmt(L"Exported bookmarks to file %s", fileName.Get());
-    str::Str<WCHAR> caption;
+    str::WStr caption;
     caption.Append(L"Exported bookmarks");
     UINT type = MB_OK | MB_ICONINFORMATION | MbRtlReadingMaybe();
     MessageBoxW(nullptr, msg.Get(), caption.Get(), type);

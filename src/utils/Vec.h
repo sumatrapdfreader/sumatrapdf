@@ -413,6 +413,8 @@ class Str : public Vec<T> {
 
 Vec<std::string_view> Split(std::string_view sv, char delim);
 
+typedef Str<WCHAR> WStr;
+
 } // namespace str
 
 #if OS_WIN
@@ -449,7 +451,7 @@ class WStrVec : public Vec<WCHAR*> {
     }
 
     WCHAR* Join(const WCHAR* joint = nullptr) {
-        str::Str<WCHAR> tmp(256);
+        str::WStr tmp(256);
         size_t jointLen = str::Len(joint);
         for (size_t i = 0; i < len; i++) {
             WCHAR* s = at(i);

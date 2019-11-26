@@ -587,7 +587,7 @@ static void CopyPropertiesToClipboard(HWND hwnd) {
         return;
 
     // concatenate all the properties into a multi-line string
-    str::Str<WCHAR> lines(256);
+    str::WStr lines(256);
     for (size_t i = 0; i < layoutData->size(); i++) {
         PropertyEl* el = layoutData->at(i);
         lines.AppendFmt(L"%s %s\r\n", el->leftTxt, el->rightTxt);

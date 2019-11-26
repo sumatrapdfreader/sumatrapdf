@@ -1345,7 +1345,7 @@ WCHAR* DisplayModel::GetTextInRegion(int pageNo, RectD region) {
     if (str::IsEmpty(pageText))
         return nullptr;
 
-    str::Str<WCHAR> result;
+    str::WStr result;
     RectI regionI = region.Round();
     for (const WCHAR* src = pageText; *src; src++) {
         if (*src != '\n') {

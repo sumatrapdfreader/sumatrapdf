@@ -28,7 +28,7 @@ static OwnedData Escape(WCHAR* string) {
     if (!str::FindChar(string, '<') && !str::FindChar(string, '&') && !str::FindChar(string, '"'))
         return str::conv::ToUtf8(string);
 
-    str::Str<WCHAR> escaped(256);
+    str::WStr escaped(256);
     for (const WCHAR* s = string; *s; s++) {
         switch (*s) {
             case '&':
@@ -356,7 +356,7 @@ bool RenderDocument(BaseEngine* engine, const WCHAR* renderPath, float zoom = 1.
         return false;
 
     if (str::EndsWithI(renderPath, L".txt")) {
-        str::Str<WCHAR> text(1024);
+        str::WStr text(1024);
         for (int pageNo = 1; pageNo <= engine->PageCount(); pageNo++)
             text.AppendAndFree(engine->ExtractPageText(pageNo, L"\r\n", nullptr, RenderTarget::Export));
         if (silent)

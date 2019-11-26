@@ -136,7 +136,7 @@ static void DrawSumatraPDF(HDC hdc, PointI pt) {
 }
 
 static WCHAR* GetSumatraVersion() {
-    str::Str<WCHAR> s;
+    str::WStr s;
     s.Set(VERSION_TXT);
     if (IsProcess64()) {
         s.Append(L" 64-bit");
@@ -411,7 +411,7 @@ static void OnPaintAbout(HWND hwnd) {
 
 static void CopyAboutInfoToClipboard(HWND hwnd) {
     UNUSED(hwnd);
-    str::Str<WCHAR> info(512);
+    str::WStr info(512);
     AutoFreeW ver(GetSumatraVersion());
     info.AppendFmt(L"%s %s\r\n", APP_NAME_STR, ver.Get());
     for (size_t i = info.size() - 2; i > 0; i--) {

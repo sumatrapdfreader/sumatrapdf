@@ -13,7 +13,7 @@
 
 #ifdef DEBUG
 static void EnumeratePrinters() {
-    str::Str<WCHAR> output;
+    str::WStr output;
 
     PRINTER_INFO_5* info5Arr = nullptr;
     DWORD bufSize = 0, printersCount;

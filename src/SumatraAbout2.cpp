@@ -275,7 +275,7 @@ static void DestroyAboutMuiWindow() {
 
 static void CopyAboutInfoToClipboard(HWND hwnd) {
     UNUSED(hwnd);
-    str::Str<WCHAR> info(512);
+    str::WStr info(512);
     info.AppendFmt(L"%s %s\r\n", APP_NAME_STR, VERSION_TXT);
     for (size_t i = info.size() - 2; i > 0; i--) {
         info.Append('-');

@@ -286,7 +286,7 @@ class DjVuEngineImpl : public BaseEngine {
 
     RenderedBitmap* CreateRenderedBitmap(const char* bmpData, SizeI size, bool grayscale) const;
     void AddUserAnnots(RenderedBitmap* bmp, int pageNo, float zoom, int rotation, RectI screen);
-    bool ExtractPageText(miniexp_t item, const WCHAR* lineSep, str::Str<WCHAR>& extracted, Vec<RectI>& coords);
+    bool ExtractPageText(miniexp_t item, const WCHAR* lineSep, str::WStr& extracted, Vec<RectI>& coords);
     char* ResolveNamedDest(const char* name);
     DjVuTocItem* BuildTocTree(miniexp_t entry, int& idCounter);
     bool Load(const WCHAR* fileName);
@@ -735,7 +735,7 @@ bool DjVuEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots
     return CopyFile(fileName, path, FALSE);
 }
 
-static void AppendNewline(str::Str<WCHAR>& extracted, Vec<RectI>& coords, const WCHAR* lineSep) {
+static void AppendNewline(str::WStr& extracted, Vec<RectI>& coords, const WCHAR* lineSep) {
     if (extracted.size() > 0 && ' ' == extracted.Last()) {
         extracted.Pop();
         coords.Pop();
@@ -744,7 +744,7 @@ static void AppendNewline(str::Str<WCHAR>& extracted, Vec<RectI>& coords, const 
     coords.AppendBlanks(str::Len(lineSep));
 }
 
-bool DjVuEngineImpl::ExtractPageText(miniexp_t item, const WCHAR* lineSep, str::Str<WCHAR>& extracted,
+bool DjVuEngineImpl::ExtractPageText(miniexp_t item, const WCHAR* lineSep, str::WStr& extracted,
                                      Vec<RectI>& coords) {
     miniexp_t type = miniexp_car(item);
     if (!miniexp_symbolp(type))
@@ -808,7 +808,7 @@ WCHAR* DjVuEngineImpl::ExtractPageText(int pageNo, const WCHAR* lineSep, RectI**
     if (miniexp_nil == pagetext)
         return nullptr;
 
-    str::Str<WCHAR> extracted;
+    str::WStr extracted;
     Vec<RectI> coords;
     bool success = ExtractPageText(pagetext, lineSep, extracted, coords);
     ddjvu_miniexp_release(doc, pagetext);

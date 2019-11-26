@@ -454,7 +454,7 @@ WCHAR* EbookEngine::ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** co
     UNUSED(target);
     ScopedCritSec scope(&pagesAccess);
 
-    str::Str<WCHAR> content;
+    str::WStr content;
     Vec<RectI> coords;
     bool insertSpace = false;
 

@@ -92,7 +92,7 @@ static char* UnescapeStr(const char* s) {
 // or quotation marks (doubling quotation marks within quotes);
 // this is simpler than full command line serialization as read by ParseCmdLine
 static char* SerializeStringArray(const Vec<WCHAR*>* strArray) {
-    str::Str<WCHAR> serialized;
+    str::WStr serialized;
 
     for (size_t i = 0; i < strArray->size(); i++) {
         if (i > 0)
@@ -129,7 +129,7 @@ static void DeserializeStringArray(Vec<WCHAR*>* strArray, const char* serialized
         if (!*s)
             return;
         if ('"' == *s) {
-            str::Str<WCHAR> part;
+            str::WStr part;
             for (s++; *s && (*s != '"' || *(s + 1) == '"'); s++) {
                 if ('"' == *s)
                     s++;

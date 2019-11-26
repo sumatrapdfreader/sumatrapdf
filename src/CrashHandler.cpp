@@ -559,7 +559,7 @@ more comprehensive list. It works so why give dbghelp.dll more directories
 to scan?
 */
 static bool BuildSymbolPath() {
-    str::Str<WCHAR> path(1024);
+    str::WStr path(1024);
 
 #if 0
     WCHAR buf[512];

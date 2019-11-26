@@ -152,7 +152,7 @@ int Synchronizer::Create(const WCHAR* pdffilename, BaseEngine* engine, Synchroni
 // the caller must free() the result
 WCHAR* Synchronizer::PrepareCommandline(const WCHAR* pattern, const WCHAR* filename, UINT line, UINT col) {
     const WCHAR* perc;
-    str::Str<WCHAR> cmdline(256);
+    str::WStr cmdline(256);
 
     while ((perc = str::FindChar(pattern, '%')) != nullptr) {
         cmdline.Append(pattern, perc - pattern);

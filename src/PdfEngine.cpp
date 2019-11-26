@@ -272,7 +272,7 @@ static inline int wchars_per_rune(int rune) {
     return 1;
 }
 
-static void AddChar(fz_stext_line* line, fz_stext_char* c, str::Str<WCHAR>& s, Vec<RectI>& rects) {
+static void AddChar(fz_stext_line* line, fz_stext_char* c, str::WStr& s, Vec<RectI>& rects) {
     fz_rect bbox = fz_rect_from_quad(c->quad);
     RectI r = fz_rect_to_RectD(bbox).Round();
 
@@ -311,7 +311,7 @@ static void AddChar(fz_stext_line* line, fz_stext_char* c, str::Str<WCHAR>& s, V
 
 #if 0
 // if there's a span following this one, add space to separate them
-static void AddSpaceAtLineEnd(fz_stext_line* line, str::Str<WCHAR>& s, Vec<RectI>& rects) {
+static void AddSpaceAtLineEnd(fz_stext_line* line, str::WStr& s, Vec<RectI>& rects) {
     if (line->first_char == line->last_char || line->next == NULL) {
         return;
     }
@@ -329,7 +329,7 @@ static void AddSpaceAtLineEnd(fz_stext_line* line, str::Str<WCHAR>& s, Vec<RectI
 }
 #endif
 
-static void AddLineSep(str::Str<WCHAR>& s, Vec<RectI>& rects, const WCHAR* lineSep, size_t lineSepLen) {
+static void AddLineSep(str::WStr& s, Vec<RectI>& rects, const WCHAR* lineSep, size_t lineSepLen) {
     if (lineSepLen == 0) {
         return;
     }
@@ -347,7 +347,7 @@ static void AddLineSep(str::Str<WCHAR>& s, Vec<RectI>& rects, const WCHAR* lineS
 
 static WCHAR* fz_text_page_to_str(fz_stext_page* text, const WCHAR* lineSep, RectI** coordsOut) {
     size_t lineSepLen = str::Len(lineSep);
-    str::Str<WCHAR> content;
+    str::WStr content;
     // coordsOut is optional but we ask for it by default so we simplify the code
     // by always calculating it
     Vec<RectI> rects;
@@ -892,7 +892,7 @@ WCHAR* FormatPageLabel(const char* type, int pageNo, const WCHAR* prefix) {
     }
     if (str::EqI(type, "A")) {
         // alphabetic numbering style (A..Z, AA..ZZ, AAA..ZZZ, ...)
-        str::Str<WCHAR> number;
+        str::WStr number;
         number.Append('A' + (pageNo - 1) % 26);
         for (int i = 0; i < (pageNo - 1) / 26; i++)
             number.Append(number.at(0));

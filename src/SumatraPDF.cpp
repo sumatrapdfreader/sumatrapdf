@@ -2232,7 +2232,7 @@ void CloseWindow(WindowInfo* win, bool quitIfLast, bool forceClose) {
 }
 
 // returns false if no filter has been appended
-static bool AppendFileFilterForDoc(Controller* ctrl, str::Str<WCHAR>& fileFilter) {
+static bool AppendFileFilterForDoc(Controller* ctrl, str::WStr& fileFilter) {
     EngineType type = EngineType::None;
     if (ctrl->AsFixed())
         type = ctrl->AsFixed()->engineType;
@@ -2347,7 +2347,7 @@ static void OnMenuSaveAs(WindowInfo* win) {
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
-    str::Str<WCHAR> fileFilter(256);
+    str::WStr fileFilter(256);
     if (AppendFileFilterForDoc(ctrl, fileFilter))
         fileFilter.AppendFmt(L"\1*%s\1", defExt);
     if (canConvertToTXT) {
@@ -2418,7 +2418,7 @@ static void OnMenuSaveAs(WindowInfo* win) {
     AutoFreeW errorMsg;
     // Extract all text when saving as a plain text file
     if (convertToTXT) {
-        str::Str<WCHAR> text(1024);
+        str::WStr text(1024);
         for (int pageNo = 1; pageNo <= ctrl->PageCount(); pageNo++) {
             WCHAR* tmp = engine->ExtractPageText(pageNo, L"\r\n", nullptr, RenderTarget::Export);
             text.AppendAndFree(tmp);
@@ -2503,7 +2503,7 @@ static void OnMenuRenameFile(WindowInfo* win) {
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
     const WCHAR* defExt = ctrl->DefaultFileExt();
-    str::Str<WCHAR> fileFilter(256);
+    str::WStr fileFilter(256);
     bool ok = AppendFileFilterForDoc(ctrl, fileFilter);
     CrashIf(!ok);
     fileFilter.AppendFmt(L"\1*%s\1", defExt);
@@ -2682,7 +2682,7 @@ static void OnMenuOpen(WindowInfo* win) {
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
-    str::Str<WCHAR> fileFilter;
+    str::WStr fileFilter;
     fileFilter.Append(_TR("All supported documents"));
     fileFilter.Append(L'\1');
     for (int i = 0; i < dimof(fileFormats); i++) {
