@@ -517,9 +517,6 @@ static void BuildAndShowContextMenu(WindowInfo* win, int x, int y) {
         case IDM_COLLAPSE_ALL:
             win->tocTreeCtrl->CollapseAll();
             break;
-        default:
-            CrashMe();
-            break;
     }
 }
 
