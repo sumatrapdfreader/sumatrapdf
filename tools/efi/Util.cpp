@@ -96,7 +96,7 @@ IDiaDataSource *LoadDia()
     return NULL;
 }
 
-void BStrToString(str::Str<char>& strInOut, BSTR str, const char *defString, bool stripWhitespace)
+void BStrToString(str::Str& strInOut, BSTR str, const char *defString, bool stripWhitespace)
 {
     strInOut.Reset();
     if (!str) {

@@ -246,9 +246,6 @@ void VecTest() {
         str::Str v;
         v.Append("foo");
         utassert(v.size() == 3);
-        auto d = v.StealAsOwnedData();
-        utassert(v.size() == 0);
-        utassert(d.size == 3);
     }
 
     WStrVecTest();

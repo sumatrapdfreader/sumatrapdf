@@ -82,4 +82,4 @@ struct TxtParser {
 };
 
 bool ParseTxt(TxtParser& parser);
-OwnedData PrettyPrintTxt(const TxtParser& parser);
+str::Str PrettyPrintTxt(const TxtParser& parser);

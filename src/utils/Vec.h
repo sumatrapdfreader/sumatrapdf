@@ -17,12 +17,12 @@ class Vec {
   protected:
     static const size_t PADDING = 1;
 
-    size_t len;
-    size_t cap;
-    size_t capacityHint;
-    T* els;
+    size_t len = 0;
+    size_t cap = 0;
+    size_t capacityHint = 0;
+    T* els = nullptr;
     T buf[16];
-    Allocator* allocator;
+    Allocator* allocator = nullptr;
 
     bool EnsureCapTry(size_t needed) {
         if (cap >= needed)
@@ -339,7 +339,9 @@ namespace str {
 template <typename T>
 class BasicStr : public Vec<T> {
   public:
-    explicit BasicStr(size_t capHint = 0, Allocator* allocator = nullptr) : Vec<T>(capHint, allocator) {
+    explicit BasicStr(size_t capHint = 0, Allocator* allocator = nullptr) {
+        this->capacityHint = capHint;
+        this->allocator = allocator;
     }
 
     void Append(T c) {
@@ -402,18 +404,83 @@ class BasicStr : public Vec<T> {
         }
         return at(n - 1);
     }
+};
 
-    // only available for T = char
-    OwnedData StealAsOwnedData() {
-        size_t size = this->size();
-        char* s = this->StealData();
-        return OwnedData(s, size);
+class Str : public Vec<char> {
+  public:
+    explicit Str(size_t capHint = 0, Allocator* allocator = nullptr) {
+        this->capacityHint = capHint;
+        this->allocator = allocator;
+    }
+
+    std::string_view AsView() const {
+        return {this->Get(), this->size()};
+    }
+
+    void Append(char c) {
+        InsertAt(len, c);
+    }
+
+    void Append(const char* src, size_t size = -1) {
+        if ((size_t)-1 == size) {
+            size = Len(src);
+        }
+        Vec<char>::Append(src, size);
+    }
+
+    // only valid for T = char
+    void AppendView(const std::string_view sv) {
+        this->Append(sv.data(), sv.size());
+    }
+
+    void AppendFmt(const char* fmt, ...) {
+        va_list args;
+        va_start(args, fmt);
+        char* res = FmtV(fmt, args);
+        AppendAndFree(res);
+        va_end(args);
+    }
+
+    void AppendAndFree(char* s) {
+        if (s) {
+            Append(s);
+        }
+        free(s);
+    }
+
+    // returns true if was replaced
+    // TODO: should be a stand-alone function
+    bool Replace(const char* toReplace, const char* replaceWith) {
+        // fast path: nothing to replace
+        if (!str::Find(els, toReplace)) {
+            return false;
+        }
+        char* newStr = str::Replace(els, toReplace, replaceWith);
+        Reset();
+        AppendAndFree(newStr);
+        return true;
+    }
+
+    void Set(const char* s) {
+        Reset();
+        Append(s);
+    }
+
+    char* Get() const {
+        return els;
+    }
+
+    char LastChar() const {
+        auto n = this->len;
+        if (n == 0) {
+            return 0;
+        }
+        return at(n - 1);
     }
 };
 
 Vec<std::string_view> Split(std::string_view sv, char delim);
 
-typedef BasicStr<char> Str;
 typedef BasicStr<WCHAR> WStr;
 
 } // namespace str

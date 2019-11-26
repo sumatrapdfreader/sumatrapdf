@@ -126,8 +126,8 @@ void testTxtParser() {
     utassert(ok);
 
     {
-        OwnedData res = PrettyPrintTxt(parser);
-        char* s = res.data;
+        str::Str res = PrettyPrintTxt(parser);
+        char* s = res.Get();
         str::NormalizeNewlinesInPlace(s);
         str::TrimWS(s, str::TrimOpt::Both);
         OwnedData orig(str::Dup(ebookWinDesc), str::Len(ebookWinDesc));

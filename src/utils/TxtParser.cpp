@@ -436,8 +436,8 @@ static void PrettyPrintNode(TxtNode* curr, int nest, str::Str& res) {
     }
 }
 
-OwnedData PrettyPrintTxt(const TxtParser& parser) {
+str::Str PrettyPrintTxt(const TxtParser& parser) {
     str::Str res;
     PrettyPrintNode(parser.nodes.at(0), -1, res);
-    return res.StealAsOwnedData();
+    return res;
 }

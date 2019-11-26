@@ -115,7 +115,7 @@ const char *GetThunkTypeName(DWORD thunkType)
     return g_thunkTypeNames[thunkType];
 }
 
-static str::Str<char> g_report;
+static str::Str g_report;
 static StringInterner g_strInterner;
 static StringInterner g_typesSeen;
 
@@ -142,7 +142,7 @@ static int InternString(const char *s)
     return g_strInterner.Intern(s);
 }
 
-static void GetInternedStringsReport(str::Str<char>& resOut)
+static void GetInternedStringsReport(str::Str& resOut)
 {
     resOut.Append("Strings:\n");
     size_t n = g_strInterner.StringsCount();
@@ -212,7 +212,7 @@ static const char *GetUdtType(IDiaSymbol *symbol)
 // the result doesn't have to be free()d but is only valid until the next call to this function
 static const char *GetObjFileName(IDiaSectionContrib *item)
 {
-    static str::Str<char> strTmp;
+    static str::Str strTmp;
     BSTR            name = 0;
 
     IDiaSymbol *    compiland = 0;
@@ -230,7 +230,7 @@ static const char *GetObjFileName(IDiaSectionContrib *item)
 #if 0
 static const char *GetLibraryName(IDiaSymbol *symbol)
 {
-    static str::Str<char> strTmp;
+    static str::Str strTmp;
     BSTR   name = 0;
     symbol->get_libraryName(&name);
     BStrToString(strTmp, name, "<nolibfile>");
@@ -243,7 +243,7 @@ static const char *GetLibraryName(IDiaSymbol *symbol)
 #if 0
 static const char *GetSourceFileName(IDiaSymbol *symbol)
 {
-    static str::Str<char> strTmp;
+    static str::Str strTmp;
     BSTR   name = 0;
     symbol->get_sourceFileName(&name);
     BStrToString(strTmp, name, "<nosrcfile>");
@@ -255,7 +255,7 @@ static const char *GetSourceFileName(IDiaSymbol *symbol)
 // the result doesn't have to be free()d but is only valid until the next call to this function
 static const char *GetTypeName(IDiaSymbol *symbol)
 {
-    static str::Str<char> strTmp;
+    static str::Str strTmp;
     BSTR name = NULL;
     symbol->get_name(&name);
     BStrToString(strTmp, name, "<noname>", true);
@@ -266,7 +266,7 @@ static const char *GetTypeName(IDiaSymbol *symbol)
 // the result doesn't have to be free()d but is only valid until the next call to this function
 static const char *GetUndecoratedSymbolName(IDiaSymbol *symbol, const char *defName = "<noname>")
 {
-    static str::Str<char> strTmp;
+    static str::Str strTmp;
 
     BSTR name = NULL;
 
@@ -573,7 +573,7 @@ static void ProcessPdbFile(const char *fileNameA)
     HRESULT             hr;
     IDiaDataSource *    dia = NULL;
     IDiaSession *       session = NULL;
-    str::Str<char>      report;
+    str::Str      report;
 
     dia = LoadDia();
     if (!dia)
@@ -603,7 +603,7 @@ static void ProcessPdbFile(const char *fileNameA)
 
     fputs("Format: 1\n", stdout);
     if (g_compact) {
-        str::Str<char> res;
+        str::Str res;
         GetInternedStringsReport(res);
         fputs(res.Get(), stdout);
     }
