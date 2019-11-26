@@ -744,8 +744,7 @@ static void AppendNewline(str::WStr& extracted, Vec<RectI>& coords, const WCHAR*
     coords.AppendBlanks(str::Len(lineSep));
 }
 
-bool DjVuEngineImpl::ExtractPageText(miniexp_t item, const WCHAR* lineSep, str::WStr& extracted,
-                                     Vec<RectI>& coords) {
+bool DjVuEngineImpl::ExtractPageText(miniexp_t item, const WCHAR* lineSep, str::WStr& extracted, Vec<RectI>& coords) {
     miniexp_t type = miniexp_car(item);
     if (!miniexp_symbolp(type))
         return false;

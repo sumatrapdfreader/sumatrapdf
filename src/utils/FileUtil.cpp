@@ -404,7 +404,6 @@ bool WriteFile(const char* filePath, const void* data, size_t dataLen) {
 #endif
 }
 
-
 #if OS_WIN
 bool Exists(std::string_view path) {
     WCHAR* wpath = str::conv::Utf8ToWchar(path);

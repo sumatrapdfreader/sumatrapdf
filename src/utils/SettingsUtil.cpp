@@ -4,6 +4,7 @@
 #include "BaseUtil.h"
 #include "SettingsUtil.h"
 #include "SquareTreeParser.h"
+#include "utils/ColorUtil.h"
 
 static inline const StructInfo* GetSubstruct(const FieldInfo& field) {
     return (const StructInfo*)field.value;
@@ -258,47 +259,68 @@ static bool SerializeField(str::Str<char>& out, const uint8_t* base, const Field
     }
 }
 
+// boolean true are "true", "yes" and any non-zero integer
+static bool parseBool(const char* value) {
+    if (str::StartsWithI(value, "true") && (!value[4] || str::IsWs(value[4]))) {
+        return true;
+    }
+    if (str::StartsWithI(value, "yes") && (!value[3] || str::IsWs(value[3]))) {
+        return true;
+    }
+
+    int i = ParseInt(value);
+    return i != 0;
+}
+
 static void DeserializeField(const FieldInfo& field, uint8_t* base, const char* value) {
     uint8_t* fieldPtr = base + field.offset;
-    int r, g, b, a;
+
+    char** strPtr = (char**)fieldPtr;
+    WCHAR** wstrPtr = (WCHAR**)fieldPtr;
+    COLORREF* colPtr = (COLORREF*)fieldPtr;
+    bool* boolPtr = (bool*)fieldPtr;
+    int* intPtr = (int*)fieldPtr;
 
     switch (field.type) {
         case Type_Bool:
             if (value) {
-                // boolean true are "true", "yes" and any non-zero integer
-                *(bool*)fieldPtr = str::StartsWithI(value, "true") && (!value[4] || str::IsWs(value[4])) ||
-                                   str::StartsWithI(value, "yes") && (!value[3] || str::IsWs(value[3])) ||
-                                   ParseInt(value) != 0;
-            } else
-                *(bool*)fieldPtr = field.value != 0;
+                *boolPtr = parseBool(value);
+            } else {
+                *boolPtr = field.value != 0;
+            }
             break;
+
         case Type_Int:
-            *(int*)fieldPtr = value ? ParseInt(value) : (int)field.value;
+            *intPtr = value ? ParseInt(value) : (int)field.value;
             break;
-        case Type_Float:
-            str::Parse(value ? value : (const char*)field.value, "%f", (float*)fieldPtr);
+
+        case Type_Float: {
+            const char* s = value ? value : (const char*)field.value;
+            str::Parse(s, "%f", (float*)fieldPtr);
             break;
+        }
+
         case Type_Color:
-            if (!value)
-                *(COLORREF*)fieldPtr = (COLORREF)field.value;
-            else if (str::Parse(value, "#%2x%2x%2x%2x", &a, &r, &g, &b))
-                *(COLORREF*)fieldPtr = RGB(r, g, b) | (a << 24);
-            else if (str::Parse(value, "#%2x%2x%2x", &r, &g, &b))
-                *(COLORREF*)fieldPtr = RGB(r, g, b);
+            if (!value) {
+                *colPtr = (COLORREF)field.value;
+            } else {
+                ParseColor(colPtr, value);
+            }
             break;
+
         case Type_String:
-            free(*(WCHAR**)fieldPtr);
+            free(*wstrPtr);
             if (value)
-                *(WCHAR**)fieldPtr = str::conv::FromUtf8(AutoFree(UnescapeStr(value)));
+                *wstrPtr = str::conv::FromUtf8(AutoFree(UnescapeStr(value)));
             else
-                *(WCHAR**)fieldPtr = str::Dup((const WCHAR*)field.value);
+                *wstrPtr = str::Dup((const WCHAR*)field.value);
             break;
         case Type_Utf8String:
-            free(*(char**)fieldPtr);
+            free(*strPtr);
             if (value)
-                *(char**)fieldPtr = UnescapeStr(value);
+                *strPtr = UnescapeStr(value);
             else
-                *(char**)fieldPtr = str::Dup((const char*)field.value);
+                *strPtr = str::Dup((const char*)field.value);
             break;
         case Type_Compact:
             AssertCrash(IsCompactable(GetSubstruct(field)));
