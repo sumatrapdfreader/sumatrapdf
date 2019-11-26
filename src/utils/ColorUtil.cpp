@@ -157,12 +157,12 @@ bool ParseColor(COLORREF* destColor, std::string_view sv) {
     }
 
     unsigned int r, g, b, a;
-    bool ok = str::Parse(txt, n, "%2x%2x%2x%2x%$", &a, &r, &g, &b);
+    bool ok = str::Parse(txt, n, "%2x%2x%2x%2x", &a, &r, &g, &b);
     if (ok) {
         *destColor = MkRgba((u8)r, (u8)g, (u8)b, (u8)a);
         return true;
     }
-    ok = str::Parse(txt, n, "%2x%2x%2x%$", &r, &g, &b);
+    ok = str::Parse(txt, n, "%2x%2x%2x", &r, &g, &b);
     *destColor = MkRgb((u8)r, (u8)g, (u8)b);
     return ok;
 }

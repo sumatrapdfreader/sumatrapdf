@@ -336,68 +336,70 @@ inline void DeleteVecMembers(std::vector<T>& v) {
 
 namespace str {
 
-template <typename T>
-class BasicStr : public Vec<T> {
+class WStr : public Vec<WCHAR> {
   public:
-    explicit BasicStr(size_t capHint = 0, Allocator* allocator = nullptr) {
+    explicit WStr(size_t capHint = 0, Allocator* allocator = nullptr) {
         this->capacityHint = capHint;
         this->allocator = allocator;
     }
 
-    void Append(T c) {
-        Vec<T>::InsertAt(Vec<T>::len, c);
+    void Append(WCHAR c) {
+        InsertAt(len, c);
     }
 
-    std::basic_string_view<T> AsView() const {
+    std::wstring_view AsView() const {
         return {this->Get(), this->size()};
     }
 
-    void Append(const T* src, size_t size = -1) {
-        if ((size_t)-1 == size)
+    void Append(const WCHAR* src, size_t size = -1) {
+        if ((size_t)-1 == size) {
             size = Len(src);
-        Vec<T>::Append(src, size);
+        }
+        Vec<WCHAR>::Append(src, size);
     }
 
-    // only valid for T = char
-    void AppendView(const std::string_view sv) {
+    void AppendView(const std::wstring_view sv) {
         this->Append(sv.data(), sv.size());
     }
 
-    void AppendFmt(const T* fmt, ...) {
+    void AppendFmt(const WCHAR* fmt, ...) {
         va_list args;
         va_start(args, fmt);
-        T* res = FmtV(fmt, args);
+        WCHAR* res = FmtV(fmt, args);
         AppendAndFree(res);
         va_end(args);
     }
 
-    void AppendAndFree(T* s) {
-        if (s)
+    void AppendAndFree(WCHAR* s) {
+        if (s) {
             Append(s);
+        }
         free(s);
     }
 
     // returns true if was replaced
-    bool Replace(const T* toReplace, const T* replaceWith) {
+    // TODO: should be a stand-alone function
+    bool Replace(const WCHAR* toReplace, const WCHAR* replaceWith) {
         // fast path: nothing to replace
-        if (!str::Find(Vec<T>::els, toReplace))
+        if (!str::Find(els, toReplace)) {
             return false;
-        char* newStr = str::Replace(Vec<T>::els, toReplace, replaceWith);
-        Vec<T>::Reset();
+        }
+        WCHAR* newStr = str::Replace(els, toReplace, replaceWith);
+        Reset();
         AppendAndFree(newStr);
         return true;
     }
 
-    void Set(const T* s) {
-        Vec<T>::Reset();
+    void Set(const WCHAR* s) {
+        Reset();
         Append(s);
     }
 
-    T* Get() const {
-        return Vec<T>::els;
+    WCHAR* Get() const {
+        return els;
     }
 
-    T LastChar() const {
+    WCHAR LastChar() const {
         auto n = this->len;
         if (n == 0) {
             return 0;
@@ -478,10 +480,6 @@ class Str : public Vec<char> {
         return at(n - 1);
     }
 };
-
-Vec<std::string_view> Split(std::string_view sv, char delim);
-
-typedef BasicStr<WCHAR> WStr;
 
 } // namespace str
 

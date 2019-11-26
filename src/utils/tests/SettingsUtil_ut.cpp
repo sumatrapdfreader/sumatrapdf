@@ -147,8 +147,13 @@ Key = Value";
     for (int i = 0; i < 3; i++) {
         data = (SutStruct*)DeserializeStruct(&gSutStructInfo, serialized, data);
         utassert(data->internal == i);
-        AutoFree reserialized(SerializeStruct(&gSutStructInfo, data, i < 2 ? unknownOnly : serialized));
+        const char* s = serialized;
+        if (i < 2) {
+            s = unknownOnly;
+        }
+        char* reserialized = SerializeStruct(&gSutStructInfo, data, s);
         utassert(str::Eq(serialized, reserialized));
+        free(reserialized);
         data->internal++;
     }
     utassert(RGB(0xab, 0xcd, 0xef) == data->color);

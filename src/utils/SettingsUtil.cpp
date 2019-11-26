@@ -291,7 +291,11 @@ static void DeserializeField(const FieldInfo& field, uint8_t* base, const char* 
             break;
 
         case Type_Int:
-            *intPtr = value ? ParseInt(value) : (int)field.value;
+            if (value) {
+                *intPtr = ParseInt(value);
+            } else {
+                *intPtr = (int)field.value;
+            }
             break;
 
         case Type_Float: {
