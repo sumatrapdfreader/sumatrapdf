@@ -182,7 +182,7 @@ static char* Base64Decode(const char* s, size_t sLen, size_t* lenOut) {
     return result;
 }
 
-static inline void AppendChar(str::Str<char>& htmlData, char c) {
+static inline void AppendChar(str::Str& htmlData, char c) {
     switch (c) {
         case '&':
             htmlData.Append("&amp;");
@@ -987,7 +987,7 @@ PalmDoc::~PalmDoc() {
 #define PDB_TOC_ENTRY_MARK "ToC!Entry!"
 
 // cf. http://wiki.mobileread.com/wiki/TealDoc
-static const char* HandleTealDocTag(str::Str<char>& builder, WStrVec& tocEntries, const char* text, size_t len,
+static const char* HandleTealDocTag(str::Str& builder, WStrVec& tocEntries, const char* text, size_t len,
                                     UINT codePage) {
     UNUSED(codePage);
     if (len < 9) {
@@ -1282,7 +1282,7 @@ static char* DecompressTcrText(const char* data, size_t dataLen) {
         curr += 1 + (uint8_t)*curr;
     }
 
-    str::Str<char> text(dataLen * 2);
+    str::Str text(dataLen * 2);
     for (; curr < end; curr++) {
         const char* entry = dict[(uint8_t)*curr];
         bool ok = text.AppendChecked(entry + 1, (uint8_t)*entry);
@@ -1293,7 +1293,7 @@ static char* DecompressTcrText(const char* data, size_t dataLen) {
     return text.StealData();
 }
 
-static const char* TextFindLinkEnd(str::Str<char>& htmlData, const char* curr, char prevChar, bool fromWww = false) {
+static const char* TextFindLinkEnd(str::Str& htmlData, const char* curr, char prevChar, bool fromWww = false) {
     const char *end, *quote;
 
     // look for the end of the URL (ends in a space preceded maybe by interpunctuation)
@@ -1334,7 +1334,7 @@ inline bool IsEmailDomainChar(char c) {
     return isalnum((unsigned char)c) || '-' == c;
 }
 
-static const char* TextFindEmailEnd(str::Str<char>& htmlData, const char* curr) {
+static const char* TextFindEmailEnd(str::Str& htmlData, const char* curr) {
     AutoFree beforeAt;
     const char* end = curr;
     if ('@' == *curr) {
@@ -1379,7 +1379,7 @@ static const char* TextFindEmailEnd(str::Str<char>& htmlData, const char* curr) 
     return end;
 }
 
-static const char* TextFindRfcEnd(str::Str<char>& htmlData, const char* curr) {
+static const char* TextFindRfcEnd(str::Str& htmlData, const char* curr) {
     if (isalnum((unsigned char)*(curr - 1)))
         return nullptr;
     int rfc;

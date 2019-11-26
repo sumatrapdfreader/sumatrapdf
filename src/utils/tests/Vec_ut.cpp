@@ -79,7 +79,7 @@ static void StrListTest() {
 }
 
 static size_t VecTestAppendFmt() {
-    str::Str<char> v(256);
+    str::Str v(256);
     int64_t val = 1;
     for (int i = 0; i < 10000; i++) {
         v.AppendFmt("i%" PRId64 "e", val);
@@ -137,7 +137,7 @@ void VecTest() {
 
     {
         char buf[2] = {'a', '\0'};
-        str::Str<char> v(0);
+        str::Str v(0);
         for (int i = 0; i < 7; i++) {
             v.Append(buf, 1);
             buf[0] = buf[0] + 1;
@@ -151,7 +151,7 @@ void VecTest() {
     }
 
     {
-        str::Str<char> v(128);
+        str::Str v(128);
         v.Append("boo", 3);
         utassert(str::Eq("boo", v.LendData()));
         utassert(v.size() == 3);
@@ -171,7 +171,7 @@ void VecTest() {
     }
 
     {
-        str::Str<char> v(0);
+        str::Str v(0);
         for (size_t i = 0; i < 32; i++) {
             utassert(v.size() == i * 6);
             v.Append("lambd", 5);
@@ -243,7 +243,7 @@ void VecTest() {
     }
 
     {
-        str::Str<char> v;
+        str::Str v;
         v.Append("foo");
         utassert(v.size() == 3);
         auto d = v.StealAsOwnedData();

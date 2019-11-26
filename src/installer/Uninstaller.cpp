@@ -535,11 +535,11 @@ static void ParseCommandLine(WCHAR* cmdLine) {
 // no-op but must be defined for CrashHandler.cpp
 void ShowCrashHandlerMessage() {
 }
-void GetStressTestInfo(str::Str<char>* s) {
+void GetStressTestInfo(str::Str* s) {
     UNUSED(s);
 }
 
-void GetProgramInfo(str::Str<char>& s) {
+void GetProgramInfo(str::Str& s) {
     s.AppendFmt("Ver: %s", CURR_VERSION_STRA);
 #ifdef SVN_PRE_RELEASE_VER
     s.AppendFmt(" pre-release");

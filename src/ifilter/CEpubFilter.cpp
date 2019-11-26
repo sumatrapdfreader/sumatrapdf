@@ -66,7 +66,7 @@ static WCHAR* ExtractHtmlText(EpubDoc* doc) {
     size_t len = d.size();
     const char* data = d.data();
 
-    str::Str<char> text(len / 2);
+    str::Str text(len / 2);
     HtmlPullParser p(data, len);
     HtmlToken* t;
     Vec<HtmlTag> tagNesting;

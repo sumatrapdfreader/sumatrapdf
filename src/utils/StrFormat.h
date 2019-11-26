@@ -114,6 +114,6 @@ class Fmt {
     int maxArgNo;
     int currPercArgNo;
     int currArgFromFormatNo; // counts from the end of args
-    str::Str<char> res;
+    str::Str res;
 };
 } // namespace fmt

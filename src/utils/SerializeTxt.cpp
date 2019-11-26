@@ -527,14 +527,14 @@ uint8_t* Deserialize(const std::string_view str, const StructMetadata* def) {
     return DeserializeRec(ds, ds.parser.nodes.at(0), def);
 }
 
-static void AppendNest(str::Str<char>& s, int nest) {
+static void AppendNest(str::Str& s, int nest) {
     while (nest > 0) {
         s.Append("  ");
         --nest;
     }
 }
 
-static void AppendVal(const char* val, char escapeChar, bool compact, str::Str<char>& res) {
+static void AppendVal(const char* val, char escapeChar, bool compact, str::Str& res) {
     const char* start = val;
     const char* s = start;
     char escaped = 0;
@@ -567,7 +567,7 @@ static void AppendVal(const char* val, char escapeChar, bool compact, str::Str<c
 }
 
 struct EncodeState {
-    str::Str<char> res;
+    str::Str res;
 
     char escapeChar;
 
@@ -599,8 +599,8 @@ void SerializeRec(EncodeState& es, const uint8_t* structStart, const StructMetad
 
 static void SerializeField(EncodeState& es, const char* fieldName, const FieldMetadata* fieldDef,
                            const uint8_t* structStart) {
-    str::Str<char> val;
-    str::Str<char>& res = es.res;
+    str::Str val;
+    str::Str& res = es.res;
 
     Type type = fieldDef->type;
     if ((type & TYPE_NO_STORE_MASK) != 0)

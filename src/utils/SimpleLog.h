@@ -1,7 +1,7 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-extern str::Str<char> logBuf;
+extern str::Str logBuf;
 extern bool logToStderr;
 
 void log(const char* s);

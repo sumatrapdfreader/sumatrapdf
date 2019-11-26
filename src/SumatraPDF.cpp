@@ -1884,7 +1884,7 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
         return ERROR_INTERNET_INVALID_URL;
     if (!str::StartsWith(rsp->url.Get(), SUMATRA_UPDATE_INFO_URL))
         return ERROR_INTERNET_INVALID_URL;
-    str::Str<char>* data = &rsp->data;
+    str::Str* data = &rsp->data;
     if (0 == data->size())
         return ERROR_INTERNET_CONNECTION_ABORTED;
 
@@ -4370,7 +4370,7 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
-void GetProgramInfo(str::Str<char>& s) {
+void GetProgramInfo(str::Str& s) {
     s.AppendFmt("Ver: %s", CURR_VERSION_STRA);
 #if defined(SVN_PRE_RELEASE_VER)
     s.AppendFmt(" pre-release");

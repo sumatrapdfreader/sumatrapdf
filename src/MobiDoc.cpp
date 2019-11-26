@@ -123,7 +123,7 @@ static_assert(kMobiHeaderLen == sizeof(MobiHeader), "wrong size of MobiHeader st
 // Uncompress source data compressed with PalmDoc compression into a buffer.
 // http://wiki.mobileread.com/wiki/PalmDOC#Format
 // Returns false on decoding errors
-static bool PalmdocUncompress(const char* src, size_t srcLen, str::Str<char>& dst) {
+static bool PalmdocUncompress(const char* src, size_t srcLen, str::Str& dst) {
     const char* srcEnd = src + srcLen;
     while (src < srcEnd) {
         uint8_t c = (uint8_t)*src++;
@@ -209,14 +209,14 @@ class HuffDicDecompressor {
 
     bool SetHuffData(uint8_t* huffData, size_t huffDataLen);
     bool AddCdicData(uint8_t* cdicData, uint32_t cdicDataLen);
-    bool Decompress(uint8_t* src, size_t octets, str::Str<char>& dst);
-    bool DecodeOne(uint32_t code, str::Str<char>& dst);
+    bool Decompress(uint8_t* src, size_t octets, str::Str& dst);
+    bool DecodeOne(uint32_t code, str::Str& dst);
 };
 
 HuffDicDecompressor::HuffDicDecompressor() : codeLength(0), dictsCount(0) {
 }
 
-bool HuffDicDecompressor::DecodeOne(uint32_t code, str::Str<char>& dst) {
+bool HuffDicDecompressor::DecodeOne(uint32_t code, str::Str& dst) {
     uint16_t dict = (uint16_t)(code >> codeLength);
     if (dict >= dictsCount) {
         lf("invalid dict value");
@@ -256,7 +256,7 @@ bool HuffDicDecompressor::DecodeOne(uint32_t code, str::Str<char>& dst) {
     return true;
 }
 
-bool HuffDicDecompressor::Decompress(uint8_t* src, size_t srcSize, str::Str<char>& dst) {
+bool HuffDicDecompressor::Decompress(uint8_t* src, size_t srcSize, str::Str& dst) {
     uint32_t bitsConsumed = 0;
     uint32_t bits = 0;
 
@@ -810,7 +810,7 @@ static size_t GetRealRecordSize(const u8* recData, size_t recLen, size_t trailer
 
 // Load a given record of a document into strOut, uncompressing if necessary.
 // Returns false if error.
-bool MobiDoc::LoadDocRecordIntoBuffer(size_t recNo, str::Str<char>& strOut) {
+bool MobiDoc::LoadDocRecordIntoBuffer(size_t recNo, str::Str& strOut) {
     std::string_view rec = pdbReader->GetRecord(recNo);
     const char* recData = rec.data();
     if (nullptr == recData) {
@@ -858,7 +858,7 @@ bool MobiDoc::LoadDocument(PdbReader* pdbReader) {
     }
 
     CrashIf(doc != nullptr);
-    doc = new str::Str<char>(docUncompressedSize);
+    doc = new str::Str(docUncompressedSize);
     for (size_t i = 1; i <= docRecCount; i++) {
         if (!LoadDocRecordIntoBuffer(i, *doc)) {
             return false;

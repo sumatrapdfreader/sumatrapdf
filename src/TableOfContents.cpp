@@ -477,7 +477,7 @@ static void SetInitialExpandState(DocTocItem* item, Vec<int>& tocState) {
 
 static void ExportBookmarks(TabInfo* tab) {
     auto* tocTree = tab->ctrl->GetTocTree();
-    str::Str<char> s;
+    str::Str s;
     SerializeBookmarksRec(tocTree->root, 0, s);
     dbglogf("%s\n", s.Get());
     str::WStr fileName;
@@ -541,7 +541,7 @@ AlternativeBookmarks::~AlternativeBookmarks() {
 }
 
 static AlternativeBookmarks* LoadAlterenativeBookmarks(std::string_view baseFileName) {
-    str::Str<char> s;
+    str::Str s;
     s.Set(baseFileName.data());
     s.Append(".bkm");
     std::string_view path = s.AsView();

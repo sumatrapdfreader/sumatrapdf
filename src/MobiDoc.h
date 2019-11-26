@@ -36,14 +36,14 @@ class MobiDoc {
     explicit MobiDoc(const WCHAR* filePath);
 
     bool ParseHeader();
-    bool LoadDocRecordIntoBuffer(size_t recNo, str::Str<char>& strOut);
+    bool LoadDocRecordIntoBuffer(size_t recNo, str::Str& strOut);
     void LoadImages();
     bool LoadImage(size_t imageNo);
     bool LoadDocument(PdbReader* pdbReader);
     bool DecodeExthHeader(const char* data, size_t dataLen);
 
   public:
-    str::Str<char>* doc;
+    str::Str* doc;
 
     size_t imagesCount;
 

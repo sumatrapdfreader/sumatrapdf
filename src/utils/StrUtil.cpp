@@ -478,7 +478,7 @@ char* Replace(const char* s, const char* toReplace, const char* replaceWith) {
     if (!s || str::IsEmpty(toReplace) || !replaceWith)
         return nullptr;
 
-    str::Str<char> result(str::Len(s));
+    str::Str result(str::Len(s));
     size_t findLen = str::Len(toReplace), replLen = str::Len(replaceWith);
     const char *start = s, *end;
     while ((end = str::Find(start, toReplace)) != nullptr) {

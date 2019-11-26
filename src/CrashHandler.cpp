@@ -33,10 +33,10 @@
 
 // The following functions allow crash handler to be used by both installer
 // and sumatra proper. They must be implemented for each app.
-extern void GetStressTestInfo(str::Str<char>* s);
+extern void GetStressTestInfo(str::Str* s);
 extern bool CrashHandlerCanUseNet();
 extern void ShowCrashHandlerMessage();
-extern void GetProgramInfo(str::Str<char>& s);
+extern void GetProgramInfo(str::Str& s);
 
 /* Note: we cannot use standard malloc()/free()/new()/delete() in crash handler.
 For multi-thread safety, there is a per-heap lock taken by HeapAlloc() etc.
@@ -105,7 +105,7 @@ static LPTOP_LEVEL_EXCEPTION_FILTER gPrevExceptionFilter = nullptr;
 static char* BuildCrashInfoText() {
     lf("BuildCrashInfoText(): start");
 
-    str::Str<char> s(16 * 1024, gCrashHandlerAllocator);
+    str::Str s(16 * 1024, gCrashHandlerAllocator);
     if (gSystemInfo)
         s.Append(gSystemInfo);
 
@@ -131,10 +131,10 @@ static void SendCrashInfo(char* s) {
     }
 
     const char* boundary = "0xKhTmLbOuNdArY";
-    str::Str<char> headers(256, gCrashHandlerAllocator);
+    str::Str headers(256, gCrashHandlerAllocator);
     headers.AppendFmt("Content-Type: multipart/form-data; boundary=%s", boundary);
 
-    str::Str<char> data(2048, gCrashHandlerAllocator);
+    str::Str data(2048, gCrashHandlerAllocator);
     data.AppendFmt("--%s\r\n", boundary);
     data.Append("Content-Disposition: form-data; name=\"file\"; filename=\"sumcrash.txt\"\r\n\r\n");
     data.Append(s);
@@ -365,7 +365,7 @@ static const char* OsNameFromVer(OSVERSIONINFOEX ver) {
     return osVerStr;
 }
 
-static void GetOsVersion(str::Str<char>& s) {
+static void GetOsVersion(str::Str& s) {
     OSVERSIONINFOEX ver = {0};
     ver.dwOSVersionInfoSize = sizeof(ver);
 #pragma warning(push)
@@ -395,7 +395,7 @@ static void GetOsVersion(str::Str<char>& s) {
         s.AppendFmt("OS: Windows %s %d.%d build %d %s\r\n", os, servicePackMajor, servicePackMinor, buildNumber, arch);
 }
 
-static void GetProcessorName(str::Str<char>& s) {
+static void GetProcessorName(str::Str& s) {
     WCHAR* name =
         ReadRegStr(HKEY_LOCAL_MACHINE, L"HARDWARE\\DESCRIPTION\\System\\CentralProcessor", L"ProcessorNameString");
     if (!name) // if more than one processor
@@ -409,7 +409,7 @@ static void GetProcessorName(str::Str<char>& s) {
     free(name);
 }
 
-static void GetMachineName(str::Str<char>& s) {
+static void GetMachineName(str::Str& s) {
     WCHAR* s1 = ReadRegStr(HKEY_LOCAL_MACHINE, L"HARDWARE\\DESCRIPTION\\System\\BIOS", L"SystemFamily");
     WCHAR* s2 = ReadRegStr(HKEY_LOCAL_MACHINE, L"HARDWARE\\DESCRIPTION\\System\\BIOS", L"SystemVersion");
     OwnedData s1u;
@@ -436,7 +436,7 @@ static void GetMachineName(str::Str<char>& s) {
 
 #define GFX_DRIVER_KEY_FMT L"SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\%04d"
 
-static void GetGraphicsDriverInfo(str::Str<char>& s) {
+static void GetGraphicsDriverInfo(str::Str& s) {
     // the info is in registry in:
     // HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000\
     //   Device Description REG_SZ (same as DriverDesc, so we don't read it)
@@ -467,14 +467,14 @@ static void GetGraphicsDriverInfo(str::Str<char>& s) {
     }
 }
 
-static void GetLanguage(str::Str<char>& s) {
+static void GetLanguage(str::Str& s) {
     char country[32] = {0}, lang[32] = {0};
     GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SISO3166CTRYNAME, country, dimof(country) - 1);
     GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SISO639LANGNAME, lang, dimof(lang) - 1);
     s.AppendFmt("Lang: %s %s\r\n", lang, country);
 }
 
-static void GetSystemInfo(str::Str<char>& s) {
+static void GetSystemInfo(str::Str& s) {
     SYSTEM_INFO si;
     GetSystemInfo(&si);
     s.AppendFmt("Number Of Processors: %d\r\n", si.dwNumberOfProcessors);
@@ -500,7 +500,7 @@ static void GetSystemInfo(str::Str<char>& s) {
 
 // returns true if running on wine (winex11.drv is present)
 // it's not a logical, but convenient place to do it
-static bool GetModules(str::Str<char>& s) {
+static bool GetModules(str::Str& s) {
     bool isWine = false;
     HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
     if (snap == INVALID_HANDLE_VALUE)
@@ -523,14 +523,14 @@ static bool GetModules(str::Str<char>& s) {
 
 // returns true if running on wine
 static bool BuildModulesInfo() {
-    str::Str<char> s(1024);
+    str::Str s(1024);
     bool isWine = GetModules(s);
     gModulesInfo = s.StealData();
     return isWine;
 }
 
 static void BuildSystemInfo() {
-    str::Str<char> s(1024);
+    str::Str s(1024);
     GetProgramInfo(s);
     GetOsVersion(s);
     GetSystemInfo(s);

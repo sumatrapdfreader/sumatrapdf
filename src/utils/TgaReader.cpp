@@ -379,7 +379,7 @@ unsigned char* SerializeBitmap(HBITMAP hbmp, size_t* bmpBytesOut) {
     headerLE.bitDepth = 24;
     TgaFooter footerLE = {0, 0, TGA_FOOTER_SIGNATURE};
 
-    str::Str<char> tgaData;
+    str::Str tgaData;
     tgaData.Append((char*)&headerLE, sizeof(headerLE));
     for (int k = 0; k < h; k++) {
         const char* line = bmpData + k * stride;

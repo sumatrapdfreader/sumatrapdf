@@ -118,8 +118,8 @@ Exit:
     return ok;
 }
 
-bool HttpPost(const WCHAR* server, int port, const WCHAR* url, str::Str<char>* headers, str::Str<char>* data) {
-    str::Str<char> resp(2048);
+bool HttpPost(const WCHAR* server, int port, const WCHAR* url, str::Str* headers, str::Str* data) {
+    str::Str resp(2048);
     bool ok = false;
     char* hdr = nullptr;
     DWORD hdrLen = 0;

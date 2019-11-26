@@ -31,7 +31,7 @@ static bool NeedsEscaping(const char* s) {
            str::FindChar(s, '\r') || str::FindChar(s, '$');
 }
 
-static void EscapeStr(str::Str<char>& out, const char* s) {
+static void EscapeStr(str::Str& out, const char* s) {
     CrashIf(!NeedsEscaping(s));
     if (str::IsWs(*s) && *s != '\n' && *s != '\r')
         out.Append('$');
@@ -58,7 +58,7 @@ static char* UnescapeStr(const char* s) {
     if (!str::FindChar(s, '$'))
         return str::Dup(s);
 
-    str::Str<char> ret;
+    str::Str ret;
     const char* end = s + str::Len(s);
     if ('$' == *s && str::IsWs(*(s + 1)))
         s++; // leading whitespace
@@ -181,7 +181,7 @@ bool IsCompactable(const StructInfo* info) {
 static_assert(sizeof(float) == sizeof(int) && sizeof(COLORREF) == sizeof(int),
               "compact array code can't be simplified if int, float and colorref are of different sizes");
 
-static bool SerializeField(str::Str<char>& out, const uint8_t* base, const FieldInfo& field) {
+static bool SerializeField(str::Str& out, const uint8_t* base, const FieldInfo& field) {
     const uint8_t* fieldPtr = base + field.offset;
     AutoFree value;
     COLORREF c;
@@ -368,7 +368,7 @@ static void DeserializeField(const FieldInfo& field, uint8_t* base, const char* 
     }
 }
 
-static inline void Indent(str::Str<char>& out, int indent) {
+static inline void Indent(str::Str& out, int indent) {
     while (indent-- > 0)
         out.Append('\t');
 }
@@ -393,7 +393,7 @@ static void MarkFieldKnown(SquareTreeNode* node, const char* fieldName, SettingT
     }
 }
 
-static void SerializeUnknownFields(str::Str<char>& out, SquareTreeNode* node, int indent) {
+static void SerializeUnknownFields(str::Str& out, SquareTreeNode* node, int indent) {
     if (!node)
         return;
     for (size_t i = 0; i < node->data.size(); i++) {
@@ -413,7 +413,7 @@ static void SerializeUnknownFields(str::Str<char>& out, SquareTreeNode* node, in
     }
 }
 
-static void SerializeStructRec(str::Str<char>& out, const StructInfo* info, const void* data, SquareTreeNode* prevNode,
+static void SerializeStructRec(str::Str& out, const StructInfo* info, const void* data, SquareTreeNode* prevNode,
                                int indent = 0) {
     const uint8_t* base = (const uint8_t*)data;
     const char* fieldName = info->fieldNames;
@@ -513,7 +513,7 @@ static void* DeserializeStructRec(const StructInfo* info, SquareTreeNode* node, 
 }
 
 char* SerializeStruct(const StructInfo* info, const void* strct, const char* prevData, size_t* sizeOut) {
-    str::Str<char> out;
+    str::Str out;
     out.Append(UTF8_BOM);
     SquareTree prevSqt(prevData);
     SerializeStructRec(out, info, strct, prevSqt.root);

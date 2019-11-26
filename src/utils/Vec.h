@@ -337,9 +337,9 @@ inline void DeleteVecMembers(std::vector<T>& v) {
 namespace str {
 
 template <typename T>
-class Str : public Vec<T> {
+class BasicStr : public Vec<T> {
   public:
-    explicit Str(size_t capHint = 0, Allocator* allocator = nullptr) : Vec<T>(capHint, allocator) {
+    explicit BasicStr(size_t capHint = 0, Allocator* allocator = nullptr) : Vec<T>(capHint, allocator) {
     }
 
     void Append(T c) {
@@ -413,7 +413,8 @@ class Str : public Vec<T> {
 
 Vec<std::string_view> Split(std::string_view sv, char delim);
 
-typedef Str<WCHAR> WStr;
+typedef BasicStr<char> Str;
+typedef BasicStr<WCHAR> WStr;
 
 } // namespace str
 

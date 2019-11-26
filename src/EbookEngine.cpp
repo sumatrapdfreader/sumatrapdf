@@ -1476,7 +1476,7 @@ static UINT ExtractHttpCharset(const char* html, size_t htmlLen) {
 class ChmHtmlCollector : public EbookTocVisitor {
     ChmDoc* doc;
     WStrList added;
-    str::Str<char> html;
+    str::Str html;
 
   public:
     explicit ChmHtmlCollector(ChmDoc* doc) : doc(doc) {

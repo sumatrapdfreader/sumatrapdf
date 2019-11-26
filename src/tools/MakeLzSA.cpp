@@ -79,7 +79,7 @@ static bool Compress(const char* uncompressed, size_t uncompressedSize, char* co
     return true;
 }
 
-static bool AppendEntry(str::Str<char>& data, str::Str<char>& content, const WCHAR* filePath, const char* inArchiveName,
+static bool AppendEntry(str::Str& data, str::Str& content, const WCHAR* filePath, const char* inArchiveName,
                         lzma::FileInfo* fi = nullptr) {
     size_t nameLen = str::Len(inArchiveName);
     CrashIf(nameLen > UINT32_MAX - 25);
@@ -136,8 +136,8 @@ bool CreateArchive(const WCHAR* archivePath, WStrVec& files, size_t skipFiles = 
     if (!lzma::ParseSimpleArchive(prevData.data, prevDataLen, &prevArchive))
         prevArchive.filesCount = 0;
 
-    str::Str<char> data;
-    str::Str<char> content;
+    str::Str data;
+    str::Str content;
 
     ByteWriter lzsaHeader = MakeByteWriterLE(data.AppendBlanks(8), 8);
     lzsaHeader.Write32(LZMA_MAGIC_ID);

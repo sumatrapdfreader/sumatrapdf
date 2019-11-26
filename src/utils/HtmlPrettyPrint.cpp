@@ -6,7 +6,7 @@
 #include "HtmlParserLookup.h"
 #include "HtmlPullParser.h"
 
-static void HtmlAddWithNesting(str::Str<char>* out, HtmlToken* tok, size_t nesting) {
+static void HtmlAddWithNesting(str::Str* out, HtmlToken* tok, size_t nesting) {
     CrashIf(!tok->IsStartTag() && !tok->IsEndTag() && !tok->IsEmptyElementEndTag());
     bool isInline = IsInlineTag(tok->tag);
     // add a newline before block start tags (unless there already is one)
@@ -47,7 +47,7 @@ char* PrettyPrintHtml(const char* s, size_t len, size_t& lenOut) {
     if ((size_t)-1 == len)
         len = str::Len(s);
 
-    str::Str<char> res(len);
+    str::Str res(len);
     HtmlPullParser parser(s, len);
     Vec<HtmlTag> tagNesting;
     HtmlToken* t;

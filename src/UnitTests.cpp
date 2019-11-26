@@ -183,7 +183,7 @@ static void hexstrTest() {
 }
 
 static void assertSerializedColor(COLORREF c, const char* s) {
-    str::Str<char> out;
+    str::Str out;
     SerializeColor(c, out);
     auto s2 = out.Get();
     utassert(str::Eq(s2, s));

@@ -119,7 +119,7 @@ bool SaveFileModifictions(const WCHAR* filePath, Vec<PageAnnotation>* list) {
     }
 
     AutoFreeW modificationsPath(str::Join(filePath, SMX_FILE_EXT));
-    str::Str<char> data;
+    str::Str data;
     size_t offset = 0;
 
     OwnedData prevData(file::ReadFile(modificationsPath));

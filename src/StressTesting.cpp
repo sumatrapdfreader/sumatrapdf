@@ -319,7 +319,7 @@ static WCHAR* FormatTime(int totalSecs) {
     return str::Format(L"%d secs", secs);
 }
 
-static void FormatTime(int totalSecs, str::Str<char>* s) {
+static void FormatTime(int totalSecs, str::Str* s) {
     int secs = totalSecs % 60;
     int totalMins = totalSecs / 60;
     int mins = totalMins % 60;
@@ -518,7 +518,7 @@ class StressTest {
     void Start(TestFileProvider* fileProvider, int cycles);
 
     void OnTimer(int timerIdGot);
-    void GetLogInfo(str::Str<char>* s);
+    void GetLogInfo(str::Str* s);
 };
 
 void StressTest::Start(TestFileProvider* fileProvider, int cycles) {
@@ -742,14 +742,14 @@ Next:
 }
 
 // note: used from CrashHandler, shouldn't allocate memory
-void StressTest::GetLogInfo(str::Str<char>* s) {
+void StressTest::GetLogInfo(str::Str* s) {
     s->AppendFmt(", stress test rendered %d files in ", filesCount);
     FormatTime(SecsSinceSystemTime(stressStartTime), s);
     s->AppendFmt(", currPage: %d", currPage);
 }
 
 // note: used from CrashHandler.cpp, should not allocate memory
-void GetStressTestInfo(str::Str<char>* s) {
+void GetStressTestInfo(str::Str* s) {
     // only add paths to files encountered during an explicit stress test
     // (for privacy reasons, users should be able to decide themselves
     // whether they want to share what files they had opened during a crash)

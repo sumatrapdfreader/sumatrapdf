@@ -3,7 +3,7 @@
 
 /* emulating Go's error handling */
 struct error {
-    str::Str<char> err;
+    str::Str err;
 
     virtual ~error();
     virtual char* Error();

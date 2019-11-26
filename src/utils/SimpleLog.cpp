@@ -1,6 +1,6 @@
 #include "utils/BaseUtil.h"
 
-str::Str<char> logBuf;
+str::Str logBuf;
 bool logToStderr;
 
 static char* logFilePath;

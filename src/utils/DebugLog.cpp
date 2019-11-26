@@ -38,12 +38,12 @@ void LogF(const WCHAR* fmt, ...) {
     va_end(args);
 }
 
-static str::Str<char>* gCrashLog = nullptr;
+static str::Str* gCrashLog = nullptr;
 
 void CrashLogF(const char* fmt, ...) {
     if (!gCrashLog) {
         // this is never freed, so only call CrashLogF before a crash
-        gCrashLog = new str::Str<char>(4096);
+        gCrashLog = new str::Str(4096);
     }
 
     va_list args;

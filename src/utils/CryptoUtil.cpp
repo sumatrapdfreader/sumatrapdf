@@ -198,7 +198,7 @@ static bool ExtractSignature(const char* hexSignature, const void* data, size_t&
     } else
         return false;
 
-    str::Str<BYTE> signatureBytes;
+    Vec<BYTE> signatureBytes;
     for (const char* c = hexSignature; *c && !str::IsWs(*c); c += 2) {
         int val;
         if (1 != sscanf_s(c, "%02x", &val))

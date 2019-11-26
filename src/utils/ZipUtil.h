@@ -8,7 +8,7 @@ typedef struct ar_archive_s ar_archive;
 
 class ZipCreator {
     ISequentialStream* stream;
-    str::Str<char> centraldir;
+    str::Str centraldir;
     size_t bytesWritten;
     size_t fileCount;
 

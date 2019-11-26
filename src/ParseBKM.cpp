@@ -17,7 +17,7 @@ Creating and parsing of .bkm files that contain alternative bookmarks view
 for PDF files.
 */
 
-static void appendQuotedString(std::string_view sv, str::Str<char>& out) {
+static void appendQuotedString(std::string_view sv, str::Str& out) {
     out.Append('"');
     const char* s = sv.data();
     const char* end = s + sv.size();
@@ -39,7 +39,7 @@ static void appendQuotedString(std::string_view sv, str::Str<char>& out) {
 }
 
 // TODO: serialize open state
-void SerializeBookmarksRec(DocTocItem* node, int level, str::Str<char>& s) {
+void SerializeBookmarksRec(DocTocItem* node, int level, str::Str& s) {
     if (level == 0) {
         s.Append(":default view\n");
     }
@@ -145,8 +145,8 @@ static std::string_view parseBookmarksTitle(const std::string_view sv) {
 }
 
 // parses "quoted string"
-static str::Str<char> parseLineTitle(std::string_view& sv) {
-    str::Str<char> res;
+static str::Str parseLineTitle(std::string_view& sv) {
+    str::Str res;
     size_t n = sv.size();
     // must be at least: ""
     if (n < 2) {
@@ -221,7 +221,7 @@ static DocTocItem* parseBookmarksLine(std::string_view line, size_t* indentOut) 
     *indentOut = indent / 2;
     skipChars(line, ' ');
     // TODO: no way to indicate an error
-    str::Str<char> title = parseLineTitle(line);
+    str::Str title = parseLineTitle(line);
     DocTocItem* res = new DocTocItem();
     res->title = str::conv::Utf8ToWchar(title.AsView());
 

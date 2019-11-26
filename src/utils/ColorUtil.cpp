@@ -107,7 +107,7 @@ COLORREF ColorSetAlpha(COLORREF c, u8 alpha) {
 }
 
 // TODO: remove use of SerializeColorRgb() and replace with SerializeColor
-void SerializeColorRgb(COLORREF c, str::Str<char>& out) {
+void SerializeColorRgb(COLORREF c, str::Str& out) {
     u8 r, g, b;
     UnpackRgb(c, r, g, b);
     char* s = str::Format("#%02x%02x%02x", r, g, b);
@@ -115,7 +115,7 @@ void SerializeColorRgb(COLORREF c, str::Str<char>& out) {
     free(s);
 }
 
-void SerializeColor(COLORREF c, str::Str<char>& out) {
+void SerializeColor(COLORREF c, str::Str& out) {
     u8 r, g, b, a;
     UnpackRgba(c, r, g, b, a);
     char* s = nullptr;
