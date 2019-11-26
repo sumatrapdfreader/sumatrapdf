@@ -579,7 +579,7 @@ void LoadTocTree(WindowInfo* win) {
     win->tocLoaded = true;
 
     auto* tocTree = tab->ctrl->GetTocTree();
-    if (!tocTree) {
+    if (!tocTree || !tocTree->root) {
         return;
     }
 

@@ -1695,9 +1695,13 @@ PdfTocItem* PdfEngineImpl::BuildTocTree(fz_outline* outline, int& idCounter, boo
     return root;
 }
 
+// TODO: maybe build in FinishDownload
 DocTocTree* PdfEngineImpl::GetTocTree() {
     if (tocTree) {
         return tocTree;
+    }
+    if (outline == nullptr && attachments == nullptr) {
+        return nullptr;
     }
 
     int idCounter = 0;
@@ -1707,6 +1711,9 @@ DocTocTree* PdfEngineImpl::GetTocTree() {
         root = BuildTocTree(outline, idCounter, false);
     }
     if (!attachments) {
+        if (!root) {
+            return nullptr;
+        }
         tocTree = new DocTocTree(root);
         return tocTree;
     }
