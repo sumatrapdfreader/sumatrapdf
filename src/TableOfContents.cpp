@@ -585,7 +585,11 @@ void LoadTocTree(WindowInfo* win) {
 
     // TODO: for now just for testing
     auto* altTocs = LoadAlterenativeBookmarks(tab->filePath);
+#if 1
     delete altTocs;
+#else
+    tocTree = altTocs->bookmarks[0];
+#endif
 
     // consider a ToC tree right-to-left if a more than half of the
     // alphabetic characters are in a right-to-left script
@@ -600,6 +604,7 @@ void LoadTocTree(WindowInfo* win) {
     UpdateTocColors(win);
     SetInitialExpandState(tocTree->root, tab->tocState);
     tocTree->root->OpenSingleNode();
+
     treeCtrl->SetTreeModel(tocTree);
 
     UINT fl = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;

@@ -245,17 +245,12 @@ class DocTocItem : public TreeItem {
         free(title);
     }
 
-    DocTocItem* last = nullptr; // only updated by AddSibling
     void AddSibling(DocTocItem* sibling) {
-        DocTocItem* item = last;
-        if (item == nullptr) {
-            item = this;
-        }
+        DocTocItem* item = this;
         while (item->next) {
             item = item->next;
         }
         item->next = sibling;
-        last = sibling;
     }
 
     void OpenSingleNode() {

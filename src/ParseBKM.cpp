@@ -285,7 +285,6 @@ static DocTocTree* parseBookmarks(std::string_view sv) {
     }
     auto tree = new DocTocTree();
     tree->name = str::Dup(sv);
-    DocTocItem* curr = nullptr;
     size_t indent = 0;
     while (true) {
         line = str::IterString(sv, '\n');
@@ -300,10 +299,46 @@ static DocTocTree* parseBookmarks(std::string_view sv) {
         DocTocItemWithIndent iwl = {item, indent};
         items.Append(iwl);
     }
+    size_t nItems = items.size();
+    if (nItems == 0) {
+        delete tree;
+        return nullptr;
+    }
 
-    // TODO: build a tree
-    for (auto& iwl : items) {
-        delete iwl.item;
+    tree->root = items[0].item;
+
+    /* We want to reconstruct tree from array
+        a
+         b1
+         b2
+        a2
+         b3
+\    */
+    for (size_t i = 1; i < nItems; i++) {
+        const auto& curr = items[i];
+        auto& prev = items[i - 1];
+        auto item = curr.item;
+        if (prev.indent == curr.indent) {
+            // b1 -> b2
+            prev.item->next = item;
+        } else if (curr.indent > prev.indent) {
+            // a2 -> b3
+            prev.item->child = item;
+        } else {
+            // a -> a2
+            bool didFound = false;
+            for (int j = (int)i - 1; j >= 0; j--) {
+                prev = items[j];
+                if (prev.indent == curr.indent) {
+                    prev.item->AddSibling(item);
+                    didFound = true;
+                    break;
+                }
+            }
+            if (!didFound) {
+                tree->root->AddSibling(item);
+            }
+        }
     }
 
     return tree;
