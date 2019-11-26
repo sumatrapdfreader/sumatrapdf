@@ -1332,11 +1332,12 @@ void UpdateBitmapColors(HBITMAP hbmp, COLORREF textColor, COLORREF bgColor) {
         return;
 
     // color order in DIB is blue-green-red-alpha
-    u8 r, g, b;
-    UnpackRgb(textColor, r, g, b);
-    int base[4] = {b, g, r, 0};
-    UnpackRgb(bgColor, r, g, b);
-    int diff[4] = {b - base[0], g - base[1], b - base[2], 255};
+    byte rt, gt, bt;
+    UnpackRgb(textColor, rt, gt, bt);
+    int base[4] = {bt, gt, rt, 0};
+    byte rb, gb, bb;
+    UnpackRgb(bgColor, rb, gb, bb);
+    int diff[4] = {(int)bb - base[0], (int)gb - base[1], (int)rb - base[2], 255};
 
     DIBSECTION info = {0};
     int ret = GetObject(hbmp, sizeof(info), &info);
