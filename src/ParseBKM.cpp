@@ -109,7 +109,7 @@ static std::string_view parseUntil(std::string_view& sv, char c) {
         }
         s++;
     }
-    size_t n = skipUntil(sv, e);
+    size_t n = skipUntil(sv, s);
     return {start, n};
 }
 
@@ -125,7 +125,7 @@ static size_t skipChars(std::string_view& sv, char c) {
         }
         s++;
     }
-    return skipUntil(sv, e);
+    return skipUntil(sv, s);
 }
 
 // first line should look like:
@@ -148,7 +148,7 @@ static std::string_view parseBookmarksTitle(const std::string_view sv) {
 static str::Str<char> parseLineTitle(std::string_view& sv) {
     str::Str<char> res;
     size_t n = sv.size();
-    // must be at least ""
+    // must be at least: ""
     if (n < 2) {
         return res;
     }
@@ -159,11 +159,30 @@ static str::Str<char> parseLineTitle(std::string_view& sv) {
     }
     s++;
     while (s < e) {
-        if (*s == '"') {
+        char c = *s;
+        if (c == '"') {
             // the end
             skipUntil(sv, s + 1);
             return res;
         }
+        if (c != '\\') {
+            res.Append(c);
+            s++;
+            continue;
+        }
+        // potentially un-escape
+        s++;
+        if (s >= e) {
+            break;
+        }
+        char c2 = *s;
+        bool unEscape = (c2 == '\\') || (c2 == '"');
+        if (!unEscape) {
+            res.Append(c);
+            continue;
+        }
+        res.Append(c2);
+        s++;
     }
 
     res.Reset();
@@ -181,7 +200,7 @@ struct ParsedDest {
 };
 
 std::tuple<ParsedDest*, bool> parseDestination(std::string_view& sv) {
-    if (str::StartsWith(sv, "page:")) {
+    if (!str::StartsWith(sv, "page:")) {
         return {nullptr, false};
     }
     // TODO: actually parse the info
