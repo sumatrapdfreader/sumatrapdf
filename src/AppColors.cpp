@@ -84,6 +84,8 @@ static COLORREF GetNoDocBgColor() {
 }
 
 COLORREF GetAppColor(AppColor col, bool ebook) {
+    COLORREF c;
+
     if (col == AppColor::NoDocBg) {
         // GetCurrentTheme()->document.canvasColor
         return GetNoDocBgColor();
@@ -110,19 +112,55 @@ COLORREF GetAppColor(AppColor col, bool ebook) {
     }
 
     if (col == AppColor::DocumentBg) {
-        if (ebook) {
-            return gGlobalPrefs->ebookUI.backgroundColor;
-        } else {
-            return gGlobalPrefs->fixedPageUI.backgroundColor;
+        if (gGlobalPrefs->useSysColors) {
+            if (gGlobalPrefs->fixedPageUI.invertColors) {
+                c = GetSysColor(COLOR_WINDOWTEXT);
+            } else {
+                c = GetSysColor(COLOR_WINDOW);
+            }
+            return c;
         }
+
+        if (ebook) {
+            if (gGlobalPrefs->fixedPageUI.invertColors) {
+                c = gGlobalPrefs->ebookUI.textColor;
+            } else {
+                c = gGlobalPrefs->ebookUI.backgroundColor;
+            }
+        } else {
+            if (gGlobalPrefs->fixedPageUI.invertColors) {
+                c = gGlobalPrefs->fixedPageUI.textColor;
+            } else {
+                c = gGlobalPrefs->fixedPageUI.backgroundColor;
+            }
+        }
+        return c;
     }
 
     if (col == AppColor::DocumentText) {
-        if (ebook) {
-            return gGlobalPrefs->ebookUI.textColor;
-        } else {
-            return gGlobalPrefs->fixedPageUI.textColor;
+        if (gGlobalPrefs->useSysColors) {
+            if (gGlobalPrefs->fixedPageUI.invertColors) {
+                c = GetSysColor(COLOR_WINDOW);
+            } else {
+                c = GetSysColor(COLOR_WINDOWTEXT);
+            }
+            return c;
         }
+
+        if (ebook) {
+            if (gGlobalPrefs->fixedPageUI.invertColors) {
+                c = gGlobalPrefs->ebookUI.backgroundColor;
+            } else {
+                c = gGlobalPrefs->ebookUI.textColor;
+            }
+        } else {
+            if (gGlobalPrefs->fixedPageUI.invertColors) {
+                c = gGlobalPrefs->fixedPageUI.backgroundColor;
+            } else {
+                c = gGlobalPrefs->fixedPageUI.textColor;
+            }
+        }
+        return c;
     }
 
     if (col == AppColor::NotificationsBg) {
@@ -154,7 +192,7 @@ COLORREF GetAppColor(AppColor col, bool ebook) {
     }
 
     if (col == AppColor::TabSelectedCloseX) {
-        auto c = GetAppColor(AppColor::TabBackgroundBg);
+        c = GetAppColor(AppColor::TabBackgroundBg);
         return AdjustLightness2(c, -60);
     }
 
@@ -207,7 +245,7 @@ COLORREF GetAppColor(AppColor col, bool ebook) {
     }
 
     if (col == AppColor::TabClickedCloseCircle) {
-        auto c = GetAppColor(AppColor::TabSelectedCloseCircle);
+        c = GetAppColor(AppColor::TabSelectedCloseCircle);
         AdjustLightness2(c, -10);
         return c;
     }
@@ -221,17 +259,8 @@ void GetFixedPageUiColors(COLORREF& text, COLORREF& bg) {
     text = GetCurrentTheme()->document.textColor;
     bg = GetCurrentTheme()->document.backgroundColor;
 #endif
-
-    if (gGlobalPrefs->useSysColors) {
-        text = GetSysColor(COLOR_WINDOWTEXT);
-        bg = GetSysColor(COLOR_WINDOW);
-    } else {
-        text = gGlobalPrefs->fixedPageUI.textColor;
-        bg = gGlobalPrefs->fixedPageUI.backgroundColor;
-    }
-    if (gGlobalPrefs->fixedPageUI.invertColors) {
-        std::swap(text, bg);
-    }
+    text = GetAppColor(AppColor::DocumentText, false);
+    bg = GetAppColor(AppColor::DocumentBg, false);
 }
 
 void GetEbookUiColors(COLORREF& text, COLORREF& bg) {
@@ -239,12 +268,6 @@ void GetEbookUiColors(COLORREF& text, COLORREF& bg) {
     text = GetCurrentTheme()->document.textColor;
     bg = GetCurrentTheme()->document.backgroundColor;
 #endif
-    if (gGlobalPrefs->useSysColors) {
-        text = GetSysColor(COLOR_WINDOWTEXT);
-        bg = GetSysColor(COLOR_WINDOW);
-    } else {
-        text = gGlobalPrefs->ebookUI.textColor;
-        bg = gGlobalPrefs->ebookUI.backgroundColor;
-    }
-    // TODO: respect gGlobalPrefs->fixedPageUI.invertColors?
+    text = GetAppColor(AppColor::DocumentText, true);
+    bg = GetAppColor(AppColor::DocumentBg, true);
 }
