@@ -2125,28 +2125,37 @@ Vec<PageElement*>* PdfEngineImpl::GetElements(int pageNo) {
 
 void PdfEngineImpl::LinkifyPageText(PdfPageInfo* pageInfo) {
     RectI* coords;
-    AutoFreeW pageText(ExtractPageTextFromPageInfo(pageInfo, L"\n", &coords, RenderTarget::View, true));
-    if (!pageText)
+    RenderTarget target = RenderTarget::View;
+    WCHAR* pageText = ExtractPageTextFromPageInfo(pageInfo, L"\n", &coords, target, true);
+    if (!pageText) {
         return;
+    }
 
-    auto page = pageInfo->page;
     LinkRectList* list = LinkifyText(pageText, coords);
-    for (size_t i = 0; i < list->links.size(); i++) {
-        bool overlaps = false;
-        for (fz_link* next = page->links; next && !overlaps; next = next->next)
-            overlaps = fz_calc_overlap(list->coords.at(i), next->rect) >= 0.25f;
-        if (!overlaps) {
-            OwnedData uri(str::conv::ToUtf8(list->links.at(i)));
-            if (!uri.Get()) {
-                continue;
-            }
+    free(pageText);
+    pdf_page* page = pageInfo->page;
 
-            char* uri2 = fz_strdup(ctx, uri.Get());
-            // add links in top-to-bottom order (i.e. last-to-first)
-            fz_link* link = fz_new_link(ctx, list->coords.at(i), _doc, uri2);
-            link->next = page->links;
-            page->links = link;
+    for (size_t i = 0; i < list->links.size(); i++) {
+        fz_rect bbox = list->coords.at(i);
+        bool overlaps = false;
+        fz_link* link = page->links;
+        while (link && !overlaps) {
+            overlaps = fz_calc_overlap(bbox, link->rect) >= 0.25f;
+            link = link->next;
         }
+        if (overlaps) {
+            continue;
+        }
+
+        OwnedData uri(str::conv::ToUtf8(list->links.at(i)));
+        if (!uri.Get()) {
+            continue;
+        }
+
+        // add links in top-to-bottom order (i.e. last-to-first)
+        link = fz_new_link(ctx, bbox, _doc, uri.Get());
+        link->next = page->links;
+        page->links = link;
     }
     delete list;
     free(coords);
