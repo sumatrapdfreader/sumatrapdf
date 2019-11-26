@@ -255,8 +255,9 @@ static bool MatchWildcardsRec(const WCHAR* fileName, const WCHAR* filter) {
 bool Match(const WCHAR* path, const WCHAR* filter) {
     path = GetBaseName(path);
     while (str::FindChar(filter, ';')) {
-        if (MatchWildcardsRec(path, filter))
+        if (MatchWildcardsRec(path, filter)) {
             return true;
+        }
         filter = str::FindChar(filter, ';') + 1;
     }
     return MatchWildcardsRec(path, filter);
@@ -269,15 +270,18 @@ bool IsAbsolute(const WCHAR* path) {
 // returns the path to either the %TEMP% directory or a
 // non-existing file inside whose name starts with filePrefix
 WCHAR* GetTempPath(const WCHAR* filePrefix) {
-    WCHAR tempDir[MAX_PATH - 14];
+    WCHAR tempDir[MAX_PATH - 14] = {0};
     DWORD res = ::GetTempPath(dimof(tempDir), tempDir);
-    if (!res || res >= dimof(tempDir))
+    if (!res || res >= dimof(tempDir)) {
         return nullptr;
-    if (!filePrefix)
+    }
+    if (!filePrefix) {
         return str::Dup(tempDir);
-    WCHAR path[MAX_PATH];
-    if (!GetTempFileName(tempDir, filePrefix, 0, path))
+    }
+    WCHAR path[MAX_PATH] = {0};
+    if (!GetTempFileName(tempDir, filePrefix, 0, path)) {
         return nullptr;
+    }
     return str::Dup(path);
 }
 
@@ -286,17 +290,15 @@ WCHAR* GetTempPath(const WCHAR* filePrefix) {
 // (module is the EXE or DLL in which path::GetPathOfFileInAppDir resides)
 // TODO: normalize the path
 WCHAR* GetPathOfFileInAppDir(const WCHAR* fileName) {
-    WCHAR modulePath[MAX_PATH];
-    modulePath[0] = '\0';
+    WCHAR modulePath[MAX_PATH] = {0};
     GetModuleFileName(GetInstance(), modulePath, dimof(modulePath));
     modulePath[dimof(modulePath) - 1] = '\0';
-    if (!fileName)
+    if (!fileName) {
         return str::Dup(modulePath);
+    }
     const WCHAR* moduleDir(path::GetDir(modulePath));
-    defer {
-        str::Free(moduleDir);
-    };
     const WCHAR* path = path::Join(moduleDir, fileName);
+    str::Free(moduleDir);
     defer {
         str::Free(path);
     };
@@ -370,7 +372,7 @@ Error:
 }
 
 std::tuple<OwnedData, error*> ReadFile2(const char* path) {
-    size_t size;
+    size_t size = 0;
     char* data = ReadFileWithAllocator(path, &size, nullptr);
     if (!data) {
         auto err = NewError("Couldn't open file");
@@ -385,7 +387,7 @@ OwnedData ReadFile(std::string_view path) {
 
 // TODO: replace with ReadFile(std::string_view path)
 OwnedData ReadFile(const char* path) {
-    size_t size;
+    size_t size = 0;
     char* data = ReadFileWithAllocator(path, &size, nullptr);
     return {data, size};
 }
@@ -435,35 +437,41 @@ FILE* OpenFILE(const WCHAR* path) {
 }
 
 bool Exists(const WCHAR* filePath) {
-    if (nullptr == filePath)
+    if (nullptr == filePath) {
         return false;
+    }
 
     WIN32_FILE_ATTRIBUTE_DATA fileInfo;
     BOOL res = GetFileAttributesEx(filePath, GetFileExInfoStandard, &fileInfo);
-    if (0 == res)
+    if (0 == res) {
         return false;
+    }
 
-    if (fileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+    if (fileInfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
         return false;
+    }
     return true;
 }
 
 // returns -1 on error (can't use INVALID_FILE_SIZE because it won't cast right)
 int64_t GetSize(const WCHAR* filePath) {
     CrashIf(!filePath);
-    if (!filePath)
+    if (!filePath) {
         return -1;
+    }
 
     ScopedHandle h(OpenReadOnly(filePath));
-    if (h == INVALID_HANDLE_VALUE)
+    if (h == INVALID_HANDLE_VALUE) {
         return -1;
+    }
 
     // Don't use GetFileAttributesEx to retrieve the file size, as
     // that function doesn't interact well with symlinks, etc.
-    LARGE_INTEGER size;
+    LARGE_INTEGER size{};
     BOOL ok = GetFileSizeEx(h, &size);
-    if (!ok)
+    if (!ok) {
         return -1;
+    }
     return size.QuadPart;
 }
 
@@ -511,29 +519,37 @@ char* ReadFileWithAllocator(const WCHAR* path, size_t* fileSizeOut, Allocator* a
 #endif
 
 OwnedData ReadFile(const WCHAR* path) {
-    size_t size;
+    size_t size = 0;
     char* data = ReadFileWithAllocator(path, &size, nullptr);
+    if (data == nullptr) {
+        return {nullptr, 0};
+    }
     return {data, size};
 }
 
 // buf must be at least toRead in size (note: it won't be zero-terminated)
 bool ReadN(const WCHAR* filePath, char* buf, size_t toRead) {
     ScopedHandle h(OpenReadOnly(filePath));
-    if (h == INVALID_HANDLE_VALUE)
+    if (h == INVALID_HANDLE_VALUE) {
         return false;
+    }
 
-    DWORD nRead;
+    DWORD nRead = 0;
     BOOL ok = ReadFile(h, buf, (DWORD)toRead, &nRead, nullptr);
     return ok && nRead == toRead;
 }
 
 bool WriteFile(const WCHAR* filePath, const void* data, size_t dataLen) {
-    ScopedHandle h(
-        CreateFile(filePath, GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr));
-    if (INVALID_HANDLE_VALUE == h)
+    DWORD access = GENERIC_WRITE;
+    DWORD share = FILE_SHARE_READ;
+    DWORD flags = FILE_ATTRIBUTE_NORMAL;
+    auto fh = CreateFileW(filePath, access, share, nullptr, CREATE_ALWAYS, flags, nullptr);
+    if (INVALID_HANDLE_VALUE == fh) {
         return false;
+    }
+    ScopedHandle h(fh);
 
-    DWORD size;
+    DWORD size = 0;
     BOOL ok = WriteFile(h, data, (DWORD)dataLen, &size, nullptr);
     AssertCrash(!ok || (dataLen == (size_t)size));
     return ok && dataLen == (size_t)size;
