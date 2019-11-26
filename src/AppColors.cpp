@@ -74,13 +74,16 @@ static COLORREF GetLogoBgColor() {
 static COLORREF GetNoDocBgColor() {
     // use the system background color if the user has non-default
     // colors for text (not black-on-white) and also wants to use them
+
+    COLORREF sysText = GetSysColor(COLOR_WINDOWTEXT);
+    COLORREF sysWindow = GetSysColor(COLOR_WINDOW);
     bool useSysColor = gGlobalPrefs->useSysColors &&
-                       (GetSysColor(COLOR_WINDOWTEXT) != WIN_COL_BLACK || GetSysColor(COLOR_WINDOW) != WIN_COL_WHITE);
+                       (sysText != WIN_COL_BLACK || sysWindow != WIN_COL_WHITE);
     if (useSysColor) {
         return GetSysColor(COLOR_BTNFACE);
     }
 
-    return COL_WINDOW_BG;
+    return GetAboutBgColor();
 }
 
 COLORREF GetAppColor(AppColor col, bool ebook) {
@@ -100,7 +103,8 @@ COLORREF GetAppColor(AppColor col, bool ebook) {
     }
 
     if (col == AppColor::MainWindowBg) {
-        return ABOUT_BG_GRAY_COLOR;
+        return GetAboutBgColor();
+        //return ABOUT_BG_GRAY_COLOR;
     }
 
     if (col == AppColor::MainWindowText) {
