@@ -17,10 +17,18 @@ const (
 	maxS3Results = 1000
 )
 
-func isMyRepo() bool {
-	// https://help.github.com/en/github/automating-your-workflow-with-github-actions/virtual-environments-for-github-actions#default-environment-variables
+// we should only sign and upload to s3 if this is my repo
+// and a push event
+func shouldSignOrUpload() bool {
+	// https://help.github.com/en/actions/automating-your-workflow-with-github-actions/using-environment-variables
+
 	repo := os.Getenv("GITHUB_REPOSITORY")
-	return repo == "sumatrapdfreader/sumatrapdf"
+	if repo != "sumatrapdfreader/sumatrapdf" {
+		return false
+	}
+	event := os.Getenv("GITHUB_EVENT_NAME")
+	// other event is "pull_request"
+	return event == "push"
 }
 
 // sumatrapdf/sumatralatest.js
@@ -249,7 +257,7 @@ func shouldSkipUpload() bool {
 		return true
 	}
 
-	if !isMyRepo() {
+	if !shouldSignOrUpload() {
 		logf("skipping upload beacuse not my repo\n")
 		flgUpload = false
 		return true

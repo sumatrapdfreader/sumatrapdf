@@ -25,7 +25,7 @@ func signMust(path string) {
 	certPwd := os.Getenv("CERT_PWD")
 	if certPwd == "" {
 		// to make it easy on others, skip signing if
-		if !isMyRepo() {
+		if !shouldSignOrUpload() {
 			logf("skipped signing of '%s' because CERT_PWD not set\n", path)
 			return
 		}
