@@ -282,21 +282,11 @@ static DocTocTree* parseBookmarks(std::string_view sv) {
     return tree;
 }
 
-std::tuple<DocTocTree*, error*> ParseBookmarksFile(const char* path) {
-    UNUSED(path);
-    auto res = file::ReadFile2(path);
-    error* err = std::get<1>(res);
-    if (err != nullptr) {
-        return std::make_tuple(nullptr, err);
-    }
-#if 0
+DocTocTree* ParseBookmarksFile(std::string_view path) {
     OwnedData d = file::ReadFile(path);
     if (d.IsEmpty()) {
-        return std::make_tuple(nullptr, NewError("empty file"));
+        return nullptr;
     }
-#endif
-    const OwnedData& d = std::get<0>(res);
     auto* docTree = parseBookmarks(d.AsView());
-
-    return std::make_tuple(docTree, nullptr);
+    return docTree;
 }

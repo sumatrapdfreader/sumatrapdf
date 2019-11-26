@@ -379,6 +379,11 @@ std::tuple<OwnedData, error*> ReadFile2(const char* path) {
     return std::make_tuple(OwnedData(data, size), nullptr);
 }
 
+OwnedData ReadFile(std::string_view path) {
+    return ReadFile(path.data());
+}
+
+// TODO: replace with ReadFile(std::string_view path)
 OwnedData ReadFile(const char* path) {
     size_t size;
     char* data = ReadFileWithAllocator(path, &size, nullptr);
@@ -398,6 +403,25 @@ bool WriteFile(const char* filePath, const void* data, size_t dataLen) {
     return false;
 #endif
 }
+
+
+#if OS_WIN
+bool Exists(std::string_view path) {
+    WCHAR* wpath = str::conv::Utf8ToWchar(path);
+    bool exists = Exists(wpath);
+    free(wpath);
+    return exists;
+}
+
+#else
+bool Exists(std::string_view path) {
+    UNUSED(path);
+    // TODO: NYI
+    CrashMe();
+    return false;
+}
+
+#endif
 
 #if OS_WIN
 HANDLE OpenReadOnly(const WCHAR* filePath) {

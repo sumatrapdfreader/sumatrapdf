@@ -2,3 +2,4 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 void SerializeBookmarksRec(DocTocItem* node, int level, str::Str<char>& s);
+DocTocTree* ParseBookmarksFile(std::string_view path);

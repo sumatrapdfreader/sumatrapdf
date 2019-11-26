@@ -346,8 +346,7 @@ class Str : public Vec<T> {
         Vec<T>::InsertAt(Vec<T>::len, c);
     }
 
-    // only valid for T = char
-    std::string_view AsView() const {
+    std::basic_string_view<T> AsView() const {
         return {this->Get(), this->size()};
     }
 
