@@ -266,11 +266,16 @@ static DocTocItem* parseBookmarksLine(std::string_view line, size_t* indentOut) 
     return res;
 }
 
+struct DocTocItemWithIndent {
+    DocTocItem* item = nullptr;
+    size_t indent = 0;
+
+    DocTocItemWithIndent() = default;
+    ~DocTocItemWithIndent() = default;
+};
+
 static DocTocTree* parseBookmarks(std::string_view sv) {
-    constexpr size_t MAX_INDENT = 64;
-    // parent node for a given indent level
-    DocTocItem* items[MAX_INDENT] = {};
-    int currIndent = 0; // index into items
+    Vec<DocTocItemWithIndent> items;
 
     // extract first line with title like ":foo"
     auto line = str::IterString(sv, '\n');
@@ -292,10 +297,13 @@ static DocTocTree* parseBookmarks(std::string_view sv) {
             delete tree;
             return nullptr;
         }
+        DocTocItemWithIndent iwl = {item, indent};
+        items.Append(iwl);
+    }
 
-        if (curr == nullptr) {
-            tree->root = new DocTocItem();
-        }
+    // TODO: build a tree
+    for (auto& iwl : items) {
+        delete iwl.item;
     }
 
     return tree;
