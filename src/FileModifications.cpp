@@ -113,7 +113,7 @@ Vec<PageAnnotation>* LoadFileModifications(const WCHAR* filePath) {
     return ParseFileModifications(data.data);
 }
 
-bool SaveFileModifictions(const WCHAR* filePath, Vec<PageAnnotation>* list) {
+bool SaveFileModifications(const WCHAR* filePath, Vec<PageAnnotation>* list) {
     if (!list) {
         return false;
     }

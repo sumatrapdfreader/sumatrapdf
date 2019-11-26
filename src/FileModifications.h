@@ -4,5 +4,5 @@
 struct PageAnnotation;
 
 Vec<PageAnnotation>* LoadFileModifications(const WCHAR* filePath);
-bool SaveFileModifictions(const WCHAR* filePath, Vec<PageAnnotation>* list);
+bool SaveFileModifications(const WCHAR* filePath, Vec<PageAnnotation>* list);
 bool IsModificationsFile(const WCHAR* filePath);

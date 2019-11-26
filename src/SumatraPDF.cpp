@@ -2437,7 +2437,7 @@ static void OnMenuSaveAs(WindowInfo* win) {
             ok = PdfCreator::RenderToFile(pathUtf8.Get(), engine);
 #endif
         } else if (!gGlobalPrefs->annotationDefaults.saveIntoDocument) {
-            SaveFileModifictions(realDstFileName, win->AsFixed()->userAnnots);
+            SaveFileModifications(realDstFileName, win->AsFixed()->userAnnots);
         }
     } else if (!file::Exists(srcFileName) && engine) {
         // Recreate inexistant files from memory...
@@ -2466,7 +2466,7 @@ static void OnMenuSaveAs(WindowInfo* win) {
     if (ok && win->AsFixed() && win->AsFixed()->userAnnots && win->AsFixed()->userAnnotsModified && !convertToTXT &&
         !convertToPDF) {
         if (!gGlobalPrefs->annotationDefaults.saveIntoDocument || !engine || !engine->SupportsAnnotation(true)) {
-            ok = SaveFileModifictions(realDstFileName, win->AsFixed()->userAnnots);
+            ok = SaveFileModifications(realDstFileName, win->AsFixed()->userAnnots);
         }
         if (ok && path::IsSame(srcFileName, realDstFileName))
             win->AsFixed()->userAnnotsModified = false;
