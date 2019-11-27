@@ -66,8 +66,8 @@ struct WindowBase {
     virtual bool Create();
     virtual SIZE GetIdealSize() = 0;
 
-    virtual LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
-    virtual LRESULT WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
+    virtual LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& didHandle);
+    virtual LRESULT WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& didHandle);
 
     void Subclass();
     void SubclassParent();

@@ -26,8 +26,8 @@ struct EditCtrl : public WindowBase {
     ~EditCtrl();
     bool Create() override;
     SIZE GetIdealSize() override;
-    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) override;
-    LRESULT WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) override;
+    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& didHandle) override;
+    LRESULT WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& didHandle) override;
 
     bool SetCueText(std::string_view);
 };

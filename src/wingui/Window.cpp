@@ -146,10 +146,12 @@ Kind kindWindowBase = "windowBase";
 static LRESULT CALLBACK wndProcDispatch(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass,
                                         DWORD_PTR dwRefData) {
     CrashIf(dwRefData == 0);
+    LRESULT res = 0;
+    bool didHandle = false;
     WindowBase* wb = (WindowBase*)dwRefData;
     if (uIdSubclass == wb->subclassId) {
         CrashIf(hwnd != wb->hwnd);
-        wb->WndProc(hwnd, msg, wp, lp);
+        res = wb->WndProc(hwnd, msg, wp, lp, didHandle);
     } else if (uIdSubclass == wb->subclassParentId) {
         CrashIf(hwnd != wb->parent);
         if (WM_COMMAND == msg) {
@@ -157,13 +159,15 @@ static LRESULT CALLBACK wndProcDispatch(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
             // we only want to dispatch the message to the control
             // that originated the message
             HWND hwndCtrl = (HWND)lp;
-            if (hwndCtrl != wb->hwnd) {
-                return DefSubclassProc(hwnd, msg, wp, lp);
+            if (hwndCtrl == wb->hwnd) {
+                res = wb->WndProcParent(hwnd, msg, wp, lp, didHandle);
             }
         }
-        wb->WndProcParent(hwnd, msg, wp, lp);
     } else {
         CrashMe();
+    }
+    if (didHandle) {
+        return res;
     }
     return DefSubclassProc(hwnd, msg, wp, lp);
 }
@@ -209,12 +213,22 @@ WindowBase::~WindowBase() {
     Unsubclass();
 }
 
-LRESULT WindowBase::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    return DefSubclassProc(hwnd, msg, wp, lp);
+LRESULT WindowBase::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& didHandle) {
+    UNUSED(hwnd);
+    UNUSED(msg);
+    UNUSED(wp);
+    UNUSED(lp);
+    didHandle = false;
+    return 0;
 }
 
-LRESULT WindowBase::WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    return DefSubclassProc(hwnd, msg, wp, lp);
+LRESULT WindowBase::WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& didHandle) {
+    UNUSED(hwnd);
+    UNUSED(msg);
+    UNUSED(wp);
+    UNUSED(lp);
+    didHandle = false;
+    return 0;
 }
 
 SIZE WindowBase::GetIdealSize() {

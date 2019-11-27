@@ -121,28 +121,43 @@ static void doLayut(HWND hwnd, int dx, int dy) {
     Size windowSize{dx, dy};
     Constraints constraints = Tight(windowSize);
     auto size = mainLayout->Layout(constraints);
+    dbglogf("doLayout: (%d,%d) => (%d, %d)\n", dx, dy, size.Width, size.Height);
 
     Point min{0, 0};
     Point max{size.Width, size.Height};
     Rect bounds{min, max};
     mainLayout->SetBounds(bounds);
-    dbglogf("doLayout: dx: %d, dy: %d\n", dx, dy);
 }
 
+static int prevDx = 0, prevDy = 0;
+
 static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    dbglogf("msg: 0x%x, wp: %d, lp: %d\n", msg, (int)wp, (int)lp);
+
     switch (msg) {
         case WM_CREATE:
             CreateMainLayout(hwnd);
             break;
 
         case WM_SIZE: {
-            int dx = LOWORD(lp);
-            int dy = HIWORD(lp);
+            int dx1 = LOWORD(lp);
+            int dy1 = HIWORD(lp);
+            RECT rect;
+            GetClientRect(hwnd, &rect);
+            int dx = RectDx(rect);
+            int dy = RectDy(rect);
+            if (prevDx == dx && prevDy == dy) {
+                return 0;
+            }
+            prevDx = dx;
+            prevDy = dy;
+            dbglogf("WM_SIZE: wp: %d, (%d,%d), (%d, %d)\n", (int)wp, dx1, dy1, dx, dy);
             if (dx != 0 && dy != 0) {
                 doLayut(hwnd, dx, dy);
             }
             return 0;
-        } break;
+            //return DefWindowProc(hwnd, msg, wp, lp);
+        }
         case WM_COMMAND: {
             int wmId = LOWORD(wp);
             switch (wmId) {

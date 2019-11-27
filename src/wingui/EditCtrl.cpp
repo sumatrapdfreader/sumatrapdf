@@ -32,8 +32,14 @@ ILayout* NewEditLayout(EditCtrl* e) {
 //   etc., http://www.catch22.net/tuts/insert-buttons-edit-control
 // - include value we remember in WM_NCCALCSIZE in GetIdealSize()
 
-LRESULT EditCtrl::WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+LRESULT EditCtrl::WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& didHandle) {
     EditCtrl* w = this;
+
+    HWND hwndCtrl = (HWND)lp;
+    if (hwndCtrl != w->hwnd) {
+        return 0;
+    }
+
     if (WM_CTLCOLOREDIT == msg) {
         if (w->bgBrush == nullptr) {
             return DefSubclassProc(hwnd, msg, wp, lp);
@@ -44,6 +50,7 @@ LRESULT EditCtrl::WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         if (w->textColor != ColorUnset) {
             ::SetTextColor(hdc, w->textColor);
         }
+        didHandle = true;
         return (INT_PTR)w->bgBrush;
     }
     if (WM_COMMAND == msg) {
@@ -51,24 +58,24 @@ LRESULT EditCtrl::WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             if (w->OnTextChanged) {
                 str::Str s = win::GetTextUtf8(w->hwnd);
                 w->OnTextChanged(s.AsView());
-                return 0;
             }
+            didHandle = true;
+            return 0;
         }
     }
     // TODO: handle WM_CTLCOLORSTATIC for read-only/disabled controls
-    return DefSubclassProc(hwnd, msg, wp, lp);
+    return 0;
 }
 
-LRESULT EditCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+LRESULT EditCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& didHandle) {
     EditCtrl* w = this;
     if (w->msgFilter) {
-        bool didHandle = false;
         auto res = w->msgFilter(hwnd, msg, wp, lp, didHandle);
         if (didHandle) {
             return res;
         }
     }
-    return DefSubclassProc(hwnd, msg, wp, lp);
+    return 0;
 }
 
 #if 0

@@ -44,7 +44,9 @@ SIZE ButtonCtrl::SetTextAndResize(const WCHAR* s) {
 }
 #endif
 
-LRESULT ButtonCtrl::WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+LRESULT ButtonCtrl::WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& didHandle) {
+    UNUSED(hwnd);
+    UNUSED(lp);
     if (msg == WM_COMMAND) {
         auto code = HIWORD(wp);
         if (code == BN_CLICKED) {
@@ -52,8 +54,10 @@ LRESULT ButtonCtrl::WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 OnClicked();
             }
         }
+        didHandle = true;
+        return 0;
     }
-    return DefSubclassProc(hwnd, msg, wp, lp);
+    return 0;
 }
 
 WindowBaseLayout::WindowBaseLayout(WindowBase* b, Kind k) {
