@@ -172,17 +172,17 @@ OwnedData ToMultiByte(const WCHAR* txt, UINT codePage, int cchTxtLen) {
         return {};
     }
 
-    // bufSize includes terminating 0
     int bufSize = WideCharToMultiByte(codePage, 0, txt, cchTxtLen, nullptr, 0, nullptr, nullptr);
     if (0 == bufSize) {
         return {};
     }
-    char* res = AllocArray<char>(bufSize + 1); // +1 not really necessary
+    char* res = AllocArray<char>(bufSize + 1); // +1 for terminating 0
     if (!res) {
         return {};
     }
     WideCharToMultiByte(codePage, 0, txt, cchTxtLen, res, bufSize, nullptr, nullptr);
-    return OwnedData(res, bufSize-1);
+    size_t resLen = str::Len(res);
+    return OwnedData(res, resLen);
 }
 
 OwnedData ToMultiByte(const char* src, UINT codePageSrc, UINT codePageDest) {
