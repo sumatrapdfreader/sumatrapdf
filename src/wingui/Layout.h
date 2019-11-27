@@ -1,5 +1,5 @@
-typedef int64_t i64;
-typedef int32_t i32;
+/* Copyright 2019 the SumatraPDF project authors (see AUTHORS file).
+   License: Simplified BSD (see COPYING.BSD) */
 
 typedef int32_t Length;
 

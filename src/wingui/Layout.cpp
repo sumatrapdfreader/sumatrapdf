@@ -1,11 +1,16 @@
+/* Copyright 2019 the SumatraPDF project authors (see AUTHORS file).
+   License: Simplified BSD (see COPYING.BSD) */
+
 #include "utils/BaseUtil.h"
 
+#if 0
 #include <cstdio>     // std::printf
 #include <limits>     // std::limits
 #include <cmath>      // std::is_nan
 #include <algorithm>  // std::max
 #include <cassert>    // assert
 #include <functional> // std::function
+#endif
 
 #include "Layout.h"
 

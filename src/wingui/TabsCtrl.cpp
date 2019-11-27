@@ -1,3 +1,6 @@
+/* Copyright 2019 the SumatraPDF project authors (see AUTHORS file).
+   License: Simplified BSD (see COPYING.BSD) */
+
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/Dpi.h"

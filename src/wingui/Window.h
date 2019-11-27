@@ -26,7 +26,7 @@ struct Window {
     HWND hwnd = nullptr;
 
     explicit Window(HWND parent, RECT* initialPosition);
-    ~Window();
+    virtual ~Window();
 
     bool Create(const WCHAR* title);
 };

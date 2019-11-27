@@ -432,17 +432,8 @@ function utils_files()
   })
 
   files_in_dir("src/wingui", {
-    "ButtonCtrl.*",
-    "DialogSizer.*",
-    "EditCtrl.*",
-    "FrameRateWnd.*",
-    "LabelWithCloseWnd.*",
-    "Layout.*",
-    "SplitterWnd.*",
-    --"TabsCtrl.*",
-    "TreeCtrl.*",
-    "TreeModel.*",
-    "Window.*",
+    "*.h",
+    "*.cpp",
   })
 end
 

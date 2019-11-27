@@ -1,3 +1,6 @@
+/* Copyright 2019 the SumatraPDF project authors (see AUTHORS file).
+   License: Simplified BSD (see COPYING.BSD) */
+
 class ButtonCtrl : public ILayout {
   public:
     // creation parameters. must be set before Create() call
