@@ -120,8 +120,9 @@ bool CheckboxCtrl::IsChecked() const {
     return !!isChecked;
 }
 
-WindowBaseLayout::WindowBaseLayout(WindowBase* b) {
+WindowBaseLayout::WindowBaseLayout(WindowBase* b, Kind k) {
     wb = b;
+    kind = k;
 }
 
 WindowBaseLayout::~WindowBaseLayout() {
@@ -158,13 +159,9 @@ bool IsCheckbox(ILayout* l) {
 }
 
 ILayout* NewButtonLayout(ButtonCtrl* b) {
-    auto* res = new WindowBaseLayout(b);
-    res->kind = kindButton;
-    return res;
+    return new WindowBaseLayout(b, kindButton);
 }
 
 ILayout* NewCheckboxLayout(CheckboxCtrl* b) {
-    auto* res = new WindowBaseLayout(b);
-    res->kind = kindCheckbox;
-    return res;
+    return new WindowBaseLayout(b, kindCheckbox);
 }

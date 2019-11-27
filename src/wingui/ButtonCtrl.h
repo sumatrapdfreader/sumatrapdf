@@ -32,18 +32,6 @@ struct CheckboxCtrl : public WindowBase {
     bool IsChecked() const;
 };
 
-struct WindowBaseLayout : public ILayout {
-    WindowBase* wb = nullptr;
-
-    WindowBaseLayout(WindowBase*);
-    virtual ~WindowBaseLayout();
-
-    Size Layout(const Constraints bc) override;
-    Length MinIntrinsicHeight(Length) override;
-    Length MinIntrinsicWidth(Length) override;
-    void SetBounds(const Rect bounds) override;
-};
-
 ILayout* NewButtonLayout(ButtonCtrl* b);
 ILayout* NewCheckboxLayout(CheckboxCtrl* b);
 

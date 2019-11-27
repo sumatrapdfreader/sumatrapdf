@@ -657,13 +657,3 @@ bool RemoveAll(const WCHAR* dir) {
 #endif // OS_WIN
 
 } // namespace dir
-
-#if OS_WIN
-// cf. http://blogs.msdn.com/b/oldnewthing/archive/2004/10/25/247180.aspx
-EXTERN_C IMAGE_DOS_HEADER __ImageBase;
-
-// A convenient way to grab the same value as HINSTANCE passed to WinMain
-HINSTANCE GetInstance() {
-    return (HINSTANCE)&__ImageBase;
-}
-#endif

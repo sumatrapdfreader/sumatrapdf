@@ -5,12 +5,17 @@
 #include "utils/WinUtil.h"
 
 #include "wingui/WinGui.h"
-#include "wingui/TreeModel.h"
-#include "wingui/TreeCtrl.h"
+#include "wingui/Layout.h"
 #include "wingui/Window.h"
-#include "utils/FileUtil.h"
 
 #define WIN_CLASS L"WC_WIN32_WINDOW"
+
+UINT_PTR g_subclassId = 0;
+
+UINT_PTR NextSubclassId() {
+    g_subclassId++;
+    return g_subclassId;
+}
 
 void HwndSetText(HWND hwnd, std::string_view s) {
     // can be called before a window is created
@@ -138,16 +143,15 @@ Window::~Window() {
 
 Kind kindWindowBase = "windowBase";
 
-const UINT_PTR idWndProc = 1;
-const UINT_PTR idParentWndProc = 2;
-
 static LRESULT CALLBACK wndProcDispatch(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass,
                                         DWORD_PTR dwRefData) {
     CrashIf(dwRefData == 0);
     WindowBase* wb = (WindowBase*)dwRefData;
-    if (uIdSubclass == idWndProc) {
+    if (uIdSubclass == wb->subclassId) {
+        CrashIf(hwnd != wb->hwnd);
         wb->WndProc(hwnd, msg, wp, lp);
-    } else if (uIdSubclass == idParentWndProc) {
+    } else if (uIdSubclass == wb->subclassParentId) {
+        CrashIf(hwnd != wb->parent);
         wb->WndProcParent(hwnd, msg, wp, lp);
     } else {
         CrashMe();
@@ -158,19 +162,34 @@ static LRESULT CALLBACK wndProcDispatch(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
 void WindowBase::Subclass() {
     CrashIf(!hwnd);
     WindowBase* wb = this;
-    BOOL ok = SetWindowSubclass(hwnd, wndProcDispatch, idWndProc, (DWORD_PTR)wb);
+    UINT_PTR id = NextSubclassId();
+    BOOL ok = SetWindowSubclass(hwnd, wndProcDispatch, id, (DWORD_PTR)wb);
     CrashIf(!ok);
+    if (ok) {
+        subclassId = id;
+    }
 }
 
 void WindowBase::SubclassParent() {
     CrashIf(!parent);
     WindowBase* wb = this;
-    BOOL ok = SetWindowSubclass(parent, wndProcDispatch, idParentWndProc, (DWORD_PTR)wb);
+    UINT_PTR id = NextSubclassId();
+    BOOL ok = SetWindowSubclass(parent, wndProcDispatch, id, (DWORD_PTR)wb);
     CrashIf(!ok);
+    if (ok) {
+        subclassParentId = id;
+    }
 }
 
-static void Unsubclass(WindowBase*) {
-    // TODO: implement me
+void WindowBase::Unsubclass() {
+    if (subclassId) {
+        RemoveWindowSubclass(hwnd, wndProcDispatch, subclassId);
+        subclassId = 0;
+    }
+    if (subclassParentId) {
+        RemoveWindowSubclass(parent, wndProcDispatch, subclassParentId);
+        subclassParentId = 0;
+    }
 }
 
 WindowBase::WindowBase(HWND p) {
@@ -178,7 +197,7 @@ WindowBase::WindowBase(HWND p) {
 }
 
 WindowBase::~WindowBase() {
-    Unsubclass(this);
+    Unsubclass();
 }
 
 LRESULT WindowBase::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
@@ -230,14 +249,23 @@ void WindowBase::SetFont(HFONT f) {
 }
 
 void WindowBase::SetText(std::string_view sv) {
-    text.Set(sv.data());
+    text.Set(sv);
+    text.Set(sv);
     HwndSetText(hwnd, text.AsView());
+    InvalidateRect(hwnd, nullptr, FALSE);
 }
 
 void WindowBase::SetTextColor(COLORREF col) {
     textColor = col;
+    InvalidateRect(hwnd, nullptr, FALSE);
 }
 
 void WindowBase::SetBackgroundColor(COLORREF col) {
     backgroundColor = col;
+    InvalidateRect(hwnd, nullptr, FALSE);
+}
+
+void WindowBase::SetColors(COLORREF bg, COLORREF txt) {
+    SetBackgroundColor(bg);
+    SetTextColor(txt);
 }

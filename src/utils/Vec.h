@@ -415,6 +415,10 @@ class Str : public Vec<char> {
         this->allocator = allocator;
     }
 
+    explicit Str(std::string_view s) {
+        Set(s);
+    }
+
     std::string_view AsView() const {
         return {this->Get(), this->size()};
     }
@@ -424,13 +428,15 @@ class Str : public Vec<char> {
     }
 
     void Append(const char* src, size_t size = -1) {
+        if (!src) {
+            return;
+        }
         if ((size_t)-1 == size) {
             size = Len(src);
         }
         Vec<char>::Append(src, size);
     }
 
-    // only valid for T = char
     void AppendView(const std::string_view sv) {
         this->Append(sv.data(), sv.size());
     }
@@ -463,9 +469,9 @@ class Str : public Vec<char> {
         return true;
     }
 
-    void Set(const char* s) {
+    void Set(std::string_view s) {
         Reset();
-        Append(s);
+        AppendView(s);
     }
 
     char* Get() const {

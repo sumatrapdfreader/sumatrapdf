@@ -49,12 +49,17 @@ struct WindowBase {
     HFONT hfont = nullptr; // TODO: this should be abstract Font description
     int menuId = 0;
 
+    // called at start of windows proc to allow intercepting messages
+    MsgFilter msgFilter;
+
     COLORREF textColor = ColorUnset;
     COLORREF backgroundColor = ColorUnset;
 
     str::Str text;
 
     HWND hwnd = nullptr;
+    UINT_PTR subclassId = 0;
+    UINT_PTR subclassParentId = 0;
 
     WindowBase(HWND p);
     virtual ~WindowBase();
@@ -66,6 +71,7 @@ struct WindowBase {
 
     void Subclass();
     void SubclassParent();
+    void Unsubclass();
 
     void SetFont(HFONT f);
     void SetText(std::string_view);
@@ -73,6 +79,20 @@ struct WindowBase {
     void SetBounds(const RECT& r);
     void SetTextColor(COLORREF);
     void SetBackgroundColor(COLORREF);
+    void SetColors(COLORREF bg, COLORREF txt);
+};
+
+struct WindowBaseLayout : public ILayout {
+    WindowBase* wb = nullptr;
+
+    WindowBaseLayout(WindowBase*, Kind);
+    virtual ~WindowBaseLayout();
+
+    Size Layout(const Constraints bc) override;
+    Length MinIntrinsicHeight(Length) override;
+    Length MinIntrinsicWidth(Length) override;
+    void SetBounds(const Rect bounds) override;
 };
 
 void HwndSetText(HWND hwnd, std::string_view s);
+UINT_PTR NextSubclassId();

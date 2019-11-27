@@ -661,7 +661,7 @@ void DrawCenteredText(HDC hdc, const RECT& r, const WCHAR* txt, bool isRTL) {
 
 /* Return size of a text <txt> in a given <hwnd>, taking into account its font */
 SizeI TextSizeInHwnd(HWND hwnd, const WCHAR* txt, HFONT font) {
-    SIZE sz;
+    SIZE sz{};
     size_t txtLen = str::Len(txt);
     HDC dc = GetWindowDC(hwnd);
     /* GetWindowDC() returns dc with default state, so we have to first set
@@ -670,7 +670,7 @@ SizeI TextSizeInHwnd(HWND hwnd, const WCHAR* txt, HFONT font) {
         font = (HFONT)SendMessage(hwnd, WM_GETFONT, 0, 0);
     }
     HGDIOBJ prev = SelectObject(dc, font);
-    GetTextExtentPoint32(dc, txt, (int)txtLen, &sz);
+    GetTextExtentPoint32W(dc, txt, (int)txtLen, &sz);
     SelectObject(dc, prev);
     ReleaseDC(hwnd, dc);
     return SizeI(sz.cx, sz.cy);
@@ -679,7 +679,7 @@ SizeI TextSizeInHwnd(HWND hwnd, const WCHAR* txt, HFONT font) {
 // TODO: unify with TextSizeInHwnd
 /* Return size of a text <txt> in a given <hwnd>, taking into account its font */
 SIZE TextSizeInHwnd2(HWND hwnd, const WCHAR* txt, HFONT font) {
-    SIZE sz;
+    SIZE sz{};
     size_t txtLen = str::Len(txt);
     HDC dc = GetWindowDC(hwnd);
     /* GetWindowDC() returns dc with default state, so we have to first set
@@ -688,7 +688,7 @@ SIZE TextSizeInHwnd2(HWND hwnd, const WCHAR* txt, HFONT font) {
         font = (HFONT)SendMessage(hwnd, WM_GETFONT, 0, 0);
     }
     HGDIOBJ prev = SelectObject(dc, font);
-    GetTextExtentPoint32(dc, txt, (int)txtLen, &sz);
+    GetTextExtentPoint32W(dc, txt, (int)txtLen, &sz);
     SelectObject(dc, prev);
     ReleaseDC(hwnd, dc);
     return sz;
@@ -1201,6 +1201,19 @@ WCHAR* GetText(HWND hwnd) {
     SendMessage(hwnd, WM_GETTEXT, cchTxtLen + 1, (LPARAM)txt);
     txt[cchTxtLen] = 0;
     return txt;
+}
+
+str::Str GetTextUtf8(HWND hwnd) {
+    size_t cchTxtLen = GetTextLen(hwnd);
+    WCHAR* txt = AllocArray<WCHAR>(cchTxtLen + 1);
+    if (nullptr == txt) {
+        return str::Str();
+    }
+    SendMessage(hwnd, WM_GETTEXT, cchTxtLen + 1, (LPARAM)txt);
+    txt[cchTxtLen] = 0;
+    auto od = str::conv::ToUtf8(txt, cchTxtLen);
+    str::Str res(od.AsView());
+    return res;
 }
 
 size_t GetTextLen(HWND hwnd) {
@@ -1759,4 +1772,12 @@ POINT GetCursorPosInHwnd(HWND hwnd) {
         ScreenToClient(hwnd, &pt);
     }
     return pt;
+}
+
+// cf. http://blogs.msdn.com/b/oldnewthing/archive/2004/10/25/247180.aspx
+EXTERN_C IMAGE_DOS_HEADER __ImageBase;
+
+// A convenient way to grab the same value as HINSTANCE passed to WinMain
+HINSTANCE GetInstance() {
+    return (HINSTANCE)&__ImageBase;
 }

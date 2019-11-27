@@ -7,6 +7,7 @@
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
 #include "wingui/ButtonCtrl.h"
+#include "wingui/EditCtrl.h"
 
 #include "test-app.h"
 
@@ -30,7 +31,7 @@ static void onClicked() {
     dbglogf("btn clicked\n");
 }
 
-static ILayout* CreateButtonLayout(HWND parent, const char* s) {
+static ILayout* CreateButtonLayout(HWND parent, std::string_view s) {
     auto b = new ButtonCtrl(parent);
     b->OnClicked = onClicked;
     b->SetText(s);
@@ -38,11 +39,24 @@ static ILayout* CreateButtonLayout(HWND parent, const char* s) {
     return NewButtonLayout(b);
 }
 
-static ILayout* CreateCheckboxLayout(HWND parent, const char* s) {
+static ILayout* CreateCheckboxLayout(HWND parent, std::string_view s) {
     auto b = new CheckboxCtrl(parent);
     b->SetText(s);
     b->Create();
     return NewCheckboxLayout(b);
+}
+
+static void onTextChanged(std::string_view s) {
+    dbglogf("text changed: '%s'\n", s.data());
+}
+
+static ILayout* CreateEditLayout(HWND parent, std::string_view s) {
+    auto e = new EditCtrl(parent);
+    e->SetText(s);
+    e->SetCueText("a cue text");
+    e->OnTextChanged = onTextChanged;
+    e->Create();
+    return NewEditLayout(e);
 }
 
 static void CreateMainLayout(HWND hwnd) {
@@ -53,7 +67,9 @@ static void CreateMainLayout(HWND hwnd) {
         auto b = CreateButtonLayout(hwnd, "button one");
         vbox->addChild(b);
     }
-    {
+    { auto e = CreateEditLayout(hwnd, "initial text");
+        vbox->addChild(e);
+    } {
         auto b = CreateButtonLayout(hwnd, "button two");
         vbox->addChild(b);
     }
@@ -69,6 +85,7 @@ static void CreateMainLayout(HWND hwnd) {
         auto b = CreateCheckboxLayout(hwnd, "checkbox two");
         vbox->addChild(b);
     }
+
     auto* padding = new Padding();
     padding->child = vbox;
     padding->insets = DefaultInsets();

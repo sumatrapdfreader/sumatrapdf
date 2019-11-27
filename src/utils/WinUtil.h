@@ -139,6 +139,7 @@ void ToForeground(HWND hwnd);
 
 size_t GetTextLen(HWND hwnd);
 WCHAR* GetText(HWND hwnd);
+str::Str GetTextUtf8(HWND hwnd);
 
 void SetText(HWND hwnd, const WCHAR* txt);
 void SetVisibility(HWND hwnd, bool visible);
@@ -225,3 +226,4 @@ bool TrackMouseLeave(HWND);
 
 void TriggerRepaint(HWND);
 POINT GetCursorPosInHwnd(HWND);
+HINSTANCE GetInstance();
