@@ -154,7 +154,7 @@ EditCtrl::EditCtrl(HWND parent, RECT* initialPosition) {
 bool EditCtrl::Create() {
     // Note: has to remember this here because when I GetWindowStyle() later on,
     // WS_BORDER is not set, which is a mystery, because it is being drawn.
-    // also, WS_BORDER seems to be painted in client areay
+    // also, WS_BORDER seems to be painted in client area
     this->hasBorder = bit::IsMaskSet<DWORD>(this->dwStyle, WS_BORDER);
 
     RECT rc = this->initialPos;

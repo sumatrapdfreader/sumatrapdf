@@ -25,7 +25,7 @@ void HwndSetText(HWND hwnd, std::string_view s) {
     free(ws);
 }
 
-Kind windowKind = "window";
+Kind kindWindow = "window";
 
 static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     if (WM_CREATE == msg) {
@@ -138,7 +138,59 @@ Window::~Window() {
 
 Kind kindWindowBase = "windowBase";
 
+const UINT_PTR idWndProc = 1;
+const UINT_PTR idParentWndProc = 2;
+
+static LRESULT CALLBACK wndProcDispatch(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass,
+                                        DWORD_PTR dwRefData) {
+    CrashIf(dwRefData == 0);
+    WindowBase* wb = (WindowBase*)dwRefData;
+    if (uIdSubclass == idWndProc) {
+        wb->WndProc(hwnd, msg, wp, lp);
+    } else if (uIdSubclass == idParentWndProc) {
+        wb->WndProcParent(hwnd, msg, wp, lp);
+    } else {
+        CrashMe();
+    }
+    return DefSubclassProc(hwnd, msg, wp, lp);
+}
+
+void WindowBase::Subclass() {
+    CrashIf(!hwnd);
+    WindowBase* wb = this;
+    BOOL ok = SetWindowSubclass(hwnd, wndProcDispatch, idWndProc, (DWORD_PTR)wb);
+    CrashIf(!ok);
+}
+
+void WindowBase::SubclassParent() {
+    CrashIf(!parent);
+    WindowBase* wb = this;
+    BOOL ok = SetWindowSubclass(parent, wndProcDispatch, idParentWndProc, (DWORD_PTR)wb);
+    CrashIf(!ok);
+}
+
+static void Unsubclass(WindowBase*) {
+    // TODO: implement me
+}
+
+WindowBase::WindowBase(HWND p) {
+    parent = p;
+}
+
 WindowBase::~WindowBase() {
+    Unsubclass(this);
+}
+
+LRESULT WindowBase::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    return DefSubclassProc(hwnd, msg, wp, lp);
+}
+
+LRESULT WindowBase::WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    return DefSubclassProc(hwnd, msg, wp, lp);
+}
+
+SIZE WindowBase::GetIdealSize() {
+    return {};
 }
 
 bool WindowBase::Create() {
@@ -154,11 +206,13 @@ bool WindowBase::Create() {
     if (hwnd == nullptr) {
         return false;
     }
+
     if (hfont == nullptr) {
         hfont = GetDefaultGuiFont();
     }
     SetFont(hfont);
     HwndSetText(hwnd, text.AsView());
+    // SubclassParent();
     return true;
 }
 

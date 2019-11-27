@@ -1,22 +1,23 @@
 /* Copyright 2019 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+typedef std::function<void()> OnClicked;
 typedef std::function<void(bool)> CheckboxChangeCb;
 
 struct ButtonCtrl : public WindowBase {
     // creation parameters. must be set before Create() call
 
+    OnClicked OnClicked = nullptr;
+
     ButtonCtrl(HWND parent);
     ~ButtonCtrl() override;
-
     bool Create() override;
+    LRESULT WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) override;
 
-    SIZE SetTextAndResize(const WCHAR*);
-    SIZE GetIdealSize();
-    void SetPos(RECT*);
+    SIZE GetIdealSize() override;
 };
 
-struct CheckboxCtrl : public ButtonCtrl {
+struct CheckboxCtrl : public WindowBase {
     // called when it's checked / unchecked
     // TODO: implement me
 
@@ -25,15 +26,17 @@ struct CheckboxCtrl : public ButtonCtrl {
     CheckboxCtrl(HWND parent);
     ~CheckboxCtrl();
 
+    SIZE GetIdealSize() override;
+
     void SetIsChecked(bool isChecked);
     bool IsChecked() const;
 };
 
-struct ButtonLayout : public ILayout {
-    ButtonCtrl* button = nullptr;
+struct WindowBaseLayout : public ILayout {
+    WindowBase* wb = nullptr;
 
-    ButtonLayout(ButtonCtrl*);
-    virtual ~ButtonLayout();
+    WindowBaseLayout(WindowBase*);
+    virtual ~WindowBaseLayout();
 
     Size Layout(const Constraints bc) override;
     Length MinIntrinsicHeight(Length) override;
@@ -41,12 +44,11 @@ struct ButtonLayout : public ILayout {
     void SetBounds(const Rect bounds) override;
 };
 
+ILayout* NewButtonLayout(ButtonCtrl* b);
+ILayout* NewCheckboxLayout(CheckboxCtrl* b);
+
 bool IsButton(Kind);
 bool IsButton(ILayout*);
 
 bool IsCheckbox(Kind);
 bool IsCheckbox(ILayout*);
-
-struct CheckboxLayout : public ButtonLayout {
-  explicit CheckboxLayout(ButtonCtrl*);
-};

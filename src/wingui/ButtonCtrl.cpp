@@ -27,21 +27,33 @@ static void hwndDpiAdjust(HWND hwnd, float* x, float* y) {
     }
 }
 
-Kind buttonKind = "button";
+static SIZE ButtonGetIdealSize(HWND hwnd) {
+    // adjust to real size and position to the right
+    SIZE s{};
+    Button_GetIdealSize(hwnd, &s);
+    // add padding
+    float xPadding = 8 * 2;
+    float yPadding = 2 * 2;
+    hwndDpiAdjust(hwnd, &xPadding, &yPadding);
+    s.cx += (int)xPadding;
+    s.cy += (int)yPadding;
+    return s;
+}
+
+Kind kindButton = "button";
 
 bool IsButton(Kind kind) {
-    return kind == buttonKind;
+    return kind == kindButton;
 }
 
 bool IsButton(ILayout* l) {
-    return IsLayoutOfKind(l, buttonKind);
+    return IsLayoutOfKind(l, kindButton);
 }
 
-ButtonCtrl::ButtonCtrl(HWND p) {
+ButtonCtrl::ButtonCtrl(HWND p) : WindowBase(p) {
     dwStyle = WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_DEFPUSHBUTTON;
     winClass = WC_BUTTON;
-    kind = buttonKind;
-    parent = p;
+    kind = kindButton;
 }
 
 bool ButtonCtrl::Create() {
@@ -49,7 +61,8 @@ bool ButtonCtrl::Create() {
     if (!ok) {
         return false;
     }
-    // this->SetTextAndResize(s);
+
+    SubclassParent();
     return true;
 }
 
@@ -58,18 +71,10 @@ ButtonCtrl::~ButtonCtrl() {
 
 // TODO: cache
 SIZE ButtonCtrl::GetIdealSize() {
-    // adjust to real size and position to the right
-    SIZE s{};
-    Button_GetIdealSize(this->hwnd, &s);
-    // add padding
-    float xPadding = 8 * 2;
-    float yPadding = 2 * 2;
-    hwndDpiAdjust(this->hwnd, &xPadding, &yPadding);
-    s.cx += (int)xPadding;
-    s.cy += (int)yPadding;
-    return s;
+    return ButtonGetIdealSize(hwnd);
 }
 
+#if 0
 SIZE ButtonCtrl::SetTextAndResize(const WCHAR* s) {
     win::SetText(this->hwnd, s);
     SIZE size = this->GetIdealSize();
@@ -77,12 +82,33 @@ SIZE ButtonCtrl::SetTextAndResize(const WCHAR* s) {
     SetWindowPos(this->hwnd, nullptr, 0, 0, size.cx, size.cy, flags);
     return size;
 }
+#endif
 
-CheckboxCtrl::CheckboxCtrl(HWND parent) : ButtonCtrl(parent) {
+LRESULT ButtonCtrl::WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    if (msg == WM_COMMAND) {
+        auto code = HIWORD(wp);
+        if (code == BN_CLICKED) {
+            if (this->OnClicked) {
+                this->OnClicked();
+            }
+        }
+    }
+    return DefSubclassProc(hwnd, msg, wp, lp);
+}
+
+Kind kindCheckbox = "checkbox";
+
+CheckboxCtrl::CheckboxCtrl(HWND parent) : WindowBase(parent) {
     dwStyle = WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX;
+    winClass = WC_BUTTON;
+    kind = kindCheckbox;
 }
 
 CheckboxCtrl::~CheckboxCtrl() {
+}
+
+SIZE CheckboxCtrl::GetIdealSize() {
+    return ButtonGetIdealSize(hwnd);
 }
 
 void CheckboxCtrl::SetIsChecked(bool isChecked) {
@@ -94,47 +120,51 @@ bool CheckboxCtrl::IsChecked() const {
     return !!isChecked;
 }
 
-
-ButtonLayout::ButtonLayout(ButtonCtrl* b) {
-    kind = buttonKind;
-    button = b;
+WindowBaseLayout::WindowBaseLayout(WindowBase* b) {
+    wb = b;
 }
 
-ButtonLayout::~ButtonLayout() {
-    delete button;
+WindowBaseLayout::~WindowBaseLayout() {
+    delete wb;
 }
 
-Size ButtonLayout::Layout(const Constraints bc) {
-    i32 width = this->MinIntrinsicWidth(0);
-    i32 height = this->MinIntrinsicHeight(0);
+Size WindowBaseLayout::Layout(const Constraints bc) {
+    i32 width = MinIntrinsicWidth(0);
+    i32 height = MinIntrinsicHeight(0);
     return bc.Constrain(Size{width, height});
 }
 
-i32 ButtonLayout::MinIntrinsicHeight(i32) {
-    SIZE s = button->GetIdealSize();
+i32 WindowBaseLayout::MinIntrinsicHeight(i32) {
+    SIZE s = wb->GetIdealSize();
     return (i32)s.cy;
 }
 
-i32 ButtonLayout::MinIntrinsicWidth(i32) {
-    SIZE s = button->GetIdealSize();
+i32 WindowBaseLayout::MinIntrinsicWidth(i32) {
+    SIZE s = wb->GetIdealSize();
     return (i32)s.cx;
 }
 
-void ButtonLayout::SetBounds(const Rect bounds) {
+void WindowBaseLayout::SetBounds(const Rect bounds) {
     auto r = RectToRECT(bounds);
-    ::MoveWindow(button->hwnd, &r);
+    ::MoveWindow(wb->hwnd, &r);
 }
 
-Kind checkboxKind = "checkbox";
-
 bool IsCheckbox(Kind kind) {
-    return kind == checkboxKind;
+    return kind == kindCheckbox;
 }
 
 bool IsCheckbox(ILayout* l) {
-    return IsLayoutOfKind(l, checkboxKind);
+    return IsLayoutOfKind(l, kindCheckbox);
 }
 
-CheckboxLayout::CheckboxLayout(ButtonCtrl* b) : ButtonLayout(b) {
-    kind = checkboxKind;
+ILayout* NewButtonLayout(ButtonCtrl* b) {
+    auto* res = new WindowBaseLayout(b);
+    res->kind = kindButton;
+    return res;
+}
+
+ILayout* NewCheckboxLayout(CheckboxCtrl* b) {
+    auto* res = new WindowBaseLayout(b);
+    res->kind = kindCheckbox;
+    return res;
 }

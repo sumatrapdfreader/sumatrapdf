@@ -1,7 +1,7 @@
 /* Copyright 2019 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-extern Kind windowKind;
+extern Kind kindWindow;
 
 struct Window {
     Kind kind;
@@ -56,9 +56,16 @@ struct WindowBase {
 
     HWND hwnd = nullptr;
 
-    WindowBase() = default;
+    WindowBase(HWND p);
     virtual ~WindowBase();
     virtual bool Create();
+    virtual SIZE GetIdealSize() = 0;
+
+    virtual LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
+    virtual LRESULT WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
+
+    void Subclass();
+    void SubclassParent();
 
     void SetFont(HFONT f);
     void SetText(std::string_view);
