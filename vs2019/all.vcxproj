@@ -230,6 +230,7 @@
       <SubSystem>Console</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <GenerateMapFile>true</GenerateMapFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug x32_xp|Win32'">
@@ -252,6 +253,7 @@
       <SubSystem>Console</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <GenerateMapFile>true</GenerateMapFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -273,6 +275,7 @@
       <SubSystem>Console</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <GenerateMapFile>true</GenerateMapFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -298,6 +301,7 @@
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <GenerateMapFile>true</GenerateMapFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release x32_xp|Win32'">
@@ -324,6 +328,7 @@
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <GenerateMapFile>true</GenerateMapFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -349,6 +354,7 @@
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <GenerateMapFile>true</GenerateMapFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|Win32'">
@@ -375,6 +381,7 @@
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <GenerateMapFile>true</GenerateMapFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast x32_xp|Win32'">
@@ -401,6 +408,7 @@
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <GenerateMapFile>true</GenerateMapFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|x64'">
@@ -427,6 +435,7 @@
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <GenerateMapFile>true</GenerateMapFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

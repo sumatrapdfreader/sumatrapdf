@@ -5,8 +5,6 @@ typedef std::function<void()> OnClicked;
 typedef std::function<void(bool)> CheckboxChangeCb;
 
 struct ButtonCtrl : public WindowBase {
-    // creation parameters. must be set before Create() call
-
     OnClicked OnClicked = nullptr;
 
     ButtonCtrl(HWND parent);

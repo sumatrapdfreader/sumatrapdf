@@ -238,6 +238,7 @@
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <AdditionalDependencies>comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\dbg32\PdfPreview.lib</ImportLibrary>
+      <GenerateMapFile>true</GenerateMapFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug x32_xp|Win32'">
@@ -268,6 +269,7 @@
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <AdditionalDependencies>comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\dbg32_xp\PdfPreview.lib</ImportLibrary>
+      <GenerateMapFile>true</GenerateMapFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -297,6 +299,7 @@
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <AdditionalDependencies>comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\dbg64\PdfPreview.lib</ImportLibrary>
+      <GenerateMapFile>true</GenerateMapFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -330,6 +333,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\rel32\PdfPreview.lib</ImportLibrary>
+      <GenerateMapFile>true</GenerateMapFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release x32_xp|Win32'">
@@ -364,6 +368,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\rel32_xp\PdfPreview.lib</ImportLibrary>
+      <GenerateMapFile>true</GenerateMapFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -397,6 +402,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\rel64\PdfPreview.lib</ImportLibrary>
+      <GenerateMapFile>true</GenerateMapFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|Win32'">
@@ -431,6 +437,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\rel32_prefast\PdfPreview.lib</ImportLibrary>
+      <GenerateMapFile>true</GenerateMapFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast x32_xp|Win32'">
@@ -465,6 +472,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\rel32_prefast_xp\PdfPreview.lib</ImportLibrary>
+      <GenerateMapFile>true</GenerateMapFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|x64'">
@@ -499,6 +507,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>comctl32.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ImportLibrary>..\out\rel64_prefast\PdfPreview.lib</ImportLibrary>
+      <GenerateMapFile>true</GenerateMapFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

@@ -247,6 +247,7 @@
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <AdditionalDependencies>comctl32.lib;delayimp.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
+      <GenerateMapFile>true</GenerateMapFile>
       <AdditionalOptions>/DELAYLOAD:gdiplus.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PreBuildEvent>
@@ -281,6 +282,7 @@
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <AdditionalDependencies>comctl32.lib;delayimp.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
+      <GenerateMapFile>true</GenerateMapFile>
       <AdditionalOptions>/DELAYLOAD:gdiplus.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PreBuildEvent>
@@ -314,6 +316,7 @@
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <AdditionalDependencies>comctl32.lib;delayimp.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
+      <GenerateMapFile>true</GenerateMapFile>
       <AdditionalOptions>/DELAYLOAD:gdiplus.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PreBuildEvent>
@@ -351,6 +354,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>comctl32.lib;delayimp.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
+      <GenerateMapFile>true</GenerateMapFile>
       <AdditionalOptions>/DELAYLOAD:gdiplus.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PreBuildEvent>
@@ -389,6 +393,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>comctl32.lib;delayimp.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
+      <GenerateMapFile>true</GenerateMapFile>
       <AdditionalOptions>/DELAYLOAD:gdiplus.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PreBuildEvent>
@@ -426,6 +431,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>comctl32.lib;delayimp.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
+      <GenerateMapFile>true</GenerateMapFile>
       <AdditionalOptions>/DELAYLOAD:gdiplus.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PreBuildEvent>
@@ -464,6 +470,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>comctl32.lib;delayimp.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
+      <GenerateMapFile>true</GenerateMapFile>
       <AdditionalOptions>/DELAYLOAD:gdiplus.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PreBuildEvent>
@@ -502,6 +509,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>comctl32.lib;delayimp.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
+      <GenerateMapFile>true</GenerateMapFile>
       <AdditionalOptions>/DELAYLOAD:gdiplus.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PreBuildEvent>
@@ -540,6 +548,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>comctl32.lib;delayimp.lib;gdiplus.lib;shlwapi.lib;version.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
+      <GenerateMapFile>true</GenerateMapFile>
       <AdditionalOptions>/DELAYLOAD:gdiplus.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PreBuildEvent>

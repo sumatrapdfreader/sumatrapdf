@@ -118,6 +118,7 @@ workspace "SumatraPDF"
   -- https://github.com/premake/premake-core/wiki/flags
   flags {
     "MultiProcessorCompile",
+    "Maps",
     -- "Unicode", TODO: breaks libdjuv?
   }
 
