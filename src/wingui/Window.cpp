@@ -31,7 +31,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     }
 
     if (WM_NCDESTROY == msg) {
-        free(w);
+        delete w;
         return DefWindowProc(hwnd, msg, wp, lp);
     }
     if (!w) {
@@ -122,3 +122,27 @@ Window::~Window() {
     // we free w in WM_DESTROY
     DestroyWindow(this->hwnd);
 }
+
+
+Kind kindWindowBase = "windowBase";
+
+WindowBase::~WindowBase() {
+}
+
+bool WindowBase::Create() {
+    RECT rc = initialPos;
+    auto h = GetModuleHandle(nullptr);
+    int x = rc.left;
+    int y = rc.top;
+    int dx = RectDx(rc);
+    int dy = RectDy(rc);
+    HMENU idMenu = (HMENU)(UINT_PTR)menuId;
+    hwnd =
+        CreateWindowExW(dwExStyle, winClass, L"", dwStyle, x, y, dx, dy, parent, idMenu, h, nullptr);
+
+    if (hwnd == nullptr) {
+        return false;
+    }
+    return true;
+}
+

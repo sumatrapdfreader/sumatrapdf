@@ -5,7 +5,9 @@
 #include "utils/WinUtil.h"
 #include "utils/Dpi.h"
 
+#include "wingui/WinGui.h"
 #include "wingui/Layout.h"
+#include "wingui/Window.h"
 #include "wingui/ButtonCtrl.h"
 
 // TODO: move to utilities or move to indow, cache DPI info
@@ -36,7 +38,11 @@ bool IsButton(ILayout* l) {
 }
 
 ButtonCtrl::ButtonCtrl(HWND parent, int menuId, RECT* initialPosition) {
-    this->kind = buttonKind;
+    dwStyle = WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_DEFPUSHBUTTON;
+    dwExStyle = 0;
+
+    winClass = WC_BUTTON;
+    kind = buttonKind;
     this->parent = parent;
     this->menuId = menuId;
     if (initialPosition) {
@@ -47,17 +53,8 @@ ButtonCtrl::ButtonCtrl(HWND parent, int menuId, RECT* initialPosition) {
 }
 
 bool ButtonCtrl::Create(const WCHAR* s) {
-    RECT rc = this->initialPos;
-    auto h = GetModuleHandle(nullptr);
-    int x = rc.left;
-    int y = rc.top;
-    int dx = RectDx(rc);
-    int dy = RectDy(rc);
-    HMENU idMenu = (HMENU)(UINT_PTR)this->menuId;
-    this->hwnd =
-        CreateWindowExW(this->dwExStyle, WC_BUTTON, L"", this->dwStyle, x, y, dx, dy, this->parent, idMenu, h, nullptr);
-
-    if (!this->hwnd) {
+    bool ok = WindowBase::Create();
+    if (!ok) {
         return false;
     }
     this->SetFont(GetDefaultGuiFont());

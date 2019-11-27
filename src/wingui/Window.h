@@ -4,7 +4,7 @@
 extern Kind windowKind;
 
 struct Window {
-    Kind* kind;
+    Kind kind;
 
     // creation parameters. must be set before Create() call
     HWND parent = nullptr;
@@ -29,4 +29,32 @@ struct Window {
     virtual ~Window();
 
     bool Create(const WCHAR* title);
+};
+
+extern Kind kindWindowBase;
+
+struct WindowBase {
+    //Kind kind;
+
+    // data that can be set before calling Create()
+
+    // either a custom class that we registered or
+    // a win32 control class. Assumed static so not freed
+    const WCHAR* winClass = nullptr;
+
+    HWND parent = nullptr;
+    RECT initialPos = {};
+    DWORD dwStyle = 0;
+    DWORD dwExStyle = 0;
+    HWND font = nullptr; // TODO: this should be abstract Font description
+    int menuId = 0;
+
+    str::Str text;
+
+    HWND hwnd = nullptr;
+
+    WindowBase() = default;
+    virtual ~WindowBase();
+
+    bool Create();
 };
