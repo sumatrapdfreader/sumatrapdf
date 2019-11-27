@@ -493,7 +493,7 @@
     <ClInclude Include="..\src\wingui\SplitterWnd.h" />
     <ClInclude Include="..\src\wingui\TreeCtrl.h" />
     <ClInclude Include="..\src\wingui\TreeModel.h" />
-    <ClInclude Include="..\src\wingui\Win32Window.h" />
+    <ClInclude Include="..\src\wingui\Window.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\utils\ApiHook.cpp" />
@@ -547,7 +547,7 @@
     <ClCompile Include="..\src\wingui\Layout.cpp" />
     <ClCompile Include="..\src\wingui\SplitterWnd.cpp" />
     <ClCompile Include="..\src\wingui\TreeCtrl.cpp" />
-    <ClCompile Include="..\src\wingui\Win32Window.cpp" />
+    <ClCompile Include="..\src\wingui\Window.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

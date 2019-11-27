@@ -1,8 +1,11 @@
 /* Copyright 2019 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-class Win32Window {
-  public:
+extern Kind windowKind;
+
+struct Window {
+    Kind* kind;
+
     // creation parameters. must be set before Create() call
     HWND parent = nullptr;
     RECT initialPos = {};
@@ -22,8 +25,8 @@ class Win32Window {
     // public
     HWND hwnd = nullptr;
 
-    explicit Win32Window(HWND parent, RECT* initialPosition);
-    ~Win32Window();
+    explicit Window(HWND parent, RECT* initialPosition);
+    ~Window();
 
     bool Create(const WCHAR* title);
 };

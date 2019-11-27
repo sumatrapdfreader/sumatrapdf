@@ -4,20 +4,22 @@
 #include "wingui/WinGui.h"
 #include "wingui/TreeModel.h"
 #include "wingui/TreeCtrl.h"
-#include "wingui/Win32Window.h"
+#include "wingui/Window.h"
 #include "utils/FileUtil.h"
 
 #define WIN_CLASS L"WC_WIN32_WINDOW"
 
+Kind windowKind = "window";
+
 static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     if (WM_CREATE == msg) {
         CREATESTRUCT* cs = (CREATESTRUCT*)lp;
-        Win32Window* w = (Win32Window*)cs->lpCreateParams;
+        Window* w = (Window*)cs->lpCreateParams;
         SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)w);
         return DefWindowProc(hwnd, msg, wp, lp);
     }
 
-    Win32Window* w = (Win32Window*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+    Window* w = (Window*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 
     // don't allow intercepting those messages
     if (WM_DESTROY == msg) {
@@ -80,7 +82,7 @@ static void RegisterClass() {
     CrashIf(!atom);
 }
 
-Win32Window::Win32Window(HWND parent, RECT* initialPosition) {
+Window::Window(HWND parent, RECT* initialPosition) {
     this->parent = parent;
     if (initialPosition) {
         this->initialPos = *initialPosition;
@@ -93,7 +95,7 @@ Win32Window::Win32Window(HWND parent, RECT* initialPosition) {
     }
 }
 
-bool Win32Window::Create(const WCHAR* title) {
+bool Window::Create(const WCHAR* title) {
     RegisterClass();
 
     RECT rc = this->initialPos;
@@ -113,7 +115,7 @@ bool Win32Window::Create(const WCHAR* title) {
     return this->hwnd != nullptr;
 }
 
-Win32Window::~Win32Window() {
+Window::~Window() {
     // we free w in WM_DESTROY
     DestroyWindow(this->hwnd);
 }

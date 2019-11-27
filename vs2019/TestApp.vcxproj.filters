@@ -81,10 +81,10 @@
     <ClInclude Include="..\src\wingui\TreeModel.h">
       <Filter>src\wingui</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\wingui\Win32Window.h">
+    <ClInclude Include="..\src\wingui\WinGui.h">
       <Filter>src\wingui</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\wingui\WinGui.h">
+    <ClInclude Include="..\src\wingui\Window.h">
       <Filter>src\wingui</Filter>
     </ClInclude>
     <ClInclude Include="..\tools\test-app\resource.h">
@@ -158,7 +158,7 @@
     <ClCompile Include="..\src\wingui\TreeCtrl.cpp">
       <Filter>src\wingui</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\wingui\Win32Window.cpp">
+    <ClCompile Include="..\src\wingui\Window.cpp">
       <Filter>src\wingui</Filter>
     </ClCompile>
     <ClCompile Include="..\tools\test-app\TestDirectDraw.cpp">

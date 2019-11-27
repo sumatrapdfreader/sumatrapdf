@@ -442,7 +442,7 @@ function utils_files()
     --"TabsCtrl.*",
     "TreeCtrl.*",
     "TreeModel.*",
-    "Win32Window.*",
+    "Window.*",
   })
 end
 

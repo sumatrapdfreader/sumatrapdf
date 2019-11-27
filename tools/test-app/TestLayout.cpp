@@ -5,7 +5,7 @@
 
 #include "wingui/WinGui.h"
 #include "wingui/Layout.h"
-#include "wingui/Win32Window.h"
+#include "wingui/Window.h"
 #include "wingui/ButtonCtrl.h"
 
 #include "test-app.h"

@@ -24,11 +24,11 @@ class TabsCtrlPrivate;
 
 struct TabsCtrl {
     // creation parameters. must be set before CreateTabsCtrl
-    HWND parent;
-    RECT initialPos;
+    HWND parent = nullptr;
+    RECT initialPos = {};
 
-    TabSelectedCb onTabSelected;
-    TabClosedCb onTabClosed;
+    TabSelectedCb onTabSelected = nullptr;
+    TabClosedCb onTabClosed = nullptr;
 
     TabsCtrlPrivate* priv;
 };

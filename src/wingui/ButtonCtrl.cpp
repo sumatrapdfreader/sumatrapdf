@@ -5,7 +5,7 @@
 #include "wingui/Layout.h"
 #include "wingui/ButtonCtrl.h"
 
-// TODO: move to utilities or move to Win32Window, cache DPI info
+// TODO: move to utilities or move to indow, cache DPI info
 // on creation and handle WM_DPICHANGED
 // https://docs.microsoft.com/en-us/windows/desktop/hidpi/wm-dpichanged
 static void hwndDpiAdjust(HWND hwnd, float* x, float* y) {
