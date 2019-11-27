@@ -26,23 +26,18 @@ static void Draw(HWND hwnd, HDC hdc) {
     FillRect(hdc, &rc, brush);
 }
 
-static ButtonCtrl* CreateButton(HWND parent, const char* s) {
-    auto b = new ButtonCtrl(parent, 0, nullptr);
+static ButtonLayout* CreateButtonLayout(HWND parent, const char* s) {
+    auto b = new ButtonCtrl(parent);
     b->SetText(s);
     b->Create();
-    return b;
-}
-
-static ButtonLayout* CreateButtonLayout(HWND parent, const char* s) {
-    auto b = CreateButton(parent, s);
     return new ButtonLayout(b);
 }
 
-static CheckboxCtrl* CreateCheckboxLayout(HWND parent, const char* s) {
-    auto b = new CheckboxCtrl(parent, 0, nullptr);
+static CheckboxLayout* CreateCheckboxLayout(HWND parent, const char* s) {
+    auto b = new CheckboxCtrl(parent);
     b->SetText(s);
     b->Create();
-    return b;
+    return new CheckboxLayout(b);
 }
 
 static void CreateMainLayout(HWND hwnd) {

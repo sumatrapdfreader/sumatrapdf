@@ -70,6 +70,8 @@ Constraints TightHeight(Length height);
 struct ILayout {
     Kind kind = nullptr;
 
+    ILayout() = default;
+    ILayout(Kind k);
     virtual ~ILayout(){};
     virtual Size Layout(const Constraints bc) = 0;
     virtual Length MinIntrinsicHeight(Length width) = 0;

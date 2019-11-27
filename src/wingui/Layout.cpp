@@ -288,6 +288,10 @@ void Padding::SetBounds(Rect bounds) {
 Length DIP = 1;
 
 // layout.go
+ILayout::ILayout(Kind k) {
+    kind = k;
+}
+
 Length calculateHGap(ILayout* previous, ILayout* current) {
     // The vertical gap between most controls is 11 relative pixels.  However,
     // there are different rules for between a label and its associated control,
