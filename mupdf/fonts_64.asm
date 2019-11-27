@@ -1,7 +1,6 @@
 section .data:
 
-; TODO: alignment
-; TODO: more fonts
+; TODO: alignment (?)
 
 ; ---------
 
@@ -175,7 +174,7 @@ global _binary_DroidSansFallbackFull_ttf
 global _binary_DroidSansFallbackFull_ttf_size
 
 _binary_DroidSansFallbackFull_ttf:
-    incbin "resources/fonts/droid/DroidSansFallbackFull.ttf
+    incbin "resources/fonts/droid/DroidSansFallbackFull.ttf"
 
 _binary_DroidSansFallbackFull_ttf_size:
     dq $ - _binary_DroidSansFallbackFull_ttf
