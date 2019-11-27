@@ -1,16 +1,17 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "BaseUtil.h"
+#include "utils/BaseUtil.h"
+#include "utils/Dpi.h"
 #include <mlang.h>
 
-#include "BitManip.h"
-#include "ScopedWin.h"
-#include "FileUtil.h"
-#include "WinDynCalls.h"
-#include "WinUtil.h"
+#include "utils/BitManip.h"
+#include "utils/ScopedWin.h"
+#include "utils/FileUtil.h"
+#include "utils/WinDynCalls.h"
+#include "utils/WinUtil.h"
 
-#include "DebugLog.h"
+#include "utils/DebugLog.h"
 
 static HFONT gDefaultGuiFont = nullptr;
 static HFONT gDefaultGuiFontBold = nullptr;
@@ -1780,4 +1781,31 @@ EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 // A convenient way to grab the same value as HINSTANCE passed to WinMain
 HINSTANCE GetInstance() {
     return (HINSTANCE)&__ImageBase;
+}
+
+void hwndDpiAdjust(HWND hwnd, float* x, float* y) {
+    auto dpi = DpiGet(hwnd);
+
+    if (x != nullptr) {
+        float dpiFactor = (float)dpi->dpiX / 96.f;
+        *x = *x * dpiFactor;
+    }
+
+    if (y != nullptr) {
+        float dpiFactor = (float)dpi->dpiY / 96.f;
+        *y = *y * dpiFactor;
+    }
+}
+
+SIZE ButtonGetIdealSize(HWND hwnd) {
+    // adjust to real size and position to the right
+    SIZE s{};
+    Button_GetIdealSize(hwnd, &s);
+    // add padding
+    float xPadding = 8 * 2;
+    float yPadding = 2 * 2;
+    hwndDpiAdjust(hwnd, &xPadding, &yPadding);
+    s.cx += (int)xPadding;
+    s.cy += (int)yPadding;
+    return s;
 }

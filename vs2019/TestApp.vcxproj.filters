@@ -54,7 +54,13 @@
     <ClInclude Include="..\src\wingui\ButtonCtrl.h">
       <Filter>src\wingui</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\wingui\CheckboxCtrl.h">
+      <Filter>src\wingui</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\wingui\DialogSizer.h">
+      <Filter>src\wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\DropDownCtrl.h">
       <Filter>src\wingui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\wingui\EditCtrl.h">
@@ -137,7 +143,13 @@
     <ClCompile Include="..\src\wingui\ButtonCtrl.cpp">
       <Filter>src\wingui</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\wingui\CheckboxCtrl.cpp">
+      <Filter>src\wingui</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\wingui\DialogSizer.cpp">
+      <Filter>src\wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\DropDownCtrl.cpp">
       <Filter>src\wingui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\wingui\EditCtrl.cpp">

@@ -227,3 +227,5 @@ bool TrackMouseLeave(HWND);
 void TriggerRepaint(HWND);
 POINT GetCursorPosInHwnd(HWND);
 HINSTANCE GetInstance();
+void hwndDpiAdjust(HWND hwnd, float* x, float* y);
+SIZE ButtonGetIdealSize(HWND hwnd);

@@ -7,6 +7,7 @@
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
 #include "wingui/ButtonCtrl.h"
+#include "wingui/CheckboxCtrl.h"
 #include "wingui/EditCtrl.h"
 
 #include "test-app.h"
@@ -39,9 +40,30 @@ static ILayout* CreateButtonLayout(HWND parent, std::string_view s) {
     return NewButtonLayout(b);
 }
 
+static void onCheckboxChanged(CheckState state) {
+    const char* name = "";
+    switch (state) {
+        case CheckState::Unchecked:
+            name = "unchecked";
+            break;
+        case CheckState::Checked:
+            name = "checked";
+            break;
+        case CheckState::Indeterminate:
+            name = "indeterminate";
+            break;
+        default:
+            CrashMe();
+            break;
+    }
+
+    dbglogf("new checkbox state: %s (%d)\n", name, (int)state);
+}
+
 static ILayout* CreateCheckboxLayout(HWND parent, std::string_view s) {
     auto b = new CheckboxCtrl(parent);
     b->SetText(s);
+    b->OnCheckStateChanged = onCheckboxChanged;
     b->Create();
     return NewCheckboxLayout(b);
 }
@@ -67,9 +89,11 @@ static void CreateMainLayout(HWND hwnd) {
         auto b = CreateButtonLayout(hwnd, "button one");
         vbox->addChild(b);
     }
-    { auto e = CreateEditLayout(hwnd, "initial text");
+    {
+        auto e = CreateEditLayout(hwnd, "initial text");
         vbox->addChild(e);
-    } {
+    } 
+    {
         auto b = CreateButtonLayout(hwnd, "button two");
         vbox->addChild(b);
     }
@@ -114,7 +138,10 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         case WM_SIZE: {
             int dx = LOWORD(lp);
             int dy = HIWORD(lp);
-            doLayut(hwnd, dx, dy);
+            if (dx != 0 && dy != 0) {
+                doLayut(hwnd, dx, dy);
+            }
+            return 0;
         } break;
         case WM_COMMAND: {
             int wmId = LOWORD(wp);

@@ -485,7 +485,9 @@
     <ClInclude Include="..\src\utils\ZipUtil.h" />
     <ClInclude Include="..\src\utils\error.h" />
     <ClInclude Include="..\src\wingui\ButtonCtrl.h" />
+    <ClInclude Include="..\src\wingui\CheckboxCtrl.h" />
     <ClInclude Include="..\src\wingui\DialogSizer.h" />
+    <ClInclude Include="..\src\wingui\DropDownCtrl.h" />
     <ClInclude Include="..\src\wingui\EditCtrl.h" />
     <ClInclude Include="..\src\wingui\Form.h" />
     <ClInclude Include="..\src\wingui\FrameRateWnd.h" />
@@ -543,7 +545,9 @@
     <ClCompile Include="..\src\utils\ZipUtil.cpp" />
     <ClCompile Include="..\src\utils\error.cpp" />
     <ClCompile Include="..\src\wingui\ButtonCtrl.cpp" />
+    <ClCompile Include="..\src\wingui\CheckboxCtrl.cpp" />
     <ClCompile Include="..\src\wingui\DialogSizer.cpp" />
+    <ClCompile Include="..\src\wingui\DropDownCtrl.cpp" />
     <ClCompile Include="..\src\wingui\EditCtrl.cpp" />
     <ClCompile Include="..\src\wingui\Form.cpp" />
     <ClCompile Include="..\src\wingui\FrameRateWnd.cpp" />

@@ -152,6 +152,15 @@ static LRESULT CALLBACK wndProcDispatch(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
         wb->WndProc(hwnd, msg, wp, lp);
     } else if (uIdSubclass == wb->subclassParentId) {
         CrashIf(hwnd != wb->parent);
+        if (WM_COMMAND == msg) {
+            // the same parent is sub-classed by many controls
+            // we only want to dispatch the message to the control
+            // that originated the message
+            HWND hwndCtrl = (HWND)lp;
+            if (hwndCtrl != wb->hwnd) {
+                return DefSubclassProc(hwnd, msg, wp, lp);
+            }
+        }
         wb->WndProcParent(hwnd, msg, wp, lp);
     } else {
         CrashMe();
