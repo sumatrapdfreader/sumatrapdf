@@ -311,7 +311,7 @@ workspace "SumatraPDF"
     -- so we can't double-define it
     defines { "USE_JPIP", "OPJ_EXPORTS", "HAVE_LCMS2MT=1" }
     defines { "OPJ_STATIC" }
-    defines { "TOFU", "SHARE_JPEG" }
+    defines { "TOFU", "TOFU_CJK_LANG", "SHARE_JPEG" }
     disablewarnings { 
       "4005", "4028", "4100", "4115", "4130", "4204", "4206", "4244",
       "4245", "4267", "4295", "4389", "4456", "4457", "4459", "4702",

@@ -160,11 +160,23 @@ __binary_StandardSymbolsPS_cff_size:
 
 ; ---------
 
-global __binary_SourceHanSerif_Regular_ttc
-global __binary_SourceHanSerif_Regular_ttc_size
+; global __binary_SourceHanSerif_Regular_ttc
+; global __binary_SourceHanSerif_Regular_ttc_size
 
-__binary_SourceHanSerif_Regular_ttc:
-    incbin "resources/fonts/han/SourceHanSerif-Regular.ttc"
+; __binary_SourceHanSerif_Regular_ttc:
+;     incbin "resources/fonts/han/SourceHanSerif-Regular.ttc"
 
-__binary_SourceHanSerif_Regular_ttc_size:
-    dq $ - __binary_SourceHanSerif_Regular_ttc
+; __binary_SourceHanSerif_Regular_ttc_size:
+;     dq $ - __binary_SourceHanSerif_Regular_ttc
+
+; ---------
+
+global _binary_DroidSansFallbackFull_ttf
+global _binary_DroidSansFallbackFull_ttf_size
+
+_binary_DroidSansFallbackFull_ttf:
+    incbin "resources/fonts/droid/DroidSansFallbackFull.ttf
+
+_binary_DroidSansFallbackFull_ttf_size:
+    dq $ - _binary_DroidSansFallbackFull_ttf
+
