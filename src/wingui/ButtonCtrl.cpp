@@ -52,26 +52,16 @@ ButtonCtrl::ButtonCtrl(HWND parent, int menuId, RECT* initialPosition) {
     }
 }
 
-bool ButtonCtrl::Create(const WCHAR* s) {
+bool ButtonCtrl::Create() {
     bool ok = WindowBase::Create();
     if (!ok) {
         return false;
     }
-    this->SetFont(GetDefaultGuiFont());
-    this->SetTextAndResize(s);
+    // this->SetTextAndResize(s);
     return true;
 }
 
 ButtonCtrl::~ButtonCtrl() {
-}
-
-// caller must free() the result
-WCHAR* ButtonCtrl::GetTextW() {
-    return win::GetText(this->hwnd);
-}
-
-void ButtonCtrl::SetPos(RECT* r) {
-    MoveWindow(this->hwnd, r);
 }
 
 // TODO: cache
@@ -96,29 +86,34 @@ SIZE ButtonCtrl::SetTextAndResize(const WCHAR* s) {
     return size;
 }
 
-void ButtonCtrl::SetFont(HFONT f) {
-    SetWindowFont(this->hwnd, f, TRUE);
+ButtonLayout::ButtonLayout(ButtonCtrl* wb) {
+    kind = buttonKind;
+    button = wb;
 }
 
-Size ButtonCtrl::Layout(const Constraints bc) {
+ButtonLayout::~ButtonLayout() {
+    delete button;
+}
+
+Size ButtonLayout::Layout(const Constraints bc) {
     i32 width = this->MinIntrinsicWidth(0);
     i32 height = this->MinIntrinsicHeight(0);
     return bc.Constrain(Size{width, height});
 }
 
-i32 ButtonCtrl::MinIntrinsicHeight(i32) {
-    SIZE s = this->GetIdealSize();
+i32 ButtonLayout::MinIntrinsicHeight(i32) {
+    SIZE s = button->GetIdealSize();
     return (i32)s.cy;
 }
 
-i32 ButtonCtrl::MinIntrinsicWidth(i32) {
-    SIZE s = this->GetIdealSize();
+i32 ButtonLayout::MinIntrinsicWidth(i32) {
+    SIZE s = button->GetIdealSize();
     return (i32)s.cx;
 }
 
-void ButtonCtrl::SetBounds(const Rect bounds) {
+void ButtonLayout::SetBounds(const Rect bounds) {
     auto r = RectToRECT(bounds);
-    ::MoveWindow(this->hwnd, &r);
+    ::MoveWindow(button->hwnd, &r);
 }
 
 Kind checkboxKind = "checkbox";
@@ -141,7 +136,7 @@ CheckboxCtrl::CheckboxCtrl(HWND parent, int menuId, RECT* initialPosition) {
     }
 }
 
-bool CheckboxCtrl::Create(const WCHAR* s) {
+bool CheckboxCtrl::Create() {
     RECT rc = this->initialPos;
     auto h = GetModuleHandle(nullptr);
     int x = rc.left;
@@ -155,8 +150,12 @@ bool CheckboxCtrl::Create(const WCHAR* s) {
     if (!this->hwnd) {
         return false;
     }
-    this->SetFont(GetDefaultGuiFont());
-    this->SetTextAndResize(s);
+    if (hfont == nullptr) {
+        hfont = GetDefaultGuiFont();
+    }
+    SetFont(hfont);
+    HwndSetText(hwnd, text.AsView());
+    // this->SetTextAndResize(s);
     return true;
 }
 
@@ -170,6 +169,11 @@ WCHAR* CheckboxCtrl::GetTextW() {
 
 void CheckboxCtrl::SetPos(RECT* r) {
     MoveWindow(this->hwnd, r);
+}
+
+void CheckboxCtrl::SetText(std::string_view sv) {
+    text.Set(sv.data());
+    HwndSetText(hwnd, text.AsView());
 }
 
 SIZE CheckboxCtrl::GetIdealSize() {

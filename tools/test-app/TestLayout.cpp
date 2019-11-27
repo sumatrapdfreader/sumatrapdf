@@ -26,19 +26,49 @@ static void Draw(HWND hwnd, HDC hdc) {
     FillRect(hdc, &rc, brush);
 }
 
+static ButtonCtrl* CreateButton(HWND parent, const char* s) {
+    auto b = new ButtonCtrl(parent, 0, nullptr);
+    b->SetText(s);
+    b->Create();
+    return b;
+}
+
+static ButtonLayout* CreateButtonLayout(HWND parent, const char* s) {
+    auto b = CreateButton(parent, s);
+    return new ButtonLayout(b);
+}
+
+static CheckboxCtrl* CreateCheckboxLayout(HWND parent, const char* s) {
+    auto b = new CheckboxCtrl(parent, 0, nullptr);
+    b->SetText(s);
+    b->Create();
+    return b;
+}
+
 static void CreateMainLayout(HWND hwnd) {
-    auto b1 = new ButtonCtrl(hwnd, 0, nullptr);
-    b1->Create(L"Button one");
-    auto b2 = new ButtonCtrl(hwnd, 0, nullptr);
-    b2->Create(L"Button two");
-    auto b3 = new ButtonCtrl(hwnd, 0, nullptr);
-    b3->Create(L"Button three");
     auto* vbox = new VBox();
-    vbox->alignMain = MainAxisAlign::Homogeneous;
+    vbox->alignMain = MainAxisAlign::MainCenter;
     vbox->alignCross = CrossAxisAlign::CrossCenter;
-    vbox->addChild(b1);
-    vbox->addChild(b2);
-    vbox->addChild(b3);
+    {
+        auto b = CreateButtonLayout(hwnd, "button one");
+        vbox->addChild(b);
+    }
+    {
+        auto b = CreateButtonLayout(hwnd, "button two");
+        vbox->addChild(b);
+    }
+    {
+        auto b = CreateButtonLayout(hwnd, "button three");
+        vbox->addChild(b);
+    }
+    {
+        auto b = CreateCheckboxLayout(hwnd, "checkbox one");
+        vbox->addChild(b);
+    }
+    {
+        auto b = CreateCheckboxLayout(hwnd, "checkbox two");
+        vbox->addChild(b);
+    }
     auto* padding = new Padding();
     padding->child = vbox;
     padding->insets = DefaultInsets();
@@ -68,8 +98,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             int dx = LOWORD(lp);
             int dy = HIWORD(lp);
             doLayut(hwnd, dx, dy);
-        }
-            break;
+        } break;
         case WM_COMMAND: {
             int wmId = LOWORD(wp);
             switch (wmId) {

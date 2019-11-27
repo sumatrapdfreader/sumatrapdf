@@ -77,8 +77,7 @@ static COLORREF GetNoDocBgColor() {
 
     COLORREF sysText = GetSysColor(COLOR_WINDOWTEXT);
     COLORREF sysWindow = GetSysColor(COLOR_WINDOW);
-    bool useSysColor = gGlobalPrefs->useSysColors &&
-                       (sysText != WIN_COL_BLACK || sysWindow != WIN_COL_WHITE);
+    bool useSysColor = gGlobalPrefs->useSysColors && (sysText != WIN_COL_BLACK || sysWindow != WIN_COL_WHITE);
     if (useSysColor) {
         return GetSysColor(COLOR_BTNFACE);
     }
@@ -104,7 +103,7 @@ COLORREF GetAppColor(AppColor col, bool ebook) {
 
     if (col == AppColor::MainWindowBg) {
         return GetAboutBgColor();
-        //return ABOUT_BG_GRAY_COLOR;
+        // return ABOUT_BG_GRAY_COLOR;
     }
 
     if (col == AppColor::MainWindowText) {

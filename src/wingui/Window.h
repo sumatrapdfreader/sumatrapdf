@@ -34,7 +34,7 @@ struct Window {
 extern Kind kindWindowBase;
 
 struct WindowBase {
-    //Kind kind;
+    Kind kind;
 
     // data that can be set before calling Create()
 
@@ -46,8 +46,11 @@ struct WindowBase {
     RECT initialPos = {};
     DWORD dwStyle = 0;
     DWORD dwExStyle = 0;
-    HWND font = nullptr; // TODO: this should be abstract Font description
+    HFONT hfont = nullptr; // TODO: this should be abstract Font description
     int menuId = 0;
+
+    COLORREF textColor = ColorUnset;
+    COLORREF backgroundColor = ColorUnset;
 
     str::Str text;
 
@@ -55,6 +58,14 @@ struct WindowBase {
 
     WindowBase() = default;
     virtual ~WindowBase();
+    virtual bool Create();
 
-    bool Create();
+    void SetFont(HFONT f);
+    void SetText(std::string_view);
+    void SetPos(RECT* r);
+    void SetBounds(const RECT& r);
+    void SetTextColor(COLORREF);
+    void SetBackgroundColor(COLORREF);
 };
+
+void HwndSetText(HWND hwnd, std::string_view s);

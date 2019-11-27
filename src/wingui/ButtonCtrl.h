@@ -1,22 +1,25 @@
 /* Copyright 2019 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-struct ButtonCtrl : public ILayout, public WindowBase {
+struct ButtonCtrl : public WindowBase {
     // creation parameters. must be set before Create() call
 
     ButtonCtrl(HWND parent, int menuId, RECT* initialPos);
     ~ButtonCtrl() override;
 
-    bool Create(const WCHAR*);
+    bool Create() override;
 
     SIZE SetTextAndResize(const WCHAR*);
     SIZE GetIdealSize();
     void SetPos(RECT*);
-    void SetFont(HFONT);
+};
 
-    WCHAR* GetTextW();
+struct ButtonLayout : public ILayout {
+    ButtonCtrl* button = nullptr;
 
-    // ILayout
+    ButtonLayout(ButtonCtrl*);
+    virtual ~ButtonLayout();
+
     Size Layout(const Constraints bc) override;
     Length MinIntrinsicHeight(Length) override;
     Length MinIntrinsicWidth(Length) override;
@@ -40,11 +43,13 @@ struct CheckboxCtrl : public ILayout {
     // TODO: implement me
     CheckboxChangeCb OnChange = nullptr;
     HWND hwnd = nullptr;
+    HFONT hfont = nullptr;
+    str::Str text;
 
     CheckboxCtrl(HWND parent, int menuId, RECT* initialPos);
     ~CheckboxCtrl();
 
-    bool Create(const WCHAR*);
+    bool Create();
 
     SIZE SetTextAndResize(const WCHAR*);
     SIZE GetIdealSize();
@@ -52,11 +57,10 @@ struct CheckboxCtrl : public ILayout {
     void SetFont(HFONT);
 
     WCHAR* GetTextW();
-
+    void SetText(std::string_view sv);
     void SetIsChecked(bool isChecked);
     bool IsChecked() const;
 
-    // ILayout
     Size Layout(const Constraints bc) override;
     Length MinIntrinsicHeight(Length) override;
     Length MinIntrinsicWidth(Length) override;

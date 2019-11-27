@@ -4,7 +4,5 @@
 extern Kind windowKind;
 
 struct Form : public Window {
-
     ~Form() override;
 };
-

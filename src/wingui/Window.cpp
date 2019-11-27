@@ -12,6 +12,19 @@
 
 #define WIN_CLASS L"WC_WIN32_WINDOW"
 
+void HwndSetText(HWND hwnd, std::string_view s) {
+    // can be called before a window is created
+    if (!hwnd) {
+        return;
+    }
+    if (s.empty()) {
+        return;
+    }
+    WCHAR* ws = str::conv::Utf8ToWchar(s);
+    win::SetText(hwnd, ws);
+    free(ws);
+}
+
 Kind windowKind = "window";
 
 static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
@@ -123,7 +136,6 @@ Window::~Window() {
     DestroyWindow(this->hwnd);
 }
 
-
 Kind kindWindowBase = "windowBase";
 
 WindowBase::~WindowBase() {
@@ -137,12 +149,41 @@ bool WindowBase::Create() {
     int dx = RectDx(rc);
     int dy = RectDy(rc);
     HMENU idMenu = (HMENU)(UINT_PTR)menuId;
-    hwnd =
-        CreateWindowExW(dwExStyle, winClass, L"", dwStyle, x, y, dx, dy, parent, idMenu, h, nullptr);
+    hwnd = CreateWindowExW(dwExStyle, winClass, L"", dwStyle, x, y, dx, dy, parent, idMenu, h, nullptr);
 
     if (hwnd == nullptr) {
         return false;
     }
+    if (hfont == nullptr) {
+        hfont = GetDefaultGuiFont();
+    }
+    SetFont(hfont);
+    HwndSetText(hwnd, text.AsView());
     return true;
 }
 
+void WindowBase::SetPos(RECT* r) {
+    ::MoveWindow(hwnd, r);
+}
+
+void WindowBase::SetBounds(const RECT& r) {
+    SetPos((RECT*)&r);
+}
+
+void WindowBase::SetFont(HFONT f) {
+    hfont = f;
+    SetWindowFont(hwnd, f, TRUE);
+}
+
+void WindowBase::SetText(std::string_view sv) {
+    text.Set(sv.data());
+    HwndSetText(hwnd, text.AsView());
+}
+
+void WindowBase::SetTextColor(COLORREF col) {
+    textColor = col;
+}
+
+void WindowBase::SetBackgroundColor(COLORREF col) {
+    backgroundColor = col;
+}
