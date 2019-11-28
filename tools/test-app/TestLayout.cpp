@@ -9,6 +9,7 @@
 #include "wingui/ButtonCtrl.h"
 #include "wingui/CheckboxCtrl.h"
 #include "wingui/EditCtrl.h"
+#include "wingui/DropDownCtrl.h"
 
 #include "test-app.h"
 
@@ -81,6 +82,24 @@ static ILayout* CreateEditLayout(HWND parent, std::string_view s) {
     return NewEditLayout(e);
 }
 
+static char* ddItems[3] = {"foo", "another one", "bar"};
+
+static void onDropDownSelected(int idx, std::string_view s) {
+    dbglogf("drop down selection changed: %d, %s\n", idx, s.data());
+}
+
+static ILayout* CreatedDropDownLayout(HWND parent) {
+    auto ctrl = new DropDownCtrl(parent);
+    for (size_t i = 0; i < dimof(ddItems); i++) {
+        char* s = ddItems[i];
+        std::string_view sv(s);
+        ctrl->items.Append(sv);
+    }
+    ctrl->OnDropDownSelectionChanged = onDropDownSelected;
+    ctrl->Create();
+    return NewDropDownLayout(ctrl);
+}
+
 static void CreateMainLayout(HWND hwnd) {
     auto* vbox = new VBox();
     vbox->alignMain = MainAxisAlign::MainCenter;
@@ -92,7 +111,7 @@ static void CreateMainLayout(HWND hwnd) {
     {
         auto e = CreateEditLayout(hwnd, "initial text");
         vbox->addChild(e);
-    } 
+    }
     {
         auto b = CreateButtonLayout(hwnd, "button two");
         vbox->addChild(b);
@@ -107,6 +126,10 @@ static void CreateMainLayout(HWND hwnd) {
     }
     {
         auto b = CreateCheckboxLayout(hwnd, "checkbox two");
+        vbox->addChild(b);
+    }
+    {
+        auto b = CreatedDropDownLayout(hwnd);
         vbox->addChild(b);
     }
 
@@ -132,7 +155,7 @@ static void doLayut(HWND hwnd, int dx, int dy) {
 static int prevDx = 0, prevDy = 0;
 
 static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    dbglogf("msg: 0x%x, wp: %d, lp: %d\n", msg, (int)wp, (int)lp);
+    //dbglogf("msg: 0x%x, wp: %d, lp: %d\n", msg, (int)wp, (int)lp);
 
     switch (msg) {
         case WM_CREATE:
@@ -156,7 +179,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                 doLayut(hwnd, dx, dy);
             }
             return 0;
-            //return DefWindowProc(hwnd, msg, wp, lp);
+            // return DefWindowProc(hwnd, msg, wp, lp);
         }
         case WM_COMMAND: {
             int wmId = LOWORD(wp);

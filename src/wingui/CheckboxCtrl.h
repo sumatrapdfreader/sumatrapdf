@@ -10,7 +10,6 @@ enum class CheckState {
 typedef std::function<void(CheckState)> OnCheckStateChanged;
 
 struct CheckboxCtrl : public WindowBase {
-
     OnCheckStateChanged OnCheckStateChanged = nullptr;
 
     CheckboxCtrl(HWND parent);
@@ -22,7 +21,7 @@ struct CheckboxCtrl : public WindowBase {
 
     void SetCheckState(CheckState);
     CheckState GetCheckState() const;
-    
+
     void SetIsChecked(bool isChecked);
     bool IsChecked() const;
 };
