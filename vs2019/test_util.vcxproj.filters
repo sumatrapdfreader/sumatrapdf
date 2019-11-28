@@ -48,6 +48,9 @@
     <ClInclude Include="..\src\utils\Dict.h">
       <Filter>utils</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\utils\Dpi.h">
+      <Filter>utils</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\utils\FileUtil.h">
       <Filter>utils</Filter>
     </ClInclude>
@@ -139,6 +142,9 @@
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\Dict.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils\Dpi.cpp">
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\FileUtil.cpp">

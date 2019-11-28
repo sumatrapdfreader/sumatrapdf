@@ -784,6 +784,7 @@ function test_util_files()
     "CryptoUtil.*",    
     "CssParser.*",
     "Dict.*",
+    "Dpi.*",
     "DebugLog.*",
     "error.*",
     "FileUtil.*",

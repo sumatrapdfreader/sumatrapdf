@@ -479,6 +479,7 @@
     <ClInclude Include="..\src\utils\CssParser.h" />
     <ClInclude Include="..\src\utils\DebugLog.h" />
     <ClInclude Include="..\src\utils\Dict.h" />
+    <ClInclude Include="..\src\utils\Dpi.h" />
     <ClInclude Include="..\src\utils\FileUtil.h" />
     <ClInclude Include="..\src\utils\GeomUtil.h" />
     <ClInclude Include="..\src\utils\HtmlParserLookup.h" />
@@ -514,6 +515,7 @@
     <ClCompile Include="..\src\utils\CssParser.cpp" />
     <ClCompile Include="..\src\utils\DebugLog.cpp" />
     <ClCompile Include="..\src\utils\Dict.cpp" />
+    <ClCompile Include="..\src\utils\Dpi.cpp" />
     <ClCompile Include="..\src\utils\FileUtil.cpp" />
     <ClCompile Include="..\src\utils\HtmlParserLookup.cpp" />
     <ClCompile Include="..\src\utils\HtmlPrettyPrint.cpp" />
