@@ -46,12 +46,13 @@ EXPORTS
 	pdf_field_flags
 	pdf_field_label
 	fz_drop_document
-	fz_needs_passwrod
+	fz_needs_password
 	fz_count_pages
 	fz_load_links
 	fz_has_permission
 	fz_new_stext_page_from_page
-	pdf_dict_getsapdf_document_from_fz_document
+	pdf_dict_geta
+	pdf_document_from_fz_document
 	pdf_page_from_fz_page
 
 	fz_keep_bitmap
