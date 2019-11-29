@@ -41,7 +41,7 @@ fz_rect fz_RectD_to_rect(RectD rect) {
     return result;
 }
 
-inline bool fz_is_pt_in_rect(fz_rect rect, fz_point pt) {
+bool fz_is_pt_in_rect(fz_rect rect, fz_point pt) {
     return fz_rect_to_RectD(rect).Contains(PointD(pt.x, pt.y));
 }
 
@@ -431,11 +431,6 @@ fz_matrix fz_create_view_ctm(fz_rect mediabox, float zoom, int rotation) {
     return ctm;
 }
 
-struct LinkRectList {
-    WStrVec links;
-    Vec<fz_rect> coords;
-};
-
 static bool LinkifyCheckMultiline(const WCHAR* pageText, const WCHAR* pos, RectI* coords) {
     // multiline links end in a non-alphanumeric character and continue on a line
     // that starts left and only slightly below where the current line ended
@@ -529,7 +524,7 @@ static const WCHAR* LinkifyEmailAddress(const WCHAR* start) {
 }
 
 // caller needs to delete the result
-static LinkRectList* LinkifyText(const WCHAR* pageText, RectI* coords) {
+LinkRectList* LinkifyText(const WCHAR* pageText, RectI* coords) {
     LinkRectList* list = new LinkRectList;
 
     for (const WCHAR* start = pageText; *start; start++) {
@@ -775,8 +770,8 @@ static fz_outline* pdf_load_attachments(fz_context* ctx, pdf_document* doc) {
     for (int i = 0; i < pdf_dict_len(ctx, dict); i++) {
         pdf_obj* name = pdf_dict_get_key(ctx, dict, i);
         pdf_obj* dest = pdf_dict_get_val(ctx, dict, i);
-        auto ef = pdf_dict_gets(ctx, dest, "EF");
-        pdf_obj* embedded = pdf_dict_getsa(ctx, ef, "DOS", "F");
+        auto ef = pdf_dict_get(ctx, dest, PDF_NAME(EF));
+        pdf_obj* embedded = pdf_dict_geta(ctx, ef, PDF_NAME(DOS), PDF_NAME(F));
         if (!embedded)
             continue;
 
@@ -1852,8 +1847,9 @@ RectD PdfEngineImpl::PageContentBox(int pageNo, RenderTarget target) {
         return mediabox;
     }
 
-    if (fz_is_infinite_rect(rect))
+    if (fz_is_infinite_rect(rect)) {
         return mediabox;
+    }
 
     RectD rect2 = fz_rect_to_RectD(rect);
     return rect2.Intersect(mediabox);
@@ -2761,7 +2757,7 @@ int PdfEngineImpl::GetPageByLabel(const WCHAR* label) const {
 }
 
 // copy of fz_is_external_link without ctx
-static int is_external_link(const char* uri) {
+int is_external_link(const char* uri) {
     while (*uri >= 'a' && *uri <= 'z')
         ++uri;
     return uri[0] == ':';
