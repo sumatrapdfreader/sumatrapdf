@@ -516,12 +516,6 @@ static const WCHAR* Md5OfAppExe() {
     return md5Hex.StealData();
 }
 
-#ifdef _WIN64
-static const WCHAR* unrarFileName = L"unrar64.dll";
-#else
-static const WCHAR* unrarFileName = L"unrar.dll";
-#endif
-
 // remove all directories except for ours
 //. need to avoid acuumulating the directories when testing
 // locally or using pre-release builds (both cases where
@@ -562,6 +556,8 @@ void RemoveMd5AppDataDirectories() {
     }
 }
 
+// TODO: this can be used for extracting other data
+#if 0
 // return a path on disk to extracted unrar.dll or nullptr if couldn't extract
 // memory has to be freed by the caller
 const WCHAR* ExractUnrarDll() {
@@ -629,3 +625,4 @@ const WCHAR* ExractUnrarDll() {
     dllPath = nullptr; // don't free
     return ret;
 }
+#endif

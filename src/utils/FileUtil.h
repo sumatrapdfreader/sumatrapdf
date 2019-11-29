@@ -38,7 +38,6 @@ char* ReadFileWithAllocator(const char* path, size_t* fileSizeOut, Allocator* al
 bool WriteFile(const char* path, const void* data, size_t dataLen);
 OwnedData ReadFile(const char* path);
 OwnedData ReadFile(std::string_view path);
-std::tuple<OwnedData, error*> ReadFile2(const char* path);
 
 bool Exists(std::string_view path);
 
