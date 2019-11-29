@@ -33,6 +33,58 @@ function zlib_files()
   })
 end
 
+function unrar_files()
+  files_in_dir("ext/unrar", {
+    "archive.*",
+    "arcread.*",
+    "blake2s.*",
+    "cmddata.*",
+    "consio.*",
+    "crc.*",
+    "crypt.*",
+    "dll.*",
+    "encname.*",
+    "errhnd.*",
+    "extinfo.*",
+    "extract.*",
+    "filcreat.*",
+    "file.*",
+    "filefn.*",
+    "filestr.*",
+    "find.*",
+    "getbits.*",
+    "global.*",
+    "hash.*",
+    "headers.*",
+    "isnt.*",
+    "list.*",
+    "match.*",
+    "options.*",
+    "pathfn.*",
+    "qopen.*",
+    "rarvm.*",
+    "rawread.*",
+    "rdwrfn.*",
+    "recvol.*",
+    "rijndael.*",
+    "rs.*",
+    "rs16.*",
+    "scantree.*",
+    "secpassword.*",
+    "sha1.*",
+    "sha256.*",
+    "smallfn.*",
+    "strfn.*",
+    "strlist.*",
+    "system.*",
+    "threadpool.*",
+    "timefn.*",
+    "unicode.*",
+    "unpack.*",
+    "volume.*",
+  })
+end
+
 function libdjvu_files()
   files_in_dir("ext/libdjvu", {
     "Arrays.cpp", "atomic.cpp", "BSByteStream.cpp", "BSEncodeByteStream.cpp",

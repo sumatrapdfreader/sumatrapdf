@@ -155,6 +155,15 @@ workspace "SumatraPDF"
     disablewarnings { "4131", "4244", "4245", "4267", "4996" }
     zlib_files()
 
+  project "unrar"
+    kind "StaticLib"
+    language "C++"
+    exceptionhandling "On"
+    defines { "UNRAR", "RARDLL", "SILENT" }
+    disablewarnings { "4100", "4201", "4211", "4244", "4389", "4456", "4459", "4701", "4702", "4706", "4709", "4996" }
+    includedirs { "ext/unrar" }
+    unrar_files()
+
   project "libdjvu"
     kind "StaticLib"
     characterset ("MBCS")
