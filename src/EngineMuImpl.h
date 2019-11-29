@@ -27,6 +27,17 @@ struct FitzImagePos {
     fz_rect rect = fz_unit_rect;
 };
 
+struct FzPageInfo {
+    int pageNo = 0; // 1-based
+    fz_page* page = nullptr;
+    fz_link* links = nullptr;
+    fz_display_list* list = nullptr;
+    fz_stext_page* stext = nullptr;
+    RectD mediabox = {};
+    Vec<pdf_annot*> pageAnnots;
+    Vec<fz_rect> imageRects;
+};
+
 fz_rect fz_RectD_to_rect(RectD rect);
 RectD fz_rect_to_RectD(fz_rect rect);
 fz_matrix fz_create_view_ctm(fz_rect mediabox, float zoom, int rotation);
