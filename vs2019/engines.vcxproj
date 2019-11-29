@@ -447,6 +447,7 @@
     <ClInclude Include="..\src\EngineEbook.h" />
     <ClInclude Include="..\src\EngineImages.h" />
     <ClInclude Include="..\src\EngineManager.h" />
+    <ClInclude Include="..\src\EngineMuImpl.h" />
     <ClInclude Include="..\src\EnginePdf.h" />
     <ClInclude Include="..\src\EnginePs.h" />
     <ClInclude Include="..\src\EngineXps.h" />
@@ -467,6 +468,7 @@
     <ClCompile Include="..\src\EngineManager.cpp" />
     <ClCompile Include="..\src\EnginePdf.cpp" />
     <ClCompile Include="..\src\EnginePs.cpp" />
+    <ClCompile Include="..\src\EngineXps.cpp" />
     <ClCompile Include="..\src\FileModifications.cpp" />
     <ClCompile Include="..\src\HtmlFormatter.cpp" />
     <ClCompile Include="..\src\MobiDoc.cpp" />

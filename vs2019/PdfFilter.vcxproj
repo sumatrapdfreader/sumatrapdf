@@ -531,6 +531,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\EnginePdf.cpp" />
+    <ClCompile Include="..\src\EngineXps.cpp" />
     <ClCompile Include="..\src\MUPDF_Exports.cpp" />
     <ClCompile Include="..\src\MobiDoc.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>

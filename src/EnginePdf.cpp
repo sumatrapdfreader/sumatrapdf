@@ -5,6 +5,7 @@
 
 extern "C" {
 #include <mupdf/fitz.h>
+#include <mupdf/pdf.h>
 }
 
 #include "utils/BaseUtil.h"
@@ -21,6 +22,7 @@ extern "C" {
 #include "AppColors.h"
 #include "wingui/TreeModel.h"
 #include "EngineBase.h"
+#include "EngineMuImpl.h"
 #include "EnginePdf.h"
 
 // maximum size of a file that's entirely loaded into memory before parsed
@@ -28,21 +30,14 @@ extern "C" {
 // so that their content can be loaded on demand in order to preserve memory
 #define MAX_MEMORY_FILE_SIZE (10 * 1024 * 1024)
 
-// number of page content trees to cache for quicker rendering
-#define MAX_PAGE_RUN_CACHE 8
-// maximum estimated memory requirement allowed for the run cache of one document
-#define MAX_PAGE_RUN_MEMORY (40 * 1024 * 1024)
-
-// maximum amount of memory that MuPDF should use per fz_context store
-#define MAX_CONTEXT_MEMORY (256 * 1024 * 1024)
 
 ///// extensions to Fitz that are usable for both PDF and XPS /////
 
-inline RectD fz_rect_to_RectD(fz_rect rect) {
+RectD fz_rect_to_RectD(fz_rect rect) {
     return RectD::FromXY(rect.x0, rect.y0, rect.x1, rect.y1);
 }
 
-inline fz_rect fz_RectD_to_rect(RectD rect) {
+fz_rect fz_RectD_to_rect(RectD rect) {
     fz_rect result = {(float)rect.x, (float)rect.y, (float)(rect.x + rect.dx), (float)(rect.y + rect.dy)};
     return result;
 }
@@ -51,7 +46,7 @@ inline bool fz_is_pt_in_rect(fz_rect rect, fz_point pt) {
     return fz_rect_to_RectD(rect).Contains(PointD(pt.x, pt.y));
 }
 
-inline float fz_calc_overlap(fz_rect r1, fz_rect r2) {
+float fz_calc_overlap(fz_rect r1, fz_rect r2) {
     if (fz_is_empty_rect(r1))
         return 0.0f;
     fz_rect isect = fz_intersect_rect(r1, r2);
@@ -132,7 +127,7 @@ static RenderedBitmap* try_render_as_palette_image(fz_pixmap* pixmap) {
     return new RenderedBitmap(hbmp, SizeI(w, h), hMap);
 }
 
-static RenderedBitmap* new_rendered_fz_pixmap(fz_context* ctx, fz_pixmap* pixmap) {
+RenderedBitmap* new_rendered_fz_pixmap(fz_context* ctx, fz_pixmap* pixmap) {
     if (pixmap->n == 4 && fz_colorspace_is_rgb(ctx, pixmap->colorspace)) {
         RenderedBitmap* res = try_render_as_palette_image(pixmap);
         if (res) {
@@ -219,7 +214,7 @@ fz_stream* fz_open_file2(fz_context* ctx, const WCHAR* filePath) {
     return stm;
 }
 
-unsigned char* fz_extract_stream_data(fz_context* ctx, fz_stream* stream, size_t* cbCount) {
+u8* fz_extract_stream_data(fz_context* ctx, fz_stream* stream, size_t* cbCount) {
     fz_seek(ctx, stream, 0, 2);
     i64 fileLen = fz_tell(ctx, stream);
     fz_seek(ctx, stream, 0, 0);
@@ -419,8 +414,6 @@ extern "C" static void drop_istream(fz_context* ctx, void* state_) {
     state->stream->Release();
     fz_free(ctx, state);
 }
-
-fz_stream* fz_open_istream(fz_context* ctx, IStream* stream);
 
 // TODO:(port)
 #if 0
@@ -663,22 +656,6 @@ class SimpleDest : public PageDestination {
     }
 };
 
-struct FitzImagePos {
-    fz_image* image = nullptr;
-    fz_rect rect = fz_unit_rect;
-};
-
-class FitzAbortCookie : public AbortCookie {
-  public:
-    fz_cookie cookie;
-    FitzAbortCookie() {
-        memset(&cookie, 0, sizeof(cookie));
-    }
-    void Abort() override {
-        cookie.abort = 1;
-    }
-};
-
 static Vec<PageAnnotation> fz_get_user_page_annots(Vec<PageAnnotation>& userAnnots, int pageNo) {
     Vec<PageAnnotation> result;
     for (size_t i = 0; i < userAnnots.size(); i++) {
@@ -784,12 +761,6 @@ static void fz_run_page_transparency(fz_context* ctx, Vec<PageAnnotation>& pageA
         fz_end_group(ctx, dev);
 }
 #endif
-
-///// PDF-specific extensions to Fitz/MuPDF /////
-
-extern "C" {
-#include <mupdf/pdf.h>
-}
 
 namespace str {
 namespace conv {
@@ -1241,7 +1212,7 @@ class PdfImage : public PageElement {
 extern "C" void pdf_install_load_system_font_funcs(fz_context* ctx);
 
 // TODO(port): improve locking to use lock
-extern "C" static void fz_lock_context_cs(void* user, int lock) {
+extern "C" void fz_lock_context_cs(void* user, int lock) {
     UNUSED(lock);
     PdfEngineImpl* e = (PdfEngineImpl*)user;
     // we use a single critical section for all locks,
@@ -1252,7 +1223,7 @@ extern "C" static void fz_lock_context_cs(void* user, int lock) {
     EnterCriticalSection(&e->ctxAccess);
 }
 
-extern "C" static void fz_unlock_context_cs(void* user, int lock) {
+extern "C" void fz_unlock_context_cs(void* user, int lock) {
     UNUSED(lock);
     PdfEngineImpl* e = (PdfEngineImpl*)user;
     LeaveCriticalSection(&e->ctxAccess);
@@ -3225,6 +3196,3 @@ BaseEngine* CreateFromStream(IStream* stream, PasswordUI* pwdUI) {
 }
 
 } // namespace PdfEngine
-
-// TODO: nasty but I want them in separate files
-#include "EngineXps.cpp"

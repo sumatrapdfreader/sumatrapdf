@@ -4,13 +4,15 @@
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
 
-#include "TreeModel.h"
+#include "wingui/TreeModel.h"
+
 #include "EngineBase.h"
 #include "EngineDjVu.h"
 #include "EngineEbook.h"
 #include "EngineImages.h"
 #include "EnginePdf.h"
 #include "EnginePs.h"
+#include "EngineXps.h"
 #include "EngineManager.h"
 
 namespace EngineManager {

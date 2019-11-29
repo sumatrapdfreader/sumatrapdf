@@ -1,7 +1,30 @@
-///// XPS-specific extensions to Fitz/MuXPS /////
+/* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
+   License: GPLv3 */
+
+#pragma warning(disable : 4611) // interaction between '_setjmp' and C++ object destruction is non-portable
+
 extern "C" {
+#include <mupdf/fitz.h>
+#include <mupdf/pdf.h>
 #include <../mupdf/source/xps/xps-imp.h>
 }
+
+#include "utils/BaseUtil.h"
+#include "utils/Archive.h"
+#include "utils/ScopedWin.h"
+#include "utils/FileUtil.h"
+#include "utils/HtmlParserLookup.h"
+#include "utils/HtmlPullParser.h"
+#include "utils/TrivialHtmlParser.h"
+#include "utils/WinUtil.h"
+#include "utils/ZipUtil.h"
+#include "utils/SimpleLog.h"
+
+#include "AppColors.h"
+#include "wingui/TreeModel.h"
+#include "EngineBase.h"
+#include "EngineMuImpl.h"
+#include "EngineXps.h"
 
 // TODO: use http://schemas.openxps.org/oxps/v1.0 as well once NS actually matters
 #define NS_XPS_MICROSOFT "http://schemas.microsoft.com/xps/2005/06"

@@ -577,6 +577,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\EnginePdf.cpp" />
+    <ClCompile Include="..\src\EngineXps.cpp" />
     <ClCompile Include="..\src\HtmlFormatter.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release x32_xp|Win32'">true</ExcludedFromBuild>

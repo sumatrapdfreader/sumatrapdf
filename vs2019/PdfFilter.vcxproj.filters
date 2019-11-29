@@ -34,6 +34,7 @@
   <ItemGroup>
     <ClCompile Include="..\src\EbookDoc.cpp" />
     <ClCompile Include="..\src\EnginePdf.cpp" />
+    <ClCompile Include="..\src\EngineXps.cpp" />
     <ClCompile Include="..\src\MUPDF_Exports.cpp" />
     <ClCompile Include="..\src\MobiDoc.cpp" />
     <ClCompile Include="..\src\ifilter\CEpubFilter.cpp">

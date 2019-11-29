@@ -44,6 +44,7 @@
     <ClCompile Include="..\src\EngineEbook.cpp" />
     <ClCompile Include="..\src\EngineImages.cpp" />
     <ClCompile Include="..\src\EnginePdf.cpp" />
+    <ClCompile Include="..\src\EngineXps.cpp" />
     <ClCompile Include="..\src\HtmlFormatter.cpp" />
     <ClCompile Include="..\src\MUPDF_Exports.cpp" />
     <ClCompile Include="..\src\MobiDoc.cpp" />
