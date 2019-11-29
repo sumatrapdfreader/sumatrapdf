@@ -757,7 +757,7 @@ static LRESULT OnSetCursor(WindowInfo* win, HWND hwnd) {
     PointI pt;
 
     if (win->mouseAction != MouseAction::Idle)
-        win->DeleteInfotip();
+        win->HideInfoTip();
 
     switch (win->mouseAction) {
         case MouseAction::Dragging:
@@ -783,7 +783,7 @@ static LRESULT OnSetCursor(WindowInfo* win, HWND hwnd) {
                 if (pageEl) {
                     AutoFreeW text(pageEl->GetValue());
                     RectI rc = dm->CvtToScreen(pageEl->GetPageNo(), pageEl->GetRect());
-                    win->CreateInfotip(text, rc, true);
+                    win->ShowInfoTip(text, rc, true);
 
                     bool isLink = pageEl->GetType() == PageElementType::Link;
                     delete pageEl;
@@ -793,14 +793,14 @@ static LRESULT OnSetCursor(WindowInfo* win, HWND hwnd) {
                         return TRUE;
                     }
                 } else
-                    win->DeleteInfotip();
+                    win->HideInfoTip();
                 if (dm->IsOverText(pt))
                     SetCursor(IDC_IBEAM);
                 else
                     SetCursor(IDC_ARROW);
                 return TRUE;
             }
-            win->DeleteInfotip();
+            win->HideInfoTip();
             break;
     }
     return win->presentation ? TRUE : FALSE;
@@ -1099,7 +1099,7 @@ static LRESULT WndProcCanvasChmUI(WindowInfo* win, HWND hwnd, UINT msg, WPARAM w
     switch (msg) {
         case WM_SETCURSOR:
             // TODO: make (re)loading a document always clear the infotip
-            win->DeleteInfotip();
+            win->HideInfoTip();
             return DefWindowProc(hwnd, msg, wParam, lParam);
 
         default:
@@ -1142,7 +1142,7 @@ static LRESULT WndProcCanvasEbookUI(WindowInfo* win, HWND hwnd, UINT msg, WPARAM
     switch (msg) {
         case WM_SETCURSOR:
             // TODO: make (re)loading a document always clear the infotip
-            win->DeleteInfotip();
+            win->HideInfoTip();
             return DefWindowProc(hwnd, msg, wParam, lParam);
 
         case WM_MOUSEWHEEL:
@@ -1233,16 +1233,16 @@ static LRESULT OnSetCursorAbout(WindowInfo* win, HWND hwnd) {
     if (GetCursorPosInHwnd(hwnd, pt)) {
         StaticLinkInfo linkInfo;
         if (GetStaticLink(win->staticLinks, pt.x, pt.y, &linkInfo)) {
-            win->CreateInfotip(linkInfo.infotip, linkInfo.rect);
+            win->ShowInfoTip(linkInfo.infotip, linkInfo.rect);
             SetCursor(IDC_HAND);
         } else {
-            win->DeleteInfotip();
+            win->HideInfoTip();
             SetCursor(IDC_ARROW);
         }
         return TRUE;
     }
 
-    win->DeleteInfotip();
+    win->HideInfoTip();
     return FALSE;
 }
 
@@ -1313,7 +1313,7 @@ static LRESULT WndProcCanvasLoadError(WindowInfo* win, HWND hwnd, UINT msg, WPAR
 
         case WM_SETCURSOR:
             // TODO: make (re)loading a document always clear the infotip
-            win->DeleteInfotip();
+            win->HideInfoTip();
             return DefWindowProc(hwnd, msg, wParam, lParam);
 
         default:

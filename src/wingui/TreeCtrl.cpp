@@ -116,7 +116,6 @@ static bool HandleKey(HWND hwnd, WPARAM wp) {
         bool recursive = IsShiftPressed();
         TreeViewToggle(hwnd, TreeView_GetSelection(hwnd), recursive);
     } else {
-        dbglogf("wp: %d\n", wp);
         return false;
     }
     TreeView_EnsureVisible(hwnd, TreeView_GetSelection(hwnd));

@@ -9,9 +9,12 @@
 #include "utils/WinUtil.h"
 
 #include "wingui/WinGui.h"
+#include "wingui/Layout.h"
+#include "wingui/Window.h"
 #include "wingui/TreeModel.h"
 #include "wingui/TreeCtrl.h"
 #include "wingui/FrameRateWnd.h"
+#include "wingui/TooltipCtrl.h"
 
 #include "BaseEngine.h"
 #include "EngineManager.h"
@@ -73,6 +76,7 @@ WindowInfo::~WindowInfo() {
     delete cbHandler;
 
     delete frameRateWnd;
+    delete infotip;
     delete tocTreeCtrl;
     free(sidebarSplitter);
     free(favSplitter);
@@ -153,7 +157,7 @@ void WindowInfo::RedrawAll(bool update) {
 void WindowInfo::ChangePresentationMode(PresentationMode mode) {
     presentation = mode;
     if (PM_BLACK_SCREEN == mode || PM_WHITE_SCREEN == mode) {
-        DeleteInfotip();
+        HideInfoTip();
     }
     RedrawAll();
 }
@@ -198,40 +202,16 @@ void WindowInfo::MoveDocBy(int dx, int dy) {
         dm->ScrollYBy(dy, false);
 }
 
-#define MULTILINE_INFOTIP_WIDTH_PX 500
-
-void WindowInfo::CreateInfotip(const WCHAR* text, RectI& rc, bool multiline) {
+void WindowInfo::ShowInfoTip(const WCHAR* text, RectI& rc, bool multiline) {
     if (str::IsEmpty(text)) {
-        this->DeleteInfotip();
+        this->HideInfoTip();
         return;
     }
-
-    TOOLINFO ti = {0};
-    ti.cbSize = sizeof(ti);
-    ti.hwnd = this->hwndCanvas;
-    ti.uFlags = TTF_SUBCLASS;
-    ti.lpszText = (WCHAR*)text;
-    ti.rect = rc.ToRECT();
-
-    if (multiline || str::FindChar(text, '\n'))
-        SendMessage(this->hwndInfotip, TTM_SETMAXTIPWIDTH, 0, MULTILINE_INFOTIP_WIDTH_PX);
-    else
-        SendMessage(this->hwndInfotip, TTM_SETMAXTIPWIDTH, 0, -1);
-
-    SendMessage(this->hwndInfotip, this->infotipVisible ? TTM_NEWTOOLRECT : TTM_ADDTOOL, 0, (LPARAM)&ti);
-    this->infotipVisible = true;
+    infotip->Show(text, rc, multiline);
 }
 
-void WindowInfo::DeleteInfotip() {
-    if (!infotipVisible)
-        return;
-
-    TOOLINFO ti = {0};
-    ti.cbSize = sizeof(ti);
-    ti.hwnd = hwndCanvas;
-
-    SendMessage(hwndInfotip, TTM_DELTOOL, 0, (LPARAM)&ti);
-    infotipVisible = false;
+void WindowInfo::HideInfoTip() {
+    infotip->Hide();
 }
 
 void WindowInfo::ShowNotification(const WCHAR* msg, int options, NotificationGroupId groupId) {

@@ -542,6 +542,7 @@
     <ClInclude Include="..\src\wingui\Layout.h" />
     <ClInclude Include="..\src\wingui\SplitterWnd.h" />
     <ClInclude Include="..\src\wingui\TabsCtrl.h" />
+    <ClInclude Include="..\src\wingui\TooltipCtrl.h" />
     <ClInclude Include="..\src\wingui\TreeCtrl.h" />
     <ClInclude Include="..\src\wingui\TreeModel.h" />
     <ClInclude Include="..\src\wingui\WinGui.h" />
@@ -573,6 +574,7 @@
     <ClCompile Include="..\src\wingui\Layout.cpp" />
     <ClCompile Include="..\src\wingui\SplitterWnd.cpp" />
     <ClCompile Include="..\src\wingui\TabsCtrl.cpp" />
+    <ClCompile Include="..\src\wingui\TooltipCtrl.cpp" />
     <ClCompile Include="..\src\wingui\TreeCtrl.cpp" />
     <ClCompile Include="..\src\wingui\Window.cpp" />
     <ClCompile Include="..\tools\test-app\TestDirectDraw.cpp" />

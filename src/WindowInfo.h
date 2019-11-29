@@ -22,6 +22,7 @@ class EbookController;
 class TabInfo;
 
 class TreeCtrl;
+struct TooltipCtrl;
 
 /* Describes actions which can be performed by mouse */
 enum class MouseAction { Idle = 0, Dragging, DraggingRight, Selecting, Scrolling, SelectingText };
@@ -127,9 +128,8 @@ class WindowInfo {
     CaptionInfo* caption = nullptr;
     int extendedFrameHeight = 0;
 
-    HWND hwndInfotip = nullptr;
+    TooltipCtrl* infotip = nullptr;
 
-    bool infotipVisible = false;
     HMENU menu = nullptr;
     bool isMenuHidden = false; // not persisted at shutdown
 
@@ -218,8 +218,8 @@ class WindowInfo {
     void ToggleZoom();
     void MoveDocBy(int dx, int dy);
 
-    void CreateInfotip(const WCHAR* text, RectI& rc, bool multiline = false);
-    void DeleteInfotip();
+    void ShowInfoTip(const WCHAR* text, RectI& rc, bool multiline = false);
+    void HideInfoTip();
     void ShowNotification(const WCHAR* message, int options = NOS_DEFAULT,
                           NotificationGroupId groupId = NG_RESPONSE_TO_ACTION);
 

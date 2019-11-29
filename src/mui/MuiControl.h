@@ -34,14 +34,14 @@ class Control : public ILayout {
     Control* GetChild(size_t idx) const;
     size_t GetChildCount() const;
 
-    void SetPosition(const Rect& p);
+    void SetPosition(const Gdiplus::Rect& p);
 
     virtual void Paint(Graphics* gfx, int offX, int offY);
 
     // ILayout
-    virtual Size Measure(const Size availableSize);
-    virtual void Arrange(const Rect finalRect);
-    virtual Size DesiredSize();
+    virtual Gdiplus::Size Measure(const Gdiplus::Size availableSize);
+    virtual void Arrange(const Gdiplus::Rect finalRect);
+    virtual Gdiplus::Size DesiredSize();
 
     // mouse enter/leave are used e.g. by a button to change the look when mouse
     // is over them. The intention is that in response to those a window should
@@ -67,7 +67,7 @@ class Control : public ILayout {
     void SetToolTip(const WCHAR*);
     void SetNamedEventClick(const char*);
 
-    void MeasureChildren(Size availableSize) const;
+    void MeasureChildren(Gdiplus::Size availableSize) const;
     void MapMyToRootPos(int& x, int& y) const;
     void MapRootToMyPos(int& x, int& y) const;
 
@@ -100,11 +100,11 @@ class Control : public ILayout {
     HCURSOR hCursor;
 
     // position and size (relative to parent, might be outside of parent's bounds)
-    Rect pos;
+    Gdiplus::Rect pos;
 
   protected:
     Vec<Control*> children;
 
     // desired size calculated in Measure()
-    Size desiredSize;
+    Gdiplus::Size desiredSize;
 };

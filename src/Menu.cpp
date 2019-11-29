@@ -588,7 +588,7 @@ void OnAboutContextMenu(WindowInfo* win, int x, int y) {
 
     if (IDM_PIN_SELECTED_DOCUMENT == cmd) {
         state->isPinned = !state->isPinned;
-        win->DeleteInfotip();
+        win->HideInfoTip();
         win->RedrawAll(true);
         return;
     }
@@ -602,7 +602,7 @@ void OnAboutContextMenu(WindowInfo* win, int x, int y) {
             DeleteDisplayState(state);
         }
         CleanUpThumbnailCache(gFileHistory);
-        win->DeleteInfotip();
+        win->HideInfoTip();
         win->RedrawAll(true);
         return;
     }

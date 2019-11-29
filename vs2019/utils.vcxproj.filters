@@ -177,6 +177,9 @@
     <ClInclude Include="..\src\wingui\TabsCtrl.h">
       <Filter>wingui</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\wingui\TooltipCtrl.h">
+      <Filter>wingui</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\wingui\TreeCtrl.h">
       <Filter>wingui</Filter>
     </ClInclude>
@@ -351,6 +354,9 @@
       <Filter>wingui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\wingui\TabsCtrl.cpp">
+      <Filter>wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\TooltipCtrl.cpp">
       <Filter>wingui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\wingui\TreeCtrl.cpp">

@@ -9,21 +9,24 @@
 #include "utils/Dpi.h"
 #include "utils/FileUtil.h"
 #include "utils/FileWatcher.h"
-#include "utils/GdiPlusUtil.h"
 #include "utils/HtmlParserLookup.h"
 #include "utils/HttpUtil.h"
-#include "mui/Mui.h"
 #include "utils/SquareTreeParser.h"
 #include "utils/ThreadUtil.h"
 #include "utils/UITask.h"
 #include "utils/WinUtil.h"
 
 #include "wingui/WinGui.h"
+#include "wingui/Layout.h"
+#include "wingui/Window.h"
 #include "wingui/TreeModel.h"
 #include "wingui/TreeCtrl.h"
 #include "wingui/SplitterWnd.h"
 #include "wingui/LabelWithCloseWnd.h"
 #include "wingui/FrameRateWnd.h"
+#include "wingui/TooltipCtrl.h"
+
+#include "utils/GdiPlusUtil.h"
 
 #include "BaseEngine.h"
 #include "PsEngine.h"
@@ -1280,9 +1283,8 @@ static WindowInfo* CreateWindowInfo() {
     ShowWindow(win->hwndCanvas, SW_SHOW);
     UpdateWindow(win->hwndCanvas);
 
-    win->hwndInfotip = CreateWindowEx(WS_EX_TOPMOST, TOOLTIPS_CLASS, nullptr, WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP,
-                                      CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, win->hwndCanvas,
-                                      nullptr, GetModuleHandle(nullptr), nullptr);
+    win->infotip = new TooltipCtrl(win->hwndCanvas);
+    win->infotip->Create();
 
     CreateCaption(win);
     CreateTabbar(win);
@@ -3770,6 +3772,12 @@ static int TestBigNew()
 }
 #endif
 
+// To avoid including mui/Mui.h, which conflicts with wingui/Layout.h
+namespace mui {
+extern void SetDebugPaint(bool);
+extern bool IsDebugPaint();
+} // namespace mui
+
 static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     int wmId = LOWORD(wParam);
 
@@ -4113,8 +4121,8 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
             break;
 
         case IDM_DEBUG_MUI:
-            SetDebugPaint(!IsDebugPaint());
-            win::menu::SetChecked(GetMenu(win->hwndFrame), IDM_DEBUG_MUI, !IsDebugPaint());
+            mui::SetDebugPaint(!mui::IsDebugPaint());
+            win::menu::SetChecked(GetMenu(win->hwndFrame), IDM_DEBUG_MUI, !mui::IsDebugPaint());
             for (size_t i = 0; i < gWindows.size(); i++)
                 gWindows.at(i)->RedrawAll(true);
             break;
