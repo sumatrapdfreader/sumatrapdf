@@ -22,7 +22,7 @@ extern "C" {
 #include "AppColors.h"
 #include "wingui/TreeModel.h"
 #include "EngineBase.h"
-#include "EngineMuImpl.h"
+#include "EngineFzUtil.h"
 #include "EnginePdf.h"
 
 // maximum size of a file that's entirely loaded into memory before parsed

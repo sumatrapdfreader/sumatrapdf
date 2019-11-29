@@ -445,9 +445,9 @@
     <ClInclude Include="..\src\EngineBase.h" />
     <ClInclude Include="..\src\EngineDjVu.h" />
     <ClInclude Include="..\src\EngineEbook.h" />
+    <ClInclude Include="..\src\EngineFzUtil.h" />
     <ClInclude Include="..\src\EngineImages.h" />
     <ClInclude Include="..\src\EngineManager.h" />
-    <ClInclude Include="..\src\EngineMuImpl.h" />
     <ClInclude Include="..\src\EnginePdf.h" />
     <ClInclude Include="..\src\EnginePs.h" />
     <ClInclude Include="..\src\EngineXps.h" />

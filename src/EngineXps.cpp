@@ -23,7 +23,7 @@ extern "C" {
 #include "AppColors.h"
 #include "wingui/TreeModel.h"
 #include "EngineBase.h"
-#include "EngineMuImpl.h"
+#include "EngineFzUtil.h"
 #include "EngineXps.h"
 
 // TODO: use http://schemas.openxps.org/oxps/v1.0 as well once NS actually matters
