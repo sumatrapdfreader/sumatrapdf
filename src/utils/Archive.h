@@ -58,7 +58,7 @@ class Archive {
     // only set when we loaded file infos using unrar.dll fallback
     const char* rarFilePath_ = nullptr;
 
-    bool OpenUnrarDllFallback(const char* rarPathUtf);
+    bool OpenUnrarFallback(const char* rarPathUtf);
     OwnedData GetFileDataByIdUnarrDll(size_t fileId);
     bool LoadedUsingUnrarDll() const {
         return rarFilePath_ != nullptr;
@@ -82,6 +82,4 @@ Archive* OpenZipArchive(IStream* stream, bool deflatedOnly);
 Archive* Open7zArchive(IStream* stream);
 Archive* OpenTarArchive(IStream* stream);
 Archive* OpenRarArchive(IStream* stream);
-
-void SetUnrarDllPath(const WCHAR*);
 #endif

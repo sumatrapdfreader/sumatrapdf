@@ -464,29 +464,6 @@ workspace "SumatraPDF"
     entrypoint "wmainCRTStartup"
 
 
-  project "cmapdump"
-    kind "ConsoleApp"
-    language "C"
-    -- force 32build so that we can compile 64-bit Sumatra even on 32bit machines
-    -- that couldn't run 64-bit cmapdump
-    architecture "x86"
-    disablewarnings { "4100", "4267" }
-    includedirs { "mupdf/include" }
-    files { "mupdf/scripts/cmapdump.c" }
-
-
-  -- unfortunate we need buildcmap re-direction but we can do
-  -- dependson { "cmapdump" } in "mupdf" as it'll break mupdf project
-  project "buildcmap"
-    kind "ConsoleApp"
-    language "C"
-    -- premake has logic in vs2010_vcxproj.lua that only sets PlatformToolset
-    -- if there is a c/c++ file, so we add a no-op cpp file to force This logic
-    files { "tools/premake/no_op_console.c" }
-    dependson { "cmapdump" }
-    postbuildcommands { "{COPY} %{cfg.targetdir}\\cmapdump.exe ..\\bin" }
-    postbuildcommands { "cd .. & call scripts\\gen_mupdf_generated.bat bin\\cmapdump.exe"}
-
   project "unarr"
     kind "ConsoleApp"
     language "C"
@@ -511,7 +488,7 @@ workspace "SumatraPDF"
     includedirs { "src", "src/wingui", "mupdf/include" }
     disablewarnings { "4100", "4267", "4457" }
     engine_dump_files()
-    links { "engines", "utils", "mupdf", "unarrlib", "libwebp", "libdjvu" }
+    links { "engines", "utils", "unrar", "mupdf", "unarrlib", "libwebp", "libdjvu" }
     links {
       "comctl32", "gdiplus", "msimg32", "shlwapi",
       "version", "windowscodecs"
@@ -536,7 +513,7 @@ workspace "SumatraPDF"
     includedirs { "src" }
     files { "src/tools/plugin-test.cpp" }
     links { "utils", "mupdf" }
-    links { "shlwapi" }
+    links { "shlwapi", "version", "comctl32" }
 
 
   project "MakeLZSA"
@@ -546,7 +523,7 @@ workspace "SumatraPDF"
     makelzsa_files()
     includedirs { "src", "ext/zlib", "ext/lzma/C", "ext/unarr" }
     links { "unarrlib", "zlib" }
-    links { "shlwapi" }
+    links { "shlwapi", "version", "comctl32" }
 
 
   project "PdfFilter"
@@ -559,7 +536,7 @@ workspace "SumatraPDF"
     filter {}
     includedirs { "src", "src/wingui", "mupdf/include" }
     pdf_filter_files()
-    links { "utils", "libmupdf" }
+    links { "utils", "unrar", "libmupdf" }
     links { "comctl32", "gdiplus", "shlwapi", "version"  }
 
 
@@ -583,7 +560,7 @@ workspace "SumatraPDF"
     filter {}
     -- TODO: "chm" should only be for Debug config but doing links { "chm" }
     -- in the filter breaks linking by setting LinkLibraryDependencies to false
-    links { "utils", "libmupdf", "chm" }
+    links { "utils", "unrar", "libmupdf", "chm" }
     links { "comctl32", "gdiplus", "msimg32", "shlwapi", "version" }
 
 
@@ -601,7 +578,7 @@ workspace "SumatraPDF"
     }
     links {
       "engines", "libdjvu",  "libwebp", "mui", "mupdf", "sumatra", "synctex",
-      "uia", "unarrlib", "utils"
+      "uia", "unarrlib", "utils", "unrar"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",
@@ -622,7 +599,7 @@ workspace "SumatraPDF"
     files { "src/MuPDF_Exports.cpp" }
     links {
       "synctex", "sumatra", "libmupdf", "utils", "mui", "engines",
-      "uia", "unarrlib", "libwebp"
+      "uia", "unarrlib", "unrar", "libwebp"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",
@@ -641,7 +618,7 @@ workspace "SumatraPDF"
     disablewarnings { "4018", "4244", "4264", "4838", "4702", "4706" }
     uninstaller_files()
     includedirs { "src", "ext/zlib", "ext/unarr", "ext/lzma/C" }
-    links { "utils", "zlib", "unarrlib" }
+    links { "utils", "unrar", "zlib", "unarrlib" }
     links {
       "comctl32", "gdiplus", "shlwapi", "version", "wininet"
     }
@@ -662,7 +639,7 @@ workspace "SumatraPDF"
     installer_files()
     includedirs { "src", "ext/zlib", "ext/unarr", "ext/lzma/C", "ext/bzip2" }
     links {
-      "comctl32", "delayimp", "gdiplus", "shlwapi", "version", "wininet"
+      "comctl32", "delayimp", "gdiplus", "shlwapi", "version", "wininet", "unrar"
     }
     -- this is to prevent dll hijacking
     linkoptions { "/DELAYLOAD:gdiplus.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll"}
@@ -683,7 +660,7 @@ workspace "SumatraPDF"
     installer_files()
     includedirs { "src", "ext/zlib", "ext/unarr", "ext/lzma/C", "ext/bzip2" }
     links {
-      "comctl32", "delayimp", "gdiplus", "shlwapi", "version", "wininet"
+      "comctl32", "delayimp", "gdiplus", "shlwapi", "version", "wininet", "unrar"
     }
     -- this is to prevent dll hijacking
     linkoptions { "/DELAYLOAD:gdiplus.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll"}

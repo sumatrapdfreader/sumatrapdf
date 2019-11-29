@@ -481,6 +481,9 @@
     <ProjectReference Include="utils.vcxproj">
       <Project>{169C8510-82B0-ADC1-4B32-5121B705AAF2}</Project>
     </ProjectReference>
+    <ProjectReference Include="unrar.vcxproj">
+      <Project>{AD768210-198B-AAC1-E20C-4E214EE0A6F2}</Project>
+    </ProjectReference>
     <ProjectReference Include="mupdf.vcxproj">
       <Project>{2181F50F-8D95-1DC1-5617-C120C2EA19F2}</Project>
     </ProjectReference>

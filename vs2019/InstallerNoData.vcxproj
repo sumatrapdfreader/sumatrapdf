@@ -567,7 +567,6 @@
     <ClInclude Include="..\src\utils\WebpReader.h" />
     <ClInclude Include="..\src\utils\WinDynCalls.h" />
     <ClInclude Include="..\src\utils\WinUtil.h" />
-    <ClInclude Include="..\src\utils\error.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\ext\bzip2\bzip_all.c" />
@@ -655,10 +654,14 @@
     <ClCompile Include="..\src\utils\WebpReader.cpp" />
     <ClCompile Include="..\src\utils\WinDynCalls.cpp" />
     <ClCompile Include="..\src\utils\WinUtil.cpp" />
-    <ClCompile Include="..\src\utils\error.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\installer\Installer.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="unrar.vcxproj">
+      <Project>{AD768210-198B-AAC1-E20C-4E214EE0A6F2}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -48,9 +48,6 @@
     <ClInclude Include="..\src\utils\WinUtil.h">
       <Filter>src\utils</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\utils\error.h">
-      <Filter>src\utils</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\wingui\ButtonCtrl.h">
       <Filter>src\wingui</Filter>
     </ClInclude>
@@ -138,9 +135,6 @@
       <Filter>src\utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\WinUtil.cpp">
-      <Filter>src\utils</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\utils\error.cpp">
       <Filter>src\utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\wingui\ButtonCtrl.cpp">

@@ -13,6 +13,7 @@
 #include "utils/ByteWriter.h"
 #include "utils/CmdLineParser.h"
 #include "utils/FileUtil.h"
+#include "utils/WinUtil.h"
 #include "utils/LzmaSimpleArchive.h"
 
 namespace lzsa {

@@ -645,7 +645,6 @@ defer { instance->Release(); };
 #include "StrUtil.h"
 #include "Scoped.h"
 #include "Vec.h"
-#include "error.h"
 #include "ColorUtil.h"
 
 // lstrcpy is dangerous so forbid using it

@@ -371,16 +371,6 @@ Error:
 #endif
 }
 
-std::tuple<OwnedData, error*> ReadFile2(const char* path) {
-    size_t size = 0;
-    char* data = ReadFileWithAllocator(path, &size, nullptr);
-    if (!data) {
-        auto err = NewError("Couldn't open file");
-        return std::make_tuple(OwnedData(), err);
-    }
-    return std::make_tuple(OwnedData(data, size), nullptr);
-}
-
 OwnedData ReadFile(std::string_view path) {
     return ReadFile(path.data());
 }
