@@ -14,7 +14,7 @@ extern "C" {
 #include "utils/GdiplusUtil.h"
 
 #include "TreeModel.h"
-#include "BaseEngine.h"
+#include "EngineBase.h"
 #include "PdfCreator.h"
 
 static AutoFreeW gPdfProducer;

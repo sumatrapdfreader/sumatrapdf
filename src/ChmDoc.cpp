@@ -10,8 +10,9 @@
 #include "utils/TrivialHtmlParser.h"
 #include "utils/ScopedWin.h"
 
-#include "TreeModel.h"
-#include "BaseEngine.h"
+#include "wingui/TreeModel.h"
+
+#include "EngineBase.h"
 #include "EbookBase.h"
 #include "ChmDoc.h"
 

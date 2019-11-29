@@ -19,9 +19,9 @@ extern "C" {
 #include "utils/SimpleLog.h"
 
 #include "AppColors.h"
-#include "TreeModel.h"
-#include "BaseEngine.h"
-#include "PdfEngine.h"
+#include "wingui/TreeModel.h"
+#include "EngineBase.h"
+#include "EnginePdf.h"
 
 // maximum size of a file that's entirely loaded into memory before parsed
 // and displayed; larger files will be kept open while they're displayed
@@ -3227,4 +3227,4 @@ BaseEngine* CreateFromStream(IStream* stream, PasswordUI* pwdUI) {
 } // namespace PdfEngine
 
 // TODO: nasty but I want them in separate files
-#include "XpsEngine.cpp"
+#include "EngineXps.cpp"

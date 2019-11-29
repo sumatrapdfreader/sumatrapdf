@@ -28,7 +28,7 @@ To write new regression test:
 #include "utils/WinUtil.h"
 
 #include "TreeModel.h"
-#include "BaseEngine.h"
+#include "EngineBase.h"
 #include "EbookBase.h"
 #include "EbookDoc.h"
 #include "HtmlFormatter.h"

@@ -8,7 +8,7 @@
 #include "utils/ScopedWin.h"
 
 #include "TreeModel.h"
-#include "BaseEngine.h"
+#include "EngineBase.h"
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "EngineManager.h"

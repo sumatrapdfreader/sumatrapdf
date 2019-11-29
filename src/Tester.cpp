@@ -20,7 +20,7 @@
 #include "utils/ZipUtil.h"
 
 #include "TreeModel.h"
-#include "BaseEngine.h"
+#include "EngineBase.h"
 #include "EbookBase.h"
 #include "MobiDoc.h"
 #include "HtmlFormatter.h"

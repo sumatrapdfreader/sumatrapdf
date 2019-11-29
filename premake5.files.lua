@@ -459,20 +459,14 @@ end
 
 function engines_files()
   files_in_dir("src", {
-    "BaseEngine.h",
+    "Engine*",
     "ChmDoc.*",
-    "DjVuEngine.*",
     "EbookDoc.*",
-    "EbookEngine.*",
     "EbookFormatter.*",
-    "EngineManager.*",
     "FileModifications.*",
     "HtmlFormatter.*",
-    "ImagesEngine.*",
     "MobiDoc.*",
     "PdfCreator.*",
-    "PdfEngine.*",
-    "PsEngine.*",
 
     "utils/PalmDbReader.*",
   })
@@ -833,17 +827,17 @@ function pdf_preview_files()
     "PdfPreview.*",
     "PdfPreviewDll.cpp",
   })
-  files { "src/MUPDF_Exports.cpp", "src/PdfEngine.*" }
+  files { "src/MUPDF_Exports.cpp", "src/EnginePdf.*", "src/EngineXps.*" }
 
   filter {"configurations:Debug"}
     files_in_dir("src", {
       "ChmDoc.*",
-      "DjVuEngine.*",
       "EbookDoc.*",
-      "EbookEngine.*",
+      "EngineEbook.*",
+      "EngineDjVu.*",
+      "EngineImages.*",
       "EbookFormatter.*",
       "HtmlFormatter.*",
-      "ImagesEngine.*",
       "MobiDoc.*",
       "PdfCreator.*",
       "utils/PalmDbReader.*",
@@ -860,7 +854,7 @@ function pdf_filter_files()
     "CPdfFilter.*",
     "FilterBase.h",
   })
-  files { "src/MUPDF_Exports.cpp", "src/PdfEngine.cpp" }
+  files { "src/MUPDF_Exports.cpp", "src/EnginePdf.cpp", "src/EngineXps.*" }
 
   filter {"configurations:Debug"}
     files_in_dir("src/ifilter", {

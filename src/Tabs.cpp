@@ -14,7 +14,7 @@
 #include "wingui/TreeModel.h"
 #include "wingui/TreeCtrl.h"
 
-#include "BaseEngine.h"
+#include "EngineBase.h"
 #include "EngineManager.h"
 #include "SettingsStructs.h"
 #include "Controller.h"

@@ -28,8 +28,8 @@
 
 #include "utils/GdiPlusUtil.h"
 
-#include "BaseEngine.h"
-#include "PsEngine.h"
+#include "EngineBase.h"
+#include "EnginePs.h"
 #include "EngineManager.h"
 #include "Doc.h"
 #include "FileModifications.h"

@@ -16,7 +16,7 @@
 #include "wingui/FrameRateWnd.h"
 #include "wingui/TooltipCtrl.h"
 
-#include "BaseEngine.h"
+#include "EngineBase.h"
 #include "EngineManager.h"
 #include "Doc.h"
 #include "SettingsStructs.h"

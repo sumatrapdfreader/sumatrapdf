@@ -16,7 +16,7 @@
 #include "wingui/TreeCtrl.h"
 #include "wingui/FrameRateWnd.h"
 
-#include "BaseEngine.h"
+#include "EngineBase.h"
 #include "EngineManager.h"
 #include "Doc.h"
 

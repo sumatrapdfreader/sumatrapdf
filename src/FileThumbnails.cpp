@@ -9,7 +9,7 @@
 #include "utils/WinUtil.h"
 
 #include "TreeModel.h"
-#include "BaseEngine.h"
+#include "EngineBase.h"
 #include "SettingsStructs.h"
 #include "FileHistory.h"
 

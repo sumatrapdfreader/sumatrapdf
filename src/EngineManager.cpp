@@ -5,12 +5,12 @@
 #include "utils/ScopedWin.h"
 
 #include "TreeModel.h"
-#include "BaseEngine.h"
-#include "DjVuEngine.h"
-#include "EbookEngine.h"
-#include "ImagesEngine.h"
-#include "PdfEngine.h"
-#include "PsEngine.h"
+#include "EngineBase.h"
+#include "EngineDjVu.h"
+#include "EngineEbook.h"
+#include "EngineImages.h"
+#include "EnginePdf.h"
+#include "EnginePs.h"
 #include "EngineManager.h"
 
 namespace EngineManager {

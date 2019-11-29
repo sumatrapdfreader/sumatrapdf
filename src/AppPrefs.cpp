@@ -7,9 +7,9 @@
 #include "utils/UITask.h"
 #include "utils/ScopedWin.h"
 
-#include "TreeModel.h"
-#include "BaseEngine.h"
-#include "EbookEngine.h"
+#include "wingui/TreeModel.h"
+#include "EngineBase.h"
+#include "EngineEbook.h"
 
 #include "SettingsStructs.h"
 #include "FileHistory.h"

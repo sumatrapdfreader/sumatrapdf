@@ -5,7 +5,7 @@
 #include "utils/ScopedWin.h"
 
 #include "TreeModel.h"
-#include "BaseEngine.h"
+#include "EngineBase.h"
 #include "TextSelection.h"
 
 PageTextCache::PageTextCache(BaseEngine* engine) : engine(engine) {

@@ -10,6 +10,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\EbookDoc.h" />
+    <ClInclude Include="..\src\EngineXps.h" />
     <ClInclude Include="..\src\MobiDoc.h" />
     <ClInclude Include="..\src\ifilter\CEpubFilter.h">
       <Filter>ifilter</Filter>
@@ -32,9 +33,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\EbookDoc.cpp" />
+    <ClCompile Include="..\src\EnginePdf.cpp" />
     <ClCompile Include="..\src\MUPDF_Exports.cpp" />
     <ClCompile Include="..\src\MobiDoc.cpp" />
-    <ClCompile Include="..\src\PdfEngine.cpp" />
     <ClCompile Include="..\src\ifilter\CEpubFilter.cpp">
       <Filter>ifilter</Filter>
     </ClCompile>

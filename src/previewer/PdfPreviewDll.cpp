@@ -7,7 +7,7 @@
 #include "utils/WinUtil.h"
 
 #include "TreeModel.h"
-#include "BaseEngine.h"
+#include "EngineBase.h"
 #include "PdfPreview.h"
 #include "PdfPreviewBase.h"
 

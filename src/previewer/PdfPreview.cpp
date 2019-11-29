@@ -6,7 +6,7 @@
 #include "utils/WinUtil.h"
 
 #include "TreeModel.h"
-#include "BaseEngine.h"
+#include "EngineBase.h"
 #include "PdfEngine.h"
 #if defined(BUILD_EPUB_PREVIEW) || defined(BUILD_FB2_PREVIEW) || defined(BUILD_MOBI_PREVIEW)
 #include "mui/MiniMui.h"

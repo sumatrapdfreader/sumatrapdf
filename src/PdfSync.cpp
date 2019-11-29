@@ -7,7 +7,7 @@
 #include "utils/FileUtil.h"
 
 #include "TreeModel.h"
-#include "BaseEngine.h"
+#include "EngineBase.h"
 #include "PdfSync.h"
 
 // size of the mark highlighting the location calculated by forward-search

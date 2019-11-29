@@ -512,6 +512,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\src\EbookDoc.h" />
+    <ClInclude Include="..\src\EngineXps.h" />
     <ClInclude Include="..\src\MobiDoc.h" />
     <ClInclude Include="..\src\ifilter\CEpubFilter.h" />
     <ClInclude Include="..\src\ifilter\CPdfFilter.h" />
@@ -529,6 +530,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast x32_xp|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\src\EnginePdf.cpp" />
     <ClCompile Include="..\src\MUPDF_Exports.cpp" />
     <ClCompile Include="..\src\MobiDoc.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -538,7 +540,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast x32_xp|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\src\PdfEngine.cpp" />
     <ClCompile Include="..\src\ifilter\CEpubFilter.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release x32_xp|Win32'">true</ExcludedFromBuild>

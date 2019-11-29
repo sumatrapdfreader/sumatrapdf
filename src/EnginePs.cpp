@@ -8,10 +8,10 @@
 #include "utils/FileUtil.h"
 #include "utils/WinUtil.h"
 
-#include "TreeModel.h"
-#include "BaseEngine.h"
-#include "PdfEngine.h"
-#include "PsEngine.h"
+#include "wingui/TreeModel.h"
+#include "EngineBase.h"
+#include "EnginePdf.h"
+#include "EnginePs.h"
 
 static WCHAR* GetGhostscriptPath() {
     const WCHAR* gsProducts[] = {

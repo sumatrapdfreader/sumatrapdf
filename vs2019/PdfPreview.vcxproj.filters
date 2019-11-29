@@ -13,15 +13,16 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\ChmDoc.h" />
-    <ClInclude Include="..\src\DjVuEngine.h" />
     <ClInclude Include="..\src\EbookDoc.h" />
-    <ClInclude Include="..\src\EbookEngine.h" />
     <ClInclude Include="..\src\EbookFormatter.h" />
+    <ClInclude Include="..\src\EngineDjVu.h" />
+    <ClInclude Include="..\src\EngineEbook.h" />
+    <ClInclude Include="..\src\EngineImages.h" />
+    <ClInclude Include="..\src\EnginePdf.h" />
+    <ClInclude Include="..\src\EngineXps.h" />
     <ClInclude Include="..\src\HtmlFormatter.h" />
-    <ClInclude Include="..\src\ImagesEngine.h" />
     <ClInclude Include="..\src\MobiDoc.h" />
     <ClInclude Include="..\src\PdfCreator.h" />
-    <ClInclude Include="..\src\PdfEngine.h" />
     <ClInclude Include="..\src\mui\MiniMui.h">
       <Filter>mui</Filter>
     </ClInclude>
@@ -37,16 +38,16 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\ChmDoc.cpp" />
-    <ClCompile Include="..\src\DjVuEngine.cpp" />
     <ClCompile Include="..\src\EbookDoc.cpp" />
-    <ClCompile Include="..\src\EbookEngine.cpp" />
     <ClCompile Include="..\src\EbookFormatter.cpp" />
+    <ClCompile Include="..\src\EngineDjVu.cpp" />
+    <ClCompile Include="..\src\EngineEbook.cpp" />
+    <ClCompile Include="..\src\EngineImages.cpp" />
+    <ClCompile Include="..\src\EnginePdf.cpp" />
     <ClCompile Include="..\src\HtmlFormatter.cpp" />
-    <ClCompile Include="..\src\ImagesEngine.cpp" />
     <ClCompile Include="..\src\MUPDF_Exports.cpp" />
     <ClCompile Include="..\src\MobiDoc.cpp" />
     <ClCompile Include="..\src\PdfCreator.cpp" />
-    <ClCompile Include="..\src\PdfEngine.cpp" />
     <ClCompile Include="..\src\mui\MiniMui.cpp">
       <Filter>mui</Filter>
     </ClCompile>

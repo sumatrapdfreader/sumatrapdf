@@ -8,7 +8,7 @@
 #include "utils/SettingsUtil.h"
 
 #include "TreeModel.h"
-#include "BaseEngine.h"
+#include "EngineBase.h"
 #define INCLUDE_SETTINGSSTRUCTS_METADATA
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"

@@ -10,9 +10,9 @@
 #include "utils/TgaReader.h"
 #include "utils/WinUtil.h"
 
-#include "TreeModel.h"
-#include "BaseEngine.h"
-#include "DjVuEngine.h"
+#include "wingui/TreeModel.h"
+#include "EngineBase.h"
+#include "EngineDjVu.h"
 #include "EngineManager.h"
 #include "FileModifications.h"
 #include "PdfCreator.h"

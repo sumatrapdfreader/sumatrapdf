@@ -13,9 +13,9 @@
 #include "utils/WinUtil.h"
 #include "utils/ScopedWin.h"
 
-#include "TreeModel.h"
-#include "BaseEngine.h"
-#include "DjVuEngine.h"
+#include "wingui/TreeModel.h"
+#include "EngineBase.h"
+#include "EngineDjVu.h"
 
 // TODO: libdjvu leaks memory - among others
 //       DjVuPort::corpse_lock, DjVuPort::corpse_head, pcaster,

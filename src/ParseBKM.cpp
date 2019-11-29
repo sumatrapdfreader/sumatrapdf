@@ -10,7 +10,7 @@
 #include "wingui/TreeModel.h"
 #include "wingui/TreeCtrl.h"
 
-#include "BaseEngine.h"
+#include "EngineBase.h"
 
 /*
 Creating and parsing of .bkm files that contain alternative bookmarks view

@@ -18,9 +18,9 @@
 #include "utils/WinUtil.h"
 #include "utils/ZipUtil.h"
 
-#include "TreeModel.h"
-#include "BaseEngine.h"
-#include "EbookEngine.h"
+#include "wingui/TreeModel.h"
+#include "EngineBase.h"
+#include "EngineEbook.h"
 #include "EbookBase.h"
 #include "EbookDoc.h"
 #include "HtmlFormatter.h"

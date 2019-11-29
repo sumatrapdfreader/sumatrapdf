@@ -48,7 +48,7 @@
 #include "utils/ScopedWin.h"
 
 #include "TreeModel.h"
-#include "BaseEngine.h"
+#include "EngineBase.h"
 #include "EngineManager.h"
 
 #include "SettingsStructs.h"

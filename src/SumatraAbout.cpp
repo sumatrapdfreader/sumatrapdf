@@ -13,7 +13,7 @@
 #include "wingui/Window.h"
 #include "wingui/TooltipCtrl.h"
 
-#include "BaseEngine.h"
+#include "EngineBase.h"
 #include "SettingsStructs.h"
 #include "FileHistory.h"
 #include "AppColors.h"

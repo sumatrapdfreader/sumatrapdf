@@ -12,9 +12,9 @@
 #include "utils/JsonParser.h"
 #include "utils/WinUtil.h"
 
-#include "TreeModel.h"
-#include "BaseEngine.h"
-#include "ImagesEngine.h"
+#include "wingui/TreeModel.h"
+#include "EngineBase.h"
+#include "EngineImages.h"
 #include "PdfCreator.h"
 
 // number of decoded bitmaps to cache for quicker rendering
