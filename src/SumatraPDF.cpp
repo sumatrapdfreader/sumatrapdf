@@ -4379,6 +4379,8 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 }
 
 void GetProgramInfo(str::Str& s) {
+    OwnedData d = str::conv::WcharToUtf8(gCrashFilePath);
+    s.AppendFmt("Crash file: %s\r\n", d.data);
     s.AppendFmt("Ver: %s", CURR_VERSION_STRA);
 #if defined(SVN_PRE_RELEASE_VER)
     s.AppendFmt(" pre-release");
@@ -4415,11 +4417,16 @@ void ShowCrashHandlerMessage() {
 
 #if 0
     int res = MessageBox(nullptr, _TR("Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash."), _TR("SumatraPDF crashed"), MB_ICONERROR | MB_OKCANCEL | MbRtlReadingMaybe());
-    if (IDCANCEL == res)
+    if (IDCANCEL == res) {
         LaunchBrowser(CRASH_REPORT_URL);
+    }
 #endif
 
     // TODO: maybe launch notepad with crash report?
-    MessageBoxA(nullptr, "We're sorry, SumatraPDF crashed.", "SumatraPDF crashed",
-                MB_ICONERROR | MB_OK | MbRtlReadingMaybe());
+    char* msg = "We're sorry, SumatraPDF crashed.\n\nPress 'Cancel' to see crash report.";
+    UINT flags = MB_ICONERROR | MB_OK | MB_OKCANCEL | MbRtlReadingMaybe();
+    int res = MessageBoxA(nullptr, msg, "SumatraPDF crashed", flags);
+    if (IDCANCEL == res) {
+        LaunchFile(gCrashFilePath, nullptr, L"open");
+    }
 }

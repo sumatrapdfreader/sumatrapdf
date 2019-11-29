@@ -1,8 +1,8 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "BaseUtil.h"
-#include "UtAssert.h"
+#include "utils/BaseUtil.h"
+#include "utils/UtAssert.h"
 
 static int g_nTotal = 0;
 static int g_nFailed = 0;

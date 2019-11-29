@@ -1,8 +1,8 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "BaseUtil.h"
-#include "Dpi.h"
+#include "utils/BaseUtil.h"
+#include "utils/Dpi.h"
 
 /* Info from https://code.msdn.microsoft.com/DPI-Tutorial-sample-64134744
 

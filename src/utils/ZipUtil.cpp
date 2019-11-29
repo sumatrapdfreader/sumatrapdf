@@ -2,13 +2,13 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #define __STDC_LIMIT_MACROS
-#include "BaseUtil.h"
-#include "ZipUtil.h"
+#include "utils/BaseUtil.h"
+#include "utils/ZipUtil.h"
 
-#include "ByteWriter.h"
-#include "ScopedWin.h"
-#include "DirIter.h"
-#include "FileUtil.h"
+#include "utils/ByteWriter.h"
+#include "utils/ScopedWin.h"
+#include "utils/DirIter.h"
+#include "utils/FileUtil.h"
 
 extern "C" {
 #include <unarr.h>

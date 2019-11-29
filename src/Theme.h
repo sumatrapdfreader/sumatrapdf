@@ -6,7 +6,7 @@ License: GPLv3 */
 
 #if defined(ENABLE_THEME)
 
-#include "BaseUtil.h"
+#include "utils/BaseUtil.h"
 
 // The number of themes
 #define THEME_COUNT 3

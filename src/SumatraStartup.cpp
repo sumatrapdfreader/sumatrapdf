@@ -65,6 +65,7 @@
 #include "AppTools.h"
 
 #define CRASH_DUMP_FILE_NAME L"sumatrapdfcrash.dmp"
+#define CRASH_FILE_NAME L"sumatrapdfcrash.txt"
 
 #ifdef DEBUG
 static bool TryLoadMemTrace() {
@@ -376,8 +377,10 @@ static void SetupCrashHandler() {
         symDir.Set(path::Join(tmpDir, L"SumatraPDF-symbols"));
     else
         symDir.Set(AppGenDataFilename(L"SumatraPDF-symbols"));
+
     AutoFreeW crashDumpPath(AppGenDataFilename(CRASH_DUMP_FILE_NAME));
-    InstallCrashHandler(crashDumpPath, symDir);
+    AutoFreeW crashFilePath(AppGenDataFilename(CRASH_FILE_NAME));
+    InstallCrashHandler(crashDumpPath, crashFilePath, symDir);
 }
 
 static HWND FindPrevInstWindow(HANDLE* hMutex) {

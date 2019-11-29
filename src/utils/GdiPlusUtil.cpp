@@ -1,20 +1,20 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "BaseUtil.h"
+#include "utils/BaseUtil.h"
 #if COMPILER_MSVC
 #pragma warning(disable : 4668)
 #endif
 #include <wincodec.h>
-#include "ScopedWin.h"
-#include "GdiPlusUtil.h"
-#include "ByteReader.h"
-#include "FzImgReader.h"
-#include "TgaReader.h"
-#include "WebpReader.h"
-#include "WinUtil.h"
+#include "utils/ScopedWin.h"
+#include "utils/GdiPlusUtil.h"
+#include "utils/ByteReader.h"
+#include "utils/FzImgReader.h"
+#include "utils/TgaReader.h"
+#include "utils/WebpReader.h"
+#include "utils/WinUtil.h"
 
-#include "DebugLog.h"
+#include "utils/DebugLog.h"
 
 // Get width of each character and add them up.
 // Doesn't seem to be any different than MeasureTextAccurate() i.e. it still

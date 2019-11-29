@@ -1,8 +1,8 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "BaseUtil.h"
-#include "WebpReader.h"
+#include "utils/BaseUtil.h"
+#include "utils/WebpReader.h"
 
 #ifndef NO_LIBWEBP
 

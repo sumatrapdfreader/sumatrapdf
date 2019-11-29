@@ -1,9 +1,9 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "BaseUtil.h"
-#include "ApiHook.h"
-#include "PEB.h"
+#include "utils/BaseUtil.h"
+#include "utils/ApiHook.h"
+#include "utils/PEB.h"
 
 #define RVA2VA(type, base, rva) (type)((ULONG_PTR)base + rva)
 

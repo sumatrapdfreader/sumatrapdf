@@ -9,7 +9,7 @@ extern "C" {
 }
 #endif
 
-#include "BaseUtil.h"
+#include "utils/BaseUtil.h"
 #include "FzImgReader.h"
 
 #ifndef NO_LIBMUPDF

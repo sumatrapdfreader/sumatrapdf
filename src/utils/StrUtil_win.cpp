@@ -717,6 +717,10 @@ OwnedData ToUtf8(const WCHAR* src) {
     return ToMultiByte(src, CP_UTF8);
 }
 
+OwnedData WcharToUtf8(const WCHAR* src) {
+    return ToMultiByte(src, CP_UTF8);
+}
+
 WCHAR* FromAnsi(const char* src, size_t cbSrcLen) {
     return ToWideChar(src, CP_ACP, (int)cbSrcLen);
 }

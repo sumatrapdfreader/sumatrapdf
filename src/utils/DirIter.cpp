@@ -1,9 +1,9 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "BaseUtil.h"
-#include "DirIter.h"
-#include "FileUtil.h"
+#include "utils/BaseUtil.h"
+#include "utils/DirIter.h"
+#include "utils/FileUtil.h"
 
 // Start directory traversal in a given dir
 bool DirIter::StartDirIter(const WCHAR* dir) {

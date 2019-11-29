@@ -1,8 +1,8 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "BaseUtil.h"
-#include "DebugLog.h"
+#include "utils/BaseUtil.h"
+#include "utils/DebugLog.h"
 
 namespace dbglog {
 

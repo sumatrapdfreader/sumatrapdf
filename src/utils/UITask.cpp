@@ -1,9 +1,9 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "BaseUtil.h"
-#include "WinUtil.h"
-#include "UITask.h"
+#include "utils/BaseUtil.h"
+#include "utils/WinUtil.h"
+#include "utils/UITask.h"
 
 namespace uitask {
 

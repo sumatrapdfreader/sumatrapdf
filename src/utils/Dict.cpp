@@ -27,8 +27,8 @@ TODO:
   doing 2 passes (the first to calculate the length)?
 */
 
-#include "BaseUtil.h"
-#include "Dict.h"
+#include "utils/BaseUtil.h"
+#include "utils/Dict.h"
 
 namespace dict {
 

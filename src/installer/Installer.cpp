@@ -992,6 +992,8 @@ static void ParseCommandLine(WCHAR* cmdLine) {
 }
 
 #define CRASH_DUMP_FILE_NAME L"suminstaller.dmp"
+#define CRASH_FILE_NAME L"suminstaller_crash.txt"
+
 
 // no-op but must be defined for CrashHandler.cpp
 void ShowCrashHandlerMessage() {
@@ -1001,6 +1003,8 @@ void GetStressTestInfo(str::Str* s) {
 }
 
 void GetProgramInfo(str::Str& s) {
+    OwnedData d = str::conv::WcharToUtf8(gCrashFilePath);
+    s.AppendFmt("Crash file: %s\r\n", d.data);
     s.AppendFmt("Ver: %s", CURR_VERSION_STRA);
 #ifdef SVN_PRE_RELEASE_VER
     s.AppendFmt(" pre-release");
@@ -1034,7 +1038,8 @@ static void InstallInstallerCrashHandler() {
             return;
     }
     AutoFreeW crashDumpPath(path::Join(tempDir, CRASH_DUMP_FILE_NAME));
-    InstallCrashHandler(crashDumpPath, tempDir);
+    AutoFreeW crashFilePath(path::Join(tempDir, CRASH_FILE_NAME));
+    InstallCrashHandler(crashDumpPath, crashFilePath, tempDir);
 }
 
 int APIENTRY WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPSTR /* lpCmdLine*/, int nCmdShow) {

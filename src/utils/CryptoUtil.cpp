@@ -7,8 +7,8 @@ extern "C" {
 }
 #endif
 
-#include "BaseUtil.h"
-#include "CryptoUtil.h"
+#include "utils/BaseUtil.h"
+#include "utils/CryptoUtil.h"
 
 #ifndef DWORD_MAX
 #define DWORD_MAX 0xffffffffUL

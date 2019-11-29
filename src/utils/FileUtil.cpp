@@ -1,12 +1,12 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "BaseUtil.h"
-#include "FileUtil.h"
+#include "utils/BaseUtil.h"
+#include "utils/FileUtil.h"
 
 #if OS_WIN
-#include "ScopedWin.h"
-#include "WinUtil.h"
+#include "utils/ScopedWin.h"
+#include "utils/WinUtil.h"
 #endif
 
 // we pad data read with 3 zeros for convenience. That way returned

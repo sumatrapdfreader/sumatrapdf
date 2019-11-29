@@ -1,8 +1,8 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "BaseUtil.h"
-#include "ByteOrderDecoder.h"
+#include "utils/BaseUtil.h"
+#include "utils/ByteOrderDecoder.h"
 
 uint16_t UInt16BE(const u8* d) {
     return d[1] | (d[0] << 8);

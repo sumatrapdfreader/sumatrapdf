@@ -1,13 +1,13 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "BaseUtil.h"
-#include "Archive.h"
+#include "utils/BaseUtil.h"
+#include "utils/Archive.h"
 
-#include "StrSlice.h"
-#include "FileUtil.h"
-#include "WinUtil.h"
-#include "CryptoUtil.h"
+#include "utils/StrSlice.h"
+#include "utils/FileUtil.h"
+#include "utils/WinUtil.h"
+#include "utils/CryptoUtil.h"
 
 extern "C" {
 #include <unarr.h>

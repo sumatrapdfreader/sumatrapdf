@@ -14,6 +14,7 @@
 #include "utils/HttpUtil.h"
 #include "utils/LzmaSimpleArchive.h"
 #include "utils/WinUtil.h"
+
 #include "SumatraPDF.h"
 #include "AppTools.h"
 #include "CrashHandler.h"
@@ -37,6 +38,24 @@ extern void GetStressTestInfo(str::Str* s);
 extern bool CrashHandlerCanUseNet();
 extern void ShowCrashHandlerMessage();
 extern void GetProgramInfo(str::Str& s);
+
+// Get url for file with symbols. Caller needs to free().
+static WCHAR* BuildSymbolsUrl() {
+#ifdef SYMBOL_DOWNLOAD_URL
+    return str::Dup(SYMBOL_DOWNLOAD_URL);
+#else
+#ifdef SVN_PRE_RELEASE_VER
+    WCHAR* urlBase =
+        L"https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/prerel/SumatraPDF-prerelease-" TEXT(
+            QM(SVN_PRE_RELEASE_VER));
+#else
+    WCHAR* urlBase =
+        L"https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/rel/SumatraPDF-" TEXT(QM(CURR_VERSION));
+#endif
+    WCHAR* is64 = IsProcess64() ? L"-64" : L"";
+    return str::Format(L"%s%s.pdb.lzsa", urlBase, is64);
+#endif
+}
 
 /* Note: we cannot use standard malloc()/free()/new()/delete() in crash handler.
 For multi-thread safety, there is a per-heap lock taken by HeapAlloc() etc.
@@ -98,11 +117,12 @@ static HANDLE gDumpEvent = nullptr;
 static HANDLE gDumpThread = nullptr;
 static ExeType gExeType = ExeSumatraStatic;
 static bool gCrashed = false;
+WCHAR* gCrashFilePath = nullptr;
 
 static MINIDUMP_EXCEPTION_INFORMATION gMei = {0};
 static LPTOP_LEVEL_EXCEPTION_FILTER gPrevExceptionFilter = nullptr;
 
-static char* BuildCrashInfoText() {
+static char* BuildCrashInfoText(size_t* sizeOut) {
     lf("BuildCrashInfoText(): start");
 
     str::Str s(16 * 1024, gCrashHandlerAllocator);
@@ -120,10 +140,18 @@ static char* BuildCrashInfoText() {
     s.Append("\r\n");
     s.Append(dbglog::GetCrashLog());
 
+    *sizeOut = s.size();
     return s.StealData();
 }
 
-static void SendCrashInfo(char* s) {
+static void SaveCrashInfo(char* s, size_t size) {
+    if (!gCrashFilePath) {
+        return;
+    }
+    file::WriteFile(gCrashFilePath, (const void*)s, size);
+}
+
+static void SendCrashInfo(char* s, size_t size) {
     lf("SendCrashInfo(): started");
     if (str::IsEmpty(s)) {
         plog("SendCrashInfo(): s is empty");
@@ -137,7 +165,7 @@ static void SendCrashInfo(char* s) {
     str::Str data(2048, gCrashHandlerAllocator);
     data.AppendFmt("--%s\r\n", boundary);
     data.Append("Content-Disposition: form-data; name=\"file\"; filename=\"sumcrash.txt\"\r\n\r\n");
-    data.Append(s);
+    data.Append(s, size);
     data.Append("\r\n");
     data.AppendFmt("\r\n--%s--\r\n", boundary);
 
@@ -289,10 +317,12 @@ void SubmitCrashInfo() {
         return;
     }
 
-    s = BuildCrashInfoText();
+    size_t size = 0;
+    s = BuildCrashInfoText(&size);
     if (!s)
         return;
-    SendCrashInfo(s);
+    SaveCrashInfo(s, size);
+    SendCrashInfo(s, size);
     gCrashHandlerAllocator->Free(s);
 }
 
@@ -596,22 +626,6 @@ static bool BuildSymbolPath() {
     return true;
 }
 
-// Get url for file with symbols. Caller needs to free().
-static WCHAR* BuildSymbolsUrl() {
-#ifdef SYMBOL_DOWNLOAD_URL
-    return str::Dup(SYMBOL_DOWNLOAD_URL);
-#else
-#ifdef SVN_PRE_RELEASE_VER
-    WCHAR* urlBase =
-        L"https://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-" TEXT(QM(SVN_PRE_RELEASE_VER));
-#else
-    WCHAR* urlBase = L"https://kjkpub.s3.amazonaws.com/sumatrapdf/rel/SumatraPDF-" TEXT(QM(CURR_VERSION));
-#endif
-    WCHAR* is64 = IsProcess64() ? L"-64" : L"";
-    return str::Format(L"%s%s.pdb.lzsa", urlBase, is64);
-#endif
-}
-
 // detect which exe it is (installer, sumatra static or sumatra with dlls)
 static ExeType DetectExeType() {
     ExeType exeType = ExeSumatraStatic;
@@ -661,7 +675,7 @@ int __cdecl _purecall() {
     return 0;
 }
 
-void InstallCrashHandler(const WCHAR* crashDumpPath, const WCHAR* symDir) {
+void InstallCrashHandler(const WCHAR* crashDumpPath, const WCHAR* crashFilePath, const WCHAR* symDir) {
     AssertCrash(!gDumpEvent && !gDumpThread);
 
     if (!crashDumpPath)
@@ -670,6 +684,9 @@ void InstallCrashHandler(const WCHAR* crashDumpPath, const WCHAR* symDir) {
         return;
     if (!BuildSymbolPath())
         return;
+
+    gCrashDumpPath = str::Dup(crashDumpPath);
+    gCrashFilePath = str::Dup(crashFilePath);
 
     // don't bother sending crash reports when running under Wine
     // as they're not helpful
@@ -687,7 +704,6 @@ void InstallCrashHandler(const WCHAR* crashDumpPath, const WCHAR* symDir) {
     // allocation functions here.
     gCrashHandlerAllocator = new CrashHandlerAllocator();
     gSymbolsUrl = BuildSymbolsUrl();
-    gCrashDumpPath = str::Dup(crashDumpPath);
     gDumpEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
     if (!gDumpEvent)
         return;
@@ -723,6 +739,7 @@ void UninstallCrashHandler() {
     free(gLibMupdfPdbPath);
     free(gSumatraPdfPdbPath);
     free(gInstallerPdbPath);
+    free(gCrashFilePath);
 
     free(gSymbolPathW);
     free(gSystemInfo);

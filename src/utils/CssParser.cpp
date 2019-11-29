@@ -1,9 +1,9 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "BaseUtil.h"
-#include "HtmlParserLookup.h"
-#include "CssParser.h"
+#include "utils/BaseUtil.h"
+#include "utils/HtmlParserLookup.h"
+#include "utils/CssParser.h"
 
 // TODO: the following parser doesn't comply yet with
 // http://www.w3.org/TR/CSS21/syndata.html#syntax

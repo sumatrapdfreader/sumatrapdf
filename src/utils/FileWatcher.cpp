@@ -1,12 +1,12 @@
 /* Copyright 2018 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-#include "BaseUtil.h"
-#include "FileWatcher.h"
-#include "ScopedWin.h"
-#include "FileUtil.h"
-#include "ThreadUtil.h"
-#include "WinUtil.h"
+#include "utils/BaseUtil.h"
+#include "utils/FileWatcher.h"
+#include "utils/ScopedWin.h"
+#include "utils/FileUtil.h"
+#include "utils/ThreadUtil.h"
+#include "utils/WinUtil.h"
 #define NOLOG 1
 #include "DebugLog.h"
 

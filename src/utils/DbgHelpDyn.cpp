@@ -7,11 +7,11 @@
    can be used from crash handler.
 */
 
-#include "BaseUtil.h"
-#include "WinDynCalls.h"
-#include "DbgHelpDyn.h"
-#include "FileUtil.h"
-#include "WinUtil.h"
+#include "utils/BaseUtil.h"
+#include "utils/WinDynCalls.h"
+#include "utils/DbgHelpDyn.h"
+#include "utils/FileUtil.h"
+#include "utils/WinUtil.h"
 
 /* Hard won wisdom: changing symbol path with SymSetSearchPath() after modules
    have been loaded (invideProcess=TRUE in SymInitialize() or SymRefreshModuleList())
