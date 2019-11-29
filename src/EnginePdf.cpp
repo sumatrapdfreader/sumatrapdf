@@ -30,7 +30,6 @@ extern "C" {
 // so that their content can be loaded on demand in order to preserve memory
 #define MAX_MEMORY_FILE_SIZE (10 * 1024 * 1024)
 
-
 ///// extensions to Fitz that are usable for both PDF and XPS /////
 
 RectD fz_rect_to_RectD(fz_rect rect) {
@@ -340,7 +339,7 @@ static void AddLineSep(str::WStr& s, Vec<RectI>& rects, const WCHAR* lineSep, si
     }
 }
 
-static WCHAR* fz_text_page_to_str(fz_stext_page* text, const WCHAR* lineSep, RectI** coordsOut) {
+WCHAR* fz_text_page_to_str(fz_stext_page* text, const WCHAR* lineSep, RectI** coordsOut) {
     size_t lineSepLen = str::Len(lineSep);
     str::WStr content;
     // coordsOut is optional but we ask for it by default so we simplify the code
@@ -1013,8 +1012,8 @@ class PdfEngineImpl : public BaseEngine {
     }
     WCHAR* ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** coordsOut = nullptr,
                            RenderTarget target = RenderTarget::View) override;
-    WCHAR* ExtractPageTextFromPageInfo(PdfPageInfo* pageInfo, const WCHAR* lineSep, RectI** coordsOut = nullptr,
-                                       RenderTarget target = RenderTarget::View, bool cacheRun = false);
+
+    WCHAR* ExtractPageText(fz_stext_page* stext, const WCHAR* lineSep, RectI** coordsOut = nullptr);
     bool HasClipOptimizations(int pageNo) override;
     PageLayoutType PreferredLayout() override;
     WCHAR* GetProperty(DocumentProperty prop) override;
@@ -1080,7 +1079,7 @@ class PdfEngineImpl : public BaseEngine {
     PdfPageInfo* _pages = nullptr;
     fz_outline* outline = nullptr;
     fz_outline* attachments = nullptr;
-    pdf_obj* _info = nullptr;       // TODO(port): what is it?
+    pdf_obj* _info = nullptr;
     WStrVec* _pagelabels = nullptr; // TODO(port): put in PageInfo
 
     Vec<PageAnnotation> userAnnots; // TODO(port): put in PageInfo
@@ -1212,7 +1211,7 @@ class PdfImage : public PageElement {
 extern "C" void pdf_install_load_system_font_funcs(fz_context* ctx);
 
 // TODO(port): improve locking to use lock
-extern "C" void fz_lock_context_cs(void* user, int lock) {
+extern "C" static void fz_lock_context_cs(void* user, int lock) {
     UNUSED(lock);
     PdfEngineImpl* e = (PdfEngineImpl*)user;
     // we use a single critical section for all locks,
@@ -1223,7 +1222,7 @@ extern "C" void fz_lock_context_cs(void* user, int lock) {
     EnterCriticalSection(&e->ctxAccess);
 }
 
-extern "C" void fz_unlock_context_cs(void* user, int lock) {
+extern "C" static void fz_unlock_context_cs(void* user, int lock) {
     UNUSED(lock);
     PdfEngineImpl* e = (PdfEngineImpl*)user;
     LeaveCriticalSection(&e->ctxAccess);
@@ -1264,7 +1263,7 @@ PdfEngineImpl::~PdfEngineImpl() {
     pdf_drop_obj(ctx, _info);
 
     fz_drop_stream(ctx, _docStream);
-    pdf_drop_document(ctx, _doc);
+    fz_drop_document(ctx, (fz_document*)_doc);
     _doc = nullptr;
     fz_drop_context(ctx);
     ctx = nullptr;
@@ -1798,23 +1797,12 @@ pdf_page* PdfEngineImpl::GetPdfPage(int pageNo, bool failIfBusy) {
     }
     pageInfo->list = list;
 
-    fz_stext_page* page_text = fz_new_stext_page(ctx, bounds);
-    fz_device* tdev = fz_new_stext_device(ctx, page_text, NULL);
-
-    tdev = fz_new_stext_device(ctx, page_text, NULL);
     fz_try(ctx) {
-        // use an infinite rectangle as bounds (instead of pdf_bound_page) to ensure that
-        // the extracted text is consistent between cached runs using a list device and
-        // fresh runs (otherwise the list device omits text outside the mediabox bounds)
-        fz_run_page(ctx, page, tdev, fz_identity, &cookie);
-        fz_close_device(ctx, tdev);
-    }
-    fz_always(ctx) {
-        fz_drop_device(ctx, tdev);
+        pageInfo->stext = fz_new_stext_page_from_page(ctx, (fz_page*)ppage, nullptr);
     }
     fz_catch(ctx) {
+        pageInfo->stext = nullptr;
     }
-    pageInfo->stext = page_text;
 
     // create fz_display_list and get fz_stext_page
     ppage->links = FixupPageLinks(ppage->links);
@@ -2096,8 +2084,8 @@ Vec<PageElement*>* PdfEngineImpl::GetElements(int pageNo) {
 
 void PdfEngineImpl::LinkifyPageText(PdfPageInfo* pageInfo) {
     RectI* coords;
-    RenderTarget target = RenderTarget::View;
-    WCHAR* pageText = ExtractPageTextFromPageInfo(pageInfo, L"\n", &coords, target, true);
+    fz_stext_page* stext = pageInfo->stext;
+    WCHAR* pageText = ExtractPageText(stext, L"\n", &coords);
     if (!pageText) {
         return;
     }
@@ -2223,17 +2211,17 @@ RenderedBitmap* PdfEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
 
 WCHAR* PdfEngineImpl::ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** coordsOut, RenderTarget target) {
     PdfPageInfo* pageInfo = GetPdfPageInfo(pageNo);
-    if (!pageInfo->page) {
-        return nullptr;
-    }
-    return ExtractPageTextFromPageInfo(pageInfo, lineSep, coordsOut, target, false);
+    fz_stext_page* stext = pageInfo->stext;
+    return ExtractPageText(stext, lineSep, coordsOut);
 }
 
-WCHAR* PdfEngineImpl::ExtractPageTextFromPageInfo(PdfPageInfo* pageInfo, const WCHAR* lineSep, RectI** coordsOut,
-                                                  RenderTarget target, bool cacheRun) {
+WCHAR* PdfEngineImpl::ExtractPageText(fz_stext_page* stext, const WCHAR* lineSep, RectI** coordsOut) {
+    if (!stext) {
+        return nullptr;
+    }
     WCHAR* content = nullptr;
     ScopedCritSec scope(&ctxAccess);
-    content = fz_text_page_to_str(pageInfo->stext, lineSep, coordsOut);
+    content = fz_text_page_to_str(stext, lineSep, coordsOut);
     return content;
 }
 

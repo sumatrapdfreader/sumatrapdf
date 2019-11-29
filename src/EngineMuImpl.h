@@ -35,7 +35,4 @@ fz_stream* fz_open_file2(fz_context* ctx, const WCHAR* filePath);
 RenderedBitmap* new_rendered_fz_pixmap(fz_context* ctx, fz_pixmap* pixmap);
 u8* fz_extract_stream_data(fz_context* ctx, fz_stream* stream, size_t* cbCount);
 float fz_calc_overlap(fz_rect r1, fz_rect r2);
-
-extern "C" void fz_lock_context_cs(void* user, int lock);
-extern "C" void fz_unlock_context_cs(void* user, int lock);
-
+WCHAR* fz_text_page_to_str(fz_stext_page* text, const WCHAR* lineSep, RectI** coordsOut);
