@@ -7,14 +7,15 @@
 
 #include "TreeModel.h"
 #include "EngineBase.h"
-#include "PdfEngine.h"
+#include "EnginePdf.h"
+#include "EngineXps.h"
 #if defined(BUILD_EPUB_PREVIEW) || defined(BUILD_FB2_PREVIEW) || defined(BUILD_MOBI_PREVIEW)
 #include "mui/MiniMui.h"
-#include "EbookEngine.h"
+#include "EngineEbook.h"
 #endif
 #if defined(BUILD_CBZ_PREVIEW) || defined(BUILD_CBR_PREVIEW) || defined(BUILD_CB7_PREVIEW) || \
     defined(BUILD_CBT_PREVIEW) || defined(BUILD_TGA_PREVIEW)
-#include "ImagesEngine.h"
+#include "EngineImages.h"
 #endif
 #include "PdfPreview.h"
 #include "PdfPreviewBase.h"
@@ -344,7 +345,7 @@ BaseEngine* CXpsPreview::LoadEngine(IStream* stream) {
 #endif
 
 #ifdef BUILD_DJVU_PREVIEW
-#include "DjVuEngine.h"
+#include "EngineDjVu.h"
 
 BaseEngine* CDjVuPreview::LoadEngine(IStream* stream) {
     return DjVuEngine::CreateFromStream(stream);

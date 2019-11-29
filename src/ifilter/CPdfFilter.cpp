@@ -7,7 +7,7 @@
 
 #include "TreeModel.h"
 #include "EngineBase.h"
-#include "PdfEngine.h"
+#include "EnginePdf.h"
 
 #include "FilterBase.h"
 #include "PdfFilter.h"
