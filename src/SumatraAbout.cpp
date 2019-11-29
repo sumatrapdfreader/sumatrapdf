@@ -7,7 +7,12 @@
 #include "utils/FileUtil.h"
 #include "utils/WinUtil.h"
 
-#include "TreeModel.h"
+#include "wingui/WinGui.h"
+#include "wingui/TreeModel.h"
+#include "wingui/Layout.h"
+#include "wingui/Window.h"
+#include "wingui/TooltipCtrl.h"
+
 #include "BaseEngine.h"
 #include "SettingsStructs.h"
 #include "FileHistory.h"
@@ -73,7 +78,7 @@
 
 static ATOM gAtomAbout;
 static HWND gHwndAbout;
-static HWND gHwndAboutTooltip = nullptr;
+static TooltipCtrl* gAboutTooltip = nullptr;
 static const WCHAR* gClickedURL = nullptr;
 
 struct AboutLayoutInfoEl {
@@ -449,34 +454,22 @@ const WCHAR* GetStaticLink(Vec<StaticLinkInfo>& linkInfo, int x, int y, StaticLi
 }
 
 static void CreateInfotipForLink(StaticLinkInfo& linkInfo) {
-    if (gHwndAboutTooltip)
+    if (gAboutTooltip != nullptr) {
         return;
+    }
 
-    gHwndAboutTooltip = CreateWindowEx(WS_EX_TOPMOST, TOOLTIPS_CLASS, nullptr, WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP,
-                                       CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, gHwndAbout, nullptr,
-                                       GetModuleHandle(nullptr), nullptr);
-
-    TOOLINFO ti = {0};
-    ti.cbSize = sizeof(ti);
-    ti.hwnd = gHwndAbout;
-    ti.uFlags = TTF_SUBCLASS;
-    ti.lpszText = (WCHAR*)linkInfo.infotip;
-    ti.rect = linkInfo.rect.ToRECT();
-
-    SendMessage(gHwndAboutTooltip, TTM_ADDTOOL, 0, (LPARAM)&ti);
+    gAboutTooltip = new TooltipCtrl(gHwndAbout);
+    gAboutTooltip->Create();
+    gAboutTooltip->Show(linkInfo.infotip, linkInfo.rect, false);
 }
 
-static void ClearInfotip() {
-    if (!gHwndAboutTooltip)
+static void DeleteInfotip() {
+    if (gAboutTooltip != nullptr) {
+        //gAboutTooltip->Hide();
+        delete gAboutTooltip;
+        gAboutTooltip = nullptr;
         return;
-
-    TOOLINFO ti = {0};
-    ti.cbSize = sizeof(ti);
-    ti.hwnd = gHwndAbout;
-
-    SendMessage(gHwndAboutTooltip, TTM_DELTOOL, 0, (LPARAM)&ti);
-    DestroyWindow(gHwndAboutTooltip);
-    gHwndAboutTooltip = nullptr;
+    }
 }
 
 LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
@@ -505,7 +498,7 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
                     return TRUE;
                 }
             }
-            ClearInfotip();
+            DeleteInfotip();
             return DefWindowProc(hwnd, message, wParam, lParam);
 
         case WM_LBUTTONDOWN:
@@ -529,7 +522,7 @@ LRESULT CALLBACK WndProcAbout(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
             break;
 
         case WM_DESTROY:
-            ClearInfotip();
+            DeleteInfotip();
             AssertCrash(gHwndAbout);
             gHwndAbout = nullptr;
             break;
