@@ -124,7 +124,7 @@ class Vec {
         return *this;
     }
 
-    T& operator[](size_t idx) {
+    T& operator[](size_t idx) const {
         CrashIf(idx >= len);
         return els[idx];
     }

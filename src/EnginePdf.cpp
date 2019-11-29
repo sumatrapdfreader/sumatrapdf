@@ -303,26 +303,6 @@ static void AddChar(fz_stext_line* line, fz_stext_char* c, str::WStr& s, Vec<Rec
     }
 }
 
-#if 0
-// if there's a span following this one, add space to separate them
-static void AddSpaceAtLineEnd(fz_stext_line* line, str::WStr& s, Vec<RectI>& rects) {
-    if (line->first_char == line->last_char || line->next == NULL) {
-        return;
-    }
-    CrashIf(s.size() == 0);
-    CrashIf(rects.size() == 0);
-    if (s.LastChar() == ' ') {
-        return;
-    }
-    // TODO: use a Tab instead? (this might be a table)
-    s.Append(L' ');
-    RectI prev = rects.Last();
-    prev.x += prev.dx;
-    prev.dx /= 2;
-    rects.Append(prev);
-}
-#endif
-
 static void AddLineSep(str::WStr& s, Vec<RectI>& rects, const WCHAR* lineSep, size_t lineSepLen) {
     if (lineSepLen == 0) {
         return;
@@ -413,20 +393,6 @@ extern "C" static void drop_istream(fz_context* ctx, void* state_) {
     state->stream->Release();
     fz_free(ctx, state);
 }
-
-// TODO:(port)
-#if 0
-extern "C" static fz_stream* reopen_istream(fz_context* ctx, fz_stream* stm) {
-    istream_filter* state = (istream_filter*)stm->state;
-    ScopedComPtr<IStream> stream2;
-    HRESULT res = state->stream->Clone(&stream2);
-    if (E_NOTIMPL == res)
-        fz_throw(ctx, FZ_ERROR_GENERIC, "IStream doesn't support cloning");
-    if (FAILED(res))
-        fz_throw(ctx, FZ_ERROR_GENERIC, "IStream clone error: %x", res);
-    return fz_open_istream(ctx, stream2);
-}
-#endif
 
 fz_stream* fz_open_istream(fz_context* ctx, IStream* stream) {
     if (!stream)
@@ -1003,7 +969,6 @@ class PdfEngineImpl : public BaseEngine {
     WCHAR* ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** coordsOut = nullptr,
                            RenderTarget target = RenderTarget::View) override;
 
-    WCHAR* ExtractPageText(fz_stext_page* stext, const WCHAR* lineSep, RectI** coordsOut = nullptr);
     bool HasClipOptimizations(int pageNo) override;
     PageLayoutType PreferredLayout() override;
     WCHAR* GetProperty(DocumentProperty prop) override;
@@ -1026,7 +991,7 @@ class PdfEngineImpl : public BaseEngine {
     }
 
     bool BenchLoadPage(int pageNo) override {
-        return GetPdfPage(pageNo) != nullptr;
+        return GetFzPage(pageNo) != nullptr;
     }
 
     Vec<PageElement*>* GetElements(int pageNo) override;
@@ -1066,7 +1031,7 @@ class PdfEngineImpl : public BaseEngine {
     fz_locks_context fz_locks_ctx;
     fz_document* _doc = nullptr;
     fz_stream* _docStream = nullptr;
-    FzPageInfo* _pages = nullptr;
+    Vec<FzPageInfo*> _pages;
     fz_outline* outline = nullptr;
     fz_outline* attachments = nullptr;
     pdf_obj* _info = nullptr;
@@ -1083,7 +1048,7 @@ class PdfEngineImpl : public BaseEngine {
     bool LoadFromStream(fz_stream* stm, PasswordUI* pwdUI = nullptr);
     bool FinishLoading();
 
-    fz_page* GetPdfPage(int pageNo, bool failIfBusy = false);
+    fz_page* GetFzPage(int pageNo, bool failIfBusy = false);
     FzPageInfo* GetFzPageInfo(int pageNo, bool failIfBusy = false);
     fz_matrix viewctm(int pageNo, float zoom, int rotation) {
         const fz_rect tmpRc = fz_RectD_to_rect(PageMediabox(pageNo));
@@ -1092,9 +1057,6 @@ class PdfEngineImpl : public BaseEngine {
     fz_matrix viewctm(fz_page* page, float zoom, int rotation) {
         return fz_create_view_ctm(fz_bound_page(ctx, page), zoom, rotation);
     }
-    bool RunPage(FzPageInfo* pageInfo, fz_device* dev, fz_matrix ctm, RenderTarget target = RenderTarget::View,
-                 fz_rect cliprect = {}, bool cacheRun = true, FitzAbortCookie* cookie = nullptr);
-
     PdfTocItem* BuildTocTree(fz_outline* entry, int& idCounter, bool isAttachment);
     void LinkifyPageText(FzPageInfo* pageInfo);
     void ProcessPageAnnotations(FzPageInfo* pageInfo);
@@ -1234,8 +1196,10 @@ PdfEngineImpl::~PdfEngineImpl() {
     EnterCriticalSection(&pagesAccess);
     EnterCriticalSection(&ctxAccess);
 
-    for (int i = 0; _pages && i < pageCount; i++) {
-        FzPageInfo* pi = &_pages[i];
+    for (auto* pi : _pages) {
+        if (pi->links) {
+            fz_drop_link(ctx, pi->links);
+        }
         if (pi->stext) {
             fz_drop_stext_page(ctx, pi->stext);
         }
@@ -1243,11 +1207,12 @@ PdfEngineImpl::~PdfEngineImpl() {
             fz_drop_display_list(ctx, pi->list);
         }
         if (pi->page) {
-            fz_drop_page(ctx, (fz_page*)pi->page);
+            fz_drop_page(ctx, pi->page);
         }
     }
 
-    free(_pages);
+    DeleteVecMembers(_pages);
+
     fz_drop_outline(ctx, outline);
     fz_drop_outline(ctx, attachments);
     pdf_drop_obj(ctx, _info);
@@ -1513,8 +1478,6 @@ bool PdfEngineImpl::FinishLoading() {
         fz_warn(ctx, "document has no pages");
         return false;
     }
-    _pages = AllocArray<FzPageInfo>(pageCount);
-    CrashAlwaysIf(!_pages);
 
     pdf_document* doc = (pdf_document*)_doc;
 
@@ -1540,9 +1503,10 @@ bool PdfEngineImpl::FinishLoading() {
             mbox.x1 = 612;
             mbox.y1 = 792;
         }
-
-        _pages[i].mediabox = fz_rect_to_RectD(mbox);
-        _pages[i].pageNo = i + 1;
+        FzPageInfo* pageInfo = new FzPageInfo();
+        pageInfo->mediabox = fz_rect_to_RectD(mbox);
+        pageInfo->pageNo = i + 1;
+        _pages.Append(pageInfo);
     }
 
     fz_try(ctx) {
@@ -1736,16 +1700,16 @@ PageDestination* PdfEngineImpl::GetNamedDest(const WCHAR* name) {
 }
 
 FzPageInfo* PdfEngineImpl::GetFzPageInfo(int pageNo, bool failIfBusy) {
-    GetPdfPage(pageNo, failIfBusy);
-    return &_pages[pageNo - 1];
+    GetFzPage(pageNo, failIfBusy);
+    return _pages[pageNo - 1];
 }
 
-fz_page* PdfEngineImpl::GetPdfPage(int pageNo, bool failIfBusy) {
+fz_page* PdfEngineImpl::GetFzPage(int pageNo, bool failIfBusy) {
     ScopedCritSec scope(&pagesAccess);
 
     CrashIf(pageNo < 1 || pageNo > pageCount);
     int pageIdx = pageNo - 1;
-    FzPageInfo* pageInfo = &_pages[pageNo - 1];
+    FzPageInfo* pageInfo = _pages[pageNo - 1];
     fz_page* page = pageInfo->page;
     // TODO: not sure what failIfBusy is supposed to do
     if (page || failIfBusy) {
@@ -1829,59 +1793,35 @@ fz_page* PdfEngineImpl::GetPdfPage(int pageNo, bool failIfBusy) {
     return page;
 }
 
+// TODO: this is code for printing and export
+#if 0
 bool PdfEngineImpl::RunPage(FzPageInfo* pageInfo, fz_device* dev, fz_matrix ctm, RenderTarget target, fz_rect cliprect,
                             bool cacheRun, FitzAbortCookie* cookie) {
-    bool ok = true;
 
-    fz_cookie* fzcookie = cookie ? &cookie->cookie : nullptr;
-
-    fz_page* fzpage = pageInfo->page;
-    pdf_document* doc = pdf_document_from_fz_document(ctx, _doc);
-    pdf_page* page = pdf_page_from_fz_page(ctx, fzpage);
-
-    int pageNo = pageInfo->pageNo;
-    if (RenderTarget::View == target) {
-        EnterCriticalSection(&ctxAccess); // TODO: probably not needed
-        Vec<PageAnnotation> pageAnnots = fz_get_user_page_annots(userAnnots, pageNo);
-        fz_try(ctx) {
-            // fz_run_page_transparency(ctx, pageAnnots, dev, cliprect, false, page->transparency);
-            fz_run_display_list(ctx, pageInfo->list, dev, ctm, cliprect, fzcookie);
-            // fz_run_page_transparency(ctx, pageAnnots, dev, cliprect, true, page->transparency);
-            // fz_run_user_page_annots(ctx, pageAnnots, dev, ctm, cliprect, fzcookie);
-        }
-        fz_always(ctx) {
-            LeaveCriticalSection(&ctxAccess);
-        }
-        fz_catch(ctx) {
-            ok = false;
-        }
-    } else {
-        ScopedCritSec scope(&ctxAccess);
-        char* targetName = target == RenderTarget::Print ? "Print" : target == RenderTarget::Export ? "Export" : "View";
-        Vec<PageAnnotation> pageAnnots = fz_get_user_page_annots(userAnnots, pageNo);
-        fz_try(ctx) {
-            // TODO(port): not sure if this is the right port
-            fz_buffer* buf = fz_new_buffer(ctx, 1024);
-            fz_output* out = fz_new_output_with_buffer(ctx, buf);
-            auto wri = fz_new_pdf_writer_with_output(ctx, out, nullptr);
-            auto pageBounds = fz_bound_page(ctx, fzpage);
-            fz_begin_page(ctx, wri, pageBounds);
-            // fz_run_page_transparency(ctx, pageAnnots, dev, cliprect, false, page->transparency);
-            pdf_run_page_with_usage(ctx, doc, page, dev, ctm, targetName, fzcookie);
-            // fz_run_page_transparency(ctx, pageAnnots, dev, cliprect, true, page->transparency);
-            // fz_run_user_page_annots(ctx, pageAnnots, dev, ctm, cliprect, fzcookie);
-            fz_end_page(ctx, wri);
-        }
-        fz_catch(ctx) {
-            ok = false;
-        }
+    ScopedCritSec scope(&ctxAccess);
+    char* targetName = target == RenderTarget::Print ? "Print" : target == RenderTarget::Export ? "Export" : "View";
+    Vec<PageAnnotation> pageAnnots = fz_get_user_page_annots(userAnnots, pageNo);
+    fz_try(ctx) {
+        // TODO(port): not sure if this is the right port
+        fz_buffer* buf = fz_new_buffer(ctx, 1024);
+        fz_output* out = fz_new_output_with_buffer(ctx, buf);
+        auto wri = fz_new_pdf_writer_with_output(ctx, out, nullptr);
+        auto pageBounds = fz_bound_page(ctx, fzpage);
+        fz_begin_page(ctx, wri, pageBounds);
+        // fz_run_page_transparency(ctx, pageAnnots, dev, cliprect, false, page->transparency);
+        pdf_run_page_with_usage(ctx, doc, page, dev, ctm, targetName, fzcookie);
+        // fz_run_page_transparency(ctx, pageAnnots, dev, cliprect, true, page->transparency);
+        // fz_run_user_page_annots(ctx, pageAnnots, dev, ctm, cliprect, fzcookie);
+        fz_end_page(ctx, wri);
     }
-
-    return ok && !(cookie && cookie->cookie.abort);
+    fz_catch(ctx) {
+        ok = false;
+    }
 }
+#endif
 
 RectD PdfEngineImpl::PageMediabox(int pageNo) {
-    FzPageInfo* pi = &_pages[pageNo - 1];
+    FzPageInfo* pi = _pages[pageNo - 1];
     return pi->mediabox;
 }
 
@@ -2050,10 +1990,10 @@ PageElement* PdfEngineImpl::GetElementAtPos(int pageNo, PointD pt) {
 }
 
 Vec<PageElement*>* PdfEngineImpl::GetElements(int pageNo) {
-    fz_page* page = GetPdfPage(pageNo, true);
+    fz_page* page = GetFzPage(pageNo, true);
     if (!page)
         return nullptr;
-    FzPageInfo* pageInfo = &_pages[pageNo - 1];
+    FzPageInfo* pageInfo = _pages[pageNo - 1];
 
     // since all elements lists are in last-to-first order, append
     // item types in inverse order and reverse the whole list at the end
@@ -2086,7 +2026,11 @@ Vec<PageElement*>* PdfEngineImpl::GetElements(int pageNo) {
 void PdfEngineImpl::LinkifyPageText(FzPageInfo* pageInfo) {
     RectI* coords;
     fz_stext_page* stext = pageInfo->stext;
-    WCHAR* pageText = ExtractPageText(stext, L"\n", &coords);
+    if (!stext) {
+        return;
+    }
+    ScopedCritSec scope(&ctxAccess);
+    WCHAR* pageText = fz_text_page_to_str(stext, L"\n", &coords);
     if (!pageText) {
         return;
     }
@@ -2122,7 +2066,7 @@ void PdfEngineImpl::LinkifyPageText(FzPageInfo* pageInfo) {
 }
 
 void PdfEngineImpl::ProcessPageAnnotations(FzPageInfo* pageInfo) {
-    Vec<pdf_annot*>& annots = pageInfo->pageAnnots;
+    auto& annots = pageInfo->pageAnnots;
 
     auto page = (pdf_page*)pageInfo->page;
     for (pdf_annot* annot = page->annots; annot; annot = annot->next) {
@@ -2210,19 +2154,15 @@ RenderedBitmap* PdfEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
     return bmp;
 }
 
+// TODO: remember this instead of re-doing
 WCHAR* PdfEngineImpl::ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** coordsOut, RenderTarget target) {
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo);
     fz_stext_page* stext = pageInfo->stext;
-    return ExtractPageText(stext, lineSep, coordsOut);
-}
-
-WCHAR* PdfEngineImpl::ExtractPageText(fz_stext_page* stext, const WCHAR* lineSep, RectI** coordsOut) {
     if (!stext) {
         return nullptr;
     }
-    WCHAR* content = nullptr;
     ScopedCritSec scope(&ctxAccess);
-    content = fz_text_page_to_str(stext, lineSep, coordsOut);
+    WCHAR* content = fz_text_page_to_str(stext, lineSep, coordsOut);
     return content;
 }
 
@@ -2256,7 +2196,7 @@ bool PdfEngineImpl::IsLinearizedFile() {
 
     // /O must be the object number of the first page
     // TODO(port): at this point we don't have _pages loaded yet. for now always return false here
-    auto fzpage = _pages[0].page;
+    auto fzpage = _pages[0]->page;
     if (!fzpage) {
         return false;
     }
@@ -2299,7 +2239,7 @@ WCHAR* PdfEngineImpl::ExtractFontList() {
 
     // collect all fonts from all page objects
     for (int i = 1; i <= PageCount(); i++) {
-        fz_page* fzpage = GetPdfPage(i);
+        fz_page* fzpage = GetFzPage(i);
         if (!fzpage) {
             continue;
         }
@@ -2324,7 +2264,7 @@ WCHAR* PdfEngineImpl::ExtractFontList() {
     }
 
     // start ctxAccess scope here so that we don't also have to
-    // ask for pagesAccess (as is required for GetPdfPage)
+    // ask for pagesAccess (as is required for GetFzPage)
     ScopedCritSec scope(&ctxAccess);
 
     for (pdf_obj* res : resList) {
@@ -2479,14 +2419,17 @@ WCHAR* PdfEngineImpl::GetProperty(DocumentProperty prop) {
 };
 
 bool PdfEngineImpl::SupportsAnnotation(bool forSaving) const {
-    if (forSaving) {
-        // TODO: support updating of documents where pages aren't all numbered objects?
-        for (int i = 0; i < PageCount(); i++) {
-            FzPageInfo* pageInfo = &_pages[i];
-            fz_page* fzpage = pageInfo->page;
-            pdf_page* page = pdf_page_from_fz_page(ctx, fzpage);
-            if (pdf_to_num(ctx, page->obj) == 0)
-                return false;
+    if (!forSaving) {
+        return true;
+    }
+    // TODO: support updating of documents where pages aren't all numbered objects?
+    size_t n = _pages.size();
+    for (size_t i = 0; i < n; i++) {
+        auto* pageInfo = _pages[i];
+        fz_page* fzpage = pageInfo->page;
+        pdf_page* page = pdf_page_from_fz_page(ctx, fzpage);
+        if (pdf_to_num(ctx, page->obj) == 0) {
+            return false;
         }
     }
     return true;
@@ -2721,7 +2664,7 @@ bool PdfEngineImpl::SaveUserAnnots(const char* pathUtf8) {
 
     fz_try(ctx) {
         for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
-            fz_page* fzpage = GetPdfPage(pageNo);
+            fz_page* fzpage = GetFzPage(pageNo);
             pdf_page* page = pdf_page_from_fz_page(ctx, fzpage);
             pdf_obj* page_obj = page->obj;
             // TODO: this will skip annotations for broken documents
@@ -3100,7 +3043,7 @@ RectD PdfLink::GetDestRect() const {
     if (link->ld.gotor.page < 0 || link->ld.gotor.page >= engine->PageCount())
         return result;
 
-    pdf_page* page = engine->GetPdfPage(link->ld.gotor.page + 1);
+    pdf_page* page = engine->GetFzPage(link->ld.gotor.page + 1);
     if (!page)
         return result;
     fz_point lt = link->ld.gotor.lt, rb = link->ld.gotor.rb;
