@@ -353,8 +353,10 @@ WCHAR* GetExePath() {
 Caller needs to free()
 */
 WCHAR* GetExeDir() {
-    std::unique_ptr<WCHAR> path(GetExePath());
-    return path::GetDir(path.get());
+    WCHAR* path = GetExePath();
+    WCHAR* dir = path::GetDir(path);
+    free(path);
+    return dir;
 }
 
 /*

@@ -24,3 +24,5 @@ Defines that can be over-written, but shouldn't:
 #define CURR_VERSION 3.1
 #define CURR_VERISON_COMMA 3,1,0
 */
+
+#define SVN_PRE_RELEASE_VER 11422

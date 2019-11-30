@@ -39,6 +39,13 @@ extern bool CrashHandlerCanUseNet();
 extern void ShowCrashHandlerMessage();
 extern void GetProgramInfo(str::Str& s);
 
+// in DEBUG we don't enable symbols download because they are not uploaded
+#if defined(DEBUG)
+static bool gDisableSymbolsDownload = true;
+#else
+static bool gDisableSymbolsDownload = false;
+#endif
+
 // Get url for file with symbols. Caller needs to free().
 static WCHAR* BuildSymbolsUrl() {
 #ifdef SYMBOL_DOWNLOAD_URL
@@ -186,7 +193,6 @@ static bool DeleteSymbolsIfExist() {
     return ok;
 }
 
-#ifndef DEBUG
 // static (single .exe) build
 static bool UnpackStaticSymbols(const char* pdbZipPath, const char* symDir) {
     lf("UnpackStaticSymbols(): unpacking %s to dir %s", pdbZipPath, symDir);
@@ -221,7 +227,6 @@ static bool UnpackInstallerSymbols(const char* pdbZipPath, const char* symDir) {
     }
     return true;
 }
-#endif
 
 // .pdb files are stored in a .zip file on a web server. Download that .zip
 // file as pdbZipPath, extract the symbols relevant to our executable
@@ -246,11 +251,12 @@ static bool DownloadAndUnzipSymbols(const WCHAR* pdbZipPath, const WCHAR* symDir
         return false;
     }
 
-#ifdef DEBUG
-    // don't care about debug builds because we don't release them
-    plog("DownloadAndUnzipSymbols(): DEBUG build so not doing anything");
-    return false;
-#else
+    if (gDisableSymbolsDownload) {
+        // don't care about debug builds because we don't release them
+        plog("DownloadAndUnzipSymbols(): DEBUG build so not doing anything");
+        return false;
+    }
+
     if (!HttpGetToFile(gSymbolsUrl, pdbZipPath)) {
         plog("DownloadAndUnzipSymbols(): couldn't download symbols");
         return false;
@@ -275,25 +281,31 @@ static bool DownloadAndUnzipSymbols(const WCHAR* pdbZipPath, const WCHAR* symDir
 
     file::Delete(pdbZipPath);
     return ok;
-#endif
 }
 
 bool CrashHandlerDownloadSymbols() {
+    if (!dir::Create(gSymbolsDir)) {
+        plog("SubmitCrashInfo(): couldn't create symbols dir");
+        return false;
+    }
+
     if (!dbghelp::Initialize(gSymbolPathW, false)) {
         plog("SubmitCrashInfo(): dbghelp::Initialize() failed");
         return false;
     }
 
-    if (!dbghelp::HasSymbols()) {
-        if (!DownloadAndUnzipSymbols(gPdbZipPath, gSymbolsDir)) {
-            plog("SubmitCrashInfo(): failed to download symbols");
-            return false;
-        }
+    if (dbghelp::HasSymbols()) {
+        return true;
+    }
 
-        if (!dbghelp::Initialize(gSymbolPathW, true)) {
-            plog("SubmitCrashInfo(): second dbghelp::Initialize() failed");
-            return false;
-        }
+    if (!DownloadAndUnzipSymbols(gPdbZipPath, gSymbolsDir)) {
+        plog("SubmitCrashInfo(): failed to download symbols");
+        return false;
+    }
+
+    if (!dbghelp::Initialize(gSymbolPathW, true)) {
+        plog("SubmitCrashInfo(): second dbghelp::Initialize() failed");
+        return false;
     }
 
     if (!dbghelp::HasSymbols()) {
@@ -309,11 +321,6 @@ bool CrashHandlerDownloadSymbols() {
 void SubmitCrashInfo() {
     if (!CrashHandlerCanUseNet()) {
         plog("SubmitCrashInfo(): internet access not allowed");
-        return;
-    }
-
-    if (!dir::Create(gSymbolsDir)) {
-        plog("SubmitCrashInfo(): couldn't create symbols dir");
         return;
     }
 
@@ -339,9 +346,8 @@ static DWORD WINAPI CrashDumpThread(LPVOID data) {
     if (!gCrashed)
         return 0;
 
-#ifndef HAS_NO_SYMBOLS
     SubmitCrashInfo();
-#endif
+
     // always write a MiniDump (for the latest crash only)
     // set the SUMATRAPDF_FULLDUMP environment variable for more complete dumps
     DWORD n = GetEnvironmentVariableA("SUMATRAPDF_FULLDUMP", nullptr, 0);
@@ -574,7 +580,7 @@ static void BuildSystemInfo() {
     gSystemInfo = s.StealData();
 }
 
-static bool StoreCrashDumpPaths(const WCHAR* symDir) {
+bool SetSymbolsDir(const WCHAR* symDir) {
     if (!symDir)
         return false;
     gSymbolsDir = str::Dup(symDir);
@@ -685,12 +691,17 @@ int __cdecl _purecall() {
 void InstallCrashHandler(const WCHAR* crashDumpPath, const WCHAR* crashFilePath, const WCHAR* symDir) {
     AssertCrash(!gDumpEvent && !gDumpThread);
 
-    if (!crashDumpPath)
+    if (!crashDumpPath) {
         return;
-    if (!StoreCrashDumpPaths(symDir))
+    }
+
+    if (!SetSymbolsDir(symDir)) {
         return;
-    if (!BuildSymbolPath())
+    }
+
+    if (!BuildSymbolPath()) {
         return;
+    }
 
     gCrashDumpPath = str::Dup(crashDumpPath);
     gCrashFilePath = str::Dup(crashFilePath);
@@ -698,8 +709,9 @@ void InstallCrashHandler(const WCHAR* crashDumpPath, const WCHAR* crashFilePath,
     // don't bother sending crash reports when running under Wine
     // as they're not helpful
     bool isWine = BuildModulesInfo();
-    if (isWine)
+    if (isWine) {
         return;
+    }
 
     BuildSystemInfo();
     // at this point list of modules should be complete (except
@@ -712,11 +724,13 @@ void InstallCrashHandler(const WCHAR* crashDumpPath, const WCHAR* crashFilePath,
     gCrashHandlerAllocator = new CrashHandlerAllocator();
     gSymbolsUrl = BuildSymbolsUrl();
     gDumpEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-    if (!gDumpEvent)
+    if (!gDumpEvent) {
         return;
+    }
     gDumpThread = CreateThread(nullptr, 0, CrashDumpThread, nullptr, 0, 0);
-    if (!gDumpThread)
+    if (!gDumpThread) {
         return;
+    }
     gPrevExceptionFilter = SetUnhandledExceptionFilter(DumpExceptionHandler);
 
     signal(SIGABRT, onSignalAbort);
@@ -727,11 +741,13 @@ void InstallCrashHandler(const WCHAR* crashDumpPath, const WCHAR* crashFilePath,
 }
 
 void UninstallCrashHandler() {
-    if (!gDumpEvent || !gDumpThread)
+    if (!gDumpEvent || !gDumpThread) {
         return;
+    }
 
-    if (gPrevExceptionFilter)
+    if (gPrevExceptionFilter) {
         SetUnhandledExceptionFilter(gPrevExceptionFilter);
+    }
 
     SetEvent(gDumpEvent);
     WaitForSingleObject(gDumpThread, 1000); // 1 sec

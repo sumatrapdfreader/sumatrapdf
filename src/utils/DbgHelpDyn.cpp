@@ -104,6 +104,7 @@ static bool CanStackWalk() {
     return ok;
 }
 
+// check if has access to valid .pdb symbols file by trying to resolve a symbol
 __declspec(noinline) bool CanSymbolizeAddress(DWORD64 addr) {
     static const int MAX_SYM_LEN = 512;
 

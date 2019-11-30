@@ -7,3 +7,4 @@ void InstallCrashHandler(const WCHAR* crashDumpPath, const WCHAR* crashFilePath,
 void SubmitCrashInfo();
 void UninstallCrashHandler();
 bool CrashHandlerDownloadSymbols();
+bool SetSymbolsDir(const WCHAR* symDir);

@@ -4426,7 +4426,6 @@ void ShowCrashHandlerMessage() {
     }
 #endif
 
-    // TODO: maybe launch notepad with crash report?
     char* msg = "We're sorry, SumatraPDF crashed.\n\nPress 'Cancel' to see crash report.";
     UINT flags = MB_ICONERROR | MB_OK | MB_OKCANCEL | MbRtlReadingMaybe();
     int res = MessageBoxA(nullptr, msg, "SumatraPDF crashed", flags);
@@ -4435,12 +4434,33 @@ void ShowCrashHandlerMessage() {
     }
 }
 
+static WCHAR* GetSymbolsDir() {
+    if (IsRunningInPortableMode()) {
+        /* Use the same path as the binary */
+        return GetExeDir();
+    }
+    WCHAR* dir = GetSpecialFolder(CSIDL_APPDATA, true);
+    WCHAR* symdir = path::Join(dir, L"sumatra_symbols");
+    free(dir);
+    return symdir;
+}
+
 static void DownloadDebugSymbols() {
+    // over-ride the default symbols directory to be more useful
+    WCHAR* symDir = GetSymbolsDir();
+    SetSymbolsDir(symDir);
+    OwnedData symDirA = str::conv::WcharToUtf8(symDir);
+
     bool ok = CrashHandlerDownloadSymbols();
-    char* msg = "Downloaded symbols!";
-    if (!ok) {
-        msg = "Failed to download symbols.";
+    char* msg = nullptr;
+    if (ok) {
+        msg = str::Format("Downloaded symbols! to %s", symDirA.data);
+    } else {
+        msg = str::Dup("Failed to download symbols.");
     }
     UINT flags = MB_ICONERROR | MB_OK | MbRtlReadingMaybe();
     MessageBoxA(nullptr, msg, "Downloading symbols", flags);
+
+    free(msg);
+    free(symDir);
 }
