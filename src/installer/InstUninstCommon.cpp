@@ -58,8 +58,8 @@ Color COLOR_MSG_INSTALLATION(gCol5);
 Color COLOR_MSG_FAILED(gCol1);
 
 HWND gHwndFrame = nullptr;
-HWND gHwndButtonExit = nullptr;
-HWND gHwndButtonInstUninst = nullptr;
+ButtonCtrl* gButtonExit = nullptr;
+ButtonCtrl* gButtonInstUninst = nullptr;
 HFONT gFontDefault = nullptr;
 bool gShowOptions = false;
 bool gForceCrash = false;
@@ -465,8 +465,27 @@ HWND CreateDefaultButton(HWND hwndParent, const WCHAR* s, int id) {
     return hwnd;
 }
 
+ButtonCtrl* CreateDefaultButtonCtrl(HWND hwndParent, const WCHAR* s) {
+    auto* b = new ButtonCtrl(hwndParent);
+    b->SetText(s);
+    b->Create();
+
+    RECT r;
+    GetClientRect(hwndParent, &r);
+    SIZE size = b->GetIdealSize();
+    int x = RectDx(r) - size.cx - WINDOW_MARGIN;
+    int y = RectDy(r) - size.cy - WINDOW_MARGIN;
+    r.left = x;
+    r.right = x + size.cx;
+    r.top = y;
+    r.bottom = y + size.cy;
+    b->SetPos(&r);
+    return b;
+}
+
 void CreateButtonExit(HWND hwndParent) {
-    gHwndButtonExit = CreateDefaultButton(hwndParent, _TR("Close"), ID_BUTTON_EXIT);
+    gButtonExit = CreateDefaultButtonCtrl(hwndParent, _TR("Close"));
+    gButtonExit->OnClicked = OnButtonExit;
 }
 
 void OnButtonExit() {

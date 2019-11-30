@@ -488,7 +488,7 @@ static void OnButtonInstall() {
     SafeDestroyWindow(&gHwndCheckboxKeepBrowserPlugin);
     delete gButtonOptions;
 
-    EnableWindow(gHwndButtonInstUninst, FALSE);
+    gButtonInstUninst->SetIsEnabled(false);
 
     SetMsg(_TR("Installation in progress..."), COLOR_MSG_INSTALLATION);
     InvalidateFrame();
@@ -497,7 +497,8 @@ static void OnButtonInstall() {
 }
 
 static void OnInstallationFinished() {
-    SafeDestroyWindow(&gHwndButtonInstUninst);
+    delete gButtonInstUninst;
+    gButtonInstUninst = nullptr;
     SafeDestroyWindow(&gHwndProgressBar);
 
     if (gInstUninstGlobals.success) {
@@ -638,12 +639,8 @@ static void OnButtonBrowse() {
 static bool OnWmCommand(WPARAM wParam) {
     switch (LOWORD(wParam)) {
         case IDOK:
-            if (gHwndButtonInstUninst)
-                OnButtonInstall();
-            else if (gHwndButtonRunSumatra)
+            if (gHwndButtonRunSumatra)
                 OnButtonStartSumatra();
-            else if (gHwndButtonExit)
-                OnButtonExit();
             break;
 
         case ID_BUTTON_START_SUMATRA:
@@ -654,7 +651,6 @@ static bool OnWmCommand(WPARAM wParam) {
             OnButtonBrowse();
             break;
 
-        case ID_BUTTON_EXIT:
         case IDCANCEL:
             OnButtonExit();
             break;
@@ -668,13 +664,13 @@ static bool OnWmCommand(WPARAM wParam) {
 //[ ACCESSKEY_GROUP Installer
 static void OnCreateWindow(HWND hwnd) {
     ClientRect r(hwnd);
-    gHwndButtonInstUninst = CreateDefaultButton(hwnd, _TR("Install SumatraPDF"), IDOK);
+
+    gButtonInstUninst = CreateDefaultButtonCtrl(hwnd, _TR("Install SumatraPDF"));
+    gButtonInstUninst->OnClicked = OnButtonInstall;
 
     SIZE btnSize;
-    gButtonOptions = new ButtonCtrl(hwnd);
+    gButtonOptions = CreateDefaultButtonCtrl(hwnd, _TR("&Options"));
     gButtonOptions->OnClicked = OnButtonOptions;
-    gButtonOptions->SetText(_TR("&Options"));
-    gButtonOptions->Create();
 
     btnSize = gButtonOptions->GetIdealSize();
     int x = WINDOW_MARGIN;
@@ -771,7 +767,7 @@ static void OnCreateWindow(HWND hwnd) {
     gShowOptions = !gShowOptions;
     OnButtonOptions();
 
-    SetFocus(gHwndButtonInstUninst);
+    gButtonInstUninst->SetFocus();
 
     if (gInstallerGlobals.autoUpdate) {
         // click the Install button
@@ -872,8 +868,9 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
             OnInstallationFinished();
             if (gHwndButtonRunSumatra)
                 SetFocus(gHwndButtonRunSumatra);
-            if (gHwndButtonExit)
-                SetFocus(gHwndButtonExit);
+            if (gButtonExit) {
+                gButtonExit->SetFocus();
+            }
             break;
 
         default:
@@ -939,7 +936,7 @@ static int RunApp() {
         // check if there are processes that need to be closed but
         // not more frequently than once per ten seconds and
         // only before (un)installation starts.
-        if (t.GetTimeInMs() > 10000 && gHwndButtonInstUninst && IsWindowEnabled(gHwndButtonInstUninst)) {
+        if (t.GetTimeInMs() > 10000 && gButtonInstUninst && gButtonInstUninst->IsEnabled()) {
             CheckInstallUninstallPossible(true);
             t.Start();
         }

@@ -42,8 +42,6 @@ extern int gButtonDy;
 #define REG_PATH_PLUGIN L"Software\\MozillaPlugins\\@mozilla.zeniko.ch/SumatraPDF_Browser_Plugin_x64"
 #endif
 
-#define ID_BUTTON_EXIT 11
-
 #define WM_APP_INSTALLATION_FINISHED (WM_APP + 1)
 
 struct InstUninstGlobals {
@@ -60,12 +58,14 @@ struct PayloadInfo {
     bool install;
 };
 
+struct ButtonCtrl;
+
 extern InstUninstGlobals gInstUninstGlobals;
 extern PayloadInfo gPayloadData[];
 extern WCHAR* gSupportedExts[];
 extern HWND gHwndFrame;
-extern HWND gHwndButtonExit;
-extern HWND gHwndButtonInstUninst;
+extern ButtonCtrl* gButtonExit;
+extern ButtonCtrl* gButtonInstUninst;
 extern HBRUSH ghbrBackground;
 extern HFONT gFontDefault;
 extern WCHAR* gMsgError;
@@ -97,6 +97,7 @@ void AnimStep();
 void CreateButtonExit(HWND hwndParent);
 HWND CreateButton(HWND hwndParent, const WCHAR* s, int id, DWORD style, SIZE* sizeOut);
 HWND CreateDefaultButton(HWND hwndParent, const WCHAR* s, int id);
+ButtonCtrl* CreateDefaultButtonCtrl(HWND hwndParent, const WCHAR* s);
 SIZE SetButtonTextAndResize(HWND hwnd, const WCHAR* s);
 SIZE SetButtonTextAndResize(ButtonCtrl* b, const WCHAR* s);
 SIZE GetIdealButtonSize(HWND hwnd);

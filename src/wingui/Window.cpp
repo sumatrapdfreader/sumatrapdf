@@ -262,6 +262,16 @@ void WindowBase::SetFocus() {
     ::SetFocus(hwnd);
 }
 
+void WindowBase::SetIsEnabled(bool isEnabled) {
+    BOOL enabled = isEnabled ? TRUE : FALSE;
+    ::EnableWindow(hwnd, enabled);
+}
+
+bool WindowBase::IsEnabled() {
+    BOOL enabled = ::IsWindowEnabled(hwnd);
+    return enabled ? true : false;
+}
+
 void WindowBase::SetPos(RECT* r) {
     ::MoveWindow(hwnd, r);
 }

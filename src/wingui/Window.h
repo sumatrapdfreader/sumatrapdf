@@ -73,6 +73,8 @@ struct WindowBase {
     void SubclassParent();
     void Unsubclass();
 
+    void SetIsEnabled(bool);
+    bool IsEnabled();
     void SetFocus();
     void SetFont(HFONT f);
     void SetText(const WCHAR* s);
@@ -83,7 +85,6 @@ struct WindowBase {
     void SetBackgroundColor(COLORREF);
     void SetColors(COLORREF bg, COLORREF txt);
 };
-
 
 struct WindowBaseLayout : public ILayout {
     WindowBase* wb = nullptr;

@@ -29,6 +29,14 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "CrashHandler.h"
 #include "utils/Dpi.h"
 #include "utils/FrameTimeoutCalculator.h"
+
+#include "wingui/WinGui.h"
+#include "wingui/Layout.h"
+#include "wingui/Window.h"
+#include "wingui/ButtonCtrl.h"
+#include "wingui/CheckboxCtrl.h"
+#include "wingui/EditCtrl.h"
+
 #include "utils/DebugLog.h"
 
 #define UNINSTALLER_WIN_DX INSTALLER_WIN_DX
@@ -301,7 +309,7 @@ static void OnButtonUninstall() {
         return;
 
     // disable the button during uninstallation
-    EnableWindow(gHwndButtonInstUninst, FALSE);
+    gButtonInstUninst->SetIsEnabled(false);
     SetMsg(_TR("Uninstallation in progress..."), COLOR_MSG_INSTALLATION);
     InvalidateFrame();
 
@@ -309,8 +317,8 @@ static void OnButtonUninstall() {
 }
 
 void OnUninstallationFinished() {
-    DestroyWindow(gHwndButtonInstUninst);
-    gHwndButtonInstUninst = nullptr;
+    delete gButtonInstUninst;
+    gButtonInstUninst = nullptr;
     CreateButtonExit(gHwndFrame);
     SetMsg(_TR("SumatraPDF has been uninstalled."), gMsgError ? COLOR_MSG_FAILED : COLOR_MSG_OK);
     gMsgError = gInstUninstGlobals.firstError;
@@ -321,14 +329,7 @@ void OnUninstallationFinished() {
 
 static bool OnWmCommand(WPARAM wParam) {
     switch (LOWORD(wParam)) {
-        case IDOK:
-            if (gHwndButtonInstUninst)
-                OnButtonUninstall();
-            else if (gHwndButtonExit)
-                OnButtonExit();
-            break;
 
-        case ID_BUTTON_EXIT:
         case IDCANCEL:
             OnButtonExit();
             break;
@@ -340,7 +341,8 @@ static bool OnWmCommand(WPARAM wParam) {
 }
 
 static void OnCreateWindow(HWND hwnd) {
-    gHwndButtonInstUninst = CreateDefaultButton(hwnd, _TR("Uninstall SumatraPDF"), IDOK);
+    gButtonInstUninst = CreateDefaultButtonCtrl(_TR("Uninstall SumatraPDF"));
+    gButtonInstUninst->OnClicked = OnButtonUninstall;
 }
 
 static void CreateMainWindow() {
@@ -427,8 +429,9 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
 
         case WM_APP_INSTALLATION_FINISHED:
             OnUninstallationFinished();
-            if (gHwndButtonExit)
-                SetFocus(gHwndButtonExit);
+            if (gButtonExit) {
+                gButtonExit->SetFocus();
+            }
             break;
 
         default:
@@ -494,7 +497,7 @@ static int RunApp() {
         // check if there are processes that need to be closed but
         // not more frequently than once per ten seconds and
         // only before (un)installation starts.
-        if (t.GetTimeInMs() > 10000 && gHwndButtonInstUninst && IsWindowEnabled(gHwndButtonInstUninst)) {
+        if (t.GetTimeInMs() > 10000 && gButtonInstUninst && gButtonInstUninst->IsEnabled()) {
             CheckInstallUninstallPossible(true);
             t.Start();
         }

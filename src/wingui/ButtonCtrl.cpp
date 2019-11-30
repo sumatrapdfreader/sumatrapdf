@@ -25,6 +25,9 @@ bool ButtonCtrl::Create() {
     if (ok) {
         SubclassParent();
     }
+    auto size = GetIdealSize();
+    RECT r{0, 0, size.cx, size.cy};
+    SetBounds(r);
     return ok;
 }
 
