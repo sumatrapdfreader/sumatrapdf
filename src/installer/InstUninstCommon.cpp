@@ -430,39 +430,13 @@ SIZE GetIdealButtonSize(HWND hwnd) {
     return s;
 }
 
-SIZE SetButtonTextAndResize(HWND hwnd, const WCHAR* s) {
+SIZE SetButtonTextAndResize(ButtonCtrl* b, const WCHAR* s) {
+    auto hwnd = b->hwnd;
     win::SetText(hwnd, s);
     SIZE size = GetIdealButtonSize(hwnd);
     UINT flags = SWP_NOMOVE | SWP_NOZORDER | SWP_NOREDRAW | SWP_NOACTIVATE | SWP_FRAMECHANGED;
     SetWindowPos(hwnd, nullptr, 0, 0, size.cx, size.cy, flags);
     return size;
-}
-
-SIZE SetButtonTextAndResize(ButtonCtrl* b, const WCHAR* s) {
-    return SetButtonTextAndResize(b->hwnd, s);
-}
-
-// Creates a button that has a right size for it's text,
-HWND CreateButton(HWND hwndParent, const WCHAR* s, int id, DWORD style, SIZE* sizeOut) {
-    HMENU idMenu = (HMENU)(UINT_PTR)id;
-    style |= WS_CHILD | WS_TABSTOP;
-    auto h = GetModuleHandleW(nullptr);
-    HWND hwnd = CreateWindowExW(0, WC_BUTTON, L"", style, 0, 0, 100, 20, hwndParent, idMenu, h, nullptr);
-    SetWindowFont(hwnd, gFontDefault, TRUE);
-    *sizeOut = SetButtonTextAndResize(hwnd, s);
-    return hwnd;
-}
-
-HWND CreateDefaultButton(HWND hwndParent, const WCHAR* s, int id) {
-    SIZE size = {};
-    HWND hwnd = CreateButton(hwndParent, s, id, BS_DEFPUSHBUTTON, &size);
-
-    ClientRect r(hwndParent);
-    int x = r.dx - size.cx - WINDOW_MARGIN;
-    int y = r.dy - size.cy - WINDOW_MARGIN;
-    UINT flags = SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW;
-    SetWindowPos(hwnd, nullptr, x, y, 0, 0, flags);
-    return hwnd;
 }
 
 ButtonCtrl* CreateDefaultButtonCtrl(HWND hwndParent, const WCHAR* s) {

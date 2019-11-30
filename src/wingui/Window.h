@@ -75,6 +75,10 @@ struct WindowBase {
 
     void SetIsEnabled(bool);
     bool IsEnabled();
+
+    void SetIsVisible(bool);
+    bool IsVisible();
+
     void SetFocus();
     void SetFont(HFONT f);
     void SetText(const WCHAR* s);

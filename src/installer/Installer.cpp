@@ -55,7 +55,6 @@ struct InstallerGlobals {
 
 #define ID_CHECKBOX_MAKE_DEFAULT 14
 #define ID_CHECKBOX_BROWSER_PLUGIN 15
-#define ID_BUTTON_BROWSE 18
 #define ID_CHECKBOX_PDF_FILTER 19
 #define ID_CHECKBOX_PDF_PREVIEWER 20
 
@@ -72,7 +71,7 @@ static ButtonCtrl* gButtonOptions = nullptr;
 static ButtonCtrl* gButtonRunSumatra = nullptr;
 static HWND gHwndStaticInstDir = nullptr;
 static HWND gHwndTextboxInstDir = nullptr;
-static HWND gHwndButtonBrowseDir = nullptr;
+static ButtonCtrl* gButtonBrowseDir = nullptr;
 static HWND gHwndCheckboxRegisterDefault = nullptr;
 static HWND gHwndCheckboxRegisterPdfFilter = nullptr;
 static HWND gHwndCheckboxRegisterPdfPreviewer = nullptr;
@@ -486,7 +485,8 @@ static void OnButtonInstall() {
     // disable the install button and remove all the installation options
     SafeDestroyWindow(&gHwndStaticInstDir);
     SafeDestroyWindow(&gHwndTextboxInstDir);
-    SafeDestroyWindow(&gHwndButtonBrowseDir);
+    delete gButtonBrowseDir;
+    gButtonBrowseDir = nullptr;
     SafeDestroyWindow(&gHwndCheckboxRegisterDefault);
     SafeDestroyWindow(&gHwndCheckboxRegisterPdfFilter);
     SafeDestroyWindow(&gHwndCheckboxRegisterPdfPreviewer);
@@ -531,12 +531,19 @@ static void EnableAndShow(HWND hwnd, bool enable) {
     EnableWindow(hwnd, enable);
 }
 
+static void EnableAndShow(WindowBase* w, bool enable) {
+    if (w) {
+        win::SetVisibility(w->hwnd, enable);
+        w->SetIsEnabled(enable);
+    }
+}
+
 static void OnButtonOptions() {
     gShowOptions = !gShowOptions;
 
     EnableAndShow(gHwndStaticInstDir, gShowOptions);
     EnableAndShow(gHwndTextboxInstDir, gShowOptions);
-    EnableAndShow(gHwndButtonBrowseDir, gShowOptions);
+    EnableAndShow(gButtonBrowseDir, gShowOptions);
     EnableAndShow(gHwndCheckboxRegisterDefault, gShowOptions);
     EnableAndShow(gHwndCheckboxRegisterPdfFilter, gShowOptions);
     EnableAndShow(gHwndCheckboxRegisterPdfPreviewer, gShowOptions);
@@ -619,7 +626,7 @@ static void OnButtonBrowse() {
     BOOL ok = BrowseForFolder(gHwndFrame, installDir, _TR("Select the folder where SumatraPDF should be installed:"),
                               path, dimof(path));
     if (!ok) {
-        SetFocus(gHwndButtonBrowseDir);
+        gButtonBrowseDir->SetFocus();
         return;
     }
 
@@ -637,15 +644,6 @@ static void OnButtonBrowse() {
 
 static bool OnWmCommand(WPARAM wParam) {
     switch (LOWORD(wParam)) {
-        case IDOK:
-            if (gButtonRunSumatra)
-                OnButtonStartSumatra();
-            break;
-
-        case ID_BUTTON_BROWSE:
-            OnButtonBrowse();
-            break;
-
         case IDCANCEL:
             OnButtonExit();
             break;
@@ -741,9 +739,11 @@ static void OnCreateWindow(HWND hwnd) {
     const WCHAR* s = L"&...";
     SizeI btnSize2 = TextSizeInHwnd(hwnd, s);
     btnSize.cx += dpiAdjust(4);
-    gHwndButtonBrowseDir = CreateButton(hwnd, s, ID_BUTTON_BROWSE, BS_PUSHBUTTON, &btnSize);
+    gButtonBrowseDir = CreateDefaultButtonCtrl(hwnd, s);
+    gButtonBrowseDir->OnClicked = OnButtonBrowse;
+    btnSize = gButtonBrowseDir->GetIdealSize();
     x = r.dx - WINDOW_MARGIN - btnSize2.dx;
-    SetWindowPos(gHwndButtonBrowseDir, nullptr, x, y, btnSize2.dx, staticDy,
+    SetWindowPos(gButtonBrowseDir->hwnd, nullptr, x, y, btnSize2.dx, staticDy,
                  SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW | SWP_FRAMECHANGED);
 
     x = WINDOW_MARGIN;

@@ -272,6 +272,15 @@ bool WindowBase::IsEnabled() {
     return enabled ? true : false;
 }
 
+
+void WindowBase::SetIsVisible(bool isVisible) {
+    ::ShowWindow(hwnd, isVisible ? SW_SHOW : SW_HIDE);
+}
+
+bool WindowBase::IsVisible() {
+    return ::IsWindowVisible(hwnd);
+}
+
 void WindowBase::SetPos(RECT* r) {
     ::MoveWindow(hwnd, r);
 }
