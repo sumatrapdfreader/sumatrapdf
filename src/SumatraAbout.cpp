@@ -465,7 +465,7 @@ static void CreateInfotipForLink(StaticLinkInfo& linkInfo) {
 
 static void DeleteInfotip() {
     if (gAboutTooltip != nullptr) {
-        //gAboutTooltip->Hide();
+        // gAboutTooltip->Hide();
         delete gAboutTooltip;
         gAboutTooltip = nullptr;
         return;

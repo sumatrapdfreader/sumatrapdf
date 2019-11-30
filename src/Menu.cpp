@@ -202,6 +202,7 @@ static MenuDef menuDefDebug[] = {
     { "Toggle ebook UI",                    IDM_DEBUG_EBOOK_UI,         MF_NO_TRANSLATE },
     { "Mui debug paint",                    IDM_DEBUG_MUI,              MF_NO_TRANSLATE },
     { "Annotation from Selection",          IDM_DEBUG_ANNOTATION,       MF_NO_TRANSLATE },
+    { "Download symbols",                   IDM_DEBUG_DOWNLOAD_SYMBOLS, MF_NO_TRANSLATE },
 #if defined(DEBUG)
     { SEP_ITEM,                             0,                          0 },
     { "Crash me",                           IDM_DEBUG_CRASH_ME,         MF_NO_TRANSLATE },

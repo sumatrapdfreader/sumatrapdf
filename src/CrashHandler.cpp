@@ -278,10 +278,40 @@ static bool DownloadAndUnzipSymbols(const WCHAR* pdbZipPath, const WCHAR* symDir
 #endif
 }
 
+bool CrashHandlerDownloadSymbols() {
+    if (!dbghelp::Initialize(gSymbolPathW, false)) {
+        plog("SubmitCrashInfo(): dbghelp::Initialize() failed");
+        return false;
+    }
+
+    if (!dbghelp::HasSymbols()) {
+        if (!DownloadAndUnzipSymbols(gPdbZipPath, gSymbolsDir)) {
+            plog("SubmitCrashInfo(): failed to download symbols");
+            return false;
+        }
+
+        if (!dbghelp::Initialize(gSymbolPathW, true)) {
+            plog("SubmitCrashInfo(): second dbghelp::Initialize() failed");
+            return false;
+        }
+    }
+
+    if (!dbghelp::HasSymbols()) {
+        plog("SubmitCrashInfo(): HasSymbols() false after downloading symbols");
+        return false;
+    }
+    return true;
+}
+
 // If we can't resolve the symbols, we assume it's because we don't have symbols
 // so we'll try to download them and retry. If we can resolve symbols, we'll
 // get the callstacks etc. and submit to our server for analysis.
 void SubmitCrashInfo() {
+    if (!CrashHandlerCanUseNet()) {
+        plog("SubmitCrashInfo(): internet access not allowed");
+        return;
+    }
+
     if (!dir::Create(gSymbolsDir)) {
         plog("SubmitCrashInfo(): couldn't create symbols dir");
         return;
@@ -289,38 +319,15 @@ void SubmitCrashInfo() {
 
     lf("SubmitCrashInfo(): start");
     lf(L"SubmitCrashInfo(): gSymbolPathW: '%s'", gSymbolPathW);
-    if (!CrashHandlerCanUseNet()) {
-        plog("SubmitCrashInfo(): internet access not allowed");
-        return;
-    }
+
+    bool ok = CrashHandlerDownloadSymbols();
 
     char* s = nullptr;
-    if (!dbghelp::Initialize(gSymbolPathW, false)) {
-        plog("SubmitCrashInfo(): dbghelp::Initialize() failed");
-        return;
-    }
-
-    if (!dbghelp::HasSymbols()) {
-        if (!DownloadAndUnzipSymbols(gPdbZipPath, gSymbolsDir)) {
-            plog("SubmitCrashInfo(): failed to download symbols");
-            return;
-        }
-
-        if (!dbghelp::Initialize(gSymbolPathW, true)) {
-            plog("SubmitCrashInfo(): second dbghelp::Initialize() failed");
-            return;
-        }
-    }
-
-    if (!dbghelp::HasSymbols()) {
-        plog("SubmitCrashInfo(): HasSymbols() false after downloading symbols");
-        return;
-    }
-
     size_t size = 0;
     s = BuildCrashInfoText(&size);
-    if (!s)
+    if (!s) {
         return;
+    }
     SaveCrashInfo(s, size);
     SendCrashInfo(s, size);
     gCrashHandlerAllocator->Free(s);

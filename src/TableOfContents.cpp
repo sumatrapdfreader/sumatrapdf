@@ -479,7 +479,7 @@ static void ExportBookmarks(TabInfo* tab) {
     auto* tocTree = tab->ctrl->GetTocTree();
     str::Str s;
     SerializeBookmarksRec(tocTree->root, 0, s);
-    //dbglogf("%s\n", s.Get());
+    // dbglogf("%s\n", s.Get());
     str::WStr fileName;
     fileName.Append(tab->filePath.Get());
     fileName.Append(L".bkm");

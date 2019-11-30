@@ -143,6 +143,7 @@ static void CloseDocumentInTab(WindowInfo*, bool keepUIEnabled = false, bool del
 static void UpdatePageInfoHelper(WindowInfo*, NotificationWnd* wnd = nullptr, int pageNo = -1);
 static bool SidebarSplitterCb(WindowInfo*, bool done);
 static bool FavSplitterCb(WindowInfo*, bool done);
+static void DownloadDebugSymbols();
 
 void SetCurrentLang(const char* langCode) {
     if (langCode) {
@@ -4120,6 +4121,10 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
             gGlobalPrefs->chmUI.useFixedPageUI = !gGlobalPrefs->chmUI.useFixedPageUI;
             break;
 
+        case IDM_DEBUG_DOWNLOAD_SYMBOLS:
+            DownloadDebugSymbols();
+            break;
+
         case IDM_DEBUG_MUI:
             mui::SetDebugPaint(!mui::IsDebugPaint());
             win::menu::SetChecked(GetMenu(win->hwndFrame), IDM_DEBUG_MUI, !mui::IsDebugPaint());
@@ -4428,4 +4433,14 @@ void ShowCrashHandlerMessage() {
     if (IDCANCEL == res) {
         LaunchFile(gCrashFilePath, nullptr, L"open");
     }
+}
+
+static void DownloadDebugSymbols() {
+    bool ok = CrashHandlerDownloadSymbols();
+    char* msg = "Downloaded symbols!";
+    if (!ok) {
+        msg = "Failed to download symbols.";
+    }
+    UINT flags = MB_ICONERROR | MB_OK | MbRtlReadingMaybe();
+    MessageBoxA(nullptr, msg, "Downloading symbols", flags);
 }

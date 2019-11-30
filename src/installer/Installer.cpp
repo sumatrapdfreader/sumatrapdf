@@ -994,7 +994,6 @@ static void ParseCommandLine(WCHAR* cmdLine) {
 #define CRASH_DUMP_FILE_NAME L"suminstaller.dmp"
 #define CRASH_FILE_NAME L"suminstaller_crash.txt"
 
-
 // no-op but must be defined for CrashHandler.cpp
 void ShowCrashHandlerMessage() {
 }

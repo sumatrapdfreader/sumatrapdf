@@ -17,4 +17,4 @@ void EnsureAreaVisibility(RectI& rect);
 RectI GetDefaultWindowPos();
 void SaveCallstackLogs();
 WCHAR* PathForFileInAppDataDir(const WCHAR* fileName);
-//const WCHAR* ExractUnrarDll();
+// const WCHAR* ExractUnrarDll();

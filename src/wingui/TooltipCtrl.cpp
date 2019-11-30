@@ -14,7 +14,7 @@ Kind kindTooltip = "tooltip";
 TooltipCtrl::TooltipCtrl(HWND p) : WindowBase(p) {
     kind = kindTooltip;
     dwExStyle = WS_EX_TOPMOST;
-    dwStyle =  WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP;
+    dwStyle = WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP;
     winClass = TOOLTIPS_CLASS;
 }
 
@@ -63,7 +63,7 @@ void TooltipCtrl::Show(const WCHAR* text, RectI& rc, bool multiline) {
     ti.lpszText = (WCHAR*)text;
     ti.rect = rc.ToRECT();
     UINT msg = isShowing ? TTM_NEWTOOLRECT : TTM_ADDTOOL;
-    SendMessageW(hwnd, msg, 0, (LPARAM)&ti); 
+    SendMessageW(hwnd, msg, 0, (LPARAM)&ti);
 
     isShowing = true;
 }
@@ -76,6 +76,6 @@ void TooltipCtrl::Hide() {
     TOOLINFO ti = {0};
     ti.cbSize = sizeof(ti);
     ti.hwnd = parent;
-    SendMessageW(hwnd, TTM_DELTOOL, 0, (LPARAM)&ti);    
+    SendMessageW(hwnd, TTM_DELTOOL, 0, (LPARAM)&ti);
     isShowing = false;
 }

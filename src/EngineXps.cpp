@@ -549,7 +549,6 @@ bool XpsEngineImpl::LoadFromStream(fz_stream* stm) {
         _pages.Append(pageInfo);
     }
 
-
     fz_try(ctx) {
         _outline = fz_load_outline(ctx, _doc);
     }
@@ -910,7 +909,6 @@ RenderedBitmap* XpsEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
     return bitmap;
 }
 
-
 u8* XpsEngineImpl::GetFileData(size_t* cbCount) {
     u8* res = nullptr;
     ScopedCritSec scope(&ctxAccess);
@@ -1098,9 +1096,7 @@ void XpsEngineImpl::LinkifyPageText(FzPageInfo* pageInfo) {
     free(coords);
 }
 
-
-WCHAR* XpsEngineImpl::ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** coordsOut,
-                                      RenderTarget target) {
+WCHAR* XpsEngineImpl::ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** coordsOut, RenderTarget target) {
     UNUSED(target);
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo);
     fz_stext_page* stext = pageInfo->stext;
