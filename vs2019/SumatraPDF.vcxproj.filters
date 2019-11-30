@@ -4,11 +4,23 @@
     <Filter Include="docs">
       <UniqueIdentifier>{CECA957C-BA01-970D-63EE-7C104F04130F}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ext">
+      <UniqueIdentifier>{7670880B-E279-887C-6BF5-9E7CD7FD937C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ext\synctex">
+      <UniqueIdentifier>{73E6124D-DF9B-8B42-6890-8519D4448246}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src">
       <UniqueIdentifier>{2DAB880B-99B4-887C-2230-9F7C8E38947C}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\ext\synctex\synctex_parser.c">
+      <Filter>ext\synctex</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\synctex\synctex_parser_utils.c">
+      <Filter>ext\synctex</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\SumatraPDF.cpp">
       <Filter>src</Filter>
     </ClCompile>

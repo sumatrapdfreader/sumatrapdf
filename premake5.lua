@@ -384,12 +384,15 @@ workspace "SumatraPDF"
     }
 
 
+  -- TODO: remove, is compiled in directly
+  --[[
   project "synctex"
     kind "StaticLib"
     language "C"
     disablewarnings { "4100", "4244", "4267", "4702", "4706" }
     includedirs { "ext/zlib", "ext/synctex" }
     synctex_files()
+  ]]
 
 
   project "utils"
@@ -564,6 +567,7 @@ workspace "SumatraPDF"
     links { "comctl32", "gdiplus", "msimg32", "shlwapi", "version" }
 
 
+  -- a single static executable
   project "SumatraPDF"
     kind "WindowedApp"
     language "C++"
@@ -572,12 +576,18 @@ workspace "SumatraPDF"
     flags { "NoManifest" }
     includedirs { "src", "src/wingui" }
     sumatrapdf_files()
+    synctex_files()
+
+    -- for synctex
+    disablewarnings { "4100", "4244", "4267", "4702", "4706" }
+    includedirs { "ext/zlib", "ext/synctex" }
+
     files {
       "docs/releasenotes.txt",
       "docs/releaseplan.txt",
     }
     links {
-      "engines", "libdjvu",  "libwebp", "mui", "mupdf", "sumatra", "synctex",
+      "engines", "libdjvu",  "libwebp", "mui", "mupdf", "sumatra",
       "uia", "unarrlib", "utils", "unrar"
     }
     links {
@@ -588,17 +598,24 @@ workspace "SumatraPDF"
     linkoptions { "/DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll"}
 
 
-  project "SumatraPDF-mupdf-dll"
+  -- a dll version where most functionality is in libmupdf.dll
+  project "SumatraPDF-dll"
     kind "WindowedApp"
     language "C++"
     cppdialect "C++17"
     entrypoint "WinMainCRTStartup"
     flags { "NoManifest" }
     includedirs { "src", "src/wingui", "mupdf/include" }
+
+    -- for synctex
+    disablewarnings { "4100", "4244", "4267", "4702", "4706" }
+    includedirs { "ext/zlib", "ext/synctex" }
+
     sumatrapdf_files()
+    synctex_files()
     files { "src/MuPDF_Exports.cpp" }
     links {
-      "synctex", "sumatra", "libmupdf", "utils", "mui", "engines",
+      "sumatra", "libmupdf", "utils", "mui", "engines",
       "uia", "unarrlib", "unrar", "libwebp"
     }
     links {
