@@ -49,7 +49,7 @@ include("premake5.files.lua")
 workspace "SumatraPDF"
   configurations { "Debug", "Release", "ReleasePrefast" }
   platforms { "x32", "x32_xp", "x64" }
-  startproject "SumatraPDF-mupdf-dll"
+  startproject "SumatraPDF"
 
   filter "platforms:x32_xp"
     architecture "x86"
@@ -706,8 +706,8 @@ workspace "SumatraPDF"
     -- this is to prevent dll hijacking
     linkoptions { "/DELAYLOAD:gdiplus.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll"}
 
-    dependson { "SumatraPDF-mupdf-dll", "PdfFilter", "PdfPreview", "Uninstaller" }
-    prebuildcommands { "cd %{cfg.targetdir} & ..\\..\\bin\\MakeLZSA.exe InstallerData.dat SumatraPDF-mupdf-dll.exe:SumatraPDF.exe libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll Uninstaller.exe:uninstall.exe ..\\..\\mupdf\\resources\\fonts\\droid\\DroidSansFallback.ttf:DroidSansFallback.ttf"  }
+    dependson { "SumatraPDF-dll", "PdfFilter", "PdfPreview", "Uninstaller" }
+    prebuildcommands { "cd %{cfg.targetdir} & ..\\..\\bin\\MakeLZSA.exe InstallerData.dat SumatraPDF-dll.exe:SumatraPDF.exe libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll Uninstaller.exe:uninstall.exe ..\\..\\mupdf\\resources\\fonts\\droid\\DroidSansFallback.ttf:DroidSansFallback.ttf"  }
   --]]
 
   project "TestApp"
