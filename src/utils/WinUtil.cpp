@@ -549,14 +549,14 @@ bool LaunchFile(const WCHAR* path, const WCHAR* params, const WCHAR* verb, bool 
         return false;
     }
 
-    SHELLEXECUTEINFOW sei = {0};
+    SHELLEXECUTEINFOW sei{};
     sei.cbSize = sizeof(sei);
     sei.fMask = SEE_MASK_FLAG_NO_UI;
     sei.lpVerb = verb;
     sei.lpFile = path;
     sei.lpParameters = params;
     sei.nShow = hidden ? SW_HIDE : SW_SHOWNORMAL;
-    return ShellExecuteEx(&sei);
+    return !!ShellExecuteExW(&sei);
 }
 
 HANDLE LaunchProcess(const WCHAR* cmdLine, const WCHAR* currDir, DWORD flags) {
@@ -573,6 +573,36 @@ HANDLE LaunchProcess(const WCHAR* cmdLine, const WCHAR* currDir, DWORD flags) {
 
     CloseHandle(pi.hThread);
     return pi.hProcess;
+}
+
+// return true if the app is running in elevated (as admin)
+bool IsRunningElevated() {
+    BOOL fIsRunAsAdmin = FALSE;
+    PSID pAdministratorsGroup = NULL;
+
+    // Allocate and initialize a SID of the administrators group.
+    SID_IDENTIFIER_AUTHORITY NtAuthority = SECURITY_NT_AUTHORITY;
+    if (!AllocateAndInitializeSid(&NtAuthority, 2, SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0,
+                                  0, &pAdministratorsGroup)) {
+        goto Cleanup;
+    }
+
+    // Determine whether the SID of administrators group is enabled in
+    // the primary access token of the process.
+    if (!CheckTokenMembership(NULL, pAdministratorsGroup, &fIsRunAsAdmin)) {
+        goto Cleanup;
+    }
+
+Cleanup:
+    if (pAdministratorsGroup) {
+        FreeSid(pAdministratorsGroup);
+    }
+
+    return !!fIsRunAsAdmin;
+}
+
+bool LaunchElevated(const WCHAR* path, const WCHAR* cmdline) {
+    return LaunchFile(path, cmdline, L"runas");
 }
 
 /* Ensure that the rectangle is at least partially in the work area on a

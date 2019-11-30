@@ -172,7 +172,7 @@ STDAPI DllRegisterServer()
         { L"Software\\Classes\\CLSID\\" SZ_EPUB_FILTER_CLSID L"\\InProcServer32",
                 L"ThreadingModel",      L"Both" },
         { L"Software\\Classes\\CLSID\\" SZ_EPUB_FILTER_HANDLER,
-                nullptr,                   L"SumatraPDF LaTeX IFilter Persistent Handler" },
+                nullptr,                   L"SumatraPDF EPUB IFilter Persistent Handler" },
         { L"Software\\Classes\\CLSID\\" SZ_EPUB_FILTER_HANDLER L"\\PersistentAddinsRegistered",
                 nullptr,                   L"" },
         { L"Software\\Classes\\CLSID\\" SZ_EPUB_FILTER_HANDLER L"\\PersistentAddinsRegistered\\{89BCB740-6119-101A-BCB7-00DD010655AF}",

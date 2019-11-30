@@ -93,9 +93,10 @@ WCHAR* gSupportedExts[] = {L".pdf", L".xps",  L".oxps", L".cbz", L".cbr",  L".cb
 // When a file is no longer shipped, just disable the install flag so that the
 // file is still correctly removed when SumatraPDF is eventually uninstalled.
 PayloadInfo gPayloadData[] = {
-    {"libmupdf.dll", true},          {"SumatraPDF.exe", true},   {"sumatrapdfprefs.dat", false},
-    {"DroidSansFallback.ttf", true}, {"npPdfViewer.dll", false}, {"PdfFilter.dll", true},
-    {"PdfPreview.dll", true},        {"uninstall.exe", true},    {nullptr, false},
+    {"libmupdf.dll", true},
+    {"PdfFilter.dll", true},
+    {"PdfPreview.dll", true},
+    {nullptr, false},
 };
 
 int dpiAdjust(int value) {
