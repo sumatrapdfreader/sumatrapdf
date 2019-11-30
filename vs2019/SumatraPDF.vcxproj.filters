@@ -107,6 +107,9 @@
     <ClCompile Include="..\src\installer\Installer.cpp">
       <Filter>src\installer</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\installer\Uninstaller.cpp">
+      <Filter>src\installer</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\mui\Mui.cpp">
       <Filter>src\mui</Filter>
     </ClCompile>

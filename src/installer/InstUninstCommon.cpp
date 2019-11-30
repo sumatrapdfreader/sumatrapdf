@@ -67,6 +67,8 @@ WCHAR* gMsgError = nullptr;
 int gBottomPartDy = 0;
 int gButtonDy = 0;
 
+const WCHAR* gDefaultMsg = nullptr; // Note: translation, not freeing
+
 static float gUiDPIFactor = 1.0f;
 static AutoFreeW gMsg;
 static Color gMsgColor;
@@ -412,6 +414,10 @@ static void SetCloseProcessMsg() {
     }
     AutoFreeW s(str::Format(_TR("Please close %s to proceed!"), procNames));
     SetMsg(s, COLOR_MSG_FAILED);
+}
+
+void SetDefaultMsg() {
+    SetMsg(gDefaultMsg, COLOR_MSG_WELCOME);
 }
 
 bool CheckInstallUninstallPossible(bool silent) {
