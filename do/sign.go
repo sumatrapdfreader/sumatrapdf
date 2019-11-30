@@ -1,12 +1,21 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"time"
 
 	"github.com/kjk/u"
 )
+
+func runCmdLogged(cmd *exec.Cmd) error {
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	fmt.Printf("> %s\n", cmd)
+	return cmd.Run()
+}
 
 // http://zabkat.com/blog/code-signing-sha1-armageddon.htm
 // signtool sign /n "subject name" /t http://timestamp.comodoca.com/authenticode myInstaller.exe
@@ -22,37 +31,47 @@ func signMust(path string) {
 	// the sign tool is finicky, so copy the cert to the same dir as
 	// the exe we're signing
 
-	certPwd := os.Getenv("CERT_PWD")
-	if certPwd == "" {
-		// to make it easy on others, skip signing if
-		if !shouldSignOrUpload() {
-			logf("skipped signing of '%s' because CERT_PWD not set\n", path)
+	var err error
+	// signing might fail due to temorary error ("The specified timestamp server either could not be reached or")
+	// so retry
+	for i := 0; i < 3; i++ {
+		certPwd := os.Getenv("CERT_PWD")
+		if certPwd == "" {
+			// to make it easy on others, skip signing if
+			if !shouldSignOrUpload() {
+				logf("skipped signing of '%s' because CERT_PWD not set\n", path)
+				return
+			}
+			panic("my repo but no CERT_PWD")
+		}
+
+		signtoolPath := detectSigntoolPath()
+		fileDir := filepath.Dir(path)
+		fileName := filepath.Base(path)
+		certSrc := filepath.Join("scripts", "cert.pfx")
+		certDest := filepath.Join(fileDir, "cert.pfx")
+		u.CopyFileMust(certDest, certSrc)
+		{
+			// sign with sha1 for pre-win-7
+			cmd := exec.Command(signtoolPath, "sign", "/t", "http://timestamp.verisign.com/scripts/timstamp.dll",
+				"/du", "http://www.sumatrapdfreader.org", "/f", "cert.pfx",
+				"/p", certPwd, fileName)
+			cmd.Dir = fileDir
+			err = runCmdLogged(cmd)
+		}
+
+		if err == nil {
+			// double-sign with sha2 for win7+ ater Jan 2016
+			cmd := exec.Command(signtoolPath, "sign", "/fd", "sha256", "/tr", "http://timestamp.comodoca.com/rfc3161",
+				"/td", "sha256", "/du", "http://www.sumatrapdfreader.org", "/f", "cert.pfx",
+				"/p", certPwd, "/as", fileName)
+			cmd.Dir = fileDir
+			err = runCmdLogged(cmd)
+		}
+		if err == nil {
 			return
 		}
-		panic("my repo but no CERT_PWD")
+		time.Sleep(time.Second * 15)
 	}
-
-	signtoolPath := detectSigntoolPath()
-	fileDir := filepath.Dir(path)
-	fileName := filepath.Base(path)
-	certSrc := filepath.Join("scripts", "cert.pfx")
-	certDest := filepath.Join(fileDir, "cert.pfx")
-	u.CopyFileMust(certDest, certSrc)
-	{
-		// sign with sha1 for pre-win-7
-		cmd := exec.Command(signtoolPath, "sign", "/t", "http://timestamp.verisign.com/scripts/timstamp.dll",
-			"/du", "http://www.sumatrapdfreader.org", "/f", "cert.pfx",
-			"/p", certPwd, fileName)
-		cmd.Dir = fileDir
-		u.RunCmdLoggedMust(cmd)
-	}
-
-	{
-		// double-sign with sha2 for win7+ ater Jan 2016
-		cmd := exec.Command(signtoolPath, "sign", "/fd", "sha256", "/tr", "http://timestamp.comodoca.com/rfc3161",
-			"/td", "sha256", "/du", "http://www.sumatrapdfreader.org", "/f", "cert.pfx",
-			"/p", certPwd, "/as", fileName)
-		cmd.Dir = fileDir
-		u.RunCmdLoggedMust(cmd)
-	}
+	u.Must(err)
 }
