@@ -52,8 +52,3 @@ void OnMenuCustomZoom(WindowInfo* win);
 UINT MenuIdFromVirtualZoom(float virtualZoom);
 void UpdateMenu(WindowInfo* win, HMENU m);
 void ShowHideMenuBar(WindowInfo* win, bool showTemporarily = false);
-
-/* Define if you want to display an additional debug menu */
-#if defined(DEBUG) && !defined(SHOW_DEBUG_MENU_ITEMS)
-#define SHOW_DEBUG_MENU_ITEMS
-#endif

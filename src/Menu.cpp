@@ -196,18 +196,18 @@ static MenuDef menuDefHelp[] = {
 };
 //] ACCESSKEY_GROUP Help Menu
 
-#ifdef SHOW_DEBUG_MENU_ITEMS
 //[ ACCESSKEY_GROUP Debug Menu
 static MenuDef menuDefDebug[] = {
     { "Highlight links",                    IDM_DEBUG_SHOW_LINKS,       MF_NO_TRANSLATE },
     { "Toggle ebook UI",                    IDM_DEBUG_EBOOK_UI,         MF_NO_TRANSLATE },
     { "Mui debug paint",                    IDM_DEBUG_MUI,              MF_NO_TRANSLATE },
     { "Annotation from Selection",          IDM_DEBUG_ANNOTATION,       MF_NO_TRANSLATE },
+#if defined(DEBUG)
     { SEP_ITEM,                             0,                          0 },
     { "Crash me",                           IDM_DEBUG_CRASH_ME,         MF_NO_TRANSLATE },
+#endif
 };
 //] ACCESSKEY_GROUP Debug Menu
-#endif
 
 //[ ACCESSKEY_GROUP Context Menu (Content)
 // the entire menu is MF_NOT_FOR_CHM | MF_NOT_FOR_EBOOK_UI
@@ -544,14 +544,12 @@ void MenuUpdateStateForWindow(WindowInfo* win) {
                        IDM_CHANGE_THEME_FIRST + GetCurrentThemeIndex(), MF_BYCOMMAND);
 #endif
 
-#ifdef SHOW_DEBUG_MENU_ITEMS
     win::menu::SetChecked(win->menu, IDM_DEBUG_SHOW_LINKS, gDebugShowLinks);
     win::menu::SetChecked(win->menu, IDM_DEBUG_EBOOK_UI, gGlobalPrefs->ebookUI.useFixedPageUI);
     win::menu::SetChecked(win->menu, IDM_DEBUG_MUI, mui::IsDebugPaint());
     win::menu::SetEnabled(win->menu, IDM_DEBUG_ANNOTATION,
                           tab && tab->selectionOnPage && win->showSelection && tab->AsFixed() &&
                               tab->AsFixed()->GetEngine()->SupportsAnnotation());
-#endif
 }
 
 void OnAboutContextMenu(WindowInfo* win, int x, int y) {
@@ -1074,10 +1072,8 @@ HMENU BuildMenu(WindowInfo* win) {
     m = GetSystemMenu(win->hwndFrame, FALSE);
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Window"));
 #endif
-#ifdef SHOW_DEBUG_MENU_ITEMS
     m = BuildMenuFromMenuDef(menuDefDebug, dimof(menuDefDebug), CreateMenu(), filter);
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, L"Debug");
-#endif
 
     MarkMenuOwnerDraw(mainMenu);
     return mainMenu;

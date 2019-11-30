@@ -85,7 +85,7 @@
 
 /* if true, we're in debug mode where we show links as blue rectangle on
    the screen. Makes debugging code related to links easier. */
-#ifdef DEBUG
+#if defined(DEBUG)
 bool gDebugShowLinks = true;
 #else
 bool gDebugShowLinks = false;
@@ -4107,11 +4107,11 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
             OnSelectAll(win);
             break;
 
-#ifdef SHOW_DEBUG_MENU_ITEMS
         case IDM_DEBUG_SHOW_LINKS:
             gDebugShowLinks = !gDebugShowLinks;
-            for (size_t i = 0; i < gWindows.size(); i++)
-                gWindows.at(i)->RedrawAll(true);
+            for (auto& w : gWindows) {
+                w->RedrawAll(true);
+            }
             break;
 
         case IDM_DEBUG_EBOOK_UI:
@@ -4134,7 +4134,6 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
         case IDM_DEBUG_CRASH_ME:
             CrashMe();
             break;
-#endif
 
         case IDM_FAV_ADD:
             if (win->IsDocLoaded())
