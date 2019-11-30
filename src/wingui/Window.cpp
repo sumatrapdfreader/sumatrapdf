@@ -272,7 +272,6 @@ bool WindowBase::IsEnabled() {
     return enabled ? true : false;
 }
 
-
 void WindowBase::SetIsVisible(bool isVisible) {
     ::ShowWindow(hwnd, isVisible ? SW_SHOW : SW_HIDE);
 }

@@ -255,7 +255,6 @@ static int GetArgNo(const WCHAR* argName) {
 
 /* parse argument list. we assume that all unrecognized arguments are file names. */
 CommandLineInfo ParseCommandLine(const WCHAR* cmdLine) {
-
     CommandLineInfo i;
     WStrVec argList;
     ParseCmdLine(cmdLine, argList);

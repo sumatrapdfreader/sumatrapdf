@@ -633,7 +633,7 @@ bool SetSymbolsDir(const WCHAR* symDir) {
     if (!symDir) {
         return false;
     }
-    
+
     free(gSymbolsDir);
     free(gPdbZipPath);
     free(gLibMupdfPdbPath);

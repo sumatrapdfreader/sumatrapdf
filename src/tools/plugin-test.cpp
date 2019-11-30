@@ -90,8 +90,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     ParseCmdLine(GetCommandLine(), argList);
 
     if (argList.size() == 1) {
-        AutoFreeW msg(
-            str::Format(L"Syntax: %s [<SumatraPDF.exe>] [<URL>] <filename.ext>", path::GetBaseNameNoFree(argList.at(0))));
+        AutoFreeW msg(str::Format(L"Syntax: %s [<SumatraPDF.exe>] [<URL>] <filename.ext>",
+                                  path::GetBaseNameNoFree(argList.at(0))));
         MessageBox(nullptr, msg, PLUGIN_TEST_NAME, MB_OK | MB_ICONINFORMATION);
         return 1;
     }

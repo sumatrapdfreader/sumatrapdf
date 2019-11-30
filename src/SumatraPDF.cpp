@@ -2622,7 +2622,8 @@ static void OnMenuSaveBookmark(WindowInfo* win) {
     AutoFreeW args(str::Format(L"\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d", ctrl->FilePath(), ss.page,
                                viewMode, ZoomVirtual, (int)ss.x, (int)ss.y));
     AutoFreeW label(ctrl->GetPageLabel(ss.page));
-    AutoFreeW desc(str::Format(_TR("Bookmark shortcut to page %s of %s"), label, path::GetBaseNameNoFree(ctrl->FilePath())));
+    AutoFreeW desc(
+        str::Format(_TR("Bookmark shortcut to page %s of %s"), label, path::GetBaseNameNoFree(ctrl->FilePath())));
 
     CreateShortcut(fileName, exePath, args, desc, 1);
 }

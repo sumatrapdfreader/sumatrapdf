@@ -34,7 +34,7 @@ class CommandLineInfo {
     bool enterFullScreen = false;
     DisplayMode startView = DM_AUTOMATIC;
     float startZoom = INVALID_ZOOM;
-    PointI startScroll{-1,-1};
+    PointI startScroll{-1, -1};
     bool showConsole = false;
     HWND hwndPluginParent = nullptr;
     AutoFreeW pluginURL;

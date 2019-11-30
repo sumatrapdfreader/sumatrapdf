@@ -437,7 +437,8 @@ int main(int argc, char** argv) {
     ParseCmdLine(GetCommandLine(), argList);
     if (argList.size() < 2) {
     Usage:
-        ErrOut("%s [-pwd <password>][-quick][-render <path-%%d.tga>] <filename>", path::GetBaseNameNoFree(argList.at(0)));
+        ErrOut("%s [-pwd <password>][-quick][-render <path-%%d.tga>] <filename>",
+               path::GetBaseNameNoFree(argList.at(0)));
         return 2;
     }
 

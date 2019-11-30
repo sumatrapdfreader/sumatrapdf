@@ -52,11 +52,6 @@ struct InstallerGlobals {
     bool autoUpdate;
 };
 
-#define ID_CHECKBOX_MAKE_DEFAULT 14
-#define ID_CHECKBOX_BROWSER_PLUGIN 15
-#define ID_CHECKBOX_PDF_FILTER 19
-#define ID_CHECKBOX_PDF_PREVIEWER 20
-
 static InstallerGlobals gInstallerGlobals = {
     false, /* bool registerAsDefault */
     false, /* bool installPdfFilter */
@@ -70,9 +65,9 @@ static ButtonCtrl* gButtonRunSumatra = nullptr;
 static HWND gHwndStaticInstDir = nullptr;
 static EditCtrl* gTextboxInstDir = nullptr;
 static ButtonCtrl* gButtonBrowseDir = nullptr;
-static HWND gHwndCheckboxRegisterDefault = nullptr;
-static HWND gHwndCheckboxRegisterPdfFilter = nullptr;
-static HWND gHwndCheckboxRegisterPdfPreviewer = nullptr;
+static CheckboxCtrl* gCheckboxRegisterDefault = nullptr;
+static CheckboxCtrl* gCheckboxRegisterPdfFilter = nullptr;
+static CheckboxCtrl* gCheckboxRegisterPdfPreviewer = nullptr;
 static HWND gHwndProgressBar = nullptr;
 
 static int GetInstallationStepCount() {
@@ -97,6 +92,14 @@ static int GetInstallationStepCount() {
 static inline void ProgressStep() {
     if (gHwndProgressBar)
         PostMessage(gHwndProgressBar, PBM_STEPIT, 0, 0);
+}
+
+static CheckboxCtrl* CreateCheckbox(HWND hwndParent, const WCHAR* s, bool isChecked) {
+    CheckboxCtrl* w = new CheckboxCtrl(hwndParent);
+    w->SetText(s);
+    w->Create();
+    w->SetIsChecked(isChecked);
+    return w;
 }
 
 static bool ExtractFiles(lzma::SimpleArchive* archive) {
@@ -162,7 +165,6 @@ static std::tuple<const char*, DWORD, HGLOBAL> LockDataResource(int id) {
     DWORD dataSize = SizeofResource(nullptr, resSrc);
     return {data, dataSize, res};
 }
-
 
 static bool InstallCopyFiles() {
     auto [data, size, res] = LockDataResource(1);
@@ -436,10 +438,6 @@ Error:
 
 static void OnButtonOptions();
 
-static bool IsCheckboxChecked(HWND hwnd) {
-    return (Button_GetState(hwnd) & BST_CHECKED) == BST_CHECKED;
-}
-
 static void OnButtonInstall() {
     CrashAlwaysIf(gForceCrash);
 
@@ -458,15 +456,14 @@ static void OnButtonInstall() {
 
     // note: this checkbox isn't created if we're already registered as default
     //       (in which case we're just going to re-register)
-    gInstallerGlobals.registerAsDefault =
-        gHwndCheckboxRegisterDefault == nullptr || IsCheckboxChecked(gHwndCheckboxRegisterDefault);
+    gInstallerGlobals.registerAsDefault = gCheckboxRegisterDefault == nullptr || gCheckboxRegisterDefault->IsChecked();
 
     // note: this checkbox isn't created when running inside Wow64
     gInstallerGlobals.installPdfFilter =
-        gHwndCheckboxRegisterPdfFilter != nullptr && IsCheckboxChecked(gHwndCheckboxRegisterPdfFilter);
+        gCheckboxRegisterPdfFilter != nullptr && gCheckboxRegisterPdfFilter->IsChecked();
     // note: this checkbox isn't created on Windows 2000 and XP
     gInstallerGlobals.installPdfPreviewer =
-        gHwndCheckboxRegisterPdfPreviewer != nullptr && IsCheckboxChecked(gHwndCheckboxRegisterPdfPreviewer);
+        gCheckboxRegisterPdfPreviewer != nullptr && gCheckboxRegisterPdfPreviewer->IsChecked();
 
     // create a progress bar in place of the Options button
     RectI rc(0, 0, dpiAdjust(INSTALLER_WIN_DX / 2), gButtonDy);
@@ -479,12 +476,10 @@ static void OnButtonInstall() {
     // disable the install button and remove all the installation options
     SafeDestroyWindow(&gHwndStaticInstDir);
     delete gTextboxInstDir;
-    gTextboxInstDir = nullptr;
     delete gButtonBrowseDir;
-    gButtonBrowseDir = nullptr;
-    SafeDestroyWindow(&gHwndCheckboxRegisterDefault);
-    SafeDestroyWindow(&gHwndCheckboxRegisterPdfFilter);
-    SafeDestroyWindow(&gHwndCheckboxRegisterPdfPreviewer);
+    delete gCheckboxRegisterDefault;
+    delete gCheckboxRegisterPdfFilter;
+    delete gCheckboxRegisterPdfPreviewer;
     delete gButtonOptions;
 
     gButtonInstUninst->SetIsEnabled(false);
@@ -538,9 +533,9 @@ static void OnButtonOptions() {
     EnableAndShow(gHwndStaticInstDir, gShowOptions);
     EnableAndShow(gTextboxInstDir, gShowOptions);
     EnableAndShow(gButtonBrowseDir, gShowOptions);
-    EnableAndShow(gHwndCheckboxRegisterDefault, gShowOptions);
-    EnableAndShow(gHwndCheckboxRegisterPdfFilter, gShowOptions);
-    EnableAndShow(gHwndCheckboxRegisterPdfPreviewer, gShowOptions);
+    EnableAndShow(gCheckboxRegisterDefault, gShowOptions);
+    EnableAndShow(gCheckboxRegisterPdfFilter, gShowOptions);
+    EnableAndShow(gCheckboxRegisterPdfPreviewer, gShowOptions);
 
     //[ ACCESSKEY_GROUP Installer
     //[ ACCESSKEY_ALTERNATIVE // ideally, the same accesskey is used for both
@@ -612,10 +607,11 @@ static BOOL BrowseForFolder(HWND hwnd, const WCHAR* lpszInitialFolder, const WCH
 static void OnButtonBrowse() {
     AutoFreeW installDir(win::GetText(gTextboxInstDir->hwnd));
     // strip a trailing "\SumatraPDF" if that directory doesn't exist (yet)
-    if (!dir::Exists(installDir))
+    if (!dir::Exists(installDir)) {
         installDir.Set(path::GetDir(installDir));
+    }
 
-    WCHAR path[MAX_PATH];
+    WCHAR path[MAX_PATH] = {};
     BOOL ok = BrowseForFolder(gHwndFrame, installDir, _TR("Select the folder where SumatraPDF should be installed:"),
                               path, dimof(path));
     if (!ok) {
@@ -626,13 +622,15 @@ static void OnButtonBrowse() {
     WCHAR* installPath = path;
     // force paths that aren't entered manually to end in ...\SumatraPDF
     // to prevent unintended installations into e.g. %ProgramFiles% itself
-    if (!str::EndsWithI(path, L"\\" APP_NAME_STR))
+    if (!str::EndsWithI(path, L"\\" APP_NAME_STR)) {
         installPath = path::Join(path, APP_NAME_STR);
+    }
     gTextboxInstDir->SetText(installPath);
     gTextboxInstDir->SetSelection(0, -1);
     gTextboxInstDir->SetFocus();
-    if (installPath != path)
+    if (installPath != path) {
         free(installPath);
+    }
 }
 
 static bool OnWmCommand(WPARAM wParam) {
@@ -668,7 +666,7 @@ static void OnCreateWindow(HWND hwnd) {
     gBottomPartDy = gButtonDy + (WINDOW_MARGIN * 2);
 
     SizeI size = TextSizeInHwnd(hwnd, L"Foo");
-    int staticDy = size.dy + dpiAdjust(4);
+    int staticDy = size.dy + dpiAdjust(6);
 
     y = r.dy - gBottomPartDy;
     int dx = r.dx - (WINDOW_MARGIN * 2) - dpiAdjust(2);
@@ -686,33 +684,30 @@ static void OnCreateWindow(HWND hwnd) {
     // (assuming that the installer has the same CPU arch as its content!)
     if (IsProcessAndOsArchSame()) {
         // for Windows XP, this means only basic thumbnail support
-        gHwndCheckboxRegisterPdfPreviewer = CreateWindowExW(
-            0, WC_BUTTON, _TR("Let Windows show &previews of PDF documents"), WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP,
-            x, y, dx, staticDy, hwnd, (HMENU)ID_CHECKBOX_PDF_PREVIEWER, GetModuleHandle(nullptr), nullptr);
-        SetWindowFont(gHwndCheckboxRegisterPdfPreviewer, gFontDefault, TRUE);
-        Button_SetCheck(gHwndCheckboxRegisterPdfPreviewer,
-                        gInstallerGlobals.installPdfPreviewer || IsPdfPreviewerInstalled());
+        const WCHAR* s = _TR("Let Windows show &previews of PDF documents");
+        bool isChecked = gInstallerGlobals.installPdfPreviewer || IsPdfPreviewerInstalled();
+        gCheckboxRegisterPdfPreviewer = CreateCheckbox(hwnd, s, isChecked);
+        RECT rc{x, y, x + dx, y + staticDy};
+        gCheckboxRegisterPdfPreviewer->SetPos(&rc);
         y -= staticDy;
 
-        gHwndCheckboxRegisterPdfFilter =
-            CreateWindowEx(0, WC_BUTTON, _TR("Let Windows Desktop Search &search PDF documents"),
-                           WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP, x, y, dx, staticDy, hwnd,
-                           (HMENU)ID_CHECKBOX_PDF_FILTER, GetModuleHandle(nullptr), nullptr);
-        SetWindowFont(gHwndCheckboxRegisterPdfFilter, gFontDefault, TRUE);
-        Button_SetCheck(gHwndCheckboxRegisterPdfFilter, gInstallerGlobals.installPdfFilter || IsPdfFilterInstalled());
+        isChecked = gInstallerGlobals.installPdfFilter || IsPdfFilterInstalled();
+        s = _TR("Let Windows Desktop Search &search PDF documents");
+        gCheckboxRegisterPdfFilter = CreateCheckbox(hwnd, s, isChecked);
+        rc = {x, y, x + dx, y + staticDy};
+        gCheckboxRegisterPdfFilter->SetPos(&rc);
         y -= staticDy;
     }
 
     // only show the checbox if Sumatra is not already a default viewer.
     // the alternative (disabling the checkbox) is more confusing
     if (!isSumatraDefaultViewer) {
-        gHwndCheckboxRegisterDefault = CreateWindowExW(
-            0, WC_BUTTON, _TR("Use SumatraPDF as the &default PDF reader"), WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP, x,
-            y, dx, staticDy, hwnd, (HMENU)ID_CHECKBOX_MAKE_DEFAULT, GetModuleHandle(nullptr), nullptr);
-        SetWindowFont(gHwndCheckboxRegisterDefault, gFontDefault, TRUE);
         // only check the "Use as default" checkbox when no other PDF viewer
         // is currently selected (not going to intrude)
-        Button_SetCheck(gHwndCheckboxRegisterDefault, !hasOtherViewer || gInstallerGlobals.registerAsDefault);
+        bool isChecked = !hasOtherViewer || gInstallerGlobals.registerAsDefault;
+        gCheckboxRegisterDefault = CreateCheckbox(hwnd, _TR("Use SumatraPDF as the &default PDF reader"), isChecked);
+        RECT rc = {x, y, x + dx, y + staticDy};
+        gCheckboxRegisterDefault->SetPos(&rc);
         y -= staticDy;
     }
     // a bit more space between text box and checkboxes

@@ -329,7 +329,6 @@ void OnUninstallationFinished() {
 
 static bool OnWmCommand(WPARAM wParam) {
     switch (LOWORD(wParam)) {
-
         case IDCANCEL:
             OnButtonExit();
             break;
