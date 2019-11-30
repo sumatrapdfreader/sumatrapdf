@@ -41,6 +41,7 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "wingui/CheckboxCtrl.h"
 #include "wingui/EditCtrl.h"
 #include "wingui/StaticCtrl.h"
+#include "wingui/ProgressCtrl.h"
 
 #include "../ifilter/PdfFilter.h"
 #include "../previewer/PdfPreview.h"

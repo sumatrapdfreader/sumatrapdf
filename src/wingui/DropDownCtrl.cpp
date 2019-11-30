@@ -12,6 +12,14 @@
 
 Kind kindDropDown = "dropdown";
 
+bool IsDropDown(Kind kind) {
+    return kind == kindDropDown;
+}
+
+bool IsDropDown(ILayout* l) {
+    return IsLayoutOfKind(l, kindDropDown);
+}
+
 DropDownCtrl::DropDownCtrl(HWND parent) : WindowBase(parent) {
     dwStyle = WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST;
     winClass = WC_COMBOBOX;
@@ -105,14 +113,6 @@ SIZE DropDownCtrl::GetIdealSize() {
     int pad = GetSystemMetrics(SM_CXVSCROLL);
     pad += 8;
     return SIZE{s1.dx + pad, s1.dy + 2};
-}
-
-bool IsDropDown(Kind kind) {
-    return kind == kindDropDown;
-}
-
-bool IsDropDown(ILayout* l) {
-    return IsLayoutOfKind(l, kindDropDown);
 }
 
 ILayout* NewDropDownLayout(DropDownCtrl* b) {

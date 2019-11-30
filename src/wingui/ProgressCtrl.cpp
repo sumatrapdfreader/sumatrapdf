@@ -7,42 +7,35 @@
 #include "wingui/WinGui.h"
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
-#include "wingui/StaticCtrl.h"
+#include "wingui/ProgressCtrl.h"
 
 // TODO: add OnClicked handler, use SS_NOTIFY to get notified about STN_CLICKED
 
-Kind kindStatic = "static";
+Kind kindProgress = "progress";
 
-bool IsStatic(Kind kind) {
-    return kind == kindStatic;
+bool IsProgress(Kind kind) {
+    return kind == kindProgress;
 }
 
-bool IsStatic(ILayout* l) {
-    return IsLayoutOfKind(l, kindStatic);
+bool IsProgress(ILayout* l) {
+    return IsLayoutOfKind(l, kindProgress);
 }
 
-StaticCtrl::StaticCtrl(HWND p) : WindowBase(p) {
+ProgressCtrl::ProgressCtrl(HWND p) : WindowBase(p) {
     dwStyle = WS_CHILD | WS_VISIBLE;
     winClass = WC_STATICW;
-    kind = kindStatic;
+    kind = kindProgress;
 }
 
-StaticCtrl::~StaticCtrl() {
+ProgressCtrl::~ProgressCtrl() {
 }
 
-bool StaticCtrl::Create() {
+bool ProgressCtrl::Create() {
     bool ok = WindowBase::Create();
-    if (ok) {
-        SubclassParent();
-    }
-    auto size = GetIdealSize();
-    RECT r{0, 0, size.cx, size.cy};
-    SetBounds(r);
     return ok;
 }
 
-// TODO: cache
-SIZE StaticCtrl::GetIdealSize() {
+SIZE ProgressCtrl::GetIdealSize() {
     WCHAR* txt = win::GetText(hwnd);
     SIZE s = MeasureTextInHwnd(hwnd, txt, hfont);
     free(txt);
@@ -50,7 +43,7 @@ SIZE StaticCtrl::GetIdealSize() {
 }
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/static-controls
-LRESULT StaticCtrl::WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& didHandle) {
+LRESULT ProgressCtrl::WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& didHandle) {
     UNUSED(hwnd);
     UNUSED(lp);
     UNUSED(didHandle);
@@ -63,6 +56,6 @@ LRESULT StaticCtrl::WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, boo
     return 0;
 }
 
-ILayout* NewStaticLayout(StaticCtrl* b) {
-    return new WindowBaseLayout(b, kindStatic);
+ILayout* NewProgressLayout(ProgressCtrl* b) {
+    return new WindowBaseLayout(b, kindProgress);
 }

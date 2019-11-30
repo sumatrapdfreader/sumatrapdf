@@ -11,6 +11,14 @@
 
 Kind kindCheckbox = "checkbox";
 
+bool IsCheckbox(Kind kind) {
+    return kind == kindCheckbox;
+}
+
+bool IsCheckbox(ILayout* l) {
+    return IsLayoutOfKind(l, kindCheckbox);
+}
+
 static CheckState GetButtonCheckState(HWND hwnd) {
     auto res = Button_GetCheck(hwnd);
     return (CheckState)res;
@@ -75,14 +83,6 @@ void CheckboxCtrl::SetIsChecked(bool isChecked) {
 bool CheckboxCtrl::IsChecked() const {
     auto state = GetCheckState();
     return state == CheckState::Checked;
-}
-
-bool IsCheckbox(Kind kind) {
-    return kind == kindCheckbox;
-}
-
-bool IsCheckbox(ILayout* l) {
-    return IsLayoutOfKind(l, kindCheckbox);
 }
 
 ILayout* NewCheckboxLayout(CheckboxCtrl* b) {

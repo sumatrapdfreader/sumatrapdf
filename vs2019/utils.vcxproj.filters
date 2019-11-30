@@ -168,6 +168,9 @@
     <ClInclude Include="..\src\wingui\Layout.h">
       <Filter>wingui</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\wingui\ProgressCtrl.h">
+      <Filter>wingui</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\wingui\SplitterWnd.h">
       <Filter>wingui</Filter>
     </ClInclude>
@@ -345,6 +348,9 @@
       <Filter>wingui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\wingui\Layout.cpp">
+      <Filter>wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\ProgressCtrl.cpp">
       <Filter>wingui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\wingui\SplitterWnd.cpp">

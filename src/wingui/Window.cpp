@@ -348,4 +348,3 @@ void WindowBaseLayout::SetBounds(const Rect bounds) {
     auto r = RectToRECT(bounds);
     ::MoveWindow(wb->hwnd, &r);
 }
-
