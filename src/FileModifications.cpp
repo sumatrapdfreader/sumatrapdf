@@ -136,7 +136,7 @@ bool SaveFileModifications(const WCHAR* filePath, Vec<PageAnnotation>* list) {
         data.AppendAndFree(prevData.StealData());
         delete prevList;
     } else {
-        data.AppendFmt("# SumatraPDF: modifications to \"%S\"\r\n", path::GetBaseName(filePath));
+        data.AppendFmt("# SumatraPDF: modifications to \"%S\"\r\n", path::GetBaseNameNoFree(filePath));
     }
     data.Append("\r\n");
 

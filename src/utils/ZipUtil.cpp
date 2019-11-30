@@ -180,7 +180,7 @@ bool ZipCreator::AddFile(const WCHAR* filePath, const WCHAR* nameInZip) {
     }
 
     if (!nameInZip) {
-        nameInZip = path::IsAbsolute(filePath) ? path::GetBaseName(filePath) : filePath;
+        nameInZip = path::IsAbsolute(filePath) ? path::GetBaseNameNoFree(filePath) : filePath;
     }
     OwnedData nameUtf8(str::conv::ToUtf8(nameInZip));
     str::TransChars(nameUtf8.Get(), "\\", "/");

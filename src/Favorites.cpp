@@ -199,7 +199,7 @@ static WCHAR* FavCompactReadableName(DisplayState* fav, Favorite* fn, bool isCur
     if (isCurrent) {
         return str::Format(L"%s : %s", _TR("Current file"), rn.Get());
     }
-    const WCHAR* fp = path::GetBaseName(fav->filePath);
+    const WCHAR* fp = path::GetBaseNameNoFree(fav->filePath);
     return str::Format(L"%s : %s", fp, rn.Get());
 }
 
@@ -224,7 +224,7 @@ static void AppendFavMenuItems(HMENU m, DisplayState* f, UINT& idx, bool combine
 static int SortByBaseFileName(const void* a, const void* b) {
     const WCHAR* filePathA = *(const WCHAR**)a;
     const WCHAR* filePathB = *(const WCHAR**)b;
-    return str::CmpNatural(path::GetBaseName(filePathA), path::GetBaseName(filePathB));
+    return str::CmpNatural(path::GetBaseNameNoFree(filePathA), path::GetBaseNameNoFree(filePathB));
 }
 
 static void GetSortedFilePaths(Vec<const WCHAR*>& filePathsSortedOut, DisplayState* toIgnore = nullptr) {
@@ -295,7 +295,7 @@ static void AppendFavMenus(HMENU m, const WCHAR* currFilePath) {
                 AppendMenu(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, _TR("Current file"));
             } else {
                 AutoFreeW tmp;
-                tmp.SetCopy(path::GetBaseName(filePath));
+                tmp.SetCopy(path::GetBaseNameNoFree(filePath));
                 auto fileName = win::menu::ToSafeString(tmp);
                 AppendMenuW(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, fileName);
             }
@@ -459,7 +459,7 @@ static HTREEITEM InsertFavTopLevelNode(HWND hwnd, DisplayState* fav, bool isExpa
         s = FavCompactReadableName(fav, fn);
         tvinsert.itemex.pszText = s;
     } else {
-        tvinsert.itemex.pszText = (WCHAR*)path::GetBaseName(fav->filePath);
+        tvinsert.itemex.pszText = (WCHAR*)path::GetBaseNameNoFree(fav->filePath);
     }
     HTREEITEM ret = TreeView_InsertItem(hwnd, &tvinsert);
     free(s);

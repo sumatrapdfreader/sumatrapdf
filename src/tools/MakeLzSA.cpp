@@ -224,7 +224,7 @@ int main(int argc, char** argv) {
         return mainVerify(args.at(1));
 
     FailIf(args.size() < 3, "Syntax: %S <archive.lzsa> <filename>[:<in-archive name>] [...]",
-           path::GetBaseName(args.at(0)));
+           path::GetBaseNameNoFree(args.at(0)));
 
     bool ok = lzsa::CreateArchive(args.at(1), args, 2);
     FailIf(!ok, "Failed to create \"%S\"", args.at(1));

@@ -282,7 +282,7 @@ static void AddFileMenuItem(HMENU menuFile, const WCHAR* filePath, UINT index) {
     }
 
     AutoFreeW menuString;
-    menuString.SetCopy(path::GetBaseName(filePath));
+    menuString.SetCopy(path::GetBaseNameNoFree(filePath));
     auto fileName = win::menu::ToSafeString(menuString);
     int menuIdx = (int)((index + 1) % 10);
     menuString.Set(str::Format(L"&%d) %s", menuIdx, fileName));
@@ -336,7 +336,7 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR* filePath) {
             if (args.size() == 0) {
                 continue;
             }
-            appName.SetCopy(path::GetBaseName(args.at(0)));
+            appName.SetCopy(path::GetBaseNameNoFree(args.at(0)));
             *(WCHAR*)path::GetExt(appName) = '\0';
         }
 

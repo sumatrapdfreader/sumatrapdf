@@ -21,7 +21,7 @@
 #define ErrOut(msg, ...) fwprintf(stderr, TEXT(msg) TEXT("\n"), __VA_ARGS__)
 
 void ShowUsage(const WCHAR* exeName) {
-    ErrOut("Syntax: %s", path::GetBaseName(exeName));
+    ErrOut("Syntax: %s", path::GetBaseNameNoFree(exeName));
     ErrOut("\t[-cert CertName]\t- name of the certificate to use");      // when omitted uses first available
     ErrOut("\t[-out filename.out]\t- where to save the signature file"); // when omitted uses stdout
     ErrOut("\t[-comment #]\t\t- comment syntax for signed text files");  // needed when saving the signature into the

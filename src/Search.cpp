@@ -428,7 +428,7 @@ bool OnInverseSearch(WindowInfo* win, int x, int y) {
         // if the source file is missing, check if it's been moved to the same place as
         // the PDF document (which happens if all files are moved together)
         AutoFreeW altsrcpath(path::GetDir(tab->filePath));
-        altsrcpath.Set(path::Join(altsrcpath, path::GetBaseName(srcfilepath)));
+        altsrcpath.Set(path::Join(altsrcpath, path::GetBaseNameNoFree(srcfilepath)));
         if (!str::Eq(altsrcpath, srcfilepath) && file::Exists(altsrcpath))
             srcfilepath.Set(altsrcpath.StealData());
     }

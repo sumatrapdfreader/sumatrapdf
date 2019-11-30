@@ -1607,7 +1607,7 @@ class ChmEmbeddedDest : public PageDestination {
         return RectD();
     }
     WCHAR* GetDestValue() const override {
-        return str::conv::FromUtf8(path::GetBaseName(path));
+        return str::conv::FromUtf8(path::GetBaseNameNoFree(path));
     }
 
     bool SaveEmbedded(LinkSaverUI& saveUI) override {

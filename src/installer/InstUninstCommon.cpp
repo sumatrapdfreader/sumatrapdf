@@ -382,7 +382,7 @@ static const WCHAR* ReadableProcName(const WCHAR* procPath) {
         EXENAME,          APP_NAME_STR,    L"plugin-container.exe", L"Mozilla Firefox", L"chrome.exe",
         L"Google Chrome", L"prevhost.exe", L"Windows Explorer",     L"dllhost.exe",     L"Windows Explorer",
     };
-    const WCHAR* procName = path::GetBaseName(procPath);
+    const WCHAR* procName = path::GetBaseNameNoFree(procPath);
     for (size_t i = 0; i < dimof(nameList); i += 2) {
         if (str::EqI(procName, nameList[i]))
             return nameList[i + 1];

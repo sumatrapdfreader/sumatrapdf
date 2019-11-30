@@ -270,7 +270,7 @@ inline bool IsSpecialDir(const WCHAR* s) {
 }
 
 static bool IsStressTestSupportedFile(const WCHAR* filePath, const WCHAR* filter) {
-    if (filter && !path::Match(path::GetBaseName(filePath), filter))
+    if (filter && !path::Match(path::GetBaseNameNoFree(filePath), filter))
         return false;
     if (EngineManager::IsSupportedFile(filePath) || Doc::IsSupportedFile(filePath))
         return true;

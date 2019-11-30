@@ -46,7 +46,7 @@ static int cmpOpenCount(const void* a, const void* b) {
         return dsA->isPinned ? -1 : 1;
     // sort pinned documents alphabetically
     if (dsA->isPinned)
-        return str::CmpNatural(path::GetBaseName(dsA->filePath), path::GetBaseName(dsB->filePath));
+        return str::CmpNatural(path::GetBaseNameNoFree(dsA->filePath), path::GetBaseNameNoFree(dsB->filePath));
     // sort often opened documents first
     if (dsA->openCount != dsB->openCount)
         return dsB->openCount - dsA->openCount;

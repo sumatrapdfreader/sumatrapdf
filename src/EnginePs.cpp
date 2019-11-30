@@ -136,8 +136,8 @@ static BaseEngine* ps2pdf(const WCHAR* fileName) {
         str::Format(L"\"%s\" -q -dSAFER -dNOPAUSE -dBATCH -dEPSCrop -sOutputFile=\"%s\" -sDEVICE=pdfwrite -c "
                     L"\".setpdfwrite%s\" -f \"%s\"",
                     gswin32c.Get(), tmpFile.Get(), psSetup ? psSetup.Get() : L"", shortPath.Get()));
-    fprintf(stderr, "- %s:%d: using '%ls' for creating '%%TEMP%%\\%ls'\n", path::GetBaseName(__FILE__), __LINE__,
-            gswin32c.Get(), path::GetBaseName(tmpFile));
+    fprintf(stderr, "- %s:%d: using '%ls' for creating '%%TEMP%%\\%ls'\n", path::GetBaseNameNoFree(__FILE__), __LINE__,
+            gswin32c.Get(), path::GetBaseNameNoFree(tmpFile));
 
     // TODO: the PS-to-PDF conversion can hang the UI for several seconds
     HANDLE process = LaunchProcess(cmdLine, nullptr, CREATE_NO_WINDOW);

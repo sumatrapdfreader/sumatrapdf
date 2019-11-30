@@ -5,14 +5,14 @@ namespace path {
 
 bool IsSep(char c);
 
-const char* GetBaseName(const char* path);
+const char* GetBaseNameNoFree(const char* path);
 const char* GetExt(const char* path);
 
 char* JoinUtf(const char* path, const char* fileName, Allocator* allocator);
 
 #if OS_WIN
 bool IsSep(WCHAR c);
-const WCHAR* GetBaseName(const WCHAR* path);
+const WCHAR* GetBaseNameNoFree(const WCHAR* path);
 const WCHAR* GetExt(const WCHAR* path);
 
 WCHAR* Normalize(const WCHAR* path);

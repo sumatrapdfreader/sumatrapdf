@@ -69,7 +69,7 @@ void CleanUpThumbnailCache(const FileHistory& fileHistory) {
         AutoFreeW bmpPath(GetThumbnailPath(list.at(i)->filePath));
         if (!bmpPath)
             continue;
-        int idx = files.Find(path::GetBaseName(bmpPath));
+        int idx = files.Find(path::GetBaseNameNoFree(bmpPath));
         if (idx != -1) {
             CrashIf(idx < 0 || files.size() <= (size_t)idx);
             free(files.PopAt(idx));

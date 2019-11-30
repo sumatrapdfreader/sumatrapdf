@@ -724,13 +724,13 @@ WCHAR* ImageDirEngineImpl::GetPageLabel(int pageNo) const {
     if (pageNo < 1 || PageCount() < pageNo)
         return BaseEngine::GetPageLabel(pageNo);
 
-    const WCHAR* fileName = path::GetBaseName(pageFileNames.at(pageNo - 1));
+    const WCHAR* fileName = path::GetBaseNameNoFree(pageFileNames.at(pageNo - 1));
     return str::DupN(fileName, path::GetExt(fileName) - fileName);
 }
 
 int ImageDirEngineImpl::GetPageByLabel(const WCHAR* label) const {
     for (size_t i = 0; i < pageFileNames.size(); i++) {
-        const WCHAR* fileName = path::GetBaseName(pageFileNames.at(i));
+        const WCHAR* fileName = path::GetBaseNameNoFree(pageFileNames.at(i));
         const WCHAR* fileExt = path::GetExt(fileName);
         if (str::StartsWithI(fileName, label) &&
             (fileName + str::Len(label) == fileExt || fileName[str::Len(label)] == '\0'))
@@ -775,7 +775,7 @@ bool ImageDirEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAn
     bool ok = true;
     for (size_t i = 0; i < pageFileNames.size(); i++) {
         const WCHAR* filePathOld = pageFileNames.at(i);
-        AutoFreeW filePathNew(path::Join(dstPath, path::GetBaseName(filePathOld)));
+        AutoFreeW filePathNew(path::Join(dstPath, path::GetBaseNameNoFree(filePathOld)));
         ok = ok && CopyFileW(filePathOld, filePathNew, TRUE);
     }
     return ok;
@@ -950,7 +950,7 @@ bool CbxEngineImpl::FinishLoading() {
 
         if (ImageEngine::IsSupportedFile(fileName) &&
             // OS X occasionally leaves metadata with image extensions
-            !str::StartsWith(path::GetBaseName(fileName), ".")) {
+            !str::StartsWith(path::GetBaseNameNoFree(fileName), ".")) {
             pageFiles.push_back(fileInfo);
         }
     }

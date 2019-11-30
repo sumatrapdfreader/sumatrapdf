@@ -226,7 +226,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationDocumentProvider::GetPropertyValue(
     if (propertyId == UIA_NamePropertyId) {
         // typically filename
         pRetVal->vt = VT_BSTR;
-        pRetVal->bstrVal = SysAllocString(path::GetBaseName(dm->GetEngine()->FileName()));
+        pRetVal->bstrVal = SysAllocString(path::GetBaseNameNoFree(dm->GetEngine()->FileName()));
         return S_OK;
     } else if (propertyId == UIA_IsTextPatternAvailablePropertyId) {
         pRetVal->vt = VT_BOOL;

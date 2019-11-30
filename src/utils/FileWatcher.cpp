@@ -149,7 +149,7 @@ static void NotifyAboutFile(WatchedDir* d, const WCHAR* fileName) {
     for (WatchedFile* wf = g_watchedFiles; wf; wf = wf->next) {
         if (wf->watchedDir != d)
             continue;
-        const WCHAR* wfFileName = path::GetBaseName(wf->filePath);
+        const WCHAR* wfFileName = path::GetBaseNameNoFree(wf->filePath);
 
         if (!str::EqI(fileName, wfFileName))
             continue;

@@ -957,7 +957,7 @@ WCHAR* XpsEngineImpl::ExtractFontList() {
     for (xps_font_cache* font = _doc->font_table; font; font = font->next) {
         AutoFreeW path(str::conv::FromUtf8(font->name));
         AutoFreeW name(str::conv::FromUtf8(font->font->name));
-        fonts.Append(str::Format(L"%s (%s)", name.Get(), path::GetBaseName(path)));
+        fonts.Append(str::Format(L"%s (%s)", name.Get(), path::GetBaseNameNoFree(path)));
     }
 #endif
     if (fonts.size() == 0)

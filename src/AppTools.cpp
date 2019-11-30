@@ -35,7 +35,7 @@ bool HasBeenInstalled() {
     }
 
     if (!str::EndsWithI(installedPath.get(), L".exe")) {
-        installedPath.reset(path::Join(installedPath.get(), path::GetBaseName(exePath.get())));
+        installedPath.reset(path::Join(installedPath.get(), path::GetBaseNameNoFree(exePath.get())));
     }
     return path::IsSame(installedPath.get(), exePath.get());
 }
@@ -66,7 +66,7 @@ bool IsRunningInPortableMode() {
     // check if one of the exePath's parent directories is "Program Files"
     // (or a junction to it)
     WCHAR* baseName;
-    while ((baseName = (WCHAR*)path::GetBaseName(exePath)) > exePath) {
+    while ((baseName = (WCHAR*)path::GetBaseNameNoFree(exePath)) > exePath) {
         baseName[-1] = '\0';
         if (path::IsSame(programFilesDir, exePath)) {
             sCacheIsPortable = 0;

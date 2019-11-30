@@ -453,7 +453,7 @@ WCHAR* HwndPasswordUI::GetPassword(const WCHAR* fileName, unsigned char* fileDig
         if (urlName)
             fileName = urlName;
     }
-    fileName = path::GetBaseName(fileName);
+    fileName = path::GetBaseNameNoFree(fileName);
 
     // check if the window is still valid as it might have been closed by now
     if (!IsWindow(hwnd)) {
@@ -899,7 +899,7 @@ static Controller* CreateControllerForFile(const WCHAR* filePath, PasswordUI* pw
 static void SetFrameTitleForTab(TabInfo* tab, bool needRefresh) {
     const WCHAR* titlePath = tab->filePath;
     if (!gGlobalPrefs->fullPathInTitle)
-        titlePath = path::GetBaseName(titlePath);
+        titlePath = path::GetBaseNameNoFree(titlePath);
     AutoFreeW docTitle(str::Dup(L""));
     if (tab->ctrl) {
         WCHAR* title = tab->ctrl->GetProperty(DocumentProperty::Title);
@@ -2366,7 +2366,7 @@ static void OnMenuSaveAs(WindowInfo* win) {
     str::TransChars(fileFilter.Get(), L"\1", L"\0");
 
     WCHAR dstFileName[MAX_PATH];
-    str::BufSet(dstFileName, dimof(dstFileName), path::GetBaseName(srcFileName));
+    str::BufSet(dstFileName, dimof(dstFileName), path::GetBaseNameNoFree(srcFileName));
     if (str::FindChar(dstFileName, ':')) {
         // handle embed-marks (for embedded PDF documents):
         // remove the container document's extension and include
@@ -2513,7 +2513,7 @@ static void OnMenuRenameFile(WindowInfo* win) {
     str::TransChars(fileFilter.Get(), L"\1", L"\0");
 
     WCHAR dstFileName[MAX_PATH];
-    str::BufSet(dstFileName, dimof(dstFileName), path::GetBaseName(srcFileName));
+    str::BufSet(dstFileName, dimof(dstFileName), path::GetBaseNameNoFree(srcFileName));
     // Remove the extension so that it can be re-added depending on the chosen filter
     if (str::EndsWithI(dstFileName, defExt)) {
         dstFileName[str::Len(dstFileName) - str::Len(defExt)] = '\0';
@@ -2573,7 +2573,7 @@ static void OnMenuSaveBookmark(WindowInfo* win) {
 
     WCHAR dstFileName[MAX_PATH];
     // Remove the extension so that it can be replaced with .lnk
-    str::BufSet(dstFileName, dimof(dstFileName), path::GetBaseName(ctrl->FilePath()));
+    str::BufSet(dstFileName, dimof(dstFileName), path::GetBaseNameNoFree(ctrl->FilePath()));
     str::TransChars(dstFileName, L":", L"_");
     if (str::EndsWithI(dstFileName, defExt)) {
         dstFileName[str::Len(dstFileName) - str::Len(defExt)] = '\0';
@@ -2622,7 +2622,7 @@ static void OnMenuSaveBookmark(WindowInfo* win) {
     AutoFreeW args(str::Format(L"\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d", ctrl->FilePath(), ss.page,
                                viewMode, ZoomVirtual, (int)ss.x, (int)ss.y));
     AutoFreeW label(ctrl->GetPageLabel(ss.page));
-    AutoFreeW desc(str::Format(_TR("Bookmark shortcut to page %s of %s"), label, path::GetBaseName(ctrl->FilePath())));
+    AutoFreeW desc(str::Format(_TR("Bookmark shortcut to page %s of %s"), label, path::GetBaseNameNoFree(ctrl->FilePath())));
 
     CreateShortcut(fileName, exePath, args, desc, 1);
 }

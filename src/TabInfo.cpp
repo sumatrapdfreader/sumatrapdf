@@ -48,7 +48,7 @@ const WCHAR* TabInfo::GetTabTitle() const {
     if (gGlobalPrefs->fullPathInTitle) {
         return filePath;
     }
-    return path::GetBaseName(filePath);
+    return path::GetBaseNameNoFree(filePath);
 }
 
 LinkSaver::LinkSaver(TabInfo* tab, HWND parentHwnd, const WCHAR* fileName) {
