@@ -580,17 +580,6 @@ static void BuildSystemInfo() {
     gSystemInfo = s.StealData();
 }
 
-bool SetSymbolsDir(const WCHAR* symDir) {
-    if (!symDir)
-        return false;
-    gSymbolsDir = str::Dup(symDir);
-    gPdbZipPath = path::Join(symDir, L"symbols_tmp.zip");
-    gLibMupdfPdbPath = path::Join(symDir, L"SumatraPDF.pdb");
-    gSumatraPdfPdbPath = path::Join(symDir, L"libmupdf.pdb");
-    gInstallerPdbPath = path::Join(symDir, L"Installer.pdb");
-    return true;
-}
-
 /* Setting symbol path:
 add GetEnvironmentVariableA("_NT_SYMBOL_PATH", ..., ...)
 add GetEnvironmentVariableA("_NT_ALTERNATE_SYMBOL_PATH", ..., ...)
@@ -601,7 +590,7 @@ Note: I've decided to use just one, known to me location rather than the
 more comprehensive list. It works so why give dbghelp.dll more directories
 to scan?
 */
-static bool BuildSymbolPath() {
+static void BuildSymbolPath() {
     str::WStr path(1024);
 
 #if 0
@@ -619,7 +608,6 @@ static bool BuildSymbolPath() {
 #endif
 
     path.Append(gSymbolsDir);
-    // path.Append(L";");
 #if 0
     // this probably wouldn't work anyway because it requires symsrv.dll in the same directory
     // as dbghelp.dll and it's not present with the os-provided dbghelp.dll
@@ -628,14 +616,37 @@ static bool BuildSymbolPath() {
     path.Append(L"*http://msdl.microsoft.com/download/symbols;cache*");
     path.Append(symDir);
 #endif
+
 #if 0
     // when running local builds, *.pdb is in the same dir as *.exe
-    AutoFreeW exePath(GetExePath());
+    WCHAR* exePath = GetExePath();
+    path.Append(L";");
     path.Append(exePath);
+    free(exePath);
 #endif
+
+    free(gSymbolPathW);
     gSymbolPathW = path.StealData();
-    if (!gSymbolPathW)
+}
+
+bool SetSymbolsDir(const WCHAR* symDir) {
+    if (!symDir) {
         return false;
+    }
+    
+    free(gSymbolsDir);
+    free(gPdbZipPath);
+    free(gLibMupdfPdbPath);
+    free(gSumatraPdfPdbPath);
+    free(gInstallerPdbPath);
+
+    gSymbolsDir = str::Dup(symDir);
+    gPdbZipPath = path::Join(symDir, L"symbols_tmp.zip");
+    gLibMupdfPdbPath = path::Join(symDir, L"SumatraPDF.pdb");
+    gSumatraPdfPdbPath = path::Join(symDir, L"libmupdf.pdb");
+    gInstallerPdbPath = path::Join(symDir, L"Installer.pdb");
+
+    BuildSymbolPath();
     return true;
 }
 
@@ -696,10 +707,6 @@ void InstallCrashHandler(const WCHAR* crashDumpPath, const WCHAR* crashFilePath,
     }
 
     if (!SetSymbolsDir(symDir)) {
-        return;
-    }
-
-    if (!BuildSymbolPath()) {
         return;
     }
 
