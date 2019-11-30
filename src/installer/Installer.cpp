@@ -40,6 +40,7 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "wingui/ButtonCtrl.h"
 #include "wingui/CheckboxCtrl.h"
 #include "wingui/EditCtrl.h"
+#include "wingui/StaticCtrl.h"
 
 #include "../ifilter/PdfFilter.h"
 #include "../previewer/PdfPreview.h"
@@ -62,7 +63,7 @@ static InstallerGlobals gInstallerGlobals = {
 
 static ButtonCtrl* gButtonOptions = nullptr;
 static ButtonCtrl* gButtonRunSumatra = nullptr;
-static HWND gHwndStaticInstDir = nullptr;
+static StaticCtrl* gStaticInstDir = nullptr;
 static EditCtrl* gTextboxInstDir = nullptr;
 static ButtonCtrl* gButtonBrowseDir = nullptr;
 static CheckboxCtrl* gCheckboxRegisterDefault = nullptr;
@@ -474,7 +475,7 @@ static void OnButtonInstall() {
     SendMessage(gHwndProgressBar, PBM_SETSTEP, 1, 0);
 
     // disable the install button and remove all the installation options
-    SafeDestroyWindow(&gHwndStaticInstDir);
+    delete gStaticInstDir;
     delete gTextboxInstDir;
     delete gButtonBrowseDir;
     delete gCheckboxRegisterDefault;
@@ -513,13 +514,6 @@ static void OnInstallationFinished() {
     }
 }
 
-static void EnableAndShow(HWND hwnd, bool enable) {
-    if (!hwnd)
-        return;
-    win::SetVisibility(hwnd, enable);
-    EnableWindow(hwnd, enable);
-}
-
 static void EnableAndShow(WindowBase* w, bool enable) {
     if (w) {
         win::SetVisibility(w->hwnd, enable);
@@ -530,7 +524,7 @@ static void EnableAndShow(WindowBase* w, bool enable) {
 static void OnButtonOptions() {
     gShowOptions = !gShowOptions;
 
-    EnableAndShow(gHwndStaticInstDir, gShowOptions);
+    EnableAndShow(gStaticInstDir, gShowOptions);
     EnableAndShow(gTextboxInstDir, gShowOptions);
     EnableAndShow(gButtonBrowseDir, gShowOptions);
     EnableAndShow(gCheckboxRegisterDefault, gShowOptions);
@@ -647,6 +641,7 @@ static bool OnWmCommand(WPARAM wParam) {
 
 //[ ACCESSKEY_GROUP Installer
 static void OnCreateWindow(HWND hwnd) {
+    RECT rc;
     ClientRect r(hwnd);
 
     gButtonInstUninst = CreateDefaultButtonCtrl(hwnd, _TR("Install SumatraPDF"));
@@ -687,7 +682,7 @@ static void OnCreateWindow(HWND hwnd) {
         const WCHAR* s = _TR("Let Windows show &previews of PDF documents");
         bool isChecked = gInstallerGlobals.installPdfPreviewer || IsPdfPreviewerInstalled();
         gCheckboxRegisterPdfPreviewer = CreateCheckbox(hwnd, s, isChecked);
-        RECT rc{x, y, x + dx, y + staticDy};
+        rc = {x, y, x + dx, y + staticDy};
         gCheckboxRegisterPdfPreviewer->SetPos(&rc);
         y -= staticDy;
 
@@ -706,7 +701,7 @@ static void OnCreateWindow(HWND hwnd) {
         // is currently selected (not going to intrude)
         bool isChecked = !hasOtherViewer || gInstallerGlobals.registerAsDefault;
         gCheckboxRegisterDefault = CreateCheckbox(hwnd, _TR("Use SumatraPDF as the &default PDF reader"), isChecked);
-        RECT rc = {x, y, x + dx, y + staticDy};
+        rc = {x, y, x + dx, y + staticDy};
         gCheckboxRegisterDefault->SetPos(&rc);
         y -= staticDy;
     }
@@ -729,14 +724,17 @@ static void OnCreateWindow(HWND hwnd) {
     gTextboxInstDir->dwStyle |= WS_BORDER;
     gTextboxInstDir->SetText(gInstUninstGlobals.installDir);
     gTextboxInstDir->Create();
-    RECT rc{x, y, x + dx, y + staticDy};
+    rc = {x, y, x + dx, y + staticDy};
     gTextboxInstDir->SetBounds(rc);
 
     y -= staticDy;
 
-    gHwndStaticInstDir = CreateWindowExW(0, WC_STATIC, _TR("Install SumatraPDF in &folder:"), WS_CHILD, x, y, r.dx,
-                                         staticDy, hwnd, nullptr, GetModuleHandle(nullptr), nullptr);
-    SetWindowFont(gHwndStaticInstDir, gFontDefault, TRUE);
+    s = _TR("Install SumatraPDF in &folder:");
+    rc = {x, y, x + r.dx, y + staticDy};
+    gStaticInstDir = new StaticCtrl(hwnd);
+    gStaticInstDir->SetText(s);
+    gStaticInstDir->Create();
+    gStaticInstDir->SetBounds(rc);
 
     gShowOptions = !gShowOptions;
     OnButtonOptions();
