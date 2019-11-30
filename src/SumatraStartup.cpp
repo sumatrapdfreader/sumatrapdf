@@ -597,8 +597,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     mui::Initialize();
     uitask::Initialize();
 
-    CommandLineInfo i;
-    i.ParseCommandLine(GetCommandLine());
+    auto i = ParseCommandLine(GetCommandLine());
 
     if (i.testRenderPage) {
         TestRenderPage(i);

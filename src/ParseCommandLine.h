@@ -19,92 +19,55 @@ class CommandLineInfo {
     //   to benchmark. It can also be a string "loadonly" which means we'll
     //   only benchmark loading of the catalog
     WStrVec pathsToBenchmark;
-    bool makeDefault;
-    bool exitWhenDone;
-    bool printDialog;
+    bool makeDefault = false;
+    bool exitWhenDone = false;
+    bool printDialog = false;
     AutoFreeW printerName;
     AutoFreeW printSettings;
     AutoFreeW forwardSearchOrigin;
-    int forwardSearchLine;
-    bool reuseDdeInstance;
+    int forwardSearchLine = 0;
+    bool reuseDdeInstance = false;
     AutoFreeW destName;
-    int pageNumber;
-    bool restrictedUse;
-    bool enterPresentation;
-    bool enterFullScreen;
-    DisplayMode startView;
-    float startZoom;
-    PointI startScroll;
-    bool showConsole;
-    HWND hwndPluginParent;
+    int pageNumber = -1;
+    bool restrictedUse = false;
+    bool enterPresentation = false;
+    bool enterFullScreen = false;
+    DisplayMode startView = DM_AUTOMATIC;
+    float startZoom = INVALID_ZOOM;
+    PointI startScroll{-1,-1};
+    bool showConsole = false;
+    HWND hwndPluginParent = nullptr;
     AutoFreeW pluginURL;
-    bool exitImmediately;
-    bool silent;
+    bool exitImmediately = false;
+    bool silent = false;
     AutoFreeW appdataDir;
     AutoFreeW inverseSearchCmdLine;
-    bool invertColors;
+    bool invertColors = false;
 
     // stress-testing related
     AutoFreeW stressTestPath;
     AutoFreeW stressTestFilter; // nullptr is equivalent to "*" (i.e. all files)
     AutoFreeW stressTestRanges;
-    int stressTestCycles;
-    int stressParallelCount;
-    bool stressRandomizeFiles;
+    int stressTestCycles = 1;
+    int stressParallelCount = 1;
+    bool stressRandomizeFiles = false;
 
     // related to testing
-    bool testRenderPage;
-    bool testExtractPage;
-    int testPageNo;
+    bool testRenderPage = false;
+    bool testExtractPage = false;
+    int testPageNo = 0;
 
-    bool crashOnOpen;
+    bool crashOnOpen = false;
 
     // deprecated flags
     AutoFree lang;
     WStrVec globalPrefArgs;
 
-    CommandLineInfo()
-        : makeDefault(false),
-          exitWhenDone(false),
-          printDialog(false),
-          printerName(nullptr),
-          printSettings(nullptr),
-          reuseDdeInstance(false),
-          lang(nullptr),
-          destName(nullptr),
-          pageNumber(-1),
-          restrictedUse(false),
-          pluginURL(nullptr),
-          enterPresentation(false),
-          enterFullScreen(false),
-          hwndPluginParent(nullptr),
-          startView(DM_AUTOMATIC),
-          startZoom(INVALID_ZOOM),
-          startScroll(PointI(-1, -1)),
-          showConsole(false),
-          exitImmediately(false),
-          silent(false),
-          forwardSearchOrigin(nullptr),
-          forwardSearchLine(0),
-          stressTestPath(nullptr),
-          stressTestFilter(nullptr),
-          stressTestRanges(nullptr),
-          stressTestCycles(1),
-          stressParallelCount(1),
-          stressRandomizeFiles(false),
-          testRenderPage(false),
-          testExtractPage(false),
-          appdataDir(nullptr),
-          inverseSearchCmdLine(nullptr),
-          invertColors(false),
-          crashOnOpen(false) {
-    }
-
-    ~CommandLineInfo() {
-    }
-
-    void ParseCommandLine(const WCHAR* cmdLine);
+    CommandLineInfo() = default;
+    ~CommandLineInfo() = default;
 };
+
+CommandLineInfo ParseCommandLine(const WCHAR* cmdLine);
 
 bool IsValidPageRange(const WCHAR* ranges);
 bool IsBenchPagesInfo(const WCHAR* s);
