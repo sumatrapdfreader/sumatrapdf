@@ -2,15 +2,27 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 struct ProgressCtrl : public WindowBase {
-    ProgressCtrl(HWND parent);
+    explicit ProgressCtrl(HWND parent, int max = 0);
+
+    // those might be outdated if user manipulates hwnd directly
+    int max = 0;
+    int current = 0;
+
+    int idealDx = 0;
+    int idealDy = 0;
+
     ~ProgressCtrl() override;
     bool Create() override;
-    LRESULT WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& didHandle) override;
+
+    void SetMax(int);
+    void SetCurrent(int);
+    int GetMax();
+    int GetCurrent();
 
     SIZE GetIdealSize() override;
 };
 
-ILayout* NewStaticLayout(ProgressCtrl* b);
+ILayout* NewProgressLayout(ProgressCtrl* b);
 
 bool IsProgress(Kind);
 bool IsProgress(ILayout*);

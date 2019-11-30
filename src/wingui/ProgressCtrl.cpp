@@ -9,7 +9,7 @@
 #include "wingui/Window.h"
 #include "wingui/ProgressCtrl.h"
 
-// TODO: add OnClicked handler, use SS_NOTIFY to get notified about STN_CLICKED
+// https://docs.microsoft.com/en-us/windows/win32/controls/progress-bar-control-reference
 
 Kind kindProgress = "progress";
 
@@ -21,10 +21,11 @@ bool IsProgress(ILayout* l) {
     return IsLayoutOfKind(l, kindProgress);
 }
 
-ProgressCtrl::ProgressCtrl(HWND p) : WindowBase(p) {
+ProgressCtrl::ProgressCtrl(HWND p, int initialMax) : WindowBase(p) {
     dwStyle = WS_CHILD | WS_VISIBLE;
-    winClass = WC_STATICW;
+    winClass = PROGRESS_CLASSW;
     kind = kindProgress;
+    max = initialMax;
 }
 
 ProgressCtrl::~ProgressCtrl() {
@@ -32,28 +33,35 @@ ProgressCtrl::~ProgressCtrl() {
 
 bool ProgressCtrl::Create() {
     bool ok = WindowBase::Create();
+    if (max != 0) {
+        SetMax(max);
+    }
     return ok;
 }
 
 SIZE ProgressCtrl::GetIdealSize() {
-    WCHAR* txt = win::GetText(hwnd);
-    SIZE s = MeasureTextInHwnd(hwnd, txt, hfont);
-    free(txt);
-    return s;
+    return { idealDx, idealDy };
 }
 
-// https://docs.microsoft.com/en-us/windows/win32/controls/static-controls
-LRESULT ProgressCtrl::WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& didHandle) {
-    UNUSED(hwnd);
-    UNUSED(lp);
-    UNUSED(didHandle);
-    UNUSED(wp);
+void ProgressCtrl::SetMax(int newMax) {
+    max = newMax;
+    int min = 0;
+    SendMessageW(hwnd, PBM_SETRANGE32, min, max); 
+}
 
-    if (msg == WM_COMMAND) {
-        // TODO: support STN_CLICKED
-        return 0;
-    }
-    return 0;
+void ProgressCtrl::SetCurrent(int newCurrent) {
+    current = newCurrent;
+    SendMessageW(hwnd, PBM_SETPOS, current, 0);
+}
+
+int ProgressCtrl::GetMax() {
+    max = (int)SendMessageW(hwnd, PBM_GETRANGE, FALSE /* get high limit */, 0);
+    return max;
+}
+
+int ProgressCtrl::GetCurrent() {
+    current = (int)SendMessageW(hwnd, PBM_GETPOS, 0, 0);
+    return current;
 }
 
 ILayout* NewProgressLayout(ProgressCtrl* b) {

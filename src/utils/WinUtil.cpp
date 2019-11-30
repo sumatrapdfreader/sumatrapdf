@@ -1513,16 +1513,6 @@ BOOL SafeCloseHandle(HANDLE* h) {
     return ok;
 }
 
-// This is just to satisfy /analyze. DestroyWindow(nullptr) works perfectly fine
-// but /analyze complains anyway
-BOOL SafeDestroyWindow(HWND* hwnd) {
-    if (!hwnd || !*hwnd)
-        return TRUE;
-    BOOL ok = DestroyWindow(*hwnd);
-    *hwnd = nullptr;
-    return ok;
-}
-
 // based on http://mdb-blog.blogspot.com/2013/01/nsis-lunch-program-as-user-from-uac.html
 // uses $WINDIR\explorer.exe to launch cmd
 // Other promising approaches:

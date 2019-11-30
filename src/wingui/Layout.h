@@ -138,7 +138,7 @@ bool IsExpand(ILayout*);
 
 // TODO: rename MainStart => Start, MainEnd => End, MainCenter => Center
 // Homogeneous => Evenly
-enum class MainAxisAlign : uint8_t {
+enum class MainAxisAlign : u8 {
     // Children will be packed together at the top or left of the box
     MainStart,
     // Children will be packed together and centered in the box.
@@ -157,7 +157,7 @@ inline bool IsPacked(MainAxisAlign a) {
     return a <= MainAxisAlign::MainEnd;
 }
 
-enum class CrossAxisAlign : uint8_t {
+enum class CrossAxisAlign : u8 {
     Stretch,     // Children will be stretched so that the extend across box
     CrossStart,  // Children will be aligned to the left or top of the box
     CrossCenter, // Children will be aligned in the center of the box

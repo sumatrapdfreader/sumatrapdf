@@ -28,7 +28,6 @@ void Edit_SelectAll(HWND hwnd);
 void ListBox_AppendString_NoSort(HWND hwnd, WCHAR* txt);
 
 BOOL SafeCloseHandle(HANDLE* h);
-BOOL SafeDestroyWindow(HWND* hwnd);
 void FillWndClassEx(WNDCLASSEX& wcex, const WCHAR* clsName, WNDPROC wndproc);
 void MoveWindow(HWND hwnd, RectI rect);
 void MoveWindow(HWND hwnd, RECT* r);

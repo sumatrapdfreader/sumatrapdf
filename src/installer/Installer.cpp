@@ -70,7 +70,7 @@ static ButtonCtrl* gButtonBrowseDir = nullptr;
 static CheckboxCtrl* gCheckboxRegisterDefault = nullptr;
 static CheckboxCtrl* gCheckboxRegisterPdfFilter = nullptr;
 static CheckboxCtrl* gCheckboxRegisterPdfPreviewer = nullptr;
-static HWND gHwndProgressBar = nullptr;
+static ProgressCtrl* gProgressBar = nullptr;
 
 static int GetInstallationStepCount() {
     /* Installation steps
@@ -91,9 +91,12 @@ static int GetInstallationStepCount() {
     return count;
 }
 
+int currProgress = 0;
 static inline void ProgressStep() {
-    if (gHwndProgressBar)
-        PostMessage(gHwndProgressBar, PBM_STEPIT, 0, 0);
+    currProgress++;
+    if (gProgressBar) {
+        gProgressBar->SetCurrent(currProgress);
+    }
 }
 
 static CheckboxCtrl* CreateCheckbox(HWND hwndParent, const WCHAR* s, bool isChecked) {
@@ -470,10 +473,14 @@ static void OnButtonInstall() {
     // create a progress bar in place of the Options button
     RectI rc(0, 0, dpiAdjust(INSTALLER_WIN_DX / 2), gButtonDy);
     rc = MapRectToWindow(rc, gButtonOptions->hwnd, gHwndFrame);
-    gHwndProgressBar = CreateWindow(PROGRESS_CLASS, nullptr, WS_CHILD | WS_VISIBLE, rc.x, rc.y, rc.dx, rc.dy,
-                                    gHwndFrame, 0, GetModuleHandle(nullptr), nullptr);
-    SendMessage(gHwndProgressBar, PBM_SETRANGE32, 0, GetInstallationStepCount());
-    SendMessage(gHwndProgressBar, PBM_SETSTEP, 1, 0);
+
+    int nSteps = GetInstallationStepCount();
+    gProgressBar = new ProgressCtrl(gHwndFrame, nSteps);
+    gProgressBar->Create();
+    RECT prc = {rc.x, rc.y, rc.x + rc.dx, rc.y + rc.dy};
+    gProgressBar->SetBounds(prc);
+    ProgressStep();
+
 
     // disable the install button and remove all the installation options
     delete gStaticInstDir;
@@ -494,8 +501,7 @@ static void OnButtonInstall() {
 
 static void OnInstallationFinished() {
     delete gButtonInstUninst;
-    gButtonInstUninst = nullptr;
-    SafeDestroyWindow(&gHwndProgressBar);
+    delete gProgressBar;
 
     if (gInstUninstGlobals.success) {
         CreateButtonRunSumatra(gHwndFrame);

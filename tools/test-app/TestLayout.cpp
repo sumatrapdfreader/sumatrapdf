@@ -11,6 +11,7 @@
 #include "wingui/EditCtrl.h"
 #include "wingui/DropDownCtrl.h"
 #include "wingui/StaticCtrl.h"
+#include "wingui/ProgressCtrl.h"
 
 #include "test-app.h"
 
@@ -18,7 +19,10 @@ static HINSTANCE hInst;
 static const WCHAR* gWindowTitle = L"Test layout";
 static const WCHAR* WIN_CLASS = L"LayutWndCls";
 static HWND g_hwnd = nullptr;
+static VBox* vboxLayout = nullptr;
 static ILayout* mainLayout = nullptr;
+static int currWinDx = 0;
+static int currWinDy = 0;
 
 #define COL_GRAY RGB(0xdd, 0xdd, 0xdd)
 #define COL_WHITE RGB(0xff, 0xff, 0xff)
@@ -30,16 +34,23 @@ static void Draw(HWND hwnd, HDC hdc) {
     FillRect(hdc, &rc, brush);
 }
 
-static void onClicked() {
-    dbglogf("btn clicked\n");
-}
-
-static ILayout* CreateButtonLayout(HWND parent, std::string_view s) {
+static std::tuple<ILayout*, ButtonCtrl*> CreateButtonLayout(HWND parent, std::string_view s, OnClicked onClicked) {
     auto b = new ButtonCtrl(parent);
     b->OnClicked = onClicked;
     b->SetText(s);
     b->Create();
-    return NewButtonLayout(b);
+    return {NewButtonLayout(b), b};
+}
+
+static void doMainLayout() {
+    Size windowSize{currWinDx, currWinDy};
+    Constraints constraints = Tight(windowSize);
+    auto size = mainLayout->Layout(constraints);
+    dbglogf("doLayout: (%d,%d) => (%d, %d)\n", currWinDx, currWinDy, size.Width, size.Height);
+    Point min{0, 0};
+    Point max{size.Width, size.Height};
+    Rect bounds{min, max};
+    mainLayout->SetBounds(bounds);
 }
 
 static void onCheckboxChanged(CheckState state) {
@@ -108,12 +119,52 @@ static ILayout* CreateStaticLayout(HWND parent, std::string_view s) {
     return NewStaticLayout(w);
 }
 
+int maxProgress = 8;
+int currProgress = 0;
+ProgressCtrl* gProgress = nullptr;
+
+static std::tuple<ILayout*, ProgressCtrl*> CreateProgressLayout(HWND parent, int maxRange) {
+    auto w = new ProgressCtrl(parent, maxRange);
+    w->Create();
+    return {NewProgressLayout(w), w};
+}
+
+static void ToggleMainAxis() {
+    u8 n = (u8)vboxLayout->alignMain + 1;
+    if (n > (u8)MainAxisAlign::Homogeneous) {
+        n = 0;
+    }
+    vboxLayout->alignMain = (MainAxisAlign)n;
+    dbglogf("toggle main axis to %d\n", (int)n);
+    doMainLayout();
+}
+
+static void ToggleCrossAxis() {
+    u8 n = (u8)vboxLayout->alignCross + 1;
+    if (n > (u8)CrossAxisAlign::CrossEnd) {
+        n = 0;
+    }
+    vboxLayout->alignCross = (CrossAxisAlign)n;
+    dbglogf("toggle cross axis to %d\n", (int)n);
+    doMainLayout();
+}
+
+static void AdvanceProgress() {
+    currProgress++;
+    if (currProgress > maxProgress) {
+        currProgress = 0;
+    }
+    gProgress->SetCurrent(currProgress);
+    dbglogf("advance progress to %d\n", currProgress);
+}
+
 static void CreateMainLayout(HWND hwnd) {
     auto* vbox = new VBox();
+
     vbox->alignMain = MainAxisAlign::MainEnd;
     vbox->alignCross = CrossAxisAlign::Stretch;
     {
-        auto l = CreateButtonLayout(hwnd, "button one");
+        auto [l, b] = CreateButtonLayout(hwnd, "toggle main axis", ToggleMainAxis);
         vbox->addChild(l);
     }
     {
@@ -121,11 +172,11 @@ static void CreateMainLayout(HWND hwnd) {
         vbox->addChild(l);
     }
     {
-        auto l = CreateButtonLayout(hwnd, "button two");
+        auto [l, b] = CreateButtonLayout(hwnd, "toggle cross axis", ToggleCrossAxis);
         vbox->addChild(l);
     }
     {
-        auto l = CreateButtonLayout(hwnd, "button three");
+        auto [l, b] = CreateButtonLayout(hwnd, "advance progress", AdvanceProgress);
         vbox->addChild(l);
     }
     {
@@ -144,27 +195,21 @@ static void CreateMainLayout(HWND hwnd) {
         auto l = CreateStaticLayout(hwnd, "static control");
         vbox->addChild(l);
     }
+    {
+        auto [l, w] = CreateProgressLayout(hwnd, maxProgress);
+        w->idealDy = 32;
+        w->idealDx = 128;
+        gProgress = w;
+        vbox->addChild(l);
+        AdvanceProgress();
+    }
 
+    vboxLayout = vbox;
     auto* padding = new Padding();
     padding->child = vbox;
     padding->insets = DefaultInsets();
     mainLayout = padding;
 }
-
-static void doLayut(HWND hwnd, int dx, int dy) {
-    UNUSED(hwnd);
-    Size windowSize{dx, dy};
-    Constraints constraints = Tight(windowSize);
-    auto size = mainLayout->Layout(constraints);
-    dbglogf("doLayout: (%d,%d) => (%d, %d)\n", dx, dy, size.Width, size.Height);
-
-    Point min{0, 0};
-    Point max{size.Width, size.Height};
-    Rect bounds{min, max};
-    mainLayout->SetBounds(bounds);
-}
-
-static int prevDx = 0, prevDy = 0;
 
 static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     // dbglogf("msg: 0x%x, wp: %d, lp: %d\n", msg, (int)wp, (int)lp);
@@ -175,21 +220,12 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             break;
 
         case WM_SIZE: {
-            int dx1 = LOWORD(lp);
-            int dy1 = HIWORD(lp);
             RECT rect;
             GetClientRect(hwnd, &rect);
-            int dx = RectDx(rect);
-            int dy = RectDy(rect);
-            if (prevDx == dx && prevDy == dy) {
-                return 0;
-            }
-            prevDx = dx;
-            prevDy = dy;
-            dbglogf("WM_SIZE: wp: %d, (%d,%d), (%d, %d)\n", (int)wp, dx1, dy1, dx, dy);
-            if (dx != 0 && dy != 0) {
-                doLayut(hwnd, dx, dy);
-            }
+            currWinDx = RectDx(rect);
+            currWinDy = RectDy(rect);
+            dbglogf("WM_SIZE: wp: %d, (%d,%d)\n", (int)wp, currWinDx, currWinDy);
+            doMainLayout();
             return 0;
             // return DefWindowProc(hwnd, msg, wp, lp);
         }
