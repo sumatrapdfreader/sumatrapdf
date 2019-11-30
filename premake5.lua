@@ -406,14 +406,19 @@ workspace "SumatraPDF"
     utils_files()
 
 
+  -- TODO: remove, merged directly into Sumatra
+  --[[
   project "mui"
     kind "StaticLib"
     language "C++"
     cppdialect "C++17"
     includedirs { "src" }
     mui_files()
+  --]]
 
 
+  -- TODO: remove, merged directly into Sumatra
+  --[[
   project "uia"
     kind "StaticLib"
     language "C++"
@@ -421,6 +426,7 @@ workspace "SumatraPDF"
     disablewarnings { "4302", "4311", "4838" }
     includedirs { "src", "src/wingui" }
     uia_files()
+  --]]
 
 
   project "sumatra"
@@ -577,18 +583,19 @@ workspace "SumatraPDF"
     includedirs { "src", "src/wingui" }
     sumatrapdf_files()
     synctex_files()
+    mui_files()
+    uia_files()
 
     -- for synctex
     disablewarnings { "4100", "4244", "4267", "4702", "4706" }
     includedirs { "ext/zlib", "ext/synctex" }
 
-    files {
-      "docs/releasenotes.txt",
-      "docs/releaseplan.txt",
-    }
+    -- for uia
+    disablewarnings { "4302", "4311", "4838" }
+
     links {
-      "engines", "libdjvu",  "libwebp", "mui", "mupdf", "sumatra",
-      "uia", "unarrlib", "utils", "unrar"
+      "engines", "libdjvu",  "libwebp", "mupdf", "sumatra",
+      "unarrlib", "utils", "unrar"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",
@@ -611,12 +618,19 @@ workspace "SumatraPDF"
     disablewarnings { "4100", "4244", "4267", "4702", "4706" }
     includedirs { "ext/zlib", "ext/synctex" }
 
+    -- for uia
+    disablewarnings { "4302", "4311", "4838" }
+
     sumatrapdf_files()
     synctex_files()
+    mui_files()
+    uia_files()
+
     files { "src/MuPDF_Exports.cpp" }
+
     links {
-      "sumatra", "libmupdf", "utils", "mui", "engines",
-      "uia", "unarrlib", "unrar", "libwebp"
+      "sumatra", "libmupdf", "utils", "engines",
+      "unarrlib", "unrar", "libwebp"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",

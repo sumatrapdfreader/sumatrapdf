@@ -86,6 +86,9 @@
     <ClCompile Include="..\ext\synctex\synctex_parser_utils.c">
       <Filter>ext\synctex</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\MuPDF_Exports.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\SumatraPDF.cpp">
       <Filter>src</Filter>
     </ClCompile>
