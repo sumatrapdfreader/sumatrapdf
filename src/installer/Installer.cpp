@@ -55,8 +55,6 @@ struct InstallerGlobals {
 
 #define ID_CHECKBOX_MAKE_DEFAULT 14
 #define ID_CHECKBOX_BROWSER_PLUGIN 15
-#define ID_BUTTON_START_SUMATRA 16
-#define ID_BUTTON_OPTIONS 17
 #define ID_BUTTON_BROWSE 18
 #define ID_CHECKBOX_PDF_FILTER 19
 #define ID_CHECKBOX_PDF_PREVIEWER 20
@@ -71,7 +69,7 @@ static InstallerGlobals gInstallerGlobals = {
 };
 
 static ButtonCtrl* gButtonOptions = nullptr;
-static HWND gHwndButtonRunSumatra = nullptr;
+static ButtonCtrl* gButtonRunSumatra = nullptr;
 static HWND gHwndStaticInstDir = nullptr;
 static HWND gHwndTextboxInstDir = nullptr;
 static HWND gHwndButtonBrowseDir = nullptr;
@@ -356,8 +354,15 @@ static bool CreateInstallationDirectory() {
     return ok;
 }
 
+static void OnButtonStartSumatra() {
+    AutoFreeW exePath(GetInstalledExePath());
+    RunNonElevated(exePath);
+    OnButtonExit();
+}
+
 static void CreateButtonRunSumatra(HWND hwndParent) {
-    gHwndButtonRunSumatra = CreateDefaultButton(hwndParent, _TR("Start SumatraPDF"), ID_BUTTON_START_SUMATRA);
+    gButtonRunSumatra = CreateDefaultButtonCtrl(hwndParent, _TR("Start SumatraPDF"));
+    gButtonRunSumatra->OnClicked = OnButtonStartSumatra;
 }
 
 static bool CreateAppShortcut(bool allUsers) {
@@ -519,12 +524,6 @@ static void OnInstallationFinished() {
     }
 }
 
-static void OnButtonStartSumatra() {
-    AutoFreeW exePath(GetInstalledExePath());
-    RunNonElevated(exePath);
-    OnButtonExit();
-}
-
 static void EnableAndShow(HWND hwnd, bool enable) {
     if (!hwnd)
         return;
@@ -639,12 +638,8 @@ static void OnButtonBrowse() {
 static bool OnWmCommand(WPARAM wParam) {
     switch (LOWORD(wParam)) {
         case IDOK:
-            if (gHwndButtonRunSumatra)
+            if (gButtonRunSumatra)
                 OnButtonStartSumatra();
-            break;
-
-        case ID_BUTTON_START_SUMATRA:
-            OnButtonStartSumatra();
             break;
 
         case ID_BUTTON_BROWSE:
@@ -866,8 +861,8 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
 
         case WM_APP_INSTALLATION_FINISHED:
             OnInstallationFinished();
-            if (gHwndButtonRunSumatra)
-                SetFocus(gHwndButtonRunSumatra);
+            if (gButtonRunSumatra)
+                gButtonRunSumatra->SetFocus();
             if (gButtonExit) {
                 gButtonExit->SetFocus();
             }
