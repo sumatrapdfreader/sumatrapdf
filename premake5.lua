@@ -428,7 +428,7 @@ workspace "SumatraPDF"
     uia_files()
   --]]
 
-
+  -- TODO: merge directly into Sumatra projects
   project "sumatra"
     kind "StaticLib"
     language "C++"
@@ -621,6 +621,7 @@ workspace "SumatraPDF"
     -- for uia
     disablewarnings { "4302", "4311", "4838" }
 
+    resdefines { "INSTALL_PAYLOAD_ZIP=.\\%{cfg.targetdir}\\InstallerData.dat" }
     sumatrapdf_files()
     synctex_files()
     mui_files()
@@ -637,9 +638,16 @@ workspace "SumatraPDF"
       "version", "wininet"
     }
     -- this is to prevent dll hijacking
-    linkoptions { "/DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll"}
+    linkoptions { "/DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll /DELAYLOAD:libmupdf.dll"}
+    dependson { "PdfFilter", "PdfPreview" }
+    filter "platforms:x32"
+      prebuildcommands { "cd %{cfg.targetdir} & ..\\..\\bin\\MakeLZSA.exe InstallerData.dat libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll"  }
+    filter {}
+    filter "platforms:x64"
+      prebuildcommands { "cd %{cfg.targetdir} & ..\\..\\bin\\MakeLZSA.exe InstallerData.dat libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll" }
+    filter {}
 
-
+  --[[
   project "Uninstaller"
     kind "WindowedApp"
     language "C++"
@@ -653,9 +661,10 @@ workspace "SumatraPDF"
     links {
       "comctl32", "gdiplus", "shlwapi", "version", "wininet"
     }
-
+  --]]
 
   -- faster to compile than Installer
+  --[[
   project "InstallerNoData"
     kind "WindowedApp"
     language "C++"
@@ -674,8 +683,9 @@ workspace "SumatraPDF"
     }
     -- this is to prevent dll hijacking
     linkoptions { "/DELAYLOAD:gdiplus.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll"}
+  --]]
 
-
+  --[[
   project "Installer"
     kind "WindowedApp"
     language "C++"
@@ -698,6 +708,7 @@ workspace "SumatraPDF"
 
     dependson { "SumatraPDF-mupdf-dll", "PdfFilter", "PdfPreview", "Uninstaller" }
     prebuildcommands { "cd %{cfg.targetdir} & ..\\..\\bin\\MakeLZSA.exe InstallerData.dat SumatraPDF-mupdf-dll.exe:SumatraPDF.exe libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll Uninstaller.exe:uninstall.exe ..\\..\\mupdf\\resources\\fonts\\droid\\DroidSansFallback.ttf:DroidSansFallback.ttf"  }
+  --]]
 
   project "TestApp"
     kind "WindowedApp"
@@ -712,7 +723,9 @@ workspace "SumatraPDF"
       "version", "wininet", "d2d1.lib",
     }
 
+  -- TODO: remove, can just build the whole solution instead
   -- dummy project that builds all other projects
+  --[[
   project "all"
     kind "ConsoleApp"
     language "C"
@@ -720,7 +733,8 @@ workspace "SumatraPDF"
     -- if there is a c/c++ file, so we add a no-op cpp file to force This logic
     files { "tools/premake/no_op_console.c" }
     dependson {
-      "PdfPreview", "PdfFilter", "SumatraPDF", "SumatraPDF-mupdf-dll",
-      "test_util", "cmapdump", "signfile", "plugin-test", "MakeLZSA",
-      "mutool", "mudraw", "Uninstaller", "enginedump", "efi", "unarr"
+      "PdfPreview", "PdfFilter", "SumatraPDF", "SumatraPDF-dll",
+      "test_util", "plugin-test", "MakeLZSA",
+      "enginedump", "TestApp"
     }
+  --]]
