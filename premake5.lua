@@ -384,17 +384,6 @@ workspace "SumatraPDF"
     }
 
 
-  -- TODO: remove, is compiled in directly
-  --[[
-  project "synctex"
-    kind "StaticLib"
-    language "C"
-    disablewarnings { "4100", "4244", "4267", "4702", "4706" }
-    includedirs { "ext/zlib", "ext/synctex" }
-    synctex_files()
-  ]]
-
-
   project "utils"
     kind "StaticLib"
     language "C++"
@@ -405,28 +394,6 @@ workspace "SumatraPDF"
     includedirs { "ext/libwebp/src", "ext/unarr", "mupdf/include" }
     utils_files()
 
-
-  -- TODO: remove, merged directly into Sumatra
-  --[[
-  project "mui"
-    kind "StaticLib"
-    language "C++"
-    cppdialect "C++17"
-    includedirs { "src" }
-    mui_files()
-  --]]
-
-
-  -- TODO: remove, merged directly into Sumatra
-  --[[
-  project "uia"
-    kind "StaticLib"
-    language "C++"
-    cppdialect "C++17"
-    disablewarnings { "4302", "4311", "4838" }
-    includedirs { "src", "src/wingui" }
-    uia_files()
-  --]]
 
   -- TODO: merge directly into Sumatra projects
   project "sumatra"
@@ -647,69 +614,6 @@ workspace "SumatraPDF"
       prebuildcommands { "cd %{cfg.targetdir} & ..\\..\\bin\\MakeLZSA.exe InstallerData.dat libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll" }
     filter {}
 
-  --[[
-  project "Uninstaller"
-    kind "WindowedApp"
-    language "C++"
-    cppdialect "C++17"
-    entrypoint "WinMainCRTStartup"
-    flags { "NoManifest" }
-    disablewarnings { "4018", "4244", "4264", "4838", "4702", "4706" }
-    uninstaller_files()
-    includedirs { "src", "ext/zlib", "ext/unarr", "ext/lzma/C" }
-    links { "utils", "unrar", "zlib", "unarrlib" }
-    links {
-      "comctl32", "gdiplus", "shlwapi", "version", "wininet"
-    }
-  --]]
-
-  -- faster to compile than Installer
-  --[[
-  project "InstallerNoData"
-    kind "WindowedApp"
-    language "C++"
-    cppdialect "C++17"
-    entrypoint "WinMainCRTStartup"
-    flags { "NoManifest" }
-    defines { "NO_LIBWEBP", "NO_LIBMUPDF", "HAVE_ZLIB", "HAVE_BZIP2", "HAVE_7Z" }
-    disablewarnings {
-      "4018", "4100", "4131", "4244", "4245", "4267", "4302", "4311", "4312", "4456",
-      "4457", "4838", "4702", "4706", "4996"
-    }
-    installer_files()
-    includedirs { "src", "ext/zlib", "ext/unarr", "ext/lzma/C", "ext/bzip2" }
-    links {
-      "comctl32", "delayimp", "gdiplus", "shlwapi", "version", "wininet", "unrar"
-    }
-    -- this is to prevent dll hijacking
-    linkoptions { "/DELAYLOAD:gdiplus.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll"}
-  --]]
-
-  --[[
-  project "Installer"
-    kind "WindowedApp"
-    language "C++"
-    cppdialect "C++17"
-    entrypoint "WinMainCRTStartup"
-    flags { "NoManifest" }
-    defines { "NO_LIBWEBP", "NO_LIBMUPDF", "HAVE_ZLIB", "HAVE_BZIP2", "HAVE_7Z" }
-    resdefines { "INSTALL_PAYLOAD_ZIP=.\\%{cfg.targetdir}\\InstallerData.dat" }
-    disablewarnings {
-      "4018", "4100", "4131", "4244", "4245", "4267", "4302", "4311",
-      "4312", "4456", "4457", "4838", "4702", "4706", "4996"
-    }
-    installer_files()
-    includedirs { "src", "ext/zlib", "ext/unarr", "ext/lzma/C", "ext/bzip2" }
-    links {
-      "comctl32", "delayimp", "gdiplus", "shlwapi", "version", "wininet", "unrar"
-    }
-    -- this is to prevent dll hijacking
-    linkoptions { "/DELAYLOAD:gdiplus.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll"}
-
-    dependson { "SumatraPDF-dll", "PdfFilter", "PdfPreview", "Uninstaller" }
-    prebuildcommands { "cd %{cfg.targetdir} & ..\\..\\bin\\MakeLZSA.exe InstallerData.dat SumatraPDF-dll.exe:SumatraPDF.exe libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll Uninstaller.exe:uninstall.exe ..\\..\\mupdf\\resources\\fonts\\droid\\DroidSansFallback.ttf:DroidSansFallback.ttf"  }
-  --]]
-
   project "TestApp"
     kind "WindowedApp"
     language "C++"
@@ -722,19 +626,3 @@ workspace "SumatraPDF"
       "comctl32", "gdiplus", "msimg32", "shlwapi", "urlmon",
       "version", "wininet", "d2d1.lib",
     }
-
-  -- TODO: remove, can just build the whole solution instead
-  -- dummy project that builds all other projects
-  --[[
-  project "all"
-    kind "ConsoleApp"
-    language "C"
-    -- premake has logic in vs2010_vcxproj.lua that only sets PlatformToolset
-    -- if there is a c/c++ file, so we add a no-op cpp file to force This logic
-    files { "tools/premake/no_op_console.c" }
-    dependson {
-      "PdfPreview", "PdfFilter", "SumatraPDF", "SumatraPDF-dll",
-      "test_util", "plugin-test", "MakeLZSA",
-      "enginedump", "TestApp"
-    }
-  --]]
