@@ -48,7 +48,6 @@ struct InstallerGlobals {
     bool registerAsDefault;
     bool installPdfFilter;
     bool installPdfPreviewer;
-    bool keepBrowserPlugin;
     bool justExtractFiles;
     bool autoUpdate;
 };
@@ -62,7 +61,6 @@ static InstallerGlobals gInstallerGlobals = {
     false, /* bool registerAsDefault */
     false, /* bool installPdfFilter */
     false, /* bool installPdfPreviewer */
-    true,  /* bool keepBrowserPlugin */
     false, /* bool extractFiles */
     false, /* bool autoUpdate */
 };
@@ -75,7 +73,6 @@ static ButtonCtrl* gButtonBrowseDir = nullptr;
 static HWND gHwndCheckboxRegisterDefault = nullptr;
 static HWND gHwndCheckboxRegisterPdfFilter = nullptr;
 static HWND gHwndCheckboxRegisterPdfPreviewer = nullptr;
-static HWND gHwndCheckboxKeepBrowserPlugin = nullptr;
 static HWND gHwndProgressBar = nullptr;
 
 static int GetInstallationStepCount() {
@@ -189,11 +186,6 @@ static WCHAR* GetDefaultPdfViewer() {
     if (buf)
         return buf.StealData();
     return ReadRegStr(HKEY_CLASSES_ROOT, L".pdf", nullptr);
-}
-
-static bool IsBrowserPluginInstalled() {
-    AutoFreeW dllPath(GetInstalledBrowserPluginPath());
-    return file::Exists(dllPath);
 }
 
 static bool IsPdfFilterInstalled() {
@@ -403,8 +395,7 @@ static DWORD WINAPI InstallerThread(LPVOID data) {
     else if (IsPdfPreviewerInstalled())
         UninstallPdfPreviewer();
 
-    if (!gInstallerGlobals.keepBrowserPlugin)
-        UninstallBrowserPlugin();
+    UninstallBrowserPlugin();
 
     if (!CreateAppShortcut(true) && !CreateAppShortcut(false)) {
         NotifyFailed(_TR("Failed to create a shortcut"));
@@ -470,9 +461,6 @@ static void OnButtonInstall() {
     // note: this checkbox isn't created on Windows 2000 and XP
     gInstallerGlobals.installPdfPreviewer =
         gHwndCheckboxRegisterPdfPreviewer != nullptr && IsCheckboxChecked(gHwndCheckboxRegisterPdfPreviewer);
-    // note: this checkbox isn't created if the browser plugin hasn't been installed before
-    gInstallerGlobals.keepBrowserPlugin =
-        gHwndCheckboxKeepBrowserPlugin != nullptr && IsCheckboxChecked(gHwndCheckboxKeepBrowserPlugin);
 
     // create a progress bar in place of the Options button
     RectI rc(0, 0, dpiAdjust(INSTALLER_WIN_DX / 2), gButtonDy);
@@ -491,7 +479,6 @@ static void OnButtonInstall() {
     SafeDestroyWindow(&gHwndCheckboxRegisterDefault);
     SafeDestroyWindow(&gHwndCheckboxRegisterPdfFilter);
     SafeDestroyWindow(&gHwndCheckboxRegisterPdfPreviewer);
-    SafeDestroyWindow(&gHwndCheckboxKeepBrowserPlugin);
     delete gButtonOptions;
 
     gButtonInstUninst->SetIsEnabled(false);
@@ -548,7 +535,6 @@ static void OnButtonOptions() {
     EnableAndShow(gHwndCheckboxRegisterDefault, gShowOptions);
     EnableAndShow(gHwndCheckboxRegisterPdfFilter, gShowOptions);
     EnableAndShow(gHwndCheckboxRegisterPdfPreviewer, gShowOptions);
-    EnableAndShow(gHwndCheckboxKeepBrowserPlugin, gShowOptions);
 
     //[ ACCESSKEY_GROUP Installer
     //[ ACCESSKEY_ALTERNATIVE // ideally, the same accesskey is used for both
@@ -689,17 +675,6 @@ static void OnCreateWindow(HWND hwnd) {
     AutoFreeW defaultViewer(GetDefaultPdfViewer());
     BOOL hasOtherViewer = !str::EqI(defaultViewer, APP_NAME_STR);
     BOOL isSumatraDefaultViewer = defaultViewer && !hasOtherViewer;
-
-    // only show this checkbox if the browser plugin has been installed before
-    if (IsBrowserPluginInstalled()) {
-        gHwndCheckboxKeepBrowserPlugin =
-            CreateWindowExW(0, WC_BUTTON, _TR("Keep the PDF &browser plugin installed (no longer supported)"),
-                            WS_CHILD | BS_AUTOCHECKBOX | WS_TABSTOP, x, y, dx, staticDy, hwnd,
-                            (HMENU)ID_CHECKBOX_BROWSER_PLUGIN, GetModuleHandle(nullptr), nullptr);
-        SetWindowFont(gHwndCheckboxKeepBrowserPlugin, gFontDefault, TRUE);
-        Button_SetCheck(gHwndCheckboxKeepBrowserPlugin, gInstallerGlobals.keepBrowserPlugin);
-        y -= staticDy;
-    }
 
     // only show this checkbox if the CPU arch of DLL and OS match
     // (assuming that the installer has the same CPU arch as its content!)
@@ -970,10 +945,6 @@ static void ParseCommandLine(WCHAR* cmdLine) {
                 gInstallerGlobals.installPdfFilter = true;
             if (optlist.Contains(L"pdfpreviewer"))
                 gInstallerGlobals.installPdfPreviewer = true;
-            // uninstall the deprecated browser plugin if it's not
-            // explicitly listed (only applies if the /opt flag is used)
-            if (!optlist.Contains(L"plugin"))
-                gInstallerGlobals.keepBrowserPlugin = false;
         } else if (is_arg("x")) {
             gInstallerGlobals.justExtractFiles = true;
             // silently extract files to the current directory (if /d isn't used)
