@@ -103,7 +103,7 @@ func smokeBuild() {
 	runTestUtilMust(filepath.Join("out", "rel64"))
 
 	{
-		cmd := exec.Command(lzsa, "SumatraPDF.pdb.lzsa", "libmupdf.pdb:libmupdf.pdb", "SumatraPDF.pdb:SumatraPDF.pdb", "SumatraPDF-dll.pdb:SumatraPDF-dll.pdb")
+		cmd := exec.Command(lzsa, "SumatraPDF.pdb.lzsa", "libmupdf.pdb:libmupdf.pdb", "SumatraPDF-dll.pdb:SumatraPDF-dll.pdb")
 		cmd.Dir = filepath.Join("out", "rel64")
 		u.RunCmdLoggedMust(cmd)
 	}
