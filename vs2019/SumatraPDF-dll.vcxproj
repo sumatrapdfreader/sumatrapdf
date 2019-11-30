@@ -547,6 +547,7 @@
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\installer\Installer.h" />
     <ClInclude Include="..\src\mui\Mui.h" />
     <ClInclude Include="..\src\mui\MuiBase.h" />
     <ClInclude Include="..\src\mui\MuiButton.h" />
@@ -575,6 +576,8 @@
     <ClCompile Include="..\src\SumatraPDF.cpp" />
     <ClCompile Include="..\src\SumatraStartup.cpp" />
     <ClCompile Include="..\src\Tests.cpp" />
+    <ClCompile Include="..\src\installer\InstUninstCommon.cpp" />
+    <ClCompile Include="..\src\installer\Installer.cpp" />
     <ClCompile Include="..\src\mui\Mui.cpp" />
     <ClCompile Include="..\src\mui\MuiBase.cpp" />
     <ClCompile Include="..\src\mui\MuiButton.cpp" />

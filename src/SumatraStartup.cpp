@@ -533,6 +533,19 @@ static void ShutdownCommon() {
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 }
 
+// we're in installer mode if the name of the executable
+// has "install" string in it e.g. SumatraPDF-installer.exe
+static bool IsInstaller() {
+    WCHAR* exePath = GetExePath();
+    const WCHAR* exeName = path::GetBaseNameNoFree(exePath);
+    bool isInstaller = str::FindI(exeName, L"install");
+    str::Free(exePath);
+    return isInstaller;
+}
+
+// in Installer.cpp
+extern int RunInstaller();
+
 int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR cmdLine,
                      _In_ int nCmdShow) {
     UNUSED(hPrevInstance);
@@ -564,25 +577,6 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     // without a cd).
     SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
 
-#if defined(DEBUG) || defined(SVN_PRE_RELEASE_VER)
-    if (str::StartsWith(cmdLine, "/tester")) {
-        extern int TesterMain(); // in Tester.cpp
-        return TesterMain();
-    }
-
-    if (str::StartsWith(cmdLine, "/regress")) {
-        extern int RegressMain(); // in Regress.cpp
-        return RegressMain();
-    }
-#endif
-#if defined(SUPPORTS_AUTO_UPDATE) || defined(DEBUG)
-    if (str::StartsWith(cmdLine, "-autoupdate")) {
-        bool quit = AutoUpdateMain();
-        if (quit)
-            return 0;
-    }
-#endif
-
     srand((unsigned int)time(nullptr));
 
 #ifdef DEBUG
@@ -597,7 +591,31 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     mui::Initialize();
     uitask::Initialize();
 
+#if defined(DEBUG) || defined(SVN_PRE_RELEASE_VER)
+    if (str::StartsWith(cmdLine, "/tester")) {
+        extern int TesterMain(); // in Tester.cpp
+        return TesterMain();
+    }
+
+    if (str::StartsWith(cmdLine, "/regress")) {
+        extern int RegressMain(); // in Regress.cpp
+        return RegressMain();
+    }
+#endif
+
     auto i = ParseCommandLine(GetCommandLine());
+    if (IsInstaller()) {
+        retCode = RunInstaller();
+        goto Exit;
+    }    
+
+#if defined(SUPPORTS_AUTO_UPDATE) || defined(DEBUG)
+    if (str::StartsWith(cmdLine, "-autoupdate")) {
+        bool quit = AutoUpdateMain();
+        if (quit)
+            return 0;
+    }
+#endif
 
     if (i.testRenderPage) {
         TestRenderPage(i);
@@ -612,8 +630,9 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     }
 
     InitializePolicies(i.restrictedUse);
-    if (i.appdataDir)
+    if (i.appdataDir) {
         SetAppDataPath(i.appdataDir);
+    }
 
     prefs::Load();
     prefs::UpdateGlobalPrefs(i);
@@ -633,29 +652,37 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
         // TODO(port)
         // fz_redirect_dll_io_to_console();
     }
-    if (i.makeDefault)
+    if (i.makeDefault) {
         AssociateExeWithPdfExtension();
+    }
+
     if (i.pathsToBenchmark.size() > 0) {
         BenchFileOrDir(i.pathsToBenchmark);
         if (i.showConsole)
             system("pause");
     }
-    if (i.exitImmediately)
+
+    if (i.exitImmediately) {
         goto Exit;
+    }
+
     gCrashOnOpen = i.crashOnOpen;
 
     GetFixedPageUiColors(gRenderCache.textColor, gRenderCache.backgroundColor);
 
-    if (!RegisterWinClass())
+    if (!RegisterWinClass()) {
         goto Exit;
+    }
 
     CrashIf(hInstance != GetModuleHandle(nullptr));
-    if (!InstanceInit())
+    if (!InstanceInit()) {
         goto Exit;
+    }
 
     if (i.hwndPluginParent) {
-        if (!SetupPluginMode(i))
+        if (!SetupPluginMode(i)) {
             goto Exit;
+        }
     }
 
     if (i.printerName) {

@@ -81,6 +81,8 @@ RectI GetVirtualScreenRect();
 
 bool LaunchFile(const WCHAR* path, const WCHAR* params = nullptr, const WCHAR* verb = nullptr, bool hidden = false);
 HANDLE LaunchProcess(const WCHAR* cmdLine, const WCHAR* currDir = nullptr, DWORD flags = 0);
+bool LaunchElevated(const WCHAR* path, const WCHAR* cmdline);
+bool IsRunningElevated();
 
 void PaintRect(HDC, const RectI&);
 void PaintLine(HDC, const RectI&);
