@@ -567,6 +567,22 @@
     <ClInclude Include="..\src\utils\WebpReader.h" />
     <ClInclude Include="..\src\utils\WinDynCalls.h" />
     <ClInclude Include="..\src\utils\WinUtil.h" />
+    <ClInclude Include="..\src\wingui\ButtonCtrl.h" />
+    <ClInclude Include="..\src\wingui\CheckboxCtrl.h" />
+    <ClInclude Include="..\src\wingui\DialogSizer.h" />
+    <ClInclude Include="..\src\wingui\DropDownCtrl.h" />
+    <ClInclude Include="..\src\wingui\EditCtrl.h" />
+    <ClInclude Include="..\src\wingui\Form.h" />
+    <ClInclude Include="..\src\wingui\FrameRateWnd.h" />
+    <ClInclude Include="..\src\wingui\LabelWithCloseWnd.h" />
+    <ClInclude Include="..\src\wingui\Layout.h" />
+    <ClInclude Include="..\src\wingui\SplitterWnd.h" />
+    <ClInclude Include="..\src\wingui\TabsCtrl.h" />
+    <ClInclude Include="..\src\wingui\TooltipCtrl.h" />
+    <ClInclude Include="..\src\wingui\TreeCtrl.h" />
+    <ClInclude Include="..\src\wingui\TreeModel.h" />
+    <ClInclude Include="..\src\wingui\WinGui.h" />
+    <ClInclude Include="..\src\wingui\Window.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\ext\bzip2\bzip_all.c" />
@@ -654,6 +670,20 @@
     <ClCompile Include="..\src\utils\WebpReader.cpp" />
     <ClCompile Include="..\src\utils\WinDynCalls.cpp" />
     <ClCompile Include="..\src\utils\WinUtil.cpp" />
+    <ClCompile Include="..\src\wingui\ButtonCtrl.cpp" />
+    <ClCompile Include="..\src\wingui\CheckboxCtrl.cpp" />
+    <ClCompile Include="..\src\wingui\DialogSizer.cpp" />
+    <ClCompile Include="..\src\wingui\DropDownCtrl.cpp" />
+    <ClCompile Include="..\src\wingui\EditCtrl.cpp" />
+    <ClCompile Include="..\src\wingui\Form.cpp" />
+    <ClCompile Include="..\src\wingui\FrameRateWnd.cpp" />
+    <ClCompile Include="..\src\wingui\LabelWithCloseWnd.cpp" />
+    <ClCompile Include="..\src\wingui\Layout.cpp" />
+    <ClCompile Include="..\src\wingui\SplitterWnd.cpp" />
+    <ClCompile Include="..\src\wingui\TabsCtrl.cpp" />
+    <ClCompile Include="..\src\wingui\TooltipCtrl.cpp" />
+    <ClCompile Include="..\src\wingui\TreeCtrl.cpp" />
+    <ClCompile Include="..\src\wingui\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\installer\Installer.rc" />

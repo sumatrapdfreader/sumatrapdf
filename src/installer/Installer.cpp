@@ -34,6 +34,13 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "utils/ByteOrderDecoder.h"
 #include "utils/LzmaSimpleArchive.h"
 
+#include "wingui/WinGui.h"
+#include "wingui/Layout.h"
+#include "wingui/Window.h"
+#include "wingui/ButtonCtrl.h"
+#include "wingui/CheckboxCtrl.h"
+#include "wingui/EditCtrl.h"
+
 #include "../ifilter/PdfFilter.h"
 #include "../previewer/PdfPreview.h"
 
@@ -63,7 +70,7 @@ static InstallerGlobals gInstallerGlobals = {
     false, /* bool autoUpdate */
 };
 
-static HWND gHwndButtonOptions = nullptr;
+static ButtonCtrl* gButtonOptions = nullptr;
 static HWND gHwndButtonRunSumatra = nullptr;
 static HWND gHwndStaticInstDir = nullptr;
 static HWND gHwndTextboxInstDir = nullptr;
@@ -465,7 +472,7 @@ static void OnButtonInstall() {
 
     // create a progress bar in place of the Options button
     RectI rc(0, 0, dpiAdjust(INSTALLER_WIN_DX / 2), gButtonDy);
-    rc = MapRectToWindow(rc, gHwndButtonOptions, gHwndFrame);
+    rc = MapRectToWindow(rc, gButtonOptions->hwnd, gHwndFrame);
     gHwndProgressBar = CreateWindow(PROGRESS_CLASS, nullptr, WS_CHILD | WS_VISIBLE, rc.x, rc.y, rc.dx, rc.dy,
                                     gHwndFrame, 0, GetModuleHandle(nullptr), nullptr);
     SendMessage(gHwndProgressBar, PBM_SETRANGE32, 0, GetInstallationStepCount());
@@ -479,7 +486,7 @@ static void OnButtonInstall() {
     SafeDestroyWindow(&gHwndCheckboxRegisterPdfFilter);
     SafeDestroyWindow(&gHwndCheckboxRegisterPdfPreviewer);
     SafeDestroyWindow(&gHwndCheckboxKeepBrowserPlugin);
-    SafeDestroyWindow(&gHwndButtonOptions);
+    delete gButtonOptions;
 
     EnableWindow(gHwndButtonInstUninst, FALSE);
 
@@ -538,10 +545,10 @@ static void OnButtonOptions() {
     //[ ACCESSKEY_GROUP Installer
     //[ ACCESSKEY_ALTERNATIVE // ideally, the same accesskey is used for both
     if (gShowOptions)
-        SetButtonTextAndResize(gHwndButtonOptions, _TR("Hide &Options"));
+        SetButtonTextAndResize(gButtonOptions, _TR("Hide &Options"));
     //| ACCESSKEY_ALTERNATIVE
     else
-        SetButtonTextAndResize(gHwndButtonOptions, _TR("&Options"));
+        SetButtonTextAndResize(gButtonOptions, _TR("&Options"));
     //] ACCESSKEY_ALTERNATIVE
     //] ACCESSKEY_GROUP Installer
 
@@ -549,7 +556,7 @@ static void OnButtonOptions() {
     RECT rcTmp = rc.ToRECT();
     InvalidateRect(gHwndFrame, &rcTmp, TRUE);
 
-    SetFocus(gHwndButtonOptions);
+    gButtonOptions->SetFocus();
 }
 
 static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT msg, LPARAM lParam, LPARAM lpData) {
@@ -643,10 +650,6 @@ static bool OnWmCommand(WPARAM wParam) {
             OnButtonStartSumatra();
             break;
 
-        case ID_BUTTON_OPTIONS:
-            OnButtonOptions();
-            break;
-
         case ID_BUTTON_BROWSE:
             OnButtonBrowse();
             break;
@@ -668,11 +671,16 @@ static void OnCreateWindow(HWND hwnd) {
     gHwndButtonInstUninst = CreateDefaultButton(hwnd, _TR("Install SumatraPDF"), IDOK);
 
     SIZE btnSize;
-    gHwndButtonOptions = CreateButton(hwnd, _TR("&Options"), ID_BUTTON_OPTIONS, BS_PUSHBUTTON, &btnSize);
+    gButtonOptions = new ButtonCtrl(hwnd);
+    gButtonOptions->OnClicked = OnButtonOptions;
+    gButtonOptions->SetText(_TR("&Options"));
+    gButtonOptions->Create();
+
+    btnSize = gButtonOptions->GetIdealSize();
     int x = WINDOW_MARGIN;
     int y = r.dy - btnSize.cy - WINDOW_MARGIN;
     UINT flags = SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW;
-    SetWindowPos(gHwndButtonOptions, nullptr, x, y, 0, 0, flags);
+    SetWindowPos(gButtonOptions->hwnd, nullptr, x, y, 0, 0, flags);
 
     gButtonDy = btnSize.cy;
     gBottomPartDy = gButtonDy + (WINDOW_MARGIN * 2);

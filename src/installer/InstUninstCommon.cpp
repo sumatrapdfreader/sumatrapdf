@@ -25,6 +25,13 @@
 #include "utils/ByteOrderDecoder.h"
 #include "utils/LzmaSimpleArchive.h"
 
+#include "wingui/WinGui.h"
+#include "wingui/Layout.h"
+#include "wingui/Window.h"
+#include "wingui/ButtonCtrl.h"
+#include "wingui/CheckboxCtrl.h"
+#include "wingui/EditCtrl.h"
+
 #include "../ifilter/PdfFilter.h"
 #include "../previewer/PdfPreview.h"
 
@@ -431,6 +438,10 @@ SIZE SetButtonTextAndResize(HWND hwnd, const WCHAR* s) {
     return size;
 }
 
+SIZE SetButtonTextAndResize(ButtonCtrl* b, const WCHAR* s) {
+    return SetButtonTextAndResize(b->hwnd, s);
+}
+
 // Creates a button that has a right size for it's text,
 HWND CreateButton(HWND hwndParent, const WCHAR* s, int id, DWORD style, SIZE* sizeOut) {
     HMENU idMenu = (HMENU)(UINT_PTR)id;
@@ -672,7 +683,7 @@ static void DrawFrame2(Graphics& g, RectI r) {
     Gdiplus::Color bgCol;
     bgCol.SetFromCOLORREF(WIN_BG_COLOR);
     SolidBrush bgBrush(bgCol);
-    Rect r2(r.ToGdipRect());
+    Gdiplus::Rect r2(r.ToGdipRect());
     r2.Inflate(1, 1);
     g.FillRectangle(&bgBrush, r2);
 

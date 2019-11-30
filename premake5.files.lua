@@ -969,6 +969,8 @@ function installer_files()
     "installer/Trans_installer_txt.cpp",
     "installer/Resource.h",
     "installer/Installer.rc",
+    "wingui/*.cpp",
+    "wingui/*.h",
   })
 end
 
@@ -982,6 +984,8 @@ function uninstaller_files()
     "installer/Trans_installer_txt.cpp",
     "installer/Resource.h",
     "installer/Installer.rc",
+    "wingui/*.cpp",
+    "wingui/*.h",
   })
 end
 

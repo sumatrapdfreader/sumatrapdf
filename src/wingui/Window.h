@@ -73,7 +73,9 @@ struct WindowBase {
     void SubclassParent();
     void Unsubclass();
 
+    void SetFocus();
     void SetFont(HFONT f);
+    void SetText(const WCHAR* s);
     void SetText(std::string_view);
     void SetPos(RECT* r);
     void SetBounds(const RECT& r);
@@ -81,6 +83,7 @@ struct WindowBase {
     void SetBackgroundColor(COLORREF);
     void SetColors(COLORREF bg, COLORREF txt);
 };
+
 
 struct WindowBaseLayout : public ILayout {
     WindowBase* wb = nullptr;

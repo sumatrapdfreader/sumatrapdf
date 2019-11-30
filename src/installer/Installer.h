@@ -88,6 +88,8 @@ extern Gdiplus::Color gCol4Shadow;
 extern Gdiplus::Color gCol5;
 extern Gdiplus::Color gCol5Shadow;
 
+struct ButtonCtrl;
+
 void InitInstallerUninstaller();
 void OnPaintFrame(HWND hwnd);
 void OnButtonExit();
@@ -96,6 +98,7 @@ void CreateButtonExit(HWND hwndParent);
 HWND CreateButton(HWND hwndParent, const WCHAR* s, int id, DWORD style, SIZE* sizeOut);
 HWND CreateDefaultButton(HWND hwndParent, const WCHAR* s, int id);
 SIZE SetButtonTextAndResize(HWND hwnd, const WCHAR* s);
+SIZE SetButtonTextAndResize(ButtonCtrl* b, const WCHAR* s);
 SIZE GetIdealButtonSize(HWND hwnd);
 int dpiAdjust(int value);
 void InvalidateFrame();

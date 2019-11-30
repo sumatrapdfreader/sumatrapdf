@@ -258,6 +258,10 @@ bool WindowBase::Create() {
     return true;
 }
 
+void WindowBase::SetFocus() {
+    ::SetFocus(hwnd);
+}
+
 void WindowBase::SetPos(RECT* r) {
     ::MoveWindow(hwnd, r);
 }
@@ -271,8 +275,12 @@ void WindowBase::SetFont(HFONT f) {
     SetWindowFont(hwnd, f, TRUE);
 }
 
+void WindowBase::SetText(const WCHAR* s) {
+    auto d = str::conv::WcharToUtf8(s);
+    SetText(d.AsView());
+}
+
 void WindowBase::SetText(std::string_view sv) {
-    text.Set(sv);
     text.Set(sv);
     HwndSetText(hwnd, text.AsView());
     InvalidateRect(hwnd, nullptr, FALSE);

@@ -4,6 +4,9 @@
     <Filter Include="installer">
       <UniqueIdentifier>{136B88E7-7FD5-3C5E-C813-EE0334BD1AB3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="wingui">
+      <UniqueIdentifier>{D80B1F25-C4AD-49FB-AD68-5D4F99A9D04B}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\CrashHandler.h" />
@@ -13,6 +16,54 @@
     </ClInclude>
     <ClInclude Include="..\src\installer\Resource.h">
       <Filter>installer</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\ButtonCtrl.h">
+      <Filter>wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\CheckboxCtrl.h">
+      <Filter>wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\DialogSizer.h">
+      <Filter>wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\DropDownCtrl.h">
+      <Filter>wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\EditCtrl.h">
+      <Filter>wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\Form.h">
+      <Filter>wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\FrameRateWnd.h">
+      <Filter>wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\LabelWithCloseWnd.h">
+      <Filter>wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\Layout.h">
+      <Filter>wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\SplitterWnd.h">
+      <Filter>wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\TabsCtrl.h">
+      <Filter>wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\TooltipCtrl.h">
+      <Filter>wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\TreeCtrl.h">
+      <Filter>wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\TreeModel.h">
+      <Filter>wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\WinGui.h">
+      <Filter>wingui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\wingui\Window.h">
+      <Filter>wingui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -26,6 +77,48 @@
     </ClCompile>
     <ClCompile Include="..\src\installer\Uninstaller.cpp">
       <Filter>installer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\ButtonCtrl.cpp">
+      <Filter>wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\CheckboxCtrl.cpp">
+      <Filter>wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\DialogSizer.cpp">
+      <Filter>wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\DropDownCtrl.cpp">
+      <Filter>wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\EditCtrl.cpp">
+      <Filter>wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\Form.cpp">
+      <Filter>wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\FrameRateWnd.cpp">
+      <Filter>wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\LabelWithCloseWnd.cpp">
+      <Filter>wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\Layout.cpp">
+      <Filter>wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\SplitterWnd.cpp">
+      <Filter>wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\TabsCtrl.cpp">
+      <Filter>wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\TooltipCtrl.cpp">
+      <Filter>wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\TreeCtrl.cpp">
+      <Filter>wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\Window.cpp">
+      <Filter>wingui</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
