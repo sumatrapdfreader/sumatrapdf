@@ -262,8 +262,8 @@ static bool WriteUninstallerRegistryInfo(HKEY hkey) {
     ok &= WriteRegStr(hkey, REG_PATH_UNINST, L"Publisher", TEXT(PUBLISHER_STR));
     // command line for uninstaller
     ok &= WriteRegStr(hkey, REG_PATH_UNINST, L"UninstallString", uninstallCmdLine);
-    ok &= WriteRegStr(hkey, REG_PATH_UNINST, L"URLInfoAbout", L"http://www.sumatrapdfreader.org/");
-    ok &= WriteRegStr(hkey, REG_PATH_UNINST, L"URLUpdateInfo", L"http://www.sumatrapdfreader.org/news.html");
+    ok &= WriteRegStr(hkey, REG_PATH_UNINST, L"URLInfoAbout", L"https://www.sumatrapdfreader.org/");
+    ok &= WriteRegStr(hkey, REG_PATH_UNINST, L"URLUpdateInfo", L"https://www.sumatrapdfreader.org/news.html");
 
     return ok;
 }
