@@ -381,11 +381,6 @@ static WCHAR* GetInstallationDir() {
     return path::GetDir(GetOwnPath());
 }
 
-// TODO: must pass msg to CheckInstallUninstallPossible() instead
-void SetDefaultMsg() {
-    SetMsg(_TR("Are you sure you want to uninstall SumatraPDF?"), COLOR_MSG_WELCOME);
-}
-
 static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
     bool handled;
     switch (message) {
@@ -441,7 +436,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
 }
 
 static bool RegisterWinClass() {
-    WNDCLASSEX wcex;
+    WNDCLASSEX wcex{};
 
     FillWndClassEx(wcex, INSTALLER_FRAME_CLASS_NAME, WndProcFrame);
     auto h = GetModuleHandle(nullptr);
@@ -532,60 +527,10 @@ static void ParseCommandLine(WCHAR* cmdLine) {
     }
 }
 
-#define CRASH_DUMP_FILE_NAME L"suminstaller.dmp"
-
-// no-op but must be defined for CrashHandler.cpp
-void ShowCrashHandlerMessage() {
-}
-void GetStressTestInfo(str::Str* s) {
-    UNUSED(s);
-}
-
-void GetProgramInfo(str::Str& s) {
-    s.AppendFmt("Ver: %s", CURR_VERSION_STRA);
-#ifdef SVN_PRE_RELEASE_VER
-    s.AppendFmt(" pre-release");
-#endif
-    if (IsProcess64()) {
-        s.Append(" 64-bit");
-    }
-#ifdef DEBUG
-    if (!str::Find(s.Get(), " (dbg)"))
-        s.Append(" (dbg)");
-#endif
-    s.Append("\r\n");
-#if defined(GIT_COMMIT_ID)
-    const char* gitSha1 = QM(GIT_COMMIT_ID);
-    s.AppendFmt("Git: %s (https://github.com/sumatrapdfreader/sumatrapdf/tree/%s)\r\n", gitSha1, gitSha1);
-#endif
-}
-
-bool CrashHandlerCanUseNet() {
-    return true;
-}
-
-int APIENTRY WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPSTR /* lpCmdLine*/, int nCmdShow) {
-    UNUSED(nCmdShow);
+int RunUninstaller() {
     int ret = 1;
 
-    SetErrorMode(SEM_NOOPENFILEERRORBOX | SEM_FAILCRITICALERRORS);
-
-    // Change current directory to prevent dll hijacking.
-    // LoadLibrary first loads from current directory which could be
-    // browser's download directory, which is an easy target
-    // for attackers to put their own fake dlls).
-    // For this to work we also have to /delayload all libraries otherwise
-    // they will be loaded even before WinMain executes.
-    auto currDir = GetSystem32Dir();
-    SetCurrentDirectoryW(currDir);
-    free(currDir);
-
-    InitDynCalls();
-    NoDllHijacking();
-
-    ScopedCom com;
-    InitAllCommonControls();
-    ScopedGdiPlus gdi;
+    gDefaultMsg = _TR("Are you sure you want to uninstall SumatraPDF?");
 
     ParseCommandLine(GetCommandLine());
     if (gInstUninstGlobals.showUsageAndQuit) {
@@ -615,7 +560,6 @@ int APIENTRY WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, LPSTR
     ret = RunApp();
 
 Exit:
-    trans::Destroy();
     free(gInstUninstGlobals.installDir);
     free(gInstUninstGlobals.firstError);
 
