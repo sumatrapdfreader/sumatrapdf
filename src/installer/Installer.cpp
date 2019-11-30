@@ -146,37 +146,43 @@ static bool IsValidInstaller()
 }
 #endif
 
-static bool InstallCopyFiles() {
-    bool ok;
-    HGLOBAL res = 0;
-    defer {
-        if (res != 0)
-            UnlockResource(res);
-    };
-
-    HRSRC resSrc = FindResource(GetModuleHandle(nullptr), MAKEINTRESOURCE(1), RT_RCDATA);
+static std::tuple<const char*, DWORD, HGLOBAL> LockDataResource(int id) {
+    auto h = GetModuleHandle(nullptr);
+    auto name = MAKEINTRESOURCEW(id);
+    HRSRC resSrc = FindResourceW(h, name, RT_RCDATA);
     if (!resSrc) {
-        goto Corrupted;
+        return {nullptr, 0, 0};
     }
-    res = LoadResource(nullptr, resSrc);
+    HGLOBAL res = LoadResource(nullptr, resSrc);
     if (!res) {
-        goto Corrupted;
+        return {nullptr, 0, 0};
     }
 
-    const char* data = (const char*)LockResource(res);
+    auto* data = (const char*)LockResource(res);
     DWORD dataSize = SizeofResource(nullptr, resSrc);
+    return {data, dataSize, res};
+}
+
+
+static bool InstallCopyFiles() {
+    auto [data, size, res] = LockDataResource(1);
+    if (data == nullptr) {
+        goto Corrupted;
+    }
 
     lzma::SimpleArchive archive;
-    ok = lzma::ParseSimpleArchive(data, dataSize, &archive);
+    bool ok = lzma::ParseSimpleArchive(data, size, &archive);
     if (!ok) {
         goto Corrupted;
     }
 
     // on error, ExtractFiles() shows error message itself
     ok = ExtractFiles(&archive);
+    UnlockResource(res);
     return ok;
 Corrupted:
     NotifyFailed(_TR("The installer has been corrupted. Please download it again.\nSorry for the inconvenience!"));
+    UnlockResource(res);
     return false;
 }
 
