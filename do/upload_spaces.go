@@ -62,7 +62,7 @@ func spacesUploadPreReleaseMust(ver string) {
 	manifestRemotePath := preRelDir + prefix + "-manifest.txt"
 	files := []string{
 		"SumatraPDF.exe", fmt.Sprintf("%s.exe", prefix),
-		"Installer.exe", fmt.Sprintf("%s-install.exe", prefix),
+		"SumatraPDF-dll.exe", fmt.Sprintf("%s-install.exe", prefix),
 		"SumatraPDF.pdb.zip", fmt.Sprintf("%s.pdb.zip", prefix),
 		"SumatraPDF.pdb.lzsa", fmt.Sprintf("%s.pdb.lzsa", prefix),
 	}
@@ -72,7 +72,7 @@ func spacesUploadPreReleaseMust(ver string) {
 	prefix = fmt.Sprintf("SumatraPDF-prerelease-%s-64", ver)
 	files = []string{
 		"SumatraPDF.exe", fmt.Sprintf("%s.exe", prefix),
-		"Installer.exe", fmt.Sprintf("%s-install.exe", prefix),
+		"SumatraPDF-dll.exe", fmt.Sprintf("%s-install.exe", prefix),
 		"SumatraPDF.pdb.zip", fmt.Sprintf("%s.pdb.zip", prefix),
 		"SumatraPDF.pdb.lzsa", fmt.Sprintf("%s.pdb.lzsa", prefix),
 	}

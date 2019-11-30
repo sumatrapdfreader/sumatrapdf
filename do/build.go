@@ -15,7 +15,7 @@ import (
 
 var (
 	pdbFiles = []string{"libmupdf.pdb", "Installer.pdb",
-		"SumatraPDF-mupdf-dll.pdb", "SumatraPDF.pdb"}
+		"SumatraPDF-dll.pdb", "SumatraPDF.pdb"}
 )
 
 var (
@@ -99,11 +99,11 @@ func smokeBuild() {
 	u.PanicIf(!u.FileExists(lzsa), "file '%s' doesn't exist", lzsa)
 
 	msbuildPath := detectMsbuildPath()
-	runExeLoggedMust(msbuildPath, `vs2019\SumatraPDF.sln`, `/t:Installer;Uninstaller;test_util`, `/p:Configuration=Release;Platform=x64`, `/m`)
+	runExeLoggedMust(msbuildPath, `vs2019\SumatraPDF.sln`, `/t:SumatraPDF-dll;test_util`, `/p:Configuration=Release;Platform=x64`, `/m`)
 	runTestUtilMust(filepath.Join("out", "rel64"))
 
 	{
-		cmd := exec.Command(lzsa, "SumatraPDF.pdb.lzsa", "libmupdf.pdb:libmupdf.pdb", "Installer.pdb:Installer.pdb", "SumatraPDF-mupdf-dll.pdb:SumatraPDF-mupdf-dll.pdb")
+		cmd := exec.Command(lzsa, "SumatraPDF.pdb.lzsa", "libmupdf.pdb:libmupdf.pdb", "SumatraPDF.pdb:SumatraPDF.pdb", "SumatraPDF-dll.pdb:SumatraPDF-dll.pdb")
 		cmd.Dir = filepath.Join("out", "rel64")
 		u.RunCmdLoggedMust(cmd)
 	}
@@ -215,12 +215,10 @@ func createManifestMust() {
 	var lines []string
 	files := []string{
 		"SumatraPDF.exe",
-		"SumatraPDF-mupdf-dll.exe",
-		"Installer.exe",
+		"SumatraPDF-dll.exe",
 		"libmupdf.dll",
 		"PdfFilter.dll",
 		"PdfPreview.dll",
-		"Uninstaller.exe",
 		"SumatraPDF.pdb.zip",
 		"SumatraPDF.pdb.lzsa",
 	}
@@ -258,24 +256,17 @@ func buildPreRelease() {
 	slnPath := filepath.Join("vs2019", "SumatraPDF.sln")
 
 	// we want to sign files inside the installer, so we have to
-	runExeLoggedMust(msbuildPath, slnPath, `/t:SumatraPDF;SumatraPDF-mupdf-dll;PdfFilter;PdfPreview;Uninstaller;test_util`, `/p:Configuration=Release;Platform=Win32`, `/m`)
+	runExeLoggedMust(msbuildPath, slnPath, `/t:SumatraPDF;SumatraPDF-dll;PdfFilter;PdfPreview;test_util`, `/p:Configuration=Release;Platform=Win32`, `/m`)
 
 	dir := filepath.Join("out", "rel32")
 	runTestUtilMust(dir)
 	signFilesMust(dir)
 
-	runExeLoggedMust(msbuildPath, slnPath, "/t:Installer", "/p:Configuration=Release;Platform=Win32", "/m")
-
-	signMust(filepath.Join(dir, "Installer.exe"))
-
-	runExeLoggedMust(msbuildPath, slnPath, "/t:SumatraPDF;SumatraPDF-mupdf-dll;PdfFilter;PdfPreview;Uninstaller;test_util", "/p:Configuration=Release;Platform=x64", "/m")
+	runExeLoggedMust(msbuildPath, slnPath, "/t:SumatraPDF;SumatraPDF-dll;PdfFilter;PdfPreview;test_util", "/p:Configuration=Release;Platform=x64", "/m")
 
 	dir = filepath.Join("out", "rel64")
 	runTestUtilMust(dir)
 	signFilesMust(dir)
-
-	runExeLoggedMust(msbuildPath, slnPath, "/t:Installer", "/p:Configuration=Release;Platform=x64", "/m")
-	signMust(filepath.Join("out", "rel64", "Installer.exe"))
 
 	createPdbZipMust(filepath.Join("out", "rel32"))
 	createPdbZipMust(filepath.Join("out", "rel64"))
@@ -295,8 +286,8 @@ const (
 
 var (
 	artifactFiles = []string{
-		"Installer.exe",
 		"SumatraPDF.exe",
+		"SumatraPDF-dll.exe",
 		"SumatraPDF.pdb.lzsa",
 		"SumatraPDF.pdb.zip",
 	}
@@ -324,8 +315,7 @@ func signFilesMust(dir string) {
 	signMust(filepath.Join(dir, "libmupdf.dll"))
 	signMust(filepath.Join(dir, "PdfFilter.dll"))
 	signMust(filepath.Join(dir, "PdfPreview.dll"))
-	signMust(filepath.Join(dir, "SumatraPDF-mupdf-dll.exe"))
-	signMust(filepath.Join(dir, "Uninstaller.exe"))
+	signMust(filepath.Join(dir, "SumatraPDF-dll.exe"))
 }
 
 func buildRelease() {
