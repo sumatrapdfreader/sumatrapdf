@@ -70,7 +70,7 @@ static InstallerGlobals gInstallerGlobals = {
 static ButtonCtrl* gButtonOptions = nullptr;
 static ButtonCtrl* gButtonRunSumatra = nullptr;
 static HWND gHwndStaticInstDir = nullptr;
-static HWND gHwndTextboxInstDir = nullptr;
+static EditCtrl* gTextboxInstDir = nullptr;
 static ButtonCtrl* gButtonBrowseDir = nullptr;
 static HWND gHwndCheckboxRegisterDefault = nullptr;
 static HWND gHwndCheckboxRegisterPdfFilter = nullptr;
@@ -454,7 +454,7 @@ static void OnButtonInstall() {
     if (!CheckInstallUninstallPossible())
         return;
 
-    WCHAR* userInstallDir = win::GetText(gHwndTextboxInstDir);
+    WCHAR* userInstallDir = win::GetText(gTextboxInstDir->hwnd);
     if (!str::IsEmpty(userInstallDir))
         str::ReplacePtr(&gInstUninstGlobals.installDir, userInstallDir);
     free(userInstallDir);
@@ -484,7 +484,8 @@ static void OnButtonInstall() {
 
     // disable the install button and remove all the installation options
     SafeDestroyWindow(&gHwndStaticInstDir);
-    SafeDestroyWindow(&gHwndTextboxInstDir);
+    delete gTextboxInstDir;
+    gTextboxInstDir = nullptr;
     delete gButtonBrowseDir;
     gButtonBrowseDir = nullptr;
     SafeDestroyWindow(&gHwndCheckboxRegisterDefault);
@@ -542,7 +543,7 @@ static void OnButtonOptions() {
     gShowOptions = !gShowOptions;
 
     EnableAndShow(gHwndStaticInstDir, gShowOptions);
-    EnableAndShow(gHwndTextboxInstDir, gShowOptions);
+    EnableAndShow(gTextboxInstDir, gShowOptions);
     EnableAndShow(gButtonBrowseDir, gShowOptions);
     EnableAndShow(gHwndCheckboxRegisterDefault, gShowOptions);
     EnableAndShow(gHwndCheckboxRegisterPdfFilter, gShowOptions);
@@ -617,7 +618,7 @@ static BOOL BrowseForFolder(HWND hwnd, const WCHAR* lpszInitialFolder, const WCH
 }
 
 static void OnButtonBrowse() {
-    AutoFreeW installDir(win::GetText(gHwndTextboxInstDir));
+    AutoFreeW installDir(win::GetText(gTextboxInstDir->hwnd));
     // strip a trailing "\SumatraPDF" if that directory doesn't exist (yet)
     if (!dir::Exists(installDir))
         installDir.Set(path::GetDir(installDir));
@@ -635,9 +636,9 @@ static void OnButtonBrowse() {
     // to prevent unintended installations into e.g. %ProgramFiles% itself
     if (!str::EndsWithI(path, L"\\" APP_NAME_STR))
         installPath = path::Join(path, APP_NAME_STR);
-    win::SetText(gHwndTextboxInstDir, installPath);
-    Edit_SetSel(gHwndTextboxInstDir, 0, -1);
-    SetFocus(gHwndTextboxInstDir);
+    gTextboxInstDir->SetText(installPath);
+    gTextboxInstDir->SetSelection(0, -1);
+    gTextboxInstDir->SetFocus();
     if (installPath != path)
         free(installPath);
 }
@@ -748,10 +749,12 @@ static void OnCreateWindow(HWND hwnd) {
 
     x = WINDOW_MARGIN;
     dx = r.dx - (2 * WINDOW_MARGIN) - btnSize2.dx - dpiAdjust(4);
-    gHwndTextboxInstDir = CreateWindowExW(0, WC_EDIT, gInstUninstGlobals.installDir,
-                                          WS_CHILD | WS_TABSTOP | WS_BORDER | ES_LEFT | ES_AUTOHSCROLL, x, y, dx,
-                                          staticDy, hwnd, nullptr, GetModuleHandle(nullptr), nullptr);
-    SetWindowFont(gHwndTextboxInstDir, gFontDefault, TRUE);
+    gTextboxInstDir = new EditCtrl(hwnd);
+    gTextboxInstDir->dwStyle |= WS_BORDER;
+    gTextboxInstDir->SetText(gInstUninstGlobals.installDir);
+    gTextboxInstDir->Create();
+    RECT rc{x, y, x + dx, y + staticDy};
+    gTextboxInstDir->SetBounds(rc);
 
     y -= staticDy;
 

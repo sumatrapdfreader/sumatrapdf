@@ -109,6 +109,10 @@ bool EditCtrl::SetCueText(std::string_view s) {
     return HwndSetCueText(hwnd, cueText.AsView());
 }
 
+void EditCtrl::SetSelection(int start, int end) {
+    Edit_SetSel(hwnd, start, end);
+}
+
 EditCtrl::EditCtrl(HWND p) : WindowBase(p) {
     dwStyle = WS_CHILD | WS_VISIBLE | ES_LEFT | ES_AUTOHSCROLL;
     winClass = WC_EDIT;
