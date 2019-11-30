@@ -13,7 +13,7 @@ Kind kindButton = "button";
 
 ButtonCtrl::ButtonCtrl(HWND p) : WindowBase(p) {
     dwStyle = WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_DEFPUSHBUTTON;
-    winClass = WC_BUTTON;
+    winClass = WC_BUTTONW;
     kind = kindButton;
 }
 
@@ -60,36 +60,6 @@ LRESULT ButtonCtrl::WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, boo
         return 0;
     }
     return 0;
-}
-
-WindowBaseLayout::WindowBaseLayout(WindowBase* b, Kind k) {
-    wb = b;
-    kind = k;
-}
-
-WindowBaseLayout::~WindowBaseLayout() {
-    delete wb;
-}
-
-Size WindowBaseLayout::Layout(const Constraints bc) {
-    i32 width = MinIntrinsicWidth(0);
-    i32 height = MinIntrinsicHeight(0);
-    return bc.Constrain(Size{width, height});
-}
-
-i32 WindowBaseLayout::MinIntrinsicHeight(i32) {
-    SIZE s = wb->GetIdealSize();
-    return (i32)s.cy;
-}
-
-i32 WindowBaseLayout::MinIntrinsicWidth(i32) {
-    SIZE s = wb->GetIdealSize();
-    return (i32)s.cx;
-}
-
-void WindowBaseLayout::SetBounds(const Rect bounds) {
-    auto r = RectToRECT(bounds);
-    ::MoveWindow(wb->hwnd, &r);
 }
 
 ILayout* NewButtonLayout(ButtonCtrl* b) {

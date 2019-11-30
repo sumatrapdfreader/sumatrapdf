@@ -318,3 +318,34 @@ void WindowBase::SetColors(COLORREF bg, COLORREF txt) {
     SetBackgroundColor(bg);
     SetTextColor(txt);
 }
+
+WindowBaseLayout::WindowBaseLayout(WindowBase* b, Kind k) {
+    wb = b;
+    kind = k;
+}
+
+WindowBaseLayout::~WindowBaseLayout() {
+    delete wb;
+}
+
+Size WindowBaseLayout::Layout(const Constraints bc) {
+    i32 width = MinIntrinsicWidth(0);
+    i32 height = MinIntrinsicHeight(0);
+    return bc.Constrain(Size{width, height});
+}
+
+i32 WindowBaseLayout::MinIntrinsicHeight(i32) {
+    SIZE s = wb->GetIdealSize();
+    return (i32)s.cy;
+}
+
+i32 WindowBaseLayout::MinIntrinsicWidth(i32) {
+    SIZE s = wb->GetIdealSize();
+    return (i32)s.cx;
+}
+
+void WindowBaseLayout::SetBounds(const Rect bounds) {
+    auto r = RectToRECT(bounds);
+    ::MoveWindow(wb->hwnd, &r);
+}
+

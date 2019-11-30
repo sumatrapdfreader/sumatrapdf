@@ -155,36 +155,14 @@ static void NcCalcSize(HWND hwnd, NCCALCSIZE_PARAMS* params) {
 }
 #endif
 
-/* Return size of a text <txt> in a given <hwnd>, taking into account its font */
-static SizeI TextSizeInHwnd3(HWND hwnd, const WCHAR* txt, HFONT font) {
-    SIZE sz{};
-    size_t txtLen = str::Len(txt);
-    HDC dc = GetWindowDC(hwnd);
-    /* GetWindowDC() returns dc with default state, so we have to first set
-       window's current font into dc */
-    if (font == nullptr) {
-        font = (HFONT)SendMessage(hwnd, WM_GETFONT, 0, 0);
-    }
-    HGDIOBJ prev = SelectObject(dc, font);
-
-    RECT r{};
-    UINT fmt = DT_CALCRECT | DT_LEFT | DT_NOCLIP | DT_EDITCONTROL;
-    DrawTextExW(dc, (WCHAR*)txt, (int)txtLen, &r, fmt, nullptr);
-    SelectObject(dc, prev);
-    ReleaseDC(hwnd, dc);
-    int dx = RectDx(r);
-    int dy = RectDy(r);
-    return SizeI(dx, dy);
-}
-
 SIZE EditCtrl::GetIdealSize() {
-    SizeI s1 = TextSizeInHwnd3(hwnd, L"Minimal", hfont);
+    SIZE s1 = MeasureTextInHwnd(hwnd, L"Minimal", hfont);
     WCHAR* txt = win::GetText(hwnd);
-    SizeI s2 = TextSizeInHwnd3(hwnd, txt, hfont);
+    SIZE s2 = MeasureTextInHwnd(hwnd, txt, hfont);
     free(txt);
 
-    int dx = std::max(s1.dx, s2.dx);
-    int dy = std::max(s2.dy, s2.dy);
+    int dx = std::max(s1.cx, s2.cx);
+    int dy = std::max(s2.cy, s2.cy);
     SIZE res{dx, dy};
 
     LRESULT margins = SendMessage(hwnd, EM_GETMARGINS, 0, 0);

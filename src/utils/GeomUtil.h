@@ -214,6 +214,9 @@ typedef geomutil::PointT<double> PointD;
 typedef geomutil::RectT<int> RectI;
 typedef geomutil::RectT<double> RectD;
 
+inline SIZE ToSIZE(SizeI s) {
+    return {s.dx, s.dy};
+}
 #ifdef _WIN32
 
 class ClientRect : public RectI {

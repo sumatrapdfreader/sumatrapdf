@@ -10,6 +10,7 @@
 #include "wingui/CheckboxCtrl.h"
 #include "wingui/EditCtrl.h"
 #include "wingui/DropDownCtrl.h"
+#include "wingui/StaticCtrl.h"
 
 #include "test-app.h"
 
@@ -89,48 +90,59 @@ static void onDropDownSelected(int idx, std::string_view s) {
 }
 
 static ILayout* CreatedDropDownLayout(HWND parent) {
-    auto ctrl = new DropDownCtrl(parent);
+    auto w = new DropDownCtrl(parent);
     for (size_t i = 0; i < dimof(ddItems); i++) {
         char* s = ddItems[i];
         std::string_view sv(s);
-        ctrl->items.Append(sv);
+        w->items.Append(sv);
     }
-    ctrl->OnDropDownSelectionChanged = onDropDownSelected;
-    ctrl->Create();
-    return NewDropDownLayout(ctrl);
+    w->OnDropDownSelectionChanged = onDropDownSelected;
+    w->Create();
+    return NewDropDownLayout(w);
+}
+
+static ILayout* CreateStaticLayout(HWND parent, std::string_view s) {
+    auto w = new StaticCtrl(parent);
+    w->SetText(s);
+    w->Create();
+    return NewStaticLayout(w);
 }
 
 static void CreateMainLayout(HWND hwnd) {
     auto* vbox = new VBox();
-    vbox->alignMain = MainAxisAlign::MainCenter;
-    vbox->alignCross = CrossAxisAlign::CrossCenter;
+    vbox->alignMain = MainAxisAlign::MainEnd;
+    vbox->alignCross = CrossAxisAlign::Stretch;
     {
-        auto b = CreateButtonLayout(hwnd, "button one");
-        vbox->addChild(b);
+        auto l = CreateButtonLayout(hwnd, "button one");
+        vbox->addChild(l);
     }
     {
-        auto e = CreateEditLayout(hwnd, "initial text");
-        vbox->addChild(e);
+        auto l = CreateEditLayout(hwnd, "initial text");
+        vbox->addChild(l);
     }
     {
-        auto b = CreateButtonLayout(hwnd, "button two");
-        vbox->addChild(b);
+        auto l = CreateButtonLayout(hwnd, "button two");
+        vbox->addChild(l);
     }
     {
-        auto b = CreateButtonLayout(hwnd, "button three");
-        vbox->addChild(b);
+        auto l = CreateButtonLayout(hwnd, "button three");
+        vbox->addChild(l);
     }
     {
-        auto b = CreateCheckboxLayout(hwnd, "checkbox one");
-        vbox->addChild(b);
+        auto l = CreateCheckboxLayout(hwnd, "checkbox one");
+        vbox->addChild(l);
     }
     {
-        auto b = CreateCheckboxLayout(hwnd, "checkbox two");
-        vbox->addChild(b);
+        auto l = CreateCheckboxLayout(hwnd, "checkbox two");
+        vbox->addChild(l);
     }
     {
-        auto b = CreatedDropDownLayout(hwnd);
-        vbox->addChild(b);
+        auto l = CreatedDropDownLayout(hwnd);
+        vbox->addChild(l);
+    }
+    {
+        auto l = CreateStaticLayout(hwnd, "static control");
+        vbox->addChild(l);
     }
 
     auto* padding = new Padding();
@@ -155,7 +167,7 @@ static void doLayut(HWND hwnd, int dx, int dy) {
 static int prevDx = 0, prevDy = 0;
 
 static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    //dbglogf("msg: 0x%x, wp: %d, lp: %d\n", msg, (int)wp, (int)lp);
+    // dbglogf("msg: 0x%x, wp: %d, lp: %d\n", msg, (int)wp, (int)lp);
 
     switch (msg) {
         case WM_CREATE:

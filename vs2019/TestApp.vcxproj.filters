@@ -78,6 +78,9 @@
     <ClInclude Include="..\src\wingui\SplitterWnd.h">
       <Filter>src\wingui</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\wingui\StaticCtrl.h">
+      <Filter>src\wingui</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\wingui\TabsCtrl.h">
       <Filter>src\wingui</Filter>
     </ClInclude>
@@ -167,6 +170,9 @@
     <ClCompile Include="..\src\wingui\SplitterWnd.cpp">
       <Filter>src\wingui</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\wingui\StaticCtrl.cpp">
+      <Filter>src\wingui</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\wingui\TabsCtrl.cpp">
       <Filter>src\wingui</Filter>
     </ClCompile>
@@ -174,6 +180,9 @@
       <Filter>src\wingui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\wingui\TreeCtrl.cpp">
+      <Filter>src\wingui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\wingui\WinGui.cpp">
       <Filter>src\wingui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\wingui\Window.cpp">
