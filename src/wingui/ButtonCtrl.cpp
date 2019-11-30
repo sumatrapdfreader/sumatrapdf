@@ -9,7 +9,17 @@
 #include "wingui/Window.h"
 #include "wingui/ButtonCtrl.h"
 
+// https://docs.microsoft.com/en-us/windows/win32/controls/buttons
+
 Kind kindButton = "button";
+
+bool IsButton(Kind kind) {
+    return kind == kindButton;
+}
+
+bool IsButton(ILayout* l) {
+    return IsLayoutOfKind(l, kindButton);
+}
 
 ButtonCtrl::ButtonCtrl(HWND p) : WindowBase(p) {
     dwStyle = WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_DEFPUSHBUTTON;
@@ -64,12 +74,4 @@ LRESULT ButtonCtrl::WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, boo
 
 ILayout* NewButtonLayout(ButtonCtrl* b) {
     return new WindowBaseLayout(b, kindButton);
-}
-
-bool IsButton(Kind kind) {
-    return kind == kindButton;
-}
-
-bool IsButton(ILayout* l) {
-    return IsLayoutOfKind(l, kindButton);
 }

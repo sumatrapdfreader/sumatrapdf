@@ -9,6 +9,8 @@
 #include "wingui/Window.h"
 #include "wingui/CheckboxCtrl.h"
 
+// https://docs.microsoft.com/en-us/windows/win32/controls/buttons
+
 Kind kindCheckbox = "checkbox";
 
 bool IsCheckbox(Kind kind) {

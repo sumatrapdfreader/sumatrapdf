@@ -10,6 +10,8 @@
 #include "wingui/Window.h"
 #include "wingui/DropDownCtrl.h"
 
+// https://docs.microsoft.com/en-us/windows/win32/controls/combo-boxes
+
 Kind kindDropDown = "dropdown";
 
 bool IsDropDown(Kind kind) {

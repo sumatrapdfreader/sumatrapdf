@@ -9,6 +9,8 @@
 #include "wingui/Window.h"
 #include "wingui/TooltipCtrl.h"
 
+// https://docs.microsoft.com/en-us/windows/win32/controls/tooltip-control-reference
+
 Kind kindTooltip = "tooltip";
 
 TooltipCtrl::TooltipCtrl(HWND p) : WindowBase(p) {

@@ -10,6 +10,16 @@
 #include "wingui/Window.h"
 #include "wingui/EditCtrl.h"
 
+// https://docs.microsoft.com/en-us/windows/win32/controls/edit-controls
+
+// TODO:
+// - expose EN_UPDATE
+// (http://msdn.microsoft.com/en-us/library/windows/desktop/bb761687(v=vs.85).aspx)
+// - add border and possibly other decorations by handling WM_NCCALCSIZE, WM_NCPAINT and
+// WM_NCHITTEST
+//   etc., http://www.catch22.net/tuts/insert-buttons-edit-control
+// - include value we remember in WM_NCCALCSIZE in GetIdealSize()
+
 Kind kindEdit = "edit";
 
 bool IsEdit(Kind kind) {
@@ -23,14 +33,6 @@ bool IsEdit(ILayout* l) {
 ILayout* NewEditLayout(EditCtrl* e) {
     return new WindowBaseLayout(e, kindEdit);
 }
-
-// TODO:
-// - expose EN_UPDATE
-// (http://msdn.microsoft.com/en-us/library/windows/desktop/bb761687(v=vs.85).aspx)
-// - add border and possibly other decorations by handling WM_NCCALCSIZE, WM_NCPAINT and
-// WM_NCHITTEST
-//   etc., http://www.catch22.net/tuts/insert-buttons-edit-control
-// - include value we remember in WM_NCCALCSIZE in GetIdealSize()
 
 LRESULT EditCtrl::WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& didHandle) {
     EditCtrl* w = this;

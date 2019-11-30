@@ -9,6 +9,8 @@
 #include "wingui/Window.h"
 #include "wingui/StaticCtrl.h"
 
+// https://docs.microsoft.com/en-us/windows/win32/controls/static-controls
+
 // TODO: add OnClicked handler, use SS_NOTIFY to get notified about STN_CLICKED
 
 Kind kindStatic = "static";
@@ -41,7 +43,6 @@ bool StaticCtrl::Create() {
     return ok;
 }
 
-// TODO: cache
 SIZE StaticCtrl::GetIdealSize() {
     WCHAR* txt = win::GetText(hwnd);
     SIZE s = MeasureTextInHwnd(hwnd, txt, hfont);
@@ -49,7 +50,6 @@ SIZE StaticCtrl::GetIdealSize() {
     return s;
 }
 
-// https://docs.microsoft.com/en-us/windows/win32/controls/static-controls
 LRESULT StaticCtrl::WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& didHandle) {
     UNUSED(hwnd);
     UNUSED(lp);
