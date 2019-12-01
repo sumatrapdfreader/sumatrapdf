@@ -20,7 +20,7 @@
    created by an installer (and should be updated through an installer) */
 bool HasBeenInstalled() {
     std::unique_ptr<WCHAR> installedPath(ReadRegStr(HKEY_CURRENT_USER, REG_PATH_UNINST, L"InstallLocation"));
-    // cf. GetInstallationDir() in installer\Installer.cpp
+    // see GetInstallationDir() in Installer.cpp
     if (!installedPath) {
         installedPath.reset(ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_UNINST, L"InstallLocation"));
     }

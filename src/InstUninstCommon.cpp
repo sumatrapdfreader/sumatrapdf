@@ -32,9 +32,6 @@
 #include "wingui/CheckboxCtrl.h"
 #include "wingui/EditCtrl.h"
 
-#include "../ifilter/PdfFilter.h"
-#include "../previewer/PdfPreview.h"
-
 // define to 1 to enable shadow effect, to 0 to disable
 #define DRAW_TEXT_SHADOW 1
 #define DRAW_MSG_TEXT_SHADOW 0

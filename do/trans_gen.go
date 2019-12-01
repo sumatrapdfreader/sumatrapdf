@@ -301,7 +301,7 @@ func gen_c_code_for_dir(strings_dict map[string][]*Translation, keys []string, d
 		a = append(a, s)
 	}
 	langcodes := strings.Join(a, " \\\n")
-	logf("langcodes:\n%s\n", langcodes)
+	logf("langcodes: %d bytes\n", len(langcodes))
 
 	a = nil
 	for _, lang := range langs {
@@ -309,7 +309,7 @@ func gen_c_code_for_dir(strings_dict map[string][]*Translation, keys []string, d
 		a = append(a, s)
 	}
 	langnames := strings.Join(a, " \\\n")
-	logf("langnames:\n%s\n", langnames)
+	logf("langnames: %d bytes\n", len(langnames))
 
 	a = nil
 	for _, lang := range langs {
@@ -317,7 +317,7 @@ func gen_c_code_for_dir(strings_dict map[string][]*Translation, keys []string, d
 		a = append(a, s)
 	}
 	langids := strings.Join(a, ",\n")
-	logf("langids:\n%s\n", langids)
+	logf("langids: %d bytes\n", len(langids))
 
 	var rtl_info []string
 	n := 0
@@ -346,10 +346,10 @@ func gen_c_code_for_dir(strings_dict map[string][]*Translation, keys []string, d
 	}
 
 	translations_refs := "  NULL,\n" + strings.Join(a, ", \n")
-	logf("translations_refs:\n%s\n", translations_refs)
+	logf("translations_refs: %d bytes\n", len(translations_refs))
 
 	translations := gen_translations(langs)
-	logf("translations:\n%s\n", translations)
+	logf("translations: %d bytes\n", len(translations))
 
 	v := struct {
 		Translations_refs string
@@ -359,7 +359,7 @@ func gen_c_code_for_dir(strings_dict map[string][]*Translation, keys []string, d
 		Translations:      translations,
 	}
 	translations = evalTmpl(uncompressed_tmpl, v)
-	logf("translations:\n%s\n", translations)
+	logf("translations: %d bytes\n", len(translations))
 
 	var lines []string
 	for _, t := range langs[0].translations {
@@ -367,7 +367,7 @@ func gen_c_code_for_dir(strings_dict map[string][]*Translation, keys []string, d
 		lines = append(lines, s)
 	}
 	original_strings := strings.Join(lines, ",\n")
-	logf("orignal_strings:\n%s\n", original_strings)
+	logf("orignal_strings: %d bytes\n", len(original_strings))
 	langs_count := len(langs)
 	translations_count := len(keys)
 
@@ -390,9 +390,9 @@ func gen_c_code_for_dir(strings_dict map[string][]*Translation, keys []string, d
 		Langids:            langids,
 		Islangrtl:          islangrtl,
 	}
-	file_content := evalTmpl(compact_c_tmpl, v2)
-	logf("file_content:\n%s\n", file_content)
 	path := filepath.Join(dir_name, file_name_from_dir_name(dir_name))
+	file_content := evalTmpl(compact_c_tmpl, v2)
+	logf("file_content: path: %s, file size: %d\n", path, len(file_content))
 	u.WriteFileMust(path, []byte(file_content))
 	print_incomplete_langs(dir_name)
 	// print_stats(langs)

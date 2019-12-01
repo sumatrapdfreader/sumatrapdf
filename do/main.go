@@ -63,7 +63,7 @@ func main() {
 		flag.BoolVar(&flgWc, "wc", false, "show loc stats (like wc -l)")
 		flag.BoolVar(&flgDownloadTranslations, "trans-dl", false, "download translations and re-generate C code")
 		flag.BoolVar(&flgRegenerateTranslattions, "trans-regen", false, "regenerate .cpp translations files from strings/translations.txt")
-		flag.BoolVar(&flgUploadTranslations, "trans-ul", false, "upload translatins to apptranslators.org if changed")
+		flag.BoolVar(&flgUploadTranslations, "trans-ul", false, "upload translations to apptranslators.org if changed")
 		flag.BoolVar(&flgClean, "clean", false, "clean the build")
 		flag.Parse()
 	}
