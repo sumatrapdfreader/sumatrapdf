@@ -14,8 +14,7 @@ import (
 )
 
 var (
-	pdbFiles = []string{"libmupdf.pdb", "Installer.pdb",
-		"SumatraPDF-dll.pdb", "SumatraPDF.pdb"}
+	pdbFiles = []string{"libmupdf.pdb", "SumatraPDF-dll.pdb", "SumatraPDF.pdb"}
 )
 
 var (
