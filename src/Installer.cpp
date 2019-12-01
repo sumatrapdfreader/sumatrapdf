@@ -10,9 +10,6 @@ The installer is good enough for production but it doesn't mean it couldn't be i
  * show fireworks on successful installation/uninstallation
 */
 
-// define to allow testing crash handling via -crash cmd-line option
-#define ENABLE_CRASH_TESTING
-
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/WinDynCalls.h"
@@ -464,8 +461,6 @@ Error:
 static void OnButtonOptions();
 
 static void OnButtonInstall() {
-    CrashAlwaysIf(gForceCrash);
-
     if (gShowOptions)
         OnButtonOptions();
 
@@ -988,15 +983,9 @@ static void ParseCommandLine(WCHAR* cmdLine) {
                 str::ReplacePtr(&gInstUninstGlobals.installDir, L".");
         } else if (is_arg("autoupdate")) {
             gInstallerGlobals.autoUpdate = true;
-        } else if (is_arg("h") || is_arg("help") || is_arg("?"))
+        } else if (is_arg("h") || is_arg("help") || is_arg("?")) {
             gInstUninstGlobals.showUsageAndQuit = true;
-#ifdef ENABLE_CRASH_TESTING
-        else if (is_arg("crash")) {
-            // will induce crash when 'Install' button is pressed
-            // for testing crash handling
-            gForceCrash = true;
         }
-#endif
     }
 }
 

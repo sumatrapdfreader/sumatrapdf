@@ -546,7 +546,7 @@ static bool IsInstaller() {
 // in Installer.cpp
 extern int RunInstaller();
 // in Uninstaller.cpp
-extern int RunUninstaller();
+extern int RunUninstaller(bool);
 
 int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR cmdLine,
                      _In_ int nCmdShow) {
@@ -613,7 +613,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     }    
 
     if (i.uninstall) {
-        retCode = RunUninstaller();
+        retCode = RunUninstaller(i.silent);
         goto Exit;
     }
 
