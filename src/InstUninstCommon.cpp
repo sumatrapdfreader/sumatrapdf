@@ -59,7 +59,6 @@ ButtonCtrl* gButtonExit = nullptr;
 ButtonCtrl* gButtonInstUninst = nullptr;
 HFONT gFontDefault = nullptr;
 bool gShowOptions = false;
-bool gForceCrash = false;
 WCHAR* gMsgError = nullptr;
 int gBottomPartDy = 0;
 int gButtonDy = 0;

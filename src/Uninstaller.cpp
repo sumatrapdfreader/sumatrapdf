@@ -10,9 +10,6 @@ The installer is good enough for production but it doesn't mean it couldn't be i
  * show fireworks on successful installation/uninstallation
 */
 
-// define to allow testing crash handling via -crash cmd-line option
-#define ENABLE_CRASH_TESTING
-
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/WinDynCalls.h"
@@ -498,41 +495,12 @@ static int RunApp() {
     }
 }
 
-static void ParseCommandLine(WCHAR* cmdLine) {
-    WStrVec argList;
-    ParseCmdLine(cmdLine, argList);
-
-#define is_arg(param) str::EqI(arg + 1, TEXT(param))
-#define is_arg_with_param(param) (is_arg(param) && i < argList.size() - 1)
-
-    // skip the first arg (exe path)
-    for (size_t i = 1; i < argList.size(); i++) {
-        WCHAR* arg = argList.at(i);
-        if ('-' != *arg && '/' != *arg)
-            continue;
-
-        if (is_arg("s"))
-            gInstUninstGlobals.silent = true;
-        else if (is_arg_with_param("d"))
-            str::ReplacePtr(&gInstUninstGlobals.installDir, argList.at(++i));
-        else if (is_arg("h") || is_arg("help") || is_arg("?"))
-            gInstUninstGlobals.showUsageAndQuit = true;
-#ifdef ENABLE_CRASH_TESTING
-        else if (is_arg("crash")) {
-            // will induce crash when 'Install' button is pressed
-            // for testing crash handling
-            gForceCrash = true;
-        }
-#endif
-    }
-}
-
-int RunUninstaller() {
+int RunUninstaller(bool silent) {
     int ret = 1;
 
+    gInstUninstGlobals.silent = silent;
     gDefaultMsg = _TR("Are you sure you want to uninstall SumatraPDF?");
 
-    ParseCommandLine(GetCommandLine());
     if (gInstUninstGlobals.showUsageAndQuit) {
         ShowUsage();
         ret = 0;
