@@ -396,6 +396,7 @@ workspace "SumatraPDF"
 
 
   -- TODO: merge directly into Sumatra projects
+  --[[
   project "sumatra"
     kind "StaticLib"
     language "C++"
@@ -404,10 +405,11 @@ workspace "SumatraPDF"
     disablewarnings { "4838" }
     includedirs { "src", "src/wingui", "ext/synctex" }
     sumatra_files()
+  --]]
 
 
   ---- executables
---[[
+  --[[
   project "efi"
     kind "ConsoleApp"
     language "C++"
@@ -552,6 +554,7 @@ workspace "SumatraPDF"
     synctex_files()
     mui_files()
     uia_files()
+    sumatra_files()
 
     -- for synctex
     disablewarnings { "4100", "4244", "4267", "4702", "4706" }
@@ -561,8 +564,7 @@ workspace "SumatraPDF"
     disablewarnings { "4302", "4311", "4838" }
 
     links {
-      "engines", "libdjvu",  "libwebp", "mupdf", "sumatra",
-      "unarrlib", "utils", "unrar"
+      "engines", "libdjvu",  "libwebp", "mupdf", "unarrlib", "utils", "unrar"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",
@@ -593,12 +595,12 @@ workspace "SumatraPDF"
     synctex_files()
     mui_files()
     uia_files()
-
+    sumatra_files()
+  
     files { "src/MuPDF_Exports.cpp" }
 
     links {
-      "sumatra", "libmupdf", "utils", "engines",
-      "unarrlib", "unrar", "libwebp"
+      "libmupdf", "utils", "engines", "unarrlib", "unrar", "libwebp"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",
