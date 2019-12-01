@@ -211,7 +211,7 @@ func runTestUtilMust(dir string) {
 }
 
 var (
-	pdbFiles = []string{"libmupdf.pdb", "Installer.pdb",
+	pdbFiles = []string{"libmupdf.pdb", ,
 		"SumatraPDF-mupdf-dll.pdb", "SumatraPDF.pdb"}
 )
 

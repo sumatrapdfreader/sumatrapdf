@@ -98,12 +98,10 @@ class CrashHandlerAllocator : public Allocator {
 };
 
 enum ExeType {
-    // this is an installer, SumatraPDF-${ver}-install.exe
-    ExeInstaller,
     // this is a single-executable (portable) build (doesn't have libmupdf.dll)
     ExeSumatraStatic,
     // an installable build (has libmupdf.dll)
-    ExeSumatraLib
+    ExeSumatraDll
 };
 
 static CrashHandlerAllocator* gCrashHandlerAllocator = nullptr;
@@ -117,7 +115,6 @@ static WCHAR* gSymbolsDir = nullptr;
 static WCHAR* gPdbZipPath = nullptr;
 static WCHAR* gLibMupdfPdbPath = nullptr;
 static WCHAR* gSumatraPdfPdbPath = nullptr;
-static WCHAR* gInstallerPdbPath = nullptr;
 static char* gSystemInfo = nullptr;
 static char* gModulesInfo = nullptr;
 static HANDLE gDumpEvent = nullptr;
@@ -186,8 +183,7 @@ static void SendCrashInfo(char* s, size_t size) {
 static bool DeleteSymbolsIfExist() {
     bool ok1 = file::Delete(gLibMupdfPdbPath);
     bool ok2 = file::Delete(gSumatraPdfPdbPath);
-    bool ok3 = file::Delete(gInstallerPdbPath);
-    bool ok = ok1 && ok2 && ok3;
+    bool ok = ok1 && ok2;
     if (!ok)
         plog("DeleteSymbolsIfExist() failed to delete");
     return ok;
@@ -212,17 +208,6 @@ static bool UnpackLibSymbols(const char* pdbZipPath, const char* symDir) {
     bool ok = lzma::ExtractFiles(pdbZipPath, symDir, &files[0], gCrashHandlerAllocator);
     if (!ok) {
         plog("Failed to unpack libmupdf.pdb or SumatraPDF-mupdf-dll.pdb");
-        return false;
-    }
-    return true;
-}
-
-static bool UnpackInstallerSymbols(const char* pdbZipPath, const char* symDir) {
-    lf("UnpackInstallerSymbols(): unpacking %s to dir %s", pdbZipPath, symDir);
-    const char* files[2] = {"Installer.pdb", nullptr};
-    bool ok = lzma::ExtractFiles(pdbZipPath, symDir, &files[0], gCrashHandlerAllocator);
-    if (!ok) {
-        plog("Failed to unpack Installer.pdb");
         return false;
     }
     return true;
@@ -271,10 +256,8 @@ static bool DownloadAndUnzipSymbols(const WCHAR* pdbZipPath, const WCHAR* symDir
     bool ok = false;
     if (ExeSumatraStatic == gExeType) {
         ok = UnpackStaticSymbols(pdbZipPathUtf, symDirUtf);
-    } else if (ExeSumatraLib == gExeType) {
+    } else if (ExeSumatraDll == gExeType) {
         ok = UnpackLibSymbols(pdbZipPathUtf, symDirUtf);
-    } else if (ExeInstaller == gExeType) {
-        ok = UnpackInstallerSymbols(pdbZipPathUtf, symDirUtf);
     } else {
         plog("DownloadAndUnzipSymbols(): unknown exe type");
     }
@@ -638,19 +621,18 @@ bool SetSymbolsDir(const WCHAR* symDir) {
     free(gPdbZipPath);
     free(gLibMupdfPdbPath);
     free(gSumatraPdfPdbPath);
-    free(gInstallerPdbPath);
 
     gSymbolsDir = str::Dup(symDir);
     gPdbZipPath = path::Join(symDir, L"symbols_tmp.zip");
     gLibMupdfPdbPath = path::Join(symDir, L"SumatraPDF.pdb");
     gSumatraPdfPdbPath = path::Join(symDir, L"libmupdf.pdb");
-    gInstallerPdbPath = path::Join(symDir, L"Installer.pdb");
 
     BuildSymbolPath();
     return true;
 }
 
-// detect which exe it is (installer, sumatra static or sumatra with dlls)
+// detect which exe it is (sumatra static or sumatra with dlls)
+// TODO: is there a better way? Check for installer data resource?
 static ExeType DetectExeType() {
     ExeType exeType = ExeSumatraStatic;
     HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
@@ -664,11 +646,7 @@ static ExeType DetectExeType() {
     while (cont) {
         WCHAR* name = mod.szModule;
         if (str::EqI(name, L"libmupdf.dll")) {
-            exeType = ExeSumatraLib;
-            break;
-        }
-        if (str::StartsWithI(name, L"SumatraPDF-") && str::EndsWithI(name, L"install.exe")) {
-            exeType = ExeInstaller;
+            exeType = ExeSumatraDll;
             break;
         }
         cont = Module32Next(snap, &mod);
@@ -768,7 +746,6 @@ void UninstallCrashHandler() {
     free(gPdbZipPath);
     free(gLibMupdfPdbPath);
     free(gSumatraPdfPdbPath);
-    free(gInstallerPdbPath);
     free(gCrashFilePath);
 
     free(gSymbolPathW);
