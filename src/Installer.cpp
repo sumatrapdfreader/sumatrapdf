@@ -43,8 +43,8 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "wingui/StaticCtrl.h"
 #include "wingui/ProgressCtrl.h"
 
-#include "../ifilter/PdfFilter.h"
-#include "../previewer/PdfPreview.h"
+#include "ifilter/PdfFilter.h"
+#include "previewer/PdfPreview.h"
 
 struct InstallerGlobals {
     bool registerAsDefault;
@@ -171,14 +171,37 @@ static std::tuple<const char*, DWORD, HGLOBAL> LockDataResource(int id) {
     return {data, dataSize, res};
 }
 
+static bool CreateInstallationDirectory() {
+    bool ok = dir::CreateAll(gInstUninstGlobals.installDir);
+    if (!ok) {
+        LogLastError();
+        NotifyFailed(_TR("Couldn't create the installation directory"));
+    }
+    return ok;
+}
+
+static bool CopySelf() {
+    // TODO: copy our own executable as SumatraPDF.exe
+    return false;
+}
+
 static bool InstallCopyFiles() {
+    if (!CreateInstallationDirectory()) {
+        return false;
+    }
+
+    bool ok = CopySelf();
+    if (!ok) {
+        return false;
+    }
+
     auto [data, size, res] = LockDataResource(1);
     if (data == nullptr) {
         goto Corrupted;
     }
 
     lzma::SimpleArchive archive;
-    bool ok = lzma::ParseSimpleArchive(data, size, &archive);
+    ok = lzma::ParseSimpleArchive(data, size, &archive);
     if (!ok) {
         goto Corrupted;
     }
@@ -349,15 +372,6 @@ static bool WriteExtendedFileExtensionInfo(HKEY hkey) {
     return ok;
 }
 
-static bool CreateInstallationDirectory() {
-    bool ok = dir::CreateAll(gInstUninstGlobals.installDir);
-    if (!ok) {
-        LogLastError();
-        NotifyFailed(_TR("Couldn't create the installation directory"));
-    }
-    return ok;
-}
-
 static void OnButtonStartSumatra() {
     AutoFreeW exePath(GetInstalledExePath());
     RunNonElevated(exePath);
@@ -381,15 +395,16 @@ static DWORD WINAPI InstallerThread(LPVOID data) {
     UNUSED(data);
     gInstUninstGlobals.success = false;
 
-    if (!CreateInstallationDirectory())
-        goto Error;
     ProgressStep();
 
-    if (!InstallCopyFiles())
+    if (!InstallCopyFiles()) {
         goto Error;
+    }
+
     // all files have been extracted at this point
-    if (gInstallerGlobals.justExtractFiles)
+    if (gInstallerGlobals.justExtractFiles) {
         return 0;
+    }
 
     if (gInstallerGlobals.registerAsDefault) {
         // need to sublaunch SumatraPDF.exe instead of replicating the code
@@ -796,10 +811,14 @@ static WCHAR* GetInstallationDir() {
             return dir.StealData();
     }
 
-    // fall back to %ProgramFiles%
-    dir.Set(GetSpecialFolder(CSIDL_PROGRAM_FILES));
-    if (dir)
-        return path::Join(dir, APP_NAME_STR);
+    // fall back to %APPLOCALDATA%\SumatraPDF
+    WCHAR* dataDir = GetSpecialFolder(CSIDL_LOCAL_APPDATA, true);
+    if (dataDir) {
+        WCHAR* res = path::Join(dataDir, APP_NAME_STR);
+        str::Free(dataDir);
+        return res;
+    }
+
     // fall back to C:\ as a last resort
     return str::Dup(L"C:\\" APP_NAME_STR);
 }
@@ -971,7 +990,7 @@ int RunInstaller() {
 
     // TODO: maybe only launch elevated if needs to write
     // to a priviledged destination
-    if (!IsRunningElevated()) {
+    if (false && !IsRunningElevated()) {
         WCHAR* exePath = GetExePath();
         WCHAR* cmdline = GetCommandLineW(); // not owning the memory
         LaunchElevated(exePath, cmdline);
