@@ -46,9 +46,10 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "ifilter/PdfFilter.h"
 #include "previewer/PdfPreview.h"
 
-// TODO: move registerAsDefault logic to startup in application
 struct InstallerGlobals {
+#if 0
     bool registerAsDefault;
+#endif
     bool installPdfFilter;
     bool installPdfPreviewer;
     bool justExtractFiles;
@@ -56,7 +57,9 @@ struct InstallerGlobals {
 };
 
 static InstallerGlobals gInstallerGlobals = {
+#if 0
     false, /* bool registerAsDefault */
+#endif
     false, /* bool installPdfFilter */
     false, /* bool installPdfPreviewer */
     false, /* bool extractFiles */
@@ -68,7 +71,9 @@ static ButtonCtrl* gButtonRunSumatra = nullptr;
 static StaticCtrl* gStaticInstDir = nullptr;
 static EditCtrl* gTextboxInstDir = nullptr;
 static ButtonCtrl* gButtonBrowseDir = nullptr;
+#if 0
 static CheckboxCtrl* gCheckboxRegisterDefault = nullptr;
+#endif
 static CheckboxCtrl* gCheckboxRegisterPdfFilter = nullptr;
 static CheckboxCtrl* gCheckboxRegisterPdfPreviewer = nullptr;
 static ProgressCtrl* gProgressBar = nullptr;
@@ -474,9 +479,11 @@ static void OnButtonInstall() {
         str::ReplacePtr(&gInstUninstGlobals.installDir, userInstallDir);
     free(userInstallDir);
 
+#if 0
     // note: this checkbox isn't created if we're already registered as default
     //       (in which case we're just going to re-register)
     gInstallerGlobals.registerAsDefault = gCheckboxRegisterDefault == nullptr || gCheckboxRegisterDefault->IsChecked();
+#endif
 
     // note: this checkbox isn't created when running inside Wow64
     gInstallerGlobals.installPdfFilter =
@@ -501,7 +508,9 @@ static void OnButtonInstall() {
     delete gStaticInstDir;
     delete gTextboxInstDir;
     delete gButtonBrowseDir;
+#if 0
     delete gCheckboxRegisterDefault;
+#endif
     delete gCheckboxRegisterPdfFilter;
     delete gCheckboxRegisterPdfPreviewer;
     delete gButtonOptions;
@@ -549,7 +558,9 @@ static void OnButtonOptions() {
     EnableAndShow(gStaticInstDir, gShowOptions);
     EnableAndShow(gTextboxInstDir, gShowOptions);
     EnableAndShow(gButtonBrowseDir, gShowOptions);
+#if 0
     EnableAndShow(gCheckboxRegisterDefault, gShowOptions);
+#endif
     EnableAndShow(gCheckboxRegisterPdfFilter, gShowOptions);
     EnableAndShow(gCheckboxRegisterPdfPreviewer, gShowOptions);
 
@@ -716,6 +727,7 @@ static void OnCreateWindow(HWND hwnd) {
         y -= staticDy;
     }
 
+#if 0
     // only show the checbox if Sumatra is not already a default viewer.
     // the alternative (disabling the checkbox) is more confusing
     if (!isSumatraDefaultViewer) {
@@ -727,6 +739,7 @@ static void OnCreateWindow(HWND hwnd) {
         gCheckboxRegisterDefault->SetPos(&rc);
         y -= staticDy;
     }
+#endif
     // a bit more space between text box and checkboxes
     y -= (dpiAdjust(4) + WINDOW_MARGIN);
 
@@ -953,8 +966,10 @@ static void ParseCommandLine(WCHAR* cmdLine) {
             gInstUninstGlobals.silent = true;
         else if (is_arg_with_param("d"))
             str::ReplacePtr(&gInstUninstGlobals.installDir, argList.at(++i));
+#if 0
         else if (is_arg("register"))
             gInstallerGlobals.registerAsDefault = true;
+#endif
         else if (is_arg_with_param("opt")) {
             WCHAR* opts = argList.at(++i);
             str::ToLowerInPlace(opts);
