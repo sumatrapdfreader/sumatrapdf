@@ -610,7 +610,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     if (i.install || IsInstaller()) {
         retCode = RunInstaller();
         goto Exit;
-    }    
+    }
 
     if (i.uninstall) {
         retCode = RunUninstaller(i.silent);

@@ -19,12 +19,9 @@
 /* Returns true, if a Registry entry indicates that this executable has been
    created by an installer (and should be updated through an installer) */
 bool HasBeenInstalled() {
-    std::unique_ptr<WCHAR> installedPath(ReadRegStr(HKEY_CURRENT_USER, REG_PATH_UNINST, L"InstallLocation"));
     // see GetInstallationDir() in Installer.cpp
-    if (!installedPath) {
-        installedPath.reset(ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_UNINST, L"InstallLocation"));
-    }
-
+    std::unique_ptr<WCHAR> installedPath(
+        ReadRegStr2(HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, REG_PATH_UNINST, L"InstallLocation"));
     if (!installedPath) {
         return false;
     }
