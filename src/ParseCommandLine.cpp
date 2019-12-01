@@ -194,6 +194,8 @@ static const char* argNames =
     "manga-mode\0"
     "autoupdate\0"
     "extract-text\0"
+    "install\0"
+    "uninstall\0"
     "silent\0";
 
 enum {
@@ -241,6 +243,8 @@ enum {
     MangaMode,
     AutoUpdate,
     ExtractText,
+    Install,
+    Uninstall,
     Silent
 };
 
@@ -374,6 +378,10 @@ CommandLineInfo ParseCommandLine(const WCHAR* cmdLine) {
         } else if (is_arg_with_param(ExtractText)) {
             handle_int_param(i.pageNumber);
             i.testExtractPage = true;
+        } else if (Install == arg) {
+            i.install = true;
+        } else if (Uninstall == arg) {
+            i.uninstall = true;
         } else if (Rand == arg) {
             i.stressRandomizeFiles = true;
         } else if (is_arg_with_param(Bench)) {
