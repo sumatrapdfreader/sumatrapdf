@@ -52,6 +52,9 @@ class CommandLineInfo {
     int stressParallelCount = 1;
     bool stressRandomizeFiles = false;
 
+    bool install = false;
+    bool uninstall = false;
+
     // related to testing
     bool testRenderPage = false;
     bool testExtractPage = false;

@@ -46,6 +46,7 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "ifilter/PdfFilter.h"
 #include "previewer/PdfPreview.h"
 
+// TODO: move registerAsDefault logic to startup in application
 struct InstallerGlobals {
     bool registerAsDefault;
     bool installPdfFilter;
@@ -185,7 +186,7 @@ static bool CopySelf() {
     return false;
 }
 
-static bool InstallCopyFiles() {
+static bool ExtractInstallerFiles() {
     if (!CreateInstallationDirectory()) {
         return false;
     }
@@ -397,7 +398,7 @@ static DWORD WINAPI InstallerThread(LPVOID data) {
 
     ProgressStep();
 
-    if (!InstallCopyFiles()) {
+    if (!ExtractInstallerFiles()) {
         goto Error;
     }
 
@@ -406,12 +407,11 @@ static DWORD WINAPI InstallerThread(LPVOID data) {
         return 0;
     }
 
+#if 0
     if (gInstallerGlobals.registerAsDefault) {
-        // need to sublaunch SumatraPDF.exe instead of replicating the code
-        // because registration uses translated strings
-        AutoFreeW installedExePath(GetInstalledExePath());
-        CreateProcessHelper(installedExePath, L"-register-for-pdf");
+        AssociateExeWithPdfExtension();
     }
+#endif
 
     if (gInstallerGlobals.installPdfFilter)
         InstallPdfFilter();

@@ -543,16 +543,6 @@ static bool IsInstaller() {
     return isInstaller;
 }
 
-// Uninstaller is when we're called with /uninstall cmd-line arg
-static bool IsUninstaller() {
-    WCHAR* cmdline = GetCommandLineW();
-    bool isUninstaller = str::FindI(cmdline, L"/uninstall");
-    if (!isUninstaller) {
-        isUninstaller = str::FindI(cmdline, L"-uninstall");
-    }
-    return isUninstaller;
-}
-
 // in Installer.cpp
 extern int RunInstaller();
 // in Uninstaller.cpp
@@ -617,12 +607,12 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 
     auto i = ParseCommandLine(GetCommandLine());
 
-    if (IsInstaller()) {
+    if (i.install || IsInstaller()) {
         retCode = RunInstaller();
         goto Exit;
     }    
 
-    if (IsUninstaller()) {
+    if (i.uninstall) {
         retCode = RunUninstaller();
         goto Exit;
     }
