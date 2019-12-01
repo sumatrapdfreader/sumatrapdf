@@ -155,7 +155,7 @@ func should_translate(path string) bool {
 }
 
 var (
-	dirsToProcess = []string{"src", filepath.Join("src", "installer")}
+	dirsToProcess = []string{"src"}
 )
 
 func getFilesToProcess() []string {

@@ -529,7 +529,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\installer\Installer.h" />
+    <ClInclude Include="..\src\Installer.h" />
     <ClInclude Include="..\src\mui\Mui.h" />
     <ClInclude Include="..\src\mui\MuiBase.h" />
     <ClInclude Include="..\src\mui\MuiButton.h" />
@@ -554,12 +554,12 @@
   <ItemGroup>
     <ClCompile Include="..\ext\synctex\synctex_parser.c" />
     <ClCompile Include="..\ext\synctex\synctex_parser_utils.c" />
+    <ClCompile Include="..\src\InstUninstCommon.cpp" />
+    <ClCompile Include="..\src\Installer.cpp" />
     <ClCompile Include="..\src\SumatraPDF.cpp" />
     <ClCompile Include="..\src\SumatraStartup.cpp" />
     <ClCompile Include="..\src\Tests.cpp" />
-    <ClCompile Include="..\src\installer\InstUninstCommon.cpp" />
-    <ClCompile Include="..\src\installer\Installer.cpp" />
-    <ClCompile Include="..\src\installer\Uninstaller.cpp" />
+    <ClCompile Include="..\src\Uninstaller.cpp" />
     <ClCompile Include="..\src\mui\Mui.cpp" />
     <ClCompile Include="..\src\mui\MuiBase.cpp" />
     <ClCompile Include="..\src\mui\MuiButton.cpp" />
