@@ -43,6 +43,8 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "ifilter/PdfFilter.h"
 #include "previewer/PdfPreview.h"
 
+#define ENABLE_CUSTOM_DIR 0 
+
 struct InstallerGlobals {
 #if 0
     bool registerAsDefault;
@@ -65,9 +67,13 @@ static InstallerGlobals gInstallerGlobals = {
 
 static ButtonCtrl* gButtonOptions = nullptr;
 static ButtonCtrl* gButtonRunSumatra = nullptr;
+
+#if ENABLE_CUSTOM_DIR
 static StaticCtrl* gStaticInstDir = nullptr;
 static EditCtrl* gTextboxInstDir = nullptr;
 static ButtonCtrl* gButtonBrowseDir = nullptr;
+#endif
+
 #if 0
 static CheckboxCtrl* gCheckboxRegisterDefault = nullptr;
 #endif
@@ -461,18 +467,22 @@ Error:
 static void OnButtonOptions();
 
 static void OnButtonInstall() {
-    if (gShowOptions)
+    if (gShowOptions) {
         OnButtonOptions();
+    }
 
     KillSumatra();
 
-    if (!CheckInstallUninstallPossible())
+    if (!CheckInstallUninstallPossible()) {
         return;
+    }
 
+#if ENABLE_CUSTOM_DIR
     WCHAR* userInstallDir = win::GetText(gTextboxInstDir->hwnd);
     if (!str::IsEmpty(userInstallDir))
         str::ReplacePtr(&gInstUninstGlobals.installDir, userInstallDir);
     free(userInstallDir);
+#endif
 
 #if 0
     // note: this checkbox isn't created if we're already registered as default
@@ -498,10 +508,13 @@ static void OnButtonInstall() {
     gProgressBar->SetBounds(prc);
     ProgressStep();
 
+#if ENABLE_CUSTOM_DIR
     // disable the install button and remove all the installation options
     delete gStaticInstDir;
     delete gTextboxInstDir;
     delete gButtonBrowseDir;
+#endif
+
 #if 0
     delete gCheckboxRegisterDefault;
 #endif
@@ -549,9 +562,12 @@ static void EnableAndShow(WindowBase* w, bool enable) {
 static void OnButtonOptions() {
     gShowOptions = !gShowOptions;
 
+#if ENABLE_CUSTOM_DIR
     EnableAndShow(gStaticInstDir, gShowOptions);
     EnableAndShow(gTextboxInstDir, gShowOptions);
     EnableAndShow(gButtonBrowseDir, gShowOptions);
+#endif
+
 #if 0
     EnableAndShow(gCheckboxRegisterDefault, gShowOptions);
 #endif
@@ -575,6 +591,7 @@ static void OnButtonOptions() {
     gButtonOptions->SetFocus();
 }
 
+#if ENABLE_CUSTOM_DIR
 static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT msg, LPARAM lParam, LPARAM lpData) {
     switch (msg) {
         case BFFM_INITIALIZED:
@@ -647,12 +664,13 @@ static void OnButtonBrowse() {
         installPath = path::Join(path, APP_NAME_STR);
     }
     gTextboxInstDir->SetText(installPath);
-    gTextboxInstDir->SetSelection(0, -1);
-    gTextboxInstDir->SetFocus();
     if (installPath != path) {
         free(installPath);
     }
+    gTextboxInstDir->SetSelection(0, -1);
+    gTextboxInstDir->SetFocus();
 }
+#endif
 
 static bool OnWmCommand(WPARAM wParam) {
     switch (LOWORD(wParam)) {
@@ -737,6 +755,7 @@ static void OnCreateWindow(HWND hwnd) {
     // a bit more space between text box and checkboxes
     y -= (dpiAdjust(4) + WINDOW_MARGIN);
 
+#if ENABLE_CUSTOM_DIR
     const WCHAR* s = L"&...";
     SizeI btnSize2 = TextSizeInHwnd(hwnd, s);
     btnSize.cx += dpiAdjust(4);
@@ -764,6 +783,7 @@ static void OnCreateWindow(HWND hwnd) {
     gStaticInstDir->SetText(s);
     gStaticInstDir->Create();
     gStaticInstDir->SetBounds(rc);
+#endif
 
     gShowOptions = !gShowOptions;
     OnButtonOptions();
