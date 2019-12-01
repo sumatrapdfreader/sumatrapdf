@@ -225,6 +225,13 @@ TryAgainWOW64:
     return val;
 }
 
+WCHAR* ReadRegStr2(HKEY keySub1, HKEY keySub2, const WCHAR* keyName, const WCHAR* valName) {
+    WCHAR* res = ReadRegStr(keySub1, keyName, valName);
+    if (!res) {
+        res = ReadRegStr(keySub2, keyName, valName);
+    }
+    return res;
+}
 bool WriteRegStr(HKEY keySub, const WCHAR* keyName, const WCHAR* valName, const WCHAR* value) {
     DWORD cbData = (DWORD)(str::Len(value) + 1) * sizeof(WCHAR);
     LSTATUS res = SHSetValueW(keySub, keyName, valName, REG_SZ, (const void*)value, cbData);
