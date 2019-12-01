@@ -59,6 +59,7 @@ ButtonCtrl* gButtonExit = nullptr;
 ButtonCtrl* gButtonInstUninst = nullptr;
 HFONT gFontDefault = nullptr;
 bool gShowOptions = false;
+bool gForceCrash = false;
 WCHAR* gMsgError = nullptr;
 int gBottomPartDy = 0;
 int gButtonDy = 0;
@@ -94,6 +95,14 @@ PayloadInfo gPayloadData[] = {
     {"libmupdf.dll", true},
     {"PdfFilter.dll", true},
     {"PdfPreview.dll", true},
+    // files no longer shipped, to be deleted
+    {"SumatraPDF.exe", false},
+    {"sumatrapdfprefs.dat", false},
+    {"DroidSansFallback.ttf", false},
+    {"npPdfViewer.dll", false},
+    {"uninstall.exe", false},
+    {"UnRar.dll", false},
+    {"UnRar64.dll", false},
     {nullptr, false},
 };
 
@@ -176,10 +185,7 @@ WCHAR* GetShortcutPath(bool allUsers) {
 }
 
 WCHAR* GetInstalledBrowserPluginPath() {
-    WCHAR* path = ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_PLUGIN, L"Path");
-    if (!path)
-        path = ReadRegStr(HKEY_CURRENT_USER, REG_PATH_PLUGIN, L"Path");
-    return path;
+    return ReadRegStr2(HKEY_LOCAL_MACHINE, HKEY_CURRENT_USER, REG_PATH_PLUGIN, L"Path");
 }
 
 static bool IsUsingInstallation(DWORD procId) {
