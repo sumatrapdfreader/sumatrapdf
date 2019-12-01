@@ -47,8 +47,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "openjpeg", "openjpeg.vcxpro
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "plugin-test", "plugin-test.vcxproj", "{21A274DA-8D57-EDCF-164C-E7A68200E4D3}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sumatra", "sumatra.vcxproj", "{E21500B1-4EF5-7E4C-570D-0A23C36BE5AD}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test_util", "test_util.vcxproj", "{22AB719A-8E15-2611-D753-D7B643FD0366}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "unarrlib", "unarrlib.vcxproj", "{C45AE373-B027-3E7F-D940-2C27C56C730D}"
@@ -450,24 +448,6 @@ Global
 		{21A274DA-8D57-EDCF-164C-E7A68200E4D3}.Release|x32_xp.Build.0 = Release x32_xp|Win32
 		{21A274DA-8D57-EDCF-164C-E7A68200E4D3}.Release|x64.ActiveCfg = Release|x64
 		{21A274DA-8D57-EDCF-164C-E7A68200E4D3}.Release|x64.Build.0 = Release|x64
-		{E21500B1-4EF5-7E4C-570D-0A23C36BE5AD}.Debug|Win32.ActiveCfg = Debug|Win32
-		{E21500B1-4EF5-7E4C-570D-0A23C36BE5AD}.Debug|Win32.Build.0 = Debug|Win32
-		{E21500B1-4EF5-7E4C-570D-0A23C36BE5AD}.Debug|x32_xp.ActiveCfg = Debug x32_xp|Win32
-		{E21500B1-4EF5-7E4C-570D-0A23C36BE5AD}.Debug|x32_xp.Build.0 = Debug x32_xp|Win32
-		{E21500B1-4EF5-7E4C-570D-0A23C36BE5AD}.Debug|x64.ActiveCfg = Debug|x64
-		{E21500B1-4EF5-7E4C-570D-0A23C36BE5AD}.Debug|x64.Build.0 = Debug|x64
-		{E21500B1-4EF5-7E4C-570D-0A23C36BE5AD}.ReleasePrefast|Win32.ActiveCfg = ReleasePrefast|Win32
-		{E21500B1-4EF5-7E4C-570D-0A23C36BE5AD}.ReleasePrefast|Win32.Build.0 = ReleasePrefast|Win32
-		{E21500B1-4EF5-7E4C-570D-0A23C36BE5AD}.ReleasePrefast|x32_xp.ActiveCfg = ReleasePrefast x32_xp|Win32
-		{E21500B1-4EF5-7E4C-570D-0A23C36BE5AD}.ReleasePrefast|x32_xp.Build.0 = ReleasePrefast x32_xp|Win32
-		{E21500B1-4EF5-7E4C-570D-0A23C36BE5AD}.ReleasePrefast|x64.ActiveCfg = ReleasePrefast|x64
-		{E21500B1-4EF5-7E4C-570D-0A23C36BE5AD}.ReleasePrefast|x64.Build.0 = ReleasePrefast|x64
-		{E21500B1-4EF5-7E4C-570D-0A23C36BE5AD}.Release|Win32.ActiveCfg = Release|Win32
-		{E21500B1-4EF5-7E4C-570D-0A23C36BE5AD}.Release|Win32.Build.0 = Release|Win32
-		{E21500B1-4EF5-7E4C-570D-0A23C36BE5AD}.Release|x32_xp.ActiveCfg = Release x32_xp|Win32
-		{E21500B1-4EF5-7E4C-570D-0A23C36BE5AD}.Release|x32_xp.Build.0 = Release x32_xp|Win32
-		{E21500B1-4EF5-7E4C-570D-0A23C36BE5AD}.Release|x64.ActiveCfg = Release|x64
-		{E21500B1-4EF5-7E4C-570D-0A23C36BE5AD}.Release|x64.Build.0 = Release|x64
 		{22AB719A-8E15-2611-D753-D7B643FD0366}.Debug|Win32.ActiveCfg = Debug|Win32
 		{22AB719A-8E15-2611-D753-D7B643FD0366}.Debug|Win32.Build.0 = Debug|Win32
 		{22AB719A-8E15-2611-D753-D7B643FD0366}.Debug|x32_xp.ActiveCfg = Debug x32_xp|Win32
