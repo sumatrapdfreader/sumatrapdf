@@ -121,23 +121,14 @@ void SetMsg(const WCHAR* msg, Color color) {
     gMsgColor = color;
 }
 
-#if 1
 static HFONT CreateDefaultGuiFont() {
-    NONCLIENTMETRICSW ncm;
+    NONCLIENTMETRICSW ncm{};
     ncm.cbSize = sizeof(ncm);
     SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
     HFONT f = CreateFontIndirectW(&ncm.lfMenuFont);
     return f;
 }
-#else
-static HFONT CreateDefaultGuiFont() {
-    HDC hdc = GetDC(nullptr);
-    HFONT font = CreateSimpleFont(hdc, L"MS Shell Dlg", 14);
-    ReleaseDC(nullptr, hdc);
-    return font;
-}
-#endif
-
+#
 void InvalidateFrame() {
     ClientRect rc(gHwndFrame);
     RECT rcTmp = rc.ToRECT();
@@ -156,31 +147,40 @@ bool CreateProcessHelper(const WCHAR* exe, const WCHAR* args) {
     return process != nullptr;
 }
 
+WCHAR* GetInstallDirNoFree() {
+    return gInstUninstGlobals.installDir;
+}
+
 WCHAR* GetBrowserPluginPath() {
-    return path::Join(gInstUninstGlobals.installDir, L"npPdfViewer.dll");
+    WCHAR* dir = GetInstallDirNoFree();
+    return path::Join(dir, L"npPdfViewer.dll");
 }
 
 WCHAR* GetPdfFilterPath() {
-    return path::Join(gInstUninstGlobals.installDir, L"PdfFilter.dll");
+    WCHAR* dir = GetInstallDirNoFree();
+    return path::Join(dir, L"PdfFilter.dll");
 }
 
 WCHAR* GetPdfPreviewerPath() {
-    return path::Join(gInstUninstGlobals.installDir, L"PdfPreview.dll");
+    WCHAR* dir = GetInstallDirNoFree();
+    return path::Join(dir, L"PdfPreview.dll");
 }
 
 WCHAR* GetInstalledExePath() {
-    return path::Join(gInstUninstGlobals.installDir, EXENAME);
+    WCHAR* dir = GetInstallDirNoFree();
+    return path::Join(dir, EXENAME);
 }
 
 WCHAR* GetUninstallerPath() {
-    return path::Join(gInstUninstGlobals.installDir, L"uninstall.exe");
+    return GetInstalledExePath();
 }
 
 WCHAR* GetShortcutPath(bool allUsers) {
     // CSIDL_COMMON_PROGRAMS => installing for all users
     AutoFreeW dir(GetSpecialFolder(allUsers ? CSIDL_COMMON_PROGRAMS : CSIDL_PROGRAMS));
-    if (!dir)
+    if (!dir) {
         return nullptr;
+    }
     return path::Join(dir, APP_NAME_STR L".lnk");
 }
 
@@ -194,7 +194,7 @@ static bool IsUsingInstallation(DWORD procId) {
         return false;
     }
 
-    AutoFreeW libmupdf(path::Join(gInstUninstGlobals.installDir, L"libmupdf.dll"));
+    AutoFreeW libmupdf(path::Join(GetInstallDirNoFree(), L"libmupdf.dll"));
     AutoFreeW browserPlugin(GetBrowserPluginPath());
     const WCHAR* libmupdfName = path::GetBaseNameNoFree(libmupdf);
     const WCHAR* browserPluginName = path::GetBaseNameNoFree(browserPlugin);
@@ -209,7 +209,6 @@ static bool IsUsingInstallation(DWORD procId) {
         if (str::EqI(exeName, libmupdfName) && path::IsSame(libmupdf, exePath)) {
             return true;
         }
-
         if (str::EqI(exeName, browserPluginName) && path::IsSame(browserPlugin, exePath)) {
             return true;
         }
@@ -219,10 +218,11 @@ static bool IsUsingInstallation(DWORD procId) {
     return false;
 }
 
-// cf. http://support.microsoft.com/default.aspx?scid=kb;en-us;207132
+// http://support.microsoft.com/default.aspx?scid=kb;en-us;207132
 static bool RegisterServerDLL(const WCHAR* dllPath, bool install, const WCHAR* args = nullptr) {
-    if (FAILED(OleInitialize(nullptr)))
+    if (FAILED(OleInitialize(nullptr))) {
         return false;
+    }
 
     // make sure that the DLL can find any DLLs it depends on and
     // which reside in the same directory (in this case: libmupdf.dll)
@@ -232,7 +232,8 @@ static bool RegisterServerDLL(const WCHAR* dllPath, bool install, const WCHAR* a
     }
 
     bool ok = false;
-    HMODULE lib = LoadLibrary(dllPath);
+    HMODULE lib = LoadLibraryW(dllPath);
+
     if (lib) {
         typedef HRESULT(WINAPI * DllInstallProc)(BOOL, LPCWSTR);
         typedef HRESULT(WINAPI * DllRegUnregProc)(VOID);
@@ -252,8 +253,9 @@ static bool RegisterServerDLL(const WCHAR* dllPath, bool install, const WCHAR* a
         FreeLibrary(lib);
     }
 
-    if (DynSetDllDirectoryW)
+    if (DynSetDllDirectoryW) {
         DynSetDllDirectoryW(L"");
+    }
 
     OleUninitialize();
 
@@ -569,16 +571,18 @@ static void RevealingLettersAnim() {
         return;
     }
     DWORD timeOut = gRevealingLettersAnim->GetTimeoutInMilliseconds();
-    if (timeOut != 0)
+    if (timeOut != 0) {
         return;
+    }
     SetLettersSumatraUpTo(++gRevealingLettersAnimLettersToShow);
     gRevealingLettersAnim->Step();
     InvalidateFrame();
 }
 
 void AnimStep() {
-    if (gRevealingLettersAnim)
+    if (gRevealingLettersAnim) {
         RevealingLettersAnim();
+    }
 }
 
 static void CalcLettersLayout(Graphics& g, Font* f, int dx) {
@@ -649,8 +653,9 @@ static void DrawSumatraLetters(Graphics& g, Font* f, Font* fVer, REAL y) {
     for (int i = 0; i < dimof(gLetters); i++) {
         li = &gLetters[i];
         s[0] = li->c;
-        if (s[0] == ' ')
+        if (s[0] == ' ') {
             return;
+        }
 
         g.RotateTransform(li->rotation, MatrixOrderAppend);
 #if DRAW_TEXT_SHADOW
@@ -702,14 +707,17 @@ static void DrawFrame2(Graphics& g, RectI r) {
     Font f2(L"Impact", 16, FontStyleRegular);
     DrawSumatraLetters(g, &f, &f2, 18.f);
 
-    if (gShowOptions)
+    if (gShowOptions) {
         return;
+    }
 
     REAL msgY = (REAL)(r.dy / 2);
-    if (gMsg)
+    if (gMsg) {
         msgY += DrawMessage(g, gMsg, msgY, (REAL)r.dx, gMsgColor) + 5;
-    if (gMsgError)
+    }
+    if (gMsgError) {
         DrawMessage(g, gMsgError, msgY, (REAL)r.dx, COLOR_MSG_FAILED);
+    }
 }
 
 static void DrawFrame(HWND hwnd, HDC dc, PAINTSTRUCT*) {

@@ -43,10 +43,13 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "ifilter/PdfFilter.h"
 #include "previewer/PdfPreview.h"
 
-#define ENABLE_CUSTOM_DIR 0 
+// if, 1 adds a way to specify custom installation directory
+#define ENABLE_CUSTOM_DIR 0
+// if 1, adds checkbox to register as default PDF viewer
+#define ENABLE_REGISTER_DEFAULT 0
 
 struct InstallerGlobals {
-#if 0
+#if ENABLE_REGISTER_DEFAULT
     bool registerAsDefault;
 #endif
     bool installPdfFilter;
@@ -56,7 +59,7 @@ struct InstallerGlobals {
 };
 
 static InstallerGlobals gInstallerGlobals = {
-#if 0
+#if ENABLE_REGISTER_DEFAULT
     false, /* bool registerAsDefault */
 #endif
     false, /* bool installPdfFilter */
@@ -74,7 +77,7 @@ static EditCtrl* gTextboxInstDir = nullptr;
 static ButtonCtrl* gButtonBrowseDir = nullptr;
 #endif
 
-#if 0
+#if ENABLE_REGISTER_DEFAULT
 static CheckboxCtrl* gCheckboxRegisterDefault = nullptr;
 #endif
 static CheckboxCtrl* gCheckboxRegisterPdfFilter = nullptr;
@@ -285,7 +288,7 @@ static bool WriteUninstallerRegistryInfo(HKEY hkey) {
     AutoFreeW installedExePath(GetInstalledExePath());
     AutoFreeW installDate(GetInstallDate());
     AutoFreeW installDir(path::GetDir(installedExePath));
-    AutoFreeW uninstallCmdLine(str::Format(L"\"%s\"", AutoFreeW(GetUninstallerPath())));
+    AutoFreeW uninstallCmdLine(str::Format(L"\"%s\" -uninstall", AutoFreeW(GetUninstallerPath())));
 
     // path to installed executable (or "$path,0" to force the first icon)
     ok &= WriteRegStr(hkey, REG_PATH_UNINST, L"DisplayIcon", installedExePath);
@@ -311,6 +314,12 @@ static bool WriteUninstallerRegistryInfo(HKEY hkey) {
     ok &= WriteRegStr(hkey, REG_PATH_UNINST, L"URLUpdateInfo", L"https://www.sumatrapdfreader.org/news.html");
 
     return ok;
+}
+
+static bool WriteUninstallerRegistryInfos() {
+    bool ok1 = WriteUninstallerRegistryInfo(HKEY_LOCAL_MACHINE);
+    bool ok2 = WriteUninstallerRegistryInfo(HKEY_CURRENT_USER);
+    return ok1 || ok2;
 }
 
 // https://msdn.microsoft.com/en-us/library/windows/desktop/cc144154(v=vs.85).aspx
@@ -346,8 +355,10 @@ static bool ListAsDefaultProgramPreWin10(HKEY hkey) {
     // PDF icon will be shown (we need icons and properly configure them)
     bool ok = true;
     for (int i = 0; nullptr != gSupportedExts[i]; i++) {
-        AutoFreeW keyname(str::Join(L"Software\\Classes\\", gSupportedExts[i], L"\\OpenWithList\\" EXENAME));
-        ok &= CreateRegKey(hkey, keyname);
+        WCHAR* ext = gSupportedExts[i];
+        WCHAR* name = str::Join(L"Software\\Classes\\", ext, L"\\OpenWithList\\" EXENAME);
+        ok &= CreateRegKey(hkey, name);
+        free(name);
     }
     return ok;
 }
@@ -357,8 +368,10 @@ static bool WriteExtendedFileExtensionInfo(HKEY hkey) {
     bool ok = true;
 
     AutoFreeW exePath(GetInstalledExePath());
-    if (HKEY_LOCAL_MACHINE == hkey)
-        ok &= WriteRegStr(hkey, L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\" EXENAME, nullptr, exePath);
+    if (HKEY_LOCAL_MACHINE == hkey) {
+        const WCHAR* key = L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\" EXENAME;
+        ok &= WriteRegStr(hkey, key, nullptr, exePath);
+    }
 
     // mirroring some of what DoAssociateExeWithPdfExtension() does (cf. AppTools.cpp)
     AutoFreeW iconPath(str::Join(exePath, L",1"));
@@ -376,9 +389,16 @@ static bool WriteExtendedFileExtensionInfo(HKEY hkey) {
 
     // in case these values don't exist yet (we won't delete these at uninstallation)
     ok &= WriteRegStr(hkey, REG_CLASSES_PDF, L"Content Type", L"application/pdf");
-    ok &= WriteRegStr(hkey, L"Software\\Classes\\MIME\\Database\\Content Type\\application/pdf", L"Extension", L".pdf");
+    const WCHAR* key = L"Software\\Classes\\MIME\\Database\\Content Type\\application/pdf";
+    ok &= WriteRegStr(hkey, key, L"Extension", L".pdf");
 
     return ok;
+}
+
+static bool WriteExtendedFileExtensionInfos() {
+    bool ok1 = WriteExtendedFileExtensionInfo(HKEY_LOCAL_MACHINE);
+    bool ok2 = WriteExtendedFileExtensionInfo(HKEY_CURRENT_USER);
+    return ok1 || ok2;
 }
 
 static void OnButtonStartSumatra() {
@@ -415,7 +435,7 @@ static DWORD WINAPI InstallerThread(LPVOID data) {
         return 0;
     }
 
-#if 0
+#if ENABLE_REGISTER_DEFAULT
     if (gInstallerGlobals.registerAsDefault) {
         AssociateExeWithPdfExtension();
     }
@@ -442,10 +462,10 @@ static DWORD WINAPI InstallerThread(LPVOID data) {
     // (still warn, if we've failed to create the uninstaller, though)
     gInstUninstGlobals.success = true;
 
-    if (!WriteUninstallerRegistryInfo(HKEY_LOCAL_MACHINE) && !WriteUninstallerRegistryInfo(HKEY_CURRENT_USER)) {
+    if (!WriteUninstallerRegistryInfos()) {
         NotifyFailed(_TR("Failed to write the uninstallation information to the registry"));
     }
-    if (!WriteExtendedFileExtensionInfo(HKEY_LOCAL_MACHINE) && !WriteExtendedFileExtensionInfo(HKEY_CURRENT_USER)) {
+    if (!WriteExtendedFileExtensionInfos()) {
         NotifyFailed(_TR("Failed to write the extended file extension information to the registry"));
     }
 
@@ -484,7 +504,7 @@ static void OnButtonInstall() {
     free(userInstallDir);
 #endif
 
-#if 0
+#if ENABLE_REGISTER_DEFAULT
     // note: this checkbox isn't created if we're already registered as default
     //       (in which case we're just going to re-register)
     gInstallerGlobals.registerAsDefault = gCheckboxRegisterDefault == nullptr || gCheckboxRegisterDefault->IsChecked();
@@ -515,7 +535,7 @@ static void OnButtonInstall() {
     delete gButtonBrowseDir;
 #endif
 
-#if 0
+#if ENABLE_REGISTER_DEFAULT
     delete gCheckboxRegisterDefault;
 #endif
     delete gCheckboxRegisterPdfFilter;
@@ -568,7 +588,7 @@ static void OnButtonOptions() {
     EnableAndShow(gButtonBrowseDir, gShowOptions);
 #endif
 
-#if 0
+#if ENABLE_REGISTER_DEFAULT
     EnableAndShow(gCheckboxRegisterDefault, gShowOptions);
 #endif
     EnableAndShow(gCheckboxRegisterPdfFilter, gShowOptions);
@@ -739,7 +759,7 @@ static void OnCreateWindow(HWND hwnd) {
         y -= staticDy;
     }
 
-#if 0
+#if ENABLE_REGISTER_DEFAULT
     // only show the checbox if Sumatra is not already a default viewer.
     // the alternative (disabling the checkbox) is more confusing
     if (!isSumatraDefaultViewer) {
