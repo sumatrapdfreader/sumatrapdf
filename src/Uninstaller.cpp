@@ -363,9 +363,7 @@ static void ShowUsage() {
 using namespace Gdiplus;
 
 static WCHAR* GetInstallationDir() {
-    AutoFreeW dir(ReadRegStr(HKEY_CURRENT_USER, REG_PATH_UNINST, L"InstallLocation"));
-    if (!dir)
-        dir.Set(ReadRegStr(HKEY_LOCAL_MACHINE, REG_PATH_UNINST, L"InstallLocation"));
+    AutoFreeW dir(ReadRegStr2(HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, REG_PATH_UNINST, L"InstallLocation"));
     if (dir) {
         if (str::EndsWithI(dir, L".exe")) {
             dir.Set(path::GetDir(dir));
@@ -506,8 +504,8 @@ int RunUninstaller(bool silent) {
         ret = 0;
         goto Exit;
     }
-    if (!gInstUninstGlobals.installDir)
-        gInstUninstGlobals.installDir = GetInstallationDir();
+
+    gInstUninstGlobals.installDir = GetInstallationDir();
 
     void* p = &ExecuteUninstallerFromTempDir;
     if (p == nullptr && ExecuteUninstallerFromTempDir())

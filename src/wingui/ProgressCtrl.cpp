@@ -40,13 +40,13 @@ bool ProgressCtrl::Create() {
 }
 
 SIZE ProgressCtrl::GetIdealSize() {
-    return { idealDx, idealDy };
+    return {idealDx, idealDy};
 }
 
 void ProgressCtrl::SetMax(int newMax) {
     max = newMax;
     int min = 0;
-    SendMessageW(hwnd, PBM_SETRANGE32, min, max); 
+    SendMessageW(hwnd, PBM_SETRANGE32, min, max);
 }
 
 void ProgressCtrl::SetCurrent(int newCurrent) {
