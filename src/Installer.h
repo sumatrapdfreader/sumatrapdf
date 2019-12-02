@@ -62,7 +62,6 @@ struct ButtonCtrl;
 
 extern InstUninstGlobals gInstUninstGlobals;
 extern const WCHAR* gDefaultMsg;
-extern PayloadInfo gPayloadData[];
 extern WCHAR* gSupportedExts[];
 extern HWND gHwndFrame;
 extern ButtonCtrl* gButtonExit;
@@ -90,7 +89,6 @@ extern Gdiplus::Color gCol5Shadow;
 
 struct ButtonCtrl;
 
-bool IsValidInstaller();
 void InitInstallerUninstaller();
 void OnPaintFrame(HWND hwnd);
 void OnButtonExit();

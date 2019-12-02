@@ -138,12 +138,12 @@ static void RemoveOwnRegistryKeys() {
     RemoveOwnRegistryKeys(HKEY_CURRENT_USER);
 }
 
-static BOOL RemoveEmptyDirectory(const WCHAR* dir) {
+static bool RemoveEmptyDirectory(const WCHAR* dir) {
     WIN32_FIND_DATA findData;
-    BOOL success = TRUE;
+    bool ok = TRUE;
 
     AutoFreeW dirPattern(path::Join(dir, L"*"));
-    HANDLE h = FindFirstFile(dirPattern, &findData);
+    HANDLE h = FindFirstFileW(dirPattern, &findData);
     if (h != INVALID_HANDLE_VALUE) {
         do {
             AutoFreeW path(path::Join(dir, findData.cFileName));
@@ -152,35 +152,55 @@ static BOOL RemoveEmptyDirectory(const WCHAR* dir) {
             // subdirectories, it also filters out the standard "." and ".."
             if ((attrs & FILE_ATTRIBUTE_DIRECTORY) && !str::Eq(findData.cFileName, L".") &&
                 !str::Eq(findData.cFileName, L"..")) {
-                success &= RemoveEmptyDirectory(path);
+                ok &= RemoveEmptyDirectory(path);
             }
-        } while (FindNextFile(h, &findData) != 0);
+        } while (FindNextFileW(h, &findData) != 0);
         FindClose(h);
     }
 
-    if (!RemoveDirectory(dir)) {
+    if (!::RemoveDirectoryW(dir)) {
         DWORD lastError = GetLastError();
         if (ERROR_DIR_NOT_EMPTY != lastError && ERROR_FILE_NOT_FOUND != lastError) {
             LogLastError(lastError);
-            success = FALSE;
+            ok = false;
         }
     }
 
-    return success;
+    return ok;
 }
 
-// We always return true because deleting our own executable
-// willl fail but it should be deleted when it's closed
-static bool RemoveInstalledFiles() {
+
+// The following list is used to verify that all the required files have been
+// installed (install flag set) and to know what files are to be removed at
+// uninstallation (all listed files that actually exist).
+// When a file is no longer shipped, just disable the install flag so that the
+// file is still correctly removed when SumatraPDF is eventually uninstalled.
+const char* gInstalledFiles[] = {
+    "libmupdf.dll",
+    "PdfFilter.dll",
+    "PdfPreview.dll",
+    // files no longer shipped, to be deleted
+    "SumatraPDF.exe",
+    "sumatrapdfprefs.dat",
+    "DroidSansFallback.ttf",
+    "npPdfViewer.dll",
+    "uninstall.exe",
+    "UnRar.dll",
+    "UnRar64.dll",
+};
+
+// TODO: maybe just delete the directory
+static void RemoveInstalledFiles() {
     const WCHAR* dir = GetInstallDirNoFree();
-    for (int i = 0; nullptr != gPayloadData[i].fileName; i++) {
-        AutoFreeW relPath(str::conv::FromUtf8(gPayloadData[i].fileName));
+    size_t n = dimof(gInstalledFiles);
+    for (size_t i = 0; i < n; i++) {
+        const char *s = gInstalledFiles[i];
+        AutoFreeW relPath(str::conv::FromUtf8(s));
         AutoFreeW path(path::Join(dir, relPath));
         DeleteFile(path);
     }
 
     RemoveEmptyDirectory(dir);
-    return true;
 }
 
 static bool RemoveShortcut(bool allUsers) {
@@ -227,9 +247,8 @@ static DWORD WINAPI UninstallerThread(LPVOID data) {
     UninstallPdfPreviewer();
     RemoveOwnRegistryKeys();
 
-    if (!RemoveInstalledFiles()) {
-        NotifyFailed(_TR("Couldn't remove installation directory"));
-    }
+    RemoveInstalledFiles();
+    //NotifyFailed(_TR("Couldn't remove installation directory"));
 
     // always succeed, even for partial uninstallations
     gInstUninstGlobals.success = true;

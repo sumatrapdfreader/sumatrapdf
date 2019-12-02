@@ -86,26 +86,6 @@ InstUninstGlobals gInstUninstGlobals = {
 WCHAR* gSupportedExts[] = {L".pdf", L".xps",  L".oxps", L".cbz", L".cbr",  L".cb7", L".cbt",  L".djvu",
                            L".chm", L".mobi", L".epub", L".fb2", L".fb2z", L".tif", L".tiff", nullptr};
 
-// The following list is used to verify that all the required files have been
-// installed (install flag set) and to know what files are to be removed at
-// uninstallation (all listed files that actually exist).
-// When a file is no longer shipped, just disable the install flag so that the
-// file is still correctly removed when SumatraPDF is eventually uninstalled.
-PayloadInfo gPayloadData[] = {
-    {"libmupdf.dll", true},
-    {"PdfFilter.dll", true},
-    {"PdfPreview.dll", true},
-    // files no longer shipped, to be deleted
-    {"SumatraPDF.exe", false},
-    {"sumatrapdfprefs.dat", false},
-    {"DroidSansFallback.ttf", false},
-    {"npPdfViewer.dll", false},
-    {"uninstall.exe", false},
-    {"UnRar.dll", false},
-    {"UnRar64.dll", false},
-    {nullptr, false},
-};
-
 int dpiAdjust(int value) {
     return (int)(value * gUiDPIFactor);
 }

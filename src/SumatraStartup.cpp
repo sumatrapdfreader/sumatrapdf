@@ -544,6 +544,11 @@ static bool IsInstaller() {
     return isInstaller;
 }
 
+static bool IsValidInstaller() {
+    HRSRC resSrc = FindResource(GetModuleHandle(nullptr), MAKEINTRESOURCEW(1), RT_RCDATA);
+    return resSrc != nullptr;
+}
+
 // in Installer.cpp
 extern int RunInstaller();
 // in Uninstaller.cpp

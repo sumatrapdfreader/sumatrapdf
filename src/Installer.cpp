@@ -70,6 +70,7 @@ static InstallerGlobals gInstallerGlobals = {
 
 static ButtonCtrl* gButtonOptions = nullptr;
 static ButtonCtrl* gButtonRunSumatra = nullptr;
+static lzma::SimpleArchive gArchive = {};
 
 #if ENABLE_CUSTOM_DIR
 static StaticCtrl* gStaticInstDir = nullptr;
@@ -83,25 +84,6 @@ static CheckboxCtrl* gCheckboxRegisterDefault = nullptr;
 static CheckboxCtrl* gCheckboxRegisterPdfFilter = nullptr;
 static CheckboxCtrl* gCheckboxRegisterPdfPreviewer = nullptr;
 static ProgressCtrl* gProgressBar = nullptr;
-
-static int GetInstallationStepCount() {
-    /* Installation steps
-     * - Create directory
-     * - One per file to be copied (count extracted from gPayloadData)
-     * - Optional registration (default viewer, browser plugin),
-     *   Shortcut and Registry keys
-     *
-     * Most time is taken by file extraction/copying, so we just add
-     * one step before - so that we start with some initial progress
-     * - and one step afterwards.
-     */
-    int count = 2;
-    for (int i = 0; nullptr != gPayloadData[i].fileName; i++) {
-        if (gPayloadData[i].install)
-            count++;
-    }
-    return count;
-}
 
 int currProgress = 0;
 static inline void ProgressStep() {
@@ -123,17 +105,9 @@ static bool ExtractFiles(lzma::SimpleArchive* archive) {
     lzma::FileInfo* fi;
     char* uncompressed;
 
-    for (int i = 0; gPayloadData[i].fileName; i++) {
-        if (!gPayloadData[i].install)
-            continue;
-        int idx = lzma::GetIdxFromName(archive, gPayloadData[i].fileName);
-        if (-1 == idx) {
-            NotifyFailed(_TR("Some files to be installed are damaged or missing"));
-            return false;
-        }
-
-        fi = &archive->files[idx];
-        uncompressed = lzma::GetFileDataByIdx(archive, idx, nullptr);
+    for (int i = 0; i < archive->filesCount; i++) {
+        fi = &archive->files[i];
+        uncompressed = lzma::GetFileDataByIdx(archive, i, nullptr);
         if (!uncompressed) {
             NotifyFailed(
                 _TR("The installer has been corrupted. Please download it again.\nSorry for the inconvenience!"));
@@ -144,22 +118,17 @@ static bool ExtractFiles(lzma::SimpleArchive* archive) {
         bool ok = file::WriteFile(extPath, uncompressed, fi->uncompressedSize);
         free(uncompressed);
         if (!ok) {
-            AutoFreeW msg(str::Format(_TR("Couldn't write %s to disk"), filePath));
+            WCHAR* msg = str::Format(_TR("Couldn't write %s to disk"), filePath);
             NotifyFailed(msg);
+            free(msg);
             return false;
         }
-        file::SetModificationTime(extPath, fi->ftModified);
-
         ProgressStep();
     }
 
     return true;
 }
 
-bool IsValidInstaller() {
-    HRSRC resSrc = FindResource(GetModuleHandle(nullptr), MAKEINTRESOURCEW(1), RT_RCDATA);
-    return resSrc != nullptr;
-}
 
 static std::tuple<const char*, DWORD, HGLOBAL> LockDataResource(int id) {
     auto h = GetModuleHandle(nullptr);
@@ -187,7 +156,7 @@ static bool CreateInstallationDirectory() {
     return ok;
 }
 
-static bool CopySelf() {
+static bool CopySelfToInstallationDir() {
     auto exePath = GetExePath();
     auto* dstPath = path::Join(GetInstallDirNoFree(), L"SumatraPDF.exe");
     BOOL failIfExists = FALSE;
@@ -201,30 +170,14 @@ static bool ExtractInstallerFiles() {
         return false;
     }
 
-    bool ok = CopySelf();
+    bool ok = CopySelfToInstallationDir();
     if (!ok) {
         return false;
     }
-
-    auto [data, size, res] = LockDataResource(1);
-    if (data == nullptr) {
-        goto Corrupted;
-    }
-
-    lzma::SimpleArchive archive;
-    ok = lzma::ParseSimpleArchive(data, size, &archive);
-    if (!ok) {
-        goto Corrupted;
-    }
+    ProgressStep();
 
     // on error, ExtractFiles() shows error message itself
-    ok = ExtractFiles(&archive);
-    UnlockResource(res);
-    return ok;
-Corrupted:
-    NotifyFailed(_TR("The installer has been corrupted. Please download it again.\nSorry for the inconvenience!"));
-    UnlockResource(res);
-    return false;
+    return ExtractFiles(&gArchive);
 }
 
 /* Caller needs to free() the result. */
@@ -428,8 +381,6 @@ static DWORD WINAPI InstallerThread(LPVOID data) {
     UNUSED(data);
     gInstUninstGlobals.success = false;
 
-    ProgressStep();
-
     if (!ExtractInstallerFiles()) {
         goto Error;
     }
@@ -445,15 +396,17 @@ static DWORD WINAPI InstallerThread(LPVOID data) {
     }
 #endif
 
-    if (gInstallerGlobals.installPdfFilter)
+    if (gInstallerGlobals.installPdfFilter) {
         InstallPdfFilter();
-    else if (IsPdfFilterInstalled())
+    } else if (IsPdfFilterInstalled()) {
         UninstallPdfFilter();
+    }
 
-    if (gInstallerGlobals.installPdfPreviewer)
+    if (gInstallerGlobals.installPdfPreviewer) {
         InstallPdfPreviewer();
-    else if (IsPdfPreviewerInstalled())
+    } else if (IsPdfPreviewerInstalled()) {
         UninstallPdfPreviewer();
+    }
 
     UninstallBrowserPlugin();
 
@@ -469,6 +422,7 @@ static DWORD WINAPI InstallerThread(LPVOID data) {
     if (!WriteUninstallerRegistryInfos()) {
         NotifyFailed(_TR("Failed to write the uninstallation information to the registry"));
     }
+
     if (!WriteExtendedFileExtensionInfos()) {
         NotifyFailed(_TR("Failed to write the extended file extension information to the registry"));
     }
@@ -530,11 +484,16 @@ static void OnButtonInstall() {
     RectI rc(0, 0, dpiAdjust(INSTALLER_WIN_DX / 2), gButtonDy);
     rc = MapRectToWindow(rc, gButtonOptions->hwnd, gHwndFrame);
 
-    int nSteps = GetInstallationStepCount();
-    gProgressBar = new ProgressCtrl(gHwndFrame, nSteps);
+    int nInstallationSteps = gArchive.filesCount;
+    nInstallationSteps++; // for copying self
+    nInstallationSteps++; // for writing registry entries
+    nInstallationSteps++; // to show progress at the beginning
+
+    gProgressBar = new ProgressCtrl(gHwndFrame, nInstallationSteps);
     gProgressBar->Create();
     RECT prc = {rc.x, rc.y, rc.x + rc.dx, rc.y + rc.dy};
     gProgressBar->SetBounds(prc);
+    // first one to show progress quickly
     ProgressStep();
 
 #if ENABLE_CUSTOM_DIR
@@ -1035,6 +994,26 @@ static void ParseCommandLine(WCHAR* cmdLine) {
     }
 }
 
+static void ShowNoEmbeddedFiles(const WCHAR* msg) {
+    const WCHAR* caption = L"Error";
+    MessageBoxW(nullptr, msg, caption, MB_OK);
+}
+
+static bool OpenEmbeddedFilesArchive() {
+    auto [data, size, res] = LockDataResource(1);
+    if (data == nullptr) {
+        ShowNoEmbeddedFiles(L"No embbedded files");
+        return false;
+    }
+
+    bool ok = lzma::ParseSimpleArchive(data, size, &gArchive);
+    if (!ok) {
+        ShowNoEmbeddedFiles(L"Embedded lzsa archive is corrupted");
+        return false;
+    }
+    return true;
+
+}
 int RunInstaller() {
     int ret = 0;
 
@@ -1046,6 +1025,10 @@ int RunInstaller() {
         LaunchElevated(exePath, cmdline);
         str::Free(exePath);
         return 0;
+    }
+
+    if (!OpenEmbeddedFilesArchive()) {
+        return 1;
     }
 
     gDefaultMsg = _TR("Thank you for choosing SumatraPDF!");
@@ -1072,11 +1055,13 @@ int RunInstaller() {
         goto Exit;
     }
 
-    if (!RegisterWinClass())
+    if (!RegisterWinClass()) {
         goto Exit;
+    }
 
-    if (!InstanceInit())
+    if (!InstanceInit()) {
         goto Exit;
+    }
 
     ret = RunApp();
 
