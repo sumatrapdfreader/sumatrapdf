@@ -4,7 +4,6 @@
 #include "BaseUtil.h"
 #include <LzmaDec.h>
 #include <Bra.h>
-#include <zlib.h> // for crc32
 #include "ByteOrderDecoder.h"
 #include "LzmaSimpleArchive.h"
 #include "FileUtil.h"
@@ -39,6 +38,32 @@ struct ISzAllocatorAlloc : ISzAlloc {
         this->allocator = allocator;
     }
 };
+
+
+/* code adapted from https://gnunet.org/svn/gnunet/src/util/crypto_crc.c (public domain) */
+static bool crc_table_ready = false;
+static uint32_t crc_table[256];
+
+uint32_t lzma_crc32(uint32_t crc32, const unsigned char* data, size_t data_len) {
+    if (!crc_table_ready) {
+        uint32_t i, j;
+        uint32_t h = 1;
+        crc_table[0] = 0;
+        for (i = 128; i; i >>= 1) {
+            h = (h >> 1) ^ ((h & 1) ? 0xEDB88320 : 0);
+            for (j = 0; j < 256; j += 2 * i) {
+                crc_table[i + j] = crc_table[j] ^ h;
+            }
+        }
+        crc_table_ready = true;
+    }
+
+    crc32 = crc32 ^ 0xFFFFFFFF;
+    while (data_len-- > 0) {
+        crc32 = (crc32 >> 8) ^ crc_table[(crc32 ^ *data++) & 0xFF];
+    }
+    return crc32 ^ 0xFFFFFFFF;
+}
 
 // adapted from lzma/C/Lzma86Dec.c
 // (main difference: the uncompressed size isn't stored in bytes 6 to 13)
@@ -170,7 +195,7 @@ bool ParseSimpleArchive(const char* archiveHeader, size_t dataLen, SimpleArchive
 
     size_t headerSize = br.Offset();
     uint32_t headerCrc32 = br.UInt32();
-    uint32_t realCrc = crc32(0, (const uint8_t*)archiveHeader, (uint32_t)headerSize);
+    uint32_t realCrc = lzma_crc32(0, (const uint8_t*)archiveHeader, (uint32_t)headerSize);
     if (headerCrc32 != realCrc) {
         return false;
     }
@@ -216,7 +241,7 @@ char* GetFileDataByIdx(SimpleArchive* archive, int idx, Allocator* allocator) {
         return nullptr;
     }
 
-    uint32_t realCrc = crc32(0, (const uint8_t*)uncompressed, fi->uncompressedSize);
+    uint32_t realCrc = lzma_crc32(0, (const uint8_t*)uncompressed, fi->uncompressedSize);
     if (realCrc != fi->uncompressedCrc32) {
         Allocator::Free(allocator, uncompressed);
         return nullptr;
