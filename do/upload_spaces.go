@@ -59,11 +59,9 @@ func spacesUploadPreReleaseMust(ver string, dir string) {
 		return
 	}
 
-	s3PreRelDir = "sumtrapdf/" + dir + "/"
-
 	c := newMinioClient()
 	timeStart := time.Now()
-	preRelDir := "software/sumatrapdf/prerel/"
+	preRelDir := "software/sumatrapdf/" + dir + "/"
 	prefix := fmt.Sprintf("SumatraPDF-prerelease-%s", ver)
 	manifestRemotePath := preRelDir + prefix + "-manifest.txt"
 	files := []string{
