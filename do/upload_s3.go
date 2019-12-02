@@ -14,11 +14,6 @@ const (
 	maxS3Results = 1000
 )
 
-func s3RemoteDir(buildType string) string {
-	panicIf(!isValidBuildType(buildType), "invalid build type: '%s'", buildType)
-	return "sumatrapdf/" + buildType + "/"
-}
-
 // we should only sign and upload to s3 if this is my repo
 // and a push event
 func shouldSignOrUpload() bool {
@@ -172,7 +167,7 @@ func s3UploadPreReleaseMust(ver string, buildType string) {
 		return
 	}
 
-	remoteDir := s3RemoteDir(buildType)
+	remoteDir := getRemoteDir(buildType)
 
 	c := newS3Client()
 	c.VerifyHasSecrets()
@@ -208,15 +203,15 @@ func s3UploadPreReleaseMust(ver string, buildType string) {
 	logf("Uploaded to s3: '%s' as '%s'\n", manifestLocalPath, manifestRemotePath)
 
 	remotePaths := []string{
-		"sumatrapdf/sumatralatest.js",
-		"sumatrapdf/sumpdf-prerelease-latest.txt",
-		"sumatrapdf/sumpdf-prerelease-update.txt",
+		"software/sumatrapdf/sumatralatest.js",
+		"software/sumatrapdf/sumpdf-prerelease-latest.txt",
+		"software/sumatrapdf/sumpdf-prerelease-update.txt",
 	}
 	if buildType == "daily" {
 		remotePaths = []string{
-			"sumatrapdf/sumadaily.js",
-			"sumatrapdf/sumpdf-daily-latest.txt",
-			"sumatrapdf/sumpdf-daily-update.txt",
+			"software/sumatrapdf/sumadaily.js",
+			"software/sumatrapdf/sumpdf-daily-latest.txt",
+			"software/sumatrapdf/sumpdf-daily-update.txt",
 		}
 	}
 
@@ -244,7 +239,7 @@ func s3UploadPreReleaseMust(ver string, buildType string) {
 func s3DeleteOldBuilkdsPrefix(buildType string) {
 	c := newS3Client()
 
-	remoteDir := s3RemoteDir(buildType)
+	remoteDir := getRemoteDir(buildType)
 
 	keys := s3ListPreReleaseFilesMust(c, remoteDir)
 	fmt.Printf("%d s3 files under '%s'\n", len(keys), remoteDir)

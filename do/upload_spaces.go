@@ -24,7 +24,7 @@ func isValidBuildType(buildType string) bool {
 	return false
 }
 
-func minioRemoteDir(buildType string) string {
+func getRemoteDir(buildType string) string {
 	panicIf(!isValidBuildType(buildType), "invalid build type: '%s'", buildType)
 	return "software/sumatrapdf/" + buildType + "/"
 }
@@ -88,7 +88,7 @@ func spacesUploadPreReleaseMust(ver string, buildType string) {
 		return
 	}
 
-	remoteDir := minioRemoteDir(buildType)
+	remoteDir := getRemoteDir(buildType)
 
 	c := newMinioClient()
 	timeStart := time.Now()
@@ -151,9 +151,6 @@ func spacesUploadPreReleaseMust(ver string, buildType string) {
 	logf("Uploaded to spaces: '%s'\n", remotePath)
 
 	logf("Uploaded the build to spaces in %s\n", time.Since(timeStart))
-}
-
-func minioUploadPrereleaseInfo(c *u.MinioClient, ver string, dir string) {
 }
 
 func minioUploadDailyInfo(c *u.MinioClient, ver string, dir string) {
@@ -225,7 +222,7 @@ func groupFilesByVersion(files []string) []*filesByVer {
 }
 
 func minioDeleteOldBuildsPrefix(buildType string) {
-	remoteDir := s3RemoteDir(buildType)
+	remoteDir := getRemoteDir(buildType)
 
 	c := newMinioClient()
 	files, err := c.ListRemoteFiles(remoteDir)
