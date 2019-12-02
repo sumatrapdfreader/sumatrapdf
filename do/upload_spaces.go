@@ -39,6 +39,18 @@ func hasSpacesCreds() bool {
 	return true
 }
 
+func hasS3Creds() bool {
+	if os.Getenv("AWS_ACCESS") == "" {
+		logf("Not uploading to s3 because AWS_ACCESS env variable not set\n")
+		return false
+	}
+	if os.Getenv("AWS_SECRET") == "" {
+		logf("Not uploading to s3 because AWS_SECRET env variable not set\n")
+		return false
+	}
+	return true
+}
+
 func minioUploadFiles(c *u.MinioClient, prefix string, dir string, files []string) error {
 	n := len(files) / 2
 	for i := 0; i < n; i++ {
