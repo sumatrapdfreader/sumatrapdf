@@ -47,6 +47,7 @@ func main() {
 		flgRegenerateTranslattions bool
 		flgUploadTranslations      bool
 		flgClean                   bool
+		flgDeleteOldBuilds         bool
 	)
 
 	{
@@ -65,6 +66,7 @@ func main() {
 		flag.BoolVar(&flgRegenerateTranslattions, "trans-regen", false, "regenerate .cpp translations files from strings/translations.txt")
 		flag.BoolVar(&flgUploadTranslations, "trans-ul", false, "upload translations to apptranslators.org if changed")
 		flag.BoolVar(&flgClean, "clean", false, "clean the build")
+		flag.BoolVar(&flgDeleteOldBuilds, "delete-old-builds", false, "delete old builds")
 		flag.Parse()
 	}
 
@@ -120,6 +122,13 @@ func main() {
 		return
 	}
 
+	if flgDeleteOldBuilds {
+		minioDeleteOldBuilds()
+		s3DeleteOldBuilkds()
+		return
+	}
+
+	// on GitHub Actions the build happens in an earlier step
 	if flgUploadCiBuild {
 		flgUpload = true
 		detectVersions()

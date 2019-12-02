@@ -111,3 +111,17 @@ func minioUploadDailyInfo(c *u.MinioClient, ver string, dir string) {
 	fatalIfErr(err)
 	logf("Uploaded to spaces: '%s'\n", remotePath)
 }
+
+func minioDeleteOldBuildsPrefix(prefix string) {
+	c := newMinioClient()
+	files, err := c.ListRemoteFiles(prefix)
+	must(err)
+	for _, f := range files {
+		fmt.Printf("key: %s\n", f.Key)
+	}
+}
+
+func minioDeleteOldBuilds() {
+	minioDeleteOldBuildsPrefix("/software/sumatrapdf/prerel/")
+	//minioDeleteOldBuildsPrefix("/software/sumatrapdf/daily/")
+}

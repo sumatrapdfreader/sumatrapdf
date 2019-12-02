@@ -347,3 +347,7 @@ func s3UploadDailyInfo(c *S3Client, ver string, dir string) {
 	err = c.UploadString("sumatrapdf/sumpdf-daily-update.txt", s, true)
 	fatalIfErr(err)
 }
+
+func s3DeleteOldBuilkds() {
+
+}

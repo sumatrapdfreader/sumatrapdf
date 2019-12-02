@@ -275,8 +275,6 @@ func buildPreRelease() {
 
 	copyArtifacts()
 	createManifestMust()
-
-	s3UploadPreReleaseMust(svnPreReleaseVer)
 }
 
 const (
