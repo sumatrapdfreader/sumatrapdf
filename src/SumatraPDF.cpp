@@ -155,9 +155,9 @@ void SetCurrentLang(const char* langCode) {
 
 #ifndef SUMATRA_UPDATE_INFO_URL
 #ifdef SVN_PRE_RELEASE_VER
-#define SUMATRA_UPDATE_INFO_URL L"https://kjkpub.s3.amazonaws.com/sumatrapdf/sumpdf-prerelease-update.txt"
+#define SUMATRA_UPDATE_INFO_URL L"https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumpdf-prerelease-update.txt"
 #else
-#define SUMATRA_UPDATE_INFO_URL L"https://kjkpub.s3.amazonaws.com/sumatrapdf/sumpdf-update.txt"
+#define SUMATRA_UPDATE_INFO_URL L"https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumpdf-update.txt"
 #endif
 #endif
 
