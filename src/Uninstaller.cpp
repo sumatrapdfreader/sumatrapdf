@@ -39,16 +39,17 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #define UNINSTALLER_WIN_DX INSTALLER_WIN_DX
 #define UNINSTALLER_WIN_DY INSTALLER_WIN_DY
 
-static BOOL IsUninstallerNeeded() {
-    AutoFreeW exePath(GetInstalledExePath());
-    return file::Exists(exePath);
-}
-
 static bool RemoveUninstallerRegistryInfo(HKEY hkey) {
     bool ok1 = DeleteRegKey(hkey, REG_PATH_UNINST);
     // legacy, this key was added by installers up to version 1.8
     bool ok2 = DeleteRegKey(hkey, L"Software\\" APP_NAME_STR);
     return ok1 && ok2;
+}
+
+static bool RemoveUninstallerRegistryInfo() {
+    bool ok1 = RemoveUninstallerRegistryInfo(HKEY_LOCAL_MACHINE);
+    bool ok2 = RemoveUninstallerRegistryInfo(HKEY_CURRENT_USER);
+    return ok1 || ok2;
 }
 
 /* Undo what DoAssociateExeWithPdfExtension() in AppTools.cpp did */
@@ -196,6 +197,12 @@ static bool RemoveShortcut(bool allUsers) {
     return true;
 }
 
+static bool RemoveShortcut() {
+    bool ok1 = RemoveShortcut(true);
+    bool ok2 = RemoveShortcut(false);
+    return ok1 || ok2;
+}
+
 static DWORD WINAPI UninstallerThread(LPVOID data) {
     UNUSED(data);
     // also kill the original uninstaller, if it's just spawned
@@ -207,11 +214,11 @@ static DWORD WINAPI UninstallerThread(LPVOID data) {
     }
     free(exePath);
 
-    if (!RemoveUninstallerRegistryInfo(HKEY_LOCAL_MACHINE) && !RemoveUninstallerRegistryInfo(HKEY_CURRENT_USER)) {
+    if (!RemoveUninstallerRegistryInfo()) {
         NotifyFailed(_TR("Failed to delete uninstaller registry keys"));
     }
 
-    if (!RemoveShortcut(true) && !RemoveShortcut(false)) {
+    if (!RemoveShortcut()) {
         NotifyFailed(_TR("Couldn't remove the shortcut"));
     }
 
@@ -227,8 +234,9 @@ static DWORD WINAPI UninstallerThread(LPVOID data) {
     // always succeed, even for partial uninstallations
     gInstUninstGlobals.success = true;
 
-    if (!gInstUninstGlobals.silent)
+    if (!gInstUninstGlobals.silent) {
         PostMessage(gHwndFrame, WM_APP_INSTALLATION_FINISHED, 0, 0);
+    }
     return 0;
 }
 
@@ -312,12 +320,6 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
     bool handled;
     switch (message) {
         case WM_CREATE:
-            if (!IsUninstallerNeeded()) {
-                MessageBox(nullptr, _TR("SumatraPDF installation not found."), _TR("Uninstallation failed"),
-                           MB_ICONEXCLAMATION | MB_OK);
-                PostQuitMessage(0);
-                return -1;
-            }
             OnCreateWindow(hwnd);
             break;
 
@@ -430,6 +432,10 @@ int RunUninstaller(bool silent) {
 
     gInstUninstGlobals.silent = silent;
     gDefaultMsg = _TR("Are you sure you want to uninstall SumatraPDF?");
+    gInstUninstGlobals.installDir = GetInstallationDir();
+
+    AutoFreeW exePath(GetInstalledExePath());
+    auto installerExists = file::Exists(exePath);
 
     if (gInstUninstGlobals.showUsageAndQuit) {
         ShowUsage();
@@ -437,7 +443,13 @@ int RunUninstaller(bool silent) {
         goto Exit;
     }
 
-    gInstUninstGlobals.installDir = GetInstallationDir();
+    // installerExists = true;
+    if (!installerExists) {
+        const WCHAR* caption = _TR("Uninstallation failed");
+        const WCHAR* msg = _TR("SumatraPDF installation not found.");
+        MessageBox(nullptr, msg, caption, MB_ICONEXCLAMATION | MB_OK);
+        goto Exit;
+    }
 
     if (gInstUninstGlobals.silent) {
         UninstallerThread(nullptr);
