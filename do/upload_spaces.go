@@ -105,9 +105,35 @@ func spacesUploadPreReleaseMust(ver string, dir string) {
 	fatalIfErr(err)
 	logf("Uploaded to spaces: '%s' as '%s'\n", manifestLocalPath, manifestRemotePath)
 
-	minioUploadDailyInfo(c, ver, dir)
+	if dir == "daily" {
+		minioUploadDailyInfo(c, ver, dir)
+	} else if dir == "prerel" {
+		minioUploadPrereleaseInfo(c, ver, dir)
+	} else {
+		panic(fmt.Sprintf("uknonw dir: '%s'", dir))
+	}
 
 	logf("Uploaded the build to spaces in %s\n", time.Since(timeStart))
+}
+
+func minioUploadPrereleaseInfo(c *u.MinioClient, ver string, dir string) {
+	s := createSumatraLatestJs(dir)
+	remotePath := "software/sumatrapdf/sumatralatest.js"
+	err := c.UploadDataPublic(remotePath, []byte(s))
+	fatalIfErr(err)
+	logf("Uploaded to spaces: '%s'\n", remotePath)
+
+	remotePath = "software/sumatrapdf/sumpdf-prerelease-latest.txt"
+	err = c.UploadDataPublic(remotePath, []byte(ver))
+	fatalIfErr(err)
+	logf("Uploaded to spaces: '%s'\n", remotePath)
+
+	//don't set a Stable version for pre-release builds
+	s = fmt.Sprintf("[SumatraPDF]\nLatest %s\n", ver)
+	remotePath = "software/sumatrapdf/sumpdf-prerelease-update.txt"
+	err = c.UploadDataPublic(remotePath, []byte(s))
+	fatalIfErr(err)
+	logf("Uploaded to spaces: '%s'\n", remotePath)
 }
 
 func minioUploadDailyInfo(c *u.MinioClient, ver string, dir string) {
@@ -117,13 +143,11 @@ func minioUploadDailyInfo(c *u.MinioClient, ver string, dir string) {
 	fatalIfErr(err)
 	logf("Uploaded to spaces: '%s'\n", remotePath)
 
-	//sumatrapdf/sumpdf-prerelease-latest.txt
 	remotePath = "software/sumatrapdf/sumpdf-daily-latest.txt"
 	err = c.UploadDataPublic(remotePath, []byte(ver))
 	fatalIfErr(err)
 	logf("Uploaded to spaces: '%s'\n", remotePath)
 
-	//sumatrapdf/sumpdf-prerelease-update.txt
 	//don't set a Stable version for pre-release builds
 	s = fmt.Sprintf("[SumatraPDF]\nLatest %s\n", ver)
 	remotePath = "software/sumatrapdf/sumpdf-daily-update.txt"
@@ -132,7 +156,9 @@ func minioUploadDailyInfo(c *u.MinioClient, ver string, dir string) {
 	logf("Uploaded to spaces: '%s'\n", remotePath)
 }
 
-// software/sumatrapdf/prerel/SumatraPDF-prerelease-11290-64-install.exe
+// "software/sumatrapdf/prerel/SumatraPDF-prerelease-11290-64-install.exe"
+// =>
+// 11290
 func extractVersionFromName(s string) int {
 	parts := strings.Split(s, "/")
 	name := parts[len(parts)-1]

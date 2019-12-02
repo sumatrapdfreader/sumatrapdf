@@ -192,9 +192,29 @@ func s3UploadPreReleaseMust(ver string, dir string) {
 	err = c.UploadFileReader(manifestRemotePath, manifestLocalPath, true)
 	fatalIfErr(err)
 
-	s3UploadDailyInfo(c, ver, dir)
+	if dir == "daily" {
+		s3UploadDailyInfo(c, ver, dir)
+	} else if dir == "prerel" {
+		s3UploadPreReleaseInfo(c, ver, dir)
+	} else {
+		panic(fmt.Sprintf("uknonw dir: '%s'", dir))
+	}
 
 	logf("Uploaded the build to s3 in %s\n", time.Since(timeStart))
+}
+
+func s3UploadPreReleaseInfo(c *S3Client, ver string, dir string) {
+	s := createSumatraLatestJs(dir)
+	err := c.UploadString("sumatrapdf/sumatralatest.js", s, true)
+	fatalIfErr(err)
+
+	err = c.UploadString("sumatrapdf/sumpdf-prerelease-latest.txt", ver, true)
+	fatalIfErr(err)
+
+	//don't set a Stable version for pre-release builds
+	s = fmt.Sprintf("[SumatraPDF]\nLatest %s\n", ver)
+	err = c.UploadString("sumatrapdf/sumpdf-prerelease-update.txt", s, true)
+	fatalIfErr(err)
 }
 
 func s3UploadDailyInfo(c *S3Client, ver string, dir string) {
@@ -202,11 +222,9 @@ func s3UploadDailyInfo(c *S3Client, ver string, dir string) {
 	err := c.UploadString("sumatrapdf/sumadaily.js", s, true)
 	fatalIfErr(err)
 
-	//sumatrapdf/sumpdf-prerelease-latest.txt
 	err = c.UploadString("sumatrapdf/sumpdf-daily-latest.txt", ver, true)
 	fatalIfErr(err)
 
-	//sumatrapdf/sumpdf-prerelease-update.txt
 	//don't set a Stable version for pre-release builds
 	s = fmt.Sprintf("[SumatraPDF]\nLatest %s\n", ver)
 	err = c.UploadString("sumatrapdf/sumpdf-daily-update.txt", s, true)
