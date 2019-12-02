@@ -231,10 +231,14 @@ static bool IsUsingInstallation(DWORD procId) {
 }
 
 // http://support.microsoft.com/default.aspx?scid=kb;en-us;207132
-static bool RegisterServerDLL(const WCHAR* dllPath, bool install, const WCHAR* args = nullptr) {
+static bool RegisterOrUnregisterServerDLL(const WCHAR* dllPath, bool install, const WCHAR* args = nullptr) {
     if (FAILED(OleInitialize(nullptr))) {
         return false;
     }
+
+    defer {
+        OleUninitialize();
+    };
 
     // make sure that the DLL can find any DLLs it depends on and
     // which reside in the same directory (in this case: libmupdf.dll)
@@ -242,36 +246,49 @@ static bool RegisterServerDLL(const WCHAR* dllPath, bool install, const WCHAR* a
         AutoFreeW dllDir(path::GetDir(dllPath));
         DynSetDllDirectoryW(dllDir);
     }
+    defer {
+        if (DynSetDllDirectoryW) {
+            DynSetDllDirectoryW(L"");
+        }
+    };
+
+    HMODULE lib = LoadLibraryW(dllPath);
+    if (!lib) {
+        return false;
+    }
+    defer {
+        FreeLibrary(lib);
+    };
 
     bool ok = false;
-    HMODULE lib = LoadLibraryW(dllPath);
-
-    if (lib) {
-        typedef HRESULT(WINAPI * DllInstallProc)(BOOL, LPCWSTR);
-        typedef HRESULT(WINAPI * DllRegUnregProc)(VOID);
-        if (args) {
-            DllInstallProc DllInstall = (DllInstallProc)GetProcAddress(lib, "DllInstall");
-            if (DllInstall)
-                ok = SUCCEEDED(DllInstall(install, args));
-            else
-                args = nullptr;
-        }
-        if (!args) {
-            const char* func = install ? "DllRegisterServer" : "DllUnregisterServer";
-            DllRegUnregProc DllRegUnreg = (DllRegUnregProc)GetProcAddress(lib, func);
-            if (DllRegUnreg)
-                ok = SUCCEEDED(DllRegUnreg());
-        }
-        FreeLibrary(lib);
+    typedef HRESULT(WINAPI * DllInstallProc)(BOOL, LPCWSTR);
+    typedef HRESULT(WINAPI * DllRegUnregProc)(VOID);
+    if (args) {
+        DllInstallProc DllInstall = (DllInstallProc)GetProcAddress(lib, "DllInstall");
+        if (DllInstall)
+            ok = SUCCEEDED(DllInstall(install, args));
+        else
+            args = nullptr;
     }
 
-    if (DynSetDllDirectoryW) {
-        DynSetDllDirectoryW(L"");
+    if (!args) {
+        const char* func = install ? "DllRegisterServer" : "DllUnregisterServer";
+        DllRegUnregProc DllRegUnreg = (DllRegUnregProc)GetProcAddress(lib, func);
+        if (DllRegUnreg)
+            ok = SUCCEEDED(DllRegUnreg());
     }
-
-    OleUninitialize();
-
     return ok;
+}
+
+static bool RegisterServerDLL(const WCHAR* dllPath, const WCHAR* args = nullptr) {
+    return RegisterOrUnregisterServerDLL(dllPath, true, args);
+}
+
+static bool UnRegisterServerDLL(const WCHAR* dllPath, const WCHAR* args = nullptr) {
+    if (!file::Exists(dllPath)) {
+        return true;
+    }
+    return RegisterOrUnregisterServerDLL(dllPath, false, args);
 }
 
 void UninstallBrowserPlugin() {
@@ -282,34 +299,39 @@ void UninstallBrowserPlugin() {
         if (!file::Exists(dllPath))
             return;
     }
-    if (!RegisterServerDLL(dllPath, false))
+    if (!UnRegisterServerDLL(dllPath)) {
         NotifyFailed(_TR("Couldn't uninstall browser plugin"));
+    }
 }
 
 void InstallPdfFilter() {
     AutoFreeW dllPath(GetPdfFilterPath());
-    if (!RegisterServerDLL(dllPath, true))
+    if (!RegisterServerDLL(dllPath)) {
         NotifyFailed(_TR("Couldn't install PDF search filter"));
+    }
 }
 
 void UninstallPdfFilter() {
     AutoFreeW dllPath(GetPdfFilterPath());
-    if (!RegisterServerDLL(dllPath, false))
+    if (!UnRegisterServerDLL(dllPath)) {
         NotifyFailed(_TR("Couldn't uninstall PDF search filter"));
+    }
 }
 
 void InstallPdfPreviewer() {
     AutoFreeW dllPath(GetPdfPreviewerPath());
     // TODO: RegisterServerDLL(dllPath, true, L"exts:pdf,...");
-    if (!RegisterServerDLL(dllPath, true))
+    if (!RegisterServerDLL(dllPath)) {
         NotifyFailed(_TR("Couldn't install PDF previewer"));
+    }
 }
 
 void UninstallPdfPreviewer() {
     AutoFreeW dllPath(GetPdfPreviewerPath());
     // TODO: RegisterServerDLL(dllPath, false, L"exts:pdf,...");
-    if (!RegisterServerDLL(dllPath, false))
+    if (!UnRegisterServerDLL(dllPath)) {
         NotifyFailed(_TR("Couldn't uninstall PDF previewer"));
+    }
 }
 
 #define TEN_SECONDS_IN_MS 10 * 1000
@@ -341,12 +363,14 @@ static bool KillProcIdWithName(DWORD processId, const WCHAR* modulePath, bool wa
     // Note: do I need PROCESS_QUERY_INFORMATION and PROCESS_VM_READ?
     DWORD dwAccess = PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | PROCESS_TERMINATE;
     ScopedHandle hProcess(OpenProcess(dwAccess, inheritHandle, processId));
-    if (!hProcess.IsValid())
+    if (!hProcess.IsValid()) {
         return false;
+    }
 
     BOOL killed = TerminateProcess(hProcess, 0);
-    if (!killed)
+    if (!killed) {
         return false;
+    }
 
     if (waitUntilTerminated)
         WaitForSingleObject(hProcess, TEN_SECONDS_IN_MS);
