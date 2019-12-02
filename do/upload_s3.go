@@ -5,10 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
-	"sort"
-	"strconv"
-	"strings"
 	"text/template"
 	"time"
 )
@@ -78,131 +74,16 @@ func createSumatraLatestJs(dir string) string {
 	return execTextTemplate(tmplText, d)
 }
 
-// FilesForVer describes pre-release files in s3 for a given version
-type FilesForVer struct {
-	Version    int      // pre-release version as int
-	VersionStr string   // pre-release version as string
-	Names      []string // relative to sumatrapdf/prerel/
-	Paths      []string // full key path in S3
-}
-
-/*
-Recognize the following files:
-SumatraPDF-prerelease-10169-install.exe
-SumatraPDF-prerelease-10169.exe
-SumatraPDF-prerelease-10169.pdb.lzsa
-SumatraPDF-prerelease-10169.pdb.zip
-SumatraPDF-prerelease-10169-install-64.exe
-SumatraPDF-prerelease-10169-64.exe
-SumatraPDF-prerelease-10169.pdb-64.lzsa
-SumatraPDF-prerelease-10169.pdb-64.zip
-manifest-10169.txt
-*/
-
-var (
-	preRelNameRegexps []*regexp.Regexp
-	regexps           = []string{
-		`SumatraPDF-prerelease-(\d+)-install-64.exe`,
-		`SumatraPDF-prerelease-(\d+)-64.exe`,
-		`SumatraPDF-prerelease-(\d+).pdb-64.lzsa`,
-		`SumatraPDF-prerelease-(\d+).pdb-64.zip`,
-
-		`SumatraPDF-prerelease-(\d+)-install.exe`,
-		`SumatraPDF-prerelease-(\d+).exe`,
-		`SumatraPDF-prerelease-(\d+).pdb.lzsa`,
-		`SumatraPDF-prerelease-(\d+).pdb.zip`,
-
-		`manifest-(\d+).txt`,
-	}
-)
-
-func compilePreRelNameRegexpsMust() {
-	fatalIf(preRelNameRegexps != nil, "preRelNameRegexps != nil")
-	for _, s := range regexps {
-		r := regexp.MustCompile(s)
-		preRelNameRegexps = append(preRelNameRegexps, r)
-	}
-}
-
-func preRelFileVer(name string) string {
-	for _, r := range preRelNameRegexps {
-		res := r.FindStringSubmatch(name)
-		if len(res) == 2 {
-			return res[1]
-		}
-	}
-	return ""
-}
-
-func addToFilesForVer(path, name, verStr string, files []*FilesForVer) []*FilesForVer {
-	ver, err := strconv.Atoi(verStr)
-	fatalIfErr(err)
-	for _, fi := range files {
-		if fi.Version == ver {
-			fi.Names = append(fi.Names, name)
-			fi.Paths = append(fi.Paths, path)
-			return files
-		}
-	}
-
-	fi := FilesForVer{
-		Version:    ver,
-		VersionStr: verStr,
-		Names:      []string{name},
-		Paths:      []string{path},
-	}
-	return append(files, &fi)
-}
-
-// ByVerFilesForVer sorts by version
-type ByVerFilesForVer []*FilesForVer
-
-func (s ByVerFilesForVer) Len() int {
-	return len(s)
-}
-func (s ByVerFilesForVer) Swap(i, j int) {
-	s[i], s[j] = s[j], s[i]
-}
-func (s ByVerFilesForVer) Less(i, j int) bool {
-	return s[i].Version > s[j].Version
-}
-
 // list is sorted by Version, biggest first, to make it easy to delete oldest
-func s3ListPreReleaseFilesMust(c *S3Client, dbg bool) []*FilesForVer {
-	fatalIf(preRelNameRegexps == nil, "preRelNameRegexps == nil")
-	var res []*FilesForVer
+func s3ListPreReleaseFilesMust(c *S3Client, prefix string) []string {
 	bucket := c.GetBucket()
 	resp, err := bucket.List(s3PreRelDir, "", "", maxS3Results)
 	fatalIfErr(err)
-	fatalIf(resp.IsTruncated, "truncated response! implement reading all the files\n")
-	if dbg {
-		logf("%d files\n", len(resp.Contents))
-	}
-	var unrecognizedFiles []string
+	//fatalIf(resp.IsTruncated, "truncated response! implement reading all the files\n")
+	var res []string
 	for _, key := range resp.Contents {
-		path := key.Key
-		name := path[len(s3PreRelDir):]
-		verStr := preRelFileVer(name)
-		if dbg {
-			logf("path: '%s', name: '%s', ver: '%s', \n", path, name, verStr)
-		}
-		if verStr == "" {
-			unrecognizedFiles = append(unrecognizedFiles, path)
-		} else {
-			res = addToFilesForVer(path, name, verStr, res)
-		}
-	}
-	sort.Sort(ByVerFilesForVer(res))
-	for _, s := range unrecognizedFiles {
-		logf("Unrecognized pre-relase file in s3: '%s'\n", s)
-	}
-
-	if true || dbg {
-		for _, fi := range res {
-			logf("Ver: %s (%d)\n", fi.VersionStr, fi.Version)
-			logf("  names: %s\n", fi.Names)
-			logf("  paths: %s\n", fi.Paths)
-		}
+		// fmt.Printf("%s\n", key.Key)
+		res = append(res, key.Key)
 	}
 	return res
 }
@@ -223,31 +104,6 @@ func verifyReleaseNotInS3Must(c *S3Client, ver string) {
 	}
 	s3Path := s3RelDir + fmt.Sprintf("SumatraPDF-%s-manifest.txt", ver)
 	fatalIf(c.Exists(s3Path), "build '%s' already exists in s3 because '%s' existst\n", ver, s3Path)
-}
-
-func s3DeleteOldestPreRel(c *S3Client) {
-	if !flgUpload {
-		return
-	}
-	maxToRetain := 10
-	files := s3ListPreReleaseFilesMust(c, false)
-	if len(files) < maxToRetain {
-		return
-	}
-	toDelete := files[maxToRetain:]
-	for _, fi := range toDelete {
-		for _, s3Path := range fi.Paths {
-			// don't delete manifest files
-			if strings.Contains(s3Path, "manifest-") {
-				continue
-			}
-			err := c.Delete(s3Path)
-			if err != nil {
-				// it's ok if fails, we'll try again next time
-				logf("Failed to delete '%s' in s3\n", s3Path)
-			}
-		}
-	}
 }
 
 func dumpEnv() {
@@ -285,6 +141,15 @@ func shouldSkipUpload() bool {
 	return false
 }
 
+func newS3Client() *S3Client {
+	c := &S3Client{
+		Access: os.Getenv("AWS_ACCESS"),
+		Secret: os.Getenv("AWS_SECRET"),
+		Bucket: "kjkpub",
+	}
+	return c
+}
+
 // upload as:
 // https://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-1027-install.exe etc.
 func s3UploadPreReleaseMust(ver string, dir string) {
@@ -294,16 +159,11 @@ func s3UploadPreReleaseMust(ver string, dir string) {
 
 	s3PreRelDir = "sumtrapdf/" + dir + "/"
 
-	c := &S3Client{
-		Access: os.Getenv("AWS_ACCESS"),
-		Secret: os.Getenv("AWS_SECRET"),
-		Bucket: "kjkpub",
-	}
+	c := newS3Client()
 	//dumpEnv()
 	c.VerifyHasSecrets()
 
 	timeStart := time.Now()
-	//s3DeleteOldestPreRel()
 
 	verifyPreReleaseNotInS3Must(c, svnPreReleaseVer)
 
@@ -353,6 +213,31 @@ func s3UploadDailyInfo(c *S3Client, ver string, dir string) {
 	fatalIfErr(err)
 }
 
-func s3DeleteOldBuilkds() {
+func s3DeleteOldBuilkdsPrefix(prefix string) {
+	c := newS3Client()
 
+	keys := s3ListPreReleaseFilesMust(c, prefix)
+	fmt.Printf("%d s3 files under '%s'\n", len(keys), prefix)
+	byVer := groupFilesByVersion(keys)
+	for i, v := range byVer {
+		deleting := (i >= nBuildsLeft)
+		if deleting {
+			fmt.Printf("%d, deleting\n", v.ver)
+			for _, fn := range v.files {
+				fmt.Printf("  %s deleting\n", fn)
+				err := c.Delete(fn)
+				must(err)
+			}
+		} else {
+			fmt.Printf("%d, not deleting\n", v.ver)
+			// for _, fn := range v.files {
+			// 	fmt.Printf("  %s not deleting\n", fn)
+			// }
+		}
+	}
+}
+
+func s3DeleteOldBuilds() {
+	s3DeleteOldBuilkdsPrefix("software/sumatrapdf/prerel/")
+	s3DeleteOldBuilkdsPrefix("software/sumatrapdf/daily/")
 }

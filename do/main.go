@@ -126,7 +126,7 @@ func main() {
 	if flgDeleteOldBuilds {
 		fmt.Printf("delete old builds\n")
 		minioDeleteOldBuilds()
-		s3DeleteOldBuilkds()
+		s3DeleteOldBuilds()
 		return
 	}
 
@@ -136,6 +136,8 @@ func main() {
 		detectVersions()
 		s3UploadPreReleaseMust(svnPreReleaseVer, "daily")
 		spacesUploadPreReleaseMust(svnPreReleaseVer, "daily")
+		minioDeleteOldBuilds()
+		s3DeleteOldBuilds()
 		return
 	}
 

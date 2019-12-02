@@ -123,6 +123,11 @@ func extractVersionFromName(s string) int {
 	parts := strings.Split(s, "/")
 	name := parts[len(parts)-1]
 	name = strings.TrimPrefix(name, "SumatraPDF-prerelease-")
+
+	// TODO: temporary, for old builds in s3
+	name = strings.TrimPrefix(name, "SumatraPDF-prerelase-")
+	name = strings.TrimPrefix(name, "manifest-")
+
 	parts = strings.Split(name, "-")
 	parts = strings.Split(parts[0], ".")
 	verStr := parts[0]
