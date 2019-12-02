@@ -2,30 +2,38 @@
 <html>
 
 <head>
-	<script src="https://kjkpub.s3.amazonaws.com/sumatrapdf/sumatralatest.js" type="text/javascript"></script>
+	<script src="https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/sumatralatest.js"
+		type="text/javascript"></script>
 	<script>
 		function $(id) {
 			return document.getElementById(id);
 		}
+
+		function setDlURL(id, html) {
+			$(id).innerHTML = html;
+			html = html.replace("kjkpub.s3.amazonaws.com/", "kjkpubsf.sfo2.digitaloceanspaces.com/")
+			$("s-" + id).innerHTML = html;
+		}
+
 		function myInit() {
 			var html, name;
 			$("buildtime").innerHTML = sumBuiltOn;
 
 			name = sumLatestExe.split("/")[5];
 			html = "<a href='" + sumLatestExe + "'>" + name + "</a>";
-			$("urlexe").innerHTML = html;
+			setDlURL("urlexe", html);
 
 			name = sumLatestInstaller.split("/")[5];
 			html = "<a href='" + sumLatestInstaller + "'>" + name + "</a>";
-			$("urlinstaller").innerHTML = html;
+			setDlURL("urlinstaller", html);
 
 			name = sumLatestExe64.split("/")[5];
 			html = "<a href='" + sumLatestExe64 + "'>" + name + "</a>";
-			$("urlexe64").innerHTML = html;
+			setDlURL("urlexe64", html);
 
 			name = sumLatestInstaller64.split("/")[5];
 			html = "<a href='" + sumLatestInstaller64 + "'>" + name + "</a>";
-			$("urlinstaller64").innerHTML = html;
+			setDlURL("urlinstaller64", html);
 		}
 		window.onload = myInit;
 	</script>
@@ -43,7 +51,7 @@
 	</noscript>
 
 	<p>
-		<a href="//www.sumatrapdfreader.org/">SumatraPDF</a> :
+		<a href="https://www.sumatrapdfreader.org/">SumatraPDF</a> :
 		<b>
 			<font color="red">Pre-release builds, please do not redistribute.</font>
 		</b>
@@ -55,14 +63,18 @@
 
 	<p><b>Latest SumatraPDF pre-release, built on <span id="buildtime"></span>:</b></p>
 
-	<p>64-bit version:</p>
+	<p><b>64-bit version:</b></p>
 	<table style="margin-left:8px">
 		<tr>
 			<td>full installer 64-bit:&nbsp;</td>
+			<td><span id="s-urlinstaller64"></span></td>
+			<td>&nbsp;&nbsp;alternative location:&nbsp;</td>
 			<td><span id="urlinstaller64"></span></td>
 		</tr>
 		<tr>
 			<td>portable version 64-bit:&nbsp;</td>
+			<td><span id="s-urlexe64"></span></td>
+			<td>&nbsp;&nbsp;alternative location:&nbsp;</td>
 			<td><span id="urlexe64"></span></td>
 		</tr>
 	</table>
@@ -71,10 +83,14 @@
 	<table style="margin-left:8px">
 		<tr>
 			<td>full installer:&nbsp;</td>
+			<td><span id="s-urlinstaller"></span></td>
+			<td>&nbsp;&nbsp;alternative location:&nbsp;</td>
 			<td><span id="urlinstaller"></span></td>
 		</tr>
 		<tr>
 			<td>portable version:&nbsp;</td>
+			<td><span id="s-urlexe"></span></td>
+			<td>&nbsp;&nbsp;alternative location:&nbsp;</td>
 			<td><span id="urlexe"></span></td>
 		</tr>
 	</table>

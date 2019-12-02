@@ -55,19 +55,20 @@ func createSumatraLatestJs(dir string) string {
 	currDate := time.Now().Format("2006-01-02")
 	v := svnPreReleaseVer
 	tmplText := `
-		var sumLatestVer = {{.Ver}};
-		var sumBuiltOn = "{{.CurrDate}}";
-		var sumLatestName = "SumatraPDF-prerelease-{{.Ver}}.exe";
+var sumLatestVer = {{.Ver}};
+var sumBuiltOn = "{{.CurrDate}}";
+var sumLatestName = "SumatraPDF-prerelease-{{.Ver}}.exe";
 
-		var sumLatestExe = "https://kjkpub.s3.amazonaws.com/{{.Dir}}/SumatraPDF-prerelease-{{.Ver}}.exe";
-		var sumLatestPdb = "https://kjkpub.s3.amazonaws.com/{{.Dir}}/SumatraPDF-prerelease-{{.Ver}}.pdb.zip";
-		var sumLatestInstaller = "https://kjkpub.s3.amazonaws.com/{{.Dir}}/SumatraPDF-prerelease-{{.Ver}}-install.exe";
+var sumLatestExe         = "{{.Host}}{{.Dir}}/SumatraPDF-prerelease-{{.Ver}}.exe";
+var sumLatestPdb         = "{{.Host}}{{.Dir}}/SumatraPDF-prerelease-{{.Ver}}.pdb.zip";
+var sumLatestInstaller   = "{{.Host}}{{.Dir}}/SumatraPDF-prerelease-{{.Ver}}-install.exe";
 
-		var sumLatestExe64 = "https://kjkpub.s3.amazonaws.com/{{.Dir}}/SumatraPDF-prerelease-{{.Ver}}-64.exe";
-		var sumLatestPdb64 = "https://kjkpub.s3.amazonaws.com/{{.Dir}}/SumatraPDF-prerelease-{{.Ver}}-64.pdb.zip";
-		var sumLatestInstaller64 = "https://kjkpub.s3.amazonaws.com/{{.Dir}}/SumatraPDF-prerelease-{{.Ver}}-64-install.exe";
+var sumLatestExe64       = "{{.Host}}{{.Dir}}/SumatraPDF-prerelease-{{.Ver}}-64.exe";
+var sumLatestPdb64       = "{{.Host}}{{.Dir}}/SumatraPDF-prerelease-{{.Ver}}-64.pdb.zip";
+var sumLatestInstaller64 = "{{.Host}}{{.Dir}}/SumatraPDF-prerelease-{{.Ver}}-64-install.exe";
 `
 	d := map[string]interface{}{
+		"Host":     "https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/",
 		"Ver":      v,
 		"Dir":      dir,
 		"CurrDate": currDate,

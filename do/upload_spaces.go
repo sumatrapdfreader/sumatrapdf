@@ -153,29 +153,6 @@ func spacesUploadPreReleaseMust(ver string, buildType string) {
 	logf("Uploaded the build to spaces in %s\n", time.Since(timeStart))
 }
 
-func minioUploadPrereleaseInfo(c *u.MinioClient, ver string, dir string) {
-}
-
-func minioUploadDailyInfo(c *u.MinioClient, ver string, dir string) {
-	s := createSumatraLatestJs(dir)
-	remotePath := "software/sumatrapdf/sumadaily.js"
-	err := c.UploadDataPublic(remotePath, []byte(s))
-	fatalIfErr(err)
-	logf("Uploaded to spaces: '%s'\n", remotePath)
-
-	remotePath = "software/sumatrapdf/sumpdf-daily-latest.txt"
-	err = c.UploadDataPublic(remotePath, []byte(ver))
-	fatalIfErr(err)
-	logf("Uploaded to spaces: '%s'\n", remotePath)
-
-	//don't set a Stable version for pre-release builds
-	s = fmt.Sprintf("[SumatraPDF]\nLatest %s\n", ver)
-	remotePath = "software/sumatrapdf/sumpdf-daily-update.txt"
-	err = c.UploadDataPublic(remotePath, []byte(s))
-	fatalIfErr(err)
-	logf("Uploaded to spaces: '%s'\n", remotePath)
-}
-
 // "software/sumatrapdf/prerel/SumatraPDF-prerelease-11290-64-install.exe"
 // =>
 // 11290

@@ -40,7 +40,8 @@ func runLocal() {
 	{
 		cmd := exec.Command("caddy", "-log", "stdout")
 		cmd.Stdout = os.Stdout
-		cmd.Start()
+		err := cmd.Start()
+		u.PanicIfErr(err)
 		u.OpenBrowser("http://localhost:9000")
 		cmd.Wait()
 	}
