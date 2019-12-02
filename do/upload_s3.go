@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -8,6 +9,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"text/template"
 	"time"
 )
 
@@ -31,6 +33,15 @@ func shouldSignOrUpload() bool {
 	return event == "push"
 }
 
+func execTextTemplate(tmplText string, data interface{}) string {
+	tmpl, err := template.New("").Parse(tmplText)
+	must(err)
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, data)
+	must(err)
+	return buf.String()
+}
+
 // sumatrapdf/sumatralatest.js
 /*
 var sumLatestVer = 10175;
@@ -40,22 +51,28 @@ var sumLatestExe = "https://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF
 var sumLatestPdb = "https://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-10175.pdb.zip";
 var sumLatestInstaller = "https://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-10175-install.exe";
 */
-func createSumatraLatestJs() string {
+func createSumatraLatestJs(dir string) string {
 	currDate := time.Now().Format("2006-01-02")
 	v := svnPreReleaseVer
-	return fmt.Sprintf(`
-		var sumLatestVer = %s;
-		var sumBuiltOn = "%s";
-		var sumLatestName = "SumatraPDF-prerelease-%s.exe";
+	tmplText := `
+		var sumLatestVer = {{.Ver}};
+		var sumBuiltOn = "{{.CurrDate}}";
+		var sumLatestName = "SumatraPDF-prerelease-{{.Ver}}.exe";
 
-		var sumLatestExe = "https://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-%s.exe";
-		var sumLatestPdb = "https://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-%s.pdb.zip";
-		var sumLatestInstaller = "https://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-%s-install.exe";
+		var sumLatestExe = "https://kjkpub.s3.amazonaws.com/sumatrapdf/{{.Dir}}/SumatraPDF-prerelease-{{.Ver}}.exe";
+		var sumLatestPdb = "https://kjkpub.s3.amazonaws.com/sumatrapdf/{{.Dir}}/SumatraPDF-prerelease-{{.Ver}}.pdb.zip";
+		var sumLatestInstaller = "https://kjkpub.s3.amazonaws.com/sumatrapdf/{{.Dir}}/SumatraPDF-prerelease-{{.Ver}}-install.exe";
 
-		var sumLatestExe64 = "https://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-%s-64.exe";
-		var sumLatestPdb64 = "https://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-%s-64.pdb.zip";
-		var sumLatestInstaller64 = "https://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-%s-64-install.exe";
-`, v, currDate, v, v, v, v, v, v, v)
+		var sumLatestExe64 = "https://kjkpub.s3.amazonaws.com/sumatrapdf/{{.Dir}}/SumatraPDF-prerelease-{{.Ver}}-64.exe";
+		var sumLatestPdb64 = "https://kjkpub.s3.amazonaws.com/sumatrapdf/{{.Dir}}/SumatraPDF-prerelease-{{.Ver}}-64.pdb.zip";
+		var sumLatestInstaller64 = "https://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-{{.Ver}}-64-install.exe";
+`
+	d := map[string]interface{}{
+		"Ver":      v,
+		"Dir":      dir,
+		"CurrDate": currDate,
+	}
+	return execTextTemplate(tmplText, d)
 }
 
 // FilesForVer describes pre-release files in s3 for a given version
@@ -267,7 +284,7 @@ func shouldSkipUpload() bool {
 
 // upload as:
 // https://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-1027-install.exe etc.
-func s3UploadPreReleaseMust(ver string) {
+func s3UploadPreReleaseMust(ver string, dir string) {
 	if shouldSkipUpload() {
 		return
 	}
@@ -310,14 +327,13 @@ func s3UploadPreReleaseMust(ver string) {
 	err = c.UploadFileReader(manifestRemotePath, manifestLocalPath, true)
 	fatalIfErr(err)
 
-	s3UploadDailyInfo(c, ver)
+	s3UploadDailyInfo(c, ver, dir)
 
 	logf("Uploaded the build to s3 in %s\n", time.Since(timeStart))
-	//s3SetAsPreRelease(ver)
 }
 
-func s3UploadDailyInfo(c *S3Client, ver string) {
-	s := createSumatraLatestJs()
+func s3UploadDailyInfo(c *S3Client, ver string, dir string) {
+	s := createSumatraLatestJs(dir)
 	err := c.UploadString("sumatrapdf/sumadaily.js", s, true)
 	fatalIfErr(err)
 
@@ -329,21 +345,5 @@ func s3UploadDailyInfo(c *S3Client, ver string) {
 	//don't set a Stable version for pre-release builds
 	s = fmt.Sprintf("[SumatraPDF]\nLatest %s\n", ver)
 	err = c.UploadString("sumatrapdf/sumpdf-daily-update.txt", s, true)
-	fatalIfErr(err)
-}
-
-func s3SetAsPreRelease(c *S3Client, ver string) {
-	s := createSumatraLatestJs()
-	err := c.UploadString("sumatrapdf/sumatralatest.js", s, true)
-	fatalIfErr(err)
-
-	//sumatrapdf/sumpdf-prerelease-latest.txt
-	err = c.UploadString("sumatrapdf/sumpdf-prerelease-latest.txt", ver, true)
-	fatalIfErr(err)
-
-	//sumatrapdf/sumpdf-prerelease-update.txt
-	//don't set a Stable version for pre-release builds
-	s = fmt.Sprintf("[SumatraPDF]\nLatest %s\n", ver)
-	err = c.UploadString("sumatrapdf/sumpdf-prerelease-update.txt", s, true)
 	fatalIfErr(err)
 }

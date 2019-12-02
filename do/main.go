@@ -123,14 +123,16 @@ func main() {
 	if flgUploadCiBuild {
 		flgUpload = true
 		detectVersions()
-		s3UploadPreReleaseMust(svnPreReleaseVer)
-		spacesUploadPreReleaseMust(svnPreReleaseVer)
+		s3UploadPreReleaseMust(svnPreReleaseVer, "daily")
+		spacesUploadPreReleaseMust(svnPreReleaseVer, "daily")
 		return
 	}
 
 	if flgBuildPreRelease {
 		detectVersions()
 		buildPreRelease()
+		s3UploadPreReleaseMust(svnPreReleaseVer, "prerel")
+		spacesUploadPreReleaseMust(svnPreReleaseVer, "prerel")
 		return
 	}
 

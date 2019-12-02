@@ -48,7 +48,7 @@ func minioUploadFiles(c *u.MinioClient, prefix string, dir string, files []strin
 
 // upload as:
 // https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/prerel/SumatraPDF-prerelease-1027-install.exe etc.
-func spacesUploadPreReleaseMust(ver string) {
+func spacesUploadPreReleaseMust(ver string, dir string) {
 	if shouldSkipUpload() {
 		return
 	}
@@ -85,13 +85,13 @@ func spacesUploadPreReleaseMust(ver string) {
 	fatalIfErr(err)
 	logf("Uploaded to spaces: '%s' as '%s'\n", manifestLocalPath, manifestRemotePath)
 
-	minioUploadDailyInfo(c, ver)
+	minioUploadDailyInfo(c, ver, dir)
 
 	logf("Uploaded the build to spaces in %s\n", time.Since(timeStart))
 }
 
-func minioUploadDailyInfo(c *u.MinioClient, ver string) {
-	s := createSumatraLatestJs()
+func minioUploadDailyInfo(c *u.MinioClient, ver string, dir string) {
+	s := createSumatraLatestJs(dir)
 	remotePath := "software/sumatrapdf/sumadaily.js"
 	err := c.UploadDataPublic(remotePath, []byte(s))
 	fatalIfErr(err)
@@ -110,20 +110,4 @@ func minioUploadDailyInfo(c *u.MinioClient, ver string) {
 	err = c.UploadDataPublic(remotePath, []byte(s))
 	fatalIfErr(err)
 	logf("Uploaded to spaces: '%s'\n", remotePath)
-}
-
-func minioSetAsPreRelease(c *u.MinioClient, ver string) {
-	s := createSumatraLatestJs()
-	err := c.UploadDataPublic("sumatrapdf/sumatralatest.js", []byte(s))
-	fatalIfErr(err)
-
-	//sumatrapdf/sumpdf-prerelease-latest.txt
-	err = c.UploadDataPublic("sumatrapdf/sumpdf-prerelease-latest.txt", []byte(ver))
-	fatalIfErr(err)
-
-	//sumatrapdf/sumpdf-prerelease-update.txt
-	//don't set a Stable version for pre-release builds
-	s = fmt.Sprintf("[SumatraPDF]\nLatest %s\n", ver)
-	err = c.UploadDataPublic("sumatrapdf/sumpdf-prerelease-update.txt", []byte(s))
-	fatalIfErr(err)
 }
