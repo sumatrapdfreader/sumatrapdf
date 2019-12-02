@@ -10,28 +10,34 @@
 		}
 
 		function setDlURL(id, html) {
-			$(id).innerHTML = html;
-			html = html.replace("kjkpub.s3.amazonaws.com/", "kjkpubsf.sfo2.digitaloceanspaces.com/")
 			$("s-" + id).innerHTML = html;
+			html = html.replace("kjkpubsf.sfo2.digitaloceanspaces.com/", "kjkpub.s3.amazonaws.com/")
+			$(id).innerHTML = html;
+		}
+
+		function getName(uri) {
+			var parts = uri.split("/");
+			var name = parts[parts.length - 1];
+			return name;
 		}
 
 		function myInit() {
 			var html, name;
 			$("buildtime").innerHTML = sumBuiltOn;
 
-			name = sumLatestExe.split("/")[5];
+			name = getName(sumLatestExe);
 			html = "<a href='" + sumLatestExe + "'>" + name + "</a>";
 			setDlURL("urlexe", html);
 
-			name = sumLatestInstaller.split("/")[5];
+			name = getName(sumLatestInstaller);
 			html = "<a href='" + sumLatestInstaller + "'>" + name + "</a>";
 			setDlURL("urlinstaller", html);
 
-			name = sumLatestExe64.split("/")[5];
+			name = getName(sumLatestExe64);
 			html = "<a href='" + sumLatestExe64 + "'>" + name + "</a>";
 			setDlURL("urlexe64", html);
 
-			name = sumLatestInstaller64.split("/")[5];
+			name = getName(sumLatestInstaller64);
 			html = "<a href='" + sumLatestInstaller64 + "'>" + name + "</a>";
 			setDlURL("urlinstaller64", html);
 		}
