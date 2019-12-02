@@ -64,7 +64,7 @@ func createSumatraLatestJs(dir string) string {
 
 		var sumLatestExe64 = "https://kjkpub.s3.amazonaws.com/sumatrapdf/{{.Dir}}/SumatraPDF-prerelease-{{.Ver}}-64.exe";
 		var sumLatestPdb64 = "https://kjkpub.s3.amazonaws.com/sumatrapdf/{{.Dir}}/SumatraPDF-prerelease-{{.Ver}}-64.pdb.zip";
-		var sumLatestInstaller64 = "https://kjkpub.s3.amazonaws.com/sumatrapdf/prerel/SumatraPDF-prerelease-{{.Ver}}-64-install.exe";
+		var sumLatestInstaller64 = "https://kjkpub.s3.amazonaws.com/sumatrapdf/{{.Dir}}/SumatraPDF-prerelease-{{.Ver}}-64-install.exe";
 `
 	d := map[string]interface{}{
 		"Ver":      v,
