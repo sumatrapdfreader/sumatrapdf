@@ -610,7 +610,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 
     if (i.install || IsInstaller()) {
         if (!IsValidInstaller()) {
-            MessageBoxW(nullptr, L"Not a valid installer", L"Not valid installer", MB_OK);
+            MessageBoxW(nullptr, L"Not a valid installer", L"Error", MB_OK | MB_ICONERROR);
             return 1;
         }
         retCode = RunInstaller();

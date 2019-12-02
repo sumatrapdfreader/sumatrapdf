@@ -173,6 +173,37 @@ WCHAR* ShortPath(const WCHAR* path) {
     return shortpath;
 }
 
+static bool IsSameFileHandleInformation(BY_HANDLE_FILE_INFORMATION& fi1, BY_HANDLE_FILE_INFORMATION fi2) {
+    if (fi1.dwVolumeSerialNumber != fi2.dwVolumeSerialNumber) {
+        return false;
+    }
+    if (fi1.nFileIndexLow != fi2.nFileIndexLow) {
+        return false;
+    }
+    if (fi1.nFileIndexHigh != fi2.nFileIndexHigh) {
+        return false;
+    }
+    if (fi1.nFileSizeLow != fi2.nFileSizeLow) {
+        return false;
+    }
+    if (fi1.nFileSizeHigh != fi2.nFileSizeHigh) {
+        return false;
+    }
+    if (fi1.dwFileAttributes != fi2.dwFileAttributes) {
+        return false;
+    }
+    if (fi1.nNumberOfLinks != fi2.nNumberOfLinks) {
+        return false;
+    }
+    if (!FileTimeEq(fi1.ftLastWriteTime, fi2.ftLastWriteTime)) {
+        return false;
+    }
+    if (!FileTimeEq(fi1.ftCreationTime, fi2.ftCreationTime)) {
+        return false;
+    }
+    return true;
+}
+
 // Code adapted from
 // http://stackoverflow.com/questions/562701/best-way-to-determine-if-two-path-reference-to-same-file-in-c-c/562830#562830
 // Determine if 2 paths point ot the same file...
@@ -181,25 +212,29 @@ bool IsSame(const WCHAR* path1, const WCHAR* path2) {
         return true;
     }
 
+    // we assume that if the last part doesn't match, they can't be the same
+    const WCHAR* base1 = path::GetBaseNameNoFree(path1);
+    const WCHAR* base2 = path::GetBaseNameNoFree(path2);
+    if (!str::EqI(base1, base2)) {
+        return false;
+    }
+
     bool isSame = false;
     bool needFallback = true;
-    HANDLE handle1 = CreateFile(path1, 0, 0, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
-    HANDLE handle2 = CreateFile(path2, 0, 0, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
+    // CreateFile might fail for already opened files
+    HANDLE h1 = CreateFileW(path1, 0, 0, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
+    HANDLE h2 = CreateFileW(path2, 0, 0, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
 
-    if (handle1 != INVALID_HANDLE_VALUE && handle2 != INVALID_HANDLE_VALUE) {
+    if (h1 != INVALID_HANDLE_VALUE && h2 != INVALID_HANDLE_VALUE) {
         BY_HANDLE_FILE_INFORMATION fi1, fi2;
-        if (GetFileInformationByHandle(handle1, &fi1) && GetFileInformationByHandle(handle2, &fi2)) {
-            isSame = fi1.dwVolumeSerialNumber == fi2.dwVolumeSerialNumber && fi1.nFileIndexLow == fi2.nFileIndexLow &&
-                     fi1.nFileIndexHigh == fi2.nFileIndexHigh && fi1.nFileSizeLow == fi2.nFileSizeLow &&
-                     fi1.nFileSizeHigh == fi2.nFileSizeHigh && fi1.dwFileAttributes == fi2.dwFileAttributes &&
-                     fi1.nNumberOfLinks == fi2.nNumberOfLinks && FileTimeEq(fi1.ftLastWriteTime, fi2.ftLastWriteTime) &&
-                     FileTimeEq(fi1.ftCreationTime, fi2.ftCreationTime);
+        if (GetFileInformationByHandle(h1, &fi1) && GetFileInformationByHandle(h2, &fi2)) {
+            isSame = IsSameFileHandleInformation(fi1, fi2);
             needFallback = false;
         }
     }
 
-    CloseHandle(handle1);
-    CloseHandle(handle2);
+    CloseHandle(h1);
+    CloseHandle(h2);
 
     if (!needFallback)
         return isSame;

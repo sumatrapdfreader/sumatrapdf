@@ -344,7 +344,6 @@ static bool ListAsDefaultProgramWin10() {
     return ok1 || ok2;
 }
 
-
 static bool ListAsDefaultProgramPreWin10(HKEY hkey) {
     // add the installed SumatraPDF.exe to the Open With lists of the supported file extensions
     // TODO: per http://msdn.microsoft.com/en-us/library/cc144148(v=vs.85).aspx we shouldn't be

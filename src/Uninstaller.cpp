@@ -103,36 +103,38 @@ static bool DeleteEmptyRegKey(HKEY root, const WCHAR* keyName) {
     return isEmpty;
 }
 
-static void RemoveOwnRegistryKeys() {
-    HKEY keys[] = {HKEY_LOCAL_MACHINE, HKEY_CURRENT_USER};
-    // remove all keys from both HKLM and HKCU (wherever they exist)
-    for (int i = 0; i < dimof(keys); i++) {
-        UnregisterFromBeingDefaultViewer(keys[i]);
-        DeleteRegKey(keys[i], REG_CLASSES_APP);
-        DeleteRegKey(keys[i], REG_CLASSES_APPS);
-        SHDeleteValue(keys[i], REG_CLASSES_PDF L"\\OpenWithProgids", APP_NAME_STR);
+static void RemoveOwnRegistryKeys(HKEY hkey) {
+    UnregisterFromBeingDefaultViewer(hkey);
+    DeleteRegKey(hkey, REG_CLASSES_APP);
+    DeleteRegKey(hkey, REG_CLASSES_APPS);
+    SHDeleteValue(hkey, REG_CLASSES_PDF L"\\OpenWithProgids", APP_NAME_STR);
 
-        for (int j = 0; nullptr != gSupportedExts[j]; j++) {
-            AutoFreeW keyname(str::Join(L"Software\\Classes\\", gSupportedExts[j], L"\\OpenWithProgids"));
-            SHDeleteValue(keys[i], keyname, APP_NAME_STR);
-            DeleteEmptyRegKey(keys[i], keyname);
+    for (int j = 0; nullptr != gSupportedExts[j]; j++) {
+        AutoFreeW keyname(str::Join(L"Software\\Classes\\", gSupportedExts[j], L"\\OpenWithProgids"));
+        SHDeleteValue(hkey, keyname, APP_NAME_STR);
+        DeleteEmptyRegKey(hkey, keyname);
 
-            keyname.Set(str::Join(L"Software\\Classes\\", gSupportedExts[j], L"\\OpenWithList\\" EXENAME));
-            if (!DeleteRegKey(keys[i], keyname))
-                continue;
-            // remove empty keys that the installer might have created
-            *(WCHAR*)str::FindCharLast(keyname, '\\') = '\0';
-            if (!DeleteEmptyRegKey(keys[i], keyname))
-                continue;
-            *(WCHAR*)str::FindCharLast(keyname, '\\') = '\0';
-            DeleteEmptyRegKey(keys[i], keyname);
+        keyname.Set(str::Join(L"Software\\Classes\\", gSupportedExts[j], L"\\OpenWithList\\" EXENAME));
+        if (!DeleteRegKey(hkey, keyname)) {
+            continue;
         }
+        // remove empty keys that the installer might have created
+        *(WCHAR*)str::FindCharLast(keyname, '\\') = '\0';
+        if (!DeleteEmptyRegKey(hkey, keyname)) {
+            continue;
+        }
+        *(WCHAR*)str::FindCharLast(keyname, '\\') = '\0';
+        DeleteEmptyRegKey(hkey, keyname);
     }
 
     // delete keys written in ListAsDefaultProgramWin10()
-    HKEY hkey = HKEY_LOCAL_MACHINE;
     SHDeleteValue(hkey, L"SOFTWARE\\RegisteredApplications", L"SumatraPDF");
     DeleteRegKey(hkey, L"SOFTWARE\\SumatraPDF\\Capabilities");
+}
+
+static void RemoveOwnRegistryKeys() {
+    RemoveOwnRegistryKeys(HKEY_LOCAL_MACHINE);
+    RemoveOwnRegistryKeys(HKEY_CURRENT_USER);
 }
 
 static BOOL RemoveEmptyDirectory(const WCHAR* dir) {
@@ -209,8 +211,9 @@ static DWORD WINAPI UninstallerThread(LPVOID data) {
         NotifyFailed(_TR("Failed to delete uninstaller registry keys"));
     }
 
-    if (!RemoveShortcut(true) && !RemoveShortcut(false))
+    if (!RemoveShortcut(true) && !RemoveShortcut(false)) {
         NotifyFailed(_TR("Couldn't remove the shortcut"));
+    }
 
     UninstallBrowserPlugin();
     UninstallPdfFilter();

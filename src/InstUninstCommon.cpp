@@ -197,6 +197,11 @@ WCHAR* GetInstalledBrowserPluginPath() {
 }
 
 static bool IsUsingInstallation(DWORD procId) {
+    DWORD myProcID = GetCurrentProcessId();
+    if (procId == myProcID) {
+        return false;
+    }
+
     ScopedHandle snap(CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, procId));
     if (snap == INVALID_HANDLE_VALUE) {
         return false;
@@ -212,12 +217,11 @@ static bool IsUsingInstallation(DWORD procId) {
     BOOL cont = Module32First(snap, &mod);
     while (cont) {
         WCHAR* exePath = mod.szExePath;
-        // exclude ourselves as we load libmupdf.dll
         const WCHAR* exeName = path::GetBaseNameNoFree(exePath);
         if (path::IsSame(libmupdf, exePath)) {
             return true;
         }
-        if (str::EqI(exeName, browserPluginName) && path::IsSame(browserPlugin, exePath)) {
+        if (path::IsSame(browserPlugin, exePath)) {
             return true;
         }
         cont = Module32Next(snap, &mod);
@@ -376,6 +380,18 @@ int KillProcess(const WCHAR* modulePath, bool waitUntilTerminated) {
     return killCount;
 }
 
+static bool SkipProcessByID(DWORD procID) {
+    // TODO: don't know why this process shows up as using
+    // our files
+    if (procID == 0) {
+        return true;
+    }
+    if (procID == GetCurrentProcessId()) {
+        return true;
+    }
+    return false;
+}
+
 // return names of processes that are running part of the installation
 // (i.e. have libmupdf.dll or npPdfViewer.dll loaded)
 static void ProcessesUsingInstallation(WStrVec& names) {
@@ -383,15 +399,16 @@ static void ProcessesUsingInstallation(WStrVec& names) {
     if (INVALID_HANDLE_VALUE == snap)
         return;
 
-    DWORD myProcID = GetCurrentProcessId();
- 
     PROCESSENTRY32W proc = {0};
     proc.dwSize = sizeof(proc);
     BOOL ok = Process32First(snap, &proc);
     while (ok) {
-        if (myProcID != proc.th32ProcessID) {
-            if (IsUsingInstallation(proc.th32ProcessID)) {
-                names.Append(str::Dup(proc.szExeFile));
+        DWORD procID = proc.th32ProcessID;
+        if (!SkipProcessByID(procID)) {
+            if (IsUsingInstallation(procID)) {
+                // TODO: this kils ReadableProcName logic
+                WCHAR* name = str::Format(L"%s (%d)", proc.szExeFile, (int)procID);
+                names.Append(name);
             }
         }
         proc.dwSize = sizeof(proc);
@@ -406,8 +423,9 @@ static const WCHAR* ReadableProcName(const WCHAR* procPath) {
     };
     const WCHAR* procName = path::GetBaseNameNoFree(procPath);
     for (size_t i = 0; i < dimof(nameList); i += 2) {
-        if (str::EqI(procName, nameList[i]))
+        if (str::EqI(procName, nameList[i])) {
             return nameList[i + 1];
+        }
     }
     return procName;
 }
