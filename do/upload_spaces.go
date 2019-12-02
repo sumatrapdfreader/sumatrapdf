@@ -16,6 +16,19 @@ import (
 // builds to retain
 const nBuildsToRetain = 16
 
+func isValidBuildType(buildType string) bool {
+	switch buildType {
+	case "daily", "prerel", "rel":
+		return true
+	}
+	return false
+}
+
+func minioRemoteDir(buildType string) string {
+	panicIf(!isValidBuildType(buildType), "invalid build type: '%s'", buildType)
+	return "software/sumatrapdf/" + buildType + "/"
+}
+
 func newMinioClient() *u.MinioClient {
 	res := &u.MinioClient{
 		StorageKey:    os.Getenv("SPACES_KEY"),
@@ -67,7 +80,7 @@ func minioUploadFiles(c *u.MinioClient, prefix string, dir string, files []strin
 
 // upload as:
 // https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/prerel/SumatraPDF-prerelease-1027-install.exe etc.
-func spacesUploadPreReleaseMust(ver string, dir string) {
+func spacesUploadPreReleaseMust(ver string, buildType string) {
 	if shouldSkipUpload() {
 		return
 	}
@@ -75,18 +88,19 @@ func spacesUploadPreReleaseMust(ver string, dir string) {
 		return
 	}
 
+	remoteDir := minioRemoteDir(buildType)
+
 	c := newMinioClient()
 	timeStart := time.Now()
-	preRelDir := "software/sumatrapdf/" + dir + "/"
 	prefix := fmt.Sprintf("SumatraPDF-prerelease-%s", ver)
-	manifestRemotePath := preRelDir + prefix + "-manifest.txt"
+	manifestRemotePath := remoteDir + prefix + "-manifest.txt"
 	files := []string{
 		"SumatraPDF.exe", fmt.Sprintf("%s.exe", prefix),
 		"SumatraPDF-dll.exe", fmt.Sprintf("%s-install.exe", prefix),
 		"SumatraPDF.pdb.zip", fmt.Sprintf("%s.pdb.zip", prefix),
 		"SumatraPDF.pdb.lzsa", fmt.Sprintf("%s.pdb.lzsa", prefix),
 	}
-	err := minioUploadFiles(c, preRelDir, filepath.Join("out", "rel32"), files)
+	err := minioUploadFiles(c, remoteDir, filepath.Join("out", "rel32"), files)
 	fatalIfErr(err)
 
 	prefix = fmt.Sprintf("SumatraPDF-prerelease-%s-64", ver)
@@ -97,7 +111,7 @@ func spacesUploadPreReleaseMust(ver string, dir string) {
 		"SumatraPDF.pdb.lzsa", fmt.Sprintf("%s.pdb.lzsa", prefix),
 	}
 
-	err = minioUploadFiles(c, preRelDir, filepath.Join("out", "rel64"), files)
+	err = minioUploadFiles(c, remoteDir, filepath.Join("out", "rel64"), files)
 	fatalIfErr(err)
 
 	manifestLocalPath := filepath.Join(artifactsDir, "manifest.txt")
@@ -105,35 +119,41 @@ func spacesUploadPreReleaseMust(ver string, dir string) {
 	fatalIfErr(err)
 	logf("Uploaded to spaces: '%s' as '%s'\n", manifestLocalPath, manifestRemotePath)
 
-	if dir == "daily" {
-		minioUploadDailyInfo(c, ver, dir)
-	} else if dir == "prerel" {
-		minioUploadPrereleaseInfo(c, ver, dir)
-	} else {
-		panic(fmt.Sprintf("uknonw dir: '%s'", dir))
+	remotePaths := []string{
+		"software/sumatrapdf/sumatralatest.js",
+		"software/sumatrapdf/sumpdf-prerelease-latest.txt",
+		"software/sumatrapdf/sumpdf-prerelease-update.txt",
+	}
+	if buildType == "daily" {
+		remotePaths = []string{
+			"software/sumatrapdf/sumadaily.js",
+			"software/sumatrapdf/sumpdf-daily-latest.txt",
+			"software/sumatrapdf/sumpdf-daily-update.txt",
+		}
 	}
 
-	logf("Uploaded the build to spaces in %s\n", time.Since(timeStart))
-}
-
-func minioUploadPrereleaseInfo(c *u.MinioClient, ver string, dir string) {
-	s := createSumatraLatestJs(dir)
-	remotePath := "software/sumatrapdf/sumatralatest.js"
-	err := c.UploadDataPublic(remotePath, []byte(s))
+	s := createSumatraLatestJs(buildType)
+	remotePath := remotePaths[0]
+	err = c.UploadDataPublic(remotePath, []byte(s))
 	fatalIfErr(err)
 	logf("Uploaded to spaces: '%s'\n", remotePath)
 
-	remotePath = "software/sumatrapdf/sumpdf-prerelease-latest.txt"
+	remotePath = remotePaths[1]
 	err = c.UploadDataPublic(remotePath, []byte(ver))
 	fatalIfErr(err)
 	logf("Uploaded to spaces: '%s'\n", remotePath)
 
 	//don't set a Stable version for pre-release builds
 	s = fmt.Sprintf("[SumatraPDF]\nLatest %s\n", ver)
-	remotePath = "software/sumatrapdf/sumpdf-prerelease-update.txt"
+	remotePath = remotePaths[2]
 	err = c.UploadDataPublic(remotePath, []byte(s))
 	fatalIfErr(err)
 	logf("Uploaded to spaces: '%s'\n", remotePath)
+
+	logf("Uploaded the build to spaces in %s\n", time.Since(timeStart))
+}
+
+func minioUploadPrereleaseInfo(c *u.MinioClient, ver string, dir string) {
 }
 
 func minioUploadDailyInfo(c *u.MinioClient, ver string, dir string) {
@@ -204,11 +224,13 @@ func groupFilesByVersion(files []string) []*filesByVer {
 	return res
 }
 
-func minioDeleteOldBuildsPrefix(prefix string) {
+func minioDeleteOldBuildsPrefix(buildType string) {
+	remoteDir := s3RemoteDir(buildType)
+
 	c := newMinioClient()
-	files, err := c.ListRemoteFiles(prefix)
+	files, err := c.ListRemoteFiles(remoteDir)
 	must(err)
-	fmt.Printf("%d minio files under '%s'\n", len(files), prefix)
+	fmt.Printf("%d minio files under '%s'\n", len(files), remoteDir)
 	var keys []string
 	for _, f := range files {
 		keys = append(keys, f.Key)
@@ -234,6 +256,6 @@ func minioDeleteOldBuildsPrefix(prefix string) {
 }
 
 func minioDeleteOldBuilds() {
-	minioDeleteOldBuildsPrefix("software/sumatrapdf/prerel/")
-	minioDeleteOldBuildsPrefix("software/sumatrapdf/daily/")
+	minioDeleteOldBuildsPrefix("prerel")
+	minioDeleteOldBuildsPrefix("daily")
 }
