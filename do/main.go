@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os/exec"
 	"path/filepath"
+	"time"
 
 	"github.com/kjk/u"
 )
@@ -33,6 +34,10 @@ func regenPremake() {
 func main() {
 	u.CdUpDir("sumatrapdf")
 	logf("Current directory: %s\n", u.CurrDirAbsMust())
+	timeStart := time.Now()
+	defer func() {
+		fmt.Printf("Finished in %s\n", time.Since(timeStart))
+	}()
 
 	var (
 		flgRegenPremake            bool

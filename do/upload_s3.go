@@ -121,10 +121,10 @@ func isMaster() bool {
 }
 
 func shouldSkipUpload() bool {
-	if !flgUpload {
-		logf("Skipping pre-release upload to s3 because -upload flag not given\n")
-		return true
+	if flgUpload {
+		return false
 	}
+	logf("shouldSkipUpload: -upload flag not given\n")
 
 	if !isMaster() {
 		logf("Skipping pre-release upload to s3 because not on master branch\n")
@@ -220,7 +220,7 @@ func s3DeleteOldBuilkdsPrefix(prefix string) {
 	fmt.Printf("%d s3 files under '%s'\n", len(keys), prefix)
 	byVer := groupFilesByVersion(keys)
 	for i, v := range byVer {
-		deleting := (i >= nBuildsLeft)
+		deleting := (i >= nBuildsToRetain)
 		if deleting {
 			fmt.Printf("%d, deleting\n", v.ver)
 			for _, fn := range v.files {

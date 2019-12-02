@@ -12,6 +12,10 @@ import (
 	"github.com/kjk/u"
 )
 
+// we delete old daily and pre-release builds. This defines how many most recent
+// builds to retain
+const nBuildsToRetain = 16
+
 func newMinioClient() *u.MinioClient {
 	res := &u.MinioClient{
 		StorageKey:    os.Getenv("SPACES_KEY"),
@@ -162,8 +166,6 @@ func groupFilesByVersion(files []string) []*filesByVer {
 	return res
 }
 
-const nBuildsLeft = 8
-
 func minioDeleteOldBuildsPrefix(prefix string) {
 	c := newMinioClient()
 	files, err := c.ListRemoteFiles(prefix)
@@ -176,7 +178,7 @@ func minioDeleteOldBuildsPrefix(prefix string) {
 	}
 	byVer := groupFilesByVersion(keys)
 	for i, v := range byVer {
-		deleting := (i >= nBuildsLeft)
+		deleting := (i >= nBuildsToRetain)
 		if deleting {
 			fmt.Printf("%d, deleting\n", v.ver)
 			for _, fn := range v.files {
