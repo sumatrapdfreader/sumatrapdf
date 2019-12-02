@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/kjk/u"
@@ -55,6 +58,9 @@ func spacesUploadPreReleaseMust(ver string, dir string) {
 	if !hasSpacesCreds() {
 		return
 	}
+
+	s3PreRelDir = "sumtrapdf/" + dir + "/"
+
 	c := newMinioClient()
 	timeStart := time.Now()
 	preRelDir := "software/sumatrapdf/prerel/"
@@ -112,16 +118,79 @@ func minioUploadDailyInfo(c *u.MinioClient, ver string, dir string) {
 	logf("Uploaded to spaces: '%s'\n", remotePath)
 }
 
+// software/sumatrapdf/prerel/SumatraPDF-prerelease-11290-64-install.exe
+func extractVersionFromName(s string) int {
+	parts := strings.Split(s, "/")
+	name := parts[len(parts)-1]
+	name = strings.TrimPrefix(name, "SumatraPDF-prerelease-")
+	parts = strings.Split(name, "-")
+	parts = strings.Split(parts[0], ".")
+	verStr := parts[0]
+	ver, err := strconv.Atoi(verStr)
+	must(err)
+	return ver
+}
+
+type filesByVer struct {
+	ver   int
+	files []string
+}
+
+func groupFilesByVersion(files []string) []*filesByVer {
+	m := map[int]*filesByVer{}
+	for _, f := range files {
+		ver := extractVersionFromName(f)
+		i := m[ver]
+		if i == nil {
+			i = &filesByVer{
+				ver: ver,
+			}
+			m[ver] = i
+		}
+		i.files = append(i.files, f)
+	}
+	res := []*filesByVer{}
+	for _, v := range m {
+		res = append(res, v)
+	}
+	sort.Slice(res, func(i, j int) bool {
+		return res[i].ver > res[j].ver
+	})
+	return res
+}
+
+const nBuildsLeft = 8
+
 func minioDeleteOldBuildsPrefix(prefix string) {
 	c := newMinioClient()
 	files, err := c.ListRemoteFiles(prefix)
 	must(err)
+	fmt.Printf("%d minio files under '%s'\n", len(files), prefix)
+	var keys []string
 	for _, f := range files {
-		fmt.Printf("key: %s\n", f.Key)
+		keys = append(keys, f.Key)
+		//fmt.Printf("key: %s\n", f.Key)
+	}
+	byVer := groupFilesByVersion(keys)
+	for i, v := range byVer {
+		deleting := (i >= nBuildsLeft)
+		if deleting {
+			fmt.Printf("%d, deleting\n", v.ver)
+			for _, fn := range v.files {
+				fmt.Printf("  %s deleting\n", fn)
+				err := c.Delete(fn)
+				must(err)
+			}
+		} else {
+			fmt.Printf("%d, not deleting\n", v.ver)
+			// for _, fn := range v.files {
+			// 	fmt.Printf("  %s not deleting\n", fn)
+			// }
+		}
 	}
 }
 
 func minioDeleteOldBuilds() {
-	minioDeleteOldBuildsPrefix("/software/sumatrapdf/prerel/")
-	//minioDeleteOldBuildsPrefix("/software/sumatrapdf/daily/")
+	minioDeleteOldBuildsPrefix("software/sumatrapdf/prerel/")
+	minioDeleteOldBuildsPrefix("software/sumatrapdf/daily/")
 }

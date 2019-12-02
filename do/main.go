@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os/exec"
 	"path/filepath"
 
@@ -123,6 +124,7 @@ func main() {
 	}
 
 	if flgDeleteOldBuilds {
+		fmt.Printf("delete old builds\n")
 		minioDeleteOldBuilds()
 		s3DeleteOldBuilkds()
 		return

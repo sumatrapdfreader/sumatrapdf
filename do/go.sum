@@ -12,8 +12,8 @@ github.com/jtolds/gls v4.20.0+incompatible h1:xdiiI2gbIgH/gLH7ADydsJ1uDOEzR8yvV7
 github.com/jtolds/gls v4.20.0+incompatible/go.mod h1:QJZ7F/aHp+rZTRtaJ1ow/lLfFfVYBRgL+9YlvaHOwJU=
 github.com/kjk/atomicfile v0.0.0-20190916063300-2d5c7d7d05bf h1:HuwmGC6wEC0CdGC3QUSBnAfQzydOiR4HeTZCySsHpHY=
 github.com/kjk/atomicfile v0.0.0-20190916063300-2d5c7d7d05bf/go.mod h1:+YlBbo63AHA3uS6tdRhd42B+I1lV7H7+aqDhwTRl5rs=
-github.com/kjk/u v0.0.0-20191202071726-a4e3ea07c587 h1:jC2rkBdoF8rc6B4U5fm9vPYrkbUoN//8dNeleqoi//U=
-github.com/kjk/u v0.0.0-20191202071726-a4e3ea07c587/go.mod h1:hxHKV0SwHb3dVLpJGnHIck9sDnNXv0IQJc0S4fFMyBA=
+github.com/kjk/u v0.0.0-20191202075033-47f6e0ba192a h1:VXacWSUlDmzpXJTy0JEeXQ/eSsm1mkaZCzP9jZLpYX8=
+github.com/kjk/u v0.0.0-20191202075033-47f6e0ba192a/go.mod h1:hxHKV0SwHb3dVLpJGnHIck9sDnNXv0IQJc0S4fFMyBA=
 github.com/minio/minio-go v6.0.14+incompatible h1:fnV+GD28LeqdN6vT2XdGKW8Qe/IfjJDswNVuni6km9o=
 github.com/minio/minio-go v6.0.14+incompatible/go.mod h1:7guKYtitv8dktvNUGrhzmNlA5wrAABTQXCoesZdFQO8=
 github.com/mitchellh/go-homedir v1.1.0 h1:lukF9ziXFxDFPkA1vsr5zpc1XuPDn/wFntq5mG+4E0Y=

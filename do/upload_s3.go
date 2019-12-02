@@ -14,9 +14,12 @@ import (
 )
 
 const (
-	s3PreRelDir  = "sumatrapdf/prerel/"
 	s3RelDir     = "sumatrapdf/rel/"
 	maxS3Results = 1000
+)
+
+var (
+	s3PreRelDir = "sumatrapdf/prerel/"
 )
 
 // we should only sign and upload to s3 if this is my repo
@@ -288,6 +291,8 @@ func s3UploadPreReleaseMust(ver string, dir string) {
 	if shouldSkipUpload() {
 		return
 	}
+
+	s3PreRelDir = "sumtrapdf/" + dir + "/"
 
 	c := &S3Client{
 		Access: os.Getenv("AWS_ACCESS"),
