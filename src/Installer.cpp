@@ -156,15 +156,10 @@ static bool ExtractFiles(lzma::SimpleArchive* archive) {
     return true;
 }
 
-// TODO: also check if valid lzma::ParseSimpleArchive()
-// TODO: use it early in installer to show an error message
-#if 0
-static bool IsValidInstaller()
-{
-  HRSRC resSrc = FindResource(GetModuleHandle(nullptr), MAKEINTRESOURCE(1), RT_RCDATA);
-  return resSrc != nullptr;
+bool IsValidInstaller() {
+    HRSRC resSrc = FindResource(GetModuleHandle(nullptr), MAKEINTRESOURCEW(1), RT_RCDATA);
+    return resSrc != nullptr;
 }
-#endif
 
 static std::tuple<const char*, DWORD, HGLOBAL> LockDataResource(int id) {
     auto h = GetModuleHandle(nullptr);
@@ -193,8 +188,12 @@ static bool CreateInstallationDirectory() {
 }
 
 static bool CopySelf() {
-    // TODO: copy our own executable as SumatraPDF.exe
-    return false;
+    auto exePath = GetExePath();
+    auto* dstPath = path::Join(GetInstallDirNoFree(), L"SumatraPDF.exe");
+    BOOL failIfExists = FALSE;
+    BOOL ok = ::CopyFileW(exePath, dstPath, failIfExists);
+    free(dstPath);
+    return ok;
 }
 
 static bool ExtractInstallerFiles() {
