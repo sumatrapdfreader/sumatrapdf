@@ -177,7 +177,12 @@ WCHAR* ShortPath(const WCHAR* path) {
 // http://stackoverflow.com/questions/562701/best-way-to-determine-if-two-path-reference-to-same-file-in-c-c/562830#562830
 // Determine if 2 paths point ot the same file...
 bool IsSame(const WCHAR* path1, const WCHAR* path2) {
-    bool isSame = false, needFallback = true;
+    if (str::EqI(path1, path2)) {
+        return true;
+    }
+
+    bool isSame = false;
+    bool needFallback = true;
     HANDLE handle1 = CreateFile(path1, 0, 0, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
     HANDLE handle2 = CreateFile(path2, 0, 0, nullptr, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
 

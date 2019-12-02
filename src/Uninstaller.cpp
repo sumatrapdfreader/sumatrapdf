@@ -39,33 +39,6 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #define UNINSTALLER_WIN_DX INSTALLER_WIN_DX
 #define UNINSTALLER_WIN_DY INSTALLER_WIN_DY
 
-// Try harder getting temporary directory
-// Caller needs to free() the result.
-// Returns nullptr if fails for any reason.
-static WCHAR* GetValidTempDir() {
-    AutoFreeW d(path::GetTempPath());
-    if (!d) {
-        NotifyFailed(_TR("Couldn't obtain temporary directory"));
-        return nullptr;
-    }
-    bool ok = dir::Create(d);
-    if (!ok) {
-        LogLastError();
-        NotifyFailed(_TR("Couldn't create temporary directory"));
-        return nullptr;
-    }
-    return d.StealData();
-}
-
-static WCHAR* GetTempUninstallerPath() {
-    AutoFreeW tempDir(GetValidTempDir());
-    if (!tempDir)
-        return nullptr;
-    // Using fixed (unlikely) name instead of GetTempFileName()
-    // so that we don't litter temp dir with copies of ourselves
-    return path::Join(tempDir, L"sum~inst.exe");
-}
-
 static BOOL IsUninstallerNeeded() {
     AutoFreeW exePath(GetInstalledExePath());
     return file::Exists(exePath);
@@ -193,73 +166,27 @@ static BOOL RemoveEmptyDirectory(const WCHAR* dir) {
     return success;
 }
 
-static BOOL RemoveInstalledFiles() {
-    BOOL success = TRUE;
-
+// We always return true because deleting our own executable
+// willl fail but it should be deleted when it's closed
+static bool RemoveInstalledFiles() {
+    const WCHAR* dir = GetInstallDirNoFree();
     for (int i = 0; nullptr != gPayloadData[i].fileName; i++) {
         AutoFreeW relPath(str::conv::FromUtf8(gPayloadData[i].fileName));
-        AutoFreeW path(path::Join(gInstUninstGlobals.installDir, relPath));
-
-        if (file::Exists(path))
-            success &= DeleteFile(path);
+        AutoFreeW path(path::Join(dir, relPath));
+        DeleteFile(path);
     }
 
-    RemoveEmptyDirectory(gInstUninstGlobals.installDir);
-    return success;
-}
-
-static const WCHAR* GetOwnPath() {
-    static WCHAR exePath[MAX_PATH];
-    exePath[0] = '\0';
-    GetModuleFileName(nullptr, exePath, dimof(exePath));
-    exePath[dimof(exePath) - 1] = '\0';
-    return exePath;
-}
-
-// If this is uninstaller and we're running from installation directory,
-// copy uninstaller to temp directory and execute from there, exiting
-// ourselves. This is needed so that uninstaller can delete itself
-// from installation directory and remove installation directory
-// If returns TRUE, this is an installer and we sublaunched ourselves,
-// so the caller needs to exit
-static bool ExecuteUninstallerFromTempDir() {
-    // only need to sublaunch if running from installation dir
-    AutoFreeW ownDir(path::GetDir(GetOwnPath()));
-    AutoFreeW tempPath(GetTempUninstallerPath());
-
-    // no temp directory available?
-    if (!tempPath)
-        return false;
-
-    // not running from the installation directory?
-    // (likely a test uninstaller that shouldn't be removed anyway)
-    if (!path::IsSame(ownDir, gInstUninstGlobals.installDir))
-        return false;
-
-    // already running from temp directory?
-    if (path::IsSame(GetOwnPath(), tempPath))
-        return false;
-
-    if (!CopyFile(GetOwnPath(), tempPath, FALSE)) {
-        NotifyFailed(_TR("Failed to copy uninstaller to temp directory"));
-        return false;
-    }
-
-    AutoFreeW args(
-        str::Format(L"/d \"%s\" %s", gInstUninstGlobals.installDir, gInstUninstGlobals.silent ? L"/s" : L""));
-    bool ok = CreateProcessHelper(tempPath, args);
-
-    // mark the uninstaller for removal at shutdown (note: works only for administrators)
-    MoveFileEx(tempPath, nullptr, MOVEFILE_DELAY_UNTIL_REBOOT);
-
-    return ok;
+    RemoveEmptyDirectory(dir);
+    return true;
 }
 
 static bool RemoveShortcut(bool allUsers) {
-    AutoFreeW p(GetShortcutPath(allUsers));
-    if (!p.Get())
+    WCHAR* p = GetShortcutPath(allUsers);
+    if (!p) {
         return false;
+    }
     bool ok = DeleteFile(p);
+    free(p);
     if (!ok && (ERROR_FILE_NOT_FOUND != GetLastError())) {
         LogLastError();
         return false;
@@ -272,8 +199,10 @@ static DWORD WINAPI UninstallerThread(LPVOID data) {
     // also kill the original uninstaller, if it's just spawned
     // a DELETE_ON_CLOSE copy from the temp directory
     WCHAR* exePath = GetUninstallerPath();
-    if (!path::IsSame(exePath, GetOwnPath()))
+    const WCHAR* ownPath = GetOwnPath();
+    if (!path::IsSame(exePath, ownPath)) {
         KillProcess(exePath, TRUE);
+    }
     free(exePath);
 
     if (!RemoveUninstallerRegistryInfo(HKEY_LOCAL_MACHINE) && !RemoveUninstallerRegistryInfo(HKEY_CURRENT_USER)) {
@@ -288,8 +217,9 @@ static DWORD WINAPI UninstallerThread(LPVOID data) {
     UninstallPdfPreviewer();
     RemoveOwnRegistryKeys();
 
-    if (!RemoveInstalledFiles())
+    if (!RemoveInstalledFiles()) {
         NotifyFailed(_TR("Couldn't remove installation directory"));
+    }
 
     // always succeed, even for partial uninstallations
     gInstUninstGlobals.success = true;
@@ -300,10 +230,9 @@ static DWORD WINAPI UninstallerThread(LPVOID data) {
 }
 
 static void OnButtonUninstall() {
-    KillSumatra();
-
-    if (!CheckInstallUninstallPossible())
+    if (!CheckInstallUninstallPossible()) {
         return;
+    }
 
     // disable the button during uninstallation
     gButtonInstUninst->SetIsEnabled(false);
@@ -507,21 +436,19 @@ int RunUninstaller(bool silent) {
 
     gInstUninstGlobals.installDir = GetInstallationDir();
 
-    void* p = &ExecuteUninstallerFromTempDir;
-    if (p == nullptr && ExecuteUninstallerFromTempDir())
-        return 0;
-
     if (gInstUninstGlobals.silent) {
         UninstallerThread(nullptr);
         ret = gInstUninstGlobals.success ? 0 : 1;
         goto Exit;
     }
 
-    if (!RegisterWinClass())
+    if (!RegisterWinClass()) {
         goto Exit;
+    }
 
-    if (!InstanceInit())
+    if (!InstanceInit()) {
         goto Exit;
+    }
 
     ret = RunApp();
 

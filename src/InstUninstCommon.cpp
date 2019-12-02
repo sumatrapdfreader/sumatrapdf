@@ -128,7 +128,15 @@ static HFONT CreateDefaultGuiFont() {
     HFONT f = CreateFontIndirectW(&ncm.lfMenuFont);
     return f;
 }
-#
+
+const WCHAR* GetOwnPath() {
+    static WCHAR exePath[MAX_PATH];
+    exePath[0] = '\0';
+    GetModuleFileName(nullptr, exePath, dimof(exePath));
+    exePath[dimof(exePath) - 1] = '\0';
+    return exePath;
+}
+
 void InvalidateFrame() {
     ClientRect rc(gHwndFrame);
     RECT rcTmp = rc.ToRECT();
@@ -204,9 +212,9 @@ static bool IsUsingInstallation(DWORD procId) {
     BOOL cont = Module32First(snap, &mod);
     while (cont) {
         WCHAR* exePath = mod.szExePath;
+        // exclude ourselves as we load libmupdf.dll
         const WCHAR* exeName = path::GetBaseNameNoFree(exePath);
-        // path::IsSame() is slow so speed up comparison by checking if names are equal first
-        if (str::EqI(exeName, libmupdfName) && path::IsSame(libmupdf, exePath)) {
+        if (path::IsSame(libmupdf, exePath)) {
             return true;
         }
         if (str::EqI(exeName, browserPluginName) && path::IsSame(browserPlugin, exePath)) {
@@ -350,7 +358,7 @@ int KillProcess(const WCHAR* modulePath, bool waitUntilTerminated) {
     if (INVALID_HANDLE_VALUE == hProcSnapshot)
         return -1;
 
-    PROCESSENTRY32 pe32;
+    PROCESSENTRY32W pe32;
     pe32.dwSize = sizeof(pe32);
     if (!Process32First(hProcSnapshot, &pe32))
         return -1;
@@ -368,13 +376,6 @@ int KillProcess(const WCHAR* modulePath, bool waitUntilTerminated) {
     return killCount;
 }
 
-/* if the app is running, we have to kill it so that we can over-write the executable */
-void KillSumatra() {
-    WCHAR* exePath = GetInstalledExePath();
-    KillProcess(exePath, true);
-    str::Free(exePath);
-}
-
 // return names of processes that are running part of the installation
 // (i.e. have libmupdf.dll or npPdfViewer.dll loaded)
 static void ProcessesUsingInstallation(WStrVec& names) {
@@ -382,12 +383,16 @@ static void ProcessesUsingInstallation(WStrVec& names) {
     if (INVALID_HANDLE_VALUE == snap)
         return;
 
-    PROCESSENTRY32 proc = {0};
+    DWORD myProcID = GetCurrentProcessId();
+ 
+    PROCESSENTRY32W proc = {0};
     proc.dwSize = sizeof(proc);
     BOOL ok = Process32First(snap, &proc);
     while (ok) {
-        if (IsUsingInstallation(proc.th32ProcessID)) {
-            names.Append(str::Dup(proc.szExeFile));
+        if (myProcID != proc.th32ProcessID) {
+            if (IsUsingInstallation(proc.th32ProcessID)) {
+                names.Append(str::Dup(proc.szExeFile));
+            }
         }
         proc.dwSize = sizeof(proc);
         ok = Process32Next(snap, &proc);

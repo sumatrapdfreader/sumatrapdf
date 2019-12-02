@@ -137,8 +137,7 @@ bool Window::Create(const WCHAR* title) {
 }
 
 Window::~Window() {
-    // we free w in WM_DESTROY
-    DestroyWindow(this->hwnd);
+    DestroyWindow(hwnd);
 }
 
 Kind kindWindowBase = "windowBase";
@@ -211,6 +210,7 @@ WindowBase::WindowBase(HWND p) {
 
 WindowBase::~WindowBase() {
     Unsubclass();
+    DestroyWindow(hwnd);
 }
 
 LRESULT WindowBase::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& didHandle) {

@@ -323,8 +323,7 @@ static bool WriteUninstallerRegistryInfos() {
 
 // https://msdn.microsoft.com/en-us/library/windows/desktop/cc144154(v=vs.85).aspx
 // http://www.tenforums.com/software-apps/23509-how-add-my-own-program-list-default-programs.html#post407794
-static bool ListAsDefaultProgramWin10() {
-    HKEY hkey = HKEY_LOCAL_MACHINE;
+static bool WriteWin10Registry(HKEY hkey) {
     bool ok = true;
 
     ok &= WriteRegStr(hkey, L"SOFTWARE\\RegisteredApplications", L"SumatraPDF", L"SOFTWARE\\SumatraPDF\\Capabilities");
@@ -338,6 +337,13 @@ static bool ListAsDefaultProgramWin10() {
     }
     return ok;
 }
+
+static bool ListAsDefaultProgramWin10() {
+    bool ok1 = WriteWin10Registry(HKEY_LOCAL_MACHINE);
+    bool ok2 = WriteWin10Registry(HKEY_CURRENT_USER);
+    return ok1 || ok2;
+}
+
 
 static bool ListAsDefaultProgramPreWin10(HKEY hkey) {
     // add the installed SumatraPDF.exe to the Open With lists of the supported file extensions
@@ -490,7 +496,12 @@ static void OnButtonInstall() {
         OnButtonOptions();
     }
 
-    KillSumatra();
+    {
+        /* if the app is running, we have to kill it so that we can over-write the executable */
+        WCHAR* exePath = GetInstalledExePath();
+        KillProcess(exePath, true);
+        str::Free(exePath);
+    }
 
     if (!CheckInstallUninstallPossible()) {
         return;
