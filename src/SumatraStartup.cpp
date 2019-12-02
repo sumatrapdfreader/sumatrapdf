@@ -619,12 +619,14 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
             return 1;
         }
         retCode = RunInstaller();
-        goto Exit;
+        // exit immediately. for some reason exit handlers try to
+        // pull in libmupdf.dll which we don't have access to in the installer
+        ::ExitProcess(retCode);
     }
 
     if (i.uninstall) {
         retCode = RunUninstaller(i.silent);
-        goto Exit;
+        ::ExitProcess(retCode);
     }
 
 #if defined(SUPPORTS_AUTO_UPDATE) || defined(DEBUG)
@@ -847,7 +849,7 @@ Exit:
 
     // leave all the remaining clean-up to the OS
     // (as recommended for a quick exit)
-    ExitProcess(retCode);
+    ::ExitProcess(retCode);
 
 #else
 
