@@ -90,6 +90,7 @@ extern Gdiplus::Color gCol5Shadow;
 
 struct ButtonCtrl;
 
+bool IsValidInstaller();
 void InitInstallerUninstaller();
 void OnPaintFrame(HWND hwnd);
 void OnButtonExit();
@@ -119,3 +120,4 @@ bool CreateProcessHelper(const WCHAR* exe, const WCHAR* args = nullptr);
 void NotifyFailed(const WCHAR* msg);
 void SetMsg(const WCHAR* msg, Gdiplus::Color color);
 void SetDefaultMsg();
+WCHAR* GetInstallDirNoFree();

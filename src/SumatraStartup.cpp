@@ -15,6 +15,7 @@
 #include "utils/ThreadUtil.h"
 #include "utils/UITask.h"
 #include "utils/WinUtil.h"
+#include "utils/Archive.h"
 #include "utils/DebugLog.h"
 
 #include "wingui/WinGui.h"
@@ -24,7 +25,7 @@
 #include "wingui/SplitterWnd.h"
 #include "wingui/LabelWithCloseWnd.h"
 
-#include "TreeModel.h"
+#include "wingui/TreeModel.h"
 #include "EngineBase.h"
 #include "EngineManager.h"
 #include "SettingsStructs.h"
@@ -61,8 +62,8 @@
 #include "Version.h"
 #include "Tests.h"
 #include "Menu.h"
-#include "utils/Archive.h"
 #include "AppTools.h"
+#include "Installer.h"
 
 #define CRASH_DUMP_FILE_NAME L"sumatrapdfcrash.dmp"
 #define CRASH_FILE_NAME L"sumatrapdfcrash.txt"
@@ -608,6 +609,10 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     auto i = ParseCommandLine(GetCommandLine());
 
     if (i.install || IsInstaller()) {
+        if (!IsValidInstaller()) {
+            MessageBoxW(nullptr, L"Not a valid installer", L"Not valid installer", MB_OK);
+            return 1;
+        }
         retCode = RunInstaller();
         goto Exit;
     }
