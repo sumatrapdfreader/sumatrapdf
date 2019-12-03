@@ -763,5 +763,3 @@ void OnPaintFrame(HWND hwnd) {
     DrawFrame(hwnd, dc, &ps);
     EndPaint(hwnd, &ps);
 }
-
-HBRUSH ghbrBackground = nullptr;

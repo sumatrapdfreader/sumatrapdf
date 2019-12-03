@@ -66,7 +66,6 @@ extern WCHAR* gSupportedExts[];
 extern HWND gHwndFrame;
 extern ButtonCtrl* gButtonExit;
 extern ButtonCtrl* gButtonInstUninst;
-extern HBRUSH ghbrBackground;
 extern HFONT gFontDefault;
 extern WCHAR* gMsgError;
 extern bool gShowOptions;

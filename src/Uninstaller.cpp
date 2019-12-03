@@ -39,6 +39,8 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #define UNINSTALLER_WIN_DX INSTALLER_WIN_DX
 #define UNINSTALLER_WIN_DY INSTALLER_WIN_DY
 
+static HBRUSH ghbrBackground = nullptr;
+
 static bool RemoveUninstallerRegistryInfo(HKEY hkey) {
     bool ok1 = DeleteRegKey(hkey, REG_PATH_UNINST);
     // legacy, this key was added by installers up to version 1.8

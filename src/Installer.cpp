@@ -67,6 +67,8 @@ static InstallerGlobals gInstallerGlobals = {
     false, /* bool autoUpdate */
 };
 
+static HBRUSH ghbrBackground = nullptr;
+
 static ButtonCtrl* gButtonOptions = nullptr;
 static ButtonCtrl* gButtonRunSumatra = nullptr;
 static lzma::SimpleArchive gArchive = {};
