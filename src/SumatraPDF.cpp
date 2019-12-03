@@ -595,10 +595,12 @@ static void UpdateWindowRtlLayout(WindowInfo* win) {
     // title and close button are also correctly laid out
     if (tocVisible || favVisible) {
         SetSidebarVisibility(win, tocVisible, favVisible);
-        if (tocVisible)
+        if (tocVisible) {
             SendMessage(win->hwndTocBox, WM_SIZE, 0, 0);
-        if (favVisible)
+        }
+        if (favVisible) {
             SendMessage(win->hwndFavBox, WM_SIZE, 0, 0);
+        }
     }
 }
 
@@ -3471,8 +3473,9 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
             break;
     }
 
-    if (!win->IsDocLoaded())
+    if (!win->IsDocLoaded()) {
         return;
+    }
 
     auto* ctrl = win->ctrl;
 
@@ -3545,38 +3548,49 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
             break;
         case 'b':
             if (win->AsFixed() && !IsSingle(ctrl->GetDisplayMode())) {
-                // "e-book view": flip a single page
+                DisplayModel* dm = win->AsFixed();
                 bool forward = !IsShiftPressed();
                 int currPage = ctrl->CurrentPageNo();
-                if (forward ? win->AsFixed()->LastBookPageVisible() : win->AsFixed()->FirstBookPageVisible())
+                bool isVisible = dm->FirstBookPageVisible();
+                if (forward) {
+                    isVisible = dm->LastBookPageVisible();
+                }
+                if (isVisible) {
                     break;
+                }
 
                 DisplayMode newMode = DM_BOOK_VIEW;
-                if (IsBookView(ctrl->GetDisplayMode()))
+                if (IsBookView(ctrl->GetDisplayMode())) {
                     newMode = DM_FACING;
+                }
                 SwitchToDisplayMode(win, newMode, true);
 
-                if (forward && currPage >= ctrl->CurrentPageNo() && (currPage > 1 || newMode == DM_BOOK_VIEW))
+                if (forward && currPage >= ctrl->CurrentPageNo() && (currPage > 1 || newMode == DM_BOOK_VIEW)) {
                     ctrl->GoToNextPage();
-                else if (!forward && currPage <= ctrl->CurrentPageNo())
+                } else if (!forward && currPage <= ctrl->CurrentPageNo()) {
                     win->ctrl->GoToPrevPage();
+                }
             } else if (win->AsEbook() && !IsSingle(ctrl->GetDisplayMode())) {
                 // "e-book view": flip a single page
                 bool forward = !IsShiftPressed();
                 int nextPage = ctrl->CurrentPageNo() + (forward ? 1 : -1);
-                if (ctrl->ValidPageNo(nextPage))
+                if (ctrl->ValidPageNo(nextPage)) {
                     ctrl->GoToPage(nextPage, false);
-            } else if (win->presentation)
+                }
+            } else if (win->presentation) {
                 win->ChangePresentationMode(PM_BLACK_SCREEN);
+            }
             break;
         case '.':
             // for Logitech's wireless presenters which target PowerPoint's shortcuts
-            if (win->presentation)
+            if (win->presentation) {
                 win->ChangePresentationMode(PM_BLACK_SCREEN);
+            }
             break;
         case 'w':
-            if (win->presentation)
+            if (win->presentation) {
                 win->ChangePresentationMode(PM_WHITE_SCREEN);
+            }
             break;
         case 'i':
             // experimental "page info" tip: make figuring out current page and
@@ -3694,11 +3708,13 @@ void LayoutTreeContainer(LabelWithCloseWnd* l, HWND hwndTree) {
 }
 
 void SetSidebarVisibility(WindowInfo* win, bool tocVisible, bool showFavorites) {
-    if (gPluginMode || !HasPermission(Perm_DiskAccess))
+    if (gPluginMode || !HasPermission(Perm_DiskAccess)) {
         showFavorites = false;
+    }
 
-    if (!win->IsDocLoaded() || !win->ctrl->HasTocTree())
+    if (!win->IsDocLoaded() || !win->ctrl->HasTocTree()) {
         tocVisible = false;
+    }
 
     if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
         tocVisible = false;
@@ -3709,8 +3725,10 @@ void SetSidebarVisibility(WindowInfo* win, bool tocVisible, bool showFavorites) 
         LoadTocTree(win);
         CrashIf(!win->tocLoaded);
     }
-    if (showFavorites)
+
+    if (showFavorites) {
         PopulateFavTreeIfNeeded(win);
+    }
 
     if (!win->currentTab) {
         CrashIf(tocVisible);

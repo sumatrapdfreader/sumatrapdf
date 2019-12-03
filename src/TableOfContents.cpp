@@ -823,8 +823,10 @@ void CreateToc(WindowInfo* win) {
     // label is set in UpdateToolbarSidebarText()
 
     auto* treeCtrl = new TreeCtrl(win->hwndTocBox, nullptr);
-    treeCtrl->dwStyle = TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS | TVS_TRACKSELECT |
-                        TVS_DISABLEDRAGDROP | TVS_NOHSCROLL | TVS_INFOTIP | WS_TABSTOP | WS_VISIBLE | WS_CHILD;
+    DWORD dwStyle = TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS;
+    dwStyle |= TVS_TRACKSELECT | TVS_DISABLEDRAGDROP | TVS_NOHSCROLL | TVS_INFOTIP;
+    dwStyle |= WS_TABSTOP | WS_VISIBLE | WS_CHILD;
+    treeCtrl->dwStyle = dwStyle;
     treeCtrl->dwExStyle = WS_EX_STATICEDGE;
     treeCtrl->menu = (HMENU)IDC_TOC_TREE;
     treeCtrl->preFilter = [treeCtrl](HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& handled) -> LRESULT {
