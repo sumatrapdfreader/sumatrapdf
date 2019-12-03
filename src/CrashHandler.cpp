@@ -26,7 +26,6 @@
 #define CRASH_SUBMIT_SERVER L"updatecheck.io"
 #define CRASH_SUBMIT_PORT 443
 
-
 #define CRASH_SUBMIT_URL L"/uploadfile/sumatrapdf-crashes"
 #endif
 
@@ -163,7 +162,7 @@ static void SendCrashInfo(char* s, size_t size) {
     str::Str headers(256, gCrashHandlerAllocator);
     headers.AppendFmt("Content-Type: text/plain");
 
-    str::Str data(16*1024, gCrashHandlerAllocator);
+    str::Str data(16 * 1024, gCrashHandlerAllocator);
     data.Append(s, size);
 
     HttpPost(CRASH_SUBMIT_SERVER, CRASH_SUBMIT_PORT, CRASH_SUBMIT_URL, &headers, &data);
@@ -197,10 +196,10 @@ static bool UnpackStaticSymbols(const char* pdbZipPath, const char* symDir) {
 // lib (.exe + libmupdf.dll) release and pre-release builds
 static bool UnpackLibSymbols(const char* pdbZipPath, const char* symDir) {
     lf("UnpackLibSymbols(): unpacking %s to dir %s", pdbZipPath, symDir);
-    const char* files[3] = {"libmupdf.pdb", "SumatraPDF-mupdf-dll.pdb", nullptr};
+    const char* files[3] = {"libmupdf.pdb", "SumatraPDF-dll.pdb", nullptr};
     bool ok = lzma::ExtractFiles(pdbZipPath, symDir, &files[0], gCrashHandlerAllocator);
     if (!ok) {
-        plog("Failed to unpack libmupdf.pdb or SumatraPDF-mupdf-dll.pdb");
+        plog("Failed to unpack libmupdf.pdb or SumatraPD-dll.pdb");
         return false;
     }
     return true;
@@ -617,34 +616,20 @@ bool SetSymbolsDir(const WCHAR* symDir) {
 
     gSymbolsDir = str::Dup(symDir);
     gPdbZipPath = path::Join(symDir, L"symbols_tmp.zip");
-    gLibMupdfPdbPath = path::Join(symDir, L"SumatraPDF.pdb");
-    gSumatraPdfPdbPath = path::Join(symDir, L"libmupdf.pdb");
-
+    gSumatraPdfPdbPath = path::Join(symDir, L"SumatraPDF.pdb");
+    gLibMupdfPdbPath = path::Join(symDir, L"libmupdf.pdb");
     BuildSymbolPath();
     return true;
 }
 
 // detect which exe it is (sumatra static or sumatra with dlls)
-// TODO: is there a better way? Check for installer data resource?
+// dll build has a data resources with payload
 static ExeType DetectExeType() {
     ExeType exeType = ExeSumatraStatic;
-    HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
-    if (snap == INVALID_HANDLE_VALUE) {
-        plog("DetectExeType(): failed to detect type");
-        return exeType;
+    HRSRC resSrc = FindResource(GetModuleHandle(nullptr), MAKEINTRESOURCEW(1), RT_RCDATA);
+    if (resSrc resSrc != nullptr) {
+        exeType = ExeSumatraDll;
     }
-    MODULEENTRY32 mod;
-    mod.dwSize = sizeof(mod);
-    BOOL cont = Module32First(snap, &mod);
-    while (cont) {
-        WCHAR* name = mod.szModule;
-        if (str::EqI(name, L"libmupdf.dll")) {
-            exeType = ExeSumatraDll;
-            break;
-        }
-        cont = Module32Next(snap, &mod);
-    }
-    CloseHandle(snap);
     return exeType;
 }
 
