@@ -23,13 +23,11 @@
 #include "utils/DebugLog.h"
 
 #if !defined(CRASH_SUBMIT_SERVER) || !defined(CRASH_SUBMIT_URL)
-#define CRASH_SUBMIT_SERVER L"kjktools.org"
+#define CRASH_SUBMIT_SERVER L"updatecheck.io"
 #define CRASH_SUBMIT_PORT 443
 
-//#define CRASH_SUBMIT_SERVER L"127.0.0.1"
-//#define CRASH_SUBMIT_PORT 6020
 
-#define CRASH_SUBMIT_URL L"/crashreports/submit?app=SumatraPDF&ver=" CURR_VERSION_STR
+#define CRASH_SUBMIT_URL L"/uploadfile/sumatrapdf-crashes"
 #endif
 
 // The following functions allow crash handler to be used by both installer
@@ -162,16 +160,11 @@ static void SendCrashInfo(char* s, size_t size) {
         return;
     }
 
-    const char* boundary = "0xKhTmLbOuNdArY";
     str::Str headers(256, gCrashHandlerAllocator);
-    headers.AppendFmt("Content-Type: multipart/form-data; boundary=%s", boundary);
+    headers.AppendFmt("Content-Type: text/plain");
 
-    str::Str data(2048, gCrashHandlerAllocator);
-    data.AppendFmt("--%s\r\n", boundary);
-    data.Append("Content-Disposition: form-data; name=\"file\"; filename=\"sumcrash.txt\"\r\n\r\n");
+    str::Str data(16*1024, gCrashHandlerAllocator);
     data.Append(s, size);
-    data.Append("\r\n");
-    data.AppendFmt("\r\n--%s--\r\n", boundary);
 
     HttpPost(CRASH_SUBMIT_SERVER, CRASH_SUBMIT_PORT, CRASH_SUBMIT_URL, &headers, &data);
     plogf("SendCrashInfo() finished");
