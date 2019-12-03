@@ -54,6 +54,7 @@ func main() {
 		flgUploadTranslations      bool
 		flgClean                   bool
 		flgDeleteOldBuilds         bool
+		flgPreviewCrashes          bool
 	)
 
 	{
@@ -73,6 +74,7 @@ func main() {
 		flag.BoolVar(&flgUploadTranslations, "trans-ul", false, "upload translations to apptranslators.org if changed")
 		flag.BoolVar(&flgClean, "clean", false, "clean the build")
 		flag.BoolVar(&flgDeleteOldBuilds, "delete-old-builds", false, "delete old builds")
+		flag.BoolVar(&flgPreviewCrashes, "crashes", false, "see crashes in a web ui")
 		flag.Parse()
 	}
 
@@ -94,6 +96,11 @@ func main() {
 
 	if flgClangFormat || flgFormat {
 		clangFormatFiles()
+		return
+	}
+
+	if flgPreviewCrashes {
+		previewCrashes()
 		return
 	}
 
