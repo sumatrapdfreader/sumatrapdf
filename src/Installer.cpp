@@ -166,6 +166,7 @@ static bool CopySelfToInstallationDir() {
 }
 
 #define PREFS_FILE_NAME L"SumatraPDF-settings.txt"
+#define APP_NAME L"SumatraPDF"
 
 static void CopySettingsFile() {
     // up to 3.1.2 we stored settings in %APPDATA%
@@ -174,8 +175,8 @@ static void CopySettingsFile() {
     WCHAR* srcDir = GetSpecialFolder(CSIDL_APPDATA, false);
     WCHAR* dstDir = GetSpecialFolder(CSIDL_LOCAL_APPDATA, false);
 
-    WCHAR* srcPath = path::Join(srcDir, PREFS_FILE_NAME);
-    WCHAR* dstPath = path::Join(dstDir, PREFS_FILE_NAME);
+    WCHAR* srcPath = path::Join(srcDir, APP_NAME, PREFS_FILE_NAME);
+    WCHAR* dstPath = path::Join(dstDir, APP_NAME, PREFS_FILE_NAME);
 
     // don't over-write
     BOOL failIfExists = true;
@@ -408,6 +409,7 @@ static DWORD WINAPI InstallerThread(LPVOID data) {
     }
 
     CopySettingsFile();
+
     // all files have been extracted at this point
     if (gInstallerGlobals.justExtractFiles) {
         return 0;
@@ -1084,6 +1086,8 @@ int RunInstaller() {
     if (!InstanceInit()) {
         goto Exit;
     }
+
+    BringWindowToTop(gHwndFrame);
 
     ret = RunApp();
 

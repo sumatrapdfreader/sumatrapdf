@@ -101,13 +101,21 @@ WCHAR* GetDir(const WCHAR* path) {
     return str::DupN(path, baseName - path - 1);
 }
 
-WCHAR* Join(const WCHAR* path, const WCHAR* fileName) {
-    if (IsSep(*fileName))
+WCHAR* Join(const WCHAR* path, const WCHAR* fileName, const WCHAR* fileName2) {
+    if (IsSep(*fileName)) {
         fileName++;
+    }
     WCHAR* sepStr = nullptr;
-    if (!IsSep(path[str::Len(path) - 1]))
+    if (!IsSep(path[str::Len(path) - 1])) {
         sepStr = L"\\";
-    return str::Join(path, sepStr, fileName);
+    }
+    WCHAR* res = str::Join(path, sepStr, fileName);
+    if (fileName2) {
+        WCHAR* toFree = res;
+        res = Join(res, fileName2);
+        free(toFree);
+    }
+    return res;
 }
 
 // Normalize a file path.

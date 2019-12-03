@@ -485,6 +485,7 @@ int RunUninstaller(bool silent) {
         goto Exit;
     }
 
+    BringWindowToTop(gHwndFrame);
     ret = RunApp();
 
 Exit:
