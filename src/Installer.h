@@ -110,7 +110,7 @@ WCHAR* GetInstalledBrowserPluginPath();
 WCHAR* GetBrowserPluginPath();
 WCHAR* GetPdfFilterPath();
 WCHAR* GetPdfPreviewerPath();
-WCHAR* GetShortcutPath(bool allUsers);
+WCHAR* GetShortcutPath(int csidl);
 int KillProcess(const WCHAR* processPath, bool waitUntilTerminated);
 bool CreateProcessHelper(const WCHAR* exe, const WCHAR* args = nullptr);
 void NotifyFailed(const WCHAR* msg);

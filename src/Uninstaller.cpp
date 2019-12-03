@@ -204,24 +204,18 @@ static void RemoveInstalledFiles() {
     RemoveEmptyDirectory(dir);
 }
 
-static bool RemoveShortcut(bool allUsers) {
-    WCHAR* p = GetShortcutPath(allUsers);
-    if (!p) {
-        return false;
-    }
-    bool ok = DeleteFile(p);
-    free(p);
-    if (!ok && (ERROR_FILE_NOT_FOUND != GetLastError())) {
-        LogLastError();
-        return false;
-    }
-    return true;
-}
+static int shortcutDirs[] = {CSIDL_COMMON_PROGRAMS, CSIDL_PROGRAMS, CSIDL_DESKTOP};
 
-static bool RemoveShortcut() {
-    bool ok1 = RemoveShortcut(true);
-    bool ok2 = RemoveShortcut(false);
-    return ok1 || ok2;
+static void RemoveShortcuts() {
+    for (size_t i = 0; i < dimof(shortcutDirs); i++) {
+        int csidl = shortcutDirs[i];
+        WCHAR* path = GetShortcutPath(csidl);
+        if (!path) {
+            continue;
+        }
+        DeleteFile(path);
+        free(path);
+    }
 }
 
 static DWORD WINAPI UninstallerThread(LPVOID data) {
@@ -239,9 +233,7 @@ static DWORD WINAPI UninstallerThread(LPVOID data) {
         NotifyFailed(_TR("Failed to delete uninstaller registry keys"));
     }
 
-    if (!RemoveShortcut()) {
-        NotifyFailed(_TR("Couldn't remove the shortcut"));
-    }
+    RemoveShortcuts();
 
     UninstallBrowserPlugin();
     UninstallPdfFilter();

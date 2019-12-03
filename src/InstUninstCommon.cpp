@@ -163,9 +163,8 @@ WCHAR* GetUninstallerPath() {
     return GetInstalledExePath();
 }
 
-WCHAR* GetShortcutPath(bool allUsers) {
-    // CSIDL_COMMON_PROGRAMS => installing for all users
-    AutoFreeW dir(GetSpecialFolder(allUsers ? CSIDL_COMMON_PROGRAMS : CSIDL_PROGRAMS));
+WCHAR* GetShortcutPath(int csidl) {
+    AutoFreeW dir(GetSpecialFolder(csidl, false));
     if (!dir) {
         return nullptr;
     }

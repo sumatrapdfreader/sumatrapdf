@@ -392,12 +392,22 @@ static void CreateButtonRunSumatra(HWND hwndParent) {
     gButtonRunSumatra->OnClicked = OnButtonStartSumatra;
 }
 
-static bool CreateAppShortcut(bool allUsers) {
-    AutoFreeW shortcutPath(GetShortcutPath(allUsers));
-    if (!shortcutPath.Get())
+static bool CreateAppShortcut(int csidl) {
+    AutoFreeW shortcutPath(GetShortcutPath(csidl));
+    if (!shortcutPath.Get()) {
         return false;
+    }
     AutoFreeW installedExePath(GetInstalledExePath());
     return CreateShortcut(shortcutPath, installedExePath);
+}
+
+static int shortcutDirs[] = {CSIDL_COMMON_PROGRAMS, CSIDL_PROGRAMS, CSIDL_DESKTOP};
+
+static void CreateAppShortcuts() {
+    for (size_t i = 0; i < dimof(shortcutDirs); i++) {
+        int csidl = shortcutDirs[i];
+        CreateAppShortcut(csidl);
+    }
 }
 
 static DWORD WINAPI InstallerThread(LPVOID data) {
@@ -435,10 +445,7 @@ static DWORD WINAPI InstallerThread(LPVOID data) {
 
     UninstallBrowserPlugin();
 
-    if (!CreateAppShortcut(true) && !CreateAppShortcut(false)) {
-        NotifyFailed(_TR("Failed to create a shortcut"));
-        goto Error;
-    }
+    CreateAppShortcuts();
 
     // consider installation a success from here on
     // (still warn, if we've failed to create the uninstaller, though)
