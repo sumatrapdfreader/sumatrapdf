@@ -169,7 +169,6 @@ static bool RemoveEmptyDirectory(const WCHAR* dir) {
     return ok;
 }
 
-
 // The following list is used to verify that all the required files have been
 // installed (install flag set) and to know what files are to be removed at
 // uninstallation (all listed files that actually exist).
@@ -194,7 +193,7 @@ static void RemoveInstalledFiles() {
     const WCHAR* dir = GetInstallDirNoFree();
     size_t n = dimof(gInstalledFiles);
     for (size_t i = 0; i < n; i++) {
-        const char *s = gInstalledFiles[i];
+        const char* s = gInstalledFiles[i];
         AutoFreeW relPath(str::conv::FromUtf8(s));
         AutoFreeW path(path::Join(dir, relPath));
         DeleteFile(path);
@@ -248,7 +247,7 @@ static DWORD WINAPI UninstallerThread(LPVOID data) {
     RemoveOwnRegistryKeys();
 
     RemoveInstalledFiles();
-    //NotifyFailed(_TR("Couldn't remove installation directory"));
+    // NotifyFailed(_TR("Couldn't remove installation directory"));
 
     // always succeed, even for partial uninstallations
     gInstUninstGlobals.success = true;

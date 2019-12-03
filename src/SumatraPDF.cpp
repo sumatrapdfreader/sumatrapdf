@@ -154,10 +154,12 @@ void SetCurrentLang(const char* langCode) {
 }
 
 #ifndef SUMATRA_UPDATE_INFO_URL
-#ifdef SVN_PRE_RELEASE_VER
-#define SUMATRA_UPDATE_INFO_URL L"https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumpdf-prerelease-update.txt"
+#if 0 // defined(SVN_PRE_RELEASE_VER)
+#define SUMATRA_UPDATE_INFO_URL \
+    L"https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/sumpdf-prerelease-latest.txt"
 #else
-#define SUMATRA_UPDATE_INFO_URL L"https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumpdf-update.txt"
+#define SUMATRA_UPDATE_INFO_URL \
+    L"https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/sumpdf-prerelease-update.txt"
 #endif
 #endif
 
@@ -1881,22 +1883,27 @@ Portable [
 */
 
 static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
-    if (rsp->error != 0)
+    if (rsp->error != 0) {
         return rsp->error;
-    if (rsp->httpStatusCode != 200)
+    }
+    if (rsp->httpStatusCode != 200) {
         return ERROR_INTERNET_INVALID_URL;
-    if (!str::StartsWith(rsp->url.Get(), SUMATRA_UPDATE_INFO_URL))
+    }
+    if (!str::StartsWith(rsp->url.Get(), SUMATRA_UPDATE_INFO_URL)) {
         return ERROR_INTERNET_INVALID_URL;
+    }
     str::Str* data = &rsp->data;
-    if (0 == data->size())
+    if (0 == data->size()) {
         return ERROR_INTERNET_CONNECTION_ABORTED;
+    }
 
     // See https://code.google.com/p/sumatrapdf/issues/detail?id=725
     // If a user configures os-wide proxy that is not regular ie proxy
     // (which we pick up) we might get complete garbage in response to
     // our query. Make sure to check whether the returned data is sane.
-    if (!str::StartsWith(data->Get(), '[' == data->at(0) ? "[SumatraPDF]" : "SumatraPDF"))
+    if (!str::StartsWith(data->Get(), '[' == data->at(0) ? "[SumatraPDF]" : "SumatraPDF")) {
         return ERROR_INTERNET_LOGIN_FAILURE;
+    }
 
 #ifdef HAS_PUBLIC_APP_KEY
     size_t pubkeyLen;
@@ -1910,14 +1917,16 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
     SquareTree tree(data->Get());
     SquareTreeNode* node = tree.root ? tree.root->GetChild("SumatraPDF") : nullptr;
     const char* latest = node ? node->GetValue("Latest") : nullptr;
-    if (!latest || !IsValidProgramVersion(latest))
+    if (!latest || !IsValidProgramVersion(latest)) {
         return ERROR_INTERNET_INCORRECT_FORMAT;
+    }
 
     AutoFreeW verTxt(str::conv::FromUtf8(latest));
     if (CompareVersion(verTxt, UPDATE_CHECK_VER) <= 0) {
         /* if automated => don't notify that there is no new version */
-        if (!silent)
+        if (!silent) {
             MessageBoxWarning(hParent, _TR("You have the latest version."), _TR("SumatraPDF Update"));
+        }
         return 0;
     }
 
@@ -1931,8 +1940,9 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
     }
 
     // if automated, respect gGlobalPrefs->versionToSkip
-    if (silent && str::EqI(gGlobalPrefs->versionToSkip, verTxt))
+    if (silent && str::EqI(gGlobalPrefs->versionToSkip, verTxt)) {
         return 0;
+    }
 
     // ask whether to download the new version and allow the user to
     // either open the browser, do nothing or don't be reminded of
@@ -1973,28 +1983,32 @@ static void ProcessAutoUpdateCheckResult(HWND hwnd, HttpRsp* rsp, bool autoCheck
 // if autoCheck is true, this is a check *not* triggered by explicit action
 // of the user and therefore will show less UI
 void UpdateCheckAsync(WindowInfo* win, bool autoCheck) {
-    if (!HasPermission(Perm_InternetAccess))
+    if (!HasPermission(Perm_InternetAccess)) {
         return;
+    }
 
     // For auto-check, only check if at least a day passed since last check
     if (autoCheck) {
         // don't check if the timestamp or version to skip can't be updated
         // (mainly in plugin mode, stress testing and restricted settings)
-        if (!HasPermission(Perm_SavePreferences))
+        if (!HasPermission(Perm_SavePreferences)) {
             return;
+        }
 
         // don't check for updates at the first start, so that privacy
         // sensitive users can disable the update check in time
         FILETIME never = {0};
-        if (FileTimeEq(gGlobalPrefs->timeOfLastUpdateCheck, never))
+        if (FileTimeEq(gGlobalPrefs->timeOfLastUpdateCheck, never)) {
             return;
+        }
 
         FILETIME currentTimeFt;
         GetSystemTimeAsFileTime(&currentTimeFt);
         int secs = FileTimeDiffInSecs(currentTimeFt, gGlobalPrefs->timeOfLastUpdateCheck);
         // if secs < 0 => somethings wrong, so ignore that case
-        if ((secs >= 0) && (secs < SECS_IN_DAY))
+        if ((secs >= 0) && (secs < SECS_IN_DAY)) {
             return;
+        }
     }
 
     GetSystemTimeAsFileTime(&gGlobalPrefs->timeOfLastUpdateCheck);
@@ -2015,8 +2029,9 @@ void UpdateCheckAsync(WindowInfo* win, bool autoCheck) {
 
 static void RerenderEverything() {
     for (auto* win : gWindows) {
-        if (!win->AsFixed())
+        if (!win->AsFixed()) {
             continue;
+        }
         DisplayModel* dm = win->AsFixed();
         gRenderCache.CancelRendering(dm);
         gRenderCache.KeepForDisplayModel(dm, dm);
@@ -2046,12 +2061,14 @@ void UpdateDocumentColors() {
 }
 
 static void OnMenuExit() {
-    if (gPluginMode)
+    if (gPluginMode) {
         return;
+    }
 
     for (WindowInfo* win : gWindows) {
-        if (!MayCloseWindow(win))
+        if (!MayCloseWindow(win)) {
             return;
+        }
     }
 
     RememberSessionState();
@@ -2077,8 +2094,9 @@ static void CloseDocumentInTab(WindowInfo* win, bool keepUIEnabled, bool deleteM
     delete win->linkOnLastButtonDown;
     win->linkOnLastButtonDown = nullptr;
     win->fwdSearchMark.show = false;
-    if (win->uia_provider)
+    if (win->uia_provider) {
         win->uia_provider->OnDocumentUnload();
+    }
     win->ctrl = nullptr;
     auto currentTab = win->currentTab;
     if (deleteModel) {

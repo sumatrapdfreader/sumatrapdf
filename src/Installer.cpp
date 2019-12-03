@@ -129,7 +129,6 @@ static bool ExtractFiles(lzma::SimpleArchive* archive) {
     return true;
 }
 
-
 static std::tuple<const char*, DWORD, HGLOBAL> LockDataResource(int id) {
     auto h = GetModuleHandle(nullptr);
     auto name = MAKEINTRESOURCEW(id);
@@ -1012,7 +1011,6 @@ static bool OpenEmbeddedFilesArchive() {
         return false;
     }
     return true;
-
 }
 int RunInstaller() {
     int ret = 0;
