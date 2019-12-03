@@ -16,5 +16,6 @@ bool ExtendedEditWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 void EnsureAreaVisibility(RectI& rect);
 RectI GetDefaultWindowPos();
 void SaveCallstackLogs();
+#if 0
 WCHAR* PathForFileInAppDataDir(const WCHAR* fileName);
-// const WCHAR* ExractUnrarDll();
+#endif

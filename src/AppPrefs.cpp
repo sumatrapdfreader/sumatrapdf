@@ -228,42 +228,6 @@ bool Reload() {
     return true;
 }
 
-void UpdateGlobalPrefs(const CommandLineInfo& i) {
-    if (i.inverseSearchCmdLine) {
-        str::ReplacePtr(&gGlobalPrefs->inverseSearchCmdLine, i.inverseSearchCmdLine);
-        gGlobalPrefs->enableTeXEnhancements = true;
-    }
-    gGlobalPrefs->fixedPageUI.invertColors = i.invertColors;
-
-    for (size_t n = 0; n < i.globalPrefArgs.size(); n++) {
-        if (str::EqI(i.globalPrefArgs.at(n), L"-esc-to-exit")) {
-            gGlobalPrefs->escToExit = true;
-        } else if (str::EqI(i.globalPrefArgs.at(n), L"-bgcolor") || str::EqI(i.globalPrefArgs.at(n), L"-bg-color")) {
-            // -bgcolor is for backwards compat (was used pre-1.3)
-            // -bg-color is for consistency
-            ParseColor(&gGlobalPrefs->mainWindowBackground, i.globalPrefArgs.at(++n));
-        } else if (str::EqI(i.globalPrefArgs.at(n), L"-set-color-range")) {
-            ParseColor(&gGlobalPrefs->fixedPageUI.textColor, i.globalPrefArgs.at(++n));
-            ParseColor(&gGlobalPrefs->fixedPageUI.backgroundColor, i.globalPrefArgs.at(++n));
-        } else if (str::EqI(i.globalPrefArgs.at(n), L"-fwdsearch-offset")) {
-            gGlobalPrefs->forwardSearch.highlightOffset = _wtoi(i.globalPrefArgs.at(++n));
-            gGlobalPrefs->enableTeXEnhancements = true;
-        } else if (str::EqI(i.globalPrefArgs.at(n), L"-fwdsearch-width")) {
-            gGlobalPrefs->forwardSearch.highlightWidth = _wtoi(i.globalPrefArgs.at(++n));
-            gGlobalPrefs->enableTeXEnhancements = true;
-        } else if (str::EqI(i.globalPrefArgs.at(n), L"-fwdsearch-color")) {
-            ParseColor(&gGlobalPrefs->forwardSearch.highlightColor, i.globalPrefArgs.at(++n));
-            gGlobalPrefs->enableTeXEnhancements = true;
-        } else if (str::EqI(i.globalPrefArgs.at(n), L"-fwdsearch-permanent")) {
-            gGlobalPrefs->forwardSearch.highlightPermanent = _wtoi(i.globalPrefArgs.at(++n));
-            gGlobalPrefs->enableTeXEnhancements = true;
-        } else if (str::EqI(i.globalPrefArgs.at(n), L"-manga-mode")) {
-            const WCHAR* s = i.globalPrefArgs.at(++n);
-            gGlobalPrefs->comicBookUI.cbxMangaMode = str::EqI(L"true", s) || str::Eq(L"1", s);
-        }
-    }
-}
-
 void CleanUp() {
     DeleteGlobalPrefs(gGlobalPrefs);
     gGlobalPrefs = nullptr;

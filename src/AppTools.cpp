@@ -95,8 +95,8 @@ WCHAR* AppGenDataFilename(const WCHAR* fileName) {
         return path::GetPathOfFileInAppDir(fileName);
     }
 
-    /* Use %APPDATA% */
-    AutoFreeW path(GetSpecialFolder(CSIDL_APPDATA, true));
+    /* Use %LOCALAPPDATA% */
+    AutoFreeW path(GetSpecialFolder(CSIDL_LOCAL_APPDATA, true));
     CrashIf(!path);
     if (!path)
         return nullptr;
@@ -109,6 +109,7 @@ WCHAR* AppGenDataFilename(const WCHAR* fileName) {
     return path::Join(path, fileName);
 }
 
+#if 0
 WCHAR* PathForFileInAppDataDir(const WCHAR* fileName) {
     if (!fileName)
         return nullptr;
@@ -127,6 +128,7 @@ WCHAR* PathForFileInAppDataDir(const WCHAR* fileName) {
 
     return path::Join(dir, fileName);
 }
+#endif
 
 /*
 Structure of registry entries for associating Sumatra with PDF files.
@@ -480,6 +482,8 @@ void SaveCallstackLogs() {
     free(s);
 }
 
+// TODO: this can be used for extracting other data
+#if 0
 // cache because calculating md5 of the whole executable
 // might be relatively expensive
 static AutoFreeW gAppMd5;
@@ -553,8 +557,6 @@ void RemoveMd5AppDataDirectories() {
     }
 }
 
-// TODO: this can be used for extracting other data
-#if 0
 // return a path on disk to extracted unrar.dll or nullptr if couldn't extract
 // memory has to be freed by the caller
 const WCHAR* ExractUnrarDll() {

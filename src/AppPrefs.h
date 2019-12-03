@@ -20,6 +20,5 @@ void CleanUp();
 
 void RegisterForFileChanges();
 void UnregisterForFileChanges();
-void UpdateGlobalPrefs(const CommandLineInfo& i);
 
 }; // namespace prefs

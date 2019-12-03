@@ -16,18 +16,12 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include <tlhelp32.h>
 #include <io.h>
 #include "utils/FileUtil.h"
-#include "Translations.h"
-#include "Resource.h"
-#include "utils/Timer.h"
-#include "Version.h"
-#include "utils/WinUtil.h"
-#include "Installer.h"
-#include "utils/CmdLineParser.h"
-#include "CrashHandler.h"
 #include "utils/Dpi.h"
 #include "utils/FrameTimeoutCalculator.h"
 #include "utils/DebugLog.h"
-
+#include "utils/WinUtil.h"
+#include "utils/Timer.h"
+#include "utils/CmdLineParser.h"
 #include "utils/ByteOrderDecoder.h"
 #include "utils/LzmaSimpleArchive.h"
 
@@ -39,6 +33,11 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "wingui/EditCtrl.h"
 #include "wingui/StaticCtrl.h"
 #include "wingui/ProgressCtrl.h"
+
+#include "Translations.h"
+#include "Resource.h"
+#include "Version.h"
+#include "Installer.h"
 
 #include "ifilter/PdfFilter.h"
 #include "previewer/PdfPreview.h"
@@ -162,6 +161,28 @@ static bool CopySelfToInstallationDir() {
     BOOL ok = ::CopyFileW(exePath, dstPath, failIfExists);
     free(dstPath);
     return ok;
+}
+
+#define PREFS_FILE_NAME L"SumatraPDF-settings.txt"
+
+static void CopySettingsFile() {
+    // up to 3.1.2 we stored settings in %APPDATA%
+    // after that we use %LOCALAPPDATA%
+    // copy the settings from old directory
+    WCHAR* srcDir = GetSpecialFolder(CSIDL_APPDATA, false);
+    WCHAR* dstDir = GetSpecialFolder(CSIDL_LOCAL_APPDATA, false);
+
+    WCHAR* srcPath = path::Join(srcDir, PREFS_FILE_NAME);
+    WCHAR* dstPath = path::Join(dstDir, PREFS_FILE_NAME);
+
+    // don't over-write
+    BOOL failIfExists = true;
+    // don't care if it fails or not
+    ::CopyFileW(srcPath, dstPath, failIfExists);
+    free(dstPath);
+    free(srcPath);
+    free(dstDir);
+    free(srcDir);
 }
 
 static bool ExtractInstallerFiles() {
@@ -384,6 +405,7 @@ static DWORD WINAPI InstallerThread(LPVOID data) {
         goto Error;
     }
 
+    CopySettingsFile();
     // all files have been extracted at this point
     if (gInstallerGlobals.justExtractFiles) {
         return 0;
