@@ -627,7 +627,7 @@ bool SetSymbolsDir(const WCHAR* symDir) {
 static ExeType DetectExeType() {
     ExeType exeType = ExeSumatraStatic;
     HRSRC resSrc = FindResource(GetModuleHandle(nullptr), MAKEINTRESOURCEW(1), RT_RCDATA);
-    if (resSrc resSrc != nullptr) {
+    if (resSrc != nullptr) {
         exeType = ExeSumatraDll;
     }
     return exeType;
