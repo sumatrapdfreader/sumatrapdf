@@ -30,10 +30,10 @@
     <ClInclude Include="..\src\utils\FileUtil.h">
       <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\utils\LzmaSimpleArchive.h">
+    <ClInclude Include="..\src\utils\Log.h">
       <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\utils\SimpleLog.h">
+    <ClInclude Include="..\src\utils\LzmaSimpleArchive.h">
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\StrUtil.h">
@@ -71,10 +71,10 @@
     <ClCompile Include="..\src\utils\FileUtil.cpp">
       <Filter>utils</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\utils\LzmaSimpleArchive.cpp">
+    <ClCompile Include="..\src\utils\Log.cpp">
       <Filter>utils</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\utils\SimpleLog.cpp">
+    <ClCompile Include="..\src\utils\LzmaSimpleArchive.cpp">
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\StrUtil.cpp">

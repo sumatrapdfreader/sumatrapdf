@@ -2,7 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "utils/BaseUtil.h"
-#include "utils/SimpleLog.h"
+#include "utils/Log.h"
 #include "utils/WinUtil.h"
 
 #include "wingui/WinGui.h"

@@ -486,9 +486,9 @@
     <ClInclude Include="..\src\utils\HtmlPrettyPrint.h" />
     <ClInclude Include="..\src\utils\HtmlPullParser.h" />
     <ClInclude Include="..\src\utils\JsonParser.h" />
+    <ClInclude Include="..\src\utils\Log.h" />
     <ClInclude Include="..\src\utils\Scoped.h" />
     <ClInclude Include="..\src\utils\SettingsUtil.h" />
-    <ClInclude Include="..\src\utils\SimpleLog.h" />
     <ClInclude Include="..\src\utils\SquareTreeParser.h" />
     <ClInclude Include="..\src\utils\StrFormat.h" />
     <ClInclude Include="..\src\utils\StrUtil.h" />
@@ -520,8 +520,8 @@
     <ClCompile Include="..\src\utils\HtmlPrettyPrint.cpp" />
     <ClCompile Include="..\src\utils\HtmlPullParser.cpp" />
     <ClCompile Include="..\src\utils\JsonParser.cpp" />
+    <ClCompile Include="..\src\utils\Log.cpp" />
     <ClCompile Include="..\src\utils\SettingsUtil.cpp" />
-    <ClCompile Include="..\src\utils\SimpleLog.cpp" />
     <ClCompile Include="..\src\utils\SquareTreeParser.cpp" />
     <ClCompile Include="..\src\utils\StrFormat.cpp" />
     <ClCompile Include="..\src\utils\StrUtil.cpp" />

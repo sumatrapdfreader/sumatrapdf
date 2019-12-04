@@ -8,7 +8,7 @@
 #include "utils/HtmlParserLookup.h"
 #include "utils/HtmlWindow.h"
 #include "mui/Mui.h"
-#include "utils/SimpleLog.h"
+#include "utils/Log.h"
 #include "utils/Timer.h"
 #include "utils/WinUtil.h"
 

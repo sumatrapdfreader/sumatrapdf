@@ -1,7 +1,7 @@
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
-#include "utils/SimpleLog.h"
+#include "utils/Log.h"
 
 #include "wingui/WinGui.h"
 #include "wingui/Layout.h"

@@ -69,13 +69,13 @@
     <ClInclude Include="..\src\utils\JsonParser.h">
       <Filter>utils</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\utils\Log.h">
+      <Filter>utils</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\utils\Scoped.h">
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\SettingsUtil.h">
-      <Filter>utils</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\utils\SimpleLog.h">
       <Filter>utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\SquareTreeParser.h">
@@ -159,10 +159,10 @@
     <ClCompile Include="..\src\utils\JsonParser.cpp">
       <Filter>utils</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\utils\SettingsUtil.cpp">
+    <ClCompile Include="..\src\utils\Log.cpp">
       <Filter>utils</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\utils\SimpleLog.cpp">
+    <ClCompile Include="..\src\utils\SettingsUtil.cpp">
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\SquareTreeParser.cpp">

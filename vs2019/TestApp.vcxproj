@@ -525,8 +525,8 @@
     <ClInclude Include="..\src\utils\DebugLog.h" />
     <ClInclude Include="..\src\utils\Dpi.h" />
     <ClInclude Include="..\src\utils\FileUtil.h" />
+    <ClInclude Include="..\src\utils\Log.h" />
     <ClInclude Include="..\src\utils\Scoped.h" />
-    <ClInclude Include="..\src\utils\SimpleLog.h" />
     <ClInclude Include="..\src\utils\StrUtil.h" />
     <ClInclude Include="..\src\utils\WinDynCalls.h" />
     <ClInclude Include="..\src\utils\WinUtil.h" />
@@ -558,7 +558,7 @@
     <ClCompile Include="..\src\utils\DebugLog.cpp" />
     <ClCompile Include="..\src\utils\Dpi.cpp" />
     <ClCompile Include="..\src\utils\FileUtil.cpp" />
-    <ClCompile Include="..\src\utils\SimpleLog.cpp" />
+    <ClCompile Include="..\src\utils\Log.cpp" />
     <ClCompile Include="..\src\utils\StrUtil.cpp" />
     <ClCompile Include="..\src\utils\StrUtil_win.cpp" />
     <ClCompile Include="..\src\utils\WinDynCalls.cpp" />

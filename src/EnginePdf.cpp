@@ -17,7 +17,7 @@ extern "C" {
 #include "utils/TrivialHtmlParser.h"
 #include "utils/WinUtil.h"
 #include "utils/ZipUtil.h"
-#include "utils/SimpleLog.h"
+#include "utils/Log.h"
 
 #include "AppColors.h"
 #include "wingui/TreeModel.h"

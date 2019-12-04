@@ -33,10 +33,10 @@
     <ClInclude Include="..\src\utils\FileUtil.h">
       <Filter>src\utils</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\utils\Scoped.h">
+    <ClInclude Include="..\src\utils\Log.h">
       <Filter>src\utils</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\utils\SimpleLog.h">
+    <ClInclude Include="..\src\utils\Scoped.h">
       <Filter>src\utils</Filter>
     </ClInclude>
     <ClInclude Include="..\src\utils\StrUtil.h">
@@ -128,7 +128,7 @@
     <ClCompile Include="..\src\utils\FileUtil.cpp">
       <Filter>src\utils</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\utils\SimpleLog.cpp">
+    <ClCompile Include="..\src\utils\Log.cpp">
       <Filter>src\utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\StrUtil.cpp">
