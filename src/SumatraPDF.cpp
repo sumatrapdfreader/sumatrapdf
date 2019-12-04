@@ -3674,7 +3674,7 @@ static bool SidebarSplitterCb(WindowInfo* win, bool done) {
     ClientRect rToc(win->hwndTocBox);
     int minDx = std::min(SIDEBAR_MIN_WIDTH, rToc.dx);
     int maxDx = std::max(rFrame.dx / 2, rToc.dx);
-    if (sidebarDx < minDx|| sidebarDx > maxDx) {
+    if (sidebarDx < minDx || sidebarDx > maxDx) {
         return false;
     }
 
@@ -3704,7 +3704,6 @@ static bool FavSplitterCb(WindowInfo* win, bool done) {
     }
     return true;
 }
-
 
 void SetSidebarVisibility(WindowInfo* win, bool tocVisible, bool showFavorites) {
     if (gPluginMode || !HasPermission(Perm_DiskAccess)) {
@@ -4418,9 +4417,19 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
+bool IsDllBuild() {
+    HRSRC resSrc = FindResourceW(GetModuleHandle(nullptr), MAKEINTRESOURCEW(1), RT_RCDATA);
+    return resSrc != nullptr;
+}
+
 void GetProgramInfo(str::Str& s) {
     OwnedData d = str::conv::WcharToUtf8(gCrashFilePath);
     s.AppendFmt("Crash file: %s\r\n", d.data);
+    char* exePath = GetExePathA();
+    s.AppendFmt("Exe: %s\r\n", exePath);
+    free(exePath);
+    const char* exeType = IsDllBuild() ? "dll" : "static";
+    s.AppendFmt("Type: %s\r\n", exeType);
     s.AppendFmt("Ver: %s", CURR_VERSION_STRA);
 #if defined(SVN_PRE_RELEASE_VER)
     s.AppendFmt(" pre-release");
@@ -4429,16 +4438,18 @@ void GetProgramInfo(str::Str& s) {
         s.Append(" 64-bit");
     }
 #ifdef DEBUG
-    if (!str::Find(s.Get(), " (dbg)"))
+    if (!str::Find(s.Get(), " (dbg)")) {
         s.Append(" (dbg)");
+    }
 #endif
-    if (gPluginMode)
+    if (gPluginMode) {
         s.Append(" [plugin]");
+    }
     s.Append("\r\n");
 
 #if defined(GIT_COMMIT_ID)
     const char* gitSha1 = QM(GIT_COMMIT_ID);
-    s.AppendFmt("Git: %s (https://github.com/sumatrapdfreader/sumatrapdf/tree/%s)\r\n", gitSha1, gitSha1);
+    s.AppendFmt("Git: %s (https://github.com/sumatrapdfreader/sumatrapdf/commit/%s)\r\n", gitSha1, gitSha1);
 #endif
 }
 

@@ -1219,11 +1219,8 @@ PdfEngineImpl::~PdfEngineImpl() {
     fz_drop_outline(ctx, attachments);
     pdf_drop_obj(ctx, _info);
 
-    fz_drop_stream(ctx, _docStream);
     fz_drop_document(ctx, (fz_document*)_doc);
-    _doc = nullptr;
     fz_drop_context(ctx);
-    ctx = nullptr;
 
     delete _pagelabels;
     free(_decryptionKey);

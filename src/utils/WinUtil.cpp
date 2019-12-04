@@ -356,6 +356,12 @@ WCHAR* GetExePath() {
     return path::Normalize(buf);
 }
 
+char* GetExePathA() {
+    WCHAR buf[MAX_PATH] = {0};
+    GetModuleFileName(nullptr, buf, dimof(buf));
+    return str::conv::WcharToUtf8(buf).StealData();
+}
+
 /* Return directory where this executable is located.
 Caller needs to free()
 */

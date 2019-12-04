@@ -434,7 +434,6 @@ XpsEngineImpl::~XpsEngineImpl() {
         DropPageRun(runCache.Last(), true);
     }
 
-    fz_drop_stream(ctx, _docStream);
     fz_drop_document(ctx, _doc);
     fz_drop_context(ctx);
 

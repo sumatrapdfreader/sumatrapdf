@@ -94,13 +94,6 @@ class CrashHandlerAllocator : public Allocator {
     }
 };
 
-enum ExeType {
-    // this is a single-executable (portable) build (doesn't have libmupdf.dll)
-    ExeSumatraStatic,
-    // an installable build (has libmupdf.dll)
-    ExeSumatraDll
-};
-
 static CrashHandlerAllocator* gCrashHandlerAllocator = nullptr;
 
 // Note: intentionally not using ScopedMem<> to avoid
@@ -116,7 +109,7 @@ static char* gSystemInfo = nullptr;
 static char* gModulesInfo = nullptr;
 static HANDLE gDumpEvent = nullptr;
 static HANDLE gDumpThread = nullptr;
-static ExeType gExeType = ExeSumatraStatic;
+static bool isDllBuild = false;
 static bool gCrashed = false;
 WCHAR* gCrashFilePath = nullptr;
 
@@ -196,14 +189,15 @@ static bool UnpackStaticSymbols(const char* pdbZipPath, const char* symDir) {
 }
 
 // lib (.exe + libmupdf.dll) release and pre-release builds
-static bool UnpackLibSymbols(const char* pdbZipPath, const char* symDir) {
-    lf("UnpackLibSymbols(): unpacking %s to dir %s", pdbZipPath, symDir);
+static bool UnpackDllSymbols(const char* pdbZipPath, const char* symDir) {
+    lf("UnpackDllSymbols(): unpacking '%s' to dir '%s'", pdbZipPath, symDir);
     const char* files[3] = {"libmupdf.pdb", "SumatraPDF-dll.pdb", nullptr};
     bool ok = lzma::ExtractFiles(pdbZipPath, symDir, &files[0], gCrashHandlerAllocator);
     if (!ok) {
         plog("Failed to unpack libmupdf.pdb or SumatraPD-dll.pdb");
         return false;
     }
+    // TODO: rename SumatraPDF-dll.pdb => SumatraPDF.dll
     return true;
 }
 
@@ -248,12 +242,10 @@ static bool DownloadAndUnzipSymbols(const WCHAR* pdbZipPath, const WCHAR* symDir
     str::WcharToUtf8Buf(symDir, symDirUtf, sizeof(symDirUtf));
 
     bool ok = false;
-    if (ExeSumatraStatic == gExeType) {
-        ok = UnpackStaticSymbols(pdbZipPathUtf, symDirUtf);
-    } else if (ExeSumatraDll == gExeType) {
-        ok = UnpackLibSymbols(pdbZipPathUtf, symDirUtf);
+    if (isDllBuild) {
+        ok = UnpackDllSymbols(pdbZipPathUtf, symDirUtf);
     } else {
-        plog("DownloadAndUnzipSymbols(): unknown exe type");
+        ok = UnpackStaticSymbols(pdbZipPathUtf, symDirUtf);
     }
 
     file::Delete(pdbZipPath);
@@ -645,17 +637,6 @@ bool SetSymbolsDir(const WCHAR* symDir) {
     return true;
 }
 
-// detect which exe it is (sumatra static or sumatra with dlls)
-// dll build has a data resources with payload
-static ExeType DetectExeType() {
-    ExeType exeType = ExeSumatraStatic;
-    HRSRC resSrc = FindResource(GetModuleHandle(nullptr), MAKEINTRESOURCEW(1), RT_RCDATA);
-    if (resSrc != nullptr) {
-        exeType = ExeSumatraDll;
-    }
-    return exeType;
-}
-
 void __cdecl onSignalAbort(int code) {
     UNUSED(code);
     // put the signal back because can be called many times
@@ -678,6 +659,9 @@ int __cdecl _purecall() {
     return 0;
 }
 
+// in SumatraPDF.cpp
+extern bool IsDllBuild();
+
 void InstallCrashHandler(const WCHAR* crashDumpPath, const WCHAR* crashFilePath, const WCHAR* symDir) {
     AssertCrash(!gDumpEvent && !gDumpThread);
 
@@ -699,11 +683,12 @@ void InstallCrashHandler(const WCHAR* crashDumpPath, const WCHAR* crashFilePath,
         return;
     }
 
+    isDllBuild = IsDllBuild();
+
     BuildSystemInfo();
     // at this point list of modules should be complete (except
     // dbghlp.dll which shouldn't be loaded yet)
 
-    gExeType = DetectExeType();
     // we pre-allocate as much as possible to minimize allocations
     // when crash handler is invoked. It's ok to use standard
     // allocation functions here.

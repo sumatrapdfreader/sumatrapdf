@@ -610,7 +610,9 @@ void LoadTocTree(WindowInfo* win) {
         win->altBookmarks->SetItems(items);
     }
 
-    win->altBookmarks->OnDropDownSelectionChanged = [=](int idx, std::string_view s) { AltBookmarksChanged(win, tab, idx, s); };
+    win->altBookmarks->OnDropDownSelectionChanged = [=](int idx, std::string_view s) {
+        AltBookmarksChanged(win, tab, idx, s);
+    };
 
     // consider a ToC tree right-to-left if a more than half of the
     // alphabetic characters are in a right-to-left script

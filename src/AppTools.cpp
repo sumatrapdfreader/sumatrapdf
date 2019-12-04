@@ -20,21 +20,28 @@
    created by an installer (and should be updated through an installer) */
 bool HasBeenInstalled() {
     // see GetInstallationDir() in Installer.cpp
-    std::unique_ptr<WCHAR> installedPath(
-        ReadRegStr2(HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, REG_PATH_UNINST, L"InstallLocation"));
+    WCHAR* installedPath = ReadRegStr2(HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, REG_PATH_UNINST, L"InstallLocation");
     if (!installedPath) {
         return false;
     }
 
-    std::unique_ptr<WCHAR> exePath(GetExePath());
+    WCHAR* exePath = GetExePath();
+
+    defer {
+        free(exePath);
+        free(installedPath);
+    };
+
     if (!exePath) {
         return false;
     }
 
-    if (!str::EndsWithI(installedPath.get(), L".exe")) {
-        installedPath.reset(path::Join(installedPath.get(), path::GetBaseNameNoFree(exePath.get())));
+    if (!str::EndsWithI(installedPath, L".exe")) {
+        auto toFree = installedPath;
+        installedPath = path::Join(installedPath, path::GetBaseNameNoFree(exePath));
+        free(toFree);
     }
-    return path::IsSame(installedPath.get(), exePath.get());
+    return path::IsSame(installedPath, exePath);
 }
 
 /* Return false if this program has been started from "Program Files" directory
