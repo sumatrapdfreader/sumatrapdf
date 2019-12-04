@@ -141,6 +141,8 @@ RenderedBitmap* new_rendered_fz_pixmap(fz_context* ctx, fz_pixmap* pixmap) {
     ScopedMem<BITMAPINFO> bmi((BITMAPINFO*)calloc(1, sizeof(BITMAPINFO) + 255 * sizeof(RGBQUAD)));
 
     fz_pixmap* bgrPixmap = nullptr;
+    fz_var(bgrPixmap);
+
     /* BGRA is a GDI compatible format */
     fz_try(ctx) {
         fz_irect bbox = fz_pixmap_bbox(ctx, pixmap);
@@ -149,6 +151,10 @@ RenderedBitmap* new_rendered_fz_pixmap(fz_context* ctx, fz_pixmap* pixmap) {
         bgrPixmap = fz_convert_pixmap(ctx, pixmap, csdest, nullptr, nullptr, cp, 1);
     }
     fz_catch(ctx) {
+        return nullptr;
+    }
+
+    if (!bgrPixmap || !bgrPixmap->samples) {
         return nullptr;
     }
 
@@ -166,7 +172,8 @@ RenderedBitmap* new_rendered_fz_pixmap(fz_context* ctx, fz_pixmap* pixmap) {
     HANDLE hMap = CreateFileMapping(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, bmih->biSizeImage, nullptr);
     HBITMAP hbmp = CreateDIBSection(nullptr, bmi, DIB_RGB_COLORS, &data, hMap, 0);
     if (data) {
-        memcpy(data, bgrPixmap->samples, bmih->biSizeImage);
+        u8* samples = bgrPixmap->samples;
+        memcpy(data, samples, bmih->biSizeImage);
     }
     fz_drop_pixmap(ctx, bgrPixmap);
     if (!hbmp) {

@@ -39,6 +39,7 @@ func downloadCrashes(dataDir string) {
 		logf("Downloaded '%s' => '%s'\n", rf.Key, path)
 	}
 	logf("%d total crashes, downloaded %d\n", nRemoteFiles, nDownloaded)
+	logf("dataDir: %s\n", dataDir)
 }
 
 func previewCrashes() {
