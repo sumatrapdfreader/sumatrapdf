@@ -81,6 +81,7 @@ class RenderCache;
 class TabInfo;
 struct LabelWithCloseWnd;
 struct SessionData;
+struct DropDownCtrl;
 
 // all defined in SumatraPDF.cpp
 extern bool gDebugShowLinks;
@@ -112,7 +113,7 @@ bool MayCloseWindow(WindowInfo* win);
 void CloseWindow(WindowInfo* win, bool quitIfLast, bool forceClose = false);
 void SetSidebarVisibility(WindowInfo* win, bool tocVisible, bool favVisible);
 void RememberFavTreeExpansionState(WindowInfo* win);
-void LayoutTreeContainer(LabelWithCloseWnd* l, HWND hwndTree);
+void LayoutTreeContainer(LabelWithCloseWnd* l, DropDownCtrl*, HWND hwndTree);
 void AdvanceFocus(WindowInfo* win);
 bool WindowInfoStillValid(WindowInfo* win);
 void SetCurrentLanguageAndRefreshUI(const char* langCode);

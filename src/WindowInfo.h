@@ -23,6 +23,7 @@ class TabInfo;
 
 class TreeCtrl;
 struct TooltipCtrl;
+struct DropDownCtrl;
 
 /* Describes actions which can be performed by mouse */
 enum class MouseAction { Idle = 0, Dragging, DraggingRight, Selecting, Scrolling, SelectingText };
@@ -96,6 +97,8 @@ class WindowInfo {
 
     // state related to table of contents (PDF bookmarks etc.)
     HWND hwndTocBox = nullptr;
+    DropDownCtrl* altBookmarks = nullptr;
+
     LabelWithCloseWnd* tocLabelWithClose = nullptr;
     TreeCtrl* tocTreeCtrl = nullptr;
     // whether the current tab's ToC has been loaded into the tree

@@ -7,15 +7,19 @@
 #include "utils/SimpleLog.h"
 #include "utils/BitManip.h"
 #include "utils/FileUtil.h"
-#include "utils/GdiPlusUtil.h"
 #include "utils/UITask.h"
 #include "utils/WinUtil.h"
 
 #include "wingui/WinGui.h"
+#include "wingui/Layout.h"
+#include "wingui/Window.h"
 #include "wingui/LabelWithCloseWnd.h"
 #include "wingui/SplitterWnd.h"
 #include "wingui/TreeModel.h"
 #include "wingui/TreeCtrl.h"
+#include "wingui/DropDownCtrl.h"
+
+#include "utils/GdiPlusUtil.h"
 
 #include "EngineBase.h"
 #include "EngineManager.h"
@@ -562,6 +566,16 @@ static AlternativeBookmarks* LoadAlterenativeBookmarks(std::string_view baseFile
     return res;
 }
 
+static void AltBookmarksChanged(WindowInfo* win, TabInfo* tab, int n, std::string_view s) {
+    DocTocTree* tocTree = nullptr;
+    if (n == 0) {
+        tocTree = tab->ctrl->GetTocTree();
+    } else {
+        tocTree = tab->altBookmarks->bookmarks[n - 1];
+    }
+    win->tocTreeCtrl->SetTreeModel(tocTree);
+}
+
 // TODO: temporary
 static AlternativeBookmarks* LoadAlterenativeBookmarks(const WCHAR* baseFileName) {
     auto tmp = str::conv::ToUtf8(baseFileName);
@@ -585,11 +599,18 @@ void LoadTocTree(WindowInfo* win) {
 
     // TODO: for now just for testing
     auto* altTocs = LoadAlterenativeBookmarks(tab->filePath);
-#if 1
-    delete altTocs;
-#else
-    tocTree = altTocs->bookmarks[0];
-#endif
+    if (altTocs && altTocs->count > 0) {
+        tab->altBookmarks = altTocs;
+        Vec<std::string_view> items;
+        items.Append("Default");
+        for (size_t i = 0; i < altTocs->count; i++) {
+            DocTocTree* toc = altTocs->bookmarks[i];
+            items.Append(toc->name);
+        }
+        win->altBookmarks->SetItems(items);
+    }
+
+    win->altBookmarks->OnDropDownSelectionChanged = [=](int idx, std::string_view s) { AltBookmarksChanged(win, tab, idx, s); };
 
     // consider a ToC tree right-to-left if a more than half of the
     // alphabetic characters are in a right-to-left script
@@ -770,6 +791,32 @@ static LRESULT TocTreePreFilter(TreeCtrl* tree, UINT msg, WPARAM wp, LPARAM lp, 
     return 0;
 }
 
+// Position label with close button and tree window within their parent.
+// Used for toc and favorites.
+void LayoutTreeContainer(LabelWithCloseWnd* l, DropDownCtrl* altBookmarks, HWND hwndTree) {
+    HWND hwndContainer = GetParent(hwndTree);
+    SizeI labelSize = l->GetIdealSize();
+    WindowRect rc(hwndContainer);
+    bool altBookmarksVisible = altBookmarks && altBookmarks->items.size() > 0;
+    int dy = rc.dy;
+    int y = 0;
+    MoveWindow(l->hwnd, y, 0, rc.dx, labelSize.dy, TRUE);
+    dy -= labelSize.dy;
+    y += labelSize.dy;
+    if (altBookmarks) {
+        altBookmarks->SetIsVisible(altBookmarksVisible);
+        if (altBookmarksVisible) {
+            SIZE bs = altBookmarks->GetIdealSize();
+            int elDy = bs.cy;
+            RECT r{0, y, rc.dx, y + elDy};
+            altBookmarks->SetBounds(r);
+            dy -= elDy;
+            y += elDy;
+        }
+    }
+    MoveWindow(hwndTree, 0, y, rc.dx, dy, TRUE);
+}
+
 static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR subclassId, DWORD_PTR data) {
     CrashIf(subclassId != SUBCLASS_ID);
     WindowInfo* winFromData = reinterpret_cast<WindowInfo*>(data);
@@ -781,7 +828,7 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
 
     switch (msg) {
         case WM_SIZE:
-            LayoutTreeContainer(win->tocLabelWithClose, win->tocTreeCtrl->hwnd);
+            LayoutTreeContainer(win->tocLabelWithClose, win->altBookmarks, win->tocTreeCtrl->hwnd);
             break;
 
         case WM_COMMAND:
@@ -821,6 +868,9 @@ void CreateToc(WindowInfo* win) {
     l->SetPaddingXY(2, 2);
     l->SetFont(GetDefaultGuiFont());
     // label is set in UpdateToolbarSidebarText()
+
+    win->altBookmarks = new DropDownCtrl(win->hwndTocBox);
+    win->altBookmarks->Create();
 
     auto* treeCtrl = new TreeCtrl(win->hwndTocBox, nullptr);
     DWORD dwStyle = TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS;
