@@ -11,6 +11,7 @@
 #include "utils/ThreadUtil.h"
 #include "utils/Timer.h"
 #include "utils/TrivialHtmlParser.h"
+#include "utils/Log.h"
 
 #include "TreeModel.h"
 #include "EngineBase.h"
@@ -27,8 +28,6 @@
 
 #include "EbookControls.h"
 #include "Translations.h"
-//#define NOLOG 0
-#include "utils/DebugLog.h"
 
 static const WCHAR* GetFontName() {
     // TODO: validate the name?
@@ -307,8 +306,9 @@ Vec<HtmlPage*>* EbookController::GetPages() {
 void EbookController::HandlePagesFromEbookLayout(EbookFormattingData* ft) {
     if (formattingThreadNo != ft->threadNo) {
         // this is a message from cancelled thread, we can disregard
-        lf("EbookController::HandlePagesFromEbookLayout() thread msg discarded, curr thread: %d, sending thread: %d",
-           formattingThreadNo, ft->threadNo);
+        logf(
+            "EbookController::HandlePagesFromEbookLayout() thread msg discarded, curr thread: %d, sending thread: %d\n",
+            formattingThreadNo, ft->threadNo);
         DeleteEbookFormattingData(ft);
         return;
     }
@@ -359,7 +359,7 @@ void EbookController::TriggerLayout() {
         return;
     }
 
-    dbglog::CrashLogF("EbookController::TriggerLayout(): starting formatting thread\n");
+    logf("EbookController::TriggerLayout(): starting formatting thread\n");
     // lf("(%3d,%3d) EbookController::TriggerLayout",size.dx, size.dy);
     pageSize = size; // set it early to prevent re-doing layout at the same size
 
@@ -515,7 +515,7 @@ void EbookController::GoToPage(int pageNo, bool addNavPoint) {
     // Hopefully prevent crashes like 55175
     if (!pages) {
         // TODO: remove when we figure out why this happens
-        dbglog::CrashLogF("EbookController::GoToPage(): pageNo: %d, currentPageNo: %d\n", pageNo, this->currPageNo);
+        logf("EbookController::GoToPage(): pageNo: %d, currentPageNo: %d\n", pageNo, this->currPageNo);
         CrashIf(!pages);
         return;
     }

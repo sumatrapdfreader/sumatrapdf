@@ -113,7 +113,7 @@ static int TimeOneMethod(Doc& doc, TextRenderMethod method, const WCHAR* methodN
 // using different text measurement method (since the time is mostly
 // dominated by text measure)
 void BenchEbookLayout(const WCHAR* filePath) {
-    logBuf.Reset();
+    gLogBuf->Reset();
     logf(L"Starting: %s", filePath);
     if (!file::Exists(filePath)) {
         logf(L"Error: file doesn't exist");

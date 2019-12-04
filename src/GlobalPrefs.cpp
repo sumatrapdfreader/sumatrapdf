@@ -3,11 +3,11 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
-#include "utils/DebugLog.h"
 #include "utils/FileUtil.h"
 #include "utils/SettingsUtil.h"
+#include "utils/Log.h"
 
-#include "TreeModel.h"
+#include "wingui/TreeModel.h"
 #include "EngineBase.h"
 #define INCLUDE_SETTINGSSTRUCTS_METADATA
 #include "SettingsStructs.h"

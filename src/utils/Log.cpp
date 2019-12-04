@@ -1,12 +1,20 @@
 #include "utils/BaseUtil.h"
 
-str::Str logBuf;
+// we use HeapAllocator because we can do logging during crash handling
+// where we want to avoid allocator deadlocks by calling malloc()
+HeapAllocator* gLogAllocator = nullptr;
+
+str::Str* gLogBuf = nullptr;
 bool logToStderr;
 
 static char* logFilePath;
 
 void log(std::string_view s) {
-    logBuf.Append(s.data(), s.size());
+    if (!gLogBuf) {
+        gLogAllocator = new HeapAllocator();
+        gLogBuf = new str::Str(16 * 1024, gLogAllocator);
+    }
+    gLogBuf->Append(s.data(), s.size());
     if (logToStderr) {
         fwrite(s.data(), 1, s.size(), stderr);
         fflush(stderr);
@@ -27,6 +35,20 @@ void log(const char* s) {
     log(sv);
 }
 
+void logf(const char* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    AutoFreeStr s(str::FmtV(fmt, args));
+    log(s.AsView());
+    va_end(args);
+}
+
+void logToFile(const char* path) {
+    logFilePath = str::Dup(path);
+    remove(path);
+}
+
+#if OS_WIN
 void log(const WCHAR* s) {
     if (!s) {
         return;
@@ -36,22 +58,6 @@ void log(const WCHAR* s) {
     log(sv);
 }
 
-void logf(const char* fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    AutoFreeStr s(str::FmtV(fmt, args));
-    log(s.AsView());
-    va_end(args);
-}
-
-void dbglogf(const char* fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    AutoFreeStr s(str::FmtV(fmt, args));
-    OutputDebugStringA(s.Get());
-    va_end(args);
-}
-
 void logf(const WCHAR* fmt, ...) {
     va_list args;
     va_start(args, fmt);
@@ -59,8 +65,18 @@ void logf(const WCHAR* fmt, ...) {
     log(s);
     va_end(args);
 }
+#endif
 
-void logToFile(const char* path) {
-    logFilePath = str::Dup(path);
-    remove(path);
+#if OS_WIN
+void dbglogf(const char* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    AutoFreeStr s(str::FmtV(fmt, args));
+    OutputDebugStringA(s.Get());
+    va_end(args);
 }
+#else
+void dbglogf(const char* fmt, ...) {
+    // no-op
+}
+#endif

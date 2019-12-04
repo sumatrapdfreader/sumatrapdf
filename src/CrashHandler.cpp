@@ -14,13 +14,12 @@
 #include "utils/HttpUtil.h"
 #include "utils/LzmaSimpleArchive.h"
 #include "utils/WinUtil.h"
+#include "utils/Log.h"
 
 #include "SumatraPDF.h"
 #include "AppTools.h"
 #include "CrashHandler.h"
 #include "Version.h"
-#define NOLOG 1 // 0 for more detailed debugging, 1 to disable lf()
-#include "utils/DebugLog.h"
 
 #if !defined(CRASH_SUBMIT_SERVER) || !defined(CRASH_SUBMIT_URL)
 #define CRASH_SUBMIT_SERVER L"updatecheck.io"
@@ -73,28 +72,7 @@ allocate memory. I assume it'll use GetProcessHeap() heap and further assume
 that CRT creates its own heap for malloc()/free() etc. so that while a deadlock
 is still possible, the probability should be greatly reduced. */
 
-class CrashHandlerAllocator : public Allocator {
-    HANDLE allocHeap;
-
-  public:
-    CrashHandlerAllocator() {
-        allocHeap = HeapCreate(0, 128 * 1024, 0);
-    }
-    virtual ~CrashHandlerAllocator() {
-        HeapDestroy(allocHeap);
-    }
-    virtual void* Alloc(size_t size) {
-        return HeapAlloc(allocHeap, 0, size);
-    }
-    virtual void* Realloc(void* mem, size_t size) {
-        return HeapReAlloc(allocHeap, 0, mem, size);
-    }
-    virtual void Free(void* mem) {
-        HeapFree(allocHeap, 0, mem);
-    }
-};
-
-static CrashHandlerAllocator* gCrashHandlerAllocator = nullptr;
+static HeapAllocator* gCrashHandlerAllocator = nullptr;
 
 // Note: intentionally not using ScopedMem<> to avoid
 // static initializers/destructors, which are bad
@@ -117,23 +95,21 @@ static MINIDUMP_EXCEPTION_INFORMATION gMei = {0};
 static LPTOP_LEVEL_EXCEPTION_FILTER gPrevExceptionFilter = nullptr;
 
 static char* BuildCrashInfoText(size_t* sizeOut) {
-    lf("BuildCrashInfoText(): start");
-
     str::Str s(16 * 1024, gCrashHandlerAllocator);
     if (gSystemInfo) {
         s.Append(gSystemInfo);
     }
 
     GetStressTestInfo(&s);
-    s.Append("\r\n");
+    s.Append("\n");
 
     dbghelp::GetExceptionInfo(s, gMei.ExceptionPointers);
     dbghelp::GetAllThreadsCallstacks(s);
-    s.Append("\r\n");
+    s.Append("\n");
     s.Append(gModulesInfo);
 
-    s.Append("\r\n");
-    s.Append(dbglog::GetCrashLog());
+    s.Append("\n\n---------------------------------\n\n");
+    s.AppendView(gLogBuf->AsView());
 
     *sizeOut = s.size();
     return s.StealData();
@@ -147,7 +123,6 @@ static void SaveCrashInfo(char* s, size_t size) {
 }
 
 static void SendCrashInfo(char* s, size_t size) {
-    lf("SendCrashInfo(): started");
     if (str::IsEmpty(s)) {
         plog("SendCrashInfo(): s is empty");
         return;
@@ -160,7 +135,6 @@ static void SendCrashInfo(char* s, size_t size) {
     data.Append(s, size);
 
     HttpPost(CRASH_SUBMIT_SERVER, CRASH_SUBMIT_PORT, CRASH_SUBMIT_URL, &headers, &data);
-    plogf("SendCrashInfo() finished");
 }
 
 // We might have symbol files for older builds. If we're here, then we
@@ -168,21 +142,20 @@ static void SendCrashInfo(char* s, size_t size) {
 // Returns false if files were there but we couldn't delete them
 static bool DeleteSymbolsIfExist() {
     bool ok1 = file::Delete(gLibMupdfPdbPath);
+    logf(L"DeleteSymbolsIfExist: deleted '%s' (%d)\n", gLibMupdfPdbPath, (int)ok1);
     bool ok2 = file::Delete(gSumatraPdfPdbPath);
+    logf(L"DeleteSymbolsIfExist: deleted '%s' (%d)\n", gSumatraPdfPdbPath, (int)ok1);
     bool ok = ok1 && ok2;
-    if (!ok) {
-        plog("DeleteSymbolsIfExist() failed to delete");
-    }
     return ok;
 }
 
 // static (single .exe) build
 static bool UnpackStaticSymbols(const char* pdbZipPath, const char* symDir) {
-    lf("UnpackStaticSymbols(): unpacking %s to dir %s", pdbZipPath, symDir);
+    logf("UnpackStaticSymbols(): unpacking %s to dir %s\n", pdbZipPath, symDir);
     const char* files[2] = {"SumatraPDF.pdb", nullptr};
     bool ok = lzma::ExtractFiles(pdbZipPath, symDir, &files[0], gCrashHandlerAllocator);
     if (!ok) {
-        plog("Failed to unpack SumatraPDF.pdb");
+        log("Failed to unpack SumatraPDF.pdb\n");
         return false;
     }
     return true;
@@ -190,11 +163,11 @@ static bool UnpackStaticSymbols(const char* pdbZipPath, const char* symDir) {
 
 // lib (.exe + libmupdf.dll) release and pre-release builds
 static bool UnpackDllSymbols(const char* pdbZipPath, const char* symDir) {
-    lf("UnpackDllSymbols(): unpacking '%s' to dir '%s'", pdbZipPath, symDir);
+    logf("UnpackDllSymbols(): unpacking '%s' to dir '%s'\n", pdbZipPath, symDir);
     const char* files[3] = {"libmupdf.pdb", "SumatraPDF-dll.pdb", nullptr};
     bool ok = lzma::ExtractFiles(pdbZipPath, symDir, &files[0], gCrashHandlerAllocator);
     if (!ok) {
-        plog("Failed to unpack libmupdf.pdb or SumatraPD-dll.pdb");
+        log("Failed to unpack libmupdf.pdb or SumatraPD-dll.pdb");
         return false;
     }
     // TODO: rename SumatraPDF-dll.pdb => SumatraPDF.dll
@@ -208,30 +181,30 @@ static bool UnpackDllSymbols(const char* pdbZipPath, const char* symDir) {
 // note: to simplify callers, it could choose pdbZipPath by itself (in a temporary
 // directory) as the file is deleted on exit anyway
 static bool DownloadAndUnzipSymbols(const WCHAR* pdbZipPath, const WCHAR* symDir) {
-    lf("DownloadAndUnzipSymbols() started");
+    log("DownloadAndUnzipSymbols() started\n");
     if (!symDir || !dir::Exists(symDir)) {
-        plog("DownloadAndUnzipSymbols(): exiting because symDir doesn't exist");
+        log("DownloadAndUnzipSymbols(): exiting because symDir doesn't exist\n");
         return false;
     }
 
     if (!DeleteSymbolsIfExist()) {
-        plog("DownloadAndUnzipSymbols(): DeleteSymbolsIfExist() failed");
+        log("DownloadAndUnzipSymbols(): DeleteSymbolsIfExist() failed\n");
         return false;
     }
 
     if (!file::Delete(pdbZipPath)) {
-        plog("DownloadAndUnzipSymbols(): deleting pdbZipPath failed");
+        log("DownloadAndUnzipSymbols(): deleting pdbZipPath failed\n");
         return false;
     }
 
     if (gDisableSymbolsDownload) {
         // don't care about debug builds because we don't release them
-        plog("DownloadAndUnzipSymbols(): DEBUG build so not doing anything");
+        log("DownloadAndUnzipSymbols(): DEBUG build so not doing anything\n");
         return false;
     }
 
     if (!HttpGetToFile(gSymbolsUrl, pdbZipPath)) {
-        plog("DownloadAndUnzipSymbols(): couldn't download symbols");
+        log("DownloadAndUnzipSymbols(): couldn't download symbols\n");
         return false;
     }
 
@@ -254,12 +227,12 @@ static bool DownloadAndUnzipSymbols(const WCHAR* pdbZipPath, const WCHAR* symDir
 
 bool CrashHandlerDownloadSymbols() {
     if (!dir::Create(gSymbolsDir)) {
-        plog("SubmitCrashInfo(): couldn't create symbols dir");
+        log("SubmitCrashInfo(): couldn't create symbols dir\n");
         return false;
     }
 
     if (!dbghelp::Initialize(gSymbolPathW, false)) {
-        plog("SubmitCrashInfo(): dbghelp::Initialize() failed");
+        log("SubmitCrashInfo(): dbghelp::Initialize() failed\n");
         return false;
     }
 
@@ -268,17 +241,17 @@ bool CrashHandlerDownloadSymbols() {
     }
 
     if (!DownloadAndUnzipSymbols(gPdbZipPath, gSymbolsDir)) {
-        plog("SubmitCrashInfo(): failed to download symbols");
+        log("SubmitCrashInfo(): failed to download symbols\n");
         return false;
     }
 
     if (!dbghelp::Initialize(gSymbolPathW, true)) {
-        plog("SubmitCrashInfo(): second dbghelp::Initialize() failed");
+        log("SubmitCrashInfo(): second dbghelp::Initialize() failed\n");
         return false;
     }
 
     if (!dbghelp::HasSymbols()) {
-        plog("SubmitCrashInfo(): HasSymbols() false after downloading symbols");
+        log("SubmitCrashInfo(): HasSymbols() false after downloading symbols\n");
         return false;
     }
     return true;
@@ -289,12 +262,10 @@ bool CrashHandlerDownloadSymbols() {
 // get the callstacks etc. and submit to our server for analysis.
 void SubmitCrashInfo() {
     if (!CrashHandlerCanUseNet()) {
-        plog("SubmitCrashInfo(): internet access not allowed");
         return;
     }
 
-    lf("SubmitCrashInfo(): start");
-    lf(L"SubmitCrashInfo(): gSymbolPathW: '%s'", gSymbolPathW);
+    logf(L"SubmitCrashInfo(): gSymbolPathW: '%s'\n", gSymbolPathW);
 
     bool ok = CrashHandlerDownloadSymbols();
 
@@ -414,11 +385,11 @@ static void GetOsVersion(str::Str& s) {
     const char* arch = IsRunningInWow64() ? "Wow64" : "32-bit";
 #endif
     if (0 == servicePackMajor) {
-        s.AppendFmt("OS: Windows %s build %d %s\r\n", os, buildNumber, arch);
+        s.AppendFmt("OS: Windows %s build %d %s\n", os, buildNumber, arch);
     } else if (0 == servicePackMinor) {
-        s.AppendFmt("OS: Windows %s SP%d build %d %s\r\n", os, servicePackMajor, buildNumber, arch);
+        s.AppendFmt("OS: Windows %s SP%d build %d %s\n", os, servicePackMajor, buildNumber, arch);
     } else {
-        s.AppendFmt("OS: Windows %s %d.%d build %d %s\r\n", os, servicePackMajor, servicePackMinor, buildNumber, arch);
+        s.AppendFmt("OS: Windows %s %d.%d build %d %s\n", os, servicePackMajor, servicePackMinor, buildNumber, arch);
     }
 }
 
@@ -435,7 +406,7 @@ static void GetProcessorName(str::Str& s) {
     }
 
     OwnedData tmp(str::conv::ToUtf8(name));
-    s.AppendFmt("Processor: %s\r\n", tmp.Get());
+    s.AppendFmt("Processor: %s\n", tmp.Get());
     free(name);
 }
 
@@ -454,11 +425,11 @@ static void GetMachineName(str::Str& s) {
     if (!s1u.Get() && !s2u.Get())
         ; // pass
     else if (!s1u.Get())
-        s.AppendFmt("Machine: %s\r\n", s2u.Get());
+        s.AppendFmt("Machine: %s\n", s2u.Get());
     else if (!s2u.Get() || str::EqI(s1u.Get(), s2u.Get()))
-        s.AppendFmt("Machine: %s\r\n", s1u.Get());
+        s.AppendFmt("Machine: %s\n", s1u.Get());
     else
-        s.AppendFmt("Machine: %s %s\r\n", s1u.Get(), s2u.Get());
+        s.AppendFmt("Machine: %s %s\n", s1u.Get(), s2u.Get());
 
     free(s1);
     free(s2);
@@ -483,17 +454,17 @@ static void GetGraphicsDriverInfo(str::Str& s) {
             break;
         }
         OwnedData v1a(str::conv::ToUtf8(v1));
-        s.AppendFmt("Graphics driver %d\r\n", i);
-        s.AppendFmt("  DriverDesc:         %s\r\n", v1.Get());
+        s.AppendFmt("Graphics driver %d\n", i);
+        s.AppendFmt("  DriverDesc:         %s\n", v1.Get());
         v1.Set(ReadRegStr(HKEY_LOCAL_MACHINE, key, L"DriverVersion"));
         if (v1) {
             v1a.TakeOwnership(str::conv::ToUtf8(v1).StealData());
-            s.AppendFmt("  DriverVersion:      %s\r\n", v1a.Get());
+            s.AppendFmt("  DriverVersion:      %s\n", v1a.Get());
         }
         v1.Set(ReadRegStr(HKEY_LOCAL_MACHINE, key, L"UserModeDriverName"));
         if (v1) {
             v1a.TakeOwnership(str::conv::ToUtf8(v1).StealData());
-            s.AppendFmt("  UserModeDriverName: %s\r\n", v1a.Get());
+            s.AppendFmt("  UserModeDriverName: %s\n", v1a.Get());
         }
     }
 }
@@ -502,13 +473,13 @@ static void GetLanguage(str::Str& s) {
     char country[32] = {0}, lang[32] = {0};
     GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SISO3166CTRYNAME, country, dimof(country) - 1);
     GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SISO639LANGNAME, lang, dimof(lang) - 1);
-    s.AppendFmt("Lang: %s %s\r\n", lang, country);
+    s.AppendFmt("Lang: %s %s\n", lang, country);
 }
 
 static void GetSystemInfo(str::Str& s) {
     SYSTEM_INFO si;
     GetSystemInfo(&si);
-    s.AppendFmt("Number Of Processors: %d\r\n", si.dwNumberOfProcessors);
+    s.AppendFmt("Number Of Processors: %d\n", si.dwNumberOfProcessors);
     GetProcessorName(s);
 
     MEMORYSTATUSEX ms;
@@ -518,8 +489,8 @@ static void GetSystemInfo(str::Str& s) {
     float physMemGB = (float)ms.ullTotalPhys / (float)(1024 * 1024 * 1024);
     float totalPageGB = (float)ms.ullTotalPageFile / (float)(1024 * 1024 * 1024);
     DWORD usedPerc = ms.dwMemoryLoad;
-    s.AppendFmt("Physical Memory: %.2f GB\r\nCommit Charge Limit: %.2f GB\r\nMemory Used: %d%%\r\n", physMemGB,
-                totalPageGB, usedPerc);
+    s.AppendFmt("Physical Memory: %.2f GB\nCommit Charge Limit: %.2f GB\nMemory Used: %d%%\n", physMemGB, totalPageGB,
+                usedPerc);
 
     GetMachineName(s);
     GetLanguage(s);
@@ -547,7 +518,7 @@ static bool GetModules(str::Str& s) {
             isWine = true;
         }
         OwnedData pathA(str::conv::ToUtf8(mod.szExePath));
-        s.AppendFmt("Module: %p %06X %-16s %s\r\n", mod.modBaseAddr, mod.modBaseSize, nameA.Get(), pathA.Get());
+        s.AppendFmt("Module: %p %06X %-16s %s\n", mod.modBaseAddr, mod.modBaseSize, nameA.Get(), pathA.Get());
         cont = Module32Next(snap, &mod);
     }
     CloseHandle(snap);
@@ -692,7 +663,7 @@ void InstallCrashHandler(const WCHAR* crashDumpPath, const WCHAR* crashFilePath,
     // we pre-allocate as much as possible to minimize allocations
     // when crash handler is invoked. It's ok to use standard
     // allocation functions here.
-    gCrashHandlerAllocator = new CrashHandlerAllocator();
+    gCrashHandlerAllocator = new HeapAllocator();
     gSymbolsUrl = BuildSymbolsUrl();
     gDumpEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
     if (!gDumpEvent) {

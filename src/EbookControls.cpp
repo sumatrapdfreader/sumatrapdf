@@ -20,8 +20,6 @@
 #include "EbookControls.h"
 #include "MuiEbookPageDef.h"
 #include "PagesLayoutDef.h"
-#define NOLOG 1
-#include "utils/DebugLog.h"
 
 constexpr const char ebookWinDesc[] = R"data(
 Style [
@@ -243,7 +241,7 @@ void PageControl::Paint(Graphics* gfx, int offX, int offY) {
     delete textRender;
 
     double durAll = timerAll.Stop();
-    lf("all: %.2f, fill: %.2f, draw html: %.2f", durAll, durFill, durDraw);
+    // logf("all: %.2f, fill: %.2f, draw html: %.2f\n", durAll, durFill, durDraw);
 }
 
 Control* CreatePageControl(TxtNode* structDef) {

@@ -7,8 +7,7 @@
 #include "utils/FileUtil.h"
 #include "utils/ThreadUtil.h"
 #include "utils/WinUtil.h"
-#define NOLOG 1
-#include "DebugLog.h"
+#include "utils/Log.h"
 
 /*
 This code is tricky, so here's a high-level overview. More info at:
@@ -144,7 +143,7 @@ static bool FileStateChanged(const WCHAR* filePath, FileState* fs) {
 // get notified again before timeout expires, call OnFileChanges() when
 // timeout expires
 static void NotifyAboutFile(WatchedDir* d, const WCHAR* fileName) {
-    lf(L"NotifyAboutFile(): %s", fileName);
+    // logf(L"NotifyAboutFile(): %s", fileName);
 
     for (WatchedFile* wf = g_watchedFiles; wf; wf = wf->next) {
         if (wf->watchedDir != d)
@@ -173,12 +172,12 @@ static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, DWORD bytes
     OverlappedEx* over = (OverlappedEx*)overlapped;
     WatchedDir* wd = (WatchedDir*)over->data;
 
-    lf(L"ReadDirectoryChangesNotification() dir: %s, numBytes: %d", wd->dirPath, (int)bytesTransfered);
+    // logf(L"ReadDirectoryChangesNotification() dir: %s, numBytes: %d\n", wd->dirPath, (int)bytesTransfered);
 
     CrashIf(wd != wd->overlapped.data);
 
     if (errCode == ERROR_OPERATION_ABORTED) {
-        lf("   ERROR_OPERATION_ABORTED");
+        logf("ReadDirectoryChangesNotification: ERROR_OPERATION_ABORTED\n");
         DeleteWatchedDir(wd);
         InterlockedDecrement(&gRemovalsPending);
         return;
@@ -199,13 +198,13 @@ static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, DWORD bytes
         // (the latter only yields a RENAMED action with the expected file name)
         if (notify->Action == FILE_ACTION_MODIFIED || notify->Action == FILE_ACTION_RENAMED_NEW_NAME) {
             if (!changedFiles.Contains(fileName)) {
-                lf(L"ReadDirectoryChangesNotification() FILE_ACTION_MODIFIED, for '%s'", fileName);
+                // logf(L"ReadDirectoryChangesNotification() FILE_ACTION_MODIFIED, for '%s'\n", fileName);
                 changedFiles.Append(fileName.StealData());
             } else {
-                lf(L"ReadDirectoryChangesNotification() eliminating duplicate notification for '%s'", fileName);
+                // logf(L"ReadDirectoryChangesNotification() eliminating duplicate notification for '%s'\n", fileName);
             }
         } else {
-            lf(L"ReadDirectoryChangesNotification() action=%d, for '%s'", (int)notify->Action, fileName);
+            // logf(L"ReadDirectoryChangesNotification() action=%d, for '%s'\n", (int)notify->Action, fileName);
         }
 
         // step to the next entry if there is one
@@ -229,7 +228,7 @@ static void CALLBACK StartMonitoringDirForChangesAPC(ULONG_PTR arg) {
     OVERLAPPED* overlapped = (OVERLAPPED*)&(wd->overlapped);
     wd->overlapped.data = (HANDLE)wd;
 
-    lf(L"StartMonitoringDirForChangesAPC() %s", wd->dirPath);
+    logf(L"StartMonitoringDirForChangesAPC() %s\n", wd->dirPath);
 
     CrashIf(g_threadId != GetCurrentThreadId());
 
@@ -264,7 +263,7 @@ static void RunManualChecks() {
         if (!wf->isManualCheck)
             continue;
         if (FileStateChanged(wf->filePath, &wf->fileState)) {
-            lf(L"RunManualCheck() %s changed", wf->filePath);
+            // logf(L"RunManualCheck() %s changed\n", wf->filePath);
             wf->onFileChangedCb();
         }
     }
@@ -287,7 +286,7 @@ static DWORD WINAPI FileWatcherThread(void* param) {
 
         if (WAIT_IO_COMPLETION == obj) {
             // APC complete. Nothing to do
-            lf("FileWatcherThread(): APC complete");
+            // logf("FileWatcherThread(): APC complete\n");
             continue;
         }
 
@@ -296,9 +295,9 @@ static DWORD WINAPI FileWatcherThread(void* param) {
         if (n == 0) {
             // a thread was explicitly awaken
             ResetEvent(g_threadControlHandle);
-            lf("FileWatcherThread(): g_threadControlHandle signalled");
+            // logf("FileWatcherThread(): g_threadControlHandle signalled\n");
         } else {
-            dbglog::CrashLogF("FileWatcherThread(): n=%d", n);
+            logf("FileWatcherThread(): n=%d\n", n);
             CrashIf(true);
         }
     }
@@ -326,7 +325,7 @@ static WatchedDir* FindExistingWatchedDir(const WCHAR* dirPath) {
 
 static void CALLBACK StopMonitoringDirAPC(ULONG_PTR arg) {
     WatchedDir* wd = (WatchedDir*)arg;
-    lf("StopMonitoringDirAPC() wd=0x%p", wd);
+    // logf("StopMonitoringDirAPC() wd=0x%p\n", wd);
 
     // this will cause ReadDirectoryChangesNotification() to be called
     // with errCode = ERROR_OPERATION_ABORTED
@@ -398,7 +397,7 @@ Returns a cancellation token that can be used in FileWatcherUnsubscribe(). That
 way we can support multiple callers subscribing to the same file.
 */
 WatchedFile* FileWatcherSubscribe(const WCHAR* path, const std::function<void()>& onFileChangedCb) {
-    lf(L"FileWatcherSubscribe() path: %s", path);
+    // logf(L"FileWatcherSubscribe() path: %s\n", path);
 
     if (!file::Exists(path)) {
         return nullptr;

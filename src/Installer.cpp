@@ -18,7 +18,7 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "utils/FileUtil.h"
 #include "utils/Dpi.h"
 #include "utils/FrameTimeoutCalculator.h"
-#include "utils/DebugLog.h"
+#include "utils/Log.h"
 #include "utils/WinUtil.h"
 #include "utils/Timer.h"
 #include "utils/CmdLineParser.h"

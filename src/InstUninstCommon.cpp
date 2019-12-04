@@ -20,7 +20,7 @@
 #include "CrashHandler.h"
 #include "utils/Dpi.h"
 #include "utils/FrameTimeoutCalculator.h"
-#include "utils/DebugLog.h"
+#include "utils/Log.h"
 
 #include "utils/ByteOrderDecoder.h"
 #include "utils/LzmaSimpleArchive.h"
@@ -93,7 +93,7 @@ int dpiAdjust(int value) {
 void NotifyFailed(const WCHAR* msg) {
     if (!gInstUninstGlobals.firstError)
         gInstUninstGlobals.firstError = str::Dup(msg);
-    plogf(L"%s", msg);
+    logf(L"NotifyFailed: %s\n", msg);
 }
 
 void SetMsg(const WCHAR* msg, Color color) {

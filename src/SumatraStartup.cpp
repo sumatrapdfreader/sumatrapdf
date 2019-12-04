@@ -16,7 +16,7 @@
 #include "utils/UITask.h"
 #include "utils/WinUtil.h"
 #include "utils/Archive.h"
-#include "utils/DebugLog.h"
+#include "utils/Log.h"
 
 #include "wingui/WinGui.h"
 #include "wingui/Layout.h"
@@ -635,6 +635,9 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     mui::Initialize();
     uitask::Initialize();
 
+    log("Starting SumatraPDF\r\n");
+
+    logf(L"CmdLine: %s\r\n", GetCommandLineW());
 #if defined(DEBUG) || defined(SVN_PRE_RELEASE_VER)
     if (str::StartsWith(cmdLine, "/tester")) {
         extern int TesterMain(); // in Tester.cpp
@@ -647,7 +650,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     }
 #endif
 
-    auto i = ParseCommandLine(GetCommandLine());
+    auto i = ParseCommandLine(GetCommandLineW());
 
     if (i.install || IsInstaller()) {
         if (!IsValidInstaller()) {
@@ -921,7 +924,9 @@ Exit:
     // atexit() code etc.) point, but it's very unlikely
     UninstallCrashHandler();
 
-    dbglog::FreeCrashLog();
+    delete gLogBuf;
+    delete gLogAllocator;
+
     // output leaks after all destructors of static objects have run
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 

@@ -496,6 +496,29 @@ class PoolAllocator : public Allocator {
     }
 };
 
+#if OS_WIN
+class HeapAllocator : public Allocator {
+    HANDLE allocHeap = nullptr;
+
+  public:
+    HeapAllocator(size_t initialSize = 128 * 1024) {
+        allocHeap = HeapCreate(0, initialSize, 0);
+    }
+    virtual ~HeapAllocator() {
+        HeapDestroy(allocHeap);
+    }
+    virtual void* Alloc(size_t size) {
+        return HeapAlloc(allocHeap, 0, size);
+    }
+    virtual void* Realloc(void* mem, size_t size) {
+        return HeapReAlloc(allocHeap, 0, mem, size);
+    }
+    virtual void Free(void* mem) {
+        HeapFree(allocHeap, 0, mem);
+    }
+};
+#endif
+
 // A helper for allocating an array of elements of type T
 // either on stack (if they fit within StackBufInBytes)
 // or in memory. Allocating on stack is a perf optimization

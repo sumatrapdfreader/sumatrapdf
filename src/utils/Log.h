@@ -1,12 +1,18 @@
 /* Copyright 2019 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-extern str::Str logBuf;
+extern HeapAllocator* gLogAllocator;
+extern str::Str* gLogBuf;
 extern bool logToStderr;
 
+void log(std::string_view s);
 void log(const char* s);
-void log(const WCHAR* s);
 void logf(const char* fmt, ...);
-void logf(const WCHAR* fmt, ...);
-void dbglogf(const char* fmt, ...);
 void logToFile(const char* path);
+
+void dbglogf(const char* fmt, ...);
+
+#if OS_WIN
+void log(const WCHAR* s);
+void logf(const WCHAR* fmt, ...);
+#endif

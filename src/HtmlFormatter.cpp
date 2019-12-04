@@ -6,13 +6,13 @@
 #include "utils/HtmlParserLookup.h"
 #include "utils/CssParser.h"
 #include "utils/HtmlPullParser.h"
+#include "utils/Log.h"
 #include "mui/Mui.h"
 #include "utils/Timer.h"
+
 // rendering engines
 #include "EbookBase.h"
 #include "HtmlFormatter.h"
-#define NOLOG 1
-#include "utils/DebugLog.h"
 
 /*
 Given size of a page, we format html into a set of pages. We handle only a small
@@ -1355,7 +1355,7 @@ void DrawHtmlPage(Graphics* g, mui::ITextRender* textDraw, Vec<DrawInstr>* drawI
     }
     textDraw->Unlock();
     double dur = t.Stop();
-    lf("DrawHtmlPage: textDraw %.2f ms", dur);
+    // logf("DrawHtmlPage: textDraw %.2f ms\n", dur);
 
     for (DrawInstr& i : *drawInstructions) {
         RectF bbox = i.bbox;
