@@ -26,6 +26,7 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "CrashHandler.h"
 #include "utils/Dpi.h"
 #include "utils/FrameTimeoutCalculator.h"
+#include "utils/Log.h"
 
 #include "wingui/WinGui.h"
 #include "wingui/Layout.h"
@@ -34,7 +35,6 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "wingui/CheckboxCtrl.h"
 #include "wingui/EditCtrl.h"
 
-#include "utils/DebugLog.h"
 
 #define UNINSTALLER_WIN_DX INSTALLER_WIN_DX
 #define UNINSTALLER_WIN_DY INSTALLER_WIN_DY

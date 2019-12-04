@@ -2,10 +2,11 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
+#include "utils/FileUtil.h"
+#include "utils/Log.h"
+
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
-#include "utils/DebugLog.h"
-#include "utils/FileUtil.h"
 
 namespace prefs {
 namespace conv {
@@ -66,14 +67,14 @@ void FromZoom(char** dst, float zoom, DisplayState* stateForIssue2140) {
         return;
     if (!IsValidZoom(zoom) && stateForIssue2140) {
         // TODO: does issue 2140 still occur?
-        dbglog::CrashLogF("Invalid ds->zoom: %g", zoom);
+        logf("Invalid ds->zoom: %g\n", zoom);
         const WCHAR* ext = path::GetExt(stateForIssue2140->filePath);
         if (!str::IsEmpty(ext)) {
             OwnedData extA(str::conv::ToUtf8(ext));
-            dbglog::CrashLogF("File type: %s", extA.Get());
+            logf("File type: %s\n", extA.Get());
         }
-        dbglog::CrashLogF("DisplayMode: %S", stateForIssue2140->displayMode);
-        dbglog::CrashLogF("PageNo: %d", stateForIssue2140->pageNo);
+        logf("DisplayMode: %S\n", stateForIssue2140->displayMode);
+        logf("PageNo: %d\n", stateForIssue2140->pageNo);
     }
     CrashIf(!IsValidZoom(zoom));
     free(*dst);

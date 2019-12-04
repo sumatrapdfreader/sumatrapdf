@@ -14,7 +14,7 @@ void SimpleLogTest() {
         log(L"ML\n");
         logf(L"%s : %d\n", L"filename.pdf", 25);
 
-        char* got = logBuf.Get();
+        char* got = gLogBuf->Get();
         char* exp = "Test1\nML\nfilename.pdf : 25\n";
         utassert(str::Eq(got, exp));
     }

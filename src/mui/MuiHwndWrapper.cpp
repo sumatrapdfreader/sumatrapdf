@@ -5,10 +5,10 @@
 #include "utils/Timer.h"
 #include "utils/WinUtil.h"
 #include "utils/HtmlParserLookup.h"
+#include "utils/Log.h"
+
 #include "Mui.h"
 #include "wingui/FrameRateWnd.h"
-//#define NOLOG 0
-#include "utils/DebugLog.h"
 
 namespace mui {
 

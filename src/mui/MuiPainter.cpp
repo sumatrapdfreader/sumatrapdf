@@ -3,8 +3,9 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/HtmlParserLookup.h"
+#include "utils/Log.h"
+
 #include "Mui.h"
-#include "utils/DebugLog.h"
 
 namespace mui {
 

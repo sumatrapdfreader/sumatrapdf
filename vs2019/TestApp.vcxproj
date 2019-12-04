@@ -522,7 +522,6 @@
   <ItemGroup>
     <ClInclude Include="..\src\utils\BaseUtil.h" />
     <ClInclude Include="..\src\utils\ColorUtil.h" />
-    <ClInclude Include="..\src\utils\DebugLog.h" />
     <ClInclude Include="..\src\utils\Dpi.h" />
     <ClInclude Include="..\src\utils\FileUtil.h" />
     <ClInclude Include="..\src\utils\Log.h" />
@@ -555,7 +554,6 @@
   <ItemGroup>
     <ClCompile Include="..\src\utils\BaseUtil.cpp" />
     <ClCompile Include="..\src\utils\ColorUtil.cpp" />
-    <ClCompile Include="..\src\utils\DebugLog.cpp" />
     <ClCompile Include="..\src\utils\Dpi.cpp" />
     <ClCompile Include="..\src\utils\FileUtil.cpp" />
     <ClCompile Include="..\src\utils\Log.cpp" />

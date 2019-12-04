@@ -451,7 +451,6 @@
     <ClInclude Include="..\src\utils\CryptoUtil.h" />
     <ClInclude Include="..\src\utils\CssParser.h" />
     <ClInclude Include="..\src\utils\DbgHelpDyn.h" />
-    <ClInclude Include="..\src\utils\DebugLog.h" />
     <ClInclude Include="..\src\utils\Dict.h" />
     <ClInclude Include="..\src\utils\DirIter.h" />
     <ClInclude Include="..\src\utils\Dpi.h" />
@@ -513,7 +512,6 @@
     <ClCompile Include="..\src\utils\CryptoUtil.cpp" />
     <ClCompile Include="..\src\utils\CssParser.cpp" />
     <ClCompile Include="..\src\utils\DbgHelpDyn.cpp" />
-    <ClCompile Include="..\src\utils\DebugLog.cpp" />
     <ClCompile Include="..\src\utils\Dict.cpp" />
     <ClCompile Include="..\src\utils\DirIter.cpp" />
     <ClCompile Include="..\src\utils\Dpi.cpp" />

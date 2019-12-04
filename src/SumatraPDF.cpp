@@ -81,8 +81,7 @@
 #include "Translations.h"
 #include "uia/Provider.h"
 #include "Version.h"
-#define NOLOG 0
-#include "utils/DebugLog.h"
+#include "utils/Log.h"
 
 /* if true, we're in debug mode where we show links as blue rectangle on
    the screen. Makes debugging code related to links easier. */
@@ -896,7 +895,7 @@ static Controller* CreateControllerForFile(const WCHAR* filePath, PasswordUI* pw
         auto ctrlFilePath = ctrl->FilePath();
         auto s1 = ctrlFilePath ? str::conv::ToUtf8(ctrlFilePath).StealData() : str::Dup("<null>");
         auto s2 = filePath ? str::conv::ToUtf8(filePath).StealData() : str::Dup("<null>");
-        dbglog::CrashLogF("CreateControllerForFile: ctrl->FilePath: '%s', filePath: '%s'\n", s1, s2);
+        logf("CreateControllerForFile: ctrl->FilePath: '%s', filePath: '%s'\n", s1, s2);
         CrashIf(ctrl && !str::Eq(ctrl->FilePath(), filePath));
         free(s1);
         free(s2);

@@ -5,9 +5,10 @@
 #include "utils/BitManip.h"
 #include "utils/Timer.h"
 #include "utils/HtmlParserLookup.h"
+#include "utils/Log.h"
+
 #include "Mui.h"
 #include "wingui/FrameRateWnd.h"
-#include "utils/DebugLog.h"
 
 namespace mui {
 

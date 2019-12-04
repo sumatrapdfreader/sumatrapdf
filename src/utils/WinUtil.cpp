@@ -11,7 +11,7 @@
 #include "utils/WinDynCalls.h"
 #include "utils/WinUtil.h"
 
-#include "utils/DebugLog.h"
+#include "utils/Log.h"
 
 static HFONT gDefaultGuiFont = nullptr;
 static HFONT gDefaultGuiFontBold = nullptr;
@@ -158,7 +158,7 @@ void LogLastError(DWORD err) {
     DWORD res = FormatMessageA(flags, nullptr, err, lang, (LPSTR)&msgBuf, 0, nullptr);
     if (!res || !msgBuf)
         return;
-    plogf("LogLastError: %s", msgBuf);
+    logf("LogLastError: %s\n", msgBuf);
     LocalFree(msgBuf);
 }
 

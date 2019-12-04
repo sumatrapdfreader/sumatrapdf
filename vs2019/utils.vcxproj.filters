@@ -45,9 +45,6 @@
     <ClInclude Include="..\src\utils\DbgHelpDyn.h">
       <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\utils\DebugLog.h">
-      <Filter>utils</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\utils\Dict.h">
       <Filter>utils</Filter>
     </ClInclude>
@@ -225,9 +222,6 @@
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\DbgHelpDyn.cpp">
-      <Filter>utils</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\utils\DebugLog.cpp">
       <Filter>utils</Filter>
     </ClCompile>
     <ClCompile Include="..\src\utils\Dict.cpp">

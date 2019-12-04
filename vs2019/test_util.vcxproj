@@ -477,7 +477,6 @@
     <ClInclude Include="..\src\utils\ColorUtil.h" />
     <ClInclude Include="..\src\utils\CryptoUtil.h" />
     <ClInclude Include="..\src\utils\CssParser.h" />
-    <ClInclude Include="..\src\utils\DebugLog.h" />
     <ClInclude Include="..\src\utils\Dict.h" />
     <ClInclude Include="..\src\utils\Dpi.h" />
     <ClInclude Include="..\src\utils\FileUtil.h" />
@@ -512,7 +511,6 @@
     <ClCompile Include="..\src\utils\ColorUtil.cpp" />
     <ClCompile Include="..\src\utils\CryptoUtil.cpp" />
     <ClCompile Include="..\src\utils\CssParser.cpp" />
-    <ClCompile Include="..\src\utils\DebugLog.cpp" />
     <ClCompile Include="..\src\utils\Dict.cpp" />
     <ClCompile Include="..\src\utils\Dpi.cpp" />
     <ClCompile Include="..\src\utils\FileUtil.cpp" />

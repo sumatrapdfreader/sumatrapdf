@@ -13,8 +13,7 @@
 #include "utils/TgaReader.h"
 #include "utils/WebpReader.h"
 #include "utils/WinUtil.h"
-
-#include "utils/DebugLog.h"
+#include "utils/Log.h"
 
 using namespace Gdiplus;
 
@@ -77,7 +76,7 @@ RectF MeasureTextAccurate(Graphics* g, Font* f, const WCHAR* s, int len) {
             s = L"<null>";
         }
         auto s2 = str::conv::ToUtf8(s, (size_t)len);
-        dbglog::CrashLogF("MeasureTextAccurate: status: %d, font: %p, len: %d, s: '%s'\n", (int)status, f, len,
+        logf("MeasureTextAccurate: status: %d, font: %p, len: %d, s: '%s'\n", (int)status, f, len,
                           s2.Get());
         CrashIf(status != Ok);
     }
