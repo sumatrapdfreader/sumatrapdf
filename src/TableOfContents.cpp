@@ -603,7 +603,7 @@ void LoadTocTree(WindowInfo* win) {
         tab->altBookmarks = altTocs;
         Vec<std::string_view> items;
         items.Append("Default");
-        for (size_t i = 0; i < altTocs->count; i++) {
+        for (int i = 0; i < altTocs->count; i++) {
             DocTocTree* toc = altTocs->bookmarks[i];
             items.Append(toc->name);
         }
