@@ -319,6 +319,10 @@ void WindowBase::SetColors(COLORREF bg, COLORREF txt) {
     SetTextColor(txt);
 }
 
+void WindowBase::SetRtl(bool isRtl) {
+    ToggleWindowExStyle(hwnd, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRtl);
+}
+
 WindowBaseLayout::WindowBaseLayout(WindowBase* b, Kind k) {
     wb = b;
     kind = k;

@@ -82,8 +82,9 @@ bool Favorites::IsPageInFavorites(const WCHAR* filePath, int pageNo) {
         return false;
     }
     for (size_t i = 0; i < fav->favorites->size(); i++) {
-        if (pageNo == fav->favorites->at(i)->pageNo)
+        if (pageNo == fav->favorites->at(i)->pageNo) {
             return true;
+        }
     }
     return false;
 }
@@ -224,7 +225,9 @@ static void AppendFavMenuItems(HMENU m, DisplayState* f, UINT& idx, bool combine
 static int SortByBaseFileName(const void* a, const void* b) {
     const WCHAR* filePathA = *(const WCHAR**)a;
     const WCHAR* filePathB = *(const WCHAR**)b;
-    return str::CmpNatural(path::GetBaseNameNoFree(filePathA), path::GetBaseNameNoFree(filePathB));
+    const WCHAR* baseA = path::GetBaseNameNoFree(filePathA);
+    const WCHAR* baseB = path::GetBaseNameNoFree(filePathB);
+    return str::CmpNatural(baseA, baseB);
 }
 
 static void GetSortedFilePaths(Vec<const WCHAR*>& filePathsSortedOut, DisplayState* toIgnore = nullptr) {
@@ -649,7 +652,7 @@ static LRESULT OnFavTreeNotify(WindowInfo* win, LPNMTREEVIEW pnmtv) {
 }
 
 static void OnFavTreeContextMenu(WindowInfo* win, PointI pt) {
-    TVITEM item;
+    TVITEMW item{};
     if (pt.x != -1 || pt.y != -1) {
         TVHITTESTINFO ht = {0};
         ht.pt.x = pt.x;
@@ -657,8 +660,9 @@ static void OnFavTreeContextMenu(WindowInfo* win, PointI pt) {
 
         MapWindowPoints(HWND_DESKTOP, win->hwndFavTree, &ht.pt, 1);
         TreeView_HitTest(win->hwndFavTree, &ht);
-        if ((ht.flags & TVHT_ONITEM) == 0)
+        if ((ht.flags & TVHT_ONITEM) == 0) {
             return; // only display menu if over a node in tree
+        }
 
         TreeView_SelectItem(win->hwndFavTree, ht.hItem);
         item.hItem = ht.hItem;
@@ -715,23 +719,26 @@ static void OnFavTreeContextMenu(WindowInfo* win, PointI pt) {
 static WNDPROC DefWndProcFavTree = nullptr;
 static LRESULT CALLBACK WndProcFavTree(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
-    if (!win)
+    if (!win) {
         return CallWindowProc(DefWndProcFavTree, hwnd, msg, wParam, lParam);
+    }
 
     switch (msg) {
         case WM_ERASEBKGND:
             return FALSE;
 
         case WM_CHAR:
-            if (VK_ESCAPE == wParam && gGlobalPrefs->escToExit && MayCloseWindow(win))
+            if (VK_ESCAPE == wParam && gGlobalPrefs->escToExit && MayCloseWindow(win)) {
                 CloseWindow(win, true);
+            }
             break;
 
         case WM_MOUSEWHEEL:
         case WM_MOUSEHWHEEL:
             // scroll the canvas if the cursor isn't over the ToC tree
-            if (!IsCursorOverWindow(win->hwndFavTree))
+            if (!IsCursorOverWindow(win->hwndFavTree)) {
                 return SendMessage(win->hwndCanvas, msg, wParam, lParam);
+            }
             break;
     }
 
@@ -745,26 +752,30 @@ static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT message, WPARAM wParam, LP
         return CallWindowProc(DefWndProcFavBox, hwnd, message, wParam, lParam);
     switch (message) {
         case WM_SIZE:
-            LayoutTreeContainer(win->favLabelWithClose, win->hwndFavTree);
+            LayoutTreeContainer(win->favLabelWithClose, nullptr, win->hwndFavTree);
             break;
 
         case WM_COMMAND:
-            if (LOWORD(wParam) == IDC_FAV_LABEL_WITH_CLOSE)
+            if (LOWORD(wParam) == IDC_FAV_LABEL_WITH_CLOSE) {
                 ToggleFavorites(win);
+            }
             break;
 
         case WM_NOTIFY:
             if (LOWORD(wParam) == IDC_FAV_TREE) {
                 LPNMTREEVIEW pnmtv = (LPNMTREEVIEW)lParam;
                 LRESULT res = OnFavTreeNotify(win, pnmtv);
-                if (res != -1)
+                if (res != -1) {
                     return res;
+                }
             }
             break;
 
         case WM_CONTEXTMENU:
             if (win->hwndFavTree == (HWND)wParam) {
-                OnFavTreeContextMenu(win, PointI(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)));
+                int x = GET_X_LPARAM(lParam);
+                int y = GET_Y_LPARAM(lParam);
+                OnFavTreeContextMenu(win, PointI(x, y));
                 return 0;
             }
             break;

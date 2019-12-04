@@ -4,7 +4,7 @@
 extern Kind kindWindow;
 
 struct Window {
-    Kind kind;
+    Kind kind = nullptr;
 
     // creation parameters. must be set before Create() call
     HWND parent = nullptr;
@@ -34,7 +34,7 @@ struct Window {
 extern Kind kindWindowBase;
 
 struct WindowBase {
-    Kind kind;
+    Kind kind = nullptr;
 
     // data that can be set before calling Create()
 
@@ -88,6 +88,7 @@ struct WindowBase {
     void SetTextColor(COLORREF);
     void SetBackgroundColor(COLORREF);
     void SetColors(COLORREF bg, COLORREF txt);
+    void SetRtl(bool);
 };
 
 struct WindowBaseLayout : public ILayout {

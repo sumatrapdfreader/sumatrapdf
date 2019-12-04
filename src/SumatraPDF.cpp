@@ -25,6 +25,7 @@
 #include "wingui/LabelWithCloseWnd.h"
 #include "wingui/FrameRateWnd.h"
 #include "wingui/TooltipCtrl.h"
+#include "wingui/DropDownCtrl.h"
 
 #include "utils/GdiPlusUtil.h"
 
@@ -565,6 +566,9 @@ static void UpdateWindowRtlLayout(WindowInfo* win) {
     SetRtl(win->hwndTocBox, isRTL);
     HWND tocBoxTitle = win->tocLabelWithClose->hwnd;
     SetRtl(tocBoxTitle, isRTL);
+    if (win->altBookmarks) {
+        SetRtl(win->altBookmarks->hwnd, isRTL);
+    }
 
     SetRtl(win->hwndFavBox, isRTL);
     HWND favBoxTitle = win->favLabelWithClose->hwnd;
@@ -3668,7 +3672,9 @@ static bool SidebarSplitterCb(WindowInfo* win, bool done) {
     //       stuck at its width if it accidentally got too wide or too narrow
     ClientRect rFrame(win->hwndFrame);
     ClientRect rToc(win->hwndTocBox);
-    if (sidebarDx < std::min(SIDEBAR_MIN_WIDTH, rToc.dx) || sidebarDx > std::max(rFrame.dx / 2, rToc.dx)) {
+    int minDx = std::min(SIDEBAR_MIN_WIDTH, rToc.dx);
+    int maxDx = std::max(rFrame.dx / 2, rToc.dx);
+    if (sidebarDx < minDx|| sidebarDx > maxDx) {
         return false;
     }
 
@@ -3687,7 +3693,9 @@ static bool FavSplitterCb(WindowInfo* win, bool done) {
     ClientRect rFrame(win->hwndFrame);
     ClientRect rToc(win->hwndTocBox);
     AssertCrash(rToc.dx == ClientRect(win->hwndFavBox).dx);
-    if (tocDy < std::min(TOC_MIN_DY, rToc.dy) || tocDy > std::max(rFrame.dy - TOC_MIN_DY, rToc.dy)) {
+    int minDy = std::min(TOC_MIN_DY, rToc.dy);
+    int maxDy = std::max(rFrame.dy - TOC_MIN_DY, rToc.dy);
+    if (tocDy < minDy || tocDy > maxDy) {
         return false;
     }
     gGlobalPrefs->tocDy = tocDy;
@@ -3697,15 +3705,6 @@ static bool FavSplitterCb(WindowInfo* win, bool done) {
     return true;
 }
 
-// Position label with close button and tree window within their parent.
-// Used for toc and favorites.
-void LayoutTreeContainer(LabelWithCloseWnd* l, HWND hwndTree) {
-    HWND hwndContainer = GetParent(hwndTree);
-    SizeI labelSize = l->GetIdealSize();
-    WindowRect rc(hwndContainer);
-    MoveWindow(l->hwnd, 0, 0, rc.dx, labelSize.dy, TRUE);
-    MoveWindow(hwndTree, 0, labelSize.dy, rc.dx, rc.dy - labelSize.dy, TRUE);
-}
 
 void SetSidebarVisibility(WindowInfo* win, bool tocVisible, bool showFavorites) {
     if (gPluginMode || !HasPermission(Perm_DiskAccess)) {

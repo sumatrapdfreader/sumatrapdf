@@ -284,7 +284,7 @@ static DocTocTree* parseBookmarks(std::string_view sv) {
         return nullptr;
     }
     auto tree = new DocTocTree();
-    tree->name = str::Dup(sv);
+    tree->name = str::Dup(title);
     size_t indent = 0;
     while (true) {
         line = str::IterString(sv, '\n');

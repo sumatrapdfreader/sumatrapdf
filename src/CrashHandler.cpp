@@ -127,8 +127,9 @@ static char* BuildCrashInfoText(size_t* sizeOut) {
     lf("BuildCrashInfoText(): start");
 
     str::Str s(16 * 1024, gCrashHandlerAllocator);
-    if (gSystemInfo)
+    if (gSystemInfo) {
         s.Append(gSystemInfo);
+    }
 
     GetStressTestInfo(&s);
     s.Append("\r\n");
@@ -176,8 +177,9 @@ static bool DeleteSymbolsIfExist() {
     bool ok1 = file::Delete(gLibMupdfPdbPath);
     bool ok2 = file::Delete(gSumatraPdfPdbPath);
     bool ok = ok1 && ok2;
-    if (!ok)
+    if (!ok) {
         plog("DeleteSymbolsIfExist() failed to delete");
+    }
     return ok;
 }
 
@@ -318,8 +320,9 @@ void SubmitCrashInfo() {
 static DWORD WINAPI CrashDumpThread(LPVOID data) {
     UNUSED(data);
     WaitForSingleObject(gDumpEvent, INFINITE);
-    if (!gCrashed)
+    if (!gCrashed) {
         return 0;
+    }
 
     SubmitCrashInfo();
 
@@ -332,12 +335,15 @@ static DWORD WINAPI CrashDumpThread(LPVOID data) {
 }
 
 static LONG WINAPI DumpExceptionHandler(EXCEPTION_POINTERS* exceptionInfo) {
-    if (!exceptionInfo || (EXCEPTION_BREAKPOINT == exceptionInfo->ExceptionRecord->ExceptionCode))
+    if (!exceptionInfo || (EXCEPTION_BREAKPOINT == exceptionInfo->ExceptionRecord->ExceptionCode)) {
         return EXCEPTION_CONTINUE_SEARCH;
+    }
 
     static bool wasHere = false;
-    if (wasHere)
+    if (wasHere) {
         return EXCEPTION_CONTINUE_SEARCH; // Note: or should TerminateProcess()?
+    }
+
     wasHere = true;
     gCrashed = true;
 
@@ -356,22 +362,30 @@ static LONG WINAPI DumpExceptionHandler(EXCEPTION_POINTERS* exceptionInfo) {
 }
 
 static const char* OsNameFromVer(OSVERSIONINFOEX ver) {
-    if (VER_PLATFORM_WIN32_NT != ver.dwPlatformId)
+    if (VER_PLATFORM_WIN32_NT != ver.dwPlatformId) {
         return "9x";
-    if (ver.dwMajorVersion == 6 && ver.dwMinorVersion == 3)
+    }
+    if (ver.dwMajorVersion == 6 && ver.dwMinorVersion == 3) {
         return "8.1"; // or Server 2012 R2
-    if (ver.dwMajorVersion == 6 && ver.dwMinorVersion == 2)
+    }
+    if (ver.dwMajorVersion == 6 && ver.dwMinorVersion == 2) {
         return "8"; // or Server 2012
-    if (ver.dwMajorVersion == 6 && ver.dwMinorVersion == 1)
+    }
+    if (ver.dwMajorVersion == 6 && ver.dwMinorVersion == 1) {
         return "7"; // or Server 2008 R2
-    if (ver.dwMajorVersion == 6 && ver.dwMinorVersion == 0)
+    }
+    if (ver.dwMajorVersion == 6 && ver.dwMinorVersion == 0) {
         return "Vista"; // or Server 2008
-    if (ver.dwMajorVersion == 5 && ver.dwMinorVersion == 2)
+    }
+    if (ver.dwMajorVersion == 5 && ver.dwMinorVersion == 2) {
         return "Server 2003";
-    if (ver.dwMajorVersion == 5 && ver.dwMinorVersion == 1)
+    }
+    if (ver.dwMajorVersion == 5 && ver.dwMinorVersion == 1) {
         return "XP";
-    if (ver.dwMajorVersion == 5 && ver.dwMinorVersion == 0)
+    }
+    if (ver.dwMajorVersion == 5 && ver.dwMinorVersion == 0) {
         return "2000";
+    }
     if (ver.dwMajorVersion == 10) {
         // ver.dwMinorVersion seems to always be 0
         return "10";
@@ -394,8 +408,10 @@ static void GetOsVersion(str::Str& s) {
     // unless the OS's GUID has been explicitly added to the compatibility manifest
     BOOL ok = GetVersionEx((OSVERSIONINFO*)&ver);
 #pragma warning(pop)
-    if (!ok)
+    if (!ok) {
         return;
+    }
+
     const char* os = OsNameFromVer(ver);
     int servicePackMajor = ver.wServicePackMajor;
     int servicePackMinor = ver.wServicePackMinor;
@@ -405,22 +421,26 @@ static void GetOsVersion(str::Str& s) {
 #else
     const char* arch = IsRunningInWow64() ? "Wow64" : "32-bit";
 #endif
-    if (0 == servicePackMajor)
+    if (0 == servicePackMajor) {
         s.AppendFmt("OS: Windows %s build %d %s\r\n", os, buildNumber, arch);
-    else if (0 == servicePackMinor)
+    } else if (0 == servicePackMinor) {
         s.AppendFmt("OS: Windows %s SP%d build %d %s\r\n", os, servicePackMajor, buildNumber, arch);
-    else
+    } else {
         s.AppendFmt("OS: Windows %s %d.%d build %d %s\r\n", os, servicePackMajor, servicePackMinor, buildNumber, arch);
+    }
 }
 
 static void GetProcessorName(str::Str& s) {
     WCHAR* name =
         ReadRegStr(HKEY_LOCAL_MACHINE, L"HARDWARE\\DESCRIPTION\\System\\CentralProcessor", L"ProcessorNameString");
-    if (!name) // if more than one processor
+    if (!name) {
+        // if more than one processor
         name = ReadRegStr(HKEY_LOCAL_MACHINE, L"HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0",
                           L"ProcessorNameString");
-    if (!name)
+    }
+    if (!name) {
         return;
+    }
 
     OwnedData tmp(str::conv::ToUtf8(name));
     s.AppendFmt("Processor: %s\r\n", tmp.Get());
@@ -467,8 +487,9 @@ static void GetGraphicsDriverInfo(str::Str& s) {
         AutoFreeW key(str::Format(GFX_DRIVER_KEY_FMT, i));
         AutoFreeW v1(ReadRegStr(HKEY_LOCAL_MACHINE, key, L"DriverDesc"));
         // I assume that if I can't read the value, there are no more drivers
-        if (!v1)
+        if (!v1) {
             break;
+        }
         OwnedData v1a(str::conv::ToUtf8(v1));
         s.AppendFmt("Graphics driver %d\r\n", i);
         s.AppendFmt("  DriverDesc:         %s\r\n", v1.Get());
@@ -521,16 +542,18 @@ static void GetSystemInfo(str::Str& s) {
 static bool GetModules(str::Str& s) {
     bool isWine = false;
     HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
-    if (snap == INVALID_HANDLE_VALUE)
+    if (snap == INVALID_HANDLE_VALUE) {
         return true;
+    }
 
     MODULEENTRY32 mod;
     mod.dwSize = sizeof(mod);
     BOOL cont = Module32First(snap, &mod);
     while (cont) {
         OwnedData nameA(str::conv::ToUtf8(mod.szModule));
-        if (str::EqI(nameA.Get(), "winex11.drv"))
+        if (str::EqI(nameA.Get(), "winex11.drv")) {
             isWine = true;
+        }
         OwnedData pathA(str::conv::ToUtf8(mod.szExePath));
         s.AppendFmt("Module: %p %06X %-16s %s\r\n", mod.modBaseAddr, mod.modBaseSize, nameA.Get(), pathA.Get());
         cont = Module32Next(snap, &mod);
