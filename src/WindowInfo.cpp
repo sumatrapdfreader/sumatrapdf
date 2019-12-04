@@ -14,6 +14,7 @@
 #include "wingui/TreeModel.h"
 #include "wingui/TreeCtrl.h"
 #include "wingui/FrameRateWnd.h"
+#include "wingui/DropDownCtrl.h"
 #include "wingui/TooltipCtrl.h"
 
 #include "EngineBase.h"
@@ -75,6 +76,7 @@ WindowInfo::~WindowInfo() {
     // (all controllers should have been deleted prior to WindowInfo, though)
     delete cbHandler;
 
+    delete altBookmarks;
     delete frameRateWnd;
     delete infotip;
     delete tocTreeCtrl;

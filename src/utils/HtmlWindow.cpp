@@ -1793,6 +1793,8 @@ void HtmlWindow::SetScrollbarToAuto() {
     SysFreeString(s);
 }
 
+using namespace Gdiplus;
+
 // Take a screenshot of a given <area> inside an html window and resize
 // it to <finalSize>. It's up to the caller to make sure <area> fits
 // within window (we don't check that's the case)

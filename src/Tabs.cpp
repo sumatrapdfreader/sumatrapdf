@@ -31,6 +31,8 @@
 #include "TableOfContents.h"
 #include "Tabs.h"
 
+using namespace Gdiplus;
+
 #define DEFAULT_CURRENT_BG_COL (COLORREF) - 1
 
 #define T_CLOSING (TCN_LAST + 1)

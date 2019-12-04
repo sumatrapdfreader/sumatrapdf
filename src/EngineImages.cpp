@@ -17,6 +17,8 @@
 #include "EngineImages.h"
 #include "PdfCreator.h"
 
+using namespace Gdiplus;
+
 // number of decoded bitmaps to cache for quicker rendering
 #define MAX_IMAGE_PAGE_CACHE 10
 

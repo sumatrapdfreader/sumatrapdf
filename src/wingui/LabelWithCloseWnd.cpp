@@ -13,6 +13,8 @@
 
 #define WND_CLASS_NAME L"LabelWithCloseWndClass"
 
+using namespace Gdiplus;
+
 static bool IsMouseOverClose(LabelWithCloseWnd* w) {
     PointI p;
     GetCursorPosInHwnd(w->hwnd, p);

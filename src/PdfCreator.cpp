@@ -17,6 +17,8 @@ extern "C" {
 #include "EngineBase.h"
 #include "PdfCreator.h"
 
+using namespace Gdiplus;
+
 static AutoFreeW gPdfProducer;
 
 void PdfCreator::SetProducerName(const WCHAR* name) {
@@ -223,10 +225,11 @@ bool PdfCreator::AddImagePage(HBITMAP hbmp, SizeI size, float imgDpi) {
     return ok;
 }
 
-bool PdfCreator::AddImagePage(Bitmap* bmp, float imgDpi) {
+bool PdfCreator::AddImagePage(Gdiplus::Bitmap* bmp, float imgDpi) {
     HBITMAP hbmp;
-    if (bmp->GetHBITMAP((ARGB)Color::White, &hbmp) != Ok)
+    if (bmp->GetHBITMAP((Gdiplus::ARGB)Gdiplus::Color::White, &hbmp) != Gdiplus::Ok) {
         return false;
+    }
     if (!imgDpi)
         imgDpi = bmp->GetHorizontalResolution();
     bool ok = AddImagePage(hbmp, SizeI(bmp->GetWidth(), bmp->GetHeight()), imgDpi);

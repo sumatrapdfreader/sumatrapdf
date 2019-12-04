@@ -141,6 +141,8 @@ void NotificationWnd::UpdateMessage(const WCHAR* message, int timeoutInMS, bool 
     }
 }
 
+using namespace Gdiplus;
+
 static void NotificationWndOnPaint(HWND hwnd, NotificationWnd* wnd) {
     PAINTSTRUCT ps = {0};
     HDC hdcWnd = BeginPaint(hwnd, &ps);

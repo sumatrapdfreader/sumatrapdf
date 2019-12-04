@@ -16,6 +16,8 @@
 
 #include "utils/DebugLog.h"
 
+using namespace Gdiplus;
+
 // Get width of each character and add them up.
 // Doesn't seem to be any different than MeasureTextAccurate() i.e. it still
 // underreports the width

@@ -29,6 +29,8 @@ understand.
 #include "SvgPath.h"
 #include "utils/VecSegmented.h"
 
+using namespace Gdiplus;
+
 namespace svg {
 
 enum class PathInstr {

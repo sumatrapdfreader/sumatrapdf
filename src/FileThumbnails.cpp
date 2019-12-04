@@ -82,19 +82,21 @@ void CleanUpThumbnailCache(const FileHistory& fileHistory) {
     }
 }
 
+using namespace Gdiplus;
+
 static RenderedBitmap* LoadRenderedBitmap(const WCHAR* filePath) {
     OwnedData data(file::ReadFile(filePath));
     if (!data.data) {
         return nullptr;
     }
-    Bitmap* bmp = BitmapFromData(data.data, data.size);
+    Gdiplus::Bitmap* bmp = BitmapFromData(data.data, data.size);
     if (!bmp) {
         return nullptr;
     }
 
     HBITMAP hbmp;
     RenderedBitmap* rendered = nullptr;
-    if (bmp->GetHBITMAP((ARGB)Color::White, &hbmp) == Ok) {
+    if (bmp->GetHBITMAP((Gdiplus::ARGB)Gdiplus::Color::White, &hbmp) == Gdiplus::Ok) {
         rendered = new RenderedBitmap(hbmp, SizeI(bmp->GetWidth(), bmp->GetHeight()));
     }
     delete bmp;
@@ -164,7 +166,7 @@ void SaveThumbnail(DisplayState& ds) {
     AutoFreeW thumbsPath(path::GetDir(bmpPath));
     if (dir::Create(thumbsPath)) {
         CrashIf(!str::EndsWithI(bmpPath, L".png"));
-        Bitmap bmp(ds.thumbnail->GetBitmap(), nullptr);
+        Gdiplus::Bitmap bmp(ds.thumbnail->GetBitmap(), nullptr);
         CLSID tmpClsid = GetEncoderClsid(L"image/png");
         bmp.Save(bmpPath.Get(), &tmpClsid, nullptr);
     }

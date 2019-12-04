@@ -391,7 +391,7 @@ bool RenderDocument(BaseEngine* engine, const WCHAR* renderPath, float zoom = 1.
         }
         AutoFreeW pageBmpPath(str::Format(renderPath, pageNo));
         if (str::EndsWithI(pageBmpPath, L".png")) {
-            Bitmap gbmp(bmp->GetBitmap(), nullptr);
+            Gdiplus::Bitmap gbmp(bmp->GetBitmap(), nullptr);
             CLSID pngEncId = GetEncoderClsid(L"image/png");
             gbmp.Save(pageBmpPath, &pngEncId);
         } else if (str::EndsWithI(pageBmpPath, L".bmp")) {
