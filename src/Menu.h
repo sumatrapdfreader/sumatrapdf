@@ -5,6 +5,8 @@
 // by making them owner-drawn
 // #define EXP_MENU_OWNER_DRAW 1
 
+extern bool gAddCrashMeMenu;
+
 #define SEP_ITEM "-----"
 
 // those are defined here instead of resource.h to avoid

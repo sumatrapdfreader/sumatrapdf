@@ -37,6 +37,8 @@
 #include "utils/BitManip.h"
 #include "utils/Dpi.h"
 
+bool gAddCrashMeMenu = false;
+
 void MenuUpdateDisplayMode(WindowInfo* win) {
     bool enabled = win->IsDocLoaded();
     DisplayMode displayMode = gGlobalPrefs->defaultDisplayModeEnum;
@@ -203,10 +205,6 @@ static MenuDef menuDefDebug[] = {
     { "Mui debug paint",                    IDM_DEBUG_MUI,              MF_NO_TRANSLATE },
     { "Annotation from Selection",          IDM_DEBUG_ANNOTATION,       MF_NO_TRANSLATE },
     { "Download symbols",                   IDM_DEBUG_DOWNLOAD_SYMBOLS, MF_NO_TRANSLATE },
-#if defined(DEBUG)
-    { SEP_ITEM,                             0,                          0 },
-    { "Crash me",                           IDM_DEBUG_CRASH_ME,         MF_NO_TRANSLATE },
-#endif
 };
 //] ACCESSKEY_GROUP Debug Menu
 
@@ -1074,6 +1072,12 @@ HMENU BuildMenu(WindowInfo* win) {
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, _TR("&Window"));
 #endif
     m = BuildMenuFromMenuDef(menuDefDebug, dimof(menuDefDebug), CreateMenu(), filter);
+
+    if (gAddCrashMeMenu) {
+        AppendMenu(m, MF_SEPARATOR, 0, nullptr);
+        AppendMenuA(m, MF_STRING, (UINT_PTR)IDM_DEBUG_CRASH_ME, "Crash me");
+    }
+
     AppendMenu(mainMenu, MF_POPUP | MF_STRING, (UINT_PTR)m, L"Debug");
 
     MarkMenuOwnerDraw(mainMenu);

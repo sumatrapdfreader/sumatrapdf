@@ -635,9 +635,12 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     mui::Initialize();
     uitask::Initialize();
 
-    log("Starting SumatraPDF\r\n");
+    log("Starting SumatraPDF\n");
 
-    logf(L"CmdLine: %s\r\n", GetCommandLineW());
+    // TODO: temporary, to test crash reporting
+    gAddCrashMeMenu = true;
+
+    logf(L"CmdLine: %s\n", GetCommandLineW());
 #if defined(DEBUG) || defined(SVN_PRE_RELEASE_VER)
     if (str::StartsWith(cmdLine, "/tester")) {
         extern int TesterMain(); // in Tester.cpp
