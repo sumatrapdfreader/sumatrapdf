@@ -2,65 +2,13 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "utils/BaseUtil.h"
+#include "utils/Log.h"
 #include "Translations.h"
 
 #ifdef DEBUG
 // define for adding "English RTL" for testing RTL layout
 #define ADD_EN_RTL_TEST_LANGUAGE
 #endif
-
-// set to 0 for not compressed. Must match trans_gen.py (gen_c_code_for_dir).
-// Also, in Sumatra, when using compressed, UNINSTALLER_OBJS need to include $(ZLIB_OBJS)
-// in makefile.msvc
-#define COMPRESSED 0
-// set to 0 for not compressed.
-
-#if COMPRESSED == 1
-
-// local copy of uncompr.c
-//#define ZLIB_INTERNAL
-#include "zlib.h"
-
-int uncompress(Bytef* dest, uLongf* destLen, const Bytef* source, uLong sourceLen) {
-    z_stream stream;
-    int err;
-
-    stream.next_in = (Bytef*)source;
-    stream.avail_in = (uInt)sourceLen;
-    /* Check for source > 64K on 16-bit machine: */
-    if ((uLong)stream.avail_in != sourceLen)
-        return Z_BUF_ERROR;
-
-    stream.next_out = dest;
-    stream.avail_out = (uInt)*destLen;
-    if ((uLong)stream.avail_out != *destLen)
-        return Z_BUF_ERROR;
-
-    stream.zalloc = (alloc_func)0;
-    stream.zfree = (free_func)0;
-
-    err = inflateInit(&stream);
-    if (err != Z_OK)
-        return err;
-
-    err = inflate(&stream, Z_FINISH);
-    if (err != Z_STREAM_END) {
-        inflateEnd(&stream);
-        if (err == Z_NEED_DICT || (err == Z_BUF_ERROR && stream.avail_in == 0))
-            return Z_DATA_ERROR;
-        return err;
-    }
-    *destLen = stream.total_out;
-
-    err = inflateEnd(&stream);
-    return err;
-}
-#endif // COMPRESSED == 1
-
-/*
-TODO:
- - could use bzip2 for compression for additional ~7k savings
-*/
 
 // Note: this code is intentionally optimized for (small) size, not speed
 
@@ -86,13 +34,7 @@ const char** gCurrLangStrings = nullptr;
 // WCHAR ** gLangsTransCache[LANGS_COUNT];
 WCHAR*** gLangsTransCache = nullptr;
 
-#if COMPRESSED == 1
-// const char *gLangsStringsUncompressed[LANGS_COUNT];
-const unsigned char* GetTranslationsForLang(int langIdx, uint32_t* uncompressedSizeOut, uint32_t* compressedSizeOut);
-const char** gLangsStringsUncompressed = nullptr;
-#else
 const char* GetTranslationsForLang(int langIdx);
-#endif
 
 #ifdef ADD_EN_RTL_TEST_LANGUAGE
 #define EN_RTL_CODE "en-rtl"
@@ -167,16 +109,9 @@ static void FreeTransCache() {
             free(transCache[i]);
         }
         free(transCache);
-#if COMPRESSED == 1
-        if (gLangsStringsUncompressed[langIdx])
-            free((void*)gLangsStringsUncompressed[langIdx]);
-#endif
     }
     free(gLangsTransCache);
     free(gCurrLangStrings);
-#if COMPRESSED == 1
-    free(gLangsStringsUncompressed);
-#endif
 }
 
 static void BuildStringsIndexForLang(int langIdx) {
@@ -193,22 +128,7 @@ static void BuildStringsIndexForLang(int langIdx) {
         return;
     }
 
-#if COMPRESSED == 1
-    const char* s = gLangsStringsUncompressed[langIdx];
-    if (nullptr == s) {
-        uint32_t uncompressedSize, compressedSize;
-        const unsigned char* compressed = GetTranslationsForLang(langIdx, &uncompressedSize, &compressedSize);
-        void* uncompressed = malloc(uncompressedSize);
-        uLongf uncompressedSizeReal;
-        int res = uncompress((Bytef*)uncompressed, &uncompressedSizeReal, compressed, compressedSize);
-        CrashAlwaysIf(Z_OK != res);
-        CrashAlwaysIf(uncompressedSize != uncompressedSizeReal);
-        gLangsStringsUncompressed[langIdx] = (const char*)uncompressed;
-        s = gLangsStringsUncompressed[langIdx];
-    }
-#else
     const char* s = GetTranslationsForLang(langIdx);
-#endif
     for (int i = 0; i < gStringsCount; i++) {
         if (0 == *s)
             gCurrLangStrings[i] = nullptr;
@@ -226,19 +146,23 @@ void SetCurrentLangByCode(const char* langCode) {
     if (!gCurrLangStrings) {
         gCurrLangStrings = AllocArray<const char*>(gStringsCount);
         gLangsTransCache = AllocArray<WCHAR**>(gLangsCount);
-#if COMPRESSED == 1
-        gLangsStringsUncompressed = AllocArray<const char*>(gLangsCount);
-#endif
     }
 
-    if (str::Eq(langCode, gCurrLangCode))
+    if (str::Eq(langCode, gCurrLangCode)) {
         return;
+    }
 
     int idx = seqstrings::StrToIdx(gLangCodes, langCode);
 #ifdef ADD_EN_RTL_TEST_LANGUAGE
-    if (-1 == idx && str::Eq(langCode, EN_RTL_CODE))
+    if (-1 == idx && str::Eq(langCode, EN_RTL_CODE)) {
         idx = EN_RTL_IDX;
+    }
 #endif
+    if (-1 == idx) {
+        logf("Unknown lang code: '%s'\n", langCode);
+        // set to English
+        idx = 0;
+    }
     CrashIf(-1 == idx);
     gCurrLangIdx = idx;
     gCurrLangCode = GetLangCodeByIdx(idx);
@@ -248,11 +172,13 @@ void SetCurrentLangByCode(const char* langCode) {
 const char* ValidateLangCode(const char* langCode) {
     int idx = seqstrings::StrToIdx(gLangCodes, langCode);
 #ifdef ADD_EN_RTL_TEST_LANGUAGE
-    if (-1 == idx && str::Eq(langCode, EN_RTL_CODE))
+    if (-1 == idx && str::Eq(langCode, EN_RTL_CODE)) {
         idx = EN_RTL_IDX;
+    }
 #endif
-    if (-1 == idx)
+    if (-1 == idx) {
         return nullptr;
+    }
     return GetLangCodeByIdx(idx);
 }
 
@@ -311,21 +237,25 @@ static int GetEnglishStringIndex(const char* txt) {
 }
 
 const WCHAR* GetTranslation(const char* s) {
-    if (nullptr == gCurrLangCode)
+    if (nullptr == gCurrLangCode) {
         SetCurrentLangByCode("en");
+    }
 
     int idx = GetEnglishStringIndex(s);
-    if (-1 == idx)
+    if (-1 == idx) {
         return FindOrAddMissingTranslation(s);
+    }
 
     const char* trans = gCurrLangStrings[idx];
     // fall back to English if the language doesn't have a translations for this string
-    if (!trans)
+    if (!trans) {
         trans = s;
+    }
 
     WCHAR** transCache = GetTransCacheForLang(gCurrLangIdx);
-    if (!transCache[idx])
+    if (!transCache[idx]) {
         transCache[idx] = str::conv::FromUtf8(trans);
+    }
     return transCache[idx];
 }
 
