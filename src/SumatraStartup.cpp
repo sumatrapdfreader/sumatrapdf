@@ -632,7 +632,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     log("Starting SumatraPDF\n");
 
     // TODO: temporary, to test crash reporting
-    gAddCrashMeMenu = true;
+    // gAddCrashMeMenu = true;
 
     logf(L"CmdLine: %s\n", GetCommandLineW());
 #if defined(DEBUG) || defined(SVN_PRE_RELEASE_VER)

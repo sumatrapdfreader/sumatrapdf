@@ -372,6 +372,9 @@ class AbortCookie {
 
 class BaseEngine {
   public:
+    // TODO: set the kind and use instead of EngineType
+    Kind kind = nullptr;
+
     virtual ~BaseEngine() {
     }
     // creates a clone of this engine (e.g. for printing on a different thread)

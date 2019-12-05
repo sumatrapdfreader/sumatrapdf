@@ -168,7 +168,7 @@ static void DeleteSymbolsIfExist() {
 }
 
 static bool ExtractSymbols(const char* archiveData, size_t dataSize, char* dstDir, Allocator* allocator) {
-    logf("ExtractSymbols: dir '%s', size: %d\n", archiveData, (int)dataSize);
+    logf("ExtractSymbols: dir '%s', size: %d\n", dstDir, (int)dataSize);
     lzma::SimpleArchive archive;
     bool ok = ParseSimpleArchive(archiveData, dataSize, &archive);
     if (!ok) {

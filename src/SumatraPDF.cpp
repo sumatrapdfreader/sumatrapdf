@@ -847,8 +847,10 @@ void ControllerCallbackHandler::PageNoChanged(Controller* ctrl, int pageNo) {
 }
 
 static Controller* CreateControllerForFile(const WCHAR* filePath, PasswordUI* pwdUI, WindowInfo* win) {
-    if (!win->cbHandler)
+    logf(L"CreateControllerForFile: '%s'\n", filePath);
+    if (!win->cbHandler) {
         win->cbHandler = new ControllerCallbackHandler(win);
+    }
 
     Controller* ctrl = nullptr;
 

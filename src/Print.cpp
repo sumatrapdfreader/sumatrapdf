@@ -6,6 +6,7 @@
 #include "utils/FileUtil.h"
 #include "utils/UITask.h"
 #include "utils/WinUtil.h"
+#include "utils/Log.h"
 
 #include "TreeModel.h"
 #include "EngineBase.h"
@@ -902,9 +903,11 @@ Exit:
 }
 
 bool PrintFile(const WCHAR* fileName, WCHAR* printerName, bool displayErrors, const WCHAR* settings) {
-    AutoFreeW fileName2(path::Normalize(fileName));
+    logf(L"PrintFile: file: '%s', printer: '%s'\n", fileName, printerName);
+    WCHAR* fileName2 = path::Normalize(fileName);
     BaseEngine* engine = EngineManager::CreateEngine(fileName2);
     bool ok = PrintFile(engine, printerName, displayErrors, settings);
     delete engine;
+    free(fileName2);
     return ok;
 }
