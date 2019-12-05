@@ -70,7 +70,7 @@ class CommandLineInfo {
     ~CommandLineInfo() = default;
 };
 
-CommandLineInfo ParseCommandLine(const WCHAR* cmdLine);
+void ParseCommandLine(const WCHAR* cmdLine, CommandLineInfo&);
 
 bool IsValidPageRange(const WCHAR* ranges);
 bool IsBenchPagesInfo(const WCHAR* s);

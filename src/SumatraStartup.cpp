@@ -647,7 +647,8 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     }
 #endif
 
-    auto i = ParseCommandLine(GetCommandLineW());
+    CommandLineInfo i;
+    ParseCommandLine(GetCommandLineW(), i);
 
     if (i.install || IsInstaller()) {
         if (!IsValidInstaller()) {

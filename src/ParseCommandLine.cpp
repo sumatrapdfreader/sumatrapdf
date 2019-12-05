@@ -258,8 +258,7 @@ static int GetArgNo(const WCHAR* argName) {
 }
 
 /* parse argument list. we assume that all unrecognized arguments are file names. */
-CommandLineInfo ParseCommandLine(const WCHAR* cmdLine) {
-    CommandLineInfo i;
+void ParseCommandLine(const WCHAR* cmdLine, CommandLineInfo& i) {
     WStrVec argList;
     ParseCmdLine(cmdLine, argList);
     size_t argCount = argList.size();
@@ -280,7 +279,7 @@ CommandLineInfo ParseCommandLine(const WCHAR* cmdLine) {
         if (RegisterForPdf == arg) {
             i.makeDefault = true;
             i.exitImmediately = true;
-            return i;
+            return;
         } else if (Silent == arg) {
             // silences errors happening during -print-to and -print-to-default
             i.silent = true;
@@ -425,7 +424,7 @@ CommandLineInfo ParseCommandLine(const WCHAR* cmdLine) {
             EnumeratePrinters();
             /* this is for testing only, exit immediately */
             i.exitImmediately = true;
-            return i;
+            return;
         }
 #endif
         // this should have been handled already by AutoUpdateMain
@@ -441,6 +440,4 @@ CommandLineInfo ParseCommandLine(const WCHAR* cmdLine) {
             i.fileNames.Push(filePath);
         }
     }
-
-    return i;
 }

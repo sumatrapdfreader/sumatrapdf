@@ -820,6 +820,7 @@ bool PrintFile(BaseEngine* engine, WCHAR* printerName, bool displayErrors, const
         engine = nullptr;
     }
 #endif
+
     if (!engine) {
         if (displayErrors) {
             MessageBoxWarning(nullptr, _TR("Cannot print this file"), _TR("Printing problem."));
@@ -906,6 +907,14 @@ bool PrintFile(const WCHAR* fileName, WCHAR* printerName, bool displayErrors, co
     logf(L"PrintFile: file: '%s', printer: '%s'\n", fileName, printerName);
     WCHAR* fileName2 = path::Normalize(fileName);
     BaseEngine* engine = EngineManager::CreateEngine(fileName2);
+    if (!engine) {
+        if (displayErrors) {
+            WCHAR* msg = str::Format(L"Couldn't open file '%s' for printing", fileName);
+            MessageBoxWarning(nullptr, msg, L"Error");
+            free(msg);
+        }
+        return false;
+    }
     bool ok = PrintFile(engine, printerName, displayErrors, settings);
     delete engine;
     free(fileName2);
