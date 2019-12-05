@@ -126,13 +126,11 @@ func shouldSkipUpload() bool {
 	if !isMaster() {
 		logf("Skipping pre-release upload to s3 because not on master branch\n")
 		logf("GITHUB_REF: '%s'\n", os.Getenv("GITHUB_REF"))
-		flgUpload = false
 		return true
 	}
 
 	if !shouldSignOrUpload() {
 		logf("skipping upload beacuse not my repo\n")
-		flgUpload = false
 		return true
 	}
 	return false
