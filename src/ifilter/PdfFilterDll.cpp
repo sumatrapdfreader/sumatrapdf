@@ -56,8 +56,9 @@ public:
     IFACEMETHODIMP CreateInstance(IUnknown *punkOuter, REFIID riid, void **ppv)
     {
         *ppv = nullptr;
-        if (punkOuter)
+        if (punkOuter) {
             return CLASS_E_NOAGGREGATION;
+        }
 
         ScopedComPtr<IFilter> pFilter;
 
@@ -118,8 +119,9 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 {
     *ppv = nullptr;
     ScopedComPtr<CClassFactory> pClassFactory(new CClassFactory(rclsid));
-    if (!pClassFactory)
+    if (!pClassFactory) {
         return E_OUTOFMEMORY;
+    }
     return pClassFactory->QueryInterface(riid, ppv);
 }
 

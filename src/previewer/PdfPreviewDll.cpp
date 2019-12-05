@@ -180,43 +180,48 @@ STDAPI DllRegisterServer() {
     return E_FAIL
 
     for (int i = 0; i < dimof(gPreviewers); i++) {
-        if (gPreviewers[i].skip)
+        if (gPreviewers[i].skip) {
             continue;
-        AutoFreeW displayName(str::Format(L"SumatraPDF Preview (*%s)", gPreviewers[i].ext));
+        }
+        const WCHAR* clsid = gPreviewers[i].clsid;
+        const WCHAR* ext = gPreviewers[i].ext;
+        const WCHAR* ext2 = gPreviewers[i].ext2;
+
+        AutoFreeW displayName(str::Format(L"SumatraPDF Preview (*%s)", ext));
         // register class
-        AutoFreeW key(str::Format(L"Software\\Classes\\CLSID\\%s", gPreviewers[i].clsid));
+        AutoFreeW key(str::Format(L"Software\\Classes\\CLSID\\%s", clsid));
         WriteOrFail_(key, nullptr, displayName);
         WriteOrFail_(key, L"AppId", IsRunningInWow64() ? APPID_PREVHOST_EXE_WOW64 : APPID_PREVHOST_EXE);
         WriteOrFail_(key, L"DisplayName", displayName);
-        key.Set(str::Format(L"Software\\Classes\\CLSID\\%s\\InProcServer32", gPreviewers[i].clsid));
+        key.Set(str::Format(L"Software\\Classes\\CLSID\\%s\\InProcServer32", clsid));
         WriteOrFail_(key, nullptr, dllPath);
         WriteOrFail_(key, L"ThreadingModel", L"Apartment");
         // IThumbnailProvider
-        key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_THUMBNAIL_PROVIDER, gPreviewers[i].ext));
-        WriteOrFail_(key, nullptr, gPreviewers[i].clsid);
-        if (gPreviewers[i].ext2) {
-            key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_THUMBNAIL_PROVIDER, gPreviewers[i].ext2));
-            WriteOrFail_(key, nullptr, gPreviewers[i].clsid);
+        key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_THUMBNAIL_PROVIDER, ext));
+        WriteOrFail_(key, nullptr, clsid);
+        if (ext2) {
+            key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_THUMBNAIL_PROVIDER, ext2));
+            WriteOrFail_(key, nullptr, clsid);
         }
         // IExtractImage (for Windows XP)
         if (!IsVistaOrGreater()) {
             // don't register for IExtractImage on systems which accept IThumbnailProvider
             // (because it doesn't offer anything beyond what IThumbnailProvider does)
-            key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_EXTRACT_IMAGE, gPreviewers[i].ext));
-            WriteOrFail_(key, nullptr, gPreviewers[i].clsid);
-            if (gPreviewers[i].ext2) {
-                key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_EXTRACT_IMAGE, gPreviewers[i].ext2));
-                WriteOrFail_(key, nullptr, gPreviewers[i].clsid);
+            key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_EXTRACT_IMAGE, ext));
+            WriteOrFail_(key, nullptr, clsid);
+            if (ext2) {
+                key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_EXTRACT_IMAGE, ext2));
+                WriteOrFail_(key, nullptr, clsid);
             }
         }
         // IPreviewHandler
-        key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_PREVIEW_HANDLER, gPreviewers[i].ext));
-        WriteOrFail_(key, nullptr, gPreviewers[i].clsid);
-        if (gPreviewers[i].ext2) {
-            key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_PREVIEW_HANDLER, gPreviewers[i].ext2));
-            WriteOrFail_(key, nullptr, gPreviewers[i].clsid);
+        key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_PREVIEW_HANDLER, ext));
+        WriteOrFail_(key, nullptr, clsid);
+        if (ext2) {
+            key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_PREVIEW_HANDLER, ext2));
+            WriteOrFail_(key, nullptr, clsid);
         }
-        WriteOrFail_(REG_KEY_PREVIEW_HANDLERS, gPreviewers[i].clsid, displayName);
+        WriteOrFail_(REG_KEY_PREVIEW_HANDLERS, clsid, displayName);
     }
 #undef WriteOrFail_
 
@@ -232,33 +237,38 @@ STDAPI DllUnregisterServer() {
     hr = E_FAIL
 
     for (int i = 0; i < dimof(gPreviewers); i++) {
-        if (gPreviewers[i].skip)
+        if (gPreviewers[i].skip) {
             continue;
+        }
+        const WCHAR* clsid = gPreviewers[i].clsid;
+        const WCHAR* ext = gPreviewers[i].ext;
+        const WCHAR* ext2 = gPreviewers[i].ext2;
+
         // unregister preview handler
-        SHDeleteValue(HKEY_LOCAL_MACHINE, REG_KEY_PREVIEW_HANDLERS, gPreviewers[i].clsid);
-        SHDeleteValue(HKEY_CURRENT_USER, REG_KEY_PREVIEW_HANDLERS, gPreviewers[i].clsid);
+        SHDeleteValue(HKEY_LOCAL_MACHINE, REG_KEY_PREVIEW_HANDLERS, clsid);
+        SHDeleteValue(HKEY_CURRENT_USER, REG_KEY_PREVIEW_HANDLERS, clsid);
         // remove class data
-        AutoFreeW key(str::Format(L"Software\\Classes\\CLSID\\%s", gPreviewers[i].clsid));
+        AutoFreeW key(str::Format(L"Software\\Classes\\CLSID\\%s", clsid));
         DeleteOrFail_(key);
         // IThumbnailProvider
-        key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_THUMBNAIL_PROVIDER, gPreviewers[i].ext));
+        key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_THUMBNAIL_PROVIDER, ext));
         DeleteOrFail_(key);
-        if (gPreviewers[i].ext2) {
-            key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_THUMBNAIL_PROVIDER, gPreviewers[i].ext2));
+        if (ext2) {
+            key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_THUMBNAIL_PROVIDER, ext2));
             DeleteOrFail_(key);
         }
         // IExtractImage (for Windows XP)
-        key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_EXTRACT_IMAGE, gPreviewers[i].ext));
+        key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_EXTRACT_IMAGE, ext));
         DeleteOrFail_(key);
-        if (gPreviewers[i].ext2) {
-            key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_EXTRACT_IMAGE, gPreviewers[i].ext2));
+        if (ext2) {
+            key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_EXTRACT_IMAGE, ext2));
             DeleteOrFail_(key);
         }
         // IPreviewHandler
-        key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_PREVIEW_HANDLER, gPreviewers[i].ext));
+        key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_PREVIEW_HANDLER, ext));
         DeleteOrFail_(key);
-        if (gPreviewers[i].ext2) {
-            key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_PREVIEW_HANDLER, gPreviewers[i].ext2));
+        if (ext2) {
+            key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_PREVIEW_HANDLER, ext2));
             DeleteOrFail_(key);
         }
     }
@@ -280,8 +290,9 @@ STDAPI DllInstall(BOOL bInstall, LPCWSTR pszCmdLine) {
         }
     }
 
-    if (!bInstall)
+    if (!bInstall) {
         return DllUnregisterServer();
+    }
     return DllRegisterServer();
 }
 

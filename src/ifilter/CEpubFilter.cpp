@@ -55,8 +55,10 @@ HRESULT CEpubFilter::OnInit() {
 static bool IsoDateParse(const WCHAR* isoDate, SYSTEMTIME* timeOut) {
     ZeroMemory(timeOut, sizeof(SYSTEMTIME));
     const WCHAR* end = str::Parse(isoDate, L"%4d-%2d-%2d", &timeOut->wYear, &timeOut->wMonth, &timeOut->wDay);
-    if (end) // time is optional
+    if (end) {
+        // time is optional
         str::Parse(end, L"T%2d:%2d:%2dZ", &timeOut->wHour, &timeOut->wMinute, &timeOut->wSecond);
+    }
     return end != nullptr;
     // don't bother about the day of week, we won't display it anyway
 }
@@ -78,16 +80,18 @@ static WCHAR* ExtractHtmlText(EpubDoc* doc) {
                 t->s++;
                 t->sLen--;
             }
-            while (t->sLen > 0 && str::IsWs(t->s[t->sLen - 1]))
+            while (t->sLen > 0 && str::IsWs(t->s[t->sLen - 1])) {
                 t->sLen--;
+            }
             if (t->sLen > 0) {
                 text.AppendAndFree(ResolveHtmlEntities(t->s, t->sLen));
                 text.Append(' ');
             }
         } else if (t->IsStartTag()) {
             // TODO: force-close tags similar to HtmlFormatter.cpp's AutoCloseOnOpen?
-            if (!IsTagSelfClosing(t->tag))
+            if (!IsTagSelfClosing(t->tag)) {
                 tagNesting.Append(t->tag);
+            }
         } else if (t->IsEndTag()) {
             if (!IsInlineTag(t->tag) && text.size() > 0 && text.Last() == ' ') {
                 text.Pop();
@@ -97,11 +101,13 @@ static WCHAR* ExtractHtmlText(EpubDoc* doc) {
             // there are only potentially self-closing tags on the
             // stack between the matching tag, we pop all of them
             if (tagNesting.Contains(t->tag)) {
-                while (tagNesting.Last() != t->tag)
+                while (tagNesting.Last() != t->tag) {
                     tagNesting.Pop();
+                }
             }
-            if (tagNesting.size() > 0 && tagNesting.Last() == t->tag)
+            if (tagNesting.size() > 0 && tagNesting.Last() == t->tag) {
                 tagNesting.Pop();
+            }
         }
     }
 
