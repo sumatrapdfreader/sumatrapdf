@@ -2431,7 +2431,7 @@ bool PdfEngineImpl::SupportsAnnotation(bool forSaving) const {
         auto* pageInfo = _pages[i];
         fz_page* fzpage = pageInfo->page;
         pdf_page* page = pdf_page_from_fz_page(ctx, fzpage);
-        if (pdf_to_num(ctx, page->obj) == 0) {
+        if (!page || pdf_to_num(ctx, page->obj) == 0) {
             return false;
         }
     }
