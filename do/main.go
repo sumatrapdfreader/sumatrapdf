@@ -151,6 +151,10 @@ func main() {
 	// on GitHub Actions the build happens in an earlier step
 	if flgUploadCiBuild {
 		flgUpload = true
+		if shouldSkipUpload() {
+			fmt.Printf("Skipping upload\n")
+			return
+		}
 		detectVersions()
 		s3UploadPreReleaseMust(svnPreReleaseVer, buildTypeDaily)
 		spacesUploadPreReleaseMust(svnPreReleaseVer, buildTypeDaily)
