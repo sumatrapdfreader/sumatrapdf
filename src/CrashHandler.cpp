@@ -98,6 +98,7 @@ static WCHAR* gCrashDumpPath = nullptr;
 static WCHAR* gSymbolPathW = nullptr;
 static WCHAR* gSymbolsDir = nullptr;
 static WCHAR* gLibMupdfPdbPath = nullptr;
+static WCHAR* gSumatraPdfDllPdbPath = nullptr;
 static WCHAR* gSumatraPdfPdbPath = nullptr;
 static char* gSystemInfo = nullptr;
 static char* gModulesInfo = nullptr;
@@ -156,13 +157,14 @@ static void SendCrashInfo(char* s, size_t size) {
 // We might have symbol files for older builds. If we're here, then we
 // didn't get the symbols so we assume it's because symbols didn't match
 // Returns false if files were there but we couldn't delete them
-static bool DeleteSymbolsIfExist() {
-    bool ok1 = file::Delete(gLibMupdfPdbPath);
-    logf(L"DeleteSymbolsIfExist: deleted '%s' (%d)\n", gLibMupdfPdbPath, (int)ok1);
-    bool ok2 = file::Delete(gSumatraPdfPdbPath);
-    logf(L"DeleteSymbolsIfExist: deleted '%s' (%d)\n", gSumatraPdfPdbPath, (int)ok1);
-    bool ok = ok1 && ok2;
-    return ok;
+static void DeleteSymbolsIfExist() {
+    // TODO: remove all files in symDir (symbols, previous crash files
+    bool ok = file::Delete(gLibMupdfPdbPath);
+    logf(L"DeleteSymbolsIfExist: deleted '%s' (%d)\n", gLibMupdfPdbPath, (int)ok);
+    ok = file::Delete(gSumatraPdfPdbPath);
+    logf(L"DeleteSymbolsIfExist: deleted '%s' (%d)\n", gSumatraPdfPdbPath, (int)ok);
+    ok = file::Delete(gSumatraPdfDllPdbPath);
+    logf(L"DeleteSymbolsIfExist: deleted '%s' (%d)\n", gSumatraPdfDllPdbPath, (int)ok);
 }
 
 static bool ExtractSymbols(const char* archiveData, size_t dataSize, char* dstDir, Allocator* allocator) {
@@ -177,32 +179,7 @@ static bool ExtractSymbols(const char* archiveData, size_t dataSize, char* dstDi
     for (int i = 0; i < archive.filesCount; i++) {
         lzma::FileInfo* fi = &(archive.files[i]);
         const char* name = fi->name;
-        // SumatraPDF.pdb is for static build
         logf("ExtractSymbols: file %d is '%s'\n", i, name);
-        if (str::Eq(name, "SumatraPDF.pdb")) {
-            if (isDllBuild) {
-                logf("  skipping because dll build\n");
-                continue;
-            }
-        }
-        // libmupdf.pdb is only for dll build
-        if (str::Eq(name, "libmupdf.pdb")) {
-            if (!isDllBuild) {
-                logf("  skipping because not dll build\n");
-                continue;
-            }
-        }
-        // SumatraPDF-dll.pdb is for dll build
-        if (str::Eq(name, "SumatraPDF-dll.pdb")) {
-            if (!isDllBuild) {
-                logf("  skipping because no dll build\n");
-                continue;
-            }
-            // change the name to fit executable name
-            logf("  changed name to 'SumatraPDF.pdb'\n");
-            name = "SumatraPDF.pdb";
-        }
-
         char* uncompressed = GetFileDataByIdx(&archive, i, allocator);
         if (!uncompressed) {
             return false;
@@ -236,10 +213,7 @@ static bool DownloadAndUnzipSymbols(const WCHAR* symDir) {
         return false;
     }
 
-    if (!DeleteSymbolsIfExist()) {
-        log("DownloadAndUnzipSymbols: DeleteSymbolsIfExist() failed\n");
-        return false;
-    }
+    DeleteSymbolsIfExist();
 
     if (gDisableSymbolsDownload) {
         // don't care about debug builds because we don't release them
@@ -268,12 +242,12 @@ static bool DownloadAndUnzipSymbols(const WCHAR* symDir) {
 
 bool CrashHandlerDownloadSymbols() {
     if (!dir::Create(gSymbolsDir)) {
-        log("SubmitCrashInfo(): couldn't create symbols dir\n");
+        log("SubmitCrashInfo: couldn't create symbols dir\n");
         return false;
     }
 
     if (!dbghelp::Initialize(gSymbolPathW, false)) {
-        log("SubmitCrashInfo(): dbghelp::Initialize() failed\n");
+        log("SubmitCrashInfo: dbghelp::Initialize() failed\n");
         return false;
     }
 
@@ -282,17 +256,17 @@ bool CrashHandlerDownloadSymbols() {
     }
 
     if (!DownloadAndUnzipSymbols(gSymbolsDir)) {
-        log("SubmitCrashInfo(): failed to download symbols\n");
+        log("SubmitCrashInfo: failed to download symbols\n");
         return false;
     }
 
     if (!dbghelp::Initialize(gSymbolPathW, true)) {
-        log("SubmitCrashInfo(): second dbghelp::Initialize() failed\n");
+        log("SubmitCrashInfo: second dbghelp::Initialize() failed\n");
         return false;
     }
 
     if (!dbghelp::HasSymbols()) {
-        log("SubmitCrashInfo(): HasSymbols() false after downloading symbols\n");
+        logf(L"SubmitCrashInfo: HasSymbols() false after downloading symbols, gSymbolPathW: '%s'\n", gSymbolPathW);
         return false;
     }
     return true;
@@ -306,7 +280,7 @@ void SubmitCrashInfo() {
         return;
     }
 
-    logf(L"SubmitCrashInfo(): gSymbolPathW: '%s'\n", gSymbolPathW);
+    logf(L"SubmitCrashInfo: gSymbolPathW: '%s'\n", gSymbolPathW);
 
     bool ok = CrashHandlerDownloadSymbols();
 
@@ -638,10 +612,12 @@ bool SetSymbolsDir(const WCHAR* symDir) {
 
     free(gSymbolsDir);
     free(gLibMupdfPdbPath);
+    free(gSumatraPdfDllPdbPath);
     free(gSumatraPdfPdbPath);
 
     gSymbolsDir = str::Dup(symDir);
     gSumatraPdfPdbPath = path::Join(symDir, L"SumatraPDF.pdb");
+    gSumatraPdfDllPdbPath = path::Join(symDir, L"SumatraPDF-dll.pdb");
     gLibMupdfPdbPath = path::Join(symDir, L"libmupdf.pdb");
     BuildSymbolPath();
     return true;
@@ -741,6 +717,7 @@ void UninstallCrashHandler() {
     free(gSymbolsDir);
     free(gLibMupdfPdbPath);
     free(gSumatraPdfPdbPath);
+    free(gSumatraPdfDllPdbPath);
     free(gCrashFilePath);
 
     free(gSymbolPathW);

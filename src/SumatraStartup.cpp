@@ -65,9 +65,6 @@
 #include "AppTools.h"
 #include "Installer.h"
 
-#define CRASH_DUMP_FILE_NAME L"sumatrapdfcrash.dmp"
-#define CRASH_FILE_NAME L"sumatrapdfcrash.txt"
-
 #ifdef DEBUG
 static bool TryLoadMemTrace() {
     AutoFreeW dllPath(path::GetPathOfFileInAppDir(L"memtrace.dll"));
@@ -372,16 +369,13 @@ static bool SetupPluginMode(CommandLineInfo& i) {
 }
 
 static void SetupCrashHandler() {
-    AutoFreeW symDir;
-    AutoFreeW tmpDir(path::GetTempPath());
-    if (tmpDir)
-        symDir.Set(path::Join(tmpDir, L"SumatraPDF-symbols"));
-    else
-        symDir.Set(AppGenDataFilename(L"SumatraPDF-symbols"));
-
-    AutoFreeW crashDumpPath(AppGenDataFilename(CRASH_DUMP_FILE_NAME));
-    AutoFreeW crashFilePath(AppGenDataFilename(CRASH_FILE_NAME));
+    WCHAR* symDir = AppGenDataFilename(L"crashinfo");
+    WCHAR* crashDumpPath = path::Join(symDir, L"sumatrapdfcrash.dmp");
+    WCHAR* crashFilePath = path::Join(symDir, L"sumatrapdfcrash.txt");
     InstallCrashHandler(crashDumpPath, crashFilePath, symDir);
+    free(crashFilePath);
+    free(crashDumpPath);
+    free(symDir);
 }
 
 static HWND FindPrevInstWindow(HANDLE* hMutex) {
