@@ -137,7 +137,7 @@ func main() {
 	if flgCIBuild {
 		// ci build does the same thing as pre-release
 		detectVersions()
-		buildPreRelease()
+		buildPreRelease(true)
 		return
 	}
 
@@ -161,7 +161,7 @@ func main() {
 
 	if flgBuildPreRelease {
 		detectVersions()
-		buildPreRelease()
+		buildPreRelease(false)
 		s3UploadPreReleaseMust(svnPreReleaseVer, "prerel")
 		spacesUploadPreReleaseMust(svnPreReleaseVer, "prerel")
 		return

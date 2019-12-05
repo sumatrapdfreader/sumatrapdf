@@ -113,11 +113,14 @@ func buildConfigPath() string {
 }
 
 // writes src/utils/BuildConfig.h to over-ride some of build settings
-func setBuildConfig(sha1, preRelVer string) {
+func setBuildConfig(sha1, preRelVer string, isDaily bool) {
 	fatalIf(sha1 == "", "sha1 must be set")
 	s := fmt.Sprintf("#define GIT_COMMIT_ID %s\n", sha1)
 	if preRelVer != "" {
 		s += fmt.Sprintf("#define SVN_PRE_RELEASE_VER %s\n", preRelVer)
+	}
+	if isDaily {
+		s += "#define IS_DAILY_BUILD 1\n"
 	}
 	err := ioutil.WriteFile(buildConfigPath(), []byte(s), 644)
 	fatalIfErr(err)
@@ -235,7 +238,7 @@ func createManifestMust() {
 	u.WriteFileMust(path, []byte(s))
 }
 
-func buildPreRelease() {
+func buildPreRelease(isDaily bool) {
 	// early exit if missing
 	detectSigntoolPath()
 
@@ -248,7 +251,7 @@ func buildPreRelease() {
 
 	verifyTranslationsMust()
 
-	setBuildConfig(gitSha1, svnPreReleaseVer)
+	setBuildConfig(gitSha1, svnPreReleaseVer, isDaily)
 	defer revertBuildConfig()
 
 	msbuildPath := detectMsbuildPath()

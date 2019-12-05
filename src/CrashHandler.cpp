@@ -42,22 +42,39 @@ static bool gDisableSymbolsDownload = true;
 static bool gDisableSymbolsDownload = false;
 #endif
 
+// those are set in BuildConfig.h by build.go
+
+#if defined(IS_DAILY_BUILD)
+static bool isDailyBuild = true;
+#else
+static bool isDailyBuild = false;
+#endif
+
+#if defined(SVN_PRE_RELEASE_VER)
+static bool isPreRelease = true;
+#else
+static bool isPreRelease = false;
+#endif
+
+#define DLURLBASE L"https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/"
+
 // Get url for file with symbols. Caller needs to free().
 static WCHAR* BuildSymbolsUrl() {
-#ifdef SYMBOL_DOWNLOAD_URL
-    return str::Dup(SYMBOL_DOWNLOAD_URL);
-#else
-#ifdef SVN_PRE_RELEASE_VER
-    WCHAR* urlBase =
-        L"https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/prerel/SumatraPDF-prerelease-" TEXT(
-            QM(SVN_PRE_RELEASE_VER));
-#else
-    WCHAR* urlBase =
-        L"https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/rel/SumatraPDF-" TEXT(QM(CURR_VERSION));
-#endif
+    WCHAR* urlBase = nullptr;
+    WCHAR* ver = nullptr;
+    if (isDailyBuild) {
+        // daily is also pre-release, just stored under a different url
+        urlBase = DLURLBASE "daily/SumatraPDF-prerelease-" TEXT(QM(SVN_PRE_RELEASE_VER));
+    } else {
+        if (isPreRelease) {
+            urlBase = DLURLBASE "prerel/SumatraPDF-prerelease-" TEXT(QM(SVN_PRE_RELEASE_VER));
+        } else {
+            // assuming this is release vers
+            urlBase = DLURLBASE "rel/SumatraPDF-" TEXT(QM(CURR_VERSION));
+        }
+    }
     WCHAR* is64 = IsProcess64() ? L"-64" : L"";
     return str::Format(L"%s%s.pdb.lzsa", urlBase, is64);
-#endif
 }
 
 /* Note: we cannot use standard malloc()/free()/new()/delete() in crash handler.

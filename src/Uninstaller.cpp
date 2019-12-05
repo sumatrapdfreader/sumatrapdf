@@ -35,7 +35,6 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "wingui/CheckboxCtrl.h"
 #include "wingui/EditCtrl.h"
 
-
 #define UNINSTALLER_WIN_DX INSTALLER_WIN_DX
 #define UNINSTALLER_WIN_DY INSTALLER_WIN_DY
 

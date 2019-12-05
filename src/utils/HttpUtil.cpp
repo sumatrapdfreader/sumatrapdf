@@ -40,8 +40,7 @@ bool HttpGet(const WCHAR* url, HttpRsp* rspOut) {
     }
 
     DWORD infoLevel = HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER;
-    if (!HttpQueryInfoW(hReq, infoLevel, &rspOut->httpStatusCode, &headerBuffSize,
-                        nullptr)) {
+    if (!HttpQueryInfoW(hReq, infoLevel, &rspOut->httpStatusCode, &headerBuffSize, nullptr)) {
         logf("HttpGet: HttpQueryInfoW failed\n");
         LogLastError();
         goto Error;
@@ -93,7 +92,7 @@ bool HttpGetToFile(const WCHAR* url, const WCHAR* destFilePath) {
     char buf[1024];
 
     HANDLE hf = CreateFileW(destFilePath, GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,
-                           nullptr);
+                            nullptr);
     if (INVALID_HANDLE_VALUE == hf) {
         logf(L"HttpGetToFile: CreateFileW('%s') failed\n", destFilePath);
         LogLastError();
