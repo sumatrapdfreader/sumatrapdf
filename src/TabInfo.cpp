@@ -37,11 +37,11 @@ TabInfo::~TabInfo() {
     delete ctrl;
 }
 
-EngineType TabInfo::GetEngineType() const {
+Kind TabInfo::GetEngineType() const {
     if (ctrl && ctrl->AsFixed()) {
-        return ctrl->AsFixed()->engineType;
+        return ctrl->AsFixed()->GetEngine()->kind;
     }
-    return EngineType::None;
+    return nullptr;
 }
 
 const WCHAR* TabInfo::GetTabTitle() const {

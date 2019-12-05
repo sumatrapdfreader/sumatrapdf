@@ -26,6 +26,14 @@
 #include "HtmlFormatter.h"
 #include "EbookFormatter.h"
 
+Kind kindEngineEpub = "engineEpub";
+Kind kindEngineFb2 = "engineFb2";
+Kind kindEngineMobi = "engineMobi";
+Kind kindEnginePdb = "enginePdb";
+Kind kindEngineChm = "engineChm";
+Kind kindEngineHtml = "engineHtml";
+Kind kindEngineTxt = "engineTxt";
+
 static AutoFreeW gDefaultFontName;
 static float gDefaultFontSize = 10.f;
 
@@ -302,8 +310,9 @@ EbookEngine::EbookEngine() {
 EbookEngine::~EbookEngine() {
     EnterCriticalSection(&pagesAccess);
 
-    if (pages)
+    if (pages) {
         DeleteVecMembers(*pages);
+    }
     delete pages;
 
     LeaveCriticalSection(&pagesAccess);
@@ -702,13 +711,13 @@ static void AppendTocItem(EbookTocItem*& root, EbookTocItem* item, int level) {
 }
 
 class EbookTocBuilder : public EbookTocVisitor {
-    BaseEngine* engine;
-    EbookTocItem* root;
-    int idCounter;
-    bool isIndex;
+    BaseEngine* engine = nullptr;
+    EbookTocItem* root = nullptr;
+    int idCounter = 0;
+    bool isIndex = false;
 
   public:
-    explicit EbookTocBuilder(BaseEngine* engine) : engine(engine), root(nullptr), idCounter(0), isIndex(false) {
+    explicit EbookTocBuilder(BaseEngine* engine) {
     }
 
     virtual void Visit(const WCHAR* name, const WCHAR* url, int level) {
@@ -748,6 +757,7 @@ class EbookTocBuilder : public EbookTocVisitor {
 class EpubEngineImpl : public EbookEngine {
   public:
     EpubEngineImpl() : EbookEngine() {
+        kind = kindEngineEpub;
     }
     virtual ~EpubEngineImpl();
     BaseEngine* Clone() override {
@@ -815,10 +825,11 @@ bool EpubEngineImpl::Load(IStream* stream) {
 }
 
 bool EpubEngineImpl::FinishLoading() {
-    if (!doc)
+    if (!doc) {
         return false;
+    }
 
-    HtmlFormatterArgs args;
+    HtmlFormatterArgs args{};
     args.htmlStr = doc->GetHtmlData();
     args.pageDx = (float)pageRect.dx - 2 * pageBorder;
     args.pageDy = (float)pageRect.dy - 2 * pageBorder;
@@ -917,7 +928,8 @@ BaseEngine* CreateFromStream(IStream* stream) {
 
 class Fb2EngineImpl : public EbookEngine {
   public:
-    Fb2EngineImpl() : EbookEngine(), doc(nullptr) {
+    Fb2EngineImpl() : EbookEngine() {
+        kind = kindEngineFb2;
     }
     virtual ~Fb2EngineImpl() {
         delete tocTree;
@@ -1035,7 +1047,8 @@ BaseEngine* CreateFromStream(IStream* stream) {
 
 class MobiEngineImpl : public EbookEngine {
   public:
-    MobiEngineImpl() : EbookEngine(), doc(nullptr) {
+    MobiEngineImpl() : EbookEngine() {
+        kind = kindEngineMobi;
     }
     ~MobiEngineImpl() override {
         delete tocTree;
@@ -1189,7 +1202,8 @@ BaseEngine* CreateFromStream(IStream* stream) {
 
 class PdbEngineImpl : public EbookEngine {
   public:
-    PdbEngineImpl() : EbookEngine(), doc(nullptr) {
+    PdbEngineImpl() : EbookEngine() {
+        kind = kindEnginePdb;
     }
     virtual ~PdbEngineImpl() {
         delete tocTree;
@@ -1277,7 +1291,7 @@ BaseEngine* CreateFromFile(const WCHAR* fileName) {
 #include "ChmDoc.h"
 
 class ChmDataCache {
-    ChmDoc* doc; // owned by creator
+    ChmDoc* doc = nullptr; // owned by creator
     AutoFree html;
     Vec<ImageData2> images;
 
@@ -1329,7 +1343,7 @@ class ChmFormatter : public HtmlFormatter {
     virtual void HandleTagPagebreak(HtmlToken* t);
     virtual void HandleTagLink(HtmlToken* t);
 
-    ChmDataCache* chmDoc;
+    ChmDataCache* chmDoc = nullptr;
     AutoFree pagePath;
 
   public:
@@ -1396,9 +1410,10 @@ class ChmEngineImpl : public EbookEngine {
     friend ChmEmbeddedDest;
 
   public:
-    ChmEngineImpl() : EbookEngine(), doc(nullptr), dataCache(nullptr) {
+    ChmEngineImpl() : EbookEngine() {
         // ISO 216 A4 (210mm x 297mm)
         pageRect = RectD(0, 0, 8.27 * GetFileDPI(), 11.693 * GetFileDPI());
+        kind = kindEngineChm;
     }
     virtual ~ChmEngineImpl() {
         delete dataCache;
@@ -1474,7 +1489,7 @@ static UINT ExtractHttpCharset(const char* html, size_t htmlLen) {
 }
 
 class ChmHtmlCollector : public EbookTocVisitor {
-    ChmDoc* doc;
+    ChmDoc* doc = nullptr;
     WStrList added;
     str::Str html;
 
@@ -1590,7 +1605,7 @@ DocTocTree* ChmEngineImpl::GetTocTree() {
 }
 
 class ChmEmbeddedDest : public PageDestination {
-    ChmEngineImpl* engine;
+    ChmEngineImpl* engine = nullptr;
     AutoFree path;
 
   public:
@@ -1665,7 +1680,7 @@ BaseEngine* CreateFromFile(const WCHAR* fileName) {
 
 class HtmlEngineImpl : public EbookEngine {
   public:
-    HtmlEngineImpl() : EbookEngine(), doc(nullptr) {
+    HtmlEngineImpl() : EbookEngine() {
         // ISO 216 A4 (210mm x 297mm)
         pageRect = RectD(0, 0, 8.27 * GetFileDPI(), 11.693 * GetFileDPI());
     }
@@ -1689,7 +1704,7 @@ class HtmlEngineImpl : public EbookEngine {
     static BaseEngine* CreateFromFile(const WCHAR* fileName);
 
   protected:
-    HtmlDoc* doc;
+    HtmlDoc* doc = nullptr;
 
     bool Load(const WCHAR* fileName);
 
@@ -1777,7 +1792,8 @@ BaseEngine* CreateFromFile(const WCHAR* fileName) {
 
 class TxtEngineImpl : public EbookEngine {
   public:
-    TxtEngineImpl() : EbookEngine(), doc(nullptr) {
+    TxtEngineImpl() : EbookEngine() {
+        kind = kindEngineTxt;
         // ISO 216 A4 (210mm x 297mm)
         pageRect = RectD(0, 0, 8.27 * GetFileDPI(), 11.693 * GetFileDPI());
     }

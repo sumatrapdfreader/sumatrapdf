@@ -384,7 +384,7 @@ bool OnInverseSearch(WindowInfo* win, int x, int y) {
     if (!HasPermission(Perm_DiskAccess) || gPluginMode)
         return false;
     TabInfo* tab = win->currentTab;
-    if (!tab || tab->GetEngineType() != EngineType::PDF)
+    if (!tab || tab->GetEngineType() != kindEnginePDF)
         return false;
     DisplayModel* dm = tab->AsFixed();
 
@@ -574,7 +574,7 @@ static const WCHAR* HandleSyncCmd(const WCHAR* cmd, DDEACK& ack) {
         }
     }
 
-    if (!win || !win->currentTab || win->currentTab->GetEngineType() != EngineType::PDF)
+    if (!win || !win->currentTab || win->currentTab->GetEngineType() != kindEnginePDF)
         return next;
     if (!win->AsFixed()->pdfSync)
         return next;

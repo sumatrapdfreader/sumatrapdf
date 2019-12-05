@@ -12,25 +12,25 @@ constexpr int INVALID_PAGE_NO = -1;
 /* Describes many attributes of one page in one, convenient place */
 struct PageInfo {
     /* data that is constant for a given page. page size in document units */
-    RectD page;
+    RectD page{};
 
     /* data that is calculated when needed. actual content size within a page (View target) */
-    RectD contentBox;
+    RectD contentBox{};
 
     /* data that needs to be set before DisplayModel::Relayout().
        Determines whether a given page should be shown on the screen. */
-    bool shown;
+    bool shown = false;
 
     /* data that changes when zoom and rotation changes */
     /* position and size within total area after applying zoom and rotation.
        Represents display rectangle for a given page.
        Calculated in DisplayModel::Relayout() */
-    RectI pos;
+    RectI pos{};
 
     /* data that changes due to scrolling. Calculated in DisplayModel::RecalcVisibleParts() */
     float visibleRatio; /* (0.0 = invisible, 1.0 = fully visible) */
     /* position of page relative to visible view port: pos.Offset(-viewPort.x, -viewPort.y) */
-    RectI pageOnScreen;
+    RectI pageOnScreen{};
 };
 
 /* The current scroll state (needed for saving/restoring the scroll position) */
@@ -64,7 +64,7 @@ class Synchronizer;
    API and re-displaying things based on new display information */
 class DisplayModel : public Controller {
   public:
-    DisplayModel(BaseEngine* engine, EngineType type, ControllerCallback* cb);
+    DisplayModel(BaseEngine* engine, ControllerCallback* cb);
     ~DisplayModel();
 
     // meta data
@@ -149,17 +149,23 @@ class DisplayModel : public Controller {
     BaseEngine* GetEngine() const {
         return engine;
     }
+    Kind GetEngineType() const {
+        if (!engine) {
+            return nullptr;
+        }
+        return engine->kind;
+    }
 
     // controller-specific data (easier to save here than on WindowInfo)
-    EngineType engineType;
+    Kind engineType = nullptr;
     Vec<PageAnnotation>* userAnnots = nullptr;
     bool userAnnotsModified = false;
     Synchronizer* pdfSync = nullptr;
 
-    PageTextCache* textCache;
-    TextSelection* textSelection;
+    PageTextCache* textCache = nullptr;
+    TextSelection* textSelection = nullptr;
     // access only from Search thread
-    TextSearch* textSearch;
+    TextSearch* textSearch = nullptr;
 
     PageInfo* GetPageInfo(int pageNo) const;
 
@@ -256,7 +262,7 @@ class DisplayModel : public Controller {
     bool GoToPrevPage(int scrollY);
     int GetPageNextToPoint(PointI pt);
 
-    BaseEngine* engine;
+    BaseEngine* engine = nullptr;
 
     /* an array of PageInfo, len of array is pageCount */
     PageInfo* pagesInfo = nullptr;

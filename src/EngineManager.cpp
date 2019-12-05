@@ -28,58 +28,42 @@ bool IsSupportedFile(const WCHAR* filePath, bool sniff, bool enableEbookEngines)
                 HtmlEngine::IsSupportedFile(filePath, sniff) || TxtEngine::IsSupportedFile(filePath, sniff));
 }
 
-BaseEngine* CreateEngine(const WCHAR* filePath, PasswordUI* pwdUI, EngineType* typeOut, bool enableChmEngine,
-                         bool enableEbookEngines) {
+BaseEngine* CreateEngine(const WCHAR* filePath, PasswordUI* pwdUI, bool enableChmEngine, bool enableEbookEngines) {
     CrashIf(!filePath);
 
     BaseEngine* engine = nullptr;
-    EngineType engineType = EngineType::None;
     bool sniff = false;
 RetrySniffing:
-    if (PdfEngine::IsSupportedFile(filePath, sniff) && engineType != EngineType::PDF) {
+    if (PdfEngine::IsSupportedFile(filePath, sniff)) {
         engine = PdfEngine::CreateFromFile(filePath, pwdUI);
-        engineType = EngineType::PDF;
-    } else if (XpsEngine::IsSupportedFile(filePath, sniff) && engineType != EngineType::XPS) {
+    } else if (XpsEngine::IsSupportedFile(filePath, sniff)) {
         engine = XpsEngine::CreateFromFile(filePath);
-        engineType = EngineType::XPS;
-    } else if (DjVuEngine::IsSupportedFile(filePath, sniff) && engineType != EngineType::DjVu) {
+    } else if (DjVuEngine::IsSupportedFile(filePath, sniff)) {
         engine = DjVuEngine::CreateFromFile(filePath);
-        engineType = EngineType::DjVu;
-    } else if (ImageEngine::IsSupportedFile(filePath, sniff) && engineType != EngineType::Image) {
+    } else if (ImageEngine::IsSupportedFile(filePath, sniff)) {
         engine = ImageEngine::CreateFromFile(filePath);
-        engineType = EngineType::Image;
-    } else if (ImageDirEngine::IsSupportedFile(filePath, sniff) && engineType != EngineType::ImageDir) {
+    } else if (ImageDirEngine::IsSupportedFile(filePath, sniff)) {
         engine = ImageDirEngine::CreateFromFile(filePath);
-        engineType = EngineType::ImageDir;
-    } else if (CbxEngine::IsSupportedFile(filePath, sniff) && engineType != EngineType::ComicBook) {
+    } else if (CbxEngine::IsSupportedFile(filePath, sniff)) {
         engine = CbxEngine::CreateFromFile(filePath);
-        engineType = EngineType::ComicBook;
-    } else if (PsEngine::IsSupportedFile(filePath, sniff) && engineType != EngineType::PostScript) {
+    } else if (PsEngine::IsSupportedFile(filePath, sniff)) {
         engine = PsEngine::CreateFromFile(filePath);
-        engineType = EngineType::PostScript;
-    } else if (enableChmEngine && ChmEngine::IsSupportedFile(filePath, sniff) && engineType != EngineType::Chm) {
+    } else if (enableChmEngine && ChmEngine::IsSupportedFile(filePath, sniff)) {
         engine = ChmEngine::CreateFromFile(filePath);
-        engineType = EngineType::Chm;
     } else if (!enableEbookEngines) {
         // don't try to create any of the below ebook engines
-    } else if (EpubEngine::IsSupportedFile(filePath, sniff) && engineType != EngineType::Epub) {
+    } else if (EpubEngine::IsSupportedFile(filePath, sniff)) {
         engine = EpubEngine::CreateFromFile(filePath);
-        engineType = EngineType::Epub;
-    } else if (Fb2Engine::IsSupportedFile(filePath, sniff) && engineType != EngineType::Fb2) {
+    } else if (Fb2Engine::IsSupportedFile(filePath, sniff)) {
         engine = Fb2Engine::CreateFromFile(filePath);
-        engineType = EngineType::Fb2;
-    } else if (MobiEngine::IsSupportedFile(filePath, sniff) && engineType != EngineType::Mobi) {
+    } else if (MobiEngine::IsSupportedFile(filePath, sniff)) {
         engine = MobiEngine::CreateFromFile(filePath);
-        engineType = EngineType::Mobi;
-    } else if (PdbEngine::IsSupportedFile(filePath, sniff) && engineType != EngineType::Pdb) {
+    } else if (PdbEngine::IsSupportedFile(filePath, sniff)) {
         engine = PdbEngine::CreateFromFile(filePath);
-        engineType = EngineType::Pdb;
-    } else if (HtmlEngine::IsSupportedFile(filePath, sniff) && engineType != EngineType::Html) {
+    } else if (HtmlEngine::IsSupportedFile(filePath, sniff)) {
         engine = HtmlEngine::CreateFromFile(filePath);
-        engineType = EngineType::Html;
-    } else if (TxtEngine::IsSupportedFile(filePath, sniff) && engineType != EngineType::Txt) {
+    } else if (TxtEngine::IsSupportedFile(filePath, sniff)) {
         engine = TxtEngine::CreateFromFile(filePath);
-        engineType = EngineType::Txt;
     }
 
     if (!engine && !sniff) {
@@ -89,8 +73,6 @@ RetrySniffing:
     }
     CrashIf(engine && !IsSupportedFile(filePath, sniff, enableEbookEngines));
 
-    if (typeOut)
-        *typeOut = engine ? engineType : EngineType::None;
     return engine;
 }
 

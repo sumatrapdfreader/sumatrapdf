@@ -142,9 +142,10 @@ static int LastPageInARowNo(int pageNo, int columns, bool showCover, int pageCou
 }
 
 // must call SetInitialViewSettings() after creation
-DisplayModel::DisplayModel(BaseEngine* engine, EngineType type, ControllerCallback* cb)
-    : Controller(cb), engine(engine), engineType(type) {
+DisplayModel::DisplayModel(BaseEngine* eng, ControllerCallback* cb) : Controller(cb), engine(engine) {
+    engine = eng;
     CrashIf(!engine || engine->PageCount() <= 0);
+    engineType = engine->kind;
 
     if (!engine->IsImageCollection()) {
         windowMargin = gGlobalPrefs->fixedPageUI.windowMargin;

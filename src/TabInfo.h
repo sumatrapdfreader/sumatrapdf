@@ -45,8 +45,8 @@ class TabInfo {
     EbookController* AsEbook() const {
         return ctrl ? ctrl->AsEbook() : nullptr;
     }
-    // returns EngineType::None if !AsFixed()
-    EngineType GetEngineType() const;
+    // returns nullptr if !AsFixed()
+    Kind GetEngineType() const;
 
     const WCHAR* GetTabTitle() const;
 };

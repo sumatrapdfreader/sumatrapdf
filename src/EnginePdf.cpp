@@ -25,6 +25,8 @@ extern "C" {
 #include "EngineFzUtil.h"
 #include "EnginePdf.h"
 
+Kind kindEnginePDF = "enginePDF";
+
 // maximum size of a file that's entirely loaded into memory before parsed
 // and displayed; larger files will be kept open while they're displayed
 // so that their content can be loaded on demand in order to preserve memory
@@ -1183,6 +1185,7 @@ extern "C" static void fz_unlock_context_cs(void* user, int lock) {
 }
 
 PdfEngineImpl::PdfEngineImpl() {
+    kind = kindEnginePDF;
     InitializeCriticalSection(&pagesAccess);
     InitializeCriticalSection(&ctxAccess);
 
