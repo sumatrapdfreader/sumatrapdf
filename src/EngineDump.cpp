@@ -513,12 +513,12 @@ int main(int argc, char** argv) {
         FindClose(hfind);
     }
 
-    EngineType engineType;
     PasswordHolder pwdUI(password);
-    BaseEngine* engine = EngineManager::CreateEngine(filePath, &pwdUI, &engineType);
+    BaseEngine* engine = EngineManager::CreateEngine(filePath, &pwdUI);
 #ifdef DEBUG
-    bool couldLeak = engineType == EngineType::DjVu || DjVuEngine::IsSupportedFile(filePath) ||
-                     DjVuEngine::IsSupportedFile(filePath, true);
+    bool isEngineDjVu = IsOfKind(engine, kindEngineDjVu);
+    bool couldLeak =
+        isEngineDjVu || DjVuEngine::IsSupportedFile(filePath) || DjVuEngine::IsSupportedFile(filePath, true);
     if (!couldLeak) {
         // report memory leaks on stderr for engines that shouldn't leak
         _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);

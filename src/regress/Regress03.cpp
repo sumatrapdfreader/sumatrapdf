@@ -1,16 +1,13 @@
 /* To run these regression tests, you need an external PDF file:
-   sumatra-search-across-pages-20170615.pdf (SHA1 1922e3a9dcfa5c6341ed23ac3882fc5d3c149e7c) 
+   sumatra-search-across-pages-20170615.pdf (SHA1 1922e3a9dcfa5c6341ed23ac3882fc5d3c149e7c)
    https://drive.google.com/file/d/0B2EXZJHDEYllMnkzMUZWWGdueDA/view?usp=sharing
  */
 
-void SearchTestWithDir(const WCHAR *searchFile, const WCHAR *searchTerm, const TextSearchDirection direction, const TextSel *expected, const int expectedLen)
-{
-    EngineType engineType;
-    BaseEngine *engine = EngineManager::CreateEngine(searchFile,
-        /* pwdUI */ nullptr,
-        &engineType);
-    PageTextCache *textCache = new PageTextCache(engine);
-    TextSearch *tsrch = new TextSearch(engine, textCache);
+void SearchTestWithDir(const WCHAR* searchFile, const WCHAR* searchTerm, const TextSearchDirection direction,
+                       const TextSel* expected, const int expectedLen) {
+    BaseEngine* engine = EngineManager::CreateEngine(searchFile, nullptr);
+    PageTextCache* textCache = new PageTextCache(engine);
+    TextSearch* tsrch = new TextSearch(engine, textCache);
     tsrch->SetDirection(direction);
     int findCount = 0;
     int startPage;
@@ -24,47 +21,39 @@ void SearchTestWithDir(const WCHAR *searchFile, const WCHAR *searchTerm, const T
         expIndex = expectedLen - 1;
         expIncr = -1;
     }
-    for (auto tsel = tsrch->FindFirst(startPage, searchTerm); nullptr != tsel; tsel = tsrch->FindNext(), ++findCount, expIndex += expIncr) {
+    for (auto tsel = tsrch->FindFirst(startPage, searchTerm); nullptr != tsel;
+         tsel = tsrch->FindNext(), ++findCount, expIndex += expIncr) {
         if (0 == expected[expIndex].len) {
             wprintf(L"Found %s %i times, not expecting another match\n", searchTerm, expIndex);
             CrashIf(true);
         }
         if (expected[expIndex].len != tsel->len) {
-            wprintf(L"Text selection length mismatch for %s at occurence %i: got %i, wanted %i\n",
-                searchTerm, findCount, expected[expIndex].len, tsel->len);
+            wprintf(L"Text selection length mismatch for %s at occurence %i: got %i, wanted %i\n", searchTerm,
+                    findCount, expected[expIndex].len, tsel->len);
             CrashIf(true);
         }
         for (int i = 0; i < tsel->len; ++i) {
-            if ((expected[expIndex].pages[i] != tsel->pages[i]) ||
-                (expected[expIndex].rects[i] != tsel->rects[i])) {
-                wprintf(L"Text selection page or rectangle mismatch for %s, "
+            if ((expected[expIndex].pages[i] != tsel->pages[i]) || (expected[expIndex].rects[i] != tsel->rects[i])) {
+                wprintf(
+                    L"Text selection page or rectangle mismatch for %s, "
                     L"expected pg %d rx=%d ry=%d rdx=%d rdy=%d "
                     L"got pg %d rx=%d ry=%d rdx=%d rdy=%d\n",
-                    searchTerm,
-                    expected[expIndex].pages[i],
-                    expected[expIndex].rects[i].x,
-                    expected[expIndex].rects[i].y,
-                    expected[expIndex].rects[i].dx,
-                    expected[expIndex].rects[i].dy,
-                    tsel->pages[i],
-                    tsel->rects[i].x,
-                    tsel->rects[i].y,
-                    tsel->rects[i].dx,
-                    tsel->rects[i].dy);
+                    searchTerm, expected[expIndex].pages[i], expected[expIndex].rects[i].x,
+                    expected[expIndex].rects[i].y, expected[expIndex].rects[i].dx, expected[expIndex].rects[i].dy,
+                    tsel->pages[i], tsel->rects[i].x, tsel->rects[i].y, tsel->rects[i].dx, tsel->rects[i].dy);
                 CrashIf(true);
             }
         }
     }
     if (TextSearchDirection::Forward == direction) {
         if (findCount != expectedLen) {
-            wprintf(L"Found only %d matches of '%s', expected %d\n",
-                expIndex, searchTerm, expectedLen);
+            wprintf(L"Found only %d matches of '%s', expected %d\n", expIndex, searchTerm, expectedLen);
             CrashIf(true);
         }
     } else {
         if (findCount != expectedLen) {
-            wprintf(L"Found only %d matches of '%s', expected %d\n",
-                expectedLen - expIndex - 1, searchTerm, expectedLen);
+            wprintf(L"Found only %d matches of '%s', expected %d\n", expectedLen - expIndex - 1, searchTerm,
+                    expectedLen);
             CrashIf(true);
         }
     }
@@ -74,12 +63,11 @@ void SearchTestWithDir(const WCHAR *searchFile, const WCHAR *searchTerm, const T
 
 #include "Regress03.h"
 
-const TextSel* BuildTextSelList(RegressSearchInfo &info)
-{
-    TextSel *result = new TextSel[info.count + 1];
+const TextSel* BuildTextSelList(RegressSearchInfo& info) {
+    TextSel* result = new TextSel[info.count + 1];
     result[info.count].len = 0;
-    result[info.count].pages = (int *)nullptr;
-    result[info.count].rects = (RectI *)nullptr;
+    result[info.count].pages = (int*)nullptr;
+    result[info.count].rects = (RectI*)nullptr;
     auto offs = 0;
     for (auto i = 0; i < info.count; ++i) {
         result[i].len = info.rectCounts[i];
@@ -90,18 +78,16 @@ const TextSel* BuildTextSelList(RegressSearchInfo &info)
     return result;
 }
 
-void RegressSearch(const WCHAR *filePath, RegressSearchInfo &info)
-{
-    const WCHAR *searchTerm = info.searchPhrase;
-    const TextSel *expected = BuildTextSelList(info);
+void RegressSearch(const WCHAR* filePath, RegressSearchInfo& info) {
+    const WCHAR* searchTerm = info.searchPhrase;
+    const TextSel* expected = BuildTextSelList(info);
     SearchTestWithDir(filePath, searchTerm, TextSearchDirection::Forward, expected, info.count);
     SearchTestWithDir(filePath, searchTerm, TextSearchDirection::Backward, expected, info.count);
     delete[] expected;
 }
 
-void Regress03()
-{
-    WCHAR *filePath = path::Join(TestFilesDir(), L"sumatra-search-across-pages-20170615.pdf");
+void Regress03() {
+    WCHAR* filePath = path::Join(TestFilesDir(), L"sumatra-search-across-pages-20170615.pdf");
     VerifyFileExists(filePath);
     // searches with hits that are all located completely in one page
     RegressSearch(filePath, data_suspendisse);

@@ -19,6 +19,10 @@
 
 using namespace Gdiplus;
 
+Kind kindEngineImage = "engineImage";
+Kind kindEngineImageDir = "engineImageDir";
+Kind kindEngineComicBooks = "engineComicBooks";
+
 // number of decoded bitmaps to cache for quicker rendering
 #define MAX_IMAGE_PAGE_CACHE 10
 
@@ -112,6 +116,7 @@ class ImagesEngine : public BaseEngine {
 };
 
 ImagesEngine::ImagesEngine() {
+    kind = kindEngineImage;
     InitializeCriticalSection(&cacheAccess);
 }
 
@@ -335,11 +340,8 @@ void ImagesEngine::DropPage(ImagePage* page, bool forceRemove) {
 
 class ImageEngineImpl : public ImagesEngine {
   public:
-    ImageEngineImpl() : fileExt(nullptr), image(nullptr) {
-    }
-    virtual ~ImageEngineImpl() {
-        delete image;
-    }
+    ImageEngineImpl();
+    virtual ~ImageEngineImpl();
 
     BaseEngine* Clone() override;
 
@@ -358,8 +360,8 @@ class ImageEngineImpl : public ImagesEngine {
     static BaseEngine* CreateFromStream(IStream* stream);
 
   protected:
-    const WCHAR* fileExt;
-    Bitmap* image;
+    const WCHAR* fileExt = nullptr;
+    Bitmap* image = nullptr;
 
     bool LoadSingleFile(const WCHAR* fileName);
     bool LoadFromStream(IStream* stream);
@@ -368,6 +370,14 @@ class ImageEngineImpl : public ImagesEngine {
     virtual Bitmap* LoadBitmap(int pageNo, bool& deleteAfterUse);
     virtual RectD LoadMediabox(int pageNo);
 };
+
+ImageEngineImpl::ImageEngineImpl() {
+    kind = kindEngineImage;
+}
+
+ImageEngineImpl::~ImageEngineImpl() {
+    delete image;
+}
 
 BaseEngine* ImageEngineImpl::Clone() {
     Bitmap* bmp = image->Clone(0, 0, image->GetWidth(), image->GetHeight(), PixelFormat32bppARGB);
@@ -633,6 +643,7 @@ BaseEngine* CreateFromStream(IStream* stream) {
 class ImageDirEngineImpl : public ImagesEngine {
   public:
     ImageDirEngineImpl() : fileDPI(96.0f) {
+        kind = kindEngineImageDir;
     }
 
     virtual ~ImageDirEngineImpl() {
@@ -843,6 +854,7 @@ BaseEngine* CreateFromFile(const WCHAR* fileName) {
 class CbxEngineImpl : public ImagesEngine, public json::ValueVisitor {
   public:
     CbxEngineImpl(Archive* arch) : cbxFile(arch) {
+        kind = kindEngineComicBooks;
     }
     virtual ~CbxEngineImpl() {
         delete cbxFile;

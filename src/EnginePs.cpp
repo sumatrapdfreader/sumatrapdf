@@ -13,6 +13,8 @@
 #include "EnginePdf.h"
 #include "EnginePs.h"
 
+Kind kindEnginePostScript = "enginePostScript";
+
 static WCHAR* GetGhostscriptPath() {
     const WCHAR* gsProducts[] = {
         L"AFPL Ghostscript",
@@ -208,7 +210,8 @@ static BaseEngine* psgz2pdf(const WCHAR* fileName) {
 // the ps2pdf conversion from Ghostscript returns
 class PsEngineImpl : public BaseEngine {
   public:
-    PsEngineImpl() : pdfEngine(nullptr) {
+    PsEngineImpl() {
+        kind = kindEnginePostScript;
     }
 
     virtual ~PsEngineImpl() {

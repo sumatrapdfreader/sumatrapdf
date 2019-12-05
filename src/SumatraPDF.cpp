@@ -854,13 +854,12 @@ static Controller* CreateControllerForFile(const WCHAR* filePath, PasswordUI* pw
 
     Controller* ctrl = nullptr;
 
-    EngineType engineType;
-    BaseEngine* engine = EngineManager::CreateEngine(filePath, pwdUI, &engineType, gGlobalPrefs->chmUI.useFixedPageUI,
+    BaseEngine* engine = EngineManager::CreateEngine(filePath, pwdUI, gGlobalPrefs->chmUI.useFixedPageUI,
                                                      gGlobalPrefs->ebookUI.useFixedPageUI);
 
     if (engine) {
     LoadEngineInFixedPageUI:
-        ctrl = new DisplayModel(engine, engineType, win->cbHandler);
+        ctrl = new DisplayModel(engine, win->cbHandler);
         CrashIf(!ctrl || !ctrl->AsFixed() || ctrl->AsChm() || ctrl->AsEbook());
     } else if (ChmModel::IsSupportedFile(filePath) && !gGlobalPrefs->chmUI.useFixedPageUI) {
         ChmModel* chmModel = ChmModel::Create(filePath, win->cbHandler);
@@ -874,10 +873,11 @@ static Controller* CreateControllerForFile(const WCHAR* filePath, PasswordUI* pw
             // if CLSID_WebBrowser isn't available, fall back on ChmEngine
             if (!chmModel->SetParentHwnd(win->hwndCanvas)) {
                 delete chmModel;
-                engine = EngineManager::CreateEngine(filePath, pwdUI, &engineType, true);
-                CrashIf(engineType != EngineType::Chm);
-                if (!engine)
+                engine = EngineManager::CreateEngine(filePath, pwdUI, true);
+                if (!engine) {
                     return nullptr;
+                }
+                CrashIf(engine->kind != kindEngineChm);
                 goto LoadEngineInFixedPageUI;
             }
             // another ChmModel might still be active
@@ -1034,7 +1034,7 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, Displa
             }
             dm->SetInitialViewSettings(displayMode, ss.page, win->GetViewPortSize(), dpi);
             // TODO: also expose Manga Mode for image folders?
-            if (tab->GetEngineType() == EngineType::ComicBook || tab->GetEngineType() == EngineType::ImageDir)
+            if (tab->GetEngineType() == kindEngineComicBooks || tab->GetEngineType() == kindEngineImageDir)
                 dm->SetDisplayR2L(state ? state->displayR2L : gGlobalPrefs->comicBookUI.cbxMangaMode);
             if (prevCtrl && prevCtrl->AsFixed() && str::Eq(win->ctrl->FilePath(), prevCtrl->FilePath())) {
                 gRenderCache.KeepForDisplayModel(prevCtrl->AsFixed(), dm);
@@ -1099,7 +1099,7 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, Displa
         win->AsEbook()->StartLayouting(state ? state->reparseIdx : 0, displayMode);
     }
 
-    if (HasPermission(Perm_DiskAccess) && tab->GetEngineType() == EngineType::PDF) {
+    if (HasPermission(Perm_DiskAccess) && tab->GetEngineType() == kindEnginePDF) {
         CrashIf(!win->AsFixed() || win->AsFixed()->pdfSync);
         int res = Synchronizer::Create(args.fileName, win->AsFixed()->GetEngine(), &win->AsFixed()->pdfSync);
         // expose SyncTeX in the UI
@@ -2261,69 +2261,57 @@ void CloseWindow(WindowInfo* win, bool quitIfLast, bool forceClose) {
 
 // returns false if no filter has been appended
 static bool AppendFileFilterForDoc(Controller* ctrl, str::WStr& fileFilter) {
-    EngineType type = EngineType::None;
+    // TODO: add a way to get Engine from Controller and use engine->kind
+    Kind type = nullptr;
     if (ctrl->AsFixed())
         type = ctrl->AsFixed()->engineType;
     else if (ctrl->AsChm())
-        type = EngineType::Chm;
+        type = kindEngineChm;
     else if (ctrl->AsEbook()) {
         switch (ctrl->AsEbook()->GetDocType()) {
             case DocType::Epub:
-                type = EngineType::Epub;
+                type = kindEngineEpub;
                 break;
             case DocType::Fb2:
-                type = EngineType::Fb2;
+                type = kindEngineFb2;
                 break;
             case DocType::Mobi:
-                type = EngineType::Mobi;
+                type = kindEngineMobi;
                 break;
             case DocType::Pdb:
-                type = EngineType::Pdb;
+                type = kindEnginePdb;
                 break;
             default:
-                type = EngineType::None;
+                type = nullptr;
                 break;
         }
     }
-    switch (type) {
-        case EngineType::XPS:
-            fileFilter.Append(_TR("XPS documents"));
-            break;
-        case EngineType::DjVu:
-            fileFilter.Append(_TR("DjVu documents"));
-            break;
-        case EngineType::ComicBook:
-            fileFilter.Append(_TR("Comic books"));
-            break;
-        case EngineType::Image:
-            fileFilter.AppendFmt(_TR("Image files (*.%s)"), ctrl->DefaultFileExt() + 1);
-            break;
-        case EngineType::ImageDir:
-            return false; // only show "All files"
-        case EngineType::PostScript:
-            fileFilter.Append(_TR("Postscript documents"));
-            break;
-        case EngineType::Chm:
-            fileFilter.Append(_TR("CHM documents"));
-            break;
-        case EngineType::Epub:
-            fileFilter.Append(_TR("EPUB ebooks"));
-            break;
-        case EngineType::Mobi:
-            fileFilter.Append(_TR("Mobi documents"));
-            break;
-        case EngineType::Fb2:
-            fileFilter.Append(_TR("FictionBook documents"));
-            break;
-        case EngineType::Pdb:
-            fileFilter.Append(_TR("PalmDoc documents"));
-            break;
-        case EngineType::Txt:
-            fileFilter.Append(_TR("Text documents"));
-            break;
-        default:
-            fileFilter.Append(_TR("PDF documents"));
-            break;
+    if (type == kindEngineXps) {
+        fileFilter.Append(_TR("XPS documents"));
+    } else if (type == kindEngineDjVu) {
+        fileFilter.Append(_TR("DjVu documents"));
+    } else if (type == kindEngineComicBooks) {
+        fileFilter.Append(_TR("Comic books"));
+    } else if (type == kindEngineImage) {
+        fileFilter.AppendFmt(_TR("Image files (*.%s)"), ctrl->DefaultFileExt() + 1);
+    } else if (type == kindEngineImageDir) {
+        return false; // only show "All files"
+    } else if (type == kindEnginePostScript) {
+        fileFilter.Append(_TR("Postscript documents"));
+    } else if (type == kindEngineChm) {
+        fileFilter.Append(_TR("CHM documents"));
+    } else if (type == kindEngineEpub) {
+        fileFilter.Append(_TR("EPUB ebooks"));
+    } else if (type == kindEngineMobi) {
+        fileFilter.Append(_TR("Mobi documents"));
+    } else if (type == kindEngineFb2) {
+        fileFilter.Append(_TR("FictionBook documents"));
+    } else if (type == kindEnginePdb) {
+        fileFilter.Append(_TR("PalmDoc documents"));
+    } else if (type == kindEngineTxt) {
+        fileFilter.Append(_TR("Text documents"));
+    } else {
+        fileFilter.Append(_TR("PDF documents"));
     }
     return true;
 }
@@ -2351,12 +2339,11 @@ static void OnMenuSaveAs(WindowInfo* win) {
     if (auto* model = win->AsFixed(); model != nullptr) {
         engine = model->GetEngine();
     }
-    bool canConvertToTXT =
-        engine && !engine->IsImageCollection() && win->currentTab->GetEngineType() != EngineType::Txt;
-    bool canConvertToPDF = engine && win->currentTab->GetEngineType() != EngineType::PDF;
+    bool canConvertToTXT = engine && !engine->IsImageCollection() && win->currentTab->GetEngineType() != kindEngineTxt;
+    bool canConvertToPDF = engine && win->currentTab->GetEngineType() != kindEnginePDF;
 #ifndef DEBUG
     // not ready for document types other than PS and image collections
-    if (canConvertToPDF && win->currentTab->GetEngineType() != EngineType::PostScript && !engine->IsImageCollection())
+    if (canConvertToPDF && win->currentTab->GetEngineType() != kindEnginePostScript && !engine->IsImageCollection())
         canConvertToPDF = false;
 #endif
 #ifndef DISABLE_DOCUMENT_RESTRICTIONS
@@ -2368,8 +2355,8 @@ static void OnMenuSaveAs(WindowInfo* win) {
         canConvertToPDF = false;
 #endif
     CrashIf(canConvertToTXT &&
-            (!engine || engine->IsImageCollection() || EngineType::Txt == win->currentTab->GetEngineType()));
-    CrashIf(canConvertToPDF && (!engine || EngineType::PDF == win->currentTab->GetEngineType()));
+            (!engine || engine->IsImageCollection() || kindEngineTxt == win->currentTab->GetEngineType()));
+    CrashIf(canConvertToPDF && (!engine || kindEnginePDF == win->currentTab->GetEngineType()));
 
     const WCHAR* defExt = ctrl->DefaultFileExt();
     // Prepare the file filters (use \1 instead of \0 so that the
@@ -3051,8 +3038,8 @@ static void OnMenuViewContinuous(WindowInfo* win) {
 }
 
 static void OnMenuViewMangaMode(WindowInfo* win) {
-    CrashIf(!win->currentTab || win->currentTab->GetEngineType() != EngineType::ComicBook);
-    if (!win->currentTab || win->currentTab->GetEngineType() != EngineType::ComicBook)
+    CrashIf(!win->currentTab || win->currentTab->GetEngineType() != kindEngineComicBooks);
+    if (!win->currentTab || win->currentTab->GetEngineType() != kindEngineComicBooks)
         return;
     DisplayModel* dm = win->AsFixed();
     dm->SetDisplayR2L(!dm->GetDisplayR2L());

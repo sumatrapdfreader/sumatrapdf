@@ -17,6 +17,8 @@
 #include "EngineBase.h"
 #include "EngineDjVu.h"
 
+Kind kindEngineDjVu = "engineDjVu";
+
 // TODO: libdjvu leaks memory - among others
 //       DjVuPort::corpse_lock, DjVuPort::corpse_head, pcaster,
 //       DataPool::OpenFiles::global_ptr, FCPools::global_ptr
@@ -189,7 +191,7 @@ static DjVuContext gDjVuContext;
 
 class DjVuEngineImpl : public BaseEngine {
   public:
-    DjVuEngineImpl(){};
+    DjVuEngineImpl();
     virtual ~DjVuEngineImpl();
     BaseEngine* Clone() override {
         if (stream != nullptr) {
@@ -294,6 +296,10 @@ class DjVuEngineImpl : public BaseEngine {
     bool FinishLoading();
     bool LoadMediaboxes();
 };
+
+DjVuEngineImpl::DjVuEngineImpl() {
+    kind = kindEngineDjVu;
+}
 
 DjVuEngineImpl::~DjVuEngineImpl() {
     ScopedCritSec scope(&gDjVuContext.lock);

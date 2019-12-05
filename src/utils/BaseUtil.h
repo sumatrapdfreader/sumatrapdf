@@ -626,7 +626,7 @@ inline bool isOfKindHelper(Kind k1, Kind k2) {
     return k1 == k2;
 }
 
-#define IsOfKind(o, kind) isOfKindHelper(o->kind, kind)
+#define IsOfKind(o, wantedKind) (o && isOfKindHelper(o->kind, wantedKind))
 
 // from https://pastebin.com/3YvWQa5c
 // In my testing, in debug build defer { } creates somewhat bloated code

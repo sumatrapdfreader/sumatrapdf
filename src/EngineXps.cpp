@@ -26,6 +26,8 @@ extern "C" {
 #include "EngineFzUtil.h"
 #include "EngineXps.h"
 
+Kind kindEngineXps = "engineXps";
+
 // TODO: use http://schemas.openxps.org/oxps/v1.0 as well once NS actually matters
 #define NS_XPS_MICROSOFT "http://schemas.microsoft.com/xps/2005/06"
 
@@ -389,6 +391,7 @@ static void fz_unlock_context_cs(void* user, int lock) {
 }
 
 XpsEngineImpl::XpsEngineImpl() {
+    kind = kindEngineXps;
     InitializeCriticalSection(&_pagesAccess);
     InitializeCriticalSection(&ctxAccess);
 

@@ -1,6 +1,21 @@
 /* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
+extern Kind kindEnginePDF;
+extern Kind kindEngineXps;
+extern Kind kindEngineDjVu;
+extern Kind kindEngineImage;
+extern Kind kindEngineImageDir;
+extern Kind kindEngineComicBooks;
+extern Kind kindEnginePostScript;
+extern Kind kindEngineEpub;
+extern Kind kindEngineFb2;
+extern Kind kindEngineMobi;
+extern Kind kindEnginePdb;
+extern Kind kindEngineChm;
+extern Kind kindEngineHtml;
+extern Kind kindEngineTxt;
+
 /* certain OCGs will only be rendered for some of these (e.g. watermarks) */
 enum class RenderTarget { View, Print, Export };
 

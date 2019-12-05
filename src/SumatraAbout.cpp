@@ -153,17 +153,17 @@ static WCHAR* GetSumatraVersion() {
 }
 
 static SizeI CalcSumatraVersionSize(HWND hwnd, HDC hdc) {
-    SizeI result;
+    SizeI result{};
 
     ScopedFont fontSumatraTxt(CreateSimpleFont(hdc, SUMATRA_TXT_FONT, SUMATRA_TXT_FONT_SIZE));
     ScopedFont fontVersionTxt(CreateSimpleFont(hdc, VERSION_TXT_FONT, VERSION_TXT_FONT_SIZE));
     ScopedHdcSelect selFont(hdc, fontSumatraTxt);
 
-    SIZE txtSize;
+    SIZE txtSize{};
     /* calculate minimal top box size */
     const WCHAR* txt = APP_NAME_STR;
     GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
-    result.dy = txtSize.cy + ABOUT_BOX_MARGIN_DY * 2;
+    result.dy = txtSize.cy + DpiScaleX(hwnd, ABOUT_BOX_MARGIN_DY * 2);
     result.dx = txtSize.cx;
 
     /* consider version and version-sub strings */
@@ -179,7 +179,7 @@ static SizeI CalcSumatraVersionSize(HWND hwnd, HDC hdc) {
     return result;
 }
 
-static void DrawSumatraVersion(HDC hdc, RectI rect) {
+static void DrawSumatraVersion(HWND hwnd, HDC hdc, RectI rect) {
     ScopedFont fontSumatraTxt(CreateSimpleFont(hdc, SUMATRA_TXT_FONT, SUMATRA_TXT_FONT_SIZE));
     ScopedFont fontVersionTxt(CreateSimpleFont(hdc, VERSION_TXT_FONT, VERSION_TXT_FONT_SIZE));
     HGDIOBJ oldFont = SelectObject(hdc, fontSumatraTxt);
@@ -199,7 +199,7 @@ static void DrawSumatraVersion(HDC hdc, RectI rect) {
     AutoFreeW ver(GetSumatraVersion());
     TextOut(hdc, pt.x, pt.y, ver.Get(), (int)str::Len(ver.Get()));
     txt = VERSION_SUB_TXT;
-    TextOut(hdc, pt.x, pt.y + 16, txt, (int)str::Len(txt));
+    TextOut(hdc, pt.x, pt.y + DpiScaleX(hwnd, 13), txt, (int)str::Len(txt));
 
     SelectObject(hdc, oldFont);
 }
@@ -271,7 +271,7 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkI
 #endif
 
     titleRect.Offset((rect.dx - titleRect.dx) / 2, 0);
-    DrawSumatraVersion(hdc, titleRect);
+    DrawSumatraVersion(hwnd, hdc, titleRect);
 
     /* render attribution box */
     col = GetAppColor(AppColor::MainWindowText);
@@ -623,7 +623,7 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
     /* render title */
     RectI titleBox = RectI(PointI(0, 0), CalcSumatraVersionSize(win->hwndCanvas, hdc));
     titleBox.x = rc.dx - titleBox.dx - 3;
-    DrawSumatraVersion(hdc, titleBox);
+    DrawSumatraVersion(win->hwndCanvas, hdc, titleBox);
     PaintLine(hdc, RectI(0, titleBox.dy, rc.dx, 0));
 
     /* render recent files list */
