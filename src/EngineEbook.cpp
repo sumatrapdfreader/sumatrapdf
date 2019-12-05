@@ -718,6 +718,7 @@ class EbookTocBuilder : public EbookTocVisitor {
 
   public:
     explicit EbookTocBuilder(BaseEngine* engine) {
+        this->engine = engine;
     }
 
     virtual void Visit(const WCHAR* name, const WCHAR* url, int level) {

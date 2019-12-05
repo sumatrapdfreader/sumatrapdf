@@ -102,6 +102,9 @@ class DisplayModel : public Controller {
 
     // table of contents
     DocTocTree* GetTocTree() override {
+        if (!engine) {
+            return false;
+        }
         return engine->GetTocTree();
     }
     void ScrollToLink(PageDestination* dest) override;
