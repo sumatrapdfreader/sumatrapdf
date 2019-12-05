@@ -16,14 +16,16 @@
 
 static void ParseCommandLineTest() {
     {
-        auto i = ParseCommandLine(L"SumatraPDF.exe -bench foo.pdf");
+        CommandLineInfo i;
+        ParseCommandLine(L"SumatraPDF.exe -bench foo.pdf", i);
         utassert(2 == i.pathsToBenchmark.size());
         utassert(str::Eq(L"foo.pdf", i.pathsToBenchmark.at(0)));
         utassert(nullptr == i.pathsToBenchmark.at(1));
     }
 
     {
-        auto i = ParseCommandLine(L"SumatraPDF.exe -bench foo.pdf -fwdsearch-width 5");
+        CommandLineInfo i;
+        ParseCommandLine(L"SumatraPDF.exe -bench foo.pdf -fwdsearch-width 5", i);
         utassert(i.globalPrefArgs.size() == 2);
         const WCHAR* s = i.globalPrefArgs.at(0);
         utassert(str::Eq(s, L"-fwdsearch-width"));
@@ -35,14 +37,16 @@ static void ParseCommandLineTest() {
     }
 
     {
-        auto i = ParseCommandLine(L"SumatraPDF.exe -bench bar.pdf loadonly");
+        CommandLineInfo i;
+        ParseCommandLine(L"SumatraPDF.exe -bench bar.pdf loadonly", i);
         utassert(2 == i.pathsToBenchmark.size());
         utassert(str::Eq(L"bar.pdf", i.pathsToBenchmark.at(0)));
         utassert(str::Eq(L"loadonly", i.pathsToBenchmark.at(1)));
     }
 
     {
-        auto i = ParseCommandLine(L"SumatraPDF.exe -bench bar.pdf 1 -set-color-range 0x123456 #abCDef");
+        CommandLineInfo i;
+        ParseCommandLine(L"SumatraPDF.exe -bench bar.pdf 1 -set-color-range 0x123456 #abCDef", i);
         utassert(i.globalPrefArgs.size() == 3);
         utassert(2 == i.pathsToBenchmark.size());
         utassert(str::Eq(L"bar.pdf", i.pathsToBenchmark.at(0)));
@@ -50,7 +54,8 @@ static void ParseCommandLineTest() {
     }
 
     {
-        auto i = ParseCommandLine(L"SumatraPDF.exe -bench bar.pdf 1-5,3   -bench some.pdf 1,3,8-34");
+        CommandLineInfo i;
+        ParseCommandLine(L"SumatraPDF.exe -bench bar.pdf 1-5,3   -bench some.pdf 1,3,8-34", i);
         utassert(4 == i.pathsToBenchmark.size());
         utassert(str::Eq(L"bar.pdf", i.pathsToBenchmark.at(0)));
         utassert(str::Eq(L"1-5,3", i.pathsToBenchmark.at(1)));
@@ -59,7 +64,8 @@ static void ParseCommandLineTest() {
     }
 
     {
-        auto i = ParseCommandLine(L"SumatraPDF.exe -presentation -bgcolor 0xaa0c13 foo.pdf -invert-colors bar.pdf");
+        CommandLineInfo i;
+        ParseCommandLine(L"SumatraPDF.exe -presentation -bgcolor 0xaa0c13 foo.pdf -invert-colors bar.pdf", i);
         utassert(true == i.enterPresentation);
         utassert(true == i.invertColors);
         utassert(2 == i.fileNames.size());
@@ -68,22 +74,25 @@ static void ParseCommandLineTest() {
     }
 
     {
-        auto i = ParseCommandLine(L"SumatraPDF.exe -bg-color 0xaa0c13 -invertcolors rosanna.pdf");
+        CommandLineInfo i;
+        ParseCommandLine(L"SumatraPDF.exe -bg-color 0xaa0c13 -invertcolors rosanna.pdf", i);
         utassert(true == i.invertColors);
         utassert(1 == i.fileNames.size());
         utassert(0 == i.fileNames.Find(L"rosanna.pdf"));
     }
 
     {
-        auto i = ParseCommandLine(L"SumatraPDF.exe \"foo \\\" bar \\\\.pdf\" un\\\"quoted.pdf");
+        CommandLineInfo i;
+        ParseCommandLine(L"SumatraPDF.exe \"foo \\\" bar \\\\.pdf\" un\\\"quoted.pdf", i);
         utassert(2 == i.fileNames.size());
         utassert(0 == i.fileNames.Find(L"foo \" bar \\\\.pdf"));
         utassert(1 == i.fileNames.Find(L"un\"quoted.pdf"));
     }
 
     {
-        auto i = ParseCommandLine(
-            L"SumatraPDF.exe -page 37 -view continuousfacing -zoom fitcontent -scroll 45,1234 -reuse-instance");
+        CommandLineInfo i;
+        ParseCommandLine(
+            L"SumatraPDF.exe -page 37 -view continuousfacing -zoom fitcontent -scroll 45,1234 -reuse-instance", i);
         utassert(0 == i.fileNames.size());
         utassert(i.pageNumber == 37);
         utassert(i.startView == DM_CONTINUOUS_FACING);
@@ -92,7 +101,8 @@ static void ParseCommandLineTest() {
     }
 
     {
-        auto i = ParseCommandLine(L"SumatraPDF.exe -view \"single page\" -zoom 237.45 -scroll -21,-1");
+        CommandLineInfo i;
+        ParseCommandLine(L"SumatraPDF.exe -view \"single page\" -zoom 237.45 -scroll -21,-1", i);
         utassert(0 == i.fileNames.size());
         utassert(i.startView == DM_SINGLE_PAGE);
         utassert(i.startZoom == 237.45f);
@@ -100,13 +110,15 @@ static void ParseCommandLineTest() {
     }
 
     {
-        auto i = ParseCommandLine(L"SumatraPDF.exe -zoom 35%");
+        CommandLineInfo i;
+        ParseCommandLine(L"SumatraPDF.exe -zoom 35%", i);
         utassert(0 == i.fileNames.size());
         utassert(i.startZoom == 35.f);
     }
 
     {
-        auto i = ParseCommandLine(L"SumatraPDF.exe -zoom fit-content");
+        CommandLineInfo i;
+        ParseCommandLine(L"SumatraPDF.exe -zoom fit-content", i);
         utassert(i.startZoom == ZOOM_FIT_CONTENT);
         utassert(0 == i.fileNames.size());
     }
