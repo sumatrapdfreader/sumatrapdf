@@ -56,6 +56,12 @@ static bool isPreRelease = true;
 static bool isPreRelease = false;
 #endif
 
+#if defined(BUILT_ON)
+static char* builtOn = QM(SVN_PRE_RELEASE_VER);
+#else
+static char* builtOn = nullptr;
+#endif
+
 #define DLURLBASE L"https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/"
 
 // Get url for file with symbols. Caller needs to free().
@@ -550,6 +556,9 @@ static bool BuildModulesInfo() {
 
 static void BuildSystemInfo() {
     str::Str s(1024);
+    if (builtOn != nullptr) {
+        s.Append(builtOn);
+    }
     GetProgramInfo(s);
     GetOsVersion(s);
     GetSystemInfo(s);

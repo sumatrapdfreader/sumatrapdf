@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/kjk/u"
 )
@@ -116,6 +117,8 @@ func buildConfigPath() string {
 func setBuildConfig(sha1, preRelVer string, isDaily bool) {
 	fatalIf(sha1 == "", "sha1 must be set")
 	s := fmt.Sprintf("#define GIT_COMMIT_ID %s\n", sha1)
+	todayDate := time.Now().Format("2006-01-02")
+	s += fmt.Sprintf("#define BUILT_ON %s\n", todayDate)
 	if preRelVer != "" {
 		s += fmt.Sprintf("#define SVN_PRE_RELEASE_VER %s\n", preRelVer)
 	}
