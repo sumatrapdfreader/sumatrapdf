@@ -150,14 +150,16 @@ bool IsProcessAndOsArchSame() {
 
 void LogLastError(DWORD err) {
     // allow to set a breakpoint in release builds
-    if (0 == err)
+    if (0 == err) {
         err = GetLastError();
+    }
     char* msgBuf = nullptr;
     DWORD flags = FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS;
     DWORD lang = MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT);
     DWORD res = FormatMessageA(flags, nullptr, err, lang, (LPSTR)&msgBuf, 0, nullptr);
-    if (!res || !msgBuf)
+    if (!res || !msgBuf) {
         return;
+    }
     logf("LogLastError: %s\n", msgBuf);
     LocalFree(msgBuf);
 }

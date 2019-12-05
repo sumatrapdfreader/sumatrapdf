@@ -80,7 +80,6 @@ static WCHAR* gSymbolsUrl = nullptr;
 static WCHAR* gCrashDumpPath = nullptr;
 static WCHAR* gSymbolPathW = nullptr;
 static WCHAR* gSymbolsDir = nullptr;
-static WCHAR* gPdbZipPath = nullptr;
 static WCHAR* gLibMupdfPdbPath = nullptr;
 static WCHAR* gSumatraPdfPdbPath = nullptr;
 static char* gSystemInfo = nullptr;
@@ -149,29 +148,62 @@ static bool DeleteSymbolsIfExist() {
     return ok;
 }
 
-// static (single .exe) build
-static bool UnpackStaticSymbols(const char* pdbZipPath, const char* symDir) {
-    logf("UnpackStaticSymbols(): unpacking %s to dir %s\n", pdbZipPath, symDir);
-    const char* files[2] = {"SumatraPDF.pdb", nullptr};
-    bool ok = lzma::ExtractFiles(pdbZipPath, symDir, &files[0], gCrashHandlerAllocator);
+static bool ExtractSymbols(const char* archiveData, size_t dataSize, char* dstDir, Allocator* allocator) {
+    logf("ExtractSymbols: dir '%s', size: %d\n", archiveData, (int)dataSize);
+    lzma::SimpleArchive archive;
+    bool ok = ParseSimpleArchive(archiveData, dataSize, &archive);
     if (!ok) {
-        log("Failed to unpack SumatraPDF.pdb\n");
+        logf("ExtractSymbols: ParseSimpleArchive failed\n");
         return false;
     }
-    return true;
-}
 
-// lib (.exe + libmupdf.dll) release and pre-release builds
-static bool UnpackDllSymbols(const char* pdbZipPath, const char* symDir) {
-    logf("UnpackDllSymbols(): unpacking '%s' to dir '%s'\n", pdbZipPath, symDir);
-    const char* files[3] = {"libmupdf.pdb", "SumatraPDF-dll.pdb", nullptr};
-    bool ok = lzma::ExtractFiles(pdbZipPath, symDir, &files[0], gCrashHandlerAllocator);
-    if (!ok) {
-        log("Failed to unpack libmupdf.pdb or SumatraPD-dll.pdb");
-        return false;
+    for (int i = 0; i < archive.filesCount; i++) {
+        lzma::FileInfo* fi = &(archive.files[i]);
+        const char* name = fi->name;
+        // SumatraPDF.pdb is for static build
+        logf("ExtractSymbols: file %d is '%s'\n", i, name);
+        if (str::Eq(name, "SumatraPDF.pdb")) {
+            if (isDllBuild) {
+                logf("  skipping because dll build\n");
+                continue;
+            }
+        }
+        // libmupdf.pdb is only for dll build
+        if (str::Eq(name, "libmupdf.pdb")) {
+            if (!isDllBuild) {
+                logf("  skipping because not dll build\n");
+                continue;
+            }
+        }
+        // SumatraPDF-dll.pdb is for dll build
+        if (str::Eq(name, "SumatraPDF-dll.pdb")) {
+            if (!isDllBuild) {
+                logf("  skipping because no dll build\n");
+                continue;
+            }
+            // change the name to fit executable name
+            logf("  changed name to 'SumatraPDF.pdb'\n");
+            name = "SumatraPDF.pdb";
+        }
+
+        char* uncompressed = GetFileDataByIdx(&archive, i, allocator);
+        if (!uncompressed) {
+            return false;
+        }
+        char* filePath = path::JoinUtf(dstDir, name, allocator);
+        if (!filePath) {
+            return false;
+        }
+        ok = file::WriteFile(filePath, uncompressed, fi->uncompressedSize);
+
+        Allocator::Free(allocator, filePath);
+        Allocator::Free(allocator, uncompressed);
+        if (!ok) {
+            logf("ExtractSymbols: failed to write '%s'\n", filePath);
+            return false;
+        }
     }
-    // TODO: rename SumatraPDF-dll.pdb => SumatraPDF.dll
-    return true;
+    return ok;
 }
 
 // .pdb files are stored in a .zip file on a web server. Download that .zip
@@ -180,48 +212,40 @@ static bool UnpackDllSymbols(const char* pdbZipPath, const char* symDir) {
 // Returns false if downloading or extracting failed
 // note: to simplify callers, it could choose pdbZipPath by itself (in a temporary
 // directory) as the file is deleted on exit anyway
-static bool DownloadAndUnzipSymbols(const WCHAR* pdbZipPath, const WCHAR* symDir) {
-    log("DownloadAndUnzipSymbols() started\n");
+static bool DownloadAndUnzipSymbols(const WCHAR* symDir) {
+    logf(L"DownloadAndUnzipSymbols: symDir: '%s', url: '%s'\n", symDir, gSymbolsUrl);
     if (!symDir || !dir::Exists(symDir)) {
-        log("DownloadAndUnzipSymbols(): exiting because symDir doesn't exist\n");
+        log("DownloadAndUnzipSymbols: exiting because symDir doesn't exist\n");
         return false;
     }
 
     if (!DeleteSymbolsIfExist()) {
-        log("DownloadAndUnzipSymbols(): DeleteSymbolsIfExist() failed\n");
-        return false;
-    }
-
-    if (!file::Delete(pdbZipPath)) {
-        log("DownloadAndUnzipSymbols(): deleting pdbZipPath failed\n");
+        log("DownloadAndUnzipSymbols: DeleteSymbolsIfExist() failed\n");
         return false;
     }
 
     if (gDisableSymbolsDownload) {
         // don't care about debug builds because we don't release them
-        log("DownloadAndUnzipSymbols(): DEBUG build so not doing anything\n");
+        log("DownloadAndUnzipSymbols: DEBUG build so not doing anything\n");
         return false;
     }
 
-    if (!HttpGetToFile(gSymbolsUrl, pdbZipPath)) {
-        log("DownloadAndUnzipSymbols(): couldn't download symbols\n");
+    HttpRsp rsp;
+    if (!HttpGet(gSymbolsUrl, &rsp)) {
+        log("DownloadAndUnzipSymbols: couldn't download symbols\n");
         return false;
     }
+    if (!HttpRspOk(&rsp)) {
+        log("DownloadAndUnzipSymbols: HttpRspOk() returned false\n");
+    }
 
-    char pdbZipPathUtf[512];
     char symDirUtf[512];
 
-    str::WcharToUtf8Buf(pdbZipPath, pdbZipPathUtf, sizeof(pdbZipPathUtf));
     str::WcharToUtf8Buf(symDir, symDirUtf, sizeof(symDirUtf));
-
-    bool ok = false;
-    if (isDllBuild) {
-        ok = UnpackDllSymbols(pdbZipPathUtf, symDirUtf);
-    } else {
-        ok = UnpackStaticSymbols(pdbZipPathUtf, symDirUtf);
+    bool ok = ExtractSymbols(rsp.data.Get(), rsp.data.size(), symDirUtf, gCrashHandlerAllocator);
+    if (!ok) {
+        log("DownloadAndUnzipSymbols: ExtractSymbols() failed\n");
     }
-
-    file::Delete(pdbZipPath);
     return ok;
 }
 
@@ -240,7 +264,7 @@ bool CrashHandlerDownloadSymbols() {
         return true;
     }
 
-    if (!DownloadAndUnzipSymbols(gPdbZipPath, gSymbolsDir)) {
+    if (!DownloadAndUnzipSymbols(gSymbolsDir)) {
         log("SubmitCrashInfo(): failed to download symbols\n");
         return false;
     }
@@ -596,12 +620,10 @@ bool SetSymbolsDir(const WCHAR* symDir) {
     }
 
     free(gSymbolsDir);
-    free(gPdbZipPath);
     free(gLibMupdfPdbPath);
     free(gSumatraPdfPdbPath);
 
     gSymbolsDir = str::Dup(symDir);
-    gPdbZipPath = path::Join(symDir, L"symbols_tmp.zip");
     gSumatraPdfPdbPath = path::Join(symDir, L"SumatraPDF.pdb");
     gLibMupdfPdbPath = path::Join(symDir, L"libmupdf.pdb");
     BuildSymbolPath();
@@ -700,7 +722,6 @@ void UninstallCrashHandler() {
     free(gCrashDumpPath);
     free(gSymbolsUrl);
     free(gSymbolsDir);
-    free(gPdbZipPath);
     free(gLibMupdfPdbPath);
     free(gSumatraPdfPdbPath);
     free(gCrashFilePath);

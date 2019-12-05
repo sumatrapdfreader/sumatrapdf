@@ -2,10 +2,12 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "BaseUtil.h"
-#include "HttpUtil.h"
-#include "ThreadUtil.h"
-#include "FileUtil.h"
-#include "WinUtil.h"
+#include "utils/HttpUtil.h"
+
+#include "utils/ThreadUtil.h"
+#include "utils/FileUtil.h"
+#include "utils/WinUtil.h"
+#include "utils/Log.h"
 
 // per RFC 1945 10.15 and 3.7, a user agent product token shouldn't contain whitespace
 #define USER_AGENT L"BaseHTTP"
@@ -17,21 +19,31 @@ bool HttpRspOk(const HttpRsp* rsp) {
 // returns false if failed to download or status code is not 200
 // for other scenarios, check HttpRsp
 bool HttpGet(const WCHAR* url, HttpRsp* rspOut) {
+    logf(L"HttpGet: url: '%s'\n", url);
     HINTERNET hReq = nullptr;
     DWORD headerBuffSize = sizeof(DWORD);
     DWORD flags = INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_RELOAD;
 
     rspOut->error = ERROR_SUCCESS;
     HINTERNET hInet = InternetOpen(USER_AGENT, INTERNET_OPEN_TYPE_PRECONFIG, nullptr, nullptr, 0);
-    if (!hInet)
+    if (!hInet) {
+        logf("HttpGet: InternetOpen failed\n");
+        LogLastError();
         goto Error;
+    }
 
     hReq = InternetOpenUrl(hInet, url, nullptr, 0, flags, 0);
-    if (!hReq)
+    if (!hReq) {
+        logf("HttpGet: InternetOpenUrl failed\n");
+        LogLastError();
         goto Error;
+    }
 
-    if (!HttpQueryInfoW(hReq, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &rspOut->httpStatusCode, &headerBuffSize,
+    DWORD infoLevel = HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER;
+    if (!HttpQueryInfoW(hReq, infoLevel, &rspOut->httpStatusCode, &headerBuffSize,
                         nullptr)) {
+        logf("HttpGet: HttpQueryInfoW failed\n");
+        LogLastError();
         goto Error;
     }
 
@@ -39,32 +51,40 @@ bool HttpGet(const WCHAR* url, HttpRsp* rspOut) {
         char buf[1024];
         DWORD dwRead = 0;
         if (!InternetReadFile(hReq, buf, sizeof(buf), &dwRead)) {
+            logf("HttpGet: InternetReadFile failed\n");
+            LogLastError();
             goto Error;
         }
         if (0 == dwRead) {
             break;
         }
         bool ok = rspOut->data.AppendChecked(buf, dwRead);
-        if (!ok)
+        if (!ok) {
+            logf("HttpGet: data.AppendChecked failed\n");
             goto Error;
+        }
     }
 
 Exit:
-    if (hReq)
+    if (hReq) {
         InternetCloseHandle(hReq);
-    if (hInet)
+    }
+    if (hInet) {
         InternetCloseHandle(hInet);
+    }
     return HttpRspOk(rspOut);
 
 Error:
     rspOut->error = GetLastError();
-    if (0 == rspOut->error)
+    if (0 == rspOut->error) {
         rspOut->error = ERROR_GEN_FAILURE;
+    }
     goto Exit;
 }
 
 // Download content of a url to a file
 bool HttpGetToFile(const WCHAR* url, const WCHAR* destFilePath) {
+    logf(L"HttpGetToFile: url: '%s', file: '%s'\n", url, destFilePath);
     bool ok = false;
     HINTERNET hReq = nullptr, hInet = nullptr;
     DWORD dwRead = 0;
@@ -72,49 +92,62 @@ bool HttpGetToFile(const WCHAR* url, const WCHAR* destFilePath) {
     DWORD statusCode = 0;
     char buf[1024];
 
-    HANDLE hf = CreateFile(destFilePath, GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,
+    HANDLE hf = CreateFileW(destFilePath, GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,
                            nullptr);
-    if (INVALID_HANDLE_VALUE == hf)
+    if (INVALID_HANDLE_VALUE == hf) {
+        logf(L"HttpGetToFile: CreateFileW('%s') failed\n", destFilePath);
+        LogLastError();
         goto Exit;
+    }
 
     hInet = InternetOpen(USER_AGENT, INTERNET_OPEN_TYPE_PRECONFIG, nullptr, nullptr, 0);
-    if (!hInet)
+    if (!hInet) {
         goto Exit;
+    }
 
     hReq = InternetOpenUrl(hInet, url, nullptr, 0, 0, 0);
-    if (!hReq)
+    if (!hReq) {
         goto Exit;
+    }
 
     if (!HttpQueryInfoW(hReq, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &statusCode, &headerBuffSize, nullptr)) {
         goto Exit;
     }
+
     if (statusCode != 200) {
         goto Exit;
     }
 
     for (;;) {
-        if (!InternetReadFile(hReq, buf, sizeof(buf), &dwRead))
+        if (!InternetReadFile(hReq, buf, sizeof(buf), &dwRead)) {
             goto Exit;
-        if (dwRead == 0)
+        }
+        if (dwRead == 0) {
             break;
+        }
         DWORD size;
         BOOL wroteOk = WriteFile(hf, buf, (DWORD)dwRead, &size, nullptr);
-        if (!wroteOk)
+        if (!wroteOk) {
             goto Exit;
+        }
 
-        if (size != dwRead)
+        if (size != dwRead) {
             goto Exit;
+        }
     }
 
     ok = true;
 Exit:
     CloseHandle(hf);
-    if (hReq)
+    if (hReq) {
         InternetCloseHandle(hReq);
-    if (hInet)
+    }
+    if (hInet) {
         InternetCloseHandle(hInet);
-    if (!ok)
+    }
+    if (!ok) {
         file::Delete(destFilePath);
+    }
     return ok;
 }
 

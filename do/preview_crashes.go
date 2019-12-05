@@ -1,19 +1,12 @@
 package main
 
 import (
-	"path"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/kjk/u"
 )
-
-// name looks like "3dc72bd6f000006.txt"
-func crashFilePath(dataDir string, name string) string {
-	// file system don't deal with lots of files in the same directory
-	// so we split them into 2-level directory structure
-	return filepath.Join(dataDir, name[0:2], name[2:4], name)
-}
 
 func downloadCrashes(dataDir string) {
 	timeStart := time.Now()
@@ -27,8 +20,8 @@ func downloadCrashes(dataDir string) {
 	nRemoteFiles := len(remoteFiles)
 	nDownloaded := 0
 	for _, rf := range remoteFiles {
-		name := path.Base(rf.Key)
-		path := crashFilePath(dataDir, name)
+		name := strings.TrimPrefix(rf.Key, "updatecheck/uploadedfiles/sumatrapdf-crashes/")
+		path := filepath.Join(dataDir, name)
 		if u.FileExists(path) {
 			continue
 		}
