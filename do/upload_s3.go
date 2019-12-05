@@ -208,7 +208,7 @@ func s3UploadPreReleaseMust(ver string, buildType string) {
 		"software/sumatrapdf/sumpdf-prerelease-latest.txt",
 		"software/sumatrapdf/sumpdf-prerelease-update.txt",
 	}
-	if buildType == "daily" {
+	if buildType == buildTypeDaily {
 		remotePaths = []string{
 			"software/sumatrapdf/sumadaily.js",
 			"software/sumatrapdf/sumpdf-daily-latest.txt",
@@ -240,6 +240,10 @@ func s3UploadPreReleaseMust(ver string, buildType string) {
 func s3DeleteOldBuilkdsPrefix(buildType string) {
 	c := newS3Client()
 
+	nBuildsToRetain := nBuildsToRetainDaily
+	if buildType == buildTypePreRel {
+		nBuildsToRetain = nBuildsToRetainPreRel
+	}
 	remoteDir := getRemoteDir(buildType)
 
 	keys := s3ListPreReleaseFilesMust(c, remoteDir)
@@ -264,6 +268,6 @@ func s3DeleteOldBuilkdsPrefix(buildType string) {
 }
 
 func s3DeleteOldBuilds() {
-	s3DeleteOldBuilkdsPrefix("prerel")
-	s3DeleteOldBuilkdsPrefix("daily")
+	s3DeleteOldBuilkdsPrefix(buildTypePreRel)
+	s3DeleteOldBuilkdsPrefix(buildTypeDaily)
 }

@@ -152,8 +152,8 @@ func main() {
 	if flgUploadCiBuild {
 		flgUpload = true
 		detectVersions()
-		s3UploadPreReleaseMust(svnPreReleaseVer, "daily")
-		spacesUploadPreReleaseMust(svnPreReleaseVer, "daily")
+		s3UploadPreReleaseMust(svnPreReleaseVer, buildTypeDaily)
+		spacesUploadPreReleaseMust(svnPreReleaseVer, buildTypeDaily)
 		minioDeleteOldBuilds()
 		s3DeleteOldBuilds()
 		return
@@ -162,8 +162,8 @@ func main() {
 	if flgBuildPreRelease {
 		detectVersions()
 		buildPreRelease(false)
-		s3UploadPreReleaseMust(svnPreReleaseVer, "prerel")
-		spacesUploadPreReleaseMust(svnPreReleaseVer, "prerel")
+		s3UploadPreReleaseMust(svnPreReleaseVer, buildTypePreRel)
+		spacesUploadPreReleaseMust(svnPreReleaseVer, buildTypePreRel)
 		return
 	}
 

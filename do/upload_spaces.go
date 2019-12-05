@@ -14,11 +14,18 @@ import (
 
 // we delete old daily and pre-release builds. This defines how many most recent
 // builds to retain
-const nBuildsToRetain = 16
+const nBuildsToRetainPreRel = 16
+const nBuildsToRetainDaily = 64
+
+const (
+	buildTypeDaily  = "daily"
+	buildTypePreRel = "prerel"
+	buildTypeRel    = "rel"
+)
 
 func isValidBuildType(buildType string) bool {
 	switch buildType {
-	case "daily", "prerel", "rel":
+	case buildTypeDaily, buildTypePreRel, buildTypeRel:
 		return true
 	}
 	return false
@@ -124,7 +131,7 @@ func spacesUploadPreReleaseMust(ver string, buildType string) {
 		"software/sumatrapdf/sumpdf-prerelease-latest.txt",
 		"software/sumatrapdf/sumpdf-prerelease-update.txt",
 	}
-	if buildType == "daily" {
+	if buildType == buildTypeDaily {
 		remotePaths = []string{
 			"software/sumatrapdf/sumadaily.js",
 			"software/sumatrapdf/sumpdf-daily-latest.txt",
@@ -202,6 +209,10 @@ func groupFilesByVersion(files []string) []*filesByVer {
 }
 
 func minioDeleteOldBuildsPrefix(buildType string) {
+	nBuildsToRetain := nBuildsToRetainDaily
+	if buildType == buildTypePreRel {
+		nBuildsToRetain = nBuildsToRetainPreRel
+	}
 	remoteDir := getRemoteDir(buildType)
 
 	c := newMinioClient()
@@ -233,6 +244,6 @@ func minioDeleteOldBuildsPrefix(buildType string) {
 }
 
 func minioDeleteOldBuilds() {
-	minioDeleteOldBuildsPrefix("prerel")
-	minioDeleteOldBuildsPrefix("daily")
+	minioDeleteOldBuildsPrefix(buildTypePreRel)
+	minioDeleteOldBuildsPrefix(buildTypeDaily)
 }
