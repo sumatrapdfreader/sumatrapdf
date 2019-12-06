@@ -19,7 +19,7 @@ first make sure you're using the latest version of Visual Studio.
 
 Open `vs2019/SumatraPDF.sln` when using Visual Studio 2019
 
-You need at least version 16.4.
+You need at least version 16.4 of Visual Studio 2019.
 
 Notes on targets:
 * `x32_sp` target is for building for Windows XP and requires v141_xp toolset, which is an optional component of Visual Studio setup
