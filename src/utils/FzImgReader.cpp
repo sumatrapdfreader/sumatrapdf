@@ -96,6 +96,36 @@ static Bitmap* ImageFromJpegData(fz_context* ctx, const char* data, int len) {
     return bmp.Clone(0, 0, w, h, fmt);
 }
 
+// had to create a copy of fz_convert_pixmap to ensure we always get the alpha
+fz_pixmap* fz_convert_pixmap2(fz_context* ctx, fz_pixmap* pix, fz_colorspace* ds, fz_colorspace* prf,
+                              fz_default_colorspaces* default_cs, fz_color_params color_params, int keep_alpha) {
+    fz_pixmap* cvt;
+
+    if (!ds && !keep_alpha)
+        fz_throw(ctx, FZ_ERROR_GENERIC, "cannot both throw away and keep alpha");
+
+    cvt = fz_new_pixmap(ctx, ds, pix->w, pix->h, pix->seps, keep_alpha);
+
+    cvt->xres = pix->xres;
+    cvt->yres = pix->yres;
+    cvt->x = pix->x;
+    cvt->y = pix->y;
+    if (pix->flags & FZ_PIXMAP_FLAG_INTERPOLATE)
+        cvt->flags |= FZ_PIXMAP_FLAG_INTERPOLATE;
+    else
+        cvt->flags &= ~FZ_PIXMAP_FLAG_INTERPOLATE;
+
+    fz_try(ctx) {
+        fz_convert_pixmap_samples(ctx, pix, cvt, prf, default_cs, color_params, 1);
+    }
+    fz_catch(ctx) {
+        fz_drop_pixmap(ctx, cvt);
+        fz_rethrow(ctx);
+    }
+
+    return cvt;
+}
+
 static Bitmap* ImageFromJp2Data(fz_context* ctx, const char* data, int len) {
     fz_pixmap* pix = nullptr;
     fz_pixmap* pix_argb = nullptr;
@@ -111,12 +141,13 @@ static Bitmap* ImageFromJp2Data(fz_context* ctx, const char* data, int len) {
     }
 
     int w = pix->w, h = pix->h;
-    Bitmap bmp(w, h, PixelFormat32bppARGB);
+    PixelFormat pixelFormat = PixelFormat32bppARGB;
+    Bitmap bmp(w, h, pixelFormat);
     bmp.SetResolution(pix->xres, pix->yres);
 
     Rect bmpRect(0, 0, w, h);
     BitmapData bmpData;
-    Status ok = bmp.LockBits(&bmpRect, ImageLockModeWrite, PixelFormat32bppARGB, &bmpData);
+    Status ok = bmp.LockBits(&bmpRect, ImageLockModeWrite, pixelFormat, &bmpData);
     if (ok != Ok) {
         fz_drop_pixmap(ctx, pix);
         return nullptr;
@@ -126,20 +157,16 @@ static Bitmap* ImageFromJp2Data(fz_context* ctx, const char* data, int len) {
     fz_var(bmpRect);
 
     fz_try(ctx) {
-        unsigned char* data = (unsigned char*)bmpData.Scan0;
-        // TODO(port): figure out seps, alpha and stride
-        CrashMe();
-        fz_separations* seps = nullptr;
-        int alpha = 0;
-        int stride = w;
-        fz_colorspace* cs = fz_device_bgr(ctx);
-        fz_colorspace* cs_des = fz_device_bgr(ctx);
-        fz_colorspace* prf = nullptr;
-        fz_default_colorspaces* default_cs = nullptr;
+        fz_colorspace* csdest = fz_device_bgr(ctx);
         fz_color_params colparms = fz_default_color_params;
-        pix_argb = fz_new_pixmap_with_data(ctx, cs, w, h, seps, alpha, stride, data);
-        // TODO(port): should this be fz_convert_pixmap_samples
-        fz_convert_pixmap(ctx, pix_argb, cs, nullptr, nullptr, colparms, 1);
+        fz_colorspace* prf = nullptr;
+        int alpha = 1;
+        // TODO: could be optimized by creating a bitmap with bmpData.Scan0 as data
+        // Or creating Bitmap after a fact with pix_argb->samples
+        pix_argb = fz_convert_pixmap2(ctx, pix, csdest, prf, nullptr, colparms, alpha);
+        unsigned char* data = (unsigned char*)bmpData.Scan0;
+        size_t dataSize = pix_argb->stride * h;
+        memcpy(data, pix_argb->samples, dataSize);
     }
     fz_always(ctx) {
         bmp.UnlockBits(&bmpData);
@@ -151,7 +178,7 @@ static Bitmap* ImageFromJp2Data(fz_context* ctx, const char* data, int len) {
     }
 
     // hack to avoid the use of ::new (because there won't be a corresponding ::delete)
-    return bmp.Clone(0, 0, w, h, PixelFormat32bppARGB);
+    return bmp.Clone(0, 0, w, h, pixelFormat);
 }
 
 Bitmap* ImageFromData(const char* data, size_t len) {
