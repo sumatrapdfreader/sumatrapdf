@@ -150,14 +150,7 @@ workspace "SumatraPDF"
       "LinkTimeOptimization",
     }
     optimize "On"
-
-    filter "configurations:ReleasePrefast"
-      -- TODO: somehow /analyze- is default which creates warning about
-      -- over-ride from cl.exe. Don't know how to disable the warning
-      buildoptions { "/analyze" }
-      disablewarnings { "28125", "28252", "28253" }
   filter {}
-
 
   project "zlib"
     kind "StaticLib"
@@ -548,11 +541,19 @@ workspace "SumatraPDF"
     entrypoint "WinMainCRTStartup"
     flags { "NoManifest" }
     includedirs { "src", "src/wingui" }
+
     sumatrapdf_files()
     synctex_files()
     mui_files()
     uia_files()
     sumatra_files()
+
+    filter "configurations:ReleasePrefast"
+      -- TODO: somehow /analyze- is default which creates warning about
+      -- over-ride from cl.exe. Don't know how to disable the warning
+      buildoptions { "/analyze" }
+      disablewarnings { "28125", "28252", "28253" }
+    filter {}
 
     -- for synctex
     disablewarnings { "4100", "4244", "4267", "4702", "4706" }
@@ -587,6 +588,19 @@ workspace "SumatraPDF"
     flags { "NoManifest" }
     includedirs { "src", "src/wingui", "mupdf/include" }
 
+    sumatrapdf_files()
+    synctex_files()
+    mui_files()
+    uia_files()
+    sumatra_files()
+
+    filter "configurations:ReleasePrefast"
+      -- TODO: somehow /analyze- is default which creates warning about
+      -- over-ride from cl.exe. Don't know how to disable the warning
+      buildoptions { "/analyze" }
+      disablewarnings { "28125", "28252", "28253" }
+    filter {}
+
     -- for synctex
     disablewarnings { "4100", "4244", "4267", "4702", "4706" }
     includedirs { "ext/zlib", "ext/synctex" }
@@ -595,11 +609,6 @@ workspace "SumatraPDF"
     disablewarnings { "4302", "4311", "4838" }
 
     resdefines { "INSTALL_PAYLOAD_ZIP=.\\%{cfg.targetdir}\\InstallerData.dat" }
-    sumatrapdf_files()
-    synctex_files()
-    mui_files()
-    uia_files()
-    sumatra_files()
   
     files { "src/MuPDF_Exports.cpp" }
 
