@@ -17,6 +17,14 @@
       <Configuration>Debug x32_xp</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug x32_asan|Win32">
+      <Configuration>Debug x32_asan</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug x32_asan|x64">
+      <Configuration>Debug x32_asan</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
       <Platform>Win32</Platform>
@@ -33,6 +41,14 @@
       <Configuration>Release x32_xp</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Release x32_asan|Win32">
+      <Configuration>Release x32_asan</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release x32_asan|x64">
+      <Configuration>Release x32_asan</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="ReleasePrefast|Win32">
       <Configuration>ReleasePrefast</Configuration>
       <Platform>Win32</Platform>
@@ -47,6 +63,14 @@
     </ProjectConfiguration>
     <ProjectConfiguration Include="ReleasePrefast x32_xp|x64">
       <Configuration>ReleasePrefast x32_xp</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleasePrefast x32_asan|Win32">
+      <Configuration>ReleasePrefast x32_asan</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleasePrefast x32_asan|x64">
+      <Configuration>ReleasePrefast x32_asan</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
@@ -69,6 +93,12 @@
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v141_xp</PlatformToolset>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug x32_asan|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
@@ -87,6 +117,13 @@
     <UseDebugLibraries>false</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v141_xp</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release x32_asan|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
@@ -110,6 +147,13 @@
     <PlatformToolset>v141_xp</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast x32_asan|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
@@ -126,6 +170,9 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug x32_xp|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug x32_asan|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
@@ -135,6 +182,9 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release x32_xp|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release x32_asan|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
@@ -142,6 +192,9 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast x32_xp|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast x32_asan|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|x64'">
@@ -160,6 +213,14 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>..\out\dbg32_xp\</OutDir>
     <IntDir>..\out\dbg32_xp\obj\x32_xp\Debug\SumatraPDF-dll\</IntDir>
+    <TargetName>SumatraPDF-dll</TargetName>
+    <TargetExt>.exe</TargetExt>
+    <GenerateManifest>false</GenerateManifest>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug x32_asan|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>..\out\dbg32_asan\</OutDir>
+    <IntDir>..\out\dbg32_asan\obj\x32_asan\Debug\SumatraPDF-dll\</IntDir>
     <TargetName>SumatraPDF-dll</TargetName>
     <TargetExt>.exe</TargetExt>
     <GenerateManifest>false</GenerateManifest>
@@ -188,6 +249,14 @@
     <TargetExt>.exe</TargetExt>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release x32_asan|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>..\out\rel32_asan\</OutDir>
+    <IntDir>..\out\rel32_asan\obj\x32_asan\Release\SumatraPDF-dll\</IntDir>
+    <TargetName>SumatraPDF-dll</TargetName>
+    <TargetExt>.exe</TargetExt>
+    <GenerateManifest>false</GenerateManifest>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>..\out\rel64\</OutDir>
@@ -208,6 +277,14 @@
     <LinkIncremental>false</LinkIncremental>
     <OutDir>..\out\rel32_prefast_xp\</OutDir>
     <IntDir>..\out\rel32_prefast_xp\obj\x32_xp\ReleasePrefast\SumatraPDF-dll\</IntDir>
+    <TargetName>SumatraPDF-dll</TargetName>
+    <TargetExt>.exe</TargetExt>
+    <GenerateManifest>false</GenerateManifest>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast x32_asan|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>..\out\rel32_prefast_asan\</OutDir>
+    <IntDir>..\out\rel32_prefast_asan\obj\x32_asan\ReleasePrefast\SumatraPDF-dll\</IntDir>
     <TargetName>SumatraPDF-dll</TargetName>
     <TargetExt>.exe</TargetExt>
     <GenerateManifest>false</GenerateManifest>
@@ -274,6 +351,38 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;DEBUG;INSTALL_PAYLOAD_ZIP=.\../out/dbg32_xp\InstallerData.dat;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <AdditionalDependencies>comctl32.lib;delayimp.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;urlmon.lib;version.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
+      <GenerateMapFile>true</GenerateMapFile>
+      <AdditionalOptions>/DELAYLOAD:libmupdf.dll /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll %(AdditionalOptions)</AdditionalOptions>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug x32_asan|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <DisableSpecificWarnings>4731;4127;4189;4324;4458;4800;4100;4244;4267;4702;4706;4302;4311;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;DEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <Optimization>Disabled</Optimization>
+      <MinimalRebuild>false</MinimalRebuild>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/fsanitize=address %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;DEBUG;INSTALL_PAYLOAD_ZIP=.\../out/dbg32_asan\InstallerData.dat;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
@@ -394,6 +503,42 @@
       <AdditionalOptions>/DELAYLOAD:libmupdf.dll /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release x32_asan|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <DisableSpecificWarnings>4731;4127;4189;4324;4458;4800;4100;4244;4267;4702;4706;4302;4311;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>Full</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/fsanitize=address %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;NDEBUG;INSTALL_PAYLOAD_ZIP=.\../out/rel32_asan\InstallerData.dat;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>comctl32.lib;delayimp.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;urlmon.lib;version.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
+      <GenerateMapFile>true</GenerateMapFile>
+      <AdditionalOptions>/DELAYLOAD:libmupdf.dll /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll %(AdditionalOptions)</AdditionalOptions>
+    </Link>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
@@ -493,6 +638,42 @@
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;NDEBUG;INSTALL_PAYLOAD_ZIP=.\../out/rel32_prefast_xp\InstallerData.dat;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>comctl32.lib;delayimp.lib;gdiplus.lib;msimg32.lib;shlwapi.lib;urlmon.lib;version.lib;wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <EntryPointSymbol>WinMainCRTStartup</EntryPointSymbol>
+      <GenerateMapFile>true</GenerateMapFile>
+      <AdditionalOptions>/DELAYLOAD:libmupdf.dll /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll %(AdditionalOptions)</AdditionalOptions>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast x32_asan|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DisableSpecificWarnings>4731;4127;4189;4324;4458;4800;28125;28252;28253;4100;4244;4267;4702;4706;4302;4311;4838;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;NDEBUG;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>Full</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/fsanitize=address /analyze %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;NDEBUG;INSTALL_PAYLOAD_ZIP=.\../out/rel32_prefast_asan\InstallerData.dat;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\src;..\src\wingui;..\mupdf\include;..\ext\zlib;..\ext\synctex;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>

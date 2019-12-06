@@ -17,6 +17,14 @@
       <Configuration>Debug x32_xp</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug x32_asan|Win32">
+      <Configuration>Debug x32_asan</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug x32_asan|x64">
+      <Configuration>Debug x32_asan</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
       <Platform>Win32</Platform>
@@ -33,6 +41,14 @@
       <Configuration>Release x32_xp</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Release x32_asan|Win32">
+      <Configuration>Release x32_asan</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release x32_asan|x64">
+      <Configuration>Release x32_asan</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="ReleasePrefast|Win32">
       <Configuration>ReleasePrefast</Configuration>
       <Platform>Win32</Platform>
@@ -47,6 +63,14 @@
     </ProjectConfiguration>
     <ProjectConfiguration Include="ReleasePrefast x32_xp|x64">
       <Configuration>ReleasePrefast x32_xp</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleasePrefast x32_asan|Win32">
+      <Configuration>ReleasePrefast x32_asan</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleasePrefast x32_asan|x64">
+      <Configuration>ReleasePrefast x32_asan</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
@@ -69,6 +93,12 @@
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v141_xp</PlatformToolset>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug x32_asan|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
@@ -87,6 +117,13 @@
     <UseDebugLibraries>false</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v141_xp</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release x32_asan|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
@@ -110,6 +147,13 @@
     <PlatformToolset>v141_xp</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast x32_asan|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
@@ -126,6 +170,9 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug x32_xp|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug x32_asan|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
@@ -135,6 +182,9 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release x32_xp|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release x32_asan|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
@@ -142,6 +192,9 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast x32_xp|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast x32_asan|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|x64'">
@@ -157,6 +210,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug x32_xp|Win32'">
     <OutDir>..\out\dbg32_xp\</OutDir>
     <IntDir>..\out\dbg32_xp\obj\x32_xp\Debug\jbig2dec\</IntDir>
+    <TargetName>jbig2dec</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug x32_asan|Win32'">
+    <OutDir>..\out\dbg32_asan\</OutDir>
+    <IntDir>..\out\dbg32_asan\obj\x32_asan\Debug\jbig2dec\</IntDir>
     <TargetName>jbig2dec</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
@@ -178,6 +237,12 @@
     <TargetName>jbig2dec</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release x32_asan|Win32'">
+    <OutDir>..\out\rel32_asan\</OutDir>
+    <IntDir>..\out\rel32_asan\obj\x32_asan\Release\jbig2dec\</IntDir>
+    <TargetName>jbig2dec</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>..\out\rel64\</OutDir>
     <IntDir>..\out\rel64\obj\x64\Release\jbig2dec\</IntDir>
@@ -193,6 +258,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast x32_xp|Win32'">
     <OutDir>..\out\rel32_prefast_xp\</OutDir>
     <IntDir>..\out\rel32_prefast_xp\obj\x32_xp\ReleasePrefast\jbig2dec\</IntDir>
+    <TargetName>jbig2dec</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast x32_asan|Win32'">
+    <OutDir>..\out\rel32_prefast_asan\</OutDir>
+    <IntDir>..\out\rel32_prefast_asan\obj\x32_asan\ReleasePrefast\jbig2dec\</IntDir>
     <TargetName>jbig2dec</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
@@ -240,6 +311,29 @@
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/arch:IA32 %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug x32_asan|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <DisableSpecificWarnings>4731;4127;4189;4324;4458;4702;4800;4018;4100;4146;4244;4267;4456;4701;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;DEBUG;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\jbig2dec;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <Optimization>Disabled</Optimization>
+      <MinimalRebuild>false</MinimalRebuild>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/fsanitize=address %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -322,6 +416,33 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release x32_asan|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <DisableSpecificWarnings>4731;4127;4189;4324;4458;4702;4800;4018;4100;4146;4244;4267;4456;4701;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;NDEBUG;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\jbig2dec;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>Full</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/fsanitize=address %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
@@ -393,6 +514,33 @@
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/arch:IA32 /analyze %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast x32_asan|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DisableSpecificWarnings>4731;4127;4189;4324;4458;4702;4800;28125;28252;28253;4018;4100;4146;4244;4267;4456;4701;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;NDEBUG;HAVE_STRING_H=1;JBIG_NO_MEMENTO;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\ext\jbig2dec;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>Full</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ExceptionHandling>false</ExceptionHandling>
+      <RuntimeTypeInfo>false</RuntimeTypeInfo>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/fsanitize=address /analyze %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

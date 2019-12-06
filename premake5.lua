@@ -3,10 +3,11 @@ To generate Visual Studio files (in vs2017/ directory), run:
 scripts\premake-regenerate-vs-projects.ps1
 
 I'm using premake5 alpha12 from http://premake.github.io/download.html#v5
-(premake4 won't work, it doesn't support VS 2013+)
 
 Note about nasm: when providing "-I foo/bar/" flag to nasm.exe, it must be
 "foo/bar/" and not just "foo/bar".
+
+Notes about asan in msvc: https://devblogs.microsoft.com/cppblog/addresssanitizer-asan-for-windows-with-msvc/
 
 Reference for warnings:
  4018 - signed/unsigned mismatch
@@ -47,8 +48,8 @@ Prefast:
 include("premake5.files.lua")
 
 workspace "SumatraPDF"
-  configurations { "Debug", "Release", "ReleasePrefast" }
-  platforms { "x32", "x32_xp", "x64" }
+  configurations { "Debug", "Release", "ReleasePrefast", }
+  platforms { "x32", "x32_xp", "x32_asan", "x64" }
   startproject "SumatraPDF"
 
   filter "platforms:x32_xp"
@@ -61,6 +62,12 @@ workspace "SumatraPDF"
      architecture "x86"
   filter {}
 
+  filter "platforms:x32_asan"
+    architecture "x86"
+    buildoptions { "/fsanitize=address"}
+    disablewarnings { "4731" }
+  filter {}
+
   filter "platforms:x64"
      architecture "x86_64"
      -- strangely this is not set by default for rc.exe
@@ -71,10 +78,6 @@ workspace "SumatraPDF"
   warnings "Extra"
 
   location "this_is_invalid_location"
-
-  filter "action:vs2017"
-    location "vs2017"
-  filter {}
 
   filter "action:vs2019"
     location "vs2019"
@@ -97,6 +100,13 @@ workspace "SumatraPDF"
     targetdir "out/rel32_prefast_xp"
   filter {"platforms:x32_xp", "configurations:Debug"}
     targetdir "out/dbg32_xp"
+
+  filter {"platforms:x32_asan", "configurations:Release"}
+    targetdir "out/rel32_asan"
+  filter {"platforms:x32_asan", "configurations:ReleasePrefast"}
+    targetdir "out/rel32_prefast_asan"
+  filter {"platforms:x32_asan", "configurations:Debug"}
+    targetdir "out/dbg32_asan"
 
   filter {"platforms:x64", "configurations:Release"}
     targetdir "out/rel64"
@@ -230,7 +240,7 @@ workspace "SumatraPDF"
     -- -I .\ext\libjpeg-turbo\win\ -f win32
     -- -o .\obj-rel\jpegturbo\jsimdcpu.obj
     -- .\ext\libjpeg-turbo\simd\jsimdcpu.asm
-    filter {'files:**.asm', 'platforms:x32 or x32_xp'}
+    filter {'files:**.asm', 'platforms:x32 or x32_xp or x32_asan'}
        buildmessage '%{file.relpath}'
        buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
        buildcommands {
@@ -344,7 +354,7 @@ workspace "SumatraPDF"
     }
     -- .\ext\..\bin\nasm.exe -I .\mupdf\ -f win32 -o .\obj-rel\mupdf\font_base14.obj
     -- .\mupdf\font_base14.asm
-    filter {'files:**.asm', 'platforms:x32 or x32_xp'}
+    filter {'files:**.asm', 'platforms:x32 or x32_xp or x32_asan'}
        buildmessage 'Compiling %{file.relpath}'
        buildoutputs { '%{cfg.objdir}/%{file.basename}.obj' }
        buildcommands {
@@ -395,19 +405,6 @@ workspace "SumatraPDF"
     utils_files()
 
 
-  -- TODO: merge directly into Sumatra projects
-  --[[
-  project "sumatra"
-    kind "StaticLib"
-    language "C++"
-    cppdialect "C++17"
-    -- TODO: 4838 only in settingsstructs.h(642)
-    disablewarnings { "4838" }
-    includedirs { "src", "src/wingui", "ext/synctex" }
-    sumatra_files()
-  --]]
-
-
   ---- executables
   --[[
   project "efi"
@@ -448,6 +445,7 @@ workspace "SumatraPDF"
     disablewarnings { "4100" }
     files { "ext/unarr/main.c" }
     links { "unarrlib", "zlib" }
+
 
   project "signfile"
     kind "ConsoleApp"
@@ -570,6 +568,12 @@ workspace "SumatraPDF"
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",
       "version", "windowscodecs", "wininet"
     }
+    filter "platforms:x32_asan"
+      -- asan-i386.lib
+      -- clang_rt.asan-i386.lib
+      links { "clang_rt.asan-i386.lib" }
+      -- linkoptions { "/WHOLEARCHIVE:asan-i386.lib"}
+    filter {}
     -- this is to prevent dll hijacking
     linkoptions { "/DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll"}
 
@@ -628,3 +632,6 @@ workspace "SumatraPDF"
       "comctl32", "gdiplus", "msimg32", "shlwapi", "urlmon",
       "version", "wininet", "d2d1.lib",
     }
+    filter "platforms:x32_asan"
+      links { "clang_rt.asan-i386.lib" }
+    filter {}
