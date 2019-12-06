@@ -18,3 +18,9 @@ and Visual Studio constantly adds latest capabilities. If things don't compile,
 first make sure you're using the latest version of Visual Studio.
 
 Open `vs2019/SumatraPDF.sln` when using Visual Studio 2019
+
+You need at least version 16.4.
+
+Notes on targets:
+* `x32_sp` target is for building for Windows XP and requires v141_xp toolset, which is an optional component of Visual Studio setup
+* `x32_asan` target is for enabling address sanitizer, only works in 32-bit Release build and requires installing an optional "C++ AddressSanitizers" component (see https://devblogs.microsoft.com/cppblog/addresssanitizer-asan-for-windows-with-msvc/ for more information)
