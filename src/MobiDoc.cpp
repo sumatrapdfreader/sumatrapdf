@@ -977,19 +977,22 @@ bool MobiDoc::ParseToc(EbookTocVisitor* visitor) {
 }
 
 bool MobiDoc::IsSupportedFile(const WCHAR* fileName, bool sniff) {
-    if (sniff) {
-        PdbReader pdbReader;
-        OwnedData data(file::ReadFile(fileName));
-        if (!pdbReader.Parse(std::move(data))) {
-            return false;
-        }
-        // in most cases, we're only interested in Mobipocket files
-        // (PalmDoc uses MobiDoc for loading other formats based on MOBI,
-        // but implements sniffing itself in PalmDoc::IsSupportedFile)
-        return PdbDocType::Mobipocket == GetPdbDocType(pdbReader.GetDbType());
+    if (!sniff) {
+        bool isMobi = str::EndsWithI(fileName, L".mobi");
+        bool isPrc = str::EndsWithI(fileName, L".prc");
+        return isMobi || isPrc;
     }
 
-    return str::EndsWithI(fileName, L".mobi") || str::EndsWithI(fileName, L".prc");
+    PdbReader pdbReader;
+    OwnedData data(file::ReadFile(fileName));
+    if (!pdbReader.Parse(data)) {
+        return false;
+    }
+    // in most cases, we're only interested in Mobipocket files
+    // (PalmDoc uses MobiDoc for loading other formats based on MOBI,
+    // but implements sniffing itself in PalmDoc::IsSupportedFile)
+    PdbDocType kind = GetPdbDocType(pdbReader.GetDbType());
+    return PdbDocType::Mobipocket == kind;
 }
 
 MobiDoc* MobiDoc::CreateFromFile(const WCHAR* fileName) {

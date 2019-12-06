@@ -11,7 +11,7 @@
 // size of PdbRecordHeader
 #define kPdbRecordHeaderLen 8
 
-bool PdbReader::Parse(OwnedData data) {
+bool PdbReader::Parse(OwnedData& data) {
     this->data = std::move(data);
     if (!ParseHeader()) {
         return false;
@@ -113,12 +113,12 @@ std::string_view PdbReader::GetRecord(size_t recNo) {
     return {data.data + off, size};
 }
 
-PdbReader* PdbReader::CreateFromData(OwnedData data) {
+PdbReader* PdbReader::CreateFromData(OwnedData& data) {
     if (!data.data) {
         return nullptr;
     }
     PdbReader* reader = new PdbReader();
-    if (!reader->Parse(std::move(data))) {
+    if (!reader->Parse(data)) {
         delete reader;
         return nullptr;
     }
@@ -127,7 +127,7 @@ PdbReader* PdbReader::CreateFromData(OwnedData data) {
 
 PdbReader* PdbReader::CreateFromFile(const char* filePath) {
     OwnedData data = file::ReadFile(filePath);
-    return CreateFromData(std::move(data));
+    return CreateFromData(data);
 }
 
 #if OS_WIN
@@ -135,11 +135,11 @@ PdbReader* PdbReader::CreateFromFile(const char* filePath) {
 
 PdbReader* PdbReader::CreateFromFile(const WCHAR* filePath) {
     OwnedData data = file::ReadFile(filePath);
-    return CreateFromData(std::move(data));
+    return CreateFromData(data);
 }
 
 PdbReader* PdbReader::CreateFromStream(IStream* stream) {
     OwnedData data = GetDataFromStream(stream);
-    return CreateFromData(std::move(data));
+    return CreateFromData(data);
 }
 #endif

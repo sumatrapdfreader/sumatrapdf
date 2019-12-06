@@ -1122,17 +1122,20 @@ bool PalmDoc::ParseToc(EbookTocVisitor* visitor) {
 }
 
 bool PalmDoc::IsSupportedFile(const WCHAR* fileName, bool sniff) {
-    if (sniff) {
-        PdbReader pdbReader;
-        OwnedData data = file::ReadFile(fileName);
-        if (!pdbReader.Parse(std::move(data))) {
-            return false;
-        }
-
-        return str::Eq(pdbReader.GetDbType(), "TEXtREAd") || str::Eq(pdbReader.GetDbType(), "TEXtTlDc");
+    if (!sniff) {
+        bool isPdb = str::EndsWithI(fileName, L".pdb");
+        bool isPrc = str::EndsWithI(fileName, L".prc");
+        return isPdb || isPrc;
     }
 
-    return str::EndsWithI(fileName, L".pdb") || str::EndsWithI(fileName, L".prc");
+    PdbReader pdbReader;
+    OwnedData data = file::ReadFile(fileName);
+    if (!pdbReader.Parse(data)) {
+        return false;
+    }
+
+    const char* kind = pdbReader.GetDbType();
+    return str::Eq(kind, "TEXtREAd") || str::Eq(kind, "TEXtTlDc");
 }
 
 PalmDoc* PalmDoc::CreateFromFile(const WCHAR* fileName) {

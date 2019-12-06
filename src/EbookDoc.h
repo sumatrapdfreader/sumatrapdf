@@ -13,7 +13,7 @@ struct ImageData2 {
 char* NormalizeURL(const char* url, const char* base);
 
 class PropertyMap {
-    AutoFree values[DocumentProperty::PdfVersion];
+    AutoFree values[(int)DocumentProperty::PdfVersion];
 
     int Find(DocumentProperty prop) const;
 
