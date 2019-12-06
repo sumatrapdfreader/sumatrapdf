@@ -565,6 +565,10 @@ static void BuildSystemInfo() {
     gSystemInfo = s.StealData();
 }
 
+void SendCrashReport(const char* condStr) {
+    // TODO: implement me
+}
+
 /* Setting symbol path:
 add GetEnvironmentVariableA("_NT_SYMBOL_PATH", ..., ...)
 add GetEnvironmentVariableA("_NT_ALTERNATE_SYMBOL_PATH", ..., ...)

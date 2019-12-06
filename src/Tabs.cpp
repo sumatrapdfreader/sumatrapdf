@@ -637,7 +637,7 @@ static NO_INLINE void VerifyTabInfo(WindowInfo* win, TabInfo* tdata) {
         }
     }
     CrashIf(win->tocVisible != expectedTocVisibility);
-    CrashIf(tdata->canvasRc != win->canvasRc);
+    SendCrashReportIf(tdata->canvasRc != win->canvasRc);
 }
 
 // Must be called when the active tab is losing selection.

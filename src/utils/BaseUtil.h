@@ -232,6 +232,21 @@ inline void CrashIfFunc(bool cond) {
 #endif
 }
 
+// must be provided somewhere else
+// could be a dummy implementation
+// For sumatra, it's in CrashHandler.cpp
+extern void SendCrashReport(const char*);
+
+inline void SendCrashIfFunc(bool cond, const char* condStr) {
+#if defined(SVN_PRE_RELEASE_VER) || defined(DEBUG)
+    if (cond) {
+        SendCrashReport(condStr);
+    }
+#else
+    UNUSED(cond);
+#endif
+}
+
 // Sometimes we want to assert only in debug build (not in pre-release)
 inline void CrashIfDebugOnlyFunc(bool cond) {
 #if defined(DEBUG)
@@ -275,6 +290,13 @@ inline void CrashIfDebugOnlyFunc(bool cond) {
         __analysis_assume(!(cond)); \
         CrashIfFunc(cond);          \
     }                               \
+    while_0_nowarn
+
+#define SendCrashReportIf(cond)       \
+    do {                              \
+        __analysis_assume(!(cond));   \
+        SendCrashIfFunc(cond, #cond); \
+    }                                 \
     while_0_nowarn
 
 // AssertCrash is like assert() but crashes like CrashIf()
