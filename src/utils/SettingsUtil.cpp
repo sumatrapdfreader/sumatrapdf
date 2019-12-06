@@ -535,16 +535,17 @@ static void FreeStructData(const StructInfo* info, uint8_t* base) {
     for (size_t i = 0; i < info->fieldCount; i++) {
         const FieldInfo& field = info->fields[i];
         uint8_t* fieldPtr = base + field.offset;
-        if (Type_Struct == field.type || Type_Prerelease == field.type)
+        if (Type_Struct == field.type || Type_Prerelease == field.type) {
             FreeStructData(GetSubstruct(field), fieldPtr);
-        else if (Type_Array == field.type)
+        } else if (Type_Array == field.type) {
             FreeArray(*(Vec<void*>**)fieldPtr, field);
-        else if (Type_String == field.type || Type_Utf8String == field.type)
+        } else if (Type_String == field.type || Type_Utf8String == field.type) {
             free(*(void**)fieldPtr);
-        else if (Type_ColorArray == field.type || Type_FloatArray == field.type || Type_IntArray == field.type)
+        } else if (Type_ColorArray == field.type || Type_FloatArray == field.type || Type_IntArray == field.type) {
             delete *(Vec<int>**)fieldPtr;
-        else if (Type_StringArray == field.type)
+        } else if (Type_StringArray == field.type) {
             FreeStringArray(*(Vec<WCHAR*>**)fieldPtr);
+        }
     }
 }
 

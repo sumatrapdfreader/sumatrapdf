@@ -39,21 +39,25 @@ enum SettingType {
     Type_IntArray,
     Type_StringArray,
     Type_Comment,
-    Type_Prerelease, // same as Type_Struct but won't be written out in release builds
+    // same as Type_Struct but won't be written out in release builds
+    Type_Prerelease,
 };
 
 struct FieldInfo {
-    size_t offset; // offset of the field in the struct
-    SettingType type;
-    intptr_t value; // default value for primitive types and pointer to StructInfo for complex ones
+    // offset of the field in the struct
+    size_t offset = 0;
+    SettingType type = Type_Struct;
+    // default value for primitive types and pointer to StructInfo for complex ones
+    intptr_t value = 0;
 };
 
 struct StructInfo {
-    uint16_t structSize;
-    uint16_t fieldCount;
-    const FieldInfo* fields;
-    // one string of fieldCount zero-terminated names of all fields in the order of fields
-    const char* fieldNames;
+    uint16_t structSize = 0;
+    uint16_t fieldCount = 0;
+    const FieldInfo* fields = nullptr;
+    // one string of fieldCount zero-terminated names of all fields
+    // in the order of fields
+    const char* fieldNames = nullptr;
 };
 
 char* SerializeStruct(const StructInfo* info, const void* strct, const char* prevData = nullptr,

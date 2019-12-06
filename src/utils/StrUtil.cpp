@@ -952,12 +952,12 @@ int CmpNatural(const char* a, const char* b) {
             b--;
         }
         // sort letters case-insensitively
-        else if (isalnum(*a) && isalnum(*b))
+        else if (isalnum((int)*a) && isalnum((int)*b))
             diff = tolower(*a) - tolower(*b);
         // sort special characters before text and numbers
-        else if (isalnum(*a))
+        else if (isalnum((int)*a))
             return 1;
-        else if (isalnum(*b))
+        else if (isalnum((int)*b))
             return -1;
         // sort special characters by ASCII code
         else

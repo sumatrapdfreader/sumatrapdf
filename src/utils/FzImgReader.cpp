@@ -164,9 +164,9 @@ static Bitmap* ImageFromJp2Data(fz_context* ctx, const char* data, int len) {
         // TODO: could be optimized by creating a bitmap with bmpData.Scan0 as data
         // Or creating Bitmap after a fact with pix_argb->samples
         pix_argb = fz_convert_pixmap2(ctx, pix, csdest, prf, nullptr, colparms, alpha);
-        unsigned char* data = (unsigned char*)bmpData.Scan0;
+        unsigned char* bmpPixels = (unsigned char*)bmpData.Scan0;
         size_t dataSize = pix_argb->stride * h;
-        memcpy(data, pix_argb->samples, dataSize);
+        memcpy(bmpPixels, pix_argb->samples, dataSize);
     }
     fz_always(ctx) {
         bmp.UnlockBits(&bmpData);

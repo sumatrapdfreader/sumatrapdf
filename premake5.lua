@@ -391,6 +391,14 @@ workspace "SumatraPDF"
     kind "StaticLib"
     language "C++"
     cppdialect "C++17"
+
+    filter "configurations:ReleasePrefast"
+      -- TODO: somehow /analyze- is default which creates warning about
+      -- over-ride from cl.exe. Don't know how to disable the warning
+      buildoptions { "/analyze" }
+      disablewarnings { "28125", "28252", "28253" }
+    filter {}
+
     -- QITABENT in shlwapi.h has incorrect definition and causes 4838
     disablewarnings { "4100", "4267", "4457", "4838" }
     includedirs { "src", "ext/zlib", "ext/lzma/C" }
