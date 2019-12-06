@@ -789,11 +789,16 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 
     bool showStartPage =
         !restoreSession && i.fileNames.size() == 0 && gGlobalPrefs->rememberOpenedFiles && gGlobalPrefs->showStartPage;
+
+    // ShGetFileInfoW triggers ASAN deep in Windows code so probably not my fault
+#if !defined(ASAN_BUILD)
     if (showStartPage) {
         // make the shell prepare the image list, so that it's ready when the first window's loaded
-        SHFILEINFO sfi = {0};
-        SHGetFileInfo(L".pdf", 0, &sfi, sizeof(sfi), SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
+        SHFILEINFOW sfi = {0};
+        UINT flags = SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES;
+        SHGetFileInfoW(L".pdf", 0, &sfi, sizeof(sfi), flags);
     }
+#endif
 
     WindowInfo* win = nullptr;
     if (restoreSession) {

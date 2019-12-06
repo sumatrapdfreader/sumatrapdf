@@ -20,7 +20,7 @@
    created by an installer (and should be updated through an installer) */
 bool HasBeenInstalled() {
     // see GetInstallationDir() in Installer.cpp
-    WCHAR* installedPath = ReadRegStr2(HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, REG_PATH_UNINST, L"InstallLocation");
+    AutoFreeW installedPath(ReadRegStr2(HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, REG_PATH_UNINST, L"InstallLocation"));
     if (!installedPath) {
         return false;
     }
@@ -29,17 +29,16 @@ bool HasBeenInstalled() {
 
     defer {
         free(exePath);
-        free(installedPath);
     };
 
     if (!exePath) {
         return false;
     }
 
+    WCHAR* toFree = nullptr;
     if (!str::EndsWithI(installedPath, L".exe")) {
-        auto toFree = installedPath;
-        installedPath = path::Join(installedPath, path::GetBaseNameNoFree(exePath));
-        free(toFree);
+        WCHAR* tmp = path::Join(installedPath, path::GetBaseNameNoFree(exePath));
+        installedPath.Set(tmp);
     }
     return path::IsSame(installedPath, exePath);
 }

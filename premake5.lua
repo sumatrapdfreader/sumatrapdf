@@ -65,6 +65,7 @@ workspace "SumatraPDF"
   filter "platforms:x32_asan"
     architecture "x86"
     buildoptions { "/fsanitize=address"}
+    defines { "ASAN_BUILD=1" }
     disablewarnings { "4731" }
   filter {}
 
