@@ -239,15 +239,23 @@ bool PdfCreator::AddImagePage(Gdiplus::Bitmap* bmp, float imgDpi) {
 
 bool PdfCreator::AddImagePage(const char* data, size_t len, float imgDpi) {
     CrashIf(!ctx || !doc);
-    if (!ctx || !doc)
+    if (!ctx || !doc) {
         return false;
+    }
 
     const WCHAR* ext = GfxFileExtFromData(data, len);
-    if (str::Eq(ext, L".jpg") || str::Eq(ext, L".jp2")) {
+    bool isJpg = str::Eq(ext, L".jpg");
+    bool isJp2 = str::Eq(ext, L".jp2");
+    if (isJpg || isJp2) {
         Size size = BitmapSizeFromData(data, len);
         fz_image* image = nullptr;
         fz_try(ctx) {
-            image = (str::Eq(ext, L".jpg") ? pack_jpeg : pack_jp2)(ctx, data, len, SizeI(size.Width, size.Height));
+            auto imgSize = SizeI(size.Width, size.Height);
+            if (isJpg) {
+                image = pack_jpeg(ctx, data, len, imgSize);
+            } else {
+                image = pack_jp2(ctx, data, len, imgSize);
+            }
         }
         fz_catch(ctx) {
             return false;
@@ -257,8 +265,9 @@ bool PdfCreator::AddImagePage(const char* data, size_t len, float imgDpi) {
         return ok;
     }
     Bitmap* bmp = BitmapFromData(data, len);
-    if (!bmp)
+    if (!bmp) {
         return false;
+    }
     bool ok = AddImagePage(bmp, imgDpi);
     delete bmp;
     return ok;
