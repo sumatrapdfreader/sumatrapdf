@@ -2258,7 +2258,6 @@ WCHAR* PdfEngineImpl::ExtractFontList() {
             for (pdf_annot* annot = page->annots; annot; annot = annot->next) {
                 if (annot->ap) {
                     pdf_obj* o = annot->ap;
-                    CrashMePort();
                     // TODO(port): not sure this is the right thing
                     resources = pdf_xobject_resources(ctx, o);
                     pdf_extract_fonts(ctx, resources, fontList, resList);
