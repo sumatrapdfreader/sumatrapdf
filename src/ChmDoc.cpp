@@ -35,26 +35,28 @@ bool ChmDoc::HasData(const char* fileName) {
     return chm_resolve_object(chmHandle, fileName, &info) == CHM_RESOLVE_SUCCESS;
 }
 
-unsigned char* ChmDoc::GetData(const char* fileName, size_t* lenOut) {
-    AutoFree fileNameTmp;
-    if (!str::StartsWith(fileName, "/")) {
-        fileNameTmp.Set(str::Join("/", fileName));
-        fileName = fileNameTmp;
-    } else if (str::StartsWith(fileName, "///")) {
-        fileName += 2;
+unsigned char* ChmDoc::GetData(const char* fileNameIn, size_t* lenOut) {
+    char* fileName = nullptr;
+    if (!str::StartsWith(fileNameIn, "/")) {
+        fileName = str::Join("/", fileNameIn);
+    } else if (str::StartsWith(fileNameIn, "///")) {
+        fileName = str::Dup(fileNameIn + 2);
+    } else {
+        fileName = str::Dup(fileNameIn);
     }
 
     struct chmUnitInfo info;
     int res = chm_resolve_object(chmHandle, fileName, &info);
     if (CHM_RESOLVE_SUCCESS != res && str::FindChar(fileName, '\\')) {
         // Microsoft's HTML Help CHM viewer tolerates backslashes in URLs
-        fileNameTmp.SetCopy(fileName);
-        str::TransChars(fileNameTmp, "\\", "/");
-        fileName = fileNameTmp;
+        str::TransChars(fileName, "\\", "/");
         res = chm_resolve_object(chmHandle, fileName, &info);
     }
-    if (CHM_RESOLVE_SUCCESS != res)
+    free(fileName);
+
+    if (CHM_RESOLVE_SUCCESS != res) {
         return nullptr;
+    }
     size_t len = (size_t)info.length;
     if (len > 128 * 1024 * 1024) {
         // don't allow anything above 128 MB
@@ -62,19 +64,22 @@ unsigned char* ChmDoc::GetData(const char* fileName, size_t* lenOut) {
     }
 
     // +1 for 0 terminator for C string compatibility
-    ScopedMem<unsigned char> data((unsigned char*)malloc(len + 1));
-    if (!data)
+    ScopedMem<unsigned char> data((u8*)malloc(len + 1));
+    if (!data) {
         return nullptr;
-    if (!chm_retrieve_object(chmHandle, &info, data.Get(), 0, len))
+    }
+    if (!chm_retrieve_object(chmHandle, &info, data.Get(), 0, len)) {
         return nullptr;
+    }
     data[len] = '\0';
 
-    if (lenOut)
+    if (lenOut) {
         *lenOut = len;
+    }
     return data.StealData();
 }
 
-char* ChmDoc::ToUtf8(const unsigned char* text, UINT overrideCP) {
+char* ChmDoc::ToUtf8(const u8* text, UINT overrideCP) {
     const char* s = (char*)text;
     if (str::StartsWith(s, UTF8_BOM))
         return str::Dup(s + 3);
