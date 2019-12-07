@@ -55,6 +55,7 @@ EXPORTS
 	pdf_document_from_fz_document
 	pdf_page_from_fz_page
 	fz_convert_pixmap_samples
+	fz_new_display_list_from_page
 
 	fz_keep_bitmap
 	fz_drop_bitmap

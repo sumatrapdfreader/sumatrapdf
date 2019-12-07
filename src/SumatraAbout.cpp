@@ -718,11 +718,15 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
             DrawText(hdc, path::GetBaseNameNoFree(state->filePath), -1, &rTmp,
                      DT_SINGLELINE | DT_END_ELLIPSIS | DT_NOPREFIX | (isRtl ? DT_RIGHT : DT_LEFT));
 
+            // this crashes asan build in windows code
+            // see https://codeeval.dev/gist/bc761bb1ef1cce04e6a1d65e9d30201b
+#if !defined(ASAN_BUILD)
             SHFILEINFO sfi = {0};
             HIMAGELIST himl = (HIMAGELIST)SHGetFileInfo(state->filePath, 0, &sfi, sizeof(sfi),
                                                         SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
             ImageList_Draw(himl, sfi.iIcon, hdc, isRtl ? page.x + page.dx - DpiScaleX(win->hwndFrame, 16) : page.x,
                            rect.y, ILD_TRANSPARENT);
+#endif
 
             win->staticLinks.Append(StaticLinkInfo(rect.Union(page), state->filePath, state->filePath));
         }
