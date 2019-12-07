@@ -965,7 +965,7 @@ class PdfEngineImpl : public BaseEngine {
     PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse = false) override;
     RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
-    unsigned char* GetFileData(size_t* cbCount) override;
+    std::tuple<char*, size_t> GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
     virtual bool SaveFileAsPdf(const char* pdfFileName, bool includeUserAnnots = false) {
         return SaveFileAs(pdfFileName, includeUserAnnots);
@@ -2482,40 +2482,46 @@ PageLayoutType PdfEngineImpl::PreferredLayout() {
     return layout;
 }
 
-u8* PdfEngineImpl::GetFileData(size_t* cbCount) {
+std::tuple<char*, size_t> PdfEngineImpl::GetFileData() {
     u8* res = nullptr;
     ScopedCritSec scope(&ctxAccess);
+
     pdf_document* doc = pdf_document_from_fz_document(ctx, _doc);
+    size_t size = 0;
+
+    fz_var(res);
     fz_try(ctx) {
-        res = fz_extract_stream_data(ctx, doc->file, cbCount);
+        res = fz_extract_stream_data(ctx, doc->file, &size);
     }
     fz_catch(ctx) {
         res = nullptr;
-        if (FileName()) {
-            OwnedData data(file::ReadFile(FileName()));
-            if (cbCount) {
-                *cbCount = data.size;
-            }
-            res = (u8*)data.StealData();
-        }
     }
-    return res;
+
+    if (res) {
+        return {(char*)res, size};
+    }
+    auto path = FileName();
+    if (!path) {
+        return {};
+    }
+    return file::ReadFile2(path);
 }
 
 bool PdfEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
-    size_t dataLen;
     AutoFreeW dstPath(str::conv::FromUtf8(copyFileName));
-    ScopedMem<unsigned char> data(GetFileData(&dataLen));
+    auto [data, dataLen] = GetFileData();
     if (data) {
-        bool ok = file::WriteFile(dstPath, data.Get(), dataLen);
+        bool ok = file::WriteFile(dstPath, data, dataLen);
+        free(data);
         if (ok) {
             return !includeUserAnnots || SaveUserAnnots(copyFileName);
         }
     }
-    if (!FileName()) {
+    auto path = FileName();
+    if (!path) {
         return false;
     }
-    bool ok = CopyFileW(FileName(), dstPath, FALSE);
+    bool ok = CopyFileW(path, dstPath, FALSE);
     if (!ok) {
         return false;
     }

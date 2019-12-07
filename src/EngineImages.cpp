@@ -60,7 +60,7 @@ class ImagesEngine : public BaseEngine {
     PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse = false) override;
     RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
-    unsigned char* GetFileData(size_t* cbCount) override;
+    std::tuple<char*, size_t> GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
     WCHAR* ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** coordsOut = nullptr,
                            RenderTarget target = RenderTarget::View) override {
@@ -263,8 +263,8 @@ PageElement* ImagesEngine::GetElementAtPos(int pageNo, PointD pt) {
     return new ImageElement(this, page);
 }
 
-u8* ImagesEngine::GetFileData(size_t* cbCount) {
-    return GetStreamOrFileData(fileStream.Get(), FileName(), cbCount);
+std::tuple<char*, size_t> ImagesEngine::GetFileData() {
+    return GetStreamOrFileData2(fileStream.Get(), FileName());
 }
 
 bool ImagesEngine::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
@@ -277,12 +277,13 @@ bool ImagesEngine::SaveFileAs(const char* copyFileName, bool includeUserAnnots) 
             return true;
         }
     }
-    size_t dataLen;
-    ScopedMem<unsigned char> data(GetFileData(&dataLen));
+    auto [data, dataLen] = GetFileData();
     if (!data) {
         return false;
     }
-    return file::WriteFile(dstPath, data.Get(), dataLen);
+    auto res = file::WriteFile(dstPath, data, dataLen);
+    free(data);
+    return res;
 }
 
 ImagePage* ImagesEngine::GetPage(int pageNo, bool tryOnly) {
@@ -657,9 +658,8 @@ class ImageDirEngineImpl : public ImagesEngine {
         return nullptr;
     }
 
-    unsigned char* GetFileData(size_t* cbCountOut) override {
-        UNUSED(cbCountOut);
-        return nullptr;
+    std::tuple<char*, size_t> GetFileData() override {
+        return {};
     }
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
 

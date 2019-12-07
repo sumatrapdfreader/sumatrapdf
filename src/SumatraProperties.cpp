@@ -462,9 +462,12 @@ static void GetProps(Controller* ctrl, PropertiesLayout* layoutData, bool extend
 
     int64_t fileSize = file::GetSize(ctrl->FilePath());
     if (-1 == fileSize && ctrl->AsFixed()) {
-        size_t fileSizeT;
-        if (ScopedMem<unsigned char>(ctrl->AsFixed()->GetEngine()->GetFileData(&fileSizeT)))
-            fileSize = fileSizeT;
+        BaseEngine* engine = ctrl->AsFixed()->GetEngine();
+        auto [data, fileSizeTmp] = engine->GetFileData();
+        if (data) {
+            fileSize = fileSizeTmp;
+            free(data);
+        }
     }
     if (-1 != fileSize) {
         str = FormatFileSize((size_t)fileSize);

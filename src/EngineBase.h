@@ -422,7 +422,8 @@ class BaseEngine {
     // returns the binary data for the current file
     // (e.g. for saving again when the file has already been deleted)
     // caller needs to free() the result
-    virtual unsigned char* GetFileData(size_t* cbCount) = 0;
+    virtual std::tuple<char*, size_t> GetFileData() = 0;
+
     // saves a copy of the current file under a different name (overwriting an existing file)
     // (includeUserAnnots only has an effect if SupportsAnnotation(true) returns true)
     virtual bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) = 0;

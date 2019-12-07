@@ -112,13 +112,11 @@ HFONT GetDefaultGuiFont(bool bold, bool italic);
 long GetDefaultGuiFontSize();
 
 IStream* CreateStreamFromData(const void* data, size_t len);
-// TODO: remove remaining usage
-void* GetDataFromStream(IStream* stream, size_t* len, HRESULT* resOpt = nullptr);
 std::tuple<char*, size_t> GetDataFromStream2(IStream* stream, HRESULT* resOpt);
 // TODO; replace with GetDataFromStream2
 OwnedData GetDataFromStream(IStream* stream, HRESULT* resOpt = nullptr);
 OwnedData GetStreamOrFileData(IStream* stream, const WCHAR* filePath);
-u8* GetStreamOrFileData(IStream* stream, const WCHAR* filePath, size_t* cbCount);
+std::tuple<char*, size_t> GetStreamOrFileData2(IStream* stream, const WCHAR* filePath);
 bool ReadDataFromStream(IStream* stream, void* buffer, size_t len, size_t offset = 0);
 UINT GuessTextCodepage(const char* data, size_t len, UINT defVal = CP_ACP);
 WCHAR* NormalizeString(const WCHAR* str, int /* NORM_FORM */ form);

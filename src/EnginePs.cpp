@@ -256,16 +256,8 @@ class PsEngineImpl : public BaseEngine {
         return pdfEngine->Transform(rect, pageNo, zoom, rotation, inverse);
     }
 
-    u8* GetFileData(size_t* cbCount) override {
-        const WCHAR* name = FileName();
-        if (!name) {
-            return nullptr;
-        }
-        OwnedData data(file::ReadFile(fileName));
-        if (cbCount) {
-            *cbCount = data.size;
-        }
-        return (u8*)data.StealData();
+    std::tuple<char*, size_t> GetFileData() override {
+        return file::ReadFile2(fileName);
     }
 
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override {

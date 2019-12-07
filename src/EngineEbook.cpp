@@ -102,16 +102,13 @@ class EbookEngine : public BaseEngine {
     PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse = false) override;
     RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
-    u8* GetFileData(size_t* cbCount) override {
+    std::tuple<char*, size_t> GetFileData() override {
         if (!fileName) {
-            return nullptr;
+            return {};
         }
-        OwnedData data(file::ReadFile(fileName));
-        if (cbCount) {
-            *cbCount = data.size;
-        }
-        return (u8*)data.StealData();
+        return file::ReadFile2(fileName);
     }
+
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override {
         UNUSED(includeUserAnnots);
         if (!fileName) {
@@ -773,7 +770,7 @@ class EpubEngineImpl : public EbookEngine {
         return nullptr;
     }
 
-    unsigned char* GetFileData(size_t* cbCount) override;
+    std::tuple<char*, size_t> GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
 
     PageLayoutType PreferredLayout() override;
@@ -848,8 +845,8 @@ bool EpubEngineImpl::FinishLoading() {
     return pages->size() > 0;
 }
 
-u8* EpubEngineImpl::GetFileData(size_t* cbCount) {
-    return GetStreamOrFileData(stream, fileName, cbCount);
+std::tuple<char*, size_t> EpubEngineImpl::GetFileData() {
+    return GetStreamOrFileData2(stream, fileName);
 }
 
 bool EpubEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {

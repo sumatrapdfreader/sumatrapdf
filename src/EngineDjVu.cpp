@@ -220,7 +220,7 @@ class DjVuEngineImpl : public BaseEngine {
     PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse = false) override;
     RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
-    unsigned char* GetFileData(size_t* cbCount) override;
+    std::tuple<char*, size_t> GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
     WCHAR* ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** coordsOut = nullptr,
                            RenderTarget target = RenderTarget::View) override;
@@ -722,8 +722,8 @@ RectD DjVuEngineImpl::Transform(RectD rect, int pageNo, float zoom, int rotation
     return RectD::FromXY(TL, BR);
 }
 
-u8* DjVuEngineImpl::GetFileData(size_t* cbCount) {
-    return GetStreamOrFileData(stream, FileName(), cbCount);
+std::tuple<char*, size_t> DjVuEngineImpl::GetFileData() {
+    return GetStreamOrFileData2(stream, FileName());
 }
 
 bool DjVuEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {

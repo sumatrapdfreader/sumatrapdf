@@ -1151,43 +1151,19 @@ OwnedData GetDataFromStream(IStream* stream, HRESULT* resOpt) {
     return {d, size};
 }
 
-void* GetDataFromStream(IStream* stream, size_t* len, HRESULT* resOpt) {
-    void* data = nullptr;
-    ULONG size;
-    HRESULT res = GetDataFromStream(stream, &data, &size);
-    if (FAILED(res)) {
-        free(data);
-        return nullptr;
-    }
-    if (len) {
-        *len = size;
-    }
-    if (resOpt) {
-        *resOpt = res;
-    }
-    return data;
-}
-
-OwnedData GetStreamOrFileData(IStream* stream, const WCHAR* filePath) {
+std::tuple<char*, size_t> GetStreamOrFileData2(IStream* stream, const WCHAR* filePath) {
     if (stream) {
-        OwnedData data = GetDataFromStream(stream);
-        return data;
+        return GetDataFromStream2(stream, nullptr);
     }
     if (!filePath) {
         return {};
     }
-    return file::ReadFile(filePath);
+    return file::ReadFile2(filePath);
 }
 
-u8* GetStreamOrFileData(IStream* stream, const WCHAR* filePath, size_t* cbCount) {
-    OwnedData data = GetStreamOrFileData(stream, filePath);
-    if (data.IsEmpty()) {
-        return nullptr;
-    }
-    if (cbCount) {
-        *cbCount = data.size;
-    }
-    return (u8*)data.Get();
+OwnedData GetStreamOrFileData(IStream* stream, const WCHAR* filePath) {
+    auto [d, size] = GetStreamOrFileData2(stream, filePath);
+    return {d, size};
 }
 
 bool ReadDataFromStream(IStream* stream, void* buffer, size_t len, size_t offset) {

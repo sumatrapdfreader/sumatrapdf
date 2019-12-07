@@ -220,7 +220,7 @@ class XpsEngineImpl : public BaseEngine {
     PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse = false) override;
     RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
-    unsigned char* GetFileData(size_t* cbCount) override;
+    std::tuple<char*, size_t> GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
     WCHAR* ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** coordsOut = nullptr,
                            RenderTarget target = RenderTarget::View) override;
@@ -911,38 +911,45 @@ RenderedBitmap* XpsEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
     return bitmap;
 }
 
-u8* XpsEngineImpl::GetFileData(size_t* cbCount) {
+std::tuple<char*, size_t> XpsEngineImpl::GetFileData() {
     u8* res = nullptr;
     ScopedCritSec scope(&ctxAccess);
+    size_t cbCount;
+
+    fz_var(res);
     fz_try(ctx) {
-        res = fz_extract_stream_data(ctx, _docStream, cbCount);
+        res = fz_extract_stream_data(ctx, _docStream, &cbCount);
     }
     fz_catch(ctx) {
         res = nullptr;
-        if (FileName()) {
-            OwnedData data(file::ReadFile(FileName()));
-            if (cbCount) {
-                *cbCount = data.size;
-            }
-            res = (u8*)data.StealData();
-        }
     }
-    return res;
+    if (res) {
+        return {(char*)res, cbCount};
+    }
+    auto path = FileName();
+    if (!path) {
+        return {};
+    }
+
+    return file::ReadFile2(FileName());
 }
 
 bool XpsEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
     UNUSED(includeUserAnnots);
-    size_t dataLen;
     AutoFreeW dstPath(str::conv::FromUtf8(copyFileName));
-    ScopedMem<u8> data(GetFileData(&dataLen));
+    auto [data, dataLen] = GetFileData();
     if (data) {
-        bool ok = file::WriteFile(dstPath, data.Get(), dataLen);
-        if (ok)
+        bool ok = file::WriteFile(dstPath, data, dataLen);
+        free(data);
+        if (ok) {
             return true;
+        }
     }
-    if (!FileName())
+    auto path = FileName();
+    if (!path) {
         return false;
-    return CopyFileW(FileName(), dstPath, FALSE);
+    }
+    return CopyFileW(path, dstPath, FALSE);
 }
 
 WCHAR* XpsEngineImpl::ExtractFontList() {
