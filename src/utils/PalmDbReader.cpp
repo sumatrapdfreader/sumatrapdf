@@ -11,12 +11,18 @@
 // size of PdbRecordHeader
 #define kPdbRecordHeaderLen 8
 
-bool PdbReader::Parse(OwnedData& data) {
-    this->data = std::move(data);
+// Takes ownership of d
+bool PdbReader::Parse(const char* d, size_t size) {
+    data = d;
+    dataSize = size;
     if (!ParseHeader()) {
         return false;
     }
     return true;
+}
+
+PdbReader::~PdbReader() {
+    str::Free(data);
 }
 
 static bool DecodePdbHeader(ByteOrderDecoder& dec, PdbHeader* hdr) {
@@ -43,7 +49,7 @@ static bool DecodePdbHeader(ByteOrderDecoder& dec, PdbHeader* hdr) {
 bool PdbReader::ParseHeader() {
     CrashIf(recInfos.size() > 0);
 
-    ByteOrderDecoder dec(data.data, data.size, ByteOrderDecoder::BigEndian);
+    ByteOrderDecoder dec(data, dataSize, ByteOrderDecoder::BigEndian);
     bool ok = DecodePdbHeader(dec, &hdr);
     if (!ok) {
         return false;
@@ -55,7 +61,7 @@ bool PdbReader::ParseHeader() {
 
     size_t nRecs = hdr.numRecords;
     size_t minOffset = kPdbHeaderLen + (nRecs * kPdbRecordHeaderLen);
-    size_t maxOffset = data.size;
+    size_t maxOffset = dataSize;
 
     for (size_t i = 0; i < nRecs; i++) {
         PdbRecordHeader recHdr;
@@ -104,21 +110,21 @@ std::string_view PdbReader::GetRecord(size_t recNo) {
         return {};
     }
     size_t off = recInfos[recNo].offset;
-    size_t nextOff = data.size;
+    size_t nextOff = dataSize;
     if (recNo != nRecs - 1) {
         nextOff = recInfos[recNo + 1].offset;
     }
     CrashIf(off > nextOff);
     size_t size = nextOff - off;
-    return {data.data + off, size};
+    return {data + off, size};
 }
 
-PdbReader* PdbReader::CreateFromData(OwnedData& data) {
-    if (!data.data) {
+PdbReader* PdbReader::CreateFromData(const char* d, size_t size) {
+    if (!d || size == 0) {
         return nullptr;
     }
     PdbReader* reader = new PdbReader();
-    if (!reader->Parse(data)) {
+    if (!reader->Parse(d, size)) {
         delete reader;
         return nullptr;
     }
@@ -126,20 +132,21 @@ PdbReader* PdbReader::CreateFromData(OwnedData& data) {
 }
 
 PdbReader* PdbReader::CreateFromFile(const char* filePath) {
-    OwnedData data = file::ReadFile(filePath);
-    return CreateFromData(data);
+    std::string_view path(filePath);
+    auto [d, size] = file::ReadFile2(path);
+    return CreateFromData(d, size);
 }
 
 #if OS_WIN
 #include "WinUtil.h"
 
 PdbReader* PdbReader::CreateFromFile(const WCHAR* filePath) {
-    OwnedData data = file::ReadFile(filePath);
-    return CreateFromData(data);
+    auto [d, size] = file::ReadFile2(filePath);
+    return CreateFromData(d, size);
 }
 
 PdbReader* PdbReader::CreateFromStream(IStream* stream) {
-    OwnedData data = GetDataFromStream(stream);
-    return CreateFromData(data);
+    auto [data, size] = GetDataFromStream2(stream, nullptr);
+    return CreateFromData(data, size);
 }
 #endif

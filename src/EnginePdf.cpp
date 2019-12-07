@@ -193,8 +193,7 @@ fz_stream* fz_open_file2(fz_context* ctx, const WCHAR* filePath) {
     // load small files entirely into memory so that they can be
     // overwritten even by programs that don't open files with FILE_SHARE_READ
     if (fileSize > 0 && fileSize < MAX_MEMORY_FILE_SIZE) {
-        size_t size;
-        char* data = file::ReadFileWithAllocator(filePath, &size, nullptr);
+        auto [data, size] = file::ReadFileWithAllocator(filePath, nullptr);
         if (data == nullptr) {
             // failed to read
             return nullptr;
@@ -1752,7 +1751,7 @@ fz_page* PdfEngineImpl::GetFzPage(int pageNo, bool failIfBusy) {
 
     fz_stext_options opts{};
     // TODO: can be used to collect images
-    //opts.flags = FZ_STEXT_PRESERVE_IMAGES;
+    // opts.flags = FZ_STEXT_PRESERVE_IMAGES;
 
     fz_try(ctx) {
         pageInfo->stext = fz_new_stext_page_from_page(ctx, page, &opts);

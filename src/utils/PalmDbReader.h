@@ -29,7 +29,8 @@ struct PdbRecordHeader {
 
 class PdbReader {
     // content of pdb file
-    OwnedData data;
+    const char* data = nullptr;
+    size_t dataSize = 0;
 
     // offset of each pdb record within the file + a sentinel
     // value equal to file size to simplify use
@@ -40,13 +41,16 @@ class PdbReader {
   public:
     PdbHeader hdr;
 
-    bool Parse(OwnedData& data);
+    PdbReader() = default;
+    ~PdbReader();
+
+    bool Parse(const char* d, size_t size);
 
     const char* GetDbType();
     size_t GetRecordCount();
     std::string_view GetRecord(size_t recNo);
 
-    static PdbReader* CreateFromData(OwnedData& data);
+    static PdbReader* CreateFromData(const char* d, size_t size);
     static PdbReader* CreateFromFile(const char* filePath);
 
 #if OS_WIN

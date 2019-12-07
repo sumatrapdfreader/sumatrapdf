@@ -227,6 +227,17 @@ TryAgainWOW64:
     return val;
 }
 
+// called needs to free() the result
+char* ReadRegStrUtf8(HKEY keySub, const WCHAR* keyName, const WCHAR* valName) {
+    WCHAR* ws = ReadRegStr(keySub, keyName, valName);
+    if (!ws) {
+        return nullptr;
+    }
+    auto [s, size] = str::conv::WstrToUtf8(ws);
+    str::Free(ws);
+    return s;
+}
+
 WCHAR* ReadRegStr2(HKEY keySub1, HKEY keySub2, const WCHAR* keyName, const WCHAR* valName) {
     WCHAR* res = ReadRegStr(keySub1, keyName, valName);
     if (!res) {
@@ -1121,9 +1132,9 @@ static HRESULT GetDataFromStream(IStream* stream, void** data, ULONG* len) {
     return S_OK;
 }
 
-OwnedData GetDataFromStream(IStream* stream, HRESULT* resOpt) {
+std::tuple<char*, size_t> GetDataFromStream2(IStream* stream, HRESULT* resOpt) {
     void* data = nullptr;
-    ULONG size;
+    ULONG size = 0;
     HRESULT res = GetDataFromStream(stream, &data, &size);
     if (resOpt) {
         *resOpt = res;
@@ -1132,7 +1143,12 @@ OwnedData GetDataFromStream(IStream* stream, HRESULT* resOpt) {
         free(data);
         return {};
     }
-    return OwnedData((char*)data, (size_t)size);
+    return {(char*)data, (size_t)size};
+}
+
+OwnedData GetDataFromStream(IStream* stream, HRESULT* resOpt) {
+    auto [d, size] = GetDataFromStream2(stream, resOpt);
+    return {d, size};
 }
 
 void* GetDataFromStream(IStream* stream, size_t* len, HRESULT* resOpt) {

@@ -45,6 +45,7 @@ void LogLastError(DWORD err = 0);
 void DbgOutLastError(DWORD err = 0);
 bool RegKeyExists(HKEY keySub, const WCHAR* keyName);
 WCHAR* ReadRegStr(HKEY keySub, const WCHAR* keyName, const WCHAR* valName);
+char* ReadRegStrUtf8(HKEY keySub, const WCHAR* keyName, const WCHAR* valName);
 WCHAR* ReadRegStr2(HKEY keySub1, HKEY keySub2, const WCHAR* keyName, const WCHAR* valName);
 bool WriteRegStr(HKEY keySub, const WCHAR* keyName, const WCHAR* valName, const WCHAR* value);
 bool ReadRegDWORD(HKEY keySub, const WCHAR* keyName, const WCHAR* valName, DWORD& value);
@@ -113,6 +114,8 @@ long GetDefaultGuiFontSize();
 IStream* CreateStreamFromData(const void* data, size_t len);
 // TODO: remove remaining usage
 void* GetDataFromStream(IStream* stream, size_t* len, HRESULT* resOpt = nullptr);
+std::tuple<char*, size_t> GetDataFromStream2(IStream* stream, HRESULT* resOpt);
+// TODO; replace with GetDataFromStream2
 OwnedData GetDataFromStream(IStream* stream, HRESULT* resOpt = nullptr);
 OwnedData GetStreamOrFileData(IStream* stream, const WCHAR* filePath);
 u8* GetStreamOrFileData(IStream* stream, const WCHAR* filePath, size_t* cbCount);

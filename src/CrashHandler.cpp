@@ -57,7 +57,7 @@ static bool isPreRelease = false;
 #endif
 
 #if defined(BUILT_ON)
-static char* builtOn = QM(SVN_PRE_RELEASE_VER);
+static char* builtOn = QM(BUILT_ON);
 #else
 static char* builtOn = nullptr;
 #endif
@@ -415,45 +415,34 @@ static void GetOsVersion(str::Str& s) {
 }
 
 static void GetProcessorName(str::Str& s) {
-    WCHAR* name =
-        ReadRegStr(HKEY_LOCAL_MACHINE, L"HARDWARE\\DESCRIPTION\\System\\CentralProcessor", L"ProcessorNameString");
+    auto key = L"HARDWARE\\DESCRIPTION\\System\\CentralProcessor";
+    char* name = ReadRegStrUtf8(HKEY_LOCAL_MACHINE, key, L"ProcessorNameString");
     if (!name) {
         // if more than one processor
-        name = ReadRegStr(HKEY_LOCAL_MACHINE, L"HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0",
-                          L"ProcessorNameString");
+        key = L"HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0";
+        name = ReadRegStrUtf8(HKEY_LOCAL_MACHINE, key, L"ProcessorNameString");
     }
-    if (!name) {
-        return;
+    if (name) {
+        s.AppendFmt("Processor: %s\n", name);
+        free(name);
     }
-
-    OwnedData tmp(str::conv::ToUtf8(name));
-    s.AppendFmt("Processor: %s\n", tmp.Get());
-    free(name);
 }
 
 static void GetMachineName(str::Str& s) {
-    WCHAR* s1 = ReadRegStr(HKEY_LOCAL_MACHINE, L"HARDWARE\\DESCRIPTION\\System\\BIOS", L"SystemFamily");
-    WCHAR* s2 = ReadRegStr(HKEY_LOCAL_MACHINE, L"HARDWARE\\DESCRIPTION\\System\\BIOS", L"SystemVersion");
-    OwnedData s1u;
-    if (s1) {
-        s1u = std::move(str::conv::ToUtf8(s1));
-    }
-    OwnedData s2u;
-    if (s2) {
-        s2u = std::move(str::conv::ToUtf8(s2));
-    }
+    char* s1 = ReadRegStrUtf8(HKEY_LOCAL_MACHINE, L"HARDWARE\\DESCRIPTION\\System\\BIOS", L"SystemFamily");
+    char* s2 = ReadRegStrUtf8(HKEY_LOCAL_MACHINE, L"HARDWARE\\DESCRIPTION\\System\\BIOS", L"SystemVersion");
 
-    if (!s1u.Get() && !s2u.Get())
-        ; // pass
-    else if (!s1u.Get())
-        s.AppendFmt("Machine: %s\n", s2u.Get());
-    else if (!s2u.Get() || str::EqI(s1u.Get(), s2u.Get()))
-        s.AppendFmt("Machine: %s\n", s1u.Get());
-    else
-        s.AppendFmt("Machine: %s %s\n", s1u.Get(), s2u.Get());
-
-    free(s1);
+    if (!s1 && !s2) {
+        // no-op
+    } else if (!s1) {
+        s.AppendFmt("Machine: %s\n", s2);
+    } else if (!s2 || str::EqI(s1, s2)) {
+        s.AppendFmt("Machine: %s\n", s1);
+    } else {
+        s.AppendFmt("Machine: %s %s\n", s1, s2);
+    }
     free(s2);
+    free(s1);
 }
 
 #define GFX_DRIVER_KEY_FMT L"SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\%04d"
@@ -469,23 +458,25 @@ static void GetGraphicsDriverInfo(str::Str& s) {
     // There can be more than one driver, they are in 0000, 0001 etc.
     for (int i = 0;; i++) {
         AutoFreeW key(str::Format(GFX_DRIVER_KEY_FMT, i));
-        AutoFreeW v1(ReadRegStr(HKEY_LOCAL_MACHINE, key, L"DriverDesc"));
+        char* v = ReadRegStrUtf8(HKEY_LOCAL_MACHINE, key, L"DriverDesc");
         // I assume that if I can't read the value, there are no more drivers
-        if (!v1) {
+        if (!v) {
             break;
         }
-        OwnedData v1a(str::conv::ToUtf8(v1));
         s.AppendFmt("Graphics driver %d\n", i);
-        s.AppendFmt("  DriverDesc:         %s\n", v1.Get());
-        v1.Set(ReadRegStr(HKEY_LOCAL_MACHINE, key, L"DriverVersion"));
-        if (v1) {
-            v1a.TakeOwnership(str::conv::ToUtf8(v1).StealData());
-            s.AppendFmt("  DriverVersion:      %s\n", v1a.Get());
+        s.AppendFmt("  DriverDesc:         %s\n", v);
+        str::Free(v);
+
+        v = ReadRegStrUtf8(HKEY_LOCAL_MACHINE, key, L"DriverVersion");
+        if (v) {
+            s.AppendFmt("  DriverVersion:      %s\n", v);
+            str::Free(v);
         }
-        v1.Set(ReadRegStr(HKEY_LOCAL_MACHINE, key, L"UserModeDriverName"));
-        if (v1) {
-            v1a.TakeOwnership(str::conv::ToUtf8(v1).StealData());
-            s.AppendFmt("  UserModeDriverName: %s\n", v1a.Get());
+
+        v = ReadRegStrUtf8(HKEY_LOCAL_MACHINE, key, L"UserModeDriverName");
+        if (v) {
+            s.AppendFmt("  UserModeDriverName: %s\n", v);
+            str::Free(v);
         }
     }
 }
@@ -557,7 +548,7 @@ static bool BuildModulesInfo() {
 static void BuildSystemInfo() {
     str::Str s(1024);
     if (builtOn != nullptr) {
-        s.Append(builtOn);
+        s.AppendFmt("BuiltOn: %s\n", builtOn);
     }
     GetProgramInfo(s);
     GetOsVersion(s);

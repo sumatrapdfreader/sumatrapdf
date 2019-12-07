@@ -371,7 +371,7 @@ FILE* OpenFILE(const char* path) {
 #endif
 }
 
-char* ReadFileWithAllocator(const char* filePath, size_t* fileSizeOut, Allocator* allocator) {
+std::tuple<char*, size_t> ReadFileWithAllocator(const char* filePath, Allocator* allocator) {
 #if 0 // OS_WIN
     WCHAR buf[512];
     str::Utf8ToWcharBuf(filePath, str::Len(filePath), buf, dimof(buf));
@@ -379,14 +379,13 @@ char* ReadFileWithAllocator(const char* filePath, size_t* fileSizeOut, Allocator
 #else
     FILE* fp = OpenFILE(filePath);
     if (!fp) {
-        return nullptr;
+        return {};
     }
     char* d = nullptr;
     int res = fseek(fp, 0, SEEK_END);
     if (res != 0) {
-        return nullptr;
+        return {};
     }
-    size_t nRead;
     size_t size = ftell(fp);
     if (addOverflows<size_t>(size, ZERO_PADDING_COUNT)) {
         goto Error;
@@ -394,10 +393,10 @@ char* ReadFileWithAllocator(const char* filePath, size_t* fileSizeOut, Allocator
     d = (char*)Allocator::AllocZero(allocator, size + ZERO_PADDING_COUNT);
     res = fseek(fp, 0, SEEK_SET);
     if (res != 0) {
-        return nullptr;
+        return {};
     }
 
-    nRead = fread((void*)d, 1, size, fp);
+    size_t nRead = fread((void*)d, 1, size, fp);
     if (nRead != size) {
         int err = ferror(fp);
         CrashIf(err == 0);
@@ -406,27 +405,47 @@ char* ReadFileWithAllocator(const char* filePath, size_t* fileSizeOut, Allocator
         goto Error;
     }
 
-Exit:
-    if (fileSizeOut) {
-        *fileSizeOut = size;
-    }
     fclose(fp);
-    return d;
+    return {d, size};
 Error:
+    fclose(fp);
     Allocator::Free(allocator, (void*)d);
-    d = nullptr;
-    goto Exit;
+    return {};
 #endif
 }
 
+char* ReadFileWithAllocator(const char* filePath, size_t* fileSizeOut, Allocator* allocator) {
+    auto [data, size] = ReadFileWithAllocator(filePath, allocator);
+    if (fileSizeOut) {
+        *fileSizeOut = size;
+    }
+    return data;
+}
+
+std::tuple<char*, size_t> ReadFile2(std::string_view path) {
+    size_t size = 0;
+    char* data = ReadFileWithAllocator(path.data(), &size, nullptr);
+    return {data, size};
+}
+
+std::tuple<char*, size_t> ReadFile2(const WCHAR* filePath) {
+    auto [path, pathSize] = str::conv::WstrToUtf8(filePath);
+    std::string_view spath = {path, pathSize};
+    size_t size = 0;
+    char* data = ReadFileWithAllocator(path, &size, nullptr);
+    str::Free(path);
+    return {data, size};
+}
+
+// TODO: replace all use of ReadFile with ReadFile2() and rename ReadFile2 => ReadFile
 OwnedData ReadFile(std::string_view path) {
-    return ReadFile(path.data());
+    auto [data, size] = ReadFile2(path);
+    return {data, size};
 }
 
 // TODO: replace with ReadFile(std::string_view path)
 OwnedData ReadFile(const char* path) {
-    size_t size = 0;
-    char* data = ReadFileWithAllocator(path, &size, nullptr);
+    auto [data, size] = ReadFile2(path);
     return {data, size};
 }
 
@@ -516,6 +535,13 @@ int64_t GetSize(const WCHAR* filePath) {
 char* ReadFileWithAllocator(const WCHAR* path, size_t* fileSizeOut, Allocator* allocator) {
     OwnedData s = str::conv::ToUtf8(path);
     return ReadFileWithAllocator(s.Get(), fileSizeOut, allocator);
+}
+
+std::tuple<char*, size_t> ReadFileWithAllocator(const WCHAR* path, Allocator* allocator) {
+    auto [pathUtf8, size] = str::conv::WstrToUtf8(path);
+    auto res = ReadFileWithAllocator(pathUtf8, allocator);
+    str::Free(pathUtf8);
+    return res;
 }
 
 #if 0
