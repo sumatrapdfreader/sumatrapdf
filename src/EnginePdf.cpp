@@ -1898,7 +1898,7 @@ RenderedBitmap* PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
     }
 
     // TODO(port): I don't see why this lock is needed
-    EnterCriticalSection(&ctxAccess);
+    ScopedCritSec cs(&ctxAccess);
 
     fz_rect pRect;
     if (pageRect) {
@@ -1916,9 +1916,11 @@ RenderedBitmap* PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
 
     fz_pixmap* pix = nullptr;
     fz_device* dev = NULL;
+    RenderedBitmap* bitmap = nullptr;
 
     fz_var(dev);
     fz_var(pix);
+    fz_var(bitmap);
 
     fz_try(ctx) {
         pix = fz_new_pixmap_with_bbox(ctx, colorspace, ibounds, nullptr, 1);
@@ -1930,19 +1932,16 @@ RenderedBitmap* PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
         dev = fz_new_draw_device(ctx, fz_identity, pix);
         // TODO: use fz_infinite_rect instead of cliprect?
         fz_run_display_list(ctx, pageInfo->list, dev, ctm, cliprect, fzcookie);
-        fz_close_device(ctx, dev);
+        bitmap = new_rendered_fz_pixmap(ctx, pix);
     }
     fz_always(ctx) {
+        fz_close_device(ctx, dev);
         fz_drop_device(ctx, dev);
-        LeaveCriticalSection(&ctxAccess);
+        fz_drop_pixmap(ctx, pix);
     }
     fz_catch(ctx) {
-        fz_drop_pixmap(ctx, pix);
         return nullptr;
     }
-
-    RenderedBitmap* bitmap = new_rendered_fz_pixmap(ctx, pix);
-    fz_drop_pixmap(ctx, pix);
     return bitmap;
 }
 
