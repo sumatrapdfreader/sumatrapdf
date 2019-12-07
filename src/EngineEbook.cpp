@@ -721,29 +721,7 @@ class EbookTocBuilder : public EbookTocVisitor {
         this->engine = engine;
     }
 
-    virtual void Visit(const WCHAR* name, const WCHAR* url, int level) {
-        PageDestination* dest;
-        if (!url)
-            dest = nullptr;
-        else if (url::IsAbsolute(url))
-            dest = new SimpleDest2(0, RectD(), str::Dup(url));
-        else {
-            dest = engine->GetNamedDest(url);
-            if (!dest && str::FindChar(url, '%')) {
-                AutoFreeW decodedUrl(str::Dup(url));
-                url::DecodeInPlace(decodedUrl);
-                dest = engine->GetNamedDest(decodedUrl);
-            }
-        }
-
-        EbookTocItem* item = new EbookTocItem(str::Dup(name), dest);
-        item->id = ++idCounter;
-        if (isIndex) {
-            item->pageNo = 0;
-            level++;
-        }
-        AppendTocItem(root, item, level);
-    }
+    void Visit(const WCHAR* name, const WCHAR* url, int level) override;
 
     EbookTocItem* GetRoot() {
         return root;
@@ -752,6 +730,30 @@ class EbookTocBuilder : public EbookTocVisitor {
         isIndex = value;
     }
 };
+
+void EbookTocBuilder::Visit(const WCHAR* name, const WCHAR* url, int level) {
+    PageDestination* dest;
+    if (!url) {
+        dest = nullptr;
+    } else if (url::IsAbsolute(url)) {
+        dest = new SimpleDest2(0, RectD(), str::Dup(url));
+    } else {
+        dest = engine->GetNamedDest(url);
+        if (!dest && str::FindChar(url, '%')) {
+            AutoFreeW decodedUrl(str::Dup(url));
+            url::DecodeInPlace(decodedUrl);
+            dest = engine->GetNamedDest(decodedUrl);
+        }
+    }
+
+    EbookTocItem* item = new EbookTocItem(str::Dup(name), dest);
+    item->id = ++idCounter;
+    if (isIndex) {
+        item->pageNo = 0;
+        level++;
+    }
+    AppendTocItem(root, item, level);
+}
 
 /* BaseEngine for handling EPUB documents */
 
