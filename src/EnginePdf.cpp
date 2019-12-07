@@ -1914,13 +1914,17 @@ RenderedBitmap* PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
     fz_irect ibounds = bbox;
     fz_rect cliprect = fz_rect_from_irect(bbox);
 
-    fz_pixmap* pix = fz_new_pixmap_with_bbox(ctx, colorspace, ibounds, nullptr, 1);
-    // initialize white background
-    fz_clear_pixmap_with_value(ctx, pix, 0xff);
-
+    fz_pixmap* pix = nullptr;
     fz_device* dev = NULL;
+
     fz_var(dev);
+    fz_var(pix);
+
     fz_try(ctx) {
+        pix = fz_new_pixmap_with_bbox(ctx, colorspace, ibounds, nullptr, 1);
+        // initialize white background
+        fz_clear_pixmap_with_value(ctx, pix, 0xff);
+
         // TODO: in printing different style. old code use pdf_run_page_with_usage(), with usage ="View"
         // or "Print". "Export" is not used
         dev = fz_new_draw_device(ctx, fz_identity, pix);
