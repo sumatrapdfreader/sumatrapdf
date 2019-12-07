@@ -17,14 +17,6 @@ var (
 
 func regenPremake() {
 	premakePath := filepath.Join("bin", "premake5.exe")
-
-	/*
-		{
-			cmd := exec.Command(premakePath, "vs2017")
-			u.RunCmdLoggedMust(cmd)
-		}
-	*/
-
 	{
 		cmd := exec.Command(premakePath, "vs2019")
 		u.RunCmdLoggedMust(cmd)
@@ -136,6 +128,7 @@ func main() {
 
 	if flgCIBuild {
 		// ci build does the same thing as pre-release
+		failIfNoCertPwd()
 		detectVersions()
 		buildPreRelease(true)
 		return
@@ -164,6 +157,10 @@ func main() {
 	}
 
 	if flgBuildPreRelease {
+		if flgUpload {
+			// if uploading, make sure we can sign
+			failIfNoCertPwd()
+		}
 		detectVersions()
 		buildPreRelease(false)
 		s3UploadPreReleaseMust(svnPreReleaseVer, buildTypePreRel)

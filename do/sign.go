@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/kjk/u"
@@ -15,6 +16,14 @@ func runCmdLogged(cmd *exec.Cmd) error {
 	cmd.Stderr = os.Stderr
 	fmt.Printf("> %s\n", cmd)
 	return cmd.Run()
+}
+
+func hasCertPwd() bool {
+	return strings.TrimSpace(os.Getenv("CERT_PWD")) != ""
+}
+
+func failIfNoCertPwd() {
+	panicIf(!hasCertPwd(), "CERT_PWD env variable is not set")
 }
 
 // http://zabkat.com/blog/code-signing-sha1-armageddon.htm
