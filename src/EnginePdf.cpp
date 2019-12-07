@@ -607,13 +607,14 @@ static fz_link* FixupPageLinks(fz_link* root) {
 }
 
 class SimpleDest : public PageDestination {
-    int pageNo;
-    RectD rect;
-
   public:
-    SimpleDest(int pageNo, RectD rect) : pageNo(pageNo), rect(rect) {
-    }
+    int pageNo = -1;
+    RectD rect{};
 
+    SimpleDest(int p, RectD r) {
+        pageNo = p;
+        rect = r;
+    }
     PageDestType GetDestType() const override {
         return PageDestType::ScrollTo;
     }
@@ -1667,6 +1668,8 @@ PageDestination* PdfEngineImpl::GetNamedDest(const WCHAR* name) {
 
     OwnedData name_utf8(str::conv::ToUtf8(name));
     pdf_obj* dest = nullptr;
+
+    fz_var(dest);
     fz_try(ctx) {
         pdf_obj* nameobj = pdf_new_string(ctx, name_utf8.Get(), (int)name_utf8.size);
         dest = pdf_lookup_dest(ctx, doc, nameobj);
@@ -1676,28 +1679,31 @@ PageDestination* PdfEngineImpl::GetNamedDest(const WCHAR* name) {
         return nullptr;
     }
 
+    if (!dest) {
+        return nullptr;
+    }
+
     PageDestination* pageDest = nullptr;
-    // TODO(port)
-    CrashMePort();
-    // fz_link_dest ld = {FZ_LINK_NONE, 0};
-    char* ld;
+    char* uri = nullptr;
+
+    fz_var(uri);
     fz_try(ctx) {
-        ld = pdf_parse_link_dest(ctx, doc, dest);
+        uri = pdf_parse_link_dest(ctx, doc, dest);
     }
     fz_catch(ctx) {
         return nullptr;
     }
 
-    /*
-    if (FZ_LINK_GOTO == ld.kind && ld.ld.gotor.page != -1) {
-        // create a SimpleDest because we have to
-        // free the fz_link_dest before returning
-        PdfLink tmp(this, &ld);
-        pageDest = new SimpleDest(tmp.GetDestPageNo(), tmp.GetDestRect());
+    if (!uri) {
+        return nullptr;
     }
-    */
-    fz_free(ctx, ld);
 
+    float x, y;
+    int pageNo = resolve_link(uri, &x, &y);
+
+    RectD r{x, y, 0, 0};
+    pageDest = new SimpleDest{pageNo, r};
+    fz_free(ctx, uri);
     return pageDest;
 }
 
