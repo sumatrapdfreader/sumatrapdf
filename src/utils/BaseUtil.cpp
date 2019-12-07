@@ -166,7 +166,9 @@ OwnedData::OwnedData(const char* data, size_t size) {
 }
 
 OwnedData::~OwnedData() {
-    free(data);
+    if (data) {
+        free(data);
+    }
 }
 
 OwnedData::OwnedData(OwnedData&& other) {
