@@ -177,7 +177,7 @@ static void CALLBACK ReadDirectoryChangesNotification(DWORD errCode, DWORD bytes
     CrashIf(wd != wd->overlapped.data);
 
     if (errCode == ERROR_OPERATION_ABORTED) {
-        logf("ReadDirectoryChangesNotification: ERROR_OPERATION_ABORTED\n");
+        // logf("ReadDirectoryChangesNotification: ERROR_OPERATION_ABORTED\n");
         DeleteWatchedDir(wd);
         InterlockedDecrement(&gRemovalsPending);
         return;
