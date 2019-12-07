@@ -1733,49 +1733,34 @@ fz_page* PdfEngineImpl::GetFzPage(int pageNo, bool failIfBusy) {
     fz_catch(ctx) {
     }
 
-    fz_rect bounds;
-    fz_display_list* list = NULL;
-    fz_device* dev = NULL;
-    fz_cookie cookie = {0};
-    fz_var(list);
-    fz_var(dev);
-
     /* TODO: handle try later?
-        if (fz_caught(ctx) != FZ_ERROR_TRYLATER) {
-            return nullptr;
-        }
+    if (fz_caught(ctx) != FZ_ERROR_TRYLATER) {
+        return nullptr;
+    }
     */
 
-    // TODO: use fz_new_display_list_from_page
+    fz_display_list* list = NULL;
+    fz_var(list);
     fz_try(ctx) {
-        bounds = fz_bound_page(ctx, page);
-        list = fz_new_display_list(ctx, bounds);
-        dev = fz_new_list_device(ctx, list);
-        // TODO(port): should this be just fz_run_page_contents?
-        fz_run_page(ctx, page, dev, fz_identity, &cookie);
-    }
-    fz_always(ctx) {
-        fz_close_device(ctx, dev);
-        fz_drop_device(ctx, dev);
-        dev = NULL;
+        list = fz_new_display_list_from_page(ctx, page);
     }
     fz_catch(ctx) {
-        fz_drop_display_list(ctx, list);
-        // fz_drop_separations(ctx, seps);
+        list = nullptr;
     }
-    if (!list) {
-        return page;
-    }
+
     pageInfo->list = list;
 
+    fz_stext_options opts{};
+    // TODO: can be used to collect images
+    //opts.flags = FZ_STEXT_PRESERVE_IMAGES;
+
     fz_try(ctx) {
-        pageInfo->stext = fz_new_stext_page_from_page(ctx, page, nullptr);
+        pageInfo->stext = fz_new_stext_page_from_page(ctx, page, &opts);
     }
     fz_catch(ctx) {
         pageInfo->stext = nullptr;
     }
 
-    // create fz_display_list and get fz_stext_page
     auto* links = fz_load_links(ctx, page);
     pageInfo->links = FixupPageLinks(links);
     LinkifyPageText(pageInfo);
@@ -1941,8 +1926,10 @@ RenderedBitmap* PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
         bitmap = new_rendered_fz_pixmap(ctx, pix);
     }
     fz_always(ctx) {
-        fz_close_device(ctx, dev);
-        fz_drop_device(ctx, dev);
+        if (dev) {
+            fz_close_device(ctx, dev);
+            fz_drop_device(ctx, dev);
+        }
         fz_drop_pixmap(ctx, pix);
     }
     fz_catch(ctx) {
