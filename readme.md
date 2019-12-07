@@ -24,3 +24,6 @@ You need at least version 16.4 of Visual Studio 2019.
 Notes on targets:
 * `x32_sp` target is for building for Windows XP and requires v141_xp toolset, which is an optional component of Visual Studio setup
 * `x32_asan` target is for enabling address sanitizer, only works in 32-bit Release build and requires installing an optional "C++ AddressSanitizers" component (see https://devblogs.microsoft.com/cppblog/addresssanitizer-asan-for-windows-with-msvc/ for more information)
+
+When running x32_asan build, in `Debugging` section set `Environment` to `ASAN_OPTIONS=allocator_may_return_null=1`. This prevents a crash when running out of memory.
+ 
