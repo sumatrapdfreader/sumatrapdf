@@ -1847,7 +1847,7 @@ RenderedBitmap* PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo);
     fz_page* page = pageInfo->page;
 
-    if (!page) {
+    if (!page || !pageInfo->list) {
         return nullptr;
     }
 
