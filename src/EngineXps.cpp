@@ -866,7 +866,8 @@ PageElement* XpsEngineImpl::GetElementAtPos(int pageNo, PointD pt) {
     }
 
     size_t imageIdx = 0;
-    for (auto ir : pageInfo->imageRects) {
+    for (auto& img : pageInfo->images) {
+        fz_rect ir = img.rect;
         if (fz_is_pt_in_rect(ir, p)) {
             return new XpsImage(this, pageNo, ir, imageIdx);
         }
@@ -886,7 +887,8 @@ Vec<PageElement*>* XpsEngineImpl::GetElements(int pageNo) {
     Vec<PageElement*>* els = new Vec<PageElement*>();
 
     size_t imageIdx = 0;
-    for (auto ir : pageInfo->imageRects) {
+    for (auto& img : pageInfo->images) {
+        fz_rect ir = img.rect;
         auto image = new XpsImage(this, pageNo, ir, imageIdx);
         els->Append(image);
         imageIdx++;
@@ -1068,7 +1070,8 @@ bool XpsEngineImpl::HasClipOptimizations(int pageNo) {
 
     fz_rect mbox = fz_RectD_to_rect(PageMediabox(pageNo));
     // check if any image covers at least 90% of the page
-    for (auto ir : pageInfo->imageRects) {
+    for (auto& img : pageInfo->images) {
+        fz_rect ir = img.rect;
         if (fz_calc_overlap(mbox, ir) >= 0.9f) {
             return false;
         }

@@ -128,6 +128,36 @@ static RenderedBitmap* try_render_as_palette_image(fz_pixmap* pixmap) {
     return new RenderedBitmap(hbmp, SizeI(w, h), hMap);
 }
 
+// had to create a copy of fz_convert_pixmap to ensure we always get the alpha
+static fz_pixmap* fz_convert_pixmap2(fz_context* ctx, fz_pixmap* pix, fz_colorspace* ds, fz_colorspace* prf,
+                                     fz_default_colorspaces* default_cs, fz_color_params color_params, int keep_alpha) {
+    fz_pixmap* cvt;
+
+    if (!ds && !keep_alpha)
+        fz_throw(ctx, FZ_ERROR_GENERIC, "cannot both throw away and keep alpha");
+
+    cvt = fz_new_pixmap(ctx, ds, pix->w, pix->h, pix->seps, keep_alpha);
+
+    cvt->xres = pix->xres;
+    cvt->yres = pix->yres;
+    cvt->x = pix->x;
+    cvt->y = pix->y;
+    if (pix->flags & FZ_PIXMAP_FLAG_INTERPOLATE)
+        cvt->flags |= FZ_PIXMAP_FLAG_INTERPOLATE;
+    else
+        cvt->flags &= ~FZ_PIXMAP_FLAG_INTERPOLATE;
+
+    fz_try(ctx) {
+        fz_convert_pixmap_samples(ctx, pix, cvt, prf, default_cs, color_params, 1);
+    }
+    fz_catch(ctx) {
+        fz_drop_pixmap(ctx, cvt);
+        fz_rethrow(ctx);
+    }
+
+    return cvt;
+}
+
 RenderedBitmap* new_rendered_fz_pixmap(fz_context* ctx, fz_pixmap* pixmap) {
     if (pixmap->n == 4 && fz_colorspace_is_rgb(ctx, pixmap->colorspace)) {
         RenderedBitmap* res = try_render_as_palette_image(pixmap);
@@ -135,10 +165,6 @@ RenderedBitmap* new_rendered_fz_pixmap(fz_context* ctx, fz_pixmap* pixmap) {
             return res;
         }
     }
-
-    int w = pixmap->w;
-    int h = pixmap->h;
-    int rows8 = ((w + 3) / 4) * 4;
 
     ScopedMem<BITMAPINFO> bmi((BITMAPINFO*)calloc(1, sizeof(BITMAPINFO) + 255 * sizeof(RGBQUAD)));
 
@@ -150,7 +176,7 @@ RenderedBitmap* new_rendered_fz_pixmap(fz_context* ctx, fz_pixmap* pixmap) {
         fz_irect bbox = fz_pixmap_bbox(ctx, pixmap);
         fz_colorspace* csdest = fz_device_bgr(ctx);
         fz_color_params cp = fz_default_color_params;
-        bgrPixmap = fz_convert_pixmap(ctx, pixmap, csdest, nullptr, nullptr, cp, 1);
+        bgrPixmap = fz_convert_pixmap2(ctx, pixmap, csdest, nullptr, nullptr, cp, 1);
     }
     fz_catch(ctx) {
         return nullptr;
@@ -160,22 +186,32 @@ RenderedBitmap* new_rendered_fz_pixmap(fz_context* ctx, fz_pixmap* pixmap) {
         return nullptr;
     }
 
+    int w = bgrPixmap->w;
+    int h = bgrPixmap->h;
+    int n = bgrPixmap->n;
+    int imgSize = bgrPixmap->stride * h;
+    int imgSize2 = w * h * n;
+    int bitsCount = n * 8;
+
     BITMAPINFOHEADER* bmih = &bmi.Get()->bmiHeader;
     bmih->biSize = sizeof(*bmih);
     bmih->biWidth = w;
     bmih->biHeight = -h;
     bmih->biPlanes = 1;
     bmih->biCompression = BI_RGB;
-    bmih->biBitCount = 32;
-    bmih->biSizeImage = h * w * 4;
+    bmih->biBitCount = bitsCount;
+    bmih->biSizeImage = imgSize;
     bmih->biClrUsed = 0;
 
     void* data = nullptr;
-    HANDLE hMap = CreateFileMapping(INVALID_HANDLE_VALUE, nullptr, PAGE_READWRITE, 0, bmih->biSizeImage, nullptr);
-    HBITMAP hbmp = CreateDIBSection(nullptr, bmi, DIB_RGB_COLORS, &data, hMap, 0);
+    HANDLE hFile = INVALID_HANDLE_VALUE;
+    DWORD fl = PAGE_READWRITE;
+    HANDLE hMap = CreateFileMappingW(hFile, nullptr, fl, 0, imgSize, nullptr);
+    UINT usage = DIB_RGB_COLORS;
+    HBITMAP hbmp = CreateDIBSection(nullptr, bmi, usage, &data, hMap, 0);
     if (data) {
         u8* samples = bgrPixmap->samples;
-        memcpy(data, samples, bmih->biSizeImage);
+        memcpy(data, samples, imgSize);
     }
     fz_drop_pixmap(ctx, bgrPixmap);
     if (!hbmp) {
@@ -909,6 +945,19 @@ WStrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) {
     return labels;
 }
 
+void fz_find_images(fz_stext_page* text, Vec<FitzImagePos>& images) {
+    fz_stext_block* block = text->first_block;
+    while (block) {
+        if (block->type != FZ_STEXT_BLOCK_IMAGE) {
+            block = block->next;
+            continue;
+        }
+        FitzImagePos img = {block->u.i.image, block->bbox, block->u.i.transform};
+        images.Append(img);
+        block = block->next;
+    }
+}
+
 struct PageTreeStackItem {
     pdf_obj* kids = nullptr;
     int i = -1;
@@ -1363,23 +1412,6 @@ bool PdfEngineImpl::Load(IStream* stream, PasswordUI* pwdUI) {
     return FinishLoading();
 }
 
-// TODO(port): fz_stream can't be re-opened anymore
-#if 0
-bool PdfEngineImpl::Load(fz_strem *stm, PasswordUI* pwdUI) {
-    auto fn = FileName();
-    AssertCrash(!fn && !_doc && ctx);
-    if (!ctx)
-        return false;
-
-    fz_stream* stm = nullptr;
-    fz_try(ctx) { stm = fz_open_file_w(ctx, File); }
-    fz_catch(ctx) { return false; }
-    if (!LoadFromStream(stm, pwdUI))
-        return false;
-    return FinishLoading();
-}
-#endif
-
 bool PdfEngineImpl::LoadFromStream(fz_stream* stm, PasswordUI* pwdUI) {
     if (!stm)
         return false;
@@ -1730,8 +1762,7 @@ fz_page* PdfEngineImpl::GetFzPage(int pageNo, bool failIfBusy) {
     pageInfo->list = list;
 
     fz_stext_options opts{};
-    // TODO: can be used to collect images
-    // opts.flags = FZ_STEXT_PRESERVE_IMAGES;
+    opts.flags = FZ_STEXT_PRESERVE_IMAGES;
 
     fz_try(ctx) {
         pageInfo->stext = fz_new_stext_page_from_page(ctx, page, &opts);
@@ -1746,51 +1777,9 @@ fz_page* PdfEngineImpl::GetFzPage(int pageNo, bool failIfBusy) {
 
     ProcessPageAnnotations(pageInfo);
 
-    // TODO: need to run inspection device to extract positions of images
-#if 0
-    Vec<FitzImagePos> positions;
-
-    if (!pi->imageRects && positions.size() > 0) {
-        // the list of page image rectangles is terminated with a null-rectangle
-        fz_rect* rects = AllocArray<fz_rect>(positions.size() + 1);
-        if (rects) {
-            for (size_t i = 0; i < positions.size(); i++) {
-                rects[i] = positions.at(i).rect;
-            }
-            pi->imageRects = rects;
-        }
-    }
-#endif
-
+    fz_find_images(pageInfo->stext, pageInfo->images);
     return page;
 }
-
-// TODO: this is code for printing and export
-#if 0
-bool PdfEngineImpl::RunPage(FzPageInfo* pageInfo, fz_device* dev, fz_matrix ctm, RenderTarget target, fz_rect cliprect,
-                            bool cacheRun, FitzAbortCookie* cookie) {
-
-    ScopedCritSec scope(&ctxAccess);
-    char* targetName = target == RenderTarget::Print ? "Print" : target == RenderTarget::Export ? "Export" : "View";
-    Vec<PageAnnotation> pageAnnots = fz_get_user_page_annots(userAnnots, pageNo);
-    fz_try(ctx) {
-        // TODO(port): not sure if this is the right port
-        fz_buffer* buf = fz_new_buffer(ctx, 1024);
-        fz_output* out = fz_new_output_with_buffer(ctx, buf);
-        auto wri = fz_new_pdf_writer_with_output(ctx, out, nullptr);
-        auto pageBounds = fz_bound_page(ctx, fzpage);
-        fz_begin_page(ctx, wri, pageBounds);
-        // fz_run_page_transparency(ctx, pageAnnots, dev, cliprect, false, page->transparency);
-        pdf_run_page_with_usage(ctx, doc, page, dev, ctm, targetName, fzcookie);
-        // fz_run_page_transparency(ctx, pageAnnots, dev, cliprect, true, page->transparency);
-        // fz_run_user_page_annots(ctx, pageAnnots, dev, ctm, cliprect, fzcookie);
-        fz_end_page(ctx, wri);
-    }
-    fz_catch(ctx) {
-        ok = false;
-    }
-}
-#endif
 
 RectD PdfEngineImpl::PageMediabox(int pageNo) {
     FzPageInfo* pi = _pages[pageNo - 1];
@@ -1948,7 +1937,8 @@ PageElement* PdfEngineImpl::GetElementAtPos(int pageNo, PointD pt) {
     }
 
     size_t imageIdx = 0;
-    for (auto ir : pageInfo->imageRects) {
+    for (auto& img : pageInfo->images) {
+        fz_rect ir = img.rect;
         if (fz_is_pt_in_rect(ir, p)) {
             return new PdfImage(this, pageNo, ir, imageIdx);
         }
@@ -1978,7 +1968,8 @@ Vec<PageElement*>* PdfEngineImpl::GetElements(int pageNo) {
     Vec<PageElement*>* els = new Vec<PageElement*>();
 
     size_t imageIdx = 0;
-    for (auto ir : pageInfo->imageRects) {
+    for (auto& img : pageInfo->images) {
+        fz_rect ir = img.rect;
         auto image = new PdfImage(this, pageNo, ir, imageIdx);
         els->Append(image);
         imageIdx++;
@@ -2106,28 +2097,35 @@ RenderedBitmap* PdfEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
     if (!pageInfo->page) {
         return nullptr;
     }
-
-    Vec<FitzImagePos> positions;
-
-    if (imageIdx >= positions.size() || fz_rect_to_RectD(positions.at(imageIdx).rect) != rect) {
-        AssertCrash(0);
+    auto& images = pageInfo->images;
+    bool outOfBounds = imageIdx >= images.size();
+    fz_rect imgRect = images.at(imageIdx).rect;
+    bool badRect = fz_rect_to_RectD(imgRect) != rect;
+    CrashIf(outOfBounds);
+    CrashIf(badRect);
+    if (outOfBounds || badRect) {
         return nullptr;
     }
 
     ScopedCritSec scope(&ctxAccess);
 
+    fz_image* image = images.at(imageIdx).image;
+    RenderedBitmap* bmp = nullptr;
     fz_pixmap* pixmap = nullptr;
+    fz_var(pixmap);
+    fz_var(bmp);
+
     fz_try(ctx) {
-        fz_image* image = positions.at(imageIdx).image;
-        CrashMePort();
         // TODO(port): not sure if should provide subarea, w and h
         pixmap = fz_get_pixmap_from_image(ctx, image, nullptr, nullptr, nullptr, nullptr);
+        bmp = new_rendered_fz_pixmap(ctx, pixmap);
+    }
+    fz_always(ctx) {
+        fz_drop_pixmap(ctx, pixmap);
     }
     fz_catch(ctx) {
         return nullptr;
     }
-    RenderedBitmap* bmp = new_rendered_fz_pixmap(ctx, pixmap);
-    fz_drop_pixmap(ctx, pixmap);
 
     return bmp;
 }
@@ -2714,7 +2712,8 @@ bool PdfEngineImpl::HasClipOptimizations(int pageNo) {
 
     fz_rect mbox = fz_RectD_to_rect(PageMediabox(pageNo));
     // check if any image covers at least 90% of the page
-    for (auto ir : pageInfo->imageRects) {
+    for (auto& img : pageInfo->images) {
+        fz_rect ir = img.rect;
         if (fz_calc_overlap(mbox, ir) >= 0.9f) {
             return false;
         }
@@ -3002,7 +3001,6 @@ RectD PdfLink::GetDestRect() const {
     char* uri = PdfLinkGetURI(this);
     CrashIf(!uri);
     if (!uri) {
-        CrashMePort();
         return result;
     }
 
@@ -3012,11 +3010,10 @@ RectD PdfLink::GetDestRect() const {
     float x, y;
     int pageNo = resolve_link(uri, &x, &y);
     if (pageNo == -1) {
-        CrashMePort();
+        // SendCrashReportIf(pageNo == -1);
         return result;
     }
 
-    // TODO(port): should those be trasformed by page's ctm?
     result.x = (double)x;
     result.y = (double)y;
     return result;

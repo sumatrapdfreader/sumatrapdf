@@ -25,6 +25,7 @@ class FitzAbortCookie : public AbortCookie {
 struct FitzImagePos {
     fz_image* image = nullptr;
     fz_rect rect = fz_unit_rect;
+    fz_matrix transform;
 };
 
 struct FzPageInfo {
@@ -35,14 +36,13 @@ struct FzPageInfo {
     fz_stext_page* stext = nullptr;
     RectD mediabox = {};
     Vec<pdf_annot*> pageAnnots;
-    Vec<fz_rect> imageRects;
+    Vec<FitzImagePos> images;
 };
 
 struct LinkRectList {
     WStrVec links;
     Vec<fz_rect> coords;
 };
-
 
 class SimpleDest : public PageDestination {
   public:
