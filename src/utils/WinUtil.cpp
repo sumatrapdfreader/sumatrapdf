@@ -1146,7 +1146,7 @@ std::tuple<char*, size_t> GetDataFromStream(IStream* stream, HRESULT* resOpt) {
     return {(char*)data, (size_t)size};
 }
 
-std::tuple<char*, size_t> GetStreamOrFileData2(IStream* stream, const WCHAR* filePath) {
+std::tuple<char*, size_t> GetStreamOrFileData(IStream* stream, const WCHAR* filePath) {
     if (stream) {
         return GetDataFromStream(stream, nullptr);
     }
@@ -1154,11 +1154,6 @@ std::tuple<char*, size_t> GetStreamOrFileData2(IStream* stream, const WCHAR* fil
         return {};
     }
     return file::ReadFile2(filePath);
-}
-
-OwnedData GetStreamOrFileData(IStream* stream, const WCHAR* filePath) {
-    auto [d, size] = GetStreamOrFileData2(stream, filePath);
-    return {d, size};
 }
 
 bool ReadDataFromStream(IStream* stream, void* buffer, size_t len, size_t offset) {

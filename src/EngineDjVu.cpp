@@ -726,7 +726,7 @@ RectD DjVuEngineImpl::Transform(RectD rect, int pageNo, float zoom, int rotation
 }
 
 std::tuple<char*, size_t> DjVuEngineImpl::GetFileData() {
-    return GetStreamOrFileData2(stream, FileName());
+    return GetStreamOrFileData(stream, FileName());
 }
 
 bool DjVuEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {

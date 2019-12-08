@@ -13,8 +13,7 @@ HRESULT CTeXFilter::OnInit()
     if (!m_pData) {
         // load content of LaTeX file into m_pData
         HRESULT res;
-        size_t len;
-        void *data = GetDataFromStream(m_pStream, &len, &res);
+        auto [data, len] = GetDataFromStream(m_pStream, &res);
         if (!data)
             return res;
 

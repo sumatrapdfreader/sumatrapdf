@@ -264,7 +264,7 @@ PageElement* ImagesEngine::GetElementAtPos(int pageNo, PointD pt) {
 }
 
 std::tuple<char*, size_t> ImagesEngine::GetFileData() {
-    return GetStreamOrFileData2(fileStream.Get(), FileName());
+    return GetStreamOrFileData(fileStream.Get(), FileName());
 }
 
 bool ImagesEngine::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {

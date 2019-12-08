@@ -29,8 +29,7 @@ HRESULT CPdfFilter::OnInit() {
 
     // load content of PDF document into a seekable stream
     HRESULT res;
-    size_t len;
-    void* data = GetDataFromStream(m_pStream, &len, &res);
+    auto [data, len] = GetDataFromStream(m_pStream, &res);
     if (!data)
         return res;
 

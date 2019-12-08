@@ -846,7 +846,7 @@ bool EpubEngineImpl::FinishLoading() {
 }
 
 std::tuple<char*, size_t> EpubEngineImpl::GetFileData() {
-    return GetStreamOrFileData2(stream, fileName);
+    return GetStreamOrFileData(stream, fileName);
 }
 
 bool EpubEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
