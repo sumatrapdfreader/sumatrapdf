@@ -946,6 +946,9 @@ WStrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) {
 }
 
 void fz_find_images(fz_stext_page* text, Vec<FitzImagePos>& images) {
+    if (!text) {
+        return;
+    }
     fz_stext_block* block = text->first_block;
     while (block) {
         if (block->type != FZ_STEXT_BLOCK_IMAGE) {
