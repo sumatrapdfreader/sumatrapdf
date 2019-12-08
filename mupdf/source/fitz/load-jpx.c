@@ -522,6 +522,11 @@ struct stream_block_s
  * threading systems.
  */
 
+/*
+sumatrapdf: need to add a single, global lock
+https://github.com/sumatrapdfreader/sumatrapdf/issues/1306
+*/
+
 static fz_context *opj_secret = NULL;
 
 static void set_opj_context(fz_context *ctx)
@@ -534,6 +539,30 @@ static fz_context *get_opj_context(void)
 	return opj_secret;
 }
 
+#if defined(_WIN32)
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+static int isInitialized = 0;
+static CRITICAL_SECTION opj_cs;
+
+void opj_lock(fz_context *ctx)
+{
+	/* this is racy, but should be good enough */
+	if (!isInitialized) {
+		InitializeCriticalSection(&opj_cs);
+		isInitialized = 1;
+	}
+
+	EnterCriticalSection(&opj_cs);
+	set_opj_context(ctx);
+}
+
+void opj_unlock(fz_context *ctx)
+{
+	set_opj_context(NULL);
+	LeaveCriticalSection(&opj_cs);
+}
+#else
 void opj_lock(fz_context *ctx)
 {
 	fz_lock(ctx, FZ_LOCK_FREETYPE);
@@ -547,6 +576,8 @@ void opj_unlock(fz_context *ctx)
 
 	fz_unlock(ctx, FZ_LOCK_FREETYPE);
 }
+#endif
+
 
 void *opj_malloc(size_t size)
 {
