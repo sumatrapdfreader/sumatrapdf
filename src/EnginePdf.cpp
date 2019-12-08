@@ -2041,6 +2041,9 @@ void PdfEngineImpl::ProcessPageAnnotations(FzPageInfo* pageInfo) {
     auto& annots = pageInfo->pageAnnots;
 
     auto page = (pdf_page*)pageInfo->page;
+    if (!page) {
+        return;
+    }
     for (pdf_annot* annot = page->annots; annot; annot = annot->next) {
         auto tp = pdf_annot_type(ctx, annot);
         const char* contents = pdf_annot_contents(ctx, annot); // don't free
