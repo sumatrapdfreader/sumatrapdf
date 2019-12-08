@@ -584,6 +584,15 @@ extern int RunInstaller();
 // in Uninstaller.cpp
 extern int RunUninstaller(bool);
 
+// In release builds, we want to do fast exit and leave cleaning up (freeing memory) to the os.
+// In debug and in release asan builds, we want to cleanup ourselves in order to see leaks.
+// Note: detect_leaks ASAN flag is not (yet?) supported with msvc 16.4
+#if defined(DEBUG) || defined(ASAN_BUILD)
+static bool fastExit = false;
+#else
+static bool fastExit = true;
+#endif
+
 int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR cmdLine,
                      _In_ int nCmdShow) {
     UNUSED(hPrevInstance);
@@ -593,7 +602,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 
     CrashIf(hInstance != GetInstance());
 
-#ifdef DEBUG
+#if defined(DEBUG)
     // Memory leak detection (only enable _CRTDBG_LEAK_CHECK_DF for
     // regular termination so that leaks aren't checked on exceptions,
     // aborts, etc. where some clean-up might not take place)
@@ -617,7 +626,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 
     srand((unsigned int)time(nullptr));
 
-#ifdef DEBUG
+#if defined(DEBUG)
     dbghelp::RememberCallstackLogs();
 #endif
 
@@ -887,13 +896,11 @@ Exit:
         DeleteWindowInfo(gWindows.at(0));
     }
 
-#ifndef DEBUG
-
-    // leave all the remaining clean-up to the OS
-    // (as recommended for a quick exit)
-    ::ExitProcess(retCode);
-
-#else
+    if (fastExit) {
+        // leave all the remaining clean-up to the OS
+        // (as recommended for a quick exit)
+        ::ExitProcess(retCode);
+    }
 
     DeleteCachedCursors();
     DeleteObject(GetDefaultGuiFont());
@@ -930,9 +937,10 @@ Exit:
     delete gLogBuf;
     delete gLogAllocator;
 
+#if defined(DEBUG)
     // output leaks after all destructors of static objects have run
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
 
     return retCode;
-#endif
 }
