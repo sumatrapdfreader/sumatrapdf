@@ -162,9 +162,14 @@ workspace "SumatraPDF"
   project "unrar"
     kind "StaticLib"
     language "C++"
-    exceptionhandling "On"
     defines { "UNRAR", "RARDLL", "SILENT" }
     disablewarnings { "4100", "4201", "4211", "4244", "4389", "4456", "4459", "4701", "4702", "4706", "4709", "4996" }
+    -- unrar uses exception handling in savepos.hpp but I don't want to enable it
+    -- as it seems to infect the Sumatra binary as well (i.e. I see bad alloc exception
+    -- being thrown)
+    -- exceptionhandling "On"
+    disablewarnings { "4530" } -- warning about using C++ exception handler without exceptions enabled
+
     includedirs { "ext/unrar" }
     unrar_files()
 
@@ -324,8 +329,10 @@ workspace "SumatraPDF"
     -- for openjpeg, OPJ_STATIC is alrady defined in load-jpx.c
     -- so we can't double-define it
     defines { "USE_JPIP", "OPJ_EXPORTS", "HAVE_LCMS2MT=1" }
-    defines { "OPJ_STATIC" }
-    defines { "TOFU", "TOFU_CJK_LANG", "SHARE_JPEG" }
+    defines { "OPJ_STATIC", "SHARE_JPEG" }
+    -- this defines which fonts are to be excluded from being included directly
+    -- we exclude the very big cjk fonts
+    defines { "TOFU", "TOFU_CJK_LANG" }
     disablewarnings { 
       "4005", "4028", "4100", "4115", "4130", "4204", "4206", "4244",
       "4245", "4267", "4295", "4389", "4456", "4457", "4459", "4702",
