@@ -834,7 +834,7 @@ function test_util_files()
     "ByteOrderDecoder.*",
     "CmdLineParser.*",
     "ColorUtil.*",
-    "CryptoUtil.*",    
+    "CryptoUtil.*",
     "CssParser.*",
     "Dict.*",
     "Dpi.*",
@@ -884,7 +884,12 @@ function pdf_preview_files()
     "PdfPreview.*",
     "PdfPreviewDll.cpp",
   })
-  files { "src/MUPDF_Exports.cpp", "src/EnginePdf.*", "src/EngineXps.*" }
+  files {
+    "src/MUPDF_Exports.cpp",
+    "src/EngineBase.*",
+    "src/EnginePdf.*",
+    "src/EngineXps.*"
+  }
 
   filter {"configurations:Debug"}
     files_in_dir("src", {
@@ -911,7 +916,12 @@ function pdf_filter_files()
     "CPdfFilter.*",
     "FilterBase.h",
   })
-  files { "src/MUPDF_Exports.cpp", "src/EnginePdf.cpp", "src/EngineXps.*" }
+  files {
+    "src/MUPDF_Exports.cpp",
+    "src/EngineBase.*",
+    "src/EnginePdf.*",
+    "src/EngineXps.*"
+  }
 
   filter {"configurations:Debug"}
     files_in_dir("src/ifilter", {

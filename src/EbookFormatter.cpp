@@ -3,9 +3,10 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
+#include "utils/GdiPlusUtil.h"
+#include "utils/WinUtil.h"
 
 #include "utils/Archive.h"
-#include "utils/GdiPlusUtil.h"
 #include "utils/HtmlParserLookup.h"
 #include "utils/HtmlPullParser.h"
 #include "mui/Mui.h"

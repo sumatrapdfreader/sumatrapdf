@@ -685,6 +685,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\src\EbookDoc.h" />
+    <ClInclude Include="..\src\EngineBase.h" />
+    <ClInclude Include="..\src\EnginePdf.h" />
     <ClInclude Include="..\src\EngineXps.h" />
     <ClInclude Include="..\src\MobiDoc.h" />
     <ClInclude Include="..\src\ifilter\CEpubFilter.h" />
@@ -705,6 +707,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast x32_asan|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\src\EngineBase.cpp" />
     <ClCompile Include="..\src\EnginePdf.cpp" />
     <ClCompile Include="..\src\EngineXps.cpp" />
     <ClCompile Include="..\src\MUPDF_Exports.cpp" />

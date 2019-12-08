@@ -43,6 +43,27 @@ struct LinkRectList {
     Vec<fz_rect> coords;
 };
 
+
+class SimpleDest : public PageDestination {
+  public:
+    int pageNo = -1;
+    RectD rect{};
+
+    SimpleDest(int p, RectD r) {
+        pageNo = p;
+        rect = r;
+    }
+    PageDestType GetDestType() const override {
+        return PageDestType::ScrollTo;
+    }
+    int GetDestPageNo() const override {
+        return pageNo;
+    }
+    RectD GetDestRect() const override {
+        return rect;
+    }
+};
+
 fz_rect fz_RectD_to_rect(RectD rect);
 RectD fz_rect_to_RectD(fz_rect rect);
 fz_matrix fz_create_view_ctm(fz_rect mediabox, float zoom, int rotation);

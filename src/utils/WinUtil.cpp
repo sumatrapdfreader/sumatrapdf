@@ -1509,6 +1509,34 @@ HBITMAP CreateMemoryBitmap(SizeI size, HANDLE* hDataMapping) {
     return CreateDIBSection(nullptr, &bmi, DIB_RGB_COLORS, &data, hDataMapping ? *hDataMapping : nullptr, 0);
 }
 
+// render the bitmap into the target rectangle (streching and skewing as requird)
+bool BlitHBITMAP(HBITMAP hbmp, HDC hdc, RectI target) {
+    HDC bmpDC = CreateCompatibleDC(hdc);
+    if (!bmpDC) {
+        return false;
+    }
+
+    BITMAP bi{};
+    GetObject(hbmp, sizeof(BITMAP), &bi);
+    int dx = bi.bmWidth;
+    int dy = bi.bmHeight;
+
+    HGDIOBJ oldBmp = SelectObject(bmpDC, hbmp);
+    if (!oldBmp) {
+        DeleteDC(bmpDC);
+        return false;
+    }
+    SetStretchBltMode(hdc, HALFTONE);
+    int x = target.x;
+    int y = target.y;
+    int tdx = target.dx;
+    int tdy = target.dy;
+    bool ok = StretchBlt(hdc, x, y, tdx, tdy, bmpDC, 0, 0, dx, dy, SRCCOPY);
+    SelectObject(bmpDC, oldBmp);
+    DeleteDC(bmpDC);
+    return ok;
+}
+
 // This is meant to measure program startup time from the user perspective.
 // One place to measure it is at the beginning of WinMain().
 // Another place is on the first run of WM_PAINT of the message loop of main window.

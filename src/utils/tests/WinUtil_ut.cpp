@@ -13,22 +13,23 @@ void WinUtilTest() {
 
     {
         char* string = "abcde";
-        size_t stringSize = 5, len;
+        size_t stringSize = 5;
         ScopedComPtr<IStream> stream(CreateStreamFromData(string, stringSize));
         utassert(stream);
-        char* data = (char*)GetDataFromStream(stream, &len);
+        auto [data, len] = GetDataFromStream(stream, nullptr);
         utassert(data && stringSize == len && str::Eq(data, string));
         free(data);
     }
 
     {
         WCHAR* string = L"abcde";
-        size_t stringSize = 10, len;
+        size_t stringSize = 10;
         ScopedComPtr<IStream> stream(CreateStreamFromData(string, stringSize));
         utassert(stream);
-        WCHAR* data = (WCHAR*)GetDataFromStream(stream, &len);
+        auto [dataTmp, len] = GetDataFromStream(stream, nullptr);
+        WCHAR* data = (WCHAR*)dataTmp;
         utassert(data && stringSize == len && str::Eq(data, string));
-        free(data);
+        free(dataTmp);
     }
 
     {

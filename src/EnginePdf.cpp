@@ -605,26 +605,6 @@ static fz_link* FixupPageLinks(fz_link* root) {
     return new_root;
 }
 
-class SimpleDest : public PageDestination {
-  public:
-    int pageNo = -1;
-    RectD rect{};
-
-    SimpleDest(int p, RectD r) {
-        pageNo = p;
-        rect = r;
-    }
-    PageDestType GetDestType() const override {
-        return PageDestType::ScrollTo;
-    }
-    int GetDestPageNo() const override {
-        return pageNo;
-    }
-    RectD GetDestRect() const override {
-        return rect;
-    }
-};
-
 static Vec<PageAnnotation> fz_get_user_page_annots(Vec<PageAnnotation>& userAnnots, int pageNo) {
     Vec<PageAnnotation> result;
     for (size_t i = 0; i < userAnnots.size(); i++) {

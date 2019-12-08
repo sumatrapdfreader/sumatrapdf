@@ -73,47 +73,18 @@ enum class DocumentProperty {
 };
 
 class RenderedBitmap {
-  protected:
+  public:
     HBITMAP hbmp = nullptr;
     SizeI size = {};
     ScopedHandle hMap = {};
 
-  public:
     RenderedBitmap(HBITMAP hbmp, SizeI size, HANDLE hMap = nullptr) : hbmp(hbmp), size(size), hMap(hMap) {
     }
-    ~RenderedBitmap() {
-        DeleteObject(hbmp);
-    }
-
-    RenderedBitmap* Clone() const {
-        HBITMAP hbmp2 = (HBITMAP)CopyImage(hbmp, IMAGE_BITMAP, size.dx, size.dy, 0);
-        return new RenderedBitmap(hbmp2, size);
-    }
-
-    // callers must not delete this (use Clone if you have to modify it)
-    HBITMAP GetBitmap() const {
-        return hbmp;
-    }
-    SizeI Size() const {
-        return size;
-    }
-
-    // render the bitmap into the target rectangle (streching and skewing as requird)
-    bool StretchDIBits(HDC hdc, RectI target) const {
-        HDC bmpDC = CreateCompatibleDC(hdc);
-        if (!bmpDC)
-            return false;
-        HGDIOBJ oldBmp = SelectObject(bmpDC, hbmp);
-        if (!oldBmp) {
-            DeleteDC(bmpDC);
-            return false;
-        }
-        SetStretchBltMode(hdc, HALFTONE);
-        bool ok = StretchBlt(hdc, target.x, target.y, target.dx, target.dy, bmpDC, 0, 0, size.dx, size.dy, SRCCOPY);
-        SelectObject(bmpDC, oldBmp);
-        DeleteDC(bmpDC);
-        return ok;
-    }
+    ~RenderedBitmap();
+    RenderedBitmap* Clone() const;
+    HBITMAP GetBitmap() const;
+    SizeI Size() const;
+    bool StretchDIBits(HDC hdc, RectI target) const;
 };
 
 // interface to be implemented for saving embedded documents that a link points to
@@ -244,135 +215,37 @@ class DocTocItem : public TreeItem {
 
     DocTocItem() = default;
 
-    explicit DocTocItem(WCHAR* title, int pageNo = 0) {
-        this->title = title;
-        this->pageNo = pageNo;
-    }
+    explicit DocTocItem(WCHAR* title, int pageNo = 0);
 
-    virtual ~DocTocItem() {
-        delete child;
-        while (next) {
-            DocTocItem* tmp = next->next;
-            next->next = nullptr;
-            delete next;
-            next = tmp;
-        }
-        free(title);
-    }
+    virtual ~DocTocItem();
 
-    void AddSibling(DocTocItem* sibling) {
-        DocTocItem* item = this;
-        while (item->next) {
-            item = item->next;
-        }
-        item->next = sibling;
-    }
+    void AddSibling(DocTocItem* sibling);
 
-    void OpenSingleNode() {
-        // only open (root level) ToC nodes if there's at most two
-        if (next && next->next) {
-            return;
-        }
+    void OpenSingleNode();
 
-        if (!IsExpanded()) {
-            isOpenToggled = !isOpenToggled;
-        }
-        if (!next) {
-            return;
-        }
-        if (!next->IsExpanded()) {
-            next->isOpenToggled = !next->isOpenToggled;
-        }
-    }
+    virtual PageDestination* GetLink();
 
-    // returns the destination this ToC item points to or nullptr
-    // (the result is owned by the DocTocItem and MUST NOT be deleted)
-    // TODO: change this to char* uri that encodes all the information
-    // about PageDestination, get rid of PageDestination and all
-    // classes that inherit from DocTocItem
-    // virtual PageDestination* GetLink() = 0;
-    virtual PageDestination* GetLink() {
-        return nullptr;
-    }
-
-    WCHAR* Text() override {
-        return title;
-    }
+    WCHAR* Text();
 
     // TreeItem
-    TreeItem* Parent() override {
-        // don't use it
-        CrashMe();
-        return nullptr;
-    }
-
-    int ChildCount() override {
-        int n = 0;
-        auto node = child;
-        while (node) {
-            n++;
-            node = node->next;
-        }
-        return n;
-    }
-
-    TreeItem* ChildAt(int n) override {
-        auto node = child;
-        while (n > 0) {
-            node = node->next;
-            n--;
-        }
-        return node;
-    }
-
-    bool IsExpanded() override {
-        // leaf items cannot be expanded
-        if (child == nullptr) {
-            return false;
-        }
-        // item is expanded when:
-        // - expanded by default, not toggled (true, false)
-        // - not expanded by default, toggled (false, true)
-        // which boils down to:
-        return isOpenDefault != isOpenToggled;
-    }
+    TreeItem* Parent();
+    int ChildCount();
+    TreeItem* ChildAt(int n);
+    bool IsExpanded();
 };
 
 struct DocTocTree : public TreeModel {
     // name of the bookmark view
     char* name = nullptr;
-
     DocTocItem* root = nullptr;
 
     DocTocTree() = default;
-    DocTocTree(DocTocItem* root) {
-        this->root = root;
-    }
-
-    virtual ~DocTocTree() {
-        free(name);
-        delete root;
-    }
+    DocTocTree(DocTocItem* root);
+    virtual ~DocTocTree();
 
     // TreeModel
-    int RootCount() override {
-        int n = 0;
-        auto node = root;
-        while (node) {
-            n++;
-            node = node->next;
-        }
-        return n;
-    }
-
-    TreeItem* RootAt(int n) override {
-        auto node = root;
-        while (n > 0) {
-            node = node->next;
-            n--;
-        }
-        return node;
-    }
+    int RootCount();
+    TreeItem* RootAt(int n);
 };
 
 // a helper that allows for rendering interruptions in an engine-agnostic way
