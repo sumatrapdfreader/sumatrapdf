@@ -854,8 +854,9 @@ bool EpubEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots
     AutoFreeW dstPath(str::conv::FromUtf8(copyFileName));
 
     if (stream) {
-        OwnedData data = GetDataFromStream(stream);
-        if (!data.IsEmpty() && file::WriteFile(dstPath, data.Get(), data.size)) {
+        auto [data, size] = GetDataFromStream(stream, nullptr);
+        bool ok = data && size && file::WriteFile(dstPath, data, size);
+        if (ok) {
             return true;
         }
     }

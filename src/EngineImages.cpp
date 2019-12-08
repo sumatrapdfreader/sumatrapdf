@@ -424,12 +424,13 @@ bool ImageEngineImpl::LoadFromStream(IStream* stream) {
         return false;
     }
 
-    OwnedData data = GetDataFromStream(stream);
-    if (IsGdiPlusNativeFormat(data.Get(), data.size)) {
+    auto [data, size] = GetDataFromStream(stream, nullptr);
+    if (IsGdiPlusNativeFormat(data, size)) {
         image = Bitmap::FromStream(stream);
     } else {
-        image = BitmapFromData(data.Get(), data.size);
+        image = BitmapFromData(data, size);
     }
+    free(data);
 
     return FinishLoading();
 }
@@ -560,8 +561,9 @@ bool ImageEngineImpl::SaveFileAsPDF(const char* pdfFileName, bool includeUserAnn
         OwnedData data(file::ReadFile(FileName()));
         ok = data.data && c->AddImagePage(data.data, data.size, GetFileDPI());
     } else {
-        OwnedData data = GetDataFromStream(fileStream);
-        ok = !data.IsEmpty() && c->AddImagePage(data.Get(), data.size, GetFileDPI());
+        auto [data, size] = GetDataFromStream(fileStream, nullptr);
+        ok = data && c->AddImagePage(data, size, GetFileDPI());
+        free(data);
     }
     for (int i = 2; i <= PageCount() && ok; i++) {
         ImagePage* page = GetPage(i);

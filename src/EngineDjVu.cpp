@@ -179,11 +179,14 @@ class DjVuContext {
 
     ddjvu_document_t* OpenStream(IStream* stream) {
         ScopedCritSec scope(&lock);
-        OwnedData data = GetDataFromStream(stream);
-        if (!data.Get() || data.size > ULONG_MAX) {
+        auto [data, size] = GetDataFromStream(stream, nullptr);
+        if (!data || size > ULONG_MAX) {
+            free(data);
             return nullptr;
         }
-        return ddjvu_document_create_by_data(ctx, data.Get(), (ULONG)data.size);
+        auto res = ddjvu_document_create_by_data(ctx, data, (ULONG)size);
+        free(data);
+        return res;
     }
 };
 
@@ -730,8 +733,10 @@ bool DjVuEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots
     UNUSED(includeUserAnnots);
     AutoFreeW path(str::conv::FromUtf8(copyFileName));
     if (stream) {
-        OwnedData data = GetDataFromStream(stream);
-        if (data.Get() && file::WriteFile(path, data.Get(), data.size)) {
+        auto [data, size] = GetDataFromStream(stream, nullptr);
+        bool ok = data && size && file::WriteFile(path, data, size);
+        free(data);
+        if (ok) {
             return true;
         }
     }

@@ -1132,7 +1132,7 @@ static HRESULT GetDataFromStream(IStream* stream, void** data, ULONG* len) {
     return S_OK;
 }
 
-std::tuple<char*, size_t> GetDataFromStream2(IStream* stream, HRESULT* resOpt) {
+std::tuple<char*, size_t> GetDataFromStream(IStream* stream, HRESULT* resOpt) {
     void* data = nullptr;
     ULONG size = 0;
     HRESULT res = GetDataFromStream(stream, &data, &size);
@@ -1146,14 +1146,9 @@ std::tuple<char*, size_t> GetDataFromStream2(IStream* stream, HRESULT* resOpt) {
     return {(char*)data, (size_t)size};
 }
 
-OwnedData GetDataFromStream(IStream* stream, HRESULT* resOpt) {
-    auto [d, size] = GetDataFromStream2(stream, resOpt);
-    return {d, size};
-}
-
 std::tuple<char*, size_t> GetStreamOrFileData2(IStream* stream, const WCHAR* filePath) {
     if (stream) {
-        return GetDataFromStream2(stream, nullptr);
+        return GetDataFromStream(stream, nullptr);
     }
     if (!filePath) {
         return {};

@@ -112,9 +112,7 @@ HFONT GetDefaultGuiFont(bool bold, bool italic);
 long GetDefaultGuiFontSize();
 
 IStream* CreateStreamFromData(const void* data, size_t len);
-std::tuple<char*, size_t> GetDataFromStream2(IStream* stream, HRESULT* resOpt);
-// TODO; replace with GetDataFromStream2
-OwnedData GetDataFromStream(IStream* stream, HRESULT* resOpt = nullptr);
+std::tuple<char*, size_t> GetDataFromStream(IStream* stream, HRESULT* resOpt);
 OwnedData GetStreamOrFileData(IStream* stream, const WCHAR* filePath);
 std::tuple<char*, size_t> GetStreamOrFileData2(IStream* stream, const WCHAR* filePath);
 bool ReadDataFromStream(IStream* stream, void* buffer, size_t len, size_t offset = 0);
