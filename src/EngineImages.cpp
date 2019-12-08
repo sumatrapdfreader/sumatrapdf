@@ -1165,9 +1165,13 @@ BaseEngine* CbxEngineImpl::CreateFromFile(const WCHAR* fileName) {
     if (str::EndsWithI(fileName, L".cbz") || str::EndsWithI(fileName, L".zip") ||
         file::StartsWithN(fileName, "PK\x03\x04", 4)) {
         auto* archive = OpenZipArchive(fileName, false);
-        CbxEngineImpl* engine = new CbxEngineImpl(archive);
-        if (engine->LoadFromFile(fileName))
+        if (!archive) {
+            return nullptr;
+        }
+        auto* engine = new CbxEngineImpl(archive);
+        if (engine->LoadFromFile(fileName)) {
             return engine;
+        }
         delete engine;
     }
     // also try again if a .cbz or .zip file failed to load, it might
@@ -1175,50 +1179,75 @@ BaseEngine* CbxEngineImpl::CreateFromFile(const WCHAR* fileName) {
     if (str::EndsWithI(fileName, L".cbr") || str::EndsWithI(fileName, L".rar") ||
         file::StartsWithN(fileName, RAR_SIGNATURE, RAR_SIGNATURE_LEN) ||
         file::StartsWithN(fileName, RAR5_SIGNATURE, RAR5_SIGNATURE_LEN)) {
-        CbxEngineImpl* engine = new CbxEngineImpl(OpenRarArchive(fileName));
-        if (engine->LoadFromFile(fileName))
-            return engine;
-        delete engine;
+        auto* archive = OpenRarArchive(fileName);
+        if (archive) {
+            auto* engine = new CbxEngineImpl(archive);
+            if (engine->LoadFromFile(fileName)) {
+                return engine;
+            }
+            delete engine;
+        }
     }
     if (str::EndsWithI(fileName, L".cb7") || str::EndsWithI(fileName, L".7z") ||
         file::StartsWith(fileName, "7z\xBC\xAF\x27\x1C")) {
         Archive* archive = Open7zArchive(fileName);
-        CbxEngineImpl* engine = new CbxEngineImpl(archive);
-        if (engine->LoadFromFile(fileName))
-            return engine;
-        delete engine;
+        if (archive) {
+            auto* engine = new CbxEngineImpl(archive);
+            if (engine->LoadFromFile(fileName)) {
+                return engine;
+            }
+            delete engine;
+        }
     }
     if (str::EndsWithI(fileName, L".cbt") || str::EndsWithI(fileName, L".tar")) {
         Archive* archive = OpenTarArchive(fileName);
-        CbxEngineImpl* engine = new CbxEngineImpl(archive);
-        if (engine->LoadFromFile(fileName))
-            return engine;
-        delete engine;
+        if (archive) {
+            auto* engine = new CbxEngineImpl(archive);
+            if (engine->LoadFromFile(fileName)) {
+                return engine;
+            }
+            delete engine;
+        }
     }
     return nullptr;
 }
 
 BaseEngine* CbxEngineImpl::CreateFromStream(IStream* stream) {
     auto* archive = OpenZipArchive(stream, false);
-    CbxEngineImpl* engine = new CbxEngineImpl(archive);
-    if (engine->LoadFromStream(stream))
-        return engine;
-    delete engine;
+    if (archive) {
+        auto* engine = new CbxEngineImpl(archive);
+        if (engine->LoadFromStream(stream)) {
+            return engine;
+        }
+        delete engine;
+    }
 
-    engine = new CbxEngineImpl(OpenRarArchive(stream));
-    if (engine->LoadFromStream(stream))
-        return engine;
-    delete engine;
+    archive = OpenRarArchive(stream);
+    if (archive) {
+        auto* engine = new CbxEngineImpl(archive);
+        if (engine->LoadFromStream(stream)) {
+            return engine;
+        }
+        delete engine;
+    }
 
-    engine = new CbxEngineImpl(Open7zArchive(stream));
-    if (engine->LoadFromStream(stream))
-        return engine;
-    delete engine;
+    archive = Open7zArchive(stream);
+    if (archive) {
+        auto* engine = new CbxEngineImpl(archive);
+        if (engine->LoadFromStream(stream)) {
+            return engine;
+        }
+        delete engine;
+    }
 
-    engine = new CbxEngineImpl(OpenTarArchive(stream));
-    if (engine->LoadFromStream(stream))
-        return engine;
-    delete engine;
+    archive = OpenTarArchive(stream);
+    if (archive) {
+        auto* engine = new CbxEngineImpl(archive);
+        if (engine->LoadFromStream(stream)) {
+            return engine;
+        }
+        delete engine;
+    }
 
     return nullptr;
 }

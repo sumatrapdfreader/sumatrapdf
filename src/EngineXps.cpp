@@ -1400,6 +1400,10 @@ bool IsSupportedFile(const WCHAR* fileName, bool sniff) {
     }
 
     Archive* archive = OpenZipArchive(fileName, true);
+    if (!archive) {
+        return false;
+    }
+
     bool res = archive->GetFileId("_rels/.rels") != (size_t)-1 ||
                archive->GetFileId("_rels/.rels/[0].piece") != (size_t)-1 ||
                archive->GetFileId("_rels/.rels/[0].last.piece") != (size_t)-1;

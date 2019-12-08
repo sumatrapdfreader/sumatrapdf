@@ -183,12 +183,20 @@ static Archive* open(Archive* archive, const char* path) {
 static Archive* open(Archive* archive, const WCHAR* path) {
     FILE* f = file::OpenFILE(path);
     auto pathUtf = str::conv::ToUtf8(path);
-    archive->Open(ar_open(f), pathUtf.Get());
+    bool ok = archive->Open(ar_open(f), pathUtf.Get());
+    if (!ok) {
+        delete archive;
+        return nullptr;
+    }
     return archive;
 }
 
 static Archive* open(Archive* archive, IStream* stream) {
-    archive->Open(ar_open_istream(stream), nullptr);
+    bool ok = archive->Open(ar_open_istream(stream), nullptr);
+    if (!ok) {
+        delete archive;
+        return nullptr;
+    }
     return archive;
 }
 #endif

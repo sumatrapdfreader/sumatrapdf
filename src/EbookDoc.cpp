@@ -267,9 +267,13 @@ EpubDoc::~EpubDoc() {
 }
 
 bool EpubDoc::Load() {
-    OwnedData container(zip->GetFileDataByName("META-INF/container.xml"));
-    if (!container.data)
+    if (!zip) {
         return false;
+    }
+    OwnedData container(zip->GetFileDataByName("META-INF/container.xml"));
+    if (!container.data) {
+        return false;
+    }
     HtmlParser parser;
     HtmlElement* node = parser.ParseInPlace(container.data);
     if (!node)
@@ -651,6 +655,9 @@ bool EpubDoc::IsSupportedFile(const WCHAR* fileName, bool sniff) {
         return str::EndsWithI(fileName, L".epub");
     }
     Archive* archive = OpenZipArchive(fileName, true);
+    if (!archive) {
+        return false;
+    }
     defer {
         delete archive;
     };
@@ -716,47 +723,71 @@ Fb2Doc::~Fb2Doc() {
         stream->Release();
 }
 
+static OwnedData loadFromFile(Fb2Doc* doc) {
+    Archive* archive = OpenZipArchive(doc->fileName, false);
+    if (!archive) {
+        return file::ReadFile(doc->fileName);
+    }
+
+    defer {
+        delete archive;
+    };
+
+    // we have archive with more than 1 file
+    doc->isZipped = true;
+    auto& fileInfos = archive->GetFileInfos();
+    size_t nFiles = fileInfos.size();
+
+    if (nFiles == 0) {
+        return {};
+    }
+
+    if (nFiles == 1) {
+        return archive->GetFileDataById(0);
+    }
+
+    OwnedData data;
+    // if the ZIP file contains more than one file, we try to be rather
+    // restrictive in what we accept in order not to accidentally accept
+    // too many archives which only contain FB2 files among others:
+    // the file must contain a single .fb2 file and may only contain
+    // .url files in addition (TODO: anything else?)
+    for (auto fileInfo : fileInfos) {
+        auto fileName = fileInfo->name;
+        const char* ext = path::GetExt(fileName.data());
+        if (str::EqI(ext, ".fb2") && data.IsEmpty()) {
+            data = archive->GetFileDataById(fileInfo->fileId);
+        } else if (!str::EqI(ext, ".url")) {
+            return {};
+        }
+    }
+    return data;
+}
+
+static OwnedData loadFromStream(Fb2Doc* doc) {
+    auto stream = doc->stream;
+    Archive* archive = OpenZipArchive(stream, false);
+    if (!archive) {
+        return {};
+    }
+    defer {
+        delete archive;
+    };
+    size_t nFiles = archive->GetFileInfos().size();
+    if (nFiles != 1) {
+        return {};
+    }
+    doc->isZipped = true;
+    return archive->GetFileDataById(0);
+}
+
 bool Fb2Doc::Load() {
     CrashIf(!stream && !fileName);
     OwnedData data;
     if (fileName) {
-        Archive* archive = OpenZipArchive(fileName, false);
-        auto& fileInfos = archive->GetFileInfos();
-        size_t nFiles = fileInfos.size();
-        isZipped = nFiles > 0;
-        if (nFiles > 1) {
-            // if the ZIP file contains more than one file, we try to be rather
-            // restrictive in what we accept in order not to accidentally accept
-            // too many archives which only contain FB2 files among others:
-            // the file must contain a single .fb2 file and may only contain
-            // .url files in addition (TODO: anything else?)
-            for (auto fileInfo : fileInfos) {
-                auto fileName = fileInfo->name;
-                const char* ext = path::GetExt(fileName.data());
-                if (str::EqI(ext, ".fb2") && data.IsEmpty()) {
-                    data = archive->GetFileDataById(fileInfo->fileId);
-                } else if (!str::EqI(ext, ".url")) {
-                    delete archive;
-                    return false;
-                }
-            }
-        } else if (isZipped) {
-            data = archive->GetFileDataById(0);
-        } else {
-            data = file::ReadFile(fileName);
-        }
-        delete archive;
+        data = loadFromFile(this);
     } else if (stream) {
-        data = GetDataFromStream(stream);
-        if (str::StartsWith(data.Get(), "PK\x03\x04")) {
-            Archive* archive = OpenZipArchive(stream, false);
-            size_t nFiles = archive->GetFileInfos().size();
-            if (nFiles == 1) {
-                isZipped = true;
-                data = archive->GetFileDataById(0);
-            }
-            delete archive;
-        }
+        data = loadFromStream(this);
     }
     if (data.IsEmpty()) {
         return false;

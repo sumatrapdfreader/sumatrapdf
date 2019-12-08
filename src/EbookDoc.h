@@ -70,20 +70,20 @@ class EpubDoc {
 #define FB2_TOC_ENTRY_MARK "ToC!Entry!"
 
 class Fb2Doc {
+  public:
     AutoFreeW fileName;
-    IStream* stream;
+    IStream* stream = nullptr;
 
     str::Str xmlData;
     Vec<ImageData2> images;
     AutoFree coverImage;
     PropertyMap props;
-    bool isZipped;
-    bool hasToc;
+    bool isZipped = false;
+    bool hasToc = false;
 
     bool Load();
     void ExtractImage(HtmlPullParser* parser, HtmlToken* tok);
 
-  public:
     explicit Fb2Doc(const WCHAR* fileName);
     explicit Fb2Doc(IStream* stream);
     ~Fb2Doc();
