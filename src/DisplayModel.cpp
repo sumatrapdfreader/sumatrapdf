@@ -46,6 +46,7 @@
 #include "utils/BaseUtil.h"
 #include "utils/WinUtil.h"
 #include "utils/ScopedWin.h"
+#include "utils/Log.h"
 
 #include "TreeModel.h"
 #include "EngineBase.h"
@@ -906,12 +907,15 @@ PointI DisplayModel::GetContentStart(int pageNo) {
 
 // TODO: what's GoToPage supposed to do for Facing at 400% zoom?
 void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX) {
-    AssertCrash(ValidPageNo(pageNo));
-    if (!ValidPageNo(pageNo))
+    if (!ValidPageNo(pageNo)) {
+        logf("DisplayModel::GoToPage: invalid pageNo: %d, nPages: %d\n", pageNo, engine->PageCount());
+        SendCrashReportIf(ValidPageNo(pageNo));
         return;
+    }
 
-    if (addNavPt)
+    if (addNavPt) {
         AddNavPoint();
+    }
 
     /* in facing mode only start at odd pages (odd because page
        numbering starts with 1, so odd is really an even page) */
@@ -1551,7 +1555,6 @@ void DisplayModel::ScrollToLink(PageDestination* dest) {
         // PDF: /FitH top  or  /FitBH top
         PointD scrollD = engine->Transform(rect.TL(), pageNo, zoomReal, rotation);
         scroll.y = scrollD.ToInt().y;
-
         // zoom = FitBH ? ZOOM_FIT_CONTENT : ZOOM_FIT_WIDTH
     }
     // else if (Fit || FitV) zoom = ZOOM_FIT_PAGE
@@ -1564,7 +1567,8 @@ void DisplayModel::ScrollToLink(PageDestination* dest) {
     }
     // */
     // TODO: prevent scroll.y from getting too large?
-    if (scroll.y < 0)
+    if (scroll.y < 0) {
         scroll.y = 0; // Adobe Reader never shows the previous page
+    }
     GoToPage(pageNo, scroll.y, true, scroll.x);
 }
