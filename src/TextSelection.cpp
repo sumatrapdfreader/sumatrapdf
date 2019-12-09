@@ -143,8 +143,9 @@ void TextSelection::FillResultRects(int pageNo, int glyph, int length, WStrVec* 
     RectI *c = &coords[glyph], *end = c + length;
     while (c < end) {
         // skip line breaks
-        for (; c < end && !c->x && !c->dx; c++)
-            ;
+        for (; c < end && !c->x && !c->dx; c++) {
+            // no-op
+        }
 
         RectI bbox, *c0 = c;
         for (; c < end && (c->x || c->dx); c++) {
@@ -152,8 +153,9 @@ void TextSelection::FillResultRects(int pageNo, int glyph, int length, WStrVec* 
         }
         bbox = bbox.Intersect(mediabox);
         // skip text that's completely outside a page's mediabox
-        if (bbox.IsEmpty())
+        if (bbox.IsEmpty()) {
             continue;
+        }
 
         if (lines) {
             lines->Push(str::DupN(text + (c0 - coords), c - c0));
@@ -161,8 +163,9 @@ void TextSelection::FillResultRects(int pageNo, int glyph, int length, WStrVec* 
         }
 
         // cut the right edge, if it overlaps the next character
-        if (c < coords + len && (c->x || c->dx) && bbox.x < c->x && bbox.x + bbox.dx > c->x)
+        if (c < coords + len && (c->x || c->dx) && bbox.x < c->x && bbox.x + bbox.dx > c->x) {
             bbox.dx = c->x - bbox.x;
+        }
 
         result.len++;
         int* newPages = (int*)realloc(result.pages, sizeof(int) * result.len);

@@ -1310,18 +1310,21 @@ static char* DecompressTcrText(const char* data, size_t dataLen) {
 
     const char* dict[256];
     for (int n = 0; n < dimof(dict); n++) {
-        if (curr >= end)
+        if (curr >= end) {
             return str::Dup(data);
+        }
         dict[n] = curr;
         curr += 1 + (uint8_t)*curr;
     }
 
     str::Str text(dataLen * 2);
+    text.allowFailure = true;
     for (; curr < end; curr++) {
         const char* entry = dict[(uint8_t)*curr];
-        bool ok = text.AppendChecked(entry + 1, (uint8_t)*entry);
-        if (!ok)
+        bool ok = text.Append(entry + 1, (uint8_t)*entry);
+        if (!ok) {
             return nullptr;
+        }
     }
 
     return text.StealData();

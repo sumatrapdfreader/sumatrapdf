@@ -14,7 +14,7 @@ not useful for other types, the code is simpler if we always do it
 */
 template <typename T>
 class Vec {
-  protected:
+  public:
     static const size_t PADDING = 1;
 
     size_t len = 0;
@@ -23,22 +23,31 @@ class Vec {
     T* els = nullptr;
     T buf[16];
     Allocator* allocator = nullptr;
+    // don't crash if we run out of memory
+    bool allowFailure = false;
 
-    bool EnsureCapTry(size_t needed) {
-        if (cap >= needed)
+  protected:
+    bool EnsureCap(size_t needed) {
+        if (cap >= needed) {
             return true;
+        }
 
         size_t newCap = cap * 2;
-        if (needed > newCap)
+        if (needed > newCap) {
             newCap = needed;
-        if (newCap < capacityHint)
+        }
+        if (newCap < capacityHint) {
             newCap = capacityHint;
+        }
 
         size_t newElCount = newCap + PADDING;
-        if (newElCount >= SIZE_MAX / sizeof(T))
+        if (newElCount >= SIZE_MAX / sizeof(T)) {
             return false;
-        if (newElCount > INT_MAX) // limitation of Vec::Find
+        }
+        if (newElCount > INT_MAX) {
+            // limitation of Vec::Find
             return false;
+        }
 
         size_t allocSize = newElCount * sizeof(T);
         size_t newPadding = allocSize - len * sizeof(T);
@@ -49,6 +58,7 @@ class Vec {
             newEls = (T*)Allocator::Realloc(allocator, els, allocSize);
         }
         if (!newEls) {
+            CrashAlwaysIf(!allowFailure);
             return false;
         }
         els = newEls;
@@ -57,17 +67,12 @@ class Vec {
         return true;
     }
 
-    void EnsureCapCrash(size_t needed) {
-        bool ok = EnsureCapTry(needed);
-        CrashAlwaysIf(!ok);
-    }
-
-    T* MakeSpaceAt(size_t idx, size_t count, bool allowFailure = false) {
+    T* MakeSpaceAt(size_t idx, size_t count) {
         size_t newLen = std::max(len, idx) + count;
-        if (!allowFailure)
-            EnsureCapCrash(newLen);
-        else if (!EnsureCapTry(newLen))
+        bool ok = EnsureCap(newLen);
+        if (!ok) {
             return nullptr;
+        }
         T* res = &(els[idx]);
         if (len > idx) {
             T* src = els + idx;
@@ -96,11 +101,11 @@ class Vec {
 
     // ensure that a Vec never shares its els buffer with another after a clone/copy
     // note: we don't inherit allocator as it's not needed for our use cases
-    Vec(const Vec& orig) : capacityHint(0), allocator(nullptr) {
+    Vec(const Vec& orig) {
         els = buf;
         Reset();
-        EnsureCapCrash(orig.cap);
-        // use memcpy, as Vec only supports POD types
+        EnsureCap(orig.cap);
+        // using memcpy, as Vec only supports POD types
         memcpy(els, orig.els, sizeof(T) * (len = orig.len));
     }
 
@@ -116,8 +121,8 @@ class Vec {
 
     Vec& operator=(const Vec& that) {
         if (this != &that) {
-            EnsureCapCrash(that.cap);
-            // use memcpy, as Vec only supports POD types
+            EnsureCap(that.cap);
+            // using memcpy, as Vec only supports POD types
             memcpy(els, that.els, sizeof(T) * (len = that.len));
             memset(els + len, 0, sizeof(T) * (cap - len));
         }
@@ -137,9 +142,9 @@ class Vec {
         memset(buf, 0, sizeof(buf));
     }
 
-    void SetSize(size_t newSize) {
+    bool SetSize(size_t newSize) {
         Reset();
-        MakeSpaceAt(0, newSize);
+        return MakeSpaceAt(0, newSize);
     }
 
     T& at(size_t idx) const {
@@ -151,29 +156,29 @@ class Vec {
         return len;
     }
 
-    void InsertAt(size_t idx, const T& el) {
-        MakeSpaceAt(idx, 1)[0] = el;
+    bool InsertAt(size_t idx, const T& el) {
+        T* p = MakeSpaceAt(idx, 1);
+        if (!p) {
+            return false;
+        }
+        p[0] = el;
+        return true;
     }
 
-    void Append(const T& el) {
-        InsertAt(len, el);
+    bool Append(const T& el) {
+        return InsertAt(len, el);
     }
 
-    void Append(const T* src, size_t count) {
-        if (0 == count)
-            return;
-        T* dst = MakeSpaceAt(len, count);
-        memcpy(dst, src, count * sizeof(T));
-    }
-
-    // returns false on allocation failure instead of crashing
-    bool AppendChecked(const T* src, size_t count) {
-        if (0 == count)
+    bool Append(const T* src, size_t count) {
+        if (0 == count) {
             return true;
-        T* dst = MakeSpaceAt(len, count, true);
-        if (dst)
-            memcpy(dst, src, count * sizeof(T));
-        return dst != nullptr;
+        }
+        T* dst = MakeSpaceAt(len, count);
+        if (!dst) {
+            return false;
+        }
+        memcpy(dst, src, count * sizeof(T));
+        return true;
     }
 
     // appends count blank (i.e. zeroed-out) elements at the end
@@ -198,18 +203,20 @@ class Vec {
     // TODO: could be extend to take number of elements to remove
     void RemoveAtFast(size_t idx) {
         CrashIf(idx >= len);
-        if (idx >= len)
+        if (idx >= len) {
             return;
+        }
         T* toRemove = els + idx;
         T* last = els + len - 1;
-        if (toRemove != last)
+        if (toRemove != last) {
             memcpy(toRemove, last, sizeof(T));
+        }
         memset(last, 0, sizeof(T));
         --len;
     }
 
-    void Push(T el) {
-        Append(el);
+    bool Push(T el) {
+        return Append(el);
     }
 
     T Pop() {
@@ -251,8 +258,9 @@ class Vec {
 
     int Find(T el, size_t startAt = 0) const {
         for (size_t i = startAt; i < len; i++) {
-            if (els[i] == el)
+            if (els[i] == el) {
                 return (int)i;
+            }
         }
         return -1;
     }
@@ -264,8 +272,9 @@ class Vec {
     // returns true if removed
     bool Remove(T el) {
         int i = Find(el);
-        if (-1 == i)
+        if (-1 == i) {
             return false;
+        }
         RemoveAt(i);
         return true;
     }
@@ -282,8 +291,9 @@ class Vec {
 
     T& FindEl(const std::function<bool(T&)>& check) {
         for (size_t i = 0; i < len; i++) {
-            if (check(els[i]))
+            if (check(els[i])) {
                 return els[i];
+            }
         }
         return els[len]; // nullptr-sentinel
     }
@@ -423,22 +433,22 @@ class Str : public Vec<char> {
         return {this->Get(), this->size()};
     }
 
-    void Append(char c) {
-        InsertAt(len, c);
+    bool Append(char c) {
+        return InsertAt(len, c);
     }
 
-    void Append(const char* src, size_t size = -1) {
+    bool Append(const char* src, size_t size = -1) {
         if (!src) {
-            return;
+            return true;
         }
         if ((size_t)-1 == size) {
             size = Len(src);
         }
-        Vec<char>::Append(src, size);
+        return Vec<char>::Append(src, size);
     }
 
-    void AppendView(const std::string_view sv) {
-        this->Append(sv.data(), sv.size());
+    bool AppendView(const std::string_view sv) {
+        return this->Append(sv.data(), sv.size());
     }
 
     void AppendFmt(const char* fmt, ...) {
@@ -449,11 +459,13 @@ class Str : public Vec<char> {
         va_end(args);
     }
 
-    void AppendAndFree(char* s) {
-        if (s) {
-            Append(s);
+    bool AppendAndFree(char* s) {
+        if (!s) {
+            return true;
         }
+        bool ok = Append(s);
         free(s);
+        return ok;
     }
 
     // returns true if was replaced

@@ -24,6 +24,8 @@ bool HttpGet(const WCHAR* url, HttpRsp* rspOut) {
     DWORD headerBuffSize = sizeof(DWORD);
     DWORD flags = INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_RELOAD;
 
+    rspOut->data.allowFailure = true;
+
     rspOut->error = ERROR_SUCCESS;
     HINTERNET hInet = InternetOpen(USER_AGENT, INTERNET_OPEN_TYPE_PRECONFIG, nullptr, nullptr, 0);
     if (!hInet) {
@@ -57,9 +59,9 @@ bool HttpGet(const WCHAR* url, HttpRsp* rspOut) {
         if (0 == dwRead) {
             break;
         }
-        bool ok = rspOut->data.AppendChecked(buf, dwRead);
+        bool ok = rspOut->data.Append(buf, dwRead);
         if (!ok) {
-            logf("HttpGet: data.AppendChecked failed\n");
+            logf("HttpGet: data.Append failed\n");
             goto Error;
         }
     }
@@ -165,20 +167,24 @@ bool HttpPost(const WCHAR* server, int port, const WCHAR* url, str::Str* headers
     DWORD dwRead = 0;
 
     HINTERNET hInet = InternetOpenW(USER_AGENT, INTERNET_OPEN_TYPE_PRECONFIG, nullptr, nullptr, 0);
-    if (!hInet)
+    if (!hInet) {
         goto Exit;
+    }
     DWORD dwService = INTERNET_SERVICE_HTTP;
     hConn = InternetConnectW(hInet, server, (INTERNET_PORT)port, nullptr, nullptr, dwService, 0, 1);
-    if (!hConn)
+    if (!hConn) {
         goto Exit;
+    }
 
     DWORD flags = INTERNET_FLAG_NO_UI;
     if (port == 443) {
         flags |= INTERNET_FLAG_SECURE;
     }
     hReq = HttpOpenRequestW(hConn, L"POST", url, nullptr, nullptr, nullptr, flags, 0);
-    if (!hReq)
+    if (!hReq) {
         goto Exit;
+    }
+
     if (headers && headers->size() > 0) {
         hdr = headers->Get();
         hdrLen = (DWORD)headers->size();
@@ -192,18 +198,21 @@ bool HttpPost(const WCHAR* server, int port, const WCHAR* url, str::Str* headers
 
     InternetSetOptionW(hReq, INTERNET_OPTION_RECEIVE_TIMEOUT, &timeoutMs, sizeof(timeoutMs));
 
-    if (!HttpSendRequestA(hReq, hdr, hdrLen, d, dLen))
+    if (!HttpSendRequestA(hReq, hdr, hdrLen, d, dLen)) {
         goto Exit;
+    }
 
     HttpQueryInfoW(hReq, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &respHttpCode, &respHttpCodeSize, 0);
 
     do {
         char buf[1024];
-        if (!InternetReadFile(hReq, buf, sizeof(buf), &dwRead))
+        if (!InternetReadFile(hReq, buf, sizeof(buf), &dwRead)) {
             goto Exit;
-        ok = resp.AppendChecked(buf, dwRead);
-        if (!ok)
+        }
+        ok = resp.Append(buf, dwRead);
+        if (!ok) {
             goto Exit;
+        }
     } while (dwRead > 0);
 
 #if 0
@@ -216,12 +225,15 @@ bool HttpPost(const WCHAR* server, int port, const WCHAR* url, str::Str* headers
 #endif
     ok = (200 == respHttpCode);
 Exit:
-    if (hReq)
+    if (hReq) {
         InternetCloseHandle(hReq);
-    if (hConn)
+    }
+    if (hConn) {
         InternetCloseHandle(hConn);
-    if (hInet)
+    }
+    if (hInet) {
         InternetCloseHandle(hInet);
+    }
     return ok;
 }
 

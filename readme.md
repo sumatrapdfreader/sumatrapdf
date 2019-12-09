@@ -28,5 +28,10 @@ Notes on targets:
 ### Asan notes
 
 Flags: https://github.com/google/sanitizers/wiki/SanitizerCommonFlags
-Can be set with `ASAN_OPTIONS=allocator_may_return_null=1:verbosity=1` env variable.
+Can be set with env variable:
+* `ASAN_OPTIONS=allocator_may_return_null=1:verbosity=1:check_malloc_usable_size=false:suppressions="C:\Users\kjk\src\sumatrapdf\asan.supp"`
+
 In Visual Studio, this is in  `Debugging`, `Environment` section.
+
+Supressing issues: https://clang.llvm.org/docs/AddressSanitizer.html#issue-suppression
+Note: I couldn't get supressing to work.
