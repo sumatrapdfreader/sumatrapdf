@@ -481,15 +481,19 @@ void ShowForwardSearchResult(WindowInfo* win, const WCHAR* fileName, UINT line, 
         // Scroll to show the overall highlighted zone
         int pageNo = page;
         RectI overallrc = rects.at(0);
-        for (size_t i = 1; i < rects.size(); i++)
+        for (size_t i = 1; i < rects.size(); i++) {
             overallrc = overallrc.Union(rects.at(i));
-        TextSel res = {1, &pageNo, &overallrc};
-        if (!dm->PageVisible(page))
+        }
+        TextSel res = {1, 1, &pageNo, &overallrc};
+        if (!dm->PageVisible(page)) {
             win->ctrl->GoToPage(page, true);
-        if (!dm->ShowResultRectToScreen(&res))
+        }
+        if (!dm->ShowResultRectToScreen(&res)) {
             win->RepaintAsync();
-        if (IsIconic(win->hwndFrame))
+        }
+        if (IsIconic(win->hwndFrame)) {
             ShowWindowAsync(win->hwndFrame, SW_RESTORE);
+        }
         return;
     }
 

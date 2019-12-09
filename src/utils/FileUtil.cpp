@@ -391,6 +391,9 @@ std::tuple<char*, size_t> ReadFileWithAllocator(const char* filePath, Allocator*
         goto Error;
     }
     d = (char*)Allocator::AllocZero(allocator, size + ZERO_PADDING_COUNT);
+    if (!d) {
+        goto Error;
+    }
     res = fseek(fp, 0, SEEK_SET);
     if (res != 0) {
         return {};

@@ -19,6 +19,9 @@ void* Allocator::AllocZero(Allocator* a, size_t size) {
 }
 
 void Allocator::Free(Allocator* a, void* p) {
+    if (!p) {
+        return;
+    }
     if (!a) {
         free(p);
     } else {

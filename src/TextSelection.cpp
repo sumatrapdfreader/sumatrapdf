@@ -77,6 +77,7 @@ TextSelection::~TextSelection() {
 
 void TextSelection::Reset() {
     result.len = 0;
+    result.cap = 0;
     free(result.pages);
     result.pages = nullptr;
     free(result.rects);
@@ -167,15 +168,26 @@ void TextSelection::FillResultRects(int pageNo, int glyph, int length, WStrVec* 
             bbox.dx = c->x - bbox.x;
         }
 
+        int currLen = result.len;
+        int left = result.cap - currLen;
+        CrashIf(left < 0);
+        if (left == 0) {
+            int newCap = result.cap * 2;
+            if (newCap < 64) {
+                newCap = 64;
+            }
+            int* newPages = (int*)realloc(result.pages, sizeof(int) * newCap);
+            RectI* newRects = (RectI*)realloc(result.rects, sizeof(RectI) * newCap);
+            CrashIf(!newPages);
+            CrashIf(!newRects);
+            result.pages = newPages;
+            result.rects = newRects;
+            result.cap = newCap;
+        }
+
+        result.pages[currLen] = pageNo;
+        result.rects[currLen] = bbox;
         result.len++;
-        int* newPages = (int*)realloc(result.pages, sizeof(int) * result.len);
-        CrashIf(!newPages); // TODO: use infallible realloc
-        result.pages = newPages;
-        result.pages[result.len - 1] = pageNo;
-        RectI* newRects = (RectI*)realloc(result.rects, sizeof(RectI) * result.len);
-        CrashIf(!newRects); // TODO: use infallible realloc
-        result.rects = newRects;
-        result.rects[result.len - 1] = bbox;
     }
 }
 

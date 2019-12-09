@@ -10,10 +10,10 @@ inline bool isWordChar(WCHAR c) {
 }
 
 class PageTextCache {
-    BaseEngine* engine;
-    RectI** coords;
-    WCHAR** text;
-    int* lens;
+    BaseEngine* engine = nullptr;
+    RectI** coords = nullptr;
+    WCHAR** text = nullptr;
+    int* lens = nullptr;
 #ifdef DEBUG
     size_t debug_size;
 #endif
@@ -28,10 +28,12 @@ class PageTextCache {
     const WCHAR* GetData(int pageNo, int* lenOut = nullptr, RectI** coordsOut = nullptr);
 };
 
+// TODO: replace with Vec<TextSel>
 struct TextSel {
-    int len;
-    int* pages;
-    RectI* rects;
+    int len = 0;
+    int cap = 0;
+    int* pages = nullptr;
+    RectI* rects = nullptr;
 };
 
 class TextSelection {
