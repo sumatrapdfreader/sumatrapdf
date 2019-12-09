@@ -87,6 +87,7 @@ struct DrawStyle {
 class HtmlPage {
   public:
     explicit HtmlPage(int reparseIdx = 0) : reparseIdx(reparseIdx) {
+        instructions.allowFailure = true;
     }
 
     Vec<DrawInstr> instructions;
