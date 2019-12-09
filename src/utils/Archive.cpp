@@ -31,7 +31,8 @@ FILETIME MultiFormatArchive::FileInfo::GetWinFileTime() const {
 }
 #endif
 
-MultiFormatArchive::MultiFormatArchive(archive_opener_t opener, MultiFormatArchive::Format format) : format(format), opener_(opener) {
+MultiFormatArchive::MultiFormatArchive(archive_opener_t opener, MultiFormatArchive::Format format)
+    : format(format), opener_(opener) {
     CrashIf(!opener);
 }
 

@@ -4,6 +4,7 @@
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/WinUtil.h"
+#include "utils/Log.h"
 
 #include "TreeModel.h"
 #include "EngineBase.h"
@@ -80,14 +81,17 @@ bool RenderCache::Exists(DisplayModel* dm, int pageNo, int rotation, float zoom,
     return entry != nullptr;
 }
 
-void RenderCache::DropCacheEntry(BitmapCacheEntry* entry) {
+bool RenderCache::DropCacheEntry(BitmapCacheEntry* entry) {
     ScopedCritSec scope(&cacheAccess);
     AssertCrash(entry);
-    if (!entry)
-        return;
+    if (!entry) {
+        return true;
+    }
     if (0 == --entry->refs) {
         delete entry;
+        return true;
     }
+    return false;
 }
 
 void RenderCache::Add(PageRenderRequest& req, RenderedBitmap* bitmap) {
@@ -609,12 +613,15 @@ UINT RenderCache::PaintTile(HDC hdc, RectI bounds, DisplayModel* dm, int pageNo,
     HBITMAP hbmp = renderedBmp ? renderedBmp->GetBitmap() : nullptr;
 
     if (!hbmp) {
-        if (entry && !(renderedBmp && ReduceTileSize()))
+        if (entry && !(renderedBmp && ReduceTileSize())) {
             renderDelay = RENDER_DELAY_FAILED;
-        else if (0 == renderDelay)
+        } else if (0 == renderDelay) {
             renderDelay = 1;
-        if (entry)
+        }
+
+        if (entry) {
             DropCacheEntry(entry);
+        }
         return renderDelay;
     }
 

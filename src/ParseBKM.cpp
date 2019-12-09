@@ -350,11 +350,12 @@ static DocTocTree* parseBookmarks(std::string_view sv) {
 }
 
 DocTocTree* ParseBookmarksFile(std::string_view path) {
-    OwnedData d = file::ReadFile(path);
-    if (d.IsEmpty()) {
+    auto [d, size] = file::ReadFile2(path);
+    if (!d) {
         return nullptr;
     }
-    auto* docTree = parseBookmarks(d.AsView());
+    auto* docTree = parseBookmarks({d, size});
+    free(d);
     return docTree;
 }
 

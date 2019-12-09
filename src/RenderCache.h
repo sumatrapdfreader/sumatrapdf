@@ -144,7 +144,7 @@ class RenderCache {
 
     BitmapCacheEntry* Find(DisplayModel* dm, int pageNo, int rotation, float zoom = INVALID_ZOOM,
                            TilePosition* tile = nullptr);
-    void DropCacheEntry(BitmapCacheEntry* entry);
+    bool DropCacheEntry(BitmapCacheEntry* entry);
     void FreePage(DisplayModel* dm = nullptr, int pageNo = -1, TilePosition* tile = nullptr);
     void FreeNotVisible() {
         FreePage();
