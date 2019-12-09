@@ -516,7 +516,7 @@ void EbookController::GoToPage(int pageNo, bool addNavPoint) {
     if (!pages) {
         // TODO: remove when we figure out why this happens
         logf("EbookController::GoToPage(): pageNo: %d, currentPageNo: %d\n", pageNo, this->currPageNo);
-        CrashIf(!pages);
+        SendCrashReportIf(!pages);
         return;
     }
 
@@ -561,7 +561,8 @@ bool EbookController::GoToNextPage() {
 bool EbookController::GoToPrevPage(bool toBottom) {
     UNUSED(toBottom);
     int dist = IsDoublePage() ? 2 : 1;
-    if (currPageNo == 1) {
+    if (currPageNo <= dist) {
+        // seen a crash were currPageNo here was 0
         return false;
     }
     GoToPage(currPageNo - dist, false);
