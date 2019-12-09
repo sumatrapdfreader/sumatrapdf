@@ -1,0 +1,12 @@
+interceptor_via_lib:ucrtbase
+interceptor_via_lib:ucrtbase.dll
+interceptor_via_lib:SHELL32
+interceptor_via_lib:SHELL32.dll
+interceptor_via_lib:C:\WINDOWS\System32\SHELL32.dll
+interceptor_via_lib:C:\WINDOWS\System32\ucrtbase.dll
+interceptor_via_fun:msize
+interceptor_via_fun:register_onexit_function
+interceptor_via_fun:o__register_onexit_function
+interceptor_via_fun:RegenerateUserEnvironment
+interceptor_via_fun:wctomb_s_l
+interceptor_via_fun:realloc
