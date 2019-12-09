@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-516019e37dd961ba87937697cc49e309a965798d
+62a2762f157e612130e7bef8aaa70e1345302e02
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -231,7 +231,7 @@ fa:&همه‌ی صفحات انتخاب ‌شده
 fi:K&aikki valitut sivut
 fr:&Toutes les pages sélectionnées
 ga:&Gach leathanach roghnaithe
-gl:&Todas as páxinas seleccionadas
+gl:Tod&as as páxinas seleccionadas
 he:כל העמודים הנבחרים
 hi:&सभी चयनित पृष्ठों
 hr:Sve obilježene str&anice
@@ -365,7 +365,7 @@ fa:&کتابی\tCtrl+8
 fi:&Kirjanäkymä\tCtrl+8
 fr:Comme un livre\tCtrl+8
 ga:&Leabhar-amharc\tCtrl+8
-gl:Vista de &libro\tCtrl+8
+gl:Vista de li&bro\tCtrl+8
 he:תצוגת ספר\tCtrl+8
 hi:&पुस्तक के रुप में देखें\tCtrl+8
 hr:&Knjiški pregled\tCtrl+8
@@ -430,7 +430,7 @@ fi:&Sulje\tCtrl+W
 fr:&Fermer\tCtrl+W
 fy-nl:&Ofslute\tCtrl+W
 ga:&Dún\tCtrl+W
-gl:&Pechar\tCtrl+W
+gl:Pe&char\tCtrl+W
 he:סגור\tCtrl+W
 hi:बंद करें(&C)\tCtrl+W
 hr:&Zatvori\tCtrl+W
@@ -4280,7 +4280,7 @@ fa:پیوست: %s
 fi:Liite: %s
 fr:Fichier joint : %s
 ga:Ceangaltán: %s
-gl:Adxunto: %s
+gl:Anexo: %s
 he:נספח: %s
 hi:संलान्गित : %s
 hr:Prilog: %s
@@ -4487,7 +4487,7 @@ fi:Tarkista pä&ivitykset automaattisesti
 fr:Vérifier &automatiquement les mises à jour
 fy-nl:Automatysk kontrolearje op &fernijings
 ga:Lorg nuashonruithe go huathoibríoch
-gl:Comprobar se hai &actualizacións automáticamente
+gl:Comprobar se hai actualizacións a&utomaticamente
 he:בדוק עדכונים אוטומטית
 hi:स्वचालित रूप से &नवीनतम के लिए जाँच
 hr:Provjeravaj &nadogradnje automatski
@@ -5288,7 +5288,7 @@ fi:Valitse kieli (Change Language)
 fr:Changer de langue (Change Language)
 fy-nl:Taal kieze (Change Language)
 ga:Athraigh an Teanga (Change Language)
-gl:Cambiar a lingua (Change Language)
+gl:Cambiar lingua
 he:שנה שפת ממשק (Change language)
 hi:भाषा बदलें (Change Language)
 hr:Promijeni jezik (Change Language)
@@ -5359,7 +5359,7 @@ fi:Tarkista &päivitysten saatavuus
 fr:&Vérifier les mises à jour
 fy-nl:&Kontrolearje op fernijings
 ga:Lorg Nuashonruithe
-gl:Buscar a&ctualizacións
+gl:Buscar act&ualizacións
 he:בדוק עדכונים...
 hi:नए संसकरण के लिए जांच करें(&C)
 hr:Provjeri ažuriranje
@@ -6407,7 +6407,7 @@ fi:Tulostimen valmistelu epäonnistui
 fr:Impossible d'initialiser l'imprimante
 fy-nl:Kin de printer net inisjalisearje
 ga:Níorbh fhéidir an clóire a thúsú
-gl:Non se pode inicializar a impresora
+gl:Non se puido inicializar a impresora
 he:אתחול המדפסת נכשל.
 hi:प्रिंटर प्रारंभ नहीं हो पा रहा
 hr:Ne mogu inicijalizirati pisač
