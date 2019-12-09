@@ -22,6 +22,9 @@ class ScopedMem {
     T* Get() const {
         return ptr;
     }
+    T* get() const {
+        return ptr;
+    }
     T* StealData() {
         T* tmp = ptr;
         ptr = nullptr;
@@ -57,7 +60,8 @@ class ScopedPtr {
     }
     T* operator=(T* newObj) {
         delete obj;
-        return (obj = newObj);
+        obj = newObj;
+        return obj;
     }
 };
 
@@ -67,7 +71,8 @@ class AutoFreeStr {
     T* ptr = nullptr;
 
     AutoFreeStr() = default;
-    explicit AutoFreeStr(T* ptr) : ptr(ptr) {
+    explicit AutoFreeStr(T* ptr) {
+        this->ptr = ptr;
     }
     ~AutoFreeStr() {
         free(this->ptr);
@@ -90,7 +95,19 @@ class AutoFreeStr {
     operator T*() const {
         return this->ptr;
     }
+#if 0
+    // TODO: I want AutoStrW v = str::Dup(L"foo"); to work
+    // can't figure out the right incantation
+    AutoFreeStr& operator=(T* newPtr) {
+        free(ptr);
+        ptr = newPtr;
+        return *this;
+    }
+#endif
     T* Get() const {
+        return this->ptr;
+    }
+    T* get() const {
         return this->ptr;
     }
     T* StealData() {

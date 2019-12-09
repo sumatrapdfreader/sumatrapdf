@@ -461,7 +461,9 @@ WCHAR* EbookEngine::ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** co
     ScopedCritSec scope(&pagesAccess);
 
     str::WStr content;
+    content.allowFailure = true;
     Vec<RectI> coords;
+    coords.allowFailure = true;
     bool insertSpace = false;
 
     Vec<DrawInstr>* pageInstrs = GetHtmlPage(pageNo);

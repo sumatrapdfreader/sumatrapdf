@@ -57,16 +57,18 @@ WCHAR* GetSettingsPath() {
 bool Load() {
     CrashIf(gGlobalPrefs);
 
-    std::unique_ptr<WCHAR> path(GetSettingsPath());
-    OwnedData prefsData(file::ReadFile(path.get()));
-    gGlobalPrefs = NewGlobalPrefs(prefsData.data);
+    AutoFreeW path(GetSettingsPath());
+    auto [prefsData, prefsDataSize] = file::ReadFile2(path.get());
+    AutoFreeStr toFree(prefsData);
+
+    gGlobalPrefs = NewGlobalPrefs(prefsData);
     CrashAlwaysIf(!gGlobalPrefs);
 
     // in pre-release builds between 3.1.10079 and 3.1.10377,
     // RestoreSession was a string with the additional option "auto"
     // TODO: remove this after 3.2 has been released
 #if defined(DEBUG) || defined(SVN_PRE_RELEASE_VER)
-    if (!gGlobalPrefs->restoreSession && prefsData.data && str::Find(prefsData.data, "\nRestoreSession = auto")) {
+    if (!gGlobalPrefs->restoreSession && prefsData && str::Find(prefsData, "\nRestoreSession = auto")) {
         gGlobalPrefs->restoreSession = true;
     }
 #endif
