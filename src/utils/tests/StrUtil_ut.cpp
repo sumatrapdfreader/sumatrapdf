@@ -136,7 +136,7 @@ static void StrUrlExtractTest() {
     utassert(str::Eq((char*)fileName.Get(), "\xAC\x20"));
 }
 
-static void IterStringTest() {
+static void ParseUntilTest() {
     const char* txt = "foo\nbar\n\nla\n";
     const char* a[] = {
         "foo",
@@ -149,7 +149,7 @@ static void IterStringTest() {
         std::string_view sv(txt);
         size_t i = 0;
         while (true) {
-            auto el = str::IterString(sv, '\n');
+            auto el = str::ParseUntil(sv, '\n');
             const char* got = el.data();
             if (got == nullptr) {
                 utassert(i == dimof(a));
@@ -167,7 +167,7 @@ static void IterStringTest() {
         std::string_view sv(txt, str::Len(txt) - 1);
         size_t i = 0;
         while (true) {
-            auto el = str::IterStringBack(sv, '\n');
+            auto el = str::ParseUntilBack(sv, '\n');
             const char* got = el.data();
             if (got == nullptr) {
                 utassert(i == dimof(a));
@@ -605,5 +605,5 @@ void StrTest() {
     StrSeqTest();
     StrConvTest();
     StrUrlExtractTest();
-    IterStringTest();
+    ParseUntilTest();
 }

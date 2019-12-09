@@ -493,7 +493,7 @@ char* Replace(const char* s, const char* toReplace, const char* replaceWith) {
 // get substring of 'sv' until delim or end of string.
 // meant of iterative calls so updates 'sv' in place
 // return { nullptr, 0 } to indicate finished iteration
-std::string_view IterString(std::string_view& sv, char delim) {
+std::string_view ParseUntil(std::string_view& sv, char delim) {
     const char* start = sv.data();
     const char* end = start + sv.size();
     if (start == end) {
@@ -507,12 +507,13 @@ std::string_view IterString(std::string_view& sv, char delim) {
         s++;
     }
     size_t size = (size_t)(s - start);
-    std::string_view el = {start, size};
-    sv = {s + 1, sv.size() - size - 1};
-    return el;
+    std::string_view res = {start, size};
+    size_t newSize = sv.size() - size - 1;
+    sv = {s + 1, newSize};
+    return res;
 }
 
-std::string_view IterStringBack(std::string_view& sv, char delim) {
+std::string_view ParseUntilBack(std::string_view& sv, char delim) {
     const char* start = sv.data();
     const char* end = start + sv.size();
     if (start == end) {

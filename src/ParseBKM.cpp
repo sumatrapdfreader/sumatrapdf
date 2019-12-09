@@ -91,7 +91,8 @@ static size_t skipN(std::string_view& sv, size_t n) {
     return n;
 }
 
-static size_t skipUntil(std::string_view& sv, const char* end) {
+// advance sv to end
+static size_t advanceTo(std::string_view& sv, const char* end) {
     const char* s = sv.data();
     CrashIf(end < s);
     size_t toSkip = end - s;
@@ -111,7 +112,7 @@ static std::string_view parseUntil(std::string_view& sv, char c) {
         }
         s++;
     }
-    size_t n = skipUntil(sv, s);
+    size_t n = advanceTo(sv, s);
     return {start, n};
 }
 
@@ -127,7 +128,7 @@ static size_t skipChars(std::string_view& sv, char c) {
         }
         s++;
     }
-    return skipUntil(sv, s);
+    return advanceTo(sv, s);
 }
 
 // first line should look like:
@@ -164,7 +165,7 @@ static str::Str parseLineTitle(std::string_view& sv) {
         char c = *s;
         if (c == '"') {
             // the end
-            skipUntil(sv, s + 1);
+            advanceTo(sv, s + 1);
             return res;
         }
         if (c != '\\') {
@@ -278,7 +279,7 @@ static DocTocTree* parseBookmarks(std::string_view sv) {
     Vec<DocTocItemWithIndent> items;
 
     // extract first line with title like ":foo"
-    auto line = str::IterString(sv, '\n');
+    auto line = str::ParseUntil(sv, '\n');
     auto title = parseBookmarksTitle(line);
     if (title.data() == nullptr) {
         return nullptr;
@@ -287,7 +288,7 @@ static DocTocTree* parseBookmarks(std::string_view sv) {
     tree->name = str::Dup(title);
     size_t indent = 0;
     while (true) {
-        line = str::IterString(sv, '\n');
+        line = str::ParseUntil(sv, '\n');
         if (line.data() == nullptr) {
             break;
         }
