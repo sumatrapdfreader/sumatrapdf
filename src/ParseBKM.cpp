@@ -188,7 +188,6 @@ static str::Str parseLineTitle(std::string_view& sv) {
         s++;
     }
 
-    res.Reset();
     return res;
 }
 
