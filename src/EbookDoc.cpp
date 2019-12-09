@@ -654,7 +654,7 @@ bool EpubDoc::IsSupportedFile(const WCHAR* fileName, bool sniff) {
     if (!sniff) {
         return str::EndsWithI(fileName, L".epub");
     }
-    Archive* archive = OpenZipArchive(fileName, true);
+    MultiFormatArchive* archive = OpenZipArchive(fileName, true);
     if (!archive) {
         return false;
     }
@@ -724,7 +724,7 @@ Fb2Doc::~Fb2Doc() {
 }
 
 static OwnedData loadFromFile(Fb2Doc* doc) {
-    Archive* archive = OpenZipArchive(doc->fileName, false);
+    MultiFormatArchive* archive = OpenZipArchive(doc->fileName, false);
     if (!archive) {
         return file::ReadFile(doc->fileName);
     }
@@ -766,7 +766,7 @@ static OwnedData loadFromFile(Fb2Doc* doc) {
 
 static OwnedData loadFromStream(Fb2Doc* doc) {
     auto stream = doc->stream;
-    Archive* archive = OpenZipArchive(stream, false);
+    MultiFormatArchive* archive = OpenZipArchive(stream, false);
     if (!archive) {
         return {};
     }

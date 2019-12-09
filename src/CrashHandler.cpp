@@ -147,7 +147,7 @@ static void SaveCrashInfo(char* s, size_t size) {
 
 static void SendCrashInfo(char* s, size_t size) {
     if (str::IsEmpty(s)) {
-        plog("SendCrashInfo(): s is empty");
+        //plog("SendCrashInfo(): s is empty");
         return;
     }
 

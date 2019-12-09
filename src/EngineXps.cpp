@@ -1240,7 +1240,7 @@ bool IsSupportedFile(const WCHAR* fileName, bool sniff) {
         return file::Exists(relsPath) || dir::Exists(relsPath);
     }
 
-    Archive* archive = OpenZipArchive(fileName, true);
+    MultiFormatArchive* archive = OpenZipArchive(fileName, true);
     if (!archive) {
         return false;
     }

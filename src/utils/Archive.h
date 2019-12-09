@@ -8,7 +8,7 @@ typedef struct ar_archive_s ar_archive;
 
 typedef ar_archive* (*archive_opener_t)(ar_stream*);
 
-class Archive {
+class MultiFormatArchive {
   public:
     enum class Format { Zip, Rar, SevenZip, Tar };
 
@@ -26,8 +26,8 @@ class Archive {
 #endif
     };
 
-    Archive(archive_opener_t opener, Format format);
-    ~Archive();
+    MultiFormatArchive(archive_opener_t opener, Format format);
+    ~MultiFormatArchive();
 
     Format format;
 
@@ -65,21 +65,21 @@ class Archive {
     }
 };
 
-Archive* OpenZipArchive(const char* path, bool deflatedOnly);
-Archive* Open7zArchive(const char* path);
-Archive* OpenTarArchive(const char* path);
+MultiFormatArchive* OpenZipArchive(const char* path, bool deflatedOnly);
+MultiFormatArchive* Open7zArchive(const char* path);
+MultiFormatArchive* OpenTarArchive(const char* path);
 
 // TODO: remove those
 #if OS_WIN
-Archive* OpenZipArchive(const WCHAR* path, bool deflatedOnly);
-Archive* Open7zArchive(const WCHAR* path);
-Archive* OpenTarArchive(const WCHAR* path);
-Archive* OpenRarArchive(const WCHAR* path);
+MultiFormatArchive* OpenZipArchive(const WCHAR* path, bool deflatedOnly);
+MultiFormatArchive* Open7zArchive(const WCHAR* path);
+MultiFormatArchive* OpenTarArchive(const WCHAR* path);
+MultiFormatArchive* OpenRarArchive(const WCHAR* path);
 #endif
 
 #if OS_WIN
-Archive* OpenZipArchive(IStream* stream, bool deflatedOnly);
-Archive* Open7zArchive(IStream* stream);
-Archive* OpenTarArchive(IStream* stream);
-Archive* OpenRarArchive(IStream* stream);
+MultiFormatArchive* OpenZipArchive(IStream* stream, bool deflatedOnly);
+MultiFormatArchive* Open7zArchive(IStream* stream);
+MultiFormatArchive* OpenTarArchive(IStream* stream);
+MultiFormatArchive* OpenRarArchive(IStream* stream);
 #endif

@@ -25,7 +25,7 @@ class PropertyMap {
 /* ********** EPUB ********** */
 
 class EpubDoc {
-    Archive* zip = nullptr;
+    MultiFormatArchive* zip = nullptr;
     // zip and images are the only mutable members of EpubDoc after initialization;
     // access to them must be serialized for multi-threaded users (such as EbookController)
     CRITICAL_SECTION zipAccess;

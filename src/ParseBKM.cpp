@@ -262,7 +262,6 @@ static DocTocItem* parseBookmarksLine(std::string_view line, size_t* indentOut) 
             continue;
         }
     }
-
     return res;
 }
 

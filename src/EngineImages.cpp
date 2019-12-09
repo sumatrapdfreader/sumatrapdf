@@ -855,7 +855,7 @@ BaseEngine* CreateFromFile(const WCHAR* fileName) {
 
 class CbxEngineImpl : public ImagesEngine, public json::ValueVisitor {
   public:
-    CbxEngineImpl(Archive* arch) : cbxFile(arch) {
+    CbxEngineImpl(MultiFormatArchive* arch) : cbxFile(arch) {
         kind = kindEngineComicBooks;
     }
     virtual ~CbxEngineImpl() {
@@ -906,8 +906,8 @@ class CbxEngineImpl : public ImagesEngine, public json::ValueVisitor {
     void ParseComicInfoXml(const char* xmlData);
 
     // access to cbxFile must be protected after initialization (with cacheAccess)
-    Archive* cbxFile;
-    std::vector<Archive::FileInfo*> files;
+    MultiFormatArchive* cbxFile;
+    std::vector<MultiFormatArchive::FileInfo*> files;
 
     // extracted metadata
     AutoFreeW propTitle;
@@ -938,7 +938,7 @@ bool CbxEngineImpl::LoadFromStream(IStream* stream) {
     return FinishLoading();
 }
 
-static bool cmpArchFileInfoByName(Archive::FileInfo* f1, Archive::FileInfo* f2) {
+static bool cmpArchFileInfoByName(MultiFormatArchive::FileInfo* f1, MultiFormatArchive::FileInfo* f2) {
     const char* s1 = f1->name.data();
     const char* s2 = f2->name.data();
     int res = str::CmpNatural(s1, s2);
@@ -951,7 +951,7 @@ bool CbxEngineImpl::FinishLoading() {
         return false;
     }
 
-    std::vector<Archive::FileInfo*> pageFiles;
+    std::vector<MultiFormatArchive::FileInfo*> pageFiles;
 
     auto& fileInfos = cbxFile->GetFileInfos();
     for (auto* fileInfo : fileInfos) {
@@ -959,7 +959,7 @@ bool CbxEngineImpl::FinishLoading() {
         if (str::Len(fileName) == 0) {
             continue;
         }
-        if (Archive::Format::Zip == cbxFile->format && str::StartsWithI(fileName, "_rels/.rels")) {
+        if (MultiFormatArchive::Format::Zip == cbxFile->format && str::StartsWithI(fileName, "_rels/.rels")) {
             // bail, if we accidentally try to load an XPS file
             return false;
         }
@@ -1118,13 +1118,13 @@ WCHAR* CbxEngineImpl::GetProperty(DocumentProperty prop) {
 
 const WCHAR* CbxEngineImpl::GetDefaultFileExt() const {
     switch (cbxFile->format) {
-        case Archive::Format::Zip:
+        case MultiFormatArchive::Format::Zip:
             return L".cbz";
-        case Archive::Format::Rar:
+        case MultiFormatArchive::Format::Rar:
             return L".cbr";
-        case Archive::Format::SevenZip:
+        case MultiFormatArchive::Format::SevenZip:
             return L".cb7";
-        case Archive::Format::Tar:
+        case MultiFormatArchive::Format::Tar:
             return L".cbt";
         default:
             CrashIf(true);
@@ -1192,7 +1192,7 @@ BaseEngine* CbxEngineImpl::CreateFromFile(const WCHAR* fileName) {
     }
     if (str::EndsWithI(fileName, L".cb7") || str::EndsWithI(fileName, L".7z") ||
         file::StartsWith(fileName, "7z\xBC\xAF\x27\x1C")) {
-        Archive* archive = Open7zArchive(fileName);
+        MultiFormatArchive* archive = Open7zArchive(fileName);
         if (archive) {
             auto* engine = new CbxEngineImpl(archive);
             if (engine->LoadFromFile(fileName)) {
@@ -1202,7 +1202,7 @@ BaseEngine* CbxEngineImpl::CreateFromFile(const WCHAR* fileName) {
         }
     }
     if (str::EndsWithI(fileName, L".cbt") || str::EndsWithI(fileName, L".tar")) {
-        Archive* archive = OpenTarArchive(fileName);
+        MultiFormatArchive* archive = OpenTarArchive(fileName);
         if (archive) {
             auto* engine = new CbxEngineImpl(archive);
             if (engine->LoadFromFile(fileName)) {

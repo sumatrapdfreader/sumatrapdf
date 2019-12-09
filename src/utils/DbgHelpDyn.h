@@ -1,12 +1,6 @@
 /* Copyright 2019 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD */
 
-// We're not using DebugLog.[h|cpp] here to make sure logging doesn't allocate
-// memory. We use plog because it's similar to plogf() but we don't want to lie
-// by claiming we support formatted strings.
-// We always log those because they only kick in on error code paths
-#define plog(msg) OutputDebugStringA(msg)
-
 namespace dbghelp {
 
 bool Initialize(const WCHAR* symPath, bool force);

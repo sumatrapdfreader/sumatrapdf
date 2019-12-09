@@ -65,14 +65,12 @@
 #include "AppTools.h"
 #include "Installer.h"
 
-#ifdef DEBUG
 static bool TryLoadMemTrace() {
     AutoFreeW dllPath(path::GetPathOfFileInAppDir(L"memtrace.dll"));
     if (!LoadLibrary(dllPath))
         return false;
     return true;
 }
-#endif
 
 // gFileExistenceChecker is initialized at startup and should
 // terminate and delete itself asynchronously while the UI is
@@ -584,6 +582,18 @@ extern int RunInstaller();
 // in Uninstaller.cpp
 extern int RunUninstaller(bool);
 
+#if defined(DEBUG)
+static bool isDebugBuild = true;
+#else
+static bool isDebugBuild = false;
+#endif
+
+#if defined(ASAN_BUILD)
+static bool isAsanBuild = true;
+#else
+static bool isAsanBuild = false;
+#endif
+
 // In release builds, we want to do fast exit and leave cleaning up (freeing memory) to the os.
 // In debug and in release asan builds, we want to cleanup ourselves in order to see leaks.
 // Note: detect_leaks ASAN flag is not (yet?) supported with msvc 16.4
@@ -602,15 +612,15 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 
     CrashIf(hInstance != GetInstance());
 
-#if defined(DEBUG)
-    // Memory leak detection (only enable _CRTDBG_LEAK_CHECK_DF for
-    // regular termination so that leaks aren't checked on exceptions,
-    // aborts, etc. where some clean-up might not take place)
-    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF);
-    //_CrtSetDbgFlag(_CRTDBG_CHECK_ALWAYS_DF);
-    //_CrtSetBreakAlloc(421);
-    TryLoadMemTrace();
-#endif
+    if (isDebugBuild) {
+        // Memory leak detection (only enable _CRTDBG_LEAK_CHECK_DF for
+        // regular termination so that leaks aren't checked on exceptions,
+        // aborts, etc. where some clean-up might not take place)
+        _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF);
+        //_CrtSetDbgFlag(_CRTDBG_CHECK_ALWAYS_DF);
+        //_CrtSetBreakAlloc(421);
+        TryLoadMemTrace();
+    }
 
     InitDynCalls();
     NoDllHijacking();
@@ -626,11 +636,9 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 
     srand((unsigned int)time(nullptr));
 
-#if defined(DEBUG)
-    dbghelp::RememberCallstackLogs();
-#endif
-
-    SetupCrashHandler();
+    if (!isAsanBuild) {
+        SetupCrashHandler();
+    }
 
     ScopedOle ole;
     InitAllCommonControls();
@@ -800,14 +808,14 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
         !restoreSession && i.fileNames.size() == 0 && gGlobalPrefs->rememberOpenedFiles && gGlobalPrefs->showStartPage;
 
     // ShGetFileInfoW triggers ASAN deep in Windows code so probably not my fault
-#if !defined(ASAN_BUILD)
-    if (showStartPage) {
-        // make the shell prepare the image list, so that it's ready when the first window's loaded
-        SHFILEINFOW sfi = {0};
-        UINT flags = SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES;
-        SHGetFileInfoW(L".pdf", 0, &sfi, sizeof(sfi), flags);
+    if (!isAsanBuild) {
+        if (showStartPage) {
+            // make the shell prepare the image list, so that it's ready when the first window's loaded
+            SHFILEINFOW sfi = {0};
+            UINT flags = SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES;
+            SHGetFileInfoW(L".pdf", 0, &sfi, sizeof(sfi), flags);
+        }
     }
-#endif
 
     WindowInfo* win = nullptr;
     if (restoreSession) {
@@ -930,17 +938,20 @@ Exit:
     prefs::CleanUp();
 
     FreeAllMenuDrawInfos();
+
     // it's still possible to crash after this (destructors of static classes,
     // atexit() code etc.) point, but it's very unlikely
-    UninstallCrashHandler();
+    if (!isAsanBuild) {
+        UninstallCrashHandler();
+    }
 
     delete gLogBuf;
     delete gLogAllocator;
 
-#if defined(DEBUG)
-    // output leaks after all destructors of static objects have run
-    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-#endif
+    if (isDebugBuild) {
+        // output leaks after all destructors of static objects have run
+        _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+    }
 
     return retCode;
 }

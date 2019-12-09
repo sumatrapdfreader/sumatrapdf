@@ -427,13 +427,14 @@ char* GetCallstacks() {
 
 void LogCallstack() {
     str::Str s(2048);
-    if (!GetCurrentThreadCallstack(s))
+    if (!GetCurrentThreadCallstack(s)) {
         return;
+    }
 
     s.Append("\n");
-    plog(s.Get());
-    if (gCallstackLogs)
+    if (gCallstackLogs) {
         gCallstackLogs->Append(s.Get());
+    }
 }
 
 void GetAllThreadsCallstacks(str::Str& s) {

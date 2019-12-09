@@ -24,18 +24,18 @@ extern "C" {
 static bool tryUnrarDllFirst = true;
 
 #if OS_WIN
-FILETIME Archive::FileInfo::GetWinFileTime() const {
+FILETIME MultiFormatArchive::FileInfo::GetWinFileTime() const {
     FILETIME ft = {(DWORD)-1, (DWORD)-1};
     LocalFileTimeToFileTime((FILETIME*)&fileTime, &ft);
     return ft;
 }
 #endif
 
-Archive::Archive(archive_opener_t opener, Archive::Format format) : format(format), opener_(opener) {
+MultiFormatArchive::MultiFormatArchive(archive_opener_t opener, MultiFormatArchive::Format format) : format(format), opener_(opener) {
     CrashIf(!opener);
 }
 
-bool Archive::Open(ar_stream* data, const char* archivePath) {
+bool MultiFormatArchive::Open(ar_stream* data, const char* archivePath) {
     data_ = data;
     if (!data) {
         return false;
@@ -74,12 +74,12 @@ bool Archive::Open(ar_stream* data, const char* archivePath) {
     return true;
 }
 
-Archive::~Archive() {
+MultiFormatArchive::~MultiFormatArchive() {
     ar_close_archive(ar_);
     ar_close(data_);
 }
 
-size_t getFileIdByName(std::vector<Archive::FileInfo*>& fileInfos, const char* name) {
+size_t getFileIdByName(std::vector<MultiFormatArchive::FileInfo*>& fileInfos, const char* name) {
     for (auto fileInfo : fileInfos) {
         if (str::EqI(fileInfo->name.data(), name)) {
             return fileInfo->fileId;
@@ -88,27 +88,27 @@ size_t getFileIdByName(std::vector<Archive::FileInfo*>& fileInfos, const char* n
     return (size_t)-1;
 }
 
-std::vector<Archive::FileInfo*> const& Archive::GetFileInfos() {
+std::vector<MultiFormatArchive::FileInfo*> const& MultiFormatArchive::GetFileInfos() {
     return fileInfos_;
 }
 
-size_t Archive::GetFileId(const char* fileName) {
+size_t MultiFormatArchive::GetFileId(const char* fileName) {
     return getFileIdByName(fileInfos_, fileName);
 }
 
 #if OS_WIN
-OwnedData Archive::GetFileDataByName(const WCHAR* fileName) {
+OwnedData MultiFormatArchive::GetFileDataByName(const WCHAR* fileName) {
     auto fileNameUtf8 = str::conv::ToUtf8(fileName);
     return GetFileDataByName(fileNameUtf8.Get());
 }
 #endif
 
-OwnedData Archive::GetFileDataByName(const char* fileName) {
+OwnedData MultiFormatArchive::GetFileDataByName(const char* fileName) {
     size_t fileId = getFileIdByName(fileInfos_, fileName);
     return GetFileDataById(fileId);
 }
 
-OwnedData Archive::GetFileDataById(size_t fileId) {
+OwnedData MultiFormatArchive::GetFileDataById(size_t fileId) {
     if (fileId == (size_t)-1) {
         return {};
     }
@@ -144,7 +144,7 @@ OwnedData Archive::GetFileDataById(size_t fileId) {
     return data;
 }
 
-std::string_view Archive::GetComment() {
+std::string_view MultiFormatArchive::GetComment() {
     if (!ar_) {
         return {};
     }
@@ -173,14 +173,14 @@ static ar_archive* ar_open_zip_archive_deflated(ar_stream* stream) {
     return ar_open_zip_archive(stream, true);
 }
 
-static Archive* open(Archive* archive, const char* path) {
+static MultiFormatArchive* open(MultiFormatArchive* archive, const char* path) {
     FILE* f = file::OpenFILE(path);
     archive->Open(ar_open(f), path);
     return archive;
 }
 
 #if OS_WIN
-static Archive* open(Archive* archive, const WCHAR* path) {
+static MultiFormatArchive* open(MultiFormatArchive* archive, const WCHAR* path) {
     FILE* f = file::OpenFILE(path);
     auto pathUtf = str::conv::ToUtf8(path);
     bool ok = archive->Open(ar_open(f), pathUtf.Get());
@@ -191,7 +191,7 @@ static Archive* open(Archive* archive, const WCHAR* path) {
     return archive;
 }
 
-static Archive* open(Archive* archive, IStream* stream) {
+static MultiFormatArchive* open(MultiFormatArchive* archive, IStream* stream) {
     bool ok = archive->Open(ar_open_istream(stream), nullptr);
     if (!ok) {
         delete archive;
@@ -201,78 +201,78 @@ static Archive* open(Archive* archive, IStream* stream) {
 }
 #endif
 
-Archive* OpenZipArchive(const char* path, bool deflatedOnly) {
+MultiFormatArchive* OpenZipArchive(const char* path, bool deflatedOnly) {
     auto opener = ar_open_zip_archive_any;
     if (deflatedOnly) {
         opener = ar_open_zip_archive_deflated;
     }
-    auto* archive = new Archive(opener, Archive::Format::Zip);
+    auto* archive = new MultiFormatArchive(opener, MultiFormatArchive::Format::Zip);
     return open(archive, path);
 }
 
-Archive* Open7zArchive(const char* path) {
-    auto* archive = new Archive(ar_open_7z_archive, Archive::Format::SevenZip);
+MultiFormatArchive* Open7zArchive(const char* path) {
+    auto* archive = new MultiFormatArchive(ar_open_7z_archive, MultiFormatArchive::Format::SevenZip);
     return open(archive, path);
 }
 
-Archive* OpenTarArchive(const char* path) {
-    auto* archive = new Archive(ar_open_tar_archive, Archive::Format::Tar);
+MultiFormatArchive* OpenTarArchive(const char* path) {
+    auto* archive = new MultiFormatArchive(ar_open_tar_archive, MultiFormatArchive::Format::Tar);
     return open(archive, path);
 }
 
-Archive* OpenRarArchive(const char* path) {
-    auto* archive = new Archive(ar_open_rar_archive, Archive::Format::Rar);
+MultiFormatArchive* OpenRarArchive(const char* path) {
+    auto* archive = new MultiFormatArchive(ar_open_rar_archive, MultiFormatArchive::Format::Rar);
     return open(archive, path);
 }
 
 #if OS_WIN
-Archive* OpenZipArchive(const WCHAR* path, bool deflatedOnly) {
+MultiFormatArchive* OpenZipArchive(const WCHAR* path, bool deflatedOnly) {
     auto opener = ar_open_zip_archive_any;
     if (deflatedOnly) {
         opener = ar_open_zip_archive_deflated;
     }
-    auto* archive = new Archive(opener, Archive::Format::Zip);
+    auto* archive = new MultiFormatArchive(opener, MultiFormatArchive::Format::Zip);
     return open(archive, path);
 }
 
-Archive* Open7zArchive(const WCHAR* path) {
-    auto* archive = new Archive(ar_open_7z_archive, Archive::Format::SevenZip);
+MultiFormatArchive* Open7zArchive(const WCHAR* path) {
+    auto* archive = new MultiFormatArchive(ar_open_7z_archive, MultiFormatArchive::Format::SevenZip);
     return open(archive, path);
 }
 
-Archive* OpenTarArchive(const WCHAR* path) {
-    auto* archive = new Archive(ar_open_tar_archive, Archive::Format::Tar);
+MultiFormatArchive* OpenTarArchive(const WCHAR* path) {
+    auto* archive = new MultiFormatArchive(ar_open_tar_archive, MultiFormatArchive::Format::Tar);
     return open(archive, path);
 }
 
-Archive* OpenRarArchive(const WCHAR* path) {
-    auto* archive = new Archive(ar_open_rar_archive, Archive::Format::Rar);
+MultiFormatArchive* OpenRarArchive(const WCHAR* path) {
+    auto* archive = new MultiFormatArchive(ar_open_rar_archive, MultiFormatArchive::Format::Rar);
     return open(archive, path);
 }
 #endif
 
 #if OS_WIN
-Archive* OpenZipArchive(IStream* stream, bool deflatedOnly) {
+MultiFormatArchive* OpenZipArchive(IStream* stream, bool deflatedOnly) {
     auto opener = ar_open_zip_archive_any;
     if (deflatedOnly) {
         opener = ar_open_zip_archive_deflated;
     }
-    auto* archive = new Archive(opener, Archive::Format::Zip);
+    auto* archive = new MultiFormatArchive(opener, MultiFormatArchive::Format::Zip);
     return open(archive, stream);
 }
 
-Archive* Open7zArchive(IStream* stream) {
-    auto* archive = new Archive(ar_open_7z_archive, Archive::Format::SevenZip);
+MultiFormatArchive* Open7zArchive(IStream* stream) {
+    auto* archive = new MultiFormatArchive(ar_open_7z_archive, MultiFormatArchive::Format::SevenZip);
     return open(archive, stream);
 }
 
-Archive* OpenTarArchive(IStream* stream) {
-    auto* archive = new Archive(ar_open_tar_archive, Archive::Format::Tar);
+MultiFormatArchive* OpenTarArchive(IStream* stream) {
+    auto* archive = new MultiFormatArchive(ar_open_tar_archive, MultiFormatArchive::Format::Tar);
     return open(archive, stream);
 }
 
-Archive* OpenRarArchive(IStream* stream) {
-    auto* archive = new Archive(ar_open_rar_archive, Archive::Format::Rar);
+MultiFormatArchive* OpenRarArchive(IStream* stream) {
+    auto* archive = new MultiFormatArchive(ar_open_rar_archive, MultiFormatArchive::Format::Rar);
     return open(archive, stream);
 }
 #endif
@@ -311,7 +311,7 @@ static bool FindFile(HANDLE hArc, RARHeaderDataEx* rarHeader, const WCHAR* fileN
     }
 }
 
-OwnedData Archive::GetFileDataByIdUnarrDll(size_t fileId) {
+OwnedData MultiFormatArchive::GetFileDataByIdUnarrDll(size_t fileId) {
     CrashIf(!rarFilePath_);
 
     AutoFreeW rarPath(str::conv::FromUtf8(rarFilePath_));
@@ -365,7 +365,19 @@ Exit:
     return {data, size};
 }
 
-bool Archive::OpenUnrarFallback(const char* rarPathUtf) {
+// asan build crashes in UnRAR code
+// see https://codeeval.dev/gist/801ad556960e59be41690d0c2fa7cba0
+#if defined(ASAN_BUILD)
+static bool disableUnrarFallback = true;
+#else
+static bool disableUnrarFallback = false;
+#endif
+
+bool MultiFormatArchive::OpenUnrarFallback(const char* rarPathUtf) {
+    if (disableUnrarFallback) {
+        return false;
+    }
+
     if (!rarPathUtf) {
         return false;
     }
