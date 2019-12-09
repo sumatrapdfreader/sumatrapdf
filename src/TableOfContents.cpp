@@ -530,42 +530,6 @@ static void TreeCtrlContextMenu(WindowInfo* win, int xScreen, int yScreen) {
     BuildAndShowContextMenu(win, xScreen, yScreen);
 }
 
-constexpr int MAX_ALT_BOOKMARKS = 64;
-
-struct AlternativeBookmarks {
-    int count = 0;
-    DocTocTree* bookmarks[MAX_ALT_BOOKMARKS] = {};
-    ~AlternativeBookmarks();
-};
-
-AlternativeBookmarks::~AlternativeBookmarks() {
-    for (int i = 0; i < count; i++) {
-        delete bookmarks[i];
-    }
-}
-
-static AlternativeBookmarks* LoadAlterenativeBookmarks(std::string_view baseFileName) {
-    str::Str s;
-    s.Set(baseFileName.data());
-    s.Append(".bkm");
-    std::string_view path = s.AsView();
-    if (!file::Exists(path)) {
-        return nullptr;
-    }
-
-    DocTocTree* docTree = ParseBookmarksFile(path);
-    if (docTree == nullptr) {
-        return nullptr;
-    }
-
-    // TODO: read more than one
-
-    auto* res = new AlternativeBookmarks();
-    res->count = 1;
-    res->bookmarks[0] = docTree;
-    return res;
-}
-
 static void AltBookmarksChanged(WindowInfo* win, TabInfo* tab, int n, std::string_view s) {
     DocTocTree* tocTree = nullptr;
     if (n == 0) {

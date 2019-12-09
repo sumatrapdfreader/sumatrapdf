@@ -23,6 +23,7 @@
 #include "AppUtil.h"
 #include "Selection.h"
 #include "Translations.h"
+#include "ParseBKM.h"
 
 TabInfo::TabInfo(const WCHAR* filePath) {
     this->filePath.SetCopy(filePath);
@@ -33,6 +34,7 @@ TabInfo::~TabInfo() {
     if (AsChm()) {
         AsChm()->RemoveParentHwnd();
     }
+    delete altBookmarks;
     delete selectionOnPage;
     delete ctrl;
 }

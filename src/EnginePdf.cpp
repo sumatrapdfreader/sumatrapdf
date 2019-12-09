@@ -1886,7 +1886,7 @@ RenderedBitmap* PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
 
     fz_try(ctx) {
         pix = fz_new_pixmap_with_bbox(ctx, colorspace, ibounds, nullptr, 1);
-        // initialize white background
+        // initialize with white background
         fz_clear_pixmap_with_value(ctx, pix, 0xff);
 
         // TODO: in printing different style. old code use pdf_run_page_with_usage(), with usage ="View"

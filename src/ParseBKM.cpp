@@ -5,12 +5,14 @@
 #include "utils/BitManip.h"
 #include "utils/ScopedWin.h"
 #include "utils/FileUtil.h"
+#include "utils/Log.h"
 
 #include "wingui/WinGui.h"
 #include "wingui/TreeModel.h"
 #include "wingui/TreeCtrl.h"
 
 #include "EngineBase.h"
+#include "ParseBKM.h"
 
 /*
 Creating and parsing of .bkm files that contain alternative bookmarks view
@@ -211,6 +213,8 @@ std::tuple<ParsedDest*, bool> parseDestination(std::string_view& sv) {
 // a single line in .bmk file is:
 // indentation "quoted title" additional-metadata* destination
 static DocTocItem* parseBookmarksLine(std::string_view line, size_t* indentOut) {
+    auto origLine = line; // save for debugging
+
     // lines might start with an indentation, 2 spaces for one level
     // TODO: maybe also count tabs as one level?
     size_t indent = skipChars(line, ' ');
@@ -241,26 +245,22 @@ static DocTocItem* parseBookmarksLine(std::string_view line, size_t* indentOut) 
             continue;
         }
 
-        auto maybeColor = parseColor(part);
-        if (std::get<1>(maybeColor) == true) {
-            res->color = std::get<0>(maybeColor);
+        auto [color, ok] = parseColor(part);
+        if (ok) {
+            res->color = color;
             continue;
         }
 
-        auto maybeDest = parseDestination(part);
-        if (std::get<1>(maybeDest) == true) {
-            auto* dest = std::get<0>(maybeDest);
+        auto [dest, ok2] = parseDestination(part);
+        if (ok2) {
             res->pageNo = dest->pageNo;
+            if (dest->pageNo == 0) {
+                dbglogf("has pageNo of 0\n");
+            }
             delete dest;
             // TODO: parse destination and set values
             continue;
         }
-    }
-
-    // page: must have been missing
-    if (res->pageNo == 0) {
-        delete res;
-        return nullptr;
     }
 
     return res;
@@ -293,6 +293,9 @@ static DocTocTree* parseBookmarks(std::string_view sv) {
         }
         auto* item = parseBookmarksLine(line, &indent);
         if (item == nullptr) {
+            for (auto& el : items) {
+                delete el.item;
+            }
             delete tree;
             return nullptr;
         }
@@ -301,6 +304,9 @@ static DocTocTree* parseBookmarks(std::string_view sv) {
     }
     size_t nItems = items.size();
     if (nItems == 0) {
+        for (auto& el : items) {
+            delete el.item;
+        }
         delete tree;
         return nullptr;
     }
@@ -351,4 +357,32 @@ DocTocTree* ParseBookmarksFile(std::string_view path) {
     }
     auto* docTree = parseBookmarks(d.AsView());
     return docTree;
+}
+
+AlternativeBookmarks::~AlternativeBookmarks() {
+    for (int i = 0; i < count; i++) {
+        delete bookmarks[i];
+    }
+}
+
+AlternativeBookmarks* LoadAlterenativeBookmarks(std::string_view baseFileName) {
+    str::Str s;
+    s.Set(baseFileName.data());
+    s.Append(".bkm");
+    std::string_view path = s.AsView();
+    if (!file::Exists(path)) {
+        return nullptr;
+    }
+
+    DocTocTree* docTree = ParseBookmarksFile(path);
+    if (docTree == nullptr) {
+        return nullptr;
+    }
+
+    // TODO: read more than one
+
+    auto* res = new AlternativeBookmarks();
+    res->count = 1;
+    res->bookmarks[0] = docTree;
+    return res;
 }
