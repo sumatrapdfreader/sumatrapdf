@@ -603,6 +603,16 @@ static bool fastExit = false;
 static bool fastExit = true;
 #endif
 
+static void stdNewHandler() {
+    // do nothing
+    // this suppresses throw std::bad_alloc done by default hanlder
+}
+
+// even though we compile without exceptions, new throws std::bad_alloc and we don't want that
+static void supressThrowFromNew() {
+    std::set_new_handler(stdNewHandler);
+}
+
 int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR cmdLine,
                      _In_ int nCmdShow) {
     UNUSED(hPrevInstance);
@@ -621,6 +631,8 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
         //_CrtSetBreakAlloc(421);
         TryLoadMemTrace();
     }
+
+    supressThrowFromNew();
 
     InitDynCalls();
     NoDllHijacking();

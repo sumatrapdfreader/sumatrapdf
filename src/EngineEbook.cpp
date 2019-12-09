@@ -1496,6 +1496,8 @@ class ChmHtmlCollector : public EbookTocVisitor {
 
   public:
     explicit ChmHtmlCollector(ChmDoc* doc) : doc(doc) {
+        // can be big
+        html.allowFailure = true;
     }
 
     char* GetHtml() {
@@ -1530,13 +1532,15 @@ class ChmHtmlCollector : public EbookTocVisitor {
         if (!url || url::IsAbsolute(url))
             return;
         AutoFreeW plainUrl(url::GetFullPath(url));
-        if (added.FindI(plainUrl) != -1)
+        if (added.FindI(plainUrl) != -1) {
             return;
+        }
         OwnedData urlUtf8(str::conv::ToUtf8(plainUrl));
         size_t pageHtmlLen;
         ScopedMem<unsigned char> pageHtml(doc->GetData(urlUtf8.Get(), &pageHtmlLen));
-        if (!pageHtml)
+        if (!pageHtml) {
             return;
+        }
         html.AppendFmt("<pagebreak page_path=\"%s\" page_marker />", urlUtf8.Get());
         html.AppendAndFree(doc->ToUtf8(pageHtml, ExtractHttpCharset((const char*)pageHtml.Get(), pageHtmlLen)));
         added.Append(plainUrl.StealData());
