@@ -13,7 +13,7 @@ struct ImageData2 {
 char* NormalizeURL(const char* url, const char* base);
 
 class PropertyMap {
-    AutoFree values[(int)DocumentProperty::PdfVersion];
+    AutoFreeStr values[(int)DocumentProperty::PdfVersion];
 
     int Find(DocumentProperty prop) const;
 
@@ -76,7 +76,7 @@ class Fb2Doc {
 
     str::Str xmlData;
     Vec<ImageData2> images;
-    AutoFree coverImage;
+    AutoFreeStr coverImage;
     PropertyMap props;
     bool isZipped = false;
     bool hasToc = false;
@@ -139,8 +139,8 @@ class PalmDoc {
 
 class HtmlDoc {
     AutoFreeW fileName;
-    AutoFree htmlData;
-    AutoFree pagePath;
+    AutoFreeStr htmlData;
+    AutoFreeStr pagePath;
     Vec<ImageData2> images;
     PropertyMap props;
 

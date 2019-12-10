@@ -645,7 +645,7 @@ bool SetModificationTime(const WCHAR* filePath, FILETIME lastMod) {
 
 // return true if a file starts with string s of size len
 bool StartsWithN(const WCHAR* filePath, const char* s, size_t len) {
-    AutoFree buf(AllocArray<char>(len));
+    AutoFreeStr buf(AllocArray<char>(len));
     if (!buf)
         return false;
 

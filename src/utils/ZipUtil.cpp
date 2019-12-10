@@ -113,7 +113,7 @@ bool ZipCreator::AddFileData(const char* nameUtf8, const void* data, size_t size
 
     uint16_t method = Z_DEFLATED;
     uLongf compressedSize = (uint32_t)size;
-    AutoFree compressed((char*)malloc(size));
+    AutoFreeStr compressed((char*)malloc(size));
     if (!compressed)
         return false;
     compressedSize = zip_compress(compressed, (uint32_t)size, data, (uint32_t)size);

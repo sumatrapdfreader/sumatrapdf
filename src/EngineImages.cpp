@@ -1016,29 +1016,29 @@ void CbxEngineImpl::ParseComicInfoXml(const char* xmlData) {
         if (!tok->IsStartTag())
             continue;
         if (tok->NameIs("Title")) {
-            AutoFree value(GetTextContent(parser));
+            AutoFreeStr value(GetTextContent(parser));
             if (value)
                 Visit("/ComicBookInfo/1.0/title", value, json::Type_String);
         } else if (tok->NameIs("Year")) {
-            AutoFree value(GetTextContent(parser));
+            AutoFreeStr value(GetTextContent(parser));
             if (value)
                 Visit("/ComicBookInfo/1.0/publicationYear", value, json::Type_Number);
         } else if (tok->NameIs("Month")) {
-            AutoFree value(GetTextContent(parser));
+            AutoFreeStr value(GetTextContent(parser));
             if (value)
                 Visit("/ComicBookInfo/1.0/publicationMonth", value, json::Type_Number);
         } else if (tok->NameIs("Summary")) {
-            AutoFree value(GetTextContent(parser));
+            AutoFreeStr value(GetTextContent(parser));
             if (value)
                 Visit("/X-summary", value, json::Type_String);
         } else if (tok->NameIs("Writer")) {
-            AutoFree value(GetTextContent(parser));
+            AutoFreeStr value(GetTextContent(parser));
             if (value) {
                 Visit("/ComicBookInfo/1.0/credits[0]/person", value, json::Type_String);
                 Visit("/ComicBookInfo/1.0/credits[0]/primary", "true", json::Type_Bool);
             }
         } else if (tok->NameIs("Penciller")) {
-            AutoFree value(GetTextContent(parser));
+            AutoFreeStr value(GetTextContent(parser));
             if (value) {
                 Visit("/ComicBookInfo/1.0/credits[1]/person", value, json::Type_String);
                 Visit("/ComicBookInfo/1.0/credits[1]/primary", "true", json::Type_Bool);

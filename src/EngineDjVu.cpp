@@ -30,7 +30,7 @@ class DjVuDestination : public PageDestination {
     //   #[+-]<pageCount>  e.g. #+1 for NextPage and #-1 for PrevPage
     //   #filename.djvu    use ResolveNamedDest to get a link in #<pageNo> format
     //   http://example.net/#hyperlink
-    AutoFree link;
+    AutoFreeStr link;
 
     bool IsPageLink(const char* link) const {
         return link && link[0] == '#' && (str::IsDigit(link[1]) || link[1] == ' ' && str::IsDigit(link[2]));
@@ -597,7 +597,7 @@ RenderedBitmap* DjVuEngineImpl::RenderBitmap(int pageNo, float zoom, int rotatio
 
     RenderedBitmap* bmp = nullptr;
     int stride = ((screen.dx * (isBitonal ? 1 : 3) + 3) / 4) * 4;
-    AutoFree bmpData(AllocArray<char>(stride * (screen.dy + 5)));
+    AutoFreeStr bmpData(AllocArray<char>(stride * (screen.dy + 5)));
     if (bmpData) {
 #ifndef DEBUG
         ddjvu_render_mode_t mode = isBitonal ? DDJVU_RENDER_MASKONLY : DDJVU_RENDER_COLOR;
@@ -643,7 +643,7 @@ RectD DjVuEngineImpl::PageContentBox(int pageNo, RenderTarget target) {
     RectI full = RectD(0, 0, pageRc.dx * zoom, pageRc.dy * zoom).Round();
     ddjvu_rect_t prect = {full.x, full.y, full.dx, full.dy}, rrect = prect;
 
-    AutoFree bmpData(AllocArray<char>(full.dx * full.dy + 1));
+    AutoFreeStr bmpData(AllocArray<char>(full.dx * full.dy + 1));
     if (bmpData && ddjvu_page_render(page, DDJVU_RENDER_MASKONLY, &prect, &rrect, fmt, full.dx, bmpData.Get())) {
         // determine the content box by counting white pixels from the edges
         RectD content(full.dx, -1, 0, 0);
@@ -950,7 +950,7 @@ Vec<PageElement*>* DjVuEngineImpl::GetElements(int pageNo) {
         }
         RectI rect(x, page.dy - y - h, w, h);
 
-        AutoFree link(ResolveNamedDest(urlUtf8));
+        AutoFreeStr link(ResolveNamedDest(urlUtf8));
         els->Append(new DjVuLink(pageNo, rect, link ? link : urlUtf8, commentUtf8));
     }
     ddjvu_free(links);
@@ -1002,7 +1002,7 @@ PageDestination* DjVuEngineImpl::GetNamedDest(const WCHAR* name) {
         nameUtf8.TakeOwnership(str::Join("#", nameUtf8.Get()));
     }
 
-    AutoFree link(ResolveNamedDest(nameUtf8.Get()));
+    AutoFreeStr link(ResolveNamedDest(nameUtf8.Get()));
     if (link)
         return new DjVuDestination(link);
     return nullptr;
@@ -1021,7 +1021,7 @@ DjVuTocItem* DjVuEngineImpl::BuildTocTree(miniexp_t entry, int& idCounter) {
         const char* link = miniexp_to_str(miniexp_cadr(item));
 
         DjVuTocItem* tocItem = nullptr;
-        AutoFree linkNo(ResolveNamedDest(link));
+        AutoFreeStr linkNo(ResolveNamedDest(link));
         if (!linkNo)
             tocItem = new DjVuTocItem(name, link);
         else if (!str::IsEmpty(name) && !str::Eq(name, link + 1))

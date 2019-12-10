@@ -615,7 +615,7 @@ static void supressThrowFromNew() {
 
 // I see people trying to use installer as a portable
 // version. This crashes because it can't load
-// libmupdf.dll. We 
+// libmupdf.dll. We
 static void ensureNotInstaller() {
     if (!IsValidInstaller()) {
         return;
@@ -625,7 +625,8 @@ static void ensureNotInstaller() {
         return;
     }
     MessageBoxA(nullptr,
-                "This is a SumatraPDF installer.\nEither install it with -install option or use portable version.\nDownload portable from https://www.sumatrapdfreader.org\n",
+                "This is a SumatraPDF installer.\nEither install it with -install option or use portable "
+                "version.\nDownload portable from https://www.sumatrapdfreader.org\n",
                 "Error", MB_OK);
     ::ExitProcess(1);
 }

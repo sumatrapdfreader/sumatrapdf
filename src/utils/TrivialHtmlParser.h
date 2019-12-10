@@ -94,7 +94,7 @@ namespace str {
 namespace conv {
 
 inline WCHAR* FromHtmlUtf8(const char* s, size_t len) {
-    AutoFree tmp(str::DupN(s, len));
+    AutoFreeStr tmp(str::DupN(s, len));
     return DecodeHtmlEntitites(tmp, CP_UTF8);
 }
 

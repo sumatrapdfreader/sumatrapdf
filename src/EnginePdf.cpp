@@ -2266,7 +2266,7 @@ WCHAR* PdfEngineImpl::ExtractFontList() {
     WStrVec fonts;
     for (size_t i = 0; i < fontList.size(); i++) {
         const char *name = nullptr, *type = nullptr, *encoding = nullptr;
-        AutoFree anonFontName;
+        AutoFreeStr anonFontName;
         bool embedded = false;
         fz_try(ctx) {
             pdf_obj* font = fontList.at(i);
@@ -2575,7 +2575,7 @@ static bool pdf_file_update_add_annotation(fz_context* ctx, pdf_document* doc, p
         std::swap(dx, dy);
     float rgb[3] = {annot.color.r / 255.f, annot.color.g / 255.f, annot.color.b / 255.f};
     // rotate the QuadPoints to match the page
-    AutoFree quad_tpl;
+    AutoFreeStr quad_tpl;
     if (0 == rotation)
         quad_tpl.Set(str::Format(obj_quad_tpl, r.x0, r.y1, r.x1, r.y1, r.x0, r.y0, r.x1, r.y0));
     else if (90 == rotation)
@@ -2584,12 +2584,12 @@ static bool pdf_file_update_add_annotation(fz_context* ctx, pdf_document* doc, p
         quad_tpl.Set(str::Format(obj_quad_tpl, r.x1, r.y0, r.x0, r.y0, r.x1, r.y1, r.x0, r.y1));
     else // if (270 == rotation)
         quad_tpl.Set(str::Format(obj_quad_tpl, r.x1, r.y1, r.x1, r.y0, r.x0, r.y1, r.x0, r.y0));
-    AutoFree annot_tpl(str::Format(obj_dict, subtype, r.x0, r.y0, r.x1, r.y1, rgb[0], rgb[1],
+    AutoFreeStr annot_tpl(str::Format(obj_dict, subtype, r.x0, r.y0, r.x1, r.y1, rgb[0], rgb[1],
                                    rgb[2],                                              // Rect and Color
                                    F_Print, pdf_to_num(ctx, page_obj), pdf_to_gen(ctx, page_obj), // F and P
                                    quad_tpl.Get()));
-    AutoFree annot_ap_dict(str::Format(ap_dict, dx, dy, annot.color.a / 255.f));
-    AutoFree annot_ap_stream;
+    AutoFreeStr annot_ap_dict(str::Format(ap_dict, dx, dy, annot.color.a / 255.f));
+    AutoFreeStr annot_ap_stream;
 
     fz_try(ctx) {
         annot_obj = pdf_new_obj_from_str(ctx, doc, annot_tpl);

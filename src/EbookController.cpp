@@ -428,9 +428,9 @@ void EbookController::OnClickedLink(int pageNo, DrawInstr* link) {
             for (size_t k = 0; k < std::min((size_t)2, p->instructions.size()); k++) {
                 DrawInstr& di = p->instructions.at(k);
                 if (DrawInstrType::Anchor == di.type && str::StartsWith(di.str.s + di.str.len, "\" page_marker />")) {
-                    AutoFree basePath(str::DupN(di.str.s, di.str.len));
-                    AutoFree relPath(ResolveHtmlEntities(link->str.s, link->str.len));
-                    AutoFree absPath(NormalizeURL(relPath, basePath));
+                    AutoFreeStr basePath(str::DupN(di.str.s, di.str.len));
+                    AutoFreeStr relPath(ResolveHtmlEntities(link->str.s, link->str.len));
+                    AutoFreeStr absPath(NormalizeURL(relPath, basePath));
                     url.Set(str::conv::FromUtf8(absPath));
                     j = 0; // done
                     break;

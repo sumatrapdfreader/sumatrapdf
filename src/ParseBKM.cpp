@@ -354,6 +354,7 @@ DocTocTree* ParseBookmarksFile(std::string_view path) {
     if (!d) {
         return nullptr;
     }
+
     auto* docTree = parseBookmarks({d, size});
     free(d);
     return docTree;

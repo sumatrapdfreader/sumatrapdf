@@ -25,7 +25,7 @@ bool ChmDoc::HasData(const char* fileName) {
     if (!fileName)
         return nullptr;
 
-    AutoFree tmpName;
+    AutoFreeStr tmpName;
     if (!str::StartsWith(fileName, "/")) {
         tmpName.Set(str::Join("/", fileName));
         fileName = tmpName;
@@ -233,11 +233,11 @@ char* ChmDoc::ResolveTopicID(unsigned int id) {
     return nullptr;
 }
 
-void ChmDoc::FixPathCodepage(AutoFree& path, UINT& fileCP) {
+void ChmDoc::FixPathCodepage(AutoFreeStr& path, UINT& fileCP) {
     if (!path || HasData(path))
         return;
 
-    AutoFree utf8Path(ToUtf8((unsigned char*)path.Get()));
+    AutoFreeStr utf8Path(ToUtf8((unsigned char*)path.Get()));
     if (HasData(utf8Path)) {
         path.Set(utf8Path.StealData());
         fileCP = codepage;

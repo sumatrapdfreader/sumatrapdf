@@ -66,15 +66,15 @@ class ScopedPtr {
 };
 
 template <typename T>
-class AutoFreeStr {
+class AutoFreeStrBasic {
   public:
     T* ptr = nullptr;
 
-    AutoFreeStr() = default;
-    explicit AutoFreeStr(T* ptr) {
+    AutoFreeStrBasic() = default;
+    explicit AutoFreeStrBasic(T* ptr) {
         this->ptr = ptr;
     }
-    ~AutoFreeStr() {
+    ~AutoFreeStrBasic() {
         free(this->ptr);
     }
     void Set(T* newPtr) {
@@ -126,8 +126,85 @@ class AutoFreeStr {
     }
 };
 
-typedef AutoFreeStr<char> AutoFree;
+typedef AutoFreeStrBasic<char> AutoFreeStr;
 
 #if OS_WIN
-typedef AutoFreeStr<WCHAR> AutoFreeW;
+typedef AutoFreeStrBasic<WCHAR> AutoFreeW;
 #endif
+
+template <typename T>
+struct AutoDelete {
+    T* o = nullptr;
+    AutoDelete() = default;
+    AutoDelete(T* p) {
+        o = p;
+    }
+    ~AutoDelete() {
+        delete o;
+    }
+
+    AutoDelete& operator=(AutoDelete& other) = delete;
+    AutoDelete& operator=(AutoDelete&& other) = delete;
+    AutoDelete& operator=(const AutoDelete& other) = delete;
+    AutoDelete& operator=(const AutoDelete&& other) = delete;
+
+    T* get() const {
+        return o;
+    }
+};
+
+#if 0
+struct AutoFreeStr {
+    char* d = nullptr;
+
+    AutoFree() = default;
+
+    AutoFree(const char* p) {
+        d = (char*)p;
+    }
+
+    ~AutoFree() {
+        str::Free(d);
+    }
+
+    AutoFree& operator=(AutoFree& other) = delete;
+    AutoFree& operator=(AutoFree&& other) = delete;
+    AutoFree& operator=(const AutoFree& other) = delete;
+    AutoFree& operator=(const AutoFree&& other) = delete;
+
+    char* get() const {
+        return d;
+    }
+    std::string_view as_view() const {
+        return { d, str::Len(d) };
+    }
+
+};
+#endif
+
+struct AutoFreeWstr {
+    WCHAR* d = nullptr;
+
+    AutoFreeWstr() = default;
+
+    AutoFreeWstr(const WCHAR* p) {
+        d = (WCHAR*)p;
+    }
+
+    ~AutoFreeWstr() {
+        str::Free(d);
+    }
+
+    AutoFreeWstr& operator=(AutoFreeWstr& other) = delete;
+    AutoFreeWstr& operator=(AutoFreeWstr&& other) = delete;
+    AutoFreeWstr& operator=(const AutoFreeWstr& other) = delete;
+    AutoFreeWstr& operator=(const AutoFreeWstr&& other) = delete;
+
+    WCHAR* get() const {
+        return d;
+    }
+
+    std::wstring_view as_view() const {
+        return {d, str::Len(d)};
+    }
+};

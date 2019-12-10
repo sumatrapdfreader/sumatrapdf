@@ -349,7 +349,7 @@ void StrTest() {
     }
 
     {
-        AutoFree str1;
+        AutoFreeStr str1;
         int i, j;
         float f;
         utassert(str::Parse("ansi string, -30-20 1.5%", "%S,%d%?-%2u%f%%%$", &str1, &i, &j, &f));

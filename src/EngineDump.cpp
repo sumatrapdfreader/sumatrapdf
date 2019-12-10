@@ -155,7 +155,7 @@ void DumpTocItem(BaseEngine* engine, DocTocItem* item, int level, int& idCounter
                 Out(" Target=\"%s\"", target.Get());
             if (item->pageNo != dest->GetDestPageNo())
                 Out(" TargetPage=\"%d\"", dest->GetDestPageNo());
-            AutoFree rectStr(DestRectToStr(engine, dest));
+            AutoFreeStr rectStr(DestRectToStr(engine, dest));
             if (rectStr)
                 Out(" Target%s", rectStr.Get());
         }
@@ -273,7 +273,7 @@ void DumpPageContent(BaseEngine* engine, int pageNo, bool fullDump) {
                     Out("\t\t\t\tLinkTarget=\"%s\"\n", value.Get());
                 if (dest->GetDestPageNo())
                     Out("\t\t\t\tLinkedPage=\"%d\"\n", dest->GetDestPageNo());
-                AutoFree rectStr(DestRectToStr(engine, dest));
+                AutoFreeStr rectStr(DestRectToStr(engine, dest));
                 if (rectStr)
                     Out("\t\t\t\tLinked%s\n", rectStr.Get());
             }
@@ -308,7 +308,7 @@ void DumpThumbnail(BaseEngine* engine) {
 
     size_t len;
     ScopedMem<unsigned char> data(tga::SerializeBitmap(bmp->GetBitmap(), &len));
-    AutoFree hexData(data ? str::MemToHex(data, len) : nullptr);
+    AutoFreeStr hexData(data ? str::MemToHex(data, len) : nullptr);
     if (hexData)
         Out("\t<Thumbnail>\n\t\t%s\n\t</Thumbnail>\n", hexData.Get());
     else
@@ -363,7 +363,7 @@ bool RenderDocument(BaseEngine* engine, const WCHAR* renderPath, float zoom = 1.
             return true;
         AutoFreeW txtFilePath(str::Format(renderPath, 0));
         OwnedData textUTF8(str::conv::ToUtf8(text.Get()));
-        AutoFree textUTF8BOM(str::Join(UTF8_BOM, textUTF8.Get()));
+        AutoFreeStr textUTF8BOM(str::Join(UTF8_BOM, textUTF8.Get()));
         return file::WriteFile(txtFilePath, textUTF8BOM.Get(), str::Len(textUTF8BOM));
     }
 
@@ -396,7 +396,7 @@ bool RenderDocument(BaseEngine* engine, const WCHAR* renderPath, float zoom = 1.
             gbmp.Save(pageBmpPath, &pngEncId);
         } else if (str::EndsWithI(pageBmpPath, L".bmp")) {
             size_t bmpDataLen;
-            AutoFree bmpData((char*)SerializeBitmap(bmp->GetBitmap(), &bmpDataLen));
+            AutoFreeStr bmpData((char*)SerializeBitmap(bmp->GetBitmap(), &bmpDataLen));
             if (bmpData)
                 file::WriteFile(pageBmpPath, bmpData, bmpDataLen);
         } else { // render as TGA for all other file extensions

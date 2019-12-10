@@ -12,7 +12,7 @@
 // from controls and implementing generic layouts.
 class ILayout {
   public:
-    AutoFree name;
+    AutoFreeStr name;
     void SetName(const char* n) {
         if (n)
             name.SetCopy(n);

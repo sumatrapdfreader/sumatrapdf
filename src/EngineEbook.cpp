@@ -551,9 +551,9 @@ PageElement* EbookEngine::CreatePageLink(DrawInstr* link, RectI rect, int pageNo
 
     DrawInstr* baseAnchor = baseAnchors.at(pageNo - 1);
     if (baseAnchor) {
-        AutoFree basePath(str::DupN(baseAnchor->str.s, baseAnchor->str.len));
-        AutoFree relPath(ResolveHtmlEntities(link->str.s, link->str.len));
-        AutoFree absPath(NormalizeURL(relPath, basePath));
+        AutoFreeStr basePath(str::DupN(baseAnchor->str.s, baseAnchor->str.len));
+        AutoFreeStr relPath(ResolveHtmlEntities(link->str.s, link->str.len));
+        AutoFreeStr absPath(NormalizeURL(relPath, basePath));
         url.Set(str::conv::FromUtf8(absPath));
     }
 
@@ -1295,7 +1295,7 @@ BaseEngine* CreateFromFile(const WCHAR* fileName) {
 
 class ChmDataCache {
     ChmDoc* doc = nullptr; // owned by creator
-    AutoFree html;
+    AutoFreeStr html;
     Vec<ImageData2> images;
 
   public:
@@ -1319,7 +1319,7 @@ class ChmDataCache {
     }
 
     ImageData* GetImageData(const char* id, const char* pagePath) {
-        AutoFree url(NormalizeURL(id, pagePath));
+        AutoFreeStr url(NormalizeURL(id, pagePath));
         for (size_t i = 0; i < images.size(); i++) {
             if (str::Eq(images.at(i).fileName, url))
                 return &images.at(i).base;
@@ -1335,7 +1335,7 @@ class ChmDataCache {
     }
 
     char* GetFileData(const char* relPath, const char* pagePath, size_t* lenOut) {
-        AutoFree url(NormalizeURL(relPath, pagePath));
+        AutoFreeStr url(NormalizeURL(relPath, pagePath));
         return (char*)doc->GetData(url, lenOut);
     }
 };
@@ -1347,7 +1347,7 @@ class ChmFormatter : public HtmlFormatter {
     virtual void HandleTagLink(HtmlToken* t);
 
     ChmDataCache* chmDoc = nullptr;
-    AutoFree pagePath;
+    AutoFreeStr pagePath;
 
   public:
     ChmFormatter(HtmlFormatterArgs* args, ChmDataCache* doc) : HtmlFormatter(args), chmDoc(doc) {
@@ -1361,7 +1361,7 @@ void ChmFormatter::HandleTagImg(HtmlToken* t) {
     bool needAlt = true;
     AttrInfo* attr = t->GetAttrByName("src");
     if (attr) {
-        AutoFree src(str::DupN(attr->val, attr->valLen));
+        AutoFreeStr src(str::DupN(attr->val, attr->valLen));
         url::DecodeInPlace(src);
         ImageData* img = chmDoc->GetImageData(src, pagePath);
         needAlt = !img || !EmitImage(img);
@@ -1398,9 +1398,9 @@ void ChmFormatter::HandleTagLink(HtmlToken* t) {
         return;
 
     size_t len;
-    AutoFree src(str::DupN(attr->val, attr->valLen));
+    AutoFreeStr src(str::DupN(attr->val, attr->valLen));
     url::DecodeInPlace(src);
-    AutoFree data(chmDoc->GetFileData(src, pagePath, &len));
+    AutoFreeStr data(chmDoc->GetFileData(src, pagePath, &len));
     if (data)
         ParseStyleSheet(data, len);
 }
@@ -1468,7 +1468,7 @@ static UINT ExtractHttpCharset(const char* html, size_t htmlLen) {
         if (!attr || !attr->ValIs("Content-Type"))
             continue;
         attr = tok->GetAttrByName("content");
-        AutoFree mimetype, charset;
+        AutoFreeStr mimetype, charset;
         if (!attr || !str::Parse(attr->val, attr->valLen, "%S;%_charset=%S", &mimetype, &charset))
             continue;
 
@@ -1579,7 +1579,7 @@ PageDestination* ChmEngineImpl::GetNamedDest(const WCHAR* name) {
     if (!dest) {
         unsigned int topicID;
         if (str::Parse(name, L"%u%$", &topicID)) {
-            AutoFree urlUtf8(doc->ResolveTopicID(topicID));
+            AutoFreeStr urlUtf8(doc->ResolveTopicID(topicID));
             if (urlUtf8) {
                 AutoFreeW url(str::conv::FromUtf8(urlUtf8));
                 dest = EbookEngine::GetNamedDest(url);
@@ -1613,7 +1613,7 @@ DocTocTree* ChmEngineImpl::GetTocTree() {
 
 class ChmEmbeddedDest : public PageDestination {
     ChmEngineImpl* engine = nullptr;
-    AutoFree path;
+    AutoFreeStr path;
 
   public:
     ChmEmbeddedDest(ChmEngineImpl* engine, const char* path) : engine(engine), path(str::Dup(path)) {
@@ -1643,8 +1643,8 @@ PageElement* ChmEngineImpl::CreatePageLink(DrawInstr* link, RectI rect, int page
         return linkEl;
 
     DrawInstr* baseAnchor = baseAnchors.at(pageNo - 1);
-    AutoFree basePath(str::DupN(baseAnchor->str.s, baseAnchor->str.len));
-    AutoFree url(str::DupN(link->str.s, link->str.len));
+    AutoFreeStr basePath(str::DupN(baseAnchor->str.s, baseAnchor->str.len));
+    AutoFreeStr url(str::DupN(link->str.s, link->str.len));
     url.Set(NormalizeURL(url, basePath));
     if (!doc->HasData(url))
         return nullptr;

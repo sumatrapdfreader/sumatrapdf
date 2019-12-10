@@ -517,7 +517,7 @@ static const WCHAR* Md5OfAppExe() {
     unsigned char md5[16] = {0};
     CalcMD5DigestWin(d.data, d.size, md5);
 
-    AutoFree md5HexA(_MemToHex(&md5));
+    AutoFreeStr md5HexA(_MemToHex(&md5));
     AutoFreeW md5Hex(str::conv::FromUtf8(md5HexA));
 
     return md5Hex.StealData();

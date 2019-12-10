@@ -45,7 +45,7 @@ fz_rect xps_bound_page_quick(xps_document* doc, int number) {
     const char* data = (const char*)part->data;
     size_t data_size = part->size;
 
-    AutoFree dataUtf8;
+    AutoFreeStr dataUtf8;
     if (str::StartsWith(data, UTF16BE_BOM)) {
         for (int i = 0; i + 1 < part->size; i += 2) {
             std::swap(part->data[i], part->data[i + 1]);

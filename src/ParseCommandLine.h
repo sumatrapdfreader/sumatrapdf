@@ -63,7 +63,7 @@ class CommandLineInfo {
     bool crashOnOpen = false;
 
     // deprecated flags
-    AutoFree lang;
+    AutoFreeStr lang;
     WStrVec globalPrefArgs;
 
     CommandLineInfo() = default;
