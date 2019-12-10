@@ -3112,20 +3112,24 @@ static void OnMenuGoToPage(WindowInfo* win) {
     auto* ctrl = win->ctrl;
     AutoFreeW label(ctrl->GetPageLabel(ctrl->CurrentPageNo()));
     AutoFreeW newPageLabel(Dialog_GoToPage(win->hwndFrame, label, ctrl->PageCount(), !ctrl->HasPageLabels()));
-    if (!newPageLabel)
+    if (!newPageLabel) {
         return;
+    }
 
     int newPageNo = ctrl->GetPageByLabel(newPageLabel);
-    if (ctrl->ValidPageNo(newPageNo))
+    if (ctrl->ValidPageNo(newPageNo)) {
         ctrl->GoToPage(newPageNo, true);
+    }
 }
 
 void EnterFullScreen(WindowInfo* win, bool presentation) {
-    if (!HasPermission(Perm_FullscreenAccess) || gPluginMode)
+    if (!HasPermission(Perm_FullscreenAccess) || gPluginMode) {
         return;
+    }
 
-    if ((presentation ? win->presentation : win->isFullScreen) || !IsWindowVisible(win->hwndFrame))
+    if ((presentation ? win->presentation : win->isFullScreen) || !IsWindowVisible(win->hwndFrame)) {
         return;
+    }
 
     AssertCrash(presentation ? !win->isFullScreen : !win->presentation);
     if (presentation) {

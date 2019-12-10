@@ -1,12 +1,206 @@
 package main
 
 import (
+	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/kjk/u"
 )
+
+type CrashVersion struct {
+	main         string
+	build        int
+	isPreRelease bool
+	is64bit      bool
+}
+
+type CrashInfo struct {
+	version          string
+	ver              *CrashVersion
+	crashFile        string
+	os               string
+	crashLines       []string
+	crashLinesAll    string
+	exceptionInfo    []string
+	exceptionInfoAll string
+}
+
+/*
+given:
+Ver: 3.2.11495 pre-release 64-bit
+produces:
+	main: "3.2"
+	build: 11495
+	isPreRelease: true
+	is64bit: tru
+*/
+func parseCrashVersion(s string) *CrashVersion {
+	s = strings.TrimPrefix(s, "Ver: ")
+	s = strings.TrimSpace(s)
+	parts := strings.Split(s, " ")
+	res := &CrashVersion{}
+	v := parts[0] // 3.2.11495
+	for _, s = range parts[1:] {
+		if s == "pre-release" {
+			res.isPreRelease = true
+			continue
+		}
+		if s == "64-bit" {
+			res.is64bit = true
+		}
+	}
+	// 3.2.11495
+	parts = strings.Split(v, ".")
+	u.PanicIf(len(parts) < 3, "has %d parts in '%s'", len(parts), v)
+	if len(parts) == 3 {
+		build, err := strconv.Atoi(parts[2])
+		must(err)
+		res.build = build
+	}
+	if len(parts) == 2 {
+		res.main = parts[0] + "." + parts[1]
+	} else {
+		res.main = parts[0]
+	}
+	return res
+}
+
+func isEmptyLine(s string) bool {
+	return len(strings.TrimSpace((s))) == 0
+}
+
+func parseCrash(d []byte) *CrashInfo {
+	d = u.NormalizeNewlines(d)
+	s := string(d)
+	lines := strings.Split(s, "\n")
+	res := &CrashInfo{}
+	var tmpLines []string
+	inExceptionInfo := false
+	inCrashLines := false
+	for _, l := range lines {
+		if inExceptionInfo {
+			if isEmptyLine(s) || len(tmpLines) > 5 {
+				res.exceptionInfo = tmpLines
+				tmpLines = nil
+				inExceptionInfo = false
+				continue
+			}
+			tmpLines = append(tmpLines, l)
+			continue
+		}
+		if inCrashLines {
+			if isEmptyLine(s) || len(tmpLines) > 6 {
+				res.crashLines = tmpLines
+				tmpLines = nil
+				inCrashLines = false
+				continue
+			}
+			tmpLines = append(tmpLines, l)
+			continue
+		}
+		if strings.HasPrefix(l, "Crash file:") {
+			res.crashFile = l
+			continue
+		}
+		if strings.HasPrefix(l, "OS:") {
+			res.os = l
+			continue
+		}
+		if strings.HasPrefix(l, "Exception:") {
+			inExceptionInfo = true
+			tmpLines = []string{l}
+			continue
+		}
+		if strings.HasPrefix(l, "Crashed thread:") {
+			inCrashLines = true
+			tmpLines = nil
+			continue
+		}
+		if strings.HasPrefix(l, "Ver:") {
+			res.version = l
+			res.ver = parseCrashVersion(l)
+		}
+	}
+	res.crashLinesAll = strings.Join(res.crashLines, "\n")
+	res.exceptionInfoAll = strings.Join(res.exceptionInfo, "\n")
+	return res
+}
+
+func crashesDataDir() string {
+	dir := u.UserHomeDirMust()
+	dir = filepath.Join(dir, "data", "sumatra-crashes")
+	u.CreateDirMust((dir))
+	return dir
+}
+
+func parseCrashFile(path string) *CrashInfo {
+	d := u.ReadFileMust(path)
+	return parseCrash(d)
+}
+
+func isCreateThumbnailCrash(ci *CrashInfo) bool {
+	s := ci.crashLinesAll
+	if strings.Contains(s, "!CreateThumbnailForFile+0x1ff") {
+		return true
+	}
+	if strings.Contains(s, "CreateThumbnailForFile+0x175") {
+		return true
+	}
+	return false
+}
+
+func shouldShowCrash(ci *CrashInfo) bool {
+	build := ci.ver.build
+	// filter out outdated builds
+	if build > 0 && build < 11576 {
+		return false
+	}
+	if isCreateThumbnailCrash(ci) {
+		return false
+	}
+	return true
+}
+
+var (
+	nTotalCrashes    = 0
+	nNotShownCrashes = 0
+)
+
+func showCrashesToTerminal() {
+	nNotShownCrashes = 0
+	dataDir := crashesDataDir()
+	logf("testParseCrashes: data dir: '%s'\n", dataDir)
+	fn := func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			return nil
+		}
+		nTotalCrashes++
+		ci := parseCrashFile(path)
+		if !shouldShowCrash(ci) {
+			nNotShownCrashes++
+			return nil
+		}
+		logf("%s\n", path)
+		logf("Crash path remote: %s\n", path)
+		if len(ci.crashFile) != 0 {
+			logf("%s\n", ci.crashFile)
+		}
+		logf("ver: %s\n", ci.version)
+		for _, s := range ci.crashLines {
+			logf("%s\n", s)
+		}
+		logf("\n")
+		return nil
+	}
+	filepath.Walk(dataDir, fn)
+	logf("Total crashes: %d, not shown: %d\n", nTotalCrashes, nNotShownCrashes)
+}
 
 func downloadCrashes(dataDir string) {
 	timeStart := time.Now()
@@ -37,9 +231,8 @@ func downloadCrashes(dataDir string) {
 
 func previewCrashes() {
 	panicIf(!hasSpacesCreds())
-	dataDir := u.UserHomeDirMust()
-	dataDir = filepath.Join(dataDir, "data", "sumatra-crashes")
-	u.CreateDirMust((dataDir))
-	logf("data dir: '%s'\n", dataDir)
+	dataDir := crashesDataDir()
+	logf("previewCrashes: data dir: '%s'\n", dataDir)
 	downloadCrashes(dataDir)
+	showCrashesToTerminal()
 }
