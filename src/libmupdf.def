@@ -56,6 +56,8 @@ EXPORTS
 	pdf_page_from_fz_page
 	fz_convert_pixmap_samples
 	fz_new_display_list_from_page
+	fz_set_warning_callback
+	fz_set_error_callback
 
 	fz_keep_bitmap
 	fz_drop_bitmap

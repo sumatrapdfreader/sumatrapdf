@@ -613,6 +613,23 @@ static void supressThrowFromNew() {
     std::set_new_handler(stdNewHandler);
 }
 
+// I see people trying to use installer as a portable
+// version. This crashes because it can't load
+// libmupdf.dll. We 
+static void ensureNotInstaller() {
+    if (!IsValidInstaller()) {
+        return;
+    }
+    HMODULE h = LoadLibraryW(L"libmupdf.dll");
+    if (h) {
+        return;
+    }
+    MessageBoxA(nullptr,
+                "This is a SumatraPDF installer.\nEither install it with -install option or use portable version.\nDownload portable from https://www.sumatrapdfreader.org\n",
+                "Error", MB_OK);
+    ::ExitProcess(1);
+}
+
 int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR cmdLine,
                      _In_ int nCmdShow) {
     UNUSED(hPrevInstance);
@@ -702,6 +719,8 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
             return 0;
     }
 #endif
+
+    ensureNotInstaller();
 
     if (i.testRenderPage) {
         TestRenderPage(i);
