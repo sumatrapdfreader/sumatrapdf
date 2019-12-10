@@ -1216,6 +1216,15 @@ extern "C" static void fz_unlock_context_cs(void* user, int lock) {
     LeaveCriticalSection(&e->ctxAccess);
 }
 
+static void fz_print_cb(void* user, const char* msg) {
+    log(msg);
+}
+
+static void installFitzErrorCallbacks(fz_context* ctx) {
+    fz_set_warning_callback(ctx, fz_print_cb, nullptr);
+    fz_set_error_callback(ctx, fz_print_cb, nullptr);
+}
+
 PdfEngineImpl::PdfEngineImpl() {
     kind = kindEnginePDF;
     InitializeCriticalSection(&pagesAccess);
@@ -1225,6 +1234,7 @@ PdfEngineImpl::PdfEngineImpl() {
     fz_locks_ctx.lock = fz_lock_context_cs;
     fz_locks_ctx.unlock = fz_unlock_context_cs;
     ctx = fz_new_context(nullptr, &fz_locks_ctx, FZ_STORE_UNLIMITED);
+    installFitzErrorCallbacks(ctx);
 
     pdf_install_load_system_font_funcs(ctx);
 }
