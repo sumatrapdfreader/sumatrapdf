@@ -169,13 +169,20 @@ static void CreateMainLayout(HWND hwnd) {
         vbox->addChild(l);
     }
     {
+        auto [l, b] = CreateButtonLayout(hwnd, "advance progress", AdvanceProgress);
+        vbox->addChild(l);
+    }
+
+    {
         auto l = CreateEditLayout(hwnd, "initial text");
         vbox->addChild(l);
     }
+
     {
         auto [l, b] = CreateButtonLayout(hwnd, "toggle cross axis", ToggleCrossAxis);
         vbox->addChild(l);
     }
+
     {
         auto l = CreateCheckboxLayout(hwnd, "checkbox one");
         auto elInfo = vbox->addChild(l, 0);
