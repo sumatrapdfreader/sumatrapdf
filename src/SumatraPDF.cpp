@@ -708,12 +708,14 @@ static void CreateThumbnailForFile(WindowInfo* win, DisplayState& ds) {
     // don't create thumbnails for password protected documents
     // (unless we're also remembering the decryption key anyway)
     auto* model = win->AsFixed();
-    auto* engine = model->GetEngine();
-    bool withPwd = engine->IsPasswordProtected();
-    AutoFreeStr decrKey(engine->GetDecryptionKey());
-    if ((model != nullptr) && withPwd && !decrKey) {
-        RemoveThumbnail(ds);
-        return;
+    if (model) {
+        auto* engine = model->GetEngine();
+        bool withPwd = engine->IsPasswordProtected();
+        AutoFreeStr decrKey(engine->GetDecryptionKey());
+        if (withPwd && !decrKey) {
+            RemoveThumbnail(ds);
+            return;
+        }
     }
 
     WCHAR* filePath = str::Dup(win->ctrl->FilePath());
