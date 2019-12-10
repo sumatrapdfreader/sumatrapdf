@@ -221,10 +221,9 @@ bool IsHBox(Kind);
 bool IsHBox(ILayout*);
 
 struct HBox : public ILayout {
+    Vec<boxElementInfo> children;
     MainAxisAlign alignMain;
     CrossAxisAlign alignCross;
-    Vec<ILayout*> children;
-    Vec<boxElementInfo> childrenInfo;
     Length totalWidth;
     int totalFlex;
 
@@ -235,7 +234,8 @@ struct HBox : public ILayout {
     void SetBounds(Rect bounds) override;
 
     void setBoundsForChild(size_t i, ILayout* v, Length posX, Length posY, Length posX2, Length posY2);
-    void addChild(ILayout* child);
+    boxElementInfo& addChild(ILayout* child);
+    boxElementInfo& addChild(ILayout* child, int flex);
     size_t childrenCount();
 };
 
