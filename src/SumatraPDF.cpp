@@ -696,18 +696,21 @@ void ControllerCallbackHandler::RenderThumbnail(DisplayModel* dm, SizeI size, co
 }
 
 static void CreateThumbnailForFile(WindowInfo* win, DisplayState& ds) {
-    if (!ShouldSaveThumbnail(ds))
+    if (!ShouldSaveThumbnail(ds)) {
         return;
+    }
 
     CrashIf(!win->IsDocLoaded());
-    if (!win->IsDocLoaded())
+    if (!win->IsDocLoaded()) {
         return;
+    }
 
     // don't create thumbnails for password protected documents
     // (unless we're also remembering the decryption key anyway)
     auto* model = win->AsFixed();
-    bool withPwd = model->GetEngine()->IsPasswordProtected();
-    AutoFreeStr decrKey(model->GetEngine()->GetDecryptionKey());
+    auto* engine = model->GetEngine();
+    bool withPwd = engine->IsPasswordProtected();
+    AutoFreeStr decrKey(engine->GetDecryptionKey());
     if ((model != nullptr) && withPwd && !decrKey) {
         RemoveThumbnail(ds);
         return;
@@ -727,15 +730,17 @@ static void CreateThumbnailForFile(WindowInfo* win, DisplayState& ds) {
 /* Send the request to render a given page to a rendering thread */
 void ControllerCallbackHandler::RequestRendering(int pageNo) {
     CrashIf(!win->AsFixed());
-    if (!win->AsFixed())
+    if (!win->AsFixed()) {
         return;
+    }
 
     DisplayModel* dm = win->AsFixed();
     // don't render any plain images on the rendering thread,
     // they'll be rendered directly in DrawDocument during
     // WM_PAINT on the UI thread
-    if (dm->ShouldCacheRendering(pageNo))
+    if (dm->ShouldCacheRendering(pageNo)) {
         gRenderCache.RequestRendering(dm, pageNo);
+    }
 }
 
 void ControllerCallbackHandler::CleanUp(DisplayModel* dm) {
@@ -744,8 +749,9 @@ void ControllerCallbackHandler::CleanUp(DisplayModel* dm) {
 }
 
 void ControllerCallbackHandler::FocusFrame(bool always) {
-    if (always || !FindWindowInfoByHwnd(GetFocus()))
+    if (always || !FindWindowInfoByHwnd(GetFocus())) {
         SetFocus(win->hwndFrame);
+    }
 }
 
 void ControllerCallbackHandler::SaveDownload(const WCHAR* url, const unsigned char* data, size_t len) {
@@ -818,12 +824,14 @@ void ControllerCallbackHandler::UpdateScrollbars(SizeI canvas) {
 void ControllerCallbackHandler::PageNoChanged(Controller* ctrl, int pageNo) {
     // discard page number change requests from documents
     // loaded asynchronously in a background tab
-    if (win->ctrl != ctrl)
+    if (win->ctrl != ctrl) {
         return;
+    }
 
     AssertCrash(win->ctrl && win->ctrl->PageCount() > 0);
-    if (!win->ctrl || win->ctrl->PageCount() == 0)
+    if (!win->ctrl || win->ctrl->PageCount() == 0) {
         return;
+    }
 
     if (win->AsEbook())
         pageNo = win->AsEbook()->CurrentTocPageNo();
