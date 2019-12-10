@@ -1620,6 +1620,7 @@ PdfTocItem* PdfEngineImpl::BuildTocTree(fz_outline* outline, int& idCounter, boo
         item->isOpenDefault = outline->is_open;
         item->id = ++idCounter;
         item->fontFlags = outline->flags;
+        item->pageNo = pageNo;
         if (outline->has_color) {
             item->color = pdfColorToCOLORREF(outline->color);
         }
