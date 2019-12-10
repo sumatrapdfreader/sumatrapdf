@@ -441,6 +441,16 @@ static int RunApp() {
 int RunUninstaller(bool silent) {
     int ret = 1;
 
+#if !defined(DEBUG)
+    if (!IsRunningElevated()) {
+        WCHAR* exePath = GetExePath();
+        WCHAR* cmdline = GetCommandLineW(); // not owning the memory
+        LaunchElevated(exePath, cmdline);
+        str::Free(exePath);
+        ::ExitProcess(0);
+    }
+#endif
+
     gInstUninstGlobals.silent = silent;
     gDefaultMsg = _TR("Are you sure you want to uninstall SumatraPDF?");
     gInstUninstGlobals.installDir = GetInstallationDir();

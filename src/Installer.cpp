@@ -1045,18 +1045,19 @@ static bool OpenEmbeddedFilesArchive() {
     }
     return true;
 }
+
 int RunInstaller() {
     int ret = 0;
 
-    // TODO: maybe only launch elevated if needs to write
-    // to a priviledged destination
-    if (false && !IsRunningElevated()) {
+#if !defined(DEBUG)
+    if (!IsRunningElevated()) {
         WCHAR* exePath = GetExePath();
         WCHAR* cmdline = GetCommandLineW(); // not owning the memory
         LaunchElevated(exePath, cmdline);
         str::Free(exePath);
-        return 0;
+        ::ExitProcess(0);
     }
+#endif
 
     if (!OpenEmbeddedFilesArchive()) {
         return 1;
