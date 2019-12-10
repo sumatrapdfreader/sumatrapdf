@@ -96,7 +96,7 @@ static bool AppendEntry(str::Str& data, str::Str& content, const WCHAR* filePath
         meta.Write32(ft.dwLowDateTime);
         meta.Write32(ft.dwHighDateTime);
         data.Append(inArchiveName, nameLen + 1);
-        return content.AppendChecked(fi->compressedData, fi->compressedSize);
+        return content.Append(fi->compressedData, fi->compressedSize);
     }
 
     OwnedData fileData(file::ReadFile(filePath));
@@ -123,7 +123,7 @@ static bool AppendEntry(str::Str& data, str::Str& content, const WCHAR* filePath
     meta.Write32(ft.dwLowDateTime);
     meta.Write32(ft.dwHighDateTime);
     data.Append(inArchiveName, nameLen + 1);
-    return content.AppendChecked(compressed, compressedSize);
+    return content.Append(compressed, compressedSize);
 }
 
 // creates an archive from files (starting at index skipFiles);
@@ -173,7 +173,7 @@ bool CreateArchive(const WCHAR* archivePath, WStrVec& files, size_t skipFiles = 
 
     uint32_t headerCrc32 = crc32(0, (const uint8_t*)data.Get(), (uint32_t)data.size());
     MakeByteWriterLE(data.AppendBlanks(4), 4).Write32(headerCrc32);
-    if (!data.AppendChecked(content.Get(), content.size()))
+    if (!data.Append(content.Get(), content.size()))
         return false;
 
     return file::WriteFile(archivePath, data.Get(), data.size());
