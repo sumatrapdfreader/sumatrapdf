@@ -1,6 +1,8 @@
 /* Copyright 2019 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+// port of https://gitlab.com/stone.code/goey
+
 typedef int32_t Length;
 
 const Length Inf = std::numeric_limits<Length>::max();
@@ -60,7 +62,7 @@ struct Constraints {
     Constraints TightenWidth(Length width) const;
 };
 
-Constraints Expand();
+Constraints ExpandInf();
 Constraints ExpandHeight(Length width);
 Constraints ExpandWidth(Length height);
 Constraints Loose(const Size size);
@@ -141,12 +143,15 @@ struct Expand : public ILayout {
     int factor;
 
     // ILayout
+    Expand(ILayout* c, int f);
     ~Expand() override;
     Size Layout(const Constraints bc) override;
     Length MinIntrinsicHeight(Length width) override;
     Length MinIntrinsicWidth(Length height) override;
     void SetBounds(Rect) override;
 };
+
+Expand* CreateExpand(ILayout*, int);
 
 bool IsExpand(Kind);
 bool IsExpand(ILayout*);
@@ -182,19 +187,18 @@ enum class CrossAxisAlign : u8 {
 };
 
 struct boxElementInfo {
-    Size size;
-    int flex;
+    ILayout* layout = nullptr;
+    Size size = {};
+    int flex = 0;
 };
 
 bool IsVBox(Kind);
 bool IsVBox(ILayout*);
 
 struct VBox : public ILayout {
-    // TODO: put ILayout inside boxElementInfo
-    Vec<ILayout*> children;
+    Vec<boxElementInfo> children;
     MainAxisAlign alignMain;
     CrossAxisAlign alignCross;
-    Vec<boxElementInfo> childrenInfo;
     Length totalHeight;
     int totalFlex;
 
@@ -206,7 +210,8 @@ struct VBox : public ILayout {
 
     void setBoundsForChild(size_t i, ILayout* v, Length posX, Length posY, Length posX2, Length posY2);
 
-    void addChild(ILayout* child);
+    boxElementInfo& addChild(ILayout* child);
+    boxElementInfo& addChild(ILayout* child, int flex);
     size_t childrenCount(); // only visible children
 };
 

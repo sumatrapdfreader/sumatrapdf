@@ -61,7 +61,7 @@ Length guardInf(Length a, Length b) {
     return b;
 }
 
-Constraints Expand() {
+Constraints ExpandInf() {
     Size min{0, 0};
     Size max{Inf, Inf};
     return Constraints{min, max};
@@ -203,36 +203,28 @@ Constraints Constraints::LoosenWidth() const {
     return Constraints{Size{0, this->Min.Height}, this->Max};
 }
 
-// TODO: goey modifies in-place
 Constraints Constraints::Tighten(Size size) const {
-    Length minw = clamp(size.Width, this->Min.Width, this->Max.Width);
-    Length maxw = this->Min.Width;
-    Length minh = clamp(size.Height, this->Min.Height, this->Max.Height);
-    Length maxh = this->Min.Height;
-    return Constraints{
-        Size{minw, minh},
-        Size{maxw, maxh},
-    };
+    Constraints bc = *this;
+    bc.Min.Width = clamp(size.Width, bc.Min.Width, bc.Max.Width);
+    bc.Max.Width = bc.Min.Width;
+    bc.Min.Height = clamp(size.Height, bc.Min.Height, bc.Max.Height);
+    bc.Max.Height = bc.Min.Height;
+    return bc;
 }
 
-// TODO: goey modifies in-place
 Constraints Constraints::TightenHeight(Length height) const {
-    Length minh = clamp(height, this->Min.Height, this->Max.Height);
-    Length maxh = this->Min.Height;
-    return Constraints{
-        Size{this->Min.Width, minh},
-        Size{this->Max.Height, maxh},
-    };
+    Constraints bc = *this;
+    bc.Min.Height = clamp(height, bc.Min.Height, bc.Max.Height);
+    bc.Max.Height = bc.Min.Height;
+    return bc;
 }
 
-// TODO: goey modifies in-place
 Constraints Constraints::TightenWidth(Length width) const {
-    Length minw = clamp(width, this->Min.Width, this->Max.Width);
-    Length maxw = this->Min.Width;
-    return Constraints{
-        Size{minw, this->Min.Height},
-        Size{maxw, this->Max.Height},
-    };
+    Constraints bc = *this;
+
+    bc.Min.Width = clamp(width, bc.Min.Width, bc.Max.Width);
+    bc.Max.Width = bc.Min.Width;
+    return bc;
 }
 
 void LayoutManager::NeedLayout() {
@@ -334,10 +326,12 @@ Length calculateVGap(ILayout* previous, ILayout* current) {
 
     // Unwrap and Expand widgets.
     if (IsExpand(previous)) {
-        // previous = expand.child
+        Expand* expand = (Expand*)previous;
+        previous = expand->child;
     }
     if (IsExpand(current)) {
-        // current = expand.child
+        Expand* expand = (Expand*)current;
+        current = expand->child;
     }
 
     // Apply layout rules.
@@ -372,11 +366,24 @@ VBox::~VBox() {
 size_t VBox::childrenCount() {
     size_t n = 0;
     for (auto& c : children) {
-        if (c->isVisible) {
+        if (c.layout->isVisible) {
             n++;
         }
     }
     return n;
+}
+
+int updateFlex(VBox* vbox) {
+    if (vbox->alignMain == MainAxisAlign::Homogeneous) {
+        return 0;
+    }
+    int totalFlex = 0;
+    for (auto& i : vbox->children) {
+        if (i.layout->isVisible) {
+            totalFlex += i.flex;
+        }
+    }
+    return totalFlex;
 }
 
 Size VBox::Layout(const Constraints bc) {
@@ -385,7 +392,7 @@ Size VBox::Layout(const Constraints bc) {
         totalHeight = 0;
         return bc.Constrain(Size{});
     }
-    childrenInfo.SetSize(n);
+    totalFlex = updateFlex(this);
 
     // Determine the constraints for layout of child elements.
     auto cbc = bc;
@@ -413,27 +420,27 @@ Size VBox::Layout(const Constraints bc) {
     ILayout* previous = nullptr;
 
     for (size_t i = 0; i < n; i++) {
-        auto v = this->children.at(i);
+        auto& v = this->children.at(i);
         // Determine what gap needs to be inserted between the elements.
         if (i > 0) {
             if (IsPacked(this->alignMain)) {
-                height += calculateVGap(previous, v);
+                height += calculateVGap(previous, v.layout);
             } else {
                 height += calculateVGap(nullptr, nullptr);
             }
         }
-        previous = v;
+        previous = v.layout;
 
         // Perform layout of the element.  Track impact on width and height.
-        auto size = v->Layout(cbc);
-        this->childrenInfo[i].size = size; // TODO: does that work?
+        auto size = v.layout->Layout(cbc);
+        v.size = size; // TODO: does that work?
         height += size.Height;
         width = std::max(width, size.Width);
     }
-    this->totalHeight = height;
+    totalHeight = height;
 
     // Need to adjust width to any widgets that have flex
-    if (this->totalFlex > 0) {
+    if (totalFlex > 0) {
         auto extraHeight = Length(0);
         if (bc.HasBoundedHeight() && bc.Max.Height > this->totalHeight) {
             extraHeight = bc.Max.Height - this->totalHeight;
@@ -442,14 +449,13 @@ Size VBox::Layout(const Constraints bc) {
         }
 
         if (extraHeight > 0) {
-            // size_t n = this->childrenInfo.size();
-            for (size_t i = 0; i < n; i++) {
-                auto& v = this->childrenInfo.at(i);
+            for (auto& v : children) {
                 if (v.flex > 0) {
                     auto oldHeight = v.size.Height;
-                    auto fbc = cbc.TightenHeight(v.size.Height + scale(extraHeight, v.flex, this->totalFlex));
-                    auto size = this->children[i]->Layout(fbc);
-                    this->childrenInfo[i].size = size;
+                    auto extra = scale(extraHeight, v.flex, totalFlex);
+                    auto fbc = cbc.TightenHeight(v.size.Height + extra);
+                    auto size = v.layout->Layout(fbc);
+                    v.size = size;
                     this->totalHeight += size.Height - oldHeight;
                 }
             }
@@ -469,17 +475,17 @@ Length VBox::MinIntrinsicWidth(Length height) {
     }
     if (this->alignMain == MainAxisAlign::Homogeneous) {
         height = guardInf(height, scale(height, 1, i64(n)));
-        auto size = this->children[0]->MinIntrinsicWidth(height);
+        auto size = children[0].layout->MinIntrinsicWidth(height);
         for (size_t i = 1; i < n; i++) {
-            auto v = this->children[i];
-            size = std::max(size, v->MinIntrinsicWidth(height));
+            auto& v = children[i];
+            size = std::max(size, v.layout->MinIntrinsicWidth(height));
         }
         return size;
     }
-    auto size = this->children[0]->MinIntrinsicWidth(Inf);
+    auto size = children[0].layout->MinIntrinsicWidth(Inf);
     for (size_t i = 1; i < n; i++) {
-        auto v = this->children[i];
-        size = std::max(size, v->MinIntrinsicWidth(Inf));
+        auto& v = this->children[i];
+        size = std::max(size, v.layout->MinIntrinsicWidth(Inf));
     }
     return size;
 }
@@ -489,24 +495,24 @@ Length VBox::MinIntrinsicHeight(Length width) {
     if (n == 0) {
         return 0;
     }
-    auto size = this->children[0]->MinIntrinsicHeight(width);
+    auto size = children[0].layout->MinIntrinsicHeight(width);
     if (IsPacked(this->alignMain)) {
-        auto previous = this->children[0];
+        auto previous = children[0].layout;
         for (size_t i = 1; i < n; i++) {
-            auto v = this->children[i];
+            auto& v = children[i];
             // Add the preferred gap between this pair of widgets
-            size += calculateVGap(previous, v);
-            previous = v;
+            size += calculateVGap(previous, v.layout);
+            previous = v.layout;
             // Find minimum size for this widget, and update
-            size += v->MinIntrinsicHeight(width);
+            size += v.layout->MinIntrinsicHeight(width);
         }
         return size;
     }
 
     if (this->alignMain == MainAxisAlign::Homogeneous) {
         for (size_t i = 1; i < n; i++) {
-            auto v = this->children[i];
-            size = std::max(size, v->MinIntrinsicHeight(width));
+            auto& v = this->children[i];
+            size = std::max(size, v.layout->MinIntrinsicHeight(width));
         }
 
         // Add a minimum gap between the controls.
@@ -516,8 +522,8 @@ Length VBox::MinIntrinsicHeight(Length width) {
     }
 
     for (size_t i = 1; i < n; i++) {
-        auto v = this->children[i];
-        size += v->MinIntrinsicHeight(width);
+        auto& v = this->children[i];
+        size += v.layout->MinIntrinsicHeight(width);
     }
 
     // Add a minimum gap between the controls.
@@ -543,10 +549,10 @@ void VBox::SetBounds(Rect bounds) {
         auto count = i64(n);
 
         for (size_t i = 0; i < n; i++) {
-            auto v = children[i];
+            auto& v = children[i];
             auto y1 = bounds.Min.Y + scale(dy, i, count);
             auto y2 = bounds.Min.Y + scale(dy, i + 1, count) - gap;
-            setBoundsForChild(i, v, bounds.Min.X, y1, bounds.Max.X, y2);
+            setBoundsForChild(i, v.layout, bounds.Min.X, y1, bounds.Max.X, y2);
         }
         return;
     }
@@ -591,22 +597,22 @@ void VBox::SetBounds(Rect bounds) {
     auto posY = bounds.Min.Y;
     ILayout* previous = nullptr;
     for (size_t i = 0; i < n; i++) {
-        auto v = children[i];
+        auto& v = children[i];
         if (IsPacked(alignMain)) {
             if (i > 0) {
-                posY += calculateVGap(previous, v);
+                posY += calculateVGap(previous, v.layout);
             }
-            previous = v;
+            previous = v.layout;
         }
 
-        auto dy = childrenInfo[i].size.Height;
-        setBoundsForChild(i, v, bounds.Min.X, posY, bounds.Max.X, posY + dy);
+        auto dy = v.size.Height;
+        setBoundsForChild(i, v.layout, bounds.Min.X, posY, bounds.Max.X, posY + dy);
         posY += dy + extraGap;
     }
 }
 
 void VBox::setBoundsForChild(size_t i, ILayout* v, Length posX, Length posY, Length posX2, Length posY2) {
-    auto dx = childrenInfo[i].size.Width;
+    auto dx = children[i].size.Width;
     switch (alignCross) {
         case CrossAxisAlign::CrossStart:
             v->SetBounds(Rect{
@@ -635,9 +641,17 @@ void VBox::setBoundsForChild(size_t i, ILayout* v, Length posX, Length posY, Len
     }
 }
 
-// TODO: remove
-void VBox::addChild(ILayout* child) {
-    children.Append(child);
+boxElementInfo& VBox::addChild(ILayout* child, int flex) {
+    boxElementInfo v{};
+    v.layout = child;
+    v.flex = flex;
+    children.Append(v);
+    auto n = children.size();
+    return children[n - 1];
+}
+
+boxElementInfo& VBox::addChild(ILayout* child) {
+    return addChild(child, 0);
 }
 
 // hbox.go
@@ -998,13 +1012,24 @@ void Align::SetBounds(Rect bounds) {
 
 // expand.go
 
-Kind expandKind = "expand";
+Kind kindExpand = "expand";
 
 bool IsExpand(Kind kind) {
-    return kind == expandKind;
+    return kind == kindExpand;
 }
+
 bool IsExpand(ILayout* l) {
-    return IsLayoutOfKind(l, expandKind);
+    return IsLayoutOfKind(l, kindExpand);
+}
+
+Expand::Expand(ILayout* c, int f) {
+    kind = kindExpand;
+    child = c;
+    factor = f;
+}
+
+Expand* CreateExpand(ILayout* child, int factor) {
+    return new Expand{child, factor};
 }
 
 Expand::~Expand() {

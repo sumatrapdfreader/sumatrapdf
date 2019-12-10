@@ -51,6 +51,7 @@ static void doMainLayout() {
     Point max{size.Width, size.Height};
     Rect bounds{min, max};
     mainLayout->SetBounds(bounds);
+    InvalidateRect(g_hwnd, nullptr, false);
 }
 
 static void onCheckboxChanged(CheckState state) {
@@ -176,12 +177,9 @@ static void CreateMainLayout(HWND hwnd) {
         vbox->addChild(l);
     }
     {
-        auto [l, b] = CreateButtonLayout(hwnd, "advance progress", AdvanceProgress);
-        vbox->addChild(l);
-    }
-    {
         auto l = CreateCheckboxLayout(hwnd, "checkbox one");
-        vbox->addChild(l);
+        auto elInfo = vbox->addChild(l, 1);
+        elInfo.flex = 2;
     }
     {
         auto l = CreateCheckboxLayout(hwnd, "checkbox two");
