@@ -182,6 +182,7 @@ struct AutoFreeStr {
 };
 #endif
 
+#if 0
 struct AutoFreeWstr {
     WCHAR* d = nullptr;
 
@@ -208,3 +209,4 @@ struct AutoFreeWstr {
         return {d, str::Len(d)};
     }
 };
+#endif
