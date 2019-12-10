@@ -235,6 +235,17 @@ Constraints Constraints::TightenWidth(Length width) const {
     };
 }
 
+void LayoutManager::NeedLayout() {
+    needLayout = true;
+}
+
+void ILayout::SetIsVisible(bool newIsVisible) {
+    isVisible = newIsVisible;
+    if (layoutManager) {
+        layoutManager->NeedLayout();
+    }
+}
+
 bool IsLayoutOfKind(ILayout* l, Kind kind) {
     if (l == nullptr) {
         return false;
@@ -358,8 +369,18 @@ bool IsVBox(Kind kind) {
 VBox::~VBox() {
 }
 
+size_t VBox::childrenCount() {
+    size_t n = 0;
+    for (auto& c : children) {
+        if (c->isVisible) {
+            n++;
+        }
+    }
+    return n;
+}
+
 Size VBox::Layout(const Constraints bc) {
-    auto n = children.size();
+    auto n = childrenCount();
     if (n == 0) {
         totalHeight = 0;
         return bc.Constrain(Size{});
@@ -370,7 +391,7 @@ Size VBox::Layout(const Constraints bc) {
     auto cbc = bc;
 
     if (this->alignMain == MainAxisAlign::Homogeneous) {
-        auto count = (i64)this->children.size();
+        auto count = (i64)this->childrenCount();
         auto gap = calculateVGap(nullptr, nullptr);
         cbc.TightenHeight(scale(cbc.Max.Height, 1, count) - scale(gap, count - 1, count));
     } else {
@@ -442,7 +463,7 @@ Size VBox::Layout(const Constraints bc) {
 }
 
 Length VBox::MinIntrinsicWidth(Length height) {
-    auto n = this->children.size();
+    auto n = this->childrenCount();
     if (n == 0) {
         return 0;
     }
@@ -464,7 +485,7 @@ Length VBox::MinIntrinsicWidth(Length height) {
 }
 
 Length VBox::MinIntrinsicHeight(Length width) {
-    auto n = this->children.size();
+    auto n = this->childrenCount();
     if (n == 0) {
         return 0;
     }
@@ -511,7 +532,7 @@ Length VBox::MinIntrinsicHeight(Length width) {
 }
 
 void VBox::SetBounds(Rect bounds) {
-    auto n = this->children.size();
+    auto n = childrenCount();
     if (n == 0) {
         return;
     }
@@ -633,8 +654,18 @@ bool IsHBox(ILayout* l) {
 HBox::~HBox() {
 }
 
+size_t HBox::childrenCount() {
+    size_t n = 0;
+    for (auto& c : children) {
+        if (c->isVisible) {
+            n++;
+        }
+    }
+    return n;
+}
+
 Size HBox::Layout(const Constraints bc) {
-    auto n = children.size();
+    auto n = childrenCount();
     if (n == 0) {
         totalWidth = 0;
         return bc.Constrain(Size{});
@@ -669,6 +700,9 @@ Size HBox::Layout(const Constraints bc) {
 
     for (size_t i = 0; i < n; i++) {
         ILayout* v = children.at(i);
+        if (!v->isVisible) {
+            continue;
+        }
         // Determine what gap needs to be inserted between the elements.
         if (i > 0) {
             if (IsPacked(alignMain)) {
@@ -717,7 +751,7 @@ Size HBox::Layout(const Constraints bc) {
 }
 
 Length HBox::MinIntrinsicHeight(Length width) {
-    auto n = children.size();
+    auto n = childrenCount();
     if (n == 0) {
         return 0;
     }
@@ -741,7 +775,7 @@ Length HBox::MinIntrinsicHeight(Length width) {
 }
 
 Length HBox::MinIntrinsicWidth(Length height) {
-    auto n = children.size();
+    auto n = childrenCount();
     if (n == 0) {
         return 0;
     }
@@ -789,7 +823,7 @@ Length HBox::MinIntrinsicWidth(Length height) {
 }
 
 void HBox::SetBounds(Rect bounds) {
-    auto n = children.size();
+    auto n = childrenCount();
     if (n == 0) {
         return;
     }

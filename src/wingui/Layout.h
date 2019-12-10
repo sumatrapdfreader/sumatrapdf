@@ -67,8 +67,23 @@ Constraints Loose(const Size size);
 Constraints Tight(const Size size);
 Constraints TightHeight(Length height);
 
+typedef std::function<void()> NeedLayout;
+
+struct LayoutManager {
+    bool needLayout = false;
+
+    LayoutManager() = default;
+    virtual ~LayoutManager() = 0;
+
+    virtual void NeedLayout();
+};
+
 struct ILayout {
     Kind kind = nullptr;
+    LayoutManager* layoutManager = nullptr;
+    // allows easy way to hide / show elements
+    // without rebuilding the whole layout
+    bool isVisible = true;
 
     ILayout() = default;
     ILayout(Kind k);
@@ -77,6 +92,8 @@ struct ILayout {
     virtual Length MinIntrinsicHeight(Length width) = 0;
     virtual Length MinIntrinsicWidth(Length height) = 0;
     virtual void SetBounds(Rect) = 0;
+
+    void SetIsVisible(bool);
 };
 
 bool IsLayoutOfKind(ILayout*, Kind);
@@ -173,6 +190,7 @@ bool IsVBox(Kind);
 bool IsVBox(ILayout*);
 
 struct VBox : public ILayout {
+    // TODO: put ILayout inside boxElementInfo
     Vec<ILayout*> children;
     MainAxisAlign alignMain;
     CrossAxisAlign alignCross;
@@ -188,9 +206,8 @@ struct VBox : public ILayout {
 
     void setBoundsForChild(size_t i, ILayout* v, Length posX, Length posY, Length posX2, Length posY2);
 
-    // TODO: alternatively, ensure childrenInfo has the same
-    // size as children in Layout()
     void addChild(ILayout* child);
+    size_t childrenCount(); // only visible children
 };
 
 // hbox.go
@@ -214,6 +231,7 @@ struct HBox : public ILayout {
 
     void setBoundsForChild(size_t i, ILayout* v, Length posX, Length posY, Length posX2, Length posY2);
     void addChild(ILayout* child);
+    size_t childrenCount();
 };
 
 // align.go
