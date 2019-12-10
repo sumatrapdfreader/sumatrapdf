@@ -178,8 +178,7 @@ static void CreateMainLayout(HWND hwnd) {
     }
     {
         auto l = CreateCheckboxLayout(hwnd, "checkbox one");
-        auto elInfo = vbox->addChild(l, 1);
-        elInfo.flex = 2;
+        auto elInfo = vbox->addChild(l, 0);
     }
     {
         auto l = CreateCheckboxLayout(hwnd, "checkbox two");
@@ -191,7 +190,9 @@ static void CreateMainLayout(HWND hwnd) {
     }
     {
         auto l = CreateStaticLayout(hwnd, "static control");
-        vbox->addChild(l);
+        auto l2 = new Align(l);
+        l2->HAlign = AlignEnd;
+        vbox->addChild(l2);
     }
     {
         auto [l, w] = CreateProgressLayout(hwnd, maxProgress);

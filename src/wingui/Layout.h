@@ -21,8 +21,8 @@ struct Point {
 
 // can't call it Rectangle because conflicts with GDI+ Rectangle function
 struct Rect {
-    Point Min;
-    Point Max;
+    Point Min{};
+    Point Max{};
 
     Length Width() const;
     Length Height() const;
@@ -37,8 +37,8 @@ Length scale(Length v, i64 num, i64 den);
 Length guardInf(Length a, Length b);
 
 struct Constraints {
-    Size Min;
-    Size Max;
+    Size Min{};
+    Size Max{};
 
     Size Constrain(const Size) const;
     Size ConstrainAndAttemptToPreserveAspectRatio(const Size) const;
@@ -122,9 +122,9 @@ inline Insets UniformInsets(Length l) {
 }
 
 struct Padding : public ILayout {
-    Insets insets;
-    ILayout* child;
-    Size childSize;
+    Insets insets{};
+    ILayout* child = nullptr;
+    Size childSize{};
 
     ~Padding() override;
     Size Layout(const Constraints bc) override;
@@ -139,8 +139,8 @@ bool IsPadding(ILayout*);
 // expand.go
 
 struct Expand : public ILayout {
-    ILayout* child;
-    int factor;
+    ILayout* child = nullptr;
+    int factor = 0;
 
     // ILayout
     Expand(ILayout* c, int f);
@@ -197,10 +197,10 @@ bool IsVBox(ILayout*);
 
 struct VBox : public ILayout {
     Vec<boxElementInfo> children;
-    MainAxisAlign alignMain;
-    CrossAxisAlign alignCross;
-    Length totalHeight;
-    int totalFlex;
+    MainAxisAlign alignMain = MainAxisAlign::MainStart;
+    CrossAxisAlign alignCross = CrossAxisAlign::CrossStart;
+    Length totalHeight = 0;
+    int totalFlex = 0;
 
     ~VBox() override;
     Size Layout(const Constraints bc) override;
@@ -222,10 +222,10 @@ bool IsHBox(ILayout*);
 
 struct HBox : public ILayout {
     Vec<boxElementInfo> children;
-    MainAxisAlign alignMain;
-    CrossAxisAlign alignCross;
-    Length totalWidth;
-    int totalFlex;
+    MainAxisAlign alignMain = MainAxisAlign::MainStart;
+    CrossAxisAlign alignCross = CrossAxisAlign::CrossStart;
+    Length totalWidth = 0;
+    int totalFlex = 0;
 
     ~HBox() override;
     Size Layout(const Constraints bc) override;
@@ -249,15 +249,14 @@ constexpr Alignment AlignCenter = 0;
 constexpr Alignment AlignEnd = 0x7fff;
 
 struct Align : public ILayout {
-    Alignment HAlign;   // Horizontal alignment of child widget.
-    Alignment VAlign;   // Vertical alignment of child widget.
-    float WidthFactor;  // If greater than zero, ratio of container width to child width.
-    float HeightFactor; // If greater than zero, ratio of container height to child height.
-    ILayout* Child;
+    Alignment HAlign = AlignStart;   // Horizontal alignment of child widget.
+    Alignment VAlign = AlignStart;   // Vertical alignment of child widget.
+    float WidthFactor = 0;  // If greater than zero, ratio of container width to child width.
+    float HeightFactor = 0; // If greater than zero, ratio of container height to child height.
+    ILayout* Child = 0;
+    Size childSize{};
 
-    Size childSize;
-
-    Align();
+    Align(ILayout*);
     ~Align() override;
     Size Layout(const Constraints bc) override;
     Length MinIntrinsicHeight(Length width) override;

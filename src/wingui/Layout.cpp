@@ -961,7 +961,8 @@ bool IsAlign(ILayout* l) {
     return IsLayoutOfKind(l, alignKind);
 }
 
-Align::Align() {
+Align::Align(ILayout* c) {
+    Child = c;
     kind = alignKind;
 }
 
