@@ -5,7 +5,7 @@ typedef std::function<void(int, std::string_view)> OnDropDownSelectionChanged;
 
 struct DropDownCtrl : public WindowBase {
     Vec<std::string_view> items;
-    OnDropDownSelectionChanged OnDropDownSelectionChanged;
+    OnDropDownSelectionChanged OnDropDownSelectionChanged = nullptr;
 
     DropDownCtrl(HWND parent);
     ~DropDownCtrl();
