@@ -117,8 +117,7 @@ class EbookEngine : public BaseEngine {
         AutoFreeW path(str::conv::FromUtf8(copyFileName));
         return fileName ? CopyFileW(fileName, path, FALSE) : false;
     }
-    WCHAR* ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** coordsOut = nullptr,
-                           RenderTarget target = RenderTarget::View) override;
+    WCHAR* ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** coordsOut = nullptr) override;
     // make RenderCache request larger tiles than per default
     bool HasClipOptimizations(int pageNo) override {
         UNUSED(pageNo);
@@ -456,8 +455,7 @@ static RectI GetInstrBbox(DrawInstr& instr, float pageBorder) {
     return bbox.Round();
 }
 
-WCHAR* EbookEngine::ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** coordsOut, RenderTarget target) {
-    UNUSED(target);
+WCHAR* EbookEngine::ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** coordsOut) {
     ScopedCritSec scope(&pagesAccess);
 
     str::WStr content;

@@ -2447,7 +2447,7 @@ static void OnMenuSaveAs(WindowInfo* win) {
     if (convertToTXT) {
         str::WStr text(1024);
         for (int pageNo = 1; pageNo <= ctrl->PageCount(); pageNo++) {
-            WCHAR* tmp = engine->ExtractPageText(pageNo, L"\r\n", nullptr, RenderTarget::Export);
+            WCHAR* tmp = engine->ExtractPageText(pageNo, L"\r\n", nullptr);
             text.AppendAndFree(tmp);
         }
 

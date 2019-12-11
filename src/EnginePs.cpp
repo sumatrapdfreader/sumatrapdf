@@ -273,9 +273,8 @@ class PsEngineImpl : public BaseEngine {
         return pdfEngine->SaveFileAs(pdfFileName, includeUserAnnots);
     }
 
-    WCHAR* ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** coordsOut = nullptr,
-                           RenderTarget target = RenderTarget::View) override {
-        return pdfEngine->ExtractPageText(pageNo, lineSep, coordsOut, target);
+    WCHAR* ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** coordsOut = nullptr) override {
+        return pdfEngine->ExtractPageText(pageNo, lineSep, coordsOut);
     }
 
     bool HasClipOptimizations(int pageNo) override {

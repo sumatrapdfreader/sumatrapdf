@@ -1000,8 +1000,7 @@ class PdfEngineImpl : public BaseEngine {
     std::tuple<char*, size_t> GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
     bool SaveFileAsPdf(const char* pdfFileName, bool includeUserAnnots = false);
-    WCHAR* ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** coordsOut = nullptr,
-                           RenderTarget target = RenderTarget::View) override;
+    WCHAR* ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** coordsOut = nullptr) override;
 
     bool HasClipOptimizations(int pageNo) override;
     PageLayoutType PreferredLayout() override;
@@ -2167,7 +2166,7 @@ RenderedBitmap* PdfEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
 }
 
 // TODO: remember this instead of re-doing
-WCHAR* PdfEngineImpl::ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** coordsOut, RenderTarget target) {
+WCHAR* PdfEngineImpl::ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** coordsOut) {
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo);
     fz_stext_page* stext = pageInfo->stext;
     if (!stext) {

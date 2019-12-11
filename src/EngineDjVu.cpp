@@ -225,8 +225,7 @@ class DjVuEngineImpl : public BaseEngine {
 
     std::tuple<char*, size_t> GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
-    WCHAR* ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** coordsOut = nullptr,
-                           RenderTarget target = RenderTarget::View) override;
+    WCHAR* ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** coordsOut = nullptr) override;
     bool HasClipOptimizations(int pageNo) override {
         UNUSED(pageNo);
         return false;
@@ -808,8 +807,7 @@ bool DjVuEngineImpl::ExtractPageText(miniexp_t item, const WCHAR* lineSep, str::
     return !item;
 }
 
-WCHAR* DjVuEngineImpl::ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** coordsOut, RenderTarget target) {
-    UNUSED(target);
+WCHAR* DjVuEngineImpl::ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** coordsOut) {
     ScopedCritSec scope(&gDjVuContext.lock);
 
     miniexp_t pagetext;

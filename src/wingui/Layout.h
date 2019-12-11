@@ -249,10 +249,10 @@ constexpr Alignment AlignCenter = 0;
 constexpr Alignment AlignEnd = 0x7fff;
 
 struct Align : public ILayout {
-    Alignment HAlign = AlignStart;   // Horizontal alignment of child widget.
-    Alignment VAlign = AlignStart;   // Vertical alignment of child widget.
-    float WidthFactor = 0;  // If greater than zero, ratio of container width to child width.
-    float HeightFactor = 0; // If greater than zero, ratio of container height to child height.
+    Alignment HAlign = AlignStart; // Horizontal alignment of child widget.
+    Alignment VAlign = AlignStart; // Vertical alignment of child widget.
+    float WidthFactor = 0;         // If greater than zero, ratio of container width to child width.
+    float HeightFactor = 0;        // If greater than zero, ratio of container height to child height.
     ILayout* Child = 0;
     Size childSize{};
 
