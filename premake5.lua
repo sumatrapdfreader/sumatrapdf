@@ -28,6 +28,7 @@ Reference for warnings:
  4312 - 64bit, conversion to X of greater size
  4324 - 64bit, structure was padded
  4458 - declaraion of X hides class member
+ 4522 - multiple assignment operators specified
  4530 - exception mismatch
  4702 - unreachable code
  4706 - assignment within conditional expression
@@ -75,7 +76,7 @@ workspace "SumatraPDF"
      resdefines { "_WIN64" }
   filter {}
 
-  disablewarnings { "4127", "4189", "4324", "4458", "4702", "4800" }
+  disablewarnings { "4127", "4189", "4324", "4458", "4522", "4702", "4800" }
   warnings "Extra"
 
   location "this_is_invalid_location"
