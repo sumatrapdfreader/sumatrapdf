@@ -11,6 +11,7 @@
 #include "utils/FileUtil.h"
 #include "utils/UITask.h"
 #include "utils/WinUtil.h"
+#include "utils/Log.h"
 
 #include "TreeModel.h"
 #include "EngineBase.h"
@@ -726,6 +727,12 @@ static const WCHAR* HandleSetViewCmd(const WCHAR* cmd, DDEACK& ack) {
 }
 
 static void HandleDdeCmds(const WCHAR* cmd, DDEACK& ack) {
+    if (str::IsEmpty(cmd)) {
+        return;
+    }
+    AutoFree tmp = str::conv::WstrToUtf8(cmd);
+    logf("HandleDdeCmds: '%s'\n", tmp.get());
+
     while (!str::IsEmpty(cmd)) {
         const WCHAR* nextCmd = nullptr;
         if (!nextCmd)
@@ -743,6 +750,9 @@ static void HandleDdeCmds(const WCHAR* cmd, DDEACK& ack) {
             nextCmd = str::Parse(cmd, L"%S]", &tmp);
         }
         cmd = nextCmd;
+
+        AutoFree tmp = str::conv::WstrToUtf8(cmd);
+        logf("HandleDdeCmds: cmd='%s'\n", tmp.get());
     }
 }
 
