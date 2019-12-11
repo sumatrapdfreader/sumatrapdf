@@ -1554,7 +1554,8 @@ WindowInfo* LoadDocument(LoadArgs& args) {
         // there's no tab to reuse at this point
         args.forceReuse = false;
     } else {
-        CrashIf(!args.forceReuse && !openNewTab);
+        // TODO: figure out why happens. seen in 2019/12/11/3e06348ed000006.txt
+        SubmitCrashReportIf(!args.forceReuse && !openNewTab);
         if (openNewTab) {
             SaveCurrentTabInfo(args.win);
         }
