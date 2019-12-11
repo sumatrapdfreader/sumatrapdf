@@ -363,7 +363,9 @@ static void AddLineSep(str::WStr& s, Vec<RectI>& rects, const WCHAR* lineSep, si
     }
 }
 
-WCHAR* fz_text_page_to_str(fz_stext_page* text, const WCHAR* lineSep, RectI** coordsOut) {
+WCHAR* fz_text_page_to_str(fz_stext_page* text, RectI** coordsOut) {
+    const WCHAR* lineSep = L"\n";
+
     size_t lineSepLen = str::Len(lineSep);
     str::WStr content;
     // coordsOut is optional but we ask for it by default so we simplify the code
@@ -1000,7 +1002,7 @@ class PdfEngineImpl : public BaseEngine {
     std::tuple<char*, size_t> GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
     bool SaveFileAsPdf(const char* pdfFileName, bool includeUserAnnots = false);
-    WCHAR* ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** coordsOut = nullptr) override;
+    WCHAR* ExtractPageText(int pageNo, RectI** coordsOut = nullptr) override;
 
     bool HasClipOptimizations(int pageNo) override;
     PageLayoutType PreferredLayout() override;
@@ -1992,7 +1994,7 @@ void PdfEngineImpl::LinkifyPageText(FzPageInfo* pageInfo) {
         return;
     }
     ScopedCritSec scope(ctxAccess);
-    WCHAR* pageText = fz_text_page_to_str(stext, L"\n", &coords);
+    WCHAR* pageText = fz_text_page_to_str(stext, &coords);
     if (!pageText) {
         return;
     }
@@ -2166,14 +2168,14 @@ RenderedBitmap* PdfEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
 }
 
 // TODO: remember this instead of re-doing
-WCHAR* PdfEngineImpl::ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** coordsOut) {
+WCHAR* PdfEngineImpl::ExtractPageText(int pageNo, RectI** coordsOut) {
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo);
     fz_stext_page* stext = pageInfo->stext;
     if (!stext) {
         return nullptr;
     }
     ScopedCritSec scope(ctxAccess);
-    WCHAR* content = fz_text_page_to_str(stext, lineSep, coordsOut);
+    WCHAR* content = fz_text_page_to_str(stext, coordsOut);
     return content;
 }
 

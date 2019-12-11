@@ -72,7 +72,7 @@ fz_stream* fz_open_file2(fz_context* ctx, const WCHAR* filePath);
 RenderedBitmap* new_rendered_fz_pixmap(fz_context* ctx, fz_pixmap* pixmap);
 u8* fz_extract_stream_data(fz_context* ctx, fz_stream* stream, size_t* cbCount);
 float fz_calc_overlap(fz_rect r1, fz_rect r2);
-WCHAR* fz_text_page_to_str(fz_stext_page* text, const WCHAR* lineSep, RectI** coordsOut);
+WCHAR* fz_text_page_to_str(fz_stext_page* text, RectI** coordsOut);
 bool fz_is_pt_in_rect(fz_rect rect, fz_point pt);
 LinkRectList* LinkifyText(const WCHAR* pageText, RectI* coords);
 int is_external_link(const char* uri);

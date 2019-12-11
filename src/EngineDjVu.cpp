@@ -225,7 +225,7 @@ class DjVuEngineImpl : public BaseEngine {
 
     std::tuple<char*, size_t> GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
-    WCHAR* ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** coordsOut = nullptr) override;
+    WCHAR* ExtractPageText(int pageNo, RectI** coordsOut = nullptr) override;
     bool HasClipOptimizations(int pageNo) override {
         UNUSED(pageNo);
         return false;
@@ -290,7 +290,7 @@ class DjVuEngineImpl : public BaseEngine {
 
     RenderedBitmap* CreateRenderedBitmap(const char* bmpData, SizeI size, bool grayscale) const;
     void AddUserAnnots(RenderedBitmap* bmp, int pageNo, float zoom, int rotation, RectI screen);
-    bool ExtractPageText(miniexp_t item, const WCHAR* lineSep, str::WStr& extracted, Vec<RectI>& coords);
+    bool ExtractPageText(miniexp_t item, str::WStr& extracted, Vec<RectI>& coords);
     char* ResolveNamedDest(const char* name);
     DjVuTocItem* BuildTocTree(miniexp_t entry, int& idCounter);
     bool Load(const WCHAR* fileName);
@@ -754,7 +754,8 @@ static void AppendNewline(str::WStr& extracted, Vec<RectI>& coords, const WCHAR*
     coords.AppendBlanks(str::Len(lineSep));
 }
 
-bool DjVuEngineImpl::ExtractPageText(miniexp_t item, const WCHAR* lineSep, str::WStr& extracted, Vec<RectI>& coords) {
+bool DjVuEngineImpl::ExtractPageText(miniexp_t item, str::WStr& extracted, Vec<RectI>& coords) {
+    WCHAR* lineSep = L"\n";
     miniexp_t type = miniexp_car(item);
     if (!miniexp_symbolp(type))
         return false;
@@ -800,14 +801,15 @@ bool DjVuEngineImpl::ExtractPageText(miniexp_t item, const WCHAR* lineSep, str::
         item = miniexp_cdr(item);
     }
     while (miniexp_consp(str)) {
-        ExtractPageText(str, lineSep, extracted, coords);
+        ExtractPageText(str, extracted, coords);
         item = miniexp_cdr(item);
         str = miniexp_car(item);
     }
     return !item;
 }
 
-WCHAR* DjVuEngineImpl::ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** coordsOut) {
+WCHAR* DjVuEngineImpl::ExtractPageText(int pageNo, RectI** coordsOut) {
+    const WCHAR* lineSep = L"\n";
     ScopedCritSec scope(&gDjVuContext.lock);
 
     miniexp_t pagetext;
@@ -818,7 +820,7 @@ WCHAR* DjVuEngineImpl::ExtractPageText(int pageNo, const WCHAR* lineSep, RectI**
 
     str::WStr extracted;
     Vec<RectI> coords;
-    bool success = ExtractPageText(pagetext, lineSep, extracted, coords);
+    bool success = ExtractPageText(pagetext, extracted, coords);
     ddjvu_miniexp_release(doc, pagetext);
     if (!success)
         return nullptr;

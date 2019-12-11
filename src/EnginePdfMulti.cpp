@@ -51,7 +51,7 @@ class EnginePdfMultiImpl : public BaseEngine {
     std::tuple<char*, size_t> GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
     bool SaveFileAsPdf(const char* pdfFileName, bool includeUserAnnots = false);
-    WCHAR* ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** coordsOut = nullptr) override;
+    WCHAR* ExtractPageText(int pageNo, RectI** coordsOut = nullptr) override;
 
     bool HasClipOptimizations(int pageNo) override;
     PageLayoutType PreferredLayout() override;

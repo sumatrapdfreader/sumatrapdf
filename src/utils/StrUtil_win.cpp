@@ -317,7 +317,7 @@ size_t TransChars(WCHAR* str, const WCHAR* oldChars, const WCHAR* newChars) {
     return findCount;
 }
 
-// the result needs to be free()d
+// free() the result
 WCHAR* Replace(const WCHAR* s, const WCHAR* toReplace, const WCHAR* replaceWith) {
     if (!s || str::IsEmpty(toReplace) || !replaceWith)
         return nullptr;

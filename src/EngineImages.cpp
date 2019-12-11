@@ -62,9 +62,8 @@ class ImagesEngine : public BaseEngine {
 
     std::tuple<char*, size_t> GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
-    WCHAR* ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** coordsOut = nullptr) override {
+    WCHAR* ExtractPageText(int pageNo, RectI** coordsOut = nullptr) override {
         UNUSED(pageNo);
-        UNUSED(lineSep);
         UNUSED(coordsOut);
         return nullptr;
     }

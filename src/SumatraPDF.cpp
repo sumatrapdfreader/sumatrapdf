@@ -2447,8 +2447,10 @@ static void OnMenuSaveAs(WindowInfo* win) {
     if (convertToTXT) {
         str::WStr text(1024);
         for (int pageNo = 1; pageNo <= ctrl->PageCount(); pageNo++) {
-            WCHAR* tmp = engine->ExtractPageText(pageNo, L"\r\n", nullptr);
-            text.AppendAndFree(tmp);
+            WCHAR* tmp = engine->ExtractPageText(pageNo, nullptr);
+            WCHAR* tmp2 = str::Replace(tmp, L"\n", L"\r\n");
+            text.AppendAndFree(tmp2);
+            free(tmp);
         }
 
         OwnedData textUTF8(str::conv::ToUtf8(text.LendData()));

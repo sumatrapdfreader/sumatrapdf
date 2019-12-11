@@ -208,7 +208,7 @@ class XpsEngineImpl : public BaseEngine {
 
     std::tuple<char*, size_t> GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
-    WCHAR* ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** coordsOut = nullptr) override;
+    WCHAR* ExtractPageText(int pageNo, RectI** coordsOut = nullptr) override;
     bool HasClipOptimizations(int pageNo) override;
     WCHAR* GetProperty(DocumentProperty prop) override;
 
@@ -920,7 +920,7 @@ void XpsEngineImpl::LinkifyPageText(FzPageInfo* pageInfo) {
         return;
     }
     ScopedCritSec scope(&ctxAccess);
-    WCHAR* pageText = fz_text_page_to_str(stext, L"\n", &coords);
+    WCHAR* pageText = fz_text_page_to_str(stext, &coords);
     if (!pageText) {
         return;
     }
@@ -955,14 +955,14 @@ void XpsEngineImpl::LinkifyPageText(FzPageInfo* pageInfo) {
     free(coords);
 }
 
-WCHAR* XpsEngineImpl::ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** coordsOut) {
+WCHAR* XpsEngineImpl::ExtractPageText(int pageNo, RectI** coordsOut) {
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo);
     fz_stext_page* stext = pageInfo->stext;
     if (!stext) {
         return nullptr;
     }
     ScopedCritSec scope(&ctxAccess);
-    WCHAR* content = fz_text_page_to_str(stext, lineSep, coordsOut);
+    WCHAR* content = fz_text_page_to_str(stext, coordsOut);
     return content;
 }
 

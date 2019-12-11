@@ -53,7 +53,8 @@ void TestRenderPage(const CommandLineInfo& i) {
 
 static void extractPageText(BaseEngine* engine, int pageNo) {
     RectI* coordsOut; // not using the result, only to trigger the code path
-    WCHAR* uni = engine->ExtractPageText(pageNo, L"_", &coordsOut);
+    WCHAR* uni = engine->ExtractPageText(pageNo, &coordsOut);
+    str::Replace(uni, L"\n", L"_");
     OwnedData utf = str::conv::ToUtf8(uni);
     printf("text on page %d: '", pageNo);
     // print characters as hex because I don't know what kind of locale-specific mangling
