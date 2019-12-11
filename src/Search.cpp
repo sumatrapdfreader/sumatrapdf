@@ -730,8 +730,11 @@ static void HandleDdeCmds(const WCHAR* cmd, DDEACK& ack) {
     if (str::IsEmpty(cmd)) {
         return;
     }
-    AutoFree tmp = str::conv::WstrToUtf8(cmd);
-    logf("HandleDdeCmds: '%s'\n", tmp.get());
+
+    {
+        AutoFree tmp = str::conv::WstrToUtf8(cmd);
+        logf("HandleDdeCmds: '%s'\n", tmp.get());
+    }
 
     while (!str::IsEmpty(cmd)) {
         const WCHAR* nextCmd = nullptr;
@@ -751,25 +754,33 @@ static void HandleDdeCmds(const WCHAR* cmd, DDEACK& ack) {
         }
         cmd = nextCmd;
 
-        AutoFree tmp = str::conv::WstrToUtf8(cmd);
-        logf("HandleDdeCmds: cmd='%s'\n", tmp.get());
+        {
+            AutoFree tmp = str::conv::WstrToUtf8(cmd);
+            logf("HandleDdeCmds: cmd='%s'\n", tmp.get());
+        }
     }
 }
 
 LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam) {
-    UINT_PTR lo, hi;
-    UnpackDDElParam(WM_DDE_EXECUTE, lparam, &lo, &hi);
+    UINT_PTR lo = 0, hi = 0;
+    if (!UnpackDDElParam(WM_DDE_EXECUTE, lparam, &lo, &hi)) {
+        return 0;
+    }
 
     DDEACK ack = {0};
     LPVOID command = GlobalLock((HGLOBAL)hi);
-    if (command) {
-        AutoFreeW cmd;
-        if (IsWindowUnicode((HWND)wparam))
-            cmd.SetCopy((const WCHAR*)command);
-        else
-            cmd.Set(str::conv::FromAnsi((const char*)command));
-        HandleDdeCmds(cmd, ack);
+    if (!command) {
+        return 0;
     }
+
+    AutoFreeWstr cmd;
+    if (IsWindowUnicode((HWND)wparam)) {
+        cmd = str::Dup((WCHAR*)command);
+    } else {
+        cmd = str::conv::FromAnsi((const char*)command);
+    }
+    HandleDdeCmds(cmd, ack);
+    free(cmd);
     GlobalUnlock((HGLOBAL)hi);
 
     lparam = ReuseDDElParam(lparam, WM_DDE_EXECUTE, WM_DDE_ACK, *(WORD*)&ack, hi);
