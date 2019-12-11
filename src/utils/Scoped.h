@@ -205,9 +205,20 @@ struct AutoFree {
         return len;
     }
 
+    bool empty() {
+        return (data == nullptr) || (size() == 0);
+    }
+
     std::string_view as_view() {
         size_t sz = size();
         return {data, sz};
+    }
+
+    char* StealData() {
+        char* res = data;
+        data = nullptr;
+        len = 0;
+        return res;
     }
 };
 
@@ -244,6 +255,7 @@ struct AutoFreeWstr {
 
     // for convenince, we calculate the size if wasn't provided
     // by the caller
+    // this is size in characters, not bytes
     size_t size() {
         if (len == 0) {
             len = str::Len(data);
@@ -251,8 +263,19 @@ struct AutoFreeWstr {
         return len;
     }
 
+    bool empty() {
+        return (data == nullptr) || (size() == 0);
+    }
+
     std::wstring_view as_view() {
         size_t sz = str::Len(data);
         return {data, sz};
+    }
+
+    WCHAR* StealData() {
+        WCHAR* res = data;
+        data = nullptr;
+        len = 0;
+        return res;
     }
 };

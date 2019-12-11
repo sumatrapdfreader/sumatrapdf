@@ -143,22 +143,22 @@ bool Save() {
     str::ReplacePtr(&gGlobalPrefs->defaultDisplayMode, conv::FromDisplayMode(gGlobalPrefs->defaultDisplayModeEnum));
     conv::FromZoom(&gGlobalPrefs->defaultZoom, gGlobalPrefs->defaultZoomFloat);
 
-    std::unique_ptr<WCHAR> path(GetSettingsPath());
-    CrashIfDebugOnly(!path);
-    if (!path) {
+    AutoFreeWstr path = GetSettingsPath();
+    CrashIfDebugOnly(!path.data);
+    if (!path.data) {
         return false;
     }
-    OwnedData prevPrefsData(file::ReadFile(path.get()));
+    AutoFree prevPrefsData = file::ReadFile2(path.data);
     size_t prefsDataSize = 0;
-    std::unique_ptr<char> prefsData(SerializeGlobalPrefs(gGlobalPrefs, prevPrefsData.data, &prefsDataSize));
+    AutoFree prefsData = SerializeGlobalPrefs(gGlobalPrefs, prevPrefsData.data, &prefsDataSize);
 
-    CrashIf(!prefsData || 0 == prefsDataSize);
-    if (!prefsData || 0 == prefsDataSize) {
+    CrashIf(!prefsData.data || 0 == prefsDataSize);
+    if (!prefsData.data || 0 == prefsDataSize) {
         return false;
     }
 
     // only save if anything's changed at all
-    if (prevPrefsData.size == prefsDataSize && str::Eq(prefsData.get(), prevPrefsData.data)) {
+    if (prevPrefsData.size() == prefsDataSize && str::Eq(prefsData.get(), prevPrefsData.data)) {
         return true;
     }
 

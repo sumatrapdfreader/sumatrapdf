@@ -502,23 +502,20 @@ static const WCHAR* Md5OfAppExe() {
         return str::Dup(gAppMd5.Get());
     }
 
-    const WCHAR* appPath = GetExePath();
-    if (appPath == nullptr) {
+    AutoFreeWstr appPath = GetExePath();
+    if (appPath.empty()) {
         return {};
     }
-    defer {
-        str::Free(appPath);
-    };
-    auto d = file::ReadFile(appPath);
-    if (d.IsEmpty()) {
+    AutoFree d = file::ReadFile2(appPath.data);
+    if (d.empty()) {
         return nullptr;
     }
 
     unsigned char md5[16] = {0};
-    CalcMD5DigestWin(d.data, d.size, md5);
+    CalcMD5DigestWin(d.data, d.size(), md5);
 
-    AutoFreeStr md5HexA(_MemToHex(&md5));
-    AutoFreeW md5Hex(str::conv::FromUtf8(md5HexA));
+    AutoFree md5HexA(_MemToHex(&md5));
+    AutoFreeWstr md5Hex = str::conv::Utf8ToWchar(md5HexA.as_view());
 
     return md5Hex.StealData();
 }
@@ -528,35 +525,26 @@ static const WCHAR* Md5OfAppExe() {
 // locally or using pre-release builds (both cases where
 // exe and its md5 changes frequently)
 void RemoveMd5AppDataDirectories() {
-    const WCHAR* extractedDir = PathForFileInAppDataDir(L"extracted");
-    if (!extractedDir) {
+    AutoFreeWstr extractedDir = PathForFileInAppDataDir(L"extracted");
+    if (extractedDir.empty()) {
         return;
     }
-    defer {
-        str::Free(extractedDir);
-    };
 
-    auto dirs = CollectDirsFromDirectory(extractedDir);
+    auto dirs = CollectDirsFromDirectory(extractedDir.data);
     if (dirs.empty()) {
         return;
     }
 
-    const WCHAR* md5App = Md5OfAppExe();
-    if (md5App == nullptr) {
+    AutoFreeWstr md5App = Md5OfAppExe();
+    if (md5App.empty()) {
         return;
     }
-    defer {
-        str::Free(md5App);
-    };
 
-    const WCHAR* md5Dir = path::Join(extractedDir, md5App);
-    defer {
-        str::Free(md5Dir);
-    };
+    AutoFreeWstr md5Dir = path::Join(extractedDir.data, md5App.data);
 
     for (auto& dir : dirs) {
         const WCHAR* s = dir.data();
-        if (str::Eq(s, md5Dir)) {
+        if (str::Eq(s, md5Dir.data)) {
             continue;
         }
         dir::RemoveAll(s);
@@ -568,39 +556,26 @@ void RemoveMd5AppDataDirectories() {
 const WCHAR* ExractUnrarDll() {
     RemoveMd5AppDataDirectories();
 
-    const WCHAR* extractedDir = PathForFileInAppDataDir(L"extracted");
-    if (!extractedDir) {
+    AutoFreeWstr extractedDir = PathForFileInAppDataDir(L"extracted");
+    if (extractedDir.empty()) {
         return nullptr;
     }
-    defer {
-        str::Free(extractedDir);
-    };
 
-    const WCHAR* md5App = Md5OfAppExe();
-    if (md5App == nullptr) {
+    AutoFreeWstr md5App = Md5OfAppExe();
+    if (md5App.empty()) {
         return nullptr;
     }
-    defer {
-        str::Free(md5App);
-    };
 
-    const WCHAR* md5Dir = path::Join(extractedDir, md5App);
-    defer {
-        str::Free(md5Dir);
-    };
+    AutoFreeWstr md5Dir = path::Join(extractedDir.data, md5App.data);
+    AutoFreeWstr dllPath = path::Join(md5Dir.data, unrarFileName);
 
-    const WCHAR* dllPath = path::Join(md5Dir, unrarFileName);
-    defer {
-        str::Free(dllPath);
-    };
-
-    if (file::Exists(dllPath)) {
-        const WCHAR* ret = dllPath;
+    if (file::Exists(dllPath.data)) {
+        const WCHAR* ret = dllPath.data;
         dllPath = nullptr; // don't free
         return ret;
     }
 
-    bool ok = dir::CreateAll(md5Dir);
+    bool ok = dir::CreateAll(md5Dir.data);
     if (!ok) {
         return nullptr;
     }
