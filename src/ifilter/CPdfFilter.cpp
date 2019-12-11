@@ -111,8 +111,8 @@ HRESULT CPdfFilter::GetNextChunkValue(CChunkValue& chunkValue) {
                 if (str::IsEmpty(str.Get())) {
                     continue;
                 }
-                str.Replace(L"\n", L"\r\n");
-                chunkValue.SetTextValue(PKEY_Search_Contents, str, CHUNK_TEXT);
+                AutoFreeWstr str2 = str::Replace(str.get(), L"\n", L"\r\n");
+                chunkValue.SetTextValue(PKEY_Search_Contents, str2.get(), CHUNK_TEXT);
                 return S_OK;
             }
             m_state = STATE_PDF_END;
