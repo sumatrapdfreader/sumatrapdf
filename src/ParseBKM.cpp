@@ -356,7 +356,7 @@ static bool parseBookmarks(std::string_view sv, Vec<Bookmarks*>* bkms) {
     bkm->toc = tree;
     bkms->Append(bkm);
 
-        return true;
+    return true;
 }
 
 bool ParseBookmarksFile(std::string_view path, Vec<Bookmarks*>* bkms) {

@@ -1,15 +1,6 @@
 /* Copyright 2019 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-/*
-The installer is good enough for production but it doesn't mean it couldn't be improved:
- * some more fanciful animations e.g.:
- * letters could drop down and back up when cursor is over it
- * messages could scroll-in
- * some background thing could be going on, e.g. a spinning 3d cube
- * show fireworks on successful installation/uninstallation
-*/
-
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/WinDynCalls.h"
@@ -42,8 +33,6 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "ifilter/PdfFilter.h"
 #include "previewer/PdfPreview.h"
 
-// if, 1 adds a way to specify custom installation directory
-#define ENABLE_CUSTOM_DIR 0
 // if 1, adds checkbox to register as default PDF viewer
 #define ENABLE_REGISTER_DEFAULT 0
 
@@ -73,11 +62,9 @@ static ButtonCtrl* gButtonOptions = nullptr;
 static ButtonCtrl* gButtonRunSumatra = nullptr;
 static lzma::SimpleArchive gArchive = {};
 
-#if ENABLE_CUSTOM_DIR
 static StaticCtrl* gStaticInstDir = nullptr;
 static EditCtrl* gTextboxInstDir = nullptr;
 static ButtonCtrl* gButtonBrowseDir = nullptr;
-#endif
 
 #if ENABLE_REGISTER_DEFAULT
 static CheckboxCtrl* gCheckboxRegisterDefault = nullptr;
@@ -492,12 +479,10 @@ static void OnButtonInstall() {
         return;
     }
 
-#if ENABLE_CUSTOM_DIR
     WCHAR* userInstallDir = win::GetText(gTextboxInstDir->hwnd);
     if (!str::IsEmpty(userInstallDir))
         str::ReplacePtr(&gInstUninstGlobals.installDir, userInstallDir);
     free(userInstallDir);
-#endif
 
 #if ENABLE_REGISTER_DEFAULT
     // note: this checkbox isn't created if we're already registered as default
@@ -528,12 +513,10 @@ static void OnButtonInstall() {
     // first one to show progress quickly
     ProgressStep();
 
-#if ENABLE_CUSTOM_DIR
     // disable the install button and remove all the installation options
     delete gStaticInstDir;
     delete gTextboxInstDir;
     delete gButtonBrowseDir;
-#endif
 
 #if ENABLE_REGISTER_DEFAULT
     delete gCheckboxRegisterDefault;
@@ -582,11 +565,9 @@ static void EnableAndShow(WindowBase* w, bool enable) {
 static void OnButtonOptions() {
     gShowOptions = !gShowOptions;
 
-#if ENABLE_CUSTOM_DIR
     EnableAndShow(gStaticInstDir, gShowOptions);
     EnableAndShow(gTextboxInstDir, gShowOptions);
     EnableAndShow(gButtonBrowseDir, gShowOptions);
-#endif
 
 #if ENABLE_REGISTER_DEFAULT
     EnableAndShow(gCheckboxRegisterDefault, gShowOptions);
@@ -611,7 +592,6 @@ static void OnButtonOptions() {
     gButtonOptions->SetFocus();
 }
 
-#if ENABLE_CUSTOM_DIR
 static int CALLBACK BrowseCallbackProc(HWND hwnd, UINT msg, LPARAM lParam, LPARAM lpData) {
     switch (msg) {
         case BFFM_INITIALIZED:
@@ -663,10 +643,12 @@ static BOOL BrowseForFolder(HWND hwnd, const WCHAR* lpszInitialFolder, const WCH
 }
 
 static void OnButtonBrowse() {
-    AutoFreeW installDir(win::GetText(gTextboxInstDir->hwnd));
+    AutoFreeWstr installDir = win::GetText(gTextboxInstDir->hwnd);
+
     // strip a trailing "\SumatraPDF" if that directory doesn't exist (yet)
     if (!dir::Exists(installDir)) {
-        installDir.Set(path::GetDir(installDir));
+        WCHAR* tmp = path::GetDir(installDir);
+        installDir = tmp;
     }
 
     WCHAR path[MAX_PATH] = {};
@@ -677,20 +659,16 @@ static void OnButtonBrowse() {
         return;
     }
 
-    WCHAR* installPath = path;
+    AutoFreeWstr installPath = str::Dup(path);
     // force paths that aren't entered manually to end in ...\SumatraPDF
     // to prevent unintended installations into e.g. %ProgramFiles% itself
     if (!str::EndsWithI(path, L"\\" APP_NAME_STR)) {
         installPath = path::Join(path, APP_NAME_STR);
     }
     gTextboxInstDir->SetText(installPath);
-    if (installPath != path) {
-        free(installPath);
-    }
     gTextboxInstDir->SetSelection(0, -1);
     gTextboxInstDir->SetFocus();
 }
-#endif
 
 static bool OnWmCommand(WPARAM wParam) {
     switch (LOWORD(wParam)) {
@@ -775,7 +753,6 @@ static void OnCreateWindow(HWND hwnd) {
     // a bit more space between text box and checkboxes
     y -= (dpiAdjust(4) + WINDOW_MARGIN);
 
-#if ENABLE_CUSTOM_DIR
     const WCHAR* s = L"&...";
     SizeI btnSize2 = TextSizeInHwnd(hwnd, s);
     btnSize.cx += dpiAdjust(4);
@@ -803,7 +780,6 @@ static void OnCreateWindow(HWND hwnd) {
     gStaticInstDir->SetText(s);
     gStaticInstDir->Create();
     gStaticInstDir->SetBounds(rc);
-#endif
 
     gShowOptions = !gShowOptions;
     OnButtonOptions();

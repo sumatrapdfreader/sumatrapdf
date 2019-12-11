@@ -169,6 +169,8 @@ struct AutoFree {
 
   public:
     AutoFree() = default;
+    AutoFree(AutoFree& other) = delete;
+    AutoFree(AutoFree&& other) = delete;
 
     AutoFree(const char* p) {
         data = (char*)p;
@@ -185,12 +187,21 @@ struct AutoFree {
         str::Free(data);
     }
 
-#if 0
     AutoFree& operator=(AutoFree& other) = delete;
-    AutoFree& operator=(AutoFree&& other) = delete;
+    AutoFree& operator=(AutoFree&& other) {
+        if (this == &other) {
+            return *this;
+        }
+        free(data);
+        data = other.data;
+        len = other.len;
+        other.data = nullptr;
+        other.len = 0;
+        return *this;
+    }
+
     AutoFree& operator=(const AutoFree& other) = delete;
     AutoFree& operator=(const AutoFree&& other) = delete;
-#endif
 
     char* get() const {
         return data;
@@ -237,6 +248,8 @@ struct AutoFreeWstr {
 
   public:
     AutoFreeWstr() = default;
+    AutoFreeWstr(AutoFreeWstr& other) = delete;
+    AutoFreeWstr(AutoFreeWstr&& other) = delete;
 
     AutoFreeWstr(const WCHAR* p) {
         data = (WCHAR*)p;
@@ -246,9 +259,20 @@ struct AutoFreeWstr {
         str::Free(data);
     }
 
-#if 0
     AutoFreeWstr& operator=(AutoFreeWstr& other) = delete;
-    AutoFreeWstr& operator=(AutoFreeWstr&& other) = delete;
+    AutoFreeWstr& operator=(AutoFreeWstr&& other) {
+        if (this == &other) {
+            return *this;
+        }
+        free(data);
+        data = other.data;
+        len = other.len;
+        other.data = nullptr;
+        other.len = 0;
+        return *this;
+    }
+
+#if 0
     AutoFreeWstr& operator=(const AutoFreeWstr& other) = delete;
     AutoFreeWstr& operator=(const AutoFreeWstr&& other) = delete;
 #endif

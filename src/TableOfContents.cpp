@@ -484,7 +484,7 @@ static void ExportBookmarks(TabInfo* tab) {
     WCHAR* path = tab->filePath.get();
     str::Str s;
     AutoFree pathA = str::conv::WstrToUtf8(path);
-    s.AppendFmt("file:%s\n", pathA);
+    s.AppendFmt("file:%s\n", pathA.get());
     SerializeBookmarksRec(tocTree->root, 0, s);
     // dbglogf("%s\n", s.Get());
     str::WStr fileName;
