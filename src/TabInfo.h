@@ -3,7 +3,7 @@
 
 struct SelectionOnPage;
 struct WatchedFile;
-struct AlternativeBookmarks;
+struct Bookmarks;
 
 /* Data related to a single document loaded into a tab/window */
 /* (none of these depend on WindowInfo, so that a TabInfo could
@@ -31,7 +31,7 @@ class TabInfo {
     // previous View settings, needed when unchecking the Fit Width/Page toolbar buttons
     float prevZoomVirtual = INVALID_ZOOM;
     DisplayMode prevDisplayMode = DM_AUTOMATIC;
-    AlternativeBookmarks* altBookmarks = nullptr;
+    Vec<Bookmarks*>* altBookmarks = nullptr;
 
     TabInfo(const WCHAR* filePath = nullptr);
     ~TabInfo();

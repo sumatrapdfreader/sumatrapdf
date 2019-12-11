@@ -67,8 +67,8 @@ struct Inst {
 // at the front are arguments given with i(), s() etc.
 // at the end are FormatStr arguments from format string
 struct Arg {
-    Type t;
-    size_t len; // for s when FormatStr
+    Type t = Type::Invalid;
+    size_t len = 0; // for s when FormatStr
     union {
         char c;
         int i;
@@ -77,6 +77,19 @@ struct Arg {
         const char* s;
         const WCHAR* ws;
     };
+    Arg() = default;
+    Arg(int arg) {
+        t = Type::Int;
+        i = arg;
+    }
+    Arg(const char* arg) {
+        t = Type::Str;
+        s = arg;
+    }
+    Arg(const WCHAR* arg) {
+        t = Type::WStr;
+        ws = arg;
+    }
 };
 
 class Fmt {
@@ -116,4 +129,8 @@ class Fmt {
     int currArgFromFormatNo; // counts from the end of args
     str::Str res;
 };
+
+std::tuple<char*, size_t> Format(const char* s, Arg& a1);
+std::tuple<char*, size_t> Format(const char* s, Arg& a1, Arg& a2);
+std::tuple<char*, size_t> Format(const char* s, Arg& a1, Arg& a2, Arg& a3);
 } // namespace fmt

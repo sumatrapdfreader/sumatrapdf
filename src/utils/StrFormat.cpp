@@ -285,4 +285,17 @@ char* Fmt::Get() {
 char* Fmt::GetDup() {
     return str::Dup(Get());
 }
+
+std::tuple<char*, size_t> Format(const char* s, Arg& a1) {
+    return {};
+}
+
+std::tuple<char*, size_t> Format(const char* s, Arg& a1, Arg& a2) {
+    return {};
+}
+
+std::tuple<char*, size_t> Format(const char* s, Arg& a1, Arg& a2, Arg& a3) {
+    return {};
+}
+
 } // namespace fmt

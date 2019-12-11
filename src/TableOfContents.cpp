@@ -481,11 +481,14 @@ static void SetInitialExpandState(DocTocItem* item, Vec<int>& tocState) {
 
 static void ExportBookmarks(TabInfo* tab) {
     auto* tocTree = tab->ctrl->GetTocTree();
+    WCHAR* path = tab->filePath.get();
     str::Str s;
+    AutoFree pathA = str::conv::WstrToUtf8(path);
+    s.AppendFmt("file:%s\n", pathA);
     SerializeBookmarksRec(tocTree->root, 0, s);
     // dbglogf("%s\n", s.Get());
     str::WStr fileName;
-    fileName.Append(tab->filePath.Get());
+    fileName.Append(path);
     fileName.Append(L".bkm");
     bool ok = file::WriteFile(fileName.Get(), (void*)s.Get(), s.size());
     str::WStr msg;
@@ -535,15 +538,15 @@ static void AltBookmarksChanged(WindowInfo* win, TabInfo* tab, int n, std::strin
     if (n == 0) {
         tocTree = tab->ctrl->GetTocTree();
     } else {
-        tocTree = tab->altBookmarks->bookmarks[n - 1];
+        tocTree = tab->altBookmarks->at(n - 1)->toc;
     }
     win->tocTreeCtrl->SetTreeModel(tocTree);
 }
 
 // TODO: temporary
-static AlternativeBookmarks* LoadAlterenativeBookmarks(const WCHAR* baseFileName) {
-    auto tmp = str::conv::ToUtf8(baseFileName);
-    return LoadAlterenativeBookmarks(tmp.AsView());
+static Vec<Bookmarks*>* LoadAlterenativeBookmarks(const WCHAR* baseFileName) {
+    AutoFree tmp = str::conv::WstrToUtf8(baseFileName);
+    return LoadAlterenativeBookmarks(tmp.as_view());
 }
 
 void LoadTocTree(WindowInfo* win) {
@@ -563,12 +566,12 @@ void LoadTocTree(WindowInfo* win) {
 
     // TODO: for now just for testing
     auto* altTocs = LoadAlterenativeBookmarks(tab->filePath);
-    if (altTocs && altTocs->count > 0) {
+    if (altTocs && altTocs->size() > 0) {
         tab->altBookmarks = altTocs;
         Vec<std::string_view> items;
         items.Append("Default");
-        for (int i = 0; i < altTocs->count; i++) {
-            DocTocTree* toc = altTocs->bookmarks[i];
+        for (int i = 0; i < altTocs->size(); i++) {
+            DocTocTree* toc = altTocs->at(i)->toc;
             items.Append(toc->name);
         }
         win->altBookmarks->SetItems(items);

@@ -1,15 +1,15 @@
 /* Copyright 2019 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-void SerializeBookmarksRec(DocTocItem* node, int level, str::Str& s);
-DocTocTree* ParseBookmarksFile(std::string_view path);
+struct Bookmarks {
+    char* filePath = nullptr;
+    DocTocTree* toc = nullptr;
 
-#define MAX_ALT_BOOKMARKS 64
-
-struct AlternativeBookmarks {
-    int count = 0;
-    DocTocTree* bookmarks[MAX_ALT_BOOKMARKS] = {};
-    ~AlternativeBookmarks();
+    Bookmarks() = default;
+    ~Bookmarks();
 };
 
-AlternativeBookmarks* LoadAlterenativeBookmarks(std::string_view baseFileName);
+void SerializeBookmarksRec(DocTocItem* node, int level, str::Str& s);
+bool ParseBookmarksFile(std::string_view path, Vec<Bookmarks*>* bkms);
+
+Vec<Bookmarks*>* LoadAlterenativeBookmarks(std::string_view baseFileName);

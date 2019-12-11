@@ -19,6 +19,11 @@ Creating and parsing of .bkm files that contain alternative bookmarks view
 for PDF files.
 */
 
+Bookmarks::~Bookmarks() {
+    free(filePath);
+    delete toc;
+}
+
 static void appendQuotedString(std::string_view sv, str::Str& out) {
     out.Append('"');
     const char* s = sv.data();
@@ -43,7 +48,7 @@ static void appendQuotedString(std::string_view sv, str::Str& out) {
 // TODO: serialize open state
 void SerializeBookmarksRec(DocTocItem* node, int level, str::Str& s) {
     if (level == 0) {
-        s.Append(":default view\n");
+        s.Append("title: default view\n");
     }
 
     while (node) {
@@ -273,10 +278,11 @@ struct DocTocItemWithIndent {
     ~DocTocItemWithIndent() = default;
 };
 
-static DocTocTree* parseBookmarks(std::string_view sv) {
+// TODO: read more than one
+static bool parseBookmarks(std::string_view sv, Vec<Bookmarks*>* bkms) {
     Vec<DocTocItemWithIndent> items;
 
-    // extract first line with title like ":foo"
+    // extract first line with title like "title: foo"
     auto line = str::ParseUntil(sv, '\n');
     auto title = parseBookmarksTitle(line);
     if (title.data() == nullptr) {
@@ -346,26 +352,22 @@ static DocTocTree* parseBookmarks(std::string_view sv) {
         }
     }
 
-    return tree;
+    auto* bkm = new Bookmarks();
+    bkm->toc = tree;
+    bkms->Append(bkm);
+
+        return true;
 }
 
-DocTocTree* ParseBookmarksFile(std::string_view path) {
+bool ParseBookmarksFile(std::string_view path, Vec<Bookmarks*>* bkms) {
     AutoFree d = file::ReadFile(path);
     if (!d.data) {
-        return nullptr;
+        return false;
     }
-
-    auto* docTree = parseBookmarks(d.as_view());
-    return docTree;
+    return parseBookmarks(d.as_view(), bkms);
 }
 
-AlternativeBookmarks::~AlternativeBookmarks() {
-    for (int i = 0; i < count; i++) {
-        delete bookmarks[i];
-    }
-}
-
-AlternativeBookmarks* LoadAlterenativeBookmarks(std::string_view baseFileName) {
+Vec<Bookmarks*>* LoadAlterenativeBookmarks(std::string_view baseFileName) {
     str::Str s;
     s.Set(baseFileName.data());
     s.Append(".bkm");
@@ -374,15 +376,15 @@ AlternativeBookmarks* LoadAlterenativeBookmarks(std::string_view baseFileName) {
         return nullptr;
     }
 
-    DocTocTree* docTree = ParseBookmarksFile(path);
-    if (docTree == nullptr) {
+    auto* res = new Vec<Bookmarks*>();
+
+    auto ok = ParseBookmarksFile(path, res);
+    if (!ok) {
+        DeleteVecMembers(*res);
+        delete res;
         return nullptr;
     }
 
     // TODO: read more than one
-
-    auto* res = new AlternativeBookmarks();
-    res->count = 1;
-    res->bookmarks[0] = docTree;
     return res;
 }

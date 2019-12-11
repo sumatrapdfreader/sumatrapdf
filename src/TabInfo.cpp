@@ -34,7 +34,10 @@ TabInfo::~TabInfo() {
     if (AsChm()) {
         AsChm()->RemoveParentHwnd();
     }
-    delete altBookmarks;
+    if (altBookmarks) {
+        DeleteVecMembers(*altBookmarks);
+        delete altBookmarks;
+    }
     delete selectionOnPage;
     delete ctrl;
 }
