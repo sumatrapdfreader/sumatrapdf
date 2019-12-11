@@ -153,18 +153,36 @@ struct AutoDelete {
     }
 };
 
-#if 0
-struct AutoFreeStr {
-    char* d = nullptr;
+// this is like std::unique_ptr<char> but specialized for our needs
+// typical usage:
+// AutoFree toFree = str::Dup("foo");
+// We also allow assignment from std::tuple<char*, size_t> (because we
+// return it from many functions) and remember length
+struct AutoFree {
+    char* data = nullptr;
 
+  protected:
+    // must be accessed via size() as it might
+    // not be provided initially so to avoid mistakes
+    // we'll calculate it on demand if needed
+    size_t len = 0;
+
+  public:
     AutoFree() = default;
 
     AutoFree(const char* p) {
-        d = (char*)p;
+        data = (char*)p;
+    }
+
+    // I often return allocated strings as a tuple so this
+    // allows easy freeing of them
+    AutoFree(std::tuple<char*, size_t> s) {
+        data = std::get<0>(s);
+        len = std::get<1>(s);
     }
 
     ~AutoFree() {
-        str::Free(d);
+        str::Free(data);
     }
 
     AutoFree& operator=(AutoFree& other) = delete;
@@ -173,14 +191,23 @@ struct AutoFreeStr {
     AutoFree& operator=(const AutoFree&& other) = delete;
 
     char* get() const {
-        return d;
-    }
-    std::string_view as_view() const {
-        return { d, str::Len(d) };
+        return data;
     }
 
+    // for convenince, we calculate the size if wasn't provided
+    // by the caller
+    size_t size() {
+        if (len == 0) {
+            len = str::Len(data);
+        }
+        return len;
+    }
+
+    std::string_view as_view() {
+        size_t sz = size();
+        return {data, sz};
+    }
 };
-#endif
 
 #if 0
 struct AutoFreeWstr {

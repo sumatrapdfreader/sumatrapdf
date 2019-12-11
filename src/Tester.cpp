@@ -220,7 +220,12 @@ void ZipCreateTest() {
     WCHAR* zipFileName = L"tester-tmp.zip";
     file::Delete(zipFileName);
     ZipCreator zc(zipFileName);
-    auto ok = zc.AddFile(L"makefile.msvc");
+    auto ok = zc.AddFile(L"premake5.lua");
+    if (!ok) {
+        printf("ZipCreateTest(): failed to add makefile.msvc");
+        return;
+    }
+    ok = zc.AddFile(L"premake5.files.lua");
     if (!ok) {
         printf("ZipCreateTest(): failed to add makefile.msvc");
         return;
@@ -239,9 +244,9 @@ int TesterMain() {
     WStrVec argv;
     ParseCmdLine(cmdLine, argv);
 
-    InitAllCommonControls();
-    ScopedGdiPlus gdi;
-    mui::Initialize();
+    // InitAllCommonControls();
+    // ScopedGdiPlus gdi;
+    // mui::Initialize();
 
     WCHAR* dirOrFile = nullptr;
 
