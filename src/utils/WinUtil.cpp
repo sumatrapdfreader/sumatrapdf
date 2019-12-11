@@ -198,6 +198,9 @@ bool RegKeyExists(HKEY keySub, const WCHAR* keyName) {
 
 // called needs to free() the result
 WCHAR* ReadRegStr(HKEY keySub, const WCHAR* keyName, const WCHAR* valName) {
+    if (!keySub) {
+        return nullptr;
+    }
     WCHAR* val = nullptr;
     REGSAM access = KEY_READ;
     HKEY hKey;

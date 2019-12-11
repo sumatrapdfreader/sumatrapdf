@@ -49,28 +49,28 @@
       <Configuration>Release x32_asan</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="ReleasePrefast|Win32">
-      <Configuration>ReleasePrefast</Configuration>
+    <ProjectConfiguration Include="ReleaseAnalyze|Win32">
+      <Configuration>ReleaseAnalyze</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="ReleasePrefast|x64">
-      <Configuration>ReleasePrefast</Configuration>
+    <ProjectConfiguration Include="ReleaseAnalyze|x64">
+      <Configuration>ReleaseAnalyze</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="ReleasePrefast x32_xp|Win32">
-      <Configuration>ReleasePrefast x32_xp</Configuration>
+    <ProjectConfiguration Include="ReleaseAnalyze x32_xp|Win32">
+      <Configuration>ReleaseAnalyze x32_xp</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="ReleasePrefast x32_xp|x64">
-      <Configuration>ReleasePrefast x32_xp</Configuration>
+    <ProjectConfiguration Include="ReleaseAnalyze x32_xp|x64">
+      <Configuration>ReleaseAnalyze x32_xp</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="ReleasePrefast x32_asan|Win32">
-      <Configuration>ReleasePrefast x32_asan</Configuration>
+    <ProjectConfiguration Include="ReleaseAnalyze x32_asan|Win32">
+      <Configuration>ReleaseAnalyze x32_asan</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="ReleasePrefast x32_asan|x64">
-      <Configuration>ReleasePrefast x32_asan</Configuration>
+    <ProjectConfiguration Include="ReleaseAnalyze x32_asan|x64">
+      <Configuration>ReleaseAnalyze x32_asan</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
@@ -133,28 +133,28 @@
     <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|Win32'" Label="Configuration">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast x32_xp|Win32'" Label="Configuration">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x32_xp|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v141_xp</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast x32_asan|Win32'" Label="Configuration">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x32_asan|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|x64'" Label="Configuration">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
@@ -188,16 +188,16 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|Win32'">
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast x32_xp|Win32'">
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x32_xp|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast x32_asan|Win32'">
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x32_asan|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|x64'">
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
@@ -249,27 +249,27 @@
     <TargetName>mupdf</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|Win32'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">
     <OutDir>..\out\rel32_prefast\</OutDir>
-    <IntDir>..\out\rel32_prefast\obj\x32\ReleasePrefast\mupdf\</IntDir>
+    <IntDir>..\out\rel32_prefast\obj\x32\ReleaseAnalyze\mupdf\</IntDir>
     <TargetName>mupdf</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast x32_xp|Win32'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x32_xp|Win32'">
     <OutDir>..\out\rel32_prefast_xp\</OutDir>
-    <IntDir>..\out\rel32_prefast_xp\obj\x32_xp\ReleasePrefast\mupdf\</IntDir>
+    <IntDir>..\out\rel32_prefast_xp\obj\x32_xp\ReleaseAnalyze\mupdf\</IntDir>
     <TargetName>mupdf</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast x32_asan|Win32'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x32_asan|Win32'">
     <OutDir>..\out\rel32_prefast_asan\</OutDir>
-    <IntDir>..\out\rel32_prefast_asan\obj\x32_asan\ReleasePrefast\mupdf\</IntDir>
+    <IntDir>..\out\rel32_prefast_asan\obj\x32_asan\ReleaseAnalyze\mupdf\</IntDir>
     <TargetName>mupdf</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|x64'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">
     <OutDir>..\out\rel64_prefast\</OutDir>
-    <IntDir>..\out\rel64_prefast\obj\x64\ReleasePrefast\mupdf\</IntDir>
+    <IntDir>..\out\rel64_prefast\obj\x64\ReleaseAnalyze\mupdf\</IntDir>
     <TargetName>mupdf</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
@@ -469,7 +469,7 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|Win32'">
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
@@ -495,7 +495,7 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast x32_xp|Win32'">
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x32_xp|Win32'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
@@ -522,7 +522,7 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast x32_asan|Win32'">
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x32_asan|Win32'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
@@ -549,7 +549,7 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|x64'">
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
@@ -782,39 +782,39 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\bin\nasm.exe -f win32 -I ../mupdf/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x32_xp|Win32'">..\bin\nasm.exe -f win32 -I ../mupdf/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release x32_asan|Win32'">..\bin\nasm.exe -f win32 -I ../mupdf/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|Win32'">..\bin\nasm.exe -f win32 -I ../mupdf/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast x32_xp|Win32'">..\bin\nasm.exe -f win32 -I ../mupdf/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast x32_asan|Win32'">..\bin\nasm.exe -f win32 -I ../mupdf/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">..\bin\nasm.exe -f win32 -I ../mupdf/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x32_xp|Win32'">..\bin\nasm.exe -f win32 -I ../mupdf/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x32_asan|Win32'">..\bin\nasm.exe -f win32 -I ../mupdf/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../out/dbg32/obj/x32/Debug/mupdf/fonts_32.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x32_xp|Win32'">../out/dbg32_xp/obj/x32_xp/Debug/mupdf/fonts_32.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug x32_asan|Win32'">../out/dbg32_asan/obj/x32_asan/Debug/mupdf/fonts_32.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../out/rel32/obj/x32/Release/mupdf/fonts_32.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x32_xp|Win32'">../out/rel32_xp/obj/x32_xp/Release/mupdf/fonts_32.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release x32_asan|Win32'">../out/rel32_asan/obj/x32_asan/Release/mupdf/fonts_32.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|Win32'">../out/rel32_prefast/obj/x32/ReleasePrefast/mupdf/fonts_32.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast x32_xp|Win32'">../out/rel32_prefast_xp/obj/x32_xp/ReleasePrefast/mupdf/fonts_32.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast x32_asan|Win32'">../out/rel32_prefast_asan/obj/x32_asan/ReleasePrefast/mupdf/fonts_32.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">../out/rel32_prefast/obj/x32/ReleaseAnalyze/mupdf/fonts_32.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x32_xp|Win32'">../out/rel32_prefast_xp/obj/x32_xp/ReleaseAnalyze/mupdf/fonts_32.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x32_asan|Win32'">../out/rel32_prefast_asan/obj/x32_asan/ReleaseAnalyze/mupdf/fonts_32.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Compiling %(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x32_xp|Win32'">Compiling %(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug x32_asan|Win32'">Compiling %(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Compiling %(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release x32_xp|Win32'">Compiling %(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release x32_asan|Win32'">Compiling %(Identity)</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|Win32'">Compiling %(Identity)</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast x32_xp|Win32'">Compiling %(Identity)</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast x32_asan|Win32'">Compiling %(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|Win32'">Compiling %(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x32_xp|Win32'">Compiling %(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x32_asan|Win32'">Compiling %(Identity)</Message>
     </CustomBuild>
     <CustomBuild Include="..\mupdf\fonts_64.asm">
       <FileType>Document</FileType>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\bin\nasm.exe -f win64 -DWIN64 -I ../mupdf/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\bin\nasm.exe -f win64 -DWIN64 -I ../mupdf/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|x64'">..\bin\nasm.exe -f win64 -DWIN64 -I ../mupdf/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">..\bin\nasm.exe -f win64 -DWIN64 -I ../mupdf/ -o "$(IntDir)/%(Filename).obj" "%(Identity)"</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../out/dbg64/obj/x64/Debug/mupdf/fonts_64.obj</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../out/rel64/obj/x64/Release/mupdf/fonts_64.obj</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|x64'">../out/rel64_prefast/obj/x64/ReleasePrefast/mupdf/fonts_64.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">../out/rel64_prefast/obj/x64/ReleaseAnalyze/mupdf/fonts_64.obj</Outputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compiling %(Identity)</Message>
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compiling %(Identity)</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='ReleasePrefast|x64'">Compiling %(Identity)</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">Compiling %(Identity)</Message>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>

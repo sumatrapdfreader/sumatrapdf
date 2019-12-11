@@ -379,10 +379,10 @@ static void SetupCrashHandler() {
 static HWND FindPrevInstWindow(HANDLE* hMutex) {
     // create a unique identifier for this executable
     // (allows independent side-by-side installations)
-    AutoFreeW exePath(GetExePath());
+    AutoFreeWstr exePath = GetExePath();
     str::ToLowerInPlace(exePath);
-    uint32_t hash = MurmurHash2(exePath.Get(), str::Len(exePath) * sizeof(WCHAR));
-    AutoFreeW mapId(str::Format(L"SumatraPDF-%08x", hash));
+    uint32_t hash = MurmurHash2(exePath, str::Len(exePath) * sizeof(WCHAR));
+    AutoFreeWstr mapId = str::Format(L"SumatraPDF-%08x", hash);
 
     int retriesLeft = 3;
 Retry:
@@ -419,8 +419,9 @@ Retry:
 
     // fall through
 Error:
-    if (--retriesLeft < 0)
+    if (--retriesLeft < 0) {
         return nullptr;
+    }
     Sleep(100);
     goto Retry;
 }

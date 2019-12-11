@@ -48,7 +48,7 @@ Prefast:
 include("premake5.files.lua")
 
 workspace "SumatraPDF"
-  configurations { "Debug", "Release", "ReleasePrefast", }
+  configurations { "Debug", "Release", "ReleaseAnalyze", }
   platforms { "x32", "x32_xp", "x32_asan", "x64" }
   startproject "SumatraPDF"
 
@@ -90,28 +90,28 @@ workspace "SumatraPDF"
 
   filter {"platforms:x32", "configurations:Release"}
     targetdir "out/rel32"
-  filter {"platforms:x32", "configurations:ReleasePrefast"}
+  filter {"platforms:x32", "configurations:ReleaseAnalyze"}
     targetdir "out/rel32_prefast"
   filter {"platforms:x32", "configurations:Debug"}
     targetdir "out/dbg32"
 
   filter {"platforms:x32_xp", "configurations:Release"}
     targetdir "out/rel32_xp"
-  filter {"platforms:x32_xp", "configurations:ReleasePrefast"}
+  filter {"platforms:x32_xp", "configurations:ReleaseAnalyze"}
     targetdir "out/rel32_prefast_xp"
   filter {"platforms:x32_xp", "configurations:Debug"}
     targetdir "out/dbg32_xp"
 
   filter {"platforms:x32_asan", "configurations:Release"}
     targetdir "out/rel32_asan"
-  filter {"platforms:x32_asan", "configurations:ReleasePrefast"}
+  filter {"platforms:x32_asan", "configurations:ReleaseAnalyze"}
     targetdir "out/rel32_prefast_asan"
   filter {"platforms:x32_asan", "configurations:Debug"}
     targetdir "out/dbg32_asan"
 
   filter {"platforms:x64", "configurations:Release"}
     targetdir "out/rel64"
-  filter {"platforms:x64", "configurations:ReleasePrefast"}
+  filter {"platforms:x64", "configurations:ReleaseAnalyze"}
     targetdir "out/rel64_prefast"
   filter {"platforms:x64", "configurations:Debug"}
     targetdir "out/dbg64"
@@ -129,11 +129,11 @@ workspace "SumatraPDF"
   -- https://github.com/premake/premake-core/wiki/flags
   flags {
     "MultiProcessorCompile",
-    "Maps",
+    "Maps", -- generate map file
     -- "Unicode", TODO: breaks libdjuv?
   }
 
-  filter {"configurations:not ReleasePrefast"}
+  filter {"configurations:not ReleaseAnalyze"}
     flags { "FatalCompileWarnings" }
   filter {}
 
@@ -144,6 +144,7 @@ workspace "SumatraPDF"
 
   filter "configurations:Debug"
     defines { "DEBUG" }
+  filter {}
 
   filter "configurations:Release*"
     defines { "NDEBUG" }
@@ -401,7 +402,7 @@ workspace "SumatraPDF"
     language "C++"
     cppdialect "C++17"
 
-    filter "configurations:ReleasePrefast"
+    filter "configurations:ReleaseAnalyze"
       -- TODO: somehow /analyze- is default which creates warning about
       -- over-ride from cl.exe. Don't know how to disable the warning
       buildoptions { "/analyze" }
@@ -565,7 +566,7 @@ workspace "SumatraPDF"
     uia_files()
     sumatra_files()
 
-    filter "configurations:ReleasePrefast"
+    filter "configurations:ReleaseAnalyze"
       -- TODO: somehow /analyze- is default which creates warning about
       -- over-ride from cl.exe. Don't know how to disable the warning
       buildoptions { "/analyze" }
@@ -611,7 +612,7 @@ workspace "SumatraPDF"
     uia_files()
     sumatra_files()
 
-    filter "configurations:ReleasePrefast"
+    filter "configurations:ReleaseAnalyze"
       -- TODO: somehow /analyze- is default which creates warning about
       -- over-ride from cl.exe. Don't know how to disable the warning
       buildoptions { "/analyze" }

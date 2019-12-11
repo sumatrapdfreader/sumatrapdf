@@ -196,6 +196,10 @@ struct AutoFree {
         return data;
     }
 
+    operator char*() const {
+        return data;
+    }
+
     // for convenince, we calculate the size if wasn't provided
     // by the caller
     size_t size() {
@@ -250,6 +254,10 @@ struct AutoFreeWstr {
 #endif
 
     WCHAR* get() const {
+        return data;
+    }
+
+    operator WCHAR*() const {
         return data;
     }
 
