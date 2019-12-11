@@ -999,9 +999,7 @@ class PdfEngineImpl : public BaseEngine {
 
     std::tuple<char*, size_t> GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
-    virtual bool SaveFileAsPdf(const char* pdfFileName, bool includeUserAnnots = false) {
-        return SaveFileAs(pdfFileName, includeUserAnnots);
-    }
+    bool SaveFileAsPdf(const char* pdfFileName, bool includeUserAnnots = false);
     WCHAR* ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** coordsOut = nullptr,
                            RenderTarget target = RenderTarget::View) override;
 
@@ -1012,23 +1010,12 @@ class PdfEngineImpl : public BaseEngine {
     bool SupportsAnnotation(bool forSaving = false) const override;
     void UpdateUserAnnotations(Vec<PageAnnotation>* list) override;
 
-    bool AllowsPrinting() const override {
-        return fz_has_permission(ctx, _doc, FZ_PERMISSION_PRINT);
-    }
-    bool AllowsCopyingText() const override {
-        return fz_has_permission(ctx, _doc, FZ_PERMISSION_COPY);
-    }
+    bool AllowsPrinting() const override;
+    bool AllowsCopyingText() const override;
+    float GetFileDPI() const override;
+    const WCHAR* GetDefaultFileExt() const override;
 
-    float GetFileDPI() const override {
-        return 72.0f;
-    }
-    const WCHAR* GetDefaultFileExt() const override {
-        return L".pdf";
-    }
-
-    bool BenchLoadPage(int pageNo) override {
-        return GetFzPage(pageNo) != nullptr;
-    }
+    bool BenchLoadPage(int pageNo) override;
 
     Vec<PageElement*>* GetElements(int pageNo) override;
     PageElement* GetElementAtPos(int pageNo, PointD pt) override;
@@ -1036,15 +1023,11 @@ class PdfEngineImpl : public BaseEngine {
     PageDestination* GetNamedDest(const WCHAR* name) override;
     DocTocTree* GetTocTree() override;
 
-    bool HasPageLabels() const override {
-        return _pagelabels != nullptr;
-    }
+    bool HasPageLabels() const override;
     WCHAR* GetPageLabel(int pageNo) const override;
     int GetPageByLabel(const WCHAR* label) const override;
 
-    bool IsPasswordProtected() const override {
-        return isProtected;
-    }
+    bool IsPasswordProtected() const override;
     char* GetDecryptionKey() const override;
 
     static BaseEngine* CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI);
@@ -1056,7 +1039,7 @@ class PdfEngineImpl : public BaseEngine {
     CRITICAL_SECTION pagesAccess;
 
     CRITICAL_SECTION mutexes[FZ_LOCK_MAX];
- 
+
     RenderedBitmap* GetPageImage(int pageNo, RectD rect, size_t imageIx);
     bool SaveEmbedded(LinkSaverUI& saveUI, int num);
 
@@ -1088,13 +1071,8 @@ class PdfEngineImpl : public BaseEngine {
 
     fz_page* GetFzPage(int pageNo, bool failIfBusy = false);
     FzPageInfo* GetFzPageInfo(int pageNo, bool failIfBusy = false);
-    fz_matrix viewctm(int pageNo, float zoom, int rotation) {
-        const fz_rect tmpRc = fz_RectD_to_rect(PageMediabox(pageNo));
-        return fz_create_view_ctm(tmpRc, zoom, rotation);
-    }
-    fz_matrix viewctm(fz_page* page, float zoom, int rotation) {
-        return fz_create_view_ctm(fz_bound_page(ctx, page), zoom, rotation);
-    }
+    fz_matrix viewctm(int pageNo, float zoom, int rotation);
+    fz_matrix viewctm(fz_page* page, float zoom, int rotation);
     PdfTocItem* BuildTocTree(fz_outline* entry, int& idCounter, bool isAttachment);
     void LinkifyPageText(FzPageInfo* pageInfo);
     void ProcessPageAnnotations(FzPageInfo* pageInfo);
@@ -2048,6 +2026,45 @@ void PdfEngineImpl::LinkifyPageText(FzPageInfo* pageInfo) {
     }
     delete list;
     free(coords);
+}
+
+bool PdfEngineImpl::SaveFileAsPdf(const char* pdfFileName, bool includeUserAnnots) {
+    return SaveFileAs(pdfFileName, includeUserAnnots);
+}
+
+bool PdfEngineImpl::AllowsPrinting() const {
+    return fz_has_permission(ctx, _doc, FZ_PERMISSION_PRINT);
+}
+bool PdfEngineImpl::AllowsCopyingText() const {
+    return fz_has_permission(ctx, _doc, FZ_PERMISSION_COPY);
+}
+
+float PdfEngineImpl::GetFileDPI() const {
+    return 72.0f;
+}
+const WCHAR* PdfEngineImpl::GetDefaultFileExt() const {
+    return L".pdf";
+}
+
+bool PdfEngineImpl::BenchLoadPage(int pageNo) {
+    return GetFzPage(pageNo) != nullptr;
+}
+
+bool PdfEngineImpl::IsPasswordProtected() const {
+    return isProtected;
+}
+
+bool PdfEngineImpl::HasPageLabels() const {
+    return _pagelabels != nullptr;
+}
+
+fz_matrix PdfEngineImpl::viewctm(int pageNo, float zoom, int rotation) {
+    const fz_rect tmpRc = fz_RectD_to_rect(PageMediabox(pageNo));
+    return fz_create_view_ctm(tmpRc, zoom, rotation);
+}
+
+fz_matrix PdfEngineImpl::viewctm(fz_page* page, float zoom, int rotation) {
+    return fz_create_view_ctm(fz_bound_page(ctx, page), zoom, rotation);
 }
 
 void PdfEngineImpl::ProcessPageAnnotations(FzPageInfo* pageInfo) {

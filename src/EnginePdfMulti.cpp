@@ -26,11 +26,70 @@ extern "C" {
 #include "EnginePdf.h"
 
 // represents .vbkm file
-struct VBkm {
-
-};
+struct VBkm {};
 
 Kind kindEnginePdfMulti = "enginePdfMulti";
+
+class EnginePdfMultiImpl : public BaseEngine {
+  public:
+    EnginePdfMultiImpl();
+    virtual ~EnginePdfMultiImpl();
+    BaseEngine* Clone() override;
+
+    int PageCount() const override;
+
+    RectD PageMediabox(int pageNo) override;
+    RectD PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
+
+    RenderedBitmap* RenderBitmap(int pageNo, float zoom, int rotation,
+                                 RectD* pageRect = nullptr, /* if nullptr: defaults to the page's mediabox */
+                                 RenderTarget target = RenderTarget::View, AbortCookie** cookie_out = nullptr) override;
+
+    PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse = false) override;
+    RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
+
+    std::tuple<char*, size_t> GetFileData() override;
+    bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
+    bool SaveFileAsPdf(const char* pdfFileName, bool includeUserAnnots = false);
+    WCHAR* ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** coordsOut = nullptr,
+                           RenderTarget target = RenderTarget::View) override;
+
+    bool HasClipOptimizations(int pageNo) override;
+    PageLayoutType PreferredLayout() override;
+    WCHAR* GetProperty(DocumentProperty prop) override;
+
+    bool SupportsAnnotation(bool forSaving = false) const override;
+    void UpdateUserAnnotations(Vec<PageAnnotation>* list) override;
+
+    bool AllowsPrinting() const override;
+    bool AllowsCopyingText() const override;
+
+    float GetFileDPI() const override;
+    const WCHAR* GetDefaultFileExt() const override;
+
+    bool BenchLoadPage(int pageNo) override;
+
+    Vec<PageElement*>* GetElements(int pageNo) override;
+    PageElement* GetElementAtPos(int pageNo, PointD pt) override;
+
+    PageDestination* GetNamedDest(const WCHAR* name) override;
+    DocTocTree* GetTocTree() override;
+
+    bool HasPageLabels() const override;
+    WCHAR* GetPageLabel(int pageNo) const override;
+    int GetPageByLabel(const WCHAR* label) const override;
+
+    bool IsPasswordProtected() const override;
+    char* GetDecryptionKey() const override;
+
+    static BaseEngine* CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI);
+    static BaseEngine* CreateFromStream(IStream* stream, PasswordUI* pwdUI);
+
+  protected:
+    int pageCount = -1;
+
+    DocTocTree* tocTree = nullptr;
+};
 
 namespace EnginePdfMulti {
 
@@ -51,4 +110,3 @@ BaseEngine* CreateFromStream(IStream* stream, PasswordUI* pwdUI) {
 }
 
 } // namespace EnginePdfMulti
-

@@ -117,7 +117,7 @@ RetrySniffing:
         goto RetrySniffing;
     }
 
-    //CrashIf(engine && !IsSupportedFile(filePath, sniff, enableEbookEngines));
+    // CrashIf(engine && !IsSupportedFile(filePath, sniff, enableEbookEngines));
     return engine;
 }
 
