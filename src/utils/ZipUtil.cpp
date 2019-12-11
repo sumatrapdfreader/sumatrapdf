@@ -164,8 +164,8 @@ bool ZipCreator::AddFileData(const char* nameUtf8, const void* data, size_t size
 
 // add a given file under (optional) nameInZip
 bool ZipCreator::AddFile(const WCHAR* filePath, const WCHAR* nameInZip) {
-    AutoFree fileData = file::ReadFile2(filePath);
-    if (!fileData.d) {
+    AutoFree fileData = file::ReadFile(filePath);
+    if (!fileData.data) {
         return false;
     }
 

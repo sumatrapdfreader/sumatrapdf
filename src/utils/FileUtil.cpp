@@ -417,39 +417,13 @@ Error:
 #endif
 }
 
-char* ReadFileWithAllocator(const char* filePath, size_t* fileSizeOut, Allocator* allocator) {
-    auto [data, size] = ReadFileWithAllocator(filePath, allocator);
-    if (fileSizeOut) {
-        *fileSizeOut = size;
-    }
-    return data;
+std::tuple<char*, size_t> ReadFile(std::string_view path) {
+    return ReadFileWithAllocator(path.data(), nullptr);
 }
 
-std::tuple<char*, size_t> ReadFile2(std::string_view path) {
-    size_t size = 0;
-    char* data = ReadFileWithAllocator(path.data(), &size, nullptr);
-    return {data, size};
-}
-
-std::tuple<char*, size_t> ReadFile2(const WCHAR* filePath) {
-    auto [path, pathSize] = str::conv::WstrToUtf8(filePath);
-    std::string_view spath = {path, pathSize};
-    size_t size = 0;
-    char* data = ReadFileWithAllocator(path, &size, nullptr);
-    str::Free(path);
-    return {data, size};
-}
-
-// TODO: replace all use of ReadFile with ReadFile2() and rename ReadFile2 => ReadFile
-OwnedData ReadFile(std::string_view path) {
-    auto [data, size] = ReadFile2(path);
-    return {data, size};
-}
-
-// TODO: replace with ReadFile(std::string_view path)
-OwnedData ReadFile(const char* path) {
-    auto [data, size] = ReadFile2(path);
-    return {data, size};
+std::tuple<char*, size_t> ReadFile(const WCHAR* filePath) {
+    AutoFree path = str::conv::WstrToUtf8(filePath);
+    return ReadFileWithAllocator(path.data, nullptr);
 }
 
 bool WriteFile(const char* filePath, const void* data, size_t dataLen) {
@@ -535,16 +509,9 @@ int64_t GetSize(const WCHAR* filePath) {
     return size.QuadPart;
 }
 
-char* ReadFileWithAllocator(const WCHAR* path, size_t* fileSizeOut, Allocator* allocator) {
-    OwnedData s = str::conv::ToUtf8(path);
-    return ReadFileWithAllocator(s.Get(), fileSizeOut, allocator);
-}
-
 std::tuple<char*, size_t> ReadFileWithAllocator(const WCHAR* path, Allocator* allocator) {
-    auto [pathUtf8, size] = str::conv::WstrToUtf8(path);
-    auto res = ReadFileWithAllocator(pathUtf8, allocator);
-    str::Free(pathUtf8);
-    return res;
+    AutoFree pathUtf8 = str::conv::WstrToUtf8(path);
+    return ReadFileWithAllocator(pathUtf8.data, allocator);
 }
 
 #if 0
@@ -584,15 +551,6 @@ char* ReadFileWithAllocator(const WCHAR* path, size_t* fileSizeOut, Allocator* a
     return data;
 }
 #endif
-
-OwnedData ReadFile(const WCHAR* path) {
-    size_t size = 0;
-    char* data = ReadFileWithAllocator(path, &size, nullptr);
-    if (data == nullptr) {
-        return {nullptr, 0};
-    }
-    return {data, size};
-}
 
 // buf must be at least toRead in size (note: it won't be zero-terminated)
 bool ReadN(const WCHAR* filePath, char* buf, size_t toRead) {

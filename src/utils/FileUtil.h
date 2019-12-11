@@ -34,23 +34,19 @@ WCHAR* GetPathOfFileInAppDir(const WCHAR* fileName = nullptr);
 namespace file {
 
 FILE* OpenFILE(const char* path);
-char* ReadFileWithAllocator(const char* path, size_t* fileSizeOut, Allocator* allocator);
 std::tuple<char*, size_t> ReadFileWithAllocator(const char* filePath, Allocator* allocator);
 bool WriteFile(const char* path, const void* data, size_t dataLen);
 
-std::tuple<char*, size_t> ReadFile2(std::string_view path);
-std::tuple<char*, size_t> ReadFile2(const WCHAR* filePath);
-OwnedData ReadFile(std::string_view path);
-OwnedData ReadFile(const char* path);
+std::tuple<char*, size_t> ReadFile(std::string_view path);
 
 bool Exists(std::string_view path);
 
 #if OS_WIN
 FILE* OpenFILE(const WCHAR* path);
 bool Exists(const WCHAR* path);
-char* ReadFileWithAllocator(const WCHAR* path, size_t* fileSizeOut, Allocator* allocator);
 std::tuple<char*, size_t> ReadFileWithAllocator(const WCHAR* filePath, Allocator* allocator);
-OwnedData ReadFile(const WCHAR* path);
+std::tuple<char*, size_t> ReadFile(const WCHAR* filePath);
+
 bool ReadN(const WCHAR* path, char* buf, size_t toRead);
 bool WriteFile(const WCHAR* path, const void* data, size_t dataLen);
 int64_t GetSize(const WCHAR* path);

@@ -506,7 +506,7 @@ static const WCHAR* Md5OfAppExe() {
     if (appPath.empty()) {
         return {};
     }
-    AutoFree d = file::ReadFile2(appPath.data);
+    AutoFree d = file::ReadFile(appPath.data);
     if (d.empty()) {
         return nullptr;
     }

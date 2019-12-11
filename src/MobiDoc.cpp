@@ -984,7 +984,7 @@ bool MobiDoc::IsSupportedFile(const WCHAR* fileName, bool sniff) {
     }
 
     PdbReader pdbReader;
-    auto [data, size] = file::ReadFile2(fileName);
+    auto [data, size] = file::ReadFile(fileName);
     if (!pdbReader.Parse(data, size)) {
         return false;
     }

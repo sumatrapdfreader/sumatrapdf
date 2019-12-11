@@ -106,7 +106,7 @@ class EbookEngine : public BaseEngine {
         if (!fileName) {
             return {};
         }
-        return file::ReadFile2(fileName);
+        return file::ReadFile(fileName.get());
     }
 
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override {

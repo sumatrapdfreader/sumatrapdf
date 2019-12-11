@@ -133,7 +133,7 @@ PdbReader* PdbReader::CreateFromData(const char* d, size_t size) {
 
 PdbReader* PdbReader::CreateFromFile(const char* filePath) {
     std::string_view path(filePath);
-    auto [d, size] = file::ReadFile2(path);
+    auto [d, size] = file::ReadFile(path);
     return CreateFromData(d, size);
 }
 
@@ -141,7 +141,7 @@ PdbReader* PdbReader::CreateFromFile(const char* filePath) {
 #include "WinUtil.h"
 
 PdbReader* PdbReader::CreateFromFile(const WCHAR* filePath) {
-    auto [d, size] = file::ReadFile2(filePath);
+    auto [d, size] = file::ReadFile(filePath);
     return CreateFromData(d, size);
 }
 

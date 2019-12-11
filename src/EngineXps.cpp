@@ -780,7 +780,7 @@ std::tuple<char*, size_t> XpsEngineImpl::GetFileData() {
         return {};
     }
 
-    return file::ReadFile2(FileName());
+    return file::ReadFile(path);
 }
 
 bool XpsEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {

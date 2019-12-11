@@ -2499,7 +2499,7 @@ std::tuple<char*, size_t> PdfEngineImpl::GetFileData() {
     if (!path) {
         return {};
     }
-    return file::ReadFile2(path);
+    return file::ReadFile(path);
 }
 
 bool PdfEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {

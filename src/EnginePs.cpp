@@ -257,7 +257,7 @@ class PsEngineImpl : public BaseEngine {
     }
 
     std::tuple<char*, size_t> GetFileData() override {
-        return file::ReadFile2(fileName);
+        return file::ReadFile(fileName);
     }
 
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override {

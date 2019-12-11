@@ -580,6 +580,7 @@ struct OwnedData {
     OwnedData() = default;
     // takes ownership of data
     OwnedData(const char* data, size_t size = 0);
+    OwnedData(std::tuple<char*, size_t>);
     ~OwnedData();
 
     OwnedData(const OwnedData& other) = delete;

@@ -1153,7 +1153,7 @@ std::tuple<char*, size_t> GetStreamOrFileData(IStream* stream, const WCHAR* file
     if (!filePath) {
         return {};
     }
-    return file::ReadFile2(filePath);
+    return file::ReadFile(filePath);
 }
 
 bool ReadDataFromStream(IStream* stream, void* buffer, size_t len, size_t offset) {

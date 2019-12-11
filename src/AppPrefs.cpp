@@ -58,7 +58,7 @@ bool Load() {
     CrashIf(gGlobalPrefs);
 
     AutoFreeWstr path = GetSettingsPath();
-    AutoFree prefsData = file::ReadFile2(path.get());
+    AutoFree prefsData = file::ReadFile(path.get());
 
     gGlobalPrefs = NewGlobalPrefs(prefsData.data);
     CrashAlwaysIf(!gGlobalPrefs);
@@ -148,7 +148,7 @@ bool Save() {
     if (!path.data) {
         return false;
     }
-    AutoFree prevPrefsData = file::ReadFile2(path.data);
+    AutoFree prevPrefsData = file::ReadFile(path.data);
     size_t prefsDataSize = 0;
     AutoFree prefsData = SerializeGlobalPrefs(gGlobalPrefs, prevPrefsData.data, &prefsDataSize);
 

@@ -350,7 +350,7 @@ static DocTocTree* parseBookmarks(std::string_view sv) {
 }
 
 DocTocTree* ParseBookmarksFile(std::string_view path) {
-    AutoFree d = file::ReadFile2(path);
+    AutoFree d = file::ReadFile(path);
     if (!d.data) {
         return nullptr;
     }
