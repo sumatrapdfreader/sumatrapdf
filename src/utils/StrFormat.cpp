@@ -287,14 +287,23 @@ char* Fmt::GetDup() {
 }
 
 std::tuple<char*, size_t> Format(const char* s, Arg& a1) {
+    UNUSED(s);
+    UNUSED(a1);
     return {};
 }
 
 std::tuple<char*, size_t> Format(const char* s, Arg& a1, Arg& a2) {
+    UNUSED(s);
+    UNUSED(a1);
+    UNUSED(a2);
     return {};
 }
 
 std::tuple<char*, size_t> Format(const char* s, Arg& a1, Arg& a2, Arg& a3) {
+    UNUSED(s);
+    UNUSED(a1);
+    UNUSED(a2);
+    UNUSED(a3);
     return {};
 }
 
