@@ -19,14 +19,54 @@
 namespace EngineManager {
 
 bool IsSupportedFile(const WCHAR* filePath, bool sniff, bool enableEbookEngines) {
-    return PdfEngine::IsSupportedFile(filePath, sniff) || XpsEngine::IsSupportedFile(filePath, sniff) ||
-           DjVuEngine::IsSupportedFile(filePath, sniff) || ImageEngine::IsSupportedFile(filePath, sniff) ||
-           ImageDirEngine::IsSupportedFile(filePath, sniff) || CbxEngine::IsSupportedFile(filePath, sniff) ||
-           PsEngine::IsSupportedFile(filePath, sniff) || ChmEngine::IsSupportedFile(filePath, sniff) ||
-           enableEbookEngines &&
-               (EpubEngine::IsSupportedFile(filePath, sniff) || Fb2Engine::IsSupportedFile(filePath, sniff) ||
-                MobiEngine::IsSupportedFile(filePath, sniff) || PdbEngine::IsSupportedFile(filePath, sniff) ||
-                HtmlEngine::IsSupportedFile(filePath, sniff) || TxtEngine::IsSupportedFile(filePath, sniff));
+    if (EnginePdf::IsSupportedFile(filePath, sniff)) {
+        return true;
+    }
+    if (XpsEngine::IsSupportedFile(filePath, sniff)) {
+        return true;
+    }
+    if (DjVuEngine::IsSupportedFile(filePath, sniff)) {
+        return true;
+    }
+    if (ImageDirEngine::IsSupportedFile(filePath, sniff)) {
+        return true;
+    }
+    if (CbxEngine::IsSupportedFile(filePath, sniff)) {
+        return true;
+    }
+    if (EnginePdf::IsSupportedFile(filePath, sniff)) {
+        return true;
+    }
+    if (PsEngine::IsSupportedFile(filePath, sniff)) {
+        return true;
+    }
+    if (ChmEngine::IsSupportedFile(filePath, sniff)) {
+        return true;
+    }
+
+    if (!enableEbookEngines) {
+        return false;
+    }
+
+    if (EpubEngine::IsSupportedFile(filePath, sniff)) {
+        return true;
+    }
+    if (Fb2Engine::IsSupportedFile(filePath, sniff)) {
+        return true;
+    }
+    if (MobiEngine::IsSupportedFile(filePath, sniff)) {
+        return true;
+    }
+    if (PdbEngine::IsSupportedFile(filePath, sniff)) {
+        return true;
+    }
+    if (HtmlEngine::IsSupportedFile(filePath, sniff)) {
+        return true;
+    }
+    if (TxtEngine::IsSupportedFile(filePath, sniff)) {
+        return true;
+    }
+    return false;
 }
 
 BaseEngine* CreateEngine(const WCHAR* filePath, PasswordUI* pwdUI, bool enableChmEngine, bool enableEbookEngines) {
@@ -35,8 +75,8 @@ BaseEngine* CreateEngine(const WCHAR* filePath, PasswordUI* pwdUI, bool enableCh
     BaseEngine* engine = nullptr;
     bool sniff = false;
 RetrySniffing:
-    if (PdfEngine::IsSupportedFile(filePath, sniff)) {
-        engine = PdfEngine::CreateFromFile(filePath, pwdUI);
+    if (EnginePdf::IsSupportedFile(filePath, sniff)) {
+        engine = EnginePdf::CreateFromFile(filePath, pwdUI);
     } else if (XpsEngine::IsSupportedFile(filePath, sniff)) {
         engine = XpsEngine::CreateFromFile(filePath);
     } else if (DjVuEngine::IsSupportedFile(filePath, sniff)) {
@@ -67,13 +107,17 @@ RetrySniffing:
         engine = TxtEngine::CreateFromFile(filePath);
     }
 
-    if (!engine && !sniff) {
+    if (engine) {
+        return engine;
+    }
+
+    if (!sniff) {
         // try sniffing the file instead
         sniff = true;
         goto RetrySniffing;
     }
-    CrashIf(engine && !IsSupportedFile(filePath, sniff, enableEbookEngines));
 
+    //CrashIf(engine && !IsSupportedFile(filePath, sniff, enableEbookEngines));
     return engine;
 }
 

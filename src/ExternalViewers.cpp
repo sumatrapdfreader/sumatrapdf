@@ -117,7 +117,7 @@ static bool CanViewExternally(TabInfo* tab) {
 
 bool CouldBePDFDoc(TabInfo* tab) {
     // consider any error state a potential PDF document
-    return !tab || !tab->ctrl || tab->GetEngineType() == kindEnginePDF;
+    return !tab || !tab->ctrl || tab->GetEngineType() == kindEnginePdf;
 }
 
 bool CanViewWithFoxit(TabInfo* tab) {

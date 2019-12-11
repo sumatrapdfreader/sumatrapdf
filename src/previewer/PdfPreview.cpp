@@ -335,7 +335,7 @@ IFACEMETHODIMP PreviewBase::DoPreview() {
 }
 
 BaseEngine* CPdfPreview::LoadEngine(IStream* stream) {
-    return PdfEngine::CreateFromStream(stream);
+    return EnginePdf::CreateFromStream(stream);
 }
 
 #ifdef BUILD_XPS_PREVIEW

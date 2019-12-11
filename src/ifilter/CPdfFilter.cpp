@@ -24,7 +24,7 @@ VOID CPdfFilter::CleanUp() {
 HRESULT CPdfFilter::OnInit() {
     CleanUp();
 
-    // TODO: PdfEngine::CreateFromStream never returns with
+    // TODO: EnginePdf::CreateFromStream never returns with
     //       m_pStream instead of a clone - why?
 
     // load content of PDF document into a seekable stream
@@ -38,7 +38,7 @@ HRESULT CPdfFilter::OnInit() {
     if (!stream)
         return E_FAIL;
 
-    m_pdfEngine = PdfEngine::CreateFromStream(stream);
+    m_pdfEngine = EnginePdf::CreateFromStream(stream);
     if (!m_pdfEngine)
         return E_FAIL;
 

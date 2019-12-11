@@ -140,7 +140,7 @@ typedef ScopedGdiObj<HPEN> ScopedPen;
 typedef ScopedGdiObj<HBRUSH> ScopedBrush;
 
 class ScopedHDC {
-    HDC hdc;
+    HDC hdc = nullptr;
 
   public:
     explicit ScopedHDC(HDC hdc) : hdc(hdc) {
@@ -154,8 +154,8 @@ class ScopedHDC {
 };
 
 class ScopedHdcSelect {
-    HDC hdc;
-    HGDIOBJ prev;
+    HDC hdc = nullptr;
+    HGDIOBJ prev = nullptr;
 
   public:
     ScopedHdcSelect(HDC hdc, HGDIOBJ obj) : hdc(hdc) {
@@ -190,8 +190,8 @@ class ScopedGdiPlus {
   protected:
     Gdiplus::GdiplusStartupInput si;
     Gdiplus::GdiplusStartupOutput so;
-    ULONG_PTR token, hookToken;
-    bool noBgThread;
+    ULONG_PTR token, hookToken = 0;
+    bool noBgThread = false;
 
   public:
     // suppress the GDI+ background thread when initiating in WinMain,
@@ -200,12 +200,14 @@ class ScopedGdiPlus {
     explicit ScopedGdiPlus(bool inWinMain = false) : noBgThread(inWinMain) {
         si.SuppressBackgroundThread = noBgThread;
         Gdiplus::GdiplusStartup(&token, &si, &so);
-        if (noBgThread)
+        if (noBgThread) {
             so.NotificationHook(&hookToken);
+        }
     }
     ~ScopedGdiPlus() {
-        if (noBgThread)
+        if (noBgThread) {
             so.NotificationUnhook(hookToken);
+        }
         Gdiplus::GdiplusShutdown(token);
     }
 };

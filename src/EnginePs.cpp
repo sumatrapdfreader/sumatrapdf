@@ -171,7 +171,7 @@ static BaseEngine* ps2pdf(const WCHAR* fileName) {
         return nullptr;
     }
 
-    return PdfEngine::CreateFromStream(stream);
+    return EnginePdf::CreateFromStream(stream);
 }
 
 static BaseEngine* psgz2pdf(const WCHAR* fileName) {

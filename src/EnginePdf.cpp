@@ -25,7 +25,7 @@ extern "C" {
 #include "EngineFzUtil.h"
 #include "EnginePdf.h"
 
-Kind kindEnginePDF = "enginePDF";
+Kind kindEnginePdf = "enginePdf";
 
 // maximum size of a file that's entirely loaded into memory before parsed
 // and displayed; larger files will be kept open while they're displayed
@@ -1226,7 +1226,7 @@ static void installFitzErrorCallbacks(fz_context* ctx) {
 }
 
 PdfEngineImpl::PdfEngineImpl() {
-    kind = kindEnginePDF;
+    kind = kindEnginePdf;
     InitializeCriticalSection(&pagesAccess);
     InitializeCriticalSection(&ctxAccess);
 
@@ -3113,7 +3113,7 @@ BaseEngine* PdfEngineImpl::CreateFromStream(IStream* stream, PasswordUI* pwdUI) 
     return engine;
 }
 
-namespace PdfEngine {
+namespace EnginePdf {
 
 bool IsSupportedFile(const WCHAR* fileName, bool sniff) {
     if (sniff) {
@@ -3138,4 +3138,4 @@ BaseEngine* CreateFromStream(IStream* stream, PasswordUI* pwdUI) {
     return PdfEngineImpl::CreateFromStream(stream, pwdUI);
 }
 
-} // namespace PdfEngine
+} // namespace EnginePdf

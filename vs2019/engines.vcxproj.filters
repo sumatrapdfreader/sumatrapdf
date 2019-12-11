@@ -16,6 +16,7 @@
     <ClInclude Include="..\src\EngineImages.h" />
     <ClInclude Include="..\src\EngineManager.h" />
     <ClInclude Include="..\src\EnginePdf.h" />
+    <ClInclude Include="..\src\EnginePdfMulti.h" />
     <ClInclude Include="..\src\EnginePs.h" />
     <ClInclude Include="..\src\EngineXps.h" />
     <ClInclude Include="..\src\FileModifications.h" />
@@ -37,6 +38,7 @@
     <ClCompile Include="..\src\EngineImages.cpp" />
     <ClCompile Include="..\src\EngineManager.cpp" />
     <ClCompile Include="..\src\EnginePdf.cpp" />
+    <ClCompile Include="..\src\EnginePdfMulti.cpp" />
     <ClCompile Include="..\src\EnginePs.cpp" />
     <ClCompile Include="..\src\EngineXps.cpp" />
     <ClCompile Include="..\src\FileModifications.cpp" />

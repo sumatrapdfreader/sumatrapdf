@@ -434,15 +434,17 @@ static void GetProps(Controller* ctrl, PropertiesLayout* layoutData, bool extend
     str = ctrl->GetProperty(DocumentProperty::Copyright);
     layoutData->AddProperty(_TR("Copyright:"), str);
 
+    DisplayModel* dm = ctrl->AsFixed();
     str = ctrl->GetProperty(DocumentProperty::CreationDate);
-    if (str && ctrl->AsFixed() && kindEnginePDF == ctrl->AsFixed()->engineType)
+    if (str && dm && kindEnginePdf == dm->engineType) {
         ConvDateToDisplay(&str, PdfDateParse);
-    else
+    } else {
         ConvDateToDisplay(&str, IsoDateParse);
+    }
     layoutData->AddProperty(_TR("Created:"), str);
 
     str = ctrl->GetProperty(DocumentProperty::ModificationDate);
-    if (str && ctrl->AsFixed() && kindEnginePDF == ctrl->AsFixed()->engineType)
+    if (str && dm && kindEnginePdf == dm->engineType)
         ConvDateToDisplay(&str, PdfDateParse);
     else
         ConvDateToDisplay(&str, IsoDateParse);
@@ -461,8 +463,8 @@ static void GetProps(Controller* ctrl, PropertiesLayout* layoutData, bool extend
     layoutData->AddProperty(_TR("PDF Optimizations:"), str);
 
     int64_t fileSize = file::GetSize(ctrl->FilePath());
-    if (-1 == fileSize && ctrl->AsFixed()) {
-        BaseEngine* engine = ctrl->AsFixed()->GetEngine();
+    if (-1 == fileSize && dm) {
+        BaseEngine* engine = dm->GetEngine();
         auto [data, fileSizeTmp] = engine->GetFileData();
         if (data) {
             fileSize = fileSizeTmp;
@@ -480,8 +482,8 @@ static void GetProps(Controller* ctrl, PropertiesLayout* layoutData, bool extend
         layoutData->AddProperty(_TR("Number of Pages:"), str);
     }
 
-    if (ctrl->AsFixed()) {
-        str = FormatPageSize(ctrl->AsFixed()->GetEngine(), ctrl->CurrentPageNo(), ctrl->AsFixed()->GetRotation());
+    if (dm) {
+        str = FormatPageSize(dm->GetEngine(), ctrl->CurrentPageNo(), dm->GetRotation());
         if (IsUIRightToLeft() && IsVistaOrGreater()) {
             // ensure that the size remains ungarbled left-to-right
             // (note: XP doesn't know about \u202A...\u202C)

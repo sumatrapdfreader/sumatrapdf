@@ -1110,7 +1110,7 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, Displa
         win->AsEbook()->StartLayouting(state ? state->reparseIdx : 0, displayMode);
     }
 
-    if (HasPermission(Perm_DiskAccess) && tab->GetEngineType() == kindEnginePDF) {
+    if (HasPermission(Perm_DiskAccess) && tab->GetEngineType() == kindEnginePdf) {
         CrashIf(!win->AsFixed() || win->AsFixed()->pdfSync);
         int res = Synchronizer::Create(args.fileName, win->AsFixed()->GetEngine(), &win->AsFixed()->pdfSync);
         // expose SyncTeX in the UI
@@ -2352,7 +2352,7 @@ static void OnMenuSaveAs(WindowInfo* win) {
         engine = model->GetEngine();
     }
     bool canConvertToTXT = engine && !engine->IsImageCollection() && win->currentTab->GetEngineType() != kindEngineTxt;
-    bool canConvertToPDF = engine && win->currentTab->GetEngineType() != kindEnginePDF;
+    bool canConvertToPDF = engine && win->currentTab->GetEngineType() != kindEnginePdf;
 #ifndef DEBUG
     // not ready for document types other than PS and image collections
     if (canConvertToPDF && win->currentTab->GetEngineType() != kindEnginePostScript && !engine->IsImageCollection())
@@ -2368,7 +2368,7 @@ static void OnMenuSaveAs(WindowInfo* win) {
 #endif
     CrashIf(canConvertToTXT &&
             (!engine || engine->IsImageCollection() || kindEngineTxt == win->currentTab->GetEngineType()));
-    CrashIf(canConvertToPDF && (!engine || kindEnginePDF == win->currentTab->GetEngineType()));
+    CrashIf(canConvertToPDF && (!engine || kindEnginePdf == win->currentTab->GetEngineType()));
 
     const WCHAR* defExt = ctrl->DefaultFileExt();
     // Prepare the file filters (use \1 instead of \0 so that the

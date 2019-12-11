@@ -384,7 +384,7 @@ bool OnInverseSearch(WindowInfo* win, int x, int y) {
     if (!HasPermission(Perm_DiskAccess) || gPluginMode)
         return false;
     TabInfo* tab = win->currentTab;
-    if (!tab || tab->GetEngineType() != kindEnginePDF)
+    if (!tab || tab->GetEngineType() != kindEnginePdf)
         return false;
     DisplayModel* dm = tab->AsFixed();
 
@@ -578,19 +578,23 @@ static const WCHAR* HandleSyncCmd(const WCHAR* cmd, DDEACK& ack) {
         }
     }
 
-    if (!win || !win->currentTab || win->currentTab->GetEngineType() != kindEnginePDF)
+    if (!win || !win->currentTab || win->currentTab->GetEngineType() != kindEnginePdf) {
         return next;
-    if (!win->AsFixed()->pdfSync)
+    }
+
+    DisplayModel* dm = win->AsFixed();
+    if (!dm->pdfSync) {
         return next;
+    }
 
     ack.fAck = 1;
-    CrashIf(!win->AsFixed());
     UINT page;
     Vec<RectI> rects;
-    int ret = win->AsFixed()->pdfSync->SourceToDoc(srcFile, line, col, &page, rects);
+    int ret = dm->pdfSync->SourceToDoc(srcFile, line, col, &page, rects);
     ShowForwardSearchResult(win, srcFile, line, col, ret, page, rects);
-    if (setFocus)
+    if (setFocus) {
         win->Focus();
+    }
 
     return next;
 }

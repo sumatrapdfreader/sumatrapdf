@@ -1,7 +1,8 @@
 /* Copyright 2015 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-extern Kind kindEnginePDF;
+extern Kind kindEnginePdf;
+extern Kind kindEnginePdfMulti;
 extern Kind kindEngineXps;
 extern Kind kindEngineDjVu;
 extern Kind kindEngineImage;
