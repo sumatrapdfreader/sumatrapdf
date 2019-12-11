@@ -25,20 +25,30 @@ extern "C" {
 #include "EngineFzUtil.h"
 #include "EnginePdf.h"
 
+// represents .vbkm file
+struct VBkm {
+
+};
+
 Kind kindEnginePdfMulti = "enginePdfMulti";
 
 namespace EnginePdfMulti {
 
-bool IsSupportedFile(const WCHAR* fileName, bool sniff = false) {
+bool IsSupportedFile(const WCHAR* fileName, bool sniff) {
+    if (!sniff) {
+        return str::EndsWithI(fileName, L".vbkm");
+    }
+    // we don't support sniffing
     return false;
 }
 
-BaseEngine* CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI = nullptr) {
+BaseEngine* CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {
     return nullptr;
 }
 
-BaseEngine* CreateFromStream(IStream* stream, PasswordUI* pwdUI = nullptr) {
+BaseEngine* CreateFromStream(IStream* stream, PasswordUI* pwdUI) {
     return nullptr;
 }
 
 } // namespace EnginePdfMulti
+

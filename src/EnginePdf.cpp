@@ -1052,9 +1052,11 @@ class PdfEngineImpl : public BaseEngine {
 
     // make sure to never ask for pagesAccess in an ctxAccess
     // protected critical section in order to avoid deadlocks
-    CRITICAL_SECTION ctxAccess;
+    CRITICAL_SECTION* ctxAccess;
     CRITICAL_SECTION pagesAccess;
 
+    CRITICAL_SECTION mutexes[FZ_LOCK_MAX];
+ 
     RenderedBitmap* GetPageImage(int pageNo, RectD rect, size_t imageIx);
     bool SaveEmbedded(LinkSaverUI& saveUI, int num);
 
@@ -1198,22 +1200,14 @@ class PdfImage : public PageElement {
 // in mupdf_load_system_font.c
 extern "C" void pdf_install_load_system_font_funcs(fz_context* ctx);
 
-// TODO(port): improve locking to use lock
 extern "C" static void fz_lock_context_cs(void* user, int lock) {
-    UNUSED(lock);
     PdfEngineImpl* e = (PdfEngineImpl*)user;
-    // we use a single critical section for all locks,
-    // since that critical section (ctxAccess) should
-    // be guarding all fz_context access anyway and
-    // thus already be in place (in debug builds we
-    // crash if that assertion doesn't hold)
-    EnterCriticalSection(&e->ctxAccess);
+    EnterCriticalSection(&e->mutexes[lock]);
 }
 
 extern "C" static void fz_unlock_context_cs(void* user, int lock) {
-    UNUSED(lock);
     PdfEngineImpl* e = (PdfEngineImpl*)user;
-    LeaveCriticalSection(&e->ctxAccess);
+    LeaveCriticalSection(&e->mutexes[lock]);
 }
 
 static void fz_print_cb(void* user, const char* msg) {
@@ -1227,8 +1221,11 @@ static void installFitzErrorCallbacks(fz_context* ctx) {
 
 PdfEngineImpl::PdfEngineImpl() {
     kind = kindEnginePdf;
+    for (size_t i = 0; i < dimof(mutexes); i++) {
+        InitializeCriticalSection(&mutexes[i]);
+    }
     InitializeCriticalSection(&pagesAccess);
-    InitializeCriticalSection(&ctxAccess);
+    ctxAccess = &mutexes[FZ_LOCK_ALLOC];
 
     fz_locks_ctx.user = this;
     fz_locks_ctx.lock = fz_lock_context_cs;
@@ -1241,7 +1238,9 @@ PdfEngineImpl::PdfEngineImpl() {
 
 PdfEngineImpl::~PdfEngineImpl() {
     EnterCriticalSection(&pagesAccess);
-    EnterCriticalSection(&ctxAccess);
+
+    // TODO: remove this lock and see what happens
+    EnterCriticalSection(ctxAccess);
 
     for (auto* pi : _pages) {
         if (pi->links) {
@@ -1271,8 +1270,11 @@ PdfEngineImpl::~PdfEngineImpl() {
     free(_decryptionKey);
 
     delete tocTree;
-    LeaveCriticalSection(&ctxAccess);
-    DeleteCriticalSection(&ctxAccess);
+
+    for (size_t i = 0; i < dimof(mutexes); i++) {
+        LeaveCriticalSection(&mutexes[i]);
+        DeleteCriticalSection(&mutexes[i]);
+    }
     LeaveCriticalSection(&pagesAccess);
     DeleteCriticalSection(&pagesAccess);
 }
@@ -1300,7 +1302,7 @@ class PasswordCloner : public PasswordUI {
 };
 
 BaseEngine* PdfEngineImpl::Clone() {
-    ScopedCritSec scope(&ctxAccess);
+    ScopedCritSec scope(ctxAccess);
 
     // use this document's encryption key (if any) to load the clone
     PasswordCloner* pwdUI = nullptr;
@@ -1508,7 +1510,7 @@ bool PdfEngineImpl::FinishLoading() {
 
     pdf_document* doc = (pdf_document*)_doc;
 
-    ScopedCritSec scope(&ctxAccess);
+    ScopedCritSec scope(ctxAccess);
 
     // this does the job of pdf_bound_page but without doing pdf_load_page()
     // TODO: time pdf_load_page(), maybe it's not slow?
@@ -1687,7 +1689,7 @@ DocTocTree* PdfEngineImpl::GetTocTree() {
 
 PageDestination* PdfEngineImpl::GetNamedDest(const WCHAR* name) {
     ScopedCritSec scope1(&pagesAccess);
-    ScopedCritSec scope2(&ctxAccess);
+    ScopedCritSec scope2(ctxAccess);
 
     pdf_document* doc = (pdf_document*)_doc;
 
@@ -1749,7 +1751,7 @@ fz_page* PdfEngineImpl::GetFzPage(int pageNo, bool failIfBusy) {
         return page;
     }
 
-    ScopedCritSec ctxScope(&ctxAccess);
+    ScopedCritSec ctxScope(ctxAccess);
     fz_var(page);
     fz_try(ctx) {
         page = fz_load_page(ctx, _doc, pageNo - 1);
@@ -1803,7 +1805,7 @@ RectD PdfEngineImpl::PageMediabox(int pageNo) {
 RectD PdfEngineImpl::PageContentBox(int pageNo, RenderTarget target) {
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo);
 
-    ScopedCritSec scope(&ctxAccess);
+    ScopedCritSec scope(ctxAccess);
 
     fz_cookie fzcookie = {};
     fz_rect rect = fz_empty_rect;
@@ -1871,7 +1873,7 @@ RenderedBitmap* PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
     }
 
     // TODO(port): I don't see why this lock is needed
-    ScopedCritSec cs(&ctxAccess);
+    ScopedCritSec cs(ctxAccess);
 
     fz_rect pRect;
     if (pageRect) {
@@ -1959,7 +1961,7 @@ PageElement* PdfEngineImpl::GetElementAtPos(int pageNo, PointD pt) {
         imageIdx++;
     }
 
-    ScopedCritSec scope(&ctxAccess); // TODO: probably not needed
+    ScopedCritSec scope(ctxAccess); // TODO: probably not needed
     for (auto* annot : pageInfo->pageAnnots) {
         fz_rect rect = pdf_annot_rect(ctx, annot);
         if (!fz_is_pt_in_rect(rect, p)) {
@@ -1989,7 +1991,7 @@ Vec<PageElement*>* PdfEngineImpl::GetElements(int pageNo) {
         imageIdx++;
     }
 
-    ScopedCritSec scope(&ctxAccess); // TODO: possibly not needed
+    ScopedCritSec scope(ctxAccess); // TODO: possibly not needed
     for (auto* annot : pageInfo->pageAnnots) {
         auto comment = makePdfCommentFromPdfAnnot(ctx, pageNo, annot);
         els->Append(comment);
@@ -2012,7 +2014,7 @@ void PdfEngineImpl::LinkifyPageText(FzPageInfo* pageInfo) {
     if (!stext) {
         return;
     }
-    ScopedCritSec scope(&ctxAccess);
+    ScopedCritSec scope(ctxAccess);
     WCHAR* pageText = fz_text_page_to_str(stext, L"\n", &coords);
     if (!pageText) {
         return;
@@ -2124,7 +2126,7 @@ RenderedBitmap* PdfEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
         return nullptr;
     }
 
-    ScopedCritSec scope(&ctxAccess);
+    ScopedCritSec scope(ctxAccess);
 
     fz_image* image = images.at(imageIdx).image;
     RenderedBitmap* bmp = nullptr;
@@ -2154,13 +2156,13 @@ WCHAR* PdfEngineImpl::ExtractPageText(int pageNo, const WCHAR* lineSep, RectI** 
     if (!stext) {
         return nullptr;
     }
-    ScopedCritSec scope(&ctxAccess);
+    ScopedCritSec scope(ctxAccess);
     WCHAR* content = fz_text_page_to_str(stext, lineSep, coordsOut);
     return content;
 }
 
 bool PdfEngineImpl::IsLinearizedFile() {
-    ScopedCritSec scope(&ctxAccess);
+    ScopedCritSec scope(ctxAccess);
     // determine the object number of the very first object in the file
     pdf_document* doc = pdf_document_from_fz_document(ctx, _doc);
     fz_seek(ctx, doc->file, 0, 0);
@@ -2237,7 +2239,7 @@ WCHAR* PdfEngineImpl::ExtractFontList() {
             continue;
         }
 
-        ScopedCritSec scope(&ctxAccess);
+        ScopedCritSec scope(ctxAccess);
         pdf_page* page = pdf_page_from_fz_page(ctx, fzpage);
         fz_try(ctx) {
             pdf_obj* resources = pdf_page_resources(ctx, page);
@@ -2257,7 +2259,7 @@ WCHAR* PdfEngineImpl::ExtractFontList() {
 
     // start ctxAccess scope here so that we don't also have to
     // ask for pagesAccess (as is required for GetFzPage)
-    ScopedCritSec scope(&ctxAccess);
+    ScopedCritSec scope(ctxAccess);
 
     for (pdf_obj* res : resList) {
         pdf_unmark_obj(ctx, res);
@@ -2429,7 +2431,7 @@ bool PdfEngineImpl::SupportsAnnotation(bool forSaving) const {
 
 void PdfEngineImpl::UpdateUserAnnotations(Vec<PageAnnotation>* list) {
     // TODO: use a new critical section to avoid blocking the UI thread
-    ScopedCritSec scope(&ctxAccess);
+    ScopedCritSec scope(ctxAccess);
     if (list)
         userAnnots = *list;
     else
@@ -2445,7 +2447,7 @@ char* PdfEngineImpl::GetDecryptionKey() const {
 PageLayoutType PdfEngineImpl::PreferredLayout() {
     PageLayoutType layout = Layout_Single;
 
-    ScopedCritSec scope(&ctxAccess);
+    ScopedCritSec scope(ctxAccess);
     pdf_document* doc = pdf_document_from_fz_document(ctx, _doc);
     pdf_obj* root = nullptr;
     fz_try(ctx) {
@@ -2479,7 +2481,7 @@ PageLayoutType PdfEngineImpl::PreferredLayout() {
 
 std::tuple<char*, size_t> PdfEngineImpl::GetFileData() {
     u8* res = nullptr;
-    ScopedCritSec scope(&ctxAccess);
+    ScopedCritSec scope(ctxAccess);
 
     pdf_document* doc = pdf_document_from_fz_document(ctx, _doc);
     size_t size = 0;
@@ -2654,7 +2656,7 @@ bool PdfEngineImpl::SaveUserAnnots(const char* pathUtf8) {
         return true;
 
     ScopedCritSec scope1(&pagesAccess);
-    ScopedCritSec scope2(&ctxAccess);
+    ScopedCritSec scope2(ctxAccess);
 
     bool ok = true;
     Vec<PageAnnotation> pageAnnots;
@@ -2703,7 +2705,7 @@ bool PdfEngineImpl::SaveUserAnnots(const char* pathUtf8) {
 }
 
 bool PdfEngineImpl::SaveEmbedded(LinkSaverUI& saveUI, int num) {
-    ScopedCritSec scope(&ctxAccess);
+    ScopedCritSec scope(ctxAccess);
     pdf_document* doc = pdf_document_from_fz_document(ctx, _doc);
 
     fz_buffer* buf = nullptr;
@@ -3090,7 +3092,7 @@ WCHAR* PdfLink::GetDestName() const {
 bool PdfLink::SaveEmbedded(LinkSaverUI& saveUI) {
     CrashIf(!outline || !isAttachment);
 
-    ScopedCritSec scope(&engine->ctxAccess);
+    ScopedCritSec scope(engine->ctxAccess);
     // TODO: hack, we stored stream number in outline->page
     return engine->SaveEmbedded(saveUI, outline->page);
 }
