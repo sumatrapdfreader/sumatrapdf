@@ -185,10 +185,12 @@ struct AutoFree {
         str::Free(data);
     }
 
+#if 0
     AutoFree& operator=(AutoFree& other) = delete;
     AutoFree& operator=(AutoFree&& other) = delete;
     AutoFree& operator=(const AutoFree& other) = delete;
     AutoFree& operator=(const AutoFree&& other) = delete;
+#endif
 
     char* get() const {
         return data;
@@ -209,31 +211,48 @@ struct AutoFree {
     }
 };
 
-#if 0
 struct AutoFreeWstr {
-    WCHAR* d = nullptr;
+    WCHAR* data = nullptr;
 
+  protected:
+    // must be accessed via size() as it might
+    // not be provided initially so to avoid mistakes
+    // we'll calculate it on demand if needed
+    size_t len = 0;
+
+  public:
     AutoFreeWstr() = default;
 
     AutoFreeWstr(const WCHAR* p) {
-        d = (WCHAR*)p;
+        data = (WCHAR*)p;
     }
 
     ~AutoFreeWstr() {
-        str::Free(d);
+        str::Free(data);
     }
 
+#if 0
     AutoFreeWstr& operator=(AutoFreeWstr& other) = delete;
     AutoFreeWstr& operator=(AutoFreeWstr&& other) = delete;
     AutoFreeWstr& operator=(const AutoFreeWstr& other) = delete;
     AutoFreeWstr& operator=(const AutoFreeWstr&& other) = delete;
+#endif
 
     WCHAR* get() const {
-        return d;
+        return data;
     }
 
-    std::wstring_view as_view() const {
-        return {d, str::Len(d)};
+    // for convenince, we calculate the size if wasn't provided
+    // by the caller
+    size_t size() {
+        if (len == 0) {
+            len = str::Len(data);
+        }
+        return len;
+    }
+
+    std::wstring_view as_view() {
+        size_t sz = str::Len(data);
+        return {data, sz};
     }
 };
-#endif

@@ -57,63 +57,63 @@ WCHAR* GetSettingsPath() {
 bool Load() {
     CrashIf(gGlobalPrefs);
 
-    AutoFreeW path(GetSettingsPath());
-    auto [prefsData, prefsDataSize] = file::ReadFile2(path.get());
-    AutoFreeStr toFree(prefsData);
+    AutoFreeWstr path = GetSettingsPath();
+    AutoFree prefsData = file::ReadFile2(path.get());
 
-    gGlobalPrefs = NewGlobalPrefs(prefsData);
+    gGlobalPrefs = NewGlobalPrefs(prefsData.data);
     CrashAlwaysIf(!gGlobalPrefs);
+    auto* gprefs = gGlobalPrefs;
 
     // in pre-release builds between 3.1.10079 and 3.1.10377,
     // RestoreSession was a string with the additional option "auto"
     // TODO: remove this after 3.2 has been released
 #if defined(DEBUG) || defined(SVN_PRE_RELEASE_VER)
-    if (!gGlobalPrefs->restoreSession && prefsData && str::Find(prefsData, "\nRestoreSession = auto")) {
-        gGlobalPrefs->restoreSession = true;
+    if (!gprefs->restoreSession && prefsData.data && str::Find(prefsData.data, "\nRestoreSession = auto")) {
+        gprefs->restoreSession = true;
     }
 #endif
 
 #ifdef DISABLE_EBOOK_UI
     if (!prefsData || !str::Find(prefsData, "UseFixedPageUI =")) {
-        gGlobalPrefs->ebookUI.useFixedPageUI = gGlobalPrefs->chmUI.useFixedPageUI = true;
+        gprefs->ebookUI.useFixedPageUI = gprefs->chmUI.useFixedPageUI = true;
     }
 #endif
 #ifdef DISABLE_TABS
     if (!prefsData || !str::Find(prefsData, "UseTabs =")) {
-        gGlobalPrefs->useTabs = false;
+        gprefs->useTabs = false;
     }
 #endif
 
-    if (!gGlobalPrefs->uiLanguage || !trans::ValidateLangCode(gGlobalPrefs->uiLanguage)) {
+    if (!gprefs->uiLanguage || !trans::ValidateLangCode(gprefs->uiLanguage)) {
         // guess the ui language on first start
-        str::ReplacePtr(&gGlobalPrefs->uiLanguage, trans::DetectUserLang());
+        str::ReplacePtr(&gprefs->uiLanguage, trans::DetectUserLang());
     }
-    gGlobalPrefs->lastPrefUpdate = file::GetModificationTime(path.get());
-    gGlobalPrefs->defaultDisplayModeEnum = conv::ToDisplayMode(gGlobalPrefs->defaultDisplayMode, DM_AUTOMATIC);
-    gGlobalPrefs->defaultZoomFloat = conv::ToZoom(gGlobalPrefs->defaultZoom, ZOOM_ACTUAL_SIZE);
-    CrashIf(!IsValidZoom(gGlobalPrefs->defaultZoomFloat));
+    gprefs->lastPrefUpdate = file::GetModificationTime(path.get());
+    gprefs->defaultDisplayModeEnum = conv::ToDisplayMode(gprefs->defaultDisplayMode, DM_AUTOMATIC);
+    gprefs->defaultZoomFloat = conv::ToZoom(gprefs->defaultZoom, ZOOM_ACTUAL_SIZE);
+    CrashIf(!IsValidZoom(gprefs->defaultZoomFloat));
 
-    int weekDiff = GetWeekCount() - gGlobalPrefs->openCountWeek;
-    gGlobalPrefs->openCountWeek = GetWeekCount();
+    int weekDiff = GetWeekCount() - gprefs->openCountWeek;
+    gprefs->openCountWeek = GetWeekCount();
     if (weekDiff > 0) {
         // "age" openCount statistics (cut in in half after every week)
-        for (DisplayState* ds : *gGlobalPrefs->fileStates) {
+        for (DisplayState* ds : *gprefs->fileStates) {
             ds->openCount >>= weekDiff;
         }
     }
 
     // make sure that zoom levels are in the order expected by DisplayModel
-    gGlobalPrefs->zoomLevels->Sort(cmpFloat);
-    while (gGlobalPrefs->zoomLevels->size() > 0 && gGlobalPrefs->zoomLevels->at(0) < ZOOM_MIN) {
-        gGlobalPrefs->zoomLevels->PopAt(0);
+    gprefs->zoomLevels->Sort(cmpFloat);
+    while (gprefs->zoomLevels->size() > 0 && gprefs->zoomLevels->at(0) < ZOOM_MIN) {
+        gprefs->zoomLevels->PopAt(0);
     }
-    while (gGlobalPrefs->zoomLevels->size() > 0 && gGlobalPrefs->zoomLevels->Last() > ZOOM_MAX) {
-        gGlobalPrefs->zoomLevels->Pop();
+    while (gprefs->zoomLevels->size() > 0 && gprefs->zoomLevels->Last() > ZOOM_MAX) {
+        gprefs->zoomLevels->Pop();
     }
 
     // TODO: verify that all states have a non-nullptr file path?
-    gFileHistory.UpdateStatesSource(gGlobalPrefs->fileStates);
-    SetDefaultEbookFont(gGlobalPrefs->ebookUI.fontName, gGlobalPrefs->ebookUI.fontSize);
+    gFileHistory.UpdateStatesSource(gprefs->fileStates);
+    SetDefaultEbookFont(gprefs->ebookUI.fontName, gprefs->ebookUI.fontSize);
 
     if (!file::Exists(path.get())) {
         Save();
