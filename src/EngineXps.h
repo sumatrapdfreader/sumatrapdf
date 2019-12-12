@@ -2,5 +2,5 @@
    License: GPLv3 */
 
 bool IsXpsEngineSupportedFile(const WCHAR* fileName, bool sniff = false);
-BaseEngine* CreateXpsEngineFromFile(const WCHAR* fileName);
-BaseEngine* CreateXpsEngineFromStream(IStream* stream);
+EngineBase* CreateXpsEngineFromFile(const WCHAR* fileName);
+EngineBase* CreateXpsEngineFromStream(IStream* stream);

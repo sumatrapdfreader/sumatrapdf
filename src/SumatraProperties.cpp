@@ -229,7 +229,7 @@ PaperFormat GetPaperFormat(SizeD size) {
 
 // format page size according to locale (e.g. "29.7 x 21.0 cm" or "11.69 x 8.27 in")
 // Caller needs to free the result
-static WCHAR* FormatPageSize(BaseEngine* engine, int pageNo, int rotation) {
+static WCHAR* FormatPageSize(EngineBase* engine, int pageNo, int rotation) {
     RectD mediabox = engine->PageMediabox(pageNo);
     SizeD size = engine->Transform(mediabox, pageNo, 1.0f / engine->GetFileDPI(), rotation).Size();
 
@@ -313,7 +313,7 @@ static WCHAR* FormatPermissions(Controller* ctrl) {
 
     WStrVec denials;
 
-    BaseEngine* engine = ctrl->AsFixed()->GetEngine();
+    EngineBase* engine = ctrl->AsFixed()->GetEngine();
     if (!engine->AllowsPrinting()) {
         denials.Push(str::Dup(_TR("printing document")));
     }
@@ -467,7 +467,7 @@ static void GetProps(Controller* ctrl, PropertiesLayout* layoutData, bool extend
 
     int64_t fileSize = file::GetSize(ctrl->FilePath());
     if (-1 == fileSize && dm) {
-        BaseEngine* engine = dm->GetEngine();
+        EngineBase* engine = dm->GetEngine();
         auto [data, fileSizeTmp] = engine->GetFileData();
         if (data) {
             fileSize = fileSizeTmp;

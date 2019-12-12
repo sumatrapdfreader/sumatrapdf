@@ -707,7 +707,6 @@ static void DrawDocument(WindowInfo* win, HDC hdc, RECT* rcArea) {
 
         if (!renderOutOfDateCue) {
             continue;
-
         }
 
         HDC bmpDC = CreateCompatibleDC(hdc);

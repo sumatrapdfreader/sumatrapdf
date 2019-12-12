@@ -10,7 +10,7 @@ inline bool isWordChar(WCHAR c) {
 }
 
 class PageTextCache {
-    BaseEngine* engine = nullptr;
+    EngineBase* engine = nullptr;
     RectI** coords = nullptr;
     WCHAR** text = nullptr;
     int* lens = nullptr;
@@ -21,7 +21,7 @@ class PageTextCache {
     CRITICAL_SECTION access;
 
   public:
-    explicit PageTextCache(BaseEngine* engine);
+    explicit PageTextCache(EngineBase* engine);
     ~PageTextCache();
 
     bool HasData(int pageNo);
@@ -38,7 +38,7 @@ struct TextSel {
 
 class TextSelection {
   public:
-    TextSelection(BaseEngine* engine, PageTextCache* textCache);
+    TextSelection(EngineBase* engine, PageTextCache* textCache);
     ~TextSelection();
 
     bool IsOverGlyph(int pageNo, double x, double y);
@@ -63,7 +63,7 @@ class TextSelection {
     int startPage, endPage;
     int startGlyph, endGlyph;
 
-    BaseEngine* engine;
+    EngineBase* engine;
     PageTextCache* textCache;
 
     int FindClosestGlyph(int pageNo, double x, double y);

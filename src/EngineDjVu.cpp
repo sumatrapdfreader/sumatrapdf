@@ -192,11 +192,11 @@ class DjVuContext {
 
 static DjVuContext gDjVuContext;
 
-class DjVuEngineImpl : public BaseEngine {
+class DjVuEngineImpl : public EngineBase {
   public:
     DjVuEngineImpl();
     virtual ~DjVuEngineImpl();
-    BaseEngine* Clone() override {
+    EngineBase* Clone() override {
         if (stream != nullptr) {
             return CreateFromStream(stream);
         }
@@ -259,8 +259,8 @@ class DjVuEngineImpl : public BaseEngine {
     WCHAR* GetPageLabel(int pageNo) const override;
     int GetPageByLabel(const WCHAR* label) const override;
 
-    static BaseEngine* CreateFromFile(const WCHAR* fileName);
-    static BaseEngine* CreateFromStream(IStream* stream);
+    static EngineBase* CreateFromFile(const WCHAR* fileName);
+    static EngineBase* CreateFromStream(IStream* stream);
 
   protected:
     IStream* stream = nullptr;
@@ -1060,7 +1060,7 @@ WCHAR* DjVuEngineImpl::GetPageLabel(int pageNo) const {
         if (pageNo - 1 == info.pageno && !str::Eq(info.title, info.id))
             return str::conv::FromUtf8(info.title);
     }
-    return BaseEngine::GetPageLabel(pageNo);
+    return EngineBase::GetPageLabel(pageNo);
 }
 
 int DjVuEngineImpl::GetPageByLabel(const WCHAR* label) const {
@@ -1071,10 +1071,10 @@ int DjVuEngineImpl::GetPageByLabel(const WCHAR* label) const {
             return info.pageno + 1;
         }
     }
-    return BaseEngine::GetPageByLabel(label);
+    return EngineBase::GetPageByLabel(label);
 }
 
-BaseEngine* DjVuEngineImpl::CreateFromFile(const WCHAR* fileName) {
+EngineBase* DjVuEngineImpl::CreateFromFile(const WCHAR* fileName) {
     DjVuEngineImpl* engine = new DjVuEngineImpl();
     if (!engine->Load(fileName)) {
         delete engine;
@@ -1083,7 +1083,7 @@ BaseEngine* DjVuEngineImpl::CreateFromFile(const WCHAR* fileName) {
     return engine;
 }
 
-BaseEngine* DjVuEngineImpl::CreateFromStream(IStream* stream) {
+EngineBase* DjVuEngineImpl::CreateFromStream(IStream* stream) {
     DjVuEngineImpl* engine = new DjVuEngineImpl();
     if (!engine->Load(stream)) {
         delete engine;
@@ -1099,10 +1099,10 @@ bool IsDjVuEngineSupportedFile(const WCHAR* fileName, bool sniff) {
     return str::EndsWithI(fileName, L".djvu");
 }
 
-BaseEngine* CreateDjVuEngineFromFile(const WCHAR* fileName) {
+EngineBase* CreateDjVuEngineFromFile(const WCHAR* fileName) {
     return DjVuEngineImpl::CreateFromFile(fileName);
 }
 
-BaseEngine* CreateDjVuEngineFromStream(IStream* stream) {
+EngineBase* CreateDjVuEngineFromStream(IStream* stream) {
     return DjVuEngineImpl::CreateFromStream(stream);
 }

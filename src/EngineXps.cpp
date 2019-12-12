@@ -185,11 +185,11 @@ static xps_document* xps_document_from_fz_document(fz_document* doc) {
     return (xps_document*)doc;
 }
 
-class XpsEngineImpl : public BaseEngine {
+class XpsEngineImpl : public EngineBase {
   public:
     XpsEngineImpl();
     virtual ~XpsEngineImpl();
-    BaseEngine* Clone() override;
+    EngineBase* Clone() override;
 
     int PageCount() const override {
         CrashIf(pageCount < 0);
@@ -225,8 +225,8 @@ class XpsEngineImpl : public BaseEngine {
     PageDestination* GetNamedDest(const WCHAR* name) override;
     DocTocTree* GetTocTree() override;
 
-    static BaseEngine* CreateFromFile(const WCHAR* fileName);
-    static BaseEngine* CreateFromStream(IStream* stream);
+    static EngineBase* CreateFromFile(const WCHAR* fileName);
+    static EngineBase* CreateFromStream(IStream* stream);
 
   public:
     // make sure to never ask for _pagesAccess in an ctxAccess
@@ -426,7 +426,7 @@ XpsEngineImpl::~XpsEngineImpl() {
     DeleteCriticalSection(&_pagesAccess);
 }
 
-BaseEngine* XpsEngineImpl::Clone() {
+EngineBase* XpsEngineImpl::Clone() {
     ScopedCritSec scope(&ctxAccess);
 
     // TODO: we used to support cloning streams
@@ -1213,7 +1213,7 @@ RectD XpsLink::GetDestRect() const {
     return result;
 }
 
-BaseEngine* XpsEngineImpl::CreateFromFile(const WCHAR* fileName) {
+EngineBase* XpsEngineImpl::CreateFromFile(const WCHAR* fileName) {
     XpsEngineImpl* engine = new XpsEngineImpl();
     if (!engine || !fileName || !engine->Load(fileName)) {
         delete engine;
@@ -1222,7 +1222,7 @@ BaseEngine* XpsEngineImpl::CreateFromFile(const WCHAR* fileName) {
     return engine;
 }
 
-BaseEngine* XpsEngineImpl::CreateFromStream(IStream* stream) {
+EngineBase* XpsEngineImpl::CreateFromStream(IStream* stream) {
     XpsEngineImpl* engine = new XpsEngineImpl();
     if (!engine->Load(stream)) {
         delete engine;
@@ -1254,10 +1254,10 @@ bool IsXpsEngineSupportedFile(const WCHAR* fileName, bool sniff) {
     return res;
 }
 
-BaseEngine* CreateXpsEngineFromFile(const WCHAR* fileName) {
+EngineBase* CreateXpsEngineFromFile(const WCHAR* fileName) {
     return XpsEngineImpl::CreateFromFile(fileName);
 }
 
-BaseEngine* CreateXpsEngineFromStream(IStream* stream) {
+EngineBase* CreateXpsEngineFromStream(IStream* stream) {
     return XpsEngineImpl::CreateFromStream(stream);
 }

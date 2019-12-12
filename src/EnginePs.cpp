@@ -119,7 +119,7 @@ static RectI ExtractDSCPageSize(const WCHAR* fileName) {
     return RectI();
 }
 
-static BaseEngine* ps2pdf(const WCHAR* fileName) {
+static EngineBase* ps2pdf(const WCHAR* fileName) {
     // TODO: read from gswin32c's stdout instead of using a TEMP file
     AutoFreeW shortPath(path::ShortPath(fileName));
     AutoFreeW tmpFile(path::GetTempPath(L"PsE"));
@@ -174,7 +174,7 @@ static BaseEngine* ps2pdf(const WCHAR* fileName) {
     return CreateEnginePdfFromStream(stream);
 }
 
-static BaseEngine* psgz2pdf(const WCHAR* fileName) {
+static EngineBase* psgz2pdf(const WCHAR* fileName) {
     AutoFreeW tmpFile(path::GetTempPath(L"PsE"));
     ScopedFile tmpFileScope(tmpFile);
     if (!tmpFile) {
@@ -208,7 +208,7 @@ static BaseEngine* psgz2pdf(const WCHAR* fileName) {
 
 // PsEngineImpl is mostly a proxy for a PdfEngine that's fed whatever
 // the ps2pdf conversion from Ghostscript returns
-class PsEngineImpl : public BaseEngine {
+class PsEngineImpl : public EngineBase {
   public:
     PsEngineImpl() {
         kind = kindEnginePostScript;
@@ -219,8 +219,8 @@ class PsEngineImpl : public BaseEngine {
         delete pdfEngine;
     }
 
-    BaseEngine* Clone() override {
-        BaseEngine* newEngine = pdfEngine->Clone();
+    EngineBase* Clone() override {
+        EngineBase* newEngine = pdfEngine->Clone();
         if (!newEngine)
             return nullptr;
         PsEngineImpl* clone = new PsEngineImpl();
@@ -324,10 +324,10 @@ class PsEngineImpl : public BaseEngine {
         return pdfEngine->GetDecryptionKey();
     }
 
-    static BaseEngine* CreateFromFile(const WCHAR* fileName);
+    static EngineBase* CreateFromFile(const WCHAR* fileName);
 
   protected:
-    BaseEngine* pdfEngine = nullptr;
+    EngineBase* pdfEngine = nullptr;
 
     bool Load(const WCHAR* fileName) {
         AssertCrash(!FileName() && !pdfEngine);
@@ -358,7 +358,7 @@ class PsEngineImpl : public BaseEngine {
     }
 };
 
-BaseEngine* PsEngineImpl::CreateFromFile(const WCHAR* fileName) {
+EngineBase* PsEngineImpl::CreateFromFile(const WCHAR* fileName) {
     PsEngineImpl* engine = new PsEngineImpl();
     if (!engine->Load(fileName)) {
         delete engine;
@@ -393,6 +393,6 @@ bool IsPsEngineSupportedFile(const WCHAR* fileName, bool sniff) {
     return str::EndsWithI(fileName, L".ps") || str::EndsWithI(fileName, L".ps.gz") || str::EndsWithI(fileName, L".eps");
 }
 
-BaseEngine* CreatePsEngineFromFile(const WCHAR* fileName) {
+EngineBase* CreatePsEngineFromFile(const WCHAR* fileName) {
     return PsEngineImpl::CreateFromFile(fileName);
 }

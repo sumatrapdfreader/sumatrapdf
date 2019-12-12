@@ -8,7 +8,7 @@
 #include "EngineBase.h"
 #include "TextSelection.h"
 
-PageTextCache::PageTextCache(BaseEngine* engine) : engine(engine) {
+PageTextCache::PageTextCache(EngineBase* engine) : engine(engine) {
     int count = engine->PageCount();
     coords = AllocArray<RectI*>(count);
     text = AllocArray<WCHAR*>(count);
@@ -64,7 +64,7 @@ const WCHAR* PageTextCache::GetData(int pageNo, int* lenOut, RectI** coordsOut) 
     return text[pageNo - 1];
 }
 
-TextSelection::TextSelection(BaseEngine* engine, PageTextCache* textCache)
+TextSelection::TextSelection(EngineBase* engine, PageTextCache* textCache)
     : engine(engine), textCache(textCache), startPage(-1), endPage(-1), startGlyph(-1), endGlyph(-1) {
     result.len = 0;
     result.pages = nullptr;

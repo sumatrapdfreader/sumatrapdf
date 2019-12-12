@@ -42,7 +42,7 @@ struct PdfsyncPoint {
 // Synchronizer based on .pdfsync file generated with the pdfsync tex package
 class Pdfsync : public Synchronizer {
   public:
-    Pdfsync(const WCHAR* syncfilename, BaseEngine* engine) : Synchronizer(syncfilename), engine(engine) {
+    Pdfsync(const WCHAR* syncfilename, EngineBase* engine) : Synchronizer(syncfilename), engine(engine) {
         AssertCrash(str::EndsWithI(syncfilename, PDFSYNC_EXTENSION));
     }
 
@@ -53,7 +53,7 @@ class Pdfsync : public Synchronizer {
     int RebuildIndex();
     UINT SourceToRecord(const WCHAR* srcfilename, UINT line, UINT col, Vec<size_t>& records);
 
-    BaseEngine* engine;              // needed for converting between coordinate systems
+    EngineBase* engine;              // needed for converting between coordinate systems
     WStrVec srcfiles;                // source file names
     Vec<PdfsyncLine> lines;          // record-to-line mapping
     Vec<PdfsyncPoint> points;        // record-to-point mapping
@@ -64,7 +64,7 @@ class Pdfsync : public Synchronizer {
 // Synchronizer based on .synctex file generated with SyncTex
 class SyncTex : public Synchronizer {
   public:
-    SyncTex(const WCHAR* syncfilename, BaseEngine* engine)
+    SyncTex(const WCHAR* syncfilename, EngineBase* engine)
         : Synchronizer(syncfilename), engine(engine), scanner(nullptr) {
         AssertCrash(str::EndsWithI(syncfilename, SYNCTEX_EXTENSION));
     }
@@ -78,7 +78,7 @@ class SyncTex : public Synchronizer {
   private:
     int RebuildIndex();
 
-    BaseEngine* engine; // needed for converting between coordinate systems
+    EngineBase* engine; // needed for converting between coordinate systems
     synctex_scanner_t scanner;
 };
 
@@ -117,7 +117,7 @@ WCHAR* Synchronizer::PrependDir(const WCHAR* filename) const {
 // Create a Synchronizer object for a PDF file.
 // It creates either a SyncTex or PdfSync object
 // based on the synchronization file found in the folder containing the PDF file.
-int Synchronizer::Create(const WCHAR* pdffilename, BaseEngine* engine, Synchronizer** sync) {
+int Synchronizer::Create(const WCHAR* pdffilename, EngineBase* engine, Synchronizer** sync) {
     if (!sync || !engine)
         return PDFSYNCERR_INVALID_ARGUMENT;
 

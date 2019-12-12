@@ -3,7 +3,7 @@
 
 enum PDF_FILTER_STATE { STATE_PDF_START, STATE_PDF_AUTHOR, STATE_PDF_TITLE, STATE_PDF_DATE, STATE_PDF_CONTENT, STATE_PDF_END };
 
-class BaseEngine;
+class EngineBase;
 
 class CPdfFilter : public CFilterBase
 {
@@ -25,5 +25,5 @@ public:
 private:
     PDF_FILTER_STATE m_state;
     int m_iPageNo;
-    BaseEngine *m_pdfEngine;
+    EngineBase *m_pdfEngine;
 };

@@ -30,11 +30,11 @@ struct VBkm {};
 
 Kind kindEnginePdfMulti = "enginePdfMulti";
 
-class EnginePdfMultiImpl : public BaseEngine {
+class EnginePdfMultiImpl : public EngineBase {
   public:
     EnginePdfMultiImpl();
     virtual ~EnginePdfMultiImpl();
-    BaseEngine* Clone() override;
+    EngineBase* Clone() override;
 
     int PageCount() const override;
 
@@ -76,7 +76,7 @@ class EnginePdfMultiImpl : public BaseEngine {
 
     bool Load(const WCHAR* fileName, PasswordUI* pwdUI);
 
-    static BaseEngine* CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI);
+    static EngineBase* CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI);
 
   protected:
     int pageCount = -1;
@@ -92,7 +92,7 @@ EnginePdfMultiImpl::EnginePdfMultiImpl() {
 
 EnginePdfMultiImpl::~EnginePdfMultiImpl() {
 }
-BaseEngine* EnginePdfMultiImpl::Clone() {
+EngineBase* EnginePdfMultiImpl::Clone() {
     return nullptr;
 }
 
@@ -194,7 +194,7 @@ bool EnginePdfMultiImpl::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
     return false;
 }
 
-BaseEngine* EnginePdfMultiImpl::CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {
+EngineBase* EnginePdfMultiImpl::CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {
     if (str::IsEmpty(fileName)) {
         return nullptr;
     }
@@ -214,6 +214,6 @@ bool IsEnginePdfMultiSupportedFile(const WCHAR* fileName, bool sniff) {
     return str::EndsWithI(fileName, L".vbkm");
 }
 
-BaseEngine* CreateEnginePdfMultiFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {
+EngineBase* CreateEnginePdfMultiFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {
     return EnginePdfMultiImpl::CreateFromFile(fileName, pwdUI);
 }

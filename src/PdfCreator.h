@@ -20,7 +20,7 @@ class PdfCreator {
     bool AddImagePage(const char* data, size_t len, float imgDpi = 0);
 
     bool SetProperty(DocumentProperty prop, const WCHAR* value);
-    bool CopyProperties(BaseEngine* engine);
+    bool CopyProperties(EngineBase* engine);
 
     bool SaveToFile(const char* filePath);
 
@@ -28,5 +28,5 @@ class PdfCreator {
     static void SetProducerName(const WCHAR* name);
 
     // creates a simple PDF with all pages rendered as a single image
-    static bool RenderToFile(const char* pdfFileName, BaseEngine* engine, int dpi = 150);
+    static bool RenderToFile(const char* pdfFileName, EngineBase* engine, int dpi = 150);
 };

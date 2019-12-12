@@ -2,5 +2,5 @@
    License: GPLv3 */
 
 bool IsDjVuEngineSupportedFile(const WCHAR* fileName, bool sniff = false);
-BaseEngine* CreateDjVuEngineFromFile(const WCHAR* fileName);
-BaseEngine* CreateDjVuEngineFromStream(IStream* stream);
+EngineBase* CreateDjVuEngineFromFile(const WCHAR* fileName);
+EngineBase* CreateDjVuEngineFromStream(IStream* stream);

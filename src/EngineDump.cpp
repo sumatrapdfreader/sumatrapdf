@@ -54,7 +54,7 @@ static OwnedData Escape(WCHAR* string) {
     return str::conv::ToUtf8(escaped.Get());
 }
 
-void DumpProperties(BaseEngine* engine, bool fullDump) {
+void DumpProperties(EngineBase* engine, bool fullDump) {
     Out("\t<Properties\n");
     OwnedData str = Escape(str::Dup(engine->FileName()));
     Out("\t\tFilePath=\"%s\"\n", str.Get());
@@ -129,7 +129,7 @@ void DumpProperties(BaseEngine* engine, bool fullDump) {
 }
 
 // caller must free() the result
-char* DestRectToStr(BaseEngine* engine, PageDestination* dest) {
+char* DestRectToStr(EngineBase* engine, PageDestination* dest) {
     if (AutoFreeW(dest->GetDestName())) {
         OwnedData name(Escape(dest->GetDestName()));
         return str::Format("Name=\"%s\"", name.Get());
@@ -154,7 +154,7 @@ char* DestRectToStr(BaseEngine* engine, PageDestination* dest) {
     return nullptr;
 }
 
-void DumpTocItem(BaseEngine* engine, DocTocItem* item, int level, int& idCounter) {
+void DumpTocItem(EngineBase* engine, DocTocItem* item, int level, int& idCounter) {
     for (; item; item = item->next) {
         OwnedData title(Escape(str::Dup(item->title)));
         for (int i = 0; i < level; i++)
@@ -189,7 +189,7 @@ void DumpTocItem(BaseEngine* engine, DocTocItem* item, int level, int& idCounter
     }
 }
 
-void DumpToc(BaseEngine* engine) {
+void DumpToc(EngineBase* engine) {
     DocTocTree* tree = engine->GetTocTree();
     if (!tree) {
         return;
@@ -249,7 +249,7 @@ const char* PageDestToStr(PageDestType destType) {
     return nullptr;
 }
 
-void DumpPageContent(BaseEngine* engine, int pageNo, bool fullDump) {
+void DumpPageContent(EngineBase* engine, int pageNo, bool fullDump) {
     // ensure that the page is loaded
     engine->BenchLoadPage(pageNo);
 
@@ -307,7 +307,7 @@ void DumpPageContent(BaseEngine* engine, int pageNo, bool fullDump) {
     Out("\t</Page>\n");
 }
 
-void DumpThumbnail(BaseEngine* engine) {
+void DumpThumbnail(EngineBase* engine) {
     RectD rect = engine->Transform(engine->PageMediabox(1), 1, 1.0, 0);
     if (rect.IsEmpty()) {
         Out("\t<Thumbnail />\n");
@@ -334,7 +334,7 @@ void DumpThumbnail(BaseEngine* engine) {
     delete bmp;
 }
 
-void DumpData(BaseEngine* engine, bool fullDump) {
+void DumpData(EngineBase* engine, bool fullDump) {
     Out(UTF8_BOM);
     Out("<?xml version=\"1.0\"?>\n");
     Out("<EngineDump>\n");
@@ -368,7 +368,7 @@ bool CheckRenderPath(const WCHAR* path) {
     return true;
 }
 
-bool RenderDocument(BaseEngine* engine, const WCHAR* renderPath, float zoom = 1.f, bool silent = false) {
+bool RenderDocument(EngineBase* engine, const WCHAR* renderPath, float zoom = 1.f, bool silent = false) {
     if (!CheckRenderPath(renderPath))
         return false;
 
@@ -533,7 +533,7 @@ int main(int argc, char** argv) {
     }
 
     PasswordHolder pwdUI(password);
-    BaseEngine* engine = EngineManager::CreateEngine(filePath, &pwdUI);
+    EngineBase* engine = EngineManager::CreateEngine(filePath, &pwdUI);
 #ifdef DEBUG
     bool isEngineDjVu = IsOfKind(engine, kindEngineDjVu);
     bool couldLeak = isEngineDjVu || IsDjVuEngineSupportedFile(filePath) || IsDjVuEngineSupportedFile(filePath, true);

@@ -142,7 +142,7 @@ static RectD GetTileRect(RectD pagerect, TilePosition tile) {
 }
 
 // get the coordinates of a specific tile
-static RectI GetTileRectDevice(BaseEngine* engine, int pageNo, int rotation, float zoom, TilePosition tile) {
+static RectI GetTileRectDevice(EngineBase* engine, int pageNo, int rotation, float zoom, TilePosition tile) {
     RectD mediabox = engine->PageMediabox(pageNo);
     if (tile.res > 0 && tile.res != INVALID_TILE_RES)
         mediabox = GetTileRect(mediabox, tile);
@@ -150,12 +150,12 @@ static RectI GetTileRectDevice(BaseEngine* engine, int pageNo, int rotation, flo
     return pixelbox.Round();
 }
 
-static RectD GetTileRectUser(BaseEngine* engine, int pageNo, int rotation, float zoom, TilePosition tile) {
+static RectD GetTileRectUser(EngineBase* engine, int pageNo, int rotation, float zoom, TilePosition tile) {
     RectI pixelbox = GetTileRectDevice(engine, pageNo, rotation, zoom, tile);
     return engine->Transform(pixelbox.Convert<double>(), pageNo, zoom, rotation, true);
 }
 
-static RectI GetTileOnScreen(BaseEngine* engine, int pageNo, int rotation, float zoom, TilePosition tile,
+static RectI GetTileOnScreen(EngineBase* engine, int pageNo, int rotation, float zoom, TilePosition tile,
                              RectI pageOnScreen) {
     RectI bbox = GetTileRectDevice(engine, pageNo, rotation, zoom, tile);
     bbox.Offset(pageOnScreen.x, pageOnScreen.y);

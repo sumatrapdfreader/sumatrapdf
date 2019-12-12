@@ -21,7 +21,7 @@
 #include "PdfPreviewBase.h"
 
 IFACEMETHODIMP PreviewBase::GetThumbnail(UINT cx, HBITMAP* phbmp, WTS_ALPHATYPE* pdwAlpha) {
-    BaseEngine* engine = GetEngine();
+    EngineBase* engine = GetEngine();
     if (!engine)
         return E_FAIL;
 
@@ -70,7 +70,7 @@ IFACEMETHODIMP PreviewBase::GetThumbnail(UINT cx, HBITMAP* phbmp, WTS_ALPHATYPE*
 #define UWM_PAINT_AGAIN (WM_USER + 1)
 
 class PageRenderer {
-    BaseEngine* engine;
+    EngineBase* engine;
     HWND hwnd;
 
     int currPage;
@@ -94,7 +94,7 @@ class PageRenderer {
     bool preventRecursion;
 
   public:
-    PageRenderer(BaseEngine* engine, HWND hwnd)
+    PageRenderer(EngineBase* engine, HWND hwnd)
         : engine(engine),
           hwnd(hwnd),
           currPage(0),
@@ -312,7 +312,7 @@ IFACEMETHODIMP PreviewBase::DoPreview() {
     this->renderer = nullptr;
     SetWindowLongPtr(m_hwnd, GWLP_USERDATA, (LONG_PTR)this);
 
-    BaseEngine* engine = GetEngine();
+    EngineBase* engine = GetEngine();
     int pageCount = 1;
     if (engine) {
         pageCount = engine->PageCount();
@@ -334,12 +334,12 @@ IFACEMETHODIMP PreviewBase::DoPreview() {
     return S_OK;
 }
 
-BaseEngine* CPdfPreview::LoadEngine(IStream* stream) {
+EngineBase* CPdfPreview::LoadEngine(IStream* stream) {
     return CreateEnginePdfFromStream(stream);
 }
 
 #ifdef BUILD_XPS_PREVIEW
-BaseEngine* CXpsPreview::LoadEngine(IStream* stream) {
+EngineBase* CXpsPreview::LoadEngine(IStream* stream) {
     return CreateXpsEngineFromStream(stream);
 }
 #endif
@@ -347,7 +347,7 @@ BaseEngine* CXpsPreview::LoadEngine(IStream* stream) {
 #ifdef BUILD_DJVU_PREVIEW
 #include "EngineDjVu.h"
 
-BaseEngine* CDjVuPreview::LoadEngine(IStream* stream) {
+EngineBase* CDjVuPreview::LoadEngine(IStream* stream) {
     return CreateDjVuEngineFromStream(stream);
 }
 #endif
@@ -363,7 +363,7 @@ CEpubPreview::~CEpubPreview() {
     mui::Destroy();
 }
 
-BaseEngine* CEpubPreview::LoadEngine(IStream* stream) {
+EngineBase* CEpubPreview::LoadEngine(IStream* stream) {
     return CreateEpubEngineFromStream(stream);
 }
 #endif
@@ -379,7 +379,7 @@ CFb2Preview::~CFb2Preview() {
     mui::Destroy();
 }
 
-BaseEngine* CFb2Preview::LoadEngine(IStream* stream) {
+EngineBase* CFb2Preview::LoadEngine(IStream* stream) {
     return CreateFb2EngineFromStream(stream);
 }
 #endif
@@ -395,21 +395,21 @@ CMobiPreview::~CMobiPreview() {
     mui::Destroy();
 }
 
-BaseEngine* CMobiPreview::LoadEngine(IStream* stream) {
+EngineBase* CMobiPreview::LoadEngine(IStream* stream) {
     return CreateMobiEngineFromStream(stream);
 }
 #endif
 
 #if defined(BUILD_CBZ_PREVIEW) || defined(BUILD_CBR_PREVIEW) || defined(BUILD_CB7_PREVIEW) || defined(BUILD_CBT_PREVIEW)
 
-BaseEngine* CCbxPreview::LoadEngine(IStream* stream) {
+EngineBase* CCbxPreview::LoadEngine(IStream* stream) {
     return CreateCbxEngineFromStream(stream);
 }
 #endif
 
 #ifdef BUILD_TGA_PREVIEW
 
-BaseEngine* CTgaPreview::LoadEngine(IStream* stream) {
+EngineBase* CTgaPreview::LoadEngine(IStream* stream) {
     return CreateImageEngineFromStream(stream);
 }
 #endif

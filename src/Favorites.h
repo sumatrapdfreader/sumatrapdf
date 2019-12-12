@@ -12,7 +12,7 @@ Favorites are accurate to a page - it's simple and should be good enough
 for the user.
 
 A favorite is identified by a (mandatory) page number and (optional) name
-(provided by the user) and page label (from BaseEngine::GetPageLabel).
+(provided by the user) and page label (from EngineBase::GetPageLabel).
 
 Favorites do not remember presentation settings like zoom or viewing mode -
 they are for navigation only. Presentation settings are remembered on a

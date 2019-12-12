@@ -2,4 +2,4 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 bool IsEnginePdfMultiSupportedFile(const WCHAR* fileName, bool sniff = false);
-BaseEngine* CreateEnginePdfMultiFromFile(const WCHAR* fileName, PasswordUI* pwdUI = nullptr);
+EngineBase* CreateEnginePdfMultiFromFile(const WCHAR* fileName, PasswordUI* pwdUI = nullptr);

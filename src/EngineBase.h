@@ -112,7 +112,7 @@ class PageDestination {
     virtual WCHAR* GetDestValue() const {
         return nullptr;
     }
-    // the name of this destination (reverses BaseEngine::GetNamedDest) or nullptr
+    // the name of this destination (reverses EngineBase::GetNamedDest) or nullptr
     // (mainly applicable for links of type "LaunchFile" to PDF documents)
     // caller must free() the result
     virtual WCHAR* GetDestName() const {
@@ -259,7 +259,7 @@ class AbortCookie {
     virtual void Abort() = 0;
 };
 
-class BaseEngine {
+class EngineBase {
   public:
     // TODO: set the kind and use instead of EngineType
     Kind kind = nullptr;
@@ -272,10 +272,10 @@ class BaseEngine {
     bool allowsPrinting = true;
     bool allowsCopyingText = true;
 
-    virtual ~BaseEngine() {
+    virtual ~EngineBase() {
     }
     // creates a clone of this engine (e.g. for printing on a different thread)
-    virtual BaseEngine* Clone() = 0;
+    virtual EngineBase* Clone() = 0;
 
     // number of pages the loaded document contains
     virtual int PageCount() const = 0;

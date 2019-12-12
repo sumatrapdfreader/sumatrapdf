@@ -5,7 +5,7 @@ enum class TextSearchDirection : bool { Backward = false, Forward = true };
 
 class TextSearch : public TextSelection {
   public:
-    TextSearch(BaseEngine* engine, PageTextCache* textCache);
+    TextSearch(EngineBase* engine, PageTextCache* textCache);
     ~TextSearch();
 
     void SetSensitive(bool sensitive);

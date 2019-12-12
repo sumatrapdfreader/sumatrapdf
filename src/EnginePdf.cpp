@@ -368,11 +368,11 @@ class PdfTocItem;
 class PdfLink;
 class PdfImage;
 
-class PdfEngineImpl : public BaseEngine {
+class PdfEngineImpl : public EngineBase {
   public:
     PdfEngineImpl();
     virtual ~PdfEngineImpl();
-    BaseEngine* Clone() override;
+    EngineBase* Clone() override;
 
     int PageCount() const override;
 
@@ -412,8 +412,8 @@ class PdfEngineImpl : public BaseEngine {
     bool IsPasswordProtected() const override;
     char* GetDecryptionKey() const override;
 
-    static BaseEngine* CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI);
-    static BaseEngine* CreateFromStream(IStream* stream, PasswordUI* pwdUI);
+    static EngineBase* CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI);
+    static EngineBase* CreateFromStream(IStream* stream, PasswordUI* pwdUI);
 
     // make sure to never ask for pagesAccess in an ctxAccess
     // protected critical section in order to avoid deadlocks
@@ -664,7 +664,7 @@ class PasswordCloner : public PasswordUI {
     }
 };
 
-BaseEngine* PdfEngineImpl::Clone() {
+EngineBase* PdfEngineImpl::Clone() {
     ScopedCritSec scope(ctxAccess);
 
     // use this document's encryption key (if any) to load the clone
@@ -2136,7 +2136,7 @@ bool PdfEngineImpl::HasClipOptimizations(int pageNo) {
 
 WCHAR* PdfEngineImpl::GetPageLabel(int pageNo) const {
     if (!_pagelabels || pageNo < 1 || PageCount() < pageNo) {
-        return BaseEngine::GetPageLabel(pageNo);
+        return EngineBase::GetPageLabel(pageNo);
     }
 
     return str::Dup(_pagelabels->at(pageNo - 1));
@@ -2149,7 +2149,7 @@ int PdfEngineImpl::GetPageByLabel(const WCHAR* label) const {
     }
 
     if (!pageNo) {
-        return BaseEngine::GetPageByLabel(label);
+        return EngineBase::GetPageByLabel(label);
     }
 
     return pageNo;
@@ -2464,7 +2464,7 @@ bool PdfLink::SaveEmbedded(LinkSaverUI& saveUI) {
     return engine->SaveEmbedded(saveUI, outline->page);
 }
 
-BaseEngine* PdfEngineImpl::CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {
+EngineBase* PdfEngineImpl::CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {
     if (str::IsEmpty(fileName)) {
         return nullptr;
     }
@@ -2476,7 +2476,7 @@ BaseEngine* PdfEngineImpl::CreateFromFile(const WCHAR* fileName, PasswordUI* pwd
     return engine;
 }
 
-BaseEngine* PdfEngineImpl::CreateFromStream(IStream* stream, PasswordUI* pwdUI) {
+EngineBase* PdfEngineImpl::CreateFromStream(IStream* stream, PasswordUI* pwdUI) {
     PdfEngineImpl* engine = new PdfEngineImpl();
     if (!engine->Load(stream, pwdUI)) {
         delete engine;
@@ -2500,10 +2500,10 @@ bool IsEnginePdfSupportedFile(const WCHAR* fileName, bool sniff) {
     return str::EndsWithI(fileName, L".pdf") || findEmbedMarks(fileName);
 }
 
-BaseEngine* CreateEnginePdfFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {
+EngineBase* CreateEnginePdfFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {
     return PdfEngineImpl::CreateFromFile(fileName, pwdUI);
 }
 
-BaseEngine* CreateEnginePdfFromStream(IStream* stream, PasswordUI* pwdUI) {
+EngineBase* CreateEnginePdfFromStream(IStream* stream, PasswordUI* pwdUI) {
     return PdfEngineImpl::CreateFromStream(stream, pwdUI);
 }

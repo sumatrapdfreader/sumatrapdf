@@ -40,7 +40,7 @@ struct ImagePage {
 
 class ImageElement;
 
-class ImagesEngine : public BaseEngine {
+class ImagesEngine : public EngineBase {
     friend ImageElement;
 
   public:
@@ -338,14 +338,14 @@ class ImageEngineImpl : public ImagesEngine {
     ImageEngineImpl();
     virtual ~ImageEngineImpl();
 
-    BaseEngine* Clone() override;
+    EngineBase* Clone() override;
 
     WCHAR* GetProperty(DocumentProperty prop) override;
 
     bool SaveFileAsPDF(const char* pdfFileName, bool includeUserAnnots = false) override;
 
-    static BaseEngine* CreateFromFile(const WCHAR* fileName);
-    static BaseEngine* CreateFromStream(IStream* stream);
+    static EngineBase* CreateFromFile(const WCHAR* fileName);
+    static EngineBase* CreateFromStream(IStream* stream);
 
   protected:
     Bitmap* image = nullptr;
@@ -367,7 +367,7 @@ ImageEngineImpl::~ImageEngineImpl() {
     delete image;
 }
 
-BaseEngine* ImageEngineImpl::Clone() {
+EngineBase* ImageEngineImpl::Clone() {
     Bitmap* bmp = image->Clone(0, 0, image->GetWidth(), image->GetHeight(), PixelFormat32bppARGB);
     if (!bmp) {
         return nullptr;
@@ -572,7 +572,7 @@ bool ImageEngineImpl::SaveFileAsPDF(const char* pdfFileName, bool includeUserAnn
     return ok;
 }
 
-BaseEngine* ImageEngineImpl::CreateFromFile(const WCHAR* fileName) {
+EngineBase* ImageEngineImpl::CreateFromFile(const WCHAR* fileName) {
     ImageEngineImpl* engine = new ImageEngineImpl();
     if (!engine->LoadSingleFile(fileName)) {
         delete engine;
@@ -581,7 +581,7 @@ BaseEngine* ImageEngineImpl::CreateFromFile(const WCHAR* fileName) {
     return engine;
 }
 
-BaseEngine* ImageEngineImpl::CreateFromStream(IStream* stream) {
+EngineBase* ImageEngineImpl::CreateFromStream(IStream* stream) {
     ImageEngineImpl* engine = new ImageEngineImpl();
     if (!engine->LoadFromStream(stream)) {
         delete engine;
@@ -655,11 +655,11 @@ bool IsImageEngineSupportedFile(const WCHAR* fileName, bool sniff) {
     return IsImageEngineSupportedFile(fileNameA);
 }
 
-BaseEngine* CreateImageEngineFromFile(const WCHAR* fileName) {
+EngineBase* CreateImageEngineFromFile(const WCHAR* fileName) {
     return ImageEngineImpl::CreateFromFile(fileName);
 }
 
-BaseEngine* CreateImageEngineFromStream(IStream* stream) {
+EngineBase* CreateImageEngineFromStream(IStream* stream) {
     return ImageEngineImpl::CreateFromStream(stream);
 }
 
@@ -677,7 +677,7 @@ class ImageDirEngineImpl : public ImagesEngine {
         delete tocTree;
     }
 
-    BaseEngine* Clone() override {
+    EngineBase* Clone() override {
         if (FileName()) {
             return CreateFromFile(FileName());
         }
@@ -705,7 +705,7 @@ class ImageDirEngineImpl : public ImagesEngine {
 
     bool SaveFileAsPDF(const char* pdfFileName, bool includeUserAnnots = false) override;
 
-    static BaseEngine* CreateFromFile(const WCHAR* fileName);
+    static EngineBase* CreateFromFile(const WCHAR* fileName);
 
   protected:
     bool LoadImageDir(const WCHAR* dirName);
@@ -754,7 +754,7 @@ bool ImageDirEngineImpl::LoadImageDir(const WCHAR* dirName) {
 
 WCHAR* ImageDirEngineImpl::GetPageLabel(int pageNo) const {
     if (pageNo < 1 || PageCount() < pageNo) {
-        return BaseEngine::GetPageLabel(pageNo);
+        return EngineBase::GetPageLabel(pageNo);
     }
 
     const WCHAR* fileName = path::GetBaseNameNoFree(pageFileNames.at(pageNo - 1));
@@ -770,7 +770,7 @@ int ImageDirEngineImpl::GetPageByLabel(const WCHAR* label) const {
             return (int)i + 1;
     }
 
-    return BaseEngine::GetPageByLabel(label);
+    return EngineBase::GetPageByLabel(label);
 }
 
 class ImageDirTocItem : public DocTocItem {
@@ -845,7 +845,7 @@ bool ImageDirEngineImpl::SaveFileAsPDF(const char* pdfFileName, bool includeUser
     return ok;
 }
 
-BaseEngine* ImageDirEngineImpl::CreateFromFile(const WCHAR* fileName) {
+EngineBase* ImageDirEngineImpl::CreateFromFile(const WCHAR* fileName) {
     AssertCrash(dir::Exists(fileName));
     ImageDirEngineImpl* engine = new ImageDirEngineImpl();
     if (!engine->LoadImageDir(fileName)) {
@@ -861,7 +861,7 @@ bool IsImageDirEngineSupportedFile(const WCHAR* fileName, bool sniff) {
     return dir::Exists(fileName);
 }
 
-BaseEngine* CreateImageDirEngineFromFile(const WCHAR* fileName) {
+EngineBase* CreateImageDirEngineFromFile(const WCHAR* fileName) {
     return ImageDirEngineImpl::CreateFromFile(fileName);
 }
 
@@ -876,7 +876,7 @@ class CbxEngineImpl : public ImagesEngine, public json::ValueVisitor {
         delete cbxFile;
     }
 
-    virtual BaseEngine* Clone() override {
+    virtual EngineBase* Clone() override {
         if (fileStream) {
             ScopedComPtr<IStream> stm;
             HRESULT res = fileStream->Clone(&stm);
@@ -899,8 +899,8 @@ class CbxEngineImpl : public ImagesEngine, public json::ValueVisitor {
     // json::ValueVisitor
     bool Visit(const char* path, const char* value, json::DataType type) override;
 
-    static BaseEngine* CreateFromFile(const WCHAR* fileName);
-    static BaseEngine* CreateFromStream(IStream* stream);
+    static EngineBase* CreateFromFile(const WCHAR* fileName);
+    static EngineBase* CreateFromStream(IStream* stream);
 
   protected:
     virtual Bitmap* LoadBitmap(int pageNo, bool& deleteAfterUse);
@@ -1178,7 +1178,7 @@ RectD CbxEngineImpl::LoadMediabox(int pageNo) {
 #define RAR5_SIGNATURE "Rar!\x1A\x07\x01\x00"
 #define RAR5_SIGNATURE_LEN 8
 
-BaseEngine* CbxEngineImpl::CreateFromFile(const WCHAR* fileName) {
+EngineBase* CbxEngineImpl::CreateFromFile(const WCHAR* fileName) {
     if (str::EndsWithI(fileName, L".cbz") || str::EndsWithI(fileName, L".zip") ||
         file::StartsWithN(fileName, "PK\x03\x04", 4)) {
         auto* archive = OpenZipArchive(fileName, false);
@@ -1229,7 +1229,7 @@ BaseEngine* CbxEngineImpl::CreateFromFile(const WCHAR* fileName) {
     return nullptr;
 }
 
-BaseEngine* CbxEngineImpl::CreateFromStream(IStream* stream) {
+EngineBase* CbxEngineImpl::CreateFromStream(IStream* stream) {
     auto* archive = OpenZipArchive(stream, false);
     if (archive) {
         auto* engine = new CbxEngineImpl(archive);
@@ -1285,10 +1285,10 @@ bool IsCbxEngineSupportedFile(const WCHAR* fileName, bool sniff) {
            str::EndsWithI(fileName, L".rar") || str::EndsWithI(fileName, L".7z") || str::EndsWithI(fileName, L".tar");
 }
 
-BaseEngine* CreateCbxEngineFromFile(const WCHAR* fileName) {
+EngineBase* CreateCbxEngineFromFile(const WCHAR* fileName) {
     return CbxEngineImpl::CreateFromFile(fileName);
 }
 
-BaseEngine* CreateCbxEngineFromStream(IStream* stream) {
+EngineBase* CreateCbxEngineFromStream(IStream* stream) {
     return CbxEngineImpl::CreateFromStream(stream);
 }

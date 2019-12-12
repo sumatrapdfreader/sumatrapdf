@@ -73,10 +73,10 @@ bool IsSupportedFile(const WCHAR* filePath, bool sniff, bool enableEbookEngines)
     return false;
 }
 
-BaseEngine* CreateEngine(const WCHAR* filePath, PasswordUI* pwdUI, bool enableChmEngine, bool enableEbookEngines) {
+EngineBase* CreateEngine(const WCHAR* filePath, PasswordUI* pwdUI, bool enableChmEngine, bool enableEbookEngines) {
     CrashIf(!filePath);
 
-    BaseEngine* engine = nullptr;
+    EngineBase* engine = nullptr;
     bool sniff = false;
 RetrySniffing:
     if (IsEnginePdfSupportedFile(filePath, sniff)) {

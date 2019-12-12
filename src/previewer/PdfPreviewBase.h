@@ -198,7 +198,7 @@ public:
         return S_OK;
     }
 
-    BaseEngine *GetEngine() {
+    EngineBase *GetEngine() {
         if (!m_engine && m_pStream)
             m_engine = LoadEngine(m_pStream);
         return m_engine;
@@ -209,7 +209,7 @@ public:
 protected:
     long m_lRef, * m_plModuleRef;
     ScopedComPtr<IStream> m_pStream;
-    BaseEngine *m_engine;
+    EngineBase *m_engine;
     // engines based on ImagesEngine require GDI+ to be preloaded
     ScopedGdiPlus *m_gdiScope;
     // state for IPreviewHandler
@@ -221,7 +221,7 @@ protected:
     UINT        m_extractCx;
     FILETIME    m_dateStamp;
 
-    virtual BaseEngine *LoadEngine(IStream *stream) = 0;
+    virtual EngineBase *LoadEngine(IStream *stream) = 0;
 };
 
 class CPdfPreview : public PreviewBase {
@@ -229,7 +229,7 @@ public:
     CPdfPreview(long *plRefCount) : PreviewBase(plRefCount, SZ_PDF_PREVIEW_CLSID) { }
 
 protected:
-    virtual BaseEngine *LoadEngine(IStream *stream);
+    virtual EngineBase *LoadEngine(IStream *stream);
 };
 
 #ifdef BUILD_XPS_PREVIEW
@@ -238,7 +238,7 @@ public:
     CXpsPreview(long *plRefCount) : PreviewBase(plRefCount, SZ_XPS_PREVIEW_CLSID) { }
 
 protected:
-    virtual BaseEngine *LoadEngine(IStream *stream);
+    virtual EngineBase *LoadEngine(IStream *stream);
 };
 #endif
 
@@ -250,7 +250,7 @@ public:
     }
 
 protected:
-    virtual BaseEngine *LoadEngine(IStream *stream);
+    virtual EngineBase *LoadEngine(IStream *stream);
 };
 #endif
 
@@ -261,7 +261,7 @@ public:
     ~CEpubPreview();
 
 protected:
-    virtual BaseEngine *LoadEngine(IStream *stream);
+    virtual EngineBase *LoadEngine(IStream *stream);
 };
 #endif
 
@@ -272,7 +272,7 @@ public:
     ~CFb2Preview();
 
 protected:
-    virtual BaseEngine *LoadEngine(IStream *stream);
+    virtual EngineBase *LoadEngine(IStream *stream);
 };
 #endif
 
@@ -283,7 +283,7 @@ public:
     ~CMobiPreview();
 
 protected:
-    virtual BaseEngine *LoadEngine(IStream *stream);
+    virtual EngineBase *LoadEngine(IStream *stream);
 };
 #endif
 
@@ -295,7 +295,7 @@ public:
     }
 
 protected:
-    virtual BaseEngine *LoadEngine(IStream *stream);
+    virtual EngineBase *LoadEngine(IStream *stream);
 };
 #endif
 
@@ -307,6 +307,6 @@ public:
     }
 
 protected:
-    virtual BaseEngine *LoadEngine(IStream *stream);
+    virtual EngineBase *LoadEngine(IStream *stream);
 };
 #endif

@@ -3,4 +3,4 @@
 
 bool IsPsEngineAvailable();
 bool IsPsEngineSupportedFile(const WCHAR* fileName, bool sniff = false);
-BaseEngine* CreatePsEngineFromFile(const WCHAR* fileName);
+EngineBase* CreatePsEngineFromFile(const WCHAR* fileName);

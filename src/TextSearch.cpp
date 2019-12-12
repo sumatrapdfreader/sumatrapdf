@@ -20,7 +20,7 @@ static void markAllPagesNonSkip(std::vector<bool>& pagesToSkip) {
         pagesToSkip[i] = false;
     }
 }
-TextSearch::TextSearch(BaseEngine* engine, PageTextCache* textCache) : TextSelection(engine, textCache) {
+TextSearch::TextSearch(EngineBase* engine, PageTextCache* textCache) : TextSelection(engine, textCache) {
     nPages = engine->PageCount();
     pagesToSkip.resize(nPages);
     markAllPagesNonSkip(pagesToSkip);

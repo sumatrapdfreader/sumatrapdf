@@ -33,14 +33,14 @@
 
 struct PrintData {
     AutoFreeW printerName;
-    ScopedMem<DEVMODE> devMode;
-    BaseEngine* engine = nullptr;
+    ScopedMem<DEVMODEW> devMode;
+    EngineBase* engine = nullptr;
     Vec<PRINTPAGERANGE> ranges; // empty when printing a selection
     Vec<SelectionOnPage> sel;   // empty when printing a page range
     Print_Advanced_Data advData;
     int rotation = 0;
 
-    PrintData(BaseEngine* engine, PRINTER_INFO_2* printerInfo, DEVMODE* devMode, Vec<PRINTPAGERANGE>& ranges,
+    PrintData(EngineBase* engine, PRINTER_INFO_2* printerInfo, DEVMODEW* devMode, Vec<PRINTPAGERANGE>& ranges,
               Print_Advanced_Data& advData, int rotation = 0, Vec<SelectionOnPage>* sel = nullptr) {
         this->advData = advData;
         this->rotation = rotation;
@@ -119,7 +119,7 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
         return false;
     }
 
-    BaseEngine& engine = *pd.engine;
+    EngineBase& engine = *pd.engine;
     AutoFreeW fileName;
 
     DOCINFO di = {0};
@@ -658,7 +658,7 @@ Exit:
     GlobalFree(pd.hDevMode);
 }
 
-static short GetPaperSize(BaseEngine* engine) {
+static short GetPaperSize(EngineBase* engine) {
     RectD mediabox = engine->PageMediabox(1);
     SizeD size = engine->Transform(mediabox, 1, 1.0f / engine->GetFileDPI(), 0).Size();
 
@@ -809,7 +809,7 @@ static void ApplyPrintSettings(const WCHAR* printerName, const WCHAR* settings, 
     }
 }
 
-bool PrintFile(BaseEngine* engine, WCHAR* printerName, bool displayErrors, const WCHAR* settings) {
+bool PrintFile(EngineBase* engine, WCHAR* printerName, bool displayErrors, const WCHAR* settings) {
     bool ok = false;
     if (!HasPermission(Perm_PrinterAccess)) {
         return false;
@@ -906,7 +906,7 @@ Exit:
 bool PrintFile(const WCHAR* fileName, WCHAR* printerName, bool displayErrors, const WCHAR* settings) {
     logf(L"PrintFile: file: '%s', printer: '%s'\n", fileName, printerName);
     WCHAR* fileName2 = path::Normalize(fileName);
-    BaseEngine* engine = EngineManager::CreateEngine(fileName2);
+    EngineBase* engine = EngineManager::CreateEngine(fileName2);
     if (!engine) {
         if (displayErrors) {
             WCHAR* msg = str::Format(L"Couldn't open file '%s' for printing", fileName);

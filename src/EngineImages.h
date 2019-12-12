@@ -2,12 +2,12 @@
    License: GPLv3 */
 
 bool IsImageEngineSupportedFile(const WCHAR* fileName, bool sniff = false);
-BaseEngine* CreateImageEngineFromFile(const WCHAR* fileName);
-BaseEngine* CreateImageEngineFromStream(IStream* stream);
+EngineBase* CreateImageEngineFromFile(const WCHAR* fileName);
+EngineBase* CreateImageEngineFromStream(IStream* stream);
 
 bool IsImageDirEngineSupportedFile(const WCHAR* fileName, bool sniff = false);
-BaseEngine* CreateImageDirEngineFromFile(const WCHAR* fileName);
+EngineBase* CreateImageDirEngineFromFile(const WCHAR* fileName);
 
 bool IsCbxEngineSupportedFile(const WCHAR* fileName, bool sniff = false);
-BaseEngine* CreateCbxEngineFromFile(const WCHAR* fileName);
-BaseEngine* CreateCbxEngineFromStream(IStream* stream);
+EngineBase* CreateCbxEngineFromFile(const WCHAR* fileName);
+EngineBase* CreateCbxEngineFromStream(IStream* stream);

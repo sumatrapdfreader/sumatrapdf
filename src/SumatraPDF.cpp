@@ -865,7 +865,7 @@ static Controller* CreateControllerForFile(const WCHAR* filePath, PasswordUI* pw
 
     Controller* ctrl = nullptr;
 
-    BaseEngine* engine = EngineManager::CreateEngine(filePath, pwdUI, gGlobalPrefs->chmUI.useFixedPageUI,
+    EngineBase* engine = EngineManager::CreateEngine(filePath, pwdUI, gGlobalPrefs->chmUI.useFixedPageUI,
                                                      gGlobalPrefs->ebookUI.useFixedPageUI);
 
     if (engine) {
@@ -1683,7 +1683,7 @@ static void UpdatePageInfoHelper(WindowInfo* win, NotificationWnd* wnd, int page
 
 enum class MeasurementUnit { pt, mm, in };
 
-static WCHAR* FormatCursorPosition(BaseEngine* engine, PointD pt, MeasurementUnit unit) {
+static WCHAR* FormatCursorPosition(EngineBase* engine, PointD pt, MeasurementUnit unit) {
     if (pt.x < 0)
         pt.x = 0;
     if (pt.y < 0)
@@ -1739,7 +1739,7 @@ void UpdateCursorPositionHelper(WindowInfo* win, PointI pos, NotificationWnd* wn
     }
 
     CrashIf(!win->AsFixed());
-    BaseEngine* engine = win->AsFixed()->GetEngine();
+    EngineBase* engine = win->AsFixed()->GetEngine();
     PointD pt = win->AsFixed()->CvtFromScreen(pos);
     AutoFreeW posStr(FormatCursorPosition(engine, pt, unit)), selStr;
     if (!win->selectionMeasure.IsEmpty()) {
@@ -2347,7 +2347,7 @@ static void OnMenuSaveAs(WindowInfo* win) {
     if (!srcFileName)
         return;
 
-    BaseEngine* engine = nullptr;
+    EngineBase* engine = nullptr;
     if (auto* model = win->AsFixed(); model != nullptr) {
         engine = model->GetEngine();
     }

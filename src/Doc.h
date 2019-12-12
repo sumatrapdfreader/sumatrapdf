@@ -1,7 +1,7 @@
 /* Copyright 2019 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// Doc is to EbookController what BaseEngine is to DisplayModel:
+// Doc is to EbookController what EngineBase is to DisplayModel:
 // It simply abstracts all document objects, allows querying the type, casting
 // to the wrapped object and present as much of the unified interface as
 // possible.

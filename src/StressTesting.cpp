@@ -57,7 +57,7 @@ static bool IsInRange(Vec<PageRange>& ranges, int pageNo) {
     return false;
 }
 
-static void BenchLoadRender(BaseEngine* engine, int pagenum) {
+static void BenchLoadRender(EngineBase* engine, int pagenum) {
     Timer t;
     bool ok = engine->BenchLoadPage(pagenum);
     t.Stop();
@@ -191,7 +191,7 @@ static void BenchFile(const WCHAR* filePath, const WCHAR* pagesSpec) {
     logf(L"Starting: %s", filePath);
 
     Timer t;
-    BaseEngine* engine = EngineManager::CreateEngine(filePath);
+    EngineBase* engine = EngineManager::CreateEngine(filePath);
     if (!engine) {
         logf(L"Error: failed to load %s", filePath);
         return;

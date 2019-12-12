@@ -64,7 +64,7 @@ class Synchronizer;
    API and re-displaying things based on new display information */
 class DisplayModel : public Controller {
   public:
-    DisplayModel(BaseEngine* engine, ControllerCallback* cb);
+    DisplayModel(EngineBase* engine, ControllerCallback* cb);
     ~DisplayModel();
 
     // meta data
@@ -149,7 +149,7 @@ class DisplayModel : public Controller {
   public:
     // the following is specific to DisplayModel
 
-    BaseEngine* GetEngine() const {
+    EngineBase* GetEngine() const {
         return engine;
     }
     Kind GetEngineType() const {
@@ -265,7 +265,7 @@ class DisplayModel : public Controller {
     bool GoToPrevPage(int scrollY);
     int GetPageNextToPoint(PointI pt);
 
-    BaseEngine* engine = nullptr;
+    EngineBase* engine = nullptr;
 
     /* an array of PageInfo, len of array is pageCount */
     PageInfo* pagesInfo = nullptr;

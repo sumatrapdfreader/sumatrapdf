@@ -18,7 +18,7 @@ enum {
     PDFSYNCERR_INVALID_ARGUMENT
 };
 
-class BaseEngine;
+class EngineBase;
 
 class Synchronizer {
   public:
@@ -55,5 +55,5 @@ class Synchronizer {
     AutoFreeW syncfilepath; // path to the synchronization file
 
   public:
-    static int Create(const WCHAR* pdffilename, BaseEngine* engine, Synchronizer** sync);
+    static int Create(const WCHAR* pdffilename, EngineBase* engine, Synchronizer** sync);
 };

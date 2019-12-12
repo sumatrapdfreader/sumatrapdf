@@ -1,7 +1,7 @@
 /* Copyright 2019 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-// engines which render flowed ebook formats into fixed pages through the BaseEngine API
+// engines which render flowed ebook formats into fixed pages through the EngineBase API
 // (pages are mostly layed out the same as for a "B Format" paperback: 5.12" x 7.8")
 
 #include "utils/BaseUtil.h"
@@ -75,7 +75,7 @@ class EbookAbortCookie : public AbortCookie {
     }
 };
 
-class EbookEngine : public BaseEngine {
+class EbookEngine : public EngineBase {
   public:
     EbookEngine();
     virtual ~EbookEngine();
@@ -707,13 +707,13 @@ static void AppendTocItem(EbookTocItem*& root, EbookTocItem* item, int level) {
 }
 
 class EbookTocBuilder : public EbookTocVisitor {
-    BaseEngine* engine = nullptr;
+    EngineBase* engine = nullptr;
     EbookTocItem* root = nullptr;
     int idCounter = 0;
     bool isIndex = false;
 
   public:
-    explicit EbookTocBuilder(BaseEngine* engine) {
+    explicit EbookTocBuilder(EngineBase* engine) {
         this->engine = engine;
     }
 
@@ -751,13 +751,13 @@ void EbookTocBuilder::Visit(const WCHAR* name, const WCHAR* url, int level) {
     AppendTocItem(root, item, level);
 }
 
-/* BaseEngine for handling EPUB documents */
+/* EngineBase for handling EPUB documents */
 
 class EpubEngineImpl : public EbookEngine {
   public:
     EpubEngineImpl();
     virtual ~EpubEngineImpl();
-    BaseEngine* Clone() override;
+    EngineBase* Clone() override;
 
     std::tuple<char*, size_t> GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
@@ -768,8 +768,8 @@ class EpubEngineImpl : public EbookEngine {
 
     DocTocTree* GetTocTree() override;
 
-    static BaseEngine* CreateFromFile(const WCHAR* fileName);
-    static BaseEngine* CreateFromStream(IStream* stream);
+    static EngineBase* CreateFromFile(const WCHAR* fileName);
+    static EngineBase* CreateFromStream(IStream* stream);
 
   protected:
     EpubDoc* doc = nullptr;
@@ -793,7 +793,7 @@ EpubEngineImpl::~EpubEngineImpl() {
         stream->Release();
 }
 
-BaseEngine* EpubEngineImpl::Clone() {
+EngineBase* EpubEngineImpl::Clone() {
     if (stream) {
         return CreateFromStream(stream);
     }
@@ -885,7 +885,7 @@ DocTocTree* EpubEngineImpl::GetTocTree() {
     return tocTree;
 }
 
-BaseEngine* EpubEngineImpl::CreateFromFile(const WCHAR* fileName) {
+EngineBase* EpubEngineImpl::CreateFromFile(const WCHAR* fileName) {
     EpubEngineImpl* engine = new EpubEngineImpl();
     if (!engine->Load(fileName)) {
         delete engine;
@@ -894,7 +894,7 @@ BaseEngine* EpubEngineImpl::CreateFromFile(const WCHAR* fileName) {
     return engine;
 }
 
-BaseEngine* EpubEngineImpl::CreateFromStream(IStream* stream) {
+EngineBase* EpubEngineImpl::CreateFromStream(IStream* stream) {
     EpubEngineImpl* engine = new EpubEngineImpl();
     if (!engine->Load(stream)) {
         delete engine;
@@ -911,15 +911,15 @@ bool IsEpubEngineSupportedFile(const WCHAR* fileName, bool sniff) {
     return EpubDoc::IsSupportedFile(fileName, sniff);
 }
 
-BaseEngine* CreateEpubEngineFromFile(const WCHAR* fileName) {
+EngineBase* CreateEpubEngineFromFile(const WCHAR* fileName) {
     return EpubEngineImpl::CreateFromFile(fileName);
 }
 
-BaseEngine* CreateEpubEngineFromStream(IStream* stream) {
+EngineBase* CreateEpubEngineFromStream(IStream* stream) {
     return EpubEngineImpl::CreateFromStream(stream);
 }
 
-/* BaseEngine for handling FictionBook2 documents */
+/* EngineBase for handling FictionBook2 documents */
 
 class Fb2EngineImpl : public EbookEngine {
   public:
@@ -931,7 +931,7 @@ class Fb2EngineImpl : public EbookEngine {
         delete tocTree;
         delete doc;
     }
-    BaseEngine* Clone() override {
+    EngineBase* Clone() override {
         return fileName ? CreateFromFile(fileName) : nullptr;
     }
 
@@ -941,8 +941,8 @@ class Fb2EngineImpl : public EbookEngine {
 
     DocTocTree* GetTocTree() override;
 
-    static BaseEngine* CreateFromFile(const WCHAR* fileName);
-    static BaseEngine* CreateFromStream(IStream* stream);
+    static EngineBase* CreateFromFile(const WCHAR* fileName);
+    static EngineBase* CreateFromStream(IStream* stream);
 
   protected:
     Fb2Doc* doc = nullptr;
@@ -1004,7 +1004,7 @@ DocTocTree* Fb2EngineImpl::GetTocTree() {
     return tocTree;
 }
 
-BaseEngine* Fb2EngineImpl::CreateFromFile(const WCHAR* fileName) {
+EngineBase* Fb2EngineImpl::CreateFromFile(const WCHAR* fileName) {
     Fb2EngineImpl* engine = new Fb2EngineImpl();
     if (!engine->Load(fileName)) {
         delete engine;
@@ -1013,7 +1013,7 @@ BaseEngine* Fb2EngineImpl::CreateFromFile(const WCHAR* fileName) {
     return engine;
 }
 
-BaseEngine* Fb2EngineImpl::CreateFromStream(IStream* stream) {
+EngineBase* Fb2EngineImpl::CreateFromStream(IStream* stream) {
     Fb2EngineImpl* engine = new Fb2EngineImpl();
     if (!engine->Load(stream)) {
         delete engine;
@@ -1026,15 +1026,15 @@ bool IsFb2EngineSupportedFile(const WCHAR* fileName, bool sniff) {
     return Fb2Doc::IsSupportedFile(fileName, sniff);
 }
 
-BaseEngine* CreateFb2EngineFromFile(const WCHAR* fileName) {
+EngineBase* CreateFb2EngineFromFile(const WCHAR* fileName) {
     return Fb2EngineImpl::CreateFromFile(fileName);
 }
 
-BaseEngine* CreateFb2EngineFromStream(IStream* stream) {
+EngineBase* CreateFb2EngineFromStream(IStream* stream) {
     return Fb2EngineImpl::CreateFromStream(stream);
 }
 
-/* BaseEngine for handling Mobi documents */
+/* EngineBase for handling Mobi documents */
 
 #include "MobiDoc.h"
 
@@ -1048,7 +1048,7 @@ class MobiEngineImpl : public EbookEngine {
         delete tocTree;
         delete doc;
     }
-    BaseEngine* Clone() override {
+    EngineBase* Clone() override {
         return fileName ? CreateFromFile(fileName) : nullptr;
     }
 
@@ -1059,8 +1059,8 @@ class MobiEngineImpl : public EbookEngine {
     PageDestination* GetNamedDest(const WCHAR* name) override;
     DocTocTree* GetTocTree() override;
 
-    static BaseEngine* CreateFromFile(const WCHAR* fileName);
-    static BaseEngine* CreateFromStream(IStream* stream);
+    static EngineBase* CreateFromFile(const WCHAR* fileName);
+    static EngineBase* CreateFromStream(IStream* stream);
 
   protected:
     MobiDoc* doc = nullptr;
@@ -1155,7 +1155,7 @@ DocTocTree* MobiEngineImpl::GetTocTree() {
     return tocTree;
 }
 
-BaseEngine* MobiEngineImpl::CreateFromFile(const WCHAR* fileName) {
+EngineBase* MobiEngineImpl::CreateFromFile(const WCHAR* fileName) {
     MobiEngineImpl* engine = new MobiEngineImpl();
     if (!engine->Load(fileName)) {
         delete engine;
@@ -1164,7 +1164,7 @@ BaseEngine* MobiEngineImpl::CreateFromFile(const WCHAR* fileName) {
     return engine;
 }
 
-BaseEngine* MobiEngineImpl::CreateFromStream(IStream* stream) {
+EngineBase* MobiEngineImpl::CreateFromStream(IStream* stream) {
     MobiEngineImpl* engine = new MobiEngineImpl();
     if (!engine->Load(stream)) {
         delete engine;
@@ -1177,15 +1177,15 @@ bool IsMobiEngineSupportedFile(const WCHAR* fileName, bool sniff) {
     return MobiDoc::IsSupportedFile(fileName, sniff);
 }
 
-BaseEngine* CreateMobiEngineFromFile(const WCHAR* fileName) {
+EngineBase* CreateMobiEngineFromFile(const WCHAR* fileName) {
     return MobiEngineImpl::CreateFromFile(fileName);
 }
 
-BaseEngine* CreateMobiEngineFromStream(IStream* stream) {
+EngineBase* CreateMobiEngineFromStream(IStream* stream) {
     return MobiEngineImpl::CreateFromStream(stream);
 }
 
-/* BaseEngine for handling PalmDOC documents (and extensions such as TealDoc) */
+/* EngineBase for handling PalmDOC documents (and extensions such as TealDoc) */
 
 class PdbEngineImpl : public EbookEngine {
   public:
@@ -1197,7 +1197,7 @@ class PdbEngineImpl : public EbookEngine {
         delete tocTree;
         delete doc;
     }
-    BaseEngine* Clone() override {
+    EngineBase* Clone() override {
         return fileName ? CreateFromFile(fileName) : nullptr;
     }
 
@@ -1207,7 +1207,7 @@ class PdbEngineImpl : public EbookEngine {
 
     DocTocTree* GetTocTree() override;
 
-    static BaseEngine* CreateFromFile(const WCHAR* fileName);
+    static EngineBase* CreateFromFile(const WCHAR* fileName);
 
   protected:
     PalmDoc* doc = nullptr;
@@ -1250,7 +1250,7 @@ DocTocTree* PdbEngineImpl::GetTocTree() {
     return tocTree;
 }
 
-BaseEngine* PdbEngineImpl::CreateFromFile(const WCHAR* fileName) {
+EngineBase* PdbEngineImpl::CreateFromFile(const WCHAR* fileName) {
     PdbEngineImpl* engine = new PdbEngineImpl();
     if (!engine->Load(fileName)) {
         delete engine;
@@ -1263,7 +1263,7 @@ bool IsPdbEngineSupportedFile(const WCHAR* fileName, bool sniff) {
     return PalmDoc::IsSupportedFile(fileName, sniff);
 }
 
-BaseEngine* CreatePdbEngineFromFile(const WCHAR* fileName) {
+EngineBase* CreatePdbEngineFromFile(const WCHAR* fileName) {
     return PdbEngineImpl::CreateFromFile(fileName);
 }
 
@@ -1383,7 +1383,7 @@ void ChmFormatter::HandleTagLink(HtmlToken* t) {
         ParseStyleSheet(data, len);
 }
 
-/* BaseEngine for handling CHM documents */
+/* EngineBase for handling CHM documents */
 
 class ChmEmbeddedDest;
 
@@ -1402,7 +1402,7 @@ class ChmEngineImpl : public EbookEngine {
         delete doc;
         delete tocTree;
     }
-    BaseEngine* Clone() override {
+    EngineBase* Clone() override {
         return fileName ? CreateFromFile(fileName) : nullptr;
     }
 
@@ -1413,7 +1413,7 @@ class ChmEngineImpl : public EbookEngine {
     PageDestination* GetNamedDest(const WCHAR* name) override;
     DocTocTree* GetTocTree() override;
 
-    static BaseEngine* CreateFromFile(const WCHAR* fileName);
+    static EngineBase* CreateFromFile(const WCHAR* fileName);
 
   protected:
     ChmDoc* doc = nullptr;
@@ -1633,7 +1633,7 @@ bool ChmEngineImpl::SaveEmbedded(LinkSaverUI& saveUI, const char* path) {
     return saveUI.SaveEmbedded(data, len);
 }
 
-BaseEngine* ChmEngineImpl::CreateFromFile(const WCHAR* fileName) {
+EngineBase* ChmEngineImpl::CreateFromFile(const WCHAR* fileName) {
     ChmEngineImpl* engine = new ChmEngineImpl();
     if (!engine->Load(fileName)) {
         delete engine;
@@ -1646,11 +1646,11 @@ bool IsChmEngineSupportedFile(const WCHAR* fileName, bool sniff) {
     return ChmDoc::IsSupportedFile(fileName, sniff);
 }
 
-BaseEngine* CreateChmEngineFromFile(const WCHAR* fileName) {
+EngineBase* CreateChmEngineFromFile(const WCHAR* fileName) {
     return ChmEngineImpl::CreateFromFile(fileName);
 }
 
-/* BaseEngine for handling HTML documents */
+/* EngineBase for handling HTML documents */
 /* (mainly to allow creating minimal regression test testcases more easily) */
 
 class HtmlEngineImpl : public EbookEngine {
@@ -1663,7 +1663,7 @@ class HtmlEngineImpl : public EbookEngine {
     virtual ~HtmlEngineImpl() {
         delete doc;
     }
-    BaseEngine* Clone() override {
+    EngineBase* Clone() override {
         return fileName ? CreateFromFile(fileName) : nullptr;
     }
 
@@ -1671,7 +1671,7 @@ class HtmlEngineImpl : public EbookEngine {
         return prop != DocumentProperty::FontList ? doc->GetProperty(prop) : ExtractFontList();
     }
 
-    static BaseEngine* CreateFromFile(const WCHAR* fileName);
+    static EngineBase* CreateFromFile(const WCHAR* fileName);
 
   protected:
     HtmlDoc* doc = nullptr;
@@ -1737,7 +1737,7 @@ PageElement* HtmlEngineImpl::CreatePageLink(DrawInstr* link, RectI rect, int pag
     return new EbookLink(link, rect, dest, pageNo, true);
 }
 
-BaseEngine* HtmlEngineImpl::CreateFromFile(const WCHAR* fileName) {
+EngineBase* HtmlEngineImpl::CreateFromFile(const WCHAR* fileName) {
     HtmlEngineImpl* engine = new HtmlEngineImpl();
     if (!engine->Load(fileName)) {
         delete engine;
@@ -1750,11 +1750,11 @@ bool IsHtmlEngineSupportedFile(const WCHAR* fileName, bool sniff) {
     return HtmlDoc::IsSupportedFile(fileName, sniff);
 }
 
-BaseEngine* CreateHtmlEngineFromFile(const WCHAR* fileName) {
+EngineBase* CreateHtmlEngineFromFile(const WCHAR* fileName) {
     return HtmlEngineImpl::CreateFromFile(fileName);
 }
 
-/* BaseEngine for handling TXT documents */
+/* EngineBase for handling TXT documents */
 
 class TxtEngineImpl : public EbookEngine {
   public:
@@ -1768,7 +1768,7 @@ class TxtEngineImpl : public EbookEngine {
         delete tocTree;
         delete doc;
     }
-    BaseEngine* Clone() override {
+    EngineBase* Clone() override {
         return fileName ? CreateFromFile(fileName) : nullptr;
     }
 
@@ -1778,7 +1778,7 @@ class TxtEngineImpl : public EbookEngine {
 
     DocTocTree* GetTocTree() override;
 
-    static BaseEngine* CreateFromFile(const WCHAR* fileName);
+    static EngineBase* CreateFromFile(const WCHAR* fileName);
 
   protected:
     TxtDoc* doc = nullptr;
@@ -1833,7 +1833,7 @@ DocTocTree* TxtEngineImpl::GetTocTree() {
     return tocTree;
 }
 
-BaseEngine* TxtEngineImpl::CreateFromFile(const WCHAR* fileName) {
+EngineBase* TxtEngineImpl::CreateFromFile(const WCHAR* fileName) {
     TxtEngineImpl* engine = new TxtEngineImpl();
     if (!engine->Load(fileName)) {
         delete engine;
@@ -1846,6 +1846,6 @@ bool IsTxtEngineSupportedFile(const WCHAR* fileName, bool sniff) {
     return TxtDoc::IsSupportedFile(fileName, sniff);
 }
 
-BaseEngine* CreateTxtEngineFromFile(const WCHAR* fileName) {
+EngineBase* CreateTxtEngineFromFile(const WCHAR* fileName) {
     return TxtEngineImpl::CreateFromFile(fileName);
 }

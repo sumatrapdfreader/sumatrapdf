@@ -342,7 +342,7 @@ bool PdfCreator::SetProperty(DocumentProperty prop, const WCHAR* value) {
 #endif
 }
 
-bool PdfCreator::CopyProperties(BaseEngine* engine) {
+bool PdfCreator::CopyProperties(EngineBase* engine) {
     static DocumentProperty props[] = {
         DocumentProperty::Title,     DocumentProperty::Author,           DocumentProperty::Subject,
         DocumentProperty::Copyright, DocumentProperty::ModificationDate, DocumentProperty::CreatorApp};
@@ -372,7 +372,7 @@ bool PdfCreator::SaveToFile(const char* filePath) {
     return true;
 }
 
-bool PdfCreator::RenderToFile(const char* pdfFileName, BaseEngine* engine, int dpi) {
+bool PdfCreator::RenderToFile(const char* pdfFileName, EngineBase* engine, int dpi) {
     PdfCreator* c = new PdfCreator();
     bool ok = true;
     // render all pages to images
