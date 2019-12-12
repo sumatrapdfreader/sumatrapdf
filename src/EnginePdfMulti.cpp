@@ -54,7 +54,6 @@ class EnginePdfMultiImpl : public BaseEngine {
     WCHAR* ExtractPageText(int pageNo, RectI** coordsOut = nullptr) override;
 
     bool HasClipOptimizations(int pageNo) override;
-    PageLayoutType PreferredLayout() override;
     WCHAR* GetProperty(DocumentProperty prop) override;
 
     bool SupportsAnnotation(bool forSaving = false) const override;
@@ -143,10 +142,6 @@ WCHAR* EnginePdfMultiImpl::ExtractPageText(int pageNo, RectI** coordsOut) {
 
 bool EnginePdfMultiImpl::HasClipOptimizations(int pageNo) {
     return true;
-}
-
-PageLayoutType EnginePdfMultiImpl::PreferredLayout() {
-    return PageLayoutType::Layout_Single;
 }
 
 WCHAR* EnginePdfMultiImpl::GetProperty(DocumentProperty prop) {

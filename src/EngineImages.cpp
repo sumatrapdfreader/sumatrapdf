@@ -71,9 +71,7 @@ class ImagesEngine : public BaseEngine {
         UNUSED(pageNo);
         return false;
     }
-    PageLayoutType PreferredLayout() override {
-        return Layout_NonContinuous;
-    }
+
     bool IsImageCollection() const override {
         return true;
     }
@@ -114,6 +112,8 @@ class ImagesEngine : public BaseEngine {
 
 ImagesEngine::ImagesEngine() {
     kind = kindEngineImage;
+    preferredLayout = Layout_NonContinuous;
+
     InitializeCriticalSection(&cacheAccess);
 }
 

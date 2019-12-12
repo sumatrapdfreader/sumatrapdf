@@ -266,6 +266,7 @@ class BaseEngine {
     // the default file extension for a document like
     // the currently loaded one (e.g. L".pdf")
     const WCHAR* defaultFileExt = nullptr;
+    PageLayoutType preferredLayout = Layout_Single;
 
     virtual ~BaseEngine() {
     }
@@ -318,9 +319,6 @@ class BaseEngine {
     // pages where clipping doesn't help are rendered in larger tiles
     virtual bool HasClipOptimizations(int pageNo) = 0;
     // the layout type this document's author suggests (if the user doesn't care)
-    virtual PageLayoutType PreferredLayout() {
-        return Layout_Single;
-    }
     // whether the content should be displayed as images instead of as document pages
     // (e.g. with a black background and less padding in between and without search UI)
     virtual bool IsImageCollection() const {

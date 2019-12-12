@@ -392,7 +392,6 @@ class PdfEngineImpl : public BaseEngine {
     WCHAR* ExtractPageText(int pageNo, RectI** coordsOut = nullptr) override;
 
     bool HasClipOptimizations(int pageNo) override;
-    PageLayoutType PreferredLayout() override;
     WCHAR* GetProperty(DocumentProperty prop) override;
 
     bool SupportsAnnotation(bool forSaving = false) const override;
@@ -738,15 +737,18 @@ bool PdfEngineImpl::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
     fz_catch(ctx) {
         file = nullptr;
     }
-    if (embedMarks)
+    if (embedMarks) {
         *embedMarks = ':';
+    }
 
 OpenEmbeddedFile:
-    if (!LoadFromStream(file, pwdUI))
+    if (!LoadFromStream(file, pwdUI)) {
         return false;
+    }
 
-    if (str::IsEmpty(embedMarks))
+    if (str::IsEmpty(embedMarks)) {
         return FinishLoading();
+    }
 
     int num, gen;
     embedMarks = (WCHAR*)str::Parse(embedMarks, L":%d:%d", &num, &gen);
@@ -789,8 +791,9 @@ bool PdfEngineImpl::Load(IStream* stream, PasswordUI* pwdUI) {
     fz_catch(ctx) {
         return false;
     }
-    if (!LoadFromStream(stm, pwdUI))
+    if (!LoadFromStream(stm, pwdUI)) {
         return false;
+    }
     return FinishLoading();
 }
 
@@ -861,6 +864,39 @@ bool PdfEngineImpl::LoadFromStream(fz_stream* stm, PasswordUI* pwdUI) {
     return ok;
 }
 
+static PageLayoutType GetPreferredLayout(fz_context* ctx, pdf_document* doc) {
+    PageLayoutType layout = Layout_Single;
+
+    pdf_obj* root = nullptr;
+    fz_try(ctx) {
+        root = pdf_dict_gets(ctx, pdf_trailer(ctx, doc), "Root");
+    }
+    fz_catch(ctx) {
+        return layout;
+    }
+
+    fz_try(ctx) {
+        const char* name = pdf_to_name(ctx, pdf_dict_gets(ctx, root, "PageLayout"));
+        if (str::EndsWith(name, "Right"))
+            layout = Layout_Book;
+        else if (str::StartsWith(name, "Two"))
+            layout = Layout_Facing;
+    }
+    fz_catch(ctx) {
+    }
+
+    fz_try(ctx) {
+        pdf_obj* prefs = pdf_dict_gets(ctx, root, "ViewerPreferences");
+        const char* direction = pdf_to_name(ctx, pdf_dict_gets(ctx, prefs, "Direction"));
+        if (str::Eq(direction, "R2L"))
+            layout = (PageLayoutType)(layout | Layout_R2L);
+    }
+    fz_catch(ctx) {
+    }
+
+    return layout;
+}
+
 bool PdfEngineImpl::FinishLoading() {
     pageCount = 0;
     fz_try(ctx) {
@@ -876,6 +912,8 @@ bool PdfEngineImpl::FinishLoading() {
     }
 
     pdf_document* doc = (pdf_document*)_doc;
+
+    preferredLayout = GetPreferredLayout(ctx, doc);
 
     ScopedCritSec scope(ctxAccess);
 
@@ -1845,41 +1883,6 @@ char* PdfEngineImpl::GetDecryptionKey() const {
     if (!_decryptionKey)
         return nullptr;
     return str::Dup(_decryptionKey);
-}
-
-PageLayoutType PdfEngineImpl::PreferredLayout() {
-    PageLayoutType layout = Layout_Single;
-
-    ScopedCritSec scope(ctxAccess);
-    pdf_document* doc = pdf_document_from_fz_document(ctx, _doc);
-    pdf_obj* root = nullptr;
-    fz_try(ctx) {
-        root = pdf_dict_gets(ctx, pdf_trailer(ctx, doc), "Root");
-    }
-    fz_catch(ctx) {
-        return layout;
-    }
-
-    fz_try(ctx) {
-        const char* name = pdf_to_name(ctx, pdf_dict_gets(ctx, root, "PageLayout"));
-        if (str::EndsWith(name, "Right"))
-            layout = Layout_Book;
-        else if (str::StartsWith(name, "Two"))
-            layout = Layout_Facing;
-    }
-    fz_catch(ctx) {
-    }
-
-    fz_try(ctx) {
-        pdf_obj* prefs = pdf_dict_gets(ctx, root, "ViewerPreferences");
-        const char* direction = pdf_to_name(ctx, pdf_dict_gets(ctx, prefs, "Direction"));
-        if (str::Eq(direction, "R2L"))
-            layout = (PageLayoutType)(layout | Layout_R2L);
-    }
-    fz_catch(ctx) {
-    }
-
-    return layout;
 }
 
 std::tuple<char*, size_t> PdfEngineImpl::GetFileData() {

@@ -97,8 +97,9 @@ void DumpProperties(BaseEngine* engine, bool fullDump) {
         Out("\t\tCopyingTextAllowed=\"no\"\n");
     if (engine->IsImageCollection())
         Out("\t\tImageFileDPI=\"%g\"\n", engine->GetFileDPI());
-    if (engine->PreferredLayout())
-        Out("\t\tPreferredLayout=\"%d\"\n", engine->PreferredLayout());
+    if (engine->preferredLayout) {
+        Out("\t\tPreferredLayout=\"%d\"\n", engine->preferredLayout);
+    }
     Out("\t/>\n");
 
     if (fullDump) {

@@ -282,10 +282,6 @@ class PsEngineImpl : public BaseEngine {
         return pdfEngine->HasClipOptimizations(pageNo);
     }
 
-    PageLayoutType PreferredLayout() override {
-        return pdfEngine->PreferredLayout();
-    }
-
     WCHAR* GetProperty(DocumentProperty prop) override {
         // omit properties created by Ghostscript
         if (!pdfEngine || DocumentProperty::CreationDate == prop || DocumentProperty::ModificationDate == prop ||
@@ -347,19 +343,26 @@ class PsEngineImpl : public BaseEngine {
 
     bool Load(const WCHAR* fileName) {
         AssertCrash(!FileName() && !pdfEngine);
-        if (!fileName)
+        if (!fileName) {
             return false;
+        }
         SetFileName(fileName);
-        if (file::StartsWith(fileName, "\x1F\x8B"))
+        if (file::StartsWith(fileName, "\x1F\x8B")) {
             pdfEngine = psgz2pdf(fileName);
-        else
+        } else {
             pdfEngine = ps2pdf(fileName);
+        }
 
         if (str::EndsWithI(FileName(), L".eps")) {
             defaultFileExt = L".eps";
         }
 
-        return pdfEngine != nullptr;
+        if (!pdfEngine) {
+            return false;
+        }
+
+        preferredLayout = pdfEngine->preferredLayout;
+        return true;
     }
 };
 

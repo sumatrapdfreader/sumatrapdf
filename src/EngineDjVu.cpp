@@ -230,9 +230,6 @@ class DjVuEngineImpl : public BaseEngine {
         UNUSED(pageNo);
         return false;
     }
-    PageLayoutType PreferredLayout() override {
-        return Layout_Single;
-    }
 
     WCHAR* GetProperty(DocumentProperty prop) override {
         UNUSED(prop);

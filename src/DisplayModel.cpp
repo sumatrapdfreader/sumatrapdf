@@ -200,7 +200,7 @@ void DisplayModel::SetInitialViewSettings(DisplayMode newDisplayMode, int newSta
 
     displayMode = newDisplayMode;
     presDisplayMode = newDisplayMode;
-    PageLayoutType layout = engine->PreferredLayout();
+    PageLayoutType layout = engine->preferredLayout;
     if (DM_AUTOMATIC == displayMode) {
         switch (layout & ~Layout_R2L) {
             case Layout_Single:

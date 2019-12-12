@@ -123,9 +123,6 @@ class EbookEngine : public BaseEngine {
         UNUSED(pageNo);
         return false;
     }
-    PageLayoutType PreferredLayout() override {
-        return Layout_Book;
-    }
 
     bool SupportsAnnotation(bool forSaving = false) const override {
         return !forSaving;
@@ -300,6 +297,7 @@ EbookEngine::EbookEngine() {
     // "B Format" paperback
     pageRect = RectD(0, 0, 5.12 * GetFileDPI(), 7.8 * GetFileDPI());
     pageBorder = 0.4f * GetFileDPI();
+    preferredLayout = Layout_Book;
     InitializeCriticalSection(&pagesAccess);
 }
 
@@ -764,8 +762,6 @@ class EpubEngineImpl : public EbookEngine {
     std::tuple<char*, size_t> GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
 
-    PageLayoutType PreferredLayout() override;
-
     WCHAR* GetProperty(DocumentProperty prop) override {
         return prop != DocumentProperty::FontList ? doc->GetProperty(prop) : ExtractFontList();
     }
@@ -845,6 +841,12 @@ bool EpubEngineImpl::FinishLoading() {
     if (!ExtractPageAnchors())
         return false;
 
+    if (doc->IsRTL()) {
+        preferredLayout = (PageLayoutType)(Layout_Book | Layout_R2L);
+    } else {
+        preferredLayout = Layout_Book;
+    }
+
     return pages->size() > 0;
 }
 
@@ -867,13 +869,6 @@ bool EpubEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots
         return false;
     }
     return CopyFileW(fileName, dstPath, FALSE);
-}
-
-PageLayoutType EpubEngineImpl::PreferredLayout() {
-    if (doc->IsRTL()) {
-        return (PageLayoutType)(Layout_Book | Layout_R2L);
-    }
-    return Layout_Book;
 }
 
 DocTocTree* EpubEngineImpl::GetTocTree() {
@@ -1415,10 +1410,6 @@ class ChmEngineImpl : public EbookEngine {
         return prop != DocumentProperty::FontList ? doc->GetProperty(prop) : ExtractFontList();
     }
 
-    PageLayoutType PreferredLayout() override {
-        return Layout_Single;
-    }
-
     PageDestination* GetNamedDest(const WCHAR* name) override;
     DocTocTree* GetTocTree() override;
 
@@ -1679,9 +1670,6 @@ class HtmlEngineImpl : public EbookEngine {
     WCHAR* GetProperty(DocumentProperty prop) override {
         return prop != DocumentProperty::FontList ? doc->GetProperty(prop) : ExtractFontList();
     }
-    PageLayoutType PreferredLayout() override {
-        return Layout_Single;
-    }
 
     static BaseEngine* CreateFromFile(const WCHAR* fileName);
 
@@ -1786,9 +1774,6 @@ class TxtEngineImpl : public EbookEngine {
 
     WCHAR* GetProperty(DocumentProperty prop) override {
         return prop != DocumentProperty::FontList ? doc->GetProperty(prop) : ExtractFontList();
-    }
-    PageLayoutType PreferredLayout() override {
-        return Layout_Single;
     }
 
     DocTocTree* GetTocTree() override;
