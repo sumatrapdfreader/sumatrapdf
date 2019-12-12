@@ -71,9 +71,6 @@ class EnginePdfMultiImpl : public EngineBase {
     WCHAR* GetPageLabel(int pageNo) const override;
     int GetPageByLabel(const WCHAR* label) const override;
 
-    bool IsPasswordProtected() const override;
-    char* GetDecryptionKey() const override;
-
     bool Load(const WCHAR* fileName, PasswordUI* pwdUI);
 
     static EngineBase* CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI);
@@ -180,14 +177,6 @@ WCHAR* EnginePdfMultiImpl::GetPageLabel(int pageNo) const {
 
 int EnginePdfMultiImpl::GetPageByLabel(const WCHAR* label) const {
     return -1;
-}
-
-bool EnginePdfMultiImpl::IsPasswordProtected() const {
-    return false;
-}
-
-char* EnginePdfMultiImpl::GetDecryptionKey() const {
-    return nullptr;
 }
 
 bool EnginePdfMultiImpl::Load(const WCHAR* fileName, PasswordUI* pwdUI) {

@@ -320,10 +320,6 @@ class PsEngineImpl : public EngineBase {
         return pdfEngine->GetTocTree();
     }
 
-    char* GetDecryptionKey() const override {
-        return pdfEngine->GetDecryptionKey();
-    }
-
     static EngineBase* CreateFromFile(const WCHAR* fileName);
 
   protected:
@@ -353,6 +349,7 @@ class PsEngineImpl : public EngineBase {
         fileDPI = pdfEngine->GetFileDPI();
         allowsPrinting = pdfEngine->AllowsPrinting();
         allowsCopyingText = pdfEngine->AllowsCopyingText();
+        decryptionKey = pdfEngine->decryptionKey;
 
         return true;
     }

@@ -271,8 +271,11 @@ class EngineBase {
     bool isImageCollection = false;
     bool allowsPrinting = true;
     bool allowsCopyingText = true;
+    bool isPasswordProtected = false;
+    char* decryptionKey = nullptr;
 
     virtual ~EngineBase() {
+        free(decryptionKey);
     }
     // creates a clone of this engine (e.g. for printing on a different thread)
     virtual EngineBase* Clone() = 0;
@@ -396,14 +399,14 @@ class EngineBase {
     }
 
     // whether this document required a password in order to be loaded
-    virtual bool IsPasswordProtected() const {
-        return false;
+    bool IsPasswordProtected() const {
+        return isPasswordProtected;
     }
     // returns a string to remember when the user wants to save a document's password
     // (don't implement for document types that don't support password protection)
     // caller must free() the result
-    virtual char* GetDecryptionKey() const {
-        return nullptr;
+    char* GetDecryptionKey() const {
+        return str::Dup(decryptionKey);
     }
 
     // loads the given page so that the time required can be measured

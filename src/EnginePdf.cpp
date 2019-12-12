@@ -409,9 +409,6 @@ class PdfEngineImpl : public EngineBase {
     WCHAR* GetPageLabel(int pageNo) const override;
     int GetPageByLabel(const WCHAR* label) const override;
 
-    bool IsPasswordProtected() const override;
-    char* GetDecryptionKey() const override;
-
     static EngineBase* CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI);
     static EngineBase* CreateFromStream(IStream* stream, PasswordUI* pwdUI);
 
@@ -426,8 +423,6 @@ class PdfEngineImpl : public EngineBase {
     bool SaveEmbedded(LinkSaverUI& saveUI, int num);
 
   protected:
-    char* _decryptionKey = nullptr;
-    bool isProtected = false;
     int pageCount = -1;
 
     fz_context* ctx = nullptr;
@@ -630,7 +625,6 @@ PdfEngineImpl::~PdfEngineImpl() {
     fz_drop_context(ctx);
 
     delete _pagelabels;
-    free(_decryptionKey);
 
     delete tocTree;
 
@@ -689,9 +683,9 @@ EngineBase* PdfEngineImpl::Clone() {
     }
     delete pwdUI;
 
-    if (!_decryptionKey && doc->crypt) {
-        delete clone->_decryptionKey;
-        clone->_decryptionKey = nullptr;
+    if (!decryptionKey && doc->crypt) {
+        free(clone->decryptionKey);
+        clone->decryptionKey = nullptr;
     }
 
     clone->UpdateUserAnnotations(&userAnnots);
@@ -810,12 +804,14 @@ bool PdfEngineImpl::LoadFromStream(fz_stream* stm, PasswordUI* pwdUI) {
 
     _docStream = stm;
 
-    isProtected = fz_needs_password(ctx, _doc);
-    if (!isProtected)
+    isPasswordProtected = fz_needs_password(ctx, _doc);
+    if (!isPasswordProtected) {
         return true;
+    }
 
-    if (!pwdUI)
+    if (!pwdUI) {
         return false;
+    }
 
     unsigned char digest[16 + 32] = {0};
     pdf_document* doc = (pdf_document*)_doc;
@@ -855,7 +851,7 @@ bool PdfEngineImpl::LoadFromStream(fz_stream* stm, PasswordUI* pwdUI) {
 
     if (ok && saveKey) {
         memcpy(digest + 16, pdf_crypt_key(ctx, doc->crypt), 32);
-        _decryptionKey = _MemToHex(&digest);
+        decryptionKey = _MemToHex(&digest);
     }
 
     return ok;
@@ -1462,10 +1458,6 @@ bool PdfEngineImpl::BenchLoadPage(int pageNo) {
     return GetFzPage(pageNo) != nullptr;
 }
 
-bool PdfEngineImpl::IsPasswordProtected() const {
-    return isProtected;
-}
-
 bool PdfEngineImpl::HasPageLabels() const {
     return _pagelabels != nullptr;
 }
@@ -1865,12 +1857,6 @@ void PdfEngineImpl::UpdateUserAnnotations(Vec<PageAnnotation>* list) {
         userAnnots = *list;
     else
         userAnnots.Reset();
-}
-
-char* PdfEngineImpl::GetDecryptionKey() const {
-    if (!_decryptionKey)
-        return nullptr;
-    return str::Dup(_decryptionKey);
 }
 
 std::tuple<char*, size_t> PdfEngineImpl::GetFileData() {

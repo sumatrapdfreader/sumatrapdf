@@ -94,10 +94,10 @@ void DisplayModel::UpdateDisplayState(DisplayState* ds) {
 
     ScrollState ss = GetScrollState();
     ds->pageNo = ss.page;
-    if (presentationMode)
-        ds->scrollPos = PointI();
-    else
+    ds->scrollPos = PointI();
+    if (!presentationMode) {
         ds->scrollPos = PointD(ss.x, ss.y).ToInt();
+    }
     ds->rotation = rotation;
     ds->displayR2L = displayR2L;
 
