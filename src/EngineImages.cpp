@@ -345,9 +345,6 @@ class ImageEngineImpl : public ImagesEngine {
 
     WCHAR* GetProperty(DocumentProperty prop) override;
 
-    float GetFileDPI() const override {
-        return image->GetHorizontalResolution();
-    }
     bool SaveFileAsPDF(const char* pdfFileName, bool includeUserAnnots = false) override;
 
     static BaseEngine* CreateFromFile(const WCHAR* fileName);
@@ -375,15 +372,18 @@ ImageEngineImpl::~ImageEngineImpl() {
 
 BaseEngine* ImageEngineImpl::Clone() {
     Bitmap* bmp = image->Clone(0, 0, image->GetWidth(), image->GetHeight(), PixelFormat32bppARGB);
-    if (!bmp)
+    if (!bmp) {
         return nullptr;
+    }
 
     ImageEngineImpl* clone = new ImageEngineImpl();
     clone->SetFileName(FileName());
     clone->defaultFileExt = defaultFileExt;
     clone->fileExt = fileExt;
-    if (fileStream)
+    clone->fileDPI = fileDPI;
+    if (fileStream) {
         fileStream->Clone(&clone->fileStream);
+    }
     clone->image = bmp;
     clone->FinishLoading();
 
@@ -435,6 +435,7 @@ bool ImageEngineImpl::FinishLoading() {
     if (!image || image->GetLastStatus() != Ok) {
         return false;
     }
+    fileDPI = image->GetHorizontalResolution();
 
     mediaboxes.Append(RectD(0, 0, image->GetWidth(), image->GetHeight()));
     AssertCrash(mediaboxes.size() == 1);
@@ -669,7 +670,8 @@ BaseEngine* CreateImageEngineFromStream(IStream* stream) {
 
 class ImageDirEngineImpl : public ImagesEngine {
   public:
-    ImageDirEngineImpl() : fileDPI(96.0f) {
+    ImageDirEngineImpl() {
+        fileDPI = 96.0f;
         kind = kindEngineImageDir;
         defaultFileExt = L"";
     }
@@ -704,11 +706,6 @@ class ImageDirEngineImpl : public ImagesEngine {
 
     DocTocTree* GetTocTree() override;
 
-    // TODO: better handle the case where images have different resolutions
-    float GetFileDPI() const override {
-        return fileDPI;
-    }
-
     bool SaveFileAsPDF(const char* pdfFileName, bool includeUserAnnots = false) override;
 
     static BaseEngine* CreateFromFile(const WCHAR* fileName);
@@ -720,7 +717,6 @@ class ImageDirEngineImpl : public ImagesEngine {
     virtual RectD LoadMediabox(int pageNo);
 
     WStrVec pageFileNames;
-    float fileDPI;
     DocTocTree* tocTree = nullptr;
 };
 
@@ -742,12 +738,14 @@ bool ImageDirEngineImpl::LoadImageDir(const WCHAR* dirName) {
     } while (FindNextFile(hfind, &fdata));
     FindClose(hfind);
 
-    if (pageFileNames.size() == 0)
+    if (pageFileNames.size() == 0) {
         return false;
+    }
     pageFileNames.SortNatural();
 
     mediaboxes.AppendBlanks(pageFileNames.size());
 
+    // TODO: better handle the case where images have different resolutions
     ImagePage* page = GetPage(1);
     if (page) {
         fileDPI = page->bmp->GetHorizontalResolution();
@@ -758,8 +756,9 @@ bool ImageDirEngineImpl::LoadImageDir(const WCHAR* dirName) {
 }
 
 WCHAR* ImageDirEngineImpl::GetPageLabel(int pageNo) const {
-    if (pageNo < 1 || PageCount() < pageNo)
+    if (pageNo < 1 || PageCount() < pageNo) {
         return BaseEngine::GetPageLabel(pageNo);
+    }
 
     const WCHAR* fileName = path::GetBaseNameNoFree(pageFileNames.at(pageNo - 1));
     return str::DupN(fileName, path::GetExt(fileName) - fileName);
@@ -898,12 +897,6 @@ class CbxEngineImpl : public ImagesEngine, public json::ValueVisitor {
 
     WCHAR* GetProperty(DocumentProperty prop) override;
 
-    // not using the resolution of the contained images seems to be
-    // expected, cf. http://forums.fofou.org/sumatrapdf/topic?id=3183827
-    // TODO: return win::GetHwndDpi(HWND_DESKTOP) instead?
-    float GetFileDPI() const override {
-        return 96.0f;
-    }
     const WCHAR* GetDefaultFileExt() const;
 
     // json::ValueVisitor
@@ -968,6 +961,11 @@ bool CbxEngineImpl::FinishLoading() {
     if (!cbxFile) {
         return false;
     }
+
+    // not using the resolution of the contained images seems to be
+    // expected, cf. http://forums.fofou.org/sumatrapdf/topic?id=3183827
+    // TODO: return win::GetHwndDpi(HWND_DESKTOP) instead?
+    fileDPI = 96.f;
 
     defaultFileExt = GetDefaultFileExt();
 

@@ -241,11 +241,6 @@ class DjVuEngineImpl : public BaseEngine {
     }
     void UpdateUserAnnotations(Vec<PageAnnotation>* list) override;
 
-    // DPI isn't constant for all pages and thus premultiplied
-    float GetFileDPI() const override {
-        return 300.0f;
-    }
-
     // we currently don't load pages lazily, so there's nothing to do here
     bool BenchLoadPage(int pageNo) override {
         UNUSED(pageNo);
@@ -296,6 +291,8 @@ class DjVuEngineImpl : public BaseEngine {
 DjVuEngineImpl::DjVuEngineImpl() {
     kind = kindEngineDjVu;
     defaultFileExt = L".djvu";
+    // DPI isn't constant for all pages and thus premultiplied
+    fileDPI = 300.0f;
 }
 
 DjVuEngineImpl::~DjVuEngineImpl() {

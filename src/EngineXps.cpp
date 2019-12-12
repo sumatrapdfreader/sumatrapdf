@@ -215,10 +215,6 @@ class XpsEngineImpl : public BaseEngine {
     bool SupportsAnnotation(bool forSaving = false) const override;
     void UpdateUserAnnotations(Vec<PageAnnotation>* list) override;
 
-    float GetFileDPI() const override {
-        return 72.0f;
-    }
-
     bool BenchLoadPage(int pageNo) override {
         return GetFzPageInfo(pageNo) != nullptr;
     }
@@ -377,6 +373,7 @@ static void installFitzErrorCallbacks(fz_context* ctx) {
 XpsEngineImpl::XpsEngineImpl() {
     kind = kindEngineXps;
     defaultFileExt = L".xps";
+    fileDPI = 72.0f;
 
     InitializeCriticalSection(&_pagesAccess);
     InitializeCriticalSection(&ctxAccess);

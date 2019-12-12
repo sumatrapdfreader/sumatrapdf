@@ -62,8 +62,6 @@ class EnginePdfMultiImpl : public BaseEngine {
     bool AllowsPrinting() const override;
     bool AllowsCopyingText() const override;
 
-    float GetFileDPI() const override;
-
     bool BenchLoadPage(int pageNo) override;
 
     Vec<PageElement*>* GetElements(int pageNo) override;
@@ -92,6 +90,7 @@ class EnginePdfMultiImpl : public BaseEngine {
 EnginePdfMultiImpl::EnginePdfMultiImpl() {
     kind = kindEnginePdfMulti;
     defaultFileExt = L".vbkm";
+    fileDPI = 72.0f;
 }
 
 EnginePdfMultiImpl::~EnginePdfMultiImpl() {
@@ -160,10 +159,6 @@ bool EnginePdfMultiImpl::AllowsPrinting() const {
 }
 bool EnginePdfMultiImpl::AllowsCopyingText() const {
     return true;
-}
-
-float EnginePdfMultiImpl::GetFileDPI() const {
-    return 96;
 }
 
 bool EnginePdfMultiImpl::BenchLoadPage(int pageNo) {

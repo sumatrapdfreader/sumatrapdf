@@ -308,10 +308,6 @@ class PsEngineImpl : public BaseEngine {
         return pdfEngine->AllowsCopyingText();
     }
 
-    float GetFileDPI() const override {
-        return pdfEngine->GetFileDPI();
-    }
-
     bool BenchLoadPage(int pageNo) override {
         return pdfEngine->BenchLoadPage(pageNo);
     }
@@ -362,6 +358,8 @@ class PsEngineImpl : public BaseEngine {
         }
 
         preferredLayout = pdfEngine->preferredLayout;
+        fileDPI = pdfEngine->GetFileDPI();
+
         return true;
     }
 };

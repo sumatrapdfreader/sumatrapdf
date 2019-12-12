@@ -267,6 +267,7 @@ class BaseEngine {
     // the currently loaded one (e.g. L".pdf")
     const WCHAR* defaultFileExt = nullptr;
     PageLayoutType preferredLayout = Layout_Single;
+    float fileDPI = 96.0f;
 
     virtual ~BaseEngine() {
     }
@@ -348,8 +349,8 @@ class BaseEngine {
     }
 
     // the DPI for a file is needed when converting internal measures to physical ones
-    virtual float GetFileDPI() const {
-        return 96.0f;
+    float GetFileDPI() const {
+        return fileDPI;
     }
 
     // returns a list of all available elements for this page
