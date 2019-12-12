@@ -307,16 +307,19 @@ static WCHAR* FormatPdfFileStructure(Controller* ctrl) {
 // returns a list of permissions denied by this document
 // Caller needs to free the result
 static WCHAR* FormatPermissions(Controller* ctrl) {
-    if (!ctrl->AsFixed())
+    if (!ctrl->AsFixed()) {
         return nullptr;
+    }
 
     WStrVec denials;
 
     BaseEngine* engine = ctrl->AsFixed()->GetEngine();
-    if (!engine->AllowsPrinting())
+    if (!engine->AllowsPrinting()) {
         denials.Push(str::Dup(_TR("printing document")));
-    if (!engine->AllowsCopyingText())
+    }
+    if (!engine->AllowsCopyingText()) {
         denials.Push(str::Dup(_TR("copying text")));
+    }
 
     return denials.Join(L", ");
 }

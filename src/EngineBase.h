@@ -269,6 +269,8 @@ class BaseEngine {
     PageLayoutType preferredLayout = Layout_Single;
     float fileDPI = 96.0f;
     bool isImageCollection = false;
+    bool allowsPrinting = true;
+    bool allowsCopyingText = true;
 
     virtual ~BaseEngine() {
     }
@@ -340,13 +342,13 @@ class BaseEngine {
 
     // TODO: needs a more general interface
     // whether it is allowed to print the current document
-    virtual bool AllowsPrinting() const {
-        return true;
+    bool AllowsPrinting() const {
+        return allowsPrinting;
     }
     // whether it is allowed to extract text from the current document
     // (except for searching an accessibility reasons)
-    virtual bool AllowsCopyingText() const {
-        return true;
+    bool AllowsCopyingText() const {
+        return allowsCopyingText;
     }
 
     // the DPI for a file is needed when converting internal measures to physical ones

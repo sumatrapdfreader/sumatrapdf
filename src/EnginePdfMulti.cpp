@@ -59,9 +59,6 @@ class EnginePdfMultiImpl : public BaseEngine {
     bool SupportsAnnotation(bool forSaving = false) const override;
     void UpdateUserAnnotations(Vec<PageAnnotation>* list) override;
 
-    bool AllowsPrinting() const override;
-    bool AllowsCopyingText() const override;
-
     bool BenchLoadPage(int pageNo) override;
 
     Vec<PageElement*>* GetElements(int pageNo) override;
@@ -152,13 +149,6 @@ bool EnginePdfMultiImpl::SupportsAnnotation(bool forSaving) const {
 }
 
 void EnginePdfMultiImpl::UpdateUserAnnotations(Vec<PageAnnotation>* list) {
-}
-
-bool EnginePdfMultiImpl::AllowsPrinting() const {
-    return false;
-}
-bool EnginePdfMultiImpl::AllowsCopyingText() const {
-    return true;
 }
 
 bool EnginePdfMultiImpl::BenchLoadPage(int pageNo) {

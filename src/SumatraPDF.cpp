@@ -2355,16 +2355,19 @@ static void OnMenuSaveAs(WindowInfo* win) {
     bool canConvertToPDF = engine && win->currentTab->GetEngineType() != kindEnginePdf;
 #ifndef DEBUG
     // not ready for document types other than PS and image collections
-    if (canConvertToPDF && win->currentTab->GetEngineType() != kindEnginePostScript && !engine->IsImageCollection())
+    if (canConvertToPDF && win->currentTab->GetEngineType() != kindEnginePostScript && !engine->IsImageCollection()) {
         canConvertToPDF = false;
+    }
 #endif
 #ifndef DISABLE_DOCUMENT_RESTRICTIONS
     // Can't save a document's content as plain text if text copying isn't allowed
-    if (engine && !engine->AllowsCopyingText())
+    if (engine && !engine->AllowsCopyingText()) {
         canConvertToTXT = false;
+    }
     // don't allow converting to PDF when printing isn't allowed
-    if (engine && !engine->AllowsPrinting())
+    if (engine && !engine->AllowsPrinting()) {
         canConvertToPDF = false;
+    }
 #endif
     CrashIf(canConvertToTXT &&
             (!engine || engine->IsImageCollection() || kindEngineTxt == win->currentTab->GetEngineType()));

@@ -397,9 +397,6 @@ class PdfEngineImpl : public BaseEngine {
     bool SupportsAnnotation(bool forSaving = false) const override;
     void UpdateUserAnnotations(Vec<PageAnnotation>* list) override;
 
-    bool AllowsPrinting() const override;
-    bool AllowsCopyingText() const override;
-
     bool BenchLoadPage(int pageNo) override;
 
     Vec<PageElement*>* GetElements(int pageNo) override;
@@ -914,6 +911,8 @@ bool PdfEngineImpl::FinishLoading() {
     pdf_document* doc = (pdf_document*)_doc;
 
     preferredLayout = GetPreferredLayout(ctx, doc);
+    allowsPrinting = fz_has_permission(ctx, _doc, FZ_PERMISSION_PRINT);
+    allowsCopyingText = fz_has_permission(ctx, _doc, FZ_PERMISSION_COPY);
 
     ScopedCritSec scope(ctxAccess);
 
@@ -1457,13 +1456,6 @@ void PdfEngineImpl::LinkifyPageText(FzPageInfo* pageInfo) {
 
 bool PdfEngineImpl::SaveFileAsPdf(const char* pdfFileName, bool includeUserAnnots) {
     return SaveFileAs(pdfFileName, includeUserAnnots);
-}
-
-bool PdfEngineImpl::AllowsPrinting() const {
-    return fz_has_permission(ctx, _doc, FZ_PERMISSION_PRINT);
-}
-bool PdfEngineImpl::AllowsCopyingText() const {
-    return fz_has_permission(ctx, _doc, FZ_PERMISSION_COPY);
 }
 
 bool PdfEngineImpl::BenchLoadPage(int pageNo) {

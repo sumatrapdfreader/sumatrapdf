@@ -300,14 +300,6 @@ class PsEngineImpl : public BaseEngine {
         pdfEngine->UpdateUserAnnotations(list);
     }
 
-    bool AllowsPrinting() const override {
-        return pdfEngine->AllowsPrinting();
-    }
-
-    bool AllowsCopyingText() const override {
-        return pdfEngine->AllowsCopyingText();
-    }
-
     bool BenchLoadPage(int pageNo) override {
         return pdfEngine->BenchLoadPage(pageNo);
     }
@@ -359,6 +351,8 @@ class PsEngineImpl : public BaseEngine {
 
         preferredLayout = pdfEngine->preferredLayout;
         fileDPI = pdfEngine->GetFileDPI();
+        allowsPrinting = pdfEngine->AllowsPrinting();
+        allowsCopyingText = pdfEngine->AllowsCopyingText();
 
         return true;
     }
