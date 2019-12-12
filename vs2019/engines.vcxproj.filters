@@ -35,6 +35,7 @@
     <ClCompile Include="..\src\EngineDjVu.cpp" />
     <ClCompile Include="..\src\EngineDump.cpp" />
     <ClCompile Include="..\src\EngineEbook.cpp" />
+    <ClCompile Include="..\src\EngineFzUtil.cpp" />
     <ClCompile Include="..\src\EngineImages.cpp" />
     <ClCompile Include="..\src\EngineManager.cpp" />
     <ClCompile Include="..\src\EnginePdf.cpp" />

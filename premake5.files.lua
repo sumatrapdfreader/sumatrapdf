@@ -887,6 +887,7 @@ function pdf_preview_files()
   files {
     "src/MUPDF_Exports.cpp",
     "src/EngineBase.*",
+    "src/EngineFzUtil.*",
     "src/EnginePdf.*",
     "src/EngineXps.*"
   }
@@ -919,6 +920,7 @@ function pdf_filter_files()
   files {
     "src/MUPDF_Exports.cpp",
     "src/EngineBase.*",
+    "src/EngineFzUtil.*",
     "src/EnginePdf.*",
     "src/EngineXps.*"
   }

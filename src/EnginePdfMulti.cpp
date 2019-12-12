@@ -91,11 +91,11 @@ class EnginePdfMultiImpl : public BaseEngine {
 };
 
 bool IsEnginePdfMultiSupportedFile(const WCHAR* fileName, bool sniff) {
-    if (!sniff) {
-        return str::EndsWithI(fileName, L".vbkm");
+    if (sniff) {
+        // we don't support sniffing
+        return false;
     }
-    // we don't support sniffing
-    return false;
+    return str::EndsWithI(fileName, L".vbkm");
 }
 
 BaseEngine* CreateEnginePdfMultiFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {

@@ -690,6 +690,7 @@
     <ClInclude Include="..\src\EngineBase.h" />
     <ClInclude Include="..\src\EngineDjVu.h" />
     <ClInclude Include="..\src\EngineEbook.h" />
+    <ClInclude Include="..\src\EngineFzUtil.h" />
     <ClInclude Include="..\src\EngineImages.h" />
     <ClInclude Include="..\src\EnginePdf.h" />
     <ClInclude Include="..\src\EngineXps.h" />
@@ -753,6 +754,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze x32_asan|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='ReleaseAnalyze|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\src\EngineFzUtil.cpp" />
     <ClCompile Include="..\src\EngineImages.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release x32_xp|Win32'">true</ExcludedFromBuild>

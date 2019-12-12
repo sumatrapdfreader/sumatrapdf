@@ -18,6 +18,7 @@
     <ClInclude Include="..\src\EngineBase.h" />
     <ClInclude Include="..\src\EngineDjVu.h" />
     <ClInclude Include="..\src\EngineEbook.h" />
+    <ClInclude Include="..\src\EngineFzUtil.h" />
     <ClInclude Include="..\src\EngineImages.h" />
     <ClInclude Include="..\src\EnginePdf.h" />
     <ClInclude Include="..\src\EngineXps.h" />
@@ -44,6 +45,7 @@
     <ClCompile Include="..\src\EngineBase.cpp" />
     <ClCompile Include="..\src\EngineDjVu.cpp" />
     <ClCompile Include="..\src\EngineEbook.cpp" />
+    <ClCompile Include="..\src\EngineFzUtil.cpp" />
     <ClCompile Include="..\src\EngineImages.cpp" />
     <ClCompile Include="..\src\EnginePdf.cpp" />
     <ClCompile Include="..\src\EngineXps.cpp" />
