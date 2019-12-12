@@ -1235,9 +1235,7 @@ BaseEngine* XpsEngineImpl::CreateFromStream(IStream* stream) {
     return engine;
 }
 
-namespace XpsEngine {
-
-bool IsSupportedFile(const WCHAR* fileName, bool sniff) {
+bool IsXpsEngineSupportedFile(const WCHAR* fileName, bool sniff) {
     if (!sniff) {
         return str::EndsWithI(fileName, L".xps") || str::EndsWithI(fileName, L".oxps");
     }
@@ -1260,12 +1258,10 @@ bool IsSupportedFile(const WCHAR* fileName, bool sniff) {
     return res;
 }
 
-BaseEngine* CreateFromFile(const WCHAR* fileName) {
+BaseEngine* CreateXpsEngineFromFile(const WCHAR* fileName) {
     return XpsEngineImpl::CreateFromFile(fileName);
 }
 
-BaseEngine* CreateFromStream(IStream* stream) {
+BaseEngine* CreateXpsEngineFromStream(IStream* stream) {
     return XpsEngineImpl::CreateFromStream(stream);
 }
-
-} // namespace XpsEngine

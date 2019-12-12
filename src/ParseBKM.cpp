@@ -368,17 +368,12 @@ bool ParseBookmarksFile(std::string_view path, Vec<Bookmarks*>* bkms) {
 }
 
 Vec<Bookmarks*>* LoadAlterenativeBookmarks(std::string_view baseFileName) {
-    str::Str s;
-    s.Set(baseFileName.data());
-    s.Append(".bkm");
-    std::string_view path = s.AsView();
-    if (!file::Exists(path)) {
-        return nullptr;
-    }
+    str::Str path = baseFileName;
+    path.Append(".bkm");
 
     auto* res = new Vec<Bookmarks*>();
 
-    auto ok = ParseBookmarksFile(path, res);
+    auto ok = ParseBookmarksFile(path.AsView(), res);
     if (!ok) {
         DeleteVecMembers(*res);
         delete res;

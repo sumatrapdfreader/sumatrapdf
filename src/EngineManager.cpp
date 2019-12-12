@@ -14,33 +14,37 @@
 #include "EnginePdf.h"
 #include "EnginePs.h"
 #include "EngineXps.h"
+#include "EnginePdfMulti.h"
 #include "EngineManager.h"
 
 namespace EngineManager {
 
 bool IsSupportedFile(const WCHAR* filePath, bool sniff, bool enableEbookEngines) {
-    if (EnginePdf::IsSupportedFile(filePath, sniff)) {
+    if (IsEnginePdfSupportedFile(filePath, sniff)) {
         return true;
     }
-    if (XpsEngine::IsSupportedFile(filePath, sniff)) {
+    if (IsEnginePdfMultiSupportedFile(filePath, sniff)) {
         return true;
     }
-    if (DjVuEngine::IsSupportedFile(filePath, sniff)) {
+    if (IsXpsEngineSupportedFile(filePath, sniff)) {
         return true;
     }
-    if (ImageDirEngine::IsSupportedFile(filePath, sniff)) {
+    if (IsDjVuEngineSupportedFile(filePath, sniff)) {
         return true;
     }
-    if (CbxEngine::IsSupportedFile(filePath, sniff)) {
+    if (IsImageDirEngineSupportedFile(filePath, sniff)) {
         return true;
     }
-    if (EnginePdf::IsSupportedFile(filePath, sniff)) {
+    if (IsCbxEngineSupportedFile(filePath, sniff)) {
         return true;
     }
-    if (PsEngine::IsSupportedFile(filePath, sniff)) {
+    if (IsEnginePdfSupportedFile(filePath, sniff)) {
         return true;
     }
-    if (ChmEngine::IsSupportedFile(filePath, sniff)) {
+    if (IsPsEngineSupportedFile(filePath, sniff)) {
+        return true;
+    }
+    if (IsChmEngineSupportedFile(filePath, sniff)) {
         return true;
     }
 
@@ -48,22 +52,22 @@ bool IsSupportedFile(const WCHAR* filePath, bool sniff, bool enableEbookEngines)
         return false;
     }
 
-    if (EpubEngine::IsSupportedFile(filePath, sniff)) {
+    if (IsEpubEngineSupportedFile(filePath, sniff)) {
         return true;
     }
-    if (Fb2Engine::IsSupportedFile(filePath, sniff)) {
+    if (IsFb2EngineSupportedFile(filePath, sniff)) {
         return true;
     }
-    if (MobiEngine::IsSupportedFile(filePath, sniff)) {
+    if (IsMobiEngineSupportedFile(filePath, sniff)) {
         return true;
     }
-    if (PdbEngine::IsSupportedFile(filePath, sniff)) {
+    if (IsPdbEngineSupportedFile(filePath, sniff)) {
         return true;
     }
-    if (HtmlEngine::IsSupportedFile(filePath, sniff)) {
+    if (IsHtmlEngineSupportedFile(filePath, sniff)) {
         return true;
     }
-    if (TxtEngine::IsSupportedFile(filePath, sniff)) {
+    if (IsTxtEngineSupportedFile(filePath, sniff)) {
         return true;
     }
     return false;
@@ -75,36 +79,36 @@ BaseEngine* CreateEngine(const WCHAR* filePath, PasswordUI* pwdUI, bool enableCh
     BaseEngine* engine = nullptr;
     bool sniff = false;
 RetrySniffing:
-    if (EnginePdf::IsSupportedFile(filePath, sniff)) {
-        engine = EnginePdf::CreateFromFile(filePath, pwdUI);
-    } else if (XpsEngine::IsSupportedFile(filePath, sniff)) {
-        engine = XpsEngine::CreateFromFile(filePath);
-    } else if (DjVuEngine::IsSupportedFile(filePath, sniff)) {
-        engine = DjVuEngine::CreateFromFile(filePath);
-    } else if (ImageEngine::IsSupportedFile(filePath, sniff)) {
-        engine = ImageEngine::CreateFromFile(filePath);
-    } else if (ImageDirEngine::IsSupportedFile(filePath, sniff)) {
-        engine = ImageDirEngine::CreateFromFile(filePath);
-    } else if (CbxEngine::IsSupportedFile(filePath, sniff)) {
-        engine = CbxEngine::CreateFromFile(filePath);
-    } else if (PsEngine::IsSupportedFile(filePath, sniff)) {
-        engine = PsEngine::CreateFromFile(filePath);
-    } else if (enableChmEngine && ChmEngine::IsSupportedFile(filePath, sniff)) {
-        engine = ChmEngine::CreateFromFile(filePath);
+    if (IsEnginePdfSupportedFile(filePath, sniff)) {
+        engine = CreateEnginePdfFromFile(filePath, pwdUI);
+    } else if (IsXpsEngineSupportedFile(filePath, sniff)) {
+        engine = CreateXpsEngineFromFile(filePath);
+    } else if (IsDjVuEngineSupportedFile(filePath, sniff)) {
+        engine = CreateDjVuEngineFromFile(filePath);
+    } else if (IsImageEngineSupportedFile(filePath, sniff)) {
+        engine = CreateImageEngineFromFile(filePath);
+    } else if (IsImageDirEngineSupportedFile(filePath, sniff)) {
+        engine = CreateImageDirEngineFromFile(filePath);
+    } else if (IsCbxEngineSupportedFile(filePath, sniff)) {
+        engine = CreateCbxEngineFromFile(filePath);
+    } else if (IsPsEngineSupportedFile(filePath, sniff)) {
+        engine = CreatePsEngineFromFile(filePath);
+    } else if (enableChmEngine && IsChmEngineSupportedFile(filePath, sniff)) {
+        engine = CreateChmEngineFromFile(filePath);
     } else if (!enableEbookEngines) {
         // don't try to create any of the below ebook engines
-    } else if (EpubEngine::IsSupportedFile(filePath, sniff)) {
-        engine = EpubEngine::CreateFromFile(filePath);
-    } else if (Fb2Engine::IsSupportedFile(filePath, sniff)) {
-        engine = Fb2Engine::CreateFromFile(filePath);
-    } else if (MobiEngine::IsSupportedFile(filePath, sniff)) {
-        engine = MobiEngine::CreateFromFile(filePath);
-    } else if (PdbEngine::IsSupportedFile(filePath, sniff)) {
-        engine = PdbEngine::CreateFromFile(filePath);
-    } else if (HtmlEngine::IsSupportedFile(filePath, sniff)) {
-        engine = HtmlEngine::CreateFromFile(filePath);
-    } else if (TxtEngine::IsSupportedFile(filePath, sniff)) {
-        engine = TxtEngine::CreateFromFile(filePath);
+    } else if (IsEpubEngineSupportedFile(filePath, sniff)) {
+        engine = CreateEpubEngineFromFile(filePath);
+    } else if (IsFb2EngineSupportedFile(filePath, sniff)) {
+        engine = CreateFb2EngineFromFile(filePath);
+    } else if (IsMobiEngineSupportedFile(filePath, sniff)) {
+        engine = CreateMobiEngineFromFile(filePath);
+    } else if (IsPdbEngineSupportedFile(filePath, sniff)) {
+        engine = CreatePdbEngineFromFile(filePath);
+    } else if (IsHtmlEngineSupportedFile(filePath, sniff)) {
+        engine = CreateHtmlEngineFromFile(filePath);
+    } else if (IsTxtEngineSupportedFile(filePath, sniff)) {
+        engine = CreateTxtEngineFromFile(filePath);
     }
 
     if (engine) {

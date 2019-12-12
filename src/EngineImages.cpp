@@ -593,9 +593,55 @@ BaseEngine* ImageEngineImpl::CreateFromStream(IStream* stream) {
     return engine;
 }
 
-namespace ImageEngine {
+bool IsImageEngineSupportedFile(const char* fileName) {
+    const char* ext = path::GetExt(fileName);
+    if (str::Len(ext) == 0) {
+        return false;
+    }
+    if (str::EqI(ext, ".png")) {
+        return true;
+    }
+    if (str::EqI(ext, ".jpg")) {
+        return true;
+    }
+    if (str::EqI(ext, ".jpeg")) {
+        return true;
+    }
+    if (str::EqI(ext, ".gif")) {
+        return true;
+    }
+    if (str::EqI(ext, ".tif")) {
+        return true;
+    }
+    if (str::EqI(ext, ".tiff")) {
+        return true;
+    }
+    if (str::EqI(ext, ".bmp")) {
+        return true;
+    }
+    if (str::EqI(ext, ".tga")) {
+        return true;
+    }
+    if (str::EqI(ext, ".jxr")) {
+        return true;
+    }
+    if (str::EqI(ext, ".hdp")) {
+        return true;
+    }
+    if (str::EqI(ext, ".wdp")) {
+        return true;
+    }
+    if (str::EqI(ext, ".webp")) {
+        return true;
+    }
 
-bool IsSupportedFile(const WCHAR* fileName, bool sniff) {
+    if (str::EqI(ext, ".jp2")) {
+        return true;
+    }
+    return false;
+}
+
+bool IsImageEngineSupportedFile(const WCHAR* fileName, bool sniff) {
     const WCHAR* ext = path::GetExt(fileName);
     if (sniff) {
         char header[32] = {0};
@@ -608,35 +654,17 @@ bool IsSupportedFile(const WCHAR* fileName, bool sniff) {
     if (str::Len(ext) == 0) {
         return false;
     }
-    // TODO: replace with seqstr
-    return str::EqI(ext, L".png") || str::EqI(ext, L".jpg") || str::EqI(ext, L".jpeg") || str::EqI(ext, L".gif") ||
-           str::EqI(ext, L".tif") || str::EqI(ext, L".tiff") || str::EqI(ext, L".bmp") || str::EqI(ext, L".tga") ||
-           str::EqI(ext, L".jxr") || str::EqI(ext, L".hdp") || str::EqI(ext, L".wdp") || str::EqI(ext, L".webp") ||
-           str::EqI(ext, L".jp2");
+    AutoFree fileNameA = str::conv::WstrToUtf8(fileName);
+    return IsImageEngineSupportedFile(fileNameA);
 }
 
-bool IsSupportedFile(const char* fileName) {
-    const char* ext = path::GetExt(fileName);
-    if (str::Len(ext) == 0) {
-        return false;
-    }
-    // TODO: replace with seqstr
-    return str::EqI(ext, ".png") || str::EqI(ext, ".jpg") || str::EqI(ext, ".jpeg") || str::EqI(ext, ".gif") ||
-           str::EqI(ext, ".tif") || str::EqI(ext, ".tiff") || str::EqI(ext, ".bmp") || str::EqI(ext, ".tga") ||
-           str::EqI(ext, ".jxr") || str::EqI(ext, ".hdp") || str::EqI(ext, ".wdp") || str::EqI(ext, ".webp") ||
-           str::EqI(ext, ".jp2");
-}
-
-BaseEngine* CreateFromFile(const WCHAR* fileName) {
-    AssertCrash(ImageEngine::IsSupportedFile(fileName) || ImageEngine::IsSupportedFile(fileName, true));
+BaseEngine* CreateImageEngineFromFile(const WCHAR* fileName) {
     return ImageEngineImpl::CreateFromFile(fileName);
 }
 
-BaseEngine* CreateFromStream(IStream* stream) {
+BaseEngine* CreateImageEngineFromStream(IStream* stream) {
     return ImageEngineImpl::CreateFromStream(stream);
 }
-
-} // namespace ImageEngine
 
 ///// ImageDirEngine handles a directory full of image files /////
 
@@ -711,7 +739,7 @@ bool ImageDirEngineImpl::LoadImageDir(const WCHAR* dirName) {
 
     do {
         if (!(fdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-            if (ImageEngine::IsSupportedFile(fdata.cFileName))
+            if (IsImageEngineSupportedFile(fdata.cFileName))
                 pageFileNames.Append(path::Join(dirName, fdata.cFileName));
         }
     } while (FindNextFile(hfind, &fdata));
@@ -834,19 +862,15 @@ BaseEngine* ImageDirEngineImpl::CreateFromFile(const WCHAR* fileName) {
     return engine;
 }
 
-namespace ImageDirEngine {
-
-bool IsSupportedFile(const WCHAR* fileName, bool sniff) {
+bool IsImageDirEngineSupportedFile(const WCHAR* fileName, bool sniff) {
     UNUSED(sniff);
     // whether it actually contains images will be checked in LoadImageDir
     return dir::Exists(fileName);
 }
 
-BaseEngine* CreateFromFile(const WCHAR* fileName) {
+BaseEngine* CreateImageDirEngineFromFile(const WCHAR* fileName) {
     return ImageDirEngineImpl::CreateFromFile(fileName);
 }
-
-} // namespace ImageDirEngine
 
 ///// CbxEngine handles comic book files (either .cbz, .cbr, .cb7 or .cbt) /////
 
@@ -961,7 +985,7 @@ bool CbxEngineImpl::FinishLoading() {
             return false;
         }
 
-        if (ImageEngine::IsSupportedFile(fileName) &&
+        if (IsImageEngineSupportedFile(fileName) &&
             // OS X occasionally leaves metadata with image extensions
             !str::StartsWith(path::GetBaseNameNoFree(fileName), ".")) {
             pageFiles.push_back(fileInfo);
@@ -1251,9 +1275,7 @@ BaseEngine* CbxEngineImpl::CreateFromStream(IStream* stream) {
     return nullptr;
 }
 
-namespace CbxEngine {
-
-bool IsSupportedFile(const WCHAR* fileName, bool sniff) {
+bool IsCbxEngineSupportedFile(const WCHAR* fileName, bool sniff) {
     if (sniff) {
         // we don't also sniff for ZIP files, as these could also
         // be broken XPS files for which failure is expected
@@ -1269,13 +1291,10 @@ bool IsSupportedFile(const WCHAR* fileName, bool sniff) {
            str::EndsWithI(fileName, L".rar") || str::EndsWithI(fileName, L".7z") || str::EndsWithI(fileName, L".tar");
 }
 
-BaseEngine* CreateFromFile(const WCHAR* fileName) {
-    AssertCrash(CbxEngine::IsSupportedFile(fileName) || CbxEngine::IsSupportedFile(fileName, true));
+BaseEngine* CreateCbxEngineFromFile(const WCHAR* fileName) {
     return CbxEngineImpl::CreateFromFile(fileName);
 }
 
-BaseEngine* CreateFromStream(IStream* stream) {
+BaseEngine* CreateCbxEngineFromStream(IStream* stream) {
     return CbxEngineImpl::CreateFromStream(stream);
 }
-
-} // namespace CbxEngine

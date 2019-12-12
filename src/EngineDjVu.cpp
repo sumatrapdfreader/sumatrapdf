@@ -1100,21 +1100,17 @@ BaseEngine* DjVuEngineImpl::CreateFromStream(IStream* stream) {
     return engine;
 }
 
-namespace DjVuEngine {
-
-bool IsSupportedFile(const WCHAR* fileName, bool sniff) {
+bool IsDjVuEngineSupportedFile(const WCHAR* fileName, bool sniff) {
     if (sniff)
         return file::StartsWith(fileName, "AT&T");
 
     return str::EndsWithI(fileName, L".djvu");
 }
 
-BaseEngine* CreateFromFile(const WCHAR* fileName) {
+BaseEngine* CreateDjVuEngineFromFile(const WCHAR* fileName) {
     return DjVuEngineImpl::CreateFromFile(fileName);
 }
 
-BaseEngine* CreateFromStream(IStream* stream) {
+BaseEngine* CreateDjVuEngineFromStream(IStream* stream) {
     return DjVuEngineImpl::CreateFromStream(stream);
 }
-
-} // namespace DjVuEngine

@@ -425,7 +425,7 @@ class Str : public Vec<char> {
         this->allocator = allocator;
     }
 
-    explicit Str(std::string_view s) {
+    Str(std::string_view s) {
         Set(s);
     }
 

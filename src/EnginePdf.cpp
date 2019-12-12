@@ -3133,9 +3133,7 @@ BaseEngine* PdfEngineImpl::CreateFromStream(IStream* stream, PasswordUI* pwdUI) 
     return engine;
 }
 
-namespace EnginePdf {
-
-bool IsSupportedFile(const WCHAR* fileName, bool sniff) {
+bool IsEnginePdfSupportedFile(const WCHAR* fileName, bool sniff) {
     if (sniff) {
         char header[1024] = {0};
         file::ReadN(fileName, header, sizeof(header));
@@ -3150,12 +3148,10 @@ bool IsSupportedFile(const WCHAR* fileName, bool sniff) {
     return str::EndsWithI(fileName, L".pdf") || findEmbedMarks(fileName);
 }
 
-BaseEngine* CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {
+BaseEngine* CreateEnginePdfFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {
     return PdfEngineImpl::CreateFromFile(fileName, pwdUI);
 }
 
-BaseEngine* CreateFromStream(IStream* stream, PasswordUI* pwdUI) {
+BaseEngine* CreateEnginePdfFromStream(IStream* stream, PasswordUI* pwdUI) {
     return PdfEngineImpl::CreateFromStream(stream, pwdUI);
 }
-
-} // namespace EnginePdf

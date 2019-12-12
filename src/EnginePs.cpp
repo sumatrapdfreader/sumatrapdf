@@ -171,7 +171,7 @@ static BaseEngine* ps2pdf(const WCHAR* fileName) {
         return nullptr;
     }
 
-    return EnginePdf::CreateFromStream(stream);
+    return CreateEnginePdfFromStream(stream);
 }
 
 static BaseEngine* psgz2pdf(const WCHAR* fileName) {
@@ -370,16 +370,15 @@ BaseEngine* PsEngineImpl::CreateFromFile(const WCHAR* fileName) {
     return engine;
 }
 
-namespace PsEngine {
-
-bool IsAvailable() {
+bool IsPsEngineAvailable() {
     AutoFreeW gswin32c(GetGhostscriptPath());
     return gswin32c.Get() != nullptr;
 }
 
-bool IsSupportedFile(const WCHAR* fileName, bool sniff) {
-    if (!IsAvailable())
+bool IsPsEngineSupportedFile(const WCHAR* fileName, bool sniff) {
+    if (!IsPsEngineAvailable()) {
         return false;
+    }
 
     if (sniff) {
         char header[2048] = {0};
@@ -397,8 +396,6 @@ bool IsSupportedFile(const WCHAR* fileName, bool sniff) {
     return str::EndsWithI(fileName, L".ps") || str::EndsWithI(fileName, L".ps.gz") || str::EndsWithI(fileName, L".eps");
 }
 
-BaseEngine* CreateFromFile(const WCHAR* fileName) {
+BaseEngine* CreatePsEngineFromFile(const WCHAR* fileName) {
     return PsEngineImpl::CreateFromFile(fileName);
 }
-
-} // namespace PsEngine

@@ -906,9 +906,7 @@ BaseEngine* EpubEngineImpl::CreateFromStream(IStream* stream) {
     return engine;
 }
 
-namespace EpubEngine {
-
-bool IsSupportedFile(const WCHAR* fileName, bool sniff) {
+bool IsEpubEngineSupportedFile(const WCHAR* fileName, bool sniff) {
     if (sniff && dir::Exists(fileName)) {
         AutoFreeW mimetypePath(path::Join(fileName, L"mimetype"));
         return file::StartsWith(mimetypePath, "application/epub+zip");
@@ -916,15 +914,13 @@ bool IsSupportedFile(const WCHAR* fileName, bool sniff) {
     return EpubDoc::IsSupportedFile(fileName, sniff);
 }
 
-BaseEngine* CreateFromFile(const WCHAR* fileName) {
+BaseEngine* CreateEpubEngineFromFile(const WCHAR* fileName) {
     return EpubEngineImpl::CreateFromFile(fileName);
 }
 
-BaseEngine* CreateFromStream(IStream* stream) {
+BaseEngine* CreateEpubEngineFromStream(IStream* stream) {
     return EpubEngineImpl::CreateFromStream(stream);
 }
-
-} // namespace EpubEngine
 
 /* BaseEngine for handling FictionBook2 documents */
 
@@ -1027,21 +1023,17 @@ BaseEngine* Fb2EngineImpl::CreateFromStream(IStream* stream) {
     return engine;
 }
 
-namespace Fb2Engine {
-
-bool IsSupportedFile(const WCHAR* fileName, bool sniff) {
+bool IsFb2EngineSupportedFile(const WCHAR* fileName, bool sniff) {
     return Fb2Doc::IsSupportedFile(fileName, sniff);
 }
 
-BaseEngine* CreateFromFile(const WCHAR* fileName) {
+BaseEngine* CreateFb2EngineFromFile(const WCHAR* fileName) {
     return Fb2EngineImpl::CreateFromFile(fileName);
 }
 
-BaseEngine* CreateFromStream(IStream* stream) {
+BaseEngine* CreateFb2EngineFromStream(IStream* stream) {
     return Fb2EngineImpl::CreateFromStream(stream);
 }
-
-} // namespace Fb2Engine
 
 /* BaseEngine for handling Mobi documents */
 
@@ -1184,21 +1176,17 @@ BaseEngine* MobiEngineImpl::CreateFromStream(IStream* stream) {
     return engine;
 }
 
-namespace MobiEngine {
-
-bool IsSupportedFile(const WCHAR* fileName, bool sniff) {
+bool IsMobiEngineSupportedFile(const WCHAR* fileName, bool sniff) {
     return MobiDoc::IsSupportedFile(fileName, sniff);
 }
 
-BaseEngine* CreateFromFile(const WCHAR* fileName) {
+BaseEngine* CreateMobiEngineFromFile(const WCHAR* fileName) {
     return MobiEngineImpl::CreateFromFile(fileName);
 }
 
-BaseEngine* CreateFromStream(IStream* stream) {
+BaseEngine* CreateMobiEngineFromStream(IStream* stream) {
     return MobiEngineImpl::CreateFromStream(stream);
 }
-
-} // namespace MobiEngine
 
 /* BaseEngine for handling PalmDOC documents (and extensions such as TealDoc) */
 
@@ -1276,17 +1264,13 @@ BaseEngine* PdbEngineImpl::CreateFromFile(const WCHAR* fileName) {
     return engine;
 }
 
-namespace PdbEngine {
-
-bool IsSupportedFile(const WCHAR* fileName, bool sniff) {
+bool IsPdbEngineSupportedFile(const WCHAR* fileName, bool sniff) {
     return PalmDoc::IsSupportedFile(fileName, sniff);
 }
 
-BaseEngine* CreateFromFile(const WCHAR* fileName) {
+BaseEngine* CreatePdbEngineFromFile(const WCHAR* fileName) {
     return PdbEngineImpl::CreateFromFile(fileName);
 }
-
-} // namespace PdbEngine
 
 /* formatting extensions for CHM */
 
@@ -1669,17 +1653,13 @@ BaseEngine* ChmEngineImpl::CreateFromFile(const WCHAR* fileName) {
     return engine;
 }
 
-namespace ChmEngine {
-
-bool IsSupportedFile(const WCHAR* fileName, bool sniff) {
+bool IsChmEngineSupportedFile(const WCHAR* fileName, bool sniff) {
     return ChmDoc::IsSupportedFile(fileName, sniff);
 }
 
-BaseEngine* CreateFromFile(const WCHAR* fileName) {
+BaseEngine* CreateChmEngineFromFile(const WCHAR* fileName) {
     return ChmEngineImpl::CreateFromFile(fileName);
 }
-
-} // namespace ChmEngine
 
 /* BaseEngine for handling HTML documents */
 /* (mainly to allow creating minimal regression test testcases more easily) */
@@ -1782,17 +1762,13 @@ BaseEngine* HtmlEngineImpl::CreateFromFile(const WCHAR* fileName) {
     return engine;
 }
 
-namespace HtmlEngine {
-
-bool IsSupportedFile(const WCHAR* fileName, bool sniff) {
+bool IsHtmlEngineSupportedFile(const WCHAR* fileName, bool sniff) {
     return HtmlDoc::IsSupportedFile(fileName, sniff);
 }
 
-BaseEngine* CreateFromFile(const WCHAR* fileName) {
+BaseEngine* CreateHtmlEngineFromFile(const WCHAR* fileName) {
     return HtmlEngineImpl::CreateFromFile(fileName);
 }
-
-} // namespace HtmlEngine
 
 /* BaseEngine for handling TXT documents */
 
@@ -1881,14 +1857,10 @@ BaseEngine* TxtEngineImpl::CreateFromFile(const WCHAR* fileName) {
     return engine;
 }
 
-namespace TxtEngine {
-
-bool IsSupportedFile(const WCHAR* fileName, bool sniff) {
+bool IsTxtEngineSupportedFile(const WCHAR* fileName, bool sniff) {
     return TxtDoc::IsSupportedFile(fileName, sniff);
 }
 
-BaseEngine* CreateFromFile(const WCHAR* fileName) {
+BaseEngine* CreateTxtEngineFromFile(const WCHAR* fileName) {
     return TxtEngineImpl::CreateFromFile(fileName);
 }
-
-} // namespace TxtEngine

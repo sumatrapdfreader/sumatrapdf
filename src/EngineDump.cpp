@@ -520,8 +520,7 @@ int main(int argc, char** argv) {
     BaseEngine* engine = EngineManager::CreateEngine(filePath, &pwdUI);
 #ifdef DEBUG
     bool isEngineDjVu = IsOfKind(engine, kindEngineDjVu);
-    bool couldLeak =
-        isEngineDjVu || DjVuEngine::IsSupportedFile(filePath) || DjVuEngine::IsSupportedFile(filePath, true);
+    bool couldLeak = isEngineDjVu || IsDjVuEngineSupportedFile(filePath) || IsDjVuEngineSupportedFile(filePath, true);
     if (!couldLeak) {
         // report memory leaks on stderr for engines that shouldn't leak
         _CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);

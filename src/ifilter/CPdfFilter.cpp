@@ -38,7 +38,7 @@ HRESULT CPdfFilter::OnInit() {
     if (!stream)
         return E_FAIL;
 
-    m_pdfEngine = EnginePdf::CreateFromStream(stream);
+    m_pdfEngine = CreateEnginePdfFromStream(stream);
     if (!m_pdfEngine)
         return E_FAIL;
 

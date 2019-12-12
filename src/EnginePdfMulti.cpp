@@ -90,9 +90,7 @@ class EnginePdfMultiImpl : public BaseEngine {
     DocTocTree* tocTree = nullptr;
 };
 
-namespace EnginePdfMulti {
-
-bool IsSupportedFile(const WCHAR* fileName, bool sniff) {
+bool IsEnginePdfMultiSupportedFile(const WCHAR* fileName, bool sniff) {
     if (!sniff) {
         return str::EndsWithI(fileName, L".vbkm");
     }
@@ -100,12 +98,10 @@ bool IsSupportedFile(const WCHAR* fileName, bool sniff) {
     return false;
 }
 
-BaseEngine* CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {
+BaseEngine* CreateEnginePdfMultiFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {
     return nullptr;
 }
 
-BaseEngine* CreateFromStream(IStream* stream, PasswordUI* pwdUI) {
+BaseEngine* CreateEnginePdfMultiFromStream(IStream* stream, PasswordUI* pwdUI) {
     return nullptr;
 }
-
-} // namespace EnginePdfMulti

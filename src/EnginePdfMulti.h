@@ -1,10 +1,6 @@
 /* Copyright 2019 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-namespace EnginePdfMulti {
-
-bool IsSupportedFile(const WCHAR* fileName, bool sniff = false);
-BaseEngine* CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI = nullptr);
-BaseEngine* CreateFromStream(IStream* stream, PasswordUI* pwdUI = nullptr);
-
-} // namespace EnginePdfMulti
+bool IsEnginePdfMultiSupportedFile(const WCHAR* fileName, bool sniff = false);
+BaseEngine* CreateEnginePdfMultiFromFile(const WCHAR* fileName, PasswordUI* pwdUI = nullptr);
+BaseEngine* CreateEnginePdfMultiFromStream(IStream* stream, PasswordUI* pwdUI = nullptr);

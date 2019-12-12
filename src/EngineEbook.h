@@ -1,56 +1,28 @@
 /* Copyright 2019 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
-namespace EpubEngine {
+bool IsEpubEngineSupportedFile(const WCHAR* fileName, bool sniff = false);
+BaseEngine* CreateEpubEngineFromFile(const WCHAR* fileName);
+BaseEngine* CreateEpubEngineFromStream(IStream* stream);
 
-bool IsSupportedFile(const WCHAR* fileName, bool sniff = false);
-BaseEngine* CreateFromFile(const WCHAR* fileName);
-BaseEngine* CreateFromStream(IStream* stream);
+bool IsFb2EngineSupportedFile(const WCHAR* fileName, bool sniff = false);
+BaseEngine* CreateFb2EngineFromFile(const WCHAR* fileName);
+BaseEngine* CreateFb2EngineFromStream(IStream* stream);
 
-} // namespace EpubEngine
+bool IsMobiEngineSupportedFile(const WCHAR* fileName, bool sniff = false);
+BaseEngine* CreateMobiEngineFromFile(const WCHAR* fileName);
+BaseEngine* CreateMobiEngineFromStream(IStream* stream);
 
-namespace Fb2Engine {
+bool IsPdbEngineSupportedFile(const WCHAR* fileName, bool sniff = false);
+BaseEngine* CreatePdbEngineFromFile(const WCHAR* fileName);
 
-bool IsSupportedFile(const WCHAR* fileName, bool sniff = false);
-BaseEngine* CreateFromFile(const WCHAR* fileName);
-BaseEngine* CreateFromStream(IStream* stream);
+bool IsChmEngineSupportedFile(const WCHAR* fileName, bool sniff = false);
+BaseEngine* CreateChmEngineFromFile(const WCHAR* fileName);
 
-} // namespace Fb2Engine
+bool IsHtmlEngineSupportedFile(const WCHAR* fileName, bool sniff = false);
+BaseEngine* CreateHtmlEngineFromFile(const WCHAR* fileName);
 
-namespace MobiEngine {
-
-bool IsSupportedFile(const WCHAR* fileName, bool sniff = false);
-BaseEngine* CreateFromFile(const WCHAR* fileName);
-BaseEngine* CreateFromStream(IStream* stream);
-
-} // namespace MobiEngine
-
-namespace PdbEngine {
-
-bool IsSupportedFile(const WCHAR* fileName, bool sniff = false);
-BaseEngine* CreateFromFile(const WCHAR* fileName);
-
-} // namespace PdbEngine
-
-namespace ChmEngine {
-
-bool IsSupportedFile(const WCHAR* fileName, bool sniff = false);
-BaseEngine* CreateFromFile(const WCHAR* fileName);
-
-} // namespace ChmEngine
-
-namespace HtmlEngine {
-
-bool IsSupportedFile(const WCHAR* fileName, bool sniff = false);
-BaseEngine* CreateFromFile(const WCHAR* fileName);
-
-} // namespace HtmlEngine
-
-namespace TxtEngine {
-
-bool IsSupportedFile(const WCHAR* fileName, bool sniff = false);
-BaseEngine* CreateFromFile(const WCHAR* fileName);
-
-} // namespace TxtEngine
+bool IsTxtEngineSupportedFile(const WCHAR* fileName, bool sniff = false);
+BaseEngine* CreateTxtEngineFromFile(const WCHAR* fileName);
 
 void SetDefaultEbookFont(const WCHAR* name, float size);

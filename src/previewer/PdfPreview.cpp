@@ -335,12 +335,12 @@ IFACEMETHODIMP PreviewBase::DoPreview() {
 }
 
 BaseEngine* CPdfPreview::LoadEngine(IStream* stream) {
-    return EnginePdf::CreateFromStream(stream);
+    return CreateEnginePdfFromStream(stream);
 }
 
 #ifdef BUILD_XPS_PREVIEW
 BaseEngine* CXpsPreview::LoadEngine(IStream* stream) {
-    return XpsEngine::CreateFromStream(stream);
+    return CreateXpsEngineFromStream(stream);
 }
 #endif
 
@@ -348,7 +348,7 @@ BaseEngine* CXpsPreview::LoadEngine(IStream* stream) {
 #include "EngineDjVu.h"
 
 BaseEngine* CDjVuPreview::LoadEngine(IStream* stream) {
-    return DjVuEngine::CreateFromStream(stream);
+    return CreateDjVuEngineFromStream(stream);
 }
 #endif
 
@@ -364,7 +364,7 @@ CEpubPreview::~CEpubPreview() {
 }
 
 BaseEngine* CEpubPreview::LoadEngine(IStream* stream) {
-    return EpubEngine::CreateFromStream(stream);
+    return CreateEpubEngineFromStream(stream);
 }
 #endif
 
@@ -380,7 +380,7 @@ CFb2Preview::~CFb2Preview() {
 }
 
 BaseEngine* CFb2Preview::LoadEngine(IStream* stream) {
-    return Fb2Engine::CreateFromStream(stream);
+    return CreateFb2EngineFromStream(stream);
 }
 #endif
 
@@ -396,20 +396,20 @@ CMobiPreview::~CMobiPreview() {
 }
 
 BaseEngine* CMobiPreview::LoadEngine(IStream* stream) {
-    return MobiEngine::CreateFromStream(stream);
+    return CreateMobiEngineFromStream(stream);
 }
 #endif
 
 #if defined(BUILD_CBZ_PREVIEW) || defined(BUILD_CBR_PREVIEW) || defined(BUILD_CB7_PREVIEW) || defined(BUILD_CBT_PREVIEW)
 
 BaseEngine* CCbxPreview::LoadEngine(IStream* stream) {
-    return CbxEngine::CreateFromStream(stream);
+    return CreateCbxEngineFromStream(stream);
 }
 #endif
 
 #ifdef BUILD_TGA_PREVIEW
 
 BaseEngine* CTgaPreview::LoadEngine(IStream* stream) {
-    return ImageEngine::CreateFromStream(stream);
+    return CreateImageEngineFromStream(stream);
 }
 #endif
