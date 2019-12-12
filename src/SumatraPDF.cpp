@@ -865,8 +865,9 @@ static Controller* CreateControllerForFile(const WCHAR* filePath, PasswordUI* pw
 
     Controller* ctrl = nullptr;
 
-    EngineBase* engine = EngineManager::CreateEngine(filePath, pwdUI, gGlobalPrefs->chmUI.useFixedPageUI,
-                                                     gGlobalPrefs->ebookUI.useFixedPageUI);
+    bool enableChmAndEbook = gGlobalPrefs->chmUI.useFixedPageUI;
+    // enableChmAndEbook = true;
+    EngineBase* engine = EngineManager::CreateEngine(filePath, pwdUI, enableChmAndEbook, enableChmAndEbook);
 
     if (engine) {
     LoadEngineInFixedPageUI:

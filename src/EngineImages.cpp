@@ -914,7 +914,7 @@ class CbxEngineImpl : public ImagesEngine, public json::ValueVisitor {
 
     // access to cbxFile must be protected after initialization (with cacheAccess)
     MultiFormatArchive* cbxFile;
-    std::vector<MultiFormatArchive::FileInfo*> files;
+    Vec<MultiFormatArchive::FileInfo*> files;
 
     // extracted metadata
     AutoFreeW propTitle;
@@ -965,10 +965,12 @@ bool CbxEngineImpl::FinishLoading() {
 
     defaultFileExt = GetDefaultFileExt();
 
-    std::vector<MultiFormatArchive::FileInfo*> pageFiles;
+    Vec<MultiFormatArchive::FileInfo*> pageFiles;
 
     auto& fileInfos = cbxFile->GetFileInfos();
-    for (auto* fileInfo : fileInfos) {
+    size_t n = fileInfos.size();
+    for (size_t i = 0; i < n; i++) {
+        auto* fileInfo = fileInfos[i];
         const char* fileName = fileInfo->name.data();
         if (str::Len(fileName) == 0) {
             continue;

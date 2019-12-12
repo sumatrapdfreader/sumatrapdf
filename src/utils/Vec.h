@@ -169,6 +169,10 @@ class Vec {
         return InsertAt(len, el);
     }
 
+    bool push_back(const T& el) {
+        return InsertAt(len, el);
+    }
+
     bool Append(const T* src, size_t count) {
         if (0 == count) {
             return true;
@@ -298,32 +302,22 @@ class Vec {
         return els[len]; // nullptr-sentinel
     }
 
-    // cf. http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html
-    class Iter {
-        Vec<T>* vec;
-        size_t pos;
+    // http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html
+    // https://stackoverflow.com/questions/16504062/how-to-make-the-for-each-loop-function-in-c-work-with-a-custom-class
+    typedef T* iterator;
+    typedef const T* const_iterator;
 
-      public:
-        Iter(Vec<T>* vec, size_t pos) : vec(vec), pos(pos) {
-        }
-
-        bool operator!=(const Iter& other) const {
-            return pos != other.pos;
-        }
-        T& operator*() const {
-            return vec->at(pos);
-        }
-        Iter& operator++() {
-            pos++;
-            return *this;
-        }
-    };
-
-    Iter begin() {
-        return Iter(this, 0);
+    iterator begin() {
+        return &(els[0]);
     }
-    Iter end() {
-        return Iter(this, len);
+    const_iterator begin() const {
+        return &(els[0]);
+    }
+    iterator end() {
+        return &(els[len]);
+    }
+    const_iterator end() const {
+        return &(els[len]);
     }
 };
 

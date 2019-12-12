@@ -37,14 +37,14 @@ constexpr size_t kInvalidSize = (size_t)-1;
 #define ENCRYPTION_NEW 2
 
 struct PalmDocHeader {
-    uint16_t compressionType;
-    uint16_t reserved1;
-    uint32_t uncompressedDocSize;
-    uint16_t recordsCount;
-    uint16_t maxRecSize; // usually (always?) 4096
+    uint16_t compressionType = 0;
+    uint16_t reserved1 = 0;
+    uint32_t uncompressedDocSize = 0;
+    uint16_t recordsCount = 0;
+    uint16_t maxRecSize = 0; // usually (always?) 4096
     // if it's palmdoc, we have currPos, if mobi, encrType/reserved2
     union {
-        uint32_t currPos;
+        uint32_t currPos = 0;
         struct {
             uint16_t encrType;
             uint16_t reserved2;
@@ -192,15 +192,15 @@ static_assert(kCdicHeaderLen == sizeof(CdicHeader), "wrong size of CdicHeader st
 #define kCdicsMax 32
 
 class HuffDicDecompressor {
-    uint32_t cacheTable[kCacheItemCount];
-    uint32_t baseTable[kBaseTableItemCount];
+    uint32_t cacheTable[kCacheItemCount] = {};
+    uint32_t baseTable[kBaseTableItemCount] = {};
 
-    size_t dictsCount;
+    size_t dictsCount = 0;
     // owned by the creator (in our case: by the PdbReader)
-    uint8_t* dicts[kCdicsMax];
-    uint32_t dictSize[kCdicsMax];
+    uint8_t* dicts[kCdicsMax] = {};
+    uint32_t dictSize[kCdicsMax] = {};
 
-    uint32_t codeLength;
+    uint32_t codeLength = 0;
 
     Vec<uint32_t> recursionGuard;
 
@@ -450,23 +450,9 @@ static bool IsValidCompression(int comprType) {
     return (COMPRESSION_NONE == comprType) || (COMPRESSION_PALM == comprType) || (COMPRESSION_HUFF == comprType);
 }
 
-MobiDoc::MobiDoc(const WCHAR* filePath)
-    : fileName(str::Dup(filePath)),
-      pdbReader(nullptr),
-      docType(PdbDocType::Unknown),
-      docRecCount(0),
-      compressionType(0),
-      docUncompressedSize(0),
-      doc(nullptr),
-      multibyte(false),
-      trailersCount(0),
-      imageFirstRec(0),
-      coverImageRec(0),
-      imagesCount(0),
-      images(nullptr),
-      huffDic(nullptr),
-      textEncoding(CP_UTF8),
-      docTocIndex(kInvalidSize) {
+MobiDoc::MobiDoc(const WCHAR* filePath) {
+    docTocIndex = kInvalidSize;
+    fileName = str::Dup(filePath);
 }
 
 MobiDoc::~MobiDoc() {
@@ -850,11 +836,12 @@ bool MobiDoc::LoadDocRecordIntoBuffer(size_t recNo, str::Str& strOut) {
         return true;
     }
 
-    AssertCrash(0);
+    CrashMe();
     return false;
 }
 
 bool MobiDoc::LoadDocument(PdbReader* pdbReader) {
+    logToDebugger = true;
     this->pdbReader = pdbReader;
     if (!ParseHeader()) {
         return false;
@@ -862,11 +849,21 @@ bool MobiDoc::LoadDocument(PdbReader* pdbReader) {
 
     CrashIf(doc != nullptr);
     doc = new str::Str(docUncompressedSize);
+    size_t nFailed = 0;
     for (size_t i = 1; i <= docRecCount; i++) {
         if (!LoadDocRecordIntoBuffer(i, *doc)) {
-            return false;
+            nFailed++;
         }
     }
+
+    // TODO: this is a heuristic for https://github.com/sumatrapdfreader/sumatrapdf/issues/1314
+    // It has 29 records that fail to decompress because infinite recursion
+    // is detected.
+    // Figure out if this is a bug in my decoding.
+    if (nFailed > docRecCount / 2) {
+        return false;
+    }
+
     // replace unexpected \0 with spaces
     // cf. https://code.google.com/p/sumatrapdf/issues/detail?id=2529
     char* s = doc->Get();
@@ -980,7 +977,9 @@ bool MobiDoc::IsSupportedFile(const WCHAR* fileName, bool sniff) {
     if (!sniff) {
         bool isMobi = str::EndsWithI(fileName, L".mobi");
         bool isPrc = str::EndsWithI(fileName, L".prc");
-        return isMobi || isPrc;
+        bool isAws1 = str::EndsWith(fileName, L".azw1");
+        bool isAws3 = str::EndsWith(fileName, L".azw3");
+        return isMobi || isPrc || isAws3;
     }
 
     PdbReader pdbReader;

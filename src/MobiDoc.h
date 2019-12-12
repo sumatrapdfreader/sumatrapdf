@@ -7,25 +7,25 @@ class PdbReader;
 enum class PdbDocType { Unknown, Mobipocket, PalmDoc, TealDoc };
 
 class MobiDoc {
-    WCHAR* fileName;
+    WCHAR* fileName = nullptr;
 
-    PdbReader* pdbReader;
+    PdbReader* pdbReader = nullptr;
 
-    PdbDocType docType;
-    size_t docRecCount;
-    int compressionType;
-    size_t docUncompressedSize;
-    int textEncoding;
-    size_t docTocIndex;
+    PdbDocType docType = PdbDocType::Unknown;
+    size_t docRecCount = 0;
+    int compressionType = 0;
+    size_t docUncompressedSize = 0;
+    int textEncoding = CP_UTF8;
+    size_t docTocIndex = 0;
 
-    bool multibyte;
-    size_t trailersCount;
-    size_t imageFirstRec; // 0 if no images
-    size_t coverImageRec; // 0 if no cover image
+    bool multibyte = false;
+    size_t trailersCount = 0;
+    size_t imageFirstRec = 0; // 0 if no images
+    size_t coverImageRec = 0; // 0 if no cover image
 
-    ImageData* images;
+    ImageData* images = nullptr;
 
-    HuffDicDecompressor* huffDic;
+    HuffDicDecompressor* huffDic = nullptr;
 
     struct Metadata {
         DocumentProperty prop;
@@ -43,9 +43,9 @@ class MobiDoc {
     bool DecodeExthHeader(const char* data, size_t dataLen);
 
   public:
-    str::Str* doc;
+    str::Str* doc = nullptr;
 
-    size_t imagesCount;
+    size_t imagesCount = 0;
 
     ~MobiDoc();
 

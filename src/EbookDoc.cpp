@@ -752,7 +752,7 @@ static OwnedData loadFromFile(Fb2Doc* doc) {
     // too many archives which only contain FB2 files among others:
     // the file must contain a single .fb2 file and may only contain
     // .url files in addition (TODO: anything else?)
-    for (auto fileInfo : fileInfos) {
+    for (auto&& fileInfo : fileInfos) {
         auto fileName = fileInfo->name;
         const char* ext = path::GetExt(fileName.data());
         if (str::EqI(ext, ".fb2") && data.IsEmpty()) {

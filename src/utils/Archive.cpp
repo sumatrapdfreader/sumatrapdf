@@ -80,7 +80,7 @@ MultiFormatArchive::~MultiFormatArchive() {
     ar_close(data_);
 }
 
-size_t getFileIdByName(std::vector<MultiFormatArchive::FileInfo*>& fileInfos, const char* name) {
+size_t getFileIdByName(Vec<MultiFormatArchive::FileInfo*>& fileInfos, const char* name) {
     for (auto fileInfo : fileInfos) {
         if (str::EqI(fileInfo->name.data(), name)) {
             return fileInfo->fileId;
@@ -89,7 +89,7 @@ size_t getFileIdByName(std::vector<MultiFormatArchive::FileInfo*>& fileInfos, co
     return (size_t)-1;
 }
 
-std::vector<MultiFormatArchive::FileInfo*> const& MultiFormatArchive::GetFileInfos() {
+Vec<MultiFormatArchive::FileInfo*> const& MultiFormatArchive::GetFileInfos() {
     return fileInfos_;
 }
 
@@ -175,16 +175,14 @@ static ar_archive* ar_open_zip_archive_deflated(ar_stream* stream) {
 }
 
 static MultiFormatArchive* open(MultiFormatArchive* archive, const char* path) {
-    FILE* f = file::OpenFILE(path);
-    archive->Open(ar_open(f), path);
+    archive->Open(ar_open_file(path), path);
     return archive;
 }
 
 #if OS_WIN
 static MultiFormatArchive* open(MultiFormatArchive* archive, const WCHAR* path) {
-    FILE* f = file::OpenFILE(path);
     auto pathUtf = str::conv::ToUtf8(path);
-    bool ok = archive->Open(ar_open(f), pathUtf.Get());
+    bool ok = archive->Open(ar_open_file_w(path), pathUtf.Get());
     if (!ok) {
         delete archive;
         return nullptr;

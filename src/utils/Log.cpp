@@ -5,7 +5,8 @@
 HeapAllocator* gLogAllocator = nullptr;
 
 str::Str* gLogBuf = nullptr;
-bool logToStderr;
+bool logToStderr = false;
+bool logToDebugger = false;
 
 static char* logFilePath;
 
@@ -27,6 +28,9 @@ void log(std::string_view s) {
             fflush(f);
             fclose(f);
         }
+    }
+    if (logToDebugger) {
+        OutputDebugStringA(s.data());
     }
 }
 

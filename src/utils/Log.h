@@ -4,6 +4,7 @@
 extern HeapAllocator* gLogAllocator;
 extern str::Str* gLogBuf;
 extern bool logToStderr;
+extern bool logToDebugger;
 
 void log(std::string_view s);
 void log(const char* s);

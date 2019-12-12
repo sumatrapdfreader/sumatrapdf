@@ -74,7 +74,7 @@ void HorizontalLayout::Arrange(const Rect finalRect) {
     }
     RedistributeSizes(sizes, finalRect.Width);
 
-    Vec<SizeInfo>::Iter si = sizes.begin();
+    auto si = sizes.begin();
     for (DirectionalLayoutData& e : els) {
         int dy = CalcScaledClippedSize(finalRect.Height, e.sizeNonLayoutAxis, e.desiredSize.Height);
         int y = e.alignNonLayoutAxis.CalcOffset(dy, finalRect.Height);
@@ -93,7 +93,7 @@ void VerticalLayout::Arrange(const Rect finalRect) {
     }
     RedistributeSizes(sizes, finalRect.Height);
 
-    Vec<SizeInfo>::Iter si = sizes.begin();
+    auto si = sizes.begin();
     for (DirectionalLayoutData& e : els) {
         int dx = CalcScaledClippedSize(finalRect.Width, e.sizeNonLayoutAxis, e.desiredSize.Width);
         int x = e.alignNonLayoutAxis.CalcOffset(dx, finalRect.Width);

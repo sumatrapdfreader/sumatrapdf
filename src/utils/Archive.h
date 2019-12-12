@@ -33,7 +33,7 @@ class MultiFormatArchive {
 
     bool Open(ar_stream* data, const char* archivePath);
 
-    std::vector<FileInfo*> const& GetFileInfos();
+    Vec<FileInfo*> const& GetFileInfos();
 
     size_t GetFileId(const char* fileName);
 
@@ -49,7 +49,7 @@ class MultiFormatArchive {
   protected:
     // used for allocating strings that are referenced by ArchFileInfo::name
     PoolAllocator allocator_;
-    std::vector<FileInfo*> fileInfos_;
+    Vec<FileInfo*> fileInfos_;
 
     archive_opener_t opener_ = nullptr;
     ar_stream* data_ = nullptr;
