@@ -632,7 +632,7 @@ workspace "SumatraPDF"
     files { "src/MuPDF_Exports.cpp" }
 
     links {
-      "libmupdf", "utils", "engines", "unarrlib", "unrar", "libwebp"
+      "libmupdf", "unrar", "utils", "engines"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",
