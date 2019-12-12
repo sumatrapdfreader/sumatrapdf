@@ -212,6 +212,7 @@ class PsEngineImpl : public BaseEngine {
   public:
     PsEngineImpl() {
         kind = kindEnginePostScript;
+        defaultFileExt = L".ps";
     }
 
     virtual ~PsEngineImpl() {
@@ -315,10 +316,6 @@ class PsEngineImpl : public BaseEngine {
         return pdfEngine->GetFileDPI();
     }
 
-    const WCHAR* GetDefaultFileExt() const override {
-        return !str::EndsWithI(FileName(), L".eps") ? L".ps" : L".eps";
-    }
-
     bool BenchLoadPage(int pageNo) override {
         return pdfEngine->BenchLoadPage(pageNo);
     }
@@ -357,6 +354,11 @@ class PsEngineImpl : public BaseEngine {
             pdfEngine = psgz2pdf(fileName);
         else
             pdfEngine = ps2pdf(fileName);
+
+        if (str::EndsWithI(FileName(), L".eps")) {
+            defaultFileExt = L".eps";
+        }
+
         return pdfEngine != nullptr;
     }
 };

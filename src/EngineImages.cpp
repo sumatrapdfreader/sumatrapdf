@@ -348,18 +348,14 @@ class ImageEngineImpl : public ImagesEngine {
     float GetFileDPI() const override {
         return image->GetHorizontalResolution();
     }
-    const WCHAR* GetDefaultFileExt() const override {
-        return fileExt;
-    }
-
     bool SaveFileAsPDF(const char* pdfFileName, bool includeUserAnnots = false) override;
 
     static BaseEngine* CreateFromFile(const WCHAR* fileName);
     static BaseEngine* CreateFromStream(IStream* stream);
 
   protected:
-    const WCHAR* fileExt = nullptr;
     Bitmap* image = nullptr;
+    const WCHAR* fileExt = nullptr;
 
     bool LoadSingleFile(const WCHAR* fileName);
     bool LoadFromStream(IStream* stream);
@@ -384,6 +380,7 @@ BaseEngine* ImageEngineImpl::Clone() {
 
     ImageEngineImpl* clone = new ImageEngineImpl();
     clone->SetFileName(FileName());
+    clone->defaultFileExt = defaultFileExt;
     clone->fileExt = fileExt;
     if (fileStream)
         fileStream->Clone(&clone->fileStream);
@@ -399,10 +396,10 @@ bool ImageEngineImpl::LoadSingleFile(const WCHAR* file) {
     }
     SetFileName(file);
 
-    OwnedData data(file::ReadFile(file));
-    fileExt = GfxFileExtFromData(data.data, data.size);
-
-    image = BitmapFromData(data.data, data.size);
+    AutoFree data = file::ReadFile(file);
+    fileExt = GfxFileExtFromData(data.data, data.size());
+    defaultFileExt = fileExt;
+    image = BitmapFromData(data.data, data.size());
     return FinishLoading();
 }
 
@@ -420,6 +417,8 @@ bool ImageEngineImpl::LoadFromStream(IStream* stream) {
     if (!fileExt) {
         return false;
     }
+
+    defaultFileExt = fileExt;
 
     auto [data, size] = GetDataFromStream(stream, nullptr);
     if (IsGdiPlusNativeFormat(data, size)) {
@@ -672,6 +671,7 @@ class ImageDirEngineImpl : public ImagesEngine {
   public:
     ImageDirEngineImpl() : fileDPI(96.0f) {
         kind = kindEngineImageDir;
+        defaultFileExt = L"";
     }
 
     virtual ~ImageDirEngineImpl() {
@@ -707,9 +707,6 @@ class ImageDirEngineImpl : public ImagesEngine {
     // TODO: better handle the case where images have different resolutions
     float GetFileDPI() const override {
         return fileDPI;
-    }
-    const WCHAR* GetDefaultFileExt() const override {
-        return L"";
     }
 
     bool SaveFileAsPDF(const char* pdfFileName, bool includeUserAnnots = false) override;
@@ -907,7 +904,7 @@ class CbxEngineImpl : public ImagesEngine, public json::ValueVisitor {
     float GetFileDPI() const override {
         return 96.0f;
     }
-    const WCHAR* GetDefaultFileExt() const override;
+    const WCHAR* GetDefaultFileExt() const;
 
     // json::ValueVisitor
     bool Visit(const char* path, const char* value, json::DataType type) override;
@@ -971,6 +968,8 @@ bool CbxEngineImpl::FinishLoading() {
     if (!cbxFile) {
         return false;
     }
+
+    defaultFileExt = GetDefaultFileExt();
 
     std::vector<MultiFormatArchive::FileInfo*> pageFiles;
 

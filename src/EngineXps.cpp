@@ -218,9 +218,6 @@ class XpsEngineImpl : public BaseEngine {
     float GetFileDPI() const override {
         return 72.0f;
     }
-    const WCHAR* GetDefaultFileExt() const override {
-        return L".xps";
-    }
 
     bool BenchLoadPage(int pageNo) override {
         return GetFzPageInfo(pageNo) != nullptr;
@@ -379,6 +376,8 @@ static void installFitzErrorCallbacks(fz_context* ctx) {
 
 XpsEngineImpl::XpsEngineImpl() {
     kind = kindEngineXps;
+    defaultFileExt = L".xps";
+
     InitializeCriticalSection(&_pagesAccess);
     InitializeCriticalSection(&ctxAccess);
 

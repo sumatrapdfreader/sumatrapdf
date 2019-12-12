@@ -248,9 +248,6 @@ class DjVuEngineImpl : public BaseEngine {
     float GetFileDPI() const override {
         return 300.0f;
     }
-    const WCHAR* GetDefaultFileExt() const override {
-        return L".djvu";
-    }
 
     // we currently don't load pages lazily, so there's nothing to do here
     bool BenchLoadPage(int pageNo) override {
@@ -301,6 +298,7 @@ class DjVuEngineImpl : public BaseEngine {
 
 DjVuEngineImpl::DjVuEngineImpl() {
     kind = kindEngineDjVu;
+    defaultFileExt = L".djvu";
 }
 
 DjVuEngineImpl::~DjVuEngineImpl() {

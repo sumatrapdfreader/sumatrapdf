@@ -263,6 +263,9 @@ class BaseEngine {
   public:
     // TODO: set the kind and use instead of EngineType
     Kind kind = nullptr;
+    // the default file extension for a document like
+    // the currently loaded one (e.g. L".pdf")
+    const WCHAR* defaultFileExt = nullptr;
 
     virtual ~BaseEngine() {
     }
@@ -350,8 +353,6 @@ class BaseEngine {
     virtual float GetFileDPI() const {
         return 96.0f;
     }
-    // the default file extension for a document like the currently loaded one (e.g. L".pdf")
-    virtual const WCHAR* GetDefaultFileExt() const = 0;
 
     // returns a list of all available elements for this page
     // caller must delete the result (including all elements contained in the Vec)

@@ -33,7 +33,6 @@ func detectClangFormat() string {
 
 func clangFormatFile(path string) {
 	cmd := exec.Command(clangFormatPath, "-i", "-style=file", path)
-	logf("> %s\n", cmd)
 	u.RunCmdLoggedMust(cmd)
 }
 

@@ -757,19 +757,9 @@ void EbookTocBuilder::Visit(const WCHAR* name, const WCHAR* url, int level) {
 
 class EpubEngineImpl : public EbookEngine {
   public:
-    EpubEngineImpl() : EbookEngine() {
-        kind = kindEngineEpub;
-    }
+    EpubEngineImpl();
     virtual ~EpubEngineImpl();
-    BaseEngine* Clone() override {
-        if (stream) {
-            return CreateFromStream(stream);
-        }
-        if (FileName()) {
-            return CreateFromFile(FileName());
-        }
-        return nullptr;
-    }
+    BaseEngine* Clone() override;
 
     std::tuple<char*, size_t> GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
@@ -778,9 +768,6 @@ class EpubEngineImpl : public EbookEngine {
 
     WCHAR* GetProperty(DocumentProperty prop) override {
         return prop != DocumentProperty::FontList ? doc->GetProperty(prop) : ExtractFontList();
-    }
-    const WCHAR* GetDefaultFileExt() const override {
-        return L".epub";
     }
 
     DocTocTree* GetTocTree() override;
@@ -798,11 +785,26 @@ class EpubEngineImpl : public EbookEngine {
     bool FinishLoading();
 };
 
+EpubEngineImpl::EpubEngineImpl() : EbookEngine() {
+    kind = kindEngineEpub;
+    defaultFileExt = L".epub";
+}
+
 EpubEngineImpl::~EpubEngineImpl() {
     delete doc;
     delete tocTree;
     if (stream)
         stream->Release();
+}
+
+BaseEngine* EpubEngineImpl::Clone() {
+    if (stream) {
+        return CreateFromStream(stream);
+    }
+    if (FileName()) {
+        return CreateFromFile(FileName());
+    }
+    return nullptr;
 }
 
 bool EpubEngineImpl::Load(const WCHAR* fileName) {
@@ -928,6 +930,7 @@ class Fb2EngineImpl : public EbookEngine {
   public:
     Fb2EngineImpl() : EbookEngine() {
         kind = kindEngineFb2;
+        defaultFileExt = L".fb2";
     }
     virtual ~Fb2EngineImpl() {
         delete tocTree;
@@ -939,9 +942,6 @@ class Fb2EngineImpl : public EbookEngine {
 
     WCHAR* GetProperty(DocumentProperty prop) override {
         return prop != DocumentProperty::FontList ? doc->GetProperty(prop) : ExtractFontList();
-    }
-    const WCHAR* GetDefaultFileExt() const override {
-        return doc->IsZipped() ? L".fb2z" : L".fb2";
     }
 
     DocTocTree* GetTocTree() override;
@@ -982,6 +982,10 @@ bool Fb2EngineImpl::FinishLoading() {
     args.fontSize = GetDefaultFontSize();
     args.textAllocator = &allocator;
     args.textRenderMethod = mui::TextRenderMethodGdiplusQuick;
+
+    if (doc->IsZipped()) {
+        defaultFileExt = L".fb2z";
+    }
 
     pages = Fb2Formatter(&args, doc).FormatAllPages(false);
     if (!ExtractPageAnchors()) {
@@ -1043,6 +1047,7 @@ class MobiEngineImpl : public EbookEngine {
   public:
     MobiEngineImpl() : EbookEngine() {
         kind = kindEngineMobi;
+        defaultFileExt = L".mobi";
     }
     ~MobiEngineImpl() override {
         delete tocTree;
@@ -1054,9 +1059,6 @@ class MobiEngineImpl : public EbookEngine {
 
     WCHAR* GetProperty(DocumentProperty prop) override {
         return prop != DocumentProperty::FontList ? doc->GetProperty(prop) : ExtractFontList();
-    }
-    const WCHAR* GetDefaultFileExt() const override {
-        return L".mobi";
     }
 
     PageDestination* GetNamedDest(const WCHAR* name) override;
@@ -1194,6 +1196,7 @@ class PdbEngineImpl : public EbookEngine {
   public:
     PdbEngineImpl() : EbookEngine() {
         kind = kindEnginePdb;
+        defaultFileExt = L".pdb";
     }
     virtual ~PdbEngineImpl() {
         delete tocTree;
@@ -1205,9 +1208,6 @@ class PdbEngineImpl : public EbookEngine {
 
     WCHAR* GetProperty(DocumentProperty prop) override {
         return prop != DocumentProperty::FontList ? doc->GetProperty(prop) : ExtractFontList();
-    }
-    const WCHAR* GetDefaultFileExt() const override {
-        return L".pdb";
     }
 
     DocTocTree* GetTocTree() override;
@@ -1400,6 +1400,7 @@ class ChmEngineImpl : public EbookEngine {
         // ISO 216 A4 (210mm x 297mm)
         pageRect = RectD(0, 0, 8.27 * GetFileDPI(), 11.693 * GetFileDPI());
         kind = kindEngineChm;
+        defaultFileExt = L".chm";
     }
     virtual ~ChmEngineImpl() {
         delete dataCache;
@@ -1412,9 +1413,6 @@ class ChmEngineImpl : public EbookEngine {
 
     WCHAR* GetProperty(DocumentProperty prop) override {
         return prop != DocumentProperty::FontList ? doc->GetProperty(prop) : ExtractFontList();
-    }
-    const WCHAR* GetDefaultFileExt() const override {
-        return L".chm";
     }
 
     PageLayoutType PreferredLayout() override {
@@ -1669,6 +1667,7 @@ class HtmlEngineImpl : public EbookEngine {
     HtmlEngineImpl() : EbookEngine() {
         // ISO 216 A4 (210mm x 297mm)
         pageRect = RectD(0, 0, 8.27 * GetFileDPI(), 11.693 * GetFileDPI());
+        defaultFileExt = L".html";
     }
     virtual ~HtmlEngineImpl() {
         delete doc;
@@ -1679,9 +1678,6 @@ class HtmlEngineImpl : public EbookEngine {
 
     WCHAR* GetProperty(DocumentProperty prop) override {
         return prop != DocumentProperty::FontList ? doc->GetProperty(prop) : ExtractFontList();
-    }
-    const WCHAR* GetDefaultFileExt() const override {
-        return L".html";
     }
     PageLayoutType PreferredLayout() override {
         return Layout_Single;
@@ -1778,6 +1774,7 @@ class TxtEngineImpl : public EbookEngine {
         kind = kindEngineTxt;
         // ISO 216 A4 (210mm x 297mm)
         pageRect = RectD(0, 0, 8.27 * GetFileDPI(), 11.693 * GetFileDPI());
+        defaultFileExt = L".txt";
     }
     virtual ~TxtEngineImpl() {
         delete tocTree;
@@ -1789,9 +1786,6 @@ class TxtEngineImpl : public EbookEngine {
 
     WCHAR* GetProperty(DocumentProperty prop) override {
         return prop != DocumentProperty::FontList ? doc->GetProperty(prop) : ExtractFontList();
-    }
-    const WCHAR* GetDefaultFileExt() const override {
-        return fileName ? path::GetExt(fileName) : L".txt";
     }
     PageLayoutType PreferredLayout() override {
         return Layout_Single;
@@ -1809,7 +1803,13 @@ class TxtEngineImpl : public EbookEngine {
 };
 
 bool TxtEngineImpl::Load(const WCHAR* fileName) {
+    if (!fileName) {
+        return false;
+    }
+
     this->fileName.SetCopy(fileName);
+
+    defaultFileExt = path::GetExt(fileName);
 
     doc = TxtDoc::CreateFromFile(fileName);
     if (!doc)

@@ -401,7 +401,6 @@ class PdfEngineImpl : public BaseEngine {
     bool AllowsPrinting() const override;
     bool AllowsCopyingText() const override;
     float GetFileDPI() const override;
-    const WCHAR* GetDefaultFileExt() const override;
 
     bool BenchLoadPage(int pageNo) override;
 
@@ -587,6 +586,8 @@ static void installFitzErrorCallbacks(fz_context* ctx) {
 
 PdfEngineImpl::PdfEngineImpl() {
     kind = kindEnginePdf;
+    defaultFileExt = L".pdf";
+
     for (size_t i = 0; i < dimof(mutexes); i++) {
         InitializeCriticalSection(&mutexes[i]);
     }
@@ -1429,9 +1430,6 @@ bool PdfEngineImpl::AllowsCopyingText() const {
 
 float PdfEngineImpl::GetFileDPI() const {
     return 72.0f;
-}
-const WCHAR* PdfEngineImpl::GetDefaultFileExt() const {
-    return L".pdf";
 }
 
 bool PdfEngineImpl::BenchLoadPage(int pageNo) {

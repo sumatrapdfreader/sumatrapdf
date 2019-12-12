@@ -72,7 +72,7 @@ class DisplayModel : public Controller {
         return engine->FileName();
     }
     const WCHAR* DefaultFileExt() const override {
-        return engine->GetDefaultFileExt();
+        return engine->defaultFileExt;
     }
     int PageCount() const override {
         return engine->PageCount();

@@ -64,7 +64,6 @@ class EnginePdfMultiImpl : public BaseEngine {
     bool AllowsCopyingText() const override;
 
     float GetFileDPI() const override;
-    const WCHAR* GetDefaultFileExt() const override;
 
     bool BenchLoadPage(int pageNo) override;
 
@@ -92,7 +91,10 @@ class EnginePdfMultiImpl : public BaseEngine {
 };
 
 EnginePdfMultiImpl::EnginePdfMultiImpl() {
+    kind = kindEnginePdfMulti;
+    defaultFileExt = L".vbkm";
 }
+
 EnginePdfMultiImpl::~EnginePdfMultiImpl() {
 }
 BaseEngine* EnginePdfMultiImpl::Clone() {
@@ -167,10 +169,6 @@ bool EnginePdfMultiImpl::AllowsCopyingText() const {
 
 float EnginePdfMultiImpl::GetFileDPI() const {
     return 96;
-}
-
-const WCHAR* EnginePdfMultiImpl::GetDefaultFileExt() const {
-    return L".vbkm";
 }
 
 bool EnginePdfMultiImpl::BenchLoadPage(int pageNo) {
