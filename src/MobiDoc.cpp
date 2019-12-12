@@ -977,9 +977,10 @@ bool MobiDoc::IsSupportedFile(const WCHAR* fileName, bool sniff) {
     if (!sniff) {
         bool isMobi = str::EndsWithI(fileName, L".mobi");
         bool isPrc = str::EndsWithI(fileName, L".prc");
-        bool isAws1 = str::EndsWith(fileName, L".azw1");
-        bool isAws3 = str::EndsWith(fileName, L".azw3");
-        return isMobi || isPrc || isAws3;
+        bool isAzw = str::EndsWith(fileName, L".azw");
+        bool isAzw1 = str::EndsWith(fileName, L".azw1");
+        bool isAzw3 = str::EndsWith(fileName, L".azw3");
+        return isMobi || isPrc || isAzw || isAzw1 || isAzw3;
     }
 
     PdbReader pdbReader;
