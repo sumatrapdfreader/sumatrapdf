@@ -882,17 +882,14 @@ void DisplayModel::SetViewPortSize(SizeI newViewPortSize) {
     }
 }
 
-RectD DisplayModel::GetContentBox(int pageNo, RenderTarget target) {
-    RectD cbox;
-    // we cache the contentBox for the View target
-    if (RenderTarget::View == target) {
-        PageInfo* pageInfo = GetPageInfo(pageNo);
-        if (pageInfo->contentBox.IsEmpty())
-            pageInfo->contentBox = engine->PageContentBox(pageNo);
-        cbox = pageInfo->contentBox;
-    } else
-        cbox = engine->PageContentBox(pageNo, target);
-
+RectD DisplayModel::GetContentBox(int pageNo) {
+    RectD cbox{};
+    // we cache the contentBox
+    PageInfo* pageInfo = GetPageInfo(pageNo);
+    if (pageInfo->contentBox.IsEmpty()) {
+        pageInfo->contentBox = engine->PageContentBox(pageNo);
+    }
+    cbox = pageInfo->contentBox;
     return engine->Transform(cbox, pageNo, zoomReal, rotation);
 }
 
@@ -900,8 +897,9 @@ RectD DisplayModel::GetContentBox(int pageNo, RenderTarget target) {
    content begins (relative to the page's top left corner) */
 PointI DisplayModel::GetContentStart(int pageNo) {
     RectD contentBox = GetContentBox(pageNo);
-    if (contentBox.IsEmpty())
+    if (contentBox.IsEmpty()) {
         return PointI(0, 0);
+    }
     return contentBox.TL().ToInt();
 }
 
