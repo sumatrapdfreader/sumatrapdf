@@ -268,6 +268,7 @@ class BaseEngine {
     const WCHAR* defaultFileExt = nullptr;
     PageLayoutType preferredLayout = Layout_Single;
     float fileDPI = 96.0f;
+    bool isImageCollection = false;
 
     virtual ~BaseEngine() {
     }
@@ -322,8 +323,8 @@ class BaseEngine {
     // the layout type this document's author suggests (if the user doesn't care)
     // whether the content should be displayed as images instead of as document pages
     // (e.g. with a black background and less padding in between and without search UI)
-    virtual bool IsImageCollection() const {
-        return false;
+    bool IsImageCollection() const {
+        return isImageCollection;
     }
 
     // access to various document properties (such as Author, Title, etc.)

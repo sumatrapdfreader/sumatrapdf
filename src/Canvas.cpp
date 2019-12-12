@@ -669,16 +669,19 @@ static void DrawDocument(WindowInfo* win, HDC hdc, RECT* rcArea) {
 
     for (int pageNo = 1; pageNo <= dm->PageCount(); ++pageNo) {
         PageInfo* pageInfo = dm->GetPageInfo(pageNo);
-        if (!pageInfo || 0.0f == pageInfo->visibleRatio)
+        if (!pageInfo || 0.0f == pageInfo->visibleRatio) {
             continue;
+        }
         CrashIf(!pageInfo->shown);
-        if (!pageInfo->shown)
+        if (!pageInfo->shown) {
             continue;
+        }
 
         RectI bounds = pageInfo->pageOnScreen.Intersect(screen);
         // don't paint the frame background for images
-        if (!dm->GetEngine()->IsImageCollection())
+        if (!dm->GetEngine()->IsImageCollection()) {
             PaintPageFrameAndShadow(hdc, bounds, pageInfo->pageOnScreen, win->presentation);
+        }
 
         bool renderOutOfDateCue = false;
         UINT renderDelay = gRenderCache.Paint(hdc, bounds, dm, pageNo, pageInfo, &renderOutOfDateCue);
@@ -702,8 +705,10 @@ static void DrawDocument(WindowInfo* win, HDC hdc, RECT* rcArea) {
             continue;
         }
 
-        if (!renderOutOfDateCue)
+        if (!renderOutOfDateCue) {
             continue;
+
+        }
 
         HDC bmpDC = CreateCompatibleDC(hdc);
         if (bmpDC) {
@@ -720,14 +725,17 @@ static void DrawDocument(WindowInfo* win, HDC hdc, RECT* rcArea) {
         }
     }
 
-    if (win->showSelection)
+    if (win->showSelection) {
         PaintSelection(win, hdc);
+    }
 
-    if (win->fwdSearchMark.show)
+    if (win->fwdSearchMark.show) {
         PaintForwardSearchMark(win, hdc);
+    }
 
-    if (!rendering)
+    if (!rendering) {
         DebugShowLinks(*dm, hdc);
+    }
 }
 
 static void OnPaintDocument(WindowInfo* win) {

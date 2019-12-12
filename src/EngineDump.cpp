@@ -59,57 +59,72 @@ void DumpProperties(BaseEngine* engine, bool fullDump) {
     OwnedData str = Escape(str::Dup(engine->FileName()));
     Out("\t\tFilePath=\"%s\"\n", str.Get());
     str = Escape(engine->GetProperty(DocumentProperty::Title));
-    if (str.Get())
+    if (str.Get()) {
         Out("\t\tTitle=\"%s\"\n", str.Get());
+    }
     str = Escape(engine->GetProperty(DocumentProperty::Subject));
-    if (str.Get())
+    if (str.Get()) {
         Out("\t\tSubject=\"%s\"\n", str.Get());
+    }
     str = Escape(engine->GetProperty(DocumentProperty::Author));
-    if (str.Get())
+    if (str.Get()) {
         Out("\t\tAuthor=\"%s\"\n", str.Get());
+    }
     str = Escape(engine->GetProperty(DocumentProperty::Copyright));
-    if (str.Get())
+    if (str.Get()) {
         Out("\t\tCopyright=\"%s\"\n", str.Get());
+    }
     str = Escape(engine->GetProperty(DocumentProperty::CreationDate));
-    if (str.Get())
+    if (str.Get()) {
         Out("\t\tCreationDate=\"%s\"\n", str.Get());
+    }
     str = Escape(engine->GetProperty(DocumentProperty::ModificationDate));
-    if (str.Get())
+    if (str.Get()) {
         Out("\t\tModDate=\"%s\"\n", str.Get());
+    }
     str = Escape(engine->GetProperty(DocumentProperty::CreatorApp));
-    if (str.Get())
+    if (str.Get()) {
         Out("\t\tCreator=\"%s\"\n", str.Get());
+    }
     str = Escape(engine->GetProperty(DocumentProperty::PdfProducer));
-    if (str.Get())
+    if (str.Get()) {
         Out("\t\tPdfProducer=\"%s\"\n", str.Get());
+    }
     str = Escape(engine->GetProperty(DocumentProperty::PdfVersion));
-    if (str.Get())
+    if (str.Get()) {
         Out("\t\tPdfVersion=\"%s\"\n", str.Get());
+    }
     str = Escape(engine->GetProperty(DocumentProperty::PdfFileStructure));
-    if (str.Get())
+    if (str.Get()) {
         Out("\t\tPdfFileStructure=\"%s\"\n", str.Get());
+    }
     str = Escape(engine->GetProperty(DocumentProperty::UnsupportedFeatures));
-    if (str.Get())
+    if (str.Get()) {
         Out("\t\tUnsupportedFeatures=\"%s\"\n", str.Get());
-    if (!engine->AllowsPrinting())
+    }
+    if (!engine->AllowsPrinting()) {
         Out("\t\tPrintingAllowed=\"no\"\n");
-    if (!engine->AllowsCopyingText())
+    }
+    if (!engine->AllowsCopyingText()) {
         Out("\t\tCopyingTextAllowed=\"no\"\n");
-    if (engine->IsImageCollection())
+    }
+    if (engine->IsImageCollection()) {
         Out("\t\tImageFileDPI=\"%g\"\n", engine->GetFileDPI());
+    }
     if (engine->preferredLayout) {
         Out("\t\tPreferredLayout=\"%d\"\n", engine->preferredLayout);
     }
     Out("\t/>\n");
 
-    if (fullDump) {
-        AutoFreeW fontlist(engine->GetProperty(DocumentProperty::FontList));
-        if (fontlist) {
-            WStrVec fonts;
-            fonts.Split(fontlist, L"\n");
-            str = Escape(fonts.Join(L"\n\t\t"));
-            Out("\t<FontList>\n\t\t%s\n\t</FontList>\n", str.Get());
-        }
+    if (!fullDump) {
+        return;
+    }
+    AutoFreeW fontlist(engine->GetProperty(DocumentProperty::FontList));
+    if (fontlist) {
+        WStrVec fonts;
+        fonts.Split(fontlist, L"\n");
+        str = Escape(fonts.Join(L"\n\t\t"));
+        Out("\t<FontList>\n\t\t%s\n\t</FontList>\n", str.Get());
     }
 }
 

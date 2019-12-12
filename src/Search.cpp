@@ -58,8 +58,9 @@ void OnMenuFind(WindowInfo* win) {
         return;
     }
 
-    if (!win->AsFixed() || !NeedsFindUI(win))
+    if (!win->AsFixed() || !NeedsFindUI(win)) {
         return;
+    }
 
     // copy any selected text to the find bar, if it's still empty
     DisplayModel* dm = win->AsFixed();

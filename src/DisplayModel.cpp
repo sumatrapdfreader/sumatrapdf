@@ -1029,10 +1029,11 @@ void DisplayModel::SetPresentationMode(bool enable) {
         SetDisplayMode(DM_SINGLE_PAGE);
         SetZoomVirtual(ZOOM_FIT_PAGE, nullptr);
     } else {
-        if (engine && engine->IsImageCollection())
+        if (engine && engine->IsImageCollection()) {
             windowMargin = gGlobalPrefs->comicBookUI.windowMargin;
-        else
+        } else {
             windowMargin = gGlobalPrefs->fixedPageUI.windowMargin;
+        }
 #ifdef DRAW_PAGE_SHADOWS
         windowMargin.top += 3;
         windowMargin.bottom += 5;
@@ -1040,8 +1041,9 @@ void DisplayModel::SetPresentationMode(bool enable) {
         windowMargin.left += 1;
 #endif
         SetDisplayMode(presDisplayMode);
-        if (!IsValidZoom(presZoomVirtual))
+        if (!IsValidZoom(presZoomVirtual)) {
             presZoomVirtual = zoomVirtual;
+        }
         SetZoomVirtual(presZoomVirtual, nullptr);
     }
 }
@@ -1514,8 +1516,9 @@ void DisplayModel::CopyNavHistory(DisplayModel& orig) {
 
 bool DisplayModel::ShouldCacheRendering(int pageNo) {
     // recommend caching for all documents which are non-trivial to render
-    if (!engine->IsImageCollection())
+    if (!engine->IsImageCollection()) {
         return true;
+    }
 
     // recommend caching large images (mainly photos) as well, as shrinking
     // them for every UI update (WM_PAINT) can cause notable lags, and also

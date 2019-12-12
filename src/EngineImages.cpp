@@ -72,10 +72,6 @@ class ImagesEngine : public BaseEngine {
         return false;
     }
 
-    bool IsImageCollection() const override {
-        return true;
-    }
-
     bool SupportsAnnotation(bool forSaving = false) const override {
         UNUSED(forSaving);
         return false;
@@ -113,6 +109,7 @@ class ImagesEngine : public BaseEngine {
 ImagesEngine::ImagesEngine() {
     kind = kindEngineImage;
     preferredLayout = Layout_NonContinuous;
+    isImageCollection = true;
 
     InitializeCriticalSection(&cacheAccess);
 }
