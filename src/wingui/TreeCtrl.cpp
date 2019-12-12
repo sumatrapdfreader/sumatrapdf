@@ -9,6 +9,19 @@
 #include "wingui/TreeModel.h"
 #include "wingui/TreeCtrl.h"
 
+/*
+Tree view, checkboxes and other info:
+- https://devblogs.microsoft.com/oldnewthing/20171127-00/?p=97465
+- https://devblogs.microsoft.com/oldnewthing/20171128-00/?p=97475
+- https://devblogs.microsoft.com/oldnewthing/20171129-00/?p=97485
+- https://devblogs.microsoft.com/oldnewthing/20171130-00/?p=97495
+- https://devblogs.microsoft.com/oldnewthing/20171201-00/?p=97505
+- https://devblogs.microsoft.com/oldnewthing/20171204-00/?p=97515
+- https://devblogs.microsoft.com/oldnewthing/20171205-00/?p=97525
+-
+https://stackoverflow.com/questions/34161879/how-to-remove-checkboxes-on-specific-tree-view-items-with-the-tvs-checkboxes-sty
+*/
+
 constexpr UINT_PTR SUBCLASS_ID = 1;
 
 static void Unsubclass(TreeCtrl* w);

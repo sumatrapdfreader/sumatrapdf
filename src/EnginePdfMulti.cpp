@@ -81,14 +81,152 @@ class EnginePdfMultiImpl : public BaseEngine {
     bool IsPasswordProtected() const override;
     char* GetDecryptionKey() const override;
 
+    bool Load(const WCHAR* fileName, PasswordUI* pwdUI);
+
     static BaseEngine* CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI);
-    static BaseEngine* CreateFromStream(IStream* stream, PasswordUI* pwdUI);
 
   protected:
     int pageCount = -1;
 
     DocTocTree* tocTree = nullptr;
 };
+
+EnginePdfMultiImpl::EnginePdfMultiImpl() {
+}
+EnginePdfMultiImpl::~EnginePdfMultiImpl() {
+}
+BaseEngine* EnginePdfMultiImpl::Clone() {
+    return nullptr;
+}
+
+int EnginePdfMultiImpl::PageCount() const {
+    return pageCount;
+}
+
+RectD EnginePdfMultiImpl::PageMediabox(int pageNo) {
+    return {};
+}
+RectD EnginePdfMultiImpl::PageContentBox(int pageNo, RenderTarget target) {
+    return {};
+}
+
+RenderedBitmap* EnginePdfMultiImpl::RenderBitmap(int pageNo, float zoom, int rotation,
+                                                 RectD* pageRect, /* if nullptr: defaults to the page's mediabox */
+                                                 RenderTarget target, AbortCookie** cookie_out) {
+    return nullptr;
+}
+
+PointD EnginePdfMultiImpl::Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse) {
+    return {};
+}
+RectD EnginePdfMultiImpl::Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse) {
+    return {};
+}
+
+std::tuple<char*, size_t> EnginePdfMultiImpl::GetFileData() {
+    return {};
+}
+
+bool EnginePdfMultiImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
+    return false;
+}
+
+bool EnginePdfMultiImpl::SaveFileAsPdf(const char* pdfFileName, bool includeUserAnnots) {
+    return false;
+}
+
+WCHAR* EnginePdfMultiImpl::ExtractPageText(int pageNo, RectI** coordsOut) {
+    return nullptr;
+}
+
+bool EnginePdfMultiImpl::HasClipOptimizations(int pageNo) {
+    return true;
+}
+
+PageLayoutType EnginePdfMultiImpl::PreferredLayout() {
+    return PageLayoutType::Layout_Single;
+}
+
+WCHAR* EnginePdfMultiImpl::GetProperty(DocumentProperty prop) {
+    return nullptr;
+}
+
+bool EnginePdfMultiImpl::SupportsAnnotation(bool forSaving) const {
+    return false;
+}
+
+void EnginePdfMultiImpl::UpdateUserAnnotations(Vec<PageAnnotation>* list) {
+}
+
+bool EnginePdfMultiImpl::AllowsPrinting() const {
+    return false;
+}
+bool EnginePdfMultiImpl::AllowsCopyingText() const {
+    return true;
+}
+
+float EnginePdfMultiImpl::GetFileDPI() const {
+    return 96;
+}
+
+const WCHAR* EnginePdfMultiImpl::GetDefaultFileExt() const {
+    return L".vbkm";
+}
+
+bool EnginePdfMultiImpl::BenchLoadPage(int pageNo) {
+    return false;
+}
+
+Vec<PageElement*>* EnginePdfMultiImpl::GetElements(int pageNo) {
+    return nullptr;
+}
+
+PageElement* EnginePdfMultiImpl::GetElementAtPos(int pageNo, PointD pt) {
+    return nullptr;
+}
+
+PageDestination* EnginePdfMultiImpl::GetNamedDest(const WCHAR* name) {
+    return nullptr;
+}
+DocTocTree* EnginePdfMultiImpl::GetTocTree() {
+    return nullptr;
+}
+
+bool EnginePdfMultiImpl::HasPageLabels() const {
+    return false;
+}
+
+WCHAR* EnginePdfMultiImpl::GetPageLabel(int pageNo) const {
+    return nullptr;
+}
+
+int EnginePdfMultiImpl::GetPageByLabel(const WCHAR* label) const {
+    return -1;
+}
+
+bool EnginePdfMultiImpl::IsPasswordProtected() const {
+    return false;
+}
+
+char* EnginePdfMultiImpl::GetDecryptionKey() const {
+    return nullptr;
+}
+
+bool EnginePdfMultiImpl::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
+    return false;
+}
+
+BaseEngine* EnginePdfMultiImpl::CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {
+    if (str::IsEmpty(fileName)) {
+        return nullptr;
+    }
+    EnginePdfMultiImpl* engine = new EnginePdfMultiImpl();
+    if (!engine->Load(fileName, pwdUI)) {
+        delete engine;
+        return nullptr;
+    }
+    return engine;
+}
 
 bool IsEnginePdfMultiSupportedFile(const WCHAR* fileName, bool sniff) {
     if (sniff) {
@@ -99,9 +237,5 @@ bool IsEnginePdfMultiSupportedFile(const WCHAR* fileName, bool sniff) {
 }
 
 BaseEngine* CreateEnginePdfMultiFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {
-    return nullptr;
-}
-
-BaseEngine* CreateEnginePdfMultiFromStream(IStream* stream, PasswordUI* pwdUI) {
-    return nullptr;
+    return EnginePdfMultiImpl::CreateFromFile(fileName, pwdUI);
 }

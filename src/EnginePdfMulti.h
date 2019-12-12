@@ -3,4 +3,3 @@
 
 bool IsEnginePdfMultiSupportedFile(const WCHAR* fileName, bool sniff = false);
 BaseEngine* CreateEnginePdfMultiFromFile(const WCHAR* fileName, PasswordUI* pwdUI = nullptr);
-BaseEngine* CreateEnginePdfMultiFromStream(IStream* stream, PasswordUI* pwdUI = nullptr);

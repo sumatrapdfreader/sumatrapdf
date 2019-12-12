@@ -125,7 +125,6 @@ extern "C" static void drop_istream(fz_context* ctx, void* state_) {
     fz_free(ctx, state);
 }
 
-
 fz_stream* fz_open_istream(fz_context* ctx, IStream* stream) {
     if (!stream) {
         return nullptr;
@@ -396,7 +395,6 @@ RenderedBitmap* new_rendered_fz_pixmap(fz_context* ctx, fz_pixmap* pixmap) {
     return new RenderedBitmap(hbmp, SizeI(w, h), hMap);
 }
 
-
 static inline int wchars_per_rune(int rune) {
     if (rune & 0x1F0000)
         return 2;
@@ -494,7 +492,6 @@ WCHAR* fz_text_page_to_str(fz_stext_page* text, RectI** coordsOut) {
     return content.StealData();
 }
 
-
 // copy of fz_is_external_link without ctx
 int is_external_link(const char* uri) {
     while (*uri >= 'a' && *uri <= 'z')
@@ -521,7 +518,6 @@ int resolve_link(const char* uri, float* xp, float* yp) {
     }
     return -1;
 }
-
 
 static bool LinkifyCheckMultiline(const WCHAR* pageText, const WCHAR* pos, RectI* coords) {
     // multiline links end in a non-alphanumeric character and continue on a line

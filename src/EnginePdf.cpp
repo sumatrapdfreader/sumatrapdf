@@ -158,7 +158,6 @@ static void fz_run_page_transparency(fz_context* ctx, Vec<PageAnnotation>& pageA
 }
 #endif
 
-
 pdf_obj* pdf_copy_str_dict(fz_context* ctx, pdf_document* doc, pdf_obj* dict) {
     pdf_obj* copy = pdf_copy_dict(ctx, dict);
     for (int i = 0; i < pdf_dict_len(ctx, copy); i++) {
@@ -2477,8 +2476,11 @@ bool PdfLink::SaveEmbedded(LinkSaverUI& saveUI) {
 }
 
 BaseEngine* PdfEngineImpl::CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {
+    if (str::IsEmpty(fileName)) {
+        return nullptr;
+    }
     PdfEngineImpl* engine = new PdfEngineImpl();
-    if (!engine || !fileName || !engine->Load(fileName, pwdUI)) {
+    if (!engine->Load(fileName, pwdUI)) {
         delete engine;
         return nullptr;
     }

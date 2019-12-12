@@ -8,6 +8,9 @@
 #include "wingui/Layout.h"
 #include "wingui/Window.h"
 
+// TODO: call RemoveWindowSubclass in WM_NCDESTROY as per
+// https://devblogs.microsoft.com/oldnewthing/20031111-00/?p=41883
+
 #define WIN_CLASS L"WC_WIN32_WINDOW"
 
 UINT_PTR g_subclassId = 0;
