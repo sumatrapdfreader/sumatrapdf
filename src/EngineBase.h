@@ -261,7 +261,6 @@ class AbortCookie {
 
 class EngineBase {
   public:
-    // TODO: set the kind and use instead of EngineType
     Kind kind = nullptr;
     // the default file extension for a document like
     // the currently loaded one (e.g. L".pdf")
@@ -273,6 +272,7 @@ class EngineBase {
     bool allowsCopyingText = true;
     bool isPasswordProtected = false;
     char* decryptionKey = nullptr;
+    bool hasPageLabels = false;
 
     virtual ~EngineBase() {
         free(decryptionKey);
@@ -385,8 +385,8 @@ class EngineBase {
 
     // checks whether this document has explicit labels for pages (such as
     // roman numerals) instead of the default plain arabic numbering
-    virtual bool HasPageLabels() const {
-        return false;
+    bool HasPageLabels() const {
+        return hasPageLabels;
     }
     // returns a label to be displayed instead of the page number
     // caller must free() the result

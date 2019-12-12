@@ -405,7 +405,6 @@ class PdfEngineImpl : public EngineBase {
     PageDestination* GetNamedDest(const WCHAR* name) override;
     DocTocTree* GetTocTree() override;
 
-    bool HasPageLabels() const override;
     WCHAR* GetPageLabel(int pageNo) const override;
     int GetPageByLabel(const WCHAR* label) const override;
 
@@ -433,7 +432,7 @@ class PdfEngineImpl : public EngineBase {
     fz_outline* outline = nullptr;
     fz_outline* attachments = nullptr;
     pdf_obj* _info = nullptr;
-    WStrVec* _pagelabels = nullptr; // TODO(port): put in PageInfo
+    WStrVec* _pageLabels = nullptr;
 
     Vec<PageAnnotation> userAnnots; // TODO(port): put in PageInfo
 
@@ -624,7 +623,7 @@ PdfEngineImpl::~PdfEngineImpl() {
     fz_drop_document(ctx, (fz_document*)_doc);
     fz_drop_context(ctx);
 
-    delete _pagelabels;
+    delete _pageLabels;
 
     delete tocTree;
 
@@ -994,12 +993,16 @@ bool PdfEngineImpl::FinishLoading() {
     }
 
     fz_try(ctx) {
-        pdf_obj* pagelabels = pdf_dict_getp(ctx, pdf_trailer(ctx, doc), "Root/PageLabels");
-        if (pagelabels)
-            _pagelabels = BuildPageLabelVec(ctx, pagelabels, PageCount());
+        pdf_obj* pageLabels = pdf_dict_getp(ctx, pdf_trailer(ctx, doc), "Root/PageLabels");
+        if (pageLabels) {
+            _pageLabels = BuildPageLabelVec(ctx, pageLabels, PageCount());
+        }
     }
     fz_catch(ctx) {
         fz_warn(ctx, "Couldn't load page labels");
+    }
+    if (_pageLabels) {
+        hasPageLabels = true;
     }
 
     // TODO: support javascript
@@ -1456,10 +1459,6 @@ bool PdfEngineImpl::SaveFileAsPdf(const char* pdfFileName, bool includeUserAnnot
 
 bool PdfEngineImpl::BenchLoadPage(int pageNo) {
     return GetFzPage(pageNo) != nullptr;
-}
-
-bool PdfEngineImpl::HasPageLabels() const {
-    return _pagelabels != nullptr;
 }
 
 fz_matrix PdfEngineImpl::viewctm(int pageNo, float zoom, int rotation) {
@@ -2121,17 +2120,17 @@ bool PdfEngineImpl::HasClipOptimizations(int pageNo) {
 }
 
 WCHAR* PdfEngineImpl::GetPageLabel(int pageNo) const {
-    if (!_pagelabels || pageNo < 1 || PageCount() < pageNo) {
+    if (!_pageLabels || pageNo < 1 || PageCount() < pageNo) {
         return EngineBase::GetPageLabel(pageNo);
     }
 
-    return str::Dup(_pagelabels->at(pageNo - 1));
+    return str::Dup(_pageLabels->at(pageNo - 1));
 }
 
 int PdfEngineImpl::GetPageByLabel(const WCHAR* label) const {
     int pageNo = 0;
-    if (_pagelabels) {
-        pageNo = _pagelabels->Find(label) + 1;
+    if (_pageLabels) {
+        pageNo = _pageLabels->Find(label) + 1;
     }
 
     if (!pageNo) {

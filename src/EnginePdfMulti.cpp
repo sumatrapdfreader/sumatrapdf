@@ -67,7 +67,6 @@ class EnginePdfMultiImpl : public EngineBase {
     PageDestination* GetNamedDest(const WCHAR* name) override;
     DocTocTree* GetTocTree() override;
 
-    bool HasPageLabels() const override;
     WCHAR* GetPageLabel(int pageNo) const override;
     int GetPageByLabel(const WCHAR* label) const override;
 
@@ -165,10 +164,6 @@ PageDestination* EnginePdfMultiImpl::GetNamedDest(const WCHAR* name) {
 }
 DocTocTree* EnginePdfMultiImpl::GetTocTree() {
     return nullptr;
-}
-
-bool EnginePdfMultiImpl::HasPageLabels() const {
-    return false;
 }
 
 WCHAR* EnginePdfMultiImpl::GetPageLabel(int pageNo) const {

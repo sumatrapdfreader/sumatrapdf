@@ -253,9 +253,6 @@ class DjVuEngineImpl : public EngineBase {
     PageDestination* GetNamedDest(const WCHAR* name) override;
     DocTocTree* GetTocTree() override;
 
-    bool HasPageLabels() const override {
-        return hasPageLabels;
-    }
     WCHAR* GetPageLabel(int pageNo) const override;
     int GetPageByLabel(const WCHAR* label) const override;
 
@@ -273,7 +270,6 @@ class DjVuEngineImpl : public EngineBase {
     miniexp_t* annos = nullptr;
     DocTocTree* tocTree = nullptr;
     Vec<PageAnnotation> userAnnots;
-    bool hasPageLabels = false;
 
     Vec<ddjvu_fileinfo_t> fileInfo;
 

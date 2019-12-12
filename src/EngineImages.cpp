@@ -671,6 +671,9 @@ class ImageDirEngineImpl : public ImagesEngine {
         fileDPI = 96.0f;
         kind = kindEngineImageDir;
         defaultFileExt = L"";
+        // TODO: is there a better place to expose pageFileNames
+        // than through page labels?
+        hasPageLabels = true;
     }
 
     virtual ~ImageDirEngineImpl() {
@@ -694,10 +697,6 @@ class ImageDirEngineImpl : public ImagesEngine {
         return nullptr;
     }
 
-    // TODO: is there a better place to expose pageFileNames than through page labels?
-    bool HasPageLabels() const override {
-        return true;
-    }
     WCHAR* GetPageLabel(int pageNo) const override;
     int GetPageByLabel(const WCHAR* label) const override;
 
