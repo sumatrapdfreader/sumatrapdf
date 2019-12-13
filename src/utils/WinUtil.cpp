@@ -1859,3 +1859,21 @@ SIZE ButtonGetIdealSize(HWND hwnd) {
     s.cy += (int)yPadding;
     return s;
 }
+
+
+std::tuple<const char*, DWORD, HGLOBAL> LockDataResource(int id) {
+    auto h = GetModuleHandle(nullptr);
+    auto name = MAKEINTRESOURCEW(id);
+    HRSRC resSrc = FindResourceW(h, name, RT_RCDATA);
+    if (!resSrc) {
+        return {nullptr, 0, 0};
+    }
+    HGLOBAL res = LoadResource(nullptr, resSrc);
+    if (!res) {
+        return {nullptr, 0, 0};
+    }
+
+    auto* data = (const char*)LockResource(res);
+    DWORD dataSize = SizeofResource(nullptr, resSrc);
+    return {data, dataSize, res};
+}

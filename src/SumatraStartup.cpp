@@ -16,6 +16,7 @@
 #include "utils/UITask.h"
 #include "utils/WinUtil.h"
 #include "utils/Archive.h"
+#include "utils/LzmaSimpleArchive.h"
 #include "utils/Log.h"
 
 #include "wingui/WinGui.h"
@@ -629,7 +630,7 @@ static void ShowInstallerHelp() {
     /s\tinstalls " APP_NAME_STR L" silently (without user interaction).\n\
     /d\tchanges the directory where " APP_NAME_STR L" will be installed.\n\
     /with-filter\tinstall search filter\n\
-    /with-preiew\tinstall shell preview\n\
+    /with-preview\tinstall shell preview\n\
     /x\tjust extracts the files contained within the installer.\n\
 ", APP_NAME_STR L" Installer Usage", MB_OK);
 }
@@ -657,6 +658,33 @@ static void stdNewHandler() {
 // even though we compile without exceptions, new throws std::bad_alloc and we don't want that
 static void supressThrowFromNew() {
     std::set_new_handler(stdNewHandler);
+}
+
+static void ShowNotValidInstallerError() {
+    MessageBoxW(nullptr, L"Not a valid installer", L"Error", MB_OK | MB_ICONERROR);
+}
+
+// in Installer.cpp
+extern bool ExtractFiles(lzma::SimpleArchive* archive, const WCHAR* destDir);
+extern bool CopySelfToDir(const WCHAR* destDir);
+
+static void ExtractInstallerFiles() {
+    auto [data, size, res] = LockDataResource(1);
+    if (data == nullptr) {
+        ShowNotValidInstallerError();
+        return;
+    }
+
+    lzma::SimpleArchive archive = {};
+    bool ok = lzma::ParseSimpleArchive(data, size, &archive);
+    if (!ok) {
+        ShowNotValidInstallerError();
+        return;
+    }
+    AutoFreeWstr dir = GetExeDir();
+    if (ExtractFiles(&archive, dir.data)) {
+        CopySelfToDir(dir);
+    }
 }
 
 int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR cmdLine,
@@ -729,9 +757,14 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
         return 0;
     }
 
-    if (i.install || IsInstallerAndNamedAsSuch()) {
+    if (i.justExtractFiles) {
+        ExtractInstallerFiles();
+        ::ExitProcess(0);
+    }
+
+    if ((i.install || i.justExtractFiles) || IsInstallerAndNamedAsSuch()) {
         if (!HasInstallerResources()) {
-            MessageBoxW(nullptr, L"Not a valid installer", L"Error", MB_OK | MB_ICONERROR);
+            ShowNotValidInstallerError();
             return 1;
         }
         retCode = RunInstaller(&i);

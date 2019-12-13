@@ -231,3 +231,4 @@ POINT GetCursorPosInHwnd(HWND);
 HINSTANCE GetInstance();
 void hwndDpiAdjust(HWND hwnd, float* x, float* y);
 SIZE ButtonGetIdealSize(HWND hwnd);
+std::tuple<const char*, DWORD, HGLOBAL> LockDataResource(int id);

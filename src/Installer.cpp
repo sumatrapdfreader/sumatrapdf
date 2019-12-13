@@ -91,24 +91,29 @@ static CheckboxCtrl* CreateCheckbox(HWND hwndParent, const WCHAR* s, bool isChec
     return w;
 }
 
-static bool ExtractFiles(lzma::SimpleArchive* archive) {
+bool ExtractFiles(lzma::SimpleArchive* archive, const WCHAR* destDir) {
     lzma::FileInfo* fi;
     char* uncompressed;
 
-    for (int i = 0; i < archive->filesCount; i++) {
+    int nFiles = archive->filesCount;
+
+    for (int i = 0; i < nFiles; i++) {
         fi = &archive->files[i];
         uncompressed = lzma::GetFileDataByIdx(archive, i, nullptr);
+
         if (!uncompressed) {
             NotifyFailed(
                 _TR("The installer has been corrupted. Please download it again.\nSorry for the inconvenience!"));
             return false;
         }
-        AutoFreeW filePath(str::conv::FromUtf8(fi->name));
-        AutoFreeW extPath(path::Join(gCli->installDir, filePath));
-        bool ok = file::WriteFile(extPath, uncompressed, fi->uncompressedSize);
+        AutoFreeWstr fileName = str::conv::Utf8ToWchar(fi->name);
+        AutoFreeWstr filePath = path::Join(destDir, fileName);
+
+        bool ok = file::WriteFile(filePath, uncompressed, fi->uncompressedSize);
         free(uncompressed);
+
         if (!ok) {
-            WCHAR* msg = str::Format(_TR("Couldn't write %s to disk"), filePath);
+            WCHAR* msg = str::Format(_TR("Couldn't write %s to disk"), filePath.data);
             NotifyFailed(msg);
             free(msg);
             return false;
@@ -117,23 +122,6 @@ static bool ExtractFiles(lzma::SimpleArchive* archive) {
     }
 
     return true;
-}
-
-static std::tuple<const char*, DWORD, HGLOBAL> LockDataResource(int id) {
-    auto h = GetModuleHandle(nullptr);
-    auto name = MAKEINTRESOURCEW(id);
-    HRSRC resSrc = FindResourceW(h, name, RT_RCDATA);
-    if (!resSrc) {
-        return {nullptr, 0, 0};
-    }
-    HGLOBAL res = LoadResource(nullptr, resSrc);
-    if (!res) {
-        return {nullptr, 0, 0};
-    }
-
-    auto* data = (const char*)LockResource(res);
-    DWORD dataSize = SizeofResource(nullptr, resSrc);
-    return {data, dataSize, res};
 }
 
 static bool CreateInstallationDirectory() {
@@ -145,9 +133,9 @@ static bool CreateInstallationDirectory() {
     return ok;
 }
 
-static bool CopySelfToInstallationDir() {
+bool CopySelfToDir(const WCHAR* destDir) {
     auto exePath = GetExePath();
-    auto* dstPath = path::Join(GetInstallDirNoFree(), L"SumatraPDF.exe");
+    auto* dstPath = path::Join(destDir, L"SumatraPDF.exe");
     BOOL failIfExists = FALSE;
     BOOL ok = ::CopyFileW(exePath, dstPath, failIfExists);
     free(dstPath);
@@ -182,14 +170,14 @@ static bool ExtractInstallerFiles() {
         return false;
     }
 
-    bool ok = CopySelfToInstallationDir();
+    bool ok = CopySelfToDir(GetInstallDirNoFree());
     if (!ok) {
         return false;
     }
     ProgressStep();
 
     // on error, ExtractFiles() shows error message itself
-    return ExtractFiles(&gArchive);
+    return ExtractFiles(&gArchive, gCli->installDir);
 }
 
 /* Caller needs to free() the result. */

@@ -393,7 +393,7 @@ workspace "SumatraPDF"
     -- TODO: is thre a better way to do it?
     -- TODO: only for windows
     linkoptions { "/DEF:..\\src\\libmupdf.def", "-IGNORE:4702" }
-    links { "mupdf", "libdjvu", "unarrlib", "libwebp" }
+    links { "mupdf", "libdjvu", "libwebp", "unarrlib" }
     links {
       "advapi32", "kernel32", "user32", "gdi32", "comdlg32",
       "shell32", "windowscodecs", "comctl32", "msimg32",
@@ -660,7 +660,7 @@ workspace "SumatraPDF"
     files { "src/MuPDF_Exports.cpp" }
 
     links {
-      "libmupdf", "unrar", "utils", "engines"
+      "libmupdf", "unrar", "unarrlib", "utils", "engines"
     }
     links {
       "comctl32", "delayimp", "gdiplus", "msimg32", "shlwapi", "urlmon",
