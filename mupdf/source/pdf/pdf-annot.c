@@ -1395,6 +1395,8 @@ void pdf_add_annot_ink_list_stroke_vertex(fz_context *ctx, pdf_annot *annot, fz_
 	p = fz_transform_point(p, inv_page_ctm);
 	pdf_array_push_real(ctx, stroke, p.x);
 	pdf_array_push_real(ctx, stroke, p.y);
+
+	pdf_dirty_annot(ctx, annot);
 }
 
 void

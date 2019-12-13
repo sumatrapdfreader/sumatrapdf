@@ -45,7 +45,7 @@ jbig2_message(const char *msg, JB2_Message_Level level, void *userdata)
 		switch (level)
 		{
 		case cJB2_Message_Information:
-#ifndef NDEBUG
+#ifdef JBIG2_DEBUG
 			fz_warn(state->ctx, "luratech jbig2 info: %s", msg);
 #endif
 			break;
@@ -253,7 +253,7 @@ error_callback(void *data, const char *msg, Jbig2Severity severity, int32_t seg_
 		fz_warn(ctx, "jbig2dec error: %s (segment %d)", msg, seg_idx);
 	else if (severity == JBIG2_SEVERITY_WARNING)
 		fz_warn(ctx, "jbig2dec warning: %s (segment %d)", msg, seg_idx);
-#ifndef NDEBUG
+#ifdef JBIG2_DEBUG
 	else if (severity == JBIG2_SEVERITY_INFO)
 		fz_warn(ctx, "jbig2dec info: %s (segment %d)", msg, seg_idx);
 	else if (severity == JBIG2_SEVERITY_DEBUG)

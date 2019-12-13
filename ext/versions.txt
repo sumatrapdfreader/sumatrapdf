@@ -52,6 +52,9 @@ mujs            1.0.5      2019-06-12
 
 ../mupdf        trunk
   http://git.ghostscript.com/?p=mupdf.git
+  c50ac19e412fe7830dfef5d1cbc71e9da3405c96
+  Fri Dec 6 21:33:32 2019 +0100
+  Update thirdparty library version information.
 
 UnRAR           5.8.4
   https://www.rarlab.com/rar_add.htm

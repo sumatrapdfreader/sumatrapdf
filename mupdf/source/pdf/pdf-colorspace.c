@@ -12,6 +12,9 @@ load_icc_based(fz_context *ctx, pdf_obj *dict, int allow_alt)
 	fz_colorspace *cs = NULL;
 	pdf_obj *obj;
 
+	fz_var(alt);
+	fz_var(cs);
+
 	/* Look at Alternate to detect type (especially Lab). */
 	if (allow_alt)
 	{
@@ -36,8 +39,16 @@ load_icc_based(fz_context *ctx, pdf_obj *dict, int allow_alt)
 		{
 			buf = pdf_load_stream(ctx, dict);
 			cs = fz_new_icc_colorspace(ctx, alt ? alt->type : FZ_COLORSPACE_NONE, 0, NULL, buf);
-			if (cs->n != n)
-				fz_warn(ctx, "ICC colorspace N=%d does not match profile N=%d", n, cs->n);
+			if (cs->n > n)
+			{
+				fz_warn(ctx, "ICC colorspace N=%d does not match profile N=%d (ignoring profile)", n, cs->n);
+				fz_drop_colorspace(ctx, cs);
+				cs = NULL;
+			}
+			else if (cs->n < n)
+			{
+				fz_warn(ctx, "ICC colorspace N=%d does not match profile N=%d (using profile)", n, cs->n);
+			}
 		}
 		fz_always(ctx)
 			fz_drop_buffer(ctx, buf);
