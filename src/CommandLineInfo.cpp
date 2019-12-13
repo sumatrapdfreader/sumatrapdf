@@ -8,9 +8,23 @@
 
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
-#include "ParseCommandLine.h"
+#include "CommandLineInfo.h"
 #include "StressTesting.h"
 #include "SumatraConfig.h"
+
+CommandLineInfo::~CommandLineInfo() {
+    free(printerName);
+    free(printSettings);
+    free(forwardSearchOrigin);
+    free(destName);
+    free(pluginURL);
+    free(appdataDir);
+    free(inverseSearchCmdLine);
+    free(stressTestPath);
+    free(stressTestFilter);
+    free(stressTestRanges);
+    free(lang);
+}
 
 static void EnumeratePrinters() {
     str::WStr output;
@@ -73,11 +87,11 @@ bool ParsePageRanges(const WCHAR* ranges, Vec<PageRange>& result) {
     for (size_t i = 0; i < rangeList.size(); i++) {
         int start, end;
         if (str::Parse(rangeList.at(i), L"%d-%d%$", &start, &end) && 0 < start && start <= end)
-            result.Append(PageRange(start, end));
+            result.Append(PageRange{start, end});
         else if (str::Parse(rangeList.at(i), L"%d-%$", &start) && 0 < start)
-            result.Append(PageRange(start, INT_MAX));
+            result.Append(PageRange{start, INT_MAX});
         else if (str::Parse(rangeList.at(i), L"%d%$", &start) && 0 < start)
-            result.Append(PageRange(start, start));
+            result.Append(PageRange{start, start});
         else
             return false;
     }
@@ -150,6 +164,7 @@ static void ParseScrollValue(PointI* scroll, const WCHAR* txt) {
 // order must match enum
 static const char* argNames =
     "register-for-pdf\0"
+    "register\0"
     "print-to-default\0"
     "print-dialog\0"
     "exit-when-done\0"
@@ -195,10 +210,21 @@ static const char* argNames =
     "extract-text\0"
     "install\0"
     "uninstall\0"
+    "regress\0"
+    "tester\0"
+    "d\0"
+    "h\0"
+    "?\0"
+    "help\0"
+    "with-filter\0"
+    "with-preview\0"
+    "x\0"
+    "s\0"
     "silent\0";
 
 enum {
     RegisterForPdf,
+    Register,
     PrintToDefault,
     PrintDialog,
     ExitWhenDone,
@@ -244,6 +270,16 @@ enum {
     ExtractText,
     Install,
     Uninstall,
+    Regress,
+    Tester,
+    InstallDir,
+    Help1,
+    Help2,
+    Help3,
+    WithFilter,
+    WithPreview,
+    ExtractFiles,
+    Silent2,
     Silent
 };
 
@@ -265,7 +301,7 @@ void ParseCommandLine(const WCHAR* cmdLine, CommandLineInfo& i) {
 #define is_arg_with_param(_argNo) (param && _argNo == arg)
 #define additional_param() argList.at(n + 1)
 #define has_additional_param() ((argCount > n + 1) && ('-' != additional_param()[0]))
-#define handle_string_param(name) name.SetCopy(argList.at(++n))
+#define handle_string_param(name) name = str::Dup(argList.at(++n))
 #define handle_int_param(name) name = _wtoi(argList.at(++n))
 
     for (size_t n = 1; n < argCount; n++) {
@@ -275,15 +311,15 @@ void ParseCommandLine(const WCHAR* cmdLine, CommandLineInfo& i) {
         if (argCount > n + 1) {
             param = argList.at(n + 1);
         }
-        if (RegisterForPdf == arg) {
-            i.makeDefault = true;
+        if (RegisterForPdf == arg || Register == arg) {
+            i.registerAsDefault = true;
             i.exitImmediately = true;
             return;
-        } else if (Silent == arg) {
+        } else if (Silent == arg || Silent2 == arg) {
             // silences errors happening during -print-to and -print-to-default
             i.silent = true;
         } else if (PrintToDefault == arg) {
-            i.printerName.Set(GetDefaultPrinterName());
+            i.printerName = GetDefaultPrinterName();
             if (!i.printerName) {
                 i.printDialog = true;
             }
@@ -293,6 +329,8 @@ void ParseCommandLine(const WCHAR* cmdLine, CommandLineInfo& i) {
             i.exitWhenDone = true;
         } else if (PrintDialog == arg) {
             i.printDialog = true;
+        } else if (Help1 == arg || Help2 == arg || Help3 == arg) {
+            i.showHelp = true;
         } else if (is_arg_with_param(PrintSettings)) {
             // argument is a comma separated list of page ranges and
             // advanced options [even|odd], [noscale|shrink|fit] and [autorotation|portrait|landscape]
@@ -305,7 +343,7 @@ void ParseCommandLine(const WCHAR* cmdLine, CommandLineInfo& i) {
             // always exit on print) and -stress-test (useful for profiling)
             i.exitWhenDone = true;
         } else if (is_arg_with_param(InverseSearch)) {
-            i.inverseSearchCmdLine.SetCopy(argList.at(++n));
+            i.inverseSearchCmdLine = str::Dup(argList.at(++n));
         } else if ((is_arg_with_param(ForwardSearch) || is_arg_with_param(FwdSearch)) && argCount > n + 2) {
             // -forward-search is for consistency with -inverse-search
             // -fwdsearch is for consistency with -fwdsearch-*
@@ -341,7 +379,7 @@ void ParseCommandLine(const WCHAR* cmdLine, CommandLineInfo& i) {
         } else if (Console == arg) {
             i.showConsole = true;
         } else if (is_arg_with_param(AppData)) {
-            i.appdataDir.SetCopy(param);
+            i.appdataDir = str::Dup(param);
             ++n;
         } else if (is_arg_with_param(Plugin)) {
             // -plugin [<URL>] <parent HWND>
@@ -380,8 +418,26 @@ void ParseCommandLine(const WCHAR* cmdLine, CommandLineInfo& i) {
             i.install = true;
         } else if (Uninstall == arg) {
             i.uninstall = true;
+        } else if (WithFilter == arg) {
+            i.withFilter = true;
+        } else if (WithPreview == arg) {
+            i.withPreview = true;
         } else if (Rand == arg) {
             i.stressRandomizeFiles = true;
+        } else if (Regress == arg) {
+            i.regress = true;
+        } else if (AutoUpdate == arg) {
+            i.autoUpdate = true;
+        } else if (ExtractFiles == arg) {
+            i.justExtractFiles = true;
+            // silently extract files to the current directory
+            // (if /d isn't used)
+            i.silent = true;
+            if (!i.installDir) {
+                i.installDir = str::Dup(L".");
+            }
+        } else if (Tester == arg) {
+            i.tester = true;
         } else if (is_arg_with_param(Bench)) {
             WCHAR* s = str::Dup(param);
             ++n;
@@ -400,11 +456,14 @@ void ParseCommandLine(const WCHAR* cmdLine, CommandLineInfo& i) {
             // for backwards compatibility, -reuse-instance reuses whatever
             // instance has registered as DDE server
             i.reuseDdeInstance = true;
-        }
-        // TODO: remove the following deprecated options within a release or two
-        else if (is_arg_with_param(Lang)) {
-            auto tmp = str::conv::ToAnsi(param);
-            i.lang.Set(tmp.StealData());
+        } else if (is_arg_with_param(InstallDir)) {
+            i.installDir = str::Dup(param);
+            ++n;
+        } else if (is_arg_with_param(Lang)) {
+            // TODO: remove the following deprecated options within
+            // a release or two
+            auto tmp = str::conv::WstrToUtf8(param);
+            i.lang = std::get<0>(tmp);
             ++n;
         } else if (EscToExit == arg) {
             i.globalPrefArgs.Append(str::Dup(argList.at(n)));

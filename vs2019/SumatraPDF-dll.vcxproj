@@ -735,6 +735,7 @@
     <ClInclude Include="..\src\Canvas.h" />
     <ClInclude Include="..\src\Caption.h" />
     <ClInclude Include="..\src\ChmModel.h" />
+    <ClInclude Include="..\src\CommandLineInfo.h" />
     <ClInclude Include="..\src\CrashHandler.h" />
     <ClInclude Include="..\src\DisplayModel.h" />
     <ClInclude Include="..\src\Doc.h" />
@@ -751,7 +752,6 @@
     <ClInclude Include="..\src\Notifications.h" />
     <ClInclude Include="..\src\PagesLayoutDef.h" />
     <ClInclude Include="..\src\ParseBKM.h" />
-    <ClInclude Include="..\src\ParseCommandLine.h" />
     <ClInclude Include="..\src\PdfSync.h" />
     <ClInclude Include="..\src\Print.h" />
     <ClInclude Include="..\src\ProgressUpdateUI.h" />
@@ -805,6 +805,7 @@
     <ClCompile Include="..\src\Canvas.cpp" />
     <ClCompile Include="..\src\Caption.cpp" />
     <ClCompile Include="..\src\ChmModel.cpp" />
+    <ClCompile Include="..\src\CommandLineInfo.cpp" />
     <ClCompile Include="..\src\CrashHandler.cpp" />
     <ClCompile Include="..\src\DisplayModel.cpp" />
     <ClCompile Include="..\src\Doc.cpp" />
@@ -823,7 +824,6 @@
     <ClCompile Include="..\src\Notifications.cpp" />
     <ClCompile Include="..\src\PagesLayoutDef.cpp" />
     <ClCompile Include="..\src\ParseBKM.cpp" />
-    <ClCompile Include="..\src\ParseCommandLine.cpp" />
     <ClCompile Include="..\src\PdfSync.cpp" />
     <ClCompile Include="..\src\Print.cpp" />
     <ClCompile Include="..\src\RenderCache.cpp" />

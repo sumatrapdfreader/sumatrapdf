@@ -53,7 +53,7 @@
 #include "WindowInfo.h"
 #include "TabInfo.h"
 #include "resource.h"
-#include "ParseCommandLine.h"
+#include "CommandLineInfo.h"
 #include "AppPrefs.h"
 #include "AppTools.h"
 #include "AppUtil.h"

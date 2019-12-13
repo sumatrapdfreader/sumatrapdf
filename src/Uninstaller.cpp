@@ -21,7 +21,6 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "utils/Timer.h"
 #include "Version.h"
 #include "utils/WinUtil.h"
-#include "Installer.h"
 #include "utils/CmdLineParser.h"
 #include "CrashHandler.h"
 #include "utils/Dpi.h"
@@ -34,6 +33,12 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #include "wingui/ButtonCtrl.h"
 #include "wingui/CheckboxCtrl.h"
 #include "wingui/EditCtrl.h"
+
+#include "SumatraConfig.h"
+#include "SettingsStructs.h"
+#include "GlobalPrefs.h"
+#include "CommandLineInfo.h"
+#include "Installer.h"
 
 #define UNINSTALLER_WIN_DX INSTALLER_WIN_DX
 #define UNINSTALLER_WIN_DY INSTALLER_WIN_DY
@@ -245,7 +250,7 @@ static DWORD WINAPI UninstallerThread(LPVOID data) {
     // always succeed, even for partial uninstallations
     gInstUninstGlobals.success = true;
 
-    if (!gInstUninstGlobals.silent) {
+    if (!gCli->silent) {
         PostMessage(gHwndFrame, WM_APP_INSTALLATION_FINISHED, 0, 0);
     }
     return 0;
@@ -438,27 +443,28 @@ static int RunApp() {
     }
 }
 
-int RunUninstaller(bool silent) {
+int RunUninstaller(CommandLineInfo* cli) {
     int ret = 1;
 
-#if !defined(DEBUG)
-    if (!IsRunningElevated()) {
-        WCHAR* exePath = GetExePath();
-        WCHAR* cmdline = GetCommandLineW(); // not owning the memory
-        LaunchElevated(exePath, cmdline);
-        str::Free(exePath);
-        ::ExitProcess(0);
-    }
-#endif
+    gCli = cli;
 
-    gInstUninstGlobals.silent = silent;
+    if (!isDebugBuild) {
+        if (!IsRunningElevated()) {
+            WCHAR* exePath = GetExePath();
+            WCHAR* cmdline = GetCommandLineW(); // not owning the memory
+            LaunchElevated(exePath, cmdline);
+            str::Free(exePath);
+            ::ExitProcess(0);
+        }
+    }
+
     gDefaultMsg = _TR("Are you sure you want to uninstall SumatraPDF?");
-    gInstUninstGlobals.installDir = GetInstallationDir();
+    gCli->installDir = GetInstallationDir();
 
     AutoFreeW exePath(GetInstalledExePath());
     auto installerExists = file::Exists(exePath);
 
-    if (gInstUninstGlobals.showUsageAndQuit) {
+    if (gCli->showHelp) {
         ShowUsage();
         ret = 0;
         goto Exit;
@@ -472,7 +478,7 @@ int RunUninstaller(bool silent) {
         goto Exit;
     }
 
-    if (gInstUninstGlobals.silent) {
+    if (gCli->silent) {
         UninstallerThread(nullptr);
         ret = gInstUninstGlobals.success ? 0 : 1;
         goto Exit;
@@ -490,7 +496,6 @@ int RunUninstaller(bool silent) {
     ret = RunApp();
 
 Exit:
-    free(gInstUninstGlobals.installDir);
     free(gInstUninstGlobals.firstError);
 
     return ret;

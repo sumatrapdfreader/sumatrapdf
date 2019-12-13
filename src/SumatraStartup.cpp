@@ -43,7 +43,7 @@
 #include "WindowInfo.h"
 #include "TabInfo.h"
 #include "resource.h"
-#include "ParseCommandLine.h"
+#include "CommandLineInfo.h"
 #include "AppPrefs.h"
 #include "AppTools.h"
 #include "Canvas.h"
@@ -358,12 +358,11 @@ static bool SetupPluginMode(CommandLineInfo& i) {
             if (str::StartsWithI(part, L"page=") && str::Parse(part + 4, L"=%d%$", &pageNo))
                 i.pageNumber = pageNo;
             else if (str::StartsWithI(part, L"nameddest=") && part[10])
-                i.destName.SetCopy(part + 10);
+                i.destName = str::Dup(part + 10);
             else if (!str::FindChar(part, '=') && part[0])
-                i.destName.SetCopy(part);
+                i.destName = str::Dup(part);
         }
     }
-
     return true;
 }
 
@@ -580,9 +579,9 @@ static bool HasInstallerResources() {
 }
 
 // in Installer.cpp
-extern int RunInstaller();
+extern int RunInstaller(CommandLineInfo*);
 // in Uninstaller.cpp
-extern int RunUninstaller(bool);
+extern int RunUninstaller(CommandLineInfo*);
 
 // In release builds, we want to do fast exit and leave cleaning up (freeing memory) to the os.
 // In debug and in release asan builds, we want to cleanup ourselves in order to see leaks.
@@ -606,7 +605,7 @@ static void supressThrowFromNew() {
 // I see people trying to use installer as a portable
 // version. This crashes because it can't load
 // libmupdf.dll. We try to detect that case and show an error message instead.
-// TODO: I still see 
+// TODO: I still see
 static void EnsureNotInstaller() {
     if (!HasInstallerResources()) {
         return;
@@ -675,32 +674,39 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     logf(L"CmdLine: %s\n", GetCommandLineW());
 #if defined(DEBUG) || defined(SVN_PRE_RELEASE_VER)
     if (str::StartsWith(cmdLine, "/tester")) {
-        extern int TesterMain(); // in Tester.cpp
-        return TesterMain();
     }
 
     if (str::StartsWith(cmdLine, "/regress")) {
-        extern int RegressMain(); // in Regress.cpp
-        return RegressMain();
     }
 #endif
 
     CommandLineInfo i;
     ParseCommandLine(GetCommandLineW(), i);
 
+    if (isDebugBuild || isPreReleaseBuild) {
+        if (i.tester) {
+            extern int TesterMain(); // in Tester.cpp
+            return TesterMain();
+        }
+        if (i.regress) {
+            extern int RegressMain(); // in Regress.cpp
+            return RegressMain();
+        }
+    }
+
     if (i.install || IsInstaller()) {
         if (!HasInstallerResources()) {
             MessageBoxW(nullptr, L"Not a valid installer", L"Error", MB_OK | MB_ICONERROR);
             return 1;
         }
-        retCode = RunInstaller();
+        retCode = RunInstaller(&i);
         // exit immediately. for some reason exit handlers try to
         // pull in libmupdf.dll which we don't have access to in the installer
         ::ExitProcess(retCode);
     }
 
     if (i.uninstall) {
-        retCode = RunUninstaller(i.silent);
+        retCode = RunUninstaller(&i);
         ::ExitProcess(retCode);
     }
 
@@ -749,7 +755,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
         // TODO(port)
         // fz_redirect_dll_io_to_console();
     }
-    if (i.makeDefault) {
+    if (i.registerAsDefault) {
         AssociateExeWithPdfExtension();
     }
 

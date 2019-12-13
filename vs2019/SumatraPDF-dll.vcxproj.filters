@@ -42,6 +42,9 @@
     <ClInclude Include="..\src\ChmModel.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\CommandLineInfo.h">
+      <Filter>src</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\CrashHandler.h">
       <Filter>src</Filter>
     </ClInclude>
@@ -88,9 +91,6 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ParseBKM.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\ParseCommandLine.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\src\PdfSync.h">
@@ -248,6 +248,9 @@
     <ClCompile Include="..\src\ChmModel.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\CommandLineInfo.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\CrashHandler.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -300,9 +303,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ParseBKM.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\ParseCommandLine.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\PdfSync.cpp">

@@ -2,12 +2,9 @@
    License: GPLv3 */
 
 struct PageRange {
-    PageRange() : start(1), end(INT_MAX) {
-    }
-    PageRange(int start, int end) : start(start), end(end) {
-    }
-
-    int start, end; // end == INT_MAX means to the last page
+    int start = 1;
+    // end == INT_MAX means to the last page
+    int end = INT_MAX;
 };
 
 class CommandLineInfo {
@@ -19,15 +16,14 @@ class CommandLineInfo {
     //   to benchmark. It can also be a string "loadonly" which means we'll
     //   only benchmark loading of the catalog
     WStrVec pathsToBenchmark;
-    bool makeDefault = false;
     bool exitWhenDone = false;
     bool printDialog = false;
-    AutoFreeW printerName;
-    AutoFreeW printSettings;
-    AutoFreeW forwardSearchOrigin;
+    WCHAR* printerName = nullptr;
+    WCHAR* printSettings = nullptr;
+    WCHAR* forwardSearchOrigin = nullptr;
     int forwardSearchLine = 0;
     bool reuseDdeInstance = false;
-    AutoFreeW destName;
+    WCHAR* destName = nullptr;
     int pageNumber = -1;
     bool restrictedUse = false;
     bool enterPresentation = false;
@@ -37,23 +33,23 @@ class CommandLineInfo {
     PointI startScroll{-1, -1};
     bool showConsole = false;
     HWND hwndPluginParent = nullptr;
-    AutoFreeW pluginURL;
+    WCHAR* pluginURL = nullptr;
     bool exitImmediately = false;
     bool silent = false;
-    AutoFreeW appdataDir;
-    AutoFreeW inverseSearchCmdLine;
+    WCHAR* appdataDir = nullptr;
+    WCHAR* inverseSearchCmdLine = nullptr;
     bool invertColors = false;
+    bool regress = false;
+    bool tester = false;
 
     // stress-testing related
-    AutoFreeW stressTestPath;
-    AutoFreeW stressTestFilter; // nullptr is equivalent to "*" (i.e. all files)
-    AutoFreeW stressTestRanges;
+    WCHAR* stressTestPath = nullptr;
+    // nullptr is equivalent to "*" (i.e. all files)
+    WCHAR* stressTestFilter = nullptr;
+    WCHAR* stressTestRanges = nullptr;
     int stressTestCycles = 1;
     int stressParallelCount = 1;
     bool stressRandomizeFiles = false;
-
-    bool install = false;
-    bool uninstall = false;
 
     // related to testing
     bool testRenderPage = false;
@@ -63,11 +59,22 @@ class CommandLineInfo {
     bool crashOnOpen = false;
 
     // deprecated flags
-    AutoFreeStr lang;
+    char* lang = nullptr;
     WStrVec globalPrefArgs;
 
+    // related to installer
+    bool showHelp = false;
+    WCHAR* installDir = nullptr;
+    bool install = false;
+    bool uninstall = false;
+    bool withFilter = false;
+    bool withPreview = false;
+    bool justExtractFiles = false;
+    bool autoUpdate = false;
+    bool registerAsDefault = false;
+
     CommandLineInfo() = default;
-    ~CommandLineInfo() = default;
+    ~CommandLineInfo();
 };
 
 void ParseCommandLine(const WCHAR* cmdLine, CommandLineInfo&);

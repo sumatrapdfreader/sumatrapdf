@@ -45,22 +45,15 @@ extern int gButtonDy;
 #define WM_APP_INSTALLATION_FINISHED (WM_APP + 1)
 
 struct InstUninstGlobals {
-    bool silent;
-    bool showUsageAndQuit;
-    WCHAR* installDir;
     WCHAR* firstError;
     HANDLE hThread;
     bool success;
 };
 
-struct PayloadInfo {
-    const char* fileName;
-    bool install;
-};
-
 struct ButtonCtrl;
 
 extern InstUninstGlobals gInstUninstGlobals;
+extern CommandLineInfo* gCli;
 extern const WCHAR* gDefaultMsg;
 extern WCHAR* gSupportedExts[];
 extern HWND gHwndFrame;
@@ -104,6 +97,7 @@ void UninstallPdfFilter();
 void UninstallPdfPreviewer();
 void UninstallBrowserPlugin();
 bool CheckInstallUninstallPossible(bool silent = false);
+WCHAR* GetInstallDirNoFree();
 WCHAR* GetInstalledExePath();
 WCHAR* GetUninstallerPath();
 WCHAR* GetInstalledBrowserPluginPath();
@@ -116,5 +110,4 @@ bool CreateProcessHelper(const WCHAR* exe, const WCHAR* args = nullptr);
 void NotifyFailed(const WCHAR* msg);
 void SetMsg(const WCHAR* msg, Gdiplus::Color color);
 void SetDefaultMsg();
-WCHAR* GetInstallDirNoFree();
 const WCHAR* GetOwnPath();

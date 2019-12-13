@@ -34,7 +34,7 @@
 #include "WindowInfo.h"
 #include "TabInfo.h"
 #include "AppTools.h"
-#include "ParseCommandLine.h"
+#include "CommandLineInfo.h"
 #include "Search.h"
 #include "StressTesting.h"
 
@@ -853,11 +853,11 @@ void StartStressTest(CommandLineInfo* i, WindowInfo* win) {
         }
         WStrVec filesToTest;
 
-        wprintf(L"Scanning for files in directory %s\n", i->stressTestPath.Get());
+        wprintf(L"Scanning for files in directory %s\n", i->stressTestPath);
         fflush(stdout);
         size_t filesCount = GetAllMatchingFiles(i->stressTestPath, i->stressTestFilter, filesToTest, true);
         if (0 == filesCount) {
-            wprintf(L"Didn't find any files matching filter '%s'\n", i->stressTestFilter.Get());
+            wprintf(L"Didn't find any files matching filter '%s'\n", i->stressTestFilter);
             return;
         }
         wprintf(L"Found %d files", (int)filesCount);

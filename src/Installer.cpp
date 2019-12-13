@@ -26,6 +26,11 @@
 #include "wingui/ProgressCtrl.h"
 
 #include "Translations.h"
+
+#include "SumatraConfig.h"
+#include "SettingsStructs.h"
+#include "GlobalPrefs.h"
+#include "CommandLineInfo.h"
 #include "Resource.h"
 #include "Version.h"
 #include "Installer.h"
@@ -40,9 +45,6 @@ struct InstallerGlobals {
 #if ENABLE_REGISTER_DEFAULT
     bool registerAsDefault;
 #endif
-    bool installPdfFilter;
-    bool installPdfPreviewer;
-    bool justExtractFiles;
     bool autoUpdate;
 };
 
@@ -50,9 +52,6 @@ static InstallerGlobals gInstallerGlobals = {
 #if ENABLE_REGISTER_DEFAULT
     false, /* bool registerAsDefault */
 #endif
-    false, /* bool installPdfFilter */
-    false, /* bool installPdfPreviewer */
-    false, /* bool extractFiles */
     false, /* bool autoUpdate */
 };
 
@@ -102,7 +101,7 @@ static bool ExtractFiles(lzma::SimpleArchive* archive) {
             return false;
         }
         AutoFreeW filePath(str::conv::FromUtf8(fi->name));
-        AutoFreeW extPath(path::Join(gInstUninstGlobals.installDir, filePath));
+        AutoFreeW extPath(path::Join(gCli->installDir, filePath));
         bool ok = file::WriteFile(extPath, uncompressed, fi->uncompressedSize);
         free(uncompressed);
         if (!ok) {
@@ -135,7 +134,7 @@ static std::tuple<const char*, DWORD, HGLOBAL> LockDataResource(int id) {
 }
 
 static bool CreateInstallationDirectory() {
-    bool ok = dir::CreateAll(gInstUninstGlobals.installDir);
+    bool ok = dir::CreateAll(gCli->installDir);
     if (!ok) {
         LogLastError();
         NotifyFailed(_TR("Couldn't create the installation directory"));
@@ -261,7 +260,7 @@ static bool WriteUninstallerRegistryInfo(HKEY hkey) {
     // so include it in the DisplayName
     if (!IsVistaOrGreater())
         ok &= WriteRegStr(hkey, REG_PATH_UNINST, L"DisplayName", APP_NAME_STR L" " CURR_VERSION_STR);
-    DWORD size = GetDirSize(gInstUninstGlobals.installDir) / 1024;
+    DWORD size = GetDirSize(gCli->installDir) / 1024;
     // size of installed directory after copying files
     ok &= WriteRegDWORD(hkey, REG_PATH_UNINST, L"EstimatedSize", size);
     // current date as YYYYMMDD
@@ -408,7 +407,7 @@ static DWORD WINAPI InstallerThread(LPVOID data) {
     CopySettingsFile();
 
     // all files have been extracted at this point
-    if (gInstallerGlobals.justExtractFiles) {
+    if (gCli->justExtractFiles) {
         return 0;
     }
 
@@ -418,13 +417,13 @@ static DWORD WINAPI InstallerThread(LPVOID data) {
     }
 #endif
 
-    if (gInstallerGlobals.installPdfFilter) {
+    if (gCli->withFilter) {
         InstallPdfFilter();
     } else if (IsPdfFilterInstalled()) {
         UninstallPdfFilter();
     }
 
-    if (gInstallerGlobals.installPdfPreviewer) {
+    if (gCli->withPreview) {
         InstallPdfPreviewer();
     } else if (IsPdfPreviewerInstalled()) {
         UninstallPdfPreviewer();
@@ -454,7 +453,7 @@ static DWORD WINAPI InstallerThread(LPVOID data) {
 
 Error:
     // TODO: roll back installation on failure (restore previous installation!)
-    if (gHwndFrame && !gInstUninstGlobals.silent) {
+    if (gHwndFrame && !gCli->silent) {
         Sleep(500); // allow a glimpse of the completed progress bar before hiding it
         PostMessage(gHwndFrame, WM_APP_INSTALLATION_FINISHED, 0, 0);
     }
@@ -481,7 +480,7 @@ static void OnButtonInstall() {
 
     WCHAR* userInstallDir = win::GetText(gTextboxInstDir->hwnd);
     if (!str::IsEmpty(userInstallDir))
-        str::ReplacePtr(&gInstUninstGlobals.installDir, userInstallDir);
+        str::ReplacePtr(&gCli->installDir, userInstallDir);
     free(userInstallDir);
 
 #if ENABLE_REGISTER_DEFAULT
@@ -491,11 +490,9 @@ static void OnButtonInstall() {
 #endif
 
     // note: this checkbox isn't created when running inside Wow64
-    gInstallerGlobals.installPdfFilter =
-        gCheckboxRegisterPdfFilter != nullptr && gCheckboxRegisterPdfFilter->IsChecked();
+    gCli->withFilter = gCheckboxRegisterPdfFilter != nullptr && gCheckboxRegisterPdfFilter->IsChecked();
     // note: this checkbox isn't created on Windows 2000 and XP
-    gInstallerGlobals.installPdfPreviewer =
-        gCheckboxRegisterPdfPreviewer != nullptr && gCheckboxRegisterPdfPreviewer->IsChecked();
+    gCli->withPreview = gCheckboxRegisterPdfPreviewer != nullptr && gCheckboxRegisterPdfPreviewer->IsChecked();
 
     // create a progress bar in place of the Options button
     RectI rc(0, 0, dpiAdjust(INSTALLER_WIN_DX / 2), gButtonDy);
@@ -723,13 +720,13 @@ static void OnCreateWindow(HWND hwnd) {
     if (IsProcessAndOsArchSame()) {
         // for Windows XP, this means only basic thumbnail support
         const WCHAR* s = _TR("Let Windows show &previews of PDF documents");
-        bool isChecked = gInstallerGlobals.installPdfPreviewer || IsPdfPreviewerInstalled();
+        bool isChecked = gCli->withPreview || IsPdfPreviewerInstalled();
         gCheckboxRegisterPdfPreviewer = CreateCheckbox(hwnd, s, isChecked);
         rc = {x, y, x + dx, y + staticDy};
         gCheckboxRegisterPdfPreviewer->SetPos(&rc);
         y -= staticDy;
 
-        isChecked = gInstallerGlobals.installPdfFilter || IsPdfFilterInstalled();
+        isChecked = gCli->withFilter || IsPdfFilterInstalled();
         s = _TR("Let Windows Desktop Search &search PDF documents");
         gCheckboxRegisterPdfFilter = CreateCheckbox(hwnd, s, isChecked);
         rc = {x, y, x + dx, y + staticDy};
@@ -767,7 +764,7 @@ static void OnCreateWindow(HWND hwnd) {
     dx = r.dx - (2 * WINDOW_MARGIN) - btnSize2.dx - dpiAdjust(4);
     gTextboxInstDir = new EditCtrl(hwnd);
     gTextboxInstDir->dwStyle |= WS_BORDER;
-    gTextboxInstDir->SetText(gInstUninstGlobals.installDir);
+    gTextboxInstDir->SetText(gCli->installDir);
     gTextboxInstDir->Create();
     rc = {x, y, x + dx, y + staticDy};
     gTextboxInstDir->SetBounds(rc);
@@ -957,51 +954,6 @@ static int RunApp() {
     }
 }
 
-static void ParseCommandLine(WCHAR* cmdLine) {
-    WStrVec argList;
-    ParseCmdLine(cmdLine, argList);
-
-#define is_arg(param) str::EqI(arg + 1, TEXT(param))
-#define is_arg_with_param(param) (is_arg(param) && i < argList.size() - 1)
-
-    // skip the first arg (exe path)
-    for (size_t i = 1; i < argList.size(); i++) {
-        WCHAR* arg = argList.at(i);
-        if ('-' != *arg && '/' != *arg)
-            continue;
-
-        if (is_arg("s"))
-            gInstUninstGlobals.silent = true;
-        else if (is_arg_with_param("d"))
-            str::ReplacePtr(&gInstUninstGlobals.installDir, argList.at(++i));
-#if 0
-        else if (is_arg("register"))
-            gInstallerGlobals.registerAsDefault = true;
-#endif
-        else if (is_arg_with_param("opt")) {
-            WCHAR* opts = argList.at(++i);
-            str::ToLowerInPlace(opts);
-            str::TransChars(opts, L" ;", L",,");
-            WStrVec optlist;
-            optlist.Split(opts, L",", true);
-            if (optlist.Contains(L"pdffilter"))
-                gInstallerGlobals.installPdfFilter = true;
-            if (optlist.Contains(L"pdfpreviewer"))
-                gInstallerGlobals.installPdfPreviewer = true;
-        } else if (is_arg("x")) {
-            gInstallerGlobals.justExtractFiles = true;
-            // silently extract files to the current directory (if /d isn't used)
-            gInstUninstGlobals.silent = true;
-            if (!gInstUninstGlobals.installDir)
-                str::ReplacePtr(&gInstUninstGlobals.installDir, L".");
-        } else if (is_arg("autoupdate")) {
-            gInstallerGlobals.autoUpdate = true;
-        } else if (is_arg("h") || is_arg("help") || is_arg("?")) {
-            gInstUninstGlobals.showUsageAndQuit = true;
-        }
-    }
-}
-
 static void ShowNoEmbeddedFiles(const WCHAR* msg) {
     const WCHAR* caption = L"Error";
     MessageBoxW(nullptr, msg, caption, MB_OK);
@@ -1022,18 +974,19 @@ static bool OpenEmbeddedFilesArchive() {
     return true;
 }
 
-int RunInstaller() {
+int RunInstaller(CommandLineInfo* cli) {
     int ret = 0;
 
-#if !defined(DEBUG)
-    if (!IsRunningElevated()) {
-        WCHAR* exePath = GetExePath();
-        WCHAR* cmdline = GetCommandLineW(); // not owning the memory
-        LaunchElevated(exePath, cmdline);
-        str::Free(exePath);
-        ::ExitProcess(0);
+    gCli = cli;
+    if (!isDebugBuild) {
+        if (!IsRunningElevated()) {
+            WCHAR* exePath = GetExePath();
+            WCHAR* cmdline = GetCommandLineW(); // not owning the memory
+            LaunchElevated(exePath, cmdline);
+            str::Free(exePath);
+            ::ExitProcess(0);
+        }
     }
-#endif
 
     if (!OpenEmbeddedFilesArchive()) {
         return 1;
@@ -1041,23 +994,24 @@ int RunInstaller() {
 
     gDefaultMsg = _TR("Thank you for choosing SumatraPDF!");
 
-    ParseCommandLine(GetCommandLine());
-    if (gInstUninstGlobals.showUsageAndQuit) {
+    if (gCli->showHelp) {
         ShowUsage();
         ret = 0;
         goto Exit;
     }
 
-    if (!gInstUninstGlobals.installDir) {
-        gInstUninstGlobals.installDir = GetInstallationDir();
+    if (!gCli->installDir) {
+        gCli->installDir = GetInstallationDir();
     }
 
-    if (gInstUninstGlobals.silent) {
+    if (gCli->silent) {
         // make sure not to uninstall the plugins during silent installation
-        if (!gInstallerGlobals.installPdfFilter)
-            gInstallerGlobals.installPdfFilter = IsPdfFilterInstalled();
-        if (!gInstallerGlobals.installPdfPreviewer)
-            gInstallerGlobals.installPdfPreviewer = IsPdfPreviewerInstalled();
+        if (!gCli->withFilter) {
+            gCli->withFilter = IsPdfFilterInstalled();
+        }
+        if (!gCli->withPreview) {
+            gCli->withPreview = IsPdfPreviewerInstalled();
+        }
         InstallerThread(nullptr);
         ret = gInstUninstGlobals.success ? 0 : 1;
         goto Exit;
@@ -1076,7 +1030,6 @@ int RunInstaller() {
     ret = RunApp();
 
 Exit:
-    free(gInstUninstGlobals.installDir);
     free(gInstUninstGlobals.firstError);
 
     return ret;

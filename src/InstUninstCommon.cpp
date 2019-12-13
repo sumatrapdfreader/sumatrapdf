@@ -10,14 +10,9 @@
 #include <tlhelp32.h>
 #include <io.h>
 #include "utils/FileUtil.h"
-#include "Translations.h"
-#include "Resource.h"
 #include "utils/Timer.h"
-#include "Version.h"
 #include "utils/WinUtil.h"
-#include "Installer.h"
 #include "utils/CmdLineParser.h"
-#include "CrashHandler.h"
 #include "utils/Dpi.h"
 #include "utils/FrameTimeoutCalculator.h"
 #include "utils/Log.h"
@@ -31,6 +26,17 @@
 #include "wingui/ButtonCtrl.h"
 #include "wingui/CheckboxCtrl.h"
 #include "wingui/EditCtrl.h"
+
+#include "CrashHandler.h"
+#include "Translations.h"
+
+#include "SumatraConfig.h"
+#include "SettingsStructs.h"
+#include "GlobalPrefs.h"
+#include "CommandLineInfo.h"
+#include "Resource.h"
+#include "Version.h"
+#include "Installer.h"
 
 // define to 1 to enable shadow effect, to 0 to disable
 #define DRAW_TEXT_SHADOW 1
@@ -64,6 +70,8 @@ WCHAR* gMsgError = nullptr;
 int gBottomPartDy = 0;
 int gButtonDy = 0;
 
+CommandLineInfo* gCli = nullptr;
+
 const WCHAR* gDefaultMsg = nullptr; // Note: translation, not freeing
 
 static float gUiDPIFactor = 1.0f;
@@ -73,9 +81,6 @@ static Color gMsgColor;
 static WStrVec gProcessesToClose;
 
 InstUninstGlobals gInstUninstGlobals = {
-    false,   /* bool silent */
-    false,   /* bool showUsageAndQuit */
-    nullptr, /* WCHAR *installDir */
     nullptr, /* WCHAR *firstError */
     nullptr, /* HANDLE hThread */
     false,   /* bool success */
@@ -130,13 +135,13 @@ void InitInstallerUninstaller() {
 }
 
 bool CreateProcessHelper(const WCHAR* exe, const WCHAR* args) {
-    AutoFreeW cmd(str::Format(L"\"%s\" %s", exe, args ? args : L""));
+    AutoFreeWstr cmd = str::Format(L"\"%s\" %s", exe, args ? args : L"");
     ScopedHandle process(LaunchProcess(cmd));
     return process != nullptr;
 }
 
 WCHAR* GetInstallDirNoFree() {
-    return gInstUninstGlobals.installDir;
+    return gCli->installDir;
 }
 
 WCHAR* GetBrowserPluginPath() {
