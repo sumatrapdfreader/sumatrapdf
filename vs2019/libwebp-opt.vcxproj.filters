@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="dec">
+      <UniqueIdentifier>{B169880B-1D73-887C-A6EE-9E7C12F7937C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dsp">
+      <UniqueIdentifier>{8C6B880B-F874-887C-81F0-9E7CEDF8937C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utils">
+      <UniqueIdentifier>{169C8510-82B0-ADC1-4B32-5121B705AAF2}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\ext\libwebp\src\dec\alpha_dec.c">
+      <Filter>dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dec\buffer_dec.c">
+      <Filter>dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dec\frame_dec.c">
+      <Filter>dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dec\idec_dec.c">
+      <Filter>dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dec\io_dec.c">
+      <Filter>dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dec\quant_dec.c">
+      <Filter>dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dec\tree_dec.c">
+      <Filter>dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dec\vp8_dec.c">
+      <Filter>dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dec\vp8l_dec.c">
+      <Filter>dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dec\webp_dec.c">
+      <Filter>dec</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dsp\alpha_processing.c">
+      <Filter>dsp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dsp\alpha_processing_sse2.c">
+      <Filter>dsp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dsp\alpha_processing_sse41.c">
+      <Filter>dsp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dsp\cost.c">
+      <Filter>dsp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dsp\cpu.c">
+      <Filter>dsp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dsp\dec.c">
+      <Filter>dsp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dsp\dec_clip_tables.c">
+      <Filter>dsp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dsp\dec_sse2.c">
+      <Filter>dsp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dsp\dec_sse41.c">
+      <Filter>dsp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dsp\filters.c">
+      <Filter>dsp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dsp\filters_sse2.c">
+      <Filter>dsp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dsp\lossless.c">
+      <Filter>dsp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dsp\lossless_sse2.c">
+      <Filter>dsp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dsp\rescaler.c">
+      <Filter>dsp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dsp\rescaler_sse2.c">
+      <Filter>dsp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dsp\ssim.c">
+      <Filter>dsp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dsp\ssim_sse2.c">
+      <Filter>dsp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dsp\upsampling.c">
+      <Filter>dsp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dsp\upsampling_sse2.c">
+      <Filter>dsp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dsp\upsampling_sse41.c">
+      <Filter>dsp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dsp\yuv.c">
+      <Filter>dsp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dsp\yuv_sse2.c">
+      <Filter>dsp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\dsp\yuv_sse41.c">
+      <Filter>dsp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\utils\bit_reader_utils.c">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\utils\bit_writer_utils.c">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\utils\color_cache_utils.c">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\utils\filters_utils.c">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\utils\huffman_encode_utils.c">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\utils\huffman_utils.c">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\utils\quant_levels_dec_utils.c">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\utils\quant_levels_utils.c">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\utils\random_utils.c">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\utils\rescaler_utils.c">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\utils\thread_utils.c">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\libwebp\src\utils\utils.c">
+      <Filter>utils</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
