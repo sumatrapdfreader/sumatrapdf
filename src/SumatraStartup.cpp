@@ -712,7 +712,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     }
 #endif
 
-    ensureNotInstaller();
+    EnsureNotInstaller();
 
     if (i.testRenderPage) {
         TestRenderPage(i);
