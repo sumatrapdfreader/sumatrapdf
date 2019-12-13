@@ -4,14 +4,14 @@
 #include "utils/BaseUtil.h"
 #include "utils/CmdLineParser.h"
 #include "utils/WinUtil.h"
-// layout controllers
+#include "utils/Log.h"
+
 #include "SettingsStructs.h"
 #include "GlobalPrefs.h"
-// ui
 #include "ParseCommandLine.h"
 #include "StressTesting.h"
+#include "SumatraConfig.h"
 
-#ifdef DEBUG
 static void EnumeratePrinters() {
     str::WStr output;
 
@@ -58,7 +58,6 @@ static void EnumeratePrinters() {
     free(info5Arr);
     MessageBox(nullptr, output.Get(), L"SumatraPDF - EnumeratePrinters", MB_OK | MB_ICONINFORMATION);
 }
-#endif
 
 // parses a list of page ranges such as 1,3-5,7- (i..e all but pages 2 and 6)
 // into an interable list (returns nullptr on parsing errors)
@@ -418,15 +417,12 @@ void ParseCommandLine(const WCHAR* cmdLine, CommandLineInfo& i) {
             i.globalPrefArgs.Append(str::Dup(argList.at(n)));
             i.globalPrefArgs.Append(str::Dup(argList.at(++n)));
             i.globalPrefArgs.Append(str::Dup(argList.at(++n)));
-        }
-#ifdef DEBUG
-        else if (ArgEnumPrinters == arg) {
+        } else if (isDebugBuild && ArgEnumPrinters == arg) {
             EnumeratePrinters();
             /* this is for testing only, exit immediately */
             i.exitImmediately = true;
             return;
         }
-#endif
         // this should have been handled already by AutoUpdateMain
         else if (is_arg_with_param(AutoUpdate)) {
             n++;

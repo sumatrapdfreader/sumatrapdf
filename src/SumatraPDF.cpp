@@ -15,6 +15,8 @@
 #include "utils/ThreadUtil.h"
 #include "utils/UITask.h"
 #include "utils/WinUtil.h"
+#include "utils/Log.h"
+#include "utils/GdiPlusUtil.h"
 
 #include "wingui/WinGui.h"
 #include "wingui/Layout.h"
@@ -26,8 +28,6 @@
 #include "wingui/FrameRateWnd.h"
 #include "wingui/TooltipCtrl.h"
 #include "wingui/DropDownCtrl.h"
-
-#include "utils/GdiPlusUtil.h"
 
 #include "EngineBase.h"
 #include "EnginePs.h"
@@ -81,7 +81,7 @@
 #include "Translations.h"
 #include "uia/Provider.h"
 #include "Version.h"
-#include "utils/Log.h"
+#include "SumatraConfig.h"
 
 /* if true, we're in debug mode where we show links as blue rectangle on
    the screen. Makes debugging code related to links easier. */
@@ -3441,6 +3441,137 @@ static WCHAR SingleCharLowerW(WCHAR c) {
     return buf[0];
 }
 
+static void OnFrameKeyEsc(WindowInfo* win) {
+    if (win->findThread) {
+        AbortFinding(win, false);
+        return;
+    }
+    if (win->notifications->GetForGroup(NG_PERSISTENT_WARNING)) {
+        win->notifications->RemoveForGroup(NG_PERSISTENT_WARNING);
+        return;
+    }
+    if (win->notifications->GetForGroup(NG_PAGE_INFO_HELPER)) {
+        win->notifications->RemoveForGroup(NG_PAGE_INFO_HELPER);
+        return;
+    }
+    if (win->notifications->GetForGroup(NG_CURSOR_POS_HELPER)) {
+        win->notifications->RemoveForGroup(NG_CURSOR_POS_HELPER);
+        return;
+    }
+    if (win->showSelection) {
+        ClearSearchResult(win);
+        return;
+    }
+    if (gGlobalPrefs->escToExit && MayCloseWindow(win)) {
+        CloseWindow(win, true);
+        return;
+    }
+    if (win->presentation || win->isFullScreen) {
+        OnMenuViewFullscreen(win, win->presentation != PM_DISABLED);
+        return;
+    }
+}
+
+static void OnFrameKeyB(WindowInfo* win) {
+    auto* ctrl = win->ctrl;
+    bool isSinglePage = IsSingle(ctrl->GetDisplayMode());
+
+    DisplayModel* dm = win->AsFixed();
+    if (dm && !isSinglePage) {
+        bool forward = !IsShiftPressed();
+        int currPage = ctrl->CurrentPageNo();
+        bool isVisible = dm->FirstBookPageVisible();
+        if (forward) {
+            isVisible = dm->LastBookPageVisible();
+        }
+        if (isVisible) {
+            return;
+        }
+
+        DisplayMode newMode = DM_BOOK_VIEW;
+        if (IsBookView(ctrl->GetDisplayMode())) {
+            newMode = DM_FACING;
+        }
+        SwitchToDisplayMode(win, newMode, true);
+
+        if (forward && currPage >= ctrl->CurrentPageNo() && (currPage > 1 || newMode == DM_BOOK_VIEW)) {
+            ctrl->GoToNextPage();
+        } else if (!forward && currPage <= ctrl->CurrentPageNo()) {
+            win->ctrl->GoToPrevPage();
+        }
+    } else if (win->AsEbook() && !isSinglePage) {
+        // "e-book view": flip a single page
+        bool forward = !IsShiftPressed();
+        int nextPage = ctrl->CurrentPageNo() + (forward ? 1 : -1);
+        if (ctrl->ValidPageNo(nextPage)) {
+            ctrl->GoToPage(nextPage, false);
+        }
+    } else if (win->presentation) {
+        win->ChangePresentationMode(PM_BLACK_SCREEN);
+    }
+}
+
+static void OnFrameKeyA(WindowInfo* win) {
+    bool annotsEnabled = isDebugBuild || isPreReleaseBuild;
+    if (!annotsEnabled) {
+        return;
+    }
+
+    // converts current selection to annotation (or back to regular text
+    // if it's already an annotation)
+    DisplayModel* dm = win->AsFixed();
+    if (!dm) {
+        return;
+    }
+    auto engine = dm->GetEngine();
+    if (!engine) {
+        return;
+    }
+
+    bool ok = engine->SupportsAnnotation() && win->showSelection && win->currentTab->selectionOnPage;
+    if (!ok) {
+        return;
+    }
+    // TODO: we probably should construct list of new annotations and replace
+    // existing list with a new one at the end
+    // TODO: we need to support overlapping selections better (merge them into existing
+    // annotation?
+    if (!dm->userAnnots) {
+        dm->userAnnots = new Vec<PageAnnotation>();
+    }
+    Vec<PageAnnotation>* annots = dm->userAnnots;
+    for (SelectionOnPage& sel : *win->currentTab->selectionOnPage) {
+        COLORREF c = gGlobalPrefs->annotationDefaults.highlightColor;
+        c = ColorSetAlpha(c, 0xcc);
+        auto addedAnnotation = PageAnnotation(PageAnnotType::Highlight, sel.pageNo, sel.rect, c);
+        size_t oldLen = annots->size();
+        for (size_t i = 0; i < oldLen && i < annots->size(); ++i) {
+            if (annots->at(i) == addedAnnotation) {
+                annots->RemoveAtFast(i);
+            }
+        }
+        if (oldLen == annots->size()) {
+            annots->Append(PageAnnotation(PageAnnotType::Highlight, sel.pageNo, sel.rect, c));
+        }
+        gRenderCache.Invalidate(dm, sel.pageNo, sel.rect);
+    }
+    dm->userAnnotsModified = true;
+    dm->GetEngine()->UpdateUserAnnotations(dm->userAnnots);
+    ClearSearchResult(win); // causes invalidated tiles to be rerendered
+}
+
+static void OnFrameKeyM(WindowInfo* win) {
+    // "cursor position" tip: make figuring out the current
+    // cursor position in cm/in/pt possible (for exact layouting)
+    if (!win->AsFixed()) {
+        return;
+    }
+    PointI pt;
+    if (GetCursorPosInHwnd(win->hwndCanvas, pt)) {
+        UpdateCursorPositionHelper(win, pt, nullptr);
+    }
+}
+
 static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
     if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
         win->ChangePresentationMode(PM_ENABLED);
@@ -3450,8 +3581,9 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
     if (key >= 0x100 && info && !IsCtrlPressed() && !IsAltPressed()) {
         // determine the intended keypress by scan code for non-Latin keyboard layouts
         UINT vk = MapVirtualKeyW((info >> 16) & 0xFF, MAPVK_VSC_TO_VK);
-        if ('A' <= vk && vk <= 'Z')
+        if ('A' <= vk && vk <= 'Z') {
             key = vk;
+        }
     }
 
     if (IsCharUpperW((WCHAR)key))
@@ -3459,20 +3591,7 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
 
     switch (key) {
         case VK_ESCAPE:
-            if (win->findThread)
-                AbortFinding(win, false);
-            else if (win->notifications->GetForGroup(NG_PERSISTENT_WARNING))
-                win->notifications->RemoveForGroup(NG_PERSISTENT_WARNING);
-            else if (win->notifications->GetForGroup(NG_PAGE_INFO_HELPER))
-                win->notifications->RemoveForGroup(NG_PAGE_INFO_HELPER);
-            else if (win->notifications->GetForGroup(NG_CURSOR_POS_HELPER))
-                win->notifications->RemoveForGroup(NG_CURSOR_POS_HELPER);
-            else if (win->showSelection)
-                ClearSearchResult(win);
-            else if (gGlobalPrefs->escToExit && MayCloseWindow(win))
-                CloseWindow(win, true);
-            else if (win->presentation || win->isFullScreen)
-                OnMenuViewFullscreen(win, win->presentation != PM_DISABLED);
+            OnFrameKeyEsc(win);
             return;
         case 'q':
             // close the current document (it's too easy to press for discarding multiple tabs)
@@ -3561,39 +3680,7 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
             OnMenuViewContinuous(win);
             break;
         case 'b':
-            if (win->AsFixed() && !IsSingle(ctrl->GetDisplayMode())) {
-                DisplayModel* dm = win->AsFixed();
-                bool forward = !IsShiftPressed();
-                int currPage = ctrl->CurrentPageNo();
-                bool isVisible = dm->FirstBookPageVisible();
-                if (forward) {
-                    isVisible = dm->LastBookPageVisible();
-                }
-                if (isVisible) {
-                    break;
-                }
-
-                DisplayMode newMode = DM_BOOK_VIEW;
-                if (IsBookView(ctrl->GetDisplayMode())) {
-                    newMode = DM_FACING;
-                }
-                SwitchToDisplayMode(win, newMode, true);
-
-                if (forward && currPage >= ctrl->CurrentPageNo() && (currPage > 1 || newMode == DM_BOOK_VIEW)) {
-                    ctrl->GoToNextPage();
-                } else if (!forward && currPage <= ctrl->CurrentPageNo()) {
-                    win->ctrl->GoToPrevPage();
-                }
-            } else if (win->AsEbook() && !IsSingle(ctrl->GetDisplayMode())) {
-                // "e-book view": flip a single page
-                bool forward = !IsShiftPressed();
-                int nextPage = ctrl->CurrentPageNo() + (forward ? 1 : -1);
-                if (ctrl->ValidPageNo(nextPage)) {
-                    ctrl->GoToPage(nextPage, false);
-                }
-            } else if (win->presentation) {
-                win->ChangePresentationMode(PM_BLACK_SCREEN);
-            }
+            OnFrameKeyB(win);
             break;
         case '.':
             // for Logitech's wireless presenters which target PowerPoint's shortcuts
@@ -3609,56 +3696,17 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
         case 'i':
             // experimental "page info" tip: make figuring out current page and
             // total pages count a one-key action (unless they're already visible)
-            if (win->AsFixed() && (!gGlobalPrefs->showToolbar || win->isFullScreen || PM_ENABLED == win->presentation))
+            if (win->AsFixed() &&
+                (!gGlobalPrefs->showToolbar || win->isFullScreen || PM_ENABLED == win->presentation)) {
                 UpdatePageInfoHelper(win);
+            }
             break;
         case 'm':
-            // "cursor position" tip: make figuring out the current
-            // cursor position in cm/in/pt possible (for exact layouting)
-            if (win->AsFixed()) {
-                PointI pt;
-                if (GetCursorPosInHwnd(win->hwndCanvas, pt)) {
-                    UpdateCursorPositionHelper(win, pt, nullptr);
-                }
-            }
+            OnFrameKeyM(win);
             break;
-#if defined(DEBUG) || defined(SVN_PRE_RELEASE_VER)
         case 'a':
-            // converts current selection to annotation (or back to regular text
-            // if it's already an annotation)
-            DisplayModel* dm = win->AsFixed();
-            bool ok =
-                dm && dm->GetEngine()->SupportsAnnotation() && win->showSelection && win->currentTab->selectionOnPage;
-            if (!ok) {
-                return;
-            }
-            // TODO: we probably should construct list of new annotations and replace
-            // existing list with a new one at the end
-            // TODO: we need to support overlapping selections better (merge them into existing
-            // annotation?
-            if (!dm->userAnnots) {
-                dm->userAnnots = new Vec<PageAnnotation>();
-            }
-            Vec<PageAnnotation>* annots = dm->userAnnots;
-            for (SelectionOnPage& sel : *win->currentTab->selectionOnPage) {
-                COLORREF c = gGlobalPrefs->annotationDefaults.highlightColor;
-                c = ColorSetAlpha(c, 0xcc);
-                auto addedAnnotation = PageAnnotation(PageAnnotType::Highlight, sel.pageNo, sel.rect, c);
-                size_t oldLen = annots->size();
-                for (size_t i = 0; i < oldLen && i < annots->size(); ++i) {
-                    if (annots->at(i) == addedAnnotation) {
-                        annots->RemoveAtFast(i);
-                    }
-                }
-                if (oldLen == annots->size()) {
-                    annots->Append(PageAnnotation(PageAnnotType::Highlight, sel.pageNo, sel.rect, c));
-                }
-                gRenderCache.Invalidate(dm, sel.pageNo, sel.rect);
-            }
-            dm->userAnnotsModified = true;
-            dm->GetEngine()->UpdateUserAnnotations(dm->userAnnots);
-            ClearSearchResult(win); // causes invalidated tiles to be rerendered
-#endif
+            OnFrameKeyA(win);
+            break;
     }
 }
 
@@ -4435,32 +4483,33 @@ bool IsDllBuild() {
 void GetProgramInfo(str::Str& s) {
     OwnedData d = str::conv::WcharToUtf8(gCrashFilePath);
     s.AppendFmt("Crash file: %s\r\n", d.data);
-    char* exePath = GetExePathA();
-    s.AppendFmt("Exe: %s\r\n", exePath);
-    free(exePath);
+    AutoFree exePath = GetExePathA();
+    s.AppendFmt("Exe: %s\r\n", exePath.get());
     const char* exeType = IsDllBuild() ? "dll" : "static";
+    if (builtOn != nullptr) {
+        s.AppendFmt("BuiltOn: %s\n", builtOn);
+    }
     s.AppendFmt("Type: %s\r\n", exeType);
-    s.AppendFmt("Ver: %s", CURR_VERSION_STRA);
-#if defined(SVN_PRE_RELEASE_VER)
-    s.AppendFmt(" pre-release");
-#endif
+    s.AppendFmt("Ver: %s", currentVersion);
+    if (isPreReleaseBuild) {
+        s.AppendFmt(" pre-release");
+    }
     if (IsProcess64()) {
         s.Append(" 64-bit");
     }
-#ifdef DEBUG
-    if (!str::Find(s.Get(), " (dbg)")) {
-        s.Append(" (dbg)");
+    if (isDebugBuild) {
+        if (!str::Find(s.Get(), " (dbg)")) {
+            s.Append(" (dbg)");
+        }
     }
-#endif
     if (gPluginMode) {
         s.Append(" [plugin]");
     }
     s.Append("\r\n");
 
-#if defined(GIT_COMMIT_ID)
-    const char* gitSha1 = QM(GIT_COMMIT_ID);
-    s.AppendFmt("Git: %s (https://github.com/sumatrapdfreader/sumatrapdf/commit/%s)\r\n", gitSha1, gitSha1);
-#endif
+    if (gitSha1 != nullptr) {
+        s.AppendFmt("Git: %s (https://github.com/sumatrapdfreader/sumatrapdf/commit/%s)\r\n", gitSha1, gitSha1);
+    }
 }
 
 bool CrashHandlerCanUseNet() {

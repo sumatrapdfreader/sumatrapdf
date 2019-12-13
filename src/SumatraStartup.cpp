@@ -64,6 +64,52 @@
 #include "Menu.h"
 #include "AppTools.h"
 #include "Installer.h"
+#include "SumatraConfig.h"
+
+#if defined(DEBUG)
+bool isDebugBuild = true;
+#else
+bool isDebugBuild = false;
+#endif
+
+#if defined(ASAN_BUILD)
+bool isAsanBuild = true;
+#else
+bool isAsanBuild = false;
+#endif
+
+// those are set in BuildConfig.h by build.go
+#if defined(IS_DAILY_BUILD)
+bool isDailyBuild = true;
+#else
+bool isDailyBuild = false;
+#endif
+
+#if defined(SVN_PRE_RELEASE_VER)
+bool isPreReleaseBuild = true;
+#else
+bool isPreReleaseBuild = false;
+#endif
+
+#if defined(BUILT_ON)
+const char* builtOn = QM(BUILT_ON);
+#else
+const char* builtOn = nullptr;
+#endif
+
+const char* currentVersion = CURR_VERSION_STRA;
+
+#if defined(SVN_PRE_RELEASE_VER)
+const char* preReleaseVersion = QM(SVN_PRE_RELEASE_VER);
+#else
+const char* preReleaseVersion = nullptr;
+#endif
+
+#if defined(GIT_COMMIT_ID)
+const char* gitSha1 = QM(GIT_COMMIT_ID);
+#else
+const char* gitSha1 = nullptr;
+#endif
 
 static bool TryLoadMemTrace() {
     AutoFreeW dllPath(path::GetPathOfFileInAppDir(L"memtrace.dll"));
@@ -582,18 +628,6 @@ static bool IsValidInstaller() {
 extern int RunInstaller();
 // in Uninstaller.cpp
 extern int RunUninstaller(bool);
-
-#if defined(DEBUG)
-static bool isDebugBuild = true;
-#else
-static bool isDebugBuild = false;
-#endif
-
-#if defined(ASAN_BUILD)
-static bool isAsanBuild = true;
-#else
-static bool isAsanBuild = false;
-#endif
 
 // In release builds, we want to do fast exit and leave cleaning up (freeing memory) to the os.
 // In debug and in release asan builds, we want to cleanup ourselves in order to see leaks.

@@ -20,6 +20,7 @@
 #include "AppTools.h"
 #include "CrashHandler.h"
 #include "Version.h"
+#include "SumatraConfig.h"
 
 #if !defined(CRASH_SUBMIT_SERVER) || !defined(CRASH_SUBMIT_URL)
 #define CRASH_SUBMIT_SERVER L"updatecheck.io"
@@ -42,26 +43,6 @@ static bool gDisableSymbolsDownload = true;
 static bool gDisableSymbolsDownload = false;
 #endif
 
-// those are set in BuildConfig.h by build.go
-
-#if defined(IS_DAILY_BUILD)
-static bool isDailyBuild = true;
-#else
-static bool isDailyBuild = false;
-#endif
-
-#if defined(SVN_PRE_RELEASE_VER)
-static bool isPreRelease = true;
-#else
-static bool isPreRelease = false;
-#endif
-
-#if defined(BUILT_ON)
-static char* builtOn = QM(BUILT_ON);
-#else
-static char* builtOn = nullptr;
-#endif
-
 #define DLURLBASE L"https://kjkpubsf.sfo2.digitaloceanspaces.com/software/sumatrapdf/"
 
 // Get url for file with symbols. Caller needs to free().
@@ -72,7 +53,7 @@ static WCHAR* BuildSymbolsUrl() {
         // daily is also pre-release, just stored under a different url
         urlBase = DLURLBASE "daily/SumatraPDF-prerelease-" TEXT(QM(SVN_PRE_RELEASE_VER));
     } else {
-        if (isPreRelease) {
+        if (isPreReleaseBuild) {
             urlBase = DLURLBASE "prerel/SumatraPDF-prerelease-" TEXT(QM(SVN_PRE_RELEASE_VER));
         } else {
             // assuming this is release vers
@@ -547,9 +528,6 @@ static bool BuildModulesInfo() {
 
 static void BuildSystemInfo() {
     str::Str s(1024);
-    if (builtOn != nullptr) {
-        s.AppendFmt("BuiltOn: %s\n", builtOn);
-    }
     GetProgramInfo(s);
     GetOsVersion(s);
     GetSystemInfo(s);
