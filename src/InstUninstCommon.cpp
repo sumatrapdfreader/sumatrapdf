@@ -82,8 +82,6 @@ static WStrVec gProcessesToClose;
 
 InstUninstGlobals gInstUninstGlobals = {
     nullptr, /* WCHAR *firstError */
-    nullptr, /* HANDLE hThread */
-    false,   /* bool success */
 };
 
 // list of supported file extensions for which SumatraPDF.exe will
@@ -122,7 +120,7 @@ const WCHAR* GetOwnPath() {
     return exePath;
 }
 
-void InvalidateFrame() {
+static void InvalidateFrame() {
     ClientRect rc(gHwndFrame);
     RECT rcTmp = rc.ToRECT();
     InvalidateRect(gHwndFrame, &rcTmp, FALSE);
@@ -470,25 +468,6 @@ bool CheckInstallUninstallPossible(bool silent) {
     InvalidateFrame();
 
     return possible;
-}
-
-SIZE GetIdealButtonSize(HWND hwnd) {
-    // adjust to real size and position to the right
-    SIZE s = {};
-    Button_GetIdealSize(hwnd, &s);
-    // add padding
-    s.cx += dpiAdjust(8) * 2;
-    s.cy += dpiAdjust(2) * 2;
-    return s;
-}
-
-SIZE SetButtonTextAndResize(ButtonCtrl* b, const WCHAR* s) {
-    auto hwnd = b->hwnd;
-    win::SetText(hwnd, s);
-    SIZE size = GetIdealButtonSize(hwnd);
-    UINT flags = SWP_NOMOVE | SWP_NOZORDER | SWP_NOREDRAW | SWP_NOACTIVATE | SWP_FRAMECHANGED;
-    SetWindowPos(hwnd, nullptr, 0, 0, size.cx, size.cy, flags);
-    return size;
 }
 
 ButtonCtrl* CreateDefaultButtonCtrl(HWND hwndParent, const WCHAR* s) {

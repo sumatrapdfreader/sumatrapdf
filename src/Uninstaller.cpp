@@ -44,6 +44,8 @@ The installer is good enough for production but it doesn't mean it couldn't be i
 #define UNINSTALLER_WIN_DY INSTALLER_WIN_DY
 
 static HBRUSH ghbrBackground = nullptr;
+static HANDLE hThread = nullptr;
+static bool success = false;
 
 static bool RemoveUninstallerRegistryInfo(HKEY hkey) {
     bool ok1 = DeleteRegKey(hkey, REG_PATH_UNINST);
@@ -248,12 +250,18 @@ static DWORD WINAPI UninstallerThread(LPVOID data) {
     // NotifyFailed(_TR("Couldn't remove installation directory"));
 
     // always succeed, even for partial uninstallations
-    gInstUninstGlobals.success = true;
+    success = true;
 
     if (!gCli->silent) {
         PostMessage(gHwndFrame, WM_APP_INSTALLATION_FINISHED, 0, 0);
     }
     return 0;
+}
+
+static void InvalidateFrame() {
+    ClientRect rc(gHwndFrame);
+    RECT rcTmp = rc.ToRECT();
+    InvalidateRect(gHwndFrame, &rcTmp, FALSE);
 }
 
 static void OnButtonUninstall() {
@@ -266,7 +274,7 @@ static void OnButtonUninstall() {
     SetMsg(_TR("Uninstallation in progress..."), COLOR_MSG_INSTALLATION);
     InvalidateFrame();
 
-    gInstUninstGlobals.hThread = CreateThread(nullptr, 0, UninstallerThread, nullptr, 0, 0);
+    hThread = CreateThread(nullptr, 0, UninstallerThread, nullptr, 0, 0);
 }
 
 void OnUninstallationFinished() {
@@ -277,7 +285,7 @@ void OnUninstallationFinished() {
     gMsgError = gInstUninstGlobals.firstError;
     InvalidateFrame();
 
-    CloseHandle(gInstUninstGlobals.hThread);
+    CloseHandle(hThread);
 }
 
 static bool OnWmCommand(WPARAM wParam) {
@@ -480,7 +488,7 @@ int RunUninstaller(CommandLineInfo* cli) {
 
     if (gCli->silent) {
         UninstallerThread(nullptr);
-        ret = gInstUninstGlobals.success ? 0 : 1;
+        ret = success ? 0 : 1;
         goto Exit;
     }
 

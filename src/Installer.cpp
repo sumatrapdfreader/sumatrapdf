@@ -72,6 +72,9 @@ static CheckboxCtrl* gCheckboxRegisterPdfFilter = nullptr;
 static CheckboxCtrl* gCheckboxRegisterPdfPreviewer = nullptr;
 static ProgressCtrl* gProgressBar = nullptr;
 
+static HANDLE hThread = nullptr;
+static bool success = false;
+
 int currProgress = 0;
 static inline void ProgressStep() {
     currProgress++;
@@ -398,7 +401,7 @@ static void CreateAppShortcuts() {
 
 static DWORD WINAPI InstallerThread(LPVOID data) {
     UNUSED(data);
-    gInstUninstGlobals.success = false;
+    success = false;
 
     if (!ExtractInstallerFiles()) {
         goto Error;
@@ -435,7 +438,7 @@ static DWORD WINAPI InstallerThread(LPVOID data) {
 
     // consider installation a success from here on
     // (still warn, if we've failed to create the uninstaller, though)
-    gInstUninstGlobals.success = true;
+    success = true;
 
     if (!WriteUninstallerRegistryInfos()) {
         NotifyFailed(_TR("Failed to write the uninstallation information to the registry"));
@@ -458,6 +461,12 @@ Error:
         PostMessage(gHwndFrame, WM_APP_INSTALLATION_FINISHED, 0, 0);
     }
     return 0;
+}
+
+static void InvalidateFrame() {
+    ClientRect rc(gHwndFrame);
+    RECT rcTmp = rc.ToRECT();
+    InvalidateRect(gHwndFrame, &rcTmp, FALSE);
 }
 
 static void OnButtonOptions();
@@ -527,14 +536,14 @@ static void OnButtonInstall() {
     SetMsg(_TR("Installation in progress..."), COLOR_MSG_INSTALLATION);
     InvalidateFrame();
 
-    gInstUninstGlobals.hThread = CreateThread(nullptr, 0, InstallerThread, nullptr, 0, 0);
+    hThread = CreateThread(nullptr, 0, InstallerThread, nullptr, 0, 0);
 }
 
 static void OnInstallationFinished() {
     delete gButtonInstUninst;
     delete gProgressBar;
 
-    if (gInstUninstGlobals.success) {
+    if (success) {
         CreateButtonRunSumatra(gHwndFrame);
         SetMsg(_TR("Thank you! SumatraPDF has been installed."), COLOR_MSG_OK);
     } else {
@@ -544,9 +553,9 @@ static void OnInstallationFinished() {
     gMsgError = gInstUninstGlobals.firstError;
     InvalidateFrame();
 
-    CloseHandle(gInstUninstGlobals.hThread);
+    CloseHandle(hThread);
 
-    if (gInstallerGlobals.autoUpdate && gInstUninstGlobals.success) {
+    if (gInstallerGlobals.autoUpdate && success) {
         // click the Start button
         PostMessage(gHwndFrame, WM_COMMAND, IDOK, 0);
     }
@@ -557,6 +566,14 @@ static void EnableAndShow(WindowBase* w, bool enable) {
         win::SetVisibility(w->hwnd, enable);
         w->SetIsEnabled(enable);
     }
+}
+
+static SIZE SetButtonTextAndResize(ButtonCtrl* b, const WCHAR* s) {
+    b->SetText(s);
+    SIZE size = b->GetIdealSize();
+    UINT flags = SWP_NOMOVE | SWP_NOZORDER | SWP_NOREDRAW | SWP_NOACTIVATE | SWP_FRAMECHANGED;
+    SetWindowPos(b->hwnd, nullptr, 0, 0, size.cx, size.cy, flags);
+    return size;
 }
 
 static void OnButtonOptions() {
@@ -1013,7 +1030,7 @@ int RunInstaller(CommandLineInfo* cli) {
             gCli->withPreview = IsPdfPreviewerInstalled();
         }
         InstallerThread(nullptr);
-        ret = gInstUninstGlobals.success ? 0 : 1;
+        ret = success ? 0 : 1;
         goto Exit;
     }
 

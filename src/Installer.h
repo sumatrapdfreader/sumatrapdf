@@ -46,8 +46,6 @@ extern int gButtonDy;
 
 struct InstUninstGlobals {
     WCHAR* firstError;
-    HANDLE hThread;
-    bool success;
 };
 
 struct ButtonCtrl;
@@ -87,10 +85,7 @@ void OnButtonExit();
 void AnimStep();
 void CreateButtonExit(HWND hwndParent);
 ButtonCtrl* CreateDefaultButtonCtrl(HWND hwndParent, const WCHAR* s);
-SIZE SetButtonTextAndResize(ButtonCtrl* b, const WCHAR* s);
-SIZE GetIdealButtonSize(HWND hwnd);
 int dpiAdjust(int value);
-void InvalidateFrame();
 void InstallPdfFilter();
 void InstallPdfPreviewer();
 void UninstallPdfFilter();
