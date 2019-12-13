@@ -155,7 +155,7 @@ func isCreateThumbnailCrash(ci *CrashInfo) bool {
 func shouldShowCrash(ci *CrashInfo) bool {
 	build := ci.ver.build
 	// filter out outdated builds
-	if build > 0 && build < 11576 {
+	if build > 0 && build <= 11589 {
 		return false
 	}
 	if isCreateThumbnailCrash(ci) {
@@ -187,7 +187,6 @@ func showCrashesToTerminal() {
 			return nil
 		}
 		logf("%s\n", path)
-		logf("Crash path remote: %s\n", path)
 		if len(ci.crashFile) != 0 {
 			logf("%s\n", ci.crashFile)
 		}

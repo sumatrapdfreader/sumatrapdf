@@ -574,7 +574,7 @@ static void UpdateGlobalPrefs(const CommandLineInfo& i) {
     }
 }
 
-static bool IsValidInstaller() {
+static bool HasInstallerResources() {
     HRSRC resSrc = FindResource(GetModuleHandle(nullptr), MAKEINTRESOURCEW(1), RT_RCDATA);
     return resSrc != nullptr;
 }
@@ -605,9 +605,10 @@ static void supressThrowFromNew() {
 
 // I see people trying to use installer as a portable
 // version. This crashes because it can't load
-// libmupdf.dll. We
-static void ensureNotInstaller() {
-    if (!IsValidInstaller()) {
+// libmupdf.dll. We try to detect that case and show an error message instead.
+// TODO: I still see 
+static void EnsureNotInstaller() {
+    if (!HasInstallerResources()) {
         return;
     }
     HMODULE h = LoadLibraryW(L"libmupdf.dll");
@@ -688,7 +689,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     ParseCommandLine(GetCommandLineW(), i);
 
     if (i.install || IsInstaller()) {
-        if (!IsValidInstaller()) {
+        if (!HasInstallerResources()) {
             MessageBoxW(nullptr, L"Not a valid installer", L"Error", MB_OK | MB_ICONERROR);
             return 1;
         }
