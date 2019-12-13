@@ -822,18 +822,6 @@ static void CreateMainWindow() {
                                  CW_USEDEFAULT, dx, dy, nullptr, nullptr, h, nullptr);
 }
 
-static void ShowUsage() {
-    // Note: translation services aren't initialized at this point, so English only
-    MessageBox(nullptr, APP_NAME_STR L"-install.exe [/s][/d <path>][/register][/opt pdffilter,...][/x][/autoupdate]\n\
-    \n\
-    /s\tinstalls " APP_NAME_STR L" silently (without user interaction).\n\
-    /d\tchanges the directory where " APP_NAME_STR L" will be installed.\n\
-    /register\tregisters " APP_NAME_STR L" as the default PDF viewer.\n\
-    /opt\tenables optional components (currently: pdffilter, pdfpreviewer, plugin).\n\
-    /x\tjust extracts the files contained within the installer.\n\
-    /autoupdate\tperforms an update with visible UI and minimal user interaction.", APP_NAME_STR L" Installer Usage", MB_OK);
-}
-
 using namespace Gdiplus;
 
 static WCHAR* GetInstallationDir() {
@@ -1010,12 +998,6 @@ int RunInstaller(CommandLineInfo* cli) {
     }
 
     gDefaultMsg = _TR("Thank you for choosing SumatraPDF!");
-
-    if (gCli->showHelp) {
-        ShowUsage();
-        ret = 0;
-        goto Exit;
-    }
 
     if (!gCli->installDir) {
         gCli->installDir = GetInstallationDir();

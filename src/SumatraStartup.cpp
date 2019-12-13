@@ -527,16 +527,6 @@ static void ShutdownCommon() {
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 }
 
-// we're in installer mode if the name of the executable
-// has "install" string in it e.g. SumatraPDF-installer.exe
-static bool IsInstaller() {
-    WCHAR* exePath = GetExePath();
-    const WCHAR* exeName = path::GetBaseNameNoFree(exePath);
-    bool isInstaller = str::FindI(exeName, L"install");
-    str::Free(exePath);
-    return isInstaller;
-}
-
 static void UpdateGlobalPrefs(const CommandLineInfo& i) {
     if (i.inverseSearchCmdLine) {
         str::ReplacePtr(&gGlobalPrefs->inverseSearchCmdLine, i.inverseSearchCmdLine);
@@ -573,13 +563,80 @@ static void UpdateGlobalPrefs(const CommandLineInfo& i) {
     }
 }
 
+// we're in installer mode if the name of the executable
+// has "install" string in it e.g. SumatraPDF-installer.exe
+static bool HasNameOfInstaller() {
+    WCHAR* exePath = GetExePath();
+    const WCHAR* exeName = path::GetBaseNameNoFree(exePath);
+    bool isInstaller = str::FindI(exeName, L"install");
+    str::Free(exePath);
+    return isInstaller;
+}
+
 static bool HasInstallerResources() {
     HRSRC resSrc = FindResource(GetModuleHandle(nullptr), MAKEINTRESOURCEW(1), RT_RCDATA);
     return resSrc != nullptr;
 }
 
+static bool IsInstallerAndNamedAsSuch() {
+    if (!HasInstallerResources()) {
+        return false;
+    }
+    return HasNameOfInstaller();
+}
+
+static bool SeemsInstalled() {
+    HMODULE h = LoadLibraryW(L"libmupdf.dll");
+    return h != nullptr;
+}
+
+static bool IsInstallerButNotInstalled() {
+    if (!HasInstallerResources()) {
+        return false;
+    }
+    if (HasNameOfInstaller()) {
+        return true;
+    }
+    if (SeemsInstalled()) {
+        return false;
+    }
+    return true;
+}
+
+// I see people trying to use installer as a portable
+// version. This crashes because it can't load
+// libmupdf.dll. We try to detect that case and show an error message instead.
+// TODO: I still see crashes due to delay loading of libmupdf.dll
+static void EnsureNotInstaller() {
+    if (IsInstallerButNotInstalled()) {
+        MessageBoxA(nullptr,
+                    "This is a SumatraPDF installer.\nEither install it with -install option or use portable "
+                    "version.\nDownload portable from https://www.sumatrapdfreader.org\n",
+                    "Error", MB_OK);
+        ::ExitProcess(1);
+    }
+}
+
+// TODO: autoupdate, was it ever working?
+// [/autoupdate]
+//     /autoupdate\tperforms an update with visible UI and minimal user interaction.
+
+static void ShowInstallerHelp() {
+    // Note: translation services aren't initialized at this point, so English only
+    MessageBox(nullptr, L"SumatraPDF installer options:\n\
+    [/s][/d <path>][/with-filter][/with-preview][/x]\n\
+    \n\
+    /s\tinstalls " APP_NAME_STR L" silently (without user interaction).\n\
+    /d\tchanges the directory where " APP_NAME_STR L" will be installed.\n\
+    /with-filter\tinstall search filter\n\
+    /with-preiew\tinstall shell preview\n\
+    /x\tjust extracts the files contained within the installer.\n\
+", APP_NAME_STR L" Installer Usage", MB_OK);
+}
+
 // in Installer.cpp
 extern int RunInstaller(CommandLineInfo*);
+extern void ShowInstallerHelp();
 // in Uninstaller.cpp
 extern int RunUninstaller(CommandLineInfo*);
 
@@ -600,25 +657,6 @@ static void stdNewHandler() {
 // even though we compile without exceptions, new throws std::bad_alloc and we don't want that
 static void supressThrowFromNew() {
     std::set_new_handler(stdNewHandler);
-}
-
-// I see people trying to use installer as a portable
-// version. This crashes because it can't load
-// libmupdf.dll. We try to detect that case and show an error message instead.
-// TODO: I still see
-static void EnsureNotInstaller() {
-    if (!HasInstallerResources()) {
-        return;
-    }
-    HMODULE h = LoadLibraryW(L"libmupdf.dll");
-    if (h) {
-        return;
-    }
-    MessageBoxA(nullptr,
-                "This is a SumatraPDF installer.\nEither install it with -install option or use portable "
-                "version.\nDownload portable from https://www.sumatrapdfreader.org\n",
-                "Error", MB_OK);
-    ::ExitProcess(1);
 }
 
 int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR cmdLine,
@@ -672,14 +710,6 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     // gAddCrashMeMenu = true;
 
     logf(L"CmdLine: %s\n", GetCommandLineW());
-#if defined(DEBUG) || defined(SVN_PRE_RELEASE_VER)
-    if (str::StartsWith(cmdLine, "/tester")) {
-    }
-
-    if (str::StartsWith(cmdLine, "/regress")) {
-    }
-#endif
-
     CommandLineInfo i;
     ParseCommandLine(GetCommandLineW(), i);
 
@@ -694,7 +724,12 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
         }
     }
 
-    if (i.install || IsInstaller()) {
+    if (i.showHelp && IsInstallerButNotInstalled()) {
+        ShowInstallerHelp();
+        return 0;
+    }
+
+    if (i.install || IsInstallerAndNamedAsSuch()) {
         if (!HasInstallerResources()) {
             MessageBoxW(nullptr, L"Not a valid installer", L"Error", MB_OK | MB_ICONERROR);
             return 1;
