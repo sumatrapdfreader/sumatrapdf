@@ -627,6 +627,7 @@
     <ClInclude Include="..\src\AppUtil.h" />
     <ClInclude Include="..\src\ParseCommandLine.h" />
     <ClInclude Include="..\src\SettingsStructs.h" />
+    <ClInclude Include="..\src\SumatraConfig.h" />
     <ClInclude Include="..\src\mui\SvgPath.h" />
     <ClInclude Include="..\src\utils\BaseUtil.h" />
     <ClInclude Include="..\src\utils\BitManip.h" />
@@ -659,6 +660,7 @@
     <ClCompile Include="..\src\AppUtil.cpp" />
     <ClCompile Include="..\src\ParseCommandLine.cpp" />
     <ClCompile Include="..\src\SettingsStructs.cpp" />
+    <ClCompile Include="..\src\SumatraConfig.cpp" />
     <ClCompile Include="..\src\UnitTests.cpp" />
     <ClCompile Include="..\src\mui\SvgPath.cpp" />
     <ClCompile Include="..\src\mui\SvgPath_ut.cpp" />

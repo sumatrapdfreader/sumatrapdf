@@ -833,6 +833,7 @@
     <ClCompile Include="..\src\StressTesting.cpp" />
     <ClCompile Include="..\src\SumatraAbout.cpp" />
     <ClCompile Include="..\src\SumatraAbout2.cpp" />
+    <ClCompile Include="..\src\SumatraConfig.cpp" />
     <ClCompile Include="..\src\SumatraDialogs.cpp" />
     <ClCompile Include="..\src\SumatraPDF.cpp" />
     <ClCompile Include="..\src\SumatraProperties.cpp" />

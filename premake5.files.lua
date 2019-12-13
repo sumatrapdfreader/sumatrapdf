@@ -799,6 +799,7 @@ function sumatrapdf_files()
   files {
     "src/SumatraPDF.cpp",
     "src/SumatraStartup.cpp",
+    "src/SumatraConfig.cpp",
     "src/Tests.cpp",
     "src/Installer.h",
     "src/Installer.cpp",
@@ -864,6 +865,7 @@ function test_util_files()
     --"StressTesting.*",
     "AppUtil.*",
     "ParseCommandLine.*",
+    "SumatraConfig.*",
     "SettingsStructs.*",
     "UnitTests.cpp",
     "mui/SvgPath*",

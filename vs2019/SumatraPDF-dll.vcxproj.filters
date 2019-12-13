@@ -332,6 +332,9 @@
     <ClCompile Include="..\src\SumatraAbout2.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\SumatraConfig.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\SumatraDialogs.cpp">
       <Filter>src</Filter>
     </ClCompile>
