@@ -1289,12 +1289,7 @@ fz_image_resolution(fz_image *image, int *xres, int *yres)
 	/* Scale xres and yres up until we get believable values */
 	if (*xres < SANE_DPI || *yres < SANE_DPI || *xres > INSANE_DPI || *yres > INSANE_DPI)
 	{
-		if (*xres == *yres)
-		{
-			*xres = SANE_DPI;
-			*yres = SANE_DPI;
-		}
-		else if (*xres < *yres)
+		if (*xres < *yres)
 		{
 			*yres = *yres * SANE_DPI / *xres;
 			*xres = SANE_DPI;
@@ -1302,6 +1297,12 @@ fz_image_resolution(fz_image *image, int *xres, int *yres)
 		else
 		{
 			*xres = *xres * SANE_DPI / *yres;
+			*yres = SANE_DPI;
+		}
+
+		if (*xres == *yres || *xres < SANE_DPI || *yres < SANE_DPI || *xres > INSANE_DPI || *yres > INSANE_DPI)
+		{
+			*xres = SANE_DPI;
 			*yres = SANE_DPI;
 		}
 	}

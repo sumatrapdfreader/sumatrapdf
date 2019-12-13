@@ -528,9 +528,16 @@ static int xml_emit_open_tag(fz_context *ctx, struct parser *parser, char *a, ch
 				*s++ = c;
 			}
 
-			tag_num = find_html_tag(a, b-a);
+			tag_num = find_html_tag(head->u.d.name, b-a);
 			if (tag_num != fz_xml_html_tag__NONE && (html_tags[tag_num].flags & END_FORBIDDEN))
 				autoclose = 1;
+			/* If parsing as HTML, and we see a FictionBook tag, turn off HTML fixups. */
+			if (tag_num == fz_xml_html_tag_fictionbook)
+			{
+				/* Restore original case. */
+				memcpy(head->u.d.name, "FictionBook", 11);
+				parser->for_html = 0;
+			}
 		}
 		else
 			memcpy(head->u.d.name, a, b - a);

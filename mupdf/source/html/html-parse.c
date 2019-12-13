@@ -1050,7 +1050,7 @@ load_fb2_images(fz_context *ctx, fz_xml *root)
 	fz_xml *fictionbook, *binary;
 	fz_tree *images = NULL;
 
-	fictionbook = fz_xml_find(root, "fictionbook");
+	fictionbook = fz_xml_find(root, "FictionBook");
 	for (binary = fz_xml_find_down(fictionbook, "binary"); binary; binary = fz_xml_find_next(binary, "binary"))
 	{
 		const char *id = fz_xml_att(binary, "id");
@@ -1302,7 +1302,7 @@ fz_parse_html(fz_context *ctx, fz_html_font_set *set, fz_archive *zip, const cha
 
 	fz_try(ctx)
 	{
-		if (fz_xml_find(root, "fictionbook"))
+		if (fz_xml_find(root, "FictionBook"))
 		{
 			g.is_fb2 = 1;
 			fz_parse_css(ctx, g.css, fb2_default_css, "<default:fb2>");
@@ -1364,7 +1364,7 @@ fz_parse_html(fz_context *ctx, fz_html_font_set *set, fz_archive *zip, const cha
 
 		if (g.is_fb2)
 		{
-			node = fz_xml_find(root, "fictionbook");
+			node = fz_xml_find(root, "FictionBook");
 			node = fz_xml_find_down(node, "description");
 			node = fz_xml_find_down(node, "title-info");
 			node = fz_xml_find_down(node, "book-title");

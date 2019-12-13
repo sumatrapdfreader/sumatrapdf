@@ -41,38 +41,15 @@ void pdf_run_page_contents(fz_context *ctx, pdf_page *page, fz_device *dev, fz_m
 void pdf_run_page_annots(fz_context *ctx, pdf_page *page, fz_device *dev, fz_matrix ctm, fz_cookie *cookie);
 void pdf_run_page_widgets(fz_context *ctx, pdf_page *page, fz_device *dev, fz_matrix ctm, fz_cookie *cookie);
 
-/*
-	A function used for processing the
-	cleaned page contents/resources gathered as part of
-	pdf_clean_page_contents.
-
-	buffer: A buffer holding the page contents.
-
-	res: A pdf_obj holding the page resources.
-
-	arg: An opaque arg specific to the particular function.
-*/
-typedef void (pdf_page_contents_process_fn)(fz_context *ctx, fz_buffer *buffer, pdf_obj *res, void *arg);
-
-void pdf_clean_page_contents(fz_context *ctx, pdf_document *doc, pdf_page *page, fz_cookie *cookie,
-	pdf_page_contents_process_fn *proc, void *proc_arg, int sanitize, int ascii);
-
-void pdf_clean_annot_contents(fz_context *ctx, pdf_document *doc, pdf_annot *annot, fz_cookie *cookie,
-	pdf_page_contents_process_fn *proc, void *proc_arg, int sanitize, int ascii);
-
-void pdf_filter_page_contents(fz_context *ctx, pdf_document *doc, pdf_page *page, fz_cookie *cookie,
-	pdf_page_contents_process_fn *proc_fn, pdf_text_filter_fn *text_filter, pdf_after_text_object_fn *after_text, void *arg,
-	int sanitize, int ascii);
-
-void pdf_filter_annot_contents(fz_context *ctx, pdf_document *doc, pdf_annot *annot, fz_cookie *cookie,
-	pdf_page_contents_process_fn *proc, pdf_text_filter_fn *text_filter, pdf_after_text_object_fn *after_text, void *arg,
-	int sanitize, int ascii);
+void pdf_filter_page_contents(fz_context *ctx, pdf_document *doc, pdf_page *page, pdf_filter_options *filter);
+void pdf_filter_annot_contents(fz_context *ctx, pdf_document *doc, pdf_annot *annot, pdf_filter_options *filter);
 
 typedef struct pdf_redact_options_s pdf_redact_options;
 
 struct pdf_redact_options_s
 {
 	int no_black_boxes;
+	int keep_images;
 };
 
 int pdf_redact_page(fz_context *ctx, pdf_document *doc, pdf_page *page, pdf_redact_options *opts);

@@ -2880,6 +2880,12 @@ static void clean_content_streams(fz_context *ctx, pdf_document *doc, int saniti
 	int n = pdf_count_pages(ctx, doc);
 	int i;
 
+	pdf_filter_options filter;
+	memset(&filter, 0, sizeof filter);
+	filter.recurse = 1;
+	filter.sanitize = sanitize;
+	filter.ascii = ascii;
+
 	for (i = 0; i < n; i++)
 	{
 		pdf_annot *annot;
@@ -2887,11 +2893,10 @@ static void clean_content_streams(fz_context *ctx, pdf_document *doc, int saniti
 
 		fz_try(ctx)
 		{
-			pdf_clean_page_contents(ctx, doc, page, NULL, NULL, NULL, sanitize, ascii);
-
+			pdf_filter_page_contents(ctx, doc, page, &filter);
 			for (annot = pdf_first_annot(ctx, page); annot != NULL; annot = pdf_next_annot(ctx, annot))
 			{
-				pdf_clean_annot_contents(ctx, doc, annot, NULL, NULL, NULL, sanitize, ascii);
+				pdf_filter_annot_contents(ctx, doc, annot, &filter);
 			}
 		}
 		fz_always(ctx)

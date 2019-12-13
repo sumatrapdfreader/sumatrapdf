@@ -17,40 +17,22 @@ cscope.*
 \#*\#
 
 # Editor settings:
+.exrc
 .vimrc
-.gradle
 *.xcworkspace
 *.xcuserdatad
 user.make
-
-# Test files:
-*.pdf
-*.xps
-*.epub
-*.fb2
-*.svg
-*.pam
-*.pbm
-*.pgm
-*.ppm
-*.jpg
-*.jpeg
-*.pcl
-*.ps
+guide
 
 # Temporary and build files:
 *.class
 *.jar
 *.o
 *.so
-*.zip
 *.dll
 DerivedData
 
-platform/java/obj
-platform/java/libs
 platform/java/local.properties
-
 platform/win32/*.user
 platform/win32/*.ncb
 platform/win32/*.suo

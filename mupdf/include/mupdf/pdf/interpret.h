@@ -171,14 +171,49 @@ pdf_processor *pdf_new_buffer_processor(fz_context *ctx, fz_buffer *buffer, int 
 
 pdf_processor *pdf_new_output_processor(fz_context *ctx, fz_output *out, int ahxencode);
 
-pdf_processor *pdf_new_filter_processor(fz_context *ctx, pdf_document *doc, pdf_processor *chain, pdf_obj *old_res, pdf_obj *new_res);
+/*
+	opaque: Opaque value that is passed to all the filter functions.
 
-typedef int (pdf_text_filter_fn)(fz_context *ctx, void *opaque, int *ucsbuf, int ucslen, fz_matrix trm, fz_matrix ctm, fz_rect bbox);
+	image_filter: A function called to assess whether a given
+	image should be removed or not.
 
-typedef void (pdf_after_text_object_fn)(fz_context *ctx, void *opaque, pdf_document *doc, pdf_processor *chain, fz_matrix ctm);
+	text_filter: A function called to assess whether a given
+	character should be removed or not.
 
-pdf_processor *
-pdf_new_filter_processor_with_text_filter(fz_context *ctx, pdf_document *doc, int structparents, pdf_processor *chain, pdf_obj *old_rdb, pdf_obj *new_rdb, pdf_text_filter_fn *text_filter, pdf_after_text_object_fn *after, void *text_filter_opaque);
+	after_text_object: A function called after each text object.
+	This allows the caller to insert some extra content if
+	desired.
+
+	end_page: A function called at the end of a page.
+	This allows the caller to insert some extra content after
+	all other content.
+
+	sanitize: If false, will only clean the syntax. This disables all filtering!
+
+	recurse: Clean/sanitize/filter resources recursively.
+
+	instance_forms: Always recurse on XObject Form resources, but will
+	create a new instance of each XObject Form that is used, filtered
+	individually.
+
+	ascii: If true, escape all binary data in the output.
+*/
+typedef struct pdf_filter_options_s
+{
+	void *opaque;
+	int (*image_filter)(fz_context *ctx, void *opaque, fz_matrix ctm, const char *name, fz_image *image);
+	int (*text_filter)(fz_context *ctx, void *opaque, int *ucsbuf, int ucslen, fz_matrix trm, fz_matrix ctm, fz_rect bbox);
+	void (*after_text_object)(fz_context *ctx, void *opaque, pdf_document *doc, pdf_processor *chain, fz_matrix ctm);
+	void (*end_page)(fz_context *ctx, fz_buffer *buffer, void *arg);
+
+	int recurse;
+	int instance_forms;
+	int sanitize;
+	int ascii;
+} pdf_filter_options;
+
+pdf_processor *pdf_new_filter_processor(fz_context *ctx, pdf_document *doc, pdf_processor *chain, pdf_obj *old_res, pdf_obj *new_res, int struct_parents, fz_matrix transform, pdf_filter_options *filter);
+pdf_obj *pdf_filter_xobject_instance(fz_context *ctx, pdf_obj *old_xobj, pdf_obj *page_res, fz_matrix ctm, pdf_filter_options *filter);
 
 void pdf_process_contents(fz_context *ctx, pdf_processor *proc, pdf_document *doc, pdf_obj *obj, pdf_obj *res, fz_cookie *cookie);
 void pdf_process_annot(fz_context *ctx, pdf_processor *proc, pdf_document *doc, pdf_page *page, pdf_annot *annot, fz_cookie *cookie);

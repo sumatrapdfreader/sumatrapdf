@@ -332,8 +332,7 @@ next_concat(fz_context *ctx, fz_stream *stm, size_t max)
 			fz_drop_stream(ctx, state->chain[state->current-1]);
 			if (state->pad)
 			{
-				stm->rp = (&state->ws_buf)+1;
-				stm->wp = stm->rp + 1;
+				stm->wp = stm->rp = (&state->ws_buf)+1;
 				stm->pos++;
 				return 32;
 			}
