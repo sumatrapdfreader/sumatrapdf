@@ -155,6 +155,8 @@ workspace "SumatraPDF"
     optimize "On"
   filter {}
 
+  include("premake5.opt.lua")
+
   project "zlib"
     kind "StaticLib"
     language "C"
