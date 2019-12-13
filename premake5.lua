@@ -161,6 +161,7 @@ workspace "SumatraPDF"
     disablewarnings { "4131", "4244", "4245", "4267", "4996" }
     zlib_files()
 
+
   project "unrar"
     kind "StaticLib"
     language "C++"
@@ -174,6 +175,7 @@ workspace "SumatraPDF"
 
     includedirs { "ext/unrar" }
     unrar_files()
+
 
   project "libdjvu"
     kind "StaticLib"
@@ -375,10 +377,10 @@ workspace "SumatraPDF"
     filter {}
     mupdf_files()
     links { "zlib", "freetype", "libjpeg-turbo", "jbig2dec", "openjpeg", "lcms2", "harfbuzz", "mujs" }
-    dependson "buildcmap"
 
 
-  project "libmupdf"
+  -- regular build with distinct debug / release builds
+  project "libmupdf-reg"
     kind "SharedLib"
     language "C"
     disablewarnings { "4206", "4702" }
@@ -390,6 +392,30 @@ workspace "SumatraPDF"
     -- TODO: only for windows
     linkoptions { "/DEF:..\\src\\libmupdf.def", "-IGNORE:4702" }
     links { "mupdf", "libdjvu", "unarrlib", "libwebp" }
+    links {
+      "advapi32", "kernel32", "user32", "gdi32", "comdlg32",
+      "shell32", "windowscodecs", "comctl32", "msimg32",
+      "winspool", "wininet", "urlmon", "gdiplus", "ole32",
+      "oleAut32", "shlwapi", "version", "crypt32"
+    }
+
+  -- should be called libmupdf-opt but we don't want that .dll name
+  project "libmupdf"
+    kind "SharedLib"
+    language "C"
+    disablewarnings { "4206", "4702" }
+    optimize "On"
+    undefines { "DEBUG" }
+    defines { "NDEBUG" }
+
+    -- premake has logic in vs2010_vcxproj.lua that only sets PlatformToolset
+    -- if there is a c/c++ file, so we add a no-op cpp file to force This logic
+    files { "src/libmupdf.rc", "tools/premake/no_op_for_premake.cpp" }
+    implibname "libmupdf"
+    -- TODO: is there a better way to do it?
+    -- TODO: only for windows
+    linkoptions { "/DEF:..\\src\\libmupdf.def", "-IGNORE:4702" }
+    links { "mupdf-opt", "libdjvu-opt", "unarrlib-opt", "libwebp-opt" }
     links {
       "advapi32", "kernel32", "user32", "gdi32", "comdlg32",
       "shell32", "windowscodecs", "comctl32", "msimg32",
