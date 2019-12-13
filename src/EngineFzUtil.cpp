@@ -531,20 +531,47 @@ static bool LinkifyCheckMultiline(const WCHAR* pageText, const WCHAR* pos, RectI
            coords[pos - pageText + 1].dy <= coords[pos - pageText - 1].dy * 1.2 && !str::StartsWith(pos + 1, L"http");
 }
 
+static bool EndsURL(WCHAR c) {
+    if (c == 0 || str::IsWs(c)) {
+        return true;
+    }
+    // https://github.com/sumatrapdfreader/sumatrapdf/issues/1313
+    // 0xff0c is ","
+    if (c == (WCHAR)0xff0c) {
+        return true;
+    }
+    return false;
+}
+
 static const WCHAR* LinkifyFindEnd(const WCHAR* start, WCHAR prevChar) {
-    const WCHAR *end, *quote;
+    const WCHAR* quote = nullptr;
 
     // look for the end of the URL (ends in a space preceded maybe by interpunctuation)
-    for (end = start; *end && !str::IsWs(*end); end++)
-        ;
-    if (',' == end[-1] || '.' == end[-1] || '?' == end[-1] || '!' == end[-1])
+    const WCHAR* end = start;
+    while (!EndsURL(*end)) {
+        end++;
+    }
+    char prev = 0;
+    if (end > start) {
+        prev = end[-1];
+    }
+    if (',' == prev || '.' == prev || '?' == prev || '!' == prev) {
         end--;
+    }
+
+    prev = 0;
+    if (end > start) {
+        prev = end[-1];
+    }
     // also ignore a closing parenthesis, if the URL doesn't contain any opening one
-    if (')' == end[-1] && (!str::FindChar(start, '(') || str::FindChar(start, '(') >= end))
+    if (')' == prev && (!str::FindChar(start, '(') || str::FindChar(start, '(') >= end)) {
         end--;
+    }
+
     // cut the link at the first quotation mark, if it's also preceded by one
-    if (('"' == prevChar || '\'' == prevChar) && (quote = str::FindChar(start, prevChar)) != nullptr && quote < end)
+    if (('"' == prevChar || '\'' == prevChar) && (quote = str::FindChar(start, prevChar)) != nullptr && quote < end) {
         end = quote;
+    }
 
     return end;
 }
