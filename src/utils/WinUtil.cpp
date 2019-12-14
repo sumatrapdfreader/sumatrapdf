@@ -375,7 +375,8 @@ WCHAR* GetExePath() {
 char* GetExePathA() {
     WCHAR buf[MAX_PATH] = {0};
     GetModuleFileName(nullptr, buf, dimof(buf));
-    return str::conv::WcharToUtf8(buf).StealData();
+    auto res = str::conv::WstrToUtf8(buf);
+    return std::get<0>(res);
 }
 
 /* Return directory where this executable is located.

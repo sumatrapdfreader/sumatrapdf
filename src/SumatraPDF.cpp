@@ -4481,7 +4481,7 @@ bool IsDllBuild() {
 }
 
 void GetProgramInfo(str::Str& s) {
-    OwnedData d = str::conv::WcharToUtf8(gCrashFilePath);
+    AutoFree d = str::conv::WstrToUtf8(gCrashFilePath);
     s.AppendFmt("Crash file: %s\r\n", d.data);
     AutoFree exePath = GetExePathA();
     s.AppendFmt("Exe: %s\r\n", exePath.get());
@@ -4545,21 +4545,19 @@ static WCHAR* GetSymbolsDir() {
         /* Use the same path as the binary */
         return GetExeDir();
     }
-    WCHAR* dir = GetSpecialFolder(CSIDL_APPDATA, true);
-    WCHAR* symdir = path::Join(dir, L"sumatra_symbols");
-    free(dir);
-    return symdir;
+    AutoFreeWstr dir = GetSpecialFolder(CSIDL_LOCAL_APPDATA, true);
+    return path::Join(dir, L"crashinfo");
 }
 
 static void DownloadDebugSymbols() {
     // over-ride the default symbols directory to be more useful
     WCHAR* symDir = GetSymbolsDir();
     SetSymbolsDir(symDir);
-    OwnedData symDirA = str::conv::WcharToUtf8(symDir);
 
     bool ok = CrashHandlerDownloadSymbols();
     char* msg = nullptr;
     if (ok) {
+        AutoFree symDirA = str::conv::WstrToUtf8(symDir);
         msg = str::Format("Downloaded symbols! to %s", symDirA.data);
     } else {
         msg = str::Dup("Failed to download symbols.");

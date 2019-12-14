@@ -297,8 +297,8 @@ void WindowBase::SetFont(HFONT f) {
 }
 
 void WindowBase::SetText(const WCHAR* s) {
-    auto d = str::conv::WcharToUtf8(s);
-    SetText(d.AsView());
+    AutoFree str = str::conv::WstrToUtf8(s);
+    SetText(str.as_view());
 }
 
 void WindowBase::SetText(std::string_view sv) {

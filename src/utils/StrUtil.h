@@ -213,7 +213,6 @@ std::tuple<char*, size_t> WstrToUtf8(const WCHAR* src);
 
 OwnedData ToUtf8(const WCHAR* src, size_t cchSrcLen);
 OwnedData ToUtf8(const WCHAR* src);
-OwnedData WcharToUtf8(const WCHAR* src);
 WCHAR* FromAnsi(const char* src, size_t cbSrcLen = (size_t)-1);
 OwnedData ToAnsi(const WCHAR* src);
 size_t ToCodePageBuf(char* buf, int cbBufSize, const WCHAR* s, UINT cp);
