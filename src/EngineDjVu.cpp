@@ -936,7 +936,7 @@ Vec<PageElement*>* DjVuEngineImpl::GetElements(int pageNo) {
         RectI rect(x, page.dy - y - h, w, h);
 
         AutoFreeStr link(ResolveNamedDest(urlUtf8));
-        els->Append(new DjVuLink(pageNo, rect, link ? link : urlUtf8, commentUtf8));
+        els->Append(new DjVuLink(pageNo, rect, link ? link.get() : urlUtf8, commentUtf8));
     }
     ddjvu_free(links);
 

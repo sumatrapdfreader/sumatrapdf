@@ -216,7 +216,7 @@ void StrTest() {
     {
         AutoFreeW large(AllocArray<WCHAR>(2000));
         memset(large, 0x11, 1998);
-        str = str::Format(L"%s", large);
+        str = str::Format(L"%s", large.get());
         utassert(str::Eq(str, large));
         free(str);
     }

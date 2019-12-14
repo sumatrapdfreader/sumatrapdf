@@ -66,69 +66,6 @@ class ScopedPtr {
 };
 
 template <typename T>
-class AutoFreeStrBasic {
-  public:
-    T* ptr = nullptr;
-
-    AutoFreeStrBasic() = default;
-    explicit AutoFreeStrBasic(T* ptr) {
-        this->ptr = ptr;
-    }
-    ~AutoFreeStrBasic() {
-        free(this->ptr);
-    }
-    void Set(T* newPtr) {
-        free(ptr);
-        ptr = newPtr;
-    }
-    void Set(const T* newPtr) {
-        free(this->ptr);
-        this->ptr = const_cast<T*>(newPtr);
-    }
-    void SetCopy(const T* newPtr) {
-        free(this->ptr);
-        this->ptr = nullptr;
-        if (newPtr) {
-            this->ptr = str::Dup(newPtr);
-        }
-    }
-    operator T*() const {
-        return this->ptr;
-    }
-#if 0
-    // TODO: I want AutoStrW v = str::Dup(L"foo"); to work
-    // can't figure out the right incantation
-    AutoFreeStr& operator=(T* newPtr) {
-        free(ptr);
-        ptr = newPtr;
-        return *this;
-    }
-#endif
-    T* Get() const {
-        return this->ptr;
-    }
-    T* get() const {
-        return this->ptr;
-    }
-    T* StealData() {
-        T* tmp = this->ptr;
-        this->ptr = nullptr;
-        return tmp;
-    }
-    void Reset() {
-        free(this->ptr);
-        this->ptr = nullptr;
-    }
-
-    // TODO: only valid for T = char
-    std::string_view AsView() const {
-        return {this->ptr, str::Len(this->ptr)};
-    }
-};
-
-typedef AutoFreeStrBasic<char> AutoFreeStr;
-
-template <typename T>
 struct AutoDelete {
     T* o = nullptr;
     AutoDelete() = default;
@@ -360,6 +297,8 @@ struct AutoFreeWstr {
         data = nullptr;
     }
 };
+
+typedef AutoFree AutoFreeStr;
 
 #if OS_WIN
 typedef AutoFreeWstr AutoFreeW;

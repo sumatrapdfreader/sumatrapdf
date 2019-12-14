@@ -127,7 +127,7 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
     if (gPluginMode) {
         fileName.Set(url::GetFileName(gPluginURL));
         // fall back to a generic "filename" instead of the more confusing temporary filename
-        di.lpszDocName = fileName ? fileName : L"filename";
+        di.lpszDocName = fileName ? fileName.get() : L"filename";
     } else {
         di.lpszDocName = engine.FileName();
     }

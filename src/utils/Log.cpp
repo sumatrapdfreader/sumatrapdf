@@ -43,7 +43,7 @@ void logf(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
     AutoFreeStr s(str::FmtV(fmt, args));
-    log(s.AsView());
+    log(s.as_view());
     va_end(args);
 }
 
