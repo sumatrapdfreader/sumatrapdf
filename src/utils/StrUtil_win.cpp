@@ -679,20 +679,18 @@ size_t WcharToUtf8Buf(const WCHAR* s, char* bufOut, size_t cbBufOutSize) {
 namespace conv {
 
 // tries to convert a string in unknown encoding to utf8, as best
-// as it cans
-// As an optimization, can return src if the string already is
-// valid utf8. Otherwise returns a copy of the string and the
+// as it can
 // caller has to free() it
-MaybeOwnedData UnknownToUtf8(const std::string_view& txt) {
+std::string_view UnknownToUtf8(const std::string_view& txt) {
     size_t len = txt.size();
     const char* s = txt.data();
 
     if (len < 3) {
-        return MaybeOwnedData((char*)s, len, false);
+        return str::DupN(s, len);
     }
 
     if (str::StartsWith(s, UTF8_BOM)) {
-        return MaybeOwnedData(str::Dup(s + 3), len - 3, false);
+        return str::DupN(s + 3, len - 3);
     }
 
     // TODO: UTF16BE_BOM
@@ -703,20 +701,20 @@ MaybeOwnedData UnknownToUtf8(const std::string_view& txt) {
         OwnedData d = str::conv::ToUtf8((const WCHAR*)s, cchLen);
         size_t n = d.size;
         auto* str = d.StealData();
-        return MaybeOwnedData(str, n, true);
+        return {str, n};
     }
 
     // if s is valid utf8, leave it alone
     const u8* tmp = (const u8*)s;
     if (isLegalUTF8String(&tmp, tmp + len)) {
-        return MaybeOwnedData((char*)s, len, false);
+        return str::DupN(s, len);
     }
 
     AutoFreeWstr uni(str::conv::FromAnsi(s, len));
     OwnedData d = str::conv::ToUtf8(uni.Get());
     size_t n = d.size;
     auto* str = d.StealData();
-    return MaybeOwnedData(str, n, true);
+    return {str, n};
 }
 
 size_t ToCodePageBuf(char* buf, int cbBufSize, const WCHAR* s, UINT cp) {

@@ -123,10 +123,9 @@ TxtNode* TxtParser::AllocTxtNodeFromToken(const Token& tok, TxtNode::Type nodeTy
 // we will modify s in-place
 void TxtParser::SetToParse(const std::string_view& str) {
     auto tmp = str::conv::UnknownToUtf8(str);
-    data = tmp.StealData();
-    char* d = data.data;
-    size_t sLen = data.size;
-    size_t n = str::NormalizeNewlinesInPlace(d, d + sLen);
+    char* d = (char*)tmp.data();
+    size_t dLen = tmp.size();
+    size_t n = str::NormalizeNewlinesInPlace(d, d + dLen);
     toParse.Set(d, n);
 
     // we create an implicit array node to hold the nodes we'll parse

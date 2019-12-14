@@ -244,64 +244,6 @@ char* OwnedData::StealData() {
     return res;
 }
 
-MaybeOwnedData::MaybeOwnedData(char* data, size_t size, bool isOwned) {
-    Set(data, size, isOwned);
-}
-
-MaybeOwnedData::~MaybeOwnedData() {
-    freeIfOwned();
-}
-
-MaybeOwnedData::MaybeOwnedData(MaybeOwnedData&& other) {
-    CrashIf(this == &other);
-    this->data = other.data;
-    this->size = other.size;
-    this->isOwned = other.isOwned;
-    other.data = nullptr;
-    other.size = 0;
-}
-
-MaybeOwnedData& MaybeOwnedData::operator=(MaybeOwnedData&& other) {
-    CrashIf(this == &other);
-    this->data = other.data;
-    this->size = other.size;
-    this->isOwned = other.isOwned;
-    other.data = nullptr;
-    other.size = 0;
-    return *this;
-}
-
-void MaybeOwnedData::Set(char* s, size_t len, bool isOwned) {
-    freeIfOwned();
-    if (len == 0) {
-        len = str::Len(s);
-    }
-    data = s;
-    size = len;
-    this->isOwned = isOwned;
-}
-
-void MaybeOwnedData::freeIfOwned() {
-    if (isOwned) {
-        free(data);
-        data = nullptr;
-        size = 0;
-        isOwned = false;
-    }
-}
-
-OwnedData MaybeOwnedData::StealData() {
-    char* res = data;
-    size_t resSize = size;
-    if (!isOwned) {
-        res = str::DupN(data, size);
-    }
-    data = nullptr;
-    size = 0;
-    isOwned = false;
-    return OwnedData(res, resSize);
-}
-
 #if !OS_WIN
 void ZeroMemory(void* p, size_t len) {
     memset(p, 0, len);

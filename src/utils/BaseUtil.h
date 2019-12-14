@@ -600,32 +600,6 @@ struct OwnedData {
     static OwnedData MakeFromStr(const char* s, size_t size = 0);
 };
 
-// MaybeOwnedData is for returning data that might be owned by this class.
-// It combines pointer to data and size.
-// It owns the data i.e. frees it in destructor.
-// It cannot be copied, only moved, so that it's clear that ownership of
-// data is being passed.
-class MaybeOwnedData {
-  public:
-    char* data = nullptr;
-    size_t size = 0;
-    bool isOwned = false;
-
-    MaybeOwnedData(){};
-    MaybeOwnedData(char* data, size_t size, bool isOwned);
-    ~MaybeOwnedData();
-
-    MaybeOwnedData(const MaybeOwnedData& other) = delete;
-    MaybeOwnedData& operator=(const MaybeOwnedData& other) = delete;
-
-    MaybeOwnedData& operator=(MaybeOwnedData&& other);
-    MaybeOwnedData(MaybeOwnedData&& other);
-
-    void Set(char* s, size_t len, bool isOwned);
-    void freeIfOwned();
-    OwnedData StealData();
-};
-
 /*
 Poor-man's manual dynamic typing.
 Identity of an object is an address of a unique, global string.
