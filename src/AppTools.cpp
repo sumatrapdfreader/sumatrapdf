@@ -101,17 +101,18 @@ WCHAR* AppGenDataFilename(const WCHAR* fileName) {
         return path::GetPathOfFileInAppDir(fileName);
     }
 
-    /* Use %LOCALAPPDATA% */
-    AutoFreeW path(GetSpecialFolder(CSIDL_LOCAL_APPDATA, true));
-    CrashIf(!path);
-    if (!path)
+    AutoFreeWstr path = GetSpecialFolder(CSIDL_LOCAL_APPDATA, true);
+    if (!path) {
         return nullptr;
-    path.Set(path::Join(path, APP_NAME_STR));
-    if (!path)
+    }
+    path = path::Join(path, APP_NAME_STR);
+    if (!path) {
         return nullptr;
+    }
     bool ok = dir::Create(path);
-    if (!ok)
+    if (!ok) {
         return nullptr;
+    }
     return path::Join(path, fileName);
 }
 

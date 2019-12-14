@@ -4546,7 +4546,7 @@ static WCHAR* GetSymbolsDir() {
         return GetExeDir();
     }
     AutoFreeWstr dir = GetSpecialFolder(CSIDL_LOCAL_APPDATA, true);
-    return path::Join(dir, L"crashinfo");
+    return path::Join(dir, APP_NAME_STR, L"crashinfo");
 }
 
 static void DownloadDebugSymbols() {

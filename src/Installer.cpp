@@ -143,26 +143,21 @@ bool CopySelfToDir(const WCHAR* destDir) {
 }
 
 #define PREFS_FILE_NAME L"SumatraPDF-settings.txt"
-#define APP_NAME L"SumatraPDF"
 
 static void CopySettingsFile() {
     // up to 3.1.2 we stored settings in %APPDATA%
     // after that we use %LOCALAPPDATA%
     // copy the settings from old directory
-    WCHAR* srcDir = GetSpecialFolder(CSIDL_APPDATA, false);
-    WCHAR* dstDir = GetSpecialFolder(CSIDL_LOCAL_APPDATA, false);
+    AutoFreeWstr srcDir = GetSpecialFolder(CSIDL_APPDATA, false);
+    AutoFreeWstr dstDir = GetSpecialFolder(CSIDL_LOCAL_APPDATA, false);
 
-    WCHAR* srcPath = path::Join(srcDir, APP_NAME, PREFS_FILE_NAME);
-    WCHAR* dstPath = path::Join(dstDir, APP_NAME, PREFS_FILE_NAME);
+    AutoFreeWstr srcPath = path::Join(srcDir.data, APP_NAME_STR, PREFS_FILE_NAME);
+    AutoFreeWstr dstPath = path::Join(dstDir.data, APP_NAME_STR, PREFS_FILE_NAME);
 
     // don't over-write
     BOOL failIfExists = true;
     // don't care if it fails or not
-    ::CopyFileW(srcPath, dstPath, failIfExists);
-    free(dstPath);
-    free(srcPath);
-    free(dstDir);
-    free(srcDir);
+    ::CopyFileW(srcPath.data, dstPath.data, failIfExists);
 }
 
 static bool ExtractInstallerFiles() {
