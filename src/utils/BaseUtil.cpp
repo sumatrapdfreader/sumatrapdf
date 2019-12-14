@@ -168,16 +168,6 @@ OwnedData::OwnedData(const char* data, size_t size) {
     this->size = size;
 }
 
-OwnedData::OwnedData(std::tuple<char*, size_t> s) {
-    char* data = std::get<0>(s);
-    size_t size = std::get<1>(s);
-    if (size == 0) {
-        size = str::Len(data);
-    }
-    this->data = (char*)data;
-    this->size = size;
-}
-
 OwnedData::OwnedData(std::string_view d) {
     char* data = (char*)d.data();
     size_t size = d.size();

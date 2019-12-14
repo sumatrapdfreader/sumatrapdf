@@ -89,8 +89,6 @@ struct AutoDelete {
 // this is like std::unique_ptr<char> but specialized for our needs
 // typical usage:
 // AutoFree toFree = str::Dup("foo");
-// We also allow assignment from std::tuple<char*, size_t> (because we
-// return it from many functions) and remember length
 struct AutoFree {
     char* data = nullptr;
 
@@ -111,13 +109,6 @@ struct AutoFree {
 
     AutoFree(const unsigned char* p) {
         data = (char*)p;
-    }
-
-    // I often return allocated strings as a tuple so this
-    // allows easy freeing of them
-    AutoFree(std::tuple<char*, size_t> s) {
-        data = std::get<0>(s);
-        len = std::get<1>(s);
     }
 
     AutoFree(std::string_view s) {

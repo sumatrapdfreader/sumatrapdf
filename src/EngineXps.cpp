@@ -993,15 +993,10 @@ RenderedBitmap* XpsEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
 }
 
 PageDestination* XpsEngineImpl::GetNamedDest(const WCHAR* nameW) {
-    auto [name, size] = str::conv::WstrToUtf8(nameW);
+    AutoFree name = str::conv::WstrToUtf8(nameW);
     if (!str::StartsWith(name, "#")) {
-        str::ReplacePtr(&name, str::Join("#", name));
+        name.Set(str::Join("#", name));
     }
-    char* toFree = name;
-    defer {
-        free(toFree);
-    };
-
     auto* doc = xps_document_from_fz_document(_doc);
     xps_target* dest = doc->target;
     while (dest) {

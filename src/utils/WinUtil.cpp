@@ -236,9 +236,9 @@ char* ReadRegStrUtf8(HKEY keySub, const WCHAR* keyName, const WCHAR* valName) {
     if (!ws) {
         return nullptr;
     }
-    auto [s, size] = str::conv::WstrToUtf8(ws);
+    auto s = str::conv::WstrToUtf8(ws);
     str::Free(ws);
-    return s;
+    return (char*)s.data();
 }
 
 WCHAR* ReadRegStr2(HKEY keySub1, HKEY keySub2, const WCHAR* keyName, const WCHAR* valName) {
@@ -376,7 +376,7 @@ char* GetExePathA() {
     WCHAR buf[MAX_PATH] = {0};
     GetModuleFileName(nullptr, buf, dimof(buf));
     auto res = str::conv::WstrToUtf8(buf);
-    return std::get<0>(res);
+    return (char*)res.data();
 }
 
 /* Return directory where this executable is located.

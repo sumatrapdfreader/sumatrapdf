@@ -130,7 +130,7 @@ class Fmt {
     str::Str res;
 };
 
-std::tuple<char*, size_t> Format(const char* s, Arg& a1);
-std::tuple<char*, size_t> Format(const char* s, Arg& a1, Arg& a2);
-std::tuple<char*, size_t> Format(const char* s, Arg& a1, Arg& a2, Arg& a3);
+std::string_view Format(const char* s, Arg& a1);
+std::string_view Format(const char* s, Arg& a1, Arg& a2);
+std::string_view Format(const char* s, Arg& a1, Arg& a2, Arg& a3);
 } // namespace fmt

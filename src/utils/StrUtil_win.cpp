@@ -166,7 +166,7 @@ WCHAR* ToLowerInPlace(WCHAR* s) {
     return res;
 }
 
-std::tuple<char*, size_t> ToMultiByte2(const WCHAR* txt, UINT codePage, int cchTxtLen) {
+std::string_view ToMultiByte2(const WCHAR* txt, UINT codePage, int cchTxtLen) {
     CrashIf(!txt);
     if (!txt) {
         return {};
@@ -190,8 +190,8 @@ OwnedData ToMultiByte(const WCHAR* txt, UINT codePage, int cchTxtLen) {
     if (!txt) {
         return {};
     }
-    auto [res, resLen] = ToMultiByte2(txt, codePage, cchTxtLen);
-    return OwnedData(res, resLen);
+    auto res = ToMultiByte2(txt, codePage, cchTxtLen);
+    return OwnedData(res.data(), res.size());
 }
 
 OwnedData ToMultiByte(const char* src, UINT codePageSrc, UINT codePageDest) {
@@ -726,7 +726,7 @@ OwnedData ToUtf8(const WCHAR* src) {
     return ToMultiByte(src, CP_UTF8);
 }
 
-std::tuple<char*, size_t> WstrToUtf8(const WCHAR* src) {
+std::string_view WstrToUtf8(const WCHAR* src) {
     return ToMultiByte2(src, CP_UTF8);
 }
 

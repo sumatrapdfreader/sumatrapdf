@@ -462,7 +462,7 @@ void ParseCommandLine(const WCHAR* cmdLine, CommandLineInfo& i) {
             // TODO: remove the following deprecated options within
             // a release or two
             auto tmp = str::conv::WstrToUtf8(param);
-            i.lang = std::get<0>(tmp);
+            i.lang = (char*)tmp.data();
             ++n;
         } else if (EscToExit == arg) {
             i.globalPrefArgs.Append(str::Dup(argList.at(n)));
