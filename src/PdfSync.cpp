@@ -552,12 +552,12 @@ int SyncTex::SourceToDoc(const WCHAR* srcfilename, UINT line, UINT col, UINT* pa
         return PDFSYNCERR_OUTOFMEMORY;
 
     bool isUtf8 = true;
-    char* mb_srcfilepath = str::conv::ToUtf8(srcfilepath).StealData();
+    const char* mb_srcfilepath = str::conv::WstrToUtf8(srcfilepath).data();
 TryAgainAnsi:
     if (!mb_srcfilepath)
         return PDFSYNCERR_OUTOFMEMORY;
     int ret = synctex_display_query(this->scanner, mb_srcfilepath, line, col);
-    free(mb_srcfilepath);
+    str::Free(mb_srcfilepath);
     // recent SyncTeX versions encode in UTF-8 instead of ANSI
     if (isUtf8 && -1 == ret) {
         isUtf8 = false;

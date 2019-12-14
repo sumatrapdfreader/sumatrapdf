@@ -81,8 +81,8 @@ static char* DecodeTextToUtf8(const char* s, bool isXML = false) {
         s = tmp;
     }
     if (str::StartsWith(s, UTF16_BOM)) {
-        auto tmp2 = str::conv::ToUtf8((WCHAR*)(s + 2));
-        return tmp2.StealData();
+        auto tmp2 = str::conv::WstrToUtf8((WCHAR*)(s + 2));
+        return (char*)tmp2.data();
     }
     if (str::StartsWith(s, UTF8_BOM))
         return str::Dup(s + 3);
@@ -337,8 +337,8 @@ bool EpubDoc::Load() {
                 continue;
             // load the image lazily
             ImageData2 data = {0};
-            auto tmp = str::conv::ToUtf8(imgPath);
-            data.fileName = tmp.StealData();
+            auto tmp = str::conv::WstrToUtf8(imgPath);
+            data.fileName = (char*)tmp.data();
             data.fileId = zip->GetFileId(data.fileName);
             images.Append(data);
         } else if (str::Eq(mediatype, L"application/xhtml+xml") || str::Eq(mediatype, L"application/html+xml") ||
@@ -393,7 +393,7 @@ bool EpubDoc::Load() {
         }
         // insert explicit page-breaks between sections including
         // an anchor with the file name at the top (for internal links)
-        OwnedData utf8_path(str::conv::ToUtf8(fullPath));
+        AutoFree utf8_path(str::conv::WstrToUtf8(fullPath));
         CrashIfDebugOnly(str::FindChar(utf8_path.Get(), '"'));
         str::TransChars(utf8_path.Get(), "\"", "'");
         htmlData.AppendFmt("<pagebreak page_path=\"%s\" page_marker />", utf8_path.Get());
@@ -461,8 +461,8 @@ ImageData* EpubDoc::GetImageData(const char* fileName, const char* pagePath) {
             if (str::EndsWithI(img->fileName, fileName)) {
                 if (!img->base.data) {
                     auto res = zip->GetFileDataById(img->fileId);
-                    img->base.len = res.size;
-                    img->base.data = res.StealData();
+                    img->base.len = res.size();
+                    img->base.data = (char*)res.data();
                 }
                 if (img->base.data)
                     return &img->base;
@@ -480,8 +480,8 @@ ImageData* EpubDoc::GetImageData(const char* fileName, const char* pagePath) {
         if (str::Eq(img->fileName, url)) {
             if (!img->base.data) {
                 auto res = zip->GetFileDataById(img->fileId);
-                img->base.len = res.size;
-                img->base.data = res.StealData();
+                img->base.len = res.size();
+                img->base.data = (char*)res.data();
             }
             if (img->base.data)
                 return &img->base;
@@ -493,8 +493,8 @@ ImageData* EpubDoc::GetImageData(const char* fileName, const char* pagePath) {
     data.fileId = zip->GetFileId(url);
     if (data.fileId != (size_t)-1) {
         auto res = zip->GetFileDataById(data.fileId);
-        data.base.len = res.size;
-        data.base.data = res.StealData();
+        data.base.len = res.size();
+        data.base.data = (char*)res.data();
         if (data.base.data) {
             data.fileName = str::Dup(url);
             images.Append(data);
@@ -637,13 +637,13 @@ bool EpubDoc::ParseToc(EbookTocVisitor* visitor) {
     {
         ScopedCritSec scope(&zipAccess);
         auto res = zip->GetFileDataByName(tocPath);
-        tocDataLen = res.size;
-        tocData.Set(res.StealData());
+        tocDataLen = res.size();
+        tocData.Set(res.data());
     }
     if (!tocData)
         return false;
 
-    OwnedData pagePath(str::conv::ToUtf8(tocPath));
+    AutoFree pagePath(str::conv::WstrToUtf8(tocPath));
     if (isNcxToc) {
         return ParseNcxToc(tocData, tocDataLen, pagePath.Get(), visitor);
     }
@@ -1199,7 +1199,7 @@ bool HtmlDoc::Load() {
     if (!htmlData)
         return false;
 
-    pagePath.Set(str::conv::ToUtf8(fileName).StealData());
+    pagePath.Set(str::conv::WstrToUtf8(fileName).data());
     str::TransChars(pagePath, "\\", "/");
 
     HtmlPullParser parser(htmlData, str::Len(htmlData));

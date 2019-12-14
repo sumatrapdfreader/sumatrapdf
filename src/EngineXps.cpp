@@ -936,7 +936,7 @@ void XpsEngineImpl::LinkifyPageText(FzPageInfo* pageInfo) {
             continue;
         }
 
-        OwnedData uri(str::conv::ToUtf8(list->links.at(i)));
+        AutoFree uri(str::conv::WstrToUtf8(list->links.at(i)));
         if (!uri.Get()) {
             continue;
         }

@@ -463,12 +463,12 @@ class Str : public Vec<char> {
         va_end(args);
     }
 
-    bool AppendAndFree(char* s) {
+    bool AppendAndFree(const char* s) {
         if (!s) {
             return true;
         }
         bool ok = Append(s);
-        free(s);
+        str::Free(s);
         return ok;
     }
 

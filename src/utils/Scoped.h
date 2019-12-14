@@ -146,8 +146,8 @@ struct AutoFree {
         return *this;
     }
 
-    AutoFree& operator=(const AutoFree& other) = delete;
-    AutoFree& operator=(const AutoFree&& other) = delete;
+    //AutoFree& operator=(const AutoFree& other) = delete;
+   // AutoFree& operator=(const AutoFree&& other) = delete;
 
     char* get() const {
         return data;
@@ -189,6 +189,16 @@ struct AutoFree {
         data = nullptr;
         len = 0;
         return res;
+    }
+
+    void TakeOwnership(const char* s, size_t size = 0) {
+        free(data);
+        data = (char*)s;
+        if (size == 0) {
+            len = str::Len(s);
+        } else {
+            len = size;
+        }
     }
 };
 

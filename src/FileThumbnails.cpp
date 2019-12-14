@@ -26,19 +26,23 @@ static WCHAR* GetThumbnailPath(const WCHAR* filePath) {
     // content), but that's too expensive for files on slow drives
     unsigned char digest[16];
     // TODO: why is this happening? Seen in crash reports e.g. 35043
-    if (!filePath)
+    if (!filePath) {
         return nullptr;
-    OwnedData pathU(str::conv::ToUtf8(filePath));
-    if (!pathU.Get())
+    }
+    AutoFree pathU(str::conv::WstrToUtf8(filePath));
+    if (!pathU.Get()) {
         return nullptr;
-    if (path::HasVariableDriveLetter(filePath))
+    }
+    if (path::HasVariableDriveLetter(filePath)) {
         pathU.Get()[0] = '?'; // ignore the drive letter, if it might change
+    }
     CalcMD5Digest((unsigned char*)pathU.Get(), str::Len(pathU.Get()), digest);
     AutoFree fingerPrint(_MemToHex(&digest));
 
     AutoFreeWstr thumbsPath(AppGenDataFilename(THUMBNAILS_DIR_NAME));
-    if (!thumbsPath)
+    if (!thumbsPath) {
         return nullptr;
+    }
     AutoFreeWstr fname(str::conv::FromAnsi(fingerPrint));
 
     return str::Format(L"%s\\%s.png", thumbsPath.Get(), fname.Get());

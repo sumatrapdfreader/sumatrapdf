@@ -98,18 +98,18 @@ size_t MultiFormatArchive::GetFileId(const char* fileName) {
 }
 
 #if OS_WIN
-OwnedData MultiFormatArchive::GetFileDataByName(const WCHAR* fileName) {
-    auto fileNameUtf8 = str::conv::ToUtf8(fileName);
-    return GetFileDataByName(fileNameUtf8.Get());
+std::string_view MultiFormatArchive::GetFileDataByName(const WCHAR* fileName) {
+    auto fileNameUtf8 = str::conv::WstrToUtf8(fileName);
+    return GetFileDataByName(fileNameUtf8.data());
 }
 #endif
 
-OwnedData MultiFormatArchive::GetFileDataByName(const char* fileName) {
+std::string_view MultiFormatArchive::GetFileDataByName(const char* fileName) {
     size_t fileId = getFileIdByName(fileInfos_, fileName);
     return GetFileDataById(fileId);
 }
 
-OwnedData MultiFormatArchive::GetFileDataById(size_t fileId) {
+std::string_view MultiFormatArchive::GetFileDataById(size_t fileId) {
     if (fileId == (size_t)-1) {
         return {};
     }
@@ -134,15 +134,15 @@ OwnedData MultiFormatArchive::GetFileDataById(size_t fileId) {
     if (addOverflows<size_t>(size, ZERO_PADDING_COUNT)) {
         return {};
     }
-    OwnedData data(AllocArray<char>(size + ZERO_PADDING_COUNT), size);
-    if (!data.data) {
+    char* data = AllocArray<char>(size + ZERO_PADDING_COUNT);
+    if (!data) {
         return {};
     }
-    if (!ar_entry_uncompress(ar_, data.data, size)) {
+    if (!ar_entry_uncompress(ar_, data, size)) {
         return {};
     }
 
-    return data;
+    return {data, size};
 }
 
 std::string_view MultiFormatArchive::GetComment() {
@@ -181,8 +181,8 @@ static MultiFormatArchive* open(MultiFormatArchive* archive, const char* path) {
 
 #if OS_WIN
 static MultiFormatArchive* open(MultiFormatArchive* archive, const WCHAR* path) {
-    auto pathUtf = str::conv::ToUtf8(path);
-    bool ok = archive->Open(ar_open_file_w(path), pathUtf.Get());
+    auto pathUtf = str::conv::WstrToUtf8(path);
+    bool ok = archive->Open(ar_open_file_w(path), pathUtf.data());
     if (!ok) {
         delete archive;
         return nullptr;
@@ -310,7 +310,7 @@ static bool FindFile(HANDLE hArc, RARHeaderDataEx* rarHeader, const WCHAR* fileN
     }
 }
 
-OwnedData MultiFormatArchive::GetFileDataByIdUnarrDll(size_t fileId) {
+std::string_view MultiFormatArchive::GetFileDataByIdUnarrDll(size_t fileId) {
     CrashIf(!rarFilePath_);
 
     AutoFreeWstr rarPath(str::conv::FromUtf8(rarFilePath_));
@@ -401,7 +401,7 @@ bool MultiFormatArchive::OpenUnrarFallback(const char* rarPathUtf) {
         }
 
         str::TransChars(rarHeader.FileNameW, L"\\", L"/");
-        OwnedData name(str::conv::ToUtf8(rarHeader.FileNameW));
+        AutoFree name = str::conv::WstrToUtf8(rarHeader.FileNameW);
 
         FileInfo* i = allocator_.AllocStruct<FileInfo>();
         i->fileId = fileId;

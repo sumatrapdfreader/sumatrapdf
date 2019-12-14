@@ -19,14 +19,29 @@
 
 #define Out(msg, ...) printf(msg, __VA_ARGS__)
 
-static OwnedData Escape(WCHAR* string) {
+static bool NeedsEscape(WCHAR* s) {
+    if (str::FindChar(s, '<')) {
+        return true;
+    }
+    if (str::FindChar(s, '&')) {
+        return true;
+    }
+    if (str::FindChar(s, '"')) {
+        return true;
+    }
+    return false;
+}
+
+static std::string_view Escape(WCHAR* string) {
     AutoFreeWstr freeOnReturn(string);
 
-    if (str::IsEmpty(string))
+    if (str::IsEmpty(string)) {
         return {};
+    }
 
-    if (!str::FindChar(string, '<') && !str::FindChar(string, '&') && !str::FindChar(string, '"'))
-        return str::conv::ToUtf8(string);
+    if (!NeedsEscape(string)) {
+        return str::conv::WstrToUtf8(string);
+    }
 
     str::WStr escaped(256);
     for (const WCHAR* s = string; *s; s++) {
@@ -51,7 +66,7 @@ static OwnedData Escape(WCHAR* string) {
                 break;
         }
     }
-    return str::conv::ToUtf8(escaped.Get());
+    return str::conv::WstrToUtf8(escaped.Get());
 }
 
 void DumpProperties(EngineBase* engine, bool fullDump) {
@@ -391,7 +406,7 @@ bool RenderDocument(EngineBase* engine, const WCHAR* renderPath, float zoom = 1.
             return false;
         }
         AutoFreeWstr pdfFilePath(str::Format(renderPath, 0));
-        OwnedData pathUtf8(str::conv::ToUtf8(pdfFilePath.Get()));
+        AutoFree pathUtf8(str::conv::WstrToUtf8(pdfFilePath.Get()));
         if (engine->SaveFileAsPDF(pathUtf8.Get(), true)) {
             return true;
         }

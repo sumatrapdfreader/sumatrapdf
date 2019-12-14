@@ -169,7 +169,7 @@ WCHAR* Utf8ToWchar(std::string_view sv);
 std::string_view WstrToUtf8(const WCHAR* src);
 
 std::string_view WstrToUtf8(const WCHAR* src, size_t cchSrcLen);
-OwnedData ToUtf8(const WCHAR* src);
+std::string_view WstrToUtf8(const WCHAR* src);
 WCHAR* FromAnsi(const char* src, size_t cbSrcLen = (size_t)-1);
 std::string_view WstrToAnsi(const WCHAR*);
 size_t ToCodePageBuf(char* buf, int cbBufSize, const WCHAR* s, UINT cp);

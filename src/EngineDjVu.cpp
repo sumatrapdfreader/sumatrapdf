@@ -171,7 +171,7 @@ class DjVuContext {
 
     ddjvu_document_t* OpenFile(const WCHAR* fileName) {
         ScopedCritSec scope(&lock);
-        OwnedData fileNameUtf8(str::conv::ToUtf8(fileName));
+        AutoFree fileNameUtf8(str::conv::WstrToUtf8(fileName));
         // TODO: libdjvu sooner or later crashes inside its caching code; cf.
         //       http://code.google.com/p/sumatrapdf/issues/detail?id=1434
         return ddjvu_document_create_by_filename_utf8(ctx, fileNameUtf8.Get(), /* cache */ FALSE);
@@ -982,7 +982,7 @@ char* DjVuEngineImpl::ResolveNamedDest(const char* name) {
 }
 
 PageDestination* DjVuEngineImpl::GetNamedDest(const WCHAR* name) {
-    OwnedData nameUtf8(str::conv::ToUtf8(name));
+    AutoFree nameUtf8(str::conv::WstrToUtf8(name));
     if (!str::StartsWith(nameUtf8.Get(), "#")) {
         nameUtf8.TakeOwnership(str::Join("#", nameUtf8.Get()));
     }
@@ -1050,14 +1050,15 @@ DocTocTree* DjVuEngineImpl::GetTocTree() {
 WCHAR* DjVuEngineImpl::GetPageLabel(int pageNo) const {
     for (size_t i = 0; i < fileInfo.size(); i++) {
         ddjvu_fileinfo_t& info = fileInfo.at(i);
-        if (pageNo - 1 == info.pageno && !str::Eq(info.title, info.id))
+        if (pageNo - 1 == info.pageno && !str::Eq(info.title, info.id)) {
             return str::conv::FromUtf8(info.title);
+        }
     }
     return EngineBase::GetPageLabel(pageNo);
 }
 
 int DjVuEngineImpl::GetPageByLabel(const WCHAR* label) const {
-    OwnedData labelUtf8(str::conv::ToUtf8(label));
+    AutoFree labelUtf8(str::conv::WstrToUtf8(label));
     for (size_t i = 0; i < fileInfo.size(); i++) {
         ddjvu_fileinfo_t& info = fileInfo.at(i);
         if (str::EqI(info.title, labelUtf8.Get()) && !str::Eq(info.title, info.id)) {

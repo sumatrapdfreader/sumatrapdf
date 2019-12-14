@@ -598,11 +598,12 @@ PageElement* EbookEngine::GetElementAtPos(int pageNo, PointD pt) {
 }
 
 PageDestination* EbookEngine::GetNamedDest(const WCHAR* name) {
-    OwnedData name_utf8(str::conv::ToUtf8(name));
+    AutoFree name_utf8(str::conv::WstrToUtf8(name));
     const char* id = name_utf8.Get();
-    if (str::FindChar(id, '#'))
+    if (str::FindChar(id, '#')) {
         id = str::FindChar(id, '#') + 1;
-
+    }
+    
     // if the name consists of both path and ID,
     // try to first skip to the page with the desired
     // path before looking for the ID to allow
@@ -1510,7 +1511,7 @@ class ChmHtmlCollector : public EbookTocVisitor {
         if (added.FindI(plainUrl) != -1) {
             return;
         }
-        OwnedData urlUtf8(str::conv::ToUtf8(plainUrl));
+        AutoFree urlUtf8(str::conv::WstrToUtf8(plainUrl));
         size_t pageHtmlLen;
         ScopedMem<unsigned char> pageHtml(doc->GetData(urlUtf8.Get(), &pageHtmlLen));
         if (!pageHtml) {

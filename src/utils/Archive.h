@@ -37,12 +37,11 @@ class MultiFormatArchive {
 
     size_t GetFileId(const char* fileName);
 
-// caller must free() the result
 #if OS_WIN
-    OwnedData GetFileDataByName(const WCHAR* filename);
+    std::string_view GetFileDataByName(const WCHAR* filename);
 #endif
-    OwnedData GetFileDataByName(const char* filename);
-    OwnedData GetFileDataById(size_t fileId);
+    std::string_view GetFileDataByName(const char* filename);
+    std::string_view GetFileDataById(size_t fileId);
 
     std::string_view GetComment();
 
@@ -59,7 +58,7 @@ class MultiFormatArchive {
     const char* rarFilePath_ = nullptr;
 
     bool OpenUnrarFallback(const char* rarPathUtf);
-    OwnedData GetFileDataByIdUnarrDll(size_t fileId);
+    std::string_view GetFileDataByIdUnarrDll(size_t fileId);
     bool LoadedUsingUnrarDll() const {
         return rarFilePath_ != nullptr;
     }

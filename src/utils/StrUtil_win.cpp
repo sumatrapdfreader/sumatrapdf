@@ -708,10 +708,7 @@ std::string_view UnknownToUtf8(const std::string_view& txt) {
     }
 
     AutoFreeWstr uni(str::conv::FromAnsi(s, len));
-    OwnedData d = str::conv::ToUtf8(uni.Get());
-    size_t n = d.size;
-    auto* str = d.StealData();
-    return {str, n};
+    return str::conv::WstrToUtf8(uni.Get());
 }
 
 size_t ToCodePageBuf(char* buf, int cbBufSize, const WCHAR* s, UINT cp) {
@@ -753,10 +750,6 @@ std::string_view WstrToUtf8(const WCHAR* src, size_t cchSrcLen) {
     return ToMultiByte2(src, CP_UTF8, (int)cchSrcLen);
 }
 
-OwnedData ToUtf8(const WCHAR* src) {
-    return ToMultiByte(src, CP_UTF8);
-}
-
 std::string_view WstrToUtf8(const WCHAR* src) {
     return ToMultiByte2(src, CP_UTF8);
 }
@@ -786,7 +779,7 @@ void DecodeInPlace(WCHAR* url) {
         return;
     }
     // URLs are usually UTF-8 encoded
-    OwnedData urlUtf8(str::conv::ToUtf8(url));
+    AutoFree urlUtf8(str::conv::WstrToUtf8(url));
     DecodeInPlace(urlUtf8.Get());
     // convert back in place
     CrashIf(str::Len(url) >= INT_MAX);

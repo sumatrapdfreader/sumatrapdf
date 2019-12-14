@@ -826,16 +826,16 @@ bool PdfEngineImpl::LoadFromStream(fz_stream* stm, PasswordUI* pwdUI) {
         }
 
         // MuPDF expects passwords to be UTF-8 encoded
-        OwnedData pwd_utf8(str::conv::ToUtf8(pwd));
-        ok = pwd_utf8.Get() && pdf_authenticate_password(ctx, doc, pwd_utf8.Get());
+        AutoFree pwd_utf8(str::conv::WstrToUtf8(pwd));
+        ok = pdf_authenticate_password(ctx, doc, pwd_utf8.Get());
         // according to the spec (1.7 ExtensionLevel 3), the password
         // for crypt revisions 5 and above are in SASLprep normalization
         if (!ok) {
             // TODO: this is only part of SASLprep
             pwd.Set(NormalizeString(pwd, 5 /* NormalizationKC */));
             if (pwd) {
-                pwd_utf8 = std::move(str::conv::ToUtf8(pwd));
-                ok = pwd_utf8.Get() && pdf_authenticate_password(ctx, doc, pwd_utf8.Get());
+                pwd_utf8 = str::conv::WstrToUtf8(pwd);
+                ok = pdf_authenticate_password(ctx, doc, pwd_utf8.Get());
             }
         }
         // older Acrobat versions seem to have considered passwords to be in codepage 1252
@@ -843,8 +843,8 @@ bool PdfEngineImpl::LoadFromStream(fz_stream* stm, PasswordUI* pwdUI) {
         if (!ok && GetACP() != 1252) {
             AutoFree pwd_ansi(str::conv::WstrToAnsi(pwd));
             AutoFreeWstr pwd_cp1252(str::conv::FromCodePage(pwd_ansi.Get(), 1252));
-            pwd_utf8 = std::move(str::conv::ToUtf8(pwd_cp1252));
-            ok = pwd_utf8.Get() && pdf_authenticate_password(ctx, doc, pwd_utf8.Get());
+            pwd_utf8 = str::conv::WstrToUtf8(pwd_cp1252);
+            ok = pdf_authenticate_password(ctx, doc, pwd_utf8.Get());
         }
     }
 
@@ -1096,12 +1096,12 @@ PageDestination* PdfEngineImpl::GetNamedDest(const WCHAR* name) {
 
     pdf_document* doc = (pdf_document*)_doc;
 
-    OwnedData name_utf8(str::conv::ToUtf8(name));
+    AutoFree name_utf8(str::conv::WstrToUtf8(name));
     pdf_obj* dest = nullptr;
 
     fz_var(dest);
     fz_try(ctx) {
-        pdf_obj* nameobj = pdf_new_string(ctx, name_utf8.Get(), (int)name_utf8.size);
+        pdf_obj* nameobj = pdf_new_string(ctx, name_utf8.Get(), (int)name_utf8.size());
         dest = pdf_lookup_dest(ctx, doc, nameobj);
         pdf_drop_obj(ctx, nameobj);
     }
@@ -1439,7 +1439,7 @@ void PdfEngineImpl::LinkifyPageText(FzPageInfo* pageInfo) {
             continue;
         }
 
-        OwnedData uri(str::conv::ToUtf8(list->links.at(i)));
+        AutoFree uri(str::conv::WstrToUtf8(list->links.at(i)));
         if (!uri.Get()) {
             continue;
         }

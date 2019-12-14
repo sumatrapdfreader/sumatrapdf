@@ -507,11 +507,11 @@ static bool GetModules(str::Str& s) {
     mod.dwSize = sizeof(mod);
     BOOL cont = Module32First(snap, &mod);
     while (cont) {
-        OwnedData nameA(str::conv::ToUtf8(mod.szModule));
+        AutoFree nameA(str::conv::WstrToUtf8(mod.szModule));
         if (str::EqI(nameA.Get(), "winex11.drv")) {
             isWine = true;
         }
-        OwnedData pathA(str::conv::ToUtf8(mod.szExePath));
+        AutoFree pathA(str::conv::WstrToUtf8(mod.szExePath));
         s.AppendFmt("Module: %p %06X %-16s %s\n", mod.modBaseAddr, mod.modBaseSize, nameA.Get(), pathA.Get());
         cont = Module32Next(snap, &mod);
     }

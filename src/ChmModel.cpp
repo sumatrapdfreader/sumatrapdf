@@ -388,7 +388,7 @@ const unsigned char* ChmModel::GetDataForUrl(const WCHAR* url, size_t* len) {
     ChmCacheEntry* e = FindDataForUrl(plainUrl);
     if (!e) {
         e = new ChmCacheEntry(Allocator::StrDup(&poolAlloc, plainUrl));
-        OwnedData urlUtf8(str::conv::ToUtf8(plainUrl));
+        AutoFree urlUtf8(str::conv::WstrToUtf8(plainUrl));
         e->data = doc->GetData(urlUtf8.Get(), &e->size);
         if (!e->data) {
             delete e;
@@ -396,8 +396,9 @@ const unsigned char* ChmModel::GetDataForUrl(const WCHAR* url, size_t* len) {
         }
         urlDataCache.Append(e);
     }
-    if (len)
+    if (len) {
         *len = e->size;
+    }
     return e->data;
 }
 
@@ -414,7 +415,7 @@ void ChmModel::OnLButtonDown() {
 // named destinations are either in-document URLs or Alias topic IDs
 PageDestination* ChmModel::GetNamedDest(const WCHAR* name) {
     AutoFreeWstr plainUrl(url::GetFullPath(name));
-    OwnedData urlUtf8(str::conv::ToUtf8(plainUrl));
+    AutoFree urlUtf8(str::conv::WstrToUtf8(plainUrl));
     if (!doc->HasData(urlUtf8.Get())) {
         unsigned int topicID;
         if (str::Parse(name, L"%u%$", &topicID)) {
@@ -423,10 +424,10 @@ PageDestination* ChmModel::GetNamedDest(const WCHAR* name) {
                 plainUrl.Set(str::conv::FromUtf8(urlUtf8.Get()));
                 name = plainUrl;
             } else {
-                urlUtf8.Clear();
+                urlUtf8.Reset();
             }
         } else {
-            urlUtf8.Clear();
+            urlUtf8.Reset();
         }
     }
     int pageNo = pages.Find(plainUrl) + 1;
@@ -583,7 +584,7 @@ class ChmThumbnailTask : public HtmlWindowCallback {
         UNUSED(len);
         ScopedCritSec scope(&docAccess);
         AutoFreeWstr plainUrl(url::GetFullPath(url));
-        OwnedData urlUtf8(str::conv::ToUtf8(plainUrl));
+        AutoFree urlUtf8(str::conv::WstrToUtf8(plainUrl));
         data.Append(doc->GetData(urlUtf8.Get(), len));
         return data.Last();
     }

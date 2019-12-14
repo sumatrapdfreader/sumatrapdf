@@ -261,11 +261,11 @@ bool LaunchBrowser(const WCHAR* url) {
         }
         HWND plugin = gWindows.at(0)->hwndFrame;
         HWND parent = GetAncestor(plugin, GA_PARENT);
-        OwnedData urlUtf8(str::conv::ToUtf8(url));
-        if (!parent || !urlUtf8.Get() || (urlUtf8.size > 4096)) {
+        AutoFree urlUtf8(str::conv::WstrToUtf8(url));
+        if (!parent || !urlUtf8.Get() || (urlUtf8.size() > 4096)) {
             return false;
         }
-        COPYDATASTRUCT cds = {0x4C5255 /* URL */, (DWORD)urlUtf8.size + 1, urlUtf8.Get()};
+        COPYDATASTRUCT cds = {0x4C5255 /* URL */, (DWORD)urlUtf8.size() + 1, urlUtf8.Get()};
         return SendMessage(parent, WM_COPYDATA, (WPARAM)plugin, (LPARAM)&cds);
     }
 
@@ -907,12 +907,12 @@ static Controller* CreateControllerForFile(const WCHAR* filePath, PasswordUI* pw
     if (ctrl && !str::Eq(ctrl->FilePath(), filePath)) {
         // TODO: remove when we figure out why we crash
         auto ctrlFilePath = ctrl->FilePath();
-        auto s1 = ctrlFilePath ? str::conv::ToUtf8(ctrlFilePath).StealData() : str::Dup("<null>");
-        auto s2 = filePath ? str::conv::ToUtf8(filePath).StealData() : str::Dup("<null>");
+        auto s1 = ctrlFilePath ? str::conv::WstrToUtf8(ctrlFilePath).data() : str::Dup("<null>");
+        auto s2 = filePath ? str::conv::WstrToUtf8(filePath).data() : str::Dup("<null>");
         logf("CreateControllerForFile: ctrl->FilePath: '%s', filePath: '%s'\n", s1, s2);
         CrashIf(ctrl && !str::Eq(ctrl->FilePath(), filePath));
-        free(s1);
-        free(s2);
+        str::Free(s1);
+        str::Free(s2);
     }
     return ctrl;
 }
@@ -2445,7 +2445,7 @@ static void OnMenuSaveAs(WindowInfo* win) {
         realDstFileName = str::Format(L"%s%s", dstFileName, defExt);
     }
 
-    OwnedData pathUtf8(str::conv::ToUtf8(realDstFileName));
+    AutoFree pathUtf8(str::conv::WstrToUtf8(realDstFileName));
     AutoFreeWstr errorMsg;
     // Extract all text when saving as a plain text file
     if (convertToTXT) {
@@ -2457,7 +2457,7 @@ static void OnMenuSaveAs(WindowInfo* win) {
             free(tmp);
         }
 
-        OwnedData textUTF8(str::conv::ToUtf8(text.LendData()));
+        AutoFree textUTF8(str::conv::WstrToUtf8(text.LendData()));
         AutoFree textUTF8BOM(str::Join(UTF8_BOM, textUTF8.Get()));
         ok = file::WriteFile(realDstFileName, textUTF8BOM.as_view());
     } else if (convertToPDF) {

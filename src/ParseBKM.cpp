@@ -56,8 +56,8 @@ void SerializeBookmarksRec(DocTocItem* node, int level, str::Str& s) {
             s.Append("  ");
         }
         WCHAR* title = node->Text();
-        auto titleA = str::conv::ToUtf8(title);
-        appendQuotedString(titleA.AsView(), s);
+        AutoFree titleA = str::conv::WstrToUtf8(title);
+        appendQuotedString(titleA.as_view(), s);
         auto flags = node->fontFlags;
         if (bit::IsSet(flags, fontBitItalic)) {
             s.Append(" font:italic");
@@ -75,9 +75,9 @@ void SerializeBookmarksRec(DocTocItem* node, int level, str::Str& s) {
             s.AppendFmt(" page:%d", pageNo);
             auto ws = dest->GetDestValue();
             if (ws != nullptr) {
-                auto str = str::conv::ToUtf8(ws);
+                AutoFree str = str::conv::WstrToUtf8(ws);
                 s.Append(",dest:");
-                s.AppendView(str.AsView());
+                s.AppendView(str.as_view());
             }
         }
         s.Append("\n");
