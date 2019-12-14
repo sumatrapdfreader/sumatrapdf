@@ -183,6 +183,11 @@ struct AutoFree {
         len = std::get<1>(s);
     }
 
+    AutoFree(std::string_view s) {
+        data = (char*)s.data();
+        len = s.size();
+    }
+
     ~AutoFree() {
         str::Free(data);
     }

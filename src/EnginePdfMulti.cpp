@@ -174,7 +174,169 @@ int EnginePdfMultiImpl::GetPageByLabel(const WCHAR* label) const {
     return -1;
 }
 
+struct VbkmFile {
+    char* path = nullptr;
+    EngineBase* engine = nullptr;
+};
+
+struct ParsedVbkm {
+    Vec<VbkmFile*> files;
+};
+
+// utilities for string view
+namespace sv {
+
+bool StartsWith(std::string_view s, std::string_view prefix) {
+    auto plen = prefix.length();
+    auto slen = s.length();
+    if (plen > slen) {
+        return false;
+    }
+    return str::EqN(s.data(), prefix.data(), plen);
+}
+
+bool StartsWith(std::string_view s, const char* prefix) {
+    auto p = std::string_view(prefix);
+    return StartsWith(s, p);
+}
+
+static Vec<std::string_view> Split(std::string_view sv, char split, size_t max = 0) {
+    Vec<std::string_view> res;
+    const char* s = sv.data();
+    const char* end = s + sv.size();
+    if (max > 0) {
+        // we want to stop at max - 1 because we also add
+        max--;
+    }
+    const char* prev = s;
+    while (s < end) {
+        char c = *s;
+        if (c == split) {
+            size_t size = s - prev;
+            res.push_back({prev, size});
+            prev = s + 1;
+            if (max != 0 && max == res.size()) {
+                break;
+            }
+        }
+        ++s;
+    }
+    // add the rest if non-empty
+    size_t size = end - prev;
+    if (size > 0) {;
+        res.push_back({prev, size});
+    }
+    return res;
+}
+
+static std::string_view TrimSpace(std::string_view str) {
+    const char* s = str.data();
+    const char* end = s + str.size();
+    while (s < end && str::IsWs(*s)) {
+        ++s;
+    }
+    while (end > s) {
+        char c = end[-1];
+        if (str::IsWs(c)) {
+            break;
+        }
+        --end;
+    }
+    size_t size = end - s;
+    return {s, size};
+}
+
+} // namespace sv
+
+// each logical record starts with "file:" line
+// we split s into list of records for each file
+// TODO: should we fail if the first line is not "file:" ?
+// Currently we ignore everything from the beginning
+// until first "file:" line
+static Vec<std::string_view> SplitVbkmIntoRecords(std::string_view s) {
+    Vec<std::string_view> res;
+    auto tmp = s;
+    Vec<const char*> addrs;
+
+    // find indexes of lines that start with "file:"
+    while (!tmp.empty()) {
+        auto line = str::ParseUntil(tmp, '\n');
+        if (sv::StartsWith(line, "file:")) {
+            addrs.push_back(line.data());
+        }
+    }
+
+    size_t n = addrs.size();
+    if (n == 0) {
+        return res;
+    }
+    addrs.push_back(s.data() + s.size());
+    for (size_t i = 0; i < n; i++) {
+        const char* start = addrs[i];
+        const char* end = addrs[i + 1];
+        size_t size = end - start;
+        auto sv = std::string_view{start, size};
+        res.push_back(sv);
+    }
+    return res;
+}
+
+std::string_view NormalizeNewlines(std::string_view s) {
+    str::Str tmp(s);
+    tmp.Replace("\r\n", "\n");
+    tmp.Replace("\r", "\n");
+    return tmp.StealAsView();
+}
+
+static std::string_view ParseLineFile(std::string_view s) {
+    auto parts = sv::Split(s, ':', 2);
+    if (parts.size() != 2) {
+        return {};
+    }
+    return parts[1];
+}
+
+// parse a .vbkm record starting with "file:" line
+static VbkmFile* ParseVbkmRecord(std::string_view s) {
+    auto line = str::ParseUntil(s, '\n');
+    auto fileName = ParseLineFile(line);
+    fileName = sv::TrimSpace(fileName);
+    if (fileName.empty()) {
+        return nullptr;
+    }
+    auto res = new VbkmFile();
+    res->path = str::Dup(fileName);
+    // TODO: parse more stuff
+    return res;
+}
+
+static ParsedVbkm* ParseVbkmFile(std::string_view d) {
+    AutoFree s = NormalizeNewlines(d);
+    auto records = SplitVbkmIntoRecords(s.as_view());
+    auto n = records.size();
+    if (n == 0) {
+        return nullptr;
+    }
+    auto res = new ParsedVbkm();
+    for (size_t i = 0; i < n; i++) {
+        auto file = ParseVbkmRecord(records[i]);
+        if (file == nullptr) {
+            delete res;
+            return nullptr;
+        }
+        res->files.push_back(file);
+    }
+
+    return res;
+}
+
 bool EnginePdfMultiImpl::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
+    auto sv = file::ReadFile2(fileName);
+    if (sv.empty()) {
+        return false;
+    }
+    auto res = ParseVbkmFile(sv);
+    delete res;
     return false;
 }
 

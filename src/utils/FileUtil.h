@@ -46,6 +46,7 @@ FILE* OpenFILE(const WCHAR* path);
 bool Exists(const WCHAR* path);
 std::tuple<char*, size_t> ReadFileWithAllocator(const WCHAR* filePath, Allocator* allocator);
 std::tuple<char*, size_t> ReadFile(const WCHAR* filePath);
+std::string_view ReadFile2(const WCHAR* filePath);
 
 bool ReadN(const WCHAR* path, char* buf, size_t toRead);
 bool WriteFile(const WCHAR* path, const void* data, size_t dataLen);

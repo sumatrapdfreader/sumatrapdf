@@ -426,6 +426,12 @@ std::tuple<char*, size_t> ReadFile(const WCHAR* filePath) {
     return ReadFileWithAllocator(path.data, nullptr);
 }
 
+std::string_view ReadFile2(const WCHAR* filePath) {
+    AutoFree path = str::conv::WstrToUtf8(filePath);
+    auto res = ReadFileWithAllocator(path.data, nullptr);
+    return {std::get<0>(res), std::get<1>(res)};
+}
+
 bool WriteFile(const char* filePath, const void* data, size_t dataLen) {
 #if OS_WIN
     WCHAR buf[512];

@@ -620,7 +620,7 @@ PdfEngineImpl::~PdfEngineImpl() {
     fz_drop_outline(ctx, attachments);
     pdf_drop_obj(ctx, _info);
 
-    fz_drop_document(ctx, (fz_document*)_doc);
+    fz_drop_document(ctx, _doc);
     fz_drop_context(ctx);
 
     delete _pageLabels;
@@ -659,22 +659,20 @@ class PasswordCloner : public PasswordUI {
 
 EngineBase* PdfEngineImpl::Clone() {
     ScopedCritSec scope(ctxAccess);
+    if (!FileName()) {
+        // before port we could clone streams but it's no longer possible
+        return nullptr;
+    }
 
     // use this document's encryption key (if any) to load the clone
     PasswordCloner* pwdUI = nullptr;
     pdf_document* doc = (pdf_document*)_doc;
-    if (pdf_crypt_key(ctx, doc->crypt))
+    if (pdf_crypt_key(ctx, doc->crypt)) {
         pwdUI = new PasswordCloner(pdf_crypt_key(ctx, doc->crypt));
+    }
 
     PdfEngineImpl* clone = new PdfEngineImpl();
-    bool ok = false;
-    if (FileName()) {
-        ok = clone->Load(FileName(), pwdUI);
-    } else {
-        CrashMe();
-        // TODO(port): might not bepossible
-        // ok = clone->Load(_doc->file, pwdUI);
-    }
+    bool ok = clone->Load(FileName(), pwdUI);
     if (!ok) {
         delete clone;
         delete pwdUI;
@@ -788,11 +786,13 @@ bool PdfEngineImpl::Load(IStream* stream, PasswordUI* pwdUI) {
 }
 
 bool PdfEngineImpl::LoadFromStream(fz_stream* stm, PasswordUI* pwdUI) {
-    if (!stm)
+    if (!stm) {
         return false;
+    }
 
     fz_try(ctx) {
-        _doc = (fz_document*)pdf_open_document_with_stream(ctx, stm);
+        pdf_document* doc = pdf_open_document_with_stream(ctx, stm);
+        _doc = (fz_document*)doc;
     }
     fz_always(ctx) {
         fz_drop_stream(ctx, stm);

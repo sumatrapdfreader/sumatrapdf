@@ -58,6 +58,7 @@ EXPORTS
 	fz_new_display_list_from_page
 	fz_set_warning_callback
 	fz_set_error_callback
+	fz_new_buffer_from_shared_data
 
 	fz_keep_bitmap
 	fz_drop_bitmap

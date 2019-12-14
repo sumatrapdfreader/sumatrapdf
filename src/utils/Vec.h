@@ -424,7 +424,17 @@ class Str : public Vec<char> {
     }
 
     std::string_view AsView() const {
-        return {this->Get(), this->size()};
+        return {Get(), size()};
+    }
+
+    std::string_view as_view() const {
+        return {Get(), size()};
+    }
+
+    std::string_view StealAsView() {
+        size_t len = size();
+        char* d = StealData();
+        return {d, len};
     }
 
     bool Append(char c) {
