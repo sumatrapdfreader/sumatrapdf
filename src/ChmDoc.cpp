@@ -337,19 +337,20 @@ static bool VisitChmTocItem(EbookTocVisitor* visitor, HtmlElement* el, UINT cp, 
 
     AutoFreeWstr name, local;
     for (el = el->GetChildByTag(Tag_Param); el; el = el->next) {
-        if (Tag_Param != el->tag)
+        if (Tag_Param != el->tag) {
             continue;
+        }
         AutoFreeWstr attrName(el->GetAttribute("name"));
         AutoFreeWstr attrVal(el->GetAttribute("value"));
         if (attrName && attrVal && cp != CP_CHM_DEFAULT) {
-            OwnedData bytes(str::conv::ToCodePage(attrVal, CP_CHM_DEFAULT));
+            AutoFree bytes(str::conv::WstrToCodePage(attrVal, CP_CHM_DEFAULT));
             attrVal.Set(str::conv::FromCodePage(bytes.Get(), cp));
         }
-        if (!attrName || !attrVal)
+        if (!attrName || !attrVal) {
             /* ignore incomplete/unneeded <param> */;
-        else if (str::EqI(attrName, L"Name"))
+        } else if (str::EqI(attrName, L"Name")) {
             name.Set(attrVal.StealData());
-        else if (str::EqI(attrName, L"Local")) {
+        } else if (str::EqI(attrName, L"Local")) {
             // remove the ITS protocol and any filename references from the URLs
             if (str::Find(attrVal, L"::/")) {
                 attrVal.SetCopy(str::Find(attrVal, L"::/") + 3);
@@ -357,8 +358,9 @@ static bool VisitChmTocItem(EbookTocVisitor* visitor, HtmlElement* el, UINT cp, 
             local.Set(attrVal.StealData());
         }
     }
-    if (!name)
+    if (!name) {
         return false;
+    }
 
     visitor->Visit(name, local, level);
     return true;
@@ -383,33 +385,37 @@ static bool VisitChmIndexItem(EbookTocVisitor* visitor, HtmlElement* el, UINT cp
     WStrVec references;
     AutoFreeWstr keyword, name;
     for (el = el->GetChildByTag(Tag_Param); el; el = el->next) {
-        if (Tag_Param != el->tag)
+        if (Tag_Param != el->tag) {
             continue;
+        }
         AutoFreeWstr attrName(el->GetAttribute("name"));
         AutoFreeWstr attrVal(el->GetAttribute("value"));
         if (attrName && attrVal && cp != CP_CHM_DEFAULT) {
-            OwnedData bytes(str::conv::ToCodePage(attrVal, CP_CHM_DEFAULT));
+            AutoFree bytes(str::conv::WstrToCodePage(attrVal, CP_CHM_DEFAULT));
             attrVal.Set(str::conv::FromCodePage(bytes.Get(), cp));
         }
-        if (!attrName || !attrVal)
+        if (!attrName || !attrVal) {
             /* ignore incomplete/unneeded <param> */;
-        else if (str::EqI(attrName, L"Keyword"))
+        } else if (str::EqI(attrName, L"Keyword")) {
             keyword.Set(attrVal.StealData());
-        else if (str::EqI(attrName, L"Name")) {
+        } else if (str::EqI(attrName, L"Name")) {
             name.Set(attrVal.StealData());
             // some CHM documents seem to use a lonely Name instead of Keyword
-            if (!keyword)
+            if (!keyword) {
                 keyword.SetCopy(name);
+            }
         } else if (str::EqI(attrName, L"Local") && name) {
             // remove the ITS protocol and any filename references from the URLs
-            if (str::Find(attrVal, L"::/"))
+            if (str::Find(attrVal, L"::/")) {
                 attrVal.SetCopy(str::Find(attrVal, L"::/") + 3);
+            }
             references.Append(name.StealData());
             references.Append(attrVal.StealData());
         }
     }
-    if (!keyword)
+    if (!keyword) {
         return false;
+    }
 
     if (references.size() == 2) {
         visitor->Visit(keyword, references.at(1), level);

@@ -157,8 +157,7 @@ std::string_view UnknownToUtf8(const std::string_view&);
 
 #if OS_WIN
 WCHAR* FromCodePage(const char* src, UINT cp);
-// TODO: replace OwnedData with std::string_view
-OwnedData ToCodePage(const WCHAR* src, UINT cp);
+std::string_view WstrToCodePage(const WCHAR* src, UINT cp);
 
 // TODO: replace with Utf8ToWchar
 WCHAR* FromUtf8(const char* src);

@@ -728,8 +728,8 @@ WCHAR* FromCodePage(const char* src, UINT cp) {
     return ToWideChar(src, cp);
 }
 
-OwnedData ToCodePage(const WCHAR* src, UINT cp) {
-    return ToMultiByte(src, cp);
+std::string_view WstrToCodePage(const WCHAR* src, UINT cp) {
+    return ToMultiByte2(src, cp);
 }
 
 WCHAR* FromUtf8(const char* src) {

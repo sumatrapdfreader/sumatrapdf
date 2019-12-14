@@ -535,7 +535,8 @@ bool MobiDoc::ParseHeader() {
         compressionType = COMPRESSION_UNSUPPORTED_DRM;
         Metadata prop;
         prop.prop = DocumentProperty::UnsupportedFeatures;
-        prop.value = str::conv::ToCodePage(L"DRM", mobiHdr.textEncoding).StealData();
+        auto tmp = str::conv::WstrToCodePage(L"DRM", mobiHdr.textEncoding);
+        prop.value = (char*)tmp.data();
         props.Append(prop);
     }
     textEncoding = mobiHdr.textEncoding;
