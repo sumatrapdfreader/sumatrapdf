@@ -270,7 +270,7 @@ bool EpubDoc::Load() {
     if (!zip) {
         return false;
     }
-    OwnedData container(zip->GetFileDataByName("META-INF/container.xml"));
+    AutoFree container(zip->GetFileDataByName("META-INF/container.xml"));
     if (!container.data) {
         return false;
     }
@@ -289,7 +289,7 @@ bool EpubDoc::Load() {
 
     // encrypted files will be ignored (TODO: support decryption)
     WStrList encList;
-    OwnedData encryption(zip->GetFileDataByName("META-INF/encryption.xml"));
+    AutoFree encryption(zip->GetFileDataByName("META-INF/encryption.xml"));
     if (encryption.data) {
         (void)parser.ParseInPlace(encryption.data);
         HtmlElement* cr = parser.FindElementByNameNS("CipherReference", EPUB_ENC_NS);
@@ -303,7 +303,7 @@ bool EpubDoc::Load() {
         }
     }
 
-    OwnedData content(zip->GetFileDataByName(contentPath));
+    AutoFree content(zip->GetFileDataByName(contentPath));
     if (!content.data) {
         return false;
     }
@@ -383,7 +383,7 @@ bool EpubDoc::Load() {
             continue;
 
         AutoFreeWstr fullPath(str::Join(contentPath, pathList.at(idList.Find(idref))));
-        OwnedData html(zip->GetFileDataByName(fullPath));
+        AutoFree html(zip->GetFileDataByName(fullPath));
         if (!html.data) {
             continue;
         }
@@ -505,7 +505,7 @@ ImageData* EpubDoc::GetImageData(const char* fileName, const char* pagePath) {
     return nullptr;
 }
 
-OwnedData EpubDoc::GetFileData(const char* relPath, const char* pagePath) {
+std::string_view EpubDoc::GetFileData(const char* relPath, const char* pagePath) {
     if (!pagePath) {
         CrashIf(true);
         return {};
@@ -654,20 +654,17 @@ bool EpubDoc::IsSupportedFile(const WCHAR* fileName, bool sniff) {
     if (!sniff) {
         return str::EndsWithI(fileName, L".epub");
     }
-    MultiFormatArchive* archive = OpenZipArchive(fileName, true);
-    if (!archive) {
+    AutoDelete<MultiFormatArchive> archive = OpenZipArchive(fileName, true);
+    if (!archive.get()) {
         return false;
     }
-    defer {
-        delete archive;
-    };
-    OwnedData mimetype(archive->GetFileDataByName("mimetype"));
+    AutoFree mimetype(archive->GetFileDataByName("mimetype"));
     if (!mimetype.data) {
         return false;
     }
     char* d = mimetype.data;
     // trailing whitespace is allowed for the mimetype file
-    for (size_t i = mimetype.size; i > 0; i--) {
+    for (size_t i = mimetype.size(); i > 0; i--) {
         if (!str::IsWs(d[i - 1])) {
             break;
         }

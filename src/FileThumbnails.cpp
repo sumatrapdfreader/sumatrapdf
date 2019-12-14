@@ -89,11 +89,11 @@ void CleanUpThumbnailCache(const FileHistory& fileHistory) {
 using namespace Gdiplus;
 
 static RenderedBitmap* LoadRenderedBitmap(const WCHAR* filePath) {
-    OwnedData data(file::ReadFile(filePath));
+    AutoFree data(file::ReadFile(filePath));
     if (!data.data) {
         return nullptr;
     }
-    Gdiplus::Bitmap* bmp = BitmapFromData(data.data, data.size);
+    Gdiplus::Bitmap* bmp = BitmapFromData(data.data, data.size());
     if (!bmp) {
         return nullptr;
     }

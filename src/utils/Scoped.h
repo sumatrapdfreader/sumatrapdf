@@ -81,6 +81,13 @@ struct AutoDelete {
     AutoDelete& operator=(const AutoDelete& other) = delete;
     AutoDelete& operator=(const AutoDelete&& other) = delete;
 
+    operator T*() const {
+        return o;
+    }
+    T* operator->() const {
+        return o;
+    }
+
     T* get() const {
         return o;
     }

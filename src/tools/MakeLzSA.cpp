@@ -99,13 +99,13 @@ static bool AppendEntry(str::Str& data, str::Str& content, const WCHAR* filePath
         return content.Append(fi->compressedData, fi->compressedSize);
     }
 
-    OwnedData fileData(file::ReadFile(filePath));
+    AutoFree fileData(file::ReadFile(filePath));
     if (!fileData.data || fileData.size >= UINT32_MAX) {
         fprintf(stderr, "Failed to read \"%S\" for compression\n", filePath);
         return false;
     }
-    uint32_t fileDataCrc = crc32(0, (const u8*)fileData.data, (uint32_t)fileData.size);
-    if (fi && fi->uncompressedCrc32 == fileDataCrc && fi->uncompressedSize == fileData.size)
+    uint32_t fileDataCrc = crc32(0, (const u8*)fileData.data, (uint32_t)fileData.size());
+    if (fi && fi->uncompressedCrc32 == fileDataCrc && fi->uncompressedSize == fileData.size())
         goto ReusePrevious;
 
     size_t compressedSize = fileData.size + 1;
@@ -131,8 +131,8 @@ static bool AppendEntry(str::Str& data, str::Str& content, const WCHAR* filePath
 // may end in a colon followed by the desired path in the archive
 // (this is required for absolute paths)
 bool CreateArchive(const WCHAR* archivePath, WStrVec& files, size_t skipFiles = 0) {
-    OwnedData prevData(file::ReadFile(archivePath));
-    size_t prevDataLen = prevData.size;
+    AutoFree prevData(file::ReadFile(archivePath));
+    size_t prevDataLen = prevData.size();
     lzma::SimpleArchive prevArchive;
     if (!lzma::ParseSimpleArchive(prevData.data, prevDataLen, &prevArchive))
         prevArchive.filesCount = 0;
@@ -190,11 +190,11 @@ bool CreateArchive(const WCHAR* archivePath, WStrVec& files, size_t skipFiles = 
 
 int mainVerify(const WCHAR* archivePath) {
     int errorStep = 1;
-    OwnedData fileData(file::ReadFile(archivePath));
+    AutoFree fileData(file::ReadFile(archivePath));
     FailIf(!fileData.data, "Failed to read \"%S\"", archivePath);
 
     lzma::SimpleArchive lzsa;
-    bool ok = lzma::ParseSimpleArchive(fileData.data, fileData.size, &lzsa);
+    bool ok = lzma::ParseSimpleArchive(fileData.data, fileData.size(), &lzsa);
     FailIf(!ok, "\"%S\" is no valid LzSA file", archivePath);
 
     for (int i = 0; i < lzsa.filesCount; i++) {

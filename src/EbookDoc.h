@@ -51,7 +51,7 @@ class EpubDoc {
     std::string_view GetHtmlData() const;
 
     ImageData* GetImageData(const char* id, const char* pagePath);
-    OwnedData GetFileData(const char* relPath, const char* pagePath);
+    std::string_view GetFileData(const char* relPath, const char* pagePath);
 
     WCHAR* GetProperty(DocumentProperty prop) const;
     const WCHAR* GetFileName() const;

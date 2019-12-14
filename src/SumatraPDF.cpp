@@ -198,7 +198,7 @@ void InitializePolicies(bool restrict) {
         return;
     }
 
-    OwnedData restrictData(file::ReadFile(restrictPath));
+    AutoFree restrictData(file::ReadFile(restrictPath));
     SquareTree sqt(restrictData.data);
     SquareTreeNode* polsec = sqt.root ? sqt.root->GetChild("Policies") : nullptr;
     // if the restriction file is broken, err on the side of full restriction

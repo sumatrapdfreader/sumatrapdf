@@ -173,26 +173,30 @@ void EpubFormatter::HandleTagLink(HtmlToken* t) {
 
     AutoFree src(str::DupN(attr->val, attr->valLen));
     url::DecodeInPlace(src);
-    OwnedData data(epubDoc->GetFileData(src, pagePath));
+    AutoFree data(epubDoc->GetFileData(src, pagePath));
     if (data.data) {
-        ParseStyleSheet(data.data, data.size);
+        ParseStyleSheet(data.data, data.size());
     }
 }
 
 void EpubFormatter::HandleTagSvgImage(HtmlToken* t) {
     CrashIf(!epubDoc);
-    if (t->IsEndTag())
+    if (t->IsEndTag()) {
         return;
-    if (!tagNesting.Contains(Tag_Svg) && Tag_Svg_Image != t->tag)
+    }
+    if (!tagNesting.Contains(Tag_Svg) && Tag_Svg_Image != t->tag) {
         return;
+    }
     AttrInfo* attr = t->GetAttrByNameNS("href", "http://www.w3.org/1999/xlink");
-    if (!attr)
+    if (!attr) {
         return;
+    }
     AutoFree src(str::DupN(attr->val, attr->valLen));
     url::DecodeInPlace(src);
     ImageData* img = epubDoc->GetImageData(src, pagePath);
-    if (img)
+    if (img) {
         EmitImage(img);
+    }
 }
 
 void EpubFormatter::HandleHtmlTag(HtmlToken* t) {

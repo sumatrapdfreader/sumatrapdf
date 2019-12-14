@@ -71,7 +71,7 @@ static std::string_view Escape(WCHAR* string) {
 
 void DumpProperties(EngineBase* engine, bool fullDump) {
     Out("\t<Properties\n");
-    OwnedData str = Escape(str::Dup(engine->FileName()));
+    AutoFree str = Escape(str::Dup(engine->FileName()));
     Out("\t\tFilePath=\"%s\"\n", str.Get());
     str = Escape(engine->GetProperty(DocumentProperty::Title));
     if (str.Get()) {
@@ -146,7 +146,7 @@ void DumpProperties(EngineBase* engine, bool fullDump) {
 // caller must free() the result
 char* DestRectToStr(EngineBase* engine, PageDestination* dest) {
     if (AutoFreeWstr(dest->GetDestName())) {
-        OwnedData name(Escape(dest->GetDestName()));
+        AutoFree name(Escape(dest->GetDestName()));
         return str::Format("Name=\"%s\"", name.Get());
     }
     // as handled by LinkHandler::ScrollTo in WindowInfo.cpp
@@ -171,7 +171,7 @@ char* DestRectToStr(EngineBase* engine, PageDestination* dest) {
 
 void DumpTocItem(EngineBase* engine, DocTocItem* item, int level, int& idCounter) {
     for (; item; item = item->next) {
-        OwnedData title(Escape(str::Dup(item->title)));
+        AutoFree title(Escape(str::Dup(item->title)));
         for (int i = 0; i < level; i++)
             Out("\t");
         Out("<Item Title=\"%s\"", title.Get());
@@ -181,7 +181,7 @@ void DumpTocItem(EngineBase* engine, DocTocItem* item, int level, int& idCounter
             Out(" Id=\"%d\"", item->id);
         if (item->GetLink()) {
             PageDestination* dest = item->GetLink();
-            OwnedData target(Escape(dest->GetDestValue()));
+            AutoFree target(Escape(dest->GetDestValue()));
             if (target.Get())
                 Out(" Target=\"%s\"", target.Get());
             if (item->pageNo != dest->GetDestPageNo())
@@ -270,7 +270,7 @@ void DumpPageContent(EngineBase* engine, int pageNo, bool fullDump) {
 
     Out("\t<Page Number=\"%d\"\n", pageNo);
     if (engine->HasPageLabels()) {
-        OwnedData label(Escape(engine->GetPageLabel(pageNo)));
+        AutoFree label(Escape(engine->GetPageLabel(pageNo)));
         Out("\t\tLabel=\"%s\"\n", label.Get());
     }
     RectI bbox = engine->PageMediabox(pageNo).Round();
@@ -283,7 +283,7 @@ void DumpPageContent(EngineBase* engine, int pageNo, bool fullDump) {
     Out("\t>\n");
 
     if (fullDump) {
-        OwnedData text(Escape(engine->ExtractPageText(pageNo)));
+        AutoFree text(Escape(engine->ExtractPageText(pageNo)));
         if (text.Get()) {
             Out("\t\t<TextContent>\n%s\t\t</TextContent>\n", text.Get());
         }
@@ -300,7 +300,7 @@ void DumpPageContent(EngineBase* engine, int pageNo, bool fullDump) {
             if (dest) {
                 if (dest->GetDestType() != PageDestType::None)
                     Out("\t\t\t\tLinkType=\"%s\"\n", PageDestToStr(dest->GetDestType()));
-                OwnedData value(Escape(dest->GetDestValue()));
+                AutoFree value(Escape(dest->GetDestValue()));
                 if (value.Get())
                     Out("\t\t\t\tLinkTarget=\"%s\"\n", value.Get());
                 if (dest->GetDestPageNo())
@@ -309,7 +309,7 @@ void DumpPageContent(EngineBase* engine, int pageNo, bool fullDump) {
                 if (rectStr)
                     Out("\t\t\t\tLinked%s\n", rectStr.Get());
             }
-            OwnedData name(Escape(els->at(i)->GetValue()));
+            AutoFree name(Escape(els->at(i)->GetValue()));
             if (name.Get())
                 Out("\t\t\t\tLabel=\"%s\"\n", name.Get());
             Out("\t\t\t/>\n");

@@ -109,7 +109,7 @@ static Vec<PageAnnotation>* ParseFileModifications(const char* data) {
 
 Vec<PageAnnotation>* LoadFileModifications(const WCHAR* filePath) {
     AutoFreeWstr modificationsPath(str::Join(filePath, SMX_FILE_EXT));
-    OwnedData data(file::ReadFile(modificationsPath));
+    AutoFree data(file::ReadFile(modificationsPath));
     return ParseFileModifications(data.data);
 }
 
@@ -122,7 +122,7 @@ bool SaveFileModifications(const WCHAR* filePath, Vec<PageAnnotation>* list) {
     str::Str data;
     size_t offset = 0;
 
-    OwnedData prevData(file::ReadFile(modificationsPath));
+    AutoFree prevData(file::ReadFile(modificationsPath));
     Vec<PageAnnotation>* prevList = ParseFileModifications(prevData.data);
     bool isUpdate = prevList != nullptr;
     if (isUpdate) {

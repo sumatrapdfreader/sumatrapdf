@@ -188,7 +188,7 @@ static char* Advance0Line(char* line, char* end) {
 
 // see http://itexmac.sourceforge.net/pdfsync.html for the specification
 int Pdfsync::RebuildIndex() {
-    OwnedData data(file::ReadFile(syncfilepath));
+    AutoFree data(file::ReadFile(syncfilepath));
     if (!data.data) {
         return PDFSYNCERR_SYNCFILE_CANNOT_BE_OPENED;
     }
@@ -197,7 +197,7 @@ int Pdfsync::RebuildIndex() {
 
     // parse preamble (jobname and version marker)
     char* line = data.data;
-    char* dataEnd = data.data + data.size;
+    char* dataEnd = data.data + data.size();
 
     // replace star by spaces (TeX uses stars instead of spaces in filenames)
     str::TransChars(line, "*/", " \\");

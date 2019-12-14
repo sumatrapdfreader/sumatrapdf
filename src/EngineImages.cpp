@@ -811,18 +811,18 @@ bool ImageDirEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAn
 }
 
 Bitmap* ImageDirEngineImpl::LoadBitmap(int pageNo, bool& deleteAfterUse) {
-    OwnedData bmpData(file::ReadFile(pageFileNames.at(pageNo - 1)));
+    AutoFree bmpData(file::ReadFile(pageFileNames.at(pageNo - 1)));
     if (bmpData.data) {
         deleteAfterUse = true;
-        return BitmapFromData(bmpData.data, bmpData.size);
+        return BitmapFromData(bmpData.data, bmpData.size());
     }
     return nullptr;
 }
 
 RectD ImageDirEngineImpl::LoadMediabox(int pageNo) {
-    OwnedData bmpData(file::ReadFile(pageFileNames.at(pageNo - 1)));
+    AutoFree bmpData(file::ReadFile(pageFileNames.at(pageNo - 1)));
     if (bmpData.data) {
-        Size size = BitmapSizeFromData(bmpData.data, bmpData.size);
+        Size size = BitmapSizeFromData(bmpData.data, bmpData.size());
         return RectD(0, 0, size.Width, size.Height);
     }
     return RectD();
@@ -833,8 +833,8 @@ bool ImageDirEngineImpl::SaveFileAsPDF(const char* pdfFileName, bool includeUser
     bool ok = true;
     PdfCreator* c = new PdfCreator();
     for (int i = 1; i <= PageCount() && ok; i++) {
-        OwnedData data(file::ReadFile(pageFileNames.at(i - 1)));
-        ok = data.data && c->AddImagePage(data.data, data.size, GetFileDPI());
+        AutoFree data(file::ReadFile(pageFileNames.at(i - 1)));
+        ok = data.data && c->AddImagePage(data.data, data.size(), GetFileDPI());
     }
     ok = ok && c->SaveToFile(pdfFileName);
     delete c;
@@ -906,7 +906,7 @@ class CbxEngineImpl : public ImagesEngine, public json::ValueVisitor {
     bool LoadFromStream(IStream* stream);
     bool FinishLoading();
 
-    OwnedData GetImageData(int pageNo);
+    std::string_view GetImageData(int pageNo);
     void ParseComicInfoXml(const char* xmlData);
 
     // access to cbxFile must be protected after initialization (with cacheAccess)
@@ -984,7 +984,7 @@ bool CbxEngineImpl::FinishLoading() {
         }
     }
 
-    OwnedData metadata(cbxFile->GetFileDataByName("ComicInfo.xml"));
+    AutoFree metadata(cbxFile->GetFileDataByName("ComicInfo.xml"));
     if (metadata.data) {
         ParseComicInfoXml(metadata.data);
     }
@@ -1005,7 +1005,7 @@ bool CbxEngineImpl::FinishLoading() {
     return true;
 }
 
-OwnedData CbxEngineImpl::GetImageData(int pageNo) {
+std::string_view CbxEngineImpl::GetImageData(int pageNo) {
     CrashIf((pageNo < 1) || (pageNo > PageCount()));
     ScopedCritSec scope(&cacheAccess);
     size_t fileId = files[pageNo - 1]->fileId;
@@ -1098,8 +1098,8 @@ bool CbxEngineImpl::SaveFileAsPDF(const char* pdfFileName, bool includeUserAnnot
     bool ok = true;
     PdfCreator* c = new PdfCreator();
     for (int i = 1; i <= PageCount() && ok; i++) {
-        OwnedData data(GetImageData(i));
-        ok = data.data && c->AddImagePage(data.data, data.size, GetFileDPI());
+        AutoFree data(GetImageData(i));
+        ok = data.data && c->AddImagePage(data.data, data.size(), GetFileDPI());
     }
     if (ok) {
         c->CopyProperties(this);
@@ -1146,10 +1146,10 @@ const WCHAR* CbxEngineImpl::GetDefaultFileExt() const {
 }
 
 Bitmap* CbxEngineImpl::LoadBitmap(int pageNo, bool& deleteAfterUse) {
-    OwnedData bmpData(GetImageData(pageNo));
+    AutoFree bmpData(GetImageData(pageNo));
     if (bmpData.data) {
         deleteAfterUse = true;
-        return BitmapFromData(bmpData.data, bmpData.size);
+        return BitmapFromData(bmpData.data, bmpData.size());
     }
     return nullptr;
 }
@@ -1163,9 +1163,9 @@ RectD CbxEngineImpl::LoadMediabox(int pageNo) {
         return mbox;
     }
 
-    OwnedData bmpData(GetImageData(pageNo));
+    AutoFree bmpData(GetImageData(pageNo));
     if (bmpData.data) {
-        Size size = BitmapSizeFromData(bmpData.data, bmpData.size);
+        Size size = BitmapSizeFromData(bmpData.data, bmpData.size());
         return RectD(0, 0, size.Width, size.Height);
     }
     return RectD();
