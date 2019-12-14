@@ -12,7 +12,7 @@ class ThreadBase {
 
   protected:
     // for debugging
-    AutoFreeStr threadName;
+    AutoFree threadName;
 
     virtual ~ThreadBase();
 

@@ -171,7 +171,7 @@ void DumpTocItem(EngineBase* engine, DocTocItem* item, int level, int& idCounter
                 Out(" Target=\"%s\"", target.Get());
             if (item->pageNo != dest->GetDestPageNo())
                 Out(" TargetPage=\"%d\"", dest->GetDestPageNo());
-            AutoFreeStr rectStr(DestRectToStr(engine, dest));
+            AutoFree rectStr(DestRectToStr(engine, dest));
             if (rectStr)
                 Out(" Target%s", rectStr.Get());
         }
@@ -290,7 +290,7 @@ void DumpPageContent(EngineBase* engine, int pageNo, bool fullDump) {
                     Out("\t\t\t\tLinkTarget=\"%s\"\n", value.Get());
                 if (dest->GetDestPageNo())
                     Out("\t\t\t\tLinkedPage=\"%d\"\n", dest->GetDestPageNo());
-                AutoFreeStr rectStr(DestRectToStr(engine, dest));
+                AutoFree rectStr(DestRectToStr(engine, dest));
                 if (rectStr)
                     Out("\t\t\t\tLinked%s\n", rectStr.Get());
             }
@@ -325,7 +325,7 @@ void DumpThumbnail(EngineBase* engine) {
 
     size_t len;
     ScopedMem<unsigned char> data(tga::SerializeBitmap(bmp->GetBitmap(), &len));
-    AutoFreeStr hexData(data ? str::MemToHex(data, len) : nullptr);
+    AutoFree hexData(data ? str::MemToHex(data, len) : nullptr);
     if (hexData)
         Out("\t<Thumbnail>\n\t\t%s\n\t</Thumbnail>\n", hexData.Get());
     else

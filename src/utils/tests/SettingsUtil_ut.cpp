@@ -171,9 +171,9 @@ Key = Value";
     utassert(2 == data->sutStructItems->at(1)->nested.colorArray->size());
     utassert(0x12785634 == data->sutStructItems->at(1)->nested.colorArray->at(0));
     utassert(!data->internalString);
-    utassert(!str::Eq(serialized, AutoFreeStr(SerializeStruct(&gSutStructInfo, data))));
+    utassert(!str::Eq(serialized, AutoFree(SerializeStruct(&gSutStructInfo, data))));
     data->sutStructItems->at(0)->nested.point.x++;
-    utassert(!str::Eq(serialized, AutoFreeStr(SerializeStruct(&gSutStructInfo, data, unknownOnly))));
+    utassert(!str::Eq(serialized, AutoFree(SerializeStruct(&gSutStructInfo, data, unknownOnly))));
     FreeStruct(&gSutStructInfo, data);
 
     data = (SutStruct*)DeserializeStruct(&gSutStructInfo, nullptr);

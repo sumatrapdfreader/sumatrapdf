@@ -42,7 +42,7 @@ void log(const char* s) {
 void logf(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    AutoFreeStr s(str::FmtV(fmt, args));
+    AutoFree s(str::FmtV(fmt, args));
     log(s.as_view());
     va_end(args);
 }
@@ -75,7 +75,7 @@ void logf(const WCHAR* fmt, ...) {
 void dbglogf(const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    AutoFreeStr s(str::FmtV(fmt, args));
+    AutoFree s(str::FmtV(fmt, args));
     OutputDebugStringA(s.Get());
     va_end(args);
 }

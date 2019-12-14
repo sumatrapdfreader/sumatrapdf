@@ -31,7 +31,7 @@ class SquareTreeNode {
 };
 
 class SquareTree {
-    AutoFreeStr dataUtf8;
+    AutoFree dataUtf8;
 
   public:
     explicit SquareTree(const char* data);

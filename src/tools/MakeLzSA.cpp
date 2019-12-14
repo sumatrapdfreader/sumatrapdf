@@ -109,7 +109,7 @@ static bool AppendEntry(str::Str& data, str::Str& content, const WCHAR* filePath
         goto ReusePrevious;
 
     size_t compressedSize = fileData.size + 1;
-    AutoFreeStr compressed((char*)malloc(compressedSize));
+    AutoFree compressed((char*)malloc(compressedSize));
     if (!compressed)
         return false;
     if (!Compress(fileData.data, fileData.size, compressed, &compressedSize))
@@ -147,7 +147,7 @@ bool CreateArchive(const WCHAR* archivePath, WStrVec& files, size_t skipFiles = 
     for (size_t i = skipFiles; i < files.size(); i++) {
         AutoFreeW filePath(str::Dup(files.at(i)));
         WCHAR* sep = str::FindCharLast(filePath, ':');
-        AutoFreeStr utf8Name;
+        AutoFree utf8Name;
         if (sep) {
             auto tmp = str::conv::ToUtf8(sep + 1);
             utf8Name.Set(tmp.StealData());
@@ -198,7 +198,7 @@ int mainVerify(const WCHAR* archivePath) {
     FailIf(!ok, "\"%S\" is no valid LzSA file", archivePath);
 
     for (int i = 0; i < lzsa.filesCount; i++) {
-        AutoFreeStr data(lzma::GetFileDataByIdx(&lzsa, i, nullptr));
+        AutoFree data(lzma::GetFileDataByIdx(&lzsa, i, nullptr));
         FailIf(!data, "Failed to extract data for \"%s\"", lzsa.files[i].name);
     }
 
