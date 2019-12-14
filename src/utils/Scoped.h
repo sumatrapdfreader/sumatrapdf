@@ -78,8 +78,8 @@ class AutoFreeStrBasic {
         free(this->ptr);
     }
     void Set(T* newPtr) {
-        free(this->ptr);
-        this->ptr = newPtr;
+        free(ptr);
+        ptr = newPtr;
     }
     void Set(const T* newPtr) {
         free(this->ptr);
@@ -190,6 +190,19 @@ struct AutoFree {
     AutoFree(std::string_view s) {
         data = (char*)s.data();
         len = s.size();
+    }
+
+    void Set(const char* newPtr) {
+        free(data);
+        data = (char*)newPtr;
+    }
+
+    void SetCopy(const char* newPtr) {
+        free(data);
+        data = nullptr;
+        if (newPtr) {
+            data = str::Dup(newPtr);
+        }
     }
 
     ~AutoFree() {

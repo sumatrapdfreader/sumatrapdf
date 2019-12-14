@@ -5,17 +5,17 @@ class ChmDoc {
     struct chmFile* chmHandle;
 
     // Data parsed from /#WINDOWS, /#STRINGS, /#SYSTEM files inside CHM file
-    AutoFreeStr title;
-    AutoFreeStr tocPath;
-    AutoFreeStr indexPath;
-    AutoFreeStr homePath;
-    AutoFreeStr creator;
+    AutoFree title;
+    AutoFree tocPath;
+    AutoFree indexPath;
+    AutoFree homePath;
+    AutoFree creator;
     UINT codepage;
 
     void ParseWindowsData();
     bool ParseSystemData();
     bool ParseTocOrIndex(EbookTocVisitor* visitor, const char* path, bool isIndex);
-    void FixPathCodepage(AutoFreeStr& path, UINT& fileCP);
+    void FixPathCodepage(AutoFree& path, UINT& fileCP);
 
     bool Load(const WCHAR* fileName);
 

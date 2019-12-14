@@ -32,7 +32,7 @@ static UINT GetCodepageFromPI(const char* xmlPI) {
     if (!enc)
         return CP_ACP;
 
-    AutoFreeStr encoding(str::DupN(enc->val, enc->valLen));
+    AutoFree encoding(str::DupN(enc->val, enc->valLen));
     struct {
         const char* namePart;
         UINT codePage;
@@ -71,7 +71,7 @@ static bool IsValidUtf8(const char* string) {
 }
 
 static char* DecodeTextToUtf8(const char* s, bool isXML = false) {
-    AutoFreeStr tmp;
+    AutoFree tmp;
     if (str::StartsWith(s, UTF16BE_BOM)) {
         size_t byteCount = (str::Len((WCHAR*)s) + 1) * sizeof(WCHAR);
         tmp.Set((char*)memdup(s, byteCount));
@@ -112,8 +112,8 @@ char* NormalizeURL(const char* url, const char* base) {
         baseEnd++;
     else
         baseEnd = base;
-    AutoFreeStr basePath(str::DupN(base, baseEnd - base));
-    AutoFreeStr norm(str::Join(basePath, url));
+    AutoFree basePath(str::DupN(base, baseEnd - base));
+    AutoFree norm(str::Join(basePath, url));
 
     char* dst = norm;
     for (char* src = norm; *src; src++) {
@@ -471,7 +471,7 @@ ImageData* EpubDoc::GetImageData(const char* fileName, const char* pagePath) {
         return nullptr;
     }
 
-    AutoFreeStr url(NormalizeURL(fileName, pagePath));
+    AutoFree url(NormalizeURL(fileName, pagePath));
     // some EPUB producers use wrong path separators
     if (str::FindChar(url, '\\'))
         str::TransChars(url, "\\", "/");
@@ -513,7 +513,7 @@ OwnedData EpubDoc::GetFileData(const char* relPath, const char* pagePath) {
 
     ScopedCritSec scope(&zipAccess);
 
-    AutoFreeStr url(NormalizeURL(relPath, pagePath));
+    AutoFree url(NormalizeURL(relPath, pagePath));
     return zip->GetFileDataByName(url);
 }
 
@@ -555,7 +555,7 @@ bool EpubDoc::ParseNavToc(const char* data, size_t dataLen, const char* pagePath
             level--;
         if (tok->IsStartTag() && (Tag_A == tok->tag || Tag_Span == tok->tag)) {
             HtmlTag itemTag = tok->tag;
-            AutoFreeStr text, href;
+            AutoFree text, href;
             if (Tag_A == tok->tag) {
                 AttrInfo* attrInfo = tok->GetAttrByName("href");
                 if (attrInfo)
@@ -563,7 +563,7 @@ bool EpubDoc::ParseNavToc(const char* data, size_t dataLen, const char* pagePath
             }
             while ((tok = parser.Next()) != nullptr && !tok->IsError() && (!tok->IsEndTag() || itemTag != tok->tag)) {
                 if (tok->IsText()) {
-                    AutoFreeStr part(str::DupN(tok->s, tok->sLen));
+                    AutoFree part(str::DupN(tok->s, tok->sLen));
                     if (!text)
                         text.Set(part.StealData());
                     else
@@ -619,7 +619,7 @@ bool EpubDoc::ParseNcxToc(const char* data, size_t dataLen, const char* pagePath
         } else if (tok->IsTag() && !tok->IsEndTag() && tok->NameIsNS("content", EPUB_NCX_NS)) {
             AttrInfo* attrInfo = tok->GetAttrByName("src");
             if (attrInfo) {
-                AutoFreeStr src(str::DupN(attrInfo->val, attrInfo->valLen));
+                AutoFree src(str::DupN(attrInfo->val, attrInfo->valLen));
                 src.Set(NormalizeURL(src, pagePath));
                 itemSrc.Set(str::conv::FromHtmlUtf8(src, str::Len(src)));
             }
@@ -633,7 +633,7 @@ bool EpubDoc::ParseToc(EbookTocVisitor* visitor) {
     if (!tocPath)
         return false;
     size_t tocDataLen;
-    AutoFreeStr tocData;
+    AutoFree tocData;
     {
         ScopedCritSec scope(&zipAccess);
         auto res = zip->GetFileDataByName(tocPath);
@@ -828,11 +828,11 @@ bool Fb2Doc::Load() {
             if (tok->IsText())
                 props.Set(DocumentProperty::Title, ResolveHtmlEntities(tok->s, tok->sLen));
         } else if ((inTitleInfo || inDocInfo) && tok->IsStartTag() && tok->NameIsNS("author", FB2_MAIN_NS)) {
-            AutoFreeStr docAuthor;
+            AutoFree docAuthor;
             while ((tok = parser.Next()) != nullptr && !tok->IsError() &&
                    !(tok->IsEndTag() && tok->NameIsNS("author", FB2_MAIN_NS))) {
                 if (tok->IsText()) {
-                    AutoFreeStr author(ResolveHtmlEntities(tok->s, tok->sLen));
+                    AutoFree author(ResolveHtmlEntities(tok->s, tok->sLen));
                     if (docAuthor)
                         docAuthor.Set(str::Join(docAuthor, " ", author));
                     else
@@ -880,7 +880,7 @@ bool Fb2Doc::Load() {
 }
 
 void Fb2Doc::ExtractImage(HtmlPullParser* parser, HtmlToken* tok) {
-    AutoFreeStr id;
+    AutoFree id;
     AttrInfo* attrInfo = tok->GetAttrByNameNS("id", FB2_MAIN_NS);
     if (attrInfo) {
         id.Set(str::DupN(attrInfo->val, attrInfo->valLen));
@@ -1227,15 +1227,15 @@ bool HtmlDoc::Load() {
     return true;
 }
 
-std::string_view HtmlDoc::GetHtmlData() const {
-    return htmlData.AsView();
+std::string_view HtmlDoc::GetHtmlData() {
+    return htmlData.as_view();
 }
 
 ImageData* HtmlDoc::GetImageData(const char* fileName) {
     // TODO: this isn't thread-safe (might leak image data when called concurrently),
     //       so add a critical section once it's used for EbookController
 
-    AutoFreeStr url(NormalizeURL(fileName, pagePath));
+    AutoFree url(NormalizeURL(fileName, pagePath));
     for (size_t i = 0; i < images.size(); i++) {
         if (str::Eq(images.at(i).fileName, url))
             return &images.at(i).base;
@@ -1251,7 +1251,7 @@ ImageData* HtmlDoc::GetImageData(const char* fileName) {
 }
 
 char* HtmlDoc::GetFileData(const char* relPath, size_t* lenOut) {
-    AutoFreeStr url(NormalizeURL(relPath, pagePath));
+    AutoFree url(NormalizeURL(relPath, pagePath));
     return LoadURL(url, lenOut);
 }
 
@@ -1372,7 +1372,7 @@ inline bool IsEmailDomainChar(char c) {
 }
 
 static const char* TextFindEmailEnd(str::Str& htmlData, const char* curr) {
-    AutoFreeStr beforeAt;
+    AutoFree beforeAt;
     const char* end = curr;
     if ('@' == *curr) {
         if (htmlData.size() == 0 || !IsEmailUsernameChar(htmlData.Last()))
