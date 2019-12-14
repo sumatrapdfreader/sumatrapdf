@@ -82,13 +82,16 @@ unsigned char* ChmDoc::GetData(const char* fileNameIn, size_t* lenOut) {
 
 char* ChmDoc::ToUtf8(const u8* text, UINT overrideCP) {
     const char* s = (char*)text;
-    if (str::StartsWith(s, UTF8_BOM))
+    if (str::StartsWith(s, UTF8_BOM)) {
         return str::Dup(s + 3);
-    if (overrideCP)
-        return str::ToMultiByte(s, overrideCP, CP_UTF8).StealData();
-    if (CP_UTF8 == codepage)
+    }
+    if (overrideCP) {
+        return (char*)str::ToMultiByte(s, overrideCP, CP_UTF8).data();
+    }
+    if (CP_UTF8 == codepage) {
         return str::Dup(s);
-    return str::ToMultiByte(s, codepage, CP_UTF8).StealData();
+    }
+    return (char*)str::ToMultiByte(s, codepage, CP_UTF8).data();
 }
 
 WCHAR* ChmDoc::ToStr(const char* text) {

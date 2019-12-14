@@ -1738,28 +1738,34 @@ WCHAR* PdfEngineImpl::ExtractFontList() {
         CrashIf(!name || !type || !encoding);
 
         str::Str info;
-        if (name[0] < 0 && MultiByteToWideChar(936, MB_ERR_INVALID_CHARS, name, -1, nullptr, 0))
-            info.Append(str::ToMultiByte(name, 936, CP_UTF8).StealData());
-        else
+        if (name[0] < 0 && MultiByteToWideChar(936, MB_ERR_INVALID_CHARS, name, -1, nullptr, 0)) {
+            info.Append(str::ToMultiByte(name, 936, CP_UTF8).data());
+        } else {
             info.Append(name);
+        }
         if (!str::IsEmpty(encoding) || !str::IsEmpty(type) || embedded) {
             info.Append(" (");
-            if (!str::IsEmpty(type))
+            if (!str::IsEmpty(type)) {
                 info.AppendFmt("%s; ", type);
-            if (!str::IsEmpty(encoding))
+            }
+            if (!str::IsEmpty(encoding)) {
                 info.AppendFmt("%s; ", encoding);
-            if (embedded)
+            }
+            if (embedded) {
                 info.Append("embedded; ");
+            }
             info.RemoveAt(info.size() - 2, 2);
             info.Append(")");
         }
 
         AutoFreeWstr fontInfo(str::conv::FromUtf8(info.LendData()));
-        if (fontInfo && !fonts.Contains(fontInfo))
+        if (fontInfo && !fonts.Contains(fontInfo)) {
             fonts.Append(fontInfo.StealData());
+        }
     }
-    if (fonts.size() == 0)
+    if (fonts.size() == 0) {
         return nullptr;
+    }
 
     fonts.SortNatural();
     return fonts.Join(L"\n");

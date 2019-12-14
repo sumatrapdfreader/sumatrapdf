@@ -92,7 +92,7 @@ static char* DecodeTextToUtf8(const char* s, bool isXML = false) {
     if (CP_ACP == codePage)
         codePage = GuessTextCodepage(s, str::Len(s), CP_ACP);
     auto tmp2 = str::ToMultiByte(s, codePage, CP_UTF8);
-    return tmp2.StealData();
+    return (char*)tmp2.data();
 }
 
 char* NormalizeURL(const char* url, const char* base) {

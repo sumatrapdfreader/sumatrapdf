@@ -525,11 +525,11 @@ void StrTest() {
     }
 
     {
-        auto tmp = str::ToMultiByte("abc", 9876, 123456);
-        utassert(!tmp.Get());
+        AutoFree tmp = str::ToMultiByte("abc", 9876, 123456);
+        utassert(!tmp.get());
     }
     {
-        auto tmp = str::ToMultiByte(L"abc", 98765);
+        AutoFree tmp = str::WstrToCodePage(L"abc", 98765);
         utassert(!tmp.Get());
     }
     {

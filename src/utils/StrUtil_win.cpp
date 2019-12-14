@@ -202,75 +202,6 @@ WCHAR* ToLowerInPlace(WCHAR* s) {
     return res;
 }
 
-std::string_view ToMultiByte2(const WCHAR* txt, UINT codePage, int cchTxtLen) {
-    CrashIf(!txt);
-    if (!txt) {
-        return {};
-    }
-
-    int bufSize = WideCharToMultiByte(codePage, 0, txt, cchTxtLen, nullptr, 0, nullptr, nullptr);
-    if (0 == bufSize) {
-        return {};
-    }
-    char* res = AllocArray<char>(size_t(bufSize) + 1); // +1 for terminating 0
-    if (!res) {
-        return {};
-    }
-    WideCharToMultiByte(codePage, 0, txt, cchTxtLen, res, bufSize, nullptr, nullptr);
-    size_t resLen = str::Len(res);
-    return {res, resLen};
-}
-
-OwnedData ToMultiByte(const WCHAR* txt, UINT codePage, int cchTxtLen) {
-    CrashIf(!txt);
-    if (!txt) {
-        return {};
-    }
-    auto res = ToMultiByte2(txt, codePage, cchTxtLen);
-    return OwnedData(res.data(), res.size());
-}
-
-OwnedData ToMultiByte(const char* src, UINT codePageSrc, UINT codePageDest) {
-    CrashIf(!src);
-    if (!src) {
-        return {};
-    }
-
-    if (codePageSrc == codePageDest) {
-        return OwnedData::MakeFromStr(src);
-    }
-
-    // 20127 is US-ASCII, which by definition is valid CP_UTF8
-    // https://msdn.microsoft.com/en-us/library/windows/desktop/dd317756(v=vs.85).aspx
-    // don't know what is CP_* name for it (if it exists)
-    if ((codePageSrc == 20127) && (codePageDest == CP_UTF8)) {
-        return OwnedData::MakeFromStr(src);
-    }
-
-    AutoFreeWstr tmp(ToWideChar(src, codePageSrc));
-    if (!tmp) {
-        return {};
-    }
-
-    return ToMultiByte(tmp.Get(), codePageDest);
-}
-
-/* Caller needs to free() the result */
-WCHAR* ToWideChar(const char* src, UINT codePage, int cbSrcLen) {
-    CrashIf(!src);
-    if (!src)
-        return nullptr;
-
-    int requiredBufSize = MultiByteToWideChar(codePage, 0, src, cbSrcLen, nullptr, 0);
-    if (0 == requiredBufSize)
-        return nullptr;
-    WCHAR* res = AllocArray<WCHAR>(requiredBufSize + 1);
-    if (!res)
-        return nullptr;
-    MultiByteToWideChar(codePage, 0, src, cbSrcLen, res, requiredBufSize);
-    return res;
-}
-
 bool BufFmtV(WCHAR* buf, size_t bufCchSize, const WCHAR* fmt, va_list args) {
     int count = _vsnwprintf_s(buf, bufCchSize, _TRUNCATE, fmt, args);
     buf[bufCchSize - 1] = 0;
@@ -676,6 +607,67 @@ size_t WcharToUtf8Buf(const WCHAR* s, char* bufOut, size_t cbBufOutSize) {
     return res;
 }
 
+std::string_view WstrToCodePage(const WCHAR* txt, UINT codePage, int cchTxtLen) {
+    CrashIf(!txt);
+    if (!txt) {
+        return {};
+    }
+
+    int bufSize = WideCharToMultiByte(codePage, 0, txt, cchTxtLen, nullptr, 0, nullptr, nullptr);
+    if (0 == bufSize) {
+        return {};
+    }
+    char* res = AllocArray<char>(size_t(bufSize) + 1); // +1 for terminating 0
+    if (!res) {
+        return {};
+    }
+    WideCharToMultiByte(codePage, 0, txt, cchTxtLen, res, bufSize, nullptr, nullptr);
+    size_t resLen = str::Len(res);
+    return {res, resLen};
+}
+
+/* Caller needs to free() the result */
+WCHAR* ToWideChar(const char* src, UINT codePage, int cbSrcLen) {
+    CrashIf(!src);
+    if (!src)
+        return nullptr;
+
+    int requiredBufSize = MultiByteToWideChar(codePage, 0, src, cbSrcLen, nullptr, 0);
+    if (0 == requiredBufSize)
+        return nullptr;
+    WCHAR* res = AllocArray<WCHAR>(requiredBufSize + 1);
+    if (!res)
+        return nullptr;
+    MultiByteToWideChar(codePage, 0, src, cbSrcLen, res, requiredBufSize);
+    return res;
+}
+
+std::string_view ToMultiByte(const char* src, UINT codePageSrc, UINT codePageDest) {
+    CrashIf(!src);
+    if (!src) {
+        return {};
+    }
+
+    if (codePageSrc == codePageDest) {
+        return std::string_view(src);
+    }
+
+    // 20127 is US-ASCII, which by definition is valid CP_UTF8
+    // https://msdn.microsoft.com/en-us/library/windows/desktop/dd317756(v=vs.85).aspx
+    // don't know what is CP_* name for it (if it exists)
+    if ((codePageSrc == 20127) && (codePageDest == CP_UTF8)) {
+        return std::string_view(src);
+    }
+
+    AutoFreeWstr tmp(ToWideChar(src, codePageSrc));
+    if (!tmp) {
+        return {};
+    }
+
+    auto res = WstrToCodePage(tmp.Get(), codePageDest);
+    return {res.data(), res.size()};
+}
+
 namespace conv {
 
 // tries to convert a string in unknown encoding to utf8, as best
@@ -722,10 +714,6 @@ WCHAR* FromCodePage(const char* src, UINT cp) {
     return ToWideChar(src, cp);
 }
 
-std::string_view WstrToCodePage(const WCHAR* src, UINT cp) {
-    return ToMultiByte2(src, cp);
-}
-
 WCHAR* FromUtf8(const char* src) {
     return ToWideChar(src, CP_UTF8);
 }
@@ -747,11 +735,11 @@ WCHAR* Utf8ToWchar(std::string_view sv) {
 }
 
 std::string_view WstrToUtf8(const WCHAR* src, size_t cchSrcLen) {
-    return ToMultiByte2(src, CP_UTF8, (int)cchSrcLen);
+    return str::WstrToCodePage(src, CP_UTF8, (int)cchSrcLen);
 }
 
 std::string_view WstrToUtf8(const WCHAR* src) {
-    return ToMultiByte2(src, CP_UTF8);
+    return str::WstrToCodePage(src, CP_UTF8);
 }
 
 WCHAR* FromAnsi(const char* src, size_t cbSrcLen) {
@@ -759,7 +747,12 @@ WCHAR* FromAnsi(const char* src, size_t cbSrcLen) {
 }
 
 std::string_view WstrToAnsi(const WCHAR* src) {
-    return ToMultiByte2(src, CP_ACP);
+    return str::WstrToCodePage(src, CP_ACP);
+}
+
+// TODO: redundant with str::conv::
+std::string_view WstrToCodePage(const WCHAR* src, UINT cp) {
+    return str::WstrToCodePage(src, cp);
 }
 
 } // namespace conv

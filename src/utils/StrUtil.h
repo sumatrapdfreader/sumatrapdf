@@ -67,9 +67,8 @@ WCHAR* DupN(const WCHAR* s, size_t lenCch);
 void Free(const WCHAR* s);
 WCHAR* ToLowerInPlace(WCHAR* s);
 
-std::string_view ToMultiByte2(const WCHAR* txt, UINT codePage, int cchTxtLen = -1);
-OwnedData ToMultiByte(const WCHAR* txt, UINT CodePage, int cchTxtLen = -1);
-OwnedData ToMultiByte(const char* src, UINT CodePageSrc, UINT CodePageDest);
+std::string_view WstrToCodePage(const WCHAR* txt, UINT codePage, int cchTxtLen = -1);
+std::string_view ToMultiByte(const char* src, UINT CodePageSrc, UINT CodePageDest);
 WCHAR* ToWideChar(const char* src, UINT CodePage, int cbSrcLen = -1);
 void Utf8Encode(char*& dst, int c);
 #endif
