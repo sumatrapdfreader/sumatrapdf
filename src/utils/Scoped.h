@@ -315,6 +315,19 @@ struct AutoFreeWstr {
         return data;
     }
 
+    void Set(const WCHAR* newPtr) {
+        str::Free(data);
+        data = (WCHAR*)newPtr;
+    }
+
+    void SetCopy(const WCHAR* newPtr) {
+        str::Free(data);
+        data = nullptr;
+        if (newPtr) {
+            data = str::Dup(newPtr);
+        }
+    }
+
     // for convenince, we calculate the size if wasn't provided
     // by the caller
     // this is size in characters, not bytes

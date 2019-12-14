@@ -20,7 +20,7 @@
    created by an installer (and should be updated through an installer) */
 bool HasBeenInstalled() {
     // see GetInstallationDir() in Installer.cpp
-    AutoFreeW installedPath(ReadRegStr2(HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, REG_PATH_UNINST, L"InstallLocation"));
+    AutoFreeWstr installedPath(ReadRegStr2(HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, REG_PATH_UNINST, L"InstallLocation"));
     if (!installedPath) {
         return false;
     }
@@ -59,8 +59,8 @@ bool IsRunningInPortableMode() {
         return false;
     }
 
-    AutoFreeW exePath(GetExePath());
-    AutoFreeW programFilesDir(GetSpecialFolder(CSIDL_PROGRAM_FILES));
+    AutoFreeWstr exePath(GetExePath());
+    AutoFreeWstr programFilesDir(GetSpecialFolder(CSIDL_PROGRAM_FILES));
     // if we can't get a path, assume we're not running from "Program Files"
     if (!exePath || !programFilesDir) {
         return true;
@@ -80,7 +80,7 @@ bool IsRunningInPortableMode() {
     return true;
 }
 
-static AutoFreeW gAppDataDir;
+static AutoFreeWstr gAppDataDir;
 
 void SetAppDataPath(const WCHAR* path) {
     gAppDataDir.Set(path::Normalize(path));
@@ -186,11 +186,11 @@ UnregisterFromBeingDefaultViewer() and RemoveOwnRegistryKeys() in Installer.cpp.
 #define REG_EXPLORER_PDF_EXT REG_WIN_CURR L"\\Explorer\\FileExts\\.pdf"
 
 void DoAssociateExeWithPdfExtension(HKEY hkey) {
-    AutoFreeW exePath(GetExePath());
+    AutoFreeWstr exePath(GetExePath());
     if (!exePath)
         return;
 
-    AutoFreeW prevHandler(nullptr);
+    AutoFreeWstr prevHandler(nullptr);
     // Remember the previous default app for the Uninstaller
     prevHandler.Set(ReadRegStr(hkey, REG_CLASSES_PDF, nullptr));
     if (prevHandler && !str::Eq(prevHandler, APP_NAME_STR))
@@ -203,7 +203,7 @@ void DoAssociateExeWithPdfExtension(HKEY hkey) {
 
     WriteRegStr(hkey, REG_CLASSES_APP L"\\shell", nullptr, L"open");
 
-    AutoFreeW cmdPath(str::Format(L"\"%s\" \"%%1\" %%*", exePath.Get())); // "${exePath}" "%1" %*
+    AutoFreeWstr cmdPath(str::Format(L"\"%s\" \"%%1\" %%*", exePath.Get())); // "${exePath}" "%1" %*
     bool ok = WriteRegStr(hkey, REG_CLASSES_APP L"\\shell\\open\\command", nullptr, cmdPath);
 
     // also register for printing
@@ -233,7 +233,7 @@ void DoAssociateExeWithPdfExtension(HKEY hkey) {
 // Sumatra with .pdf files exist and have the right values
 bool IsExeAssociatedWithPdfExtension() {
     // this one doesn't have to exist but if it does, it must be APP_NAME_STR
-    AutoFreeW tmp(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, L"Progid"));
+    AutoFreeWstr tmp(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, L"Progid"));
     if (tmp && !str::Eq(tmp, APP_NAME_STR))
         return false;
 
@@ -264,7 +264,7 @@ bool IsExeAssociatedWithPdfExtension() {
 
     WStrVec argList;
     ParseCmdLine(tmp, argList);
-    AutoFreeW exePath(GetExePath());
+    AutoFreeWstr exePath(GetExePath());
     if (!exePath || !argList.Contains(L"%1") || !str::Find(tmp, L"\"%1\""))
         return false;
 
@@ -333,14 +333,14 @@ WCHAR* AutoDetectInverseSearchCommands(HWND hwndCombo) {
     WStrList foundExes;
 
     for (int i = 0; i < dimof(editor_rules); i++) {
-        AutoFreeW path(ReadRegStr(editor_rules[i].RegRoot, editor_rules[i].RegKey, editor_rules[i].RegValue));
+        AutoFreeWstr path(ReadRegStr(editor_rules[i].RegRoot, editor_rules[i].RegKey, editor_rules[i].RegValue));
         if (!path)
             continue;
 
-        AutoFreeW exePath;
+        AutoFreeWstr exePath;
         if (editor_rules[i].Type == SiblingPath) {
             // remove file part
-            AutoFreeW dir(path::GetDir(path));
+            AutoFreeWstr dir(path::GetDir(path));
             exePath.Set(path::Join(dir, editor_rules[i].BinaryFilename));
         } else if (editor_rules[i].Type == BinaryDir)
             exePath.Set(path::Join(path, editor_rules[i].BinaryFilename));
@@ -355,7 +355,7 @@ WCHAR* AutoDetectInverseSearchCommands(HWND hwndCombo) {
             continue;
         }
 
-        AutoFreeW editorCmd(str::Format(L"\"%s\" %s", exePath.Get(), editor_rules[i].InverseSearchArgs));
+        AutoFreeWstr editorCmd(str::Format(L"\"%s\" %s", exePath.Get(), editor_rules[i].InverseSearchArgs));
 
         if (!hwndCombo) {
             // no need to fill a combo box: return immeditately after finding an editor.
@@ -421,7 +421,7 @@ bool ExtendedEditWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) 
             return true;
 
         case UWM_DELAYED_CTRL_BACK: {
-            AutoFreeW text(win::GetText(hwnd));
+            AutoFreeWstr text(win::GetText(hwnd));
             int selStart = LOWORD(Edit_GetSel(hwnd)), selEnd = selStart;
             // remove the rectangle produced by Ctrl+Backspace
             if (selStart > 0 && text[selStart - 1] == '\x7F') {
@@ -485,7 +485,7 @@ void SaveCallstackLogs() {
     if (s.empty()) {
         return;
     }
-    AutoFreeW filePath(AppGenDataFilename(L"callstacks.txt"));
+    AutoFreeWstr filePath(AppGenDataFilename(L"callstacks.txt"));
     file::WriteFile(filePath.Get(), s.as_view());
 }
 
@@ -493,7 +493,7 @@ void SaveCallstackLogs() {
 #if 0
 // cache because calculating md5 of the whole executable
 // might be relatively expensive
-static AutoFreeW gAppMd5;
+static AutoFreeWstr gAppMd5;
 
 // return hex version of md5 of app's executable
 // nullptr if there was an error
