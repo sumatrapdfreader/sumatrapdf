@@ -4,6 +4,11 @@
 
 // note: include BaseUtil.h instead of including directly
 
+
+#define UTF8_BOM "\xEF\xBB\xBF"
+#define UTF16_BOM "\xFF\xFE"
+#define UTF16BE_BOM "\xFE\xFF"
+
 bool isLegalUTF8Sequence(const u8* source, const u8* sourceEnd);
 bool isLegalUTF8String(const u8** source, const u8* sourceEnd);
 
@@ -48,27 +53,19 @@ bool StartsWith(const WCHAR* str, const WCHAR* txt);
 bool StartsWithI(const char* str, const char* txt);
 bool EndsWith(const char* txt, const char* end);
 bool EndsWithI(const char* txt, const char* end);
-
-inline bool EqNIx(const char* s, size_t len, const char* s2) {
-    return str::Len(s2) == len && str::StartsWithI(s, s2);
-}
+bool EqNIx(const char* s, size_t len, const char* s2);
 
 char* DupN(const char* s, size_t lenCch);
 char* Dup(const std::string_view sv);
 char* ToLowerInPlace(char* s);
-
-inline void Free(const char* s) {
-    free((void*)s);
-}
+void Free(const char* s);
 
 #if OS_WIN
 bool StartsWithI(const WCHAR* str, const WCHAR* txt);
 bool EndsWith(const WCHAR* txt, const WCHAR* end);
 bool EndsWithI(const WCHAR* txt, const WCHAR* end);
 WCHAR* DupN(const WCHAR* s, size_t lenCch);
-inline void Free(const WCHAR* s) {
-    free((void*)s);
-}
+void Free(const WCHAR* s);
 WCHAR* ToLowerInPlace(WCHAR* s);
 
 std::string_view ToMultiByte2(const WCHAR* txt, UINT codePage, int cchTxtLen = -1);
@@ -78,72 +75,34 @@ WCHAR* ToWideChar(const char* src, UINT CodePage, int cbSrcLen = -1);
 void Utf8Encode(char*& dst, int c);
 #endif
 
-inline const char* FindChar(const char* str, const char c) {
-    return strchr(str, c);
-}
-inline char* FindChar(char* str, const char c) {
-    return strchr(str, c);
-}
+bool IsDigit(char c);
+bool IsWs(char c);
 
-inline const char* FindCharLast(const char* str, const char c) {
-    return strrchr(str, c);
-}
-inline char* FindCharLast(char* str, const char c) {
-    return strrchr(str, c);
-}
-
-inline const char* Find(const char* str, const char* find) {
-    return strstr(str, find);
-}
-
+const char* FindChar(const char* str, const char c);
+char* FindChar(char* str, const char c);
+const char* FindCharLast(const char* str, const char c);
+char* FindCharLast(char* str, const char c);
+const char* Find(const char* str, const char* find);
 const char* FindI(const char* str, const char* find);
 bool BufFmtV(char* buf, size_t bufCchSize, const char* fmt, va_list args);
 char* FmtV(const char* fmt, va_list args);
 char* Format(const char* fmt, ...);
 
-inline bool IsWs(char c) {
-    return (' ' == c) || (('\t' <= c) && (c <= '\r'));
-}
-
-// Note: I tried an optimization: return (unsigned)(c - '0') < 10;
-// but it seems to mis-compile in release builds
-inline bool IsDigit(char c) {
-    return ('0' <= c) && (c <= '9');
-}
-
 #if OS_WIN
-inline const WCHAR* FindChar(const WCHAR* str, const WCHAR c) {
-    return wcschr(str, c);
-}
-inline WCHAR* FindChar(WCHAR* str, const WCHAR c) {
-    return wcschr(str, c);
-}
-inline const WCHAR* FindCharLast(const WCHAR* str, const WCHAR c) {
-    return wcsrchr(str, c);
-}
-inline WCHAR* FindCharLast(WCHAR* str, const WCHAR c) {
-    return wcsrchr(str, c);
-}
-inline const WCHAR* Find(const WCHAR* str, const WCHAR* find) {
-    return wcsstr(str, find);
-}
+const WCHAR* FindChar(const WCHAR* str, const WCHAR c);
+WCHAR* FindChar(WCHAR* str, const WCHAR c);
+const WCHAR* FindCharLast(const WCHAR* str, const WCHAR c);
+WCHAR* FindCharLast(WCHAR* str, const WCHAR c);
+const WCHAR* Find(const WCHAR* str, const WCHAR* find);
 
 const WCHAR* FindI(const WCHAR* str, const WCHAR* find);
 bool BufFmtV(WCHAR* buf, size_t bufCchSize, const WCHAR* fmt, va_list args);
 WCHAR* FmtV(const WCHAR* fmt, va_list args);
 WCHAR* Format(const WCHAR* fmt, ...);
 
-inline bool IsWs(WCHAR c) {
-    return iswspace(c);
-}
-
-inline bool IsDigit(WCHAR c) {
-    return ('0' <= c) && (c <= '9');
-}
-
-inline bool IsNonCharacter(WCHAR c) {
-    return c >= 0xFFFE || (c & ~1) == 0xDFFE || (0xFDD0 <= c && c <= 0xFDEF);
-}
+bool IsWs(WCHAR c);
+bool IsDigit(WCHAR c);
+bool IsNonCharacter(WCHAR c);
 
 size_t TrimWS(WCHAR* s, TrimOpt opt);
 #endif
@@ -252,6 +211,3 @@ int StrToIdx(const char* strings, const WCHAR* toFind);
 #define _MemToHex(ptr) str::MemToHex((const unsigned char*)(ptr), sizeof(*ptr))
 #define _HexToMem(txt, ptr) str::HexToMem(txt, (unsigned char*)(ptr), sizeof(*ptr))
 
-#define UTF8_BOM "\xEF\xBB\xBF"
-#define UTF16_BOM "\xFF\xFE"
-#define UTF16BE_BOM "\xFE\xFF"

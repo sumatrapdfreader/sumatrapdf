@@ -271,6 +271,10 @@ bool EndsWithI(const char* txt, const char* end) {
     return str::EqI(txt + txtLen - endLen, end);
 }
 
+bool EqNIx(const char* s, size_t len, const char* s2) {
+    return str::Len(s2) == len && str::StartsWithI(s, s2);
+}
+
 const char* FindI(const char* s, const char* toFind) {
     if (!s || !toFind)
         return nullptr;
@@ -288,6 +292,10 @@ const char* FindI(const char* s, const char* toFind) {
         s++;
     }
     return nullptr;
+}
+
+void Free(const char* s) {
+    free((void*)s);
 }
 
 void ReplacePtr(char** s, const char* snew) {
@@ -370,6 +378,35 @@ void Utf8Encode(char*& dst, int c) {
         *tmp++ = 0x80 + (uint8_t)(c & 0x3F);
     }
     dst = (char*)tmp;
+}
+
+// Note: I tried an optimization: return (unsigned)(c - '0') < 10;
+// but it seems to mis-compile in release builds
+bool IsDigit(char c) {
+    return ('0' <= c) && (c <= '9');
+}
+
+bool IsWs(char c) {
+    return (' ' == c) || (('\t' <= c) && (c <= '\r'));
+}
+
+const char* FindChar(const char* str, const char c) {
+    return strchr(str, c);
+}
+
+char* FindChar(char* str, const char c) {
+    return strchr(str, c);
+}
+
+const char* FindCharLast(const char* str, const char c) {
+    return strrchr(str, c);
+}
+char* FindCharLast(char* str, const char c) {
+    return strrchr(str, c);
+}
+
+const char* Find(const char* str, const char* find) {
+    return strstr(str, find);
 }
 
 // format string to a buffer profided by the caller
@@ -616,100 +653,6 @@ size_t RemoveChars(char* str, const char* toRemove) {
     *dst = '\0';
     return removed;
 }
-
-#if !defined(_MSC_VER)
-typedef int errno_t;
-
-// based on https://github.com/coruus/safeclib/blob/88a3bf7c7e4cd6f0b7a8559050523bacb31362f3/src/safeclib/strncpy_s.c
-// TODO: is this defined in <string.h> in C11? http://en.cppreference.com/w/c/string/byte/strncpy
-// TODO: if not available, rewrite in a simpler way
-errno_t strncpy_s(char* dest, size_t dmax, const char* src, size_t slen) {
-    const char* overlap_bumper;
-
-    if (dest == nullptr) {
-        return (errno_t)-1;
-    }
-
-    if (dmax == 0) {
-        return (errno_t)-1;
-    }
-
-    if (src == nullptr) {
-        return (errno_t)-1;
-    }
-
-    if (slen == 0) {
-        return (errno_t)-1;
-    }
-
-    if (dest < src) {
-        overlap_bumper = src;
-
-        while (dmax > 0) {
-            if (dest == overlap_bumper) {
-                return (errno_t)-1;
-            }
-
-            if (slen == 0) {
-                /*
-                 * Copying truncated to slen chars.  Note that the TR says to
-                 * copy slen chars plus the null char.  We null the slack.
-                 */
-                *dest = '\0';
-                return (errno_t)0;
-            }
-
-            *dest = *src;
-            if (*dest == '\0') {
-                return (errno_t)0;
-            }
-
-            dmax--;
-            slen--;
-            dest++;
-            src++;
-        }
-
-    } else {
-        overlap_bumper = dest;
-
-        while (dmax > 0) {
-            if (src == overlap_bumper) {
-                return (errno_t)-1;
-            }
-
-            if (slen == 0) {
-                /*
-                 * Copying truncated to slen chars.  Note that the TR says to
-                 * copy slen chars plus the null char.  We null the slack.
-                 */
-                *dest = '\0';
-                return (errno_t)0;
-            }
-
-            *dest = *src;
-            if (*dest == '\0') {
-                return (errno_t)0;
-            }
-
-            dmax--;
-            slen--;
-            dest++;
-            src++;
-        }
-    }
-
-    /*
-     * the entire src was not copied, so zero the string
-     */
-    return (errno_t)-1;
-}
-
-errno_t strncat_s(char* dest IS_UNUSED, size_t destsz IS_UNUSED, const char* src IS_UNUSED, size_t count IS_UNUSED) {
-    CrashAlwaysIf(true);
-    return (errno_t)0;
-}
-#endif
 
 // Note: BufSet() should only be used when absolutely necessary (e.g. when
 // handling buffers in OS-defined structures)

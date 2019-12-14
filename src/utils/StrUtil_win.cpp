@@ -5,8 +5,24 @@
 
 namespace str {
 
+bool IsWs(WCHAR c) {
+    return iswspace(c);
+}
+
+bool IsDigit(WCHAR c) {
+    return ('0' <= c) && (c <= '9');
+}
+
+bool IsNonCharacter(WCHAR c) {
+    return c >= 0xFFFE || (c & ~1) == 0xDFFE || (0xFDD0 <= c && c <= 0xFDEF);
+}
+
 size_t Len(const WCHAR* s) {
     return s ? wcslen(s) : 0;
+}
+
+void Free(const WCHAR* s) {
+    free((void*)s);
 }
 
 WCHAR* Dup(const WCHAR* s) {
@@ -109,6 +125,26 @@ bool EndsWithI(const WCHAR* txt, const WCHAR* end) {
     if (endLen > txtLen)
         return false;
     return str::EqI(txt + txtLen - endLen, end);
+}
+
+const WCHAR* FindChar(const WCHAR* str, const WCHAR c) {
+    return wcschr(str, c);
+}
+
+WCHAR* FindChar(WCHAR* str, const WCHAR c) {
+    return wcschr(str, c);
+}
+
+const WCHAR* FindCharLast(const WCHAR* str, const WCHAR c) {
+    return wcsrchr(str, c);
+}
+
+WCHAR* FindCharLast(WCHAR* str, const WCHAR c) {
+    return wcsrchr(str, c);
+}
+
+const WCHAR* Find(const WCHAR* str, const WCHAR* find) {
+    return wcsstr(str, find);
 }
 
 const WCHAR* FindI(const WCHAR* s, const WCHAR* toFind) {
