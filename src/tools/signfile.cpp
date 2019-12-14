@@ -154,7 +154,7 @@ int main() {
     // prepare data for signing
     size_t dataLen;
     {
-        OwnedData tmp(file::ReadFile(filePath));
+        AutoFree tmp(file::ReadFile(filePath));
         dataLen = tmp.size;
         data.Set(tmp.StealData());
     }

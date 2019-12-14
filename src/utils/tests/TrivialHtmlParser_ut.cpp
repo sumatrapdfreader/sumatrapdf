@@ -216,7 +216,7 @@ static void HtmlParserFile() {
     const WCHAR* exeDir = path::GetBaseNameNoFree(exePath);
     AutoFreeWstr p1(path::Join(exeDir, L"..\\src\\utils"));
     AutoFreeWstr p2(path::Join(p1, fileName));
-    OwnedData d(file::ReadFile(p2));
+    AutoFree d(file::ReadFile(p2));
     // it's ok if we fail - we assume we were not run from the
     // right location
     if (!d.data) {

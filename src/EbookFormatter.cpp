@@ -338,10 +338,10 @@ void HtmlFileFormatter::HandleTagLink(HtmlToken* t) {
     if (!attr)
         return;
 
-    size_t len;
     AutoFree src(str::DupN(attr->val, attr->valLen));
     url::DecodeInPlace(src);
-    AutoFree data(htmlDoc->GetFileData(src, &len));
-    if (data)
-        ParseStyleSheet(data, len);
+    AutoFree data(htmlDoc->GetFileData(src));
+    if (data) {
+        ParseStyleSheet(data.data, data.size());
+    }
 }

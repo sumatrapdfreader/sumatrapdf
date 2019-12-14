@@ -42,7 +42,7 @@ GlobalPrefs* NewGlobalPrefs(const char* data) {
     return (GlobalPrefs*)DeserializeStruct(&gGlobalPrefsInfo, data);
 }
 
-// TODO: return OwnedData
+// TODO: return std::string_view
 char* SerializeGlobalPrefs(GlobalPrefs* gp, const char* prevData, size_t* sizeOut) {
     if (!gp->rememberStatePerDocument || !gp->rememberOpenedFiles) {
         for (DisplayState* ds : *gp->fileStates) {

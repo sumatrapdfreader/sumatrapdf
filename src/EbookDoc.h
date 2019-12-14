@@ -145,7 +145,7 @@ class HtmlDoc {
     PropertyMap props;
 
     bool Load();
-    char* LoadURL(const char* url, size_t* lenOut);
+    std::string_view LoadURL(const char* url);
 
   public:
     explicit HtmlDoc(const WCHAR* fileName);
@@ -154,7 +154,7 @@ class HtmlDoc {
     std::string_view HtmlDoc::GetHtmlData();
 
     ImageData* GetImageData(const char* id);
-    char* GetFileData(const char* relPath, size_t* lenOut);
+    std::string_view GetFileData(const char* relPath);
 
     WCHAR* GetProperty(DocumentProperty prop) const;
     const WCHAR* GetFileName() const;

@@ -199,15 +199,17 @@ static inline void AppendChar(str::Str& htmlData, char c) {
     }
 }
 
-static char* DecodeDataURI(const char* url, size_t* lenOut) {
+static std::string_view DecodeDataURI(const char* url) {
     const char* comma = str::FindChar(url, ',');
-    if (!comma)
-        return nullptr;
+    if (!comma) {
+        return {};
+    }
     const char* data = comma + 1;
-    if (comma - url >= 12 && str::EqN(comma - 7, ";base64", 7))
-        return Base64Decode(data, str::Len(data), lenOut);
-    if (lenOut)
-        *lenOut = str::Len(data);
+    if (comma - url >= 12 && str::EqN(comma - 7, ";base64", 7)) {
+        size_t lenOut = 0;
+        char* d = Base64Decode(data, str::Len(data), &lenOut);
+        return {d, lenOut};
+    }
     return str::Dup(data);
 }
 
@@ -720,7 +722,7 @@ Fb2Doc::~Fb2Doc() {
         stream->Release();
 }
 
-static OwnedData loadFromFile(Fb2Doc* doc) {
+static std::string_view loadFromFile(Fb2Doc* doc) {
     MultiFormatArchive* archive = OpenZipArchive(doc->fileName, false);
     if (!archive) {
         return file::ReadFile(doc->fileName);
@@ -743,7 +745,7 @@ static OwnedData loadFromFile(Fb2Doc* doc) {
         return archive->GetFileDataById(0);
     }
 
-    OwnedData data;
+    std::string_view data;
     // if the ZIP file contains more than one file, we try to be rather
     // restrictive in what we accept in order not to accidentally accept
     // too many archives which only contain FB2 files among others:
@@ -752,7 +754,7 @@ static OwnedData loadFromFile(Fb2Doc* doc) {
     for (auto&& fileInfo : fileInfos) {
         auto fileName = fileInfo->name;
         const char* ext = path::GetExt(fileName.data());
-        if (str::EqI(ext, ".fb2") && data.IsEmpty()) {
+        if (str::EqI(ext, ".fb2") && data.empty()) {
             data = archive->GetFileDataById(fileInfo->fileId);
         } else if (!str::EqI(ext, ".url")) {
             return {};
@@ -761,7 +763,7 @@ static OwnedData loadFromFile(Fb2Doc* doc) {
     return data;
 }
 
-static OwnedData loadFromStream(Fb2Doc* doc) {
+static std::string_view loadFromStream(Fb2Doc* doc) {
     auto stream = doc->stream;
     MultiFormatArchive* archive = OpenZipArchive(stream, false);
     if (!archive) {
@@ -780,13 +782,14 @@ static OwnedData loadFromStream(Fb2Doc* doc) {
 
 bool Fb2Doc::Load() {
     CrashIf(!stream && !fileName);
-    OwnedData data;
+
+    AutoFree data;
     if (fileName) {
         data = loadFromFile(this);
     } else if (stream) {
         data = loadFromStream(this);
     }
-    if (data.IsEmpty()) {
+    if (data.empty()) {
         return false;
     }
     char* tmp = DecodeTextToUtf8(data.Get(), true);
@@ -795,7 +798,7 @@ bool Fb2Doc::Load() {
     }
     data.TakeOwnership(tmp);
 
-    HtmlPullParser parser(data.Get(), data.size);
+    HtmlPullParser parser(data.Get(), data.size());
     HtmlToken* tok;
     int inBody = 0, inTitleInfo = 0, inDocInfo = 0;
     const char* bodyStart = nullptr;
@@ -1102,10 +1105,10 @@ bool PalmDoc::Load() {
 
     const std::string_view text = mobiDoc->GetHtmlData();
     UINT codePage = GuessTextCodepage(text.data(), text.size(), CP_ACP);
-    OwnedData textUtf8(str::ToMultiByte(text.data(), codePage, CP_UTF8));
+    AutoFree textUtf8(str::ToMultiByte(text.data(), codePage, CP_UTF8));
 
     const char* start = textUtf8.Get();
-    const char* end = start + textUtf8.size;
+    const char* end = start + textUtf8.size();
     // TODO: speedup by not calling htmlData.Append() for every byte
     // but gather spans and memcpy them wholesale
     for (const char* curr = start; curr < end; curr++) {
@@ -1188,7 +1191,7 @@ HtmlDoc::~HtmlDoc() {
 }
 
 bool HtmlDoc::Load() {
-    OwnedData data(file::ReadFile(fileName));
+    AutoFree data(file::ReadFile(fileName));
     if (!data.data) {
         return false;
     }
@@ -1239,34 +1242,32 @@ ImageData* HtmlDoc::GetImageData(const char* fileName) {
     }
 
     ImageData2 data = {0};
-    data.base.data = LoadURL(url, &data.base.len);
-    if (!data.base.data)
+    auto urlData = LoadURL(url);
+    if (urlData.empty()) {
         return nullptr;
+    }
+    data.base.data = (char*)urlData.data();
+    data.base.len = urlData.size();
     data.fileName = url.StealData();
     images.Append(data);
     return &images.Last().base;
 }
 
-char* HtmlDoc::GetFileData(const char* relPath, size_t* lenOut) {
+std::string_view HtmlDoc::GetFileData(const char* relPath) {
     AutoFree url(NormalizeURL(relPath, pagePath));
-    return LoadURL(url, lenOut);
+    return LoadURL(url);
 }
 
-// TODO: convert to return OwnedData
-char* HtmlDoc::LoadURL(const char* url, size_t* lenOut) {
+std::string_view HtmlDoc::LoadURL(const char* url) {
     if (str::StartsWith(url, "data:")) {
-        return DecodeDataURI(url, lenOut);
+        return DecodeDataURI(url);
     }
     if (str::FindChar(url, ':')) {
         return nullptr;
     }
     AutoFreeWstr path(str::conv::FromUtf8(url));
     str::TransChars(path, L"/", L"\\");
-    OwnedData tmp(file::ReadFile(path));
-    if (lenOut) {
-        *lenOut = tmp.size;
-    }
-    return tmp.StealData();
+    return file::ReadFile(path);
 }
 
 WCHAR* HtmlDoc::GetProperty(DocumentProperty prop) const {

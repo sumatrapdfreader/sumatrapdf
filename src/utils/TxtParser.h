@@ -67,7 +67,7 @@ struct Token {
 
 struct TxtParser {
     PoolAllocator allocator;
-    OwnedData data;
+    AutoFree data;
 
     str::Slice toParse;
     Token tok;
