@@ -426,11 +426,11 @@ std::string_view ReadFile(const WCHAR* filePath) {
     return ReadFileWithAllocator(path.data, nullptr);
 }
 
-bool WriteFile(const char* filePath, const void* data, size_t dataLen) {
+bool WriteFile(const char* filePath, std::string_view d) {
 #if OS_WIN
     WCHAR buf[512];
     str::Utf8ToWcharBuf(filePath, str::Len(filePath), buf, dimof(buf));
-    return WriteFile(buf, data, dataLen);
+    return WriteFile(buf, d);
 #else
     CrashAlwaysIf(true);
     UNUSED(filePath);
@@ -526,7 +526,9 @@ bool ReadN(const WCHAR* filePath, char* buf, size_t toRead) {
     return ok && nRead == toRead;
 }
 
-bool WriteFile(const WCHAR* filePath, const void* data, size_t dataLen) {
+bool WriteFile(const WCHAR* filePath, std::string_view d) {
+    const void* data = d.data();
+    size_t dataLen = d.size();
     DWORD access = GENERIC_WRITE;
     DWORD share = FILE_SHARE_READ;
     DWORD flags = FILE_ATTRIBUTE_NORMAL;

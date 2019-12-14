@@ -123,7 +123,7 @@ static void SaveCrashInfo(char* s, size_t size) {
     if (!gCrashFilePath) {
         return;
     }
-    file::WriteFile(gCrashFilePath, (const void*)s, size);
+    file::WriteFile(gCrashFilePath, {s, size});
 }
 
 static void SendCrashInfo(char* s, size_t size) {
@@ -175,7 +175,8 @@ static bool ExtractSymbols(const char* archiveData, size_t dataSize, char* dstDi
         if (!filePath) {
             return false;
         }
-        ok = file::WriteFile(filePath, uncompressed, fi->uncompressedSize);
+        std::string_view d = {uncompressed, fi->uncompressedSize};
+        ok = file::WriteFile(filePath, d);
 
         Allocator::Free(allocator, filePath);
         Allocator::Free(allocator, uncompressed);

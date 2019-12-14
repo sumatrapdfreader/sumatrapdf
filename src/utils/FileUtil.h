@@ -35,7 +35,7 @@ namespace file {
 
 FILE* OpenFILE(const char* path);
 std::string_view ReadFileWithAllocator(const char* path, Allocator*);
-bool WriteFile(const char* path, const void* data, size_t dataLen);
+bool WriteFile(const char* path, std::string_view);
 
 std::string_view ReadFile(std::string_view path);
 
@@ -48,7 +48,7 @@ std::string_view ReadFileWithAllocator(const WCHAR* filePath, Allocator* allocat
 std::string_view ReadFile(const WCHAR* filePath);
 
 bool ReadN(const WCHAR* path, char* buf, size_t toRead);
-bool WriteFile(const WCHAR* path, const void* data, size_t dataLen);
+bool WriteFile(const WCHAR* path, std::string_view);
 int64_t GetSize(const WCHAR* path);
 bool Delete(const WCHAR* path);
 FILETIME GetModificationTime(const WCHAR* path);

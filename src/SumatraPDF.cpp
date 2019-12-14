@@ -1848,7 +1848,7 @@ bool AutoUpdateInitiate(const char* updateData) {
         updateArgs.Set(str::Format(L"-autoupdate replace:\"%s\"", thisExe));
     }
 
-    bool ok = file::WriteFile(updateExe, rsp.data.Get(), rsp.data.size());
+    bool ok = file::WriteFile(updateExe, rsp.data.as_view());
     if (!ok)
         return false;
 
@@ -2458,8 +2458,8 @@ static void OnMenuSaveAs(WindowInfo* win) {
         }
 
         OwnedData textUTF8(str::conv::ToUtf8(text.LendData()));
-        AutoFreeStr textUTF8BOM(str::Join(UTF8_BOM, textUTF8.Get()));
-        ok = file::WriteFile(realDstFileName, textUTF8BOM, str::Len(textUTF8BOM));
+        AutoFree textUTF8BOM(str::Join(UTF8_BOM, textUTF8.Get()));
+        ok = file::WriteFile(realDstFileName, textUTF8BOM.as_view());
     } else if (convertToPDF) {
         // Convert the file into a PDF one
         PdfCreator::SetProducerName(APP_NAME_STR L" " CURR_VERSION_STR);

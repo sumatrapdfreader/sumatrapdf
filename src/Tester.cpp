@@ -118,10 +118,10 @@ static void MobiSaveHtml(const WCHAR* filePathBase, MobiDoc* mb) {
     const char* html = htmlData.data();
     size_t ppHtmlLen;
     char* ppHtml = PrettyPrintHtml(html, htmlLen, ppHtmlLen);
-    file::WriteFile(outFile.Get(), ppHtml, ppHtmlLen);
+    file::WriteFile(outFile.Get(), {ppHtml, ppHtmlLen});
 
     outFile.Set(str::Join(filePathBase, L".html"));
-    file::WriteFile(outFile.Get(), html, htmlLen);
+    file::WriteFile(outFile.Get(), {html, htmlLen});
 }
 
 static void MobiSaveImage(const WCHAR* filePathBase, size_t imgNo, ImageData* img) {
@@ -131,7 +131,7 @@ static void MobiSaveImage(const WCHAR* filePathBase, size_t imgNo, ImageData* im
     const WCHAR* ext = GfxFileExtFromData(img->data, img->len);
     CrashAlwaysIf(!ext);
     AutoFreeW fileName(str::Format(L"%s_img_%d%s", filePathBase, imgNo, ext));
-    file::WriteFile(fileName.Get(), img->data, img->len);
+    file::WriteFile(fileName.Get(), {img->data, img->len});
 }
 
 static void MobiSaveImages(const WCHAR* filePathBase, MobiDoc* mb) {

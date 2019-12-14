@@ -275,8 +275,7 @@ bool ImagesEngine::SaveFileAs(const char* copyFileName, bool includeUserAnnots) 
     if (d.empty()) {
         return false;
     }
-    auto res = file::WriteFile(dstPath, d.data, d.size());
-    return res;
+    return file::WriteFile(dstPath, d.as_view());
 }
 
 ImagePage* ImagesEngine::GetPage(int pageNo, bool tryOnly) {

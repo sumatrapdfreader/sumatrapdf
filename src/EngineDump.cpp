@@ -380,10 +380,10 @@ bool RenderDocument(EngineBase* engine, const WCHAR* renderPath, float zoom = 1.
         text.Replace(L"\n", L"\r\n");
         if (silent)
             return true;
-        AutoFreeW txtFilePath(str::Format(renderPath, 0));
-        OwnedData textUTF8(str::conv::ToUtf8(text.Get()));
-        AutoFreeStr textUTF8BOM(str::Join(UTF8_BOM, textUTF8.Get()));
-        return file::WriteFile(txtFilePath, textUTF8BOM.Get(), str::Len(textUTF8BOM));
+        AutoFreeWstr txtFilePath(str::Format(renderPath, 0));
+        AutoFree textUTF8 = str::conv::WstrToUtf8(text.Get());
+        AutoFree textUTF8BOM(str::Join(UTF8_BOM, textUTF8.Get()));
+        return file::WriteFile(txtFilePath, textUTF8BOM.as_view());
     }
 
     if (str::EndsWithI(renderPath, L".pdf")) {
@@ -415,14 +415,16 @@ bool RenderDocument(EngineBase* engine, const WCHAR* renderPath, float zoom = 1.
             gbmp.Save(pageBmpPath, &pngEncId);
         } else if (str::EndsWithI(pageBmpPath, L".bmp")) {
             size_t bmpDataLen;
-            AutoFreeStr bmpData((char*)SerializeBitmap(bmp->GetBitmap(), &bmpDataLen));
-            if (bmpData)
-                file::WriteFile(pageBmpPath, bmpData, bmpDataLen);
+            AutoFree bmpData((char*)SerializeBitmap(bmp->GetBitmap(), &bmpDataLen));
+            if (!bmpData.empty()) {
+                file::WriteFile(pageBmpPath, bmpData.as_view());
+            }
         } else { // render as TGA for all other file extensions
             size_t tgaDataLen;
-            ScopedMem<unsigned char> tgaData(tga::SerializeBitmap(bmp->GetBitmap(), &tgaDataLen));
-            if (tgaData)
-                file::WriteFile(pageBmpPath, tgaData, tgaDataLen);
+            AutoFree tgaData(tga::SerializeBitmap(bmp->GetBitmap(), &tgaDataLen));
+            if (!tgaData.empty()) {
+                file::WriteFile(pageBmpPath, {tgaData, tgaDataLen});
+            }
         }
         delete bmp;
     }

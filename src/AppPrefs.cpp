@@ -162,7 +162,7 @@ bool Save() {
         return true;
     }
 
-    bool ok = file::WriteFile(path.get(), prefsData.get(), prefsDataSize);
+    bool ok = file::WriteFile(path.get(), prefsData.as_view());
     if (!ok) {
         return false;
     }

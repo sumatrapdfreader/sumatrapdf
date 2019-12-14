@@ -490,7 +490,7 @@ static void ExportBookmarks(TabInfo* tab) {
     str::WStr fileName;
     fileName.Append(path);
     fileName.Append(L".bkm");
-    bool ok = file::WriteFile(fileName.Get(), (void*)s.Get(), s.size());
+    bool ok = file::WriteFile(fileName.Get(), s.as_view());
     str::WStr msg;
     msg.AppendFmt(L"Exported bookmarks to file %s", fileName.Get());
     str::WStr caption;

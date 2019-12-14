@@ -176,6 +176,10 @@ struct AutoFree {
         data = (char*)p;
     }
 
+    AutoFree(const unsigned char* p) {
+        data = (char*)p;
+    }
+
     // I often return allocated strings as a tuple so this
     // allows easy freeing of them
     AutoFree(std::tuple<char*, size_t> s) {
@@ -209,6 +213,10 @@ struct AutoFree {
     AutoFree& operator=(const AutoFree&& other) = delete;
 
     char* get() const {
+        return data;
+    }
+
+    char* Get() const {
         return data;
     }
 

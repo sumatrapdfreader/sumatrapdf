@@ -109,7 +109,8 @@ bool ExtractFiles(lzma::SimpleArchive* archive, const WCHAR* destDir) {
         AutoFreeWstr fileName = str::conv::Utf8ToWchar(fi->name);
         AutoFreeWstr filePath = path::Join(destDir, fileName);
 
-        bool ok = file::WriteFile(filePath, uncompressed, fi->uncompressedSize);
+        std::string_view d = {uncompressed, fi->uncompressedSize};
+        bool ok = file::WriteFile(filePath, d);
         free(uncompressed);
 
         if (!ok) {

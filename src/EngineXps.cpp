@@ -783,7 +783,7 @@ bool XpsEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots)
     AutoFreeWstr dstPath = str::conv::FromUtf8(copyFileName);
     AutoFree d = GetFileData();
     if (!d.empty()) {
-        bool ok = file::WriteFile(dstPath, d.data, d.size());
+        bool ok = file::WriteFile(dstPath, d.as_view());
         if (ok) {
             return true;
         }

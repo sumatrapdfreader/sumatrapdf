@@ -187,7 +187,7 @@ bool SaveFileModifications(const WCHAR* filePath, Vec<PageAnnotation>* list) {
     }
     data.RemoveAt(data.size() - 2, 2);
 
-    return file::WriteFile(modificationsPath, data.LendData(), data.size());
+    return file::WriteFile(modificationsPath, data.as_view());
 }
 
 bool IsModificationsFile(const WCHAR* filePath) {

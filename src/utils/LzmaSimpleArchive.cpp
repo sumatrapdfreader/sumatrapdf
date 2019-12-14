@@ -268,7 +268,8 @@ static bool ExtractFileByIdx(SimpleArchive* archive, int idx, const char* dstDir
     bool ok = false;
     char* filePath = path::JoinUtf(dstDir, fi->name, allocator);
     if (filePath) {
-        ok = file::WriteFile(filePath, uncompressed, fi->uncompressedSize);
+        std::string_view d = {uncompressed, fi->uncompressedSize};
+        ok = file::WriteFile(filePath, d);
     }
 
     Allocator::Free(allocator, filePath);

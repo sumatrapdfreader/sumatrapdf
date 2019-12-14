@@ -481,12 +481,12 @@ RectI GetDefaultWindowPos() {
 }
 
 void SaveCallstackLogs() {
-    char* s = dbghelp::GetCallstacks();
-    if (!s)
+    AutoFree s = dbghelp::GetCallstacks();
+    if (s.empty()) {
         return;
+    }
     AutoFreeW filePath(AppGenDataFilename(L"callstacks.txt"));
-    file::WriteFile(filePath.Get(), s, str::Len(s));
-    free(s);
+    file::WriteFile(filePath.Get(), s.as_view());
 }
 
 // TODO: this can be used for extracting other data

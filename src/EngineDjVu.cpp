@@ -719,7 +719,7 @@ bool DjVuEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots
     AutoFreeWstr path = str::conv::FromUtf8(copyFileName);
     if (stream) {
         AutoFree d = GetDataFromStream(stream, nullptr);
-        bool ok = !d.empty() && file::WriteFile(path, d.data, d.size());
+        bool ok = !d.empty() && file::WriteFile(path, d.as_view());
         if (ok) {
             return true;
         }
