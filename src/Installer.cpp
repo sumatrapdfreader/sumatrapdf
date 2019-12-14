@@ -178,7 +178,7 @@ static bool ExtractInstallerFiles() {
 
 /* Caller needs to free() the result. */
 static WCHAR* GetDefaultPdfViewer() {
-    AutoFreeW buf(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT L"\\UserChoice", PROG_ID));
+    AutoFreeWstr buf(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT L"\\UserChoice", PROG_ID));
     if (buf)
         return buf.StealData();
     return ReadRegStr(HKEY_CLASSES_ROOT, L".pdf", nullptr);
@@ -186,7 +186,7 @@ static WCHAR* GetDefaultPdfViewer() {
 
 static bool IsPdfFilterInstalled() {
     const WCHAR* key = L".pdf\\PersistentHandler";
-    AutoFreeW handler_iid(ReadRegStr(HKEY_CLASSES_ROOT, key, nullptr));
+    AutoFreeWstr handler_iid(ReadRegStr(HKEY_CLASSES_ROOT, key, nullptr));
     if (!handler_iid)
         return false;
     return str::EqI(handler_iid, SZ_PDF_FILTER_HANDLER);
@@ -194,7 +194,7 @@ static bool IsPdfFilterInstalled() {
 
 static bool IsPdfPreviewerInstalled() {
     const WCHAR* key = L".pdf\\shellex\\{8895b1c6-b41f-4c1c-a562-0d564250836f}";
-    AutoFreeW handler_iid(ReadRegStr(HKEY_CLASSES_ROOT, key, nullptr));
+    AutoFreeWstr handler_iid(ReadRegStr(HKEY_CLASSES_ROOT, key, nullptr));
     if (!handler_iid)
         return false;
     return str::EqI(handler_iid, SZ_PDF_PREVIEW_CLSID);
@@ -202,7 +202,7 @@ static bool IsPdfPreviewerInstalled() {
 
 // Note: doesn't handle (total) sizes above 4GB
 static DWORD GetDirSize(const WCHAR* dir) {
-    AutoFreeW dirPattern(path::Join(dir, L"*"));
+    AutoFreeWstr dirPattern(path::Join(dir, L"*"));
     WIN32_FIND_DATA findData;
 
     HANDLE h = FindFirstFile(dirPattern, &findData);
@@ -214,7 +214,7 @@ static DWORD GetDirSize(const WCHAR* dir) {
         if (!(findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
             totalSize += findData.nFileSizeLow;
         } else if (!str::Eq(findData.cFileName, L".") && !str::Eq(findData.cFileName, L"..")) {
-            AutoFreeW subdir(path::Join(dir, findData.cFileName));
+            AutoFreeWstr subdir(path::Join(dir, findData.cFileName));
             totalSize += GetDirSize(subdir);
         }
     } while (FindNextFile(h, &findData) != 0);
@@ -233,10 +233,10 @@ static WCHAR* GetInstallDate() {
 static bool WriteUninstallerRegistryInfo(HKEY hkey) {
     bool ok = true;
 
-    AutoFreeW installedExePath(GetInstalledExePath());
-    AutoFreeW installDate(GetInstallDate());
-    AutoFreeW installDir(path::GetDir(installedExePath));
-    AutoFreeW uninstallCmdLine(str::Format(L"\"%s\" -uninstall", AutoFreeW(GetUninstallerPath())));
+    AutoFreeWstr installedExePath(GetInstalledExePath());
+    AutoFreeWstr installDate(GetInstallDate());
+    AutoFreeWstr installDir(path::GetDir(installedExePath));
+    AutoFreeWstr uninstallCmdLine(str::Format(L"\"%s\" -uninstall", AutoFreeWstr(GetUninstallerPath())));
 
     // path to installed executable (or "$path,0" to force the first icon)
     ok &= WriteRegStr(hkey, REG_PATH_UNINST, L"DisplayIcon", installedExePath);
@@ -320,20 +320,20 @@ static bool ListAsDefaultProgramPreWin10(HKEY hkey) {
 static bool WriteExtendedFileExtensionInfo(HKEY hkey) {
     bool ok = true;
 
-    AutoFreeW exePath(GetInstalledExePath());
+    AutoFreeWstr exePath(GetInstalledExePath());
     if (HKEY_LOCAL_MACHINE == hkey) {
         const WCHAR* key = L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\" EXENAME;
         ok &= WriteRegStr(hkey, key, nullptr, exePath);
     }
 
     // mirroring some of what DoAssociateExeWithPdfExtension() does (cf. AppTools.cpp)
-    AutoFreeW iconPath(str::Join(exePath, L",1"));
+    AutoFreeWstr iconPath(str::Join(exePath, L",1"));
     ok &= WriteRegStr(hkey, REG_CLASSES_APPS L"\\DefaultIcon", nullptr, iconPath);
-    AutoFreeW cmdPath(str::Format(L"\"%s\" \"%%1\" %%*", exePath.get()));
+    AutoFreeWstr cmdPath(str::Format(L"\"%s\" \"%%1\" %%*", exePath.get()));
     ok &= WriteRegStr(hkey, REG_CLASSES_APPS L"\\Shell\\Open\\Command", nullptr, cmdPath);
-    AutoFreeW printPath(str::Format(L"\"%s\" -print-to-default \"%%1\"", exePath.get()));
+    AutoFreeWstr printPath(str::Format(L"\"%s\" -print-to-default \"%%1\"", exePath.get()));
     ok &= WriteRegStr(hkey, REG_CLASSES_APPS L"\\Shell\\Print\\Command", nullptr, printPath);
-    AutoFreeW printToPath(str::Format(L"\"%s\" -print-to \"%%2\" \"%%1\"", exePath.get()));
+    AutoFreeWstr printToPath(str::Format(L"\"%s\" -print-to \"%%2\" \"%%1\"", exePath.get()));
     ok &= WriteRegStr(hkey, REG_CLASSES_APPS L"\\Shell\\PrintTo\\Command", nullptr, printToPath);
 
     // don't add REG_CLASSES_APPS L"\\SupportedTypes", as that prevents SumatraPDF.exe to
@@ -355,7 +355,7 @@ static bool WriteExtendedFileExtensionInfos() {
 }
 
 static void OnButtonStartSumatra() {
-    AutoFreeW exePath(GetInstalledExePath());
+    AutoFreeWstr exePath(GetInstalledExePath());
     RunNonElevated(exePath);
     OnButtonExit();
 }
@@ -366,11 +366,11 @@ static void CreateButtonRunSumatra(HWND hwndParent) {
 }
 
 static bool CreateAppShortcut(int csidl) {
-    AutoFreeW shortcutPath(GetShortcutPath(csidl));
+    AutoFreeWstr shortcutPath(GetShortcutPath(csidl));
     if (!shortcutPath.Get()) {
         return false;
     }
-    AutoFreeW installedExePath(GetInstalledExePath());
+    AutoFreeWstr installedExePath(GetInstalledExePath());
     return CreateShortcut(shortcutPath, installedExePath);
 }
 
@@ -712,7 +712,7 @@ static void OnCreateWindow(HWND hwnd) {
     // build options controls going from the bottom
     y -= (staticDy + WINDOW_MARGIN);
 
-    AutoFreeW defaultViewer(GetDefaultPdfViewer());
+    AutoFreeWstr defaultViewer(GetDefaultPdfViewer());
     BOOL hasOtherViewer = !str::EqI(defaultViewer, APP_NAME_STR);
     BOOL isSumatraDefaultViewer = defaultViewer && !hasOtherViewer;
 
@@ -792,7 +792,7 @@ static void OnCreateWindow(HWND hwnd) {
 //] ACCESSKEY_GROUP Installer
 
 static void CreateMainWindow() {
-    AutoFreeW title(str::Format(_TR("SumatraPDF %s Installer"), CURR_VERSION_STR));
+    AutoFreeWstr title(str::Format(_TR("SumatraPDF %s Installer"), CURR_VERSION_STR));
 
     DWORD exStyle = 0;
     if (trans::IsCurrLangRtl()) {
@@ -809,7 +809,7 @@ static void CreateMainWindow() {
 using namespace Gdiplus;
 
 static WCHAR* GetInstallationDir() {
-    AutoFreeW dir(ReadRegStr2(HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, REG_PATH_UNINST, L"InstallLocation"));
+    AutoFreeWstr dir(ReadRegStr2(HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, REG_PATH_UNINST, L"InstallLocation"));
     if (dir) {
         if (str::EndsWithI(dir, L".exe")) {
             dir.Set(path::GetDir(dir));

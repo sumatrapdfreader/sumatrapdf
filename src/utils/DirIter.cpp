@@ -8,7 +8,7 @@
 // Start directory traversal in a given dir
 bool DirIter::StartDirIter(const WCHAR* dir) {
     currDir.SetCopy(dir);
-    AutoFreeW pattern(path::Join(currDir, L"*"));
+    AutoFreeWstr pattern(path::Join(currDir, L"*"));
     currFindHandle = FindFirstFile(pattern, &currFindData);
     if (INVALID_HANDLE_VALUE == currFindHandle)
         return false;
@@ -17,7 +17,7 @@ bool DirIter::StartDirIter(const WCHAR* dir) {
 
 bool DirIter::TryNextDir() {
     while (dirsToVisit.size() > 0) {
-        AutoFreeW nextDir(dirsToVisit.Pop());
+        AutoFreeWstr nextDir(dirsToVisit.Pop());
         // it's ok if we fail, this might be an auth problem,
         // we keep going
         bool ok = StartDirIter(nextDir);
@@ -97,7 +97,7 @@ const WCHAR* DirIter::Next() {
 }
 
 bool CollectPathsFromDirectory(const WCHAR* pattern, WStrVec& paths, bool dirsInsteadOfFiles) {
-    AutoFreeW dirPath(path::GetDir(pattern));
+    AutoFreeWstr dirPath(path::GetDir(pattern));
 
     WIN32_FIND_DATA fdata;
     HANDLE hfind = FindFirstFile(pattern, &fdata);

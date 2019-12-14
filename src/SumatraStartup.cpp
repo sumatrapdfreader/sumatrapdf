@@ -68,7 +68,7 @@
 #include "SumatraConfig.h"
 
 static bool TryLoadMemTrace() {
-    AutoFreeW dllPath(path::GetPathOfFileInAppDir(L"memtrace.dll"));
+    AutoFreeWstr dllPath(path::GetPathOfFileInAppDir(L"memtrace.dll"));
     if (!LoadLibrary(dllPath))
         return false;
     return true;
@@ -219,7 +219,7 @@ static void OpenUsingDde(HWND targetWnd, const WCHAR* filePath, CommandLineInfo&
                       i.startScroll.x, i.startScroll.y);
     }
     if (i.forwardSearchOrigin && i.forwardSearchLine) {
-        AutoFreeW sourcePath(path::Normalize(i.forwardSearchOrigin));
+        AutoFreeWstr sourcePath(path::Normalize(i.forwardSearchOrigin));
         cmd.AppendFmt(L"[" DDECOMMAND_SYNC L"(\"%s\", \"%s\", %d, 0, 0, 1)]", fullpath, sourcePath.get(),
                       i.forwardSearchLine);
     }
@@ -271,7 +271,7 @@ static WindowInfo* LoadOnStartup(const WCHAR* filePath, CommandLineInfo& i, bool
     if (i.forwardSearchOrigin && i.forwardSearchLine && win->AsFixed() && win->AsFixed()->pdfSync) {
         UINT page;
         Vec<RectI> rects;
-        AutoFreeW sourcePath(path::Normalize(i.forwardSearchOrigin));
+        AutoFreeWstr sourcePath(path::Normalize(i.forwardSearchOrigin));
         int ret = win->AsFixed()->pdfSync->SourceToDoc(sourcePath, i.forwardSearchLine, 0, &page, rects);
         ShowForwardSearchResult(win, sourcePath, i.forwardSearchLine, 0, ret, page, rects);
     }
@@ -349,7 +349,7 @@ static bool SetupPluginMode(CommandLineInfo& i) {
     // extract some command line arguments from the URL's hash fragment where available
     // see http://www.adobe.com/devnet/acrobat/pdfs/pdf_open_parameters.pdf#nameddest=G4.1501531
     if (i.pluginURL && str::FindChar(i.pluginURL, '#')) {
-        AutoFreeW args(str::Dup(str::FindChar(i.pluginURL, '#') + 1));
+        AutoFreeWstr args(str::Dup(str::FindChar(i.pluginURL, '#') + 1));
         str::TransChars(args, L"#", L"&");
         WStrVec parts;
         parts.Split(args, L"&", true);
@@ -490,7 +490,7 @@ static bool AutoUpdateMain() {
     }
     if (str::Eq(argList.at(2), L"replace")) {
         // older 2.6 prerelease versions used implicit paths
-        AutoFreeW exePath(GetExePath());
+        AutoFreeWstr exePath(GetExePath());
         CrashIf(!str::EndsWith(exePath, L".exe-updater.exe"));
         exePath[str::Len(exePath) - 12] = '\0';
         free(argList.at(2));
@@ -510,10 +510,10 @@ static bool AutoUpdateMain() {
         // continue startup, restoring the previous session
         return false;
     }
-    AutoFreeW thisExe(GetExePath());
+    AutoFreeWstr thisExe(GetExePath());
     RetryIO([&] { return CopyFile(thisExe, otherExe, FALSE) != 0; });
     // TODO: somehow indicate success or failure
-    AutoFreeW cleanupArgs(str::Format(L"-autoupdate cleanup:\"%s\"", thisExe.get()));
+    AutoFreeWstr cleanupArgs(str::Format(L"-autoupdate cleanup:\"%s\"", thisExe.get()));
     RetryIO([&] { return LaunchFile(otherExe, cleanupArgs); });
     return true;
 }

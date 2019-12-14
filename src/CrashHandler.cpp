@@ -439,7 +439,7 @@ static void GetGraphicsDriverInfo(str::Str& s) {
     //
     // There can be more than one driver, they are in 0000, 0001 etc.
     for (int i = 0;; i++) {
-        AutoFreeW key(str::Format(GFX_DRIVER_KEY_FMT, i));
+        AutoFreeWstr key(str::Format(GFX_DRIVER_KEY_FMT, i));
         char* v = ReadRegStrUtf8(HKEY_LOCAL_MACHINE, key, L"DriverDesc");
         // I assume that if I can't read the value, there are no more drivers
         if (!v) {

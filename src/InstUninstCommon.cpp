@@ -75,7 +75,7 @@ CommandLineInfo* gCli = nullptr;
 const WCHAR* gDefaultMsg = nullptr; // Note: translation, not freeing
 
 static float gUiDPIFactor = 1.0f;
-static AutoFreeW gMsg;
+static AutoFreeWstr gMsg;
 static Color gMsgColor;
 
 static WStrVec gProcessesToClose;
@@ -167,7 +167,7 @@ WCHAR* GetUninstallerPath() {
 }
 
 WCHAR* GetShortcutPath(int csidl) {
-    AutoFreeW dir(GetSpecialFolder(csidl, false));
+    AutoFreeWstr dir(GetSpecialFolder(csidl, false));
     if (!dir) {
         return nullptr;
     }
@@ -189,8 +189,8 @@ static bool IsUsingInstallation(DWORD procId) {
         return false;
     }
 
-    AutoFreeW libmupdf(path::Join(GetInstallDirNoFree(), L"libmupdf.dll"));
-    AutoFreeW browserPlugin(GetBrowserPluginPath());
+    AutoFreeWstr libmupdf(path::Join(GetInstallDirNoFree(), L"libmupdf.dll"));
+    AutoFreeWstr browserPlugin(GetBrowserPluginPath());
     const WCHAR* libmupdfName = path::GetBaseNameNoFree(libmupdf);
     const WCHAR* browserPluginName = path::GetBaseNameNoFree(browserPlugin);
 
@@ -225,7 +225,7 @@ static bool RegisterOrUnregisterServerDLL(const WCHAR* dllPath, bool install, co
     // make sure that the DLL can find any DLLs it depends on and
     // which reside in the same directory (in this case: libmupdf.dll)
     if (DynSetDllDirectoryW) {
-        AutoFreeW dllDir(path::GetDir(dllPath));
+        AutoFreeWstr dllDir(path::GetDir(dllPath));
         DynSetDllDirectoryW(dllDir);
     }
     defer {
@@ -274,7 +274,7 @@ static bool UnRegisterServerDLL(const WCHAR* dllPath, const WCHAR* args = nullpt
 }
 
 void UninstallBrowserPlugin() {
-    AutoFreeW dllPath(GetBrowserPluginPath());
+    AutoFreeWstr dllPath(GetBrowserPluginPath());
     if (!file::Exists(dllPath)) {
         // uninstall the detected plugin, even if it isn't in the target installation path
         dllPath.Set(GetInstalledBrowserPluginPath());
@@ -287,21 +287,21 @@ void UninstallBrowserPlugin() {
 }
 
 void InstallPdfFilter() {
-    AutoFreeW dllPath(GetPdfFilterPath());
+    AutoFreeWstr dllPath(GetPdfFilterPath());
     if (!RegisterServerDLL(dllPath)) {
         NotifyFailed(_TR("Couldn't install PDF search filter"));
     }
 }
 
 void UninstallPdfFilter() {
-    AutoFreeW dllPath(GetPdfFilterPath());
+    AutoFreeWstr dllPath(GetPdfFilterPath());
     if (!UnRegisterServerDLL(dllPath)) {
         NotifyFailed(_TR("Couldn't uninstall PDF search filter"));
     }
 }
 
 void InstallPdfPreviewer() {
-    AutoFreeW dllPath(GetPdfPreviewerPath());
+    AutoFreeWstr dllPath(GetPdfPreviewerPath());
     // TODO: RegisterServerDLL(dllPath, true, L"exts:pdf,...");
     if (!RegisterServerDLL(dllPath)) {
         NotifyFailed(_TR("Couldn't install PDF previewer"));
@@ -309,7 +309,7 @@ void InstallPdfPreviewer() {
 }
 
 void UninstallPdfPreviewer() {
-    AutoFreeW dllPath(GetPdfPreviewerPath());
+    AutoFreeWstr dllPath(GetPdfPreviewerPath());
     // TODO: RegisterServerDLL(dllPath, false, L"exts:pdf,...");
     if (!UnRegisterServerDLL(dllPath)) {
         NotifyFailed(_TR("Couldn't uninstall PDF previewer"));
@@ -437,7 +437,7 @@ static const WCHAR* ReadableProcName(const WCHAR* procPath) {
 }
 
 static void SetCloseProcessMsg() {
-    AutoFreeW procNames(str::Dup(ReadableProcName(gProcessesToClose.at(0))));
+    AutoFreeWstr procNames(str::Dup(ReadableProcName(gProcessesToClose.at(0))));
     for (size_t i = 1; i < gProcessesToClose.size(); i++) {
         const WCHAR* name = ReadableProcName(gProcessesToClose.at(i));
         if (i < gProcessesToClose.size() - 1)
@@ -445,7 +445,7 @@ static void SetCloseProcessMsg() {
         else
             procNames.Set(str::Join(procNames, L" and ", name));
     }
-    AutoFreeW s(str::Format(_TR("Please close %s to proceed!"), procNames.get()));
+    AutoFreeWstr s(str::Format(_TR("Please close %s to proceed!"), procNames.get()));
     SetMsg(s, COLOR_MSG_FAILED);
 }
 
@@ -629,7 +629,7 @@ static void CalcLettersLayout(Graphics& g, Font* f, int dx) {
 }
 
 static REAL DrawMessage(Graphics& g, const WCHAR* msg, REAL y, REAL dx, Color color) {
-    AutoFreeW s(str::Dup(msg));
+    AutoFreeWstr s(str::Dup(msg));
 
     Font f(L"Impact", 16, FontStyleRegular);
     RectF maxbox(0, y, dx, 0);

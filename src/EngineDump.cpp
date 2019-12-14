@@ -20,7 +20,7 @@
 #define Out(msg, ...) printf(msg, __VA_ARGS__)
 
 static OwnedData Escape(WCHAR* string) {
-    AutoFreeW freeOnReturn(string);
+    AutoFreeWstr freeOnReturn(string);
 
     if (str::IsEmpty(string))
         return {};
@@ -119,7 +119,7 @@ void DumpProperties(EngineBase* engine, bool fullDump) {
     if (!fullDump) {
         return;
     }
-    AutoFreeW fontlist(engine->GetProperty(DocumentProperty::FontList));
+    AutoFreeWstr fontlist(engine->GetProperty(DocumentProperty::FontList));
     if (fontlist) {
         WStrVec fonts;
         fonts.Split(fontlist, L"\n");
@@ -130,7 +130,7 @@ void DumpProperties(EngineBase* engine, bool fullDump) {
 
 // caller must free() the result
 char* DestRectToStr(EngineBase* engine, PageDestination* dest) {
-    if (AutoFreeW(dest->GetDestName())) {
+    if (AutoFreeWstr(dest->GetDestName())) {
         OwnedData name(Escape(dest->GetDestName()));
         return str::Format("Name=\"%s\"", name.Get());
     }
@@ -390,7 +390,7 @@ bool RenderDocument(EngineBase* engine, const WCHAR* renderPath, float zoom = 1.
         if (silent) {
             return false;
         }
-        AutoFreeW pdfFilePath(str::Format(renderPath, 0));
+        AutoFreeWstr pdfFilePath(str::Format(renderPath, 0));
         OwnedData pathUtf8(str::conv::ToUtf8(pdfFilePath.Get()));
         if (engine->SaveFileAsPDF(pathUtf8.Get(), true)) {
             return true;
@@ -408,7 +408,7 @@ bool RenderDocument(EngineBase* engine, const WCHAR* renderPath, float zoom = 1.
             delete bmp;
             continue;
         }
-        AutoFreeW pageBmpPath(str::Format(renderPath, pageNo));
+        AutoFreeWstr pageBmpPath(str::Format(renderPath, pageNo));
         if (str::EndsWithI(pageBmpPath, L".png")) {
             Gdiplus::Bitmap gbmp(bmp->GetBitmap(), nullptr);
             CLSID pngEncId = GetEncoderClsid(L"image/png");
@@ -463,7 +463,7 @@ int main(int argc, char** argv) {
         return 2;
     }
 
-    AutoFreeW filePath;
+    AutoFreeWstr filePath;
     WCHAR* password = nullptr;
     bool fullDump = true;
     WCHAR* renderPath = nullptr;
@@ -529,7 +529,7 @@ int main(int argc, char** argv) {
     // embedded documents are referred to by an invalid path
     // containing more information after a colon (e.g. "C:\file.pdf:3:0")
     if (INVALID_HANDLE_VALUE != hfind) {
-        AutoFreeW dir(path::GetDir(filePath));
+        AutoFreeWstr dir(path::GetDir(filePath));
         filePath.Set(path::Join(dir, fdata.cFileName));
         FindClose(hfind);
     }

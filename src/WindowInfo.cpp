@@ -247,8 +247,8 @@ class RemoteDestination : public PageDestination {
     PageDestType type;
     int pageNo;
     RectD rect;
-    AutoFreeW value;
-    AutoFreeW name;
+    AutoFreeWstr value;
+    AutoFreeWstr name;
 
   public:
     RemoteDestination(PageDestination* dest)
@@ -284,7 +284,7 @@ void LinkHandler::GotoLink(PageDestination* link) {
         return;
 
     TabInfo* tab = owner->currentTab;
-    AutoFreeW path(link->GetDestValue());
+    AutoFreeWstr path(link->GetDestValue());
     PageDestType type = link->GetDestType();
     if (PageDestType::ScrollTo == type) {
         // TODO: respect link->ld.gotor.new_window for PDF documents ?
@@ -388,7 +388,7 @@ void LinkHandler::LaunchFile(const WCHAR* path, PageDestination* link) {
         link = nullptr;
     }
 
-    AutoFreeW fullPath(path::GetDir(owner->ctrl->FilePath()));
+    AutoFreeWstr fullPath(path::GetDir(owner->ctrl->FilePath()));
     fullPath.Set(path::Join(fullPath, path));
     fullPath.Set(path::Normalize(fullPath));
     // TODO: respect link->ld.gotor.new_window for PDF documents ?
@@ -410,7 +410,7 @@ void LinkHandler::LaunchFile(const WCHAR* path, PageDestination* link) {
         // consider bad UI and thus simply don't)
         bool ok = OpenFileExternally(fullPath);
         if (!ok) {
-            AutoFreeW msg(str::Format(_TR("Error loading %s"), fullPath.get()));
+            AutoFreeWstr msg(str::Format(_TR("Error loading %s"), fullPath.get()));
             owner->ShowNotification(msg, NOS_HIGHLIGHT);
         }
         delete remoteLink;
@@ -421,7 +421,7 @@ void LinkHandler::LaunchFile(const WCHAR* path, PageDestination* link) {
     if (!remoteLink)
         return;
 
-    AutoFreeW destName(remoteLink->GetDestName());
+    AutoFreeWstr destName(remoteLink->GetDestName());
     if (destName) {
         PageDestination* dest = newWin->ctrl->GetNamedDest(destName);
         if (dest) {
@@ -460,7 +460,7 @@ static bool MatchFuzzy(const WCHAR* s1, const WCHAR* s2, bool partially = false)
 // (ignoring case and whitespace differences)
 PageDestination* LinkHandler::FindTocItem(DocTocItem* item, const WCHAR* name, bool partially) {
     for (; item; item = item->next) {
-        AutoFreeW fuzTitle(NormalizeFuzzy(item->title));
+        AutoFreeWstr fuzTitle(NormalizeFuzzy(item->title));
         if (MatchFuzzy(fuzTitle, name, partially))
             return item->GetLink();
         PageDestination* dest = FindTocItem(item->child, name, partially);
@@ -489,7 +489,7 @@ void LinkHandler::GotoNamedDest(const WCHAR* name) {
     } else if (ctrl->HasTocTree()) {
         auto* docTree = ctrl->GetTocTree();
         DocTocItem* root = docTree->root;
-        AutoFreeW fuzName(NormalizeFuzzy(name));
+        AutoFreeWstr fuzName(NormalizeFuzzy(name));
         dest = FindTocItem(root, fuzName);
         if (!dest)
             dest = FindTocItem(root, fuzName, true);

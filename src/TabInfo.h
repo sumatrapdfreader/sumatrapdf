@@ -10,10 +10,10 @@ struct Bookmarks;
    be moved between windows once this is supported) */
 class TabInfo {
   public:
-    AutoFreeW filePath;
+    AutoFreeWstr filePath;
     Controller* ctrl = nullptr;
     // text of win->hwndFrame when the tab is selected
-    AutoFreeW frameTitle;
+    AutoFreeWstr frameTitle;
     // state of the table of contents
     bool showToc = false;
     bool showTocPresentation = false;

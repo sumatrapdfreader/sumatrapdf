@@ -145,7 +145,7 @@ bool CreateArchive(const WCHAR* archivePath, WStrVec& files, size_t skipFiles = 
     lzsaHeader.Write32((uint32_t)(files.size() - skipFiles));
 
     for (size_t i = skipFiles; i < files.size(); i++) {
-        AutoFreeW filePath(str::Dup(files.at(i)));
+        AutoFreeWstr filePath(str::Dup(files.at(i)));
         WCHAR* sep = str::FindCharLast(filePath, ':');
         AutoFree utf8Name;
         if (sep) {

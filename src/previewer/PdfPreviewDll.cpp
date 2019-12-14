@@ -170,7 +170,7 @@ static struct {
 };
 
 STDAPI DllRegisterServer() {
-    AutoFreeW dllPath(path::GetPathOfFileInAppDir());
+    AutoFreeWstr dllPath(path::GetPathOfFileInAppDir());
     if (!dllPath)
         return HRESULT_FROM_WIN32(GetLastError());
 
@@ -187,9 +187,9 @@ STDAPI DllRegisterServer() {
         const WCHAR* ext = gPreviewers[i].ext;
         const WCHAR* ext2 = gPreviewers[i].ext2;
 
-        AutoFreeW displayName(str::Format(L"SumatraPDF Preview (*%s)", ext));
+        AutoFreeWstr displayName(str::Format(L"SumatraPDF Preview (*%s)", ext));
         // register class
-        AutoFreeW key(str::Format(L"Software\\Classes\\CLSID\\%s", clsid));
+        AutoFreeWstr key(str::Format(L"Software\\Classes\\CLSID\\%s", clsid));
         WriteOrFail_(key, nullptr, displayName);
         WriteOrFail_(key, L"AppId", IsRunningInWow64() ? APPID_PREVHOST_EXE_WOW64 : APPID_PREVHOST_EXE);
         WriteOrFail_(key, L"DisplayName", displayName);
@@ -248,7 +248,7 @@ STDAPI DllUnregisterServer() {
         SHDeleteValue(HKEY_LOCAL_MACHINE, REG_KEY_PREVIEW_HANDLERS, clsid);
         SHDeleteValue(HKEY_CURRENT_USER, REG_KEY_PREVIEW_HANDLERS, clsid);
         // remove class data
-        AutoFreeW key(str::Format(L"Software\\Classes\\CLSID\\%s", clsid));
+        AutoFreeWstr key(str::Format(L"Software\\Classes\\CLSID\\%s", clsid));
         DeleteOrFail_(key);
         // IThumbnailProvider
         key.Set(str::Format(L"Software\\Classes\\%s\\shellex\\" CLSID_I_THUMBNAIL_PROVIDER, ext));
@@ -280,7 +280,7 @@ STDAPI DllUnregisterServer() {
 STDAPI DllInstall(BOOL bInstall, LPCWSTR pszCmdLine) {
     // allows installing only a subset of available preview handlers
     if (str::StartsWithI(pszCmdLine, L"exts:")) {
-        AutoFreeW extsList(str::Dup(pszCmdLine + 5));
+        AutoFreeWstr extsList(str::Dup(pszCmdLine + 5));
         str::ToLowerInPlace(extsList);
         str::TransChars(extsList, L";. :", L",,,\0");
         WStrVec exts;

@@ -423,7 +423,7 @@ class EngineBase {
         fileName.SetCopy(s);
     }
 
-    AutoFreeW fileName;
+    AutoFreeWstr fileName;
 };
 
 class PasswordUI {

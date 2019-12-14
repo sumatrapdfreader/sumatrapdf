@@ -264,7 +264,7 @@ std::string_view ImagesEngine::GetFileData() {
 bool ImagesEngine::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
     UNUSED(includeUserAnnots);
     const WCHAR* srcPath = FileName();
-    AutoFreeW dstPath(str::conv::FromUtf8(copyFileName));
+    AutoFreeWstr dstPath(str::conv::FromUtf8(copyFileName));
     if (srcPath) {
         BOOL ok = CopyFileW(srcPath, dstPath, FALSE);
         if (ok) {
@@ -716,7 +716,7 @@ class ImageDirEngineImpl : public ImagesEngine {
 bool ImageDirEngineImpl::LoadImageDir(const WCHAR* dirName) {
     SetFileName(dirName);
 
-    AutoFreeW pattern(path::Join(dirName, L"*"));
+    AutoFreeWstr pattern(path::Join(dirName, L"*"));
 
     WIN32_FIND_DATA fdata;
     HANDLE hfind = FindFirstFile(pattern, &fdata);
@@ -797,14 +797,14 @@ DocTocTree* ImageDirEngineImpl::GetTocTree() {
 bool ImageDirEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
     UNUSED(includeUserAnnots);
     // only copy the files if the target directory doesn't exist yet
-    AutoFreeW dstPath(str::conv::FromUtf8(copyFileName));
+    AutoFreeWstr dstPath(str::conv::FromUtf8(copyFileName));
     if (!CreateDirectoryW(dstPath, nullptr)) {
         return false;
     }
     bool ok = true;
     for (size_t i = 0; i < pageFileNames.size(); i++) {
         const WCHAR* filePathOld = pageFileNames.at(i);
-        AutoFreeW filePathNew(path::Join(dstPath, path::GetBaseNameNoFree(filePathOld)));
+        AutoFreeWstr filePathNew(path::Join(dstPath, path::GetBaseNameNoFree(filePathOld)));
         ok = ok && CopyFileW(filePathOld, filePathNew, TRUE);
     }
     return ok;
@@ -914,14 +914,14 @@ class CbxEngineImpl : public ImagesEngine, public json::ValueVisitor {
     Vec<MultiFormatArchive::FileInfo*> files;
 
     // extracted metadata
-    AutoFreeW propTitle;
+    AutoFreeWstr propTitle;
     WStrVec propAuthors;
-    AutoFreeW propDate;
-    AutoFreeW propModDate;
-    AutoFreeW propCreator;
-    AutoFreeW propSummary;
+    AutoFreeWstr propDate;
+    AutoFreeWstr propModDate;
+    AutoFreeWstr propCreator;
+    AutoFreeWstr propSummary;
     // temporary state needed for extracting metadata
-    AutoFreeW propAuthorTmp;
+    AutoFreeWstr propAuthorTmp;
 };
 
 bool CbxEngineImpl::LoadFromFile(const WCHAR* file) {

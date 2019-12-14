@@ -80,7 +80,7 @@ static void HtmlParser04() {
     utassert(nullptr == root->next);
     utassert(nullptr == root->up);
     utassert(nullptr == root->down);
-    AutoFreeW val(root->GetAttribute("att"));
+    AutoFreeWstr val(root->GetAttribute("att"));
     utassert(str::Eq(val, L"va'l"));
     utassert(!root->firstAttr->next);
 }
@@ -94,7 +94,7 @@ static void HtmlParser03() {
     utassert(nullptr == root->next);
     utassert(nullptr == root->up);
     utassert(nullptr == root->down);
-    AutoFreeW val(root->GetAttribute("att"));
+    AutoFreeWstr val(root->GetAttribute("att"));
     utassert(str::Eq(val, L"v\"al"));
     utassert(!root->firstAttr->next);
 }
@@ -117,7 +117,7 @@ static void HtmlParser02() {
     utassert(el->NameIs("d"));
     utassert(nullptr == el->next);
     utassert(root == el->up);
-    AutoFreeW val(el->GetAttribute("at1"));
+    AutoFreeWstr val(el->GetAttribute("at1"));
     utassert(str::Eq(val, L"<quo&ted>"));
     val.Set(el->GetAttribute("at2"));
     utassert(str::Eq(val, L"also quoted"));
@@ -152,14 +152,14 @@ static void HtmlParser07() {
     HtmlParser p;
     HtmlElement* root = p.Parse("<test umls=&auml;\xC3\xB6&#xFC; Zero=&#1;&#0;&#-1;>", CP_UTF8);
     utassert(1 == p.ElementsCount());
-    AutoFreeW val(root->GetAttribute("umls"));
+    AutoFreeWstr val(root->GetAttribute("umls"));
     utassert(str::Eq(val, L"\xE4\xF6\xFC"));
     val.Set(root->GetAttribute("zerO"));
     utassert(str::Eq(val, L"\x01??"));
 }
 
 static void HtmlParser08() {
-    AutoFreeW val(DecodeHtmlEntitites("&auml&test;&&ouml-", CP_ACP));
+    AutoFreeWstr val(DecodeHtmlEntitites("&auml&test;&&ouml-", CP_ACP));
     utassert(str::Eq(val, L"\xE4&test;&\xF6-"));
 }
 
@@ -169,7 +169,7 @@ static void HtmlParser09() {
     utassert(1 == p.ElementsCount());
     utassert(1 == p.TotalAttrCount());
     utassert(root->NameIs("root"));
-    AutoFreeW val(root->GetAttribute("attr"));
+    AutoFreeWstr val(root->GetAttribute("attr"));
     utassert(str::Eq(val, L"<!-- comment -->"));
 
     root = p.Parse("<!-- comment with \" and \' --><main />");
@@ -190,7 +190,7 @@ static void HtmlParser10() {
     node = p.FindElementByNameNS("b", "http://example.org/ns/x");
     utassert(node);
     utassert(node->NameIs("x:b") && node->NameIsNS("b", "http://example.org/ns/x"));
-    AutoFreeW val(node->GetAttribute("attr"));
+    AutoFreeWstr val(node->GetAttribute("attr"));
     utassert(str::Eq(val, L"val"));
     // TODO: XML tags are case sensitive (HTML tags aren't)
     node = p.FindElementByName("X:B");
@@ -212,10 +212,10 @@ static void HtmlParserFile() {
     WCHAR* fileName = L"HtmlParseTest00.html";
     // We assume we're being run from obj-[dbg|rel], so the test
     // files are in ..\src\utils directory relative to exe's dir
-    AutoFreeW exePath(GetExePath());
+    AutoFreeWstr exePath(GetExePath());
     const WCHAR* exeDir = path::GetBaseNameNoFree(exePath);
-    AutoFreeW p1(path::Join(exeDir, L"..\\src\\utils"));
-    AutoFreeW p2(path::Join(p1, fileName));
+    AutoFreeWstr p1(path::Join(exeDir, L"..\\src\\utils"));
+    AutoFreeWstr p2(path::Join(p1, fileName));
     OwnedData d(file::ReadFile(p2));
     // it's ok if we fail - we assume we were not run from the
     // right location
@@ -240,7 +240,7 @@ static void HtmlParserFile() {
     utassert(el->NameIs("li"));
     el = el->down;
     utassert(el->NameIs("object"));
-    AutoFreeW val(el->GetAttribute("type"));
+    AutoFreeWstr val(el->GetAttribute("type"));
     utassert(str::Eq(val, L"text/sitemap"));
     el = el->down;
     utassert(el->NameIs("param"));

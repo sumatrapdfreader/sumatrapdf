@@ -176,7 +176,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationPageProvider::GetPropertyValue(PROP
 
     if (propertyId == UIA_NamePropertyId) {
         pRetVal->vt = VT_BSTR;
-        pRetVal->bstrVal = SysAllocString(AutoFreeW(str::Format(L"Page %d", pageNum)));
+        pRetVal->bstrVal = SysAllocString(AutoFreeWstr(str::Format(L"Page %d", pageNum)));
         return S_OK;
     } else if (propertyId == UIA_IsValuePatternAvailablePropertyId) {
         pRetVal->vt = VT_BOOL;

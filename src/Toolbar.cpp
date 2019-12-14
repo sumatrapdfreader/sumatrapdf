@@ -213,7 +213,7 @@ void UpdateFindbox(WindowInfo* win) {
 }
 
 static HBITMAP LoadExternalBitmap(HINSTANCE hInst, WCHAR* fileName, INT resourceId, bool useDibSection) {
-    AutoFreeW path(AppGenDataFilename(fileName));
+    AutoFreeWstr path(AppGenDataFilename(fileName));
 
     UINT flags = useDibSection ? LR_CREATEDIBSECTION : 0;
     if (path) {
@@ -415,7 +415,7 @@ static LRESULT CALLBACK WndProcPageBox(HWND hwnd, UINT message, WPARAM wParam, L
     } else if (WM_CHAR == message) {
         switch (wParam) {
             case VK_RETURN: {
-                AutoFreeW buf(win::GetText(win->hwndPageBox));
+                AutoFreeWstr buf(win::GetText(win->hwndPageBox));
                 int newPageNo = win->ctrl->GetPageByLabel(buf);
                 if (win->ctrl->ValidPageNo(newPageNo)) {
                     win->ctrl->GoToPage(newPageNo, true);
@@ -478,7 +478,7 @@ void UpdateToolbarPageText(WindowInfo* win, int pageCount, bool updateOnly) {
         buf = str::Format(L" / %d", pageCount);
     else {
         buf = str::Format(L" (%d / %d)", win->ctrl->CurrentPageNo(), pageCount);
-        AutoFreeW buf2(str::Format(L" (%d / %d)", pageCount, pageCount));
+        AutoFreeWstr buf2(str::Format(L" (%d / %d)", pageCount, pageCount));
         size2 = TextSizeInHwnd(win->hwndPageTotal, buf2);
     }
 

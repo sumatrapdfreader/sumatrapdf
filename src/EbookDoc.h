@@ -32,8 +32,8 @@ class EpubDoc {
 
     str::Str htmlData;
     Vec<ImageData2> images;
-    AutoFreeW tocPath;
-    AutoFreeW fileName;
+    AutoFreeWstr tocPath;
+    AutoFreeWstr fileName;
     PropertyMap props;
     bool isNcxToc = false;
     bool isRtlDoc = false;
@@ -71,7 +71,7 @@ class EpubDoc {
 
 class Fb2Doc {
   public:
-    AutoFreeW fileName;
+    AutoFreeWstr fileName;
     IStream* stream = nullptr;
 
     str::Str xmlData;
@@ -113,7 +113,7 @@ class Fb2Doc {
 class PdbReader;
 
 class PalmDoc {
-    AutoFreeW fileName;
+    AutoFreeWstr fileName;
     str::Str htmlData;
     WStrVec tocEntries;
 
@@ -138,7 +138,7 @@ class PalmDoc {
 /* ********** Plain HTML ********** */
 
 class HtmlDoc {
-    AutoFreeW fileName;
+    AutoFreeWstr fileName;
     AutoFree htmlData;
     AutoFree pagePath;
     Vec<ImageData2> images;
@@ -166,7 +166,7 @@ class HtmlDoc {
 /* ********** Plain Text (and RFCs and TCR) ********** */
 
 class TxtDoc {
-    AutoFreeW fileName;
+    AutoFreeWstr fileName;
     str::Str htmlData;
     bool isRFC;
 

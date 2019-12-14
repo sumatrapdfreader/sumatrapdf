@@ -601,7 +601,7 @@ static const WCHAR* LinkifyFindEnd(const WCHAR* start, WCHAR prevChar) {
 static const WCHAR* LinkifyMultilineText(LinkRectList* list, const WCHAR* pageText, const WCHAR* start,
                                          const WCHAR* next, RectI* coords) {
     size_t lastIx = list->coords.size() - 1;
-    AutoFreeW uri(list->links.at(lastIx));
+    AutoFreeWstr uri(list->links.at(lastIx));
     const WCHAR* end = next;
     bool multiline = false;
 
@@ -609,7 +609,7 @@ static const WCHAR* LinkifyMultilineText(LinkRectList* list, const WCHAR* pageTe
         end = LinkifyFindEnd(next, start > pageText ? start[-1] : ' ');
         multiline = LinkifyCheckMultiline(pageText, end, coords);
 
-        AutoFreeW part(str::DupN(next, end - next));
+        AutoFreeWstr part(str::DupN(next, end - next));
         uri.Set(str::Join(uri, part));
         RectI bbox = coords[next - pageText].Union(coords[end - pageText - 1]);
         list->coords.Append(fz_RectD_to_rect(bbox.Convert<double>()));
@@ -695,7 +695,7 @@ LinkRectList* LinkifyText(const WCHAR* pageText, RectI* coords) {
         if (!end)
             continue;
 
-        AutoFreeW part(str::DupN(start, end - start));
+        AutoFreeWstr part(str::DupN(start, end - start));
         WCHAR* uri = protocol ? str::Join(protocol, part) : part.StealData();
         list->links.Append(uri);
         RectI bbox = coords[start - pageText].Union(coords[end - pageText - 1]);

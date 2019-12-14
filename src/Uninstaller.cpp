@@ -62,8 +62,8 @@ static bool RemoveUninstallerRegistryInfo() {
 
 /* Undo what DoAssociateExeWithPdfExtension() in AppTools.cpp did */
 static void UnregisterFromBeingDefaultViewer(HKEY hkey) {
-    AutoFreeW curr(ReadRegStr(hkey, REG_CLASSES_PDF, nullptr));
-    AutoFreeW prev(ReadRegStr(hkey, REG_CLASSES_APP, L"previous.pdf"));
+    AutoFreeWstr curr(ReadRegStr(hkey, REG_CLASSES_PDF, nullptr));
+    AutoFreeWstr prev(ReadRegStr(hkey, REG_CLASSES_APP, L"previous.pdf"));
     if (!curr || !str::Eq(curr, APP_NAME_STR)) {
         // not the default, do nothing
     } else if (prev) {
@@ -77,7 +77,7 @@ static void UnregisterFromBeingDefaultViewer(HKEY hkey) {
     }
 
     // the following settings overrule HKEY_CLASSES_ROOT\.pdf
-    AutoFreeW buf(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, PROG_ID));
+    AutoFreeWstr buf(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, PROG_ID));
     if (str::Eq(buf, APP_NAME_STR)) {
         LONG res = SHDeleteValue(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT, PROG_ID);
         if (res != ERROR_SUCCESS)
@@ -119,7 +119,7 @@ static void RemoveOwnRegistryKeys(HKEY hkey) {
     SHDeleteValue(hkey, REG_CLASSES_PDF L"\\OpenWithProgids", APP_NAME_STR);
 
     for (int j = 0; nullptr != gSupportedExts[j]; j++) {
-        AutoFreeW keyname(str::Join(L"Software\\Classes\\", gSupportedExts[j], L"\\OpenWithProgids"));
+        AutoFreeWstr keyname(str::Join(L"Software\\Classes\\", gSupportedExts[j], L"\\OpenWithProgids"));
         SHDeleteValue(hkey, keyname, APP_NAME_STR);
         DeleteEmptyRegKey(hkey, keyname);
 
@@ -150,11 +150,11 @@ static bool RemoveEmptyDirectory(const WCHAR* dir) {
     WIN32_FIND_DATA findData;
     bool ok = TRUE;
 
-    AutoFreeW dirPattern(path::Join(dir, L"*"));
+    AutoFreeWstr dirPattern(path::Join(dir, L"*"));
     HANDLE h = FindFirstFileW(dirPattern, &findData);
     if (h != INVALID_HANDLE_VALUE) {
         do {
-            AutoFreeW path(path::Join(dir, findData.cFileName));
+            AutoFreeWstr path(path::Join(dir, findData.cFileName));
             DWORD attrs = findData.dwFileAttributes;
             // filter out directories. Even though there shouldn't be any
             // subdirectories, it also filters out the standard "." and ".."
@@ -202,8 +202,8 @@ static void RemoveInstalledFiles() {
     size_t n = dimof(gInstalledFiles);
     for (size_t i = 0; i < n; i++) {
         const char* s = gInstalledFiles[i];
-        AutoFreeW relPath(str::conv::FromUtf8(s));
-        AutoFreeW path(path::Join(dir, relPath));
+        AutoFreeWstr relPath(str::conv::FromUtf8(s));
+        AutoFreeWstr path(path::Join(dir, relPath));
         DeleteFile(path);
     }
 
@@ -306,7 +306,7 @@ static void OnCreateWindow(HWND hwnd) {
 }
 
 static void CreateMainWindow() {
-    AutoFreeW title(str::Format(_TR("SumatraPDF %s Uninstaller"), CURR_VERSION_STR));
+    AutoFreeWstr title(str::Format(_TR("SumatraPDF %s Uninstaller"), CURR_VERSION_STR));
     int dx = dpiAdjust(INSTALLER_WIN_DX);
     int dy = dpiAdjust(INSTALLER_WIN_DY);
     HMODULE h = GetModuleHandleW(nullptr);
@@ -327,7 +327,7 @@ static void ShowUsage() {
 using namespace Gdiplus;
 
 static WCHAR* GetInstallationDir() {
-    AutoFreeW dir(ReadRegStr2(HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, REG_PATH_UNINST, L"InstallLocation"));
+    AutoFreeWstr dir(ReadRegStr2(HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, REG_PATH_UNINST, L"InstallLocation"));
     if (dir) {
         if (str::EndsWithI(dir, L".exe")) {
             dir.Set(path::GetDir(dir));
@@ -469,7 +469,7 @@ int RunUninstaller(CommandLineInfo* cli) {
     gDefaultMsg = _TR("Are you sure you want to uninstall SumatraPDF?");
     gCli->installDir = GetInstallationDir();
 
-    AutoFreeW exePath(GetInstalledExePath());
+    AutoFreeWstr exePath(GetInstalledExePath());
     auto installerExists = file::Exists(exePath);
 
     if (gCli->showHelp) {

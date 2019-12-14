@@ -258,7 +258,7 @@ HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu, int flag
             }
             wasSeparator = true;
         } else if (MF_NO_TRANSLATE == (md.flags & MF_NO_TRANSLATE)) {
-            AutoFreeW tmp(str::conv::FromUtf8(md.title));
+            AutoFreeWstr tmp(str::conv::FromUtf8(md.title));
             AppendMenu(menu, MF_STRING, (UINT_PTR)md.id, tmp);
             wasSeparator = false;
         } else {
@@ -279,7 +279,7 @@ static void AddFileMenuItem(HMENU menuFile, const WCHAR* filePath, UINT index) {
         return;
     }
 
-    AutoFreeW menuString;
+    AutoFreeWstr menuString;
     menuString.SetCopy(path::GetBaseNameNoFree(filePath));
     auto fileName = win::menu::ToSafeString(menuString);
     int menuIdx = (int)((index + 1) % 10);
@@ -326,7 +326,7 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR* filePath) {
             continue;
         }
 
-        AutoFreeW appName;
+        AutoFreeWstr appName;
         const WCHAR* name = ev->name;
         if (str::IsEmpty(name)) {
             WStrVec args;
@@ -338,7 +338,7 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR* filePath) {
             *(WCHAR*)path::GetExt(appName) = '\0';
         }
 
-        AutoFreeW menuString(str::Format(_TR("Open in %s"), appName ? appName.get() : name));
+        AutoFreeWstr menuString(str::Format(_TR("Open in %s"), appName ? appName.get() : name));
         UINT menuId = IDM_OPEN_WITH_EXTERNAL_FIRST + count;
         InsertMenu(menuFile, IDM_SEND_BY_EMAIL, MF_BYCOMMAND | MF_ENABLED | MF_STRING, menuId, menuString);
         if (!filePath) {
@@ -612,7 +612,7 @@ void OnContextMenu(WindowInfo* win, int x, int y) {
     }
 
     PageElement* pageEl = win->AsFixed()->GetElementAtPos(PointI(x, y));
-    AutoFreeW value;
+    AutoFreeWstr value;
     if (pageEl) {
         value.Set(pageEl->GetValue());
     }

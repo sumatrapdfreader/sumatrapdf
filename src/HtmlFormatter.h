@@ -131,7 +131,7 @@ class HtmlFormatterArgs {
     int reparseIdx = 0;
 
   private:
-    AutoFreeW fontName;
+    AutoFreeWstr fontName;
 };
 
 class HtmlPullParser;
@@ -215,7 +215,7 @@ class HtmlFormatter {
     float lineSpacing;
     float spaceDx;
     Graphics* gfx; // for measuring text
-    AutoFreeW defaultFontName;
+    AutoFreeWstr defaultFontName;
     float defaultFontSize;
     Allocator* textAllocator;
     mui::ITextRender* textMeasure;

@@ -289,7 +289,7 @@ bool ChmDoc::Load(const WCHAR* fileName) {
 }
 
 WCHAR* ChmDoc::GetProperty(DocumentProperty prop) {
-    AutoFreeW result;
+    AutoFreeWstr result;
     if (DocumentProperty::Title == prop && title)
         result.Set(ToStr(title));
     else if (DocumentProperty::CreatorApp == prop && creator)
@@ -335,12 +335,12 @@ Vec<char*>* ChmDoc::GetAllPaths() {
 static bool VisitChmTocItem(EbookTocVisitor* visitor, HtmlElement* el, UINT cp, int level) {
     CrashIf(el->tag != Tag_Object || level > 1 && (!el->up || el->up->tag != Tag_Li));
 
-    AutoFreeW name, local;
+    AutoFreeWstr name, local;
     for (el = el->GetChildByTag(Tag_Param); el; el = el->next) {
         if (Tag_Param != el->tag)
             continue;
-        AutoFreeW attrName(el->GetAttribute("name"));
-        AutoFreeW attrVal(el->GetAttribute("value"));
+        AutoFreeWstr attrName(el->GetAttribute("name"));
+        AutoFreeWstr attrVal(el->GetAttribute("value"));
         if (attrName && attrVal && cp != CP_CHM_DEFAULT) {
             OwnedData bytes(str::conv::ToCodePage(attrVal, CP_CHM_DEFAULT));
             attrVal.Set(str::conv::FromCodePage(bytes.Get(), cp));
@@ -381,12 +381,12 @@ static bool VisitChmIndexItem(EbookTocVisitor* visitor, HtmlElement* el, UINT cp
     CrashIf(el->tag != Tag_Object || level > 1 && (!el->up || el->up->tag != Tag_Li));
 
     WStrVec references;
-    AutoFreeW keyword, name;
+    AutoFreeWstr keyword, name;
     for (el = el->GetChildByTag(Tag_Param); el; el = el->next) {
         if (Tag_Param != el->tag)
             continue;
-        AutoFreeW attrName(el->GetAttribute("name"));
-        AutoFreeW attrVal(el->GetAttribute("value"));
+        AutoFreeWstr attrName(el->GetAttribute("name"));
+        AutoFreeWstr attrVal(el->GetAttribute("value"));
         if (attrName && attrVal && cp != CP_CHM_DEFAULT) {
             OwnedData bytes(str::conv::ToCodePage(attrVal, CP_CHM_DEFAULT));
             attrVal.Set(str::conv::FromCodePage(bytes.Get(), cp));
@@ -458,7 +458,7 @@ static bool WalkBrokenChmTocOrIndex(EbookTocVisitor* visitor, HtmlParser& p, UIN
 
     HtmlElement* el = p.FindElementByName("body");
     while ((el = p.FindElementByName("object", el)) != nullptr) {
-        AutoFreeW type(el->GetAttribute("type"));
+        AutoFreeWstr type(el->GetAttribute("type"));
         if (!str::EqI(type, L"text/sitemap"))
             continue;
         if (isIndex)

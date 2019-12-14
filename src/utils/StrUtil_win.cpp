@@ -211,7 +211,7 @@ OwnedData ToMultiByte(const char* src, UINT codePageSrc, UINT codePageDest) {
         return OwnedData::MakeFromStr(src);
     }
 
-    AutoFreeW tmp(ToWideChar(src, codePageSrc));
+    AutoFreeWstr tmp(ToWideChar(src, codePageSrc));
     if (!tmp) {
         return {};
     }
@@ -405,7 +405,7 @@ WCHAR* FormatNumWithThousandSep(size_t num, LCID locale) {
     WCHAR thousandSep[4] = {0};
     if (!GetLocaleInfo(locale, LOCALE_STHOUSAND, thousandSep, dimof(thousandSep)))
         str::BufSet(thousandSep, dimof(thousandSep), L",");
-    AutoFreeW buf(str::Format(L"%Iu", num));
+    AutoFreeWstr buf(str::Format(L"%Iu", num));
 
     size_t resLen = str::Len(buf) + str::Len(thousandSep) * (str::Len(buf) + 3) / 3 + 1;
     WCHAR* res = AllocArray<WCHAR>(resLen);
@@ -429,13 +429,13 @@ WCHAR* FormatNumWithThousandSep(size_t num, LCID locale) {
 WCHAR* FormatFloatWithThousandSep(double number, LCID locale) {
     size_t num = (size_t)(number * 100 + 0.5);
 
-    AutoFreeW tmp(FormatNumWithThousandSep(num / 100, locale));
+    AutoFreeWstr tmp(FormatNumWithThousandSep(num / 100, locale));
     WCHAR decimal[4];
     if (!GetLocaleInfo(locale, LOCALE_SDECIMAL, decimal, dimof(decimal)))
         str::BufSet(decimal, dimof(decimal), L".");
 
     // always add between one and two decimals after the point
-    AutoFreeW buf(str::Format(L"%s%s%02d", tmp.get(), decimal, num % 100));
+    AutoFreeWstr buf(str::Format(L"%s%s%02d", tmp.get(), decimal, num % 100));
     if (str::EndsWith(buf, L"0"))
         buf[str::Len(buf) - 1] = '\0';
 
@@ -583,7 +583,7 @@ const WCHAR* Parse(const WCHAR* str, const WCHAR* format, ...) {
         else if ('s' == *f)
             *va_arg(args, WCHAR**) = ExtractUntil(str, *(f + 1), &end);
         else if ('S' == *f)
-            va_arg(args, AutoFreeW*)->Set(ExtractUntil(str, *(f + 1), &end));
+            va_arg(args, AutoFreeWstr*)->Set(ExtractUntil(str, *(f + 1), &end));
         else if ('$' == *f && !*str)
             continue; // don't fail, if we're indeed at the end of the string
         else if ('%' == *f && *f == *str)
@@ -676,7 +676,7 @@ MaybeOwnedData UnknownToUtf8(const std::string_view& txt) {
         return MaybeOwnedData((char*)s, len, false);
     }
 
-    AutoFreeW uni(str::conv::FromAnsi(s, len));
+    AutoFreeWstr uni(str::conv::FromAnsi(s, len));
     OwnedData d = str::conv::ToUtf8(uni.Get());
     size_t n = d.size;
     auto* str = d.StealData();
@@ -770,7 +770,7 @@ WCHAR* GetFullPath(const WCHAR* url) {
 }
 
 WCHAR* GetFileName(const WCHAR* url) {
-    AutoFreeW path(str::Dup(url));
+    AutoFreeWstr path(str::Dup(url));
     str::TransChars(path, L"#?", L"\0\0");
     WCHAR* base = path + str::Len(path);
     for (; base > path; base--) {

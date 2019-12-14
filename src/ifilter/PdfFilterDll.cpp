@@ -129,7 +129,7 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 
 STDAPI DllRegisterServer()
 {
-    AutoFreeW dllPath(path::GetPathOfFileInAppDir());
+    AutoFreeWstr dllPath(path::GetPathOfFileInAppDir());
     if (!dllPath)
         return HRESULT_FROM_WIN32(GetLastError());
 

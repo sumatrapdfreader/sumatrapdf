@@ -54,7 +54,7 @@ class HtmlWindow {
     DWORD adviseCookie;
     bool blankWasShown;
 
-    AutoFreeW currentURL;
+    AutoFreeWstr currentURL;
 
     HtmlWindow(HWND hwndParent, HtmlWindowCallback* cb);
 

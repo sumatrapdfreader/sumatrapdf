@@ -168,7 +168,7 @@ static SizeI CalcSumatraVersionSize(HWND hwnd, HDC hdc) {
 
     /* consider version and version-sub strings */
     SelectObject(hdc, fontVersionTxt);
-    AutoFreeW ver(GetSumatraVersion());
+    AutoFreeWstr ver(GetSumatraVersion());
     GetTextExtentPoint32(hdc, ver.Get(), (int)str::Len(ver.Get()), &txtSize);
     LONG minWidth = txtSize.cx + DpiScaleX(hwnd, 8);
     txt = VERSION_SUB_TXT;
@@ -196,7 +196,7 @@ static void DrawSumatraVersion(HWND hwnd, HDC hdc, RectI rect) {
     SelectObject(hdc, fontVersionTxt);
     PointI pt(mainRect.x + mainRect.dx + ABOUT_INNER_PADDING, mainRect.y);
 
-    AutoFreeW ver(GetSumatraVersion());
+    AutoFreeWstr ver(GetSumatraVersion());
     TextOut(hdc, pt.x, pt.y, ver.Get(), (int)str::Len(ver.Get()));
     txt = VERSION_SUB_TXT;
     TextOut(hdc, pt.x, pt.y + DpiScaleX(hwnd, 13), txt, (int)str::Len(txt));
@@ -417,7 +417,7 @@ static void OnPaintAbout(HWND hwnd) {
 static void CopyAboutInfoToClipboard(HWND hwnd) {
     UNUSED(hwnd);
     str::WStr info(512);
-    AutoFreeW ver(GetSumatraVersion());
+    AutoFreeWstr ver(GetSumatraVersion());
     info.AppendFmt(L"%s %s\r\n", APP_NAME_STR, ver.Get());
     for (size_t i = info.size() - 2; i > 0; i--) {
         info.Append('-');

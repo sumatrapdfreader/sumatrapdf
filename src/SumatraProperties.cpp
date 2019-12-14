@@ -37,7 +37,7 @@ class PropertyEl {
     // A property is always in format: Name (left): Value (right)
     // (leftTxt is static, rightTxt will be freed)
     const WCHAR* leftTxt;
-    AutoFreeW rightTxt;
+    AutoFreeWstr rightTxt;
 
     // data calculated by the layout
     RectI leftPos;
@@ -186,7 +186,7 @@ static WCHAR* FormatSizeSuccint(size_t size) {
         unit = _TR("KB");
     }
 
-    AutoFreeW sizestr(str::FormatFloatWithThousandSep(s));
+    AutoFreeWstr sizestr(str::FormatFloatWithThousandSep(s));
     if (!unit)
         return sizestr.StealData();
     return str::Format(L"%s %s", sizestr.Get(), unit);
@@ -196,8 +196,8 @@ static WCHAR* FormatSizeSuccint(size_t size) {
 // as "1.29 MB (1,348,258 Bytes)"
 // Caller needs to free the result
 static WCHAR* FormatFileSize(size_t size) {
-    AutoFreeW n1(FormatSizeSuccint(size));
-    AutoFreeW n2(str::FormatNumWithThousandSep(size));
+    AutoFreeWstr n1(FormatSizeSuccint(size));
+    AutoFreeWstr n2(str::FormatNumWithThousandSep(size));
 
     return str::Format(L"%s (%s %s)", n1.Get(), n2.Get(), _TR("Bytes"));
 }
@@ -275,14 +275,14 @@ static WCHAR* FormatPageSize(EngineBase* engine, int pageNo, int rotation) {
     if (((int)(height * 100)) % 100 == 99)
         height += 0.01;
 
-    AutoFreeW strWidth(str::FormatFloatWithThousandSep(width));
-    AutoFreeW strHeight(str::FormatFloatWithThousandSep(height));
+    AutoFreeWstr strWidth(str::FormatFloatWithThousandSep(width));
+    AutoFreeWstr strHeight(str::FormatFloatWithThousandSep(height));
 
     return str::Format(L"%s x %s %s%s", strWidth.Get(), strHeight.Get(), unit, formatName);
 }
 
 static WCHAR* FormatPdfFileStructure(Controller* ctrl) {
-    AutoFreeW fstruct(ctrl->GetProperty(DocumentProperty::PdfFileStructure));
+    AutoFreeWstr fstruct(ctrl->GetProperty(DocumentProperty::PdfFileStructure));
     if (str::IsEmpty(fstruct.Get()))
         return nullptr;
     WStrVec parts;

@@ -117,7 +117,7 @@ static WCHAR* ExtractHtmlText(EpubDoc* doc) {
 }
 
 HRESULT CEpubFilter::GetNextChunkValue(CChunkValue& chunkValue) {
-    AutoFreeW str;
+    AutoFreeWstr str;
 
     switch (m_state) {
         case STATE_EPUB_START:

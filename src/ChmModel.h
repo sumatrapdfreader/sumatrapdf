@@ -91,7 +91,7 @@ class ChmModel : public Controller {
     void DownloadData(const WCHAR* url, const unsigned char* data, size_t len);
 
   protected:
-    AutoFreeW fileName;
+    AutoFreeWstr fileName;
     ChmDoc* doc = nullptr;
     DocTocTree* tocTree = nullptr;
     CRITICAL_SECTION docAccess;

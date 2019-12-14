@@ -165,7 +165,7 @@ static void EnumeratePrinters() {
         free(info5Arr);
         return;
     }
-    AutoFreeW defName(GetDefaultPrinterName());
+    AutoFreeWstr defName(GetDefaultPrinterName());
     for (DWORD i = 0; i < printersCount; i++) {
         const WCHAR* printerName = info5Arr[i].pPrinterName;
         const WCHAR* printerPort = info5Arr[i].pPortName;
@@ -183,7 +183,7 @@ static void EnumeratePrinters() {
         } else {
             ScopedMem<WORD> binValues(AllocArray<WORD>(bins));
             DeviceCapabilities(printerName, printerPort, DC_BINS, (WCHAR*)binValues.Get(), nullptr);
-            AutoFreeW binNameValues(AllocArray<WCHAR>(24 * binNames));
+            AutoFreeWstr binNameValues(AllocArray<WCHAR>(24 * binNames));
             DeviceCapabilities(printerName, printerPort, DC_BINNAMES, binNameValues.Get(), nullptr);
             for (DWORD j = 0; j < bins; j++) {
                 output.AppendFmt(L" - '%s' (%d)\n", binNameValues.Get() + 24 * j, binValues.Get()[j]);

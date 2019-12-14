@@ -19,7 +19,7 @@ extern "C" {
 
 using namespace Gdiplus;
 
-static AutoFreeW gPdfProducer;
+static AutoFreeWstr gPdfProducer;
 
 void PdfCreator::SetProducerName(const WCHAR* name) {
     if (!str::Eq(gPdfProducer, name))
@@ -348,7 +348,7 @@ bool PdfCreator::CopyProperties(EngineBase* engine) {
         DocumentProperty::Copyright, DocumentProperty::ModificationDate, DocumentProperty::CreatorApp};
     bool ok = true;
     for (int i = 0; i < dimof(props); i++) {
-        AutoFreeW value(engine->GetProperty(props[i]));
+        AutoFreeWstr value(engine->GetProperty(props[i]));
         if (value) {
             ok = ok && SetProperty(props[i], value);
         }

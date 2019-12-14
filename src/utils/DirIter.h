@@ -13,9 +13,9 @@ class DirIter {
     bool recursive = false;
 
     WStrVec dirsToVisit;
-    AutoFreeW startDir;
-    AutoFreeW currDir;
-    AutoFreeW currPath;
+    AutoFreeWstr startDir;
+    AutoFreeWstr currDir;
+    AutoFreeWstr currPath;
     HANDLE currFindHandle = nullptr;
     WIN32_FIND_DATAW currFindData{};
     bool foundNext = false;

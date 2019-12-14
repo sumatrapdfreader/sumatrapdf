@@ -34,7 +34,7 @@ Kind kindEngineChm = "engineChm";
 Kind kindEngineHtml = "engineHtml";
 Kind kindEngineTxt = "engineTxt";
 
-static AutoFreeW gDefaultFontName;
+static AutoFreeWstr gDefaultFontName;
 static float gDefaultFontSize = 10.f;
 
 static const WCHAR* GetDefaultFontName() {
@@ -114,7 +114,7 @@ class EbookEngine : public EngineBase {
         if (!fileName) {
             return false;
         }
-        AutoFreeW path(str::conv::FromUtf8(copyFileName));
+        AutoFreeWstr path(str::conv::FromUtf8(copyFileName));
         return fileName ? CopyFileW(fileName, path, FALSE) : false;
     }
     WCHAR* ExtractPageText(int pageNo, RectI** coordsOut = nullptr) override;
@@ -175,7 +175,7 @@ class SimpleDest2 : public PageDestination {
   protected:
     int pageNo;
     RectD rect;
-    AutoFreeW value;
+    AutoFreeWstr value;
 
   public:
     SimpleDest2(int pageNo, RectD rect, WCHAR* value = nullptr) : pageNo(pageNo), rect(rect), value(value) {
@@ -482,7 +482,7 @@ WCHAR* EbookEngine::ExtractPageText(int pageNo, RectI** coordsOut) {
                 }
                 insertSpace = false;
                 {
-                    AutoFreeW s(str::conv::FromHtmlUtf8(i.str.s, i.str.len));
+                    AutoFreeWstr s(str::conv::FromHtmlUtf8(i.str.s, i.str.len));
                     content.Append(s);
                     size_t len = str::Len(s);
                     double cwidth = 1.0 * bbox.dx / len;
@@ -505,7 +505,7 @@ WCHAR* EbookEngine::ExtractPageText(int pageNo, RectI** coordsOut) {
                 }
                 insertSpace = false;
                 {
-                    AutoFreeW s(str::conv::FromHtmlUtf8(i.str.s, i.str.len));
+                    AutoFreeWstr s(str::conv::FromHtmlUtf8(i.str.s, i.str.len));
                     content.Append(s);
                     size_t len = str::Len(s);
                     double cwidth = 1.0 * bbox.dx / len;
@@ -541,7 +541,7 @@ void EbookEngine::UpdateUserAnnotations(Vec<PageAnnotation>* list) {
 }
 
 PageElement* EbookEngine::CreatePageLink(DrawInstr* link, RectI rect, int pageNo) {
-    AutoFreeW url(str::conv::FromHtmlUtf8(link->str.s, link->str.len));
+    AutoFreeWstr url(str::conv::FromHtmlUtf8(link->str.s, link->str.len));
     if (url::IsAbsolute(url)) {
         return new EbookLink(link, rect, nullptr, pageNo);
     }
@@ -736,7 +736,7 @@ void EbookTocBuilder::Visit(const WCHAR* name, const WCHAR* url, int level) {
     } else {
         dest = engine->GetNamedDest(url);
         if (!dest && str::FindChar(url, '%')) {
-            AutoFreeW decodedUrl(str::Dup(url));
+            AutoFreeWstr decodedUrl(str::Dup(url));
             url::DecodeInPlace(decodedUrl);
             dest = engine->GetNamedDest(decodedUrl);
         }
@@ -905,7 +905,7 @@ EngineBase* EpubEngineImpl::CreateFromStream(IStream* stream) {
 
 bool IsEpubEngineSupportedFile(const WCHAR* fileName, bool sniff) {
     if (sniff && dir::Exists(fileName)) {
-        AutoFreeW mimetypePath(path::Join(fileName, L"mimetype"));
+        AutoFreeWstr mimetypePath(path::Join(fileName, L"mimetype"));
         return file::StartsWith(mimetypePath, "application/epub+zip");
     }
     return EpubDoc::IsSupportedFile(fileName, sniff);
@@ -1478,7 +1478,7 @@ class ChmHtmlCollector : public EbookTocVisitor {
     char* GetHtml() {
         // first add the homepage
         const char* index = doc->GetHomePath();
-        AutoFreeW url(doc->ToStr(index));
+        AutoFreeWstr url(doc->ToStr(index));
         Visit(nullptr, url, 0);
 
         // then add all pages linked to from the table of contents
@@ -1506,7 +1506,7 @@ class ChmHtmlCollector : public EbookTocVisitor {
         UNUSED(level);
         if (!url || url::IsAbsolute(url))
             return;
-        AutoFreeW plainUrl(url::GetFullPath(url));
+        AutoFreeWstr plainUrl(url::GetFullPath(url));
         if (added.FindI(plainUrl) != -1) {
             return;
         }
@@ -1554,7 +1554,7 @@ PageDestination* ChmEngineImpl::GetNamedDest(const WCHAR* name) {
         if (str::Parse(name, L"%u%$", &topicID)) {
             AutoFree urlUtf8(doc->ResolveTopicID(topicID));
             if (urlUtf8) {
-                AutoFreeW url(str::conv::FromUtf8(urlUtf8));
+                AutoFreeWstr url(str::conv::FromUtf8(urlUtf8));
                 dest = EbookEngine::GetNamedDest(url);
             }
         }
@@ -1706,7 +1706,7 @@ bool HtmlEngineImpl::Load(const WCHAR* fileName) {
 }
 
 class RemoteHtmlDest : public SimpleDest2 {
-    AutoFreeW name;
+    AutoFreeWstr name;
 
   public:
     explicit RemoteHtmlDest(const WCHAR* relativeURL) : SimpleDest2(0, RectD()) {
@@ -1730,7 +1730,7 @@ PageElement* HtmlEngineImpl::CreatePageLink(DrawInstr* link, RectI rect, int pag
     if (0 == link->str.len)
         return nullptr;
 
-    AutoFreeW url(str::conv::FromHtmlUtf8(link->str.s, link->str.len));
+    AutoFreeWstr url(str::conv::FromHtmlUtf8(link->str.s, link->str.len));
     if (url::IsAbsolute(url) || '#' == *url)
         return EbookEngine::CreatePageLink(link, rect, pageNo);
 

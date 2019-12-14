@@ -39,7 +39,7 @@ static void StrReplaceTest() {
         {L"a", L"b", nullptr, nullptr},
     };
     for (size_t i = 0; i < dimof(data); i++) {
-        AutoFreeW result(str::Replace(data[i].string, data[i].find, data[i].replace));
+        AutoFreeWstr result(str::Replace(data[i].string, data[i].find, data[i].replace));
         utassert(str::Eq(result, data[i].result));
     }
 }
@@ -124,7 +124,7 @@ static void StrUrlExtractTest() {
     utassert(!url::GetFileName(L""));
     utassert(!url::GetFileName(L"#hash_only"));
     utassert(!url::GetFileName(L"?query=only"));
-    AutoFreeW fileName(url::GetFileName(L"http://example.net/filename.ext"));
+    AutoFreeWstr fileName(url::GetFileName(L"http://example.net/filename.ext"));
     utassert(str::Eq(fileName, L"filename.ext"));
     fileName.Set(url::GetFileName(L"http://example.net/filename.ext#with_hash"));
     utassert(str::Eq(fileName, L"filename.ext"));
@@ -214,7 +214,7 @@ void StrTest() {
     utassert(str::Eq(str, buf));
     free(str);
     {
-        AutoFreeW large(AllocArray<WCHAR>(2000));
+        AutoFreeWstr large(AllocArray<WCHAR>(2000));
         memset(large, 0x11, 1998);
         str = str::Format(L"%s", large.get());
         utassert(str::Eq(str, large));
@@ -276,7 +276,7 @@ void StrTest() {
 
     {
         UINT u1 = 0;
-        AutoFreeW str1;
+        AutoFreeWstr str1;
         const WCHAR* end = str::Parse(str, L"[Open(\"%S\",0%?,%u,0)]", &str1, &u1);
         utassert(end && !*end);
         utassert(u1 == 1 && str::Eq(str1, L"filename.pdf"));
@@ -356,7 +356,7 @@ void StrTest() {
         utassert(str::Eq(str1, "ansi string") && i == -30 && j == 20 && f == 1.5f);
     }
     {
-        AutoFreeW str1;
+        AutoFreeWstr str1;
         int i, j;
         float f;
         utassert(str::Parse(L"wide string, -30-20 1.5%", L"%S,%d%?-%2u%f%%%$", &str1, &i, &j, &f));
@@ -413,7 +413,7 @@ void StrTest() {
     };
 
     for (int i = 0; i < dimof(formatNumData); i++) {
-        AutoFreeW tmp(str::FormatNumWithThousandSep(formatNumData[i].number, LOCALE_INVARIANT));
+        AutoFreeWstr tmp(str::FormatNumWithThousandSep(formatNumData[i].number, LOCALE_INVARIANT));
         utassert(str::Eq(tmp, formatNumData[i].result));
     }
 
@@ -426,7 +426,7 @@ void StrTest() {
     };
 
     for (int i = 0; i < dimof(formatFloatData); i++) {
-        AutoFreeW tmp(str::FormatFloatWithThousandSep(formatFloatData[i].number, LOCALE_INVARIANT));
+        AutoFreeWstr tmp(str::FormatFloatWithThousandSep(formatFloatData[i].number, LOCALE_INVARIANT));
         utassert(str::Eq(tmp, formatFloatData[i].result));
     }
 
@@ -450,7 +450,7 @@ void StrTest() {
     };
 
     for (int i = 0; i < dimof(formatRomanData); i++) {
-        AutoFreeW tmp(str::FormatRomanNumeral(formatRomanData[i].number));
+        AutoFreeWstr tmp(str::FormatRomanNumeral(formatRomanData[i].number));
         utassert(str::Eq(tmp, formatRomanData[i].result));
     }
 
@@ -533,7 +533,7 @@ void StrTest() {
         utassert(!tmp.Get());
     }
     {
-        AutoFreeW tmp(str::conv::FromCodePage("abc", 12345));
+        AutoFreeWstr tmp(str::conv::FromCodePage("abc", 12345));
         utassert(!tmp.Get());
     }
     {

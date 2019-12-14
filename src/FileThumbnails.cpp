@@ -36,20 +36,20 @@ static WCHAR* GetThumbnailPath(const WCHAR* filePath) {
     CalcMD5Digest((unsigned char*)pathU.Get(), str::Len(pathU.Get()), digest);
     AutoFree fingerPrint(_MemToHex(&digest));
 
-    AutoFreeW thumbsPath(AppGenDataFilename(THUMBNAILS_DIR_NAME));
+    AutoFreeWstr thumbsPath(AppGenDataFilename(THUMBNAILS_DIR_NAME));
     if (!thumbsPath)
         return nullptr;
-    AutoFreeW fname(str::conv::FromAnsi(fingerPrint));
+    AutoFreeWstr fname(str::conv::FromAnsi(fingerPrint));
 
     return str::Format(L"%s\\%s.png", thumbsPath.Get(), fname.Get());
 }
 
 // removes thumbnails that don't belong to any frequently used item in file history
 void CleanUpThumbnailCache(const FileHistory& fileHistory) {
-    AutoFreeW thumbsPath(AppGenDataFilename(THUMBNAILS_DIR_NAME));
+    AutoFreeWstr thumbsPath(AppGenDataFilename(THUMBNAILS_DIR_NAME));
     if (!thumbsPath)
         return;
-    AutoFreeW pattern(path::Join(thumbsPath, L"*.png"));
+    AutoFreeWstr pattern(path::Join(thumbsPath, L"*.png"));
 
     WStrVec files;
     WIN32_FIND_DATA fdata;
@@ -66,7 +66,7 @@ void CleanUpThumbnailCache(const FileHistory& fileHistory) {
     Vec<DisplayState*> list;
     fileHistory.GetFrequencyOrder(list);
     for (size_t i = 0; i < list.size() && i < FILE_HISTORY_MAX_FREQUENT * 2; i++) {
-        AutoFreeW bmpPath(GetThumbnailPath(list.at(i)->filePath));
+        AutoFreeWstr bmpPath(GetThumbnailPath(list.at(i)->filePath));
         if (!bmpPath)
             continue;
         int idx = files.Find(path::GetBaseNameNoFree(bmpPath));
@@ -77,7 +77,7 @@ void CleanUpThumbnailCache(const FileHistory& fileHistory) {
     }
 
     for (size_t i = 0; i < files.size(); i++) {
-        AutoFreeW bmpPath(path::Join(thumbsPath, files.at(i)));
+        AutoFreeWstr bmpPath(path::Join(thumbsPath, files.at(i)));
         file::Delete(bmpPath);
     }
 }
@@ -108,7 +108,7 @@ bool LoadThumbnail(DisplayState& ds) {
     delete ds.thumbnail;
     ds.thumbnail = nullptr;
 
-    AutoFreeW bmpPath(GetThumbnailPath(ds.filePath));
+    AutoFreeWstr bmpPath(GetThumbnailPath(ds.filePath));
     if (!bmpPath) {
         return false;
     }
@@ -128,7 +128,7 @@ bool HasThumbnail(DisplayState& ds) {
         return false;
     }
 
-    AutoFreeW bmpPath(GetThumbnailPath(ds.filePath));
+    AutoFreeWstr bmpPath(GetThumbnailPath(ds.filePath));
     if (!bmpPath) {
         return true;
     }
@@ -159,11 +159,11 @@ void SaveThumbnail(DisplayState& ds) {
         return;
     }
 
-    AutoFreeW bmpPath(GetThumbnailPath(ds.filePath));
+    AutoFreeWstr bmpPath(GetThumbnailPath(ds.filePath));
     if (!bmpPath) {
         return;
     }
-    AutoFreeW thumbsPath(path::GetDir(bmpPath));
+    AutoFreeWstr thumbsPath(path::GetDir(bmpPath));
     if (dir::Create(thumbsPath)) {
         CrashIf(!str::EndsWithI(bmpPath, L".png"));
         Gdiplus::Bitmap bmp(ds.thumbnail->GetBitmap(), nullptr);
@@ -177,7 +177,7 @@ void RemoveThumbnail(DisplayState& ds) {
         return;
     }
 
-    AutoFreeW bmpPath(GetThumbnailPath(ds.filePath));
+    AutoFreeWstr bmpPath(GetThumbnailPath(ds.filePath));
     if (bmpPath) {
         file::Delete(bmpPath);
     }

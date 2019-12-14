@@ -179,7 +179,7 @@ static void NotificationWndOnPaint(HWND hwnd, NotificationWnd* wnd) {
     if (wnd->hasCancel) {
         rectMsg.dx -= 20;
     }
-    AutoFreeW text(win::GetText(hwnd));
+    AutoFreeWstr text(win::GetText(hwnd));
     rTmp = rectMsg.ToRECT();
     DrawText(hdc, text, -1, &rTmp, DT_SINGLELINE | DT_NOPREFIX);
 
@@ -386,7 +386,7 @@ void NotificationWnd::UpdateProgress(int current, int total) {
     }
     progress = limitValue(100 * current / total, 0, 100);
     if (hasProgress && progressMsg) {
-        AutoFreeW message(str::Format(progressMsg, current, total));
+        AutoFreeWstr message(str::Format(progressMsg, current, total));
         this->UpdateMessage(message);
     }
 }

@@ -12,7 +12,7 @@ INT_PTR Dialog_NewVersionAvailable(HWND hwnd, const WCHAR* currentVersion, const
                                    bool* skipThisVersion);
 bool Dialog_CustomZoom(HWND hwnd, bool forChm, float* currZoomInOut);
 INT_PTR Dialog_Settings(HWND hwnd, GlobalPrefs* prefs);
-bool Dialog_AddFavorite(HWND hwnd, const WCHAR* pageNo, AutoFreeW& favName);
+bool Dialog_AddFavorite(HWND hwnd, const WCHAR* pageNo, AutoFreeWstr& favName);
 
 enum class PrintRangeAdv { All = 0, Even, Odd };
 enum class PrintScaleAdv { None = 0, Shrink, Fit };

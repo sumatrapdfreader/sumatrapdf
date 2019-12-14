@@ -421,7 +421,7 @@ HRESULT STDMETHODCALLTYPE SumatraUIAutomationTextRange::GetText(int maxLength, B
     selection.StartAt(startPage, startGlyph);
     selection.SelectUpTo(endPage, endGlyph);
 
-    AutoFreeW selected_text(selection.ExtractText(L"\r\n"));
+    AutoFreeWstr selected_text(selection.ExtractText(L"\r\n"));
     size_t selected_text_length = str::Len(selected_text);
 
     // -1 and [0, inf) are allowed

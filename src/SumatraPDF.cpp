@@ -190,7 +190,7 @@ void InitializePolicies(bool restrict) {
     // allow to restrict SumatraPDF's functionality from an INI file in the
     // same directory as SumatraPDF.exe (cf. ../docs/sumatrapdfrestrict.ini)
     // (if the file isn't there, everything is allowed)
-    AutoFreeW restrictPath(path::GetPathOfFileInAppDir(RESTRICTIONS_FILE_NAME));
+    AutoFreeWstr restrictPath(path::GetPathOfFileInAppDir(RESTRICTIONS_FILE_NAME));
     if (!file::Exists(restrictPath)) {
         gPolicyRestrictions = Perm_All;
         gAllowedLinkProtocols.Split(DEFAULT_LINK_PROTOCOLS, L",");
@@ -228,13 +228,13 @@ void InitializePolicies(bool restrict) {
     if ((gPolicyRestrictions & Perm_DiskAccess)) {
         const char* value;
         if ((value = polsec->GetValue("LinkProtocols")) != nullptr) {
-            AutoFreeW protocols(str::conv::FromUtf8(value));
+            AutoFreeWstr protocols(str::conv::FromUtf8(value));
             str::ToLowerInPlace(protocols);
             str::TransChars(protocols, L":; ", L",,,");
             gAllowedLinkProtocols.Split(protocols, L",", true);
         }
         if ((value = polsec->GetValue("SafeFileTypes")) != nullptr) {
-            AutoFreeW protocols(str::conv::FromUtf8(value));
+            AutoFreeWstr protocols(str::conv::FromUtf8(value));
             str::ToLowerInPlace(protocols);
             str::TransChars(protocols, L":; ", L",,,");
             gAllowedFileTypes.Split(protocols, L",", true);
@@ -273,7 +273,7 @@ bool LaunchBrowser(const WCHAR* url) {
         return false;
 
     // check if this URL's protocol is allowed
-    AutoFreeW protocol;
+    AutoFreeWstr protocol;
     if (!str::Parse(url, L"%S:", &protocol))
         return false;
     str::ToLowerInPlace(protocol);
@@ -291,7 +291,7 @@ bool OpenFileExternally(const WCHAR* path) {
 
     // check if this file's perceived type is allowed
     const WCHAR* ext = path::GetExt(path);
-    AutoFreeW perceivedType(ReadRegStr(HKEY_CLASSES_ROOT, ext, L"PerceivedType"));
+    AutoFreeWstr perceivedType(ReadRegStr(HKEY_CLASSES_ROOT, ext, L"PerceivedType"));
     // since we allow following hyperlinks, also allow opening local webpages
     if (str::EndsWithI(path, L".htm") || str::EndsWithI(path, L".html") || str::EndsWithI(path, L".xhtml"))
         perceivedType.SetCopy(L"webpage");
@@ -348,7 +348,7 @@ bool WindowInfoStillValid(WindowInfo* win) {
 
 // Find the first window showing a given PDF file
 WindowInfo* FindWindowInfoByFile(const WCHAR* file, bool focusTab) {
-    AutoFreeW normFile(path::Normalize(file));
+    AutoFreeWstr normFile(path::Normalize(file));
 
     for (WindowInfo* win : gWindows) {
         if (!win->IsAboutWindow() && path::IsSame(win->currentTab->filePath, normFile))
@@ -449,7 +449,7 @@ WCHAR* HwndPasswordUI::GetPassword(const WCHAR* fileName, unsigned char* fileDig
 
     // extract the filename from the URL in plugin mode instead
     // of using the more confusing temporary filename
-    AutoFreeW urlName;
+    AutoFreeWstr urlName;
     if (gPluginMode) {
         urlName.Set(url::GetFileName(gPluginURL));
         if (urlName)
@@ -757,7 +757,7 @@ void ControllerCallbackHandler::FocusFrame(bool always) {
 }
 
 void ControllerCallbackHandler::SaveDownload(const WCHAR* url, const unsigned char* data, size_t len) {
-    AutoFreeW fileName(url::GetFileName(url));
+    AutoFreeWstr fileName(url::GetFileName(url));
     LinkSaver linkSaver(win->currentTab, win->hwndFrame, fileName);
     linkSaver.SaveEmbedded(data, len);
 }
@@ -838,7 +838,7 @@ void ControllerCallbackHandler::PageNoChanged(Controller* ctrl, int pageNo) {
     if (win->AsEbook())
         pageNo = win->AsEbook()->CurrentTocPageNo();
     else if (INVALID_PAGE_NO != pageNo) {
-        AutoFreeW buf(win->ctrl->GetPageLabel(pageNo));
+        AutoFreeWstr buf(win->ctrl->GetPageLabel(pageNo));
         win::SetText(win->hwndPageBox, buf);
         ToolbarUpdateStateForWindow(win, false);
         if (win->ctrl->HasPageLabels())
@@ -921,7 +921,7 @@ static void SetFrameTitleForTab(TabInfo* tab, bool needRefresh) {
     const WCHAR* titlePath = tab->filePath;
     if (!gGlobalPrefs->fullPathInTitle)
         titlePath = path::GetBaseNameNoFree(titlePath);
-    AutoFreeW docTitle(str::Dup(L""));
+    AutoFreeWstr docTitle(str::Dup(L""));
     if (tab->ctrl) {
         WCHAR* title = tab->ctrl->GetProperty(DocumentProperty::Title);
         if (title != nullptr) {
@@ -1148,7 +1148,7 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, Displa
     if (!win->IsDocLoaded())
         return;
 
-    AutoFreeW unsupported(win->ctrl->GetProperty(DocumentProperty::UnsupportedFeatures));
+    AutoFreeWstr unsupported(win->ctrl->GetProperty(DocumentProperty::UnsupportedFeatures));
     if (unsupported) {
         unsupported.Set(str::Format(_TR("This document uses unsupported features (%s) and might not render properly"),
                                     unsupported.get()));
@@ -1415,7 +1415,7 @@ bool DocumentPathExists(const WCHAR* path) {
         // remove information needed for pointing at embedded documents
         // (e.g. "C:\path\file.pdf:3:0") to check at least whether the
         // container document exists
-        AutoFreeW realPath(str::DupN(path, str::FindChar(path + 2, ':') - path));
+        AutoFreeWstr realPath(str::DupN(path, str::FindChar(path + 2, ':') - path));
         return file::Exists(realPath);
     }
     return false;
@@ -1429,7 +1429,7 @@ bool DocumentPathExists(const WCHAR* path) {
 // TODO: write me
 static WindowInfo* LoadDocumentNew(LoadArgs& args)
 {
-    AutoFreeW fullPath(path::Normalize(args.fileName));
+    AutoFreeWstr fullPath(path::Normalize(args.fileName));
     // TODO: try to find file on other drives if doesn't exist
 
     CrashIf(true);
@@ -1460,14 +1460,14 @@ void scheduleReloadTab(TabInfo* tab) {
 WindowInfo* LoadDocument(LoadArgs& args) {
     CrashAlwaysIf(gCrashOnOpen);
 
-    AutoFreeW fullPath(path::Normalize(args.fileName));
+    AutoFreeWstr fullPath(path::Normalize(args.fileName));
     WindowInfo* win = args.win;
 
     bool failEarly = win && !args.forceReuse && !DocumentPathExists(fullPath);
     // try to find inexistent files with history data
     // on a different removable drive before failing
     if (failEarly && gFileHistory.Find(fullPath, nullptr)) {
-        AutoFreeW adjPath(str::Dup(fullPath));
+        AutoFreeWstr adjPath(str::Dup(fullPath));
         if (AdjustVariableDriveLetter(adjPath)) {
             RenameFileInHistory(fullPath, adjPath);
             fullPath.Set(adjPath.StealData());
@@ -1478,7 +1478,7 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     // fail with a notification if the file doesn't exist and
     // there is a window the user has just been interacting with
     if (failEarly) {
-        AutoFreeW msg(str::Format(_TR("File %s not found"), fullPath.get()));
+        AutoFreeWstr msg(str::Format(_TR("File %s not found"), fullPath.get()));
         win->ShowNotification(msg, NOS_HIGHLIGHT);
         // display the notification ASAP (prefs::Save() can introduce a notable delay)
         win->RedrawAll(true);
@@ -1669,9 +1669,9 @@ void LoadModelIntoTab(WindowInfo* win, TabInfo* tdata) {
 static void UpdatePageInfoHelper(WindowInfo* win, NotificationWnd* wnd, int pageNo) {
     if (!win->ctrl->ValidPageNo(pageNo))
         pageNo = win->ctrl->CurrentPageNo();
-    AutoFreeW pageInfo(str::Format(L"%s %d / %d", _TR("Page:"), pageNo, win->ctrl->PageCount()));
+    AutoFreeWstr pageInfo(str::Format(L"%s %d / %d", _TR("Page:"), pageNo, win->ctrl->PageCount()));
     if (win->ctrl->HasPageLabels()) {
-        AutoFreeW label(win->ctrl->GetPageLabel(pageNo));
+        AutoFreeWstr label(win->ctrl->GetPageLabel(pageNo));
         pageInfo.Set(str::Format(L"%s %s (%d / %d)", _TR("Page:"), label.get(), pageNo, win->ctrl->PageCount()));
     }
     if (!wnd) {
@@ -1707,8 +1707,8 @@ static WCHAR* FormatCursorPosition(EngineBase* engine, PointD pt, MeasurementUni
             break;
     }
 
-    AutoFreeW xPos(str::FormatFloatWithThousandSep(pt.x * factor));
-    AutoFreeW yPos(str::FormatFloatWithThousandSep(pt.y * factor));
+    AutoFreeWstr xPos(str::FormatFloatWithThousandSep(pt.x * factor));
+    AutoFreeWstr yPos(str::FormatFloatWithThousandSep(pt.y * factor));
     if (unit != MeasurementUnit::in) {
         // use similar precision for all units
         if (str::IsDigit(xPos[str::Len(xPos) - 2]))
@@ -1742,13 +1742,13 @@ void UpdateCursorPositionHelper(WindowInfo* win, PointI pos, NotificationWnd* wn
     CrashIf(!win->AsFixed());
     EngineBase* engine = win->AsFixed()->GetEngine();
     PointD pt = win->AsFixed()->CvtFromScreen(pos);
-    AutoFreeW posStr(FormatCursorPosition(engine, pt, unit)), selStr;
+    AutoFreeWstr posStr(FormatCursorPosition(engine, pt, unit)), selStr;
     if (!win->selectionMeasure.IsEmpty()) {
         pt = PointD(win->selectionMeasure.dx, win->selectionMeasure.dy);
         selStr.Set(FormatCursorPosition(engine, pt, unit));
     }
 
-    AutoFreeW posInfo(str::Format(L"%s %s", _TR("Cursor position:"), posStr.get()));
+    AutoFreeWstr posInfo(str::Format(L"%s %s", _TR("Cursor position:"), posStr.get()));
     if (selStr)
         posInfo.Set(str::Format(L"%s - %s %s", posInfo.get(), _TR("Selection:"), selStr.get()));
     if (!wnd)
@@ -1825,7 +1825,7 @@ bool AutoUpdateInitiate(const char* updateData) {
     if (!url || !hash || !str::EndsWithI(url, ".exe"))
         return false;
 
-    AutoFreeW exeUrl(str::conv::FromUtf8(url));
+    AutoFreeWstr exeUrl(str::conv::FromUtf8(url));
     HttpRsp rsp;
     if (!HttpGet(exeUrl, &rsp))
         return false;
@@ -1836,14 +1836,14 @@ bool AutoUpdateInitiate(const char* updateData) {
     if (!str::EqI(fingerPrint, hash))
         return false;
 
-    AutoFreeW updateExe, updateArgs;
+    AutoFreeWstr updateExe, updateArgs;
     if (installer) {
-        AutoFreeW tmpDir(path::GetTempPath());
+        AutoFreeWstr tmpDir(path::GetTempPath());
         updateExe.Set(path::Join(tmpDir, L"SumatraPDF-install-update.exe"));
         // TODO: make the installer delete itself after the update?
         updateArgs.SetCopy(L"-autoupdate");
     } else {
-        AutoFreeW thisExe(GetExePath());
+        AutoFreeWstr thisExe(GetExePath());
         updateExe.Set(str::Join(thisExe, L"-update.exe"));
         updateArgs.Set(str::Format(L"-autoupdate replace:\"%s\"", thisExe.get()));
     }
@@ -1941,7 +1941,7 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
         return ERROR_INTERNET_INCORRECT_FORMAT;
     }
 
-    AutoFreeW verTxt(str::conv::FromUtf8(latest));
+    AutoFreeWstr verTxt(str::conv::FromUtf8(latest));
     if (CompareVersion(verTxt, UPDATE_CHECK_VER) <= 0) {
         /* if automated => don't notify that there is no new version */
         if (!silent) {
@@ -1953,7 +1953,7 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
     if (silent) {
         const char* stable = node->GetValue("Stable");
         if (stable && IsValidProgramVersion(stable) &&
-            CompareVersion(AutoFreeW(str::conv::FromUtf8(stable)), UPDATE_CHECK_VER) <= 0) {
+            CompareVersion(AutoFreeWstr(str::conv::FromUtf8(stable)), UPDATE_CHECK_VER) <= 0) {
             // don't update just yet if the older version is still marked as stable
             return 0;
         }
@@ -1993,7 +1993,7 @@ static void ProcessAutoUpdateCheckResult(HWND hwnd, HttpRsp* rsp, bool autoCheck
     DWORD error = ShowAutoUpdateDialog(hwnd, rsp, autoCheck);
     if (error != 0 && !autoCheck) {
         // notify the user about network error during a manual update check
-        AutoFreeW msg(str::Format(_TR("Can't connect to the Internet (error %#x)."), error));
+        AutoFreeWstr msg(str::Format(_TR("Can't connect to the Internet (error %#x)."), error));
         MessageBoxWarning(hwnd, msg, _TR("SumatraPDF Update"));
     }
 }
@@ -2337,7 +2337,7 @@ static void OnMenuSaveAs(WindowInfo* win) {
 
     auto* ctrl = win->ctrl;
     const WCHAR* srcFileName = ctrl->FilePath();
-    AutoFreeW urlName;
+    AutoFreeWstr urlName;
     if (gPluginMode) {
         urlName.Set(url::GetFileName(gPluginURL));
         // fall back to a generic "filename" instead of the more confusing temporary filename
@@ -2446,7 +2446,7 @@ static void OnMenuSaveAs(WindowInfo* win) {
     }
 
     OwnedData pathUtf8(str::conv::ToUtf8(realDstFileName));
-    AutoFreeW errorMsg;
+    AutoFreeWstr errorMsg;
     // Extract all text when saving as a plain text file
     if (convertToTXT) {
         str::WStr text(1024);
@@ -2526,7 +2526,7 @@ static void OnMenuRenameFile(WindowInfo* win) {
         return;
 
     auto* ctrl = win->ctrl;
-    AutoFreeW srcFileName(str::Dup(ctrl->FilePath()));
+    AutoFreeWstr srcFileName(str::Dup(ctrl->FilePath()));
     // this happens e.g. for embedded documents and directories
     if (!file::Exists(srcFileName)) {
         return;
@@ -2549,7 +2549,7 @@ static void OnMenuRenameFile(WindowInfo* win) {
         dstFileName[str::Len(dstFileName) - str::Len(defExt)] = '\0';
     }
 
-    AutoFreeW initDir(path::GetDir(srcFileName));
+    AutoFreeWstr initDir(path::GetDir(srcFileName));
 
     OPENFILENAME ofn = {0};
     ofn.lStructSize = sizeof(ofn);
@@ -2584,7 +2584,7 @@ static void OnMenuRenameFile(WindowInfo* win) {
         return;
     }
 
-    AutoFreeW newPath(path::Normalize(dstFileName));
+    AutoFreeWstr newPath(path::Normalize(dstFileName));
     RenameFileInHistory(srcFileName, newPath);
 
     LoadArgs args(dstFileName, win);
@@ -2612,7 +2612,7 @@ static void OnMenuSaveBookmark(WindowInfo* win) {
     // Prepare the file filters (use \1 instead of \0 so that the
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
-    AutoFreeW fileFilter(str::Format(L"%s\1*.lnk\1", _TR("Bookmark Shortcuts")));
+    AutoFreeWstr fileFilter(str::Format(L"%s\1*.lnk\1", _TR("Bookmark Shortcuts")));
     str::TransChars(fileFilter, L"\1", L"\0");
 
     OPENFILENAME ofn = {0};
@@ -2629,7 +2629,7 @@ static void OnMenuSaveBookmark(WindowInfo* win) {
         return;
     }
 
-    AutoFreeW fileName(str::Dup(dstFileName));
+    AutoFreeWstr fileName(str::Dup(dstFileName));
     if (!str::EndsWithI(dstFileName, L".lnk")) {
         fileName.Set(str::Join(dstFileName, L".lnk"));
     }
@@ -2639,7 +2639,7 @@ static void OnMenuSaveBookmark(WindowInfo* win) {
         ss = win->AsFixed()->GetScrollState();
     }
     const WCHAR* viewMode = prefs::conv::FromDisplayMode(ctrl->GetDisplayMode());
-    AutoFreeW ZoomVirtual(str::Format(L"%.2f", ctrl->GetZoomVirtual()));
+    AutoFreeWstr ZoomVirtual(str::Format(L"%.2f", ctrl->GetZoomVirtual()));
     if (ZOOM_FIT_PAGE == ctrl->GetZoomVirtual()) {
         ZoomVirtual.SetCopy(L"fitpage");
     } else if (ZOOM_FIT_WIDTH == ctrl->GetZoomVirtual()) {
@@ -2648,11 +2648,11 @@ static void OnMenuSaveBookmark(WindowInfo* win) {
         ZoomVirtual.SetCopy(L"fitcontent");
     }
 
-    AutoFreeW exePath(GetExePath());
-    AutoFreeW args(str::Format(L"\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d", ctrl->FilePath(), ss.page,
+    AutoFreeWstr exePath(GetExePath());
+    AutoFreeWstr args(str::Format(L"\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d", ctrl->FilePath(), ss.page,
                                viewMode, ZoomVirtual.get(), (int)ss.x, (int)ss.y));
-    AutoFreeW label(ctrl->GetPageLabel(ss.page));
-    AutoFreeW desc(
+    AutoFreeWstr label(ctrl->GetPageLabel(ss.page));
+    AutoFreeWstr desc(
         str::Format(_TR("Bookmark shortcut to page %s of %s"), label.get(), path::GetBaseNameNoFree(ctrl->FilePath())));
 
     CreateShortcut(fileName, exePath, args, desc, 1);
@@ -2761,7 +2761,7 @@ static void OnMenuOpen(WindowInfo* win) {
     }
     // note: ofn.lpstrFile can be reallocated by GetOpenFileName -> FileOpenHook
 #endif
-    AutoFreeW file(AllocArray<WCHAR>(ofn.nMaxFile));
+    AutoFreeWstr file(AllocArray<WCHAR>(ofn.nMaxFile));
     ofn.lpstrFile = file;
 
     if (!GetOpenFileName(&ofn))
@@ -2776,7 +2776,7 @@ static void OnMenuOpen(WindowInfo* win) {
     }
 
     while (*fileName) {
-        AutoFreeW filePath(path::Join(ofn.lpstrFile, fileName));
+        AutoFreeWstr filePath(path::Join(ofn.lpstrFile, fileName));
         if (filePath) {
             LoadArgs args(filePath, win);
             LoadDocument(args);
@@ -2794,7 +2794,7 @@ static void BrowseFolder(WindowInfo* win, bool forward) {
 
     TabInfo* tab = win->currentTab;
     WStrVec files;
-    AutoFreeW pattern(path::GetDir(tab->filePath));
+    AutoFreeWstr pattern(path::GetDir(tab->filePath));
     // TODO: make pattern configurable (for users who e.g. want to skip single images)?
     pattern.Set(path::Join(pattern, L"*"));
     if (!CollectPathsFromDirectory(pattern, files))
@@ -3117,8 +3117,8 @@ static void OnMenuGoToPage(WindowInfo* win) {
     }
 
     auto* ctrl = win->ctrl;
-    AutoFreeW label(ctrl->GetPageLabel(ctrl->CurrentPageNo()));
-    AutoFreeW newPageLabel(Dialog_GoToPage(win->hwndFrame, label, ctrl->PageCount(), !ctrl->HasPageLabels()));
+    AutoFreeWstr label(ctrl->GetPageLabel(ctrl->CurrentPageNo()));
+    AutoFreeWstr newPageLabel(Dialog_GoToPage(win->hwndFrame, label, ctrl->PageCount(), !ctrl->HasPageLabels()));
     if (!newPageLabel) {
         return;
     }

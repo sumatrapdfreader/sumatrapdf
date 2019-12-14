@@ -185,10 +185,10 @@ static bool HasFavorites() {
 
 // caller has to free() the result
 static WCHAR* FavReadableName(Favorite* fn) {
-    AutoFreeW plainLabel(str::Format(L"%d", fn->pageNo));
+    AutoFreeWstr plainLabel(str::Format(L"%d", fn->pageNo));
     const WCHAR* label = fn->pageLabel ? fn->pageLabel : plainLabel;
     if (fn->name) {
-        AutoFreeW pageNo(str::Format(_TR("(page %s)"), label));
+        AutoFreeWstr pageNo(str::Format(_TR("(page %s)"), label));
         return str::Join(fn->name, L" ", pageNo);
     }
     return str::Format(_TR("Page %s"), label);
@@ -196,7 +196,7 @@ static WCHAR* FavReadableName(Favorite* fn) {
 
 // caller has to free() the result
 static WCHAR* FavCompactReadableName(DisplayState* fav, Favorite* fn, bool isCurrent = false) {
-    AutoFreeW rn(FavReadableName(fn));
+    AutoFreeWstr rn(FavReadableName(fn));
     if (isCurrent) {
         return str::Format(L"%s : %s", _TR("Current file"), rn.Get());
     }
@@ -211,7 +211,7 @@ static void AppendFavMenuItems(HMENU m, DisplayState* f, UINT& idx, bool combine
         }
         Favorite* fn = f->favorites->at(i);
         fn->menuId = idx++;
-        AutoFreeW s;
+        AutoFreeWstr s;
         if (combined) {
             s.Set(FavCompactReadableName(f, fn, isCurrent));
         } else {
@@ -297,7 +297,7 @@ static void AppendFavMenus(HMENU m, const WCHAR* currFilePath) {
             if (f == currFileFav) {
                 AppendMenu(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, _TR("Current file"));
             } else {
-                AutoFreeW tmp;
+                AutoFreeWstr tmp;
                 tmp.SetCopy(path::GetBaseNameNoFree(filePath));
                 auto fileName = win::menu::ToSafeString(tmp);
                 AppendMenuW(m, MF_POPUP | MF_STRING, (UINT_PTR)sub, fileName);
@@ -319,15 +319,15 @@ void RebuildFavMenu(WindowInfo* win, HMENU menu) {
         win::menu::SetEnabled(menu, IDM_FAV_DEL, false);
         AppendFavMenus(menu, nullptr);
     } else {
-        AutoFreeW label(win->ctrl->GetPageLabel(win->currPageNo));
+        AutoFreeWstr label(win->ctrl->GetPageLabel(win->currPageNo));
         bool isBookmarked = gFavorites.IsPageInFavorites(win->ctrl->FilePath(), win->currPageNo);
         if (isBookmarked) {
             win::menu::SetEnabled(menu, IDM_FAV_ADD, false);
-            AutoFreeW s(str::Format(_TR("Remove page %s from favorites"), label.Get()));
+            AutoFreeWstr s(str::Format(_TR("Remove page %s from favorites"), label.Get()));
             win::menu::SetText(menu, IDM_FAV_DEL, s);
         } else {
             win::menu::SetEnabled(menu, IDM_FAV_DEL, false);
-            AutoFreeW s(str::Format(_TR("Add page %s to favorites"), label.Get()));
+            AutoFreeWstr s(str::Format(_TR("Add page %s to favorites"), label.Get()));
             win::menu::SetText(menu, IDM_FAV_ADD, s);
         }
         AppendFavMenus(menu, win->ctrl->FilePath());
@@ -432,7 +432,7 @@ static HTREEITEM InsertFavSecondLevelNode(HWND hwnd, HTREEITEM parent, Favorite*
     tvinsert.itemex.state = 0;
     tvinsert.itemex.stateMask = TVIS_EXPANDED;
     tvinsert.itemex.lParam = (LPARAM)fn;
-    AutoFreeW s(FavReadableName(fn));
+    AutoFreeWstr s(FavReadableName(fn));
     tvinsert.itemex.pszText = s;
     return TreeView_InsertItem(hwnd, &tvinsert);
 }
@@ -540,7 +540,7 @@ void AddFavorite(WindowInfo* win) {
     TabInfo* tab = win->currentTab;
     CrashIf(!tab);
     int pageNo = win->currPageNo;
-    AutoFreeW name;
+    AutoFreeWstr name;
     auto* ctrl = tab->ctrl;
     if (ctrl->HasTocTree()) {
         // use the current ToC heading as default name
@@ -551,14 +551,14 @@ void AddFavorite(WindowInfo* win) {
             name.SetCopy(item->title);
         }
     }
-    AutoFreeW pageLabel(ctrl->GetPageLabel(pageNo));
+    AutoFreeWstr pageLabel(ctrl->GetPageLabel(pageNo));
 
     bool shouldAdd = Dialog_AddFavorite(win->hwndFrame, pageLabel, name);
     if (!shouldAdd) {
         return;
     }
 
-    AutoFreeW plainLabel(str::Format(L"%d", pageNo));
+    AutoFreeWstr plainLabel(str::Format(L"%d", pageNo));
     bool needsLabel = !str::Eq(plainLabel, pageLabel);
 
     RememberFavTreeExpansionStateForAllWindows();

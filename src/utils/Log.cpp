@@ -65,7 +65,7 @@ void log(const WCHAR* s) {
 void logf(const WCHAR* fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    AutoFreeW s(str::FmtV(fmt, args));
+    AutoFreeWstr s(str::FmtV(fmt, args));
     log(s);
     va_end(args);
 }

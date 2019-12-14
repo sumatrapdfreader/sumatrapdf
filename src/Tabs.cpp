@@ -627,7 +627,7 @@ void CreateTabbar(WindowInfo* win) {
 // verifies that TabInfo state is consistent with WindowInfo state
 static NO_INLINE void VerifyTabInfo(WindowInfo* win, TabInfo* tdata) {
     CrashIf(tdata->ctrl != win->ctrl);
-    AutoFreeW winTitle(win::GetText(win->hwndFrame));
+    AutoFreeWstr winTitle(win::GetText(win->hwndFrame));
     SendCrashReportIf(!str::Eq(winTitle.Get(), tdata->frameTitle));
     bool expectedTocVisibility = tdata->showToc; // if not in presentation mode
     if (PM_DISABLED != win->presentation) {

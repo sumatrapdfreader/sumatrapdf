@@ -65,7 +65,7 @@ static bool PdfDateParse(const WCHAR* pdfDate, SYSTEMTIME* timeOut) {
 }
 
 HRESULT CPdfFilter::GetNextChunkValue(CChunkValue& chunkValue) {
-    AutoFreeW str;
+    AutoFreeWstr str;
 
     switch (m_state) {
         case STATE_PDF_START:

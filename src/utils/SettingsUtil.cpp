@@ -121,7 +121,7 @@ static char* SerializeStringArray(const Vec<WCHAR*>* strArray) {
 }
 
 static void DeserializeStringArray(Vec<WCHAR*>* strArray, const char* serialized) {
-    AutoFreeW str(str::conv::FromUtf8(serialized));
+    AutoFreeWstr str(str::conv::FromUtf8(serialized));
     const WCHAR* s = str.Get();
 
     for (;;) {

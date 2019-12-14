@@ -13,7 +13,7 @@ void FileUtilTest() {
     const WCHAR* baseName = path::GetBaseNameNoFree(path1);
     utassert(str::Eq(baseName, L"SumatraPDF.exe"));
 
-    AutoFreeW dirName(path::GetDir(path1));
+    AutoFreeWstr dirName(path::GetDir(path1));
     utassert(str::Eq(dirName, L"C:\\Program Files\\SumatraPDF"));
     baseName = path::GetBaseNameNoFree(dirName);
     utassert(str::Eq(baseName, L"SumatraPDF"));

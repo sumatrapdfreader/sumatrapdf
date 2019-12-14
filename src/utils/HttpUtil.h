@@ -3,7 +3,7 @@
 
 class HttpRsp {
   public:
-    AutoFreeW url;
+    AutoFreeWstr url;
     str::Str data;
     DWORD error = (DWORD)-1;
     DWORD httpStatusCode = (DWORD)-1;

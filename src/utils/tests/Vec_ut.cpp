@@ -49,7 +49,7 @@ static void WStrVecTest() {
         utassert(count == 5 && v2.Find(L"c") == 3);
         utassert(v2.Find(L"") == 2 && v2.Find(L"", 3) == 4 && v2.Find(L"", 5) == -1);
         utassert(v2.Find(L"B") == -1 && v2.FindI(L"B") == 1);
-        AutoFreeW joined(v2.Join(L";"));
+        AutoFreeWstr joined(v2.Join(L";"));
         utassert(str::Eq(joined, L"a;b;;c;"));
     }
 
@@ -57,9 +57,9 @@ static void WStrVecTest() {
         WStrVec v2;
         size_t count = v2.Split(L"a,b,,c,", L",", true);
         utassert(count == 3 && v2.Find(L"c") == 2);
-        AutoFreeW joined(v2.Join(L";"));
+        AutoFreeWstr joined(v2.Join(L";"));
         utassert(str::Eq(joined, L"a;b;c"));
-        AutoFreeW last(v2.Pop());
+        AutoFreeWstr last(v2.Pop());
         utassert(v2.size() == 2 && str::Eq(last, L"c"));
     }
 }

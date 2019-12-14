@@ -230,7 +230,7 @@ WCHAR* FormatPageLabel(const char* type, int pageNo, const WCHAR* prefix) {
         return str::Format(L"%s%d", prefix, pageNo);
     if (str::EqI(type, "R")) {
         // roman numbering style
-        AutoFreeW number(str::FormatRomanNumeral(pageNo));
+        AutoFreeWstr number(str::FormatRomanNumeral(pageNo));
         if (*type == 'r')
             str::ToLowerInPlace(number.Get());
         return str::Format(L"%s%s", prefix, number.get());
@@ -301,7 +301,7 @@ WStrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) {
         if (i < n - 1 && data.at(i + 1).startAt <= pageCount) {
             secLen = data.at(i + 1).startAt - pli.startAt;
         }
-        AutoFreeW prefix(pdf_to_wstr(ctx, data.at(i).prefix));
+        AutoFreeWstr prefix(pdf_to_wstr(ctx, data.at(i).prefix));
         for (int j = 0; j < secLen; j++) {
             size_t idx = pli.startAt + j - 1;
             free(labels->at(idx));
@@ -321,7 +321,7 @@ WStrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) {
             continue;
         int idx = labels->Find(dups.at(i)), counter = 0;
         while ((idx = labels->Find(dups.at(i), idx + 1)) != -1) {
-            AutoFreeW unique;
+            AutoFreeWstr unique;
             do {
                 unique.Set(str::Format(L"%s.%d", dups.at(i), ++counter));
             } while (labels->Contains(unique));
@@ -493,7 +493,7 @@ class PdfLink : public PageElement, public PageDestination {
 class PdfComment : public PageElement {
   public:
     PageAnnotation annot;
-    AutoFreeW content;
+    AutoFreeWstr content;
 
     PdfComment(const WCHAR* content, RectD rect, int pageNo)
         : annot(PageAnnotType::None, pageNo, rect, 0), content(str::Dup(content)) {
@@ -818,7 +818,7 @@ bool PdfEngineImpl::LoadFromStream(fz_stream* stm, PasswordUI* pwdUI) {
 
     bool ok = false, saveKey = false;
     while (!ok) {
-        AutoFreeW pwd(pwdUI->GetPassword(FileName(), digest, pdf_crypt_key(ctx, doc->crypt), &saveKey));
+        AutoFreeWstr pwd(pwdUI->GetPassword(FileName(), digest, pdf_crypt_key(ctx, doc->crypt), &saveKey));
         if (!pwd) {
             // password not given or encryption key has been remembered
             ok = saveKey;
@@ -842,7 +842,7 @@ bool PdfEngineImpl::LoadFromStream(fz_stream* stm, PasswordUI* pwdUI) {
         // note: such passwords aren't portable when stored as Unicode text
         if (!ok && GetACP() != 1252) {
             OwnedData pwd_ansi(str::conv::ToAnsi(pwd));
-            AutoFreeW pwd_cp1252(str::conv::FromCodePage(pwd_ansi.Get(), 1252));
+            AutoFreeWstr pwd_cp1252(str::conv::FromCodePage(pwd_ansi.Get(), 1252));
             pwd_utf8 = std::move(str::conv::ToUtf8(pwd_cp1252));
             ok = pwd_utf8.Get() && pdf_authenticate_password(ctx, doc, pwd_utf8.Get());
         }
@@ -1335,7 +1335,7 @@ static PdfComment* makePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf_a
     if (str::IsEmpty(contents) && PDF_ANNOT_WIDGET == tp) {
         s = label;
     }
-    AutoFreeW ws(str::conv::FromUtf8(s));
+    AutoFreeWstr ws(str::conv::FromUtf8(s));
     RectD rd = fz_rect_to_RectD(rect);
     return new PdfComment(ws, rd, pageNo);
 }
@@ -1754,7 +1754,7 @@ WCHAR* PdfEngineImpl::ExtractFontList() {
             info.Append(")");
         }
 
-        AutoFreeW fontInfo(str::conv::FromUtf8(info.LendData()));
+        AutoFreeWstr fontInfo(str::conv::FromUtf8(info.LendData()));
         if (fontInfo && !fonts.Contains(fontInfo))
             fonts.Append(fontInfo.StealData());
     }
@@ -2205,7 +2205,7 @@ WCHAR* PdfLink::GetValue() const {
         case FZ_LINK_URI:
             path = str::conv::FromUtf8(link->ld.uri.uri);
             if (IsRelativeURI(path)) {
-                AutoFreeW base;
+                AutoFreeWstr base;
                 fz_try(engine->ctx) {
                     pdf_obj* obj = pdf_dict_gets(pdf_trailer(engine->_doc), "Root");
                     obj = pdf_dict_gets(pdf_dict_gets(obj, "URI"), "Base");
@@ -2214,7 +2214,7 @@ WCHAR* PdfLink::GetValue() const {
                 }
                 fz_catch(engine->ctx) {}
                 if (!str::IsEmpty(base.Get())) {
-                    AutoFreeW uri(str::Join(base, path));
+                    AutoFreeWstr uri(str::Join(base, path));
                     free(path);
                     path = uri.StealData();
                 }
@@ -2225,7 +2225,7 @@ WCHAR* PdfLink::GetValue() const {
                     x = (int)(pt.x - rect.x + 0.5);
                     y = (int)(pt.y - rect.y + 0.5);
                 }
-                AutoFreeW uri(str::Format(L"%s?%d,%d", path, x, y));
+                AutoFreeWstr uri(str::Format(L"%s?%d,%d", path, x, y));
                 free(path);
                 path = uri.StealData();
             }

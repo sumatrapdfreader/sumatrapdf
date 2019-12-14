@@ -392,8 +392,8 @@ class FilesProvider : public TestFileProvider {
 };
 
 class DirFileProvider : public TestFileProvider {
-    AutoFreeW startDir;
-    AutoFreeW fileFilter;
+    AutoFreeWstr startDir;
+    AutoFreeWstr fileFilter;
 
     // current state of directory traversal
     WStrVec filesToOpen;
@@ -424,7 +424,7 @@ bool DirFileProvider::OpenDir(const WCHAR* dirPath) {
     bool hasFiles = CollectStressTestSupportedFilesFromDirectory(dirPath, fileFilter, filesToOpen);
     filesToOpen.SortNatural();
 
-    AutoFreeW pattern(str::Format(L"%s\\*", dirPath));
+    AutoFreeWstr pattern(str::Format(L"%s\\*", dirPath));
     bool hasSubDirs = CollectPathsFromDirectory(pattern, dirsToVisit, true);
 
     return hasFiles || hasSubDirs;
@@ -437,7 +437,7 @@ WCHAR* DirFileProvider::NextFile() {
 
     if (dirsToVisit.size() > 0) {
         // test next directory
-        AutoFreeW path(dirsToVisit.PopAt(0));
+        AutoFreeWstr path(dirsToVisit.PopAt(0));
         OpenDir(path);
         return NextFile();
     }
@@ -459,9 +459,9 @@ static size_t GetAllMatchingFiles(const WCHAR* dir, const WCHAR* filter, WStrVec
             fflush(stdout);
         }
 
-        AutoFreeW path(dirsToVisit.PopAt(0));
+        AutoFreeWstr path(dirsToVisit.PopAt(0));
         CollectStressTestSupportedFilesFromDirectory(path, filter, files);
-        AutoFreeW pattern(str::Format(L"%s\\*", path.get()));
+        AutoFreeWstr pattern(str::Format(L"%s\\*", path.get()));
         CollectPathsFromDirectory(pattern, dirsToVisit, true);
     }
     return files.size();
@@ -546,7 +546,7 @@ void StressTest::Start(const WCHAR* path, const WCHAR* filter, const WCHAR* rang
         Start(dirFileProvider, cycles);
     } else {
         // Note: string dev only, don't translate
-        AutoFreeW s(str::Format(L"Path '%s' doesn't exist", path));
+        AutoFreeWstr s(str::Format(L"Path '%s' doesn't exist", path));
         win->ShowNotification(s, NOS_WARNING, NG_STRESS_TEST_SUMMARY);
         Finished(false);
     }
@@ -557,8 +557,8 @@ void StressTest::Finished(bool success) {
 
     if (success) {
         int secs = SecsSinceSystemTime(stressStartTime);
-        AutoFreeW tm(FormatTime(secs));
-        AutoFreeW s(str::Format(L"Stress test complete, rendered %d files in %s", filesCount, tm.get()));
+        AutoFreeWstr tm(FormatTime(secs));
+        AutoFreeWstr s(str::Format(L"Stress test complete, rendered %d files in %s", filesCount, tm.get()));
         win->ShowNotification(s, NOS_PERSIST, NG_STRESS_TEST_SUMMARY);
     }
 
@@ -568,7 +568,7 @@ void StressTest::Finished(bool success) {
 
 bool StressTest::GoToNextFile() {
     for (;;) {
-        AutoFreeW nextFile(fileProvider->NextFile());
+        AutoFreeWstr nextFile(fileProvider->NextFile());
         if (nextFile) {
             if (!IsInRange(fileRanges, ++fileIndex))
                 continue;
@@ -643,8 +643,8 @@ bool StressTest::OpenFile(const WCHAR* fileName) {
     }
 
     int secs = SecsSinceSystemTime(stressStartTime);
-    AutoFreeW tm(FormatTime(secs));
-    AutoFreeW s(str::Format(L"File %d: %s, time: %s", filesCount, fileName, tm.get()));
+    AutoFreeWstr tm(FormatTime(secs));
+    AutoFreeWstr s(str::Format(L"File %d: %s, time: %s", filesCount, fileName, tm.get()));
     win->ShowNotification(s, NOS_PERSIST, NG_STRESS_TEST_SUMMARY);
 
     return true;
@@ -652,7 +652,7 @@ bool StressTest::OpenFile(const WCHAR* fileName) {
 
 bool StressTest::GoToNextPage() {
     double pageRenderTime = currPageRenderTime.GetTimeInMs();
-    AutoFreeW s(str::Format(L"Page %d rendered in %d milliseconds", currPage, (int)pageRenderTime));
+    AutoFreeWstr s(str::Format(L"Page %d rendered in %d milliseconds", currPage, (int)pageRenderTime));
     win->ShowNotification(s, NOS_DEFAULT, NG_STRESS_TEST_BENCHMARK);
 
     ++currPage;

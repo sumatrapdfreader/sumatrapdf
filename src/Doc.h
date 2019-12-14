@@ -33,7 +33,7 @@ class Doc {
 
     // A copy of the file path which is needed in case of an error (else
     // the file path is supposed to be stored inside the wrapped *Doc)
-    AutoFreeW filePath;
+    AutoFreeWstr filePath;
 
     union {
         void* generic;

@@ -29,7 +29,7 @@ static WCHAR* GetGhostscriptPath() {
 TryAgain64Bit:
     for (int i = 0; i < dimof(gsProducts); i++) {
         HKEY hkey;
-        AutoFreeW keyName(str::Join(L"Software\\", gsProducts[i]));
+        AutoFreeWstr keyName(str::Join(L"Software\\", gsProducts[i]));
         if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, keyName, 0, access, &hkey) != ERROR_SUCCESS)
             continue;
         WCHAR subkey[32];
@@ -51,12 +51,12 @@ TryAgain64Bit:
     // return the path to the newest installation
     for (size_t ix = versions.size(); ix > 0; ix--) {
         for (int i = 0; i < dimof(gsProducts); i++) {
-            AutoFreeW keyName(str::Format(L"Software\\%s\\%s", gsProducts[i], versions.at(ix - 1)));
-            AutoFreeW GS_DLL(ReadRegStr(HKEY_LOCAL_MACHINE, keyName, L"GS_DLL"));
+            AutoFreeWstr keyName(str::Format(L"Software\\%s\\%s", gsProducts[i], versions.at(ix - 1)));
+            AutoFreeWstr GS_DLL(ReadRegStr(HKEY_LOCAL_MACHINE, keyName, L"GS_DLL"));
             if (!GS_DLL)
                 continue;
-            AutoFreeW dir(path::GetDir(GS_DLL));
-            AutoFreeW exe(path::Join(dir, L"gswin32c.exe"));
+            AutoFreeWstr dir(path::GetDir(GS_DLL));
+            AutoFreeWstr exe(path::Join(dir, L"gswin32c.exe"));
             if (file::Exists(exe))
                 return exe.StealData();
             exe.Set(path::Join(dir, L"gswin64c.exe"));
@@ -67,13 +67,13 @@ TryAgain64Bit:
 
     // if Ghostscript isn't found in the Registry, try finding it in the %PATH%
     DWORD size = GetEnvironmentVariable(L"PATH", nullptr, 0);
-    AutoFreeW envpath(AllocArray<WCHAR>(size));
+    AutoFreeWstr envpath(AllocArray<WCHAR>(size));
     if (size > 0 && envpath) {
         GetEnvironmentVariable(L"PATH", envpath, size);
         WStrVec paths;
         paths.Split(envpath, L";", true);
         for (size_t ix = 0; ix < paths.size(); ix++) {
-            AutoFreeW exe(path::Join(paths.at(ix), L"gswin32c.exe"));
+            AutoFreeWstr exe(path::Join(paths.at(ix), L"gswin32c.exe"));
             if (file::Exists(exe))
                 return exe.StealData();
             exe.Set(path::Join(paths.at(ix), L"gswin64c.exe"));
@@ -86,7 +86,7 @@ TryAgain64Bit:
 }
 
 class ScopedFile {
-    AutoFreeW path;
+    AutoFreeWstr path;
 
   public:
     explicit ScopedFile(const WCHAR* path) : path(str::Dup(path)) {
@@ -178,7 +178,7 @@ static EngineBase* ps2pdf(const WCHAR* fileName) {
 }
 
 static EngineBase* psgz2pdf(const WCHAR* fileName) {
-    AutoFreeW tmpFile(path::GetTempPath(L"PsE"));
+    AutoFreeWstr tmpFile(path::GetTempPath(L"PsE"));
     ScopedFile tmpFileScope(tmpFile);
     if (!tmpFile) {
         return nullptr;
@@ -269,7 +269,7 @@ class PsEngineImpl : public EngineBase {
         if (!FileName()) {
             return false;
         }
-        AutoFreeW dstPath(str::conv::FromUtf8(copyFileName));
+        AutoFreeWstr dstPath(str::conv::FromUtf8(copyFileName));
         return CopyFileW(FileName(), dstPath, FALSE);
     }
 
@@ -368,7 +368,7 @@ EngineBase* PsEngineImpl::CreateFromFile(const WCHAR* fileName) {
 }
 
 bool IsPsEngineAvailable() {
-    AutoFreeW gswin32c(GetGhostscriptPath());
+    AutoFreeWstr gswin32c(GetGhostscriptPath());
     return gswin32c.Get() != nullptr;
 }
 

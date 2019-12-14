@@ -78,7 +78,7 @@ static void CustomizeTocInfoTip(TreeCtrl* w, NMTVGETINFOTIPW* nm) {
     if (!link) {
         return;
     }
-    AutoFreeW path(link->GetDestValue());
+    AutoFreeWstr path(link->GetDestValue());
     if (!path) {
         return;
     }
@@ -144,7 +144,7 @@ static void RelayoutTocItem(LPNMTVCUSTOMDRAW ntvcd) {
     // Draw the page number right-aligned (if there is one)
     WindowInfo* win = FindWindowInfoByHwnd(hTV);
     DocTocItem* tocItem = (DocTocItem*)item.lParam;
-    AutoFreeW label;
+    AutoFreeWstr label;
     if (tocItem->pageNo && win && win->IsDocLoaded()) {
         label.Set(win->ctrl->GetPageLabel(tocItem->pageNo));
         label.Set(str::Join(L"  ", label));
@@ -274,8 +274,8 @@ static HTREEITEM AddTocItemToView(TreeCtrl* tree, DocTocItem* entry, HTREEITEM p
 #ifdef DISPLAY_TOC_PAGE_NUMBERS
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
     if (entry->pageNo && win && win->IsDocLoaded() && !win->AsEbook()) {
-        AutoFreeW label(win->ctrl->GetPageLabel(entry->pageNo));
-        AutoFreeW text(str::Format(L"%s  %s", entry->title, label));
+        AutoFreeWstr label(win->ctrl->GetPageLabel(entry->pageNo));
+        AutoFreeWstr text(str::Format(L"%s  %s", entry->title, label));
         toInsert.itemex.pszText = text;
         return TreeView_InsertItem(hwnd, &tvinsert);
     }

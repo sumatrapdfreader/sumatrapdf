@@ -298,6 +298,3 @@ struct AutoFreeWstr {
     }
 };
 
-#if OS_WIN
-typedef AutoFreeWstr AutoFreeW;
-#endif

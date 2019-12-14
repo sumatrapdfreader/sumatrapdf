@@ -313,7 +313,7 @@ static bool FindFile(HANDLE hArc, RARHeaderDataEx* rarHeader, const WCHAR* fileN
 OwnedData MultiFormatArchive::GetFileDataByIdUnarrDll(size_t fileId) {
     CrashIf(!rarFilePath_);
 
-    AutoFreeW rarPath(str::conv::FromUtf8(rarFilePath_));
+    AutoFreeWstr rarPath(str::conv::FromUtf8(rarFilePath_));
 
     str::Slice uncompressedBuf;
 
@@ -333,7 +333,7 @@ OwnedData MultiFormatArchive::GetFileDataByIdUnarrDll(size_t fileId) {
 
     char* data = nullptr;
     size_t size = 0;
-    AutoFreeW fileName(str::conv::FromUtf8(fileInfo->name.data()));
+    AutoFreeWstr fileName(str::conv::FromUtf8(fileInfo->name.data()));
     RARHeaderDataEx rarHeader = {0};
     bool ok = FindFile(hArc, &rarHeader, fileName.Get());
     if (!ok) {
@@ -381,7 +381,7 @@ bool MultiFormatArchive::OpenUnrarFallback(const char* rarPathUtf) {
         return false;
     }
     CrashIf(rarFilePath_);
-    AutoFreeW rarPath(str::conv::FromUtf8(rarPathUtf));
+    AutoFreeWstr rarPath(str::conv::FromUtf8(rarPathUtf));
 
     RAROpenArchiveDataEx arcData = {0};
     arcData.ArcNameW = (WCHAR*)rarPath;

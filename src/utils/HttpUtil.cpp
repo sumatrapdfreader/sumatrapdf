@@ -251,7 +251,7 @@ void HttpGetAsync(const WCHAR* url, const std::function<void(HttpRsp*)>& f) {
 // returns false if failed to download or status code is not 200
 // for other scenarios, check HttpRsp
 static bool  HttpGet(const char *url, HttpRsp *rspOut) {
-    AutoFreeW urlW(str::conv::FromUtf8(url));
+    AutoFreeWstr urlW(str::conv::FromUtf8(url));
     return HttpGet(urlW, rspOut);
 }
 

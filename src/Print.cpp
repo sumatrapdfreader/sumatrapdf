@@ -32,7 +32,7 @@
 #include "Translations.h"
 
 struct PrintData {
-    AutoFreeW printerName;
+    AutoFreeWstr printerName;
     ScopedMem<DEVMODEW> devMode;
     EngineBase* engine = nullptr;
     Vec<PRINTPAGERANGE> ranges; // empty when printing a selection
@@ -120,7 +120,7 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
     }
 
     EngineBase& engine = *pd.engine;
-    AutoFreeW fileName;
+    AutoFreeWstr fileName;
 
     DOCINFO di = {0};
     di.cbSize = sizeof(DOCINFO);
@@ -729,7 +729,7 @@ static short GetPaperSourceByName(const WCHAR* printerName, const WCHAR* binName
     }
     // try to determine the paper bin number by name
     ScopedMem<WORD> bins(AllocArray<WORD>(count));
-    AutoFreeW binNames(AllocArray<WCHAR>(24 * count + 1));
+    AutoFreeWstr binNames(AllocArray<WCHAR>(24 * count + 1));
     DeviceCapabilitiesW(printerName, nullptr, DC_BINS, (WCHAR*)bins.Get(), nullptr);
     DeviceCapabilitiesW(printerName, nullptr, DC_BINNAMES, binNames.Get(), nullptr);
     for (DWORD i = 0; i < count; i++) {
@@ -828,7 +828,7 @@ bool PrintFile(EngineBase* engine, WCHAR* printerName, bool displayErrors, const
         return false;
     }
 
-    AutoFreeW defaultPrinter;
+    AutoFreeWstr defaultPrinter;
     if (!printerName) {
         defaultPrinter.Set(GetDefaultPrinterName());
         printerName = defaultPrinter;

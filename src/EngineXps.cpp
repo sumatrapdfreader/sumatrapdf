@@ -81,11 +81,11 @@ fz_rect xps_bound_page_quick(xps_document* doc, int number) {
 
 class xps_doc_props {
   public:
-    AutoFreeW title;
-    AutoFreeW author;
-    AutoFreeW subject;
-    AutoFreeW creation_date;
-    AutoFreeW modification_date;
+    AutoFreeWstr title;
+    AutoFreeWstr author;
+    AutoFreeWstr subject;
+    AutoFreeWstr creation_date;
+    AutoFreeWstr modification_date;
 };
 
 static fz_xml_doc* xps_open_and_parse(fz_context* ctx, xps_document* doc, char* path) {
@@ -807,8 +807,8 @@ WCHAR* XpsEngineImpl::ExtractFontList() {
     WStrVec fonts;
 #if 0
     for (xps_font_cache* font = _doc->font_table; font; font = font->next) {
-        AutoFreeW path(str::conv::FromUtf8(font->name));
-        AutoFreeW name(str::conv::FromUtf8(font->font->name));
+        AutoFreeWstr path(str::conv::FromUtf8(font->name));
+        AutoFreeWstr name(str::conv::FromUtf8(font->font->name));
         fonts.Append(str::Format(L"%s (%s)", name.Get(), path::GetBaseNameNoFree(path)));
     }
 #endif
@@ -1237,7 +1237,7 @@ bool IsXpsEngineSupportedFile(const WCHAR* fileName, bool sniff) {
 
     if (dir::Exists(fileName)) {
         // allow opening uncompressed XPS files as well
-        AutoFreeW relsPath(path::Join(fileName, L"_rels\\.rels"));
+        AutoFreeWstr relsPath(path::Join(fileName, L"_rels\\.rels"));
         return file::Exists(relsPath) || dir::Exists(relsPath);
     }
 

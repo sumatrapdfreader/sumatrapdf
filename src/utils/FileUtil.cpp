@@ -141,20 +141,20 @@ WCHAR* Normalize(const WCHAR* path) {
     DWORD cch = GetFullPathName(path, 0, nullptr, nullptr);
     if (!cch)
         return str::Dup(path);
-    AutoFreeW fullpath(AllocArray<WCHAR>(cch));
+    AutoFreeWstr fullpath(AllocArray<WCHAR>(cch));
     GetFullPathName(path, cch, fullpath, nullptr);
     // convert to long form
     cch = GetLongPathName(fullpath, nullptr, 0);
     if (!cch)
         return fullpath.StealData();
-    AutoFreeW normpath(AllocArray<WCHAR>(cch));
+    AutoFreeWstr normpath(AllocArray<WCHAR>(cch));
     GetLongPathName(fullpath, normpath, cch);
     if (cch <= MAX_PATH)
         return normpath.StealData();
     // handle overlong paths: first, try to shorten the path
     cch = GetShortPathName(fullpath, nullptr, 0);
     if (cch && cch <= MAX_PATH) {
-        AutoFreeW shortpath(AllocArray<WCHAR>(cch));
+        AutoFreeWstr shortpath(AllocArray<WCHAR>(cch));
         GetShortPathName(fullpath, shortpath, cch);
         if (str::Len(path::GetBaseNameNoFree(normpath)) + path::GetBaseNameNoFree(shortpath) - shortpath < MAX_PATH) {
             // keep the long filename if possible
@@ -172,7 +172,7 @@ WCHAR* Normalize(const WCHAR* path) {
 // Normalizes the file path and the converts it into a short form that
 // can be used for interaction with non-UNICODE aware applications
 WCHAR* ShortPath(const WCHAR* path) {
-    AutoFreeW normpath(Normalize(path));
+    AutoFreeWstr normpath(Normalize(path));
     DWORD cch = GetShortPathName(normpath, nullptr, 0);
     if (!cch)
         return normpath.StealData();
@@ -247,8 +247,8 @@ bool IsSame(const WCHAR* path1, const WCHAR* path2) {
     if (!needFallback)
         return isSame;
 
-    AutoFreeW npath1(Normalize(path1));
-    AutoFreeW npath2(Normalize(path2));
+    AutoFreeWstr npath1(Normalize(path1));
+    AutoFreeWstr npath2(Normalize(path2));
     // consider the files different, if their paths can't be normalized
     return npath1 && str::EqI(npath1, npath2);
 }
@@ -364,7 +364,7 @@ FILE* OpenFILE(const char* path) {
         return nullptr;
     }
 #if OS_WIN
-    AutoFreeW pathW(str::conv::FromUtf8(path));
+    AutoFreeWstr pathW(str::conv::FromUtf8(path));
     return OpenFILE(pathW.Get());
 #else
     return fopen(path, "rb");
@@ -582,13 +582,13 @@ bool StartsWith(const WCHAR* filePath, const char* s) {
 }
 
 int GetZoneIdentifier(const WCHAR* filePath) {
-    AutoFreeW path(str::Join(filePath, L":Zone.Identifier"));
+    AutoFreeWstr path(str::Join(filePath, L":Zone.Identifier"));
     return GetPrivateProfileInt(L"ZoneTransfer", L"ZoneId", URLZONE_INVALID, path);
 }
 
 bool SetZoneIdentifier(const WCHAR* filePath, int zoneId) {
-    AutoFreeW path(str::Join(filePath, L":Zone.Identifier"));
-    AutoFreeW id(str::Format(L"%d", zoneId));
+    AutoFreeWstr path(str::Join(filePath, L":Zone.Identifier"));
+    AutoFreeWstr id(str::Format(L"%d", zoneId));
     return WritePrivateProfileString(L"ZoneTransfer", L"ZoneId", id, path);
 }
 
@@ -622,7 +622,7 @@ bool Create(const WCHAR* dir) {
 
 // creates a directory and all its parent directories that don't exist yet
 bool CreateAll(const WCHAR* dir) {
-    AutoFreeW parent(path::GetDir(dir));
+    AutoFreeWstr parent(path::GetDir(dir));
     if (!str::Eq(parent, dir) && !Exists(parent))
         CreateAll(parent);
     return Create(dir);
