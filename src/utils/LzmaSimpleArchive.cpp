@@ -278,15 +278,18 @@ static bool ExtractFileByIdx(SimpleArchive* archive, int idx, const char* dstDir
 }
 
 bool ExtractFiles(const char* archivePath, const char* dstDir, const char** files, Allocator* allocator) {
-    auto [archiveData, archiveDataSize] = file::ReadFileWithAllocator(archivePath, allocator);
-    if (!archiveData) {
+    auto d = file::ReadFileWithAllocator(archivePath, allocator);
+    if (d.empty()) {
         return false;
     }
 
+    defer {
+        Allocator::Free(allocator, (void*)d.data());
+    };
+
     SimpleArchive archive;
-    bool ok = ParseSimpleArchive(archiveData, archiveDataSize, &archive);
+    bool ok = ParseSimpleArchive(d.data(), d.size(), &archive);
     if (!ok) {
-        Allocator::Free(allocator, archiveData);
         return false;
     }
     for (; *files; files++) {
@@ -295,7 +298,6 @@ bool ExtractFiles(const char* archivePath, const char* dstDir, const char** file
             ok &= ExtractFileByIdx(&archive, idx, dstDir, allocator);
         }
     }
-    Allocator::Free(allocator, archiveData);
     return ok;
 }
 

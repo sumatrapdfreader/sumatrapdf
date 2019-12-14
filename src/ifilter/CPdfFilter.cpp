@@ -29,18 +29,20 @@ HRESULT CPdfFilter::OnInit() {
 
     // load content of PDF document into a seekable stream
     HRESULT res;
-    auto [data, len] = GetDataFromStream(m_pStream, &res);
-    if (!data)
+    AutoFree data = GetDataFromStream(m_pStream, &res);
+    if (data.empty()) {
         return res;
+    }
 
-    ScopedComPtr<IStream> stream(CreateStreamFromData(data, len));
-    free(data);
-    if (!stream)
+    ScopedComPtr<IStream> stream(CreateStreamFromData(data.data, data.size()));
+    if (!stream) {
         return E_FAIL;
+    }
 
     m_pdfEngine = CreateEnginePdfFromStream(stream);
-    if (!m_pdfEngine)
+    if (!m_pdfEngine) {
         return E_FAIL;
+    }
 
     m_state = STATE_PDF_START;
     m_iPageNo = 0;

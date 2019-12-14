@@ -133,20 +133,20 @@ PdbReader* PdbReader::CreateFromData(const char* d, size_t size) {
 
 PdbReader* PdbReader::CreateFromFile(const char* filePath) {
     std::string_view path(filePath);
-    auto [d, size] = file::ReadFile(path);
-    return CreateFromData(d, size);
+    auto d = file::ReadFile(path);
+    return CreateFromData(d.data(), d.size());
 }
 
 #if OS_WIN
 #include "WinUtil.h"
 
 PdbReader* PdbReader::CreateFromFile(const WCHAR* filePath) {
-    auto [d, size] = file::ReadFile(filePath);
-    return CreateFromData(d, size);
+    std::string_view d = file::ReadFile(filePath);
+    return CreateFromData(d.data(), d.size());
 }
 
 PdbReader* PdbReader::CreateFromStream(IStream* stream) {
-    auto [data, size] = GetDataFromStream(stream, nullptr);
-    return CreateFromData(data, size);
+    std::string_view data = GetDataFromStream(stream, nullptr);
+    return CreateFromData(data.data(), data.size());
 }
 #endif

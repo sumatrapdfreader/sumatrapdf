@@ -178,6 +178,16 @@ OwnedData::OwnedData(std::tuple<char*, size_t> s) {
     this->size = size;
 }
 
+OwnedData::OwnedData(std::string_view d) {
+    char* data = (char*)d.data();
+    size_t size = d.size();
+    if (size == 0) {
+        size = str::Len(data);
+    }
+    this->data = (char*)data;
+    this->size = size;
+}
+
 OwnedData::~OwnedData() {
     if (data) {
         free(data);

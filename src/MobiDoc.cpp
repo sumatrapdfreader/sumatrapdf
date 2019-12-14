@@ -984,8 +984,8 @@ bool MobiDoc::IsSupportedFile(const WCHAR* fileName, bool sniff) {
     }
 
     PdbReader pdbReader;
-    auto [data, size] = file::ReadFile(fileName);
-    if (!pdbReader.Parse(data, size)) {
+    auto data = file::ReadFile(fileName);
+    if (!pdbReader.Parse(data.data(), data.size())) {
         return false;
     }
     // in most cases, we're only interested in Mobipocket files

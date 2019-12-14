@@ -60,7 +60,7 @@ class ImagesEngine : public EngineBase {
     PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse = false) override;
     RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
-    std::tuple<char*, size_t> GetFileData() override;
+    std::string_view GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
     WCHAR* ExtractPageText(int pageNo, RectI** coordsOut = nullptr) override {
         UNUSED(pageNo);
@@ -257,7 +257,7 @@ PageElement* ImagesEngine::GetElementAtPos(int pageNo, PointD pt) {
     return new ImageElement(this, page);
 }
 
-std::tuple<char*, size_t> ImagesEngine::GetFileData() {
+std::string_view ImagesEngine::GetFileData() {
     return GetStreamOrFileData(fileStream.Get(), FileName());
 }
 
@@ -271,12 +271,11 @@ bool ImagesEngine::SaveFileAs(const char* copyFileName, bool includeUserAnnots) 
             return true;
         }
     }
-    auto [data, dataLen] = GetFileData();
-    if (!data) {
+    AutoFree d = GetFileData();
+    if (d.empty()) {
         return false;
     }
-    auto res = file::WriteFile(dstPath, data, dataLen);
-    free(data);
+    auto res = file::WriteFile(dstPath, d.data, d.size());
     return res;
 }
 
@@ -417,13 +416,12 @@ bool ImageEngineImpl::LoadFromStream(IStream* stream) {
 
     defaultFileExt = fileExt;
 
-    auto [data, size] = GetDataFromStream(stream, nullptr);
-    if (IsGdiPlusNativeFormat(data, size)) {
+    AutoFree data = GetDataFromStream(stream, nullptr);
+    if (IsGdiPlusNativeFormat(data.data, data.size())) {
         image = Bitmap::FromStream(stream);
     } else {
-        image = BitmapFromData(data, size);
+        image = BitmapFromData(data.data, data.size());
     }
-    free(data);
 
     return FinishLoading();
 }
@@ -551,17 +549,17 @@ bool ImageEngineImpl::SaveFileAsPDF(const char* pdfFileName, bool includeUserAnn
     UNUSED(includeUserAnnots);
     bool ok = true;
     PdfCreator* c = new PdfCreator();
+    auto dpi = GetFileDPI();
     if (FileName()) {
-        OwnedData data(file::ReadFile(FileName()));
-        ok = data.data && c->AddImagePage(data.data, data.size, GetFileDPI());
+        AutoFree data = file::ReadFile(FileName());
+        ok = !data.empty() && c->AddImagePage(data.data, data.size(), dpi);
     } else {
-        auto [data, size] = GetDataFromStream(fileStream, nullptr);
-        ok = data && c->AddImagePage(data, size, GetFileDPI());
-        free(data);
+        AutoFree data = GetDataFromStream(fileStream, nullptr);
+        ok = !data.empty() && c->AddImagePage(data.data, data.size(), dpi);
     }
     for (int i = 2; i <= PageCount() && ok; i++) {
         ImagePage* page = GetPage(i);
-        ok = page && c->AddImagePage(page->bmp, GetFileDPI());
+        ok = page && c->AddImagePage(page->bmp, dpi);
         DropPage(page);
     }
     if (ok) {
@@ -687,7 +685,7 @@ class ImageDirEngineImpl : public ImagesEngine {
         return nullptr;
     }
 
-    std::tuple<char*, size_t> GetFileData() override {
+    std::string_view GetFileData() override {
         return {};
     }
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;

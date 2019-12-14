@@ -160,8 +160,8 @@ fz_stream* fz_open_file2(fz_context* ctx, const WCHAR* filePath) {
     // load small files entirely into memory so that they can be
     // overwritten even by programs that don't open files with FILE_SHARE_READ
     if (fileSize > 0 && fileSize < MAX_MEMORY_FILE_SIZE) {
-        auto [dataTmp, size] = file::ReadFileWithAllocator(filePath, nullptr);
-        if (dataTmp == nullptr) {
+        auto dataTmp = file::ReadFileWithAllocator(filePath, nullptr);
+        if (dataTmp.empty()) {
             // failed to read
             return nullptr;
         }
@@ -171,11 +171,12 @@ fz_stream* fz_open_file2(fz_context* ctx, const WCHAR* filePath) {
         // We can either use  fz_new_buffer_from_shared_data
         // and free the data on the side or create Allocator that
         // uses fz_malloc_no_throw and pass it to ReadFileWithAllocator
-        void* data = fz_memdup(ctx, dataTmp, size);
+        size_t size = dataTmp.size();
+        void* data = fz_memdup(ctx, (void*)dataTmp.data(), size);
         if (!data) {
             return nullptr;
         }
-        free(dataTmp);
+        str::Free(dataTmp.data());
 
         fz_buffer* buf = fz_new_buffer_from_data(ctx, (u8*)data, size);
         fz_var(buf);

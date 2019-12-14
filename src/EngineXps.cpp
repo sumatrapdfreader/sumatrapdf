@@ -206,7 +206,7 @@ class XpsEngineImpl : public EngineBase {
     PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse = false) override;
     RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
-    std::tuple<char*, size_t> GetFileData() override;
+    std::string_view GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
     WCHAR* ExtractPageText(int pageNo, RectI** coordsOut = nullptr) override;
     bool HasClipOptimizations(int pageNo) override;
@@ -755,7 +755,7 @@ RenderedBitmap* XpsEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
     return bitmap;
 }
 
-std::tuple<char*, size_t> XpsEngineImpl::GetFileData() {
+std::string_view XpsEngineImpl::GetFileData() {
     u8* res = nullptr;
     ScopedCritSec scope(&ctxAccess);
     size_t cbCount;
@@ -780,11 +780,10 @@ std::tuple<char*, size_t> XpsEngineImpl::GetFileData() {
 
 bool XpsEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
     UNUSED(includeUserAnnots);
-    AutoFreeW dstPath(str::conv::FromUtf8(copyFileName));
-    auto [data, dataLen] = GetFileData();
-    if (data) {
-        bool ok = file::WriteFile(dstPath, data, dataLen);
-        free(data);
+    AutoFreeWstr dstPath = str::conv::FromUtf8(copyFileName);
+    AutoFree d = GetFileData();
+    if (!d.empty()) {
+        bool ok = file::WriteFile(dstPath, d.data, d.size());
         if (ok) {
             return true;
         }

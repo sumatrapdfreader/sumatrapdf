@@ -34,19 +34,18 @@ WCHAR* GetPathOfFileInAppDir(const WCHAR* fileName = nullptr);
 namespace file {
 
 FILE* OpenFILE(const char* path);
-std::tuple<char*, size_t> ReadFileWithAllocator(const char* filePath, Allocator* allocator);
+std::string_view ReadFileWithAllocator(const char* path, Allocator*);
 bool WriteFile(const char* path, const void* data, size_t dataLen);
 
-std::tuple<char*, size_t> ReadFile(std::string_view path);
+std::string_view ReadFile(std::string_view path);
 
 bool Exists(std::string_view path);
 
 #if OS_WIN
 FILE* OpenFILE(const WCHAR* path);
 bool Exists(const WCHAR* path);
-std::tuple<char*, size_t> ReadFileWithAllocator(const WCHAR* filePath, Allocator* allocator);
-std::tuple<char*, size_t> ReadFile(const WCHAR* filePath);
-std::string_view ReadFile2(const WCHAR* filePath);
+std::string_view ReadFileWithAllocator(const WCHAR* filePath, Allocator* allocator);
+std::string_view ReadFile(const WCHAR* filePath);
 
 bool ReadN(const WCHAR* path, char* buf, size_t toRead);
 bool WriteFile(const WCHAR* path, const void* data, size_t dataLen);
@@ -74,7 +73,5 @@ bool RemoveAll(const WCHAR* dir);
 } // namespace dir
 
 #if OS_WIN
-inline bool FileTimeEq(const FILETIME& a, const FILETIME& b) {
-    return a.dwLowDateTime == b.dwLowDateTime && a.dwHighDateTime == b.dwHighDateTime;
-}
+bool FileTimeEq(const FILETIME& a, const FILETIME& b);
 #endif

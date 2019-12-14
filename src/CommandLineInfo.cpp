@@ -133,7 +133,6 @@ enum {
     Silent
 };
 
-
 CommandLineInfo::~CommandLineInfo() {
     free(printerName);
     free(printSettings);

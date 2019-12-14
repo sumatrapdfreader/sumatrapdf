@@ -1136,7 +1136,7 @@ static HRESULT GetDataFromStream(IStream* stream, void** data, ULONG* len) {
     return S_OK;
 }
 
-std::tuple<char*, size_t> GetDataFromStream(IStream* stream, HRESULT* resOpt) {
+std::string_view GetDataFromStream(IStream* stream, HRESULT* resOpt) {
     void* data = nullptr;
     ULONG size = 0;
     HRESULT res = GetDataFromStream(stream, &data, &size);
@@ -1150,7 +1150,7 @@ std::tuple<char*, size_t> GetDataFromStream(IStream* stream, HRESULT* resOpt) {
     return {(char*)data, (size_t)size};
 }
 
-std::tuple<char*, size_t> GetStreamOrFileData(IStream* stream, const WCHAR* filePath) {
+std::string_view GetStreamOrFileData(IStream* stream, const WCHAR* filePath) {
     if (stream) {
         return GetDataFromStream(stream, nullptr);
     }
@@ -1860,7 +1860,6 @@ SIZE ButtonGetIdealSize(HWND hwnd) {
     s.cy += (int)yPadding;
     return s;
 }
-
 
 std::tuple<const char*, DWORD, HGLOBAL> LockDataResource(int id) {
     auto h = GetModuleHandle(nullptr);

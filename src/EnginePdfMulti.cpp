@@ -48,7 +48,7 @@ class EnginePdfMultiImpl : public EngineBase {
     PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse = false) override;
     RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
-    std::tuple<char*, size_t> GetFileData() override;
+    std::string_view GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
     bool SaveFileAsPdf(const char* pdfFileName, bool includeUserAnnots = false);
     WCHAR* ExtractPageText(int pageNo, RectI** coordsOut = nullptr) override;
@@ -116,7 +116,7 @@ RectD EnginePdfMultiImpl::Transform(RectD rect, int pageNo, float zoom, int rota
     return {};
 }
 
-std::tuple<char*, size_t> EnginePdfMultiImpl::GetFileData() {
+std::string_view EnginePdfMultiImpl::GetFileData() {
     return {};
 }
 
@@ -223,7 +223,7 @@ static Vec<std::string_view> Split(std::string_view sv, char split, size_t max =
     }
     // add the rest if non-empty
     size_t size = end - prev;
-    if (size > 0) {;
+    if (size > 0) {
         res.push_back({prev, size});
     }
     return res;
@@ -331,7 +331,7 @@ static ParsedVbkm* ParseVbkmFile(std::string_view d) {
 }
 
 bool EnginePdfMultiImpl::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
-    auto sv = file::ReadFile2(fileName);
+    auto sv = file::ReadFile(fileName);
     if (sv.empty()) {
         return false;
     }

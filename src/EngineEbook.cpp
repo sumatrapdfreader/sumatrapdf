@@ -102,7 +102,7 @@ class EbookEngine : public EngineBase {
     PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse = false) override;
     RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
-    std::tuple<char*, size_t> GetFileData() override {
+    std::string_view GetFileData() override {
         if (!fileName) {
             return {};
         }
@@ -759,7 +759,7 @@ class EpubEngineImpl : public EbookEngine {
     virtual ~EpubEngineImpl();
     EngineBase* Clone() override;
 
-    std::tuple<char*, size_t> GetFileData() override;
+    std::string_view GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
 
     WCHAR* GetProperty(DocumentProperty prop) override {
@@ -850,17 +850,17 @@ bool EpubEngineImpl::FinishLoading() {
     return pages->size() > 0;
 }
 
-std::tuple<char*, size_t> EpubEngineImpl::GetFileData() {
+std::string_view EpubEngineImpl::GetFileData() {
     return GetStreamOrFileData(stream, fileName);
 }
 
 bool EpubEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
     UNUSED(includeUserAnnots);
-    AutoFreeW dstPath(str::conv::FromUtf8(copyFileName));
+    AutoFreeWstr dstPath = str::conv::Utf8ToWchar(copyFileName);
 
     if (stream) {
-        auto [data, size] = GetDataFromStream(stream, nullptr);
-        bool ok = data && size && file::WriteFile(dstPath, data, size);
+        AutoFree d = GetDataFromStream(stream, nullptr);
+        bool ok = !d.empty() && file::WriteFile(dstPath, d.data, d.size());
         if (ok) {
             return true;
         }
@@ -1378,9 +1378,10 @@ void ChmFormatter::HandleTagLink(HtmlToken* t) {
     size_t len;
     AutoFreeStr src(str::DupN(attr->val, attr->valLen));
     url::DecodeInPlace(src);
-    AutoFreeStr data(chmDoc->GetFileData(src, pagePath, &len));
-    if (data)
+    AutoFree data = chmDoc->GetFileData(src, pagePath, &len);
+    if (data) {
         ParseStyleSheet(data, len);
+    }
 }
 
 /* EngineBase for handling CHM documents */

@@ -468,10 +468,9 @@ static void GetProps(Controller* ctrl, PropertiesLayout* layoutData, bool extend
     int64_t fileSize = file::GetSize(ctrl->FilePath());
     if (-1 == fileSize && dm) {
         EngineBase* engine = dm->GetEngine();
-        auto [data, fileSizeTmp] = engine->GetFileData();
-        if (data) {
-            fileSize = fileSizeTmp;
-            free(data);
+        AutoFree d = engine->GetFileData();
+        if (!d.empty()) {
+            fileSize = d.size();
         }
     }
     if (-1 != fileSize) {

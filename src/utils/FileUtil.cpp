@@ -371,7 +371,7 @@ FILE* OpenFILE(const char* path) {
 #endif
 }
 
-std::tuple<char*, size_t> ReadFileWithAllocator(const char* filePath, Allocator* allocator) {
+std::string_view ReadFileWithAllocator(const char* filePath, Allocator* allocator) {
 #if 0 // OS_WIN
     WCHAR buf[512];
     str::Utf8ToWcharBuf(filePath, str::Len(filePath), buf, dimof(buf));
@@ -417,19 +417,13 @@ Error:
 #endif
 }
 
-std::tuple<char*, size_t> ReadFile(std::string_view path) {
+std::string_view ReadFile(std::string_view path) {
     return ReadFileWithAllocator(path.data(), nullptr);
 }
 
-std::tuple<char*, size_t> ReadFile(const WCHAR* filePath) {
+std::string_view ReadFile(const WCHAR* filePath) {
     AutoFree path = str::conv::WstrToUtf8(filePath);
     return ReadFileWithAllocator(path.data, nullptr);
-}
-
-std::string_view ReadFile2(const WCHAR* filePath) {
-    AutoFree path = str::conv::WstrToUtf8(filePath);
-    auto res = ReadFileWithAllocator(path.data, nullptr);
-    return {std::get<0>(res), std::get<1>(res)};
 }
 
 bool WriteFile(const char* filePath, const void* data, size_t dataLen) {
@@ -515,48 +509,10 @@ int64_t GetSize(const WCHAR* filePath) {
     return size.QuadPart;
 }
 
-std::tuple<char*, size_t> ReadFileWithAllocator(const WCHAR* path, Allocator* allocator) {
+std::string_view ReadFileWithAllocator(const WCHAR* path, Allocator* allocator) {
     AutoFree pathUtf8 = str::conv::WstrToUtf8(path);
     return ReadFileWithAllocator(pathUtf8.data, allocator);
 }
-
-#if 0
-char* ReadFileWithAllocator(const WCHAR* path, size_t* fileSizeOut, Allocator* allocator) {
-    int64_t size64 = GetSize(path);
-    if (size64 < 0) {
-        return nullptr;
-    }
-    size_t size = (size_t)size64;
-#ifdef _WIN64
-    CrashIf(size != (size_t)size64);
-#else
-    if (size != size64) {
-        return nullptr;
-    }
-#endif
-
-    if (addOverflows<size_t>(size, ZERO_PADDING_COUNT)) {
-        return nullptr;
-    }
-    /* allocate one character more and zero-terminate just in case it's a
-       text file we'll want to treat as C string. Doesn't hurt for binary
-       files (note: three byte terminator for UTF-16 files) */
-    char* data = (char*)Allocator::AllocZero(allocator, size + ZERO_PADDING_COUNT);
-    if (!data) {
-        return nullptr;
-    }
-
-    if (!ReadN(path, data, size)) {
-        Allocator::Free(allocator, data);
-        return nullptr;
-    }
-
-    if (fileSizeOut) {
-        *fileSizeOut = size;
-    }
-    return data;
-}
-#endif
 
 // buf must be at least toRead in size (note: it won't be zero-terminated)
 bool ReadN(const WCHAR* filePath, char* buf, size_t toRead) {
@@ -688,3 +644,9 @@ bool RemoveAll(const WCHAR* dir) {
 #endif // OS_WIN
 
 } // namespace dir
+
+#if OS_WIN
+bool FileTimeEq(const FILETIME& a, const FILETIME& b) {
+    return a.dwLowDateTime == b.dwLowDateTime && a.dwHighDateTime == b.dwHighDateTime;
+}
+#endif

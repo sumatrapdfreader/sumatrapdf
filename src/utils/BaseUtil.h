@@ -393,7 +393,7 @@ class Allocator {
     virtual ~Allocator(){};
     virtual void* Alloc(size_t size) = 0;
     virtual void* Realloc(void* mem, size_t size) = 0;
-    virtual void Free(void* mem) = 0;
+    virtual void Free(const void* mem) = 0;
 
     // helper functions that fallback to malloc()/free() if allocator is nullptr
     // helps write clients where allocator is optional
@@ -455,17 +455,17 @@ class PoolAllocator : public Allocator {
     void SetMinBlockSize(size_t newMinBlockSize);
     void SetAllocRounding(size_t newRounding);
     void FreeAll();
-    virtual ~PoolAllocator() override;
+    ~PoolAllocator() override;
     void AllocBlock(size_t minSize);
 
     // Allocator methods
-    virtual void* Realloc(void* mem, size_t size) override;
+    void* Realloc(void* mem, size_t size) override;
 
-    virtual void Free(void*) override {
+    virtual void Free(const void*) override {
         // does nothing, we can't free individual pieces of memory
     }
 
-    virtual void* Alloc(size_t size) override;
+    void* Alloc(size_t size) override;
 
     void* FindNthPieceOfSize(size_t size, size_t n) const;
 
@@ -526,17 +526,17 @@ class HeapAllocator : public Allocator {
     HeapAllocator(size_t initialSize = 128 * 1024) {
         allocHeap = HeapCreate(0, initialSize, 0);
     }
-    virtual ~HeapAllocator() {
+    ~HeapAllocator() override {
         HeapDestroy(allocHeap);
     }
-    virtual void* Alloc(size_t size) {
+    void* Alloc(size_t size) override {
         return HeapAlloc(allocHeap, 0, size);
     }
-    virtual void* Realloc(void* mem, size_t size) {
+    void* Realloc(void* mem, size_t size) override {
         return HeapReAlloc(allocHeap, 0, mem, size);
     }
-    virtual void Free(void* mem) {
-        HeapFree(allocHeap, 0, mem);
+    void Free(const void* mem) override {
+        HeapFree(allocHeap, 0, (void*)mem);
     }
 };
 #endif
@@ -581,6 +581,7 @@ struct OwnedData {
     // takes ownership of data
     OwnedData(const char* data, size_t size = 0);
     OwnedData(std::tuple<char*, size_t>);
+    OwnedData(std::string_view);
     ~OwnedData();
 
     OwnedData(const OwnedData& other) = delete;

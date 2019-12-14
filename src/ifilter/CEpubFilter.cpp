@@ -33,18 +33,20 @@ HRESULT CEpubFilter::OnInit() {
 
     // load content of EPUB document into a seekable stream
     HRESULT res;
-    auto [data, len] = GetDataFromStream(m_pStream, &res);
-    if (!data)
+    AutoFree data = GetDataFromStream(m_pStream, &res);
+    if (data.empty()) {
         return res;
+    }
 
-    ScopedComPtr<IStream> stream(CreateStreamFromData(data, len));
-    free(data);
-    if (!stream)
+    ScopedComPtr<IStream> stream(CreateStreamFromData(data.data, data.size()));
+    if (!stream) {
         return E_FAIL;
+    }
 
     m_epubDoc = EpubDoc::CreateFromStream(stream);
-    if (!m_epubDoc)
+    if (!m_epubDoc) {
         return E_FAIL;
+    }
 
     m_state = STATE_EPUB_START;
     return S_OK;

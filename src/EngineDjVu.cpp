@@ -179,13 +179,11 @@ class DjVuContext {
 
     ddjvu_document_t* OpenStream(IStream* stream) {
         ScopedCritSec scope(&lock);
-        auto [data, size] = GetDataFromStream(stream, nullptr);
-        if (!data || size > ULONG_MAX) {
-            free(data);
+        AutoFree d = GetDataFromStream(stream, nullptr);
+        if (d.empty() || d.size() > ULONG_MAX) {
             return nullptr;
         }
-        auto res = ddjvu_document_create_by_data(ctx, data, (ULONG)size);
-        free(data);
+        auto res = ddjvu_document_create_by_data(ctx, d.data, (ULONG)d.size());
         return res;
     }
 };
@@ -223,7 +221,7 @@ class DjVuEngineImpl : public EngineBase {
     PointD Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse = false) override;
     RectD Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse = false) override;
 
-    std::tuple<char*, size_t> GetFileData() override;
+    std::string_view GetFileData() override;
     bool SaveFileAs(const char* copyFileName, bool includeUserAnnots = false) override;
     WCHAR* ExtractPageText(int pageNo, RectI** coordsOut = nullptr) override;
     bool HasClipOptimizations(int pageNo) override {
@@ -712,17 +710,16 @@ RectD DjVuEngineImpl::Transform(RectD rect, int pageNo, float zoom, int rotation
     return RectD::FromXY(TL, BR);
 }
 
-std::tuple<char*, size_t> DjVuEngineImpl::GetFileData() {
+std::string_view DjVuEngineImpl::GetFileData() {
     return GetStreamOrFileData(stream, FileName());
 }
 
 bool DjVuEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
     UNUSED(includeUserAnnots);
-    AutoFreeW path(str::conv::FromUtf8(copyFileName));
+    AutoFreeWstr path = str::conv::FromUtf8(copyFileName);
     if (stream) {
-        auto [data, size] = GetDataFromStream(stream, nullptr);
-        bool ok = data && size && file::WriteFile(path, data, size);
-        free(data);
+        AutoFree d = GetDataFromStream(stream, nullptr);
+        bool ok = !d.empty() && file::WriteFile(path, d.data, d.size());
         if (ok) {
             return true;
         }

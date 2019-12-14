@@ -257,7 +257,7 @@ class PsEngineImpl : public EngineBase {
         return pdfEngine->Transform(rect, pageNo, zoom, rotation, inverse);
     }
 
-    std::tuple<char*, size_t> GetFileData() override {
+    std::string_view GetFileData() override {
         return file::ReadFile(fileName);
     }
 
