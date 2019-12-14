@@ -286,6 +286,10 @@ struct AutoFreeWstr {
         return data;
     }
 
+    WCHAR* Get() const {
+        return data;
+    }
+
     operator WCHAR*() const {
         return data;
     }

@@ -372,22 +372,30 @@ bool IsGdiPlusNativeFormat(const char* data, size_t len) {
 // cf. http://stackoverflow.com/questions/4598872/creating-hbitmap-from-memory-buffer/4616394#4616394
 Bitmap* BitmapFromData(const char* data, size_t len) {
     ImgFormat format = GfxFormatFromData(data, len);
-    if (ImgFormat::TGA == format)
+    if (ImgFormat::TGA == format) {
         return tga::ImageFromData(data, len);
-    if (ImgFormat::WebP == format)
+    }
+    if (ImgFormat::WebP == format) {
         return webp::ImageFromData(data, len);
-    if (ImgFormat::JP2 == format)
+    }
+    if (ImgFormat::JP2 == format) {
         return fitz::ImageFromData(data, len);
-    if (ImgFormat::JPEG == format && JpegUsesArithmeticCoding(data, len))
+    }
+    if (ImgFormat::JPEG == format && JpegUsesArithmeticCoding(data, len)) {
         return fitz::ImageFromData(data, len);
-    if (ImgFormat::PNG == format && PngRequiresPresetDict(data, len))
+    }
+    if (ImgFormat::PNG == format && PngRequiresPresetDict(data, len)) {
         return nullptr;
+    }
 
-    ScopedComPtr<IStream> stream(CreateStreamFromData(data, len));
-    if (!stream)
+    auto strm = CreateStreamFromData({data, len});
+    ScopedComPtr<IStream> stream(strm);
+    if (!stream) {
         return nullptr;
-    if (ImgFormat::JXR == format)
+    }
+    if (ImgFormat::JXR == format) {
         return WICDecodeImageFromStream(stream);
+    }
 
     Bitmap* bmp = Bitmap::FromStream(stream);
     if (bmp && bmp->GetLastStatus() != Ok) {

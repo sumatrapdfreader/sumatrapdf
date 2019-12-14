@@ -111,7 +111,7 @@ HFONT GetDefaultGuiFont();
 HFONT GetDefaultGuiFont(bool bold, bool italic);
 long GetDefaultGuiFontSize();
 
-IStream* CreateStreamFromData(const void* data, size_t len);
+IStream* CreateStreamFromData(std::string_view);
 std::string_view GetDataFromStream(IStream* stream, HRESULT* resOpt);
 std::string_view GetStreamOrFileData(IStream* stream, const WCHAR* filePath);
 bool ReadDataFromStream(IStream* stream, void* buffer, size_t len, size_t offset = 0);

@@ -121,23 +121,25 @@ static RectI ExtractDSCPageSize(const WCHAR* fileName) {
 
 static EngineBase* ps2pdf(const WCHAR* fileName) {
     // TODO: read from gswin32c's stdout instead of using a TEMP file
-    AutoFreeW shortPath(path::ShortPath(fileName));
-    AutoFreeW tmpFile(path::GetTempPath(L"PsE"));
+    AutoFreeWstr shortPath(path::ShortPath(fileName));
+    AutoFreeWstr tmpFile(path::GetTempPath(L"PsE"));
     ScopedFile tmpFileScope(tmpFile);
-    AutoFreeW gswin32c(GetGhostscriptPath());
-    if (!shortPath || !tmpFile || !gswin32c)
+    AutoFreeWstr gswin32c(GetGhostscriptPath());
+    if (!shortPath || !tmpFile || !gswin32c) {
         return nullptr;
+    }
 
     // try to help Ghostscript determine the intended page size
-    AutoFreeW psSetup;
+    AutoFreeWstr psSetup;
     RectI page = ExtractDSCPageSize(fileName);
-    if (!page.IsEmpty())
-        psSetup.Set(str::Format(L" << /PageSize [%i %i] >> setpagedevice", page.dx, page.dy));
+    if (!page.IsEmpty()) {
+        psSetup = str::Format(L" << /PageSize [%i %i] >> setpagedevice", page.dx, page.dy);
+    }
 
-    AutoFreeW cmdLine(
-        str::Format(L"\"%s\" -q -dSAFER -dNOPAUSE -dBATCH -dEPSCrop -sOutputFile=\"%s\" -sDEVICE=pdfwrite -c "
-                    L"\".setpdfwrite%s\" -f \"%s\"",
-                    gswin32c.Get(), tmpFile.Get(), psSetup ? psSetup.Get() : L"", shortPath.Get()));
+    AutoFreeWstr cmdLine = str::Format(
+        L"\"%s\" -q -dSAFER -dNOPAUSE -dBATCH -dEPSCrop -sOutputFile=\"%s\" -sDEVICE=pdfwrite -c "
+        L"\".setpdfwrite%s\" -f \"%s\"",
+        gswin32c.Get(), tmpFile.Get(), psSetup ? psSetup.Get() : L"", shortPath.Get());
     fprintf(stderr, "- %s:%d: using '%ls' for creating '%%TEMP%%\\%ls'\n", path::GetBaseNameNoFree(__FILE__), __LINE__,
             gswin32c.Get(), path::GetBaseNameNoFree(tmpFile));
 
@@ -161,12 +163,13 @@ static EngineBase* ps2pdf(const WCHAR* fileName) {
         return nullptr;
     }
 
-    OwnedData pdfData(file::ReadFile(tmpFile));
-    if (!pdfData.data) {
+    AutoFree pdfData = file::ReadFile(tmpFile);
+    if (pdfData.empty()) {
         return nullptr;
     }
 
-    ScopedComPtr<IStream> stream(CreateStreamFromData(pdfData.data, pdfData.size));
+    auto strm = CreateStreamFromData(pdfData.as_view());
+    ScopedComPtr<IStream> stream(strm);
     if (!stream) {
         return nullptr;
     }

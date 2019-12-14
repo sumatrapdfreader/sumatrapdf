@@ -14,7 +14,8 @@ void WinUtilTest() {
     {
         char* string = "abcde";
         size_t stringSize = 5;
-        ScopedComPtr<IStream> stream(CreateStreamFromData(string, stringSize));
+        auto strm = CreateStreamFromData({string, stringSize});
+        ScopedComPtr<IStream> stream(strm);
         utassert(stream);
         AutoFree data = GetDataFromStream(stream, nullptr);
         utassert(data.data && stringSize == data.size() && str::Eq(data.data, string));
@@ -23,7 +24,8 @@ void WinUtilTest() {
     {
         WCHAR* string = L"abcde";
         size_t stringSize = 10;
-        ScopedComPtr<IStream> stream(CreateStreamFromData(string, stringSize));
+        auto strm = CreateStreamFromData({(char*)string, stringSize});
+        ScopedComPtr<IStream> stream(strm);
         utassert(stream);
         AutoFree dataTmp = GetDataFromStream(stream, nullptr);
         WCHAR* data = (WCHAR*)dataTmp.data;

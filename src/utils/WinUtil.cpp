@@ -1085,17 +1085,22 @@ HFONT CreateSimpleFont(HDC hdc, const WCHAR* fontName, int fontSize) {
     return CreateFontIndirectW(&lf);
 }
 
-IStream* CreateStreamFromData(const void* data, size_t len) {
-    if (!data)
+IStream* CreateStreamFromData(std::string_view d) {
+    if (d.empty()) {
         return nullptr;
+    }
 
+    const void* data = d.data();
+    size_t len = d.size();
     ScopedComPtr<IStream> stream;
-    if (FAILED(CreateStreamOnHGlobal(nullptr, TRUE, &stream)))
+    if (FAILED(CreateStreamOnHGlobal(nullptr, TRUE, &stream))) {
         return nullptr;
+    }
 
-    ULONG written;
-    if (FAILED(stream->Write(data, (ULONG)len, &written)) || written != len)
+    ULONG n;
+    if (FAILED(stream->Write(data, (ULONG)len, &n)) || n != len) {
         return nullptr;
+    }
 
     LARGE_INTEGER zero = {0};
     stream->Seek(zero, STREAM_SEEK_SET, nullptr);

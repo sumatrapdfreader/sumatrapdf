@@ -34,7 +34,8 @@ HRESULT CPdfFilter::OnInit() {
         return res;
     }
 
-    ScopedComPtr<IStream> stream(CreateStreamFromData(data.data, data.size()));
+    auto strm = CreateStreamFromData(data.as_view());
+    ScopedComPtr<IStream> stream(strm);
     if (!stream) {
         return E_FAIL;
     }

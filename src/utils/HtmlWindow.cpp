@@ -1367,9 +1367,10 @@ HtmlMoniker::~HtmlMoniker() {
 HRESULT HtmlMoniker::SetHtml(const char* s, size_t len) {
     free(htmlData);
     htmlData = str::DupN(s, len);
-    if (htmlStream)
+    if (htmlStream) {
         htmlStream->Release();
-    htmlStream = CreateStreamFromData(htmlData, len);
+    }
+    htmlStream = CreateStreamFromData({htmlData, len});
     return S_OK;
 }
 
