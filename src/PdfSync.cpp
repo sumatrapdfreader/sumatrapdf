@@ -477,13 +477,15 @@ int SyncTex::RebuildIndex() {
     synctex_scanner_free(scanner);
     scanner = nullptr;
 
-    OwnedData syncfname(str::conv::ToAnsi(syncfilepath));
-    if (!syncfname.Get())
+    AutoFree syncfname(str::conv::WstrToAnsi(syncfilepath));
+    if (!syncfname.Get()) {
         return PDFSYNCERR_OUTOFMEMORY;
+    }
 
     scanner = synctex_scanner_new_with_output_file(syncfname.Get(), nullptr, 1);
-    if (!scanner)
+    if (!scanner) {
         return PDFSYNCERR_SYNCFILE_NOTFOUND; // cannot rebuild the index
+    }
 
     return Synchronizer::RebuildIndex();
 }
@@ -559,7 +561,7 @@ TryAgainAnsi:
     // recent SyncTeX versions encode in UTF-8 instead of ANSI
     if (isUtf8 && -1 == ret) {
         isUtf8 = false;
-        mb_srcfilepath = str::conv::ToAnsi(srcfilepath).StealData();
+        mb_srcfilepath = (char*)str::conv::WstrToAnsi(srcfilepath).data();
         goto TryAgainAnsi;
     }
 

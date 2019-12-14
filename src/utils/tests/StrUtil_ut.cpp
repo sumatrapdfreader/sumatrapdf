@@ -383,7 +383,7 @@ void StrTest() {
     // the test string should only contain ASCII characters,
     // as all others might not be available in all code pages
 #define TEST_STRING "aBc"
-    OwnedData strA = str::conv::ToAnsi(TEXT(TEST_STRING));
+    AutoFree strA = str::conv::WstrToAnsi(TEXT(TEST_STRING));
     utassert(str::Eq(strA.Get(), TEST_STRING));
     str = str::conv::FromAnsi(strA.Get());
     utassert(str::Eq(str, TEXT(TEST_STRING)));
@@ -537,7 +537,7 @@ void StrTest() {
         utassert(!tmp.Get());
     }
     {
-        auto tmp = str::conv::ToCodePage(L"abc", 987654);
+        AutoFree tmp = str::conv::WstrToCodePage(L"abc", 987654);
         utassert(!tmp.Get());
     }
 

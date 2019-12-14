@@ -4,7 +4,6 @@
 
 // note: include BaseUtil.h instead of including directly
 
-
 #define UTF8_BOM "\xEF\xBB\xBF"
 #define UTF16_BOM "\xFF\xFE"
 #define UTF16BE_BOM "\xFE\xFF"
@@ -172,7 +171,8 @@ std::string_view WstrToUtf8(const WCHAR* src);
 OwnedData ToUtf8(const WCHAR* src, size_t cchSrcLen);
 OwnedData ToUtf8(const WCHAR* src);
 WCHAR* FromAnsi(const char* src, size_t cbSrcLen = (size_t)-1);
-OwnedData ToAnsi(const WCHAR* src);
+// OwnedData ToAnsi(const WCHAR* src);
+std::string_view WstrToAnsi(const WCHAR*);
 size_t ToCodePageBuf(char* buf, int cbBufSize, const WCHAR* s, UINT cp);
 size_t FromCodePageBuf(WCHAR* buf, int cchBufSize, const char* s, UINT cp);
 
@@ -209,4 +209,3 @@ int StrToIdx(const char* strings, const WCHAR* toFind);
 
 #define _MemToHex(ptr) str::MemToHex((const unsigned char*)(ptr), sizeof(*ptr))
 #define _HexToMem(txt, ptr) str::HexToMem(txt, (unsigned char*)(ptr), sizeof(*ptr))
-

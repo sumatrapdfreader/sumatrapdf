@@ -2650,7 +2650,7 @@ static void OnMenuSaveBookmark(WindowInfo* win) {
 
     AutoFreeWstr exePath(GetExePath());
     AutoFreeWstr args(str::Format(L"\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d", ctrl->FilePath(), ss.page,
-                               viewMode, ZoomVirtual.get(), (int)ss.x, (int)ss.y));
+                                  viewMode, ZoomVirtual.get(), (int)ss.x, (int)ss.y));
     AutoFreeWstr label(ctrl->GetPageLabel(ss.page));
     AutoFreeWstr desc(
         str::Format(_TR("Bookmark shortcut to page %s of %s"), label.get(), path::GetBaseNameNoFree(ctrl->FilePath())));

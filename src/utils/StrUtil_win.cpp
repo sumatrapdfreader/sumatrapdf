@@ -768,8 +768,8 @@ WCHAR* FromAnsi(const char* src, size_t cbSrcLen) {
     return ToWideChar(src, CP_ACP, (int)cbSrcLen);
 }
 
-OwnedData ToAnsi(const WCHAR* src) {
-    return ToMultiByte(src, CP_ACP);
+std::string_view WstrToAnsi(const WCHAR* src) {
+    return ToMultiByte2(src, CP_ACP);
 }
 
 } // namespace conv

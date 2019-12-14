@@ -288,4 +288,3 @@ struct AutoFreeWstr {
         data = nullptr;
     }
 };
-

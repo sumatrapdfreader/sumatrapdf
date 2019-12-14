@@ -22,7 +22,7 @@
 static WCHAR* GetAcrobatPath() {
     // Try Adobe Acrobat as a fall-back, if the Reader isn't installed
     AutoFreeWstr path(ReadRegStr(HKEY_LOCAL_MACHINE,
-                              L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\AcroRd32.exe", nullptr));
+                                 L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\AcroRd32.exe", nullptr));
     if (!path)
         path.Set(ReadRegStr(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\Acrobat.exe",
                             nullptr));
