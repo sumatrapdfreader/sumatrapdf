@@ -329,11 +329,11 @@ static bool WriteExtendedFileExtensionInfo(HKEY hkey) {
     // mirroring some of what DoAssociateExeWithPdfExtension() does (cf. AppTools.cpp)
     AutoFreeW iconPath(str::Join(exePath, L",1"));
     ok &= WriteRegStr(hkey, REG_CLASSES_APPS L"\\DefaultIcon", nullptr, iconPath);
-    AutoFreeW cmdPath(str::Format(L"\"%s\" \"%%1\" %%*", exePath));
+    AutoFreeW cmdPath(str::Format(L"\"%s\" \"%%1\" %%*", exePath.get()));
     ok &= WriteRegStr(hkey, REG_CLASSES_APPS L"\\Shell\\Open\\Command", nullptr, cmdPath);
-    AutoFreeW printPath(str::Format(L"\"%s\" -print-to-default \"%%1\"", exePath));
+    AutoFreeW printPath(str::Format(L"\"%s\" -print-to-default \"%%1\"", exePath.get()));
     ok &= WriteRegStr(hkey, REG_CLASSES_APPS L"\\Shell\\Print\\Command", nullptr, printPath);
-    AutoFreeW printToPath(str::Format(L"\"%s\" -print-to \"%%2\" \"%%1\"", exePath));
+    AutoFreeW printToPath(str::Format(L"\"%s\" -print-to \"%%2\" \"%%1\"", exePath.get()));
     ok &= WriteRegStr(hkey, REG_CLASSES_APPS L"\\Shell\\PrintTo\\Command", nullptr, printToPath);
 
     // don't add REG_CLASSES_APPS L"\\SupportedTypes", as that prevents SumatraPDF.exe to

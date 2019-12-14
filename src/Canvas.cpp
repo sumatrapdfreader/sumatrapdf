@@ -1305,7 +1305,7 @@ static void OnPaintError(WindowInfo* win) {
     ScopedGdiObj<HBRUSH> bgBrush(CreateSolidBrush(bgCol));
     FillRect(hdc, &ps.rcPaint, bgBrush);
     // TODO: should this be "Error opening %s"?
-    AutoFreeW msg(str::Format(_TR("Error loading %s"), win->currentTab->filePath));
+    AutoFreeW msg(str::Format(_TR("Error loading %s"), win->currentTab->filePath.get()));
     DrawCenteredText(hdc, ClientRect(win->hwndCanvas), msg, IsUIRightToLeft());
     SelectObject(hdc, hPrevFont);
 

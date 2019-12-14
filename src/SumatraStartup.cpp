@@ -220,7 +220,7 @@ static void OpenUsingDde(HWND targetWnd, const WCHAR* filePath, CommandLineInfo&
     }
     if (i.forwardSearchOrigin && i.forwardSearchLine) {
         AutoFreeW sourcePath(path::Normalize(i.forwardSearchOrigin));
-        cmd.AppendFmt(L"[" DDECOMMAND_SYNC L"(\"%s\", \"%s\", %d, 0, 0, 1)]", fullpath, sourcePath,
+        cmd.AppendFmt(L"[" DDECOMMAND_SYNC L"(\"%s\", \"%s\", %d, 0, 0, 1)]", fullpath, sourcePath.get(),
                       i.forwardSearchLine);
     }
 
@@ -494,7 +494,7 @@ static bool AutoUpdateMain() {
         CrashIf(!str::EndsWith(exePath, L".exe-updater.exe"));
         exePath[str::Len(exePath) - 12] = '\0';
         free(argList.at(2));
-        argList.at(2) = str::Format(L"replace:%s", exePath);
+        argList.at(2) = str::Format(L"replace:%s", exePath.get());
     }
     const WCHAR* otherExe = nullptr;
     if (str::StartsWith(argList.at(2), L"replace:"))
@@ -513,7 +513,7 @@ static bool AutoUpdateMain() {
     AutoFreeW thisExe(GetExePath());
     RetryIO([&] { return CopyFile(thisExe, otherExe, FALSE) != 0; });
     // TODO: somehow indicate success or failure
-    AutoFreeW cleanupArgs(str::Format(L"-autoupdate cleanup:\"%s\"", thisExe));
+    AutoFreeW cleanupArgs(str::Format(L"-autoupdate cleanup:\"%s\"", thisExe.get()));
     RetryIO([&] { return LaunchFile(otherExe, cleanupArgs); });
     return true;
 }

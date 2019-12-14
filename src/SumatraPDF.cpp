@@ -934,14 +934,14 @@ static void SetFrameTitleForTab(TabInfo* tab, bool needRefresh) {
     }
 
     if (!IsUIRightToLeft()) {
-        tab->frameTitle.Set(str::Format(L"%s %s- %s", titlePath, docTitle, SUMATRA_WINDOW_TITLE));
+        tab->frameTitle.Set(str::Format(L"%s %s- %s", titlePath, docTitle.get(), SUMATRA_WINDOW_TITLE));
     } else {
         // explicitly revert the title, so that filenames aren't garbled
-        tab->frameTitle.Set(str::Format(L"%s %s- %s", SUMATRA_WINDOW_TITLE, docTitle, titlePath));
+        tab->frameTitle.Set(str::Format(L"%s %s- %s", SUMATRA_WINDOW_TITLE, docTitle.get(), titlePath));
     }
     if (needRefresh && tab->ctrl) {
         // TODO: this isn't visible when tabs are used
-        tab->frameTitle.Set(str::Format(_TR("[Changes detected; refreshing] %s"), tab->frameTitle));
+        tab->frameTitle.Set(str::Format(_TR("[Changes detected; refreshing] %s"), tab->frameTitle.get()));
     }
 }
 
@@ -1151,7 +1151,7 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, Displa
     AutoFreeW unsupported(win->ctrl->GetProperty(DocumentProperty::UnsupportedFeatures));
     if (unsupported) {
         unsupported.Set(str::Format(_TR("This document uses unsupported features (%s) and might not render properly"),
-                                    unsupported));
+                                    unsupported.get()));
         win->ShowNotification(unsupported, NOS_WARNING, NG_PERSISTENT_WARNING);
     }
 
@@ -1478,7 +1478,7 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     // fail with a notification if the file doesn't exist and
     // there is a window the user has just been interacting with
     if (failEarly) {
-        AutoFreeW msg(str::Format(_TR("File %s not found"), fullPath));
+        AutoFreeW msg(str::Format(_TR("File %s not found"), fullPath.get()));
         win->ShowNotification(msg, NOS_HIGHLIGHT);
         // display the notification ASAP (prefs::Save() can introduce a notable delay)
         win->RedrawAll(true);
@@ -1531,7 +1531,7 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     if (!ctrl) {
         // TODO: same message as in Canvas.cpp to not introduce
         // new translation. Find a better message e.g. why failed.
-        WCHAR* msg = str::Format(_TR("Error loading %s"), fullPath);
+        WCHAR* msg = str::Format(_TR("Error loading %s"), fullPath.get());
         win->ShowNotification(msg, NOS_HIGHLIGHT);
         str::Free(msg);
         ShowWindow(win->hwndFrame, SW_SHOW);
@@ -1672,7 +1672,7 @@ static void UpdatePageInfoHelper(WindowInfo* win, NotificationWnd* wnd, int page
     AutoFreeW pageInfo(str::Format(L"%s %d / %d", _TR("Page:"), pageNo, win->ctrl->PageCount()));
     if (win->ctrl->HasPageLabels()) {
         AutoFreeW label(win->ctrl->GetPageLabel(pageNo));
-        pageInfo.Set(str::Format(L"%s %s (%d / %d)", _TR("Page:"), label, pageNo, win->ctrl->PageCount()));
+        pageInfo.Set(str::Format(L"%s %s (%d / %d)", _TR("Page:"), label.get(), pageNo, win->ctrl->PageCount()));
     }
     if (!wnd) {
         int options = IsShiftPressed() ? NOS_PERSIST : NOS_DEFAULT;
@@ -1716,7 +1716,7 @@ static WCHAR* FormatCursorPosition(EngineBase* engine, PointD pt, MeasurementUni
         if (str::IsDigit(yPos[str::Len(yPos) - 2]))
             yPos[str::Len(yPos) - 1] = '\0';
     }
-    return str::Format(L"%s x %s %s", xPos, yPos, unitName);
+    return str::Format(L"%s x %s %s", xPos.get(), yPos.get(), unitName);
 }
 
 void UpdateCursorPositionHelper(WindowInfo* win, PointI pos, NotificationWnd* wnd) {
@@ -1748,9 +1748,9 @@ void UpdateCursorPositionHelper(WindowInfo* win, PointI pos, NotificationWnd* wn
         selStr.Set(FormatCursorPosition(engine, pt, unit));
     }
 
-    AutoFreeW posInfo(str::Format(L"%s %s", _TR("Cursor position:"), posStr));
+    AutoFreeW posInfo(str::Format(L"%s %s", _TR("Cursor position:"), posStr.get()));
     if (selStr)
-        posInfo.Set(str::Format(L"%s - %s %s", posInfo, _TR("Selection:"), selStr));
+        posInfo.Set(str::Format(L"%s - %s %s", posInfo.get(), _TR("Selection:"), selStr.get()));
     if (!wnd)
         win->ShowNotification(posInfo, NOS_PERSIST, NG_CURSOR_POS_HELPER);
     else
@@ -1845,7 +1845,7 @@ bool AutoUpdateInitiate(const char* updateData) {
     } else {
         AutoFreeW thisExe(GetExePath());
         updateExe.Set(str::Join(thisExe, L"-update.exe"));
-        updateArgs.Set(str::Format(L"-autoupdate replace:\"%s\"", thisExe));
+        updateArgs.Set(str::Format(L"-autoupdate replace:\"%s\"", thisExe.get()));
     }
 
     bool ok = file::WriteFile(updateExe, rsp.data.as_view());
@@ -2341,7 +2341,7 @@ static void OnMenuSaveAs(WindowInfo* win) {
     if (gPluginMode) {
         urlName.Set(url::GetFileName(gPluginURL));
         // fall back to a generic "filename" instead of the more confusing temporary filename
-        srcFileName = urlName ? urlName : L"filename";
+        srcFileName = urlName ? urlName.get() : L"filename";
     }
 
     AssertCrash(srcFileName);
@@ -2505,7 +2505,7 @@ static void OnMenuSaveAs(WindowInfo* win) {
             win->AsFixed()->userAnnotsModified = false;
     }
     if (!ok) {
-        MessageBoxWarning(win->hwndFrame, errorMsg ? errorMsg : _TR("Failed to save a file"));
+        MessageBoxWarning(win->hwndFrame, errorMsg ? errorMsg.get() : _TR("Failed to save a file"));
     }
 
     if (ok && IsUntrustedFile(win->ctrl->FilePath(), gPluginURL) && !convertToTXT) {
@@ -2650,10 +2650,10 @@ static void OnMenuSaveBookmark(WindowInfo* win) {
 
     AutoFreeW exePath(GetExePath());
     AutoFreeW args(str::Format(L"\"%s\" -page %d -view \"%s\" -zoom %s -scroll %d,%d", ctrl->FilePath(), ss.page,
-                               viewMode, ZoomVirtual, (int)ss.x, (int)ss.y));
+                               viewMode, ZoomVirtual.get(), (int)ss.x, (int)ss.y));
     AutoFreeW label(ctrl->GetPageLabel(ss.page));
     AutoFreeW desc(
-        str::Format(_TR("Bookmark shortcut to page %s of %s"), label, path::GetBaseNameNoFree(ctrl->FilePath())));
+        str::Format(_TR("Bookmark shortcut to page %s of %s"), label.get(), path::GetBaseNameNoFree(ctrl->FilePath())));
 
     CreateShortcut(fileName, exePath, args, desc, 1);
 }

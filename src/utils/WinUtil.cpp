@@ -1589,17 +1589,19 @@ BOOL SafeCloseHandle(HANDLE* h) {
 // It'll always run the process, might fail to run non-elevated if fails to find explorer.exe
 // Also, if explorer.exe is running elevated, it'll probably run elevated as well.
 void RunNonElevated(const WCHAR* exePath) {
-    AutoFreeW cmd, explorerPath;
+    AutoFreeWstr cmd, explorerPath;
     WCHAR buf[MAX_PATH] = {0};
     UINT res = GetWindowsDirectory(buf, dimof(buf));
-    if (0 == res || res >= dimof(buf))
+    if (0 == res || res >= dimof(buf)) {
         goto Run;
+    }
     explorerPath.Set(path::Join(buf, L"explorer.exe"));
-    if (!file::Exists(explorerPath))
+    if (!file::Exists(explorerPath)) {
         goto Run;
+    }
     cmd.Set(str::Format(L"\"%s\" \"%s\"", explorerPath.Get(), exePath));
 Run:
-    HANDLE h = LaunchProcess(cmd ? cmd : exePath);
+    HANDLE h = LaunchProcess(cmd ? cmd.get() : exePath);
     SafeCloseHandle(&h);
 }
 

@@ -597,7 +597,7 @@ static void CopyPropertiesToClipboard(HWND hwnd) {
     str::WStr lines(256);
     for (size_t i = 0; i < layoutData->size(); i++) {
         PropertyEl* el = layoutData->at(i);
-        lines.AppendFmt(L"%s %s\r\n", el->leftTxt, el->rightTxt);
+        lines.AppendFmt(L"%s %s\r\n", el->leftTxt, el->rightTxt.get());
     }
 
     CopyTextToClipboard(lines.LendData());

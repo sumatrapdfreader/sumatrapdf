@@ -718,7 +718,7 @@ void EbookController::ExtractPageAnchors() {
         }
         if (attr) {
             AutoFreeW id(str::conv::FromUtf8(attr->val, attr->valLen));
-            pageAnchorIds->Append(str::Format(L"%s#%s", epubPagePath ? epubPagePath : L"", id.Get()));
+            pageAnchorIds->Append(str::Format(L"%s#%s", epubPagePath ? epubPagePath.get() : L"", id.Get()));
             pageAnchorIdxs->Append((int)(tok->GetReparsePoint() - parser.Start()));
         }
         // update EPUB page paths and create an anchor per chapter

@@ -445,7 +445,7 @@ static void SetCloseProcessMsg() {
         else
             procNames.Set(str::Join(procNames, L" and ", name));
     }
-    AutoFreeW s(str::Format(_TR("Please close %s to proceed!"), procNames));
+    AutoFreeW s(str::Format(_TR("Please close %s to proceed!"), procNames.get()));
     SetMsg(s, COLOR_MSG_FAILED);
 }
 

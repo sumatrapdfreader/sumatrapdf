@@ -38,7 +38,7 @@ static AutoFreeW gDefaultFontName;
 static float gDefaultFontSize = 10.f;
 
 static const WCHAR* GetDefaultFontName() {
-    return gDefaultFontName ? gDefaultFontName : L"Georgia";
+    return gDefaultFontName.get() ? gDefaultFontName.get() : L"Georgia";
 }
 
 static float GetDefaultFontSize() {

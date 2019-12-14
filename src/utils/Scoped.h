@@ -128,10 +128,6 @@ class AutoFreeStrBasic {
 
 typedef AutoFreeStrBasic<char> AutoFreeStr;
 
-#if OS_WIN
-typedef AutoFreeStrBasic<WCHAR> AutoFreeW;
-#endif
-
 template <typename T>
 struct AutoDelete {
     T* o = nullptr;
@@ -255,6 +251,11 @@ struct AutoFree {
         return {data, sz};
     }
 
+    void Reset() {
+        free(data);
+        data = nullptr;
+    }
+
     char* StealData() {
         char* res = data;
         data = nullptr;
@@ -353,4 +354,13 @@ struct AutoFreeWstr {
         len = 0;
         return res;
     }
+
+    void Reset() {
+        free(data);
+        data = nullptr;
+    }
 };
+
+#if OS_WIN
+typedef AutoFreeWstr AutoFreeW;
+#endif

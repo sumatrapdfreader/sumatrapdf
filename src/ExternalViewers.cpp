@@ -145,7 +145,7 @@ bool ViewWithFoxit(TabInfo* tab, const WCHAR* args) {
     if (tab->ctrl)
         params.Set(str::Format(L"\"%s\" %s -n %d", tab->ctrl->FilePath(), args, tab->ctrl->CurrentPageNo()));
     else
-        params.Set(str::Format(L"\"%s\" %s", tab->filePath, args));
+        params.Set(str::Format(L"\"%s\" %s", tab->filePath.get(), args));
     return LaunchFile(exePath, params);
 }
 
@@ -174,7 +174,7 @@ bool ViewWithPDFXChange(TabInfo* tab, const WCHAR* args) {
     if (tab->ctrl)
         params.Set(str::Format(L"%s /A \"page=%d\" \"%s\"", args, tab->ctrl->CurrentPageNo(), tab->ctrl->FilePath()));
     else
-        params.Set(str::Format(L"%s \"%s\"", args, tab->filePath));
+        params.Set(str::Format(L"%s \"%s\"", args, tab->filePath.get()));
     return LaunchFile(exePath, params);
 }
 
@@ -207,7 +207,7 @@ bool ViewWithAcrobat(TabInfo* tab, const WCHAR* args) {
     if (tab->ctrl && HIWORD(GetFileVersion(exePath)) >= 6)
         params.Set(str::Format(L"/A \"page=%d\" %s \"%s\"", tab->ctrl->CurrentPageNo(), args, tab->ctrl->FilePath()));
     else
-        params.Set(str::Format(L"%s \"%s\"", args, tab->filePath));
+        params.Set(str::Format(L"%s \"%s\"", args, tab->filePath.get()));
 
     return LaunchFile(exePath, params);
 }
@@ -241,7 +241,7 @@ bool ViewWithXPSViewer(TabInfo* tab, const WCHAR* args) {
     if (tab->ctrl)
         params.Set(str::Format(L"%s \"%s\"", args, tab->ctrl->FilePath()));
     else
-        params.Set(str::Format(L"%s \"%s\"", args, tab->filePath));
+        params.Set(str::Format(L"%s \"%s\"", args, tab->filePath.get()));
     return LaunchFile(exePath, params);
 }
 
@@ -274,7 +274,7 @@ bool ViewWithHtmlHelp(TabInfo* tab, const WCHAR* args) {
     if (tab->ctrl)
         params.Set(str::Format(L"%s \"%s\"", args, tab->ctrl->FilePath()));
     else
-        params.Set(str::Format(L"%s \"%s\"", args, tab->filePath));
+        params.Set(str::Format(L"%s \"%s\"", args, tab->filePath.get()));
     return LaunchFile(exePath, params);
 }
 
@@ -308,7 +308,7 @@ bool ViewWithExternalViewer(TabInfo* tab, size_t idx) {
     if (str::Find(cmdLine, L"%1"))
         params.Set(str::Replace(cmdLine, L"%1", tab->filePath));
     else
-        params.Set(str::Format(L"%s \"%s\"", cmdLine, tab->filePath));
+        params.Set(str::Format(L"%s \"%s\"", cmdLine, tab->filePath.get()));
     return LaunchFile(args.at(0), params);
 }
 

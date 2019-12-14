@@ -338,7 +338,7 @@ static void AppendExternalViewersToMenu(HMENU menuFile, const WCHAR* filePath) {
             *(WCHAR*)path::GetExt(appName) = '\0';
         }
 
-        AutoFreeW menuString(str::Format(_TR("Open in %s"), appName ? appName : name));
+        AutoFreeW menuString(str::Format(_TR("Open in %s"), appName ? appName.get() : name));
         UINT menuId = IDM_OPEN_WITH_EXTERNAL_FIRST + count;
         InsertMenu(menuFile, IDM_SEND_BY_EMAIL, MF_BYCOMMAND | MF_ENABLED | MF_STRING, menuId, menuString);
         if (!filePath) {

@@ -1066,9 +1066,9 @@ bool CbxEngineImpl::Visit(const char* path, const char* value, json::DataType ty
     if (json::Type_String == type && str::Eq(path, "/ComicBookInfo/1.0/title"))
         propTitle.Set(str::conv::FromUtf8(value));
     else if (json::Type_Number == type && str::Eq(path, "/ComicBookInfo/1.0/publicationYear"))
-        propDate.Set(str::Format(L"%s/%d", propDate ? propDate : L"", atoi(value)));
+        propDate.Set(str::Format(L"%s/%d", propDate ? propDate.get() : L"", atoi(value)));
     else if (json::Type_Number == type && str::Eq(path, "/ComicBookInfo/1.0/publicationMonth"))
-        propDate.Set(str::Format(L"%d%s", atoi(value), propDate ? propDate : L""));
+        propDate.Set(str::Format(L"%d%s", atoi(value), propDate ? propDate.get() : L""));
     else if (json::Type_String == type && str::Eq(path, "/appID"))
         propCreator.Set(str::conv::FromUtf8(value));
     else if (json::Type_String == type && str::Eq(path, "/lastModified"))

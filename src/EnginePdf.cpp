@@ -233,7 +233,7 @@ WCHAR* FormatPageLabel(const char* type, int pageNo, const WCHAR* prefix) {
         AutoFreeW number(str::FormatRomanNumeral(pageNo));
         if (*type == 'r')
             str::ToLowerInPlace(number.Get());
-        return str::Format(L"%s%s", prefix, number);
+        return str::Format(L"%s%s", prefix, number.get());
     }
     if (str::EqI(type, "A")) {
         // alphabetic numbering style (A..Z, AA..ZZ, AAA..ZZZ, ...)
