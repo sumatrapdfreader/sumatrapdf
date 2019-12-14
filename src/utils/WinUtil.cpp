@@ -1250,8 +1250,8 @@ str::Str GetTextUtf8(HWND hwnd) {
     }
     SendMessage(hwnd, WM_GETTEXT, cchTxtLen + 1, (LPARAM)txt);
     txt[cchTxtLen] = 0;
-    auto od = str::conv::ToUtf8(txt, cchTxtLen);
-    str::Str res(od.AsView());
+    AutoFree od = str::conv::WstrToUtf8(txt, cchTxtLen);
+    str::Str res(od.as_view());
     return res;
 }
 

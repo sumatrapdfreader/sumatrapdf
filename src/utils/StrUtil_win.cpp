@@ -698,10 +698,7 @@ std::string_view UnknownToUtf8(const std::string_view& txt) {
     if (str::StartsWith(s, UTF16_BOM)) {
         s += 2;
         int cchLen = (int)((len - 2) / 2);
-        OwnedData d = str::conv::ToUtf8((const WCHAR*)s, cchLen);
-        size_t n = d.size;
-        auto* str = d.StealData();
-        return {str, n};
+        return str::conv::WstrToUtf8((const WCHAR*)s, cchLen);
     }
 
     // if s is valid utf8, leave it alone
@@ -752,8 +749,8 @@ WCHAR* Utf8ToWchar(std::string_view sv) {
     return ToWideChar(sv.data(), CP_UTF8, (int)sv.size());
 }
 
-OwnedData ToUtf8(const WCHAR* src, size_t cchSrcLen) {
-    return ToMultiByte(src, CP_UTF8, (int)cchSrcLen);
+std::string_view WstrToUtf8(const WCHAR* src, size_t cchSrcLen) {
+    return ToMultiByte2(src, CP_UTF8, (int)cchSrcLen);
 }
 
 OwnedData ToUtf8(const WCHAR* src) {
