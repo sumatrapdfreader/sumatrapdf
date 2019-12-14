@@ -51,7 +51,7 @@ inline ButtonVectorDef* DeserializeButtonVectorDef(TxtNode* root) {
     return (ButtonVectorDef*)Deserialize(root, &gButtonVectorDefMetadata);
 }
 
-inline OwnedData SerializeButtonVectorDef(ButtonVectorDef* val) {
+inline std::string_view SerializeButtonVectorDef(ButtonVectorDef* val) {
     return Serialize((const uint8_t*)val, &gButtonVectorDefMetadata);
 }
 
@@ -69,7 +69,7 @@ inline ButtonDef* DeserializeButtonDef(TxtNode* root) {
     return (ButtonDef*)Deserialize(root, &gButtonDefMetadata);
 }
 
-inline OwnedData SerializeButtonDef(ButtonDef* val) {
+inline std::string_view SerializeButtonDef(ButtonDef* val) {
     return Serialize((const uint8_t*)val, &gButtonDefMetadata);
 }
 
@@ -87,7 +87,7 @@ inline ScrollBarDef* DeserializeScrollBarDef(TxtNode* root) {
     return (ScrollBarDef*)Deserialize(root, &gScrollBarDefMetadata);
 }
 
-inline OwnedData SerializeScrollBarDef(ScrollBarDef* val) {
+inline std::string_view SerializeScrollBarDef(ScrollBarDef* val) {
     return Serialize((const uint8_t*)val, &gScrollBarDefMetadata);
 }
 
@@ -105,7 +105,7 @@ inline DirectionalLayoutDataDef* DeserializeDirectionalLayoutDataDef(TxtNode* ro
     return (DirectionalLayoutDataDef*)Deserialize(root, &gDirectionalLayoutDataDefMetadata);
 }
 
-inline OwnedData SerializeDirectionalLayoutDataDef(DirectionalLayoutDataDef* val) {
+inline std::string_view SerializeDirectionalLayoutDataDef(DirectionalLayoutDataDef* val) {
     return Serialize((const uint8_t*)val, &gDirectionalLayoutDataDefMetadata);
 }
 
@@ -123,7 +123,7 @@ inline HorizontalLayoutDef* DeserializeHorizontalLayoutDef(TxtNode* root) {
     return (HorizontalLayoutDef*)Deserialize(root, &gHorizontalLayoutDefMetadata);
 }
 
-inline OwnedData SerializeHorizontalLayoutDef(HorizontalLayoutDef* val) {
+inline std::string_view SerializeHorizontalLayoutDef(HorizontalLayoutDef* val) {
     return Serialize((const uint8_t*)val, &gHorizontalLayoutDefMetadata);
 }
 
@@ -141,7 +141,7 @@ inline VerticalLayoutDef* DeserializeVerticalLayoutDef(TxtNode* root) {
     return (VerticalLayoutDef*)Deserialize(root, &gVerticalLayoutDefMetadata);
 }
 
-inline OwnedData SerializeVerticalLayoutDef(VerticalLayoutDef* val) {
+inline std::string_view SerializeVerticalLayoutDef(VerticalLayoutDef* val) {
     return Serialize((const uint8_t*)val, &gVerticalLayoutDefMetadata);
 }
 

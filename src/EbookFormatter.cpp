@@ -341,7 +341,7 @@ void HtmlFileFormatter::HandleTagLink(HtmlToken* t) {
     AutoFree src(str::DupN(attr->val, attr->valLen));
     url::DecodeInPlace(src);
     AutoFree data(htmlDoc->GetFileData(src));
-    if (data) {
+    if (data.data) {
         ParseStyleSheet(data.data, data.size());
     }
 }

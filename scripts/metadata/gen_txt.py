@@ -221,7 +221,7 @@ inline %(name)s *Deserialize%(name)s(TxtNode* root)
     return (%(name)s*)Deserialize(root, &g%(name)sMetadata);
 }
 
-inline OwnedData Serialize%(name)s(%(name)s *val)
+inline std::string_view Serialize%(name)s(%(name)s *val)
 {
     return Serialize((const uint8_t*)val, &g%(name)sMetadata);
 }

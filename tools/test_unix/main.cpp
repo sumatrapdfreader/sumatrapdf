@@ -130,7 +130,7 @@ void testTxtParser() {
         char* s = res.Get();
         str::NormalizeNewlinesInPlace(s);
         str::TrimWS(s, str::TrimOpt::Both);
-        OwnedData orig(str::Dup(ebookWinDesc), str::Len(ebookWinDesc));
+        AutoFree orig(str::Dup(ebookWinDesc), str::Len(ebookWinDesc));
 
         char* s2 = orig.data;
         str::NormalizeNewlinesInPlace(s2);

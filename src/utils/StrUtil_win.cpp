@@ -649,14 +649,14 @@ std::string_view ToMultiByte(const char* src, UINT codePageSrc, UINT codePageDes
     }
 
     if (codePageSrc == codePageDest) {
-        return std::string_view(src);
+        return std::string_view(str::Dup(src));
     }
 
     // 20127 is US-ASCII, which by definition is valid CP_UTF8
     // https://msdn.microsoft.com/en-us/library/windows/desktop/dd317756(v=vs.85).aspx
     // don't know what is CP_* name for it (if it exists)
     if ((codePageSrc == 20127) && (codePageDest == CP_UTF8)) {
-        return std::string_view(src);
+        return std::string_view(str::Dup(src));
     }
 
     AutoFreeWstr tmp(ToWideChar(src, codePageSrc));
@@ -664,8 +664,7 @@ std::string_view ToMultiByte(const char* src, UINT codePageSrc, UINT codePageDes
         return {};
     }
 
-    auto res = WstrToCodePage(tmp.Get(), codePageDest);
-    return {res.data(), res.size()};
+    return WstrToCodePage(tmp.Get(), codePageDest);
 }
 
 namespace conv {

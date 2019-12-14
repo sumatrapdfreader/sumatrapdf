@@ -1380,7 +1380,7 @@ void ChmFormatter::HandleTagLink(HtmlToken* t) {
     AutoFree src(str::DupN(attr->val, attr->valLen));
     url::DecodeInPlace(src);
     AutoFree data = chmDoc->GetFileData(src, pagePath, &len);
-    if (data) {
+    if (data.data) {
         ParseStyleSheet(data, len);
     }
 }

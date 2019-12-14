@@ -21,7 +21,7 @@ inline PagesLayoutDef* DeserializePagesLayoutDef(TxtNode* root) {
     return (PagesLayoutDef*)Deserialize(root, &gPagesLayoutDefMetadata);
 }
 
-inline OwnedData SerializePagesLayoutDef(PagesLayoutDef* val) {
+inline std::string_view SerializePagesLayoutDef(PagesLayoutDef* val) {
     return Serialize((const uint8_t*)val, &gPagesLayoutDefMetadata);
 }
 

@@ -378,24 +378,28 @@ bool EpubDoc::Load() {
         isRtlDoc = str::EqI(readingDir, L"rtl");
 
     for (node = node->down; node; node = node->next) {
-        if (!node->NameIsNS("itemref", EPUB_OPF_NS))
+        if (!node->NameIsNS("itemref", EPUB_OPF_NS)) {
             continue;
+        }
         AutoFreeWstr idref(node->GetAttribute("idref"));
-        if (!idref || !idList.Contains(idref))
+        if (!idref || !idList.Contains(idref)) {
             continue;
+        }
 
-        AutoFreeWstr fullPath(str::Join(contentPath, pathList.at(idList.Find(idref))));
-        AutoFree html(zip->GetFileDataByName(fullPath));
+        const WCHAR* fileName = pathList.at(idList.Find(idref));
+        AutoFreeWstr fullPath = str::Join(contentPath, fileName);
+        AutoFree html = zip->GetFileDataByName(fullPath);
         if (!html.data) {
             continue;
         }
-        html.TakeOwnership(DecodeTextToUtf8(html.data, true));
+        char* decoded = DecodeTextToUtf8(html.data, true);
+        html.TakeOwnership(decoded);
         if (!html.data) {
             continue;
         }
         // insert explicit page-breaks between sections including
         // an anchor with the file name at the top (for internal links)
-        AutoFree utf8_path(str::conv::WstrToUtf8(fullPath));
+        AutoFree utf8_path = str::conv::WstrToUtf8(fullPath);
         CrashIfDebugOnly(str::FindChar(utf8_path.Get(), '"'));
         str::TransChars(utf8_path.Get(), "\"", "'");
         htmlData.AppendFmt("<pagebreak page_path=\"%s\" page_marker />", utf8_path.Get());
@@ -1425,9 +1429,9 @@ static const char* TextFindRfcEnd(str::Str& htmlData, const char* curr) {
 }
 
 bool TxtDoc::Load() {
-    OwnedData text(file::ReadFile(fileName));
+    AutoFree text(file::ReadFile(fileName));
     if (str::EndsWithI(fileName, L".tcr") && str::StartsWith(text.data, TCR_HEADER)) {
-        text.TakeOwnership(DecompressTcrText(text.data, text.size));
+        text.TakeOwnership(DecompressTcrText(text.data, text.size()));
     }
     if (!text.data) {
         return false;

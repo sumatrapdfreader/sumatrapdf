@@ -569,37 +569,6 @@ class FixedArray {
     }
 };
 
-// OwnedData is for returning data. It combines pointer to data and size.
-// It owns the data i.e. frees it in destructor.
-// It cannot be copied, only moved, so that it's clear that ownership of
-// data is being passed.
-struct OwnedData {
-    char* data = nullptr;
-    size_t size = 0;
-
-    OwnedData() = default;
-    // takes ownership of data
-    OwnedData(const char* data, size_t size = 0);
-    OwnedData(std::string_view);
-    ~OwnedData();
-
-    OwnedData(const OwnedData& other) = delete;
-    OwnedData& operator=(const OwnedData& other) = delete;
-
-    OwnedData& operator=(OwnedData&& other);
-    OwnedData(OwnedData&& other);
-
-    bool IsEmpty();
-    void Clear();
-    void TakeOwnership(const char* s, size_t size = 0);
-    char* StealData();
-    char* Get() const;
-    std::string_view AsView() const;
-
-    // creates a copy of s
-    static OwnedData MakeFromStr(const char* s, size_t size = 0);
-};
-
 /*
 Poor-man's manual dynamic typing.
 Identity of an object is an address of a unique, global string.
