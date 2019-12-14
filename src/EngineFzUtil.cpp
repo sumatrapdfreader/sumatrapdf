@@ -145,17 +145,38 @@ fz_stream* fz_open_istream(fz_context* ctx, IStream* stream) {
     return stm;
 }
 
+void* fz_memdup(fz_context* ctx, void* p, size_t size) {
+    void* res = fz_malloc_no_throw(ctx, size);
+    if (!res) {
+        return nullptr;
+    }
+    memcpy(res, p, size);
+    return res;
+}
+
 fz_stream* fz_open_file2(fz_context* ctx, const WCHAR* filePath) {
     fz_stream* stm = nullptr;
     int64_t fileSize = file::GetSize(filePath);
     // load small files entirely into memory so that they can be
     // overwritten even by programs that don't open files with FILE_SHARE_READ
     if (fileSize > 0 && fileSize < MAX_MEMORY_FILE_SIZE) {
-        auto [data, size] = file::ReadFileWithAllocator(filePath, nullptr);
-        if (data == nullptr) {
+        auto [dataTmp, size] = file::ReadFileWithAllocator(filePath, nullptr);
+        if (dataTmp == nullptr) {
             // failed to read
             return nullptr;
         }
+
+        // TODO: we copy so that the memory ends up in chunk allocated
+        // by libmupdf so that it works across dll boundaries.
+        // We can either use  fz_new_buffer_from_shared_data
+        // and free the data on the side or create Allocator that
+        // uses fz_malloc_no_throw and pass it to ReadFileWithAllocator
+        void* data = fz_memdup(ctx, dataTmp, size);
+        if (!data) {
+            return nullptr;
+        }
+        free(dataTmp);
+
         fz_buffer* buf = fz_new_buffer_from_data(ctx, (u8*)data, size);
         fz_var(buf);
         fz_try(ctx) {
