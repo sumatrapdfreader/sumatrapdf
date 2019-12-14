@@ -44,13 +44,13 @@ class PdbReader {
     PdbReader() = default;
     ~PdbReader();
 
-    bool Parse(const char* d, size_t size);
+    bool Parse(std::string_view);
 
     const char* GetDbType();
     size_t GetRecordCount();
     std::string_view GetRecord(size_t recNo);
 
-    static PdbReader* CreateFromData(const char* d, size_t size);
+    static PdbReader* CreateFromData(std::string_view);
     static PdbReader* CreateFromFile(const char* filePath);
 
 #if OS_WIN
