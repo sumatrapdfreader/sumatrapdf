@@ -4564,7 +4564,7 @@ static void DownloadDebugSymbols() {
     } else {
         msg = str::Dup("Failed to download symbols.");
     }
-    UINT flags = MB_ICONERROR | MB_OK | MbRtlReadingMaybe();
+    UINT flags = MB_ICONINFORMATION | MB_OK | MbRtlReadingMaybe();
     MessageBoxA(nullptr, msg, "Downloading symbols", flags);
 
     free(msg);
