@@ -56,7 +56,7 @@ void SerializeBookmarksRec(DocTocItem* node, int level, str::Str& s) {
             s.Append("  ");
         }
         WCHAR* title = node->Text();
-        AutoFree titleA = str::conv::WstrToUtf8(title);
+        AutoFree titleA = strconv::WstrToUtf8(title);
         appendQuotedString(titleA.as_view(), s);
         auto flags = node->fontFlags;
         if (bit::IsSet(flags, fontBitItalic)) {
@@ -75,7 +75,7 @@ void SerializeBookmarksRec(DocTocItem* node, int level, str::Str& s) {
             s.AppendFmt(" page:%d", pageNo);
             auto ws = dest->GetDestValue();
             if (ws != nullptr) {
-                AutoFree str = str::conv::WstrToUtf8(ws);
+                AutoFree str = strconv::WstrToUtf8(ws);
                 s.Append(",dest:");
                 s.AppendView(str.as_view());
             }
@@ -232,7 +232,7 @@ static DocTocItem* parseBookmarksLine(std::string_view line, size_t* indentOut) 
     // TODO: no way to indicate an error
     str::Str title = parseLineTitle(line);
     DocTocItem* res = new DocTocItem();
-    res->title = str::conv::Utf8ToWchar(title.AsView());
+    res->title = strconv::Utf8ToWchar(title.AsView());
 
     // parse meta-data and page destination
     std::string_view part;

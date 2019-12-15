@@ -579,7 +579,7 @@ static void ProcessPdbFile(const char *fileNameA)
     if (!dia)
         return;
 
-    AutoFreeWstr fileName(str::conv::FromAnsi(fileNameA));
+    AutoFreeWstr fileName(strconv::FromAnsi(fileNameA));
     hr = dia->loadDataForExe(fileName, 0, 0);
     if (FAILED(hr)) {
         logf("  failed to load %s or its debug symbols from .pdb file\n", fileNameA);

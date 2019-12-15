@@ -35,7 +35,7 @@ void TestRenderPage(const CommandLineInfo& i) {
         zoom = i.startZoom;
     }
     for (auto fileName : files) {
-        AutoFree fileNameUtf(str::conv::WstrToUtf8(fileName));
+        AutoFree fileNameUtf(strconv::WstrToUtf8(fileName));
         printf("rendering page %d for '%s', zoom: %.2f\n", i.pageNumber, fileNameUtf.Get(), zoom);
         auto engine = EngineManager::CreateEngine(fileName);
         if (engine == nullptr) {
@@ -55,7 +55,7 @@ static void extractPageText(EngineBase* engine, int pageNo) {
     RectI* coordsOut; // not using the result, only to trigger the code path
     WCHAR* uni = engine->ExtractPageText(pageNo, &coordsOut);
     str::Replace(uni, L"\n", L"_");
-    AutoFree utf = str::conv::WstrToUtf8(uni);
+    AutoFree utf = strconv::WstrToUtf8(uni);
     printf("text on page %d: '", pageNo);
     // print characters as hex because I don't know what kind of locale-specific mangling
     // printf() might do
@@ -83,7 +83,7 @@ void TestExtractPage(const CommandLineInfo& ci) {
         return;
     }
     for (auto fileName : files) {
-        AutoFree fileNameUtf(str::conv::WstrToUtf8(fileName));
+        AutoFree fileNameUtf(strconv::WstrToUtf8(fileName));
         auto engine = EngineManager::CreateEngine(fileName);
         if (engine == nullptr) {
             printf("failed to create engine for file '%s'\n", fileNameUtf.Get());

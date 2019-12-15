@@ -53,7 +53,7 @@ float fz_calc_overlap(fz_rect r1, fz_rect r2) {
 
 WCHAR* pdf_to_wstr(fz_context* ctx, pdf_obj* obj) {
     char* s = pdf_new_utf8_from_pdf_string_obj(ctx, obj);
-    WCHAR* res = str::conv::FromUtf8(s);
+    WCHAR* res = strconv::FromUtf8(s);
     fz_free(ctx, s);
     return res;
 }

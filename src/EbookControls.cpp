@@ -172,7 +172,7 @@ void PageControl::NotifyMouseMove(int x, int y) {
     }
 
     SetCursor(IDC_HAND);
-    AutoFreeWstr url(str::conv::FromHtmlUtf8(link->str.s, link->str.len));
+    AutoFreeWstr url(strconv::FromHtmlUtf8(link->str.s, link->str.len));
     if (toolTip && (!url::IsAbsolute(url) || !str::Eq(toolTip, url))) {
         Control::NotifyMouseLeave();
         str::ReplacePtr(&toolTip, nullptr);

@@ -17,6 +17,8 @@ function makelzsa_files()
     "Dpi.*",
     "FileUtil.*",
     "LzmaSimpleArchive.*",
+    "StrconvUtil.*",
+    "StringViewUtil.*",
     "StrUtil.*",
     "StrUtil_win.*",
     "Log.*",
@@ -470,10 +472,12 @@ function utils_files()
     "SerializeTxt.*",
     "SettingsUtil.*",
     "Log.*",
+    "StrconvUtil.*",
+    "StrFormat.*",
+    "StringViewUtil.*",
+    "StrSlice.*",
     "StrUtil.*",
     "StrUtil_win.cpp",
-    "StrFormat.*",
-    "StrSlice.*",
     "SquareTreeParser.*",
     "ThreadUtil.*",
     "TgaReader.*",
@@ -848,7 +852,9 @@ function test_util_files()
     "Scoped.*",
     "SettingsUtil.*",
     "Log.*",
+    "StrconvUtil.*",
     "StrFormat.*",
+    "StringViewUtil.*",
     "StrUtil.*",
     "StrUtil_win.cpp",
     "SquareTreeParser.*",
@@ -940,69 +946,6 @@ function pdf_filter_files()
   filter {}
 end
 
-function installer_utils_files()
-  files_in_dir("src/utils", {
-    "Archive.*",
-    "BaseUtil.*",
-    "BitReader.*",
-    "ByteOrderDecoder.*",
-    "ColorUtil.*",
-    "CmdLineParser.*",
-    "DbgHelpDyn.*",
-    "Dict.*",
-    "DirIter.*",
-    "Dpi.*",
-    "FileUtil.*",
-    "FzImgReader.*",
-    "GdiPlusUtil.*",
-    "HttpUtil.*",
-    "LzmaSimpleArchive.*",
-    "StrUtil.*",
-    "StrUtil_win.cpp",
-    "StrFormat.*",
-    "StrSlice.*",
-    "ThreadUtil.*",
-    "TgaReader.*",
-    "UITask.*",
-    "WebpReader.*",
-    "WinDynCalls.*",
-    "WinUtil.*",
-  })
-end
-
-function installer_files()
-  zlib_files()
-  unarr_files()
-  installer_utils_files()
-  files_in_dir( "src", {
-    "CrashHandler.*",
-    "Translations.*",
-    "installer/Installer.h",
-    "installer/InstUninstCommon.cpp",
-    "installer/Installer.cpp",
-    "installer/Trans_installer_txt.cpp",
-    "installer/Resource.h",
-    "installer/Installer.rc",
-    "wingui/*.cpp",
-    "wingui/*.h",
-  })
-end
-
-function uninstaller_files()
-  files_in_dir("src", {
-    "CrashHandler.*",
-    "Translations.*",
-    "installer/Installer.h",
-    "installer/InstUninstCommon.cpp",
-    "installer/Uninstaller.cpp",
-    "installer/Trans_installer_txt.cpp",
-    "installer/Resource.h",
-    "installer/Installer.rc",
-    "wingui/*.cpp",
-    "wingui/*.h",
-  })
-end
-
 function test_app_files()
   files_in_dir("tools/test-app", {
     "resource.h",
@@ -1024,6 +967,8 @@ function test_app_files()
     "FileUtil.*",
     "Scoped.h",
     "Log.*",
+    "StrconvUtil.*",
+    "StringViewUtil.*",
     "StrUtil.*",
     "StrUtil_win.cpp",
     "WinDynCalls.*",

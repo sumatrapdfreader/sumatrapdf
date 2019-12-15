@@ -60,7 +60,7 @@ static WCHAR IntToChar(int codepoint) {
 
 // caller needs to free() the result
 WCHAR* DecodeHtmlEntitites(const char* string, UINT codepage) {
-    WCHAR* fixed = str::conv::FromCodePage(string, codepage);
+    WCHAR* fixed = strconv::FromCodePage(string, codepage);
     WCHAR* dst = fixed;
     const WCHAR* src = fixed;
 

@@ -77,13 +77,13 @@ static bool SetupSymbolPath()
     }
 
     BOOL ok = FALSE;
-    AutoFreeWstr tpath(str::conv::FromWStr(path));
+    AutoFreeWstr tpath(strconv::FromWStr(path));
     if (DynSymSetSearchPathW) {
         ok = DynSymSetSearchPathW(GetCurrentProcess(), path);
         if (!ok)
             plog("DynSymSetSearchPathW() failed");
     } else {
-        AutoFree tmp(str::conv::ToAnsi(tpath));
+        AutoFree tmp(strconv::ToAnsi(tpath));
         ok = DynSymSetSearchPath(GetCurrentProcess(), tmp);
         if (!ok)
             plog("DynSymSetSearchPath() failed");
@@ -151,7 +151,7 @@ bool Initialize(const WCHAR* symPathW, bool force) {
     } else {
         // SymInitializeW() is not present on some XP systems
         char symPathA[MAX_PATH];
-        if (0 != str::conv::ToCodePageBuf(symPathA, dimof(symPathA), symPathW, CP_ACP))
+        if (0 != strconv::ToCodePageBuf(symPathA, dimof(symPathA), symPathW, CP_ACP))
             gSymInitializeOk = DynSymInitialize(GetCurrentProcess(), symPathA, TRUE);
     }
 

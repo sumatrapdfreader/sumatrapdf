@@ -264,7 +264,7 @@ std::string_view ImagesEngine::GetFileData() {
 bool ImagesEngine::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
     UNUSED(includeUserAnnots);
     const WCHAR* srcPath = FileName();
-    AutoFreeWstr dstPath(str::conv::FromUtf8(copyFileName));
+    AutoFreeWstr dstPath(strconv::FromUtf8(copyFileName));
     if (srcPath) {
         BOOL ok = CopyFileW(srcPath, dstPath, FALSE);
         if (ok) {
@@ -461,7 +461,7 @@ static WCHAR* GetImageProperty(Bitmap* bmp, PROPID id, PROPID altId = 0) {
     if (Ok != ok) {
         /* property didn't exist */;
     } else if (PropertyTagTypeASCII == item->type) {
-        value = str::conv::FromAnsi((char*)item->value);
+        value = strconv::FromAnsi((char*)item->value);
     } else if (PropertyTagTypeByte == item->type && item->length > 0 && 0 == (item->length % 2) &&
                !((WCHAR*)item->value)[item->length / 2 - 1]) {
         value = str::Dup((WCHAR*)item->value);
@@ -648,7 +648,7 @@ bool IsImageEngineSupportedFile(const WCHAR* fileName, bool sniff) {
     if (str::Len(ext) == 0) {
         return false;
     }
-    AutoFree fileNameA = str::conv::WstrToUtf8(fileName);
+    AutoFree fileNameA = strconv::WstrToUtf8(fileName);
     return IsImageEngineSupportedFile(fileNameA);
 }
 
@@ -797,7 +797,7 @@ DocTocTree* ImageDirEngineImpl::GetTocTree() {
 bool ImageDirEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
     UNUSED(includeUserAnnots);
     // only copy the files if the target directory doesn't exist yet
-    AutoFreeWstr dstPath(str::conv::FromUtf8(copyFileName));
+    AutoFreeWstr dstPath(strconv::FromUtf8(copyFileName));
     if (!CreateDirectoryW(dstPath, nullptr)) {
         return false;
     }
@@ -1064,23 +1064,23 @@ void CbxEngineImpl::ParseComicInfoXml(const char* xmlData) {
 // cf. http://code.google.com/p/comicbookinfo/
 bool CbxEngineImpl::Visit(const char* path, const char* value, json::DataType type) {
     if (json::Type_String == type && str::Eq(path, "/ComicBookInfo/1.0/title"))
-        propTitle.Set(str::conv::FromUtf8(value));
+        propTitle.Set(strconv::FromUtf8(value));
     else if (json::Type_Number == type && str::Eq(path, "/ComicBookInfo/1.0/publicationYear"))
         propDate.Set(str::Format(L"%s/%d", propDate ? propDate.get() : L"", atoi(value)));
     else if (json::Type_Number == type && str::Eq(path, "/ComicBookInfo/1.0/publicationMonth"))
         propDate.Set(str::Format(L"%d%s", atoi(value), propDate ? propDate.get() : L""));
     else if (json::Type_String == type && str::Eq(path, "/appID"))
-        propCreator.Set(str::conv::FromUtf8(value));
+        propCreator.Set(strconv::FromUtf8(value));
     else if (json::Type_String == type && str::Eq(path, "/lastModified"))
-        propModDate.Set(str::conv::FromUtf8(value));
+        propModDate.Set(strconv::FromUtf8(value));
     else if (json::Type_String == type && str::Eq(path, "/X-summary"))
-        propSummary.Set(str::conv::FromUtf8(value));
+        propSummary.Set(strconv::FromUtf8(value));
     else if (str::StartsWith(path, "/ComicBookInfo/1.0/credits[")) {
         int idx = -1;
         const char* prop = str::Parse(path, "/ComicBookInfo/1.0/credits[%d]/", &idx);
         if (prop) {
             if (json::Type_String == type && str::Eq(prop, "person"))
-                propAuthorTmp.Set(str::conv::FromUtf8(value));
+                propAuthorTmp.Set(strconv::FromUtf8(value));
             else if (json::Type_Bool == type && str::Eq(prop, "primary") && propAuthorTmp &&
                      !propAuthors.Contains(propAuthorTmp)) {
                 propAuthors.Append(propAuthorTmp.StealData());

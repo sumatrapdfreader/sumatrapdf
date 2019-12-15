@@ -826,7 +826,7 @@ bool PdfEngineImpl::LoadFromStream(fz_stream* stm, PasswordUI* pwdUI) {
         }
 
         // MuPDF expects passwords to be UTF-8 encoded
-        AutoFree pwd_utf8(str::conv::WstrToUtf8(pwd));
+        AutoFree pwd_utf8(strconv::WstrToUtf8(pwd));
         ok = pdf_authenticate_password(ctx, doc, pwd_utf8.Get());
         // according to the spec (1.7 ExtensionLevel 3), the password
         // for crypt revisions 5 and above are in SASLprep normalization
@@ -834,16 +834,16 @@ bool PdfEngineImpl::LoadFromStream(fz_stream* stm, PasswordUI* pwdUI) {
             // TODO: this is only part of SASLprep
             pwd.Set(NormalizeString(pwd, 5 /* NormalizationKC */));
             if (pwd) {
-                pwd_utf8 = str::conv::WstrToUtf8(pwd);
+                pwd_utf8 = strconv::WstrToUtf8(pwd);
                 ok = pdf_authenticate_password(ctx, doc, pwd_utf8.Get());
             }
         }
         // older Acrobat versions seem to have considered passwords to be in codepage 1252
         // note: such passwords aren't portable when stored as Unicode text
         if (!ok && GetACP() != 1252) {
-            AutoFree pwd_ansi(str::conv::WstrToAnsi(pwd));
-            AutoFreeWstr pwd_cp1252(str::conv::FromCodePage(pwd_ansi.Get(), 1252));
-            pwd_utf8 = str::conv::WstrToUtf8(pwd_cp1252);
+            AutoFree pwd_ansi(strconv::WstrToAnsi(pwd));
+            AutoFreeWstr pwd_cp1252(strconv::FromCodePage(pwd_ansi.Get(), 1252));
+            pwd_utf8 = strconv::WstrToUtf8(pwd_cp1252);
             ok = pdf_authenticate_password(ctx, doc, pwd_utf8.Get());
         }
     }
@@ -1022,7 +1022,7 @@ PdfTocItem* PdfEngineImpl::BuildTocTree(fz_outline* outline, int& idCounter, boo
     while (outline) {
         WCHAR* name = nullptr;
         if (outline->title) {
-            name = str::conv::FromUtf8(outline->title);
+            name = strconv::FromUtf8(outline->title);
             name = pdf_clean_string(name);
         }
         if (!name) {
@@ -1096,7 +1096,7 @@ PageDestination* PdfEngineImpl::GetNamedDest(const WCHAR* name) {
 
     pdf_document* doc = (pdf_document*)_doc;
 
-    AutoFree name_utf8(str::conv::WstrToUtf8(name));
+    AutoFree name_utf8(strconv::WstrToUtf8(name));
     pdf_obj* dest = nullptr;
 
     fz_var(dest);
@@ -1335,7 +1335,7 @@ static PdfComment* makePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf_a
     if (str::IsEmpty(contents) && PDF_ANNOT_WIDGET == tp) {
         s = label;
     }
-    AutoFreeWstr ws(str::conv::FromUtf8(s));
+    AutoFreeWstr ws(strconv::FromUtf8(s));
     RectD rd = fz_rect_to_RectD(rect);
     return new PdfComment(ws, rd, pageNo);
 }
@@ -1439,7 +1439,7 @@ void PdfEngineImpl::LinkifyPageText(FzPageInfo* pageInfo) {
             continue;
         }
 
-        AutoFree uri(str::conv::WstrToUtf8(list->links.at(i)));
+        AutoFree uri(strconv::WstrToUtf8(list->links.at(i)));
         if (!uri.Get()) {
             continue;
         }
@@ -1758,7 +1758,7 @@ WCHAR* PdfEngineImpl::ExtractFontList() {
             info.Append(")");
         }
 
-        AutoFreeWstr fontInfo(str::conv::FromUtf8(info.LendData()));
+        AutoFreeWstr fontInfo(strconv::FromUtf8(info.LendData()));
         if (fontInfo && !fonts.Contains(fontInfo)) {
             fonts.Append(fontInfo.StealData());
         }
@@ -1799,7 +1799,7 @@ WCHAR* PdfEngineImpl::GetProperty(DocumentProperty prop) {
             for (int i = 0; i < pdf_array_len(ctx, pdf_dict_gets(ctx, _info, "OutputIntents")); i++) {
                 pdf_obj* intent = pdf_array_get(ctx, pdf_dict_gets(ctx, _info, "OutputIntents"), i);
                 CrashIf(!str::StartsWith(pdf_to_name(ctx, intent), "GTS_"));
-                fstruct.Append(str::conv::FromUtf8(pdf_to_name(ctx, intent) + 4));
+                fstruct.Append(strconv::FromUtf8(pdf_to_name(ctx, intent) + 4));
             }
         }
         return fstruct.size() > 0 ? fstruct.Join(L",") : nullptr;
@@ -1890,7 +1890,7 @@ std::string_view PdfEngineImpl::GetFileData() {
 }
 
 bool PdfEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
-    AutoFreeWstr dstPath = str::conv::FromUtf8(copyFileName);
+    AutoFreeWstr dstPath = strconv::FromUtf8(copyFileName);
     AutoFree d = GetFileData();
     if (!d.empty()) {
         bool ok = file::WriteFile(dstPath, d.as_view());
@@ -2184,7 +2184,7 @@ static char* PdfLinkGetURI(const PdfLink* link) {
 
 WCHAR* PdfLink::GetValue() const {
     if (outline && isAttachment) {
-        WCHAR* path = str::conv::FromUtf8(outline->uri);
+        WCHAR* path = strconv::FromUtf8(outline->uri);
         return path;
     }
 
@@ -2196,7 +2196,7 @@ WCHAR* PdfLink::GetValue() const {
         // other values: #1,115,208
         return nullptr;
     }
-    WCHAR* path = str::conv::FromUtf8(uri);
+    WCHAR* path = strconv::FromUtf8(uri);
     return path;
 #if 0
     if (!link || !engine)
@@ -2210,7 +2210,7 @@ WCHAR* PdfLink::GetValue() const {
 
     switch (link->kind) {
         case FZ_LINK_URI:
-            path = str::conv::FromUtf8(link->ld.uri.uri);
+            path = strconv::FromUtf8(link->ld.uri.uri);
             if (IsRelativeURI(path)) {
                 AutoFreeWstr base;
                 fz_try(engine->ctx) {
@@ -2240,7 +2240,7 @@ WCHAR* PdfLink::GetValue() const {
         case FZ_LINK_LAUNCH:
             // note: we (intentionally) don't support the /Win specific Launch parameters
             if (link->ld.launch.file_spec)
-                path = str::conv::FromUtf8(link->ld.launch.file_spec);
+                path = strconv::FromUtf8(link->ld.launch.file_spec);
             if (path && link->ld.launch.embedded_num && str::EndsWithI(path, L".pdf")) {
                 free(path);
                 path = str::Format(L"%s:%d:%d", engine->FileName(), link->ld.launch.embedded_num,
@@ -2249,7 +2249,7 @@ WCHAR* PdfLink::GetValue() const {
             break;
         case FZ_LINK_GOTOR:
             if (link->ld.gotor.file_spec)
-                path = str::conv::FromUtf8(link->ld.gotor.file_spec);
+                path = strconv::FromUtf8(link->ld.gotor.file_spec);
             break;
     }
 
@@ -2443,7 +2443,7 @@ WCHAR* PdfLink::GetDestName() const {
 #if 0
     if (!link || FZ_LINK_GOTOR != link->kind || !link->ld.gotor.dest)
         return nullptr;
-    return str::conv::FromUtf8(link->ld.gotor.dest);
+    return strconv::FromUtf8(link->ld.gotor.dest);
 #endif
 }
 

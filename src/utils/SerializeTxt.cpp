@@ -453,7 +453,7 @@ static bool DecodeField(DecodeState& ds, TxtNode* firstNode, const char* fieldNa
         size_t sLen = node->valEnd - s;
         if (s && (sLen > 0)) {
             // note: we don't free ws because it's remembered in structDataPtr
-            WCHAR* ws = str::conv::FromUtf8(s);
+            WCHAR* ws = strconv::FromUtf8(s);
             WriteStructWStr(structDataPtr, ws);
         }
         return true;
@@ -649,7 +649,7 @@ static void SerializeField(EncodeState& es, const char* fieldName, const FieldMe
     } else if (TYPE_WSTR == type) {
         WCHAR* s = (WCHAR*)ReadStructPtr(data);
         if (s) {
-            AutoFree val2(str::conv::WstrToUtf8(s));
+            AutoFree val2(strconv::WstrToUtf8(s));
             AppendKeyVal(es, fieldName, val2.Get());
         }
     } else if (TYPE_STRUCT_PTR == type) {

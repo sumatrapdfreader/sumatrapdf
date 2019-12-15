@@ -28,7 +28,7 @@ void HwndSetText(HWND hwnd, std::string_view s) {
     if (s.empty()) {
         return;
     }
-    WCHAR* ws = str::conv::Utf8ToWchar(s);
+    WCHAR* ws = strconv::Utf8ToWchar(s);
     win::SetText(hwnd, ws);
     free(ws);
 }
@@ -297,7 +297,7 @@ void WindowBase::SetFont(HFONT f) {
 }
 
 void WindowBase::SetText(const WCHAR* s) {
-    AutoFree str = str::conv::WstrToUtf8(s);
+    AutoFree str = strconv::WstrToUtf8(s);
     SetText(str.as_view());
 }
 

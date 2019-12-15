@@ -74,7 +74,7 @@ int main() {
         else if (is_arg("-pubkey", pubkeyPath))
             pubkeyPath = args.at(++i);
         else if (is_arg("-comment", inFileCommentSyntax)) {
-            auto tmp = str::conv::ToUtf8(args.at(++i));
+            auto tmp = strconv::ToUtf8(args.at(++i));
             inFileCommentSyntax.Set(tmp.StealData());
         } else if (!filePath)
             filePath = args.at(i);

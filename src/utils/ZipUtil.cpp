@@ -183,7 +183,7 @@ bool ZipCreator::AddFile(const WCHAR* filePath, const WCHAR* nameInZip) {
         nameInZip = path::IsAbsolute(filePath) ? path::GetBaseNameNoFree(filePath) : filePath;
     }
 
-    AutoFree nameUtf8 = str::conv::WstrToUtf8(nameInZip);
+    AutoFree nameUtf8 = strconv::WstrToUtf8(nameInZip);
     str::TransChars(nameUtf8.get(), "\\", "/");
 
     return AddFileData(nameUtf8.get(), fileData.get(), fileData.size(), dosdatetime);

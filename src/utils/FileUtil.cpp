@@ -364,7 +364,7 @@ FILE* OpenFILE(const char* path) {
         return nullptr;
     }
 #if OS_WIN
-    AutoFreeWstr pathW(str::conv::FromUtf8(path));
+    AutoFreeWstr pathW(strconv::FromUtf8(path));
     return OpenFILE(pathW.Get());
 #else
     return fopen(path, "rb");
@@ -422,7 +422,7 @@ std::string_view ReadFile(std::string_view path) {
 }
 
 std::string_view ReadFile(const WCHAR* filePath) {
-    AutoFree path = str::conv::WstrToUtf8(filePath);
+    AutoFree path = strconv::WstrToUtf8(filePath);
     return ReadFileWithAllocator(path.data, nullptr);
 }
 
@@ -442,7 +442,7 @@ bool WriteFile(const char* filePath, std::string_view d) {
 
 #if OS_WIN
 bool Exists(std::string_view path) {
-    WCHAR* wpath = str::conv::Utf8ToWchar(path);
+    WCHAR* wpath = strconv::Utf8ToWchar(path);
     bool exists = Exists(wpath);
     free(wpath);
     return exists;
@@ -510,7 +510,7 @@ int64_t GetSize(const WCHAR* filePath) {
 }
 
 std::string_view ReadFileWithAllocator(const WCHAR* path, Allocator* allocator) {
-    AutoFree pathUtf8 = str::conv::WstrToUtf8(path);
+    AutoFree pathUtf8 = strconv::WstrToUtf8(path);
     return ReadFileWithAllocator(pathUtf8.data, allocator);
 }
 

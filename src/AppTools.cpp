@@ -516,7 +516,7 @@ static const WCHAR* Md5OfAppExe() {
     CalcMD5DigestWin(d.data, d.size(), md5);
 
     AutoFree md5HexA(_MemToHex(&md5));
-    AutoFreeWstr md5Hex = str::conv::Utf8ToWchar(md5HexA.as_view());
+    AutoFreeWstr md5Hex = strconv::Utf8ToWchar(md5HexA.as_view());
 
     return md5Hex.StealData();
 }

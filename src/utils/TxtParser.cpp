@@ -122,7 +122,7 @@ TxtNode* TxtParser::AllocTxtNodeFromToken(const Token& tok, TxtNode::Type nodeTy
 
 // we will modify s in-place
 void TxtParser::SetToParse(const std::string_view& str) {
-    auto tmp = str::conv::UnknownToUtf8(str);
+    auto tmp = strconv::UnknownToUtf8(str);
     char* d = (char*)tmp.data();
     size_t dLen = tmp.size();
     size_t n = str::NormalizeNewlinesInPlace(d, d + dLen);

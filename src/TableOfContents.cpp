@@ -483,7 +483,7 @@ static void ExportBookmarks(TabInfo* tab) {
     auto* tocTree = tab->ctrl->GetTocTree();
     WCHAR* path = tab->filePath.get();
     str::Str s;
-    AutoFree pathA = str::conv::WstrToUtf8(path);
+    AutoFree pathA = strconv::WstrToUtf8(path);
     s.AppendFmt("file:%s\n", pathA.get());
     SerializeBookmarksRec(tocTree->root, 0, s);
     // dbglogf("%s\n", s.Get());
@@ -545,7 +545,7 @@ static void AltBookmarksChanged(WindowInfo* win, TabInfo* tab, int n, std::strin
 
 // TODO: temporary
 static Vec<Bookmarks*>* LoadAlterenativeBookmarks(const WCHAR* baseFileName) {
-    AutoFree tmp = str::conv::WstrToUtf8(baseFileName);
+    AutoFree tmp = strconv::WstrToUtf8(baseFileName);
     return LoadAlterenativeBookmarks(tmp.as_view());
 }
 

@@ -763,7 +763,7 @@ void GetStressTestInfo(str::Str* s) {
 
         s->Append("File: ");
         char buf[256];
-        str::conv::ToCodePageBuf(buf, dimof(buf), w->currentTab->filePath, CP_UTF8);
+        strconv::ToCodePageBuf(buf, dimof(buf), w->currentTab->filePath, CP_UTF8);
         s->Append(buf);
         w->stressTest->GetLogInfo(s);
         s->Append("\r\n");

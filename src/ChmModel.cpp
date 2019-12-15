@@ -307,7 +307,7 @@ bool ChmModel::Load(const WCHAR* fileName) {
         return false;
 
     // always make the document's homepage page 1
-    pages.Append(str::conv::FromAnsi(doc->GetHomePath()));
+    pages.Append(strconv::FromAnsi(doc->GetHomePath()));
 
     // parse the ToC here, since page numbering depends on it
     tocTrace = new Vec<ChmTocTraceItem>();
@@ -386,7 +386,7 @@ std::string_view ChmModel::GetDataForUrl(const WCHAR* url) {
     ChmCacheEntry* e = FindDataForUrl(plainUrl);
     if (!e) {
         e = new ChmCacheEntry(Allocator::StrDup(&poolAlloc, plainUrl));
-        AutoFree urlUtf8(str::conv::WstrToUtf8(plainUrl));
+        AutoFree urlUtf8(strconv::WstrToUtf8(plainUrl));
         e->data = doc->GetData(urlUtf8.Get());
         if (e->data.empty()) {
             delete e;
@@ -412,13 +412,13 @@ void ChmModel::OnLButtonDown() {
 // named destinations are either in-document URLs or Alias topic IDs
 PageDestination* ChmModel::GetNamedDest(const WCHAR* name) {
     AutoFreeWstr plainUrl(url::GetFullPath(name));
-    AutoFree urlUtf8(str::conv::WstrToUtf8(plainUrl));
+    AutoFree urlUtf8(strconv::WstrToUtf8(plainUrl));
     if (!doc->HasData(urlUtf8.Get())) {
         unsigned int topicID;
         if (str::Parse(name, L"%u%$", &topicID)) {
             urlUtf8.TakeOwnership(doc->ResolveTopicID(topicID));
             if (urlUtf8.Get() && doc->HasData(urlUtf8.Get())) {
-                plainUrl.Set(str::conv::FromUtf8(urlUtf8.Get()));
+                plainUrl.Set(strconv::FromUtf8(urlUtf8.Get()));
                 name = plainUrl;
             } else {
                 urlUtf8.Reset();
@@ -553,7 +553,7 @@ class ChmThumbnailTask : public HtmlWindowCallback {
 
     void CreateThumbnail(HtmlWindow* hw) {
         this->hw = hw;
-        homeUrl.Set(str::conv::FromAnsi(doc->GetHomePath()));
+        homeUrl.Set(strconv::FromAnsi(doc->GetHomePath()));
         if (*homeUrl == '/')
             homeUrl.SetCopy(homeUrl + 1);
         hw->NavigateToDataUrl(homeUrl);
@@ -582,7 +582,7 @@ class ChmThumbnailTask : public HtmlWindowCallback {
     std::string_view GetDataForUrl(const WCHAR* url) override {
         ScopedCritSec scope(&docAccess);
         AutoFreeWstr plainUrl(url::GetFullPath(url));
-        AutoFree urlUtf8(str::conv::WstrToUtf8(plainUrl));
+        AutoFree urlUtf8(strconv::WstrToUtf8(plainUrl));
         auto d = doc->GetData(urlUtf8.Get());
         data.Append(d);
         return d;

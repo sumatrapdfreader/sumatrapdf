@@ -269,7 +269,7 @@ class PsEngineImpl : public EngineBase {
         if (!FileName()) {
             return false;
         }
-        AutoFreeWstr dstPath(str::conv::FromUtf8(copyFileName));
+        AutoFreeWstr dstPath(strconv::FromUtf8(copyFileName));
         return CopyFileW(FileName(), dstPath, FALSE);
     }
 

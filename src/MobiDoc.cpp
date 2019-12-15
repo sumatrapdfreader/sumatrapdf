@@ -535,7 +535,7 @@ bool MobiDoc::ParseHeader() {
         compressionType = COMPRESSION_UNSUPPORTED_DRM;
         Metadata prop;
         prop.prop = DocumentProperty::UnsupportedFeatures;
-        auto tmp = str::conv::WstrToCodePage(L"DRM", mobiHdr.textEncoding);
+        auto tmp = strconv::WstrToCodePage(L"DRM", mobiHdr.textEncoding);
         prop.value = (char*)tmp.data();
         props.Append(prop);
     }
@@ -889,7 +889,7 @@ std::string_view MobiDoc::GetHtmlData() const {
 WCHAR* MobiDoc::GetProperty(DocumentProperty prop) {
     for (size_t i = 0; i < props.size(); i++) {
         if (props.at(i).prop == prop) {
-            return str::conv::FromCodePage(props.at(i).value, textEncoding);
+            return strconv::FromCodePage(props.at(i).value, textEncoding);
         }
     }
     return nullptr;
@@ -911,12 +911,12 @@ bool MobiDoc::HasToc() {
         AttrInfo* attr = tok->GetAttrByName("type");
         if (!attr)
             continue;
-        AutoFreeWstr val(str::conv::FromHtmlUtf8(attr->val, attr->valLen));
+        AutoFreeWstr val(strconv::FromHtmlUtf8(attr->val, attr->valLen));
         attr = tok->GetAttrByName("filepos");
         if (!str::EqI(val, L"toc") || !attr) {
             continue;
         }
-        val.Set(str::conv::FromHtmlUtf8(attr->val, attr->valLen));
+        val.Set(strconv::FromHtmlUtf8(attr->val, attr->valLen));
         unsigned int pos;
         if (str::Parse(val, L"%u%$", &pos)) {
             docTocIndex = pos;
@@ -941,7 +941,7 @@ bool MobiDoc::ParseToc(EbookTocVisitor* visitor) {
     HtmlToken* tok;
     while ((tok = parser.Next()) != nullptr && !tok->IsError()) {
         if (itemLink && tok->IsText()) {
-            AutoFreeWstr linkText(str::conv::FromHtmlUtf8(tok->s, tok->sLen));
+            AutoFreeWstr linkText(strconv::FromHtmlUtf8(tok->s, tok->sLen));
             if (itemText)
                 itemText.Set(str::Join(itemText, L" ", linkText));
             else
@@ -955,7 +955,7 @@ bool MobiDoc::ParseToc(EbookTocVisitor* visitor) {
             if (!attr)
                 attr = tok->GetAttrByName("href");
             if (attr)
-                itemLink.Set(str::conv::FromHtmlUtf8(attr->val, attr->valLen));
+                itemLink.Set(strconv::FromHtmlUtf8(attr->val, attr->valLen));
         } else if (itemLink && tok->IsEndTag() && Tag_A == tok->tag) {
             if (!itemText) {
                 itemLink.Reset();

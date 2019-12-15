@@ -74,7 +74,7 @@ static const WCHAR* FindOrAddMissingTranslation(const char* s) {
         return L"missing translation";
 
     gMissingTranslations[gMissingTranslationsCount].s = s;
-    const WCHAR* res = str::conv::FromUtf8(s);
+    const WCHAR* res = strconv::FromUtf8(s);
     gMissingTranslations[gMissingTranslationsCount].translation = res;
     gMissingTranslationsCount++;
     return res;
@@ -254,7 +254,7 @@ const WCHAR* GetTranslation(const char* s) {
 
     WCHAR** transCache = GetTransCacheForLang(gCurrLangIdx);
     if (!transCache[idx]) {
-        transCache[idx] = str::conv::FromUtf8(trans);
+        transCache[idx] = strconv::FromUtf8(trans);
     }
     return transCache[idx];
 }

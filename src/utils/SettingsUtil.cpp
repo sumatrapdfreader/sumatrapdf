@@ -116,12 +116,12 @@ static char* SerializeStringArray(const Vec<WCHAR*>* strArray) {
         }
     }
 
-    auto tmp = str::conv::WstrToUtf8(serialized.Get());
+    auto tmp = strconv::WstrToUtf8(serialized.Get());
     return (char*)tmp.data();
 }
 
 static void DeserializeStringArray(Vec<WCHAR*>* strArray, const char* serialized) {
-    AutoFreeWstr str(str::conv::FromUtf8(serialized));
+    AutoFreeWstr str(strconv::FromUtf8(serialized));
     const WCHAR* s = str.Get();
 
     for (;;) {
@@ -206,7 +206,7 @@ static bool SerializeField(str::Str& out, const uint8_t* base, const FieldInfo& 
                 return false; // skip empty strings
             }
             {
-                auto tmp = str::conv::WstrToUtf8(*(const WCHAR**)fieldPtr);
+                auto tmp = strconv::WstrToUtf8(*(const WCHAR**)fieldPtr);
                 value.Set(tmp.data());
             }
             if (!NeedsEscaping(value)) {
@@ -316,7 +316,7 @@ static void DeserializeField(const FieldInfo& field, uint8_t* base, const char* 
         case Type_String:
             free(*wstrPtr);
             if (value)
-                *wstrPtr = str::conv::FromUtf8(AutoFree(UnescapeStr(value)));
+                *wstrPtr = strconv::FromUtf8(AutoFree(UnescapeStr(value)));
             else
                 *wstrPtr = str::Dup((const WCHAR*)field.value);
             break;

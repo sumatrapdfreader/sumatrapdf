@@ -61,7 +61,7 @@ class DjVuDestination : public PageDestination {
     }
     WCHAR* GetDestValue() const override {
         if (PageDestType::LaunchURL == GetDestType())
-            return str::conv::FromUtf8(link);
+            return strconv::FromUtf8(link);
         return nullptr;
     }
 };
@@ -77,7 +77,7 @@ class DjVuLink : public PageElement {
         this->pageNo = pageNo;
         dest = new DjVuDestination(link);
         if (!str::IsEmpty(comment))
-            value = str::conv::FromUtf8(comment);
+            value = strconv::FromUtf8(comment);
     }
 
     ~DjVuLink() override {
@@ -110,7 +110,7 @@ class DjVuTocItem : public DocTocItem {
     DjVuDestination* dest;
 
   public:
-    DjVuTocItem(const char* title, const char* link) : DocTocItem(str::conv::FromUtf8(title)) {
+    DjVuTocItem(const char* title, const char* link) : DocTocItem(strconv::FromUtf8(title)) {
         dest = new DjVuDestination(link);
         pageNo = dest->GetDestPageNo();
     }
@@ -171,7 +171,7 @@ class DjVuContext {
 
     ddjvu_document_t* OpenFile(const WCHAR* fileName) {
         ScopedCritSec scope(&lock);
-        AutoFree fileNameUtf8(str::conv::WstrToUtf8(fileName));
+        AutoFree fileNameUtf8(strconv::WstrToUtf8(fileName));
         // TODO: libdjvu sooner or later crashes inside its caching code; cf.
         //       http://code.google.com/p/sumatrapdf/issues/detail?id=1434
         return ddjvu_document_create_by_filename_utf8(ctx, fileNameUtf8.Get(), /* cache */ FALSE);
@@ -716,7 +716,7 @@ std::string_view DjVuEngineImpl::GetFileData() {
 
 bool DjVuEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
     UNUSED(includeUserAnnots);
-    AutoFreeWstr path = str::conv::FromUtf8(copyFileName);
+    AutoFreeWstr path = strconv::FromUtf8(copyFileName);
     if (stream) {
         AutoFree d = GetDataFromStream(stream, nullptr);
         bool ok = !d.empty() && file::WriteFile(path, d.as_view());
@@ -771,7 +771,7 @@ bool DjVuEngineImpl::ExtractPageText(miniexp_t item, str::WStr& extracted, Vec<R
             AppendNewline(extracted, coords, lineSep);
         }
         const char* content = miniexp_to_str(str);
-        WCHAR* value = str::conv::FromUtf8(content);
+        WCHAR* value = strconv::FromUtf8(content);
         if (value) {
             size_t len = str::Len(value);
             // TODO: split the rectangle into individual parts per glyph
@@ -982,7 +982,7 @@ char* DjVuEngineImpl::ResolveNamedDest(const char* name) {
 }
 
 PageDestination* DjVuEngineImpl::GetNamedDest(const WCHAR* name) {
-    AutoFree nameUtf8(str::conv::WstrToUtf8(name));
+    AutoFree nameUtf8(strconv::WstrToUtf8(name));
     if (!str::StartsWith(nameUtf8.Get(), "#")) {
         nameUtf8.TakeOwnership(str::Join("#", nameUtf8.Get()));
     }
@@ -1051,14 +1051,14 @@ WCHAR* DjVuEngineImpl::GetPageLabel(int pageNo) const {
     for (size_t i = 0; i < fileInfo.size(); i++) {
         ddjvu_fileinfo_t& info = fileInfo.at(i);
         if (pageNo - 1 == info.pageno && !str::Eq(info.title, info.id)) {
-            return str::conv::FromUtf8(info.title);
+            return strconv::FromUtf8(info.title);
         }
     }
     return EngineBase::GetPageLabel(pageNo);
 }
 
 int DjVuEngineImpl::GetPageByLabel(const WCHAR* label) const {
-    AutoFree labelUtf8(str::conv::WstrToUtf8(label));
+    AutoFree labelUtf8(strconv::WstrToUtf8(label));
     for (size_t i = 0; i < fileInfo.size(); i++) {
         ddjvu_fileinfo_t& info = fileInfo.at(i);
         if (str::EqI(info.title, labelUtf8.Get()) && !str::Eq(info.title, info.id)) {

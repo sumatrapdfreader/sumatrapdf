@@ -228,13 +228,13 @@ void InitializePolicies(bool restrict) {
     if ((gPolicyRestrictions & Perm_DiskAccess)) {
         const char* value;
         if ((value = polsec->GetValue("LinkProtocols")) != nullptr) {
-            AutoFreeWstr protocols(str::conv::FromUtf8(value));
+            AutoFreeWstr protocols(strconv::FromUtf8(value));
             str::ToLowerInPlace(protocols);
             str::TransChars(protocols, L":; ", L",,,");
             gAllowedLinkProtocols.Split(protocols, L",", true);
         }
         if ((value = polsec->GetValue("SafeFileTypes")) != nullptr) {
-            AutoFreeWstr protocols(str::conv::FromUtf8(value));
+            AutoFreeWstr protocols(strconv::FromUtf8(value));
             str::ToLowerInPlace(protocols);
             str::TransChars(protocols, L":; ", L",,,");
             gAllowedFileTypes.Split(protocols, L",", true);
@@ -261,7 +261,7 @@ bool LaunchBrowser(const WCHAR* url) {
         }
         HWND plugin = gWindows.at(0)->hwndFrame;
         HWND parent = GetAncestor(plugin, GA_PARENT);
-        AutoFree urlUtf8(str::conv::WstrToUtf8(url));
+        AutoFree urlUtf8(strconv::WstrToUtf8(url));
         if (!parent || !urlUtf8.Get() || (urlUtf8.size() > 4096)) {
             return false;
         }
@@ -907,8 +907,8 @@ static Controller* CreateControllerForFile(const WCHAR* filePath, PasswordUI* pw
     if (ctrl && !str::Eq(ctrl->FilePath(), filePath)) {
         // TODO: remove when we figure out why we crash
         auto ctrlFilePath = ctrl->FilePath();
-        auto s1 = ctrlFilePath ? str::conv::WstrToUtf8(ctrlFilePath).data() : str::Dup("<null>");
-        auto s2 = filePath ? str::conv::WstrToUtf8(filePath).data() : str::Dup("<null>");
+        auto s1 = ctrlFilePath ? strconv::WstrToUtf8(ctrlFilePath).data() : str::Dup("<null>");
+        auto s2 = filePath ? strconv::WstrToUtf8(filePath).data() : str::Dup("<null>");
         logf("CreateControllerForFile: ctrl->FilePath: '%s', filePath: '%s'\n", s1, s2);
         CrashIf(ctrl && !str::Eq(ctrl->FilePath(), filePath));
         str::Free(s1);
@@ -1825,7 +1825,7 @@ bool AutoUpdateInitiate(const char* updateData) {
     if (!url || !hash || !str::EndsWithI(url, ".exe"))
         return false;
 
-    AutoFreeWstr exeUrl(str::conv::FromUtf8(url));
+    AutoFreeWstr exeUrl(strconv::FromUtf8(url));
     HttpRsp rsp;
     if (!HttpGet(exeUrl, &rsp))
         return false;
@@ -1941,7 +1941,7 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
         return ERROR_INTERNET_INCORRECT_FORMAT;
     }
 
-    AutoFreeWstr verTxt(str::conv::FromUtf8(latest));
+    AutoFreeWstr verTxt(strconv::FromUtf8(latest));
     if (CompareVersion(verTxt, UPDATE_CHECK_VER) <= 0) {
         /* if automated => don't notify that there is no new version */
         if (!silent) {
@@ -1953,7 +1953,7 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
     if (silent) {
         const char* stable = node->GetValue("Stable");
         if (stable && IsValidProgramVersion(stable) &&
-            CompareVersion(AutoFreeWstr(str::conv::FromUtf8(stable)), UPDATE_CHECK_VER) <= 0) {
+            CompareVersion(AutoFreeWstr(strconv::FromUtf8(stable)), UPDATE_CHECK_VER) <= 0) {
             // don't update just yet if the older version is still marked as stable
             return 0;
         }
@@ -2445,7 +2445,7 @@ static void OnMenuSaveAs(WindowInfo* win) {
         realDstFileName = str::Format(L"%s%s", dstFileName, defExt);
     }
 
-    AutoFree pathUtf8(str::conv::WstrToUtf8(realDstFileName));
+    AutoFree pathUtf8(strconv::WstrToUtf8(realDstFileName));
     AutoFreeWstr errorMsg;
     // Extract all text when saving as a plain text file
     if (convertToTXT) {
@@ -2457,7 +2457,7 @@ static void OnMenuSaveAs(WindowInfo* win) {
             free(tmp);
         }
 
-        AutoFree textUTF8(str::conv::WstrToUtf8(text.LendData()));
+        AutoFree textUTF8(strconv::WstrToUtf8(text.LendData()));
         AutoFree textUTF8BOM(str::Join(UTF8_BOM, textUTF8.Get()));
         ok = file::WriteFile(realDstFileName, textUTF8BOM.as_view());
     } else if (convertToPDF) {
@@ -4483,7 +4483,7 @@ bool IsDllBuild() {
 }
 
 void GetProgramInfo(str::Str& s) {
-    AutoFree d = str::conv::WstrToUtf8(gCrashFilePath);
+    AutoFree d = strconv::WstrToUtf8(gCrashFilePath);
     s.AppendFmt("Crash file: %s\r\n", d.data);
     AutoFree exePath = GetExePathA();
     s.AppendFmt("Exe: %s\r\n", exePath.get());
@@ -4559,7 +4559,7 @@ static void DownloadDebugSymbols() {
     bool ok = CrashHandlerDownloadSymbols();
     char* msg = nullptr;
     if (ok) {
-        AutoFree symDirA = str::conv::WstrToUtf8(symDir);
+        AutoFree symDirA = strconv::WstrToUtf8(symDir);
         msg = str::Format("Downloaded symbols! to %s", symDirA.data);
     } else {
         msg = str::Dup("Failed to download symbols.");

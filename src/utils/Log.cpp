@@ -57,7 +57,7 @@ void log(const WCHAR* s) {
     if (!s) {
         return;
     }
-    AutoFree tmp = str::conv::WstrToUtf8(s);
+    AutoFree tmp = strconv::WstrToUtf8(s);
     auto sv = tmp.as_view();
     log(sv);
 }

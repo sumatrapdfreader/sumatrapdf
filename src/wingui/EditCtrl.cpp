@@ -100,7 +100,7 @@ static bool HwndSetCueText(HWND hwnd, std::string_view s) {
     if (!hwnd) {
         return false;
     }
-    auto* ws = str::conv::Utf8ToWchar(s);
+    auto* ws = strconv::Utf8ToWchar(s);
     bool ok = Edit_SetCueBannerText(hwnd, ws) == TRUE;
     free(ws);
     return ok;

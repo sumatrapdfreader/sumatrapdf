@@ -736,7 +736,7 @@ static void HandleDdeCmds(const WCHAR* cmd, DDEACK& ack) {
     }
 
     {
-        AutoFree tmp = str::conv::WstrToUtf8(cmd);
+        AutoFree tmp = strconv::WstrToUtf8(cmd);
         logf("HandleDdeCmds: '%s'\n", tmp.get());
     }
 
@@ -759,7 +759,7 @@ static void HandleDdeCmds(const WCHAR* cmd, DDEACK& ack) {
         cmd = nextCmd;
 
         {
-            AutoFree tmp = str::conv::WstrToUtf8(cmd);
+            AutoFree tmp = strconv::WstrToUtf8(cmd);
             logf("HandleDdeCmds: cmd='%s'\n", tmp.get());
         }
     }
@@ -781,7 +781,7 @@ LRESULT OnDDExecute(HWND hwnd, WPARAM wparam, LPARAM lparam) {
     if (IsWindowUnicode((HWND)wparam)) {
         cmd = str::Dup((WCHAR*)command);
     } else {
-        cmd = str::conv::FromAnsi((const char*)command);
+        cmd = strconv::FromAnsi((const char*)command);
     }
     HandleDdeCmds(cmd, ack);
     free(cmd);

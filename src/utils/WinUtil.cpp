@@ -236,7 +236,7 @@ char* ReadRegStrUtf8(HKEY keySub, const WCHAR* keyName, const WCHAR* valName) {
     if (!ws) {
         return nullptr;
     }
-    auto s = str::conv::WstrToUtf8(ws);
+    auto s = strconv::WstrToUtf8(ws);
     str::Free(ws);
     return (char*)s.data();
 }
@@ -375,7 +375,7 @@ WCHAR* GetExePath() {
 char* GetExePathA() {
     WCHAR buf[MAX_PATH] = {0};
     GetModuleFileName(nullptr, buf, dimof(buf));
-    auto res = str::conv::WstrToUtf8(buf);
+    auto res = strconv::WstrToUtf8(buf);
     return (char*)res.data();
 }
 
@@ -1250,7 +1250,7 @@ str::Str GetTextUtf8(HWND hwnd) {
     }
     SendMessage(hwnd, WM_GETTEXT, cchTxtLen + 1, (LPARAM)txt);
     txt[cchTxtLen] = 0;
-    AutoFree od = str::conv::WstrToUtf8(txt, cchTxtLen);
+    AutoFree od = strconv::WstrToUtf8(txt, cchTxtLen);
     str::Str res(od.as_view());
     return res;
 }

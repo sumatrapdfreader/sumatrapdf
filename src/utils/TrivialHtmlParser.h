@@ -90,13 +90,11 @@ class HtmlParser {
 
 WCHAR* DecodeHtmlEntitites(const char* string, UINT codepage);
 
-namespace str {
-namespace conv {
+namespace strconv {
 
 inline WCHAR* FromHtmlUtf8(const char* s, size_t len) {
     AutoFree tmp(str::DupN(s, len));
     return DecodeHtmlEntitites(tmp, CP_UTF8);
 }
 
-} // namespace conv
-} // namespace str
+} // namespace strconv

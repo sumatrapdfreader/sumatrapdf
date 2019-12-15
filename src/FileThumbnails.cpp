@@ -29,7 +29,7 @@ static WCHAR* GetThumbnailPath(const WCHAR* filePath) {
     if (!filePath) {
         return nullptr;
     }
-    AutoFree pathU(str::conv::WstrToUtf8(filePath));
+    AutoFree pathU(strconv::WstrToUtf8(filePath));
     if (!pathU.Get()) {
         return nullptr;
     }
@@ -43,7 +43,7 @@ static WCHAR* GetThumbnailPath(const WCHAR* filePath) {
     if (!thumbsPath) {
         return nullptr;
     }
-    AutoFreeWstr fname(str::conv::FromAnsi(fingerPrint));
+    AutoFreeWstr fname(strconv::FromAnsi(fingerPrint));
 
     return str::Format(L"%s\\%s.png", thumbsPath.Get(), fname.Get());
 }

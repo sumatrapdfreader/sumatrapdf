@@ -54,7 +54,7 @@ fz_rect xps_bound_page_quick(xps_document* doc, int number) {
     if (str::StartsWith(data, UTF16_BOM)) {
         const WCHAR* s = (const WCHAR*)(part->data + 2);
         size_t n = (part->size - 2) / 2;
-        auto tmp = str::conv::ToUtf8(s, n);
+        auto tmp = strconv::ToUtf8(s, n);
         dataUtf8.Set(tmp.StealData());
         data = dataUtf8;
         data_size = str::Len(dataUtf8);
@@ -123,7 +123,7 @@ static WCHAR* xps_get_core_prop(fz_context* ctx, fz_xml* item) {
     for (end = start + strlen(start); end > start && str::IsWs(*(end - 1)); end--)
         ;
 
-    return str::conv::FromHtmlUtf8(start, end - start);
+    return strconv::FromHtmlUtf8(start, end - start);
 }
 
 #define REL_CORE_PROPERTIES "http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties"
@@ -780,7 +780,7 @@ std::string_view XpsEngineImpl::GetFileData() {
 
 bool XpsEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
     UNUSED(includeUserAnnots);
-    AutoFreeWstr dstPath = str::conv::FromUtf8(copyFileName);
+    AutoFreeWstr dstPath = strconv::FromUtf8(copyFileName);
     AutoFree d = GetFileData();
     if (!d.empty()) {
         bool ok = file::WriteFile(dstPath, d.as_view());
@@ -807,8 +807,8 @@ WCHAR* XpsEngineImpl::ExtractFontList() {
     WStrVec fonts;
 #if 0
     for (xps_font_cache* font = _doc->font_table; font; font = font->next) {
-        AutoFreeWstr path(str::conv::FromUtf8(font->name));
-        AutoFreeWstr name(str::conv::FromUtf8(font->font->name));
+        AutoFreeWstr path(strconv::FromUtf8(font->name));
+        AutoFreeWstr name(strconv::FromUtf8(font->font->name));
         fonts.Append(str::Format(L"%s (%s)", name.Get(), path::GetBaseNameNoFree(path)));
     }
 #endif
@@ -936,7 +936,7 @@ void XpsEngineImpl::LinkifyPageText(FzPageInfo* pageInfo) {
             continue;
         }
 
-        AutoFree uri(str::conv::WstrToUtf8(list->links.at(i)));
+        AutoFree uri(strconv::WstrToUtf8(list->links.at(i)));
         if (!uri.Get()) {
             continue;
         }
@@ -993,7 +993,7 @@ RenderedBitmap* XpsEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
 }
 
 PageDestination* XpsEngineImpl::GetNamedDest(const WCHAR* nameW) {
-    AutoFree name = str::conv::WstrToUtf8(nameW);
+    AutoFree name = strconv::WstrToUtf8(nameW);
     if (!str::StartsWith(name, "#")) {
         name.Set(str::Join("#", name));
     }
@@ -1015,7 +1015,7 @@ XpsTocItem* XpsEngineImpl::BuildTocTree(fz_outline* outline, int& idCounter) {
     while (outline) {
         WCHAR* name = nullptr;
         if (outline->title) {
-            name = str::conv::FromUtf8(outline->title);
+            name = strconv::FromUtf8(outline->title);
             name = pdf_clean_string(name);
         }
         if (!name) {
@@ -1106,7 +1106,7 @@ static char* XpsLinkGetURI(const XpsLink* link) {
 
 WCHAR* XpsLink::GetValue() const {
     if (outline) {
-        WCHAR* path = str::conv::FromUtf8(outline->uri);
+        WCHAR* path = strconv::FromUtf8(outline->uri);
         return path;
     }
 
@@ -1118,7 +1118,7 @@ WCHAR* XpsLink::GetValue() const {
         // other values: #1,115,208
         return nullptr;
     }
-    WCHAR* path = str::conv::FromUtf8(uri);
+    WCHAR* path = strconv::FromUtf8(uri);
     return path;
 }
 

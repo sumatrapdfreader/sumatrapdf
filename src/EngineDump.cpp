@@ -40,7 +40,7 @@ static std::string_view Escape(WCHAR* string) {
     }
 
     if (!NeedsEscape(string)) {
-        return str::conv::WstrToUtf8(string);
+        return strconv::WstrToUtf8(string);
     }
 
     str::WStr escaped(256);
@@ -66,7 +66,7 @@ static std::string_view Escape(WCHAR* string) {
                 break;
         }
     }
-    return str::conv::WstrToUtf8(escaped.Get());
+    return strconv::WstrToUtf8(escaped.Get());
 }
 
 void DumpProperties(EngineBase* engine, bool fullDump) {
@@ -396,7 +396,7 @@ bool RenderDocument(EngineBase* engine, const WCHAR* renderPath, float zoom = 1.
         if (silent)
             return true;
         AutoFreeWstr txtFilePath(str::Format(renderPath, 0));
-        AutoFree textUTF8 = str::conv::WstrToUtf8(text.Get());
+        AutoFree textUTF8 = strconv::WstrToUtf8(text.Get());
         AutoFree textUTF8BOM(str::Join(UTF8_BOM, textUTF8.Get()));
         return file::WriteFile(txtFilePath, textUTF8BOM.as_view());
     }
@@ -406,7 +406,7 @@ bool RenderDocument(EngineBase* engine, const WCHAR* renderPath, float zoom = 1.
             return false;
         }
         AutoFreeWstr pdfFilePath(str::Format(renderPath, 0));
-        AutoFree pathUtf8(str::conv::WstrToUtf8(pdfFilePath.Get()));
+        AutoFree pathUtf8(strconv::WstrToUtf8(pdfFilePath.Get()));
         if (engine->SaveFileAsPDF(pathUtf8.Get(), true)) {
             return true;
         }

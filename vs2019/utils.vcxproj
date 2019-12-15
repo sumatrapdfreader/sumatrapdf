@@ -624,6 +624,8 @@
     <ClInclude Include="..\src\utils\StrFormat.h" />
     <ClInclude Include="..\src\utils\StrSlice.h" />
     <ClInclude Include="..\src\utils\StrUtil.h" />
+    <ClInclude Include="..\src\utils\StrconvUtil.h" />
+    <ClInclude Include="..\src\utils\StringViewUtil.h" />
     <ClInclude Include="..\src\utils\TgaReader.h" />
     <ClInclude Include="..\src\utils\ThreadUtil.h" />
     <ClInclude Include="..\src\utils\TrivialHtmlParser.h" />
@@ -685,6 +687,8 @@
     <ClCompile Include="..\src\utils\StrSlice.cpp" />
     <ClCompile Include="..\src\utils\StrUtil.cpp" />
     <ClCompile Include="..\src\utils\StrUtil_win.cpp" />
+    <ClCompile Include="..\src\utils\StrconvUtil.cpp" />
+    <ClCompile Include="..\src\utils\StringViewUtil.cpp" />
     <ClCompile Include="..\src\utils\TgaReader.cpp" />
     <ClCompile Include="..\src\utils\ThreadUtil.cpp" />
     <ClCompile Include="..\src\utils\TrivialHtmlParser.cpp" />

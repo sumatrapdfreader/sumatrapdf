@@ -99,7 +99,7 @@ size_t MultiFormatArchive::GetFileId(const char* fileName) {
 
 #if OS_WIN
 std::string_view MultiFormatArchive::GetFileDataByName(const WCHAR* fileName) {
-    auto fileNameUtf8 = str::conv::WstrToUtf8(fileName);
+    auto fileNameUtf8 = strconv::WstrToUtf8(fileName);
     return GetFileDataByName(fileNameUtf8.data());
 }
 #endif
@@ -181,7 +181,7 @@ static MultiFormatArchive* open(MultiFormatArchive* archive, const char* path) {
 
 #if OS_WIN
 static MultiFormatArchive* open(MultiFormatArchive* archive, const WCHAR* path) {
-    auto pathUtf = str::conv::WstrToUtf8(path);
+    auto pathUtf = strconv::WstrToUtf8(path);
     bool ok = archive->Open(ar_open_file_w(path), pathUtf.data());
     if (!ok) {
         delete archive;
@@ -313,7 +313,7 @@ static bool FindFile(HANDLE hArc, RARHeaderDataEx* rarHeader, const WCHAR* fileN
 std::string_view MultiFormatArchive::GetFileDataByIdUnarrDll(size_t fileId) {
     CrashIf(!rarFilePath_);
 
-    AutoFreeWstr rarPath(str::conv::FromUtf8(rarFilePath_));
+    AutoFreeWstr rarPath(strconv::FromUtf8(rarFilePath_));
 
     str::Slice uncompressedBuf;
 
@@ -333,7 +333,7 @@ std::string_view MultiFormatArchive::GetFileDataByIdUnarrDll(size_t fileId) {
 
     char* data = nullptr;
     size_t size = 0;
-    AutoFreeWstr fileName(str::conv::FromUtf8(fileInfo->name.data()));
+    AutoFreeWstr fileName(strconv::FromUtf8(fileInfo->name.data()));
     RARHeaderDataEx rarHeader = {0};
     bool ok = FindFile(hArc, &rarHeader, fileName.Get());
     if (!ok) {
@@ -381,7 +381,7 @@ bool MultiFormatArchive::OpenUnrarFallback(const char* rarPathUtf) {
         return false;
     }
     CrashIf(rarFilePath_);
-    AutoFreeWstr rarPath(str::conv::FromUtf8(rarPathUtf));
+    AutoFreeWstr rarPath(strconv::FromUtf8(rarPathUtf));
 
     RAROpenArchiveDataEx arcData = {0};
     arcData.ArcNameW = (WCHAR*)rarPath;
@@ -401,7 +401,7 @@ bool MultiFormatArchive::OpenUnrarFallback(const char* rarPathUtf) {
         }
 
         str::TransChars(rarHeader.FileNameW, L"\\", L"/");
-        AutoFree name = str::conv::WstrToUtf8(rarHeader.FileNameW);
+        AutoFree name = strconv::WstrToUtf8(rarHeader.FileNameW);
 
         FileInfo* i = allocator_.AllocStruct<FileInfo>();
         i->fileId = fileId;

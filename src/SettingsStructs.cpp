@@ -70,7 +70,7 @@ void FromZoom(char** dst, float zoom, DisplayState* stateForIssue2140) {
         logf("Invalid ds->zoom: %g\n", zoom);
         const WCHAR* ext = path::GetExt(stateForIssue2140->filePath);
         if (!str::IsEmpty(ext)) {
-            AutoFree extA(str::conv::WstrToUtf8(ext));
+            AutoFree extA(strconv::WstrToUtf8(ext));
             logf("File type: %s\n", extA.Get());
         }
         logf("DisplayMode: %S\n", stateForIssue2140->displayMode);

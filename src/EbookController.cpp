@@ -413,7 +413,7 @@ void EbookController::ClickedProgress(Control* c, int x, int y) {
 }
 
 void EbookController::OnClickedLink(int pageNo, DrawInstr* link) {
-    AutoFreeWstr url(str::conv::FromHtmlUtf8(link->str.s, link->str.len));
+    AutoFreeWstr url(strconv::FromHtmlUtf8(link->str.s, link->str.len));
     if (url::IsAbsolute(url)) {
         EbookTocDest dest(nullptr, url);
         cb->GotoLink(&dest);
@@ -431,7 +431,7 @@ void EbookController::OnClickedLink(int pageNo, DrawInstr* link) {
                     AutoFree basePath(str::DupN(di.str.s, di.str.len));
                     AutoFree relPath(ResolveHtmlEntities(link->str.s, link->str.len));
                     AutoFree absPath(NormalizeURL(relPath, basePath));
-                    url.Set(str::conv::FromUtf8(absPath));
+                    url.Set(strconv::FromUtf8(absPath));
                     j = 0; // done
                     break;
                 }
@@ -717,7 +717,7 @@ void EbookController::ExtractPageAnchors() {
             attr = tok->GetAttrByName("name");
         }
         if (attr) {
-            AutoFreeWstr id(str::conv::FromUtf8(attr->val, attr->valLen));
+            AutoFreeWstr id(strconv::FromUtf8(attr->val, attr->valLen));
             pageAnchorIds->Append(str::Format(L"%s#%s", epubPagePath ? epubPagePath.get() : L"", id.Get()));
             pageAnchorIdxs->Append((int)(tok->GetReparsePoint() - parser.Start()));
         }
@@ -725,7 +725,7 @@ void EbookController::ExtractPageAnchors() {
         if (Tag_Pagebreak == tok->tag && (attr = tok->GetAttrByName("page_path")) != nullptr &&
             str::StartsWith(attr->val + attr->valLen, "\" page_marker />")) {
             CrashIf(doc.Type() != DocType::Epub);
-            epubPagePath.Set(str::conv::FromUtf8(attr->val, attr->valLen));
+            epubPagePath.Set(strconv::FromUtf8(attr->val, attr->valLen));
             pageAnchorIds->Append(str::Dup(epubPagePath));
             pageAnchorIdxs->Append((int)(tok->GetReparsePoint() - parser.Start()));
         }

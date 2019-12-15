@@ -201,7 +201,7 @@ int Pdfsync::RebuildIndex() {
 
     // replace star by spaces (TeX uses stars instead of spaces in filenames)
     str::TransChars(line, "*/", " \\");
-    AutoFreeWstr jobName(str::conv::FromAnsi(line));
+    AutoFreeWstr jobName(strconv::FromAnsi(line));
     jobName.Set(str::Join(jobName, L".tex"));
     jobName.Set(PrependDir(jobName));
 
@@ -268,7 +268,7 @@ int Pdfsync::RebuildIndex() {
                 break;
 
             case '(': {
-                AutoFreeWstr filename(str::conv::FromAnsi(line + 1));
+                AutoFreeWstr filename(strconv::FromAnsi(line + 1));
                 // if the filename contains quotes then remove them
                 // TODO: this should never happen!?
                 if (filename[0] == '"' && filename[str::Len(filename) - 1] == '"')
@@ -477,7 +477,7 @@ int SyncTex::RebuildIndex() {
     synctex_scanner_free(scanner);
     scanner = nullptr;
 
-    AutoFree syncfname(str::conv::WstrToAnsi(syncfilepath));
+    AutoFree syncfname(strconv::WstrToAnsi(syncfilepath));
     if (!syncfname.Get()) {
         return PDFSYNCERR_OUTOFMEMORY;
     }
@@ -511,7 +511,7 @@ int SyncTex::DocToSource(UINT pageNo, PointI pt, AutoFreeWstr& filename, UINT* l
         return PDFSYNCERR_UNKNOWN_SOURCEFILE;
 
     bool isUtf8 = true;
-    filename.Set(str::conv::FromUtf8(name));
+    filename.Set(strconv::FromUtf8(name));
 TryAgainAnsi:
     if (!filename)
         return PDFSYNCERR_OUTOFMEMORY;
@@ -525,7 +525,7 @@ TryAgainAnsi:
     // recent SyncTeX versions encode in UTF-8 instead of ANSI
     if (isUtf8 && !file::Exists(filename)) {
         isUtf8 = false;
-        filename.Set(str::conv::FromAnsi(name));
+        filename.Set(strconv::FromAnsi(name));
         goto TryAgainAnsi;
     }
 
@@ -552,7 +552,7 @@ int SyncTex::SourceToDoc(const WCHAR* srcfilename, UINT line, UINT col, UINT* pa
         return PDFSYNCERR_OUTOFMEMORY;
 
     bool isUtf8 = true;
-    const char* mb_srcfilepath = str::conv::WstrToUtf8(srcfilepath).data();
+    const char* mb_srcfilepath = strconv::WstrToUtf8(srcfilepath).data();
 TryAgainAnsi:
     if (!mb_srcfilepath)
         return PDFSYNCERR_OUTOFMEMORY;
@@ -561,7 +561,7 @@ TryAgainAnsi:
     // recent SyncTeX versions encode in UTF-8 instead of ANSI
     if (isUtf8 && -1 == ret) {
         isUtf8 = false;
-        mb_srcfilepath = (char*)str::conv::WstrToAnsi(srcfilepath).data();
+        mb_srcfilepath = (char*)strconv::WstrToAnsi(srcfilepath).data();
         goto TryAgainAnsi;
     }
 
