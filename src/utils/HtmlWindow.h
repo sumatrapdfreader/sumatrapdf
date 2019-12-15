@@ -19,7 +19,7 @@ class HtmlWindowCallback {
 
     // allows for providing data for a given url.
     // returning nullptr means data wasn't provided.
-    virtual const unsigned char* GetDataForUrl(const WCHAR* url, size_t* len) = 0;
+    virtual std::string_view GetDataForUrl(const WCHAR* url) = 0;
 
     // called when left mouse button is clicked in the web control window.
     // we use it to maintain proper focus (since it's stolen by left click)

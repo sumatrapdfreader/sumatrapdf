@@ -2,7 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 class ByteReader {
-    const uint8_t* d;
+    const u8* d;
     size_t len;
 
     // Unpacks a structure from the data according to the given format
@@ -51,6 +51,10 @@ class ByteReader {
     }
 
   public:
+    ByteReader(std::string_view data) {
+        d = (const u8*)data.data();
+        len = data.size();
+    }
     ByteReader(const char* data, size_t len) : d((const uint8_t*)data), len(len) {
     }
     ByteReader(const unsigned char* data, size_t len) : d((const uint8_t*)data), len(len) {

@@ -71,22 +71,22 @@ class HtmlWindowHandler : public HtmlWindowCallback {
   public:
     HtmlWindowHandler(ChmModel* cm) : cm(cm) {
     }
-    virtual ~HtmlWindowHandler() {
+    ~HtmlWindowHandler() override {
     }
 
-    virtual bool OnBeforeNavigate(const WCHAR* url, bool newWindow) {
+    bool OnBeforeNavigate(const WCHAR* url, bool newWindow) override {
         return cm->OnBeforeNavigate(url, newWindow);
     }
-    virtual void OnDocumentComplete(const WCHAR* url) {
+    void OnDocumentComplete(const WCHAR* url) override {
         cm->OnDocumentComplete(url);
     }
-    virtual void OnLButtonDown() {
+    void OnLButtonDown() override {
         cm->OnLButtonDown();
     }
-    virtual const unsigned char* GetDataForUrl(const WCHAR* url, size_t* len) {
-        return cm->GetDataForUrl(url, len);
+    std::string_view GetDataForUrl(const WCHAR* url) override {
+        return cm->GetDataForUrl(url);
     }
-    virtual void DownloadData(const WCHAR* url, const unsigned char* data, size_t len) {
+    void DownloadData(const WCHAR* url, const unsigned char* data, size_t len) override {
         cm->DownloadData(url, data, len);
     }
 };
@@ -319,15 +319,13 @@ bool ChmModel::Load(const WCHAR* fileName) {
 
 class ChmCacheEntry {
   public:
-    const WCHAR* url; // owned by ChmModel::poolAllocator
-    unsigned char* data;
-    size_t size;
+    // owned by ChmModel::poolAllocator
+    const WCHAR* url = nullptr;
+    AutoFree data{};
 
-    explicit ChmCacheEntry(const WCHAR* url) : url(url), data(nullptr), size(0) {
+    explicit ChmCacheEntry(const WCHAR* url) : url(url) {
     }
-    ~ChmCacheEntry() {
-        free(data);
-    }
+    ~ChmCacheEntry() = default;
 };
 
 ChmCacheEntry* ChmModel::FindDataForUrl(const WCHAR* url) {
@@ -382,24 +380,21 @@ bool ChmModel::OnBeforeNavigate(const WCHAR* url, bool newWindow) {
 }
 
 // Load and cache data for a given url inside CHM file.
-const unsigned char* ChmModel::GetDataForUrl(const WCHAR* url, size_t* len) {
+std::string_view ChmModel::GetDataForUrl(const WCHAR* url) {
     ScopedCritSec scope(&docAccess);
     AutoFreeWstr plainUrl(url::GetFullPath(url));
     ChmCacheEntry* e = FindDataForUrl(plainUrl);
     if (!e) {
         e = new ChmCacheEntry(Allocator::StrDup(&poolAlloc, plainUrl));
         AutoFree urlUtf8(str::conv::WstrToUtf8(plainUrl));
-        e->data = doc->GetData(urlUtf8.Get(), &e->size);
-        if (!e->data) {
+        e->data = doc->GetData(urlUtf8.Get());
+        if (e->data.empty()) {
             delete e;
-            return nullptr;
+            return {};
         }
         urlDataCache.Append(e);
     }
-    if (len) {
-        *len = e->size;
-    }
-    return e->data;
+    return e->data.as_view();
 }
 
 void ChmModel::DownloadData(const WCHAR* url, const unsigned char* data, size_t len) {
@@ -527,18 +522,18 @@ void ChmModel::UpdateDisplayState(DisplayState* ds) {
 }
 
 class ChmThumbnailTask : public HtmlWindowCallback {
-    ChmDoc* doc;
-    HWND hwnd;
-    HtmlWindow* hw;
+    ChmDoc* doc = nullptr;
+    HWND hwnd = nullptr;
+    HtmlWindow* hw = nullptr;
     SizeI size;
     onBitmapRenderedCb saveThumbnail;
     AutoFreeWstr homeUrl;
-    Vec<unsigned char*> data;
+    Vec<std::string_view> data;
     CRITICAL_SECTION docAccess;
 
   public:
     ChmThumbnailTask(ChmDoc* doc, HWND hwnd, SizeI size, const onBitmapRenderedCb& saveThumbnail)
-        : doc(doc), hwnd(hwnd), hw(nullptr), size(size), saveThumbnail(saveThumbnail) {
+        : doc(doc), hwnd(hwnd), size(size), saveThumbnail(saveThumbnail) {
         InitializeCriticalSection(&docAccess);
     }
 
@@ -547,7 +542,9 @@ class ChmThumbnailTask : public HtmlWindowCallback {
         delete hw;
         DestroyWindow(hwnd);
         delete doc;
-        data.FreeMembers();
+        for (auto&& sv : data) {
+            str::Free(sv.data());
+        }
         LeaveCriticalSection(&docAccess);
         DeleteCriticalSection(&docAccess);
     }
@@ -560,11 +557,11 @@ class ChmThumbnailTask : public HtmlWindowCallback {
         hw->NavigateToDataUrl(homeUrl);
     }
 
-    virtual bool OnBeforeNavigate(const WCHAR* url, bool newWindow) {
+    bool OnBeforeNavigate(const WCHAR* url, bool newWindow) override {
         UNUSED(url);
         return !newWindow;
     }
-    virtual void OnDocumentComplete(const WCHAR* url) {
+    void OnDocumentComplete(const WCHAR* url) override {
         if (url && *url == '/')
             url++;
         if (str::Eq(url, homeUrl)) {
@@ -578,17 +575,17 @@ class ChmThumbnailTask : public HtmlWindowCallback {
             uitask::Post([=] { delete this; });
         }
     }
-    virtual void OnLButtonDown() {
+    void OnLButtonDown() override {
     }
-    virtual const unsigned char* GetDataForUrl(const WCHAR* url, size_t* len) {
-        UNUSED(len);
+    std::string_view GetDataForUrl(const WCHAR* url) override {
         ScopedCritSec scope(&docAccess);
         AutoFreeWstr plainUrl(url::GetFullPath(url));
         AutoFree urlUtf8(str::conv::WstrToUtf8(plainUrl));
-        data.Append(doc->GetData(urlUtf8.Get(), len));
-        return data.Last();
+        auto d = doc->GetData(urlUtf8.Get());
+        data.Append(d);
+        return d;
     }
-    virtual void DownloadData(const WCHAR* url, const unsigned char* data, size_t len) {
+    void DownloadData(const WCHAR* url, const unsigned char* data, size_t len) override {
         UNUSED(url);
         UNUSED(data);
         UNUSED(len);

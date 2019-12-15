@@ -310,7 +310,7 @@ STDMETHODIMP HW_IInternetProtocolInfo::QueryInterface(REFIID riid, void** ppv) {
 
 class HW_IInternetProtocol : public IInternetProtocol {
   public:
-    HW_IInternetProtocol() : refCount(1), data(nullptr), dataLen(0), dataCurrPos(0) {
+    HW_IInternetProtocol() {
     }
 
   protected:
@@ -358,13 +358,12 @@ class HW_IInternetProtocol : public IInternetProtocol {
     }
 
   protected:
-    LONG refCount;
+    LONG refCount = 1;
 
     // those are filled in Start() and represent data to be sent
     // for a given url
-    const unsigned char* data;
-    size_t dataLen;
-    size_t dataCurrPos;
+    std::string_view data{};
+    size_t dataCurrPos = 0;
 };
 
 ULONG STDMETHODCALLTYPE HW_IInternetProtocol::Release() {
@@ -463,33 +462,37 @@ STDMETHODIMP HW_IInternetProtocol::Start(LPCWSTR szUrl, IInternetProtocolSink* p
         return INET_E_OBJECT_NOT_FOUND;
     if (!win->htmlWinCb)
         return INET_E_OBJECT_NOT_FOUND;
-    data = win->htmlWinCb->GetDataForUrl(urlRest, &dataLen);
-    if (!data)
+    data = win->htmlWinCb->GetDataForUrl(urlRest);
+    if (data.empty()) {
         return INET_E_DATA_NOT_AVAILABLE;
+    }
 
-    const WCHAR* imgExt = GfxFileExtFromData((const char*)data, dataLen);
+    const WCHAR* imgExt = GfxFileExtFromData(data.data(), data.size());
     AutoFreeWstr mime(MimeFromUrl(urlRest, imgExt));
     pIProtSink->ReportProgress(BINDSTATUS_VERIFIEDMIMETYPEAVAILABLE, mime);
 #ifdef _WIN64
     // not going to report data in parts for unexpectedly huge webpages
-    CrashIf(dataLen > ULONG_MAX);
+    CrashIf(data.size() > ULONG_MAX);
 #endif
     pIProtSink->ReportData(BSCF_FIRSTDATANOTIFICATION | BSCF_LASTDATANOTIFICATION | BSCF_DATAFULLYAVAILABLE,
-                           (ULONG)dataLen, (ULONG)dataLen);
+                           (ULONG)data.size(), (ULONG)data.size());
     pIProtSink->ReportResult(S_OK, 200, nullptr);
     return S_OK;
 }
 
 STDMETHODIMP HW_IInternetProtocol::Read(void* pv, ULONG cb, ULONG* pcbRead) {
-    if (!data)
+    if (data.empty()) {
         return S_FALSE;
-    size_t dataAvail = dataLen - dataCurrPos;
-    if (0 == dataAvail)
+    }
+    size_t dataAvail = data.size() - dataCurrPos;
+    if (0 == dataAvail) {
         return S_FALSE;
+    }
     ULONG toRead = cb;
-    if (toRead > dataAvail)
+    if (toRead > dataAvail) {
         toRead = (ULONG)dataAvail;
-    const unsigned char* dataToRead = data + dataCurrPos;
+    }
+    const char* dataToRead = data.data() + dataCurrPos;
     memcpy(pv, dataToRead, toRead);
     dataCurrPos += toRead;
     *pcbRead = toRead;
@@ -1184,23 +1187,28 @@ class HW_IDownloadManager : public IDownloadManager {
         AutoFreeWstr urlRest;
         bool ok = ParseProtoUrl(urlToFile, &htmlWindowId, &urlRest);
         // free urlToFile using IMalloc::Free
-        IMalloc* pMalloc;
-        if (SUCCEEDED(CoGetMalloc(1, &pMalloc)))
+        IMalloc* pMalloc = nullptr;
+        if (SUCCEEDED(CoGetMalloc(1, &pMalloc))) {
             pMalloc->Free(urlToFile);
-        else
+        } else {
             CoTaskMemFree(urlToFile);
-        if (!ok)
+        }
+
+        if (!ok) {
             return INET_E_INVALID_URL;
+        }
+
         // fetch the data
         HtmlWindow* win = FindHtmlWindowById(htmlWindowId);
-        if (!win || !win->htmlWinCb)
+        if (!win || !win->htmlWinCb) {
             return INET_E_OBJECT_NOT_FOUND;
-        size_t len;
-        const unsigned char* data = win->htmlWinCb->GetDataForUrl(urlRest, &len);
-        if (!data)
+        }
+        auto data = win->htmlWinCb->GetDataForUrl(urlRest);
+        if (data.empty()) {
             return INET_E_DATA_NOT_AVAILABLE;
+        }
         // ask the UI to let the user save the file
-        win->htmlWinCb->DownloadData(urlRest, data, len);
+        win->htmlWinCb->DownloadData(urlRest, (const u8*)data.data(), data.size());
         return S_OK;
     }
 };

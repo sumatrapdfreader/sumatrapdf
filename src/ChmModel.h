@@ -87,7 +87,7 @@ class ChmModel : public Controller {
     bool OnBeforeNavigate(const WCHAR* url, bool newWindow);
     void OnDocumentComplete(const WCHAR* url);
     void OnLButtonDown();
-    const unsigned char* GetDataForUrl(const WCHAR* url, size_t* len);
+    std::string_view GetDataForUrl(const WCHAR* url);
     void DownloadData(const WCHAR* url, const unsigned char* data, size_t len);
 
   protected:

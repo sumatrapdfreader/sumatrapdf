@@ -603,7 +603,7 @@ PageDestination* EbookEngine::GetNamedDest(const WCHAR* name) {
     if (str::FindChar(id, '#')) {
         id = str::FindChar(id, '#') + 1;
     }
-    
+
     // if the name consists of both path and ID,
     // try to first skip to the page with the desired
     // path before looking for the ID to allow
@@ -1280,6 +1280,7 @@ class ChmDataCache {
   public:
     ChmDataCache(ChmDoc* doc, char* html) : doc(doc), html(html) {
     }
+
     ~ChmDataCache() {
         for (size_t i = 0; i < images.size(); i++) {
             free(images.at(i).base.data);
@@ -1288,34 +1289,34 @@ class ChmDataCache {
     }
 
     std::string_view GetHtmlData() {
-        return {html, str::Len(html)};
-    }
-
-    // TODO: remove
-    const char* GetHtmlData(size_t* lenOut) {
-        *lenOut = str::Len(html);
-        return html;
+        return html.as_view();
     }
 
     ImageData* GetImageData(const char* id, const char* pagePath) {
         AutoFree url(NormalizeURL(id, pagePath));
         for (size_t i = 0; i < images.size(); i++) {
-            if (str::Eq(images.at(i).fileName, url))
+            if (str::Eq(images.at(i).fileName, url)) {
                 return &images.at(i).base;
+            }
+        }
+
+        auto tmp = doc->GetData(url);
+        if (tmp.empty()) {
+            return nullptr;
         }
 
         ImageData2 data = {0};
-        data.base.data = (char*)doc->GetData(url, &data.base.len);
-        if (!data.base.data)
-            return nullptr;
+        data.base.data = (char*)tmp.data();
+        data.base.len = tmp.size();
+
         data.fileName = url.StealData();
         images.Append(data);
         return &images.Last().base;
     }
 
-    char* GetFileData(const char* relPath, const char* pagePath, size_t* lenOut) {
+    std::string_view GetFileData(const char* relPath, const char* pagePath) {
         AutoFree url(NormalizeURL(relPath, pagePath));
-        return (char*)doc->GetData(url, lenOut);
+        return doc->GetData(url);
     }
 };
 
@@ -1376,12 +1377,11 @@ void ChmFormatter::HandleTagLink(HtmlToken* t) {
     if (!attr)
         return;
 
-    size_t len;
     AutoFree src(str::DupN(attr->val, attr->valLen));
     url::DecodeInPlace(src);
-    AutoFree data = chmDoc->GetFileData(src, pagePath, &len);
+    AutoFree data = chmDoc->GetFileData(src, pagePath);
     if (data.data) {
-        ParseStyleSheet(data, len);
+        ParseStyleSheet(data.data, data.size());
     }
 }
 
@@ -1490,8 +1490,9 @@ class ChmHtmlCollector : public EbookTocVisitor {
         for (size_t i = 0; i < paths->size(); i++) {
             char* path = paths->at(i);
             if (str::EndsWithI(path, ".htm") || str::EndsWithI(path, ".html")) {
-                if (*path == '/')
+                if (*path == '/') {
                     path++;
+                }
                 url.Set(str::conv::FromUtf8(path));
                 Visit(nullptr, url, -1);
             }
@@ -1505,20 +1506,21 @@ class ChmHtmlCollector : public EbookTocVisitor {
     virtual void Visit(const WCHAR* name, const WCHAR* url, int level) {
         UNUSED(name);
         UNUSED(level);
-        if (!url || url::IsAbsolute(url))
+        if (!url || url::IsAbsolute(url)) {
             return;
+        }
         AutoFreeWstr plainUrl(url::GetFullPath(url));
         if (added.FindI(plainUrl) != -1) {
             return;
         }
         AutoFree urlUtf8(str::conv::WstrToUtf8(plainUrl));
-        size_t pageHtmlLen;
-        ScopedMem<unsigned char> pageHtml(doc->GetData(urlUtf8.Get(), &pageHtmlLen));
+        AutoFree pageHtml = doc->GetData(urlUtf8.Get());
         if (!pageHtml) {
             return;
         }
         html.AppendFmt("<pagebreak page_path=\"%s\" page_marker />", urlUtf8.Get());
-        html.AppendAndFree(doc->ToUtf8(pageHtml, ExtractHttpCharset((const char*)pageHtml.Get(), pageHtmlLen)));
+        auto charset = ExtractHttpCharset((const char*)pageHtml.Get(), pageHtml.size());
+        html.AppendAndFree(doc->ToUtf8((const u8*)pageHtml.data, charset));
         added.Append(plainUrl.StealData());
     }
 };
@@ -1628,11 +1630,11 @@ PageElement* ChmEngineImpl::CreatePageLink(DrawInstr* link, RectI rect, int page
 }
 
 bool ChmEngineImpl::SaveEmbedded(LinkSaverUI& saveUI, const char* path) {
-    size_t len;
-    ScopedMem<unsigned char> data(doc->GetData(path, &len));
-    if (!data)
+    AutoFree data = doc->GetData(path);
+    if (data.empty()) {
         return false;
-    return saveUI.SaveEmbedded(data, len);
+    }
+    return saveUI.SaveEmbedded((const u8*)data.data, data.size());
 }
 
 EngineBase* ChmEngineImpl::CreateFromFile(const WCHAR* fileName) {

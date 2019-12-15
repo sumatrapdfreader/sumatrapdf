@@ -36,8 +36,8 @@ bool ChmDoc::HasData(const char* fileName) {
     return chm_resolve_object(chmHandle, fileName, &info) == CHM_RESOLVE_SUCCESS;
 }
 
-unsigned char* ChmDoc::GetData(const char* fileNameIn, size_t* lenOut) {
-    char* fileName = nullptr;
+std::string_view ChmDoc::GetData(const char* fileNameIn) {
+    AutoFree fileName;
     if (!str::StartsWith(fileNameIn, "/")) {
         fileName = str::Join("/", fileNameIn);
     } else if (str::StartsWith(fileNameIn, "///")) {
@@ -53,31 +53,26 @@ unsigned char* ChmDoc::GetData(const char* fileNameIn, size_t* lenOut) {
         str::TransChars(fileName, "\\", "/");
         res = chm_resolve_object(chmHandle, fileName, &info);
     }
-    free(fileName);
 
     if (CHM_RESOLVE_SUCCESS != res) {
         return nullptr;
     }
     size_t len = (size_t)info.length;
     if (len > 128 * 1024 * 1024) {
-        // don't allow anything above 128 MB
+        // limit to 128 MB
         return nullptr;
     }
 
     // +1 for 0 terminator for C string compatibility
-    ScopedMem<unsigned char> data((u8*)malloc(len + 1));
+    char* data = AllocArray<char>(len + 1);
     if (!data) {
         return nullptr;
     }
-    if (!chm_retrieve_object(chmHandle, &info, data.Get(), 0, len)) {
+    if (!chm_retrieve_object(chmHandle, &info, (u8*)data, 0, len)) {
         return nullptr;
     }
-    data[len] = '\0';
 
-    if (lenOut) {
-        *lenOut = len;
-    }
-    return data.StealData();
+    return {data, len};
 }
 
 char* ChmDoc::ToUtf8(const u8* text, UINT overrideCP) {
@@ -98,49 +93,57 @@ WCHAR* ChmDoc::ToStr(const char* text) {
     return str::conv::FromCodePage(text, codepage);
 }
 
-static char* GetCharZ(const unsigned char* data, size_t len, size_t off) {
-    if (off >= len)
+static char* GetCharZ(std::string_view sv, size_t off) {
+    const char* data = sv.data();
+    size_t len = sv.size();
+    if (off >= len) {
         return nullptr;
+    }
     CrashIf(!memchr(data + off, '\0', len - off + 1)); // data is zero-terminated
-    const char* str = (char*)data + off;
-    if (str::IsEmpty(str))
+    const char* str = data + off;
+    if (str::IsEmpty(str)) {
         return nullptr;
+    }
     return str::Dup(str);
 }
 
 // http://www.nongnu.org/chmspec/latest/Internal.html#WINDOWS
 void ChmDoc::ParseWindowsData() {
-    size_t windowsLen, stringsLen;
-    ScopedMem<unsigned char> windowsData(GetData("/#WINDOWS", &windowsLen));
-    ScopedMem<unsigned char> stringsData(GetData("/#STRINGS", &stringsLen));
-    if (!windowsData || !stringsData)
+    AutoFree windowsData = GetData("/#WINDOWS");
+    auto stringsData = GetData("/#STRINGS");
+    AutoFree stringsDataFree = stringsData;
+    if (windowsData.empty() || stringsData.empty()) {
         return;
-    if (windowsLen <= 8)
+    }
+    size_t windowsLen = windowsData.size();
+    if (windowsLen <= 8) {
         return;
+    }
 
     ByteReader rw(windowsData, windowsLen);
-    DWORD entries = rw.DWordLE(0);
-    DWORD entrySize = rw.DWordLE(4);
-    if (entrySize < 188)
+    size_t entries = rw.DWordLE(0);
+    size_t entrySize = rw.DWordLE(4);
+    if (entrySize < 188) {
         return;
+    }
 
-    for (DWORD i = 0; i < entries && (i + 1) * entrySize <= windowsLen; i++) {
-        DWORD off = 8 + i * entrySize;
+    for (size_t i = 0; i < entries && ((i + (size_t)1) * entrySize) <= windowsLen; i++) {
+        size_t off = 8 + i * entrySize;
         if (!title) {
-            DWORD strOff = rw.DWordLE(off + 0x14);
-            title.Set(GetCharZ(stringsData, stringsLen, strOff));
+            DWORD strOff = rw.DWordLE(off + (size_t)0x14);
+            title.Set(GetCharZ(stringsData, strOff));
         }
         if (!tocPath) {
-            DWORD strOff = rw.DWordLE(off + 0x60);
-            tocPath.Set(GetCharZ(stringsData, stringsLen, strOff));
+            DWORD strOff = rw.DWordLE(off + (size_t)0x60);
+            tocPath.Set(GetCharZ(stringsData, strOff));
         }
         if (!indexPath) {
-            DWORD strOff = rw.DWordLE(off + 0x64);
-            indexPath.Set(GetCharZ(stringsData, stringsLen, strOff));
+            DWORD strOff = rw.DWordLE(off + (size_t)0x64);
+            indexPath.Set(GetCharZ(stringsData, strOff));
         }
         if (!homePath) {
-            DWORD strOff = rw.DWordLE(off + 0x68);
-            homePath.Set(GetCharZ(stringsData, stringsLen, strOff));
+            DWORD strOff = rw.DWordLE(off + (size_t)0x68);
+            homePath.Set(GetCharZ(stringsData, strOff));
         }
     }
 }
@@ -167,37 +170,39 @@ static UINT LcidToCodepage(DWORD lcid) {
 
 // http://www.nongnu.org/chmspec/latest/Internal.html#SYSTEM
 bool ChmDoc::ParseSystemData() {
-    size_t dataLen;
-    ScopedMem<unsigned char> data(GetData("/#SYSTEM", &dataLen));
-    if (!data)
+    auto data = GetData("/#SYSTEM");
+    if (data.empty()) {
         return false;
+    }
+    AutoFree dataFree = data;
 
-    ByteReader r(data, dataLen);
+    ByteReader r(data);
     DWORD len = 0;
     // Note: skipping DWORD version at offset 0. It's supposed to be 2 or 3.
-    for (size_t off = 4; off + 4 < dataLen; off += len + 4) {
+    for (size_t off = 4; off + 4 < data.size(); off += len + (size_t)4) {
         // Note: at some point we seem to get off-sync i.e. I'm seeing
         // many entries with type == 0 and len == 0. Seems harmless.
         len = r.WordLE(off + 2);
-        if (len == 0)
+        if (len == 0) {
             continue;
+        }
         WORD type = r.WordLE(off);
         switch (type) {
             case 0:
                 if (!tocPath)
-                    tocPath.Set(GetCharZ(data, dataLen, off + 4));
+                    tocPath.Set(GetCharZ(data, off + 4));
                 break;
             case 1:
                 if (!indexPath)
-                    indexPath.Set(GetCharZ(data, dataLen, off + 4));
+                    indexPath.Set(GetCharZ(data, off + 4));
                 break;
             case 2:
                 if (!homePath)
-                    homePath.Set(GetCharZ(data, dataLen, off + 4));
+                    homePath.Set(GetCharZ(data, off + 4));
                 break;
             case 3:
                 if (!title)
-                    title.Set(GetCharZ(data, dataLen, off + 4));
+                    title.Set(GetCharZ(data, off + 4));
                 break;
             case 4:
                 if (!codepage && len >= 4)
@@ -208,7 +213,7 @@ bool ChmDoc::ParseSystemData() {
                 break;
             case 9:
                 if (!creator)
-                    creator.Set(GetCharZ(data, dataLen, off + 4));
+                    creator.Set(GetCharZ(data, off + 4));
                 break;
             case 16:
                 // default font - ignore
@@ -220,17 +225,19 @@ bool ChmDoc::ParseSystemData() {
 }
 
 char* ChmDoc::ResolveTopicID(unsigned int id) {
-    size_t ivbLen = 0;
-    ScopedMem<unsigned char> ivbData(GetData("/#IVB", &ivbLen));
-    ByteReader br(ivbData, ivbLen);
-    if ((ivbLen % 8) != 4 || ivbLen - 4 != br.DWordLE(0))
+    AutoFree ivbData = GetData("/#IVB");
+    size_t ivbLen = ivbData.size();
+    ByteReader br(ivbData.as_view());
+    if ((ivbLen % 8) != 4 || ivbLen - 4 != br.DWordLE(0)) {
         return nullptr;
+    }
 
     for (size_t off = 4; off < ivbLen; off += 8) {
         if (br.DWordLE(off) == id) {
             size_t stringsLen = 0;
-            ScopedMem<unsigned char> stringsData(GetData("/#STRINGS", &stringsLen));
-            return GetCharZ(stringsData, stringsLen, br.DWordLE(off + 4));
+            auto stringsData = GetData("/#STRINGS");
+            AutoFree stringsDataFree = stringsData;
+            return GetCharZ(stringsData, br.DWordLE(off + 4));
         }
     }
     return nullptr;
@@ -480,12 +487,14 @@ static bool WalkBrokenChmTocOrIndex(EbookTocVisitor* visitor, HtmlParser& p, UIN
 }
 
 bool ChmDoc::ParseTocOrIndex(EbookTocVisitor* visitor, const char* path, bool isIndex) {
-    if (!path)
+    if (!path) {
         return false;
-    ScopedMem<unsigned char> htmlData(GetData(path, nullptr));
-    const char* html = (char*)htmlData.Get();
-    if (!html)
+    }
+    AutoFree htmlData = GetData(path);
+    if (htmlData.empty()) {
         return false;
+    }
+    const char* html = htmlData.Get();
 
     HtmlParser p;
     UINT cp = codepage;
@@ -498,13 +507,15 @@ bool ChmDoc::ParseTocOrIndex(EbookTocVisitor* visitor, const char* path, bool is
     // entities are in the same codepage and VisitChmTocItem yields
     // consistent results
     HtmlElement* el = p.Parse(html, CP_CHM_DEFAULT);
-    if (!el)
+    if (!el) {
         return false;
+    }
     el = p.FindElementByName("body");
     // since <body> is optional, also continue without one
     el = p.FindElementByName("ul", el);
-    if (!el)
+    if (!el) {
         return WalkBrokenChmTocOrIndex(visitor, p, cp, isIndex);
+    }
     WalkChmTocOrIndex(visitor, el, cp, isIndex);
     return true;
 }

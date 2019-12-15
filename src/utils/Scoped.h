@@ -98,24 +98,20 @@ struct AutoDelete {
 // AutoFree toFree = str::Dup("foo");
 struct AutoFree {
     char* data = nullptr;
-
-  protected:
-    // must be accessed via size() as it might
-    // not be provided initially so to avoid mistakes
-    // we'll calculate it on demand if needed
     size_t len = 0;
 
-  public:
     AutoFree() = default;
     AutoFree(AutoFree& other) = delete;
     AutoFree(AutoFree&& other) = delete;
 
     AutoFree(const char* p) {
         data = (char*)p;
+        len = str::Len(data);
     }
 
     AutoFree(const unsigned char* p) {
         data = (char*)p;
+        len = str::Len(data);
     }
 
     AutoFree(std::string_view s) {
@@ -126,6 +122,7 @@ struct AutoFree {
     void Set(const char* newPtr) {
         free(data);
         data = (char*)newPtr;
+        len = str::Len(data);
     }
 
     void SetCopy(const char* newPtr) {
@@ -133,6 +130,7 @@ struct AutoFree {
         data = nullptr;
         if (newPtr) {
             data = str::Dup(newPtr);
+            len = str::Len(data);
         }
     }
 
@@ -153,8 +151,8 @@ struct AutoFree {
         return *this;
     }
 
-    //AutoFree& operator=(const AutoFree& other) = delete;
-   // AutoFree& operator=(const AutoFree&& other) = delete;
+    // AutoFree& operator=(const AutoFree& other) = delete;
+    // AutoFree& operator=(const AutoFree&& other) = delete;
 
     char* get() const {
         return data;
@@ -170,25 +168,22 @@ struct AutoFree {
 
     // for convenince, we calculate the size if wasn't provided
     // by the caller
-    size_t size() {
-        if (len == 0) {
-            len = str::Len(data);
-        }
+    size_t size() const {
         return len;
     }
 
     bool empty() {
-        return (data == nullptr) || (size() == 0);
+        return (data == nullptr) || (len == 0);
     }
 
     std::string_view as_view() {
-        size_t sz = size();
-        return {data, sz};
+        return {data, len};
     }
 
     void Reset() {
         free(data);
         data = nullptr;
+        len = 0;
     }
 
     char* StealData() {
