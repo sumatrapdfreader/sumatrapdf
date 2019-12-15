@@ -3967,13 +3967,15 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
             break;
 
         case IDT_VIEW_ZOOMIN:
-            if (win->IsDocLoaded())
+            if (win->IsDocLoaded()) {
                 ZoomToSelection(win, ctrl->GetNextZoomStep(ZOOM_MAX), false);
+            }
             break;
 
         case IDT_VIEW_ZOOMOUT:
-            if (win->IsDocLoaded())
+            if (win->IsDocLoaded()) {
                 ZoomToSelection(win, ctrl->GetNextZoomStep(ZOOM_MIN), false);
+            }
             break;
 
         case IDM_ZOOM_6400:

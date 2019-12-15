@@ -31,6 +31,10 @@ struct PageInfo {
     float visibleRatio; /* (0.0 = invisible, 1.0 = fully visible) */
     /* position of page relative to visible view port: pos.Offset(-viewPort.x, -viewPort.y) */
     RectI pageOnScreen{};
+
+    // when zoomVirtual in DisplayMode is ZOOM_FIT_PAGE, ZOOM_FIT_WIDTH
+    // or ZOOM_FIT_CONTENT, this is per-page zoom level
+    float zoomReal;
 };
 
 /* The current scroll state (needed for saving/restoring the scroll position) */
@@ -176,10 +180,6 @@ class DisplayModel : public Controller {
     int GetRotation() const {
         return rotation;
     }
-    // Note: zoomReal contains dpiFactor premultiplied
-    float GetZoomReal() const {
-        return zoomReal;
-    }
     float GetZoomReal(int pageNo) const;
     void Relayout(float zoomVirtual, int rotation);
 
@@ -260,7 +260,7 @@ class DisplayModel : public Controller {
     void RenderVisibleParts();
     void AddNavPoint();
     RectD GetContentBox(int pageNo);
-    void CalcZoomVirtual(float zoomVirtual);
+    void CalcZoomReal(float zoomVirtual);
     void GoToPage(int pageNo, int scrollY, bool addNavPt = false, int scrollX = -1);
     bool GoToPrevPage(int scrollY);
     int GetPageNextToPoint(PointI pt);

@@ -387,8 +387,9 @@ int DisplayModel::CurrentPageNo() const {
         return startPage;
 
     AssertCrash(pagesInfo);
-    if (!pagesInfo)
+    if (!pagesInfo) {
         return INVALID_PAGE_NO;
+    }
     // determine the most visible page
     int mostVisiblePage = INVALID_PAGE_NO;
     float ratio = 0;
@@ -404,16 +405,17 @@ int DisplayModel::CurrentPageNo() const {
     /* if no page is visible, default to either the first or the last one */
     if (INVALID_PAGE_NO == mostVisiblePage) {
         PageInfo* pageInfo = GetPageInfo(1);
-        if (pageInfo && viewPort.y > pageInfo->pos.y + pageInfo->pos.dy)
+        if (pageInfo && viewPort.y > pageInfo->pos.y + pageInfo->pos.dy) {
             mostVisiblePage = PageCount();
-        else
+        } else {
             mostVisiblePage = 1;
+        }
     }
 
     return mostVisiblePage;
 }
 
-void DisplayModel::CalcZoomVirtual(float newZoomVirtual) {
+void DisplayModel::CalcZoomReal(float newZoomVirtual) {
     CrashIf(!IsValidZoom(newZoomVirtual));
     zoomVirtual = newZoomVirtual;
     if ((ZOOM_FIT_WIDTH == newZoomVirtual) || (ZOOM_FIT_PAGE == newZoomVirtual)) {
@@ -423,9 +425,12 @@ void DisplayModel::CalcZoomVirtual(float newZoomVirtual) {
         float minZoom = (float)HUGE_VAL;
         for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
             if (PageShown(pageNo)) {
-                float thisPageZoom = ZoomRealFromVirtualForPage(newZoomVirtual, pageNo);
-                if (minZoom > thisPageZoom)
-                    minZoom = thisPageZoom;
+                float zoom = ZoomRealFromVirtualForPage(newZoomVirtual, pageNo);
+                PageInfo* pageInfo = GetPageInfo(pageNo);
+                pageInfo->zoomReal = zoom;
+                if (minZoom > zoom) {
+                    minZoom = zoom;
+                }
             }
         }
         AssertCrash(minZoom != (float)HUGE_VAL);
@@ -433,28 +438,39 @@ void DisplayModel::CalcZoomVirtual(float newZoomVirtual) {
     } else if (ZOOM_FIT_CONTENT == newZoomVirtual) {
         float newZoom = ZoomRealFromVirtualForPage(newZoomVirtual, CurrentPageNo());
         // limit zooming in to 800% on almost empty pages
-        if (newZoom > 8.0)
+        if (newZoom > 8.0) {
             newZoom = 8.0;
+        }
         // don't zoom in by just a few pixels (throwing away a prerendered page)
         if (newZoom < zoomReal || zoomReal / newZoom < 0.95 ||
-            zoomReal < ZoomRealFromVirtualForPage(ZOOM_FIT_PAGE, CurrentPageNo()))
+            zoomReal < ZoomRealFromVirtualForPage(ZOOM_FIT_PAGE, CurrentPageNo())) {
             zoomReal = newZoom;
+        }
     } else {
         zoomReal = zoomVirtual * 0.01f * dpiFactor;
+        for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
+            PageInfo* pageInfo = GetPageInfo(pageNo);
+            pageInfo->zoomReal = zoomReal;
+        }
     }
 }
 
 float DisplayModel::GetZoomReal(int pageNo) const {
     DisplayMode mode = GetDisplayMode();
-    if (IsContinuous(mode))
-        return zoomReal;
-    if (IsSingle(mode))
+    if (IsContinuous(mode)) {
+        PageInfo* pageInfo = GetPageInfo(pageNo);
+        return pageInfo->zoomReal;
+    }
+    if (IsSingle(mode)) {
         return ZoomRealFromVirtualForPage(zoomVirtual, pageNo);
+    }
     pageNo = FirstPageInARowNo(pageNo, ColumnsFromDisplayMode(mode), IsBookView(mode));
-    if (pageNo == PageCount() || pageNo == 1 && IsBookView(mode))
+    if (pageNo == PageCount() || pageNo == 1 && IsBookView(mode)) {
         return ZoomRealFromVirtualForPage(zoomVirtual, pageNo);
-    return std::min(ZoomRealFromVirtualForPage(zoomVirtual, pageNo),
-                    ZoomRealFromVirtualForPage(zoomVirtual, pageNo + 1));
+    }
+    float zoomCurr = ZoomRealFromVirtualForPage(zoomVirtual, pageNo);
+    float zoomNext = ZoomRealFromVirtualForPage(zoomVirtual, pageNo + 1);
+    return std::min(zoomCurr, zoomNext);
 }
 
 /* Given zoom and rotation, calculate the position of each page on a
@@ -477,7 +493,7 @@ void DisplayModel::Relayout(float newZoomVirtual, int newRotation) {
 RestartLayout:
     int currPosY = windowMargin.top;
     float currZoomReal = zoomReal;
-    CalcZoomVirtual(newZoomVirtual);
+    CalcZoomReal(newZoomVirtual);
 
     int newViewPortOffsetX = 0;
     if (0 != currZoomReal && INVALID_ZOOM != currZoomReal)
@@ -499,11 +515,13 @@ RestartLayout:
         SizeD pageSize = PageSizeAfterRotation(pageNo);
         RectI pos;
         // don't add the full 0.5 for rounding to account for precision errors
-        pos.dx = (int)(pageSize.dx * zoomReal + 0.499);
-        pos.dy = (int)(pageSize.dy * zoomReal + 0.499);
+        float zoom = GetZoomReal(pageNo);
+        pos.dx = (int)(pageSize.dx * zoom + 0.499);
+        pos.dy = (int)(pageSize.dy * zoom + 0.499);
 
-        if (rowMaxPageDy < pos.dy)
+        if (rowMaxPageDy < pos.dy) {
             rowMaxPageDy = pos.dy;
+        }
         pos.y = currPosY;
 
         // restart the layout if we detect we need to show scrollbars
@@ -513,11 +531,13 @@ RestartLayout:
             goto RestartLayout;
         }
 
-        if (IsBookView(GetDisplayMode()) && pageNo == 1 && columns - pageInARow > 1)
+        if (IsBookView(GetDisplayMode()) && pageNo == 1 && columns - pageInARow > 1) {
             pageInARow++;
+        }
         CrashIf(pageInARow >= dimof(columnMaxWidth));
-        if (columnMaxWidth[pageInARow] < pos.dx)
+        if (columnMaxWidth[pageInARow] < pos.dx) {
             columnMaxWidth[pageInARow] = pos.dx;
+        }
 
         if (!needHScroll && viewPort.dx < windowMargin.left + columnMaxWidth[0] +
                                               (columns == 2 ? pageSpacing.dx + columnMaxWidth[1] : 0) +
@@ -929,10 +949,11 @@ void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX)
            the size of canvas */
         ChangeStartPage(pageNo);
     } else if (ZOOM_FIT_CONTENT == zoomVirtual) {
-        // make sure that CalcZoomVirtual uses the correct page to calculate
+        // make sure that CalcZoomReal uses the correct page to calculate
         // the zoom level for (visibility will be recalculated below anyway)
-        for (int i = PageCount(); i > 0; i--)
+        for (int i = PageCount(); i > 0; i--) {
             GetPageInfo(i)->visibleRatio = (i == pageNo ? 1.0f : 0);
+        }
         Relayout(zoomVirtual, rotation);
     }
     // lf("DisplayModel::GoToPage(pageNo=%d, scrollY=%d)", pageNo, scrollY);

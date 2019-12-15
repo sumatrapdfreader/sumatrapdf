@@ -163,13 +163,18 @@ static RectI GetTileOnScreen(EngineBase* engine, int pageNo, int rotation, float
 }
 
 static bool IsTileVisible(DisplayModel* dm, int pageNo, TilePosition tile, float fuzz = 0) {
-    if (!dm)
+    if (!dm) {
         return false;
+    }
     PageInfo* pageInfo = dm->GetPageInfo(pageNo);
-    if (!dm->GetEngine() || !pageInfo)
+    EngineBase* engine = dm->GetEngine();
+    if (!engine || !pageInfo) {
         return false;
-    RectI tileOnScreen =
-        GetTileOnScreen(dm->GetEngine(), pageNo, dm->GetRotation(), dm->GetZoomReal(), tile, pageInfo->pageOnScreen);
+    }
+    int rotation = dm->GetRotation();
+    float zoom = dm->GetZoomReal(pageNo);
+    RectI r = pageInfo->pageOnScreen;
+    RectI tileOnScreen = GetTileOnScreen(engine, pageNo, rotation, zoom, tile, r);
     // consider nearby tiles visible depending on the fuzz factor
     tileOnScreen.x -= (int)(tileOnScreen.dx * fuzz * 0.5);
     tileOnScreen.dx = (int)(tileOnScreen.dx * (fuzz + 1));
@@ -261,7 +266,9 @@ void RenderCache::Invalidate(DisplayModel* dm, int pageNo, RectD rect) {
 // determine the count of tiles required for a page at a given zoom level
 USHORT RenderCache::GetTileRes(DisplayModel* dm, int pageNo) {
     RectD mediabox = dm->GetEngine()->PageMediabox(pageNo);
-    RectD pixelbox = dm->GetEngine()->Transform(mediabox, pageNo, dm->GetZoomReal(), dm->GetRotation());
+    float zoom = dm->GetZoomReal(pageNo);
+    int rotation = dm->GetRotation();
+    RectD pixelbox = dm->GetEngine()->Transform(mediabox, pageNo, zoom, rotation);
 
     float factorW = (float)pixelbox.dx / (maxTileSize.dx + 1);
     float factorH = (float)pixelbox.dy / (maxTileSize.dy + 1);
@@ -596,7 +603,8 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data) {
 //       (this is the only place that knows about Tiles, though)
 UINT RenderCache::PaintTile(HDC hdc, RectI bounds, DisplayModel* dm, int pageNo, TilePosition tile, RectI tileOnScreen,
                             bool renderMissing, bool* renderOutOfDateCue, bool* renderedReplacement) {
-    BitmapCacheEntry* entry = Find(dm, pageNo, dm->GetRotation(), dm->GetZoomReal(), &tile);
+    float zoom = dm->GetZoomReal(pageNo);
+    BitmapCacheEntry* entry = Find(dm, pageNo, dm->GetRotation(), zoom, &tile);
     UINT renderDelay = 0;
 
     if (!entry) {
@@ -686,11 +694,12 @@ UINT RenderCache::Paint(HDC hdc, RectI bounds, DisplayModel* dm, int pageNo, Pag
     }
 
     int rotation = dm->GetRotation();
-    float zoom = dm->GetZoomReal();
+    float zoom = dm->GetZoomReal(pageNo);
     USHORT targetRes = GetTileRes(dm, pageNo);
     USHORT maxRes = GetMaxTileRes(dm, pageNo, rotation);
-    if (maxRes < targetRes)
+    if (maxRes < targetRes) {
         maxRes = targetRes;
+    }
 
     Vec<TilePosition> queue;
     queue.Append(TilePosition(0, 0, 0));
