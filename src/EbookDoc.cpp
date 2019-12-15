@@ -91,7 +91,7 @@ static char* DecodeTextToUtf8(const char* s, bool isXML = false) {
         return str::Dup(s);
     if (CP_ACP == codePage)
         codePage = GuessTextCodepage(s, str::Len(s), CP_ACP);
-    auto tmp2 = str::ToMultiByte(s, codePage, CP_UTF8);
+    auto tmp2 = strconv::ToMultiByte(s, codePage, CP_UTF8);
     return (char*)tmp2.data();
 }
 
@@ -1109,7 +1109,7 @@ bool PalmDoc::Load() {
 
     const std::string_view text = mobiDoc->GetHtmlData();
     UINT codePage = GuessTextCodepage(text.data(), text.size(), CP_ACP);
-    AutoFree textUtf8(str::ToMultiByte(text.data(), codePage, CP_UTF8));
+    AutoFree textUtf8(strconv::ToMultiByte(text.data(), codePage, CP_UTF8));
 
     const char* start = textUtf8.Get();
     const char* end = start + textUtf8.size();

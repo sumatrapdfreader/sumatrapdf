@@ -374,7 +374,7 @@ FILE* OpenFILE(const char* path) {
 std::string_view ReadFileWithAllocator(const char* filePath, Allocator* allocator) {
 #if 0 // OS_WIN
     WCHAR buf[512];
-    str::Utf8ToWcharBuf(filePath, str::Len(filePath), buf, dimof(buf));
+    strconv::Utf8ToWcharBuf(filePath, str::Len(filePath), buf, dimof(buf));
     return ReadFileWithAllocator(buf, fileSizeOut, allocator);
 #else
     FILE* fp = OpenFILE(filePath);
@@ -429,7 +429,7 @@ std::string_view ReadFile(const WCHAR* filePath) {
 bool WriteFile(const char* filePath, std::string_view d) {
 #if OS_WIN
     WCHAR buf[512];
-    str::Utf8ToWcharBuf(filePath, str::Len(filePath), buf, dimof(buf));
+    strconv::Utf8ToWcharBuf(filePath, str::Len(filePath), buf, dimof(buf));
     return WriteFile(buf, d);
 #else
     CrashAlwaysIf(true);

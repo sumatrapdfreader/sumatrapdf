@@ -220,7 +220,7 @@ static bool DownloadAndUnzipSymbols(const WCHAR* symDir) {
 
     char symDirUtf[512];
 
-    str::WcharToUtf8Buf(symDir, symDirUtf, sizeof(symDirUtf));
+    strconv::WcharToUtf8Buf(symDir, symDirUtf, sizeof(symDirUtf));
     bool ok = ExtractSymbols(rsp.data.Get(), rsp.data.size(), symDirUtf, gCrashHandlerAllocator);
     if (!ok) {
         log("DownloadAndUnzipSymbols: ExtractSymbols() failed\n");

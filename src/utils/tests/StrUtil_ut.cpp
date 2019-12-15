@@ -106,13 +106,13 @@ static void StrIsDigitTest() {
 static void StrConvTest() {
     WCHAR wbuf[4];
     char cbuf[4];
-    size_t conv = str::Utf8ToWcharBuf("testing", 4, wbuf, dimof(wbuf));
+    size_t conv = strconv::Utf8ToWcharBuf("testing", 4, wbuf, dimof(wbuf));
     utassert(conv == 3 && str::Eq(wbuf, L"tes"));
     conv = str::WcharToUtf8Buf(L"abc", cbuf, dimof(cbuf));
     utassert(conv == 3 && str::Eq(cbuf, "abc"));
-    conv = str::Utf8ToWcharBuf("ab\xF0\x90\x82\x80", 6, wbuf, dimof(wbuf));
+    conv = strconv::Utf8ToWcharBuf("ab\xF0\x90\x82\x80", 6, wbuf, dimof(wbuf));
     utassert(conv == 3 && str::StartsWith(wbuf, L"ab") && wbuf[2] == 0xD800);
-    conv = str::Utf8ToWcharBuf("ab\xF0\x90\x82\x80", 6, wbuf, dimof(wbuf) - 1);
+    conv = strconv::Utf8ToWcharBuf("ab\xF0\x90\x82\x80", 6, wbuf, dimof(wbuf) - 1);
     utassert(conv == 1 && str::Eq(wbuf, L"a"));
     conv = str::WcharToUtf8Buf(L"ab\u20AC", cbuf, dimof(cbuf));
     utassert(conv == 0 && str::Eq(cbuf, ""));
@@ -525,7 +525,7 @@ void StrTest() {
     }
 
     {
-        AutoFree tmp = str::ToMultiByte("abc", 9876, 123456);
+        AutoFree tmp = strconv::ToMultiByte("abc", 9876, 123456);
         utassert(!tmp.get());
     }
     {
