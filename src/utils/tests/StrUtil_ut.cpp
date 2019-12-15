@@ -108,15 +108,15 @@ static void StrConvTest() {
     char cbuf[4];
     size_t conv = strconv::Utf8ToWcharBuf("testing", 4, wbuf, dimof(wbuf));
     utassert(conv == 3 && str::Eq(wbuf, L"tes"));
-    conv = str::WcharToUtf8Buf(L"abc", cbuf, dimof(cbuf));
+    conv = strconv::WcharToUtf8Buf(L"abc", cbuf, dimof(cbuf));
     utassert(conv == 3 && str::Eq(cbuf, "abc"));
     conv = strconv::Utf8ToWcharBuf("ab\xF0\x90\x82\x80", 6, wbuf, dimof(wbuf));
     utassert(conv == 3 && str::StartsWith(wbuf, L"ab") && wbuf[2] == 0xD800);
     conv = strconv::Utf8ToWcharBuf("ab\xF0\x90\x82\x80", 6, wbuf, dimof(wbuf) - 1);
     utassert(conv == 1 && str::Eq(wbuf, L"a"));
-    conv = str::WcharToUtf8Buf(L"ab\u20AC", cbuf, dimof(cbuf));
+    conv = strconv::WcharToUtf8Buf(L"ab\u20AC", cbuf, dimof(cbuf));
     utassert(conv == 0 && str::Eq(cbuf, ""));
-    conv = str::WcharToUtf8Buf(L"abcd", cbuf, dimof(cbuf));
+    conv = strconv::WcharToUtf8Buf(L"abcd", cbuf, dimof(cbuf));
     utassert(conv == 0 && str::Eq(cbuf, ""));
 }
 
@@ -529,7 +529,7 @@ void StrTest() {
         utassert(!tmp.get());
     }
     {
-        AutoFree tmp = str::WstrToCodePage(L"abc", 98765);
+        AutoFree tmp = strconv::WstrToCodePage(L"abc", 98765);
         utassert(!tmp.Get());
     }
     {
