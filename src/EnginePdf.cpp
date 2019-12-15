@@ -2102,7 +2102,8 @@ bool PdfEngineImpl::SaveEmbedded(LinkSaverUI& saveUI, int num) {
     CrashIf(nullptr == buf);
     u8* data = nullptr;
     size_t dataLen = fz_buffer_extract(ctx, buf, &data);
-    bool result = saveUI.SaveEmbedded(data, dataLen);
+    std::string_view sv{(char*)data, dataLen};
+    bool result = saveUI.SaveEmbedded(sv);
     fz_drop_buffer(ctx, buf);
     return result;
 }

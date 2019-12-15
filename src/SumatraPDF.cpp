@@ -672,7 +672,7 @@ class ControllerCallbackHandler : public ControllerCallback {
         win->linkHandler->GotoLink(dest);
     }
     void FocusFrame(bool always) override;
-    void SaveDownload(const WCHAR* url, const unsigned char* data, size_t len) override;
+    void SaveDownload(const WCHAR* url, std::string_view data) override;
     void HandleLayoutedPages(EbookController* ctrl, EbookFormattingData* data) override;
     void RequestDelayedLayout(int delay) override;
 };
@@ -756,10 +756,10 @@ void ControllerCallbackHandler::FocusFrame(bool always) {
     }
 }
 
-void ControllerCallbackHandler::SaveDownload(const WCHAR* url, const unsigned char* data, size_t len) {
+void ControllerCallbackHandler::SaveDownload(const WCHAR* url, std::string_view data) {
     AutoFreeWstr fileName(url::GetFileName(url));
     LinkSaver linkSaver(win->currentTab, win->hwndFrame, fileName);
-    linkSaver.SaveEmbedded(data, len);
+    linkSaver.SaveEmbedded(data);
 }
 
 void ControllerCallbackHandler::HandleLayoutedPages(EbookController* ctrl, EbookFormattingData* data) {

@@ -91,7 +91,7 @@ class RenderedBitmap {
 // interface to be implemented for saving embedded documents that a link points to
 class LinkSaverUI {
   public:
-    virtual bool SaveEmbedded(const unsigned char* data, size_t cbCount) = 0;
+    virtual bool SaveEmbedded(std::string_view data) = 0;
     virtual ~LinkSaverUI() {
     }
 };

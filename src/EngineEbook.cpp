@@ -1634,7 +1634,7 @@ bool ChmEngineImpl::SaveEmbedded(LinkSaverUI& saveUI, const char* path) {
     if (data.empty()) {
         return false;
     }
-    return saveUI.SaveEmbedded((const u8*)data.data, data.size());
+    return saveUI.SaveEmbedded(data.as_view());
 }
 
 EngineBase* ChmEngineImpl::CreateFromFile(const WCHAR* fileName) {

@@ -1208,7 +1208,7 @@ class HW_IDownloadManager : public IDownloadManager {
             return INET_E_DATA_NOT_AVAILABLE;
         }
         // ask the UI to let the user save the file
-        win->htmlWinCb->DownloadData(urlRest, (const u8*)data.data(), data.size());
+        win->htmlWinCb->DownloadData(urlRest, data);
         return S_OK;
     }
 };

@@ -86,8 +86,8 @@ class HtmlWindowHandler : public HtmlWindowCallback {
     std::string_view GetDataForUrl(const WCHAR* url) override {
         return cm->GetDataForUrl(url);
     }
-    void DownloadData(const WCHAR* url, const unsigned char* data, size_t len) override {
-        cm->DownloadData(url, data, len);
+    void DownloadData(const WCHAR* url, std::string_view data) override {
+        cm->DownloadData(url, data);
     }
 };
 
@@ -397,14 +397,16 @@ std::string_view ChmModel::GetDataForUrl(const WCHAR* url) {
     return e->data.as_view();
 }
 
-void ChmModel::DownloadData(const WCHAR* url, const unsigned char* data, size_t len) {
-    if (cb)
-        cb->SaveDownload(url, data, len);
+void ChmModel::DownloadData(const WCHAR* url, std::string_view data) {
+    if (cb) {
+        cb->SaveDownload(url, data);
+    }
 }
 
 void ChmModel::OnLButtonDown() {
-    if (cb)
+    if (cb) {
         cb->FocusFrame(true);
+    }
 }
 
 // named destinations are either in-document URLs or Alias topic IDs
@@ -585,10 +587,9 @@ class ChmThumbnailTask : public HtmlWindowCallback {
         data.Append(d);
         return d;
     }
-    void DownloadData(const WCHAR* url, const unsigned char* data, size_t len) override {
+    void DownloadData(const WCHAR* url, std::string_view data) override {
         UNUSED(url);
         UNUSED(data);
-        UNUSED(len);
     }
 };
 

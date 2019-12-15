@@ -59,5 +59,5 @@ class LinkSaver : public LinkSaverUI {
   public:
     LinkSaver(TabInfo* tab, HWND parentHwnd, const WCHAR* fileName);
 
-    virtual bool SaveEmbedded(const unsigned char* data, size_t cbCount);
+    virtual bool SaveEmbedded(std::string_view data);
 };

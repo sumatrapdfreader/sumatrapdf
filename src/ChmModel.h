@@ -88,7 +88,7 @@ class ChmModel : public Controller {
     void OnDocumentComplete(const WCHAR* url);
     void OnLButtonDown();
     std::string_view GetDataForUrl(const WCHAR* url);
-    void DownloadData(const WCHAR* url, const unsigned char* data, size_t len);
+    void DownloadData(const WCHAR* url, std::string_view data);
 
   protected:
     AutoFreeWstr fileName;

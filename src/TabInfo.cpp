@@ -62,7 +62,7 @@ LinkSaver::LinkSaver(TabInfo* tab, HWND parentHwnd, const WCHAR* fileName) {
     this->fileName = fileName;
 }
 
-bool LinkSaver::SaveEmbedded(const unsigned char* data, size_t len) {
+bool LinkSaver::SaveEmbedded(std::string_view data) {
     if (!HasPermission(Perm_DiskAccess))
         return false;
 
@@ -91,7 +91,7 @@ bool LinkSaver::SaveEmbedded(const unsigned char* data, size_t len) {
     if (!ok) {
         return false;
     }
-    ok = file::WriteFile(dstFileName, {(char*)data, len});
+    ok = file::WriteFile(dstFileName, data);
     if (ok && tab && IsUntrustedFile(tab->filePath, gPluginURL)) {
         file::SetZoneIdentifier(dstFileName);
     }
