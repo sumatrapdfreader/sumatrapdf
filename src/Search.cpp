@@ -356,21 +356,24 @@ void FindTextOnThread(WindowInfo* win, TextSearchDirection direction, bool showP
 void PaintForwardSearchMark(WindowInfo* win, HDC hdc) {
     CrashIf(!win->AsFixed());
     DisplayModel* dm = win->AsFixed();
-    PageInfo* pageInfo = dm->GetPageInfo(win->fwdSearchMark.page);
-    if (!pageInfo || 0.0 == pageInfo->visibleRatio)
+    int pageNo = win->fwdSearchMark.page;
+    PageInfo* pageInfo = dm->GetPageInfo(pageNo);
+    if (!pageInfo || 0.0 == pageInfo->visibleRatio) {
         return;
+    }
+
+    int hiLiWidth = gGlobalPrefs->forwardSearch.highlightWidth;
+    int hiLiOff = gGlobalPrefs->forwardSearch.highlightOffset;
 
     // Draw the rectangles highlighting the forward search results
     Vec<RectI> rects;
     for (size_t i = 0; i < win->fwdSearchMark.rects.size(); i++) {
         RectI rect = win->fwdSearchMark.rects.at(i);
-        rect = dm->CvtToScreen(win->fwdSearchMark.page, rect.Convert<double>());
-        if (gGlobalPrefs->forwardSearch.highlightOffset > 0) {
-            rect.x = std::max(pageInfo->pageOnScreen.x, 0) +
-                     (int)(gGlobalPrefs->forwardSearch.highlightOffset * dm->GetZoomReal());
-            rect.dx = (int)((gGlobalPrefs->forwardSearch.highlightWidth > 0 ? gGlobalPrefs->forwardSearch.highlightWidth
-                                                                            : 15.0) *
-                            dm->GetZoomReal());
+        rect = dm->CvtToScreen(pageNo, rect.Convert<double>());
+        if (hiLiOff > 0) {
+            float zoom = dm->GetZoomReal(pageNo);
+            rect.x = std::max(pageInfo->pageOnScreen.x, 0) + (int)(hiLiOff * zoom);
+            rect.dx = (int)((hiLiWidth > 0 ? hiLiWidth : 15.0) * zoom);
             rect.y -= 4;
             rect.dy += 8;
         }
