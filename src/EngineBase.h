@@ -88,14 +88,6 @@ class RenderedBitmap {
     bool StretchDIBits(HDC hdc, RectI target) const;
 };
 
-// interface to be implemented for saving embedded documents that a link points to
-class LinkSaverUI {
-  public:
-    virtual bool SaveEmbedded(std::string_view data) = 0;
-    virtual ~LinkSaverUI() {
-    }
-};
-
 // a link destination
 class PageDestination {
   public:
@@ -117,14 +109,6 @@ class PageDestination {
     // caller must free() the result
     virtual WCHAR* GetDestName() const {
         return nullptr;
-    }
-
-    // if this destination's target is an embedded file, this allows to
-    // save that file efficiently (the LinkSaverUI might get passed a link
-    // to an internal buffer in order to avoid unnecessary memory allocations)
-    virtual bool SaveEmbedded(LinkSaverUI& saveUI) {
-        UNUSED(saveUI);
-        return false;
     }
 };
 

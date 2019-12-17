@@ -51,13 +51,6 @@ class TabInfo {
     const WCHAR* GetTabTitle() const;
 };
 
-class LinkSaver : public LinkSaverUI {
-    TabInfo* tab = nullptr;
-    HWND parentHwnd = 0;
-    const WCHAR* fileName = nullptr;
 
-  public:
-    LinkSaver(TabInfo* tab, HWND parentHwnd, const WCHAR* fileName);
+bool SaveDataToFile(HWND hwndParent, WCHAR* fileName, std::string_view data);
 
-    virtual bool SaveEmbedded(std::string_view data);
-};

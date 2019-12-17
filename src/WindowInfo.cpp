@@ -322,8 +322,7 @@ void LinkHandler::GotoLink(PageDestination* link) {
         }
         // offer to save other attachments to a file
         else {
-            LinkSaver linkSaverTmp(tab, owner->hwndFrame, path);
-            link->SaveEmbedded(linkSaverTmp);
+            // https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
         }
     } else if (PageDestType::LaunchFile == type) {
         if (path) {

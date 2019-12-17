@@ -56,15 +56,19 @@ const WCHAR* TabInfo::GetTabTitle() const {
     return path::GetBaseNameNoFree(filePath);
 }
 
+// https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
+#if 0
 LinkSaver::LinkSaver(TabInfo* tab, HWND parentHwnd, const WCHAR* fileName) {
     this->tab = tab;
     this->parentHwnd = parentHwnd;
     this->fileName = fileName;
 }
+#endif
 
-bool LinkSaver::SaveEmbedded(std::string_view data) {
-    if (!HasPermission(Perm_DiskAccess))
+bool SaveDataToFile(HWND hwndParent, WCHAR* fileName, std::string_view data) {
+    if (!HasPermission(Perm_DiskAccess)) {
         return false;
+    }
 
     WCHAR dstFileName[MAX_PATH] = {0};
     if (fileName) {
@@ -80,7 +84,7 @@ bool LinkSaver::SaveEmbedded(std::string_view data) {
 
     OPENFILENAME ofn = {0};
     ofn.lStructSize = sizeof(ofn);
-    ofn.hwndOwner = this->parentHwnd;
+    ofn.hwndOwner = hwndParent;
     ofn.lpstrFile = dstFileName;
     ofn.nMaxFile = dimof(dstFileName);
     ofn.lpstrFilter = fileFilter;
@@ -92,8 +96,11 @@ bool LinkSaver::SaveEmbedded(std::string_view data) {
         return false;
     }
     ok = file::WriteFile(dstFileName, data);
+    // https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
+#if 0
     if (ok && tab && IsUntrustedFile(tab->filePath, gPluginURL)) {
         file::SetZoneIdentifier(dstFileName);
     }
+#endif
     return ok;
 }

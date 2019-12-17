@@ -759,8 +759,8 @@ void ControllerCallbackHandler::FocusFrame(bool always) {
 
 void ControllerCallbackHandler::SaveDownload(const WCHAR* url, std::string_view data) {
     AutoFreeWstr fileName(url::GetFileName(url));
-    LinkSaver linkSaver(win->currentTab, win->hwndFrame, fileName);
-    linkSaver.SaveEmbedded(data);
+    //LinkSaver linkSaver(win->currentTab, win->hwndFrame, fileName);
+    SaveDataToFile(win->hwndFrame, fileName, data);
 }
 
 void ControllerCallbackHandler::HandleLayoutedPages(EbookController* ctrl, EbookFormattingData* data) {

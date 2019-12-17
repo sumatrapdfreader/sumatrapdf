@@ -1425,7 +1425,6 @@ class ChmEngineImpl : public EbookEngine {
     bool Load(const WCHAR* fileName);
 
     virtual PageElement* CreatePageLink(DrawInstr* link, RectI rect, int pageNo);
-    bool SaveEmbedded(LinkSaverUI& saveUI, const char* path);
 };
 
 // cf. http://www.w3.org/TR/html4/charset.html#h-5.2.2
@@ -1607,10 +1606,6 @@ class ChmEmbeddedDest : public PageDestination {
     WCHAR* GetDestValue() const override {
         return strconv::FromUtf8(path::GetBaseNameNoFree(path));
     }
-
-    bool SaveEmbedded(LinkSaverUI& saveUI) override {
-        return engine->SaveEmbedded(saveUI, path);
-    }
 };
 
 PageElement* ChmEngineImpl::CreatePageLink(DrawInstr* link, RectI rect, int pageNo) {
@@ -1627,14 +1622,6 @@ PageElement* ChmEngineImpl::CreatePageLink(DrawInstr* link, RectI rect, int page
 
     PageDestination* dest = new ChmEmbeddedDest(this, url);
     return new EbookLink(link, rect, dest, pageNo);
-}
-
-bool ChmEngineImpl::SaveEmbedded(LinkSaverUI& saveUI, const char* path) {
-    AutoFree data = doc->GetData(path);
-    if (data.empty()) {
-        return false;
-    }
-    return saveUI.SaveEmbedded(data.as_view());
 }
 
 EngineBase* ChmEngineImpl::CreateFromFile(const WCHAR* fileName) {

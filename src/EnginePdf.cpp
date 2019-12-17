@@ -419,7 +419,6 @@ class PdfEngineImpl : public EngineBase {
     CRITICAL_SECTION mutexes[FZ_LOCK_MAX];
 
     RenderedBitmap* GetPageImage(int pageNo, RectD rect, size_t imageIx);
-    bool SaveEmbedded(LinkSaverUI& saveUI, int num);
 
   protected:
     int pageCount = -1;
@@ -486,8 +485,6 @@ class PdfLink : public PageElement, public PageDestination {
         return GetValue();
     }
     WCHAR* GetDestName() const override;
-
-    virtual bool SaveEmbedded(LinkSaverUI& saveUI);
 };
 
 class PdfComment : public PageElement {
@@ -2088,6 +2085,8 @@ bool PdfEngineImpl::SaveUserAnnots(const char* pathUtf8) {
     return ok;
 }
 
+// https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
+#if 0
 bool PdfEngineImpl::SaveEmbedded(LinkSaverUI& saveUI, int num) {
     ScopedCritSec scope(ctxAccess);
     pdf_document* doc = pdf_document_from_fz_document(ctx, _doc);
@@ -2107,6 +2106,7 @@ bool PdfEngineImpl::SaveEmbedded(LinkSaverUI& saveUI, int num) {
     fz_drop_buffer(ctx, buf);
     return result;
 }
+#endif
 
 bool PdfEngineImpl::HasClipOptimizations(int pageNo) {
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo, true);
@@ -2447,6 +2447,8 @@ WCHAR* PdfLink::GetDestName() const {
 #endif
 }
 
+// https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
+#if 0
 bool PdfLink::SaveEmbedded(LinkSaverUI& saveUI) {
     CrashIf(!outline || !isAttachment);
 
@@ -2454,6 +2456,8 @@ bool PdfLink::SaveEmbedded(LinkSaverUI& saveUI) {
     // TODO: hack, we stored stream number in outline->page
     return engine->SaveEmbedded(saveUI, outline->page);
 }
+#endif
+
 
 EngineBase* PdfEngineImpl::CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {
     if (str::IsEmpty(fileName)) {
