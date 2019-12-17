@@ -235,7 +235,18 @@ WCHAR* EnginePdfMultiImpl::GetPageLabel(int pageNo) const {
 }
 
 int EnginePdfMultiImpl::GetPageByLabel(const WCHAR* label) const {
-    // TODO: cycle through all files
+    int n = 0;
+    for (auto&& f : vbkm->files) {
+        auto e = f->engine;
+        if (!e) {
+            continue;
+        }
+        auto pageNo = e->GetPageByLabel(label);
+        if (pageNo != -1) {
+            return n + pageNo;
+        }
+        n += e->PageCount();
+    }
     return -1;
 }
 
