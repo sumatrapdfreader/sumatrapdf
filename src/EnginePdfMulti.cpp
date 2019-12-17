@@ -218,7 +218,19 @@ PageElement* EnginePdfMultiImpl::GetElementAtPos(int pageNo, PointD pt) {
 }
 
 PageDestination* EnginePdfMultiImpl::GetNamedDest(const WCHAR* name) {
-    // TODO: cycle through all files
+    int n = 0;
+    for (auto&& f : vbkm->files) {
+        auto e = f->engine;
+        if (!e) {
+            continue;
+        }
+        auto dest = e->GetNamedDest(name);
+        if (dest) {
+            // TODO: add n to page number in returned destination
+            return dest;
+        }
+        n += e->PageCount();
+    }
     return nullptr;
 }
 
