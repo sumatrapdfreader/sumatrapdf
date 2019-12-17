@@ -387,7 +387,13 @@ bool IsDigit(char c) {
 }
 
 bool IsWs(char c) {
-    return (' ' == c) || (('\t' <= c) && (c <= '\r'));
+    if (' ' == c) {
+        return true;
+    }
+    if (('\t' <= c) && (c <= '\r')) {
+        return true;
+    }
+    return false;
 }
 
 const char* FindChar(const char* str, const char c) {

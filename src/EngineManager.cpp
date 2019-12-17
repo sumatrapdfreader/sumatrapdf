@@ -81,6 +81,8 @@ EngineBase* CreateEngine(const WCHAR* filePath, PasswordUI* pwdUI, bool enableCh
 RetrySniffing:
     if (IsEnginePdfSupportedFile(filePath, sniff)) {
         engine = CreateEnginePdfFromFile(filePath, pwdUI);
+    } else if (IsEnginePdfMultiSupportedFile(filePath, sniff)) {
+        engine = CreateEnginePdfMultiFromFile(filePath, pwdUI);
     } else if (IsXpsEngineSupportedFile(filePath, sniff)) {
         engine = CreateXpsEngineFromFile(filePath);
     } else if (IsDjVuEngineSupportedFile(filePath, sniff)) {

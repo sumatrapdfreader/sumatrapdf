@@ -633,9 +633,9 @@ defer { instance->Release(); };
 #include "GeomUtil.h"
 #include "StrUtil.h"
 #include "StrconvUtil.h"
-#include "StringViewUtil.h"
 #include "Scoped.h"
 #include "Vec.h"
+#include "StringViewUtil.h"
 #include "ColorUtil.h"
 
 // lstrcpy is dangerous so forbid using it

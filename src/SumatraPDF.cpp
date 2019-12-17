@@ -307,8 +307,9 @@ bool OpenFileExternally(const WCHAR* path) {
 
 void SwitchToDisplayMode(WindowInfo* win, DisplayMode displayMode, bool keepContinuous) {
     CrashIf(!win->IsDocLoaded());
-    if (!win->IsDocLoaded())
+    if (!win->IsDocLoaded()) {
         return;
+    }
 
     win->ctrl->SetDisplayMode(displayMode, keepContinuous);
     UpdateToolbarState(win);
@@ -4292,8 +4293,9 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             return OnFrameGetMinMaxInfo((MINMAXINFO*)lParam);
 
         case WM_MOVE:
-            if (win)
+            if (win) {
                 RememberDefaultWindowPosition(win);
+            }
             break;
 
         case WM_INITMENUPOPUP:
@@ -4337,13 +4339,15 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             return DefWindowProc(hwnd, msg, wParam, lParam);
 
         case WM_CHAR:
-            if (win)
+            if (win) {
                 FrameOnChar(win, wParam, lParam);
+            }
             break;
 
         case WM_KEYDOWN:
-            if (win)
+            if (win) {
                 FrameOnKeydown(win, wParam, lParam);
+            }
             break;
 
         case WM_SYSKEYUP:
@@ -4363,14 +4367,16 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         case WM_SYSCOMMAND:
             // temporarily show the menu bar if it has been hidden
-            if (wParam == SC_KEYMENU && win && win->isMenuHidden)
+            if (wParam == SC_KEYMENU && win && win->isMenuHidden) {
                 ShowHideMenuBar(win, true);
+            }
             return DefWindowProc(hwnd, msg, wParam, lParam);
 
         case WM_EXITMENULOOP:
             // hide the menu bar again if it was shown only temporarily
-            if (!wParam && win && win->isMenuHidden)
+            if (!wParam && win && win->isMenuHidden) {
                 SetMenu(hwnd, nullptr);
+            }
             return DefWindowProc(hwnd, msg, wParam, lParam);
 
         case WM_CONTEXTMENU: {
@@ -4391,10 +4397,11 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             if (win) {
                 // in tablets it's possible to rotate the screen. if we're
                 // in full screen, resize our window to match new screen size
-                if (win->presentation)
+                if (win->presentation) {
                     EnterFullScreen(win, true);
-                else if (win->isFullScreen)
+                } else if (win->isFullScreen) {
                     EnterFullScreen(win, false);
+                }
             }
 
             return 0;
@@ -4464,8 +4471,9 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_MOUSEACTIVATE:
-            if (win && win->presentation && hwnd != GetForegroundWindow())
+            if (win && win->presentation && hwnd != GetForegroundWindow()) {
                 return MA_ACTIVATEANDEAT;
+            }
             return MA_ACTIVATE;
 
         case WM_ERASEBKGND:
