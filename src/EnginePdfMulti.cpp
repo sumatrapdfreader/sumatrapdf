@@ -23,10 +23,50 @@ extern "C" {
 #include "wingui/TreeModel.h"
 #include "EngineBase.h"
 #include "EngineFzUtil.h"
+#include "EngineManager.h"
 #include "EnginePdf.h"
 
+struct VbkmFile {
+    char* fileName = nullptr;
+    char* path = nullptr;
+    EngineBase* engine = nullptr;
+
+    ~VbkmFile();
+};
+
+VbkmFile::~VbkmFile() {
+    free(fileName);
+    free(path);
+    delete engine;
+}
+
 // represents .vbkm file
-struct VBkm {};
+struct ParsedVbkm {
+    AutoFree fileContent;
+
+    Vec<VbkmFile*> files;
+
+    ~ParsedVbkm();
+};
+
+ParsedVbkm::~ParsedVbkm() {
+    DeleteVecMembers(files);
+}
+
+static EngineBase* findEngineForPage(ParsedVbkm* vbkm, int& pageNo) {
+    for (auto&& f : vbkm->files) {
+        if (!f->engine) {
+            continue;
+        }
+        int nPages = f->engine->PageCount();
+        if (pageNo <= nPages) {
+            return f->engine;
+        }
+        pageNo -= nPages;
+    }
+    CrashIf(true);
+    return nullptr;
+}
 
 Kind kindEnginePdfMulti = "enginePdfMulti";
 
@@ -76,6 +116,8 @@ class EnginePdfMultiImpl : public EngineBase {
 
   protected:
     int pageCount = -1;
+    ;
+    ParsedVbkm* vbkm = nullptr;
 
     DocTocTree* tocTree = nullptr;
 };
@@ -87,8 +129,11 @@ EnginePdfMultiImpl::EnginePdfMultiImpl() {
 }
 
 EnginePdfMultiImpl::~EnginePdfMultiImpl() {
+    delete vbkm;
 }
+
 EngineBase* EnginePdfMultiImpl::Clone() {
+    CrashIf(true);
     return nullptr;
 }
 
@@ -97,23 +142,29 @@ int EnginePdfMultiImpl::PageCount() const {
 }
 
 RectD EnginePdfMultiImpl::PageMediabox(int pageNo) {
-    return {};
+    auto e = findEngineForPage(vbkm, pageNo);
+    return e->PageMediabox(pageNo);
 }
+
 RectD EnginePdfMultiImpl::PageContentBox(int pageNo, RenderTarget target) {
-    return {};
+    auto e = findEngineForPage(vbkm, pageNo);
+    return e->PageContentBox(pageNo, target);
 }
 
 RenderedBitmap* EnginePdfMultiImpl::RenderBitmap(int pageNo, float zoom, int rotation,
                                                  RectD* pageRect, /* if nullptr: defaults to the page's mediabox */
                                                  RenderTarget target, AbortCookie** cookie_out) {
-    return nullptr;
+    auto e = findEngineForPage(vbkm, pageNo);
+    return e->RenderBitmap(pageNo, zoom, rotation, pageRect, target, cookie_out);
 }
 
 PointD EnginePdfMultiImpl::Transform(PointD pt, int pageNo, float zoom, int rotation, bool inverse) {
-    return {};
+    auto e = findEngineForPage(vbkm, pageNo);
+    return e->Transform(pt, pageNo, zoom, rotation, inverse);
 }
 RectD EnginePdfMultiImpl::Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse) {
-    return {};
+    auto e = findEngineForPage(vbkm, pageNo);
+    return e->Transform(rect, pageNo, zoom, rotation, inverse);
 }
 
 std::string_view EnginePdfMultiImpl::GetFileData() {
@@ -129,11 +180,13 @@ bool EnginePdfMultiImpl::SaveFileAsPdf(const char* pdfFileName, bool includeUser
 }
 
 WCHAR* EnginePdfMultiImpl::ExtractPageText(int pageNo, RectI** coordsOut) {
-    return nullptr;
+    auto e = findEngineForPage(vbkm, pageNo);
+    return e->ExtractPageText(pageNo, coordsOut);
 }
 
 bool EnginePdfMultiImpl::HasClipOptimizations(int pageNo) {
-    return true;
+    auto e = findEngineForPage(vbkm, pageNo);
+    return e->HasClipOptimizations(pageNo);
 }
 
 WCHAR* EnginePdfMultiImpl::GetProperty(DocumentProperty prop) {
@@ -141,47 +194,50 @@ WCHAR* EnginePdfMultiImpl::GetProperty(DocumentProperty prop) {
 }
 
 bool EnginePdfMultiImpl::SupportsAnnotation(bool forSaving) const {
+    // TODO: needs to support annotations
     return false;
 }
 
 void EnginePdfMultiImpl::UpdateUserAnnotations(Vec<PageAnnotation>* list) {
+    // TODO: support
 }
 
 bool EnginePdfMultiImpl::BenchLoadPage(int pageNo) {
-    return false;
+    auto e = findEngineForPage(vbkm, pageNo);
+    return e->BenchLoadPage(pageNo);
 }
 
 Vec<PageElement*>* EnginePdfMultiImpl::GetElements(int pageNo) {
-    return nullptr;
+    auto e = findEngineForPage(vbkm, pageNo);
+    return e->GetElements(pageNo);
 }
 
 PageElement* EnginePdfMultiImpl::GetElementAtPos(int pageNo, PointD pt) {
-    return nullptr;
+    auto e = findEngineForPage(vbkm, pageNo);
+    return e->GetElementAtPos(pageNo, pt);
 }
 
 PageDestination* EnginePdfMultiImpl::GetNamedDest(const WCHAR* name) {
+    // TODO: cycle through all files
     return nullptr;
 }
+
 DocTocTree* EnginePdfMultiImpl::GetTocTree() {
-    return nullptr;
+    // TODO: build combined toc tree
+    int pageNo = 1;
+    auto e = findEngineForPage(vbkm, pageNo);
+    return e->GetTocTree();
 }
 
 WCHAR* EnginePdfMultiImpl::GetPageLabel(int pageNo) const {
-    return nullptr;
+    auto e = findEngineForPage(vbkm, pageNo);
+    return e->GetPageLabel(pageNo);
 }
 
 int EnginePdfMultiImpl::GetPageByLabel(const WCHAR* label) const {
+    // TODO: cycle through all files
     return -1;
 }
-
-struct VbkmFile {
-    char* path = nullptr;
-    EngineBase* engine = nullptr;
-};
-
-struct ParsedVbkm {
-    Vec<VbkmFile*> files;
-};
 
 // each logical record starts with "file:" line
 // we split s into list of records for each file
@@ -240,7 +296,7 @@ static VbkmFile* ParseVbkmRecord(std::string_view s) {
         return nullptr;
     }
     auto res = new VbkmFile();
-    res->path = str::Dup(fileName);
+    res->fileName = str::Dup(fileName);
     // TODO: parse more stuff
     return res;
 }
@@ -270,9 +326,45 @@ bool EnginePdfMultiImpl::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
     if (sv.empty()) {
         return false;
     }
+    AutoFreeWstr dir = path::GetDir(fileName);
+    AutoFree dirA = strconv::WstrToUtf8(dir);
     auto res = ParseVbkmFile(sv);
-    delete res;
-    return false;
+    res->fileContent = sv;
+
+    // resolve file names to full paths
+    for (auto&& vbkm : res->files) {
+        char* fileName = vbkm->fileName;
+        if (file::Exists(fileName)) {
+            vbkm->path = str::Dup(vbkm->fileName);
+            continue;
+        }
+        AutoFree path = path::JoinUtf(dirA, fileName, nullptr);
+        if (file::Exists(path.as_view())) {
+            vbkm->path = path.StealData();
+        }
+    }
+
+    int nOpened = 0;
+    int nPages = 0;
+    for (auto&& vbkm : res->files) {
+        if (!vbkm->path) {
+            continue;
+        }
+        AutoFreeWstr path = strconv::Utf8ToWchar(vbkm->path);
+        vbkm->engine = EngineManager::CreateEngine(path, pwdUI);
+        if (vbkm->engine) {
+            nOpened++;
+            nPages += vbkm->engine->PageCount();
+        }
+    }
+    if (nOpened == 0) {
+        delete res;
+        return false;
+    }
+
+    vbkm = res;
+    pageCount = nPages;
+    return true;
 }
 
 EngineBase* EnginePdfMultiImpl::CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {
@@ -284,6 +376,7 @@ EngineBase* EnginePdfMultiImpl::CreateFromFile(const WCHAR* fileName, PasswordUI
         delete engine;
         return nullptr;
     }
+    engine->fileName = str::Dup(fileName);
     return engine;
 }
 
