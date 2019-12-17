@@ -130,6 +130,17 @@ EnginePdfMultiImpl::EnginePdfMultiImpl() {
 
 EnginePdfMultiImpl::~EnginePdfMultiImpl() {
     delete vbkm;
+    if (!tocTree) {
+        return;
+    }
+    // we only own the first level. the rest is owned by their respective
+    // engines, so we detach them before freeing
+    auto curr = tocTree->root;
+    while (curr) {
+        curr->child = nullptr;
+        curr = curr->next;
+    }
+    delete tocTree;
 }
 
 EngineBase* EnginePdfMultiImpl::Clone() {
@@ -199,7 +210,7 @@ bool EnginePdfMultiImpl::SupportsAnnotation(bool forSaving) const {
 }
 
 void EnginePdfMultiImpl::UpdateUserAnnotations(Vec<PageAnnotation>* list) {
-    // TODO: support
+    // TODO: support user annotations
 }
 
 bool EnginePdfMultiImpl::BenchLoadPage(int pageNo) {
@@ -234,11 +245,49 @@ PageDestination* EnginePdfMultiImpl::GetNamedDest(const WCHAR* name) {
     return nullptr;
 }
 
+static void updateTocItemsPageNo(DocTocItem* i, int nPageNoAdd) {
+    if (nPageNoAdd == 0) {
+        return;
+    }
+    if (!i) {
+        return;
+    }
+    auto curr = i;
+    while (curr) {
+        updateTocItemsPageNo(curr->child, nPageNoAdd);
+        curr->pageNo += nPageNoAdd;
+        curr = curr->next;
+    }
+}
+
 DocTocTree* EnginePdfMultiImpl::GetTocTree() {
-    // TODO: build combined toc tree
-    int pageNo = 1;
-    auto e = findEngineForPage(vbkm, pageNo);
-    return e->GetTocTree();
+    if (tocTree) {
+        return tocTree;
+    }
+    DocTocTree* tree = new DocTocTree();
+    tree->name = str::Dup("bookmarks");
+    int startPageNo = 0;
+    for (auto&& f : vbkm->files) {
+        auto e = f->engine;
+        if (!e) {
+            continue;
+        }
+        WCHAR* title = strconv::Utf8ToWchar(f->fileName);
+        auto tocItem = new DocTocItem(title, startPageNo + 1);
+        if (!tree->root) {
+            tree->root = tocItem;
+        } else {
+            tree->root->AddSibling(tocItem);
+        }
+        auto subTree = e->GetTocTree();
+        if (subTree) {
+            tocItem->child = subTree->root;
+            updateTocItemsPageNo(subTree->root, startPageNo);
+        }
+        startPageNo += e->PageCount();
+    }
+    tocTree = tree;
+    return tocTree;
 }
 
 WCHAR* EnginePdfMultiImpl::GetPageLabel(int pageNo) const {
