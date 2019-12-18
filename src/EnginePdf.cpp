@@ -829,10 +829,12 @@ class PdfImage : public PageElement {
         elementPageNo = pageNo;
         elementType = PageElementType::Image;
         elementRect = fz_rect_to_RectD(rect);
-    }
-
-    RenderedBitmap* GetImage() override {
-        return engine->GetPageImage(elementPageNo, elementRect, imageIdx);
+        getImage = [=]() -> RenderedBitmap* {
+            auto pn = this->elementPageNo;
+            auto r = this->elementRect;
+            auto idx = this->imageIdx;
+            return this->engine->GetPageImage(pn, r, idx);
+        };
     }
 };
 

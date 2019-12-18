@@ -223,29 +223,28 @@ class EbookLink : public PageElement, public PageDestination {
     }
 };
 
+static RenderedBitmap* getImageFromData(ImageData* id) {
+    HBITMAP hbmp;
+    Bitmap* bmp = BitmapFromData(id->data, id->len);
+    if (!bmp || bmp->GetHBITMAP((ARGB)Color::White, &hbmp) != Ok) {
+        delete bmp;
+        return nullptr;
+    }
+    SizeI size(bmp->GetWidth(), bmp->GetHeight());
+    delete bmp;
+    return new RenderedBitmap(hbmp, size);
+}
+
 class ImageDataElement : public PageElement {
     ImageData* id = nullptr; // owned by *EngineImpl::pages
-    RectI bbox = {};
 
   public:
     ImageDataElement(int pageNo, ImageData* id, RectI bbox) {
         this->id = id;
-        this->bbox = bbox;
         elementPageNo = pageNo;
         elementType = PageElementType::Image;
         elementRect = bbox.Convert<double>();
-    }
-
-    RenderedBitmap* GetImage() override {
-        HBITMAP hbmp;
-        Bitmap* bmp = BitmapFromData(id->data, id->len);
-        if (!bmp || bmp->GetHBITMAP((ARGB)Color::White, &hbmp) != Ok) {
-            delete bmp;
-            return nullptr;
-        }
-        SizeI size(bmp->GetWidth(), bmp->GetHeight());
-        delete bmp;
-        return new RenderedBitmap(hbmp, size);
+        getImage = [=]() -> RenderedBitmap* { return getImageFromData(id); };
     }
 };
 
