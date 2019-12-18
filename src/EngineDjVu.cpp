@@ -58,11 +58,9 @@ class DjVuDestination : public PageDestination {
         if (IsPageLink(link)) {
             destPageNo = atoi(link + 1);
         }
+        destRect = RectD(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
     }
 
-    RectD GetDestRect() const override {
-        return RectD(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
-    }
     WCHAR* GetDestValue() const override {
         if (PageDestType::LaunchURL == GetDestType()) {
             return strconv::FromUtf8(link);

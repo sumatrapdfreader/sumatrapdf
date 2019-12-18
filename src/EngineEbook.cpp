@@ -173,14 +173,12 @@ class EbookEngine : public EngineBase {
 
 class SimpleDest2 : public PageDestination {
   protected:
-    int pageNo;
-    RectD rect;
     AutoFreeWstr value;
 
   public:
     SimpleDest2(int pageNo, RectD rect, WCHAR* value = nullptr) {
-        this->pageNo = pageNo;
-        this->rect = rect;
+        destPageNo = pageNo;
+        destRect = rect;
         this->value = value;
         if (value) {
             destType = PageDestType::LaunchURL;
@@ -189,9 +187,6 @@ class SimpleDest2 : public PageDestination {
         }
     }
 
-    RectD GetDestRect() const override {
-        return rect;
-    }
     WCHAR* GetDestValue() const override {
         return str::Dup(value);
     }
@@ -233,10 +228,6 @@ class EbookLink : public PageElement, public PageDestination {
 
     PageDestination* AsLink() override {
         return dest ? dest : this;
-    }
-
-    RectD GetDestRect() const override {
-        return RectD();
     }
 
     WCHAR* GetDestValue() const override {
@@ -1597,9 +1588,6 @@ class ChmEmbeddedDest : public PageDestination {
         destPageNo = 0;
     }
 
-    RectD GetDestRect() const override {
-        return RectD();
-    }
     WCHAR* GetDestValue() const override {
         return strconv::FromUtf8(path::GetBaseNameNoFree(path));
     }

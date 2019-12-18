@@ -478,9 +478,9 @@ class PdfLink : public PageElement, public PageDestination {
     }
 
     PageDestType CalcDestType();
+    RectD CalcDestRect();
 
     // PageDestination
-    RectD GetDestRect() const override;
     WCHAR* GetDestValue() const override {
         return GetValue();
     }
@@ -1129,7 +1129,7 @@ PageDestination* PdfEngineImpl::GetNamedDest(const WCHAR* name) {
     int pageNo = resolve_link(uri, &x, &y);
 
     RectD r{x, y, 0, 0};
-    pageDest = new SimpleDest{pageNo, r};
+    pageDest = makeSimpleDest(pageNo, r);
     fz_free(ctx, uri);
     return pageDest;
 }
@@ -2166,6 +2166,7 @@ PdfLink::PdfLink(PdfEngineImpl* engine, int pageNo, fz_link* link, fz_outline* o
     this->outline = outline;
 
     destType = CalcDestType();
+    destRect = CalcDestRect();
 }
 
 RectD PdfLink::GetRect() const {
@@ -2379,7 +2380,7 @@ int PdfLink::GetDestPageNo() const {
 }
 #endif
 
-RectD PdfLink::GetDestRect() const {
+RectD PdfLink::CalcDestRect() {
     RectD result(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
     char* uri = PdfLinkGetURI(this);
     CrashIf(!uri);
