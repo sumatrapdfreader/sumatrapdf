@@ -94,6 +94,7 @@ enum class PageDestType {
 class PageDestination {
   public:
     PageDestType destType = PageDestType::None;
+    int destPageNo = -1;
 
     virtual ~PageDestination() {
     }
@@ -103,7 +104,11 @@ class PageDestination {
     }
 
     // page the destination points to (0 for external destinations such as URLs)
-    virtual int GetDestPageNo() const = 0;
+    int GetDestPageNo() {
+        CrashIf(destPageNo < 0);
+        return destPageNo;
+    }
+
     // rectangle of the destination on the above returned page
     virtual RectD GetDestRect() const = 0;
     // string value associated with the destination (e.g. a path or a URL)

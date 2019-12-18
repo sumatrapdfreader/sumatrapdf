@@ -54,19 +54,19 @@ class DjVuDestination : public PageDestination {
         if (str::StartsWithI(link, "http:") || str::StartsWithI(link, "https:") || str::StartsWithI(link, "mailto:")) {
             destType = PageDestType::LaunchURL;
         }
+        destPageNo = 0;
+        if (IsPageLink(link)) {
+            destPageNo = atoi(link + 1);
+        }
     }
 
-    int GetDestPageNo() const override {
-        if (IsPageLink(link))
-            return atoi(link + 1);
-        return 0;
-    }
     RectD GetDestRect() const override {
         return RectD(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
     }
     WCHAR* GetDestValue() const override {
-        if (PageDestType::LaunchURL == GetDestType())
+        if (PageDestType::LaunchURL == GetDestType()) {
             return strconv::FromUtf8(link);
+        }
         return nullptr;
     }
 };

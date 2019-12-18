@@ -189,9 +189,6 @@ class SimpleDest2 : public PageDestination {
         }
     }
 
-    int GetDestPageNo() const override {
-        return pageNo;
-    }
     RectD GetDestRect() const override {
         return rect;
     }
@@ -210,7 +207,8 @@ class EbookLink : public PageElement, public PageDestination {
     EbookLink() = default;
 
     EbookLink(DrawInstr* link, RectI rect, PageDestination* dest, int pageNo = -1, bool showUrl = false) {
-        this->pageNo = pageNo;
+        PageElement::pageNo = pageNo;
+        destPageNo = 0;
         this->link = link;
         this->rect = rect;
         this->dest = dest;
@@ -235,10 +233,6 @@ class EbookLink : public PageElement, public PageDestination {
 
     PageDestination* AsLink() override {
         return dest ? dest : this;
-    }
-
-    int GetDestPageNo() const override {
-        return 0;
     }
 
     RectD GetDestRect() const override {
@@ -1600,11 +1594,9 @@ class ChmEmbeddedDest : public PageDestination {
         this->engine = engine;
         this->path = str::Dup(path);
         destType = PageDestType::LaunchEmbedded;
+        destPageNo = 0;
     }
 
-    int GetDestPageNo() const override {
-        return 0;
-    }
     RectD GetDestRect() const override {
         return RectD();
     }

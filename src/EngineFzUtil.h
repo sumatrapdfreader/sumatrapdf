@@ -45,18 +45,14 @@ struct LinkRectList {
 
 class SimpleDest : public PageDestination {
   public:
-    int pageNo = -1;
     RectD rect{};
 
-    SimpleDest(int p, RectD r) {
-        pageNo = p;
-        rect = r;
+    SimpleDest(int pageNo, RectD rect) {
+        this->destPageNo = pageNo;
+        this->rect = rect;
         destType = PageDestType::ScrollTo;
     }
 
-    int GetDestPageNo() const override {
-        return pageNo;
-    }
     RectD GetDestRect() const override {
         return rect;
     }
