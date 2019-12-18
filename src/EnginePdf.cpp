@@ -468,7 +468,7 @@ class PdfLink : public PageElement, public PageDestination {
     PdfLink(PdfEngineImpl* engine, int pageNo, fz_link* link, fz_outline* outline);
 
     // PageElement
-    WCHAR* GetValue() const override;
+    WCHAR* CalcValue() const;
     virtual PageDestination* AsLink() {
         return this;
     }
@@ -505,6 +505,7 @@ PdfLink::PdfLink(PdfEngineImpl* engine, int pageNo, fz_link* link, fz_outline* o
     if (link) {
         elementRect = fz_rect_to_RectD(link->rect);
     }
+    elementValue = CalcValue();
 }
 
 static char* PdfLinkGetURI(const PdfLink* link) {
@@ -533,7 +534,7 @@ WCHAR* PdfLink::CalcDestName() {
 #endif
 }
 
-WCHAR* PdfLink::GetValue() const {
+WCHAR* PdfLink::CalcValue() const {
     if (outline && isAttachment) {
         WCHAR* path = strconv::FromUtf8(outline->uri);
         return path;
@@ -807,10 +808,8 @@ class PdfComment : public PageElement {
         elementPageNo = pageNo;
         elementType = PageElementType::Comment;
         elementRect = annot.rect;
-    }
+        elementValue = str::Dup(content);
 
-    WCHAR* GetValue() const override {
-        return str::Dup(content);
     }
 };
 
@@ -828,25 +827,19 @@ class PdfTocItem : public DocTocItem {
 
 class PdfImage : public PageElement {
   public:
-    PdfEngineImpl* engine;
-    RectD rect;
-    size_t imageIdx;
+    PdfEngineImpl* engine = nullptr;
+    size_t imageIdx = 0;
 
     PdfImage(PdfEngineImpl* engine, int pageNo, fz_rect rect, size_t imageIdx) {
         this->engine = engine;
-        this->rect = fz_rect_to_RectD(rect);
         this->imageIdx = imageIdx;
         elementPageNo = pageNo;
         elementType = PageElementType::Image;
-        elementRect = this->rect;
-    }
-
-    WCHAR* GetValue() const override {
-        return nullptr;
+        elementRect = fz_rect_to_RectD(rect);
     }
 
     RenderedBitmap* GetImage() override {
-        return engine->GetPageImage(elementPageNo, rect, imageIdx);
+        return engine->GetPageImage(elementPageNo, elementRect, imageIdx);
     }
 };
 
