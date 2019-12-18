@@ -207,11 +207,24 @@ RectD ImagesEngine::Transform(RectD rect, int pageNo, float zoom, int rotation, 
     return rect;
 }
 
+static RenderedBitmap* imageFromImageElment(ImagePage* page) {
+    HBITMAP hbmp;
+    auto bmp = page->bmp;
+    int dx = bmp->GetWidth();
+    int dy = bmp->GetHeight();
+    SizeI s{dx, dy};
+    auto status = bmp->GetHBITMAP((ARGB)Color::White, &hbmp);
+    if (status != Ok) {
+        return nullptr;
+    }
+    return new RenderedBitmap(hbmp, s);
+}
+
 class ImageElement : public PageElement {
+  public:
     ImagesEngine* engine = nullptr;
     ImagePage* page = nullptr;
 
-  public:
     explicit ImageElement(ImagesEngine* engine, ImagePage* page) {
         this->engine = engine;
         this->page = page;
@@ -220,17 +233,11 @@ class ImageElement : public PageElement {
         int dx = page->bmp->GetWidth();
         int dy = page->bmp->GetHeight();
         elementRect = RectD(0, 0, dx, dy);
+        getImage = [=]() -> RenderedBitmap* { return imageFromImageElment(this->page); };
     }
 
     ~ImageElement() override {
         engine->DropPage(page);
-    }
-
-    RenderedBitmap* GetImage() override {
-        HBITMAP hbmp;
-        if (page->bmp->GetHBITMAP((ARGB)Color::White, &hbmp) != Ok)
-            return nullptr;
-        return new RenderedBitmap(hbmp, SizeI(page->bmp->GetWidth(), page->bmp->GetHeight()));
     }
 };
 

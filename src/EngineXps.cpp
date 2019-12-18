@@ -434,20 +434,22 @@ class XpsTocItem : public DocTocItem {
 };
 
 class XpsImage : public PageElement {
+  public:
     XpsEngineImpl* engine = nullptr;
     size_t imageIdx = 0;
 
-  public:
     XpsImage(XpsEngineImpl* engine, int pageNo, fz_rect rect, size_t imageIx) {
         this->engine = engine;
         this->elementPageNo = pageNo;
         this->elementRect = fz_rect_to_RectD(rect);
         this->imageIdx = imageIdx;
         elementType = PageElementType::Image;
-    }
-
-    RenderedBitmap* GetImage() override {
-        return engine->GetPageImage(elementPageNo, elementRect, imageIdx);
+        getImage = [=]() -> RenderedBitmap* {
+            auto pn = this->elementPageNo;
+            auto r = this->elementRect;
+            auto idx = this->imageIdx;
+            return this->engine->GetPageImage(pn, r, idx);
+        };
     }
 };
 

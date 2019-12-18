@@ -160,6 +160,7 @@ class PageElement {
     RectD elementRect{};
     WCHAR* elementValue = nullptr;
     PageDestination* elementDest = nullptr;
+    std::function<RenderedBitmap*(void)> getImage = nullptr;
 
     virtual ~PageElement() {
         free(elementValue);
@@ -192,7 +193,10 @@ class PageElement {
     }
     // if this element is an image, this returns it
     // caller must delete the result
-    virtual RenderedBitmap* GetImage() {
+    RenderedBitmap* GetImage() {
+        if (getImage) {
+            return getImage();
+        }
         return nullptr;
     }
 };
