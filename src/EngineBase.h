@@ -30,25 +30,6 @@ enum PageLayoutType {
 
 enum class PageElementType { Link, Image, Comment };
 
-enum class PageDestType {
-    None,
-    ScrollTo,
-    LaunchURL,
-    LaunchEmbedded,
-    LaunchFile,
-    NextPage,
-    PrevPage,
-    FirstPage,
-    LastPage,
-    FindDialog,
-    FullScreen,
-    GoBack,
-    GoForward,
-    GoToPageDialog,
-    PrintDialog,
-    SaveAsDialog,
-    ZoomToDialog,
-};
 
 enum class PageAnnotType {
     None,
@@ -88,13 +69,39 @@ class RenderedBitmap {
     bool StretchDIBits(HDC hdc, RectI target) const;
 };
 
+
+enum class PageDestType {
+    None,
+    ScrollTo,
+    LaunchURL,
+    LaunchEmbedded,
+    LaunchFile,
+    NextPage,
+    PrevPage,
+    FirstPage,
+    LastPage,
+    FindDialog,
+    FullScreen,
+    GoBack,
+    GoForward,
+    GoToPageDialog,
+    PrintDialog,
+    SaveAsDialog,
+    ZoomToDialog,
+};
+
 // a link destination
 class PageDestination {
   public:
+    PageDestType destType = PageDestType::None;
+
     virtual ~PageDestination() {
     }
-    // type of the destination (most common are PageDestType::ScrollTo and PageDestType::LaunchURL)
-    virtual PageDestType GetDestType() const = 0;
+
+    PageDestType GetDestType() const {
+        return destType;
+    }
+
     // page the destination points to (0 for external destinations such as URLs)
     virtual int GetDestPageNo() const = 0;
     // rectangle of the destination on the above returned page

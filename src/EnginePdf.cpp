@@ -477,8 +477,9 @@ class PdfLink : public PageElement, public PageDestination {
         return this;
     }
 
+    PageDestType CalcDestType();
+
     // PageDestination
-    PageDestType GetDestType() const override;
     int GetDestPageNo() const override;
     RectD GetDestRect() const override;
     WCHAR* GetDestValue() const override {
@@ -2162,6 +2163,8 @@ PdfLink::PdfLink(PdfEngineImpl* engine, int pageNo, fz_link* link, fz_outline* o
     CrashIf(!link && !outline);
     this->link = link;
     this->outline = outline;
+
+    destType = CalcDestType();
 }
 
 RectD PdfLink::GetRect() const {
@@ -2288,7 +2291,7 @@ static PageDestType DestTypeFromName(const char* name) {
 }
 #endif
 
-PageDestType PdfLink::GetDestType() const {
+PageDestType PdfLink::CalcDestType() {
     if (outline && isAttachment) {
         return PageDestType::LaunchEmbedded;
     }

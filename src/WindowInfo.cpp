@@ -243,27 +243,25 @@ bool WindowInfo::CreateUIAProvider() {
     return true;
 }
 
+// TODO: we use RemoteDestination only in LinkHandler::LaunchFile to make a copy
+// of PageDestination, so we'll be able to replace it with just PageDestination
 class RemoteDestination : public PageDestination {
-    PageDestType type;
     int pageNo;
     RectD rect;
     AutoFreeWstr value;
     AutoFreeWstr name;
 
   public:
-    RemoteDestination(PageDestination* dest)
-        : type(dest->GetDestType()),
-          pageNo(dest->GetDestPageNo()),
-          rect(dest->GetDestRect()),
-          value(dest->GetDestValue()),
-          name(dest->GetDestName()) {
+    RemoteDestination(PageDestination* dest) {
+        destType = dest->destType;
+        pageNo = dest->GetDestPageNo();
+        rect = dest->GetDestRect();
+        value = dest->GetDestValue();
+        name = dest->GetDestName();
     }
     virtual ~RemoteDestination() {
     }
 
-    PageDestType GetDestType() const override {
-        return type;
-    }
     int GetDestPageNo() const override {
         return pageNo;
     }
@@ -386,6 +384,7 @@ void LinkHandler::LaunchFile(const WCHAR* path, PageDestination* link) {
         remoteLink = new RemoteDestination(link);
         link = nullptr;
     }
+    AutoDelete deleteRemoteLink(remoteLink);
 
     AutoFreeWstr fullPath(path::GetDir(owner->ctrl->FilePath()));
     fullPath.Set(path::Join(fullPath, path));
@@ -397,7 +396,6 @@ void LinkHandler::LaunchFile(const WCHAR* path, PageDestination* link) {
         LoadArgs args(fullPath, owner);
         newWin = LoadDocument(args);
         if (!newWin) {
-            delete remoteLink;
             return;
         }
     }
@@ -412,7 +410,6 @@ void LinkHandler::LaunchFile(const WCHAR* path, PageDestination* link) {
             AutoFreeWstr msg(str::Format(_TR("Error loading %s"), fullPath.get()));
             owner->ShowNotification(msg, NOS_HIGHLIGHT);
         }
-        delete remoteLink;
         return;
     }
 
@@ -430,7 +427,6 @@ void LinkHandler::LaunchFile(const WCHAR* path, PageDestination* link) {
     } else {
         newWin->linkHandler->ScrollTo(remoteLink);
     }
-    delete remoteLink;
 }
 
 // normalizes case and whitespace in the string

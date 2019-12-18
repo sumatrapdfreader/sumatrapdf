@@ -25,8 +25,18 @@ class ChmTocItem : public DocTocItem, public PageDestination {
   public:
     const WCHAR* url = nullptr; // owned by ChmModel::poolAllocator or ChmNamedDest::myUrl
 
-    ChmTocItem(const WCHAR* title, int pageNo, const WCHAR* url) : DocTocItem((WCHAR*)title, pageNo), url(url) {
+    ChmTocItem(const WCHAR* title, int pageNo, const WCHAR* url) : DocTocItem((WCHAR*)title, pageNo) {
+        this->url = url;
+        if (!url) {
+            return;
+        }
+        if (IsExternalUrl(url)) {
+            destType = PageDestType::LaunchURL;
+        } else {
+            destType = PageDestType::ScrollTo;
+        }
     }
+
     virtual ~ChmTocItem() {
         // prevent title from being freed
         title = nullptr;
@@ -37,9 +47,6 @@ class ChmTocItem : public DocTocItem, public PageDestination {
     }
 
     // PageDestination
-    PageDestType GetDestType() const override {
-        return !url ? PageDestType::None : IsExternalUrl(url) ? PageDestType::LaunchURL : PageDestType::ScrollTo;
-    }
     int GetDestPageNo() const override {
         return pageNo;
     }
