@@ -520,7 +520,6 @@ static char* PdfLinkGetURI(const PdfLink* link) {
     return nullptr;
 }
 
-
 WCHAR* PdfLink::CalcDestName() {
     char* uri = PdfLinkGetURI(this);
     if (is_external_link(uri)) {
@@ -802,14 +801,12 @@ class PdfComment : public PageElement {
     PageAnnotation annot;
     AutoFreeWstr content;
 
-    PdfComment(const WCHAR* content, RectD rect, int pageNo)
-        : annot(PageAnnotType::None, pageNo, rect, 0) {
+    PdfComment(const WCHAR* content, RectD rect, int pageNo) : annot(PageAnnotType::None, pageNo, rect, 0) {
         this->content = str::Dup(content);
         elementPageNo = pageNo;
         elementType = PageElementType::Comment;
         elementRect = annot.rect;
         elementValue = str::Dup(content);
-
     }
 };
 
@@ -1670,8 +1667,9 @@ PageElement* PdfEngineImpl::GetElementAtPos(int pageNo, PointD pt) {
 
 Vec<PageElement*>* PdfEngineImpl::GetElements(int pageNo) {
     fz_page* page = GetFzPage(pageNo, true);
-    if (!page)
+    if (!page) {
         return nullptr;
+    }
     FzPageInfo* pageInfo = _pages[pageNo - 1];
 
     // since all elements lists are in last-to-first order, append
@@ -1697,6 +1695,10 @@ Vec<PageElement*>* PdfEngineImpl::GetElements(int pageNo) {
         auto* el = new PdfLink(this, pageNo, link, nullptr);
         els->Append(el);
         link = link->next;
+    }
+    if (els->size() == 0) {
+        delete els;
+        return nullptr;
     }
 
     els->Reverse();
@@ -1921,8 +1923,9 @@ bool PdfEngineImpl::IsLinearizedFile() {
 }
 
 static void pdf_extract_fonts(fz_context* ctx, pdf_obj* res, Vec<pdf_obj*>& fontList, Vec<pdf_obj*>& resList) {
-    if (!res || pdf_mark_obj(ctx, res))
+    if (!res || pdf_mark_obj(ctx, res)) {
         return;
+    }
     resList.Append(res);
 
     pdf_obj* fonts = pdf_dict_gets(ctx, res, "Font");
