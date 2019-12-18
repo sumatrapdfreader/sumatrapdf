@@ -54,9 +54,12 @@ class EbookTocDest : public DocTocItem, public PageDestination {
     AutoFreeWstr url;
 
   public:
-    EbookTocDest(const WCHAR* title, int reparseIdx) : DocTocItem(str::Dup(title), reparseIdx), url(nullptr) {
+    EbookTocDest(const WCHAR* title, int reparseIdx) : DocTocItem(str::Dup(title), reparseIdx) {
+        url = nullptr;
     }
-    EbookTocDest(const WCHAR* title, const WCHAR* url) : DocTocItem(str::Dup(title)), url(str::Dup(url)) {
+
+    EbookTocDest(const WCHAR* title, const WCHAR* url) : DocTocItem(str::Dup(title)) {
+        this->url = str::Dup(url);
     }
 
     PageDestination* GetLink() override {
@@ -64,9 +67,14 @@ class EbookTocDest : public DocTocItem, public PageDestination {
     }
 
     // PageDestination
-    PageDestType GetDestType() const override {
-        return url ? PageDestType::LaunchURL : PageDestType::ScrollTo;
+    void UpdateDestType() {
+        if (url) {
+            destType = PageDestType::LaunchURL;
+            return;
+        }
+        destType = PageDestType::ScrollTo;
     }
+
     int GetDestPageNo() const override {
         return pageNo;
     }

@@ -37,20 +37,25 @@ class DjVuDestination : public PageDestination {
     }
 
   public:
-    explicit DjVuDestination(const char* link) : link(str::Dup(link)) {
+    explicit DjVuDestination(const char* link) {
+        this->link = str::Dup(link);
+        if (IsPageLink(link)) {
+            destType = PageDestType::ScrollTo;
+        }
+
+        if (str::Eq(link, "#+1")) {
+            destType = PageDestType::NextPage;
+        }
+
+        if (str::Eq(link, "#-1")) {
+            destType = PageDestType::PrevPage;
+        }
+
+        if (str::StartsWithI(link, "http:") || str::StartsWithI(link, "https:") || str::StartsWithI(link, "mailto:")) {
+            destType = PageDestType::LaunchURL;
+        }
     }
 
-    PageDestType GetDestType() const override {
-        if (IsPageLink(link))
-            return PageDestType::ScrollTo;
-        if (str::Eq(link, "#+1"))
-            return PageDestType::NextPage;
-        if (str::Eq(link, "#-1"))
-            return PageDestType::PrevPage;
-        if (str::StartsWithI(link, "http:") || str::StartsWithI(link, "https:") || str::StartsWithI(link, "mailto:"))
-            return PageDestType::LaunchURL;
-        return PageDestType::None;
-    }
     int GetDestPageNo() const override {
         if (IsPageLink(link))
             return atoi(link + 1);

@@ -294,7 +294,7 @@ class XpsLink : public PageElement, public PageDestination {
         return this;
     }
 
-    PageDestType GetDestType() const override;
+    PageDestType UpdateDestType();
     int GetDestPageNo() const override;
     RectD GetDestRect() const override;
 
@@ -1084,6 +1084,7 @@ XpsLink::XpsLink(XpsEngineImpl* engine, int pageNo, fz_link* link, fz_outline* o
     CrashIf(!link && !outline);
     this->link = link;
     this->outline = outline;
+    destType = UpdateDestType();
 }
 
 RectD XpsLink::GetRect() const {
@@ -1122,7 +1123,7 @@ WCHAR* XpsLink::GetValue() const {
     return path;
 }
 
-PageDestType XpsLink::GetDestType() const {
+PageDestType XpsLink::UpdateDestType() {
     if (outline) {
         return PageDestType::LaunchEmbedded;
     }

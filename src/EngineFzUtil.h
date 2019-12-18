@@ -51,10 +51,9 @@ class SimpleDest : public PageDestination {
     SimpleDest(int p, RectD r) {
         pageNo = p;
         rect = r;
+        destType = PageDestType::ScrollTo;
     }
-    PageDestType GetDestType() const override {
-        return PageDestType::ScrollTo;
-    }
+
     int GetDestPageNo() const override {
         return pageNo;
     }
