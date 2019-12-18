@@ -51,6 +51,4 @@ class TabInfo {
     const WCHAR* GetTabTitle() const;
 };
 
-
 bool SaveDataToFile(HWND hwndParent, WCHAR* fileName, std::string_view data);
-

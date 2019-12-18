@@ -222,7 +222,7 @@ class ImageElement : public PageElement {
         elementRect = RectD(0, 0, dx, dy);
     }
 
-    virtual ~ImageElement() {
+    ~ImageElement() override {
         engine->DropPage(page);
     }
 

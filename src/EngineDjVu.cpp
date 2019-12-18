@@ -71,36 +71,22 @@ class DjVuDestination : public PageDestination {
 };
 
 class DjVuLink : public PageElement {
-    DjVuDestination* dest = nullptr;
-    RectD rect = {};
-    WCHAR* value = nullptr;
-
   public:
     DjVuLink(int pageNo, RectI rect, const char* link, const char* comment) {
-        this->rect = rect.Convert<double>();
+        elementRect = rect.Convert<double>();
         elementPageNo = pageNo;
-        dest = new DjVuDestination(link);
+        elementDest = new DjVuDestination(link);
         if (!str::IsEmpty(comment)) {
-            value = strconv::FromUtf8(comment);
+            elementValue = strconv::FromUtf8(comment);
         }
         elementType = PageElementType::Link;
-        elementRect = this->rect;
-        if (value) {
-            elementValue = str::Dup(value);
+        if (!str::IsEmpty(comment)) {
+            elementValue = strconv::Utf8ToWchar(comment);
         } else {
-            if (PageDestType::LaunchURL == dest->GetDestType()) {
-                value = dest->GetDestValue();
+            if (PageDestType::LaunchURL == elementDest->GetDestType()) {
+                elementValue = elementDest->GetDestValue();
             }
         }
-    }
-
-    ~DjVuLink() override {
-        delete dest;
-        free(value);
-    }
-
-    virtual PageDestination* AsLink() {
-        return dest;
     }
 };
 
