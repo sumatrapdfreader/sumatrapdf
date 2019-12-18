@@ -35,6 +35,7 @@ class ChmTocItem : public DocTocItem, public PageDestination {
             destValue = str::Dup(url);
         } else {
             destType = PageDestType::ScrollTo;
+            destValue = str::Dup(url);
         }
 
         destRect = RectD(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
@@ -47,10 +48,6 @@ class ChmTocItem : public DocTocItem, public PageDestination {
 
     PageDestination* GetLink() override {
         return url ? this : nullptr;
-    }
-
-    WCHAR* GetDestName() const override {
-        return url && !IsExternalUrl(url) ? str::Dup(url) : nullptr;
     }
 };
 

@@ -479,9 +479,7 @@ class PdfLink : public PageElement, public PageDestination {
 
     PageDestType CalcDestType();
     RectD CalcDestRect();
-
-    // PageDestination
-    WCHAR* GetDestName() const override;
+    WCHAR* CalcDestName();
 };
 
 #if 0
@@ -505,6 +503,7 @@ PdfLink::PdfLink(PdfEngineImpl* engine, int pageNo, fz_link* link, fz_outline* o
     destType = CalcDestType();
     destRect = CalcDestRect();
     destValue = GetValue();
+    destName = CalcDestName();
 }
 
 RectD PdfLink::GetRect() const {
@@ -523,6 +522,22 @@ static char* PdfLinkGetURI(const PdfLink* link) {
         return link->outline->uri;
     }
     return nullptr;
+}
+
+
+WCHAR* PdfLink::CalcDestName() {
+    char* uri = PdfLinkGetURI(this);
+    if (is_external_link(uri)) {
+        return nullptr;
+    }
+    // TODO(port): test with more stuff
+    // figure out what PDF_NAME(GoToR) ends up being
+    return nullptr;
+#if 0
+    if (!link || FZ_LINK_GOTOR != link->kind || !link->ld.gotor.dest)
+        return nullptr;
+    return strconv::FromUtf8(link->ld.gotor.dest);
+#endif
 }
 
 WCHAR* PdfLink::GetValue() const {
@@ -774,21 +789,6 @@ RectD PdfLink::CalcDestRect() {
         result.y = lt.y;
     }
     // all other link types only affect the zoom level, which we intentionally leave alone
-#endif
-}
-
-WCHAR* PdfLink::GetDestName() const {
-    char* uri = PdfLinkGetURI(this);
-    if (is_external_link(uri)) {
-        return nullptr;
-    }
-    // TODO(port): test with more stuff
-    // figure out what PDF_NAME(GoToR) ends up being
-    return nullptr;
-#if 0
-    if (!link || FZ_LINK_GOTOR != link->kind || !link->ld.gotor.dest)
-        return nullptr;
-    return strconv::FromUtf8(link->ld.gotor.dest);
 #endif
 }
 
