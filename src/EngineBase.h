@@ -28,8 +28,6 @@ enum PageLayoutType {
     Layout_NonContinuous = 32
 };
 
-enum class PageElementType { Link, Image, Comment };
-
 enum class PageAnnotType {
     None,
     Highlight,
@@ -152,15 +150,20 @@ struct PageAnnotation {
 // use in PageDestination::GetDestRect for values that don't matter
 #define DEST_USE_DEFAULT -999.9
 
+enum class PageElementType { Unknown, Link, Image, Comment };
+
 // hoverable (and maybe interactable) element on a single page
 class PageElement {
   public:
     int elementPageNo = -1;
+    PageElementType elementType = PageElementType::Unknown;
 
     virtual ~PageElement() {
     }
     // the type of this page element
-    virtual PageElementType GetType() const = 0;
+    PageElementType GetType() const {
+        return elementType;
+    }
 
     // page this element lives on (0 for elements in a ToC)
     int GetPageNo() const {

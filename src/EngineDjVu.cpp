@@ -83,6 +83,7 @@ class DjVuLink : public PageElement {
         if (!str::IsEmpty(comment)) {
             value = strconv::FromUtf8(comment);
         }
+        elementType = PageElementType::Link;
     }
 
     ~DjVuLink() override {
@@ -90,17 +91,14 @@ class DjVuLink : public PageElement {
         free(value);
     }
 
-    PageElementType GetType() const override {
-        return PageElementType::Link;
-    }
-
     RectD GetRect() const override {
         return rect;
     }
 
     WCHAR* GetValue() const override {
-        if (value)
+        if (value) {
             return str::Dup(value);
+        }
         if (PageDestType::LaunchURL == dest->GetDestType())
             return dest->GetDestValue();
         return nullptr;
