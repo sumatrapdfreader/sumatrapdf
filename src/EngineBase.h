@@ -155,7 +155,7 @@ struct PageAnnotation {
 // hoverable (and maybe interactable) element on a single page
 class PageElement {
   public:
-    int pageNo = -1;
+    int elementPageNo = -1;
 
     virtual ~PageElement() {
     }
@@ -164,7 +164,7 @@ class PageElement {
 
     // page this element lives on (0 for elements in a ToC)
     int GetPageNo() const {
-        return pageNo;
+        return elementPageNo;
     }
 
     // rectangle that can be interacted with

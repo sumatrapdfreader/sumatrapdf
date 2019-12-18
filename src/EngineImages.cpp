@@ -212,8 +212,10 @@ class ImageElement : public PageElement {
     ImagePage* page;
 
   public:
-    explicit ImageElement(ImagesEngine* engine, ImagePage* page) : engine(engine), page(page) {
-        this->pageNo = page->pageNo;
+    explicit ImageElement(ImagesEngine* engine, ImagePage* page) {
+        this->engine = engine;
+        this->page = page;
+        this->elementPageNo = page->pageNo;
     }
     virtual ~ImageElement() {
         engine->DropPage(page);

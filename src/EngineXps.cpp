@@ -1075,7 +1075,7 @@ bool XpsEngineImpl::HasClipOptimizations(int pageNo) {
 
 XpsLink::XpsLink(XpsEngineImpl* engine, int pageNo, fz_link* link, fz_outline* outline) {
     this->engine = engine;
-    PageElement::pageNo = pageNo;
+    elementPageNo = pageNo;
     this->link = link;
     CrashIf(!link && !outline);
     this->link = link;
