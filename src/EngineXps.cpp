@@ -297,10 +297,6 @@ class XpsLink : public PageElement, public PageDestination {
     PageDestType UpdateDestType();
     int UpdateDestPageNo();
     RectD CalcDestRect();
-
-    WCHAR* GetDestValue() const override {
-        return GetValue();
-    }
 };
 
 class XpsTocItem : public DocTocItem {
@@ -1088,6 +1084,7 @@ XpsLink::XpsLink(XpsEngineImpl* engine, int pageNo, fz_link* link, fz_outline* o
     destType = UpdateDestType();
     destPageNo = UpdateDestPageNo();
     destRect = CalcDestRect();
+    destValue = GetValue();
 }
 
 RectD XpsLink::GetRect() const {
@@ -1122,8 +1119,7 @@ WCHAR* XpsLink::GetValue() const {
         // other values: #1,115,208
         return nullptr;
     }
-    WCHAR* path = strconv::FromUtf8(uri);
-    return path;
+    return strconv::Utf8ToWchar(uri);
 }
 
 PageDestType XpsLink::UpdateDestType() {

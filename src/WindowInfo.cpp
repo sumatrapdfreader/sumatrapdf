@@ -261,9 +261,6 @@ class RemoteDestination : public PageDestination {
     virtual ~RemoteDestination() {
     }
 
-    WCHAR* GetDestValue() const override {
-        return str::Dup(value);
-    }
     WCHAR* GetDestName() const override {
         return str::Dup(name);
     }

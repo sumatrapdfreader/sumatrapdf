@@ -185,10 +185,7 @@ class SimpleDest2 : public PageDestination {
         } else {
             destType = PageDestType::ScrollTo;
         }
-    }
-
-    WCHAR* GetDestValue() const override {
-        return str::Dup(value);
+        destValue = str::Dup(value);
     }
 };
 
@@ -206,9 +203,11 @@ class EbookLink : public PageElement, public PageDestination {
         destPageNo = 0;
         this->link = link;
         this->rect = rect;
+        destRect = rect.Convert<double>();
         this->dest = dest;
         this->showUrl = showUrl;
         destType = PageDestType::LaunchURL;
+        destValue = GetValue();
     }
     virtual ~EbookLink() {
         delete dest;
@@ -221,17 +220,14 @@ class EbookLink : public PageElement, public PageDestination {
         return rect.Convert<double>();
     }
     WCHAR* GetValue() const override {
-        if (!dest || showUrl)
+        if (!dest || showUrl) {
             return strconv::FromHtmlUtf8(link->str.s, link->str.len);
+        }
         return nullptr;
     }
 
     PageDestination* AsLink() override {
         return dest ? dest : this;
-    }
-
-    WCHAR* GetDestValue() const override {
-        return GetValue();
     }
 };
 
@@ -1586,11 +1582,9 @@ class ChmEmbeddedDest : public PageDestination {
         this->path = str::Dup(path);
         destType = PageDestType::LaunchEmbedded;
         destPageNo = 0;
+        destValue = strconv::Utf8ToWchar(path::GetBaseNameNoFree(path));
     }
 
-    WCHAR* GetDestValue() const override {
-        return strconv::FromUtf8(path::GetBaseNameNoFree(path));
-    }
 };
 
 PageElement* ChmEngineImpl::CreatePageLink(DrawInstr* link, RectI rect, int pageNo) {

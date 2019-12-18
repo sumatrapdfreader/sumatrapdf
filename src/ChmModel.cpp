@@ -32,6 +32,7 @@ class ChmTocItem : public DocTocItem, public PageDestination {
         }
         if (IsExternalUrl(url)) {
             destType = PageDestType::LaunchURL;
+            destValue = str::Dup(url);
         } else {
             destType = PageDestType::ScrollTo;
         }
@@ -48,9 +49,6 @@ class ChmTocItem : public DocTocItem, public PageDestination {
         return url ? this : nullptr;
     }
 
-    WCHAR* GetDestValue() const override {
-        return url && IsExternalUrl(url) ? str::Dup(url) : nullptr;
-    }
     WCHAR* GetDestName() const override {
         return url && !IsExternalUrl(url) ? str::Dup(url) : nullptr;
     }
