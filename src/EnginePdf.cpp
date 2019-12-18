@@ -832,7 +832,7 @@ class PdfTocItem : public DocTocItem {
     PdfTocItem(WCHAR* title, PdfLink link) : DocTocItem(title), link(link) {
     }
 
-    PageDestination* GetLink() override {
+    PageDestination* GetPageDestination() override {
         return &link;
     }
 };

@@ -228,7 +228,7 @@ class DocTocItem : public TreeItem {
 
     void OpenSingleNode();
 
-    virtual PageDestination* GetLink();
+    virtual PageDestination* GetPageDestination();
 
     WCHAR* Text();
 

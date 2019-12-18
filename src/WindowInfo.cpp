@@ -438,7 +438,7 @@ PageDestination* LinkHandler::FindTocItem(DocTocItem* item, const WCHAR* name, b
     for (; item; item = item->next) {
         AutoFreeWstr fuzTitle(NormalizeFuzzy(item->title));
         if (MatchFuzzy(fuzTitle, name, partially))
-            return item->GetLink();
+            return item->GetPageDestination();
         PageDestination* dest = FindTocItem(item->child, name, partially);
         if (dest)
             return dest;

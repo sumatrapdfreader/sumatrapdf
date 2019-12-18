@@ -79,7 +79,7 @@ void DocTocItem::OpenSingleNode() {
 // about PageDestination, get rid of PageDestination and all
 // classes that inherit from DocTocItem
 // virtual PageDestination* GetLink() = 0;
-PageDestination* DocTocItem::GetLink() {
+PageDestination* DocTocItem::GetPageDestination() {
     return nullptr;
 }
 

@@ -774,7 +774,7 @@ class ImageDirTocItem : public DocTocItem {
     ImageDirTocItem(WCHAR* title, int pageNo) : DocTocItem(title, pageNo) {
     }
 
-    PageDestination* GetLink() override {
+    PageDestination* GetPageDestination() override {
         return nullptr;
     }
 };

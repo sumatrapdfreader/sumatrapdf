@@ -274,7 +274,7 @@ class EbookTocItem : public DocTocItem {
         delete dest;
     }
 
-    PageDestination* GetLink() override {
+    PageDestination* GetPageDestination() override {
         return dest;
     }
 };
