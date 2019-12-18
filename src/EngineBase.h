@@ -30,7 +30,6 @@ enum PageLayoutType {
 
 enum class PageElementType { Link, Image, Comment };
 
-
 enum class PageAnnotType {
     None,
     Highlight,
@@ -69,7 +68,6 @@ class RenderedBitmap {
     bool StretchDIBits(HDC hdc, RectI target) const;
 };
 
-
 enum class PageDestType {
     None,
     ScrollTo,
@@ -97,9 +95,11 @@ class PageDestination {
     int destPageNo = -1;
     RectD destRect{};
     WCHAR* destValue = nullptr;
+    WCHAR* destName = nullptr;
 
     virtual ~PageDestination() {
         free(destValue);
+        free(destName);
     }
 
     PageDestType GetDestType() const {
@@ -107,28 +107,28 @@ class PageDestination {
     }
 
     // page the destination points to (0 for external destinations such as URLs)
-    int GetDestPageNo() {
+    int GetDestPageNo() const {
         CrashIf(destPageNo < 0);
         return destPageNo;
     }
 
     // rectangle of the destination on the above returned page
-    RectD GetDestRect() {
+    RectD GetDestRect() const {
         return destRect;
     }
 
     // string value associated with the destination (e.g. a path or a URL)
     // caller must free() the result
     // TODO: change the contract to not need free()
-    WCHAR* GetDestValue() {
+    WCHAR* GetDestValue() const {
         return str::Dup(destValue);
     }
 
     // the name of this destination (reverses EngineBase::GetNamedDest) or nullptr
     // (mainly applicable for links of type "LaunchFile" to PDF documents)
     // caller must free() the result
-    virtual WCHAR* GetDestName() const {
-        return nullptr;
+    WCHAR* GetDestName() const {
+        return str::Dup(destName);
     }
 };
 
