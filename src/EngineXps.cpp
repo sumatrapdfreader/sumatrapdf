@@ -284,7 +284,6 @@ class XpsLink : public PageElement, public PageDestination {
 
     XpsLink(XpsEngineImpl* engine, int pageNo, fz_link* link, fz_outline* outline);
 
-    RectD GetRect() const override;
     WCHAR* GetValue() const override;
     virtual PageDestination* AsLink() {
         return this;
@@ -308,14 +307,9 @@ XpsLink::XpsLink(XpsEngineImpl* engine, int pageNo, fz_link* link, fz_outline* o
     destRect = CalcDestRect();
     destValue = GetValue();
     elementType = PageElementType::Link;
-}
-
-RectD XpsLink::GetRect() const {
     if (link) {
-        RectD r(fz_rect_to_RectD(link->rect));
-        return r;
+        elementRect = fz_rect_to_RectD(link->rect);
     }
-    return RectD();
 }
 
 static char* XpsLinkGetURI(const XpsLink* link) {
@@ -443,31 +437,24 @@ class XpsTocItem : public DocTocItem {
 };
 
 class XpsImage : public PageElement {
-    XpsEngineImpl* engine;
-    int pageNo;
-    RectD rect;
-    size_t imageIdx;
+    XpsEngineImpl* engine = nullptr;
+    size_t imageIdx = 0;
 
   public:
-    XpsImage(XpsEngineImpl* engine, int pageNo, fz_rect rect, size_t imageIx)
-        : engine(engine), pageNo(pageNo), rect(fz_rect_to_RectD(rect)), imageIdx(imageIdx) {
+    XpsImage(XpsEngineImpl* engine, int pageNo, fz_rect rect, size_t imageIx) {
+        this->engine = engine;
+        this->elementPageNo = pageNo;
+        this->elementRect = fz_rect_to_RectD(rect);
+        this->imageIdx = imageIdx;
+        elementType = PageElementType::Image;
     }
 
-    virtual PageElementType GetType() const {
-        return PageElementType::Image;
-    }
-    virtual int GetPageNo() const {
-        return pageNo;
-    }
-    virtual RectD GetRect() const {
-        return rect;
-    }
-    virtual WCHAR* GetValue() const {
+    WCHAR* GetValue() const override {
         return nullptr;
     }
 
-    virtual RenderedBitmap* GetImage() {
-        return engine->GetPageImage(pageNo, rect, imageIdx);
+    RenderedBitmap* GetImage() override {
+        return engine->GetPageImage(elementPageNo, elementRect, imageIdx);
     }
 };
 

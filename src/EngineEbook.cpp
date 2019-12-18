@@ -209,14 +209,12 @@ class EbookLink : public PageElement, public PageDestination {
         destType = PageDestType::LaunchURL;
         destValue = GetValue();
         elementType = PageElementType::Link;
+        elementRect = rect.Convert<double>();
     }
     virtual ~EbookLink() {
         delete dest;
     }
 
-    RectD GetRect() const override {
-        return rect.Convert<double>();
-    }
     WCHAR* GetValue() const override {
         if (!dest || showUrl) {
             return strconv::FromHtmlUtf8(link->str.s, link->str.len);
@@ -239,10 +237,7 @@ class ImageDataElement : public PageElement {
         this->bbox = bbox;
         elementPageNo = pageNo;
         elementType = PageElementType::Image;
-    }
-
-    RectD GetRect() const override {
-        return bbox.Convert<double>();
+        elementRect = bbox.Convert<double>();
     }
 
     WCHAR* GetValue() const override {
