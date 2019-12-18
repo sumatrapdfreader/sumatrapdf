@@ -199,7 +199,7 @@ class EbookLink : public PageElement, public PageDestination {
     EbookLink() = default;
 
     EbookLink(DrawInstr* link, RectI rect, PageDestination* dest, int pageNo = -1, bool showUrl = false) {
-        PageElement::pageNo = pageNo;
+        elementPageNo = pageNo;
         destPageNo = 0;
         this->link = link;
         this->rect = rect;
@@ -237,7 +237,7 @@ class ImageDataElement : public PageElement {
 
   public:
     ImageDataElement(int pageNo, ImageData* id, RectI bbox) : id(id), bbox(bbox) {
-        this->pageNo = pageNo;
+        elementPageNo = pageNo;
     }
 
     PageElementType GetType() const override {

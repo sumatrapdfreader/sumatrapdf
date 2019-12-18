@@ -78,10 +78,11 @@ class DjVuLink : public PageElement {
   public:
     DjVuLink(int pageNo, RectI rect, const char* link, const char* comment) {
         this->rect = rect.Convert<double>();
-        this->pageNo = pageNo;
+        elementPageNo = pageNo;
         dest = new DjVuDestination(link);
-        if (!str::IsEmpty(comment))
+        if (!str::IsEmpty(comment)) {
             value = strconv::FromUtf8(comment);
+        }
     }
 
     ~DjVuLink() override {

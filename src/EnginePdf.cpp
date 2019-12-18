@@ -494,7 +494,7 @@ static bool IsRelativeURI(const WCHAR* uri) {
 
 PdfLink::PdfLink(PdfEngineImpl* engine, int pageNo, fz_link* link, fz_outline* outline) {
     this->engine = engine;
-    this->pageNo = pageNo;
+    elementPageNo = pageNo;
     destPageNo = pageNo;
     CrashIf(!link && !outline);
     this->link = link;
@@ -811,7 +811,7 @@ class PdfComment : public PageElement {
     PdfComment(const WCHAR* content, RectD rect, int pageNo)
         : annot(PageAnnotType::None, pageNo, rect, 0) {
         this->content = str::Dup(content);
-        this->pageNo = pageNo;
+        elementPageNo = pageNo;
     }
 
     PageElementType GetType() const override {
@@ -843,9 +843,11 @@ class PdfImage : public PageElement {
     RectD rect;
     size_t imageIdx;
 
-    PdfImage(PdfEngineImpl* engine, int pageNo, fz_rect rect, size_t imageIdx)
-        : engine(engine), rect(fz_rect_to_RectD(rect)), imageIdx(imageIdx) {
-        this->pageNo = pageNo;
+    PdfImage(PdfEngineImpl* engine, int pageNo, fz_rect rect, size_t imageIdx) {
+        this->engine = engine;
+        this->rect = fz_rect_to_RectD(rect);
+        this->imageIdx = imageIdx;
+        elementPageNo = pageNo;
     }
 
     PageElementType GetType() const override {
@@ -861,7 +863,7 @@ class PdfImage : public PageElement {
     }
 
     RenderedBitmap* GetImage() override {
-        return engine->GetPageImage(pageNo, rect, imageIdx);
+        return engine->GetPageImage(elementPageNo, rect, imageIdx);
     }
 };
 
