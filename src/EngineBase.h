@@ -96,8 +96,10 @@ class PageDestination {
     PageDestType destType = PageDestType::None;
     int destPageNo = -1;
     RectD destRect{};
+    WCHAR* destValue = nullptr;
 
     virtual ~PageDestination() {
+        free(destValue);
     }
 
     PageDestType GetDestType() const {
@@ -117,9 +119,11 @@ class PageDestination {
 
     // string value associated with the destination (e.g. a path or a URL)
     // caller must free() the result
-    virtual WCHAR* GetDestValue() const {
-        return nullptr;
+    // TODO: change the contract to not need free()
+    WCHAR* GetDestValue() {
+        return str::Dup(destValue);
     }
+
     // the name of this destination (reverses EngineBase::GetNamedDest) or nullptr
     // (mainly applicable for links of type "LaunchFile" to PDF documents)
     // caller must free() the result

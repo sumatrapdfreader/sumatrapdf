@@ -481,9 +481,6 @@ class PdfLink : public PageElement, public PageDestination {
     RectD CalcDestRect();
 
     // PageDestination
-    WCHAR* GetDestValue() const override {
-        return GetValue();
-    }
     WCHAR* GetDestName() const override;
 };
 
@@ -2158,15 +2155,15 @@ static bool IsRelativeURI(const WCHAR* uri) {
 
 PdfLink::PdfLink(PdfEngineImpl* engine, int pageNo, fz_link* link, fz_outline* outline) {
     this->engine = engine;
-    PageElement::pageNo = pageNo;
+    this->pageNo = pageNo;
     destPageNo = pageNo;
-    //this->pageNo = pageNo;
     CrashIf(!link && !outline);
     this->link = link;
     this->outline = outline;
 
     destType = CalcDestType();
     destRect = CalcDestRect();
+    destValue = GetValue();
 }
 
 RectD PdfLink::GetRect() const {

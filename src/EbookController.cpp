@@ -56,28 +56,17 @@ class EbookTocDest : public DocTocItem, public PageDestination {
   public:
     EbookTocDest(const WCHAR* title, int reparseIdx) : DocTocItem(str::Dup(title), reparseIdx) {
         url = nullptr;
-        destType = CalcDestType();
+        destType = PageDestType::ScrollTo;
     }
 
     EbookTocDest(const WCHAR* title, const WCHAR* url) : DocTocItem(str::Dup(title)) {
         this->url = str::Dup(url);
-        destType = CalcDestType();
+        destType = PageDestType::LaunchURL;
+        destValue = str::Dup(url);
     }
 
     PageDestination* GetLink() override {
         return this;
-    }
-
-    // PageDestination
-    PageDestType CalcDestType() {
-        if (url) {
-            return PageDestType::LaunchURL;
-        }
-        return PageDestType::ScrollTo;
-    }
-
-    WCHAR* GetDestValue() const override {
-        return str::Dup(url);
     }
 };
 

@@ -59,9 +59,10 @@ class DjVuDestination : public PageDestination {
             destPageNo = atoi(link + 1);
         }
         destRect = RectD(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
+        destValue = str::Dup(CalcDestValue());
     }
 
-    WCHAR* GetDestValue() const override {
+    WCHAR* CalcDestValue() {
         if (PageDestType::LaunchURL == GetDestType()) {
             return strconv::FromUtf8(link);
         }
