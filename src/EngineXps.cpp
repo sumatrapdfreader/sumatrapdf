@@ -296,7 +296,7 @@ class XpsLink : public PageElement, public PageDestination {
 
     PageDestType UpdateDestType();
     int UpdateDestPageNo();
-    RectD GetDestRect() const override;
+    RectD CalcDestRect();
 
     WCHAR* GetDestValue() const override {
         return GetValue();
@@ -1001,7 +1001,7 @@ PageDestination* XpsEngineImpl::GetNamedDest(const WCHAR* nameW) {
     xps_target* dest = doc->target;
     while (dest) {
         if (str::EndsWithI(dest->name, name)) {
-            return new SimpleDest(dest->page + 1, RectD{});
+            return makeSimpleDest(dest->page + 1, RectD{});
         }
         dest = dest->next;
     }
@@ -1087,6 +1087,7 @@ XpsLink::XpsLink(XpsEngineImpl* engine, int pageNo, fz_link* link, fz_outline* o
 
     destType = UpdateDestType();
     destPageNo = UpdateDestPageNo();
+    destRect = CalcDestRect();
 }
 
 RectD XpsLink::GetRect() const {
@@ -1190,7 +1191,7 @@ int XpsLink::UpdateDestPageNo() {
     return 0;
 }
 
-RectD XpsLink::GetDestRect() const {
+RectD XpsLink::CalcDestRect() {
     RectD result(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
     char* uri = XpsLinkGetURI(this);
     CrashIf(!uri);

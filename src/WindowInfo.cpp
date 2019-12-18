@@ -246,7 +246,6 @@ bool WindowInfo::CreateUIAProvider() {
 // TODO: we use RemoteDestination only in LinkHandler::LaunchFile to make a copy
 // of PageDestination, so we'll be able to replace it with just PageDestination
 class RemoteDestination : public PageDestination {
-    RectD rect;
     AutoFreeWstr value;
     AutoFreeWstr name;
 
@@ -254,16 +253,14 @@ class RemoteDestination : public PageDestination {
     RemoteDestination(PageDestination* dest) {
         destType = dest->destType;
         destPageNo = dest->GetDestPageNo();
-        rect = dest->GetDestRect();
+        destRect = dest->GetDestRect();
         value = dest->GetDestValue();
         name = dest->GetDestName();
     }
+
     virtual ~RemoteDestination() {
     }
 
-    RectD GetDestRect() const override {
-        return rect;
-    }
     WCHAR* GetDestValue() const override {
         return str::Dup(value);
     }

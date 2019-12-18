@@ -95,6 +95,7 @@ class PageDestination {
   public:
     PageDestType destType = PageDestType::None;
     int destPageNo = -1;
+    RectD destRect{};
 
     virtual ~PageDestination() {
     }
@@ -110,7 +111,10 @@ class PageDestination {
     }
 
     // rectangle of the destination on the above returned page
-    virtual RectD GetDestRect() const = 0;
+    RectD GetDestRect() {
+        return destRect;
+    }
+
     // string value associated with the destination (e.g. a path or a URL)
     // caller must free() the result
     virtual WCHAR* GetDestValue() const {

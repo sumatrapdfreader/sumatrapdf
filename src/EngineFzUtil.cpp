@@ -708,3 +708,11 @@ LinkRectList* LinkifyText(const WCHAR* pageText, RectI* coords) {
 
     return list;
 }
+
+PageDestination* makeSimpleDest(int pageNo, RectD rect) {
+    auto res = new PageDestination();
+    res->destPageNo = pageNo;
+    res->destRect = rect;
+    res->destType = PageDestType::ScrollTo;
+    return res;
+}

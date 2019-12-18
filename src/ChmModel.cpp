@@ -35,6 +35,8 @@ class ChmTocItem : public DocTocItem, public PageDestination {
         } else {
             destType = PageDestType::ScrollTo;
         }
+
+        destRect = RectD(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
     }
 
     virtual ~ChmTocItem() {
@@ -46,10 +48,6 @@ class ChmTocItem : public DocTocItem, public PageDestination {
         return url ? this : nullptr;
     }
 
-    // PageDestination
-    RectD GetDestRect() const override {
-        return RectD(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
-    }
     WCHAR* GetDestValue() const override {
         return url && IsExternalUrl(url) ? str::Dup(url) : nullptr;
     }
