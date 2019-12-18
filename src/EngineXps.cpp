@@ -295,7 +295,7 @@ class XpsLink : public PageElement, public PageDestination {
     }
 
     PageDestType UpdateDestType();
-    int GetDestPageNo() const override;
+    int UpdateDestPageNo();
     RectD GetDestRect() const override;
 
     WCHAR* GetDestValue() const override {
@@ -1079,12 +1079,14 @@ bool XpsEngineImpl::HasClipOptimizations(int pageNo) {
 
 XpsLink::XpsLink(XpsEngineImpl* engine, int pageNo, fz_link* link, fz_outline* outline) {
     this->engine = engine;
-    this->pageNo = pageNo;
+    PageElement::pageNo = pageNo;
     this->link = link;
     CrashIf(!link && !outline);
     this->link = link;
     this->outline = outline;
+
     destType = UpdateDestType();
+    destPageNo = UpdateDestPageNo();
 }
 
 RectD XpsLink::GetRect() const {
@@ -1164,7 +1166,7 @@ PageDestType XpsLink::UpdateDestType() {
     return PageDestType::None;
 }
 
-int XpsLink::GetDestPageNo() const {
+int XpsLink::UpdateDestPageNo() {
     char* uri = XpsLinkGetURI(this);
     CrashIf(!uri);
     if (!uri) {

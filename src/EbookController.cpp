@@ -75,9 +75,6 @@ class EbookTocDest : public DocTocItem, public PageDestination {
         destType = PageDestType::ScrollTo;
     }
 
-    int GetDestPageNo() const override {
-        return pageNo;
-    }
     RectD GetDestRect() const override {
         return RectD();
     }

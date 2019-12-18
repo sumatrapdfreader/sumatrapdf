@@ -47,9 +47,6 @@ class ChmTocItem : public DocTocItem, public PageDestination {
     }
 
     // PageDestination
-    int GetDestPageNo() const override {
-        return pageNo;
-    }
     RectD GetDestRect() const override {
         return RectD(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
     }
@@ -65,7 +62,8 @@ class ChmNamedDest : public ChmTocItem {
     AutoFreeWstr myUrl;
 
   public:
-    ChmNamedDest(const WCHAR* url, int pageNo) : ChmTocItem(nullptr, pageNo, nullptr), myUrl(str::Dup(url)) {
+    ChmNamedDest(const WCHAR* url, int pageNo) : ChmTocItem(nullptr, pageNo, nullptr) {
+        this->myUrl = str::Dup(url);
         this->url = this->title = myUrl;
     }
     virtual ~ChmNamedDest() {
