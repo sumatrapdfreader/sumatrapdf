@@ -253,7 +253,6 @@ class RemoteDestination : public PageDestination {
         destRect = dest->GetDestRect();
         destValue = dest->GetDestValue();
         destName = dest->GetDestName();
-
     }
 };
 

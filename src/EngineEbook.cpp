@@ -218,7 +218,7 @@ class EbookLink : public PageElement, public PageDestination {
         }
     }
 
-    virtual ~EbookLink() {
+    ~EbookLink() override {
         delete dest;
     }
 };
@@ -1570,7 +1570,6 @@ class ChmEmbeddedDest : public PageDestination {
         destPageNo = 0;
         destValue = strconv::Utf8ToWchar(path::GetBaseNameNoFree(path));
     }
-
 };
 
 PageElement* ChmEngineImpl::CreatePageLink(DrawInstr* link, RectI rect, int pageNo) {

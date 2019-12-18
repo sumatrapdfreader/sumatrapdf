@@ -759,7 +759,7 @@ void ControllerCallbackHandler::FocusFrame(bool always) {
 
 void ControllerCallbackHandler::SaveDownload(const WCHAR* url, std::string_view data) {
     AutoFreeWstr fileName(url::GetFileName(url));
-    //LinkSaver linkSaver(win->currentTab, win->hwndFrame, fileName);
+    // LinkSaver linkSaver(win->currentTab, win->hwndFrame, fileName);
     SaveDataToFile(win->hwndFrame, fileName, data);
 }
 

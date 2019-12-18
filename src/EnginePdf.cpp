@@ -469,10 +469,6 @@ class PdfLink : public PageElement, public PageDestination {
 
     // PageElement
     WCHAR* CalcValue() const;
-    virtual PageDestination* AsLink() {
-        return this;
-    }
-
     int CalcDestPageNo() const;
     PageDestType CalcDestType();
     RectD CalcDestRect();

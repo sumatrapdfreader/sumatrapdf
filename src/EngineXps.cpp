@@ -285,10 +285,6 @@ class XpsLink : public PageElement, public PageDestination {
     XpsLink(XpsEngineImpl* engine, int pageNo, fz_link* link, fz_outline* outline);
 
     WCHAR* CalcValue() const;
-    virtual PageDestination* AsLink() {
-        return this;
-    }
-
     PageDestType CalcDestType();
     int CalcDestPageNo();
     RectD CalcDestRect();
