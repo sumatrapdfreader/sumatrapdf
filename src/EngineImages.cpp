@@ -208,8 +208,8 @@ RectD ImagesEngine::Transform(RectD rect, int pageNo, float zoom, int rotation, 
 }
 
 class ImageElement : public PageElement {
-    ImagesEngine* engine;
-    ImagePage* page;
+    ImagesEngine* engine = nullptr;
+    ImagePage* page = nullptr;
 
   public:
     explicit ImageElement(ImagesEngine* engine, ImagePage* page) {
@@ -224,10 +224,6 @@ class ImageElement : public PageElement {
 
     virtual ~ImageElement() {
         engine->DropPage(page);
-    }
-
-    WCHAR* GetValue() const override {
-        return nullptr;
     }
 
     RenderedBitmap* GetImage() override {

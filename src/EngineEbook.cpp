@@ -192,7 +192,6 @@ class SimpleDest2 : public PageDestination {
 class EbookLink : public PageElement, public PageDestination {
     PageDestination* dest = nullptr; // required for internal links, nullptr for external ones
     DrawInstr* link = nullptr;       // owned by *EngineImpl::pages
-    RectI rect = {};
     bool showUrl = false;
 
   public:
@@ -202,7 +201,6 @@ class EbookLink : public PageElement, public PageDestination {
         elementPageNo = pageNo;
         destPageNo = 0;
         this->link = link;
-        this->rect = rect;
         destRect = rect.Convert<double>();
         this->dest = dest;
         this->showUrl = showUrl;
@@ -210,16 +208,13 @@ class EbookLink : public PageElement, public PageDestination {
         destValue = GetValue();
         elementType = PageElementType::Link;
         elementRect = rect.Convert<double>();
-    }
-    virtual ~EbookLink() {
-        delete dest;
+        if (!dest || showUrl) {
+            elementValue = strconv::FromHtmlUtf8(link->str.s, link->str.len);
+        }
     }
 
-    WCHAR* GetValue() const override {
-        if (!dest || showUrl) {
-            return strconv::FromHtmlUtf8(link->str.s, link->str.len);
-        }
-        return nullptr;
+    virtual ~EbookLink() {
+        delete dest;
     }
 
     PageDestination* AsLink() override {
@@ -238,10 +233,6 @@ class ImageDataElement : public PageElement {
         elementPageNo = pageNo;
         elementType = PageElementType::Image;
         elementRect = bbox.Convert<double>();
-    }
-
-    WCHAR* GetValue() const override {
-        return nullptr;
     }
 
     RenderedBitmap* GetImage() override {

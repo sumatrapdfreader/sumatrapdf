@@ -284,13 +284,13 @@ class XpsLink : public PageElement, public PageDestination {
 
     XpsLink(XpsEngineImpl* engine, int pageNo, fz_link* link, fz_outline* outline);
 
-    WCHAR* GetValue() const override;
+    WCHAR* CalcValue() const;
     virtual PageDestination* AsLink() {
         return this;
     }
 
-    PageDestType UpdateDestType();
-    int UpdateDestPageNo();
+    PageDestType CalcDestType();
+    int CalcDestPageNo();
     RectD CalcDestRect();
 };
 
@@ -302,14 +302,15 @@ XpsLink::XpsLink(XpsEngineImpl* engine, int pageNo, fz_link* link, fz_outline* o
     this->link = link;
     this->outline = outline;
 
-    destType = UpdateDestType();
-    destPageNo = UpdateDestPageNo();
+    destType = CalcDestType();
+    destPageNo = CalcDestPageNo();
     destRect = CalcDestRect();
     destValue = GetValue();
     elementType = PageElementType::Link;
     if (link) {
         elementRect = fz_rect_to_RectD(link->rect);
     }
+    elementValue = CalcValue();
 }
 
 static char* XpsLinkGetURI(const XpsLink* link) {
@@ -322,7 +323,7 @@ static char* XpsLinkGetURI(const XpsLink* link) {
     return nullptr;
 }
 
-WCHAR* XpsLink::GetValue() const {
+WCHAR* XpsLink::CalcValue() const {
     if (outline) {
         WCHAR* path = strconv::FromUtf8(outline->uri);
         return path;
@@ -339,7 +340,7 @@ WCHAR* XpsLink::GetValue() const {
     return strconv::Utf8ToWchar(uri);
 }
 
-PageDestType XpsLink::UpdateDestType() {
+PageDestType XpsLink::CalcDestType() {
     if (outline) {
         return PageDestType::LaunchEmbedded;
     }
@@ -380,7 +381,7 @@ PageDestType XpsLink::UpdateDestType() {
     return PageDestType::None;
 }
 
-int XpsLink::UpdateDestPageNo() {
+int XpsLink::CalcDestPageNo() {
     char* uri = XpsLinkGetURI(this);
     CrashIf(!uri);
     if (!uri) {
@@ -447,10 +448,6 @@ class XpsImage : public PageElement {
         this->elementRect = fz_rect_to_RectD(rect);
         this->imageIdx = imageIdx;
         elementType = PageElementType::Image;
-    }
-
-    WCHAR* GetValue() const override {
-        return nullptr;
     }
 
     RenderedBitmap* GetImage() override {

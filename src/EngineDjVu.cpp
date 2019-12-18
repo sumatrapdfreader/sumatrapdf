@@ -85,20 +85,18 @@ class DjVuLink : public PageElement {
         }
         elementType = PageElementType::Link;
         elementRect = this->rect;
+        if (value) {
+            elementValue = str::Dup(value);
+        } else {
+            if (PageDestType::LaunchURL == dest->GetDestType()) {
+                value = dest->GetDestValue();
+            }
+        }
     }
 
     ~DjVuLink() override {
         delete dest;
         free(value);
-    }
-
-    WCHAR* GetValue() const override {
-        if (value) {
-            return str::Dup(value);
-        }
-        if (PageDestType::LaunchURL == dest->GetDestType())
-            return dest->GetDestValue();
-        return nullptr;
     }
 
     virtual PageDestination* AsLink() {

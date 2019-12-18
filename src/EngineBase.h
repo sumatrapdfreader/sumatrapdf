@@ -158,8 +158,10 @@ class PageElement {
     int elementPageNo = -1;
     PageElementType elementType = PageElementType::Unknown;
     RectD elementRect{};
+    WCHAR* elementValue = nullptr;
 
     virtual ~PageElement() {
+        free(elementValue);
     }
     // the type of this page element
     PageElementType GetType() const {
@@ -178,7 +180,9 @@ class PageElement {
 
     // string value associated with this element (e.g. displayed in an infotip)
     // caller must free() the result
-    virtual WCHAR* GetValue() const = 0;
+    WCHAR* GetValue() const {
+        return str::Dup(elementValue);
+    }
 
     // if this element is a link, this returns information about the link's destination
     // (the result is owned by the PageElement and MUST NOT be deleted)
