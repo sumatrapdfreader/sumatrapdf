@@ -468,9 +468,6 @@ class PdfLink : public PageElement, public PageDestination {
     PdfLink(PdfEngineImpl* engine, int pageNo, fz_link* link, fz_outline* outline);
 
     // PageElement
-    PageElementType GetType() const override {
-        return PageElementType::Link;
-    }
     RectD GetRect() const override;
     WCHAR* GetValue() const override;
     virtual PageDestination* AsLink() {
@@ -504,6 +501,8 @@ PdfLink::PdfLink(PdfEngineImpl* engine, int pageNo, fz_link* link, fz_outline* o
     destRect = CalcDestRect();
     destValue = GetValue();
     destName = CalcDestName();
+
+    elementType = PageElementType::Link;
 }
 
 RectD PdfLink::GetRect() const {
@@ -812,11 +811,9 @@ class PdfComment : public PageElement {
         : annot(PageAnnotType::None, pageNo, rect, 0) {
         this->content = str::Dup(content);
         elementPageNo = pageNo;
+        elementType = PageElementType::Comment;
     }
 
-    PageElementType GetType() const override {
-        return PageElementType::Comment;
-    }
     RectD GetRect() const override {
         return annot.rect;
     }
@@ -848,10 +845,7 @@ class PdfImage : public PageElement {
         this->rect = fz_rect_to_RectD(rect);
         this->imageIdx = imageIdx;
         elementPageNo = pageNo;
-    }
-
-    PageElementType GetType() const override {
-        return PageElementType::Image;
+        elementType = PageElementType::Image;
     }
 
     RectD GetRect() const override {

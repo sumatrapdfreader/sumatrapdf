@@ -215,14 +215,12 @@ class ImageElement : public PageElement {
     explicit ImageElement(ImagesEngine* engine, ImagePage* page) {
         this->engine = engine;
         this->page = page;
-        this->elementPageNo = page->pageNo;
-    }
-    virtual ~ImageElement() {
-        engine->DropPage(page);
+        elementPageNo = page->pageNo;
+        elementType = PageElementType::Image;
     }
 
-    PageElementType GetType() const override {
-        return PageElementType::Image;
+    virtual ~ImageElement() {
+        engine->DropPage(page);
     }
 
     RectD GetRect() const override {

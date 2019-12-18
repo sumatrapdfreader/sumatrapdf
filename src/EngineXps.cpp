@@ -284,10 +284,6 @@ class XpsLink : public PageElement, public PageDestination {
 
     XpsLink(XpsEngineImpl* engine, int pageNo, fz_link* link, fz_outline* outline);
 
-    PageElementType GetType() const override {
-        return PageElementType::Link;
-    }
-
     RectD GetRect() const override;
     WCHAR* GetValue() const override;
     virtual PageDestination* AsLink() {
@@ -298,6 +294,141 @@ class XpsLink : public PageElement, public PageDestination {
     int UpdateDestPageNo();
     RectD CalcDestRect();
 };
+
+XpsLink::XpsLink(XpsEngineImpl* engine, int pageNo, fz_link* link, fz_outline* outline) {
+    this->engine = engine;
+    elementPageNo = pageNo;
+    this->link = link;
+    CrashIf(!link && !outline);
+    this->link = link;
+    this->outline = outline;
+
+    destType = UpdateDestType();
+    destPageNo = UpdateDestPageNo();
+    destRect = CalcDestRect();
+    destValue = GetValue();
+    elementType = PageElementType::Link;
+}
+
+RectD XpsLink::GetRect() const {
+    if (link) {
+        RectD r(fz_rect_to_RectD(link->rect));
+        return r;
+    }
+    return RectD();
+}
+
+static char* XpsLinkGetURI(const XpsLink* link) {
+    if (link->link) {
+        return link->link->uri;
+    }
+    if (link->outline) {
+        return link->outline->uri;
+    }
+    return nullptr;
+}
+
+WCHAR* XpsLink::GetValue() const {
+    if (outline) {
+        WCHAR* path = strconv::FromUtf8(outline->uri);
+        return path;
+    }
+
+    char* uri = XpsLinkGetURI(this);
+    if (!uri) {
+        return nullptr;
+    }
+    if (!is_external_link(uri)) {
+        // other values: #1,115,208
+        return nullptr;
+    }
+    return strconv::Utf8ToWchar(uri);
+}
+
+PageDestType XpsLink::UpdateDestType() {
+    if (outline) {
+        return PageDestType::LaunchEmbedded;
+    }
+
+    char* uri = XpsLinkGetURI(this);
+    // some outline entries are bad (issue 1245)
+    if (!uri) {
+        return PageDestType::None;
+    }
+    if (!is_external_link(uri)) {
+        float x, y;
+        int pageNo = resolve_link(uri, &x, &y);
+        if (pageNo == -1) {
+            // TODO: figure out what it could be
+            CrashMePort();
+            return PageDestType::None;
+        }
+        return PageDestType::ScrollTo;
+    }
+    if (str::StartsWith(uri, "file://")) {
+        return PageDestType::LaunchFile;
+    }
+    if (str::StartsWithI(uri, "http://")) {
+        return PageDestType::LaunchURL;
+    }
+    if (str::StartsWithI(uri, "https://")) {
+        return PageDestType::LaunchURL;
+    }
+    if (str::StartsWithI(uri, "ftp://")) {
+        return PageDestType::LaunchURL;
+    }
+    if (str::StartsWith(uri, "mailto:")) {
+        return PageDestType::LaunchURL;
+    }
+
+    // TODO: PageDestType::LaunchEmbedded, PageDestType::LaunchURL, named destination
+    CrashMePort();
+    return PageDestType::None;
+}
+
+int XpsLink::UpdateDestPageNo() {
+    char* uri = XpsLinkGetURI(this);
+    CrashIf(!uri);
+    if (!uri) {
+        return 0;
+    }
+    if (is_external_link(uri)) {
+        return 0;
+    }
+    float x, y;
+    int pageNo = resolve_link(uri, &x, &y);
+    if (pageNo == -1) {
+        return 0;
+    }
+    return pageNo + 1;
+#if 0
+    if (link && FZ_LINK_GOTO == link->kind)
+        return link->ld.gotor.page + 1;
+    if (link && FZ_LINK_GOTOR == link->kind && !link->ld.gotor.dest)
+        return link->ld.gotor.page + 1;
+#endif
+    return 0;
+}
+
+RectD XpsLink::CalcDestRect() {
+    RectD result(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
+    char* uri = XpsLinkGetURI(this);
+    CrashIf(!uri);
+    if (!uri) {
+        return result;
+    }
+
+    if (is_external_link(uri)) {
+        return result;
+    }
+    float x, y;
+    int pageNo = resolve_link(uri, &x, &y);
+    CrashIf(pageNo < 0);
+
+    result.x = (double)x;
+    result.y = (double)y;
+    return result;
+}
 
 class XpsTocItem : public DocTocItem {
     XpsLink link;
@@ -1071,140 +1202,6 @@ bool XpsEngineImpl::HasClipOptimizations(int pageNo) {
         }
     }
     return true;
-}
-
-XpsLink::XpsLink(XpsEngineImpl* engine, int pageNo, fz_link* link, fz_outline* outline) {
-    this->engine = engine;
-    elementPageNo = pageNo;
-    this->link = link;
-    CrashIf(!link && !outline);
-    this->link = link;
-    this->outline = outline;
-
-    destType = UpdateDestType();
-    destPageNo = UpdateDestPageNo();
-    destRect = CalcDestRect();
-    destValue = GetValue();
-}
-
-RectD XpsLink::GetRect() const {
-    if (link) {
-        RectD r(fz_rect_to_RectD(link->rect));
-        return r;
-    }
-    return RectD();
-}
-
-static char* XpsLinkGetURI(const XpsLink* link) {
-    if (link->link) {
-        return link->link->uri;
-    }
-    if (link->outline) {
-        return link->outline->uri;
-    }
-    return nullptr;
-}
-
-WCHAR* XpsLink::GetValue() const {
-    if (outline) {
-        WCHAR* path = strconv::FromUtf8(outline->uri);
-        return path;
-    }
-
-    char* uri = XpsLinkGetURI(this);
-    if (!uri) {
-        return nullptr;
-    }
-    if (!is_external_link(uri)) {
-        // other values: #1,115,208
-        return nullptr;
-    }
-    return strconv::Utf8ToWchar(uri);
-}
-
-PageDestType XpsLink::UpdateDestType() {
-    if (outline) {
-        return PageDestType::LaunchEmbedded;
-    }
-
-    char* uri = XpsLinkGetURI(this);
-    // some outline entries are bad (issue 1245)
-    if (!uri) {
-        return PageDestType::None;
-    }
-    if (!is_external_link(uri)) {
-        float x, y;
-        int pageNo = resolve_link(uri, &x, &y);
-        if (pageNo == -1) {
-            // TODO: figure out what it could be
-            CrashMePort();
-            return PageDestType::None;
-        }
-        return PageDestType::ScrollTo;
-    }
-    if (str::StartsWith(uri, "file://")) {
-        return PageDestType::LaunchFile;
-    }
-    if (str::StartsWithI(uri, "http://")) {
-        return PageDestType::LaunchURL;
-    }
-    if (str::StartsWithI(uri, "https://")) {
-        return PageDestType::LaunchURL;
-    }
-    if (str::StartsWithI(uri, "ftp://")) {
-        return PageDestType::LaunchURL;
-    }
-    if (str::StartsWith(uri, "mailto:")) {
-        return PageDestType::LaunchURL;
-    }
-
-    // TODO: PageDestType::LaunchEmbedded, PageDestType::LaunchURL, named destination
-    CrashMePort();
-    return PageDestType::None;
-}
-
-int XpsLink::UpdateDestPageNo() {
-    char* uri = XpsLinkGetURI(this);
-    CrashIf(!uri);
-    if (!uri) {
-        return 0;
-    }
-    if (is_external_link(uri)) {
-        return 0;
-    }
-    float x, y;
-    int pageNo = resolve_link(uri, &x, &y);
-    if (pageNo == -1) {
-        return 0;
-    }
-    return pageNo + 1;
-#if 0
-    if (link && FZ_LINK_GOTO == link->kind)
-        return link->ld.gotor.page + 1;
-    if (link && FZ_LINK_GOTOR == link->kind && !link->ld.gotor.dest)
-        return link->ld.gotor.page + 1;
-#endif
-    return 0;
-}
-
-RectD XpsLink::CalcDestRect() {
-    RectD result(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
-    char* uri = XpsLinkGetURI(this);
-    CrashIf(!uri);
-    if (!uri) {
-        return result;
-    }
-
-    if (is_external_link(uri)) {
-        return result;
-    }
-    float x, y;
-    int pageNo = resolve_link(uri, &x, &y);
-    CrashIf(pageNo < 0);
-
-    result.x = (double)x;
-    result.y = (double)y;
-    return result;
 }
 
 EngineBase* XpsEngineImpl::CreateFromFile(const WCHAR* fileName) {
