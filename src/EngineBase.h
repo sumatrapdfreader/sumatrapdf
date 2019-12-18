@@ -159,6 +159,7 @@ class PageElement {
     PageElementType elementType = PageElementType::Unknown;
     RectD elementRect{};
     WCHAR* elementValue = nullptr;
+    PageDestination* elementDest = nullptr;
 
     virtual ~PageElement() {
         free(elementValue);
@@ -186,8 +187,8 @@ class PageElement {
 
     // if this element is a link, this returns information about the link's destination
     // (the result is owned by the PageElement and MUST NOT be deleted)
-    virtual PageDestination* AsLink() {
-        return nullptr;
+    PageDestination* AsLink() {
+        return elementDest;
     }
     // if this element is an image, this returns it
     // caller must delete the result

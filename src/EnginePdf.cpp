@@ -473,6 +473,7 @@ class PdfLink : public PageElement, public PageDestination {
         return this;
     }
 
+    int CalcDestPageNo() const;
     PageDestType CalcDestType();
     RectD CalcDestRect();
     WCHAR* CalcDestName();
@@ -491,7 +492,6 @@ static bool IsRelativeURI(const WCHAR* uri) {
 PdfLink::PdfLink(PdfEngineImpl* engine, int pageNo, fz_link* link, fz_outline* outline) {
     this->engine = engine;
     elementPageNo = pageNo;
-    destPageNo = pageNo;
     CrashIf(!link && !outline);
     this->link = link;
     this->outline = outline;
@@ -500,12 +500,14 @@ PdfLink::PdfLink(PdfEngineImpl* engine, int pageNo, fz_link* link, fz_outline* o
     destRect = CalcDestRect();
     destValue = GetValue();
     destName = CalcDestName();
+    destPageNo = CalcDestPageNo();
 
     elementType = PageElementType::Link;
     if (link) {
         elementRect = fz_rect_to_RectD(link->rect);
     }
     elementValue = CalcValue();
+    elementDest = this;
 }
 
 static char* PdfLinkGetURI(const PdfLink* link) {
@@ -701,8 +703,7 @@ PageDestType PdfLink::CalcDestType() {
 #endif
 }
 
-#if 0
-int PdfLink::GetDestPageNo() const {
+int PdfLink::CalcDestPageNo() const {
     char* uri = PdfLinkGetURI(this);
     CrashIf(!uri);
     if (!uri) {
@@ -725,7 +726,6 @@ int PdfLink::GetDestPageNo() const {
 #endif
     return 0;
 }
-#endif
 
 RectD PdfLink::CalcDestRect() {
     RectD result(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);

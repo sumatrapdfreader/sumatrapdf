@@ -211,14 +211,15 @@ class EbookLink : public PageElement, public PageDestination {
         if (!dest || showUrl) {
             elementValue = strconv::FromHtmlUtf8(link->str.s, link->str.len);
         }
+        if (dest) {
+            elementDest = dest;
+        } else {
+            elementDest = this;
+        }
     }
 
     virtual ~EbookLink() {
         delete dest;
-    }
-
-    PageDestination* AsLink() override {
-        return dest ? dest : this;
     }
 };
 
