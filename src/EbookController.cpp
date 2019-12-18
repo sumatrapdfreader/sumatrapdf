@@ -65,7 +65,7 @@ class EbookTocDest : public DocTocItem, public PageDestination {
         destValue = str::Dup(url);
     }
 
-    PageDestination* GetLink() override {
+    PageDestination* GetPageDestination() override {
         return this;
     }
 };

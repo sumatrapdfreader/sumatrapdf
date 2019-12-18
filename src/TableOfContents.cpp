@@ -74,7 +74,7 @@ static DocTocItem* GetDocTocItemFromLPARAM(LPARAM lp) {
 // set tooltip for this item but only if the text isn't fully shown
 static void CustomizeTocInfoTip(TreeCtrl* w, NMTVGETINFOTIPW* nm) {
     DocTocItem* tocItem = GetDocTocItemFromLPARAM(nm->lParam);
-    PageDestination* link = tocItem->GetLink();
+    PageDestination* link = tocItem->GetPageDestination();
     if (!link) {
         return;
     }
@@ -190,7 +190,7 @@ static void GoToTocLinkTask(WindowInfo* win, DocTocItem* tocItem, TabInfo* tab, 
     // isn't unselected in UpdateTocSelection right again
     win->tocKeepSelection = true;
     int pageNo = tocItem->pageNo;
-    PageDestination* dest = tocItem->GetLink();
+    PageDestination* dest = tocItem->GetPageDestination();
     if (dest) {
         win->linkHandler->GotoLink(dest);
     } else if (pageNo) {
@@ -220,7 +220,7 @@ static void GoToTocLinkForTVItem(WindowInfo* win, HTREEITEM hItem, bool allowExt
         return;
     }
     bool validPage = (tocItem->pageNo > 0);
-    bool isScroll = IsScrollToLink(tocItem->GetLink());
+    bool isScroll = IsScrollToLink(tocItem->GetPageDestination());
     if (validPage || (allowExternal || isScroll)) {
         // delay changing the page until the tree messages have been handled
         TabInfo* tab = win->currentTab;

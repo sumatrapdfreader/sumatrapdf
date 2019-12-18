@@ -122,7 +122,7 @@ class DjVuTocItem : public DocTocItem {
         delete dest;
     }
 
-    PageDestination* GetLink() override {
+    PageDestination* GetPageDestination() override {
         return dest;
     }
 };

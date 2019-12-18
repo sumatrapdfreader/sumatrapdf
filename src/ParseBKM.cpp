@@ -69,7 +69,7 @@ void SerializeBookmarksRec(DocTocItem* node, int level, str::Str& s) {
             s.Append(" ");
             SerializeColor(node->color, s);
         }
-        PageDestination* dest = node->GetLink();
+        PageDestination* dest = node->GetPageDestination();
         if (dest) {
             int pageNo = dest->GetDestPageNo();
             s.AppendFmt(" page:%d", pageNo);

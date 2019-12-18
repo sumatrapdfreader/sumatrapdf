@@ -46,7 +46,7 @@ class ChmTocItem : public DocTocItem, public PageDestination {
         title = nullptr;
     }
 
-    PageDestination* GetLink() override {
+    PageDestination* GetPageDestination() override {
         return url ? this : nullptr;
     }
 };

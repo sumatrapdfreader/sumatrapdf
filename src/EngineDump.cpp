@@ -179,8 +179,8 @@ void DumpTocItem(EngineBase* engine, DocTocItem* item, int level, int& idCounter
             Out(" Page=\"%d\"", item->pageNo);
         if (item->id != ++idCounter)
             Out(" Id=\"%d\"", item->id);
-        if (item->GetLink()) {
-            PageDestination* dest = item->GetLink();
+        if (item->GetPageDestination()) {
+            PageDestination* dest = item->GetPageDestination();
             AutoFree target(Escape(dest->GetDestValue()));
             if (target.Get())
                 Out(" Target=\"%s\"", target.Get());

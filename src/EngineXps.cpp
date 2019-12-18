@@ -306,7 +306,7 @@ class XpsTocItem : public DocTocItem {
     XpsTocItem(WCHAR* title, XpsLink link) : DocTocItem(title), link(link) {
     }
 
-    PageDestination* GetLink() override {
+    PageDestination* GetPageDestination() override {
         return &link;
     }
 };
