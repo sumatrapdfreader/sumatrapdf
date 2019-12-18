@@ -484,13 +484,333 @@ class PdfLink : public PageElement, public PageDestination {
     WCHAR* GetDestName() const override;
 };
 
+#if 0
+static bool IsRelativeURI(const WCHAR* uri) {
+    const WCHAR* c = uri;
+    while (*c && *c != ':' && *c != '/' && *c != '?' && *c != '#') {
+        c++;
+    }
+    return *c != ':';
+}
+#endif
+
+PdfLink::PdfLink(PdfEngineImpl* engine, int pageNo, fz_link* link, fz_outline* outline) {
+    this->engine = engine;
+    this->pageNo = pageNo;
+    destPageNo = pageNo;
+    CrashIf(!link && !outline);
+    this->link = link;
+    this->outline = outline;
+
+    destType = CalcDestType();
+    destRect = CalcDestRect();
+    destValue = GetValue();
+}
+
+RectD PdfLink::GetRect() const {
+    if (link) {
+        RectD r(fz_rect_to_RectD(link->rect));
+        return r;
+    }
+    return RectD();
+}
+
+static char* PdfLinkGetURI(const PdfLink* link) {
+    if (link->link) {
+        return link->link->uri;
+    }
+    if (link->outline) {
+        return link->outline->uri;
+    }
+    return nullptr;
+}
+
+WCHAR* PdfLink::GetValue() const {
+    if (outline && isAttachment) {
+        WCHAR* path = strconv::FromUtf8(outline->uri);
+        return path;
+    }
+
+    char* uri = PdfLinkGetURI(this);
+    if (!uri) {
+        return nullptr;
+    }
+    if (!is_external_link(uri)) {
+        // other values: #1,115,208
+        return nullptr;
+    }
+    WCHAR* path = strconv::FromUtf8(uri);
+    return path;
+#if 0
+    if (!link || !engine)
+        return nullptr;
+    if (link->kind != FZ_LINK_URI && link->kind != FZ_LINK_LAUNCH && link->kind != FZ_LINK_GOTOR)
+        return nullptr;
+
+    ScopedCritSec scope(&engine->ctxAccess);
+
+    WCHAR* path = nullptr;
+
+    switch (link->kind) {
+        case FZ_LINK_URI:
+            path = strconv::FromUtf8(link->ld.uri.uri);
+            if (IsRelativeURI(path)) {
+                AutoFreeWstr base;
+                fz_try(engine->ctx) {
+                    pdf_obj* obj = pdf_dict_gets(pdf_trailer(engine->_doc), "Root");
+                    obj = pdf_dict_gets(pdf_dict_gets(obj, "URI"), "Base");
+                    if (obj)
+                        base.Set(PdfToWstr(obj));
+                }
+                fz_catch(engine->ctx) {}
+                if (!str::IsEmpty(base.Get())) {
+                    AutoFreeWstr uri(str::Join(base, path));
+                    free(path);
+                    path = uri.StealData();
+                }
+            }
+            if (link->ld.uri.is_map) {
+                int x = 0, y = 0;
+                if (rect.Contains(pt)) {
+                    x = (int)(pt.x - rect.x + 0.5);
+                    y = (int)(pt.y - rect.y + 0.5);
+                }
+                AutoFreeWstr uri(str::Format(L"%s?%d,%d", path, x, y));
+                free(path);
+                path = uri.StealData();
+            }
+            break;
+        case FZ_LINK_LAUNCH:
+            // note: we (intentionally) don't support the /Win specific Launch parameters
+            if (link->ld.launch.file_spec)
+                path = strconv::FromUtf8(link->ld.launch.file_spec);
+            if (path && link->ld.launch.embedded_num && str::EndsWithI(path, L".pdf")) {
+                free(path);
+                path = str::Format(L"%s:%d:%d", engine->FileName(), link->ld.launch.embedded_num,
+                                   link->ld.launch.embedded_gen);
+            }
+            break;
+        case FZ_LINK_GOTOR:
+            if (link->ld.gotor.file_spec)
+                path = strconv::FromUtf8(link->ld.gotor.file_spec);
+            break;
+    }
+
+    return path;
+#endif
+}
+
+#if 0
+static PageDestType DestTypeFromName(const char* name) {
+// named actions are converted either to Dest_Name or Dest_NameDialog
+#define HandleType(type)      \
+    if (str::Eq(name, #type)) \
+    return PageDestType::##type
+#define HandleTypeDialog(type) \
+    if (str::Eq(name, #type))  \
+    return PageDestType::##type##Dialog
+    // predefined named actions
+    HandleType(NextPage);
+    HandleType(PrevPage);
+    HandleType(FirstPage);
+    HandleType(LastPage);
+    // Adobe Reader extensions to the spec
+    // cf. http://www.tug.org/applications/hyperref/manual.html
+    HandleTypeDialog(Find);
+    HandleType(FullScreen);
+    HandleType(GoBack);
+    HandleType(GoForward);
+    HandleTypeDialog(GoToPage);
+    HandleTypeDialog(Print);
+    HandleTypeDialog(SaveAs);
+    HandleTypeDialog(ZoomTo);
+#undef HandleType
+#undef HandleTypeDialog
+    // named action that we don't support (or invalid action name)
+    return PageDestType::None;
+}
+#endif
+
+PageDestType PdfLink::CalcDestType() {
+    if (outline && isAttachment) {
+        return PageDestType::LaunchEmbedded;
+    }
+
+    char* uri = PdfLinkGetURI(this);
+    // some outline entries are bad (issue 1245)
+    if (!uri) {
+        return PageDestType::None;
+    }
+    if (!is_external_link(uri)) {
+        float x, y;
+        int pageNo = resolve_link(uri, &x, &y);
+        if (pageNo == -1) {
+            // TODO: figure out what it could be
+            CrashMePort();
+            return PageDestType::None;
+        }
+        return PageDestType::ScrollTo;
+    }
+    if (str::StartsWith(uri, "file://")) {
+        return PageDestType::LaunchFile;
+    }
+    if (str::StartsWithI(uri, "http://")) {
+        return PageDestType::LaunchURL;
+    }
+    if (str::StartsWithI(uri, "https://")) {
+        return PageDestType::LaunchURL;
+    }
+    if (str::StartsWithI(uri, "ftp://")) {
+        return PageDestType::LaunchURL;
+    }
+    if (str::StartsWith(uri, "mailto:")) {
+        return PageDestType::LaunchURL;
+    }
+
+    // TODO: PageDestType::LaunchEmbedded, PageDestType::LaunchURL, named destination
+    CrashMePort();
+    return PageDestType::None;
+#if 0
+    switch (link->kind) {
+        case FZ_LINK_GOTO:
+            return PageDestType::ScrollTo;
+        case FZ_LINK_URI:
+            return PageDestType::LaunchURL;
+        case FZ_LINK_NAMED:
+            return DestTypeFromName(link->ld.named.named);
+        case FZ_LINK_LAUNCH:
+            if (link->ld.launch.embedded_num)
+                return PageDestType::LaunchEmbedded;
+            if (link->ld.launch.is_uri)
+                return PageDestType::LaunchURL;
+            return PageDestType::LaunchFile;
+        case FZ_LINK_GOTOR:
+            return PageDestType::LaunchFile;
+        default:
+            return PageDestType::None; // unsupported action
+    }
+#endif
+}
+
+#if 0
+int PdfLink::GetDestPageNo() const {
+    char* uri = PdfLinkGetURI(this);
+    CrashIf(!uri);
+    if (!uri) {
+        return 0;
+    }
+    if (is_external_link(uri)) {
+        return 0;
+    }
+    float x, y;
+    int pageNo = resolve_link(uri, &x, &y);
+    if (pageNo == -1) {
+        return 0;
+    }
+    return pageNo + 1; // TODO(port): or is it just pageNo?
+#if 0
+    if (link && FZ_LINK_GOTO == link->kind)
+        return link->ld.gotor.page + 1;
+    if (link && FZ_LINK_GOTOR == link->kind && !link->ld.gotor.dest)
+        return link->ld.gotor.page + 1;
+#endif
+    return 0;
+}
+#endif
+
+RectD PdfLink::CalcDestRect() {
+    RectD result(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
+    char* uri = PdfLinkGetURI(this);
+    CrashIf(!uri);
+    if (!uri) {
+        return result;
+    }
+
+    if (is_external_link(uri)) {
+        return result;
+    }
+    float x, y;
+    int pageNo = resolve_link(uri, &x, &y);
+    if (pageNo == -1) {
+        // SendCrashReportIf(pageNo == -1);
+        return result;
+    }
+
+    result.x = (double)x;
+    result.y = (double)y;
+    return result;
+#if 0
+    if (!link || FZ_LINK_GOTO != link->kind && FZ_LINK_GOTOR != link->kind)
+        return result;
+    if (link->ld.gotor.page < 0 || link->ld.gotor.page >= engine->PageCount())
+        return result;
+
+    pdf_page* page = engine->GetFzPage(link->ld.gotor.page + 1);
+    if (!page)
+        return result;
+    fz_point lt = link->ld.gotor.lt, rb = link->ld.gotor.rb;
+    fz_transform_point(&lt, &page->ctm);
+    fz_transform_point(&rb, &page->ctm);
+
+    if ((link->ld.gotor.flags & fz_link_flag_r_is_zoom)) {
+        // /XYZ link, undefined values for the coordinates mean: keep the current position
+        if ((link->ld.gotor.flags & fz_link_flag_l_valid))
+            result.x = lt.x;
+        if ((link->ld.gotor.flags & fz_link_flag_t_valid))
+            result.y = lt.y;
+        result.dx = result.dy = 0;
+    } else if ((link->ld.gotor.flags & (fz_link_flag_fit_h | fz_link_flag_fit_v)) ==
+                   (fz_link_flag_fit_h | fz_link_flag_fit_v) &&
+               (link->ld.gotor.flags &
+                (fz_link_flag_l_valid | fz_link_flag_t_valid | fz_link_flag_r_valid | fz_link_flag_b_valid))) {
+        // /FitR link
+        result = RectD::FromXY(lt.x, lt.y, rb.x, rb.y);
+        // an empty destination rectangle would imply an /XYZ-type link to callers
+        if (result.IsEmpty())
+            result.dx = result.dy = 0.1;
+    } else if ((link->ld.gotor.flags & (fz_link_flag_fit_h | fz_link_flag_fit_v)) == fz_link_flag_fit_h &&
+               (link->ld.gotor.flags & fz_link_flag_t_valid)) {
+        // /FitH or /FitBH link
+        result.y = lt.y;
+    }
+    // all other link types only affect the zoom level, which we intentionally leave alone
+#endif
+}
+
+WCHAR* PdfLink::GetDestName() const {
+    char* uri = PdfLinkGetURI(this);
+    if (is_external_link(uri)) {
+        return nullptr;
+    }
+    // TODO(port): test with more stuff
+    // figure out what PDF_NAME(GoToR) ends up being
+    return nullptr;
+#if 0
+    if (!link || FZ_LINK_GOTOR != link->kind || !link->ld.gotor.dest)
+        return nullptr;
+    return strconv::FromUtf8(link->ld.gotor.dest);
+#endif
+}
+
+// https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
+#if 0
+bool PdfLink::SaveEmbedded(LinkSaverUI& saveUI) {
+    CrashIf(!outline || !isAttachment);
+
+    ScopedCritSec scope(engine->ctxAccess);
+    // TODO: hack, we stored stream number in outline->page
+    return engine->SaveEmbedded(saveUI, outline->page);
+}
+#endif
+
 class PdfComment : public PageElement {
   public:
     PageAnnotation annot;
     AutoFreeWstr content;
 
     PdfComment(const WCHAR* content, RectD rect, int pageNo)
-        : annot(PageAnnotType::None, pageNo, rect, 0), content(str::Dup(content)) {
+        : annot(PageAnnotType::None, pageNo, rect, 0) {
+        this->content = str::Dup(content);
         this->pageNo = pageNo;
     }
 
@@ -2142,326 +2462,6 @@ int PdfEngineImpl::GetPageByLabel(const WCHAR* label) const {
 
     return pageNo;
 }
-
-#if 0
-static bool IsRelativeURI(const WCHAR* uri) {
-    const WCHAR* c = uri;
-    while (*c && *c != ':' && *c != '/' && *c != '?' && *c != '#') {
-        c++;
-    }
-    return *c != ':';
-}
-#endif
-
-PdfLink::PdfLink(PdfEngineImpl* engine, int pageNo, fz_link* link, fz_outline* outline) {
-    this->engine = engine;
-    this->pageNo = pageNo;
-    destPageNo = pageNo;
-    CrashIf(!link && !outline);
-    this->link = link;
-    this->outline = outline;
-
-    destType = CalcDestType();
-    destRect = CalcDestRect();
-    destValue = GetValue();
-}
-
-RectD PdfLink::GetRect() const {
-    if (link) {
-        RectD r(fz_rect_to_RectD(link->rect));
-        return r;
-    }
-    return RectD();
-}
-
-static char* PdfLinkGetURI(const PdfLink* link) {
-    if (link->link) {
-        return link->link->uri;
-    }
-    if (link->outline) {
-        return link->outline->uri;
-    }
-    return nullptr;
-}
-
-WCHAR* PdfLink::GetValue() const {
-    if (outline && isAttachment) {
-        WCHAR* path = strconv::FromUtf8(outline->uri);
-        return path;
-    }
-
-    char* uri = PdfLinkGetURI(this);
-    if (!uri) {
-        return nullptr;
-    }
-    if (!is_external_link(uri)) {
-        // other values: #1,115,208
-        return nullptr;
-    }
-    WCHAR* path = strconv::FromUtf8(uri);
-    return path;
-#if 0
-    if (!link || !engine)
-        return nullptr;
-    if (link->kind != FZ_LINK_URI && link->kind != FZ_LINK_LAUNCH && link->kind != FZ_LINK_GOTOR)
-        return nullptr;
-
-    ScopedCritSec scope(&engine->ctxAccess);
-
-    WCHAR* path = nullptr;
-
-    switch (link->kind) {
-        case FZ_LINK_URI:
-            path = strconv::FromUtf8(link->ld.uri.uri);
-            if (IsRelativeURI(path)) {
-                AutoFreeWstr base;
-                fz_try(engine->ctx) {
-                    pdf_obj* obj = pdf_dict_gets(pdf_trailer(engine->_doc), "Root");
-                    obj = pdf_dict_gets(pdf_dict_gets(obj, "URI"), "Base");
-                    if (obj)
-                        base.Set(PdfToWstr(obj));
-                }
-                fz_catch(engine->ctx) {}
-                if (!str::IsEmpty(base.Get())) {
-                    AutoFreeWstr uri(str::Join(base, path));
-                    free(path);
-                    path = uri.StealData();
-                }
-            }
-            if (link->ld.uri.is_map) {
-                int x = 0, y = 0;
-                if (rect.Contains(pt)) {
-                    x = (int)(pt.x - rect.x + 0.5);
-                    y = (int)(pt.y - rect.y + 0.5);
-                }
-                AutoFreeWstr uri(str::Format(L"%s?%d,%d", path, x, y));
-                free(path);
-                path = uri.StealData();
-            }
-            break;
-        case FZ_LINK_LAUNCH:
-            // note: we (intentionally) don't support the /Win specific Launch parameters
-            if (link->ld.launch.file_spec)
-                path = strconv::FromUtf8(link->ld.launch.file_spec);
-            if (path && link->ld.launch.embedded_num && str::EndsWithI(path, L".pdf")) {
-                free(path);
-                path = str::Format(L"%s:%d:%d", engine->FileName(), link->ld.launch.embedded_num,
-                                   link->ld.launch.embedded_gen);
-            }
-            break;
-        case FZ_LINK_GOTOR:
-            if (link->ld.gotor.file_spec)
-                path = strconv::FromUtf8(link->ld.gotor.file_spec);
-            break;
-    }
-
-    return path;
-#endif
-}
-
-#if 0
-static PageDestType DestTypeFromName(const char* name) {
-// named actions are converted either to Dest_Name or Dest_NameDialog
-#define HandleType(type)      \
-    if (str::Eq(name, #type)) \
-    return PageDestType::##type
-#define HandleTypeDialog(type) \
-    if (str::Eq(name, #type))  \
-    return PageDestType::##type##Dialog
-    // predefined named actions
-    HandleType(NextPage);
-    HandleType(PrevPage);
-    HandleType(FirstPage);
-    HandleType(LastPage);
-    // Adobe Reader extensions to the spec
-    // cf. http://www.tug.org/applications/hyperref/manual.html
-    HandleTypeDialog(Find);
-    HandleType(FullScreen);
-    HandleType(GoBack);
-    HandleType(GoForward);
-    HandleTypeDialog(GoToPage);
-    HandleTypeDialog(Print);
-    HandleTypeDialog(SaveAs);
-    HandleTypeDialog(ZoomTo);
-#undef HandleType
-#undef HandleTypeDialog
-    // named action that we don't support (or invalid action name)
-    return PageDestType::None;
-}
-#endif
-
-PageDestType PdfLink::CalcDestType() {
-    if (outline && isAttachment) {
-        return PageDestType::LaunchEmbedded;
-    }
-
-    char* uri = PdfLinkGetURI(this);
-    // some outline entries are bad (issue 1245)
-    if (!uri) {
-        return PageDestType::None;
-    }
-    if (!is_external_link(uri)) {
-        float x, y;
-        int pageNo = resolve_link(uri, &x, &y);
-        if (pageNo == -1) {
-            // TODO: figure out what it could be
-            CrashMePort();
-            return PageDestType::None;
-        }
-        return PageDestType::ScrollTo;
-    }
-    if (str::StartsWith(uri, "file://")) {
-        return PageDestType::LaunchFile;
-    }
-    if (str::StartsWithI(uri, "http://")) {
-        return PageDestType::LaunchURL;
-    }
-    if (str::StartsWithI(uri, "https://")) {
-        return PageDestType::LaunchURL;
-    }
-    if (str::StartsWithI(uri, "ftp://")) {
-        return PageDestType::LaunchURL;
-    }
-    if (str::StartsWith(uri, "mailto:")) {
-        return PageDestType::LaunchURL;
-    }
-
-    // TODO: PageDestType::LaunchEmbedded, PageDestType::LaunchURL, named destination
-    CrashMePort();
-    return PageDestType::None;
-#if 0
-    switch (link->kind) {
-        case FZ_LINK_GOTO:
-            return PageDestType::ScrollTo;
-        case FZ_LINK_URI:
-            return PageDestType::LaunchURL;
-        case FZ_LINK_NAMED:
-            return DestTypeFromName(link->ld.named.named);
-        case FZ_LINK_LAUNCH:
-            if (link->ld.launch.embedded_num)
-                return PageDestType::LaunchEmbedded;
-            if (link->ld.launch.is_uri)
-                return PageDestType::LaunchURL;
-            return PageDestType::LaunchFile;
-        case FZ_LINK_GOTOR:
-            return PageDestType::LaunchFile;
-        default:
-            return PageDestType::None; // unsupported action
-    }
-#endif
-}
-
-#if 0
-int PdfLink::GetDestPageNo() const {
-    char* uri = PdfLinkGetURI(this);
-    CrashIf(!uri);
-    if (!uri) {
-        return 0;
-    }
-    if (is_external_link(uri)) {
-        return 0;
-    }
-    float x, y;
-    int pageNo = resolve_link(uri, &x, &y);
-    if (pageNo == -1) {
-        return 0;
-    }
-    return pageNo + 1; // TODO(port): or is it just pageNo?
-#if 0
-    if (link && FZ_LINK_GOTO == link->kind)
-        return link->ld.gotor.page + 1;
-    if (link && FZ_LINK_GOTOR == link->kind && !link->ld.gotor.dest)
-        return link->ld.gotor.page + 1;
-#endif
-    return 0;
-}
-#endif
-
-RectD PdfLink::CalcDestRect() {
-    RectD result(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
-    char* uri = PdfLinkGetURI(this);
-    CrashIf(!uri);
-    if (!uri) {
-        return result;
-    }
-
-    if (is_external_link(uri)) {
-        return result;
-    }
-    float x, y;
-    int pageNo = resolve_link(uri, &x, &y);
-    if (pageNo == -1) {
-        // SendCrashReportIf(pageNo == -1);
-        return result;
-    }
-
-    result.x = (double)x;
-    result.y = (double)y;
-    return result;
-#if 0
-    if (!link || FZ_LINK_GOTO != link->kind && FZ_LINK_GOTOR != link->kind)
-        return result;
-    if (link->ld.gotor.page < 0 || link->ld.gotor.page >= engine->PageCount())
-        return result;
-
-    pdf_page* page = engine->GetFzPage(link->ld.gotor.page + 1);
-    if (!page)
-        return result;
-    fz_point lt = link->ld.gotor.lt, rb = link->ld.gotor.rb;
-    fz_transform_point(&lt, &page->ctm);
-    fz_transform_point(&rb, &page->ctm);
-
-    if ((link->ld.gotor.flags & fz_link_flag_r_is_zoom)) {
-        // /XYZ link, undefined values for the coordinates mean: keep the current position
-        if ((link->ld.gotor.flags & fz_link_flag_l_valid))
-            result.x = lt.x;
-        if ((link->ld.gotor.flags & fz_link_flag_t_valid))
-            result.y = lt.y;
-        result.dx = result.dy = 0;
-    } else if ((link->ld.gotor.flags & (fz_link_flag_fit_h | fz_link_flag_fit_v)) ==
-                   (fz_link_flag_fit_h | fz_link_flag_fit_v) &&
-               (link->ld.gotor.flags &
-                (fz_link_flag_l_valid | fz_link_flag_t_valid | fz_link_flag_r_valid | fz_link_flag_b_valid))) {
-        // /FitR link
-        result = RectD::FromXY(lt.x, lt.y, rb.x, rb.y);
-        // an empty destination rectangle would imply an /XYZ-type link to callers
-        if (result.IsEmpty())
-            result.dx = result.dy = 0.1;
-    } else if ((link->ld.gotor.flags & (fz_link_flag_fit_h | fz_link_flag_fit_v)) == fz_link_flag_fit_h &&
-               (link->ld.gotor.flags & fz_link_flag_t_valid)) {
-        // /FitH or /FitBH link
-        result.y = lt.y;
-    }
-    // all other link types only affect the zoom level, which we intentionally leave alone
-#endif
-}
-
-WCHAR* PdfLink::GetDestName() const {
-    char* uri = PdfLinkGetURI(this);
-    if (is_external_link(uri)) {
-        return nullptr;
-    }
-    // TODO(port): test with more stuff
-    // figure out what PDF_NAME(GoToR) ends up being
-    return nullptr;
-#if 0
-    if (!link || FZ_LINK_GOTOR != link->kind || !link->ld.gotor.dest)
-        return nullptr;
-    return strconv::FromUtf8(link->ld.gotor.dest);
-#endif
-}
-
-// https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
-#if 0
-bool PdfLink::SaveEmbedded(LinkSaverUI& saveUI) {
-    CrashIf(!outline || !isAttachment);
-
-    ScopedCritSec scope(engine->ctxAccess);
-    // TODO: hack, we stored stream number in outline->page
-    return engine->SaveEmbedded(saveUI, outline->page);
-}
-#endif
-
 
 EngineBase* PdfEngineImpl::CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI) {
     if (str::IsEmpty(fileName)) {
