@@ -533,8 +533,9 @@ static void PaintPageFrameAndShadow(HDC hdc, RectI& bounds, RectI& pageRect, boo
 
 /* debug code to visualize links (can block while rendering) */
 static void DebugShowLinks(DisplayModel& dm, HDC hdc) {
-    if (!gDebugShowLinks)
+    if (!gDebugShowLinks) {
         return;
+    }
 
     RectI viewPortRect(PointI(), dm.GetViewPort().Size());
     HPEN pen = CreatePen(PS_SOLID, 1, RGB(0x00, 0xff, 0xff));
@@ -542,22 +543,25 @@ static void DebugShowLinks(DisplayModel& dm, HDC hdc) {
 
     for (int pageNo = dm.PageCount(); pageNo >= 1; --pageNo) {
         PageInfo* pageInfo = dm.GetPageInfo(pageNo);
-        if (!pageInfo || !pageInfo->shown || 0.0 == pageInfo->visibleRatio)
+        if (!pageInfo || !pageInfo->shown || 0.0 == pageInfo->visibleRatio) {
             continue;
+        }
 
         Vec<PageElement*>* els = dm.GetEngine()->GetElements(pageNo);
-        if (els) {
-            for (size_t i = 0; i < els->size(); i++) {
-                if (els->at(i)->GetType() == PageElementType::Image)
-                    continue;
-                RectI rect = dm.CvtToScreen(pageNo, els->at(i)->GetRect());
-                RectI isect = viewPortRect.Intersect(rect);
-                if (!isect.IsEmpty())
-                    PaintRect(hdc, isect);
-            }
-            DeleteVecMembers(*els);
-            delete els;
+        if (!els) {
+            continue;
         }
+
+        for (size_t i = 0; i < els->size(); i++) {
+            if (els->at(i)->GetType() == PageElementType::Image)
+                continue;
+            RectI rect = dm.CvtToScreen(pageNo, els->at(i)->GetRect());
+            RectI isect = viewPortRect.Intersect(rect);
+            if (!isect.IsEmpty())
+                PaintRect(hdc, isect);
+        }
+        DeleteVecMembers(*els);
+        delete els;
     }
 
     DeletePen(SelectObject(hdc, oldPen));
