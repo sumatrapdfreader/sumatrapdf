@@ -157,6 +157,7 @@ class PageElement {
   public:
     int elementPageNo = -1;
     PageElementType elementType = PageElementType::Unknown;
+    RectD elementRect{};
 
     virtual ~PageElement() {
     }
@@ -171,7 +172,10 @@ class PageElement {
     }
 
     // rectangle that can be interacted with
-    virtual RectD GetRect() const = 0;
+    RectD GetRect() const {
+        return elementRect;
+    }
+
     // string value associated with this element (e.g. displayed in an infotip)
     // caller must free() the result
     virtual WCHAR* GetValue() const = 0;

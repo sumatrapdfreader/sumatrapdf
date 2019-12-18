@@ -468,7 +468,6 @@ class PdfLink : public PageElement, public PageDestination {
     PdfLink(PdfEngineImpl* engine, int pageNo, fz_link* link, fz_outline* outline);
 
     // PageElement
-    RectD GetRect() const override;
     WCHAR* GetValue() const override;
     virtual PageDestination* AsLink() {
         return this;
@@ -503,14 +502,9 @@ PdfLink::PdfLink(PdfEngineImpl* engine, int pageNo, fz_link* link, fz_outline* o
     destName = CalcDestName();
 
     elementType = PageElementType::Link;
-}
-
-RectD PdfLink::GetRect() const {
     if (link) {
-        RectD r(fz_rect_to_RectD(link->rect));
-        return r;
+        elementRect = fz_rect_to_RectD(link->rect);
     }
-    return RectD();
 }
 
 static char* PdfLinkGetURI(const PdfLink* link) {
@@ -812,11 +806,9 @@ class PdfComment : public PageElement {
         this->content = str::Dup(content);
         elementPageNo = pageNo;
         elementType = PageElementType::Comment;
+        elementRect = annot.rect;
     }
 
-    RectD GetRect() const override {
-        return annot.rect;
-    }
     WCHAR* GetValue() const override {
         return str::Dup(content);
     }
@@ -846,10 +838,7 @@ class PdfImage : public PageElement {
         this->imageIdx = imageIdx;
         elementPageNo = pageNo;
         elementType = PageElementType::Image;
-    }
-
-    RectD GetRect() const override {
-        return rect;
+        elementRect = this->rect;
     }
 
     WCHAR* GetValue() const override {

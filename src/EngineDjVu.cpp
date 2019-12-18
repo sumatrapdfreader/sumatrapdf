@@ -84,15 +84,12 @@ class DjVuLink : public PageElement {
             value = strconv::FromUtf8(comment);
         }
         elementType = PageElementType::Link;
+        elementRect = this->rect;
     }
 
     ~DjVuLink() override {
         delete dest;
         free(value);
-    }
-
-    RectD GetRect() const override {
-        return rect;
     }
 
     WCHAR* GetValue() const override {

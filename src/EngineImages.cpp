@@ -217,15 +217,15 @@ class ImageElement : public PageElement {
         this->page = page;
         elementPageNo = page->pageNo;
         elementType = PageElementType::Image;
+        int dx = page->bmp->GetWidth();
+        int dy = page->bmp->GetHeight();
+        elementRect = RectD(0, 0, dx, dy);
     }
 
     virtual ~ImageElement() {
         engine->DropPage(page);
     }
 
-    RectD GetRect() const override {
-        return RectD(0, 0, page->bmp->GetWidth(), page->bmp->GetHeight());
-    }
     WCHAR* GetValue() const override {
         return nullptr;
     }
