@@ -172,14 +172,10 @@ class EbookEngine : public EngineBase {
 };
 
 class SimpleDest2 : public PageDestination {
-  protected:
-    AutoFreeWstr value;
-
   public:
     SimpleDest2(int pageNo, RectD rect, WCHAR* value = nullptr) {
         destPageNo = pageNo;
         destRect = rect;
-        this->value = value;
         if (value) {
             destKind = kindDestinationLaunchURL;
         } else {
@@ -1544,11 +1540,8 @@ DocTocTree* ChmEngineImpl::GetTocTree() {
 }
 
 class ChmEmbeddedDest : public PageDestination {
-    ChmEngineImpl* engine = nullptr;
-
   public:
-    ChmEmbeddedDest(ChmEngineImpl* engine, const char* path) {
-        this->engine = engine;
+    ChmEmbeddedDest(const char* path) {
         destKind = kindDestinationLaunchEmbedded;
         destPageNo = 0;
         destValue = strconv::Utf8ToWchar(path::GetBaseNameNoFree(path));
@@ -1567,7 +1560,7 @@ PageElement* ChmEngineImpl::CreatePageLink(DrawInstr* link, RectI rect, int page
     if (!doc->HasData(url))
         return nullptr;
 
-    PageDestination* dest = new ChmEmbeddedDest(this, url);
+    PageDestination* dest = new ChmEmbeddedDest(url);
     return new EbookLink(link, rect, dest, pageNo);
 }
 
@@ -1643,22 +1636,16 @@ bool HtmlEngineImpl::Load(const WCHAR* fileName) {
 }
 
 class RemoteHtmlDest : public SimpleDest2 {
-    AutoFreeWstr name;
-
   public:
     explicit RemoteHtmlDest(const WCHAR* relativeURL) : SimpleDest2(0, RectD()) {
         const WCHAR* id = str::FindChar(relativeURL, '#');
         if (id) {
-            value.Set(str::DupN(relativeURL, id - relativeURL));
-            name.SetCopy(id);
+            destValue = str::DupN(relativeURL, id - relativeURL);
+            destName = str::Dup(id);
         } else {
-            value.SetCopy(relativeURL);
+            destValue = str::Dup(relativeURL);
         }
         destKind = kindDestinationLaunchFile;
-    }
-
-    virtual WCHAR* GetDestName() const {
-        return str::Dup(name);
     }
 };
 

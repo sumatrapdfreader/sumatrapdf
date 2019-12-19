@@ -78,7 +78,7 @@ static void CustomizeTocInfoTip(TreeCtrl* w, NMTVGETINFOTIPW* nm) {
     if (!link) {
         return;
     }
-    AutoFreeWstr path(link->GetDestValue());
+    WCHAR* path = link->GetDestValue();
     if (!path) {
         return;
     }
@@ -106,10 +106,12 @@ static void CustomizeTocInfoTip(TreeCtrl* w, NMTVGETINFOTIPW* nm) {
     }
 
     if (kindDestinationLaunchEmbedded == dstType) {
-        path.Set(str::Format(_TR("Attachment: %s"), path.Get()));
+        AutoFreeWstr tmp = str::Format(_TR("Attachment: %s"), path);
+        infotip.Append(tmp.get());
+    } else {
+        infotip.Append(path);
     }
 
-    infotip.Append(path);
     str::BufSet(nm->pszText, nm->cchTextMax, infotip.Get());
 }
 

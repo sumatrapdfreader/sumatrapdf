@@ -113,17 +113,14 @@ class PageDestination {
     }
 
     // string value associated with the destination (e.g. a path or a URL)
-    // caller must free() the result
-    // TODO: change the contract to not need free()
     WCHAR* GetDestValue() const {
-        return str::Dup(destValue);
+        return destValue;
     }
 
     // the name of this destination (reverses EngineBase::GetNamedDest) or nullptr
     // (mainly applicable for links of type "LaunchFile" to PDF documents)
-    // caller must free() the result
     WCHAR* GetDestName() const {
-        return str::Dup(destName);
+        return destName;
     }
 };
 
