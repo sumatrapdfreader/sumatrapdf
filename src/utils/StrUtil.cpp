@@ -854,17 +854,31 @@ const char* Parse(const char* str, size_t len, const char* fmt, ...) {
     return res;
 }
 
+bool IsAlNum(char c) {
+    if (c >= '0' && c <= '9') {
+        return true;
+    }
+    if (c >= 'a' && c <= 'z') {
+        return true;
+    }
+    if (c >= 'A' && c <= 'Z') {
+        return true;
+    }
+    return false;
+}
+
 /* compares two strings "naturally" by sorting numbers within a string
    numerically instead of by pure ASCII order; we imitate Windows Explorer
    by sorting special characters before alphanumeric characters
    (e.g. ".hg" < "2.pdf" < "100.pdf" < "zzz")
+   // TODO: this should be utf8-aware, see e.g. cbx\bug1234-*.cbr file
 */
 int CmpNatural(const char* a, const char* b) {
     CrashAlwaysIf(!a || !b);
     const char *aStart = a, *bStart = b;
     int diff = 0;
 
-    for (; 0 == diff; a++, b++) {
+    while (diff == 0) {
         // ignore leading and trailing spaces, and differences in whitespace only
         if (a == aStart || !*a || !*b || IsWs(*a) && IsWs(*b)) {
             for (; IsWs(*a); a++) {
@@ -876,8 +890,10 @@ int CmpNatural(const char* a, const char* b) {
         }
         // if two strings are identical when ignoring case, leading zeroes and
         // whitespace, compare them traditionally for a stable sort order
-        if (!*a && !*b)
+        if (!*a && !*b) {
             return strcmp(aStart, bStart);
+        }
+
         if (str::IsDigit(*a) && str::IsDigit(*b)) {
             // ignore leading zeroes
             for (; '0' == *a; a++) {
@@ -900,18 +916,20 @@ int CmpNatural(const char* a, const char* b) {
             // neither *a nor *b is a digit, so continue with them (unless diff != 0)
             a--;
             b--;
-        }
-        // sort letters case-insensitively
-        else if (isalnum((int)*a) && isalnum((int)*b))
+        } else if (str::IsAlNum(*a) && str::IsAlNum(*b)) {
+            // sort letters case-insensitively
             diff = tolower(*a) - tolower(*b);
-        // sort special characters before text and numbers
-        else if (isalnum((int)*a))
+        } else if (str::IsAlNum(*a)) {
+            // sort special characters before text and numbers
             return 1;
-        else if (isalnum((int)*b))
+        } else if (str::IsAlNum(*b)) {
             return -1;
-        // sort special characters by ASCII code
-        else
+        } else {
+            // sort special characters by ASCII code
             diff = *a - *b;
+        }
+        a++;
+        b++;
     }
 
     return diff;

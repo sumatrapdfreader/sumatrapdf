@@ -72,6 +72,7 @@ void Utf8Encode(char*& dst, int c);
 
 bool IsDigit(char c);
 bool IsWs(char c);
+bool IsAlNum(char c);
 
 const char* FindChar(const char* str, const char c);
 char* FindChar(char* str, const char c);
