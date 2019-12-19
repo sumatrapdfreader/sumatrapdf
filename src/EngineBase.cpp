@@ -102,6 +102,18 @@ PageDestination* DocTocItem::GetPageDestination() {
     return dest;
 }
 
+PageDestination* newSimpleDest(int pageNo, RectD rect, const WCHAR* value) {
+    auto res = new PageDestination();
+    res->destPageNo = pageNo;
+    res->destRect = rect;
+    res->destKind = kindDestinationScrollTo;
+    if (value) {
+        res->destKind = kindDestinationLaunchURL;
+        res->destValue = str::Dup(value);
+    }
+    return res;
+}
+
 WCHAR* DocTocItem::Text() {
     return title;
 }

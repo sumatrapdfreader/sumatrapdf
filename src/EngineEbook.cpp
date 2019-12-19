@@ -171,19 +171,6 @@ class EbookEngine : public EngineBase {
     }
 };
 
-static PageDestination* newSimpleDest2(int pageNo, RectD rect, WCHAR* value = nullptr) {
-    auto res = new PageDestination();
-    res->destPageNo = pageNo;
-    res->destRect = rect;
-    if (value) {
-        res->destKind = kindDestinationLaunchURL;
-    } else {
-        res->destKind = kindDestinationScrollTo;
-    }
-    res->destValue = str::Dup(value);
-    return res;
-}
-
 class EbookLink : public PageElement {
   public:
     EbookLink() = default;
@@ -586,7 +573,7 @@ PageDestination* EbookEngine::GetNamedDest(const WCHAR* name) {
         if (id_len == anchor->instr->str.len && str::EqNI(id, anchor->instr->str.s, id_len)) {
             RectD rect(0, anchor->instr->bbox.Y + pageBorder, pageRect.dx, 10);
             rect.Inflate(-pageBorder, 0);
-            return newSimpleDest2(anchor->pageNo, rect);
+            return newSimpleDest(anchor->pageNo, rect);
         }
     }
 
@@ -594,7 +581,7 @@ PageDestination* EbookEngine::GetNamedDest(const WCHAR* name) {
     if (basePageNo != 0) {
         RectD rect(0, pageBorder, pageRect.dx, 10);
         rect.Inflate(-pageBorder, 0);
-        return newSimpleDest2(basePageNo, rect);
+        return newSimpleDest(basePageNo, rect);
     }
 
     return nullptr;
@@ -685,7 +672,7 @@ void EbookTocBuilder::Visit(const WCHAR* name, const WCHAR* url, int level) {
     if (!url) {
         dest = nullptr;
     } else if (url::IsAbsolute(url)) {
-        dest = newSimpleDest2(0, RectD(), str::Dup(url));
+        dest = newSimpleDest(0, RectD(), str::Dup(url));
     } else {
         dest = engine->GetNamedDest(url);
         if (!dest && str::FindChar(url, '%')) {
@@ -1091,7 +1078,7 @@ PageDestination* MobiEngineImpl::GetNamedDest(const WCHAR* name) {
     }
     RectD rect(0, currY + pageBorder, pageRect.dx, 10);
     rect.Inflate(-pageBorder, 0);
-    return newSimpleDest2(pageNo, rect);
+    return newSimpleDest(pageNo, rect);
 }
 
 DocTocTree* MobiEngineImpl::GetTocTree() {

@@ -124,6 +124,8 @@ class PageDestination {
     }
 };
 
+PageDestination* newSimpleDest(int pageNo, RectD rect, const WCHAR* value = nullptr);
+
 // an user annotation on page
 struct PageAnnotation {
     PageAnnotType type = PageAnnotType::None;
