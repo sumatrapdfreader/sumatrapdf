@@ -618,13 +618,13 @@ void OnContextMenu(WindowInfo* win, int x, int y) {
     }
 
     HMENU popup = BuildMenuFromMenuDef(menuDefContext, dimof(menuDefContext), CreatePopupMenu());
-    if (!pageEl || pageEl->GetType() != PageElementType::Link || !value) {
+    if (!pageEl || pageEl->kind != kindPageElementLink || !value) {
         win::menu::Remove(popup, IDM_COPY_LINK_TARGET);
     }
-    if (!pageEl || pageEl->GetType() != PageElementType::Comment || !value) {
+    if (!pageEl || pageEl->kind != kindPageElementComment || !value) {
         win::menu::Remove(popup, IDM_COPY_COMMENT);
     }
-    if (!pageEl || pageEl->GetType() != PageElementType::Image) {
+    if (!pageEl || pageEl->kind != kindPageElementImage) {
         win::menu::Remove(popup, IDM_COPY_IMAGE);
     }
 

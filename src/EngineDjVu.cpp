@@ -79,7 +79,7 @@ class DjVuLink : public PageElement {
         if (!str::IsEmpty(comment)) {
             elementValue = strconv::FromUtf8(comment);
         }
-        elementType = PageElementType::Link;
+        kind = kindPageElementLink;
         if (!str::IsEmpty(comment)) {
             elementValue = strconv::Utf8ToWchar(comment);
         } else {

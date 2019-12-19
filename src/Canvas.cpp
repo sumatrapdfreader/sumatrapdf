@@ -253,16 +253,18 @@ static void OnMouseMove(WindowInfo* win, int x, int y, WPARAM flags) {
 
     NotificationWnd* wnd = win->notifications->GetForGroup(NG_CURSOR_POS_HELPER);
     if (wnd) {
-        if (MouseAction::Selecting == win->mouseAction)
+        if (MouseAction::Selecting == win->mouseAction) {
             win->selectionMeasure = win->AsFixed()->CvtFromScreen(win->selectionRect).Size();
+        }
         UpdateCursorPositionHelper(win, PointI(x, y), wnd);
     }
 }
 
 static void OnMouseLeftButtonDown(WindowInfo* win, int x, int y, WPARAM key) {
     // lf("Left button clicked on %d %d", x, y);
-    if (MouseAction::DraggingRight == win->mouseAction)
+    if (MouseAction::DraggingRight == win->mouseAction) {
         return;
+    }
 
     if (MouseAction::Scrolling == win->mouseAction) {
         win->mouseAction = MouseAction::Idle;
@@ -277,10 +279,11 @@ static void OnMouseLeftButtonDown(WindowInfo* win, int x, int y, WPARAM key) {
     AssertCrash(!win->linkOnLastButtonDown);
     DisplayModel* dm = win->AsFixed();
     PageElement* pageEl = dm->GetElementAtPos(PointI(x, y));
-    if (pageEl && pageEl->GetType() == PageElementType::Link)
+    if (pageEl && pageEl->Is(kindPageElementLink)) {
         win->linkOnLastButtonDown = pageEl;
-    else
+    } else {
         delete pageEl;
+    }
     win->dragStartPending = true;
     win->dragStart = PointI(x, y);
 
@@ -303,16 +306,17 @@ static void OnMouseLeftButtonDown(WindowInfo* win, int x, int y, WPARAM key) {
 
 static void OnMouseLeftButtonUp(WindowInfo* win, int x, int y, WPARAM key) {
     AssertCrash(win->AsFixed());
-    if (MouseAction::Idle == win->mouseAction || MouseAction::DraggingRight == win->mouseAction)
+    if (MouseAction::Idle == win->mouseAction || MouseAction::DraggingRight == win->mouseAction) {
         return;
+    }
     AssertCrash(MouseAction::Selecting == win->mouseAction || MouseAction::SelectingText == win->mouseAction ||
                 MouseAction::Dragging == win->mouseAction);
 
     bool didDragMouse = !win->dragStartPending || abs(x - win->dragStart.x) > GetSystemMetrics(SM_CXDRAG) ||
                         abs(y - win->dragStart.y) > GetSystemMetrics(SM_CYDRAG);
-    if (MouseAction::Dragging == win->mouseAction)
+    if (MouseAction::Dragging == win->mouseAction) {
         OnDraggingStop(win, x, y, !didDragMouse);
-    else {
+    } else {
         OnSelectionStop(win, x, y, !didDragMouse);
         if (MouseAction::Selecting == win->mouseAction && win->showSelection)
             win->selectionMeasure = win->AsFixed()->CvtFromScreen(win->selectionRect).Size();
@@ -325,13 +329,13 @@ static void OnMouseLeftButtonUp(WindowInfo* win, int x, int y, WPARAM key) {
     win->linkOnLastButtonDown = nullptr;
     win->mouseAction = MouseAction::Idle;
 
-    if (didDragMouse)
+    if (didDragMouse) {
         /* pass */;
-    /* return from white/black screens in presentation mode */
-    else if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation)
+        /* return from white/black screens in presentation mode */
+    } else if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
         win->ChangePresentationMode(PM_ENABLED);
-    /* follow an active link */
-    else if (link && link->GetRect().Contains(ptPage)) {
+        /* follow an active link */
+    } else if (link && link->GetRect().Contains(ptPage)) {
         PageDestination* dest = link->AsLink();
         // highlight the clicked link (as a reminder of the last action once the user returns)
         if (dest &&
@@ -344,21 +348,20 @@ static void OnMouseLeftButtonUp(WindowInfo* win, int x, int y, WPARAM key) {
         }
         SetCursor(IDC_ARROW);
         win->linkHandler->GotoLink(dest);
-    }
-    /* if we had a selection and this was just a click, hide the selection */
-    else if (win->showSelection)
+    } else if (win->showSelection) {
+        /* if we had a selection and this was just a click, hide the selection */
         ClearSearchResult(win);
-    /* if there's a permanent forward search mark, hide it */
-    else if (win->fwdSearchMark.show && gGlobalPrefs->forwardSearch.highlightPermanent) {
+    } else if (win->fwdSearchMark.show && gGlobalPrefs->forwardSearch.highlightPermanent) {
+        /* if there's a permanent forward search mark, hide it */
         win->fwdSearchMark.show = false;
         win->RepaintAsync();
-    }
-    /* in presentation mode, change pages on left/right-clicks */
-    else if (PM_ENABLED == win->presentation) {
-        if ((key & MK_SHIFT))
+    } else if (PM_ENABLED == win->presentation) {
+        /* in presentation mode, change pages on left/right-clicks */
+        if ((key & MK_SHIFT)) {
             win->ctrl->GoToPrevPage();
-        else
+        } else {
             win->ctrl->GoToNextPage();
+        }
     }
 
     delete link;
@@ -374,10 +377,12 @@ static void OnMouseLeftButtonDblClk(WindowInfo* win, int x, int y, WPARAM key) {
     }
 
     bool dontSelect = false;
-    if (gGlobalPrefs->enableTeXEnhancements && !(key & ~MK_LBUTTON))
+    if (gGlobalPrefs->enableTeXEnhancements && !(key & ~MK_LBUTTON)) {
         dontSelect = OnInverseSearch(win, x, y);
-    if (dontSelect)
+    }
+    if (dontSelect) {
         return;
+    }
 
     DisplayModel* dm = win->AsFixed();
     if (dm->IsOverText(PointI(x, y))) {
@@ -392,10 +397,10 @@ static void OnMouseLeftButtonDblClk(WindowInfo* win, int x, int y, WPARAM key) {
     }
 
     PageElement* pageEl = dm->GetElementAtPos(PointI(x, y));
-    if (pageEl && pageEl->GetType() == PageElementType::Link) {
+    if (pageEl && pageEl->Is(kindPageElementLink)) {
         // speed up navigation in a file where navigation links are in a fixed position
         OnMouseLeftButtonDown(win, x, y, key);
-    } else if (pageEl && pageEl->GetType() == PageElementType::Image) {
+    } else if (pageEl && pageEl->Is(kindPageElementImage)) {
         // select an image that could be copied to the clipboard
         RectI rc = dm->CvtToScreen(pageEl->GetPageNo(), pageEl->GetRect());
 
@@ -553,12 +558,14 @@ static void DebugShowLinks(DisplayModel& dm, HDC hdc) {
         }
 
         for (size_t i = 0; i < els->size(); i++) {
-            if (els->at(i)->GetType() == PageElementType::Image)
+            if (els->at(i)->Is(kindPageElementImage)) {
                 continue;
+            }
             RectI rect = dm.CvtToScreen(pageNo, els->at(i)->GetRect());
             RectI isect = viewPortRect.Intersect(rect);
-            if (!isect.IsEmpty())
+            if (!isect.IsEmpty()) {
                 PaintRect(hdc, isect);
+            }
         }
         DeleteVecMembers(*els);
         delete els;
@@ -573,10 +580,12 @@ static void DebugShowLinks(DisplayModel& dm, HDC hdc) {
 
         for (int pageNo = dm.PageCount(); pageNo >= 1; --pageNo) {
             PageInfo* pageInfo = dm.GetPageInfo(pageNo);
-            if (!pageInfo->shown || 0.0 == pageInfo->visibleRatio)
+            if (!pageInfo->shown || 0.0 == pageInfo->visibleRatio) {
                 continue;
+            }
 
-            RectI rect = dm.CvtToScreen(pageNo, dm.GetEngine()->PageContentBox(pageNo));
+            auto cbbox = dm.GetEngine()->PageContentBox(pageNo);
+            RectI rect = dm.CvtToScreen(pageNo, cbbox);
             PaintRect(hdc, rect);
         }
 
@@ -796,7 +805,7 @@ static LRESULT OnSetCursor(WindowInfo* win, HWND hwnd) {
                     RectI rc = dm->CvtToScreen(pageEl->GetPageNo(), pageEl->GetRect());
                     win->ShowInfoTip(text, rc, true);
 
-                    bool isLink = pageEl->GetType() == PageElementType::Link;
+                    bool isLink = pageEl->Is(kindPageElementLink);
                     delete pageEl;
 
                     if (isLink) {

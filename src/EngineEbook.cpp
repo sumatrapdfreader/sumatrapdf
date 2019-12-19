@@ -206,7 +206,7 @@ class EbookLink : public PageElement, public PageDestination {
         this->showUrl = showUrl;
         destType = PageDestType::LaunchURL;
         destValue = GetValue();
-        elementType = PageElementType::Link;
+        kind = kindPageElementLink;
         elementRect = rect.Convert<double>();
         if (!dest || showUrl) {
             elementValue = strconv::FromHtmlUtf8(link->str.s, link->str.len);
@@ -242,7 +242,7 @@ class ImageDataElement : public PageElement {
     ImageDataElement(int pageNo, ImageData* id, RectI bbox) {
         this->id = id;
         elementPageNo = pageNo;
-        elementType = PageElementType::Image;
+        kind = kindPageElementImage;
         elementRect = bbox.Convert<double>();
         getImage = [=]() -> RenderedBitmap* { return getImageFromData(id); };
     }

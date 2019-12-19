@@ -9,6 +9,10 @@
 
 #include "EngineBase.h"
 
+Kind kindPageElementLink = "link";
+Kind kindPageElementImage = "image";
+Kind kindPageElementComment = "comment";
+
 RenderedBitmap::~RenderedBitmap() {
     DeleteObject(hbmp);
 }

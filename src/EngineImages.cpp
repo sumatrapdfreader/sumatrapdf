@@ -229,7 +229,7 @@ class ImageElement : public PageElement {
         this->engine = engine;
         this->page = page;
         elementPageNo = page->pageNo;
-        elementType = PageElementType::Image;
+        kind = kindPageElementImage;
         int dx = page->bmp->GetWidth();
         int dy = page->bmp->GetHeight();
         elementRect = RectD(0, 0, dx, dy);
