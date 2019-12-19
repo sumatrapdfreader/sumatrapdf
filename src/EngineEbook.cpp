@@ -217,15 +217,14 @@ static PageElement* newImageDataElement(int pageNo, ImageData* id, RectI bbox) {
     return res;
 }
 
-class EbookTocItem : public DocTocItem {
-  public:
-    EbookTocItem(WCHAR* title, PageDestination* dest) : DocTocItem(title, 0) {
-        this->dest = dest;
-        if (dest) {
-            pageNo = dest->GetPageNo();
-        }
+static DocTocItem* newEbookTocItem(const WCHAR* title, PageDestination* dest)  {
+    auto res = new DocTocItem(title, 0);
+    res->dest = dest;
+    if (dest) {
+        res->pageNo = dest->GetPageNo();
     }
-};
+    return res;
+}
 
 EbookEngine::EbookEngine() {
     // "B Format" paperback
@@ -279,11 +278,14 @@ PointD EbookEngine::Transform(PointD pt, int pageNo, float zoom, int rotation, b
 RectD EbookEngine::Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse) {
     UNUSED(pageNo);
     geomutil::RectT<REAL> rcF = rect.Convert<REAL>();
-    PointF pts[2] = {PointF(rcF.x, rcF.y), PointF(rcF.x + rcF.dx, rcF.y + rcF.dy)};
+    auto p1 = PointF(rcF.x, rcF.y);
+    auto p2 = PointF(rcF.x + rcF.dx, rcF.y + rcF.dy);
+    PointF pts[2] = {p1, p2};
     Matrix m;
     GetTransform(m, zoom, rotation);
-    if (inverse)
+    if (inverse) {
         m.Invert();
+    }
     m.TransformPoints(pts, 2);
     return RectD::FromXY(pts[0].X, pts[0].Y, pts[1].X, pts[1].Y);
 }
@@ -627,7 +629,7 @@ WCHAR* EbookEngine::ExtractFontList() {
     return fonts.Join(L"\n");
 }
 
-static void AppendTocItem(EbookTocItem*& root, EbookTocItem* item, int level) {
+static void AppendTocItem(DocTocItem*& root, DocTocItem* item, int level) {
     if (!root) {
         root = item;
         return;
@@ -649,7 +651,7 @@ static void AppendTocItem(EbookTocItem*& root, EbookTocItem* item, int level) {
 
 class EbookTocBuilder : public EbookTocVisitor {
     EngineBase* engine = nullptr;
-    EbookTocItem* root = nullptr;
+    DocTocItem* root = nullptr;
     int idCounter = 0;
     bool isIndex = false;
 
@@ -660,7 +662,7 @@ class EbookTocBuilder : public EbookTocVisitor {
 
     void Visit(const WCHAR* name, const WCHAR* url, int level) override;
 
-    EbookTocItem* GetRoot() {
+    DocTocItem* GetRoot() {
         return root;
     }
     void SetIsIndex(bool value) {
@@ -683,7 +685,7 @@ void EbookTocBuilder::Visit(const WCHAR* name, const WCHAR* url, int level) {
         }
     }
 
-    EbookTocItem* item = new EbookTocItem(str::Dup(name), dest);
+    DocTocItem* item = newEbookTocItem(name, dest);
     item->id = ++idCounter;
     if (isIndex) {
         item->pageNo = 0;
@@ -819,7 +821,7 @@ DocTocTree* EpubEngineImpl::GetTocTree() {
     }
     EbookTocBuilder builder(this);
     doc->ParseToc(&builder);
-    EbookTocItem* root = builder.GetRoot();
+    DocTocItem* root = builder.GetRoot();
     if (!root) {
         return nullptr;
     }
@@ -938,7 +940,7 @@ DocTocTree* Fb2EngineImpl::GetTocTree() {
     }
     EbookTocBuilder builder(this);
     doc->ParseToc(&builder);
-    EbookTocItem* root = builder.GetRoot();
+    DocTocItem* root = builder.GetRoot();
     if (!root) {
         return nullptr;
     }
@@ -1089,7 +1091,7 @@ DocTocTree* MobiEngineImpl::GetTocTree() {
     }
     EbookTocBuilder builder(this);
     doc->ParseToc(&builder);
-    EbookTocItem* root = builder.GetRoot();
+    DocTocItem* root = builder.GetRoot();
     if (!root) {
         return nullptr;
     }
@@ -1532,7 +1534,7 @@ DocTocTree* ChmEngineImpl::GetTocTree() {
         builder.SetIsIndex(true);
         doc->ParseIndex(&builder);
     }
-    EbookTocItem* root = builder.GetRoot();
+    DocTocItem* root = builder.GetRoot();
     if (!root) {
         return nullptr;
     }
