@@ -65,13 +65,14 @@ bool IsSep(WCHAR c) {
 
 // Note: returns pointer inside <path>, do not free
 const WCHAR* GetBaseNameNoFree(const WCHAR* path) {
-    const WCHAR* fileBaseName = path + str::Len(path);
-    for (; fileBaseName > path; fileBaseName--) {
-        if (IsSep(fileBaseName[-1])) {
+    const WCHAR* end = path + str::Len(path);
+    while (end > path) {
+        if (IsSep(end[-1])) {
             break;
         }
+        --end;
     }
-    return fileBaseName;
+    return end;
 }
 
 // Note: returns pointer inside <path>, do not free

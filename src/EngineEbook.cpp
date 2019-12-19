@@ -1326,11 +1326,7 @@ void ChmFormatter::HandleTagLink(HtmlToken* t) {
 
 /* EngineBase for handling CHM documents */
 
-class ChmEmbeddedDest;
-
 class ChmEngineImpl : public EbookEngine {
-    friend ChmEmbeddedDest;
-
   public:
     ChmEngineImpl() : EbookEngine() {
         // ISO 216 A4 (210mm x 297mm)
@@ -1525,14 +1521,12 @@ DocTocTree* ChmEngineImpl::GetTocTree() {
     return tocTree;
 }
 
-class ChmEmbeddedDest : public PageDestination {
-  public:
-    ChmEmbeddedDest(const char* path) {
-        destKind = kindDestinationLaunchEmbedded;
-        destPageNo = 0;
-        destValue = strconv::Utf8ToWchar(path::GetBaseNameNoFree(path));
-    }
-};
+static PageDestination* newChmEmbeddedDest(const char* path) {
+    auto res = new PageDestination();
+    res->destKind = kindDestinationLaunchEmbedded;
+    res->destValue = strconv::Utf8ToWchar(path::GetBaseNameNoFree(path));
+    return res;
+}
 
 PageElement* ChmEngineImpl::CreatePageLink(DrawInstr* link, RectI rect, int pageNo) {
     PageElement* linkEl = EbookEngine::CreatePageLink(link, rect, pageNo);
@@ -1546,7 +1540,7 @@ PageElement* ChmEngineImpl::CreatePageLink(DrawInstr* link, RectI rect, int page
     if (!doc->HasData(url))
         return nullptr;
 
-    PageDestination* dest = new ChmEmbeddedDest(url);
+    PageDestination* dest = newChmEmbeddedDest(url);
     return new EbookLink(link, rect, dest, pageNo);
 }
 
