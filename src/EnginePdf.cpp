@@ -487,16 +487,16 @@ static bool IsRelativeURI(const WCHAR* uri) {
 
 PdfLink::PdfLink(PdfEngineImpl* engine, int pageNo, fz_link* link, fz_outline* outline) {
     this->engine = engine;
-    elementPageNo = pageNo;
+    pageNo = pageNo;
     CrashIf(!link && !outline);
     this->link = link;
     this->outline = outline;
 
     kind = kindPageElementDest;
     if (link) {
-        elementRect = fz_rect_to_RectD(link->rect);
+        rect = fz_rect_to_RectD(link->rect);
     }
-    elementValue = CalcValue();
+    value = CalcValue();
 
     auto dest = new PageDestination();
     dest->kind = CalcDestKind();
@@ -505,7 +505,7 @@ PdfLink::PdfLink(PdfEngineImpl* engine, int pageNo, fz_link* link, fz_outline* o
     dest->name = CalcDestName();
     dest->pageNo = CalcDestPageNo();
 
-    elementDest = dest;
+    this->dest = dest;
 }
 
 static char* PdfLinkGetURI(const PdfLink* link) {
@@ -770,10 +770,10 @@ class PdfComment : public PageElement {
 
     PdfComment(const WCHAR* content, RectD rect, int pageNo) : annot(PageAnnotType::None, pageNo, rect, 0) {
         this->content = str::Dup(content);
-        elementPageNo = pageNo;
+        pageNo = pageNo;
         kind = kindPageElementComment;
-        elementRect = annot.rect;
-        elementValue = str::Dup(content);
+        rect = annot.rect;
+        value = str::Dup(content);
     }
 };
 
@@ -783,7 +783,7 @@ class PdfTocItem : public DocTocItem {
     PdfLink* link;
 
     PdfTocItem(WCHAR* title, PdfLink* link) : DocTocItem(title), link(link) {
-        dest = link->elementDest;
+        dest = link->dest;
     }
 
     ~PdfTocItem() override {
@@ -800,12 +800,12 @@ class PdfImage : public PageElement {
         PdfImage(PdfEngineImpl * engine, int pageNo, fz_rect rect, size_t imageIdx) {
             this->engine = engine;
             this->imageIdx = imageIdx;
-            elementPageNo = pageNo;
+            pageNo = pageNo;
             kind = kindPageElementImage;
-            elementRect = fz_rect_to_RectD(rect);
+            this->rect = fz_rect_to_RectD(rect);
             getImage = [=]() -> RenderedBitmap* {
-                auto pn = this->elementPageNo;
-                auto r = this->elementRect;
+                auto pn = this->pageNo;
+                auto r = this->rect;
                 auto idx = this->imageIdx;
                 return this->engine->GetPageImage(pn, r, idx);
             };

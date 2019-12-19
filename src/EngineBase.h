@@ -153,17 +153,17 @@ extern Kind kindPageElementComment;
 class PageElement {
   public:
     Kind kind = nullptr;
-    int elementPageNo = -1;
-    RectD elementRect{};
-    WCHAR* elementValue = nullptr;
+    int pageNo = -1;
+    RectD rect{};
+    WCHAR* value = nullptr;
     std::function<RenderedBitmap*(void)> getImage = nullptr;
 
     // only set if kindPageElementDest
-    PageDestination* elementDest = nullptr;
+    PageDestination* dest = nullptr;
 
     virtual ~PageElement() {
-        free(elementValue);
-        delete elementDest;
+        free(value);
+        delete dest;
     }
     // the type of this page element
     bool Is(Kind expectedKind) const {
@@ -172,24 +172,24 @@ class PageElement {
 
     // page this element lives on (0 for elements in a ToC)
     int GetPageNo() const {
-        return elementPageNo;
+        return pageNo;
     }
 
     // rectangle that can be interacted with
     RectD GetRect() const {
-        return elementRect;
+        return rect;
     }
 
     // string value associated with this element (e.g. displayed in an infotip)
     // caller must free() the result
     WCHAR* GetValue() const {
-        return str::Dup(elementValue);
+        return str::Dup(value);
     }
 
     // if this element is a link, this returns information about the link's destination
     // (the result is owned by the PageElement and MUST NOT be deleted)
     PageDestination* AsLink() {
-        return elementDest;
+        return dest;
     }
 
     // if this element is an image, this returns it

@@ -292,7 +292,7 @@ class XpsLink : public PageElement {
 
 XpsLink::XpsLink(XpsEngineImpl* engine, int pageNo, fz_link* link, fz_outline* outline) {
     this->engine = engine;
-    elementPageNo = pageNo;
+    pageNo = pageNo;
     this->link = link;
     CrashIf(!link && !outline);
     this->link = link;
@@ -300,16 +300,16 @@ XpsLink::XpsLink(XpsEngineImpl* engine, int pageNo, fz_link* link, fz_outline* o
 
     kind = kindPageElementDest;
     if (link) {
-        elementRect = fz_rect_to_RectD(link->rect);
+        rect = fz_rect_to_RectD(link->rect);
     }
-    elementValue = CalcValue();
+    value = CalcValue();
 
     auto dest = new PageDestination();
     dest->kind = CalcDestKind();
     dest->pageNo = CalcDestPageNo();
     dest->rect = CalcDestRect();
     dest->value = GetValue();
-    elementDest = dest;
+    dest = dest;
 }
 
 static char* XpsLinkGetURI(const XpsLink* link) {
@@ -430,7 +430,7 @@ class XpsTocItem : public DocTocItem {
 
   public:
     XpsTocItem(WCHAR* title, XpsLink* link) : DocTocItem(title), link(link) {
-        dest = link->elementDest;
+        dest = link->dest;
     }
 
     ~XpsTocItem() override {
@@ -446,13 +446,13 @@ class XpsImage : public PageElement {
 
     XpsImage(XpsEngineImpl* engine, int pageNo, fz_rect rect, size_t imageIx) {
         this->engine = engine;
-        this->elementPageNo = pageNo;
-        this->elementRect = fz_rect_to_RectD(rect);
+        this->pageNo = pageNo;
+        this->rect = fz_rect_to_RectD(rect);
         this->imageIdx = imageIdx;
         kind = kindPageElementImage;
         getImage = [=]() -> RenderedBitmap* {
-            auto pn = this->elementPageNo;
-            auto r = this->elementRect;
+            auto pn = this->pageNo;
+            auto r = this->rect;
             auto idx = this->imageIdx;
             return this->engine->GetPageImage(pn, r, idx);
         };

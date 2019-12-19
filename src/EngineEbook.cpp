@@ -176,24 +176,24 @@ class EbookLink : public PageElement {
     EbookLink() = default;
 
     EbookLink(DrawInstr* link, RectI rect, PageDestination* dest, int pageNo = -1, bool showUrl = false) {
-        elementPageNo = pageNo;
+        pageNo = pageNo;
 
         kind = kindPageElementDest;
-        elementRect = rect.Convert<double>();
+        this->rect = rect.Convert<double>();
 
         if (!dest || showUrl) {
-            elementValue = strconv::FromHtmlUtf8(link->str.s, link->str.len);
+            value = strconv::FromHtmlUtf8(link->str.s, link->str.len);
         }
 
         if (!dest) {
             dest = new PageDestination();
             dest->kind = kindDestinationLaunchURL;
             // TODO: not sure about this
-            dest->value = str::Dup(elementValue);
+            dest->value = str::Dup(value);
             dest->pageNo = 0;
             dest->rect = rect.Convert<double>();
         }
-        elementDest = dest;
+        dest = dest;
     }
 };
 
@@ -215,9 +215,9 @@ class ImageDataElement : public PageElement {
   public:
     ImageDataElement(int pageNo, ImageData* id, RectI bbox) {
         this->id = id;
-        elementPageNo = pageNo;
+        pageNo = pageNo;
         kind = kindPageElementImage;
-        elementRect = bbox.Convert<double>();
+        rect = bbox.Convert<double>();
         getImage = [=]() -> RenderedBitmap* { return getImageFromData(id); };
     }
 };
