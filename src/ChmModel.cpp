@@ -33,14 +33,14 @@ class ChmTocItem : public DocTocItem {
 
         dest = new PageDestination();
         if (IsExternalUrl(url)) {
-            dest->destKind = kindDestinationLaunchURL;
-            dest->destValue = str::Dup(url);
+            dest->kind = kindDestinationLaunchURL;
+            dest->value = str::Dup(url);
         } else {
-            dest->destKind = kindDestinationScrollTo;
-            dest->destValue = str::Dup(url);
+            dest->kind = kindDestinationScrollTo;
+            dest->value = str::Dup(url);
         }
 
-        dest->destRect = RectD(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
+        dest->rect = RectD(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
     }
 
     virtual ~ChmTocItem() {
@@ -195,8 +195,8 @@ void ChmModel::DisplayPage(const WCHAR* pageUrl) {
 }
 
 void ChmModel::ScrollToLink(PageDestination* link) {
-    CrashIf(link->GetDestKind() != kindDestinationScrollTo);
-    WCHAR* url = link->GetDestName();
+    CrashIf(link->Kind() != kindDestinationScrollTo);
+    WCHAR* url = link->GetName();
     if (url) {
         DisplayPage(url);
     }

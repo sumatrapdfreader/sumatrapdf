@@ -37,25 +37,25 @@ static PageDestination* newDjVuDestination(const char* link) {
     auto res = new PageDestination();
 
     if (IsPageLink(link)) {
-        res->destKind = kindDestinationScrollTo;
+        res->kind = kindDestinationScrollTo;
     }
 
     if (str::Eq(link, "#+1")) {
-        res->destKind = kindDestinationNextPage;
+        res->kind = kindDestinationNextPage;
     }
 
     if (str::Eq(link, "#-1")) {
-        res->destKind = kindDestinationPrevPage;
+        res->kind = kindDestinationPrevPage;
     }
 
     if (str::StartsWithI(link, "http:") || str::StartsWithI(link, "https:") || str::StartsWithI(link, "mailto:")) {
-        res->destKind = kindDestinationLaunchURL;
-        res->destValue = strconv::FromUtf8(link);
+        res->kind = kindDestinationLaunchURL;
+        res->value = strconv::FromUtf8(link);
     }
     if (IsPageLink(link)) {
-        res->destPageNo = atoi(link + 1);
+        res->pageNo = atoi(link + 1);
     }
-    res->destRect = RectD(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
+    res->rect = RectD(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
     return res;
 }
 
@@ -72,8 +72,8 @@ class DjVuLink : public PageElement {
         if (!str::IsEmpty(comment)) {
             elementValue = strconv::Utf8ToWchar(comment);
         } else {
-            if (kindDestinationLaunchURL == elementDest->GetDestKind()) {
-                elementValue = str::Dup(elementDest->GetDestValue());
+            if (kindDestinationLaunchURL == elementDest->Kind()) {
+                elementValue = str::Dup(elementDest->GetValue());
             }
         }
     }
@@ -83,7 +83,7 @@ class DjVuTocItem : public DocTocItem {
   public:
     DjVuTocItem(const char* title, const char* link) : DocTocItem(strconv::FromUtf8(title)) {
         dest = newDjVuDestination(link);
-        pageNo = dest->GetDestPageNo();
+        pageNo = dest->GetPageNo();
     }
 };
 

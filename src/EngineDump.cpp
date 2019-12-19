@@ -145,16 +145,16 @@ void DumpProperties(EngineBase* engine, bool fullDump) {
 
 // caller must free() the result
 char* DestRectToStr(EngineBase* engine, PageDestination* dest) {
-    WCHAR* destName = dest->GetDestName(); 
+    WCHAR* destName = dest->GetName(); 
     if (destName) {
         AutoFree name(Escape(destName));
         return str::Format("Name=\"%s\"", name.Get());
     }
     // as handled by LinkHandler::ScrollTo in WindowInfo.cpp
-    int pageNo = dest->GetDestPageNo();
+    int pageNo = dest->GetPageNo();
     if (pageNo <= 0 || pageNo > engine->PageCount())
         return nullptr;
-    RectD rect = dest->GetDestRect();
+    RectD rect = dest->GetRect();
     if (rect.IsEmpty()) {
         PointD pt = engine->Transform(rect.TL(), pageNo, 1.0, 0);
         return str::Format("Point=\"%.0f %.0f\"", pt.x, pt.y);
@@ -182,11 +182,11 @@ void DumpTocItem(EngineBase* engine, DocTocItem* item, int level, int& idCounter
             Out(" Id=\"%d\"", item->id);
         if (item->GetPageDestination()) {
             PageDestination* dest = item->GetPageDestination();
-            AutoFree target(Escape(dest->GetDestValue()));
+            AutoFree target(Escape(dest->GetValue()));
             if (target.Get())
                 Out(" Target=\"%s\"", target.Get());
-            if (item->pageNo != dest->GetDestPageNo())
-                Out(" TargetPage=\"%d\"", dest->GetDestPageNo());
+            if (item->pageNo != dest->GetPageNo())
+                Out(" TargetPage=\"%d\"", dest->GetPageNo());
             AutoFree rectStr(DestRectToStr(engine, dest));
             if (rectStr)
                 Out(" Target%s", rectStr.Get());
@@ -228,8 +228,8 @@ const char* ElementTypeToStr(PageElement* el) {
     return el->kind;
 }
 
-const char* PageDestToStr(Kind destKind) {
-    return destKind;
+const char* PageDestToStr(Kind kind) {
+    return kind;
 }
 
 void DumpPageContent(EngineBase* engine, int pageNo, bool fullDump) {
@@ -266,13 +266,13 @@ void DumpPageContent(EngineBase* engine, int pageNo, bool fullDump) {
                 rect.x, rect.y, rect.dx, rect.dy);
             PageDestination* dest = els->at(i)->AsLink();
             if (dest) {
-                if (dest->GetDestKind() != nullptr)
-                    Out("\t\t\t\tLinkType=\"%s\"\n", dest->GetDestKind());
-                AutoFree value(Escape(dest->GetDestValue()));
+                if (dest->Kind() != nullptr)
+                    Out("\t\t\t\tLinkType=\"%s\"\n", dest->Kind());
+                AutoFree value(Escape(dest->GetValue()));
                 if (value.Get())
                     Out("\t\t\t\tLinkTarget=\"%s\"\n", value.Get());
-                if (dest->GetDestPageNo())
-                    Out("\t\t\t\tLinkedPage=\"%d\"\n", dest->GetDestPageNo());
+                if (dest->GetPageNo())
+                    Out("\t\t\t\tLinkedPage=\"%d\"\n", dest->GetPageNo());
                 AutoFree rectStr(DestRectToStr(engine, dest));
                 if (rectStr)
                     Out("\t\t\t\tLinked%s\n", rectStr.Get());

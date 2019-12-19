@@ -499,11 +499,11 @@ PdfLink::PdfLink(PdfEngineImpl* engine, int pageNo, fz_link* link, fz_outline* o
     elementValue = CalcValue();
 
     auto dest = new PageDestination();
-    dest->destKind = CalcDestKind();
-    dest->destRect = CalcDestRect();
-    dest->destValue = GetValue();
-    dest->destName = CalcDestName();
-    dest->destPageNo = CalcDestPageNo();
+    dest->kind = CalcDestKind();
+    dest->rect = CalcDestRect();
+    dest->value = GetValue();
+    dest->name = CalcDestName();
+    dest->pageNo = CalcDestPageNo();
 
     elementDest = dest;
 }
