@@ -124,6 +124,7 @@ class PageDestination {
 };
 
 PageDestination* newSimpleDest(int pageNo, RectD rect, const WCHAR* value = nullptr);
+PageDestination* clonePageDestination(PageDestination* dest);
 
 // an user annotation on page
 struct PageAnnotation {

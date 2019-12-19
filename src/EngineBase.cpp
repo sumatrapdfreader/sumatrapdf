@@ -114,6 +114,16 @@ PageDestination* newSimpleDest(int pageNo, RectD rect, const WCHAR* value) {
     return res;
 }
 
+PageDestination* clonePageDestination(PageDestination* dest) {
+    auto res = new PageDestination();
+    res->kind = dest->kind;
+    res->pageNo = dest->GetPageNo();
+    res->rect = dest->GetRect();
+    res->value = str::Dup(dest->GetValue());
+    res->name = str::Dup(dest->GetName());
+    return res;
+}
+
 WCHAR* DocTocItem::Text() {
     return title;
 }
