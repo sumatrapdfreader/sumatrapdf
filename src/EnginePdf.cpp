@@ -498,7 +498,7 @@ PdfLink::PdfLink(PdfEngineImpl* engine, int pageNo, fz_link* link, fz_outline* o
     destName = CalcDestName();
     destPageNo = CalcDestPageNo();
 
-    kind = kindPageElementLink;
+    kind = kindPageElementDest;
     if (link) {
         elementRect = fz_rect_to_RectD(link->rect);
     }

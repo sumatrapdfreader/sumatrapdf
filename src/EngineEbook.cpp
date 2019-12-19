@@ -190,7 +190,6 @@ class SimpleDest2 : public PageDestination {
 };
 
 class EbookLink : public PageElement, public PageDestination {
-    PageDestination* dest = nullptr; // required for internal links, nullptr for external ones
     DrawInstr* link = nullptr;       // owned by *EngineImpl::pages
     bool showUrl = false;
 
@@ -202,11 +201,10 @@ class EbookLink : public PageElement, public PageDestination {
         destPageNo = 0;
         this->link = link;
         destRect = rect.Convert<double>();
-        this->dest = dest;
         this->showUrl = showUrl;
         destKind = kindDestinationLaunchURL;
         destValue = GetValue();
-        kind = kindPageElementLink;
+        kind = kindPageElementDest;
         elementRect = rect.Convert<double>();
         if (!dest || showUrl) {
             elementValue = strconv::FromHtmlUtf8(link->str.s, link->str.len);
@@ -219,7 +217,7 @@ class EbookLink : public PageElement, public PageDestination {
     }
 
     ~EbookLink() override {
-        delete dest;
+        delete elementDest;
     }
 };
 

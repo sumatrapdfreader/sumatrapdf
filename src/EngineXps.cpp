@@ -302,7 +302,7 @@ XpsLink::XpsLink(XpsEngineImpl* engine, int pageNo, fz_link* link, fz_outline* o
     destPageNo = CalcDestPageNo();
     destRect = CalcDestRect();
     destValue = GetValue();
-    kind = kindPageElementLink;
+    kind = kindPageElementDest;
     if (link) {
         elementRect = fz_rect_to_RectD(link->rect);
     }

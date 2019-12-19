@@ -279,7 +279,7 @@ static void OnMouseLeftButtonDown(WindowInfo* win, int x, int y, WPARAM key) {
     AssertCrash(!win->linkOnLastButtonDown);
     DisplayModel* dm = win->AsFixed();
     PageElement* pageEl = dm->GetElementAtPos(PointI(x, y));
-    if (pageEl && pageEl->Is(kindPageElementLink)) {
+    if (pageEl && pageEl->Is(kindPageElementDest)) {
         win->linkOnLastButtonDown = pageEl;
     } else {
         delete pageEl;
@@ -397,7 +397,7 @@ static void OnMouseLeftButtonDblClk(WindowInfo* win, int x, int y, WPARAM key) {
     }
 
     PageElement* pageEl = dm->GetElementAtPos(PointI(x, y));
-    if (pageEl && pageEl->Is(kindPageElementLink)) {
+    if (pageEl && pageEl->Is(kindPageElementDest)) {
         // speed up navigation in a file where navigation links are in a fixed position
         OnMouseLeftButtonDown(win, x, y, key);
     } else if (pageEl && pageEl->Is(kindPageElementImage)) {
@@ -805,7 +805,7 @@ static LRESULT OnSetCursor(WindowInfo* win, HWND hwnd) {
                     RectI rc = dm->CvtToScreen(pageEl->GetPageNo(), pageEl->GetRect());
                     win->ShowInfoTip(text, rc, true);
 
-                    bool isLink = pageEl->Is(kindPageElementLink);
+                    bool isLink = pageEl->Is(kindPageElementDest);
                     delete pageEl;
 
                     if (isLink) {
