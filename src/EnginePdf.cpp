@@ -364,8 +364,6 @@ struct PageTreeStackItem {
 
 ///// Above are extensions to Fitz and MuPDF, now follows PdfEngine /////
 
-class PdfTocItem;
-
 class PdfEngineImpl : public EngineBase {
   public:
     PdfEngineImpl();
@@ -446,7 +444,7 @@ class PdfEngineImpl : public EngineBase {
     FzPageInfo* GetFzPageInfo(int pageNo, bool failIfBusy = false);
     fz_matrix viewctm(int pageNo, float zoom, int rotation);
     fz_matrix viewctm(fz_page* page, float zoom, int rotation);
-    PdfTocItem* BuildTocTree(fz_outline* entry, int& idCounter, bool isAttachment);
+    DocTocItem* BuildTocTree(fz_outline* entry, int& idCounter, bool isAttachment);
     void LinkifyPageText(FzPageInfo* pageInfo);
     void ProcessPageAnnotations(FzPageInfo* pageInfo);
     WCHAR* ExtractFontList();
@@ -475,12 +473,11 @@ static PageElement* newPdfComment(const WCHAR* content, RectD rect, int pageNo) 
     return res;
 }
 
-class PdfTocItem : public DocTocItem {
-  public:
-    PdfTocItem(WCHAR* title, PageDestination* link) : DocTocItem(title) {
-        dest = link;
-    }
-};
+static DocTocItem* newPdfTocItem(WCHAR* title, PageDestination* dest) {
+    auto res = new DocTocItem(title);
+    res->dest = dest;
+    return res;
+}
 
 static PageElement* newPdfImage(PdfEngineImpl* engine, int pageNo, fz_rect rect, size_t imageIdx) {
     auto res = new PageElement();
@@ -959,9 +956,9 @@ static COLORREF pdfColorToCOLORREF(float color[4]) {
     return MkRgb(color[0], color[1], color[2]);
 }
 
-PdfTocItem* PdfEngineImpl::BuildTocTree(fz_outline* outline, int& idCounter, bool isAttachment) {
-    PdfTocItem* root = nullptr;
-    PdfTocItem* curr = nullptr;
+DocTocItem* PdfEngineImpl::BuildTocTree(fz_outline* outline, int& idCounter, bool isAttachment) {
+    DocTocItem* root = nullptr;
+    DocTocItem* curr = nullptr;
 
     while (outline) {
         WCHAR* name = nullptr;
@@ -976,10 +973,11 @@ PdfTocItem* PdfEngineImpl::BuildTocTree(fz_outline* outline, int& idCounter, boo
 
         // TODO: simplify by constructing just destination
         auto link = newFzLink(pageNo, nullptr, outline, isAttachment);
-        auto dest = clonePageDestination(link->dest);
+        auto dest = link->dest;
+        link->dest = nullptr;
         delete link;
 
-        PdfTocItem* item = new PdfTocItem(name, dest);
+        DocTocItem* item = newPdfTocItem(name, dest);
         item->isOpenDefault = outline->is_open;
         item->id = ++idCounter;
         item->fontFlags = outline->flags;
@@ -1017,7 +1015,7 @@ DocTocTree* PdfEngineImpl::GetTocTree() {
 
     int idCounter = 0;
 
-    PdfTocItem* root = nullptr;
+    DocTocItem* root = nullptr;
     if (outline) {
         root = BuildTocTree(outline, idCounter, false);
     }
@@ -1028,7 +1026,7 @@ DocTocTree* PdfEngineImpl::GetTocTree() {
         tocTree = new DocTocTree(root);
         return tocTree;
     }
-    PdfTocItem* att = BuildTocTree(attachments, idCounter, true);
+    DocTocItem* att = BuildTocTree(attachments, idCounter, true);
     if (!root) {
         tocTree = new DocTocTree(att);
         return tocTree;
