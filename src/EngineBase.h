@@ -153,9 +153,11 @@ extern Kind kindPageElementComment;
 class PageElement {
   public:
     Kind kind = nullptr;
-    int pageNo = -1;
+    int pageNo = 0;
     RectD rect{};
     WCHAR* value = nullptr;
+
+    int imageID = 0;
     std::function<RenderedBitmap*(void)> getImage = nullptr;
 
     // only set if kindPageElementDest
@@ -439,6 +441,11 @@ class EngineBase {
     // the name of the file this engine handles
     const WCHAR* FileName() const {
         return fileName.Get();
+    }
+
+    virtual RenderedBitmap* GetImageForPageElement(PageElement*) {
+        CrashMe();
+        return nullptr;
     }
 
   protected:

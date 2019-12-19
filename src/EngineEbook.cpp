@@ -133,6 +133,7 @@ class EbookEngine : public EngineBase {
     PageElement* GetElementAtPos(int pageNo, PointD pt) override;
 
     PageDestination* GetNamedDest(const WCHAR* name) override;
+    RenderedBitmap* GetImageForPageElement(PageElement* el) override;
 
     bool BenchLoadPage(int pageNo) override {
         UNUSED(pageNo);
@@ -209,18 +210,14 @@ static RenderedBitmap* getImageFromData(ImageData* id) {
     return new RenderedBitmap(hbmp, size);
 }
 
-class ImageDataElement : public PageElement {
-    ImageData* id = nullptr; // owned by *EngineImpl::pages
-
-  public:
-    ImageDataElement(int pageNo, ImageData* id, RectI bbox) {
-        this->id = id;
-        pageNo = pageNo;
-        kind = kindPageElementImage;
-        rect = bbox.Convert<double>();
-        getImage = [=]() -> RenderedBitmap* { return getImageFromData(id); };
-    }
-};
+static PageElement* newImageDataElement(int pageNo, ImageData* id, RectI bbox) {
+    auto res = new PageElement();
+    res->kind = kindPageElementImage;
+    res->pageNo = pageNo;
+    res->rect = bbox.Convert<double>();
+    res->getImage = [=]() -> RenderedBitmap* { return getImageFromData(id); };
+    return res;
+}
 
 class EbookTocItem : public DocTocItem {
   public:
@@ -506,7 +503,9 @@ Vec<PageElement*>* EbookEngine::GetElements(int pageNo) {
     Vec<DrawInstr>* pageInstrs = GetHtmlPage(pageNo);
     for (DrawInstr& i : *pageInstrs) {
         if (DrawInstrType::Image == i.type) {
-            els->Append(new ImageDataElement(pageNo, &i.img, GetInstrBbox(i, pageBorder)));
+            auto box = GetInstrBbox(i, pageBorder);
+            auto el = newImageDataElement(pageNo, &i.img, box);
+            els->Append(el);
         } else if (DrawInstrType::LinkStart == i.type && !i.bbox.IsEmptyArea()) {
             PageElement* link = CreatePageLink(&i, GetInstrBbox(i, pageBorder), pageNo);
             if (link) {
@@ -516,6 +515,10 @@ Vec<PageElement*>* EbookEngine::GetElements(int pageNo) {
     }
 
     return els;
+}
+
+RenderedBitmap* EbookEngine::GetImageForPageElement(PageElement* el) {
+    return nullptr;
 }
 
 PageElement* EbookEngine::GetElementAtPos(int pageNo, PointD pt) {
