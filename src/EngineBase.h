@@ -87,7 +87,7 @@ extern Kind kindDestinationZoomToDialog;
 class PageDestination {
   public:
     Kind destKind = nullptr;
-    int destPageNo = -1;
+    int destPageNo = 0;
     RectD destRect{};
     WCHAR* destValue = nullptr;
     WCHAR* destName = nullptr;
