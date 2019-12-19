@@ -150,13 +150,15 @@ struct PageAnnotation {
 // use in PageDestination::GetDestRect for values that don't matter
 #define DEST_USE_DEFAULT -999.9
 
-enum class PageElementType { Unknown, Link, Image, Comment };
+extern Kind kindPageElementLink;
+extern Kind kindPageElementImage;
+extern Kind kindPageElementComment;
 
 // hoverable (and maybe interactable) element on a single page
 class PageElement {
   public:
+    Kind kind = nullptr;
     int elementPageNo = -1;
-    PageElementType elementType = PageElementType::Unknown;
     RectD elementRect{};
     WCHAR* elementValue = nullptr;
     PageDestination* elementDest = nullptr;
@@ -166,8 +168,8 @@ class PageElement {
         free(elementValue);
     }
     // the type of this page element
-    PageElementType GetType() const {
-        return elementType;
+    bool Is(Kind expectedKind) const {
+        return kind == expectedKind;
     }
 
     // page this element lives on (0 for elements in a ToC)

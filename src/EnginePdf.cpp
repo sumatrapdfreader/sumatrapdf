@@ -498,7 +498,7 @@ PdfLink::PdfLink(PdfEngineImpl* engine, int pageNo, fz_link* link, fz_outline* o
     destName = CalcDestName();
     destPageNo = CalcDestPageNo();
 
-    elementType = PageElementType::Link;
+    kind = kindPageElementLink;
     if (link) {
         elementRect = fz_rect_to_RectD(link->rect);
     }
@@ -800,7 +800,7 @@ class PdfComment : public PageElement {
     PdfComment(const WCHAR* content, RectD rect, int pageNo) : annot(PageAnnotType::None, pageNo, rect, 0) {
         this->content = str::Dup(content);
         elementPageNo = pageNo;
-        elementType = PageElementType::Comment;
+        kind = kindPageElementComment;
         elementRect = annot.rect;
         elementValue = str::Dup(content);
     }
@@ -827,7 +827,7 @@ class PdfImage : public PageElement {
         this->engine = engine;
         this->imageIdx = imageIdx;
         elementPageNo = pageNo;
-        elementType = PageElementType::Image;
+        kind = kindPageElementImage;
         elementRect = fz_rect_to_RectD(rect);
         getImage = [=]() -> RenderedBitmap* {
             auto pn = this->elementPageNo;

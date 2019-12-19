@@ -221,16 +221,10 @@ void DumpToc(EngineBase* engine) {
 }
 
 const char* ElementTypeToStr(PageElement* el) {
-    switch (el->GetType()) {
-        case PageElementType::Link:
-            return "Link";
-        case PageElementType::Image:
-            return "Image";
-        case PageElementType::Comment:
-            return "Comment";
-        default:
-            return "Unknown";
+    if (!el->kind) {
+        return "unknown";
     }
+    return el->kind;
 }
 
 const char* PageDestToStr(PageDestType destType) {

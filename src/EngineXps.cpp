@@ -302,7 +302,7 @@ XpsLink::XpsLink(XpsEngineImpl* engine, int pageNo, fz_link* link, fz_outline* o
     destPageNo = CalcDestPageNo();
     destRect = CalcDestRect();
     destValue = GetValue();
-    elementType = PageElementType::Link;
+    kind = kindPageElementLink;
     if (link) {
         elementRect = fz_rect_to_RectD(link->rect);
     }
@@ -443,7 +443,7 @@ class XpsImage : public PageElement {
         this->elementPageNo = pageNo;
         this->elementRect = fz_rect_to_RectD(rect);
         this->imageIdx = imageIdx;
-        elementType = PageElementType::Image;
+        kind = kindPageElementImage;
         getImage = [=]() -> RenderedBitmap* {
             auto pn = this->elementPageNo;
             auto r = this->elementRect;
