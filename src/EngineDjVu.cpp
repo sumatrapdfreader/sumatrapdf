@@ -24,58 +24,47 @@ Kind kindEngineDjVu = "engineDjVu";
 //       DataPool::OpenFiles::global_ptr, FCPools::global_ptr
 //       cf. http://sourceforge.net/projects/djvu/forums/forum/103286/topic/3553602
 
-class DjVuDestination : public PageDestination {
-    // the link format can be any of
-    //   #[ ]<pageNo>      e.g. #1 for FirstPage and # 13 for page 13
-    //   #[+-]<pageCount>  e.g. #+1 for NextPage and #-1 for PrevPage
-    //   #filename.djvu    use ResolveNamedDest to get a link in #<pageNo> format
-    //   http://example.net/#hyperlink
-    AutoFree link;
+static bool IsPageLink(const char* link) {
+    return link && link[0] == '#' && (str::IsDigit(link[1]) || link[1] == ' ' && str::IsDigit(link[2]));
+}
 
-    bool IsPageLink(const char* link) const {
-        return link && link[0] == '#' && (str::IsDigit(link[1]) || link[1] == ' ' && str::IsDigit(link[2]));
+// the link format can be any of
+//   #[ ]<pageNo>      e.g. #1 for FirstPage and # 13 for page 13
+//   #[+-]<pageCount>  e.g. #+1 for NextPage and #-1 for PrevPage
+//   #filename.djvu    use ResolveNamedDest to get a link in #<pageNo> format
+//   http://example.net/#hyperlink
+static PageDestination* newDjVuDestination(const char* link) {
+    auto res = new PageDestination();
+
+    if (IsPageLink(link)) {
+        res->destKind = kindDestinationScrollTo;
     }
 
-  public:
-    explicit DjVuDestination(const char* link) {
-        this->link = str::Dup(link);
-        if (IsPageLink(link)) {
-            destKind = kindDestinationScrollTo;
-        }
-
-        if (str::Eq(link, "#+1")) {
-            destKind = kindDestinationNextPage;
-        }
-
-        if (str::Eq(link, "#-1")) {
-            destKind = kindDestinationPrevPage;
-        }
-
-        if (str::StartsWithI(link, "http:") || str::StartsWithI(link, "https:") || str::StartsWithI(link, "mailto:")) {
-            destKind = kindDestinationLaunchURL;
-        }
-        destPageNo = 0;
-        if (IsPageLink(link)) {
-            destPageNo = atoi(link + 1);
-        }
-        destRect = RectD(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
-        destValue = str::Dup(CalcDestValue());
+    if (str::Eq(link, "#+1")) {
+        res->destKind = kindDestinationNextPage;
     }
 
-    WCHAR* CalcDestValue() {
-        if (kindDestinationLaunchURL == GetDestKind()) {
-            return strconv::FromUtf8(link);
-        }
-        return nullptr;
+    if (str::Eq(link, "#-1")) {
+        res->destKind = kindDestinationPrevPage;
     }
-};
+
+    if (str::StartsWithI(link, "http:") || str::StartsWithI(link, "https:") || str::StartsWithI(link, "mailto:")) {
+        res->destKind = kindDestinationLaunchURL;
+        res->destValue = strconv::FromUtf8(link);
+    }
+    if (IsPageLink(link)) {
+        res->destPageNo = atoi(link + 1);
+    }
+    res->destRect = RectD(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
+    return res;
+}
 
 class DjVuLink : public PageElement {
   public:
     DjVuLink(int pageNo, RectI rect, const char* link, const char* comment) {
         elementRect = rect.Convert<double>();
         elementPageNo = pageNo;
-        elementDest = new DjVuDestination(link);
+        elementDest = newDjVuDestination(link);
         if (!str::IsEmpty(comment)) {
             elementValue = strconv::FromUtf8(comment);
         }
@@ -93,7 +82,7 @@ class DjVuLink : public PageElement {
 class DjVuTocItem : public DocTocItem {
   public:
     DjVuTocItem(const char* title, const char* link) : DocTocItem(strconv::FromUtf8(title)) {
-        dest = new DjVuDestination(link);
+        dest = newDjVuDestination(link);
         pageNo = dest->GetDestPageNo();
     }
 };
@@ -272,17 +261,21 @@ DjVuEngineImpl::~DjVuEngineImpl() {
 
     if (annos) {
         for (int i = 0; i < pageCount; i++) {
-            if (annos[i])
+            if (annos[i]) {
                 ddjvu_miniexp_release(doc, annos[i]);
+            }
         }
         free(annos);
     }
-    if (outline != miniexp_nil)
+    if (outline != miniexp_nil) {
         ddjvu_miniexp_release(doc, outline);
-    if (doc)
+    }
+    if (doc) {
         ddjvu_document_release(doc);
-    if (stream)
+    }
+    if (stream) {
         stream->Release();
+    }
 }
 
 // Most functions of the ddjvu API such as ddjvu_document_get_pageinfo
@@ -292,8 +285,9 @@ DjVuEngineImpl::~DjVuEngineImpl() {
 
 static bool ReadBytes(HANDLE h, DWORD offset, void* buffer, DWORD count) {
     DWORD res = SetFilePointer(h, offset, nullptr, FILE_BEGIN);
-    if (res != offset)
+    if (res != offset) {
         return false;
+    }
     bool ok = ReadFile(h, buffer, count, &res, nullptr);
     return ok && res == count;
 }
@@ -318,37 +312,45 @@ struct DjVuInfoChunk {
 static_assert(sizeof(DjVuInfoChunk) == 10, "wrong size of DjVuInfoChunk structure");
 
 bool DjVuEngineImpl::LoadMediaboxes() {
-    if (!fileName)
+    if (!fileName) {
         return false;
+    }
     ScopedHandle h(file::OpenReadOnly(fileName));
-    if (h == INVALID_HANDLE_VALUE)
+    if (h == INVALID_HANDLE_VALUE) {
         return false;
+    }
     char buffer[16];
     ByteReader r(buffer, sizeof(buffer));
-    if (!ReadBytes(h, 0, buffer, 16) || r.DWordBE(0) != DJVU_MARK_MAGIC || r.DWordBE(4) != DJVU_MARK_FORM)
+    if (!ReadBytes(h, 0, buffer, 16) || r.DWordBE(0) != DJVU_MARK_MAGIC || r.DWordBE(4) != DJVU_MARK_FORM) {
         return false;
+    }
 
     DWORD offset = r.DWordBE(12) == DJVU_MARK_DJVM ? 16 : 4;
     for (int pages = 0; pages < pageCount;) {
-        if (!ReadBytes(h, offset, buffer, 16))
+        if (!ReadBytes(h, offset, buffer, 16)) {
             return false;
+        }
         int partLen = r.DWordBE(4);
-        if (partLen < 0)
+        if (partLen < 0) {
             return false;
+        }
         if (r.DWordBE(0) == DJVU_MARK_FORM && r.DWordBE(8) == DJVU_MARK_DJVU && r.DWordBE(12) == DJVU_MARK_INFO) {
-            if (!ReadBytes(h, offset + 16, buffer, 14))
+            if (!ReadBytes(h, offset + 16, buffer, 14)) {
                 return false;
+            }
             DjVuInfoChunk info;
             bool ok = r.UnpackBE(&info, sizeof(info), "2w6b", 4);
             CrashIf(!ok);
             int dpi = MAKEWORD(info.dpiLo, info.dpiHi); // dpi is little-endian
             // DjVuLibre ignores DPI values outside 25 to 6000 in DjVuInfo::decode
-            if (dpi < 25 || 6000 < dpi)
+            if (dpi < 25 || 6000 < dpi) {
                 dpi = 300;
+            }
             mediaboxes[pages].dx = GetFileDPI() * info.width / dpi;
             mediaboxes[pages].dy = GetFileDPI() * info.height / dpi;
-            if ((info.flags & 4))
+            if ((info.flags & 4)) {
                 std::swap(mediaboxes[pages].dx, mediaboxes[pages].dy);
+            }
             pages++;
         }
         offset += 8 + partLen + (partLen & 1);
@@ -358,38 +360,41 @@ bool DjVuEngineImpl::LoadMediaboxes() {
 }
 
 bool DjVuEngineImpl::Load(const WCHAR* fileName) {
-    if (!gDjVuContext.Initialize())
+    if (!gDjVuContext.Initialize()) {
         return false;
-
+    }
     SetFileName(fileName);
     doc = gDjVuContext.OpenFile(fileName);
-
     return FinishLoading();
 }
 
 bool DjVuEngineImpl::Load(IStream* stream) {
-    if (!gDjVuContext.Initialize())
+    if (!gDjVuContext.Initialize()) {
         return false;
-
+    }
     doc = gDjVuContext.OpenStream(stream);
-
     return FinishLoading();
 }
 
 bool DjVuEngineImpl::FinishLoading() {
-    if (!doc)
+    if (!doc) {
         return false;
+    }
 
     ScopedCritSec scope(&gDjVuContext.lock);
 
-    while (!ddjvu_document_decoding_done(doc))
+    while (!ddjvu_document_decoding_done(doc)) {
         gDjVuContext.SpinMessageLoop();
-    if (ddjvu_document_decoding_error(doc))
+    }
+
+    if (ddjvu_document_decoding_error(doc)) {
         return false;
+    }
 
     pageCount = ddjvu_document_get_pagenum(doc);
-    if (0 == pageCount)
+    if (0 == pageCount) {
         return false;
+    }
 
     mediaboxes = AllocArray<RectD>(pageCount);
     bool ok = LoadMediaboxes();
@@ -398,17 +403,21 @@ bool DjVuEngineImpl::FinishLoading() {
         for (int i = 0; i < pageCount; i++) {
             ddjvu_status_t status;
             ddjvu_pageinfo_t info;
-            while ((status = ddjvu_document_get_pageinfo(doc, i, &info)) < DDJVU_JOB_OK)
+            while ((status = ddjvu_document_get_pageinfo(doc, i, &info)) < DDJVU_JOB_OK) {
                 gDjVuContext.SpinMessageLoop();
-            if (DDJVU_JOB_OK == status)
-                mediaboxes[i] =
-                    RectD(0, 0, info.width * GetFileDPI() / info.dpi, info.height * GetFileDPI() / info.dpi);
+            }
+            if (DDJVU_JOB_OK == status) {
+                double dx = info.width * GetFileDPI() / info.dpi;
+                double dy = info.height * GetFileDPI() / info.dpi;
+                mediaboxes[i] = RectD(0, 0, dx, dy);
+            }
         }
     }
 
     annos = AllocArray<miniexp_t>(pageCount);
-    for (int i = 0; i < pageCount; i++)
+    for (int i = 0; i < pageCount; i++) {
         annos[i] = miniexp_dummy;
+    }
 
     while ((outline = ddjvu_document_get_outline(doc)) == miniexp_dummy)
         gDjVuContext.SpinMessageLoop();
@@ -421,8 +430,9 @@ bool DjVuEngineImpl::FinishLoading() {
     for (int i = 0; i < fileCount; i++) {
         ddjvu_status_t status;
         ddjvu_fileinfo_s info;
-        while ((status = ddjvu_document_get_fileinfo(doc, i, &info)) < DDJVU_JOB_OK)
+        while ((status = ddjvu_document_get_fileinfo(doc, i, &info)) < DDJVU_JOB_OK) {
             gDjVuContext.SpinMessageLoop();
+        }
         if (DDJVU_JOB_OK == status && info.type == 'P' && info.pageno >= 0) {
             fileInfo.Append(info);
             hasPageLabels = hasPageLabels || !str::Eq(info.title, info.id);
@@ -435,8 +445,9 @@ bool DjVuEngineImpl::FinishLoading() {
 void DjVuEngineImpl::AddUserAnnots(RenderedBitmap* bmp, int pageNo, float zoom, int rotation, RectI screen) {
     using namespace Gdiplus;
 
-    if (!bmp || userAnnots.size() == 0)
+    if (!bmp || userAnnots.size() == 0) {
         return;
+    }
 
     HDC hdc = CreateCompatibleDC(nullptr);
     {
@@ -947,11 +958,13 @@ PageElement* DjVuEngineImpl::GetElementAtPos(int pageNo, PointD pt) {
 // returns a numeric DjVu link to a named page (if the name resolves)
 // caller needs to free() the result
 char* DjVuEngineImpl::ResolveNamedDest(const char* name) {
-    if (!str::StartsWith(name, "#"))
+    if (!str::StartsWith(name, "#")) {
         return nullptr;
+    }
     for (size_t i = 0; i < fileInfo.size(); i++) {
-        if (str::EqI(name + 1, fileInfo.at(i).id))
+        if (str::EqI(name + 1, fileInfo.at(i).id)) {
             return str::Format("#%d", fileInfo.at(i).pageno + 1);
+        }
     }
     return nullptr;
 }
@@ -963,8 +976,9 @@ PageDestination* DjVuEngineImpl::GetNamedDest(const WCHAR* name) {
     }
 
     AutoFree link(ResolveNamedDest(nameUtf8.Get()));
-    if (link)
-        return new DjVuDestination(link);
+    if (link) {
+        return newDjVuDestination(link);
+    }
     return nullptr;
 }
 
