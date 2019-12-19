@@ -31,10 +31,10 @@ class ChmTocItem : public DocTocItem, public PageDestination {
             return;
         }
         if (IsExternalUrl(url)) {
-            destType = PageDestType::LaunchURL;
+            destKind = kindDestinationLaunchURL;
             destValue = str::Dup(url);
         } else {
-            destType = PageDestType::ScrollTo;
+            destKind = kindDestinationScrollTo;
             destValue = str::Dup(url);
         }
 
@@ -201,7 +201,7 @@ void ChmModel::DisplayPage(const WCHAR* pageUrl) {
 }
 
 void ChmModel::ScrollToLink(PageDestination* link) {
-    CrashIf(link->GetDestType() != PageDestType::ScrollTo);
+    CrashIf(link->GetDestKind() != kindDestinationScrollTo);
     AutoFreeWstr url(link->GetDestName());
     if (url)
         DisplayPage(url);

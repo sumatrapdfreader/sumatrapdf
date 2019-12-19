@@ -13,6 +13,24 @@ Kind kindPageElementLink = "link";
 Kind kindPageElementImage = "image";
 Kind kindPageElementComment = "comment";
 
+Kind kindDestinationNone = "none";
+Kind kindDestinationScrollTo = "scrollTo";
+Kind kindDestinationLaunchURL = "launchURL";
+Kind kindDestinationLaunchEmbedded = "launchEmbedded";
+Kind kindDestinationLaunchFile = "launchFile";
+Kind kindDestinationNextPage = "nextPage";
+Kind kindDestinationPrevPage = "prevPage";
+Kind kindDestinationFirstPage = "firstPage";
+Kind kindDestinationLastPage = "lastPage";
+Kind kindDestinationFindDialog = "findDialog";
+Kind kindDestinationFullScreen = "fullscreen";
+Kind kindDestinationGoBack = "goBack";
+Kind kindDestinationGoForward = "goForward";
+Kind kindDestinationGoToPageDialog = "goToPageDialog";
+Kind kindDestinationPrintDialog = "printDialog";
+Kind kindDestinationSaveAsDialog = "saveAsDialog";
+Kind kindDestinationZoomToDialog = "zoomToDialog";
+
 RenderedBitmap::~RenderedBitmap() {
     DeleteObject(hbmp);
 }

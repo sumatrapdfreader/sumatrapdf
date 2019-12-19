@@ -713,6 +713,6 @@ PageDestination* makeSimpleDest(int pageNo, RectD rect) {
     auto res = new PageDestination();
     res->destPageNo = pageNo;
     res->destRect = rect;
-    res->destType = PageDestType::ScrollTo;
+    res->destKind = kindDestinationScrollTo;
     return res;
 }

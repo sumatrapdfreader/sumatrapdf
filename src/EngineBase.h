@@ -66,30 +66,28 @@ class RenderedBitmap {
     bool StretchDIBits(HDC hdc, RectI target) const;
 };
 
-enum class PageDestType {
-    None,
-    ScrollTo,
-    LaunchURL,
-    LaunchEmbedded,
-    LaunchFile,
-    NextPage,
-    PrevPage,
-    FirstPage,
-    LastPage,
-    FindDialog,
-    FullScreen,
-    GoBack,
-    GoForward,
-    GoToPageDialog,
-    PrintDialog,
-    SaveAsDialog,
-    ZoomToDialog,
-};
+extern Kind kindDestinationNone;
+extern Kind kindDestinationScrollTo;
+extern Kind kindDestinationLaunchURL;
+extern Kind kindDestinationLaunchEmbedded;
+extern Kind kindDestinationLaunchFile;
+extern Kind kindDestinationNextPage;
+extern Kind kindDestinationPrevPage;
+extern Kind kindDestinationFirstPage;
+extern Kind kindDestinationLastPage;
+extern Kind kindDestinationFindDialog;
+extern Kind kindDestinationFullScreen;
+extern Kind kindDestinationGoBack;
+extern Kind kindDestinationGoForward;
+extern Kind kindDestinationGoToPageDialog;
+extern Kind kindDestinationPrintDialog;
+extern Kind kindDestinationSaveAsDialog;
+extern Kind kindDestinationZoomToDialog;
 
 // a link destination
 class PageDestination {
   public:
-    PageDestType destType = PageDestType::None;
+    Kind destKind = nullptr;
     int destPageNo = -1;
     RectD destRect{};
     WCHAR* destValue = nullptr;
@@ -100,8 +98,8 @@ class PageDestination {
         free(destName);
     }
 
-    PageDestType GetDestType() const {
-        return destType;
+    Kind GetDestKind() const {
+        return destKind;
     }
 
     // page the destination points to (0 for external destinations such as URLs)

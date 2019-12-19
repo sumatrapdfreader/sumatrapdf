@@ -470,7 +470,7 @@ class PdfLink : public PageElement, public PageDestination {
     // PageElement
     WCHAR* CalcValue() const;
     int CalcDestPageNo() const;
-    PageDestType CalcDestType();
+    Kind CalcDestKind();
     RectD CalcDestRect();
     WCHAR* CalcDestName();
 };
@@ -492,7 +492,7 @@ PdfLink::PdfLink(PdfEngineImpl* engine, int pageNo, fz_link* link, fz_outline* o
     this->link = link;
     this->outline = outline;
 
-    destType = CalcDestType();
+    destKind = CalcDestKind();
     destRect = CalcDestRect();
     destValue = GetValue();
     destName = CalcDestName();
@@ -606,46 +606,15 @@ WCHAR* PdfLink::CalcValue() const {
 #endif
 }
 
-#if 0
-static PageDestType DestTypeFromName(const char* name) {
-// named actions are converted either to Dest_Name or Dest_NameDialog
-#define HandleType(type)      \
-    if (str::Eq(name, #type)) \
-    return PageDestType::##type
-#define HandleTypeDialog(type) \
-    if (str::Eq(name, #type))  \
-    return PageDestType::##type##Dialog
-    // predefined named actions
-    HandleType(NextPage);
-    HandleType(PrevPage);
-    HandleType(FirstPage);
-    HandleType(LastPage);
-    // Adobe Reader extensions to the spec
-    // cf. http://www.tug.org/applications/hyperref/manual.html
-    HandleTypeDialog(Find);
-    HandleType(FullScreen);
-    HandleType(GoBack);
-    HandleType(GoForward);
-    HandleTypeDialog(GoToPage);
-    HandleTypeDialog(Print);
-    HandleTypeDialog(SaveAs);
-    HandleTypeDialog(ZoomTo);
-#undef HandleType
-#undef HandleTypeDialog
-    // named action that we don't support (or invalid action name)
-    return PageDestType::None;
-}
-#endif
-
-PageDestType PdfLink::CalcDestType() {
+Kind PdfLink::CalcDestKind() {
     if (outline && isAttachment) {
-        return PageDestType::LaunchEmbedded;
+        return kindDestinationLaunchEmbedded;
     }
 
     char* uri = PdfLinkGetURI(this);
     // some outline entries are bad (issue 1245)
     if (!uri) {
-        return PageDestType::None;
+        return nullptr;
     }
     if (!is_external_link(uri)) {
         float x, y;
@@ -653,47 +622,47 @@ PageDestType PdfLink::CalcDestType() {
         if (pageNo == -1) {
             // TODO: figure out what it could be
             CrashMePort();
-            return PageDestType::None;
+            return nullptr;
         }
-        return PageDestType::ScrollTo;
+        return kindDestinationScrollTo;
     }
     if (str::StartsWith(uri, "file://")) {
-        return PageDestType::LaunchFile;
+        return kindDestinationLaunchFile;
     }
     if (str::StartsWithI(uri, "http://")) {
-        return PageDestType::LaunchURL;
+        return kindDestinationLaunchURL;
     }
     if (str::StartsWithI(uri, "https://")) {
-        return PageDestType::LaunchURL;
+        return kindDestinationLaunchURL;
     }
     if (str::StartsWithI(uri, "ftp://")) {
-        return PageDestType::LaunchURL;
+        return kindDestinationLaunchURL;
     }
     if (str::StartsWith(uri, "mailto:")) {
-        return PageDestType::LaunchURL;
+        return kindDestinationLaunchURL;
     }
 
-    // TODO: PageDestType::LaunchEmbedded, PageDestType::LaunchURL, named destination
+    // TODO: kindDestinationLaunchEmbedded, kindDestinationLaunchURL, named destination
     CrashMePort();
-    return PageDestType::None;
+    return nullptr;
 #if 0
     switch (link->kind) {
         case FZ_LINK_GOTO:
-            return PageDestType::ScrollTo;
+            return kindDestinationScrollTo;
         case FZ_LINK_URI:
-            return PageDestType::LaunchURL;
+            return kindDestinationLaunchURL;
         case FZ_LINK_NAMED:
             return DestTypeFromName(link->ld.named.named);
         case FZ_LINK_LAUNCH:
             if (link->ld.launch.embedded_num)
-                return PageDestType::LaunchEmbedded;
+                return kindDestinationLaunchEmbedded;
             if (link->ld.launch.is_uri)
-                return PageDestType::LaunchURL;
-            return PageDestType::LaunchFile;
+                return kindDestinationLaunchURL;
+            return kindDestinationLaunchFile;
         case FZ_LINK_GOTOR:
-            return PageDestType::LaunchFile;
+            return kindDestinationLaunchFile;
         default:
-            return PageDestType::None; // unsupported action
+            return nullptr; // unsupported action
     }
 #endif
 }

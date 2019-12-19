@@ -83,9 +83,9 @@ static void CustomizeTocInfoTip(TreeCtrl* w, NMTVGETINFOTIPW* nm) {
         return;
     }
     CrashIf(!link); // /analyze claims that this could happen - it really can't
-    auto dstType = link->GetDestType();
-    CrashIf(dstType != PageDestType::LaunchURL && dstType != PageDestType::LaunchFile &&
-            dstType != PageDestType::LaunchEmbedded);
+    auto dstType = link->GetDestKind();
+    CrashIf(dstType != kindDestinationLaunchURL && dstType != kindDestinationLaunchFile &&
+            dstType != kindDestinationLaunchEmbedded);
     CrashIf(nm->hdr.hwndFrom != w->hwnd);
 
     str::WStr infotip;
@@ -105,7 +105,7 @@ static void CustomizeTocInfoTip(TreeCtrl* w, NMTVGETINFOTIPW* nm) {
         infotip.Append(L"\r\n");
     }
 
-    if (PageDestType::LaunchEmbedded == dstType) {
+    if (kindDestinationLaunchEmbedded == dstType) {
         path.Set(str::Format(_TR("Attachment: %s"), path.Get()));
     }
 
@@ -203,8 +203,8 @@ static bool IsScrollToLink(PageDestination* link) {
     if (!link) {
         return false;
     }
-    auto tp = link->GetDestType();
-    return tp == PageDestType::ScrollTo;
+    auto kind = link->GetDestKind();
+    return kind == kindDestinationScrollTo;
 }
 
 static void GoToTocLinkForTVItem(WindowInfo* win, HTREEITEM hItem, bool allowExternal) {
