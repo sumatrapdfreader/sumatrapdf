@@ -100,7 +100,7 @@ static bool AppendEntry(str::Str& data, str::Str& content, const WCHAR* filePath
     }
 
     AutoFree fileData(file::ReadFile(filePath));
-    if (!fileData.data || fileData.size >= UINT32_MAX) {
+    if (!fileData.data || fileData.size() >= UINT32_MAX) {
         fprintf(stderr, "Failed to read \"%S\" for compression\n", filePath);
         return false;
     }
@@ -108,17 +108,17 @@ static bool AppendEntry(str::Str& data, str::Str& content, const WCHAR* filePath
     if (fi && fi->uncompressedCrc32 == fileDataCrc && fi->uncompressedSize == fileData.size())
         goto ReusePrevious;
 
-    size_t compressedSize = fileData.size + 1;
+    size_t compressedSize = fileData.size() + 1;
     AutoFree compressed((char*)malloc(compressedSize));
     if (!compressed)
         return false;
-    if (!Compress(fileData.data, fileData.size, compressed, &compressedSize))
+    if (!Compress(fileData.data, fileData.size(), compressed, &compressedSize))
         return false;
 
     ByteWriter meta = MakeByteWriterLE(data.AppendBlanks(24), 24);
     meta.Write32(headerSize);
     meta.Write32((uint32_t)compressedSize);
-    meta.Write32((uint32_t)fileData.size);
+    meta.Write32((uint32_t)fileData.size());
     meta.Write32(fileDataCrc);
     meta.Write32(ft.dwLowDateTime);
     meta.Write32(ft.dwHighDateTime);
@@ -149,12 +149,10 @@ bool CreateArchive(const WCHAR* archivePath, WStrVec& files, size_t skipFiles = 
         WCHAR* sep = str::FindCharLast(filePath, ':');
         AutoFree utf8Name;
         if (sep) {
-            auto tmp = strconv::ToUtf8(sep + 1);
-            utf8Name.Set(tmp.StealData());
+            utf8Name = strconv::WstrToUtf8(sep + 1);
             *sep = '\0';
         } else {
-            auto tmp = strconv::ToUtf8(filePath);
-            utf8Name.Set(tmp.StealData());
+            utf8Name = strconv::WstrToUtf8(filePath);
         }
 
         str::TransChars(utf8Name, "/", "\\");
