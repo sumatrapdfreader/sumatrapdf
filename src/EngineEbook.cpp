@@ -217,7 +217,7 @@ static PageElement* newImageDataElement(int pageNo, ImageData* id, RectI bbox) {
     return res;
 }
 
-static DocTocItem* newEbookTocItem(const WCHAR* title, PageDestination* dest)  {
+static DocTocItem* newEbookTocItem(const WCHAR* title, PageDestination* dest) {
     auto res = new DocTocItem(title, 0);
     res->dest = dest;
     if (dest) {
