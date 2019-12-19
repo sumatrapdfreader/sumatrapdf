@@ -179,7 +179,6 @@ xps_doc_props* xps_extract_doc_props(fz_context* ctx, xps_document* xpsdoc) {
 ///// XpsEngine is also based on Fitz and shares quite some code with PdfEngine /////
 
 class XpsTocItem;
-class XpsImage;
 
 static xps_document* xps_document_from_fz_document(fz_document* doc) {
     return (xps_document*)doc;
@@ -272,192 +271,26 @@ class XpsEngineImpl : public EngineBase {
     WCHAR* ExtractFontList();
 };
 
-class XpsLink : public PageElement {
-  public:
-    XpsEngineImpl* engine = nullptr;
-    // must be one or the other
-    fz_link* link = nullptr;
-    fz_outline* outline = nullptr;
-    RectD rect = {};
-
-    XpsLink() = default;
-
-    XpsLink(XpsEngineImpl* engine, int pageNo, fz_link* link, fz_outline* outline);
-
-    WCHAR* CalcValue() const;
-    Kind CalcDestKind();
-    int CalcDestPageNo();
-    RectD CalcDestRect();
-};
-
-XpsLink::XpsLink(XpsEngineImpl* engine, int pageNo, fz_link* link, fz_outline* outline) {
-    this->engine = engine;
-    pageNo = pageNo;
-    this->link = link;
-    CrashIf(!link && !outline);
-    this->link = link;
-    this->outline = outline;
-
-    kind = kindPageElementDest;
-    if (link) {
-        rect = fz_rect_to_RectD(link->rect);
-    }
-    value = CalcValue();
-
-    auto dest = new PageDestination();
-    dest->kind = CalcDestKind();
-    dest->pageNo = CalcDestPageNo();
-    dest->rect = CalcDestRect();
-    dest->value = GetValue();
-    dest = dest;
-}
-
-static char* XpsLinkGetURI(const XpsLink* link) {
-    if (link->link) {
-        return link->link->uri;
-    }
-    if (link->outline) {
-        return link->outline->uri;
-    }
-    return nullptr;
-}
-
-WCHAR* XpsLink::CalcValue() const {
-    if (outline) {
-        WCHAR* path = strconv::FromUtf8(outline->uri);
-        return path;
-    }
-
-    char* uri = XpsLinkGetURI(this);
-    if (!uri) {
-        return nullptr;
-    }
-    if (!is_external_link(uri)) {
-        // other values: #1,115,208
-        return nullptr;
-    }
-    return strconv::Utf8ToWchar(uri);
-}
-
-Kind XpsLink::CalcDestKind() {
-    if (outline) {
-        return kindDestinationLaunchEmbedded;
-    }
-
-    char* uri = XpsLinkGetURI(this);
-    // some outline entries are bad (issue 1245)
-    if (!uri) {
-        return nullptr;
-    }
-    if (!is_external_link(uri)) {
-        float x, y;
-        int pageNo = resolve_link(uri, &x, &y);
-        if (pageNo == -1) {
-            // TODO: figure out what it could be
-            CrashMePort();
-            return nullptr;
-        }
-        return kindDestinationScrollTo;
-    }
-    if (str::StartsWith(uri, "file://")) {
-        return kindDestinationLaunchFile;
-    }
-    if (str::StartsWithI(uri, "http://")) {
-        return kindDestinationLaunchURL;
-    }
-    if (str::StartsWithI(uri, "https://")) {
-        return kindDestinationLaunchURL;
-    }
-    if (str::StartsWithI(uri, "ftp://")) {
-        return kindDestinationLaunchURL;
-    }
-    if (str::StartsWith(uri, "mailto:")) {
-        return kindDestinationLaunchURL;
-    }
-
-    // TODO: kindDestinationLaunchEmbedded, kindDestinationLaunchURL, named destination
-    CrashMePort();
-    return nullptr;
-}
-
-int XpsLink::CalcDestPageNo() {
-    char* uri = XpsLinkGetURI(this);
-    CrashIf(!uri);
-    if (!uri) {
-        return 0;
-    }
-    if (is_external_link(uri)) {
-        return 0;
-    }
-    float x, y;
-    int pageNo = resolve_link(uri, &x, &y);
-    if (pageNo == -1) {
-        return 0;
-    }
-    return pageNo + 1;
-#if 0
-    if (link && FZ_LINK_GOTO == link->kind)
-        return link->ld.gotor.page + 1;
-    if (link && FZ_LINK_GOTOR == link->kind && !link->ld.gotor.dest)
-        return link->ld.gotor.page + 1;
-#endif
-    return 0;
-}
-
-RectD XpsLink::CalcDestRect() {
-    RectD result(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
-    char* uri = XpsLinkGetURI(this);
-    CrashIf(!uri);
-    if (!uri) {
-        return result;
-    }
-
-    if (is_external_link(uri)) {
-        return result;
-    }
-    float x, y;
-    int pageNo = resolve_link(uri, &x, &y);
-    CrashIf(pageNo < 0);
-
-    result.x = (double)x;
-    result.y = (double)y;
-    return result;
-}
 
 class XpsTocItem : public DocTocItem {
-    // TODO: get rid of link
-    XpsLink* link;
-
   public:
-    XpsTocItem(WCHAR* title, XpsLink* link) : DocTocItem(title), link(link) {
+    XpsTocItem(WCHAR* title, PageElement* link) : DocTocItem(title) {
         dest = link->dest;
-    }
-
-    ~XpsTocItem() override {
-        link = nullptr;
-        delete link;
+        link->dest = nullptr;
     }
 };
 
-class XpsImage : public PageElement {
-  public:
-    XpsEngineImpl* engine = nullptr;
-    size_t imageIdx = 0;
-
-    XpsImage(XpsEngineImpl* engine, int pageNo, fz_rect rect, size_t imageIx) {
-        this->engine = engine;
-        this->pageNo = pageNo;
-        this->rect = fz_rect_to_RectD(rect);
-        this->imageIdx = imageIdx;
-        kind = kindPageElementImage;
-        getImage = [=]() -> RenderedBitmap* {
-            auto pn = this->pageNo;
-            auto r = this->rect;
-            auto idx = this->imageIdx;
-            return this->engine->GetPageImage(pn, r, idx);
-        };
-    }
-};
+static PageElement* newXpsImage(XpsEngineImpl* engine, int pageNo, fz_rect rect, size_t imageIdx) {
+    auto res = new PageElement();
+    res->pageNo = pageNo;
+    res->rect = fz_rect_to_RectD(rect);
+    res->kind = kindPageElementImage;
+    res->getImage = [=]() -> RenderedBitmap* {
+        auto r = res->rect;
+        return engine->GetPageImage(pageNo, r, imageIdx);
+    };
+    return res;
+}
 
 static void fz_lock_context_cs(void* user, int lock) {
     UNUSED(lock);
@@ -979,7 +812,7 @@ PageElement* XpsEngineImpl::GetElementAtPos(int pageNo, PointD pt) {
     fz_point p = {(float)pt.x, (float)pt.y};
     while (link) {
         if (fz_is_pt_in_rect(link->rect, p)) {
-            return new XpsLink(this, pageNo, link, nullptr);
+            return newFzLink(pageNo, link, nullptr, false);
         }
         link = link->next;
     }
@@ -988,7 +821,7 @@ PageElement* XpsEngineImpl::GetElementAtPos(int pageNo, PointD pt) {
     for (auto& img : pageInfo->images) {
         fz_rect ir = img.rect;
         if (fz_is_pt_in_rect(ir, p)) {
-            return new XpsImage(this, pageNo, ir, imageIdx);
+            return newXpsImage(this, pageNo, ir, imageIdx);
         }
         imageIdx++;
     }
@@ -1008,13 +841,13 @@ Vec<PageElement*>* XpsEngineImpl::GetElements(int pageNo) {
     size_t imageIdx = 0;
     for (auto& img : pageInfo->images) {
         fz_rect ir = img.rect;
-        auto image = new XpsImage(this, pageNo, ir, imageIdx);
+        auto image = newXpsImage(this, pageNo, ir, imageIdx);
         els->Append(image);
         imageIdx++;
     }
     fz_link* link = pageInfo->links;
     while (link) {
-        auto* el = new XpsLink(this, pageNo, link, nullptr);
+        auto* el = newFzLink(pageNo, link, nullptr, false);
         els->Append(el);
         link = link->next;
     }
@@ -1137,7 +970,7 @@ XpsTocItem* XpsEngineImpl::BuildTocTree(fz_outline* outline, int& idCounter) {
             name = str::Dup(L"");
         }
         int pageNo = outline->page + 1;
-        auto link = new XpsLink(this, pageNo, nullptr, outline);
+        auto link = newFzLink(pageNo, nullptr, outline, false);
         XpsTocItem* item = new XpsTocItem(name, link);
         item->isOpenDefault = outline->is_open;
         item->id = ++idCounter;
