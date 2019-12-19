@@ -1393,7 +1393,7 @@ PageDestination* PdfEngineImpl::GetNamedDest(const WCHAR* name) {
         int pageNo = resolve_link(uri, &x, &y);
 
         RectD r{x, y, 0, 0};
-        pageDest = makeSimpleDest(pageNo, r);
+        pageDest = newSimpleDest(pageNo, r);
         fz_free(ctx, uri);
         return pageDest;
 }

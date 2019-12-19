@@ -1116,7 +1116,7 @@ PageDestination* XpsEngineImpl::GetNamedDest(const WCHAR* nameW) {
     xps_target* dest = doc->target;
     while (dest) {
         if (str::EndsWithI(dest->name, name)) {
-            return makeSimpleDest(dest->page + 1, RectD{});
+            return newSimpleDest(dest->page + 1, RectD{});
         }
         dest = dest->next;
     }

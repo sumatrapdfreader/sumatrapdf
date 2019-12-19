@@ -43,8 +43,6 @@ struct LinkRectList {
     Vec<fz_rect> coords;
 };
 
-PageDestination* makeSimpleDest(int pageNo, RectD rect);
-
 fz_rect fz_RectD_to_rect(RectD rect);
 RectD fz_rect_to_RectD(fz_rect rect);
 fz_matrix fz_create_view_ctm(fz_rect mediabox, float zoom, int rotation);
