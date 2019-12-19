@@ -425,17 +425,16 @@ RectD XpsLink::CalcDestRect() {
 }
 
 class XpsTocItem : public DocTocItem {
+    // TODO: get rid of link
     XpsLink* link;
 
   public:
     XpsTocItem(WCHAR* title, XpsLink* link) : DocTocItem(title), link(link) {
-    }
-
-    PageDestination* GetPageDestination() override {
-        return link->elementDest;
+        dest = link->elementDest;
     }
 
     ~XpsTocItem() override {
+        link = nullptr;
         delete link;
     }
 };

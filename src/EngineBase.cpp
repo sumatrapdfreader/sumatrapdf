@@ -60,6 +60,7 @@ DocTocItem::DocTocItem(WCHAR* title, int pageNo) {
 
 DocTocItem::~DocTocItem() {
     delete child;
+    delete dest;
     while (next) {
         DocTocItem* tmp = next->next;
         next->next = nullptr;
@@ -96,12 +97,9 @@ void DocTocItem::OpenSingleNode() {
 
 // returns the destination this ToC item points to or nullptr
 // (the result is owned by the DocTocItem and MUST NOT be deleted)
-// TODO: change this to char* uri that encodes all the information
-// about PageDestination, get rid of PageDestination and all
-// classes that inherit from DocTocItem
-// virtual PageDestination* GetLink() = 0;
+// TODO: rename to GetDestination()
 PageDestination* DocTocItem::GetPageDestination() {
-    return nullptr;
+    return dest;
 }
 
 WCHAR* DocTocItem::Text() {

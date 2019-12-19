@@ -779,15 +779,15 @@ class PdfComment : public PageElement {
 
 class PdfTocItem : public DocTocItem {
   public:
+    // TODO: get rid of link
     PdfLink* link;
 
     PdfTocItem(WCHAR* title, PdfLink* link) : DocTocItem(title), link(link) {
+        dest = link->elementDest;
     }
 
-    PageDestination* GetPageDestination() override {
-        return link->elementDest;
-    }
     ~PdfTocItem() override {
+        dest = nullptr; // deleted in ~DocTocItem
         delete link;
     }
 };

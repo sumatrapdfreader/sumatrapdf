@@ -241,18 +241,12 @@ class ImageDataElement : public PageElement {
 };
 
 class EbookTocItem : public DocTocItem {
-    PageDestination* dest;
-
   public:
-    EbookTocItem(WCHAR* title, PageDestination* dest)
-        : DocTocItem(title, dest ? dest->GetDestPageNo() : 0), dest(dest) {
-    }
-    ~EbookTocItem() {
-        delete dest;
-    }
-
-    PageDestination* GetPageDestination() override {
-        return dest;
+    EbookTocItem(WCHAR* title, PageDestination* dest) : DocTocItem(title, 0) {
+        this->dest = dest;
+        if (dest) {
+            pageNo = dest->GetDestPageNo();
+        }
     }
 };
 

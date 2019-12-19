@@ -50,23 +50,18 @@ HtmlFormatterArgs* CreateFormatterArgsDoc(Doc doc, int dx, int dy, Allocator* te
     return args;
 }
 
-class EbookTocDest : public DocTocItem, public PageDestination {
-    AutoFreeWstr url;
-
+class EbookTocDest : public DocTocItem {
   public:
     EbookTocDest(const WCHAR* title, int reparseIdx) : DocTocItem(str::Dup(title), reparseIdx) {
-        url = nullptr;
-        destKind = kindDestinationScrollTo;
+        dest = new PageDestination();
+        dest->destKind = kindDestinationScrollTo;
+        dest->destPageNo = reparseIdx;
     }
 
     EbookTocDest(const WCHAR* title, const WCHAR* url) : DocTocItem(str::Dup(title)) {
-        this->url = str::Dup(url);
-        destKind = kindDestinationLaunchURL;
-        destValue = str::Dup(url);
-    }
-
-    PageDestination* GetPageDestination() override {
-        return this;
+        dest = new PageDestination();
+        dest->destKind = kindDestinationLaunchURL;
+        dest->destValue = str::Dup(url);
     }
 };
 
@@ -408,7 +403,7 @@ void EbookController::OnClickedLink(int pageNo, DrawInstr* link) {
     AutoFreeWstr url(strconv::FromHtmlUtf8(link->str.s, link->str.len));
     if (url::IsAbsolute(url)) {
         EbookTocDest dest(nullptr, url);
-        cb->GotoLink(&dest);
+        cb->GotoLink(dest.GetPageDestination());
         return;
     }
 
@@ -438,7 +433,7 @@ void EbookController::OnClickedLink(int pageNo, DrawInstr* link) {
     }
     if (idx != -1) {
         EbookTocDest dest(nullptr, idx);
-        cb->GotoLink(&dest);
+        cb->GotoLink(dest.GetPageDestination());
     }
 }
 
@@ -857,7 +852,13 @@ PageDestination* EbookController::GetNamedDest(const WCHAR* name) {
         return nullptr;
     }
     CrashIf((size_t)reparseIdx > d.size());
-    return new EbookTocDest(nullptr, reparseIdx + 1);
+    // TODO: need a separate makeEbookDestination() that is not
+    // conflated with DocTocItem
+    auto toc = new EbookTocDest(nullptr, reparseIdx + 1);
+    auto res = toc->GetPageDestination();
+    toc->dest = nullptr;
+    delete toc;
+    return res;
 }
 
 int EbookController::CurrentTocPageNo() const {
