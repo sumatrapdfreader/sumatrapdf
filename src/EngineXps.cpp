@@ -305,10 +305,10 @@ XpsLink::XpsLink(XpsEngineImpl* engine, int pageNo, fz_link* link, fz_outline* o
     elementValue = CalcValue();
 
     auto dest = new PageDestination();
-    dest->destKind = CalcDestKind();
-    dest->destPageNo = CalcDestPageNo();
-    dest->destRect = CalcDestRect();
-    dest->destValue = GetValue();
+    dest->kind = CalcDestKind();
+    dest->pageNo = CalcDestPageNo();
+    dest->rect = CalcDestRect();
+    dest->value = GetValue();
     elementDest = dest;
 }
 

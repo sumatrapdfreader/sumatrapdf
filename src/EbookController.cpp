@@ -54,14 +54,14 @@ class EbookTocDest : public DocTocItem {
   public:
     EbookTocDest(const WCHAR* title, int reparseIdx) : DocTocItem(str::Dup(title), reparseIdx) {
         dest = new PageDestination();
-        dest->destKind = kindDestinationScrollTo;
-        dest->destPageNo = reparseIdx;
+        dest->kind = kindDestinationScrollTo;
+        dest->pageNo = reparseIdx;
     }
 
     EbookTocDest(const WCHAR* title, const WCHAR* url) : DocTocItem(str::Dup(title)) {
         dest = new PageDestination();
-        dest->destKind = kindDestinationLaunchURL;
-        dest->destValue = str::Dup(url);
+        dest->kind = kindDestinationLaunchURL;
+        dest->value = str::Dup(url);
     }
 };
 
@@ -828,7 +828,7 @@ DocTocTree* EbookController::GetTocTree() {
 }
 
 void EbookController::ScrollToLink(PageDestination* dest) {
-    int reparseIdx = dest->GetDestPageNo() - 1;
+    int reparseIdx = dest->GetPageNo() - 1;
     int pageNo = PageForReparsePoint(pages, reparseIdx);
     if (pageNo > 0)
         GoToPage(pageNo, true);

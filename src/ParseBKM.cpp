@@ -71,9 +71,9 @@ void SerializeBookmarksRec(DocTocItem* node, int level, str::Str& s) {
         }
         PageDestination* dest = node->GetPageDestination();
         if (dest) {
-            int pageNo = dest->GetDestPageNo();
+            int pageNo = dest->GetPageNo();
             s.AppendFmt(" page:%d", pageNo);
-            auto ws = dest->GetDestValue();
+            auto ws = dest->GetValue();
             if (ws != nullptr) {
                 AutoFree str = strconv::WstrToUtf8(ws);
                 s.Append(",dest:");

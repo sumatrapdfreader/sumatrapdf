@@ -78,12 +78,12 @@ static void CustomizeTocInfoTip(TreeCtrl* w, NMTVGETINFOTIPW* nm) {
     if (!link) {
         return;
     }
-    WCHAR* path = link->GetDestValue();
+    WCHAR* path = link->GetValue();
     if (!path) {
         return;
     }
     CrashIf(!link); // /analyze claims that this could happen - it really can't
-    auto dstType = link->GetDestKind();
+    auto dstType = link->Kind();
     CrashIf(dstType != kindDestinationLaunchURL && dstType != kindDestinationLaunchFile &&
             dstType != kindDestinationLaunchEmbedded);
     CrashIf(nm->hdr.hwndFrom != w->hwnd);
@@ -205,7 +205,7 @@ static bool IsScrollToLink(PageDestination* link) {
     if (!link) {
         return false;
     }
-    auto kind = link->GetDestKind();
+    auto kind = link->Kind();
     return kind == kindDestinationScrollTo;
 }
 

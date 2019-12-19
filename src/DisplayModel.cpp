@@ -1547,11 +1547,11 @@ bool DisplayModel::ShouldCacheRendering(int pageNo) {
 }
 
 void DisplayModel::ScrollToLink(PageDestination* dest) {
-    CrashIf(!dest || dest->GetDestPageNo() <= 0);
+    CrashIf(!dest || dest->GetPageNo() <= 0);
 
     PointI scroll(-1, 0);
-    RectD rect = dest->GetDestRect();
-    int pageNo = dest->GetDestPageNo();
+    RectD rect = dest->GetRect();
+    int pageNo = dest->GetPageNo();
 
     if (rect.IsEmpty()) {
         // PDF: /XYZ top left

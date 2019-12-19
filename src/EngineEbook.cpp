@@ -187,11 +187,11 @@ class EbookLink : public PageElement {
 
         if (!dest) {
             dest = new PageDestination();
-            dest->destKind = kindDestinationLaunchURL;
+            dest->kind = kindDestinationLaunchURL;
             // TODO: not sure about this
-            dest->destValue = str::Dup(elementValue);
-            dest->destPageNo = 0;
-            dest->destRect = rect.Convert<double>();
+            dest->value = str::Dup(elementValue);
+            dest->pageNo = 0;
+            dest->rect = rect.Convert<double>();
         }
         elementDest = dest;
     }
@@ -227,7 +227,7 @@ class EbookTocItem : public DocTocItem {
     EbookTocItem(WCHAR* title, PageDestination* dest) : DocTocItem(title, 0) {
         this->dest = dest;
         if (dest) {
-            pageNo = dest->GetDestPageNo();
+            pageNo = dest->GetPageNo();
         }
     }
 };
@@ -1523,8 +1523,8 @@ DocTocTree* ChmEngineImpl::GetTocTree() {
 
 static PageDestination* newChmEmbeddedDest(const char* path) {
     auto res = new PageDestination();
-    res->destKind = kindDestinationLaunchEmbedded;
-    res->destValue = strconv::Utf8ToWchar(path::GetBaseNameNoFree(path));
+    res->kind = kindDestinationLaunchEmbedded;
+    res->value = strconv::Utf8ToWchar(path::GetBaseNameNoFree(path));
     return res;
 }
 
@@ -1619,12 +1619,12 @@ static PageDestination* newRemoteHtmlDest(const WCHAR* relativeURL) {
     auto* res = new PageDestination();
     const WCHAR* id = str::FindChar(relativeURL, '#');
     if (id) {
-        res->destValue = str::DupN(relativeURL, id - relativeURL);
-        res->destName = str::Dup(id);
+        res->value = str::DupN(relativeURL, id - relativeURL);
+        res->name = str::Dup(id);
     } else {
-        res->destValue = str::Dup(relativeURL);
+        res->value = str::Dup(relativeURL);
     }
-    res->destKind = kindDestinationLaunchFile;
+    res->kind = kindDestinationLaunchFile;
     return res;
 }
 

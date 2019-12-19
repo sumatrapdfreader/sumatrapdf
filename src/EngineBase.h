@@ -86,41 +86,40 @@ extern Kind kindDestinationZoomToDialog;
 // a link destination
 class PageDestination {
   public:
-    Kind destKind = nullptr;
-    int destPageNo = 0;
-    RectD destRect{};
-    WCHAR* destValue = nullptr;
-    WCHAR* destName = nullptr;
+    Kind kind = nullptr;
+    int pageNo = 0;
+    RectD rect{};
+    WCHAR* value = nullptr;
+    WCHAR* name = nullptr;
 
-    virtual ~PageDestination() {
-        free(destValue);
-        free(destName);
+    ~PageDestination() {
+        free(value);
+        free(name);
     }
 
-    Kind GetDestKind() const {
-        return destKind;
+    Kind Kind() const {
+        return kind;
     }
 
     // page the destination points to (0 for external destinations such as URLs)
-    int GetDestPageNo() const {
-        CrashIf(destPageNo < 0);
-        return destPageNo;
+    int GetPageNo() const {
+        return pageNo;
     }
 
     // rectangle of the destination on the above returned page
-    RectD GetDestRect() const {
-        return destRect;
+    RectD GetRect() const {
+        return rect;
     }
 
     // string value associated with the destination (e.g. a path or a URL)
-    WCHAR* GetDestValue() const {
-        return destValue;
+    WCHAR* GetValue() const {
+        return value;
     }
 
     // the name of this destination (reverses EngineBase::GetNamedDest) or nullptr
     // (mainly applicable for links of type "LaunchFile" to PDF documents)
-    WCHAR* GetDestName() const {
-        return destName;
+    WCHAR* GetName() const {
+        return name;
     }
 };
 

@@ -104,12 +104,12 @@ PageDestination* DocTocItem::GetPageDestination() {
 
 PageDestination* newSimpleDest(int pageNo, RectD rect, const WCHAR* value) {
     auto res = new PageDestination();
-    res->destPageNo = pageNo;
-    res->destRect = rect;
-    res->destKind = kindDestinationScrollTo;
+    res->pageNo = pageNo;
+    res->rect = rect;
+    res->kind = kindDestinationScrollTo;
     if (value) {
-        res->destKind = kindDestinationLaunchURL;
-        res->destValue = str::Dup(value);
+        res->kind = kindDestinationLaunchURL;
+        res->value = str::Dup(value);
     }
     return res;
 }

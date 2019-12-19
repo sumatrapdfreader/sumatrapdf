@@ -245,11 +245,11 @@ bool WindowInfo::CreateUIAProvider() {
 
 PageDestination* clonePageDestination(PageDestination* dest) {
     auto res = new PageDestination();
-    res->destKind = dest->destKind;
-    res->destPageNo = dest->GetDestPageNo();
-    res->destRect = dest->GetDestRect();
-    res->destValue = str::Dup(dest->GetDestValue());
-    res->destName = str::Dup(dest->GetDestName());
+    res->kind = dest->kind;
+    res->pageNo = dest->GetPageNo();
+    res->rect = dest->GetRect();
+    res->value = str::Dup(dest->GetValue());
+    res->name = str::Dup(dest->GetName());
     return res;
 }
 
@@ -261,8 +261,8 @@ void LinkHandler::GotoLink(PageDestination* link) {
 
     HWND hwndFrame = owner->hwndFrame;
     TabInfo* tab = owner->currentTab;
-    WCHAR* path = link->GetDestValue();
-    Kind kind = link->GetDestKind();
+    WCHAR* path = link->GetValue();
+    Kind kind = link->Kind();
     if (kindDestinationScrollTo == kind) {
         // TODO: respect link->ld.gotor.new_window for PDF documents ?
         ScrollTo(link);
@@ -345,7 +345,7 @@ void LinkHandler::ScrollTo(PageDestination* dest) {
     if (!dest || !owner->IsDocLoaded())
         return;
 
-    int pageNo = dest->GetDestPageNo();
+    int pageNo = dest->GetPageNo();
     if (pageNo > 0)
         owner->ctrl->ScrollToLink(dest);
 }
@@ -399,7 +399,7 @@ void LinkHandler::LaunchFile(const WCHAR* path, PageDestination* link) {
         return;
     }
 
-    WCHAR* destName = remoteLink->GetDestName();
+    WCHAR* destName = remoteLink->GetName();
     if (destName) {
         PageDestination* dest = newWin->ctrl->GetNamedDest(destName);
         if (dest) {
