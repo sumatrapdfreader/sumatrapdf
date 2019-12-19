@@ -59,25 +59,24 @@ static PageDestination* newDjVuDestination(const char* link) {
     return res;
 }
 
-class DjVuLink : public PageElement {
-  public:
-    DjVuLink(int pageNo, RectI rect, const char* link, const char* comment) {
-        this->rect = rect.Convert<double>();
-        pageNo = pageNo;
-        dest = newDjVuDestination(link);
-        if (!str::IsEmpty(comment)) {
-            value = strconv::FromUtf8(comment);
-        }
-        kind = kindPageElementDest;
-        if (!str::IsEmpty(comment)) {
-            value = strconv::Utf8ToWchar(comment);
-        } else {
-            if (kindDestinationLaunchURL == dest->Kind()) {
-                value = str::Dup(dest->GetValue());
-            }
+static PageElement* newDjVuLink(int pageNo, RectI rect, const char* link, const char* comment) {
+    auto res = new PageElement();
+    res->rect = rect.Convert<double>();
+    res->pageNo = pageNo;
+    res->dest = newDjVuDestination(link);
+    if (!str::IsEmpty(comment)) {
+        res->value = strconv::FromUtf8(comment);
+    }
+    res->kind = kindPageElementDest;
+    if (!str::IsEmpty(comment)) {
+        res->value = strconv::Utf8ToWchar(comment);
+    } else {
+        if (kindDestinationLaunchURL == res->dest->Kind()) {
+            res->value = str::Dup(res->dest->GetValue());
         }
     }
-};
+    return res;
+}
 
 class DjVuTocItem : public DocTocItem {
   public:
@@ -922,7 +921,9 @@ Vec<PageElement*>* DjVuEngineImpl::GetElements(int pageNo) {
         RectI rect(x, page.dy - y - h, w, h);
 
         AutoFree link(ResolveNamedDest(urlUtf8));
-        els->Append(new DjVuLink(pageNo, rect, link ? link.get() : urlUtf8, commentUtf8));
+        const char* tmp = link.get() ? link.get() : urlUtf8;
+        auto el = newDjVuLink(pageNo, rect, tmp, commentUtf8);
+        els->Append(el);
     }
     ddjvu_free(links);
 
