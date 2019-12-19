@@ -53,8 +53,8 @@ SizeI RenderedBitmap::Size() const {
     return size;
 }
 
-DocTocItem::DocTocItem(WCHAR* title, int pageNo) {
-    this->title = title;
+DocTocItem::DocTocItem(const WCHAR* title, int pageNo) {
+    this->title = str::Dup(title);
     this->pageNo = pageNo;
 }
 

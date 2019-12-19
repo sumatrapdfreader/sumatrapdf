@@ -242,7 +242,7 @@ class DocTocItem : public TreeItem {
 
     DocTocItem() = default;
 
-    explicit DocTocItem(WCHAR* title, int pageNo = 0);
+    explicit DocTocItem(const WCHAR* title, int pageNo = 0);
 
     virtual ~DocTocItem();
 

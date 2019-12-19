@@ -314,12 +314,12 @@ void ZeroMemory(void* p, size_t len);
 #endif
 
 template <typename T>
-FORCEINLINE T* AllocArray(size_t n) {
+__forceinline T* AllocArray(size_t n) {
     return (T*)calloc(n, sizeof(T));
 }
 
 template <typename T>
-FORCEINLINE T* AllocStruct() {
+__forceinline T* AllocStruct() {
     return (T*)calloc(1, sizeof(T));
 }
 

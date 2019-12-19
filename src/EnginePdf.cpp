@@ -978,6 +978,7 @@ DocTocItem* PdfEngineImpl::BuildTocTree(fz_outline* outline, int& idCounter, boo
         delete link;
 
         DocTocItem* item = newPdfTocItem(name, dest);
+        free(name);
         item->isOpenDefault = outline->is_open;
         item->id = ++idCounter;
         item->fontFlags = outline->flags;

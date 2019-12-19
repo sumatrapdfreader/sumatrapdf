@@ -274,6 +274,7 @@ DocTocTree* EnginePdfMultiImpl::GetTocTree() {
         }
         WCHAR* title = strconv::Utf8ToWchar(f->fileName);
         auto tocItem = new DocTocItem(title, startPageNo + 1);
+        free(title);
         if (!tree->root) {
             tree->root = tocItem;
         } else {
