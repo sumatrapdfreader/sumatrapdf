@@ -91,19 +91,10 @@ class DjVuLink : public PageElement {
 };
 
 class DjVuTocItem : public DocTocItem {
-    DjVuDestination* dest;
-
   public:
     DjVuTocItem(const char* title, const char* link) : DocTocItem(strconv::FromUtf8(title)) {
         dest = new DjVuDestination(link);
         pageNo = dest->GetDestPageNo();
-    }
-    virtual ~DjVuTocItem() {
-        delete dest;
-    }
-
-    PageDestination* GetPageDestination() override {
-        return dest;
     }
 };
 

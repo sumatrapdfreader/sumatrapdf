@@ -193,6 +193,7 @@ class PageElement {
     PageDestination* AsLink() {
         return elementDest;
     }
+
     // if this element is an image, this returns it
     // caller must delete the result
     RenderedBitmap* GetImage() {
@@ -231,6 +232,8 @@ class DocTocItem : public TreeItem {
     int fontFlags = 0; // fontBitBold, fontBitItalic
     COLORREF color = ColorUnset;
 
+    PageDestination* dest = nullptr;
+
     // first child item
     DocTocItem* child = nullptr;
     // next sibling
@@ -246,7 +249,7 @@ class DocTocItem : public TreeItem {
 
     void OpenSingleNode();
 
-    virtual PageDestination* GetPageDestination();
+    PageDestination* GetPageDestination();
 
     WCHAR* Text();
 

@@ -21,7 +21,7 @@ static bool IsExternalUrl(const WCHAR* url) {
     return str::StartsWithI(url, L"http://") || str::StartsWithI(url, L"https://") || str::StartsWithI(url, L"mailto:");
 }
 
-class ChmTocItem : public DocTocItem, public PageDestination {
+class ChmTocItem : public DocTocItem {
   public:
     const WCHAR* url = nullptr; // owned by ChmModel::poolAllocator or ChmNamedDest::myUrl
 
@@ -30,36 +30,30 @@ class ChmTocItem : public DocTocItem, public PageDestination {
         if (!url) {
             return;
         }
+
+        dest = new PageDestination();
         if (IsExternalUrl(url)) {
-            destKind = kindDestinationLaunchURL;
-            destValue = str::Dup(url);
+            dest->destKind = kindDestinationLaunchURL;
+            dest->destValue = str::Dup(url);
         } else {
-            destKind = kindDestinationScrollTo;
-            destValue = str::Dup(url);
+            dest->destKind = kindDestinationScrollTo;
+            dest->destValue = str::Dup(url);
         }
 
-        destRect = RectD(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
+        dest->destRect = RectD(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
     }
 
     virtual ~ChmTocItem() {
         // prevent title from being freed
         title = nullptr;
     }
-
-    PageDestination* GetPageDestination() override {
-        return url ? this : nullptr;
-    }
 };
 
 class ChmNamedDest : public ChmTocItem {
-    AutoFreeWstr myUrl;
-
   public:
     ChmNamedDest(const WCHAR* url, int pageNo) : ChmTocItem(nullptr, pageNo, nullptr) {
-        this->myUrl = str::Dup(url);
-        this->url = this->title = myUrl;
-    }
-    virtual ~ChmNamedDest() {
+        this->url = str::Dup(url);
+        this->title = str::Dup(url);
     }
 };
 
@@ -174,7 +168,7 @@ void ChmModel::DisplayPage(const WCHAR* pageUrl) {
         // (same as for PDF, XPS, etc. documents)
         if (cb) {
             ChmTocItem item(nullptr, 0, pageUrl);
-            cb->GotoLink(&item);
+            cb->GotoLink(item.dest);
         }
         return;
     }
@@ -370,7 +364,7 @@ bool ChmModel::OnBeforeNavigate(const WCHAR* url, bool newWindow) {
         // instead pass the URL to the system's default browser
         if (url && cb) {
             ChmTocItem item(nullptr, 0, url);
-            cb->GotoLink(&item);
+            cb->GotoLink(item.dest);
         }
         return false;
     }
@@ -432,8 +426,14 @@ PageDestination* ChmModel::GetNamedDest(const WCHAR* name) {
         // but LinkHandler::ScrollTo doesn't
         pageNo = 1;
     }
-    if (pageNo > 0)
-        return new ChmNamedDest(name, pageNo);
+    if (pageNo > 0) {
+        // TODO: make a function just for constructing a destination
+        auto tmp = new ChmNamedDest(name, pageNo);
+        auto res = tmp->dest;
+        tmp->dest = nullptr;
+        delete tmp;
+        return res;
+    }
     return nullptr;
 }
 

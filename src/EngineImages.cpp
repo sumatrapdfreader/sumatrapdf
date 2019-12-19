@@ -776,10 +776,6 @@ class ImageDirTocItem : public DocTocItem {
   public:
     ImageDirTocItem(WCHAR* title, int pageNo) : DocTocItem(title, pageNo) {
     }
-
-    PageDestination* GetPageDestination() override {
-        return nullptr;
-    }
 };
 
 DocTocTree* ImageDirEngineImpl::GetTocTree() {
