@@ -196,9 +196,10 @@ void ChmModel::DisplayPage(const WCHAR* pageUrl) {
 
 void ChmModel::ScrollToLink(PageDestination* link) {
     CrashIf(link->GetDestKind() != kindDestinationScrollTo);
-    AutoFreeWstr url(link->GetDestName());
-    if (url)
+    WCHAR* url = link->GetDestName();
+    if (url) {
         DisplayPage(url);
+    }
 }
 
 bool ChmModel::CanNavigate(int dir) const {

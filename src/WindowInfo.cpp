@@ -248,34 +248,37 @@ PageDestination* clonePageDestination(PageDestination* dest) {
     res->destKind = dest->destKind;
     res->destPageNo = dest->GetDestPageNo();
     res->destRect = dest->GetDestRect();
-    res->destValue = dest->GetDestValue();
-    res->destName = dest->GetDestName();
+    res->destValue = str::Dup(dest->GetDestValue());
+    res->destName = str::Dup(dest->GetDestName());
     return res;
 }
 
 void LinkHandler::GotoLink(PageDestination* link) {
     CrashIf(!owner || owner->linkHandler != this);
-    if (!link || !owner->IsDocLoaded())
+    if (!link || !owner->IsDocLoaded()) {
         return;
+    }
 
+    HWND hwndFrame = owner->hwndFrame;
     TabInfo* tab = owner->currentTab;
-    AutoFreeWstr path(link->GetDestValue());
+    WCHAR* path = link->GetDestValue();
     Kind kind = link->GetDestKind();
     if (kindDestinationScrollTo == kind) {
         // TODO: respect link->ld.gotor.new_window for PDF documents ?
         ScrollTo(link);
     } else if (kindDestinationLaunchURL == kind) {
-        if (!path)
+        if (!path) {
             /* ignore missing URLs */;
-        else {
+        } else {
             WCHAR* colon = str::FindChar(path, ':');
             WCHAR* hash = str::FindChar(path, '#');
             if (!colon || (hash && colon > hash)) {
                 // treat relative URIs as file paths (without fragment identifier)
-                if (hash)
+                if (hash) {
                     *hash = '\0';
-                str::TransChars(path.Get(), L"/", L"\\");
-                url::DecodeInPlace(path.Get());
+                }
+                str::TransChars(path, L"/", L"\\");
+                url::DecodeInPlace(path);
                 // LaunchFile will reject unsupported file types
                 LaunchFile(path, nullptr);
             } else {
@@ -286,14 +289,15 @@ void LinkHandler::GotoLink(PageDestination* link) {
         }
     } else if (kindDestinationLaunchEmbedded == kind) {
         // open embedded PDF documents in a new window
-        if (path && str::StartsWith(path.Get(), tab->filePath.Get())) {
+        if (path && str::StartsWith(path, tab->filePath.Get())) {
             WindowInfo* newWin = FindWindowInfoByFile(path, true);
             if (!newWin) {
                 LoadArgs args(path, owner);
                 newWin = LoadDocument(args);
             }
-            if (newWin)
+            if (newWin) {
                 newWin->Focus();
+            }
         }
         // offer to save other attachments to a file
         else {
@@ -305,35 +309,35 @@ void LinkHandler::GotoLink(PageDestination* link) {
             // (except for allowed perceived file types)
             LaunchFile(path, link);
         }
-    }
-    // predefined named actions
-    else if (kindDestinationNextPage == kind)
+    } else if (kindDestinationNextPage == kind) {
+        // predefined named actions
         tab->ctrl->GoToNextPage();
-    else if (kindDestinationPrevPage == kind)
+    } else if (kindDestinationPrevPage == kind) {
         tab->ctrl->GoToPrevPage();
-    else if (kindDestinationFirstPage == kind)
+    } else if (kindDestinationFirstPage == kind) {
         tab->ctrl->GoToFirstPage();
-    else if (kindDestinationLastPage == kind)
+    } else if (kindDestinationLastPage == kind) {
         tab->ctrl->GoToLastPage();
-    // Adobe Reader extensions to the spec, cf. http://www.tug.org/applications/hyperref/manual.html
-    else if (kindDestinationFindDialog == kind)
-        PostMessage(owner->hwndFrame, WM_COMMAND, IDM_FIND_FIRST, 0);
-    else if (kindDestinationFullScreen == kind)
-        PostMessage(owner->hwndFrame, WM_COMMAND, IDM_VIEW_PRESENTATION_MODE, 0);
-    else if (kindDestinationGoBack == kind)
+        // Adobe Reader extensions to the spec, see http://www.tug.org/applications/hyperref/manual.html
+    } else if (kindDestinationFindDialog == kind) {
+        PostMessage(hwndFrame, WM_COMMAND, IDM_FIND_FIRST, 0);
+    } else if (kindDestinationFullScreen == kind) {
+        PostMessage(hwndFrame, WM_COMMAND, IDM_VIEW_PRESENTATION_MODE, 0);
+    } else if (kindDestinationGoBack == kind) {
         tab->ctrl->Navigate(-1);
-    else if (kindDestinationGoForward == kind)
+    } else if (kindDestinationGoForward == kind) {
         tab->ctrl->Navigate(1);
-    else if (kindDestinationGoToPageDialog == kind)
-        PostMessage(owner->hwndFrame, WM_COMMAND, IDM_GOTO_PAGE, 0);
-    else if (kindDestinationPrintDialog == kind)
-        PostMessage(owner->hwndFrame, WM_COMMAND, IDM_PRINT, 0);
-    else if (kindDestinationSaveAsDialog == kind)
-        PostMessage(owner->hwndFrame, WM_COMMAND, IDM_SAVEAS, 0);
-    else if (kindDestinationZoomToDialog == kind)
-        PostMessage(owner->hwndFrame, WM_COMMAND, IDM_ZOOM_CUSTOM, 0);
-    else
+    } else if (kindDestinationGoToPageDialog == kind) {
+        PostMessage(hwndFrame, WM_COMMAND, IDM_GOTO_PAGE, 0);
+    } else if (kindDestinationPrintDialog == kind) {
+        PostMessage(hwndFrame, WM_COMMAND, IDM_PRINT, 0);
+    } else if (kindDestinationSaveAsDialog == kind) {
+        PostMessage(hwndFrame, WM_COMMAND, IDM_SAVEAS, 0);
+    } else if (kindDestinationZoomToDialog == kind) {
+        PostMessage(hwndFrame, WM_COMMAND, IDM_ZOOM_CUSTOM, 0);
+    } else {
         CrashIf(nullptr != kind);
+    }
 }
 
 void LinkHandler::ScrollTo(PageDestination* dest) {
@@ -395,7 +399,7 @@ void LinkHandler::LaunchFile(const WCHAR* path, PageDestination* link) {
         return;
     }
 
-    AutoFreeWstr destName(remoteLink->GetDestName());
+    WCHAR* destName = remoteLink->GetDestName();
     if (destName) {
         PageDestination* dest = newWin->ctrl->GetNamedDest(destName);
         if (dest) {

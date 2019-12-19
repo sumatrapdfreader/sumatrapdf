@@ -84,7 +84,7 @@ class DjVuLink : public PageElement {
             elementValue = strconv::Utf8ToWchar(comment);
         } else {
             if (kindDestinationLaunchURL == elementDest->GetDestKind()) {
-                elementValue = elementDest->GetDestValue();
+                elementValue = str::Dup(elementDest->GetDestValue());
             }
         }
     }

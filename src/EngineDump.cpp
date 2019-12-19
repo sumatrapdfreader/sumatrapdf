@@ -145,8 +145,9 @@ void DumpProperties(EngineBase* engine, bool fullDump) {
 
 // caller must free() the result
 char* DestRectToStr(EngineBase* engine, PageDestination* dest) {
-    if (AutoFreeWstr(dest->GetDestName())) {
-        AutoFree name(Escape(dest->GetDestName()));
+    WCHAR* destName = dest->GetDestName(); 
+    if (destName) {
+        AutoFree name(Escape(destName));
         return str::Format("Name=\"%s\"", name.Get());
     }
     // as handled by LinkHandler::ScrollTo in WindowInfo.cpp
