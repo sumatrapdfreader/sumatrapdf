@@ -243,18 +243,15 @@ bool WindowInfo::CreateUIAProvider() {
     return true;
 }
 
-// TODO: we use RemoteDestination only in LinkHandler::LaunchFile to make a copy
-// of PageDestination, so we'll be able to replace it with just PageDestination
-class RemoteDestination : public PageDestination {
-  public:
-    RemoteDestination(PageDestination* dest) {
-        destKind = dest->destKind;
-        destPageNo = dest->GetDestPageNo();
-        destRect = dest->GetDestRect();
-        destValue = dest->GetDestValue();
-        destName = dest->GetDestName();
-    }
-};
+PageDestination* clonePageDestination(PageDestination* dest) {
+    auto res = new PageDestination();
+    res->destKind = dest->destKind;
+    res->destPageNo = dest->GetDestPageNo();
+    res->destRect = dest->GetDestRect();
+    res->destValue = dest->GetDestValue();
+    res->destName = dest->GetDestName();
+    return res;
+}
 
 void LinkHandler::GotoLink(PageDestination* link) {
     CrashIf(!owner || owner->linkHandler != this);
@@ -359,9 +356,9 @@ void LinkHandler::LaunchFile(const WCHAR* path, PageDestination* link) {
     }
 
     // TODO: link is deleted when opening the document in a new tab
-    RemoteDestination* remoteLink = nullptr;
+    PageDestination* remoteLink = nullptr;
     if (link) {
-        remoteLink = new RemoteDestination(link);
+        remoteLink = clonePageDestination(link);
         link = nullptr;
     }
     AutoDelete deleteRemoteLink(remoteLink);
@@ -394,8 +391,9 @@ void LinkHandler::LaunchFile(const WCHAR* path, PageDestination* link) {
     }
 
     newWin->Focus();
-    if (!remoteLink)
+    if (!remoteLink) {
         return;
+    }
 
     AutoFreeWstr destName(remoteLink->GetDestName());
     if (destName) {
