@@ -982,6 +982,7 @@ DocTocItem* XpsEngineImpl::BuildTocTree(fz_outline* outline, int& idCounter) {
         delete link;
 
         DocTocItem* item = newXpsTocItem(name, dest);
+        free(name);
         item->isOpenDefault = outline->is_open;
         item->id = ++idCounter;
         item->fontFlags = outline->flags;

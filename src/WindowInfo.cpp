@@ -231,15 +231,17 @@ void WindowInfo::ShowNotification(const WCHAR* msg, int options, NotificationGro
 }
 
 bool WindowInfo::CreateUIAProvider() {
-    if (!uia_provider) {
-        uia_provider = new SumatraUIAutomationProvider(this->hwndCanvas);
-        if (!uia_provider)
-            return false;
-        // load data to provider
-        if (AsFixed())
-            uia_provider->OnDocumentLoad(AsFixed());
+    if (uia_provider) {
+        return true;
     }
-
+    uia_provider = new SumatraUIAutomationProvider(this->hwndCanvas);
+    if (!uia_provider) {
+        return false;
+    }
+    // load data to provider
+    if (AsFixed()) {
+        uia_provider->OnDocumentLoad(AsFixed());
+    }
     return true;
 }
 
@@ -332,12 +334,14 @@ void LinkHandler::GotoLink(PageDestination* link) {
 
 void LinkHandler::ScrollTo(PageDestination* dest) {
     CrashIf(!owner || owner->linkHandler != this);
-    if (!dest || !owner->IsDocLoaded())
+    if (!dest || !owner->IsDocLoaded()) {
         return;
+    }
 
     int pageNo = dest->GetPageNo();
-    if (pageNo > 0)
+    if (pageNo > 0) {
         owner->ctrl->ScrollToLink(dest);
+    }
 }
 
 void LinkHandler::LaunchFile(const WCHAR* path, PageDestination* link) {

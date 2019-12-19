@@ -83,9 +83,15 @@ static void CustomizeTocInfoTip(TreeCtrl* w, NMTVGETINFOTIPW* nm) {
         return;
     }
     CrashIf(!link); // /analyze claims that this could happen - it really can't
-    auto dstType = link->Kind();
-    CrashIf(dstType != kindDestinationLaunchURL && dstType != kindDestinationLaunchFile &&
-            dstType != kindDestinationLaunchEmbedded);
+    auto k = link->Kind();
+    // TODO: DocTocItem from Chm contain other types
+    // we probably shouldn't set DocTocItem::dest there
+    if (k == kindDestinationScrollTo) {
+        return;
+    }
+
+    CrashIf(k != kindDestinationLaunchURL && k != kindDestinationLaunchFile &&
+            k != kindDestinationLaunchEmbedded);
     CrashIf(nm->hdr.hwndFrom != w->hwnd);
 
     str::WStr infotip;
@@ -105,7 +111,7 @@ static void CustomizeTocInfoTip(TreeCtrl* w, NMTVGETINFOTIPW* nm) {
         infotip.Append(L"\r\n");
     }
 
-    if (kindDestinationLaunchEmbedded == dstType) {
+    if (kindDestinationLaunchEmbedded == k) {
         AutoFreeWstr tmp = str::Format(_TR("Attachment: %s"), path);
         infotip.Append(tmp.get());
     } else {
