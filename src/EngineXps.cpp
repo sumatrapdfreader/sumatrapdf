@@ -272,7 +272,7 @@ class XpsEngineImpl : public EngineBase {
     WCHAR* ExtractFontList();
 };
 
-class XpsLink : public PageElement, public PageDestination {
+class XpsLink : public PageElement {
   public:
     XpsEngineImpl* engine = nullptr;
     // must be one or the other
@@ -298,15 +298,18 @@ XpsLink::XpsLink(XpsEngineImpl* engine, int pageNo, fz_link* link, fz_outline* o
     this->link = link;
     this->outline = outline;
 
-    destKind = CalcDestKind();
-    destPageNo = CalcDestPageNo();
-    destRect = CalcDestRect();
-    destValue = GetValue();
     kind = kindPageElementDest;
     if (link) {
         elementRect = fz_rect_to_RectD(link->rect);
     }
     elementValue = CalcValue();
+
+    auto dest = new PageDestination();
+    dest->destKind = CalcDestKind();
+    dest->destPageNo = CalcDestPageNo();
+    dest->destRect = CalcDestRect();
+    dest->destValue = GetValue();
+    elementDest = dest;
 }
 
 static char* XpsLinkGetURI(const XpsLink* link) {
@@ -422,14 +425,18 @@ RectD XpsLink::CalcDestRect() {
 }
 
 class XpsTocItem : public DocTocItem {
-    XpsLink link;
+    XpsLink* link;
 
   public:
-    XpsTocItem(WCHAR* title, XpsLink link) : DocTocItem(title), link(link) {
+    XpsTocItem(WCHAR* title, XpsLink* link) : DocTocItem(title), link(link) {
     }
 
     PageDestination* GetPageDestination() override {
-        return &link;
+        return link->elementDest;
+    }
+
+    ~XpsTocItem() override {
+        delete link;
     }
 };
 
@@ -1131,7 +1138,7 @@ XpsTocItem* XpsEngineImpl::BuildTocTree(fz_outline* outline, int& idCounter) {
             name = str::Dup(L"");
         }
         int pageNo = outline->page + 1;
-        XpsLink link(this, pageNo, nullptr, outline);
+        auto link = new XpsLink(this, pageNo, nullptr, outline);
         XpsTocItem* item = new XpsTocItem(name, link);
         item->isOpenDefault = outline->is_open;
         item->id = ++idCounter;
