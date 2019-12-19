@@ -165,6 +165,7 @@ class PageElement {
 
     virtual ~PageElement() {
         free(elementValue);
+        delete elementDest;
     }
     // the type of this page element
     bool Is(Kind expectedKind) const {
