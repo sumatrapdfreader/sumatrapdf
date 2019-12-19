@@ -1635,19 +1635,18 @@ bool HtmlEngineImpl::Load(const WCHAR* fileName) {
     return pages->size() > 0;
 }
 
-class RemoteHtmlDest : public SimpleDest2 {
-  public:
-    explicit RemoteHtmlDest(const WCHAR* relativeURL) : SimpleDest2(0, RectD()) {
-        const WCHAR* id = str::FindChar(relativeURL, '#');
-        if (id) {
-            destValue = str::DupN(relativeURL, id - relativeURL);
-            destName = str::Dup(id);
-        } else {
-            destValue = str::Dup(relativeURL);
-        }
-        destKind = kindDestinationLaunchFile;
+static PageDestination* newRemoteHtmlDest(const WCHAR* relativeURL) {
+    auto* res = new PageDestination();
+    const WCHAR* id = str::FindChar(relativeURL, '#');
+    if (id) {
+        res->destValue = str::DupN(relativeURL, id - relativeURL);
+        res->destName = str::Dup(id);
+    } else {
+        res->destValue = str::Dup(relativeURL);
     }
-};
+    res->destKind = kindDestinationLaunchFile;
+    return res;
+}
 
 PageElement* HtmlEngineImpl::CreatePageLink(DrawInstr* link, RectI rect, int pageNo) {
     if (0 == link->str.len)
@@ -1657,7 +1656,7 @@ PageElement* HtmlEngineImpl::CreatePageLink(DrawInstr* link, RectI rect, int pag
     if (url::IsAbsolute(url) || '#' == *url)
         return EbookEngine::CreatePageLink(link, rect, pageNo);
 
-    PageDestination* dest = new RemoteHtmlDest(url);
+    PageDestination* dest = newRemoteHtmlDest(url);
     return new EbookLink(link, rect, dest, pageNo, true);
 }
 
