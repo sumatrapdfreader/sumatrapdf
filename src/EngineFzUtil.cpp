@@ -731,12 +731,15 @@ static char* PdfLinkGetURI(fz_link* link, fz_outline* outline) {
 
 static WCHAR* CalcDestName(fz_link* link, fz_outline* outline) {
     char* uri = PdfLinkGetURI(link, outline);
+    if (!uri) {
+        return nullptr;
+    }
     if (is_external_link(uri)) {
         return nullptr;
     }
     // TODO(port): test with more stuff
     // figure out what PDF_NAME(GoToR) ends up being
-    return nullptr;
+    return strconv::Utf8ToWchar(uri);
 #if 0
     if (!link || FZ_LINK_GOTOR != link->kind || !link->ld.gotor.dest)
         return nullptr;
@@ -839,7 +842,8 @@ static Kind CalcDestKind(fz_link* link, fz_outline* outline, bool isAttachment) 
         }
         return kindDestinationScrollTo;
     }
-    if (str::StartsWith(uri, "file://")) {
+    if (str::StartsWith(uri, "file:")) {
+        // TODO: investigate more, happens in pier-EsugAwards2007.pdf
         return kindDestinationLaunchFile;
     }
     if (str::StartsWithI(uri, "http://")) {
@@ -852,6 +856,9 @@ static Kind CalcDestKind(fz_link* link, fz_outline* outline, bool isAttachment) 
         return kindDestinationLaunchURL;
     }
     if (str::StartsWith(uri, "mailto:")) {
+        return kindDestinationLaunchURL;
+    }
+    if (str::StartsWith(uri, "news:")) {
         return kindDestinationLaunchURL;
     }
 
@@ -882,7 +889,8 @@ static Kind CalcDestKind(fz_link* link, fz_outline* outline, bool isAttachment) 
 
 static int CalcDestPageNo(fz_link* link, fz_outline* outline) {
     char* uri = PdfLinkGetURI(link, outline);
-    CrashIf(!uri);
+    // TODO: happened in ug_logodesign.pdf. investigate
+    // CrashIf(!uri);
     if (!uri) {
         return 0;
     }
@@ -907,7 +915,9 @@ static int CalcDestPageNo(fz_link* link, fz_outline* outline) {
 static RectD CalcDestRect(fz_link* link, fz_outline* outline) {
     RectD result(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
     char* uri = PdfLinkGetURI(link, outline);
-    CrashIf(!uri);
+    // TODO: this happens in pdf/ug_logodesign.pdf, there's only outline without
+    // pageno. need to investigate
+    // CrashIf(!uri);
     if (!uri) {
         return result;
     }
