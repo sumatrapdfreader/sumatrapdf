@@ -618,7 +618,7 @@ void OnContextMenu(WindowInfo* win, int x, int y) {
     }
 
     HMENU popup = BuildMenuFromMenuDef(menuDefContext, dimof(menuDefContext), CreatePopupMenu());
-    if (!pageEl || pageEl->kind != kindPageElementLink || !value) {
+    if (!pageEl || pageEl->kind != kindPageElementDest || !value) {
         win::menu::Remove(popup, IDM_COPY_LINK_TARGET);
     }
     if (!pageEl || pageEl->kind != kindPageElementComment || !value) {

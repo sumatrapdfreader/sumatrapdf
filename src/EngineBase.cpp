@@ -9,11 +9,10 @@
 
 #include "EngineBase.h"
 
-Kind kindPageElementLink = "link";
+Kind kindPageElementDest = "dest";
 Kind kindPageElementImage = "image";
 Kind kindPageElementComment = "comment";
 
-Kind kindDestinationNone = "none";
 Kind kindDestinationScrollTo = "scrollTo";
 Kind kindDestinationLaunchURL = "launchURL";
 Kind kindDestinationLaunchEmbedded = "launchEmbedded";

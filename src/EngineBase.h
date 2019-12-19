@@ -66,7 +66,6 @@ class RenderedBitmap {
     bool StretchDIBits(HDC hdc, RectI target) const;
 };
 
-extern Kind kindDestinationNone;
 extern Kind kindDestinationScrollTo;
 extern Kind kindDestinationLaunchURL;
 extern Kind kindDestinationLaunchEmbedded;
@@ -148,7 +147,7 @@ struct PageAnnotation {
 // use in PageDestination::GetDestRect for values that don't matter
 #define DEST_USE_DEFAULT -999.9
 
-extern Kind kindPageElementLink;
+extern Kind kindPageElementDest;
 extern Kind kindPageElementImage;
 extern Kind kindPageElementComment;
 
@@ -159,8 +158,10 @@ class PageElement {
     int elementPageNo = -1;
     RectD elementRect{};
     WCHAR* elementValue = nullptr;
-    PageDestination* elementDest = nullptr;
     std::function<RenderedBitmap*(void)> getImage = nullptr;
+
+    // only set if kindPageElementDest
+    PageDestination* elementDest = nullptr;
 
     virtual ~PageElement() {
         free(elementValue);
