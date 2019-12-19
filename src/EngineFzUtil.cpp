@@ -709,7 +709,6 @@ LinkRectList* LinkifyText(const WCHAR* pageText, RectI* coords) {
     return list;
 }
 
-
 #if 0
 static bool IsRelativeURI(const WCHAR* uri) {
     const WCHAR* c = uri;

@@ -110,18 +110,22 @@ static fz_xml_doc* xps_open_and_parse(fz_context* ctx, xps_document* doc, char* 
 static WCHAR* xps_get_core_prop(fz_context* ctx, fz_xml* item) {
     fz_xml* text = fz_xml_down(item);
 
-    if (!text)
+    if (!text) {
         return nullptr;
+    }
     if (!fz_xml_text(text) || fz_xml_next(text)) {
         fz_warn(ctx, "non-text content for property %s", fz_xml_tag(item));
         return nullptr;
     }
 
-    char *start, *end;
-    for (start = fz_xml_text(text); str::IsWs(*start); start++)
-        ;
-    for (end = start + strlen(start); end > start && str::IsWs(*(end - 1)); end--)
-        ;
+    char* start = fz_xml_text(text);
+    while (str::IsWs(*start)) {
+        ++start;
+    }
+    char* end = start + strlen(start);
+    while (end > start && str::IsWs(*(end - 1))) {
+        --end;
+    }
 
     return strconv::FromHtmlUtf8(start, end - start);
 }
@@ -265,20 +269,17 @@ class XpsEngineImpl : public EngineBase {
         return fz_create_view_ctm(r, zoom, rotation);
     }
 
-    XpsTocItem* BuildTocTree(fz_outline* entry, int& idCounter);
+    DocTocItem* BuildTocTree(fz_outline* entry, int& idCounter);
     void LinkifyPageText(FzPageInfo* pageInfo);
     RenderedBitmap* GetPageImage(int pageNo, RectD rect, size_t imageIx);
     WCHAR* ExtractFontList();
 };
 
-
-class XpsTocItem : public DocTocItem {
-  public:
-    XpsTocItem(WCHAR* title, PageElement* link) : DocTocItem(title) {
-        dest = link->dest;
-        link->dest = nullptr;
-    }
-};
+static DocTocItem* newXpsTocItem(WCHAR* title, PageDestination* dest) {
+    auto res = new DocTocItem(title);
+    res->dest = dest;
+    return res;
+}
 
 static PageElement* newXpsImage(XpsEngineImpl* engine, int pageNo, fz_rect rect, size_t imageIdx) {
     auto res = new PageElement();
@@ -760,18 +761,21 @@ WCHAR* XpsEngineImpl::ExtractFontList() {
         fonts.Append(str::Format(L"%s (%s)", name.Get(), path::GetBaseNameNoFree(path)));
     }
 #endif
-    if (fonts.size() == 0)
+    if (fonts.size() == 0) {
         return nullptr;
+    }
 
     fonts.SortNatural();
     return fonts.Join(L"\n");
 }
 
 WCHAR* XpsEngineImpl::GetProperty(DocumentProperty prop) {
-    if (DocumentProperty::FontList == prop)
+    if (DocumentProperty::FontList == prop) {
         return ExtractFontList();
-    if (!_info)
+    }
+    if (!_info) {
         return nullptr;
+    }
 
     switch (prop) {
         case DocumentProperty::Title:
@@ -796,10 +800,11 @@ bool XpsEngineImpl::SupportsAnnotation(bool forSaving) const {
 void XpsEngineImpl::UpdateUserAnnotations(Vec<PageAnnotation>* list) {
     // TODO: use a new critical section to avoid blocking the UI thread
     ScopedCritSec scope(&ctxAccess);
-    if (list)
+    if (list) {
         userAnnots = *list;
-    else
+    } else {
         userAnnots.Reset();
+    }
 }
 
 PageElement* XpsEngineImpl::GetElementAtPos(int pageNo, PointD pt) {
@@ -830,8 +835,9 @@ PageElement* XpsEngineImpl::GetElementAtPos(int pageNo, PointD pt) {
 
 Vec<PageElement*>* XpsEngineImpl::GetElements(int pageNo) {
     fz_page* page = GetFzPage(pageNo, true);
-    if (!page)
+    if (!page) {
         return nullptr;
+    }
     FzPageInfo* pageInfo = _pages[pageNo - 1];
 
     // since all elements lists are in last-to-first order, append
@@ -956,9 +962,9 @@ PageDestination* XpsEngineImpl::GetNamedDest(const WCHAR* nameW) {
     return nullptr;
 }
 
-XpsTocItem* XpsEngineImpl::BuildTocTree(fz_outline* outline, int& idCounter) {
-    XpsTocItem* root = nullptr;
-    XpsTocItem* curr = nullptr;
+DocTocItem* XpsEngineImpl::BuildTocTree(fz_outline* outline, int& idCounter) {
+    DocTocItem* root = nullptr;
+    DocTocItem* curr = nullptr;
 
     while (outline) {
         WCHAR* name = nullptr;
@@ -971,7 +977,11 @@ XpsTocItem* XpsEngineImpl::BuildTocTree(fz_outline* outline, int& idCounter) {
         }
         int pageNo = outline->page + 1;
         auto link = newFzLink(pageNo, nullptr, outline, false);
-        XpsTocItem* item = new XpsTocItem(name, link);
+        auto dest = link->dest;
+        link->dest = nullptr;
+        delete link;
+
+        DocTocItem* item = newXpsTocItem(name, dest);
         item->isOpenDefault = outline->is_open;
         item->id = ++idCounter;
         item->fontFlags = outline->flags;
