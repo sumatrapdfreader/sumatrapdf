@@ -115,8 +115,12 @@ ImagesEngine::ImagesEngine() {
 ImagesEngine::~ImagesEngine() {
     EnterCriticalSection(&cacheAccess);
     while (pageCache.size() > 0) {
-        CrashIf(pageCache.Last()->refs != 1);
-        DropPage(pageCache.Last(), true);
+        ImagePage* lastPage = pageCache.Last();
+        // TODO: this is because we can no longer drop
+        // the page we get with GetPage() and store in PageElement
+        // maybe just ignore refcounting
+        // CrashIf(lastPage->refs != 1);
+        DropPage(lastPage, true);
     }
     LeaveCriticalSection(&cacheAccess);
 
