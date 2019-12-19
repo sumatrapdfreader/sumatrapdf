@@ -1274,7 +1274,7 @@ std::string_view HtmlDoc::LoadURL(const char* url) {
         return DecodeDataURI(url);
     }
     if (str::FindChar(url, ':')) {
-        return nullptr;
+        return {};
     }
     AutoFreeWstr path(strconv::FromUtf8(url));
     str::TransChars(path, L"/", L"\\");

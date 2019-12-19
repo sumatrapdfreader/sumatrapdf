@@ -286,7 +286,7 @@ static bool parseBookmarks(std::string_view sv, Vec<Bookmarks*>* bkms) {
     auto line = str::ParseUntil(sv, '\n');
     auto title = parseBookmarksTitle(line);
     if (title.data() == nullptr) {
-        return nullptr;
+        return false;
     }
     auto tree = new DocTocTree();
     tree->name = str::Dup(title);
@@ -302,7 +302,7 @@ static bool parseBookmarks(std::string_view sv, Vec<Bookmarks*>* bkms) {
                 delete el.item;
             }
             delete tree;
-            return nullptr;
+            return false;
         }
         DocTocItemWithIndent iwl = {item, indent};
         items.Append(iwl);
@@ -313,7 +313,7 @@ static bool parseBookmarks(std::string_view sv, Vec<Bookmarks*>* bkms) {
             delete el.item;
         }
         delete tree;
-        return nullptr;
+        return false;
     }
 
     tree->root = items[0].item;

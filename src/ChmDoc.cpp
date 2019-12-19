@@ -22,15 +22,17 @@ ChmDoc::~ChmDoc() {
 }
 
 bool ChmDoc::HasData(const char* fileName) {
-    if (!fileName)
-        return nullptr;
+    if (!fileName) {
+        return false;
+    }
 
     AutoFree tmpName;
     if (!str::StartsWith(fileName, "/")) {
         tmpName.Set(str::Join("/", fileName));
         fileName = tmpName;
-    } else if (str::StartsWith(fileName, "///"))
+    } else if (str::StartsWith(fileName, "///")) {
         fileName += 2;
+    }
 
     struct chmUnitInfo info;
     return chm_resolve_object(chmHandle, fileName, &info) == CHM_RESOLVE_SUCCESS;
@@ -55,21 +57,21 @@ std::string_view ChmDoc::GetData(const char* fileNameIn) {
     }
 
     if (CHM_RESOLVE_SUCCESS != res) {
-        return nullptr;
+        return {};
     }
     size_t len = (size_t)info.length;
     if (len > 128 * 1024 * 1024) {
         // limit to 128 MB
-        return nullptr;
+        return {};
     }
 
     // +1 for 0 terminator for C string compatibility
     char* data = AllocArray<char>(len + 1);
     if (!data) {
-        return nullptr;
+        return {};
     }
     if (!chm_retrieve_object(chmHandle, &info, (u8*)data, 0, len)) {
-        return nullptr;
+        return {};
     }
 
     return {data, len};
@@ -161,8 +163,9 @@ static UINT LcidToCodepage(DWORD lcid) {
     };
 
     for (int i = 0; i < dimof(lcidToCodepage); i++) {
-        if (lcid == lcidToCodepage[i].lcid)
+        if (lcid == lcidToCodepage[i].lcid) {
             return lcidToCodepage[i].codepage;
+        }
     }
 
     return CP_CHM_DEFAULT;
@@ -244,8 +247,9 @@ char* ChmDoc::ResolveTopicID(unsigned int id) {
 }
 
 void ChmDoc::FixPathCodepage(AutoFree& path, UINT& fileCP) {
-    if (!path || HasData(path))
+    if (!path || HasData(path)) {
         return;
+    }
 
     AutoFree utf8Path(ToUtf8((unsigned char*)path.Get()));
     if (HasData(utf8Path)) {
@@ -262,12 +266,14 @@ void ChmDoc::FixPathCodepage(AutoFree& path, UINT& fileCP) {
 
 bool ChmDoc::Load(const WCHAR* fileName) {
     chmHandle = chm_open((WCHAR*)fileName);
-    if (!chmHandle)
+    if (!chmHandle) {
         return false;
+    }
 
     ParseWindowsData();
-    if (!ParseSystemData())
+    if (!ParseSystemData()) {
         return false;
+    }
 
     UINT fileCodepage = codepage;
     char header[24] = {0};
@@ -275,14 +281,16 @@ bool ChmDoc::Load(const WCHAR* fileName) {
         DWORD lcid = ByteReader(header, sizeof(header)).DWordLE(20);
         fileCodepage = LcidToCodepage(lcid);
     }
-    if (!codepage)
+    if (!codepage) {
         codepage = fileCodepage;
+    }
     // if file and #SYSTEM codepage disagree, prefer #SYSTEM's (unless it leads to wrong paths)
     FixPathCodepage(homePath, fileCodepage);
     FixPathCodepage(tocPath, fileCodepage);
     FixPathCodepage(indexPath, fileCodepage);
-    if (GetACP() == codepage)
+    if (GetACP() == codepage) {
         codepage = CP_ACP;
+    }
 
     if (!HasData(homePath)) {
         const char* pathsToTest[] = {"/index.htm", "/index.html", "/default.htm", "/default.html"};
@@ -291,8 +299,9 @@ bool ChmDoc::Load(const WCHAR* fileName) {
                 homePath.SetCopy(pathsToTest[i]);
             }
         }
-        if (!HasData(homePath))
+        if (!HasData(homePath)) {
             return false;
+        }
     }
 
     return true;
@@ -300,10 +309,11 @@ bool ChmDoc::Load(const WCHAR* fileName) {
 
 WCHAR* ChmDoc::GetProperty(DocumentProperty prop) {
     AutoFreeWstr result;
-    if (DocumentProperty::Title == prop && title)
+    if (DocumentProperty::Title == prop && title) {
         result.Set(ToStr(title));
-    else if (DocumentProperty::CreatorApp == prop && creator)
+    } else if (DocumentProperty::CreatorApp == prop && creator) {
         result.Set(ToStr(creator));
+    }
     // TODO: shouldn't it be up to the front-end to normalize whitespace?
     if (result) {
         // TODO: original code called str::RemoveChars(result, "\n\r\t")
