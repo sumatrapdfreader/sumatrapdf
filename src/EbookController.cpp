@@ -56,12 +56,12 @@ class EbookTocDest : public DocTocItem, public PageDestination {
   public:
     EbookTocDest(const WCHAR* title, int reparseIdx) : DocTocItem(str::Dup(title), reparseIdx) {
         url = nullptr;
-        destType = PageDestType::ScrollTo;
+        destKind = kindDestinationScrollTo;
     }
 
     EbookTocDest(const WCHAR* title, const WCHAR* url) : DocTocItem(str::Dup(title)) {
         this->url = str::Dup(url);
-        destType = PageDestType::LaunchURL;
+        destKind = kindDestinationLaunchURL;
         destValue = str::Dup(url);
     }
 

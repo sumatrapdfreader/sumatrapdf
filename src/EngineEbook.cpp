@@ -181,9 +181,9 @@ class SimpleDest2 : public PageDestination {
         destRect = rect;
         this->value = value;
         if (value) {
-            destType = PageDestType::LaunchURL;
+            destKind = kindDestinationLaunchURL;
         } else {
-            destType = PageDestType::ScrollTo;
+            destKind = kindDestinationScrollTo;
         }
         destValue = str::Dup(value);
     }
@@ -204,7 +204,7 @@ class EbookLink : public PageElement, public PageDestination {
         destRect = rect.Convert<double>();
         this->dest = dest;
         this->showUrl = showUrl;
-        destType = PageDestType::LaunchURL;
+        destKind = kindDestinationLaunchURL;
         destValue = GetValue();
         kind = kindPageElementLink;
         elementRect = rect.Convert<double>();
@@ -1559,13 +1559,11 @@ DocTocTree* ChmEngineImpl::GetTocTree() {
 
 class ChmEmbeddedDest : public PageDestination {
     ChmEngineImpl* engine = nullptr;
-    AutoFree path;
 
   public:
     ChmEmbeddedDest(ChmEngineImpl* engine, const char* path) {
         this->engine = engine;
-        this->path = str::Dup(path);
-        destType = PageDestType::LaunchEmbedded;
+        destKind = kindDestinationLaunchEmbedded;
         destPageNo = 0;
         destValue = strconv::Utf8ToWchar(path::GetBaseNameNoFree(path));
     }
@@ -1670,7 +1668,7 @@ class RemoteHtmlDest : public SimpleDest2 {
         } else {
             value.SetCopy(relativeURL);
         }
-        destType = PageDestType::LaunchFile;
+        destKind = kindDestinationLaunchFile;
     }
 
     virtual WCHAR* GetDestName() const {

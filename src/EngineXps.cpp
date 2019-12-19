@@ -285,7 +285,7 @@ class XpsLink : public PageElement, public PageDestination {
     XpsLink(XpsEngineImpl* engine, int pageNo, fz_link* link, fz_outline* outline);
 
     WCHAR* CalcValue() const;
-    PageDestType CalcDestType();
+    Kind CalcDestKind();
     int CalcDestPageNo();
     RectD CalcDestRect();
 };
@@ -298,7 +298,7 @@ XpsLink::XpsLink(XpsEngineImpl* engine, int pageNo, fz_link* link, fz_outline* o
     this->link = link;
     this->outline = outline;
 
-    destType = CalcDestType();
+    destKind = CalcDestKind();
     destPageNo = CalcDestPageNo();
     destRect = CalcDestRect();
     destValue = GetValue();
@@ -336,15 +336,15 @@ WCHAR* XpsLink::CalcValue() const {
     return strconv::Utf8ToWchar(uri);
 }
 
-PageDestType XpsLink::CalcDestType() {
+Kind XpsLink::CalcDestKind() {
     if (outline) {
-        return PageDestType::LaunchEmbedded;
+        return kindDestinationLaunchEmbedded;
     }
 
     char* uri = XpsLinkGetURI(this);
     // some outline entries are bad (issue 1245)
     if (!uri) {
-        return PageDestType::None;
+        return nullptr;
     }
     if (!is_external_link(uri)) {
         float x, y;
@@ -352,29 +352,29 @@ PageDestType XpsLink::CalcDestType() {
         if (pageNo == -1) {
             // TODO: figure out what it could be
             CrashMePort();
-            return PageDestType::None;
+            return nullptr;
         }
-        return PageDestType::ScrollTo;
+        return kindDestinationScrollTo;
     }
     if (str::StartsWith(uri, "file://")) {
-        return PageDestType::LaunchFile;
+        return kindDestinationLaunchFile;
     }
     if (str::StartsWithI(uri, "http://")) {
-        return PageDestType::LaunchURL;
+        return kindDestinationLaunchURL;
     }
     if (str::StartsWithI(uri, "https://")) {
-        return PageDestType::LaunchURL;
+        return kindDestinationLaunchURL;
     }
     if (str::StartsWithI(uri, "ftp://")) {
-        return PageDestType::LaunchURL;
+        return kindDestinationLaunchURL;
     }
     if (str::StartsWith(uri, "mailto:")) {
-        return PageDestType::LaunchURL;
+        return kindDestinationLaunchURL;
     }
 
-    // TODO: PageDestType::LaunchEmbedded, PageDestType::LaunchURL, named destination
+    // TODO: kindDestinationLaunchEmbedded, kindDestinationLaunchURL, named destination
     CrashMePort();
-    return PageDestType::None;
+    return nullptr;
 }
 
 int XpsLink::CalcDestPageNo() {

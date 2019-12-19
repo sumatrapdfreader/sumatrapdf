@@ -40,19 +40,19 @@ class DjVuDestination : public PageDestination {
     explicit DjVuDestination(const char* link) {
         this->link = str::Dup(link);
         if (IsPageLink(link)) {
-            destType = PageDestType::ScrollTo;
+            destKind = kindDestinationScrollTo;
         }
 
         if (str::Eq(link, "#+1")) {
-            destType = PageDestType::NextPage;
+            destKind = kindDestinationNextPage;
         }
 
         if (str::Eq(link, "#-1")) {
-            destType = PageDestType::PrevPage;
+            destKind = kindDestinationPrevPage;
         }
 
         if (str::StartsWithI(link, "http:") || str::StartsWithI(link, "https:") || str::StartsWithI(link, "mailto:")) {
-            destType = PageDestType::LaunchURL;
+            destKind = kindDestinationLaunchURL;
         }
         destPageNo = 0;
         if (IsPageLink(link)) {
@@ -63,7 +63,7 @@ class DjVuDestination : public PageDestination {
     }
 
     WCHAR* CalcDestValue() {
-        if (PageDestType::LaunchURL == GetDestType()) {
+        if (kindDestinationLaunchURL == GetDestKind()) {
             return strconv::FromUtf8(link);
         }
         return nullptr;
@@ -83,7 +83,7 @@ class DjVuLink : public PageElement {
         if (!str::IsEmpty(comment)) {
             elementValue = strconv::Utf8ToWchar(comment);
         } else {
-            if (PageDestType::LaunchURL == elementDest->GetDestType()) {
+            if (kindDestinationLaunchURL == elementDest->GetDestKind()) {
                 elementValue = elementDest->GetDestValue();
             }
         }
