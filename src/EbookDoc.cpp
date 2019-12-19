@@ -597,11 +597,13 @@ bool EpubDoc::ParseNcxToc(const char* data, size_t dataLen, const char* pagePath
     HtmlToken* tok;
     // skip to the start of the navMap
     while ((tok = parser.Next()) != nullptr && !tok->IsError()) {
-        if (tok->IsStartTag() && tok->NameIsNS("navMap", EPUB_NCX_NS))
+        if (tok->IsStartTag() && tok->NameIsNS("navMap", EPUB_NCX_NS)) {
             break;
+        }
     }
-    if (!tok || tok->IsError())
+    if (!tok || tok->IsError()) {
         return false;
+    }
 
     AutoFreeWstr itemText, itemSrc;
     int level = 0;
@@ -613,15 +615,18 @@ bool EpubDoc::ParseNcxToc(const char* data, size_t dataLen, const char* pagePath
                 itemText.Reset();
                 itemSrc.Reset();
             }
-            if (tok->IsStartTag())
+            if (tok->IsStartTag()) {
                 level++;
-            else if (tok->IsEndTag() && level > 0)
+            } else if (tok->IsEndTag() && level > 0) {
                 level--;
+            }
         } else if (tok->IsStartTag() && tok->NameIsNS("text", EPUB_NCX_NS)) {
-            if ((tok = parser.Next()) == nullptr || tok->IsError())
+            if ((tok = parser.Next()) == nullptr || tok->IsError()) {
                 break;
-            if (tok->IsText())
+            }
+            if (tok->IsText()) {
                 itemText.Set(strconv::FromHtmlUtf8(tok->s, tok->sLen));
+            }
         } else if (tok->IsTag() && !tok->IsEndTag() && tok->NameIsNS("content", EPUB_NCX_NS)) {
             AttrInfo* attrInfo = tok->GetAttrByName("src");
             if (attrInfo) {
@@ -636,8 +641,9 @@ bool EpubDoc::ParseNcxToc(const char* data, size_t dataLen, const char* pagePath
 }
 
 bool EpubDoc::ParseToc(EbookTocVisitor* visitor) {
-    if (!tocPath)
+    if (!tocPath) {
         return false;
+    }
     size_t tocDataLen;
     AutoFree tocData;
     {
@@ -646,8 +652,9 @@ bool EpubDoc::ParseToc(EbookTocVisitor* visitor) {
         tocDataLen = res.size();
         tocData.Set(res.data());
     }
-    if (!tocData)
+    if (!tocData) {
         return false;
+    }
 
     AutoFree pagePath(strconv::WstrToUtf8(tocPath));
     if (isNcxToc) {

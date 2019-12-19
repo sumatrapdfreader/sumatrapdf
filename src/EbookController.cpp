@@ -50,20 +50,21 @@ HtmlFormatterArgs* CreateFormatterArgsDoc(Doc doc, int dx, int dy, Allocator* te
     return args;
 }
 
-class EbookTocDest : public DocTocItem {
-  public:
-    EbookTocDest(const WCHAR* title, int reparseIdx) : DocTocItem(str::Dup(title), reparseIdx) {
-        dest = new PageDestination();
-        dest->kind = kindDestinationScrollTo;
-        dest->pageNo = reparseIdx;
-    }
+static DocTocItem* newEbookTocDest(const WCHAR* title, int reparseIdx) {
+    auto res = new DocTocItem(title, reparseIdx);
+    res->dest = new PageDestination();
+    res->dest->kind = kindDestinationScrollTo;
+    res->dest->pageNo = reparseIdx;
+    return res;
+}
 
-    EbookTocDest(const WCHAR* title, const WCHAR* url) : DocTocItem(str::Dup(title)) {
-        dest = new PageDestination();
-        dest->kind = kindDestinationLaunchURL;
-        dest->value = str::Dup(url);
-    }
-};
+static DocTocItem* newEbookTocDest(const WCHAR* title, const WCHAR* url) {
+    auto res = new DocTocItem(title);
+    res->dest = new PageDestination();
+    res->dest->kind = kindDestinationLaunchURL;
+    res->dest->value = str::Dup(url);
+    return res;
+}
 
 struct EbookFormattingData {
     enum { MAX_PAGES = 256 };
@@ -115,8 +116,12 @@ class EbookFormattingThread : public ThreadBase {
 };
 
 EbookFormattingThread::EbookFormattingThread(Doc doc, HtmlFormatterArgs* args, EbookController* ctrl, int reparseIdx,
-                                             ControllerCallback* cb)
-    : doc(doc), formatterArgs(args), cb(cb), controller(ctrl), reparseIdx(reparseIdx) {
+                                             ControllerCallback* cb) {
+    this->doc = doc;
+    this->cb = cb;
+    this->controller = ctrl;
+    this->formatterArgs = args;
+    this->reparseIdx = reparseIdx;
     CrashIf(reparseIdx < 0);
     AssertCrash(doc.IsDocLoaded() || (doc.IsNone() && (nullptr != args->htmlStr)));
 }
@@ -189,8 +194,9 @@ void EbookFormattingThread::Run() {
 }
 
 static void DeletePages(Vec<HtmlPage*>** toDeletePtr) {
-    if (!*toDeletePtr)
+    if (!*toDeletePtr) {
         return;
+    }
 
     DeleteVecMembers(**toDeletePtr);
     delete *toDeletePtr;
@@ -402,8 +408,10 @@ void EbookController::ClickedProgress(Control* c, int x, int y) {
 void EbookController::OnClickedLink(int pageNo, DrawInstr* link) {
     AutoFreeWstr url(strconv::FromHtmlUtf8(link->str.s, link->str.len));
     if (url::IsAbsolute(url)) {
-        EbookTocDest dest(nullptr, url);
-        cb->GotoLink(dest.GetPageDestination());
+        // TODO: optimize
+        auto dest = newEbookTocDest(nullptr, url);
+        cb->GotoLink(dest->GetPageDestination());
+        delete dest;
         return;
     }
 
@@ -432,8 +440,10 @@ void EbookController::OnClickedLink(int pageNo, DrawInstr* link) {
         idx = ResolvePageAnchor(url);
     }
     if (idx != -1) {
-        EbookTocDest dest(nullptr, idx);
-        cb->GotoLink(dest.GetPageDestination());
+        // TODO: optimize
+        auto dest = newEbookTocDest(nullptr, idx);
+        cb->GotoLink(dest->GetPageDestination());
+        delete dest;
     }
 }
 
@@ -765,28 +775,29 @@ int EbookController::ResolvePageAnchor(const WCHAR* id) {
 }
 
 class EbookTocCollector : public EbookTocVisitor {
-    EbookController* ctrl;
-    EbookTocDest* root;
-    int idCounter;
+    EbookController* ctrl = nullptr;
+    DocTocItem* root = nullptr;
+    int idCounter = 0;
 
   public:
-    explicit EbookTocCollector(EbookController* ctrl) : ctrl(ctrl), root(nullptr), idCounter(0) {
+    explicit EbookTocCollector(EbookController* ctrl) {
+        this->ctrl = ctrl;
     }
 
     virtual void Visit(const WCHAR* name, const WCHAR* url, int level) {
-        EbookTocDest* item = nullptr;
-        if (!url)
-            item = new EbookTocDest(name, 0);
-        else if (url::IsAbsolute(url))
-            item = new EbookTocDest(name, url);
-        else {
+        DocTocItem* item = nullptr;
+        if (!url) {
+            item = newEbookTocDest(name, 0);
+        } else if (url::IsAbsolute(url)) {
+            item = newEbookTocDest(name, url);
+        } else {
             int idx = ctrl->ResolvePageAnchor(url);
             if (-1 == idx && str::FindChar(url, '%')) {
                 AutoFreeWstr decodedUrl(str::Dup(url));
                 url::DecodeInPlace(decodedUrl);
                 idx = ctrl->ResolvePageAnchor(decodedUrl);
             }
-            item = new EbookTocDest(name, idx + 1);
+            item = newEbookTocDest(name, idx + 1);
         }
         item->id = ++idCounter;
         // find the last child at each level, until finding the parent of the new item
@@ -795,20 +806,23 @@ class EbookTocCollector : public EbookTocVisitor {
         } else {
             DocTocItem* r2 = root;
             for (level--; level > 0; level--) {
-                for (; r2->next; r2 = r2->next)
-                    ;
-                if (!r2->child)
+                for (; r2->next; r2 = r2->next) {
+                    // no-op
+                }
+                if (!r2->child) {
                     break;
+                }
                 r2 = r2->child;
             }
-            if (level <= 0)
+            if (level <= 0) {
                 r2->AddSibling(item);
-            else
+            } else {
                 r2->child = item;
+            }
         }
     }
 
-    EbookTocDest* GetRoot() {
+    DocTocItem* GetRoot() {
         return root;
     }
 };
@@ -819,7 +833,7 @@ DocTocTree* EbookController::GetTocTree() {
     }
     EbookTocCollector visitor(this);
     doc.ParseToc(&visitor);
-    EbookTocDest* root = visitor.GetRoot();
+    DocTocItem* root = visitor.GetRoot();
     if (!root) {
         return nullptr;
     }
@@ -830,10 +844,11 @@ DocTocTree* EbookController::GetTocTree() {
 void EbookController::ScrollToLink(PageDestination* dest) {
     int reparseIdx = dest->GetPageNo() - 1;
     int pageNo = PageForReparsePoint(pages, reparseIdx);
-    if (pageNo > 0)
+    if (pageNo > 0) {
         GoToPage(pageNo, true);
-    else if (0 == pageNo)
+    } else if (0 == pageNo) {
         GoToLastPage();
+    }
 }
 
 PageDestination* EbookController::GetNamedDest(const WCHAR* name) {
@@ -852,9 +867,7 @@ PageDestination* EbookController::GetNamedDest(const WCHAR* name) {
         return nullptr;
     }
     CrashIf((size_t)reparseIdx > d.size());
-    // TODO: need a separate makeEbookDestination() that is not
-    // conflated with DocTocItem
-    auto toc = new EbookTocDest(nullptr, reparseIdx + 1);
+    auto toc = newEbookTocDest(nullptr, reparseIdx + 1);
     auto res = toc->GetPageDestination();
     toc->dest = nullptr;
     delete toc;
