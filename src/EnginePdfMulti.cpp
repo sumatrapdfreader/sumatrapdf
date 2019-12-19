@@ -254,6 +254,9 @@ static void updateTocItemsPageNo(DocTocItem* i, int nPageNoAdd) {
     }
     auto curr = i;
     while (curr) {
+        if (curr->dest) {
+            curr->dest->pageNo += nPageNoAdd;
+        }
         updateTocItemsPageNo(curr->child, nPageNoAdd);
         curr->pageNo += nPageNoAdd;
         curr = curr->next;

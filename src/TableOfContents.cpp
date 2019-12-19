@@ -90,8 +90,7 @@ static void CustomizeTocInfoTip(TreeCtrl* w, NMTVGETINFOTIPW* nm) {
         return;
     }
 
-    CrashIf(k != kindDestinationLaunchURL && k != kindDestinationLaunchFile &&
-            k != kindDestinationLaunchEmbedded);
+    CrashIf(k != kindDestinationLaunchURL && k != kindDestinationLaunchFile && k != kindDestinationLaunchEmbedded);
     CrashIf(nm->hdr.hwndFrom != w->hwnd);
 
     str::WStr infotip;
