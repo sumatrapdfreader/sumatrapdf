@@ -189,35 +189,29 @@ class SimpleDest2 : public PageDestination {
     }
 };
 
-class EbookLink : public PageElement, public PageDestination {
-    DrawInstr* link = nullptr;       // owned by *EngineImpl::pages
-    bool showUrl = false;
-
+class EbookLink : public PageElement {
   public:
     EbookLink() = default;
 
     EbookLink(DrawInstr* link, RectI rect, PageDestination* dest, int pageNo = -1, bool showUrl = false) {
         elementPageNo = pageNo;
-        destPageNo = 0;
-        this->link = link;
-        destRect = rect.Convert<double>();
-        this->showUrl = showUrl;
-        destKind = kindDestinationLaunchURL;
-        destValue = GetValue();
+
         kind = kindPageElementDest;
         elementRect = rect.Convert<double>();
+
         if (!dest || showUrl) {
             elementValue = strconv::FromHtmlUtf8(link->str.s, link->str.len);
         }
-        if (dest) {
-            elementDest = dest;
-        } else {
-            elementDest = this;
-        }
-    }
 
-    ~EbookLink() override {
-        delete elementDest;
+        if (!dest) {
+            dest = new PageDestination();
+            dest->destKind = kindDestinationLaunchURL;
+            // TODO: not sure about this
+            dest->destValue = str::Dup(elementValue);
+            dest->destPageNo = 0;
+            dest->destRect = rect.Convert<double>();
+        }
+        elementDest = dest;
     }
 };
 
