@@ -145,7 +145,7 @@ void DumpProperties(EngineBase* engine, bool fullDump) {
 
 // caller must free() the result
 char* DestRectToStr(EngineBase* engine, PageDestination* dest) {
-    WCHAR* destName = dest->GetName(); 
+    WCHAR* destName = dest->GetName();
     if (destName) {
         AutoFree name(Escape(destName));
         return str::Format("Name=\"%s\"", name.Get());

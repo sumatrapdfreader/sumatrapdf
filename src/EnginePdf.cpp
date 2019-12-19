@@ -365,7 +365,6 @@ struct PageTreeStackItem {
 ///// Above are extensions to Fitz and MuPDF, now follows PdfEngine /////
 
 class PdfTocItem;
-class PdfImage;
 
 class PdfEngineImpl : public EngineBase {
   public:
@@ -758,25 +757,18 @@ class PdfTocItem : public DocTocItem {
     }
 };
 
-class PdfImage : public PageElement {
-  public:
-    PdfEngineImpl* engine = nullptr;
-    size_t imageIdx = 0;
-
-    PdfImage(PdfEngineImpl* engine, int pageNo, fz_rect rect, size_t imageIdx) {
-        this->engine = engine;
-        this->imageIdx = imageIdx;
-        pageNo = pageNo;
-        kind = kindPageElementImage;
-        this->rect = fz_rect_to_RectD(rect);
-        getImage = [=]() -> RenderedBitmap* {
-            auto pn = this->pageNo;
-            auto r = this->rect;
-            auto idx = this->imageIdx;
-            return this->engine->GetPageImage(pn, r, idx);
-        };
-    }
-};
+static PageElement* newPdfImage(PdfEngineImpl* engine, int pageNo, fz_rect rect, size_t imageIdx) {
+    auto res = new PageElement();
+    res->pageNo = pageNo;
+    res->kind = kindPageElementImage;
+    res->rect = fz_rect_to_RectD(rect);
+    res->getImage = [=]() -> RenderedBitmap* {
+        auto pn = res->pageNo;
+        auto r = res->rect;
+        return engine->GetPageImage(pn, r, imageIdx);
+    };
+    return res;
+}
 
 // in mupdf_load_system_font.c
 extern "C" void pdf_install_load_system_font_funcs(fz_context* ctx);
@@ -1590,7 +1582,7 @@ PageElement* PdfEngineImpl::GetElementAtPos(int pageNo, PointD pt) {
     for (auto& img : pageInfo->images) {
         fz_rect ir = img.rect;
         if (fz_is_pt_in_rect(ir, p)) {
-            return new PdfImage(this, pageNo, ir, imageIdx);
+            return newPdfImage(this, pageNo, ir, imageIdx);
         }
         imageIdx++;
     }
@@ -1621,7 +1613,7 @@ Vec<PageElement*>* PdfEngineImpl::GetElements(int pageNo) {
     size_t imageIdx = 0;
     for (auto& img : pageInfo->images) {
         fz_rect ir = img.rect;
-        auto image = new PdfImage(this, pageNo, ir, imageIdx);
+        auto image = newPdfImage(this, pageNo, ir, imageIdx);
         els->Append(image);
         imageIdx++;
     }
