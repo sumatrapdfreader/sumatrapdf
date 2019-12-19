@@ -29,20 +29,18 @@ Kind kindEngineComicBooks = "engineComicBooks";
 ///// ImagesEngine methods apply to all types of engines handling full-page images /////
 
 struct ImagePage {
-    int pageNo;
-    Bitmap* bmp;
-    bool ownBmp;
-    int refs;
+    int pageNo = 0;
+    Bitmap* bmp = nullptr;
+    bool ownBmp = true;
+    int refs = 1;
 
-    ImagePage(int pageNo, Bitmap* bmp) : pageNo(pageNo), bmp(bmp), ownBmp(true), refs(1) {
+    ImagePage(int pageNo, Bitmap* bmp) {
+        this->pageNo = pageNo;
+        this->bmp = bmp;
     }
 };
 
-class ImageElement;
-
 class ImagesEngine : public EngineBase {
-    friend ImageElement;
-
   public:
     ImagesEngine();
     virtual ~ImagesEngine();
@@ -207,7 +205,7 @@ RectD ImagesEngine::Transform(RectD rect, int pageNo, float zoom, int rotation, 
     return rect;
 }
 
-static RenderedBitmap* imageFromImageElment(ImagePage* page) {
+static RenderedBitmap* imageFromImagePage(ImagePage* page) {
     HBITMAP hbmp;
     auto bmp = page->bmp;
     int dx = bmp->GetWidth();
@@ -220,44 +218,42 @@ static RenderedBitmap* imageFromImageElment(ImagePage* page) {
     return new RenderedBitmap(hbmp, s);
 }
 
-class ImageElement : public PageElement {
-  public:
-    ImagesEngine* engine = nullptr;
-    ImagePage* page = nullptr;
-
-    explicit ImageElement(ImagesEngine* engine, ImagePage* page) {
-        this->engine = engine;
-        this->page = page;
-        pageNo = page->pageNo;
-        kind = kindPageElementImage;
-        int dx = page->bmp->GetWidth();
-        int dy = page->bmp->GetHeight();
-        rect = RectD(0, 0, dx, dy);
-        getImage = [=]() -> RenderedBitmap* { return imageFromImageElment(this->page); };
-    }
-
-    ~ImageElement() override {
-        engine->DropPage(page);
-    }
-};
+// TODO: need to call engine->DropPage(page)
+// when page is deleted, but we no longer can do
+// it in ImageElement destructor. Maybe remember engine and ImagePage?
+// or just don't increase the refcount in GetPage()
+static PageElement* newImageElement(ImagePage* page) {
+    auto res = new PageElement();
+    res->pageNo = page->pageNo;
+    res->kind = kindPageElementImage;
+    int dx = page->bmp->GetWidth();
+    int dy = page->bmp->GetHeight();
+    res->rect = RectD(0, 0, dx, dy);
+    res->getImage = [=]() -> RenderedBitmap* { return imageFromImagePage(page); };
+    return res;
+}
 
 Vec<PageElement*>* ImagesEngine::GetElements(int pageNo) {
     ImagePage* page = GetPage(pageNo);
-    if (!page)
+    if (!page) {
         return nullptr;
+    }
 
     Vec<PageElement*>* els = new Vec<PageElement*>();
-    els->Append(new ImageElement(this, page));
+    auto el = newImageElement(page);
+    els->Append(el);
     return els;
 }
 
 PageElement* ImagesEngine::GetElementAtPos(int pageNo, PointD pt) {
-    if (!PageMediabox(pageNo).Contains(pt))
+    if (!PageMediabox(pageNo).Contains(pt)) {
         return nullptr;
+    }
     ImagePage* page = GetPage(pageNo);
-    if (!page)
+    if (!page) {
         return nullptr;
-    return new ImageElement(this, page);
+    }
+    return newImageElement(page);
 }
 
 std::string_view ImagesEngine::GetFileData() {
@@ -292,8 +288,10 @@ ImagePage* ImagesEngine::GetPage(int pageNo, bool tryOnly) {
             break;
         }
     }
-    if (!result && tryOnly)
+    if (!result && tryOnly) {
         return nullptr;
+    }
+
     if (!result) {
         // TODO: drop most memory intensive pages first
         // (i.e. formats which aren't IsGdiPlusNativeFormat)?
@@ -310,11 +308,13 @@ ImagePage* ImagesEngine::GetPage(int pageNo, bool tryOnly) {
         pageCache.InsertAt(0, result);
     }
     // return nullptr if a page failed to load
-    if (result && !result->bmp)
+    if (result && !result->bmp) {
         result = nullptr;
+    }
 
-    if (result)
+    if (result) {
         result->refs++;
+    }
     return result;
 }
 
@@ -322,12 +322,14 @@ void ImagesEngine::DropPage(ImagePage* page, bool forceRemove) {
     ScopedCritSec scope(&cacheAccess);
     page->refs--;
 
-    if (0 == page->refs || forceRemove)
+    if (0 == page->refs || forceRemove) {
         pageCache.Remove(page);
+    }
 
     if (0 == page->refs) {
-        if (page->ownBmp)
+        if (page->ownBmp) {
             delete page->bmp;
+        }
         delete page;
     }
 }
