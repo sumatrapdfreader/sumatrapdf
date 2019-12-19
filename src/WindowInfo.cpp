@@ -243,16 +243,6 @@ bool WindowInfo::CreateUIAProvider() {
     return true;
 }
 
-PageDestination* clonePageDestination(PageDestination* dest) {
-    auto res = new PageDestination();
-    res->kind = dest->kind;
-    res->pageNo = dest->GetPageNo();
-    res->rect = dest->GetRect();
-    res->value = str::Dup(dest->GetValue());
-    res->name = str::Dup(dest->GetName());
-    return res;
-}
-
 void LinkHandler::GotoLink(PageDestination* link) {
     CrashIf(!owner || owner->linkHandler != this);
     if (!link || !owner->IsDocLoaded()) {

@@ -365,7 +365,6 @@ struct PageTreeStackItem {
 ///// Above are extensions to Fitz and MuPDF, now follows PdfEngine /////
 
 class PdfTocItem;
-class PdfLink;
 class PdfImage;
 
 class PdfEngineImpl : public EngineBase {
@@ -457,24 +456,6 @@ class PdfEngineImpl : public EngineBase {
     bool SaveUserAnnots(const char* fileName);
 };
 
-class PdfLink : public PageElement {
-  public:
-    PdfEngineImpl* engine = nullptr;
-    // must be one or the other
-    fz_link* link = nullptr;
-    fz_outline* outline = nullptr;
-    bool isAttachment = false;
-
-    PdfLink(PdfEngineImpl* engine, int pageNo, fz_link* link, fz_outline* outline);
-
-    // PageElement
-    WCHAR* CalcValue() const;
-    int CalcDestPageNo() const;
-    Kind CalcDestKind();
-    RectD CalcDestRect();
-    WCHAR* CalcDestName();
-};
-
 #if 0
 static bool IsRelativeURI(const WCHAR* uri) {
     const WCHAR* c = uri;
@@ -485,41 +466,18 @@ static bool IsRelativeURI(const WCHAR* uri) {
 }
 #endif
 
-PdfLink::PdfLink(PdfEngineImpl* engine, int pageNo, fz_link* link, fz_outline* outline) {
-    this->engine = engine;
-    pageNo = pageNo;
-    CrashIf(!link && !outline);
-    this->link = link;
-    this->outline = outline;
-
-    kind = kindPageElementDest;
+static char* PdfLinkGetURI(fz_link* link, fz_outline* outline) {
     if (link) {
-        rect = fz_rect_to_RectD(link->rect);
+        return link->uri;
     }
-    value = CalcValue();
-
-    auto dest = new PageDestination();
-    dest->kind = CalcDestKind();
-    dest->rect = CalcDestRect();
-    dest->value = GetValue();
-    dest->name = CalcDestName();
-    dest->pageNo = CalcDestPageNo();
-
-    this->dest = dest;
-}
-
-static char* PdfLinkGetURI(const PdfLink* link) {
-    if (link->link) {
-        return link->link->uri;
-    }
-    if (link->outline) {
-        return link->outline->uri;
+    if (outline) {
+        return outline->uri;
     }
     return nullptr;
 }
 
-WCHAR* PdfLink::CalcDestName() {
-    char* uri = PdfLinkGetURI(this);
+static WCHAR* CalcDestName(fz_link* link, fz_outline* outline) {
+    char* uri = PdfLinkGetURI(link, outline);
     if (is_external_link(uri)) {
         return nullptr;
     }
@@ -533,13 +491,13 @@ WCHAR* PdfLink::CalcDestName() {
 #endif
 }
 
-WCHAR* PdfLink::CalcValue() const {
+static WCHAR* CalcValue(fz_link* link, fz_outline* outline, bool isAttachment) {
     if (outline && isAttachment) {
         WCHAR* path = strconv::FromUtf8(outline->uri);
         return path;
     }
 
-    char* uri = PdfLinkGetURI(this);
+    char* uri = PdfLinkGetURI(link, outline);
     if (!uri) {
         return nullptr;
     }
@@ -608,12 +566,12 @@ WCHAR* PdfLink::CalcValue() const {
 #endif
 }
 
-Kind PdfLink::CalcDestKind() {
+static Kind CalcDestKind(fz_link* link, fz_outline* outline, bool isAttachment) {
     if (outline && isAttachment) {
         return kindDestinationLaunchEmbedded;
     }
 
-    char* uri = PdfLinkGetURI(this);
+    char* uri = PdfLinkGetURI(link, outline);
     // some outline entries are bad (issue 1245)
     if (!uri) {
         return nullptr;
@@ -669,8 +627,8 @@ Kind PdfLink::CalcDestKind() {
 #endif
 }
 
-int PdfLink::CalcDestPageNo() const {
-    char* uri = PdfLinkGetURI(this);
+static int CalcDestPageNo(fz_link* link, fz_outline* outline) {
+    char* uri = PdfLinkGetURI(link, outline);
     CrashIf(!uri);
     if (!uri) {
         return 0;
@@ -693,9 +651,9 @@ int PdfLink::CalcDestPageNo() const {
     return 0;
 }
 
-RectD PdfLink::CalcDestRect() {
+static RectD CalcDestRect(fz_link* link, fz_outline* outline) {
     RectD result(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
-    char* uri = PdfLinkGetURI(this);
+    char* uri = PdfLinkGetURI(link, outline);
     CrashIf(!uri);
     if (!uri) {
         return result;
@@ -763,6 +721,29 @@ bool PdfLink::SaveEmbedded(LinkSaverUI& saveUI) {
 }
 #endif
 
+
+static PageElement* newPdfLink(int pageNo, fz_link* link, fz_outline* outline, bool isAttachment) {
+    auto res = new PageElement();
+    res->kind = kindPageElementDest;
+
+    res->pageNo = pageNo;
+    if (link) {
+        res->rect = fz_rect_to_RectD(link->rect);
+    }
+    res->value = CalcValue(link, outline, isAttachment);
+
+    auto dest = new PageDestination();
+    dest->kind = CalcDestKind(link, outline, isAttachment);
+    dest->rect = CalcDestRect(link, outline);
+    dest->value = res->GetValue();
+    dest->name = CalcDestName(link, outline);
+    dest->pageNo = CalcDestPageNo(link, outline);
+    res->dest = dest;
+
+    return res;
+}
+
+
 class PdfComment : public PageElement {
   public:
     PageAnnotation annot;
@@ -779,16 +760,8 @@ class PdfComment : public PageElement {
 
 class PdfTocItem : public DocTocItem {
   public:
-    // TODO: get rid of link
-    PdfLink* link;
-
-    PdfTocItem(WCHAR* title, PdfLink* link) : DocTocItem(title), link(link) {
-        dest = link->dest;
-    }
-
-    ~PdfTocItem() override {
-        dest = nullptr; // deleted in ~DocTocItem
-        delete link;
+    PdfTocItem(WCHAR* title, PageDestination* link) : DocTocItem(title) {
+        dest = link;
     }
 };
 
@@ -1290,9 +1263,13 @@ PdfTocItem* PdfEngineImpl::BuildTocTree(fz_outline* outline, int& idCounter, boo
                 name = str::Dup(L"");
             }
             int pageNo = outline->page + 1;
-            auto link = new PdfLink(this, pageNo, nullptr, outline);
-            link->isAttachment = isAttachment;
-            PdfTocItem* item = new PdfTocItem(name, link);
+
+            // TODO: simplify by constructing just destination
+            auto link = newPdfLink(pageNo, nullptr, outline, isAttachment);
+            auto dest = clonePageDestination(link->dest);
+            delete link;
+
+            PdfTocItem* item = new PdfTocItem(name, dest);
             item->isOpenDefault = outline->is_open;
             item->id = ++idCounter;
             item->fontFlags = outline->flags;
@@ -1611,7 +1588,7 @@ PageElement* PdfEngineImpl::GetElementAtPos(int pageNo, PointD pt) {
         fz_point p = {(float)pt.x, (float)pt.y};
         while (link) {
             if (fz_is_pt_in_rect(link->rect, p)) {
-                return new PdfLink(this, pageNo, link, nullptr);
+                return newPdfLink(pageNo, link, nullptr, false);
             }
             link = link->next;
         }
@@ -1664,7 +1641,7 @@ Vec<PageElement*>* PdfEngineImpl::GetElements(int pageNo) {
 
         fz_link* link = pageInfo->links;
         while (link) {
-            auto* el = new PdfLink(this, pageNo, link, nullptr);
+            auto* el = newPdfLink(pageNo, link, nullptr, false);
             els->Append(el);
             link = link->next;
         }
