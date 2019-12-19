@@ -228,11 +228,11 @@ class ImageElement : public PageElement {
     explicit ImageElement(ImagesEngine* engine, ImagePage* page) {
         this->engine = engine;
         this->page = page;
-        elementPageNo = page->pageNo;
+        pageNo = page->pageNo;
         kind = kindPageElementImage;
         int dx = page->bmp->GetWidth();
         int dy = page->bmp->GetHeight();
-        elementRect = RectD(0, 0, dx, dy);
+        rect = RectD(0, 0, dx, dy);
         getImage = [=]() -> RenderedBitmap* { return imageFromImageElment(this->page); };
     }
 

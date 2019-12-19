@@ -62,18 +62,18 @@ static PageDestination* newDjVuDestination(const char* link) {
 class DjVuLink : public PageElement {
   public:
     DjVuLink(int pageNo, RectI rect, const char* link, const char* comment) {
-        elementRect = rect.Convert<double>();
-        elementPageNo = pageNo;
-        elementDest = newDjVuDestination(link);
+        this->rect = rect.Convert<double>();
+        pageNo = pageNo;
+        dest = newDjVuDestination(link);
         if (!str::IsEmpty(comment)) {
-            elementValue = strconv::FromUtf8(comment);
+            value = strconv::FromUtf8(comment);
         }
         kind = kindPageElementDest;
         if (!str::IsEmpty(comment)) {
-            elementValue = strconv::Utf8ToWchar(comment);
+            value = strconv::Utf8ToWchar(comment);
         } else {
-            if (kindDestinationLaunchURL == elementDest->Kind()) {
-                elementValue = str::Dup(elementDest->GetValue());
+            if (kindDestinationLaunchURL == dest->Kind()) {
+                value = str::Dup(dest->GetValue());
             }
         }
     }
