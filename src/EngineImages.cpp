@@ -313,12 +313,13 @@ ImagePage* ImagesEngine::GetPage(int pageNo, bool tryOnly) {
     }
     // return nullptr if a page failed to load
     if (result && !result->bmp) {
-        result = nullptr;
+        return nullptr;
+    }
+    if (!result) {
+        return nullptr;
     }
 
-    if (result) {
-        result->refs++;
-    }
+    result->refs++;
     return result;
 }
 
