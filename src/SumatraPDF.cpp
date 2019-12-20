@@ -1469,11 +1469,12 @@ void scheduleReloadTab(TabInfo* tab) {
 WindowInfo* LoadDocument(LoadArgs& args) {
     CrashAlwaysIf(gCrashOnOpen);
 
+    int threadID = (int)GetCurrentThreadId();
     AutoFreeWstr fullPath(path::Normalize(args.fileName));
     WindowInfo* win = args.win;
     {
         AutoFree path = strconv::WstrToUtf8(fullPath);
-        logf("LoadDocument: '%s'\n", path.get());
+        logf("LoadDocument: '%s', tid=%d\n", path.get(), threadID);
     }
 
     bool failEarly = win && !args.forceReuse && !DocumentPathExists(fullPath);

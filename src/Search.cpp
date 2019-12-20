@@ -36,6 +36,15 @@
 #include "SumatraDialogs.h"
 #include "Translations.h"
 
+// open file command
+//  format: [Open("<pdffilepath>"[,<newwindow>,<setfocus>,<forcerefresh>])]
+//    if newwindow = 1 then a new window is created even if the file is already open
+//    if focus = 1 then the focus is set to the window
+//  eg: [Open("c:\file.pdf", 1, 1, 0)]
+
+bool gIsStartup = false;
+WStrVec gDdeOpenOnStartup;
+
 NotificationGroupId NG_FIND_PROGRESS = "findProgress";
 
 // don't show the Search UI for document types that don't
@@ -618,9 +627,14 @@ static const WCHAR* HandleOpenCmd(const WCHAR* cmd, DDEACK& ack) {
         return nullptr;
     }
 
-    // TODO: maybe focus after LoadDocument()
-    // see https://github.com/sumatrapdfreader/sumatrapdf/issues/1340
-    bool focusTab = false; // !newWindow
+    // on startup this is called while LoadDocument is in progress, which causes
+    // all sort of mayhem. Queue files to be loaded in a sequence
+    if (gIsStartup) {
+        gDdeOpenOnStartup.Append(pdfFile.StealData());
+        return next;
+    }
+
+    bool focusTab = !newWindow;
     WindowInfo* win = FindWindowInfoByFile(pdfFile, focusTab);
     if (newWindow || !win) {
         LoadArgs args(pdfFile, !newWindow ? win : nullptr);

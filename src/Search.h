@@ -12,13 +12,6 @@
 //  eg: [ForwardSearch("c:\file.pdf","c:\folder\source.tex",298,0)]
 #define DDECOMMAND_SYNC L"ForwardSearch"
 
-// open file command
-//  format: [Open("<pdffilepath>"[,<newwindow>,<setfocus>,<forcerefresh>])]
-//    if newwindow = 1 then a new window is created even if the file is already open
-//    if focus = 1 then the focus is set to the window
-//  eg: [Open("c:\file.pdf", 1, 1, 0)]
-#define DDECOMMAND_OPEN L"Open"
-
 // jump to named destination command
 //  format: [GoToNamedDest("<pdffilepath>","<destination name>")]
 //  eg: [GoToNamedDest("c:\file.pdf", "chapter.1")]. pdf file must be already opened
@@ -58,3 +51,6 @@ void OnMenuFindMatchCase(WindowInfo* win);
 void OnMenuFindSel(WindowInfo* win, TextSearchDirection direction);
 void AbortFinding(WindowInfo* win, bool hideMessage);
 void FindTextOnThread(WindowInfo* win, TextSearchDirection direction, bool showProgress);
+
+extern bool gIsStartup;
+extern WStrVec gDdeOpenOnStartup;

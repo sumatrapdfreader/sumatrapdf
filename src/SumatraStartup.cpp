@@ -205,7 +205,7 @@ static void OpenUsingDde(HWND targetWnd, const WCHAR* filePath, CommandLineInfo&
     GetFullPathName(filePath, dimof(fullpath), fullpath, nullptr);
 
     str::WStr cmd;
-    cmd.AppendFmt(L"[" DDECOMMAND_OPEN L"(\"%s\", 0, 1, 0)]", fullpath);
+    cmd.AppendFmt(L"[Open(\"%s\", 0, 1, 0)]", fullpath);
     if (i.destName && isFirstWin) {
         cmd.AppendFmt(L"[" DDECOMMAND_GOTO L"(\"%s\", \"%s\")]", fullpath, i.destName);
     } else if (i.pageNumber > 0 && isFirstWin) {
@@ -747,6 +747,8 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     mui::Initialize();
     uitask::Initialize();
 
+    //logToFile("C:\\Users\\kjk\\Downloads\\sumlog.txt");
+
     log("Starting SumatraPDF\n");
 
     // TODO: temporary, to test crash reporting
@@ -856,6 +858,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 
     GetFixedPageUiColors(gRenderCache.textColor, gRenderCache.backgroundColor);
 
+    gIsStartup = true;
     if (!RegisterWinClass()) {
         goto Exit;
     }
@@ -941,38 +944,69 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     }
     ResetSessionState(gGlobalPrefs->sessionData);
     // prevent the same session from being restored twice
-    if (restoreSession && !(gGlobalPrefs->reuseInstance || gGlobalPrefs->useTabs))
+    if (restoreSession && !(gGlobalPrefs->reuseInstance || gGlobalPrefs->useTabs)) {
         prefs::Save();
+    }
 
     for (const WCHAR* filePath : i.fileNames) {
-        if (restoreSession && FindWindowInfoByFile(filePath, true))
+        if (restoreSession && FindWindowInfoByFile(filePath, false)) {
             continue;
+        }
+        AutoFree path = strconv::WstrToUtf8(filePath);
+        logf("before LoadOnStartup: '%s'\n", path.get());
         win = LoadOnStartup(filePath, i, !win);
+        logf("after LoadOnStartup: '%s'\n", path.get());
         if (!win) {
             retCode++;
             continue;
         }
-        if (i.printDialog)
+        if (i.printDialog) {
             OnMenuPrint(win, i.exitWhenDone);
+        }
     }
+
+    int nWithDde = (int)gDdeOpenOnStartup.size();
+    if (nWithDde > 0) {
+        logf("Loading %d documents queued by dde open\n", nWithDde);
+        for (auto&& filePath : gDdeOpenOnStartup) {
+            if (restoreSession && FindWindowInfoByFile(filePath, false)) {
+                continue;
+            }
+            AutoFree path = strconv::WstrToUtf8(filePath);
+            logf("before LoadOnStartup: '%s'\n", path.get());
+            win = LoadOnStartup(filePath, i, !win);
+            logf("after LoadOnStartup: '%s'\n", path.get());
+            if (!win) {
+                retCode++;
+            }
+        }
+        gDdeOpenOnStartup.Reset();
+    }
+
+    gIsStartup = false;
+
+
     if (i.fileNames.size() > 0 && !win) {
         // failed to create any window, even though there
         // were files to load (or show a failure message for)
         goto Exit;
     }
-    if (i.printDialog && i.exitWhenDone)
+    if (i.printDialog && i.exitWhenDone) {
         goto Exit;
+    }
 
     if (!win) {
         win = CreateAndShowWindowInfo();
-        if (!win)
+        if (!win) {
             goto Exit;
+        }
     }
 
     // Make sure that we're still registered as default,
     // if the user has explicitly told us to be
-    if (gGlobalPrefs->associatedExtensions)
+    if (gGlobalPrefs->associatedExtensions) {
         RegisterForPdfExtentions(win->hwndFrame);
+    }
 
     if (i.stressTestPath) {
         // don't save file history and preference changes
@@ -981,8 +1015,9 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
         StartStressTest(&i, win);
     }
 
-    if (gGlobalPrefs->checkForUpdates)
+    if (gGlobalPrefs->checkForUpdates) {
         UpdateCheckAsync(win, true);
+    }
 
     // only hide newly missing files when showing the start page on startup
     if (showStartPage && gFileHistory.Get(0)) {
