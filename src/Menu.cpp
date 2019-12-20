@@ -606,15 +606,16 @@ void OnAboutContextMenu(WindowInfo* win, int x, int y) {
 }
 
 void OnContextMenu(WindowInfo* win, int x, int y) {
-    CrashIf(!win->AsFixed());
-    if (!win->AsFixed()) {
+    DisplayModel* dm = win->AsFixed();
+    CrashIf(!dm);
+    if (!dm) {
         return;
     }
 
-    PageElement* pageEl = win->AsFixed()->GetElementAtPos(PointI(x, y));
-    AutoFreeWstr value;
+    PageElement* pageEl = dm->GetElementAtPos(PointI(x, y));
+    WCHAR* value = nullptr;
     if (pageEl) {
-        value.Set(pageEl->GetValue());
+        value = pageEl->GetValue();
     }
 
     HMENU popup = BuildMenuFromMenuDef(menuDefContext, dimof(menuDefContext), CreatePopupMenu());

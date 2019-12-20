@@ -986,7 +986,7 @@ PageElement* newFzLink(int pageNo, fz_link* link, fz_outline* outline, bool isAt
     auto dest = new PageDestination();
     dest->kind = CalcDestKind(link, outline, isAttachment);
     dest->rect = CalcDestRect(link, outline);
-    dest->value = res->GetValue();
+    dest->value = str::Dup(res->GetValue());
     dest->name = CalcDestName(link, outline);
     dest->pageNo = CalcDestPageNo(link, outline);
     res->dest = dest;

@@ -800,8 +800,10 @@ static LRESULT OnSetCursor(WindowInfo* win, HWND hwnd) {
                 DisplayModel* dm = win->AsFixed();
                 PageElement* pageEl = dm->GetElementAtPos(pt);
                 if (pageEl) {
-                    AutoFreeWstr text(pageEl->GetValue());
-                    RectI rc = dm->CvtToScreen(pageEl->GetPageNo(), pageEl->GetRect());
+                    WCHAR* text = pageEl->GetValue();
+                    int pageNo = pageEl->GetPageNo();
+                    auto r = pageEl->GetRect();
+                    RectI rc = dm->CvtToScreen(pageNo, r);
                     win->ShowInfoTip(text, rc, true);
 
                     bool isLink = pageEl->Is(kindPageElementDest);

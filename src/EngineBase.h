@@ -157,14 +157,14 @@ class PageElement {
     int pageNo = 0;
     RectD rect{};
     WCHAR* value = nullptr;
+    // only set if kindPageElementDest
+    PageDestination* dest = nullptr;
 
     int imageID = 0;
     std::function<RenderedBitmap*(void)> getImage = nullptr;
 
-    // only set if kindPageElementDest
-    PageDestination* dest = nullptr;
 
-    virtual ~PageElement() {
+    ~PageElement() {
         free(value);
         delete dest;
     }
@@ -186,7 +186,7 @@ class PageElement {
     // string value associated with this element (e.g. displayed in an infotip)
     // caller must free() the result
     WCHAR* GetValue() const {
-        return str::Dup(value);
+        return value;
     }
 
     // if this element is a link, this returns information about the link's destination
@@ -244,7 +244,7 @@ class DocTocItem : public TreeItem {
 
     explicit DocTocItem(const WCHAR* title, int pageNo = 0);
 
-    virtual ~DocTocItem();
+    ~DocTocItem();
 
     void AddSibling(DocTocItem* sibling);
 

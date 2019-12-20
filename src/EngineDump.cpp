@@ -19,7 +19,7 @@
 
 #define Out(msg, ...) printf(msg, __VA_ARGS__)
 
-static bool NeedsEscape(WCHAR* s) {
+static bool NeedsEscape(const WCHAR* s) {
     if (str::FindChar(s, '<')) {
         return true;
     }
@@ -32,19 +32,20 @@ static bool NeedsEscape(WCHAR* s) {
     return false;
 }
 
-static std::string_view Escape(WCHAR* string) {
-    AutoFreeWstr freeOnReturn(string);
-
-    if (str::IsEmpty(string)) {
+// TODO: we leak because in the past Escape() was freeing str
+// and now we don't but I didn't update all the code
+// doesn't matter because engine dump does its job and quits
+static std::string_view Escape(const WCHAR* str) {
+    if (str::IsEmpty(str)) {
         return {};
     }
 
-    if (!NeedsEscape(string)) {
-        return strconv::WstrToUtf8(string);
+    if (!NeedsEscape(str)) {
+        return strconv::WstrToUtf8(str);
     }
 
     str::WStr escaped(256);
-    for (const WCHAR* s = string; *s; s++) {
+    for (const WCHAR* s = str; *s; s++) {
         switch (*s) {
             case '&':
                 escaped.Append(L"&amp;");
@@ -71,7 +72,7 @@ static std::string_view Escape(WCHAR* string) {
 
 void DumpProperties(EngineBase* engine, bool fullDump) {
     Out("\t<Properties\n");
-    AutoFree str = Escape(str::Dup(engine->FileName()));
+    AutoFree str = Escape(engine->FileName());
     Out("\t\tFilePath=\"%s\"\n", str.Get());
     str = Escape(engine->GetProperty(DocumentProperty::Title));
     if (str.Get()) {
@@ -147,7 +148,7 @@ void DumpProperties(EngineBase* engine, bool fullDump) {
 char* DestRectToStr(EngineBase* engine, PageDestination* dest) {
     WCHAR* destName = dest->GetName();
     if (destName) {
-        AutoFree name(Escape(destName));
+        AutoFree name = Escape(destName);
         return str::Format("Name=\"%s\"", name.Get());
     }
     // as handled by LinkHandler::ScrollTo in WindowInfo.cpp
@@ -172,7 +173,7 @@ char* DestRectToStr(EngineBase* engine, PageDestination* dest) {
 
 void DumpTocItem(EngineBase* engine, DocTocItem* item, int level, int& idCounter) {
     for (; item; item = item->next) {
-        AutoFree title(Escape(str::Dup(item->title)));
+        AutoFree title(Escape(item->title));
         for (int i = 0; i < level; i++)
             Out("\t");
         Out("<Item Title=\"%s\"", title.Get());
@@ -182,7 +183,7 @@ void DumpTocItem(EngineBase* engine, DocTocItem* item, int level, int& idCounter
             Out(" Id=\"%d\"", item->id);
         if (item->GetPageDestination()) {
             PageDestination* dest = item->GetPageDestination();
-            AutoFree target(Escape(dest->GetValue()));
+            AutoFree target = Escape(dest->GetValue());
             if (target.Get())
                 Out(" Target=\"%s\"", target.Get());
             if (item->pageNo != dest->GetPageNo())
