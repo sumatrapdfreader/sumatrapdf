@@ -76,8 +76,6 @@ class EnginePdfMultiImpl : public EngineBase {
     virtual ~EnginePdfMultiImpl();
     EngineBase* Clone() override;
 
-    int PageCount() const override;
-
     RectD PageMediabox(int pageNo) override;
     RectD PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
 
@@ -115,8 +113,6 @@ class EnginePdfMultiImpl : public EngineBase {
     static EngineBase* CreateFromFile(const WCHAR* fileName, PasswordUI* pwdUI);
 
   protected:
-    int pageCount = -1;
-    ;
     ParsedVbkm* vbkm = nullptr;
 
     DocTocTree* tocTree = nullptr;
@@ -146,10 +142,6 @@ EnginePdfMultiImpl::~EnginePdfMultiImpl() {
 EngineBase* EnginePdfMultiImpl::Clone() {
     CrashIf(true);
     return nullptr;
-}
-
-int EnginePdfMultiImpl::PageCount() const {
-    return pageCount;
 }
 
 RectD EnginePdfMultiImpl::PageMediabox(int pageNo) {

@@ -233,10 +233,6 @@ class PsEngineImpl : public EngineBase {
         return clone;
     }
 
-    int PageCount() const override {
-        return pdfEngine->PageCount();
-    }
-
     RectD PageMediabox(int pageNo) override {
         return pdfEngine->PageMediabox(pageNo);
     }
@@ -329,7 +325,8 @@ class PsEngineImpl : public EngineBase {
     EngineBase* pdfEngine = nullptr;
 
     bool Load(const WCHAR* fileName) {
-        AssertCrash(!FileName() && !pdfEngine);
+        pageCount = 0;
+        CrashIf(FileName() || pdfEngine);
         if (!fileName) {
             return false;
         }
@@ -353,6 +350,7 @@ class PsEngineImpl : public EngineBase {
         allowsPrinting = pdfEngine->AllowsPrinting();
         allowsCopyingText = pdfEngine->AllowsCopyingText();
         decryptionKey = pdfEngine->decryptionKey;
+        pageCount = pdfEngine->PageCount();
 
         return true;
     }

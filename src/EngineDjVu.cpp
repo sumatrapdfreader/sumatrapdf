@@ -167,12 +167,8 @@ class DjVuEngineImpl : public EngineBase {
         return nullptr;
     }
 
-    int PageCount() const override {
-        return pageCount;
-    }
-
     RectD PageMediabox(int pageNo) override {
-        AssertCrash(1 <= pageNo && pageNo <= PageCount());
+        AssertCrash(1 <= pageNo && pageNo <= pageCount);
         return mediaboxes[pageNo - 1];
     }
     RectD PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
@@ -223,7 +219,6 @@ class DjVuEngineImpl : public EngineBase {
   protected:
     IStream* stream = nullptr;
 
-    int pageCount = 0;
     RectD* mediaboxes = nullptr;
 
     ddjvu_document_t* doc = nullptr;

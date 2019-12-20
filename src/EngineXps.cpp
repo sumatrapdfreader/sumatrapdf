@@ -194,11 +194,6 @@ class XpsEngineImpl : public EngineBase {
     virtual ~XpsEngineImpl();
     EngineBase* Clone() override;
 
-    int PageCount() const override {
-        CrashIf(pageCount < 0);
-        return pageCount;
-    }
-
     RectD PageMediabox(int pageNo) override;
     RectD PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
 
@@ -236,7 +231,6 @@ class XpsEngineImpl : public EngineBase {
     // protected critical section in order to avoid deadlocks
     CRITICAL_SECTION ctxAccess;
     CRITICAL_SECTION _pagesAccess;
-    int pageCount = -0;
 
     fz_context* ctx = nullptr;
     fz_locks_context fz_locks_ctx;

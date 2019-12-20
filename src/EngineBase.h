@@ -163,7 +163,6 @@ class PageElement {
     int imageID = 0;
     std::function<RenderedBitmap*(void)> getImage = nullptr;
 
-
     ~PageElement() {
         free(value);
         delete dest;
@@ -299,6 +298,7 @@ class EngineBase {
     bool isPasswordProtected = false;
     char* decryptionKey = nullptr;
     bool hasPageLabels = false;
+    int pageCount = -1;
 
     virtual ~EngineBase() {
         free(decryptionKey);
@@ -307,7 +307,10 @@ class EngineBase {
     virtual EngineBase* Clone() = 0;
 
     // number of pages the loaded document contains
-    virtual int PageCount() const = 0;
+    int PageCount() const {
+        CrashIf(pageCount < 0);
+        return pageCount;
+    }
 
     // the box containing the visible page content (usually RectD(0, 0, pageWidth, pageHeight))
     virtual RectD PageMediabox(int pageNo) = 0;

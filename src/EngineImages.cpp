@@ -45,10 +45,6 @@ class ImagesEngine : public EngineBase {
     ImagesEngine();
     virtual ~ImagesEngine();
 
-    int PageCount() const override {
-        return (int)mediaboxes.size();
-    }
-
     RectD PageMediabox(int pageNo) override;
 
     RenderedBitmap* RenderBitmap(int pageNo, float zoom, int rotation,
@@ -129,10 +125,12 @@ ImagesEngine::~ImagesEngine() {
 }
 
 RectD ImagesEngine::PageMediabox(int pageNo) {
-    AssertCrash(1 <= pageNo && pageNo <= PageCount());
-    if (mediaboxes.at(pageNo - 1).IsEmpty())
-        mediaboxes.at(pageNo - 1) = LoadMediabox(pageNo);
-    return mediaboxes.at(pageNo - 1);
+    CrashIf((pageNo < 1) || (pageNo > pageCount));
+    int n = pageNo - 1;
+    if (mediaboxes.at(n).IsEmpty()) {
+        mediaboxes.at(n) = LoadMediabox(pageNo);
+    }
+    return mediaboxes.at(n);
 }
 
 RenderedBitmap* ImagesEngine::RenderBitmap(int pageNo, float zoom, int rotation, RectD* pageRect, RenderTarget target,
@@ -446,13 +444,14 @@ bool ImageEngineImpl::FinishLoading() {
     fileDPI = image->GetHorizontalResolution();
 
     mediaboxes.Append(RectD(0, 0, image->GetWidth(), image->GetHeight()));
-    AssertCrash(mediaboxes.size() == 1);
+    CrashIf(mediaboxes.size() != 1);
 
     // extract all frames from multi-page TIFFs and animated GIFs
     if (str::Eq(fileExt, L".tif") || str::Eq(fileExt, L".gif")) {
         const GUID* frameDimension = str::Eq(fileExt, L".tif") ? &FrameDimensionPage : &FrameDimensionTime;
         mediaboxes.AppendBlanks(image->GetFrameCount(frameDimension) - 1);
     }
+    pageCount = (int)mediaboxes.size();
 
     CrashIf(!fileExt);
     return fileExt != nullptr;
@@ -759,7 +758,7 @@ bool ImageDirEngineImpl::LoadImageDir(const WCHAR* dirName) {
         fileDPI = page->bmp->GetHorizontalResolution();
         DropPage(page, false, false);
     }
-
+    pageCount = (int)mediaboxes.size();
     return true;
 }
 
@@ -1013,6 +1012,7 @@ bool CbxEngineImpl::FinishLoading() {
 
     mediaboxes.AppendBlanks(nFiles);
     files = std::move(pageFiles);
+    pageCount = (int)nFiles;
     return true;
 }
 

@@ -370,8 +370,6 @@ class PdfEngineImpl : public EngineBase {
     virtual ~PdfEngineImpl();
     EngineBase* Clone() override;
 
-    int PageCount() const override;
-
     RectD PageMediabox(int pageNo) override;
     RectD PageContentBox(int pageNo, RenderTarget target = RenderTarget::View) override;
 
@@ -417,8 +415,6 @@ class PdfEngineImpl : public EngineBase {
     RenderedBitmap* GetPageImage(int pageNo, RectD rect, size_t imageIx);
 
   protected:
-    int pageCount = -1;
-
     fz_context* ctx = nullptr;
     fz_locks_context fz_locks_ctx;
     fz_document* _doc = nullptr;
@@ -574,11 +570,6 @@ PdfEngineImpl::~PdfEngineImpl() {
     }
     LeaveCriticalSection(&pagesAccess);
     DeleteCriticalSection(&pagesAccess);
-}
-
-int PdfEngineImpl::PageCount() const {
-    CrashIf(pageCount < 0);
-    return pageCount;
 }
 
 class PasswordCloner : public PasswordUI {

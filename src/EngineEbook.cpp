@@ -80,10 +80,6 @@ class EbookEngine : public EngineBase {
     EbookEngine();
     virtual ~EbookEngine();
 
-    int PageCount() const override {
-        return pages ? (int)pages->size() : 0;
-    }
-
     RectD PageMediabox(int pageNo) override {
         UNUSED(pageNo);
         return pageRect;
@@ -227,6 +223,7 @@ static DocTocItem* newEbookTocItem(const WCHAR* title, PageDestination* dest) {
 }
 
 EbookEngine::EbookEngine() {
+    pageCount = 0;
     // "B Format" paperback
     pageRect = RectD(0, 0, 5.12 * GetFileDPI(), 7.8 * GetFileDPI());
     pageBorder = 0.4f * GetFileDPI();
@@ -752,8 +749,9 @@ bool EpubEngineImpl::Load(const WCHAR* fileName) {
     if (dir::Exists(fileName)) {
         // load uncompressed documents as a recompressed ZIP stream
         ScopedComPtr<IStream> zipStream(OpenDirAsZipStream(fileName, true));
-        if (!zipStream)
+        if (!zipStream) {
             return false;
+        }
         return Load(zipStream);
     }
     doc = EpubDoc::CreateFromFile(fileName);
@@ -791,7 +789,8 @@ bool EpubEngineImpl::FinishLoading() {
         preferredLayout = Layout_Book;
     }
 
-    return pages->size() > 0;
+    pageCount = (int)pages->size();
+    return pageCount > 0;
 }
 
 std::string_view EpubEngineImpl::GetFileData() {
@@ -931,7 +930,8 @@ bool Fb2EngineImpl::FinishLoading() {
         return false;
     }
 
-    return pages->size() > 0;
+    pageCount = (int)pages->size();
+    return pageCount > 0;
 }
 
 DocTocTree* Fb2EngineImpl::GetTocTree() {
@@ -1045,7 +1045,8 @@ bool MobiEngineImpl::FinishLoading() {
         return false;
     }
 
-    return pages->size() > 0;
+    pageCount = (int)pages->size();
+    return pageCount > 0;
 }
 
 PageDestination* MobiEngineImpl::GetNamedDest(const WCHAR* name) {
@@ -1182,7 +1183,8 @@ bool PdbEngineImpl::Load(const WCHAR* fileName) {
         return false;
     }
 
-    return pages->size() > 0;
+    pageCount = (int)pages->size();
+    return pageCount > 0;
 }
 
 DocTocTree* PdbEngineImpl::GetTocTree() {
@@ -1501,7 +1503,8 @@ bool ChmEngineImpl::Load(const WCHAR* fileName) {
         return false;
     }
 
-    return pages->size() > 0;
+    pageCount = (int)pages->size();
+    return pageCount > 0;
 }
 
 PageDestination* ChmEngineImpl::GetNamedDest(const WCHAR* name) {
@@ -1637,7 +1640,8 @@ bool HtmlEngineImpl::Load(const WCHAR* fileName) {
         return false;
     }
 
-    return pages->size() > 0;
+    pageCount = (int)pages->size();
+    return pageCount > 0;
 }
 
 static PageDestination* newRemoteHtmlDest(const WCHAR* relativeURL) {
@@ -1727,8 +1731,9 @@ bool TxtEngineImpl::Load(const WCHAR* fileName) {
     defaultFileExt = path::GetExt(fileName);
 
     doc = TxtDoc::CreateFromFile(fileName);
-    if (!doc)
+    if (!doc) {
         return false;
+    }
 
     if (doc->IsRFC()) {
         // RFCs are targeted at letter size pages
@@ -1745,10 +1750,12 @@ bool TxtEngineImpl::Load(const WCHAR* fileName) {
     args.textRenderMethod = mui::TextRenderMethodGdiplus;
 
     pages = TxtFormatter(&args).FormatAllPages(false);
-    if (!ExtractPageAnchors())
+    if (!ExtractPageAnchors()) {
         return false;
+    }
 
-    return pages->size() > 0;
+    pageCount = (int)pages->size();
+    return pageCount > 0;
 }
 
 DocTocTree* TxtEngineImpl::GetTocTree() {
