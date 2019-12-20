@@ -142,6 +142,10 @@ class Vec {
         memset(buf, 0, sizeof(buf));
     }
 
+    void clear() {
+        Reset();
+    }
+
     bool SetSize(size_t newSize) {
         Reset();
         return MakeSpaceAt(0, newSize);
@@ -302,6 +306,10 @@ class Vec {
         return els[len]; // nullptr-sentinel
     }
 
+    bool empty() const {
+        return len == 0;
+    }
+
     // http://www.cprogramming.com/c++11/c++11-ranged-for-loop.html
     // https://stackoverflow.com/questions/16504062/how-to-make-the-for-each-loop-function-in-c-work-with-a-custom-class
     typedef T* iterator;
@@ -347,11 +355,19 @@ class WStr : public Vec<WCHAR> {
         this->allocator = allocator;
     }
 
+    WStr(std::wstring_view s) {
+        AppendView(s);
+    }
+
     void Append(WCHAR c) {
         InsertAt(len, c);
     }
 
     std::wstring_view AsView() const {
+        return {this->Get(), this->size()};
+    }
+
+    std::wstring_view as_view() const {
         return {this->Get(), this->size()};
     }
 
@@ -394,12 +410,21 @@ class WStr : public Vec<WCHAR> {
         return true;
     }
 
+    void Set(std::wstring s) {
+        Reset();
+        AppendView(s);
+    }
+
     void Set(const WCHAR* s) {
         Reset();
         Append(s);
     }
 
     WCHAR* Get() const {
+        return els;
+    }
+
+    WCHAR* c_str() const {
         return els;
     }
 
@@ -420,7 +445,7 @@ class Str : public Vec<char> {
     }
 
     Str(std::string_view s) {
-        Set(s);
+        AppendView(s);
     }
 
     std::string_view AsView() const {
@@ -429,6 +454,10 @@ class Str : public Vec<char> {
 
     std::string_view as_view() const {
         return {Get(), size()};
+    }
+
+    char* c_str() const {
+        return els;
     }
 
     std::string_view StealAsView() {

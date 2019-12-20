@@ -118,7 +118,7 @@ ImagesEngine::~ImagesEngine() {
         // maybe just ignore refcounting
         // CrashIf(lastPage->refs != 1);
         DropPage(lastPage, true, true);
-    }
+        }
     LeaveCriticalSection(&cacheAccess);
 
     DeleteCriticalSection(&cacheAccess);
@@ -328,6 +328,7 @@ ImagePage* ImagesEngine::GetPage(int pageNo, bool tryOnly) {
 void ImagesEngine::DropPage(ImagePage* page, bool forceRemove, bool forceDelete) {
     ScopedCritSec scope(&cacheAccess);
     page->refs--;
+    CrashIf(page->refs < 0);
 
     if (0 == page->refs || forceRemove) {
         pageCache.Remove(page);

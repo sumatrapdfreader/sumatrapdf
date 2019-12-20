@@ -78,23 +78,20 @@ enum class Tab {
     Highlighted = 2,
 };
 
-static std::wstring wstrFromUtf8(const std::string& str) {
-    WCHAR* s = strconv::FromUtf8(str.c_str());
-    ;
-    std::wstring res(s);
-    free(s);
-    return res;
+static str::WStr wstrFromUtf8(const str::Str& str) {
+    AutoFreeWstr s = strconv::Utf8ToWchar(str.c_str());
+    return str::WStr(s.as_view());
 }
 
-TabItem::TabItem(const std::string& title, const std::string& toolTip) {
+TabItem::TabItem(const std::string_view title, const std::string_view toolTip) {
     this->title = title;
     this->toolTip = toolTip;
 }
 
 class TabItemInfo {
   public:
-    std::wstring title;
-    std::wstring toolTip;
+    str::WStr title;
+    str::WStr toolTip;
 
     SIZE titleSize;
     // area for this tab item inside the tab window
@@ -116,18 +113,18 @@ class TabsCtrlPrivate {
     HWND hwnd = nullptr;
     HFONT font = nullptr;
     // TODO: logFont is not used anymore, keep it for debugging?
-    LOGFONTW logFont; // info that corresponds to font
-    TEXTMETRIC fontMetrics;
-    int fontDy;
-    SIZE size;                  // current size of the control's window
-    SIZE idealSize;             // ideal size as calculated during layout
+    LOGFONTW logFont{}; // info that corresponds to font
+    TEXTMETRIC fontMetrics{};
+    int fontDy = 0;
+    SIZE size{};                // current size of the control's window
+    SIZE idealSize{};           // ideal size as calculated during layout
     int tabIdxUnderCursor = -1; // -1 if none under cursor
     bool isCursorOverClose = false;
 
-    std::shared_ptr<TabsCtrlState> state;
+    TabsCtrlState* state = nullptr;
 
     // each TabItemInfo orresponds to TabItem from state->tabs, same order
-    std::vector<std::unique_ptr<TabItemInfo>> tabInfos;
+    Vec<TabItemInfo*> tabInfos;
 };
 
 static long GetIdealDy(TabsCtrl* ctrl) {
@@ -312,7 +309,7 @@ static void Paint(TabsCtrl* ctrl) {
         auto pos = ti->titlePos;
         int x = pos.x;
         int y = pos.y;
-        const WCHAR* s = ti->title.data();
+        const WCHAR* s = ti->title.c_str();
         UINT sLen = (UINT)ti->title.size();
         ExtTextOutW(hdc, x, y, opts, nullptr, s, sLen, nullptr);
 
@@ -504,7 +501,7 @@ void DeleteTabsCtrl(TabsCtrl* ctrl) {
     delete ctrl;
 }
 
-void SetState(TabsCtrl* ctrl, std::shared_ptr<TabsCtrlState> state) {
+void SetState(TabsCtrl* ctrl, TabsCtrlState* state) {
     auto priv = ctrl->priv;
     priv->state = state;
     priv->tabInfos.clear();
@@ -513,11 +510,11 @@ void SetState(TabsCtrl* ctrl, std::shared_ptr<TabsCtrlState> state) {
     auto& tabInfos = priv->tabInfos;
     for (auto& tab : state->tabs) {
         auto ti = new TabItemInfo();
-        tabInfos.emplace_back(ti);
+        tabInfos.push_back(ti);
         ti->titleSize = MakeSize(0, 0);
         if (!tab->title.empty()) {
             ti->title = wstrFromUtf8(tab->title);
-            const WCHAR* s = ti->title.data();
+            const WCHAR* s = ti->title.c_str();
             ti->titleSize = TextSizeInHwnd2(priv->hwnd, s, priv->font);
         }
         if (!tab->toolTip.empty()) {

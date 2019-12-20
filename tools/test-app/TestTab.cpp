@@ -28,17 +28,16 @@ static void Draw(HWND hwnd, HDC hdc) {
     FillRect(hdc, &rc, brush);
 }
 
-static void OnTabSelected(TabsCtrl* tabsCtrl, std::shared_ptr<TabsCtrlState> currState, int selectedTabIdx) {
+static void OnTabSelected(TabsCtrl* tabsCtrl, TabsCtrlState* currState, int selectedTabIdx) {
     CrashIf(g_tabsCtrl != tabsCtrl);
     CrashIf(currState->selectedItem == selectedTabIdx);
     currState->selectedItem = selectedTabIdx;
     SetState(tabsCtrl, currState);
 }
 
-static void OnTabClosed(TabsCtrl* tabsCtrl, std::shared_ptr<TabsCtrlState> currState, int tabIdx) {
+static void OnTabClosed(TabsCtrl* tabsCtrl, TabsCtrlState* currState, int tabIdx) {
     CrashIf(g_tabsCtrl != tabsCtrl);
-    auto pos = currState->tabs.begin() + tabIdx;
-    currState->tabs.erase(pos, pos + 1);
+    currState->tabs.RemoveAt(tabIdx);
     if (currState->selectedItem == tabIdx) {
         if (currState->selectedItem > 0) {
             currState->selectedItem--;
@@ -149,7 +148,7 @@ int TestTab(HINSTANCE hInstance, int nCmdShow) {
         return FALSE;
     }
 
-    auto tabsState = std::make_shared<TabsCtrlState>();
+    auto tabsState = new TabsCtrlState();
     tabsState->selectedItem = 0;
 
     std::array<TabItem*, 3> tabs = {
@@ -159,7 +158,7 @@ int TestTab(HINSTANCE hInstance, int nCmdShow) {
     };
 
     for (auto& tab : tabs) {
-        tabsState->tabs.emplace_back(tab);
+        tabsState->tabs.push_back(tab);
     }
 
     SetState(g_tabsCtrl, tabsState);
