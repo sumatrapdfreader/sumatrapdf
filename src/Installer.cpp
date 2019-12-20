@@ -236,10 +236,11 @@ static WCHAR* GetInstallDate() {
 static bool WriteUninstallerRegistryInfo(HKEY hkey) {
     bool ok = true;
 
-    AutoFreeWstr installedExePath(GetInstalledExePath());
-    AutoFreeWstr installDate(GetInstallDate());
-    AutoFreeWstr installDir(path::GetDir(installedExePath));
-    AutoFreeWstr uninstallCmdLine(str::Format(L"\"%s\" -uninstall", AutoFreeWstr(GetUninstallerPath())));
+    AutoFreeWstr installedExePath = GetInstalledExePath();
+    AutoFreeWstr installDate = GetInstallDate();
+    AutoFreeWstr installDir = path::GetDir(installedExePath);
+    AutoFreeWstr uninstallerPath = GetUninstallerPath();
+    AutoFreeWstr uninstallCmdLine = str::Format(L"\"%s\" -uninstall", uninstallerPath.get());
 
     // path to installed executable (or "$path,0" to force the first icon)
     ok &= WriteRegStr(hkey, REG_PATH_UNINST, L"DisplayIcon", installedExePath);
