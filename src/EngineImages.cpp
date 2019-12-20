@@ -83,8 +83,9 @@ class ImagesEngine : public EngineBase {
 
     bool BenchLoadPage(int pageNo) override {
         ImagePage* page = GetPage(pageNo);
-        if (page)
-            DropPage(page);
+        if (page) {
+            DropPage(page, false, false);
+        }
         return page != nullptr;
     }
 
@@ -101,7 +102,7 @@ class ImagesEngine : public EngineBase {
     virtual RectD LoadMediabox(int pageNo) = 0;
 
     ImagePage* GetPage(int pageNo, bool tryOnly = false);
-    void DropPage(ImagePage* page, bool forceRemove = false);
+    void DropPage(ImagePage* page, bool forceRemove, bool forceDelete);
 };
 
 ImagesEngine::ImagesEngine() {
@@ -120,7 +121,7 @@ ImagesEngine::~ImagesEngine() {
         // the page we get with GetPage() and store in PageElement
         // maybe just ignore refcounting
         // CrashIf(lastPage->refs != 1);
-        DropPage(lastPage, true);
+        DropPage(lastPage, true, true);
     }
     LeaveCriticalSection(&cacheAccess);
 
@@ -139,8 +140,9 @@ RenderedBitmap* ImagesEngine::RenderBitmap(int pageNo, float zoom, int rotation,
     UNUSED(target);
     UNUSED(cookieOut);
     ImagePage* page = GetPage(pageNo);
-    if (!page)
+    if (!page) {
         return nullptr;
+    }
 
     RectD pageRc = pageRect ? *pageRect : PageMediabox(pageNo);
     RectI screen = Transform(pageRc, pageNo, zoom, rotation).Round();
@@ -173,7 +175,7 @@ RenderedBitmap* ImagesEngine::RenderBitmap(int pageNo, float zoom, int rotation,
     imgAttrs.SetWrapMode(WrapModeTileFlipXY);
     Status ok = g.DrawImage(page->bmp, pageRcI.ToGdipRect(), 0, 0, pageRcI.dx, pageRcI.dy, UnitPixel, &imgAttrs);
 
-    DropPage(page);
+    DropPage(page, false, false);
     DeleteDC(hDC);
 
     if (ok != Ok) {
@@ -301,7 +303,7 @@ ImagePage* ImagesEngine::GetPage(int pageNo, bool tryOnly) {
         // (i.e. formats which aren't IsGdiPlusNativeFormat)?
         if (pageCache.size() >= MAX_IMAGE_PAGE_CACHE) {
             CrashIf(pageCache.size() != MAX_IMAGE_PAGE_CACHE);
-            DropPage(pageCache.Last(), true);
+            DropPage(pageCache.Last(), true, false);
         }
         result = new ImagePage(pageNo, nullptr);
         result->bmp = LoadBitmap(pageNo, result->ownBmp);
@@ -323,7 +325,9 @@ ImagePage* ImagesEngine::GetPage(int pageNo, bool tryOnly) {
     return result;
 }
 
-void ImagesEngine::DropPage(ImagePage* page, bool forceRemove) {
+// TODO: forceDelete is temporary until I fix ref-counting caused by
+// returning ImagePage as part of PageElement
+void ImagesEngine::DropPage(ImagePage* page, bool forceRemove, bool forceDelete) {
     ScopedCritSec scope(&cacheAccess);
     page->refs--;
 
@@ -331,7 +335,7 @@ void ImagesEngine::DropPage(ImagePage* page, bool forceRemove) {
         pageCache.Remove(page);
     }
 
-    if (0 == page->refs) {
+    if (0 == page->refs || forceDelete) {
         if (page->ownBmp) {
             delete page->bmp;
         }
@@ -535,7 +539,7 @@ RectD ImageEngineImpl::LoadMediabox(int pageNo) {
     ImagePage* page = GetPage(pageNo, MAX_IMAGE_PAGE_CACHE == pageCache.size());
     if (page) {
         RectD mbox(0, 0, page->bmp->GetWidth(), page->bmp->GetHeight());
-        DropPage(page);
+        DropPage(page, false, false);
         return mbox;
     }
 
@@ -569,7 +573,7 @@ bool ImageEngineImpl::SaveFileAsPDF(const char* pdfFileName, bool includeUserAnn
     for (int i = 2; i <= PageCount() && ok; i++) {
         ImagePage* page = GetPage(i);
         ok = page && c->AddImagePage(page->bmp, dpi);
-        DropPage(page);
+        DropPage(page, false, false);
     }
     if (ok) {
         c->CopyProperties(this);
@@ -730,8 +734,9 @@ bool ImageDirEngineImpl::LoadImageDir(const WCHAR* dirName) {
 
     WIN32_FIND_DATA fdata;
     HANDLE hfind = FindFirstFile(pattern, &fdata);
-    if (INVALID_HANDLE_VALUE == hfind)
+    if (INVALID_HANDLE_VALUE == hfind) {
         return false;
+    }
 
     do {
         if (!(fdata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
@@ -752,7 +757,7 @@ bool ImageDirEngineImpl::LoadImageDir(const WCHAR* dirName) {
     ImagePage* page = GetPage(1);
     if (page) {
         fileDPI = page->bmp->GetHorizontalResolution();
-        DropPage(page);
+        DropPage(page, false, false);
     }
 
     return true;
@@ -1165,7 +1170,7 @@ RectD CbxEngineImpl::LoadMediabox(int pageNo) {
     ImagePage* page = GetPage(pageNo, MAX_IMAGE_PAGE_CACHE == pageCache.size());
     if (page) {
         RectD mbox(0, 0, page->bmp->GetWidth(), page->bmp->GetHeight());
-        DropPage(page);
+        DropPage(page, false, false);
         return mbox;
     }
 
