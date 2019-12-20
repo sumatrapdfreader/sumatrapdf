@@ -181,8 +181,8 @@ static MultiFormatArchive* open(MultiFormatArchive* archive, const char* path) {
 
 #if OS_WIN
 static MultiFormatArchive* open(MultiFormatArchive* archive, const WCHAR* path) {
-    auto pathUtf = strconv::WstrToUtf8(path);
-    bool ok = archive->Open(ar_open_file_w(path), pathUtf.data());
+    AutoFree pathUtf = strconv::WstrToUtf8(path);
+    bool ok = archive->Open(ar_open_file_w(path), pathUtf);
     if (!ok) {
         delete archive;
         return nullptr;
