@@ -9,6 +9,7 @@
 #include "utils/GdiPlusUtil.h"
 #include "utils/UITask.h"
 #include "utils/WinUtil.h"
+#include "utils/Log.h"
 
 #include "wingui/WinGui.h"
 #include "wingui/TreeModel.h"
@@ -647,8 +648,9 @@ void SaveCurrentTabInfo(WindowInfo* win) {
         return;
 
     int current = TabCtrl_GetCurSel(win->hwndTabBar);
-    if (-1 == current)
+    if (-1 == current) {
         return;
+    }
     CrashIf(win->currentTab != win->tabs.at(current));
 
     TabInfo* tab = win->currentTab;
@@ -679,8 +681,9 @@ void UpdateCurrentTabBgColor(WindowInfo* win) {
 // On load of a new document we insert a new tab item in the tab bar.
 TabInfo* CreateNewTab(WindowInfo* win, const WCHAR* filePath) {
     CrashIf(!win);
-    if (!win)
+    if (!win) {
         return nullptr;
+    }
 
     TabInfo* tab = new TabInfo(filePath);
     win->tabs.Append(tab);
@@ -815,8 +818,9 @@ void UpdateTabWidth(WindowInfo* win) {
 }
 
 void SetTabsInTitlebar(WindowInfo* win, bool set) {
-    if (set == win->tabsInTitlebar)
+    if (set == win->tabsInTitlebar) {
         return;
+    }
     win->tabsInTitlebar = set;
     TabPainter* tab = (TabPainter*)GetWindowLongPtr(win->hwndTabBar, GWLP_USERDATA);
     tab->inTitlebar = set;
@@ -835,18 +839,23 @@ void SetTabsInTitlebar(WindowInfo* win, bool set) {
         dwm::ExtendFrameIntoClientArea(win->hwndFrame, &margins);
         win->extendedFrameHeight = 0;
     }
-    SetWindowPos(win->hwndFrame, nullptr, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOMOVE);
+    UINT flags = SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOSIZE | SWP_NOMOVE;
+    SetWindowPos(win->hwndFrame, nullptr, 0, 0, 0, 0, flags);
 }
 
 // Selects the given tab (0-based index).
 void TabsSelect(WindowInfo* win, int tabIndex) {
     int count = (int)win->tabs.size();
-    if (count < 2 || tabIndex < 0 || tabIndex >= count)
+    if (count < 2 || tabIndex < 0 || tabIndex >= count) {
         return;
+    }
     NMHDR ntd = {nullptr, 0, TCN_SELCHANGING};
-    if (TabsOnNotify(win, (LPARAM)&ntd))
+    if (TabsOnNotify(win, (LPARAM)&ntd)) {
         return;
+    }
     win->currentTab = win->tabs.at(tabIndex);
+    AutoFree path = strconv::WstrToUtf8(win->currentTab->filePath);
+    logf("TabsSelect: tabIndex: %d, new win->currentTab: 0x%p, path: '%s'\n", tabIndex, win->currentTab, path.get());
     int prevIndex = TabCtrl_SetCurSel(win->hwndTabBar, tabIndex);
     if (prevIndex != -1) {
         ntd.code = TCN_SELCHANGE;

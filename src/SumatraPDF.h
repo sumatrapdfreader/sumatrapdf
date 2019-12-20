@@ -134,17 +134,18 @@ WindowInfo* FindWindowInfoByController(Controller* ctrl);
 // LoadDocument carries a lot of state, this holds them in
 // one place
 struct LoadArgs {
-    explicit LoadArgs(const WCHAR* fileName, WindowInfo* win = nullptr)
-        : fileName(fileName), win(win), showWin(true), forceReuse(false), isNewWindow(false), placeWindow(true) {
+    explicit LoadArgs(const WCHAR* fileName, WindowInfo* win) {
+        this->fileName = fileName;
     }
 
-    const WCHAR* fileName;
-    WindowInfo* win;
-    bool showWin;
-    bool forceReuse;
+    const WCHAR* fileName = nullptr;
+    WindowInfo* win = nullptr;
+    bool showWin = true;
+    bool forceReuse = false;
+
     // for internal use
-    bool isNewWindow;
-    bool placeWindow;
+    bool isNewWindow = false;
+    bool placeWindow = true;
 };
 
 WindowInfo* LoadDocument(LoadArgs& args);

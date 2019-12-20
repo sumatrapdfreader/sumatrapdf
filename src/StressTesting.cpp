@@ -586,7 +586,7 @@ bool StressTest::OpenFile(const WCHAR* fileName) {
     wprintf(L"%s\n", fileName);
     fflush(stdout);
 
-    LoadArgs args(fileName);
+    LoadArgs args(fileName, nullptr);
     args.forceReuse = rand() % 3 != 1;
     WindowInfo* w = LoadDocument(args);
     if (!w)

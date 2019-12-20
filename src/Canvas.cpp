@@ -1427,7 +1427,7 @@ static void OnDropFiles(HDROP hDrop, bool dragFinish) {
                 str::BufSet(filePath, dimof(filePath), resolved);
         }
         // The first dropped document may override the current window
-        LoadArgs args(filePath);
+        LoadArgs args(filePath, nullptr);
         LoadDocument(args);
     }
     if (dragFinish)

@@ -234,33 +234,40 @@ static void OpenUsingDde(HWND targetWnd, const WCHAR* filePath, CommandLineInfo&
     DDEExecute(PDFSYNC_DDE_SERVICE, PDFSYNC_DDE_TOPIC, cmd.Get());
 }
 
-static WindowInfo* LoadOnStartup(const WCHAR* filePath, CommandLineInfo& i, bool isFirstWin) {
-    LoadArgs args(filePath);
+static WindowInfo* LoadOnStartup(const WCHAR* filePath, const CommandLineInfo& i, bool isFirstWin) {
+    LoadArgs args(filePath, nullptr);
     args.showWin = !(i.printDialog && i.exitWhenDone) && !gPluginMode;
     WindowInfo* win = LoadDocument(args);
-    if (!win)
+    if (!win) {
         return win;
+    }
 
     if (win->IsDocLoaded() && i.destName && isFirstWin) {
         win->linkHandler->GotoNamedDest(i.destName);
     } else if (win->IsDocLoaded() && i.pageNumber > 0 && isFirstWin) {
-        if (win->ctrl->ValidPageNo(i.pageNumber))
+        if (win->ctrl->ValidPageNo(i.pageNumber)) {
             win->ctrl->GoToPage(i.pageNumber, false);
+        }
     }
-    if (i.hwndPluginParent)
+    if (i.hwndPluginParent) {
         MakePluginWindow(win, i.hwndPluginParent);
-    if (!win->IsDocLoaded() || !isFirstWin)
+    }
+    if (!win->IsDocLoaded() || !isFirstWin) {
         return win;
+    }
 
     if (i.enterPresentation || i.enterFullScreen) {
-        if (i.enterPresentation && win->isFullScreen || i.enterFullScreen && win->presentation)
+        if (i.enterPresentation && win->isFullScreen || i.enterFullScreen && win->presentation) {
             ExitFullScreen(win);
+        }
         EnterFullScreen(win, i.enterPresentation);
     }
-    if (i.startView != DM_AUTOMATIC)
+    if (i.startView != DM_AUTOMATIC) {
         SwitchToDisplayMode(win, i.startView);
-    if (i.startZoom != INVALID_ZOOM)
+    }
+    if (i.startZoom != INVALID_ZOOM) {
         ZoomToSelection(win, i.startZoom);
+    }
     if ((i.startScroll.x != -1 || i.startScroll.y != -1) && win->AsFixed()) {
         DisplayModel* dm = win->AsFixed();
         ScrollState ss = dm->GetScrollState();
@@ -280,39 +287,47 @@ static WindowInfo* LoadOnStartup(const WCHAR* filePath, CommandLineInfo& i, bool
 
 static void RestoreTabOnStartup(WindowInfo* win, TabState* state) {
     LoadArgs args(state->filePath, win);
-    if (!LoadDocument(args))
+    if (!LoadDocument(args)) {
         return;
+    }
     TabInfo* tab = win->currentTab;
-    if (!tab || !tab->ctrl)
+    if (!tab || !tab->ctrl) {
         return;
+    }
 
     tab->tocState = *state->tocState;
     SetSidebarVisibility(win, state->showToc, gGlobalPrefs->showFavorites);
 
     DisplayMode displayMode = prefs::conv::ToDisplayMode(state->displayMode, DM_AUTOMATIC);
-    if (displayMode != DM_AUTOMATIC)
+    if (displayMode != DM_AUTOMATIC) {
         SwitchToDisplayMode(win, displayMode);
+    }
     // TODO: make EbookController::GoToPage not crash
-    if (!tab->AsEbook())
+    if (!tab->AsEbook()) {
         tab->ctrl->GoToPage(state->pageNo, true);
+    }
     float zoom = prefs::conv::ToZoom(state->zoom, INVALID_ZOOM);
     if (zoom != INVALID_ZOOM) {
-        if (tab->AsFixed())
+        if (tab->AsFixed()) {
             tab->AsFixed()->Relayout(zoom, state->rotation);
-        else
+        } else {
             tab->ctrl->SetZoomVirtual(zoom, nullptr);
+        }
     }
-    if (tab->AsFixed())
+    if (tab->AsFixed()) {
         tab->AsFixed()->SetScrollState(ScrollState(state->pageNo, state->scrollPos.x, state->scrollPos.y));
+    }
 }
 
 static bool SetupPluginMode(CommandLineInfo& i) {
-    if (!IsWindow(i.hwndPluginParent) || i.fileNames.size() == 0)
+    if (!IsWindow(i.hwndPluginParent) || i.fileNames.size() == 0) {
         return false;
+    }
 
     gPluginURL = i.pluginURL;
-    if (!gPluginURL)
+    if (!gPluginURL) {
         gPluginURL = i.fileNames.at(0);
+    }
 
     AssertCrash(i.fileNames.size() == 1);
     while (i.fileNames.size() > 1) {

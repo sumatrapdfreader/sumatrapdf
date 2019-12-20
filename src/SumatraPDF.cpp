@@ -352,8 +352,9 @@ WindowInfo* FindWindowInfoByFile(const WCHAR* file, bool focusTab) {
     AutoFreeWstr normFile(path::Normalize(file));
 
     for (WindowInfo* win : gWindows) {
-        if (!win->IsAboutWindow() && path::IsSame(win->currentTab->filePath, normFile))
+        if (!win->IsAboutWindow() && path::IsSame(win->currentTab->filePath, normFile)) {
             return win;
+        }
         if (focusTab && win->tabs.size() > 1) {
             // bring a background tab to the foreground
             for (TabInfo* tab : win->tabs) {
@@ -1094,14 +1095,16 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, Displa
 
     // DisplayModel needs a valid zoom value before any relayout
     // caused by showing/hiding UI elements happends
-    if (win->AsFixed())
+    if (win->AsFixed()) {
         win->AsFixed()->Relayout(zoomVirtual, rotation);
-    else if (win->IsDocLoaded())
+    } else if (win->IsDocLoaded()) {
         win->ctrl->SetZoomVirtual(zoomVirtual, nullptr);
+    }
 
     // TODO: why is this needed?
-    if (!args.isNewWindow && win->IsDocLoaded())
+    if (!args.isNewWindow && win->IsDocLoaded()) {
         win->RedrawAll();
+    }
 
     SetFrameTitleForTab(tab, false);
     UpdateUiForCurrentTab(win);
@@ -1128,8 +1131,9 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, Displa
             // accidentally update gGlobalState with this window's dimensions
             MoveWindow(win->hwndFrame, rect);
         }
-        if (args.showWin)
+        if (args.showWin) {
             ShowWindow(win->hwndFrame, showType);
+        }
         UpdateWindow(win->hwndFrame);
     }
 
@@ -1140,14 +1144,16 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, Displa
 
     SetSidebarVisibility(win, showToc, gGlobalPrefs->showFavorites);
     // restore scroll state after the canvas size has been restored
-    if ((args.showWin || ss.page != 1) && win->AsFixed())
+    if ((args.showWin || ss.page != 1) && win->AsFixed()) {
         win->AsFixed()->SetScrollState(ss);
+    }
 
     win->RedrawAll(true);
     TabsOnChangedDoc(win);
 
-    if (!win->IsDocLoaded())
+    if (!win->IsDocLoaded()) {
         return;
+    }
 
     AutoFreeWstr unsupported(win->ctrl->GetProperty(DocumentProperty::UnsupportedFeatures));
     if (unsupported) {
@@ -1157,10 +1163,12 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, Displa
     }
 
     // This should only happen after everything else is ready
-    if ((args.isNewWindow || args.placeWindow) && args.showWin && showAsFullScreen)
+    if ((args.isNewWindow || args.placeWindow) && args.showWin && showAsFullScreen) {
         EnterFullScreen(win);
-    if (!args.isNewWindow && win->presentation && win->ctrl)
+    }
+    if (!args.isNewWindow && win->presentation && win->ctrl) {
         win->ctrl->SetPresentationMode(true);
+    }
 }
 
 void ReloadDocument(WindowInfo* win, bool autorefresh) {
@@ -1463,6 +1471,10 @@ WindowInfo* LoadDocument(LoadArgs& args) {
 
     AutoFreeWstr fullPath(path::Normalize(args.fileName));
     WindowInfo* win = args.win;
+    {
+        AutoFree path = strconv::WstrToUtf8(fullPath);
+        logf("LoadDocument: '%s'\n", path.get());
+    }
 
     bool failEarly = win && !args.forceReuse && !DocumentPathExists(fullPath);
     // try to find inexistent files with history data
@@ -1558,6 +1570,9 @@ WindowInfo* LoadDocument(LoadArgs& args) {
         args.forceReuse = false;
     } else {
         // TODO: figure out why happens. seen in 2019/12/11/3e06348ed000006.txt
+        if (!args.forceReuse && !openNewTab) {
+            logf("LoadDocument: got !args.forceReuse && !openNewTab\n");
+        }
         SubmitCrashIf(!args.forceReuse && !openNewTab);
         if (openNewTab) {
             SaveCurrentTabInfo(args.win);
@@ -1567,8 +1582,11 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     if (!args.forceReuse) {
         // insert a new tab for the loaded document
         win->currentTab = CreateNewTab(win, fullPath);
+        logf("LoadDocument: !forceReuse, created win->currentTab at 0x%p\n", win->currentTab);
     } else {
         win->currentTab->filePath.SetCopy(fullPath);
+        AutoFree path = strconv::WstrToUtf8(fullPath);
+        logf("LoadDocument: forceReuse, set win->currentTab (0x%p) filePath to '%s'\n", win->currentTab, path.get());
     }
 
     args.fileName = fullPath;
@@ -1590,12 +1608,14 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     }
 
     auto currTab = win->currentTab;
+    AutoFree path = strconv::WstrToUtf8(currTab->filePath);
+    logf("LoadDocument: after LoadDocIntoCurrentTab win->currentTab is 0x%p, path: '%s'\n", currTab, path.get());
 
     // TODO: figure why we hit this.
     // happens when opening 3 files via "Open With"
     // the first file is loaded via cmd-line arg, the rest
     // via DDE Open command.
-    SubmitCrashIf(currTab->watcher);
+    CrashIf(currTab->watcher);
 
     if (gGlobalPrefs->reloadModifiedDocuments) {
         currTab->watcher = FileWatcherSubscribe(win->currentTab->filePath, [currTab] { scheduleReloadTab(currTab); });

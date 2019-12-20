@@ -545,23 +545,23 @@ LRESULT OnDDEInitiate(HWND hwnd, WPARAM wparam, LPARAM lparam) {
 static const WCHAR* HandleSyncCmd(const WCHAR* cmd, DDEACK& ack) {
     AutoFreeWstr pdfFile, srcFile;
     BOOL line = 0, col = 0, newWindow = 0, setFocus = 0;
-    const WCHAR* next =
-        str::Parse(cmd, L"[" DDECOMMAND_SYNC L"(\"%S\",%? \"%S\",%u,%u)]", &pdfFile, &srcFile, &line, &col);
+    const WCHAR* next = str::Parse(cmd, L"[ForwardSearch(\"%S\",%? \"%S\",%u,%u)]", &pdfFile, &srcFile, &line, &col);
     if (!next)
-        next = str::Parse(cmd, L"[" DDECOMMAND_SYNC L"(\"%S\",%? \"%S\",%u,%u,%u,%u)]", &pdfFile, &srcFile, &line, &col,
+        next = str::Parse(cmd, L"[ForwardSearch(\"%S\",%? \"%S\",%u,%u,%u,%u)]", &pdfFile, &srcFile, &line, &col,
                           &newWindow, &setFocus);
     // allow to omit the pdffile path, so that editors don't have to know about
     // multi-file projects (requires that the PDF has already been opened)
     if (!next) {
         pdfFile.Reset();
-        next = str::Parse(cmd, L"[" DDECOMMAND_SYNC L"(\"%S\",%u,%u)]", &srcFile, &line, &col);
+        next = str::Parse(cmd, L"[ForwardSearch(\"%S\",%u,%u)]", &srcFile, &line, &col);
         if (!next)
-            next = str::Parse(cmd, L"[" DDECOMMAND_SYNC L"(\"%S\",%u,%u,%u,%u)]", &srcFile, &line, &col, &newWindow,
-                              &setFocus);
+            next =
+                str::Parse(cmd, L"[ForwardSearch(\"%S\",%u,%u,%u,%u)]", &srcFile, &line, &col, &newWindow, &setFocus);
     }
 
-    if (!next)
+    if (!next) {
         return nullptr;
+    }
 
     WindowInfo* win = nullptr;
     if (pdfFile) {
@@ -578,7 +578,7 @@ static const WCHAR* HandleSyncCmd(const WCHAR* cmd, DDEACK& ack) {
         // check if any opened PDF has sync information for the source file
         win = FindWindowInfoBySyncFile(srcFile, true);
         if (win && newWindow) {
-            LoadArgs args(win->currentTab->filePath);
+            LoadArgs args(win->currentTab->filePath, nullptr);
             win = LoadDocument(args);
         }
     }
@@ -618,7 +618,10 @@ static const WCHAR* HandleOpenCmd(const WCHAR* cmd, DDEACK& ack) {
         return nullptr;
     }
 
-    WindowInfo* win = FindWindowInfoByFile(pdfFile, !newWindow);
+    // TODO: maybe focus after LoadDocument()
+    // see https://github.com/sumatrapdfreader/sumatrapdf/issues/1340
+    bool focusTab = false; // !newWindow
+    WindowInfo* win = FindWindowInfoByFile(pdfFile, focusTab);
     if (newWindow || !win) {
         LoadArgs args(pdfFile, !newWindow ? win : nullptr);
         win = LoadDocument(args);
