@@ -1511,8 +1511,9 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     } else if (!win || !openNewTab && !args.forceReuse && win->IsDocLoaded()) {
         WindowInfo* currWin = win;
         win = CreateWindowInfo();
-        if (!win)
+        if (!win) {
             return nullptr;
+        }
         args.win = win;
         args.isNewWindow = true;
         if (currWin) {
@@ -1557,7 +1558,7 @@ WindowInfo* LoadDocument(LoadArgs& args) {
         args.forceReuse = false;
     } else {
         // TODO: figure out why happens. seen in 2019/12/11/3e06348ed000006.txt
-        SendCrashReportIf(!args.forceReuse && !openNewTab);
+        SubmitCrashIf(!args.forceReuse && !openNewTab);
         if (openNewTab) {
             SaveCurrentTabInfo(args.win);
         }
@@ -1589,7 +1590,13 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     }
 
     auto currTab = win->currentTab;
-    CrashIf(currTab->watcher);
+
+    // TODO: figure why we hit this.
+    // happens when opening 3 files via "Open With"
+    // the first file is loaded via cmd-line arg, the rest
+    // via DDE Open command.
+    SubmitCrashIf(currTab->watcher);
+
     if (gGlobalPrefs->reloadModifiedDocuments) {
         currTab->watcher = FileWatcherSubscribe(win->currentTab->filePath, [currTab] { scheduleReloadTab(currTab); });
     }
@@ -1597,8 +1604,9 @@ WindowInfo* LoadDocument(LoadArgs& args) {
     if (gGlobalPrefs->rememberOpenedFiles) {
         CrashIf(!str::Eq(fullPath, win->currentTab->filePath));
         DisplayState* ds = gFileHistory.MarkFileLoaded(fullPath);
-        if (gGlobalPrefs->showStartPage)
+        if (gGlobalPrefs->showStartPage) {
             CreateThumbnailForFile(win, *ds);
+        }
         // TODO: this seems to save the state of file that we just opened
         // add a way to skip saving currTab?
         prefs::Save();
@@ -1606,8 +1614,9 @@ WindowInfo* LoadDocument(LoadArgs& args) {
 
     // Add the file also to Windows' recently used documents (this doesn't
     // happen automatically on drag&drop, reopening from history, etc.)
-    if (HasPermission(Perm_DiskAccess) && !gPluginMode && !IsStressTesting())
+    if (HasPermission(Perm_DiskAccess) && !gPluginMode && !IsStressTesting()) {
         SHAddToRecentDocs(SHARD_PATH, fullPath);
+    }
 
     return win;
 }

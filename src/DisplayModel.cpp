@@ -927,7 +927,7 @@ PointI DisplayModel::GetContentStart(int pageNo) {
 void DisplayModel::GoToPage(int pageNo, int scrollY, bool addNavPt, int scrollX) {
     if (!ValidPageNo(pageNo)) {
         logf("DisplayModel::GoToPage: invalid pageNo: %d, nPages: %d\n", pageNo, engine->PageCount());
-        SendCrashReportIf(ValidPageNo(pageNo));
+        SubmitCrashIf(ValidPageNo(pageNo));
         return;
     }
 

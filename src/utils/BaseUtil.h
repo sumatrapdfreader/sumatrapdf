@@ -292,7 +292,7 @@ inline void CrashIfDebugOnlyFunc(bool cond) {
     }                               \
     while_0_nowarn
 
-#define SendCrashReportIf(cond)       \
+#define SubmitCrashIf(cond)           \
     do {                              \
         __analysis_assume(!(cond));   \
         SendCrashIfFunc(cond, #cond); \

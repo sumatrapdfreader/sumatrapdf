@@ -513,7 +513,7 @@ void EbookController::GoToPage(int pageNo, bool addNavPoint) {
     if (!pages) {
         // TODO: remove when we figure out why this happens
         logf("EbookController::GoToPage(): pageNo: %d, currentPageNo: %d\n", pageNo, this->currPageNo);
-        SendCrashReportIf(!pages);
+        SubmitCrashIf(!pages);
         return;
     }
 

@@ -609,12 +609,14 @@ static const WCHAR* HandleSyncCmd(const WCHAR* cmd, DDEACK& ack) {
 static const WCHAR* HandleOpenCmd(const WCHAR* cmd, DDEACK& ack) {
     AutoFreeWstr pdfFile;
     BOOL newWindow = 0, setFocus = 0, forceRefresh = 0;
-    const WCHAR* next = str::Parse(cmd, L"[" DDECOMMAND_OPEN L"(\"%S\")]", &pdfFile);
-    if (!next)
-        next =
-            str::Parse(cmd, L"[" DDECOMMAND_OPEN L"(\"%S\",%u,%u,%u)]", &pdfFile, &newWindow, &setFocus, &forceRefresh);
-    if (!next)
+    const WCHAR* next = str::Parse(cmd, L"[Open(\"%S\")]", &pdfFile);
+    if (!next) {
+        const WCHAR* pat = L"[Open(\"%S\",%u,%u,%u)]";
+        next = str::Parse(cmd, pat, &pdfFile, &newWindow, &setFocus, &forceRefresh);
+    }
+    if (!next) {
         return nullptr;
+    }
 
     WindowInfo* win = FindWindowInfoByFile(pdfFile, !newWindow);
     if (newWindow || !win) {
@@ -625,15 +627,18 @@ static const WCHAR* HandleOpenCmd(const WCHAR* cmd, DDEACK& ack) {
         forceRefresh = 0;
     }
 
-    AssertCrash(!win || !win->IsAboutWindow());
-    if (!win)
+    CrashIf(win && win->IsAboutWindow());
+    if (!win) {
         return next;
+    }
 
     ack.fAck = 1;
-    if (forceRefresh)
+    if (forceRefresh) {
         ReloadDocument(win, true);
-    if (setFocus)
+    }
+    if (setFocus) {
         win->Focus();
+    }
 
     return next;
 }
@@ -642,17 +647,20 @@ static const WCHAR* HandleOpenCmd(const WCHAR* cmd, DDEACK& ack) {
 // [<DDECOMMAND_GOTO>("<pdffilepath>", "<destination name>")]
 static const WCHAR* HandleGotoCmd(const WCHAR* cmd, DDEACK& ack) {
     AutoFreeWstr pdfFile, destName;
-    const WCHAR* next = str::Parse(cmd, L"[" DDECOMMAND_GOTO L"(\"%S\",%? \"%S\")]", &pdfFile, &destName);
-    if (!next)
+    const WCHAR* next = str::Parse(cmd, L"[GotoNamedDest(\"%S\",%? \"%S\")]", &pdfFile, &destName);
+    if (!next) {
         return nullptr;
+    }
 
     WindowInfo* win = FindWindowInfoByFile(pdfFile, true);
-    if (!win)
+    if (!win) {
         return next;
+    }
     if (!win->IsDocLoaded()) {
         ReloadDocument(win);
-        if (!win->IsDocLoaded())
+        if (!win->IsDocLoaded()) {
             return next;
+        }
     }
 
     win->linkHandler->GotoNamedDest(destName);
@@ -666,18 +674,21 @@ static const WCHAR* HandleGotoCmd(const WCHAR* cmd, DDEACK& ack) {
 static const WCHAR* HandlePageCmd(const WCHAR* cmd, DDEACK& ack) {
     AutoFreeWstr pdfFile;
     UINT page;
-    const WCHAR* next = str::Parse(cmd, L"[" DDECOMMAND_PAGE L"(\"%S\",%u)]", &pdfFile, &page);
-    if (!next)
+    const WCHAR* next = str::Parse(cmd, L"GotoPage(\"%S\",%u)]", &pdfFile, &page);
+    if (!next) {
         return nullptr;
+    }
 
     // check if the PDF is already opened
     WindowInfo* win = FindWindowInfoByFile(pdfFile, true);
-    if (!win)
+    if (!win) {
         return next;
+    }
     if (!win->IsDocLoaded()) {
         ReloadDocument(win);
-        if (!win->IsDocLoaded())
+        if (!win->IsDocLoaded()) {
             return next;
+        }
     }
 
     if (!win->ctrl->ValidPageNo(page))
@@ -695,28 +706,34 @@ static const WCHAR* HandleSetViewCmd(const WCHAR* cmd, DDEACK& ack) {
     AutoFreeWstr pdfFile, viewMode;
     float zoom = INVALID_ZOOM;
     PointI scroll(-1, -1);
-    const WCHAR* next = str::Parse(cmd, L"[" DDECOMMAND_SETVIEW L"(\"%S\",%? \"%S\",%f)]", &pdfFile, &viewMode, &zoom);
-    if (!next)
-        next = str::Parse(cmd, L"[" DDECOMMAND_SETVIEW L"(\"%S\",%? \"%S\",%f,%d,%d)]", &pdfFile, &viewMode, &zoom,
-                          &scroll.x, &scroll.y);
-    if (!next)
+    const WCHAR* next = str::Parse(cmd, L"[SetView(\"%S\",%? \"%S\",%f)]", &pdfFile, &viewMode, &zoom);
+    if (!next) {
+        next =
+            str::Parse(cmd, L"[SetView(\"%S\",%? \"%S\",%f,%d,%d)]", &pdfFile, &viewMode, &zoom, &scroll.x, &scroll.y);
+    }
+    if (!next) {
         return nullptr;
+    }
 
     WindowInfo* win = FindWindowInfoByFile(pdfFile, true);
-    if (!win)
+    if (!win) {
         return next;
+    }
     if (!win->IsDocLoaded()) {
         ReloadDocument(win);
-        if (!win->IsDocLoaded())
+        if (!win->IsDocLoaded()) {
             return next;
+        }
     }
 
     DisplayMode mode = prefs::conv::ToDisplayMode(viewMode, DM_AUTOMATIC);
-    if (mode != DM_AUTOMATIC)
+    if (mode != DM_AUTOMATIC) {
         SwitchToDisplayMode(win, mode);
+    }
 
-    if (zoom != INVALID_ZOOM)
+    if (zoom != INVALID_ZOOM) {
         ZoomToSelection(win, zoom);
+    }
 
     if ((scroll.x != -1 || scroll.y != -1) && win->AsFixed()) {
         DisplayModel* dm = win->AsFixed();
@@ -742,16 +759,21 @@ static void HandleDdeCmds(const WCHAR* cmd, DDEACK& ack) {
 
     while (!str::IsEmpty(cmd)) {
         const WCHAR* nextCmd = nullptr;
-        if (!nextCmd)
+        if (!nextCmd) {
             nextCmd = HandleSyncCmd(cmd, ack);
-        if (!nextCmd)
+        }
+        if (!nextCmd) {
             nextCmd = HandleOpenCmd(cmd, ack);
-        if (!nextCmd)
+        }
+        if (!nextCmd) {
             nextCmd = HandleGotoCmd(cmd, ack);
-        if (!nextCmd)
+        }
+        if (!nextCmd) {
             nextCmd = HandlePageCmd(cmd, ack);
-        if (!nextCmd)
+        }
+        if (!nextCmd) {
             nextCmd = HandleSetViewCmd(cmd, ack);
+        }
         if (!nextCmd) {
             AutoFreeWstr tmp;
             nextCmd = str::Parse(cmd, L"%S]", &tmp);

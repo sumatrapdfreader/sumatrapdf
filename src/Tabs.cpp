@@ -628,7 +628,7 @@ void CreateTabbar(WindowInfo* win) {
 static NO_INLINE void VerifyTabInfo(WindowInfo* win, TabInfo* tdata) {
     CrashIf(tdata->ctrl != win->ctrl);
     AutoFreeWstr winTitle(win::GetText(win->hwndFrame));
-    SendCrashReportIf(!str::Eq(winTitle.Get(), tdata->frameTitle));
+    SubmitCrashIf(!str::Eq(winTitle.Get(), tdata->frameTitle));
     bool expectedTocVisibility = tdata->showToc; // if not in presentation mode
     if (PM_DISABLED != win->presentation) {
         expectedTocVisibility = false; // PM_BLACK_SCREEN, PM_WHITE_SCREEN
@@ -636,8 +636,8 @@ static NO_INLINE void VerifyTabInfo(WindowInfo* win, TabInfo* tdata) {
             expectedTocVisibility = tdata->showTocPresentation;
         }
     }
-    SendCrashReportIf(win->tocVisible != expectedTocVisibility);
-    SendCrashReportIf(tdata->canvasRc != win->canvasRc);
+    SubmitCrashIf(win->tocVisible != expectedTocVisibility);
+    SubmitCrashIf(tdata->canvasRc != win->canvasRc);
 }
 
 // Must be called when the active tab is losing selection.
