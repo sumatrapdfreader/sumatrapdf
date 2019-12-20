@@ -747,7 +747,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     mui::Initialize();
     uitask::Initialize();
 
-    //logToFile("C:\\Users\\kjk\\Downloads\\sumlog.txt");
+    // logToFile("C:\\Users\\kjk\\Downloads\\sumlog.txt");
 
     log("Starting SumatraPDF\n");
 
@@ -984,7 +984,6 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     }
 
     gIsStartup = false;
-
 
     if (i.fileNames.size() > 0 && !win) {
         // failed to create any window, even though there

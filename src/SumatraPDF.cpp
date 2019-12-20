@@ -1199,10 +1199,17 @@ void ReloadDocument(WindowInfo* win, bool autorefresh) {
     UpdateDisplayStateWindowRect(win, *ds);
     UpdateSidebarDisplayState(win, tab, ds);
     // Set the windows state based on the actual window's placement
-    ds->windowState = win->isFullScreen ? WIN_STATE_FULLSCREEN
-                                        : IsZoomed(win->hwndFrame)
-                                              ? WIN_STATE_MAXIMIZED
-                                              : IsIconic(win->hwndFrame) ? WIN_STATE_MINIMIZED : WIN_STATE_NORMAL;
+    int wstate = WIN_STATE_NORMAL;
+    if (win->isFullScreen) {
+        wstate = WIN_STATE_FULLSCREEN;
+    } else {
+        if (IsZoomed(win->hwndFrame)) {
+            wstate = WIN_STATE_MAXIMIZED;
+        } else if (IsIconic(win->hwndFrame)) {
+            wstate = WIN_STATE_MINIMIZED;
+        }
+    }
+    ds->windowState = wstate;
     ds->useDefaultState = false;
 
     LoadArgs args(tab->filePath, win);

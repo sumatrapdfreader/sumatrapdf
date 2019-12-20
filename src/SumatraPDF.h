@@ -136,6 +136,7 @@ WindowInfo* FindWindowInfoByController(Controller* ctrl);
 struct LoadArgs {
     explicit LoadArgs(const WCHAR* fileName, WindowInfo* win) {
         this->fileName = fileName;
+        this->win = win;
     }
 
     const WCHAR* fileName = nullptr;
