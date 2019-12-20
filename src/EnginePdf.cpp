@@ -395,6 +395,7 @@ class PdfEngineImpl : public EngineBase {
 
     Vec<PageElement*>* GetElements(int pageNo) override;
     PageElement* GetElementAtPos(int pageNo, PointD pt) override;
+    RenderedBitmap* GetImageForPageElement(PageElement*) override;
 
     PageDestination* GetNamedDest(const WCHAR* name) override;
     DocTocTree* GetTocTree() override;
@@ -480,11 +481,7 @@ static PageElement* newPdfImage(PdfEngineImpl* engine, int pageNo, fz_rect rect,
     res->pageNo = pageNo;
     res->kind = kindPageElementImage;
     res->rect = fz_rect_to_RectD(rect);
-    res->getImage = [=]() -> RenderedBitmap* {
-        auto pn = res->pageNo;
-        auto r = res->rect;
-        return engine->GetPageImage(pn, r, imageIdx);
-    };
+    res->imageID = (int)imageIdx;
     return res;
 }
 
@@ -1352,6 +1349,13 @@ Vec<PageElement*>* PdfEngineImpl::GetElements(int pageNo) {
 
     els->Reverse();
     return els;
+}
+
+RenderedBitmap* PdfEngineImpl::GetImageForPageElement(PageElement* pel) {
+    auto r = pel->rect;
+    int pageNo = pel->pageNo;
+    int imageID = pel->imageID;
+    return GetPageImage(pageNo, r, imageID);
 }
 
 void PdfEngineImpl::LinkifyPageText(FzPageInfo* pageInfo) {

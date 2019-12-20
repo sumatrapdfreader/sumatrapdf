@@ -161,7 +161,6 @@ class PageElement {
     PageDestination* dest = nullptr;
 
     int imageID = 0;
-    std::function<RenderedBitmap*(void)> getImage = nullptr;
 
     ~PageElement() {
         free(value);
@@ -192,15 +191,6 @@ class PageElement {
     // (the result is owned by the PageElement and MUST NOT be deleted)
     PageDestination* AsLink() {
         return dest;
-    }
-
-    // if this element is an image, this returns it
-    // caller must delete the result
-    RenderedBitmap* GetImage() {
-        if (getImage) {
-            return getImage();
-        }
-        return nullptr;
     }
 };
 

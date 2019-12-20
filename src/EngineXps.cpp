@@ -213,6 +213,8 @@ class XpsEngineImpl : public EngineBase {
     bool SupportsAnnotation(bool forSaving = false) const override;
     void UpdateUserAnnotations(Vec<PageAnnotation>* list) override;
 
+    RenderedBitmap* GetImageForPageElement(PageElement*) override;
+
     bool BenchLoadPage(int pageNo) override {
         return GetFzPageInfo(pageNo) != nullptr;
     }
@@ -277,13 +279,10 @@ static DocTocItem* newXpsTocItem(WCHAR* title, PageDestination* dest) {
 
 static PageElement* newXpsImage(XpsEngineImpl* engine, int pageNo, fz_rect rect, size_t imageIdx) {
     auto res = new PageElement();
+    res->kind = kindPageElementImage;
     res->pageNo = pageNo;
     res->rect = fz_rect_to_RectD(rect);
-    res->kind = kindPageElementImage;
-    res->getImage = [=]() -> RenderedBitmap* {
-        auto r = res->rect;
-        return engine->GetPageImage(pageNo, r, imageIdx);
-    };
+    res->imageID = (int)imageIdx;
     return res;
 }
 
@@ -854,6 +853,13 @@ Vec<PageElement*>* XpsEngineImpl::GetElements(int pageNo) {
 
     els->Reverse();
     return els;
+}
+
+RenderedBitmap* XpsEngineImpl::GetImageForPageElement(PageElement* pel) {
+    auto r = pel->rect;
+    int pageNo = pel->pageNo;
+    int imageID = pel->imageID;
+    return GetPageImage(pageNo, r, imageID);
 }
 
 void XpsEngineImpl::LinkifyPageText(FzPageInfo* pageInfo) {

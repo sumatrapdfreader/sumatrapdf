@@ -192,24 +192,12 @@ static PageElement* newEbookLink(DrawInstr* link, RectI rect, PageDestination* d
     return res;
 }
 
-static RenderedBitmap* getImageFromData(ImageData* id) {
-    HBITMAP hbmp;
-    Bitmap* bmp = BitmapFromData(id->data, id->len);
-    if (!bmp || bmp->GetHBITMAP((ARGB)Color::White, &hbmp) != Ok) {
-        delete bmp;
-        return nullptr;
-    }
-    SizeI size(bmp->GetWidth(), bmp->GetHeight());
-    delete bmp;
-    return new RenderedBitmap(hbmp, size);
-}
-
-static PageElement* newImageDataElement(int pageNo, ImageData* id, RectI bbox) {
+static PageElement* newImageDataElement(int pageNo, RectI bbox, int imageID) {
     auto res = new PageElement();
     res->kind = kindPageElementImage;
     res->pageNo = pageNo;
     res->rect = bbox.Convert<double>();
-    res->getImage = [=]() -> RenderedBitmap* { return getImageFromData(id); };
+    res->imageID = imageID;
     return res;
 }
 
@@ -498,10 +486,12 @@ Vec<PageElement*>* EbookEngine::GetElements(int pageNo) {
     Vec<PageElement*>* els = new Vec<PageElement*>();
 
     Vec<DrawInstr>* pageInstrs = GetHtmlPage(pageNo);
-    for (DrawInstr& i : *pageInstrs) {
+    size_t n = pageInstrs->size();
+    for (size_t idx = 0; idx < n; idx++) {
+        DrawInstr& i = pageInstrs->at(idx);
         if (DrawInstrType::Image == i.type) {
             auto box = GetInstrBbox(i, pageBorder);
-            auto el = newImageDataElement(pageNo, &i.img, box);
+            auto el = newImageDataElement(pageNo, box, (int)idx);
             els->Append(el);
         } else if (DrawInstrType::LinkStart == i.type && !i.bbox.IsEmptyArea()) {
             PageElement* link = CreatePageLink(&i, GetInstrBbox(i, pageBorder), pageNo);
@@ -514,8 +504,25 @@ Vec<PageElement*>* EbookEngine::GetElements(int pageNo) {
     return els;
 }
 
+static RenderedBitmap* getImageFromData(ImageData id) {
+    HBITMAP hbmp;
+    Bitmap* bmp = BitmapFromData(id.data, id.len);
+    if (!bmp || bmp->GetHBITMAP((ARGB)Color::White, &hbmp) != Ok) {
+        delete bmp;
+        return nullptr;
+    }
+    SizeI size(bmp->GetWidth(), bmp->GetHeight());
+    delete bmp;
+    return new RenderedBitmap(hbmp, size);
+}
+
 RenderedBitmap* EbookEngine::GetImageForPageElement(PageElement* el) {
-    return nullptr;
+    int pageNo = el->pageNo;
+    int idx = el->imageID;
+    Vec<DrawInstr>* pageInstrs = GetHtmlPage(pageNo);
+    DrawInstr& i = pageInstrs->at(idx);
+    CrashIf(i.type != DrawInstrType::Image);
+    return getImageFromData(i.img);
 }
 
 PageElement* EbookEngine::GetElementAtPos(int pageNo, PointD pt) {

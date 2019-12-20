@@ -77,10 +77,12 @@ class ImagesEngine : public EngineBase {
     Vec<PageElement*>* GetElements(int pageNo) override;
     PageElement* GetElementAtPos(int pageNo, PointD pt) override;
 
+    RenderedBitmap* GetImageForPageElement(PageElement*) override;
+
     bool BenchLoadPage(int pageNo) override {
         ImagePage* page = GetPage(pageNo);
         if (page) {
-            DropPage(page, false, false);
+            DropPage(page, false);
         }
         return page != nullptr;
     }
@@ -98,7 +100,7 @@ class ImagesEngine : public EngineBase {
     virtual RectD LoadMediabox(int pageNo) = 0;
 
     ImagePage* GetPage(int pageNo, bool tryOnly = false);
-    void DropPage(ImagePage* page, bool forceRemove, bool forceDelete);
+    void DropPage(ImagePage* page, bool forceRemove);
 };
 
 ImagesEngine::ImagesEngine() {
@@ -113,14 +115,10 @@ ImagesEngine::~ImagesEngine() {
     EnterCriticalSection(&cacheAccess);
     while (pageCache.size() > 0) {
         ImagePage* lastPage = pageCache.Last();
-        // TODO: this is because we can no longer drop
-        // the page we get with GetPage() and store in PageElement
-        // maybe just ignore refcounting
-        // CrashIf(lastPage->refs != 1);
-        DropPage(lastPage, true, true);
-        }
+        CrashIf(lastPage->refs != 1);
+        DropPage(lastPage, true);
+    }
     LeaveCriticalSection(&cacheAccess);
-
     DeleteCriticalSection(&cacheAccess);
 }
 
@@ -173,7 +171,7 @@ RenderedBitmap* ImagesEngine::RenderBitmap(int pageNo, float zoom, int rotation,
     imgAttrs.SetWrapMode(WrapModeTileFlipXY);
     Status ok = g.DrawImage(page->bmp, pageRcI.ToGdipRect(), 0, 0, pageRcI.dx, pageRcI.dy, UnitPixel, &imgAttrs);
 
-    DropPage(page, false, false);
+    DropPage(page, false);
     DeleteDC(hDC);
 
     if (ok != Ok) {
@@ -209,35 +207,20 @@ RectD ImagesEngine::Transform(RectD rect, int pageNo, float zoom, int rotation, 
     return rect;
 }
 
-static RenderedBitmap* imageFromImagePage(ImagePage* page) {
-    HBITMAP hbmp;
-    auto bmp = page->bmp;
-    int dx = bmp->GetWidth();
-    int dy = bmp->GetHeight();
-    SizeI s{dx, dy};
-    auto status = bmp->GetHBITMAP((ARGB)Color::White, &hbmp);
-    if (status != Ok) {
-        return nullptr;
-    }
-    return new RenderedBitmap(hbmp, s);
-}
-
-// TODO: need to call engine->DropPage(page)
-// when page is deleted, but we no longer can do
-// it in ImageElement destructor. Maybe remember engine and ImagePage?
-// or just don't increase the refcount in GetPage()
 static PageElement* newImageElement(ImagePage* page) {
     auto res = new PageElement();
-    res->pageNo = page->pageNo;
     res->kind = kindPageElementImage;
+    res->pageNo = page->pageNo;
     int dx = page->bmp->GetWidth();
     int dy = page->bmp->GetHeight();
     res->rect = RectD(0, 0, dx, dy);
-    res->getImage = [=]() -> RenderedBitmap* { return imageFromImagePage(page); };
+    res->imageID = page->pageNo;
     return res;
 }
 
 Vec<PageElement*>* ImagesEngine::GetElements(int pageNo) {
+    // TODO: this is inefficient because we don't need to
+    // decompress the image. just need to know the size
     ImagePage* page = GetPage(pageNo);
     if (!page) {
         return nullptr;
@@ -246,6 +229,7 @@ Vec<PageElement*>* ImagesEngine::GetElements(int pageNo) {
     Vec<PageElement*>* els = new Vec<PageElement*>();
     auto el = newImageElement(page);
     els->Append(el);
+    DropPage(page, false);
     return els;
 }
 
@@ -257,7 +241,26 @@ PageElement* ImagesEngine::GetElementAtPos(int pageNo, PointD pt) {
     if (!page) {
         return nullptr;
     }
-    return newImageElement(page);
+    auto res = newImageElement(page);
+    DropPage(page, false);
+    return res;
+}
+
+RenderedBitmap* ImagesEngine::GetImageForPageElement(PageElement* pel) {
+    int pageNo = pel->imageID;
+    auto page = GetPage(pageNo);
+
+    HBITMAP hbmp;
+    auto bmp = page->bmp;
+    int dx = bmp->GetWidth();
+    int dy = bmp->GetHeight();
+    SizeI s{dx, dy};
+    auto status = bmp->GetHBITMAP((ARGB)Color::White, &hbmp);
+    DropPage(page, false);
+    if (status != Ok) {
+        return nullptr;
+    }
+    return new RenderedBitmap(hbmp, s);
 }
 
 std::string_view ImagesEngine::GetFileData() {
@@ -301,7 +304,7 @@ ImagePage* ImagesEngine::GetPage(int pageNo, bool tryOnly) {
         // (i.e. formats which aren't IsGdiPlusNativeFormat)?
         if (pageCache.size() >= MAX_IMAGE_PAGE_CACHE) {
             CrashIf(pageCache.size() != MAX_IMAGE_PAGE_CACHE);
-            DropPage(pageCache.Last(), true, false);
+            DropPage(pageCache.Last(), true);
         }
         result = new ImagePage(pageNo, nullptr);
         result->bmp = LoadBitmap(pageNo, result->ownBmp);
@@ -323,9 +326,7 @@ ImagePage* ImagesEngine::GetPage(int pageNo, bool tryOnly) {
     return result;
 }
 
-// TODO: forceDelete is temporary until I fix ref-counting caused by
-// returning ImagePage as part of PageElement
-void ImagesEngine::DropPage(ImagePage* page, bool forceRemove, bool forceDelete) {
+void ImagesEngine::DropPage(ImagePage* page, bool forceRemove) {
     ScopedCritSec scope(&cacheAccess);
     page->refs--;
     CrashIf(page->refs < 0);
@@ -334,7 +335,7 @@ void ImagesEngine::DropPage(ImagePage* page, bool forceRemove, bool forceDelete)
         pageCache.Remove(page);
     }
 
-    if (0 == page->refs || forceDelete) {
+    if (0 == page->refs) {
         if (page->ownBmp) {
             delete page->bmp;
         }
@@ -539,7 +540,7 @@ RectD ImageEngineImpl::LoadMediabox(int pageNo) {
     ImagePage* page = GetPage(pageNo, MAX_IMAGE_PAGE_CACHE == pageCache.size());
     if (page) {
         RectD mbox(0, 0, page->bmp->GetWidth(), page->bmp->GetHeight());
-        DropPage(page, false, false);
+        DropPage(page, false);
         return mbox;
     }
 
@@ -573,7 +574,7 @@ bool ImageEngineImpl::SaveFileAsPDF(const char* pdfFileName, bool includeUserAnn
     for (int i = 2; i <= PageCount() && ok; i++) {
         ImagePage* page = GetPage(i);
         ok = page && c->AddImagePage(page->bmp, dpi);
-        DropPage(page, false, false);
+        DropPage(page, false);
     }
     if (ok) {
         c->CopyProperties(this);
@@ -757,7 +758,7 @@ bool ImageDirEngineImpl::LoadImageDir(const WCHAR* dirName) {
     ImagePage* page = GetPage(1);
     if (page) {
         fileDPI = page->bmp->GetHorizontalResolution();
-        DropPage(page, false, false);
+        DropPage(page, false);
     }
     pageCount = (int)mediaboxes.size();
     return true;
@@ -1171,7 +1172,7 @@ RectD CbxEngineImpl::LoadMediabox(int pageNo) {
     ImagePage* page = GetPage(pageNo, MAX_IMAGE_PAGE_CACHE == pageCache.size());
     if (page) {
         RectD mbox(0, 0, page->bmp->GetWidth(), page->bmp->GetHeight());
-        DropPage(page, false, false);
+        DropPage(page, false);
         return mbox;
     }
 

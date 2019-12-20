@@ -661,7 +661,7 @@ void OnContextMenu(WindowInfo* win, int x, int y) {
 
         case IDM_COPY_IMAGE:
             if (pageEl) {
-                RenderedBitmap* bmp = pageEl->GetImage();
+                RenderedBitmap* bmp = dm->GetEngine()->GetImageForPageElement(pageEl);
                 if (bmp) {
                     CopyImageToClipboard(bmp->GetBitmap(), false);
                 }
