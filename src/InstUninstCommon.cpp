@@ -94,8 +94,9 @@ int dpiAdjust(int value) {
 }
 
 void NotifyFailed(const WCHAR* msg) {
-    if (!gInstUninstGlobals.firstError)
+    if (!gInstUninstGlobals.firstError) {
         gInstUninstGlobals.firstError = str::Dup(msg);
+    }
     logf(L"NotifyFailed: %s\n", msg);
 }
 

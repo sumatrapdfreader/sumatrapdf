@@ -179,24 +179,27 @@ static bool ExtractInstallerFiles() {
 /* Caller needs to free() the result. */
 static WCHAR* GetDefaultPdfViewer() {
     AutoFreeWstr buf(ReadRegStr(HKEY_CURRENT_USER, REG_EXPLORER_PDF_EXT L"\\UserChoice", PROG_ID));
-    if (buf)
+    if (buf) {
         return buf.StealData();
+    }
     return ReadRegStr(HKEY_CLASSES_ROOT, L".pdf", nullptr);
 }
 
 static bool IsPdfFilterInstalled() {
     const WCHAR* key = L".pdf\\PersistentHandler";
     AutoFreeWstr handler_iid(ReadRegStr(HKEY_CLASSES_ROOT, key, nullptr));
-    if (!handler_iid)
+    if (!handler_iid) {
         return false;
+    }
     return str::EqI(handler_iid, SZ_PDF_FILTER_HANDLER);
 }
 
 static bool IsPdfPreviewerInstalled() {
     const WCHAR* key = L".pdf\\shellex\\{8895b1c6-b41f-4c1c-a562-0d564250836f}";
     AutoFreeWstr handler_iid(ReadRegStr(HKEY_CLASSES_ROOT, key, nullptr));
-    if (!handler_iid)
+    if (!handler_iid) {
         return false;
+    }
     return str::EqI(handler_iid, SZ_PDF_PREVIEW_CLSID);
 }
 
@@ -265,9 +268,12 @@ static bool WriteUninstallerRegistryInfo(HKEY hkey) {
 }
 
 static bool WriteUninstallerRegistryInfos() {
-    bool ok1 = WriteUninstallerRegistryInfo(HKEY_LOCAL_MACHINE);
-    bool ok2 = WriteUninstallerRegistryInfo(HKEY_CURRENT_USER);
-    return ok1 || ok2;
+    // we only want to write one of those
+    bool ok = WriteUninstallerRegistryInfo(HKEY_LOCAL_MACHINE);
+    if (ok) {
+        return true;
+    }
+    return WriteUninstallerRegistryInfo(HKEY_CURRENT_USER);
 }
 
 // https://msdn.microsoft.com/en-us/library/windows/desktop/cc144154(v=vs.85).aspx
@@ -288,9 +294,11 @@ static bool WriteWin10Registry(HKEY hkey) {
 }
 
 static bool ListAsDefaultProgramWin10() {
-    bool ok1 = WriteWin10Registry(HKEY_LOCAL_MACHINE);
-    bool ok2 = WriteWin10Registry(HKEY_CURRENT_USER);
-    return ok1 || ok2;
+    bool ok = WriteWin10Registry(HKEY_LOCAL_MACHINE);
+    if (ok) {
+        return true;
+    }
+    return WriteWin10Registry(HKEY_CURRENT_USER);
 }
 
 static bool ListAsDefaultProgramPreWin10(HKEY hkey) {
@@ -309,9 +317,8 @@ static bool ListAsDefaultProgramPreWin10(HKEY hkey) {
     bool ok = true;
     for (int i = 0; nullptr != gSupportedExts[i]; i++) {
         WCHAR* ext = gSupportedExts[i];
-        WCHAR* name = str::Join(L"Software\\Classes\\", ext, L"\\OpenWithList\\" EXENAME);
-        ok &= CreateRegKey(hkey, name);
-        free(name);
+        AutoFreeWstr name = str::Join(L"Software\\Classes\\", ext, L"\\OpenWithList\\" EXENAME);
+        ok &= CreateRegKey(hkey, name.get());
     }
     return ok;
 }
