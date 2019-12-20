@@ -753,6 +753,7 @@ bool ImageDirEngineImpl::LoadImageDir(const WCHAR* dirName) {
     pageFileNames.SortNatural();
 
     mediaboxes.AppendBlanks(pageFileNames.size());
+    pageCount = (int)mediaboxes.size();
 
     // TODO: better handle the case where images have different resolutions
     ImagePage* page = GetPage(1);
@@ -760,7 +761,6 @@ bool ImageDirEngineImpl::LoadImageDir(const WCHAR* dirName) {
         fileDPI = page->bmp->GetHorizontalResolution();
         DropPage(page, false);
     }
-    pageCount = (int)mediaboxes.size();
     return true;
 }
 

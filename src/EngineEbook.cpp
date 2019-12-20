@@ -235,18 +235,21 @@ bool EbookEngine::ExtractPageAnchors() {
     ScopedCritSec scope(&pagesAccess);
 
     DrawInstr* baseAnchor = nullptr;
-    for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
+    for (int pageNo = 1; pageNo <= pageCount; pageNo++) {
         Vec<DrawInstr>* pageInstrs = GetHtmlPage(pageNo);
-        if (!pageInstrs)
+        if (!pageInstrs) {
             return false;
+        }
 
         for (size_t k = 0; k < pageInstrs->size(); k++) {
             DrawInstr* i = &pageInstrs->at(k);
-            if (DrawInstrType::Anchor != i->type)
+            if (DrawInstrType::Anchor != i->type) {
                 continue;
+            }
             anchors.Append(PageAnchor(i, pageNo));
-            if (k < 2 && str::StartsWith(i->str.s + i->str.len, "\" page_marker />"))
+            if (k < 2 && str::StartsWith(i->str.s + i->str.len, "\" page_marker />")) {
                 baseAnchor = i;
+            }
         }
         baseAnchors.Append(baseAnchor);
     }
@@ -787,8 +790,12 @@ bool EpubEngineImpl::FinishLoading() {
     args.textRenderMethod = mui::TextRenderMethodGdiplusQuick;
 
     pages = EpubFormatter(&args, doc).FormatAllPages(false);
-    if (!ExtractPageAnchors())
+
+    // must set pageCount before ExtractPageAnchors
+    pageCount = (int)pages->size();
+    if (!ExtractPageAnchors()) {
         return false;
+    }
 
     if (doc->IsRTL()) {
         preferredLayout = (PageLayoutType)(Layout_Book | Layout_R2L);
@@ -796,7 +803,6 @@ bool EpubEngineImpl::FinishLoading() {
         preferredLayout = Layout_Book;
     }
 
-    pageCount = (int)pages->size();
     return pageCount > 0;
 }
 
@@ -933,11 +939,11 @@ bool Fb2EngineImpl::FinishLoading() {
     }
 
     pages = Fb2Formatter(&args, doc).FormatAllPages(false);
+    // must set pageCount before ExtractPageAnchors
+    pageCount = (int)pages->size();
     if (!ExtractPageAnchors()) {
         return false;
     }
-
-    pageCount = (int)pages->size();
     return pageCount > 0;
 }
 
@@ -1048,11 +1054,11 @@ bool MobiEngineImpl::FinishLoading() {
     args.textRenderMethod = mui::TextRenderMethodGdiplusQuick;
 
     pages = MobiFormatter(&args, doc).FormatAllPages();
+    // must set pageCount before ExtractPageAnchors
+    pageCount = (int)pages->size();
     if (!ExtractPageAnchors()) {
         return false;
     }
-
-    pageCount = (int)pages->size();
     return pageCount > 0;
 }
 
@@ -1186,11 +1192,12 @@ bool PdbEngineImpl::Load(const WCHAR* fileName) {
     args.textRenderMethod = mui::TextRenderMethodGdiplusQuick;
 
     pages = HtmlFormatter(&args).FormatAllPages();
+    // must set pageCount before ExtractPageAnchors
+    pageCount = (int)pages->size();
     if (!ExtractPageAnchors()) {
         return false;
     }
 
-    pageCount = (int)pages->size();
     return pageCount > 0;
 }
 
@@ -1506,11 +1513,12 @@ bool ChmEngineImpl::Load(const WCHAR* fileName) {
     args.textRenderMethod = mui::TextRenderMethodGdiplusQuick;
 
     pages = ChmFormatter(&args, dataCache).FormatAllPages(false);
+    // must set pageCount before ExtractPageAnchors
+    pageCount = (int)pages->size();
     if (!ExtractPageAnchors()) {
         return false;
     }
 
-    pageCount = (int)pages->size();
     return pageCount > 0;
 }
 
@@ -1643,11 +1651,12 @@ bool HtmlEngineImpl::Load(const WCHAR* fileName) {
     args.textRenderMethod = mui::TextRenderMethodGdiplus;
 
     pages = HtmlFileFormatter(&args, doc).FormatAllPages(false);
+    // must set pageCount before ExtractPageAnchors
+    pageCount = (int)pages->size();
     if (!ExtractPageAnchors()) {
         return false;
     }
 
-    pageCount = (int)pages->size();
     return pageCount > 0;
 }
 
@@ -1757,11 +1766,12 @@ bool TxtEngineImpl::Load(const WCHAR* fileName) {
     args.textRenderMethod = mui::TextRenderMethodGdiplus;
 
     pages = TxtFormatter(&args).FormatAllPages(false);
+    // must set pageCount before ExtractPageAnchors
+    pageCount = (int)pages->size();
     if (!ExtractPageAnchors()) {
         return false;
     }
 
-    pageCount = (int)pages->size();
     return pageCount > 0;
 }
 
