@@ -103,6 +103,9 @@ WindowBase::WindowBase(HWND p) {
 }
 
 WindowBase::~WindowBase() {
+    if (backgroundColorBrush != nullptr) {
+        DeleteObject(backgroundColorBrush);
+    }
     Unsubclass();
     DestroyWindow(hwnd);
 }
@@ -251,6 +254,15 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         }
     }
 
+    if (WM_CTLCOLORBTN == msg) {
+        if (ColorUnset != w->backgroundColor) {
+            auto bgBrush = w->backgroundColorBrush;
+            if (bgBrush != nullptr) {
+                return (LRESULT)bgBrush;
+            }
+        }
+    }
+
     if ((WM_COMMAND == msg) && w->onCommand) {
         bool discardMsg = false;
         LRESULT res = w->onCommand(hwnd, LOWORD(wp), HIWORD(wp), lp, discardMsg);
@@ -270,11 +282,10 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     if (WM_PAINT == msg) {
         PAINTSTRUCT ps;
         BeginPaint(hwnd, &ps);
-        auto bgCol = w->backgroundColor;
-        if (bgCol != ColorUnset) {
+        auto bgBrush = w->backgroundColorBrush;
+        if (bgBrush != nullptr) {
             RECT rc = GetClientRect(hwnd);
-            ScopedBrush br = CreateSolidBrush(bgCol);
-            FillRect(ps.hdc, &ps.rcPaint, br);
+            FillRect(ps.hdc, &ps.rcPaint, bgBrush);
         }
         EndPaint(hwnd, &ps);
         return 0;
@@ -340,10 +351,20 @@ bool Window::Create() {
 
     AutoFreeWstr title = strconv::Utf8ToWchar(this->text.as_view());
     HINSTANCE hinst = GetInstance();
-    this->hwnd =
+    hwnd =
         CreateWindowExW(dwExStyle, winClass, title, dwStyle, x, y, dx, dy, parent, nullptr, hinst, (void*)this);
-
-    return this->hwnd != nullptr;
+    if (!hwnd) {
+        return false;
+    }
+    if (hfont == nullptr) {
+        hfont = GetDefaultGuiFont();
+    }
+    if (backgroundColor != ColorUnset) {
+        backgroundColorBrush = CreateSolidBrush(backgroundColor);
+    }
+    SetFont(hfont);
+    HwndSetText(hwnd, text.AsView());
+    return true;
 }
 
 Window::~Window() {

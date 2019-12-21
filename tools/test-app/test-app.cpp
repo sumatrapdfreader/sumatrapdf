@@ -81,7 +81,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     // return TestLayout(hInstance, nCmdShow);
 
     auto w = new Window();
-    w->backgroundColor = MkRgb((u8)0xee, (u8)0xee, (u8)0xee);
+    w->backgroundColor = MkRgb((u8)0xae, (u8)0xae, (u8)0xae);
     w->SetTitle("this is a title");
     w->initialPos = {100, 100, 100 + 480, 100 + 640};
     bool ok = w->Create();

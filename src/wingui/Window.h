@@ -25,6 +25,7 @@ struct WindowBase {
 
     COLORREF textColor = ColorUnset;
     COLORREF backgroundColor = ColorUnset;
+    HBRUSH backgroundColorBrush = nullptr;
 
     str::Str text;
 
