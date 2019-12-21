@@ -533,53 +533,6 @@ char* Replace(const char* s, const char* toReplace, const char* replaceWith) {
     return result.StealData();
 }
 
-// get substring of 'sv' until delim or end of string.
-// meant of iterative calls so updates 'sv' in place
-// return { nullptr, 0 } to indicate finished iteration
-std::string_view ParseUntil(std::string_view& sv, char delim) {
-    const char* start = sv.data();
-    const char* end = start + sv.size();
-    if (start == end) {
-        return {nullptr, 0};
-    }
-    const char* s = start;
-    while (s < end) {
-        if (*s == delim) {
-            break;
-        }
-        s++;
-    }
-    size_t size = (size_t)(s - start);
-    std::string_view res = {start, size};
-    size_t newSize = sv.size() - size - 1;
-    sv = {s + 1, newSize};
-    return res;
-}
-
-std::string_view ParseUntilBack(std::string_view& sv, char delim) {
-    const char* start = sv.data();
-    const char* end = start + sv.size();
-    if (start == end) {
-        return {nullptr, 0};
-    }
-    const char* s = end - 1;
-    while (s >= start) {
-        if (*s == delim) {
-            break;
-        }
-        s--;
-    }
-    size_t size = (size_t)(end - s - 1);
-    std::string_view el = {s + 1, size};
-    size_t newSize = sv.size() - size;
-    if (newSize > 0) {
-        // eat delim
-        newSize--;
-    }
-    sv = {start, newSize};
-    return el;
-}
-
 // replaces all whitespace characters with spaces, collapses several
 // consecutive spaces into one and strips heading/trailing ones
 // returns the number of removed characters

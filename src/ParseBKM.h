@@ -11,5 +11,6 @@ struct Bookmarks {
 
 void SerializeBookmarksRec(DocTocItem* node, int level, str::Str& s);
 bool ParseBookmarksFile(std::string_view path, Vec<Bookmarks*>* bkms);
+bool ExportBookmarksToFile(DocTocTree* tocTree, const char* path);
 
 Vec<Bookmarks*>* LoadAlterenativeBookmarks(std::string_view baseFileName);

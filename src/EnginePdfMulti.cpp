@@ -319,7 +319,7 @@ static Vec<std::string_view> SplitVbkmIntoRecords(std::string_view s) {
 
     // find indexes of lines that start with "file:"
     while (!tmp.empty()) {
-        auto line = str::ParseUntil(tmp, '\n');
+        auto line = sv::ParseUntil(tmp, '\n');
         if (sv::StartsWith(line, "file:")) {
             addrs.push_back(line.data());
         }
@@ -340,13 +340,6 @@ static Vec<std::string_view> SplitVbkmIntoRecords(std::string_view s) {
     return res;
 }
 
-std::string_view NormalizeNewlines(std::string_view s) {
-    str::Str tmp(s);
-    tmp.Replace("\r\n", "\n");
-    tmp.Replace("\r", "\n");
-    return tmp.StealAsView();
-}
-
 static std::string_view ParseLineFile(std::string_view s) {
     auto parts = sv::Split(s, ':', 2);
     if (parts.size() != 2) {
@@ -357,7 +350,7 @@ static std::string_view ParseLineFile(std::string_view s) {
 
 // parse a .vbkm record starting with "file:" line
 static VbkmFile* ParseVbkmRecord(std::string_view s) {
-    auto line = str::ParseUntil(s, '\n');
+    auto line = sv::ParseUntil(s, '\n');
     auto fileName = ParseLineFile(line);
     fileName = sv::TrimSpace(fileName);
     if (fileName.empty()) {
@@ -370,7 +363,7 @@ static VbkmFile* ParseVbkmRecord(std::string_view s) {
 }
 
 static ParsedVbkm* ParseVbkmFile(std::string_view d) {
-    AutoFree s = NormalizeNewlines(d);
+    AutoFree s = sv::NormalizeNewlines(d);
     auto records = SplitVbkmIntoRecords(s.as_view());
     auto n = records.size();
     if (n == 0) {

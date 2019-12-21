@@ -24,27 +24,6 @@ Bookmarks::~Bookmarks() {
     delete toc;
 }
 
-static void appendQuotedString(std::string_view sv, str::Str& out) {
-    out.Append('"');
-    const char* s = sv.data();
-    const char* end = s + sv.size();
-    while (s < end) {
-        auto c = *s;
-        switch (c) {
-            case '"':
-            case '\\':
-                out.Append('\\');
-                out.Append(c);
-                out.Append('\\');
-                break;
-            default:
-                out.Append(c);
-        }
-        s++;
-    }
-    out.Append('"');
-}
-
 // TODO: serialize open state
 void SerializeBookmarksRec(DocTocItem* node, int level, str::Str& s) {
     if (level == 0) {
@@ -57,7 +36,7 @@ void SerializeBookmarksRec(DocTocItem* node, int level, str::Str& s) {
         }
         WCHAR* title = node->Text();
         AutoFree titleA = strconv::WstrToUtf8(title);
-        appendQuotedString(titleA.as_view(), s);
+        sv::AppendQuotedString(titleA.as_view(), s);
         auto flags = node->fontFlags;
         if (bit::IsSet(flags, fontBitItalic)) {
             s.Append(" font:italic");
@@ -85,55 +64,6 @@ void SerializeBookmarksRec(DocTocItem* node, int level, str::Str& s) {
         SerializeBookmarksRec(node->child, level + 1, s);
         node = node->next;
     }
-}
-
-// update sv to skip first n characters
-static size_t skipN(std::string_view& sv, size_t n) {
-    CrashIf(n > sv.size());
-    const char* s = sv.data() + n;
-    size_t newSize = sv.size() - n;
-    sv = {s, newSize};
-    return n;
-}
-
-// advance sv to end
-static size_t advanceTo(std::string_view& sv, const char* end) {
-    const char* s = sv.data();
-    CrashIf(end < s);
-    size_t toSkip = end - s;
-    CrashIf(toSkip > sv.size());
-    skipN(sv, toSkip);
-    return toSkip;
-}
-
-// returns a substring of sv until c. updates sv to reflect the rest of the string
-static std::string_view parseUntil(std::string_view& sv, char c) {
-    const char* s = sv.data();
-    const char* start = s;
-    const char* e = s + sv.size();
-    while (s < e) {
-        if (*s == c) {
-            break;
-        }
-        s++;
-    }
-    size_t n = advanceTo(sv, s);
-    return {start, n};
-}
-
-// skips all c chars in the beginning of sv
-// returns number of chars skipped
-// TODO: rename trimLeft?
-static size_t skipChars(std::string_view& sv, char c) {
-    const char* s = sv.data();
-    const char* e = s + sv.size();
-    while (s < e) {
-        if (*s != c) {
-            break;
-        }
-        s++;
-    }
-    return advanceTo(sv, s);
 }
 
 // first line should look like:
@@ -170,7 +100,7 @@ static str::Str parseLineTitle(std::string_view& sv) {
         char c = *s;
         if (c == '"') {
             // the end
-            advanceTo(sv, s + 1);
+            sv::SkipTo(sv, s + 1);
             return res;
         }
         if (c != '\\') {
@@ -222,13 +152,13 @@ static DocTocItem* parseBookmarksLine(std::string_view line, size_t* indentOut) 
 
     // lines might start with an indentation, 2 spaces for one level
     // TODO: maybe also count tabs as one level?
-    size_t indent = skipChars(line, ' ');
+    size_t indent = sv::SkipChars(line, ' ');
     // must be multiple of 2
     if (indent % 2 != 0) {
         return nullptr;
     }
     *indentOut = indent / 2;
-    skipChars(line, ' ');
+    sv::SkipChars(line, ' ');
     // TODO: no way to indicate an error
     str::Str title = parseLineTitle(line);
     DocTocItem* res = new DocTocItem();
@@ -237,8 +167,8 @@ static DocTocItem* parseBookmarksLine(std::string_view line, size_t* indentOut) 
     // parse meta-data and page destination
     std::string_view part;
     while (line.size() > 0) {
-        skipChars(line, ' ');
-        part = parseUntil(line, ' ');
+        sv::SkipChars(line, ' ');
+        part = sv::ParseUntil(line, ' ');
 
         if (str::Eq(part, "font:bold")) {
             bit::Set(res->fontFlags, fontBitBold);
@@ -283,7 +213,7 @@ static bool parseBookmarks(std::string_view sv, Vec<Bookmarks*>* bkms) {
     Vec<DocTocItemWithIndent> items;
 
     // extract first line with title like "title: foo"
-    auto line = str::ParseUntil(sv, '\n');
+    auto line = sv::ParseUntil(sv, '\n');
     auto title = parseBookmarksTitle(line);
     if (title.data() == nullptr) {
         return false;
@@ -292,7 +222,7 @@ static bool parseBookmarks(std::string_view sv, Vec<Bookmarks*>* bkms) {
     tree->name = str::Dup(title);
     size_t indent = 0;
     while (true) {
-        line = str::ParseUntil(sv, '\n');
+        line = sv::ParseUntil(sv, '\n');
         if (line.data() == nullptr) {
             break;
         }
@@ -382,4 +312,14 @@ Vec<Bookmarks*>* LoadAlterenativeBookmarks(std::string_view baseFileName) {
 
     // TODO: read more than one
     return res;
+}
+
+bool ExportBookmarksToFile(DocTocTree* tocTree, const char* path) {
+    str::Str s;
+    s.AppendFmt("file:%s\n", path);
+    SerializeBookmarksRec(tocTree->root, 0, s);
+    // dbglogf("%s\n", s.Get());
+    str::Str fileName = path;
+    fileName.Append(".bkm");
+    return file::WriteFile(fileName.Get(), s.as_view());
 }

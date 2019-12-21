@@ -108,8 +108,6 @@ void TrimWsEnd(char* s, char*& e);
 
 size_t TransChars(char* str, const char* oldChars, const char* newChars);
 char* Replace(const char* s, const char* toReplace, const char* replaceWith);
-std::string_view ParseUntil(std::string_view& sv, char delim);
-std::string_view ParseUntilBack(std::string_view& sv, char delim);
 
 size_t NormalizeWS(char* str);
 size_t NormalizeNewlinesInPlace(char* s, char* e);

@@ -486,26 +486,6 @@ static void SetInitialExpandState(DocTocItem* item, Vec<int>& tocState) {
     }
 }
 
-static void ExportBookmarks(TabInfo* tab) {
-    auto* tocTree = tab->ctrl->GetTocTree();
-    WCHAR* path = tab->filePath.get();
-    str::Str s;
-    AutoFree pathA = strconv::WstrToUtf8(path);
-    s.AppendFmt("file:%s\n", pathA.get());
-    SerializeBookmarksRec(tocTree->root, 0, s);
-    // dbglogf("%s\n", s.Get());
-    str::WStr fileName;
-    fileName.Append(path);
-    fileName.Append(L".bkm");
-    bool ok = file::WriteFile(fileName.Get(), s.as_view());
-    str::WStr msg;
-    msg.AppendFmt(L"Exported bookmarks to file %s", fileName.Get());
-    str::WStr caption;
-    caption.Append(L"Exported bookmarks");
-    UINT type = MB_OK | MB_ICONINFORMATION | MbRtlReadingMaybe();
-    MessageBoxW(nullptr, msg.Get(), caption.Get(), type);
-}
-
 static MenuDef contextMenuDef[] = {
     {"Expand All", IDM_EXPAND_ALL, MF_NO_TRANSLATE},
     {"Colapse All", IDM_COLLAPSE_ALL, MF_NO_TRANSLATE},
@@ -522,9 +502,20 @@ static void BuildAndShowContextMenu(WindowInfo* win, int x, int y) {
     // FreeMenuOwnerDrawInfoData(popup);
     DestroyMenu(popup);
     switch (cmd) {
-        case IDM_EXPORT_BOOKMARKS:
-            ExportBookmarks(win->currentTab);
-            break;
+        case IDM_EXPORT_BOOKMARKS: {
+            auto* tab = win->currentTab;
+            auto* tocTree = tab->ctrl->GetTocTree();
+            AutoFree path = strconv::WstrToUtf8(tab->filePath.get());
+            bool ok = ExportBookmarksToFile(tocTree, path);
+            str::WStr msg;
+            msg.AppendFmt(L"Exported bookmarks to file %s", tab->filePath.get());
+            msg.Append(L".bkm");
+            str::WStr caption;
+            caption.Append(L"Exported bookmarks");
+            UINT type = MB_OK | MB_ICONINFORMATION | MbRtlReadingMaybe();
+            MessageBoxW(nullptr, msg.Get(), caption.Get(), type);
+
+        } break;
         case IDM_EXPAND_ALL:
             win->tocTreeCtrl->ExpandAll();
             break;
