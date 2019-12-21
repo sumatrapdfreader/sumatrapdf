@@ -149,7 +149,7 @@ static void ParseUntilTest() {
         std::string_view sv(txt);
         size_t i = 0;
         while (true) {
-            auto el = str::ParseUntil(sv, '\n');
+            auto el = sv::ParseUntil(sv, '\n');
             const char* got = el.data();
             if (got == nullptr) {
                 utassert(i == dimof(a));
@@ -167,7 +167,7 @@ static void ParseUntilTest() {
         std::string_view sv(txt, str::Len(txt) - 1);
         size_t i = 0;
         while (true) {
-            auto el = str::ParseUntilBack(sv, '\n');
+            auto el = sv::ParseUntilBack(sv, '\n');
             const char* got = el.data();
             if (got == nullptr) {
                 utassert(i == dimof(a));

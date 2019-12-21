@@ -69,22 +69,6 @@ void SerializeBookmarksRec(DocTocItem* node, int level, str::Str& s) {
     }
 }
 
-// sv is "key: value"
-// returns value if key is <key>
-static std::string_view parseKVLine(std::string_view sv, const char* key) {
-    auto parts = sv::Split(sv, ':', 2);
-    if (parts.size() == 1) {
-        return {};
-    }
-    auto k = parts[0];
-    if (!str::EqI(k, key)) {
-        return {};
-    }
-    auto v = parts[1];
-    v = sv::TrimSpace(v);
-    return v;
-}
-
 // parses "quoted string"
 static str::Str parseLineTitle(std::string_view& sv) {
     str::Str res;
@@ -217,14 +201,14 @@ static bool parseBookmarks(std::string_view sv, Vec<Bookmarks*>* bkms) {
 
     // first line should be "file: $file"
     auto line = sv::ParseUntil(sv, '\n');
-    auto file = parseKVLine(line, "file");
+    auto file = sv::ParseKV(line, "file");
     if (file.empty()) {
         return false;
     }
 
     // this line should be "title: $title"
     line = sv::ParseUntil(sv, '\n');
-    auto title = parseKVLine(line, "title");
+    auto title = sv::ParseKV(line, "title");
     if (title.empty()) {
         return false;
     }

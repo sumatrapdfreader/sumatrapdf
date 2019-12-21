@@ -143,6 +143,22 @@ std::string_view ParseUntilBack(std::string_view& sv, char delim) {
     return el;
 }
 
+// sv is "key: value"
+// returns value if key is <key>
+std::string_view ParseKV(std::string_view sv, const char* key) {
+    auto parts = sv::Split(sv, ':', 2);
+    if (parts.size() == 1) {
+        return {};
+    }
+    auto k = parts[0];
+    if (!str::EqI(k, key)) {
+        return {};
+    }
+    auto v = parts[1];
+    v = sv::TrimSpace(v);
+    return v;
+}
+
 // skips all c chars in the beginning of sv
 // returns number of chars skipped
 // TODO: rename trimLeft?
