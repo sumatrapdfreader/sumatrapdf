@@ -86,8 +86,9 @@ InstUninstGlobals gInstUninstGlobals = {
 
 // list of supported file extensions for which SumatraPDF.exe will
 // be registered as a candidate for the Open With dialog's suggestions
-WCHAR* gSupportedExts[] = {L".pdf", L".xps",  L".oxps", L".cbz", L".cbr",  L".cb7", L".cbt",  L".djvu",
-                           L".chm", L".mobi", L".epub", L".fb2", L".fb2z", L".tif", L".tiff", nullptr};
+WCHAR* gSupportedExts[] = {L".pdf",  L".xps",  L".oxps", L".cbz",  L".cbr", L".cb7",  L".cbt",
+                           L".djvu", L".chm",  L".mobi", L".epub", L".azw", L".azw3", L"azw4",
+                           L".fb2",  L".fb2z", L".prc", L".tif",  L".tiff", L".jp2", nullptr};
 
 int dpiAdjust(int value) {
     return (int)(value * gUiDPIFactor);
