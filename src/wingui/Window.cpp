@@ -3,6 +3,7 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/WinUtil.h"
+#include "utils/ScopedWin.h"
 
 #include "wingui/WinGui.h"
 #include "wingui/Layout.h"
@@ -219,7 +220,7 @@ void WindowBase::SetRtl(bool isRtl) {
 Kind kindWindow = "window";
 
 static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    if (WM_CREATE == msg) {
+    if (WM_NCCREATE == msg) {
         CREATESTRUCT* cs = (CREATESTRUCT*)lp;
         Window* w = (Window*)cs->lpCreateParams;
         SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)w);
@@ -237,8 +238,9 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     if (WM_NCDESTROY == msg) {
         return DefWindowProc(hwnd, msg, wp, lp);
     }
+
     if (!w) {
-        goto Exit;
+        return DefWindowProc(hwnd, msg, wp, lp);
     }
 
     if (w->msgFilter) {
@@ -252,8 +254,9 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     if ((WM_COMMAND == msg) && w->onCommand) {
         bool discardMsg = false;
         LRESULT res = w->onCommand(hwnd, LOWORD(wp), HIWORD(wp), lp, discardMsg);
-        if (discardMsg)
+        if (discardMsg) {
             return res;
+        }
         return DefWindowProc(hwnd, msg, wp, lp);
     }
 
@@ -264,10 +267,15 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         return 0;
     }
 
-Exit:
     if (WM_PAINT == msg) {
         PAINTSTRUCT ps;
         BeginPaint(hwnd, &ps);
+        auto bgCol = w->backgroundColor;
+        if (bgCol != ColorUnset) {
+            RECT rc = GetClientRect(hwnd);
+            ScopedBrush br = CreateSolidBrush(bgCol);
+            FillRect(ps.hdc, &ps.rcPaint, br);
+        }
         EndPaint(hwnd, &ps);
         return 0;
     }

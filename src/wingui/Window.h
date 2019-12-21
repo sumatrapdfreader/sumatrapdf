@@ -37,7 +37,7 @@ struct WindowBase {
     virtual ~WindowBase();
 
     virtual bool Create();
-    virtual SIZE GetIdealSize() = 0;
+    virtual SIZE GetIdealSize();
 
     virtual LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& didHandle);
     virtual LRESULT WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& didHandle);

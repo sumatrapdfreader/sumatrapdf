@@ -126,7 +126,8 @@ class ScopedGdiObj {
     T obj;
 
   public:
-    explicit ScopedGdiObj(T obj) : obj(obj) {
+    ScopedGdiObj(T obj) {
+        this->obj = obj;
     }
     ~ScopedGdiObj() {
         DeleteObject(obj);
