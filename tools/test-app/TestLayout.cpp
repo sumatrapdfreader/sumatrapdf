@@ -263,7 +263,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     return 0;
 }
 static ATOM RegisterWinClass(HINSTANCE hInstance) {
-    WNDCLASSEXW wcex;
+    WNDCLASSEXW wcex{};
 
     wcex.cbSize = sizeof(WNDCLASSEX);
 
@@ -296,8 +296,6 @@ static BOOL CreateMainWindow(HINSTANCE hInstance, int nCmdShow) {
         return FALSE;
 
     g_hwnd = hwnd;
-
-    long fontDy = GetDefaultGuiFontSize();
 
     ShowWindow(hwnd, nCmdShow);
     UpdateWindow(hwnd);
