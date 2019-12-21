@@ -100,16 +100,15 @@ std::string_view ParseUntil(std::string_view& sv, char delim) {
     const char* s = sv.data();
     const char* e = s + sv.size();
     const char* start = s;
+    if (s == e) {
+        return {nullptr, 0};
+    }
     while (s < e) {
         if (*s == delim) {
             break;
         }
         s++;
     }
-    if (s == start) {
-        return {nullptr, 0};
-    }
-
     // skip one past delim
     size_t n = SkipTo(sv, s);
     // skip delim
