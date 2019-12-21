@@ -304,17 +304,6 @@ static BOOL CreateMainWindow(HINSTANCE hInstance, int nCmdShow) {
     return TRUE;
 }
 
-static int RunMessageLoop() {
-    MSG msg;
-    HACCEL accelTable = LoadAccelerators(hInst, MAKEINTRESOURCE(IDC_TESTWIN));
-    while (GetMessage(&msg, nullptr, 0, 0)) {
-        if (!TranslateAccelerator(msg.hwnd, accelTable, &msg)) {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        }
-    }
-    return (int)msg.wParam;
-}
 int TestLayout(HINSTANCE hInstance, int nCmdShow) {
     RegisterWinClass(hInstance);
 
@@ -322,7 +311,7 @@ int TestLayout(HINSTANCE hInstance, int nCmdShow) {
         CrashAlwaysIf(true);
         return FALSE;
     }
-
-    auto res = RunMessageLoop();
+    HACCEL accelTable = LoadAccelerators(hInst, MAKEINTRESOURCE(IDC_TESTWIN));
+    auto res = RunMessageLoop(accelTable);
     return res;
 }

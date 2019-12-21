@@ -476,8 +476,9 @@ static int RunMessageLoop() {
         // dispatch the accelerator to the correct window
         WindowInfo* win = FindWindowInfoByHwnd(msg.hwnd);
         HWND accHwnd = win ? win->hwndFrame : msg.hwnd;
-        if (TranslateAccelerator(accHwnd, accTable, &msg))
+        if (TranslateAccelerator(accHwnd, accTable, &msg)) {
             continue;
+        }
 
         TranslateMessage(&msg);
         DispatchMessage(&msg);

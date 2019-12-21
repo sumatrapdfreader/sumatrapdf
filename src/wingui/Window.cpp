@@ -11,7 +11,7 @@
 // TODO: call RemoveWindowSubclass in WM_NCDESTROY as per
 // https://devblogs.microsoft.com/oldnewthing/20031111-00/?p=41883
 
-#define WIN_CLASS L"WC_WIN32_WINDOW"
+#define DEFAULT_WIN_CLASS L"WC_WIN32_WINDOW"
 
 UINT_PTR g_subclassId = 0;
 
@@ -31,116 +31,6 @@ void HwndSetText(HWND hwnd, std::string_view s) {
     WCHAR* ws = strconv::Utf8ToWchar(s);
     win::SetText(hwnd, ws);
     free(ws);
-}
-
-Kind kindWindow = "window";
-
-static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
-    if (WM_CREATE == msg) {
-        CREATESTRUCT* cs = (CREATESTRUCT*)lp;
-        Window* w = (Window*)cs->lpCreateParams;
-        SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)w);
-        return DefWindowProc(hwnd, msg, wp, lp);
-    }
-
-    Window* w = (Window*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-
-    // don't allow intercepting those messages
-    if (WM_DESTROY == msg) {
-        PostQuitMessage(0);
-        return 0;
-    }
-
-    if (WM_NCDESTROY == msg) {
-        delete w;
-        return DefWindowProc(hwnd, msg, wp, lp);
-    }
-    if (!w) {
-        goto Exit;
-    }
-
-    if (w->preFilter) {
-        bool discardMsg = false;
-        LRESULT res = w->preFilter(hwnd, msg, wp, lp, discardMsg);
-        if (discardMsg)
-            return res;
-    }
-
-    if ((WM_COMMAND == msg) && w->onCommand) {
-        bool discardMsg = false;
-        LRESULT res = w->onCommand(hwnd, LOWORD(wp), HIWORD(wp), lp, discardMsg);
-        if (discardMsg)
-            return res;
-        return DefWindowProc(hwnd, msg, wp, lp);
-    }
-
-    if ((WM_SIZE == msg) && w->onSize) {
-        int dx = LOWORD(lp);
-        int dy = HIWORD(lp);
-        w->onSize(hwnd, dx, dy, wp);
-        return 0;
-    }
-
-Exit:
-    if (WM_PAINT == msg) {
-        PAINTSTRUCT ps;
-        BeginPaint(hwnd, &ps);
-        EndPaint(hwnd, &ps);
-        return 0;
-    }
-
-    return DefWindowProc(hwnd, msg, wp, lp);
-}
-
-static void RegisterClass() {
-    static ATOM atom = 0;
-
-    if (atom != 0) {
-        // already registered
-        return;
-    }
-
-    WNDCLASSEXW wcex = {};
-    FillWndClassEx(wcex, WIN_CLASS, WndProc);
-    atom = RegisterClassExW(&wcex);
-    CrashIf(!atom);
-}
-
-Window::Window(HWND parent, RECT* initialPosition) {
-    this->parent = parent;
-    if (initialPosition) {
-        this->initialPos = *initialPosition;
-    }
-
-    this->dwExStyle = 0;
-    this->dwStyle = WS_OVERLAPPEDWINDOW;
-    if (parent != nullptr) {
-        this->dwStyle |= WS_CHILD;
-    }
-}
-
-bool Window::Create(const WCHAR* title) {
-    RegisterClass();
-
-    RECT rc = this->initialPos;
-    int x = rc.left;
-    int y = rc.top;
-    int dx = RectDx(rc);
-    int dy = RectDy(rc);
-    if (dx == 0) {
-        x = CW_USEDEFAULT;
-        y = CW_USEDEFAULT;
-        dx = CW_USEDEFAULT;
-        dy = CW_USEDEFAULT;
-    }
-    this->hwnd = CreateWindowExW(this->dwExStyle, WIN_CLASS, title, this->dwStyle, x, y, dx, dy, this->parent, nullptr,
-                                 GetInstance(), (void*)this);
-
-    return this->hwnd != nullptr;
-}
-
-Window::~Window() {
-    DestroyWindow(hwnd);
 }
 
 Kind kindWindowBase = "windowBase";
@@ -326,6 +216,136 @@ void WindowBase::SetRtl(bool isRtl) {
     ToggleWindowExStyle(hwnd, WS_EX_LAYOUTRTL | WS_EX_NOINHERITLAYOUT, isRtl);
 }
 
+Kind kindWindow = "window";
+
+static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    if (WM_CREATE == msg) {
+        CREATESTRUCT* cs = (CREATESTRUCT*)lp;
+        Window* w = (Window*)cs->lpCreateParams;
+        SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)w);
+        return DefWindowProc(hwnd, msg, wp, lp);
+    }
+
+    Window* w = (Window*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+
+    // don't allow intercepting those messages
+    if (WM_DESTROY == msg) {
+        PostQuitMessage(0);
+        return 0;
+    }
+
+    if (WM_NCDESTROY == msg) {
+        return DefWindowProc(hwnd, msg, wp, lp);
+    }
+    if (!w) {
+        goto Exit;
+    }
+
+    if (w->msgFilter) {
+        bool didHandle = false;
+        LRESULT res = w->msgFilter(hwnd, msg, wp, lp, didHandle);
+        if (didHandle) {
+            return res;
+        }
+    }
+
+    if ((WM_COMMAND == msg) && w->onCommand) {
+        bool discardMsg = false;
+        LRESULT res = w->onCommand(hwnd, LOWORD(wp), HIWORD(wp), lp, discardMsg);
+        if (discardMsg)
+            return res;
+        return DefWindowProc(hwnd, msg, wp, lp);
+    }
+
+    if ((WM_SIZE == msg) && w->onSize) {
+        int dx = LOWORD(lp);
+        int dy = HIWORD(lp);
+        w->onSize(hwnd, dx, dy, wp);
+        return 0;
+    }
+
+Exit:
+    if (WM_PAINT == msg) {
+        PAINTSTRUCT ps;
+        BeginPaint(hwnd, &ps);
+        EndPaint(hwnd, &ps);
+        return 0;
+    }
+
+    return DefWindowProc(hwnd, msg, wp, lp);
+}
+
+struct winClassWithAtom {
+    const WCHAR* winClass = nullptr;
+    ATOM atom = 0;
+};
+
+Vec<winClassWithAtom> gRegisteredClasses;
+
+static void RegisterClass(Window* w) {
+    // check if already registered
+    for (auto&& ca : gRegisteredClasses) {
+        if (str::Eq(ca.winClass, w->winClass)) {
+            if (ca.atom != 0) {
+                return;
+            }
+        }
+    }
+    WNDCLASSEXW wcex = {};
+    wcex.cbSize = sizeof(wcex);
+    wcex.hIcon = w->hIcon;
+    wcex.hIconSm = w->hIconSm;
+    wcex.lpfnWndProc = WndProc;
+    wcex.lpszClassName = w->winClass;
+    wcex.lpszMenuName = w->lpszMenuName;
+    ATOM atom = RegisterClassExW(&wcex);
+    CrashIf(!atom);
+    winClassWithAtom ca = {w->winClass, atom};
+    gRegisteredClasses.Append(ca);
+}
+
+Window::Window() {
+    this->dwExStyle = 0;
+    this->dwStyle = WS_OVERLAPPEDWINDOW;
+    if (parent != nullptr) {
+        this->dwStyle |= WS_CHILD;
+    }
+}
+
+bool Window::Create() {
+    if (winClass == nullptr) {
+        winClass = DEFAULT_WIN_CLASS;
+    }
+    RegisterClass(this);
+
+    RECT rc = this->initialPos;
+    int x = rc.left;
+    int y = rc.top;
+    int dx = RectDx(rc);
+    int dy = RectDy(rc);
+    if (dx == 0) {
+        x = CW_USEDEFAULT;
+        y = CW_USEDEFAULT;
+        dx = CW_USEDEFAULT;
+        dy = CW_USEDEFAULT;
+    }
+
+    AutoFreeWstr title = strconv::Utf8ToWchar(this->text.as_view());
+    HINSTANCE hinst = GetInstance();
+    this->hwnd =
+        CreateWindowExW(dwExStyle, winClass, title, dwStyle, x, y, dx, dy, parent, nullptr, hinst, (void*)this);
+
+    return this->hwnd != nullptr;
+}
+
+Window::~Window() {
+    DestroyWindow(hwnd);
+}
+
+void Window::SetTitle(std::string_view title) {
+    this->SetText(title);
+}
+
 WindowBaseLayout::WindowBaseLayout(WindowBase* b, Kind k) {
     wb = b;
     kind = k;
@@ -354,4 +374,15 @@ i32 WindowBaseLayout::MinIntrinsicWidth(i32) {
 void WindowBaseLayout::SetBounds(const Rect bounds) {
     auto r = RectToRECT(bounds);
     ::MoveWindow(wb->hwnd, &r);
+}
+
+int RunMessageLoop(HACCEL accelTable) {
+    MSG msg;
+    while (GetMessage(&msg, nullptr, 0, 0)) {
+        if (!TranslateAccelerator(msg.hwnd, accelTable, &msg)) {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
+    }
+    return (int)msg.wParam;
 }

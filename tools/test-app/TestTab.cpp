@@ -3,6 +3,10 @@
 #include "utils/WinUtil.h"
 #include "test-app.h"
 
+#include "wingui/WinGui.h"
+#include "wingui/Layout.h"
+#include "wingui/Window.h"
+
 #include "wingui/TabsCtrl.h"
 
 static HINSTANCE hInst;
@@ -128,18 +132,6 @@ static BOOL InitInstance(HINSTANCE hInstance, int nCmdShow) {
     return TRUE;
 }
 
-static int RunMessageLoop() {
-    MSG msg;
-    HACCEL accelTable = LoadAccelerators(hInst, MAKEINTRESOURCE(IDC_TESTWIN));
-    while (GetMessage(&msg, nullptr, 0, 0)) {
-        if (!TranslateAccelerator(msg.hwnd, accelTable, &msg)) {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        }
-    }
-    return (int)msg.wParam;
-}
-
 int TestTab(HINSTANCE hInstance, int nCmdShow) {
     RegisterWinClass(hInstance);
 
@@ -164,6 +156,7 @@ int TestTab(HINSTANCE hInstance, int nCmdShow) {
     SetState(g_tabsCtrl, tabsState);
     UpdateTabsSize();
 
-    auto res = RunMessageLoop();
+    HACCEL accelTable = LoadAccelerators(hInst, MAKEINTRESOURCE(IDC_TESTWIN));
+    auto res = RunMessageLoop(accelTable);
     return res;
 }

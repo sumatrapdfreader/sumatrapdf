@@ -1,35 +1,6 @@
+
 /* Copyright 2019 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
-
-extern Kind kindWindow;
-
-struct Window {
-    Kind kind = nullptr;
-
-    // creation parameters. must be set before Create() call
-    HWND parent = nullptr;
-    RECT initialPos = {};
-    DWORD dwStyle = 0;
-    DWORD dwExStyle = 0;
-
-    // those tweak WNDCLASSEX for RegisterClass() class
-    HICON hIcon = nullptr;
-    HICON hIconSm = nullptr;
-    LPCWSTR lpszMenuName = nullptr;
-
-    // can be set any time
-    MsgFilter preFilter = nullptr; // called at start of windows proc to allow intercepting commands
-    WmCommandCb onCommand = nullptr;
-    SizeCb onSize = nullptr;
-
-    // public
-    HWND hwnd = nullptr;
-
-    explicit Window(HWND parent, RECT* initialPosition);
-    virtual ~Window();
-
-    bool Create(const WCHAR* title);
-};
 
 extern Kind kindWindowBase;
 
@@ -61,8 +32,10 @@ struct WindowBase {
     UINT_PTR subclassId = 0;
     UINT_PTR subclassParentId = 0;
 
+    WindowBase() = default;
     WindowBase(HWND p);
     virtual ~WindowBase();
+
     virtual bool Create();
     virtual SIZE GetIdealSize() = 0;
 
@@ -91,6 +64,28 @@ struct WindowBase {
     void SetRtl(bool);
 };
 
+extern Kind kindWindow;
+
+// a top-level window. Must set winClass before
+// calling Create()
+struct Window : public WindowBase {
+
+    // those tweak WNDCLASSEX for RegisterClass() class
+    HICON hIcon = nullptr;
+    HICON hIconSm = nullptr;
+    LPCWSTR lpszMenuName = nullptr;
+
+    WmCommandCb onCommand = nullptr;
+    SizeCb onSize = nullptr;
+
+    Window();
+    ~Window() override;
+
+    bool Create() override;
+
+    void SetTitle(std::string_view);
+};
+
 struct WindowBaseLayout : public ILayout {
     WindowBase* wb = nullptr;
 
@@ -105,3 +100,4 @@ struct WindowBaseLayout : public ILayout {
 
 void HwndSetText(HWND hwnd, std::string_view s);
 UINT_PTR NextSubclassId();
+int RunMessageLoop(HACCEL accelTable);

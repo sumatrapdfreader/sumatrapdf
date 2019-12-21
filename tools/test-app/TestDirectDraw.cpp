@@ -1,5 +1,10 @@
 #include "utils/BaseUtil.h"
 #include "utils/WinUtil.h"
+
+#include "wingui/WinGui.h"
+#include "wingui/Layout.h"
+#include "wingui/Window.h"
+
 #include <d2d1.h>
 
 #include "test-app.h"
@@ -209,21 +214,6 @@ static BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     return TRUE;
 }
 
-static int RunMessageLoop()
-{
-    MSG msg;
-    HACCEL accelTable = LoadAccelerators(hInst, MAKEINTRESOURCE(IDC_TESTWIN));
-    while (GetMessage(&msg, nullptr, 0, 0))
-    {
-        if (!TranslateAccelerator(msg.hwnd, accelTable, &msg))
-        {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        }
-    }
-    return (int)msg.wParam;
-}
-
 int TestDirectDraw(HINSTANCE hInstance, int nCmdShow) {
     RegisterWinClass(hInstance);
 
@@ -232,6 +222,7 @@ int TestDirectDraw(HINSTANCE hInstance, int nCmdShow) {
         return FALSE;
     }
 
-    auto res = RunMessageLoop();
+    HACCEL accelTable = LoadAccelerators(hInst, MAKEINTRESOURCE(IDC_TESTWIN));
+    auto res = RunMessageLoop(accelTable);
     return res;
 }
