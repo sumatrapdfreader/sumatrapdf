@@ -48,15 +48,18 @@ void SerializeBookmarksRec(DocTocItem* node, int level, str::Str& s) {
             s.Append(" ");
             SerializeColor(node->color, s);
         }
+        if (node->pageNo != 0) {
+            s.AppendFmt(" page:%d", node->pageNo);
+        }
         PageDestination* dest = node->GetPageDestination();
         if (dest) {
             int pageNo = dest->GetPageNo();
-            s.AppendFmt(" page:%d", pageNo);
+            CrashIf(node->pageNo != pageNo);
             auto ws = dest->GetValue();
             if (ws != nullptr) {
+                s.Append(" dest:");
                 AutoFree str = strconv::WstrToUtf8(ws);
-                s.Append(",dest:");
-                s.AppendView(str.as_view());
+                sv::AppendQuotedString(str.as_view(), s);
             }
         }
         s.Append("\n");
@@ -66,20 +69,20 @@ void SerializeBookmarksRec(DocTocItem* node, int level, str::Str& s) {
     }
 }
 
-// first line should look like:
-// :title of the bookmarks view
-// returns { nullptr, 0 } on error
-static std::string_view parseBookmarksTitle(const std::string_view sv) {
-    size_t n = sv.size();
-    // must have at least ":" at the beginning
-    if (n < 1) {
-        return {nullptr, 0};
+// sv is "key: value"
+// returns value if key is <key>
+static std::string_view parseKVLine(std::string_view sv, const char* key) {
+    auto parts = sv::Split(sv, ':', 2);
+    if (parts.size() == 1) {
+        return {};
     }
-    const char* s = sv.data();
-    if (s[0] != ':') {
-        return {nullptr, 0};
+    auto k = parts[0];
+    if (!str::EqI(k, key)) {
+        return {};
     }
-    return {s + 1, n - 1};
+    auto v = parts[1];
+    v = sv::TrimSpace(v);
+    return v;
 }
 
 // parses "quoted string"
@@ -212,10 +215,17 @@ struct DocTocItemWithIndent {
 static bool parseBookmarks(std::string_view sv, Vec<Bookmarks*>* bkms) {
     Vec<DocTocItemWithIndent> items;
 
-    // extract first line with title like "title: foo"
+    // first line should be "file: $file"
     auto line = sv::ParseUntil(sv, '\n');
-    auto title = parseBookmarksTitle(line);
-    if (title.data() == nullptr) {
+    auto file = parseKVLine(line, "file");
+    if (file.empty()) {
+        return false;
+    }
+
+    // this line should be "title: $title"
+    line = sv::ParseUntil(sv, '\n');
+    auto title = parseKVLine(line, "title");
+    if (title.empty()) {
         return false;
     }
     auto tree = new DocTocTree();
@@ -223,7 +233,7 @@ static bool parseBookmarks(std::string_view sv, Vec<Bookmarks*>* bkms) {
     size_t indent = 0;
     while (true) {
         line = sv::ParseUntil(sv, '\n');
-        if (line.data() == nullptr) {
+        if (line.empty()) {
             break;
         }
         auto* item = parseBookmarksLine(line, &indent);

@@ -106,12 +106,17 @@ std::string_view ParseUntil(std::string_view& sv, char delim) {
         }
         s++;
     }
-    if (s == e) {
+    if (s == start) {
         return {nullptr, 0};
     }
+
     // skip one past delim
-    size_t n = SkipTo(sv, s + 1);
-    return {start, n-1};
+    size_t n = SkipTo(sv, s);
+    // skip delim
+    if (s < e) {
+        SkipN(sv, 1);
+    }
+    return {start, n};
 }
 
 std::string_view ParseUntilBack(std::string_view& sv, char delim) {
