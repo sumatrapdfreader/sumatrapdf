@@ -21,13 +21,13 @@ class TreeCtrl {
 
     void Clear();
     TVITEMW* GetItem(HTREEITEM);
-    std::wstring GetInfoTip(HTREEITEM);
+    str::WStr GetInfoTip(HTREEITEM);
     HTREEITEM GetRoot();
     HTREEITEM GetChild(HTREEITEM);
     HTREEITEM GetSiblingNext(HTREEITEM); // GetNextSibling is windows macro
     HTREEITEM GetSelection();
     bool SelectItem(HTREEITEM);
-    HTREEITEM InsertItem(TV_INSERTSTRUCT*);
+    HTREEITEM InsertItem(TV_INSERTSTRUCTW*);
 
     void VisitNodes(const TreeItemVisitor& visitor);
     // TODO: create 2 functions for 2 different fItemRect values
@@ -63,8 +63,8 @@ class TreeCtrl {
     COLORREF backgroundColor = 0;
     COLORREF textColor = 0;
     bool withCheckboxes = false;
-    TreeModel* treeModel = nullptr;         // not owned by us
-    WCHAR infotipBuf[INFOTIPSIZE + 1] = {}; // +1 just in case
+    // treeModel not owned by us
+    TreeModel* treeModel = nullptr;
 
     // this data can be set directly
     MsgFilter preFilter = nullptr; // called at start of windows proc to allow intercepting messages

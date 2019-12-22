@@ -105,7 +105,7 @@ static void CustomizeTocInfoTip(TreeCtrl* w, NMTVGETINFOTIPW* nm) {
     }
 
     if (rcLine.right + 2 < rcLabel.right) {
-        std::wstring_view currInfoTip = w->GetInfoTip(nm->hItem);
+        str::WStr currInfoTip = w->GetInfoTip(nm->hItem);
         infotip.Append(currInfoTip.data());
         infotip.Append(L"\r\n");
     }
@@ -840,7 +840,8 @@ void CreateToc(WindowInfo* win) {
     win->altBookmarks->Create();
 
     auto* treeCtrl = new TreeCtrl(win->hwndTocBox, nullptr);
-    treeCtrl->withCheckboxes = true;
+    //TODO: remove, for easy testing
+    //treeCtrl->withCheckboxes = true;
 
     DWORD dwStyle = TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS;
     dwStyle |= TVS_TRACKSELECT | TVS_DISABLEDRAGDROP | TVS_NOHSCROLL | TVS_INFOTIP;

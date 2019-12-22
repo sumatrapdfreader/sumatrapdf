@@ -424,7 +424,13 @@ class WStr : public Vec<WCHAR> {
         return els;
     }
 
+    // for compat with std::wstring
     WCHAR* c_str() const {
+        return els;
+    }
+
+    // for compat with std::wstring
+    WCHAR* data() const {
         return els;
     }
 
