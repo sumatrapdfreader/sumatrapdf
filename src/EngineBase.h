@@ -211,6 +211,8 @@ class DocTocItem : public TreeItem {
     bool isOpenDefault = false;
     bool isOpenToggled = false;
 
+    bool isChecked = false;
+
     // page this item points to (0 for non-page destinations)
     // if GetLink() returns a destination to a page, the two should match
     int pageNo = 0;
@@ -233,7 +235,7 @@ class DocTocItem : public TreeItem {
 
     explicit DocTocItem(const WCHAR* title, int pageNo = 0);
 
-    ~DocTocItem();
+    ~DocTocItem() override;
 
     void AddSibling(DocTocItem* sibling);
 
@@ -244,10 +246,11 @@ class DocTocItem : public TreeItem {
     WCHAR* Text();
 
     // TreeItem
-    TreeItem* Parent();
-    int ChildCount();
-    TreeItem* ChildAt(int n);
-    bool IsExpanded();
+    TreeItem* Parent() override;
+    int ChildCount() override;
+    TreeItem* ChildAt(int n) override;
+    bool IsExpanded() override;
+    bool IsChecked() override;
 };
 
 struct DocTocTree : public TreeModel {
@@ -257,11 +260,11 @@ struct DocTocTree : public TreeModel {
 
     DocTocTree() = default;
     DocTocTree(DocTocItem* root);
-    virtual ~DocTocTree();
+    ~DocTocTree() override;
 
     // TreeModel
-    int RootCount();
-    TreeItem* RootAt(int n);
+    int RootCount() override;
+    TreeItem* RootAt(int n) override;
 };
 
 // a helper that allows for rendering interruptions in an engine-agnostic way

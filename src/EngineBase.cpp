@@ -165,6 +165,10 @@ bool DocTocItem::IsExpanded() {
     return isOpenDefault != isOpenToggled;
 }
 
+bool DocTocItem::IsChecked() {
+    return isChecked;
+}
+
 DocTocTree::DocTocTree(DocTocItem* root) {
     this->root = root;
 }

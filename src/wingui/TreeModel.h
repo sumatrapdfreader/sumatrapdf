@@ -3,6 +3,8 @@
 
 // TreeItem represents an item in a TreeView control
 struct TreeItem {
+    virtual ~TreeItem(){};
+
     // TODO: convert to char*
     virtual WCHAR* Text() = 0;
     virtual TreeItem* Parent() = 0;
@@ -10,10 +12,14 @@ struct TreeItem {
     virtual TreeItem* ChildAt(int index) = 0;
     // true if this tree item should be expanded i.e. showing children
     virtual bool IsExpanded() = 0;
+    // when showing checkboxes
+    virtual bool IsChecked() = 0;
 };
 
 // TreeModel provides data to TreeCtrl
 struct TreeModel {
+    virtual ~TreeModel(){};
+
     virtual int RootCount() = 0;
     virtual TreeItem* RootAt(int) = 0;
 };
