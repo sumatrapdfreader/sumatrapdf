@@ -40,14 +40,14 @@ void TreeViewExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, bool subt
     }
 }
 
-static bool GetItem(HWND hwnd, HTREEITEM hItem, TVITEMW* item) {
-    ZeroStruct(item);
-    item->hItem = hItem;
-    item->mask = TVIF_PARAM | TVIF_STATE;
-    UINT sm = TVIS_SELECTED | TVIS_CUT | TVIS_DROPHILITED | TVIS_BOLD | TVIS_EXPANDED;
-    item->stateMask = sm;
-    BOOL ok = TreeView_GetItem(hwnd, item);
-    return !!ok;
+static bool GetItem(HWND hwnd, HTREEITEM hItem, TVITEMW* ti) {
+    ZeroStruct(ti);
+    ti->hItem = hItem;
+    // https: // docs.microsoft.com/en-us/windows/win32/api/commctrl/ns-commctrl-tvitemexa
+    ti->mask = TVIF_HANDLE | TVIF_PARAM | TVIF_STATE | TVIF_CHILDREN | TVIF_IMAGE | TVIF_SELECTEDIMAGE;
+    ti->stateMask = TVIS_SELECTED | TVIS_CUT | TVIS_DROPHILITED | TVIS_BOLD | TVIS_EXPANDED | TVIS_STATEIMAGEMASK;
+    BOOL ok = TreeView_GetItem(hwnd, ti);
+    return ok != 0;
 }
 
 #include "utils/BitManip.h"
@@ -228,14 +228,25 @@ bool TreeCtrl::Create(const WCHAR* title) {
     return true;
 }
 
+// TODO: remove GetItem(HTREEITEM) and use GetItem(TreeItem*) instead
 TVITEMW* TreeCtrl::GetItem(HTREEITEM hItem) {
-    bool ok = ::GetItem(this->hwnd, hItem, &this->item);
+    bool ok = ::GetItem(hwnd, hItem, &item);
     if (!ok) {
         return nullptr;
     }
-    return &this->item;
-    return &this->item;
+    return &item;
 }
+
+TVITEMW* TreeCtrl::GetItem(TreeItem* ti) {
+    HTREEITEM hItem = GetHandleByTreeItem(ti);
+    bool ok = ::GetItem(hwnd, hItem, &item);
+    if (!ok) {
+        return nullptr;
+    }
+    return &item;
+}
+
+
 
 bool TreeCtrl::IsExpanded(HTREEITEM hItem) {
     auto* item = GetItem(hItem);
@@ -461,4 +472,19 @@ bool TreeCtrl::GetCheckState(TreeItem* item) {
     CrashIf(!hi);
     auto res = TreeView_GetCheckState(hwnd, hi);
     return res != 0;
+}
+
+TreeItemState TreeCtrl::GetItemState(TreeItem* ti) {
+    HTREEITEM hi = GetHandleByTreeItem(ti);
+    TreeItemState res;
+    TVITEMW* item = GetItem(ti);
+    CrashIf(!item);
+
+    res.isExpanded = bitmask::IsSet(item->state, TVIS_EXPANDED);
+    res.isSelected = bitmask::IsSet(item->state, TVIS_SELECTED);
+    res.nChildren = item->cChildren;
+
+    UINT n = (item->state >> 12) - 1;
+    res.isChecked = n != 0;
+    return res;
 }

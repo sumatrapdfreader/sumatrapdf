@@ -14,6 +14,13 @@ typedef std::function<bool(TVITEM*)> TreeItemVisitor;
 - ctrl->Create()
 */
 
+struct TreeItemState {
+    bool isSelected = false;
+    bool isExpanded = false;
+    bool isChecked = false;
+    int nChildren = 0;
+};
+
 class TreeCtrl {
   public:
     TreeCtrl(HWND parent, RECT* initialPosition);
@@ -21,6 +28,7 @@ class TreeCtrl {
 
     void Clear();
     TVITEMW* GetItem(HTREEITEM);
+    TVITEMW* GetItem(TreeItem*);
     str::WStr GetTooltip(HTREEITEM);
     HTREEITEM GetRoot();
     HTREEITEM GetChild(HTREEITEM);
@@ -52,6 +60,8 @@ class TreeCtrl {
 
     void SetCheckState(TreeItem*, bool);
     bool GetCheckState(TreeItem*);
+
+    TreeItemState GetItemState(TreeItem*);
 
     // creation parameters. must be set before CreateTreeCtrl() call
     HWND parent = nullptr;
