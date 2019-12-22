@@ -70,7 +70,6 @@ extern Kind kindWindow;
 // a top-level window. Must set winClass before
 // calling Create()
 struct Window : public WindowBase {
-
     // those tweak WNDCLASSEX for RegisterClass() class
     HICON hIcon = nullptr;
     HICON hIconSm = nullptr;

@@ -840,6 +840,8 @@ void CreateToc(WindowInfo* win) {
     win->altBookmarks->Create();
 
     auto* treeCtrl = new TreeCtrl(win->hwndTocBox, nullptr);
+    treeCtrl->withCheckboxes = true;
+
     DWORD dwStyle = TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS;
     dwStyle |= TVS_TRACKSELECT | TVS_DISABLEDRAGDROP | TVS_NOHSCROLL | TVS_INFOTIP;
     dwStyle |= WS_TABSTOP | WS_VISIBLE | WS_CHILD;

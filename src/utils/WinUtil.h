@@ -160,18 +160,17 @@ const WCHAR* ToSafeString(AutoFreeWstr& s);
 } // namespace win
 
 class DoubleBuffer {
-    HWND hTarget;
-    HDC hdcCanvas, hdcBuffer;
-    HBITMAP doubleBuffer;
-    RectI rect;
+    HWND hTarget = nullptr;
+    HDC hdcCanvas = nullptr;
+    HDC hdcBuffer = nullptr;
+    HBITMAP doubleBuffer = nullptr;
+    RectI rect{};
 
   public:
     DoubleBuffer(HWND hwnd, RectI rect);
     ~DoubleBuffer();
 
-    HDC GetDC() const {
-        return hdcBuffer ? hdcBuffer : hdcCanvas;
-    }
+    HDC GetDC() const;
     void Flush(HDC hdc);
 };
 

@@ -50,6 +50,9 @@ class TreeCtrl {
     HTREEITEM GetHandleByTreeItem(TreeItem*);
     TreeItem* GetTreeItemByHandle(HTREEITEM);
 
+    void SetCheckState(TreeItem*, bool);
+    bool GetCheckState(TreeItem*);
+
     // creation parameters. must be set before CreateTreeCtrl() call
     HWND parent = nullptr;
     RECT initialPos = {0, 0, 0, 0};
@@ -59,6 +62,7 @@ class TreeCtrl {
     HMENU menu = nullptr;
     COLORREF backgroundColor = 0;
     COLORREF textColor = 0;
+    bool withCheckboxes = false;
     TreeModel* treeModel = nullptr;         // not owned by us
     WCHAR infotipBuf[INFOTIPSIZE + 1] = {}; // +1 just in case
 

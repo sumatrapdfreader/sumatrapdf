@@ -351,8 +351,7 @@ bool Window::Create() {
 
     AutoFreeWstr title = strconv::Utf8ToWchar(this->text.as_view());
     HINSTANCE hinst = GetInstance();
-    hwnd =
-        CreateWindowExW(dwExStyle, winClass, title, dwStyle, x, y, dx, dy, parent, nullptr, hinst, (void*)this);
+    hwnd = CreateWindowExW(dwExStyle, winClass, title, dwStyle, x, y, dx, dy, parent, nullptr, hinst, (void*)this);
     if (!hwnd) {
         return false;
     }

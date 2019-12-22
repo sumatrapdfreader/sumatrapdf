@@ -983,6 +983,13 @@ DoubleBuffer::~DoubleBuffer() {
     ReleaseDC(hTarget, hdcCanvas);
 }
 
+HDC DoubleBuffer::GetDC() const {
+    if (hdcBuffer != nullptr) {
+        return hdcBuffer;
+    }
+    return hdcCanvas;
+}
+
 void DoubleBuffer::Flush(HDC hdc) {
     AssertCrash(hdc != hdcBuffer);
     if (hdcBuffer)

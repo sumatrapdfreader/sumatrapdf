@@ -194,12 +194,12 @@ static void Unsubclass(TreeCtrl* w) {
     }
 }
 
-TreeCtrl::TreeCtrl(HWND parent, RECT* initialPosition) {
-    this->parent = parent;
+TreeCtrl::TreeCtrl(HWND p, RECT* initialPosition) {
+    parent = p;
     if (initialPosition) {
-        this->initialPos = *initialPosition;
+        initialPos = *initialPosition;
     } else {
-        SetRect(&this->initialPos, 0, 0, 120, 28);
+        SetRect(&initialPos, 0, 0, 120, 28);
     }
 }
 
@@ -208,15 +208,21 @@ bool TreeCtrl::Create(const WCHAR* title) {
         title = L"";
     }
 
-    RECT rc = this->initialPos;
+    RECT rc = initialPos;
     HMODULE hmod = GetModuleHandleW(nullptr);
-    this->hwnd = CreateWindowExW(this->dwExStyle, WC_TREEVIEWW, title, this->dwStyle, rc.left, rc.top, RectDx(rc),
-                                 RectDy(rc), this->parent, this->menu, hmod, nullptr);
-    if (!this->hwnd) {
+    hwnd = CreateWindowExW(this->dwExStyle, WC_TREEVIEWW, title, this->dwStyle, rc.left, rc.top, RectDx(rc), RectDy(rc),
+                           this->parent, this->menu, hmod, nullptr);
+    if (!hwnd) {
         return false;
     }
     TreeView_SetUnicodeFormat(this->hwnd, true);
     this->SetFont(GetDefaultGuiFont());
+
+    // TVS_CHECKBOXES has to be set with SetWindowLong before populating with data
+    // https: // docs.microsoft.com/en-us/windows/win32/controls/tree-view-control-window-styles
+    if (withCheckboxes) {
+        ToggleWindowStyle(hwnd, TVS_CHECKBOXES, true);
+    }
     Subclass(this);
 
     return true;
@@ -440,4 +446,17 @@ void TreeCtrl::SetTreeModel(TreeModel* tm) {
     SuspendRedraw();
     PopulateTree(this, tm);
     ResumeRedraw();
+}
+
+void TreeCtrl::SetCheckState(TreeItem* item, bool enable) {
+    HTREEITEM hi = GetHandleByTreeItem(item);
+    CrashIf(!hi);
+    TreeView_SetCheckState(hwnd, hi, enable);
+}
+
+bool TreeCtrl::GetCheckState(TreeItem* item) {
+    HTREEITEM hi = GetHandleByTreeItem(item);
+    CrashIf(!hi);
+    auto res = TreeView_GetCheckState(hwnd, hi);
+    return res != 0;
 }
