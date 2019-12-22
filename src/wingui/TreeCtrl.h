@@ -1,7 +1,7 @@
 /* Copyright 2019 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-typedef std::function<void(NMTVGETINFOTIPW*)> GetInfoTipCb;
+typedef std::function<void(NMTVGETINFOTIPW*)> GetTooltipCb;
 typedef std::function<LRESULT(NMTREEVIEWW*, bool& didHandle)> TreeNotifyCb;
 
 // function called for every item in the tree.
@@ -21,13 +21,13 @@ class TreeCtrl {
 
     void Clear();
     TVITEMW* GetItem(HTREEITEM);
-    str::WStr GetInfoTip(HTREEITEM);
+    str::WStr GetTooltip(HTREEITEM);
     HTREEITEM GetRoot();
     HTREEITEM GetChild(HTREEITEM);
     HTREEITEM GetSiblingNext(HTREEITEM); // GetNextSibling is windows macro
     HTREEITEM GetSelection();
     bool SelectItem(HTREEITEM);
-    HTREEITEM InsertItem(TV_INSERTSTRUCTW*);
+    HTREEITEM InsertItem(TVINSERTSTRUCTW*);
 
     void VisitNodes(const TreeItemVisitor& visitor);
     // TODO: create 2 functions for 2 different fItemRect values
@@ -70,7 +70,7 @@ class TreeCtrl {
     MsgFilter preFilter = nullptr; // called at start of windows proc to allow intercepting messages
 
     // when set, allows the caller to set info tip by updating NMTVGETINFOTIP
-    GetInfoTipCb onGetInfoTip = nullptr;
+    GetTooltipCb onGetTooltip = nullptr;
 
     // if set, called to process all WM_NOTIFY messages
     TreeNotifyCb onTreeNotify = nullptr;

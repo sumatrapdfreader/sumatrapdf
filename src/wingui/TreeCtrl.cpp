@@ -89,9 +89,9 @@ static LRESULT CALLBACK TreeParentProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
         }
         auto code = nm->hdr.code;
         if (code == TVN_GETINFOTIP) {
-            if (w->onGetInfoTip) {
+            if (w->onGetTooltip) {
                 auto* arg = reinterpret_cast<NMTVGETINFOTIPW*>(nm);
-                w->onGetInfoTip(arg);
+                w->onGetTooltip(arg);
                 return 0;
             }
         }
@@ -367,7 +367,7 @@ void TreeCtrl::VisitNodes(const TreeItemVisitor& visitor) {
     VisitTreeNodesRec(this->hwnd, hRoot, visitor);
 }
 
-str::WStr TreeCtrl::GetInfoTip(HTREEITEM hItem) {
+str::WStr TreeCtrl::GetTooltip(HTREEITEM hItem) {
     WCHAR buf[INFOTIPSIZE + 1] = {}; // +1 just in case
 
     TVITEMW item = {0};

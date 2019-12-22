@@ -72,7 +72,7 @@ static DocTocItem* GetDocTocItemFromLPARAM(LPARAM lp) {
 }
 
 // set tooltip for this item but only if the text isn't fully shown
-static void CustomizeTocInfoTip(TreeCtrl* w, NMTVGETINFOTIPW* nm) {
+static void CustomizeTocTooltip(TreeCtrl* w, NMTVGETINFOTIPW* nm) {
     DocTocItem* tocItem = GetDocTocItemFromLPARAM(nm->lParam);
     PageDestination* link = tocItem->GetPageDestination();
     if (!link) {
@@ -105,7 +105,7 @@ static void CustomizeTocInfoTip(TreeCtrl* w, NMTVGETINFOTIPW* nm) {
     }
 
     if (rcLine.right + 2 < rcLabel.right) {
-        str::WStr currInfoTip = w->GetInfoTip(nm->hItem);
+        str::WStr currInfoTip = w->GetTooltip(nm->hItem);
         infotip.Append(currInfoTip.data());
         infotip.Append(L"\r\n");
     }
@@ -859,7 +859,7 @@ void CreateToc(WindowInfo* win) {
         handled = (res != -1);
         return res;
     };
-    treeCtrl->onGetInfoTip = [treeCtrl](NMTVGETINFOTIP* infoTipInfo) { CustomizeTocInfoTip(treeCtrl, infoTipInfo); };
+    treeCtrl->onGetTooltip = [treeCtrl](NMTVGETINFOTIP* infoTipInfo) { CustomizeTocTooltip(treeCtrl, infoTipInfo); };
     treeCtrl->onContextMenu = [win](HWND, int x, int y) { TreeCtrlContextMenu(win, x, y); };
     bool ok = treeCtrl->Create(L"TOC");
     CrashIf(!ok);
