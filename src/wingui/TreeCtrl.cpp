@@ -40,30 +40,38 @@ void TreeViewExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, bool subt
     }
 }
 
-static bool GetItem(HWND hwnd, HTREEITEM hItem, TVITEMW* ti) {
+// the result only valid until the next GetItem call
+static TVITEMW* GetItem(TreeCtrl* tree, HTREEITEM hItem) {
+    TVITEMW* ti = &tree->item;
     ZeroStruct(ti);
     ti->hItem = hItem;
     // https: // docs.microsoft.com/en-us/windows/win32/api/commctrl/ns-commctrl-tvitemexa
     ti->mask = TVIF_HANDLE | TVIF_PARAM | TVIF_STATE | TVIF_CHILDREN | TVIF_IMAGE | TVIF_SELECTEDIMAGE;
     ti->stateMask = TVIS_SELECTED | TVIS_CUT | TVIS_DROPHILITED | TVIS_BOLD | TVIS_EXPANDED | TVIS_STATEIMAGEMASK;
-    BOOL ok = TreeView_GetItem(hwnd, ti);
-    return ok != 0;
+    BOOL ok = TreeView_GetItem(tree->hwnd, ti);
+    if (!ok) {
+        return nullptr;
+    }
+    return ti;
 }
 
 #include "utils/BitManip.h"
 
 // expand if collapse, collapse if expanded
-static void TreeViewToggle(HWND hTree, HTREEITEM hItem, bool recursive) {
+static void TreeViewToggle(TreeCtrl* tree, HTREEITEM hItem, bool recursive) {
+    HWND hTree = tree->hwnd;
     HTREEITEM child = TreeView_GetChild(hTree, hItem);
     if (!child) {
         // only applies to nodes with children
         return;
     }
 
-    TVITEMW item;
-    ::GetItem(hTree, hItem, &item);
+    TVITEMW* item = GetItem(tree, hItem);
+    if (!item) {
+        return;
+    }
     UINT flag = TVE_EXPAND;
-    bool isExpanded = bitmask::IsSet(item.state, TVIS_EXPANDED);
+    bool isExpanded = bitmask::IsSet(item->state, TVIS_EXPANDED);
     if (isExpanded) {
         flag = TVE_COLLAPSE;
     }
@@ -107,7 +115,8 @@ static LRESULT CALLBACK TreeParentProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
     return DefSubclassProc(hwnd, msg, wp, lp);
 }
 
-static bool HandleKey(HWND hwnd, WPARAM wp) {
+static bool HandleKey(TreeCtrl* tree, WPARAM wp) {
+    HWND hwnd = tree->hwnd;
     // consistently expand/collapse whole (sub)trees
     if (VK_MULTIPLY == wp) {
         if (IsShiftPressed()) {
@@ -127,7 +136,7 @@ static bool HandleKey(HWND hwnd, WPARAM wp) {
     } else if (wp == 13) {
         // this is Enter key
         bool recursive = IsShiftPressed();
-        TreeViewToggle(hwnd, TreeView_GetSelection(hwnd), recursive);
+        TreeViewToggle(tree, TreeView_GetSelection(hwnd), recursive);
     } else {
         return false;
     }
@@ -153,7 +162,7 @@ static LRESULT CALLBACK TreeProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT
     }
 
     if (WM_KEYDOWN == msg) {
-        if (HandleKey(hwnd, wp)) {
+        if (HandleKey(w, wp)) {
             return 0;
         }
     }
@@ -228,32 +237,14 @@ bool TreeCtrl::Create(const WCHAR* title) {
     return true;
 }
 
-// TODO: remove GetItem(HTREEITEM) and use GetItem(TreeItem*) instead
-TVITEMW* TreeCtrl::GetItem(HTREEITEM hItem) {
-    bool ok = ::GetItem(hwnd, hItem, &item);
-    if (!ok) {
-        return nullptr;
-    }
-    return &item;
-}
-
 TVITEMW* TreeCtrl::GetItem(TreeItem* ti) {
-    HTREEITEM hItem = GetHandleByTreeItem(ti);
-    bool ok = ::GetItem(hwnd, hItem, &item);
-    if (!ok) {
-        return nullptr;
-    }
-    return &item;
+    auto hi = GetHandleByTreeItem(ti);
+    return ::GetItem(this, hi);
 }
 
-
-
-bool TreeCtrl::IsExpanded(HTREEITEM hItem) {
-    auto* item = GetItem(hItem);
-    if (item) {
-        return (item->state & TVIS_EXPANDED) != 0;
-    }
-    return false;
+bool TreeCtrl::IsExpanded(TreeItem* ti) {
+    auto state = GetItemState(ti);
+    return state.isExpanded;
 }
 
 bool TreeCtrl::GetItemRect(HTREEITEM item, bool fItemRect, RECT& r) {
@@ -277,14 +268,23 @@ HTREEITEM TreeCtrl::GetSiblingNext(HTREEITEM item) {
 }
 
 HTREEITEM TreeCtrl::GetSelection() {
-    HTREEITEM res = TreeView_GetSelection(this->hwnd);
+    HTREEITEM res = TreeView_GetSelection(hwnd);
     return res;
 }
 
+#if 0
 bool TreeCtrl::SelectItem(HTREEITEM item) {
-    BOOL ok = TreeView_SelectItem(this->hwnd, item);
-    return (ok == TRUE);
+    BOOL ok = TreeView_SelectItem(hwnd, item);
+    return ok == TRUE;
 }
+#endif
+
+bool TreeCtrl::SelectItem(TreeItem* ti) {
+    auto hi = GetHandleByTreeItem(ti);
+    BOOL ok = TreeView_SelectItem(hwnd, hi);
+    return ok == TRUE;
+}
+
 
 HTREEITEM TreeCtrl::InsertItem(TVINSERTSTRUCTW* item) {
     HTREEITEM res = TreeView_InsertItem(this->hwnd, item);

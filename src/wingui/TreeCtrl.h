@@ -27,20 +27,22 @@ class TreeCtrl {
     ~TreeCtrl();
 
     void Clear();
-    TVITEMW* GetItem(HTREEITEM);
     TVITEMW* GetItem(TreeItem*);
     str::WStr GetTooltip(HTREEITEM);
     HTREEITEM GetRoot();
     HTREEITEM GetChild(HTREEITEM);
     HTREEITEM GetSiblingNext(HTREEITEM); // GetNextSibling is windows macro
     HTREEITEM GetSelection();
-    bool SelectItem(HTREEITEM);
+    //bool SelectItem(HTREEITEM);
+
+    bool SelectItem(TreeItem*);
     HTREEITEM InsertItem(TVINSERTSTRUCTW*);
 
     void VisitNodes(const TreeItemVisitor& visitor);
     // TODO: create 2 functions for 2 different fItemRect values
     bool GetItemRect(HTREEITEM, bool fItemRect, RECT& r);
-    bool IsExpanded(HTREEITEM);
+
+    bool IsExpanded(TreeItem*);
 
     bool Create(const WCHAR* title);
     void SetFont(HFONT);

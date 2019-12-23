@@ -336,11 +336,11 @@ static HTREEITEM TreeItemForPageNo(TreeCtrl* tocTreeCtrl, int pageNo) {
 #endif
 
 // find the closest item in tree view to a given page number
-static HTREEITEM TreeItemForPageNo(TreeCtrl* tocTreeCtrl, int pageNo) {
+static TreeItem* TreeItemForPageNo(TreeCtrl* treeCtrl, int pageNo) {
     HTREEITEM bestMatchItem = nullptr;
     int bestMatchPageNo = 0;
 
-    tocTreeCtrl->VisitNodes([&bestMatchItem, &bestMatchPageNo, pageNo](TVITEMW* item) {
+    treeCtrl->VisitNodes([&bestMatchItem, &bestMatchPageNo, pageNo](TVITEMW* item) {
         if (!bestMatchItem) {
             // if nothing else matches, match the root node
             bestMatchItem = item->hItem;
@@ -360,7 +360,8 @@ static HTREEITEM TreeItemForPageNo(TreeCtrl* tocTreeCtrl, int pageNo) {
         }
         return true;
     });
-    return bestMatchItem;
+    TreeItem* res = treeCtrl->GetTreeItemByHandle(bestMatchItem);
+    return res;
 }
 
 void UpdateTocSelection(WindowInfo* win, int currPageNo) {
@@ -368,10 +369,9 @@ void UpdateTocSelection(WindowInfo* win, int currPageNo) {
         return;
     }
 
-    // TODO: change to use TreeItem instead of hItem
-    HTREEITEM hItem = TreeItemForPageNo(win->tocTreeCtrl, currPageNo);
-    if (hItem) {
-        win->tocTreeCtrl->SelectItem(hItem);
+    TreeItem* item = TreeItemForPageNo(win->tocTreeCtrl, currPageNo);
+    if (item) {
+        win->tocTreeCtrl->SelectItem(item);
     }
 }
 
@@ -383,14 +383,7 @@ static void UpdateDocTocExpansionState(TreeCtrl* treeCtrl, Vec<int>& tocState, D
             // isOpenToggled is not kept in sync
             // TODO: keep toggle state on DocTocItem in sync
             // by subscribing to the right notifications
-            HTREEITEM hItem = treeCtrl->GetHandleByTreeItem(tocItem);
-            CrashIf(!hItem);
-            TVITEM* item = treeCtrl->GetItem(hItem);
-            if (!item) {
-                // TODO: why this happens when open / close / re-open ?
-                return;
-            }
-            bool isExpanded = (item->state & TVIS_EXPANDED) != 0;
+            bool isExpanded = treeCtrl->IsExpanded(tocItem);
             bool wasToggled = isExpanded != tocItem->isOpenDefault;
             if (wasToggled) {
                 tocState.Append(tocItem->id);
