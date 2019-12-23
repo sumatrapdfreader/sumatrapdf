@@ -661,6 +661,7 @@ static const WCHAR* LinkifyEmailAddress(const WCHAR* start) {
 }
 
 // caller needs to delete the result
+// TODO: return Vec<PageElement*> directly
 LinkRectList* LinkifyText(const WCHAR* pageText, RectI* coords) {
     LinkRectList* list = new LinkRectList;
 
@@ -846,19 +847,9 @@ static Kind CalcDestKind(fz_link* link, fz_outline* outline, bool isAttachment) 
         // TODO: investigate more, happens in pier-EsugAwards2007.pdf
         return kindDestinationLaunchFile;
     }
-    if (str::StartsWithI(uri, "http://")) {
-        return kindDestinationLaunchURL;
-    }
-    if (str::StartsWithI(uri, "https://")) {
-        return kindDestinationLaunchURL;
-    }
-    if (str::StartsWithI(uri, "ftp://")) {
-        return kindDestinationLaunchURL;
-    }
-    if (str::StartsWith(uri, "mailto:")) {
-        return kindDestinationLaunchURL;
-    }
-    if (str::StartsWith(uri, "news:")) {
+    // TODO: hackish way to detect uris of various kinds
+    // like http:, news:, mailto:, tel: etc.
+    if (str::FindChar(uri, ':') != nullptr) {
         return kindDestinationLaunchURL;
     }
 
@@ -992,4 +983,169 @@ PageElement* newFzLink(int pageNo, fz_link* link, fz_outline* outline, bool isAt
     res->dest = dest;
 
     return res;
+}
+
+PageElement* newFzImage(int pageNo, fz_rect rect, size_t imageIdx) {
+    auto res = new PageElement();
+    res->kind = kindPageElementImage;
+    res->pageNo = pageNo;
+    res->rect = fz_rect_to_RectD(rect);
+    res->imageID = (int)imageIdx;
+    return res;
+}
+
+DocTocItem* newDocTocItemWithDestination(WCHAR* title, PageDestination* dest) {
+    auto res = new DocTocItem(title);
+    res->dest = dest;
+    return res;
+}
+
+PageElement* newFzComment(const WCHAR* comment, int pageNo, RectD rect) {
+    auto res = new PageElement();
+    res->kind = kindPageElementComment;
+    res->pageNo = pageNo;
+    res->rect = rect;
+    res->value = str::Dup(comment);
+    return res;
+}
+
+PageElement* makePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf_annot* annot) {
+    fz_rect rect = pdf_annot_rect(ctx, annot);
+    auto tp = pdf_annot_type(ctx, annot);
+    const char* contents = pdf_annot_contents(ctx, annot);
+    const char* label = pdf_field_label(ctx, annot->obj);
+    const char* s = contents;
+    // TODO: use separate classes for comments and tooltips?
+    if (str::IsEmpty(contents) && PDF_ANNOT_WIDGET == tp) {
+        s = label;
+    }
+    AutoFreeWstr ws(strconv::FromUtf8(s));
+    RectD rd = fz_rect_to_RectD(rect);
+    return newFzComment(ws, pageNo, rd);
+}
+
+PageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointD pt) {
+    if (!pageInfo) {
+        return nullptr;
+    }
+    int pageNo = pageInfo->pageNo;
+    fz_link* link = pageInfo->links;
+    fz_point p = {(float)pt.x, (float)pt.y};
+    while (link) {
+        if (fz_is_pt_in_rect(link->rect, p)) {
+            return newFzLink(pageNo, link, nullptr, false);
+        }
+        link = link->next;
+    }
+
+    for (auto* pel : pageInfo->autoLinks) {
+        if (pel->rect.Contains(pt)) {
+            return clonePageElement(pel);
+        }
+    }
+
+    for (auto* pel : pageInfo->comments) {
+        if (pel->rect.Contains(pt)) {
+            return clonePageElement(pel);
+        }
+    }
+
+    size_t imageIdx = 0;
+    for (auto& img : pageInfo->images) {
+        fz_rect ir = img.rect;
+        if (fz_is_pt_in_rect(ir, p)) {
+            return newFzImage(pageNo, ir, imageIdx);
+        }
+        imageIdx++;
+    }
+    return nullptr;
+}
+
+// TODO: construct this only once per page and change the API
+// to not free the result of GetElements()
+Vec<PageElement*>* FzGetElements(FzPageInfo* pageInfo) {
+    if (!pageInfo) {
+        return nullptr;
+    }
+
+    // since all elements lists are in last-to-first order, append
+    // item types in inverse order and reverse the whole list at the end
+    Vec<PageElement*>* els = new Vec<PageElement*>();
+    int pageNo = pageInfo->pageNo;
+
+    size_t imageIdx = 0;
+    for (auto& img : pageInfo->images) {
+        fz_rect ir = img.rect;
+        auto image = newFzImage(pageNo, ir, imageIdx);
+        els->Append(image);
+        imageIdx++;
+    }
+
+    fz_link* link = pageInfo->links;
+    while (link) {
+        auto* el = newFzLink(pageNo, link, nullptr, false);
+        els->Append(el);
+        link = link->next;
+    }
+
+    for (auto&& pel : pageInfo->autoLinks) {
+        auto* el = clonePageElement(pel);
+        els->Append(el);
+    }
+
+    for (auto* comment : pageInfo->comments) {
+        auto el = clonePageElement(comment);
+        els->Append(el);
+    }
+
+    els->Reverse();
+    return els;
+}
+
+void FzLinkifyPageText(FzPageInfo* pageInfo) {
+    if (!pageInfo) {
+        return;
+    }
+
+    RectI* coords;
+    fz_stext_page* stext = pageInfo->stext;
+    if (!stext) {
+        return;
+    }
+    WCHAR* pageText = fz_text_page_to_str(stext, &coords);
+    if (!pageText) {
+        return;
+    }
+
+    LinkRectList* list = LinkifyText(pageText, coords);
+    free(pageText);
+    fz_page* page = pageInfo->page;
+
+    for (size_t i = 0; i < list->links.size(); i++) {
+        fz_rect bbox = list->coords.at(i);
+        bool overlaps = false;
+        fz_link* link = pageInfo->links;
+        while (link && !overlaps) {
+            overlaps = fz_calc_overlap(bbox, link->rect) >= 0.25f;
+            link = link->next;
+        }
+        if (overlaps) {
+            continue;
+        }
+
+        WCHAR* uri = list->links.at(i);
+        if (!uri) {
+            continue;
+        }
+
+        PageElement* pel = new PageElement();
+        pel->kind = kindPageElementDest;
+        pel->dest = new PageDestination();
+        pel->dest->kind = kindDestinationLaunchURL;
+        pel->dest->pageNo = 0;
+        pel->dest->value = str::Dup(uri);
+        pageInfo->autoLinks.Append(pel);
+    }
+    delete list;
+    free(coords);
 }

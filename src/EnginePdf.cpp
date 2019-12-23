@@ -442,8 +442,7 @@ class PdfEngineImpl : public EngineBase {
     fz_matrix viewctm(int pageNo, float zoom, int rotation);
     fz_matrix viewctm(fz_page* page, float zoom, int rotation);
     DocTocItem* BuildTocTree(fz_outline* entry, int& idCounter, bool isAttachment);
-    void LinkifyPageText(FzPageInfo* pageInfo);
-    void ProcessPageAnnotations(FzPageInfo* pageInfo);
+    void MakePageElementCommentsFromAnnotations(FzPageInfo* pageInfo);
     WCHAR* ExtractFontList();
     bool IsLinearizedFile();
 
@@ -461,39 +460,15 @@ bool PdfLink::SaveEmbedded(LinkSaverUI& saveUI) {
 }
 #endif
 
-static PageElement* newPdfComment(const WCHAR* content, RectD rect, int pageNo) {
-    auto res = new PageElement();
-    res->kind = kindPageElementComment;
-    res->pageNo = pageNo;
-    res->rect = rect;
-    res->value = str::Dup(content);
-    return res;
-}
-
-static DocTocItem* newPdfTocItem(WCHAR* title, PageDestination* dest) {
-    auto res = new DocTocItem(title);
-    res->dest = dest;
-    return res;
-}
-
-static PageElement* newPdfImage(PdfEngineImpl* engine, int pageNo, fz_rect rect, size_t imageIdx) {
-    auto res = new PageElement();
-    res->pageNo = pageNo;
-    res->kind = kindPageElementImage;
-    res->rect = fz_rect_to_RectD(rect);
-    res->imageID = (int)imageIdx;
-    return res;
-}
-
 // in mupdf_load_system_font.c
 extern "C" void pdf_install_load_system_font_funcs(fz_context* ctx);
 
-extern "C" static void fz_lock_context_cs(void* user, int lock) {
+static void fz_lock_context_cs(void* user, int lock) {
     PdfEngineImpl* e = (PdfEngineImpl*)user;
     EnterCriticalSection(&e->mutexes[lock]);
 }
 
-extern "C" static void fz_unlock_context_cs(void* user, int lock) {
+static void fz_unlock_context_cs(void* user, int lock) {
     PdfEngineImpl* e = (PdfEngineImpl*)user;
     LeaveCriticalSection(&e->mutexes[lock]);
 }
@@ -546,6 +521,8 @@ PdfEngineImpl::~PdfEngineImpl() {
         if (pi->page) {
             fz_drop_page(ctx, pi->page);
         }
+        DeleteVecMembers(pi->autoLinks);
+        DeleteVecMembers(pi->comments);
     }
 
     DeleteVecMembers(_pages);
@@ -965,7 +942,7 @@ DocTocItem* PdfEngineImpl::BuildTocTree(fz_outline* outline, int& idCounter, boo
         link->dest = nullptr;
         delete link;
 
-        DocTocItem* item = newPdfTocItem(name, dest);
+        DocTocItem* item = newDocTocItemWithDestination(name, dest);
         free(name);
         item->isOpenDefault = outline->is_open;
         item->id = ++idCounter;
@@ -1083,6 +1060,7 @@ fz_page* PdfEngineImpl::GetFzPage(int pageNo, bool failIfBusy) {
     CrashIf(pageNo < 1 || pageNo > pageCount);
     int pageIdx = pageNo - 1;
     FzPageInfo* pageInfo = _pages[pageNo - 1];
+    CrashIf(pageInfo->pageNo != pageNo);
     fz_page* page = pageInfo->page;
     // TODO: not sure what failIfBusy is supposed to do
     if (page || failIfBusy) {
@@ -1127,9 +1105,9 @@ fz_page* PdfEngineImpl::GetFzPage(int pageNo, bool failIfBusy) {
 
     auto* links = fz_load_links(ctx, page);
     pageInfo->links = FixupPageLinks(links);
-    LinkifyPageText(pageInfo);
+    FzLinkifyPageText(pageInfo);
 
-    ProcessPageAnnotations(pageInfo);
+    MakePageElementCommentsFromAnnotations(pageInfo);
 
     fz_find_images(pageInfo->stext, pageInfo->images);
     return page;
@@ -1260,95 +1238,17 @@ RenderedBitmap* PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
     return bitmap;
 }
 
-static PageElement* makePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf_annot* annot) {
-    fz_rect rect = pdf_annot_rect(ctx, annot);
-    auto tp = pdf_annot_type(ctx, annot);
-    const char* contents = pdf_annot_contents(ctx, annot);
-    const char* label = pdf_field_label(ctx, annot->obj);
-    const char* s = contents;
-    // TODO: use separate classes for comments and tooltips?
-    if (str::IsEmpty(contents) && PDF_ANNOT_WIDGET == tp) {
-        s = label;
-    }
-    AutoFreeWstr ws(strconv::FromUtf8(s));
-    RectD rd = fz_rect_to_RectD(rect);
-    return newPdfComment(ws, rd, pageNo);
-}
-
 PageElement* PdfEngineImpl::GetElementAtPos(int pageNo, PointD pt) {
-    auto* pageInfo = GetFzPageInfo(pageNo);
-    if (!pageInfo) {
-        return nullptr;
-    }
-
-    fz_link* link = pageInfo->links;
-    fz_point p = {(float)pt.x, (float)pt.y};
-    while (link) {
-        if (fz_is_pt_in_rect(link->rect, p)) {
-            return newFzLink(pageNo, link, nullptr, false);
-        }
-        link = link->next;
-    }
-
-    size_t imageIdx = 0;
-    for (auto& img : pageInfo->images) {
-        fz_rect ir = img.rect;
-        if (fz_is_pt_in_rect(ir, p)) {
-            return newPdfImage(this, pageNo, ir, imageIdx);
-        }
-        imageIdx++;
-    }
-
     ScopedCritSec scope(ctxAccess); // TODO: probably not needed
-    for (auto* annot : pageInfo->pageAnnots) {
-        fz_rect rect = pdf_annot_rect(ctx, annot);
-        if (!fz_is_pt_in_rect(rect, p)) {
-            continue;
-        }
-        return makePdfCommentFromPdfAnnot(ctx, pageNo, annot);
-    }
 
-    return nullptr;
+    FzPageInfo* pageInfo = GetFzPageInfo(pageNo);
+    return FzGetElementAtPos(pageInfo, pt);
 }
 
 Vec<PageElement*>* PdfEngineImpl::GetElements(int pageNo) {
-    fz_page* page = GetFzPage(pageNo, true);
-    if (!page) {
-        return nullptr;
-    }
-    FzPageInfo* pageInfo = _pages[pageNo - 1];
-
-    // since all elements lists are in last-to-first order, append
-    // item types in inverse order and reverse the whole list at the end
-    Vec<PageElement*>* els = new Vec<PageElement*>();
-
-    size_t imageIdx = 0;
-    for (auto& img : pageInfo->images) {
-        fz_rect ir = img.rect;
-        auto image = newPdfImage(this, pageNo, ir, imageIdx);
-        els->Append(image);
-        imageIdx++;
-    }
-
-    ScopedCritSec scope(ctxAccess); // TODO: possibly not needed
-    for (auto* annot : pageInfo->pageAnnots) {
-        auto comment = makePdfCommentFromPdfAnnot(ctx, pageNo, annot);
-        els->Append(comment);
-    }
-
-    fz_link* link = pageInfo->links;
-    while (link) {
-        auto* el = newFzLink(pageNo, link, nullptr, false);
-        els->Append(el);
-        link = link->next;
-    }
-    if (els->size() == 0) {
-        delete els;
-        return nullptr;
-    }
-
-    els->Reverse();
-    return els;
+    ScopedCritSec scope(ctxAccess); // TODO: probably not needed
+    auto* pageInfo = GetFzPageInfo(pageNo, true);
+    return FzGetElements(pageInfo);
 }
 
 RenderedBitmap* PdfEngineImpl::GetImageForPageElement(PageElement* pel) {
@@ -1356,48 +1256,6 @@ RenderedBitmap* PdfEngineImpl::GetImageForPageElement(PageElement* pel) {
     int pageNo = pel->pageNo;
     int imageID = pel->imageID;
     return GetPageImage(pageNo, r, imageID);
-}
-
-void PdfEngineImpl::LinkifyPageText(FzPageInfo* pageInfo) {
-    RectI* coords;
-    fz_stext_page* stext = pageInfo->stext;
-    if (!stext) {
-        return;
-    }
-    ScopedCritSec scope(ctxAccess);
-    WCHAR* pageText = fz_text_page_to_str(stext, &coords);
-    if (!pageText) {
-        return;
-    }
-
-    LinkRectList* list = LinkifyText(pageText, coords);
-    free(pageText);
-    fz_page* page = pageInfo->page;
-
-    for (size_t i = 0; i < list->links.size(); i++) {
-        fz_rect bbox = list->coords.at(i);
-        bool overlaps = false;
-        fz_link* link = pageInfo->links;
-        while (link && !overlaps) {
-            overlaps = fz_calc_overlap(bbox, link->rect) >= 0.25f;
-            link = link->next;
-        }
-        if (overlaps) {
-            continue;
-        }
-
-        AutoFree uri(strconv::WstrToUtf8(list->links.at(i)));
-        if (!uri.Get()) {
-            continue;
-        }
-
-        // add links in top-to-bottom order (i.e. last-to-first)
-        link = fz_new_link(ctx, bbox, _doc, uri.Get());
-        link->next = pageInfo->links;
-        pageInfo->links = link;
-    }
-    delete list;
-    free(coords);
 }
 
 bool PdfEngineImpl::SaveFileAsPdf(const char* pdfFileName, bool includeUserAnnots) {
@@ -1417,13 +1275,15 @@ fz_matrix PdfEngineImpl::viewctm(fz_page* page, float zoom, int rotation) {
     return fz_create_view_ctm(fz_bound_page(ctx, page), zoom, rotation);
 }
 
-void PdfEngineImpl::ProcessPageAnnotations(FzPageInfo* pageInfo) {
-    auto& annots = pageInfo->pageAnnots;
+void PdfEngineImpl::MakePageElementCommentsFromAnnotations(FzPageInfo* pageInfo) {
+    auto& comments = pageInfo->comments;
 
     auto page = (pdf_page*)pageInfo->page;
     if (!page) {
         return;
     }
+    int pageNo = pageInfo->pageNo;
+
     for (pdf_annot* annot = page->annots; annot; annot = annot->next) {
         auto tp = pdf_annot_type(ctx, annot);
         const char* contents = pdf_annot_contents(ctx, annot); // don't free
@@ -1463,19 +1323,21 @@ void PdfEngineImpl::ProcessPageAnnotations(FzPageInfo* pageInfo) {
         }
 
         if (!isContentsEmpty && tp != PDF_ANNOT_FREE_TEXT) {
-            annots.Append(annot);
+            auto comment = makePdfCommentFromPdfAnnot(ctx, pageNo, annot);
+            comments.Append(comment);
             continue;
         }
 
         if (PDF_ANNOT_WIDGET == tp && !isLabelEmpty) {
             if (!(flags & PDF_FIELD_IS_READ_ONLY)) {
-                annots.Append(annot);
+                auto comment = makePdfCommentFromPdfAnnot(ctx, pageNo, annot);
+                comments.Append(comment);
             }
         }
     }
 
     // re-order list into top-to-bottom order (i.e. last-to-first)
-    annots.Reverse();
+    comments.Reverse();
 }
 
 RenderedBitmap* PdfEngineImpl::GetPageImage(int pageNo, RectD rect, size_t imageIdx) {

@@ -194,6 +194,8 @@ class PageElement {
     }
 };
 
+PageElement* clonePageElement(PageElement*);
+
 // those are the same as F font bitmask in PDF docs
 // for DocTocItem::fontFlags
 constexpr int fontBitBold = 0;

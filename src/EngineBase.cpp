@@ -1,3 +1,4 @@
+
 /* Copyright 2019 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
@@ -115,12 +116,28 @@ PageDestination* newSimpleDest(int pageNo, RectD rect, const WCHAR* value) {
 }
 
 PageDestination* clonePageDestination(PageDestination* dest) {
+    if (!dest) {
+        return nullptr;
+    }
     auto res = new PageDestination();
     res->kind = dest->kind;
     res->pageNo = dest->GetPageNo();
     res->rect = dest->GetRect();
     res->value = str::Dup(dest->GetValue());
     res->name = str::Dup(dest->GetName());
+    return res;
+}
+
+PageElement* clonePageElement(PageElement* el) {
+    if (!el) {
+        return nullptr;
+    }
+    auto* res = new PageElement();
+    res->kind = el->kind;
+    res->pageNo = el->pageNo;
+    res->rect = el->rect;
+    res->value = str::Dup(el->value);
+    res->dest = clonePageDestination(el->dest);
     return res;
 }
 

@@ -30,11 +30,17 @@ struct FitzImagePos {
 struct FzPageInfo {
     int pageNo = 0; // 1-based
     fz_page* page = nullptr;
+
     fz_link* links = nullptr;
+
+    // auto-detected links
+    Vec<PageElement*> autoLinks;
+    // comments are made out of annotations
+    Vec<PageElement*> comments;
+
     fz_display_list* list = nullptr;
     fz_stext_page* stext = nullptr;
     RectD mediabox = {};
-    Vec<pdf_annot*> pageAnnots;
     Vec<FitzImagePos> images;
 };
 
@@ -65,4 +71,11 @@ WCHAR* fz_text_page_to_str(fz_stext_page* text, RectI** coordsOut);
 LinkRectList* LinkifyText(const WCHAR* pageText, RectI* coords);
 int is_external_link(const char* uri);
 int resolve_link(const char* uri, float* xp, float* yp);
+DocTocItem* newDocTocItemWithDestination(WCHAR* title, PageDestination* dest);
+PageElement* newFzComment(const WCHAR* comment, int pageNo, RectD rect);
+PageElement* newFzImage(int pageNo, fz_rect rect, size_t imageIdx);
 PageElement* newFzLink(int pageNo, fz_link* link, fz_outline* outline, bool isAttachment);
+PageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointD pt);
+Vec<PageElement*>* FzGetElements(FzPageInfo* pageInfo);
+PageElement* makePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf_annot* annot);
+void FzLinkifyPageText(FzPageInfo* pageInfo);

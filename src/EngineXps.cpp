@@ -229,10 +229,11 @@ class XpsEngineImpl : public EngineBase {
     static EngineBase* CreateFromStream(IStream* stream);
 
   public:
-    // make sure to never ask for _pagesAccess in an ctxAccess
+    // make sure to never ask for pagesAccess in an ctxAccess
     // protected critical section in order to avoid deadlocks
-    CRITICAL_SECTION ctxAccess;
-    CRITICAL_SECTION _pagesAccess;
+    CRITICAL_SECTION* ctxAccess;
+    CRITICAL_SECTION pagesAccess;
+    CRITICAL_SECTION mutexes[FZ_LOCK_MAX];
 
     fz_context* ctx = nullptr;
     fz_locks_context fz_locks_ctx;
@@ -266,41 +267,18 @@ class XpsEngineImpl : public EngineBase {
     }
 
     DocTocItem* BuildTocTree(fz_outline* entry, int& idCounter);
-    void LinkifyPageText(FzPageInfo* pageInfo);
     RenderedBitmap* GetPageImage(int pageNo, RectD rect, size_t imageIx);
     WCHAR* ExtractFontList();
 };
 
-static DocTocItem* newXpsTocItem(WCHAR* title, PageDestination* dest) {
-    auto res = new DocTocItem(title);
-    res->dest = dest;
-    return res;
-}
-
-static PageElement* newXpsImage(XpsEngineImpl* engine, int pageNo, fz_rect rect, size_t imageIdx) {
-    auto res = new PageElement();
-    res->kind = kindPageElementImage;
-    res->pageNo = pageNo;
-    res->rect = fz_rect_to_RectD(rect);
-    res->imageID = (int)imageIdx;
-    return res;
-}
-
 static void fz_lock_context_cs(void* user, int lock) {
-    UNUSED(lock);
     XpsEngineImpl* e = (XpsEngineImpl*)user;
-    // we use a single critical section for all locks,
-    // since that critical section (ctxAccess) should
-    // be guarding all fz_context access anyway and
-    // thus already be in place (in debug builds we
-    // crash if that assertion doesn't hold)
-    EnterCriticalSection(&e->ctxAccess);
+    EnterCriticalSection(&e->mutexes[lock]);
 }
 
 static void fz_unlock_context_cs(void* user, int lock) {
-    UNUSED(lock);
     XpsEngineImpl* e = (XpsEngineImpl*)user;
-    LeaveCriticalSection(&e->ctxAccess);
+    LeaveCriticalSection(&e->mutexes[lock]);
 }
 
 static void fz_print_cb(void* user, const char* msg) {
@@ -317,8 +295,11 @@ XpsEngineImpl::XpsEngineImpl() {
     defaultFileExt = L".xps";
     fileDPI = 72.0f;
 
-    InitializeCriticalSection(&_pagesAccess);
-    InitializeCriticalSection(&ctxAccess);
+    for (size_t i = 0; i < dimof(mutexes); i++) {
+        InitializeCriticalSection(&mutexes[i]);
+    }
+    InitializeCriticalSection(&pagesAccess);
+    ctxAccess = &mutexes[FZ_LOCK_ALLOC];
 
     fz_locks_ctx.user = this;
     fz_locks_ctx.lock = fz_lock_context_cs;
@@ -328,8 +309,8 @@ XpsEngineImpl::XpsEngineImpl() {
 }
 
 XpsEngineImpl::~XpsEngineImpl() {
-    EnterCriticalSection(&_pagesAccess);
-    EnterCriticalSection(&ctxAccess);
+    EnterCriticalSection(&pagesAccess);
+    EnterCriticalSection(ctxAccess);
 
     for (auto* pi : _pages) {
         if (pi->links) {
@@ -361,15 +342,16 @@ XpsEngineImpl::~XpsEngineImpl() {
     fz_drop_document(ctx, _doc);
     fz_drop_context(ctx);
 
-    LeaveCriticalSection(&ctxAccess);
-    DeleteCriticalSection(&ctxAccess);
-
-    LeaveCriticalSection(&_pagesAccess);
-    DeleteCriticalSection(&_pagesAccess);
+    for (size_t i = 0; i < dimof(mutexes); i++) {
+        LeaveCriticalSection(&mutexes[i]);
+        DeleteCriticalSection(&mutexes[i]);
+    }
+    LeaveCriticalSection(&pagesAccess);
+    DeleteCriticalSection(&pagesAccess);
 }
 
 EngineBase* XpsEngineImpl::Clone() {
-    ScopedCritSec scope(&ctxAccess);
+    ScopedCritSec scope(ctxAccess);
 
     // TODO: we used to support cloning streams
     // but mupdf removed ability to clone fz_stream
@@ -494,7 +476,7 @@ FzPageInfo* XpsEngineImpl::GetFzPageInfo(int pageNo, bool failIfBusy) {
 }
 
 fz_page* XpsEngineImpl::GetFzPage(int pageNo, bool failIfBusy) {
-    ScopedCritSec scope(&_pagesAccess);
+    ScopedCritSec scope(&pagesAccess);
 
     CrashIf(pageNo < 1 || pageNo > pageCount);
     int pageIdx = pageNo - 1;
@@ -504,7 +486,7 @@ fz_page* XpsEngineImpl::GetFzPage(int pageNo, bool failIfBusy) {
         return pageInfo->page;
     }
 
-    ScopedCritSec ctxScope(&ctxAccess);
+    ScopedCritSec ctxScope(ctxAccess);
 
 #if 0
     // was loaded in LoadFromStream
@@ -561,7 +543,7 @@ fz_page* XpsEngineImpl::GetFzPage(int pageNo, bool failIfBusy) {
     }
 
     pageInfo->links = fz_load_links(ctx, page);
-    LinkifyPageText(pageInfo);
+    FzLinkifyPageText(pageInfo);
 
     return page;
 }
@@ -584,7 +566,7 @@ RectD XpsEngineImpl::PageContentBox(int pageNo, RenderTarget target) {
     UNUSED(target);
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo);
 
-    ScopedCritSec scope(&ctxAccess);
+    ScopedCritSec scope(ctxAccess);
 
     fz_cookie fzcookie = {};
     fz_rect rect = fz_empty_rect;
@@ -653,7 +635,7 @@ RenderedBitmap* XpsEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
     }
 
     // TODO(port): I don't see why this lock is needed
-    EnterCriticalSection(&ctxAccess);
+    EnterCriticalSection(ctxAccess);
 
     fz_rect pRect;
     if (pageRect) {
@@ -685,7 +667,7 @@ RenderedBitmap* XpsEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
     }
     fz_always(ctx) {
         fz_drop_device(ctx, dev);
-        LeaveCriticalSection(&ctxAccess);
+        LeaveCriticalSection(ctxAccess);
     }
     fz_catch(ctx) {
         fz_drop_pixmap(ctx, pix);
@@ -699,7 +681,7 @@ RenderedBitmap* XpsEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
 
 std::string_view XpsEngineImpl::GetFileData() {
     u8* res = nullptr;
-    ScopedCritSec scope(&ctxAccess);
+    ScopedCritSec scope(ctxAccess);
     size_t cbCount;
 
     fz_var(res);
@@ -743,7 +725,7 @@ WCHAR* XpsEngineImpl::ExtractFontList() {
         GetFzPageInfo(i);
     }
 
-    ScopedCritSec scope(&ctxAccess);
+    ScopedCritSec scope(ctxAccess);
 
     // collect a list of all included fonts
     WStrVec fonts;
@@ -792,7 +774,7 @@ bool XpsEngineImpl::SupportsAnnotation(bool forSaving) const {
 
 void XpsEngineImpl::UpdateUserAnnotations(Vec<PageAnnotation>* list) {
     // TODO: use a new critical section to avoid blocking the UI thread
-    ScopedCritSec scope(&ctxAccess);
+    ScopedCritSec scope(ctxAccess);
     if (list) {
         userAnnots = *list;
     } else {
@@ -801,58 +783,21 @@ void XpsEngineImpl::UpdateUserAnnotations(Vec<PageAnnotation>* list) {
 }
 
 PageElement* XpsEngineImpl::GetElementAtPos(int pageNo, PointD pt) {
-    auto* pageInfo = GetFzPageInfo(pageNo);
-    if (!pageInfo) {
-        return nullptr;
-    }
+    ScopedCritSec scope(ctxAccess); // TODO: probably not needed
 
-    fz_link* link = pageInfo->links;
-    fz_point p = {(float)pt.x, (float)pt.y};
-    while (link) {
-        if (fz_is_pt_in_rect(link->rect, p)) {
-            return newFzLink(pageNo, link, nullptr, false);
-        }
-        link = link->next;
-    }
-
-    size_t imageIdx = 0;
-    for (auto& img : pageInfo->images) {
-        fz_rect ir = img.rect;
-        if (fz_is_pt_in_rect(ir, p)) {
-            return newXpsImage(this, pageNo, ir, imageIdx);
-        }
-        imageIdx++;
-    }
-    return nullptr;
+    FzPageInfo* pageInfo = GetFzPageInfo(pageNo);
+    return FzGetElementAtPos(pageInfo, pt);
 }
 
 Vec<PageElement*>* XpsEngineImpl::GetElements(int pageNo) {
+    ScopedCritSec scope(ctxAccess); // TODO: probably not needed
+
     fz_page* page = GetFzPage(pageNo, true);
     if (!page) {
         return nullptr;
     }
     FzPageInfo* pageInfo = _pages[pageNo - 1];
-
-    // since all elements lists are in last-to-first order, append
-    // item types in inverse order and reverse the whole list at the end
-    Vec<PageElement*>* els = new Vec<PageElement*>();
-
-    size_t imageIdx = 0;
-    for (auto& img : pageInfo->images) {
-        fz_rect ir = img.rect;
-        auto image = newXpsImage(this, pageNo, ir, imageIdx);
-        els->Append(image);
-        imageIdx++;
-    }
-    fz_link* link = pageInfo->links;
-    while (link) {
-        auto* el = newFzLink(pageNo, link, nullptr, false);
-        els->Append(el);
-        link = link->next;
-    }
-
-    els->Reverse();
-    return els;
+    return FzGetElements(pageInfo);
 }
 
 RenderedBitmap* XpsEngineImpl::GetImageForPageElement(PageElement* pel) {
@@ -862,55 +807,13 @@ RenderedBitmap* XpsEngineImpl::GetImageForPageElement(PageElement* pel) {
     return GetPageImage(pageNo, r, imageID);
 }
 
-void XpsEngineImpl::LinkifyPageText(FzPageInfo* pageInfo) {
-    RectI* coords;
-    fz_stext_page* stext = pageInfo->stext;
-    if (!stext) {
-        return;
-    }
-    ScopedCritSec scope(&ctxAccess);
-    WCHAR* pageText = fz_text_page_to_str(stext, &coords);
-    if (!pageText) {
-        return;
-    }
-
-    LinkRectList* list = LinkifyText(pageText, coords);
-    free(pageText);
-    fz_page* page = pageInfo->page;
-
-    for (size_t i = 0; i < list->links.size(); i++) {
-        fz_rect bbox = list->coords.at(i);
-        bool overlaps = false;
-        fz_link* link = pageInfo->links;
-        while (link && !overlaps) {
-            overlaps = fz_calc_overlap(bbox, link->rect) >= 0.25f;
-            link = link->next;
-        }
-        if (overlaps) {
-            continue;
-        }
-
-        AutoFree uri(strconv::WstrToUtf8(list->links.at(i)));
-        if (!uri.Get()) {
-            continue;
-        }
-
-        // add links in top-to-bottom order (i.e. last-to-first)
-        link = fz_new_link(ctx, bbox, _doc, uri.Get());
-        link->next = pageInfo->links;
-        pageInfo->links = link;
-    }
-    delete list;
-    free(coords);
-}
-
 WCHAR* XpsEngineImpl::ExtractPageText(int pageNo, RectI** coordsOut) {
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo);
     fz_stext_page* stext = pageInfo->stext;
     if (!stext) {
         return nullptr;
     }
-    ScopedCritSec scope(&ctxAccess);
+    ScopedCritSec scope(ctxAccess);
     WCHAR* content = fz_text_page_to_str(stext, coordsOut);
     return content;
 }
@@ -928,12 +831,12 @@ RenderedBitmap* XpsEngineImpl::GetPageImage(int pageNo, RectD rect, size_t image
         return nullptr;
     }
 
-    ScopedCritSec scope(&ctxAccess);
+    ScopedCritSec scope(ctxAccess);
 
     fz_pixmap* pixmap = nullptr;
     fz_try(ctx) {
         fz_image* image = positions.at(imageIdx).image;
-        CrashMePort();
+        // CrashMePort();
         // TODO(port): not sure if should provide subarea, w and h
         pixmap = fz_get_pixmap_from_image(ctx, image, nullptr, nullptr, nullptr, nullptr);
     }
@@ -981,7 +884,7 @@ DocTocItem* XpsEngineImpl::BuildTocTree(fz_outline* outline, int& idCounter) {
         link->dest = nullptr;
         delete link;
 
-        DocTocItem* item = newXpsTocItem(name, dest);
+        DocTocItem* item = newDocTocItemWithDestination(name, dest);
         free(name);
         item->isOpenDefault = outline->is_open;
         item->id = ++idCounter;

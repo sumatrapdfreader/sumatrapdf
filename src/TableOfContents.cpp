@@ -474,7 +474,7 @@ static void BuildAndShowContextMenu(WindowInfo* win, int x, int y) {
             auto* tab = win->currentTab;
             ExportBookmarksFromTab(tab);
         } break;
-            case IDM_NEW_BOOKMARKS:
+        case IDM_NEW_BOOKMARKS:
             StartTocEditor(nullptr);
             break;
         case IDM_EXPAND_ALL:

@@ -76,7 +76,7 @@ void StartTocEditor(TreeModel* tm) {
         InvalidateRect(hwnd, nullptr, false);
     };
     w->onClose = [&](WindowCloseArgs*) {
-        //UNUSED(args);
+        // UNUSED(args);
         OutputDebugStringA("onClose\n");
     };
 
