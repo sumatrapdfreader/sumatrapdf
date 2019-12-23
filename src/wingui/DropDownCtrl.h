@@ -10,7 +10,8 @@ struct DropDownCtrl : public WindowBase {
     DropDownCtrl(HWND parent);
     ~DropDownCtrl();
     bool Create() override;
-    LRESULT WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& didHandle) override;
+
+    void WndProcParent(WndProcArgs*) override;
 
     SIZE GetIdealSize() override;
 

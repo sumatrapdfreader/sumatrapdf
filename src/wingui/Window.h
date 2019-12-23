@@ -2,7 +2,44 @@
 /* Copyright 2019 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+struct WindowBase;
 struct Window;
+
+struct WndProcArgs {
+    WindowBase* w = nullptr;
+    HWND hwnd = nullptr;
+    UINT msg = 0;
+    WPARAM wparam = 0;
+    LPARAM lparam = 0;
+
+    bool didHandle = false;
+    LRESULT result = 0;
+};
+
+#define SetWndProcArgs(n) \
+    {                     \
+        n.w = w;       \
+        n.hwnd = hwnd;    \
+        n.msg = msg;      \
+        n.wparam = wp;    \
+        n.lparam = lp;    \
+    }
+
+typedef std::function<void(WndProcArgs*)> MsgFilter;
+
+struct SizeArgs {
+    HWND hwnd = nullptr;
+    int dx = 0;
+    int dy = 0;
+
+    WPARAM wparam = 0; // resize type
+    LPARAM lparam = 0;
+
+    bool didHandle = false;
+    LRESULT result = 0;
+};
+
+typedef std::function<void(HWND, int dx, int dy, WPARAM resizeType)> OnSize;
 
 struct WindowCloseArgs {
     Window* window = nullptr;
@@ -55,8 +92,8 @@ struct WindowBase {
     virtual bool Create();
     virtual SIZE GetIdealSize();
 
-    virtual LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& didHandle);
-    virtual LRESULT WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& didHandle);
+    virtual void WndProc(WndProcArgs*);
+    virtual void WndProcParent(WndProcArgs*);
 
     void Subclass();
     void SubclassParent();

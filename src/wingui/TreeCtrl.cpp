@@ -6,6 +6,8 @@
 #include "utils/WinUtil.h"
 
 #include "wingui/WinGui.h"
+#include "wingui/Layout.h"
+#include "wingui/Window.h"
 #include "wingui/TreeModel.h"
 #include "wingui/TreeCtrl.h"
 
@@ -21,10 +23,6 @@ Tree view, checkboxes and other info:
 -
 https://stackoverflow.com/questions/34161879/how-to-remove-checkboxes-on-specific-tree-view-items-with-the-tvs-checkboxes-sty
 */
-
-constexpr UINT_PTR SUBCLASS_ID = 1;
-
-static void Unsubclass(TreeCtrl* w);
 
 void TreeViewExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, bool subtree) {
     while (hItem) {
@@ -82,37 +80,48 @@ static void TreeViewToggle(TreeCtrl* tree, HTREEITEM hItem, bool recursive) {
     }
 }
 
-static LRESULT CALLBACK TreeParentProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR subclassId, DWORD_PTR data) {
-    CrashIf(subclassId != SUBCLASS_ID); // this proc is only used in one subclass
-    auto* w = (TreeCtrl*)data;
+void TreeCtrl::WndProcParent(WndProcArgs* args) {
+    auto* w = (TreeCtrl*)this;
+    HWND hwnd = args->hwnd;
+    UINT msg = args->msg;
+    WPARAM wp = args->wparam;
+    LPARAM lp = args->lparam;
+
     CrashIf(GetParent(w->hwnd) != (HWND)hwnd);
+
     if (msg == WM_NOTIFY) {
         NMTREEVIEWW* nm = reinterpret_cast<NMTREEVIEWW*>(lp);
         if (w->onTreeNotify) {
-            bool handled = true;
-            LRESULT res = w->onTreeNotify(nm, handled);
-            if (handled) {
-                return res;
+            bool didHandle = false;
+            LRESULT res = w->onTreeNotify(nm, didHandle);
+            if (didHandle) {
+                args->didHandle = true;
+                args->result = res;
+                return;
             }
         }
+
         auto code = nm->hdr.code;
         if (code == TVN_GETINFOTIP) {
             if (w->onGetTooltip) {
                 auto* arg = reinterpret_cast<NMTVGETINFOTIPW*>(nm);
                 w->onGetTooltip(arg);
-                return 0;
+                args->didHandle = true;
+                args->result = 0;
+                return;
             }
         }
     }
+
     if (msg == WM_CONTEXTMENU) {
         if (w->onContextMenu) {
             int x = GET_X_LPARAM(lp);
             int y = GET_Y_LPARAM(lp);
             w->onContextMenu(hwnd, x, y);
-            return 0;
+            args->didHandle = 0;
+            return;
         }
     }
-    return DefSubclassProc(hwnd, msg, wp, lp);
 }
 
 static bool HandleKey(TreeCtrl* tree, WPARAM wp) {
@@ -144,47 +153,36 @@ static bool HandleKey(TreeCtrl* tree, WPARAM wp) {
     return true;
 }
 
-static LRESULT CALLBACK TreeProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
-    UNUSED(uIdSubclass);
-    auto* w = (TreeCtrl*)dwRefData;
+void TreeCtrl::WndProc(WndProcArgs* args) {
+    HWND hwnd = args->hwnd;
+    UINT msg = args->msg;
+    WPARAM wp = args->wparam;
+
+    TreeCtrl* w = this;
     CrashIf(w->hwnd != (HWND)hwnd);
 
-    if (w->preFilter) {
-        bool discard = false;
-        auto res = w->preFilter(hwnd, msg, wp, lp, discard);
-        if (discard) {
-            return res;
+    if (w->msgFilter) {
+        w->msgFilter(args);
+        if (args->didHandle) {
+            return;
         }
     }
 
     if (WM_ERASEBKGND == msg) {
-        return FALSE;
+        args->didHandle = true;
+        args->result = FALSE;
+        return;
     }
 
     if (WM_KEYDOWN == msg) {
         if (HandleKey(w, wp)) {
-            return 0;
+            args->didHandle = true;
+            return;
         }
     }
-
-    if (WM_NCDESTROY == msg) {
-        Unsubclass(w);
-        return DefSubclassProc(hwnd, msg, wp, lp);
-    }
-
-    return DefSubclassProc(hwnd, msg, wp, lp);
 }
 
-static void Subclass(TreeCtrl* w) {
-    BOOL ok = SetWindowSubclass(w->hwnd, TreeProc, SUBCLASS_ID, (DWORD_PTR)w);
-    CrashIf(!ok);
-    w->hwndSubclassId = SUBCLASS_ID;
-
-    ok = SetWindowSubclass(w->parent, TreeParentProc, SUBCLASS_ID, (DWORD_PTR)w);
-    CrashIf(!ok);
-    w->hwndParentSubclassId = SUBCLASS_ID;
-}
-
+#if 0
 static void Unsubclass(TreeCtrl* w) {
     if (!w) {
         return;
@@ -202,14 +200,15 @@ static void Unsubclass(TreeCtrl* w) {
         w->hwndParentSubclassId = 0;
     }
 }
+#endif
 
-TreeCtrl::TreeCtrl(HWND p, RECT* initialPosition) {
+TreeCtrl::TreeCtrl(HWND p) {
+    dwStyle = WS_CHILD | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS |
+              TVS_TRACKSELECT | TVS_DISABLEDRAGDROP | TVS_NOHSCROLL | TVS_INFOTIP;
+    dwExStyle = 0;
+    winClass = WC_TREEVIEWW;
     parent = p;
-    if (initialPosition) {
-        initialPos = *initialPosition;
-    } else {
-        SetRect(&initialPos, 0, 0, 120, 28);
-    }
+    SetRect(&initialPos, 0, 0, 48, 120);
 }
 
 bool TreeCtrl::Create(const WCHAR* title) {
@@ -217,22 +216,20 @@ bool TreeCtrl::Create(const WCHAR* title) {
         title = L"";
     }
 
-    RECT rc = initialPos;
-    HMODULE hmod = GetModuleHandleW(nullptr);
-    hwnd = CreateWindowExW(this->dwExStyle, WC_TREEVIEWW, title, this->dwStyle, rc.left, rc.top, RectDx(rc), RectDy(rc),
-                           this->parent, this->menu, hmod, nullptr);
-    if (!hwnd) {
+    bool ok = WindowBase::Create();
+    if (!ok) {
         return false;
     }
-    TreeView_SetUnicodeFormat(this->hwnd, true);
-    this->SetFont(GetDefaultGuiFont());
+    Subclass();
+    SubclassParent();
+
+    TreeView_SetUnicodeFormat(hwnd, true);
 
     // TVS_CHECKBOXES has to be set with SetWindowLong before populating with data
     // https: // docs.microsoft.com/en-us/windows/win32/controls/tree-view-control-window-styles
     if (withCheckboxes) {
         ToggleWindowStyle(hwnd, TVS_CHECKBOXES, true);
     }
-    Subclass(this);
 
     return true;
 }
@@ -316,7 +313,6 @@ void TreeCtrl::Clear() {
 }
 
 TreeCtrl::~TreeCtrl() {
-    Unsubclass(this);
     // DeleteObject(w->bgBrush);
 }
 

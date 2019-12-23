@@ -1,3 +1,4 @@
+
 /* Copyright 2019 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
@@ -27,8 +28,8 @@ struct EditCtrl : public WindowBase {
     ~EditCtrl();
     bool Create() override;
     SIZE GetIdealSize() override;
-    LRESULT WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& didHandle) override;
-    LRESULT WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& didHandle) override;
+    void WndProc(WndProcArgs*) override;
+    void WndProcParent(WndProcArgs*) override;
 
     void SetSelection(int start, int end);
     bool SetCueText(std::string_view);

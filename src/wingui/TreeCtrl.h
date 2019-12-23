@@ -1,3 +1,4 @@
+
 /* Copyright 2019 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
@@ -17,9 +18,8 @@ struct TreeItemState {
     int nChildren = 0;
 };
 
-class TreeCtrl {
-  public:
-    TreeCtrl(HWND parent, RECT* initialPosition);
+struct TreeCtrl : public WindowBase {
+    TreeCtrl(HWND parent);
     ~TreeCtrl();
 
     void Clear();
@@ -60,22 +60,15 @@ class TreeCtrl {
 
     TreeItemState GetItemState(TreeItem*);
 
+    void WndProc(WndProcArgs*) override;
+    void WndProcParent(WndProcArgs*) override;
+
     // creation parameters. must be set before CreateTreeCtrl() call
-    HWND parent = nullptr;
-    RECT initialPos = {0, 0, 0, 0};
-    DWORD dwStyle = WS_CHILD | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT |
-                    TVS_SHOWSELALWAYS | TVS_TRACKSELECT | TVS_DISABLEDRAGDROP | TVS_NOHSCROLL | TVS_INFOTIP;
-    DWORD dwExStyle = 0;
-    HMENU menu = nullptr;
-    COLORREF backgroundColor = 0;
-    COLORREF textColor = 0;
     bool withCheckboxes = false;
     // treeModel not owned by us
     TreeModel* treeModel = nullptr;
 
     // this data can be set directly
-    MsgFilter preFilter = nullptr; // called at start of windows proc to allow intercepting messages
-
     // when set, allows the caller to set info tip by updating NMTVGETINFOTIP
     GetTooltipCb onGetTooltip = nullptr;
 
@@ -86,10 +79,7 @@ class TreeCtrl {
     ContextMenuCb onContextMenu = nullptr;
 
     // private
-    HWND hwnd = nullptr;
     TVITEMW item = {0};
-    UINT_PTR hwndSubclassId = 0;
-    UINT_PTR hwndParentSubclassId = 0;
 
     // TreeItem* -> HTREEITEM mapping so that we can
     // find HTREEITEM from TreeItem*

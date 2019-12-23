@@ -56,9 +56,11 @@ SIZE ButtonCtrl::SetTextAndResize(const WCHAR* s) {
 }
 #endif
 
-LRESULT ButtonCtrl::WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& didHandle) {
-    UNUSED(hwnd);
-    UNUSED(lp);
+void ButtonCtrl::WndProcParent(WndProcArgs* args) {
+    UINT msg = args->msg;
+    WPARAM wp = args->wparam;
+
+    args->result = 0;
     if (msg == WM_COMMAND) {
         auto code = HIWORD(wp);
         if (code == BN_CLICKED) {
@@ -66,10 +68,8 @@ LRESULT ButtonCtrl::WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, boo
                 OnClicked();
             }
         }
-        didHandle = true;
-        return 0;
+        args->didHandle = true;
     }
-    return 0;
 }
 
 ILayout* NewButtonLayout(ButtonCtrl* b) {

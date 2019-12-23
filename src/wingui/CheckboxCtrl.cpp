@@ -47,10 +47,9 @@ bool CheckboxCtrl::Create() {
     return ok;
 }
 
-LRESULT CheckboxCtrl::WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& didHandle) {
-    UNUSED(hwnd);
-    UNUSED(lp);
-
+void CheckboxCtrl::WndProcParent(WndProcArgs* args) {
+    UINT msg = args->msg;
+    WPARAM wp = args->wparam;
     if (msg == WM_COMMAND) {
         auto code = HIWORD(wp);
         if (code == BN_CLICKED) {
@@ -58,11 +57,11 @@ LRESULT CheckboxCtrl::WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, b
                 auto state = GetCheckState();
                 OnCheckStateChanged(state);
             }
-            didHandle = true;
-            return 0;
+            args->didHandle = true;
+            args->result = 0;
+            return;
         }
     }
-    return 0;
 }
 
 SIZE CheckboxCtrl::GetIdealSize() {

@@ -50,10 +50,9 @@ bool DropDownCtrl::Create() {
     return ok;
 }
 
-LRESULT DropDownCtrl::WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& didHandle) {
-    UNUSED(hwnd);
-    UNUSED(lp);
-
+void DropDownCtrl::WndProcParent(WndProcArgs* args) {
+    UINT msg = args->msg;
+    WPARAM wp = args->wparam;
     if (msg == WM_COMMAND) {
         auto code = HIWORD(wp);
         if (code == CBN_SELCHANGE) {
@@ -65,11 +64,11 @@ LRESULT DropDownCtrl::WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, b
                 }
                 OnDropDownSelectionChanged(idx, s);
             }
-            didHandle = true;
-            return 0;
+            args->didHandle = true;
+            args->result = 0;
+            return;
         }
     }
-    return 0;
 }
 
 int DropDownCtrl::GetCurrentSelection() {

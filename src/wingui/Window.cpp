@@ -41,26 +41,19 @@ static LRESULT CALLBACK wndProcDispatch(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
     CrashIf(dwRefData == 0);
     LRESULT res = 0;
     bool didHandle = false;
-    WindowBase* wb = (WindowBase*)dwRefData;
-    if (uIdSubclass == wb->subclassId) {
-        CrashIf(hwnd != wb->hwnd);
-        res = wb->WndProc(hwnd, msg, wp, lp, didHandle);
-    } else if (uIdSubclass == wb->subclassParentId) {
-        CrashIf(hwnd != wb->parent);
-        if (WM_COMMAND == msg) {
-            // the same parent is sub-classed by many controls
-            // we only want to dispatch the message to the control
-            // that originated the message
-            HWND hwndCtrl = (HWND)lp;
-            if (hwndCtrl == wb->hwnd) {
-                res = wb->WndProcParent(hwnd, msg, wp, lp, didHandle);
-            }
-        }
-    } else {
-        CrashMe();
+    WindowBase* w = (WindowBase*)dwRefData;
+    WndProcArgs args{};
+    SetWndProcArgs(args);
+
+    if (uIdSubclass == w->subclassId) {
+        CrashIf(hwnd != w->hwnd);
+        w->WndProc(&args);
+    } else if (uIdSubclass == w->subclassParentId) {
+        CrashIf(hwnd != w->parent);
+        w->WndProcParent(&args);
     }
-    if (didHandle) {
-        return res;
+    if (args.didHandle) {
+        return args.result;
     }
     return DefSubclassProc(hwnd, msg, wp, lp);
 }
@@ -110,22 +103,12 @@ WindowBase::~WindowBase() {
     DestroyWindow(hwnd);
 }
 
-LRESULT WindowBase::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& didHandle) {
-    UNUSED(hwnd);
-    UNUSED(msg);
-    UNUSED(wp);
-    UNUSED(lp);
-    didHandle = false;
-    return 0;
+void WindowBase::WndProc(WndProcArgs* args) {
+    args->didHandle = false;
 }
 
-LRESULT WindowBase::WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& didHandle) {
-    UNUSED(hwnd);
-    UNUSED(msg);
-    UNUSED(wp);
-    UNUSED(lp);
-    didHandle = false;
-    return 0;
+void WindowBase::WndProcParent(WndProcArgs* args) {
+    args->didHandle = false;
 }
 
 SIZE WindowBase::GetIdealSize() {
@@ -139,8 +122,8 @@ bool WindowBase::Create() {
     int y = rc.top;
     int dx = RectDx(rc);
     int dy = RectDy(rc);
-    HMENU idMenu = (HMENU)(UINT_PTR)menuId;
-    hwnd = CreateWindowExW(dwExStyle, winClass, L"", dwStyle, x, y, dx, dy, parent, idMenu, h, nullptr);
+    HMENU m = (HMENU)(UINT_PTR)menuId;
+    hwnd = CreateWindowExW(dwExStyle, winClass, L"", dwStyle, x, y, dx, dy, parent, m, h, nullptr);
 
     if (hwnd == nullptr) {
         return false;
@@ -272,10 +255,11 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     }
 
     if (w->msgFilter) {
-        bool didHandle = false;
-        LRESULT res = w->msgFilter(hwnd, msg, wp, lp, didHandle);
-        if (didHandle) {
-            return res;
+        WndProcArgs args{};
+        SetWndProcArgs(args);
+        w->msgFilter(&args);
+        if (args.didHandle) {
+            return args.result;
         }
     }
 

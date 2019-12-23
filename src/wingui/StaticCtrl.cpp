@@ -50,17 +50,12 @@ SIZE StaticCtrl::GetIdealSize() {
     return s;
 }
 
-LRESULT StaticCtrl::WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& didHandle) {
-    UNUSED(hwnd);
-    UNUSED(lp);
-    UNUSED(didHandle);
-    UNUSED(wp);
-
+void StaticCtrl::WndProcParent(WndProcArgs* args) {
+    UINT msg = args->msg;
     if (msg == WM_COMMAND) {
         // TODO: support STN_CLICKED
-        return 0;
+        return;
     }
-    return 0;
 }
 
 ILayout* NewStaticLayout(StaticCtrl* b) {

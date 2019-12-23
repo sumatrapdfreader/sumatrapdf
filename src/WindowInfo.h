@@ -21,7 +21,7 @@ class DisplayModel;
 class EbookController;
 class TabInfo;
 
-class TreeCtrl;
+struct TreeCtrl;
 struct TooltipCtrl;
 struct DropDownCtrl;
 

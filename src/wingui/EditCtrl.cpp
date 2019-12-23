@@ -34,17 +34,24 @@ ILayout* NewEditLayout(EditCtrl* e) {
     return new WindowBaseLayout(e, kindEdit);
 }
 
-LRESULT EditCtrl::WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& didHandle) {
+void EditCtrl::WndProcParent(WndProcArgs* args) {
     EditCtrl* w = this;
+
+
+    UINT msg = args->msg;
+    WPARAM wp = args->wparam;
+    LPARAM lp = args->lparam;
+
 
     HWND hwndCtrl = (HWND)lp;
     if (hwndCtrl != w->hwnd) {
-        return 0;
+        return;
     }
 
     if (WM_CTLCOLOREDIT == msg) {
         if (w->bgBrush == nullptr) {
-            return DefSubclassProc(hwnd, msg, wp, lp);
+            args->result = DefSubclassProc(hwnd, msg, wp, lp);
+            return;
         }
         HDC hdc = (HDC)wp;
         // SetBkColor(hdc, w->bgCol);
@@ -52,32 +59,33 @@ LRESULT EditCtrl::WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool&
         if (w->textColor != ColorUnset) {
             ::SetTextColor(hdc, w->textColor);
         }
-        didHandle = true;
-        return (INT_PTR)w->bgBrush;
+        args->didHandle = true;
+        args->result = (INT_PTR)w->bgBrush;
+        return;
     }
+
     if (WM_COMMAND == msg) {
         if (EN_CHANGE == HIWORD(wp)) {
             if (w->OnTextChanged) {
                 str::Str s = win::GetTextUtf8(w->hwnd);
                 w->OnTextChanged(s.AsView());
             }
-            didHandle = true;
-            return 0;
+            args->didHandle = true;
+            return;
         }
     }
+
     // TODO: handle WM_CTLCOLORSTATIC for read-only/disabled controls
-    return 0;
 }
 
-LRESULT EditCtrl::WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& didHandle) {
+void EditCtrl::WndProc(WndProcArgs* args) {
     EditCtrl* w = this;
     if (w->msgFilter) {
-        auto res = w->msgFilter(hwnd, msg, wp, lp, didHandle);
-        if (didHandle) {
-            return res;
+        w->msgFilter(args);
+        if (args->didHandle) {
+            return;
         }
     }
-    return 0;
 }
 
 #if 0

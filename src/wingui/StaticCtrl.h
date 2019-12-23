@@ -5,7 +5,8 @@ struct StaticCtrl : public WindowBase {
     StaticCtrl(HWND parent);
     ~StaticCtrl() override;
     bool Create() override;
-    LRESULT WndProcParent(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& didHandle) override;
+
+    void WndProcParent(WndProcArgs*) override;
 
     SIZE GetIdealSize() override;
 };

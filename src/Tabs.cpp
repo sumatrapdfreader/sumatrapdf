@@ -12,6 +12,8 @@
 #include "utils/Log.h"
 
 #include "wingui/WinGui.h"
+#include "wingui/Layout.h"
+#include "wingui/Window.h"
 #include "wingui/TreeModel.h"
 #include "wingui/TreeCtrl.h"
 
@@ -93,7 +95,7 @@ class TabPainter {
 
         GraphicsPath shape;
         // define tab's body
-        shape.AddRectangle(Rect(0, 0, width, height));
+        shape.AddRectangle(Gdiplus::Rect(0, 0, width, height));
         shape.SetMarker();
 
         // define "x"'s circle
@@ -102,7 +104,7 @@ class TabPainter {
         if (height > maxC) {
             c = DpiScaleX(hwnd, 17);
         }
-        Point p(width - c - DpiScaleX(hwnd, 3), (height - c) / 2); // circle's position
+        Gdiplus::Point p(width - c - DpiScaleX(hwnd, 3), (height - c) / 2); // circle's position
         shape.AddEllipse(p.X, p.Y, c, c);
         shape.SetMarker();
         // define "x"
@@ -120,7 +122,7 @@ class TabPainter {
 
     // Finds the index of the tab, which contains the given point.
     int IndexFromPoint(int x, int y, bool* inXbutton = nullptr) {
-        Point point(x, y);
+        Gdiplus::Point point(x, y);
         Graphics gfx(hwnd);
         GraphicsPath shapes(data->Points, data->Types, data->Count);
         GraphicsPath shape;
@@ -131,7 +133,7 @@ class TabPainter {
         REAL yPosTab = inTitlebar ? 0.0f : REAL(rClient.dy - height - 1);
         gfx.TranslateTransform(1.0f, yPosTab);
         for (int i = 0; i < Count(); i++) {
-            Point pt(point);
+            Gdiplus::Point pt(point);
             gfx.TransformPoints(CoordinateSpaceWorld, CoordinateSpaceDevice, &pt, 1);
             if (shape.IsVisible(pt, &gfx)) {
                 iterator.NextMarker(&shape);
@@ -248,9 +250,9 @@ class TabPainter {
             gfx.SetCompositingMode(CompositingModeSourceCopy);
             iterator.NextMarker(&shape);
             br.SetColor(GdiRgbFromCOLORREF(bgCol));
-            Point points[4];
+            Gdiplus::Point points[4];
             shape.GetPathPoints(points, 4);
-            Rect body(points[0].X, points[0].Y, points[2].X - points[0].X, points[2].Y - points[0].Y);
+            Gdiplus::Rect body(points[0].X, points[0].Y, points[2].X - points[0].X, points[2].Y - points[0].Y);
             body.Inflate(0, 0);
             gfx.SetClip(body);
             body.Inflate(5, 5);

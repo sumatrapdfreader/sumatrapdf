@@ -680,8 +680,13 @@ static LRESULT OnTocTreeNotify(WindowInfo* win, NMTREEVIEWW* pnmtv) {
     return -1;
 }
 
-// LRESULT(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& discardMsg)
-static LRESULT TocTreePreFilter(TreeCtrl* tree, UINT msg, WPARAM wp, LPARAM lp, bool& handled) {
+static LRESULT TocTreePreFilter(TreeCtrl* tree, WndProcArgs* args) {
+    CrashIf(tree->hwnd != args->hwnd);
+
+    UINT msg = args->msg;
+    WPARAM wp = args->wparam;
+    LPARAM lp = args->lparam;
+
     HWND hwnd = tree->hwnd;
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
     if (!win) {
@@ -692,7 +697,7 @@ static LRESULT TocTreePreFilter(TreeCtrl* tree, UINT msg, WPARAM wp, LPARAM lp, 
         case WM_CHAR:
             if (VK_ESCAPE == wp && gGlobalPrefs->escToExit && MayCloseWindow(win)) {
                 CloseWindow(win, true);
-                handled = true;
+                args->didHandle = true;
             }
             break;
 
@@ -701,7 +706,7 @@ static LRESULT TocTreePreFilter(TreeCtrl* tree, UINT msg, WPARAM wp, LPARAM lp, 
             // scroll the canvas if the cursor isn't over the ToC tree
             if (!IsCursorOverWindow(win->tocTreeCtrl->hwnd)) {
                 return SendMessage(win->hwndCanvas, msg, wp, lp);
-                handled = true;
+                args->didHandle = true;
             }
             break;
 #ifdef DISPLAY_TOC_PAGE_NUMBERS
@@ -800,7 +805,7 @@ void CreateToc(WindowInfo* win) {
     win->altBookmarks = new DropDownCtrl(win->hwndTocBox);
     win->altBookmarks->Create();
 
-    auto* treeCtrl = new TreeCtrl(win->hwndTocBox, nullptr);
+    auto* treeCtrl = new TreeCtrl(win->hwndTocBox);
     // TODO: remove, for easy testing
     // treeCtrl->withCheckboxes = true;
 
@@ -809,10 +814,9 @@ void CreateToc(WindowInfo* win) {
     dwStyle |= WS_TABSTOP | WS_VISIBLE | WS_CHILD;
     treeCtrl->dwStyle = dwStyle;
     treeCtrl->dwExStyle = WS_EX_STATICEDGE;
-    treeCtrl->menu = (HMENU)IDC_TOC_TREE;
-    treeCtrl->preFilter = [treeCtrl](HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, bool& handled) -> LRESULT {
-        UNUSED(hwnd);
-        return TocTreePreFilter(treeCtrl, msg, wp, lp, handled);
+    treeCtrl->menuId = IDC_TOC_TREE;
+    treeCtrl->msgFilter = [treeCtrl](WndProcArgs* args) {
+        return TocTreePreFilter(treeCtrl, args);
     };
     treeCtrl->onTreeNotify = [win, treeCtrl](NMTREEVIEWW* nm, bool& handled) {
         CrashIf(win->tocTreeCtrl != treeCtrl);
