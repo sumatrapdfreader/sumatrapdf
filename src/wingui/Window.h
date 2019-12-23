@@ -67,6 +67,15 @@ struct WindowBase {
 
 extern Kind kindWindow;
 
+struct Window;
+
+struct WindowCloseArgs {
+    Window* window = nullptr;
+    bool cancel = false;
+};
+
+typedef std::function<void(WindowCloseArgs*)> OnClose;
+
 // a top-level window. Must set winClass before
 // calling Create()
 struct Window : public WindowBase {
@@ -76,7 +85,8 @@ struct Window : public WindowBase {
     LPCWSTR lpszMenuName = nullptr;
 
     WmCommandCb onCommand = nullptr;
-    SizeCb onSize = nullptr;
+    OnSize onSize = nullptr;
+    OnClose onClose = nullptr;
 
     Window();
     ~Window() override;

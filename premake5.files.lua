@@ -419,6 +419,7 @@ function sumatra_files()
     "TextSearch.*",
     "TextSelection.*",
     "Theme.*",
+    "TocEditor.*",
     "Toolbar.*",
     "Translations.*",
     "Trans_sumatra_txt.cpp",

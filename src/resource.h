@@ -81,9 +81,12 @@
 #define IDM_OPEN_WITH_EXTERNAL_LAST     509
 #define IDM_FILE_HISTORY_FIRST          510
 #define IDM_FILE_HISTORY_LAST           519
-#define IDM_EXPORT_BOOKMARKS            530
-#define IDM_EXPAND_ALL                  531
-#define IDM_COLLAPSE_ALL                532
+
+#define IDM_EXPAND_ALL                  525
+#define IDM_COLLAPSE_ALL                526
+#define IDM_EXPORT_BOOKMARKS            527
+#define IDM_NEW_BOOKMARKS               528
+
 #define IDM_VISIT_WEBSITE               550
 #define IDM_ABOUT                       551
 #define IDM_OPTIONS                     552

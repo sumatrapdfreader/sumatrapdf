@@ -40,6 +40,7 @@
 #include "Translations.h"
 #include "Tabs.h"
 #include "Menu.h"
+#include "TocEditor.h"
 
 constexpr UINT_PTR SUBCLASS_ID = 1;
 
@@ -436,11 +437,28 @@ static void SetInitialExpandState(DocTocItem* item, Vec<int>& tocState) {
     }
 }
 
-static MenuDef contextMenuDef[] = {
-    {"Expand All", IDM_EXPAND_ALL, MF_NO_TRANSLATE},
-    {"Colapse All", IDM_COLLAPSE_ALL, MF_NO_TRANSLATE},
-    {"Export Bookmarks", IDM_EXPORT_BOOKMARKS, MF_NO_TRANSLATE},
-};
+#if defined(DEBUG) || defined(SVN_PRE_RELEASE_VER)
+static MenuDef contextMenuDef[] = {{"Expand All", IDM_EXPAND_ALL, MF_NO_TRANSLATE},
+                                   {"Colapse All", IDM_COLLAPSE_ALL, MF_NO_TRANSLATE},
+                                   {"Export Bookmarks", IDM_EXPORT_BOOKMARKS, MF_NO_TRANSLATE},
+                                   {"New Bookmarks", IDM_NEW_BOOKMARKS, MF_NO_TRANSLATE}};
+#else
+static MenuDef contextMenuDef[] = {{"Expand All", IDM_EXPAND_ALL, MF_NO_TRANSLATE},
+                                   {"Colapse All", IDM_COLLAPSE_ALL, MF_NO_TRANSLATE},
+#endif
+
+static void ExportBookmarksFromTab(TabInfo* tab) {
+    auto* tocTree = tab->ctrl->GetTocTree();
+    AutoFree path = strconv::WstrToUtf8(tab->filePath.get());
+    bool ok = ExportBookmarksToFile(tocTree, path);
+    str::WStr msg;
+    msg.AppendFmt(L"Exported bookmarks to file %s", tab->filePath.get());
+    msg.Append(L".bkm");
+    str::WStr caption;
+    caption.Append(L"Exported bookmarks");
+    UINT type = MB_OK | MB_ICONINFORMATION | MbRtlReadingMaybe();
+    MessageBoxW(nullptr, msg.Get(), caption.Get(), type);
+}
 
 static void BuildAndShowContextMenu(WindowInfo* win, int x, int y) {
     HMENU popup = BuildMenuFromMenuDef(contextMenuDef, dimof(contextMenuDef), CreatePopupMenu());
@@ -454,18 +472,11 @@ static void BuildAndShowContextMenu(WindowInfo* win, int x, int y) {
     switch (cmd) {
         case IDM_EXPORT_BOOKMARKS: {
             auto* tab = win->currentTab;
-            auto* tocTree = tab->ctrl->GetTocTree();
-            AutoFree path = strconv::WstrToUtf8(tab->filePath.get());
-            bool ok = ExportBookmarksToFile(tocTree, path);
-            str::WStr msg;
-            msg.AppendFmt(L"Exported bookmarks to file %s", tab->filePath.get());
-            msg.Append(L".bkm");
-            str::WStr caption;
-            caption.Append(L"Exported bookmarks");
-            UINT type = MB_OK | MB_ICONINFORMATION | MbRtlReadingMaybe();
-            MessageBoxW(nullptr, msg.Get(), caption.Get(), type);
-
+            ExportBookmarksFromTab(tab);
         } break;
+            case IDM_NEW_BOOKMARKS:
+            StartTocEditor(nullptr);
+            break;
         case IDM_EXPAND_ALL:
             win->tocTreeCtrl->ExpandAll();
             break;
@@ -790,8 +801,8 @@ void CreateToc(WindowInfo* win) {
     win->altBookmarks->Create();
 
     auto* treeCtrl = new TreeCtrl(win->hwndTocBox, nullptr);
-    //TODO: remove, for easy testing
-    //treeCtrl->withCheckboxes = true;
+    // TODO: remove, for easy testing
+    // treeCtrl->withCheckboxes = true;
 
     DWORD dwStyle = TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS;
     dwStyle |= TVS_TRACKSELECT | TVS_DISABLEDRAGDROP | TVS_NOHSCROLL | TVS_INFOTIP;

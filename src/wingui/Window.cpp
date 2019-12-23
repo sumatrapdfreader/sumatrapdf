@@ -234,8 +234,19 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 
     // don't allow intercepting those messages
     if (WM_DESTROY == msg) {
-        PostQuitMessage(0);
         return 0;
+    }
+
+    if (WM_CLOSE == msg) {
+        if (w->onClose) {
+            WindowCloseArgs args{};
+            args.window = w;
+            w->onClose(&args);
+            if (args.cancel) {
+                return 0;
+            }
+        }
+        return DefWindowProc(hwnd, msg, wp, lp);
     }
 
     if (WM_NCDESTROY == msg) {

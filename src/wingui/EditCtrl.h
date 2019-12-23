@@ -6,7 +6,8 @@ typedef std::function<void(std::string_view)> OnTextChanged;
 // pass to SetColor() function to indicate this color should not change
 #define NO_CHANGE (COLORREF)(-2) // -1 is taken by NO_COLOR in windows headers
 
-/* Creation sequence:
+/*
+Creation sequence:
 - auto ctrl = new EditCtrl()
 - set creation parameters
 - ctrl.Create()
