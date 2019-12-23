@@ -28,6 +28,7 @@ struct WndProcArgs {
 typedef std::function<void(WndProcArgs*)> MsgFilter;
 
 struct SizeArgs {
+    WindowBase* w = nullptr;
     HWND hwnd = nullptr;
     int dx = 0;
     int dy = 0;
@@ -36,10 +37,9 @@ struct SizeArgs {
     LPARAM lparam = 0;
 
     bool didHandle = false;
-    LRESULT result = 0;
 };
 
-typedef std::function<void(HWND, int dx, int dy, WPARAM resizeType)> OnSize;
+typedef std::function<void(SizeArgs*)> OnSize;
 
 struct WindowCloseArgs {
     Window* window = nullptr;

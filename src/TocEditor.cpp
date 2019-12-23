@@ -68,9 +68,10 @@ void StartTocEditor(TreeModel* tm) {
     CrashIf(!ok);
 
     gTocEditorLayout = CreateMainLayout(w->hwnd);
-    w->onSize = [](HWND hwnd, int dx, int dy, WPARAM resizeType) {
-        UNUSED(hwnd);
-        UNUSED(resizeType);
+    w->onSize = [](SizeArgs* args) {
+        int dx = args->dx;
+        int dy = args->dy;
+        HWND hwnd = args->hwnd;
         if (dx == 0 || dy == 0) {
             return;
         }
@@ -83,6 +84,7 @@ void StartTocEditor(TreeModel* tm) {
         Rect bounds{min, max};
         gTocEditorLayout->SetBounds(bounds);
         InvalidateRect(hwnd, nullptr, false);
+        args->didHandle = true;
     };
     w->onDestroyed = [](WindowDestroyedArgs*) {
         delete gTocEditorWindow;

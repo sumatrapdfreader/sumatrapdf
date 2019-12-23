@@ -287,10 +287,17 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     }
 
     if ((WM_SIZE == msg) && w->onSize) {
-        int dx = LOWORD(lp);
-        int dy = HIWORD(lp);
-        w->onSize(hwnd, dx, dy, wp);
-        return 0;
+        SizeArgs args;
+        args.w = w;
+        args.hwnd = hwnd;
+        args.wparam = wp;
+        args.lparam = lp;
+        args.dx = LOWORD(lp);
+        args.dy = HIWORD(lp);
+        w->onSize(&args);
+        if (args.didHandle) {
+            return 0;
+        }
     }
 
     if (WM_PAINT == msg) {
