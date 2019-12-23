@@ -815,9 +815,7 @@ void CreateToc(WindowInfo* win) {
     treeCtrl->dwStyle = dwStyle;
     treeCtrl->dwExStyle = WS_EX_STATICEDGE;
     treeCtrl->menuId = IDC_TOC_TREE;
-    treeCtrl->msgFilter = [treeCtrl](WndProcArgs* args) {
-        return TocTreePreFilter(treeCtrl, args);
-    };
+    treeCtrl->msgFilter = [treeCtrl](WndProcArgs* args) { return TocTreePreFilter(treeCtrl, args); };
     treeCtrl->onTreeNotify = [win, treeCtrl](NMTREEVIEWW* nm, bool& handled) {
         CrashIf(win->tocTreeCtrl != treeCtrl);
         LRESULT res = OnTocTreeNotify(win, nm);

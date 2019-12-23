@@ -37,11 +37,9 @@ ILayout* NewEditLayout(EditCtrl* e) {
 void EditCtrl::WndProcParent(WndProcArgs* args) {
     EditCtrl* w = this;
 
-
     UINT msg = args->msg;
     WPARAM wp = args->wparam;
     LPARAM lp = args->lparam;
-
 
     HWND hwndCtrl = (HWND)lp;
     if (hwndCtrl != w->hwnd) {

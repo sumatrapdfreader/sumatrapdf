@@ -1,9 +1,11 @@
+
 /* Copyright 2019 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "utils/BaseUtil.h"
 #include "utils/WinUtil.h"
 #include "utils/ScopedWin.h"
+#include "utils/Log.h"
 
 #include "wingui/WinGui.h"
 #include "wingui/Layout.h"
@@ -39,21 +41,74 @@ Kind kindWindowBase = "windowBase";
 static LRESULT CALLBACK wndProcDispatch(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass,
                                         DWORD_PTR dwRefData) {
     CrashIf(dwRefData == 0);
-    LRESULT res = 0;
-    bool didHandle = false;
-    WindowBase* w = (WindowBase*)dwRefData;
-    WndProcArgs args{};
-    SetWndProcArgs(args);
 
+    WindowBase* w = (WindowBase*)dwRefData;
     if (uIdSubclass == w->subclassId) {
         CrashIf(hwnd != w->hwnd);
+        WndProcArgs args{};
+        SetWndProcArgs(args);
         w->WndProc(&args);
-    } else if (uIdSubclass == w->subclassParentId) {
-        CrashIf(hwnd != w->parent);
-        w->WndProcParent(&args);
+        if (args.didHandle) {
+            return args.result;
+        }
     }
-    if (args.didHandle) {
-        return args.result;
+    return DefSubclassProc(hwnd, msg, wp, lp);
+}
+
+// TODO: potentially more messages
+// https://docs.microsoft.com/en-us/cpp/mfc/reflected-window-message-ids?view=vs-2019
+static HWND getChildHWNDForMessage(UINT msg, WPARAM wp, LPARAM lp) {
+    // https://docs.microsoft.com/en-us/windows/win32/controls/wm-ctlcolorbtn
+    if (WM_CTLCOLORBTN == msg) {
+        return (HWND)lp;
+    }
+    // https://docs.microsoft.com/en-us/windows/win32/controls/wm-notify
+    if (WM_NOTIFY == msg) {
+        NMHDR* hdr = (NMHDR*)lp;
+        return hdr->hwndFrom;
+    }
+    // https://docs.microsoft.com/en-us/windows/win32/menurc/wm-command
+    if (WM_COMMAND == msg) {
+        return (HWND)lp;
+    }
+    // https://docs.microsoft.com/en-us/windows/win32/controls/wm-drawitem
+    if (WM_DRAWITEM == msg) {
+        DRAWITEMSTRUCT* s = (DRAWITEMSTRUCT*)lp;
+        return s->hwndItem;
+    }
+    // TODO: there's no HWND so have to do it differently e.g. allocate
+    // unique CtlID, store it in WindowBase and compare that
+#if 0
+    // https://docs.microsoft.com/en-us/windows/win32/controls/wm-measureitem
+    if (WM_MEASUREITEM == msg) {
+        MEASUREITEMSTRUCT* s = (MEASUREITEMSTRUCT*)lp;
+        return s->CtlID;
+    }
+#endif
+    return nullptr;
+}
+
+// TODO: maybe just always subclass main window and reflect those messages
+// back to their children instead of subclassing in each child
+// Another option: always create a reflector HWND window, like
+static LRESULT CALLBACK wndProcParentDispatch(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass,
+                                              DWORD_PTR dwRefData) {
+    WindowBase* w = (WindowBase*)dwRefData;
+    // char* msgName = getWinMessageName(msg);
+    // dbglogf("hwnd: 0x%6p, msg: 0x%03x (%s), wp: 0x%x, id: %d, w: 0x%p\n", hwnd, msg, msgName, wp, uIdSubclass, w);
+    if (uIdSubclass != w->subclassParentId) {
+        return DefSubclassProc(hwnd, msg, wp, lp);
+    }
+    CrashIf(hwnd != w->parent);
+
+    HWND hwndCtrl = getChildHWNDForMessage(msg, wp, lp);
+    if (hwndCtrl == w->hwnd) {
+        WndProcArgs args{};
+        SetWndProcArgs(args);
+        w->WndProcParent(&args);
+        if (args.didHandle) {
+            return args.result;
+        }
     }
     return DefSubclassProc(hwnd, msg, wp, lp);
 }
@@ -61,22 +116,22 @@ static LRESULT CALLBACK wndProcDispatch(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
 void WindowBase::Subclass() {
     CrashIf(!hwnd);
     WindowBase* wb = this;
-    UINT_PTR id = NextSubclassId();
-    BOOL ok = SetWindowSubclass(hwnd, wndProcDispatch, id, (DWORD_PTR)wb);
+    subclassId = NextSubclassId();
+    BOOL ok = SetWindowSubclass(hwnd, wndProcDispatch, subclassId, (DWORD_PTR)wb);
     CrashIf(!ok);
-    if (ok) {
-        subclassId = id;
+    if (!ok) {
+        subclassId = 0;
     }
 }
 
 void WindowBase::SubclassParent() {
     CrashIf(!parent);
     WindowBase* wb = this;
-    UINT_PTR id = NextSubclassId();
-    BOOL ok = SetWindowSubclass(parent, wndProcDispatch, id, (DWORD_PTR)wb);
+    subclassParentId = NextSubclassId();
+    BOOL ok = SetWindowSubclass(parent, wndProcParentDispatch, subclassParentId, (DWORD_PTR)wb);
     CrashIf(!ok);
-    if (ok) {
-        subclassParentId = id;
+    if (!ok) {
+        subclassParentId = 0;
     }
 }
 
@@ -95,13 +150,22 @@ WindowBase::WindowBase(HWND p) {
     parent = p;
 }
 
+void WindowBase::Destroy() {
+    auto tmp = hwnd;
+    hwnd = nullptr;
+    if (IsWindow(tmp)) {
+        DestroyWindow(tmp);
+    }
+}
+
 WindowBase::~WindowBase() {
     if (backgroundColorBrush != nullptr) {
         DeleteObject(backgroundColorBrush);
     }
     Unsubclass();
-    DestroyWindow(hwnd);
+    Destroy();
 }
+
 
 void WindowBase::WndProc(WndProcArgs* args) {
     args->didHandle = false;
@@ -389,15 +453,6 @@ bool Window::Create() {
 }
 
 Window::~Window() {
-    Destroy();
-}
-
-void Window::Destroy() {
-    auto tmp = hwnd;
-    hwnd = nullptr;
-    if (IsWindow(tmp)) {
-        DestroyWindow(tmp);
-    }
 }
 
 void Window::SetTitle(std::string_view title) {

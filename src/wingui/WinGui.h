@@ -26,3 +26,4 @@ struct ContextMenuArgs {
 typedef std::function<void(HWND, int xMouseScreen, int yMouseScreen)> ContextMenuCb;
 
 SIZE MeasureTextInHwnd(HWND hwnd, const WCHAR* txt, HFONT font);
+char* getWinMessageName(UINT msg);

@@ -18,7 +18,7 @@ struct WndProcArgs {
 
 #define SetWndProcArgs(n) \
     {                     \
-        n.w = w;       \
+        n.w = w;          \
         n.hwnd = hwnd;    \
         n.msg = msg;      \
         n.wparam = wp;    \
@@ -95,6 +95,7 @@ struct WindowBase {
     virtual void WndProc(WndProcArgs*);
     virtual void WndProcParent(WndProcArgs*);
 
+    void Destroy();
     void Subclass();
     void SubclassParent();
     void Unsubclass();
@@ -138,7 +139,6 @@ struct Window : public WindowBase {
     bool Create() override;
 
     void SetTitle(std::string_view);
-    void Destroy();
 };
 
 struct WindowBaseLayout : public ILayout {
