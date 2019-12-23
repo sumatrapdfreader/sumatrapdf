@@ -713,6 +713,7 @@
     <ClCompile Include="..\src\wingui\TabsCtrl.cpp" />
     <ClCompile Include="..\src\wingui\TooltipCtrl.cpp" />
     <ClCompile Include="..\src\wingui\TreeCtrl.cpp" />
+    <ClCompile Include="..\src\wingui\TreeModel.cpp" />
     <ClCompile Include="..\src\wingui\WinGui.cpp" />
     <ClCompile Include="..\src\wingui\Window.cpp" />
   </ItemGroup>

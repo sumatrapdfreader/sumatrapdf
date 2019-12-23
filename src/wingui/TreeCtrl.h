@@ -4,10 +4,6 @@
 typedef std::function<void(NMTVGETINFOTIPW*)> GetTooltipCb;
 typedef std::function<LRESULT(NMTREEVIEWW*, bool& didHandle)> TreeNotifyCb;
 
-// function called for every item in the tree.
-// returning false stops iteration
-typedef std::function<bool(TVITEM*)> TreeItemVisitor;
-
 /* Creation sequence:
 - auto ctrl = new TreeCtrl()
 - set creation parameters
@@ -38,7 +34,6 @@ class TreeCtrl {
     bool SelectItem(TreeItem*);
     HTREEITEM InsertItem(TVINSERTSTRUCTW*);
 
-    void VisitNodes(const TreeItemVisitor& visitor);
     // TODO: create 2 functions for 2 different fItemRect values
     bool GetItemRect(HTREEITEM, bool fItemRect, RECT& r);
 

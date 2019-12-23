@@ -1,6 +1,7 @@
 /* Copyright 2019 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+
 // TreeItem represents an item in a TreeView control
 struct TreeItem {
     virtual ~TreeItem(){};
@@ -23,3 +24,9 @@ struct TreeModel {
     virtual int RootCount() = 0;
     virtual TreeItem* RootAt(int) = 0;
 };
+
+// function called for every item in the TreeModel
+// return false to stop iteration
+typedef std::function<bool(TreeItem*)> TreeItemVisitor;
+
+bool VisitTreeModelItems(TreeModel* tm, const TreeItemVisitor& visitor);

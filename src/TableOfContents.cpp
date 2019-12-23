@@ -296,8 +296,9 @@ static TreeItem* TreeItemForPageNo(TreeCtrl* treeCtrl, int pageNo) {
     DocTocItem* bestMatch = nullptr;
     int bestMatchPageNo = 0;
 
-    treeCtrl->VisitNodes([&](TVITEMW* item) {
-        auto* docItem = GetDocTocItemFromLPARAM(item->lParam);
+    TreeModel* tm = treeCtrl->treeModel;
+    VisitTreeModelItems(tm, [&](TreeItem* ti) {
+        auto* docItem = (DocTocItem*)ti;
         if (!docItem) {
             return true;
         }

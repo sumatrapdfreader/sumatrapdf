@@ -278,7 +278,6 @@ bool TreeCtrl::SelectItem(TreeItem* ti) {
     return ok == TRUE;
 }
 
-
 HTREEITEM TreeCtrl::InsertItem(TVINSERTSTRUCTW* item) {
     HTREEITEM res = TreeView_InsertItem(this->hwnd, item);
     return res;
@@ -335,40 +334,6 @@ void TreeCtrl::SuspendRedraw() {
 
 void TreeCtrl::ResumeRedraw() {
     SendMessage(hwnd, WM_SETREDRAW, TRUE, 0);
-}
-
-// returns false if we should stop iteration
-// TODO: convert to non-recursive version by storing nodes to visit in std::deque
-static bool VisitTreeNodesRec(HWND hwnd, HTREEITEM hItem, const TreeItemVisitor& visitor) {
-    while (hItem) {
-        TVITEMW item = {0};
-        item.hItem = hItem;
-        item.mask = TVIF_PARAM | TVIF_STATE;
-        item.stateMask = TVIS_EXPANDED;
-        BOOL ok = TreeView_GetItem(hwnd, &item);
-        if (!ok) {
-            // we failed to get the node, but we don't want to stop the traversal
-            return true;
-        }
-        bool shouldContinue = visitor(&item);
-        if (!shouldContinue) {
-            // visitor asked to stop
-            return false;
-        }
-
-        if ((item.state & TVIS_EXPANDED)) {
-            HTREEITEM child = TreeView_GetChild(hwnd, hItem);
-            VisitTreeNodesRec(hwnd, child, visitor);
-        }
-
-        hItem = TreeView_GetNextSibling(hwnd, hItem);
-    }
-    return true;
-}
-
-void TreeCtrl::VisitNodes(const TreeItemVisitor& visitor) {
-    HTREEITEM hRoot = TreeView_GetRoot(this->hwnd);
-    VisitTreeNodesRec(this->hwnd, hRoot, visitor);
 }
 
 str::WStr TreeCtrl::GetTooltip(HTREEITEM hItem) {

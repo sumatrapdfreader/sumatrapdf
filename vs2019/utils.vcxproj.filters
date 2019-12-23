@@ -374,6 +374,9 @@
     <ClCompile Include="..\src\wingui\TreeCtrl.cpp">
       <Filter>wingui</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\wingui\TreeModel.cpp">
+      <Filter>wingui</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\wingui\WinGui.cpp">
       <Filter>wingui</Filter>
     </ClCompile>
