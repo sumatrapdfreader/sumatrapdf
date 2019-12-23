@@ -291,67 +291,24 @@ static HTREEITEM AddTocItemToView(TreeCtrl* tree, DocTocItem* entry, HTREEITEM p
 }
 #endif
 
-#if 0
-static void TreeItemForPageNoRec(TreeCtrl* tocTreeCtrl, HTREEITEM hItem, int pageNo, HTREEITEM& bestMatchItem,
-                                 int& bestMatchPageNo) {
-    while (hItem && bestMatchPageNo < pageNo) {
-        TVITEMW* item = TreeCtrlGetItem(tocTreeCtrl, hItem);
-        CrashIf(!item);
-        if (!item) {
-            return;
-        }
-        // remember this item if it is on the specified page (or on a previous page and closer than all other items)
-        if (item->lParam) {
-            auto* docItem = reinterpret_cast<DocTocItem*>(item->lParam);
-            int page = docItem->pageNo;
-            if (page <= pageNo && page >= bestMatchPageNo && page >= 1) {
-                bestMatchItem = hItem;
-                bestMatchPageNo = page;
-            }
-        }
-
-        // find any child item closer to the specified page
-        if ((item->state & TVIS_EXPANDED)) {
-            HTREEITEM child = TreeCtrlGetChild(tocTreeCtrl, hItem);
-            TreeItemForPageNoRec(tocTreeCtrl, child, pageNo, bestMatchItem, bestMatchPageNo);
-        }
-
-        hItem = TreeCtrlGetNextSibling(tocTreeCtrl, hItem);
-    }
-}
-
-static HTREEITEM TreeItemForPageNo(TreeCtrl* tocTreeCtrl, int pageNo) {
-    HTREEITEM hRoot = TreeCtrlGetRoot(tocTreeCtrl);
-    if (!hRoot) {
-        return nullptr;
-    }
-
-    HTREEITEM bestMatchItem = hRoot;
-    int bestMatchPageNo = 0;
-
-    TreeItemForPageNoRec(win, hRoot, pageNo, bestMatchItem, bestMatchPageNo);
-
-    return bestMatchItem;
-}
-#endif
-
 // find the closest item in tree view to a given page number
 static TreeItem* TreeItemForPageNo(TreeCtrl* treeCtrl, int pageNo) {
-    HTREEITEM bestMatchItem = nullptr;
+    DocTocItem* bestMatch = nullptr;
     int bestMatchPageNo = 0;
 
-    treeCtrl->VisitNodes([&bestMatchItem, &bestMatchPageNo, pageNo](TVITEMW* item) {
-        if (!bestMatchItem) {
-            // if nothing else matches, match the root node
-            bestMatchItem = item->hItem;
-        }
+    treeCtrl->VisitNodes([&](TVITEMW* item) {
         auto* docItem = GetDocTocItemFromLPARAM(item->lParam);
         if (!docItem) {
             return true;
         }
+        if (!bestMatch) {
+            // if nothing else matches, match the root node
+            bestMatch = docItem;
+        }
+
         int page = docItem->pageNo;
         if ((page <= pageNo) && (page >= bestMatchPageNo) && (page >= 1)) {
-            bestMatchItem = item->hItem;
+            bestMatch = docItem;
             bestMatchPageNo = page;
             if (pageNo == bestMatchPageNo) {
                 // we can stop earlier if we found the exact match
@@ -360,8 +317,7 @@ static TreeItem* TreeItemForPageNo(TreeCtrl* treeCtrl, int pageNo) {
         }
         return true;
     });
-    TreeItem* res = treeCtrl->GetTreeItemByHandle(bestMatchItem);
-    return res;
+    return bestMatch;
 }
 
 void UpdateTocSelection(WindowInfo* win, int currPageNo) {

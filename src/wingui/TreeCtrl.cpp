@@ -272,13 +272,6 @@ HTREEITEM TreeCtrl::GetSelection() {
     return res;
 }
 
-#if 0
-bool TreeCtrl::SelectItem(HTREEITEM item) {
-    BOOL ok = TreeView_SelectItem(hwnd, item);
-    return ok == TRUE;
-}
-#endif
-
 bool TreeCtrl::SelectItem(TreeItem* ti) {
     auto hi = GetHandleByTreeItem(ti);
     BOOL ok = TreeView_SelectItem(hwnd, hi);
@@ -412,16 +405,29 @@ TreeItem* TreeCtrl::GetTreeItemByHandle(HTREEITEM item) {
 }
 
 static HTREEITEM InsertItem(TreeCtrl* tree, HTREEITEM parent, TreeItem* item) {
-    TV_INSERTSTRUCT toInsert{};
+    TVINSERTSTRUCTW toInsert{};
+    UINT mask = TVIF_TEXT | TVIF_PARAM | TVIF_STATE;
+
     toInsert.hParent = parent;
     toInsert.hInsertAfter = TVI_LAST;
-    toInsert.itemex.mask = TVIF_TEXT | TVIF_PARAM | TVIF_STATE;
+    toInsert.itemex.mask = mask;
+
+    UINT stateMask = TVIS_EXPANDED;
     UINT state = 0;
     if (item->IsExpanded()) {
         state = TVIS_EXPANDED;
     }
+
+    if (tree->withCheckboxes) {
+        stateMask |= TVIS_STATEIMAGEMASK;
+        bool isChecked = item->IsChecked();
+        UINT imgIdx = isChecked ? 2 : 1;
+        UINT imgState = INDEXTOSTATEIMAGEMASK(imgIdx);
+        state |= imgState;
+    }
+
     toInsert.itemex.state = state;
-    toInsert.itemex.stateMask = TVIS_EXPANDED;
+    toInsert.itemex.stateMask = stateMask;
     toInsert.itemex.lParam = reinterpret_cast<LPARAM>(item);
     auto title = item->Text();
     toInsert.itemex.pszText = title;

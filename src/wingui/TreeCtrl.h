@@ -31,9 +31,9 @@ class TreeCtrl {
     str::WStr GetTooltip(HTREEITEM);
     HTREEITEM GetRoot();
     HTREEITEM GetChild(HTREEITEM);
-    HTREEITEM GetSiblingNext(HTREEITEM); // GetNextSibling is windows macro
+    // GetNextSibling is windows macro so need a different name
+    HTREEITEM GetSiblingNext(HTREEITEM);
     HTREEITEM GetSelection();
-    //bool SelectItem(HTREEITEM);
 
     bool SelectItem(TreeItem*);
     HTREEITEM InsertItem(TVINSERTSTRUCTW*);
