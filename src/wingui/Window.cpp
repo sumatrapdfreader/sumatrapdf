@@ -232,8 +232,15 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
 
     Window* w = (Window*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 
-    // don't allow intercepting those messages
-    if (WM_DESTROY == msg) {
+    // this is the last message ever received by hwnd
+    if (WM_NCDESTROY == msg) {
+        if (w->onDestroyed) {
+            WindowDestroyedArgs args{};
+            args.window = w;
+            w->onDestroyed(&args);
+        } else {
+            PostQuitMessage(0);
+        }
         return 0;
     }
 
@@ -245,11 +252,18 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             if (args.cancel) {
                 return 0;
             }
+        } else {
+            w->Destroy();
         }
         return DefWindowProc(hwnd, msg, wp, lp);
     }
 
     if (WM_NCDESTROY == msg) {
+        if (w->onDestroyed) {
+            WindowDestroyedArgs args;
+            args.window = w;
+            w->onDestroyed(&args);
+        }
         return DefWindowProc(hwnd, msg, wp, lp);
     }
 
@@ -274,11 +288,16 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         }
     }
 
-    if ((WM_COMMAND == msg) && w->onCommand) {
-        bool discardMsg = false;
-        LRESULT res = w->onCommand(hwnd, LOWORD(wp), HIWORD(wp), lp, discardMsg);
-        if (discardMsg) {
-            return res;
+    if ((WM_COMMAND == msg) && w->onWmCommand) {
+        WmCommandArgs args{};
+        args.hwnd = hwnd;
+        args.id = LOWORD(wp);
+        args.ev = HIWORD(wp);
+        args.lparam = lp;
+        args.wparam = wp;
+        w->onWmCommand(&args);
+        if (args.didHandle) {
+            return args.result;
         }
         return DefWindowProc(hwnd, msg, wp, lp);
     }
@@ -374,11 +393,20 @@ bool Window::Create() {
     }
     SetFont(hfont);
     HwndSetText(hwnd, text.AsView());
+
     return true;
 }
 
 Window::~Window() {
-    DestroyWindow(hwnd);
+    Destroy();
+}
+
+void Window::Destroy() {
+    auto tmp = hwnd;
+    hwnd = nullptr;
+    if (IsWindow(tmp)) {
+        DestroyWindow(tmp);
+    }
 }
 
 void Window::SetTitle(std::string_view title) {

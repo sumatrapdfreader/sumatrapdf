@@ -676,7 +676,7 @@ static void OnButtonBrowse() {
     gTextboxInstDir->SetFocus();
 }
 
-static bool OnWmCommand(WPARAM wParam) {
+static bool InstallerOnWmCommand(WPARAM wParam) {
     switch (LOWORD(wParam)) {
         case IDCANCEL:
             OnButtonExit();
@@ -867,7 +867,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
             break;
 
         case WM_COMMAND:
-            handled = OnWmCommand(wParam);
+            handled = InstallerOnWmCommand(wParam);
             if (!handled)
                 return DefWindowProc(hwnd, message, wParam, lParam);
             break;

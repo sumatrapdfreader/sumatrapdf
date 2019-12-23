@@ -288,7 +288,7 @@ void OnUninstallationFinished() {
     CloseHandle(hThread);
 }
 
-static bool OnWmCommand(WPARAM wParam) {
+static bool UninstallerOnWmCommand(WPARAM wParam) {
     switch (LOWORD(wParam)) {
         case IDCANCEL:
             OnButtonExit();
@@ -369,7 +369,7 @@ static LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT message, WPARAM wParam, LPA
             break;
 
         case WM_COMMAND:
-            handled = OnWmCommand(wParam);
+            handled = UninstallerOnWmCommand(wParam);
             if (!handled)
                 return DefWindowProc(hwnd, message, wParam, lParam);
             break;

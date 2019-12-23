@@ -12,6 +12,9 @@
 
 #include "TocEditor.h"
 
+static Window* gTocEditorWindow = nullptr;
+static ILayout* gTocEditorLayout = nullptr;
+
 static std::tuple<ILayout*, ButtonCtrl*> CreateButtonLayout(HWND parent, std::string_view s, OnClicked onClicked) {
     auto b = new ButtonCtrl(parent);
     b->OnClicked = onClicked;
@@ -51,6 +54,12 @@ static ILayout* CreateMainLayout(HWND hwnd) {
 
 void StartTocEditor(TreeModel* tm) {
     UNUSED(tm);
+    if (gTocEditorWindow != nullptr) {
+        gTocEditorWindow->onDestroyed = nullptr;
+        delete gTocEditorWindow;
+        delete gTocEditorLayout;
+    }
+
     auto w = new Window();
     w->backgroundColor = MkRgb((u8)0xae, (u8)0xae, (u8)0xae);
     w->SetTitle("Table of contest editor");
@@ -58,8 +67,8 @@ void StartTocEditor(TreeModel* tm) {
     bool ok = w->Create();
     CrashIf(!ok);
 
-    auto l = CreateMainLayout(w->hwnd);
-    w->onSize = [&](HWND hwnd, int dx, int dy, WPARAM resizeType) {
+    gTocEditorLayout = CreateMainLayout(w->hwnd);
+    w->onSize = [](HWND hwnd, int dx, int dy, WPARAM resizeType) {
         UNUSED(hwnd);
         UNUSED(resizeType);
         if (dx == 0 || dy == 0) {
@@ -68,19 +77,22 @@ void StartTocEditor(TreeModel* tm) {
         // auto c = Loose(Size{dx, dy});
         Size windowSize{dx, dy};
         auto c = Tight(windowSize);
-        auto size = l->Layout(c);
+        auto size = gTocEditorLayout->Layout(c);
         Point min{0, 0};
         Point max{size.Width, size.Height};
         Rect bounds{min, max};
-        l->SetBounds(bounds);
+        gTocEditorLayout->SetBounds(bounds);
         InvalidateRect(hwnd, nullptr, false);
     };
-    w->onClose = [&](WindowCloseArgs*) {
-        // UNUSED(args);
-        OutputDebugStringA("onClose\n");
+    w->onDestroyed = [](WindowDestroyedArgs*) {
+        delete gTocEditorWindow;
+        gTocEditorWindow = nullptr;
+        delete gTocEditorLayout;
+        gTocEditorLayout = nullptr;
     };
 
     // important to call this after hooking up onSize to ensure
     // first layout is triggered
     w->SetIsVisible(true);
+    gTocEditorWindow = w;
 }

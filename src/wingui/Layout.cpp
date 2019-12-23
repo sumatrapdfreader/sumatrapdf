@@ -256,6 +256,7 @@ bool IsPadding(ILayout* l) {
 }
 
 Padding::~Padding() {
+    delete child;
 }
 
 Size Padding::Layout(const Constraints bc) {
@@ -361,6 +362,9 @@ bool IsVBox(Kind kind) {
 }
 
 VBox::~VBox() {
+    for (auto& c : children) {
+        delete c.layout;
+    }
 }
 
 size_t VBox::childrenCount() {
@@ -666,6 +670,9 @@ bool IsHBox(ILayout* l) {
 }
 
 HBox::~HBox() {
+    for (auto& c : children) {
+        delete c.layout;
+    }
 }
 
 size_t HBox::childrenCount() {

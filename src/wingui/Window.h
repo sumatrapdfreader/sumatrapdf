@@ -2,6 +2,21 @@
 /* Copyright 2019 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
+struct Window;
+
+struct WindowCloseArgs {
+    Window* window = nullptr;
+    bool cancel = false;
+};
+
+typedef std::function<void(WindowCloseArgs*)> OnClose;
+
+struct WindowDestroyedArgs {
+    Window* window = nullptr;
+};
+
+typedef std::function<void(WindowDestroyedArgs*)> OnDestroyed;
+
 extern Kind kindWindowBase;
 
 struct WindowBase {
@@ -67,15 +82,6 @@ struct WindowBase {
 
 extern Kind kindWindow;
 
-struct Window;
-
-struct WindowCloseArgs {
-    Window* window = nullptr;
-    bool cancel = false;
-};
-
-typedef std::function<void(WindowCloseArgs*)> OnClose;
-
 // a top-level window. Must set winClass before
 // calling Create()
 struct Window : public WindowBase {
@@ -84,9 +90,10 @@ struct Window : public WindowBase {
     HICON hIconSm = nullptr;
     LPCWSTR lpszMenuName = nullptr;
 
-    WmCommandCb onCommand = nullptr;
+    OnWmCommand onWmCommand = nullptr;
     OnSize onSize = nullptr;
     OnClose onClose = nullptr;
+    OnDestroyed onDestroyed = nullptr;
 
     Window();
     ~Window() override;
@@ -94,13 +101,14 @@ struct Window : public WindowBase {
     bool Create() override;
 
     void SetTitle(std::string_view);
+    void Destroy();
 };
 
 struct WindowBaseLayout : public ILayout {
     WindowBase* wb = nullptr;
 
     WindowBaseLayout(WindowBase*, Kind);
-    virtual ~WindowBaseLayout();
+    ~WindowBaseLayout() override;
 
     Size Layout(const Constraints bc) override;
     Length MinIntrinsicHeight(Length) override;
