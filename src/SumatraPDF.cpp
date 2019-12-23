@@ -1290,7 +1290,7 @@ static WindowInfo* CreateWindowInfo() {
     if (!hwndFrame)
         return nullptr;
 
-    AssertCrash(nullptr == FindWindowInfoByHwnd(hwndFrame));
+    CrashIf(nullptr != FindWindowInfoByHwnd(hwndFrame));
     WindowInfo* win = new WindowInfo(hwndFrame);
 
     // don't add a WS_EX_STATICEDGE so that the scrollbars touch the
@@ -1329,8 +1329,9 @@ static WindowInfo* CreateWindowInfo() {
     CreateToolbar(win);
     CreateSidebar(win);
     UpdateFindbox(win);
-    if (HasPermission(Perm_DiskAccess) && !gPluginMode)
+    if (HasPermission(Perm_DiskAccess) && !gPluginMode) {
         DragAcceptFiles(win->hwndCanvas, TRUE);
+    }
 
     gWindows.push_back(win);
     // needed for RTL languages
@@ -1351,8 +1352,9 @@ WindowInfo* CreateAndShowWindowInfo(SessionData* data) {
     // CreateWindowInfo shouldn't change the windowState value
     int windowState = gGlobalPrefs->windowState;
     WindowInfo* win = CreateWindowInfo();
-    if (!win)
+    if (!win) {
         return nullptr;
+    }
     CrashIf(windowState != gGlobalPrefs->windowState);
 
     if (data) {
@@ -1362,17 +1364,19 @@ WindowInfo* CreateAndShowWindowInfo(SessionData* data) {
         // TODO: also restore data->sidebarDx
     }
 
-    if (WIN_STATE_FULLSCREEN == windowState || WIN_STATE_MAXIMIZED == windowState)
+    if (WIN_STATE_FULLSCREEN == windowState || WIN_STATE_MAXIMIZED == windowState) {
         ShowWindow(win->hwndFrame, SW_MAXIMIZE);
-    else
+    } else {
         ShowWindow(win->hwndFrame, SW_SHOW);
+    }
     UpdateWindow(win->hwndFrame);
 
     SetSidebarVisibility(win, false, gGlobalPrefs->showFavorites);
     ToolbarUpdateStateForWindow(win, true);
 
-    if (WIN_STATE_FULLSCREEN == windowState)
+    if (WIN_STATE_FULLSCREEN == windowState) {
         EnterFullScreen(win);
+    }
     return win;
 }
 
@@ -2726,12 +2730,19 @@ static UINT_PTR CALLBACK FileOpenHook(HWND hDlg, UINT uiMsg, WPARAM wParam, LPAR
 }
 #endif
 
+static void OnMenuNewWindow() {
+    CreateAndShowWindowInfo(nullptr);
+}
+
 static void OnMenuOpen(WindowInfo* win) {
-    if (!HasPermission(Perm_DiskAccess))
+    if (!HasPermission(Perm_DiskAccess)) {
         return;
+    }
+
     // don't allow opening different files in plugin mode
-    if (gPluginMode)
+    if (gPluginMode) {
         return;
+    }
 
     const struct {
         const WCHAR* name; /* nullptr if only to include in "All supported documents" */
@@ -2799,11 +2810,12 @@ static void OnMenuOpen(WindowInfo* win) {
     }
     // note: ofn.lpstrFile can be reallocated by GetOpenFileName -> FileOpenHook
 #endif
-    AutoFreeWstr file(AllocArray<WCHAR>(ofn.nMaxFile));
+    AutoFreeWstr file = AllocArray<WCHAR>(ofn.nMaxFile);
     ofn.lpstrFile = file;
 
-    if (!GetOpenFileName(&ofn))
+    if (!GetOpenFileName(&ofn)) {
         return;
+    }
 
     WCHAR* fileName = ofn.lpstrFile + ofn.nFileOffset;
     if (*(fileName - 1)) {
@@ -2814,7 +2826,7 @@ static void OnMenuOpen(WindowInfo* win) {
     }
 
     while (*fileName) {
-        AutoFreeWstr filePath(path::Join(ofn.lpstrFile, fileName));
+        AutoFreeWstr filePath = path::Join(ofn.lpstrFile, fileName);
         if (filePath) {
             LoadArgs args(filePath, win);
             LoadDocument(args);
@@ -3961,6 +3973,9 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
     auto* ctrl = win->ctrl;
     // most of them require a win, the few exceptions are no-ops
     switch (wmId) {
+        case IDM_NEW_WINDOW:
+            OnMenuNewWindow();
+            break;
         case IDM_OPEN:
         case IDT_FILE_OPEN:
             OnMenuOpen(win);

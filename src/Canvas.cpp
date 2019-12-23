@@ -1421,6 +1421,8 @@ static void OnDropFiles(HDROP hDrop, bool dragFinish) {
     WCHAR filePath[MAX_PATH];
     const int count = DragQueryFile(hDrop, DRAGQUERY_NUMFILES, 0, 0);
 
+    bool isShift = IsShiftPressed();
+    WindowInfo* win = nullptr;
     for (int i = 0; i < count; i++) {
         DragQueryFile(hDrop, i, filePath, dimof(filePath));
         if (str::EndsWithI(filePath, L".lnk")) {
@@ -1430,6 +1432,10 @@ static void OnDropFiles(HDROP hDrop, bool dragFinish) {
         }
         // The first dropped document may override the current window
         LoadArgs args(filePath, nullptr);
+        if (isShift && !win) {
+            win = CreateAndShowWindowInfo(nullptr);
+            args.win = win;
+        }
         LoadDocument(args);
     }
     if (dragFinish)

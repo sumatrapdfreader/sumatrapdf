@@ -11,7 +11,7 @@
 #define IDD_DIALOG_CHANGE_LANGUAGE      134
 #define IDD_DIALOG_NEW_VERSION          135
 #define IDD_DIALOG_SETTINGS             136
-#define IDD_DIALOG_FIND                 137
+#define IDD_DIALOG_FIND                 137 
 #define IDD_DIALOG_CUSTOM_ZOOM          138
 #define IDD_PROPSHEET_PRINT_ADVANCED    139
 #define IDD_DIALOG_FAV_ADD              140
@@ -38,6 +38,7 @@
 #define IDM_VIEW_FULLSCREEN             421
 #define IDM_SELECT_ALL                  422
 #define IDM_VIEW_SHOW_HIDE_MENUBAR      423
+#define IDM_NEW_WINDOW                  424
 #define IDM_COPY_IMAGE                  427
 #define IDM_COPY_LINK_TARGET            428
 #define IDM_COPY_COMMENT                429

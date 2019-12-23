@@ -84,6 +84,7 @@ BEGIN
     "G",            IDM_GOTO_PAGE,          VIRTKEY, CONTROL
     "L",            IDM_VIEW_PRESENTATION_MODE, VIRTKEY, CONTROL
     "L",            IDM_VIEW_FULLSCREEN,    VIRTKEY, SHIFT, CONTROL
+    "N",            IDM_NEW_WINDOW,         VIRTKEY, CONTROL
     "O",            IDM_OPEN,               VIRTKEY, CONTROL
     "S",            IDM_SAVEAS,             VIRTKEY, CONTROL
     "S",            IDM_SAVEAS_BOOKMARK,    VIRTKEY, SHIFT, CONTROL
