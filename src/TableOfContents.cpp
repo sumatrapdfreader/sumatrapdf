@@ -42,8 +42,6 @@
 #include "Menu.h"
 #include "TocEditor.h"
 
-constexpr UINT_PTR SUBCLASS_ID = 1;
-
 /* Define if you want page numbers to be displayed in the ToC sidebar */
 // #define DISPLAY_TOC_PAGE_NUMBERS
 
@@ -743,6 +741,7 @@ void LayoutTreeContainer(LabelWithCloseWnd* l, DropDownCtrl* altBookmarks, HWND 
             int elDy = bs.cy;
             RECT r{0, y, rc.dx, y + elDy};
             altBookmarks->SetBounds(r);
+            elDy += 4;
             dy -= elDy;
             y += elDy;
         }
@@ -751,12 +750,12 @@ void LayoutTreeContainer(LabelWithCloseWnd* l, DropDownCtrl* altBookmarks, HWND 
 }
 
 static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR subclassId, DWORD_PTR data) {
-    CrashIf(subclassId != SUBCLASS_ID);
     WindowInfo* winFromData = reinterpret_cast<WindowInfo*>(data);
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
     if (!win) {
         return DefSubclassProc(hwnd, msg, wp, lp);
     }
+    CrashIf(subclassId != win->tocBoxSubclassId);
     CrashIf(win != winFromData);
 
     switch (msg) {
@@ -773,18 +772,21 @@ static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp,
     return DefSubclassProc(hwnd, msg, wp, lp);
 }
 
-// TODO: for unsubclassing, those need to be part of WindowInfo
-static UINT_PTR tocBoxSubclassId = 0;
-
 // TODO: should unsubclass as well?
 static void SubclassToc(WindowInfo* win) {
     TreeCtrl* tree = win->tocTreeCtrl;
     HWND hwndTocBox = win->hwndTocBox;
 
-    if (tocBoxSubclassId == 0) {
-        BOOL wasOk = SetWindowSubclass(hwndTocBox, WndProcTocBox, SUBCLASS_ID, (DWORD_PTR)win);
-        CrashIf(!wasOk);
-        tocBoxSubclassId = SUBCLASS_ID;
+    if (win->tocBoxSubclassId == 0) {
+        win->tocBoxSubclassId = NextSubclassId();
+        BOOL ok = SetWindowSubclass(hwndTocBox, WndProcTocBox, win->tocBoxSubclassId, (DWORD_PTR)win);
+        CrashIf(!ok);
+    }
+}
+
+void UnsubclassToc(WindowInfo* win) {
+    if (win->tocBoxSubclassId != 0) {
+        RemoveWindowSubclass(win->hwndTocBox, WndProcTocBox, win->tocBoxSubclassId);
     }
 }
 

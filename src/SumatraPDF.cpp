@@ -475,17 +475,19 @@ WCHAR* HwndPasswordUI::GetPassword(const WCHAR* fileName, unsigned char* fileDig
 // no pdf is opened or a document without window dimension information
 static void RememberDefaultWindowPosition(WindowInfo* win) {
     // ignore spurious WM_SIZE and WM_MOVE messages happening during initialization
-    if (!IsWindowVisible(win->hwndFrame))
+    if (!IsWindowVisible(win->hwndFrame)) {
         return;
+    }
 
-    if (win->presentation)
+    if (win->presentation) {
         gGlobalPrefs->windowState = win->windowStateBeforePresentation;
-    else if (win->isFullScreen)
+    } else if (win->isFullScreen) {
         gGlobalPrefs->windowState = WIN_STATE_FULLSCREEN;
-    else if (IsZoomed(win->hwndFrame))
+    } else if (IsZoomed(win->hwndFrame)) {
         gGlobalPrefs->windowState = WIN_STATE_MAXIMIZED;
-    else if (!IsIconic(win->hwndFrame))
+    } else if (!IsIconic(win->hwndFrame)) {
         gGlobalPrefs->windowState = WIN_STATE_NORMAL;
+    }
 
     gGlobalPrefs->sidebarDx = WindowRect(win->hwndTocBox).dx;
 
@@ -498,8 +500,9 @@ static void RememberDefaultWindowPosition(WindowInfo* win) {
 }
 
 static void UpdateDisplayStateWindowRect(WindowInfo* win, DisplayState& ds, bool updateGlobal = true) {
-    if (updateGlobal)
+    if (updateGlobal) {
         RememberDefaultWindowPosition(win);
+    }
 
     ds.windowState = gGlobalPrefs->windowState;
     ds.windowPos = gGlobalPrefs->windowPos;
@@ -1279,16 +1282,27 @@ static void UpdateToolbarSidebarText(WindowInfo* win) {
 
 static WindowInfo* CreateWindowInfo() {
     RectI windowPos = gGlobalPrefs->windowPos;
-    if (!windowPos.IsEmpty())
+    if (!windowPos.IsEmpty()) {
         EnsureAreaVisibility(windowPos);
-    else
+    } else {
         windowPos = GetDefaultWindowPos();
+    }
+    // we don't want the windows to overlap so shift each window by a bit
+    int nShift = (int)gWindows.size();
+    windowPos.x += (nShift * 15); // TODO: DPI scale
 
-    HWND hwndFrame =
-        CreateWindow(FRAME_CLASS_NAME, SUMATRA_WINDOW_TITLE, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, windowPos.x,
-                     windowPos.y, windowPos.dx, windowPos.dy, nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
-    if (!hwndFrame)
+    const WCHAR* clsName = FRAME_CLASS_NAME;
+    const WCHAR* title = SUMATRA_WINDOW_TITLE;
+    DWORD style = WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN;
+    int x = windowPos.x;
+    int y = windowPos.y;
+    int dx = windowPos.dx;
+    int dy = windowPos.dy;
+    HINSTANCE h = GetModuleHandle(nullptr);
+    HWND hwndFrame = CreateWindowExW(0, clsName, title, style, x, y, dx, dy, nullptr, nullptr, h, nullptr);
+    if (!hwndFrame) {
         return nullptr;
+    }
 
     CrashIf(nullptr != FindWindowInfoByHwnd(hwndFrame));
     WindowInfo* win = new WindowInfo(hwndFrame);
@@ -1296,9 +1310,10 @@ static WindowInfo* CreateWindowInfo() {
     // don't add a WS_EX_STATICEDGE so that the scrollbars touch the
     // screen's edge when maximized (cf. Fitts' law) and there are
     // no additional adjustments needed when (un)maximizing
-    win->hwndCanvas = CreateWindow(CANVAS_CLASS_NAME, nullptr, WS_CHILD | WS_HSCROLL | WS_VSCROLL, 0, 0, 0,
-                                   0, /* position and size determined in OnSize */
-                                   hwndFrame, nullptr, GetModuleHandle(nullptr), nullptr);
+    clsName = CANVAS_CLASS_NAME;
+    style = WS_CHILD | WS_HSCROLL | WS_VSCROLL;
+    /* position and size determined in OnSize */
+    win->hwndCanvas = CreateWindowExW(0, clsName, nullptr, style, 0, 0, 0, 0, hwndFrame, nullptr, h, nullptr);
     if (!win->hwndCanvas) {
         delete win;
         return nullptr;
@@ -1315,8 +1330,9 @@ static WindowInfo* CreateWindowInfo() {
     AssertCrash(!win->menu);
     win->menu = BuildMenu(win);
     win->isMenuHidden = !gGlobalPrefs->showMenubar;
-    if (!win->isMenuHidden)
+    if (!win->isMenuHidden) {
         SetMenu(win->hwndFrame, win->menu);
+    }
 
     ShowWindow(win->hwndCanvas, SW_SHOW);
     UpdateWindow(win->hwndCanvas);
@@ -2734,6 +2750,37 @@ static void OnMenuNewWindow() {
     CreateAndShowWindowInfo(nullptr);
 }
 
+#if 0
+    struct SessionData {
+        // a subset of FileState required for restoring the state of a single
+        // tab (required for handling documents being opened twice)
+        Vec<TabState*>* tabStates;
+        // index of the currently selected tab (1-based)
+        int tabIndex;
+        // same as FileState -> WindowState
+        int windowState;
+        // default position (can be on any monitor)
+        RectI windowPos;
+        // width of favorites/bookmarks sidebar (if shown)
+        int sidebarDx;
+    };
+#endif
+
+static void OnDuplicateInNewWindow(WindowInfo* win) {
+    if (win->IsAboutWindow()) {
+        return;
+    }
+    if (!win->IsDocLoaded()) {
+        return;
+    }
+    TabInfo* tab = win->currentTab;
+    WCHAR* path = tab->filePath;
+    SessionData sd = {};
+    sd.tabIndex = 1;
+    sd.windowState = WIN_STATE_NORMAL;
+    CreateAndShowWindowInfo(&sd);
+}
+
 static void OnMenuOpen(WindowInfo* win) {
     if (!HasPermission(Perm_DiskAccess)) {
         return;
@@ -2878,8 +2925,9 @@ static void BrowseFolder(WindowInfo* win, bool forward) {
 static void RelayoutFrame(WindowInfo* win, bool updateToolbars = true, int sidebarDx = -1) {
     ClientRect rc(win->hwndFrame);
     // don't relayout while the window is minimized
-    if (rc.IsEmpty())
+    if (rc.IsEmpty()) {
         return;
+    }
 
     if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
         // make the black/white canvas cover the entire window
@@ -2908,20 +2956,23 @@ static void RelayoutFrame(WindowInfo* win, bool updateToolbars = true, int sideb
                     WindowRect wr(win->hwndFrame);
                     POINT pt = {wr.x + capButtons.left, wr.y + capButtons.top};
                     ScreenToClient(win->hwndFrame, &pt);
-                    if (IsUIRightToLeft())
+                    if (IsUIRightToLeft()) {
                         captionWidth = rc.x + rc.dx - pt.x;
-                    else
+                    } else {
                         captionWidth = pt.x - rc.x;
-                } else
+                    }
+                } else {
                     captionWidth = rc.dx;
+                }
                 dh.SetWindowPos(win->hwndCaption, nullptr, rc.x, rc.y, captionWidth, captionHeight, SWP_NOZORDER);
             }
             rc.y += captionHeight;
             rc.dy -= captionHeight;
         } else if (win->tabsVisible) {
             int tabHeight = GetTabbarHeight(win->hwndFrame);
-            if (updateToolbars)
+            if (updateToolbars) {
                 dh.SetWindowPos(win->hwndTabBar, nullptr, rc.x, rc.y, rc.dx, tabHeight, SWP_NOZORDER);
+            }
             // TODO: show tab bar also for About window (or hide the toolbar so that it doesn't jump around)
             if (!win->IsAboutWindow()) {
                 rc.y += tabHeight;
@@ -2943,7 +2994,10 @@ static void RelayoutFrame(WindowInfo* win, bool updateToolbars = true, int sideb
     bool showFavorites = gGlobalPrefs->showFavorites && !gPluginMode && HasPermission(Perm_DiskAccess);
     bool tocVisible = win->tocVisible;
     if (tocVisible || showFavorites) {
-        SizeI toc = sidebarDx < 0 ? ClientRect(win->hwndTocBox).Size() : SizeI(sidebarDx, rc.y);
+        SizeI toc = ClientRect(win->hwndTocBox).Size();
+        if (sidebarDx > 0) {
+            toc = SizeI(sidebarDx, rc.y);
+        }
         if (0 == toc.dx) {
             // TODO: use saved sidebarDx from saved preferences?
             toc.dx = rc.dx / 4;
@@ -2953,12 +3007,23 @@ static void RelayoutFrame(WindowInfo* win, bool updateToolbars = true, int sideb
         //       wide (cf. OnFrameGetMinMaxInfo)
         toc.dx = limitValue(toc.dx, SIDEBAR_MIN_WIDTH, rc.dx / 2);
 
-        toc.dy = !tocVisible ? 0
-                             : !showFavorites ? rc.dy
-                                              : gGlobalPrefs->tocDy ? limitValue(gGlobalPrefs->tocDy, 0, rc.dy)
-                                                                    : rc.dy / 2; // default value
-        if (tocVisible && showFavorites)
+        toc.dy = 0;
+        if (tocVisible) {
+            if (!showFavorites) {
+                toc.dy = rc.dy;
+            } else {
+                toc.dy = gGlobalPrefs->tocDy;
+                if (toc.dy > 0) {
+                    toc.dy = limitValue<int>(gGlobalPrefs->tocDy, 0, rc.dy);
+                } else {
+                    toc.dy = rc.dy / 2; // default value
+                }
+            }
+        }
+
+        if (tocVisible && showFavorites) {
             toc.dy = limitValue(toc.dy, TOC_MIN_DY, rc.dy - TOC_MIN_DY);
+        }
 
         if (tocVisible) {
             RectI rToc(rc.TL(), toc);
@@ -2990,10 +3055,11 @@ static void RelayoutFrame(WindowInfo* win, bool updateToolbars = true, int sideb
     if (tocVisible && win->ctrl) {
         // the ToC selection may change due to resizing
         // (and SetSidebarVisibility relies on this for initialization)
-        if (win->ctrl->AsEbook())
+        if (win->ctrl->AsEbook()) {
             UpdateTocSelection(win, win->ctrl->AsEbook()->CurrentTocPageNo());
-        else
+        } else {
             UpdateTocSelection(win, win->ctrl->CurrentPageNo());
+        }
     }
 }
 
@@ -3975,6 +4041,9 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
     switch (wmId) {
         case IDM_NEW_WINDOW:
             OnMenuNewWindow();
+            break;
+        case IDM_DUPLICATE_IN_NEW_WINDOW:
+            OnDuplicateInNewWindow(win);
             break;
         case IDM_OPEN:
         case IDT_FILE_OPEN:

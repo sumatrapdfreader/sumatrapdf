@@ -182,26 +182,6 @@ void TreeCtrl::WndProc(WndProcArgs* args) {
     }
 }
 
-#if 0
-static void Unsubclass(TreeCtrl* w) {
-    if (!w) {
-        return;
-    }
-
-    if (w->hwndSubclassId != 0) {
-        BOOL ok = RemoveWindowSubclass(w->hwnd, TreeProc, SUBCLASS_ID);
-        CrashIf(false && !ok);
-        w->hwndSubclassId = 0;
-    }
-
-    if (w->hwndParentSubclassId != 0) {
-        BOOL ok = RemoveWindowSubclass(w->parent, TreeParentProc, SUBCLASS_ID);
-        CrashIf(false && !ok);
-        w->hwndParentSubclassId = 0;
-    }
-}
-#endif
-
 TreeCtrl::TreeCtrl(HWND p) {
     dwStyle = WS_CHILD | WS_VISIBLE | WS_TABSTOP | TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS |
               TVS_TRACKSELECT | TVS_DISABLEDRAGDROP | TVS_NOHSCROLL | TVS_INFOTIP;

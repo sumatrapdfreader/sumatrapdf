@@ -42,15 +42,15 @@ enum PresentationMode { PM_DISABLED = 0, PM_ENABLED, PM_BLACK_SCREEN, PM_WHITE_S
 
 // WM_GESTURE handling
 struct TouchState {
-    bool panStarted;
-    POINTS panPos;
-    int panScrollOrigX;
-    double startArg;
+    bool panStarted = false;
+    POINTS panPos{};
+    int panScrollOrigX = 0;
+    double startArg = 0;
 };
 
 /* Describes position, the target (URL or file path) and infotip of a "hyperlink" */
 struct StaticLinkInfo {
-    RectI rect;
+    RectI rect{};
     const WCHAR* target = nullptr;
     const WCHAR* infotip = nullptr;
 
@@ -101,6 +101,8 @@ class WindowInfo {
 
     LabelWithCloseWnd* tocLabelWithClose = nullptr;
     TreeCtrl* tocTreeCtrl = nullptr;
+    UINT_PTR tocBoxSubclassId = 0;
+
     // whether the current tab's ToC has been loaded into the tree
     bool tocLoaded = false;
     // whether the ToC sidebar is currently visible
@@ -169,9 +171,9 @@ class WindowInfo {
     int windowStateBeforePresentation = 0;
 
     long nonFullScreenWindowStyle = 0;
-    RectI nonFullScreenFrameRect;
+    RectI nonFullScreenFrameRect{};
 
-    RectI canvasRc;     // size of the canvas (excluding any scroll bars)
+    RectI canvasRc{};   // size of the canvas (excluding any scroll bars)
     int currPageNo = 0; // cached value, needed to determine when to auto-update the ToC selection
 
     int wheelAccumDelta = 0;

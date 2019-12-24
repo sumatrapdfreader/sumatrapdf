@@ -33,6 +33,7 @@
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 #include "TabInfo.h"
+#include "TableOfContents.h"
 #include "resource.h"
 #include "Caption.h"
 #include "Selection.h"
@@ -56,6 +57,8 @@ WindowInfo::~WindowInfo() {
 
     CrashIf(tabs.size() > 0);
     CrashIf(ctrl || linkOnLastButtonDown);
+
+    UnsubclassToc(this);
 
     // release our copy of UIA provider
     // the UI automation still might have a copy somewhere

@@ -76,6 +76,10 @@ static HWND getChildHWNDForMessage(UINT msg, WPARAM wp, LPARAM lp) {
         DRAWITEMSTRUCT* s = (DRAWITEMSTRUCT*)lp;
         return s->hwndItem;
     }
+    // https://docs.microsoft.com/en-us/windows/win32/menurc/wm-contextmenu
+    if (WM_CONTEXTMENU == msg) {
+        return (HWND)wp;
+    }
     // TODO: there's no HWND so have to do it differently e.g. allocate
     // unique CtlID, store it in WindowBase and compare that
 #if 0
@@ -165,7 +169,6 @@ WindowBase::~WindowBase() {
     Unsubclass();
     Destroy();
 }
-
 
 void WindowBase::WndProc(WndProcArgs* args) {
     args->didHandle = false;
