@@ -109,6 +109,9 @@ static LRESULT CALLBACK wndProcParentDispatch(HWND hwnd, UINT msg, WPARAM wp, LP
         return DefSubclassProc(hwnd, msg, wp, lp);
     }
     CrashIf(hwnd != w->parent);
+    if (hwndCtrl != w->hwnd) {
+        return DefSubclassProc(hwnd, msg, wp, lp);
+    }
     WndProcArgs args{};
     SetWndProcArgs(args);
     w->WndProcParent(&args);
