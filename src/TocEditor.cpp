@@ -84,7 +84,7 @@ void StartTocEditor(TreeModel* tm) {
 
     auto w = new Window();
     w->backgroundColor = MkRgb((u8)0xee, (u8)0xee, (u8)0xee);
-    w->SetTitle("Table of contest editor");
+    w->SetTitle("Table of content editor");
     w->initialPos = {100, 100, 100 + 640, 100 + 800};
     bool ok = w->Create();
     CrashIf(!ok);
