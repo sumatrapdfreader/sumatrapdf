@@ -243,24 +243,9 @@ bool TreeCtrl::GetItemRect(HTREEITEM item, bool fItemRect, RECT& r) {
     return fromBOOL(ok);
 }
 
-HTREEITEM TreeCtrl::GetRoot() {
-    HTREEITEM res = TreeView_GetRoot(this->hwnd);
-    return res;
-}
-
-HTREEITEM TreeCtrl::GetChild(HTREEITEM item) {
-    HTREEITEM res = TreeView_GetChild(this->hwnd, item);
-    return res;
-}
-
-HTREEITEM TreeCtrl::GetSiblingNext(HTREEITEM item) {
-    HTREEITEM res = TreeView_GetNextSibling(this->hwnd, item);
-    return res;
-}
-
-HTREEITEM TreeCtrl::GetSelection() {
-    HTREEITEM res = TreeView_GetSelection(hwnd);
-    return res;
+TreeItem* TreeCtrl::GetSelection() {
+    HTREEITEM hi = TreeView_GetSelection(hwnd);
+    return GetTreeItemByHandle(hi);
 }
 
 bool TreeCtrl::SelectItem(TreeItem* ti) {

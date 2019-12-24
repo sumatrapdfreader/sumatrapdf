@@ -25,11 +25,7 @@ struct TreeCtrl : public WindowBase {
     void Clear();
     TVITEMW* GetItem(TreeItem*);
     str::WStr GetTooltip(HTREEITEM);
-    HTREEITEM GetRoot();
-    HTREEITEM GetChild(HTREEITEM);
-    // GetNextSibling is windows macro so need a different name
-    HTREEITEM GetSiblingNext(HTREEITEM);
-    HTREEITEM GetSelection();
+    TreeItem* GetSelection();
 
     bool SelectItem(TreeItem*);
     HTREEITEM InsertItem(TVINSERTSTRUCTW*);

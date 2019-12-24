@@ -218,13 +218,16 @@ static void GoToTocLinkForTVItem(WindowInfo* win, HTREEITEM hItem, bool allowExt
         return;
     }
     TreeCtrl* treeCtrl = win->tocTreeCtrl;
-    if (!hItem) {
-        hItem = treeCtrl->GetSelection();
+    TreeItem* ti = nullptr;
+    if (hItem) {
+        ti = treeCtrl->GetTreeItemByHandle(hItem);
+    } else {
+        ti = treeCtrl->GetSelection();
     }
-    DocTocItem* tocItem = GetDocTocItem(treeCtrl, hItem);
-    if (!tocItem) {
+    if (!ti) {
         return;
     }
+    DocTocItem* tocItem = (DocTocItem*)ti;
     bool validPage = (tocItem->pageNo > 0);
     bool isScroll = IsScrollToLink(tocItem->GetPageDestination());
     if (validPage || (allowExternal || isScroll)) {
