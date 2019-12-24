@@ -127,18 +127,21 @@ SizeD DisplayModel::PageSizeAfterRotation(int pageNo, bool fitToContent) const {
    (5)     5                (4,5)   4                  (5)   5
  */
 static int FirstPageInARowNo(int pageNo, int columns, bool showCover) {
-    if (showCover && columns > 1)
+    if (showCover && columns > 1) {
         pageNo++;
+    }
     int firstPageNo = pageNo - ((pageNo - 1) % columns);
-    if (showCover && columns > 1 && firstPageNo > 1)
+    if (showCover && columns > 1 && firstPageNo > 1) {
         firstPageNo--;
+    }
     return firstPageNo;
 }
 
 static int LastPageInARowNo(int pageNo, int columns, bool showCover, int pageCount) {
     int lastPageNo = FirstPageInARowNo(pageNo, columns, showCover) + columns - 1;
-    if (showCover && pageNo < columns)
+    if (showCover && pageNo < columns) {
         lastPageNo--;
+    }
     return std::min(lastPageNo, pageCount);
 }
 
@@ -183,11 +186,13 @@ DisplayModel::~DisplayModel() {
 }
 
 PageInfo* DisplayModel::GetPageInfo(int pageNo) const {
-    if (!ValidPageNo(pageNo))
+    if (!ValidPageNo(pageNo)) {
         return nullptr;
-    AssertCrash(pagesInfo);
-    if (!pagesInfo)
+    }
+    CrashIf(!pagesInfo);
+    if (!pagesInfo) {
         return nullptr;
+    }
     return &(pagesInfo[pageNo - 1]);
 }
 
@@ -195,8 +200,9 @@ PageInfo* DisplayModel::GetPageInfo(int pageNo) const {
 void DisplayModel::SetInitialViewSettings(DisplayMode newDisplayMode, int newStartPage, SizeI viewPort, int screenDPI) {
     totalViewPortSize = viewPort;
     dpiFactor = 1.0f * screenDPI / engine->GetFileDPI();
-    if (ValidPageNo(newStartPage))
+    if (ValidPageNo(newStartPage)) {
         startPage = newStartPage;
+    }
 
     displayMode = newDisplayMode;
     presDisplayMode = newDisplayMode;
@@ -228,32 +234,38 @@ void DisplayModel::SetInitialViewSettings(DisplayMode newDisplayMode, int newSta
 }
 
 void DisplayModel::BuildPagesInfo() {
-    AssertCrash(!pagesInfo);
+    CrashIf(pagesInfo);
     int pageCount = PageCount();
     pagesInfo = AllocArray<PageInfo>(pageCount);
 
     RectD defaultRect;
-    if (0 == GetMeasurementSystem())
-        defaultRect = RectD(0, 0, 21.0 / 2.54 * engine->GetFileDPI(), 29.7 / 2.54 * engine->GetFileDPI());
-    else
-        defaultRect = RectD(0, 0, 8.5 * engine->GetFileDPI(), 11 * engine->GetFileDPI());
+    float fileDPI = engine->GetFileDPI();
+    if (0 == GetMeasurementSystem()) {
+        defaultRect = RectD(0, 0, 21.0 / 2.54 * fileDPI, 29.7 / 2.54 * fileDPI);
+    } else {
+        defaultRect = RectD(0, 0, 8.5 * fileDPI, 11 * fileDPI);
+    }
 
     int columns = ColumnsFromDisplayMode(displayMode);
     int newStartPage = startPage;
-    if (IsBookView(displayMode) && newStartPage == 1 && columns > 1)
+    if (IsBookView(displayMode) && newStartPage == 1 && columns > 1) {
         newStartPage--;
+    }
+
     for (int pageNo = 1; pageNo <= pageCount; pageNo++) {
         PageInfo* pageInfo = GetPageInfo(pageNo);
         pageInfo->page = engine->PageMediabox(pageNo);
         // layout pages with an empty mediabox as A4 size (resp. letter size)
-        if (pageInfo->page.IsEmpty())
+        if (pageInfo->page.IsEmpty()) {
             pageInfo->page = defaultRect;
+        }
         pageInfo->visibleRatio = 0.0;
         pageInfo->shown = false;
-        if (IsContinuous(displayMode))
+        if (IsContinuous(displayMode)) {
             pageInfo->shown = true;
-        else if (newStartPage <= pageNo && pageNo < newStartPage + columns)
+        } else if (newStartPage <= pageNo && pageNo < newStartPage + columns) {
             pageInfo->shown = true;
+        }
     }
 }
 
@@ -261,15 +273,17 @@ void DisplayModel::BuildPagesInfo() {
 // before-layout info and after-layout visibility checks
 bool DisplayModel::PageShown(int pageNo) const {
     PageInfo* pageInfo = GetPageInfo(pageNo);
-    if (!pageInfo)
+    if (!pageInfo) {
         return false;
+    }
     return pageInfo->shown;
 }
 
 bool DisplayModel::PageVisible(int pageNo) const {
     PageInfo* pageInfo = GetPageInfo(pageNo);
-    if (!pageInfo)
+    if (!pageInfo) {
         return false;
+    }
     return pageInfo->visibleRatio > 0.0;
 }
 
@@ -280,8 +294,9 @@ bool DisplayModel::PageVisibleNearby(int pageNo) const {
 
     pageNo = FirstPageInARowNo(pageNo, columns, IsBookView(mode));
     for (int i = pageNo - columns; i < pageNo + 2 * columns; i++) {
-        if (ValidPageNo(i) && PageVisible(i))
+        if (ValidPageNo(i) && PageVisible(i)) {
             return true;
+        }
     }
     return false;
 }
@@ -289,10 +304,12 @@ bool DisplayModel::PageVisibleNearby(int pageNo) const {
 /* Return true if the first page is fully visible and alone on a line in
    show cover mode (i.e. it's not possible to flip to a previous page) */
 bool DisplayModel::FirstBookPageVisible() const {
-    if (!IsBookView(GetDisplayMode()))
+    if (!IsBookView(GetDisplayMode())) {
         return false;
-    if (CurrentPageNo() != 1)
+    }
+    if (CurrentPageNo() != 1) {
         return false;
+    }
     return true;
 }
 

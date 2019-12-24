@@ -80,7 +80,7 @@ void StartTocEditor(TreeModel* tm) {
         auto* docItem = (DocTocItem*)ti;
         docItem->isChecked = true;
         return true;
-     });
+    });
 
     auto w = new Window();
     w->backgroundColor = MkRgb((u8)0xee, (u8)0xee, (u8)0xee);
