@@ -78,8 +78,8 @@ class Controller {
     virtual void ScrollToLink(PageDestination* dest) = 0;
     virtual PageDestination* GetNamedDest(const WCHAR* name) = 0;
 
-    // state export
-    virtual void UpdateDisplayState(DisplayState* ds) = 0;
+    // get display state (pageNo, zoom, scroll etc. of the document)
+    virtual void GetDisplayState(DisplayState* ds) = 0;
     // asynchronously calls saveThumbnail (fails silently)
     virtual void CreateThumbnail(SizeI size, const std::function<void(RenderedBitmap*)>& saveThumbnail) = 0;
 

@@ -529,7 +529,7 @@ void UpdateTabFileDisplayStateForWin(WindowInfo* win, TabInfo* tab) {
     if (!ds) {
         return;
     }
-    tab->ctrl->UpdateDisplayState(ds);
+    tab->ctrl->GetDisplayState(ds);
     UpdateDisplayStateWindowRect(win, *ds, false);
     UpdateSidebarDisplayState(win, tab, ds);
 }
@@ -1126,7 +1126,11 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, Displa
             gGlobalPrefs->enableTeXEnhancements = true;
     }
 
-    if (args.isNewWindow || args.placeWindow && state) {
+    bool shouldPlace = args.isNewWindow || args.placeWindow && state;
+    if (args.noPlaceWindow) {
+        shouldPlace = false;
+    }
+    if (shouldPlace) {
         if (args.isNewWindow && state && !state->windowPos.IsEmpty()) {
             // Make sure it doesn't have a position like outside of the screen etc.
             RectI rect = ShiftRectToWorkArea(state->windowPos);
@@ -1198,7 +1202,7 @@ void ReloadDocument(WindowInfo* win, bool autorefresh) {
     }
 
     DisplayState* ds = NewDisplayState(tab->filePath);
-    tab->ctrl->UpdateDisplayState(ds);
+    tab->ctrl->GetDisplayState(ds);
     UpdateDisplayStateWindowRect(win, *ds);
     UpdateSidebarDisplayState(win, tab, ds);
     // Set the windows state based on the actual window's placement
@@ -1807,17 +1811,20 @@ void UpdateCursorPositionHelper(WindowInfo* win, PointI pos, NotificationWnd* wn
     }
 
     AutoFreeWstr posInfo(str::Format(L"%s %s", _TR("Cursor position:"), posStr.get()));
-    if (selStr)
+    if (selStr) {
         posInfo.Set(str::Format(L"%s - %s %s", posInfo.get(), _TR("Selection:"), selStr.get()));
-    if (!wnd)
+    }
+    if (!wnd) {
         win->ShowNotification(posInfo, NOS_PERSIST, NG_CURSOR_POS_HELPER);
-    else
+    } else {
         wnd->UpdateMessage(posInfo);
+    }
 }
 
 void AssociateExeWithPdfExtension() {
-    if (!HasPermission(Perm_RegistryAccess))
+    if (!HasPermission(Perm_RegistryAccess)) {
         return;
+    }
 
     DoAssociateExeWithPdfExtension(HKEY_CURRENT_USER);
     DoAssociateExeWithPdfExtension(HKEY_LOCAL_MACHINE);
@@ -1832,21 +1839,25 @@ void AssociateExeWithPdfExtension() {
 // TODO: actually restore the session on startup depending on
 //       gGlobalPrefs->restoreSession
 static void RememberSessionState() {
-    if (!gGlobalPrefs->rememberOpenedFiles)
+    if (!gGlobalPrefs->rememberOpenedFiles) {
         return;
+    }
 
     ResetSessionState(gGlobalPrefs->sessionData);
     for (auto* win : gWindows) {
-        if (win->tabs.size() == 0)
+        if (win->tabs.size() == 0) {
             continue;
+        }
         SessionData* data = NewSessionData();
         for (TabInfo* tab : win->tabs) {
             DisplayState* ds = NewDisplayState(tab->filePath);
-            if (tab->ctrl)
-                tab->ctrl->UpdateDisplayState(ds);
+            if (tab->ctrl) {
+                tab->ctrl->GetDisplayState(ds);
+            }
             // TODO: pageNo should be good enough, as canvas size is restored as well
-            if (tab->AsEbook() && tab->ctrl)
+            if (tab->AsEbook() && tab->ctrl) {
                 ds->pageNo = tab->ctrl->CurrentPageNo();
+            }
             ds->showToc = tab->showToc;
             *ds->tocState = tab->tocState;
             data->tabStates->Append(NewTabState(ds));
@@ -2750,22 +2761,8 @@ static void OnMenuNewWindow() {
     CreateAndShowWindowInfo(nullptr);
 }
 
-#if 0
-    struct SessionData {
-        // a subset of FileState required for restoring the state of a single
-        // tab (required for handling documents being opened twice)
-        Vec<TabState*>* tabStates;
-        // index of the currently selected tab (1-based)
-        int tabIndex;
-        // same as FileState -> WindowState
-        int windowState;
-        // default position (can be on any monitor)
-        RectI windowPos;
-        // width of favorites/bookmarks sidebar (if shown)
-        int sidebarDx;
-    };
-#endif
-
+// create a new window and load currently shown document into it
+// meant to make it easy to compare 2 documents
 static void OnDuplicateInNewWindow(WindowInfo* win) {
     if (win->IsAboutWindow()) {
         return;
@@ -2775,10 +2772,21 @@ static void OnDuplicateInNewWindow(WindowInfo* win) {
     }
     TabInfo* tab = win->currentTab;
     WCHAR* path = tab->filePath;
-    SessionData sd = {};
-    sd.tabIndex = 1;
-    sd.windowState = WIN_STATE_NORMAL;
-    CreateAndShowWindowInfo(&sd);
+    CrashIf(!path);
+    if (!path) {
+        return;
+    }
+    WindowInfo* newWin = CreateAndShowWindowInfo(nullptr);
+    if (!newWin) {
+        return;
+    }
+
+    // TODO: should copy the display state from current file
+    LoadArgs args(path, newWin);
+    args.fileName = tab->filePath;
+    args.showWin = true;
+    args.noPlaceWindow = true;
+    LoadDocument(args);
 }
 
 static void OnMenuOpen(WindowInfo* win) {

@@ -878,7 +878,7 @@ int EbookController::CurrentTocPageNo() const {
     return currPageReparseIdx + 1;
 }
 
-void EbookController::UpdateDisplayState(DisplayState* ds) {
+void EbookController::GetDisplayState(DisplayState* ds) {
     if (!ds->filePath || !str::EqI(ds->filePath, doc.GetFilePath())) {
         str::ReplacePtr(&ds->filePath, doc.GetFilePath());
     }

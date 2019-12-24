@@ -163,10 +163,10 @@ void WindowBase::Destroy() {
 }
 
 WindowBase::~WindowBase() {
+    Unsubclass();
     if (backgroundColorBrush != nullptr) {
         DeleteObject(backgroundColorBrush);
     }
-    Unsubclass();
     Destroy();
 }
 

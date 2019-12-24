@@ -67,7 +67,7 @@ class EbookController : public Controller {
     void ScrollToLink(PageDestination* dest) override;
     PageDestination* GetNamedDest(const WCHAR* name) override;
 
-    void UpdateDisplayState(DisplayState* ds) override;
+    void GetDisplayState(DisplayState* ds) override;
     void CreateThumbnail(SizeI size, const onBitmapRenderedCb&) override;
 
     bool GoToNextPage() override;

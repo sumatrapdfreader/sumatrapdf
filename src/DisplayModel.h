@@ -116,8 +116,7 @@ class DisplayModel : public Controller {
         return engine->GetNamedDest(name);
     }
 
-    // state export
-    void UpdateDisplayState(DisplayState* ds) override;
+    void GetDisplayState(DisplayState* ds) override;
     // asynchronously calls saveThumbnail (fails silently)
     void CreateThumbnail(SizeI size, const onBitmapRenderedCb& saveThumbnail) override {
         cb->RenderThumbnail(this, size, saveThumbnail);

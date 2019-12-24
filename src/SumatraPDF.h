@@ -143,6 +143,9 @@ struct LoadArgs {
     WindowInfo* win = nullptr;
     bool showWin = true;
     bool forceReuse = false;
+    // over-writes placeWindow and other flags and forces no changing
+    // of window location after loading
+    bool noPlaceWindow = false;
 
     // for internal use
     bool isNewWindow = false;

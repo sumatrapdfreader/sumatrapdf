@@ -82,7 +82,7 @@ int NormalizeRotation(int rotation) {
     return rotation;
 }
 
-void DisplayModel::UpdateDisplayState(DisplayState* ds) {
+void DisplayModel::GetDisplayState(DisplayState* ds) {
     if (!ds->filePath || !str::EqI(ds->filePath, engine->FileName()))
         str::ReplacePtr(&ds->filePath, engine->FileName());
 
