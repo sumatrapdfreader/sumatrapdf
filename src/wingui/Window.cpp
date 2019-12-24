@@ -205,6 +205,14 @@ bool WindowBase::Create() {
     return true;
 }
 
+void WindowBase::SuspendRedraw() {
+    SendMessage(hwnd, WM_SETREDRAW, FALSE, 0);
+}
+
+void WindowBase::ResumeRedraw() {
+    SendMessage(hwnd, WM_SETREDRAW, TRUE, 0);
+}
+
 void WindowBase::SetFocus() {
     ::SetFocus(hwnd);
 }

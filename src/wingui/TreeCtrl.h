@@ -2,7 +2,15 @@
 /* Copyright 2019 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-typedef std::function<void(NMTVGETINFOTIPW*)> GetTooltipCb;
+struct TreeCtrl;
+
+struct TreeItmGetTooltipArgs {
+    TreeCtrl* w = nullptr;
+    TreeItem* treeItem = nullptr;
+    NMTVGETINFOTIPW* info = nullptr;
+};
+
+typedef std::function<void(TreeItmGetTooltipArgs*)> OnTreeItemGetTooltip;
 typedef std::function<LRESULT(NMTREEVIEWW*, bool& didHandle)> TreeNotifyCb;
 
 /* Creation sequence:
@@ -23,27 +31,23 @@ struct TreeCtrl : public WindowBase {
     ~TreeCtrl();
 
     void Clear();
-    TVITEMW* GetItem(TreeItem*);
-    str::WStr GetTooltip(HTREEITEM);
+    TVITEMW* GetTVITEM(TreeItem*);
+    str::WStr GetTooltip(TreeItem*);
     TreeItem* GetSelection();
 
     bool SelectItem(TreeItem*);
     HTREEITEM InsertItem(TVINSERTSTRUCTW*);
 
-    // TODO: create 2 functions for 2 different fItemRect values
-    bool GetItemRect(HTREEITEM, bool fItemRect, RECT& r);
+    bool GetTreeItemRect(TreeItem*, bool justText, RECT& r);
 
     bool IsExpanded(TreeItem*);
 
     bool Create(const WCHAR* title);
-    void SetFont(HFONT);
-    HFONT GetFont();
+
     void SetTreeModel(TreeModel*);
+
     void SetBackgroundColor(COLORREF);
     void SetTextColor(COLORREF);
-
-    void SuspendRedraw();
-    void ResumeRedraw();
 
     void ExpandAll();
     void CollapseAll();
@@ -64,14 +68,13 @@ struct TreeCtrl : public WindowBase {
     // treeModel not owned by us
     TreeModel* treeModel = nullptr;
 
-    // this data can be set directly
-    // when set, allows the caller to set info tip by updating NMTVGETINFOTIP
-    GetTooltipCb onGetTooltip = nullptr;
+    // allows the caller to set info tip by updating NMTVGETINFOTIP
+    OnTreeItemGetTooltip onGetTooltip = nullptr;
 
-    // if set, called to process all WM_NOTIFY messages
+    // called to process all WM_NOTIFY messages
     TreeNotifyCb onTreeNotify = nullptr;
 
-    // if set, called to process WM_CONTEXTMENU
+    // called to process WM_CONTEXTMENU
     ContextMenuCb onContextMenu = nullptr;
 
     // private

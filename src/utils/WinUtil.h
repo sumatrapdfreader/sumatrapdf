@@ -134,6 +134,10 @@ inline bool fromBOOL(BOOL b) {
     return b ? true : false;
 }
 
+inline bool tobool(BOOL b) {
+    return b ? true : false;
+}
+
 namespace win {
 
 void ToForeground(HWND hwnd);

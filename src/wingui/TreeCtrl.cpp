@@ -53,7 +53,7 @@ void TreeViewExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, bool subt
 }
 
 // the result only valid until the next GetItem call
-static TVITEMW* GetItem(TreeCtrl* tree, HTREEITEM hItem) {
+static TVITEMW* GetTVITEM(TreeCtrl* tree, HTREEITEM hItem) {
     TVITEMW* ti = &tree->item;
     ZeroStruct(ti);
     ti->hItem = hItem;
@@ -78,7 +78,7 @@ static void TreeViewToggle(TreeCtrl* tree, HTREEITEM hItem, bool recursive) {
         return;
     }
 
-    TVITEMW* item = GetItem(tree, hItem);
+    TVITEMW* item = GetTVITEM(tree, hItem);
     if (!item) {
         return;
     }
@@ -118,8 +118,11 @@ void TreeCtrl::WndProcParent(WndProcArgs* args) {
         auto code = nm->hdr.code;
         if (code == TVN_GETINFOTIP) {
             if (w->onGetTooltip) {
-                auto* arg = reinterpret_cast<NMTVGETINFOTIPW*>(nm);
-                w->onGetTooltip(arg);
+                TreeItmGetTooltipArgs cbArgs{};
+                cbArgs.w = w;
+                cbArgs.info = (NMTVGETINFOTIPW*)(nm);
+                cbArgs.treeItem = w->GetTreeItemByHandle(cbArgs.info->hItem);
+                w->onGetTooltip(&cbArgs);
                 args->didHandle = true;
                 args->result = 0;
                 return;
@@ -228,9 +231,9 @@ bool TreeCtrl::Create(const WCHAR* title) {
     return true;
 }
 
-TVITEMW* TreeCtrl::GetItem(TreeItem* ti) {
+TVITEMW* TreeCtrl::GetTVITEM(TreeItem* ti) {
     auto hi = GetHandleByTreeItem(ti);
-    return ::GetItem(this, hi);
+    return ::GetTVITEM(this, hi);
 }
 
 bool TreeCtrl::IsExpanded(TreeItem* ti) {
@@ -238,9 +241,12 @@ bool TreeCtrl::IsExpanded(TreeItem* ti) {
     return state.isExpanded;
 }
 
-bool TreeCtrl::GetItemRect(HTREEITEM item, bool fItemRect, RECT& r) {
-    BOOL ok = TreeView_GetItemRect(this->hwnd, item, &r, (BOOL)fItemRect);
-    return fromBOOL(ok);
+// https://docs.microsoft.com/en-us/windows/win32/api/commctrl/nf-commctrl-treeview_getitemrect
+bool TreeCtrl::GetTreeItemRect(TreeItem* ti, bool justText, RECT& r) {
+    HTREEITEM hi = GetHandleByTreeItem(ti);
+    BOOL b = toBOOL(justText);
+    BOOL ok = TreeView_GetItemRect(hwnd, hi, &r, b);
+    return ok == TRUE;
 }
 
 TreeItem* TreeCtrl::GetSelection() {
@@ -253,7 +259,7 @@ bool TreeCtrl::SelectItem(TreeItem* ti) {
     BOOL ok = TreeView_SelectItem(hwnd, hi);
     return ok == TRUE;
 }
-
+ 
 HTREEITEM TreeCtrl::InsertItem(TVINSERTSTRUCTW* item) {
     HTREEITEM res = TreeView_InsertItem(this->hwnd, item);
     return res;
@@ -295,23 +301,8 @@ TreeCtrl::~TreeCtrl() {
     // DeleteObject(w->bgBrush);
 }
 
-void TreeCtrl::SetFont(HFONT f) {
-    SetWindowFont(this->hwnd, f, TRUE);
-}
-
-HFONT TreeCtrl::GetFont() {
-    return GetWindowFont(this->hwnd);
-}
-
-void TreeCtrl::SuspendRedraw() {
-    SendMessage(hwnd, WM_SETREDRAW, FALSE, 0);
-}
-
-void TreeCtrl::ResumeRedraw() {
-    SendMessage(hwnd, WM_SETREDRAW, TRUE, 0);
-}
-
-str::WStr TreeCtrl::GetTooltip(HTREEITEM hItem) {
+str::WStr TreeCtrl::GetTooltip(TreeItem* ti) {
+    auto hItem = GetHandleByTreeItem(ti);
     WCHAR buf[INFOTIPSIZE + 1] = {}; // +1 just in case
 
     TVITEMW item = {0};
@@ -423,7 +414,7 @@ bool TreeCtrl::GetCheckState(TreeItem* item) {
 TreeItemState TreeCtrl::GetItemState(TreeItem* ti) {
     HTREEITEM hi = GetHandleByTreeItem(ti);
     TreeItemState res;
-    TVITEMW* item = GetItem(ti);
+    TVITEMW* item = GetTVITEM(ti);
     CrashIf(!item);
 
     res.isExpanded = bitmask::IsSet(item->state, TVIS_EXPANDED);

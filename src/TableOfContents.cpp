@@ -49,16 +49,6 @@
 #define WM_APP_REPAINT_TOC (WM_APP + 1)
 #endif
 
-static DocTocItem* GetDocTocItem(TreeCtrl* treeCtrl, HTREEITEM hItem) {
-    // must do the cast in two stages because of multiple inheritance
-    TreeItem* treeItem = treeCtrl->GetTreeItemByHandle(hItem);
-    if (!treeItem) {
-        return nullptr;
-    }
-    DocTocItem* tocItem = static_cast<DocTocItem*>(treeItem);
-    return tocItem;
-}
-
 static DocTocItem* GetDocTocItemFromLPARAM(LPARAM lp) {
     if (!lp) {
         CrashMe(); // TODO: not sure if should ever happen
@@ -71,13 +61,20 @@ static DocTocItem* GetDocTocItemFromLPARAM(LPARAM lp) {
 }
 
 // set tooltip for this item but only if the text isn't fully shown
-static void CustomizeTocTooltip(TreeCtrl* w, NMTVGETINFOTIPW* nm) {
-    DocTocItem* tocItem = GetDocTocItemFromLPARAM(nm->lParam);
+// TODO: I might have lost something in translation
+static void CustomizeTocTooltip(TreeItmGetTooltipArgs* args) {
+    auto* w = args->w;
+    auto* ti = args->treeItem;
+    auto* nm = args->info;
+    DocTocItem* tocItem = (DocTocItem*)ti;
     PageDestination* link = tocItem->GetPageDestination();
     if (!link) {
         return;
     }
     WCHAR* path = link->GetValue();
+    if (!path) {
+        path = tocItem->title;
+    }
     if (!path) {
         return;
     }
@@ -90,21 +87,16 @@ static void CustomizeTocTooltip(TreeCtrl* w, NMTVGETINFOTIPW* nm) {
     }
 
     CrashIf(k != kindDestinationLaunchURL && k != kindDestinationLaunchFile && k != kindDestinationLaunchEmbedded);
-    CrashIf(nm->hdr.hwndFrom != w->hwnd);
 
     str::WStr infotip;
 
-    RECT rcLine, rcLabel;
-    HTREEITEM item = nm->hItem;
     // Display the item's full label, if it's overlong
-    bool ok = w->GetItemRect(item, false, rcLine);
-    ok &= w->GetItemRect(item, true, rcLabel);
-    if (!ok) {
-        return;
-    }
+    RECT rcLine, rcLabel;
+    w->GetTreeItemRect(args->treeItem, false, rcLine);
+    w->GetTreeItemRect(args->treeItem, true, rcLabel);
 
     if (rcLine.right + 2 < rcLabel.right) {
-        str::WStr currInfoTip = w->GetTooltip(nm->hItem);
+        str::WStr currInfoTip = w->GetTooltip(ti);
         infotip.Append(currInfoTip.data());
         infotip.Append(L"\r\n");
     }
@@ -827,7 +819,7 @@ void CreateToc(WindowInfo* win) {
         handled = (res != -1);
         return res;
     };
-    treeCtrl->onGetTooltip = [treeCtrl](NMTVGETINFOTIP* infoTipInfo) { CustomizeTocTooltip(treeCtrl, infoTipInfo); };
+    treeCtrl->onGetTooltip = [](TreeItmGetTooltipArgs* args) { CustomizeTocTooltip(args); };
     treeCtrl->onContextMenu = [win](HWND, int x, int y) { TreeCtrlContextMenu(win, x, y); };
     bool ok = treeCtrl->Create(L"TOC");
     CrashIf(!ok);

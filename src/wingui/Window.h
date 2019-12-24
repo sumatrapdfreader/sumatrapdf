@@ -106,6 +106,9 @@ struct WindowBase {
     void SetIsVisible(bool);
     bool IsVisible();
 
+    void SuspendRedraw();
+    void ResumeRedraw();
+
     void SetFocus();
     void SetFont(HFONT f);
     void SetText(const WCHAR* s);
