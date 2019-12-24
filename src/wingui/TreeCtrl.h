@@ -82,10 +82,9 @@ struct TreeCtrl : public WindowBase {
 
     // TreeItem* -> HTREEITEM mapping so that we can
     // find HTREEITEM from TreeItem*
-    std::vector<std::tuple<TreeItem*, HTREEITEM>> insertedItems;
+    Vec<std::tuple<TreeItem*, HTREEITEM>> insertedItems;
 };
 
-void TreeViewExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, bool subtree);
 ILayout* NewTreeLayout(TreeCtrl*);
 
 bool IsTree(Kind);

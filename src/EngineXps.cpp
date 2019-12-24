@@ -783,15 +783,11 @@ void XpsEngineImpl::UpdateUserAnnotations(Vec<PageAnnotation>* list) {
 }
 
 PageElement* XpsEngineImpl::GetElementAtPos(int pageNo, PointD pt) {
-    ScopedCritSec scope(ctxAccess); // TODO: probably not needed
-
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo);
     return FzGetElementAtPos(pageInfo, pt);
 }
 
 Vec<PageElement*>* XpsEngineImpl::GetElements(int pageNo) {
-    ScopedCritSec scope(ctxAccess); // TODO: probably not needed
-
     fz_page* page = GetFzPage(pageNo, true);
     if (!page) {
         return nullptr;

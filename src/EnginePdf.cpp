@@ -1239,14 +1239,11 @@ RenderedBitmap* PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
 }
 
 PageElement* PdfEngineImpl::GetElementAtPos(int pageNo, PointD pt) {
-    ScopedCritSec scope(ctxAccess); // TODO: probably not needed
-
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo);
     return FzGetElementAtPos(pageInfo, pt);
 }
 
 Vec<PageElement*>* PdfEngineImpl::GetElements(int pageNo) {
-    ScopedCritSec scope(ctxAccess); // TODO: probably not needed
     auto* pageInfo = GetFzPageInfo(pageNo, true);
     return FzGetElements(pageInfo);
 }

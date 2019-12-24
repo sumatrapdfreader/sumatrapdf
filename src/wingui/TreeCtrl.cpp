@@ -38,7 +38,7 @@ ILayout* NewTreeLayout(TreeCtrl* e) {
     return new WindowBaseLayout(e, kindTree);
 }
 
-void TreeViewExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, bool subtree) {
+static void TreeViewExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, bool subtree) {
     while (hItem) {
         TreeView_Expand(hTree, hItem, flag);
         HTREEITEM child = TreeView_GetChild(hTree, hItem);
