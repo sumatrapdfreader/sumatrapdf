@@ -141,7 +141,7 @@ workspace "SumatraPDF"
   exceptionhandling "Off"
   rtti "Off"
 
-  defines { "WIN32", "_WIN32", "_CRT_SECURE_NO_WARNINGS", "WINVER=0x0501", "_WIN32_WINNT=0x0501" }
+  defines { "WIN32", "_WIN32", "_CRT_SECURE_NO_WARNINGS", "WINVER=0x0601", "_WIN32_WINNT=0x0601" }
 
   filter "configurations:Debug"
     defines { "DEBUG" }

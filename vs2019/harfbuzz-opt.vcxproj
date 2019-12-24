@@ -279,7 +279,7 @@
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4800;4100;4244;4245;4267;4456;4701;4702;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;DEBUG;NDEBUG;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HB_NO_MT;hb_malloc_impl=fz_hb_malloc;hb_calloc_impl=fz_hb_calloc;hb_realloc_impl=fz_hb_realloc;hb_free_impl=fz_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0601;_WIN32_WINNT=0x0601;DEBUG;NDEBUG;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HB_NO_MT;hb_malloc_impl=fz_hb_malloc;hb_calloc_impl=fz_hb_calloc;hb_realloc_impl=fz_hb_realloc;hb_free_impl=fz_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\harfbuzz\src\hb-ucdn;..\ext\freetype-config;..\ext\freetype\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -307,7 +307,7 @@
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4800;4100;4244;4245;4267;4456;4701;4702;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;DEBUG;NDEBUG;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HB_NO_MT;hb_malloc_impl=fz_hb_malloc;hb_calloc_impl=fz_hb_calloc;hb_realloc_impl=fz_hb_realloc;hb_free_impl=fz_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0601;_WIN32_WINNT=0x0601;DEBUG;NDEBUG;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HB_NO_MT;hb_malloc_impl=fz_hb_malloc;hb_calloc_impl=fz_hb_calloc;hb_realloc_impl=fz_hb_realloc;hb_free_impl=fz_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\harfbuzz\src\hb-ucdn;..\ext\freetype-config;..\ext\freetype\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -336,7 +336,7 @@
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4731;4127;4189;4324;4458;4522;4800;4100;4244;4245;4267;4456;4701;4702;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;DEBUG;NDEBUG;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HB_NO_MT;hb_malloc_impl=fz_hb_malloc;hb_calloc_impl=fz_hb_calloc;hb_realloc_impl=fz_hb_realloc;hb_free_impl=fz_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0601;_WIN32_WINNT=0x0601;DEBUG;NDEBUG;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HB_NO_MT;hb_malloc_impl=fz_hb_malloc;hb_calloc_impl=fz_hb_calloc;hb_realloc_impl=fz_hb_realloc;hb_free_impl=fz_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\harfbuzz\src\hb-ucdn;..\ext\freetype-config;..\ext\freetype\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -365,7 +365,7 @@
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4800;4100;4244;4245;4267;4456;4701;4702;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;DEBUG;NDEBUG;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HB_NO_MT;hb_malloc_impl=fz_hb_malloc;hb_calloc_impl=fz_hb_calloc;hb_realloc_impl=fz_hb_realloc;hb_free_impl=fz_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0601;_WIN32_WINNT=0x0601;DEBUG;NDEBUG;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HB_NO_MT;hb_malloc_impl=fz_hb_malloc;hb_calloc_impl=fz_hb_calloc;hb_realloc_impl=fz_hb_realloc;hb_free_impl=fz_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\harfbuzz\src\hb-ucdn;..\ext\freetype-config;..\ext\freetype\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -393,7 +393,7 @@
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4800;4100;4244;4245;4267;4456;4701;4702;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;NDEBUG;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HB_NO_MT;hb_malloc_impl=fz_hb_malloc;hb_calloc_impl=fz_hb_calloc;hb_realloc_impl=fz_hb_realloc;hb_free_impl=fz_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0601;_WIN32_WINNT=0x0601;NDEBUG;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HB_NO_MT;hb_malloc_impl=fz_hb_malloc;hb_calloc_impl=fz_hb_calloc;hb_realloc_impl=fz_hb_realloc;hb_free_impl=fz_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\harfbuzz\src\hb-ucdn;..\ext\freetype-config;..\ext\freetype\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -420,7 +420,7 @@
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4800;4100;4244;4245;4267;4456;4701;4702;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;NDEBUG;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HB_NO_MT;hb_malloc_impl=fz_hb_malloc;hb_calloc_impl=fz_hb_calloc;hb_realloc_impl=fz_hb_realloc;hb_free_impl=fz_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0601;_WIN32_WINNT=0x0601;NDEBUG;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HB_NO_MT;hb_malloc_impl=fz_hb_malloc;hb_calloc_impl=fz_hb_calloc;hb_realloc_impl=fz_hb_realloc;hb_free_impl=fz_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\harfbuzz\src\hb-ucdn;..\ext\freetype-config;..\ext\freetype\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -448,7 +448,7 @@
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4731;4127;4189;4324;4458;4522;4800;4100;4244;4245;4267;4456;4701;4702;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;NDEBUG;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HB_NO_MT;hb_malloc_impl=fz_hb_malloc;hb_calloc_impl=fz_hb_calloc;hb_realloc_impl=fz_hb_realloc;hb_free_impl=fz_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0601;_WIN32_WINNT=0x0601;NDEBUG;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HB_NO_MT;hb_malloc_impl=fz_hb_malloc;hb_calloc_impl=fz_hb_calloc;hb_realloc_impl=fz_hb_realloc;hb_free_impl=fz_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\harfbuzz\src\hb-ucdn;..\ext\freetype-config;..\ext\freetype\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -476,7 +476,7 @@
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4800;4100;4244;4245;4267;4456;4701;4702;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;NDEBUG;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HB_NO_MT;hb_malloc_impl=fz_hb_malloc;hb_calloc_impl=fz_hb_calloc;hb_realloc_impl=fz_hb_realloc;hb_free_impl=fz_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0601;_WIN32_WINNT=0x0601;NDEBUG;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HB_NO_MT;hb_malloc_impl=fz_hb_malloc;hb_calloc_impl=fz_hb_calloc;hb_realloc_impl=fz_hb_realloc;hb_free_impl=fz_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\harfbuzz\src\hb-ucdn;..\ext\freetype-config;..\ext\freetype\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -502,7 +502,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4800;4100;4244;4245;4267;4456;4701;4702;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;NDEBUG;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HB_NO_MT;hb_malloc_impl=fz_hb_malloc;hb_calloc_impl=fz_hb_calloc;hb_realloc_impl=fz_hb_realloc;hb_free_impl=fz_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0601;_WIN32_WINNT=0x0601;NDEBUG;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HB_NO_MT;hb_malloc_impl=fz_hb_malloc;hb_calloc_impl=fz_hb_calloc;hb_realloc_impl=fz_hb_realloc;hb_free_impl=fz_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\harfbuzz\src\hb-ucdn;..\ext\freetype-config;..\ext\freetype\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -529,7 +529,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4800;4100;4244;4245;4267;4456;4701;4702;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;NDEBUG;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HB_NO_MT;hb_malloc_impl=fz_hb_malloc;hb_calloc_impl=fz_hb_calloc;hb_realloc_impl=fz_hb_realloc;hb_free_impl=fz_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0601;_WIN32_WINNT=0x0601;NDEBUG;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HB_NO_MT;hb_malloc_impl=fz_hb_malloc;hb_calloc_impl=fz_hb_calloc;hb_realloc_impl=fz_hb_realloc;hb_free_impl=fz_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\harfbuzz\src\hb-ucdn;..\ext\freetype-config;..\ext\freetype\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -557,7 +557,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4731;4127;4189;4324;4458;4522;4800;4100;4244;4245;4267;4456;4701;4702;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;NDEBUG;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HB_NO_MT;hb_malloc_impl=fz_hb_malloc;hb_calloc_impl=fz_hb_calloc;hb_realloc_impl=fz_hb_realloc;hb_free_impl=fz_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ASAN_BUILD=1;WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0601;_WIN32_WINNT=0x0601;NDEBUG;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HB_NO_MT;hb_malloc_impl=fz_hb_malloc;hb_calloc_impl=fz_hb_calloc;hb_realloc_impl=fz_hb_realloc;hb_free_impl=fz_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\harfbuzz\src\hb-ucdn;..\ext\freetype-config;..\ext\freetype\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -585,7 +585,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4127;4189;4324;4458;4522;4800;4100;4244;4245;4267;4456;4701;4702;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0501;_WIN32_WINNT=0x0501;NDEBUG;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HB_NO_MT;hb_malloc_impl=fz_hb_malloc;hb_calloc_impl=fz_hb_calloc;hb_realloc_impl=fz_hb_realloc;hb_free_impl=fz_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WIN32;_CRT_SECURE_NO_WARNINGS;WINVER=0x0601;_WIN32_WINNT=0x0601;NDEBUG;HAVE_FALLBACK=1;HAVE_OT;HAVE_UCDN;HB_NO_MT;hb_malloc_impl=fz_hb_malloc;hb_calloc_impl=fz_hb_calloc;hb_realloc_impl=fz_hb_realloc;hb_free_impl=fz_hb_free;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UndefinePreprocessorDefinitions>DEBUG;%(UndefinePreprocessorDefinitions)</UndefinePreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\ext\harfbuzz\src\hb-ucdn;..\ext\freetype-config;..\ext\freetype\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>

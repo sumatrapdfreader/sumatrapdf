@@ -304,8 +304,8 @@ Length calculateHGap(ILayout* previous, ILayout* current) {
     // inferred from the order and type of controls.
     //
     // https://msdn.microsoft.com/en-us/library/windows/desktop/dn742486.aspx#sizingandspacing
-    if (IsButton(previous->kind)) {
-        if (IsButton(current->kind)) {
+    if (IsButton(previous)) {
+        if (IsButton(current)) {
             // Any pair of successive buttons will be assumed to be in a
             // related group.
             return 7 * DIP;
@@ -946,8 +946,10 @@ void HBox::setBoundsForChild(size_t i, ILayout* v, Length posX, Length posY, Len
 }
 
 boxElementInfo& HBox::addChild(ILayout* child, int flex) {
-    boxElementInfo i{child, flex};
-    children.Append(i);
+    boxElementInfo v{};
+    v.layout = child;
+    v.flex = flex;
+    children.Append(v);
     auto n = children.size();
     return children[n - 1];
 }

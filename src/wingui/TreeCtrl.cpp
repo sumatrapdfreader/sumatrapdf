@@ -24,6 +24,20 @@ Tree view, checkboxes and other info:
 https://stackoverflow.com/questions/34161879/how-to-remove-checkboxes-on-specific-tree-view-items-with-the-tvs-checkboxes-sty
 */
 
+Kind kindTree = "treeV";
+
+bool IsTree(Kind kind) {
+    return kind == kindTree;
+}
+
+bool IsTree(ILayout* l) {
+    return IsLayoutOfKind(l, kindTree);
+}
+
+ILayout* NewTreeLayout(TreeCtrl* e) {
+    return new WindowBaseLayout(e, kindTree);
+}
+
 void TreeViewExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, bool subtree) {
     while (hItem) {
         TreeView_Expand(hTree, hItem, flag);
@@ -402,7 +416,7 @@ void TreeCtrl::SetTreeModel(TreeModel* tm) {
     CrashIf(!tm);
 
     Clear();
-    this->treeModel = tm;
+    treeModel = tm;
     SuspendRedraw();
     PopulateTree(this, tm);
     ResumeRedraw();

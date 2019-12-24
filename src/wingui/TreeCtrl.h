@@ -87,3 +87,7 @@ struct TreeCtrl : public WindowBase {
 };
 
 void TreeViewExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, bool subtree);
+ILayout* NewTreeLayout(TreeCtrl*);
+
+bool IsTree(Kind);
+bool IsTree(ILayout*);
