@@ -97,6 +97,11 @@ static HWND getChildHWNDForMessage(UINT msg, WPARAM wp, LPARAM lp) {
 // Another option: always create a reflector HWND window, like
 static LRESULT CALLBACK wndProcParentDispatch(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass,
                                               DWORD_PTR dwRefData) {
+    HWND hwndCtrl = getChildHWNDForMessage(msg, wp, lp);
+    if (!hwndCtrl) {
+        return DefSubclassProc(hwnd, msg, wp, lp);
+    }
+
     WindowBase* w = (WindowBase*)dwRefData;
     // char* msgName = getWinMessageName(msg);
     // dbglogf("hwnd: 0x%6p, msg: 0x%03x (%s), wp: 0x%x, id: %d, w: 0x%p\n", hwnd, msg, msgName, wp, uIdSubclass, w);
@@ -104,15 +109,11 @@ static LRESULT CALLBACK wndProcParentDispatch(HWND hwnd, UINT msg, WPARAM wp, LP
         return DefSubclassProc(hwnd, msg, wp, lp);
     }
     CrashIf(hwnd != w->parent);
-
-    HWND hwndCtrl = getChildHWNDForMessage(msg, wp, lp);
-    if (hwndCtrl == w->hwnd) {
-        WndProcArgs args{};
-        SetWndProcArgs(args);
-        w->WndProcParent(&args);
-        if (args.didHandle) {
-            return args.result;
-        }
+    WndProcArgs args{};
+    SetWndProcArgs(args);
+    w->WndProcParent(&args);
+    if (args.didHandle) {
+        return args.result;
     }
     return DefSubclassProc(hwnd, msg, wp, lp);
 }
@@ -145,7 +146,7 @@ void WindowBase::Unsubclass() {
         subclassId = 0;
     }
     if (subclassParentId) {
-        RemoveWindowSubclass(parent, wndProcDispatch, subclassParentId);
+        RemoveWindowSubclass(parent, wndProcParentDispatch, subclassParentId);
         subclassParentId = 0;
     }
 }
@@ -159,6 +160,7 @@ void WindowBase::Destroy() {
     hwnd = nullptr;
     if (IsWindow(tmp)) {
         DestroyWindow(tmp);
+        tmp = nullptr;
     }
 }
 

@@ -79,10 +79,11 @@ WindowInfo::~WindowInfo() {
     // (all controllers should have been deleted prior to WindowInfo, though)
     delete cbHandler;
 
-    delete altBookmarks;
     delete frameRateWnd;
     delete infotip;
+    delete altBookmarks;
     delete tocTreeCtrl;
+
     free(sidebarSplitter);
     free(favSplitter);
     free(tocLabelWithClose);
