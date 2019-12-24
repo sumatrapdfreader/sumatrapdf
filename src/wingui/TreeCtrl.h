@@ -31,12 +31,10 @@ struct TreeCtrl : public WindowBase {
     ~TreeCtrl();
 
     void Clear();
-    TVITEMW* GetTVITEM(TreeItem*);
     str::WStr GetTooltip(TreeItem*);
     TreeItem* GetSelection();
 
     bool SelectItem(TreeItem*);
-    HTREEITEM InsertItem(TVINSERTSTRUCTW*);
 
     bool GetTreeItemRect(TreeItem*, bool justText, RECT& r);
 

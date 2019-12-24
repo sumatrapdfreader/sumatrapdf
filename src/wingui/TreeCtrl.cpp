@@ -67,6 +67,11 @@ static TVITEMW* GetTVITEM(TreeCtrl* tree, HTREEITEM hItem) {
     return ti;
 }
 
+static TVITEMW* GetTVITEM(TreeCtrl* tree, TreeItem* ti) {
+    HTREEITEM hi = tree->GetHandleByTreeItem(ti);
+    return GetTVITEM(tree, hi);
+}
+
 #include "utils/BitManip.h"
 
 // expand if collapse, collapse if expanded
@@ -231,11 +236,6 @@ bool TreeCtrl::Create(const WCHAR* title) {
     return true;
 }
 
-TVITEMW* TreeCtrl::GetTVITEM(TreeItem* ti) {
-    auto hi = GetHandleByTreeItem(ti);
-    return ::GetTVITEM(this, hi);
-}
-
 bool TreeCtrl::IsExpanded(TreeItem* ti) {
     auto state = GetItemState(ti);
     return state.isExpanded;
@@ -258,11 +258,6 @@ bool TreeCtrl::SelectItem(TreeItem* ti) {
     auto hi = GetHandleByTreeItem(ti);
     BOOL ok = TreeView_SelectItem(hwnd, hi);
     return ok == TRUE;
-}
- 
-HTREEITEM TreeCtrl::InsertItem(TVINSERTSTRUCTW* item) {
-    HTREEITEM res = TreeView_InsertItem(this->hwnd, item);
-    return res;
 }
 
 void TreeCtrl::SetBackgroundColor(COLORREF bgCol) {
@@ -362,7 +357,8 @@ static HTREEITEM InsertItem(TreeCtrl* tree, HTREEITEM parent, TreeItem* item) {
     toInsert.itemex.lParam = reinterpret_cast<LPARAM>(item);
     auto title = item->Text();
     toInsert.itemex.pszText = title;
-    return tree->InsertItem(&toInsert);
+    HTREEITEM res = TreeView_InsertItem(tree->hwnd, &toInsert);
+    return res;
 }
 
 static void PopulateTreeItem(TreeCtrl* tree, TreeItem* item, HTREEITEM parent) {
@@ -412,11 +408,10 @@ bool TreeCtrl::GetCheckState(TreeItem* item) {
 }
 
 TreeItemState TreeCtrl::GetItemState(TreeItem* ti) {
-    HTREEITEM hi = GetHandleByTreeItem(ti);
-    TreeItemState res;
-    TVITEMW* item = GetTVITEM(ti);
+    TVITEMW* item = GetTVITEM(this, ti);
     CrashIf(!item);
 
+    TreeItemState res;
     res.isExpanded = bitmask::IsSet(item->state, TVIS_EXPANDED);
     res.isSelected = bitmask::IsSet(item->state, TVIS_SELECTED);
     res.nChildren = item->cChildren;
