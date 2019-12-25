@@ -92,11 +92,11 @@ static void CustomizeTocTooltip(TreeItmGetTooltipArgs* args) {
 
     // Display the item's full label, if it's overlong
     RECT rcLine, rcLabel;
-    w->GetTreeItemRect(args->treeItem, false, rcLine);
-    w->GetTreeItemRect(args->treeItem, true, rcLabel);
+    w->GetItemRect(args->treeItem, false, rcLine);
+    w->GetItemRect(args->treeItem, true, rcLabel);
 
     if (rcLine.right + 2 < rcLabel.right) {
-        str::WStr currInfoTip = w->GetTooltip(ti);
+        str::WStr currInfoTip = w->GetDefaultTooltip(ti);
         infotip.Append(currInfoTip.data());
         infotip.Append(L"\r\n");
     }
@@ -482,12 +482,6 @@ static void BuildAndShowContextMenu(WindowInfo* win, int x, int y) {
     }
 }
 
-static void TreeCtrlContextMenu(WindowInfo* win, int xScreen, int yScreen) {
-    UNUSED(xScreen);
-    UNUSED(yScreen);
-    BuildAndShowContextMenu(win, xScreen, yScreen);
-}
-
 static void AltBookmarksChanged(WindowInfo* win, TabInfo* tab, int n, std::string_view s) {
     DocTocTree* tocTree = nullptr;
     if (n == 0) {
@@ -552,8 +546,8 @@ void LoadTocTree(WindowInfo* win) {
 
     treeCtrl->SetTreeModel(tocTree);
 
-    //UINT fl = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;
-    //RedrawWindow(hwnd, nullptr, nullptr, fl);
+    // UINT fl = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;
+    // RedrawWindow(hwnd, nullptr, nullptr, fl);
 }
 
 // TODO: use https://docs.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-getobject?redirectedfrom=MSDN
@@ -824,7 +818,11 @@ void CreateToc(WindowInfo* win) {
         args->procArgs->result = res;
     };
     treeCtrl->onGetTooltip = [](TreeItmGetTooltipArgs* args) { CustomizeTocTooltip(args); };
-    treeCtrl->onContextMenu = [win](TreeContextMenuArgs* args) { TreeCtrlContextMenu(win, args->x, args->y); };
+    treeCtrl->onContextMenu = [win](TreeContextMenuArgs* args) {
+        int xScreen = args->mouseGlobal.x;
+        int yScreen = args->mouseGlobal.y;
+        BuildAndShowContextMenu(win, xScreen, yScreen);
+    };
     bool ok = treeCtrl->Create(L"TOC");
     CrashIf(!ok);
     win->tocTreeCtrl = treeCtrl;

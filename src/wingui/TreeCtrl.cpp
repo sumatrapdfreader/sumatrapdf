@@ -142,8 +142,14 @@ void TreeCtrl::WndProcParent(WndProcArgs* args) {
             TreeContextMenuArgs a;
             a.procArgs = args;
             a.w = w;
-            a.x = GET_X_LPARAM(lp);
-            a.y = GET_Y_LPARAM(lp);
+            a.mouseGlobal.x = GET_X_LPARAM(lp);
+            a.mouseGlobal.y = GET_Y_LPARAM(lp);
+            POINT pt{a.mouseGlobal.x, a.mouseGlobal.y};
+            if (pt.x != -1) {
+                MapWindowPoints(HWND_DESKTOP, w->hwnd, &pt, 1);
+            }
+            a.mouseWindow.x = pt.x;
+            a.mouseWindow.y = pt.y;
             onContextMenu(&a);
         }
         return;
@@ -246,7 +252,7 @@ bool TreeCtrl::IsExpanded(TreeItem* ti) {
 }
 
 // https://docs.microsoft.com/en-us/windows/win32/api/commctrl/nf-commctrl-treeview_getitemrect
-bool TreeCtrl::GetTreeItemRect(TreeItem* ti, bool justText, RECT& r) {
+bool TreeCtrl::GetItemRect(TreeItem* ti, bool justText, RECT& r) {
     HTREEITEM hi = GetHandleByTreeItem(ti);
     BOOL b = toBOOL(justText);
     BOOL ok = TreeView_GetItemRect(hwnd, hi, &r, b);
@@ -300,7 +306,7 @@ TreeCtrl::~TreeCtrl() {
     // DeleteObject(w->bgBrush);
 }
 
-str::WStr TreeCtrl::GetTooltip(TreeItem* ti) {
+str::WStr TreeCtrl::GetDefaultTooltip(TreeItem* ti) {
     auto hItem = GetHandleByTreeItem(ti);
     WCHAR buf[INFOTIPSIZE + 1] = {}; // +1 just in case
 
@@ -314,6 +320,24 @@ str::WStr TreeCtrl::GetTooltip(TreeItem* ti) {
     return str::WStr(buf);
 }
 
+
+// get the item at a given (x,y) position in the window
+TreeItem* TreeCtrl::HitTest(int x, int y) {
+    if (x < 0 || y < 0) {
+        return nullptr;
+    }
+    TVHITTESTINFO ht{};
+    ht.pt.x = x;
+    ht.pt.y = y;
+
+    TreeView_HitTest(hwnd, &ht);
+    if ((ht.flags & TVHT_ONITEM) == 0) {
+        return nullptr;
+    }
+    return GetTreeItemByHandle(ht.hItem);
+}
+
+// TODO: speed up by storing the pointer as TVINSERTSTRUCTW.lParam
 HTREEITEM TreeCtrl::GetHandleByTreeItem(TreeItem* item) {
     for (auto t : this->insertedItems) {
         auto* i = std::get<0>(t);

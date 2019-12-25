@@ -24,8 +24,11 @@ typedef std::function<void(TreeNotifyArgs*)> OnTreeNotify;
 struct TreeContextMenuArgs {
     WndProcArgs* procArgs = nullptr;
     TreeCtrl* w = nullptr;
-    int x = 0;
-    int y = 0;
+
+    // mouse x,y position relative to the window
+    PointI mouseWindow{};
+    // global (screen) mouse x,y position 
+    PointI mouseGlobal{};
 };
 
 typedef std::function<void(TreeContextMenuArgs*)> OnTreeContextMenu;
@@ -48,18 +51,21 @@ struct TreeCtrl : public WindowBase {
     ~TreeCtrl();
 
     void Clear();
-    str::WStr GetTooltip(TreeItem*);
+
+    void SetTreeModel(TreeModel*);
+
+    str::WStr GetDefaultTooltip(TreeItem*);
     TreeItem* GetSelection();
+
+    TreeItem* HitTest(int x, int y);
 
     bool SelectItem(TreeItem*);
 
-    bool GetTreeItemRect(TreeItem*, bool justText, RECT& r);
+    bool GetItemRect(TreeItem*, bool justText, RECT& r);
 
     bool IsExpanded(TreeItem*);
 
     bool Create(const WCHAR* title);
-
-    void SetTreeModel(TreeModel*);
 
     void SetBackgroundColor(COLORREF);
     void SetTextColor(COLORREF);
