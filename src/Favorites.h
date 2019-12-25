@@ -24,8 +24,7 @@ class Favorites {
     size_t idxCache = (size_t)-1;
 
   public:
-    Favorites() {
-    }
+    Favorites() = default;
 
     Favorite* GetByMenuId(int menuId, DisplayState** dsOut = nullptr);
     void ResetMenuIds();
