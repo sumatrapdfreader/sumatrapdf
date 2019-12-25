@@ -552,8 +552,8 @@ void LoadTocTree(WindowInfo* win) {
 
     treeCtrl->SetTreeModel(tocTree);
 
-    UINT fl = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;
-    RedrawWindow(hwnd, nullptr, nullptr, fl);
+    //UINT fl = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;
+    //RedrawWindow(hwnd, nullptr, nullptr, fl);
 }
 
 // TODO: use https://docs.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-getobject?redirectedfrom=MSDN
@@ -824,7 +824,7 @@ void CreateToc(WindowInfo* win) {
         args->procArgs->result = res;
     };
     treeCtrl->onGetTooltip = [](TreeItmGetTooltipArgs* args) { CustomizeTocTooltip(args); };
-    treeCtrl->onContextMenu = [win](HWND, int x, int y) { TreeCtrlContextMenu(win, x, y); };
+    treeCtrl->onContextMenu = [win](TreeContextMenuArgs* args) { TreeCtrlContextMenu(win, args->x, args->y); };
     bool ok = treeCtrl->Create(L"TOC");
     CrashIf(!ok);
     win->tocTreeCtrl = treeCtrl;

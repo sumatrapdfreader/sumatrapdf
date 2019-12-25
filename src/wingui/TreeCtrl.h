@@ -5,6 +5,7 @@
 struct TreeCtrl;
 
 struct TreeItmGetTooltipArgs {
+    WndProcArgs* procArgs = nullptr;
     TreeCtrl* w = nullptr;
     TreeItem* treeItem = nullptr;
     NMTVGETINFOTIPW* info = nullptr;
@@ -13,13 +14,21 @@ struct TreeItmGetTooltipArgs {
 typedef std::function<void(TreeItmGetTooltipArgs*)> OnTreeItemGetTooltip;
 
 struct TreeNotifyArgs {
+    WndProcArgs* procArgs = nullptr;
     TreeCtrl* w = nullptr;
     NMTREEVIEWW* treeView = nullptr;
-
-    WndProcArgs* procArgs = nullptr;
 };
 
 typedef std::function<void(TreeNotifyArgs*)> OnTreeNotify;
+
+struct TreeContextMenuArgs {
+    WndProcArgs* procArgs = nullptr;
+    TreeCtrl* w = nullptr;
+    int x = 0;
+    int y = 0;
+};
+
+typedef std::function<void(TreeContextMenuArgs*)> OnTreeContextMenu;
 
 /* Creation sequence:
 - auto ctrl = new TreeCtrl()
@@ -81,7 +90,7 @@ struct TreeCtrl : public WindowBase {
     OnTreeNotify onTreeNotify = nullptr;
 
     // called to process WM_CONTEXTMENU
-    ContextMenuCb onContextMenu = nullptr;
+    OnTreeContextMenu onContextMenu = nullptr;
 
     // private
     TVITEMW item = {0};

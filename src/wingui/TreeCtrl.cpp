@@ -139,12 +139,14 @@ void TreeCtrl::WndProcParent(WndProcArgs* args) {
 
     if (msg == WM_CONTEXTMENU) {
         if (w->onContextMenu) {
-            int x = GET_X_LPARAM(lp);
-            int y = GET_Y_LPARAM(lp);
-            w->onContextMenu(hwnd, x, y);
-            args->didHandle = 0;
-            return;
+            TreeContextMenuArgs a;
+            a.procArgs = args;
+            a.w = w;
+            a.x = GET_X_LPARAM(lp);
+            a.y = GET_Y_LPARAM(lp);
+            onContextMenu(&a);
         }
+        return;
     }
 }
 
@@ -389,11 +391,17 @@ static void PopulateTree(TreeCtrl* tree, TreeModel* tm) {
 void TreeCtrl::SetTreeModel(TreeModel* tm) {
     CrashIf(!tm);
 
-    Clear();
-    treeModel = tm;
     SuspendRedraw();
+
+    insertedItems.clear();
+    TreeView_DeleteAllItems(hwnd);
+
+    treeModel = tm;
     PopulateTree(this, tm);
     ResumeRedraw();
+
+    UINT flags = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;
+    RedrawWindow(hwnd, nullptr, nullptr, flags);
 }
 
 void TreeCtrl::SetCheckState(TreeItem* item, bool enable) {
