@@ -2,7 +2,12 @@
 /* Copyright 2019 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
-typedef std::function<void(std::string_view)> OnTextChanged;
+struct EditTextChangedArgs {
+    WndProcArgs* procArgs = nullptr;
+    std::string_view text{};
+};
+
+typedef std::function<void(EditTextChangedArgs*)> OnTextChanged;
 
 // pass to SetColor() function to indicate this color should not change
 #define NO_CHANGE (COLORREF)(-2) // -1 is taken by NO_COLOR in windows headers

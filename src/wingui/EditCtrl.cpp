@@ -21,7 +21,7 @@
 // - include value we remember in WM_NCCALCSIZE in GetIdealSize()
 
 Kind kindEdit = "edit";
-
+ 
 bool IsEdit(Kind kind) {
     return kind == kindEdit;
 }
@@ -65,11 +65,15 @@ void EditCtrl::WndProcParent(WndProcArgs* args) {
     if (WM_COMMAND == msg) {
         if (EN_CHANGE == HIWORD(wp)) {
             if (w->OnTextChanged) {
+                EditTextChangedArgs eargs{};
+                eargs.procArgs = args;
                 str::Str s = win::GetTextUtf8(w->hwnd);
-                w->OnTextChanged(s.AsView());
+                eargs.text = s.as_view();
+                w->OnTextChanged(&eargs);
+                if (args->didHandle) {
+                    return;
+                }
             }
-            args->didHandle = true;
-            return;
         }
     }
 

@@ -82,7 +82,8 @@ static ILayout* CreateCheckboxLayout(HWND parent, std::string_view s) {
     return NewCheckboxLayout(b);
 }
 
-static void onTextChanged(std::string_view s) {
+static void onTextChanged(EditTextChangedArgs* args) {
+    std::string_view s = args->text;
     dbglogf("text changed: '%s'\n", s.data());
 }
 
