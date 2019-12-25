@@ -640,7 +640,8 @@ static LRESULT OnTocTreeNotify(WindowInfo* win, NMTREEVIEWW* pnmtv) {
             MapWindowPoints(HWND_DESKTOP, hwndFrom, &ht.pt, 1);
             TreeView_HitTest(hwndFrom, &ht);
 
-            // let TVN_SELCHANGED handle the click, if it isn't on the already selected item
+            // let TVN_SELCHANGED handle the click, if it isn't on
+            // the already selected item
             bool isOnItem = (ht.flags & TVHT_ONITEM);
             HTREEITEM sel = TreeView_GetSelection(hwndFrom);
             bool isSel = (sel == ht.hItem);
@@ -816,11 +817,11 @@ void CreateToc(WindowInfo* win) {
     treeCtrl->dwExStyle = WS_EX_STATICEDGE;
     treeCtrl->menuId = IDC_TOC_TREE;
     treeCtrl->msgFilter = [treeCtrl](WndProcArgs* args) { return TocTreePreFilter(treeCtrl, args); };
-    treeCtrl->onTreeNotify = [win, treeCtrl](NMTREEVIEWW* nm, bool& handled) {
-        CrashIf(win->tocTreeCtrl != treeCtrl);
-        LRESULT res = OnTocTreeNotify(win, nm);
-        handled = (res != -1);
-        return res;
+    treeCtrl->onTreeNotify = [win](TreeNotifyArgs* args) {
+        CrashIf(win->tocTreeCtrl != args->w);
+        LRESULT res = OnTocTreeNotify(win, args->treeView);
+        args->procArgs->didHandle = (res != -1);
+        args->procArgs->result = res;
     };
     treeCtrl->onGetTooltip = [](TreeItmGetTooltipArgs* args) { CustomizeTocTooltip(args); };
     treeCtrl->onContextMenu = [win](HWND, int x, int y) { TreeCtrlContextMenu(win, x, y); };

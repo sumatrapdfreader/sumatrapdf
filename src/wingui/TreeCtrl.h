@@ -11,7 +11,15 @@ struct TreeItmGetTooltipArgs {
 };
 
 typedef std::function<void(TreeItmGetTooltipArgs*)> OnTreeItemGetTooltip;
-typedef std::function<LRESULT(NMTREEVIEWW*, bool& didHandle)> TreeNotifyCb;
+
+struct TreeNotifyArgs {
+    TreeCtrl* w = nullptr;
+    NMTREEVIEWW* treeView = nullptr;
+
+    WndProcArgs* procArgs = nullptr;
+};
+
+typedef std::function<void(TreeNotifyArgs*)> OnTreeNotify;
 
 /* Creation sequence:
 - auto ctrl = new TreeCtrl()
@@ -70,7 +78,7 @@ struct TreeCtrl : public WindowBase {
     OnTreeItemGetTooltip onGetTooltip = nullptr;
 
     // called to process all WM_NOTIFY messages
-    TreeNotifyCb onTreeNotify = nullptr;
+    OnTreeNotify onTreeNotify = nullptr;
 
     // called to process WM_CONTEXTMENU
     ContextMenuCb onContextMenu = nullptr;

@@ -109,13 +109,15 @@ void TreeCtrl::WndProcParent(WndProcArgs* args) {
     CrashIf(GetParent(w->hwnd) != (HWND)hwnd);
 
     if (msg == WM_NOTIFY) {
-        NMTREEVIEWW* nm = reinterpret_cast<NMTREEVIEWW*>(lp);
+        NMTREEVIEWW* nm = (NMTREEVIEWW*)(lp);
         if (w->onTreeNotify) {
-            bool didHandle = false;
-            LRESULT res = w->onTreeNotify(nm, didHandle);
-            if (didHandle) {
-                args->didHandle = true;
-                args->result = res;
+            TreeNotifyArgs nargs{};
+            nargs.w = w;
+            nargs.treeView = nm;
+            nargs.procArgs = args;
+
+            w->onTreeNotify(&nargs);
+            if (args->didHandle) {
                 return;
             }
         }
