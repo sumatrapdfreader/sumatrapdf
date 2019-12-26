@@ -248,3 +248,4 @@ class LinkHandler {
 
 // TODO: this belongs in SumatraPDF.h but introduces a dependency on SettingsStructs.h
 void SwitchToDisplayMode(WindowInfo* win, DisplayMode displayMode, bool keepContinuous = false);
+void UpdateTreeCtrlColors(WindowInfo* win);

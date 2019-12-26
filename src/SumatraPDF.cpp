@@ -2133,7 +2133,7 @@ void UpdateDocumentColors() {
     for (auto* win : gWindows) {
         if (win->AsEbook()) {
             win->AsEbook()->UpdateDocumentColors();
-            UpdateTocColors(win);
+            UpdateTreeCtrlColors(win);
         }
     }
 

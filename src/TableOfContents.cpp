@@ -28,7 +28,6 @@
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "GlobalPrefs.h"
-#include "AppColors.h"
 #include "ProgressUpdateUI.h"
 #include "Notifications.h"
 #include "SumatraPDF.h"
@@ -358,49 +357,6 @@ void UpdateTocExpansionState(Vec<int>& tocState, TreeCtrl* treeCtrl, DocTocTree*
     UpdateDocTocExpansionState(treeCtrl, tocState, tocItem);
 }
 
-void UpdateTocColors(WindowInfo* win) {
-    COLORREF labelBgCol = GetSysColor(COLOR_BTNFACE);
-    COLORREF labelTxtCol = GetSysColor(COLOR_BTNTEXT);
-    COLORREF treeBgCol = GetAppColor(AppColor::DocumentBg);
-    COLORREF treeTxtCol = GetAppColor(AppColor::DocumentText);
-    COLORREF splitterCol = GetSysColor(COLOR_BTNFACE);
-    bool flatTreeWnd = false;
-
-    if (win->AsEbook()) {
-        labelBgCol = GetAppColor(AppColor::DocumentBg, true);
-        labelTxtCol = GetAppColor(AppColor::DocumentText, true);
-        treeTxtCol = labelTxtCol;
-        treeBgCol = labelBgCol;
-        float factor = 14.f;
-        int sign = GetLightness(labelBgCol) + factor > 255 ? 1 : -1;
-        splitterCol = AdjustLightness2(labelBgCol, sign * factor);
-        flatTreeWnd = true;
-    }
-
-    auto treeCtrl = win->tocTreeCtrl;
-    treeCtrl->SetBackgroundColor(treeBgCol);
-    treeCtrl->SetTextColor(treeTxtCol);
-
-    win->tocLabelWithClose->SetBgCol(labelBgCol);
-    win->tocLabelWithClose->SetTextCol(labelTxtCol);
-    SetBgCol(win->sidebarSplitter, splitterCol);
-    ToggleWindowExStyle(treeCtrl->hwnd, WS_EX_STATICEDGE, !flatTreeWnd);
-    UINT flags = SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED;
-    SetWindowPos(treeCtrl->hwnd, nullptr, 0, 0, 0, 0, flags);
-
-    // TODO: if we have favorites in ebook view, we'll need this
-    // SetBgCol(win->favLabelWithClose, labelBgCol);
-    // SetTextCol(win->favLabelWithClose, labelTxtCol);
-    // SetBgCol(win->favSplitter, labelTxtCol);
-
-    // TODO: more work needed to to ensure consistent look of the ebook window:
-    // - tab bar should match the colort
-    // - change the tree item text color
-    // - change the tree item background color when selected (for both focused and non-focused cases)
-    // - ultimately implement owner-drawn scrollbars in a simpler style (like Chrome or VS 2013)
-    //   and match their colors as well
-}
-
 // copied from mupdf/fitz/dev_text.c
 #define ISLEFTTORIGHTCHAR(c) \
     ((0x0041 <= (c) && (c) <= 0x005A) || (0x0061 <= (c) && (c) <= 0x007A) || (0xFB00 <= (c) && (c) <= 0xFB06))
@@ -540,7 +496,7 @@ void LoadTocTree(WindowInfo* win) {
     HWND hwnd = treeCtrl->hwnd;
     SetRtl(hwnd, isRTL);
 
-    UpdateTocColors(win);
+    UpdateTreeCtrlColors(win);
     SetInitialExpandState(tocTree->root, tab->tocState);
     tocTree->root->OpenSingleNode();
 
@@ -800,31 +756,31 @@ void CreateToc(WindowInfo* win) {
     win->altBookmarks = new DropDownCtrl(win->hwndTocBox);
     win->altBookmarks->Create();
 
-    auto* treeCtrl = new TreeCtrl(win->hwndTocBox);
+    auto* tocTreeCtrl = new TreeCtrl(win->hwndTocBox);
     // TODO: remove, for easy testing
     // treeCtrl->withCheckboxes = true;
 
     DWORD dwStyle = TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS;
     dwStyle |= TVS_TRACKSELECT | TVS_DISABLEDRAGDROP | TVS_NOHSCROLL | TVS_INFOTIP;
     dwStyle |= WS_TABSTOP | WS_VISIBLE | WS_CHILD;
-    treeCtrl->dwStyle = dwStyle;
-    treeCtrl->dwExStyle = WS_EX_STATICEDGE;
-    treeCtrl->menuId = IDC_TOC_TREE;
-    treeCtrl->msgFilter = [treeCtrl](WndProcArgs* args) { return TocTreePreFilter(treeCtrl, args); };
-    treeCtrl->onTreeNotify = [win](TreeNotifyArgs* args) {
+    tocTreeCtrl->dwStyle = dwStyle;
+    tocTreeCtrl->dwExStyle = WS_EX_STATICEDGE;
+    tocTreeCtrl->menuId = IDC_TOC_TREE;
+    tocTreeCtrl->msgFilter = [tocTreeCtrl](WndProcArgs* args) { return TocTreePreFilter(tocTreeCtrl, args); };
+    tocTreeCtrl->onTreeNotify = [win](TreeNotifyArgs* args) {
         CrashIf(win->tocTreeCtrl != args->w);
         LRESULT res = OnTocTreeNotify(win, args->treeView);
         args->procArgs->didHandle = (res != -1);
         args->procArgs->result = res;
     };
-    treeCtrl->onGetTooltip = [](TreeItmGetTooltipArgs* args) { CustomizeTocTooltip(args); };
-    treeCtrl->onContextMenu = [win](TreeContextMenuArgs* args) {
+    tocTreeCtrl->onGetTooltip = [](TreeItmGetTooltipArgs* args) { CustomizeTocTooltip(args); };
+    tocTreeCtrl->onContextMenu = [win](TreeContextMenuArgs* args) {
         int xScreen = args->mouseGlobal.x;
         int yScreen = args->mouseGlobal.y;
         BuildAndShowContextMenu(win, xScreen, yScreen);
     };
-    bool ok = treeCtrl->Create(L"TOC");
+    bool ok = tocTreeCtrl->Create(L"TOC");
     CrashIf(!ok);
-    win->tocTreeCtrl = treeCtrl;
+    win->tocTreeCtrl = tocTreeCtrl;
     SubclassToc(win);
 }
