@@ -3429,11 +3429,12 @@ void AdvanceFocus(WindowInfo* win) {
 
     // find the currently focused element
     HWND focused = GetFocus();
-    int i;
-    for (i = 0; i < nWindows; i++) {
+    int i = 0;
+    while (i < nWindows) {
         if (tabOrder[i] == focused) {
             break;
         }
+        i++;
     }
     // if it's not in the tab order, start at the beginning
     if (i == nWindows) {
@@ -3449,16 +3450,21 @@ void AdvanceFocus(WindowInfo* win) {
 static bool gIsDivideKeyDown = false;
 
 static bool ChmForwardKey(WPARAM key) {
-    if ((VK_LEFT == key) || (VK_RIGHT == key))
+    if ((VK_LEFT == key) || (VK_RIGHT == key)) {
         return true;
-    if ((VK_UP == key) || (VK_DOWN == key))
+    }
+    if ((VK_UP == key) || (VK_DOWN == key)) {
         return true;
-    if ((VK_HOME == key) || (VK_END == key))
+    }
+    if ((VK_HOME == key) || (VK_END == key)) {
         return true;
-    if ((VK_PRIOR == key) || (VK_NEXT == key))
+    }
+    if ((VK_PRIOR == key) || (VK_NEXT == key)) {
         return true;
-    if ((VK_MULTIPLY == key) || (VK_DIVIDE == key))
+    }
+    if ((VK_MULTIPLY == key) || (VK_DIVIDE == key)) {
         return true;
+    }
     return false;
 }
 
@@ -3483,8 +3489,9 @@ bool FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lparam, bool inTextfield
         return true;
     }
 
-    if (!win->IsDocLoaded())
+    if (!win->IsDocLoaded()) {
         return false;
+    }
 
     DisplayModel* dm = win->AsFixed();
     // some of the chm key bindings are different than the rest and we
@@ -3492,26 +3499,34 @@ bool FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lparam, bool inTextfield
     bool isChm = win->AsChm();
 
     bool isPageUp = (isCtrl && (VK_UP == key));
-    if (!isChm)
+    if (!isChm) {
         isPageUp |= (VK_PRIOR == key) && !isCtrl;
+    }
+
     if (isPageUp) {
         int currentPos = GetScrollPos(win->hwndCanvas, SB_VERT);
-        if (win->ctrl->GetZoomVirtual() != ZOOM_FIT_CONTENT)
+        if (win->ctrl->GetZoomVirtual() != ZOOM_FIT_CONTENT) {
             SendMessage(win->hwndCanvas, WM_VSCROLL, SB_PAGEUP, 0);
-        if (GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos)
+        }
+        if (GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos) {
             win->ctrl->GoToPrevPage(true);
+        }
         return true;
     }
 
     bool isPageDown = (isCtrl && (VK_DOWN == key));
-    if (!isChm)
+    if (!isChm) {
         isPageDown |= (VK_NEXT == key) && !isCtrl;
+    }
+
     if (isPageDown) {
         int currentPos = GetScrollPos(win->hwndCanvas, SB_VERT);
-        if (win->ctrl->GetZoomVirtual() != ZOOM_FIT_CONTENT)
+        if (win->ctrl->GetZoomVirtual() != ZOOM_FIT_CONTENT) {
             SendMessage(win->hwndCanvas, WM_VSCROLL, SB_PAGEDOWN, 0);
-        if (GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos)
+        }
+        if (GetScrollPos(win->hwndCanvas, SB_VERT) == currentPos) {
             win->ctrl->GoToNextPage();
+        }
         return true;
     }
 
@@ -3524,15 +3539,17 @@ bool FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lparam, bool inTextfield
     // lf("key=%d,%c,shift=%d\n", key, (char)key, (int)WasKeyDown(VK_SHIFT));
 
     if (VK_UP == key) {
-        if (dm && dm->NeedVScroll())
+        if (dm && dm->NeedVScroll()) {
             SendMessage(win->hwndCanvas, WM_VSCROLL, isShift ? SB_HPAGEUP : SB_LINEUP, 0);
-        else
+        } else {
             win->ctrl->GoToPrevPage(true);
+        }
     } else if (VK_DOWN == key) {
-        if (dm && dm->NeedVScroll())
+        if (dm && dm->NeedVScroll()) {
             SendMessage(win->hwndCanvas, WM_VSCROLL, isShift ? SB_HPAGEDOWN : SB_LINEDOWN, 0);
-        else
+        } else {
             win->ctrl->GoToNextPage();
+        }
     } else if (VK_PRIOR == key && isCtrl) {
         win->ctrl->GoToPrevPage();
     } else if (VK_NEXT == key && isCtrl) {
@@ -3540,26 +3557,30 @@ bool FrameOnKeydown(WindowInfo* win, WPARAM key, LPARAM lparam, bool inTextfield
     } else if (VK_HOME == key && isCtrl) {
         win->ctrl->GoToFirstPage();
     } else if (VK_END == key && isCtrl) {
-        if (!win->ctrl->GoToLastPage())
+        if (!win->ctrl->GoToLastPage()) {
             SendMessage(win->hwndCanvas, WM_VSCROLL, SB_BOTTOM, 0);
+        }
     } else if (inTextfield) {
         // The remaining keys have a different meaning
         return false;
     } else if (VK_LEFT == key) {
-        if (dm && dm->NeedHScroll() && !isCtrl)
+        if (dm && dm->NeedHScroll() && !isCtrl) {
             SendMessage(win->hwndCanvas, WM_HSCROLL, isShift ? SB_PAGELEFT : SB_LINELEFT, 0);
-        else
+        } else {
             win->ctrl->GoToPrevPage();
+        }
     } else if (VK_RIGHT == key) {
-        if (dm && dm->NeedHScroll() && !isCtrl)
+        if (dm && dm->NeedHScroll() && !isCtrl) {
             SendMessage(win->hwndCanvas, WM_HSCROLL, isShift ? SB_PAGERIGHT : SB_LINERIGHT, 0);
-        else
+        } else {
             win->ctrl->GoToNextPage();
+        }
     } else if (VK_HOME == key) {
         win->ctrl->GoToFirstPage();
     } else if (VK_END == key) {
-        if (!win->ctrl->GoToLastPage())
+        if (!win->ctrl->GoToLastPage()) {
             SendMessage(win->hwndCanvas, WM_VSCROLL, SB_BOTTOM, 0);
+        }
     } else if (VK_MULTIPLY == key && dm) {
         dm->RotateBy(90);
     } else if (VK_DIVIDE == key && dm) {
