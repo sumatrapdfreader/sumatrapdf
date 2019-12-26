@@ -703,6 +703,29 @@ static void ExtractInstallerFiles() {
     }
 }
 
+#if 0
+static void LogDpiAwareness() {
+    if (!DynGetThreadDpiAwarenessContext) {
+        return;
+    }
+    auto awc = DynGetThreadDpiAwarenessContext();
+    auto aw = DynGetAwarenessFromDpiAwarenessContext(awc);
+
+    char* aws = "unknown";
+    if (aw == DPI_AWARENESS_INVALID) {
+        aws = "DPI_AWARENESS_INVALID";
+    } else if (aw == DPI_AWARENESS_UNAWARE) {
+        aws = "DPI_AWARENESS_UNAWARE";
+    } else if (aw == DPI_AWARENESS_SYSTEM_AWARE) {
+        aws = "DPI_AWARENESS_SYSTEM_AWARE";
+    } else if (aw == DPI_AWARENESS_PER_MONITOR_AWARE) {
+        aws = "DPI_AWARENESS_PER_MONITOR_AWARE";
+    }
+
+    logf("aw: %d %s\n", (int)aw, aws);
+}
+#endif
+
 int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR cmdLine,
                      _In_ int nCmdShow) {
     UNUSED(hPrevInstance);
@@ -751,6 +774,8 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     // logToFile("C:\\Users\\kjk\\Downloads\\sumlog.txt");
 
     log("Starting SumatraPDF\n");
+
+    // LogDpiAwareness();
 
     // TODO: temporary, to test crash reporting
     // gAddCrashMeMenu = true;

@@ -37,7 +37,7 @@ typedef decltype(SetDllDirectoryW)* Sig_SetDllDirectoryW;
 // typedef BOOL(WINAPI* Sig_SetDllDirectoryW)(LPCWSTR);
 
 // TODO: not available in 32bit XP SDK
-//typedef decltype(SetDefaultDllDirectories)* Sig_SetDefaultDllDirectories;
+// typedef decltype(SetDefaultDllDirectories)* Sig_SetDefaultDllDirectories;
 typedef BOOL(WINAPI* Sig_SetDefaultDllDirectories)(DWORD);
 
 // TODO: not available in 32bit XP SDK
@@ -151,18 +151,34 @@ typedef unsigned __int64 QWORD, *LPQWORD;
 #endif
 #endif
 
+// typedef decltype(GetGestureInfo) Sig_GetGestureInfo;
 typedef BOOL(WINAPI* Sig_GetGestureInfo)(HGESTUREINFO, PGESTUREINFO);
+
+// typedef decltype(CloseGestureInfoHandle) Sig_CloseGestureInfoHandle;
 typedef BOOL(WINAPI* Sig_CloseGestureInfoHandle)(HGESTUREINFO);
+
+// typedef decltype(SetGestureConfig) Sig_GetGestSig_SetGestureConfigureInfo;
 typedef BOOL(WINAPI* Sig_SetGestureConfig)(HWND, DWORD, UINT, PGESTURECONFIG, UINT);
 
-//typedef decltype(GetDpiForWindow)* Sig_GetDpiForWindow;
+// typedef decltype(GetThreadDpiAwarenessContext) Sig_GetThreadDpiAwarenessContext;
+typedef DPI_AWARENESS_CONTEXT(WINAPI* Sig_GetThreadDpiAwarenessContext)();
+
+// typedef decltype(SetThreadDpiAwarenessContext) Sig_SetThreadDpiAwarenessContext;
+typedef DPI_AWARENESS_CONTEXT(WINAPI* Sig_SetThreadDpiAwarenessContext)(DPI_AWARENESS_CONTEXT);
+
+typedef DPI_AWARENESS(WINAPI* Sig_GetAwarenessFromDpiAwarenessContext)(DPI_AWARENESS_CONTEXT);
+
+// typedef decltype(GetDpiForWindow)* Sig_GetDpiForWindow;
 typedef UINT(WINAPI* Sig_GetDpiForWindow)(HWND);
 
-#define USER32_API_LIST(V)    \
-    V(GetGestureInfo)         \
-    V(CloseGestureInfoHandle) \
-    V(GetDpiForWindow)        \
-    V(SetGestureConfig)
+#define USER32_API_LIST(V)                 \
+    V(GetDpiForWindow)                     \
+    V(GetThreadDpiAwarenessContext)        \
+    V(GetAwarenessFromDpiAwarenessContext) \
+    V(SetThreadDpiAwarenessContext)        \
+    V(SetGestureConfig)                    \
+    V(GetGestureInfo)                      \
+    V(CloseGestureInfoHandle)
 
 // dbghelp.dll,  may not be available under Win2000
 typedef decltype(MiniDumpWriteDump)* Sig_MiniDumpWriteDump;
