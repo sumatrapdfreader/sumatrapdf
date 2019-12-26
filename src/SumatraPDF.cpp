@@ -577,7 +577,7 @@ static void UpdateWindowRtlLayout(WindowInfo* win) {
     SetRtl(win->hwndFavBox, isRTL);
     HWND favBoxTitle = win->favLabelWithClose->hwnd;
     SetRtl(favBoxTitle, isRTL);
-    SetRtl(win->hwndFavTree->hwnd, isRTL);
+    win->favTreeCtrl->SetRtl(isRTL);
 
     SetRtl(win->hwndReBar, isRTL);
     SetRtl(win->hwndToolbar, isRTL);
@@ -3405,7 +3405,7 @@ void AdvanceFocus(WindowInfo* win) {
         tabOrder[nWindows++] = win->tocTreeCtrl->hwnd;
     }
     if (gGlobalPrefs->showFavorites) {
-        tabOrder[nWindows++] = win->hwndFavTree->hwnd;
+        tabOrder[nWindows++] = win->favTreeCtrl->hwnd;
     }
     CrashIf(nWindows > MAX_WINDOWS);
 
@@ -3922,7 +3922,7 @@ void SetSidebarVisibility(WindowInfo* win, bool tocVisible, bool showFavorites) 
     // TODO: make this a per-window setting as well?
     gGlobalPrefs->showFavorites = showFavorites;
 
-    if ((!tocVisible && IsFocused(win->tocTreeCtrl->hwnd)) || (!showFavorites && IsFocused(win->hwndFavTree->hwnd))) {
+    if ((!tocVisible && IsFocused(win->tocTreeCtrl->hwnd)) || (!showFavorites && IsFocused(win->favTreeCtrl->hwnd))) {
         SetFocus(win->hwndFrame);
     }
 

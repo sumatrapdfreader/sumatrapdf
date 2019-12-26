@@ -110,6 +110,8 @@ struct WindowBase {
     void ResumeRedraw();
 
     void SetFocus();
+    bool IsFocused();
+
     void SetFont(HFONT f);
     void SetText(const WCHAR* s);
     void SetText(std::string_view);

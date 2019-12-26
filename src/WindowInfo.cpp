@@ -83,9 +83,9 @@ WindowInfo::~WindowInfo() {
     delete infotip;
     delete altBookmarks;
     delete tocTreeCtrl;
-    if (hwndFavTree) {
-        delete hwndFavTree->treeModel;
-        delete hwndFavTree;
+    if (favTreeCtrl) {
+        delete favTreeCtrl->treeModel;
+        delete favTreeCtrl;
     }
 
     free(sidebarSplitter);

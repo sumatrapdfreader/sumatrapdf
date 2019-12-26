@@ -113,7 +113,7 @@ class WindowInfo {
     // state related to favorites
     HWND hwndFavBox = nullptr;
     LabelWithCloseWnd* favLabelWithClose = nullptr;
-    TreeCtrl* hwndFavTree = nullptr;
+    TreeCtrl* favTreeCtrl = nullptr;
     Vec<DisplayState*> expandedFavorites;
 
     // vertical splitter for resizing left side panel
