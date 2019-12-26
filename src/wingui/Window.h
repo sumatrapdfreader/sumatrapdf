@@ -72,6 +72,11 @@ struct WindowBase {
     HFONT hfont = nullptr; // TODO: this should be abstract Font description
     int menuId = 0;
 
+    // those tweak WNDCLASSEX for RegisterClass() class
+    HICON hIcon = nullptr;
+    HICON hIconSm = nullptr;
+    LPCWSTR lpszMenuName = nullptr;
+
     // called at start of windows proc to allow intercepting messages
     MsgFilter msgFilter;
 
@@ -128,11 +133,6 @@ extern Kind kindWindow;
 // a top-level window. Must set winClass before
 // calling Create()
 struct Window : public WindowBase {
-    // those tweak WNDCLASSEX for RegisterClass() class
-    HICON hIcon = nullptr;
-    HICON hIconSm = nullptr;
-    LPCWSTR lpszMenuName = nullptr;
-
     OnWmCommand onWmCommand = nullptr;
     OnSize onSize = nullptr;
     OnClose onClose = nullptr;

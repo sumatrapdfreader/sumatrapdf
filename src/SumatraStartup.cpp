@@ -1060,7 +1060,6 @@ Exit:
     DeleteCachedCursors();
     DeleteObject(GetDefaultGuiFont());
     DeleteBitmap(gBitmapReloadingCue);
-    DeleteSplitterBrush();
 
     // wait for FileExistenceChecker to terminate
     // (which should be necessary only very rarely)

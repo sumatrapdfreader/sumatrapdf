@@ -141,16 +141,18 @@ static WStrVec gAllowedFileTypes;
 
 static void CloseDocumentInTab(WindowInfo*, bool keepUIEnabled = false, bool deleteModel = false);
 static void UpdatePageInfoHelper(WindowInfo*, NotificationWnd* wnd = nullptr, int pageNo = -1);
-static bool SidebarSplitterCb(WindowInfo*, bool done);
-static bool FavSplitterCb(WindowInfo*, bool done);
+static void OnSidebarSplitterMove(SplitterMoveArgs*);
+static void OnFavSplitterMove(SplitterMoveArgs*);
 static void DownloadDebugSymbols();
 
 void SetCurrentLang(const char* langCode) {
-    if (langCode) {
-        if (langCode != gGlobalPrefs->uiLanguage)
-            str::ReplacePtr(&gGlobalPrefs->uiLanguage, langCode);
-        trans::SetCurrentLangByCode(langCode);
+    if (!langCode) {
+        return;
     }
+    if (langCode != gGlobalPrefs->uiLanguage) {
+        str::ReplacePtr(&gGlobalPrefs->uiLanguage, langCode);
+    }
+    trans::SetCurrentLangByCode(langCode);
 }
 
 #ifndef SUMATRA_UPDATE_INFO_URL
@@ -1256,14 +1258,20 @@ void ReloadDocument(WindowInfo* win, bool autorefresh) {
 }
 
 static void CreateSidebar(WindowInfo* win) {
-    auto sidebarCb = [=](bool done) { return SidebarSplitterCb(win, done); };
-    win->sidebarSplitter = CreateSplitter(win->hwndFrame, SplitterType::Vert, sidebarCb);
-    CrashIf(!win->sidebarSplitter);
+    win->sidebarSplitter = new SplitterCtrl(win->hwndFrame);
+    win->sidebarSplitter->type = SplitterType::Vert;
+    win->sidebarSplitter->onSplitterMove = OnSidebarSplitterMove;
+    bool ok = win->sidebarSplitter->Create();
+    CrashIf(!ok);
+
     CreateToc(win);
 
-    auto favCb = [=](bool done) { return FavSplitterCb(win, done); };
-    win->favSplitter = CreateSplitter(win->hwndFrame, SplitterType::Horiz, favCb);
-    CrashIf(!win->favSplitter);
+    win->favSplitter = new SplitterCtrl(win->hwndFrame);
+    win->favSplitter->type = SplitterType::Horiz;
+    win->favSplitter->onSplitterMove = OnFavSplitterMove;
+    ok = win->favSplitter->Create();
+    CrashIf(!ok);
+
     CreateFavorites(win);
 
     if (win->tocVisible) {
@@ -3038,7 +3046,7 @@ static void RelayoutFrame(WindowInfo* win, bool updateToolbars = true, int sideb
             dh.MoveWindow(win->hwndTocBox, rToc);
             if (showFavorites) {
                 RectI rSplitV(rc.x, rc.y + toc.dy, toc.dx, SPLITTER_DY);
-                dh.MoveWindow(GetHwnd(win->favSplitter), rSplitV);
+                dh.MoveWindow(win->favSplitter->hwnd, rSplitV);
                 toc.dy += SPLITTER_DY;
             }
         }
@@ -3047,7 +3055,7 @@ static void RelayoutFrame(WindowInfo* win, bool updateToolbars = true, int sideb
             dh.MoveWindow(win->hwndFavBox, rFav);
         }
         RectI rSplitH(rc.x + toc.dx, rc.y, SPLITTER_DX, rc.dy);
-        dh.MoveWindow(GetHwnd(win->sidebarSplitter), rSplitH);
+        dh.MoveWindow(win->sidebarSplitter->hwnd, rSplitH);
 
         rc.x += toc.dx + SPLITTER_DX;
         rc.dx -= toc.dx + SPLITTER_DX;
@@ -3883,7 +3891,13 @@ static bool FrameOnSysChar(WindowInfo* win, WPARAM key) {
     return false;
 }
 
-static bool SidebarSplitterCb(WindowInfo* win, bool done) {
+static void OnSidebarSplitterMove(SplitterMoveArgs* args) {
+    SplitterCtrl* splitter = args->w;
+    HWND hwnd = splitter->hwnd;
+    WindowInfo* win = FindWindowInfoByHwnd(hwnd);
+    CrashIf(!win);
+    bool done = args->done;
+
     PointI pcur;
     GetCursorPosInHwnd(win->hwndFrame, pcur);
     int sidebarDx = pcur.x; // without splitter
@@ -3896,16 +3910,22 @@ static bool SidebarSplitterCb(WindowInfo* win, bool done) {
     int minDx = std::min(SIDEBAR_MIN_WIDTH, rToc.dx);
     int maxDx = std::max(rFrame.dx / 2, rToc.dx);
     if (sidebarDx < minDx || sidebarDx > maxDx) {
-        return false;
+        args->resizeAllowed = false;
+        return;
     }
 
     if (done || !win->AsEbook()) {
         RelayoutFrame(win, false, sidebarDx);
     }
-    return true;
 }
 
-static bool FavSplitterCb(WindowInfo* win, bool done) {
+static void OnFavSplitterMove(SplitterMoveArgs* args) {
+    SplitterCtrl* splitter = args->w;
+    HWND hwnd = splitter->hwnd;
+    WindowInfo* win = FindWindowInfoByHwnd(hwnd);
+    CrashIf(!win);
+    bool done = args->done;
+
     PointI pcur;
     GetCursorPosInHwnd(win->hwndTocBox, pcur);
     int tocDy = pcur.y; // without splitter
@@ -3913,17 +3933,17 @@ static bool FavSplitterCb(WindowInfo* win, bool done) {
     // make sure to keep this in sync with the calculations in RelayoutFrame
     ClientRect rFrame(win->hwndFrame);
     ClientRect rToc(win->hwndTocBox);
-    AssertCrash(rToc.dx == ClientRect(win->hwndFavBox).dx);
+    CrashIf(rToc.dx != ClientRect(win->hwndFavBox).dx);
     int minDy = std::min(TOC_MIN_DY, rToc.dy);
     int maxDy = std::max(rFrame.dy - TOC_MIN_DY, rToc.dy);
     if (tocDy < minDy || tocDy > maxDy) {
-        return false;
+        args->resizeAllowed = false;
+        return;
     }
     gGlobalPrefs->tocDy = tocDy;
     if (done || !win->AsEbook()) {
         RelayoutFrame(win, false, rToc.dx);
     }
-    return true;
 }
 
 void SetSidebarVisibility(WindowInfo* win, bool tocVisible, bool showFavorites) {
@@ -3965,13 +3985,13 @@ void SetSidebarVisibility(WindowInfo* win, bool tocVisible, bool showFavorites) 
         SetFocus(win->hwndFrame);
     }
 
-    win::SetVisibility(GetHwnd(win->sidebarSplitter), tocVisible || showFavorites);
+    win::SetVisibility(win->sidebarSplitter->hwnd, tocVisible || showFavorites);
     win::SetVisibility(win->hwndTocBox, tocVisible);
-    SetSplitterLive(win->sidebarSplitter, !win->AsEbook());
+    win->sidebarSplitter->isLive = !win->AsEbook();
 
-    win::SetVisibility(GetHwnd(win->favSplitter), tocVisible && showFavorites);
+    win::SetVisibility(win->favSplitter->hwnd, tocVisible && showFavorites);
     win::SetVisibility(win->hwndFavBox, showFavorites);
-    SetSplitterLive(win->favSplitter, !win->AsEbook());
+    win->favSplitter->isLive = !win->AsEbook();
 
     RelayoutFrame(win, false);
 }

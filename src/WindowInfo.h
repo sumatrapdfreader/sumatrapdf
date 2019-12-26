@@ -9,6 +9,7 @@ class SumatraUIAutomationProvider;
 class FrameRateWnd;
 struct LabelWithCloseWnd;
 class SplitterWnd;
+struct SplitterCtrl;
 class CaptionInfo;
 
 class PageElement;
@@ -117,10 +118,10 @@ class WindowInfo {
     Vec<DisplayState*> expandedFavorites;
 
     // vertical splitter for resizing left side panel
-    SplitterWnd* sidebarSplitter = nullptr;
+    SplitterCtrl* sidebarSplitter = nullptr;
 
     // horizontal splitter for resizing favorites and bookmars parts
-    SplitterWnd* favSplitter = nullptr;
+    SplitterCtrl* favSplitter = nullptr;
 
     HWND hwndTabBar = nullptr;
     bool tabsVisible = false;

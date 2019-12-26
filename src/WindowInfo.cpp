@@ -91,8 +91,8 @@ WindowInfo::~WindowInfo() {
         delete favTreeCtrl;
     }
 
-    free(sidebarSplitter);
-    free(favSplitter);
+    delete sidebarSplitter;
+    delete favSplitter;
     free(tocLabelWithClose);
     free(favLabelWithClose);
 }
@@ -513,7 +513,7 @@ void UpdateTreeCtrlColors(WindowInfo* win) {
 
         win->tocLabelWithClose->SetBgCol(labelBgCol);
         win->tocLabelWithClose->SetTextCol(labelTxtCol);
-        SetBgCol(win->sidebarSplitter, splitterCol);
+        win->sidebarSplitter->SetBackgroundColor(splitterCol);
         ToggleWindowExStyle(tocTreeCtrl->hwnd, WS_EX_STATICEDGE, !flatTreeWnd);
         UINT flags = SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED;
         SetWindowPos(tocTreeCtrl->hwnd, nullptr, 0, 0, 0, 0, flags);
@@ -527,7 +527,7 @@ void UpdateTreeCtrlColors(WindowInfo* win) {
         win->favLabelWithClose->SetBgCol(labelBgCol);
         win->favLabelWithClose->SetTextCol(labelTxtCol);
 
-        SetBgCol(win->favSplitter, splitterCol);
+        win->favSplitter->SetBackgroundColor(splitterCol);
 
         ToggleWindowExStyle(favTreeCtrl->hwnd, WS_EX_STATICEDGE, !flatTreeWnd);
         UINT flags = SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED;

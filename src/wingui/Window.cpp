@@ -335,6 +335,14 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         return DefWindowProc(hwnd, msg, wp, lp);
     }
 
+    // TODDO: a hack, a Window might be deleted when we get here
+    // happens e.g. when we call CloseWindow() inside
+    // wndproc. Maybe instead of calling DestroyWindow()
+    // we should delete WindowInfo, for proper shutdown sequence
+    if (WM_DESTROY == msg) {
+        return DefWindowProc(hwnd, msg, wp, lp);
+    }
+
     if (!w) {
         return DefWindowProc(hwnd, msg, wp, lp);
     }
@@ -407,7 +415,7 @@ struct winClassWithAtom {
 
 Vec<winClassWithAtom> gRegisteredClasses;
 
-static void RegisterClass(Window* w) {
+static void RegisterWindowClass(Window* w) {
     // check if already registered
     for (auto&& ca : gRegisteredClasses) {
         if (str::Eq(ca.winClass, w->winClass)) {
@@ -441,7 +449,7 @@ bool Window::Create() {
     if (winClass == nullptr) {
         winClass = DEFAULT_WIN_CLASS;
     }
-    RegisterClass(this);
+    RegisterWindowClass(this);
 
     RECT rc = this->initialPos;
     int x = rc.left;

@@ -5,6 +5,8 @@
 // this one is hopefully not used in practice
 // can't use constexpr because they'll end up in multiple .lib and conflict
 #define ColorUnset ((COLORREF)(0xfeffffff))
+// ColorNoChange indicates that we shouldn't change the color
+#define ColorNoChange ((COLORREF)(0xfdffffff)
 
 COLORREF MkRgb(u8 r, u8 g, u8 b);
 COLORREF MkRgb(float r, float g, float b); // in 0..1 range
