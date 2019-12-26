@@ -420,7 +420,7 @@ void ToggleFavorites(WindowInfo* win) {
         SetSidebarVisibility(win, win->tocVisible, false);
     } else {
         SetSidebarVisibility(win, win->tocVisible, true);
-        win->hwndFavTree->SetFocus();
+        win->favTreeCtrl->SetFocus();
     }
 }
 
@@ -554,7 +554,7 @@ static FavTreeModel* BuildFavTreeModel(WindowInfo* win) {
 }
 
 void PopulateFavTreeIfNeeded(WindowInfo* win) {
-    TreeCtrl* treeCtrl = win->hwndFavTree;
+    TreeCtrl* treeCtrl = win->favTreeCtrl;
     if (treeCtrl->treeModel) {
         return;
     }
@@ -563,7 +563,7 @@ void PopulateFavTreeIfNeeded(WindowInfo* win) {
 }
 
 void UpdateFavoritesTree(WindowInfo* win) {
-    TreeCtrl* treeCtrl = win->hwndFavTree;
+    TreeCtrl* treeCtrl = win->favTreeCtrl;
     auto* prevModel = treeCtrl->treeModel;
     TreeModel* newModel = BuildFavTreeModel(win);
     treeCtrl->SetTreeModel(newModel);
@@ -652,7 +652,7 @@ void DelFavorite(WindowInfo* win) {
 
 void RememberFavTreeExpansionState(WindowInfo* win) {
     win->expandedFavorites.clear();
-    TreeCtrl* treeCtrl = win->hwndFavTree;
+    TreeCtrl* treeCtrl = win->favTreeCtrl;
     TreeModel* tm = treeCtrl ? treeCtrl->treeModel : nullptr;
     if (!tm) {
         // TODO: remember all favorites as expanded
@@ -780,36 +780,41 @@ static void OnFavTreeContextMenu(WindowInfo* win, TreeContextMenuArgs* args) {
     }
 }
 
-#if 0
-static WNDPROC DefWndProcFavTree = nullptr;
-static LRESULT CALLBACK WndProcFavTree(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+static void WndProcFavTree(WndProcArgs* args) {
+    HWND hwnd = args->hwnd;
+    UINT msg = args->msg;
+    WPARAM wp = args->wparam;
+    LPARAM lp = args->lparam;
+
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
     if (!win) {
-        return CallWindowProc(DefWndProcFavTree, hwnd, msg, wParam, lParam);
+        return;
+    }
+    CrashIf(hwnd != win->favTreeCtrl->hwnd);
+
+    if (msg == WM_ERASEBKGND) {
+        args->didHandle;
+        args->result = FALSE;
+        return;
     }
 
-    switch (msg) {
-        case WM_ERASEBKGND:
-            return FALSE;
-
-        case WM_CHAR:
-            if (VK_ESCAPE == wParam && gGlobalPrefs->escToExit && MayCloseWindow(win)) {
-                CloseWindow(win, true);
-            }
-            break;
-
-        case WM_MOUSEWHEEL:
-        case WM_MOUSEHWHEEL:
-            // scroll the canvas if the cursor isn't over the ToC tree
-            if (!IsCursorOverWindow(win->hwndFavTree)) {
-                return SendMessage(win->hwndCanvas, msg, wParam, lParam);
-            }
-            break;
+    if (msg == WM_CHAR) {
+        if (VK_ESCAPE == wp && gGlobalPrefs->escToExit && MayCloseWindow(win)) {
+            args->didHandle = true;
+            CloseWindow(win, true);
+        }
+        return;
     }
 
-    return CallWindowProc(DefWndProcFavTree, hwnd, msg, wParam, lParam);
+    if (msg == WM_MOUSEWHEEL || msg == WM_MOUSEHWHEEL) {
+        // scroll the canvas if the cursor isn't over the ToC tree
+        if (!IsCursorOverWindow(win->favTreeCtrl->hwnd)) {
+            args->didHandle = true;
+            args->result = SendMessage(win->hwndCanvas, msg, wp, lp);
+            return;
+        }
+    }
 }
-#endif
 
 static WNDPROC DefWndProcFavBox = nullptr;
 static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
@@ -818,7 +823,7 @@ static LRESULT CALLBACK WndProcFavBox(HWND hwnd, UINT message, WPARAM wParam, LP
         return CallWindowProc(DefWndProcFavBox, hwnd, message, wParam, lParam);
     }
 
-    TreeCtrl* treeCtrl = win->hwndFavTree;
+    TreeCtrl* treeCtrl = win->favTreeCtrl;
     switch (message) {
         case WM_SIZE:
             LayoutTreeContainer(win->favLabelWithClose, nullptr, treeCtrl->hwnd);
@@ -846,9 +851,11 @@ void CreateFavorites(WindowInfo* win) {
     l->SetFont(GetDefaultGuiFont());
     // label is set in UpdateToolbarSidebarText()
 
-    win->hwndFavTree = new TreeCtrl(win->hwndFavBox);
+    TreeCtrl* treeCtrl = new TreeCtrl(win->hwndFavBox);
 
-    win->hwndFavTree->onContextMenu = [win](TreeContextMenuArgs* args) {
+    treeCtrl->msgFilter = WndProcFavTree;
+
+    treeCtrl->onContextMenu = [win](TreeContextMenuArgs* args) {
         int x = args->mouseWindow.x;
         int y = args->mouseWindow.y;
         OnFavTreeContextMenu(win, args);
@@ -856,7 +863,7 @@ void CreateFavorites(WindowInfo* win) {
         args->procArgs->result = 0;
     };
 
-    win->hwndFavTree->onTreeNotify = [win](TreeNotifyArgs* args) {
+    treeCtrl->onTreeNotify = [win](TreeNotifyArgs* args) {
         LRESULT res = OnFavTreeNotify(win, args->w, args->treeView);
         if (res != -1) {
             args->procArgs->didHandle = true;
@@ -864,7 +871,10 @@ void CreateFavorites(WindowInfo* win) {
         }
     };
 
-    bool ok = win->hwndFavTree->Create(L"Fav");
+    bool ok = treeCtrl->Create(L"Fav");
+    CrashIf(!ok);
+
+    win->favTreeCtrl = treeCtrl;
 
     if (nullptr == DefWndProcFavBox) {
         DefWndProcFavBox = (WNDPROC)GetWindowLongPtr(win->hwndFavBox, GWLP_WNDPROC);
