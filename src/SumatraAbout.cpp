@@ -163,14 +163,14 @@ static SizeI CalcSumatraVersionSize(HWND hwnd, HDC hdc) {
     /* calculate minimal top box size */
     const WCHAR* txt = APP_NAME_STR;
     GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
-    result.dy = txtSize.cy + DpiScaleX(hwnd, ABOUT_BOX_MARGIN_DY * 2);
+    result.dy = txtSize.cy + DpiScale(hwnd, ABOUT_BOX_MARGIN_DY * 2);
     result.dx = txtSize.cx;
 
     /* consider version and version-sub strings */
     SelectObject(hdc, fontVersionTxt);
     AutoFreeWstr ver(GetSumatraVersion());
     GetTextExtentPoint32(hdc, ver.Get(), (int)str::Len(ver.Get()), &txtSize);
-    LONG minWidth = txtSize.cx + DpiScaleX(hwnd, 8);
+    LONG minWidth = txtSize.cx + DpiScale(hwnd, 8);
     txt = VERSION_SUB_TXT;
     GetTextExtentPoint32(hdc, txt, (int)str::Len(txt), &txtSize);
     txtSize.cx = std::max(txtSize.cx, minWidth);
@@ -199,7 +199,7 @@ static void DrawSumatraVersion(HWND hwnd, HDC hdc, RectI rect) {
     AutoFreeWstr ver(GetSumatraVersion());
     TextOut(hdc, pt.x, pt.y, ver.Get(), (int)str::Len(ver.Get()));
     txt = VERSION_SUB_TXT;
-    TextOut(hdc, pt.x, pt.y + DpiScaleX(hwnd, 13), txt, (int)str::Len(txt));
+    TextOut(hdc, pt.x, pt.y + DpiScale(hwnd, 13), txt, (int)str::Len(txt));
 
     SelectObject(hdc, oldFont);
 }
@@ -588,14 +588,14 @@ void DrawAboutPage(WindowInfo* win, HDC hdc) {
 
 #define DOCLIST_SEPARATOR_DY 2
 #define DOCLIST_THUMBNAIL_BORDER_W 1
-#define DOCLIST_MARGIN_LEFT DpiScaleX(win->hwndFrame, 40)
-#define DOCLIST_MARGIN_BETWEEN_X DpiScaleX(win->hwndFrame, 30)
-#define DOCLIST_MARGIN_RIGHT DpiScaleX(win->hwndFrame, 40)
-#define DOCLIST_MARGIN_TOP DpiScaleY(win->hwndFrame, 60)
-#define DOCLIST_MARGIN_BETWEEN_Y DpiScaleY(win->hwndFrame, 50)
-#define DOCLIST_MARGIN_BOTTOM DpiScaleY(win->hwndFrame, 40)
+#define DOCLIST_MARGIN_LEFT DpiScale(win->hwndFrame, 40)
+#define DOCLIST_MARGIN_BETWEEN_X DpiScale(win->hwndFrame, 30)
+#define DOCLIST_MARGIN_RIGHT DpiScale(win->hwndFrame, 40)
+#define DOCLIST_MARGIN_TOP DpiScale(win->hwndFrame, 60)
+#define DOCLIST_MARGIN_BETWEEN_Y DpiScale(win->hwndFrame, 50)
+#define DOCLIST_MARGIN_BOTTOM DpiScale(win->hwndFrame, 40)
 #define DOCLIST_MAX_THUMBNAILS_X 5
-#define DOCLIST_BOTTOM_BOX_DY DpiScaleY(win->hwndFrame, 50)
+#define DOCLIST_BOTTOM_BOX_DY DpiScale(win->hwndFrame, 50)
 
 void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF textColor, COLORREF backgroundColor) {
     auto col = GetAppColor(AppColor::MainWindowText);
@@ -710,7 +710,7 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
             }
             RoundRect(hdc, page.x, page.y, page.x + page.dx, page.y + page.dy, 10, 10);
 
-            int iconSpace = DpiScaleX(win->hwndFrame, 20);
+            int iconSpace = DpiScale(win->hwndFrame, 20);
             RectI rect(page.x + iconSpace, page.y + page.dy + 3, page.dx - iconSpace, iconSpace);
             if (isRtl)
                 rect.x -= iconSpace;
@@ -724,7 +724,7 @@ void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF 
             SHFILEINFO sfi = {0};
             HIMAGELIST himl = (HIMAGELIST)SHGetFileInfo(state->filePath, 0, &sfi, sizeof(sfi),
                                                         SHGFI_SYSICONINDEX | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);
-            ImageList_Draw(himl, sfi.iIcon, hdc, isRtl ? page.x + page.dx - DpiScaleX(win->hwndFrame, 16) : page.x,
+            ImageList_Draw(himl, sfi.iIcon, hdc, isRtl ? page.x + page.dx - DpiScale(win->hwndFrame, 16) : page.x,
                            rect.y, ILD_TRANSPARENT);
 #endif
 

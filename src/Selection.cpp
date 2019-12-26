@@ -321,8 +321,8 @@ void OnSelectAll(WindowInfo* win, bool textOnly) {
     win->RepaintAsync();
 }
 
-#define SELECT_AUTOSCROLL_AREA_WIDTH DpiScaleX(win->hwndFrame, 15)
-#define SELECT_AUTOSCROLL_STEP_LENGTH DpiScaleY(win->hwndFrame, 10)
+#define SELECT_AUTOSCROLL_AREA_WIDTH DpiScale(win->hwndFrame, 15)
+#define SELECT_AUTOSCROLL_STEP_LENGTH DpiScale(win->hwndFrame, 10)
 
 bool NeedsSelectionEdgeAutoscroll(WindowInfo* win, int x, int y) {
     return x < SELECT_AUTOSCROLL_AREA_WIDTH || x > win->canvasRc.dx - SELECT_AUTOSCROLL_AREA_WIDTH ||

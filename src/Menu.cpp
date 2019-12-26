@@ -881,8 +881,8 @@ void MenuOwnerDrawnMesureItem(HWND hwnd, MEASUREITEMSTRUCT* mis) {
 
     bool isSeparator = bit::IsMaskSet(modi->fType, (UINT)MFT_SEPARATOR);
     if (isSeparator) {
-        mis->itemHeight = DpiScaleY(hwnd, 7);
-        mis->itemWidth = DpiScaleX(hwnd, 33);
+        mis->itemHeight = DpiScale(hwnd, 7);
+        mis->itemWidth = DpiScale(hwnd, 33);
         return;
     }
 
@@ -901,12 +901,12 @@ void MenuOwnerDrawnMesureItem(HWND hwnd, MEASUREITEMSTRUCT* mis) {
         size = TextSizeInHwnd(hwnd, mt.shortcutText, font);
         dx += size.dx;
     }
-    auto padX = DpiScaleX(hwnd, kMenuPaddingX);
-    auto padY = DpiScaleY(hwnd, kMenuPaddingY);
+    auto padX = DpiScale(hwnd, kMenuPaddingX);
+    auto padY = DpiScale(hwnd, kMenuPaddingY);
 
     auto cxMenuCheck = GetSystemMetrics(SM_CXMENUCHECK);
     mis->itemHeight += padY * 2;
-    mis->itemWidth = UINT(dx + DpiScaleX(hwnd, cxMenuCheck) + (padX * 2));
+    mis->itemWidth = UINT(dx + DpiScale(hwnd, cxMenuCheck) + (padX * 2));
 }
 
 // https://gist.github.com/kjk/1df108aa126b7d8e298a5092550a53b7
@@ -964,9 +964,9 @@ void MenuOwnerDrawnDrawItem(HWND hwnd, DRAWITEMSTRUCT* dis) {
 
     RECT rc = dis->rcItem;
 
-    int padY = DpiScaleY(hwnd, kMenuPaddingY);
-    int padX = DpiScaleX(hwnd, kMenuPaddingX);
-    int dxCheckMark = DpiScaleX(hwnd, GetSystemMetrics(SM_CXMENUCHECK));
+    int padY = DpiScale(hwnd, kMenuPaddingY);
+    int padX = DpiScale(hwnd, kMenuPaddingX);
+    int dxCheckMark = DpiScale(hwnd, GetSystemMetrics(SM_CXMENUCHECK));
 
     auto hbr = CreateSolidBrush(bgCol);
     FillRect(hdc, &rc, hbr);

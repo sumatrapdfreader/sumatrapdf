@@ -80,7 +80,7 @@ static void OnVScroll(WindowInfo* win, WPARAM wParam) {
 
     int currPos = si.nPos;
     auto ctrl = win->ctrl;
-    int lineHeight = DpiScaleY(win->hwndCanvas, 16);
+    int lineHeight = DpiScale(win->hwndCanvas, 16);
     bool isFitPage = (ZOOM_FIT_PAGE == ctrl->GetZoomVirtual());
     if (!IsContinuous(ctrl->GetDisplayMode()) && isFitPage) {
         lineHeight = 1;
@@ -148,10 +148,10 @@ static void OnHScroll(WindowInfo* win, WPARAM wParam) {
             si.nPos = si.nMax;
             break;
         case SB_LINELEFT:
-            si.nPos -= DpiScaleX(win->hwndCanvas, 16);
+            si.nPos -= DpiScale(win->hwndCanvas, 16);
             break;
         case SB_LINERIGHT:
-            si.nPos += DpiScaleX(win->hwndCanvas, 16);
+            si.nPos += DpiScale(win->hwndCanvas, 16);
             break;
         case SB_PAGELEFT:
             si.nPos -= si.nPage;
@@ -726,7 +726,7 @@ static void DrawDocument(WindowInfo* win, HDC hdc, RECT* rcArea) {
         HDC bmpDC = CreateCompatibleDC(hdc);
         if (bmpDC) {
             SelectObject(bmpDC, gBitmapReloadingCue);
-            int size = DpiScaleY(win->hwndFrame, 16);
+            int size = DpiScale(win->hwndFrame, 16);
             int cx = std::min(bounds.dx, 2 * size);
             int cy = std::min(bounds.dy, 2 * size);
             int x = bounds.x + bounds.dx - std::min((cx + size) / 2, cx);

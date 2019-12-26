@@ -2,10 +2,11 @@
    License: GPLv3 */
 
 #include "utils/BaseUtil.h"
-#include "utils/ScopedWin.h"
-#include "utils/WinDynCalls.h"
 #include <tlhelp32.h>
 #include <io.h>
+
+#include "utils/ScopedWin.h"
+#include "utils/WinDynCalls.h"
 #include "utils/FileUtil.h"
 #include "utils/Dpi.h"
 #include "utils/FrameTimeoutCalculator.h"
@@ -496,7 +497,8 @@ static void OnButtonInstall() {
     gCli->withPreview = gCheckboxRegisterPdfPreviewer != nullptr && gCheckboxRegisterPdfPreviewer->IsChecked();
 
     // create a progress bar in place of the Options button
-    RectI rc(0, 0, dpiAdjust(INSTALLER_WIN_DX / 2), gButtonDy);
+    int dx = DpiScale(gHwndFrame, INSTALLER_WIN_DX / 2);
+    RectI rc(0, 0, dx, gButtonDy);
     rc = MapRectToWindow(rc, gButtonOptions->hwnd, gHwndFrame);
 
     int nInstallationSteps = gArchive.filesCount;
@@ -710,12 +712,12 @@ static void OnCreateWindow(HWND hwnd) {
     gBottomPartDy = gButtonDy + (WINDOW_MARGIN * 2);
 
     SizeI size = TextSizeInHwnd(hwnd, L"Foo");
-    int staticDy = size.dy + dpiAdjust(6);
+    int staticDy = size.dy + DpiScale(hwnd, 6);
 
     y = r.dy - gBottomPartDy;
-    int dx = r.dx - (WINDOW_MARGIN * 2) - dpiAdjust(2);
+    int dx = r.dx - (WINDOW_MARGIN * 2) - DpiScale(hwnd, 2);
 
-    x += dpiAdjust(2);
+    x += DpiScale(hwnd, 2);
 
     // build options controls going from the bottom
     y -= (staticDy + WINDOW_MARGIN);
@@ -757,11 +759,11 @@ static void OnCreateWindow(HWND hwnd) {
     }
 #endif
     // a bit more space between text box and checkboxes
-    y -= (dpiAdjust(4) + WINDOW_MARGIN);
+    y -= (DpiScale(hwnd, 4) + WINDOW_MARGIN);
 
     const WCHAR* s = L"&...";
     SizeI btnSize2 = TextSizeInHwnd(hwnd, s);
-    btnSize.cx += dpiAdjust(4);
+    btnSize.cx += DpiScale(hwnd, 4);
     gButtonBrowseDir = CreateDefaultButtonCtrl(hwnd, s);
     gButtonBrowseDir->OnClicked = OnButtonBrowse;
     btnSize = gButtonBrowseDir->GetIdealSize();
@@ -770,7 +772,7 @@ static void OnCreateWindow(HWND hwnd) {
                  SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW | SWP_FRAMECHANGED);
 
     x = WINDOW_MARGIN;
-    dx = r.dx - (2 * WINDOW_MARGIN) - btnSize2.dx - dpiAdjust(4);
+    dx = r.dx - (2 * WINDOW_MARGIN) - btnSize2.dx - DpiScale(hwnd, 4);
     gTextboxInstDir = new EditCtrl(hwnd);
     gTextboxInstDir->dwStyle |= WS_BORDER;
     gTextboxInstDir->SetText(gCli->installDir);
@@ -806,8 +808,8 @@ static void CreateMainWindow() {
     if (trans::IsCurrLangRtl()) {
         exStyle = WS_EX_LAYOUTRTL;
     }
-    int dx = dpiAdjust(INSTALLER_WIN_DX);
-    int dy = dpiAdjust(INSTALLER_WIN_DY);
+    int dx = DpiScale(INSTALLER_WIN_DX);
+    int dy = DpiScale(INSTALLER_WIN_DY);
     DWORD dwStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
     HMODULE h = GetModuleHandleW(nullptr);
     gHwndFrame = CreateWindowExW(exStyle, INSTALLER_FRAME_CLASS_NAME, title.Get(), dwStyle, CW_USEDEFAULT,

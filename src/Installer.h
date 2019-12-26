@@ -10,7 +10,8 @@
 
 #define WIN_BG_COLOR RGB(0xff, 0xf2, 0) // yellow
 
-#define WINDOW_MARGIN dpiAdjust(8)
+// TODO: should scale
+#define WINDOW_MARGIN DpiScale(8)
 
 /* The window is divided in three parts:
 - top part, where we display nice graphics
@@ -85,7 +86,6 @@ void OnButtonExit();
 void AnimStep();
 void CreateButtonExit(HWND hwndParent);
 ButtonCtrl* CreateDefaultButtonCtrl(HWND hwndParent, const WCHAR* s);
-int dpiAdjust(int value);
 void InstallPdfFilter();
 void InstallPdfPreviewer();
 void UninstallPdfFilter();

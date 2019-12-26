@@ -193,6 +193,10 @@ int RoundUp(int n, int rounding) {
     return ((n + rounding - 1) / rounding) * rounding;
 }
 
+UINT RoundUp(UINT n, UINT rounding) {
+    return ((n + rounding - 1) / rounding) * rounding;
+}
+
 size_t RoundToPowerOf2(size_t size) {
     size_t n = 1;
     while (n < size) {

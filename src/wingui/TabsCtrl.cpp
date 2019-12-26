@@ -86,7 +86,7 @@ static long GetIdealDy(TabsCtrl* ctrl) {
     auto priv = ctrl->priv;
     int padTop = PADDING_TOP;
     int padBottom = PADDING_BOTTOM;
-    DpiScaleY2(priv->hwnd, padTop, padBottom);
+    DpiScale(priv->hwnd, padTop, padBottom);
     return priv->fontDy + padTop + padBottom;
 }
 
@@ -119,7 +119,7 @@ void LayoutTabs(TabsCtrl* ctrl) {
 
     int padLeft = PADDING_LEFT;
     int padRight = PADDING_RIGHT;
-    DpiScaleX2(priv->hwnd, padLeft, padRight);
+    DpiScale(priv->hwnd, padLeft, padRight);
 
     // position y of title text and 'x' circle
     long titleY = 0;
@@ -127,7 +127,7 @@ void LayoutTabs(TabsCtrl* ctrl) {
         titleY = (dy - priv->fontDy) / 2;
     }
 
-    long closeButtonDy = (priv->fontMetrics.tmAscent / 2) + DpiScaleY(priv->hwnd, 1);
+    long closeButtonDy = (priv->fontMetrics.tmAscent / 2) + DpiScale(priv->hwnd, 1);
     long closeButtonY = (dy - closeButtonDy) / 2;
     if (closeButtonY < 0) {
         closeButtonDy = dy - 2;
@@ -176,7 +176,7 @@ static LRESULT CALLBACK TabsParentProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp
     return DefSubclassProc(hwnd, msg, wp, lp);
 }
 
-static void PaintClose(HDC hdc, RECT& r, bool isHighlighted) {
+static void PaintClose(HWND hwnd, HDC hdc, RECT& r, bool isHighlighted) {
     auto x = r.left;
     auto y = r.top;
     auto dx = RectDx(r);
@@ -185,7 +185,7 @@ static void PaintClose(HDC hdc, RECT& r, bool isHighlighted) {
     COLORREF lineCol = COL_BLACK;
     if (isHighlighted) {
         int p = 3;
-        DpiScaleX(hdc, p);
+        DpiScale(hwnd, p);
         AutoDeleteBrush brush(CreateSolidBrush(COL_RED));
         RECT r2 = r;
         r2.left -= p;
@@ -220,7 +220,7 @@ static void Paint(TabsCtrl* ctrl) {
     UINT opts = ETO_OPAQUE;
 
     int padLeft = PADDING_LEFT;
-    DpiScaleX(priv->hwnd, padLeft);
+    DpiScale(priv->hwnd, padLeft);
 
     int tabIdx = 0;
     for (const auto& ti : priv->tabInfos) {
@@ -270,7 +270,7 @@ static void Paint(TabsCtrl* ctrl) {
 
         if (paintClose) {
             bool isCursorOverClose = priv->isCursorOverClose && (tabIdx == priv->tabIdxUnderCursor);
-            PaintClose(hdc, ti->closeRect, isCursorOverClose);
+            PaintClose(hwnd, hdc, ti->closeRect, isCursorOverClose);
         }
 
         tabIdx++;

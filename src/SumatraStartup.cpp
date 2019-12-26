@@ -1096,7 +1096,6 @@ Exit:
     mui::Destroy();
     uitask::Destroy();
     trans::Destroy();
-    DpiRemoveAll();
 
     FileWatcherWaitForShutdown();
 

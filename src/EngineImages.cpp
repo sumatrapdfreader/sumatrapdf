@@ -969,7 +969,7 @@ bool CbxEngineImpl::FinishLoading() {
 
     // not using the resolution of the contained images seems to be
     // expected, cf. http://forums.fofou.org/sumatrapdf/topic?id=3183827
-    // TODO: return win::GetHwndDpi(HWND_DESKTOP) instead?
+    // TODO: return DpiGetForHwnd(HWND_DESKTOP) instead?
     fileDPI = 96.f;
 
     defaultFileExt = GetDefaultFileExt();

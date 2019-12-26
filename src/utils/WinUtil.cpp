@@ -1852,12 +1852,12 @@ void hwndDpiAdjust(HWND hwnd, float* x, float* y) {
     auto dpi = DpiGet(hwnd);
 
     if (x != nullptr) {
-        float dpiFactor = (float)dpi->dpiX / 96.f;
+        float dpiFactor = (float)dpi / 96.f;
         *x = *x * dpiFactor;
     }
 
     if (y != nullptr) {
-        float dpiFactor = (float)dpi->dpiY / 96.f;
+        float dpiFactor = (float)dpi / 96.f;
         *y = *y * dpiFactor;
     }
 }

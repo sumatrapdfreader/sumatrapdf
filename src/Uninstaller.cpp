@@ -307,8 +307,8 @@ static void OnCreateWindow(HWND hwnd) {
 
 static void CreateMainWindow() {
     AutoFreeWstr title(str::Format(_TR("SumatraPDF %s Uninstaller"), CURR_VERSION_STR));
-    int dx = dpiAdjust(INSTALLER_WIN_DX);
-    int dy = dpiAdjust(INSTALLER_WIN_DY);
+    int dx = DpiScale(INSTALLER_WIN_DX);
+    int dy = DpiScale(INSTALLER_WIN_DY);
     HMODULE h = GetModuleHandleW(nullptr);
     DWORD dwStyle = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU;
     gHwndFrame = CreateWindowW(INSTALLER_FRAME_CLASS_NAME, title.Get(), dwStyle, CW_USEDEFAULT, CW_USEDEFAULT, dx, dy,

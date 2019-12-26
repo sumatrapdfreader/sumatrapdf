@@ -35,21 +35,32 @@ Note: maybe I don't need keep a per-HWND cache and instead
 always call GetDpiXY() ?
 */
 
-struct DpiNode {
-    DpiNode* next;
-    Dpi dpi;
-};
+static HWND gLastHwndParent = nullptr;
+static HWND gLastHwnd = nullptr;
+static UINT gLastDpi = 0;
 
-static DpiNode* g_dpis = nullptr;
-static DpiNode* gLastHwndNode = nullptr;
+void DpiReset() {
+    gLastHwndParent = nullptr;
+    gLastHwnd = nullptr;
+    gLastDpi = 0;
+}
 
-static void GetDpiXY(HWND hwnd, int& scaleX, int& scaleY) {
+// Uncached getting of dpi
+int DpiGetForHwnd(HWND hwnd) {
     if (DynGetDpiForWindow) {
+        // HWND_DESKTOP is 0 and not really HWND
+        // GetDpiForWindow(HWND_DESKTOP) returns 0
+        if (hwnd == HWND_DESKTOP) {
+            hwnd = GetDesktopWindow();
+        }
         UINT dpi = DynGetDpiForWindow(hwnd);
-        scaleX = (int)dpi;
-        scaleY = (int)dpi;
-        return;
+        // returns 0 for HWND_DESKTOP,
+        if (dpi > 0) {
+            CrashIf(dpi < 72);
+            return (int)dpi;
+        }
     }
+
 #if 0
     // TODO: only available in 8.1
     UINT dpiX = 96, dpiY = 96;
@@ -62,134 +73,60 @@ static void GetDpiXY(HWND hwnd, int& scaleX, int& scaleY) {
             return;
         }
 #endif
-    HDC dc = GetDC(hwnd);
-    scaleX = (UINT)GetDeviceCaps(dc, LOGPIXELSX);
-    scaleY = (UINT)GetDeviceCaps(dc, LOGPIXELSY);
-    ReleaseDC(hwnd, dc);
+
+    ScopedGetDC dc(hwnd);
+    int dpi = GetDeviceCaps(dc, LOGPIXELSX);
+    return dpi;
 }
 
-// return the top-level parent of hwnd or nullptr if hwnd is top-level
-static HWND GetTopLevelParent(HWND hwnd) {
-    HWND topLevel = hwnd;
-    while (GetParent(topLevel) != nullptr) {
-        topLevel = GetParent(topLevel);
-    }
-    if (topLevel == hwnd) {
-        return nullptr;
-    }
-    return topLevel;
-}
-
-static DpiNode* DpiNodeFindByHwnd(HWND hwnd) {
-    if (gLastHwndNode && gLastHwndNode->dpi.hwnd == hwnd) {
-        return gLastHwndNode;
+int DpiGet(HWND hwnd) {
+    CrashIf(!hwnd);
+    if (hwnd == gLastHwnd) {
+        CrashIf(gLastDpi == 0);
+        return gLastDpi;
     }
 
-    DpiNode* n = g_dpis;
-    while (n != nullptr) {
-        if (n->dpi.hwnd == hwnd) {
-            gLastHwndNode = n;
-            return n;
+    HWND hwndParent = hwnd;
+    // TODO: not sure if it's worth, perf-wise, to go up level
+    while (true) {
+        HWND p = GetParent(hwndParent);
+        if (p == nullptr) {
+            break;
         }
-        n = n->next;
+        hwndParent = p;
     }
-    return nullptr;
-}
-
-static Dpi* DpiFindByHwnd(HWND hwnd) {
-    DpiNode* n = DpiNodeFindByHwnd(hwnd);
-    if (n == nullptr) {
-        return nullptr;
+    if (hwndParent == gLastHwndParent) {
+        CrashIf(gLastDpi == 0);
+        return gLastDpi;
     }
-    return &n->dpi;
+
+    int dpi = DpiGetForHwnd(hwnd);
+    dpi = RoundUp(dpi, 4);
+    gLastDpi = dpi;
+    gLastHwnd = hwnd;
+    gLastHwndParent = hwndParent;
+    return dpi;
 }
 
-void DpiUpdate(Dpi* dpi) {
-    dpi->dpiX = 96;
-    dpi->dpiY = 96;
-    GetDpiXY(dpi->hwnd, dpi->dpiX, dpi->dpiY);
-    // round up unusual DPIs
-    dpi->dpiX = RoundUp(dpi->dpiX, 4);
-    dpi->dpiY = RoundUp(dpi->dpiY, 4);
+int DpiScale(HWND hwnd, int x) {
+    int dpi = DpiGet(hwnd);
+    int res = MulDiv(x, dpi, 96);
+    return res;
 }
 
-Dpi* DpiGet(HWND hwnd) {
-    Dpi* dpi = DpiFindByHwnd(hwnd);
-    if (nullptr != dpi) {
-        return dpi;
+void DpiScale(HWND hwnd, int& x1, int& x2) {
+    int dpi = DpiGet(hwnd);
+    int nx1 = MulDiv(x1, dpi, 96);
+    int nx2 = MulDiv(x2, dpi, 96);
+    x1 = nx1;
+    x2 = nx2;
+}
+
+int DpiScale(int x) {
+    int dpi = gLastDpi;
+    if (dpi == 0) {
+        HWND hwnd = GetDesktopWindow();
+        dpi = DpiGetForHwnd(hwnd);
     }
-    // try the parent
-    HWND topLevel = GetTopLevelParent(hwnd);
-    if (topLevel != nullptr) {
-        hwnd = topLevel;
-        dpi = DpiFindByHwnd(topLevel);
-        if (nullptr != dpi) {
-            return dpi;
-        }
-    }
-    // create if doesn't exist
-    DpiNode* n = AllocStruct<DpiNode>();
-    n->dpi.hwnd = hwnd;
-    DpiUpdate(&n->dpi);
-    n->next = g_dpis;
-    g_dpis = n;
-    return &n->dpi;
-}
-
-int DpiGetPreciseX(HWND hwnd) {
-    int dpiX, dpiY;
-    GetDpiXY(hwnd, dpiX, dpiY);
-    return dpiX;
-}
-
-int DpiGetPreciseY(HWND hwnd) {
-    int dpiX, dpiY;
-    GetDpiXY(hwnd, dpiX, dpiY);
-    return dpiY;
-}
-
-void DpiRemove(HWND hwnd) {
-    DpiNode* n = DpiNodeFindByHwnd(hwnd);
-    CrashIf(nullptr == n);
-    ListRemove(&g_dpis, n);
-    free(n);
-}
-
-void DpiRemoveAll() {
-    while (g_dpis != nullptr) {
-        DpiNode* n = g_dpis;
-        DpiRemove(n->dpi.hwnd);
-    }
-}
-
-int DpiScaleX(HWND hwnd, int x) {
-    return MulDiv(x, DpiGet(hwnd)->dpiX, 96);
-}
-
-int DpiScaleX(HDC hdc, int& x) {
-    auto dpiX = (UINT)GetDeviceCaps(hdc, LOGPIXELSX);
-    x = MulDiv(x, dpiX, 96);
-    return x;
-}
-
-void DpiScaleX2(HWND hwnd, int& x1, int& x2) {
-    ScopedGetDC hdc(hwnd);
-    auto dpiX = (UINT)GetDeviceCaps(hdc, LOGPIXELSX);
-    x1 = MulDiv(x1, dpiX, 96);
-    x2 = MulDiv(x2, dpiX, 96);
-}
-
-int DpiScaleY(HWND hwnd, int y) {
-    return MulDiv(y, DpiGet(hwnd)->dpiY, 96);
-}
-
-void DpiScaleY2(HWND hwnd, int& y1, int& y2) {
-    ScopedGetDC hdc(hwnd);
-    auto dpiY = (UINT)GetDeviceCaps(hdc, LOGPIXELSY);
-    y1 = MulDiv(y1, dpiY, 96);
-    y2 = MulDiv(y2, dpiY, 96);
-}
-
-void DpiUpdate(HWND hwnd) {
-    DpiUpdate(DpiGet(hwnd));
+    return MulDiv(x, dpi, 96);
 }

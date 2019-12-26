@@ -67,8 +67,8 @@ static void PaintHDC(LabelWithCloseWnd* w, HDC hdc, const PAINTSTRUCT& ps) {
 
     ClientRect cr(w->hwnd);
 
-    int x = DpiScaleX(w->hwnd, w->padX);
-    int y = DpiScaleY(w->hwnd, w->padY);
+    int x = DpiScale(w->hwnd, w->padX);
+    int y = DpiScale(w->hwnd, w->padY);
     UINT opts = ETO_OPAQUE;
     if (IsRtl(w->hwnd)) {
         opts = opts | ETO_RTLREADING;
@@ -89,7 +89,7 @@ static void PaintHDC(LabelWithCloseWnd* w, HDC hdc, const PAINTSTRUCT& ps) {
     // the background, which is not the pretties but works.
     // A better way would be to intelligently truncate text or shrink the font
     // size (within reason)
-    x = w->closeBtnPos.x - DpiScaleX(w->hwnd, LABEL_BUTTON_SPACE_DX);
+    x = w->closeBtnPos.x - DpiScale(w->hwnd, LABEL_BUTTON_SPACE_DX);
     RectI ri(x, 0, cr.dx - x, cr.dy);
     RECT r = ri.ToRECT();
     FillRect(hdc, &r, br);
@@ -112,9 +112,9 @@ static void OnPaint(LabelWithCloseWnd* w) {
 }
 
 static void CalcCloseButtonPos(LabelWithCloseWnd* w, int dx, int dy) {
-    int btnDx = DpiScaleX(w->hwnd, CLOSE_BTN_DX);
-    int btnDy = DpiScaleY(w->hwnd, CLOSE_BTN_DY);
-    int x = dx - btnDx - DpiScaleX(w->hwnd, w->padX);
+    int btnDx = DpiScale(w->hwnd, CLOSE_BTN_DX);
+    int btnDy = DpiScale(w->hwnd, CLOSE_BTN_DY);
+    int x = dx - btnDx - DpiScale(w->hwnd, w->padX);
     int y = 0;
     if (dy > btnDy) {
         y = (dy - btnDy) / 2;
@@ -242,15 +242,15 @@ SizeI LabelWithCloseWnd::GetIdealSize() {
     WCHAR* s = win::GetText(this->hwnd);
     SizeI size = TextSizeInHwnd(this->hwnd, s);
     free(s);
-    int btnDx = DpiScaleX(this->hwnd, CLOSE_BTN_DX);
-    int btnDy = DpiScaleY(this->hwnd, CLOSE_BTN_DY);
+    int btnDx = DpiScale(this->hwnd, CLOSE_BTN_DX);
+    int btnDy = DpiScale(this->hwnd, CLOSE_BTN_DY);
     size.dx += btnDx;
-    size.dx += DpiScaleX(this->hwnd, LABEL_BUTTON_SPACE_DX);
-    size.dx += 2 * DpiScaleX(this->hwnd, this->padX);
+    size.dx += DpiScale(this->hwnd, LABEL_BUTTON_SPACE_DX);
+    size.dx += 2 * DpiScale(this->hwnd, this->padX);
     if (size.dy < btnDy) {
         size.dy = btnDy;
     }
-    size.dy += 2 * DpiScaleY(this->hwnd, this->padY);
+    size.dy += 2 * DpiScale(this->hwnd, this->padY);
     return size;
 }
 
@@ -288,14 +288,14 @@ void LabelWithCloseCtrl::SetPaddingXY(int x, int y) {
 SIZE LabelWithCloseCtrl::GetIdealSize() {
     AutoFreeWstr s = strconv::Utf8ToWchar(text.as_view());
     SizeI size = TextSizeInHwnd(hwnd, s);
-    int btnDx = DpiScaleX(hwnd, CLOSE_BTN_DX);
-    int btnDy = DpiScaleY(hwnd, CLOSE_BTN_DY);
+    int btnDx = DpiScale(hwnd, CLOSE_BTN_DX);
+    int btnDy = DpiScale(hwnd, CLOSE_BTN_DY);
     size.dx += btnDx;
-    size.dx += DpiScaleX(hwnd, LABEL_BUTTON_SPACE_DX);
-    size.dx += 2 * DpiScaleX(hwnd, padX);
+    size.dx += DpiScale(hwnd, LABEL_BUTTON_SPACE_DX);
+    size.dx += 2 * DpiScale(hwnd, padX);
     if (size.dy < btnDy) {
         size.dy = btnDy;
     }
-    size.dy += 2 * DpiScaleY(hwnd, padY);
+    size.dy += 2 * DpiScale(hwnd, padY);
     return {size.dx, size.dy};
 }

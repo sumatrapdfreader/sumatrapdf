@@ -1049,7 +1049,7 @@ static void LoadDocIntoCurrentTab(const LoadArgs& args, Controller* ctrl, Displa
             DisplayModel* dm = win->AsFixed();
             int dpi = gGlobalPrefs->customScreenDPI;
             if (dpi == 0) {
-                dpi = DpiGetPreciseX(win->hwndFrame);
+                dpi = DpiGetForHwnd(win->hwndFrame);
             }
             dm->SetInitialViewSettings(displayMode, ss.page, win->GetViewPortSize(), dpi);
             // TODO: also expose Manga Mode for image folders?

@@ -46,13 +46,13 @@ using namespace Gdiplus;
 #define MIN_TAB_WIDTH 100
 
 int GetTabbarHeight(HWND hwnd, float factor) {
-    int dy = DpiScaleY(hwnd, TABBAR_HEIGHT);
+    int dy = DpiScale(hwnd, TABBAR_HEIGHT);
     return (int)(dy * factor);
 }
 
 static inline SizeI GetTabSize(HWND hwnd) {
-    int dx = DpiScaleX(hwnd, std::max(gGlobalPrefs->tabWidth, MIN_TAB_WIDTH));
-    int dy = DpiScaleY(hwnd, TABBAR_HEIGHT);
+    int dx = DpiScale(hwnd, std::max(gGlobalPrefs->tabWidth, MIN_TAB_WIDTH));
+    int dy = DpiScale(hwnd, TABBAR_HEIGHT);
     return SizeI(dx, dy);
 }
 
@@ -100,11 +100,11 @@ class TabPainter {
 
         // define "x"'s circle
         int c = int((float)height * 0.78f + 0.5f); // size of bounding square for the circle
-        int maxC = DpiScaleX(hwnd, 17);
+        int maxC = DpiScale(hwnd, 17);
         if (height > maxC) {
-            c = DpiScaleX(hwnd, 17);
+            c = DpiScale(hwnd, 17);
         }
-        Gdiplus::Point p(width - c - DpiScaleX(hwnd, 3), (height - c) / 2); // circle's position
+        Gdiplus::Point p(width - c - DpiScale(hwnd, 3), (height - c) / 2); // circle's position
         shape.AddEllipse(p.X, p.Y, c, c);
         shape.SetMarker();
         // define "x"
@@ -206,7 +206,7 @@ class TabPainter {
 
         Font f(hdc, GetDefaultGuiFont());
         // TODO: adjust these constant values for DPI?
-        RectF layout((REAL)DpiScaleX(hwnd, 3), 1.0f, REAL(width - DpiScaleX(hwnd, 20)), (REAL)height);
+        RectF layout((REAL)DpiScale(hwnd, 3), 1.0f, REAL(width - DpiScale(hwnd, 20)), (REAL)height);
         StringFormat sf(StringFormat::GenericDefault());
         sf.SetFormatFlags(StringFormatFlagsNoWrap);
         sf.SetLineAlignment(StringAlignmentCenter);
