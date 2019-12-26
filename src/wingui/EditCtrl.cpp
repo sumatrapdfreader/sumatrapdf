@@ -21,7 +21,7 @@
 // - include value we remember in WM_NCCALCSIZE in GetIdealSize()
 
 Kind kindEdit = "edit";
- 
+
 bool IsEdit(Kind kind) {
     return kind == kindEdit;
 }

@@ -173,18 +173,18 @@ bool Save() {
 // refresh the preferences when a different SumatraPDF process saves them
 // or if they are edited by the user using a text editor
 bool Reload() {
-    std::unique_ptr<WCHAR> path(GetSettingsPath());
-    if (!file::Exists(path.get())) {
+    AutoFreeWstr path = GetSettingsPath();
+    if (!file::Exists(path)) {
         return false;
     }
 
     // make sure that the settings file is readable - else wait
     // a short while to prevent accidental dataloss
     int tryAgainCount = 5;
-    HANDLE h = file::OpenReadOnly(path.get());
+    HANDLE h = file::OpenReadOnly(path);
     while (INVALID_HANDLE_VALUE == h && tryAgainCount-- > 0) {
         Sleep(200);
-        h = file::OpenReadOnly(path.get());
+        h = file::OpenReadOnly(path);
     }
     if (INVALID_HANDLE_VALUE == h) {
         // prefer not reloading to resetting all settings
@@ -193,11 +193,12 @@ bool Reload() {
 
     ScopedHandle hScope(h);
 
-    FILETIME time = file::GetModificationTime(path.get());
-    if (FileTimeEq(time, gGlobalPrefs->lastPrefUpdate))
+    FILETIME time = file::GetModificationTime(path);
+    if (FileTimeEq(time, gGlobalPrefs->lastPrefUpdate)) {
         return true;
+    }
 
-    std::unique_ptr<char> uiLanguage(str::Dup(gGlobalPrefs->uiLanguage));
+    AutoFree uiLanguage = str::Dup(gGlobalPrefs->uiLanguage);
     bool showToolbar = gGlobalPrefs->showToolbar;
     bool invertColors = gGlobalPrefs->fixedPageUI.invertColors;
 
@@ -216,17 +217,19 @@ bool Reload() {
         gWindows.at(0)->RedrawAll(true);
     }
 
-    if (!str::Eq(uiLanguage.get(), gGlobalPrefs->uiLanguage))
+    if (!str::Eq(uiLanguage.get(), gGlobalPrefs->uiLanguage)) {
         SetCurrentLanguageAndRefreshUI(gGlobalPrefs->uiLanguage);
+    }
 
     for (WindowInfo* win : gWindows) {
-        if (gGlobalPrefs->showToolbar != showToolbar)
+        if (gGlobalPrefs->showToolbar != showToolbar) {
             ShowOrHideToolbar(win);
+        }
         UpdateFavoritesTree(win);
+        UpdateTreeCtrlColors(win);
     }
 
     UpdateDocumentColors();
-
     return true;
 }
 
@@ -244,8 +247,8 @@ void RegisterForFileChanges() {
         return;
 
     CrashIf(gWatchedSettingsFile); // only call me once
-    std::unique_ptr<WCHAR> path(GetSettingsPath());
-    gWatchedSettingsFile = FileWatcherSubscribe(path.get(), schedulePrefsReload);
+    AutoFreeWstr path = GetSettingsPath();
+    gWatchedSettingsFile = FileWatcherSubscribe(path, schedulePrefsReload);
 }
 
 void UnregisterForFileChanges() {

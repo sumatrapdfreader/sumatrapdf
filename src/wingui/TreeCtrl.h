@@ -27,7 +27,7 @@ struct TreeContextMenuArgs {
 
     // mouse x,y position relative to the window
     PointI mouseWindow{};
-    // global (screen) mouse x,y position 
+    // global (screen) mouse x,y position
     PointI mouseGlobal{};
 };
 

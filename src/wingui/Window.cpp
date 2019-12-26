@@ -227,7 +227,6 @@ bool WindowBase::IsFocused() {
     return tobool(isFocused);
 }
 
-
 void WindowBase::SetIsEnabled(bool isEnabled) {
     BOOL enabled = isEnabled ? TRUE : FALSE;
     ::EnableWindow(hwnd, enabled);

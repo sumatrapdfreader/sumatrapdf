@@ -358,49 +358,6 @@ void UpdateTocExpansionState(Vec<int>& tocState, TreeCtrl* treeCtrl, DocTocTree*
     UpdateDocTocExpansionState(treeCtrl, tocState, tocItem);
 }
 
-void UpdateTocColors(WindowInfo* win) {
-    COLORREF labelBgCol = GetSysColor(COLOR_BTNFACE);
-    COLORREF labelTxtCol = GetSysColor(COLOR_BTNTEXT);
-    COLORREF treeBgCol = GetAppColor(AppColor::DocumentBg);
-    COLORREF treeTxtCol = GetAppColor(AppColor::DocumentText);
-    COLORREF splitterCol = GetSysColor(COLOR_BTNFACE);
-    bool flatTreeWnd = false;
-
-    if (win->AsEbook()) {
-        labelBgCol = GetAppColor(AppColor::DocumentBg, true);
-        labelTxtCol = GetAppColor(AppColor::DocumentText, true);
-        treeTxtCol = labelTxtCol;
-        treeBgCol = labelBgCol;
-        float factor = 14.f;
-        int sign = GetLightness(labelBgCol) + factor > 255 ? 1 : -1;
-        splitterCol = AdjustLightness2(labelBgCol, sign * factor);
-        flatTreeWnd = true;
-    }
-
-    auto treeCtrl = win->tocTreeCtrl;
-    treeCtrl->SetBackgroundColor(treeBgCol);
-    treeCtrl->SetTextColor(treeTxtCol);
-
-    win->tocLabelWithClose->SetBgCol(labelBgCol);
-    win->tocLabelWithClose->SetTextCol(labelTxtCol);
-    SetBgCol(win->sidebarSplitter, splitterCol);
-    ToggleWindowExStyle(treeCtrl->hwnd, WS_EX_STATICEDGE, !flatTreeWnd);
-    UINT flags = SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED;
-    SetWindowPos(treeCtrl->hwnd, nullptr, 0, 0, 0, 0, flags);
-
-    // TODO: if we have favorites in ebook view, we'll need this
-    // SetBgCol(win->favLabelWithClose, labelBgCol);
-    // SetTextCol(win->favLabelWithClose, labelTxtCol);
-    // SetBgCol(win->favSplitter, labelTxtCol);
-
-    // TODO: more work needed to to ensure consistent look of the ebook window:
-    // - tab bar should match the colort
-    // - change the tree item text color
-    // - change the tree item background color when selected (for both focused and non-focused cases)
-    // - ultimately implement owner-drawn scrollbars in a simpler style (like Chrome or VS 2013)
-    //   and match their colors as well
-}
-
 // copied from mupdf/fitz/dev_text.c
 #define ISLEFTTORIGHTCHAR(c) \
     ((0x0041 <= (c) && (c) <= 0x005A) || (0x0061 <= (c) && (c) <= 0x007A) || (0xFB00 <= (c) && (c) <= 0xFB06))
@@ -540,7 +497,7 @@ void LoadTocTree(WindowInfo* win) {
     HWND hwnd = treeCtrl->hwnd;
     SetRtl(hwnd, isRTL);
 
-    UpdateTocColors(win);
+    UpdateTreeCtrlColors(win);
     SetInitialExpandState(tocTree->root, tab->tocState);
     tocTree->root->OpenSingleNode();
 
@@ -671,36 +628,37 @@ static LRESULT OnTocTreeNotify(WindowInfo* win, NMTREEVIEWW* pnmtv) {
     return -1;
 }
 
-static LRESULT TocTreePreFilter(TreeCtrl* tree, WndProcArgs* args) {
-    CrashIf(tree->hwnd != args->hwnd);
-
+static void TocTreeMsgFilter(WndProcArgs* args) {
+    HWND hwnd = args->hwnd;
     UINT msg = args->msg;
     WPARAM wp = args->wparam;
     LPARAM lp = args->lparam;
 
-    HWND hwnd = tree->hwnd;
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
     if (!win) {
-        return 0;
+        return;
     }
 
-    switch (msg) {
-        case WM_CHAR:
-            if (VK_ESCAPE == wp && gGlobalPrefs->escToExit && MayCloseWindow(win)) {
-                CloseWindow(win, true);
-                args->didHandle = true;
-            }
-            break;
+    TreeCtrl* tree = (TreeCtrl*)args->w;
+    CrashIf(tree->hwnd != hwnd);
 
-        case WM_MOUSEWHEEL:
-        case WM_MOUSEHWHEEL:
-            // scroll the canvas if the cursor isn't over the ToC tree
-            if (!IsCursorOverWindow(win->tocTreeCtrl->hwnd)) {
-                return SendMessage(win->hwndCanvas, msg, wp, lp);
-                args->didHandle = true;
-            }
-            break;
+    if (msg == WM_CHAR) {
+        if (VK_ESCAPE == wp && gGlobalPrefs->escToExit && MayCloseWindow(win)) {
+            CloseWindow(win, true);
+            args->didHandle = true;
+            return;
+        }
+    }
+    if (msg == WM_MOUSEWHEEL || msg == WM_MOUSEHWHEEL) {
+        // scroll the canvas if the cursor isn't over the ToC tree
+        if (!IsCursorOverWindow(hwnd)) {
+            args->didHandle = true;
+            args->result = SendMessage(win->hwndCanvas, msg, wp, lp);
+            return;
+        }
+    }
 #ifdef DISPLAY_TOC_PAGE_NUMBERS
+    switch (msg) {
         case WM_SIZE:
         case WM_HSCROLL:
             // Repaint the ToC so that RelayoutTocItem is called for all items
@@ -711,120 +669,116 @@ static LRESULT TocTreePreFilter(TreeCtrl* tree, WndProcArgs* args) {
             UpdateWindow(hwnd);
             break;
 #endif
+            return;
     }
-    return 0;
-}
 
-// Position label with close button and tree window within their parent.
-// Used for toc and favorites.
-void LayoutTreeContainer(LabelWithCloseWnd* l, DropDownCtrl* altBookmarks, HWND hwndTree) {
-    HWND hwndContainer = GetParent(hwndTree);
-    SizeI labelSize = l->GetIdealSize();
-    WindowRect rc(hwndContainer);
-    bool altBookmarksVisible = altBookmarks && altBookmarks->items.size() > 0;
-    int dy = rc.dy;
-    int y = 0;
-    MoveWindow(l->hwnd, y, 0, rc.dx, labelSize.dy, TRUE);
-    dy -= labelSize.dy;
-    y += labelSize.dy;
-    if (altBookmarks) {
-        altBookmarks->SetIsVisible(altBookmarksVisible);
-        if (altBookmarksVisible) {
-            SIZE bs = altBookmarks->GetIdealSize();
-            int elDy = bs.cy;
-            RECT r{0, y, rc.dx, y + elDy};
-            altBookmarks->SetBounds(r);
-            elDy += 4;
-            dy -= elDy;
-            y += elDy;
+    // Position label with close button and tree window within their parent.
+    // Used for toc and favorites.
+    void LayoutTreeContainer(LabelWithCloseWnd * l, DropDownCtrl * altBookmarks, HWND hwndTree) {
+        HWND hwndContainer = GetParent(hwndTree);
+        SizeI labelSize = l->GetIdealSize();
+        WindowRect rc(hwndContainer);
+        bool altBookmarksVisible = altBookmarks && altBookmarks->items.size() > 0;
+        int dy = rc.dy;
+        int y = 0;
+        MoveWindow(l->hwnd, y, 0, rc.dx, labelSize.dy, TRUE);
+        dy -= labelSize.dy;
+        y += labelSize.dy;
+        if (altBookmarks) {
+            altBookmarks->SetIsVisible(altBookmarksVisible);
+            if (altBookmarksVisible) {
+                SIZE bs = altBookmarks->GetIdealSize();
+                int elDy = bs.cy;
+                RECT r{0, y, rc.dx, y + elDy};
+                altBookmarks->SetBounds(r);
+                elDy += 4;
+                dy -= elDy;
+                y += elDy;
+            }
         }
+        MoveWindow(hwndTree, 0, y, rc.dx, dy, TRUE);
     }
-    MoveWindow(hwndTree, 0, y, rc.dx, dy, TRUE);
-}
 
-static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR subclassId, DWORD_PTR data) {
-    WindowInfo* winFromData = reinterpret_cast<WindowInfo*>(data);
-    WindowInfo* win = FindWindowInfoByHwnd(hwnd);
-    if (!win) {
+    static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR subclassId,
+                                          DWORD_PTR data) {
+        WindowInfo* winFromData = reinterpret_cast<WindowInfo*>(data);
+        WindowInfo* win = FindWindowInfoByHwnd(hwnd);
+        if (!win) {
+            return DefSubclassProc(hwnd, msg, wp, lp);
+        }
+        CrashIf(subclassId != win->tocBoxSubclassId);
+        CrashIf(win != winFromData);
+
+        switch (msg) {
+            case WM_SIZE:
+                LayoutTreeContainer(win->tocLabelWithClose, win->altBookmarks, win->tocTreeCtrl->hwnd);
+                break;
+
+            case WM_COMMAND:
+                if (LOWORD(wp) == IDC_TOC_LABEL_WITH_CLOSE) {
+                    ToggleTocBox(win);
+                }
+                break;
+        }
         return DefSubclassProc(hwnd, msg, wp, lp);
     }
-    CrashIf(subclassId != win->tocBoxSubclassId);
-    CrashIf(win != winFromData);
 
-    switch (msg) {
-        case WM_SIZE:
-            LayoutTreeContainer(win->tocLabelWithClose, win->altBookmarks, win->tocTreeCtrl->hwnd);
-            break;
+    // TODO: should unsubclass as well?
+    static void SubclassToc(WindowInfo * win) {
+        TreeCtrl* tree = win->tocTreeCtrl;
+        HWND hwndTocBox = win->hwndTocBox;
 
-        case WM_COMMAND:
-            if (LOWORD(wp) == IDC_TOC_LABEL_WITH_CLOSE) {
-                ToggleTocBox(win);
-            }
-            break;
+        if (win->tocBoxSubclassId == 0) {
+            win->tocBoxSubclassId = NextSubclassId();
+            BOOL ok = SetWindowSubclass(hwndTocBox, WndProcTocBox, win->tocBoxSubclassId, (DWORD_PTR)win);
+            CrashIf(!ok);
+        }
     }
-    return DefSubclassProc(hwnd, msg, wp, lp);
-}
 
-// TODO: should unsubclass as well?
-static void SubclassToc(WindowInfo* win) {
-    TreeCtrl* tree = win->tocTreeCtrl;
-    HWND hwndTocBox = win->hwndTocBox;
+    void UnsubclassToc(WindowInfo * win) {
+        if (win->tocBoxSubclassId != 0) {
+            RemoveWindowSubclass(win->hwndTocBox, WndProcTocBox, win->tocBoxSubclassId);
+        }
+    }
 
-    if (win->tocBoxSubclassId == 0) {
-        win->tocBoxSubclassId = NextSubclassId();
-        BOOL ok = SetWindowSubclass(hwndTocBox, WndProcTocBox, win->tocBoxSubclassId, (DWORD_PTR)win);
+    void CreateToc(WindowInfo * win) {
+        HMODULE hmod = GetModuleHandle(nullptr);
+        int dx = gGlobalPrefs->sidebarDx;
+        DWORD style = WS_CHILD | WS_CLIPCHILDREN;
+        HWND parent = win->hwndFrame;
+        win->hwndTocBox = CreateWindowExW(0, WC_STATIC, L"", style, 0, 0, dx, 0, parent, 0, hmod, nullptr);
+
+        auto* l = new LabelWithCloseWnd();
+        l->Create(win->hwndTocBox, IDC_TOC_LABEL_WITH_CLOSE);
+        win->tocLabelWithClose = l;
+        l->SetPaddingXY(2, 2);
+        l->SetFont(GetDefaultGuiFont());
+        // label is set in UpdateToolbarSidebarText()
+
+        win->altBookmarks = new DropDownCtrl(win->hwndTocBox);
+        win->altBookmarks->Create();
+
+        auto* tocTreeCtrl = new TreeCtrl(win->hwndTocBox);
+        DWORD dwStyle = TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS;
+        dwStyle |= TVS_TRACKSELECT | TVS_DISABLEDRAGDROP | TVS_NOHSCROLL | TVS_INFOTIP;
+        dwStyle |= WS_TABSTOP | WS_VISIBLE | WS_CHILD;
+        tocTreeCtrl->dwStyle = dwStyle;
+        tocTreeCtrl->dwExStyle = WS_EX_STATICEDGE;
+        tocTreeCtrl->msgFilter = TocTreeMsgFilter;
+        tocTreeCtrl->onTreeNotify = [win](TreeNotifyArgs* args) {
+            CrashIf(win->tocTreeCtrl != args->w);
+            LRESULT res = OnTocTreeNotify(win, args->treeView);
+            args->procArgs->didHandle = (res != -1);
+            args->procArgs->result = res;
+        };
+        tocTreeCtrl->onGetTooltip = [](TreeItmGetTooltipArgs* args) { CustomizeTocTooltip(args); };
+        tocTreeCtrl->onContextMenu = [win](TreeContextMenuArgs* args) {
+            int xScreen = args->mouseGlobal.x;
+            int yScreen = args->mouseGlobal.y;
+            BuildAndShowContextMenu(win, xScreen, yScreen);
+        };
+        bool ok = tocTreeCtrl->Create(L"TOC");
         CrashIf(!ok);
+        win->tocTreeCtrl = tocTreeCtrl;
+        SubclassToc(win);
     }
-}
-
-void UnsubclassToc(WindowInfo* win) {
-    if (win->tocBoxSubclassId != 0) {
-        RemoveWindowSubclass(win->hwndTocBox, WndProcTocBox, win->tocBoxSubclassId);
-    }
-}
-
-void CreateToc(WindowInfo* win) {
-    HMODULE hmod = GetModuleHandle(nullptr);
-    int dx = gGlobalPrefs->sidebarDx;
-    DWORD style = WS_CHILD | WS_CLIPCHILDREN;
-    HWND parent = win->hwndFrame;
-    win->hwndTocBox = CreateWindowExW(0, WC_STATIC, L"", style, 0, 0, dx, 0, parent, 0, hmod, nullptr);
-
-    auto* l = new LabelWithCloseWnd();
-    l->Create(win->hwndTocBox, IDC_TOC_LABEL_WITH_CLOSE);
-    win->tocLabelWithClose = l;
-    l->SetPaddingXY(2, 2);
-    l->SetFont(GetDefaultGuiFont());
-    // label is set in UpdateToolbarSidebarText()
-
-    win->altBookmarks = new DropDownCtrl(win->hwndTocBox);
-    win->altBookmarks->Create();
-
-    auto* treeCtrl = new TreeCtrl(win->hwndTocBox);
-    // TODO: remove, for easy testing
-    // treeCtrl->withCheckboxes = true;
-
-    DWORD dwStyle = TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS;
-    dwStyle |= TVS_TRACKSELECT | TVS_DISABLEDRAGDROP | TVS_NOHSCROLL | TVS_INFOTIP;
-    dwStyle |= WS_TABSTOP | WS_VISIBLE | WS_CHILD;
-    treeCtrl->dwStyle = dwStyle;
-    treeCtrl->dwExStyle = WS_EX_STATICEDGE;
-    treeCtrl->menuId = IDC_TOC_TREE;
-    treeCtrl->msgFilter = [treeCtrl](WndProcArgs* args) { return TocTreePreFilter(treeCtrl, args); };
-    treeCtrl->onTreeNotify = [win](TreeNotifyArgs* args) {
-        CrashIf(win->tocTreeCtrl != args->w);
-        LRESULT res = OnTocTreeNotify(win, args->treeView);
-        args->procArgs->didHandle = (res != -1);
-        args->procArgs->result = res;
-    };
-    treeCtrl->onGetTooltip = [](TreeItmGetTooltipArgs* args) { CustomizeTocTooltip(args); };
-    treeCtrl->onContextMenu = [win](TreeContextMenuArgs* args) {
-        int xScreen = args->mouseGlobal.x;
-        int yScreen = args->mouseGlobal.y;
-        BuildAndShowContextMenu(win, xScreen, yScreen);
-    };
-    bool ok = treeCtrl->Create(L"TOC");
-    CrashIf(!ok);
-    win->tocTreeCtrl = treeCtrl;
-    SubclassToc(win);
-}

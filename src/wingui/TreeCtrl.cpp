@@ -320,7 +320,6 @@ str::WStr TreeCtrl::GetDefaultTooltip(TreeItem* ti) {
     return str::WStr(buf);
 }
 
-
 // get the item at a given (x,y) position in the window
 TreeItem* TreeCtrl::HitTest(int x, int y) {
     if (x < 0 || y < 0) {

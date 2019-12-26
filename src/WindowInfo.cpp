@@ -16,6 +16,8 @@
 #include "wingui/FrameRateWnd.h"
 #include "wingui/DropDownCtrl.h"
 #include "wingui/TooltipCtrl.h"
+#include "wingui/LabelWithCloseWnd.h"
+#include "wingui/SplitterWnd.h"
 
 #include "EngineBase.h"
 #include "EngineManager.h"
@@ -23,6 +25,7 @@
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "GlobalPrefs.h"
+#include "AppColors.h"
 #include "ChmModel.h"
 #include "DisplayModel.h"
 #include "EbookController.h"
@@ -482,4 +485,59 @@ void LinkHandler::GotoNamedDest(const WCHAR* name) {
         if (ctrl->ValidPageNo(pageNo))
             ctrl->GoToPage(pageNo, true);
     }
+}
+
+void UpdateTreeCtrlColors(WindowInfo* win) {
+    COLORREF labelBgCol = GetSysColor(COLOR_BTNFACE);
+    COLORREF labelTxtCol = GetSysColor(COLOR_BTNTEXT);
+    COLORREF treeBgCol = GetAppColor(AppColor::DocumentBg);
+    COLORREF treeTxtCol = GetAppColor(AppColor::DocumentText);
+    COLORREF splitterCol = GetSysColor(COLOR_BTNFACE);
+    bool flatTreeWnd = false;
+
+    if (win->AsEbook()) {
+        labelBgCol = GetAppColor(AppColor::DocumentBg, true);
+        labelTxtCol = GetAppColor(AppColor::DocumentText, true);
+        treeTxtCol = labelTxtCol;
+        treeBgCol = labelBgCol;
+        float factor = 14.f;
+        int sign = GetLightness(labelBgCol) + factor > 255 ? 1 : -1;
+        splitterCol = AdjustLightness2(labelBgCol, sign * factor);
+        flatTreeWnd = true;
+    }
+
+    {
+        auto tocTreeCtrl = win->tocTreeCtrl;
+        tocTreeCtrl->SetBackgroundColor(treeBgCol);
+        tocTreeCtrl->SetTextColor(treeTxtCol);
+
+        win->tocLabelWithClose->SetBgCol(labelBgCol);
+        win->tocLabelWithClose->SetTextCol(labelTxtCol);
+        SetBgCol(win->sidebarSplitter, splitterCol);
+        ToggleWindowExStyle(tocTreeCtrl->hwnd, WS_EX_STATICEDGE, !flatTreeWnd);
+        UINT flags = SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED;
+        SetWindowPos(tocTreeCtrl->hwnd, nullptr, 0, 0, 0, 0, flags);
+    }
+
+    auto favTreeCtrl = win->favTreeCtrl;
+    if (favTreeCtrl) {
+        favTreeCtrl->SetBackgroundColor(treeBgCol);
+        favTreeCtrl->SetTextColor(treeTxtCol);
+
+        win->favLabelWithClose->SetBgCol(labelBgCol);
+        win->favLabelWithClose->SetTextCol(labelTxtCol);
+
+        SetBgCol(win->favSplitter, splitterCol);
+
+        ToggleWindowExStyle(favTreeCtrl->hwnd, WS_EX_STATICEDGE, !flatTreeWnd);
+        UINT flags = SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED;
+        SetWindowPos(favTreeCtrl->hwnd, nullptr, 0, 0, 0, 0, flags);
+    }
+
+    // TODO: more work needed to to ensure consistent look of the ebook window:
+    // - tab bar should match the colort
+    // - change the tree item text color
+    // - change the tree item background color when selected (for both focused and non-focused cases)
+    // - ultimately implement owner-drawn scrollbars in a simpler style (like Chrome or VS 2013)
+    //   and match their colors as well
 }

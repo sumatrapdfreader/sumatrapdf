@@ -165,7 +165,6 @@
 #define IDC_SECTION_PRINT_COMPATIBILITY 1070
 #define IDC_TOC_BOX                     1100
 #define IDC_TOC_LABEL_WITH_CLOSE        1101
-#define IDC_TOC_TREE                    1102
 #define IDC_FAV_BOX                     1105
 #define IDC_FAV_LABEL_WITH_CLOSE        1106
 #define IDC_FAV_TREE                    1107

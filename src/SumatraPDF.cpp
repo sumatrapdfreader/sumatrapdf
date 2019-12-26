@@ -2133,7 +2133,7 @@ void UpdateDocumentColors() {
     for (auto* win : gWindows) {
         if (win->AsEbook()) {
             win->AsEbook()->UpdateDocumentColors();
-            UpdateTocColors(win);
+            UpdateTreeCtrlColors(win);
         }
     }
 
@@ -3100,8 +3100,9 @@ void SetCurrentLanguageAndRefreshUI(const char* langCode) {
         RebuildMenuBarForWindow(win);
         UpdateToolbarSidebarText(win);
         // About page text is translated during (re)drawing
-        if (win->IsAboutWindow())
+        if (win->IsAboutWindow()) {
             win->RedrawAll(true);
+        }
     }
 
     prefs::Save();
@@ -3120,21 +3121,24 @@ static void OnMenuViewShowHideToolbar() {
 }
 
 static void OnMenuAdvancedOptions() {
-    if (!HasPermission(Perm_DiskAccess) || !HasPermission(Perm_SavePreferences))
+    if (!HasPermission(Perm_DiskAccess) || !HasPermission(Perm_SavePreferences)) {
         return;
+    }
 
-    std::unique_ptr<WCHAR> path(prefs::GetSettingsPath());
+    AutoFreeWstr path = prefs::GetSettingsPath();
     // TODO: disable/hide the menu item when there's no prefs file
     //       (happens e.g. when run in portable mode from a CD)?
     LaunchFile(path.get(), nullptr, L"open");
 }
 
 static void OnMenuOptions(HWND hwnd) {
-    if (!HasPermission(Perm_SavePreferences))
+    if (!HasPermission(Perm_SavePreferences)) {
         return;
+    }
 
-    if (IDOK != Dialog_Settings(hwnd, gGlobalPrefs))
+    if (IDOK != Dialog_Settings(hwnd, gGlobalPrefs)) {
         return;
+    }
 
     if (!gGlobalPrefs->rememberOpenedFiles) {
         gFileHistory.Clear(true);
@@ -3158,8 +3162,9 @@ static void OnMenuOptions(WindowInfo* win) {
 
 // toggles 'show pages continuously' state
 static void OnMenuViewContinuous(WindowInfo* win) {
-    if (!win->IsDocLoaded())
+    if (!win->IsDocLoaded()) {
         return;
+    }
 
     DisplayMode newMode = win->ctrl->GetDisplayMode();
     switch (newMode) {
@@ -3181,8 +3186,9 @@ static void OnMenuViewContinuous(WindowInfo* win) {
 
 static void OnMenuViewMangaMode(WindowInfo* win) {
     CrashIf(!win->currentTab || win->currentTab->GetEngineType() != kindEngineComicBooks);
-    if (!win->currentTab || win->currentTab->GetEngineType() != kindEngineComicBooks)
+    if (!win->currentTab || win->currentTab->GetEngineType() != kindEngineComicBooks) {
         return;
+    }
     DisplayModel* dm = win->AsFixed();
     dm->SetDisplayR2L(!dm->GetDisplayR2L());
     ScrollState state = dm->GetScrollState();
@@ -3224,15 +3230,17 @@ static void ChangeZoomLevel(WindowInfo* win, float newZoom, bool pagesContinuous
 }
 
 static void FocusPageNoEdit(HWND hwndPageBox) {
-    if (IsFocused(hwndPageBox))
+    if (IsFocused(hwndPageBox)) {
         SendMessage(hwndPageBox, WM_SETFOCUS, 0, 0);
-    else
+    } else {
         SetFocus(hwndPageBox);
+    }
 }
 
 static void OnMenuGoToPage(WindowInfo* win) {
-    if (!win->IsDocLoaded())
+    if (!win->IsDocLoaded()) {
         return;
+    }
 
     // Don't show a dialog if we don't have to - use the Toolbar instead
     if (gGlobalPrefs->showToolbar && !win->isFullScreen && !win->presentation && !win->AsEbook()) {
@@ -3241,7 +3249,7 @@ static void OnMenuGoToPage(WindowInfo* win) {
     }
 
     auto* ctrl = win->ctrl;
-    AutoFreeWstr label(ctrl->GetPageLabel(ctrl->CurrentPageNo()));
+    AutoFreeWstr label = ctrl->GetPageLabel(ctrl->CurrentPageNo());
     AutoFreeWstr newPageLabel(Dialog_GoToPage(win->hwndFrame, label, ctrl->PageCount(), !ctrl->HasPageLabels()));
     if (!newPageLabel) {
         return;
@@ -3305,8 +3313,9 @@ void EnterFullScreen(WindowInfo* win, bool presentation) {
     SetWindowPos(win->hwndFrame, nullptr, rect.x, rect.y, rect.dx, rect.dy,
                  SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOZORDER);
 
-    if (presentation)
+    if (presentation) {
         win->ctrl->SetPresentationMode(true);
+    }
 
     // Make sure that no toolbar/sidebar keeps the focus
     SetFocus(win->hwndFrame);
@@ -3315,14 +3324,16 @@ void EnterFullScreen(WindowInfo* win, bool presentation) {
 }
 
 void ExitFullScreen(WindowInfo* win) {
-    if (!win->isFullScreen && !win->presentation)
+    if (!win->isFullScreen && !win->presentation) {
         return;
+    }
 
     bool wasPresentation = PM_DISABLED != win->presentation;
     if (wasPresentation) {
         win->presentation = PM_DISABLED;
-        if (win->IsDocLoaded())
+        if (win->IsDocLoaded()) {
             win->ctrl->SetPresentationMode(false);
+        }
         // re-enable the auto-hidden cursor
         KillTimer(win->hwndCanvas, HIDE_CURSOR_TIMER_ID);
         SetCursor(IDC_ARROW);
@@ -3337,14 +3348,18 @@ void ExitFullScreen(WindowInfo* win) {
     bool tocVisible = win->currentTab && win->currentTab->showToc;
     SetSidebarVisibility(win, tocVisible, gGlobalPrefs->showFavorites);
 
-    if (win->tabsInTitlebar)
+    if (win->tabsInTitlebar) {
         ShowWindow(win->hwndCaption, SW_SHOW);
-    if (win->tabsVisible)
+    }
+    if (win->tabsVisible) {
         ShowWindow(win->hwndTabBar, SW_SHOW);
-    if (gGlobalPrefs->showToolbar && !win->AsEbook())
+    }
+    if (gGlobalPrefs->showToolbar && !win->AsEbook()) {
         ShowWindow(win->hwndReBar, SW_SHOW);
-    if (!win->isMenuHidden)
+    }
+    if (!win->isMenuHidden) {
         SetMenu(win->hwndFrame, win->menu);
+    }
 
     ClientRect cr(win->hwndFrame);
     SetWindowLong(win->hwndFrame, GWL_STYLE, win->nonFullScreenWindowStyle);
@@ -3355,20 +3370,23 @@ void ExitFullScreen(WindowInfo* win) {
     // CrashIf(WindowRect(win.hwndFrame) != win.nonFullScreenFrameRect);
     // We have to relayout here, because it isn't done in the SetWindowPos nor MoveWindow,
     // if the client rectangle hasn't changed.
-    if (ClientRect(win->hwndFrame) == cr)
+    if (ClientRect(win->hwndFrame) == cr) {
         RelayoutFrame(win);
+    }
 }
 
 void OnMenuViewFullscreen(WindowInfo* win, bool presentation) {
     bool enterFullScreen = presentation ? !win->presentation : !win->isFullScreen;
 
-    if (!win->presentation && !win->isFullScreen)
+    if (!win->presentation && !win->isFullScreen) {
         RememberDefaultWindowPosition(win);
-    else
+    } else {
         ExitFullScreen(win);
+    }
 
-    if (enterFullScreen && (!presentation || win->IsDocLoaded()))
+    if (enterFullScreen && (!presentation || win->IsDocLoaded())) {
         EnterFullScreen(win, presentation);
+    }
 }
 
 static void OnMenuViewPresentation(WindowInfo* win) {
