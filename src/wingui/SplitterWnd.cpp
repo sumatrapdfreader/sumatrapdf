@@ -20,7 +20,7 @@
 static void OnPaint(HWND hwnd, COLORREF bgCol) {
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(hwnd, &ps);
-    ScopedBrush br = CreateSolidBrush(bgCol);
+    AutoDeleteBrush br = CreateSolidBrush(bgCol);
     FillRect(hdc, &ps.rcPaint, br);
     EndPaint(hwnd, &ps);
 }

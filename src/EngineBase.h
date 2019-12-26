@@ -55,7 +55,7 @@ class RenderedBitmap {
   public:
     HBITMAP hbmp = nullptr;
     SizeI size = {};
-    ScopedHandle hMap = {};
+    AutoCloseHandle hMap = {};
 
     RenderedBitmap(HBITMAP hbmp, SizeI size, HANDLE hMap = nullptr) : hbmp(hbmp), size(size), hMap(hMap) {
     }

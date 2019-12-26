@@ -528,11 +528,11 @@ static void PaintPageFrameAndShadow(HDC hdc, RectI& bounds, RectI& pageRect, boo
 static void PaintPageFrameAndShadow(HDC hdc, RectI& bounds, RectI& pageRect, bool presentation) {
     UNUSED(pageRect);
     UNUSED(presentation);
-    ScopedPen pen(CreatePen(PS_NULL, 0, 0));
+    AutoDeletePen pen(CreatePen(PS_NULL, 0, 0));
     auto col = GetAppColor(AppColor::MainWindowBg);
-    ScopedBrush brush(CreateSolidBrush(col));
-    ScopedHdcSelect restorePen(hdc, pen);
-    ScopedHdcSelect restoreBrush(hdc, brush);
+    AutoDeleteBrush brush(CreateSolidBrush(col));
+    ScopedSelectPen restorePen(hdc, pen);
+    ScopedSelectObject restoreBrush(hdc, brush);
     Rectangle(hdc, bounds.x, bounds.y, bounds.x + bounds.dx + 1, bounds.y + bounds.dy + 1);
 }
 #endif
@@ -701,7 +701,7 @@ static void DrawDocument(WindowInfo* win, HDC hdc, RECT* rcArea) {
         UINT renderDelay = gRenderCache.Paint(hdc, bounds, dm, pageNo, pageInfo, &renderOutOfDateCue);
 
         if (renderDelay) {
-            ScopedFont fontRightTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 14));
+            AutoDeleteFont fontRightTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 14));
             HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt);
             auto col = GetAppColor(AppColor::MainWindowText);
             SetTextColor(hdc, col);
@@ -1315,7 +1315,7 @@ static void OnPaintError(WindowInfo* win) {
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(win->hwndCanvas, &ps);
 
-    ScopedFont fontRightTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 14));
+    AutoDeleteFont fontRightTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 14));
     HGDIOBJ hPrevFont = SelectObject(hdc, fontRightTxt);
     auto bgCol = GetAppColor(AppColor::NoDocBg);
     ScopedGdiObj<HBRUSH> bgBrush(CreateSolidBrush(bgCol));

@@ -191,7 +191,7 @@ bool Reload() {
         return false;
     }
 
-    ScopedHandle hScope(h);
+    AutoCloseHandle hScope(h);
 
     FILETIME time = file::GetModificationTime(path);
     if (FileTimeEq(time, gGlobalPrefs->lastPrefUpdate)) {

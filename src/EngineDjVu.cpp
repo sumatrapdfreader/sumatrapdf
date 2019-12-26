@@ -309,8 +309,8 @@ bool DjVuEngineImpl::LoadMediaboxes() {
     if (!fileName) {
         return false;
     }
-    ScopedHandle h(file::OpenReadOnly(fileName));
-    if (h == INVALID_HANDLE_VALUE) {
+    AutoCloseHandle h(file::OpenReadOnly(fileName));
+    if (!h.IsValid()) {
         return false;
     }
     char buffer[16];
@@ -445,7 +445,7 @@ void DjVuEngineImpl::AddUserAnnots(RenderedBitmap* bmp, int pageNo, float zoom, 
 
     HDC hdc = CreateCompatibleDC(nullptr);
     {
-        ScopedHdcSelect bmpScope(hdc, bmp->GetBitmap());
+        ScopedSelectObject bmpScope(hdc, bmp->GetBitmap());
         Graphics g(hdc);
         g.SetCompositingQuality(CompositingQualityHighQuality);
         g.SetPageUnit(UnitPixel);

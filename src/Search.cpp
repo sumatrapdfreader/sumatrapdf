@@ -461,7 +461,7 @@ bool OnInverseSearch(WindowInfo* win, int x, int y) {
         AutoFreeWstr appDir(GetExePath());
         if (appDir)
             appDir.Set(path::GetDir(appDir));
-        ScopedHandle process(LaunchProcess(cmdline, appDir));
+        AutoCloseHandle process(LaunchProcess(cmdline, appDir));
         if (!process)
             win->ShowNotification(
                 _TR("Cannot start inverse search command. Please check the command line in the settings."));

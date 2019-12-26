@@ -618,6 +618,8 @@
     <ClInclude Include="..\src\utils\Log.h" />
     <ClInclude Include="..\src\utils\LzmaSimpleArchive.h" />
     <ClInclude Include="..\src\utils\PEB.h" />
+    <ClInclude Include="..\src\utils\Scoped.h" />
+    <ClInclude Include="..\src\utils\ScopedWin.h" />
     <ClInclude Include="..\src\utils\SerializeTxt.h" />
     <ClInclude Include="..\src\utils\SettingsUtil.h" />
     <ClInclude Include="..\src\utils\SquareTreeParser.h" />

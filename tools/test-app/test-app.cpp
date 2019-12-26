@@ -88,9 +88,10 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     CrashIf(!ok);
 
     auto l = CreateMainLayout(w->hwnd);
-    w->onSize = [&](HWND hwnd, int dx, int dy, WPARAM resizeType) {
-        UNUSED(hwnd);
-        UNUSED(resizeType);
+    w->onSize = [&](SizeArgs* args) {
+        HWND hwnd = args->hwnd;
+        int dx = args->dx;
+        int dy = args->dy;
         if (dx == 0 || dy == 0) {
             return;
         }

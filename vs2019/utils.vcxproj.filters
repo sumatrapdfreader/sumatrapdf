@@ -93,6 +93,12 @@
     <ClInclude Include="..\src\utils\PEB.h">
       <Filter>utils</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\utils\Scoped.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils\ScopedWin.h">
+      <Filter>utils</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\utils\SerializeTxt.h">
       <Filter>utils</Filter>
     </ClInclude>

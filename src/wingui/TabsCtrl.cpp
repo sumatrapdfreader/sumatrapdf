@@ -27,51 +27,6 @@
 
 // TODO: implement a max width for the tab
 
-class ScopedGetDC {
-    HDC hdc;
-    HWND hwnd;
-
-  public:
-    explicit ScopedGetDC(HWND hwnd) {
-        this->hwnd = hwnd;
-        this->hdc = GetDC(hwnd);
-    }
-    ~ScopedGetDC() {
-        ReleaseDC(hwnd, hdc);
-    }
-    operator HDC() const {
-        return hdc;
-    }
-};
-
-class ScopedSelectHFONT {
-    HDC hdc;
-    HFONT prevFont;
-
-  public:
-    explicit ScopedSelectHFONT(HDC hdc, HFONT font) {
-        prevFont = (HFONT)SelectObject(hdc, font);
-    }
-
-    ~ScopedSelectHFONT() {
-        SelectObject(hdc, prevFont);
-    }
-};
-
-class ScopedSelectHHPEN {
-    HDC hdc;
-    HPEN prevPen;
-
-  public:
-    explicit ScopedSelectHHPEN(HDC hdc, HPEN pen) {
-        prevPen = (HPEN)SelectObject(hdc, pen);
-    }
-
-    ~ScopedSelectHHPEN() {
-        SelectObject(hdc, prevPen);
-    }
-};
-
 enum class Tab {
     Selected = 0,
     Background = 1,
@@ -231,7 +186,7 @@ static void PaintClose(HDC hdc, RECT& r, bool isHighlighted) {
     if (isHighlighted) {
         int p = 3;
         DpiScaleX(hdc, p);
-        ScopedBrush brush(CreateSolidBrush(COL_RED));
+        AutoDeleteBrush brush(CreateSolidBrush(COL_RED));
         RECT r2 = r;
         r2.left -= p;
         r2.right += p;
@@ -241,8 +196,8 @@ static void PaintClose(HDC hdc, RECT& r, bool isHighlighted) {
         lineCol = COL_WHITE;
     }
 
-    ScopedPen pen(CreatePen(PS_SOLID, 2, lineCol));
-    ScopedSelectHHPEN p(hdc, pen);
+    AutoDeletePen pen(CreatePen(PS_SOLID, 2, lineCol));
+    ScopedSelectPen p(hdc, pen);
     MoveToEx(hdc, x, y, nullptr);
     LineTo(hdc, x + dx, y + dy);
 
@@ -258,10 +213,10 @@ static void Paint(TabsCtrl* ctrl) {
     RECT rc = GetClientRect(hwnd);
     HDC hdc = BeginPaint(hwnd, &ps);
 
-    ScopedBrush brush(CreateSolidBrush(COL_LIGHTER_GRAY));
+    AutoDeleteBrush brush(CreateSolidBrush(COL_LIGHTER_GRAY));
     FillRect(hdc, &rc, brush);
 
-    ScopedSelectHFONT f(hdc, priv->font);
+    ScopedSelectFont f(hdc, priv->font);
     UINT opts = ETO_OPAQUE;
 
     int padLeft = PADDING_LEFT;
@@ -303,7 +258,7 @@ static void Paint(TabsCtrl* ctrl) {
         SetBkColor(hdc, bgCol);
 
         auto tabRect = ti->tabRect;
-        ScopedBrush brush2(CreateSolidBrush(bgCol));
+        AutoDeleteBrush brush2(CreateSolidBrush(bgCol));
         FillRect(hdc, &tabRect, brush2);
 
         auto pos = ti->titlePos;
@@ -460,7 +415,7 @@ void SetFont(TabsCtrl* ctrl, HFONT font) {
     GetObject(font, sizeof(LOGFONTW), &priv->logFont);
 
     ScopedGetDC hdc(priv->hwnd);
-    ScopedSelectHFONT prevFont(hdc, priv->font);
+    ScopedSelectFont prevFont(hdc, priv->font);
     GetTextMetrics(hdc, &priv->fontMetrics);
     priv->fontDy = priv->fontMetrics.tmHeight;
 }

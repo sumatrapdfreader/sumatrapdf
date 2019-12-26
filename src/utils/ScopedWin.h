@@ -10,16 +10,17 @@ class ScopedCritSec {
     }
 };
 
-class ScopedHandle {
+class AutoCloseHandle {
     HANDLE handle = nullptr;
 
   public:
-    ScopedHandle() = default;
+    AutoCloseHandle() = default;
 
-    explicit ScopedHandle(HANDLE handle) : handle(handle) {
+    explicit AutoCloseHandle(HANDLE h) {
+        handle = h;
     }
 
-    ~ScopedHandle() {
+    ~AutoCloseHandle() {
         if (IsValid())
             CloseHandle(handle);
     }
@@ -121,6 +122,21 @@ class ScopedComQIPtr {
     }
 };
 
+class AutoDeleteDC {
+    HDC hdc = nullptr;
+
+  public:
+    explicit AutoDeleteDC(HDC hdc) {
+        this->hdc = hdc;
+    }
+    ~AutoDeleteDC() {
+        DeleteDC(hdc);
+    }
+    operator HDC() const {
+        return hdc;
+    }
+};
+
 template <typename T>
 class ScopedGdiObj {
     T obj;
@@ -136,37 +152,81 @@ class ScopedGdiObj {
         return obj;
     }
 };
-typedef ScopedGdiObj<HFONT> ScopedFont;
-typedef ScopedGdiObj<HPEN> ScopedPen;
-typedef ScopedGdiObj<HBRUSH> ScopedBrush;
+typedef ScopedGdiObj<HFONT> AutoDeleteFont;
+typedef ScopedGdiObj<HPEN> AutoDeletePen;
+typedef ScopedGdiObj<HBRUSH> AutoDeleteBrush;
 
-class ScopedHDC {
+class ScopedGetDC {
     HDC hdc = nullptr;
+    HWND hwnd = nullptr;
 
   public:
-    explicit ScopedHDC(HDC hdc) : hdc(hdc) {
+    explicit ScopedGetDC(HWND hwnd) {
+        this->hwnd = hwnd;
+        this->hdc = GetDC(hwnd);
     }
-    ~ScopedHDC() {
-        DeleteDC(hdc);
+    ~ScopedGetDC() {
+        ReleaseDC(hwnd, hdc);
     }
     operator HDC() const {
         return hdc;
     }
 };
 
-class ScopedHdcSelect {
+class ScopedSelectObject {
     HDC hdc = nullptr;
     HGDIOBJ prev = nullptr;
 
   public:
-    ScopedHdcSelect(HDC hdc, HGDIOBJ obj) : hdc(hdc) {
+    ScopedSelectObject(HDC hdc, HGDIOBJ obj) : hdc(hdc) {
         prev = SelectObject(hdc, obj);
     }
-    ~ScopedHdcSelect() {
+    ~ScopedSelectObject() {
         SelectObject(hdc, prev);
     }
 };
 
+class ScopedSelectFont {
+    HDC hdc = nullptr;
+    HFONT prevFont = nullptr;
+
+  public:
+    explicit ScopedSelectFont(HDC hdc, HFONT font) {
+        prevFont = (HFONT)SelectObject(hdc, font);
+    }
+
+    ~ScopedSelectFont() {
+        SelectObject(hdc, prevFont);
+    }
+};
+
+class ScopedSelectPen {
+    HDC hdc = nullptr;
+    HPEN prevPen = nullptr;
+
+  public:
+    explicit ScopedSelectPen(HDC hdc, HPEN pen) {
+        prevPen = (HPEN)SelectObject(hdc, pen);
+    }
+
+    ~ScopedSelectPen() {
+        SelectObject(hdc, prevPen);
+    }
+};
+
+class ScopedSelectBrush {
+    HDC hdc = nullptr;
+    HBRUSH prevBrush = nullptr;
+
+  public:
+    explicit ScopedSelectBrush(HDC hdc, HBRUSH pen) {
+        prevBrush = (HBRUSH)SelectObject(hdc, pen);
+    }
+
+    ~ScopedSelectBrush() {
+        SelectObject(hdc, prevBrush);
+    }
+};
 class ScopedCom {
   public:
     ScopedCom() {

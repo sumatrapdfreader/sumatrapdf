@@ -136,7 +136,7 @@ void InitInstallerUninstaller() {
 
 bool CreateProcessHelper(const WCHAR* exe, const WCHAR* args) {
     AutoFreeWstr cmd = str::Format(L"\"%s\" %s", exe, args ? args : L"");
-    ScopedHandle process(LaunchProcess(cmd));
+    AutoCloseHandle process(LaunchProcess(cmd));
     return process != nullptr;
 }
 
@@ -186,7 +186,7 @@ static bool IsUsingInstallation(DWORD procId) {
         return false;
     }
 
-    ScopedHandle snap(CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, procId));
+    AutoCloseHandle snap(CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, procId));
     if (snap == INVALID_HANDLE_VALUE) {
         return false;
     }
@@ -321,7 +321,7 @@ void UninstallPdfPreviewer() {
 #define TEN_SECONDS_IN_MS 10 * 1000
 
 static bool IsProcWithName(DWORD processId, const WCHAR* modulePath) {
-    ScopedHandle hModSnapshot(CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, processId));
+    AutoCloseHandle hModSnapshot(CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, processId));
     if (!hModSnapshot.IsValid())
         return false;
 
@@ -346,7 +346,7 @@ static bool KillProcIdWithName(DWORD processId, const WCHAR* modulePath, bool wa
     BOOL inheritHandle = FALSE;
     // Note: do I need PROCESS_QUERY_INFORMATION and PROCESS_VM_READ?
     DWORD dwAccess = PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | PROCESS_TERMINATE;
-    ScopedHandle hProcess(OpenProcess(dwAccess, inheritHandle, processId));
+    AutoCloseHandle hProcess(OpenProcess(dwAccess, inheritHandle, processId));
     if (!hProcess.IsValid()) {
         return false;
     }
@@ -366,7 +366,7 @@ static bool KillProcIdWithName(DWORD processId, const WCHAR* modulePath, bool wa
 // modulePath
 // returns -1 on error, 0 if no matching processes
 int KillProcess(const WCHAR* modulePath, bool waitUntilTerminated) {
-    ScopedHandle hProcSnapshot(CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0));
+    AutoCloseHandle hProcSnapshot(CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0));
     if (INVALID_HANDLE_VALUE == hProcSnapshot)
         return -1;
 
@@ -403,7 +403,7 @@ static bool SkipProcessByID(DWORD procID) {
 // return names of processes that are running part of the installation
 // (i.e. have libmupdf.dll or npPdfViewer.dll loaded)
 static void ProcessesUsingInstallation(WStrVec& names) {
-    ScopedHandle snap(CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0));
+    AutoCloseHandle snap(CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0));
     if (INVALID_HANDLE_VALUE == snap)
         return;
 

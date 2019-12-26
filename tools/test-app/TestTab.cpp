@@ -28,7 +28,7 @@ static void UpdateTabsSize() {
 
 static void Draw(HWND hwnd, HDC hdc) {
     RECT rc = GetClientRect(hwnd);
-    ScopedBrush brush(CreateSolidBrush(COL_GRAY));
+    AutoDeleteBrush brush(CreateSolidBrush(COL_GRAY));
     FillRect(hdc, &rc, brush);
 }
 

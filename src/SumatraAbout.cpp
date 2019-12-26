@@ -155,9 +155,9 @@ static WCHAR* GetSumatraVersion() {
 static SizeI CalcSumatraVersionSize(HWND hwnd, HDC hdc) {
     SizeI result{};
 
-    ScopedFont fontSumatraTxt(CreateSimpleFont(hdc, SUMATRA_TXT_FONT, SUMATRA_TXT_FONT_SIZE));
-    ScopedFont fontVersionTxt(CreateSimpleFont(hdc, VERSION_TXT_FONT, VERSION_TXT_FONT_SIZE));
-    ScopedHdcSelect selFont(hdc, fontSumatraTxt);
+    AutoDeleteFont fontSumatraTxt(CreateSimpleFont(hdc, SUMATRA_TXT_FONT, SUMATRA_TXT_FONT_SIZE));
+    AutoDeleteFont fontVersionTxt(CreateSimpleFont(hdc, VERSION_TXT_FONT, VERSION_TXT_FONT_SIZE));
+    ScopedSelectObject selFont(hdc, fontSumatraTxt);
 
     SIZE txtSize{};
     /* calculate minimal top box size */
@@ -180,8 +180,8 @@ static SizeI CalcSumatraVersionSize(HWND hwnd, HDC hdc) {
 }
 
 static void DrawSumatraVersion(HWND hwnd, HDC hdc, RectI rect) {
-    ScopedFont fontSumatraTxt(CreateSimpleFont(hdc, SUMATRA_TXT_FONT, SUMATRA_TXT_FONT_SIZE));
-    ScopedFont fontVersionTxt(CreateSimpleFont(hdc, VERSION_TXT_FONT, VERSION_TXT_FONT_SIZE));
+    AutoDeleteFont fontSumatraTxt(CreateSimpleFont(hdc, SUMATRA_TXT_FONT, SUMATRA_TXT_FONT_SIZE));
+    AutoDeleteFont fontVersionTxt(CreateSimpleFont(hdc, VERSION_TXT_FONT, VERSION_TXT_FONT_SIZE));
     HGDIOBJ oldFont = SelectObject(hdc, fontSumatraTxt);
 
     SetBkMode(hdc, TRANSPARENT);
@@ -205,10 +205,10 @@ static void DrawSumatraVersion(HWND hwnd, HDC hdc, RectI rect) {
 }
 
 static RectI DrawBottomRightLink(HWND hwnd, HDC hdc, const WCHAR* txt) {
-    ScopedFont fontLeftTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 14));
+    AutoDeleteFont fontLeftTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 14));
     auto col = GetAppColor(AppColor::MainWindowLink);
-    ScopedPen penLinkLine(CreatePen(PS_SOLID, 1, col));
-    ScopedHdcSelect font(hdc, fontLeftTxt);
+    AutoDeletePen penLinkLine(CreatePen(PS_SOLID, 1, col));
+    ScopedSelectObject font(hdc, fontLeftTxt);
 
     SetTextColor(hdc, col);
     SetBkMode(hdc, TRANSPARENT);
@@ -223,7 +223,7 @@ static RectI DrawBottomRightLink(HWND hwnd, HDC hdc, const WCHAR* txt) {
     RECT rTmp = rect.ToRECT();
     DrawText(hdc, txt, -1, &rTmp, IsUIRightToLeft() ? DT_RTLREADING : DT_LEFT);
     {
-        ScopedHdcSelect pen(hdc, penLinkLine);
+        ScopedSelectObject pen(hdc, penLinkLine);
         PaintLine(hdc, RectI(rect.x, rect.y + rect.dy, rect.dx, 0));
     }
 
@@ -237,15 +237,15 @@ static RectI DrawBottomRightLink(HWND hwnd, HDC hdc, const WCHAR* txt) {
    to understand without seeing the design. */
 static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkInfo) {
     auto col = GetAppColor(AppColor::MainWindowText);
-    ScopedPen penBorder(CreatePen(PS_SOLID, ABOUT_LINE_OUTER_SIZE, col));
-    ScopedPen penDivideLine(CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, col));
+    AutoDeletePen penBorder(CreatePen(PS_SOLID, ABOUT_LINE_OUTER_SIZE, col));
+    AutoDeletePen penDivideLine(CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, col));
     col = GetAppColor(AppColor::MainWindowLink);
-    ScopedPen penLinkLine(CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, col));
+    AutoDeletePen penLinkLine(CreatePen(PS_SOLID, ABOUT_LINE_SEP_SIZE, col));
 
-    ScopedFont fontLeftTxt(CreateSimpleFont(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE));
-    ScopedFont fontRightTxt(CreateSimpleFont(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE));
+    AutoDeleteFont fontLeftTxt(CreateSimpleFont(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE));
+    AutoDeleteFont fontRightTxt(CreateSimpleFont(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE));
 
-    ScopedHdcSelect font(hdc, fontLeftTxt); /* Just to remember the orig font */
+    ScopedSelectObject font(hdc, fontLeftTxt); /* Just to remember the orig font */
 
     ClientRect rc(hwnd);
     RECT rTmp = rc.ToRECT();
@@ -256,9 +256,9 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkI
     /* render title */
     RectI titleRect(rect.TL(), CalcSumatraVersionSize(hwnd, hdc));
 
-    ScopedBrush bgBrush(CreateSolidBrush(col));
-    ScopedHdcSelect brush(hdc, bgBrush);
-    ScopedHdcSelect pen(hdc, penBorder);
+    AutoDeleteBrush bgBrush(CreateSolidBrush(col));
+    ScopedSelectObject brush(hdc, bgBrush);
+    ScopedSelectObject pen(hdc, penBorder);
 #ifndef ABOUT_USE_LESS_COLORS
     Rectangle(hdc, rect.x, rect.y + ABOUT_LINE_OUTER_SIZE, rect.x + rect.dx,
               rect.y + titleRect.dy + ABOUT_LINE_OUTER_SIZE);
@@ -321,8 +321,8 @@ static void DrawAbout(HWND hwnd, HDC hdc, RectI rect, Vec<StaticLinkInfo>& linkI
 }
 
 static void UpdateAboutLayoutInfo(HWND hwnd, HDC hdc, RectI* rect) {
-    ScopedFont fontLeftTxt(CreateSimpleFont(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE));
-    ScopedFont fontRightTxt(CreateSimpleFont(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE));
+    AutoDeleteFont fontLeftTxt(CreateSimpleFont(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE));
+    AutoDeleteFont fontRightTxt(CreateSimpleFont(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE));
 
     HGDIOBJ origFont = SelectObject(hdc, fontLeftTxt);
 
@@ -599,24 +599,24 @@ void DrawAboutPage(WindowInfo* win, HDC hdc) {
 
 void DrawStartPage(WindowInfo* win, HDC hdc, FileHistory& fileHistory, COLORREF textColor, COLORREF backgroundColor) {
     auto col = GetAppColor(AppColor::MainWindowText);
-    ScopedPen penBorder(CreatePen(PS_SOLID, DOCLIST_SEPARATOR_DY, col));
-    ScopedPen penThumbBorder(CreatePen(PS_SOLID, DOCLIST_THUMBNAIL_BORDER_W, col));
+    AutoDeletePen penBorder(CreatePen(PS_SOLID, DOCLIST_SEPARATOR_DY, col));
+    AutoDeletePen penThumbBorder(CreatePen(PS_SOLID, DOCLIST_THUMBNAIL_BORDER_W, col));
     col = GetAppColor(AppColor::MainWindowLink);
-    ScopedPen penLinkLine(CreatePen(PS_SOLID, 1, col));
+    AutoDeletePen penLinkLine(CreatePen(PS_SOLID, 1, col));
 
-    ScopedFont fontSumatraTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 24));
-    ScopedFont fontLeftTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 14));
+    AutoDeleteFont fontSumatraTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 24));
+    AutoDeleteFont fontLeftTxt(CreateSimpleFont(hdc, L"MS Shell Dlg", 14));
 
-    ScopedHdcSelect font(hdc, fontSumatraTxt);
+    ScopedSelectObject font(hdc, fontSumatraTxt);
 
     ClientRect rc(win->hwndCanvas);
     RECT rTmp = rc.ToRECT();
     col = GetAppColor(AppColor::MainWindowBg);
-    ScopedBrush brushLogoBg(CreateSolidBrush(col));
+    AutoDeleteBrush brushLogoBg(CreateSolidBrush(col));
     FillRect(hdc, &rTmp, brushLogoBg);
 
-    ScopedHdcSelect brush(hdc, brushLogoBg);
-    ScopedHdcSelect pen(hdc, penBorder);
+    ScopedSelectObject brush(hdc, brushLogoBg);
+    ScopedSelectObject pen(hdc, penBorder);
 
     bool isRtl = IsUIRightToLeft();
 

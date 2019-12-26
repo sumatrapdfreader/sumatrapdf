@@ -95,5 +95,5 @@ static DWORD WINAPI ThreadFunc(void* data) {
 
 void RunAsync(const std::function<void()>& func) {
     auto fp = new std::function<void()>(func);
-    ScopedHandle h(CreateThread(nullptr, 0, ThreadFunc, fp, 0, 0));
+    AutoCloseHandle h(CreateThread(nullptr, 0, ThreadFunc, fp, 0, 0));
 }

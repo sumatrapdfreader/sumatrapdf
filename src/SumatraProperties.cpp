@@ -328,8 +328,8 @@ static WCHAR* FormatPermissions(Controller* ctrl) {
 }
 
 static void UpdatePropertiesLayout(PropertiesLayout* layoutData, HDC hdc, RectI* rect) {
-    ScopedFont fontLeftTxt(CreateSimpleFont(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE));
-    ScopedFont fontRightTxt(CreateSimpleFont(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE));
+    AutoDeleteFont fontLeftTxt(CreateSimpleFont(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE));
+    AutoDeleteFont fontRightTxt(CreateSimpleFont(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE));
     HGDIOBJ origFont = SelectObject(hdc, fontLeftTxt);
 
     /* calculate text dimensions for the left side */
@@ -541,8 +541,8 @@ void OnMenuProperties(WindowInfo* win) {
 static void DrawProperties(HWND hwnd, HDC hdc) {
     PropertiesLayout* layoutData = FindPropertyWindowByHwnd(hwnd);
 
-    ScopedFont fontLeftTxt(CreateSimpleFont(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE));
-    ScopedFont fontRightTxt(CreateSimpleFont(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE));
+    AutoDeleteFont fontLeftTxt(CreateSimpleFont(hdc, LEFT_TXT_FONT, LEFT_TXT_FONT_SIZE));
+    AutoDeleteFont fontRightTxt(CreateSimpleFont(hdc, RIGHT_TXT_FONT, RIGHT_TXT_FONT_SIZE));
 
     HGDIOBJ origFont = SelectObject(hdc, fontLeftTxt); /* Just to remember the orig font */
 

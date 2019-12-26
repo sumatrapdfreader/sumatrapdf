@@ -158,7 +158,7 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
     }
 
     // cf. http://blogs.msdn.com/b/oldnewthing/archive/2012/11/09/10367057.aspx
-    ScopedHDC hdc(CreateDC(nullptr, pd.printerName, nullptr, pd.devMode));
+    AutoDeleteDC hdc(CreateDC(nullptr, pd.printerName, nullptr, pd.devMode));
     if (!hdc) {
         return false;
     }
@@ -174,8 +174,10 @@ static bool PrintToDevice(const PrintData& pd, ProgressUpdateUI* progressUI = nu
     const SizeI paperSize(GetDeviceCaps(hdc, PHYSICALWIDTH), GetDeviceCaps(hdc, PHYSICALHEIGHT));
     const RectI printable(GetDeviceCaps(hdc, PHYSICALOFFSETX), GetDeviceCaps(hdc, PHYSICALOFFSETY),
                           GetDeviceCaps(hdc, HORZRES), GetDeviceCaps(hdc, VERTRES));
-    const float dpiFactor = std::min(GetDeviceCaps(hdc, LOGPIXELSX) / engine.GetFileDPI(),
-                                     GetDeviceCaps(hdc, LOGPIXELSY) / engine.GetFileDPI());
+    float fileDPI = engine.GetFileDPI();
+    float px = (float)GetDeviceCaps(hdc, LOGPIXELSX);
+    float py = (float)GetDeviceCaps(hdc, LOGPIXELSY);
+    float dpiFactor = std::min(px / fileDPI, py / fileDPI);
     bool bPrintPortrait = paperSize.dx < paperSize.dy;
     if (pd.devMode && (pd.devMode.Get()->dmFields & DM_ORIENTATION))
         bPrintPortrait = DMORIENT_PORTRAIT == pd.devMode.Get()->dmOrientation;

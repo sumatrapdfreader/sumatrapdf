@@ -495,7 +495,7 @@ int64_t GetSize(const WCHAR* filePath) {
         return -1;
     }
 
-    ScopedHandle h(OpenReadOnly(filePath));
+    AutoCloseHandle h(OpenReadOnly(filePath));
     if (h == INVALID_HANDLE_VALUE) {
         return -1;
     }
@@ -517,7 +517,7 @@ std::string_view ReadFileWithAllocator(const WCHAR* path, Allocator* allocator) 
 
 // buf must be at least toRead in size (note: it won't be zero-terminated)
 bool ReadN(const WCHAR* filePath, char* buf, size_t toRead) {
-    ScopedHandle h(OpenReadOnly(filePath));
+    AutoCloseHandle h(OpenReadOnly(filePath));
     if (h == INVALID_HANDLE_VALUE) {
         return false;
     }
@@ -537,7 +537,7 @@ bool WriteFile(const WCHAR* filePath, std::string_view d) {
     if (INVALID_HANDLE_VALUE == fh) {
         return false;
     }
-    ScopedHandle h(fh);
+    AutoCloseHandle h(fh);
 
     DWORD size = 0;
     BOOL ok = WriteFile(h, data, (DWORD)dataLen, &size, nullptr);
@@ -553,14 +553,15 @@ bool Delete(const WCHAR* filePath) {
 
 FILETIME GetModificationTime(const WCHAR* filePath) {
     FILETIME lastMod = {0};
-    ScopedHandle h(OpenReadOnly(filePath));
-    if (h != INVALID_HANDLE_VALUE)
+    AutoCloseHandle h(OpenReadOnly(filePath));
+    if (h.IsValid()) {
         GetFileTime(h, nullptr, nullptr, &lastMod);
+    }
     return lastMod;
 }
 
 bool SetModificationTime(const WCHAR* filePath, FILETIME lastMod) {
-    ScopedHandle h(CreateFile(filePath, GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr));
+    AutoCloseHandle h(CreateFile(filePath, GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr));
     if (INVALID_HANDLE_VALUE == h)
         return false;
     return SetFileTime(h, nullptr, nullptr, &lastMod);

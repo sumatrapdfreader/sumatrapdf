@@ -4,6 +4,7 @@
 #include "utils/BaseUtil.h"
 #include "utils/Dpi.h"
 #include "utils/WinDynCalls.h"
+#include "utils/ScopedWin.h"
 
 /* Info from https://code.msdn.microsoft.com/DPI-Tutorial-sample-64134744
 
@@ -41,23 +42,6 @@ struct DpiNode {
 
 static DpiNode* g_dpis = nullptr;
 static DpiNode* gLastHwndNode = nullptr;
-
-class ScopedGetDC {
-    HDC hdc;
-    HWND hwnd;
-
-  public:
-    explicit ScopedGetDC(HWND hwnd) {
-        this->hwnd = hwnd;
-        this->hdc = GetDC(hwnd);
-    }
-    ~ScopedGetDC() {
-        ReleaseDC(hwnd, hdc);
-    }
-    operator HDC() const {
-        return hdc;
-    }
-};
 
 static void GetDpiXY(HWND hwnd, int& scaleX, int& scaleY) {
     if (DynGetDpiForWindow) {
