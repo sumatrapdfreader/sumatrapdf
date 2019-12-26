@@ -218,7 +218,7 @@ TreeCtrl::TreeCtrl(HWND p) {
     dwStyle = WS_CHILD | WS_VISIBLE | WS_TABSTOP;
     dwStyle |= TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS | TVS_TRACKSELECT;
     dwStyle |= TVS_DISABLEDRAGDROP | TVS_NOHSCROLL | TVS_INFOTIP;
-    dwExStyle = 0;
+    dwExStyle = TVS_EX_DOUBLEBUFFER;
     winClass = WC_TREEVIEWW;
     parent = p;
     SetRect(&initialPos, 0, 0, 48, 120);
