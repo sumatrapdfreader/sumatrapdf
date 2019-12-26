@@ -313,14 +313,16 @@ inline void CrashIfDebugOnlyFunc(bool cond) {
 void ZeroMemory(void* p, size_t len);
 #endif
 
+void* AllocZero(size_t count, size_t size);
+
 template <typename T>
 FORCEINLINE T* AllocArray(size_t n) {
-    return (T*)calloc(n, sizeof(T));
+    return (T*)AllocZero(n, sizeof(T));
 }
 
 template <typename T>
 FORCEINLINE T* AllocStruct() {
-    return (T*)calloc(1, sizeof(T));
+    return (T*)AllocZero(1, sizeof(T));
 }
 
 template <typename T>

@@ -99,8 +99,8 @@ size_t MultiFormatArchive::GetFileId(const char* fileName) {
 
 #if OS_WIN
 std::string_view MultiFormatArchive::GetFileDataByName(const WCHAR* fileName) {
-    auto fileNameUtf8 = strconv::WstrToUtf8(fileName);
-    return GetFileDataByName(fileNameUtf8.data());
+    AutoFree fileNameUtf8 = strconv::WstrToUtf8(fileName);
+    return GetFileDataByName(fileNameUtf8);
 }
 #endif
 

@@ -166,6 +166,13 @@ void ZeroMemory(void* p, size_t len) {
 }
 #endif
 
+// This exits so that I can add temporary instrumentation
+// to catch allocations of a given size and it won't cause
+// re-compilation of everything caused by changing BaseUtil.h
+void* AllocZero(size_t count, size_t size) {
+    return calloc(count, size);
+}
+
 void* memdup(const void* data, size_t len) {
     void* dup = malloc(len);
     if (dup) {

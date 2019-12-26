@@ -268,6 +268,32 @@ EpubDoc::~EpubDoc() {
     delete zip;
 }
 
+// TODO: switch to seqstring
+static bool isHtmlMediaType(const WCHAR* mediatype) {
+
+    if (str::Eq(mediatype, L"application/xhtml+xml")) {
+        return true;
+    }
+    if (str::Eq(mediatype, L"application/html+xml")) {
+        return true;
+    }
+    if (str::Eq(mediatype, L"application/x-dtbncx+xml")) {
+        return true;
+    }
+    if (str::Eq(mediatype, L"text/html")) {
+        return true;
+    }
+    if (str::Eq(mediatype, L"text/xml")) {
+        return true;
+    }
+    return false;
+}
+
+// TODO: switch to seqstring
+static bool isImageMediaType(const WCHAR* mediatype) {
+    return str::Eq(mediatype, L"image/png") || str::Eq(mediatype, L"image/jpeg") || str::Eq(mediatype, L"image/gif");
+}
+
 bool EpubDoc::Load() {
     if (!zip) {
         return false;
@@ -278,15 +304,19 @@ bool EpubDoc::Load() {
     }
     HtmlParser parser;
     HtmlElement* node = parser.ParseInPlace(container.data);
-    if (!node)
+    if (!node) {
         return false;
+    }
+
     // only consider the first <rootfile> element (default rendition)
     node = parser.FindElementByNameNS("rootfile", EPUB_CONTAINER_NS);
-    if (!node)
+    if (!node) {
         return false;
+    }
     AutoFreeWstr contentPath(node->GetAttribute("full-path"));
-    if (!contentPath)
+    if (!contentPath) {
         return false;
+    }
     url::DecodeInPlace(contentPath);
 
     // encrypted files will be ignored (TODO: support decryption)
@@ -329,34 +359,39 @@ bool EpubDoc::Load() {
 
     for (node = node->down; node; node = node->next) {
         AutoFreeWstr mediatype(node->GetAttribute("media-type"));
-        if (str::Eq(mediatype, L"image/png") || str::Eq(mediatype, L"image/jpeg") || str::Eq(mediatype, L"image/gif")) {
-            AutoFreeWstr imgPath(node->GetAttribute("href"));
-            if (!imgPath)
+        if (isImageMediaType(mediatype)) {
+            AutoFreeWstr imgPath = node->GetAttribute("href");
+            if (!imgPath) {
                 continue;
+            }
             url::DecodeInPlace(imgPath);
             imgPath.Set(str::Join(contentPath, imgPath));
-            if (encList.Contains(imgPath))
+            if (encList.Contains(imgPath)) {
                 continue;
+            }
             // load the image lazily
             ImageData2 data = {0};
             auto tmp = strconv::WstrToUtf8(imgPath);
             data.fileName = (char*)tmp.data();
             data.fileId = zip->GetFileId(data.fileName);
             images.Append(data);
-        } else if (str::Eq(mediatype, L"application/xhtml+xml") || str::Eq(mediatype, L"application/html+xml") ||
-                   str::Eq(mediatype, L"application/x-dtbncx+xml") || str::Eq(mediatype, L"text/html") ||
-                   str::Eq(mediatype, L"text/xml")) {
+        } else if (isHtmlMediaType(mediatype)) {
             AutoFreeWstr htmlPath(node->GetAttribute("href"));
-            if (!htmlPath)
+            if (!htmlPath) {
                 continue;
+            }
             url::DecodeInPlace(htmlPath);
             AutoFreeWstr htmlId(node->GetAttribute("id"));
             // EPUB 3 ToC
             AutoFreeWstr properties(node->GetAttribute("properties"));
-            if (properties && str::Find(properties, L"nav") && str::Eq(mediatype, L"application/xhtml+xml"))
+            if (properties && str::Find(properties, L"nav") && str::Eq(mediatype, L"application/xhtml+xml")) {
                 tocPath.Set(str::Join(contentPath, htmlPath));
-            if (encList.size() > 0 && encList.Contains(AutoFreeWstr(str::Join(contentPath, htmlPath))))
+            }
+
+            AutoFreeWstr fullContentPath = str::Join(contentPath, htmlPath);
+            if (encList.size() > 0 && encList.Contains(fullContentPath)) {
                 continue;
+            }
             if (htmlPath && htmlId) {
                 idList.Append(htmlId.StealData());
                 pathList.Append(htmlPath.StealData());
@@ -365,8 +400,10 @@ bool EpubDoc::Load() {
     }
 
     node = parser.FindElementByNameNS("spine", EPUB_OPF_NS);
-    if (!node)
+    if (!node) {
         return false;
+    }
+
     // EPUB 2 ToC
     AutoFreeWstr tocId(node->GetAttribute("toc"));
     if (tocId && !tocPath && idList.Contains(tocId)) {
@@ -374,14 +411,15 @@ bool EpubDoc::Load() {
         isNcxToc = true;
     }
     AutoFreeWstr readingDir(node->GetAttribute("page-progression-direction"));
-    if (readingDir)
+    if (readingDir) {
         isRtlDoc = str::EqI(readingDir, L"rtl");
+    }
 
     for (node = node->down; node; node = node->next) {
         if (!node->NameIsNS("itemref", EPUB_OPF_NS)) {
             continue;
         }
-        AutoFreeWstr idref(node->GetAttribute("idref"));
+        AutoFreeWstr idref = node->GetAttribute("idref");
         if (!idref || !idList.Contains(idref)) {
             continue;
         }
