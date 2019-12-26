@@ -39,6 +39,7 @@ struct DpiNode {
 };
 
 static DpiNode* g_dpis = nullptr;
+static DpiNode* gLastHwndNode = nullptr;
 
 class ScopedGetDC {
     HDC hdc;
@@ -89,9 +90,14 @@ static HWND GetTopLevelParent(HWND hwnd) {
 }
 
 static DpiNode* DpiNodeFindByHwnd(HWND hwnd) {
+    if (gLastHwndNode && gLastHwndNode->dpi.hwnd == hwnd) {
+        return gLastHwndNode;
+    }
+
     DpiNode* n = g_dpis;
     while (n != nullptr) {
         if (n->dpi.hwnd == hwnd) {
+            gLastHwndNode = n;
             return n;
         }
         n = n->next;

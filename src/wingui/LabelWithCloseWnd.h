@@ -25,3 +25,21 @@ struct LabelWithCloseWnd {
     int padX = 0;
     int padY = 0;
 };
+
+struct LabelWithCloseCtrl : public Window {
+    LabelWithCloseCtrl(HWND);
+    ~LabelWithCloseCtrl() override;
+
+    bool Create(const WCHAR*);
+
+    void SetLabel(const WCHAR*);
+
+    void SetPaddingXY(int x, int y);
+    SIZE GetIdealSize() override;
+
+    RectI closeBtnPos = {};
+
+    // in points
+    int padX = 0;
+    int padY = 0;
+};

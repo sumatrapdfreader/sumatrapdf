@@ -13,6 +13,7 @@ Reference for warnings:
  4018 - signed/unsigned mismatch
  4057 - function X differs in indirection to slightly different base types
  4090 - different 'const' qualifiers
+ 4091 - 'typedef ': ignored on left of 'tagGPFIDL_FLAGS' when no variable is declared
  4100 - unreferenced formal parameter
  4127 - conditional expression is constant
  4131 - uses old-style declarator
@@ -56,6 +57,7 @@ workspace "SumatraPDF"
   filter "platforms:x32_xp"
     architecture "x86"
     toolset "v141_xp"
+    disablewarnings { "4091" }
     buildoptions { "/arch:IA32" } -- disable the default /arch:SSE2 for 32-bit builds
   filter {}
 
@@ -95,6 +97,7 @@ workspace "SumatraPDF"
     targetdir "out/rel32_prefast"
   filter {"platforms:x32", "configurations:Debug"}
     targetdir "out/dbg32"
+  filter {}
 
   filter {"platforms:x32_xp", "configurations:Release"}
     targetdir "out/rel32_xp"
@@ -102,6 +105,7 @@ workspace "SumatraPDF"
     targetdir "out/rel32_prefast_xp"
   filter {"platforms:x32_xp", "configurations:Debug"}
     targetdir "out/dbg32_xp"
+  filter {}
 
   filter {"platforms:x32_asan", "configurations:Release"}
     targetdir "out/rel32_asan"
@@ -109,6 +113,7 @@ workspace "SumatraPDF"
     targetdir "out/rel32_prefast_asan"
   filter {"platforms:x32_asan", "configurations:Debug"}
     targetdir "out/dbg32_asan"
+  filter {}
 
   filter {"platforms:x64", "configurations:Release"}
     targetdir "out/rel64"
@@ -117,6 +122,7 @@ workspace "SumatraPDF"
   filter {"platforms:x64", "configurations:Debug"}
     targetdir "out/dbg64"
   filter {}
+
   objdir "%{cfg.targetdir}/obj"
 
   -- https://github.com/premake/premake-core/wiki/symbols
@@ -141,7 +147,13 @@ workspace "SumatraPDF"
   exceptionhandling "Off"
   rtti "Off"
 
-  defines { "WIN32", "_WIN32", "_CRT_SECURE_NO_WARNINGS", "WINVER=0x0601", "_WIN32_WINNT=0x0601" }
+  defines { 
+    "WIN32", 
+    "_WIN32", 
+    "_CRT_SECURE_NO_WARNINGS", 
+    "WINVER=0x0601", 
+    "_WIN32_WINNT=0x0601"
+  }
 
   filter "configurations:Debug"
     defines { "DEBUG" }
@@ -669,12 +681,7 @@ workspace "SumatraPDF"
     -- this is to prevent dll hijacking
     linkoptions { "/DELAYLOAD:libmupdf.dll /DELAYLOAD:gdiplus.dll /DELAYLOAD:msimg32.dll /DELAYLOAD:shlwapi.dll /DELAYLOAD:urlmon.dll /DELAYLOAD:version.dll /DELAYLOAD:wininet.dll"}
     dependson { "PdfFilter", "PdfPreview" }
-    filter "platforms:x32"
-      prebuildcommands { "cd %{cfg.targetdir} & ..\\..\\bin\\MakeLZSA.exe InstallerData.dat libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll"  }
-    filter {}
-    filter "platforms:x64"
-      prebuildcommands { "cd %{cfg.targetdir} & ..\\..\\bin\\MakeLZSA.exe InstallerData.dat libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll" }
-    filter {}
+    prebuildcommands { "cd %{cfg.targetdir} & ..\\..\\bin\\MakeLZSA.exe InstallerData.dat libmupdf.dll:libmupdf.dll PdfFilter.dll:PdfFilter.dll PdfPreview.dll:PdfPreview.dll"  }
 
   project "TestApp"
     kind "WindowedApp"

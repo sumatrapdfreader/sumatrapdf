@@ -26,27 +26,25 @@ The intent is to standardize how we do it.
 #pragma warning(pop)
 #include <tlhelp32.h>
 
-// kernel32.dll
-#ifndef PROCESS_DEP_ENABLE
-#define PROCESS_DEP_ENABLE 0x1
-#define PROCESS_DEP_DISABLE_ATL_THUNK_EMULATION 0x2
-#endif
+typedef decltype(SetProcessDEPPolicy)* Sig_SetProcessDEPPolicy;
+// typedef BOOL(WINAPI* Sig_SetProcessDEPPolicy)(DWORD dwFlags);
 
-// TODO: bump WINVER version to get definition for SetProcessDEPPolicy etc.
-// typedef decltype(SetProcessDEPPolicy)* Sig_SetProcessDEPPolicy;
 typedef decltype(IsWow64Process)* Sig_IsWow64Process;
-// typedef decltype(SetDllDirectoryW)* Sig_SetDllDirectoryW;
-typedef decltype(RtlCaptureContext)* Sig_RtlCaptureContext;
-// TODO: not available in 32bit SDK (XP)
-// typedef decltype(SetDefaultDllDirectories)* Sig_SetDefaultDllDirectories;
-// typedef decltype(SetProcessMitigationPolicy)* Sig_SetProcessMitigationPolicy;
-
-typedef BOOL(WINAPI* Sig_SetProcessDEPPolicy)(DWORD dwFlags);
 // typedef BOOL(WINAPI* Sig_IsWow64Process)(HANDLE, PBOOL);
-typedef BOOL(WINAPI* Sig_SetDllDirectoryW)(LPCWSTR);
-// typedef void(WINAPI* Sig_RtlCaptureContext)(PCONTEXT);
+
+typedef decltype(SetDllDirectoryW)* Sig_SetDllDirectoryW;
+// typedef BOOL(WINAPI* Sig_SetDllDirectoryW)(LPCWSTR);
+
+// TODO: not available in 32bit XP SDK
+// typedef decltype(SetDefaultDllDirectories)* Sig_SetDefaultDllDirectories;
 typedef BOOL(WINAPI* Sig_SetDefaultDllDirectories)(DWORD);
+
+// TODO: not available in 32bit XP SDK
+// typedef decltype(SetProcessMitigationPolicy)* Sig_SetProcessMitigationPolicy;
 typedef BOOL(WINAPI* Sig_SetProcessMitigationPolicy)(int, PVOID, SIZE_T);
+
+typedef decltype(RtlCaptureContext)* Sig_RtlCaptureContext;
+// typedef void(WINAPI* Sig_RtlCaptureContext)(PCONTEXT);
 
 #define KERNEL32_API_LIST(V)    \
     V(SetProcessDEPPolicy)      \
@@ -71,28 +69,26 @@ typedef HRESULT(WINAPI* Sig_NtSetInformationProcess)(HANDLE ProcessHandle, UINT 
 #define NTDLL_API_LIST(V) V(NtSetInformationProcess)
 
 // uxtheme.dll
-// for win SDKs that don't have this
-#ifndef WM_THEMECHANGED
-#define WM_THEMECHANGED 0x031A
-#endif
-#ifndef WM_DWMCOMPOSITIONCHANGED
-#define WM_DWMCOMPOSITIONCHANGED 0x031E
-#endif
-#ifndef SM_CXPADDEDBORDER
-#define SM_CXPADDEDBORDER 92
-#endif
-#ifndef WM_DWMCOLORIZATIONCOLORCHANGED
-#define WM_DWMCOLORIZATIONCOLORCHANGED 0x0320
-#endif
+typedef decltype(IsAppThemed)* Sig_IsAppThemed;
+// typedef BOOL(WINAPI* Sig_IsAppThemed)();
 
-typedef BOOL(WINAPI* Sig_IsAppThemed)();
-typedef HTHEME(WINAPI* Sig_OpenThemeData)(HWND hwnd, LPCWSTR pszClassList);
-typedef HRESULT(WINAPI* Sig_CloseThemeData)(HTHEME hTheme);
-typedef HRESULT(WINAPI* Sig_DrawThemeBackground)(HTHEME hTheme, HDC hdc, int iPartId, int iStateId, LPCRECT pRect,
-                                                 LPCRECT pClipRect);
-typedef BOOL(WINAPI* Sig_IsThemeActive)(void);
-typedef BOOL(WINAPI* Sig_IsThemeBackgroundPartiallyTransparent)(HTHEME hTheme, int iPartId, int iStateId);
-typedef HRESULT(WINAPI* Sig_GetThemeColor)(HTHEME hTheme, int iPartId, int iStateId, int iPropId, COLORREF* pColor);
+typedef decltype(OpenThemeData)* Sig_OpenThemeData;
+// typedef HTHEME(WINAPI* Sig_OpenThemeData)(HWND hwnd, LPCWSTR pszClassList);
+
+typedef decltype(CloseThemeData)* Sig_CloseThemeData;
+// typedef HRESULT(WINAPI* Sig_CloseThemeData)(HTHEME hTheme);
+
+typedef decltype(DrawThemeBackground)* Sig_DrawThemeBackground;
+// typedef HRESULT(WINAPI* Sig_DrawThemeBackground)(HTHEME, HDC, int, int, LPCRECT, LPCRECT);
+
+typedef decltype(IsThemeActive)* Sig_IsThemeActive;
+// typedef BOOL(WINAPI* Sig_IsThemeActive)(void);
+
+typedef decltype(IsThemeBackgroundPartiallyTransparent)* Sig_IsThemeBackgroundPartiallyTransparent;
+// typedef BOOL(WINAPI* Sig_IsThemeBackgroundPartiallyTransparent)(HTHEME, int, int);
+
+typedef decltype(GetThemeColor)* Sig_GetThemeColor;
+// typedef HRESULT(WINAPI* Sig_GetThemeColor)(HTHEME, int, int, int, COLORREF*);
 
 #define UXTHEME_API_LIST(V)                  \
     V(IsAppThemed)                           \
@@ -120,18 +116,6 @@ typedef int(WINAPI* Sig_NormalizeString)(int, LPCWSTR, int, LPWSTR, int);
 
 #define NORMALIZ_API_LIST(V) V(NormalizeString)
 
-// ktmw32.dll
-typedef HANDLE(WINAPI* Sig_CreateTransaction)(LPSECURITY_ATTRIBUTES lpTransactionAttributes, LPGUID UOW,
-                                              DWORD CreateOptions, DWORD IsolationLevel, DWORD IsolationFlags,
-                                              DWORD Timeout, LPWSTR Description);
-typedef BOOL(WINAPI* Sig_CommitTransaction)(HANDLE TransactionHandle);
-typedef BOOL(WINAPI* Sig_RollbackTransaction)(HANDLE TransactionHandle);
-
-#define KTMW32_API_LIST(V) \
-    V(CreateTransaction)   \
-    V(CommitTransaction)   \
-    V(RollbackTransaction)
-
 // uiautomationcore.dll, not available under Win2000
 typedef LRESULT(WINAPI* Sig_UiaReturnRawElementProvider)(HWND hwnd, WPARAM wParam, LPARAM lParam,
                                                          IRawElementProviderSimple* el);
@@ -151,6 +135,9 @@ typedef HRESULT(WINAPI* Sig_UiaGetReservedNotSupportedValue)(IUnknown** punkNotS
 
 // user32.dll
 
+// TODO: this shold be defined somewhere since msdn docs
+// mention HIDWORD https://docs.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-gestureinfo
+#if 1
 #ifndef _QWORD_DEFINED
 #define _QWORD_DEFINED
 typedef unsigned __int64 QWORD, *LPQWORD;
@@ -161,117 +148,32 @@ typedef unsigned __int64 QWORD, *LPQWORD;
 #define LODWORD(l) ((DWORD)((l)&0xFFFFFFFF))
 #define HIDWORD(l) ((DWORD)(((QWORD)(l) >> 32) & 0xFFFFFFFF))
 #endif
+#endif
 
-// Define the Gesture structures here because they
-// are not available in all versions of Windows
-// These defines can be found in WinUser.h
-#ifndef GF_BEGIN // needs WINVER >= 0x0601
+typedef BOOL(WINAPI* Sig_GetGestureInfo)(HGESTUREINFO, PGESTUREINFO);
+typedef BOOL(WINAPI* Sig_CloseGestureInfoHandle)(HGESTUREINFO);
+typedef BOOL(WINAPI* Sig_SetGestureConfig)(HWND, DWORD, UINT, PGESTURECONFIG, UINT);
 
-DECLARE_HANDLE(HGESTUREINFO);
-
-/*
- * Gesture flags - GESTUREINFO.dwFlags
- */
-#define GF_BEGIN 0x00000001
-#define GF_INERTIA 0x00000002
-#define GF_END 0x00000004
-
-/*
- * Gesture configuration structure
- *   - Used in SetGestureConfig and GetGestureConfig
- *   - Note that any setting not included in either GESTURECONFIG.dwWant or
- *     GESTURECONFIG.dwBlock will use the parent window's preferences or
- *     system defaults.
- */
-typedef struct tagGESTURECONFIG {
-    DWORD dwID;    // gesture ID
-    DWORD dwWant;  // settings related to gesture ID that are to be turned on
-    DWORD dwBlock; // settings related to gesture ID that are to be turned off
-} GESTURECONFIG, *PGESTURECONFIG;
-
-/*
- * Gesture information structure
- *   - Pass the HGESTUREINFO received in the WM_GESTURE message lParam into the
- *     GetGestureInfo function to retrieve this information.
- *   - If cbExtraArgs is non-zero, pass the HGESTUREINFO received in the WM_GESTURE
- *     message lParam into the GetGestureExtraArgs function to retrieve extended
- *     argument information.
- */
-typedef struct tagGESTUREINFO {
-    UINT cbSize;            // size, in bytes, of this structure (including variable length Args field)
-    DWORD dwFlags;          // see GF_* flags
-    DWORD dwID;             // gesture ID, see GID_* defines
-    HWND hwndTarget;        // handle to window targeted by this gesture
-    POINTS ptsLocation;     // current location of this gesture
-    DWORD dwInstanceID;     // internally used
-    DWORD dwSequenceID;     // internally used
-    ULONGLONG ullArguments; // arguments for gestures whose arguments fit in 8 BYTES
-    UINT cbExtraArgs;       // size, in bytes, of extra arguments, if any, that accompany this gesture
-} GESTUREINFO, *PGESTUREINFO;
-typedef GESTUREINFO const* PCGESTUREINFO;
-
-/*
- * Gesture argument helpers
- *   - Angle should be a double in the range of -2pi to +2pi
- *   - Argument should be an unsigned 16-bit value
- */
-#define GID_ROTATE_ANGLE_TO_ARGUMENT(_arg_) ((USHORT)((((_arg_) + 2.0 * M_PI) / (4.0 * M_PI)) * 65535.0))
-#define GID_ROTATE_ANGLE_FROM_ARGUMENT(_arg_) ((((double)(_arg_) / 65535.0) * 4.0 * M_PI) - 2.0 * M_PI)
-
-/*
- * Gesture configuration flags
- */
-#define GC_ALLGESTURES 0x00000001
-#define GC_ZOOM 0x00000001
-#define GC_PAN 0x00000001
-#define GC_PAN_WITH_SINGLE_FINGER_VERTICALLY 0x00000002
-#define GC_PAN_WITH_SINGLE_FINGER_HORIZONTALLY 0x00000004
-#define GC_PAN_WITH_GUTTER 0x00000008
-#define GC_PAN_WITH_INERTIA 0x00000010
-#define GC_ROTATE 0x00000001
-#define GC_TWOFINGERTAP 0x00000001
-#define GC_PRESSANDTAP 0x00000001
-
-/*
- * Gesture IDs
- */
-#define GID_BEGIN 1
-#define GID_END 2
-#define GID_ZOOM 3
-#define GID_PAN 4
-#define GID_ROTATE 5
-#define GID_TWOFINGERTAP 6
-#define GID_PRESSANDTAP 7
-
-// Window events
-#define WM_GESTURE 0x0119
-
-#endif // HGESTUREINFO
-
-typedef BOOL(WINAPI* Sig_GetGestureInfo)(HGESTUREINFO hGestureInfo, PGESTUREINFO pGestureInfo);
-typedef BOOL(WINAPI* Sig_CloseGestureInfoHandle)(HGESTUREINFO hGestureInfo);
-typedef BOOL(WINAPI* Sig_SetGestureConfig)(HWND hwnd, DWORD dwReserved, UINT cIDs, PGESTURECONFIG pGestureConfig,
-                                           UINT cbSize);
+// typedef decltype(GetDpiForWindow)* Sig_GetDpiForWindow;
+typedef UINT(WINAPI* Sig_GetDpiForWindow)(HWND);
 
 #define USER32_API_LIST(V)    \
     V(GetGestureInfo)         \
     V(CloseGestureInfoHandle) \
+    V(GetDpiForWindow)        \
     V(SetGestureConfig)
 
 // dbghelp.dll,  may not be available under Win2000
-typedef BOOL(WINAPI* Sig_MiniDumpWriteDump)(HANDLE hProcess, DWORD ProcessId, HANDLE hFile, LONG DumpType,
-                                            PMINIDUMP_EXCEPTION_INFORMATION ExceptionParam,
-                                            PMINIDUMP_USER_STREAM_INFORMATION UserStreamParam,
-                                            PMINIDUMP_CALLBACK_INFORMATION CallbackParam);
+typedef decltype(MiniDumpWriteDump)* Sig_MiniDumpWriteDump;
 
-typedef BOOL(WINAPI* Sig_SymInitializeW)(HANDLE hProcess, PCWSTR UserSearchPath, BOOL fInvadeProcess);
+// typedef BOOL(WINAPI* Sig_MiniDumpWriteDump)(HANDLE, DWORD, HANDLE, LONG, PMINIDUMP_EXCEPTION_INFORMATION,
+//                                            PMINIDUMP_USER_STREAM_INFORMATION, PMINIDUMP_CALLBACK_INFORMATION);
 
-typedef BOOL(WINAPI* Sig_SymInitialize)(HANDLE hProcess, PCSTR UserSearchPath, BOOL fInvadeProcess);
-
-typedef BOOL(WINAPI* Sig_SymCleanup)(HANDLE hProcess);
-
+typedef BOOL(WINAPI* Sig_SymInitializeW)(HANDLE, PCWSTR, BOOL);
+typedef BOOL(WINAPI* Sig_SymInitialize)(HANDLE, PCSTR, BOOL);
+typedef BOOL(WINAPI* Sig_SymCleanup)(HANDLE);
 typedef DWORD(WINAPI* Sig_SymGetOptions)();
-typedef DWORD(WINAPI* Sig_SymSetOptions)(DWORD SymOptions);
+typedef DWORD(WINAPI* Sig_SymSetOptions)(DWORD);
 
 typedef BOOL(WINAPI* Sig_StackWalk64)(DWORD MachineType, HANDLE hProcess, HANDLE hThread, LPSTACKFRAME64 StackFrame,
                                       PVOID ContextRecord, PREAD_PROCESS_MEMORY_ROUTINE64 ReadMemoryRoutine,
@@ -317,7 +219,6 @@ NTDLL_API_LIST(API_DECLARATION)
 UXTHEME_API_LIST(API_DECLARATION)
 DWMAPI_API_LIST(API_DECLARATION)
 NORMALIZ_API_LIST(API_DECLARATION)
-KTMW32_API_LIST(API_DECLARATION)
 USER32_API_LIST(API_DECLARATION)
 UIA_API_LIST(API_DECLARATION)
 DBGHELP_API_LIST(API_DECLARATION)

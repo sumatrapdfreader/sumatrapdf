@@ -11,7 +11,6 @@ KERNEL32_API_LIST(API_DECLARATION)
 NTDLL_API_LIST(API_DECLARATION)
 UXTHEME_API_LIST(API_DECLARATION)
 NORMALIZ_API_LIST(API_DECLARATION)
-KTMW32_API_LIST(API_DECLARATION)
 USER32_API_LIST(API_DECLARATION)
 DWMAPI_API_LIST(API_DECLARATION)
 UIA_API_LIST(API_DECLARATION)
@@ -61,11 +60,6 @@ void InitDynCalls() {
     h = SafeLoadLibrary(L"normaliz.dll");
     if (h) {
         NORMALIZ_API_LIST(API_LOAD);
-    }
-
-    h = SafeLoadLibrary(L"ktmw32.dll");
-    if (h) {
-        KTMW32_API_LIST(API_LOAD);
     }
 
     h = SafeLoadLibrary(L"uiautomationcore.dll");

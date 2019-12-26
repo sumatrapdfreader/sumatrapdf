@@ -270,7 +270,6 @@ EpubDoc::~EpubDoc() {
 
 // TODO: switch to seqstring
 static bool isHtmlMediaType(const WCHAR* mediatype) {
-
     if (str::Eq(mediatype, L"application/xhtml+xml")) {
         return true;
     }

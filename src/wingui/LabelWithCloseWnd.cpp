@@ -2,18 +2,20 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "utils/BaseUtil.h"
-#include "LabelWithCloseWnd.h"
 #include "utils/Dpi.h"
 #include "utils/GdiPlusUtil.h"
 #include "utils/WinUtil.h"
+
+#include "wingui/WinGui.h"
+#include "wingui/Layout.h"
+#include "wingui/Window.h"
+#include "wingui/LabelWithCloseWnd.h"
 
 #define CLOSE_BTN_DX 16
 #define CLOSE_BTN_DY 16
 #define LABEL_BUTTON_SPACE_DX 8
 
 #define WND_CLASS_NAME L"LabelWithCloseWndClass"
-
-using namespace Gdiplus;
 
 static bool IsMouseOverClose(LabelWithCloseWnd* w) {
     PointI p;
@@ -24,38 +26,38 @@ static bool IsMouseOverClose(LabelWithCloseWnd* w) {
 // Draws the 'x' close button in regular state or onhover state
 // Tries to mimic visual style of Chrome tab close button
 static void DrawCloseButton(HDC hdc, LabelWithCloseWnd* w) {
-    Graphics g(hdc);
-    g.SetCompositingQuality(CompositingQualityHighQuality);
-    g.SetSmoothingMode(SmoothingModeAntiAlias);
-    g.SetPageUnit(UnitPixel);
+    Gdiplus::Graphics g(hdc);
+    g.SetCompositingQuality(Gdiplus::CompositingQualityHighQuality);
+    g.SetSmoothingMode(Gdiplus::SmoothingModeAntiAlias);
+    g.SetPageUnit(Gdiplus::UnitPixel);
     // GDI+ doesn't pick up the window's orientation through the device context,
     // so we have to explicitly mirror all rendering horizontally
     if (IsRtl(w->hwnd)) {
         g.ScaleTransform(-1, 1);
-        g.TranslateTransform((REAL)ClientRect(w->hwnd).dx, 0, MatrixOrderAppend);
+        g.TranslateTransform((Gdiplus::REAL)ClientRect(w->hwnd).dx, 0, Gdiplus::MatrixOrderAppend);
     }
 
-    Color c;
+    Gdiplus::Color c;
     RectI& r = w->closeBtnPos;
 
     // in onhover state, background is a red-ish circle
     bool onHover = IsMouseOverClose(w);
     if (onHover) {
         c.SetFromCOLORREF(COL_CLOSE_HOVER_BG);
-        SolidBrush b(c);
+        Gdiplus::SolidBrush b(c);
         g.FillEllipse(&b, r.x, r.y, r.dx - 2, r.dy - 2);
     }
 
     // draw 'x'
     c.SetFromCOLORREF(onHover ? COL_CLOSE_X_HOVER : COL_CLOSE_X);
     g.TranslateTransform((float)r.x, (float)r.y);
-    Pen p(c, 2);
+    Gdiplus::Pen p(c, 2);
     if (onHover) {
-        g.DrawLine(&p, Point(4, 4), Point(r.dx - 6, r.dy - 6));
-        g.DrawLine(&p, Point(r.dx - 6, 4), Point(4, r.dy - 6));
+        g.DrawLine(&p, Gdiplus::Point(4, 4), Gdiplus::Point(r.dx - 6, r.dy - 6));
+        g.DrawLine(&p, Gdiplus::Point(r.dx - 6, 4), Gdiplus::Point(4, r.dy - 6));
     } else {
-        g.DrawLine(&p, Point(4, 5), Point(r.dx - 6, r.dy - 5));
-        g.DrawLine(&p, Point(r.dx - 6, 5), Point(4, r.dy - 5));
+        g.DrawLine(&p, Gdiplus::Point(4, 5), Gdiplus::Point(r.dx - 6, r.dy - 5));
+        g.DrawLine(&p, Gdiplus::Point(r.dx - 6, 5), Gdiplus::Point(4, r.dy - 5));
     }
 }
 
@@ -261,4 +263,39 @@ void LabelWithCloseWnd::SetPaddingXY(int x, int y) {
     this->padX = x;
     this->padY = y;
     ScheduleRepaint(this->hwnd);
+}
+
+Kind kindLabelWithClose = "labelWithClose";
+
+LabelWithCloseCtrl::LabelWithCloseCtrl(HWND p) {
+    kind = kindLabelWithClose;
+    parent = p;
+    dwStyle = WS_VISIBLE | WS_CHILD;
+    dwExStyle = 0;
+    backgroundColor = GetSysColor(COLOR_BTNFACE);
+    textColor = GetSysColor(COLOR_BTNTEXT);
+}
+
+LabelWithCloseCtrl::~LabelWithCloseCtrl() {
+}
+
+void LabelWithCloseCtrl::SetPaddingXY(int x, int y) {
+    padX = x;
+    padY = y;
+    ScheduleRepaint(hwnd);
+}
+
+SIZE LabelWithCloseCtrl::GetIdealSize() {
+    AutoFreeWstr s = strconv::Utf8ToWchar(text.as_view());
+    SizeI size = TextSizeInHwnd(hwnd, s);
+    int btnDx = DpiScaleX(hwnd, CLOSE_BTN_DX);
+    int btnDy = DpiScaleY(hwnd, CLOSE_BTN_DY);
+    size.dx += btnDx;
+    size.dx += DpiScaleX(hwnd, LABEL_BUTTON_SPACE_DX);
+    size.dx += 2 * DpiScaleX(hwnd, padX);
+    if (size.dy < btnDy) {
+        size.dy = btnDy;
+    }
+    size.dy += 2 * DpiScaleY(hwnd, padY);
+    return {size.dx, size.dy};
 }
