@@ -194,8 +194,14 @@ struct DocTocItemWithIndent {
     size_t indent = 0;
 
     DocTocItemWithIndent() = default;
+    DocTocItemWithIndent(DocTocItem* item, size_t indent);
     ~DocTocItemWithIndent() = default;
 };
+
+DocTocItemWithIndent::DocTocItemWithIndent(DocTocItem* item, size_t indent) {
+    this->item = item;
+    this->indent = indent;
+}
 
 // TODO: read more than one
 static bool parseBookmarks(std::string_view sv, Vec<Bookmarks*>* bkms) {

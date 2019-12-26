@@ -89,7 +89,7 @@ workspace "SumatraPDF"
   project "test_unix"
     kind "ConsoleApp"
     language "C++"
-    cppdialect "C++17"
+    cppdialect "C++latest"
 
     includedirs { "src", "src/utils", "ext/unarr" }
 

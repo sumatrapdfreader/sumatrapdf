@@ -26,7 +26,9 @@
 #define PROPERTIES_TXT_DY_PADDING 2
 #define PROPERTIES_WIN_TITLE _TR("Document Properties")
 
-enum { KB = 1024, MB = 1024 * KB, GB = 1024 * MB };
+constexpr double KB = 1024;
+constexpr double MB = 1024 * 1024;
+constexpr double GB = 1024 * 1024 * 1024;
 
 class PropertyEl {
   public:
@@ -175,20 +177,21 @@ static WCHAR* FormatSizeSuccint(size_t size) {
     const WCHAR* unit = nullptr;
     double s = (double)size;
 
-    if (size > GB) {
-        s /= GB;
+    if (s > GB) {
+        s = s / GB;
         unit = _TR("GB");
-    } else if (size > MB) {
-        s /= MB;
+    } else if (s > MB) {
+        s = s / MB;
         unit = _TR("MB");
     } else {
-        s /= KB;
+        s = s / KB;
         unit = _TR("KB");
     }
 
-    AutoFreeWstr sizestr(str::FormatFloatWithThousandSep(s));
-    if (!unit)
+    AutoFreeWstr sizestr = str::FormatFloatWithThousandSep(s);
+    if (!unit) {
         return sizestr.StealData();
+    }
     return str::Format(L"%s %s", sizestr.Get(), unit);
 }
 

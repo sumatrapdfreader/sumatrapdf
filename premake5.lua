@@ -317,7 +317,7 @@ workspace "SumatraPDF"
   project "engines"
     kind "StaticLib"
     language "C++"
-    cppdialect "C++17"
+    cppdialect "C++latest"
     disablewarnings { 
       "4018", "4057", "4100", "4189", "4244", "4267", "4295", "4457", 
       "4819", "4701", "4706", "4838" 
@@ -429,7 +429,7 @@ workspace "SumatraPDF"
   project "utils"
     kind "StaticLib"
     language "C++"
-    cppdialect "C++17"
+    cppdialect "C++latest"
 
     filter "configurations:ReleaseAnalyze"
       -- TODO: somehow /analyze- is default which creates warning about
@@ -450,7 +450,7 @@ workspace "SumatraPDF"
   project "efi"
     kind "ConsoleApp"
     language "C++"
-    cppdialect "C++17"
+    cppdialect "C++latest"
     disablewarnings { "4091", "4577" }
     includedirs { "src" }
     efi_files()
@@ -490,7 +490,7 @@ workspace "SumatraPDF"
   project "signfile"
     kind "ConsoleApp"
     language "C++"
-    cppdialect "C++17"
+    cppdialect "C++latest"
     includedirs { "src", "mupdf/include"}
     files { "src/tools/signfile.cpp" }
     links { "utils", "mupdf" }
@@ -500,7 +500,7 @@ workspace "SumatraPDF"
   project "enginedump"
     kind "ConsoleApp"
     language "C++"
-    cppdialect "C++17"
+    cppdialect "C++latest"
     includedirs { "src", "src/wingui", "mupdf/include" }
     disablewarnings { "4100", "4267", "4457" }
     engine_dump_files()
@@ -513,7 +513,7 @@ workspace "SumatraPDF"
   project "test_util"
     kind "ConsoleApp"
     language "C++"
-    cppdialect "C++17"
+    cppdialect "C++latest"
     disablewarnings { "4838" }
     defines { "NO_LIBMUPDF" }
     includedirs { "src" }
@@ -524,7 +524,7 @@ workspace "SumatraPDF"
   project "plugin-test"
     kind "WindowedApp"
     language "C++"
-    cppdialect "C++17"
+    cppdialect "C++latest"
     entrypoint "WinMainCRTStartup"
     includedirs { "src" }
     files { "src/tools/plugin-test.cpp" }
@@ -535,7 +535,7 @@ workspace "SumatraPDF"
   project "MakeLZSA"
     kind "ConsoleApp"
     language "C++"
-    cppdialect "C++17"
+    cppdialect "C++latest"
     makelzsa_files()
     includedirs { "src", "ext/zlib", "ext/lzma/C", "ext/unarr" }
     links { "unarrlib", "zlib" }
@@ -545,7 +545,7 @@ workspace "SumatraPDF"
   project "PdfFilter"
     kind "SharedLib"
     language "C++"
-    cppdialect "C++17"
+    cppdialect "C++latest"
     disablewarnings { "4100", "4838" }
     filter {"configurations:Debug"}
       defines { "BUILD_TEX_IFILTER", "BUILD_EPUB_IFILTER" }
@@ -559,7 +559,7 @@ workspace "SumatraPDF"
   project "PdfPreview"
     kind "SharedLib"
     language "C++"
-    cppdialect "C++17"
+    cppdialect "C++latest"
     disablewarnings { "4100", "4838" }
     includedirs {
       "src", "src/wingui", "mupdf/include",
@@ -584,7 +584,7 @@ workspace "SumatraPDF"
   project "SumatraPDF"
     kind "WindowedApp"
     language "C++"
-    cppdialect "C++17"
+    cppdialect "C++latest"
     entrypoint "WinMainCRTStartup"
     flags { "NoManifest" }
     includedirs { "src", "src/wingui" }
@@ -630,7 +630,7 @@ workspace "SumatraPDF"
   project "SumatraPDF-dll"
     kind "WindowedApp"
     language "C++"
-    cppdialect "C++17"
+    cppdialect "C++latest"
     entrypoint "WinMainCRTStartup"
     flags { "NoManifest" }
     includedirs { "src", "src/wingui", "mupdf/include" }
@@ -679,7 +679,7 @@ workspace "SumatraPDF"
   project "TestApp"
     kind "WindowedApp"
     language "C++"
-    cppdialect "C++17"
+    cppdialect "C++latest"
     entrypoint "WinMainCRTStartup"
     flags { "NoManifest" }
     includedirs { "src" }
