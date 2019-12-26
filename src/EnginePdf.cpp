@@ -1164,8 +1164,9 @@ PointD PdfEngineImpl::Transform(PointD pt, int pageNo, float zoom, int rotation,
 
 RectD PdfEngineImpl::Transform(RectD rect, int pageNo, float zoom, int rotation, bool inverse) {
     fz_matrix ctm = viewctm(pageNo, zoom, rotation);
-    if (inverse)
+    if (inverse) {
         ctm = fz_invert_matrix(ctm);
+    }
     fz_rect rect2 = fz_RectD_to_rect(rect);
     rect2 = fz_transform_rect(rect2, ctm);
     return fz_rect_to_RectD(rect2);
@@ -1233,6 +1234,7 @@ RenderedBitmap* PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
         fz_drop_pixmap(ctx, pix);
     }
     fz_catch(ctx) {
+        delete bitmap;
         return nullptr;
     }
     return bitmap;

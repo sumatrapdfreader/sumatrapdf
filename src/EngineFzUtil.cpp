@@ -418,8 +418,9 @@ RenderedBitmap* new_rendered_fz_pixmap(fz_context* ctx, fz_pixmap* pixmap) {
 }
 
 static inline int wchars_per_rune(int rune) {
-    if (rune & 0x1F0000)
+    if (rune & 0x1F0000) {
         return 2;
+    }
     return 1;
 }
 

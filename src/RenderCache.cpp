@@ -27,11 +27,9 @@
 // define to view the tile boundaries
 #undef SHOW_TILE_LAYOUT
 
-RenderCache::RenderCache()
-    : cacheCount(0),
-      requestCount(0),
-      maxTileSize(GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN)),
-      isRemoteSession(GetSystemMetrics(SM_REMOTESESSION)) {
+RenderCache::RenderCache() {
+    maxTileSize = {GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN)};
+    isRemoteSession = GetSystemMetrics(SM_REMOTESESSION);
     textColor = WIN_COL_BLACK;
     backgroundColor = WIN_COL_WHITE;
 
@@ -40,7 +38,7 @@ RenderCache::RenderCache()
 
     startRendering = CreateEvent(nullptr, FALSE, FALSE, nullptr);
     renderThread = CreateThread(nullptr, 0, RenderCacheThread, this, 0, 0);
-    AssertCrash(nullptr != renderThread);
+    CrashIf(nullptr == renderThread);
 }
 
 RenderCache::~RenderCache() {
@@ -49,7 +47,7 @@ RenderCache::~RenderCache() {
 
     CloseHandle(renderThread);
     CloseHandle(startRendering);
-    AssertCrash(!curReq && 0 == requestCount && 0 == cacheCount);
+    CrashIf(curReq || 0 != requestCount || 0 != cacheCount);
 
     LeaveCriticalSection(&cacheAccess);
     DeleteCriticalSection(&cacheAccess);
@@ -64,11 +62,12 @@ BitmapCacheEntry* RenderCache::Find(DisplayModel* dm, int pageNo, int rotation, 
     ScopedCritSec scope(&cacheAccess);
     rotation = NormalizeRotation(rotation);
     for (int i = 0; i < cacheCount; i++) {
-        BitmapCacheEntry* entry = cache[i];
-        if ((dm == entry->dm) && (pageNo == entry->pageNo) && (rotation == entry->rotation) &&
-            (INVALID_ZOOM == zoom || zoom == entry->zoom) && (!tile || entry->tile == *tile)) {
-            entry->refs++;
-            return entry;
+        BitmapCacheEntry* e = cache[i];
+        if ((dm == e->dm) && (pageNo == e->pageNo) && (rotation == e->rotation) &&
+            (INVALID_ZOOM == zoom || zoom == e->zoom) && (!tile || e->tile == *tile)) {
+            e->refs++;
+            CrashIf(i != e->cacheIdx);
+            return e;
         }
     }
     return nullptr;
@@ -76,59 +75,89 @@ BitmapCacheEntry* RenderCache::Find(DisplayModel* dm, int pageNo, int rotation, 
 
 bool RenderCache::Exists(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition* tile) {
     BitmapCacheEntry* entry = Find(dm, pageNo, rotation, zoom, tile);
-    if (entry)
+    if (entry) {
         DropCacheEntry(entry);
+    }
     return entry != nullptr;
 }
 
 bool RenderCache::DropCacheEntry(BitmapCacheEntry* entry) {
     ScopedCritSec scope(&cacheAccess);
-    AssertCrash(entry);
+    CrashIf(!entry);
     if (!entry) {
+        return false;
+    }
+    CrashIf(entry->cacheIdx < 0);
+    CrashIf(entry->cacheIdx >= cacheCount);
+    CrashIf(entry->refs <= 0);
+    --entry->refs;
+    if (entry->refs > 0) {
+        return false;
+    }
+    CrashIf(entry->refs != 0);
+    int idx = entry->cacheIdx;
+    CrashIf(cache[idx] != entry);
+
+    delete entry;
+    cache[idx] = nullptr;
+    int lastIdx = cacheCount - 1;
+    if (idx != lastIdx) {
+        cache[idx] = cache[lastIdx];
+        cache[lastIdx] = nullptr;
+        cache[idx]->cacheIdx = idx;
+    }
+    cacheCount--;
+    CrashIf(cacheCount < 0);
+    return true;
+}
+
+static bool FreeIfFull(RenderCache* rc, PageRenderRequest& req) {
+    int n = rc->cacheCount;
+    if (n < MAX_BITMAPS_CACHED) {
         return true;
     }
-    if (0 == --entry->refs) {
-        delete entry;
-        return true;
+
+    // free an invisible page of the same DisplayModel ...
+    for (int i = 0; i < n; i++) {
+        auto entry = rc->cache[i];
+        if (entry->dm == req.dm && !req.dm->PageVisibleNearby(entry->pageNo)) {
+            bool didDrop = rc->DropCacheEntry(entry);
+            if (didDrop) {
+                return true;
+            }
+        }
+    }
+
+    // ... or just the oldest cached page
+    for (int i = 0; i < n; i++) {
+        auto entry = rc->cache[i];
+        bool didDrop = rc->DropCacheEntry(entry);
+        if (didDrop) {
+            return true;
+        }
     }
     return false;
 }
 
-void RenderCache::Add(PageRenderRequest& req, RenderedBitmap* bitmap) {
+void RenderCache::Add(PageRenderRequest& req, RenderedBitmap* bmp) {
     ScopedCritSec scope(&cacheAccess);
-    AssertCrash(req.dm);
+    CrashIf(!req.dm);
 
     req.rotation = NormalizeRotation(req.rotation);
-    AssertCrash(cacheCount <= MAX_BITMAPS_CACHED);
+    CrashIf(cacheCount > MAX_BITMAPS_CACHED);
 
     /* It's possible there still is a cached bitmap with different zoom/rotation */
     FreePage(req.dm, req.pageNo, &req.tile);
 
-    if (cacheCount >= MAX_BITMAPS_CACHED) {
-        // free an invisible page of the same DisplayModel ...
-        for (int i = 0; i < cacheCount; i++) {
-            if (cache[i]->dm == req.dm && !req.dm->PageVisibleNearby(cache[i]->pageNo)) {
-                DropCacheEntry(cache[i]);
-                cacheCount--;
-                memmove(&cache[i], &cache[i + 1], (cacheCount - i) * sizeof(cache[0]));
-                break;
-            }
-        }
-        // ... or just the oldest cached page
-        if (cacheCount >= MAX_BITMAPS_CACHED) {
-            DropCacheEntry(cache[0]);
-            cacheCount--;
-            memmove(&cache[0], &cache[1], cacheCount * sizeof(cache[0]));
-        }
-    }
+    bool hasSpace = FreeIfFull(this, req);
+    CrashIf(!hasSpace);
+    CrashIf(cacheCount > MAX_BITMAPS_CACHED);
 
     // Copy the PageRenderRequest as it will be reused
-    cache[cacheCount] = new BitmapCacheEntry(req.dm, req.pageNo, req.rotation, req.zoom, req.tile, bitmap);
-    CrashIf(!cache[cacheCount]);
-    if (!cache[cacheCount])
-        delete bitmap;
-    else
-        cacheCount++;
+    auto entry = new BitmapCacheEntry(req.dm, req.pageNo, req.rotation, req.zoom, req.tile, bmp);
+    entry->cacheIdx = cacheCount;
+    cache[cacheCount] = entry;
+    cacheCount++;
 }
 
 static RectD GetTileRect(RectD pagerect, TilePosition tile) {
@@ -144,8 +173,9 @@ static RectD GetTileRect(RectD pagerect, TilePosition tile) {
 // get the coordinates of a specific tile
 static RectI GetTileRectDevice(EngineBase* engine, int pageNo, int rotation, float zoom, TilePosition tile) {
     RectD mediabox = engine->PageMediabox(pageNo);
-    if (tile.res > 0 && tile.res != INVALID_TILE_RES)
+    if (tile.res > 0 && tile.res != INVALID_TILE_RES) {
         mediabox = GetTileRect(mediabox, tile);
+    }
     RectD pixelbox = engine->Transform(mediabox, pageNo, zoom, rotation);
     return pixelbox.Round();
 }
@@ -188,10 +218,9 @@ static bool IsTileVisible(DisplayModel* dm, int pageNo, TilePosition tile, float
    of the given DisplayModel, or even all invisible pages). */
 void RenderCache::FreePage(DisplayModel* dm, int pageNo, TilePosition* tile) {
     ScopedCritSec scope(&cacheAccess);
-    int cacheCountTmp = cacheCount;
-    int curPos = 0;
 
-    for (int i = 0; i < cacheCountTmp; i++) {
+    // must go from end becaues freeing changes the cache
+    for (int i = cacheCount - 1; i >= 0; i--) {
         BitmapCacheEntry* entry = cache[i];
         bool shouldFree;
         if (dm && pageNo != INVALID_PAGE_NO) {
@@ -207,24 +236,17 @@ void RenderCache::FreePage(DisplayModel* dm, int pageNo, TilePosition* tile) {
             }
         } else if (dm) {
             // all pages of this DisplayModel
-            shouldFree = (cache[i]->dm == dm);
+            shouldFree = (entry->dm == dm);
         } else {
             // all invisible pages resp. page tiles
             shouldFree = !entry->dm->PageVisibleNearby(entry->pageNo);
-            if (!shouldFree && entry->tile.res > 1)
+            if (!shouldFree && entry->tile.res > 1) {
                 shouldFree = !IsTileVisible(entry->dm, entry->pageNo, entry->tile, 2.0);
+            }
         }
-
         if (shouldFree) {
             DropCacheEntry(entry);
-            cache[i] = nullptr;
-            cacheCount--;
         }
-
-        if (curPos != i)
-            cache[curPos] = cache[i];
-        if (!shouldFree)
-            curPos++;
     }
 }
 
@@ -233,13 +255,16 @@ void RenderCache::FreePage(DisplayModel* dm, int pageNo, TilePosition* tile) {
 void RenderCache::KeepForDisplayModel(DisplayModel* oldDm, DisplayModel* newDm) {
     ScopedCritSec scope(&cacheAccess);
     for (int i = 0; i < cacheCount; i++) {
-        if (cache[i]->dm == oldDm) {
-            if (oldDm->PageVisible(cache[i]->pageNo))
-                cache[i]->dm = newDm;
-            // make sure that the page is rerendered eventually
-            cache[i]->zoom = INVALID_ZOOM;
-            cache[i]->outOfDate = true;
+        BitmapCacheEntry* entry = cache[i];
+        if (entry->dm != oldDm) {
+            continue;
         }
+        if (oldDm->PageVisible(entry->pageNo)) {
+            entry->dm = newDm;
+        }
+        // make sure that the page is rerendered eventually
+        entry->zoom = INVALID_ZOOM;
+        entry->outOfDate = true;
     }
 }
 
@@ -248,17 +273,18 @@ void RenderCache::Invalidate(DisplayModel* dm, int pageNo, RectD rect) {
     ScopedCritSec scopeReq(&requestAccess);
 
     ClearQueueForDisplayModel(dm, pageNo);
-    if (curReq && curReq->dm == dm && curReq->pageNo == pageNo)
+    if (curReq && curReq->dm == dm && curReq->pageNo == pageNo) {
         AbortCurrentRequest();
+    }
 
     ScopedCritSec scopeCache(&cacheAccess);
 
     RectD mediabox = dm->GetEngine()->PageMediabox(pageNo);
     for (int i = 0; i < cacheCount; i++) {
-        if (cache[i]->dm == dm && cache[i]->pageNo == pageNo &&
-            !GetTileRect(mediabox, cache[i]->tile).Intersect(rect).IsEmpty()) {
-            cache[i]->zoom = INVALID_ZOOM;
-            cache[i]->outOfDate = true;
+        auto e = cache[i];
+        if (e->dm == dm && e->pageNo == pageNo && !GetTileRect(mediabox, e->tile).Intersect(rect).IsEmpty()) {
+            e->zoom = INVALID_ZOOM;
+            e->outOfDate = true;
         }
     }
 }
@@ -287,8 +313,9 @@ USHORT RenderCache::GetTileRes(DisplayModel* dm, int pageNo) {
     }
 
     USHORT res = 0;
-    if (factorAvg > 1.5)
+    if (factorAvg > 1.5) {
         res = (USHORT)ceilf(log(factorAvg) / log(2.0f));
+    }
     // limit res to 30, so that (1 << res) doesn't overflow for 32-bit signed int
     return std::min(res, (USHORT)30);
 }
@@ -298,8 +325,9 @@ USHORT RenderCache::GetMaxTileRes(DisplayModel* dm, int pageNo, int rotation) {
     ScopedCritSec scope(&cacheAccess);
     USHORT maxRes = 0;
     for (int i = 0; i < cacheCount; i++) {
-        if (cache[i]->dm == dm && cache[i]->pageNo == pageNo && cache[i]->rotation == rotation) {
-            maxRes = std::max(cache[i]->tile.res, maxRes);
+        auto e = cache[i];
+        if (e->dm == dm && e->pageNo == pageNo && e->rotation == rotation) {
+            maxRes = std::max(e->tile.res, maxRes);
         }
     }
     return maxRes;
@@ -308,22 +336,26 @@ USHORT RenderCache::GetMaxTileRes(DisplayModel* dm, int pageNo, int rotation) {
 // reduce the size of tiles in order to hopefully use less memory overall
 bool RenderCache::ReduceTileSize() {
     fprintf(stderr, "RenderCache: reducing tile size (current: %d x %d)\n", maxTileSize.dx, maxTileSize.dy);
-    if (maxTileSize.dx < 200 || maxTileSize.dy < 200)
+    if (maxTileSize.dx < 200 || maxTileSize.dy < 200) {
         return false;
+    }
 
     ScopedCritSec scope1(&requestAccess);
     ScopedCritSec scope2(&cacheAccess);
 
-    if (maxTileSize.dx > maxTileSize.dy)
+    if (maxTileSize.dx > maxTileSize.dy) {
         maxTileSize.dx /= 2;
-    else
+    } else {
         maxTileSize.dy /= 2;
+    }
 
     // invalidate all rendered bitmaps and all requests
-    while (cacheCount > 0)
+    while (cacheCount > 0) {
         FreeForDisplayModel(cache[0]->dm);
-    while (requestCount > 0)
+    }
+    while (requestCount > 0) {
         ClearQueueForDisplayModel(requests[0].dm);
+    }
     AbortCurrentRequest();
 
     return true;
@@ -333,8 +365,9 @@ void RenderCache::RequestRendering(DisplayModel* dm, int pageNo) {
     TilePosition tile(GetTileRes(dm, pageNo), 0, 0);
     // only honor the request if there's a good chance that the
     // rendered tile will actually be used
-    if (tile.res > 1)
+    if (tile.res > 1) {
         return;
+    }
 
     RequestRendering(dm, pageNo, tile);
     // render both tiles of the first row when splitting a page in four
@@ -349,8 +382,9 @@ void RenderCache::RequestRendering(DisplayModel* dm, int pageNo) {
 void RenderCache::RequestRendering(DisplayModel* dm, int pageNo, TilePosition tile, bool clearQueueForPage) {
     ScopedCritSec scope(&requestAccess);
     AssertCrash(dm);
-    if (!dm || dm->dontRenderFlag)
+    if (!dm || dm->dontRenderFlag) {
         return;
+    }
 
     int rotation = NormalizeRotation(dm->GetRotation());
     float zoom = dm->GetZoomReal(pageNo);
@@ -366,8 +400,9 @@ void RenderCache::RequestRendering(DisplayModel* dm, int pageNo, TilePosition ti
     }
 
     // clear requests for tiles of different resolution and invisible tiles
-    if (clearQueueForPage)
+    if (clearQueueForPage) {
         ClearQueueForDisplayModel(dm, pageNo, &tile);
+    }
 
     for (int i = 0; i < requestCount; i++) {
         PageRenderRequest* req = &(requests[i]);
@@ -402,19 +437,22 @@ void RenderCache::RequestRendering(DisplayModel* dm, int pageNo, TilePosition ti
 void RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom, RectD pageRect,
                          RenderingCallback& callback) {
     bool ok = Render(dm, pageNo, rotation, zoom, nullptr, &pageRect, &callback);
-    if (!ok)
+    if (!ok) {
         callback.Callback();
+    }
 }
 
 bool RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition* tile, RectD* pageRect,
                          RenderingCallback* renderCb) {
-    AssertCrash(dm);
-    if (!dm || dm->dontRenderFlag)
+    CrashIf(!dm);
+    if (!dm || dm->dontRenderFlag) {
         return false;
+    }
 
     AssertCrash(tile || pageRect && renderCb);
-    if (!tile && !(pageRect && renderCb))
+    if (!tile && !(pageRect && renderCb)) {
         return false;
+    }
 
     ScopedCritSec scope(&requestAccess);
     PageRenderRequest* newRequest;
@@ -422,15 +460,16 @@ bool RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom,
     /* add request to the queue */
     if (requestCount == MAX_PAGE_REQUESTS) {
         /* queue is full -> remove the oldest items on the queue */
-        if (requests[0].renderCb)
+        if (requests[0].renderCb) {
             requests[0].renderCb->Callback();
+        }
         memmove(&(requests[0]), &(requests[1]), sizeof(PageRenderRequest) * (MAX_PAGE_REQUESTS - 1));
         newRequest = &(requests[MAX_PAGE_REQUESTS - 1]);
     } else {
         newRequest = &(requests[requestCount]);
         requestCount++;
     }
-    AssertCrash(requestCount <= MAX_PAGE_REQUESTS);
+    CrashIf(requestCount > MAX_PAGE_REQUESTS);
 
     newRequest->dm = dm;
     newRequest->pageNo = pageNo;
@@ -442,9 +481,10 @@ bool RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom,
     } else if (pageRect) {
         newRequest->pageRect = *pageRect;
         // can't cache bitmaps that aren't for a given tile
-        AssertCrash(renderCb);
-    } else
-        AssertCrash(0);
+        CrashIf(!renderCb);
+    } else {
+        CrashMe();
+    }
     newRequest->abort = false;
     newRequest->abortCookie = nullptr;
     newRequest->timestamp = GetTickCount();
@@ -458,12 +498,15 @@ bool RenderCache::Render(DisplayModel* dm, int pageNo, int rotation, float zoom,
 UINT RenderCache::GetRenderDelay(DisplayModel* dm, int pageNo, TilePosition tile) {
     ScopedCritSec scope(&requestAccess);
 
-    if (curReq && curReq->pageNo == pageNo && curReq->dm == dm && curReq->tile == tile)
+    if (curReq && curReq->pageNo == pageNo && curReq->dm == dm && curReq->tile == tile) {
         return GetTickCount() - curReq->timestamp;
+    }
 
-    for (int i = 0; i < requestCount; i++)
-        if (requests[i].pageNo == pageNo && requests[i].dm == dm && requests[i].tile == tile)
+    for (int i = 0; i < requestCount; i++) {
+        if (requests[i].pageNo == pageNo && requests[i].dm == dm && requests[i].tile == tile) {
             return GetTickCount() - requests[i].timestamp;
+        }
+    }
 
     return RENDER_DELAY_UNDEFINED;
 }
@@ -471,10 +514,11 @@ UINT RenderCache::GetRenderDelay(DisplayModel* dm, int pageNo, TilePosition tile
 bool RenderCache::GetNextRequest(PageRenderRequest* req) {
     ScopedCritSec scope(&requestAccess);
 
-    if (requestCount == 0)
+    if (requestCount == 0) {
         return false;
+    }
 
-    AssertCrash(requestCount > 0);
+    CrashIf(requestCount < 0);
     AssertCrash(requestCount <= MAX_PAGE_REQUESTS);
     requestCount--;
     *req = requests[requestCount];
@@ -487,8 +531,9 @@ bool RenderCache::GetNextRequest(PageRenderRequest* req) {
 
 bool RenderCache::ClearCurrentRequest() {
     ScopedCritSec scope(&requestAccess);
-    if (curReq)
+    if (curReq) {
         delete curReq->abortCookie;
+    }
     curReq = nullptr;
 
     bool isQueueEmpty = requestCount == 0;
@@ -555,33 +600,42 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data) {
         if (cache->ClearCurrentRequest()) {
             DWORD waitResult = WaitForSingleObject(cache->startRendering, INFINITE);
             // Is it not a page render request?
-            if (WAIT_OBJECT_0 != waitResult)
+            if (WAIT_OBJECT_0 != waitResult) {
                 continue;
+            }
         }
 
-        if (!cache->GetNextRequest(&req))
+        if (!cache->GetNextRequest(&req)) {
             continue;
-        if (!req.dm->PageVisibleNearby(req.pageNo) && !req.renderCb)
+        }
+
+        if (!req.dm->PageVisibleNearby(req.pageNo) && !req.renderCb) {
             continue;
+        }
+
         if (req.dm->dontRenderFlag) {
-            if (req.renderCb)
+            if (req.renderCb) {
                 req.renderCb->Callback();
+            }
             continue;
         }
 
         // make sure that we have extracted page text for
         // all rendered pages to allow text selection and
         // searching without any further delays
-        if (!req.dm->textCache->HasData(req.pageNo))
+        if (!req.dm->textCache->HasData(req.pageNo)) {
             req.dm->textCache->GetData(req.pageNo);
+        }
 
         CrashIf(req.abortCookie != nullptr);
-        bmp = req.dm->GetEngine()->RenderBitmap(req.pageNo, req.zoom, req.rotation, &req.pageRect, RenderTarget::View,
-                                                &req.abortCookie);
+        EngineBase* engine = req.dm->GetEngine();
+        bmp = engine->RenderBitmap(req.pageNo, req.zoom, req.rotation, &req.pageRect, RenderTarget::View,
+                                   &req.abortCookie);
         if (req.abort) {
             delete bmp;
-            if (req.renderCb)
-                req.renderCb->Callback();
+            if (req.renderCb) {
+                req.renderCb->Callback(nullptr);
+            }
             continue;
         }
 
@@ -591,8 +645,9 @@ DWORD WINAPI RenderCache::RenderCacheThread(LPVOID data) {
             req.renderCb = (RenderingCallback*)1; // will crash if accessed again, which should not happen
         } else {
             // don't replace colors for individual images
-            if (bmp && !req.dm->GetEngine()->IsImageCollection())
+            if (bmp && !engine->IsImageCollection()) {
                 UpdateBitmapColors(bmp->GetBitmap(), cache->textColor, cache->backgroundColor);
+            }
             cache->Add(req, bmp);
             req.dm->RepaintDisplay();
         }
@@ -609,13 +664,15 @@ UINT RenderCache::PaintTile(HDC hdc, RectI bounds, DisplayModel* dm, int pageNo,
 
     if (!entry) {
         if (!isRemoteSession) {
-            if (renderedReplacement)
+            if (renderedReplacement) {
                 *renderedReplacement = true;
+            }
             entry = Find(dm, pageNo, dm->GetRotation(), INVALID_ZOOM, &tile);
         }
         renderDelay = GetRenderDelay(dm, pageNo, tile);
-        if (renderMissing && RENDER_DELAY_UNDEFINED == renderDelay && !IsRenderQueueFull())
+        if (renderMissing && RENDER_DELAY_UNDEFINED == renderDelay && !IsRenderQueueFull()) {
             RequestRendering(dm, pageNo, tile);
+        }
     }
     RenderedBitmap* renderedBmp = entry ? entry->bitmap : nullptr;
     HBITMAP hbmp = renderedBmp ? renderedBmp->GetBitmap() : nullptr;
@@ -641,11 +698,19 @@ UINT RenderCache::PaintTile(HDC hdc, RectI bounds, DisplayModel* dm, int pageNo,
         float factor = std::min(1.0f * bmpSize.dx / tileOnScreen.dx, 1.0f * bmpSize.dy / tileOnScreen.dy);
 
         HGDIOBJ prevBmp = SelectObject(bmpDC, hbmp);
-        if (factor != 1.0f)
-            StretchBlt(hdc, bounds.x, bounds.y, bounds.dx, bounds.dy, bmpDC, (int)(xSrc * factor), (int)(ySrc * factor),
-                       (int)(bounds.dx * factor), (int)(bounds.dy * factor), SRCCOPY);
-        else
-            BitBlt(hdc, bounds.x, bounds.y, bounds.dx, bounds.dy, bmpDC, xSrc, ySrc, SRCCOPY);
+        int xDst = bounds.x;
+        int yDst = bounds.y;
+        int dxDst = bounds.dx;
+        int dyDst = bounds.dy;
+        if (factor != 1.0f) {
+            xSrc = (int)(xSrc * factor);
+            ySrc = (int)(ySrc * factor);
+            int dxSrc = (int)(bounds.dx * factor);
+            int dySrc = (int)(bounds.dy * factor);
+            StretchBlt(hdc, xDst, yDst, dxDst, dyDst, bmpDC, xSrc, ySrc, dxSrc, dySrc, SRCCOPY);
+        } else {
+            BitBlt(hdc, xDst, yDst, dxDst, dyDst, bmpDC, xSrc, ySrc, SRCCOPY);
+        }
 
         SelectObject(bmpDC, prevBmp);
         DeleteDC(bmpDC);
@@ -659,8 +724,9 @@ UINT RenderCache::PaintTile(HDC hdc, RectI bounds, DisplayModel* dm, int pageNo,
     }
 
     if (entry->outOfDate) {
-        if (renderOutOfDateCue)
+        if (renderOutOfDateCue) {
             *renderOutOfDateCue = true;
+        }
         CrashIf(renderedReplacement && !*renderedReplacement);
     }
 

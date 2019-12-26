@@ -20,10 +20,15 @@ class RenderingCallback {
 /* A page is split into tiles of at most TILE_MAX_W x TILE_MAX_H pixels.
    A given tile starts at (col / 2^res * page_width, row / 2^res * page_height). */
 struct TilePosition {
-    USHORT res, row, col;
+    USHORT res = INVALID_TILE_RES;
+    USHORT row = (USHORT)-1;
+    USHORT col = (USHORT)-1;
 
-    explicit TilePosition(USHORT res = INVALID_TILE_RES, USHORT row = -1, USHORT col = -1)
-        : res(res), row(row), col(col) {
+    TilePosition() = default;
+    explicit TilePosition(USHORT res, USHORT row, USHORT col) {
+        this->res = res;
+        this->row = row;
+        this->col = col;
     }
     bool operator==(const TilePosition& other) const {
         return res == other.res && row == other.row && col == other.col;
@@ -34,26 +39,26 @@ struct TilePosition {
    that uniquely identifies rendered page (dm, pageNo, rotation, zoom)
    and the corresponding rendered bitmap. */
 struct BitmapCacheEntry {
-    DisplayModel* dm;
-    int pageNo;
-    int rotation;
-    float zoom;
+    DisplayModel* dm = nullptr;
+    int pageNo = 0;
+    int rotation = 0;
+    float zoom = 0.f;
     TilePosition tile;
+    int cacheIdx = -1; // index within RenderCache.cache
 
     // owned by the BitmapCacheEntry
-    RenderedBitmap* bitmap;
-    bool outOfDate;
-    int refs;
+    RenderedBitmap* bitmap = nullptr;
+    bool outOfDate = false;
+    int refs = 1;
 
-    BitmapCacheEntry(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition tile, RenderedBitmap* bitmap)
-        : dm(dm),
-          pageNo(pageNo),
-          rotation(rotation),
-          zoom(zoom),
-          tile(tile),
-          bitmap(bitmap),
-          outOfDate(false),
-          refs(1) {
+    BitmapCacheEntry(DisplayModel* dm, int pageNo, int rotation, float zoom, TilePosition tile,
+                     RenderedBitmap* bitmap) {
+        this->dm = dm;
+        this->pageNo = pageNo;
+        this->rotation = rotation;
+        this->zoom = zoom;
+        this->tile = tile;
+        this->bitmap = bitmap;
     }
     ~BitmapCacheEntry() {
         delete bitmap;
@@ -64,41 +69,40 @@ struct BitmapCacheEntry {
    separate for clarity in the code (PageRenderRequests are reused,
    while BitmapCacheEntries are ref-counted) */
 struct PageRenderRequest {
-    DisplayModel* dm;
-    int pageNo;
-    int rotation;
-    float zoom;
+    DisplayModel* dm = nullptr;
+    int pageNo = 0;
+    int rotation = 0;
+    float zoom = 0.f;
     TilePosition tile;
 
     RectD pageRect; // calculated from TilePosition
-    bool abort;
-    AbortCookie* abortCookie;
-    DWORD timestamp;
+    bool abort = false;
+    AbortCookie* abortCookie = nullptr;
+    DWORD timestamp = 0;
     // owned by the PageRenderRequest (use it before reusing the request)
     // on rendering success, the callback gets handed the RenderedBitmap
-    RenderingCallback* renderCb;
+    RenderingCallback* renderCb = nullptr;
 };
 
 class RenderCache {
-  private:
-    BitmapCacheEntry* cache[MAX_BITMAPS_CACHED];
-    int cacheCount;
+  public:
+    BitmapCacheEntry* cache[MAX_BITMAPS_CACHED]{};
+    int cacheCount = 0;
     // make sure to never ask for requestAccess in a cacheAccess
     // protected critical section in order to avoid deadlocks
     CRITICAL_SECTION cacheAccess;
 
-    PageRenderRequest requests[MAX_PAGE_REQUESTS];
-    int requestCount;
-    PageRenderRequest* curReq;
+    PageRenderRequest requests[MAX_PAGE_REQUESTS]{};
+    int requestCount = 0;
+    PageRenderRequest* curReq = nullptr;
     CRITICAL_SECTION requestAccess;
-    HANDLE renderThread;
+    HANDLE renderThread = nullptr;
 
-    SizeI maxTileSize;
-    bool isRemoteSession;
+    SizeI maxTileSize{};
+    bool isRemoteSession = false;
 
-  public:
-    COLORREF textColor;
-    COLORREF backgroundColor;
+    COLORREF textColor = 0;
+    COLORREF backgroundColor = 0;
 
     RenderCache();
     ~RenderCache();
@@ -117,15 +121,13 @@ class RenderCache {
     // painted, 0 if something has been painted and RENDER_DELAY_FAILED on failure
     UINT Paint(HDC hdc, RectI bounds, DisplayModel* dm, int pageNo, PageInfo* pageInfo, bool* renderOutOfDateCue);
 
-  protected:
     /* Interface for page rendering thread */
-    HANDLE startRendering;
+    HANDLE startRendering = nullptr;
 
     bool ClearCurrentRequest();
     bool GetNextRequest(PageRenderRequest* req);
     void Add(PageRenderRequest& req, RenderedBitmap* bitmap);
 
-  private:
     USHORT GetTileRes(DisplayModel* dm, int pageNo);
     USHORT GetMaxTileRes(DisplayModel* dm, int pageNo, int rotation);
     bool ReduceTileSize();
