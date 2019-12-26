@@ -25,3 +25,32 @@ void DeleteSplitterBrush();
 // at the end of resize and the owner only re-layouts when callback is called
 // with 'done' set to true
 void SetSplitterLive(SplitterWnd*, bool live);
+
+struct SplitterMoveArgs {
+    bool done = false;
+    // user can set to false to forbid resizing here
+    bool resizeAllowed = true;
+};
+
+typedef std::function<void(SplitterMoveArgs*)> OnSplitterMove;
+
+struct SplitterCtrl : public WindowBase {
+    SplitterType type = SplitterType::Horiz;
+    bool isLive = false;
+    OnSplitterMove onSplitterMove = nullptr;
+
+    HBITMAP bmp = nullptr;
+    HBRUSH brush = nullptr;
+
+    PointI prevResizeLinePos{};
+    // if a parent clips children, DrawXorBar() doesn't work, so for
+    // non-live resize, we need to remove WS_CLIPCHILDREN style from
+    // parent and restore it when we're done
+    bool parentClipsChildren = false;
+
+    SplitterCtrl(HWND parent);
+    ~SplitterCtrl() override;
+
+    bool Create();
+};
+

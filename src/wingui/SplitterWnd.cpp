@@ -2,10 +2,15 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 #include "utils/BaseUtil.h"
-#include "SplitterWnd.h"
-
 #include "utils/BitManip.h"
 #include "utils/WinUtil.h"
+#include "utils/ScopedWin.h"
+
+#include "wingui/WinGui.h"
+#include "wingui/Layout.h"
+#include "wingui/Window.h"
+
+#include "SplitterWnd.h"
 
 // the technique for drawing the splitter for non-live resize is described
 // at http://www.catch22.net/tuts/splitter-windows
@@ -35,13 +40,12 @@ class SplitterWnd {
     bool parentClipsChildren;
 };
 
-static void OnPaint(SplitterWnd* w) {
+static void OnPaint(HWND hwnd, COLORREF bgCol) {
     PAINTSTRUCT ps;
-    HDC hdc = BeginPaint(w->hwnd, &ps);
-    HBRUSH br = CreateSolidBrush(w->bgCol);
+    HDC hdc = BeginPaint(hwnd, &ps);
+    ScopedBrush br = CreateSolidBrush(bgCol);
     FillRect(hdc, &ps.rcPaint, br);
-    DeleteObject(br);
-    EndPaint(w->hwnd, &ps);
+    EndPaint(hwnd, &ps);
 }
 
 static void DrawXorBar(HDC hdc, int x1, int y1, int width, int height) {
@@ -51,46 +55,47 @@ static void DrawXorBar(HDC hdc, int x1, int y1, int width, int height) {
     SelectObject(hdc, hbrushOld);
 }
 
-static HDC InitDraw(SplitterWnd* w, RectI& rc) {
-    rc = ChildPosWithinParent(w->hwnd);
-    HDC hdc = GetDC(GetParent(w->hwnd));
+static HDC InitDraw(HWND hwnd, RectI& rc) {
+    rc = ChildPosWithinParent(hwnd);
+    HDC hdc = GetDC(GetParent(hwnd));
     SetROP2(hdc, R2_NOTXORPEN);
     return hdc;
 }
 
-static void DrawResizeLineV(SplitterWnd* w, int x) {
+static void DrawResizeLineV(HWND hwnd, int x) {
     RectI rc;
-    HDC hdc = InitDraw(w, rc);
+    HDC hdc = InitDraw(hwnd, rc);
     DrawXorBar(hdc, x, rc.y, 4, rc.dy);
-    ReleaseDC(GetParent(w->hwnd), hdc);
+    ReleaseDC(GetParent(hwnd), hdc);
 }
 
-static void DrawResizeLineH(SplitterWnd* w, int y) {
+static void DrawResizeLineH(HWND hwnd, int y) {
     RectI rc;
-    HDC hdc = InitDraw(w, rc);
+    HDC hdc = InitDraw(hwnd, rc);
     DrawXorBar(hdc, rc.x, y, rc.dx, 4);
-    ReleaseDC(GetParent(w->hwnd), hdc);
+    ReleaseDC(GetParent(hwnd), hdc);
 }
 
-static void DrawResizeLineVH(SplitterWnd* w, bool isVert, PointI pos) {
-    if (isVert)
-        DrawResizeLineV(w, pos.x);
-    else
-        DrawResizeLineH(w, pos.y);
+static void DrawResizeLineVH(HWND hwnd, bool isVert, PointI pos) {
+    if (isVert) {
+        DrawResizeLineV(hwnd, pos.x);
+    } else {
+        DrawResizeLineH(hwnd, pos.y);
+    }
 }
 
-static void DrawResizeLine(SplitterWnd* w, bool erasePrev, bool drawCurr) {
+static void DrawResizeLine(HWND hwnd, SplitterType stype, bool erasePrev, bool drawCurr, PointI& prevResizeLinePos) {
     PointI pos;
-    GetCursorPosInHwnd(GetParent(w->hwnd), pos);
-    bool isVert = w->type != SplitterType::Horiz;
+    GetCursorPosInHwnd(GetParent(hwnd), pos);
+    bool isVert = stype != SplitterType::Horiz;
 
     if (erasePrev) {
-        DrawResizeLineVH(w, isVert, w->prevResizeLinePos);
+        DrawResizeLineVH(hwnd, isVert, prevResizeLinePos);
     }
     if (drawCurr) {
-        DrawResizeLineVH(w, isVert, pos);
+        DrawResizeLineVH(hwnd, isVert, pos);
     }
-    w->prevResizeLinePos = pos;
+    prevResizeLinePos = pos;
 }
 
 static LRESULT CALLBACK WndProcSplitter(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
@@ -119,14 +124,14 @@ static LRESULT CALLBACK WndProcSplitter(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
             if (w->parentClipsChildren) {
                 ToggleWindowStyle(GetParent(hwnd), WS_CLIPCHILDREN, false);
             }
-            DrawResizeLine(w, false, true);
+            DrawResizeLine(w->hwnd, w->type, false, true, w->prevResizeLinePos);
         }
         return 0;
     }
 
     if (WM_LBUTTONUP == msg) {
         if (!w->isLive) {
-            DrawResizeLine(w, true, false);
+            DrawResizeLine(w->hwnd, w->type, true, false, w->prevResizeLinePos);
             if (w->parentClipsChildren) {
                 ToggleWindowStyle(GetParent(hwnd), WS_CLIPCHILDREN, true);
             }
@@ -147,7 +152,7 @@ static LRESULT CALLBACK WndProcSplitter(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
             if (!resizingAllowed) {
                 curId = IDC_NO;
             } else if (!w->isLive) {
-                DrawResizeLine(w, true, true);
+                DrawResizeLine(w->hwnd, w->type, true, true, w->prevResizeLinePos);
             }
         }
         SetCursor(curId);
@@ -155,13 +160,15 @@ static LRESULT CALLBACK WndProcSplitter(HWND hwnd, UINT msg, WPARAM wp, LPARAM l
     }
 
     if (WM_PAINT == msg) {
-        OnPaint(w);
+        OnPaint(w->hwnd, w->bgCol);
         return 0;
     }
 
 Exit:
     return DefWindowProc(hwnd, msg, wp, lp);
 }
+
+static WORD dotPatternBmp[8] = {0x00aa, 0x0055, 0x00aa, 0x0055, 0x00aa, 0x0055, 0x00aa, 0x0055};
 
 // call only once at the beginning of program
 static void RegisterSplitterWndClass() {
@@ -171,8 +178,6 @@ static void RegisterSplitterWndClass() {
         // already registered
         return;
     }
-
-    static WORD dotPatternBmp[8] = {0x00aa, 0x0055, 0x00aa, 0x0055, 0x00aa, 0x0055, 0x00aa, 0x0055};
 
     splitterBmp = CreateBitmap(8, 8, 1, 1, dotPatternBmp);
     splitterBrush = CreatePatternBrush(splitterBmp);
@@ -215,4 +220,103 @@ void DeleteSplitterBrush() {
     splitterBrush = nullptr;
     DeleteObject(splitterBmp);
     splitterBmp = nullptr;
+}
+
+Kind kindSplitter = "splitter";
+
+SplitterCtrl::SplitterCtrl(HWND parent) {
+    kind = kindSplitter;
+    winClass = SPLITTER_CLASS_NAME;
+    parent = parent;
+}
+
+SplitterCtrl::~SplitterCtrl() {
+    DeleteObject(brush);
+    DeleteObject(bmp);
+}
+
+static void SplitterWndProc(WndProcArgs* args) {
+    UINT msg = args->msg;
+    if (WM_ERASEBKGND == msg) {
+        args->didHandle = true;
+        // TODO: should this be FALSE?
+        args->result = TRUE;
+        return;
+    }
+
+    HWND hwnd = args->hwnd;
+    SplitterCtrl* w = (SplitterCtrl*)args->w;
+    CrashIf(!w);
+    if (!w) {
+        return;
+    }
+
+    if (WM_LBUTTONDOWN == msg) {
+        SetCapture(hwnd);
+        if (!w->isLive) {
+            if (w->parentClipsChildren) {
+                ToggleWindowStyle(GetParent(hwnd), WS_CLIPCHILDREN, false);
+            }
+            DrawResizeLine(w->hwnd, w->type, false, true, w->prevResizeLinePos);
+        }
+        args->didHandle = true;
+        return;
+    }
+
+    if (WM_LBUTTONUP == msg) {
+        if (!w->isLive) {
+            DrawResizeLine(w->hwnd, w->type, true, false, w->prevResizeLinePos);
+            if (w->parentClipsChildren) {
+                ToggleWindowStyle(GetParent(hwnd), WS_CLIPCHILDREN, true);
+            }
+        }
+        ReleaseCapture();
+        SplitterMoveArgs arg;
+        arg.done = true;
+        w->onSplitterMove(&arg);
+        ScheduleRepaint(w->hwnd);
+        args->didHandle = true;
+        return;
+    }
+
+    if (WM_MOUSEMOVE == msg) {
+        LPWSTR curId = IDC_SIZENS;
+        if (SplitterType::Vert == w->type) {
+            curId = IDC_SIZEWE;
+        }
+        if (hwnd == GetCapture()) {
+            SplitterMoveArgs arg;
+            arg.done = false;
+            w->onSplitterMove(&arg);            
+            if (!arg.resizeAllowed) {
+                curId = IDC_NO;
+            } else if (!w->isLive) {
+                DrawResizeLine(w->hwnd, w->type, true, true, w->prevResizeLinePos);
+            }
+        }
+        SetCursor(curId);
+        args->didHandle = true;
+        return;
+    }
+
+    if (WM_PAINT == msg) {
+        OnPaint(w->hwnd, w->backgroundColor);
+        args->didHandle = true;
+        return;
+    }
+}
+
+bool SplitterCtrl::Create() {
+    bmp = CreateBitmap(8, 8, 1, 1, dotPatternBmp);
+    CrashIf(!bmp);
+    brush = CreatePatternBrush(bmp);
+    CrashIf(!brush);
+
+    bool ok = WindowBase::Create();
+    if (!ok) {
+        return false;
+    }
+    msgFilter = SplitterWndProc;
+    Subclass();
+    return true;
 }
