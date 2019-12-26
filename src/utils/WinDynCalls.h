@@ -12,6 +12,7 @@ The intent is to standardize how we do it.
 */
 
 // as an exception, we include system headers needed for the calls that we dynamically load
+#include <Windows.h>
 #include <dwmapi.h>
 #include <vssym32.h>
 #include <UIAutomationCore.h>
@@ -36,7 +37,7 @@ typedef decltype(SetDllDirectoryW)* Sig_SetDllDirectoryW;
 // typedef BOOL(WINAPI* Sig_SetDllDirectoryW)(LPCWSTR);
 
 // TODO: not available in 32bit XP SDK
-// typedef decltype(SetDefaultDllDirectories)* Sig_SetDefaultDllDirectories;
+//typedef decltype(SetDefaultDllDirectories)* Sig_SetDefaultDllDirectories;
 typedef BOOL(WINAPI* Sig_SetDefaultDllDirectories)(DWORD);
 
 // TODO: not available in 32bit XP SDK
@@ -154,7 +155,7 @@ typedef BOOL(WINAPI* Sig_GetGestureInfo)(HGESTUREINFO, PGESTUREINFO);
 typedef BOOL(WINAPI* Sig_CloseGestureInfoHandle)(HGESTUREINFO);
 typedef BOOL(WINAPI* Sig_SetGestureConfig)(HWND, DWORD, UINT, PGESTURECONFIG, UINT);
 
-// typedef decltype(GetDpiForWindow)* Sig_GetDpiForWindow;
+//typedef decltype(GetDpiForWindow)* Sig_GetDpiForWindow;
 typedef UINT(WINAPI* Sig_GetDpiForWindow)(HWND);
 
 #define USER32_API_LIST(V)    \
@@ -165,7 +166,6 @@ typedef UINT(WINAPI* Sig_GetDpiForWindow)(HWND);
 
 // dbghelp.dll,  may not be available under Win2000
 typedef decltype(MiniDumpWriteDump)* Sig_MiniDumpWriteDump;
-
 // typedef BOOL(WINAPI* Sig_MiniDumpWriteDump)(HANDLE, DWORD, HANDLE, LONG, PMINIDUMP_EXCEPTION_INFORMATION,
 //                                            PMINIDUMP_USER_STREAM_INFORMATION, PMINIDUMP_CALLBACK_INFORMATION);
 

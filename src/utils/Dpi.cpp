@@ -3,6 +3,7 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/Dpi.h"
+#include "utils/WinDynCalls.h"
 
 /* Info from https://code.msdn.microsoft.com/DPI-Tutorial-sample-64134744
 
@@ -59,6 +60,12 @@ class ScopedGetDC {
 };
 
 static void GetDpiXY(HWND hwnd, int& scaleX, int& scaleY) {
+    if (DynGetDpiForWindow) {
+        UINT dpi = DynGetDpiForWindow(hwnd);
+        scaleX = (int)dpi;
+        scaleY = (int)dpi;
+        return;
+    }
 #if 0
     // TODO: only available in 8.1
     UINT dpiX = 96, dpiY = 96;

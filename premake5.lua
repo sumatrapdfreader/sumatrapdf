@@ -151,7 +151,7 @@ workspace "SumatraPDF"
     "WIN32", 
     "_WIN32", 
     "_CRT_SECURE_NO_WARNINGS", 
-    "WINVER=0x0601", 
+    "WINVER=0x0605", -- latest Windows SDK
     "_WIN32_WINNT=0x0601"
   }
 
