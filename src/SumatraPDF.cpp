@@ -2594,16 +2594,40 @@ static void OnMenuSaveAs(WindowInfo* win) {
     }
 }
 
+static void OnMenuShowInFolder(WindowInfo* win) {
+    if (!HasPermission(Perm_DiskAccess)) {
+        return;
+    }
+    if (!win->IsDocLoaded()) {
+        return;
+    }
+    if (gPluginMode) {
+        return;
+    }
+    auto* ctrl = win->ctrl;
+    auto srcFileName = ctrl->FilePath();
+    if (!srcFileName) {
+        return;
+    }
+
+    WCHAR* process = L"explorer.exe";
+    AutoFreeWstr args = str::Format(L"/select,%s", srcFileName);
+    CreateProcessHelper(process, args);
+}
+
 static void OnMenuRenameFile(WindowInfo* win) {
-    if (!HasPermission(Perm_DiskAccess))
+    if (!HasPermission(Perm_DiskAccess)) {
         return;
-    if (!win->IsDocLoaded())
+    }
+    if (!win->IsDocLoaded()) {
         return;
-    if (gPluginMode)
+    }
+    if (gPluginMode) {
         return;
+    }
 
     auto* ctrl = win->ctrl;
-    AutoFreeWstr srcFileName(str::Dup(ctrl->FilePath()));
+    AutoFreeWstr srcFileName = str::Dup(ctrl->FilePath());
     // this happens e.g. for embedded documents and directories
     if (!file::Exists(srcFileName)) {
         return;
@@ -4123,6 +4147,9 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
 
         case IDM_RENAME_FILE:
             OnMenuRenameFile(win);
+            break;
+        case IDM_SHOW_IN_FOLDER:
+            OnMenuShowInFolder(win);
             break;
 
         case IDT_FILE_PRINT:

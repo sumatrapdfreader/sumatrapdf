@@ -76,6 +76,7 @@ static MenuDef menuDefFile[] = {
     { _TRN("New &window\tCtrl+N"),          IDM_NEW_WINDOW,             MF_REQ_DISK_ACCESS },
     { _TRN("&Open...\tCtrl+O"),             IDM_OPEN ,                  MF_REQ_DISK_ACCESS },
     { _TRN("&Close\tCtrl+W"),               IDM_CLOSE,                  MF_REQ_DISK_ACCESS },
+    { "Show in &folder",                    IDM_SHOW_IN_FOLDER,         MF_REQ_DISK_ACCESS},
     { _TRN("&Save As...\tCtrl+S"),          IDM_SAVEAS,                 MF_REQ_DISK_ACCESS },
 //[ ACCESSKEY_ALTERNATIVE // only one of these two will be shown
 #ifdef ENABLE_SAVE_SHORTCUT
@@ -477,6 +478,7 @@ void MenuUpdateStateForWindow(WindowInfo* win) {
         IDM_VIEW_WITH_FOXIT,
         IDM_VIEW_WITH_PDF_XCHANGE,
         IDM_RENAME_FILE,
+        IDM_SHOW_IN_FOLDER,
         IDM_DEBUG_ANNOTATION,
         // IDM_VIEW_WITH_XPS_VIEWER and IDM_VIEW_WITH_HTML_HELP
         // are removed instead of disabled (and can remain enabled
@@ -484,7 +486,8 @@ void MenuUpdateStateForWindow(WindowInfo* win) {
     };
     // this list coincides with menusToEnableIfBrokenPDF
     static UINT menusToDisableIfDirectory[] = {
-        IDM_RENAME_FILE, IDM_SEND_BY_EMAIL, IDM_VIEW_WITH_ACROBAT, IDM_VIEW_WITH_FOXIT, IDM_VIEW_WITH_PDF_XCHANGE,
+        IDM_RENAME_FILE,     IDM_SEND_BY_EMAIL,         IDM_VIEW_WITH_ACROBAT,
+        IDM_VIEW_WITH_FOXIT, IDM_VIEW_WITH_PDF_XCHANGE, IDM_SHOW_IN_FOLDER,
     };
 #define menusToEnableIfBrokenPDF menusToDisableIfDirectory
 

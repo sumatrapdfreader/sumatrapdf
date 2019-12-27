@@ -605,6 +605,15 @@ HANDLE LaunchProcess(const WCHAR* cmdLine, const WCHAR* currDir, DWORD flags) {
     return pi.hProcess;
 }
 
+bool CreateProcessHelper(const WCHAR* exe, const WCHAR* args) {
+    if (!args) {
+        args = L"";
+    }
+    AutoFreeWstr cmd = str::Format(L"\"%s\" %s", exe, args);
+    AutoCloseHandle process = LaunchProcess(cmd);
+    return process != nullptr;
+}
+
 // return true if the app is running in elevated (as admin)
 bool IsRunningElevated() {
     BOOL fIsRunAsAdmin = FALSE;

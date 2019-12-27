@@ -19,6 +19,7 @@
 #define IDM_CLOSE                       401
 #define IDM_SAVEAS                      402
 #define IDM_PRINT                       403
+#define IDM_SHOW_IN_FOLDER              404
 #define IDM_EXIT                        405
 #define IDM_REFRESH                     406
 #define IDM_SAVEAS_BOOKMARK             407

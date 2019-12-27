@@ -128,12 +128,6 @@ void InitInstallerUninstaller() {
     trans::SetCurrentLangByCode(trans::DetectUserLang());
 }
 
-bool CreateProcessHelper(const WCHAR* exe, const WCHAR* args) {
-    AutoFreeWstr cmd = str::Format(L"\"%s\" %s", exe, args ? args : L"");
-    AutoCloseHandle process(LaunchProcess(cmd));
-    return process != nullptr;
-}
-
 WCHAR* GetInstallDirNoFree() {
     return gCli->installDir;
 }

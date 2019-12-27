@@ -16,7 +16,7 @@ class AutoCloseHandle {
   public:
     AutoCloseHandle() = default;
 
-    explicit AutoCloseHandle(HANDLE h) {
+    AutoCloseHandle(HANDLE h) {
         handle = h;
     }
 

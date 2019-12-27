@@ -101,7 +101,6 @@ WCHAR* GetPdfFilterPath();
 WCHAR* GetPdfPreviewerPath();
 WCHAR* GetShortcutPath(int csidl);
 int KillProcess(const WCHAR* processPath, bool waitUntilTerminated);
-bool CreateProcessHelper(const WCHAR* exe, const WCHAR* args = nullptr);
 void NotifyFailed(const WCHAR* msg);
 void SetMsg(const WCHAR* msg, Gdiplus::Color color);
 void SetDefaultMsg();
