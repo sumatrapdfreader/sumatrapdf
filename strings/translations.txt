@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-62a2762f157e612130e7bef8aaa70e1345302e02
+5e7893bb3edf9052a6d1ece33db22b9ab5ecb6d3
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -6259,67 +6259,6 @@ tw:無法取得印表機特性
 uk:Неможливо отримати налаштування принтера
 uz:Printer xossalarini olib bo'lmadi
 vn:Không thể có được thuộc tính Máy in
-:Couldn't create temporary directory
-am:Հնարավոր չեղավ ստեղծել ժամանակավոր թղթապանակ
-ar:لا يمكن إنشاء دليل مؤقت
-az:Müvəqqəti qovluğu yaratmaq mümkün olmadı
-bg:Не може да се създаде временна директория
-bn:অস্থায়ী ডিরেক্টরি প্রস্তুত করা সম্ভব হয়নি
-br:Não foi possível criar pasta temporária
-bs:Neuspješno kreiranje privremenog direktorija
-by:Немагчыма стварыць часовы каталог
-ca-xv:No es pot crear el directori temporal
-ca:No es pot crear el directori temporal
-cn:无法创建临时目录
-co:Impussibule di creà un cartulare timpurariu
-cy:Methu creu cyfeiriadur dros dro
-cz:Nepodařilo se vytvořit dočasný adresář
-de:Konnte das Temporärverzeichnis nicht erstellen
-dk:Kunne ikke oprette midlertidig mappe
-el:Αδυναμία δημιουργίας προσωρινού φακέλου
-es:No se pudo crear la carpeta temporal
-et:Ei suudetud luua ajutist kataloogi
-eu:Ezinezkoa aldibaterako zuzenbidea sortzea
-fa:نمی‌توان پوشه‌ی موقت را ایجاد کرد
-fi:Väliaikaiskansion luominen epäonnistui
-fr:Impossible de créer un répertoire temporaire
-ga:Níorbh fhéidir comhadlann sealadach a chruthú
-gl:Non se puido crear o cartafol temporal
-he:יצירת תיקייה זמנית נכשלה.
-hi:अस्थायी निर्देशिका नहीं बना सका
-hr:Nemoguće napraviti privremenu mapu
-hu:Ideiglenes könyvtár létrehozása sikertelen
-id:Gagal membuat direktori sementara
-it:Impossibile creare la cartella temporanea
-ja:一時ディレクトリを作成できませんでした
-ka:დროებითი საქაღალდე ვერ შეიქმნა
-kr:임시 디렉토리를 만들 수 없습니다.
-ku:ناتوانرێت فۆڵدەری کاتی دروستبکرێت
-lt:Nepavyko sukurti laikino katalogo
-lv:Nevarēja izveidot pagaidu direktoriju
-mk:Не можам да создадам привремена папка
-my:Tidak dapat mencipta direktori sementara
-ne:अस्थाई निर्देशिका सिर्जना गर्न सकिएन
-nl:Kan tijdelijke map niet aanmaken
-nn:Kunne ikkje lage midlertidig direktiv
-no:Kunne ikke opprette en midlertidig mappe
-pl:Nie można utworzyć katalogu tymczasowego
-pt:Não foi possível criar a pasta temporária
-ro:Nu s-a putut crea un director temporar
-ru:Не удалось создать временную директорию
-si:තාවකාලික ඩිරෙක්ටරියක් නිර්මාණය කිරීමට නොහැකිවිය
-sk:Nie je možné vytvoriť dočasný adresár
-sl:Ni bilo mogoče ustvariti začasne mape
-sp-rs:Greška prilikom kreiranja privremenog direktorijuma
-sq:Nuk mund të krijojë direktorinë e përkohshme
-sr-rs:Привремени директоријум се не може креирати
-sv:Kunde inte skapa en tillfällig katalog
-ta:தற்காலிக கோப்புறையினை உருவாக்க இயலவில்லை
-tr:Geçici dizin oluşturulamadı
-tw:無法建立暫存資料夾
-uk:Не вдалося створити тимчасову папку
-uz:Vaqtincha direktoriyani yaratib bo'lmadi
-vn:Không tạo được thư mục tạm
 :Couldn't create the installation directory
 am:Հնարավոր չեղավ ստեղծել տեղադրման թղթապանակը
 ar:لا يمكن إنشاء دليل التثبيت
@@ -6567,65 +6506,6 @@ tw:無法安裝 PDF 搜索過濾器
 uk:Не вдалося встановити фільтр пошуку для PDF
 uz:PDF qidirish filtrini o'rnatib bo'lmadi
 vn:Không thể cài đặt bộ lọc tìm kiếm PDF
-:Couldn't obtain temporary directory
-am:Հնարավոր չեղավ ստանալ ժամանակավոր թղթապանակ
-ar:لم أستطع الحصول على الدليل المؤقت
-az:Müvəqqəti qovluğu təyin etmək mümkün olmadı
-bg:Не можа да се получи временна директория
-br:Não foi possível obter a pasta temporária
-bs:Neuspješno dobavljanje privremenog direktorija
-by:Немагчыма знайсці часовы каталог
-ca-xv:No es pot obtindre el directori temporal
-ca:No es pot obtenir el directori temporal
-cn:无法获得暂存文件夹
-co:Impussibule d’ottene u cartulare timpurariu
-cy:Methu canfod cyfeiriadur dros dro
-cz:Dočasný adresář není dostupný
-de:Konnte das temporäre Verzeichnis nicht finden
-dk:Kunne ikke tilgå midlertidig mappe
-el:Αδυναμία ανάκτησης προσωρινού φακέλου
-es:No se pudo obtener la carpeta temporal
-et:Ei suudetud luua ajutist kataloogi
-eu:Ezinezkoa aldibaterako zuzenbidea lortzea
-fa:دسترسی به پوشه‌ی موقت مقدور نیست
-fi:Väliaikaishakemiston käyttäminen epäonnistui
-fr:Impossible d'obtenir un répertoire temporaire
-ga:Níorbh fhéidir an chomhadlann sealadach a fháil
-gl:Non se puido obter o cartafol temporal
-he:הגישה לתיקייה הזמנית נכשלה.
-hi:अस्थाई निर्देशिका प्राप्त नहीं हो पाई
-hr:Nemoguće dobiti privremenu mapu
-hu:Ideiglenes könyvtár nem érhető el
-id:Gagal mendeteksi direktori sementara
-it:Impossibile ottenere la cartella temporanea
-ja:一時ディレクトリを確保できませんでした
-kr:임시 디렉토리를 가져올 수 없습니다.
-ku:ناتوانرێت فۆڵدەری کاتی بدۆزرێتەوە
-lt:Nepavyko gauti laikinojo katalogo
-lv:Nevarēja iegūt pagaidu direktoriju
-mk:Не можам да пристапам до привремената папка
-my:Tidak boleh mendapatkan direktori sementara
-ne:अस्थाई निर्देशिका प्राप्त गर्न सकिएन
-nl:Kan tijdelijke map niet verkrijgen
-nn:Kunne ikkje hente midlertidig direktiv
-no:Kunne ikke finne midlertidig mappe
-pl:Nie można uzyskać katalogu tymczasowego
-pt:Não foi possível obter a pasta temporária
-ro:Nu s-a putut obtine directorul temporar
-ru:Не удалось определить временную директорию
-si:තාවකාලික ඩිරෙක්ටරිය ලබාගැනීමට නොහැවිය
-sk:Požiadavka na dočasný adresár bola neúspešná
-sl:Ni bilo mogoče pridobiti začasne mape
-sp-rs:Nemoguć pristup privremenom direktorijumu
-sq:Nuk mund të sigurojë direktorinë e përkohshme
-sr-rs:Немогућ приступ привременом директоријуму
-sv:Kunde inte hämta temp-katalog
-ta:தற்காலிக கோப்புறையை அடைய முடியவில்லை
-tr:Geçici dizin bulunamadı
-tw:無法獲得暫存資料夾
-uk:Не вдалося отримати розташування тимчасової папки
-uz:Vaqtinchalik direktoriyani olib bo'lmadi
-vn:Không thể tìm được thư mục tạm
 :Couldn't remove installation directory
 am:Հնարավոր չեղավ ջնջել տեղադրման թղթապանակը
 ar:لا يمكن إزالة دليل التثبيت
@@ -6686,67 +6566,6 @@ tw:無法移除安裝目錄
 uk:Не вдалося видалити папку, де було встановлено програму
 uz:O'rnatish direktoriyasini o'chirib bo'lmadi
 vn:Không thể gỡ bỏ thư mục cài đặt
-:Couldn't remove the shortcut
-am:Հնարավոր չեղավ ջնջել պիտակը
-ar:لا يمكن إزالة الاختصار
-az:Yarlığı silmək mümkün olmadı
-bg:Не можа да се изтрие командата за бърз достъп
-bn:শর্টকাট বাতিল করা সম্ভব হয়নি
-br:Não foi possível remover o atalho
-bs:Neuspješno uklanjanje kratice
-by:Немагчыма знішчыць спасылак
-ca-xv:No es pot suprimir la drecera
-ca:No es pot suprimir la drecera
-cn:无法移除快捷方式
-co:Impussibule di caccià l’accurtatoghju
-cy:Methu tynnu'r llwybr byr
-cz:Nepodařilo se odstranit zástupce
-de:Konnte die Verknüpfung nicht löschen
-dk:Kunne ikke fjerne genvej
-el:Αδυναμία απομάκρυνσης συντόμευσης
-es:No se pudo eliminar el acceso directo
-et:Ei suudetud kustutada otseteed
-eu:Ezinezkoa lastertekla kentzea
-fa:نمی‌توان میانبر را حذف کرد
-fi:Pikakuvakkeen poistaminen epäonnistui
-fr:Impossible de supprimer le raccourci
-ga:Ní féidir an t-aicearra a bhaint
-gl:Non se puido eliminar o atallo
-he:הסרת קיצור דרך נכשלה.
-hi:शॉर्टकट को नहीं निकाला जा सका
-hr:Nemoguće ukloniti prečac
-hu:Parancsikon eltávolítása sikertelen
-id:Gagal menghapus shortcut
-it:Impossibile rimuovere il collegamento
-ja:ショートカットを削除できませんでした
-ka:მალსახმობი ვერ ამოიშალა
-kr:바로가기를 제거할 수 없습니다.
-ku:ناتوانرێت کورتە ئایکۆن لابدرێت
-lt:Nepavyko pašalinti nuorodos
-lv:Nevarēja noņemt saīsni
-mk:Не можам да ја избришам кратенката
-my:Tidak dapat membuang shortcut
-ne:सर्टकट हटाउन सकिएन
-nl:Kon snelkoppeling niet verwijderen
-nn:Kunne ikkje fjerne snarvegen
-no:Kunne ikke fjerne snarveien
-pl:Nie można usunąć skrótu
-pt:Não foi possível remover o atalho
-ro:Nu s-au putut sterge scurtatura
-ru:Не удалось удалить ярлык
-si:කෙටිමග ඉවත් කිරීමට නොහැකිවිය
-sk:Nie je možné odstrániť odkaz
-sl:Ni bilo mogoče odstraniti bližnjice
-sp-rs:Nemoguće ukloniti skraćenicu
-sq:Nuk mund të heqë shkurtoren
-sr-rs:Немогуће уклониити скраћеницу
-sv:Kunde inte ta bort genvägen
-ta:சுருக்கு வழியை நீக்க முடியவில்லை
-tr:Kısayol silinemedi
-tw:無法移除捷徑
-uk:Не вдалося видалити ярлик
-uz:Xatcho'pni o'chirib bo'lmadi
-vn:Không bỏ lối tắt được
 :Couldn't render the page
 am:Հնարավոր չեղավ ստեղծել էջի պատկերը
 ar:لا يستطيع أن يعيد الصفحة
@@ -8534,126 +8353,6 @@ tw:雙頁模式
 uk:Дві сторінки
 uz:Ikkita betdan
 vn:Trang kép
-:Failed to copy uninstaller to temp directory
-am:Հնարավոր չեղավ պատճենել ջնջիչը ժամանակավոր թղթապանակ
-ar:فشل في نسخ إلغاء التثبيت الى الدليل المؤقت
-az:Deinstalyatoru müvəqqəti qovluğa kopyalamaq mümkün olmadı
-bg:Не може да се копира деинсталатора във временната директория
-br:Falha na cópia do desinstalador para a pasta temporária
-bs:Neuspješno kopiranje deinstalera u privremeni direktorij
-by:Немагчыма запісаць знішчальнік у часовы каталог
-ca-xv:No es pot copiar el desinstal·lador al directori temporal
-ca:No es pot copiar el desinstal·lador al directori temporal
-cn:无法复制卸载程序到暂存目录
-co:Fiascu per cupià u disinstalladore ver di u cartulare timpurariu
-cy:Methwyd copïo'r dadosodwr i'r cyfeiriadur dros dro
-cz:Nezdařilo se zkopírovat odinstalační program do dočasného adresáře
-de:Konnte das Deinstallationsprogramm nicht kopieren
-dk:Kunne ikke kopiere fra midlertidig mappe
-el:Αποτυχία αντιγραφής απεγκαταστάτη στον κατάλογο temp
-es:Error al copiar el desinstalador al directorio temporal
-et:Ei õnnestunud kopeerida eemaldusprogrammi temp kataloogi
-eu:Hutsegitea kentzailea aldibaterako zuzenbidra kopiatzerakoan
-fa:کپی کردن برنامه‌ی حذف به پوشه‌ی موقت ناموفق بود
-fi:Poisto-ohjelman kopioiminen väliaikaiskansioon epäonnistui
-fr:La copie du désinstalleur dans un répertoire temporaire a échoué
-ga:Theip air an díshuiteálaí a mhacasamhlú chuig an chomhadlann sealadach
-gl:Fallou a copia do desinstalador no cartafol temporal
-he:העתקת מסיר התוכנה לתיקייה הזמנית נכשלה.
-hi:उनिंस्टालर को अस्थायी निर्देशिका में कॉपी नहीं किया जा सका
-hr:Neuspjeh kod kopiranju deinstalera u privremenu mapu
-hu:Az eltávolító ideiglenes könyvtárba másolása nem sikerült
-id:Gagal mengkopi uninstaller ke direktori temp
-it:Impossibile copiare programma disinstallazione nella cartella temporanea
-ja:アンインストーラを一時ディレクトリへコピーするのに失敗しました
-kr:제거 관리자를 임시 디렉토리에 복사하지 못했습니다.
-ku:لەبەرگرتنەوەی داتاکانی سڕینەوە سەرکەتو نەبوو بۆ فۆڵدەری کاتی
-lt:Nepavyko šalinimo programos nukopijuoti į laikiną katalogą
-lv:Neizdevās iekopēt instalācijas noņemšanas programmu pagaidu direktorijā
-mk:Не успеав да го ископирам деинсталаторот во привремената папка
-my:Gagal untuk menyalin uninstaller untuk direktori sementara
-ne:अनस्थापकको प्रतिलिपि temp फोल्डरमा बनाउन असफल भयो
-nl:Kon deinstallatie programma niet kopieren naar tijdelijke folder
-nn:Mislykkas i å kopiere installasjonsfjernar til det midlertidige direktivet
-no:Kan ikke kopiere avinstalleringsrutinen til midlertidig mappe
-pl:Nie można skopiować deinstalatora do katalogu tymczasowego
-pt:Falha ao copiar o desinstalador para a pasta temporária
-ro:Eroare la copierea dezinstalatorului in directorul temporar
-ru:Не удалось скопировать деинсталлятор во временную директорию
-si:ඉවත්කරනය තාවකාලික ඩිරෙක්ටරියකට පිටපත්කිරීමට අසමත්විය
-sk:Kopírovanie odinštalátora do dočasného adresára bolo neúspešné
-sl:Kopiranje odstranjevalnega programa v začasno mapo ni uspelo
-sp-rs:Neuspelo kopiranje deinstalera u privremeni direktorijum
-sq:Problem me kopjimin e çinstaluesit te direktoria e përkohshme
-sr-rs:Неуспело копирање деинсталера у привремени директоријум
-sv:Misslyckades med att kopiera avinstalleraren till temp-katalogen
-ta:நிறுவி நீக்கலை தற்காலிக கோப்புறையில் இருந்து நகலெடுத்தல் தோல்வி
-tr:Kaldırıcıyı geçici dizine kopyalama başarısız oldu
-tw:無法將解除安裝程式複製到暫存目錄
-uk:Не вдалося скопіювати деінсталятор у тимчасову папку
-uz:O'chirish dasturini vaqtinchalik direktoriyaga nusxa olish muvaffaqiyatsiz tugadi
-vn:Không thể chép bộ gỡ cài đặt vào thư mục tạm
-:Failed to create a shortcut
-am:Հնարավոր չեղավ ստեղծել պիտակը
-ar:فشل في إنشاء رابط اختصار للبرنامج
-az:Yarlık yaratmaq mümkün olmadı
-bg:Не може да се създаде командата за бърз достъп
-bn:শর্টকাট তৈরি ব্যর্থ হয়েছে
-br:Falha na criação do atalho
-bs:Neuspješno kreiranje kratice
-by:Немагчыма стварыць спасылку
-ca-xv:No es pot crear una drecera
-ca:No es pot crear una drecera
-cn:无法创建快捷方式
-co:Fiascu per creà un accurtatoghju
-cy:Methwyd creu llwybr byr
-cz:Vytvoření zástupce se nezdařilo
-de:Konnte keine Verknüpfung erstellen
-dk:Kunne ikke oprette genvej
-el:Αποτυχία δημιουργίας συντόμευσης
-es:No se pudo crear un acceso directo
-et:Ei õnnestu luua otseteed
-eu:Hutsegitea lasterbidea sortzerakoan
-fa:خطا در ایجاد میانبر
-fi:Pikakuvakkeen luominen epäonnistui
-fr:Impossible de créer un raccourci
-ga:Theip air aicearra a chruthú
-gl:Fallou a creación do atallo
-he:יצירת קיצור דרך נכשלה.
-hi:शॉर्टकट को नहीं बनाया जा सका
-hr:Neuspjeh u kreiranju prečaca
-hu:Nem sikerült létrehozni a parancsikont
-id:Gagal membuat shortcut.
-it:Impossibile creare il collegamento
-ja:ショートカットの作成に失敗しました
-ka:მალსახმობი ვერ შეიქმნა
-kr:바로가기를 만들지 못했습니다.
-ku:دروستکردنی کورتە ئایکۆن سەرکەوتو نەبوو
-lt:Nepavyko sukurti nuorodos
-lv:Neizdevās izveidot saīsni
-mk:Не успеав да создадам кратенка
-my:Gagal untuk mencipta shortcut
-ne:सर्टकट सिर्जना गर्न असफल भयो
-nl:Kon snelkoppeling niet aanmaken
-nn:Klarte ikkje å lage ein snarveg
-no:Kan ikke opprette snarvei
-pl:Błąd przy tworzeniu skrótu
-pt:Erro ao criar atalho
-ro:Eroare la crearea unei scurtaturi
-ru:Не удалось создать ярлык
-si:කෙටිමග සැකසීමට නොහැකිවිය
-sk:Vytvorenie odkazu bolo neúspešné
-sl:Ustvarjanje bližnjice ni uspelo
-sp-rs:Neuspelo kreiranje skraćenice
-sq:Problem me krijimin e shkurtores
-sr-rs:Неуспело креирање скраћенице!
-sv:Misslyckades med att skapa genväg
-ta:சுருக்கு வழி அமைதல் தோல்வி
-tr:Kısayol oluşturulamadı
-tw:無法建立捷徑
-uk:Не вдалося створити ярлик
-uz:Xatcho'pni yaratib bo'lmadi
-vn:Không thể tạo Shortcut
 :Failed to delete uninstaller registry keys
 am:Հնարավոր չեղավ ջնջել Գրանցատեղիի բանալիները
 ar:فشل في حذف مفاتيح مكتب تسجيل إلغاء التثبيت
@@ -11279,62 +10978,6 @@ tw:KB
 uk:KB
 uz:KB
 vn:KB
-:Keep the PDF &browser plugin installed (no longer supported)
-am:Թողնել &դիտարկիչի PDF բաղադրիչը (այլևս չի աջակցում)
-ar:(الحفاظ  على المستندات المحمولة متصفح البرنامج المساعد المثبت (لم تعد معتمدة
-az:PDF &brauzer plaginini silmə (artıq dəstəklənmir)
-bg:Запази PDF приставката за &браузъри (не се поддържа)
-br:Mantenha o plugin PDF para instalado (não é mais suportado)
-bs:Ostavi plugin instaliran u &browseru (više nije podržano)
-by:Утрымаць убудову PDF для &браўзера устаноўленым (больш не падтрымліваецца)
-ca-xv:Mantín instal·lat el connector PDF del &navegador (ja no es manté)
-ca:Mantén instal·lat el connector PDF del &navegador (ja no es manté)
-cn:维持 PDF 浏览器插件安装状态(不再支持)(&B)
-co:Cunservà l’estensione PDF di u &navigatore installata (senza assistenza)
-cy:Cadw yr ategyn porwr PDF wedi ei osod (ddim yn cael ei gynnal bellach)
-cz:Ponechat nainstalovaný plugin &prohlížeč PDF (již není podporován)
-de:PDF &Browser-Plugin installiert lassen (nicht mehr unterstützt)
-dk:Bevar PDF-&browserudvidelsesmodulet installeret (ikke længere understøttet)
-el:Διατήρηση του πρόσθετου προγράμματος περιήγησης PDF εγκατεστημένο (δε θα υποστηρίζεται πλέον)
-es:Mantener instalado el complemento de &navegador (ahora obsoleto)
-et:Jäta alles PDF &brauseri plugin (enam ei toetata)
-eu:Eduki PDF &nabigatzaile plugina ezarrita (sostengu gabe aurrerantzean)
-fa:افزونه‌ی PDF نصب شده روی مرورگر باقی بماند (دیگر پشتیبانی نمی‌شود)
-fi:Pidä PDF-selainlaajennus asennettuna (ei enää tuettu)
-fr:Conserver le plugin pour navigateur (plus de support)
-ga:Coinnigh suiteáilte an breiseán don líonléitheoir PDF (ní thugtar tacaíocht dó feasta)
-gl:Manter instalado o engadido PDF do &navegador (sen soporte)
-he:השאר את תוסף PDF לדפדפנים (התוסף אינו נתמך עוד)
-hr:Zadrži PDF &browser dodatak instaliran (više nije podržano)
-hu:Hagyja a PDF böngésző beépülőt telepítve (már nem támogatott)
-id:Biarkan plugin peramban PDF terinstal (tidak lagi didukung)
-it:Mantieni installato il plugin PDF del &browser (non più supportato)
-ja:PDF閲覧プラグインのインストールは保つ(&b) (廃止された機能)
-kr:브라우저에 설치된 PDF 플러그인 유지(&B) (더 이상 지원 안 함)
-ku:هێشتنەوەی پێوەکراوی وێبگەڕ بە دامەزێرێنراوی (چیتر پاڵپشتی ناکرێت)
-lt:Palikti PDF &naršyklės įskiepį įdiegtą (nebepalaikoma)
-lv:Paturēt pārlūka PDF spraudni instalētu (vairs netiek atbalstīts)
-mk:Задржи го додатокот за PDF за &прелистувачи (не е повеќе поддржан)
-ne:PDF ब्राउजर प्लगइन राख्नुहोस् (समर्थनयोग्य छैन)
-nl:Behoud de PDF-&browserplugin geïnstalleerd (niet langer ondersteund)
-nn:Behald installeringa av PDF-&nettlesartillegget (Ikkje lenger støtta)
-no:Fortsett å ha PDF-nettlesertillegget installert (Ikke lenger støttet)
-pl:Pozostaw zainstalowaną &wtyczkę PDF do przeglądarek (już nie jest wspierana)
-pt:&Manter plugin de navegador instalado (já não é suportado)
-ru:Сохранить установленный PDF плагин для браузера (более не поддерживается)
-si:PDF browser plugin ස්ථාපනය කර තබාගන්න (තවදුරටත් සහාය නොදක්වයි)
-sk:Ponechať PDF plugin prehliadača nainštalovaný (už nie je podporovaný)
-sl:Obdržati PDF vtičnik &brskalnika nameščen (ni več podprt)
-sp-rs:Zadrži PDF plugin pretraživača instalisan (nije podržano)
-sq:Mbaj të instaluar spinën PDF për &shfletuesit (nuk garantohet)
-sr-rs:Задржи ПДФ плугин инсталисан (није подржано)
-sv:Behåll webbläsarens insticksprogram för PDF (stöds inte längre)
-ta:நிறுவப்பட்ட PDF உலாவி சொருகியை வைத்திருக்கவும் (இந்த செயல்பாடு இனி ஆதரிக்கப்படாது)
-tr:PDF ve tarayıcı eklentisini kurulu oalrak bırakınız (artık desteklenmiyor)
-tw:維持 PDF 瀏覽器插件安裝狀態(不再支援)(&B)
-uk:Залишити розширення для браузера (більше не підтримується)
-uz:PDF &brauzer plaginini o'rnatilgan qoldirish (boshqa qo'llab-quvvatlanmaydi)
-vn:Giữ lại Plugin PDF đã cài đặt cho các trình duyệt (không còn được hỗ trợ)
 :Let Windows Desktop Search &search PDF documents
 am:Թույլատրել Windows Desktop Search-ին &PDF ֆայլերի որոնումը
 ar:دع البحث في سطح مكتب الوندوز &البحث في وثائق المستندات المحمولة
@@ -16234,64 +15877,6 @@ tw:單頁模式
 uk:Одна сторінка
 uz:Bitta bet
 vn:Trang đơn
-:Some files to be installed are damaged or missing
-am:Տեղակայվող որոշ ֆայլեր վնասված են կամ բացակայում են
-ar:بعض الملفات التي ستثبت قد  تكون تالفة أو مفقودة
-az:Bəzi quraşdırılacaq fayllar zədələnmişdir və ya yoxdur
-bg:Някои файлове които са нужни за инсталацията са повредени или липсват
-br:Alguns arquivos de instalação estão danificados ou ausentes
-bs:Neki fajlovi koji bi trebali biti instalirani su ili oštećeni ili nedostaju
-by:Некаторыя файлы для усталёўкі пашкоджаны альбо адсутнічаюць
-ca-xv:Alguns fitxers que s'han d'instal·lar no hi són o són malmesos
-ca:Alguns fitxers que s'han d'instal·lar no hi són o són malmesos
-cn:某些安装所需的文件损坏或丢失
-co:Certi schedarii à installà sò alterati o mancanu
-cy:Mae rhai ffeiliau i'w gosod wedi eu difrodi neu ar goll
-cz:Některé soubory potřebné pro instalaci jsou poškozené nebo nebyly nalezeny
-de:Einige Dateien konnten nicht korrekt installiert werden
-dk:Nogle installationsfiler er beskadiget eller mangler
-el:Ορισμένα αρχεία προς εγκατάσταση είναι κατεστραμμένα ή λείπουν
-es:Algunos de los archivos que van a ser instalados estan dañados o no se encuentran
-et:Mõned paigaldatavad failid on viga saanud või puuduvad
-eu:Ezarritako zenbait agiri hondatuta edo galduta daude
-fa:بعضی از فایل‌های نصب خراب هستند یا وجود ندارند
-fi:Osa asennettavista tiedostoista on vahingoittuneita tai ne puuttuvat
-fr:Des fichiers prévus pour l'installation sont endommagés ou manquants
-ga:Tá díobháil déanta de roinnt de na comhaid atá le suiteáil nó tá siad in easnamh
-gl:Algúns ficheiros a instalar están danados ou faltan
-he:קובצי התקנה מסוימים פגומים או חסרים.
-hr:Neke datoteke za instalaciju su oštećene ili nedostaju
-hu:Néhány, a telepítéshez szükséges fájl sérült vagy hiányzik
-id:Beberapa berkas yang akan diinstal rusak atau hilang.
-it:Alcuni file che dovevano essere installati erano corrotti o mancanti
-ja:インストールすべきいくつかのファイルが破損しているか存在しません。
-kr:설치해야 할 일부 파일이 손상 또는 누락됐습니다.
-ku:هەندێک فایلی دابەزاندن وونبوون یان تێکچوون
-lt:Kai kurių, norimų diegti, failų trūksta arba jie yra pažeisti.
-lv:Kādi faili ir instalēti bojāti vai tie trūkst
-mk:Некои од датотеките што треба да се инсталираат се оштетени или недостасуваат
-my:Sesetengah fail yang akan dipasang akan rosak atau hilang
-ne:स्थापना गर्नुपर्ने केहि फाईलहरु बिग्रिएका अथवा हराएका छन्
-nl:Sommige bestanden voor de installatie zijn beschadigd of ontbreken
-nn:Nokre filar som skal installeres, enten mangler eller har forsvunnet.
-no:Noen filer som skal installeres er skadet eller mangler
-pl:Niektóre pliki instalacyjne są uszkodzone lub niedostępne
-pt:Alguns ficheiros do instalador estão danificados
-ro:Niste fisiere ce trebuiesc instalate lipsesc sau sunt pleznite
-ru:Некоторые файлы установки повреждены или отсутствуют
-si:ස්ථාපනය කිරීමට අවශ්‍ය සමහර ගොනු හානිවී හෝ අස්ථානගතවී ඇත
-sk:Niektoré inštalačné súbory sú poškodené alebo chýbajú
-sl:Nekatere datoteke za namestitev so poškodovane ali manjkajo
-sp-rs:Neki instalacioni fajlovi nedostaju ili su oštećeni
-sq:Janë dëmtuar ose mungojnë disa skedarë që do të instalohen
-sr-rs:Неки инсталациони фајлови су оштећени или недостају
-sv:Några installationsfiler saknas eller är skadade
-ta:நிறுவப்பட்ட சில கோப்புகள் சேதமடைந்துள்ளன/காணவில்லை
-tr:Yüklü olması gereken bazı dosyalar eksik ve ya hasar görmüş
-tw:一些要安裝的檔案已損壞或丟失
-uk:Деякі файли необхідні для встановлення відсутні або пошкоджені
-uz:Ba'zi o'rnatilayotgan fayllar buzilgan yoki mavjud emas
-vn:Một số tập tin dùng để cài đặt đã bị lỗi hoặc bị thiếu
 :Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 am:Կներեք, սա չպետք է տեղի ունենար։\n\nՍեղմեք 'Չեղարկել'՝եթե ցանկանում եք օգնել մեզ վերացնելու այս սխալը։
 ar:الرجاء اضغط 'إلغاء الأمر'، إذا كنت ترغب في مساعدتنا على إصلاح هذا الحادث \n\n !آسف، أنه لا ينبغي أن يكون قد حدث
