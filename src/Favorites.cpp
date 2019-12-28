@@ -675,7 +675,10 @@ void RememberFavTreeExpansionStateForAllWindows() {
     }
 }
 
-static LRESULT OnFavTreeNotify(WindowInfo* win, TreeCtrl* w, NMTREEVIEW* pnmtv) {
+static void OnFavTreeNotify(TreeNotifyArgs* args) {
+    TreeCtrl* w = args->w;
+    WindowInfo* win = FindWindowInfoByHwnd(w->hwnd);
+    NMTREEVIEW* pnmtv = args->treeView;
     switch (pnmtv->hdr.code) {
             // TVN_SELCHANGED intentionally not implemented (mouse clicks are handled
             // in NM_CLICK, and keyboard navigation in NM_RETURN and TVN_KEYDOWN)
@@ -688,7 +691,8 @@ static LRESULT OnFavTreeNotify(WindowInfo* win, TreeCtrl* w, NMTREEVIEW* pnmtv) 
                 } else {
                     AdvanceFocus(win);
                 }
-                return 1;
+                args->procArgs->didHandle = true;
+                args->procArgs->result = 1;
             }
             break;
         }
@@ -713,25 +717,29 @@ static LRESULT OnFavTreeNotify(WindowInfo* win, TreeCtrl* w, NMTREEVIEW* pnmtv) 
             break;
 
         case NM_CUSTOMDRAW:
-            return CDRF_DODEFAULT;
+            args->procArgs->didHandle = true;
+            args->procArgs->result = CDRF_DODEFAULT;
+            break;
     }
-    return -1;
+    return;
 }
 
-static void OnFavTreeContextMenu(WindowInfo* win, TreeContextMenuArgs* args) {
-    args->procArgs->didHandle = true;
-
+// if context menu invoked via keyboard, get selected item
+// if via right-click, selects the item under the cursor
+// in both cases can return null
+// sets pt to screen position (for context menu coordinates)
+TreeItem* GetOrSelectTreeItemAtPos(TreeContextMenuArgs* args, POINT& pt) {
     TreeCtrl* treeCtrl = args->w;
     HWND hwnd = treeCtrl->hwnd;
-    TreeItem* ti = nullptr;
-    POINT pt{args->mouseWindow.x, args->mouseWindow.y};
 
+    TreeItem* ti = nullptr;
+    pt = {args->mouseWindow.x, args->mouseWindow.y};
     if (pt.x == -1 || pt.y == -1) {
         // no mouse position when launched via keyboard shortcut
         // use position of selected item to show menu
         ti = treeCtrl->GetSelection();
         if (!ti) {
-            return;
+            return nullptr;
         }
         RECT rcItem;
         if (treeCtrl->GetItemRect(ti, true, rcItem)) {
@@ -744,13 +752,28 @@ static void OnFavTreeContextMenu(WindowInfo* win, TreeContextMenuArgs* args) {
         ti = treeCtrl->HitTest(pt.x, pt.y);
         if (!ti) {
             // only show context menu if over a node in tree
-            return;
+            return nullptr;
         }
         // context menu acts on this item so select it
         // for better visual feedback to the user
         treeCtrl->SelectItem(ti);
         pt.x = args->mouseGlobal.x;
         pt.y = args->mouseGlobal.y;
+    }
+    return ti;
+}
+
+static void OnFavTreeContextMenu(TreeContextMenuArgs* args) {
+    args->procArgs->didHandle = true;
+
+    TreeCtrl* treeCtrl = args->w;
+    HWND hwnd = treeCtrl->hwnd;
+    WindowInfo* win = FindWindowInfoByHwnd(hwnd);
+
+    POINT pt{};
+    TreeItem* ti = GetOrSelectTreeItemAtPos(args, pt);
+    if (!ti) {
+        return;
     }
     HMENU popup = BuildMenuFromMenuDef(menuDefFavContext, dimof(menuDefFavContext), CreatePopupMenu());
     MarkMenuOwnerDraw(popup);
@@ -854,22 +877,8 @@ void CreateFavorites(WindowInfo* win) {
     TreeCtrl* treeCtrl = new TreeCtrl(win->hwndFavBox);
 
     treeCtrl->msgFilter = WndProcFavTree;
-
-    treeCtrl->onContextMenu = [win](TreeContextMenuArgs* args) {
-        int x = args->mouseWindow.x;
-        int y = args->mouseWindow.y;
-        OnFavTreeContextMenu(win, args);
-        args->procArgs->didHandle = true;
-        args->procArgs->result = 0;
-    };
-
-    treeCtrl->onTreeNotify = [win](TreeNotifyArgs* args) {
-        LRESULT res = OnFavTreeNotify(win, args->w, args->treeView);
-        if (res != -1) {
-            args->procArgs->didHandle = true;
-            args->procArgs->result = res;
-        }
-    };
+    treeCtrl->onContextMenu = OnFavTreeContextMenu;
+    treeCtrl->onTreeNotify = OnFavTreeNotify;
 
     bool ok = treeCtrl->Create(L"Fav");
     CrashIf(!ok);

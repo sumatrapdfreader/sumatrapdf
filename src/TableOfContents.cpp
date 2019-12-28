@@ -413,10 +413,20 @@ static void ExportBookmarksFromTab(TabInfo* tab) {
     MessageBoxW(nullptr, msg.Get(), caption.Get(), type);
 }
 
-static void BuildAndShowContextMenu(WindowInfo* win, int x, int y) {
+// in Favorites.cpp
+extern TreeItem* GetOrSelectTreeItemAtPos(TreeContextMenuArgs* args, POINT& pt);
+
+static void OnTocContextMenu(TreeContextMenuArgs* args) {
+    WindowInfo* win = FindWindowInfoByHwnd(args->w->hwnd);
+    CrashIf(!win);
+
+    POINT pt{};
+    TreeItem* ti = GetOrSelectTreeItemAtPos(args, pt);
+    if (!ti) {
+        return;
+    }
+
     HMENU popup = BuildMenuFromMenuDef(contextMenuDef, dimof(contextMenuDef), CreatePopupMenu());
-    POINT pt = {x, y};
-    // MapWindowPoints(win->hwndCanvas, HWND_DESKTOP, &pt, 1);
     // MarkMenuOwnerDraw(popup);
     UINT flags = TPM_RETURNCMD | TPM_RIGHTBUTTON;
     INT cmd = TrackPopupMenu(popup, flags, pt.x, pt.y, 0, win->hwndFrame, nullptr);
@@ -520,7 +530,7 @@ static void UpdateFont(HDC hdc, int fontFlags) {
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/about-custom-draw
 // https://docs.microsoft.com/en-us/windows/win32/api/commctrl/ns-commctrl-nmtvcustomdraw
-static LRESULT OnCustomDraw(WindowInfo* win, NMTVCUSTOMDRAW* tvcd) {
+static LRESULT OnTocCustomDraw(WindowInfo* win, NMTVCUSTOMDRAW* tvcd) {
     // TODO: only for PDF
     if (!win->AsFixed()) {
         return CDRF_DODEFAULT;
@@ -552,7 +562,18 @@ static LRESULT OnCustomDraw(WindowInfo* win, NMTVCUSTOMDRAW* tvcd) {
     return CDRF_DODEFAULT;
 }
 
-static LRESULT OnTocTreeNotify(WindowInfo* win, NMTREEVIEWW* pnmtv) {
+/*
+[win](TreeNotifyArgs* args) {
+            CrashIf(win->tocTreeCtrl != args->w);
+            LRESULT res = OnTocTreeNotify(win, args->treeView);
+            args->procArgs->didHandle = (res != -1);
+            args->procArgs->result = res;
+        };
+*/
+static void OnTocTreeNotify(TreeNotifyArgs* args) {
+    WindowInfo* win = FindWindowInfoByHwnd(args->w->hwnd);
+    CrashIf(!win);
+    NMTREEVIEWW* pnmtv = args->treeView;
     HWND hwndFrom = pnmtv->hdr.hwndFrom;
     auto action = pnmtv->action;
     CrashIf(hwndFrom != win->tocTreeCtrl->hwnd);
@@ -574,11 +595,14 @@ static LRESULT OnTocTreeNotify(WindowInfo* win, NMTREEVIEWW* pnmtv) {
         case TVN_KEYDOWN: {
             TV_KEYDOWN* ptvkd = (TV_KEYDOWN*)pnmtv;
             if (VK_TAB == ptvkd->wVKey) {
-                if (win->tabsVisible && IsCtrlPressed())
+                if (win->tabsVisible && IsCtrlPressed()) {
                     TabsOnCtrlTab(win, IsShiftPressed());
-                else
+                } else {
                     AdvanceFocus(win);
-                return 1;
+                }
+                args->procArgs->didHandle = true;
+                args->procArgs->result = 1;
+                return;
             }
             break;
         }
@@ -622,10 +646,11 @@ static LRESULT OnTocTreeNotify(WindowInfo* win, NMTREEVIEWW* pnmtv) {
             }
             break;
 #else
-            return OnCustomDraw(win, (NMTVCUSTOMDRAW*)pnmtv);
+            args->procArgs->didHandle = true;
+            args->procArgs->result = OnTocCustomDraw(win, (NMTVCUSTOMDRAW*)pnmtv);
+            break;
 #endif
     }
-    return -1;
 }
 
 static void TocTreeMsgFilter(WndProcArgs* args) {
@@ -759,24 +784,12 @@ static void TocTreeMsgFilter(WndProcArgs* args) {
         win->altBookmarks->Create();
 
         auto* tocTreeCtrl = new TreeCtrl(win->hwndTocBox);
-        DWORD dwStyle = TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS;
-        dwStyle |= TVS_TRACKSELECT | TVS_DISABLEDRAGDROP | TVS_NOHSCROLL | TVS_INFOTIP;
-        dwStyle |= WS_TABSTOP | WS_VISIBLE | WS_CHILD;
-        tocTreeCtrl->dwStyle = dwStyle;
-        tocTreeCtrl->dwExStyle = WS_EX_STATICEDGE;
+        tocTreeCtrl->dwExStyle = WS_EX_STATICEDGE | TVS_EX_DOUBLEBUFFER;
         tocTreeCtrl->msgFilter = TocTreeMsgFilter;
-        tocTreeCtrl->onTreeNotify = [win](TreeNotifyArgs* args) {
-            CrashIf(win->tocTreeCtrl != args->w);
-            LRESULT res = OnTocTreeNotify(win, args->treeView);
-            args->procArgs->didHandle = (res != -1);
-            args->procArgs->result = res;
-        };
-        tocTreeCtrl->onGetTooltip = [](TreeItmGetTooltipArgs* args) { CustomizeTocTooltip(args); };
-        tocTreeCtrl->onContextMenu = [win](TreeContextMenuArgs* args) {
-            int xScreen = args->mouseGlobal.x;
-            int yScreen = args->mouseGlobal.y;
-            BuildAndShowContextMenu(win, xScreen, yScreen);
-        };
+        tocTreeCtrl->onTreeNotify = OnTocTreeNotify;
+        tocTreeCtrl->onGetTooltip = CustomizeTocTooltip;
+        tocTreeCtrl->onContextMenu = OnTocContextMenu;
+
         bool ok = tocTreeCtrl->Create(L"TOC");
         CrashIf(!ok);
         win->tocTreeCtrl = tocTreeCtrl;
