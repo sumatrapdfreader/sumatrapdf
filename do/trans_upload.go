@@ -15,10 +15,8 @@ import (
 )
 
 func readFile(path string) string {
-	d, err := ioutil.ReadFile(path)
-	if err != nil {
-		return ""
-	}
+	// it's ok if file doesn't ext
+	d, _ := ioutil.ReadFile(path)
 	return string(d)
 }
 

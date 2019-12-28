@@ -47,6 +47,7 @@ func main() {
 		flgClean                   bool
 		flgDeleteOldBuilds         bool
 		flgPreviewCrashes          bool
+		flgCheckAccessKeys         bool
 	)
 
 	{
@@ -67,6 +68,7 @@ func main() {
 		flag.BoolVar(&flgClean, "clean", false, "clean the build")
 		flag.BoolVar(&flgDeleteOldBuilds, "delete-old-builds", false, "delete old builds")
 		flag.BoolVar(&flgPreviewCrashes, "crashes", false, "see crashes in a web ui")
+		flag.BoolVar(&flgCheckAccessKeys, "check-access-keys", false, "check access keys for menu items")
 		flag.Parse()
 	}
 
@@ -98,6 +100,11 @@ func main() {
 
 	if flgRegenPremake {
 		regenPremake()
+		return
+	}
+
+	if flgCheckAccessKeys {
+		checkAccessKeys()
 		return
 	}
 

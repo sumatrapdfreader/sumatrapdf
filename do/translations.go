@@ -39,7 +39,7 @@ func verifyTranslationsMust() {
 	url := fmt.Sprintf("%s/dltrans?app=SumatraPDF&sha1=%s", TRANSLATION_SERVER, sha1)
 	d := httpDlMust(url)
 	lines := toTrimmedLines(d)
-	fatalIf(lines[1] != "No change", "translations changed, run python scripts/trans_download.py\n")
+	fatalIf(lines[1] != "No change", "translations changed, run ./doit.bat -trans-dl\n")
 }
 
 func validSha1(s string) bool {

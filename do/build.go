@@ -252,7 +252,9 @@ func buildPreRelease(isDaily bool) {
 	verifyGitCleanMust()
 	verifyOnMasterBranchMust()
 
-	verifyTranslationsMust()
+	if !isDaily {
+		verifyTranslationsMust()
+	}
 
 	setBuildConfig(gitSha1, svnPreReleaseVer, isDaily)
 	defer revertBuildConfig()

@@ -47,7 +47,7 @@ func NewLang(desc []string) *Lang {
 	return res
 }
 
-func get_lang_objects(langs_defs [][]string) []*Lang {
+func getLangObjects(langs_defs [][]string) []*Lang {
 	var res []*Lang
 	for _, desc := range langs_defs {
 		res = append(res, NewLang(desc))
@@ -289,7 +289,7 @@ func gen_c_code_for_dir(strings_dict map[string][]*Translation, keys []string, d
 		}
 		return x[1] < y[1]
 	})
-	langs := get_lang_objects(g_langs)
+	langs := getLangObjects(g_langs)
 	panicIf("en" != langs[0].code)
 
 	langs = build_trans_for_langs(langs, strings_dict, keys)
