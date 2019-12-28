@@ -10,6 +10,8 @@ import (
 	"github.com/kjk/u"
 )
 
+const TRANSLATION_SERVER = "http://www.apptranslator.org"
+
 func translationsPath() string {
 	return filepath.Join("strings", "translations.txt")
 }
@@ -34,7 +36,7 @@ func saveTranslationsMust(d []byte) {
 
 func verifyTranslationsMust() {
 	sha1 := lastTranslationsSha1HexMust()
-	url := fmt.Sprintf("http://www.apptranslator.org/dltrans?app=SumatraPDF&sha1=%s", sha1)
+	url := fmt.Sprintf("%s/dltrans?app=SumatraPDF&sha1=%s", TRANSLATION_SERVER, sha1)
 	d := httpDlMust(url)
 	lines := toTrimmedLines(d)
 	fatalIf(lines[1] != "No change", "translations changed, run python scripts/trans_download.py\n")

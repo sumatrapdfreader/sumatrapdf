@@ -1,10 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
+	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/kjk/u"
@@ -18,23 +22,28 @@ func readFile(path string) string {
 	return string(d)
 }
 
-func uploadStringsToServer(strings string, secret string) {
-	print("Uploading strings to the server...")
-	panic("NYI")
-	/*
-		params = urllib.urlencode(
-				{'strings': strings, 'app': 'SumatraPDF', 'secret': secret})
-		headers = {"Content-type": "application/x-www-form-urlencoded",
-								"Accept": "text/plain"}
-		conn = httplib.HTTPConnection(SERVER, PORT)
-		conn.request("POST", "/uploadstrings", params, headers)
-		resp = conn.getresponse()
-		print resp.status
-		print resp.reason
-		print resp.read()
-		conn.close()
-		print("Upload done")
-	*/
+func uploadStringsToServer(strs string, secret string) {
+	fmt.Printf("Uploading strings to the server...\n")
+	uri := fmt.Sprintf("%s/uploadstrings", TRANSLATION_SERVER)
+
+	data := url.Values{}
+	data.Set("strings", strs)
+	data.Set("app", "SumatraPDF")
+	data.Set("secret", secret)
+	dataStr := data.Encode()
+	r := strings.NewReader(dataStr)
+	req, err := http.NewRequest(http.MethodPost, uri, r)
+	must(err)
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Accept", "text/plain")
+	req.Header.Add("Content-Length", strconv.Itoa(len(dataStr)))
+	rsp, err := http.DefaultClient.Do(req)
+	must(err)
+	defer rsp.Body.Close()
+	u.PanicIf(rsp.StatusCode != http.StatusOK)
+	d, err := ioutil.ReadAll(rsp.Body)
+	fmt.Printf("Response:\n%s\n", string(d))
+	fmt.Printf("Upload finished\n")
 }
 
 func getTransSecret() string {

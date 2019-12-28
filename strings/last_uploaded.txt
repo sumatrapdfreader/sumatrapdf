@@ -82,6 +82,7 @@ Cannot start inverse search command. Please check the command line in the settin
 Change Language
 Check for &Updates
 Close
+Colapse All
 Comic books
 Compatibility
 Continuous
@@ -94,14 +95,11 @@ Copy Co&mment
 Copying text was denied (copying as image only)
 Copyright:
 Could not obtain Printer properties
-Couldn't create temporary directory
 Couldn't create the installation directory
 Couldn't initialize printer
 Couldn't install PDF previewer
 Couldn't install PDF search filter
-Couldn't obtain temporary directory
 Couldn't remove installation directory
-Couldn't remove the shortcut
 Couldn't render the page
 Couldn't uninstall PDF previewer
 Couldn't uninstall PDF search filter
@@ -126,12 +124,11 @@ Enter password
 Enter password for %s
 Enter the command-line to invoke when you double-click on the PDF document:
 Error loading %s
+Expand All
 F&avorites
 F&orward\tAlt+Right Arrow
 F&ullscreen\tF11
 Facing
-Failed to copy uninstaller to temp directory
-Failed to create a shortcut
 Failed to delete uninstaller registry keys
 Failed to register as default program on win 10
 Failed to rename the file!
@@ -173,7 +170,6 @@ Install SumatraPDF in &folder:
 Installation failed!
 Installation in progress...
 KB
-Keep the PDF &browser plugin installed (no longer supported)
 Let Windows Desktop Search &search PDF documents
 Let Windows show &previews of PDF documents
 Light
@@ -184,6 +180,7 @@ Man&ga Mode
 Match Case
 Mobi documents
 Modified:
+New &window\tCtrl+N
 New version %s is available. Download new version?
 Next Page
 No matches were found
@@ -249,9 +246,9 @@ Show &Pages Continuously
 Show &Toolbar\tF8
 Show Favorites
 Show frequently read
+Show in &folder
 Show the &bookmarks sidebar when available
 Single Page
-Some files to be installed are damaged or missing
 Sorry, that shouldn't have happened!\n\nPlease press 'Cancel', if you want to help us fix the cause of this crash.
 Source file %s has no synchronization point
 Start SumatraPDF
