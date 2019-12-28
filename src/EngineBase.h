@@ -66,6 +66,7 @@ class RenderedBitmap {
     bool StretchDIBits(HDC hdc, RectI target) const;
 };
 
+extern Kind kindDestinationNone;
 extern Kind kindDestinationScrollTo;
 extern Kind kindDestinationLaunchURL;
 extern Kind kindDestinationLaunchEmbedded;
@@ -92,35 +93,19 @@ class PageDestination {
     WCHAR* value = nullptr;
     WCHAR* name = nullptr;
 
-    ~PageDestination() {
-        free(value);
-        free(name);
-    }
+    PageDestination() = default;
 
-    Kind Kind() const {
-        return kind;
-    }
-
+    ~PageDestination();
+    Kind Kind() const;
     // page the destination points to (0 for external destinations such as URLs)
-    int GetPageNo() const {
-        return pageNo;
-    }
-
+    int GetPageNo() const;
     // rectangle of the destination on the above returned page
-    RectD GetRect() const {
-        return rect;
-    }
-
+    RectD GetRect() const;
     // string value associated with the destination (e.g. a path or a URL)
-    WCHAR* GetValue() const {
-        return value;
-    }
-
+    WCHAR* GetValue() const;
     // the name of this destination (reverses EngineBase::GetNamedDest) or nullptr
     // (mainly applicable for links of type "LaunchFile" to PDF documents)
-    WCHAR* GetName() const {
-        return name;
-    }
+    WCHAR* GetName() const;
 };
 
 PageDestination* newSimpleDest(int pageNo, RectD rect, const WCHAR* value = nullptr);
@@ -162,36 +147,19 @@ class PageElement {
 
     int imageID = 0;
 
-    ~PageElement() {
-        free(value);
-        delete dest;
-    }
+    ~PageElement();
     // the type of this page element
-    bool Is(Kind expectedKind) const {
-        return kind == expectedKind;
-    }
-
+    bool Is(Kind expectedKind) const;
     // page this element lives on (0 for elements in a ToC)
-    int GetPageNo() const {
-        return pageNo;
-    }
-
+    int GetPageNo() const;
     // rectangle that can be interacted with
-    RectD GetRect() const {
-        return rect;
-    }
-
+    RectD GetRect() const;
     // string value associated with this element (e.g. displayed in an infotip)
     // caller must free() the result
-    WCHAR* GetValue() const {
-        return value;
-    }
-
+    WCHAR* GetValue() const;
     // if this element is a link, this returns information about the link's destination
     // (the result is owned by the PageElement and MUST NOT be deleted)
-    PageDestination* AsLink() {
-        return dest;
-    }
+    PageDestination* AsLink();
 };
 
 PageElement* clonePageElement(PageElement*);

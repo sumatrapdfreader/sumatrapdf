@@ -14,6 +14,7 @@ Kind kindPageElementDest = "dest";
 Kind kindPageElementImage = "image";
 Kind kindPageElementComment = "comment";
 
+Kind kindDestinationNone = "none";
 Kind kindDestinationScrollTo = "scrollTo";
 Kind kindDestinationLaunchURL = "launchURL";
 Kind kindDestinationLaunchEmbedded = "launchEmbedded";
@@ -30,6 +31,68 @@ Kind kindDestinationGoToPageDialog = "goToPageDialog";
 Kind kindDestinationPrintDialog = "printDialog";
 Kind kindDestinationSaveAsDialog = "saveAsDialog";
 Kind kindDestinationZoomToDialog = "zoomToDialog";
+
+PageDestination::~PageDestination() {
+    free(value);
+    free(name);
+}
+
+Kind PageDestination::Kind() const {
+    return kind;
+}
+
+// page the destination points to (0 for external destinations such as URLs)
+int PageDestination::GetPageNo() const {
+    return pageNo;
+}
+
+// rectangle of the destination on the above returned page
+RectD PageDestination::GetRect() const {
+    return rect;
+}
+
+// string value associated with the destination (e.g. a path or a URL)
+WCHAR* PageDestination::GetValue() const {
+    return value;
+}
+
+// the name of this destination (reverses EngineBase::GetNamedDest) or nullptr
+// (mainly applicable for links of type "LaunchFile" to PDF documents)
+WCHAR* PageDestination::GetName() const {
+    return name;
+}
+
+PageElement::~PageElement() {
+    free(value);
+    delete dest;
+}
+
+// the type of this page element
+bool PageElement::Is(Kind expectedKind) const {
+    return kind == expectedKind;
+}
+
+// page this element lives on (0 for elements in a ToC)
+int PageElement::GetPageNo() const {
+    return pageNo;
+}
+
+// rectangle that can be interacted with
+RectD PageElement::GetRect() const {
+    return rect;
+}
+
+// string value associated with this element (e.g. displayed in an infotip)
+// caller must free() the result
+WCHAR* PageElement::GetValue() const {
+    return value;
+}
+
+// if this element is a link, this returns information about the link's destination
+// (the result is owned by the PageElement and MUST NOT be deleted)
+PageDestination* PageElement::AsLink() {
+    return dest;
+}
 
 RenderedBitmap::~RenderedBitmap() {
     DeleteObject(hbmp);
@@ -120,6 +183,7 @@ PageDestination* clonePageDestination(PageDestination* dest) {
         return nullptr;
     }
     auto res = new PageDestination();
+    CrashIf(!dest->kind);
     res->kind = dest->kind;
     res->pageNo = dest->GetPageNo();
     res->rect = dest->GetRect();

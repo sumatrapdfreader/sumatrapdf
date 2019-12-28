@@ -266,7 +266,9 @@ void LinkHandler::GotoLink(PageDestination* link) {
     TabInfo* tab = owner->currentTab;
     WCHAR* path = link->GetValue();
     Kind kind = link->Kind();
-    if (kindDestinationScrollTo == kind) {
+    if (kindDestinationNone == kind) {
+        return;
+    } else if (kindDestinationScrollTo == kind) {
         // TODO: respect link->ld.gotor.new_window for PDF documents ?
         ScrollTo(link);
     } else if (kindDestinationLaunchURL == kind) {

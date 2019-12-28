@@ -52,6 +52,7 @@ static PageDestination* newDjVuDestination(const char* link) {
         res->kind = kindDestinationLaunchURL;
         res->value = strconv::FromUtf8(link);
     }
+    CrashIf(!res->kind);
     if (IsPageLink(link)) {
         res->pageNo = atoi(link + 1);
     }

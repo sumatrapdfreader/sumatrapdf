@@ -36,6 +36,7 @@ static DocTocItem* newChmTocItem(const WCHAR* title, int pageNo, const WCHAR* ur
         dest->kind = kindDestinationScrollTo;
         dest->name = str::Dup(url);
     }
+    CrashIf(!dest->kind);
 
     dest->rect = RectD(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
     res->dest = dest;

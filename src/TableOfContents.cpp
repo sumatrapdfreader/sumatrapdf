@@ -87,6 +87,9 @@ static void CustomizeTocTooltip(TreeItmGetTooltipArgs* args) {
     if (k == kindDestinationScrollTo) {
         return;
     }
+    if (k == kindDestinationNone) {
+        return;
+    }
 
     CrashIf(k != kindDestinationLaunchURL && k != kindDestinationLaunchFile && k != kindDestinationLaunchEmbedded);
 

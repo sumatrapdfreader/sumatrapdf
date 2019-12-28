@@ -828,7 +828,11 @@ static Kind CalcDestKind(fz_link* link, fz_outline* outline, bool isAttachment) 
     if (outline && isAttachment) {
         return kindDestinationLaunchEmbedded;
     }
-
+    // outline entries with page set to -1 go nowhere
+    // see https://github.com/sumatrapdfreader/sumatrapdf/issues/1352
+    if (outline && outline->page == -1) {
+        return kindDestinationNone;
+    }
     char* uri = PdfLinkGetURI(link, outline);
     // some outline entries are bad (issue 1245)
     if (!uri) {
@@ -977,6 +981,7 @@ PageElement* newFzLink(int pageNo, fz_link* link, fz_outline* outline, bool isAt
 
     auto dest = new PageDestination();
     dest->kind = CalcDestKind(link, outline, isAttachment);
+    CrashIf(!dest->kind);
     dest->rect = CalcDestRect(link, outline);
     dest->value = str::Dup(res->GetValue());
     dest->name = CalcDestName(link, outline);
