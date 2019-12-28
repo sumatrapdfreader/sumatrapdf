@@ -182,6 +182,10 @@ void UpdateTextSelection(WindowInfo* win, bool select) {
 }
 
 void ZoomToSelection(WindowInfo* win, float factor, bool scrollToFit, bool relative) {
+    if (!win->IsDocLoaded()) {
+        return;
+    }
+
     PointI pt;
     bool zoomToPt = false;
 

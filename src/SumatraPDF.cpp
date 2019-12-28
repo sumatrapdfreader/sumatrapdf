@@ -308,7 +308,6 @@ bool OpenFileExternally(const WCHAR* path) {
 }
 
 void SwitchToDisplayMode(WindowInfo* win, DisplayMode displayMode, bool keepContinuous) {
-    CrashIf(!win->IsDocLoaded());
     if (!win->IsDocLoaded()) {
         return;
     }
@@ -4119,8 +4118,9 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
     }
 #endif
 
-    if (!win)
+    if (!win) {
         return DefWindowProc(hwnd, msg, wParam, lParam);
+    }
 
     if (!win->IsAboutWindow() && IDM_OPEN_WITH_EXTERNAL_FIRST <= wmId && wmId <= IDM_OPEN_WITH_EXTERNAL_LAST) {
         ViewWithExternalViewer(win->currentTab, wmId - IDM_OPEN_WITH_EXTERNAL_FIRST);
@@ -4183,15 +4183,11 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
             break;
 
         case IDT_VIEW_ZOOMIN:
-            if (win->IsDocLoaded()) {
-                ZoomToSelection(win, ctrl->GetNextZoomStep(ZOOM_MAX), false);
-            }
+            ZoomToSelection(win, ctrl->GetNextZoomStep(ZOOM_MAX), false);
             break;
 
         case IDT_VIEW_ZOOMOUT:
-            if (win->IsDocLoaded()) {
-                ZoomToSelection(win, ctrl->GetNextZoomStep(ZOOM_MIN), false);
-            }
+            ZoomToSelection(win, ctrl->GetNextZoomStep(ZOOM_MIN), false);
             break;
 
         case IDM_ZOOM_6400:
@@ -4219,18 +4215,15 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
             break;
 
         case IDM_VIEW_SINGLE_PAGE:
-            if (win->IsDocLoaded())
-                SwitchToDisplayMode(win, DM_SINGLE_PAGE, true);
+            SwitchToDisplayMode(win, DM_SINGLE_PAGE, true);
             break;
 
         case IDM_VIEW_FACING:
-            if (win->IsDocLoaded())
-                SwitchToDisplayMode(win, DM_FACING, true);
+            SwitchToDisplayMode(win, DM_FACING, true);
             break;
 
         case IDM_VIEW_BOOK:
-            if (win->IsDocLoaded())
-                SwitchToDisplayMode(win, DM_BOOK_VIEW, true);
+            SwitchToDisplayMode(win, DM_BOOK_VIEW, true);
             break;
 
         case IDM_VIEW_CONTINUOUS:
@@ -4246,8 +4239,9 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
             break;
 
         case IDM_VIEW_SHOW_HIDE_MENUBAR:
-            if (!win->tabsInTitlebar)
+            if (!win->tabsInTitlebar) {
                 ShowHideMenuBar(win);
+            }
             break;
 
         case IDM_CHANGE_LANGUAGE:
@@ -4296,8 +4290,9 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
             break;
 
         case IDM_VIEW_ROTATE_RIGHT:
-            if (win->AsFixed())
+            if (win->AsFixed()) {
                 win->AsFixed()->RotateBy(90);
+            }
             break;
 
         case IDM_FIND_FIRST:
@@ -4385,20 +4380,23 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
             break;
 
         case IDM_MOVE_FRAME_FOCUS:
-            if (!IsFocused(win->hwndFrame))
+            if (!IsFocused(win->hwndFrame)) {
                 SetFocus(win->hwndFrame);
-            else if (win->tocVisible)
+            } else if (win->tocVisible) {
                 SetFocus(win->tocTreeCtrl->hwnd);
+            }
             break;
 
         case IDM_GOTO_NAV_BACK:
-            if (win->IsDocLoaded())
+            if (win->IsDocLoaded()) {
                 ctrl->Navigate(-1);
+            }
             break;
 
         case IDM_GOTO_NAV_FORWARD:
-            if (win->IsDocLoaded())
+            if (win->IsDocLoaded()) {
                 ctrl->Navigate(1);
+            }
             break;
 
         case IDM_COPY_SELECTION:
@@ -4439,8 +4437,9 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
         case IDM_DEBUG_MUI:
             mui::SetDebugPaint(!mui::IsDebugPaint());
             win::menu::SetChecked(GetMenu(win->hwndFrame), IDM_DEBUG_MUI, !mui::IsDebugPaint());
-            for (size_t i = 0; i < gWindows.size(); i++)
+            for (size_t i = 0; i < gWindows.size(); i++) {
                 gWindows.at(i)->RedrawAll(true);
+            }
             break;
 
         case IDM_DEBUG_ANNOTATION:
@@ -4452,13 +4451,11 @@ static LRESULT FrameOnCommand(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wPara
             break;
 
         case IDM_FAV_ADD:
-            if (win->IsDocLoaded())
-                AddFavorite(win);
+            AddFavoriteForCurrentPage(win);
             break;
 
         case IDM_FAV_DEL:
-            if (win->IsDocLoaded())
-                DelFavorite(win);
+            DelFavorite(win->ctrl->FilePath(), win->currPageNo);
             break;
 
         case IDM_FAV_TOGGLE:
@@ -4485,8 +4482,9 @@ LRESULT CALLBACK WndProcFrame(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     if (win && win->tabsInTitlebar) {
         bool callDefault = true;
         LRESULT res = CustomCaptionFrameProc(hwnd, msg, wParam, lParam, &callDefault, win);
-        if (!callDefault)
+        if (!callDefault) {
             return res;
+        }
     }
 
     switch (msg) {

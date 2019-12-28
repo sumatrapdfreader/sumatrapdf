@@ -36,8 +36,9 @@ class Favorites {
     void RemoveAllForFile(const WCHAR* filePath);
 };
 
-void AddFavorite(WindowInfo* win);
-void DelFavorite(WindowInfo* win);
+void AddFavoriteWithLabelAndName(WindowInfo* win, int pageNo, const WCHAR* pageLabel, AutoFreeWstr& name);
+void AddFavoriteForCurrentPage(WindowInfo* win);
+void DelFavorite(const WCHAR* filePath, int pageNo);
 void RebuildFavMenu(WindowInfo* win, HMENU menu);
 void CreateFavorites(WindowInfo* win);
 void ToggleFavorites(WindowInfo* win);

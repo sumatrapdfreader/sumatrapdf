@@ -602,7 +602,35 @@ static DocTocItem* TocItemForPageNo(DocTocItem* item, int pageNo) {
     return currItem;
 }
 
-void AddFavorite(WindowInfo* win) {
+void AddFavoriteWithLabelAndName(WindowInfo* win, int pageNo, const WCHAR* pageLabel, AutoFreeWstr& name) {
+    bool shouldAdd = Dialog_AddFavorite(win->hwndFrame, pageLabel, name);
+    if (!shouldAdd) {
+        return;
+    }
+
+    AutoFreeWstr plainLabel(str::Format(L"%d", pageNo));
+    bool needsLabel = !str::Eq(plainLabel, pageLabel);
+
+    RememberFavTreeExpansionStateForAllWindows();
+    const WCHAR* pl = nullptr;
+    if (needsLabel) {
+        pl = pageLabel;
+    }
+    TabInfo* tab = win->currentTab;
+    gFavorites.AddOrReplace(tab->filePath, pageNo, name, pl);
+    // expand newly added favorites by default
+    DisplayState* fav = gFavorites.GetFavByFilePath(tab->filePath);
+    if (fav && fav->favorites->size() == 2) {
+        win->expandedFavorites.Append(fav);
+    }
+    UpdateFavoritesTreeForAllWindows();
+    prefs::Save();
+}
+
+void AddFavoriteForCurrentPage(WindowInfo* win) {
+    if (!win->IsDocLoaded()) {
+        return;
+    }
     TabInfo* tab = win->currentTab;
     CrashIf(!tab);
     int pageNo = win->currPageNo;
@@ -617,35 +645,16 @@ void AddFavorite(WindowInfo* win) {
             name.SetCopy(item->title);
         }
     }
-    AutoFreeWstr pageLabel(ctrl->GetPageLabel(pageNo));
-
-    bool shouldAdd = Dialog_AddFavorite(win->hwndFrame, pageLabel, name);
-    if (!shouldAdd) {
-        return;
-    }
-
-    AutoFreeWstr plainLabel(str::Format(L"%d", pageNo));
-    bool needsLabel = !str::Eq(plainLabel, pageLabel);
-
-    RememberFavTreeExpansionStateForAllWindows();
-    WCHAR* pl = nullptr;
-    if (needsLabel) {
-        pl = pageLabel.Get();
-    }
-    gFavorites.AddOrReplace(tab->filePath, pageNo, name, pl);
-    // expand newly added favorites by default
-    DisplayState* fav = gFavorites.GetFavByFilePath(tab->filePath);
-    if (fav && fav->favorites->size() == 2) {
-        win->expandedFavorites.Append(fav);
-    }
-    UpdateFavoritesTreeForAllWindows();
-    prefs::Save();
+    AutoFreeWstr pageLabel = ctrl->GetPageLabel(pageNo);
+    AddFavoriteWithLabelAndName(win, pageNo, pageLabel.Get(), name);
 }
 
-void DelFavorite(WindowInfo* win) {
-    CrashIf(!win->currentTab);
+void DelFavorite(const WCHAR* filePath, int pageNo) {
+    if (!filePath) {
+        return;
+    }
     RememberFavTreeExpansionStateForAllWindows();
-    gFavorites.Remove(win->currentTab->filePath, win->currPageNo);
+    gFavorites.Remove(filePath, pageNo);
     UpdateFavoritesTreeForAllWindows();
     prefs::Save();
 }
@@ -660,8 +669,10 @@ void RememberFavTreeExpansionState(WindowInfo* win) {
     }
     int n = tm->RootCount();
     for (int i = 0; i < n; i++) {
-        FavTreeItem* fti = (FavTreeItem*)tm->RootAt(i);
-        if (fti->IsExpanded()) {
+        TreeItem* ti = tm->RootAt(i);
+        bool isExpanded = treeCtrl->IsExpanded(ti);
+        if (isExpanded) {
+            FavTreeItem* fti = (FavTreeItem*)ti;
             Favorite* fn = fti->favorite;
             DisplayState* f = gFavorites.GetByFavorite(fn);
             win->expandedFavorites.push_back(f);

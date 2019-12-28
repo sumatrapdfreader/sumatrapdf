@@ -256,7 +256,7 @@ HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu, int flag
         if (str::Eq(md.title, SEP_ITEM)) {
             // prevent two consecutive separators
             if (!wasSeparator) {
-                AppendMenu(menu, MF_SEPARATOR, 0, nullptr);
+                AppendMenu(menu, MF_SEPARATOR, (UINT_PTR)md.id, nullptr);
             }
             wasSeparator = true;
         } else if (MF_NO_TRANSLATE == (md.flags & MF_NO_TRANSLATE)) {

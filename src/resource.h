@@ -89,6 +89,7 @@
 #define IDM_COLLAPSE_ALL                526
 #define IDM_EXPORT_BOOKMARKS            527
 #define IDM_NEW_BOOKMARKS               528
+#define IDM_SEPARATOR                   530
 
 #define IDM_VISIT_WEBSITE               550
 #define IDM_ABOUT                       551

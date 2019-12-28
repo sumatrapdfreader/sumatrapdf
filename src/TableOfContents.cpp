@@ -25,6 +25,7 @@
 #include "EngineManager.h"
 #include "ParseBKM.h"
 
+#include "SumatraConfig.h"
 #include "SettingsStructs.h"
 #include "Controller.h"
 #include "GlobalPrefs.h"
@@ -33,6 +34,7 @@
 #include "Notifications.h"
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
+#include "Favorites.h"
 #include "TabInfo.h"
 #include "resource.h"
 #include "AppTools.h"
@@ -390,16 +392,6 @@ static void SetInitialExpandState(DocTocItem* item, Vec<int>& tocState) {
     }
 }
 
-#if defined(DEBUG) || defined(SVN_PRE_RELEASE_VER)
-static MenuDef contextMenuDef[] = {{"Expand All", IDM_EXPAND_ALL, MF_NO_TRANSLATE},
-                                   {"Colapse All", IDM_COLLAPSE_ALL, MF_NO_TRANSLATE},
-                                   {"Export Bookmarks", IDM_EXPORT_BOOKMARKS, MF_NO_TRANSLATE},
-                                   {"New Bookmarks", IDM_NEW_BOOKMARKS, MF_NO_TRANSLATE}};
-#else
-static MenuDef contextMenuDef[] = {{"Expand All", IDM_EXPAND_ALL, MF_NO_TRANSLATE},
-                                   {"Colapse All", IDM_COLLAPSE_ALL, MF_NO_TRANSLATE},
-#endif
-
 static void ExportBookmarksFromTab(TabInfo* tab) {
     auto* tocTree = tab->ctrl->GetTocTree();
     AutoFree path = strconv::WstrToUtf8(tab->filePath.get());
@@ -416,17 +408,70 @@ static void ExportBookmarksFromTab(TabInfo* tab) {
 // in Favorites.cpp
 extern TreeItem* GetOrSelectTreeItemAtPos(TreeContextMenuArgs* args, POINT& pt);
 
+// clang-format off
+static MenuDef contextMenuDef[] = {
+    {"Expand All",          IDM_EXPAND_ALL,         MF_NO_TRANSLATE},
+    {"Colapse All",         IDM_COLLAPSE_ALL,       MF_NO_TRANSLATE},
+    {"",                    IDM_FAV_ADD,            MF_NO_TRANSLATE},
+    {"",                    IDM_FAV_DEL,            MF_NO_TRANSLATE},
+    {SEP_ITEM,              IDM_SEPARATOR,          MF_NO_TRANSLATE},
+    {"Export Bookmarks",    IDM_EXPORT_BOOKMARKS,   MF_NO_TRANSLATE},
+    {"New Bookmarks",       IDM_NEW_BOOKMARKS,      MF_NO_TRANSLATE},
+};
+// clang-format on
+
+static void AddFavoriteFromToc(WindowInfo* win, DocTocItem* dti) {
+    int pageNo = 0;
+    if (dti->dest) {
+        pageNo = dti->dest->GetPageNo();
+    }
+    AutoFreeWstr name = str::Dup(dti->title);
+    AutoFreeWstr pageLabel = win->ctrl->GetPageLabel(pageNo);
+    AddFavoriteWithLabelAndName(win, pageNo, pageLabel.Get(), name);
+}
+
 static void OnTocContextMenu(TreeContextMenuArgs* args) {
     WindowInfo* win = FindWindowInfoByHwnd(args->w->hwnd);
     CrashIf(!win);
+    const WCHAR* filePath = win->ctrl->FilePath();
 
     POINT pt{};
     TreeItem* ti = GetOrSelectTreeItemAtPos(args, pt);
     if (!ti) {
         return;
     }
+    int pageNo = 0;
+    DocTocItem* dti = (DocTocItem*)ti;
+    if (dti->dest) {
+        pageNo = dti->dest->GetPageNo();
+    }
 
     HMENU popup = BuildMenuFromMenuDef(contextMenuDef, dimof(contextMenuDef), CreatePopupMenu());
+    bool showExperimental = isDebugBuild || isPreReleaseBuild;
+    if (!showExperimental) {
+        win::menu::Remove(popup, IDM_SEPARATOR);
+        win::menu::Remove(popup, IDM_EXPORT_BOOKMARKS);
+        win::menu::Remove(popup, IDM_NEW_BOOKMARKS);
+    }
+    if (pageNo > 0) {
+        AutoFreeWstr pageLabel = win->ctrl->GetPageLabel(pageNo);
+        bool isBookmarked = gFavorites.IsPageInFavorites(filePath, pageNo);
+        if (isBookmarked) {
+            // %s and not %d because re-using translation from RebuildFavMenu()
+            AutoFreeWstr s(str::Format(_TR("Remove page %s from favorites"), pageLabel.Get()));
+            win::menu::SetText(popup, IDM_FAV_DEL, s);
+            win::menu::Remove(popup, IDM_FAV_ADD);
+        } else {
+            // %s and not %d because re-using translation from RebuildFavMenu()
+            AutoFreeWstr s(str::Format(_TR("Add page %s to favorites"), pageLabel.Get()));
+            win::menu::SetText(popup, IDM_FAV_ADD, s);
+            win::menu::Remove(popup, IDM_FAV_DEL);
+        }
+    } else {
+        win::menu::Remove(popup, IDM_FAV_ADD);
+        win::menu::Remove(popup, IDM_FAV_DEL);
+    }
+
     // MarkMenuOwnerDraw(popup);
     UINT flags = TPM_RETURNCMD | TPM_RIGHTBUTTON;
     INT cmd = TrackPopupMenu(popup, flags, pt.x, pt.y, 0, win->hwndFrame, nullptr);
@@ -445,6 +490,12 @@ static void OnTocContextMenu(TreeContextMenuArgs* args) {
             break;
         case IDM_COLLAPSE_ALL:
             win->tocTreeCtrl->CollapseAll();
+            break;
+        case IDM_FAV_ADD:
+            AddFavoriteFromToc(win, dti);
+            break;
+        case IDM_FAV_DEL:
+            DelFavorite(filePath, pageNo);
             break;
     }
 }
@@ -562,14 +613,6 @@ static LRESULT OnTocCustomDraw(WindowInfo* win, NMTVCUSTOMDRAW* tvcd) {
     return CDRF_DODEFAULT;
 }
 
-/*
-[win](TreeNotifyArgs* args) {
-            CrashIf(win->tocTreeCtrl != args->w);
-            LRESULT res = OnTocTreeNotify(win, args->treeView);
-            args->procArgs->didHandle = (res != -1);
-            args->procArgs->result = res;
-        };
-*/
 static void OnTocTreeNotify(TreeNotifyArgs* args) {
     WindowInfo* win = FindWindowInfoByHwnd(args->w->hwnd);
     CrashIf(!win);
@@ -693,105 +736,103 @@ static void TocTreeMsgFilter(WndProcArgs* args) {
             InvalidateRect(hwnd, nullptr, TRUE);
             UpdateWindow(hwnd);
             break;
+    }
 #endif
-            return;
+}
+
+// Position label with close button and tree window within their parent.
+// Used for toc and favorites.
+void LayoutTreeContainer(LabelWithCloseWnd* l, DropDownCtrl* altBookmarks, HWND hwndTree) {
+    HWND hwndContainer = GetParent(hwndTree);
+    SizeI labelSize = l->GetIdealSize();
+    WindowRect rc(hwndContainer);
+    bool altBookmarksVisible = altBookmarks && altBookmarks->items.size() > 0;
+    int dy = rc.dy;
+    int y = 0;
+    MoveWindow(l->hwnd, y, 0, rc.dx, labelSize.dy, TRUE);
+    dy -= labelSize.dy;
+    y += labelSize.dy;
+    if (altBookmarks) {
+        altBookmarks->SetIsVisible(altBookmarksVisible);
+        if (altBookmarksVisible) {
+            SIZE bs = altBookmarks->GetIdealSize();
+            int elDy = bs.cy;
+            RECT r{0, y, rc.dx, y + elDy};
+            altBookmarks->SetBounds(r);
+            elDy += 4;
+            dy -= elDy;
+            y += elDy;
+        }
     }
+    MoveWindow(hwndTree, 0, y, rc.dx, dy, TRUE);
+}
 
-    // Position label with close button and tree window within their parent.
-    // Used for toc and favorites.
-    void LayoutTreeContainer(LabelWithCloseWnd * l, DropDownCtrl * altBookmarks, HWND hwndTree) {
-        HWND hwndContainer = GetParent(hwndTree);
-        SizeI labelSize = l->GetIdealSize();
-        WindowRect rc(hwndContainer);
-        bool altBookmarksVisible = altBookmarks && altBookmarks->items.size() > 0;
-        int dy = rc.dy;
-        int y = 0;
-        MoveWindow(l->hwnd, y, 0, rc.dx, labelSize.dy, TRUE);
-        dy -= labelSize.dy;
-        y += labelSize.dy;
-        if (altBookmarks) {
-            altBookmarks->SetIsVisible(altBookmarksVisible);
-            if (altBookmarksVisible) {
-                SIZE bs = altBookmarks->GetIdealSize();
-                int elDy = bs.cy;
-                RECT r{0, y, rc.dx, y + elDy};
-                altBookmarks->SetBounds(r);
-                elDy += 4;
-                dy -= elDy;
-                y += elDy;
-            }
-        }
-        MoveWindow(hwndTree, 0, y, rc.dx, dy, TRUE);
-    }
-
-    static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR subclassId,
-                                          DWORD_PTR data) {
-        WindowInfo* winFromData = reinterpret_cast<WindowInfo*>(data);
-        WindowInfo* win = FindWindowInfoByHwnd(hwnd);
-        if (!win) {
-            return DefSubclassProc(hwnd, msg, wp, lp);
-        }
-        CrashIf(subclassId != win->tocBoxSubclassId);
-        CrashIf(win != winFromData);
-
-        switch (msg) {
-            case WM_SIZE:
-                LayoutTreeContainer(win->tocLabelWithClose, win->altBookmarks, win->tocTreeCtrl->hwnd);
-                break;
-
-            case WM_COMMAND:
-                if (LOWORD(wp) == IDC_TOC_LABEL_WITH_CLOSE) {
-                    ToggleTocBox(win);
-                }
-                break;
-        }
+static LRESULT CALLBACK WndProcTocBox(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR subclassId, DWORD_PTR data) {
+    WindowInfo* winFromData = reinterpret_cast<WindowInfo*>(data);
+    WindowInfo* win = FindWindowInfoByHwnd(hwnd);
+    if (!win) {
         return DefSubclassProc(hwnd, msg, wp, lp);
     }
+    CrashIf(subclassId != win->tocBoxSubclassId);
+    CrashIf(win != winFromData);
 
-    // TODO: should unsubclass as well?
-    static void SubclassToc(WindowInfo * win) {
-        TreeCtrl* tree = win->tocTreeCtrl;
-        HWND hwndTocBox = win->hwndTocBox;
+    switch (msg) {
+        case WM_SIZE:
+            LayoutTreeContainer(win->tocLabelWithClose, win->altBookmarks, win->tocTreeCtrl->hwnd);
+            break;
 
-        if (win->tocBoxSubclassId == 0) {
-            win->tocBoxSubclassId = NextSubclassId();
-            BOOL ok = SetWindowSubclass(hwndTocBox, WndProcTocBox, win->tocBoxSubclassId, (DWORD_PTR)win);
-            CrashIf(!ok);
-        }
+        case WM_COMMAND:
+            if (LOWORD(wp) == IDC_TOC_LABEL_WITH_CLOSE) {
+                ToggleTocBox(win);
+            }
+            break;
     }
+    return DefSubclassProc(hwnd, msg, wp, lp);
+}
 
-    void UnsubclassToc(WindowInfo * win) {
-        if (win->tocBoxSubclassId != 0) {
-            RemoveWindowSubclass(win->hwndTocBox, WndProcTocBox, win->tocBoxSubclassId);
-        }
-    }
+static void SubclassToc(WindowInfo* win) {
+    TreeCtrl* tree = win->tocTreeCtrl;
+    HWND hwndTocBox = win->hwndTocBox;
 
-    void CreateToc(WindowInfo * win) {
-        HMODULE hmod = GetModuleHandle(nullptr);
-        int dx = gGlobalPrefs->sidebarDx;
-        DWORD style = WS_CHILD | WS_CLIPCHILDREN;
-        HWND parent = win->hwndFrame;
-        win->hwndTocBox = CreateWindowExW(0, WC_STATIC, L"", style, 0, 0, dx, 0, parent, 0, hmod, nullptr);
-
-        auto* l = new LabelWithCloseWnd();
-        l->Create(win->hwndTocBox, IDC_TOC_LABEL_WITH_CLOSE);
-        win->tocLabelWithClose = l;
-        l->SetPaddingXY(2, 2);
-        l->SetFont(GetDefaultGuiFont());
-        // label is set in UpdateToolbarSidebarText()
-
-        win->altBookmarks = new DropDownCtrl(win->hwndTocBox);
-        win->altBookmarks->Create();
-
-        auto* tocTreeCtrl = new TreeCtrl(win->hwndTocBox);
-        tocTreeCtrl->dwExStyle = WS_EX_STATICEDGE | TVS_EX_DOUBLEBUFFER;
-        tocTreeCtrl->msgFilter = TocTreeMsgFilter;
-        tocTreeCtrl->onTreeNotify = OnTocTreeNotify;
-        tocTreeCtrl->onGetTooltip = CustomizeTocTooltip;
-        tocTreeCtrl->onContextMenu = OnTocContextMenu;
-
-        bool ok = tocTreeCtrl->Create(L"TOC");
+    if (win->tocBoxSubclassId == 0) {
+        win->tocBoxSubclassId = NextSubclassId();
+        BOOL ok = SetWindowSubclass(hwndTocBox, WndProcTocBox, win->tocBoxSubclassId, (DWORD_PTR)win);
         CrashIf(!ok);
-        win->tocTreeCtrl = tocTreeCtrl;
-        SubclassToc(win);
     }
+}
+
+void UnsubclassToc(WindowInfo* win) {
+    if (win->tocBoxSubclassId != 0) {
+        RemoveWindowSubclass(win->hwndTocBox, WndProcTocBox, win->tocBoxSubclassId);
+    }
+}
+
+void CreateToc(WindowInfo* win) {
+    HMODULE hmod = GetModuleHandle(nullptr);
+    int dx = gGlobalPrefs->sidebarDx;
+    DWORD style = WS_CHILD | WS_CLIPCHILDREN;
+    HWND parent = win->hwndFrame;
+    win->hwndTocBox = CreateWindowExW(0, WC_STATIC, L"", style, 0, 0, dx, 0, parent, 0, hmod, nullptr);
+
+    auto* l = new LabelWithCloseWnd();
+    l->Create(win->hwndTocBox, IDC_TOC_LABEL_WITH_CLOSE);
+    win->tocLabelWithClose = l;
+    l->SetPaddingXY(2, 2);
+    l->SetFont(GetDefaultGuiFont());
+    // label is set in UpdateToolbarSidebarText()
+
+    win->altBookmarks = new DropDownCtrl(win->hwndTocBox);
+    win->altBookmarks->Create();
+
+    auto* tocTreeCtrl = new TreeCtrl(win->hwndTocBox);
+    tocTreeCtrl->dwExStyle = WS_EX_STATICEDGE | TVS_EX_DOUBLEBUFFER;
+    tocTreeCtrl->msgFilter = TocTreeMsgFilter;
+    tocTreeCtrl->onTreeNotify = OnTocTreeNotify;
+    tocTreeCtrl->onGetTooltip = CustomizeTocTooltip;
+    tocTreeCtrl->onContextMenu = OnTocContextMenu;
+
+    bool ok = tocTreeCtrl->Create(L"TOC");
+    CrashIf(!ok);
+    win->tocTreeCtrl = tocTreeCtrl;
+    SubclassToc(win);
+}
