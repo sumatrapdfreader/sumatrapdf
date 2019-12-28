@@ -4757,6 +4757,7 @@ void ShowCrashHandlerMessage() {
 
     char* msg = "We're sorry, SumatraPDF crashed.\n\nPress 'Cancel' to see crash report.";
     UINT flags = MB_ICONERROR | MB_OK | MB_OKCANCEL | MbRtlReadingMaybe();
+    flags |= MB_SETFOREGROUND | MB_TOPMOST;
     int res = MessageBoxA(nullptr, msg, "SumatraPDF crashed", flags);
     if (IDCANCEL == res) {
         LaunchFile(gCrashFilePath, nullptr, L"open");
