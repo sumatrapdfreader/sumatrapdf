@@ -15,7 +15,7 @@ import (
 // we don't want want to show crsahes for outdated builds
 // so this is usually set to the latest pre-release build
 // https://www.sumatrapdfreader.org/prerelease.html
-const lowestCrashingBuildToShow = 11807
+const lowestCrashingBuildToShow = 11818
 
 type CrashVersion struct {
 	main         string
