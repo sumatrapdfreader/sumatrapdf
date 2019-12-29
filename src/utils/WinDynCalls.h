@@ -91,6 +91,9 @@ typedef decltype(IsThemeBackgroundPartiallyTransparent)* Sig_IsThemeBackgroundPa
 typedef decltype(GetThemeColor)* Sig_GetThemeColor;
 // typedef HRESULT(WINAPI* Sig_GetThemeColor)(HTHEME, int, int, int, COLORREF*);
 
+typedef decltype(SetWindowTheme)* Sig_SetWindowTheme;
+// typedef HRESULT(WINAPI* Sig_SetWindowTheme)(HWND, LPCWSTR, LPCWSTR);
+
 #define UXTHEME_API_LIST(V)                  \
     V(IsAppThemed)                           \
     V(OpenThemeData)                         \
@@ -98,6 +101,7 @@ typedef decltype(GetThemeColor)* Sig_GetThemeColor;
     V(DrawThemeBackground)                   \
     V(IsThemeActive)                         \
     V(IsThemeBackgroundPartiallyTransparent) \
+    V(SetWindowTheme)                        \
     V(GetThemeColor)
 
 /// dwmapi.dll

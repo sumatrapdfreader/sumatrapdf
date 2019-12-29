@@ -4,6 +4,7 @@
 #include "utils/BaseUtil.h"
 #include "utils/Log.h"
 #include "utils/WinUtil.h"
+#include "utils/WinDynCalls.h"
 
 #include "wingui/WinGui.h"
 #include "wingui/Layout.h"
@@ -239,6 +240,10 @@ bool TreeCtrl::Create(const WCHAR* title) {
     if (IsVistaOrGreater()) {
         SendMessageW(hwnd, TVM_SETEXTENDEDSTYLE, TVS_EX_DOUBLEBUFFER, TVS_EX_DOUBLEBUFFER);
     }
+    if (DynSetWindowTheme) {
+        DynSetWindowTheme(hwnd, L"Explorer", nullptr);
+    }
+
     Subclass();
     SubclassParent();
 
