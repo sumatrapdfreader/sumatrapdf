@@ -189,6 +189,10 @@ func showCrashesToTerminal() {
 		}
 		nTotalCrashes++
 		ci := parseCrashFile(path)
+		if ci == nil || ci.ver == nil {
+			logf("Failed to parse crash file '%s'\n", path)
+			return nil
+		}
 		if !shouldShowCrash(ci) {
 			nNotShownCrashes++
 			return nil
@@ -205,11 +209,10 @@ func showCrashesToTerminal() {
 		return nil
 	}
 	filepath.Walk(dataDir, fn)
-	logf("Total crashes: %d, not shown: %d\n", nTotalCrashes, nNotShownCrashes)
+	logf("Total crashes: %d, shown: %d\n", nTotalCrashes, nTotalCrashes-nNotShownCrashes)
 }
 
-// ListRemoveFiles returns a list of files under a given prefix
-func ListRemoteFiles2(c *u.MinioClient, prefix string) ([]*minio.ObjectInfo, error) {
+func listRemoteFiles(c *u.MinioClient, prefix string) ([]*minio.ObjectInfo, error) {
 	var res []*minio.ObjectInfo
 	client, err := c.GetClient()
 	if err != nil {
@@ -232,14 +235,18 @@ func downloadCrashes(dataDir string) {
 		logf("downloadCrashes took %s\n", time.Since(timeStart))
 	}()
 	mc := newMinioClient()
-	c, err := mc.GetClient()
-	must(err)
-	c.TraceOn(os.Stdout)
+	if false {
+		c, err := mc.GetClient()
+		must(err)
+		c.TraceOn(os.Stdout)
+	}
 
+	// this fails with digital ocean because in ListObjectsV2 they seemingly don't return
+	// continuation token
 	//remoteFiles, err := mc.ListRemoteFiles("updatecheck/uploadedfiles/sumatrapdf-crashes/")
 	//must(err)
 
-	remoteFiles, err := ListRemoteFiles2(mc, "updatecheck/uploadedfiles/sumatrapdf-crashes/")
+	remoteFiles, err := listRemoteFiles(mc, "updatecheck/uploadedfiles/sumatrapdf-crashes/")
 	must(err)
 
 	nRemoteFiles := len(remoteFiles)
