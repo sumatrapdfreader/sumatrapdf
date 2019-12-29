@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -16,6 +18,8 @@ import (
 // so this is usually set to the latest pre-release build
 // https://www.sumatrapdfreader.org/prerelease.html
 const lowestCrashingBuildToShow = 11818
+
+const crashesPrefix = "updatecheck/uploadedfiles/sumatrapdf-crashes/"
 
 type CrashVersion struct {
 	main         string
@@ -243,10 +247,10 @@ func downloadCrashes(dataDir string) {
 
 	// this fails with digital ocean because in ListObjectsV2 they seemingly don't return
 	// continuation token
-	//remoteFiles, err := mc.ListRemoteFiles("updatecheck/uploadedfiles/sumatrapdf-crashes/")
+	//remoteFiles, err := mc.ListRemoteFiles(crashesPrefix)
 	//must(err)
 
-	remoteFiles, err := listRemoteFiles(mc, "updatecheck/uploadedfiles/sumatrapdf-crashes/")
+	remoteFiles, err := listRemoteFiles(mc, crashesPrefix)
 	must(err)
 
 	nRemoteFiles := len(remoteFiles)
@@ -254,7 +258,7 @@ func downloadCrashes(dataDir string) {
 	nDownloaded := 0
 	for _, rf := range remoteFiles {
 		must(rf.Err)
-		name := strings.TrimPrefix(rf.Key, "updatecheck/uploadedfiles/sumatrapdf-crashes/")
+		name := strings.TrimPrefix(rf.Key, crashesPrefix)
 		path := filepath.Join(dataDir, name)
 		if u.FileExists(path) {
 			continue
@@ -269,10 +273,69 @@ func downloadCrashes(dataDir string) {
 	logf("dataDir: %s\n", dataDir)
 }
 
+const nDaysToKeep = 14
+
+func deleteWithPrefix(prefix string) {
+	timeStart := time.Now()
+	defer func() {
+		logf("deleteWithPrefix('%s') took %s\n", prefix, time.Since(timeStart))
+	}()
+	mc := newMinioClient()
+	remoteFiles, err := listRemoteFiles(mc, prefix)
+	must(err)
+	for _, rf := range remoteFiles {
+		must(rf.Err)
+		if false {
+			err = mc.Delete(rf.Key)
+			must(err)
+		}
+		logf("Deleted '%s'\n", rf.Key)
+	}
+}
+
+func deleteOldCrashes() {
+	timeStart := time.Now()
+	defer func() {
+		logf("deleteOldCrashes took %s\n", time.Since(timeStart))
+	}()
+	mc := newMinioClient()
+	remoteFiles, err := listRemoteFiles(mc, crashesPrefix)
+	must(err)
+	days := map[string]bool{}
+	for _, rf := range remoteFiles {
+		must(rf.Err)
+		day := strings.TrimPrefix(rf.Key, crashesPrefix)
+		// now day is YYYY/MM/DD/rest
+		day = path.Dir(day)
+		panicIf(len(strings.Split(day, "/")) != 3)
+		days[day] = true
+	}
+	var sortedDays []string
+	for day := range days {
+		sortedDays = append(sortedDays, day)
+	}
+	sort.Strings(sortedDays)
+	n := len(sortedDays)
+	nToDelete := n - nDaysToKeep
+	if nToDelete < 1 {
+		logf("nothing to delete, %d days of crashes\n", n)
+		return
+	}
+	for i := 0; i < nToDelete; i++ {
+		day := sortedDays[i]
+		prefix := crashesPrefix + day + "/"
+		deleteWithPrefix(prefix)
+	}
+}
+
 func previewCrashes() {
 	panicIf(!hasSpacesCreds())
 	dataDir := crashesDataDir()
 	logf("previewCrashes: data dir: '%s'\n", dataDir)
-	downloadCrashes(dataDir)
-	showCrashesToTerminal()
+	deleteOldCrashes()
+
+	if false {
+		downloadCrashes(dataDir)
+		showCrashesToTerminal()
+	}
 }
