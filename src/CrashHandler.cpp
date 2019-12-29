@@ -21,6 +21,7 @@
 #include "CrashHandler.h"
 #include "Version.h"
 #include "SumatraConfig.h"
+#include "AppPrefs.h"
 
 #if !defined(CRASH_SUBMIT_SERVER) || !defined(CRASH_SUBMIT_URL)
 #define CRASH_SUBMIT_SERVER L"updatecheck.io"
@@ -88,6 +89,7 @@ static WCHAR* gLibMupdfPdbPath = nullptr;
 static WCHAR* gSumatraPdfDllPdbPath = nullptr;
 static WCHAR* gSumatraPdfPdbPath = nullptr;
 static char* gSystemInfo = nullptr;
+static char* gSettingsFile = nullptr;
 static char* gModulesInfo = nullptr;
 static HANDLE gDumpEvent = nullptr;
 static HANDLE gDumpThread = nullptr;
@@ -112,8 +114,13 @@ static char* BuildCrashInfoText(size_t* sizeOut) {
     s.Append("\n");
     s.Append(gModulesInfo);
 
-    s.Append("\n\n---------------------------------\n\n");
+    s.Append("\n\n-------- Log -----------------\n\n");
     s.AppendView(gLogBuf->AsView());
+
+    if (gSettingsFile) {
+        s.Append("\n\n----- Settings file ----------\n\n");
+        s.Append(gSettingsFile);
+    }
 
     *sizeOut = s.size();
     return s.StealData();
@@ -663,6 +670,11 @@ void InstallCrashHandler(const WCHAR* crashDumpPath, const WCHAR* crashFilePath,
     // allocation functions here.
     gCrashHandlerAllocator = new HeapAllocator();
     gSymbolsUrl = BuildSymbolsUrl();
+
+    AutoFreeWstr path = prefs::GetSettingsPath();
+    // can be empty on first run but that's fine because then we know it has default values
+    gSettingsFile = (char*)file::ReadFile(path).data();
+
     gDumpEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
     if (!gDumpEvent) {
         return;
@@ -705,6 +717,7 @@ void UninstallCrashHandler() {
 
     free(gSymbolPathW);
     free(gSystemInfo);
+    free(gSettingsFile);
     free(gModulesInfo);
     delete gCrashHandlerAllocator;
 }
