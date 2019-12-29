@@ -265,17 +265,25 @@ void BenchFileOrDir(WStrVec& pathsToBench) {
     }
 }
 
-inline bool IsSpecialDir(const WCHAR* s) {
-    return str::Eq(s, L".") || str::Eq(s, L"..");
+static bool IsVbkmFile(const WCHAR* s) {
+    return str::EndsWithI(s, L".vbkm");
 }
 
 static bool IsStressTestSupportedFile(const WCHAR* filePath, const WCHAR* filter) {
-    if (filter && !path::Match(path::GetBaseNameNoFree(filePath), filter))
+    // TODO: for now don't test .vbkm files
+    if (IsVbkmFile(filePath)) {
         return false;
-    if (EngineManager::IsSupportedFile(filePath) || Doc::IsSupportedFile(filePath))
+    }
+
+    if (filter && !path::Match(path::GetBaseNameNoFree(filePath), filter)) {
+        return false;
+    }
+    if (EngineManager::IsSupportedFile(filePath) || Doc::IsSupportedFile(filePath)) {
         return true;
-    if (!filter)
+    }
+    if (!filter) {
         return false;
+    }
     // sniff the file's content if it matches the filter but
     // doesn't have a known extension
     return EngineManager::IsSupportedFile(filePath, true) || Doc::IsSupportedFile(filePath, true);

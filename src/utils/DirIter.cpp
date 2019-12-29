@@ -61,13 +61,7 @@ static bool IsDirectory(DWORD fileAttr) {
 
 // "." and ".." are special
 static bool IsSpecialDir(const WCHAR* s) {
-    if ('.' == *s++) {
-        if (*s == 0)
-            return true;
-        if (('.' == *s++) && (0 == *s))
-            return true;
-    }
-    return false;
+    return str::Eq(s, L".") || str::Eq(s, L"..");
 }
 
 // Returns a full path of the next file
