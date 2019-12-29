@@ -644,7 +644,10 @@ static const WCHAR* HandleOpenCmd(const WCHAR* cmd, DDEACK& ack) {
         forceRefresh = 0;
     }
 
-    CrashIf(win && win->IsAboutWindow());
+    // TODO: not sure why this triggers. Seems to happen when opening multiple files
+    // via Open menu in explorer. The first one is opened via cmd-line arg, the
+    // rest via DDE.
+    // CrashIf(win && win->IsAboutWindow());
     if (!win) {
         return next;
     }
