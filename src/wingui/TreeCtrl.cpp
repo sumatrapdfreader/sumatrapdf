@@ -12,6 +12,8 @@
 #include "wingui/TreeCtrl.h"
 
 /*
+- https://docs.microsoft.com/en-us/windows/win32/controls/tree-view-control-reference
+
 Tree view, checkboxes and other info:
 - https://devblogs.microsoft.com/oldnewthing/20171127-00/?p=97465
 - https://devblogs.microsoft.com/oldnewthing/20171128-00/?p=97475
@@ -232,6 +234,10 @@ bool TreeCtrl::Create(const WCHAR* title) {
     bool ok = WindowBase::Create();
     if (!ok) {
         return false;
+    }
+
+    if (IsVistaOrGreater()) {
+        SendMessageW(hwnd, TVM_SETEXTENDEDSTYLE, TVS_EX_DOUBLEBUFFER, TVS_EX_DOUBLEBUFFER);
     }
     Subclass();
     SubclassParent();

@@ -828,7 +828,7 @@ void CreateToc(WindowInfo* win) {
     win->altBookmarks->Create();
 
     auto* tocTreeCtrl = new TreeCtrl(win->hwndTocBox);
-    tocTreeCtrl->dwExStyle = WS_EX_STATICEDGE | TVS_EX_DOUBLEBUFFER;
+    tocTreeCtrl->dwExStyle = WS_EX_STATICEDGE;
     tocTreeCtrl->msgFilter = TocTreeMsgFilter;
     tocTreeCtrl->onTreeNotify = OnTocTreeNotify;
     tocTreeCtrl->onGetTooltip = CustomizeTocTooltip;
