@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -8,7 +9,13 @@ import (
 	"time"
 
 	"github.com/kjk/u"
+	"github.com/minio/minio-go/v6"
 )
+
+// we don't want want to show crsahes for outdated builds
+// so this is usually set to the latest pre-release build
+// https://www.sumatrapdfreader.org/prerelease.html
+const lowestCrashingBuildToShow = 11807
 
 type CrashVersion struct {
 	main         string
@@ -155,7 +162,7 @@ func isCreateThumbnailCrash(ci *CrashInfo) bool {
 func shouldShowCrash(ci *CrashInfo) bool {
 	build := ci.ver.build
 	// filter out outdated builds
-	if build > 0 && build <= 11589 {
+	if build > 0 && build < lowestCrashingBuildToShow {
 		return false
 	}
 	if isCreateThumbnailCrash(ci) {
@@ -201,18 +208,45 @@ func showCrashesToTerminal() {
 	logf("Total crashes: %d, not shown: %d\n", nTotalCrashes, nNotShownCrashes)
 }
 
+// ListRemoveFiles returns a list of files under a given prefix
+func ListRemoteFiles2(c *u.MinioClient, prefix string) ([]*minio.ObjectInfo, error) {
+	var res []*minio.ObjectInfo
+	client, err := c.GetClient()
+	if err != nil {
+		return nil, err
+	}
+	doneCh := make(chan struct{})
+	defer close(doneCh)
+
+	files := client.ListObjects(c.Bucket, prefix, true, doneCh)
+	for oi := range files {
+		oic := oi
+		res = append(res, &oic)
+	}
+	return res, nil
+}
+
 func downloadCrashes(dataDir string) {
 	timeStart := time.Now()
 	defer func() {
 		logf("downloadCrashes took %s\n", time.Since(timeStart))
 	}()
 	mc := newMinioClient()
-	remoteFiles, err := mc.ListRemoteFiles("updatecheck/uploadedfiles/sumatrapdf-crashes")
+	c, err := mc.GetClient()
+	must(err)
+	c.TraceOn(os.Stdout)
+
+	//remoteFiles, err := mc.ListRemoteFiles("updatecheck/uploadedfiles/sumatrapdf-crashes/")
+	//must(err)
+
+	remoteFiles, err := ListRemoteFiles2(mc, "updatecheck/uploadedfiles/sumatrapdf-crashes/")
 	must(err)
 
 	nRemoteFiles := len(remoteFiles)
+	fmt.Printf("nRemoteFiles: %d\n", nRemoteFiles)
 	nDownloaded := 0
 	for _, rf := range remoteFiles {
+		must(rf.Err)
 		name := strings.TrimPrefix(rf.Key, "updatecheck/uploadedfiles/sumatrapdf-crashes/")
 		path := filepath.Join(dataDir, name)
 		if u.FileExists(path) {
@@ -221,7 +255,7 @@ func downloadCrashes(dataDir string) {
 		nDownloaded++
 		u.CreateDirForFileMust(path)
 		err = mc.DownloadFileAtomically(path, rf.Key)
-		must(err)
+		panicIf(err != nil, "mc.DownloadFileAtomc.DownloadFileAtomically('%s', '%s') failed with '%s'", path, rf.Key, err)
 		logf("Downloaded '%s' => '%s'\n", rf.Key, path)
 	}
 	logf("%d total crashes, downloaded %d\n", nRemoteFiles, nDownloaded)

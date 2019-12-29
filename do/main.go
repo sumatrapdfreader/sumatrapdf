@@ -46,7 +46,7 @@ func main() {
 		flgUploadTranslations      bool
 		flgClean                   bool
 		flgDeleteOldBuilds         bool
-		flgPreviewCrashes          bool
+		flgCrashes                 bool
 		flgCheckAccessKeys         bool
 	)
 
@@ -67,7 +67,7 @@ func main() {
 		flag.BoolVar(&flgUploadTranslations, "trans-upload", false, "upload translations to apptranslators.org if changed")
 		flag.BoolVar(&flgClean, "clean", false, "clean the build")
 		flag.BoolVar(&flgDeleteOldBuilds, "delete-old-builds", false, "delete old builds")
-		flag.BoolVar(&flgPreviewCrashes, "crashes", false, "see crashes in a web ui")
+		flag.BoolVar(&flgCrashes, "crashes", false, "see crashes in a web ui")
 		flag.BoolVar(&flgCheckAccessKeys, "check-access-keys", false, "check access keys for menu items")
 		flag.Parse()
 	}
@@ -93,7 +93,7 @@ func main() {
 		return
 	}
 
-	if flgPreviewCrashes {
+	if flgCrashes {
 		previewCrashes()
 		return
 	}
