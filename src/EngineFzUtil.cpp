@@ -59,12 +59,21 @@ WCHAR* pdf_to_wstr(fz_context* ctx, pdf_obj* obj) {
 }
 
 // some PDF documents contain control characters in outline titles or /Info properties
-WCHAR* pdf_clean_string(WCHAR* string) {
-    for (WCHAR* c = string; *c; c++) {
-        if (*c < 0x20 && *c != '\n' && *c != '\r' && *c != '\t')
-            *c = ' ';
+WCHAR* pdf_clean_string(WCHAR* s) {
+    WCHAR* curr = s;
+    while (*curr) {
+        WCHAR c = *curr;
+        // TODO: in 3.1.2 it was:
+        //if (c < 0x20 && c != '\n' && c != '\r' && c != '\t') {
+        // but I don't get why we would leave \n etc. in the toc item title
+        // This is visible in C# 4.0 In a nutshell.pdf where e.g. "Chapter 1" contains \n
+        // TODO: maybe remove them instead of replacing with space
+        if (c < 0x20) {
+            *curr = ' ';
+        }
+        curr++;
     }
-    return string;
+    return s;
 }
 
 fz_matrix fz_create_view_ctm(fz_rect mediabox, float zoom, int rotation) {
