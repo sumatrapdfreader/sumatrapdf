@@ -157,7 +157,7 @@ cn:高级选项(&A)...
 co:Ozzioni di l’espertu…
 cy:Dewisiadau &Uwch...
 cz:&Pokročilé možnosti...
-de:&Mehr Optionen…
+de:&Erweiterte Optionen…
 dk:&Avancerede valgmuligheder
 el:&Επιλογές για προχωρημένους
 es:Opciones &avanzadas...
@@ -949,7 +949,7 @@ cn:第一页(&F)\tHome
 co:P&rima pagina\tPrincipiu
 cy:Tudalen Gyntaf\tHome
 cz:První &stránka\tHome
-de:&Erste Seite\tPos1
+de:&Erste Seite\tPos 1
 dk:&Første side\tHome
 el:Πρώτ&η σελίδα\tHome
 es:Primera página\tInicio
@@ -2136,7 +2136,7 @@ cn:钉选(&P)
 co:&Spirlà u ducumentu
 cy:&Pinio Dogfen
 cz:&Připnout dokument
-de:Auf dieser Seite &behalten
+de:Dokument &anheften
 dk:&Fastgør dokument
 el:&Καρφίτσωμα εγγράφου
 es:Fi&jar documento
@@ -3033,7 +3033,7 @@ cn:主题(&T)
 co:&Temu
 cy:&Thema
 cz:&Téma
-de:Anwendungs &Stil
+de:Anwendungs&stil
 dk:Tema
 es:&Tema
 et:&Kujundus
@@ -3865,7 +3865,7 @@ cn:高级
 co:Espertu
 cy:Uwch
 cz:Upřesnit
-de:Weiteres
+de:Erweitert
 dk:Avanceret
 el:Προχωρημένα
 es:Avanzado
@@ -4943,7 +4943,7 @@ cn:CHM 文档
 co:Ducumenti d’aiutu CHM
 cy:Dogfennau CHM
 cz:Dokumenty CHM
-de:CHM Hilfe-Dateien
+de:CHM-Hilfedateien
 dk:CHM-dokumenter
 el:Έγγραφα CHM
 es:Documentos CHM
@@ -6400,7 +6400,7 @@ cn:无法安装 PDF 预览器
 co:Impussibule d’installà u previsualizatore di PDF
 cy:Mehu gosod rhagolygwr PDF
 cz:Nelze nainstalovat PDF prohlížeč
-de:Konnte die PDF Vorschau nicht installieren
+de:Konnte die PDF-Vorschau nicht installieren
 dk:Kunne ikke installere PDF-fremviser
 el:Δεν ήταν δυνατή η εγκατάσταση του PDF previewer
 es:No se pudo instalar el previsualizador de PDF
@@ -6460,7 +6460,7 @@ cn:无法安装 PDF 搜索过滤器
 co:Impussibule d’installà u filtru di ricerca di PDF
 cy:Methu gosod hidl chwilio PDF
 cz:Nelze nainstalovat vyhledávací PDF filtr
-de:Konnte den PDF Suchfilter nicht installieren
+de:Konnte den PDF-Suchfilter nicht installieren
 dk:Kunne ikke installere PDF-søgefilter
 el:Δεν μπόρεσε να γίνει εγκατάσταση του φίλτρου αναζήτησης PDF
 es:No se pudo instalar el filtro de búsqueda PDF
@@ -6644,7 +6644,7 @@ cn:无法卸载 PDF 预览器
 co:Impussibule di disinstallà u previsualizatore di PDF
 cy:Methu dadosod rhagolygwr PDF
 cz:Nelze odinstalovat PDF prohlížeč
-de:Konnte die PDF Vorschau nicht deinstallieren
+de:Konnte die PDF-Vorschau nicht deinstallieren
 dk:Kunne ikke fjerne PDF-fremviser
 el:Δεν ήταν δυνατή η απεγκατάσταση του PDF previewer
 es:No se pudo desinstalar el previsualizador de PDF
@@ -6703,7 +6703,7 @@ cn:无法卸载 PDF 搜索过滤器
 co:Impussibule di disinstallà u filtru di ricerca di PDF
 cy:Methu dadosod hidl chwilio PDF
 cz:Nelze odinstalovavat vyhledávací PDF filtr
-de:Konnte den PDF Suchfilter nicht deinstallieren
+de:Konnte den PDF-Suchfilter nicht deinstallieren
 dk:Kunne ikke afinstallere PDF-søgefilter
 el:Δε μπόρεσε να γίνει απεγκατάσταση του φίλτρου αναζήτησης PDF
 es:No se pudo desinstalar el filtro de búsqueda PDF
@@ -6823,7 +6823,7 @@ cn:无法写入 %s 到磁盘
 co:Impussibule di scrive %s nant’à u discu
 cy:Methu ysgrifennu %s i ddisg
 cz:Nelze zapsat %s na disk
-de:Konnte %s nicht kopieren
+de:Konnte %s nicht schreiben
 dk:Kunne ikke skrive %s til disk
 el:Αδυναμία εγγραφής %s στον δίσκο
 es:No se puede escribir %s en el disco
@@ -7774,7 +7774,7 @@ cn:EPUB 文档
 co:Libri elettronichi EPUB
 cy:eLyfrau EPUB
 cz:Dokumenty EPUB
-de:EPUB E-Bücher
+de:EPUB-E-Bücher
 dk:EPUB-dokumenter
 el:Έγγραφα EPUB
 es:Libros electrónicos en EPUB
@@ -7979,7 +7979,7 @@ cn:请输入您双击 PDF 文件后调用的命令行(&E):
 co:Scrivite a linea di cumanda à eseguisce quandu ci hè un doppiu-cliccu nant’à u ducumentu PDF :
 cy:Rhowch y llinell orchymyn i'w gychwyn pan yn rhoi clic dwbl i ddogfen PDF:
 cz:Dvojité kliknutí na PDF dokument vykoná zadaný příkazový řádek:
-de:Beim Doppelklicken im PDF Dokument wird der folgende Befehl ausgeführt:
+de:Beim Doppelklicken im PDF-Dokument wird der folgende Befehl ausgeführt:
 dk:Indtast den kommandolinje du vil bruge, når du dobbeltklikker på PDF-dokumentet:
 el:Εισάγετε την εντολή προς εκτέλεση με διπλό κλικ σε έγγραφο PDF:
 es:Introduzca los parámetros de línea de comandos que se ejecutarán al hacer doble-clic en el documento PDF:
@@ -8426,7 +8426,7 @@ cn:Win 10 下注冊為默认程序失败
 co:Fiascu per inscrive cum’è prugramma predefinitu nant’à Windows 10
 cy:Methwyd cofrestru fel rhaglen rhagosodedig ar Win 10
 cz:Nepodařilo se nastavit jako výchozí program na Windows 10
-de:Fehler beim registrieren als Standardanwendung auf win 10
+de:Fehler beim Registrieren als Standardanwendung unter Windows 10
 dk:Kunne ikke registreres som standardprogram på win 10
 el:Απέτυχε να γίνει το προκαθορισμένο πρόγραμμα ανάγνωσης στα Win 10
 es:Fallo al registrar como programa por defecto en Windows 10.
@@ -8851,7 +8851,7 @@ cn:小说文档
 co:Ducumenti FictionBook
 cy:Dogfennau FictionBook
 cz:Dokumenty FictionBook
-de:FictionBook E-Bücher
+de:FictionBook-Dokumente
 dk:FictionBook-dokumenter
 el:Έγγραφα FictionBook
 es:Documentos FictionBook
@@ -9315,7 +9315,7 @@ cn:向上查找
 co:Occurrenza precedente
 cy:Canfod y Blaenorol
 cz:Najít předchozí
-de:Rückwärts suchen
+de:Rückwärtssuchen
 dk:Find forrige
 el:Εύρεση προηγούμενου
 es:Buscar anterior
@@ -10429,7 +10429,7 @@ cn:隐藏选项(&O)
 co:Piattà l’&ozzioni
 cy:Dewisiadau C&uddio
 cz:Skrýt &možnosti
-de:&Optionen
+de:&Optionen ausblenden
 dk:Gem &valgmuligheder
 el:Απόκρυψη επιλογών
 es:Menos &opciones
@@ -10992,7 +10992,7 @@ cn:让 Windows “桌面搜索”搜索 PDF 文件
 co:Permette à Windows Desktop Search di &ricercà in i ducumenti PDF
 cy:Gadael i Chwilio Bwrdd Gwaith Windows c&hwilio'r dogfennau PDF
 cz:Nechte Windows Desktop Search &prohledávat PDF dokumenty
-de:PDF Dokumente in Windows-&Suchen einbeziehen
+de:PDF-Dokumente in Windows-&Suche einbeziehen
 dk:Lad Windows' skrivebordssøgning &søge i PDF-dokumenter
 el:Αναζήτηση εγγράφων PDF μέσω του Windows Desktop Search 
 es:Permitir que la búsqueda de Windows encuentre documentos PDF
@@ -11050,7 +11050,7 @@ cn:让 Windows 显示 PDF 文件的预览(&P)
 co:Permette à Windows di &previsualizà i ducumenti PDF
 cy:Gadael i Windows ddangos &rhagolwg o ddogfennau PDF
 cz:Nechte Windows zobrazit &náhledy PDF dokumentů
-de:&Vorschau für PDF Dokumente in Explorer aktivieren
+de:&Vorschau für PDF-Dokumente in Explorer aktivieren
 dk:Lad Windows vise &forhåndsvisninger af PDF-dokumenter
 el:Εμφάνιση προεπισκόπησης των εγγράφων PDF στα Windows
 es:Mostrar miniaturas en los iconos de documentos &PDF
@@ -11495,7 +11495,7 @@ cn:Mobi 文档
 co:Ducumenti Mobi
 cy:Dogfennau Mobi
 cz:Dokumenty Mobi
-de:Kindle E-Bücher
+de:Mobi-Dokumente
 dk:Mobi-dokumenter
 el:Έγγραφα Mobi
 es:Documentos en formato Mobi
@@ -12536,7 +12536,7 @@ cn:在 &Microsoft HTML Help 中打开(&M)
 co:Apre cù Microsoft &HTML Help
 cy:Agor yn Microsoft HTML Help
 cz:Otevřít v programu Microsoft HTML Help
-de:Mit &Microsoft HTML Hilfe öffnen
+de:Mit &Microsoft HTML-Hilfe öffnen
 dk:Åbn med Microsoft HTML Help
 el:Άνοιγμα με Microsoft HTML Help
 es:Abrir con &Microsoft HTML Help
@@ -12852,7 +12852,7 @@ cn:PDF 优化:
 co:Migliuramenti di PDF :
 cy:Gwella'r PDF
 cz:Optimalizace PDF:
-de:PDF Optimierungen:
+de:PDF-Optimierungen:
 dk:PDF-optimeringer:
 el:Βελτιστοποίηση PDF
 es:Optimizaciones de PDF:
@@ -12912,7 +12912,7 @@ cn:PDF 制作程序:
 co:PDF pruduttu da :
 cy:Cynhyrchydd PDF:
 cz:Producent PDF:
-de:PDF Urheber:
+de:PDF-Urheber:
 dk:PDF-producent:
 el:Δημιουργός PDF:
 es:Generador de PDF:
@@ -12975,7 +12975,7 @@ cn:PDF 版本:
 co:Versione di PDF :
 cy:PDF Fersiwn:
 cz:Verze PDF:
-de:PDF Version:
+de:PDF-Version:
 dk:PDF-version:
 el:Έκδοση PDF:
 es:Versión de PDF:
@@ -13495,7 +13495,7 @@ cn:PalmDoc 文档
 co:Ducumenti PalmDoc
 cy:Dogfennau PalmDoc
 cz:Dokumenty PalmDoc
-de:PalmDoc E-Bücher
+de:PalmDoc-Dokumente
 dk:PalmDoc-dokumenter
 el:Έγγραφα PalmDoc 
 es:Documentos PalmDoc
@@ -13552,7 +13552,7 @@ cn:请关闭 %s 以继续。
 co:Ci vole à chjode %s per cuntinuà !
 cy:Cau %s i barhau!
 cz:Prosím ukončete %s pro pokračování!
-de:Bitte schliessen Sie %s vor der Installation!
+de:Bitte schließen Sie %s vor der Installation!
 dk:Luk venligst %s for at fortsætte !
 el:Παρακαλώ κλείστε %s για να συνεχίσετε!
 es:Necesita cerrar %s para continuar.
@@ -13760,7 +13760,7 @@ ku:پڕ& بە شاشە بەبێ شریتی ئامرازەکان\tCtrl+L
 lt:&Pateiktis\tCtrl+L
 lv:Prezentācija\tF5
 mk:Презентација\tCtrl+L
-my:P&embentangan\tCtrl + L
+my:P&embentangan\tCtrl+L
 ne:प्रस्तुती&करण\tCtrl+L
 nl:Pr&esentatie\tCtrl+L
 nn:Pr&esentasjon\tF5
@@ -13931,7 +13931,7 @@ cn:打印范围
 co:Stesa di stampa
 cy:Ystod argraffu
 cz:Rozsah tisku
-de:Seitenbereich
+de:Druckbereich
 dk:Udskriftsområde
 el:Εύρος εκτύπωσης
 es:Rango de impresión
@@ -14053,7 +14053,7 @@ cn:正在打印
 co:Stampa in corsu.
 cy:Wrthi'n argraffu.
 cz:Probíhá tisk
-de:Drucken - SumatraPDF
+de:Drucken…
 dk:Udskrift i gang
 el:Εκτύπωση σε εξέλιξη
 es:Impresión en progreso.
@@ -15569,7 +15569,7 @@ cn:显示工具栏(&T)
 co:Affissà a &barra d’attrezzi\tF8
 cy:Dangos y &Bar Offer
 cz:Zobrazit panel nás&trojů
-de:&Werkzeugleiste anzeigen
+de:&Werkzeugleiste anzeigen\tF8
 dk:Vis &værktøjslinje
 el:&Εμφάνιση γραμμής εργαλείων
 es:Mostrar barra de &herramientas
@@ -15758,7 +15758,7 @@ cn:可用时显示书签边栏(&B)
 co:Affissà a &barra laterale di l’unghjette s’ella hè dispunibule
 cy:Dangos bar ochr y &nodau tudalen pan yw ar gael
 cz:Zo&brazit záložky v postranním panelu, jsou-li dostupné
-de:&Lesezeichen standardmässig anzeigen
+de:&Lesezeichen standardmäßig anzeigen
 dk:Vis sidepanelet for &bogmærker når tilgængeligt
 el:Εμφάνιση &πλευρικής στήλης σελιδοδεικτών όπου είναι δυνατόν
 es:Mostrar la barra de &marcadores cuando esté disponible
@@ -15952,7 +15952,7 @@ cn:源文件 %s 没有同步点
 co:U schedariu d’urigine %s ùn hà micca di puntu di sincrunizazione
 cy:Does dim pwynt cydweddu yn ffeil %s
 cz:Zdrojový soubor %s nemá bod synchronizace
-de:%s hat keinen Synchronisations-Punkt
+de:%s hat keinen Synchronisationspunkt
 dk:Kildefilen %s har ingen synkroniseringspunkter
 el:Το αρχείο προέλευσης %s δεν έχει σημείο συγχρονισμού
 es:El archivo de origen %s no posee un punto de sincronización
@@ -16256,7 +16256,7 @@ cn:SumatraPDF 选项
 co:Ozzioni di SumatraPDF
 cy:Dewisiadau SumatraPDF
 cz:Možnosti programu SumatraPDF
-de:SumatraPDF Optionen
+de:SumatraPDF-Optionen
 dk:SumatraPDF-valgmuligheder
 el:Επιλογές SumatraPDF
 es:Opciones de SumatraPDF
@@ -16320,7 +16320,7 @@ cn:升级 SumatraPDF
 co:Rinnovu di SumatraPDF
 cy:Diweddaru SumatraPDF
 cz:SumatraPDF - Aktualizace
-de:SumatraPDF Update
+de:SumatraPDF-Update
 dk:SumatraPDF-opdatering
 el:Ενημέρωση SumatraPDF
 es:Actualizar SumatraPDF
@@ -16808,7 +16808,7 @@ cn:文本文档
 co:Ducumenti di testu
 cy:Dogfennau testun
 cz:Textové dokumenty
-de:Text-Dokumente
+de:Textdokumente
 dk:Tekstdokumenter
 el:Αρχεία κειμένου
 es:Documentos de texto
@@ -17470,7 +17470,7 @@ cn:使用 SumatraPDF 作为默认的 PDF 阅读器(&U)
 co:Impiegà SumatraPDF cum’è u lettore PDF predefinitu
 cy:Defnyddio SumatraPDF fel y darllennydd PDF &rhagosodedig
 cz:Použít SumatraPDF jako &výchozí PDF prohlížeč
-de:SumatraPDF als Standard&programm für PDF Dokumente verwenden
+de:SumatraPDF als Standard&programm für PDF-Dokumente verwenden
 dk:Anvend SumatraPDF som &standardlæser for PDF-filer
 el:Χρησιμοποιήστε το SumatraPDF σαν το &default PDF reader
 es:Usar SumatraPDF como lector PDF pre&determinado
@@ -17799,7 +17799,7 @@ cn:您的版本为最新版。
 co:Impiegate l’ultima versione.
 cy:Mae'r fersiwn diweddaraf gennych.
 cz:Používáte nejnovější verzi.
-de:Sie haben die neuste Version installiert.
+de:Sie haben die neueste Version installiert.
 dk:Du har den seneste version.
 el:Έχετε την πιο πρόσφατη έκδοση.
 es:Esta es la última versión disponible.
