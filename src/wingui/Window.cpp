@@ -307,6 +307,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
             args.window = w;
             w->onDestroyed(&args);
         } else {
+            logf("Calling PostQuitMessage() in Window.cpp WindProc\n");
             PostQuitMessage(0);
         }
         return 0;

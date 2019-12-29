@@ -2343,6 +2343,7 @@ void CloseWindow(WindowInfo* win, bool quitIfLast, bool forceClose) {
     }
 
     if (lastWindow && quitIfLast) {
+        logf("Calling PostQuitMessage() in CloseWindow() because closing lastWindow\n");
         CrashIf(gWindows.size() != 0);
         PostQuitMessage(0);
     }

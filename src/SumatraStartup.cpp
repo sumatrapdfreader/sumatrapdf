@@ -1038,6 +1038,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
         RestrictPolicies(Perm_SavePreferences);
         RebuildMenuBarForWindow(win);
         StartStressTest(&i, win);
+        fastExit = true;
     }
 
     if (gGlobalPrefs->checkForUpdates) {
@@ -1072,14 +1073,14 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 Exit:
     prefs::UnregisterForFileChanges();
 
-    while (gWindows.size() > 0) {
-        DeleteWindowInfo(gWindows.at(0));
-    }
-
     if (fastExit) {
         // leave all the remaining clean-up to the OS
         // (as recommended for a quick exit)
         ::ExitProcess(retCode);
+    }
+
+    while (gWindows.size() > 0) {
+        DeleteWindowInfo(gWindows.at(0));
     }
 
     DeleteCachedCursors();
