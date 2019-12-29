@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-fe10ac6167d8246ccd80b34434dc3a5e840faf95
+23e0bc933c834da2c24e720f1a7a5d41b56513d7
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -5467,8 +5467,6 @@ tw:關閉(&C)
 uk:Закрити
 uz:Yopish
 vn:Đóng lại
-:Colapse All
-nl:Alle Samenvouwen
 :Comic books
 am:Հումորային գրքեր
 ar:الكتب الهزلية

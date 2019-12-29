@@ -82,7 +82,7 @@ Cannot start inverse search command. Please check the command line in the settin
 Change Language
 Check for &Updates
 Close
-Colapse All
+Collapse All
 Comic books
 Compatibility
 Continuous

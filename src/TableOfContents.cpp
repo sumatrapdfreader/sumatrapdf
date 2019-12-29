@@ -414,7 +414,7 @@ extern TreeItem* GetOrSelectTreeItemAtPos(TreeContextMenuArgs* args, POINT& pt);
 // clang-format off
 static MenuDef contextMenuDef[] = {
     {_TRN("Expand All"),    IDM_EXPAND_ALL,         0 },
-    {_TRN("Colapse All"),   IDM_COLLAPSE_ALL,       0 },
+    {_TRN("Collapse All"),  IDM_COLLAPSE_ALL,       0 },
     {"",                    IDM_FAV_ADD,            MF_NO_TRANSLATE},
     {"",                    IDM_FAV_DEL,            MF_NO_TRANSLATE},
     {SEP_ITEM,              IDM_SEPARATOR,          MF_NO_TRANSLATE},
