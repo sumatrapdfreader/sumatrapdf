@@ -14,6 +14,8 @@ github.com/kjk/atomicfile v0.0.0-20190916063300-2d5c7d7d05bf h1:HuwmGC6wEC0CdGC3
 github.com/kjk/atomicfile v0.0.0-20190916063300-2d5c7d7d05bf/go.mod h1:+YlBbo63AHA3uS6tdRhd42B+I1lV7H7+aqDhwTRl5rs=
 github.com/kjk/u v0.0.0-20191229010049-008aeff6fc55 h1:B6km6IEXrEm0HwH2qeT6piWnRrXCgWHZuqqoh9rTSJI=
 github.com/kjk/u v0.0.0-20191229010049-008aeff6fc55/go.mod h1:5DUexog+kFLzpHxAQ7R9Of0N8DdhUjbpWGgnc41TMK4=
+github.com/kjk/u v0.0.0-20191229080709-d1ac8976d53f h1:HGmmQzrSiO8TNUIYoG6lg/DrVeqsFz2CEJeySHQHcRU=
+github.com/kjk/u v0.0.0-20191229080709-d1ac8976d53f/go.mod h1:5DUexog+kFLzpHxAQ7R9Of0N8DdhUjbpWGgnc41TMK4=
 github.com/konsorten/go-windows-terminal-sequences v1.0.1/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
 github.com/minio/minio-go/v6 v6.0.44 h1:CVwVXw+uCOcyMi7GvcOhxE8WgV+Xj8Vkf2jItDf/EGI=
 github.com/minio/minio-go/v6 v6.0.44/go.mod h1:qD0lajrGW49lKZLtXKtCB4X/qkMf0a5tBvN2PaZg7Gg=

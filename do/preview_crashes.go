@@ -140,10 +140,16 @@ func parseCrash(d []byte) *CrashInfo {
 	return res
 }
 
+var crashesDirCached = ""
+
 func crashesDataDir() string {
+	if crashesDirCached != "" {
+		return crashesDirCached
+	}
 	dir := u.UserHomeDirMust()
 	dir = filepath.Join(dir, "data", "sumatra-crashes")
 	u.CreateDirMust((dir))
+	crashesDirCached = dir
 	return dir
 }
 
@@ -233,7 +239,14 @@ func listRemoteFiles(c *u.MinioClient, prefix string) ([]*minio.ObjectInfo, erro
 	return res, nil
 }
 
-func downloadCrashes(dataDir string) {
+func crashPathFromKey(key string) string {
+	dataDir := crashesDataDir()
+	name := strings.TrimPrefix(key, crashesPrefix)
+	path := filepath.Join(dataDir, name)
+	return path
+}
+
+func downloadCrashes() {
 	timeStart := time.Now()
 	defer func() {
 		logf("downloadCrashes took %s\n", time.Since(timeStart))
@@ -258,8 +271,7 @@ func downloadCrashes(dataDir string) {
 	nDownloaded := 0
 	for _, rf := range remoteFiles {
 		must(rf.Err)
-		name := strings.TrimPrefix(rf.Key, crashesPrefix)
-		path := filepath.Join(dataDir, name)
+		path := crashPathFromKey(rf.Key)
 		if u.FileExists(path) {
 			continue
 		}
@@ -270,7 +282,6 @@ func downloadCrashes(dataDir string) {
 		logf("Downloaded '%s' => '%s'\n", rf.Key, path)
 	}
 	logf("%d total crashes, downloaded %d\n", nRemoteFiles, nDownloaded)
-	logf("dataDir: %s\n", dataDir)
 }
 
 const nDaysToKeep = 14
@@ -285,11 +296,15 @@ func deleteWithPrefix(prefix string) {
 	must(err)
 	for _, rf := range remoteFiles {
 		must(rf.Err)
-		if false {
+		if true {
 			err = mc.Delete(rf.Key)
 			must(err)
 		}
 		logf("Deleted '%s'\n", rf.Key)
+		path := crashPathFromKey(rf.Key)
+		if os.Remove(path) == nil {
+			logf("Deleted '%s'\n", path)
+		}
 	}
 }
 
@@ -334,8 +349,7 @@ func previewCrashes() {
 	logf("previewCrashes: data dir: '%s'\n", dataDir)
 	deleteOldCrashes()
 
-	if false {
-		downloadCrashes(dataDir)
-		showCrashesToTerminal()
-	}
+	downloadCrashes()
+	logf("dataDir: %s\n", dataDir)
+	showCrashesToTerminal()
 }
