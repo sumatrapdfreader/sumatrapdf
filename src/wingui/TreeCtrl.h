@@ -33,11 +33,22 @@ struct TreeContextMenuArgs {
 
 typedef std::function<void(TreeContextMenuArgs*)> OnTreeContextMenu;
 
-/* Creation sequence:
-- auto ctrl = new TreeCtrl()
-- set creation parameters
-- ctrl->Create()
-*/
+struct TreeSelectionChangedArgs {
+    WndProcArgs* procArgs = nullptr;
+    TreeCtrl* w = nullptr;
+    TreeItem* treeItem = nullptr;
+};
+
+typedef std::function<void(TreeSelectionChangedArgs*)> OnTreeSelectionChanged;
+
+struct TreeItemExpandedArgs {
+    WndProcArgs* procArgs = nullptr;
+    TreeCtrl* w = nullptr;
+    TreeItem* treeItem = nullptr;
+    bool isExpanded = false;
+};
+
+typedef std::function<void(TreeItemExpandedArgs*)> OnTreeItemExpanded;
 
 struct TreeItemState {
     bool isSelected = false;
@@ -45,6 +56,25 @@ struct TreeItemState {
     bool isChecked = false;
     int nChildren = 0;
 };
+
+struct TreeItemChangedArgs {
+    WndProcArgs* procArgs = nullptr;
+    TreeCtrl* w = nullptr;
+    TreeItem* treeItem = nullptr;
+    NMTVITEMCHANGE* nmic = nullptr;
+
+    // except for nChildren
+    TreeItemState prevState{};
+    TreeItemState newState{};
+};
+
+typedef std::function<void(TreeItemChangedArgs*)> OnTreeItemChanged;
+
+/* Creation sequence:
+- auto ctrl = new TreeCtrl()
+- set creation parameters
+- ctrl->Create()
+*/
 
 struct TreeCtrl : public WindowBase {
     TreeCtrl(HWND parent);
@@ -97,6 +127,12 @@ struct TreeCtrl : public WindowBase {
 
     // called to process WM_CONTEXTMENU
     OnTreeContextMenu onContextMenu = nullptr;
+
+    OnTreeSelectionChanged onTreeSelectionChanged = nullptr;
+
+    OnTreeItemExpanded onTreeItemExpanded = nullptr;
+
+    OnTreeItemChanged onTreeItemChanged = nullptr;
 
     // private
     TVITEMW item = {0};

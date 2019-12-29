@@ -102,6 +102,13 @@ static void TreeViewToggle(TreeCtrl* tree, HTREEITEM hItem, bool recursive) {
     }
 }
 
+static void SetTreeItemState(UINT uState, TreeItemState& state) {
+    state.isExpanded = bitmask::IsSet(uState, TVIS_EXPANDED);
+    state.isSelected = bitmask::IsSet(uState, TVIS_SELECTED);
+    UINT n = (uState >> 12) - 1;
+    state.isChecked = n != 0;
+}
+
 void TreeCtrl::WndProcParent(WndProcArgs* args) {
     auto* w = (TreeCtrl*)this;
     HWND hwnd = args->hwnd;
@@ -128,14 +135,56 @@ void TreeCtrl::WndProcParent(WndProcArgs* args) {
         auto code = nm->hdr.code;
         if (code == TVN_GETINFOTIP) {
             if (w->onGetTooltip) {
-                TreeItmGetTooltipArgs cbArgs{};
-                cbArgs.w = w;
-                cbArgs.info = (NMTVGETINFOTIPW*)(nm);
-                cbArgs.treeItem = w->GetTreeItemByHandle(cbArgs.info->hItem);
-                w->onGetTooltip(&cbArgs);
+                TreeItmGetTooltipArgs a{};
+                a.w = w;
+                a.info = (NMTVGETINFOTIPW*)(nm);
+                a.treeItem = w->GetTreeItemByHandle(a.info->hItem);
+                w->onGetTooltip(&a);
                 args->didHandle = true;
                 args->result = 0;
                 return;
+            }
+        }
+
+        if (code == TVN_SELCHANGED) {
+            if (w->onTreeSelectionChanged) {
+                TreeSelectionChangedArgs a;
+                a.procArgs = args;
+                a.w = w;
+                a.treeItem = w->GetTreeItemByHandle(nm->itemNew.hItem);
+                onTreeSelectionChanged(&a);
+            }
+        }
+
+        // https://docs.microsoft.com/en-us/windows/win32/controls/tvn-itemchanged
+        if (code == TVN_ITEMCHANGED) {
+            if (w->onTreeItemChanged) {
+                TreeItemChangedArgs a;
+                a.procArgs = args;
+                a.nmic = (NMTVITEMCHANGE*)lp;
+                TreeItem* ti = w->GetTreeItemByHandle(a.nmic->hItem);
+                SetTreeItemState(a.nmic->uStateOld, a.prevState);
+                SetTreeItemState(a.nmic->uStateNew, a.newState);
+                onTreeItemChanged(&a);
+            }
+        }
+
+        if (code == TVN_ITEMEXPANDED) {
+            bool doNotify = false;
+            bool isExpanded = false;
+            if (nm->action == TVE_COLLAPSE) {
+                isExpanded = false;
+                doNotify = true;
+            } else if (nm->action == TVE_EXPAND) {
+                isExpanded = true;
+                doNotify = true;
+            }
+            if (doNotify && onTreeItemExpanded) {
+                TreeItemExpandedArgs a{};
+                a.procArgs = args;
+                a.w = w;
+                a.treeItem = w->GetTreeItemByHandle(nm->itemNew.hItem);
+                onTreeItemExpanded(&a);
             }
         }
     }
@@ -457,11 +506,8 @@ TreeItemState TreeCtrl::GetItemState(TreeItem* ti) {
     CrashIf(!item);
 
     TreeItemState res;
-    res.isExpanded = bitmask::IsSet(item->state, TVIS_EXPANDED);
-    res.isSelected = bitmask::IsSet(item->state, TVIS_SELECTED);
+    SetTreeItemState(item->state, res);
     res.nChildren = item->cChildren;
 
-    UINT n = (item->state >> 12) - 1;
-    res.isChecked = n != 0;
     return res;
 }
