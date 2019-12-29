@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-5e7893bb3edf9052a6d1ece33db22b9ab5ecb6d3
+fe10ac6167d8246ccd80b34434dc3a5e840faf95
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -5467,6 +5467,8 @@ tw:關閉(&C)
 uk:Закрити
 uz:Yopish
 vn:Đóng lại
+:Colapse All
+nl:Alle Samenvouwen
 :Comic books
 am:Հումորային գրքեր
 ar:الكتب الهزلية
@@ -8088,6 +8090,8 @@ tw:正在載入 %s 時發生錯誤
 uk:Помилка завантаження %s
 uz:%s yuklab olish xatosi
 vn:Không mở %s được
+:Expand All
+nl:Alle Uitvouwen
 :F&avorites
 am:Ը&նտրյալներ
 ar:المفضلة
@@ -11610,6 +11614,9 @@ tw:檔案更新日期:
 uk:Змінено:
 uz:O'zgartirilgan:
 vn:Ngày chỉnh sửa
+:New &window\tCtrl+N
+fr:Nouvelle &fenêtre\tCtrl+N
+nl:Nieuw venster\tCrtl+N
 :New version %s is available. Download new version?
 af:Nuwe Weergawe %s Is Beskikbaar. Laai Die Nuwe Weergawe Af?
 am:Հասանելի է նոր՝ %s տարբերակը։ Ներբեռնե՞լ նոր տարբերակը։
@@ -15744,6 +15751,8 @@ tw:顯示經常開啟的檔案
 uk:Найбільш часто читані
 uz:Tez-tez o'qiladiganlarni ko'rsatish
 vn:Hiện Đọc thường xuyên
+:Show in &folder
+nl:Toon in &map
 :Show the &bookmarks sidebar when available
 am:Հնարավորության դեպքում ցուցադրել &Էջերը
 ar:اظهار &قائمة العناوين في الشريط الجانبي عند توفرها
