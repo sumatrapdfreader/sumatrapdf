@@ -492,15 +492,14 @@ void MenuUpdateStateForWindow(WindowInfo* win) {
 #define menusToEnableIfBrokenPDF menusToDisableIfDirectory
 
     TabInfo* tab = win->currentTab;
-    // TODO: is this check too expensive?
-    bool fileExists = tab && file::Exists(tab->filePath);
 
     for (int i = 0; i < dimof(menusToDisableIfNoDocument); i++) {
         UINT id = menusToDisableIfNoDocument[i];
         win::menu::SetEnabled(win->menu, id, win->IsDocLoaded());
     }
 
-    CrashIf(IsFileCloseMenuEnabled() == win->IsAboutWindow());
+    // TODO: happens with UseTabs = false with .pdf files
+    SubmitCrashIf(IsFileCloseMenuEnabled() == win->IsAboutWindow());
     win::menu::SetEnabled(win->menu, IDM_CLOSE, IsFileCloseMenuEnabled());
 
     MenuUpdatePrintItem(win, win->menu);
@@ -521,6 +520,9 @@ void MenuUpdateStateForWindow(WindowInfo* win) {
         win::menu::SetEnabled(win->menu, IDM_GOTO_NAV_BACK, tab->ctrl->CanNavigate(-1));
         win::menu::SetEnabled(win->menu, IDM_GOTO_NAV_FORWARD, tab->ctrl->CanNavigate(1));
     }
+
+        // TODO: is this check too expensive?
+    bool fileExists = tab && file::Exists(tab->filePath);
 
     if (tab && tab->ctrl && !fileExists && dir::Exists(tab->filePath)) {
         for (int i = 0; i < dimof(menusToDisableIfDirectory); i++) {
