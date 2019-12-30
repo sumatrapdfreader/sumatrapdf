@@ -34,6 +34,7 @@
 #include "Notifications.h"
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
+#include "DisplayModel.h"
 #include "Favorites.h"
 #include "TabInfo.h"
 #include "resource.h"
@@ -50,17 +51,6 @@
 #ifdef DISPLAY_TOC_PAGE_NUMBERS
 #define WM_APP_REPAINT_TOC (WM_APP + 1)
 #endif
-
-static DocTocItem* GetDocTocItemFromLPARAM(LPARAM lp) {
-    if (!lp) {
-        CrashMe(); // TODO: not sure if should ever happen
-        return nullptr;
-    }
-    // must do the cast in two stages because of multiple inheritance
-    TreeItem* treeItem = reinterpret_cast<TreeItem*>(lp);
-    DocTocItem* tocItem = static_cast<DocTocItem*>(treeItem);
-    return tocItem;
-}
 
 // set tooltip for this item but only if the text isn't fully shown
 // TODO: I might have lost something in translation
@@ -519,6 +509,26 @@ static Vec<Bookmarks*>* LoadAlterenativeBookmarks(const WCHAR* baseFileName) {
     return LoadAlterenativeBookmarks(tmp.as_view());
 }
 
+static bool ShouldCustomDraw(WindowInfo* win) {
+    // we only want custom drawing for pdf and pdf multi engines
+    // as they are the only ones supporting custom colors and fonts
+    DisplayModel* dm = win->AsFixed();
+    if (!dm) {
+        return false;
+    }
+    EngineBase* engine = dm->GetEngine();
+    if (!engine) {
+        return false;
+    }
+    Kind kind = dm->GetEngineType();
+    if (kind == kindEnginePdf || kind == kindEnginePdfMulti) {
+        return true;
+    }
+    return false;
+}
+
+void OnDocTocCustomDraw(TreeItemCustomDrawArgs*);
+
 void LoadTocTree(WindowInfo* win) {
     TabInfo* tab = win->currentTab;
     CrashIf(!tab);
@@ -567,6 +577,10 @@ void LoadTocTree(WindowInfo* win) {
 
     treeCtrl->SetTreeModel(tocTree);
 
+    treeCtrl->onTreeItemCustomDraw = nullptr;
+    if (ShouldCustomDraw(win)) {
+        treeCtrl->onTreeItemCustomDraw = OnDocTocCustomDraw;
+    }
     // UINT fl = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;
     // RedrawWindow(hwnd, nullptr, nullptr, fl);
 }
@@ -584,36 +598,56 @@ static void UpdateFont(HDC hdc, int fontFlags) {
 
 // https://docs.microsoft.com/en-us/windows/win32/controls/about-custom-draw
 // https://docs.microsoft.com/en-us/windows/win32/api/commctrl/ns-commctrl-nmtvcustomdraw
-static LRESULT OnTocCustomDraw(WindowInfo* win, NMTVCUSTOMDRAW* tvcd) {
-    // TODO: only for PDF
-    if (!win->AsFixed()) {
+void OnDocTocCustomDraw(TreeItemCustomDrawArgs* args) {
+#if defined(DISPLAY_TOC_PAGE_NUMBERS)
+    if (win->AsEbook())
         return CDRF_DODEFAULT;
+    switch (((LPNMCUSTOMDRAW)pnmtv)->dwDrawStage) {
+        case CDDS_PREPAINT:
+            return CDRF_NOTIFYITEMDRAW;
+        case CDDS_ITEMPREPAINT:
+            return CDRF_DODEFAULT | CDRF_NOTIFYPOSTPAINT;
+        case CDDS_ITEMPOSTPAINT:
+            RelayoutTocItem((LPNMTVCUSTOMDRAW)pnmtv);
+            // fall through
+        default:
+            return CDRF_DODEFAULT;
     }
+    break;
+#endif
+
+    args->procArgs->result = CDRF_DODEFAULT;
+    args->procArgs->didHandle = true;
 
     // TODO: only for PdfEngine
 
+    TreeCtrl* w = args->w;
+    NMTVCUSTOMDRAW* tvcd = args->nm;
     NMCUSTOMDRAW* cd = &(tvcd->nmcd);
     if (cd->dwDrawStage == CDDS_PREPAINT) {
         // ask to be notified about each item
-        return CDRF_NOTIFYITEMDRAW;
+        args->procArgs->result = CDRF_NOTIFYITEMDRAW;
+        return;
     }
 
     if (cd->dwDrawStage == CDDS_ITEMPREPAINT) {
         // called before drawing each item
-        DocTocItem* tocItem = GetDocTocItemFromLPARAM(cd->lItemlParam);
+        DocTocItem* tocItem = (DocTocItem*)args->treeItem;
+        ;
         if (!tocItem) {
-            return CDRF_DODEFAULT;
+            return;
         }
         if (tocItem->color != ColorUnset) {
             tvcd->clrText = tocItem->color;
         }
         if (tocItem->fontFlags != 0) {
             UpdateFont(cd->hdc, tocItem->fontFlags);
-            return CDRF_NEWFONT;
+            args->procArgs->result = CDRF_NEWFONT;
+            return;
         }
-        return CDRF_DODEFAULT;
+        return;
     }
-    return CDRF_DODEFAULT;
+    return;
 }
 
 static void OnTocTreeNotify(TreeNotifyArgs* args) {
@@ -675,23 +709,8 @@ static void OnTocTreeNotify(TreeNotifyArgs* args) {
             GoToTocLinkForTVItem(win, nullptr, true);
             break;
 
+#if 0
         case NM_CUSTOMDRAW:
-#ifdef DISPLAY_TOC_PAGE_NUMBERS
-            if (win->AsEbook())
-                return CDRF_DODEFAULT;
-            switch (((LPNMCUSTOMDRAW)pnmtv)->dwDrawStage) {
-                case CDDS_PREPAINT:
-                    return CDRF_NOTIFYITEMDRAW;
-                case CDDS_ITEMPREPAINT:
-                    return CDRF_DODEFAULT | CDRF_NOTIFYPOSTPAINT;
-                case CDDS_ITEMPOSTPAINT:
-                    RelayoutTocItem((LPNMTVCUSTOMDRAW)pnmtv);
-                    // fall through
-                default:
-                    return CDRF_DODEFAULT;
-            }
-            break;
-#else
             args->procArgs->didHandle = true;
             args->procArgs->result = OnTocCustomDraw(win, (NMTVCUSTOMDRAW*)pnmtv);
             break;

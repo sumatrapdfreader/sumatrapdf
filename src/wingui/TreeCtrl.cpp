@@ -134,42 +134,72 @@ void TreeCtrl::WndProcParent(WndProcArgs* args) {
 
         auto code = nm->hdr.code;
         if (code == TVN_GETINFOTIP) {
-            if (w->onGetTooltip) {
-                TreeItmGetTooltipArgs a{};
-                a.w = w;
-                a.info = (NMTVGETINFOTIPW*)(nm);
-                a.treeItem = w->GetTreeItemByHandle(a.info->hItem);
-                w->onGetTooltip(&a);
-                args->didHandle = true;
-                args->result = 0;
+            if (!w->onGetTooltip) {
+                return;
+            }
+            TreeItmGetTooltipArgs a{};
+            a.w = w;
+            a.info = (NMTVGETINFOTIPW*)(nm);
+            a.treeItem = w->GetTreeItemByHandle(a.info->hItem);
+            w->onGetTooltip(&a);
+            args->didHandle = true;
+            args->result = 0;
+            return;
+        }
+
+        // https://docs.microsoft.com/en-us/windows/win32/controls/nm-customdraw-tree-view
+        if (code == NM_CUSTOMDRAW) {
+            if (!w->onTreeItemCustomDraw) {
+                return;
+            }
+            TreeItemCustomDrawArgs a;
+            a.procArgs = args;
+            a.w = w;
+            a.nm = (NMTVCUSTOMDRAW*)lp;
+            HTREEITEM hItem = (HTREEITEM)a.nm->nmcd.dwItemSpec;
+            // it can be 0 in CDDS_PREPAINT state
+            if (hItem) {
+                a.treeItem = w->GetTreeItemByHandle(hItem);
+                CrashIf(!a.treeItem);
+            }
+            w->onTreeItemCustomDraw(&a);
+            if (a.procArgs->didHandle) {
                 return;
             }
         }
 
         if (code == TVN_SELCHANGED) {
-            if (w->onTreeSelectionChanged) {
-                TreeSelectionChangedArgs a;
-                a.procArgs = args;
-                a.w = w;
-                a.treeItem = w->GetTreeItemByHandle(nm->itemNew.hItem);
-                onTreeSelectionChanged(&a);
+            if (!w->onTreeSelectionChanged) {
+                return;
             }
+
+            TreeSelectionChangedArgs a;
+            a.procArgs = args;
+            a.w = w;
+            a.treeItem = w->GetTreeItemByHandle(nm->itemNew.hItem);
+            onTreeSelectionChanged(&a);
+            return;
         }
 
         // https://docs.microsoft.com/en-us/windows/win32/controls/tvn-itemchanged
         if (code == TVN_ITEMCHANGED) {
-            if (w->onTreeItemChanged) {
-                TreeItemChangedArgs a;
-                a.procArgs = args;
-                a.nmic = (NMTVITEMCHANGE*)lp;
-                TreeItem* ti = w->GetTreeItemByHandle(a.nmic->hItem);
-                SetTreeItemState(a.nmic->uStateOld, a.prevState);
-                SetTreeItemState(a.nmic->uStateNew, a.newState);
-                onTreeItemChanged(&a);
+            if (!w->onTreeItemChanged) {
+                return;
             }
+            TreeItemChangedArgs a;
+            a.procArgs = args;
+            a.nmic = (NMTVITEMCHANGE*)lp;
+            a.treeItem = w->GetTreeItemByHandle(a.nmic->hItem);
+            SetTreeItemState(a.nmic->uStateOld, a.prevState);
+            SetTreeItemState(a.nmic->uStateNew, a.newState);
+            onTreeItemChanged(&a);
+            return;
         }
 
         if (code == TVN_ITEMEXPANDED) {
+            if (!w->onTreeItemExpanded) {
+                return;
+            }
             bool doNotify = false;
             bool isExpanded = false;
             if (nm->action == TVE_COLLAPSE) {
@@ -179,31 +209,36 @@ void TreeCtrl::WndProcParent(WndProcArgs* args) {
                 isExpanded = true;
                 doNotify = true;
             }
-            if (doNotify && onTreeItemExpanded) {
-                TreeItemExpandedArgs a{};
-                a.procArgs = args;
-                a.w = w;
-                a.treeItem = w->GetTreeItemByHandle(nm->itemNew.hItem);
-                onTreeItemExpanded(&a);
+            if (!doNotify) {
+                return;
             }
+            TreeItemExpandedArgs a{};
+            a.procArgs = args;
+            a.w = w;
+            a.treeItem = w->GetTreeItemByHandle(nm->itemNew.hItem);
+            onTreeItemExpanded(&a);
+            return;
         }
+
+        return;
     }
 
     if (msg == WM_CONTEXTMENU) {
-        if (w->onContextMenu) {
-            TreeContextMenuArgs a;
-            a.procArgs = args;
-            a.w = w;
-            a.mouseGlobal.x = GET_X_LPARAM(lp);
-            a.mouseGlobal.y = GET_Y_LPARAM(lp);
-            POINT pt{a.mouseGlobal.x, a.mouseGlobal.y};
-            if (pt.x != -1) {
-                MapWindowPoints(HWND_DESKTOP, w->hwnd, &pt, 1);
-            }
-            a.mouseWindow.x = pt.x;
-            a.mouseWindow.y = pt.y;
-            onContextMenu(&a);
+        if (!w->onContextMenu) {
+            return;
         }
+        TreeContextMenuArgs a;
+        a.procArgs = args;
+        a.w = w;
+        a.mouseGlobal.x = GET_X_LPARAM(lp);
+        a.mouseGlobal.y = GET_Y_LPARAM(lp);
+        POINT pt{a.mouseGlobal.x, a.mouseGlobal.y};
+        if (pt.x != -1) {
+            MapWindowPoints(HWND_DESKTOP, w->hwnd, &pt, 1);
+        }
+        a.mouseWindow.x = pt.x;
+        a.mouseWindow.y = pt.y;
+        onContextMenu(&a);
         return;
     }
 }

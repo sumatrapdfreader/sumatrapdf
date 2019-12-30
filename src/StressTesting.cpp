@@ -265,16 +265,7 @@ void BenchFileOrDir(WStrVec& pathsToBench) {
     }
 }
 
-static bool IsVbkmFile(const WCHAR* s) {
-    return str::EndsWithI(s, L".vbkm");
-}
-
 static bool IsStressTestSupportedFile(const WCHAR* filePath, const WCHAR* filter) {
-    // TODO: for now don't test .vbkm files
-    if (IsVbkmFile(filePath)) {
-        return false;
-    }
-
     if (filter && !path::Match(path::GetBaseNameNoFree(filePath), filter)) {
         return false;
     }

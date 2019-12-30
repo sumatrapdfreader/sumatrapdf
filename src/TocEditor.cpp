@@ -3,6 +3,7 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
+#include "utils/Log.h"
 
 #include "wingui/WinGui.h"
 #include "wingui/TreeModel.h"
@@ -17,6 +18,7 @@
 
 static Window* gTocEditorWindow = nullptr;
 static ILayout* gTocEditorLayout = nullptr;
+static TreeCtrl* gTreeCtrl = nullptr;
 
 static std::tuple<ILayout*, ButtonCtrl*> CreateButtonLayout(HWND parent, std::string_view s, OnClicked onClicked) {
     auto b = new ButtonCtrl(parent);
@@ -55,8 +57,11 @@ static ILayout* CreateMainLayout(HWND hwnd, TreeModel* tm) {
 
     auto* tree = new TreeCtrl(hwnd);
     tree->withCheckboxes = true;
-    tree->Create(L"tree");
+    bool ok = tree->Create(L"tree");
+    CrashIf(!ok);
     tree->SetTreeModel(tm);
+
+    gTreeCtrl = tree;
     auto treeLayout = NewTreeLayout(tree);
 
     hbox->addChild(treeLayout, 3);
@@ -67,6 +72,38 @@ static ILayout* CreateMainLayout(HWND hwnd, TreeModel* tm) {
     padding->child = hbox;
     return padding;
 }
+
+static void OnWindowSize(SizeArgs* args) {
+    int dx = args->dx;
+    int dy = args->dy;
+    HWND hwnd = args->hwnd;
+    if (dx == 0 || dy == 0) {
+        return;
+    }
+    Size windowSize{dx, dy};
+    auto c = Tight(windowSize);
+    auto size = gTocEditorLayout->Layout(c);
+    Point min{0, 0};
+    Point max{size.Width, size.Height};
+    Rect bounds{min, max};
+    gTocEditorLayout->SetBounds(bounds);
+    InvalidateRect(hwnd, nullptr, false);
+    args->didHandle = true;
+}
+
+static void OnWindowDestroyed(WindowDestroyedArgs*) {
+    delete gTocEditorWindow;
+    gTocEditorWindow = nullptr;
+    delete gTocEditorLayout;
+    gTocEditorLayout = nullptr;
+}
+
+static void onTreeItemChanged(TreeItemChangedArgs* args) {
+    logf("onTreeItemChanged\n");
+}
+
+// in TableOfContents.cpp
+extern void OnDocTocCustomDraw(TreeItemCustomDrawArgs* args);
 
 // TODO: make a copy of tree model
 void StartTocEditor(TreeModel* tm) {
@@ -90,32 +127,15 @@ void StartTocEditor(TreeModel* tm) {
     CrashIf(!ok);
 
     gTocEditorLayout = CreateMainLayout(w->hwnd, tm);
-    w->onSize = [](SizeArgs* args) {
-        int dx = args->dx;
-        int dy = args->dy;
-        HWND hwnd = args->hwnd;
-        if (dx == 0 || dy == 0) {
-            return;
-        }
-        Size windowSize{dx, dy};
-        auto c = Tight(windowSize);
-        auto size = gTocEditorLayout->Layout(c);
-        Point min{0, 0};
-        Point max{size.Width, size.Height};
-        Rect bounds{min, max};
-        gTocEditorLayout->SetBounds(bounds);
-        InvalidateRect(hwnd, nullptr, false);
-        args->didHandle = true;
-    };
-    w->onDestroyed = [](WindowDestroyedArgs*) {
-        delete gTocEditorWindow;
-        gTocEditorWindow = nullptr;
-        delete gTocEditorLayout;
-        gTocEditorLayout = nullptr;
-    };
+
+    w->onSize = OnWindowSize;
+    w->onDestroyed = OnWindowDestroyed;
+    gTreeCtrl->onTreeItemChanged = onTreeItemChanged;
+    gTreeCtrl->onTreeItemCustomDraw = OnDocTocCustomDraw;
 
     // important to call this after hooking up onSize to ensure
     // first layout is triggered
+    w->SetIsVisible(true);
     w->SetIsVisible(true);
     gTocEditorWindow = w;
 }

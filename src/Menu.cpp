@@ -521,7 +521,7 @@ void MenuUpdateStateForWindow(WindowInfo* win) {
         win::menu::SetEnabled(win->menu, IDM_GOTO_NAV_FORWARD, tab->ctrl->CanNavigate(1));
     }
 
-        // TODO: is this check too expensive?
+    // TODO: is this check too expensive?
     bool fileExists = tab && file::Exists(tab->filePath);
 
     if (tab && tab->ctrl && !fileExists && dir::Exists(tab->filePath)) {

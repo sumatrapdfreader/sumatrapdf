@@ -70,6 +70,15 @@ struct TreeItemChangedArgs {
 
 typedef std::function<void(TreeItemChangedArgs*)> OnTreeItemChanged;
 
+struct TreeItemCustomDrawArgs {
+    WndProcArgs* procArgs = nullptr;
+    TreeCtrl* w = nullptr;
+    TreeItem* treeItem = nullptr;
+    NMTVCUSTOMDRAW* nm = nullptr;
+};
+
+typedef std::function<void(TreeItemCustomDrawArgs*)> OnTreeItemCustomDraw;
+
 /* Creation sequence:
 - auto ctrl = new TreeCtrl()
 - set creation parameters
@@ -133,6 +142,8 @@ struct TreeCtrl : public WindowBase {
     OnTreeItemExpanded onTreeItemExpanded = nullptr;
 
     OnTreeItemChanged onTreeItemChanged = nullptr;
+
+    OnTreeItemCustomDraw onTreeItemCustomDraw = nullptr;
 
     // private
     TVITEMW item = {0};
