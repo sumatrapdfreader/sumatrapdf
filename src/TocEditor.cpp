@@ -161,17 +161,6 @@ void StartTocEditor(TocEditorArgs* args) {
 
     gArgs = args;
 
-    // TODO: only for now. Maybe rename DocTocItem::isChecked
-    // => DocTocItem::isUnchecked so that default state is what we want
-    for (auto&& bkm : args->bookmarks) {
-        auto tm = bkm->toc;
-        VisitTreeModelItems(tm, [](TreeItem* ti) -> bool {
-            auto* docItem = (DocTocItem*)ti;
-            docItem->isChecked = true;
-            return true;
-        });
-    }
-
     auto w = new Window();
     w->backgroundColor = MkRgb((u8)0xee, (u8)0xee, (u8)0xee);
     w->SetTitle("Table of content editor");

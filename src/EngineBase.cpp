@@ -174,7 +174,7 @@ DocTocItem* CloneDocTocItemRecur(DocTocItem* ti) {
     res->title = str::Dup(ti->title);
     res->isOpenDefault = ti->isOpenDefault;
     res->isOpenToggled = ti->isOpenToggled;
-    res->isChecked = ti->isChecked;
+    res->isUnchecked = ti->isUnchecked;
     res->pageNo = ti->pageNo;
     res->id = ti->id;
     res->fontFlags = ti->fontFlags;
@@ -273,7 +273,7 @@ bool DocTocItem::IsExpanded() {
 }
 
 bool DocTocItem::IsChecked() {
-    return isChecked;
+    return !isUnchecked;
 }
 
 DocTocTree::DocTocTree(DocTocItem* root) {

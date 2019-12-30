@@ -181,7 +181,7 @@ class DocTocItem : public TreeItem {
     bool isOpenDefault = false;
     bool isOpenToggled = false;
 
-    bool isChecked = false;
+    bool isUnchecked = false;
 
     // page this item points to (0 for non-page destinations)
     // if GetLink() returns a destination to a page, the two should match
