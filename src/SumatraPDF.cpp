@@ -2407,10 +2407,12 @@ static bool AppendFileFilterForDoc(Controller* ctrl, str::WStr& fileFilter) {
 }
 
 static void OnMenuSaveAs(WindowInfo* win) {
-    if (!HasPermission(Perm_DiskAccess))
+    if (!HasPermission(Perm_DiskAccess)) {
         return;
-    if (!win->IsDocLoaded())
+    }
+    if (!win->IsDocLoaded()) {
         return;
+    }
 
     auto* ctrl = win->ctrl;
     const WCHAR* srcFileName = ctrl->FilePath();
@@ -2421,9 +2423,10 @@ static void OnMenuSaveAs(WindowInfo* win) {
         srcFileName = urlName ? urlName.get() : L"filename";
     }
 
-    AssertCrash(srcFileName);
-    if (!srcFileName)
+    CrashIf(!srcFileName);
+    if (!srcFileName) {
         return;
+    }
 
     EngineBase* engine = nullptr;
     if (auto* model = win->AsFixed(); model != nullptr) {
@@ -2456,8 +2459,9 @@ static void OnMenuSaveAs(WindowInfo* win) {
     // double-zero terminated string isn't cut by the string handling
     // methods too early on)
     str::WStr fileFilter(256);
-    if (AppendFileFilterForDoc(ctrl, fileFilter))
+    if (AppendFileFilterForDoc(ctrl, fileFilter)) {
         fileFilter.AppendFmt(L"\1*%s\1", defExt);
+    }
     if (canConvertToTXT) {
         fileFilter.Append(_TR("Text documents"));
         fileFilter.Append(L"\1*.txt\1");
@@ -2479,15 +2483,17 @@ static void OnMenuSaveAs(WindowInfo* win) {
         WCHAR* colon = (WCHAR*)str::FindChar(dstFileName, ':');
         str::TransChars(colon, L":", L"_");
         WCHAR* ext;
-        for (ext = colon; ext > dstFileName && *ext != '.'; ext--)
-            ;
-        if (ext == dstFileName)
+        for (ext = colon; ext > dstFileName && *ext != '.'; ext--) {
+            // no-op
+        }
+        if (ext == dstFileName) {
             ext = colon;
+        }
         memmove(ext, colon, (str::Len(colon) + 1) * sizeof(WCHAR));
-    }
-    // Remove the extension so that it can be re-added depending on the chosen filter
-    else if (str::EndsWithI(dstFileName, defExt))
+    } else if (str::EndsWithI(dstFileName, defExt)) {
+        // Remove the extension so that it can be re-added depending on the chosen filter
         dstFileName[str::Len(dstFileName) - str::Len(defExt)] = '\0';
+    }
 
     OPENFILENAME ofn = {0};
     ofn.lStructSize = sizeof(ofn);
@@ -2503,8 +2509,9 @@ static void OnMenuSaveAs(WindowInfo* win) {
     // in plugin mode, which is likely the main reason for saving as...)
 
     bool ok = GetSaveFileName(&ofn);
-    if (!ok)
+    if (!ok) {
         return;
+    }
 
     WCHAR* realDstFileName = dstFileName;
     bool convertToTXT = canConvertToTXT && str::EndsWithI(dstFileName, L".txt");

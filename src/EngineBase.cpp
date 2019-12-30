@@ -166,6 +166,32 @@ PageDestination* DocTocItem::GetPageDestination() {
     return dest;
 }
 
+DocTocItem* CloneDocTocItemRecur(DocTocItem* ti) {
+    if (ti == nullptr) {
+        return nullptr;
+    }
+    DocTocItem* res = new DocTocItem();
+    res->title = str::Dup(ti->title);
+    res->isOpenDefault = ti->isOpenDefault;
+    res->isOpenToggled = ti->isOpenToggled;
+    res->isChecked = ti->isChecked;
+    res->pageNo = ti->pageNo;
+    res->id = ti->id;
+    res->fontFlags = ti->fontFlags;
+    res->color = ti->color;
+    res->dest = clonePageDestination(ti->dest);
+    res->child = CloneDocTocItemRecur(ti->child);
+    res->next = CloneDocTocItemRecur(ti->next);
+    return res;
+}
+
+DocTocTree* CloneDocTocTree(DocTocTree* tree) {
+    DocTocTree* res = new DocTocTree();
+    res->name = str::Dup(tree->name);
+    res->root = CloneDocTocItemRecur(tree->root);
+    return res;
+}
+
 PageDestination* newSimpleDest(int pageNo, RectD rect, const WCHAR* value) {
     auto res = new PageDestination();
     res->pageNo = pageNo;

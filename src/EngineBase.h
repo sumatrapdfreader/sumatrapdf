@@ -223,6 +223,8 @@ class DocTocItem : public TreeItem {
     bool IsChecked() override;
 };
 
+DocTocItem* CloneDocTocItemRecur(DocTocItem*);
+
 struct DocTocTree : public TreeModel {
     // name of the bookmark view
     char* name = nullptr;
@@ -236,6 +238,8 @@ struct DocTocTree : public TreeModel {
     int RootCount() override;
     TreeItem* RootAt(int n) override;
 };
+
+DocTocTree* CloneDocTocTree(DocTocTree*);
 
 // a helper that allows for rendering interruptions in an engine-agnostic way
 class AbortCookie {

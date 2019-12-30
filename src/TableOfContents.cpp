@@ -423,6 +423,18 @@ static void AddFavoriteFromToc(WindowInfo* win, DocTocItem* dti) {
     AddFavoriteWithLabelAndName(win, pageNo, pageLabel.Get(), name);
 }
 
+static void StartTocEditorForWindowInfo(WindowInfo* win) {
+    auto* tab = win->currentTab;
+    TocEditorArgs* args = new TocEditorArgs();
+    // args->filePath = str::Dup(tab->filePath);
+    Bookmarks* bkms = new Bookmarks();
+    bkms->filePath = (char*)strconv::WstrToUtf8(tab->filePath).data();
+    DocTocTree* tree = (DocTocTree*)win->tocTreeCtrl->treeModel;
+    bkms->toc = CloneDocTocTree(tree);
+    args->bookmarks.push_back(bkms);
+    StartTocEditor(args);
+}
+
 static void OnTocContextMenu(TreeContextMenuArgs* args) {
     WindowInfo* win = FindWindowInfoByHwnd(args->w->hwnd);
     CrashIf(!win);
@@ -476,7 +488,7 @@ static void OnTocContextMenu(TreeContextMenuArgs* args) {
             ExportBookmarksFromTab(tab);
         } break;
         case IDM_NEW_BOOKMARKS:
-            StartTocEditor(win->tocTreeCtrl->treeModel);
+            StartTocEditorForWindowInfo(win);
             break;
         case IDM_EXPAND_ALL:
             win->tocTreeCtrl->ExpandAll();

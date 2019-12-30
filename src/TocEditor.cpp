@@ -14,11 +14,19 @@
 
 #include "EngineBase.h"
 
+#include "ParseBKM.h"
 #include "TocEditor.h"
+
+// TODO: put state in a TocEditorWindow
 
 static Window* gTocEditorWindow = nullptr;
 static ILayout* gTocEditorLayout = nullptr;
 static TreeCtrl* gTreeCtrl = nullptr;
+static TocEditorArgs* gArgs = nullptr;
+
+TocEditorArgs::~TocEditorArgs() {
+    DeleteVecMembers(bookmarks);
+}
 
 static std::tuple<ILayout*, ButtonCtrl*> CreateButtonLayout(HWND parent, std::string_view s, OnClicked onClicked) {
     auto b = new ButtonCtrl(parent);
@@ -28,10 +36,36 @@ static std::tuple<ILayout*, ButtonCtrl*> CreateButtonLayout(HWND parent, std::st
     return {NewButtonLayout(b), b};
 }
 
+static void MessageNYI() {
+    MessageBoxA(gTocEditorWindow->hwnd, "Not yet implemented!", "Information", MB_OK | MB_ICONINFORMATION);
+}
+
 static void AddPdf() {
+    MessageNYI();
 }
 
 static void SaveVirtual() {
+    HWND hwnd = gTocEditorWindow->hwnd;
+
+    WCHAR dstFileName[MAX_PATH];
+
+    OPENFILENAME ofn = {0};
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = hwnd;
+    ofn.lpstrFile = dstFileName;
+    ofn.nMaxFile = dimof(dstFileName);
+    ofn.lpstrFilter = L".vbkm\0\0";
+    ofn.nFilterIndex = 1;
+    ofn.lpstrDefExt = L"vbkm";
+    ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
+    // note: explicitly not setting lpstrInitialDir so that the OS
+    // picks a reasonable default (in particular, we don't want this
+    // in plugin mode, which is likely the main reason for saving as...)
+
+    bool ok = GetSaveFileName(&ofn);
+    if (!ok) {
+        return;
+    }
 }
 
 static void Exit() {
@@ -98,11 +132,17 @@ static void OnWindowSize(SizeArgs* args) {
     args->didHandle = true;
 }
 
-static void OnWindowDestroyed(WindowDestroyedArgs*) {
+static void DeleteTocEditorWindow() {
     delete gTocEditorWindow;
     gTocEditorWindow = nullptr;
     delete gTocEditorLayout;
     gTocEditorLayout = nullptr;
+    delete gArgs;
+    gArgs = nullptr;
+}
+
+static void OnWindowDestroyed(WindowDestroyedArgs*) {
+    DeleteTocEditorWindow();
 }
 
 static void onTreeItemChanged(TreeItemChangedArgs* args) {
@@ -112,19 +152,25 @@ static void onTreeItemChanged(TreeItemChangedArgs* args) {
 // in TableOfContents.cpp
 extern void OnDocTocCustomDraw(TreeItemCustomDrawArgs* args);
 
-// TODO: make a copy of tree model
-void StartTocEditor(TreeModel* tm) {
+void StartTocEditor(TocEditorArgs* args) {
     if (gTocEditorWindow != nullptr) {
+        // TODO: maybe allow multiple windows
         gTocEditorWindow->onDestroyed = nullptr;
-        delete gTocEditorWindow;
-        delete gTocEditorLayout;
+        DeleteTocEditorWindow();
     }
 
-    VisitTreeModelItems(tm, [](TreeItem* ti) -> bool {
-        auto* docItem = (DocTocItem*)ti;
-        docItem->isChecked = true;
-        return true;
-    });
+    gArgs = args;
+
+    // TODO: only for now. Maybe rename DocTocItem::isChecked
+    // => DocTocItem::isUnchecked so that default state is what we want
+    for (auto&& bkm : args->bookmarks) {
+        auto tm = bkm->toc;
+        VisitTreeModelItems(tm, [](TreeItem* ti) -> bool {
+            auto* docItem = (DocTocItem*)ti;
+            docItem->isChecked = true;
+            return true;
+        });
+    }
 
     auto w = new Window();
     w->backgroundColor = MkRgb((u8)0xee, (u8)0xee, (u8)0xee);
@@ -133,6 +179,8 @@ void StartTocEditor(TreeModel* tm) {
     bool ok = w->Create();
     CrashIf(!ok);
 
+    // TODO:  if more than 1, create a combined TreeModel
+    auto tm = args->bookmarks[0]->toc;
     gTocEditorLayout = CreateMainLayout(w->hwnd, tm);
 
     w->onSize = OnWindowSize;
@@ -142,7 +190,6 @@ void StartTocEditor(TreeModel* tm) {
 
     // important to call this after hooking up onSize to ensure
     // first layout is triggered
-    w->SetIsVisible(true);
     w->SetIsVisible(true);
     gTocEditorWindow = w;
 }
