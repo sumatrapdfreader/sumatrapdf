@@ -227,7 +227,11 @@ DocTocItem* CloneDocTocItemRecur(DocTocItem*);
 
 struct DocTocTree : public TreeModel {
     // name of the bookmark view
-    char* name = nullptr;
+    AutoFree name;
+
+    // path of the file
+    AutoFree filePath;
+
     DocTocItem* root = nullptr;
 
     DocTocTree() = default;

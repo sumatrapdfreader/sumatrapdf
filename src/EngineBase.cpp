@@ -281,7 +281,6 @@ DocTocTree::DocTocTree(DocTocItem* root) {
 }
 
 DocTocTree::~DocTocTree() {
-    free(name);
     delete root;
 }
 

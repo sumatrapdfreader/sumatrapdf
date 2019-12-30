@@ -27,7 +27,7 @@ Bookmarks::~Bookmarks() {
 }
 
 // TODO: serialize open state
-void SerializeBookmarksRec(DocTocItem* node, int level, str::Str& s) {
+static void SerializeBookmarksRec(DocTocItem* node, int level, str::Str& s) {
     if (level == 0) {
         s.Append("title: default view\n");
     }
@@ -316,12 +316,14 @@ Vec<Bookmarks*>* LoadAlterenativeBookmarks(std::string_view baseFileName) {
     return res;
 }
 
-bool ExportBookmarksToFile(DocTocTree* tocTree, const char* path) {
+bool ExportBookmarksToFile(const Vec<Bookmarks*>& bookmarks, const char* bkmPath) {
     str::Str s;
-    s.AppendFmt("file:%s\n", path);
-    SerializeBookmarksRec(tocTree->root, 0, s);
-    // dbglogf("%s\n", s.Get());
-    str::Str fileName = path;
-    fileName.Append(".bkm");
-    return file::WriteFile(fileName.Get(), s.as_view());
+    for (auto&& bkm : bookmarks) {
+        DocTocTree* tocTree = bkm->toc;
+        const char* path = tocTree->filePath;
+        s.AppendFmt("file: %s\n", path);
+        SerializeBookmarksRec(tocTree->root, 0, s);
+        // dbglogf("%s\n", s.Get());
+    }
+    return file::WriteFile(bkmPath, s.as_view());
 }

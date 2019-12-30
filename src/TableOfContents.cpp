@@ -385,17 +385,28 @@ static void SetInitialExpandState(DocTocItem* item, Vec<int>& tocState) {
     }
 }
 
+void ShowExportedBookmarksMsg(const char* path) {
+    str::Str msg;
+    msg.AppendFmt("Exported bookmarks to file %s", path);
+    str::Str caption;
+    caption.Append("Exported bookmarks");
+    UINT type = MB_OK | MB_ICONINFORMATION | MbRtlReadingMaybe();
+    MessageBoxA(nullptr, msg.Get(), caption.Get(), type);
+}
+
 static void ExportBookmarksFromTab(TabInfo* tab) {
     auto* tocTree = tab->ctrl->GetTocTree();
-    AutoFree path = strconv::WstrToUtf8(tab->filePath.get());
-    bool ok = ExportBookmarksToFile(tocTree, path);
-    str::WStr msg;
-    msg.AppendFmt(L"Exported bookmarks to file %s", tab->filePath.get());
-    msg.Append(L".bkm");
-    str::WStr caption;
-    caption.Append(L"Exported bookmarks");
-    UINT type = MB_OK | MB_ICONINFORMATION | MbRtlReadingMaybe();
-    MessageBoxW(nullptr, msg.Get(), caption.Get(), type);
+    str::Str path = strconv::WstrToUtf8(tab->filePath.get());
+    path.Append(".bkm");
+    Vec<Bookmarks*> bookmarks;
+
+    Bookmarks* bkms = new Bookmarks();
+    bkms->toc = CloneDocTocTree(tocTree);
+    bookmarks.push_back(bkms);
+    bool ok = ExportBookmarksToFile(bookmarks, path.c_str());
+    delete bkms;
+
+    ShowExportedBookmarksMsg(path.c_str());
 }
 
 // in Favorites.cpp
@@ -564,7 +575,7 @@ void LoadTocTree(WindowInfo* win) {
         items.Append("Default");
         for (size_t i = 0; i < altTocs->size(); i++) {
             DocTocTree* toc = altTocs->at(i)->toc;
-            items.Append(toc->name);
+            items.Append(toc->name.get());
         }
         win->altBookmarks->SetItems(items);
     }

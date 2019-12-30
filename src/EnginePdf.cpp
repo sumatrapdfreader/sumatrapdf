@@ -982,6 +982,7 @@ DocTocTree* PdfEngineImpl::GetTocTree() {
     int idCounter = 0;
 
     DocTocItem* root = nullptr;
+    const char* path = strconv::WstrToUtf8(fileName).data();
     if (outline) {
         root = BuildTocTree(outline, idCounter, false);
     }
@@ -990,15 +991,18 @@ DocTocTree* PdfEngineImpl::GetTocTree() {
             return nullptr;
         }
         tocTree = new DocTocTree(root);
+        tocTree->filePath = path;
         return tocTree;
     }
     DocTocItem* att = BuildTocTree(attachments, idCounter, true);
     if (!root) {
         tocTree = new DocTocTree(att);
+        tocTree->filePath = path;
         return tocTree;
     }
     root->AddSibling(att);
     tocTree = new DocTocTree(root);
+    tocTree->filePath = path;
     return tocTree;
 }
 

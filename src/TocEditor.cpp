@@ -57,10 +57,19 @@ static void AddPdf() {
     MessageNYI();
 }
 
-static void SaveVirtual() {
-    HWND hwnd = gWindow->tocEditorWindow->hwnd;
+// in TableOfContents.cpp
+extern void ShowExportedBookmarksMsg(const char* path);
 
+static void SaveVirtual() {
+    TocEditorArgs* tocArgs = gWindow->tocArgs;
+    char* path = tocArgs->bookmarks[0]->filePath;
+
+    str::WStr pathw = strconv::Utf8ToWchar(path);
+    pathw.Append(L".vbkm");
     WCHAR dstFileName[MAX_PATH];
+    str::BufSet(&(dstFileName[0]), dimof(dstFileName), pathw.Get());
+
+    HWND hwnd = gWindow->tocEditorWindow->hwnd;
 
     OPENFILENAME ofn = {0};
     ofn.lStructSize = sizeof(ofn);
@@ -79,6 +88,12 @@ static void SaveVirtual() {
     if (!ok) {
         return;
     }
+    AutoFree patha = strconv::WstrToUtf8(dstFileName);
+    ok = ExportBookmarksToFile(tocArgs->bookmarks, patha);
+    if (!ok) {
+        return;
+    }
+    ShowExportedBookmarksMsg(patha);
 }
 
 static void Exit() {
