@@ -1056,13 +1056,14 @@ void Empty(HMENU m) {
 }
 
 void SetText(HMENU m, UINT id, WCHAR* s) {
-    MENUITEMINFO mii = {0};
+    MENUITEMINFOW mii = {0};
     mii.cbSize = sizeof(mii);
     mii.fMask = MIIM_STRING;
     mii.fType = MFT_STRING;
     mii.dwTypeData = s;
     mii.cch = (UINT)str::Len(s);
-    SetMenuItemInfoW(m, id, FALSE, &mii);
+    BOOL ok = SetMenuItemInfoW(m, id, FALSE, &mii);
+    CrashIf(!ok);
 }
 
 /* Make a string safe to be displayed as a menu item

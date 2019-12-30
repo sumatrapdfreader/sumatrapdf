@@ -91,7 +91,7 @@ static void CustomizeTocTooltip(TreeItmGetTooltipArgs* args) {
     w->GetItemRect(args->treeItem, true, rcLabel);
 
     if (rcLine.right + 2 < rcLabel.right) {
-        str::WStr currInfoTip = w->GetDefaultTooltip(ti);
+        str::WStr currInfoTip = ti->Text();
         infotip.Append(currInfoTip.data());
         infotip.Append(L"\r\n");
     }
@@ -250,36 +250,6 @@ void ToggleTocBox(WindowInfo* win) {
     }
 }
 
-#if 0
-static HTREEITEM AddTocItemToView(TreeCtrl* tree, DocTocItem* entry, HTREEITEM parent, bool toggleItem) {
-    TV_INSERTSTRUCT toInsert;
-    toInsert.hParent = parent;
-    toInsert.hInsertAfter = TVI_LAST;
-    toInsert.itemex.mask = TVIF_TEXT | TVIF_PARAM | TVIF_STATE;
-    UINT state = 0;
-    if (entry->child && (entry->isOpen != toggleItem)) {
-        state = TVIS_EXPANDED;
-    }
-    toInsert.itemex.state = state;
-    toInsert.itemex.stateMask = TVIS_EXPANDED;
-    toInsert.itemex.lParam = reinterpret_cast<LPARAM>(entry);
-    // Replace unprintable whitespace with regular spaces
-    str::NormalizeWS(entry->title);
-    toInsert.itemex.pszText = entry->title;
-
-#ifdef DISPLAY_TOC_PAGE_NUMBERS
-    WindowInfo* win = FindWindowInfoByHwnd(hwnd);
-    if (entry->pageNo && win && win->IsDocLoaded() && !win->AsEbook()) {
-        AutoFreeWstr label(win->ctrl->GetPageLabel(entry->pageNo));
-        AutoFreeWstr text(str::Format(L"%s  %s", entry->title, label));
-        toInsert.itemex.pszText = text;
-        return TreeView_InsertItem(hwnd, &tvinsert);
-    }
-#endif
-    return tree->InsertItem(&toInsert);
-}
-#endif
-
 // find the closest item in tree view to a given page number
 static TreeItem* TreeItemForPageNo(TreeCtrl* treeCtrl, int pageNo) {
     DocTocItem* bestMatch = nullptr;
@@ -416,8 +386,9 @@ extern TreeItem* GetOrSelectTreeItemAtPos(TreeContextMenuArgs* args, POINT& pt);
 static MenuDef contextMenuDef[] = {
     {_TRN("Expand All"),    IDM_EXPAND_ALL,         0 },
     {_TRN("Collapse All"),  IDM_COLLAPSE_ALL,       0 },
-    {"",                    IDM_FAV_ADD,            MF_NO_TRANSLATE},
-    {"",                    IDM_FAV_DEL,            MF_NO_TRANSLATE},
+    // note: strings cannot be "" or else items are not there
+    {"add",                 IDM_FAV_ADD,            MF_NO_TRANSLATE},
+    {"del",                 IDM_FAV_DEL,            MF_NO_TRANSLATE},
     {SEP_ITEM,              IDM_SEPARATOR,          MF_NO_TRANSLATE},
     {"Export Bookmarks",    IDM_EXPORT_BOOKMARKS,   MF_NO_TRANSLATE},
     {"New Bookmarks",       IDM_NEW_BOOKMARKS,      MF_NO_TRANSLATE},
@@ -473,15 +444,19 @@ static void OnTocContextMenu(TreeContextMenuArgs* args) {
         AutoFreeWstr pageLabel = win->ctrl->GetPageLabel(pageNo);
         bool isBookmarked = gFavorites.IsPageInFavorites(filePath, pageNo);
         if (isBookmarked) {
-            // %s and not %d because re-using translation from RebuildFavMenu()
-            AutoFreeWstr s(str::Format(_TR("Remove page %s from favorites"), pageLabel.Get()));
-            win::menu::SetText(popup, IDM_FAV_DEL, s);
             win::menu::Remove(popup, IDM_FAV_ADD);
-        } else {
+
             // %s and not %d because re-using translation from RebuildFavMenu()
-            AutoFreeWstr s(str::Format(_TR("Add page %s to favorites"), pageLabel.Get()));
-            win::menu::SetText(popup, IDM_FAV_ADD, s);
+            auto tr = _TR("Remove page %s from favorites");
+            AutoFreeWstr s = str::Format(tr, pageLabel.Get());
+            win::menu::SetText(popup, IDM_FAV_DEL, s);
+        } else {
             win::menu::Remove(popup, IDM_FAV_DEL);
+
+            // %s and not %d because re-using translation from RebuildFavMenu()
+            auto tr = _TR("Add page %s to favorites");
+            AutoFreeWstr s = str::Format(tr, pageLabel.Get());
+            win::menu::SetText(popup, IDM_FAV_ADD, s);
         }
     } else {
         win::menu::Remove(popup, IDM_FAV_ADD);
@@ -729,13 +704,6 @@ static void OnTocTreeNotify(TreeNotifyArgs* args) {
         case NM_RETURN:
             GoToTocLinkForTVItem(win, nullptr, true);
             break;
-
-#if 0
-        case NM_CUSTOMDRAW:
-            args->procArgs->didHandle = true;
-            args->procArgs->result = OnTocCustomDraw(win, (NMTVCUSTOMDRAW*)pnmtv);
-            break;
-#endif
     }
 }
 
