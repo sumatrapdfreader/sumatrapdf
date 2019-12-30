@@ -89,6 +89,8 @@ struct TreeCtrl : public WindowBase {
     TreeCtrl(HWND parent);
     ~TreeCtrl();
 
+    SIZE GetIdealSize() override;
+
     void Clear();
 
     void SetTreeModel(TreeModel*);
@@ -125,6 +127,7 @@ struct TreeCtrl : public WindowBase {
 
     // creation parameters. must be set before CreateTreeCtrl() call
     bool withCheckboxes = false;
+
     // treeModel not owned by us
     TreeModel* treeModel = nullptr;
 
@@ -145,6 +148,8 @@ struct TreeCtrl : public WindowBase {
 
     OnTreeItemCustomDraw onTreeItemCustomDraw = nullptr;
 
+    Size idealSize{};
+
     // private
     TVITEMW item = {0};
 
@@ -153,7 +158,7 @@ struct TreeCtrl : public WindowBase {
     Vec<std::tuple<TreeItem*, HTREEITEM>> insertedItems;
 };
 
-ILayout* NewTreeLayout(TreeCtrl*);
+WindowBaseLayout* NewTreeLayout(TreeCtrl*);
 
 bool IsTree(Kind);
 bool IsTree(ILayout*);

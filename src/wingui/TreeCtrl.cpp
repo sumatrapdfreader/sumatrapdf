@@ -37,10 +37,6 @@ bool IsTree(ILayout* l) {
     return IsLayoutOfKind(l, kindTree);
 }
 
-ILayout* NewTreeLayout(TreeCtrl* e) {
-    return new WindowBaseLayout(e, kindTree);
-}
-
 static void TreeViewExpandRecursively(HWND hTree, HTREEITEM hItem, UINT flag, bool subtree) {
     while (hItem) {
         TreeView_Expand(hTree, hItem, flag);
@@ -545,4 +541,12 @@ TreeItemState TreeCtrl::GetItemState(TreeItem* ti) {
     res.nChildren = item->cChildren;
 
     return res;
+}
+
+SIZE TreeCtrl::GetIdealSize() {
+    return SIZE{idealSize.Width, idealSize.Height};
+}
+
+WindowBaseLayout* NewTreeLayout(TreeCtrl* e) {
+    return new WindowBaseLayout(e, kindTree);
 }

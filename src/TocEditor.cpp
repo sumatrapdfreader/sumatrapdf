@@ -17,12 +17,24 @@
 #include "ParseBKM.h"
 #include "TocEditor.h"
 
-// TODO: put state in a TocEditorWindow
+struct TocEditorWindow {
+    Window* tocEditorWindow = nullptr;
+    ILayout* tocEditorLayout = nullptr;
+    TreeCtrl* treeCtrl = nullptr;
+    TocEditorArgs* tocArgs = nullptr;
 
-static Window* gTocEditorWindow = nullptr;
-static ILayout* gTocEditorLayout = nullptr;
-static TreeCtrl* gTreeCtrl = nullptr;
-static TocEditorArgs* gArgs = nullptr;
+    ~TocEditorWindow();
+    void OnWindowSize(SizeArgs*);
+    void OnTreeItemChanged(TreeItemChangedArgs*);
+};
+
+TocEditorWindow::~TocEditorWindow() {
+    delete tocEditorLayout;
+    delete tocArgs;
+    delete tocEditorWindow;
+}
+
+static TocEditorWindow* gWindow = nullptr;
 
 TocEditorArgs::~TocEditorArgs() {
     DeleteVecMembers(bookmarks);
@@ -37,7 +49,8 @@ static std::tuple<ILayout*, ButtonCtrl*> CreateButtonLayout(HWND parent, std::st
 }
 
 static void MessageNYI() {
-    MessageBoxA(gTocEditorWindow->hwnd, "Not yet implemented!", "Information", MB_OK | MB_ICONINFORMATION);
+    HWND hwnd = gWindow->tocEditorWindow->hwnd;
+    MessageBoxA(hwnd, "Not yet implemented!", "Information", MB_OK | MB_ICONINFORMATION);
 }
 
 static void AddPdf() {
@@ -45,7 +58,7 @@ static void AddPdf() {
 }
 
 static void SaveVirtual() {
-    HWND hwnd = gTocEditorWindow->hwnd;
+    HWND hwnd = gWindow->tocEditorWindow->hwnd;
 
     WCHAR dstFileName[MAX_PATH];
 
@@ -69,27 +82,27 @@ static void SaveVirtual() {
 }
 
 static void Exit() {
-    gTocEditorWindow->Close();
+    gWindow->tocEditorWindow->Close();
 }
 
 static ILayout* CreateMainLayout(HWND hwnd, TreeModel* tm) {
-    auto* vbox = new VBox();
+    auto* right = new VBox();
 
-    vbox->alignMain = MainAxisAlign::MainStart;
-    vbox->alignCross = CrossAxisAlign::CrossCenter;
+    right->alignMain = MainAxisAlign::MainStart;
+    right->alignCross = CrossAxisAlign::CrossCenter;
     {
         auto [l, b] = CreateButtonLayout(hwnd, "Add PDF", AddPdf);
-        vbox->addChild(l);
+        right->addChild(l);
     }
 
     {
         auto [l, b] = CreateButtonLayout(hwnd, "Save As Virtual PDF", SaveVirtual);
-        vbox->addChild(l);
+        right->addChild(l);
     }
 
     {
         auto [l, b] = CreateButtonLayout(hwnd, "Exit", Exit);
-        vbox->addChild(l);
+        right->addChild(l);
     }
 
     auto* hbox = new HBox();
@@ -101,12 +114,13 @@ static ILayout* CreateMainLayout(HWND hwnd, TreeModel* tm) {
     bool ok = tree->Create(L"tree");
     CrashIf(!ok);
     tree->SetTreeModel(tm);
+    // tree->idealSize = {80, 640};
 
-    gTreeCtrl = tree;
+    gWindow->treeCtrl = tree;
     auto treeLayout = NewTreeLayout(tree);
 
-    hbox->addChild(treeLayout, 3);
-    hbox->addChild(vbox, 1);
+    hbox->addChild(treeLayout, 4);
+    hbox->addChild(right, 1);
 
     auto* padding = new Padding();
     padding->insets = DefaultInsets();
@@ -114,7 +128,7 @@ static ILayout* CreateMainLayout(HWND hwnd, TreeModel* tm) {
     return padding;
 }
 
-static void OnWindowSize(SizeArgs* args) {
+void TocEditorWindow::OnWindowSize(SizeArgs* args) {
     int dx = args->dx;
     int dy = args->dy;
     HWND hwnd = args->hwnd;
@@ -123,29 +137,21 @@ static void OnWindowSize(SizeArgs* args) {
     }
     Size windowSize{dx, dy};
     auto c = Tight(windowSize);
-    auto size = gTocEditorLayout->Layout(c);
+    auto size = tocEditorLayout->Layout(c);
     Point min{0, 0};
     Point max{size.Width, size.Height};
     Rect bounds{min, max};
-    gTocEditorLayout->SetBounds(bounds);
+    tocEditorLayout->SetBounds(bounds);
     InvalidateRect(hwnd, nullptr, false);
     args->didHandle = true;
 }
 
-static void DeleteTocEditorWindow() {
-    delete gTocEditorWindow;
-    gTocEditorWindow = nullptr;
-    delete gTocEditorLayout;
-    gTocEditorLayout = nullptr;
-    delete gArgs;
-    gArgs = nullptr;
-}
-
 static void OnWindowDestroyed(WindowDestroyedArgs*) {
-    DeleteTocEditorWindow();
+    delete gWindow;
+    gWindow = nullptr;
 }
 
-static void onTreeItemChanged(TreeItemChangedArgs* args) {
+void TocEditorWindow::OnTreeItemChanged(TreeItemChangedArgs* args) {
     logf("onTreeItemChanged\n");
 }
 
@@ -153,14 +159,15 @@ static void onTreeItemChanged(TreeItemChangedArgs* args) {
 extern void OnDocTocCustomDraw(TreeItemCustomDrawArgs* args);
 
 void StartTocEditor(TocEditorArgs* args) {
-    if (gTocEditorWindow != nullptr) {
+    if (gWindow != nullptr) {
         // TODO: maybe allow multiple windows
-        gTocEditorWindow->onDestroyed = nullptr;
-        DeleteTocEditorWindow();
+        gWindow->tocEditorWindow->onDestroyed = nullptr;
+        delete gWindow;
+        gWindow = nullptr;
     }
 
-    gArgs = args;
-
+    gWindow = new TocEditorWindow();
+    gWindow->tocArgs = args;
     auto w = new Window();
     w->backgroundColor = MkRgb((u8)0xee, (u8)0xee, (u8)0xee);
     w->SetTitle("Table of content editor");
@@ -170,15 +177,17 @@ void StartTocEditor(TocEditorArgs* args) {
 
     // TODO:  if more than 1, create a combined TreeModel
     auto tm = args->bookmarks[0]->toc;
-    gTocEditorLayout = CreateMainLayout(w->hwnd, tm);
+    gWindow->tocEditorLayout = CreateMainLayout(w->hwnd, tm);
 
-    w->onSize = OnWindowSize;
+    using namespace std::placeholders;
+    w->onSize = std::bind(&TocEditorWindow::OnWindowSize, gWindow, _1);
     w->onDestroyed = OnWindowDestroyed;
-    gTreeCtrl->onTreeItemChanged = onTreeItemChanged;
-    gTreeCtrl->onTreeItemCustomDraw = OnDocTocCustomDraw;
+
+    gWindow->treeCtrl->onTreeItemChanged = std::bind(&TocEditorWindow::OnTreeItemChanged, gWindow, _1);
+    gWindow->treeCtrl->onTreeItemCustomDraw = OnDocTocCustomDraw;
 
     // important to call this after hooking up onSize to ensure
     // first layout is triggered
     w->SetIsVisible(true);
-    gTocEditorWindow = w;
+    gWindow->tocEditorWindow = w;
 }
