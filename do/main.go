@@ -55,7 +55,7 @@ func main() {
 		flag.BoolVar(&flgCIBuild, "ci", false, "run CI steps")
 		flag.BoolVar(&flgUploadCiBuild, "ci-upload", false, "upload the result of ci build to s3 and do spaces")
 		flag.BoolVar(&flgSmoke, "smoke", false, "run smoke build (installer for 64bit release)")
-		flag.BoolVar(&flgBuildPreRelease, "build-prerel", false, "build pre-release")
+		flag.BoolVar(&flgBuildPreRelease, "build-pre-rel", false, "build pre-release")
 		flag.BoolVar(&flgBuildLzsa, "build-lzsa", false, "build MakeLZSA.exe")
 		flag.BoolVar(&flgNoCleanCheck, "no-clean-check", false, "allow running if repo has changes (for testing build script)")
 		flag.BoolVar(&flgUpload, "upload", false, "upload the build to s3 and do spaces")
