@@ -187,6 +187,7 @@ DocTocItem* CloneDocTocItemRecur(DocTocItem* ti) {
 
 DocTocTree* CloneDocTocTree(DocTocTree* tree) {
     DocTocTree* res = new DocTocTree();
+    res->filePath = str::Dup(tree->filePath);
     res->name = str::Dup(tree->name);
     res->root = CloneDocTocItemRecur(tree->root);
     return res;

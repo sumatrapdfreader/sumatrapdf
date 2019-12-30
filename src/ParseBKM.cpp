@@ -22,7 +22,6 @@ for PDF files.
 */
 
 Bookmarks::~Bookmarks() {
-    free(filePath);
     delete toc;
 }
 

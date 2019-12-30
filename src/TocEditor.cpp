@@ -3,6 +3,7 @@
 
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
+#include "utils/FileUtil.h"
 #include "utils/Log.h"
 
 #include "wingui/WinGui.h"
@@ -13,6 +14,7 @@
 #include "wingui/ButtonCtrl.h"
 
 #include "EngineBase.h"
+#include "EngineManager.h"
 
 #include "ParseBKM.h"
 #include "TocEditor.h"
@@ -53,6 +55,44 @@ void MessageNYI() {
     MessageBoxA(hwnd, "Not yet implemented!", "Information", MB_OK | MB_ICONINFORMATION);
 }
 
+void ShowErrorMessage(const char* msg) {
+    HWND hwnd = gWindow->tocEditorWindow->hwnd;
+    MessageBoxA(hwnd, msg, "Error", MB_OK | MB_ICONERROR);
+}
+
+static void SetTreeModel() {
+    // TODO:  if more than 1, create a combined TreeModel
+    TreeCtrl* treeCtrl = gWindow->treeCtrl;
+    auto& bookmarks = gWindow->tocArgs->bookmarks;
+    delete treeCtrl->treeModel;
+    treeCtrl->treeModel = nullptr;
+    if (bookmarks.size() == 1) {
+        auto tm = bookmarks[0]->toc;
+        auto tmCopy = CloneDocTocTree(tm);
+        treeCtrl->SetTreeModel(tmCopy);
+        return;
+    }
+    DocTocItem* root = nullptr;
+    DocTocItem* curr = nullptr;
+    for (auto&& bkm : bookmarks) {
+        DocTocItem* i = new DocTocItem();
+        i->child = CloneDocTocItemRecur(bkm->toc->root);
+        AutoFreeWstr path = strconv::Utf8ToWchar(bkm->filePath);
+        const WCHAR* name = path::GetBaseNameNoFree(path);
+        i->title = str::Dup(name);
+        if (root == nullptr) {
+            root = i;
+            curr = root;
+        } else {
+            curr->next = i;
+            curr = i;
+        }
+    }
+    DocTocTree* tm = new DocTocTree();
+    tm->root = root;
+    treeCtrl->SetTreeModel(tm);
+}
+
 static void AddPdf() {
     HWND hwnd = gWindow->tocEditorWindow->hwnd;
 
@@ -75,8 +115,25 @@ static void AddPdf() {
     if (!GetOpenFileNameW(&ofn)) {
         return;
     }
-    WCHAR* fileName = ofn.lpstrFile;
-    logf(L"fileName: %s\n", fileName);
+    WCHAR* filePath = ofn.lpstrFile;
+    logf(L"fileName: %s\n", filePath);
+    EngineBase* engine = EngineManager::CreateEngine(filePath);
+    if (!engine) {
+        ShowErrorMessage("Failed to open a file!");
+        return;
+    }
+    DocTocTree* tocTree = engine->GetTocTree();
+    if (nullptr == tocTree) {
+        ShowErrorMessage("File doesn't have Table of content");
+        return;
+    }
+    tocTree = CloneDocTocTree(tocTree);
+    delete engine;
+    Bookmarks* bookmarks = new Bookmarks();
+    bookmarks->toc = tocTree;
+    bookmarks->filePath = str::Dup(tocTree->filePath);
+    gWindow->tocArgs->bookmarks.push_back(bookmarks);
+    SetTreeModel();
 }
 
 // in TableOfContents.cpp
@@ -122,7 +179,7 @@ static void Exit() {
     gWindow->tocEditorWindow->Close();
 }
 
-static ILayout* CreateMainLayout(HWND hwnd, TreeModel* tm) {
+static ILayout* CreateMainLayout(HWND hwnd) {
     auto* right = new VBox();
 
     right->alignMain = MainAxisAlign::MainStart;
@@ -150,7 +207,6 @@ static ILayout* CreateMainLayout(HWND hwnd, TreeModel* tm) {
     tree->withCheckboxes = true;
     bool ok = tree->Create(L"tree");
     CrashIf(!ok);
-    tree->SetTreeModel(tm);
     // tree->idealSize = {80, 640};
 
     gWindow->treeCtrl = tree;
@@ -212,9 +268,7 @@ void StartTocEditor(TocEditorArgs* args) {
     bool ok = w->Create();
     CrashIf(!ok);
 
-    // TODO:  if more than 1, create a combined TreeModel
-    auto tm = args->bookmarks[0]->toc;
-    gWindow->tocEditorLayout = CreateMainLayout(w->hwnd, tm);
+    gWindow->tocEditorLayout = CreateMainLayout(w->hwnd);
 
     using namespace std::placeholders;
     w->onSize = std::bind(&TocEditorWindow::OnWindowSize, gWindow, _1);
@@ -223,6 +277,7 @@ void StartTocEditor(TocEditorArgs* args) {
     gWindow->treeCtrl->onTreeItemChanged = std::bind(&TocEditorWindow::OnTreeItemChanged, gWindow, _1);
     gWindow->treeCtrl->onTreeItemCustomDraw = OnDocTocCustomDraw;
 
+    SetTreeModel();
     // important to call this after hooking up onSize to ensure
     // first layout is triggered
     w->SetIsVisible(true);

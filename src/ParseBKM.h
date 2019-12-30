@@ -2,7 +2,7 @@
    License: Simplified BSD (see COPYING.BSD) */
 
 struct Bookmarks {
-    char* filePath = nullptr;
+    AutoFree filePath;
     DocTocTree* toc = nullptr;
 
     Bookmarks() = default;
