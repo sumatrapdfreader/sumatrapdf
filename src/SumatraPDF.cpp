@@ -2907,7 +2907,7 @@ static void OnMenuOpen(WindowInfo* win) {
     AutoFreeWstr file = AllocArray<WCHAR>(ofn.nMaxFile);
     ofn.lpstrFile = file;
 
-    if (!GetOpenFileName(&ofn)) {
+    if (!GetOpenFileNameW(&ofn)) {
         return;
     }
 

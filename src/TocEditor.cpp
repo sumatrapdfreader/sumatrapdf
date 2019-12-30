@@ -48,13 +48,35 @@ static std::tuple<ILayout*, ButtonCtrl*> CreateButtonLayout(HWND parent, std::st
     return {NewButtonLayout(b), b};
 }
 
-static void MessageNYI() {
+void MessageNYI() {
     HWND hwnd = gWindow->tocEditorWindow->hwnd;
     MessageBoxA(hwnd, "Not yet implemented!", "Information", MB_OK | MB_ICONINFORMATION);
 }
 
 static void AddPdf() {
-    MessageNYI();
+    HWND hwnd = gWindow->tocEditorWindow->hwnd;
+
+    OPENFILENAME ofn = {0};
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = hwnd;
+
+    ofn.lpstrFilter = L".pdf\0";
+    ofn.nFilterIndex = 1;
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_EXPLORER;
+
+    // OFN_ENABLEHOOK disables the new Open File dialog under Windows Vista
+    // and later, so don't use it and just allocate enough memory to contain
+    // several dozen file paths and hope that this is enough
+    // TODO: Use IFileOpenDialog instead (requires a Vista SDK, though)
+    ofn.nMaxFile = MAX_PATH * 2;
+    AutoFreeWstr file = AllocArray<WCHAR>(ofn.nMaxFile);
+    ofn.lpstrFile = file;
+
+    if (!GetOpenFileNameW(&ofn)) {
+        return;
+    }
+    WCHAR* fileName = ofn.lpstrFile;
+    logf(L"fileName: %s\n", fileName);
 }
 
 // in TableOfContents.cpp
@@ -76,7 +98,7 @@ static void SaveVirtual() {
     ofn.hwndOwner = hwnd;
     ofn.lpstrFile = dstFileName;
     ofn.nMaxFile = dimof(dstFileName);
-    ofn.lpstrFilter = L".vbkm\0\0";
+    ofn.lpstrFilter = L".vbkm\0";
     ofn.nFilterIndex = 1;
     ofn.lpstrDefExt = L"vbkm";
     ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY;
@@ -84,7 +106,7 @@ static void SaveVirtual() {
     // picks a reasonable default (in particular, we don't want this
     // in plugin mode, which is likely the main reason for saving as...)
 
-    bool ok = GetSaveFileName(&ofn);
+    bool ok = GetSaveFileNameW(&ofn);
     if (!ok) {
         return;
     }
