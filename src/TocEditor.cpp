@@ -28,7 +28,14 @@ static std::tuple<ILayout*, ButtonCtrl*> CreateButtonLayout(HWND parent, std::st
     return {NewButtonLayout(b), b};
 }
 
-static void NoOpFunc() {
+static void AddPdf() {
+}
+
+static void SaveVirtual() {
+}
+
+static void Exit() {
+    gTocEditorWindow->Close();
 }
 
 static ILayout* CreateMainLayout(HWND hwnd, TreeModel* tm) {
@@ -37,17 +44,17 @@ static ILayout* CreateMainLayout(HWND hwnd, TreeModel* tm) {
     vbox->alignMain = MainAxisAlign::MainStart;
     vbox->alignCross = CrossAxisAlign::CrossCenter;
     {
-        auto [l, b] = CreateButtonLayout(hwnd, "Add PDF", NoOpFunc);
+        auto [l, b] = CreateButtonLayout(hwnd, "Add PDF", AddPdf);
         vbox->addChild(l);
     }
 
     {
-        auto [l, b] = CreateButtonLayout(hwnd, "Save PDF", NoOpFunc);
+        auto [l, b] = CreateButtonLayout(hwnd, "Save As Virtual PDF", SaveVirtual);
         vbox->addChild(l);
     }
 
     {
-        auto [l, b] = CreateButtonLayout(hwnd, "Exit", NoOpFunc);
+        auto [l, b] = CreateButtonLayout(hwnd, "Exit", Exit);
         vbox->addChild(l);
     }
 

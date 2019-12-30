@@ -485,7 +485,11 @@ Window::~Window() {
 }
 
 void Window::SetTitle(std::string_view title) {
-    this->SetText(title);
+    SetText(title);
+}
+
+void Window::Close() {
+    ::SendMessage(hwnd, WM_CLOSE, 0, 0);
 }
 
 WindowBaseLayout::WindowBaseLayout(WindowBase* b, Kind k) {

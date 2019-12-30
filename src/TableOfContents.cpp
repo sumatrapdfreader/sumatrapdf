@@ -619,8 +619,6 @@ void OnDocTocCustomDraw(TreeItemCustomDrawArgs* args) {
     args->procArgs->result = CDRF_DODEFAULT;
     args->procArgs->didHandle = true;
 
-    // TODO: only for PdfEngine
-
     TreeCtrl* w = args->w;
     NMTVCUSTOMDRAW* tvcd = args->nm;
     NMCUSTOMDRAW* cd = &(tvcd->nmcd);

@@ -144,6 +144,8 @@ struct Window : public WindowBase {
     bool Create() override;
 
     void SetTitle(std::string_view);
+
+    void Close();
 };
 
 struct WindowBaseLayout : public ILayout {
