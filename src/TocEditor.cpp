@@ -22,8 +22,10 @@
 struct TocEditorWindow {
     Window* tocEditorWindow = nullptr;
     ILayout* tocEditorLayout = nullptr;
-    TreeCtrl* treeCtrl = nullptr;
     TocEditorArgs* tocArgs = nullptr;
+
+    // not owned by us but by tocEditorLayout
+    TreeCtrl* treeCtrl = nullptr;
 
     ~TocEditorWindow();
     void OnWindowSize(SizeArgs*);
@@ -31,7 +33,11 @@ struct TocEditorWindow {
 };
 
 TocEditorWindow::~TocEditorWindow() {
+    delete treeCtrl->treeModel;
+
+    // deletes all windows owned by layout
     delete tocEditorLayout;
+
     delete tocArgs;
     delete tocEditorWindow;
 }
