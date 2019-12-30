@@ -453,7 +453,7 @@ static bool DecodeField(DecodeState& ds, TxtNode* firstNode, const char* fieldNa
         size_t sLen = node->valEnd - s;
         if (s && (sLen > 0)) {
             // note: we don't free ws because it's remembered in structDataPtr
-            WCHAR* ws = strconv::FromUtf8(s);
+            WCHAR* ws = strconv::Utf8ToWstr(s);
             WriteStructWStr(structDataPtr, ws);
         }
         return true;

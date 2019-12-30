@@ -928,7 +928,7 @@ DocTocItem* PdfEngineImpl::BuildTocTree(fz_outline* outline, int& idCounter, boo
     while (outline) {
         WCHAR* name = nullptr;
         if (outline->title) {
-            name = strconv::FromUtf8(outline->title);
+            name = strconv::Utf8ToWstr(outline->title);
             name = pdf_clean_string(name);
         }
         if (!name) {
@@ -1571,7 +1571,7 @@ WCHAR* PdfEngineImpl::ExtractFontList() {
             info.Append(")");
         }
 
-        AutoFreeWstr fontInfo(strconv::FromUtf8(info.LendData()));
+        AutoFreeWstr fontInfo = strconv::Utf8ToWstr(info.LendData());
         if (fontInfo && !fonts.Contains(fontInfo)) {
             fonts.Append(fontInfo.StealData());
         }
@@ -1612,7 +1612,7 @@ WCHAR* PdfEngineImpl::GetProperty(DocumentProperty prop) {
             for (int i = 0; i < pdf_array_len(ctx, pdf_dict_gets(ctx, _info, "OutputIntents")); i++) {
                 pdf_obj* intent = pdf_array_get(ctx, pdf_dict_gets(ctx, _info, "OutputIntents"), i);
                 CrashIf(!str::StartsWith(pdf_to_name(ctx, intent), "GTS_"));
-                fstruct.Append(strconv::FromUtf8(pdf_to_name(ctx, intent) + 4));
+                fstruct.Append(strconv::Utf8ToWstr(pdf_to_name(ctx, intent) + 4));
             }
         }
         return fstruct.size() > 0 ? fstruct.Join(L",") : nullptr;
@@ -1703,7 +1703,7 @@ std::string_view PdfEngineImpl::GetFileData() {
 }
 
 bool PdfEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
-    AutoFreeWstr dstPath = strconv::FromUtf8(copyFileName);
+    AutoFreeWstr dstPath = strconv::Utf8ToWstr(copyFileName);
     AutoFree d = GetFileData();
     if (!d.empty()) {
         bool ok = file::WriteFile(dstPath, d.as_view());

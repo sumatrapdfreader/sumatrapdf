@@ -267,7 +267,7 @@ DocTocTree* EnginePdfMultiImpl::GetTocTree() {
         if (!e) {
             continue;
         }
-        WCHAR* title = strconv::Utf8ToWchar(f->fileName);
+        WCHAR* title = strconv::Utf8ToWstr(f->fileName);
         auto tocItem = new DocTocItem(title, startPageNo + 1);
         free(title);
         if (!tree->root) {
@@ -411,7 +411,7 @@ bool EnginePdfMultiImpl::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
         if (!vbkm->path) {
             continue;
         }
-        AutoFreeWstr path = strconv::Utf8ToWchar(vbkm->path);
+        AutoFreeWstr path = strconv::Utf8ToWstr(vbkm->path);
         vbkm->engine = EngineManager::CreateEngine(path, pwdUI);
         if (vbkm->engine) {
             nOpened++;

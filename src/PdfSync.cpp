@@ -511,7 +511,7 @@ int SyncTex::DocToSource(UINT pageNo, PointI pt, AutoFreeWstr& filename, UINT* l
         return PDFSYNCERR_UNKNOWN_SOURCEFILE;
 
     bool isUtf8 = true;
-    filename.Set(strconv::FromUtf8(name));
+    filename.Set(strconv::Utf8ToWstr(name));
 TryAgainAnsi:
     if (!filename)
         return PDFSYNCERR_OUTOFMEMORY;

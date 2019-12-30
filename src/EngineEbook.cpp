@@ -110,7 +110,7 @@ class EbookEngine : public EngineBase {
         if (!fileName) {
             return false;
         }
-        AutoFreeWstr path(strconv::FromUtf8(copyFileName));
+        AutoFreeWstr path = strconv::Utf8ToWstr(copyFileName);
         return fileName ? CopyFileW(fileName, path, FALSE) : false;
     }
     WCHAR* ExtractPageText(int pageNo, RectI** coordsOut = nullptr) override;
@@ -475,7 +475,7 @@ PageElement* EbookEngine::CreatePageLink(DrawInstr* link, RectI rect, int pageNo
         AutoFree basePath(str::DupN(baseAnchor->str.s, baseAnchor->str.len));
         AutoFree relPath(ResolveHtmlEntities(link->str.s, link->str.len));
         AutoFree absPath(NormalizeURL(relPath, basePath));
-        url.Set(strconv::FromUtf8(absPath));
+        url.Set(strconv::Utf8ToWstr(absPath.get()));
     }
 
     PageDestination* dest = GetNamedDest(url);
@@ -812,7 +812,7 @@ std::string_view EpubEngineImpl::GetFileData() {
 
 bool EpubEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
     UNUSED(includeUserAnnots);
-    AutoFreeWstr dstPath = strconv::Utf8ToWchar(copyFileName);
+    AutoFreeWstr dstPath = strconv::Utf8ToWstr(copyFileName);
 
     if (stream) {
         AutoFree d = GetDataFromStream(stream, nullptr);
@@ -1461,7 +1461,7 @@ class ChmHtmlCollector : public EbookTocVisitor {
                 if (*path == '/') {
                     path++;
                 }
-                url.Set(strconv::FromUtf8(path));
+                url.Set(strconv::Utf8ToWstr(path));
                 Visit(nullptr, url, -1);
             }
         }
@@ -1531,7 +1531,7 @@ PageDestination* ChmEngineImpl::GetNamedDest(const WCHAR* name) {
     if (str::Parse(name, L"%u%$", &topicID)) {
         AutoFree urlUtf8(doc->ResolveTopicID(topicID));
         if (urlUtf8) {
-            AutoFreeWstr url(strconv::FromUtf8(urlUtf8));
+            AutoFreeWstr url = strconv::Utf8ToWstr(urlUtf8.get());
             dest = EbookEngine::GetNamedDest(url);
         }
     }
@@ -1563,7 +1563,7 @@ DocTocTree* ChmEngineImpl::GetTocTree() {
 static PageDestination* newChmEmbeddedDest(const char* path) {
     auto res = new PageDestination();
     res->kind = kindDestinationLaunchEmbedded;
-    res->value = strconv::Utf8ToWchar(path::GetBaseNameNoFree(path));
+    res->value = strconv::Utf8ToWstr(path::GetBaseNameNoFree(path));
     return res;
 }
 

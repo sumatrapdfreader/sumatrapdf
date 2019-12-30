@@ -50,7 +50,7 @@ static PageDestination* newDjVuDestination(const char* link) {
 
     if (str::StartsWithI(link, "http:") || str::StartsWithI(link, "https:") || str::StartsWithI(link, "mailto:")) {
         res->kind = kindDestinationLaunchURL;
-        res->value = strconv::FromUtf8(link);
+        res->value = strconv::Utf8ToWstr(link);
     }
     CrashIf(!res->kind);
     if (IsPageLink(link)) {
@@ -66,11 +66,11 @@ static PageElement* newDjVuLink(int pageNo, RectI rect, const char* link, const 
     res->pageNo = pageNo;
     res->dest = newDjVuDestination(link);
     if (!str::IsEmpty(comment)) {
-        res->value = strconv::FromUtf8(comment);
+        res->value = strconv::Utf8ToWstr(comment);
     }
     res->kind = kindPageElementDest;
     if (!str::IsEmpty(comment)) {
-        res->value = strconv::Utf8ToWchar(comment);
+        res->value = strconv::Utf8ToWstr(comment);
     } else {
         if (kindDestinationLaunchURL == res->dest->Kind()) {
             res->value = str::Dup(res->dest->GetValue());
@@ -80,7 +80,7 @@ static PageElement* newDjVuLink(int pageNo, RectI rect, const char* link, const 
 }
 
 static DocTocItem* newDjVuTocItem(const char* title, const char* link) {
-    AutoFreeWstr s = strconv::Utf8ToWchar(title);
+    AutoFreeWstr s = strconv::Utf8ToWstr(title);
     auto res = new DocTocItem(s);
     res->dest = newDjVuDestination(link);
     res->pageNo = res->dest->GetPageNo();
@@ -697,7 +697,7 @@ std::string_view DjVuEngineImpl::GetFileData() {
 
 bool DjVuEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
     UNUSED(includeUserAnnots);
-    AutoFreeWstr path = strconv::FromUtf8(copyFileName);
+    AutoFreeWstr path = strconv::Utf8ToWstr(copyFileName);
     if (stream) {
         AutoFree d = GetDataFromStream(stream, nullptr);
         bool ok = !d.empty() && file::WriteFile(path, d.as_view());
@@ -752,7 +752,7 @@ bool DjVuEngineImpl::ExtractPageText(miniexp_t item, str::WStr& extracted, Vec<R
             AppendNewline(extracted, coords, lineSep);
         }
         const char* content = miniexp_to_str(str);
-        WCHAR* value = strconv::FromUtf8(content);
+        WCHAR* value = strconv::Utf8ToWstr(content);
         if (value) {
             size_t len = str::Len(value);
             // TODO: split the rectangle into individual parts per glyph
@@ -1037,7 +1037,7 @@ WCHAR* DjVuEngineImpl::GetPageLabel(int pageNo) const {
     for (size_t i = 0; i < fileInfo.size(); i++) {
         ddjvu_fileinfo_t& info = fileInfo.at(i);
         if (pageNo - 1 == info.pageno && !str::Eq(info.title, info.id)) {
-            return strconv::FromUtf8(info.title);
+            return strconv::Utf8ToWstr(info.title);
         }
     }
     return EngineBase::GetPageLabel(pageNo);

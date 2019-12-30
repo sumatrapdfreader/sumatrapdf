@@ -133,32 +133,12 @@ WCHAR* FromCodePage(const char* src, UINT cp) {
     return ToWideChar(src, cp);
 }
 
-WCHAR* FromUtf8(const char* src) {
-    return ToWideChar(src, CP_UTF8);
-}
-
-WCHAR* FromUtf8(const char* src, size_t cbSrcLen) {
-    return ToWideChar(src, CP_UTF8, (int)cbSrcLen);
-}
-
-WCHAR* Utf8ToWchar(const char* src) {
-    return ToWideChar(src, CP_UTF8);
-}
-
-WCHAR* Utf8ToWchar(const char* src, size_t cbSrcLen) {
-    return ToWideChar(src, CP_UTF8, (int)cbSrcLen);
-}
-
-WCHAR* Utf8ToWchar(std::string_view sv) {
+WCHAR* Utf8ToWstr(std::string_view sv) {
     return ToWideChar(sv.data(), CP_UTF8, (int)sv.size());
 }
 
 std::string_view WstrToUtf8(const WCHAR* src, size_t cchSrcLen) {
     return WstrToCodePage(src, CP_UTF8, (int)cchSrcLen);
-}
-
-std::string_view WstrToUtf8(const WCHAR* src) {
-    return WstrToCodePage(src, CP_UTF8);
 }
 
 WCHAR* FromAnsi(const char* src, size_t cbSrcLen) {

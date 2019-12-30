@@ -367,10 +367,11 @@ static INT_PTR CALLBACK Dialog_ChangeLanguage_Proc(HWND hDlg, UINT msg, WPARAM w
         for (int i = 0; i < trans::GetLangsCount(); i++) {
             const char* name = trans::GetLangNameByIdx(i);
             const char* langCode = trans::GetLangCodeByIdx(i);
-            AutoFreeWstr langName(strconv::FromUtf8(name));
+            AutoFreeWstr langName = strconv::Utf8ToWstr(name);
             ListBox_AppendString_NoSort(langList, langName);
-            if (str::Eq(langCode, data->langCode))
+            if (str::Eq(langCode, data->langCode)) {
                 itemToSelect = i;
+            }
         }
         ListBox_SetCurSel(langList, itemToSelect);
         // the language list is meant to be laid out left-to-right

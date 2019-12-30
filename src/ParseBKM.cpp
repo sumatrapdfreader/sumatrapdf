@@ -150,7 +150,7 @@ static DocTocItem* parseBookmarksLine(std::string_view line, size_t* indentOut) 
     // TODO: no way to indicate an error
     str::Str title = parseLineTitle(line);
     DocTocItem* res = new DocTocItem();
-    res->title = strconv::Utf8ToWchar(title.AsView());
+    res->title = strconv::Utf8ToWstr(title.AsView());
 
     // parse meta-data and page destination
     std::string_view part;

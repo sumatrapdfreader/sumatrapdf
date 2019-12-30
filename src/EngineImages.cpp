@@ -270,7 +270,7 @@ std::string_view ImagesEngine::GetFileData() {
 bool ImagesEngine::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
     UNUSED(includeUserAnnots);
     const WCHAR* srcPath = FileName();
-    AutoFreeWstr dstPath(strconv::FromUtf8(copyFileName));
+    AutoFreeWstr dstPath = strconv::Utf8ToWstr(copyFileName);
     if (srcPath) {
         BOOL ok = CopyFileW(srcPath, dstPath, FALSE);
         if (ok) {
@@ -809,7 +809,7 @@ DocTocTree* ImageDirEngineImpl::GetTocTree() {
 bool ImageDirEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
     UNUSED(includeUserAnnots);
     // only copy the files if the target directory doesn't exist yet
-    AutoFreeWstr dstPath(strconv::FromUtf8(copyFileName));
+    AutoFreeWstr dstPath = strconv::Utf8ToWstr(copyFileName);
     if (!CreateDirectoryW(dstPath, nullptr)) {
         return false;
     }
@@ -1077,23 +1077,23 @@ void CbxEngineImpl::ParseComicInfoXml(const char* xmlData) {
 // cf. http://code.google.com/p/comicbookinfo/
 bool CbxEngineImpl::Visit(const char* path, const char* value, json::DataType type) {
     if (json::Type_String == type && str::Eq(path, "/ComicBookInfo/1.0/title"))
-        propTitle.Set(strconv::FromUtf8(value));
+        propTitle.Set(strconv::Utf8ToWstr(value));
     else if (json::Type_Number == type && str::Eq(path, "/ComicBookInfo/1.0/publicationYear"))
         propDate.Set(str::Format(L"%s/%d", propDate ? propDate.get() : L"", atoi(value)));
     else if (json::Type_Number == type && str::Eq(path, "/ComicBookInfo/1.0/publicationMonth"))
         propDate.Set(str::Format(L"%d%s", atoi(value), propDate ? propDate.get() : L""));
     else if (json::Type_String == type && str::Eq(path, "/appID"))
-        propCreator.Set(strconv::FromUtf8(value));
+        propCreator.Set(strconv::Utf8ToWstr(value));
     else if (json::Type_String == type && str::Eq(path, "/lastModified"))
-        propModDate.Set(strconv::FromUtf8(value));
+        propModDate.Set(strconv::Utf8ToWstr(value));
     else if (json::Type_String == type && str::Eq(path, "/X-summary"))
-        propSummary.Set(strconv::FromUtf8(value));
+        propSummary.Set(strconv::Utf8ToWstr(value));
     else if (str::StartsWith(path, "/ComicBookInfo/1.0/credits[")) {
         int idx = -1;
         const char* prop = str::Parse(path, "/ComicBookInfo/1.0/credits[%d]/", &idx);
         if (prop) {
             if (json::Type_String == type && str::Eq(prop, "person"))
-                propAuthorTmp.Set(strconv::FromUtf8(value));
+                propAuthorTmp.Set(strconv::Utf8ToWstr(value));
             else if (json::Type_Bool == type && str::Eq(prop, "primary") && propAuthorTmp &&
                      !propAuthors.Contains(propAuthorTmp)) {
                 propAuthors.Append(propAuthorTmp.StealData());

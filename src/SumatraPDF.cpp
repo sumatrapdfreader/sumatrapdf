@@ -230,13 +230,13 @@ void InitializePolicies(bool restrict) {
     if ((gPolicyRestrictions & Perm_DiskAccess)) {
         const char* value;
         if ((value = polsec->GetValue("LinkProtocols")) != nullptr) {
-            AutoFreeWstr protocols(strconv::FromUtf8(value));
+            AutoFreeWstr protocols = strconv::Utf8ToWstr(value);
             str::ToLowerInPlace(protocols);
             str::TransChars(protocols, L":; ", L",,,");
             gAllowedLinkProtocols.Split(protocols, L",", true);
         }
         if ((value = polsec->GetValue("SafeFileTypes")) != nullptr) {
-            AutoFreeWstr protocols(strconv::FromUtf8(value));
+            AutoFreeWstr protocols = strconv::Utf8ToWstr(value);
             str::ToLowerInPlace(protocols);
             str::TransChars(protocols, L":; ", L",,,");
             gAllowedFileTypes.Split(protocols, L",", true);
@@ -1901,7 +1901,7 @@ bool AutoUpdateInitiate(const char* updateData) {
     if (!url || !hash || !str::EndsWithI(url, ".exe"))
         return false;
 
-    AutoFreeWstr exeUrl(strconv::FromUtf8(url));
+    AutoFreeWstr exeUrl = strconv::Utf8ToWstr(url);
     HttpRsp rsp;
     if (!HttpGet(exeUrl, &rsp))
         return false;
@@ -2017,7 +2017,7 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
         return ERROR_INTERNET_INCORRECT_FORMAT;
     }
 
-    AutoFreeWstr verTxt(strconv::FromUtf8(latest));
+    AutoFreeWstr verTxt = strconv::Utf8ToWstr(latest);
     if (CompareVersion(verTxt, UPDATE_CHECK_VER) <= 0) {
         /* if automated => don't notify that there is no new version */
         if (!silent) {
@@ -2029,7 +2029,7 @@ static DWORD ShowAutoUpdateDialog(HWND hParent, HttpRsp* rsp, bool silent) {
     if (silent) {
         const char* stable = node->GetValue("Stable");
         if (stable && IsValidProgramVersion(stable) &&
-            CompareVersion(AutoFreeWstr(strconv::FromUtf8(stable)), UPDATE_CHECK_VER) <= 0) {
+            CompareVersion(AutoFreeWstr(strconv::Utf8ToWstr(stable)), UPDATE_CHECK_VER) <= 0) {
             // don't update just yet if the older version is still marked as stable
             return 0;
         }

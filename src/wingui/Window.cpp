@@ -31,7 +31,7 @@ void HwndSetText(HWND hwnd, std::string_view s) {
     if (s.empty()) {
         return;
     }
-    WCHAR* ws = strconv::Utf8ToWchar(s);
+    WCHAR* ws = strconv::Utf8ToWstr(s);
     win::SetText(hwnd, ws);
     free(ws);
 }
@@ -463,7 +463,7 @@ bool Window::Create() {
         dy = CW_USEDEFAULT;
     }
 
-    AutoFreeWstr title = strconv::Utf8ToWchar(this->text.as_view());
+    AutoFreeWstr title = strconv::Utf8ToWstr(this->text.as_view());
     HINSTANCE hinst = GetInstance();
     hwnd = CreateWindowExW(dwExStyle, winClass, title, dwStyle, x, y, dx, dy, parent, nullptr, hinst, (void*)this);
     if (!hwnd) {

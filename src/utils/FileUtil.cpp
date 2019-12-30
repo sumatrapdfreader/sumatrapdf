@@ -365,7 +365,7 @@ FILE* OpenFILE(const char* path) {
         return nullptr;
     }
 #if OS_WIN
-    AutoFreeWstr pathW(strconv::FromUtf8(path));
+    AutoFreeWstr pathW = strconv::Utf8ToWstr(path);
     return OpenFILE(pathW.Get());
 #else
     return fopen(path, "rb");
@@ -443,7 +443,7 @@ bool WriteFile(const char* filePath, std::string_view d) {
 
 #if OS_WIN
 bool Exists(std::string_view path) {
-    WCHAR* wpath = strconv::Utf8ToWchar(path);
+    WCHAR* wpath = strconv::Utf8ToWstr(path);
     bool exists = Exists(wpath);
     free(wpath);
     return exists;

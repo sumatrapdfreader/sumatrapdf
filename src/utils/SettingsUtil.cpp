@@ -121,7 +121,7 @@ static char* SerializeStringArray(const Vec<WCHAR*>* strArray) {
 }
 
 static void DeserializeStringArray(Vec<WCHAR*>* strArray, const char* serialized) {
-    AutoFreeWstr str(strconv::FromUtf8(serialized));
+    AutoFreeWstr str = strconv::Utf8ToWstr(serialized);
     const WCHAR* s = str.Get();
 
     for (;;) {
@@ -315,10 +315,12 @@ static void DeserializeField(const FieldInfo& field, uint8_t* base, const char* 
 
         case Type_String:
             free(*wstrPtr);
-            if (value)
-                *wstrPtr = strconv::FromUtf8(AutoFree(UnescapeStr(value)));
-            else
+            if (value) {
+                AutoFree tmp = UnescapeStr(value);
+                *wstrPtr = strconv::Utf8ToWstr(tmp.as_view());
+            } else {
                 *wstrPtr = str::Dup((const WCHAR*)field.value);
+            }
             break;
         case Type_Utf8String:
             free(*strPtr);

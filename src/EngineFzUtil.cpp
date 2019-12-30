@@ -53,7 +53,7 @@ float fz_calc_overlap(fz_rect r1, fz_rect r2) {
 
 WCHAR* pdf_to_wstr(fz_context* ctx, pdf_obj* obj) {
     char* s = pdf_new_utf8_from_pdf_string_obj(ctx, obj);
-    WCHAR* res = strconv::FromUtf8(s);
+    WCHAR* res = strconv::Utf8ToWstr(s);
     fz_free(ctx, s);
     return res;
 }
@@ -747,7 +747,7 @@ static WCHAR* CalcDestName(fz_link* link, fz_outline* outline) {
     }
     // TODO(port): test with more stuff
     // figure out what PDF_NAME(GoToR) ends up being
-    return strconv::Utf8ToWchar(uri);
+    return strconv::Utf8ToWstr(uri);
 #if 0
     if (!link || FZ_LINK_GOTOR != link->kind || !link->ld.gotor.dest)
         return nullptr;
@@ -757,7 +757,7 @@ static WCHAR* CalcDestName(fz_link* link, fz_outline* outline) {
 
 static WCHAR* CalcValue(fz_link* link, fz_outline* outline, bool isAttachment) {
     if (outline && isAttachment) {
-        WCHAR* path = strconv::FromUtf8(outline->uri);
+        WCHAR* path = strconv::Utf8ToWstr(outline->uri);
         return path;
     }
 
@@ -769,7 +769,7 @@ static WCHAR* CalcValue(fz_link* link, fz_outline* outline, bool isAttachment) {
         // other values: #1,115,208
         return nullptr;
     }
-    WCHAR* path = strconv::FromUtf8(uri);
+    WCHAR* path = strconv::Utf8ToWstr(uri);
     return path;
 #if 0
     if (!link || !engine)
@@ -1031,7 +1031,7 @@ PageElement* makePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf_annot* 
     if (str::IsEmpty(contents) && PDF_ANNOT_WIDGET == tp) {
         s = label;
     }
-    AutoFreeWstr ws(strconv::FromUtf8(s));
+    AutoFreeWstr ws = strconv::Utf8ToWstr(s);
     RectD rd = fz_rect_to_RectD(rect);
     return newFzComment(ws, pageNo, rd);
 }

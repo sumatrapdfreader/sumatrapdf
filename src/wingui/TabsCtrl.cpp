@@ -34,7 +34,7 @@ enum class Tab {
 };
 
 static str::WStr wstrFromUtf8(const str::Str& str) {
-    AutoFreeWstr s = strconv::Utf8ToWchar(str.c_str());
+    AutoFreeWstr s = strconv::Utf8ToWstr(str.c_str());
     return str::WStr(s.as_view());
 }
 

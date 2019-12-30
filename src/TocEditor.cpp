@@ -83,7 +83,7 @@ static void SetTreeModel() {
     for (auto&& bkm : bookmarks) {
         DocTocItem* i = new DocTocItem();
         i->child = CloneDocTocItemRecur(bkm->toc->root);
-        AutoFreeWstr path = strconv::Utf8ToWchar(bkm->filePath);
+        AutoFreeWstr path = strconv::Utf8ToWstr(bkm->filePath.get());
         const WCHAR* name = path::GetBaseNameNoFree(path);
         i->title = str::Dup(name);
         if (root == nullptr) {
@@ -149,7 +149,7 @@ static void SaveVirtual() {
     TocEditorArgs* tocArgs = gWindow->tocArgs;
     char* path = tocArgs->bookmarks[0]->filePath;
 
-    str::WStr pathw = strconv::Utf8ToWchar(path);
+    str::WStr pathw = strconv::Utf8ToWstr(path);
     pathw.Append(L".vbkm");
     WCHAR dstFileName[MAX_PATH];
     str::BufSet(&(dstFileName[0]), dimof(dstFileName), pathw.Get());

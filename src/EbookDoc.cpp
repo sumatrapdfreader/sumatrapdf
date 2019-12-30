@@ -232,8 +232,9 @@ void PropertyMap::Set(DocumentProperty prop, char* valueUtf8, bool replace) {
 
 WCHAR* PropertyMap::Get(DocumentProperty prop) const {
     int idx = Find(prop);
-    if (idx >= 0 && values[idx])
-        return strconv::FromUtf8(values[idx]);
+    if (idx >= 0 && values[idx]) {
+        return strconv::Utf8ToWstr(values[idx].get());
+    }
     return nullptr;
 }
 
@@ -607,15 +608,17 @@ bool EpubDoc::ParseNavToc(const char* data, size_t dataLen, const char* pagePath
             while ((tok = parser.Next()) != nullptr && !tok->IsError() && (!tok->IsEndTag() || itemTag != tok->tag)) {
                 if (tok->IsText()) {
                     AutoFree part(str::DupN(tok->s, tok->sLen));
-                    if (!text)
+                    if (!text) {
                         text.Set(part.StealData());
-                    else
+                    } else {
                         text.Set(str::Join(text, part));
+                    }
                 }
             }
-            if (!text)
+            if (!text) {
                 continue;
-            AutoFreeWstr itemText(strconv::FromUtf8(text));
+            }
+            AutoFreeWstr itemText(strconv::Utf8ToWstr(text.get()));
             str::NormalizeWS(itemText);
             AutoFreeWstr itemSrc;
             if (href) {
@@ -1313,7 +1316,7 @@ std::string_view HtmlDoc::LoadURL(const char* url) {
     if (str::FindChar(url, ':')) {
         return {};
     }
-    AutoFreeWstr path(strconv::FromUtf8(url));
+    AutoFreeWstr path(strconv::Utf8ToWstr(url));
     str::TransChars(path, L"/", L"\\");
     return file::ReadFile(path);
 }

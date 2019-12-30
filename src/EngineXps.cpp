@@ -710,7 +710,7 @@ std::string_view XpsEngineImpl::GetFileData() {
 
 bool XpsEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
     UNUSED(includeUserAnnots);
-    AutoFreeWstr dstPath = strconv::FromUtf8(copyFileName);
+    AutoFreeWstr dstPath = strconv::Utf8ToWstr(copyFileName);
     AutoFree d = GetFileData();
     if (!d.empty()) {
         bool ok = file::WriteFile(dstPath, d.as_view());
@@ -874,7 +874,7 @@ DocTocItem* XpsEngineImpl::BuildTocTree(fz_outline* outline, int& idCounter) {
     while (outline) {
         WCHAR* name = nullptr;
         if (outline->title) {
-            name = strconv::FromUtf8(outline->title);
+            name = strconv::Utf8ToWstr(outline->title);
             name = pdf_clean_string(name);
         }
         if (!name) {
