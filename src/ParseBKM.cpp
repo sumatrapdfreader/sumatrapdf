@@ -55,6 +55,9 @@ static void SerializeBookmarksRec(DocTocItem* node, int level, str::Str& s) {
         PageDestination* dest = node->GetPageDestination();
         if (dest) {
             int pageNo = dest->GetPageNo();
+            if (pageNo != node->pageNo) {
+                logf("pageNo: %d, node->pageNo: %d\n", pageNo, node->pageNo);
+            }
             CrashIf(node->pageNo != pageNo);
             auto ws = dest->GetValue();
             if (ws != nullptr) {

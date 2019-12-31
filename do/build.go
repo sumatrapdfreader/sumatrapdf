@@ -244,11 +244,10 @@ func createManifestMust() {
 func buildPreRelease(isDaily bool) {
 	// early exit if missing
 	detectSigntoolPath()
+	msbuildPath := detectMsbuildPath()
 
 	s := fmt.Sprintf("buidling pre-release version %s", svnPreReleaseVer)
 	defer makePrintDuration(s)()
-	clean()
-
 	verifyGitCleanMust()
 	verifyOnMasterBranchMust()
 
@@ -256,10 +255,11 @@ func buildPreRelease(isDaily bool) {
 		verifyTranslationsMust()
 	}
 
+	clean()
+
 	setBuildConfig(gitSha1, svnPreReleaseVer, isDaily)
 	defer revertBuildConfig()
 
-	msbuildPath := detectMsbuildPath()
 	slnPath := filepath.Join("vs2019", "SumatraPDF.sln")
 
 	// we want to sign files inside the installer, so we have to

@@ -3894,7 +3894,7 @@ const char * gTranslations_co =
   "Cambi\303\240 di lingua (Change Language)\0"\
   "&Cuntroll\303\240 e nove versioni\0"\
   "Chjode\0"\
-  "\0"\
+  "Pieg\303\240 tuttu\0"\
   "Libri comichi\0"\
   "Cumpatibilit\303\240\0"\
   "Vista in cuntinuu\0"\
@@ -3936,7 +3936,7 @@ const char * gTranslations_co =
   "Scrivite a parolla d\342\200\231entrata per %s\0"\
   "Scrivite a linea di cumanda \303\240 eseguisce quandu ci h\303\250 un doppiu-cliccu nant\342\200\231\303\240 u ducumentu PDF :\0"\
   "Sbagliu di caricamentu di %s\0"\
-  "\0"\
+  "Spieg\303\240 tuttu\0"\
   "&Favuriti\0"\
   "&Dopu\tAlt+Fleccia diritta\0"\
   "&Screnu sanu\tF11\0"\
@@ -3992,7 +3992,7 @@ const char * gTranslations_co =
   "Rispett\303\240 a cassa\0"\
   "Ducumenti Mobi\0"\
   "Mudificatu :\0"\
-  "\0"\
+  "No&va finestra\tCtrl+N\0"\
   "A nova versione %s h\303\250 dispunibule. Scaricalla ?\0"\
   "Pagina seguente\0"\
   "Alcuna occurrenza trova\0"\
@@ -4058,7 +4058,7 @@ const char * gTranslations_co =
   "Affiss\303\240 a &barra d\342\200\231attrezzi\tF8\0"\
   "Affiss\303\240 i favuriti\0"\
   "Affiss\303\240 i ducumenti letti aspessu\0"\
-  "\0"\
+  "Affiss\303\240 in u car&tulare\0"\
   "Affiss\303\240 a &barra laterale di l\342\200\231unghjette s\342\200\231ella h\303\250 dispunibule\0"\
   "Pagina sola\0"\
   "Quessu \303\271n duveria mai accade !\n\nCi vole \303\240 sceglie \302\253 Abbandun\303\240 \302\273 s\342\200\231\303\250 voi vulete aiutacci \303\240 currege a causa di stu penseru.\0"\
@@ -4478,7 +4478,7 @@ const char * gTranslations_cz =
   "Zm\304\233nit jazyk... (Change Language)\0"\
   "&Zkontrolovat aktualizace\0"\
   "Zav\305\231\303\255t\0"\
-  "\0"\
+  "Sbalit v\305\241e\0"\
   "Komiksy\0"\
   "Kompatibilita\0"\
   "Jedna str\303\241nka pr\305\257b\304\233\305\276n\304\233\0"\
