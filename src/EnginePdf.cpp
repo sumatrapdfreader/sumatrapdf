@@ -252,7 +252,8 @@ WCHAR* FormatPageLabel(const char* type, int pageNo, const WCHAR* prefix) {
 void BuildPageLabelRec(fz_context* ctx, pdf_obj* node, int pageCount, Vec<PageLabelInfo>& data) {
     pdf_obj* obj;
     if ((obj = pdf_dict_gets(ctx, node, "Kids")) != nullptr && !pdf_mark_obj(ctx, node)) {
-        for (int i = 0; i < pdf_array_len(ctx, obj); i++) {
+        int n = pdf_array_len(ctx, obj);
+        for (int i = 0; i < n; i++) {
             auto arr = pdf_array_get(ctx, obj, i);
             BuildPageLabelRec(ctx, arr, pageCount, data);
         }
@@ -263,7 +264,8 @@ void BuildPageLabelRec(fz_context* ctx, pdf_obj* node, int pageCount, Vec<PageLa
     if (obj == nullptr) {
         return;
     }
-    for (int i = 0; i < pdf_array_len(ctx, obj); i += 2) {
+    int n = pdf_array_len(ctx, obj);
+    for (int i = 0; i < n; i += 2) {
         pdf_obj* info = pdf_array_get(ctx, obj, i + 1);
         PageLabelInfo pli;
         pli.startAt = pdf_to_int(ctx, pdf_array_get(ctx, obj, i)) + 1;
@@ -313,7 +315,8 @@ WStrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) {
         for (int j = 0; j < secLen; j++) {
             size_t idx = pli.startAt + j - 1;
             free(labels->at(idx));
-            labels->at(idx) = FormatPageLabel(pli.type, pli.countFrom + j, prefix);
+            WCHAR* label = FormatPageLabel(pli.type, pli.countFrom + j, prefix);
+            labels->at(idx) = label;
         }
     }
 
