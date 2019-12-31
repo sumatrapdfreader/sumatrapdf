@@ -156,7 +156,11 @@ void TreeCtrl::WndProcParent(WndProcArgs* args) {
             // it can be 0 in CDDS_PREPAINT state
             if (hItem) {
                 a.treeItem = w->GetTreeItemByHandle(hItem);
-                CrashIf(!a.treeItem);
+                // TODO: log more info
+                SubmitCrashIf(!a.treeItem);
+                if (!a.treeItem) {
+                    return;
+                }
             }
             w->onTreeItemCustomDraw(&a);
             if (a.procArgs->didHandle) {
