@@ -1645,7 +1645,11 @@ WCHAR* PdfEngineImpl::GetProperty(DocumentProperty prop) {
             // _info is guaranteed not to contain any indirect references,
             // so no need for ctxAccess
             pdf_obj* obj = pdf_dict_gets(ctx, _info, pdfPropNames[i].name);
-            return obj ? pdf_clean_string(pdf_to_wstr(ctx, obj)) : nullptr;
+            if (!obj) {
+                return nullptr;
+            }
+            WCHAR* s = pdf_to_wstr(ctx, obj);
+            return pdf_clean_string(s);
         }
     }
     return nullptr;
