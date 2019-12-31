@@ -32,7 +32,7 @@ static fz_link* FixupPageLinks(fz_link* root) {
     // i.e. links that appear later in the list should be preferred
     // to links appearing before. Since we search from the start of
     // the (single-linked) list, we have to reverse the order of links
-    // (cf. http://code.google.com/p/sumatrapdf/issues/detail?id=1303 )
+    // (http://code.google.com/p/sumatrapdf/issues/detail?id=1303 )
     fz_link* new_root = nullptr;
     while (root) {
         fz_link* tmp = root->next;
@@ -74,16 +74,14 @@ static Vec<PageAnnotation> fz_get_user_page_annots(Vec<PageAnnotation>& userAnno
     return result;
 }
 
-// TODO(port)
-#if 0
 static void fz_run_user_page_annots(fz_context* ctx, Vec<PageAnnotation>& pageAnnots, fz_device* dev, fz_matrix ctm,
-                                    const fz_rect* cliprect, fz_cookie* cookie) {
+                                    const fz_rect cliprect, fz_cookie* cookie) {
     for (size_t i = 0; i < pageAnnots.size() && (!cookie || !cookie->abort); i++) {
         PageAnnotation& annot = pageAnnots.at(i);
         // skip annotation if it isn't visible
         fz_rect rect = fz_RectD_to_rect(annot.rect);
         rect = fz_transform_rect(rect, ctm);
-        if (cliprect && fz_is_empty_rect(fz_intersect_rect(rect, *cliprect))) {
+        if (fz_is_empty_rect(fz_intersect_rect(rect, cliprect))) {
             continue;
         }
         // prepare text highlighting path (cf. pdf_create_highlight_annot
@@ -121,29 +119,30 @@ static void fz_run_user_page_annots(fz_context* ctx, Vec<PageAnnotation>& pageAn
                 CrashIf(true);
         }
         fz_colorspace* cs = fz_device_rgb(ctx);
-        float color[3] = {annot.color.r / 255.f, annot.color.g / 255.f, annot.color.b / 255.f};
+        float r, g, b, a;
+        UnpackRgba(annot.color, r, g, b, a);
+        float color[3] = {r / 255.f, g / 255.f, b / 255.f};
         if (PageAnnotType::Highlight == annot.type) {
             // render path with transparency effect
             fz_begin_group(ctx, dev, rect, nullptr, 0, 0, FZ_BLEND_MULTIPLY, 1.f);
-            fz_fill_path(ctx, dev, path, 0, ctm, cs, color, annot.color.a / 255.f, fz_default_color_params);
+            fz_fill_path(ctx, dev, path, 0, ctm, cs, color, a / 255.f, fz_default_color_params);
             fz_end_group(ctx, dev);
         } else {
-            if (!stroke)
+            if (!stroke) {
                 stroke = fz_new_stroke_state(ctx);
+            }
             fz_stroke_path(ctx, dev, path, stroke, ctm, cs, color, 1.0f, fz_default_color_params);
             fz_drop_stroke_state(ctx, stroke);
         }
         fz_drop_path(ctx, path);
     }
 }
-#endif
 
-// TODO(port): not sure why it was here and if it's still needed
-#if 0
-static void fz_run_page_transparency(fz_context* ctx, Vec<PageAnnotation>& pageAnnots, fz_device* dev,
-                                     const fz_rect* cliprect, bool endGroup, bool hasTransparency = false) {
-    if (hasTransparency || pageAnnots.size() == 0)
+void fz_run_page_transparency(fz_context* ctx, Vec<PageAnnotation>& pageAnnots, fz_device* dev, const fz_rect cliprect,
+                              bool endGroup, bool hasTransparency = false) {
+    if (hasTransparency || pageAnnots.size() == 0) {
         return;
+    }
     bool needsTransparency = false;
     for (size_t i = 0; i < pageAnnots.size(); i++) {
         if (PageAnnotType::Highlight == pageAnnots.at(i).type) {
@@ -151,15 +150,14 @@ static void fz_run_page_transparency(fz_context* ctx, Vec<PageAnnotation>& pageA
             break;
         }
     }
-    if (!needsTransparency)
+    if (!needsTransparency) {
         return;
+    }
     if (!endGroup) {
-        fz_rect r = cliprect ? *cliprect : fz_infinite_rect;
-        fz_begin_group(ctx, dev, r, nullptr, 1, 0, 0, 1);
+        fz_begin_group(ctx, dev, cliprect, nullptr, 1, 0, 0, 1);
     } else
         fz_end_group(ctx, dev);
 }
-#endif
 
 pdf_obj* pdf_copy_str_dict(fz_context* ctx, pdf_document* doc, pdf_obj* dict) {
     pdf_obj* copy = pdf_copy_dict(ctx, dict);
@@ -602,7 +600,6 @@ EngineBase* PdfEngineImpl::Clone() {
     }
 
     clone->UpdateUserAnnotations(&userAnnots);
-
     return clone;
 }
 
@@ -892,20 +889,28 @@ bool PdfEngineImpl::FinishLoading() {
         // isn't thread safe and we don't want to block for this when
         // displaying document properties
         _info = pdf_dict_gets(ctx, pdf_trailer(ctx, doc), "Info");
-        if (_info)
+        if (_info) {
             _info = pdf_copy_str_dict(ctx, doc, _info);
-        if (!_info)
+        }
+        if (!_info) {
             _info = pdf_new_dict(ctx, doc, 4);
+        }
         // also remember linearization and tagged states at this point
-        if (IsLinearizedFile())
+        if (IsLinearizedFile()) {
             pdf_dict_puts_drop(ctx, _info, "Linearized", PDF_TRUE);
-        if (pdf_to_bool(ctx, pdf_dict_getp(ctx, pdf_trailer(ctx, doc), "Root/MarkInfo/Marked")))
+        }
+        pdf_obj* trailer = pdf_trailer(ctx, doc);
+        pdf_obj* marked = pdf_dict_getp(ctx, trailer, "Root/MarkInfo/Marked");
+        bool isMarked = pdf_to_bool(ctx, marked);
+        if (isMarked) {
             pdf_dict_puts_drop(ctx, _info, "Marked", PDF_TRUE);
+        }
         // also remember known output intents (PDF/X, etc.)
-        pdf_obj* intents = pdf_dict_getp(ctx, pdf_trailer(ctx, doc), "Root/OutputIntents");
+        pdf_obj* intents = pdf_dict_getp(ctx, trailer, "Root/OutputIntents");
         if (pdf_is_array(ctx, intents)) {
-            pdf_obj* list = pdf_new_array(ctx, doc, pdf_array_len(ctx, intents));
-            for (int i = 0; i < pdf_array_len(ctx, intents); i++) {
+            int n = pdf_array_len(ctx, intents);
+            pdf_obj* list = pdf_new_array(ctx, doc, n);
+            for (int i = 0; i < n; i++) {
                 pdf_obj* intent = pdf_dict_gets(ctx, pdf_array_get(ctx, intents, i), "S");
                 if (pdf_is_name(ctx, intent) && !pdf_is_indirect(ctx, intent) &&
                     str::StartsWith(pdf_to_name(ctx, intent), "GTS_PDF"))
@@ -915,8 +920,9 @@ bool PdfEngineImpl::FinishLoading() {
         }
         // also note common unsupported features (such as XFA forms)
         pdf_obj* xfa = pdf_dict_getp(ctx, pdf_trailer(ctx, doc), "Root/AcroForm/XFA");
-        if (pdf_is_array(ctx, xfa))
+        if (pdf_is_array(ctx, xfa)) {
             pdf_dict_puts_drop(ctx, _info, "Unsupported_XFA", PDF_TRUE);
+        }
     }
     fz_catch(ctx) {
         fz_warn(ctx, "Couldn't load document properties");
@@ -939,7 +945,6 @@ bool PdfEngineImpl::FinishLoading() {
 
     // TODO: support javascript
     CrashIf(pdf_js_supported(ctx, doc));
-
     return true;
 }
 
@@ -1217,6 +1222,8 @@ RenderedBitmap* PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
                                             AbortCookie** cookie_out) {
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo);
     fz_page* page = pageInfo->page;
+    pdf_page* pdfpage = pdf_page_from_fz_page(ctx, page);
+    int transparency = pdfpage->transparency;
 
     if (!page || !pageInfo->list) {
         return nullptr;
@@ -1255,6 +1262,8 @@ RenderedBitmap* PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
     fz_var(pix);
     fz_var(bitmap);
 
+    Vec<PageAnnotation> pageAnnots = fz_get_user_page_annots(userAnnots, pageNo);
+
     fz_try(ctx) {
         pix = fz_new_pixmap_with_bbox(ctx, colorspace, ibounds, nullptr, 1);
         // initialize with white background
@@ -1264,7 +1273,10 @@ RenderedBitmap* PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
         // or "Print". "Export" is not used
         dev = fz_new_draw_device(ctx, fz_identity, pix);
         // TODO: use fz_infinite_rect instead of cliprect?
+        fz_run_page_transparency(ctx, pageAnnots, dev, cliprect, false, transparency);
         fz_run_display_list(ctx, pageInfo->list, dev, ctm, cliprect, fzcookie);
+        fz_run_page_transparency(ctx, pageAnnots, dev, cliprect, false, transparency);
+        fz_run_user_page_annots(ctx, pageAnnots, dev, ctm, cliprect, fzcookie);
         bitmap = new_rendered_fz_pixmap(ctx, pix);
     }
     fz_always(ctx) {
@@ -1466,15 +1478,25 @@ bool PdfEngineImpl::IsLinearizedFile() {
     }
     pdf_page* page = pdf_page_from_fz_page(ctx, fzpage);
 
-    if (pdf_to_int(ctx, pdf_dict_gets(ctx, obj, "O")) != pdf_to_num(ctx, page->obj))
+    if (pdf_to_int(ctx, pdf_dict_gets(ctx, obj, "O")) != pdf_to_num(ctx, page->obj)) {
         return false;
+    }
 
     // /N must be the total number of pages
-    if (pdf_to_int(ctx, pdf_dict_gets(ctx, obj, "N")) != PageCount())
+    if (pdf_to_int(ctx, pdf_dict_gets(ctx, obj, "N")) != PageCount()) {
         return false;
+    }
     // /H must be an array and /E and /T must be integers
-    return pdf_is_array(ctx, pdf_dict_gets(ctx, obj, "H")) && pdf_is_int(ctx, pdf_dict_gets(ctx, obj, "E")) &&
-           pdf_is_int(ctx, pdf_dict_gets(ctx, obj, "T"));
+    bool ok = pdf_is_array(ctx, pdf_dict_gets(ctx, obj, "H"));
+    if (!ok) {
+        return false;
+    }
+    ok = pdf_is_int(ctx, pdf_dict_gets(ctx, obj, "E"));
+    if (!ok) {
+        return false;
+    }
+    ok = pdf_is_int(ctx, pdf_dict_gets(ctx, obj, "T"));
+    return ok;
 }
 
 static void pdf_extract_fonts(fz_context* ctx, pdf_obj* res, Vec<pdf_obj*>& fontList, Vec<pdf_obj*>& resList) {
@@ -1631,38 +1653,48 @@ WCHAR* PdfEngineImpl::GetProperty(DocumentProperty prop) {
         int major = doc->version / 10, minor = doc->version % 10;
         pdf_crypt* crypt = doc->crypt;
         if (1 == major && 7 == minor && pdf_crypt_version(ctx, crypt) == 5) {
-            if (pdf_crypt_revision(ctx, crypt) == 5)
+            if (pdf_crypt_revision(ctx, crypt) == 5) {
                 return str::Format(L"%d.%d Adobe Extension Level %d", major, minor, 3);
-            if (pdf_crypt_revision(ctx, crypt) == 6)
+            }
+            if (pdf_crypt_revision(ctx, crypt) == 6) {
                 return str::Format(L"%d.%d Adobe Extension Level %d", major, minor, 8);
+            }
         }
         return str::Format(L"%d.%d", major, minor);
     }
 
     if (DocumentProperty::PdfFileStructure == prop) {
         WStrVec fstruct;
-        if (pdf_to_bool(ctx, pdf_dict_gets(ctx, _info, "Linearized")))
+        if (pdf_to_bool(ctx, pdf_dict_gets(ctx, _info, "Linearized"))) {
             fstruct.Append(str::Dup(L"linearized"));
-        if (pdf_to_bool(ctx, pdf_dict_gets(ctx, _info, "Marked")))
+        }
+        if (pdf_to_bool(ctx, pdf_dict_gets(ctx, _info, "Marked"))) {
             fstruct.Append(str::Dup(L"tagged"));
+        }
         if (pdf_dict_gets(ctx, _info, "OutputIntents")) {
-            for (int i = 0; i < pdf_array_len(ctx, pdf_dict_gets(ctx, _info, "OutputIntents")); i++) {
+            int n = pdf_array_len(ctx, pdf_dict_gets(ctx, _info, "OutputIntents"));
+            for (int i = 0; i < n; i++) {
                 pdf_obj* intent = pdf_array_get(ctx, pdf_dict_gets(ctx, _info, "OutputIntents"), i);
                 CrashIf(!str::StartsWith(pdf_to_name(ctx, intent), "GTS_"));
                 fstruct.Append(strconv::Utf8ToWstr(pdf_to_name(ctx, intent) + 4));
             }
         }
-        return fstruct.size() > 0 ? fstruct.Join(L",") : nullptr;
+        if (fstruct.size() == 0) {
+            return nullptr;
+        }
+        return fstruct.Join(L",");
     }
 
     if (DocumentProperty::UnsupportedFeatures == prop) {
-        if (pdf_to_bool(ctx, pdf_dict_gets(ctx, _info, "Unsupported_XFA")))
+        if (pdf_to_bool(ctx, pdf_dict_gets(ctx, _info, "Unsupported_XFA"))) {
             return str::Dup(L"XFA");
+        }
         return nullptr;
     }
 
-    if (DocumentProperty::FontList == prop)
+    if (DocumentProperty::FontList == prop) {
         return ExtractFontList();
+    }
 
     static struct {
         DocumentProperty prop;
@@ -1891,8 +1923,9 @@ static bool pdf_file_update_add_annotation(fz_context* ctx, pdf_document* doc, p
 }
 
 bool PdfEngineImpl::SaveUserAnnots(const char* pathUtf8) {
-    if (!userAnnots.size())
+    if (!userAnnots.size()) {
         return true;
+    }
 
     ScopedCritSec scope1(&pagesAccess);
     ScopedCritSec scope2(ctxAccess);
@@ -1912,8 +1945,9 @@ bool PdfEngineImpl::SaveUserAnnots(const char* pathUtf8) {
                 break;
             }
             pageAnnots = fz_get_user_page_annots(userAnnots, pageNo);
-            if (pageAnnots.size() == 0)
+            if (pageAnnots.size() == 0) {
                 continue;
+            }
             // get the page's /Annots array for appending
             pdf_obj* annots = pdf_dict_gets(ctx, page_obj, "Annots");
             if (!pdf_is_array(ctx, annots)) {

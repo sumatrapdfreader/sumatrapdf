@@ -2529,6 +2529,7 @@ static void OnMenuSaveAs(WindowInfo* win) {
         realDstFileName = str::Format(L"%s%s", dstFileName, defExt);
     }
 
+    bool saveAnnotsInDoc = gGlobalPrefs->annotationDefaults.saveIntoDocument;
     AutoFree pathUtf8(strconv::WstrToUtf8(realDstFileName));
     AutoFreeWstr errorMsg;
     // Extract all text when saving as a plain text file
@@ -2547,19 +2548,19 @@ static void OnMenuSaveAs(WindowInfo* win) {
     } else if (convertToPDF) {
         // Convert the file into a PDF one
         PdfCreator::SetProducerName(APP_NAME_STR L" " CURR_VERSION_STR);
-        ok = engine->SaveFileAsPDF(pathUtf8.Get(), gGlobalPrefs->annotationDefaults.saveIntoDocument);
+        ok = engine->SaveFileAsPDF(pathUtf8.Get(), saveAnnotsInDoc);
         if (!ok) {
 #ifdef DEBUG
             // rendering includes all page annotations
             ok = PdfCreator::RenderToFile(pathUtf8.Get(), engine);
 #endif
-        } else if (!gGlobalPrefs->annotationDefaults.saveIntoDocument) {
+        } else if (!saveAnnotsInDoc) {
             SaveFileModifications(realDstFileName, win->AsFixed()->userAnnots);
         }
     } else if (!file::Exists(srcFileName) && engine) {
         // Recreate inexistant files from memory...
-        ok = engine->SaveFileAs(pathUtf8.Get(), gGlobalPrefs->annotationDefaults.saveIntoDocument);
-    } else if (gGlobalPrefs->annotationDefaults.saveIntoDocument && engine && engine->SupportsAnnotation(true)) {
+        ok = engine->SaveFileAs(pathUtf8.Get(), saveAnnotsInDoc);
+    } else if (saveAnnotsInDoc && engine && engine->SupportsAnnotation(true)) {
         // ... as well as files containing annotations ...
         ok = engine->SaveFileAs(pathUtf8.Get(), true);
     } else if (!path::IsSame(srcFileName, realDstFileName)) {
@@ -2582,11 +2583,12 @@ static void OnMenuSaveAs(WindowInfo* win) {
     }
     if (ok && win->AsFixed() && win->AsFixed()->userAnnots && win->AsFixed()->userAnnotsModified && !convertToTXT &&
         !convertToPDF) {
-        if (!gGlobalPrefs->annotationDefaults.saveIntoDocument || !engine || !engine->SupportsAnnotation(true)) {
+        if (!saveAnnotsInDoc || !engine || !engine->SupportsAnnotation(true)) {
             ok = SaveFileModifications(realDstFileName, win->AsFixed()->userAnnots);
         }
-        if (ok && path::IsSame(srcFileName, realDstFileName))
+        if (ok && path::IsSame(srcFileName, realDstFileName)) {
             win->AsFixed()->userAnnotsModified = false;
+        }
     }
     if (!ok) {
         MessageBoxWarning(win->hwndFrame, errorMsg ? errorMsg.get() : _TR("Failed to save a file"));
@@ -3713,7 +3715,7 @@ static void OnFrameKeyB(WindowInfo* win) {
     }
 }
 
-static void OnFrameKeyA(WindowInfo* win) {
+static void MakeAnnotationFromSelection(WindowInfo* win) {
     bool annotsEnabled = isDebugBuild || isPreReleaseBuild;
     if (!annotsEnabled) {
         return;
@@ -3788,8 +3790,9 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
         }
     }
 
-    if (IsCharUpperW((WCHAR)key))
+    if (IsCharUpperW((WCHAR)key)) {
         key = (WPARAM)SingleCharLowerW((WCHAR)key);
+    }
 
     switch (key) {
         case VK_ESCAPE:
@@ -3854,10 +3857,11 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
             win->AsFixed()->RotateBy(90);
             break;
         case 'f':
-            if (win->isFullScreen == false)
+            if (win->isFullScreen == false) {
                 EnterFullScreen(win);
-            else
+            } else {
                 ExitFullScreen(win);
+            }
             break;
         // per https://en.wikipedia.org/wiki/Keyboard_layout
         // almost all keyboard layouts allow to press either
@@ -3907,7 +3911,7 @@ static void FrameOnChar(WindowInfo* win, WPARAM key, LPARAM info = 0) {
             OnFrameKeyM(win);
             break;
         case 'a':
-            OnFrameKeyA(win);
+            MakeAnnotationFromSelection(win);
             break;
     }
 }

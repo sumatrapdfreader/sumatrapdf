@@ -39,6 +39,16 @@ void UnpackRgb(COLORREF c, u8& r, u8& g, u8& b) {
     UnpackRgba(c, r, g, b, a);
 }
 
+void UnpackRgba(COLORREF c, float& r, float& g, float& b, float& a) {
+    r = (float)(c & 0xff);
+    c = c >> 8;
+    g = (float)(c & 0xff);
+    c = c >> 8;
+    b = (float)(c & 0xff);
+    c = c >> 8;
+    a = (float)(c & 0xff);
+}
+
 #if 0
 static Gdiplus::Color Unblend(PageAnnotation::Color c, BYTE alpha) {
     alpha = (BYTE)(alpha * c.a / 255.f);

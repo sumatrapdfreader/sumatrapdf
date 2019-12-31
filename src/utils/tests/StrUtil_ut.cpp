@@ -534,11 +534,11 @@ void StrTest() {
     }
     {
         AutoFreeWstr tmp(strconv::FromCodePage("abc", 12345));
-        utassert(!tmp.Get());
+        utassert(str::IsEmpty(tmp.Get()));
     }
     {
         AutoFree tmp = strconv::WstrToCodePage(L"abc", 987654);
-        utassert(!tmp.Get());
+        utassert(str::IsEmpty(tmp.Get()));
     }
 
     {

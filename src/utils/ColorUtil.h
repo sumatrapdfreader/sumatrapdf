@@ -12,6 +12,7 @@ COLORREF MkRgb(u8 r, u8 g, u8 b);
 COLORREF MkRgb(float r, float g, float b); // in 0..1 range
 COLORREF MkRgba(u8 r, u8 g, u8 b, u8 a);
 void UnpackRgb(COLORREF, u8& r, u8& g, u8& b);
+void UnpackRgba(COLORREF c, float& r, float& g, float& b, float& a);
 void UnpackRgba(COLORREF, u8& r, u8& g, u8& b, u8& a);
 
 COLORREF ColorSetRed(COLORREF c, u8 red);
