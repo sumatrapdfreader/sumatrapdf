@@ -54,111 +54,6 @@ static fz_link* FixupPageLinks(fz_link* root) {
     return new_root;
 }
 
-static Vec<PageAnnotation> fz_get_user_page_annots(Vec<PageAnnotation>& userAnnots, int pageNo) {
-    Vec<PageAnnotation> result;
-    for (size_t i = 0; i < userAnnots.size(); i++) {
-        PageAnnotation& annot = userAnnots.at(i);
-        if (annot.pageNo != pageNo) {
-            continue;
-        }
-        // include all annotations for pageNo that can be rendered by fz_run_user_annots
-        switch (annot.type) {
-            case PageAnnotType::Highlight:
-            case PageAnnotType::Underline:
-            case PageAnnotType::StrikeOut:
-            case PageAnnotType::Squiggly:
-                result.Append(annot);
-                break;
-        }
-    }
-    return result;
-}
-
-static void fz_run_user_page_annots(fz_context* ctx, Vec<PageAnnotation>& pageAnnots, fz_device* dev, fz_matrix ctm,
-                                    const fz_rect cliprect, fz_cookie* cookie) {
-    for (size_t i = 0; i < pageAnnots.size() && (!cookie || !cookie->abort); i++) {
-        PageAnnotation& annot = pageAnnots.at(i);
-        // skip annotation if it isn't visible
-        fz_rect rect = fz_RectD_to_rect(annot.rect);
-        rect = fz_transform_rect(rect, ctm);
-        if (fz_is_empty_rect(fz_intersect_rect(rect, cliprect))) {
-            continue;
-        }
-        // prepare text highlighting path (cf. pdf_create_highlight_annot
-        // and pdf_create_markup_annot in pdf_annot.c)
-        fz_path* path = fz_new_path(ctx);
-        fz_stroke_state* stroke = nullptr;
-        switch (annot.type) {
-            case PageAnnotType::Highlight:
-                fz_moveto(ctx, path, annot.rect.TL().x, annot.rect.TL().y);
-                fz_lineto(ctx, path, annot.rect.BR().x, annot.rect.TL().y);
-                fz_lineto(ctx, path, annot.rect.BR().x, annot.rect.BR().y);
-                fz_lineto(ctx, path, annot.rect.TL().x, annot.rect.BR().y);
-                fz_closepath(ctx, path);
-                break;
-            case PageAnnotType::Underline:
-                fz_moveto(ctx, path, annot.rect.TL().x, annot.rect.BR().y - 0.25f);
-                fz_lineto(ctx, path, annot.rect.BR().x, annot.rect.BR().y - 0.25f);
-                break;
-            case PageAnnotType::StrikeOut:
-                fz_moveto(ctx, path, annot.rect.TL().x, annot.rect.TL().y + annot.rect.dy / 2);
-                fz_lineto(ctx, path, annot.rect.BR().x, annot.rect.TL().y + annot.rect.dy / 2);
-                break;
-            case PageAnnotType::Squiggly:
-                fz_moveto(ctx, path, annot.rect.TL().x + 1, annot.rect.BR().y);
-                fz_lineto(ctx, path, annot.rect.BR().x, annot.rect.BR().y);
-                fz_moveto(ctx, path, annot.rect.TL().x, annot.rect.BR().y - 0.5f);
-                fz_lineto(ctx, path, annot.rect.BR().x, annot.rect.BR().y - 0.5f);
-                stroke = fz_new_stroke_state_with_dash_len(ctx, 2);
-                CrashIf(!stroke);
-                stroke->linewidth = 0.5f;
-                stroke->dash_list[stroke->dash_len++] = 1;
-                stroke->dash_list[stroke->dash_len++] = 1;
-                break;
-            default:
-                CrashIf(true);
-        }
-        fz_colorspace* cs = fz_device_rgb(ctx);
-        float r, g, b, a;
-        UnpackRgba(annot.color, r, g, b, a);
-        float color[3] = {r / 255.f, g / 255.f, b / 255.f};
-        if (PageAnnotType::Highlight == annot.type) {
-            // render path with transparency effect
-            fz_begin_group(ctx, dev, rect, nullptr, 0, 0, FZ_BLEND_MULTIPLY, 1.f);
-            fz_fill_path(ctx, dev, path, 0, ctm, cs, color, a / 255.f, fz_default_color_params);
-            fz_end_group(ctx, dev);
-        } else {
-            if (!stroke) {
-                stroke = fz_new_stroke_state(ctx);
-            }
-            fz_stroke_path(ctx, dev, path, stroke, ctm, cs, color, 1.0f, fz_default_color_params);
-            fz_drop_stroke_state(ctx, stroke);
-        }
-        fz_drop_path(ctx, path);
-    }
-}
-
-void fz_run_page_transparency(fz_context* ctx, Vec<PageAnnotation>& pageAnnots, fz_device* dev, const fz_rect cliprect,
-                              bool endGroup, bool hasTransparency = false) {
-    if (hasTransparency || pageAnnots.size() == 0) {
-        return;
-    }
-    bool needsTransparency = false;
-    for (size_t i = 0; i < pageAnnots.size(); i++) {
-        if (PageAnnotType::Highlight == pageAnnots.at(i).type) {
-            needsTransparency = true;
-            break;
-        }
-    }
-    if (!needsTransparency) {
-        return;
-    }
-    if (!endGroup) {
-        fz_begin_group(ctx, dev, cliprect, nullptr, 1, 0, 0, 1);
-    } else
-        fz_end_group(ctx, dev);
-}
-
 pdf_obj* pdf_copy_str_dict(fz_context* ctx, pdf_document* doc, pdf_obj* dict) {
     pdf_obj* copy = pdf_copy_dict(ctx, dict);
     for (int i = 0; i < pdf_dict_len(ctx, copy); i++) {
@@ -1278,7 +1173,7 @@ RenderedBitmap* PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
         // TODO: use fz_infinite_rect instead of cliprect?
         fz_run_page_transparency(ctx, pageAnnots, dev, cliprect, false, transparency);
         fz_run_display_list(ctx, pageInfo->list, dev, ctm, cliprect, fzcookie);
-        fz_run_page_transparency(ctx, pageAnnots, dev, cliprect, false, transparency);
+        fz_run_page_transparency(ctx, pageAnnots, dev, cliprect, true, transparency);
         fz_run_user_page_annots(ctx, pageAnnots, dev, ctm, cliprect, fzcookie);
         bitmap = new_rendered_fz_pixmap(ctx, pix);
     }

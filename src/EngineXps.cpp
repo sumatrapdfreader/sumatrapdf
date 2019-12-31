@@ -621,7 +621,6 @@ RenderedBitmap* XpsEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
                                             AbortCookie** cookie_out) {
     FzPageInfo* pageInfo = GetFzPageInfo(pageNo);
     fz_page* page = pageInfo->page;
-
     if (!page) {
         return nullptr;
     }
@@ -659,6 +658,8 @@ RenderedBitmap* XpsEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
     fz_var(pix);
     fz_var(bitmap);
 
+    Vec<PageAnnotation> pageAnnots = fz_get_user_page_annots(userAnnots, pageNo);
+
     fz_try(ctx) {
         pix = fz_new_pixmap_with_bbox(ctx, colorspace, ibounds, nullptr, 1);
         // initialize with white background
@@ -668,7 +669,10 @@ RenderedBitmap* XpsEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
         // or "Print". "Export" is not used
         dev = fz_new_draw_device(ctx, fz_identity, pix);
         // TODO: use fz_infinite_rect instead of cliprect?
+        fz_run_page_transparency(ctx, pageAnnots, dev, cliprect, false, false);
         fz_run_display_list(ctx, pageInfo->list, dev, ctm, cliprect, fzcookie);
+        fz_run_page_transparency(ctx, pageAnnots, dev, cliprect, true, false);
+        fz_run_user_page_annots(ctx, pageAnnots, dev, ctm, cliprect, fzcookie);
         bitmap = new_rendered_fz_pixmap(ctx, pix);
     }
     fz_always(ctx) {
