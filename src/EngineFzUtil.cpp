@@ -210,24 +210,24 @@ fz_stream* fz_open_file2(fz_context* ctx, const WCHAR* filePath) {
     return stm;
 }
 
-u8* fz_extract_stream_data(fz_context* ctx, fz_stream* stream, size_t* cbCount) {
+std::string_view fz_extract_stream_data(fz_context* ctx, fz_stream* stream) {
     fz_seek(ctx, stream, 0, 2);
     i64 fileLen = fz_tell(ctx, stream);
     fz_seek(ctx, stream, 0, 0);
 
     fz_buffer* buf = fz_read_all(ctx, stream, fileLen);
 
-    u8* data;
+    u8* data = nullptr;
     size_t size = fz_buffer_extract(ctx, buf, &data);
     CrashIf((size_t)fileLen != size);
-    if (cbCount)
-        *cbCount = size;
-
     fz_drop_buffer(ctx, buf);
-
-    if (!data)
-        fz_throw(ctx, FZ_ERROR_GENERIC, "OOM in fz_extract_stream_data");
-    return data;
+    if (!data || size == 0) {
+        return {};
+    }
+    // this was allocated inside mupdf, make a copy that can be free()d
+    char* res = (char*)memdup(data, size);
+    fz_free(ctx, data);
+    return {res, size};
 }
 
 void fz_stream_fingerprint(fz_context* ctx, fz_stream* stm, unsigned char digest[16]) {
@@ -758,12 +758,7 @@ static WCHAR* CalcDestName(fz_link* link, fz_outline* outline) {
 #endif
 }
 
-static WCHAR* CalcValue(fz_link* link, fz_outline* outline, bool isAttachment) {
-    if (outline && isAttachment) {
-        WCHAR* path = strconv::Utf8ToWstr(outline->uri);
-        return path;
-    }
-
+static WCHAR* CalcValue(fz_link* link, fz_outline* outline) {
     char* uri = PdfLinkGetURI(link, outline);
     if (!uri) {
         return nullptr;
@@ -833,10 +828,7 @@ static WCHAR* CalcValue(fz_link* link, fz_outline* outline, bool isAttachment) {
 #endif
 }
 
-static Kind CalcDestKind(fz_link* link, fz_outline* outline, bool isAttachment) {
-    if (outline && isAttachment) {
-        return kindDestinationLaunchEmbedded;
-    }
+static Kind CalcDestKind(fz_link* link, fz_outline* outline) {
     // outline entries with page set to -1 go nowhere
     // see https://github.com/sumatrapdfreader/sumatrapdf/issues/1352
     if (outline && outline->page == -1) {
@@ -845,7 +837,7 @@ static Kind CalcDestKind(fz_link* link, fz_outline* outline, bool isAttachment) 
     char* uri = PdfLinkGetURI(link, outline);
     // some outline entries are bad (issue 1245)
     if (!uri) {
-        return nullptr;
+        return kindDestinationNone;
     }
     if (!is_external_link(uri)) {
         float x, y;
@@ -978,7 +970,7 @@ static RectD CalcDestRect(fz_link* link, fz_outline* outline) {
 #endif
 }
 
-PageElement* newFzLink(int pageNo, fz_link* link, fz_outline* outline, bool isAttachment) {
+PageElement* newFzLink(int pageNo, fz_link* link, fz_outline* outline) {
     auto res = new PageElement();
     res->kind = kindPageElementDest;
 
@@ -986,10 +978,10 @@ PageElement* newFzLink(int pageNo, fz_link* link, fz_outline* outline, bool isAt
     if (link) {
         res->rect = fz_rect_to_RectD(link->rect);
     }
-    res->value = CalcValue(link, outline, isAttachment);
+    res->value = CalcValue(link, outline);
 
     auto dest = new PageDestination();
-    dest->kind = CalcDestKind(link, outline, isAttachment);
+    dest->kind = CalcDestKind(link, outline);
     CrashIf(!dest->kind);
     dest->rect = CalcDestRect(link, outline);
     dest->value = str::Dup(res->GetValue());
@@ -998,6 +990,16 @@ PageElement* newFzLink(int pageNo, fz_link* link, fz_outline* outline, bool isAt
     res->dest = dest;
 
     return res;
+}
+
+// TODO: this is a hack, newFzLink() should use newFzDestination()
+// but they are co-mingled for historical reasons
+PageDestination* newFzDestination(fz_outline* outline) {
+    auto link = newFzLink(0, nullptr, outline);
+    auto dest = link->dest;
+    link->dest = nullptr;
+    delete link;
+    return dest;
 }
 
 PageElement* newFzImage(int pageNo, fz_rect rect, size_t imageIdx) {
@@ -1048,7 +1050,7 @@ PageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointD pt) {
     fz_point p = {(float)pt.x, (float)pt.y};
     while (link) {
         if (fz_is_pt_in_rect(link->rect, p)) {
-            return newFzLink(pageNo, link, nullptr, false);
+            return newFzLink(pageNo, link, nullptr);
         }
         link = link->next;
     }
@@ -1098,7 +1100,7 @@ Vec<PageElement*>* FzGetElements(FzPageInfo* pageInfo) {
 
     fz_link* link = pageInfo->links;
     while (link) {
-        auto* el = newFzLink(pageNo, link, nullptr, false);
+        auto* el = newFzLink(pageNo, link, nullptr);
         els->Append(el);
         link = link->next;
     }

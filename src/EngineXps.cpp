@@ -686,25 +686,25 @@ RenderedBitmap* XpsEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
 }
 
 std::string_view XpsEngineImpl::GetFileData() {
-    u8* res = nullptr;
+    std::string_view res;
     ScopedCritSec scope(ctxAccess);
-    size_t cbCount;
 
     fz_var(res);
     fz_try(ctx) {
-        res = fz_extract_stream_data(ctx, _docStream, &cbCount);
+        res = fz_extract_stream_data(ctx, _docStream);
     }
     fz_catch(ctx) {
-        res = nullptr;
+        res = {};
     }
-    if (res) {
-        return {(char*)res, cbCount};
+
+    if (!res.empty()) {
+        return res;
     }
+
     auto path = FileName();
     if (!path) {
         return {};
     }
-
     return file::ReadFile(path);
 }
 
@@ -881,10 +881,7 @@ DocTocItem* XpsEngineImpl::BuildTocTree(fz_outline* outline, int& idCounter) {
             name = str::Dup(L"");
         }
         int pageNo = outline->page + 1;
-        auto link = newFzLink(pageNo, nullptr, outline, false);
-        auto dest = link->dest;
-        link->dest = nullptr;
-        delete link;
+        auto dest = newFzDestination(outline);
 
         DocTocItem* item = newDocTocItemWithDestination(name, dest);
         free(name);

@@ -62,7 +62,7 @@ WCHAR* pdf_clean_string(WCHAR* string);
 fz_stream* fz_open_istream(fz_context* ctx, IStream* stream);
 fz_stream* fz_open_file2(fz_context* ctx, const WCHAR* filePath);
 void fz_stream_fingerprint(fz_context* ctx, fz_stream* stm, unsigned char digest[16]);
-u8* fz_extract_stream_data(fz_context* ctx, fz_stream* stream, size_t* cbCount);
+std::string_view fz_extract_stream_data(fz_context* ctx, fz_stream* stream);
 
 RenderedBitmap* new_rendered_fz_pixmap(fz_context* ctx, fz_pixmap* pixmap);
 
@@ -74,7 +74,8 @@ int resolve_link(const char* uri, float* xp, float* yp);
 DocTocItem* newDocTocItemWithDestination(WCHAR* title, PageDestination* dest);
 PageElement* newFzComment(const WCHAR* comment, int pageNo, RectD rect);
 PageElement* newFzImage(int pageNo, fz_rect rect, size_t imageIdx);
-PageElement* newFzLink(int pageNo, fz_link* link, fz_outline* outline, bool isAttachment);
+PageElement* newFzLink(int pageNo, fz_link* link, fz_outline* outline);
+PageDestination* newFzDestination(fz_outline*);
 PageElement* FzGetElementAtPos(FzPageInfo* pageInfo, PointD pt);
 Vec<PageElement*>* FzGetElements(FzPageInfo* pageInfo);
 PageElement* makePdfCommentFromPdfAnnot(fz_context* ctx, int pageNo, pdf_annot* annot);

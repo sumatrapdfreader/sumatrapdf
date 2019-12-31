@@ -596,37 +596,48 @@ EngineBase* PdfEngineImpl::Clone() {
     return clone;
 }
 
+// embedded PDF files have names like "c:/foo.pdf:${pdfStreamNo}"
+// return pointer starting at ":${pdfStream}"
 static const WCHAR* findEmbedMarks(const WCHAR* fileName) {
-    const WCHAR* embedMarks = nullptr;
+    const WCHAR* start = fileName;
+    const WCHAR* end = start + str::Len(start) - 1;
 
-    int colonCount = 0;
-    for (const WCHAR* c = fileName + str::Len(fileName) - 1; c > fileName; c--) {
-        if (*c == ':') {
-            if (!str::IsDigit(*(c + 1)))
-                break;
-            if (++colonCount % 2 == 0)
-                embedMarks = c;
-        } else if (!str::IsDigit(*c))
-            break;
+    int nDigits = 0;
+    while (end > start) {
+        WCHAR c = *end;
+        if (c == ':') {
+            if (nDigits > 0) {
+                return end;
+            }
+            // it was just ':' at the end
+            return nullptr;
+        }
+        if (!str::IsDigit(c)) {
+            return nullptr;
+        }
+        nDigits++;
+        end--;
     }
-
-    return embedMarks;
+    return nullptr;
 }
 
 bool PdfEngineImpl::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
-    AssertCrash(!FileName() && !_doc && ctx);
+    CrashIf(FileName() || _doc || !ctx);
     SetFileName(fileName);
-    if (!ctx)
+    if (!ctx) {
         return false;
+    }
 
     fz_stream* file = nullptr;
     // File names ending in :<digits>:<digits> are interpreted as containing
     // embedded PDF documents (the digits are :<num>:<gen> of the embedded file stream)
-    WCHAR* embedMarks = (WCHAR*)findEmbedMarks(fileName);
-    if (embedMarks)
+    AutoFreeWstr fnCopy = str::Dup(fileName);
+    WCHAR* embedMarks = (WCHAR*)findEmbedMarks(fnCopy);
+    if (embedMarks) {
         *embedMarks = '\0';
+    }
     fz_try(ctx) {
-        file = fz_open_file2(ctx, fileName);
+        file = fz_open_file2(ctx, fnCopy);
     }
     fz_catch(ctx) {
         file = nullptr;
@@ -635,28 +646,28 @@ bool PdfEngineImpl::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
         *embedMarks = ':';
     }
 
-OpenEmbeddedFile:
     if (!LoadFromStream(file, pwdUI)) {
         return false;
     }
 
-    if (str::IsEmpty(embedMarks)) {
+    if (!embedMarks) {
         return FinishLoading();
     }
 
-    int num, gen;
-    embedMarks = (WCHAR*)str::Parse(embedMarks, L":%d:%d", &num, &gen);
+    int num = -1;
+    embedMarks = (WCHAR*)str::Parse(embedMarks, L":%d", &num);
     CrashIf(!embedMarks);
-    pdf_document* doc = (pdf_document*)_doc;
-    // TODO(port): not sure if this fully translates as gen is no longer used
-    if (!embedMarks || !pdf_obj_num_is_stream(ctx, doc, num))
+    if (!embedMarks) {
         return false;
+    }
+    pdf_document* doc = (pdf_document*)_doc;
+    if (!pdf_obj_num_is_stream(ctx, doc, num)) {
+        return false;
+    }
 
     fz_buffer* buffer = nullptr;
     fz_var(buffer);
     fz_try(ctx) {
-        // TODO(port): not sure if this is the right translation
-        CrashMe();
         buffer = pdf_load_stream_number(ctx, doc, num);
         file = fz_open_buffer(ctx, buffer);
     }
@@ -670,7 +681,11 @@ OpenEmbeddedFile:
     fz_drop_document(ctx, _doc);
     _doc = nullptr;
 
-    goto OpenEmbeddedFile;
+    if (!LoadFromStream(file, pwdUI)) {
+        return false;
+    }
+
+    return FinishLoading();
 }
 
 bool PdfEngineImpl::Load(IStream* stream, PasswordUI* pwdUI) {
@@ -921,6 +936,16 @@ static COLORREF pdfColorToCOLORREF(float color[4]) {
     return MkRgb(color[0], color[1], color[2]);
 }
 
+PageDestination* destFromAttachment(PdfEngineImpl* engine, fz_outline* outline) {
+    PageDestination* dest = new PageDestination();
+    dest->kind = kindDestinationLaunchEmbedded;
+    // WCHAR* path = strconv::Utf8ToWstr(outline->uri);
+    dest->name = strconv::Utf8ToWstr(outline->title);
+    // page is really a stream number
+    dest->value = str::Format(L"%s:%d", engine->FileName(), outline->page);
+    return dest;
+}
+
 DocTocItem* PdfEngineImpl::BuildTocTree(fz_outline* outline, int& idCounter, bool isAttachment) {
     DocTocItem* root = nullptr;
     DocTocItem* curr = nullptr;
@@ -936,11 +961,12 @@ DocTocItem* PdfEngineImpl::BuildTocTree(fz_outline* outline, int& idCounter, boo
         }
         int pageNo = outline->page + 1;
 
-        // TODO: simplify by constructing just destination
-        auto link = newFzLink(pageNo, nullptr, outline, isAttachment);
-        auto dest = link->dest;
-        link->dest = nullptr;
-        delete link;
+        PageDestination* dest = nullptr;
+        if (isAttachment) {
+            dest = destFromAttachment(this, outline);
+        } else {
+            dest = newFzDestination(outline);
+        }
 
         DocTocItem* item = newDocTocItemWithDestination(name, dest);
         free(name);
@@ -1682,23 +1708,23 @@ void PdfEngineImpl::UpdateUserAnnotations(Vec<PageAnnotation>* list) {
 }
 
 std::string_view PdfEngineImpl::GetFileData() {
-    u8* res = nullptr;
+    std::string_view res;
     ScopedCritSec scope(ctxAccess);
 
     pdf_document* doc = pdf_document_from_fz_document(ctx, _doc);
-    size_t size = 0;
 
     fz_var(res);
     fz_try(ctx) {
-        res = fz_extract_stream_data(ctx, doc->file, &size);
+        res = fz_extract_stream_data(ctx, doc->file);
     }
     fz_catch(ctx) {
-        res = nullptr;
+        res = {};
     }
 
-    if (res) {
-        return {(char*)res, size};
+    if (!res.empty()) {
+        return res;
     }
+
     auto path = FileName();
     if (!path) {
         return {};
