@@ -268,33 +268,46 @@ void LinkHandler::GotoLink(PageDestination* link) {
     Kind kind = link->Kind();
     if (kindDestinationNone == kind) {
         return;
-    } else if (kindDestinationScrollTo == kind) {
+    }
+
+    if (kindDestinationScrollTo == kind) {
         // TODO: respect link->ld.gotor.new_window for PDF documents ?
         ScrollTo(link);
-    } else if (kindDestinationLaunchURL == kind) {
+        return;
+    }
+
+    if (kindDestinationLaunchURL == kind) {
         if (!path) {
             /* ignore missing URLs */;
-        } else {
-            WCHAR* colon = str::FindChar(path, ':');
-            WCHAR* hash = str::FindChar(path, '#');
-            if (!colon || (hash && colon > hash)) {
-                // treat relative URIs as file paths (without fragment identifier)
-                if (hash) {
-                    *hash = '\0';
-                }
-                str::TransChars(path, L"/", L"\\");
-                url::DecodeInPlace(path);
-                // LaunchFile will reject unsupported file types
-                LaunchFile(path, nullptr);
-            } else {
-                // LaunchBrowser will reject unsupported URI schemes
-                // TODO: support file URIs?
-                LaunchBrowser(path);
-            }
+            return;
         }
-    } else if (kindDestinationLaunchEmbedded == kind) {
+
+        WCHAR* colon = str::FindChar(path, ':');
+        WCHAR* hash = str::FindChar(path, '#');
+        if (!colon || (hash && colon > hash)) {
+            // treat relative URIs as file paths (without fragment identifier)
+            if (hash) {
+                *hash = '\0';
+            }
+            str::TransChars(path, L"/", L"\\");
+            url::DecodeInPlace(path);
+            // LaunchFile will reject unsupported file types
+            LaunchFile(path, nullptr);
+        } else {
+            // LaunchBrowser will reject unsupported URI schemes
+            // TODO: support file URIs?
+            LaunchBrowser(path);
+        }
+        return;
+    }
+
+    if (kindDestinationLaunchEmbedded == kind) {
         // open embedded PDF documents in a new window
-        if (path && str::StartsWith(path, tab->filePath.Get())) {
+        if (!path) {
+            return;
+        }
+
+        if (str::StartsWith(path, tab->filePath.Get())) {
             WindowInfo* newWin = FindWindowInfoByFile(path, true);
             if (!newWin) {
                 LoadArgs args(path, owner);
@@ -303,46 +316,87 @@ void LinkHandler::GotoLink(PageDestination* link) {
             if (newWin) {
                 newWin->Focus();
             }
+            return;
         }
+
         // offer to save other attachments to a file
-        else {
-            // https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
+        // https://github.com/sumatrapdfreader/sumatrapdf/issues/1336
+        return;
+    }
+
+    if (kindDestinationLaunchFile == kind) {
+        if (!path) {
+            return;
         }
-    } else if (kindDestinationLaunchFile == kind) {
-        if (path) {
-            // LaunchFile only opens files inside SumatraPDF
-            // (except for allowed perceived file types)
-            LaunchFile(path, link);
-        }
-    } else if (kindDestinationNextPage == kind) {
+        // LaunchFile only opens files inside SumatraPDF
+        // (except for allowed perceived file types)
+        LaunchFile(path, link);
+        return;
+    }
+
+    if (kindDestinationNextPage == kind) {
         // predefined named actions
         tab->ctrl->GoToNextPage();
-    } else if (kindDestinationPrevPage == kind) {
+        return;
+    }
+
+    if (kindDestinationPrevPage == kind) {
         tab->ctrl->GoToPrevPage();
-    } else if (kindDestinationFirstPage == kind) {
+        return;
+    }
+
+    if (kindDestinationFirstPage == kind) {
         tab->ctrl->GoToFirstPage();
-    } else if (kindDestinationLastPage == kind) {
+        return;
+    }
+
+    if (kindDestinationLastPage == kind) {
         tab->ctrl->GoToLastPage();
         // Adobe Reader extensions to the spec, see http://www.tug.org/applications/hyperref/manual.html
-    } else if (kindDestinationFindDialog == kind) {
-        PostMessage(hwndFrame, WM_COMMAND, IDM_FIND_FIRST, 0);
-    } else if (kindDestinationFullScreen == kind) {
-        PostMessage(hwndFrame, WM_COMMAND, IDM_VIEW_PRESENTATION_MODE, 0);
-    } else if (kindDestinationGoBack == kind) {
-        tab->ctrl->Navigate(-1);
-    } else if (kindDestinationGoForward == kind) {
-        tab->ctrl->Navigate(1);
-    } else if (kindDestinationGoToPageDialog == kind) {
-        PostMessage(hwndFrame, WM_COMMAND, IDM_GOTO_PAGE, 0);
-    } else if (kindDestinationPrintDialog == kind) {
-        PostMessage(hwndFrame, WM_COMMAND, IDM_PRINT, 0);
-    } else if (kindDestinationSaveAsDialog == kind) {
-        PostMessage(hwndFrame, WM_COMMAND, IDM_SAVEAS, 0);
-    } else if (kindDestinationZoomToDialog == kind) {
-        PostMessage(hwndFrame, WM_COMMAND, IDM_ZOOM_CUSTOM, 0);
-    } else {
-        CrashIf(nullptr != kind);
+        return;
     }
+
+    if (kindDestinationFindDialog == kind) {
+        PostMessage(hwndFrame, WM_COMMAND, IDM_FIND_FIRST, 0);
+        return;
+    }
+
+    if (kindDestinationFullScreen == kind) {
+        PostMessage(hwndFrame, WM_COMMAND, IDM_VIEW_PRESENTATION_MODE, 0);
+        return;
+    }
+
+    if (kindDestinationGoBack == kind) {
+        tab->ctrl->Navigate(-1);
+        return;
+    }
+
+    if (kindDestinationGoForward == kind) {
+        tab->ctrl->Navigate(1);
+        return;
+    }
+
+    if (kindDestinationGoToPageDialog == kind) {
+        PostMessage(hwndFrame, WM_COMMAND, IDM_GOTO_PAGE, 0);
+        return;
+    }
+
+    if (kindDestinationPrintDialog == kind) {
+        PostMessage(hwndFrame, WM_COMMAND, IDM_PRINT, 0);
+        return;
+    }
+
+    if (kindDestinationSaveAsDialog == kind) {
+        PostMessage(hwndFrame, WM_COMMAND, IDM_SAVEAS, 0);
+        return;
+    }
+
+    if (kindDestinationZoomToDialog == kind) {
+        PostMessage(hwndFrame, WM_COMMAND, IDM_ZOOM_CUSTOM, 0);
+        return;
+    }
+
+    CrashIf(nullptr != kind);
 }
 
 void LinkHandler::ScrollTo(PageDestination* dest) {
