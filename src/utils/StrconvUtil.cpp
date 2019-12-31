@@ -51,15 +51,18 @@ std::string_view WstrToCodePage(const WCHAR* txt, UINT codePage, int cchTxtLen) 
 /* Caller needs to free() the result */
 WCHAR* ToWideChar(const char* src, UINT codePage, int cbSrcLen) {
     CrashIf(!src);
-    if (!src)
+    if (!src) {
         return nullptr;
+    }
 
     int requiredBufSize = MultiByteToWideChar(codePage, 0, src, cbSrcLen, nullptr, 0);
-    if (0 == requiredBufSize)
-        return nullptr;
+    if (0 == requiredBufSize) {
+        return str::Dup(L"");
+    }
     WCHAR* res = AllocArray<WCHAR>(requiredBufSize + 1);
-    if (!res)
+    if (!res) {
         return nullptr;
+    }
     MultiByteToWideChar(codePage, 0, src, cbSrcLen, res, requiredBufSize);
     return res;
 }

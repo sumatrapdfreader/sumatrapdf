@@ -42,12 +42,14 @@ static fz_link* FixupPageLinks(fz_link* root) {
 
         // there are PDFs that have x,y positions in reverse order, so fix them up
         fz_link* link = new_root;
-        if (link->rect.x0 > link->rect.x1)
+        if (link->rect.x0 > link->rect.x1) {
             std::swap(link->rect.x0, link->rect.x1);
-        if (link->rect.y0 > link->rect.y1)
+        }
+        if (link->rect.y0 > link->rect.y1) {
             std::swap(link->rect.y0, link->rect.y1);
-        AssertCrash(link->rect.x1 >= link->rect.x0);
-        AssertCrash(link->rect.y1 >= link->rect.y0);
+        }
+        CrashIf(link->rect.x1 < link->rect.x0);
+        CrashIf(link->rect.y1 < link->rect.y0);
     }
     return new_root;
 }
@@ -56,8 +58,9 @@ static Vec<PageAnnotation> fz_get_user_page_annots(Vec<PageAnnotation>& userAnno
     Vec<PageAnnotation> result;
     for (size_t i = 0; i < userAnnots.size(); i++) {
         PageAnnotation& annot = userAnnots.at(i);
-        if (annot.pageNo != pageNo)
+        if (annot.pageNo != pageNo) {
             continue;
+        }
         // include all annotations for pageNo that can be rendered by fz_run_user_annots
         switch (annot.type) {
             case PageAnnotType::Highlight:
@@ -177,8 +180,9 @@ pdf_obj* pdf_copy_str_dict(fz_context* ctx, pdf_document* doc, pdf_obj* dict) {
 // Note: make sure to only call with ctxAccess
 static fz_outline* pdf_load_attachments(fz_context* ctx, pdf_document* doc) {
     pdf_obj* dict = pdf_load_name_tree(ctx, doc, PDF_NAME(EmbeddedFiles));
-    if (!dict)
+    if (!dict) {
         return nullptr;
+    }
 
     fz_outline root = {0}, *node = &root;
     for (int i = 0; i < pdf_dict_len(ctx, dict); i++) {
@@ -186,18 +190,11 @@ static fz_outline* pdf_load_attachments(fz_context* ctx, pdf_document* doc) {
         pdf_obj* dest = pdf_dict_get_val(ctx, dict, i);
         auto ef = pdf_dict_get(ctx, dest, PDF_NAME(EF));
         pdf_obj* embedded = pdf_dict_geta(ctx, ef, PDF_NAME(DOS), PDF_NAME(F));
-        if (!embedded)
+        if (!embedded) {
             continue;
-
-        // TODO: in fz_try ?
-        char* uri = pdf_parse_file_spec(ctx, doc, dest, nullptr);
-        // undo the mangling done in pdf_parse_file_spec
-        if (str::StartsWith(uri, "file://")) {
-            char* prev = uri;
-            uri = fz_strdup(ctx, uri + 7);
-            fz_free(ctx, prev);
         }
 
+        char* uri = pdf_parse_file_spec(ctx, doc, dest, nullptr);
         char* title = fz_strdup(ctx, pdf_to_name(ctx, name));
         int streamNo = pdf_to_num(ctx, embedded);
         fz_outline* link = fz_new_outline(ctx);
@@ -205,6 +202,8 @@ static fz_outline* pdf_load_attachments(fz_context* ctx, pdf_document* doc) {
         link->uri = uri;
         link->title = title;
         // TODO: a hack: re-using page as stream number
+        // Could construct PageDestination here instead of delaying
+        // until BuildToc
         link->page = streamNo;
 
         node = node->next = link;
@@ -226,23 +225,27 @@ int CmpPageLabelInfo(const void* a, const void* b) {
 }
 
 WCHAR* FormatPageLabel(const char* type, int pageNo, const WCHAR* prefix) {
-    if (str::Eq(type, "D"))
+    if (str::Eq(type, "D")) {
         return str::Format(L"%s%d", prefix, pageNo);
+    }
     if (str::EqI(type, "R")) {
         // roman numbering style
         AutoFreeWstr number(str::FormatRomanNumeral(pageNo));
-        if (*type == 'r')
+        if (*type == 'r') {
             str::ToLowerInPlace(number.Get());
+        }
         return str::Format(L"%s%s", prefix, number.get());
     }
     if (str::EqI(type, "A")) {
         // alphabetic numbering style (A..Z, AA..ZZ, AAA..ZZZ, ...)
         str::WStr number;
         number.Append('A' + (pageNo - 1) % 26);
-        for (int i = 0; i < (pageNo - 1) / 26; i++)
+        for (int i = 0; i < (pageNo - 1) / 26; i++) {
             number.Append(number.at(0));
-        if (*type == 'a')
+        }
+        if (*type == 'a') {
             str::ToLowerInPlace(number.Get());
+        }
         return str::Format(L"%s%s", prefix, number.Get());
     }
     return str::Dup(prefix);
@@ -256,21 +259,27 @@ void BuildPageLabelRec(fz_context* ctx, pdf_obj* node, int pageCount, Vec<PageLa
             BuildPageLabelRec(ctx, arr, pageCount, data);
         }
         pdf_unmark_obj(ctx, node);
-    } else if ((obj = pdf_dict_gets(ctx, node, "Nums")) != nullptr) {
-        for (int i = 0; i < pdf_array_len(ctx, obj); i += 2) {
-            pdf_obj* info = pdf_array_get(ctx, obj, i + 1);
-            PageLabelInfo pli;
-            pli.startAt = pdf_to_int(ctx, pdf_array_get(ctx, obj, i)) + 1;
-            if (pli.startAt < 1)
-                continue;
-
-            pli.type = pdf_to_name(ctx, pdf_dict_gets(ctx, info, "S"));
-            pli.prefix = pdf_dict_gets(ctx, info, "P");
-            pli.countFrom = pdf_to_int(ctx, pdf_dict_gets(ctx, info, "St"));
-            if (pli.countFrom < 1)
-                pli.countFrom = 1;
-            data.Append(pli);
+        return;
+    }
+    obj = pdf_dict_gets(ctx, node, "Nums");
+    if (obj == nullptr) {
+        return;
+    }
+    for (int i = 0; i < pdf_array_len(ctx, obj); i += 2) {
+        pdf_obj* info = pdf_array_get(ctx, obj, i + 1);
+        PageLabelInfo pli;
+        pli.startAt = pdf_to_int(ctx, pdf_array_get(ctx, obj, i)) + 1;
+        if (pli.startAt < 1) {
+            continue;
         }
+
+        pli.type = pdf_to_name(ctx, pdf_dict_gets(ctx, info, "S"));
+        pli.prefix = pdf_dict_gets(ctx, info, "P");
+        pli.countFrom = pdf_to_int(ctx, pdf_dict_gets(ctx, info, "St"));
+        if (pli.countFrom < 1) {
+            pli.countFrom = 1;
+        }
+        data.Append(pli);
     }
 }
 
@@ -280,8 +289,9 @@ WStrVec* BuildPageLabelVec(fz_context* ctx, pdf_obj* root, int pageCount) {
     data.Sort(CmpPageLabelInfo);
 
     size_t n = data.size();
-    if (n == 0)
+    if (n == 0) {
         return nullptr;
+    }
 
     PageLabelInfo& pli = data.at(0);
     if (n == 1 && pli.startAt == 1 && pli.countFrom == 1 && !pli.prefix && str::Eq(pli.type, "D")) {
@@ -689,9 +699,10 @@ bool PdfEngineImpl::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
 }
 
 bool PdfEngineImpl::Load(IStream* stream, PasswordUI* pwdUI) {
-    AssertCrash(!FileName() && !_doc && ctx);
-    if (!ctx)
+    CrashIf(FileName() || _doc || !ctx);
+    if (!ctx) {
         return false;
+    }
 
     fz_stream* stm = nullptr;
     fz_try(ctx) {
@@ -927,7 +938,7 @@ bool PdfEngineImpl::FinishLoading() {
     }
 
     // TODO: support javascript
-    AssertCrash(!pdf_js_supported(ctx, doc));
+    CrashIf(pdf_js_supported(ctx, doc));
 
     return true;
 }
@@ -1701,10 +1712,11 @@ bool PdfEngineImpl::SupportsAnnotation(bool forSaving) const {
 void PdfEngineImpl::UpdateUserAnnotations(Vec<PageAnnotation>* list) {
     // TODO: use a new critical section to avoid blocking the UI thread
     ScopedCritSec scope(ctxAccess);
-    if (list)
+    if (list) {
         userAnnots = *list;
-    else
+    } else {
         userAnnots.Reset();
+    }
 }
 
 std::string_view PdfEngineImpl::GetFileData() {
