@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-3736cc3a64197bb9034a74be3a84158c6262e7a0
+6182f0b807225ccfd9d75a0bfc107f7783e5dcba
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -8094,6 +8094,7 @@ uz:%s yuklab olish xatosi
 vn:Không mở %s được
 :Expand All
 co:Spiegà tuttu
+cz:Rozbalit vše
 nl:Alle Uitvouwen
 :F&avorites
 am:Ը&նտրյալներ
@@ -11619,6 +11620,7 @@ uz:O'zgartirilgan:
 vn:Ngày chỉnh sửa
 :New &window\tCtrl+N
 co:No&va finestra\tCtrl+N
+cz:Nové &okno\tCtrl+N
 fr:Nouvelle &fenêtre\tCtrl+N
 nl:Nieuw venster\tCrtl+N
 :New version %s is available. Download new version?
@@ -15757,6 +15759,7 @@ uz:Tez-tez o'qiladiganlarni ko'rsatish
 vn:Hiện Đọc thường xuyên
 :Show in &folder
 co:Affissà in u car&tulare
+cz:Zobrazit ve &složce
 nl:Toon in &map
 :Show the &bookmarks sidebar when available
 am:Հնարավորության դեպքում ցուցադրել &Էջերը

@@ -4520,7 +4520,7 @@ const char * gTranslations_cz =
   "Zadejte heslo pro %s\0"\
   "Dvojit\303\251 kliknut\303\255 na PDF dokument vykon\303\241 zadan\303\275 p\305\231\303\255kazov\303\275 \305\231\303\241dek:\0"\
   "Chyba p\305\231i na\304\215\303\255t\303\241n\303\255 %s\0"\
-  "\0"\
+  "Rozbalit v\305\241e\0"\
   "&Obl\303\255ben\303\251 polo\305\276ky\0"\
   "V&p\305\231ed\tAlt+\305\240ipka vpravo\0"\
   "&Cel\303\241 obrazovka\tF11\0"\
@@ -4576,7 +4576,7 @@ const char * gTranslations_cz =
   "Rozli\305\241ovat velikost p\303\255smen\0"\
   "Dokumenty Mobi\0"\
   "Zm\304\233n\304\233no:\0"\
-  "\0"\
+  "Nov\303\251 &okno\tCtrl+N\0"\
   "Nov\303\241 verze %s je k dispozici. St\303\241hnout novou verzi?\0"\
   "Dal\305\241\303\255 str\303\241nka\0"\
   "\305\275\303\241dn\303\241 polo\305\276ka nebyla nalezena\0"\
@@ -4642,7 +4642,7 @@ const char * gTranslations_cz =
   "Zobrazit panel n\303\241s&troj\305\257\0"\
   "Zobrazit obl\303\255ben\303\251 polo\305\276ky\0"\
   "Zobrazit \304\215asto \304\215ten\303\251 dokumenty\0"\
-  "\0"\
+  "Zobrazit ve &slo\305\276ce\0"\
   "Zo&brazit z\303\241lo\305\276ky v postrann\303\255m panelu, jsou-li dostupn\303\251\0"\
   "Jedna str\303\241nka\0"\
   "To se nem\304\233lo st\303\241t, omlouv\303\241me se.\n\nPokud n\303\241m chcete pomoci vy\305\231e\305\241it p\305\231\303\255\304\215inu tohoto p\303\241du, klikn\304\233te na tla\304\215\303\255tko Storno.\0"\
