@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-6182f0b807225ccfd9d75a0bfc107f7783e5dcba
+e82e33a0434397afb812c154d66379f3cb103f7f
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -5468,9 +5468,12 @@ uk:Закрити
 uz:Yopish
 vn:Đóng lại
 :Collapse All
+cn:全部折叠(&C)
 co:Piegà tuttu
 cz:Sbalit vše
+fr:Tout réduire
 nl:Alle Samenvouwen
+tw:全部折叠(&C)
 :Comic books
 am:Հումորային գրքեր
 ar:الكتب الهزلية
@@ -8093,9 +8096,12 @@ uk:Помилка завантаження %s
 uz:%s yuklab olish xatosi
 vn:Không mở %s được
 :Expand All
+cn:全部展开
 co:Spiegà tuttu
 cz:Rozbalit vše
+fr:Tout développer
 nl:Alle Uitvouwen
+tw:全部展開
 :F&avorites
 am:Ը&նտրյալներ
 ar:المفضلة
@@ -11619,10 +11625,12 @@ uk:Змінено:
 uz:O'zgartirilgan:
 vn:Ngày chỉnh sửa
 :New &window\tCtrl+N
+cn:新建窗口(&W)\tCtrl+Y
 co:No&va finestra\tCtrl+N
 cz:Nové &okno\tCtrl+N
 fr:Nouvelle &fenêtre\tCtrl+N
 nl:Nieuw venster\tCrtl+N
+tw:新建視窗(&W)\tCtrl+N
 :New version %s is available. Download new version?
 af:Nuwe Weergawe %s Is Beskikbaar. Laai Die Nuwe Weergawe Af?
 am:Հասանելի է նոր՝ %s տարբերակը։ Ներբեռնե՞լ նոր տարբերակը։
@@ -15758,9 +15766,11 @@ uk:Найбільш часто читані
 uz:Tez-tez o'qiladiganlarni ko'rsatish
 vn:Hiện Đọc thường xuyên
 :Show in &folder
+cn:打开所在文件夹(&F)
 co:Affissà in u car&tulare
 cz:Zobrazit ve &složce
 nl:Toon in &map
+tw:打開所在資料夾(&F)
 :Show the &bookmarks sidebar when available
 am:Հնարավորության դեպքում ցուցադրել &Էջերը
 ar:اظهار &قائمة العناوين في الشريط الجانبي عند توفرها
