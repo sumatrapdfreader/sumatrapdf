@@ -11,6 +11,7 @@ extern "C" {
 #include "utils/BaseUtil.h"
 #include "utils/ScopedWin.h"
 #include "utils/GdiplusUtil.h"
+#include "utils/Log.h"
 
 #include "TreeModel.h"
 #include "EngineBase.h"
@@ -115,10 +116,22 @@ static fz_image* render_to_pixmap(fz_context* ctx, HBITMAP hbmp, SizeI size) {
 #endif
 }
 
+static void fz_print_cb(void* user, const char* msg) {
+    log(msg);
+}
+
+static void installFitzErrorCallbacks(fz_context* ctx) {
+    fz_set_warning_callback(ctx, fz_print_cb, nullptr);
+    fz_set_error_callback(ctx, fz_print_cb, nullptr);
+}
+
 PdfCreator::PdfCreator() {
     ctx = fz_new_context(nullptr, nullptr, FZ_STORE_UNLIMITED);
-    if (!ctx)
+    if (!ctx) {
         return;
+    }
+
+    installFitzErrorCallbacks(ctx);
     fz_try(ctx) {
         doc = pdf_create_document(ctx);
     }
@@ -129,10 +142,11 @@ PdfCreator::PdfCreator() {
 
 PdfCreator::~PdfCreator() {
     pdf_drop_document(ctx, doc);
+    fz_flush_warnings(ctx);
     fz_drop_context(ctx);
 }
 
-static void add_image_res(fz_context* ctx, pdf_document* doc, pdf_obj* resources, char* name, fz_image* image) {
+pdf_obj* add_image_res(fz_context* ctx, pdf_document* doc, pdf_obj* resources, char* name, fz_image* image) {
     pdf_obj *subres, *ref;
 
     subres = pdf_dict_get(ctx, resources, PDF_NAME(XObject));
@@ -144,32 +158,43 @@ static void add_image_res(fz_context* ctx, pdf_document* doc, pdf_obj* resources
     ref = pdf_add_image(ctx, doc, image);
     pdf_dict_puts(ctx, subres, name, ref);
     pdf_drop_obj(ctx, ref);
-
-    fz_drop_image(ctx, image);
+    return ref;
 }
 
+// based on create_page in pdfcreate.c
 bool PdfCreator::AddPageFromFzImage(fz_image* image, float imgDpi) {
     CrashIf(!ctx || !doc);
     if (!ctx || !doc) {
         return false;
     }
 
-    pdf_obj* page = nullptr;
     pdf_obj* resources = nullptr;
+    fz_buffer* contents = nullptr;
+    fz_device* dev = nullptr;
 
-    fz_var(page);
-
-    fz_rect mediabox = {0, 0, 595, 842};
+    fz_var(contents);
+    fz_var(resources);
+    fz_var(dev);
 
     fz_try(ctx) {
-        resources = pdf_new_dict(ctx, doc, 2);
-        add_image_res(ctx, doc, resources, "image", image);
-        page = pdf_add_page(ctx, doc, mediabox, 0, resources, nullptr);
+        float zoom = 1.0f;
+        fz_matrix ctm = {image->w * zoom, 0, 0, image->h * zoom, 0, 0};
+        fz_rect bounds = fz_unit_rect;
+        bounds = fz_transform_rect(bounds, ctm);
+
+        pdf_page_write(ctx, doc, bounds, &resources, &contents);
+        fz_fill_image(ctx, dev, image, ctm, 1.0f, fz_default_color_params);
+        fz_drop_device(ctx, dev);
+        dev = nullptr;
+
+        pdf_obj* page = pdf_add_page(ctx, doc, bounds, 0, resources, contents);
         pdf_insert_page(ctx, doc, -1, page);
         pdf_drop_obj(ctx, page);
-        pdf_drop_obj(ctx, resources);
     }
     fz_always(ctx) {
+        pdf_drop_obj(ctx, resources);
+        fz_drop_buffer(ctx, contents);
+        fz_drop_device(ctx, dev);
     }
     fz_catch(ctx) {
         return false;
@@ -182,15 +207,16 @@ static bool AddPageFromHBITMAP(PdfCreator* c, HBITMAP hbmp, SizeI size, float im
         return false;
     }
 
-    fz_image* image = nullptr;
+    bool ok = false;
+    fz_var(ok);
     fz_try(c->ctx) {
-        image = render_to_pixmap(c->ctx, hbmp, size);
+        fz_image* image = render_to_pixmap(c->ctx, hbmp, size);
+        ok = c->AddPageFromFzImage(image, imgDpi);
+        fz_drop_image(c->ctx, image);
     }
     fz_catch(c->ctx) {
         return false;
     }
-    bool ok = c->AddPageFromFzImage(image, imgDpi);
-    fz_drop_image(c->ctx, image);
     return ok;
 }
 
@@ -217,7 +243,7 @@ bool PdfCreator::AddPageFromImageData(const char* data, size_t len, float imgDpi
     fz_var(img);
 
     fz_try(ctx) {
-        fz_buffer* buf = fz_new_buffer_from_data(ctx, (u8*)data, len);
+        fz_buffer* buf = fz_new_buffer_from_copied_data(ctx, (u8*)data, len);
         img = fz_new_image_from_buffer(ctx, buf);
     }
     fz_catch(ctx) {
@@ -227,7 +253,7 @@ bool PdfCreator::AddPageFromImageData(const char* data, size_t len, float imgDpi
         return false;
     }
     bool ok = AddPageFromFzImage(img, imgDpi);
-    fz_drop_image(ctx, img);
+    // fz_drop_image(ctx, img);
     return ok;
 }
 
@@ -307,16 +333,36 @@ bool PdfCreator::CopyProperties(EngineBase* engine) {
     return true;
 }
 
+const pdf_write_options pdf_default_write_options2 = {
+    0,  /* do_incremental */
+    0,  /* do_pretty */
+    0,  /* do_ascii */
+    0,  /* do_compress */
+    0,  /* do_compress_images */
+    0,  /* do_compress_fonts */
+    0,  /* do_decompress */
+    0,  /* do_garbage */
+    0,  /* do_linear */
+    0,  /* do_clean */
+    0,  /* do_sanitize */
+    0,  /* do_appearance */
+    0,  /* do_encrypt */
+    ~0, /* permissions */
+    "", /* opwd_utf8[128] */
+    "", /* upwd_utf8[128] */
+};
+
 bool PdfCreator::SaveToFile(const char* filePath) {
     if (!ctx || !doc)
         return false;
 
-    if (gPdfProducer) {
+    if (false && gPdfProducer) {
         SetProperty(DocumentProperty::PdfProducer, gPdfProducer);
     }
 
     fz_try(ctx) {
-        pdf_save_document(ctx, doc, const_cast<char*>(filePath), nullptr);
+        pdf_write_options opts = pdf_default_write_options2;
+        pdf_save_document(ctx, doc, (const char*)filePath, &opts);
     }
     fz_catch(ctx) {
         return false;
@@ -341,7 +387,7 @@ bool PdfCreator::RenderToFile(const char* pdfFileName, EngineBase* engine, int d
         delete c;
         return false;
     }
-    c->CopyProperties(engine);
+    // c->CopyProperties(engine);
     ok = c->SaveToFile(pdfFileName);
     delete c;
     return ok;

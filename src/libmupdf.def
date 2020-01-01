@@ -69,6 +69,7 @@ EXPORTS
 	pdf_add_page
 	pdf_add_image
 	pdf_new_text_string
+	fz_new_buffer_from_copied_data
 
 	fz_keep_bitmap
 	fz_drop_bitmap
