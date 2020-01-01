@@ -8566,7 +8566,7 @@ const char * gTranslations_ga =
   "Athraigh an Teanga (Change Language)\0"\
   "Lorg Nuashonruithe\0"\
   "D\303\272n\0"\
-  "\0"\
+  "Laghdaigh Gach\0"\
   "Greann\303\241in\0"\
   "Comhoiri\303\272nacht\0"\
   "Amharc lean\303\272nach\0"\
@@ -8608,7 +8608,7 @@ const char * gTranslations_ga =
   "Cuir isteach focal faire le haghaidh %s\0"\
   "Cuir isteach l\303\255ne na n-orduithe at\303\241 le gairm nuair a bhr\303\272ann t\303\272 faoi dh\303\263 ar ch\303\241ip\303\251is PDF:\0"\
   "Tharla bot\303\272n ag lucht\303\272 %s\0"\
-  "\0"\
+  "Leathnaigh Gach\0"\
   "Ce&an\303\241in\0"\
   "Ar aghaidh\tAlt+Saighead Ar Deis\0"\
   "L\303\241nsc\303\241ile\303\241n\tCtrl+Shift+L\0"\
@@ -8664,7 +8664,7 @@ const char * gTranslations_ga =
   "Comhoiri\303\272naigh an c\303\241s\0"\
   "C\303\241ip\303\251is\303\255 Mobi\0"\
   "Mionathraithe:\0"\
-  "\0"\
+  "Fuinneog &nua\tCtrl+N\0"\
   "T\303\241 an leagan nua %s ar f\303\241il. \303\215osluchtaigh an leagan nua?\0"\
   "Leathanach Ar Aghaidh\0"\
   "N\303\255or aims\303\255odh comhionanna\0"\
@@ -8730,7 +8730,7 @@ const char * gTranslations_ga =
   "Taispe\303\241in an Barra Uirlis\303\255\0"\
   "Taispe\303\241in Cean\303\241in\0"\
   "Taispe\303\241in cinn l\303\251ite go minic\0"\
-  "\0"\
+  "Taispe\303\241in san &fillte\303\241n\0"\
   "Taispe\303\241in taobh-bharra na gcean\303\241n nuair at\303\241 s\303\251 ar f\303\241il\0"\
   "Leathanach Amh\303\241in\0"\
   "Faraor, n\303\255or ch\303\263ir go dtarl\303\263dh sin!\n\nBr\303\272igh 'Cealaigh' le do thoil, m\303\241s mian leat cuidi\303\272 linn \303\272dar an chliste seo a dheisi\303\272.\0"\
