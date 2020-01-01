@@ -1,4 +1,4 @@
-/* Copyright 2019 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2020 the SumatraPDF project authors (see AUTHORS file).
    License: GPLv3 */
 
 bool IsXpsEngineSupportedFile(const WCHAR* fileName, bool sniff = false);

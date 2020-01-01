@@ -1,4 +1,4 @@
-/* Copyright 2019 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2020 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
 /* A driver for various tests. The idea is that instead of having a separate

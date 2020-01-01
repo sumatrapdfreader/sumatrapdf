@@ -1,4 +1,4 @@
-/* Copyright 2019 the SumatraPDF project authors (see AUTHORS file).
+/* Copyright 2020 the SumatraPDF project authors (see AUTHORS file).
    License: Simplified BSD (see COPYING.BSD) */
 
 #define COL_CLOSE_X RGB(0xa0, 0xa0, 0xa0)
