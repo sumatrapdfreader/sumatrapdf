@@ -779,9 +779,7 @@ static std::string_view loadFromFile(Fb2Doc* doc) {
         return file::ReadFile(doc->fileName);
     }
 
-    defer {
-        delete archive;
-    };
+    AutoDelete delArchive(archive);
 
     // we have archive with more than 1 file
     doc->isZipped = true;
@@ -820,9 +818,8 @@ static std::string_view loadFromStream(Fb2Doc* doc) {
     if (!archive) {
         return {};
     }
-    defer {
-        delete archive;
-    };
+
+    AutoDelete delArchive(archive);
     size_t nFiles = archive->GetFileInfos().size();
     if (nFiles != 1) {
         return {};

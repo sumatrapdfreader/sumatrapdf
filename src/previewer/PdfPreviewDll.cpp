@@ -75,17 +75,20 @@ class CClassFactory : public IClassFactory {
 #endif
         else
             return E_NOINTERFACE;
-        if (!pObject)
+
+        if (!pObject) {
             return E_OUTOFMEMORY;
+        }
 
         return pObject->QueryInterface(riid, ppv);
     }
 
     IFACEMETHODIMP LockServer(BOOL bLock) {
-        if (bLock)
+        if (bLock) {
             InterlockedIncrement(&g_lRefCount);
-        else
+        } else {
             InterlockedDecrement(&g_lRefCount);
+        }
         return S_OK;
     }
 
@@ -116,8 +119,9 @@ STDAPI DllCanUnloadNow(VOID) {
 STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv) {
     *ppv = nullptr;
     ScopedComPtr<CClassFactory> pClassFactory(new CClassFactory(rclsid));
-    if (!pClassFactory)
+    if (!pClassFactory) {
         return E_OUTOFMEMORY;
+    }
     return pClassFactory->QueryInterface(riid, ppv);
 }
 
@@ -170,9 +174,10 @@ static struct {
 };
 
 STDAPI DllRegisterServer() {
-    AutoFreeWstr dllPath(path::GetPathOfFileInAppDir());
-    if (!dllPath)
-        return HRESULT_FROM_WIN32(GetLastError());
+    AutoFreeWstr dllPath = path::GetPathOfFileInAppDir();
+    if (!dllPath) {
+        return HRESULT_FROM_WIN32(GetLastError());        
+    }
 
 #define WriteOrFail_(key, value, data)                     \
     WriteRegStr(HKEY_LOCAL_MACHINE, key, value, data);     \
@@ -187,9 +192,9 @@ STDAPI DllRegisterServer() {
         const WCHAR* ext = gPreviewers[i].ext;
         const WCHAR* ext2 = gPreviewers[i].ext2;
 
-        AutoFreeWstr displayName(str::Format(L"SumatraPDF Preview (*%s)", ext));
+        AutoFreeWstr displayName = str::Format(L"SumatraPDF Preview (*%s)", ext);
         // register class
-        AutoFreeWstr key(str::Format(L"Software\\Classes\\CLSID\\%s", clsid));
+        AutoFreeWstr key = str::Format(L"Software\\Classes\\CLSID\\%s", clsid);
         WriteOrFail_(key, nullptr, displayName);
         WriteOrFail_(key, L"AppId", IsRunningInWow64() ? APPID_PREVHOST_EXE_WOW64 : APPID_PREVHOST_EXE);
         WriteOrFail_(key, L"DisplayName", displayName);

@@ -25,11 +25,7 @@ bool HasBeenInstalled() {
         return false;
     }
 
-    WCHAR* exePath = GetExePath();
-
-    defer {
-        free(exePath);
-    };
+    AutoFreeWstr exePath = GetExePath();
 
     if (!exePath) {
         return false;
@@ -118,20 +114,17 @@ WCHAR* AppGenDataFilename(const WCHAR* fileName) {
 
 #if 0
 WCHAR* PathForFileInAppDataDir(const WCHAR* fileName) {
-    if (!fileName)
+    if (!fileName) {
         return nullptr;
+    }
 
     /* Use local (non-roaming) app data directory */
-    WCHAR* dataDir = GetSpecialFolder(CSIDL_LOCAL_APPDATA, true);
-    WCHAR* dir = path::Join(dataDir, APP_NAME_STR);
-    free(dataDir);
-
-    defer {
-        str::Free(dir);
-    };
+    AutoFreeWstr dataDir = GetSpecialFolder(CSIDL_LOCAL_APPDATA, true);
+    AutoFreeWstr dir = path::Join(dataDir, APP_NAME_STR);
     bool ok = dir::Create(dir);
-    if (!ok)
+    if (!ok) {
         return nullptr;
+    }
 
     return path::Join(dir, fileName);
 }

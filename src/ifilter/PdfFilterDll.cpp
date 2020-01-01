@@ -187,8 +187,9 @@ STDAPI DllRegisterServer()
     for (int i = 0; i < dimof(regVals); i++) {
         WriteRegStr(HKEY_LOCAL_MACHINE, regVals[i].key, regVals[i].value, regVals[i].data);
         bool ok = WriteRegStr(HKEY_CURRENT_USER, regVals[i].key, regVals[i].value, regVals[i].data);
-        if (!ok)
+        if (!ok) {
             return E_FAIL;
+        }
     }
 
     return S_OK;
@@ -217,8 +218,9 @@ STDAPI DllUnregisterServer()
     for (int i = 0; i < dimof(regKeys); i++) {
         DeleteRegKey(HKEY_LOCAL_MACHINE, regKeys[i]);
         bool ok = DeleteRegKey(HKEY_CURRENT_USER, regKeys[i]);
-        if (!ok)
+        if (!ok) {
             hr = E_FAIL;
+        }
     }
 
     return hr;
