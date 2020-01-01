@@ -22,8 +22,9 @@ using namespace Gdiplus;
 static AutoFreeWstr gPdfProducer;
 
 void PdfCreator::SetProducerName(const WCHAR* name) {
-    if (!str::Eq(gPdfProducer, name))
+    if (!str::Eq(gPdfProducer, name)) {
         gPdfProducer.SetCopy(name);
+    }
 }
 
 static fz_image* render_to_pixmap(fz_context* ctx, HBITMAP hbmp, SizeI size) {
@@ -182,7 +183,7 @@ bool PdfCreator::AddPageFromFzImage(fz_image* image, float imgDpi) {
         fz_rect bounds = fz_unit_rect;
         bounds = fz_transform_rect(bounds, ctm);
 
-        pdf_page_write(ctx, doc, bounds, &resources, &contents);
+        dev = pdf_page_write(ctx, doc, bounds, &resources, &contents);
         fz_fill_image(ctx, dev, image, ctm, 1.0f, fz_default_color_params);
         fz_drop_device(ctx, dev);
         dev = nullptr;
@@ -220,7 +221,7 @@ static bool AddPageFromHBITMAP(PdfCreator* c, HBITMAP hbmp, SizeI size, float im
     return ok;
 }
 
-bool PdfCreator::AddImagePage(Gdiplus::Bitmap* bmp, float imgDpi) {
+bool PdfCreator::AddPageFromGdiplusBitmap(Gdiplus::Bitmap* bmp, float imgDpi) {
     HBITMAP hbmp;
     if (bmp->GetHBITMAP((Gdiplus::ARGB)Gdiplus::Color::White, &hbmp) != Gdiplus::Ok) {
         return false;
@@ -253,7 +254,7 @@ bool PdfCreator::AddPageFromImageData(const char* data, size_t len, float imgDpi
         return false;
     }
     bool ok = AddPageFromFzImage(img, imgDpi);
-    // fz_drop_image(ctx, img);
+    fz_drop_image(ctx, img);
     return ok;
 }
 
@@ -356,7 +357,7 @@ bool PdfCreator::SaveToFile(const char* filePath) {
     if (!ctx || !doc)
         return false;
 
-    if (false && gPdfProducer) {
+    if (gPdfProducer) {
         SetProperty(DocumentProperty::PdfProducer, gPdfProducer);
     }
 
@@ -387,7 +388,7 @@ bool PdfCreator::RenderToFile(const char* pdfFileName, EngineBase* engine, int d
         delete c;
         return false;
     }
-    // c->CopyProperties(engine);
+    c->CopyProperties(engine);
     ok = c->SaveToFile(pdfFileName);
     delete c;
     return ok;

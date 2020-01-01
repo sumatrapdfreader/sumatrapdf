@@ -573,7 +573,7 @@ bool ImageEngineImpl::SaveFileAsPDF(const char* pdfFileName, bool includeUserAnn
     }
     for (int i = 2; i <= PageCount() && ok; i++) {
         ImagePage* page = GetPage(i);
-        ok = page && c->AddImagePage(page->bmp, dpi);
+        ok = page && c->AddPageFromGdiplusBitmap(page->bmp, dpi);
         DropPage(page, false);
     }
     if (ok) {
