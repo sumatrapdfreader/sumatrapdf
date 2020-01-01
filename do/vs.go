@@ -15,17 +15,21 @@ const (
 )
 
 var (
-	msbuilds = []string{
+	msbuildPaths = []string{
 		`C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe`,
 		`C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\MSBuild.exe`,
 	}
-	vsvars = []string{
+	vsvarsPaths = []string{
 		`C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat`,
 		`C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat`,
 	}
-	signtools = []string{
+	signtoolPaths = []string{
 		`C:\Program Files (x86)\Windows Kits\10\bin\10.0.14393.0\x64\signtool.exe`,
 		`C:\Program Files (x86)\Windows Kits\10\bin\10.0.18362.0\x64\signtool.exe`,
+	}
+	makeappxPaths = []string{
+		`c:\Program Files (x86)\Windows Kits\10\bin\10.0.14393.0\x64\makeappx.exe`,
+		`c:\Program Files (x86)\Windows Kits\10\bin\10.0.18362.0\x64\makeappx.exe`,
 	}
 )
 
@@ -43,16 +47,20 @@ func detectPath(paths []string) string {
 }
 
 func detectMsbuildPath() string {
-	return detectPath(msbuilds)
+	return detectPath(msbuildPaths)
 }
 
 func detectSigntoolPath() string {
-	return detectPath(signtools)
+	return detectPath(signtoolPaths)
+}
+
+func detectMakeAppxPath() string {
+	return detectPath(makeappxPaths)
 }
 
 func getVs2019Env() []string {
 	if len(cachedEnv) == 0 {
-		path := detectPath(vsvars)
+		path := detectPath(vsvarsPaths)
 		cachedEnv = getEnvAfterScript(path)
 		u.PanicIf(len(cachedEnv) == 0, "didn't find env from '%s'", path)
 	}

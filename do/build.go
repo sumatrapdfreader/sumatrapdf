@@ -241,6 +241,15 @@ func createManifestMust() {
 	u.WriteFileMust(path, []byte(s))
 }
 
+// https://lucasg.github.io/2018/01/15/Creating-an-appx-package/
+// https://docs.microsoft.com/en-us/windows/win32/appxpkg/make-appx-package--makeappx-exe-#to-create-a-package-using-a-mapping-file
+// https://github.com/lucasg/Dependencies/tree/master/DependenciesAppx
+// https://docs.microsoft.com/en-us/windows/msix/desktop/desktop-to-uwp-packaging-dot-net
+func makeAppx() {
+	appExePath := detectMakeAppxPath()
+	fmt.Printf("makeAppx: '%s'\n", appExePath)
+}
+
 func buildPreRelease(isDaily bool) {
 	// early exit if missing
 	detectSigntoolPath()
