@@ -164,7 +164,7 @@ class Vec {
 
     T& at(int idx) const {
         CrashIf(idx < 0);
-        CrashIf(idx >= len);
+        CrashIf((size_t)idx >= len);
         return els[idx];
     }
 
