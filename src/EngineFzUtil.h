@@ -49,7 +49,7 @@ struct LinkRectList {
     Vec<fz_rect> coords;
 };
 
-fz_rect fz_RectD_to_rect(RectD rect);
+fz_rect RectD_to_fz_rect(RectD rect);
 RectD fz_rect_to_RectD(fz_rect rect);
 fz_matrix fz_create_view_ctm(fz_rect mediabox, float zoom, int rotation);
 

@@ -35,7 +35,7 @@ RectD fz_rect_to_RectD(fz_rect rect) {
     return RectD::FromXY(rect.x0, rect.y0, rect.x1, rect.y1);
 }
 
-fz_rect fz_RectD_to_rect(RectD rect) {
+fz_rect RectD_to_fz_rect(RectD rect) {
     fz_rect result = {(float)rect.x, (float)rect.y, (float)(rect.x + rect.dx), (float)(rect.y + rect.dy)};
     return result;
 }
@@ -622,7 +622,7 @@ static const WCHAR* LinkifyMultilineText(LinkRectList* list, const WCHAR* pageTe
         AutoFreeWstr part(str::DupN(next, end - next));
         uri.Set(str::Join(uri, part));
         RectI bbox = coords[next - pageText].Union(coords[end - pageText - 1]);
-        list->coords.Append(fz_RectD_to_rect(bbox.Convert<double>()));
+        list->coords.Append(RectD_to_fz_rect(bbox.Convert<double>()));
 
         next = end + 1;
     } while (multiline);
@@ -710,7 +710,7 @@ LinkRectList* LinkifyText(const WCHAR* pageText, RectI* coords) {
         WCHAR* uri = protocol ? str::Join(protocol, part) : part.StealData();
         list->links.Append(uri);
         RectI bbox = coords[start - pageText].Union(coords[end - pageText - 1]);
-        list->coords.Append(fz_RectD_to_rect(bbox.Convert<double>()));
+        list->coords.Append(RectD_to_fz_rect(bbox.Convert<double>()));
         if (multiline)
             end = LinkifyMultilineText(list, pageText, start, end + 1, coords);
 
@@ -1193,7 +1193,7 @@ void fz_run_user_page_annots(fz_context* ctx, Vec<PageAnnotation>& pageAnnots, f
     for (size_t i = 0; i < pageAnnots.size() && (!cookie || !cookie->abort); i++) {
         PageAnnotation& annot = pageAnnots.at(i);
         // skip annotation if it isn't visible
-        fz_rect rect = fz_RectD_to_rect(annot.rect);
+        fz_rect rect = RectD_to_fz_rect(annot.rect);
         rect = fz_transform_rect(rect, ctm);
         if (fz_is_empty_rect(fz_intersect_rect(rect, cliprect))) {
             continue;
@@ -1233,13 +1233,13 @@ void fz_run_user_page_annots(fz_context* ctx, Vec<PageAnnotation>& pageAnnots, f
                 CrashIf(true);
         }
         fz_colorspace* cs = fz_device_rgb(ctx);
-        float r, g, b, a;
-        UnpackRgba(annot.color, r, g, b, a);
-        float color[3] = {r / 255.f, g / 255.f, b / 255.f};
+        float color[4];
+        ToPdfRgba(annot.color, color);
+        float a = color[3];
         if (PageAnnotType::Highlight == annot.type) {
             // render path with transparency effect
             fz_begin_group(ctx, dev, rect, nullptr, 0, 0, FZ_BLEND_MULTIPLY, 1.f);
-            fz_fill_path(ctx, dev, path, 0, ctm, cs, color, a / 255.f, fz_default_color_params);
+            fz_fill_path(ctx, dev, path, 0, ctm, cs, color, a, fz_default_color_params);
             fz_end_group(ctx, dev);
         } else {
             if (!stroke) {

@@ -12,6 +12,7 @@
 #include "utils/FileUtil.h"
 #include "utils/WinUtil.h"
 #include "utils/ScopedWin.h"
+#include "utils/Log.h"
 
 #include "wingui/TreeModel.h"
 #include "EngineBase.h"
@@ -38,6 +39,7 @@ static PageDestination* newDjVuDestination(const char* link) {
 
     if (IsPageLink(link)) {
         res->kind = kindDestinationScrollTo;
+        res->pageNo = atoi(link + 1);
     }
 
     if (str::Eq(link, "#+1")) {
@@ -52,10 +54,11 @@ static PageDestination* newDjVuDestination(const char* link) {
         res->kind = kindDestinationLaunchURL;
         res->value = strconv::Utf8ToWstr(link);
     }
-    CrashIf(!res->kind);
-    if (IsPageLink(link)) {
-        res->pageNo = atoi(link + 1);
+    if (!res->kind) {
+        logf("link: '%s'\n", link);
+        CrashIf(!res->kind);
     }
+
     res->rect = RectD(DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT, DEST_USE_DEFAULT);
     return res;
 }

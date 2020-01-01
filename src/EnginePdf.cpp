@@ -846,10 +846,6 @@ bool PdfEngineImpl::FinishLoading() {
     return true;
 }
 
-static COLORREF pdfColorToCOLORREF(float color[4]) {
-    return MkRgb(color[0], color[1], color[2]);
-}
-
 PageDestination* destFromAttachment(PdfEngineImpl* engine, fz_outline* outline) {
     PageDestination* dest = new PageDestination();
     dest->kind = kindDestinationLaunchEmbedded;
@@ -889,7 +885,7 @@ DocTocItem* PdfEngineImpl::BuildTocTree(fz_outline* outline, int& idCounter, boo
         item->fontFlags = outline->flags;
         item->pageNo = pageNo;
         if (outline->has_color) {
-            item->color = pdfColorToCOLORREF(outline->color);
+            item->color = FromPdfColorRgba(outline->color);
         }
 
         if (outline->down) {
@@ -1111,7 +1107,7 @@ RectD PdfEngineImpl::Transform(RectD rect, int pageNo, float zoom, int rotation,
     if (inverse) {
         ctm = fz_invert_matrix(ctm);
     }
-    fz_rect rect2 = fz_RectD_to_rect(rect);
+    fz_rect rect2 = RectD_to_fz_rect(rect);
     rect2 = fz_transform_rect(rect2, ctm);
     return fz_rect_to_RectD(rect2);
 }
@@ -1140,7 +1136,7 @@ RenderedBitmap* PdfEngineImpl::RenderBitmap(int pageNo, float zoom, int rotation
 
     fz_rect pRect;
     if (pageRect) {
-        pRect = fz_RectD_to_rect(*pageRect);
+        pRect = RectD_to_fz_rect(*pageRect);
     } else {
         // TODO(port): use pageInfo->mediabox?
         pRect = fz_bound_page(ctx, page);
@@ -1217,7 +1213,7 @@ bool PdfEngineImpl::BenchLoadPage(int pageNo) {
 }
 
 fz_matrix PdfEngineImpl::viewctm(int pageNo, float zoom, int rotation) {
-    const fz_rect tmpRc = fz_RectD_to_rect(PageMediabox(pageNo));
+    const fz_rect tmpRc = RectD_to_fz_rect(PageMediabox(pageNo));
     return fz_create_view_ctm(tmpRc, zoom, rotation);
 }
 
@@ -1542,8 +1538,9 @@ WCHAR* PdfEngineImpl::ExtractFontList() {
 }
 
 WCHAR* PdfEngineImpl::GetProperty(DocumentProperty prop) {
-    if (!_doc)
+    if (!_doc) {
         return nullptr;
+    }
 
     pdf_document* doc = pdf_document_from_fz_document(ctx, _doc);
 
@@ -1695,10 +1692,9 @@ bool PdfEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAnnots)
     return !includeUserAnnots || SaveUserAnnots(copyFileName);
 }
 
+#if 0
 static bool pdf_file_update_add_annotation(fz_context* ctx, pdf_document* doc, pdf_page* page, pdf_obj* page_obj,
                                            PageAnnotation& annot, pdf_obj* annots) {
-    CrashMePort();
-#if 0
     static const char* obj_dict =
         "<<\
     /Type /Annot /Subtype /%s\
@@ -1738,8 +1734,8 @@ static bool pdf_file_update_add_annotation(fz_context* ctx, pdf_document* doc, p
     int rotation = (page->rotate + 360) % 360;
     CrashIf((rotation % 90) != 0);
     // convert the annotation's rectangle back to raw user space
-    fz_rect r = fz_RectD_to_rect(annot.rect);
-    fz_matrix invctm = fz_invert_matrix(page->ctm)
+    fz_rect r = RectD_to_fz_rect(annot.rect);
+    fz_matrix invctm = fz_invert_matrix(page->ctm);
     fz_transform_rect(&r, invctm);
     double dx = r.x1 - r.x0, dy = r.y1 - r.y0;
     if ((rotation % 180) == 90)
@@ -1816,8 +1812,60 @@ static bool pdf_file_update_add_annotation(fz_context* ctx, pdf_document* doc, p
         pdf_drop_obj(ctx, annot_obj);
     }
     fz_catch(ctx) { return false; }
-#endif
     return true;
+}
+#endif
+
+static enum pdf_annot_type PageAnnotTypeToPdf(PageAnnotType tp) {
+    switch (tp) {
+        case PageAnnotType::Highlight:
+            return PDF_ANNOT_HIGHLIGHT;
+        case PageAnnotType::Squiggly:
+            return PDF_ANNOT_SQUIGGLY;
+        case PageAnnotType::Underline:
+            return PDF_ANNOT_UNDERLINE;
+        case PageAnnotType::StrikeOut:
+            return PDF_ANNOT_SQUIGGLY;
+    }
+    return PDF_ANNOT_UNKNOWN;
+}
+
+static void add_user_annotation(fz_context* ctx, pdf_document* doc, pdf_page* page, const PageAnnotation& userAnnot) {
+    enum pdf_annot_type tp = PageAnnotTypeToPdf(userAnnot.type);
+    pdf_annot* annot = pdf_create_annot(ctx, page, tp);
+
+    fz_rect r = RectD_to_fz_rect(userAnnot.rect);
+
+    // TODO: not sure if this is needed
+#if 0
+    // rotate the QuadPoints to match the page
+    AutoFree quad_tpl;
+    if (0 == rotation)
+        quad_tpl.Set(str::Format(obj_quad_tpl, r.x0, r.y1, r.x1, r.y1, r.x0, r.y0, r.x1, r.y0));
+    else if (90 == rotation)
+        quad_tpl.Set(str::Format(obj_quad_tpl, r.x0, r.y0, r.x0, r.y1, r.x1, r.y0, r.x1, r.y1));
+    else if (180 == rotation)
+        quad_tpl.Set(str::Format(obj_quad_tpl, r.x1, r.y0, r.x0, r.y0, r.x1, r.y1, r.x0, r.y1));
+    else // if (270 == rotation)
+        quad_tpl.Set(str::Format(obj_quad_tpl, r.x1, r.y1, r.x1, r.y0, r.x0, r.y1, r.x0, r.y0));
+#endif
+    fz_quad quad = fz_make_quad(r.x0, r.y1, r.x1, r.y1, r.x0, r.y0, r.x1, r.y0);
+    pdf_add_annot_quad_point(ctx, annot, quad);
+
+    // TODO: not sure if rect is needed for annotations
+    // maybe only for some annotations but not highlight?
+#if 0
+    fz_rect r = RectD_to_fz_rect(userAnnot.rect);
+    pdf_set_annot_rect(ctx, annot, r);
+#endif
+
+    float col[4];
+    ToPdfRgba(userAnnot.color, col);
+    pdf_set_annot_color(ctx, annot, 3, col);
+    pdf_set_annot_opacity(ctx, annot, col[3]);
+
+    pdf_set_annot_modification_date(ctx, annot, time(NULL));
+    pdf_update_appearance(ctx, annot);
 }
 
 bool PdfEngineImpl::SaveUserAnnots(const char* pathUtf8) {
@@ -1831,39 +1879,35 @@ bool PdfEngineImpl::SaveUserAnnots(const char* pathUtf8) {
     bool ok = true;
     Vec<PageAnnotation> pageAnnots;
     pdf_document* doc = pdf_document_from_fz_document(ctx, _doc);
+    int nAdded = 0;
 
     fz_try(ctx) {
         for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
-            fz_page* fzpage = GetFzPage(pageNo);
-            pdf_page* page = pdf_page_from_fz_page(ctx, fzpage);
+            FzPageInfo* pageInfo = GetFzPageInfo(pageNo);
+            pdf_page* page = pdf_page_from_fz_page(ctx, pageInfo->page);
+
+            // TODO: see if this is necessary
+#if 0
             pdf_obj* page_obj = page->obj;
             // TODO: this will skip annotations for broken documents
             if (!page || !pdf_to_num(ctx, page_obj)) {
                 ok = false;
                 break;
             }
+#endif
+
             pageAnnots = fz_get_user_page_annots(userAnnots, pageNo);
             if (pageAnnots.size() == 0) {
                 continue;
             }
-            // get the page's /Annots array for appending
-            pdf_obj* annots = pdf_dict_gets(ctx, page_obj, "Annots");
-            if (!pdf_is_array(ctx, annots)) {
-                pdf_dict_puts_drop(ctx, page_obj, "Annots", pdf_new_array(ctx, doc, (int)pageAnnots.size()));
-                annots = pdf_dict_gets(ctx, page_obj, "Annots");
-            }
-            if (!pdf_is_indirect(ctx, annots)) {
-                // make /Annots indirect for the current /Page
-                CrashMePort();
-                // TODO(port): no pdf_new_ref
-                // pdf_dict_puts_drop(ctx, page_obj, "Annots", pdf_new_ref(ctx, _doc, annots));
-            }
-            // append all annotations for the current page
-            for (size_t i = 0; i < pageAnnots.size(); i++) {
-                ok &= pdf_file_update_add_annotation(ctx, doc, page, page_obj, pageAnnots.at(i), annots);
+
+            for (auto&& annot : pageAnnots) {
+                add_user_annotation(ctx, doc, page, annot);
+                nAdded++;
             }
         }
-        if (ok) {
+
+        if (nAdded > 0) {
             pdf_write_options opts = {0};
             opts.do_incremental = 1;
             pdf_save_document(ctx, doc, const_cast<char*>(pathUtf8), &opts);
@@ -1904,7 +1948,7 @@ bool PdfEngineImpl::HasClipOptimizations(int pageNo) {
         return false;
     }
 
-    fz_rect mbox = fz_RectD_to_rect(PageMediabox(pageNo));
+    fz_rect mbox = RectD_to_fz_rect(PageMediabox(pageNo));
     // check if any image covers at least 90% of the page
     for (auto& img : pageInfo->images) {
         fz_rect ir = img.rect;

@@ -5,18 +5,11 @@
 
 #include "utils/WinUtil.h"
 
-COLORREF MkRgb(byte r, byte g, byte b) {
+COLORREF MkRgb(u8 r, u8 g, u8 b) {
     return RGB(r, g, b);
 }
 
-COLORREF MkRgb(float r, float g, float b) {
-    byte rb = (byte)(r * 255.0);
-    byte gb = (byte)(g * 255.0);
-    byte bb = (byte)(b * 255.0);
-    return MkRgb(rb, gb, bb);
-}
-
-COLORREF MkRgba(byte r, byte g, byte b, byte a) {
+COLORREF MkRgba(u8 r, u8 g, u8 b, u8 a) {
     COLORREF col = RGB(r, g, b);
     COLORREF alpha = (COLORREF)a;
     alpha = alpha << 24;
@@ -35,18 +28,60 @@ void UnpackRgba(COLORREF c, u8& r, u8& g, u8& b, u8& a) {
 }
 
 void UnpackRgb(COLORREF c, u8& r, u8& g, u8& b) {
-    u8 a;
-    UnpackRgba(c, r, g, b, a);
+    r = (u8)(c & 0xff);
+    c = c >> 8;
+    g = (u8)(c & 0xff);
+    c = c >> 8;
+    b = (u8)(c & 0xff);
 }
 
-void UnpackRgba(COLORREF c, float& r, float& g, float& b, float& a) {
+static COLORREF MkRgbaFloat(float r, float g, float b, float a) {
+    u8 rb = (u8)(r * 255.0f);
+    u8 gb = (u8)(g * 255.0f);
+    u8 bb = (u8)(b * 255.0f);
+    u8 aa = (u8)(a * 255.0f);
+    return MkRgba(rb, gb, bb, aa);
+}
+
+static void UnpackRgbaFloat(COLORREF c, float& r, float& g, float& b, float& a) {
     r = (float)(c & 0xff);
     c = c >> 8;
+    r /= 255.0f;
     g = (float)(c & 0xff);
+    g /= 255.0f;
     c = c >> 8;
     b = (float)(c & 0xff);
+    b /= 255.0f;
     c = c >> 8;
     a = (float)(c & 0xff);
+    a /= 255.0f;
+}
+
+static void UnpackRgbFloat(COLORREF c, float& r, float& g, float& b) {
+    r = (float)(c & 0xff);
+    r /= 255.0f;
+    c = c >> 8;
+    g = (float)(c & 0xff);
+    g /= 255.0f;
+    c = c >> 8;
+    b = (float)(c & 0xff);
+    b /= 255.0f;
+}
+
+COLORREF FromPdfColorRgba(float color[4]) {
+    return MkRgbaFloat(color[0], color[1], color[2], color[3]);
+}
+
+COLORREF FromPdfColorRgb(float color[3]) {
+    return MkRgbaFloat(color[0], color[1], color[2], 0);
+}
+
+void ToPdfRgb(COLORREF c, float col[3]) {
+    UnpackRgbFloat(c, col[0], col[1], col[2]);
+}
+
+void ToPdfRgba(COLORREF c, float col[4]) {
+    UnpackRgbaFloat(c, col[0], col[1], col[2], col[3]);
 }
 
 #if 0
