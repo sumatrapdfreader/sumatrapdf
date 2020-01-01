@@ -6,18 +6,16 @@ typedef struct fz_image_s fz_image;
 typedef struct pdf_document_s pdf_document;
 
 class PdfCreator {
-    fz_context* ctx;
-    pdf_document* doc;
-
   public:
+    fz_context* ctx = nullptr;
+    pdf_document* doc = nullptr;
+
     PdfCreator();
     ~PdfCreator();
 
-    bool AddImagePage(fz_image* image, float imgDpi = 0);
-    bool AddImagePage(HBITMAP hbmp, SizeI size, float imgDpi = 0);
+    bool AddPageFromFzImage(fz_image* image, float imgDpi = 0);
     bool AddImagePage(Gdiplus::Bitmap* bmp, float imgDpi = 0);
-    // recommended for JPEG and JP2 images (don't need to be recompressed)
-    bool AddImagePage(const char* data, size_t len, float imgDpi = 0);
+    bool AddPageFromImageData(const char* data, size_t len, float imgDpi = 0);
 
     bool SetProperty(DocumentProperty prop, const WCHAR* value);
     bool CopyProperties(EngineBase* engine);

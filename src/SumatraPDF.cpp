@@ -2549,11 +2549,9 @@ static void OnMenuSaveAs(WindowInfo* win) {
         // Convert the file into a PDF one
         PdfCreator::SetProducerName(APP_NAME_STR L" " CURR_VERSION_STR);
         ok = engine->SaveFileAsPDF(pathUtf8.Get(), saveAnnotsInDoc);
-        if (!ok) {
-#ifdef DEBUG
+        if (!ok && isDebugBuild) {
             // rendering includes all page annotations
             ok = PdfCreator::RenderToFile(pathUtf8.Get(), engine);
-#endif
         } else if (!saveAnnotsInDoc) {
             SaveFileModifications(realDstFileName, win->AsFixed()->userAnnots);
         }

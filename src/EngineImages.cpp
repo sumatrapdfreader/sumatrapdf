@@ -566,10 +566,10 @@ bool ImageEngineImpl::SaveFileAsPDF(const char* pdfFileName, bool includeUserAnn
     auto dpi = GetFileDPI();
     if (FileName()) {
         AutoFree data = file::ReadFile(FileName());
-        ok = !data.empty() && c->AddImagePage(data.data, data.size(), dpi);
+        ok = c->AddPageFromImageData(data.data, data.size(), dpi);
     } else {
         AutoFree data = GetDataFromStream(fileStream, nullptr);
-        ok = !data.empty() && c->AddImagePage(data.data, data.size(), dpi);
+        ok = c->AddPageFromImageData(data.data, data.size(), dpi);
     }
     for (int i = 2; i <= PageCount() && ok; i++) {
         ImagePage* page = GetPage(i);
@@ -845,10 +845,12 @@ bool ImageDirEngineImpl::SaveFileAsPDF(const char* pdfFileName, bool includeUser
     bool ok = true;
     PdfCreator* c = new PdfCreator();
     for (int i = 1; i <= PageCount() && ok; i++) {
-        AutoFree data(file::ReadFile(pageFileNames.at(i - 1)));
-        ok = data.data && c->AddImagePage(data.data, data.size(), GetFileDPI());
+        AutoFree data = file::ReadFile(pageFileNames.at(i - 1));
+        ok = c->AddPageFromImageData(data.data, data.size(), GetFileDPI());
     }
-    ok = ok && c->SaveToFile(pdfFileName);
+    if (ok) {
+        ok = c->SaveToFile(pdfFileName);
+    }
     delete c;
     return ok;
 }
@@ -1111,8 +1113,8 @@ bool CbxEngineImpl::SaveFileAsPDF(const char* pdfFileName, bool includeUserAnnot
     bool ok = true;
     PdfCreator* c = new PdfCreator();
     for (int i = 1; i <= PageCount() && ok; i++) {
-        AutoFree data(GetImageData(i));
-        ok = data.data && c->AddImagePage(data.data, data.size(), GetFileDPI());
+        AutoFree data = GetImageData(i);
+        ok = c->AddPageFromImageData(data.data, data.size(), GetFileDPI());
     }
     if (ok) {
         c->CopyProperties(this);

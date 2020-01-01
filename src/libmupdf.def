@@ -65,6 +65,10 @@ EXPORTS
 	pdf_set_annot_modification_date
 	pdf_add_annot_quad_point
 	pdf_set_annot_opacity
+	pdf_dict_put_drop
+	pdf_add_page
+	pdf_add_image
+	pdf_new_text_string
 
 	fz_keep_bitmap
 	fz_drop_bitmap
