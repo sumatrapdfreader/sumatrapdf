@@ -51,16 +51,49 @@ timestamp = 2013-03-10T05:43:21Z
 #define SMX_FILE_EXT L".smx"
 #define SMX_CURR_VERSION CURR_VERSION_STRA
 
+static char* PageAnnotTypeToString(PageAnnotType typ) {
+    switch (typ) {
+        case PageAnnotType::Highlight:
+            return "highlight";
+        case PageAnnotType::Underline:
+            return "underline";
+        case PageAnnotType::StrikeOut:
+            return "strikeout";
+        case PageAnnotType::Squiggly:
+            return "squiggly";
+    }
+    return "";
+}
+
+static PageAnnotType PageAnnotTypeFromString(const char* s) {
+    if (str::EqI(s, "highlight")) {
+        return PageAnnotType::Highlight;
+    }
+    if (str::EqI(s, "underline")) {
+        return PageAnnotType::Underline;
+    }
+    if (str::EqI(s, "strikeout")) {
+        return PageAnnotType::StrikeOut;
+    }
+    if (str::EqI(s, "squiggly")) {
+        return PageAnnotType::Squiggly;
+    }
+    return PageAnnotType::None;
+}
+
 static Vec<PageAnnotation>* ParseFileModifications(const char* data) {
-    if (!data)
+    if (!data) {
         return nullptr;
+    }
 
     SquareTree sqt(data);
-    if (!sqt.root || sqt.root->data.size() == 0)
+    if (!sqt.root || sqt.root->data.size() == 0) {
         return nullptr;
+    }
     SquareTreeNode::DataItem& item = sqt.root->data.at(0);
-    if (!item.isChild || !str::EqI(item.key, "@meta"))
+    if (!item.isChild || !str::EqI(item.key, "@meta")) {
         return nullptr;
+    }
     if (!item.value.child->GetValue("version")) {
         // don't check the version value - rather extend the format
         // in a way to ensure backwards compatibility
@@ -69,17 +102,12 @@ static Vec<PageAnnotation>* ParseFileModifications(const char* data) {
 
     Vec<PageAnnotation>* list = new Vec<PageAnnotation>();
     for (SquareTreeNode::DataItem& i : sqt.root->data) {
-        PageAnnotType type =
-            str::EqI(i.key, "highlight")
-                ? PageAnnotType::Highlight
-                : str::EqI(i.key, "underline")
-                      ? PageAnnotType::Underline
-                      : str::EqI(i.key, "strikeout")
-                            ? PageAnnotType::StrikeOut
-                            : str::EqI(i.key, "squiggly") ? PageAnnotType::Squiggly : PageAnnotType::None;
+        PageAnnotType type = PageAnnotTypeFromString(i.key);
+
         CrashIf(!i.isChild);
-        if (PageAnnotType::None == type || !i.isChild)
+        if (PageAnnotType::None == type || !i.isChild) {
             continue;
+        }
 
         int pageNo;
         geomutil::RectT<float> rect;
@@ -89,17 +117,21 @@ static Vec<PageAnnotation>* ParseFileModifications(const char* data) {
 
         SquareTreeNode* node = i.value.child;
         const char* value = node->GetValue("page");
-        if (!value || !str::Parse(value, "%d%$", &pageNo))
+        if (!value || !str::Parse(value, "%d%$", &pageNo)) {
             continue;
+        }
         value = node->GetValue("rect");
-        if (!value || !str::Parse(value, "%f %f %f %f%$", &rect.x, &rect.y, &rect.dx, &rect.dy))
+        if (!value || !str::Parse(value, "%f %f %f %f%$", &rect.x, &rect.y, &rect.dx, &rect.dy)) {
             continue;
+        }
         value = node->GetValue("color");
-        if (!value || !str::Parse(value, "#%2x%2x%2x%$", &r, &g, &b))
+        if (!value || !str::Parse(value, "#%2x%2x%2x%$", &r, &g, &b)) {
             continue;
+        }
         value = node->GetValue("opacity");
-        if (!value || !str::Parse(value, "%f%$", &opacity))
+        if (!value || !str::Parse(value, "%f%$", &opacity)) {
             opacity = 1.0f;
+        }
         color = MkRgba((u8)r, (u8)g, (u8)b, (u8)(255 * opacity));
         list->Append(PageAnnotation(type, pageNo, rect.Convert<double>(), color));
     }
@@ -136,7 +168,8 @@ bool SaveFileModifications(const WCHAR* filePath, Vec<PageAnnotation>* list) {
         data.AppendAndFree(prevData.StealData());
         delete prevList;
     } else {
-        data.AppendFmt("# SumatraPDF: modifications to \"%S\"\r\n", path::GetBaseNameNoFree(filePath));
+        const WCHAR* s = path::GetBaseNameNoFree(filePath);
+        data.AppendFmt("# SumatraPDF: modifications to \"%S\"\r\n", s);
     }
     data.Append("\r\n");
 
@@ -158,22 +191,11 @@ bool SaveFileModifications(const WCHAR* filePath, Vec<PageAnnotation>* list) {
 
     for (size_t i = offset; i < list->size(); i++) {
         PageAnnotation& annot = list->at(i);
-        switch (annot.type) {
-            case PageAnnotType::Highlight:
-                data.Append("[highlight]\r\n");
-                break;
-            case PageAnnotType::Underline:
-                data.Append("[underline]\r\n");
-                break;
-            case PageAnnotType::StrikeOut:
-                data.Append("[strikeout]\r\n");
-                break;
-            case PageAnnotType::Squiggly:
-                data.Append("[squiggly]\r\n");
-                break;
-            default:
-                continue;
+        char* s = PageAnnotTypeToString(annot.type);
+        if (str::IsEmpty(s)) {
+            continue;
         }
+        data.AppendFmt("[%s]\r\n", s);
         data.AppendFmt("page = %d\r\n", annot.pageNo);
         data.AppendFmt("rect = %g %g %g %g\r\n", annot.rect.x, annot.rect.y, annot.rect.dx, annot.rect.dy);
         data.AppendFmt("color = ");
