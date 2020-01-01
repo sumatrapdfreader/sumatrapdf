@@ -85,3 +85,5 @@ void fz_run_page_transparency(fz_context* ctx, Vec<PageAnnotation>& pageAnnots, 
 void fz_run_user_page_annots(fz_context* ctx, Vec<PageAnnotation>& pageAnnots, fz_device* dev, fz_matrix ctm,
                              const fz_rect cliprect, fz_cookie* cookie);
 Vec<PageAnnotation> fz_get_user_page_annots(Vec<PageAnnotation>& userAnnots, int pageNo);
+fz_pixmap* fz_convert_pixmap2(fz_context* ctx, fz_pixmap* pix, fz_colorspace* ds, fz_colorspace* prf,
+                              fz_default_colorspaces* default_cs, fz_color_params color_params, int keep_alpha);
