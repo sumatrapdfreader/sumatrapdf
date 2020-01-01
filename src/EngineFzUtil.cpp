@@ -29,7 +29,7 @@ extern "C" {
 // maximum size of a file that's entirely loaded into memory before parsed
 // and displayed; larger files will be kept open while they're displayed
 // so that their content can be loaded on demand in order to preserve memory
-#define MAX_MEMORY_FILE_SIZE (10 * 1024 * 1024)
+#define MAX_MEMORY_FILE_SIZE (32 * 1024 * 1024)
 
 RectD fz_rect_to_RectD(fz_rect rect) {
     return RectD::FromXY(rect.x0, rect.y0, rect.x1, rect.y1);
