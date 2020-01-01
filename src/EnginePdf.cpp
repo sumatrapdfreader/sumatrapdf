@@ -1620,19 +1620,6 @@ WCHAR* PdfEngineImpl::GetProperty(DocumentProperty prop) {
 };
 
 bool PdfEngineImpl::SupportsAnnotation(bool forSaving) const {
-    if (!forSaving) {
-        return true;
-    }
-    // TODO: support updating of documents where pages aren't all numbered objects?
-    size_t n = _pages.size();
-    for (size_t i = 0; i < n; i++) {
-        auto* pageInfo = _pages[i];
-        fz_page* fzpage = pageInfo->page;
-        pdf_page* page = pdf_page_from_fz_page(ctx, fzpage);
-        if (!page || pdf_to_num(ctx, page->obj) == 0) {
-            return false;
-        }
-    }
     return true;
 }
 
@@ -1885,16 +1872,6 @@ bool PdfEngineImpl::SaveUserAnnots(const char* pathUtf8) {
         for (int pageNo = 1; pageNo <= PageCount(); pageNo++) {
             FzPageInfo* pageInfo = GetFzPageInfo(pageNo);
             pdf_page* page = pdf_page_from_fz_page(ctx, pageInfo->page);
-
-            // TODO: see if this is necessary
-#if 0
-            pdf_obj* page_obj = page->obj;
-            // TODO: this will skip annotations for broken documents
-            if (!page || !pdf_to_num(ctx, page_obj)) {
-                ok = false;
-                break;
-            }
-#endif
 
             pageAnnots = fz_get_user_page_annots(userAnnots, pageNo);
             if (pageAnnots.size() == 0) {

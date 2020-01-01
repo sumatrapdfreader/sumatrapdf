@@ -6,7 +6,6 @@
 extern "C" {
 #include <mupdf/fitz.h>
 #include <mupdf/pdf.h>
-#include <zlib.h>
 }
 
 #include "utils/BaseUtil.h"
@@ -116,43 +115,6 @@ static fz_image* render_to_pixmap(fz_context* ctx, HBITMAP hbmp, SizeI size) {
 #endif
 }
 
-static fz_image* pack_jpeg(fz_context* ctx, const char* data, size_t len, SizeI size) {
-    fz_compressed_buffer* buf = nullptr;
-    fz_var(buf);
-
-    fz_try(ctx) {
-        buf = fz_malloc_struct(ctx, fz_compressed_buffer);
-        buf->buffer = fz_new_buffer_from_data(ctx, (u8*)data, len);
-        buf->params.type = FZ_IMAGE_JPEG;
-        buf->params.u.jpeg.color_transform = -1;
-    }
-    fz_catch(ctx) {
-        fz_drop_compressed_buffer(ctx, buf);
-        fz_rethrow(ctx);
-    }
-
-    return fz_new_image_from_compressed_buffer(ctx, size.dx, size.dy, 8, fz_device_rgb(ctx), 96, 96, 0, 0, nullptr,
-                                               nullptr, buf, nullptr);
-}
-
-static fz_image* pack_jp2(fz_context* ctx, const char* data, size_t len, SizeI size) {
-    fz_compressed_buffer* buf = nullptr;
-    fz_var(buf);
-
-    fz_try(ctx) {
-        buf = fz_malloc_struct(ctx, fz_compressed_buffer);
-        buf->buffer = fz_new_buffer_from_data(ctx, (u8*)data, len);
-        buf->params.type = FZ_IMAGE_JPX;
-    }
-    fz_catch(ctx) {
-        fz_drop_compressed_buffer(ctx, buf);
-        fz_rethrow(ctx);
-    }
-
-    return fz_new_image_from_compressed_buffer(ctx, size.dx, size.dy, 8, fz_device_rgb(ctx), 96, 96, 0, 0, nullptr,
-                                               nullptr, buf, nullptr);
-}
-
 PdfCreator::PdfCreator() {
     ctx = fz_new_context(nullptr, nullptr, FZ_STORE_UNLIMITED);
     if (!ctx)
@@ -239,37 +201,25 @@ bool PdfCreator::AddImagePage(Gdiplus::Bitmap* bmp, float imgDpi) {
 
 bool PdfCreator::AddImagePage(const char* data, size_t len, float imgDpi) {
     CrashIf(!ctx || !doc);
-    if (!ctx || !doc) {
+    if (!ctx || !doc || !data || len == 0) {
         return false;
     }
 
-    const WCHAR* ext = GfxFileExtFromData(data, len);
-    bool isJpg = str::Eq(ext, L".jpg");
-    bool isJp2 = str::Eq(ext, L".jp2");
-    if (isJpg || isJp2) {
-        Size size = BitmapSizeFromData(data, len);
-        fz_image* image = nullptr;
-        fz_try(ctx) {
-            auto imgSize = SizeI(size.Width, size.Height);
-            if (isJpg) {
-                image = pack_jpeg(ctx, data, len, imgSize);
-            } else {
-                image = pack_jp2(ctx, data, len, imgSize);
-            }
-        }
-        fz_catch(ctx) {
-            return false;
-        }
-        bool ok = AddImagePage(image, imgDpi);
-        fz_drop_image(ctx, image);
-        return ok;
+    fz_image* img = nullptr;
+    fz_var(img);
+
+    fz_try(ctx) {
+        fz_buffer* buf = fz_new_buffer_from_data(ctx, (u8*)data, len);
+        img = fz_new_image_from_buffer(ctx, buf);
     }
-    Bitmap* bmp = BitmapFromData(data, len);
-    if (!bmp) {
+    fz_catch(ctx) {
         return false;
     }
-    bool ok = AddImagePage(bmp, imgDpi);
-    delete bmp;
+    if (!img) {
+        return false;
+    }
+    bool ok = AddImagePage(img, imgDpi);
+    fz_drop_image(ctx, img);
     return ok;
 }
 

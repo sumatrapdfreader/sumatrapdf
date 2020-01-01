@@ -96,7 +96,7 @@ class ImagesEngine : public EngineBase {
 
     void GetTransform(Matrix& m, int pageNo, float zoom, int rotation);
 
-    virtual Bitmap* LoadBitmap(int pageNo, bool& deleteAfterUse) = 0;
+    virtual Bitmap* LoadBitmapForPage(int pageNo, bool& deleteAfterUse) = 0;
     virtual RectD LoadMediabox(int pageNo) = 0;
 
     ImagePage* GetPage(int pageNo, bool tryOnly = false);
@@ -307,7 +307,7 @@ ImagePage* ImagesEngine::GetPage(int pageNo, bool tryOnly) {
             DropPage(pageCache.Last(), true);
         }
         result = new ImagePage(pageNo, nullptr);
-        result->bmp = LoadBitmap(pageNo, result->ownBmp);
+        result->bmp = LoadBitmapForPage(pageNo, result->ownBmp);
         pageCache.InsertAt(0, result);
     } else if (result != pageCache.at(0)) {
         // keep the list Most Recently Used first
@@ -367,8 +367,8 @@ class ImageEngineImpl : public ImagesEngine {
     bool LoadFromStream(IStream* stream);
     bool FinishLoading();
 
-    virtual Bitmap* LoadBitmap(int pageNo, bool& deleteAfterUse);
-    virtual RectD LoadMediabox(int pageNo);
+    Bitmap* LoadBitmapForPage(int pageNo, bool& deleteAfterUse) override;
+    RectD LoadMediabox(int pageNo) override;
 };
 
 ImageEngineImpl::ImageEngineImpl() {
@@ -507,7 +507,7 @@ WCHAR* ImageEngineImpl::GetProperty(DocumentProperty prop) {
     }
 }
 
-Bitmap* ImageEngineImpl::LoadBitmap(int pageNo, bool& deleteAfterUse) {
+Bitmap* ImageEngineImpl::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
     if (1 == pageNo) {
         deleteAfterUse = false;
         return image;
@@ -721,8 +721,8 @@ class ImageDirEngineImpl : public ImagesEngine {
   protected:
     bool LoadImageDir(const WCHAR* dirName);
 
-    virtual Bitmap* LoadBitmap(int pageNo, bool& deleteAfterUse);
-    virtual RectD LoadMediabox(int pageNo);
+    Bitmap* LoadBitmapForPage(int pageNo, bool& deleteAfterUse) override;
+    RectD LoadMediabox(int pageNo) override;
 
     WStrVec pageFileNames;
     DocTocTree* tocTree = nullptr;
@@ -822,7 +822,7 @@ bool ImageDirEngineImpl::SaveFileAs(const char* copyFileName, bool includeUserAn
     return ok;
 }
 
-Bitmap* ImageDirEngineImpl::LoadBitmap(int pageNo, bool& deleteAfterUse) {
+Bitmap* ImageDirEngineImpl::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
     AutoFree bmpData(file::ReadFile(pageFileNames.at(pageNo - 1)));
     if (bmpData.data) {
         deleteAfterUse = true;
@@ -911,8 +911,8 @@ class CbxEngineImpl : public ImagesEngine, public json::ValueVisitor {
     static EngineBase* CreateFromStream(IStream* stream);
 
   protected:
-    virtual Bitmap* LoadBitmap(int pageNo, bool& deleteAfterUse);
-    virtual RectD LoadMediabox(int pageNo);
+    Bitmap* LoadBitmapForPage(int pageNo, bool& deleteAfterUse) override;
+    RectD LoadMediabox(int pageNo) override;
 
     bool LoadFromFile(const WCHAR* fileName);
     bool LoadFromStream(IStream* stream);
@@ -1158,7 +1158,7 @@ const WCHAR* CbxEngineImpl::GetDefaultFileExt() const {
     }
 }
 
-Bitmap* CbxEngineImpl::LoadBitmap(int pageNo, bool& deleteAfterUse) {
+Bitmap* CbxEngineImpl::LoadBitmapForPage(int pageNo, bool& deleteAfterUse) {
     AutoFree bmpData(GetImageData(pageNo));
     if (bmpData.data) {
         deleteAfterUse = true;
