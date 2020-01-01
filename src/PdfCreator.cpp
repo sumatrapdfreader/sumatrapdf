@@ -153,6 +153,9 @@ bool PdfCreator::AddPageFromFzImage(fz_image* image, float imgDpi) {
 
     fz_try(ctx) {
         float zoom = 1.0f;
+        if (imgDpi > 0) {
+            zoom = 72.0f / imgDpi;
+        }
         fz_matrix ctm = {image->w * zoom, 0, 0, image->h * zoom, 0, 0};
         fz_rect bounds = fz_unit_rect;
         bounds = fz_transform_rect(bounds, ctm);
