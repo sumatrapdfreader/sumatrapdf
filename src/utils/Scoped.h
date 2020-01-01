@@ -139,7 +139,7 @@ struct AutoFree {
     }
 
     AutoFree& operator=(AutoFree& other) = delete;
-    AutoFree& operator=(AutoFree&& other) {
+    AutoFree& operator=(AutoFree&& other) noexcept {
         if (this == &other) {
             return *this;
         }
@@ -227,7 +227,7 @@ struct AutoFreeWstr {
     }
 
     AutoFreeWstr& operator=(AutoFreeWstr& other) = delete;
-    AutoFreeWstr& operator=(AutoFreeWstr&& other) {
+    AutoFreeWstr& operator=(AutoFreeWstr&& other) noexcept {
         if (this == &other) {
             return *this;
         }

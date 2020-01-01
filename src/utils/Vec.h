@@ -134,6 +134,12 @@ class Vec {
         return els[idx];
     }
 
+    T& operator[](int idx) const {
+        CrashIf(idx < 0);
+        CrashIf(idx >= len);
+        return els[idx];
+    }
+
     void Reset() {
         len = 0;
         cap = dimof(buf) - PADDING;
@@ -152,6 +158,12 @@ class Vec {
     }
 
     T& at(size_t idx) const {
+        CrashIf(idx >= len);
+        return els[idx];
+    }
+
+    T& at(int idx) const {
+        CrashIf(idx < 0);
         CrashIf(idx >= len);
         return els[idx];
     }

@@ -337,7 +337,7 @@ int Pdfsync::DocToSource(UINT pageNo, PointI pt, AutoFreeWstr& filename, UINT* l
     UINT closest_ydist_record = UINT_MAX; // vertically-closest record
 
     // read all the sections of 'p' declarations for this pdf sheet
-    for (size_t i = sheetIndex.at(pageNo); i < points.size() && points.at(i).page == pageNo; i++) {
+    for (size_t i = sheetIndex.at((size_t)pageNo); i < points.size() && points.at(i).page == pageNo; i++) {
         // check whether it is closer than the closest point found so far
         UINT dx = abs(pt.x - (int)SYNC_TO_PDF_COORDINATE(points.at(i).x));
         UINT dy = abs(pt.y - (int)SYNC_TO_PDF_COORDINATE(points.at(i).y));
@@ -586,9 +586,9 @@ TryAgainAnsi:
 
         RectD rc;
         rc.x = synctex_node_box_visible_h(node);
-        rc.y = synctex_node_box_visible_v(node) - synctex_node_box_visible_height(node);
+        rc.y = (double)synctex_node_box_visible_v(node) - (double)synctex_node_box_visible_height(node);
         rc.dx = synctex_node_box_visible_width(node),
-        rc.dy = synctex_node_box_visible_height(node) + synctex_node_box_visible_depth(node);
+        rc.dy = (double)synctex_node_box_visible_height(node) + (double)synctex_node_box_visible_depth(node);
         rects.Push(rc.Round());
     }
 
