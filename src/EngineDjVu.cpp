@@ -82,9 +82,9 @@ static PageElement* newDjVuLink(int pageNo, RectI rect, const char* link, const 
     return res;
 }
 
-static DocTocItem* newDjVuTocItem(const char* title, const char* link) {
+static DocTocItem* newDjVuTocItem(DocTocItem* parent, const char* title, const char* link) {
     AutoFreeWstr s = strconv::Utf8ToWstr(title);
-    auto res = new DocTocItem(s);
+    auto res = new DocTocItem(parent, s, 0);
     res->dest = newDjVuDestination(link);
     res->pageNo = res->dest->GetPageNo();
     return res;
@@ -237,7 +237,7 @@ class DjVuEngineImpl : public EngineBase {
     void AddUserAnnots(RenderedBitmap* bmp, int pageNo, float zoom, int rotation, RectI screen);
     bool ExtractPageText(miniexp_t item, str::WStr& extracted, Vec<RectI>& coords);
     char* ResolveNamedDest(const char* name);
-    DocTocItem* BuildTocTree(miniexp_t entry, int& idCounter);
+    DocTocItem* BuildTocTree(DocTocItem* parent, miniexp_t entry, int& idCounter);
     bool Load(const WCHAR* fileName);
     bool Load(IStream* stream);
     bool FinishLoading();
@@ -982,7 +982,7 @@ PageDestination* DjVuEngineImpl::GetNamedDest(const WCHAR* name) {
     return nullptr;
 }
 
-DocTocItem* DjVuEngineImpl::BuildTocTree(miniexp_t entry, int& idCounter) {
+DocTocItem* DjVuEngineImpl::BuildTocTree(DocTocItem* parent, miniexp_t entry, int& idCounter) {
     DocTocItem* node = nullptr;
 
     for (miniexp_t rest = entry; miniexp_consp(rest); rest = miniexp_cdr(rest)) {
@@ -996,23 +996,25 @@ DocTocItem* DjVuEngineImpl::BuildTocTree(miniexp_t entry, int& idCounter) {
 
         DocTocItem* tocItem = nullptr;
         AutoFree linkNo(ResolveNamedDest(link));
-        if (!linkNo)
-            tocItem = newDjVuTocItem(name, link);
-        else if (!str::IsEmpty(name) && !str::Eq(name, link + 1))
-            tocItem = newDjVuTocItem(name, linkNo);
-        else {
+        if (!linkNo) {
+            tocItem = newDjVuTocItem(parent, name, link);
+        } else if (!str::IsEmpty(name) && !str::Eq(name, link + 1)) {
+            tocItem = newDjVuTocItem(parent, name, linkNo);
+        } else {
             // ignore generic (name-less) entries
-            delete BuildTocTree(miniexp_cddr(item), idCounter);
+            auto* tocTree = BuildTocTree(nullptr, miniexp_cddr(item), idCounter);
+            delete tocTree;
             continue;
         }
 
         tocItem->id = ++idCounter;
-        tocItem->child = BuildTocTree(miniexp_cddr(item), idCounter);
+        tocItem->child = BuildTocTree(tocItem, miniexp_cddr(item), idCounter);
 
-        if (!node)
+        if (!node) {
             node = tocItem;
-        else
+        } else {
             node->AddSibling(tocItem);
+        }
     }
 
     return node;
@@ -1028,7 +1030,7 @@ DocTocTree* DjVuEngineImpl::GetTocTree() {
     }
     ScopedCritSec scope(&gDjVuContext.lock);
     int idCounter = 0;
-    DocTocItem* root = BuildTocTree(outline, idCounter);
+    DocTocItem* root = BuildTocTree(nullptr, outline, idCounter);
     if (!root) {
         return nullptr;
     }

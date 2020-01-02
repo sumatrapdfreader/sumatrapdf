@@ -172,6 +172,8 @@ constexpr int fontBitItalic = 1;
 // an item in a document's Table of Content
 class DocTocItem : public TreeItem {
   public:
+    DocTocItem* parent = nullptr;
+
     // the item's visible label
     WCHAR* title = nullptr;
 
@@ -203,7 +205,7 @@ class DocTocItem : public TreeItem {
 
     DocTocItem() = default;
 
-    explicit DocTocItem(const WCHAR* title, int pageNo = 0);
+    explicit DocTocItem(DocTocItem* parent, const WCHAR* title, int pageNo);
 
     ~DocTocItem() override;
 

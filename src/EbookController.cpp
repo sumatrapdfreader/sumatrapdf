@@ -50,16 +50,16 @@ HtmlFormatterArgs* CreateFormatterArgsDoc(Doc doc, int dx, int dy, Allocator* te
     return args;
 }
 
-static DocTocItem* newEbookTocDest(const WCHAR* title, int reparseIdx) {
-    auto res = new DocTocItem(title, reparseIdx);
+static DocTocItem* newEbookTocDest(DocTocItem* parent, const WCHAR* title, int reparseIdx) {
+    auto res = new DocTocItem(parent, title, reparseIdx);
     res->dest = new PageDestination();
     res->dest->kind = kindDestinationScrollTo;
     res->dest->pageNo = reparseIdx;
     return res;
 }
 
-static DocTocItem* newEbookTocDest(const WCHAR* title, const WCHAR* url) {
-    auto res = new DocTocItem(title);
+static DocTocItem* newEbookTocDest(DocTocItem* parent, const WCHAR* title, const WCHAR* url) {
+    auto res = new DocTocItem(parent, title, 0);
     res->dest = new PageDestination();
     res->dest->kind = kindDestinationLaunchURL;
     res->dest->value = str::Dup(url);
@@ -408,8 +408,8 @@ void EbookController::ClickedProgress(Control* c, int x, int y) {
 void EbookController::OnClickedLink(int pageNo, DrawInstr* link) {
     AutoFreeWstr url(strconv::FromHtmlUtf8(link->str.s, link->str.len));
     if (url::IsAbsolute(url)) {
-        // TODO: optimize
-        auto dest = newEbookTocDest(nullptr, url);
+        // TODO: optimize: create just the destination
+        auto dest = newEbookTocDest(nullptr, nullptr, url);
         cb->GotoLink(dest->GetPageDestination());
         delete dest;
         return;
@@ -440,8 +440,8 @@ void EbookController::OnClickedLink(int pageNo, DrawInstr* link) {
         idx = ResolvePageAnchor(url);
     }
     if (idx != -1) {
-        // TODO: optimize
-        auto dest = newEbookTocDest(nullptr, idx);
+        // TODO: optimize, create just a destination
+        auto dest = newEbookTocDest(nullptr, nullptr, idx);
         cb->GotoLink(dest->GetPageDestination());
         delete dest;
     }
@@ -786,10 +786,11 @@ class EbookTocCollector : public EbookTocVisitor {
 
     virtual void Visit(const WCHAR* name, const WCHAR* url, int level) {
         DocTocItem* item = nullptr;
+        // TODO: set parent for newEbookTocDest()
         if (!url) {
-            item = newEbookTocDest(name, 0);
+            item = newEbookTocDest(nullptr, name, 0);
         } else if (url::IsAbsolute(url)) {
-            item = newEbookTocDest(name, url);
+            item = newEbookTocDest(nullptr, name, url);
         } else {
             int idx = ctrl->ResolvePageAnchor(url);
             if (-1 == idx && str::FindChar(url, '%')) {
@@ -797,7 +798,7 @@ class EbookTocCollector : public EbookTocVisitor {
                 url::DecodeInPlace(decodedUrl);
                 idx = ctrl->ResolvePageAnchor(decodedUrl);
             }
-            item = newEbookTocDest(name, idx + 1);
+            item = newEbookTocDest(nullptr, name, idx + 1);
         }
         item->id = ++idCounter;
         // find the last child at each level, until finding the parent of the new item
@@ -867,7 +868,7 @@ PageDestination* EbookController::GetNamedDest(const WCHAR* name) {
         return nullptr;
     }
     CrashIf((size_t)reparseIdx > d.size());
-    auto toc = newEbookTocDest(nullptr, reparseIdx + 1);
+    auto toc = newEbookTocDest(nullptr, nullptr, reparseIdx + 1);
     auto res = toc->GetPageDestination();
     toc->dest = nullptr;
     delete toc;

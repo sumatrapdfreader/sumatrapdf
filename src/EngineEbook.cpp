@@ -201,8 +201,8 @@ static PageElement* newImageDataElement(int pageNo, RectI bbox, int imageID) {
     return res;
 }
 
-static DocTocItem* newEbookTocItem(const WCHAR* title, PageDestination* dest) {
-    auto res = new DocTocItem(title, 0);
+static DocTocItem* newEbookTocItem(DocTocItem* parent, const WCHAR* title, PageDestination* dest) {
+    auto res = new DocTocItem(parent, title, 0);
     res->dest = dest;
     if (dest) {
         res->pageNo = dest->GetPageNo();
@@ -692,7 +692,8 @@ void EbookTocBuilder::Visit(const WCHAR* name, const WCHAR* url, int level) {
         }
     }
 
-    DocTocItem* item = newEbookTocItem(name, dest);
+    // TODO; send parent to newEbookTocItem
+    DocTocItem* item = newEbookTocItem(nullptr, name, dest);
     item->id = ++idCounter;
     if (isIndex) {
         item->pageNo = 0;

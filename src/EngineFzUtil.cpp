@@ -1011,8 +1011,8 @@ PageElement* newFzImage(int pageNo, fz_rect rect, size_t imageIdx) {
     return res;
 }
 
-DocTocItem* newDocTocItemWithDestination(WCHAR* title, PageDestination* dest) {
-    auto res = new DocTocItem(title);
+DocTocItem* newDocTocItemWithDestination(DocTocItem* parent, WCHAR* title, PageDestination* dest) {
+    auto res = new DocTocItem(parent, title, 0);
     res->dest = dest;
     return res;
 }

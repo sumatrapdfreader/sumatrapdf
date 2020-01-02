@@ -266,7 +266,7 @@ class XpsEngineImpl : public EngineBase {
         return fz_create_view_ctm(r, zoom, rotation);
     }
 
-    DocTocItem* BuildTocTree(fz_outline* entry, int& idCounter);
+    DocTocItem* BuildTocTree(DocTocItem* parent, fz_outline* entry, int& idCounter);
     RenderedBitmap* GetPageImage(int pageNo, RectD rect, size_t imageIx);
     WCHAR* ExtractFontList();
 };
@@ -871,7 +871,7 @@ PageDestination* XpsEngineImpl::GetNamedDest(const WCHAR* nameW) {
     return nullptr;
 }
 
-DocTocItem* XpsEngineImpl::BuildTocTree(fz_outline* outline, int& idCounter) {
+DocTocItem* XpsEngineImpl::BuildTocTree(DocTocItem* parent, fz_outline* outline, int& idCounter) {
     DocTocItem* root = nullptr;
     DocTocItem* curr = nullptr;
 
@@ -887,14 +887,14 @@ DocTocItem* XpsEngineImpl::BuildTocTree(fz_outline* outline, int& idCounter) {
         int pageNo = outline->page + 1;
         auto dest = newFzDestination(outline);
 
-        DocTocItem* item = newDocTocItemWithDestination(name, dest);
+        DocTocItem* item = newDocTocItemWithDestination(parent, name, dest);
         free(name);
         item->isOpenDefault = outline->is_open;
         item->id = ++idCounter;
         item->fontFlags = outline->flags;
 
         if (outline->down) {
-            item->child = BuildTocTree(outline->down, idCounter);
+            item->child = BuildTocTree(item, outline->down, idCounter);
         }
 
         if (!root) {
@@ -917,7 +917,7 @@ DocTocTree* XpsEngineImpl::GetTocTree() {
     }
 
     int idCounter = 0;
-    DocTocItem* root = BuildTocTree(_outline, idCounter);
+    DocTocItem* root = BuildTocTree(nullptr, _outline, idCounter);
     if (!root) {
         return nullptr;
     }

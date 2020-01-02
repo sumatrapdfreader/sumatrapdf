@@ -347,7 +347,7 @@ class PdfEngineImpl : public EngineBase {
     FzPageInfo* GetFzPageInfo(int pageNo, bool failIfBusy = false);
     fz_matrix viewctm(int pageNo, float zoom, int rotation);
     fz_matrix viewctm(fz_page* page, float zoom, int rotation);
-    DocTocItem* BuildTocTree(fz_outline* entry, int& idCounter, bool isAttachment);
+    DocTocItem* BuildTocTree(DocTocItem* parent, fz_outline* entry, int& idCounter, bool isAttachment);
     void MakePageElementCommentsFromAnnotations(FzPageInfo* pageInfo);
     WCHAR* ExtractFontList();
     bool IsLinearizedFile();
@@ -856,7 +856,7 @@ PageDestination* destFromAttachment(PdfEngineImpl* engine, fz_outline* outline) 
     return dest;
 }
 
-DocTocItem* PdfEngineImpl::BuildTocTree(fz_outline* outline, int& idCounter, bool isAttachment) {
+DocTocItem* PdfEngineImpl::BuildTocTree(DocTocItem* parent, fz_outline* outline, int& idCounter, bool isAttachment) {
     DocTocItem* root = nullptr;
     DocTocItem* curr = nullptr;
 
@@ -878,7 +878,7 @@ DocTocItem* PdfEngineImpl::BuildTocTree(fz_outline* outline, int& idCounter, boo
             dest = newFzDestination(outline);
         }
 
-        DocTocItem* item = newDocTocItemWithDestination(name, dest);
+        DocTocItem* item = newDocTocItemWithDestination(parent, name, dest);
         free(name);
         item->isOpenDefault = outline->is_open;
         item->id = ++idCounter;
@@ -889,7 +889,7 @@ DocTocItem* PdfEngineImpl::BuildTocTree(fz_outline* outline, int& idCounter, boo
         }
 
         if (outline->down) {
-            item->child = BuildTocTree(outline->down, idCounter, isAttachment);
+            item->child = BuildTocTree(item, outline->down, idCounter, isAttachment);
         }
 
         if (!root) {
@@ -920,7 +920,7 @@ DocTocTree* PdfEngineImpl::GetTocTree() {
     DocTocItem* root = nullptr;
     const char* path = strconv::WstrToUtf8(fileName).data();
     if (outline) {
-        root = BuildTocTree(outline, idCounter, false);
+        root = BuildTocTree(nullptr, outline, idCounter, false);
     }
     if (!attachments) {
         if (!root) {
@@ -930,7 +930,7 @@ DocTocTree* PdfEngineImpl::GetTocTree() {
         tocTree->filePath = path;
         return tocTree;
     }
-    DocTocItem* att = BuildTocTree(attachments, idCounter, true);
+    DocTocItem* att = BuildTocTree(nullptr, attachments, idCounter, true);
     if (!root) {
         tocTree = new DocTocTree(att);
         tocTree->filePath = path;

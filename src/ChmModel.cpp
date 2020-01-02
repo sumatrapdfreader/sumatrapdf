@@ -21,8 +21,8 @@ static bool IsExternalUrl(const WCHAR* url) {
     return str::StartsWithI(url, L"http://") || str::StartsWithI(url, L"https://") || str::StartsWithI(url, L"mailto:");
 }
 
-static DocTocItem* newChmTocItem(const WCHAR* title, int pageNo, const WCHAR* url) {
-    auto res = new DocTocItem(title, pageNo);
+static DocTocItem* newChmTocItem(DocTocItem* parent, const WCHAR* title, int pageNo, const WCHAR* url) {
+    auto res = new DocTocItem(parent, title, pageNo);
     if (!url) {
         return res;
     }
@@ -44,7 +44,7 @@ static DocTocItem* newChmTocItem(const WCHAR* title, int pageNo, const WCHAR* ur
 }
 
 static DocTocItem* newChmNamedDest(const WCHAR* url, int pageNo) {
-    auto res = newChmTocItem(url, pageNo, nullptr);
+    auto res = newChmTocItem(nullptr, url, pageNo, nullptr);
     return res;
 }
 
@@ -162,8 +162,8 @@ void ChmModel::DisplayPage(const WCHAR* pageUrl) {
         // open external links in an external browser
         // (same as for PDF, XPS, etc. documents)
         if (cb) {
-            // TODO: optimize
-            auto item = newChmTocItem(nullptr, 0, pageUrl);
+            // TODO: optimize, create just destination
+            auto item = newChmTocItem(nullptr, nullptr, 0, pageUrl);
             cb->GotoLink(item->dest);
             delete item;
         }
@@ -343,21 +343,25 @@ ChmCacheEntry* ChmModel::FindDataForUrl(const WCHAR* url) {
 // Sync the state of the ui with the page (show
 // the right page number, select the right item in toc tree)
 void ChmModel::OnDocumentComplete(const WCHAR* url) {
-    if (!url || IsBlankUrl(url))
+    if (!url || IsBlankUrl(url)) {
         return;
-    if (*url == '/')
+    }
+    if (*url == '/') {
         ++url;
+    }
     int pageNo = pages.Find(AutoFreeWstr(url::GetFullPath(url))) + 1;
-    if (pageNo) {
-        currentPageNo = pageNo;
-        // TODO: setting zoom before the first page is loaded seems not to work
-        // (might be a regression from between r4593 and r4629)
-        if (IsValidZoom(initZoom)) {
-            SetZoomVirtual(initZoom, nullptr);
-            initZoom = INVALID_ZOOM;
-        }
-        if (cb)
-            cb->PageNoChanged(this, pageNo);
+    if (!pageNo) {
+        return;
+    }
+    currentPageNo = pageNo;
+    // TODO: setting zoom before the first page is loaded seems not to work
+    // (might be a regression from between r4593 and r4629)
+    if (IsValidZoom(initZoom)) {
+        SetZoomVirtual(initZoom, nullptr);
+        initZoom = INVALID_ZOOM;
+    }
+    if (cb) {
+        cb->PageNoChanged(this, pageNo);
     }
 }
 
@@ -366,21 +370,23 @@ void ChmModel::OnDocumentComplete(const WCHAR* url) {
 bool ChmModel::OnBeforeNavigate(const WCHAR* url, bool newWindow) {
     // ensure that JavaScript doesn't keep the focus
     // in the HtmlWindow when a new page is loaded
-    if (cb)
+    if (cb) {
         cb->FocusFrame(false);
-
-    if (newWindow) {
-        // don't allow new MSIE windows to be opened
-        // instead pass the URL to the system's default browser
-        if (url && cb) {
-            // TODO: optimize
-            auto item = newChmTocItem(nullptr, 0, url);
-            cb->GotoLink(item->dest);
-            delete item;
-        }
-        return false;
     }
-    return true;
+
+    if (!newWindow) {
+        return true;
+    }
+
+    // don't allow new MSIE windows to be opened
+    // instead pass the URL to the system's default browser
+    if (url && cb) {
+        // TODO: optimize, create just destination
+        auto item = newChmTocItem(nullptr, nullptr, 0, url);
+        cb->GotoLink(item->dest);
+        delete item;
+    }
+    return false;
 }
 
 // Load and cache data for a given url inside CHM file.
@@ -463,7 +469,8 @@ DocTocTree* ChmModel::GetTocTree() {
     int idCounter = 0;
 
     for (ChmTocTraceItem& ti : *tocTrace) {
-        DocTocItem* item = newChmTocItem(ti.title, ti.pageNo, ti.url);
+        // TODO: set parent
+        DocTocItem* item = newChmTocItem(nullptr, ti.title, ti.pageNo, ti.url);
         item->id = ++idCounter;
         // append the item at the correct level
         CrashIf(ti.level < 1);

@@ -10,6 +10,29 @@
 
 #include "EngineBase.h"
 
+RenderedBitmap::~RenderedBitmap() {
+    DeleteObject(hbmp);
+}
+
+RenderedBitmap* RenderedBitmap::Clone() const {
+    HBITMAP hbmp2 = (HBITMAP)CopyImage(hbmp, IMAGE_BITMAP, size.dx, size.dy, 0);
+    return new RenderedBitmap(hbmp2, size);
+}
+
+// render the bitmap into the target rectangle (streching and skewing as requird)
+bool RenderedBitmap::StretchDIBits(HDC hdc, RectI target) const {
+    return BlitHBITMAP(hbmp, hdc, target);
+}
+
+// callers must not delete this (use Clone if you have to modify it)
+HBITMAP RenderedBitmap::GetBitmap() const {
+    return hbmp;
+}
+
+SizeI RenderedBitmap::Size() const {
+    return size;
+}
+
 Kind kindPageElementDest = "dest";
 Kind kindPageElementImage = "image";
 Kind kindPageElementComment = "comment";
@@ -62,6 +85,32 @@ WCHAR* PageDestination::GetName() const {
     return name;
 }
 
+PageDestination* newSimpleDest(int pageNo, RectD rect, const WCHAR* value) {
+    auto res = new PageDestination();
+    res->pageNo = pageNo;
+    res->rect = rect;
+    res->kind = kindDestinationScrollTo;
+    if (value) {
+        res->kind = kindDestinationLaunchURL;
+        res->value = str::Dup(value);
+    }
+    return res;
+}
+
+PageDestination* clonePageDestination(PageDestination* dest) {
+    if (!dest) {
+        return nullptr;
+    }
+    auto res = new PageDestination();
+    CrashIf(!dest->kind);
+    res->kind = dest->kind;
+    res->pageNo = dest->GetPageNo();
+    res->rect = dest->GetRect();
+    res->value = str::Dup(dest->GetValue());
+    res->name = str::Dup(dest->GetName());
+    return res;
+}
+
 PageElement::~PageElement() {
     free(value);
     delete dest;
@@ -94,32 +143,23 @@ PageDestination* PageElement::AsLink() {
     return dest;
 }
 
-RenderedBitmap::~RenderedBitmap() {
-    DeleteObject(hbmp);
+PageElement* clonePageElement(PageElement* el) {
+    if (!el) {
+        return nullptr;
+    }
+    auto* res = new PageElement();
+    res->kind = el->kind;
+    res->pageNo = el->pageNo;
+    res->rect = el->rect;
+    res->value = str::Dup(el->value);
+    res->dest = clonePageDestination(el->dest);
+    return res;
 }
 
-RenderedBitmap* RenderedBitmap::Clone() const {
-    HBITMAP hbmp2 = (HBITMAP)CopyImage(hbmp, IMAGE_BITMAP, size.dx, size.dy, 0);
-    return new RenderedBitmap(hbmp2, size);
-}
-
-// render the bitmap into the target rectangle (streching and skewing as requird)
-bool RenderedBitmap::StretchDIBits(HDC hdc, RectI target) const {
-    return BlitHBITMAP(hbmp, hdc, target);
-}
-
-// callers must not delete this (use Clone if you have to modify it)
-HBITMAP RenderedBitmap::GetBitmap() const {
-    return hbmp;
-}
-
-SizeI RenderedBitmap::Size() const {
-    return size;
-}
-
-DocTocItem::DocTocItem(const WCHAR* title, int pageNo) {
+DocTocItem::DocTocItem(DocTocItem* parent, const WCHAR* title, int pageNo) {
     this->title = str::Dup(title);
     this->pageNo = pageNo;
+    this->parent = parent;
 }
 
 DocTocItem::~DocTocItem() {
@@ -171,6 +211,7 @@ DocTocItem* CloneDocTocItemRecur(DocTocItem* ti) {
         return nullptr;
     }
     DocTocItem* res = new DocTocItem();
+    res->parent = ti->parent;
     res->title = str::Dup(ti->title);
     res->isOpenDefault = ti->isOpenDefault;
     res->isOpenToggled = ti->isOpenToggled;
@@ -193,53 +234,12 @@ DocTocTree* CloneDocTocTree(DocTocTree* tree) {
     return res;
 }
 
-PageDestination* newSimpleDest(int pageNo, RectD rect, const WCHAR* value) {
-    auto res = new PageDestination();
-    res->pageNo = pageNo;
-    res->rect = rect;
-    res->kind = kindDestinationScrollTo;
-    if (value) {
-        res->kind = kindDestinationLaunchURL;
-        res->value = str::Dup(value);
-    }
-    return res;
-}
-
-PageDestination* clonePageDestination(PageDestination* dest) {
-    if (!dest) {
-        return nullptr;
-    }
-    auto res = new PageDestination();
-    CrashIf(!dest->kind);
-    res->kind = dest->kind;
-    res->pageNo = dest->GetPageNo();
-    res->rect = dest->GetRect();
-    res->value = str::Dup(dest->GetValue());
-    res->name = str::Dup(dest->GetName());
-    return res;
-}
-
-PageElement* clonePageElement(PageElement* el) {
-    if (!el) {
-        return nullptr;
-    }
-    auto* res = new PageElement();
-    res->kind = el->kind;
-    res->pageNo = el->pageNo;
-    res->rect = el->rect;
-    res->value = str::Dup(el->value);
-    res->dest = clonePageDestination(el->dest);
-    return res;
-}
-
 WCHAR* DocTocItem::Text() {
     return title;
 }
 
 TreeItem* DocTocItem::Parent() {
-    // don't use it
-    CrashMe();
-    return nullptr;
+    return parent;
 }
 
 int DocTocItem::ChildCount() {

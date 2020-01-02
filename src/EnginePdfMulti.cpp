@@ -268,7 +268,7 @@ DocTocTree* EnginePdfMultiImpl::GetTocTree() {
             continue;
         }
         WCHAR* title = strconv::Utf8ToWstr(f->fileName);
-        auto tocItem = new DocTocItem(title, startPageNo + 1);
+        auto tocItem = new DocTocItem(nullptr, title, startPageNo + 1);
         free(title);
         if (!tree->root) {
             tree->root = tocItem;
@@ -278,6 +278,7 @@ DocTocTree* EnginePdfMultiImpl::GetTocTree() {
         auto subTree = e->GetTocTree();
         if (subTree) {
             tocItem->child = subTree->root;
+            tocItem->child->parent = tocItem;
             updateTocItemsPageNo(subTree->root, startPageNo);
         }
         startPageNo += e->PageCount();

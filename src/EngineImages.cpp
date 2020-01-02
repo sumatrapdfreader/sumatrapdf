@@ -785,8 +785,8 @@ int ImageDirEngineImpl::GetPageByLabel(const WCHAR* label) const {
     return EngineBase::GetPageByLabel(label);
 }
 
-static DocTocItem* newImageDirTocItem(WCHAR* title, int pageNo) {
-    return new DocTocItem(title, pageNo);
+static DocTocItem* newImageDirTocItem(DocTocItem* parent, WCHAR* title, int pageNo) {
+    return new DocTocItem(parent, title, pageNo);
 };
 
 DocTocTree* ImageDirEngineImpl::GetTocTree() {
@@ -794,11 +794,11 @@ DocTocTree* ImageDirEngineImpl::GetTocTree() {
         return tocTree;
     }
     AutoFreeWstr ws = GetPageLabel(1);
-    DocTocItem* root = newImageDirTocItem(ws, 1);
+    DocTocItem* root = newImageDirTocItem(nullptr, ws, 1);
     root->id = 1;
     for (int i = 2; i <= PageCount(); i++) {
         ws = GetPageLabel(i);
-        DocTocItem* item = newImageDirTocItem(ws, i);
+        DocTocItem* item = newImageDirTocItem(root, ws, i);
         item->id = i;
         root->AddSibling(item);
     }
