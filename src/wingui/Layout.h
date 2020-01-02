@@ -12,11 +12,13 @@ extern Length DIP;
 struct Size {
     Length Width = 0;
     Length Height = 0;
+    bool empty() const;
 };
 
 struct Point {
     Length X = 0;
     Length Y = 0;
+    bool empty() const;
 };
 
 // can't call it Rectangle because conflicts with GDI+ Rectangle function
@@ -28,6 +30,7 @@ struct Rect {
     Length Height() const;
     Length Dx() const;
     Length Dy() const;
+    bool empty() const;
 };
 
 RECT RectToRECT(const Rect);

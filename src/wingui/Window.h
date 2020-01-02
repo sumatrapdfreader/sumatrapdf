@@ -66,7 +66,8 @@ struct WindowBase {
     const WCHAR* winClass = nullptr;
 
     HWND parent = nullptr;
-    RECT initialPos = {};
+    Point initialPos = {-1, -1};
+    Size initialSize = {0, 0};
     DWORD dwStyle = 0;
     DWORD dwExStyle = 0;
     HFONT hfont = nullptr; // TODO: this should be abstract Font description

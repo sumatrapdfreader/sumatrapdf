@@ -5,6 +5,7 @@
 #include "utils/ScopedWin.h"
 #include "utils/FileUtil.h"
 #include "utils/Log.h"
+#include "utils/WinUtil.h"
 
 #include "wingui/WinGui.h"
 #include "wingui/TreeModel.h"
@@ -73,21 +74,23 @@ void ShowErrorMessage(const char* msg) {
 }
 
 static void SetTreeModel() {
-    // TODO:  if more than 1, create a combined TreeModel
     TreeCtrl* treeCtrl = gWindow->treeCtrl;
     auto& bookmarks = gWindow->tocArgs->bookmarks;
     delete treeCtrl->treeModel;
     treeCtrl->treeModel = nullptr;
+#if 0
     if (bookmarks.size() == 1) {
         auto tm = bookmarks[0]->toc;
         auto tmCopy = CloneDocTocTree(tm);
         treeCtrl->SetTreeModel(tmCopy);
         return;
     }
+#endif
     DocTocItem* root = nullptr;
     DocTocItem* curr = nullptr;
     for (auto&& bkm : bookmarks) {
         DocTocItem* i = new DocTocItem();
+        i->isOpenDefault = true;
         i->child = CloneDocTocItemRecur(bkm->toc->root);
         AutoFreeWstr path = strconv::Utf8ToWstr(bkm->filePath.get());
         const WCHAR* name = path::GetBaseNameNoFree(path);
@@ -277,6 +280,31 @@ void TocEditorWindow::OnTreeItemChanged(TreeItemChangedArgs* args) {
 // in TableOfContents.cpp
 extern void OnDocTocCustomDraw(TreeItemCustomDrawArgs* args);
 
+// sets initial position of w within hwnd. Assumes w->initialSize is set.
+static void PositionCloseTo(WindowBase* w, HWND hwnd) {
+    CrashIf(!hwnd);
+    Size is = w->initialSize;
+    CrashIf(is.empty());
+    RECT r{};
+    BOOL ok = GetWindowRect(hwnd, &r);
+    CrashIf(!ok);
+
+    // position w in the the center of hwnd
+    // if window is bigger than hwnd, let the system position
+    // we don't want to hide it
+    int offX = (RectDx(r) - is.Width) / 2;
+    if (offX < 0) {
+        return;
+    }
+    int offY = (RectDy(r) - is.Height) / 2;
+    if (offY < 0) {
+        return;
+    }
+    Point& ip = w->initialPos;
+    ip.X = (Length)r.left + (Length)offX;
+    ip.Y = (Length)r.top + (Length)offY;
+}
+
 void StartTocEditor(TocEditorArgs* args) {
     if (gWindow != nullptr) {
         // TODO: maybe allow multiple windows
@@ -290,7 +318,9 @@ void StartTocEditor(TocEditorArgs* args) {
     auto w = new Window();
     w->backgroundColor = MkRgb((u8)0xee, (u8)0xee, (u8)0xee);
     w->SetTitle("Table of content editor");
-    w->initialPos = {100, 100, 100 + 640, 100 + 800};
+    w->initialSize = {640, 800};
+    PositionCloseTo(w, args->relatedTo);
+
     bool ok = w->Create();
     CrashIf(!ok);
 

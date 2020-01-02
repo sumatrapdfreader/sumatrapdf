@@ -188,12 +188,24 @@ SIZE WindowBase::GetIdealSize() {
 }
 
 bool WindowBase::Create() {
-    RECT rc = initialPos;
     auto h = GetModuleHandle(nullptr);
-    int x = rc.left;
-    int y = rc.top;
-    int dx = RectDx(rc);
-    int dy = RectDy(rc);
+    int x = CW_USEDEFAULT;
+    if (initialPos.X != -1) {
+        x = initialPos.X;
+    }
+    int y = CW_USEDEFAULT;
+    if (initialPos.Y != -1) {
+        y = initialPos.Y;
+    }
+
+    int dx = CW_USEDEFAULT;
+    if (initialSize.Width > 0) {
+        dx = initialSize.Width;
+    }
+    int dy = CW_USEDEFAULT;
+    if (initialSize.Height > 0) {
+        dy = initialSize.Height;
+    }
     HMENU m = (HMENU)(UINT_PTR)menuId;
     hwnd = CreateWindowExW(dwExStyle, winClass, L"", dwStyle, x, y, dx, dy, parent, m, h, nullptr);
 
@@ -451,18 +463,23 @@ bool Window::Create() {
     }
     RegisterWindowClass(this);
 
-    RECT rc = this->initialPos;
-    int x = rc.left;
-    int y = rc.top;
-    int dx = RectDx(rc);
-    int dy = RectDy(rc);
-    if (dx == 0) {
-        x = CW_USEDEFAULT;
-        y = CW_USEDEFAULT;
-        dx = CW_USEDEFAULT;
-        dy = CW_USEDEFAULT;
+    int x = CW_USEDEFAULT;
+    if (initialPos.X != -1) {
+        x = initialPos.X;
+    }
+    int y = CW_USEDEFAULT;
+    if (initialPos.Y != -1) {
+        y = initialPos.Y;
     }
 
+    int dx = CW_USEDEFAULT;
+    if (initialSize.Width > 0) {
+        dx = initialSize.Width;
+    }
+    int dy = CW_USEDEFAULT;
+    if (initialSize.Height > 0) {
+        dy = initialSize.Height;
+    }
     AutoFreeWstr title = strconv::Utf8ToWstr(this->text.as_view());
     HINSTANCE hinst = GetInstance();
     hwnd = CreateWindowExW(dwExStyle, winClass, title, dwStyle, x, y, dx, dy, parent, nullptr, hinst, (void*)this);

@@ -3,16 +3,15 @@
 
 #include "utils/BaseUtil.h"
 
-#if 0
-#include <cstdio>     // std::printf
-#include <limits>     // std::limits
-#include <cmath>      // std::is_nan
-#include <algorithm>  // std::max
-#include <cassert>    // assert
-#include <functional> // std::function
-#endif
-
 #include "Layout.h"
+
+bool Size::empty() const {
+    return Width == 0 || Height == 0;
+}
+
+bool Point::empty() const {
+    return X == 0 || Y == 0;
+}
 
 Length Rect::Width() const {
     return Max.X - Min.X;
@@ -28,6 +27,10 @@ Length Rect::Dx() const {
 // Dy returns r's height.
 Length Rect::Dy() const {
     return this->Max.Y - this->Min.Y;
+}
+
+bool Rect::empty() const {
+    return Dx() == 0 || Dy() == 0;
 }
 
 RECT RectToRECT(const Rect r) {

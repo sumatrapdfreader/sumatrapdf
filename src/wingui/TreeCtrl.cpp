@@ -308,7 +308,7 @@ TreeCtrl::TreeCtrl(HWND p) {
     dwExStyle = TVS_EX_DOUBLEBUFFER;
     winClass = WC_TREEVIEWW;
     parent = p;
-    SetRect(&initialPos, 0, 0, 48, 120);
+    initialSize = {48, 120};
 }
 
 bool TreeCtrl::Create(const WCHAR* title) {

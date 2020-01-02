@@ -29,8 +29,8 @@ class ChmModel : public Controller {
     void GoToPage(int pageNo, bool addNavPoint) override {
         UNUSED(addNavPoint);
         CrashIf(!ValidPageNo(pageNo));
-        if (ValidPageNo(pageNo))
-            DisplayPage(pages.at(pageNo - 1));
+        if (ValidPageNo(pageNo)) {
+        }
     }
     bool CanNavigate(int dir) const override;
     void Navigate(int dir) override;
