@@ -41,6 +41,20 @@ struct SizeArgs {
 
 typedef std::function<void(SizeArgs*)> OnSize;
 
+
+struct ContextMenuArgs {
+    WndProcArgs* procArgs = nullptr;
+    WindowBase* w = nullptr;
+
+    // mouse x,y position relative to the window
+    PointI mouseWindow{};
+    // global (screen) mouse x,y position
+    PointI mouseGlobal{};
+};
+
+typedef std::function<void(ContextMenuArgs*)> OnContextMenu;
+
+
 struct WindowCloseArgs {
     Window* window = nullptr;
     bool cancel = false;
@@ -80,6 +94,9 @@ struct WindowBase {
 
     // called at start of windows proc to allow intercepting messages
     MsgFilter msgFilter;
+
+    // called to process WM_CONTEXTMENU
+    OnContextMenu onContextMenu = nullptr;
 
     COLORREF textColor = ColorUnset;
     COLORREF backgroundColor = ColorUnset;

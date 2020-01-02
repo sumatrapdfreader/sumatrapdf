@@ -94,7 +94,7 @@ static HWND getChildHWNDForMessage(UINT msg, WPARAM wp, LPARAM lp) {
 
 // TODO: maybe just always subclass main window and reflect those messages
 // back to their children instead of subclassing in each child
-// Another option: always create a reflector HWND window, like
+// Another option: always create a reflector HWND window, like walk does
 static LRESULT CALLBACK wndProcParentDispatch(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR uIdSubclass,
                                               DWORD_PTR dwRefData) {
     HWND hwndCtrl = getChildHWNDForMessage(msg, wp, lp);
@@ -112,8 +112,26 @@ static LRESULT CALLBACK wndProcParentDispatch(HWND hwnd, UINT msg, WPARAM wp, LP
     if (hwndCtrl != w->hwnd) {
         return DefSubclassProc(hwnd, msg, wp, lp);
     }
+
     WndProcArgs args{};
     SetWndProcArgs(args);
+
+    if (msg == WM_CONTEXTMENU && w->onContextMenu) {
+        ContextMenuArgs a;
+        a.procArgs = &args;
+        a.w = w;
+        a.mouseGlobal.x = GET_X_LPARAM(lp);
+        a.mouseGlobal.y = GET_Y_LPARAM(lp);
+        POINT pt{a.mouseGlobal.x, a.mouseGlobal.y};
+        if (pt.x != -1) {
+            MapWindowPoints(HWND_DESKTOP, w->hwnd, &pt, 1);
+        }
+        a.mouseWindow.x = pt.x;
+        a.mouseWindow.y = pt.y;
+        w->onContextMenu(&a);
+        return 0;
+    }
+
     w->WndProcParent(&args);
     if (args.didHandle) {
         return args.result;

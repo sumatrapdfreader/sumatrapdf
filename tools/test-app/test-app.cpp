@@ -61,6 +61,10 @@ static ILayout* CreateMainLayout(HWND hwnd) {
     return padding;
 }
 
+void __cdecl SendCrashReport(char const*) {
+    // a dummy implementation
+}
+
 int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine,
                      _In_ int nCmdShow) {
     UNUSED(hPrevInstance);
@@ -83,7 +87,8 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     auto w = new Window();
     w->backgroundColor = MkRgb((u8)0xae, (u8)0xae, (u8)0xae);
     w->SetTitle("this is a title");
-    w->initialPos = {100, 100, 100 + 480, 100 + 640};
+    w->initialPos = {100, 100};
+    w->initialSize = {480, 640};
     bool ok = w->Create();
     CrashIf(!ok);
 

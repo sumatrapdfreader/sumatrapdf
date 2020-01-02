@@ -380,7 +380,7 @@ static void ExportBookmarksFromTab(TabInfo* tab) {
 }
 
 // in Favorites.cpp
-extern TreeItem* GetOrSelectTreeItemAtPos(TreeContextMenuArgs* args, POINT& pt);
+extern TreeItem* GetOrSelectTreeItemAtPos(ContextMenuArgs* args, POINT& pt);
 
 // clang-format off
 static MenuDef contextMenuDef[] = {
@@ -418,7 +418,7 @@ static void StartTocEditorForWindowInfo(WindowInfo* win) {
     StartTocEditor(args);
 }
 
-static void OnTocContextMenu(TreeContextMenuArgs* args) {
+static void OnTocContextMenu(ContextMenuArgs* args) {
     WindowInfo* win = FindWindowInfoByHwnd(args->w->hwnd);
     CrashIf(!win);
     const WCHAR* filePath = win->ctrl->FilePath();

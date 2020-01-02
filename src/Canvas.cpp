@@ -461,21 +461,23 @@ static void OnMouseRightButtonUp(WindowInfo* win, int x, int y, WPARAM key) {
 
     win->mouseAction = MouseAction::Idle;
 
-    if (didDragMouse)
+    if (didDragMouse) {
         /* pass */;
-    else if (PM_ENABLED == win->presentation) {
-        if ((key & MK_CONTROL))
-            OnContextMenu(win, x, y);
-        else if ((key & MK_SHIFT))
+    } else if (PM_ENABLED == win->presentation) {
+        if ((key & MK_CONTROL)) {
+            OnWindowContextMenu(win, x, y);
+        } else if ((key & MK_SHIFT)) {
             win->ctrl->GoToNextPage();
-        else
+        } else {
             win->ctrl->GoToPrevPage();
+        }
     }
     /* return from white/black screens in presentation mode */
-    else if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation)
+    else if (PM_BLACK_SCREEN == win->presentation || PM_WHITE_SCREEN == win->presentation) {
         win->ChangePresentationMode(PM_ENABLED);
-    else
-        OnContextMenu(win, x, y);
+    } else {
+        OnWindowContextMenu(win, x, y);
+    }
 }
 
 static void OnMouseRightButtonDblClick(WindowInfo* win, int x, int y, WPARAM key) {
@@ -1105,7 +1107,7 @@ static LRESULT WndProcCanvasFixedPageUI(WindowInfo* win, HWND hwnd, UINT msg, WP
             return DefWindowProc(hwnd, msg, wParam, lParam);
 
         case WM_CONTEXTMENU:
-            OnContextMenu(win, 0, 0);
+            OnWindowContextMenu(win, 0, 0);
             return 0;
 
         case WM_GESTURE:

@@ -21,18 +21,6 @@ struct TreeNotifyArgs {
 
 typedef std::function<void(TreeNotifyArgs*)> OnTreeNotify;
 
-struct TreeContextMenuArgs {
-    WndProcArgs* procArgs = nullptr;
-    TreeCtrl* w = nullptr;
-
-    // mouse x,y position relative to the window
-    PointI mouseWindow{};
-    // global (screen) mouse x,y position
-    PointI mouseGlobal{};
-};
-
-typedef std::function<void(TreeContextMenuArgs*)> OnTreeContextMenu;
-
 struct TreeSelectionChangedArgs {
     WndProcArgs* procArgs = nullptr;
     TreeCtrl* w = nullptr;
@@ -136,9 +124,6 @@ struct TreeCtrl : public WindowBase {
 
     // called to process all WM_NOTIFY messages
     OnTreeNotify onTreeNotify = nullptr;
-
-    // called to process WM_CONTEXTMENU
-    OnTreeContextMenu onContextMenu = nullptr;
 
     OnTreeSelectionChanged onTreeSelectionChanged = nullptr;
 

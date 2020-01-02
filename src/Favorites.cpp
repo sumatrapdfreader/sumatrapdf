@@ -739,8 +739,8 @@ static void OnFavTreeNotify(TreeNotifyArgs* args) {
 // if via right-click, selects the item under the cursor
 // in both cases can return null
 // sets pt to screen position (for context menu coordinates)
-TreeItem* GetOrSelectTreeItemAtPos(TreeContextMenuArgs* args, POINT& pt) {
-    TreeCtrl* treeCtrl = args->w;
+TreeItem* GetOrSelectTreeItemAtPos(ContextMenuArgs* args, POINT& pt) {
+    TreeCtrl* treeCtrl = (TreeCtrl*)args->w;
     HWND hwnd = treeCtrl->hwnd;
 
     TreeItem* ti = nullptr;
@@ -774,10 +774,11 @@ TreeItem* GetOrSelectTreeItemAtPos(TreeContextMenuArgs* args, POINT& pt) {
     return ti;
 }
 
-static void OnFavTreeContextMenu(TreeContextMenuArgs* args) {
+static void OnFavTreeContextMenu(ContextMenuArgs* args) {
     args->procArgs->didHandle = true;
 
-    TreeCtrl* treeCtrl = args->w;
+    TreeCtrl* treeCtrl = (TreeCtrl*)args->w;
+    CrashIf(!IsTree(treeCtrl->kind));
     HWND hwnd = treeCtrl->hwnd;
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
 

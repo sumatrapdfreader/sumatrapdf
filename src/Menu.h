@@ -47,7 +47,7 @@ HFONT GetMenuFont();
 
 HMENU BuildMenuFromMenuDef(MenuDef menuDefs[], int menuLen, HMENU menu, int flagFilter = 0);
 HMENU BuildMenu(WindowInfo* win);
-void OnContextMenu(WindowInfo* win, int x, int y);
+void OnWindowContextMenu(WindowInfo* win, int x, int y);
 void OnAboutContextMenu(WindowInfo* win, int x, int y);
 void OnMenuZoom(WindowInfo* win, UINT menuId);
 void OnMenuCustomZoom(WindowInfo* win);

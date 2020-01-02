@@ -611,7 +611,7 @@ void OnAboutContextMenu(WindowInfo* win, int x, int y) {
     }
 }
 
-void OnContextMenu(WindowInfo* win, int x, int y) {
+void OnWindowContextMenu(WindowInfo* win, int x, int y) {
     DisplayModel* dm = win->AsFixed();
     CrashIf(!dm);
     if (!dm) {

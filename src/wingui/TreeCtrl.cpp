@@ -222,25 +222,6 @@ void TreeCtrl::WndProcParent(WndProcArgs* args) {
 
         return;
     }
-
-    if (msg == WM_CONTEXTMENU) {
-        if (!w->onContextMenu) {
-            return;
-        }
-        TreeContextMenuArgs a;
-        a.procArgs = args;
-        a.w = w;
-        a.mouseGlobal.x = GET_X_LPARAM(lp);
-        a.mouseGlobal.y = GET_Y_LPARAM(lp);
-        POINT pt{a.mouseGlobal.x, a.mouseGlobal.y};
-        if (pt.x != -1) {
-            MapWindowPoints(HWND_DESKTOP, w->hwnd, &pt, 1);
-        }
-        a.mouseWindow.x = pt.x;
-        a.mouseWindow.y = pt.y;
-        onContextMenu(&a);
-        return;
-    }
 }
 
 static bool HandleKey(TreeCtrl* tree, WPARAM wp) {
