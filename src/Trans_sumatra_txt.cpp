@@ -3408,7 +3408,7 @@ const char * gTranslations_cn =
   "\345\244\247\345\260\217\345\206\231\345\214\271\351\205\215\0"\
   "Mobi \346\226\207\346\241\243\0"\
   "\344\277\256\346\224\271\346\227\266\351\227\264:\0"\
-  "\346\226\260\345\273\272\347\252\227\345\217\243(&W)\tCtrl+Y\0"\
+  "\346\226\260\345\273\272\347\252\227\345\217\243(&W)\tCtrl+N\0"\
   "\346\234\200\346\226\260\347\211\210\346\234\254 %s\343\200\202 \346\230\257\345\220\246\344\270\213\350\275\275\346\226\260\347\211\210\346\234\254?\0"\
   "\344\270\213\344\270\200\351\241\265\0"\
   "\346\262\241\346\234\211\346\211\276\345\210\260\345\214\271\351\205\215\351\241\271\0"\
@@ -6102,7 +6102,7 @@ const char * gTranslations_fr =
   "Afficher la &barre d'outils\0"\
   "Voir Favoris\0"\
   "Montrer les documents fr\303\251quemment lus\0"\
-  "\0"\
+  "Montrer dans le &dossier\0"\
   "Voir la barre lat\303\251rale des &signets lorsqu'elle est disponible\0"\
   "Une seule page\0"\
   "D\303\251sol\303\251, cela n'aurait pas d\303\273 se produire !\n\n Cliquez sur \"Annuler\" si vous voulez nous aider \303\240 rem\303\251dier \303\240 ce crash\0"\
@@ -15380,7 +15380,7 @@ const char * gTranslations_es =
   "Coincidir may\303\272sculas y min\303\272sculas\0"\
   "Documentos en formato Mobi\0"\
   "Modificado:\0"\
-  "\0"\
+  "Nueva &ventana\tCtrl+N\0"\
   "Est\303\241 disponible la nueva versi\303\263n %s. \302\277Desea descargarla?\0"\
   "P\303\241gina siguiente\0"\
   "No se encontraron coincidencias\0"\
@@ -15446,7 +15446,7 @@ const char * gTranslations_es =
   "Mostrar barra de &herramientas\0"\
   "Mostrar favoritos\0"\
   "Mostrar \302\253lo m\303\241s le\303\255do\302\273\0"\
-  "\0"\
+  "Mostrar en &Carpeta\0"\
   "Mostrar la barra de &marcadores cuando est\303\251 disponible\0"\
   "P\303\241gina \303\272nica\0"\
   "Lo sentimos, esto no deber\303\255a haber sucedido...\n\nPresione \302\253cancelar\302\273 si quiere ayudarnos a arreglar la causa del fallo.\0"\

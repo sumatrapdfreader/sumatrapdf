@@ -1,5 +1,5 @@
 AppTranslator: SumatraPDF
-f30d9eaf88fe95a266550a845ea8a0ed95ae7b5e
+0511d510873454bb2c177f07892b76f707c58c2e
 :&About
 af:&Omtrent
 am:&Ծրագրի մասին
@@ -11627,9 +11627,10 @@ uk:Змінено:
 uz:O'zgartirilgan:
 vn:Ngày chỉnh sửa
 :New &window\tCtrl+N
-cn:新建窗口(&W)\tCtrl+Y
+cn:新建窗口(&W)\tCtrl+N
 co:No&va finestra\tCtrl+N
 cz:Nové &okno\tCtrl+N
+es:Nueva &ventana\tCtrl+N
 fr:Nouvelle &fenêtre\tCtrl+N
 ga:Fuinneog &nua\tCtrl+N
 nl:Nieuw venster\tCrtl+N
@@ -15772,6 +15773,8 @@ vn:Hiện Đọc thường xuyên
 cn:打开所在文件夹(&F)
 co:Affissà in u car&tulare
 cz:Zobrazit ve &složce
+es:Mostrar en &Carpeta
+fr:Montrer dans le &dossier
 ga:Taispeáin san &fillteán
 nl:Toon in &map
 tw:打開所在資料夾(&F)
