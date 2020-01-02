@@ -78,16 +78,57 @@ void ShowErrorMessage(const char* msg) {
     MessageBoxA(hwnd, msg, "Error", MB_OK | MB_ICONERROR);
 }
 
+static void AddPageNumbersToTocItem(DocTocItem* ti) {
+    int sno = ti->pageNo;
+    if (sno <= 0) {
+        return;
+    }
+    int eno = ti->endPageNo;
+    WCHAR* s = nullptr;
+    if (eno > sno) {
+        s = str::Format(L"%s (pages %d-%d)", ti->title, sno, eno);
+    } else {
+        s = str::Format(L"%s (page %d)", ti->title, sno);
+    }
+    str::Free(ti->title);
+    ti->title = s;
+}
+
 static void AddPageNumbersToTocItemsRecur(DocTocItem* ti) {
     while (ti) {
-        if (ti->pageNo > 0) {
-            WCHAR* s = str::Format(L"%s (page %d)", ti->title, ti->pageNo);
-            str::Free(ti->title);
-            ti->title = s;
-        }
+        AddPageNumbersToTocItem(ti);
         AddPageNumbersToTocItemsRecur(ti->child);
         ti = ti->next;
     }
+}
+
+static void CollectTocItemsRecur(DocTocItem* ti, Vec<DocTocItem*>& v) {
+    while (ti) {
+        v.push_back(ti);
+        CollectTocItemsRecur(ti->child, v);
+        ti = ti->next;
+    }
+}
+
+static bool cmpByPageNo(DocTocItem* ti1, DocTocItem* ti2) {
+    return ti1->pageNo < ti2->pageNo;
+}
+
+static void CalcEndPageNo(DocTocItem* root, int nPages) {
+    Vec<DocTocItem*> tocItems;
+    CollectTocItemsRecur(root, tocItems);
+    size_t n = tocItems.size();
+    if (n < 1) {
+        return;
+    }
+    std::sort(tocItems.begin(), tocItems.end(), cmpByPageNo);
+    DocTocItem* prev = tocItems[0];
+    for (size_t i = 1; i < n; i++) {
+        DocTocItem* next = tocItems[i];
+        prev->endPageNo = next->pageNo;
+        prev = next;
+    }
+    prev->endPageNo = nPages;
 }
 
 static void UpdateTreeModel() {
@@ -103,6 +144,7 @@ static void UpdateTreeModel() {
         i->isOpenDefault = true;
         i->child = CloneDocTocItemRecur(bkm->toc->root);
         if (i->child) {
+            CalcEndPageNo(i->child, bkm->nPages);
             AddPageNumbersToTocItemsRecur(i->child);
             i->child->parent = i->child;
         }
@@ -158,10 +200,12 @@ static void AddPdf() {
         return;
     }
     tocTree = CloneDocTocTree(tocTree);
+    int nPages = engine->PageCount();
     delete engine;
     Bookmarks* bookmarks = new Bookmarks();
     bookmarks->toc = tocTree;
     bookmarks->filePath = str::Dup(tocTree->filePath);
+    bookmarks->nPages = nPages;
     gWindow->tocArgs->bookmarks.push_back(bookmarks);
     UpdateTreeModel();
 }

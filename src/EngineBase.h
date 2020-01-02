@@ -188,6 +188,13 @@ class DocTocItem : public TreeItem {
     // page this item points to (0 for non-page destinations)
     // if GetLink() returns a destination to a page, the two should match
     int pageNo = 0;
+
+    // auto-calculated page number that tells us a span from
+    // pageNo => endPageNo
+    // only used by TocEditor and EnginePdfMulti
+    // TODO: maybe create a subclass of DocTocItem
+    int endPageNo = 0;
+
     // arbitrary number allowing to distinguish this DocTocItem
     // from any other of the same ToC tree (must be constant
     // between runs so that it can be persisted in FileState::tocState)

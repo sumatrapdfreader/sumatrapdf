@@ -411,6 +411,8 @@ static void StartTocEditorForWindowInfo(WindowInfo* win) {
     // args->filePath = str::Dup(tab->filePath);
     Bookmarks* bkms = new Bookmarks();
     bkms->filePath = (char*)strconv::WstrToUtf8(tab->filePath).data();
+    bkms->nPages = tab->ctrl->PageCount();
+
     DocTocTree* tree = (DocTocTree*)win->tocTreeCtrl->treeModel;
     bkms->toc = CloneDocTocTree(tree);
     args->bookmarks.push_back(bkms);

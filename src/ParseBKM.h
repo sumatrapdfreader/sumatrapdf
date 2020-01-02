@@ -4,6 +4,7 @@
 struct Bookmarks {
     AutoFree filePath;
     DocTocTree* toc = nullptr;
+    int nPages = 0;
 
     Bookmarks() = default;
     ~Bookmarks();
