@@ -41,7 +41,6 @@ struct SizeArgs {
 
 typedef std::function<void(SizeArgs*)> OnSize;
 
-
 struct ContextMenuArgs {
     WndProcArgs* procArgs = nullptr;
     WindowBase* w = nullptr;
@@ -53,7 +52,6 @@ struct ContextMenuArgs {
 };
 
 typedef std::function<void(ContextMenuArgs*)> OnContextMenu;
-
 
 struct WindowCloseArgs {
     Window* window = nullptr;

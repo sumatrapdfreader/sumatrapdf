@@ -100,12 +100,32 @@ ChmModel::~ChmModel() {
     DeleteCriticalSection(&docAccess);
 }
 
+const WCHAR* ChmModel::FilePath() const {
+    return fileName;
+}
+
+const WCHAR* ChmModel::DefaultFileExt() const {
+    return L".chm";
+}
+
 int ChmModel::PageCount() const {
     return (int)pages.size();
 }
 
 WCHAR* ChmModel::GetProperty(DocumentProperty prop) {
     return doc->GetProperty(prop);
+}
+
+int ChmModel::CurrentPageNo() const {
+    return currentPageNo;
+}
+
+void ChmModel::GoToPage(int pageNo, bool addNavPoint) {
+    UNUSED(addNavPoint);
+    CrashIf(!ValidPageNo(pageNo));
+    if (ValidPageNo(pageNo)) {
+        DisplayPage(pages.at(pageNo - 1));
+    }
 }
 
 bool ChmModel::SetParentHwnd(HWND hwnd) {
@@ -229,6 +249,26 @@ void ChmModel::Navigate(int dir) {
     }
 }
 
+void ChmModel::SetDisplayMode(DisplayMode mode, bool keepContinuous) {
+    UNUSED(mode);
+    UNUSED(keepContinuous); /* not supported */
+}
+
+DisplayMode ChmModel::GetDisplayMode() const {
+    return DM_SINGLE_PAGE;
+}
+void ChmModel::SetPresentationMode(bool enable) {
+    UNUSED(enable); /* not supported */
+}
+
+void ChmModel::SetViewPortSize(SizeI size) {
+    UNUSED(size); /* not needed(?) */
+}
+
+ChmModel* ChmModel::AsChm() {
+    return this;
+}
+
 void ChmModel::SetZoomVirtual(float zoom, PointI* fixPt) {
     UNUSED(fixPt);
     if (zoom > 0) {
@@ -284,9 +324,13 @@ class ChmTocBuilder : public EbookTocVisitor {
     }
 
   public:
-    ChmTocBuilder(ChmDoc* doc, WStrList* pages, Vec<ChmTocTraceItem>* tocTrace, Allocator* allocator)
-        : doc(doc), pages(pages), tocTrace(tocTrace), allocator(allocator) {
-        for (int i = 0; i < (int)pages->size(); i++) {
+    ChmTocBuilder(ChmDoc* doc, WStrList* pages, Vec<ChmTocTraceItem>* tocTrace, Allocator* allocator) {
+        this->doc = doc;
+        this->pages = pages;
+        this->tocTrace = tocTrace;
+        this->allocator = allocator;
+        int n = (int)pages->size();
+        for (int i = 0; i < n; i++) {
             const WCHAR* url = pages->at(i);
             bool inserted = urlsSet.Insert(url, i + 1, nullptr);
             CrashIf(!inserted);
@@ -305,8 +349,9 @@ class ChmTocBuilder : public EbookTocVisitor {
 bool ChmModel::Load(const WCHAR* fileName) {
     this->fileName.SetCopy(fileName);
     doc = ChmDoc::CreateFromFile(fileName);
-    if (!doc)
+    if (!doc) {
         return false;
+    }
 
     // always make the document's homepage page 1
     pages.Append(strconv::FromAnsi(doc->GetHomePath()));
@@ -331,10 +376,12 @@ class ChmCacheEntry {
 };
 
 ChmCacheEntry* ChmModel::FindDataForUrl(const WCHAR* url) {
-    for (size_t i = 0; i < urlDataCache.size(); i++) {
+    size_t n = urlDataCache.size();
+    for (size_t i = 0; i < n; i++) {
         ChmCacheEntry* e = urlDataCache.at(i);
-        if (str::Eq(url, e->url))
+        if (str::Eq(url, e->url)) {
             return e;
+        }
     }
     return nullptr;
 }
@@ -629,12 +676,12 @@ void ChmModel::CreateThumbnail(SizeI size, const onBitmapRenderedCb& saveThumbna
     }
 
     // We render twice the size of thumbnail and scale it down
-    int winDx = size.dx * 2 + GetSystemMetrics(SM_CXVSCROLL);
-    int winDy = size.dy * 2 + GetSystemMetrics(SM_CYHSCROLL);
+    int dx = size.dx * 2 + GetSystemMetrics(SM_CXVSCROLL);
+    int dy = size.dy * 2 + GetSystemMetrics(SM_CYHSCROLL);
     // reusing WC_STATIC. I don't think exact class matters (WndProc
     // will be taken over by HtmlWindow anyway) but it can't be nullptr.
     HWND hwnd =
-        CreateWindow(WC_STATIC, L"BrowserCapture", WS_POPUP, 0, 0, winDx, winDy, nullptr, nullptr, nullptr, nullptr);
+        CreateWindowExW(0, WC_STATIC, L"BrowserCapture", WS_POPUP, 0, 0, dx, dy, nullptr, nullptr, nullptr, nullptr);
     if (!hwnd) {
         delete doc;
         return;
