@@ -90,7 +90,7 @@ static void AddPageNumbersToTocItemsRecur(DocTocItem* ti) {
     }
 }
 
-static void SetTreeModel() {
+static void UpdateTreeModel() {
     TreeCtrl* treeCtrl = gWindow->treeCtrl;
     auto& bookmarks = gWindow->tocArgs->bookmarks;
     delete treeCtrl->treeModel;
@@ -145,7 +145,6 @@ static void AddPdf() {
         return;
     }
     WCHAR* filePath = ofn.lpstrFile;
-    logf(L"fileName: %s\n", filePath);
     EngineBase* engine = EngineManager::CreateEngine(filePath);
     if (!engine) {
         ShowErrorMessage("Failed to open a file!");
@@ -153,6 +152,8 @@ static void AddPdf() {
     }
     DocTocTree* tocTree = engine->GetTocTree();
     if (nullptr == tocTree) {
+        // TODO: maybe add a dummy entry for the first page
+        // or make top-level act as first page destination
         ShowErrorMessage("File doesn't have Table of content");
         return;
     }
@@ -162,11 +163,51 @@ static void AddPdf() {
     bookmarks->toc = tocTree;
     bookmarks->filePath = str::Dup(tocTree->filePath);
     gWindow->tocArgs->bookmarks.push_back(bookmarks);
-    SetTreeModel();
+    UpdateTreeModel();
 }
 
 static void RemovePdf() {
-    MessageNYI();
+    TocEditorWindow* w = gWindow;
+    TreeItem* sel = w->treeCtrl->GetSelection();
+    CrashIf(!sel);
+    size_t n = w->tocArgs->bookmarks.size();
+    CrashIf(n < 2);
+
+    DocTocItem* di = (DocTocItem*)sel;
+    CrashIf(di->Parent() != nullptr);
+    WCHAR* toRemoveTitle = di->title;
+    size_t toRemoveIdx = 0;
+    Bookmarks* bkmToRemove = nullptr;
+    for (size_t i = 0; i < n; i++) {
+        Bookmarks* bkm = w->tocArgs->bookmarks[i];
+
+        AutoFreeWstr path = strconv::Utf8ToWstr(bkm->filePath.get());
+        const WCHAR* name = path::GetBaseNameNoFree(path);
+        if (str::Eq(name, toRemoveTitle)) {
+            toRemoveIdx = i;
+            bkmToRemove = bkm;
+            break;
+        }
+    }
+    CrashIf(!bkmToRemove);
+    w->tocArgs->bookmarks.RemoveAt(toRemoveIdx);
+    delete bkmToRemove;
+    UpdateTreeModel();
+}
+
+static void UpdateRemovePdfButtonStatus(TocEditorWindow* w) {
+    TreeItem* sel = w->treeCtrl->GetSelection();
+    bool isEnabled = false;
+    if (sel) {
+        DocTocItem* di = (DocTocItem*)sel;
+        TreeItem* p = di->Parent();
+        isEnabled = (p == nullptr); // enabled if top-level
+    }
+    // must have at least 2 PDFs to remove
+    if (w->tocArgs->bookmarks.size() < 2) {
+        isEnabled = 0;
+    }
+    w->btnRemovePdf->SetIsEnabled(isEnabled);
 }
 
 // in TableOfContents.cpp
@@ -210,21 +251,6 @@ static void SaveVirtual() {
 
 static void Exit() {
     gWindow->mainWindow->Close();
-}
-
-static void UpdateRemovePdfButtonStatus(TocEditorWindow* w) {
-    TreeItem* sel = w->treeCtrl->GetSelection();
-    bool isEnabled = false;
-    if (sel) {
-        DocTocItem* di = (DocTocItem*)sel;
-        TreeItem* p = di->Parent();
-        isEnabled = (p == nullptr); // enabled if top-level
-    }
-    // must have at least 2 PDFs to remove
-    if (w->tocArgs->bookmarks.size() < 2) {
-        isEnabled = 0;
-    }
-    w->btnRemovePdf->SetIsEnabled(isEnabled);
 }
 
 static void CreateButtonsLayout(TocEditorWindow* w) {
@@ -383,7 +409,7 @@ void StartTocEditor(TocEditorArgs* args) {
     gWindow->treeCtrl->onTreeItemCustomDraw = OnDocTocCustomDraw;
     gWindow->treeCtrl->onTreeSelectionChanged = std::bind(&TocEditorWindow::OnTreeItemSelected, gWindow, _1);
 
-    SetTreeModel();
+    UpdateTreeModel();
     // important to call this after hooking up onSize to ensure
     // first layout is triggered
     w->SetIsVisible(true);
