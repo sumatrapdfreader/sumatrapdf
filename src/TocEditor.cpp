@@ -20,9 +20,15 @@
 #include "TocEditor.h"
 
 struct TocEditorWindow {
+    HWND hwnd = nullptr;
     Window* tocEditorWindow = nullptr;
     ILayout* tocEditorLayout = nullptr;
     TocEditorArgs* tocArgs = nullptr;
+
+    ButtonCtrl* btnAddPdf = nullptr;
+    ButtonCtrl* btnExit = nullptr;
+    ButtonCtrl* btnSaveAsVirtual = nullptr;
+    ILayout* layoutButtons = nullptr;
 
     // not owned by us but by tocEditorLayout
     TreeCtrl* treeCtrl = nullptr;
@@ -185,46 +191,60 @@ static void Exit() {
     gWindow->tocEditorWindow->Close();
 }
 
-static ILayout* CreateMainLayout(HWND hwnd) {
-    auto* right = new VBox();
+static void CreateButtonsLayout(TocEditorWindow* w) {
+    HWND hwnd = w->hwnd;
+    CrashIf(!hwnd);
 
-    right->alignMain = MainAxisAlign::MainStart;
-    right->alignCross = CrossAxisAlign::CrossCenter;
+    auto* buttons = new HBox();
+
+    buttons->alignMain = MainAxisAlign::SpaceBetween;
+    buttons->alignCross = CrossAxisAlign::CrossStart;
     {
         auto [l, b] = CreateButtonLayout(hwnd, "Add PDF", AddPdf);
-        right->addChild(l);
+        buttons->addChild(l);
+        w->btnAddPdf = b;
     }
 
     {
         auto [l, b] = CreateButtonLayout(hwnd, "Save As Virtual PDF", SaveVirtual);
-        right->addChild(l);
+        buttons->addChild(l);
+        w->btnSaveAsVirtual = b;
     }
 
     {
         auto [l, b] = CreateButtonLayout(hwnd, "Exit", Exit);
-        right->addChild(l);
+        buttons->addChild(l);
+        w->btnExit = b;
     }
+    w->layoutButtons = buttons;
+}
 
-    auto* hbox = new HBox();
-    hbox->alignMain = MainAxisAlign::MainStart;
-    hbox->alignCross = CrossAxisAlign::Stretch;
+static void CreateMainLayout(TocEditorWindow* w) {
+    HWND hwnd = w->hwnd;
+    CrashIf(!hwnd);
+
+    CreateButtonsLayout(w);
+
+    auto* main = new VBox();
+    main->alignMain = MainAxisAlign::MainStart;
+    main->alignCross = CrossAxisAlign::Stretch;
 
     auto* tree = new TreeCtrl(hwnd);
     tree->withCheckboxes = true;
     bool ok = tree->Create(L"tree");
     CrashIf(!ok);
-    // tree->idealSize = {80, 640};
+    tree->idealSize = {80, 640};
 
     gWindow->treeCtrl = tree;
     auto treeLayout = NewTreeLayout(tree);
 
-    hbox->addChild(treeLayout, 4);
-    hbox->addChild(right, 1);
+    main->addChild(treeLayout, 4);
+    main->addChild(w->layoutButtons, 1);
 
     auto* padding = new Padding();
     padding->insets = DefaultInsets();
-    padding->child = hbox;
-    return padding;
+    padding->child = main;
+    w->tocEditorLayout = padding;
 }
 
 void TocEditorWindow::OnWindowSize(SizeArgs* args) {
@@ -274,7 +294,10 @@ void StartTocEditor(TocEditorArgs* args) {
     bool ok = w->Create();
     CrashIf(!ok);
 
-    gWindow->tocEditorLayout = CreateMainLayout(w->hwnd);
+    gWindow->tocEditorWindow = w;
+    gWindow->hwnd = w->hwnd;
+
+    CreateMainLayout(gWindow);
 
     using namespace std::placeholders;
     w->onSize = std::bind(&TocEditorWindow::OnWindowSize, gWindow, _1);

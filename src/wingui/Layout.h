@@ -113,7 +113,7 @@ struct Insets {
 };
 
 inline Insets DefaultInsets() {
-    const Length padding = 11;
+    const Length padding = 8;
     return Insets{padding, padding, padding, padding};
 }
 
