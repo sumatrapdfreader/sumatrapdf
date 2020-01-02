@@ -78,6 +78,18 @@ void ShowErrorMessage(const char* msg) {
     MessageBoxA(hwnd, msg, "Error", MB_OK | MB_ICONERROR);
 }
 
+static void AddPageNumbersToTocItemsRecur(DocTocItem* ti) {
+    while (ti) {
+        if (ti->pageNo > 0) {
+            WCHAR* s = str::Format(L"%s (page %d)", ti->title, ti->pageNo);
+            str::Free(ti->title);
+            ti->title = s;
+        }
+        AddPageNumbersToTocItemsRecur(ti->child);
+        ti = ti->next;
+    }
+}
+
 static void SetTreeModel() {
     TreeCtrl* treeCtrl = gWindow->treeCtrl;
     auto& bookmarks = gWindow->tocArgs->bookmarks;
@@ -91,6 +103,7 @@ static void SetTreeModel() {
         i->isOpenDefault = true;
         i->child = CloneDocTocItemRecur(bkm->toc->root);
         if (i->child) {
+            AddPageNumbersToTocItemsRecur(i->child);
             i->child->parent = i->child;
         }
         AutoFreeWstr path = strconv::Utf8ToWstr(bkm->filePath.get());
