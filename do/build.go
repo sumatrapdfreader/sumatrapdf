@@ -325,6 +325,9 @@ func copyArtifacts() {
 }
 
 func signFilesMust(dir string) {
+	if !shouldSignAndUpload() {
+		logf("Skipping signing in dir '%s'\n", dir)
+	}
 	signMust(filepath.Join(dir, "SumatraPDF.exe"))
 	signMust(filepath.Join(dir, "libmupdf.dll"))
 	signMust(filepath.Join(dir, "PdfFilter.dll"))

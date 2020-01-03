@@ -135,7 +135,9 @@ func main() {
 
 	if flgCIBuild {
 		// ci build does the same thing as pre-release
-		failIfNoCertPwd()
+		if shouldSignAndUpload() {
+			failIfNoCertPwd()
+		}
 		detectVersions()
 		buildPreRelease(true)
 		return

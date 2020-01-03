@@ -16,7 +16,7 @@ const (
 
 // we should only sign and upload to s3 if this is my repo
 // and a push event
-func shouldSignOrUpload() bool {
+func shouldSignAndUpload() bool {
 	// https://help.github.com/en/actions/automating-your-workflow-with-github-actions/using-environment-variables
 
 	repo := os.Getenv("GITHUB_REPOSITORY")
@@ -129,7 +129,7 @@ func shouldSkipUpload() bool {
 		return true
 	}
 
-	if !shouldSignOrUpload() {
+	if !shouldSignAndUpload() {
 		logf("skipping upload beacuse not my repo\n")
 		return true
 	}
