@@ -23,9 +23,7 @@ struct TxtNode {
     char* keyStart;
     char* keyEnd;
 
-    explicit TxtNode(TxtNode::Type tp) {
-        type = tp;
-    }
+    explicit TxtNode(TxtNode::Type tp);
     TxtNode(const TxtNode& other) = delete;
     TxtNode& operator=(const TxtNode& other) = delete;
 

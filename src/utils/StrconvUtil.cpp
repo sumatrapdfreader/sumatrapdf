@@ -121,7 +121,7 @@ std::string_view UnknownToUtf8(const std::string_view& txt) {
         return str::DupN(s, len);
     }
 
-    AutoFreeWstr uni(strconv::FromAnsi(s, len));
+    AutoFreeWstr uni = strconv::FromAnsi(s, len);
     return strconv::WstrToUtf8(uni.Get());
 }
 

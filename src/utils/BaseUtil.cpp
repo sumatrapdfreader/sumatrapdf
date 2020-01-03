@@ -175,9 +175,10 @@ void* AllocZero(size_t count, size_t size) {
 
 void* memdup(const void* data, size_t len) {
     void* dup = malloc(len);
-    if (dup) {
-        memcpy(dup, data, len);
+    if (!dup) {
+        return nullptr;
     }
+    memcpy(dup, data, len);
     return dup;
 }
 

@@ -28,6 +28,10 @@ a given line either as a simple string or key/value pair. It's
 up to the caller to interpret the data.
 */
 
+TxtNode::TxtNode(TxtNode::Type tp) {
+    type = tp;
+}
+
 void TxtNode::AddChild(TxtNode* child) {
     if (firstChild == nullptr) {
         firstChild = child;
@@ -120,17 +124,17 @@ TxtNode* TxtParser::AllocTxtNodeFromToken(const Token& tok, TxtNode::Type nodeTy
     return node;
 }
 
-// we will modify s in-place
 void TxtParser::SetToParse(const std::string_view& str) {
-    auto tmp = strconv::UnknownToUtf8(str);
-    char* d = (char*)tmp.data();
-    size_t dLen = tmp.size();
+    data = strconv::UnknownToUtf8(str);
+    char* d = (char*)data.get();
+    size_t dLen = data.size();
     size_t n = str::NormalizeNewlinesInPlace(d, d + dLen);
     toParse.Set(d, n);
 
     // we create an implicit array node to hold the nodes we'll parse
     CrashIf(0 != nodes.size());
-    nodes.push_back(AllocTxtNode(TxtNode::Type::Array));
+    TxtNode* node = AllocTxtNode(TxtNode::Type::Array);
+    nodes.push_back(node);
 }
 
 static bool IsCommentStartChar(char c) {
