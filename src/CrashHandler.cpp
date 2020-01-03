@@ -50,11 +50,11 @@ static bool gDisableSymbolsDownload = false;
 static WCHAR* BuildSymbolsUrl() {
     WCHAR* urlBase = nullptr;
     WCHAR* ver = nullptr;
-    if (isDailyBuild) {
+    if (gIsDailyBuild) {
         // daily is also pre-release, just stored under a different url
         urlBase = DLURLBASE "daily/SumatraPDF-prerelease-" TEXT(QM(SVN_PRE_RELEASE_VER));
     } else {
-        if (isPreReleaseBuild) {
+        if (gIsPreReleaseBuild) {
             urlBase = DLURLBASE "prerel/SumatraPDF-prerelease-" TEXT(QM(SVN_PRE_RELEASE_VER));
         } else {
             // assuming this is release vers

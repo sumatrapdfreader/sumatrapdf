@@ -1549,7 +1549,7 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             }
             // disable UIAutomation in release builds until concurrency issues and
             // memory leaks have been figured out and fixed
-            if (!isDebugBuild) {
+            if (!gIsDebugBuild) {
                 return DefWindowProc(hwnd, msg, wParam, lParam);
             }
             if (!win->CreateUIAProvider()) {

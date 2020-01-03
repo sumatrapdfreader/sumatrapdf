@@ -456,7 +456,7 @@ int RunUninstaller(CommandLineInfo* cli) {
 
     gCli = cli;
 
-    if (!isDebugBuild) {
+    if (!gIsDebugBuild) {
         if (!IsRunningElevated()) {
             WCHAR* exePath = GetExePath();
             WCHAR* cmdline = GetCommandLineW(); // not owning the memory

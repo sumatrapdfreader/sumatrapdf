@@ -475,7 +475,7 @@ void ParseCommandLine(const WCHAR* cmdLine, CommandLineInfo& i) {
             i.globalPrefArgs.Append(str::Dup(argList.at(n)));
             i.globalPrefArgs.Append(str::Dup(argList.at(++n)));
             i.globalPrefArgs.Append(str::Dup(argList.at(++n)));
-        } else if (isDebugBuild && ArgEnumPrinters == arg) {
+        } else if (gIsDebugBuild && ArgEnumPrinters == arg) {
             EnumeratePrinters();
             /* this is for testing only, exit immediately */
             i.exitImmediately = true;

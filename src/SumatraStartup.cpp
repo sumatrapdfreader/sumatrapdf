@@ -735,7 +735,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 
     CrashIf(hInstance != GetInstance());
 
-    if (isDebugBuild) {
+    if (gIsDebugBuild) {
         // Memory leak detection (only enable _CRTDBG_LEAK_CHECK_DF for
         // regular termination so that leaks aren't checked on exceptions,
         // aborts, etc. where some clean-up might not take place)
@@ -761,7 +761,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
 
     srand((unsigned int)time(nullptr));
 
-    if (!isAsanBuild) {
+    if (!gIsAsanBuild) {
         SetupCrashHandler();
     }
 
@@ -784,7 +784,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
     CommandLineInfo i;
     ParseCommandLine(GetCommandLineW(), i);
 
-    if (isDebugBuild || isPreReleaseBuild) {
+    if (gIsDebugBuild || gIsPreReleaseBuild) {
         if (i.tester) {
             extern int TesterMain(); // in Tester.cpp
             return TesterMain();
@@ -949,7 +949,7 @@ int APIENTRY WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance,
         !restoreSession && i.fileNames.size() == 0 && gGlobalPrefs->rememberOpenedFiles && gGlobalPrefs->showStartPage;
 
     // ShGetFileInfoW triggers ASAN deep in Windows code so probably not my fault
-    if (!isAsanBuild) {
+    if (!gIsAsanBuild) {
         if (showStartPage) {
             // make the shell prepare the image list, so that it's ready when the first window's loaded
             SHFILEINFOW sfi = {0};
@@ -1112,14 +1112,14 @@ Exit:
 
     // it's still possible to crash after this (destructors of static classes,
     // atexit() code etc.) point, but it's very unlikely
-    if (!isAsanBuild) {
+    if (!gIsAsanBuild) {
         UninstallCrashHandler();
     }
 
     delete gLogBuf;
     delete gLogAllocator;
 
-    if (isDebugBuild) {
+    if (gIsDebugBuild) {
         // output leaks after all destructors of static objects have run
         _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
     }

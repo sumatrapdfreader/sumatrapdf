@@ -2549,7 +2549,7 @@ static void OnMenuSaveAs(WindowInfo* win) {
         // Convert the file into a PDF one
         PdfCreator::SetProducerName(APP_NAME_STR L" " CURR_VERSION_STR);
         ok = engine->SaveFileAsPDF(pathUtf8.Get(), saveAnnotsInDoc);
-        if (!ok && isDebugBuild) {
+        if (!ok && gIsDebugBuild) {
             // rendering includes all page annotations
             ok = PdfCreator::RenderToFile(pathUtf8.Get(), engine);
         } else if (!saveAnnotsInDoc) {
@@ -3714,7 +3714,7 @@ static void OnFrameKeyB(WindowInfo* win) {
 }
 
 static void MakeAnnotationFromSelection(WindowInfo* win) {
-    bool annotsEnabled = isDebugBuild || isPreReleaseBuild;
+    bool annotsEnabled = gIsDebugBuild || gIsPreReleaseBuild;
     if (!annotsEnabled) {
         return;
     }
@@ -4724,13 +4724,13 @@ void GetProgramInfo(str::Str& s) {
     }
     s.AppendFmt("Type: %s\r\n", exeType);
     s.AppendFmt("Ver: %s", currentVersion);
-    if (isPreReleaseBuild) {
+    if (gIsPreReleaseBuild) {
         s.AppendFmt(" pre-release");
     }
     if (IsProcess64()) {
         s.Append(" 64-bit");
     }
-    if (isDebugBuild) {
+    if (gIsDebugBuild) {
         if (!str::Find(s.Get(), " (dbg)")) {
             s.Append(" (dbg)");
         }

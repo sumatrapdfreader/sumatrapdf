@@ -7,28 +7,28 @@
 #include "SumatraConfig.h"
 
 #if defined(DEBUG)
-bool isDebugBuild = true;
+bool gIsDebugBuild = true;
 #else
-bool isDebugBuild = false;
+bool gIsDebugBuild = false;
 #endif
 
 #if defined(ASAN_BUILD)
-bool isAsanBuild = true;
+bool gIsAsanBuild = true;
 #else
-bool isAsanBuild = false;
+bool gIsAsanBuild = false;
 #endif
 
 // those are set in BuildConfig.h by build.go
 #if defined(IS_DAILY_BUILD)
-bool isDailyBuild = true;
+bool gIsDailyBuild = true;
 #else
-bool isDailyBuild = false;
+bool gIsDailyBuild = false;
 #endif
 
 #if defined(SVN_PRE_RELEASE_VER)
-bool isPreReleaseBuild = true;
+bool gIsPreReleaseBuild = true;
 #else
-bool isPreReleaseBuild = false;
+bool gIsPreReleaseBuild = false;
 #endif
 
 #if defined(BUILT_ON)
@@ -49,4 +49,10 @@ const char* preReleaseVersion = nullptr;
 const char* gitSha1 = QM(GIT_COMMIT_ID);
 #else
 const char* gitSha1 = nullptr;
+#endif
+
+#if defined(DEBUG) || defined(SVN_PRE_RELEASE_VER)
+bool gWithTocEditor = true;
+#else
+bool gWithTocEditor = false;
 #endif
