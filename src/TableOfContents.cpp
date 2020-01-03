@@ -428,11 +428,11 @@ static void OnTocContextMenu(ContextMenuArgs* args) {
     POINT pt{};
     TreeItem* ti = GetOrSelectTreeItemAtPos(args, pt);
     if (!ti) {
-        return;
+        pt = {args->mouseGlobal.x, args->mouseGlobal.y};
     }
     int pageNo = 0;
     DocTocItem* dti = (DocTocItem*)ti;
-    if (dti->dest) {
+    if (dti && dti->dest) {
         pageNo = dti->dest->GetPageNo();
     }
 
@@ -443,6 +443,7 @@ static void OnTocContextMenu(ContextMenuArgs* args) {
         win::menu::Remove(popup, IDM_EXPORT_BOOKMARKS);
         win::menu::Remove(popup, IDM_NEW_BOOKMARKS);
     }
+
     if (pageNo > 0) {
         AutoFreeWstr pageLabel = win->ctrl->GetPageLabel(pageNo);
         bool isBookmarked = gFavorites.IsPageInFavorites(filePath, pageNo);

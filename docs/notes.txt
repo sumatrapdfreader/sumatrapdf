@@ -4,3 +4,5 @@ Making the icons:
   using A200 => A400 transition
 * export to .png using 512h
 * convert to .ico with https://www.icoconverter.com/
+
+Online icon editor: https://redketchup.io/icon-editor could be used to improve the low-resolution icons.
