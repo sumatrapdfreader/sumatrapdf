@@ -33,6 +33,7 @@
 #include "TextSelection.h"
 #include "TextSearch.h"
 #include "Notifications.h"
+#include "SumatraConfig.h"
 #include "SumatraPDF.h"
 #include "WindowInfo.h"
 #include "TabInfo.h"
@@ -56,16 +57,17 @@ static bool gWheelMsgRedirect = false;
 void UpdateDeltaPerLine() {
     ULONG ulScrollLines;
     BOOL ok = SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0, &ulScrollLines, 0);
-    if (!ok)
+    if (!ok) {
         return;
+    }
     // ulScrollLines usually equals 3 or 0 (for no scrolling) or -1 (for page scrolling)
     // WHEEL_DELTA equals 120, so iDeltaPerLine will be 40
-    if (ulScrollLines == (ULONG)-1)
+    gDeltaPerLine = 0;
+    if (ulScrollLines == (ULONG)-1) {
         gDeltaPerLine = -1;
-    else if (ulScrollLines != 0)
+    } else if (ulScrollLines != 0) {
         gDeltaPerLine = WHEEL_DELTA / ulScrollLines;
-    else
-        gDeltaPerLine = 0;
+    }
 }
 
 ///// methods needed for FixedPageUI canvases with document loaded /////
@@ -181,23 +183,39 @@ static void OnDraggingStart(WindowInfo* win, int x, int y, bool right = false) {
     SetCapture(win->hwndCanvas);
     win->mouseAction = right ? MouseAction::DraggingRight : MouseAction::Dragging;
     win->dragPrevPos = PointI(x, y);
-    if (GetCursor())
+    if (GetCursor()) {
         SetCursor(gCursorDrag);
+    }
 }
 
 static void OnDraggingStop(WindowInfo* win, int x, int y, bool aborted) {
-    if (GetCapture() != win->hwndCanvas)
+    if (GetCapture() != win->hwndCanvas) {
         return;
+    }
 
-    if (GetCursor())
+    if (GetCursor()) {
         SetCursor(IDC_ARROW);
+    }
     ReleaseCapture();
 
-    if (aborted)
+    if (aborted) {
         return;
+    }
 
     SizeI drag(x - win->dragPrevPos.x, y - win->dragPrevPos.y);
     win->MoveDocBy(drag.dx, -2 * drag.dy);
+}
+
+static bool IsDragX(int x1, int x2) {
+    int dx = abs(x1 - x2);
+    int dragDx = GetSystemMetrics(SM_CXDRAG);
+    return dx > dragDx;
+}
+
+static bool IsDragY(int y1, int y2) {
+    int dy = abs(y1 - y2);
+    int dragDy = GetSystemMetrics(SM_CYDRAG);
+    return dy > dragDy;
 }
 
 static void OnMouseMove(WindowInfo* win, int x, int y, WPARAM flags) {
@@ -211,18 +229,18 @@ static void OnMouseMove(WindowInfo* win, int x, int y, WPARAM flags) {
         }
         // shortly display the cursor if the mouse has moved and the cursor is hidden
         if (PointI(x, y) != win->dragPrevPos && !GetCursor()) {
-            if (win->mouseAction == MouseAction::Idle)
+            if (win->mouseAction == MouseAction::Idle) {
                 SetCursor(IDC_ARROW);
-            else
+            } else {
                 SendMessage(win->hwndCanvas, WM_SETCURSOR, 0, 0);
+            }
             SetTimer(win->hwndCanvas, HIDE_CURSOR_TIMER_ID, HIDE_CURSOR_DELAY_IN_MS, nullptr);
         }
     }
 
     if (win->dragStartPending) {
         // have we already started a proper drag?
-        if (abs(x - win->dragStart.x) <= GetSystemMetrics(SM_CXDRAG) &&
-            abs(y - win->dragStart.y) <= GetSystemMetrics(SM_CYDRAG)) {
+        if (!IsDragX(x, win->dragStart.x) && !IsDragY(y, win->dragStart.y)) {
             return;
         }
         win->dragStartPending = false;
@@ -236,8 +254,9 @@ static void OnMouseMove(WindowInfo* win, int x, int y, WPARAM flags) {
             win->xScrollSpeed = (x - win->dragStart.x) / SMOOTHSCROLL_SLOW_DOWN_FACTOR;
             break;
         case MouseAction::SelectingText:
-            if (GetCursor())
+            if (GetCursor()) {
                 SetCursor(IDC_IBEAM);
+            }
         /* fall through */
         case MouseAction::Selecting:
             win->selectionRect.dx = x - win->selectionRect.x;
@@ -254,12 +273,14 @@ static void OnMouseMove(WindowInfo* win, int x, int y, WPARAM flags) {
     win->dragPrevPos = PointI(x, y);
 
     NotificationWnd* wnd = win->notifications->GetForGroup(NG_CURSOR_POS_HELPER);
-    if (wnd) {
-        if (MouseAction::Selecting == win->mouseAction) {
-            win->selectionMeasure = win->AsFixed()->CvtFromScreen(win->selectionRect).Size();
-        }
-        UpdateCursorPositionHelper(win, PointI(x, y), wnd);
+    if (!wnd) {
+        return;
     }
+
+    if (MouseAction::Selecting == win->mouseAction) {
+        win->selectionMeasure = win->AsFixed()->CvtFromScreen(win->selectionRect).Size();
+    }
+    UpdateCursorPositionHelper(win, PointI(x, y), wnd);
 }
 
 static void OnMouseLeftButtonDown(WindowInfo* win, int x, int y, WPARAM key) {
@@ -273,12 +294,13 @@ static void OnMouseLeftButtonDown(WindowInfo* win, int x, int y, WPARAM key) {
         return;
     }
 
-    CrashIfDebugOnly(win->mouseAction != MouseAction::Idle); // happened e.g. in crash 50539
+    // happened e.g. in crash 50539
+    CrashIfDebugOnly(win->mouseAction != MouseAction::Idle);
     CrashIf(!win->AsFixed());
 
     SetFocus(win->hwndFrame);
 
-    AssertCrash(!win->linkOnLastButtonDown);
+    CrashIf(win->linkOnLastButtonDown);
     DisplayModel* dm = win->AsFixed();
     PageElement* pageEl = dm->GetElementAtPos(PointI(x, y));
     if (pageEl && pageEl->Is(kindPageElementDest)) {
@@ -307,21 +329,21 @@ static void OnMouseLeftButtonDown(WindowInfo* win, int x, int y, WPARAM key) {
 }
 
 static void OnMouseLeftButtonUp(WindowInfo* win, int x, int y, WPARAM key) {
-    AssertCrash(win->AsFixed());
-    if (MouseAction::Idle == win->mouseAction || MouseAction::DraggingRight == win->mouseAction) {
+    CrashIf(!win->AsFixed());
+    auto ma = win->mouseAction;
+    if (MouseAction::Idle == ma || MouseAction::DraggingRight == ma) {
         return;
     }
-    AssertCrash(MouseAction::Selecting == win->mouseAction || MouseAction::SelectingText == win->mouseAction ||
-                MouseAction::Dragging == win->mouseAction);
+    CrashIf(MouseAction::Selecting != ma && MouseAction::SelectingText != ma && MouseAction::Dragging != ma);
 
-    bool didDragMouse = !win->dragStartPending || abs(x - win->dragStart.x) > GetSystemMetrics(SM_CXDRAG) ||
-                        abs(y - win->dragStart.y) > GetSystemMetrics(SM_CYDRAG);
-    if (MouseAction::Dragging == win->mouseAction) {
+    bool didDragMouse = !win->dragStartPending || IsDragX(x, win->dragStart.x) || IsDragY(y, win->dragStart.y);
+    if (MouseAction::Dragging == ma) {
         OnDraggingStop(win, x, y, !didDragMouse);
     } else {
         OnSelectionStop(win, x, y, !didDragMouse);
-        if (MouseAction::Selecting == win->mouseAction && win->showSelection)
+        if (MouseAction::Selecting == ma && win->showSelection) {
             win->selectionMeasure = win->AsFixed()->CvtFromScreen(win->selectionRect).Size();
+        }
     }
 
     DisplayModel* dm = win->AsFixed();
@@ -436,11 +458,12 @@ static void OnMouseMiddleButtonDown(WindowInfo* win, int x, int y, WPARAM key) {
 static void OnMouseRightButtonDown(WindowInfo* win, int x, int y, WPARAM key) {
     UNUSED(key);
     // lf("Right button clicked on %d %d", x, y);
-    if (MouseAction::Scrolling == win->mouseAction)
+    if (MouseAction::Scrolling == win->mouseAction) {
         win->mouseAction = MouseAction::Idle;
-    else if (win->mouseAction != MouseAction::Idle)
+    } else if (win->mouseAction != MouseAction::Idle) {
         return;
-    AssertCrash(win->AsFixed());
+    }
+    CrashIf(!win->AsFixed());
 
     SetFocus(win->hwndFrame);
 
@@ -451,12 +474,14 @@ static void OnMouseRightButtonDown(WindowInfo* win, int x, int y, WPARAM key) {
 }
 
 static void OnMouseRightButtonUp(WindowInfo* win, int x, int y, WPARAM key) {
-    AssertCrash(win->AsFixed());
-    if (MouseAction::DraggingRight != win->mouseAction)
+    CrashIf(!win->AsFixed());
+    if (MouseAction::DraggingRight != win->mouseAction) {
         return;
+    }
 
-    bool didDragMouse = !win->dragStartPending || abs(x - win->dragStart.x) > GetSystemMetrics(SM_CXDRAG) ||
-                        abs(y - win->dragStart.y) > GetSystemMetrics(SM_CYDRAG);
+    int isDragX = IsDragX(x, win->dragStart.x);
+    int isDragY = IsDragY(y, win->dragStart.y);
+    bool didDragMouse = !win->dragStartPending || isDragX || isDragY;
     OnDraggingStop(win, x, y, !didDragMouse);
 
     win->mouseAction = MouseAction::Idle;
@@ -654,20 +679,26 @@ static void DrawDocument(WindowInfo* win, HDC hdc, RECT* rcArea) {
         SizeI vp = dm->GetViewPort().Size();
         TRIVERTEX tv[4] = {{0, 0}, {vp.dx, vp.dy / 2}, {0, vp.dy / 2}, {vp.dx, vp.dy}};
         GRADIENT_RECT gr[2] = {{0, 1}, {2, 3}};
-        if (percTop < 0.5f)
-            GetGradientColor(colors[0], colors[1], 2 * percTop, &tv[0]);
-        else
-            GetGradientColor(colors[1], colors[2], 2 * (percTop - 0.5f), &tv[0]);
 
-        if (percBot < 0.5f)
-            GetGradientColor(colors[0], colors[1], 2 * percBot, &tv[3]);
-        else
-            GetGradientColor(colors[1], colors[2], 2 * (percBot - 0.5f), &tv[3]);
+        COLORREF col0 = colors[0];
+        COLORREF col1 = colors[1];
+        COLORREF col2 = colors[2];
+        if (percTop < 0.5f) {
+            GetGradientColor(col0, col1, 2 * percTop, &tv[0]);
+        } else {
+            GetGradientColor(col1, col2, 2 * (percTop - 0.5f), &tv[0]);
+        }
+
+        if (percBot < 0.5f) {
+            GetGradientColor(col0, col1, 2 * percBot, &tv[3]);
+        } else {
+            GetGradientColor(col1, col2, 2 * (percBot - 0.5f), &tv[3]);
+        }
 
         bool needCenter = percTop < 0.5f && percBot > 0.5f;
         if (needCenter) {
-            GetGradientColor(colors[1], colors[1], 0, &tv[1]);
-            GetGradientColor(colors[1], colors[1], 0, &tv[2]);
+            GetGradientColor(col1, col1, 0, &tv[1]);
+            GetGradientColor(col1, col1, 0, &tv[2]);
             tv[1].y = tv[2].y = (LONG)((0.5f - percTop) / (percBot - percTop) * vp.dy);
         } else {
             gr[0].LowerRight = 3;
@@ -696,7 +727,9 @@ static void DrawDocument(WindowInfo* win, HDC hdc, RECT* rcArea) {
         RectI bounds = pageInfo->pageOnScreen.Intersect(screen);
         // don't paint the frame background for images
         if (!dm->GetEngine()->IsImageCollection()) {
-            PaintPageFrameAndShadow(hdc, bounds, pageInfo->pageOnScreen, win->presentation);
+            RectI r = pageInfo->pageOnScreen;
+            auto presMode = win->presentation;
+            PaintPageFrameAndShadow(hdc, bounds, r, presMode);
         }
 
         bool renderOutOfDateCue = false;
@@ -779,8 +812,9 @@ static void OnPaintDocument(WindowInfo* win) {
 static LRESULT OnSetCursor(WindowInfo* win, HWND hwnd) {
     PointI pt;
 
-    if (win->mouseAction != MouseAction::Idle)
+    if (win->mouseAction != MouseAction::Idle) {
         win->HideInfoTip();
+    }
 
     switch (win->mouseAction) {
         case MouseAction::Dragging:
@@ -817,12 +851,14 @@ static LRESULT OnSetCursor(WindowInfo* win, HWND hwnd) {
                         SetCursor(IDC_HAND);
                         return TRUE;
                     }
-                } else
+                } else {
                     win->HideInfoTip();
-                if (dm->IsOverText(pt))
+                }
+                if (dm->IsOverText(pt)) {
                     SetCursor(IDC_IBEAM);
-                else
+                } else {
                     SetCursor(IDC_ARROW);
+                }
                 return TRUE;
             }
             win->HideInfoTip();
@@ -855,27 +891,31 @@ static LRESULT CanvasOnMouseWheel(WindowInfo* win, UINT message, WPARAM wParam, 
         UpdateToolbarState(win);
 
         // don't show the context menu when zooming with the right mouse-button down
-        if ((LOWORD(wParam) & MK_RBUTTON))
+        if ((LOWORD(wParam) & MK_RBUTTON)) {
             win->dragStartPending = false;
+        }
 
         return 0;
     }
 
     // make sure to scroll whole pages in non-continuous Fit Content mode
     if (!IsContinuous(win->ctrl->GetDisplayMode()) && ZOOM_FIT_CONTENT == win->ctrl->GetZoomVirtual()) {
-        if (delta > 0)
+        if (delta > 0) {
             win->ctrl->GoToPrevPage();
-        else
+        } else {
             win->ctrl->GoToNextPage();
+        }
         return 0;
     }
 
-    if (gDeltaPerLine == 0)
+    if (gDeltaPerLine == 0) {
         return 0;
+    }
 
     bool horizontal = (LOWORD(wParam) & MK_ALT) || IsAltPressed();
-    if (horizontal)
+    if (horizontal) {
         gSuppressAltKey = true;
+    }
 
     if (gDeltaPerLine < 0 && win->AsFixed()) {
         // scroll by (fraction of a) page
@@ -883,10 +923,12 @@ static LRESULT CanvasOnMouseWheel(WindowInfo* win, UINT message, WPARAM wParam, 
         si.cbSize = sizeof(si);
         si.fMask = SIF_PAGE;
         GetScrollInfo(win->hwndCanvas, horizontal ? SB_HORZ : SB_VERT, &si);
-        if (horizontal)
-            win->AsFixed()->ScrollXBy(-MulDiv(si.nPage, delta, WHEEL_DELTA));
-        else
-            win->AsFixed()->ScrollYBy(-MulDiv(si.nPage, delta, WHEEL_DELTA), true);
+        int scrollBy = -MulDiv(si.nPage, delta, WHEEL_DELTA);
+        if (horizontal) {
+            win->AsFixed()->ScrollXBy(scrollBy);
+        } else {
+            win->AsFixed()->ScrollYBy(scrollBy, true);
+        }
         return 0;
     }
 
@@ -901,26 +943,29 @@ static LRESULT CanvasOnMouseWheel(WindowInfo* win, UINT message, WPARAM wParam, 
     int currentScrollPos = GetScrollPos(win->hwndCanvas, SB_VERT);
 
     while (win->wheelAccumDelta >= gDeltaPerLine) {
-        if (horizontal)
+        if (horizontal) {
             SendMessage(win->hwndCanvas, WM_HSCROLL, SB_LINELEFT, 0);
-        else
+        } else {
             SendMessage(win->hwndCanvas, WM_VSCROLL, SB_LINEUP, 0);
+        }
         win->wheelAccumDelta -= gDeltaPerLine;
     }
     while (win->wheelAccumDelta <= -gDeltaPerLine) {
-        if (horizontal)
+        if (horizontal) {
             SendMessage(win->hwndCanvas, WM_HSCROLL, SB_LINERIGHT, 0);
-        else
+        } else {
             SendMessage(win->hwndCanvas, WM_VSCROLL, SB_LINEDOWN, 0);
+        }
         win->wheelAccumDelta += gDeltaPerLine;
     }
 
     if (!horizontal && !IsContinuous(win->ctrl->GetDisplayMode()) &&
         GetScrollPos(win->hwndCanvas, SB_VERT) == currentScrollPos) {
-        if (delta > 0)
+        if (delta > 0) {
             win->ctrl->GoToPrevPage(true);
-        else
+        } else {
             win->ctrl->GoToNextPage();
+        }
     }
 
     return 0;
@@ -954,8 +999,9 @@ static LRESULT CanvasOnMouseHWheel(WindowInfo* win, UINT message, WPARAM wParam,
 }
 
 static LRESULT OnGesture(WindowInfo* win, UINT message, WPARAM wParam, LPARAM lParam) {
-    if (!touch::SupportsGestures())
+    if (!touch::SupportsGestures()) {
         return DefWindowProc(win->hwndFrame, message, wParam, lParam);
+    }
 
     HGESTUREINFO hgi = (HGESTUREINFO)lParam;
     GESTUREINFO gi = {0};
@@ -1018,12 +1064,13 @@ static LRESULT OnGesture(WindowInfo* win, UINT message, WPARAM wParam, LPARAM lP
 
                 // Playing with the app, I found that I often didn't go quit a full 90 or 180
                 // degrees. Allowing rotate without a full finger rotate seemed more natural.
-                if (degrees < -120 || degrees > 120)
+                if (degrees < -120 || degrees > 120) {
                     win->AsFixed()->RotateBy(180);
-                else if (degrees < -45)
+                } else if (degrees < -45) {
                     win->AsFixed()->RotateBy(-90);
-                else if (degrees > 45)
+                } else if (degrees > 45) {
                     win->AsFixed()->RotateBy(90);
+                }
             }
             break;
 
@@ -1034,8 +1081,9 @@ static LRESULT OnGesture(WindowInfo* win, UINT message, WPARAM wParam, LPARAM lP
 
         case GID_PRESSANDTAP:
             // Toggle between Fit Page, Fit Width and Fit Content (same as 'z')
-            if (gi.dwFlags == GF_BEGIN)
+            if (gi.dwFlags == GF_BEGIN) {
                 win->ToggleZoom();
+            }
             break;
 
         default:
@@ -1102,8 +1150,9 @@ static LRESULT WndProcCanvasFixedPageUI(WindowInfo* win, HWND hwnd, UINT msg, WP
             return CanvasOnMouseHWheel(win, msg, wParam, lParam);
 
         case WM_SETCURSOR:
-            if (OnSetCursor(win, hwnd))
+            if (OnSetCursor(win, hwnd)) {
                 return TRUE;
+            }
             return DefWindowProc(hwnd, msg, wParam, lParam);
 
         case WM_CONTEXTMENU:
@@ -1151,18 +1200,20 @@ static NO_INLINE LRESULT CanvasOnMouseWheelEbook(WindowInfo* win, UINT message, 
     }
 
     short delta = GET_WHEEL_DELTA_WPARAM(wParam);
-    if (delta > 0)
+    if (delta > 0) {
         win->ctrl->GoToPrevPage();
-    else
+    } else {
         win->ctrl->GoToNextPage();
+    }
     return 0;
 }
 
 static LRESULT WndProcCanvasEbookUI(WindowInfo* win, HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     bool wasHandled;
     LRESULT res = win->AsEbook()->HandleMessage(msg, wParam, lParam, wasHandled);
-    if (wasHandled)
+    if (wasHandled) {
         return res;
+    }
 
     switch (msg) {
         case WM_SETCURSOR:
@@ -1232,8 +1283,9 @@ static void OnMouseLeftButtonUpAbout(WindowInfo* win, int x, int y, WPARAM key) 
                    !str::StartsWithI(url, L"mailto:")) {
             LoadArgs args(url, win);
             LoadDocument(args);
-        } else
+        } else {
             LaunchBrowser(url);
+        }
     }
     win->url = nullptr;
 }
@@ -1247,10 +1299,12 @@ static void OnMouseRightButtonDownAbout(WindowInfo* win, int x, int y, WPARAM ke
 
 static void OnMouseRightButtonUpAbout(WindowInfo* win, int x, int y, WPARAM key) {
     UNUSED(key);
-    bool didDragMouse = abs(x - win->dragStart.x) > GetSystemMetrics(SM_CXDRAG) ||
-                        abs(y - win->dragStart.y) > GetSystemMetrics(SM_CYDRAG);
-    if (!didDragMouse)
+    int isDragX = IsDragX(x, win->dragStart.x);
+    int isDragY = IsDragY(y, win->dragStart.y);
+    bool didDragMouse = isDragX || isDragY;
+    if (!didDragMouse) {
         OnAboutContextMenu(win, x, y);
+    }
 }
 
 static LRESULT OnSetCursorAbout(WindowInfo* win, HWND hwnd) {
@@ -1351,13 +1405,15 @@ static LRESULT WndProcCanvasLoadError(WindowInfo* win, HWND hwnd, UINT msg, WPAR
 void WindowInfo::RepaintAsync(UINT delay) {
     // even though RepaintAsync is mostly called from the UI thread,
     // we depend on the repaint message to happen asynchronously
-    uitask::Post([=] {
-        if (!WindowInfoStillValid(this))
+    uitask::Post([this, delay] {
+        if (!WindowInfoStillValid(this)) {
             return;
-        if (!delay)
-            WndProcCanvas(this->hwndCanvas, WM_TIMER, REPAINT_TIMER_ID, 0);
-        else if (!this->delayedRepaintTimer)
-            this->delayedRepaintTimer = SetTimer(this->hwndCanvas, REPAINT_TIMER_ID, delay, nullptr);
+        }
+        if (!delay) {
+            WndProcCanvas(hwndCanvas, WM_TIMER, REPAINT_TIMER_ID, 0);
+        } else if (!delayedRepaintTimer) {
+            delayedRepaintTimer = SetTimer(this->hwndCanvas, REPAINT_TIMER_ID, delay, nullptr);
+        }
     });
 }
 
@@ -1372,12 +1428,13 @@ static void OnTimer(WindowInfo* win, HWND hwnd, WPARAM timerId) {
             break;
 
         case SMOOTHSCROLL_TIMER_ID:
-            if (MouseAction::Scrolling == win->mouseAction)
+            if (MouseAction::Scrolling == win->mouseAction) {
                 win->MoveDocBy(win->xScrollSpeed, win->yScrollSpeed);
-            else if (MouseAction::Selecting == win->mouseAction || MouseAction::SelectingText == win->mouseAction) {
+            } else if (MouseAction::Selecting == win->mouseAction || MouseAction::SelectingText == win->mouseAction) {
                 GetCursorPosInHwnd(win->hwndCanvas, pt);
-                if (NeedsSelectionEdgeAutoscroll(win, pt.x, pt.y))
+                if (NeedsSelectionEdgeAutoscroll(win, pt.x, pt.y)) {
                     OnMouseMove(win, pt.x, pt.y, MK_CONTROL);
+                }
             } else {
                 KillTimer(hwnd, SMOOTHSCROLL_TIMER_ID);
                 win->yScrollSpeed = 0;
@@ -1387,8 +1444,9 @@ static void OnTimer(WindowInfo* win, HWND hwnd, WPARAM timerId) {
 
         case HIDE_CURSOR_TIMER_ID:
             KillTimer(hwnd, HIDE_CURSOR_TIMER_ID);
-            if (win->presentation)
+            if (win->presentation) {
                 SetCursor((HCURSOR) nullptr);
+            }
             break;
 
         case HIDE_FWDSRCHMARK_TIMER_ID:
@@ -1399,21 +1457,24 @@ static void OnTimer(WindowInfo* win, HWND hwnd, WPARAM timerId) {
                 KillTimer(hwnd, HIDE_FWDSRCHMARK_TIMER_ID);
                 win->fwdSearchMark.show = false;
                 win->RepaintAsync();
-            } else
+            } else {
                 win->RepaintAsync();
+            }
             break;
 
         case AUTO_RELOAD_TIMER_ID:
             KillTimer(hwnd, AUTO_RELOAD_TIMER_ID);
-            if (win->currentTab && win->currentTab->reloadOnFocus)
+            if (win->currentTab && win->currentTab->reloadOnFocus) {
                 ReloadDocument(win, true);
+            }
             break;
 
         case EBOOK_LAYOUT_TIMER_ID:
             KillTimer(hwnd, EBOOK_LAYOUT_TIMER_ID);
             for (TabInfo* tab : win->tabs) {
-                if (tab->AsEbook())
+                if (tab->AsEbook()) {
                     tab->AsEbook()->TriggerLayout();
+                }
             }
             break;
     }
@@ -1429,8 +1490,9 @@ static void OnDropFiles(HDROP hDrop, bool dragFinish) {
         DragQueryFile(hDrop, i, filePath, dimof(filePath));
         if (str::EndsWithI(filePath, L".lnk")) {
             AutoFreeWstr resolved(ResolveLnk(filePath));
-            if (resolved)
+            if (resolved) {
                 str::BufSet(filePath, dimof(filePath), resolved);
+            }
         }
         // The first dropped document may override the current window
         LoadArgs args(filePath, nullptr);
@@ -1440,8 +1502,9 @@ static void OnDropFiles(HDROP hDrop, bool dragFinish) {
         }
         LoadDocument(args);
     }
-    if (dragFinish)
+    if (dragFinish) {
         DragFinish(hDrop);
+    }
 }
 
 LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -1458,8 +1521,9 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
     }
 
     WindowInfo* win = FindWindowInfoByHwnd(hwnd);
-    if (!win)
+    if (!win) {
         return DefWindowProc(hwnd, msg, wParam, lParam);
+    }
 
     // messages that require win
     switch (msg) {
@@ -1468,8 +1532,9 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             return 0;
 
         case WM_SIZE:
-            if (!IsIconic(win->hwndFrame))
+            if (!IsIconic(win->hwndFrame)) {
                 win->UpdateCanvasSize();
+            }
             return 0;
 
         case WM_GETOBJECT:
@@ -1479,39 +1544,45 @@ LRESULT CALLBACK WndProcCanvas(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             // http://code.msdn.microsoft.com/windowsdesktop/UI-Automation-Clean-94993ac6/sourcecode?fileId=42883&pathId=2071281652
             // says that UiaReturnRawElementProvider() should be called regardless of lParam
             // Don't expose UIA automation in plugin mode yet. UIA is still too experimental
-            if (!gPluginMode) {
-// disable UIAutomation in release builds until concurrency issues and
-// memory leaks have been figured out and fixed
-#ifdef DEBUG
-                if (win->CreateUIAProvider()) {
-                    // TODO: should win->uia_provider->Release() as in
-                    // http://msdn.microsoft.com/en-us/library/windows/desktop/gg712214.aspx
-                    // and http://www.code-magazine.com/articleprint.aspx?quickid=0810112&printmode=true ?
-                    // Maybe instead of having a single provider per win, we should always create a new one
-                    // like in this sample:
-                    // http://code.msdn.microsoft.com/windowsdesktop/UI-Automation-Clean-94993ac6/sourcecode?fileId=42883&pathId=2071281652
-                    // currently win->uia_provider refCount is really out of wack in WindowInfo::~WindowInfo
-                    // from logging it seems that UiaReturnRawElementProvider() increases refCount by 1
-                    // and since WM_GETOBJECT is called many times, it accumulates
-                    return uia::ReturnRawElementProvider(hwnd, wParam, lParam, win->uia_provider);
-                }
-#endif
+            if (gPluginMode) {
+                return DefWindowProc(hwnd, msg, wParam, lParam);
             }
-            return DefWindowProc(hwnd, msg, wParam, lParam);
+            // disable UIAutomation in release builds until concurrency issues and
+            // memory leaks have been figured out and fixed
+            if (!isDebugBuild) {
+                return DefWindowProc(hwnd, msg, wParam, lParam);
+            }
+            if (!win->CreateUIAProvider()) {
+                return DefWindowProc(hwnd, msg, wParam, lParam);
+            }
+            // TODO: should win->uia_provider->Release() as in
+            // http://msdn.microsoft.com/en-us/library/windows/desktop/gg712214.aspx
+            // and http://www.code-magazine.com/articleprint.aspx?quickid=0810112&printmode=true ?
+            // Maybe instead of having a single provider per win, we should always create a new one
+            // like in this sample:
+            // http://code.msdn.microsoft.com/windowsdesktop/UI-Automation-Clean-94993ac6/sourcecode?fileId=42883&pathId=2071281652
+            // currently win->uia_provider refCount is really out of wack in WindowInfo::~WindowInfo
+            // from logging it seems that UiaReturnRawElementProvider() increases refCount by 1
+            // and since WM_GETOBJECT is called many times, it accumulates
+            return uia::ReturnRawElementProvider(hwnd, wParam, lParam, win->uia_provider);
 
         default:
             // TODO: achieve this split through subclassing or different window classes
-            if (win->AsFixed())
+            if (win->AsFixed()) {
                 return WndProcCanvasFixedPageUI(win, hwnd, msg, wParam, lParam);
+            }
 
-            if (win->AsChm())
+            if (win->AsChm()) {
                 return WndProcCanvasChmUI(win, hwnd, msg, wParam, lParam);
+            }
 
-            if (win->AsEbook())
+            if (win->AsEbook()) {
                 return WndProcCanvasEbookUI(win, hwnd, msg, wParam, lParam);
+            }
 
-            if (win->IsAboutWindow())
+            if (win->IsAboutWindow()) {
                 return WndProcCanvasAbout(win, hwnd, msg, wParam, lParam);
+            }
 
             return WndProcCanvasLoadError(win, hwnd, msg, wParam, lParam);
     }

@@ -27,7 +27,16 @@ struct TooltipCtrl;
 struct DropDownCtrl;
 
 /* Describes actions which can be performed by mouse */
-enum class MouseAction { Idle = 0, Dragging, DraggingRight, Selecting, Scrolling, SelectingText };
+// clang-format off
+enum class MouseAction {
+    Idle = 0,
+    Dragging,
+    DraggingRight,
+    Selecting,
+    Scrolling,
+    SelectingText
+};
+// clang-format on
 
 extern NotificationGroupId NG_CURSOR_POS_HELPER;
 extern NotificationGroupId NG_RESPONSE_TO_ACTION;
@@ -39,7 +48,14 @@ enum NotificationOptions {
     NOS_WARNING = NOS_PERSIST | NOS_HIGHLIGHT,
 };
 
-enum PresentationMode { PM_DISABLED = 0, PM_ENABLED, PM_BLACK_SCREEN, PM_WHITE_SCREEN };
+// clang-format off
+enum PresentationMode {
+    PM_DISABLED = 0,
+    PM_ENABLED,
+    PM_BLACK_SCREEN,
+    PM_WHITE_SCREEN
+};
+// clang-format on
 
 // WM_GESTURE handling
 struct TouchState {
