@@ -344,6 +344,8 @@ static bool SetupPluginMode(CommandLineInfo& i) {
     gGlobalPrefs->reuseInstance = false;
     // don't allow tabbed navigation
     gGlobalPrefs->useTabs = false;
+    // don't exit on double click on menu button
+    gGlobalPrefs->menuButtonDblClickExit = false;
     // always display the toolbar when embedded (as there's no menubar in that case)
     gGlobalPrefs->showToolbar = true;
     // never allow esc as a shortcut to quit

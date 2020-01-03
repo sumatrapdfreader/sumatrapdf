@@ -372,6 +372,9 @@ struct GlobalPrefs {
     bool showStartPage;
     // if true, documents are opened in tabs instead of new windows
     bool useTabs;
+    // if true and useTabs is enabled, double clicking on the menu button will exit
+    // (to match windows behavior when double clicking on system icon on the left of the titlebar).
+    bool menuButtonDblClickExit;
     // information about opened files (in most recently used order)
     Vec<FileState*>* fileStates;
     // state of the last session, usage depends on RestoreSession
@@ -635,6 +638,7 @@ static const FieldInfo gGlobalPrefsFields[] = {
     {offsetof(GlobalPrefs, tocDy), Type_Int, 0},
     {offsetof(GlobalPrefs, showStartPage), Type_Bool, true},
     {offsetof(GlobalPrefs, useTabs), Type_Bool, true},
+    {offsetof(GlobalPrefs, menuButtonDblClickExit), Type_Bool, false},
     {(size_t)-1, Type_Comment, 0},
     {offsetof(GlobalPrefs, fileStates), Type_Array, (intptr_t)&gFileStateInfo},
     {offsetof(GlobalPrefs, sessionData), Type_Array, (intptr_t)&gSessionDataInfo},
@@ -651,7 +655,7 @@ static const StructInfo gGlobalPrefsInfo = {
     "ement\0\0PrinterDefaults\0ForwardSearch\0AnnotationDefaults\0DefaultPasswords\0CustomScreenDPI\0\0RememberStatePer"
     "Document\0UiLanguage\0ShowToolbar\0ShowFavorites\0AssociatedExtensions\0AssociateSilently\0CheckForUpdates\0Versio"
     "nToSkip\0RememberOpenedFiles\0InverseSearchCmdLine\0EnableTeXEnhancements\0DefaultDisplayMode\0DefaultZoom\0Window"
-    "State\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0ShowStartPage\0UseTabs\0\0FileStates\0SessionData\0ReopenOnce\0TimeOf"
-    "LastUpdateCheck\0OpenCountWeek\0\0"};
+    "State\0WindowPos\0ShowToc\0SidebarDx\0TocDy\0ShowStartPage\0UseTabs\0MenuButtonDblClickExit\0\0FileStates\0Session"
+    "Data\0ReopenOnce\0TimeOfLastUpdateCheck\0OpenCountWeek\0\0"};
 
 #endif

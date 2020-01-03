@@ -156,6 +156,7 @@
 #define IDC_CMDLINE_LABEL               1041
 #define IDC_CMDLINE                     1042
 #define IDC_USE_TABS                    1045
+#define IDC_MENU_BUTTON_DBL_CLICK_EXIT  1046
 #define IDC_SECTION_PRINT_RANGE         1050
 #define IDC_PRINT_RANGE_ALL             1051
 #define IDC_PRINT_RANGE_EVEN            1052

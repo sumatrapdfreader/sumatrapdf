@@ -16,6 +16,7 @@
 #include "Translations.h"
 #include "resource.h"
 #include "Menu.h"
+#include "GlobalPrefs.h"
 
 using namespace Gdiplus;
 
@@ -166,6 +167,12 @@ static LRESULT CALLBACK WndProcCaption(HWND hwnd, UINT message, WPARAM wParam, L
                         SetTimer(hwnd, DO_NOT_REOPEN_MENU_TIMER_ID, DO_NOT_REOPEN_MENU_DELAY_IN_MS, nullptr);
                     }
                     SetFocus(win->hwndFrame);
+                }
+            } else if (win && BN_DBLCLK == HIWORD(wParam) && gGlobalPrefs->menuButtonDblClickExit) {
+                WORD button = LOWORD(wParam) - BTN_ID_FIRST;
+                if (button == CB_MENU) {
+                    // Menu button double clicked, exit now
+                    SendMessage(win->hwndFrame, WM_CLOSE, 0, 0);
                 }
             }
             break;
