@@ -803,6 +803,8 @@ DocTocTree* ImageDirEngineImpl::GetTocTree() {
         root->AddSibling(item);
     }
     tocTree = new DocTocTree(root);
+    const char* path = strconv::WstrToUtf8(fileName).data();
+    tocTree->filePath = path;
     return tocTree;
 }
 

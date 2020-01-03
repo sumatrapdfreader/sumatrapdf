@@ -148,7 +148,8 @@ static void UpdateTreeModel() {
             AddPageNumbersToTocItemsRecur(i->child);
             i->child->parent = i->child;
         }
-        AutoFreeWstr path = strconv::Utf8ToWstr(bkm->filePath.get());
+        const char* filePath = bkm->filePath.get();
+        AutoFreeWstr path = strconv::Utf8ToWstr(filePath);
         const WCHAR* name = path::GetBaseNameNoFree(path);
         i->title = str::Dup(name);
         if (root == nullptr) {
